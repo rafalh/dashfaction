@@ -1,0 +1,17 @@
+#ifndef CONFIG_H_INCLUDED
+#define CONFIG_H_INCLUDED
+
+#define MASK_AS_PF 0
+#define NO_CD_FIX 1
+#define NO_INTRO 1
+#define LEVELS_AUTODOWNLOADER 1
+#define CAMERA_1_3_COMMANDS 0
+#define SPECTATE_ENABLE 0
+#define SPLITSCREEN_ENABLE 0
+
+#define CONSOLE_BG_R 0x00
+#define CONSOLE_BG_G 0x00
+#define CONSOLE_BG_B 0x40
+#define CONSOLE_BG_A 0xC0
+
+#endif // CONFIG_H_INCLUDED

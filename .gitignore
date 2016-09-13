@@ -1,0 +1,22 @@
+bin
+dist
+obj
+build
+lib
+
+asm_test
+docs
+*.tbl
+*.lnk
+
+# Visual Studio
+*.sln
+*.VC.*
+ipch
+.vs
+*.vcxproj*
+*.vcproj
+*.sdf
+*.pdb
+*.idb
+*.lib
