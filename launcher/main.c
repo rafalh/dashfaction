@@ -3,11 +3,13 @@
 #include <windows.h>
 #include <shlwapi.h>
 #include "version.h"
+#include "crc32.h"
 
 #define HRESULT_CUST_BIT 0x20000000
 #define FACILITY_MOD 0x09F
 #define MAKE_MOD_ERROR(code) (0x80000000 | HRESULT_CUST_BIT | (FACILITY_MOD << 16) | ((code) & 0xFFFF))
 #define GET_LAST_WIN32_ERROR() ((HRESULT)(GetLastError()) < 0 ? ((HRESULT)(GetLastError())) : ((HRESULT) (((GetLastError()) & 0x0000FFFF) | (FACILITY_WIN32 << 16) | 0x80000000)))
+#define RF_120_EU_CRC32 0xA7BF79E4
 
 HRESULT InitProcess(HANDLE hProcess, const TCHAR *pszPath, DWORD dwRfThreadId)
 {
@@ -165,6 +167,22 @@ HRESULT GetRfSteamPath(char *pszPath, DWORD cbPath)
 	return S_OK;
 }
 
+uint32_t GetFileCRC32(const char *path)
+{
+	char buf[1024];
+	FILE *pFile = fopen(path, "rb");
+	if (!pFile) return 0;
+	uint32_t hash = 0;
+	while (1)
+	{
+		size_t len = fread(buf, 1, sizeof(buf), pFile);
+		if (!len) break;
+		hash = crc32(hash, buf, len);
+	}
+	fclose(pFile);
+	return hash;
+}
+
 int main()
 {
     STARTUPINFO si;
@@ -200,6 +218,15 @@ int main()
         return (int)hr;
     }
     
+	uint32_t hash = GetFileCRC32(szBuf);
+	printf("CRC32: %X\n", hash);
+	if (hash != RF_120_EU_CRC32)
+	{
+		sprintf(szBuf, "Error! Unsupported version of Red Faction executable has been detected (crc32 0x%X). Only 1.20 EU version is supported.", hash);
+		MessageBox(NULL, szBuf, NULL, MB_OK | MB_ICONERROR);
+		return -1;
+	}
+	
     ZeroMemory(&si, sizeof(si));
     printf("Starting %s...\n", szBuf);
     if(!CreateProcess(szBuf, NULL, NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, szRfPath, &si, &pi))
