@@ -27,7 +27,9 @@ static BOOL VfsLoadPackfileHook(const char *pszFilename, const char *pszDir)
     BOOL bRet = FALSE;
     unsigned i, cFilesInBlock, cAdded, OffsetInBlocks;
     
-	WARN("Load packfile %s %s", pszDir, pszFilename);
+#if DEBUG_VFS
+	TRACE("Load packfile %s %s", pszDir, pszFilename);
+#endif
     
     sprintf(szFullPath, "%s%s%s", g_pszRootPath, pszDir ? pszDir : "", pszFilename);
     if(!pszFilename || strlen(pszFilename) > 0x1F || strlen(szFullPath) > 0x7F)
@@ -263,8 +265,10 @@ static PACKFILE_ENTRY *VfsFindFileInternalHook(const char *pszFilename)
     }
     while(pLookupTableItem);
     
-    WARN("Cannot find: %s (%x)", pszFilename, Checksum);
-    
+#if DEBUG_VFS
+	TRACE("Cannot find: %s (%x)", pszFilename, Checksum);
+#endif
+	
     /*pLookupTableItem = &g_pVfsLookupTableNew[Checksum % 20713];
     do
     {
