@@ -33,6 +33,16 @@ static void ProcessUnreliableGamePacketsHook(const char *pData, int cbData, void
 #endif
 }
 
+static void ProcessWaitingMessages()
+{
+	MSG msg;
+	while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+	{
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+}
+
 static void DrawConsoleAndProcessKbdFifoHook(BOOL bServer)
 {
     char szBuf[64];
@@ -104,6 +114,12 @@ CPlayer *FindPlayer(const char *pszName)
     return NULL;
 }
 
+static void GrSwitchBuffersHook(void)
+{
+	// We disabled msg loop thread so we have to process them somewhere
+	ProcessWaitingMessages();
+}
+
 DWORD DLL_EXPORT Init(PVOID pParam)
 {
     DWORD dwRfThreadId = (DWORD)pParam;
@@ -122,9 +138,19 @@ DWORD DLL_EXPORT Init(PVOID pParam)
     
     /* Enable windowed mode */
     //WriteMemUInt8Repeat((PVOID)0x00545ABF, ASM_NOP, 2); // force PRESENT_PARAMETERS::Windowed to TRUE
-    WriteMemUInt32((PVOID)(0x004B29A5 + 6), 0xC8);
-    WriteMemUInt32((PVOID)(0x0050C4E3 + 1), WS_POPUP|WS_SYSMENU);
-    
+    //WriteMemUInt32((PVOID)(0x004B29A5 + 6), 0xC8);
+    //WriteMemUInt32((PVOID)(0x0050C4E3 + 1), WS_POPUP|WS_SYSMENU);
+	//WriteMemUInt8((PVOID)0x00524C98, ASM_SHORT_JMP_REL); // disable window hooks
+	//WriteMemUInt32((PVOID)(0x00545B4D + 6), 3); // D3DSWAPEFFECT_DISCARD
+	//WriteMemUInt8Repeat((PVOID)(0x00545BA5), ASM_NOP, 6); // PP.Flags = 0
+
+	/* Process messages in the same thread as DX processing */
+	WriteMemUInt8Repeat((PVOID)0x00524C48, ASM_NOP, 0x00524C83 - 0x00524C48); // disable msg loop thread
+	WriteMemUInt8((PVOID)0x00524C48, ASM_LONG_CALL_REL);
+	WriteMemPtr((PVOID)0x00524C49, (PVOID)((ULONG_PTR)0x00524E40 - (0x00524C48 + 0x5))); // CreateMainWindow
+	WriteMemPtr((PVOID)0x0050CE21, (PVOID)((ULONG_PTR)GrSwitchBuffersHook - (0x0050CE20 + 0x5)));
+	
+
     //WriteMemUInt8Repeat((PVOID)0x00545017, 0xFF, 4);
     
 

@@ -10,22 +10,22 @@ static D3DGAMMARAMP g_GammaRamp;
 
 static void SetGammaRamp(D3DGAMMARAMP *pGammaRamp)
 {
-    if(0)
-        IDirect3DDevice8_SetGammaRamp(*g_ppGrDevice, D3DSGR_NO_CALIBRATION, pGammaRamp);
-    else
-    {
-        HDC hdc;
+#if 0
+	if (*g_ppGrDevice)
+		IDirect3DDevice8_SetGammaRamp(*g_ppGrDevice, D3DSGR_NO_CALIBRATION, pGammaRamp);
+#else
+    HDC hdc;
         
-        hdc = GetDC(*g_phWnd);
-        if(hdc)
-        {
-            if(!SetDeviceGammaRamp(hdc, pGammaRamp))
-                ERR("SetDeviceGammaRamp failed");
-            ReleaseDC(*g_phWnd, hdc);
-        }
-        else
-            ERR("GetDC failed");
+    hdc = GetDC(*g_phWnd);
+    if(hdc)
+    {
+        if(!SetDeviceGammaRamp(hdc, pGammaRamp))
+            ERR("SetDeviceGammaRamp failed");
+        ReleaseDC(*g_phWnd, hdc);
     }
+    else
+        ERR("GetDC failed");
+#endif
 }
 
 static void GrUpdateGammaRampHook(void)
@@ -57,15 +57,13 @@ static void GammaMsgHandler(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch(uMsg)
     {
-        case WM_SETFOCUS:
-            SetGammaRamp(&g_GammaRamp);
-            TRACE("WM_SETFOCUS");
-            break;
-        
-        case WM_KILLFOCUS:
-            ResetGammaRamp();
-            TRACE("WM_KILLFOCUS");
-            break;
+	case WM_ACTIVATE:
+	case WM_ACTIVATEAPP:
+		TRACE("WM_ACTIVATE %lx", wParam);
+		if (wParam)
+			SetGammaRamp(&g_GammaRamp);
+		else
+			ResetGammaRamp();
     }
 }
 
