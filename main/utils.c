@@ -84,7 +84,7 @@ void DbgPrint(char *pszFormat, ...)
 		va_start(pArgList, pszFormat);
     	vfprintf(pFile, pszFormat, pArgList);
     	va_end(pArgList);
-        fputs("\r\n", pFile);
+        fputs("\n", pFile);
         fclose(pFile);
     }
 
