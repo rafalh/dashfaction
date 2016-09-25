@@ -82,8 +82,10 @@ static BANLIST_ENTRY * const g_pBanlistNullEntry = (BANLIST_ENTRY*)0x0064EC08;
 
 /* Graphics */
 
+static IDirect3D8 ** const g_ppDirect3D = (IDirect3D8**)0x01CFCBE0;
 static IDirect3DDevice8 ** const g_ppGrDevice = (IDirect3DDevice8**)0x01CFCBE4;
 static uint32_t * const g_pGrGammaRamp = (uint32_t*)0x017C7C68;
+static uint32_t * const g_pAdapterIdx = (uint32_t*)0x01CFCC34;
 
 typedef void (*PFN_GR_SET_COLOR_RGB)(unsigned r, unsigned g, unsigned b, unsigned a);
 static const PFN_GR_SET_COLOR_RGB GrSetColorRgb = (PFN_GR_SET_COLOR_RGB)0x0050CF80;
@@ -111,6 +113,9 @@ static const PFN_GR_LOAD_TEXTURE GrLoadTexture = (PFN_GR_LOAD_TEXTURE)0x0050F6A0
 
 typedef int (*PFN_GR_DRAW_IMAGE)(int Texture, int x, int y, int a4);
 static const PFN_GR_DRAW_IMAGE GrDrawImage = (PFN_GR_DRAW_IMAGE)0x0050D2A0;
+
+typedef int(*PFN_GR_READ_BACK_BUFFER)(int x, int y, int Width, int Height, void *pBuffer);
+static const PFN_GR_READ_BACK_BUFFER GrReadBackBuffer = (PFN_GR_READ_BACK_BUFFER)0x0050DFF0;
 
 /* GUI */
 

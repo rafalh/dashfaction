@@ -4,6 +4,7 @@
 #include <shlwapi.h>
 #include "version.h"
 #include "crc32.h"
+#include "sharedoptions.h"
 
 #define HRESULT_CUST_BIT 0x20000000
 #define FACILITY_MOD 0x09F
@@ -11,7 +12,7 @@
 #define GET_LAST_WIN32_ERROR() ((HRESULT)(GetLastError()) < 0 ? ((HRESULT)(GetLastError())) : ((HRESULT) (((GetLastError()) & 0x0000FFFF) | (FACILITY_WIN32 << 16) | 0x80000000)))
 #define RF_120_EU_CRC32 0xA7BF79E4
 
-HRESULT InitProcess(HANDLE hProcess, const TCHAR *pszPath, DWORD dwRfThreadId)
+HRESULT InitProcess(HANDLE hProcess, const TCHAR *pszPath, SHARED_OPTIONS *pOptions)
 {
     HANDLE hThread = NULL;
     PVOID pVirtBuf = NULL;
@@ -78,7 +79,17 @@ HRESULT InitProcess(HANDLE hProcess, const TCHAR *pszPath, DWORD dwRfThreadId)
     }
     
     CloseHandle(hThread);
-    hThread = CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)((DWORD_PTR)pfnInit - (DWORD_PTR)hLib + dwExitCode), (PVOID)dwRfThreadId, 0, NULL);
+
+	pVirtBuf = VirtualAllocEx(hProcess, NULL, sizeof(*pOptions), MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+	if (!pVirtBuf)
+	{
+		hr = GET_LAST_WIN32_ERROR();
+		goto cleanup;
+	}
+	
+	WriteProcessMemory(hProcess, pVirtBuf, pOptions, sizeof(*pOptions), NULL);
+
+    hThread = CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)((DWORD_PTR)pfnInit - (DWORD_PTR)hLib + dwExitCode), pVirtBuf, 0, NULL);
     if (!hThread)
     {
         hr = GET_LAST_WIN32_ERROR();
@@ -183,7 +194,7 @@ uint32_t GetFileCRC32(const char *path)
 	return hash;
 }
 
-int main()
+int main(int argc, const char *argv[])
 {
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
@@ -191,9 +202,21 @@ int main()
     char szRfPath[MAX_PATH];
     unsigned i;
     HRESULT hr;
+	SHARED_OPTIONS Options;
     
     printf("Starting " PRODUCT_NAME " " VER_STR "!\n");
     
+	Options.bMultiSampling = FALSE;
+
+	for (i = 1; i < (unsigned) argc; ++i)
+	{
+		if (!strcmp(argv[i], "-msaa"))
+			Options.bMultiSampling = TRUE;
+		else if (!strcmp(argv[i], "-h"))
+			printf("Supported options:\n"
+				"\t-msaa  Enable experimental Multisample Anti-Aliasing support");
+	}
+
     hr = GetRfPath(szRfPath, sizeof(szRfPath));
 	if (FAILED(hr) && FAILED(GetRfSteamPath(szRfPath, sizeof(szRfPath))))
     {
@@ -236,6 +259,8 @@ int main()
         MessageBox(NULL, szBuf2, NULL, MB_OK|MB_ICONERROR);
         return (int)hr;
     }
+
+	Options.dwRfThreadId = pi.dwThreadId;
     
     i = GetCurrentDirectory(sizeof(szBuf)/sizeof(szBuf[0]), szBuf);
     if(!i)
@@ -248,7 +273,7 @@ int main()
     }
     
     sprintf(szBuf + i, "\\DashFaction.dll");
-    hr = InitProcess(pi.hProcess, szBuf, pi.dwThreadId);
+    hr = InitProcess(pi.hProcess, szBuf, &Options);
     if(FAILED(hr))
     {
         sprintf(szBuf, "Error %lX! Failed to init process.", hr);

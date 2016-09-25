@@ -5,6 +5,9 @@
 #include "lazyban.h"
 #include "main.h"
 #include "config.h"
+#include "sharedoptions.h"
+
+extern SHARED_OPTIONS g_Options;
 
 #if SPLITSCREEN_ENABLE
 
@@ -111,6 +114,25 @@ static void SpectateCmdHandler(void)
 
 #endif // SPECTATE_ENABLE
 
+#if MULTISAMPLING_SUPPORT
+static void AntiAliasingCmdHandler(void)
+{
+	if (*g_pbCmdRun)
+	{
+		if (!g_Options.bMultiSampling)
+			RfConsolePrintf("Anti-aliasing is not supported");
+		else
+		{
+			BOOL Enabled = FALSE;
+			IDirect3DDevice8_GetRenderState(*g_ppGrDevice, D3DRS_MULTISAMPLEANTIALIAS, &Enabled);
+			Enabled = !Enabled;
+			IDirect3DDevice8_SetRenderState(*g_ppGrDevice, D3DRS_MULTISAMPLEANTIALIAS, Enabled);
+			RfConsolePrintf("Anti-aliasing is %s", Enabled ? "enabled" : "disabled");
+		}
+	}
+}
+#endif
+
 CCmd g_Commands[] = {
 #if SPLITSCREEN_ENABLE
     {"splitscreen", "Starts split screen mode", SplitScreenCmdHandler},
@@ -120,6 +142,9 @@ CCmd g_Commands[] = {
     {"debug", "Switches debugging in RF", DebugCmdHandler},
 #if SPECTATE_ENABLE
     {"spectate", "Starts spectating mode", SpectateCmdHandler},
+#endif
+#if MULTISAMPLING_SUPPORT
+	{ "antialiasing", "Toggles anti-aliasing", AntiAliasingCmdHandler },
 #endif
     {"unban_last", "Unbans last banned player", UnbanLastCmdHandler},
 #ifndef NDEBUG

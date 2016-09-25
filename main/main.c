@@ -1,6 +1,7 @@
 #include "config.h"
 #include "exports.h"
 #include "version.h"
+#include "sharedoptions.h"
 #include "crashdump.h"
 #include "autodl.h"
 #include "utils.h"
@@ -23,6 +24,8 @@
 #ifndef M_PI
 # define M_PI 3.141592f
 #endif
+
+SHARED_OPTIONS g_Options;
 
 static void ProcessUnreliableGamePacketsHook(const char *pData, int cbData, void *pAddr, void *pPlayer)
 {
@@ -120,11 +123,52 @@ static void GrSwitchBuffersHook(void)
 	ProcessWaitingMessages();
 }
 
-DWORD DLL_EXPORT Init(PVOID pParam)
+
+
+
+static void SetupPP(void)
 {
-    DWORD dwRfThreadId = (DWORD)pParam;
+	D3DPRESENT_PARAMETERS *pPP = (D3DPRESENT_PARAMETERS*)0x01CFCA18;
+	memset(pPP, 0, sizeof(*pPP));
+
+	PDWORD pFormat = (PDWORD)0x005A135C;
+	WARN("D3D Format: %ld", *pFormat);
+
+	pPP->Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
+
+	/*int i, Format;
+	for (Format = 0; Format < 120; ++Format)
+	{
+		for (i = 2; i < 8; ++i)
+			if (SUCCEEDED(IDirect3D8_CheckDeviceMultiSampleType(*g_ppDirect3D, *g_pAdapterIdx, D3DDEVTYPE_HAL, Format, FALSE, i)))
+				WARN("AA (format %d %d samples) supported", Format, i);
+	}*/
+	
+#if MULTISAMPLING_SUPPORT
+	if (g_Options.bMultiSampling && *pFormat > 0)
+	{
+		HRESULT hr = IDirect3D8_CheckDeviceMultiSampleType(*g_ppDirect3D, *g_pAdapterIdx, D3DDEVTYPE_HAL, *pFormat, FALSE, D3DMULTISAMPLE_4_SAMPLES);
+		if (SUCCEEDED(hr))
+		{
+			WARN("Enabling Anti-Aliasing (4x MSAA)...");
+			pPP->MultiSampleType = D3DMULTISAMPLE_4_SAMPLES;
+		}
+		else
+		{
+			WARN("MSAA not supported (0x%x)...", hr);
+			g_Options.bMultiSampling = FALSE;
+		}
+	}
+#endif
+}
+
+DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
+{
+    DWORD dwRfThreadId = pOptions->dwRfThreadId;
     HANDLE hRfThread;
     
+	g_Options = *pOptions;
+
     /* Init crash dump writer before anything else */
     InitCrashDumps();
     
@@ -136,20 +180,29 @@ DWORD DLL_EXPORT Init(PVOID pParam)
     WriteMemUInt8((PVOID)0x004B31B6, ASM_SHORT_JMP_REL);
 #endif /* NO_CD_FIX */
     
-    /* Enable windowed mode */
-    //WriteMemUInt8Repeat((PVOID)0x00545ABF, ASM_NOP, 2); // force PRESENT_PARAMETERS::Windowed to TRUE
+#if USE_WINDOWED_MODE
+	/* Enable windowed mode */
     //WriteMemUInt32((PVOID)(0x004B29A5 + 6), 0xC8);
     //WriteMemUInt32((PVOID)(0x0050C4E3 + 1), WS_POPUP|WS_SYSMENU);
-	//WriteMemUInt8((PVOID)0x00524C98, ASM_SHORT_JMP_REL); // disable window hooks
-	//WriteMemUInt32((PVOID)(0x00545B4D + 6), 3); // D3DSWAPEFFECT_DISCARD
-	//WriteMemUInt8Repeat((PVOID)(0x00545BA5), ASM_NOP, 6); // PP.Flags = 0
+#endif
 
-	/* Process messages in the same thread as DX processing */
+	//WriteMemUInt8((PVOID)0x00524C98, ASM_SHORT_JMP_REL); // disable window hooks
+
+#if MULTISAMPLING_SUPPORT
+	if (pOptions->bMultiSampling)
+		WriteMemUInt32((PVOID)(0x00545B4D + 6), D3DSWAPEFFECT_DISCARD);
+#endif
+
+	WriteMemUInt8Repeat((PVOID)0x00545AA7, ASM_NOP, 0x00545AB5 - 0x00545AA7);
+	WriteMemUInt8((PVOID)0x00545AA7, ASM_LONG_CALL_REL);
+	WriteMemPtr((PVOID)0x00545AA8, (PVOID)((ULONG_PTR)SetupPP - (0x00545AA7 + 0x5)));
+	WriteMemUInt8Repeat((PVOID)(0x00545BA5), ASM_NOP, 6); // dont set PP.Flags
+
+	/* Process messages in the same thread as DX processing (alternative: D3DCREATE_MULTITHREADED) */
 	WriteMemUInt8Repeat((PVOID)0x00524C48, ASM_NOP, 0x00524C83 - 0x00524C48); // disable msg loop thread
 	WriteMemUInt8((PVOID)0x00524C48, ASM_LONG_CALL_REL);
 	WriteMemPtr((PVOID)0x00524C49, (PVOID)((ULONG_PTR)0x00524E40 - (0x00524C48 + 0x5))); // CreateMainWindow
 	WriteMemPtr((PVOID)0x0050CE21, (PVOID)((ULONG_PTR)GrSwitchBuffersHook - (0x0050CE20 + 0x5)));
-	
 
     //WriteMemUInt8Repeat((PVOID)0x00545017, 0xFF, 4);
     
