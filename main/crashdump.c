@@ -2,13 +2,17 @@
 #include <windows.h>
 #include <stdio.h>
 #include <psapi.h>
+#include <stdint.h>
 
 #define CRASHDUMP_USE_DMP 0
+#define CRASHDUMP_USE_HEURISTIC_STACK_TRACE 1
 #if CRASHDUMP_USE_DMP
 #define CRASHDUMP_FILENAME "rfmod_crash.dmp"
 #else
 #define CRASHDUMP_FILENAME "rfmod_crash.txt"
 #endif
+
+#define CRASHDUMP_HEURISTIC_MAX_FUN_SIZE 4096
 
 #ifdef _MSC_VER
 #include <Dbghelp.h>
@@ -71,6 +75,60 @@ static DWORD cModules;
 static char szBuffer[256];
 #endif
 
+#if CRASHDUMP_USE_HEURISTIC_STACK_TRACE == 0
+
+static inline void WriteFrameBasedStackTrace(FILE *pFile, DWORD Ebp)
+{
+	PVOID *pFrame = (PVOID*)Ebp;
+	while (!IsBadReadPtr(pFrame, 8))
+	{
+		fprintf(pFile, "%08lX\n", (DWORD)pFrame[1]);
+		if (pFrame == (PVOID)pFrame[0])
+		{
+			fprintf(g_pFile, "...\n");
+			break;
+		}
+		pFrame = (PVOID)pFrame[0];
+	}
+}
+
+#else // CRASHDUMP_USE_HEURISTIC_STACK_TRACE
+
+static void inline WriteHeuristicStackTrace(FILE *pFile, DWORD Eip, DWORD Esp)
+{
+	int i;
+	BYTE *PrevCodePtr = (BYTE*)Eip;
+	for (i = 0; i < 1024; ++i)
+	{
+		// Read next values from the stack
+		DWORD *StackPtr = ((DWORD*)Esp) + i;
+		if (IsBadReadPtr(StackPtr, sizeof(DWORD)))
+			break;
+		BYTE *CodePtr = (BYTE*)*StackPtr;
+
+		// Check if this is address to code
+		if (IsBadCodePtr((FARPROC)(CodePtr - 6)) || IsBadCodePtr((FARPROC)CodePtr))
+			continue;
+
+		if (CodePtr[-5] == 0xE8) // call rel32
+		{
+			BYTE *CallAddr = (BYTE*)((int)CodePtr + *(int*)(CodePtr - 4));
+			//WARN("%p %p %u", CodePtr, CallAddr, abs(CallAddr - PrevCodePtr));
+			if (abs(CallAddr - PrevCodePtr) > CRASHDUMP_HEURISTIC_MAX_FUN_SIZE) // check if call destinatio is near 
+				continue;
+			fprintf(pFile, "%08p\n", CodePtr - 5);
+		}
+		//else if (CodePtr[-6] == 0xFF && CodePtr[-5] == 0x15) // call ds:rel32
+		//	fprintf(g_pFile, "%08p\n", CodePtr - 6);
+		else
+			continue;
+
+		PrevCodePtr = CodePtr;
+	}
+}
+
+#endif
+
 static LONG WINAPI CrashDumpExceptionFilter(PEXCEPTION_POINTERS pExceptionPointers)
 {
 #if CRASHDUMP_USE_DMP
@@ -114,7 +172,6 @@ static LONG WINAPI CrashDumpExceptionFilter(PEXCEPTION_POINTERS pExceptionPointe
     if (g_pFile)
     {
         unsigned i;
-        PVOID *pFrame;
         
         fprintf(g_pFile, "ExceptionCode: %08lX\n", pExceptionPointers->ExceptionRecord->ExceptionCode);
         fprintf(g_pFile, "ExceptionFlags: %08lX\n", pExceptionPointers->ExceptionRecord->ExceptionFlags);
@@ -137,18 +194,22 @@ static LONG WINAPI CrashDumpExceptionFilter(PEXCEPTION_POINTERS pExceptionPointe
         fprintf(g_pFile, "EDI: %08lX\t", pExceptionPointers->ContextRecord->Edi);
         fprintf(g_pFile, "ESI: %08lX\n", pExceptionPointers->ContextRecord->Esi);
         
-        fprintf(g_pFile, "\nStacktrace:\n%08lX\n", pExceptionPointers->ContextRecord->Eip);
-        pFrame = (PVOID*)pExceptionPointers->ContextRecord->Ebp;
-        while(!IsBadReadPtr(pFrame, 8))
-        {
-            fprintf(g_pFile, "%08lX\n", (DWORD)pFrame[1]);
-            if(pFrame == (PVOID)pFrame[0])
-            {
-                fprintf(g_pFile, "...\n");
-                break;
-            }
-            pFrame = (PVOID)pFrame[0];
-        }
+		// Note: Red Faction has 'omit frame pointer' optimization enabled
+		fprintf(g_pFile, "\nStacktrace:\n%08lX\n", pExceptionPointers->ContextRecord->Eip);
+#if CRASHDUMP_USE_HEURISTIC_STACK_TRACE
+		WriteHeuristicStackTrace(g_pFile, pExceptionPointers->ContextRecord->Eip, pExceptionPointers->ContextRecord->Esp);
+#else
+		WriteFrameBasedStackTrace(g_pFile, pExceptionPointers->ContextRecord->Ebp);
+#endif
+
+		fprintf(g_pFile, "\nStack:\n");
+		for (i = 0; i < 1024; ++i)
+		{
+			DWORD *Ptr = ((DWORD*)pExceptionPointers->ContextRecord->Esp) + i;
+			if (IsBadReadPtr(Ptr, sizeof(DWORD)))
+				break;
+			fprintf(g_pFile, "%08lX%s", *Ptr, i % 8 == 7 ? "\n" : " ");
+		}
         
         if (EnumProcessModules(GetCurrentProcess(), Modules, sizeof(Modules), &cModules))
         {
@@ -165,15 +226,6 @@ static LONG WINAPI CrashDumpExceptionFilter(PEXCEPTION_POINTERS pExceptionPointe
             }
         }
         
-        fprintf(g_pFile, "\nStack:\n");
-        for (i = 0; i < 1024; ++i)
-        {
-            DWORD *Ptr = ((DWORD*)pExceptionPointers->ContextRecord->Esp) + i;
-            if (IsBadReadPtr(Ptr, sizeof(DWORD)))
-                break;
-            fprintf(g_pFile, "%08lX%s", *Ptr, i % 8 == 7 ? "\n" : " ");
-        }
-        fprintf(g_pFile, "\n");
 #endif // _X86_
         fclose(g_pFile);
         MessageBox(NULL, TEXT("Application has crashed! Crashdump has been saved in " CRASHDUMP_FILENAME ". Please send this file to the program author."), NULL, MB_ICONERROR|MB_OK);
