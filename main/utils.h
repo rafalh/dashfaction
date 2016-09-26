@@ -19,9 +19,9 @@ void WriteMemStr(PVOID pAddr, const char *pStr);
 void DbgPrint(char *format, ...);
 
 #ifdef NDEBUG
-#define DEBUG_LEVEL 1
-#else
 #define DEBUG_LEVEL 2
+#else
+#define DEBUG_LEVEL 3
 #endif
 
 #if DEBUG_LEVEL >= 1
@@ -37,6 +37,12 @@ void DbgPrint(char *format, ...);
 #endif
 
 #if DEBUG_LEVEL >= 3
+#define INFO(...) DbgPrint(__VA_ARGS__)
+#else
+#define INFO(...)
+#endif
+
+#if DEBUG_LEVEL >= 4
 #define TRACE(...) DbgPrint(__VA_ARGS__)
 #else
 #define TRACE(...)
