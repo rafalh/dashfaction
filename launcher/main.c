@@ -10,7 +10,7 @@
 #define FACILITY_MOD 0x09F
 #define MAKE_MOD_ERROR(code) (0x80000000 | HRESULT_CUST_BIT | (FACILITY_MOD << 16) | ((code) & 0xFFFF))
 #define GET_LAST_WIN32_ERROR() ((HRESULT)(GetLastError()) < 0 ? ((HRESULT)(GetLastError())) : ((HRESULT) (((GetLastError()) & 0x0000FFFF) | (FACILITY_WIN32 << 16) | 0x80000000)))
-#define RF_120_EU_CRC32 0xA7BF79E4
+#define RF_120_CRC32 0xA7BF79E4
 
 HRESULT InitProcess(HANDLE hProcess, const TCHAR *pszPath, SHARED_OPTIONS *pOptions)
 {
@@ -243,9 +243,9 @@ int main(int argc, const char *argv[])
     
 	uint32_t hash = GetFileCRC32(szBuf);
 	printf("CRC32: %X\n", hash);
-	if (hash != RF_120_EU_CRC32)
+	if (hash != RF_120_CRC32)
 	{
-		sprintf(szBuf, "Error! Unsupported version of Red Faction executable has been detected (crc32 0x%X). Only 1.20 EU version is supported.", hash);
+		sprintf(szBuf, "Error! Unsupported version of Red Faction executable has been detected (crc32 0x%X). Only version 1.20 is supported.", hash);
 		MessageBox(NULL, szBuf, NULL, MB_OK | MB_ICONERROR);
 		return -1;
 	}
