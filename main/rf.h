@@ -11,6 +11,11 @@ typedef BOOL WINBOOL;
 
 //#pragma pack(push, 1)
 
+typedef struct _CVector3
+{
+	float x, y, z;
+} CVector3;
+
 /* String */
 
 typedef struct _CString
@@ -243,6 +248,43 @@ typedef struct _CPlayerNetData
     uint32_t field_9C4;
 } CPlayerNetData;
 
+#pragma pack(push, 1)
+
+typedef struct _SKeyState
+{
+	int field_0;
+	int field_4;
+	int field_8;
+	int field_C;
+	int field_10;
+	__int16 ScanCodes[2];
+	__int16 MouseBtnId;
+	__int16 field_1A;
+} SKeyState;
+
+typedef struct _CGameControls
+{
+	float fMouseSensitivity;
+	int bMouseLook;
+	int field_EC;
+	SKeyState Keys[128];
+	int CtrlCount;
+	int field_EF4;
+	int field_EF8;
+	int field_EFC;
+	int field_F00;
+	int field_F04;
+	int field_F08;
+	int field_F0C;
+	int field_F10;
+	int field_F14;
+	int field_F18;
+	int field_F1C;
+	int field_F20;
+	int field_F24;
+	int field_F28;
+} CGameControls;
+
 struct _CPlayer;
 struct _CEntity;
 
@@ -255,19 +297,186 @@ typedef struct _CAMERA
 
 typedef struct _CPlayer
 {
-    struct _CPlayer *pNext;
-    struct _CPlayer *pPrev;
-    CString strName;
-    uint32_t field_10;
-    uint32_t hEntity;
-    uint32_t EntityClassId;
-    uint32_t Unknown[4];
-    PLAYER_STATS *pStats;
-    uint8_t bBlueTeam;
-    uint32_t Unknown2[36];
-    CAMERA *pCamera;
-    uint32_t Unknown3[1102];
-    CPlayerNetData *pNetData;
+	struct _CPlayer *pNext;
+	struct _CPlayer *pPrev;
+	CString strName;
+	int FireFlags;
+	int hEntity;
+	int EntityClsId;
+	CVector3 field_1C;
+	int field_28;
+	PLAYER_STATS *pStats;
+	char bBlueTeam;
+	char bCollide;
+	char field_32;
+	char field_33;
+	void *pWeaponMesh;
+	int field_38;
+	int field_3C;
+	int field_40;
+	int field_44;
+	int field_48;
+	int field_4C;
+	int field_50;
+	int field_54;
+	int field_58;
+	int field_5C;
+	int field_60;
+	int field_64;
+	int field_68;
+	int field_6C;
+	int field_70;
+	int field_74;
+	int field_78;
+	int field_7C;
+	int field_80;
+	int field_84;
+	int field_88;
+	int field_8C;
+	int field_90;
+	int field_94;
+	int field_98;
+	int field_9C;
+	int field_A0;
+	int field_A4;
+	int field_A8;
+	int field_AC;
+	char field_B0;
+	char IsCrouched;
+	char field_B2;
+	char field_B3;
+	int hViewObj;
+	int field_B8;
+	int field_BC;
+	int field_C0;
+	CAMERA *pCamera;
+	int xViewport;
+	int yViewport;
+	int cxViewport;
+	int cyViewport;
+	float fFov;
+	int ViewMode;
+	int field_E0;
+	CGameControls Controls;
+	int field_F2C;
+	int field_F30;
+	BYTE field_F34[4];
+	char field_F38;
+	char field_F39;
+	char field_F3A;
+	char bHudVisible;
+	int field_F3C;
+	char field_F40;
+	char field_F41;
+	char ShadowsEnabled;
+	char DecalsEnabled;
+	char DynamicLightiningEnabled;
+	char field_F45;
+	char field_F46;
+	char field_F47;
+	char FilteringLevel;
+	char field_F49;
+	char field_F4A;
+	char field_F4B;
+	int DetailLevel;
+	int TexturesResolutionLevel;
+	int CharacterDetailLevel;
+	int field_F58;
+	int MpCharacter;
+	int field_F60;
+	int field_F64;
+	int field_F68;
+	int field_F6C;
+	int field_F70;
+	int field_F74;
+	int field_F78;
+	int field_F7C;
+	int field_F80;
+	int field_F84;
+	int field_F88;
+	int field_F8C;
+	int field_F90;
+	char bInZoomMode;
+	char field_F95;
+	char field_F96;
+	char field_F97;
+	float field_F98;
+	int field_F9C;
+	int field_FA0;
+	int field_FA4;
+	int field_FA8;
+	int field_FAC;
+	char bRailgunScanner;
+	char bScannerView;
+	char clrUnkR;
+	char clrUnkG;
+	char clrUnkB;
+	char clrUnkA;
+	char field_FB6;
+	char field_FB7;
+	int field_FB8;
+	int field_FBC;
+	float field_FC0;
+	int field_FC4;
+	int field_FC8;
+	int field_FCC;
+	int field_FD0;
+	int field_FD4;
+	int field_FD8;
+	int field_FDC;
+	int field_FE0;
+	int field_FE4;
+	int field_FE8;
+	int field_FEC;
+	int field_FF0;
+	CVector3 field_FF4;
+	CVector3 field_1000;
+	CVector3 field_100C;
+	int field_1018;
+	int field_101C;
+	int field_1020;
+	int field_1024;
+	int field_1028;
+	int field_102C;
+	int field_1030;
+	int field_1034;
+	int field_1038;
+	int field_103C;
+	int field_1040;
+	int field_1044;
+	int field_1048;
+	int field_104C;
+	int field_1050;
+	int field_1054;
+	int field_1058;
+	int field_105C;
+	int field_1060;
+	int field_1064;
+	int field_1068;
+	int field_106C;
+	int field_1070;
+	int field_1074;
+	int field_1078;
+	int field_107C;
+	int field_1080;
+	int field_1084;
+	int field_1088;
+	int field_108C[17];
+	int HitScrColor;
+	int HitScrTime;
+	float field_10D8;
+	float field_10DC;
+	int field_10E0;
+	int field_10E4;
+	int field_10E8;
+	int field_10EC[26];
+	int PrefWeapons[32];
+	float field_11D4;
+	float field_11D8;
+	int field_11DC;
+	int field_11E0;
+	int field_11E4[7];
+	CPlayerNetData *pNwData;
 } CPlayer;
 
 static CPlayer ** const g_ppPlayersList = (CPlayer**)0x007C75CC;

@@ -160,9 +160,9 @@ void DrawScoreboardInternalHook(BOOL bDraw)
                 x2 += 50;
             }
             
-            if(pPlayer->pNetData)
+            if(pPlayer->pNwData)
             {
-                sprintf(szBuf, "%hu", pPlayer->pNetData->dwPing);
+                sprintf(szBuf, "%hu", pPlayer->pNwData->dwPing);
                 GrDrawText(x2, y2, szBuf, -1, *((uint32_t*)0x17C7C5C));
             }
         }

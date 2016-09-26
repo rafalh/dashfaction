@@ -18,7 +18,7 @@ void BanCmdHandlerHook(void)
                 if(pPlayer != *g_ppLocalPlayer)
                 {
                     RfConsolePrintf(g_ppszStringsTable[959], pPlayer->strName.psz);
-                    RfBanIp(&(pPlayer->pNetData->Addr));
+                    RfBanIp(&(pPlayer->pNwData->Addr));
                     RfKickPlayer(pPlayer);
                 } else
                     RfConsolePrintf("You cannot ban yourself!");
