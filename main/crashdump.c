@@ -129,6 +129,11 @@ static void inline WriteHeuristicStackTrace(FILE *pFile, DWORD Eip, DWORD Esp)
 
 #endif
 
+static int ModuleHandleCompare(const void *phMod1, const void *phMod2)
+{
+	return *((HMODULE*)phMod1) - *((HMODULE*)phMod2);
+}
+
 static LONG WINAPI CrashDumpExceptionFilter(PEXCEPTION_POINTERS pExceptionPointers)
 {
 #if CRASHDUMP_USE_DMP
@@ -216,6 +221,7 @@ static LONG WINAPI CrashDumpExceptionFilter(PEXCEPTION_POINTERS pExceptionPointe
             if (cModules > sizeof(Modules))
                 cModules = sizeof(Modules);
             cModules /= sizeof(HMODULE);
+			qsort(Modules, cModules, sizeof(HMODULE), ModuleHandleCompare);
             
             fprintf(g_pFile, "\nModules:\n");
             for (i = 0; i < cModules; ++i)
