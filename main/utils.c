@@ -6,7 +6,7 @@ void WriteMem(PVOID pAddr, PVOID pValue, unsigned cbValue)
 {
     DWORD dwOldProtect;
     
-    VirtualProtect(pAddr, cbValue, PAGE_READWRITE, &dwOldProtect);
+    VirtualProtect(pAddr, cbValue, PAGE_EXECUTE_READWRITE, &dwOldProtect);
     memcpy(pAddr, pValue, cbValue);
     VirtualProtect(pAddr, cbValue, dwOldProtect, NULL);
 }
