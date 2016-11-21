@@ -1,7 +1,7 @@
 #ifndef CONFIG_H_INCLUDED
 #define CONFIG_H_INCLUDED
 
-#define MASK_AS_PF 0
+#define MASK_AS_PF 1
 #define NO_CD_FIX 1
 #define NO_INTRO 1
 #define LEVELS_AUTODOWNLOADER 1
