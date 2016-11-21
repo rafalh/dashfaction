@@ -252,7 +252,7 @@ int main(int argc, const char *argv[])
 	
     ZeroMemory(&si, sizeof(si));
     printf("Starting %s...\n", szBuf);
-    if(!CreateProcess(szBuf, NULL, NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, szRfPath, &si, &pi))
+    if(!CreateProcess(szBuf, GetCommandLine(), NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, szRfPath, &si, &pi))
     {
         hr = GET_LAST_WIN32_ERROR();
         sprintf(szBuf2, "Error %lX! Failed to start: %s", hr, szBuf);
