@@ -31,7 +31,7 @@ static void ProcessUnreliableGamePacketsHook(const char *pData, int cbData, void
 {
     RfProcessGamePackets(pData, cbData, pAddr, pPlayer);
     
-#ifdef MASK_AS_PF
+#if MASK_AS_PF
     ProcessPfPacket(pData, cbData, pAddr, pPlayer);
 #endif
 }
