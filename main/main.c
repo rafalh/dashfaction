@@ -69,11 +69,6 @@ static void InitGameHook(void)
     ForceFileFromPackfile("strings.tbl", "ui.vpp");
     
     RegisterCommands();
-    
-    /*int *ptr = HeapAlloc(GetProcessHeap(), 0, 8);
-    ptr[2] = 1;
-    
-    HeapFree(GetProcessHeap(), 0, 0x5324325);*/
 }
 
 static void CleanupGameHook(void)
@@ -89,6 +84,7 @@ static void HandleNewPlayerPacketHook(BYTE *pData, NET_ADDR *pAddr)
         Beep(750, 300);
     RfHandleNewPlayerPacket(pData, pAddr);
 }
+
 #if 0
 static void RenderEntityHook(CEntity *pEntity)
 { // TODO
@@ -103,6 +99,7 @@ static void RenderEntityHook(CEntity *pEntity)
     //IDirect3DDevice8_SetRenderState(*g_ppGrDevice, D3DRS_LIGHTING, dwOldLightining);
 }
 #endif
+
 CPlayer *FindPlayer(const char *pszName)
 {
     CPlayer *pPlayer = *g_ppPlayersList;
@@ -132,7 +129,7 @@ static void SetupPP(void)
 	memset(pPP, 0, sizeof(*pPP));
 
 	PDWORD pFormat = (PDWORD)0x005A135C;
-	WARN("D3D Format: %ld", *pFormat);
+	INFO("D3D Format: %ld", *pFormat);
 
 	pPP->Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
 
@@ -150,7 +147,7 @@ static void SetupPP(void)
 		HRESULT hr = IDirect3D8_CheckDeviceMultiSampleType(*g_ppDirect3D, *g_pAdapterIdx, D3DDEVTYPE_HAL, *pFormat, FALSE, D3DMULTISAMPLE_4_SAMPLES);
 		if (SUCCEEDED(hr))
 		{
-			WARN("Enabling Anti-Aliasing (4x MSAA)...");
+			INFO("Enabling Anti-Aliasing (4x MSAA)...");
 			pPP->MultiSampleType = D3DMULTISAMPLE_4_SAMPLES;
 		}
 		else
@@ -204,16 +201,6 @@ DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
 	WriteMemPtr((PVOID)0x00524C49, (PVOID)((ULONG_PTR)0x00524E40 - (0x00524C48 + 0x5))); // CreateMainWindow
 	WriteMemPtr((PVOID)0x0050CE21, (PVOID)((ULONG_PTR)GrSwitchBuffersHook - (0x0050CE20 + 0x5)));
 
-    //WriteMemUInt8Repeat((PVOID)0x00545017, 0xFF, 4);
-    
-
-    //WriteMemUInt8Repeat((PVOID)0x0050CE31, ASM_NOP, 2);
-    //WriteMemUInt8Repeat((PVOID)0x00545017, 0xFF, 5);
-    
-    /* No present */
-    //WriteMemUInt8Repeat((PVOID)0x00544FFB, ASM_NOP, 7);
-    //WriteMemUInt8Repeat((PVOID)0x00545002, ASM_NOP, 3);
-    
     /* Console init string */
     WriteMemPtr((PVOID)0x004B2534, "-- " PRODUCT_NAME " Initializing --\n");
     
@@ -240,7 +227,7 @@ DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
     WriteMemUInt8((PVOID)0x005098D6, CONSOLE_BG_B); // Blue
     WriteMemUInt8((PVOID)0x005098D8, CONSOLE_BG_G); // Green
     WriteMemUInt8((PVOID)0x005098DA, CONSOLE_BG_R); // Red
-    
+
     /* Use hardware vertex processing */
     //WriteMemUInt8((PVOID)0x00545BDF, D3DCREATE_HARDWARE_VERTEXPROCESSING);
     
@@ -252,8 +239,6 @@ DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
     
     //WriteMemUInt32((PVOID)0x005450DE, /*D3DUSAGE_DYNAMIC|*/D3DUSAGE_DONOTCLIP|D3DUSAGE_WRITEONLY);
     //WriteMemUInt32((PVOID)0x00545118, /*D3DUSAGE_DYNAMIC|*/D3DUSAGE_DONOTCLIP|D3DUSAGE_WRITEONLY);
-    
-    //WriteMemUInt8Repeat((PVOID)0x005450CB, ASM_NOP, 3);
     
     /* Sound loop fix */
     WriteMemUInt8((PVOID)0x00505D08, 0x00505D5B - (0x00505D07 + 0x2));
@@ -314,8 +299,6 @@ DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
 	/* Default port: 0 */
 	WriteMemUInt16((PVOID)0x0059CDE4, 0);
 	
-	
-
     /* Init modules */
     InitGamma();
     InitWndProc();
