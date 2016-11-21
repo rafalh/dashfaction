@@ -607,6 +607,11 @@ static const PFN_OBJECT_RENDER RfRenderEntity = (PFN_OBJECT_RENDER)0x00421850;
 typedef void (*PFN_GR_FLUSH_BUFFERS)(void);
 static const PFN_GR_FLUSH_BUFFERS GrFlushBuffers = (PFN_GR_FLUSH_BUFFERS)0x00559D90;
 
+static int *g_pRfWndWidth = (int*)0x017C7BC4;
+static int *g_pRfWndHeight = (int*)0x017C7BC8;
+
+static D3DCAPS8 *g_pRfGrDeviceCaps = (D3DCAPS8*)0x01CFCAC8;
+
 /* RF stdlib functions are not compatible with GCC */
 
 typedef FILE *(*PFN_FOPEN)(const char *pszPath, const char *pszMode);
