@@ -61,6 +61,36 @@ static void DrawConsoleAndProcessKbdFifoHook(BOOL bServer)
 #endif
 }
 
+static void SetTextureMinMagFilter(D3DTEXTUREFILTERTYPE FilterType)
+{
+	uintptr_t Addresses[] = {
+		// InitD3D
+		0x00546283, 0x00546295,
+		0x005462A9, 0x005462BD,
+		// GrSetMaterial
+		0x0054F2E8, 0x0054F2FC,
+		0x0054F438, 0x0054F44C,
+		0x0054F567, 0x0054F57B,
+		0x0054F62D, 0x0054F641,
+		0x0054F709, 0x0054F71D,
+		0x0054F800, 0x0054F814,
+		0x0054F909, 0x0054F91D,
+		0x0054FA1A, 0x0054FA2E,
+		0x0054FB22, 0x0054FB36,
+		0x0054FBFE, 0x0054FC12,
+		0x0054FD06, 0x0054FD1A,
+		0x0054FD90, 0x0054FDA4,
+		0x0054FE98, 0x0054FEAC,
+		0x0054FF74, 0x0054FF88,
+		0x0055007C, 0x00550090,
+		0x005500C6, 0x005500DA,
+		0x005501A2, 0x005501B6,
+	};
+	unsigned i;
+	for (i = 0; i < sizeof(Addresses) / sizeof(Addresses[0]); ++i)
+		WriteMemUInt8((PVOID)(Addresses[i] + 1), (uint8_t)FilterType);
+}
+
 static void InitGameHook(void)
 {
     RfInitGame();
@@ -76,6 +106,19 @@ static void InitGameHook(void)
 	WriteMemFloat((PVOID)(0x004A34C7 + 6), fFov);
 	INFO("FOV: %f", fFov);
 #endif
+
+#if ANISOTROPIC_FILTERING
+	/* Anisotropic texture filtering */
+	if (g_pRfGrDeviceCaps->MaxAnisotropy > 0)
+	{
+		DWORD AnisotropyLevel = min(g_pRfGrDeviceCaps->MaxAnisotropy, 16);
+		SetTextureMinMagFilter(D3DTEXF_ANISOTROPIC);
+		IDirect3DDevice8_SetTextureStageState(*g_ppGrDevice, 0, D3DTSS_MAXANISOTROPY, AnisotropyLevel);
+		IDirect3DDevice8_SetTextureStageState(*g_ppGrDevice, 1, D3DTSS_MAXANISOTROPY, AnisotropyLevel);
+		INFO("Anisotropic Filtering enabled (level: %d)", AnisotropyLevel);
+	}
+#endif
+
     /* Allow modded strings.tbl in ui.vpp */
     ForceFileFromPackfile("strings.tbl", "ui.vpp");
     
