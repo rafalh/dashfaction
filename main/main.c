@@ -65,6 +65,17 @@ static void InitGameHook(void)
 {
     RfInitGame();
     
+#if 1
+	/* Fix aspect ratio for widescreen */
+	*((float*)0x017C7BD8) = 1.0f;
+
+	/* Fix FOV for widescreen */
+	float w = (float)*g_pRfWndWidth;
+	float h = (float)*g_pRfWndHeight;
+	float fFov = 90.0f * (w / h) / (4.0f / 3.0f); // default is 90
+	WriteMemFloat((PVOID)(0x004A34C7 + 6), fFov);
+	INFO("FOV: %f", fFov);
+#endif
     /* Allow modded strings.tbl in ui.vpp */
     ForceFileFromPackfile("strings.tbl", "ui.vpp");
     
@@ -119,9 +130,6 @@ static void GrSwitchBuffersHook(void)
 	// We disabled msg loop thread so we have to process them somewhere
 	ProcessWaitingMessages();
 }
-
-
-
 
 static void SetupPP(void)
 {
@@ -268,13 +276,6 @@ DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
     
     /* Set FPS limit to 60 */
     WriteMemFloat((PVOID)0x005094CA, 1.0f / 60.0f);
-    
-    /* Improve FOV for wide screens */
-    float w = (float)GetSystemMetrics(SM_CXSCREEN);
-	float h = (float)GetSystemMetrics(SM_CYSCREEN);
-    float fFov = 2 * atanf((w/h)*tanf(45.0f / 180.0f * M_PI) / 1.33f) / M_PI * 180.0f;
-    WriteMemFloat((PVOID)0x004A6B4B, fFov);
-    TRACE("FOV: %f", fFov);
     
     /* If server forces player character, don't save it in settings */
     WriteMemUInt8Repeat((PVOID)0x004755C1, ASM_NOP, 6);
