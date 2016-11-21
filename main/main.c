@@ -220,6 +220,9 @@ DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
     /* Init crash dump writer before anything else */
     InitCrashDumps();
     
+    if (!SetProcessDEPPolicy(PROCESS_DEP_ENABLE))
+        WARN("SetProcessDEPPolicy failed (error %ld)", GetLastError());
+
     /* Fix for "At least 8 MB of available video memory" */
     WriteMemUInt8((PVOID)0x005460CD, ASM_SHORT_JMP_REL);
     
