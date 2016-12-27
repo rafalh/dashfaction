@@ -3,6 +3,8 @@ dist
 obj
 build
 lib
+premake-build
+research
 
 asm_test
 docs

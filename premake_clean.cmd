@@ -1,5 +1,5 @@
 @echo off
 call config.cmd
 
-%PREMAKE4% clean
+%PREMAKE5% clean
 pause
