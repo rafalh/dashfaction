@@ -52,7 +52,7 @@ static BOOL VfsLoadPackfileHook(const char *pszFilename, const char *pszDir)
         memset(&g_pPackfiles[g_cPackfiles], 0, 64 * sizeof(PACKFILE*));
     }
     
-    pPackfile = malloc(sizeof(*pPackfile));
+    pPackfile = (PACKFILE*)malloc(sizeof(*pPackfile));
     if(!pPackfile)
     {
         ERR("malloc failed");
@@ -68,7 +68,7 @@ static BOOL VfsLoadPackfileHook(const char *pszFilename, const char *pszDir)
     if(fread(Buf, sizeof(Buf), 1, pFile) == 1 &&
        VfsProcessPackfileHeader(pPackfile, Buf))
     {
-        pPackfile->pFileList = malloc(pPackfile->cFiles * sizeof(PACKFILE_ENTRY));
+        pPackfile->pFileList = (PACKFILE_ENTRY*)malloc(pPackfile->cFiles * sizeof(PACKFILE_ENTRY));
         memset(pPackfile->pFileList, 0, pPackfile->cFiles * sizeof(PACKFILE_ENTRY));
         cAdded = 0;
         OffsetInBlocks = 1;
@@ -145,7 +145,7 @@ static BOOL VfsBuildPackfileEntriesListHook(const char *pszExtList, char **ppFil
         }
     }
     
-    *ppFilenames = RfMalloc(cbBuf);
+    *ppFilenames = (char*)RfMalloc(cbBuf);
     if(!*ppFilenames)
         return FALSE;
     BufPtr = *ppFilenames;
@@ -184,7 +184,7 @@ static BOOL VfsAddPackfileEntriesHook(PACKFILE *pPackfile, const void *pBlock, u
             pEntry->pszFileName = "DEADBEEF";
         else
         {
-            pEntry->pszFileName = malloc(strlen((char*)pData) + 10);
+            pEntry->pszFileName = (char*)malloc(strlen((char*)pData) + 10);
             memset(pEntry->pszFileName, 0, strlen((char*)pData) + 10);
             strcpy(pEntry->pszFileName, (char*)pData);
         }
@@ -230,7 +230,7 @@ static void VfsAddFileToLookupTableHook(PACKFILE_ENTRY *pEntry)
             if(DEBUG_VFS && (!stricmp(pEntry->pszFileName, DEBUG_VFS_FILENAME1) || !stricmp(pEntry->pszFileName, DEBUG_VFS_FILENAME2) || g_bTest))
                 TRACE("Add 3: %s (%x)", pEntry->pszFileName, pEntry->dwNameChecksum);
             
-            pLookupTableItem->pNext = malloc(sizeof(VFS_LOOKUP_TABLE_NEW));
+            pLookupTableItem->pNext = (VFS_LOOKUP_TABLE_NEW*)malloc(sizeof(VFS_LOOKUP_TABLE_NEW));
             pLookupTableItem = pLookupTableItem->pNext;
             pLookupTableItem->pNext = NULL;
             break;

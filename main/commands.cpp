@@ -63,7 +63,7 @@ static void TestCmdHandler(void)
 {
     if(*g_pbCmdRun)
     {
-        int *ptr = HeapAlloc(GetProcessHeap(), 0, 8);
+        int *ptr = (int*)HeapAlloc(GetProcessHeap(), 0, 8);
         ptr[10] = 1;
         RfConsolePrintf("test done %p", ptr);
     }
@@ -123,7 +123,7 @@ static void AntiAliasingCmdHandler(void)
 			RfConsolePrintf("Anti-aliasing is not supported");
 		else
 		{
-			BOOL Enabled = FALSE;
+			DWORD Enabled = FALSE;
 			IDirect3DDevice8_GetRenderState(*g_ppGrDevice, D3DRS_MULTISAMPLEANTIALIAS, &Enabled);
 			Enabled = !Enabled;
 			IDirect3DDevice8_SetRenderState(*g_ppGrDevice, D3DRS_MULTISAMPLEANTIALIAS, Enabled);

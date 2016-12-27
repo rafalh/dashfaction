@@ -1,7 +1,7 @@
 project "DashFaction"
 	kind "SharedLib"
-	language "C"
-	files { "**.h", "**.c" }
+	language "C++"
+	files { "**.h", "**.c", "**.cpp" }
 	defines {"BUILD_DLL"}
 	includedirs {
 		"../vendor",

@@ -27,25 +27,25 @@ void DbgPrint(char *format, ...);
 #if DEBUG_LEVEL >= 1
 #define ERR(...) DbgPrint(__VA_ARGS__)
 #else
-#define ERR(...)
+#define ERR(...) do {} while (false)
 #endif
 
 #if DEBUG_LEVEL >= 2
 #define WARN(...) DbgPrint(__VA_ARGS__)
 #else
-#define WARN(...)
+#define WARN(...) do {} while (false)
 #endif
 
 #if DEBUG_LEVEL >= 3
 #define INFO(...) DbgPrint(__VA_ARGS__)
 #else
-#define INFO(...)
+#define INFO(...) do {} while (false)
 #endif
 
 #if DEBUG_LEVEL >= 4
 #define TRACE(...) DbgPrint(__VA_ARGS__)
 #else
-#define TRACE(...)
+#define TRACE(...) do {} while (false)
 #endif
 
 

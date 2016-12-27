@@ -136,7 +136,7 @@ HRESULT GetRfPath(char *pszPath, DWORD cbPath)
 	}
 	
     /* Read install path and close key */
-    iError = RegQueryValueEx(hKey, "InstallPath", NULL, &dwType, (PVOID)pszPath, &cbPath);
+    iError = RegQueryValueEx(hKey, "InstallPath", NULL, &dwType, (LPBYTE)pszPath, &cbPath);
     RegCloseKey(hKey);
     if (iError != ERROR_SUCCESS)
         return HRESULT_FROM_WIN32(iError);
@@ -163,7 +163,7 @@ HRESULT GetRfSteamPath(char *pszPath, DWORD cbPath)
 		return HRESULT_FROM_WIN32(iError);
 
 	/* Read install path and close key */
-	iError = RegQueryValueEx(hKey, "InstallLocation", NULL, &dwType, (PVOID)pszPath, &cbPath);
+	iError = RegQueryValueEx(hKey, "InstallLocation", NULL, &dwType, (LPBYTE)pszPath, &cbPath);
 	RegCloseKey(hKey);
 	if (iError != ERROR_SUCCESS)
 		return HRESULT_FROM_WIN32(iError);

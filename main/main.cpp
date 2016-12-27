@@ -179,7 +179,7 @@ static void SetupPP(void)
 	D3DPRESENT_PARAMETERS *pPP = (D3DPRESENT_PARAMETERS*)0x01CFCA18;
 	memset(pPP, 0, sizeof(*pPP));
 
-	PDWORD pFormat = (PDWORD)0x005A135C;
+	D3DFORMAT *pFormat = (D3DFORMAT*)0x005A135C;
 	INFO("D3D Format: %ld", *pFormat);
 
 	pPP->Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
@@ -210,7 +210,8 @@ static void SetupPP(void)
 #endif
 }
 
-DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
+
+extern "C" DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
 {
     DWORD dwRfThreadId = pOptions->dwRfThreadId;
     HANDLE hRfThread;

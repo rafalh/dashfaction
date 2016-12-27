@@ -13,13 +13,14 @@
     #define DLL_EXPORT __declspec(dllimport)
 #endif
 
+struct SHARED_OPTIONS;
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-DWORD DLL_EXPORT Init(PVOID pParam);
+DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions);
 
 #ifdef __cplusplus
 }

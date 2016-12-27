@@ -1,7 +1,7 @@
 project "DashFactionLauncher"
 	kind "ConsoleApp"
-	language "C"
-	files {"**.h", "**.c"}
+	language "C++"
+	files {"**.h", "**.c", "**.cpp"}
 	links {"Shlwapi"}
 	
 	configuration "Debug"

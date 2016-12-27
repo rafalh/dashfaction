@@ -46,7 +46,7 @@ int GrReadBackBufferHook(LONG x, LONG y, int Width, int Height, BYTE *pBuffer)
 
 	GrFlushBuffers();
 
-	hr = IDirect3DDevice8_GetBackBuffer(*g_ppGrDevice, 0, 0, &pBackBuffer);
+	hr = IDirect3DDevice8_GetBackBuffer(*g_ppGrDevice, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer);
 	if (FAILED(hr))
 	{
 		ERR("IDirect3DDevice8_GetBackBuffer failed %x", hr);
@@ -126,7 +126,7 @@ void InitScreenshot(void)
 	int ScreenHeight = GetSystemMetrics(SM_CYSCREEN);
     if(ScreenHeight > 1024)
     {
-        g_ScreenshotScanlinesBuf = malloc(ScreenHeight * sizeof(BYTE*));
+        g_ScreenshotScanlinesBuf = (BYTE**)malloc(ScreenHeight * sizeof(BYTE*));
         WriteMemUInt8((PVOID)0x0055A066, ASM_MOV_ECX);
         WriteMemUInt32((PVOID)0x0055A067, (uint32_t)&g_ScreenshotScanlinesBuf[0]);
         WriteMemUInt8Repeat((PVOID)0x0055A06B, ASM_NOP, 2);

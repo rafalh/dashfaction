@@ -1,9 +1,9 @@
 #pragma once
 
-#include <windows.h>
+#include <cstdint>
 
-typedef struct _SHARED_OPTIONS
+struct SHARED_OPTIONS
 {
-	DWORD dwRfThreadId;
-	BOOL bMultiSampling;
-} SHARED_OPTIONS;
+	uintptr_t dwRfThreadId;
+	bool bMultiSampling;
+};
