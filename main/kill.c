@@ -31,7 +31,7 @@ void OnPlayerKill(CPlayer *pKilled, CPlayer *pKiller)
         {
             unsigned cchWeaponName = 0;
             
-            if(pKillerEntity && pKillerEntity->WeaponClassId == *g_pRiotStickClassId)
+            if(pKillerEntity && pKillerEntity->WeaponSel.WeaponClsId == *g_pRiotStickClassId)
             {
                 pszMuiMsg = g_ppszStringsTable[943] ? g_ppszStringsTable[943] : ""; // You just got beat down by
                 strMsg.psz = StringAlloc(strlen(pszMuiMsg) + pKiller->strName.cch + 2);
@@ -41,9 +41,9 @@ void OnPlayerKill(CPlayer *pKilled, CPlayer *pKiller)
             {
                 pszMuiMsg = g_ppszStringsTable[944] ? g_ppszStringsTable[944] : ""; // You were killed by
                 
-                if(pKillerEntity && pKillerEntity->WeaponClassId >= 0 && pKillerEntity->WeaponClassId < 64)
+                if(pKillerEntity && pKillerEntity->WeaponSel.WeaponClsId >= 0 && pKillerEntity->WeaponSel.WeaponClsId < 64)
                 {
-                    pstrWeaponName = &g_pWeaponClasses[pKillerEntity->WeaponClassId].strDisplayName;
+                    pstrWeaponName = &g_pWeaponClasses[pKillerEntity->WeaponSel.WeaponClsId].strDisplayName;
                     if(pstrWeaponName->psz && pstrWeaponName->cch)
                     {
                         pszWeaponName = pstrWeaponName->psz;
@@ -79,7 +79,7 @@ void OnPlayerKill(CPlayer *pKilled, CPlayer *pKiller)
         }
         else
         {
-            if(pKillerEntity && pKillerEntity->WeaponClassId == *g_pRiotStickClassId)
+            if(pKillerEntity && pKillerEntity->WeaponSel.WeaponClsId == *g_pRiotStickClassId)
                 pszMuiMsg = g_ppszStringsTable[946] ? g_ppszStringsTable[946] : ""; // got beat down by
             else
                 pszMuiMsg = g_ppszStringsTable[694] ? g_ppszStringsTable[694] : ""; // was killed by

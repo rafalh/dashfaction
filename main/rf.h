@@ -16,6 +16,11 @@ typedef struct _CVector3
 	float x, y, z;
 } CVector3;
 
+typedef struct _CMatrix3
+{
+    CVector3 rows[3];
+} CMatrix3;
+
 /* String */
 
 typedef struct _CString
@@ -484,20 +489,218 @@ static CPlayer ** const g_ppLocalPlayer = (CPlayer**)0x007C75D4;
 
 /* Object */
 
+enum EObjectType
+{
+    OT_ENTITY = 0,
+    OT_ITEM = 1,
+    OT_WEAPON = 2,
+    OT_3 = 3,
+    OT_CLUTTER = 4,
+    OT_TRIGGER = 5,
+    OT_EVENT = 6,
+    OT_7 = 7,
+    OT_8 = 8,
+    OT_MOVER = 9,
+    OT_10 = 10,
+};
+
+typedef struct SPosRotUnk
+{
+    int field_88;
+    float field_8C;
+    int field_90;
+    int field_94;
+    float fMass;
+    CMatrix3 field_9C;
+    CMatrix3 field_C0;
+    CVector3 Pos;
+    CVector3 vNewPos;
+    CMatrix3 matYawRot;
+} SPosRotUnk;
+
+struct CAnimMesh;
+typedef struct CAnimMesh CAnimMesh;
+
 typedef struct _CObject
 {
-    uint8_t Unknown[0x2C];
-    uint32_t Handle;
+    int field_0;
+    CVector3 field_4;
+    int field_10;
+    int field_14;
+    CString strName;
+    int Uid;
+    enum EObjectType Type;
+    int Team;
+    int Handle;
+    int unk2;
+    float fLife;
+    float fArmor;
+    CVector3 vPos;
+    CMatrix3 matRot;
+    CVector3 vPos2;
+    float fRadius;
+    int Flags;
+    CAnimMesh *pAnimMesh;
+    int field_84;
+    SPosRotUnk PosRotUnk;
+    CMatrix3 field_120;
+    CVector3 vVel;
+    CVector3 vRotChangeUnk;
+    CVector3 field_15C;
+    CVector3 field_168;
+    CVector3 RotChangeUnkDelta;
+    float field_180;
+    int field_184;
+    int field_188;
+    int field_18C;
+    CVector3 field_190;
+    CVector3 field_19C;
+    int MovementFlags;
+    int field_1AC;
+    float field_1B0;
+    int field_1B4;
+    int field_1B8;
+    int field_1BC;
+    CVector3 field_1C0;
+    float field_1CC;
+    int field_1D0[6];
+    int field_1E8;
+    int field_1EC;
+    int field_1F0;
+    int field_1F4;
+    int field_1F8;
+    int iMaterial;
+    int hParent;
+    int field_204;
+    CVector3 field_208;
+    CMatrix3 field_214;
+    CVector3 vPos3;
+    CMatrix3 matRot2;
+    int field_268;
+    int field_26C;
+    int KillerId;
+    int MpHandle;
+    int pAnim;
+    int field_27C;
+    int field_280;
+    int field_284;
+    int field_288;
+    struct _CObject *pNextObj;
 } CObject;
 
 /* Entity */
 
+typedef void ENTITY_CLASS;
+typedef void SMovementMode;
+
+typedef struct SWeaponSelection
+{
+    int field_0;
+    int WeaponClsId;
+    int WeaponClsId2;
+} SWeaponSelection;
+
+typedef struct SEntityMotion
+{
+    CVector3 vRotChange;
+    CVector3 vPosChange;
+    int field_18;
+    float field_1C;
+    float field_20;
+} SEntityMotion;
+
 typedef struct _CEntity
 {
     CObject Head;
-    uint32_t Unknown[32+1+124];
-    int32_t WeaponClassId;
-    /* ... */
+    int field_290;
+    ENTITY_CLASS *pClass;
+    int ClassId;
+    ENTITY_CLASS *pClass2;
+    SWeaponSelection WeaponSel;
+    int Ammo[8];
+    char field_2CC[492];
+    int field_4B8;
+    char field_4BC[100];
+    int field_520;
+    char field_524[164];
+    int field_5C8[80];
+    SEntityMotion MotionChange;
+    int field_72C[12];
+    int field_75C;
+    int field_760[20];
+    float LastRotTime;
+    float LastMoveTime;
+    int field_7B8;
+    int field_7BC[5];
+    int field_7D0;
+    CVector3 vWeaponPos;
+    CMatrix3 matWeaponRot;
+    int field_804;
+    int field_808;
+    int field_80C;
+    int field_810;
+    int field_814[4];
+    __int16 KillType;
+    __int16 field_826;
+    int field_828[9];
+    int field_84C;
+    int field_850;
+    int field_854;
+    SMovementMode *MovementMode;
+    CMatrix3 *field_85C;
+    int field_860;
+    CVector3 vRotYaw;
+    CVector3 vRotYawDelta;
+    CVector3 vRotPitch;
+    CVector3 vRotPitchDelta;
+    CVector3 field_894;
+    CVector3 field_8A0;
+    int field_8AC[5];
+    float field_8C0;
+    int field_8C4;
+    int field_8C8;
+    int field_8CC;
+    int field_8D0[206];
+    int field_C08[200];
+    int field_F28[200];
+    int field_1248[6];
+    int field_1260;
+    int field_1264;
+    int field_1268[71];
+    int field_1384;
+    int field_1388;
+    int field_138C;
+    int field_1390;
+    float field_1394;
+    float field_1398;
+    int field_139C[5];
+    int field_13B0;
+    int field_13B4;
+    CVector3 field_13B8;
+    int field_13C4[7];
+    CVector3 field_13E0;
+    int field_13EC;
+    int field_13F0[4];
+    int field_1400;
+    char field_1404[16];
+    int field_1414;
+    char field_1418[16];
+    int field_1428;
+    int field_142C;
+    CPlayer *pLocalPlayer;
+    CVector3 vPitchMin;
+    CVector3 vPitchMax;
+    int field_144C[8];
+    int hUnkEntity;
+    int field_1470;
+    int AmbientColor;
+    int field_1478;
+    int field_147C;
+    int field_1480;
+    int field_1484;
+    int field_1488;
+    int RespawnVfx;
+    int field_1490;
 } CEntity;
 
 typedef CEntity *(*PFN_HANDLE_TO_ENTITY)(uint32_t hEntity);
@@ -598,6 +801,14 @@ static const PFN_BAN_IP RfBanIp = (PFN_BAN_IP)0x0046D0F0;
 
 typedef void (*PFN_PACKET_HANDLER)(BYTE *pData, NET_ADDR *pAddr);
 static const PFN_PACKET_HANDLER RfHandleNewPlayerPacket = (PFN_PACKET_HANDLER)0x0047A580;
+
+typedef void(*PFN_RENDER_PLAYER_ARM)(CPlayer *pPlayer);
+static const PFN_RENDER_PLAYER_ARM RenderPlayerArm = (PFN_RENDER_PLAYER_ARM)0x004A2B30;
+static const PFN_RENDER_PLAYER_ARM RenderPlayerArm2 = (PFN_RENDER_PLAYER_ARM)0x004AB1A0;
+
+typedef void(*PFN_SETUP_PLAYER_WEAPON_MESH)(CPlayer *pPlayer, int WeaponClsId);
+static const PFN_SETUP_PLAYER_WEAPON_MESH SetupPlayerWeaponMesh = (PFN_SETUP_PLAYER_WEAPON_MESH)0x004AA230;
+
 
 /* Graphics */
 
