@@ -3,18 +3,20 @@
 #include "rf.h"
 #include "rfproto.h"
 
-int g_ScoreRflogoTexture = 0;
-int g_HudFlagRedTexture = 0;
-int g_HudFlagBlueTexture = 0;
+static int g_ScoreRflogoTexture = 0;
+static int g_HudFlagRedTexture = 0;
+static int g_HudFlagBlueTexture = 0;
+static bool g_ScoreboardHidden = false;
 
-int ScoreboardSortFunc(const void *Ptr1, const void *Ptr2)
+static int ScoreboardSortFunc(const void *Ptr1, const void *Ptr2)
 {
     CPlayer *pPlayer1 = *((CPlayer**)Ptr1), *pPlayer2 = *((CPlayer**)Ptr2);
     return pPlayer2->pStats->iScore - pPlayer1->pStats->iScore;
 }
 
-void DrawScoreboardInternalHook(BOOL bDraw)
+static void DrawScoreboardInternalHook(BOOL bDraw)
 {
+    if (g_ScoreboardHidden) return;
     if(bDraw)
     {
         unsigned i, x, x2, y, y2;
@@ -173,4 +175,9 @@ void InitScoreboard(void)
 {
     WriteMemUInt8((PVOID)0x00470880, ASM_LONG_JMP_REL);
     WriteMemUInt32((PVOID)0x00470881, (ULONG_PTR)DrawScoreboardInternalHook - (0x00470880 + 0x5));
+}
+
+void SetScoreboardHidden(bool hidden)
+{
+    g_ScoreboardHidden = hidden;
 }

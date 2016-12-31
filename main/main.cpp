@@ -16,6 +16,7 @@
 #include "kill.h"
 #include "screenshot.h"
 #include "commands.h"
+#include "spectate.h"
 #include "wndproc.h"
 #include <stdio.h>
 #include <stdint.h>
@@ -58,6 +59,9 @@ static void DrawConsoleAndProcessKbdFifoHook(BOOL bServer)
     
 #ifdef LEVELS_AUTODOWNLOADER
     RenderDownloadProgress();
+#endif
+#if SPECTATE_ENABLE
+    DrawSpectateModeUI();
 #endif
 }
 
@@ -353,6 +357,9 @@ extern "C" DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
 	/* Default port: 0 */
 	WriteMemUInt16((PVOID)0x0059CDE4, 0);
 	
+    // Spectate
+    InitSpectateMode();
+
     /* Init modules */
     InitGamma();
     InitWndProc();

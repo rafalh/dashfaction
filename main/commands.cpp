@@ -6,6 +6,7 @@
 #include "main.h"
 #include "config.h"
 #include "sharedoptions.h"
+#include "spectate.h"
 
 extern SHARED_OPTIONS g_Options;
 
@@ -78,16 +79,16 @@ static void TestCmdHandler(void)
 
 static void SpectateCmdHandler(void)
 {
-    if(*g_pbCmdRun)
+    if (*g_pbCmdRun)
     {
-        if(*g_pbNetworkGame)
+        if (*g_pbNetworkGame)
         {
             CPlayer *pPlayer;
             RfCmdGetNextArg(CMD_ARG_NONE | CMD_ARG_STR, 0);
-            if(*g_piCmdArgType & CMD_ARG_STR)
+            if (*g_piCmdArgType & CMD_ARG_STR)
             {
                 pPlayer = FindPlayer(g_pszCmdArg);
-                if(!pPlayer)
+                if (!pPlayer)
                     RfConsolePrintf("Cannot find player: %s", g_pszCmdArg);
 			}
 			else {
@@ -95,12 +96,8 @@ static void SpectateCmdHandler(void)
 				pPlayer = *g_ppLocalPlayer;
 			}
             
-            if(*g_ppLocalPlayer && (*g_ppLocalPlayer)->pCamera && pPlayer)
-            {
-                (*g_ppLocalPlayer)->pCamera->pPlayer = pPlayer;
-                //(*g_ppLocalPlayer)->pCamera->pEntity->hParent = pPlayer->hEntity;
-            }
-                
+            if (pPlayer)
+                SetSpectateModeTarget(pPlayer);
         } else
             RfConsoleWrite("Works only in multiplayer game!", NULL);
     }

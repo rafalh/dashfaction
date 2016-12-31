@@ -297,7 +297,7 @@ typedef struct _CAMERA
 {
     struct _CEntity *pEntity;
     struct _CPlayer *pPlayer;
-    enum{RF_CAM_1ST_PERSON, RF_CAM_3RD_PERSON, RF_CAM_FREE} Type;
+    enum { RF_CAM_1ST_PERSON, RF_CAM_3RD_PERSON, RF_CAM_FREE} Type;
 } CAMERA;
 
 typedef struct _CPlayer
@@ -486,6 +486,8 @@ typedef struct _CPlayer
 
 static CPlayer ** const g_ppPlayersList = (CPlayer**)0x007C75CC;
 static CPlayer ** const g_ppLocalPlayer = (CPlayer**)0x007C75D4;
+
+constexpr auto KillLocalPlayer = (void(*)())0x004757A0;
 
 /* Object */
 
@@ -744,6 +746,35 @@ static CString * const g_pstrServName = (CString*)0x0064EC28;
 
 /* Other */
 
+enum EGameCtrl
+{
+    GC_PRIMARY_ATTACK = 0x0,
+    GC_SECONDARY_ATTACK = 0x1,
+    GC_USE = 0x2,
+    GC_JUMP = 0x3,
+    GC_CROUCH = 0x4,
+    GC_HIDE_WEAPON = 0x5,
+    GC_RELOAD = 0x6,
+    GC_NEXT_WEAPON = 0x7,
+    GC_PREV_WEAPON = 0x8,
+    GC_CHAT = 0x9,
+    GC_TEAM_CHAT = 0xA,
+    GC_FORWARD = 0xB,
+    GC_BACKWARD = 0xC,
+    GC_SLIDE_LEFT = 0xD,
+    GC_SLIDE_RIGHT = 0xE,
+    GC_SLIDE_UP = 0xF,
+    GC_SLIDE_DOWN = 0x10,
+    GC_LOOK_DOWN = 0x11,
+    GC_LOOK_UP = 0x12,
+    GC_TURN_LEFT = 0x13,
+    GC_TURN_RIGHT = 0x14,
+    GC_MESSAGES = 0x15,
+    GC_MP_STATS = 0x16,
+    GC_QUICK_SAVE = 0x17,
+    GC_QUICK_LOAD = 0x18,
+};
+
 static char * const g_pszRootPath = (char*)0x018060E8;
 static float * const g_fFps = (float*)0x005A4018;
 static uint32_t * const g_pSimultaneousPing = (uint32_t*)0x00599CD8;
@@ -753,6 +784,7 @@ static float * const g_pfMinFramerate = (float*)0x005A4024;
 static uint8_t * const g_pbNetworkGame = (uint8_t*)0x0064ECB9;
 static uint8_t * const g_pbLocalNetworkGame = (uint8_t*)0x0064ECBA;
 static uint32_t * const g_pbDedicatedServer = (uint32_t*)0x01B0D75C;
+static bool * const g_pDbgWeapon = (bool*)0x007CAB59;
 
 typedef const char *(*PFN_GET_JOIN_FAILED_STR)(unsigned Reason);
 static PFN_GET_JOIN_FAILED_STR const RfGetJoinFailedStr = (PFN_GET_JOIN_FAILED_STR)0x0047BE60;
@@ -809,6 +841,9 @@ static const PFN_RENDER_PLAYER_ARM RenderPlayerArm2 = (PFN_RENDER_PLAYER_ARM)0x0
 typedef void(*PFN_SETUP_PLAYER_WEAPON_MESH)(CPlayer *pPlayer, int WeaponClsId);
 static const PFN_SETUP_PLAYER_WEAPON_MESH SetupPlayerWeaponMesh = (PFN_SETUP_PLAYER_WEAPON_MESH)0x004AA230;
 
+constexpr auto HandleCtrlInGame = (void(*)(CPlayer *pPlayer, EGameCtrl KeyId, char WasPressed))0x004A6210;
+constexpr auto IsPlayerEntityInvalid = (bool(*)(CPlayer *pPlayer))0x004A4920;
+constexpr auto RegReadDword = (int(*)(char *pszSubKeyName, LPCSTR lpValueName, DWORD *lpData, int DefaultValue))0x004A4920;
 
 /* Graphics */
 
@@ -817,6 +852,8 @@ static const PFN_OBJECT_RENDER RfRenderEntity = (PFN_OBJECT_RENDER)0x00421850;
 
 typedef void (*PFN_GR_FLUSH_BUFFERS)(void);
 static const PFN_GR_FLUSH_BUFFERS GrFlushBuffers = (PFN_GR_FLUSH_BUFFERS)0x00559D90;
+
+constexpr auto GrLoadFont = (int(*)(const char *pszFileName, int a2))0x0051F6E0;
 
 static int *g_pRfWndWidth = (int*)0x017C7BC4;
 static int *g_pRfWndHeight = (int*)0x017C7BC8;
