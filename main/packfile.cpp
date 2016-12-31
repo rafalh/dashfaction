@@ -19,6 +19,8 @@ static unsigned g_cFilesInVfs = 0;
 #define DEBUG_VFS_FILENAME1 "Flame01_02.tga"
 #define DEBUG_VFS_FILENAME2 "big_glassblast_a.tga"
 
+#define VFS_DBGPRINT TRACE
+
 static BOOL VfsLoadPackfileHook(const char *pszFilename, const char *pszDir)
 {
     char szFullPath[256], Buf[0x800];
@@ -27,9 +29,7 @@ static BOOL VfsLoadPackfileHook(const char *pszFilename, const char *pszDir)
     BOOL bRet = FALSE;
     unsigned i, cFilesInBlock, cAdded, OffsetInBlocks;
     
-#if DEBUG_VFS
-	TRACE("Load packfile %s %s", pszDir, pszFilename);
-#endif
+    VFS_DBGPRINT("Load packfile %s %s", pszDir, pszFilename);
     
     sprintf(szFullPath, "%s%s%s", g_pszRootPath, pszDir ? pszDir : "", pszFilename);
     if(!pszFilename || strlen(pszFilename) > 0x1F || strlen(szFullPath) > 0x7F)
@@ -126,8 +126,7 @@ static BOOL VfsBuildPackfileEntriesListHook(const char *pszExtList, char **ppFil
     unsigned i, j, cbBuf = 1;
     PACKFILE *pPackfile;
     
-    if(DEBUG_VFS)
-        TRACE("VfsBuildPackfileEntriesListHook called");
+    VFS_DBGPRINT("VfsBuildPackfileEntriesListHook called");
     *pcFiles = 0;
     *ppFilenames = 0;
     
@@ -213,7 +212,7 @@ static void VfsAddFileToLookupTableHook(PACKFILE_ENTRY *pEntry)
         if(!pLookupTableItem->pPackfileEntry)
         {
             if(DEBUG_VFS && (!stricmp(pEntry->pszFileName, DEBUG_VFS_FILENAME1) || !stricmp(pEntry->pszFileName, DEBUG_VFS_FILENAME2) || g_bTest))
-                TRACE("Add 1: %s (%x)", pEntry->pszFileName, pEntry->dwNameChecksum);
+                VFS_DBGPRINT("Add 1: %s (%x)", pEntry->pszFileName, pEntry->dwNameChecksum);
                 
             break;
         }
@@ -221,22 +220,20 @@ static void VfsAddFileToLookupTableHook(PACKFILE_ENTRY *pEntry)
         if(!stricmp(pLookupTableItem->pPackfileEntry->pszFileName, pEntry->pszFileName))
         {
             if(DEBUG_VFS && (!stricmp(pEntry->pszFileName, DEBUG_VFS_FILENAME1) || !stricmp(pEntry->pszFileName, DEBUG_VFS_FILENAME2) || g_bTest))
-                TRACE("Add 2: %s (%x)", pEntry->pszFileName, pEntry->dwNameChecksum);
+                VFS_DBGPRINT("Add 2: %s (%x)", pEntry->pszFileName, pEntry->dwNameChecksum);
             break;
         }
             
         if(!pLookupTableItem->pNext)
         {
             if(DEBUG_VFS && (!stricmp(pEntry->pszFileName, DEBUG_VFS_FILENAME1) || !stricmp(pEntry->pszFileName, DEBUG_VFS_FILENAME2) || g_bTest))
-                TRACE("Add 3: %s (%x)", pEntry->pszFileName, pEntry->dwNameChecksum);
+                VFS_DBGPRINT("Add 3: %s (%x)", pEntry->pszFileName, pEntry->dwNameChecksum);
             
             pLookupTableItem->pNext = (VFS_LOOKUP_TABLE_NEW*)malloc(sizeof(VFS_LOOKUP_TABLE_NEW));
             pLookupTableItem = pLookupTableItem->pNext;
             pLookupTableItem->pNext = NULL;
             break;
         }
-        if(DEBUG_VFS && (!stricmp(pEntry->pszFileName, DEBUG_VFS_FILENAME1) || !stricmp(pEntry->pszFileName, DEBUG_VFS_FILENAME2) || g_bTest))
-            TRACE(0, NULL, "next", 0);
         pLookupTableItem = pLookupTableItem->pNext;
     }
     
@@ -257,7 +254,7 @@ static PACKFILE_ENTRY *VfsFindFileInternalHook(const char *pszFilename)
            !stricmp(pLookupTableItem->pPackfileEntry->pszFileName, pszFilename))
         {
             if(DEBUG_VFS && (strstr(pszFilename, DEBUG_VFS_FILENAME1) || strstr(pszFilename, DEBUG_VFS_FILENAME2)))
-                TRACE("Found: %s (%x)", pszFilename, Checksum);
+                VFS_DBGPRINT("Found: %s (%x)", pszFilename, Checksum);
             return pLookupTableItem->pPackfileEntry;
         }
         
@@ -265,9 +262,7 @@ static PACKFILE_ENTRY *VfsFindFileInternalHook(const char *pszFilename)
     }
     while(pLookupTableItem);
     
-#if DEBUG_VFS
-	TRACE("Cannot find: %s (%x)", pszFilename, Checksum);
-#endif
+    VFS_DBGPRINT("Cannot find: %s (%x)", pszFilename, Checksum);
 	
     /*pLookupTableItem = &g_pVfsLookupTableNew[Checksum % 20713];
     do
