@@ -214,6 +214,28 @@ static void SetupPP(void)
 #endif
 }
 
+void  __declspec(naked) CrashFix0055CE59()
+{
+	_asm
+	{
+		shl   edi, 5
+		lea   edx, [esp + 0x38 - 0x28]
+		mov   eax, [eax + edi]
+		test  eax, eax
+		jz    CrashFix0055CE59_label1
+		//jmp CrashFix0055CE59_label1
+		push  0
+		push  0
+		push  edx
+		push  0
+		push  eax
+		mov   ecx, 0x0055CE59
+		jmp   ecx
+	CrashFix0055CE59_label1:
+		mov   ecx, 0x0055CF23
+		jmp   ecx
+	}
+}
 
 extern "C" DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
 {
@@ -346,6 +368,11 @@ extern "C" DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
     
     /* Crash-fix... (probably argument for function is invalid); Page Heap is needed */
     WriteMemUInt32((PVOID)(0x0056A28C + 1), 0);
+
+	/* Crash-fix for pdm04 (FIXME) */
+	WriteMemUInt8((PVOID)0x0055CE47, ASM_LONG_JMP_REL);
+	WriteMemPtr((PVOID)0x0055CE48, (PVOID)((ULONG_PTR)CrashFix0055CE59 - (0x0055CE48 + 0x4)));
+	WriteMemUInt8((PVOID)0x00412370, ASM_RET); // disable function calling GrLock without checking for success (no idea what it does)
     
     //WriteMemUInt32((PVOID)0x00488BE9, ((ULONG_PTR)RenderEntityHook) - (0x00488BE8 + 0x5));
     
