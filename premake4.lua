@@ -28,3 +28,5 @@
 	include "vendor"
 	include "launcher"
 	include "main"
+	include "mod_common"
+	include "logger"
