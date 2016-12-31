@@ -151,6 +151,32 @@ HRESULT GetRfPath(char *pszPath, DWORD cbPath)
     return S_OK;
 }
 
+bool IsWindowedModeEnabled()
+{
+	HKEY hKey;
+	LONG iError;
+	DWORD dwType, dwWindowMode, dwSize = sizeof(dwWindowMode);
+
+	/* Open RF registry key */
+	iError = RegOpenKeyEx(HKEY_CURRENT_USER, "SOFTWARE\\Volition\\Red Faction", 0, KEY_READ, &hKey);
+	if (iError != ERROR_SUCCESS)
+	{
+		printf("RegOpenKeyEx failed: %lu\n", GetLastError());
+		return FALSE;
+	}
+
+	/* Read Pure Faction window mode setting */
+	iError = RegQueryValueEx(hKey, "windowMode", NULL, &dwType, (LPBYTE)&dwWindowMode, &dwSize);
+	RegCloseKey(hKey);
+	if (iError != ERROR_SUCCESS)
+		return FALSE;
+
+	if (dwType != REG_DWORD)
+		return FALSE;
+
+	return dwWindowMode != 3;
+}
+
 HRESULT GetRfSteamPath(char *pszPath, DWORD cbPath)
 {
 	HKEY hKey;
@@ -205,13 +231,20 @@ int main(int argc, const char *argv[])
 	SHARED_OPTIONS Options;
     
     printf("Starting " PRODUCT_NAME " " VER_STR "!\n");
-    
-	Options.bMultiSampling = FALSE;
+
+	//Options.bMultiSampling = FALSE;
+	Options.bMultiSampling = TRUE;
+	Options.bWindowed = IsWindowedModeEnabled();
+	printf("Windowed mode: %d\n", Options.bWindowed);
 
 	for (i = 1; i < (unsigned) argc; ++i)
 	{
 		if (!strcmp(argv[i], "-msaa"))
 			Options.bMultiSampling = TRUE;
+		else if (!strcmp(argv[i], "-no-msaa"))
+			Options.bMultiSampling = FALSE;
+		else if (!strcmp(argv[i], "-windowed"))
+			Options.bWindowed = TRUE;
 		else if (!strcmp(argv[i], "-h"))
 			printf("Supported options:\n"
 				"\t-msaa  Enable experimental Multisample Anti-Aliasing support");

@@ -232,17 +232,23 @@ extern "C" DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
     WriteMemUInt8((PVOID)0x004B31B6, ASM_SHORT_JMP_REL);
 #endif /* NO_CD_FIX */
     
-#if USE_WINDOWED_MODE
-	/* Enable windowed mode */
-    //WriteMemUInt32((PVOID)(0x004B29A5 + 6), 0xC8);
-    //WriteMemUInt32((PVOID)(0x0050C4E3 + 1), WS_POPUP|WS_SYSMENU);
+#if WINDOWED_MODE_SUPPORT
+	if (pOptions->bWindowed)
+	{
+		/* Enable windowed mode */
+		WriteMemUInt32((PVOID)(0x004B29A5 + 6), 0xC8);
+		//WriteMemUInt32((PVOID)(0x0050C4E3 + 1), WS_POPUP|WS_SYSMENU);
+	}
 #endif
 
 	//WriteMemUInt8((PVOID)0x00524C98, ASM_SHORT_JMP_REL); // disable window hooks
 
 #if MULTISAMPLING_SUPPORT
 	if (pOptions->bMultiSampling)
-		WriteMemUInt32((PVOID)(0x00545B4D + 6), D3DSWAPEFFECT_DISCARD);
+	{
+		WriteMemUInt32((PVOID)(0x00545B4D + 6), D3DSWAPEFFECT_DISCARD); // full screen
+		WriteMemUInt32((PVOID)(0x00545AE3 + 6), D3DSWAPEFFECT_DISCARD); // windowed
+	}
 #endif
 
 	WriteMemUInt8Repeat((PVOID)0x00545AA7, ASM_NOP, 0x00545AB5 - 0x00545AA7);
