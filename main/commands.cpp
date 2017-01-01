@@ -50,6 +50,7 @@ static void DebugCmdHandler(void)
     memset((char*)0x0062FE19, bDbg, 9);
     *(char*)0x00856500 = bDbg;
     *(int*)0x006FED24 = bDbg;
+    *g_pDbgWeapon = bDbg;
 }
 
 typedef void (*PFN_SET_PLAYER_WEAPON_ACTION)(CPlayer *pPlayer, unsigned iAction);
@@ -130,6 +131,20 @@ static void AntiAliasingCmdHandler(void)
 }
 #endif
 
+#if DIRECTINPUT_SUPPORT
+static void InputModeCmdHandler(void)
+{
+    if (*g_pbCmdRun)
+    {
+        *g_pbDirectInputDisabled = !*g_pbDirectInputDisabled;
+        if (*g_pbDirectInputDisabled)
+            RfConsolePrintf("DirectInput is disabled");
+        else
+            RfConsolePrintf("DirectInput is enabled");
+    }
+}
+#endif
+
 CCmd g_Commands[] = {
 #if SPLITSCREEN_ENABLE
     {"splitscreen", "Starts split screen mode", SplitScreenCmdHandler},
@@ -142,6 +157,9 @@ CCmd g_Commands[] = {
 #endif
 #if MULTISAMPLING_SUPPORT
 	{ "antialiasing", "Toggles anti-aliasing", AntiAliasingCmdHandler },
+#endif
+#if DIRECTINPUT_SUPPORT
+    { "inputmode", "Toggles input mode", InputModeCmdHandler },
 #endif
     {"unban_last", "Unbans last banned player", UnbanLastCmdHandler},
 #ifndef NDEBUG

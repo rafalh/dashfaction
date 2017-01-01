@@ -123,6 +123,10 @@ static void InitGameHook(void)
 	}
 #endif
 
+#if DIRECTINPUT_SUPPORT
+    *g_pbDirectInputDisabled = !DIRECTINPUT_ENABLED;
+#endif
+
     /* Allow modded strings.tbl in ui.vpp */
     ForceFileFromPackfile("strings.tbl", "ui.vpp");
     
@@ -375,17 +379,15 @@ extern "C" DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
 	WriteMemUInt8((PVOID)0x00412370, ASM_RET); // disable function calling GrLock without checking for success (no idea what it does)
     
     //WriteMemUInt32((PVOID)0x00488BE9, ((ULONG_PTR)RenderEntityHook) - (0x00488BE8 + 0x5));
-    
-    /* Don't use Direct Input */
-    //WriteMemUInt8Repeat((PVOID)0x0051E02F, 0x90, 5 + 3 + 2);
-    
+
+#if DIRECTINPUT_SUPPORT
+    *g_pbDirectInputDisabled = 0;
+#endif
+
 	/* Allow ports < 1023 (especially 0 - any port) */
 	WriteMemUInt8Repeat((PVOID)0x00528F24, 0x90, 2);
 	/* Default port: 0 */
 	WriteMemUInt16((PVOID)0x0059CDE4, 0);
-	
-    // Spectate
-    InitSpectateMode();
 
     /* Init modules */
     InitGamma();
@@ -400,7 +402,9 @@ extern "C" DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
     InitKill();
     VfsApplyHooks(); /* Use new VFS without file count limit */
     InitCamera();
+    InitSpectateMode();
     
+#if 0
     /* Resume RF thread */
     hRfThread = OpenThread(THREAD_SUSPEND_RESUME, FALSE, dwRfThreadId);
     if (!hRfThread)
@@ -410,6 +414,7 @@ extern "C" DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
     }
     ResumeThread(hRfThread);
     CloseHandle(hRfThread);
+#endif
     
     return 1; /* success */
 }

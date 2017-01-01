@@ -842,8 +842,14 @@ typedef void(*PFN_SETUP_PLAYER_WEAPON_MESH)(CPlayer *pPlayer, int WeaponClsId);
 static const PFN_SETUP_PLAYER_WEAPON_MESH SetupPlayerWeaponMesh = (PFN_SETUP_PLAYER_WEAPON_MESH)0x004AA230;
 
 constexpr auto HandleCtrlInGame = (void(*)(CPlayer *pPlayer, EGameCtrl KeyId, char WasPressed))0x004A6210;
-constexpr auto IsPlayerEntityInvalid = (bool(*)(CPlayer *pPlayer))0x004A4920;
+
+typedef bool(*PFN_IS_PLAYER_ENTITY_INVALID)(CPlayer *pPlayer);
+constexpr auto IsPlayerEntityInvalid = (PFN_IS_PLAYER_ENTITY_INVALID)0x004A4920;
+
 constexpr auto RegReadDword = (int(*)(char *pszSubKeyName, LPCSTR lpValueName, DWORD *lpData, int DefaultValue))0x004A4920;
+
+constexpr bool *g_pbDirectInputDisabled = (bool*)0x005A4F88;
+
 
 /* Graphics */
 
@@ -859,6 +865,7 @@ static int *g_pRfWndWidth = (int*)0x017C7BC4;
 static int *g_pRfWndHeight = (int*)0x017C7BC8;
 
 static D3DCAPS8 *g_pRfGrDeviceCaps = (D3DCAPS8*)0x01CFCAC8;
+constexpr uint32_t *g_pDrawTextUnk = (uint32_t*)0x17C7C5C;
 
 /* RF stdlib functions are not compatible with GCC */
 
