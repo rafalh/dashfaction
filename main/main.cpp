@@ -380,6 +380,9 @@ extern "C" DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
     
     //WriteMemUInt32((PVOID)0x00488BE9, ((ULONG_PTR)RenderEntityHook) - (0x00488BE8 + 0x5));
 
+    /* Switch UI language */
+    WriteMemUInt8((PVOID)(0x004B27D2 + 1), (uint8_t)GetInstalledGameLang());
+
 #if DIRECTINPUT_SUPPORT
     *g_pbDirectInputDisabled = 0;
 #endif
@@ -403,7 +406,7 @@ extern "C" DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
     VfsApplyHooks(); /* Use new VFS without file count limit */
     InitCamera();
     InitSpectateMode();
-    
+
 #if 0
     /* Resume RF thread */
     hRfThread = OpenThread(THREAD_SUSPEND_RESUME, FALSE, dwRfThreadId);

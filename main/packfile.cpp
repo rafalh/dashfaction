@@ -16,10 +16,37 @@ static BOOL g_bTest = FALSE;
 static unsigned g_cFilesInVfs = 0;
 
 #define DEBUG_VFS 1
-#define DEBUG_VFS_FILENAME1 "Flame01_02.tga"
-#define DEBUG_VFS_FILENAME2 "big_glassblast_a.tga"
+//#define DEBUG_VFS_FILENAME1 "Flame01_02.tga"
+//#define DEBUG_VFS_FILENAME2 "big_glassblast_a.tga"
 
 #define VFS_DBGPRINT TRACE
+
+static EGameLang DetectInstalledGameLang()
+{
+    char szFullPath[MAX_PATH];
+    const char *LangCodes[] = { "en", "gr", "fr" };
+    for (unsigned i = 0; i < COUNTOF(LangCodes); ++i)
+    {
+        sprintf(szFullPath, "%s/maps_%s.vpp", g_pszRootPath, LangCodes[i]);
+        FILE *pFile = fopen(szFullPath, "rb");
+        if (pFile)
+        {
+            fclose(pFile);
+            return (EGameLang)i;
+        }
+    }
+    WARN("Cannot detect game language");
+    return LANG_EN; // default
+}
+
+EGameLang GetInstalledGameLang()
+{
+    static bool Initialized = false;
+    static EGameLang InstalledGameLang;
+    if (!Initialized)
+        InstalledGameLang = DetectInstalledGameLang();
+    return InstalledGameLang;
+}
 
 static BOOL VfsLoadPackfileHook(const char *pszFilename, const char *pszDir)
 {
@@ -211,23 +238,29 @@ static void VfsAddFileToLookupTableHook(PACKFILE_ENTRY *pEntry)
     {
         if(!pLookupTableItem->pPackfileEntry)
         {
-            if(DEBUG_VFS && (!stricmp(pEntry->pszFileName, DEBUG_VFS_FILENAME1) || !stricmp(pEntry->pszFileName, DEBUG_VFS_FILENAME2) || g_bTest))
+#if DEBUG_VFS && defined(DEBUG_VFS_FILENAME1) && defined(DEBUG_VFS_FILENAME2)
+            if (!stricmp(pEntry->pszFileName, DEBUG_VFS_FILENAME1) || !stricmp(pEntry->pszFileName, DEBUG_VFS_FILENAME2))
                 VFS_DBGPRINT("Add 1: %s (%x)", pEntry->pszFileName, pEntry->dwNameChecksum);
+#endif
                 
             break;
         }
             
         if(!stricmp(pLookupTableItem->pPackfileEntry->pszFileName, pEntry->pszFileName))
         {
-            if(DEBUG_VFS && (!stricmp(pEntry->pszFileName, DEBUG_VFS_FILENAME1) || !stricmp(pEntry->pszFileName, DEBUG_VFS_FILENAME2) || g_bTest))
+#if DEBUG_VFS && defined(DEBUG_VFS_FILENAME1) && defined(DEBUG_VFS_FILENAME2)
+            if (!stricmp(pEntry->pszFileName, DEBUG_VFS_FILENAME1) || !stricmp(pEntry->pszFileName, DEBUG_VFS_FILENAME2))
                 VFS_DBGPRINT("Add 2: %s (%x)", pEntry->pszFileName, pEntry->dwNameChecksum);
+#endif
             break;
         }
             
         if(!pLookupTableItem->pNext)
         {
-            if(DEBUG_VFS && (!stricmp(pEntry->pszFileName, DEBUG_VFS_FILENAME1) || !stricmp(pEntry->pszFileName, DEBUG_VFS_FILENAME2) || g_bTest))
+#if DEBUG_VFS && defined(DEBUG_VFS_FILENAME1) && defined(DEBUG_VFS_FILENAME2)
+            if (!stricmp(pEntry->pszFileName, DEBUG_VFS_FILENAME1) || !stricmp(pEntry->pszFileName, DEBUG_VFS_FILENAME2))
                 VFS_DBGPRINT("Add 3: %s (%x)", pEntry->pszFileName, pEntry->dwNameChecksum);
+#endif
             
             pLookupTableItem->pNext = (VFS_LOOKUP_TABLE_NEW*)malloc(sizeof(VFS_LOOKUP_TABLE_NEW));
             pLookupTableItem = pLookupTableItem->pNext;
@@ -253,8 +286,10 @@ static PACKFILE_ENTRY *VfsFindFileInternalHook(const char *pszFilename)
            pLookupTableItem->pPackfileEntry->dwNameChecksum == Checksum &&
            !stricmp(pLookupTableItem->pPackfileEntry->pszFileName, pszFilename))
         {
-            if(DEBUG_VFS && (strstr(pszFilename, DEBUG_VFS_FILENAME1) || strstr(pszFilename, DEBUG_VFS_FILENAME2)))
+#if DEBUG_VFS && defined(DEBUG_VFS_FILENAME1) && defined(DEBUG_VFS_FILENAME2)
+            if (strstr(pszFilename, DEBUG_VFS_FILENAME1) || strstr(pszFilename, DEBUG_VFS_FILENAME2))
                 VFS_DBGPRINT("Found: %s (%x)", pszFilename, Checksum);
+#endif
             return pLookupTableItem->pPackfileEntry;
         }
         
@@ -282,11 +317,32 @@ static PACKFILE_ENTRY *VfsFindFileInternalHook(const char *pszFilename)
 static void VfsInitHook(void)
 {
     memset(g_pVfsLookupTableNew, 0, sizeof(VFS_LOOKUP_TABLE_NEW) * VFS_LOOKUP_TABLE_SIZE);
-    VfsLoadPackfile("audio.vpp", 0);
-    VfsLoadPackfile("maps_en.vpp", 0);
-    VfsLoadPackfile("levels1.vpp", 0);
-    VfsLoadPackfile("levels2.vpp", 0);
-    VfsLoadPackfile("levels3.vpp", 0);
+    if (GetInstalledGameLang() == LANG_GR)
+    {
+        VfsLoadPackfile("audiog.vpp", 0);
+        VfsLoadPackfile("maps_gr.vpp", 0);
+        VfsLoadPackfile("levels1g.vpp", 0);
+        VfsLoadPackfile("levels2g.vpp", 0);
+        VfsLoadPackfile("levels3g.vpp", 0);
+        VfsLoadPackfile("ltables.vpp", 0);
+    }
+    else if (GetInstalledGameLang() == LANG_FR)
+    {
+        VfsLoadPackfile("audiof.vpp", 0);
+        VfsLoadPackfile("maps_fr.vpp", 0);
+        VfsLoadPackfile("levels1f.vpp", 0);
+        VfsLoadPackfile("levels2f.vpp", 0);
+        VfsLoadPackfile("levels3f.vpp", 0);
+        VfsLoadPackfile("ltables.vpp", 0);
+    }
+    else
+    {
+        VfsLoadPackfile("audio.vpp", 0);
+        VfsLoadPackfile("maps_en.vpp", 0);
+        VfsLoadPackfile("levels1.vpp", 0);
+        VfsLoadPackfile("levels2.vpp", 0);
+        VfsLoadPackfile("levels3.vpp", 0);
+    }
     VfsLoadPackfile("levelsm.vpp", 0);
     //VfsLoadPackfile("levelseb.vpp", 0);
     //VfsLoadPackfile("levelsbg.vpp", 0);
@@ -343,6 +399,9 @@ void VfsApplyHooks(void)
     WriteMemUInt8((PVOID)0x0052BC80, ASM_LONG_JMP_REL);
     WriteMemUInt32((PVOID)0x0052BC81, ((ULONG_PTR)VfsCleanupHook) - (0x0052BC80 + 0x5));
     
+    if (GetInstalledGameLang() != LANG_EN)
+        WriteMemPtr((PVOID)(0x004B082B + 1), (PVOID)"localized_strings.tbl");
+
 #ifdef DEBUG
     WriteMemUInt8((PVOID)0x0052BEF0, 0xFF); // VfsInitPackfileFilesList
     WriteMemUInt8((PVOID)0x0052BF50, 0xFF); // VfsLoadPackfileInternal

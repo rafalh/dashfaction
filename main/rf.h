@@ -775,6 +775,13 @@ enum EGameCtrl
     GC_QUICK_LOAD = 0x18,
 };
 
+enum EGameLang
+{
+    LANG_EN = 0,
+    LANG_GR = 1,
+    LANG_FR = 2,
+};
+
 static char * const g_pszRootPath = (char*)0x018060E8;
 static float * const g_fFps = (float*)0x005A4018;
 static uint32_t * const g_pSimultaneousPing = (uint32_t*)0x00599CD8;
