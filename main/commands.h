@@ -1,3 +1,4 @@
 #pragma once
 
-void RegisterCommands(void);
+void CommandsInit();
+void CommandsAfterGameInit();

@@ -1,7 +1,9 @@
 #include "stdafx.h"
 #include "network.h"
 #include "rf.h"
+#include "pf.h"
 #include "utils.h"
+#include "config.h"
 
 static void ProcessUnreliableGamePacketsHook(const char *pData, int cbData, void *pAddr, void *pPlayer)
 {

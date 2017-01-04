@@ -407,6 +407,10 @@ void VfsApplyHooks(void)
     WriteMemUInt8((PVOID)0x0052BF50, 0xFF); // VfsLoadPackfileInternal
     WriteMemUInt8((PVOID)0x0052C440, 0xFF); // VfsFindPackfileEntry
 #endif
+
+    /* Load ui.vpp before tables.vpp - not used anymore */
+    //WriteMemPtr((PVOID)0x0052BC58, "ui.vpp");
+    //WriteMemPtr((PVOID)0x0052BC67, "tables.vpp");
 }
 
 void ForceFileFromPackfile(const char *pszName, const char *pszPackfile)

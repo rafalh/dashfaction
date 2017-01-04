@@ -2,3 +2,4 @@
 
 void GraphicsInit();
 void GraphicsAfterGameInit();
+void GraphicsDrawFpsCounter();

@@ -792,7 +792,11 @@ static float * const g_pfMinFramerate = (float*)0x005A4024;
 static uint8_t * const g_pbNetworkGame = (uint8_t*)0x0064ECB9;
 static uint8_t * const g_pbLocalNetworkGame = (uint8_t*)0x0064ECBA;
 static uint32_t * const g_pbDedicatedServer = (uint32_t*)0x01B0D75C;
-static bool * const g_pDbgWeapon = (bool*)0x007CAB59;
+
+constexpr auto g_pbDbgNetwork = (uint32_t*)0x006FED24;
+constexpr auto g_pbDbgFlagsArray = (uint8_t*)0x0062FE19;
+constexpr auto g_pbRenderEventIcons = (uint8_t*)0x00856500;
+constexpr auto g_pbDbgWeapon = (uint8_t*)0x007CAB59;
 
 typedef const char *(*PFN_GET_JOIN_FAILED_STR)(unsigned Reason);
 static PFN_GET_JOIN_FAILED_STR const RfGetJoinFailedStr = (PFN_GET_JOIN_FAILED_STR)0x0047BE60;

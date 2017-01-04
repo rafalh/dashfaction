@@ -7,13 +7,11 @@
 #include "autodl.h"
 #include "utils.h"
 #include "rf.h"
-#include "pf.h"
 #include "scoreboard.h"
 #include "hud.h"
 #include "packfile.h"
 #include "lazyban.h"
 #include "gamma.h"
-#include "camera.h"
 #include "kill.h"
 #include "screenshot.h"
 #include "commands.h"
@@ -36,13 +34,9 @@ static void ProcessWaitingMessages()
 
 static void DrawConsoleAndProcessKbdFifoHook(BOOL bServer)
 {
-    char szBuf[64];
-    
     RfDrawConsoleAndProcessKbdFifo(bServer);
     
-    sprintf(szBuf, "FPS: %.1f", *g_fFps);
-    GrSetColorRgb(0, 255, 0, 255);
-    GrDrawAlignedText(2, RfGetWidth() - 10, 60, szBuf, -1, *((uint32_t*)0x17C7C5C));
+    GraphicsDrawFpsCounter();
     
 #ifdef LEVELS_AUTODOWNLOADER
     RenderDownloadProgress();
@@ -65,7 +59,7 @@ static void InitGameHook(void)
     /* Allow modded strings.tbl in ui.vpp */
     ForceFileFromPackfile("strings.tbl", "ui.vpp");
     
-    RegisterCommands();
+    CommandsAfterGameInit();
 }
 
 static void CleanupGameHook(void)
@@ -172,10 +166,6 @@ extern "C" DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
     /* Sound loop fix */
     WriteMemUInt8((PVOID)0x00505D08, 0x00505D5B - (0x00505D07 + 0x2));
     
-    /* Load ui.vpp before tables.vpp */
-    WriteMemPtr((PVOID)0x0052BC58, "ui.vpp");
-    WriteMemPtr((PVOID)0x0052BC67, "tables.vpp");
-    
     /* DrawConsoleAndProcssKbdFifo hook */
     WriteMemPtr((PVOID)0x004B2DD4, (PVOID)((ULONG_PTR)DrawConsoleAndProcessKbdFifoHook - (0x004B2DD3 + 0x5)));
 
@@ -215,8 +205,8 @@ extern "C" DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
     InitLazyban();
     InitKill();
     VfsApplyHooks(); /* Use new VFS without file count limit */
-    InitCamera();
     InitSpectateMode();
+    CommandsInit();
 
 #if 0
     /* Resume RF thread */

@@ -28,7 +28,7 @@ static void SplitScreenCmdHandler(void)
 
 static void MaxFpsCmdHandler(void)
 {
-    if(*g_pbCmdRun)
+    if (*g_pbCmdRun)
     {
         RfCmdGetNextArg(CMD_ARG_NONE | CMD_ARG_FLOAT, 0);
         
@@ -38,7 +38,7 @@ static void MaxFpsCmdHandler(void)
             RfConsolePrintf("Maximal FPS: %.1f", 1.0f / *g_pfMinFramerate);
     }
     
-    if(*g_pbCmdHelp)
+    if (*g_pbCmdHelp)
     {
         RfConsoleWrite(g_ppszStringsTable[886], NULL);
         RfConsoleWrite("     maxfps <limit>", NULL);
@@ -47,35 +47,29 @@ static void MaxFpsCmdHandler(void)
 
 static void DebugCmdHandler(void)
 {
-    int bDbg = !(*(char*)0x0062FE19);
-    memset((char*)0x0062FE19, bDbg, 9);
-    *(char*)0x00856500 = bDbg;
-    *(int*)0x006FED24 = bDbg;
-    *g_pDbgWeapon = bDbg;
+    bool bDbg = !g_pbDbgFlagsArray[0];
+    memset((char*)g_pbDbgFlagsArray, bDbg, 9);
+    *g_pbRenderEventIcons = bDbg;
+    *g_pbDbgNetwork = bDbg;
+    *g_pbDbgWeapon = bDbg;
 }
-
-typedef void (*PFN_SET_PLAYER_WEAPON_ACTION)(CPlayer *pPlayer, unsigned iAction);
-static const PFN_SET_PLAYER_WEAPON_ACTION RfSetPlayerWeaponAction = (PFN_SET_PLAYER_WEAPON_ACTION)0x004A9380;
-
-typedef void (*PFN_TEST)(CPlayer *pPlayer, unsigned iWeaponCls);
-static const PFN_TEST RfShoot = (PFN_TEST)0x0041AE70;
 
 #ifndef NDEBUG
 
 static void TestCmdHandler(void)
 {
-    if(*g_pbCmdRun)
+    if (*g_pbCmdRun)
     {
         int *ptr = (int*)HeapAlloc(GetProcessHeap(), 0, 8);
         ptr[10] = 1;
         RfConsolePrintf("test done %p", ptr);
     }
     
-    if(*g_pbCmdHelp)
+    if (*g_pbCmdHelp)
         RfConsoleWrite("     test <n>", NULL);
 }
 
-#endif // DEBUG
+#endif // NDEBUG
 
 #if SPECTATE_ENABLE
 
@@ -104,7 +98,7 @@ static void SpectateCmdHandler(void)
             RfConsoleWrite("Works only in multiplayer game!", NULL);
     }
     
-    if(*g_pbCmdHelp)
+    if (*g_pbCmdHelp)
     {
         RfConsoleWrite(g_ppszStringsTable[886], NULL);
         RfConsolePrintf("     spectate <%s>", g_ppszStringsTable[835]);
@@ -130,7 +124,7 @@ static void AntiAliasingCmdHandler(void)
         }
     }
 }
-#endif
+#endif // MULTISAMPLING_SUPPORT
 
 #if DIRECTINPUT_SUPPORT
 static void InputModeCmdHandler(void)
@@ -144,7 +138,20 @@ static void InputModeCmdHandler(void)
             RfConsolePrintf("DirectInput is enabled");
     }
 }
-#endif
+#endif // DIRECTINPUT_SUPPORT
+
+#if CAMERA_1_3_COMMANDS
+
+static int CanPlayerFireHook(CPlayer *pPlayer)
+{
+    if (!(pPlayer->field_10 & 0x10))
+        return 0;
+    if (*g_pbNetworkGame && (pPlayer->pCamera->Type == RF_CAM_FREE || pPlayer->pCamera->pPlayer != pPlayer))
+        return 0;
+    return 1;
+}
+
+#endif // if CAMERA_1_3_COMMANDS
 
 CCmd g_Commands[] = {
 #if SPLITSCREEN_ENABLE
@@ -168,14 +175,26 @@ CCmd g_Commands[] = {
 #endif
 };
 
-void RegisterCommands(void)
+void CommandsInit(void)
+{
+#if CAMERA_1_3_COMMANDS
+    /* Enable camera1-3 in multiplayer and hook CanPlayerFire to disable shooting in camera2 */
+    WriteMemUInt8Repeat((PVOID)0x00431280, ASM_NOP, 2);
+    WriteMemUInt8Repeat((PVOID)0x004312E0, ASM_NOP, 2);
+    WriteMemUInt8Repeat((PVOID)0x00431340, ASM_NOP, 2);
+    WriteMemUInt8((PVOID)0x004A68D0, ASM_LONG_JMP_REL);
+    WriteMemUInt32((PVOID)0x004A68D1, ((ULONG_PTR)CanPlayerFireHook) - (0x004A68D0 + 0x5));
+#endif // if CAMERA_1_3_COMMANDS
+}
+
+void CommandsAfterGameInit()
 {
     unsigned i;
-    
+
     /* Add commands */
-    for(i = 0; i < COUNTOF(g_Commands); ++i)
+    for (i = 0; i < COUNTOF(g_Commands); ++i)
     {
-        if(*g_pcCommands < MAX_COMMANDS_COUNT)
+        if (*g_pcCommands < MAX_COMMANDS_COUNT)
             g_ppCommands[(*g_pcCommands)++] = &g_Commands[i];
     }
 }
