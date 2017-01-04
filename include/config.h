@@ -1,5 +1,4 @@
-#ifndef CONFIG_H_INCLUDED
-#define CONFIG_H_INCLUDED
+#pragma once
 
 #define MASK_AS_PF 1
 #define NO_CD_FIX 1
@@ -19,5 +18,3 @@
 #define CONSOLE_BG_G 0x00
 #define CONSOLE_BG_B 0x40
 #define CONSOLE_BG_A 0xC0
-
-#endif // CONFIG_H_INCLUDED

@@ -1,5 +1,4 @@
-#ifndef UTILS_H_INCLUDED
-#define UTILS_H_INCLUDED
+#pragma once
 
 #include <windows.h>
 #include <stdint.h>
@@ -64,5 +63,3 @@ char *stristr(const char *haystack, const char *needle);
 #define ASM_PUSH_EBX      0x53
 #define ASM_PUSH_EDI      0x57
 #define ASM_ADD_ESP_BYTE  0xC483
-
-#endif // UTILS_H_INCLUDED

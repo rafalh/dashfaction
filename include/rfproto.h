@@ -515,53 +515,53 @@ typedef struct _rfItemUpdate
 
 enum rfWeapon
 {
-	RF_REMOTE_CHARGE             = 0x00,
-	RF_REMOTE_CHARGE_DETONATOR   = 0x01,
-	RF_CONTROL_BATON             = 0x02,
-	RF_PISTOL                    = 0x03,
-	RF_SILENCED_PISTOL           = 0x04, /* not supported in RF multiplayer */
-	RF_SHOTGUN                   = 0x05,
-	RF_SNIPER_RIFLE              = 0x06,
-	RF_ROCKET_LAUNCHER           = 0x07,
-	RF_ASSOULT_RIFLE             = 0x08,
-	RF_SUBMACHINE_GUN            = 0x09,
-	RF_SUBMACHINE_GUN_SPECIAL    = 0x0A, /* not supported in RF multiplayer */
-	RF_GRENADE                   = 0x0B,
-	RF_FLAMETHROWER              = 0x0C,
-	RF_RIOT_SHIELD               = 0x0D,
-	RF_RAIL_GUN                  = 0x0E,
-	RF_HEAVY_MACHINE_GUN         = 0x0F,
-	RF_PRECISION_RIFLE           = 0x10,
-	RF_FUSION_ROCKET_LAUNCHER    = 0x11,
-	
-	RF_VAUSS                     = 0x12,
-	RF_TANKBOT_CHAINGUN          = 0x13,
-	RF_TRIBEAM_LASER             = 0x14,
-	RF_LASER                     = 0x15,
-	RF_CAPEK_CANE                = 0x16,
+    RF_REMOTE_CHARGE             = 0x00,
+    RF_REMOTE_CHARGE_DETONATOR   = 0x01,
+    RF_CONTROL_BATON             = 0x02,
+    RF_PISTOL                    = 0x03,
+    RF_SILENCED_PISTOL           = 0x04, /* not supported in RF multiplayer */
+    RF_SHOTGUN                   = 0x05,
+    RF_SNIPER_RIFLE              = 0x06,
+    RF_ROCKET_LAUNCHER           = 0x07,
+    RF_ASSOULT_RIFLE             = 0x08,
+    RF_SUBMACHINE_GUN            = 0x09,
+    RF_SUBMACHINE_GUN_SPECIAL    = 0x0A, /* not supported in RF multiplayer */
+    RF_GRENADE                   = 0x0B,
+    RF_FLAMETHROWER              = 0x0C,
+    RF_RIOT_SHIELD               = 0x0D,
+    RF_RAIL_GUN                  = 0x0E,
+    RF_HEAVY_MACHINE_GUN         = 0x0F,
+    RF_PRECISION_RIFLE           = 0x10,
+    RF_FUSION_ROCKET_LAUNCHER    = 0x11,
+    
+    RF_VAUSS                     = 0x12,
+    RF_TANKBOT_CHAINGUN          = 0x13,
+    RF_TRIBEAM_LASER             = 0x14,
+    RF_LASER                     = 0x15,
+    RF_CAPEK_CANE                = 0x16,
     RF_REEPER_CLAW               = 0x17,
-	RF_BABY_REEPER_CLAW          = 0x18,
-	RF_ROCK_SNAKE_SMASH          = 0x19,
-	RF_ROCK_SNAKE_SPIT           = 0x1A,
-	RF_BIG_ROCK_SNAKE_SMASH      = 0x1B,
-	RF_BIG_ROCK_SNAKE_SPIT       = 0x1C,
-	RF_SEA_CREATURE_SONAR_ATTACK = 0x1D,
-	RF_DRONE_SMASH               = 0x1E,
-	RF_TANKBOT_SMASH             = 0x1F,
-	RF_MUTANT_ATTACK_1           = 0x20,
-	RF_MUTANT_ATTACK_2           = 0x21,
-	RF_HEAP                      = 0x22,
-	RF_TORPEDO                   = 0x23,
-	RF_APC_MINIGUN               = 0x24,
-	RF_JEEP_GUN                  = 0x25,
-	RF_FIGHTER_MINIGUN           = 0x26,
-	RF_DRILL                     = 0x27,
-	RF_DRONE_MISSILE             = 0x28,
-	RF_TANKBOT_MISSILE           = 0x29,
-	RF_FIGHTER_ROCKET            = 0x2A,
-	RF_APC_ROCKET                = 0x2B,
-	
-	RF_UNKNOWN_WEAPON            = 0xFF,
+    RF_BABY_REEPER_CLAW          = 0x18,
+    RF_ROCK_SNAKE_SMASH          = 0x19,
+    RF_ROCK_SNAKE_SPIT           = 0x1A,
+    RF_BIG_ROCK_SNAKE_SMASH      = 0x1B,
+    RF_BIG_ROCK_SNAKE_SPIT       = 0x1C,
+    RF_SEA_CREATURE_SONAR_ATTACK = 0x1D,
+    RF_DRONE_SMASH               = 0x1E,
+    RF_TANKBOT_SMASH             = 0x1F,
+    RF_MUTANT_ATTACK_1           = 0x20,
+    RF_MUTANT_ATTACK_2           = 0x21,
+    RF_HEAP                      = 0x22,
+    RF_TORPEDO                   = 0x23,
+    RF_APC_MINIGUN               = 0x24,
+    RF_JEEP_GUN                  = 0x25,
+    RF_FIGHTER_MINIGUN           = 0x26,
+    RF_DRILL                     = 0x27,
+    RF_DRONE_MISSILE             = 0x28,
+    RF_TANKBOT_MISSILE           = 0x29,
+    RF_FIGHTER_ROCKET            = 0x2A,
+    RF_APC_ROCKET                = 0x2B,
+    
+    RF_UNKNOWN_WEAPON            = 0xFF,
 };
 
 enum rfEntityDataFlags
@@ -590,23 +590,23 @@ enum rfEntityArmorStateFlags
 
 typedef struct _rfEntityData
 {
-	uint16_t entity_handle; /* Object handle */
-	uint8_t flags; /* Bitfield (RF_ODF_*) */
-	uint16_t ticks; /* Milliseconds since app. start, exists if RF_ODF_POS_ROT is set */
-	float x; /* X coordinate,                         exists if RF_ODF_POS_ROT is set */
-	float y; /* Y coordinate,                         exists if RF_ODF_POS_ROT is set */
-	float z; /* Z coordinate,                         exists if RF_ODF_POS_ROT is set */
-	int16_t angle_x; /* Rotation in X axis (pitch),   exists if RF_ODF_POS_ROT is set */
-	int16_t angle_y; /* Rotation in Y axis (yaw),     exists if RF_ODF_POS_ROT is set */
-	uint32_t state; /* Ie. 00 00 00 80 (animation?),  exists if RF_ODF_POS_ROT is set */
-	uint8_t armor_state; /* Bitfield (RF_EDAS_*),     exists if RF_ARMOR_STATE is set */
-	uint8_t weapon; /* Weapon type,                   exists if RF_ODF_WEAPON_TYPE is set */
-	uint8_t health; /* Entity health points,          exists if RF_ODF_HEATH_ARMOR is set */
-	uint8_t armor; /* Entity armor,                   exists if RF_ODF_HEATH_ARMOR is set */
-	uint8_t unknown2; /* Ie. 00,                      exists if  RF_ODF_HEATH_ARMOR is set */
-	uint8_t unknown3; /* Ie. 00,                      exists if RF_ODF_UNKNOWN3 is set */
-	/*uint8_t _unknown3[unknown3*3]; *                exists if RF_ODF_UNKNOWN3 is set *
-	uint16_t unknown4; * Ie. 00 00,                   exists if RF_ODF_UNKNOWN4 is set */
+    uint16_t entity_handle; /* Object handle */
+    uint8_t flags; /* Bitfield (RF_ODF_*) */
+    uint16_t ticks; /* Milliseconds since app. start, exists if RF_ODF_POS_ROT is set */
+    float x; /* X coordinate,                         exists if RF_ODF_POS_ROT is set */
+    float y; /* Y coordinate,                         exists if RF_ODF_POS_ROT is set */
+    float z; /* Z coordinate,                         exists if RF_ODF_POS_ROT is set */
+    int16_t angle_x; /* Rotation in X axis (pitch),   exists if RF_ODF_POS_ROT is set */
+    int16_t angle_y; /* Rotation in Y axis (yaw),     exists if RF_ODF_POS_ROT is set */
+    uint32_t state; /* Ie. 00 00 00 80 (animation?),  exists if RF_ODF_POS_ROT is set */
+    uint8_t armor_state; /* Bitfield (RF_EDAS_*),     exists if RF_ARMOR_STATE is set */
+    uint8_t weapon; /* Weapon type,                   exists if RF_ODF_WEAPON_TYPE is set */
+    uint8_t health; /* Entity health points,          exists if RF_ODF_HEATH_ARMOR is set */
+    uint8_t armor; /* Entity armor,                   exists if RF_ODF_HEATH_ARMOR is set */
+    uint8_t unknown2; /* Ie. 00,                      exists if  RF_ODF_HEATH_ARMOR is set */
+    uint8_t unknown3; /* Ie. 00,                      exists if RF_ODF_UNKNOWN3 is set */
+    /*uint8_t _unknown3[unknown3*3]; *                exists if RF_ODF_UNKNOWN3 is set *
+    uint16_t unknown4; * Ie. 00 00,                   exists if RF_ODF_UNKNOWN4 is set */
 } rfEntityData;
 
 typedef struct _rfEntityUpdate

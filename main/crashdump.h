@@ -1,7 +1,4 @@
-#ifndef CRASHDUMP_H
-#define CRASHDUMP_H
+#pragma once
 
 void InitCrashDumps(void);
 void UninitCrashDumps(void);
-
-#endif // CRASHDUMP_H

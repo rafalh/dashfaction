@@ -1,5 +1,6 @@
 #include "hud.h"
 #include "utils.h"
+#include "rf.h"
 
 void HudCmdHandler(void)
 {

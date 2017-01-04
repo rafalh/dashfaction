@@ -7,24 +7,24 @@
 
 enum pfPacketType
 {
-	PF_CLIENT_INFO_REQUEST = 0x3B,
-	PF_CLIENT_INFO = 0x3C,
-	PF_CLIENT_INFO2_REQUEST = 0x3D,
-	PF_CLIENT_INFO2 = 0x3E,
+    PF_CLIENT_INFO_REQUEST = 0x3B,
+    PF_CLIENT_INFO = 0x3C,
+    PF_CLIENT_INFO2_REQUEST = 0x3D,
+    PF_CLIENT_INFO2 = 0x3E,
 };
 
 typedef struct _pfClientInfoRequest
 {
-	uint8_t type; /* PF_CLIENT_INFO_REQUEST */
+    uint8_t type; /* PF_CLIENT_INFO_REQUEST */
     uint16_t size; /* 0x9 (broken) */
     uint16_t unknown; /* 02 02 (const) */
-	uint32_t data;  /* 0B D2 7B ED  0xED7BD20B */
-	                /* E6 EC CF C6  0xC6CFECE6 */
+    uint32_t data;  /* 0B D2 7B ED  0xED7BD20B */
+                    /* E6 EC CF C6  0xC6CFECE6 */
 } pfClientInfoRequest;
 
 typedef struct _pfClientInfo
 {
-	uint8_t type; /* PF_CLIENT_INFO */
+    uint8_t type; /* PF_CLIENT_INFO */
     uint16_t size; /* 0xD (broken) */
     uint16_t unknown; /* 02 02 (const) */
     uint32_t data; /* (x + 0x4921511) ^ key, eg. 0x85A7B7B1, 0xB8039EC3, x = 0x3104D9C7, 0x16B0FEED */ 
@@ -33,7 +33,7 @@ typedef struct _pfClientInfo
 
 typedef struct _pfClientInfo2Request
 {
-	uint8_t type; /* PF_CLIENT_INFO2_REQUEST */
+    uint8_t type; /* PF_CLIENT_INFO2_REQUEST */
     uint16_t size; /* 0xB (broken) */
     uint8_t unknown; /* 02 (const) */
     uint8_t unused; /* Eg. 40, 00 */
@@ -44,7 +44,7 @@ typedef struct _pfClientInfo2Request
 
 typedef struct _pfClientInfo2
 {
-	uint8_t type; /* PF_CLIENT_INFO2 */
+    uint8_t type; /* PF_CLIENT_INFO2 */
     uint16_t size; /* 0x14 (broken) */
     uint8_t unknown; /* 02 (const) */
     uint32_t data; /* Eg. 0x4D308CFC, 0x5B205813 (diff DEFCB17) */

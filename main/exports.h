@@ -1,5 +1,4 @@
-#ifndef __MAIN_H__
-#define __MAIN_H__
+#pragma once
 
 #include <windows.h>
 
@@ -25,5 +24,3 @@ DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions);
 #ifdef __cplusplus
 }
 #endif
-
-#endif // __MAIN_H__

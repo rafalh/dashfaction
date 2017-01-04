@@ -1,6 +1,3 @@
-#ifndef KILL_H_INCLUDED
-#define KILL_H_INCLUDED
+#pragma once
 
 void InitKill(void);
-
-#endif // KILL_H_INCLUDED

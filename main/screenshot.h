@@ -1,7 +1,4 @@
-#ifndef SCREENSHOT_H_INCLUDED
-#define SCREENSHOT_H_INCLUDED
+#pragma once
 
 void InitScreenshot(void);
 void CleanupScreenshot(void);
-
-#endif // SCREENSHOT_H_INCLUDED

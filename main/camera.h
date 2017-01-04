@@ -1,6 +1,3 @@
-#ifndef CAMERA_H_INCLUDED
-#define CAMERA_H_INCLUDED
+#pragma once
 
 void InitCamera(void);
-
-#endif // CAMERA_H_INCLUDED

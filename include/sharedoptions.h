@@ -4,7 +4,7 @@
 
 struct SHARED_OPTIONS
 {
-	uintptr_t dwRfThreadId;
-	bool bMultiSampling;
+    uintptr_t dwRfThreadId;
+    bool bMultiSampling;
     bool bWindowed;
 };

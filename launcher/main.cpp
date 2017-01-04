@@ -66,11 +66,11 @@ void InitProcess(HANDLE hProcess, const TCHAR *pszPath, SHARED_OPTIONS *pOptions
     
     CloseHandle(hThread);
 
-	pVirtBuf = VirtualAllocEx(hProcess, NULL, sizeof(*pOptions), MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
-	if (!pVirtBuf)
+    pVirtBuf = VirtualAllocEx(hProcess, NULL, sizeof(*pOptions), MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+    if (!pVirtBuf)
         THROW_EXCEPTION_WITH_WIN32_ERROR();
-	
-	WriteProcessMemory(hProcess, pVirtBuf, pOptions, sizeof(*pOptions), NULL);
+    
+    WriteProcessMemory(hProcess, pVirtBuf, pOptions, sizeof(*pOptions), NULL);
 
     hThread = CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)((DWORD_PTR)pfnInit - (DWORD_PTR)hLib + dwExitCode), pVirtBuf, 0, NULL);
     if (!hThread)
@@ -92,101 +92,101 @@ void InitProcess(HANDLE hProcess, const TCHAR *pszPath, SHARED_OPTIONS *pOptions
 
 HRESULT GetRfPath(char *pszPath, DWORD cbPath)
 {
-	HKEY hKey;
-	LONG iError;
-	DWORD dwType;
-	
-	/* Open RF registry key */
-	iError = RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SOFTWARE\\Volition\\Red Faction", 0, KEY_READ, &hKey);
-	if (iError != ERROR_SUCCESS)
-	{
-		printf("RegOpenKeyEx failed: %lu\n", GetLastError());
-		return HRESULT_FROM_WIN32(iError);
-	}
-	
+    HKEY hKey;
+    LONG iError;
+    DWORD dwType;
+    
+    /* Open RF registry key */
+    iError = RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SOFTWARE\\Volition\\Red Faction", 0, KEY_READ, &hKey);
+    if (iError != ERROR_SUCCESS)
+    {
+        printf("RegOpenKeyEx failed: %lu\n", GetLastError());
+        return HRESULT_FROM_WIN32(iError);
+    }
+    
     /* Read install path and close key */
     iError = RegQueryValueEx(hKey, "InstallPath", NULL, &dwType, (LPBYTE)pszPath, &cbPath);
     RegCloseKey(hKey);
     if (iError != ERROR_SUCCESS)
         return HRESULT_FROM_WIN32(iError);
-	
+    
     if (dwType != REG_SZ)
         return MAKE_MOD_ERROR(0x04);
-	
+    
     /* Is path NULL terminated? */
     if (cbPath == 0 || pszPath[cbPath - 1] != 0)
         return MAKE_MOD_ERROR(0x05);
-	
+    
     return S_OK;
 }
 
 bool IsWindowedModeEnabled()
 {
-	HKEY hKey;
-	LONG iError;
-	DWORD dwType, dwWindowMode, dwSize = sizeof(dwWindowMode);
+    HKEY hKey;
+    LONG iError;
+    DWORD dwType, dwWindowMode, dwSize = sizeof(dwWindowMode);
 
-	/* Open RF registry key */
-	iError = RegOpenKeyEx(HKEY_CURRENT_USER, "SOFTWARE\\Volition\\Red Faction", 0, KEY_READ, &hKey);
-	if (iError != ERROR_SUCCESS)
-	{
-		printf("RegOpenKeyEx failed: %lu\n", GetLastError());
-		return FALSE;
-	}
+    /* Open RF registry key */
+    iError = RegOpenKeyEx(HKEY_CURRENT_USER, "SOFTWARE\\Volition\\Red Faction", 0, KEY_READ, &hKey);
+    if (iError != ERROR_SUCCESS)
+    {
+        printf("RegOpenKeyEx failed: %lu\n", GetLastError());
+        return FALSE;
+    }
 
-	/* Read Pure Faction window mode setting */
-	iError = RegQueryValueEx(hKey, "windowMode", NULL, &dwType, (LPBYTE)&dwWindowMode, &dwSize);
-	RegCloseKey(hKey);
-	if (iError != ERROR_SUCCESS)
-		return FALSE;
+    /* Read Pure Faction window mode setting */
+    iError = RegQueryValueEx(hKey, "windowMode", NULL, &dwType, (LPBYTE)&dwWindowMode, &dwSize);
+    RegCloseKey(hKey);
+    if (iError != ERROR_SUCCESS)
+        return FALSE;
 
-	if (dwType != REG_DWORD)
-		return FALSE;
+    if (dwType != REG_DWORD)
+        return FALSE;
 
-	return dwWindowMode != 3;
+    return dwWindowMode != 3;
 }
 
 HRESULT GetRfSteamPath(char *pszPath, DWORD cbPath)
 {
-	HKEY hKey;
-	LONG iError;
-	DWORD dwType;
+    HKEY hKey;
+    LONG iError;
+    DWORD dwType;
 
-	/* Open RF registry key */
-	iError = RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Steam App 20530", 0, KEY_READ, &hKey);
-	if (iError != ERROR_SUCCESS)
-		return HRESULT_FROM_WIN32(iError);
+    /* Open RF registry key */
+    iError = RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Steam App 20530", 0, KEY_READ, &hKey);
+    if (iError != ERROR_SUCCESS)
+        return HRESULT_FROM_WIN32(iError);
 
-	/* Read install path and close key */
-	iError = RegQueryValueEx(hKey, "InstallLocation", NULL, &dwType, (LPBYTE)pszPath, &cbPath);
-	RegCloseKey(hKey);
-	if (iError != ERROR_SUCCESS)
-		return HRESULT_FROM_WIN32(iError);
+    /* Read install path and close key */
+    iError = RegQueryValueEx(hKey, "InstallLocation", NULL, &dwType, (LPBYTE)pszPath, &cbPath);
+    RegCloseKey(hKey);
+    if (iError != ERROR_SUCCESS)
+        return HRESULT_FROM_WIN32(iError);
 
-	if (dwType != REG_SZ)
-		return MAKE_MOD_ERROR(0x04);
+    if (dwType != REG_SZ)
+        return MAKE_MOD_ERROR(0x04);
 
-	/* Is path NULL terminated? */
-	if (cbPath == 0 || pszPath[cbPath - 1] != 0)
-		return MAKE_MOD_ERROR(0x05);
+    /* Is path NULL terminated? */
+    if (cbPath == 0 || pszPath[cbPath - 1] != 0)
+        return MAKE_MOD_ERROR(0x05);
 
-	return S_OK;
+    return S_OK;
 }
 
 uint32_t GetFileCRC32(const char *path)
 {
-	char buf[1024];
-	FILE *pFile = fopen(path, "rb");
-	if (!pFile) return 0;
-	uint32_t hash = 0;
-	while (1)
-	{
-		size_t len = fread(buf, 1, sizeof(buf), pFile);
-		if (!len) break;
-		hash = crc32(hash, buf, len);
-	}
-	fclose(pFile);
-	return hash;
+    char buf[1024];
+    FILE *pFile = fopen(path, "rb");
+    if (!pFile) return 0;
+    uint32_t hash = 0;
+    while (1)
+    {
+        size_t len = fread(buf, 1, sizeof(buf), pFile);
+        if (!len) break;
+        hash = crc32(hash, buf, len);
+    }
+    fclose(pFile);
+    return hash;
 }
 
 int main(int argc, const char *argv[]) try
@@ -197,41 +197,41 @@ int main(int argc, const char *argv[]) try
     char szRfPath[MAX_PATH];
     unsigned i;
     HRESULT hr;
-	SHARED_OPTIONS Options;
+    SHARED_OPTIONS Options;
     
     printf("Starting " PRODUCT_NAME " " VER_STR "!\n");
 
-	//Options.bMultiSampling = FALSE;
-	Options.bMultiSampling = TRUE;
-	Options.bWindowed = IsWindowedModeEnabled();
-	printf("Windowed mode: %d\n", Options.bWindowed);
+    //Options.bMultiSampling = FALSE;
+    Options.bMultiSampling = TRUE;
+    Options.bWindowed = IsWindowedModeEnabled();
+    printf("Windowed mode: %d\n", Options.bWindowed);
 
-	for (i = 1; i < (unsigned) argc; ++i)
-	{
-		if (!strcmp(argv[i], "-msaa"))
-			Options.bMultiSampling = TRUE;
-		else if (!strcmp(argv[i], "-no-msaa"))
-			Options.bMultiSampling = FALSE;
-		else if (!strcmp(argv[i], "-windowed"))
-			Options.bWindowed = TRUE;
-		else if (!strcmp(argv[i], "-h"))
-			printf("Supported options:\n"
-				"\t-msaa  Enable experimental Multisample Anti-Aliasing support");
-	}
+    for (i = 1; i < (unsigned) argc; ++i)
+    {
+        if (!strcmp(argv[i], "-msaa"))
+            Options.bMultiSampling = TRUE;
+        else if (!strcmp(argv[i], "-no-msaa"))
+            Options.bMultiSampling = FALSE;
+        else if (!strcmp(argv[i], "-windowed"))
+            Options.bWindowed = TRUE;
+        else if (!strcmp(argv[i], "-h"))
+            printf("Supported options:\n"
+                "\t-msaa  Enable experimental Multisample Anti-Aliasing support");
+    }
 
     hr = GetRfPath(szRfPath, sizeof(szRfPath));
-	if (FAILED(hr) && FAILED(GetRfSteamPath(szRfPath, sizeof(szRfPath))))
+    if (FAILED(hr) && FAILED(GetRfSteamPath(szRfPath, sizeof(szRfPath))))
     {
         printf("Warning %lX! Failed to read RF install path from registry.\n", hr);
 
         /* Use default path */
-		if (PathFileExists("C:\\games\\RedFaction\\rf.exe"))
-			strcpy(szRfPath, "C:\\games\\RedFaction");
-		else
-		{
-			/* Fallback to current directory */
-			GetCurrentDirectory(sizeof(szRfPath), szRfPath);
-		}
+        if (PathFileExists("C:\\games\\RedFaction\\rf.exe"))
+            strcpy(szRfPath, "C:\\games\\RedFaction");
+        else
+        {
+            /* Fallback to current directory */
+            GetCurrentDirectory(sizeof(szRfPath), szRfPath);
+        }
     }
     
     /* Start RF process */
@@ -243,15 +243,15 @@ int main(int argc, const char *argv[]) try
         return (int)hr;
     }
     
-	uint32_t hash = GetFileCRC32(szBuf);
-	printf("CRC32: %X\n", hash);
-	if (hash != RF_120_NA_CRC32)
-	{
-		sprintf(szBuf, "Error! Unsupported version of Red Faction executable has been detected (crc32 0x%X). Only version 1.20 North America is supported.", hash);
-		MessageBox(NULL, szBuf, NULL, MB_OK | MB_ICONERROR);
-		return -1;
-	}
-	
+    uint32_t hash = GetFileCRC32(szBuf);
+    printf("CRC32: %X\n", hash);
+    if (hash != RF_120_NA_CRC32)
+    {
+        sprintf(szBuf, "Error! Unsupported version of Red Faction executable has been detected (crc32 0x%X). Only version 1.20 North America is supported.", hash);
+        MessageBox(NULL, szBuf, NULL, MB_OK | MB_ICONERROR);
+        return -1;
+    }
+    
     ZeroMemory(&si, sizeof(si));
     printf("Starting %s...\n", szBuf);
     if (!CreateProcess(szBuf, GetCommandLine(), NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, szRfPath, &si, &pi))
@@ -262,7 +262,7 @@ int main(int argc, const char *argv[]) try
         return (int)hr;
     }
 
-	Options.dwRfThreadId = pi.dwThreadId;
+    Options.dwRfThreadId = pi.dwThreadId;
     
     i = GetCurrentDirectory(sizeof(szBuf)/sizeof(szBuf[0]), szBuf);
     if(!i)

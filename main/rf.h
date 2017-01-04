@@ -1,5 +1,4 @@
-#ifndef RF_H_INCLUDED
-#define RF_H_INCLUDED
+#pragma once
 
 #include <stdint.h>
 #include <stdio.h>
@@ -893,5 +892,3 @@ typedef void *(*PFN_MALLOC)(uint32_t cbSize);
 static const PFN_MALLOC RfMalloc = (PFN_MALLOC)0x00573B37;
 
 //#pragma pack(pop)
-
-#endif // RF_H_INCLUDED
