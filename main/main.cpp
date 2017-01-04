@@ -114,9 +114,6 @@ void  __declspec(naked) CrashFix0055CE59()
 
 extern "C" DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
 {
-    DWORD dwRfThreadId = pOptions->dwRfThreadId;
-    HANDLE hRfThread;
-    
     g_Options = *pOptions;
 
     /* Init crash dump writer before anything else */
@@ -208,18 +205,6 @@ extern "C" DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
     InitSpectateMode();
     CommandsInit();
 
-#if 0
-    /* Resume RF thread */
-    hRfThread = OpenThread(THREAD_SUSPEND_RESUME, FALSE, dwRfThreadId);
-    if (!hRfThread)
-    {
-        MessageBox(0, "OpenThread failed!", 0, 0);
-        return 0; /* fail */
-    }
-    ResumeThread(hRfThread);
-    CloseHandle(hRfThread);
-#endif
-    
     return 1; /* success */
 }
 

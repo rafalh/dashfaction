@@ -258,11 +258,9 @@ int main(int argc, const char *argv[]) try
         MessageBox(NULL, szBuf2, NULL, MB_OK|MB_ICONERROR);
         return (int)hr;
     }
-
-    Options.dwRfThreadId = pi.dwThreadId;
     
     i = GetCurrentDirectory(sizeof(szBuf)/sizeof(szBuf[0]), szBuf);
-    if(!i)
+    if (!i)
     {
         hr = GET_LAST_WIN32_ERROR();
         sprintf(szBuf, "Error %lX! Failed to get current directory", hr);
