@@ -5,6 +5,7 @@
 #include "scoreboard.h"
 
 #include "HookableFunPtr.h"
+#include "hooks/HookCall.h"
 
 //#define SPECTATE_SHOW_WEAPON_EXPERIMENTAL
 
@@ -16,6 +17,8 @@ static bool g_SpectateModeEnabled = false;
 static int g_LargeFont = -1;
 
 HookableFunPtr<0x004A35C0, void, CPlayer*> DestroyPlayerFun;
+HookableFunPtr<0x004A6210, void, CPlayer *, EGameCtrl, char> HandleCtrlInGameFun;
+HookCall<PFN_IS_PLAYER_ENTITY_INVALID> *pIsPlayerEntityInvalidCall;
 
 static void SetCameraTarget(CPlayer *pPlayer)
 {
@@ -98,7 +101,7 @@ static void HandleCtrlInGameHook(CPlayer *pPlayer, EGameCtrl KeyId, char WasPres
             return;
         }
     }
-    HandleCtrlInGame(pPlayer, KeyId, WasPressed);
+    HandleCtrlInGameFun.callOrig(pPlayer, KeyId, WasPressed);
 }
 
 static bool IsPlayerEntityInvalidHook(CPlayer *pPlayer)
@@ -140,9 +143,10 @@ static void RenderPlayerArm2Hook(CPlayer *pPlayer)
 
 void InitSpectateMode()
 {
-    WriteMemPtr((PVOID)(0x00430E3E + 1), (PVOID)((ULONG_PTR)HandleCtrlInGameHook - (0x00430E3E + 0x5)));
-    WriteMemPtr((PVOID)(0x00432A52 + 1), (PVOID)((ULONG_PTR)IsPlayerEntityInvalidHook - (0x00432A52 + 0x5)));
+    pIsPlayerEntityInvalidCall = new HookCall<PFN_IS_PLAYER_ENTITY_INVALID>(0x00432A52, IsPlayerEntityInvalid);
+    pIsPlayerEntityInvalidCall->Hook(IsPlayerEntityInvalidHook);
 
+    HandleCtrlInGameFun.hook(HandleCtrlInGameHook);
     DestroyPlayerFun.hook(DestroyPlayerHook);
 
 #ifdef SPECTATE_SHOW_WEAPON_EXPERIMENTAL
@@ -158,8 +162,6 @@ void InitSpectateMode()
     WriteMemUInt8Repeat((PVOID)0x004AE384, ASM_NOP, 6); // PlayerPrepareWeapon
 #endif // SPECTATE_SHOW_WEAPON_EXPERIMENTAL
 }
-
-uint32_t *g_pDrawTextUnk = (uint32_t*)0x17C7C5C;
 
 void DrawSpectateModeUI()
 {
@@ -185,7 +187,10 @@ void DrawSpectateModeUI()
 
     CEntity *pEntity = HandleToEntity(g_SpectateModeTarget->hEntity);
     if (!pEntity)
-        GrDrawAlignedText(1, cxScr/2, cySrc/2, "DEAD", g_LargeFont, *g_pDrawTextUnk);
+    {
+        GrSetColorRgb(0xC0, 0, 0, 0xC0);
+        GrDrawAlignedText(1, cxScr / 2, cySrc / 2, "DEAD", g_LargeFont, *g_pDrawTextUnk);
+    }
 }
 
 #endif
