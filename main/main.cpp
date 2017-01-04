@@ -95,21 +95,22 @@ static void SetTextureMinMagFilter(D3DTEXTUREFILTERTYPE FilterType)
 		WriteMemUInt8((PVOID)(Addresses[i] + 1), (uint8_t)FilterType);
 }
 
+void GrSetViewMatrixLastCallHook()
+{
+    constexpr auto GrUnkAfterWFarUpdateInternal = (void(*)())0x00546A40;
+    float w = (float)*g_pRfWndWidth;
+    float h = (float)*g_pRfWndHeight;
+    float fFovMod = (4.0f / 3.0f) / (w / h);
+    g_pGrScaleVec->x *= fFovMod;
+    g_GrViewMatrix->rows[0].x *= fFovMod;
+    g_GrViewMatrix->rows[0].y *= fFovMod;
+    g_GrViewMatrix->rows[0].z *= fFovMod;
+    GrUnkAfterWFarUpdateInternal();
+}
+
 static void InitGameHook(void)
 {
     RfInitGame();
-    
-#if 1
-	/* Fix aspect ratio for widescreen */
-	*((float*)0x017C7BD8) = 1.0f;
-
-	/* Fix FOV for widescreen */
-	float w = (float)*g_pRfWndWidth;
-	float h = (float)*g_pRfWndHeight;
-	float fFov = 90.0f * (w / h) / (4.0f / 3.0f); // default is 90
-	WriteMemFloat((PVOID)(0x004A34C7 + 6), fFov);
-	INFO("FOV: %f", fFov);
-#endif
 
 #if ANISOTROPIC_FILTERING
 	/* Anisotropic texture filtering */
@@ -261,7 +262,7 @@ extern "C" DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
     /* No-CD fix */
     WriteMemUInt8((PVOID)0x004B31B6, ASM_SHORT_JMP_REL);
 #endif /* NO_CD_FIX */
-    
+
 #if WINDOWED_MODE_SUPPORT
 	if (pOptions->bWindowed)
 	{
@@ -301,7 +302,7 @@ extern "C" DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
     WriteMemUInt16((PVOID)0x004B2093, MAKEWORD(ASM_NOP, ASM_NOP));
     WriteMemUInt8((PVOID)0x004B2095, ASM_NOP);
 #endif /* NO_INTRO */
-    
+
     /* Version in Main Menu */
     WriteMemUInt32((PVOID)0x005A18A8, VER_MAJOR);
     WriteMemUInt32((PVOID)0x005A18AC, VER_MINOR);
@@ -333,7 +334,7 @@ extern "C" DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
     
     /* Sound loop fix */
     WriteMemUInt8((PVOID)0x00505D08, 0x00505D5B - (0x00505D07 + 0x2));
-    
+
     /* nVidia issue fix (make sure D3Dsc is enabled) */
     WriteMemUInt8((PVOID)0x00546154, 1);
     
@@ -346,7 +347,7 @@ extern "C" DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
     
     /* ProcessGamePackets hook (not reliable only) */
     WriteMemPtr((PVOID)0x00479245, (PVOID)((ULONG_PTR)ProcessUnreliableGamePacketsHook - (0x00479244 + 0x5)));
-    
+
     /* CleanupGame and InitGame hooks */
     WriteMemPtr((PVOID)0x004B27CE, (PVOID)((ULONG_PTR)InitGameHook - (0x004B27CD + 0x5)));
     WriteMemPtr((PVOID)0x004B2822, (PVOID)((ULONG_PTR)CleanupGameHook - (0x004B2821 + 0x5)));
@@ -354,12 +355,18 @@ extern "C" DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
     /* Don't use LOD models */
     WriteMemUInt8((PVOID)0x0052FACC, ASM_SHORT_JMP_REL);
     
+#if WIDESCREEN_FIX
+    /* Fix FOV for widescreen */
+    WriteMemPtr((PVOID)(0x005473E4 + 1), (PVOID)((ULONG_PTR)GrSetViewMatrixLastCallHook - (0x005473E4 + 0x5)));
+    WriteMemFloat((PVOID)0x00596140, 200.0f); // reduce default wfar value to fix Assault Rifle rendering on wide screen
+#endif
+
     /* Improve SimultaneousPing */
     *g_pSimultaneousPing = 32;
     
     /* Set FPS limit to 60 */
     WriteMemFloat((PVOID)0x005094CA, 1.0f / 60.0f);
-    
+
     /* If server forces player character, don't save it in settings */
     WriteMemUInt8Repeat((PVOID)0x004755C1, ASM_NOP, 6);
     WriteMemUInt8Repeat((PVOID)0x004755C7, ASM_NOP, 6);

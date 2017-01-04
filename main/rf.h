@@ -96,6 +96,8 @@ static IDirect3D8 ** const g_ppDirect3D = (IDirect3D8**)0x01CFCBE0;
 static IDirect3DDevice8 ** const g_ppGrDevice = (IDirect3DDevice8**)0x01CFCBE4;
 static uint32_t * const g_pGrGammaRamp = (uint32_t*)0x017C7C68;
 static uint32_t * const g_pAdapterIdx = (uint32_t*)0x01CFCC34;
+constexpr CVector3 *g_pGrScaleVec = (CVector3*)0x01818B48;
+constexpr CMatrix3 *g_GrViewMatrix = (CMatrix3*)0x018186C8;
 
 typedef void (*PFN_GR_SET_COLOR_RGB)(unsigned r, unsigned g, unsigned b, unsigned a);
 static const PFN_GR_SET_COLOR_RGB GrSetColorRgb = (PFN_GR_SET_COLOR_RGB)0x0050CF80;
@@ -867,6 +869,8 @@ typedef void (*PFN_GR_FLUSH_BUFFERS)(void);
 static const PFN_GR_FLUSH_BUFFERS GrFlushBuffers = (PFN_GR_FLUSH_BUFFERS)0x00559D90;
 
 constexpr auto GrLoadFont = (int(*)(const char *pszFileName, int a2))0x0051F6E0;
+constexpr auto GrSetViewMatrix = (void(*)(CMatrix3 *pMatRot, CVector3 *pPos, float fFov, int a4, int a5))0x00517EB0;
+constexpr auto GrSetViewMatrixD3D = (void(*)(CMatrix3 *pMatRot, CVector3 *pPos, float fFov, int a4, int a5))0x00547150;
 
 static int *g_pRfWndWidth = (int*)0x017C7BC4;
 static int *g_pRfWndHeight = (int*)0x017C7BC8;
