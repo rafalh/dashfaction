@@ -1,12 +1,9 @@
+#include "stdafx.h"
 #include "config.h"
 #include "autodl.h"
 #include "rf.h"
 #include "rfproto.h"
 #include "utils.h"
-#include <unzip.h>
-#include <unrar/dll.hpp>
-#include <wininet.h>
-#include <stdio.h>
 
 #ifdef LEVELS_AUTODOWNLOADER
 

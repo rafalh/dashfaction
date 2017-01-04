@@ -1,10 +1,9 @@
+#include "stdafx.h"
 #include "graphics.h"
 #include "utils.h"
 #include "rf.h"
 #include "config.h"
 #include "main.h"
-#include <Windows.h>
-#include <d3d8.h>
 
 static void SetTextureMinMagFilter(D3DTEXTUREFILTERTYPE FilterType)
 {

@@ -1,8 +1,5 @@
+#include "stdafx.h"
 #include "crashdump.h"
-#include <windows.h>
-#include <stdio.h>
-#include <psapi.h>
-#include <stdint.h>
 
 #define CRASHDUMP_USE_DMP 0
 #define CRASHDUMP_USE_HEURISTIC_STACK_TRACE 1

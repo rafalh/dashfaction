@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "lazyban.h"
 #include "utils.h"
 #include "rf.h"

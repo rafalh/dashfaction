@@ -4,6 +4,9 @@ project "DashFactionLauncher"
 	files {"**.h", "**.c", "**.cpp"}
 	links {"Shlwapi"}
 	
+	pchheader "stdafx.h"
+	pchsource "stdafx.cpp"
+	
 	configuration "Debug"
 		targetdir "../bin/debug"
 		debugdir "../bin/debug"

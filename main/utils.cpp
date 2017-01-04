@@ -1,6 +1,6 @@
+#include "stdafx.h"
 #include "utils.h"
 #include "rf.h"
-#include <stdio.h>
 
 void WriteMem(PVOID pAddr, PVOID pValue, unsigned cbValue)
 {

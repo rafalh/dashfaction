@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "kill.h"
 #include "rf.h"
 #include "utils.h"

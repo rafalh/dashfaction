@@ -1,7 +1,7 @@
+#include "stdafx.h"
 #include "packfile.h"
 #include "utils.h"
 #include "rf.h"
-#include <stdio.h>
 
 typedef struct _VFS_LOOKUP_TABLE_NEW
 {

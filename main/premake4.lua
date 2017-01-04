@@ -15,6 +15,9 @@ project "DashFaction"
 	}
 	links { "psapi", "wininet", "unrar", "unzip", "zlib", "ModCommon", "subhook", "logger" }
 	
+	pchheader "stdafx.h"
+	pchsource "stdafx.cpp"
+	
 	configuration "Debug"
 		targetdir "../bin/debug"
 	

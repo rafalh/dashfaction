@@ -1,9 +1,9 @@
+#include "stdafx.h"
 #include "screenshot.h"
 #include "utils.h"
 #include "rf.h"
 #include "config.h"
 #include "sharedoptions.h"
-#include <windows.h>
 
 static BYTE **g_ScreenshotScanlinesBuf = NULL;
 extern SHARED_OPTIONS g_Options;

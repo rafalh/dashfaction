@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "commands.h"
 #include "rf.h"
 #include "utils.h"

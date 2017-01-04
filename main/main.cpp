@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "config.h"
 #include "exports.h"
 #include "version.h"
@@ -20,9 +21,6 @@
 #include "wndproc.h"
 #include "graphics.h"
 #include "network.h"
-#include <stdio.h>
-#include <stdint.h>
-#include <math.h>
 
 SHARED_OPTIONS g_Options;
 

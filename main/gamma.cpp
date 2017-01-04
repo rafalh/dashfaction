@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "gamma.h"
 #include "rf.h"
 #include "utils.h"

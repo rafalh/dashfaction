@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "rf.h"
 #include "spectate.h"
 #include "config.h"

@@ -1,7 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <windows.h>
-#include <shlwapi.h>
+#include "stdafx.h"
 #include "version.h"
 #include "crc32.h"
 #include "sharedoptions.h"

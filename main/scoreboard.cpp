@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "scoreboard.h"
 #include "utils.h"
 #include "rf.h"
