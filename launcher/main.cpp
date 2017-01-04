@@ -5,6 +5,7 @@
 #include "version.h"
 #include "crc32.h"
 #include "sharedoptions.h"
+#include "Exception.h"
 
 #define HRESULT_CUST_BIT 0x20000000
 #define FACILITY_MOD 0x09F
@@ -12,23 +13,24 @@
 #define GET_LAST_WIN32_ERROR() ((HRESULT)(GetLastError()) < 0 ? ((HRESULT)(GetLastError())) : ((HRESULT) (((GetLastError()) & 0x0000FFFF) | (FACILITY_WIN32 << 16) | 0x80000000)))
 #define RF_120_NA_CRC32 0xA7BF79E4
 
-HRESULT InitProcess(HANDLE hProcess, const TCHAR *pszPath, SHARED_OPTIONS *pOptions)
+#define THROW_EXCEPTION_WITH_WIN32_ERROR() THROW_EXCEPTION("win32 error %lu", GetLastError())
+
+void InitProcess(HANDLE hProcess, const TCHAR *pszPath, SHARED_OPTIONS *pOptions)
 {
     HANDLE hThread = NULL;
     PVOID pVirtBuf = NULL;
     DWORD dwExitCode, dwWaitResult;
     FARPROC pfnLoadLibrary, pfnInit;
     unsigned cbPath = strlen(pszPath) + 1;
-    HRESULT hr = S_OK;
     HMODULE hLib;
     
     pfnLoadLibrary = GetProcAddress(GetModuleHandle("kernel32.dll"), "LoadLibraryA");
     if (!pfnLoadLibrary)
-        return GET_LAST_WIN32_ERROR();
+        THROW_EXCEPTION_WITH_WIN32_ERROR();
     
     pVirtBuf = VirtualAllocEx(hProcess, NULL, cbPath, MEM_RESERVE|MEM_COMMIT, PAGE_EXECUTE_READWRITE);
     if (!pVirtBuf)
-        return GET_LAST_WIN32_ERROR();
+        THROW_EXCEPTION_WITH_WIN32_ERROR();
     
     /* For some reason WriteProcessMemory returns 0, but memory is written */
     WriteProcessMemory(hProcess, pVirtBuf, pszPath, cbPath, NULL);
@@ -36,89 +38,56 @@ HRESULT InitProcess(HANDLE hProcess, const TCHAR *pszPath, SHARED_OPTIONS *pOpti
     printf("Loading %s\n", pszPath);
     hThread = CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)pfnLoadLibrary, pVirtBuf, 0, NULL);
     if (!hThread)
-    {
-        hr = GET_LAST_WIN32_ERROR();
-        goto cleanup;
-    }
+        THROW_EXCEPTION_WITH_WIN32_ERROR();
     
     dwWaitResult = WaitForSingleObject(hThread, 5000);
     if (dwWaitResult != WAIT_OBJECT_0)
     {
-        if(dwWaitResult == WAIT_TIMEOUT)
-            hr = MAKE_MOD_ERROR(0x01);
+        if (dwWaitResult == WAIT_TIMEOUT)
+            THROW_EXCEPTION("timeout");
         else
-            hr = GET_LAST_WIN32_ERROR();
-        goto cleanup;
+            THROW_EXCEPTION_WITH_WIN32_ERROR();
     }
     
     if (!GetExitCodeThread(hThread, &dwExitCode))
-    {
-        hr = GET_LAST_WIN32_ERROR();
-        goto cleanup;
-    }
+        THROW_EXCEPTION_WITH_WIN32_ERROR();
     
     if (!dwExitCode)
-    {
-        hr = MAKE_MOD_ERROR(0x02);
-        goto cleanup;
-    }
+        THROW_EXCEPTION("remote LoadLibrary failed");
     
     hLib = LoadLibrary(pszPath);
     if (!hLib)
-    {
-        hr = GET_LAST_WIN32_ERROR();
-        goto cleanup;
-    }
-    
+        THROW_EXCEPTION_WITH_WIN32_ERROR();
+
     pfnInit = GetProcAddress(hLib, "Init");
     FreeLibrary(hLib);
     if (!pfnInit)
-    {
-        hr = GET_LAST_WIN32_ERROR();
-        goto cleanup;
-    }
+        THROW_EXCEPTION_WITH_WIN32_ERROR();
     
     CloseHandle(hThread);
 
 	pVirtBuf = VirtualAllocEx(hProcess, NULL, sizeof(*pOptions), MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 	if (!pVirtBuf)
-	{
-		hr = GET_LAST_WIN32_ERROR();
-		goto cleanup;
-	}
+        THROW_EXCEPTION_WITH_WIN32_ERROR();
 	
 	WriteProcessMemory(hProcess, pVirtBuf, pOptions, sizeof(*pOptions), NULL);
 
     hThread = CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)((DWORD_PTR)pfnInit - (DWORD_PTR)hLib + dwExitCode), pVirtBuf, 0, NULL);
     if (!hThread)
-    {
-        hr = GET_LAST_WIN32_ERROR();
-        goto cleanup;
-    }
+        THROW_EXCEPTION_WITH_WIN32_ERROR();
     
-    if (WaitForSingleObject(hThread, INFINITE) != WAIT_OBJECT_0)
-    {
-        hr = GET_LAST_WIN32_ERROR();
-        goto cleanup;
-    }
+    dwWaitResult = WaitForSingleObject(hThread, INFINITE);
+    if (dwWaitResult != WAIT_OBJECT_0)
+        THROW_EXCEPTION_WITH_WIN32_ERROR();
     
     if (!GetExitCodeThread(hThread, &dwExitCode))
-    {
-        hr = GET_LAST_WIN32_ERROR();
-        goto cleanup;
-    }
+        THROW_EXCEPTION_WITH_WIN32_ERROR();
     
     if (!dwExitCode)
-    {
-        hr = MAKE_MOD_ERROR(0x03);
-        goto cleanup;
-    }
+        THROW_EXCEPTION("Init failed");
 
-cleanup:
-    if (pVirtBuf)
-        VirtualFreeEx(hProcess, pVirtBuf, 0, MEM_RELEASE);
+    VirtualFreeEx(hProcess, pVirtBuf, 0, MEM_RELEASE);
     CloseHandle(hThread);
-    return hr;
 }
 
 HRESULT GetRfPath(char *pszPath, DWORD cbPath)
@@ -220,7 +189,7 @@ uint32_t GetFileCRC32(const char *path)
 	return hash;
 }
 
-int main(int argc, const char *argv[])
+int main(int argc, const char *argv[]) try
 {
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
@@ -285,7 +254,7 @@ int main(int argc, const char *argv[])
 	
     ZeroMemory(&si, sizeof(si));
     printf("Starting %s...\n", szBuf);
-    if(!CreateProcess(szBuf, GetCommandLine(), NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, szRfPath, &si, &pi))
+    if (!CreateProcess(szBuf, GetCommandLine(), NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, szRfPath, &si, &pi))
     {
         hr = GET_LAST_WIN32_ERROR();
         sprintf(szBuf2, "Error %lX! Failed to start: %s", hr, szBuf);
@@ -306,16 +275,31 @@ int main(int argc, const char *argv[])
     }
     
     sprintf(szBuf + i, "\\DashFaction.dll");
-    hr = InitProcess(pi.hProcess, szBuf, &Options);
-    if(FAILED(hr))
+    try
     {
-        sprintf(szBuf, "Error %lX! Failed to init process.", hr);
-        MessageBox(NULL, szBuf, NULL, MB_OK|MB_ICONERROR);
+        InitProcess(pi.hProcess, szBuf, &Options);
+    }
+    catch (const std::exception &e)
+    {
+        sprintf(szBuf, "Failed to init game process! Error: %s", e.what());
+        MessageBox(NULL, szBuf, NULL, MB_OK | MB_ICONERROR);
         TerminateProcess(pi.hProcess, 0);
+        return -1;
     }
     
+#if 0
+    printf("Press ENTER to resume game launch...");
+    getchar();
+#endif
+
+    ResumeThread(pi.hThread);
+
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
     
     return hr;
+}
+catch (const std::exception &e)
+{
+    fprintf(stderr, "Fatal error: %s\n", e.what());
 }
