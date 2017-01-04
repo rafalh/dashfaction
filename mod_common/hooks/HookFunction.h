@@ -31,7 +31,7 @@ public:
 	}
 
 private:
-	SubHook m_hook;
+    subhook::Hook m_hook;
 
 	void Hook(void *FunPtr, void *HookPtr)
 	{

@@ -1,5 +1,9 @@
-[SubHook][github] is a super-simple hooking library for C/C++ that works on
-both Linux and Windows. It currently supports only x86 and x86-64.
+[![Version][version_badge]][version]
+[![Build Status][build_status]][build]
+[![Build Status - Windows][build_status_win]][build_win]
+
+SubHook is a super-simple hooking library for C/C++ that works on Linux and
+Windows. It currently supports x86 and x86-64.
 
 Examples
 --------
@@ -29,7 +33,7 @@ void my_foo(int x) {
 
 int main() {
   /* Create a hook that will redirect all foo() calls to to my_foo(). */
-  foo_hook = subhook_new((void *)foo, (void *)my_foo);
+  foo_hook = subhook_new((void *)foo, (void *)my_foo, 0);
 
   /* Install it. */
   subhook_install(foo_hook);
@@ -62,7 +66,10 @@ int main() {
 }
 ```
 
-Please note that subhook has a very simple length disassmebler engine (LDE) that works only with most common prologue instructions like push, mov, call, etc. When it encounters an unknown instruction subhook_get_trampoline() will return NULL.
+Please note that subhook has a very simple length disassmebler engine (LDE)
+that works only with most common prologue instructions like push, mov, call,
+etc. When it encounters an unknown instruction subhook_get_trampoline() will
+return NULL.
 
 ### C++
 
@@ -70,15 +77,15 @@ Please note that subhook has a very simple length disassmebler engine (LDE) that
 #include <iostream>
 #include <subhook.h>
 
-SubHook foo_hook;
-SubHook foo_hook_tr;
+subhook::Hook foo_hook;
+subhook::Hook foo_hook_tr;
 
 typedef void (*foo_func)(int x);
 
 void my_foo(int x) {
-  // ScopedRemove removes the specified hook and automatically re-installs it
-  // when the objectt goes out of scope (thanks to C++ destructors).
-  SubHook::ScopedRemove remove(&foo_hook);
+  // ScopedHookRemove removes the specified hook and automatically re-installs
+  // it when the objectt goes out of scope (thanks to C++ destructors).
+  subhook::ScopedHookRemove remove(&foo_hook);
 
   std::cout << "foo(" << x < ") called" << std::endl;
   foo(x + 1);
@@ -93,8 +100,18 @@ void my_foo_tr(int x) {
 
 int main() {
   foo_hook.Install((void *)foo, (void *)my_foo);
-  foo_hook_tr.Install(void *)foo, (void *)my_foo_tr);
+  foo_hook_tr.Install((void *)foo, (void *)my_foo_tr);
 }
 ```
 
-[github]: https://github.com/Zeex/subhook
+License
+-------
+
+Licensed under the 2-clause BSD license.
+
+[version]: http://badge.fury.io/gh/zeex%2Fsubhook
+[version_badge]: https://badge.fury.io/gh/zeex%2Fsubhook.svg
+[build]: https://travis-ci.org/Zeex/subhook
+[build_status]: https://travis-ci.org/Zeex/subhook.svg?branch=master
+[build_win]: https://ci.appveyor.com/project/Zeex/subhook/branch/master
+[build_status_win]: https://ci.appveyor.com/api/projects/status/q5sp0p8ahuqfh8e4/branch/master?svg=true

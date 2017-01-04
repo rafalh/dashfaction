@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2014 Zeex
+/* Copyright (c) 2012-2015 Zeex
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,12 +28,16 @@
 
 #include <stddef.h>
 
-struct subhook {
-	int installed;
-	void *src;
-	void *dst;
-	void *code;
-	void *trampoline;
+struct subhook_struct {
+  int installed;
+  void *src;
+  void *dst;
+  subhook_options_t options;
+  void *code;
+  void *trampoline;
+  size_t jmp_size;
+  size_t trampoline_size;
+  size_t trampoline_len;
 };
 
 void *subhook_unprotect(void *address, size_t size);

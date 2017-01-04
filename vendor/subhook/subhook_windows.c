@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2014 Zeex
+/* Copyright (c) 2012-2015 Zeex
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,10 +27,11 @@
 #include <windows.h>
 
 void *subhook_unprotect(void *address, size_t size) {
-	DWORD old;
+  DWORD old;
 
-	if (VirtualProtect(address, size, PAGE_EXECUTE_READWRITE, &old) == 0)
-		return NULL;
+  if (VirtualProtect(address, size, PAGE_EXECUTE_READWRITE, &old) == 0) {
+    return NULL;
+  }
 
-	return address;
+  return address;
 }
