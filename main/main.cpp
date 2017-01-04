@@ -22,10 +22,6 @@
 #include <stdint.h>
 #include <math.h>
 
-#ifndef M_PI
-# define M_PI 3.141592f
-#endif
-
 SHARED_OPTIONS g_Options;
 
 static void ProcessUnreliableGamePacketsHook(const char *pData, int cbData, void *pAddr, void *pPlayer)
