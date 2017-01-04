@@ -70,7 +70,7 @@ void DbgPrint(char *pszFormat, ...)
 {
     va_list pArgList;
     FILE *pFile;
-	char szBuf[256];
+    char szBuf[256];
     static int bFirstFileDebug = 1;
     
     if(bFirstFileDebug)
@@ -80,18 +80,18 @@ void DbgPrint(char *pszFormat, ...)
     
     if(pFile)
     {
-		bFirstFileDebug = 0;
-		va_start(pArgList, pszFormat);
-    	vfprintf(pFile, pszFormat, pArgList);
-    	va_end(pArgList);
+        bFirstFileDebug = 0;
+        va_start(pArgList, pszFormat);
+        vfprintf(pFile, pszFormat, pArgList);
+        va_end(pArgList);
         fputs("\n", pFile);
         fclose(pFile);
     }
 
-	va_start(pArgList, pszFormat);
-	vsnprintf(szBuf, sizeof(szBuf), pszFormat, pArgList);
-	va_end(pArgList);
-	RfConsoleWrite(szBuf, NULL);
+    va_start(pArgList, pszFormat);
+    vsnprintf(szBuf, sizeof(szBuf), pszFormat, pArgList);
+    va_end(pArgList);
+    RfConsoleWrite(szBuf, NULL);
 }
 
 char *stristr(const char *haystack, const char *needle)

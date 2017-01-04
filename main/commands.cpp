@@ -91,11 +91,11 @@ static void SpectateCmdHandler(void)
                 pPlayer = FindPlayer(g_pszCmdArg);
                 if (!pPlayer)
                     RfConsolePrintf("Cannot find player: %s", g_pszCmdArg);
-			}
-			else {
-				RfConsolePrintf("Expected player name.");
-				pPlayer = *g_ppLocalPlayer;
-			}
+            }
+            else {
+                RfConsolePrintf("Expected player name.");
+                pPlayer = *g_ppLocalPlayer;
+            }
             
             if (pPlayer)
                 SetSpectateModeTarget(pPlayer);
@@ -115,19 +115,19 @@ static void SpectateCmdHandler(void)
 #if MULTISAMPLING_SUPPORT
 static void AntiAliasingCmdHandler(void)
 {
-	if (*g_pbCmdRun)
-	{
-		if (!g_Options.bMultiSampling)
-			RfConsolePrintf("Anti-aliasing is not supported");
-		else
-		{
-			DWORD Enabled = FALSE;
-			IDirect3DDevice8_GetRenderState(*g_ppGrDevice, D3DRS_MULTISAMPLEANTIALIAS, &Enabled);
-			Enabled = !Enabled;
-			IDirect3DDevice8_SetRenderState(*g_ppGrDevice, D3DRS_MULTISAMPLEANTIALIAS, Enabled);
-			RfConsolePrintf("Anti-aliasing is %s", Enabled ? "enabled" : "disabled");
-		}
-	}
+    if (*g_pbCmdRun)
+    {
+        if (!g_Options.bMultiSampling)
+            RfConsolePrintf("Anti-aliasing is not supported");
+        else
+        {
+            DWORD Enabled = FALSE;
+            IDirect3DDevice8_GetRenderState(*g_ppGrDevice, D3DRS_MULTISAMPLEANTIALIAS, &Enabled);
+            Enabled = !Enabled;
+            IDirect3DDevice8_SetRenderState(*g_ppGrDevice, D3DRS_MULTISAMPLEANTIALIAS, Enabled);
+            RfConsolePrintf("Anti-aliasing is %s", Enabled ? "enabled" : "disabled");
+        }
+    }
 }
 #endif
 
@@ -156,7 +156,7 @@ CCmd g_Commands[] = {
     {"spectate", "Starts spectating mode", SpectateCmdHandler},
 #endif
 #if MULTISAMPLING_SUPPORT
-	{ "antialiasing", "Toggles anti-aliasing", AntiAliasingCmdHandler },
+    { "antialiasing", "Toggles anti-aliasing", AntiAliasingCmdHandler },
 #endif
 #if DIRECTINPUT_SUPPORT
     { "inputmode", "Toggles input mode", InputModeCmdHandler },

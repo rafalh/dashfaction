@@ -35,12 +35,12 @@ static void ProcessUnreliableGamePacketsHook(const char *pData, int cbData, void
 
 static void ProcessWaitingMessages()
 {
-	MSG msg;
-	while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
-	{
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
-	}
+    MSG msg;
+    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+    {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
 }
 
 static void DrawConsoleAndProcessKbdFifoHook(BOOL bServer)
@@ -63,32 +63,32 @@ static void DrawConsoleAndProcessKbdFifoHook(BOOL bServer)
 
 static void SetTextureMinMagFilter(D3DTEXTUREFILTERTYPE FilterType)
 {
-	uintptr_t Addresses[] = {
-		// InitD3D
-		0x00546283, 0x00546295,
-		0x005462A9, 0x005462BD,
-		// GrSetMaterial
-		0x0054F2E8, 0x0054F2FC,
-		0x0054F438, 0x0054F44C,
-		0x0054F567, 0x0054F57B,
-		0x0054F62D, 0x0054F641,
-		0x0054F709, 0x0054F71D,
-		0x0054F800, 0x0054F814,
-		0x0054F909, 0x0054F91D,
-		0x0054FA1A, 0x0054FA2E,
-		0x0054FB22, 0x0054FB36,
-		0x0054FBFE, 0x0054FC12,
-		0x0054FD06, 0x0054FD1A,
-		0x0054FD90, 0x0054FDA4,
-		0x0054FE98, 0x0054FEAC,
-		0x0054FF74, 0x0054FF88,
-		0x0055007C, 0x00550090,
-		0x005500C6, 0x005500DA,
-		0x005501A2, 0x005501B6,
-	};
-	unsigned i;
-	for (i = 0; i < sizeof(Addresses) / sizeof(Addresses[0]); ++i)
-		WriteMemUInt8((PVOID)(Addresses[i] + 1), (uint8_t)FilterType);
+    uintptr_t Addresses[] = {
+        // InitD3D
+        0x00546283, 0x00546295,
+        0x005462A9, 0x005462BD,
+        // GrSetMaterial
+        0x0054F2E8, 0x0054F2FC,
+        0x0054F438, 0x0054F44C,
+        0x0054F567, 0x0054F57B,
+        0x0054F62D, 0x0054F641,
+        0x0054F709, 0x0054F71D,
+        0x0054F800, 0x0054F814,
+        0x0054F909, 0x0054F91D,
+        0x0054FA1A, 0x0054FA2E,
+        0x0054FB22, 0x0054FB36,
+        0x0054FBFE, 0x0054FC12,
+        0x0054FD06, 0x0054FD1A,
+        0x0054FD90, 0x0054FDA4,
+        0x0054FE98, 0x0054FEAC,
+        0x0054FF74, 0x0054FF88,
+        0x0055007C, 0x00550090,
+        0x005500C6, 0x005500DA,
+        0x005501A2, 0x005501B6,
+    };
+    unsigned i;
+    for (i = 0; i < sizeof(Addresses) / sizeof(Addresses[0]); ++i)
+        WriteMemUInt8((PVOID)(Addresses[i] + 1), (uint8_t)FilterType);
 }
 
 void GrSetViewMatrixLastCallHook()
@@ -109,15 +109,15 @@ static void InitGameHook(void)
     RfInitGame();
 
 #if ANISOTROPIC_FILTERING
-	/* Anisotropic texture filtering */
-	if (g_pRfGrDeviceCaps->MaxAnisotropy > 0)
-	{
-		DWORD AnisotropyLevel = min(g_pRfGrDeviceCaps->MaxAnisotropy, 16);
-		SetTextureMinMagFilter(D3DTEXF_ANISOTROPIC);
-		IDirect3DDevice8_SetTextureStageState(*g_ppGrDevice, 0, D3DTSS_MAXANISOTROPY, AnisotropyLevel);
-		IDirect3DDevice8_SetTextureStageState(*g_ppGrDevice, 1, D3DTSS_MAXANISOTROPY, AnisotropyLevel);
-		INFO("Anisotropic Filtering enabled (level: %d)", AnisotropyLevel);
-	}
+    /* Anisotropic texture filtering */
+    if (g_pRfGrDeviceCaps->MaxAnisotropy > 0)
+    {
+        DWORD AnisotropyLevel = min(g_pRfGrDeviceCaps->MaxAnisotropy, 16);
+        SetTextureMinMagFilter(D3DTEXF_ANISOTROPIC);
+        IDirect3DDevice8_SetTextureStageState(*g_ppGrDevice, 0, D3DTSS_MAXANISOTROPY, AnisotropyLevel);
+        IDirect3DDevice8_SetTextureStageState(*g_ppGrDevice, 1, D3DTSS_MAXANISOTROPY, AnisotropyLevel);
+        INFO("Anisotropic Filtering enabled (level: %d)", AnisotropyLevel);
+    }
 #endif
 
 #if DIRECTINPUT_SUPPORT
@@ -175,67 +175,67 @@ CPlayer *FindPlayer(const char *pszName)
 
 static void GrSwitchBuffersHook(void)
 {
-	// We disabled msg loop thread so we have to process them somewhere
-	ProcessWaitingMessages();
+    // We disabled msg loop thread so we have to process them somewhere
+    ProcessWaitingMessages();
 }
 
 static void SetupPP(void)
 {
-	D3DPRESENT_PARAMETERS *pPP = (D3DPRESENT_PARAMETERS*)0x01CFCA18;
-	memset(pPP, 0, sizeof(*pPP));
+    D3DPRESENT_PARAMETERS *pPP = (D3DPRESENT_PARAMETERS*)0x01CFCA18;
+    memset(pPP, 0, sizeof(*pPP));
 
-	D3DFORMAT *pFormat = (D3DFORMAT*)0x005A135C;
-	INFO("D3D Format: %ld", *pFormat);
+    D3DFORMAT *pFormat = (D3DFORMAT*)0x005A135C;
+    INFO("D3D Format: %ld", *pFormat);
 
-	pPP->Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
+    pPP->Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
 
-	/*int i, Format;
-	for (Format = 0; Format < 120; ++Format)
-	{
-		for (i = 2; i < 8; ++i)
-			if (SUCCEEDED(IDirect3D8_CheckDeviceMultiSampleType(*g_ppDirect3D, *g_pAdapterIdx, D3DDEVTYPE_HAL, Format, FALSE, i)))
-				WARN("AA (format %d %d samples) supported", Format, i);
-	}*/
-	
+    /*int i, Format;
+    for (Format = 0; Format < 120; ++Format)
+    {
+        for (i = 2; i < 8; ++i)
+            if (SUCCEEDED(IDirect3D8_CheckDeviceMultiSampleType(*g_ppDirect3D, *g_pAdapterIdx, D3DDEVTYPE_HAL, Format, FALSE, i)))
+                WARN("AA (format %d %d samples) supported", Format, i);
+    }*/
+    
 #if MULTISAMPLING_SUPPORT
-	if (g_Options.bMultiSampling && *pFormat > 0)
-	{
-		HRESULT hr = IDirect3D8_CheckDeviceMultiSampleType(*g_ppDirect3D, *g_pAdapterIdx, D3DDEVTYPE_HAL, *pFormat, FALSE, D3DMULTISAMPLE_4_SAMPLES);
-		if (SUCCEEDED(hr))
-		{
-			INFO("Enabling Anti-Aliasing (4x MSAA)...");
-			pPP->MultiSampleType = D3DMULTISAMPLE_4_SAMPLES;
-		}
-		else
-		{
-			WARN("MSAA not supported (0x%x)...", hr);
-			g_Options.bMultiSampling = FALSE;
-		}
-	}
+    if (g_Options.bMultiSampling && *pFormat > 0)
+    {
+        HRESULT hr = IDirect3D8_CheckDeviceMultiSampleType(*g_ppDirect3D, *g_pAdapterIdx, D3DDEVTYPE_HAL, *pFormat, FALSE, D3DMULTISAMPLE_4_SAMPLES);
+        if (SUCCEEDED(hr))
+        {
+            INFO("Enabling Anti-Aliasing (4x MSAA)...");
+            pPP->MultiSampleType = D3DMULTISAMPLE_4_SAMPLES;
+        }
+        else
+        {
+            WARN("MSAA not supported (0x%x)...", hr);
+            g_Options.bMultiSampling = FALSE;
+        }
+    }
 #endif
 }
 
 void  __declspec(naked) CrashFix0055CE59()
 {
-	_asm
-	{
-		shl   edi, 5
-		lea   edx, [esp + 0x38 - 0x28]
-		mov   eax, [eax + edi]
-		test  eax, eax
-		jz    CrashFix0055CE59_label1
-		//jmp CrashFix0055CE59_label1
-		push  0
-		push  0
-		push  edx
-		push  0
-		push  eax
-		mov   ecx, 0x0055CE59
-		jmp   ecx
-	CrashFix0055CE59_label1:
-		mov   ecx, 0x0055CF23
-		jmp   ecx
-	}
+    _asm
+    {
+        shl   edi, 5
+        lea   edx, [esp + 0x38 - 0x28]
+        mov   eax, [eax + edi]
+        test  eax, eax
+        jz    CrashFix0055CE59_label1
+        //jmp CrashFix0055CE59_label1
+        push  0
+        push  0
+        push  edx
+        push  0
+        push  eax
+        mov   ecx, 0x0055CE59
+        jmp   ecx
+    CrashFix0055CE59_label1:
+        mov   ecx, 0x0055CF23
+        jmp   ecx
+    }
 }
 
 extern "C" DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
@@ -243,7 +243,7 @@ extern "C" DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
     DWORD dwRfThreadId = pOptions->dwRfThreadId;
     HANDLE hRfThread;
     
-	g_Options = *pOptions;
+    g_Options = *pOptions;
 
     /* Init crash dump writer before anything else */
     InitCrashDumps();
@@ -260,34 +260,34 @@ extern "C" DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
 #endif /* NO_CD_FIX */
 
 #if WINDOWED_MODE_SUPPORT
-	if (pOptions->bWindowed)
-	{
-		/* Enable windowed mode */
-		WriteMemUInt32((PVOID)(0x004B29A5 + 6), 0xC8);
-		//WriteMemUInt32((PVOID)(0x0050C4E3 + 1), WS_POPUP|WS_SYSMENU);
-	}
+    if (pOptions->bWindowed)
+    {
+        /* Enable windowed mode */
+        WriteMemUInt32((PVOID)(0x004B29A5 + 6), 0xC8);
+        //WriteMemUInt32((PVOID)(0x0050C4E3 + 1), WS_POPUP|WS_SYSMENU);
+    }
 #endif
 
-	//WriteMemUInt8((PVOID)0x00524C98, ASM_SHORT_JMP_REL); // disable window hooks
+    //WriteMemUInt8((PVOID)0x00524C98, ASM_SHORT_JMP_REL); // disable window hooks
 
 #if MULTISAMPLING_SUPPORT
-	if (pOptions->bMultiSampling)
-	{
-		WriteMemUInt32((PVOID)(0x00545B4D + 6), D3DSWAPEFFECT_DISCARD); // full screen
-		WriteMemUInt32((PVOID)(0x00545AE3 + 6), D3DSWAPEFFECT_DISCARD); // windowed
-	}
+    if (pOptions->bMultiSampling)
+    {
+        WriteMemUInt32((PVOID)(0x00545B4D + 6), D3DSWAPEFFECT_DISCARD); // full screen
+        WriteMemUInt32((PVOID)(0x00545AE3 + 6), D3DSWAPEFFECT_DISCARD); // windowed
+    }
 #endif
 
-	WriteMemUInt8Repeat((PVOID)0x00545AA7, ASM_NOP, 0x00545AB5 - 0x00545AA7);
-	WriteMemUInt8((PVOID)0x00545AA7, ASM_LONG_CALL_REL);
-	WriteMemPtr((PVOID)0x00545AA8, (PVOID)((ULONG_PTR)SetupPP - (0x00545AA7 + 0x5)));
-	WriteMemUInt8Repeat((PVOID)(0x00545BA5), ASM_NOP, 6); // dont set PP.Flags
+    WriteMemUInt8Repeat((PVOID)0x00545AA7, ASM_NOP, 0x00545AB5 - 0x00545AA7);
+    WriteMemUInt8((PVOID)0x00545AA7, ASM_LONG_CALL_REL);
+    WriteMemPtr((PVOID)0x00545AA8, (PVOID)((ULONG_PTR)SetupPP - (0x00545AA7 + 0x5)));
+    WriteMemUInt8Repeat((PVOID)(0x00545BA5), ASM_NOP, 6); // dont set PP.Flags
 
-	/* Process messages in the same thread as DX processing (alternative: D3DCREATE_MULTITHREADED) */
-	WriteMemUInt8Repeat((PVOID)0x00524C48, ASM_NOP, 0x00524C83 - 0x00524C48); // disable msg loop thread
-	WriteMemUInt8((PVOID)0x00524C48, ASM_LONG_CALL_REL);
-	WriteMemPtr((PVOID)0x00524C49, (PVOID)((ULONG_PTR)0x00524E40 - (0x00524C48 + 0x5))); // CreateMainWindow
-	WriteMemPtr((PVOID)0x0050CE21, (PVOID)((ULONG_PTR)GrSwitchBuffersHook - (0x0050CE20 + 0x5)));
+    /* Process messages in the same thread as DX processing (alternative: D3DCREATE_MULTITHREADED) */
+    WriteMemUInt8Repeat((PVOID)0x00524C48, ASM_NOP, 0x00524C83 - 0x00524C48); // disable msg loop thread
+    WriteMemUInt8((PVOID)0x00524C48, ASM_LONG_CALL_REL);
+    WriteMemPtr((PVOID)0x00524C49, (PVOID)((ULONG_PTR)0x00524E40 - (0x00524C48 + 0x5))); // CreateMainWindow
+    WriteMemPtr((PVOID)0x0050CE21, (PVOID)((ULONG_PTR)GrSwitchBuffersHook - (0x0050CE20 + 0x5)));
 
     /* Console init string */
     WriteMemPtr((PVOID)0x004B2534, "-- " PRODUCT_NAME " Initializing --\n");
@@ -303,8 +303,8 @@ extern "C" DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
     WriteMemUInt32((PVOID)0x005A18A8, VER_MAJOR);
     WriteMemUInt32((PVOID)0x005A18AC, VER_MINOR);
     WriteMemPtr((PVOID)0x004B33D1, PRODUCT_NAME " %u.%02u");
-	WriteMemUInt32((PVOID)0x00443444, 300); // X coord
-	WriteMemUInt8((PVOID)0x0044343D, 127); // width (127 is max)
+    WriteMemUInt32((PVOID)0x00443444, 300); // X coord
+    WriteMemUInt8((PVOID)0x0044343D, 127); // width (127 is max)
     
     /* Window title (client and server) */
     WriteMemPtr((PVOID)0x004B2790, PRODUCT_NAME);
@@ -376,10 +376,10 @@ extern "C" DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
     /* Crash-fix... (probably argument for function is invalid); Page Heap is needed */
     WriteMemUInt32((PVOID)(0x0056A28C + 1), 0);
 
-	/* Crash-fix for pdm04 (FIXME) */
-	WriteMemUInt8((PVOID)0x0055CE47, ASM_LONG_JMP_REL);
-	WriteMemPtr((PVOID)0x0055CE48, (PVOID)((ULONG_PTR)CrashFix0055CE59 - (0x0055CE48 + 0x4)));
-	WriteMemUInt8((PVOID)0x00412370, ASM_RET); // disable function calling GrLock without checking for success (no idea what it does)
+    /* Crash-fix for pdm04 (FIXME) */
+    WriteMemUInt8((PVOID)0x0055CE47, ASM_LONG_JMP_REL);
+    WriteMemPtr((PVOID)0x0055CE48, (PVOID)((ULONG_PTR)CrashFix0055CE59 - (0x0055CE48 + 0x4)));
+    WriteMemUInt8((PVOID)0x00412370, ASM_RET); // disable function calling GrLock without checking for success (no idea what it does)
     
     //WriteMemUInt32((PVOID)0x00488BE9, ((ULONG_PTR)RenderEntityHook) - (0x00488BE8 + 0x5));
 
@@ -390,10 +390,10 @@ extern "C" DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
     *g_pbDirectInputDisabled = 0;
 #endif
 
-	/* Allow ports < 1023 (especially 0 - any port) */
-	WriteMemUInt8Repeat((PVOID)0x00528F24, 0x90, 2);
-	/* Default port: 0 */
-	WriteMemUInt16((PVOID)0x0059CDE4, 0);
+    /* Allow ports < 1023 (especially 0 - any port) */
+    WriteMemUInt8Repeat((PVOID)0x00528F24, 0x90, 2);
+    /* Default port: 0 */
+    WriteMemUInt16((PVOID)0x0059CDE4, 0);
 
     /* Init modules */
     InitGamma();

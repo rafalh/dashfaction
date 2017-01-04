@@ -170,59 +170,59 @@ static DWORD WINAPI DownloadLevelThread(PVOID pParam)
 
     hInternet = InternetOpen("hoverlees", 0, NULL, NULL, 0);
     if(!hInternet)
-		goto cleanup;
+        goto cleanup;
 
     //hConnect = InternetConnect(hInternet, "nebulamods.com", INTERNET_DEFAULT_HTTP_PORT, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
     hConnect = InternetConnect(hInternet, "pfapi.factionfiles.com", INTERNET_DEFAULT_HTTP_PORT, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
-	if(!hConnect)
-	{
-	    ERR("InternetConnect failed");
-	    goto cleanup;
-	}
+    if(!hConnect)
+    {
+        ERR("InternetConnect failed");
+        goto cleanup;
+    }
 
     //sprintf(buf, "nm_puredl.php?action=download&ticketid=%u", g_LevelTicketId);
     sprintf(buf, "downloadmap.php?ticketid=%u", g_LevelTicketId);
     hRequest = HttpOpenRequest(hConnect, NULL, buf, NULL, NULL, AcceptTypes, INTERNET_FLAG_RELOAD, 0);
-	if(!hRequest)
+    if(!hRequest)
     {
         ERR("HttpOpenRequest failed");
         goto cleanup;
     }
 
     if(!HttpSendRequest(hRequest, NULL, 0, NULL, 0))
-	{
-	    ERR("HttpSendRequest failed");
-		goto cleanup;
-	}
-
-	if(HttpQueryInfo(hRequest, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &dwStatus, &dwSize, NULL) && (dwStatus / 100) != 2)
-	{
-	    ERR("HttpQueryInfo failed or status code (%lu) is wrong", dwStatus);
-		goto cleanup;
-	}
-
-	tmpnam(szTmpName);
-	pTmpFile = fopen(szTmpName, "wb");
-	if(!pTmpFile)
     {
-	    ERR("fopen failed");
-		goto cleanup;
-	}
+        ERR("HttpSendRequest failed");
+        goto cleanup;
+    }
 
-	while(InternetReadFile(hRequest, buf, sizeof(buf), &dwBytesRead) && dwBytesRead > 0)
-	{
-	    g_cbDownloadProgress += dwBytesRead;
-	    fwrite(buf, 1, dwBytesRead, pTmpFile);
-	}
+    if(HttpQueryInfo(hRequest, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &dwStatus, &dwSize, NULL) && (dwStatus / 100) != 2)
+    {
+        ERR("HttpQueryInfo failed or status code (%lu) is wrong", dwStatus);
+        goto cleanup;
+    }
 
-	g_cbLevelSize = g_cbDownloadProgress;
+    tmpnam(szTmpName);
+    pTmpFile = fopen(szTmpName, "wb");
+    if(!pTmpFile)
+    {
+        ERR("fopen failed");
+        goto cleanup;
+    }
 
-	fclose(pTmpFile);
+    while(InternetReadFile(hRequest, buf, sizeof(buf), &dwBytesRead) && dwBytesRead > 0)
+    {
+        g_cbDownloadProgress += dwBytesRead;
+        fwrite(buf, 1, dwBytesRead, pTmpFile);
+    }
 
-	if(!UnzipVpp(szTmpName) && !UnrarVpp(szTmpName))
+    g_cbLevelSize = g_cbDownloadProgress;
+
+    fclose(pTmpFile);
+
+    if(!UnzipVpp(szTmpName) && !UnrarVpp(szTmpName))
         ERR("UnzipVpp and UnrarVpp failed");
 
-	remove(szTmpName);
+    remove(szTmpName);
 
     g_bDownloadActive = FALSE;
 
@@ -272,53 +272,53 @@ BOOL TryToDownloadLevel(const char *pszFileName)
     if(!hInternet)
     {
         ERR("InternetOpen failed");
-		goto cleanup;
+        goto cleanup;
     }
 
     //hConnect = InternetConnect(hInternet, "nebulamods.com", INTERNET_DEFAULT_HTTP_PORT, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
     hConnect = InternetConnect(hInternet, "pfapi.factionfiles.com", INTERNET_DEFAULT_HTTP_PORT, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
-	if(!hConnect)
-	{
-	    ERR("InternetConnect failed");
-	    goto cleanup;
-	}
+    if(!hConnect)
+    {
+        ERR("InternetConnect failed");
+        goto cleanup;
+    }
 
     //hRequest = HttpOpenRequest(hConnect, "POST", "nm_puredl.php", NULL, NULL, AcceptTypes, INTERNET_FLAG_RELOAD, 0);
     hRequest = HttpOpenRequest(hConnect, "POST", "findmap.php", NULL, NULL, AcceptTypes, INTERNET_FLAG_RELOAD, 0);
-	if(!hRequest)
+    if(!hRequest)
     {
         ERR("HttpOpenRequest failed");
         goto cleanup;
     }
 
     dwSize = sprintf(szBuf, "rflName=%s", pszFileName);
-	if(!HttpSendRequest(hRequest, szHeaders, sizeof(szHeaders) - 1, szBuf, dwSize))
-	{
-	    ERR("HttpSendRequest failed");
-		goto cleanup;
-	}
+    if(!HttpSendRequest(hRequest, szHeaders, sizeof(szHeaders) - 1, szBuf, dwSize))
+    {
+        ERR("HttpSendRequest failed");
+        goto cleanup;
+    }
 
-	if(HttpQueryInfo(hRequest, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &dwStatus, &dwSize, NULL) && (dwStatus / 100) != 2)
-	{
-	    ERR("HttpQueryInfo failed or status code (%lu) is wrong", dwStatus);
-		goto cleanup;
-	}
+    if(HttpQueryInfo(hRequest, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &dwStatus, &dwSize, NULL) && (dwStatus / 100) != 2)
+    {
+        ERR("HttpQueryInfo failed or status code (%lu) is wrong", dwStatus);
+        goto cleanup;
+    }
 
-	if(!InternetReadFile(hRequest, szBuf, sizeof(szBuf) - 1, &dwBytesRead))
-	{
-	    ERR("InternetReadFile failed", NULL);
-		goto cleanup;
-	}
+    if(!InternetReadFile(hRequest, szBuf, sizeof(szBuf) - 1, &dwBytesRead))
+    {
+        ERR("InternetReadFile failed", NULL);
+        goto cleanup;
+    }
 
-	szBuf[dwBytesRead] = '\0';
+    szBuf[dwBytesRead] = '\0';
 
-	TRACE("Maps server response: %s", szBuf);
+    TRACE("Maps server response: %s", szBuf);
 
-	pszName = strchr(szBuf, '\n');
-	if(!pszName)
+    pszName = strchr(szBuf, '\n');
+    if(!pszName)
         goto cleanup;
     *(pszName++) = 0; // terminate first line with 0
-	if(strcmp(szBuf, "found") != 0)
+    if(strcmp(szBuf, "found") != 0)
         goto cleanup;
 
     pszAuthor = strchr(pszName, '\n');
@@ -363,7 +363,7 @@ cleanup:
         InternetCloseHandle(hConnect);
     if(hInternet)
         InternetCloseHandle(hInternet);
-	return bRet;
+    return bRet;
 }
 
 void OnJoinFailed(unsigned Reason)

@@ -14,16 +14,16 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     unsigned i;
     
-	//TRACE("%08x: msg %s %x %x", GetTickCount(), GetWndMsgName(uMsg), wParam, lParam);
+    //TRACE("%08x: msg %s %x %x", GetTickCount(), GetWndMsgName(uMsg), wParam, lParam);
 
     for(i = 0; i < *g_pcMsgHandlers; ++i)
         g_MsgHandlers[i](uMsg, wParam, lParam);
-	
+    
     switch(uMsg)
     {
         case WM_ACTIVATE:
             *g_pbIsActive = wParam ? 1 : 0;
-			return DefWindowProcA(hWnd, uMsg, wParam, lParam);
+            return DefWindowProcA(hWnd, uMsg, wParam, lParam);
         
         case WM_QUIT:
         case WM_CLOSE:
@@ -48,7 +48,7 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 void InitWndProc(void)
 {
     // Subclass window
-	WriteMemPtr((PVOID)0x00524E66, WndProc);
+    WriteMemPtr((PVOID)0x00524E66, WndProc);
     
     // Disable mouse when window is not active
     WriteMemUInt8((PVOID)0x0051DC70, ASM_LONG_CALL_REL);

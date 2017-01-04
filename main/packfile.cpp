@@ -298,7 +298,7 @@ static PACKFILE_ENTRY *VfsFindFileInternalHook(const char *pszFilename)
     while(pLookupTableItem);
     
     VFS_DBGPRINT("Cannot find: %s (%x)", pszFilename, Checksum);
-	
+    
     /*pLookupTableItem = &g_pVfsLookupTableNew[Checksum % 20713];
     do
     {
