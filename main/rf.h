@@ -170,7 +170,7 @@ static uint32_t * const g_pcArchives = (uint32_t*)0x01BDB214;
 static PACKFILE * const g_pArchives = (PACKFILE*)0x01BA7AC8;
 #define VFS_LOOKUP_TABLE_SIZE 20713
 static VFS_LOOKUP_TABLE * const g_pVfsLookupTable = (VFS_LOOKUP_TABLE*)0x01BB2AC8;
-static BOOL * const g_pbVfsIgnoreTblFiles = (BOOL*)0x01BDB21C;
+constexpr auto g_pbVfsIgnoreTblFiles = (uint8_t*)0x01BDB21C;
 
 typedef BOOL (*PFN_LOAD_PACKFILE)(const char *pszFileName, const char *pszDir);
 static const PFN_LOAD_PACKFILE VfsLoadPackfile = (PFN_LOAD_PACKFILE)0x0052C070;
@@ -857,6 +857,8 @@ constexpr auto HandleCtrlInGame = (void(*)(CPlayer *pPlayer, EGameCtrl KeyId, ch
 
 typedef bool(*PFN_IS_PLAYER_ENTITY_INVALID)(CPlayer *pPlayer);
 constexpr auto IsPlayerEntityInvalid = (PFN_IS_PLAYER_ENTITY_INVALID)0x004A4920;
+typedef bool(*PFN_IS_PLAYER_DYING)(CPlayer *pPlayer);
+constexpr auto IsPlayerDying = (PFN_IS_PLAYER_DYING)0x004A4940;
 
 constexpr auto RegReadDword = (int(*)(char *pszSubKeyName, LPCSTR lpValueName, DWORD *lpData, int DefaultValue))0x004A4920;
 

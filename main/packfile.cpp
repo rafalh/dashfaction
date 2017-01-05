@@ -15,9 +15,9 @@ static VFS_LOOKUP_TABLE_NEW *g_pVfsLookupTableNew = (VFS_LOOKUP_TABLE_NEW*)0x01B
 static BOOL g_bTest = FALSE;
 static unsigned g_cFilesInVfs = 0;
 
-#define DEBUG_VFS 1
-//#define DEBUG_VFS_FILENAME1 "Flame01_02.tga"
-//#define DEBUG_VFS_FILENAME2 "big_glassblast_a.tga"
+#define DEBUG_VFS 0
+#define DEBUG_VFS_FILENAME1 "DM RTS MiniGolf 2.1.rfl"
+#define DEBUG_VFS_FILENAME2 "JumpPad.wav"
 
 #define VFS_DBGPRINT TRACE
 
@@ -86,8 +86,10 @@ static BOOL VfsLoadPackfileHook(const char *pszFilename, const char *pszDir)
         return FALSE;
     }
     
-    strncpy(pPackfile->szName, pszFilename, 0x1F);
-    strncpy(pPackfile->szPath, szFullPath, 0x7F);
+    strncpy(pPackfile->szName, pszFilename, sizeof(pPackfile->szName) - 1);
+    pPackfile->szName[sizeof(pPackfile->szName) - 1] = '\0';
+    strncpy(pPackfile->szPath, szFullPath, sizeof(pPackfile->szPath) - 1);
+    pPackfile->szPath[sizeof(pPackfile->szPath) - 1] = '\0';
     pPackfile->field_A0 = 0;
     pPackfile->cFiles = 0;
     pPackfile->pFileList = NULL;
@@ -206,7 +208,7 @@ static BOOL VfsAddPackfileEntriesHook(PACKFILE *pPackfile, const void *pBlock, u
     for(i = 0; i < cFilesInBlock; ++i)
     {
         pEntry = &pPackfile->pFileList[*pcAddedFiles];
-        if(*g_pbVfsIgnoreTblFiles && !stricmp(GetFileExt((char*)pData), ".tbl"))
+        if (*g_pbVfsIgnoreTblFiles && !stricmp(GetFileExt((char*)pData), ".tbl"))
             pEntry->pszFileName = "DEADBEEF";
         else
         {
@@ -252,9 +254,21 @@ static void VfsAddFileToLookupTableHook(PACKFILE_ENTRY *pEntry)
             if (!stricmp(pEntry->pszFileName, DEBUG_VFS_FILENAME1) || !stricmp(pEntry->pszFileName, DEBUG_VFS_FILENAME2))
                 VFS_DBGPRINT("Add 2: %s (%x)", pEntry->pszFileName, pEntry->dwNameChecksum);
 #endif
-            break;
+            // file with the same name already exist
+            if (*g_pbVfsIgnoreTblFiles) // this is set to true for user_maps
+            {
+                TRACE("Denied overwriting game file %s (old archive %s, new archive %s)",
+                    pEntry->pArchive->szName, pEntry->pszFileName, pLookupTableItem->pPackfileEntry->pArchive->szName);
+                return;
+            }
+            else
+            {
+                TRACE("Overwriting packfile item %s (old archive %s, new %s)",
+                    pEntry->pszFileName, pLookupTableItem->pPackfileEntry->pArchive->szName, pEntry->pArchive->szName);
+                break;
+            }
         }
-            
+        
         if(!pLookupTableItem->pNext)
         {
 #if DEBUG_VFS && defined(DEBUG_VFS_FILENAME1) && defined(DEBUG_VFS_FILENAME2)
