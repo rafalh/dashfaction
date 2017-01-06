@@ -233,7 +233,7 @@ int main(int argc, const char *argv[]) try
     
     /* Start RF process */
     sprintf(szBuf, "%s\\rf.exe", szRfPath);
-    if(!PathFileExists(szBuf))
+    if (!PathFileExists(szBuf))
     {
         sprintf(szBuf, "Error %lX! Cannot find Red Faction path. Reinstall is needed.", hr);
         MessageBox(NULL, szBuf, NULL, MB_OK|MB_ICONERROR);
@@ -253,6 +253,16 @@ int main(int argc, const char *argv[]) try
     printf("Starting %s...\n", szBuf);
     if (!CreateProcess(szBuf, GetCommandLine(), NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, szRfPath, &si, &pi))
     {
+        if (GetLastError() == ERROR_ELEVATION_REQUIRED)
+        {
+            MessageBox(NULL,
+                "Privilege elevation is required. Please change RF.exe file properties and disable all "
+                "compatibility settings (Run as administrator, Compatibility mode for Windows XX, etc.) or run "
+                "Dash Faction launcher as administrator.",
+                NULL, MB_OK | MB_ICONERROR);
+            return -1;
+        }
+        
         hr = GET_LAST_WIN32_ERROR();
         sprintf(szBuf2, "Error %lX! Failed to start: %s", hr, szBuf);
         MessageBox(NULL, szBuf2, NULL, MB_OK|MB_ICONERROR);
@@ -276,7 +286,7 @@ int main(int argc, const char *argv[]) try
     }
     catch (const std::exception &e)
     {
-        sprintf(szBuf, "Failed to init game process! Error: %s", e.what());
+        sprintf(szBuf, "Failed to initialize game process! Error: %s", e.what());
         MessageBox(NULL, szBuf, NULL, MB_OK | MB_ICONERROR);
         TerminateProcess(pi.hProcess, 0);
         return -1;
