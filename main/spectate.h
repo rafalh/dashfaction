@@ -2,6 +2,6 @@
 
 #include "rf.h"
 
-void SetSpectateModeTarget(CPlayer *pPlayer);
-void InitSpectateMode();
-void DrawSpectateModeUI();
+void SpectateModeSetTargetPlayer(CPlayer *pPlayer);
+void SpectateModeInit();
+void SpectateModeDrawUI();

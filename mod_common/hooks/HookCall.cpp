@@ -8,7 +8,7 @@ HookCallInternal::HookCallInternal(uintptr_t OpcodeAddr, uintptr_t ExpectedFunAd
     unsigned char *OpcodePtr = reinterpret_cast<unsigned char*>(OpcodeAddr);
     m_bIsValid = (*OpcodePtr == 0xE8);
     if (!m_bIsValid)
-        CLogger::root().err() << "Failed to set hook at address " << std::hex << OpcodeAddr;
+        CLogger::root().err() << "Failed to set hook at address " << std::hex << OpcodeAddr << " (opcode 0x" << std::hex << *OpcodePtr << ")";
     
 	if (ExpectedFunAddr)
     {

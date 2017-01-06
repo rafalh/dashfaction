@@ -19,8 +19,10 @@
 #include "wndproc.h"
 #include "graphics.h"
 #include "network.h"
+#include "HookableFunPtr.h"
 
 SHARED_OPTIONS g_Options;
+HookableFunPtr<0x004163C0, void, CPlayer*> RenderHitScreenHookable;
 
 static void ProcessWaitingMessages()
 {
@@ -34,15 +36,14 @@ static void ProcessWaitingMessages()
 
 static void DrawConsoleAndProcessKbdFifoHook(BOOL bServer)
 {
+    // Draw on top (after scene)
+
     RfDrawConsoleAndProcessKbdFifo(bServer);
     
     GraphicsDrawFpsCounter();
     
 #ifdef LEVELS_AUTODOWNLOADER
     RenderDownloadProgress();
-#endif
-#if SPECTATE_ENABLE
-    DrawSpectateModeUI();
 #endif
 }
 
@@ -87,6 +88,15 @@ static void GrSwitchBuffersHook(void)
 {
     // We disabled msg loop thread so we have to process them somewhere
     ProcessWaitingMessages();
+}
+
+static void RenderHitScreenHook(CPlayer *pPlayer)
+{
+    RenderHitScreenHookable.callOrig(pPlayer);
+
+#if SPECTATE_MODE_ENABLE
+    SpectateModeDrawUI();
+#endif
 }
 
 void  __declspec(naked) CrashFix0055CE59()
@@ -183,6 +193,8 @@ extern "C" DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
     
     /* Switch UI language */
     WriteMemUInt8((PVOID)(0x004B27D2 + 1), (uint8_t)GetInstalledGameLang());
+    
+    RenderHitScreenHookable.hook(RenderHitScreenHook);
 
 #if DIRECTINPUT_SUPPORT
     *g_pbDirectInputDisabled = 0;
@@ -202,7 +214,7 @@ extern "C" DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
     InitLazyban();
     InitKill();
     VfsApplyHooks(); /* Use new VFS without file count limit */
-    InitSpectateMode();
+    SpectateModeInit();
     CommandsInit();
 
     return 1; /* success */

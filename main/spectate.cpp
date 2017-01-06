@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "rf.h"
+#include "rfproto.h"
 #include "spectate.h"
 #include "config.h"
 #include "utils.h"
@@ -8,17 +9,16 @@
 #include "HookableFunPtr.h"
 #include "hooks/HookCall.h"
 
-//#define SPECTATE_SHOW_WEAPON_EXPERIMENTAL
-
-#if SPECTATE_ENABLE
+#if SPECTATE_MODE_ENABLE
 
 static CPlayer *g_SpectateModeTarget;
+static CAMERA *g_OldTargetCamera = NULL;
 static bool g_SpectateModeEnabled = false;
 static int g_LargeFont = -1, g_MediumFont = -1, g_SmallFont = -1;
 
-HookableFunPtr<0x004A35C0, void, CPlayer*> DestroyPlayerFun;
-HookableFunPtr<0x004A6210, void, CPlayer*, EGameCtrl, char> HandleCtrlInGameFun;
-HookableFunPtr<0x0043A2C0, void, CPlayer*> RenderReticleFun;
+static HookableFunPtr<0x004A35C0, void, CPlayer*> DestroyPlayerFun;
+static HookableFunPtr<0x004A6210, void, CPlayer*, EGameCtrl, char> HandleCtrlInGameFun;
+static HookableFunPtr<0x0043A2C0, void, CPlayer*> RenderReticleFun;
 
 static void SetCameraTarget(CPlayer *pPlayer)
 {
@@ -29,6 +29,8 @@ static void SetCameraTarget(CPlayer *pPlayer)
     CAMERA *pCamera = (*g_ppLocalPlayer)->pCamera;
     pCamera->Type = CAMERA::RF_CAM_1ST_PERSON;
     pCamera->pPlayer = pPlayer;
+
+    g_OldTargetCamera = pPlayer->pCamera;
     pPlayer->pCamera = pCamera; // fix crash 0040D744
 
     CEntity *pEntity = HandleToEntity(pPlayer->hEntity);
@@ -45,7 +47,7 @@ static void SetCameraTarget(CPlayer *pPlayer)
     }
 }
 
-void SetSpectateModeTarget(CPlayer *pPlayer)
+void SpectateModeSetTargetPlayer(CPlayer *pPlayer)
 {
     if (!pPlayer)
         pPlayer = *g_ppLocalPlayer;
@@ -53,25 +55,50 @@ void SetSpectateModeTarget(CPlayer *pPlayer)
     if (!*g_ppLocalPlayer || !(*g_ppLocalPlayer)->pCamera)
         return;
 
+    if (*g_pGameOptions & RF_GO_FORCE_RESPAWN)
+    {
+        const char szMessage[] = "You cannot use Spectate Mode because Force Respawn option is enabled on this server!";
+        CString strMessage = { strlen(szMessage), NULL };
+        CString strPrefix = { 0, NULL };
+        strMessage.psz = StringAlloc(strMessage.cch + 1);
+        strcpy(strMessage.psz, szMessage);
+        ChatPrint(strMessage, 4, strPrefix);
+        return;
+    }
+
+    // fix old target
+    if (g_SpectateModeTarget && g_SpectateModeTarget != *g_ppLocalPlayer)
+    {
+        g_SpectateModeTarget->pCamera = g_OldTargetCamera;
+        g_SpectateModeTarget->FireFlags &= ~(1 << 4);
+        g_OldTargetCamera = NULL;
+    }
+
     g_SpectateModeEnabled = (pPlayer != *g_ppLocalPlayer);
     g_SpectateModeTarget = pPlayer;
 
-    //SetScoreboardHidden(g_SpectateModeEnabled);
     KillLocalPlayer();
     SetCameraTarget(pPlayer);
 
-#ifdef SPECTATE_SHOW_WEAPON_EXPERIMENTAL
+#if SPECTATE_MODE_SHOW_WEAPON
     g_SpectateModeTarget = pPlayer;
-    CEntity *pEntity = HandleToEntity(pPlayer->hEntity);
-    SetupPlayerWeaponMesh(pPlayer, pEntity->WeaponSel.WeaponClsId);
     pPlayer->FireFlags |= 1 << 4;
-    RfConsolePrintf("pWeaponMesh %p", pPlayer->pWeaponMesh);
-#endif // SPECTATE_SHOW_WEAPON_EXPERIMENTAL
+    CEntity *pEntity = HandleToEntity(pPlayer->hEntity);
+    if (pEntity)
+    {
+        SetupPlayerWeaponMesh(pPlayer, pEntity->WeaponSel.WeaponClsId);
+        TRACE("pWeaponMesh %p", pPlayer->pWeaponMesh);
+    }
+#endif // SPECTATE_MODE_SHOW_WEAPON
 }
 
 static void SpectateNextPlayer(bool bDir, bool bTryAlivePlayersFirst = false)
 {
-    CPlayer *pNewTarget = g_SpectateModeTarget;
+    CPlayer *pNewTarget;
+    if (g_SpectateModeEnabled)
+        pNewTarget = g_SpectateModeTarget;
+    else
+        pNewTarget = *g_ppLocalPlayer;
     while (true)
     {
         pNewTarget = bDir ? pNewTarget->pNext : pNewTarget->pPrev;
@@ -81,7 +108,7 @@ static void SpectateNextPlayer(bool bDir, bool bTryAlivePlayersFirst = false)
             continue;
         if (pNewTarget != *g_ppLocalPlayer)
         {
-            SetSpectateModeTarget(pNewTarget);
+            SpectateModeSetTargetPlayer(pNewTarget);
             return;
         }
     }
@@ -94,13 +121,13 @@ static void HandleCtrlInGameHook(CPlayer *pPlayer, EGameCtrl KeyId, char WasPres
 {
     if (g_SpectateModeEnabled)
     {
-        if (KeyId == GC_PRIMARY_ATTACK)
+        if (KeyId == GC_PRIMARY_ATTACK || KeyId == GC_SLIDE_RIGHT)
         {
             if (WasPressed)
                 SpectateNextPlayer(true);
             return; // dont allow spawn
         }
-        else if (KeyId == GC_SECONDARY_ATTACK)
+        else if (KeyId == GC_SECONDARY_ATTACK || KeyId == GC_SLIDE_LEFT)
         {
             if (WasPressed)
                 SpectateNextPlayer(false);
@@ -109,15 +136,15 @@ static void HandleCtrlInGameHook(CPlayer *pPlayer, EGameCtrl KeyId, char WasPres
         else if (KeyId == GC_JUMP)
         {
             if (WasPressed)
-                SetSpectateModeTarget(nullptr);
+                SpectateModeSetTargetPlayer(nullptr);
             return;
         }
     }
     else if (!g_SpectateModeEnabled)
     {
-        if (KeyId == GC_JUMP && WasPressed)
+        if (KeyId == GC_JUMP && WasPressed && IsPlayerEntityInvalid(*g_ppLocalPlayer))
         {
-            SetSpectateModeTarget(*g_ppLocalPlayer);
+            SpectateModeSetTargetPlayer(*g_ppLocalPlayer);
             SpectateNextPlayer(true, true);
             return;
         }
@@ -142,12 +169,12 @@ static bool IsPlayerDyingHook(CPlayer *pPlayer)
         return IsPlayerDying(pPlayer);
 }
 
-void DestroyPlayerHook(CPlayer *pPlayer)
+static void DestroyPlayerHook(CPlayer *pPlayer)
 {
     if (g_SpectateModeTarget == pPlayer)
         SpectateNextPlayer(true);
     if (g_SpectateModeTarget == pPlayer)
-        SetSpectateModeTarget(nullptr);
+        SpectateModeSetTargetPlayer(nullptr);
     DestroyPlayerFun.callOrig(pPlayer);
 }
 
@@ -159,27 +186,35 @@ static void RenderReticleHook(CPlayer *pPlayer)
         RenderReticleFun.callOrig(pPlayer);
 }
 
-#ifdef SPECTATE_SHOW_WEAPON_EXPERIMENTAL
+#if SPECTATE_MODE_SHOW_WEAPON
 
 static void RenderPlayerArmHook(CPlayer *pPlayer)
 {
-    if (g_SpectateModeTarget)
+    if (g_SpectateModeEnabled)
+    {
+        CEntity *pEntity = HandleToEntity(g_SpectateModeTarget->hEntity);
+
+        // HACKFIX: RF uses function PlayerSetRemoteChargeVisible for local player only
+        g_SpectateModeTarget->RemoteChargeVisible = (pEntity && pEntity->WeaponSel.WeaponClsId == *g_pRemoteChargeClsId);
+
+        UpdatePlayerWeaponMesh(g_SpectateModeTarget);
         RenderPlayerArm(g_SpectateModeTarget);
+    }
     else
         RenderPlayerArm(pPlayer);
 }
 
 static void RenderPlayerArm2Hook(CPlayer *pPlayer)
 {
-    if (g_SpectateModeTarget)
+    if (g_SpectateModeEnabled)
         RenderPlayerArm2(g_SpectateModeTarget);
     else
         RenderPlayerArm2(pPlayer);
 }
 
-#endif // SPECTATE_SHOW_WEAPON_EXPERIMENTAL
+#endif // SPECTATE_MODE_SHOW_WEAPON
 
-void InitSpectateMode()
+void SpectateModeInit()
 {
     static HookCall<PFN_IS_PLAYER_ENTITY_INVALID> IsPlayerEntityInvalid_RedBars_Hookable(0x00432A52, IsPlayerEntityInvalid);
     IsPlayerEntityInvalid_RedBars_Hookable.Hook(IsPlayerEntityInvalidHook);
@@ -205,9 +240,9 @@ void InitSpectateMode()
 
     // Note: HUD rendering doesn't make sense because life and armor isn't synced
 
-#ifdef SPECTATE_SHOW_WEAPON_EXPERIMENTAL
-    //WriteMemPtr((PVOID)(0x0043285D + 1), (PVOID)((ULONG_PTR)RenderPlayerArmHook - (0x0043285D + 0x5)));
-    WriteMemPtr((PVOID)(0x004A2B56 + 1), (PVOID)((ULONG_PTR)RenderPlayerArm2Hook - (0x004A2B56 + 0x5)));
+#if SPECTATE_MODE_SHOW_WEAPON
+    WriteMemPtr((PVOID)(0x0043285D + 1), (PVOID)((ULONG_PTR)RenderPlayerArmHook - (0x0043285D + 0x5)));
+    //WriteMemPtr((PVOID)(0x004A2B56 + 1), (PVOID)((ULONG_PTR)RenderPlayerArm2Hook - (0x004A2B56 + 0x5)));
     WriteMemUInt8Repeat((PVOID)0x004AB1B8, ASM_NOP, 6); // RenderPlayerArm2
     WriteMemUInt8Repeat((PVOID)0x004AA23E, ASM_NOP, 6); // SetupPlayerWeaponMesh
     WriteMemUInt8Repeat((PVOID)0x004AE0DF, ASM_NOP, 2); // PlayerLoadWeaponMesh
@@ -216,10 +251,11 @@ void InitSpectateMode()
     WriteMemUInt8((PVOID)0x004A952C, ASM_SHORT_JMP_REL); // sub_4A9520
     WriteMemUInt8Repeat((PVOID)0x004AA56D, ASM_NOP, 6); // sub_4AA560
     WriteMemUInt8Repeat((PVOID)0x004AE384, ASM_NOP, 6); // PlayerPrepareWeapon
-#endif // SPECTATE_SHOW_WEAPON_EXPERIMENTAL
+    WriteMemUInt8Repeat((PVOID)0x004AA6E7, ASM_NOP, 6); // UpdatePlayerWeaponMesh
+#endif // SPECTATE_MODE_SHOW_WEAPON
 }
 
-void DrawSpectateModeUI()
+void SpectateModeDrawUI()
 {
     if (!g_SpectateModeEnabled)
     {
@@ -245,10 +281,10 @@ void DrawSpectateModeUI()
     unsigned cyFont = GrGetFontHeight(-1);
 
     GrSetColorRgb(0xFF, 0xFF, 0xFF, 0xFF);
-    GrDrawAlignedText(1, cxScr / 2, 100, "SPECTATE MODE", g_LargeFont, *g_pDrawTextUnk);
+    GrDrawAlignedText(1, cxScr / 2, 150, "SPECTATE MODE", g_LargeFont, *g_pDrawTextUnk);
     GrDrawAlignedText(0, 20, 200, "Press JUMP key to exit Spectate Mode", g_MediumFont, *g_pDrawTextUnk);
-    GrDrawAlignedText(0, 20, 220, "Press PRIMARY ATTACK key to switch to the next player", g_MediumFont, *g_pDrawTextUnk);
-    GrDrawAlignedText(0, 20, 240, "Press SECONDARY ATTACK key to switch to the previous player", g_MediumFont, *g_pDrawTextUnk);
+    GrDrawAlignedText(0, 20, 215, "Press PRIMARY ATTACK key to switch to the next player", g_MediumFont, *g_pDrawTextUnk);
+    GrDrawAlignedText(0, 20, 230, "Press SECONDARY ATTACK key to switch to the previous player", g_MediumFont, *g_pDrawTextUnk);
 
     GrSetColorRgb(0, 0, 0x00, 0x60);
     GrDrawRect(x, y, cx, cy, *((uint32_t*)0x17756C0));
@@ -266,4 +302,4 @@ void DrawSpectateModeUI()
     }
 }
 
-#endif
+#endif // SPECTATE_MODE_ENABLE

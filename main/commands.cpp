@@ -60,9 +60,13 @@ static void TestCmdHandler(void)
 {
     if (*g_pbCmdRun)
     {
-        int *ptr = (int*)HeapAlloc(GetProcessHeap(), 0, 8);
-        ptr[10] = 1;
-        RfConsolePrintf("test done %p", ptr);
+
+        RfCmdGetNextArg(CMD_ARG_FLOAT, 0);
+        *((float*)0x017C7BD8) = *g_pfCmdArg;
+
+        //int *ptr = (int*)HeapAlloc(GetProcessHeap(), 0, 8);
+        //ptr[10] = 1;
+        //RfConsolePrintf("test done %p", ptr);
     }
     
     if (*g_pbCmdHelp)
@@ -71,7 +75,7 @@ static void TestCmdHandler(void)
 
 #endif // NDEBUG
 
-#if SPECTATE_ENABLE
+#if SPECTATE_MODE_ENABLE
 
 static void SpectateCmdHandler(void)
 {
@@ -93,7 +97,7 @@ static void SpectateCmdHandler(void)
             }
             
             if (pPlayer)
-                SetSpectateModeTarget(pPlayer);
+                SpectateModeSetTargetPlayer(pPlayer);
         } else
             RfConsoleWrite("Works only in multiplayer game!", NULL);
     }
@@ -105,7 +109,7 @@ static void SpectateCmdHandler(void)
     }
 }
 
-#endif // SPECTATE_ENABLE
+#endif // SPECTATE_MODE_ENABLE
 
 #if MULTISAMPLING_SUPPORT
 static void AntiAliasingCmdHandler(void)
@@ -160,7 +164,7 @@ CCmd g_Commands[] = {
     {"maxfps", "Sets maximal FPS", MaxFpsCmdHandler},
     {"hud", "Show and hide HUD", HudCmdHandler},
     {"debug", "Switches debugging in RF", DebugCmdHandler},
-#if SPECTATE_ENABLE
+#if SPECTATE_MODE_ENABLE
     {"spectate", "Starts spectating mode", SpectateCmdHandler},
 #endif
 #if MULTISAMPLING_SUPPORT

@@ -228,14 +228,14 @@ static PFN_CHAT_PRINT const ChatPrint = (PFN_CHAT_PRINT)0x004785A0;
 
 /* Players */
 
-typedef struct _PLAYER_STATS
+struct SPlayerStats
 {
     uint16_t field_0;
     int16_t iScore;
     int16_t cCaps;
-} PLAYER_STATS;
+};
 
-typedef struct _CPlayerNetData
+struct CPlayerNetData
 {
     NET_ADDR Addr;
     uint32_t Flags;
@@ -252,7 +252,7 @@ typedef struct _CPlayerNetData
     uint32_t ConnectionSpeed;
     uint32_t field_9C0;
     uint32_t field_9C4;
-} CPlayerNetData;
+};
 
 #pragma pack(push, 1)
 
@@ -291,32 +291,35 @@ typedef struct _CGameControls
     int field_F28;
 } CGameControls;
 
-struct _CPlayer;
-struct _CEntity;
+struct CPlayer;
+struct CEntity;
 
-typedef struct _CAMERA
+struct CAMERA
 {
-    struct _CEntity *pEntity;
-    struct _CPlayer *pPlayer;
+    CEntity *pEntity;
+    CPlayer *pPlayer;
     enum { RF_CAM_1ST_PERSON, RF_CAM_3RD_PERSON, RF_CAM_FREE} Type;
-} CAMERA;
+};
 
-typedef struct _CPlayer
+struct SPlayerStats;
+struct CAnimMesh;
+
+struct CPlayer
 {
-    struct _CPlayer *pNext;
-    struct _CPlayer *pPrev;
+    CPlayer *pNext;
+    CPlayer *pPrev;
     CString strName;
     int FireFlags;
     int hEntity;
     int EntityClsId;
     CVector3 field_1C;
     int field_28;
-    PLAYER_STATS *pStats;
+    SPlayerStats *pStats;
     char bBlueTeam;
     char bCollide;
     char field_32;
     char field_33;
-    void *pWeaponMesh;
+    CAnimMesh *pWeaponMesh;
     int field_38;
     int field_3C;
     int field_40;
@@ -397,7 +400,7 @@ typedef struct _CPlayer
     int field_F74;
     int field_F78;
     int field_F7C;
-    int field_F80;
+    int NextWeaponClsId;
     int field_F84;
     int field_F88;
     int field_F8C;
@@ -435,21 +438,17 @@ typedef struct _CPlayer
     int field_FE8;
     int field_FEC;
     int field_FF0;
-    CVector3 field_FF4;
-    CVector3 field_1000;
-    CVector3 field_100C;
-    int field_1018;
-    int field_101C;
-    int field_1020;
+    CMatrix3 matRotFpsWeapon;
+    CVector3 vPosFpsWeapon;
     int field_1024;
-    int field_1028;
+    float field_1028;
     int field_102C;
-    int field_1030;
-    int field_1034;
+    float field_1030;
+    int field_1034_BoneId;
     int field_1038;
     int field_103C;
     int field_1040;
-    int field_1044;
+    int RemoteChargeVisible;
     int field_1048;
     int field_104C;
     int field_1050;
@@ -483,7 +482,7 @@ typedef struct _CPlayer
     int field_11E0;
     int field_11E4[7];
     CPlayerNetData *pNwData;
-} CPlayer;
+};
 
 static CPlayer ** const g_ppPlayersList = (CPlayer**)0x007C75CC;
 static CPlayer ** const g_ppLocalPlayer = (CPlayer**)0x007C75D4;
@@ -520,9 +519,6 @@ typedef struct SPosRotUnk
     CVector3 vNewPos;
     CMatrix3 matYawRot;
 } SPosRotUnk;
-
-struct CAnimMesh;
-typedef struct CAnimMesh CAnimMesh;
 
 typedef struct _CObject
 {
@@ -612,7 +608,7 @@ typedef struct SEntityMotion
     float field_20;
 } SEntityMotion;
 
-typedef struct _CEntity
+struct CEntity
 {
     CObject Head;
     int field_290;
@@ -704,7 +700,7 @@ typedef struct _CEntity
     int field_1488;
     int RespawnVfx;
     int field_1490;
-} CEntity;
+};
 
 typedef CEntity *(*PFN_HANDLE_TO_ENTITY)(uint32_t hEntity);
 static PFN_HANDLE_TO_ENTITY const HandleToEntity = (PFN_HANDLE_TO_ENTITY)0x00426FC0;
@@ -731,6 +727,9 @@ typedef struct _WEAPON_CLASS
 
 static WEAPON_CLASS * const g_pWeaponClasses = (WEAPON_CLASS*)0x0085CD08;
 static char ** const g_ppszStringsTable = (char**)0x007CBBF0;
+constexpr auto g_pRemoteChargeClsId = (uint32_t*)0x0087210C;
+
+constexpr auto UpdatePlayerWeaponMesh = (void(*)(CPlayer*))0x004AA6D0;
 
 /* Window */
 
@@ -787,11 +786,15 @@ static char * const g_pszRootPath = (char*)0x018060E8;
 static float * const g_fFps = (float*)0x005A4018;
 static uint32_t * const g_pSimultaneousPing = (uint32_t*)0x00599CD8;
 static CString * const g_pstrLevelName = (CString*)0x00645FDC;
+static CString * const g_pstrLevelFilename = (CString*)0x00645FE4;
+static CString * const g_pstrLevelAuthor = (CString*)0x00645FEC;
+static CString * const g_pstrLevelDate = (CString*)0x00645FF4;
 static int * const g_pBigFontId = (int*)0x006C74C0;
 static float * const g_pfMinFramerate = (float*)0x005A4024;
 static uint8_t * const g_pbNetworkGame = (uint8_t*)0x0064ECB9;
 static uint8_t * const g_pbLocalNetworkGame = (uint8_t*)0x0064ECBA;
 static uint32_t * const g_pbDedicatedServer = (uint32_t*)0x01B0D75C;
+static uint32_t * const g_pGameOptions = (uint32_t*)0x0064EC40;
 
 constexpr auto g_pbDbgNetwork = (uint32_t*)0x006FED24;
 constexpr auto g_pbDbgFlagsArray = (uint8_t*)0x0062FE19;
