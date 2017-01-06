@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "rf.h"
 #include "rfproto.h"
-#include "spectate.h"
+#include "spectate_mode.h"
 #include "config.h"
 #include "utils.h"
 #include "scoreboard.h"

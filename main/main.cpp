@@ -15,7 +15,7 @@
 #include "kill.h"
 #include "screenshot.h"
 #include "commands.h"
-#include "spectate.h"
+#include "spectate_mode.h"
 #include "wndproc.h"
 #include "graphics.h"
 #include "network.h"

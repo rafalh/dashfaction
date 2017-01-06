@@ -7,9 +7,9 @@
 #include "main.h"
 #include "config.h"
 #include "sharedoptions.h"
-#include "spectate.h"
-
-extern SHARED_OPTIONS g_Options;
+#include "spectate_mode.h"
+#include "main.h"
+#include "config.h"
 
 #if SPLITSCREEN_ENABLE
 
