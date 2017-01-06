@@ -18,7 +18,7 @@ static int ScoreboardSortFunc(const void *Ptr1, const void *Ptr2)
 static void DrawScoreboardInternalHook(BOOL bDraw)
 {
     if (g_ScoreboardHidden) return;
-    if(bDraw)
+    if (bDraw)
     {
         unsigned i, x, x2, y, y2;
         unsigned cx, cy, cxNameMax, cPlayers;
@@ -33,22 +33,22 @@ static void DrawScoreboardInternalHook(BOOL bDraw)
         
         pPlayer = *g_ppPlayersList;
         cPlayers = 0;
-        while(cPlayers < 32)
+        while (cPlayers < 32)
         {
             Players[cPlayers++] = pPlayer;
-            if(GameType == RF_DM || !pPlayer->bBlueTeam)
+            if (GameType == RF_DM || !pPlayer->bBlueTeam)
                 ++cLeftCol;
             else
                 ++cRightCol;
             
             pPlayer = pPlayer->pNext;
-            if(!pPlayer || pPlayer == *g_ppPlayersList)
+            if (!pPlayer || pPlayer == *g_ppPlayersList)
                 break;
         }
         
         qsort(Players, cPlayers, sizeof(CPlayer*), ScoreboardSortFunc);
         
-        cx = (GameType == RF_DM) ? 400 : 600;
+        cx = (GameType == RF_DM) ? 450 : 600;
         cy = ((GameType == RF_DM) ? 110 : 170) + max(cLeftCol, cRightCol) * 15;
         cxNameMax = cx / (GameType == RF_DM ? 1 : 2) - 25 - 50 * (GameType == RF_CTF ? 3 : 2);
         
@@ -61,13 +61,14 @@ static void DrawScoreboardInternalHook(BOOL bDraw)
         
         /* Draw RF logo */
         GrSetColorRgb(0xFF, 0xFF, 0xFF, 0xFF);
-        if(!g_ScoreRflogoTexture)
+        if (!g_ScoreRflogoTexture)
             g_ScoreRflogoTexture = GrLoadTexture("score_rflogo.tga", -1, TRUE);
         GrDrawImage(g_ScoreRflogoTexture, x + cx / 2 - 170, y + 10, *((int*)0x17756DC));
         
         /* Draw map and server name */
         GrSetColorRgb(0xB0, 0xB0, 0xB0, 0xFF);
-        GrDrawAlignedText(1, x + cx/2, y + 45, g_pstrLevelName->psz, -1, *((uint32_t*)0x17C7C5C));
+        sprintf(szBuf, "%s (%s) by %s", g_pstrLevelName->psz, g_pstrLevelFilename->psz, g_pstrLevelAuthor->psz);
+        GrDrawAlignedText(1, x + cx/2, y + 45, szBuf, -1, *((uint32_t*)0x17C7C5C));
         i = sprintf(szBuf, "%s (", g_pstrServName->psz);
         NwAddrToStr(szBuf + i, sizeof(szBuf) - i, g_pServAddr);
         i += strlen(szBuf + i);
@@ -76,7 +77,7 @@ static void DrawScoreboardInternalHook(BOOL bDraw)
         y += 80;
         
         /* Draw team scores */
-        if(GameType == RF_CTF)
+        if (GameType == RF_CTF)
         {
             if(!g_HudFlagRedTexture)
                 g_HudFlagRedTexture = GrLoadTexture("hud_flag_red.tga", -1, TRUE);
@@ -87,13 +88,13 @@ static void DrawScoreboardInternalHook(BOOL bDraw)
             RedScore = CtfGetRedScore();
             BlueScore = CtfGetBlueScore();
         }
-        else if(GameType == RF_TEAMDM)
+        else if (GameType == RF_TEAMDM)
         {
             RedScore = TdmGetRedScore();
             BlueScore = TdmGetBlueScore();
         }
         
-        if(GameType != RF_DM)
+        if (GameType != RF_DM)
         {
             GrSetColorRgb(0xD0, 0x20, 0x20, 0xFF);
             sprintf(szBuf, "%u", RedScore);
@@ -106,7 +107,7 @@ static void DrawScoreboardInternalHook(BOOL bDraw)
         
         /* Draw headers */
         GrSetColorRgb(0xFF, 0xFF, 0xFF, 0xFF);
-        for(i = 0; i < (GameType == RF_DM ? 1u : 2u); ++i)
+        for (i = 0; i < (GameType == RF_DM ? 1u : 2u); ++i)
         {
             x2 = x + i*300 + 25;
             GrDrawText(x2, y, "Name", -1, *((uint32_t*)0x17C7C5C));
@@ -123,11 +124,11 @@ static void DrawScoreboardInternalHook(BOOL bDraw)
         y += 20;
         
         /* Finally draw the list */
-        for(i = 0; i < cPlayers; ++i)
+        for (i = 0; i < cPlayers; ++i)
         {
             pPlayer = Players[i];
             
-            if(GameType == RF_DM || !pPlayer->bBlueTeam)
+            if (GameType == RF_DM || !pPlayer->bBlueTeam)
             {
                 x2 = x + 25;
                 y2 = y + cLeftCol * 15;
@@ -140,7 +141,7 @@ static void DrawScoreboardInternalHook(BOOL bDraw)
                 ++cRightCol;
             }
             
-            if(pPlayer == *g_ppPlayersList)
+            if (pPlayer == *g_ppPlayersList)
                 GrSetColorRgb(0xFF, 0xFF, 0x80, 0xFF);
             else
                 GrSetColorRgb(0xFF, 0xFF, 0xFF, 0xFF);
@@ -156,14 +157,14 @@ static void DrawScoreboardInternalHook(BOOL bDraw)
             sprintf(szBuf, "%hd", pPlayer->pStats->iScore);
             GrDrawText(x2, y2, szBuf, -1, *((uint32_t*)0x17C7C5C));
             x2 += 50;
-            if(GameType == RF_CTF)
+            if (GameType == RF_CTF)
             {
                 sprintf(szBuf, "%hu", pPlayer->pStats->cCaps);
                 GrDrawText(x2, y2, szBuf, -1, *((uint32_t*)0x17C7C5C));
                 x2 += 50;
             }
             
-            if(pPlayer->pNwData)
+            if (pPlayer->pNwData)
             {
                 sprintf(szBuf, "%hu", pPlayer->pNwData->dwPing);
                 GrDrawText(x2, y2, szBuf, -1, *((uint32_t*)0x17C7C5C));
