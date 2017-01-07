@@ -182,6 +182,11 @@ extern "C" DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
 
     /* Set FPS limit to 60 */
     WriteMemFloat((PVOID)0x005094CA, 1.0f / 60.0f);
+
+    /* Fix for jumping on high FPS */
+    const static float JUMP_THRESHOLD = 0.05f;
+    WriteMemPtr((PVOID)(0x00428A98 + 2), &JUMP_THRESHOLD);
+    WriteMemPtr((PVOID)(0x004A09A6 + 2), &JUMP_THRESHOLD);
     
     /* Crash-fix... (probably argument for function is invalid); Page Heap is needed */
     WriteMemUInt32((PVOID)(0x0056A28C + 1), 0);
