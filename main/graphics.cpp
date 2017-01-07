@@ -161,7 +161,7 @@ void GraphicsAfterGameInit()
     /* Anisotropic texture filtering */
     if (g_pRfGrDeviceCaps->MaxAnisotropy > 0)
     {
-        DWORD AnisotropyLevel = min(g_pRfGrDeviceCaps->MaxAnisotropy, 16);
+        DWORD AnisotropyLevel = std::min(g_pRfGrDeviceCaps->MaxAnisotropy, 16ul);
         SetTextureMinMagFilter(D3DTEXF_ANISOTROPIC);
         IDirect3DDevice8_SetTextureStageState(*g_ppGrDevice, 0, D3DTSS_MAXANISOTROPY, AnisotropyLevel);
         IDirect3DDevice8_SetTextureStageState(*g_ppGrDevice, 1, D3DTSS_MAXANISOTROPY, AnisotropyLevel);

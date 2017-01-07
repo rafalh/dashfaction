@@ -112,7 +112,7 @@ static BOOL VfsLoadPackfileHook(const char *pszFilename, const char *pszDir)
                 break;
             }
             
-            cFilesInBlock = min(pPackfile->cFiles - i, 32);
+            cFilesInBlock = std::min(pPackfile->cFiles - i, 32u);
             VfsAddPackfileEntries(pPackfile, Buf, cFilesInBlock, &cAdded);
             ++OffsetInBlocks;
         }

@@ -4,6 +4,7 @@
 		"_CRT_SECURE_NO_WARNINGS",
 		"_CRT_NONSTDC_NO_DEPRECATE",
 		"_USE_MATH_DEFINES",
+		"NOMINMAX",
 	}
 	includedirs "include"
 	language "C" -- default

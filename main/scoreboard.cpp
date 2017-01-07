@@ -49,7 +49,7 @@ static void DrawScoreboardInternalHook(BOOL bDraw)
         qsort(Players, cPlayers, sizeof(CPlayer*), ScoreboardSortFunc);
         
         cx = (GameType == RF_DM) ? 450 : 600;
-        cy = ((GameType == RF_DM) ? 110 : 170) + max(cLeftCol, cRightCol) * 15;
+        cy = ((GameType == RF_DM) ? 110 : 170) + std::max(cLeftCol, cRightCol) * 15;
         cxNameMax = cx / (GameType == RF_DM ? 1 : 2) - 25 - 50 * (GameType == RF_CTF ? 3 : 2);
         
         x = (RfGetWidth() - cx) / 2;
@@ -114,7 +114,7 @@ static void DrawScoreboardInternalHook(BOOL bDraw)
             x2 += cxNameMax;
             GrDrawText(x2, y, "Score", -1, *((uint32_t*)0x17C7C5C));
             x2 += 50;
-            if(GameType == RF_CTF)
+            if (GameType == RF_CTF)
             {
                 GrDrawText(x2, y, "Flags", -1, *((uint32_t*)0x17C7C5C));
                 x2 += 50;

@@ -16,3 +16,4 @@ typedef BOOL WINBOOL;
 #include <cstdio>
 #include <cstdint>
 #include <cmath>
+#include <algorithm>
