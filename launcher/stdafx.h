@@ -9,3 +9,5 @@
 
 #include <windows.h>
 #include <shlwapi.h>
+#include <WinInet.h>
+#include <Shellapi.h>

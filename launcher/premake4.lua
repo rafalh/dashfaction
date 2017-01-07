@@ -2,7 +2,7 @@ project "DashFactionLauncher"
 	kind "ConsoleApp"
 	language "C++"
 	files {"**.h", "**.c", "**.cpp"}
-	links {"Shlwapi"}
+	links {"Shlwapi", "WinInet"}
 	
 	pchheader "stdafx.h"
 	pchsource "stdafx.cpp"

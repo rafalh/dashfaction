@@ -186,6 +186,76 @@ uint32_t GetFileCRC32(const char *path)
     return hash;
 }
 
+static bool CheckForUpdate()
+{
+    HINTERNET hInternet = NULL, hConnect = NULL, hRequest = NULL;
+    char buf[4096];
+    LPCTSTR AcceptTypes[] = { TEXT("*/*"), NULL };
+    DWORD dwStatus = 0, dwSize = sizeof(DWORD), dwBytesRead;
+
+    try
+    {
+        hInternet = InternetOpen("DashFaction", 0, NULL, NULL, 0);
+        if (!hInternet)
+            THROW_EXCEPTION_WITH_WIN32_ERROR();
+        
+        hConnect = InternetConnect(hInternet, "ravin.tk", INTERNET_DEFAULT_HTTPS_PORT, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
+        if (!hConnect)
+            THROW_EXCEPTION_WITH_WIN32_ERROR();
+
+        sprintf(buf, "api/rf/dashfaction/checkupdate.php?version=%u.%u&version_major=%d&version_minor=%d",
+            VERSION_MAJOR, VERSION_MINOR, VERSION_MAJOR, VERSION_MINOR);
+        hRequest = HttpOpenRequest(hConnect, NULL, buf, NULL, NULL, AcceptTypes, INTERNET_FLAG_RELOAD | INTERNET_FLAG_SECURE, 0);
+        if (!hRequest)
+            THROW_EXCEPTION_WITH_WIN32_ERROR();
+        
+        if (!HttpSendRequest(hRequest, NULL, 0, NULL, 0))
+            THROW_EXCEPTION_WITH_WIN32_ERROR();
+        
+        if (HttpQueryInfo(hRequest, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &dwStatus, &dwSize, NULL) && (dwStatus / 100) != 2)
+            THROW_EXCEPTION("Invalid status: %lu", dwStatus);
+        
+        InternetReadFile(hRequest, buf, sizeof(buf), &dwBytesRead);
+        buf[dwBytesRead] = 0;
+
+        if (!buf[0])
+            printf("No new version is available.\n");
+        else
+        {
+            printf("%s\n", buf);
+            char *pUrl = buf;
+            char *pMsgText = strchr(buf, '\n');
+            if (pMsgText)
+            {
+                *pMsgText = 0;
+                ++pMsgText;
+            }
+            int iResult = MessageBox(NULL, pMsgText, "DashFaction update is available!", MB_OKCANCEL | MB_ICONEXCLAMATION);
+            if (iResult == IDOK)
+            {
+                printf("url %s<\n", pUrl);
+                ShellExecute(NULL, "open", pUrl, NULL, NULL, SW_SHOW);
+                return true;
+            }
+        }
+        return false;
+    }
+    catch (std::exception)
+    {
+        if (hRequest)
+            InternetCloseHandle(hRequest);
+        if (hConnect)
+            InternetCloseHandle(hConnect);
+        if (hInternet)
+            InternetCloseHandle(hInternet);
+        throw;
+    }
+    
+    InternetCloseHandle(hRequest);
+    InternetCloseHandle(hConnect);
+    InternetCloseHandle(hInternet);
+}
+
 int main(int argc, const char *argv[]) try
 {
     STARTUPINFO si;
@@ -198,6 +268,19 @@ int main(int argc, const char *argv[]) try
     
     printf("Starting " PRODUCT_NAME_VERSION "!\n");
 
+#ifndef DEBUG
+    printf("Checking for update...\n");
+    try
+    {
+        if (CheckForUpdate())
+            return 0;
+    }
+    catch (std::exception &e)
+    {
+        fprintf(stderr, "Failed to check for update: %s\n", e.what());
+    }
+#endif
+    
     //Options.bMultiSampling = FALSE;
     Options.bMultiSampling = TRUE;
     Options.bWindowed = IsWindowedModeEnabled();
