@@ -24,7 +24,9 @@
 SHARED_OPTIONS g_Options;
 HookableFunPtr<0x004163C0, void, CPlayer*> RenderHitScreenHookable;
 HookableFunPtr<0x005094F0, void> UpdateFramerateHookable;
-
+HookableFunPtr<0x004B33F0, void, const char**, const char**> GetVersionStrHookable;
+int g_VersionLabelX, g_VersionLabelWidth, g_VersionLabelHeight;
+static const char g_szVersionInMenu[] = PRODUCT_NAME_VERSION;
 static float g_fFramerateMax150Fps, g_fFramerateMax900Fps;
 
 static void ProcessWaitingMessages()
@@ -48,6 +50,33 @@ static void DrawConsoleAndProcessKbdFifoHook(BOOL bServer)
 #ifdef LEVELS_AUTODOWNLOADER
     RenderDownloadProgress();
 #endif
+}
+
+void  __declspec(naked) VersionLabelPushArgs_0044343A()
+{
+    _asm
+    {
+        // Default: 330, 340, 120, 15
+        push    g_VersionLabelHeight
+        push    g_VersionLabelWidth
+        push    340
+        push    g_VersionLabelX
+        mov eax, 0x00443448
+        jmp eax
+    }
+}
+
+static void GetVersionStrHook(const char **ppszVersion, const char **a2)
+{
+    if (ppszVersion)
+        *ppszVersion = g_szVersionInMenu;
+    if (a2)
+        *a2 = "";
+    GrGetTextWidth(&g_VersionLabelWidth, &g_VersionLabelHeight, g_szVersionInMenu, -1, *g_pMediumFontId);
+
+    g_VersionLabelX = 430 - g_VersionLabelWidth;
+    g_VersionLabelWidth = g_VersionLabelWidth + 5;
+    g_VersionLabelHeight = g_VersionLabelHeight + 2;
 }
 
 static void InitGameHook(void)
@@ -156,11 +185,9 @@ extern "C" DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
     WriteMemPtr((PVOID)0x004B2534, "-- " PRODUCT_NAME " Initializing --\n");
 
     /* Version in Main Menu */
-    WriteMemUInt32((PVOID)0x005A18A8, VER_MAJOR);
-    WriteMemUInt32((PVOID)0x005A18AC, VER_MINOR);
-    WriteMemPtr((PVOID)0x004B33D1, PRODUCT_NAME " %u.%02u");
-    WriteMemUInt32((PVOID)0x00443444, 300); // X coord
-    WriteMemUInt8((PVOID)0x0044343D, 127); // width (127 is max)
+    WriteMemUInt8((PVOID)0x0044343A, ASM_LONG_JMP_REL);
+    WriteMemPtr((PVOID)(0x0044343A + 1), (PVOID)((ULONG_PTR)VersionLabelPushArgs_0044343A - (0x0044343A + 0x5)));
+    GetVersionStrHookable.hook(GetVersionStrHook);
     
     /* Window title (client and server) */
     WriteMemPtr((PVOID)0x004B2790, PRODUCT_NAME);
@@ -213,7 +240,7 @@ extern "C" DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
     WriteMemUInt8((PVOID)0x0055CE47, ASM_LONG_JMP_REL);
     WriteMemPtr((PVOID)0x0055CE48, (PVOID)((ULONG_PTR)CrashFix0055CE59 - (0x0055CE48 + 0x4)));
     WriteMemUInt8((PVOID)0x00412370, ASM_RET); // disable function calling GrLock without checking for success (no idea what it does)
-    
+
     /* Switch UI language */
     WriteMemUInt8((PVOID)(0x004B27D2 + 1), (uint8_t)GetInstalledGameLang());
     

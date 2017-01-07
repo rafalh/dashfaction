@@ -8,7 +8,7 @@ typedef BOOL WINBOOL;
 
 #include <d3d8.h>
 
-//#pragma pack(push, 1)
+#pragma pack(push, 1)
 
 typedef struct _CVector3
 {
@@ -127,6 +127,8 @@ static const PFN_GR_DRAW_IMAGE GrDrawImage = (PFN_GR_DRAW_IMAGE)0x0050D2A0;
 
 typedef int(*PFN_GR_READ_BACK_BUFFER)(int x, int y, int Width, int Height, void *pBuffer);
 static const PFN_GR_READ_BACK_BUFFER GrReadBackBuffer = (PFN_GR_READ_BACK_BUFFER)0x0050DFF0;
+
+constexpr auto GrGetTextWidth = (void(*)(int *pOutWidth, int *pOutHeight, const char *pszText, int TextLen, int FontId))0x0051F530;
 
 /* GUI */
 
@@ -253,8 +255,6 @@ struct CPlayerNetData
     uint32_t field_9C0;
     uint32_t field_9C4;
 };
-
-#pragma pack(push, 1)
 
 typedef struct _SKeyState
 {
@@ -401,7 +401,7 @@ struct CPlayer
     int field_F78;
     int field_F7C;
     int NextWeaponClsId;
-    int field_F84;
+    int WeaponSwitchCounter;
     int field_F88;
     int field_F8C;
     int field_F90;
@@ -590,7 +590,19 @@ typedef struct _CObject
 /* Entity */
 
 typedef void ENTITY_CLASS;
-typedef void SMovementMode;
+
+struct SMovementMode
+{
+    char bAvailable;
+    char unk, unk2, unk3;
+    int Id;
+    int iMoveRefX;
+    int iMoveRefY;
+    int iMoveRefZ;
+    int iRotRefX;
+    int iRotRefY;
+    int iRotRefZ;
+};
 
 typedef struct SWeaponSelection
 {
@@ -792,6 +804,9 @@ static CString * const g_pstrLevelFilename = (CString*)0x00645FE4;
 static CString * const g_pstrLevelAuthor = (CString*)0x00645FEC;
 static CString * const g_pstrLevelDate = (CString*)0x00645FF4;
 static int * const g_pBigFontId = (int*)0x006C74C0;
+static int * const g_pLargeFontId = (int*)0x0063C05C;
+static int * const g_pMediumFontId = (int*)0x0063C060;
+static int * const g_pSmallFontId = (int*)0x0063C068;
 static uint8_t * const g_pbNetworkGame = (uint8_t*)0x0064ECB9;
 static uint8_t * const g_pbLocalNetworkGame = (uint8_t*)0x0064ECBA;
 static uint32_t * const g_pbDedicatedServer = (uint32_t*)0x01B0D75C;
@@ -901,4 +916,4 @@ static const PFN_DELETE RfDelete = (PFN_DELETE)0x0057360E;
 typedef void *(*PFN_MALLOC)(uint32_t cbSize);
 static const PFN_MALLOC RfMalloc = (PFN_MALLOC)0x00573B37;
 
-//#pragma pack(pop)
+#pragma pack(pop)

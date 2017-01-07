@@ -196,7 +196,7 @@ int main(int argc, const char *argv[]) try
     HRESULT hr;
     SHARED_OPTIONS Options;
     
-    printf("Starting " PRODUCT_NAME " " VER_STR "!\n");
+    printf("Starting " PRODUCT_NAME_VERSION "!\n");
 
     //Options.bMultiSampling = FALSE;
     Options.bMultiSampling = TRUE;

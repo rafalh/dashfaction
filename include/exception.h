@@ -10,7 +10,7 @@
 class Exception: public std::exception
 {
     public:
-        inline Exception(const char *pszFormat, ...)
+        Exception(const char *pszFormat, ...)
         {
             va_list ap;
             va_start(ap, pszFormat); 
@@ -20,9 +20,9 @@ class Exception: public std::exception
             m_strWhat = szBuf;
         }
         
-        inline ~Exception() throw() {}
+        ~Exception() throw() {}
         
-        inline const char *what() const throw()
+        const char *what() const throw()
         {
             return m_strWhat.c_str();
         }
