@@ -23,6 +23,9 @@
 
 SHARED_OPTIONS g_Options;
 HookableFunPtr<0x004163C0, void, CPlayer*> RenderHitScreenHookable;
+HookableFunPtr<0x005094F0, void> UpdateFramerateHookable;
+
+static float g_fFramerateMax150Fps, g_fFramerateMax900Fps;
 
 static void ProcessWaitingMessages()
 {
@@ -70,6 +73,13 @@ static void CleanupGameHook(void)
     RfCleanupGame();
 }
 
+static void UpdateFramerateHook()
+{
+    UpdateFramerateHookable.callOrig();
+    g_fFramerateMax150Fps = std::max(*g_pfFramerate, 1 / 150.0f);
+    g_fFramerateMax900Fps = std::max(*g_pfFramerate, 1 / 900.0f);
+}
+
 CPlayer *FindPlayer(const char *pszName)
 {
     CPlayer *pPlayer = *g_ppPlayersList;
@@ -90,6 +100,8 @@ static void GrSwitchBuffersHook(void)
     ProcessWaitingMessages();
 }
 
+void TestRender();
+
 static void RenderHitScreenHook(CPlayer *pPlayer)
 {
     RenderHitScreenHookable.callOrig(pPlayer);
@@ -97,6 +109,8 @@ static void RenderHitScreenHook(CPlayer *pPlayer)
 #if SPECTATE_MODE_ENABLE
     SpectateModeDrawUI();
 #endif
+
+    TestRender();
 }
 
 void  __declspec(naked) CrashFix0055CE59()
@@ -188,6 +202,10 @@ extern "C" DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
     WriteMemPtr((PVOID)(0x00428A98 + 2), &JUMP_THRESHOLD);
     WriteMemPtr((PVOID)(0x004A09A6 + 2), &JUMP_THRESHOLD);
     
+    /* Fix FPS related animations for high FPS */
+    WriteMemPtr((PVOID)(0x0041641A + 2), &g_fFramerateMax150Fps); // hit screen
+    WriteMemPtr((PVOID)(0x0050ABEF + 2), &g_fFramerateMax900Fps); // console open/close
+
     /* Crash-fix... (probably argument for function is invalid); Page Heap is needed */
     WriteMemUInt32((PVOID)(0x0056A28C + 1), 0);
 
@@ -200,6 +218,7 @@ extern "C" DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
     WriteMemUInt8((PVOID)(0x004B27D2 + 1), (uint8_t)GetInstalledGameLang());
     
     RenderHitScreenHookable.hook(RenderHitScreenHook);
+    UpdateFramerateHookable.hook(UpdateFramerateHook);
 
 #if DIRECTINPUT_SUPPORT
     *g_pbDirectInputDisabled = 0;

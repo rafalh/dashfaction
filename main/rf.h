@@ -784,13 +784,14 @@ enum EGameLang
 
 static char * const g_pszRootPath = (char*)0x018060E8;
 static float * const g_fFps = (float*)0x005A4018;
+static float * const g_pfFramerate = (float*)0x005A4014;
+static float * const g_pfMinFramerate = (float*)0x005A4024;
 static uint32_t * const g_pSimultaneousPing = (uint32_t*)0x00599CD8;
 static CString * const g_pstrLevelName = (CString*)0x00645FDC;
 static CString * const g_pstrLevelFilename = (CString*)0x00645FE4;
 static CString * const g_pstrLevelAuthor = (CString*)0x00645FEC;
 static CString * const g_pstrLevelDate = (CString*)0x00645FF4;
 static int * const g_pBigFontId = (int*)0x006C74C0;
-static float * const g_pfMinFramerate = (float*)0x005A4024;
 static uint8_t * const g_pbNetworkGame = (uint8_t*)0x0064ECB9;
 static uint8_t * const g_pbLocalNetworkGame = (uint8_t*)0x0064ECBA;
 static uint32_t * const g_pbDedicatedServer = (uint32_t*)0x01B0D75C;
