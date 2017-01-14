@@ -240,9 +240,6 @@ extern "C" DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
     WriteMemUInt8((PVOID)0x0055CE47, ASM_LONG_JMP_REL);
     WriteMemPtr((PVOID)0x0055CE48, (PVOID)((ULONG_PTR)CrashFix0055CE59 - (0x0055CE48 + 0x4)));
     WriteMemUInt8((PVOID)0x00412370, ASM_RET); // disable function calling GrLock without checking for success (no idea what it does)
-
-    /* Switch UI language */
-    WriteMemUInt8((PVOID)(0x004B27D2 + 1), (uint8_t)GetInstalledGameLang());
     
     RenderHitScreenHookable.hook(RenderHitScreenHook);
     UpdateFramerateHookable.hook(UpdateFramerateHook);

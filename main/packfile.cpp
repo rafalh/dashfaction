@@ -29,6 +29,7 @@ static EGameLang DetectInstalledGameLang()
     {
         sprintf(szFullPath, "%s/maps_%s.vpp", g_pszRootPath, LangCodes[i]);
         FILE *pFile = fopen(szFullPath, "rb");
+        INFO("Checking file %s: %p", szFullPath, pFile);
         if (pFile)
         {
             fclose(pFile);
@@ -44,7 +45,11 @@ EGameLang GetInstalledGameLang()
     static bool Initialized = false;
     static EGameLang InstalledGameLang;
     if (!Initialized)
+    {
         InstalledGameLang = DetectInstalledGameLang();
+        Initialized = true;
+        INFO("Detected game language %d", InstalledGameLang);
+    }
     return InstalledGameLang;
 }
 
@@ -372,6 +377,19 @@ static void VfsInitHook(void)
     *((BOOL*)0x01BDB218) = TRUE; // bPackfilesLoaded
     *((uint32_t*)0x01BDB210) = 10000; // cFilesInVfs
     *((uint32_t*)0x01BDB214) = 100; // cPackfiles
+
+    // Note: language changes in binary are done here to make sure RootPath is already initialized
+
+    // Switch UI language - can be anything even if this is US edition
+    WriteMemUInt8((PVOID)(0x004B27D2 + 1), (uint8_t)GetInstalledGameLang());
+
+    // Switch localized tables names
+    if (GetInstalledGameLang() != LANG_EN)
+    {
+        WriteMemPtr((PVOID)(0x0043DCAB + 1), (PVOID)"localized_credits.tbl");
+        WriteMemPtr((PVOID)(0x0043E50B + 1), (PVOID)"localized_endgame.tbl");
+        WriteMemPtr((PVOID)(0x004B082B + 1), (PVOID)"localized_strings.tbl");
+    }
 }
 
 static void VfsCleanupHook(void)
@@ -409,13 +427,6 @@ void VfsApplyHooks(void)
     
     WriteMemUInt8((PVOID)0x0052BC80, ASM_LONG_JMP_REL);
     WriteMemUInt32((PVOID)0x0052BC81, ((ULONG_PTR)VfsCleanupHook) - (0x0052BC80 + 0x5));
-
-    if (GetInstalledGameLang() != LANG_EN)
-    {
-        WriteMemPtr((PVOID)(0x0043DCAB + 1), (PVOID)"localized_credits.tbl");
-        WriteMemPtr((PVOID)(0x0043E50B + 1), (PVOID)"localized_endgame.tbl");
-        WriteMemPtr((PVOID)(0x004B082B + 1), (PVOID)"localized_strings.tbl");
-    }
 
 #ifdef DEBUG
     WriteMemUInt8((PVOID)0x0052BEF0, 0xFF); // VfsInitPackfileFilesList
