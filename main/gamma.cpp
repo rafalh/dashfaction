@@ -3,11 +3,8 @@
 #include "rf.h"
 #include "utils.h"
 
-#ifndef D3DSGR_NO_CALIBRATION
-#define D3DSGR_NO_CALIBRATION 0
-#endif
-
 static D3DGAMMARAMP g_GammaRamp;
+static bool g_GammaRampInitialized = false;
 
 static void SetGammaRamp(D3DGAMMARAMP *pGammaRamp)
 {
@@ -18,9 +15,9 @@ static void SetGammaRamp(D3DGAMMARAMP *pGammaRamp)
     HDC hdc;
 
     hdc = GetDC(*g_phWnd);
-    if(hdc)
+    if (hdc)
     {
-        if(!SetDeviceGammaRamp(hdc, pGammaRamp))
+        if (!SetDeviceGammaRamp(hdc, pGammaRamp))
             ERR("SetDeviceGammaRamp failed %lu", GetLastError());
         ReleaseDC(*g_phWnd, hdc);
     }
@@ -31,40 +28,42 @@ static void SetGammaRamp(D3DGAMMARAMP *pGammaRamp)
 
 static void GrUpdateGammaRampHook(void)
 {
-    unsigned i, Val;
-    
-    for(i = 0; i < 256; ++i)
+    for (unsigned i = 0; i < 256; ++i)
     {
-        Val = g_pGrGammaRamp[i] << 8;
+        unsigned Val = g_pGrGammaRamp[i] << 8;
         g_GammaRamp.red[i] = Val;
         g_GammaRamp.green[i] = Val;
         g_GammaRamp.blue[i] = Val;
     }
-    
+
+    g_GammaRampInitialized = true;
     SetGammaRamp(&g_GammaRamp);
 }
 
 void ResetGammaRamp(void)
 {
     D3DGAMMARAMP GammaRamp;
-    unsigned i;
     
-    for(i = 0; i < 256; ++i)
+    for (unsigned i = 0; i < 256; ++i)
         GammaRamp.red[i] = GammaRamp.green[i] = GammaRamp.blue[i] = i << 8;
+    
     SetGammaRamp(&GammaRamp);
 }
 
 static void GammaMsgHandler(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    switch(uMsg)
+    switch (uMsg)
     {
     case WM_ACTIVATE:
     case WM_ACTIVATEAPP:
         TRACE("WM_ACTIVATE %lx", wParam);
-        if (wParam)
-            SetGammaRamp(&g_GammaRamp);
-        else
-            ResetGammaRamp();
+        if (g_GammaRampInitialized)
+        {
+            if (wParam)
+                SetGammaRamp(&g_GammaRamp);
+            else
+                ResetGammaRamp();
+        }
     }
 }
 
@@ -72,7 +71,7 @@ void InitGamma(void)
 {
     /* Gamma fix */
     WriteMemUInt8((PVOID)0x00547A60, ASM_LONG_JMP_REL);
-    WriteMemUInt32((PVOID)0x00547A61, ((ULONG_PTR)GrUpdateGammaRampHook) - (0x00547A60 + 0x5));
+    WriteMemUInt32((PVOID)(0x00547A60 + 1), ((ULONG_PTR)GrUpdateGammaRampHook) - (0x00547A60 + 0x5));
     
     RfAddMsgHandler(GammaMsgHandler);
 }
