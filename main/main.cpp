@@ -19,6 +19,7 @@
 #include "wndproc.h"
 #include "graphics.h"
 #include "network.h"
+#include "test.h"
 #include "high_fps.h"
 #include "HookableFunPtr.h"
 
@@ -121,8 +122,6 @@ static void GrSwitchBuffersHook(void)
     ProcessWaitingMessages();
 }
 
-void TestRender();
-
 static void RenderHitScreenHook(CPlayer *pPlayer)
 {
     RenderHitScreenHookable.callOrig(pPlayer);
@@ -131,7 +130,9 @@ static void RenderHitScreenHook(CPlayer *pPlayer)
     SpectateModeDrawUI();
 #endif
 
+#ifndef NDEBUG
     TestRender();
+#endif
 }
 
 void  __declspec(naked) CrashFix0055CE59()
@@ -247,6 +248,9 @@ extern "C" DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
     SpectateModeInit();
     CommandsInit();
     HighFpsInit();
+#ifndef NDEBUG
+    TestInit();
+#endif
 
     return 1; /* success */
 }

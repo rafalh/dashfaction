@@ -44,12 +44,12 @@ static const PFN_CONSOLE_PRINTF RfConsolePrintf = (PFN_CONSOLE_PRINTF)0x0050B9F0
 
 /* Commands */
 
-typedef struct _CCmd
+struct CCmd
 {
     const char *pszCmd;
     const char *pszDescr;
     void (*pfnHandler)(void);
-} CCmd;
+};
 
 #define MAX_COMMANDS_COUNT 30
 static CCmd ** const g_ppCommands = (CCmd**)0x01775530;

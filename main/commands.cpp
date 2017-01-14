@@ -54,27 +54,6 @@ static void DebugCmdHandler(void)
     *g_pbDbgWeapon = bDbg;
 }
 
-#ifndef NDEBUG
-
-static void TestCmdHandler(void)
-{
-    if (*g_pbCmdRun)
-    {
-
-        RfCmdGetNextArg(CMD_ARG_FLOAT, 0);
-        *((float*)0x017C7BD8) = *g_pfCmdArg;
-
-        //int *ptr = (int*)HeapAlloc(GetProcessHeap(), 0, 8);
-        //ptr[10] = 1;
-        //RfConsolePrintf("test done %p", ptr);
-    }
-    
-    if (*g_pbCmdHelp)
-        RfConsoleWrite("     test <n>", NULL);
-}
-
-#endif // NDEBUG
-
 #if SPECTATE_MODE_ENABLE
 
 static void SpectateCmdHandler(void)
@@ -174,9 +153,6 @@ CCmd g_Commands[] = {
     { "inputmode", "Toggles input mode", InputModeCmdHandler },
 #endif
     {"unban_last", "Unbans last banned player", UnbanLastCmdHandler},
-#ifndef NDEBUG
-    {"test", "Test command", TestCmdHandler},
-#endif
 };
 
 void CommandsInit(void)
@@ -191,14 +167,17 @@ void CommandsInit(void)
 #endif // if CAMERA_1_3_COMMANDS
 }
 
+void CommandRegister(CCmd *pCmd)
+{
+    if (*g_pcCommands < MAX_COMMANDS_COUNT)
+        g_ppCommands[(*g_pcCommands)++] = pCmd;
+}
+
 void CommandsAfterGameInit()
 {
     unsigned i;
 
     /* Add commands */
     for (i = 0; i < COUNTOF(g_Commands); ++i)
-    {
-        if (*g_pcCommands < MAX_COMMANDS_COUNT)
-            g_ppCommands[(*g_pcCommands)++] = &g_Commands[i];
-    }
+        CommandRegister(&g_Commands[i]);
 }
