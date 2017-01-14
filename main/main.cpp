@@ -23,11 +23,12 @@
 
 SHARED_OPTIONS g_Options;
 HookableFunPtr<0x004163C0, void, CPlayer*> RenderHitScreenHookable;
-HookableFunPtr<0x005094F0, void> UpdateFramerateHookable;
 HookableFunPtr<0x004B33F0, void, const char**, const char**> GetVersionStrHookable;
 int g_VersionLabelX, g_VersionLabelWidth, g_VersionLabelHeight;
 static const char g_szVersionInMenu[] = PRODUCT_NAME_VERSION;
-static float g_fFramerateMax150Fps, g_fFramerateMax900Fps;
+static float g_FtolAccumulator_HitScreen = 0.0f;
+static float g_FtolAccumulated_ToggleConsole = 0.0f;
+static float g_FtolAccumulated_Timer = 0.0f;
 
 static void ProcessWaitingMessages()
 {
@@ -50,6 +51,53 @@ static void DrawConsoleAndProcessKbdFifoHook(BOOL bServer)
 #ifdef LEVELS_AUTODOWNLOADER
     RenderDownloadProgress();
 #endif
+}
+
+long __stdcall AccumulatingFtoL(float fVal, float *pAccumulator)
+{
+    fVal += *pAccumulator;
+    long Result = (long)fVal;
+    *pAccumulator = fVal - Result;
+    return Result;
+}
+
+void  __declspec(naked) ftol_HitScreen()  // Note: value is in ST(0), not on stack
+{
+    _asm
+    {
+        sub esp, 8
+        lea ecx, [g_FtolAccumulator_HitScreen]
+        mov [esp+4], ecx
+        fstp [esp+0]
+        call AccumulatingFtoL
+        ret
+    }
+}
+
+void  __declspec(naked) ftol_ToggleConsole()
+{
+    _asm
+    {
+        sub esp, 8
+        lea ecx, [g_FtolAccumulated_ToggleConsole]
+        mov[esp + 4], ecx
+        fstp[esp + 0]
+        call AccumulatingFtoL
+        ret
+    }
+}
+
+void  __declspec(naked) ftol_Timer()
+{
+    _asm
+    {
+        sub esp, 8
+        lea ecx, [g_FtolAccumulated_Timer]
+        mov[esp + 4], ecx
+        fstp[esp + 0]
+        call AccumulatingFtoL
+        ret
+    }
 }
 
 void  __declspec(naked) VersionLabelPushArgs_0044343A()
@@ -100,13 +148,6 @@ static void CleanupGameHook(void)
     ResetGammaRamp();
     CleanupScreenshot();
     RfCleanupGame();
-}
-
-static void UpdateFramerateHook()
-{
-    UpdateFramerateHookable.callOrig();
-    g_fFramerateMax150Fps = std::max(*g_pfFramerate, 1 / 150.0f);
-    g_fFramerateMax900Fps = std::max(*g_pfFramerate, 1 / 900.0f);
 }
 
 CPlayer *FindPlayer(const char *pszName)
@@ -163,6 +204,14 @@ void  __declspec(naked) CrashFix0055CE59()
         mov   ecx, 0x0055CF23
         jmp   ecx
     }
+}
+
+void __stdcall EntityWaterDecelerateFix(CEntity *pEntity)
+{
+    float fVelFactor = 1.0f - (*g_pfFramerate * 4.5f);
+    pEntity->Head.vVel.x *= fVelFactor;
+    pEntity->Head.vVel.y *= fVelFactor;
+    pEntity->Head.vVel.z *= fVelFactor;
 }
 
 extern "C" DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
@@ -224,15 +273,21 @@ extern "C" DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
     /* Set FPS limit to 60 */
     WriteMemFloat((PVOID)0x005094CA, 1.0f / 60.0f);
 
-    /* Fix for jumping on high FPS */
+    /* Fix animations broken for high FPS */
+    WriteMemUInt32((PVOID)(0x00416426 + 1), (ULONG_PTR)ftol_HitScreen - (0x00416426 + 0x5)); // hit screen
+    WriteMemUInt32((PVOID)(0x0050ABFB + 1), (ULONG_PTR)ftol_ToggleConsole - (0x0050ABFB + 0x5)); // console open/close
+    WriteMemUInt32((PVOID)(0x005096A7 + 1), (ULONG_PTR)ftol_Timer - (0x005096A7 + 0x5)); // switching weapon and more
+
+    /* Fix jumping on high FPS */
     const static float JUMP_THRESHOLD = 0.05f;
-    WriteMemPtr((PVOID)(0x00428A98 + 2), &JUMP_THRESHOLD);
     WriteMemPtr((PVOID)(0x004A09A6 + 2), &JUMP_THRESHOLD);
     
-    /* Fix FPS related animations for high FPS */
-    WriteMemPtr((PVOID)(0x0041641A + 2), &g_fFramerateMax150Fps); // hit screen
-    WriteMemPtr((PVOID)(0x0050ABEF + 2), &g_fFramerateMax900Fps); // console open/close
-
+    /* Fix water deceleration on high FPS */
+    WriteMemUInt8Repeat((PVOID)0x0049D816, ASM_NOP, 5);
+    WriteMemUInt8Repeat((PVOID)0x0049D82A, ASM_NOP, 5);
+    WriteMemUInt8((PVOID)(0x0049D82A + 5), ASM_PUSH_ESI);
+    WriteMemPtr((PVOID)(0x0049D830 + 1), (PVOID)((ULONG_PTR)EntityWaterDecelerateFix - (0x0049D830 + 0x5)));
+    
     /* Crash-fix... (probably argument for function is invalid); Page Heap is needed */
     WriteMemUInt32((PVOID)(0x0056A28C + 1), 0);
 
@@ -242,7 +297,6 @@ extern "C" DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
     WriteMemUInt8((PVOID)0x00412370, ASM_RET); // disable function calling GrLock without checking for success (no idea what it does)
     
     RenderHitScreenHookable.hook(RenderHitScreenHook);
-    UpdateFramerateHookable.hook(UpdateFramerateHook);
 
 #if DIRECTINPUT_SUPPORT
     *g_pbDirectInputDisabled = 0;
