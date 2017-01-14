@@ -11,9 +11,7 @@
 	if location then
 		location "premake-build"
 	end
-	if toolset then
-		toolset "v140_xp" -- Premake 5
-	end
+	
 	if characterset then
 		characterset "MBCS" -- Premake 5
 	end
@@ -29,6 +27,10 @@
 
 	configuration "linux"
 		defines { "LINUX" }
+	
+	configuration "vs*"
+		if toolset then toolset "v140_xp" end
+		buildoptions { "/Zc:threadSafeInit-" }
 	
 	include "vendor"
 	include "launcher"
