@@ -8,6 +8,8 @@
 #define FACILITY_MOD 0x09F
 #define MAKE_MOD_ERROR(code) (0x80000000 | HRESULT_CUST_BIT | (FACILITY_MOD << 16) | ((code) & 0xFFFF))
 #define GET_LAST_WIN32_ERROR() ((HRESULT)(GetLastError()) < 0 ? ((HRESULT)(GetLastError())) : ((HRESULT) (((GetLastError()) & 0x0000FFFF) | (FACILITY_WIN32 << 16) | 0x80000000)))
+#define INIT_TIMEOUT 10000
+
 #define RF_120_NA_CRC32 0xA7BF79E4
 
 #define THROW_EXCEPTION_WITH_WIN32_ERROR() THROW_EXCEPTION("win32 error %lu", GetLastError())
@@ -37,7 +39,7 @@ void InitProcess(HANDLE hProcess, const TCHAR *pszPath, SHARED_OPTIONS *pOptions
     if (!hThread)
         THROW_EXCEPTION_WITH_WIN32_ERROR();
     
-    dwWaitResult = WaitForSingleObject(hThread, 5000);
+    dwWaitResult = WaitForSingleObject(hThread, INIT_TIMEOUT);
     if (dwWaitResult != WAIT_OBJECT_0)
     {
         if (dwWaitResult == WAIT_TIMEOUT)
@@ -73,7 +75,7 @@ void InitProcess(HANDLE hProcess, const TCHAR *pszPath, SHARED_OPTIONS *pOptions
     if (!hThread)
         THROW_EXCEPTION_WITH_WIN32_ERROR();
     
-    dwWaitResult = WaitForSingleObject(hThread, INFINITE);
+    dwWaitResult = WaitForSingleObject(hThread, INIT_TIMEOUT);
     if (dwWaitResult != WAIT_OBJECT_0)
         THROW_EXCEPTION_WITH_WIN32_ERROR();
     
