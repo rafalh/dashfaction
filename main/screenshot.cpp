@@ -4,9 +4,12 @@
 #include "rf.h"
 #include "config.h"
 #include "sharedoptions.h"
+#include "main.h"
+
+const char SCREENSHOT_DIR_NAME[] = "screenshots";
 
 static BYTE **g_ScreenshotScanlinesBuf = NULL;
-extern SHARED_OPTIONS g_Options;
+static int g_ScreenshotDirId;
 
 int GetPixelFormatID(int PixelFormat, int *BytesPerPixel)
 {
@@ -143,9 +146,16 @@ void InitScreenshot(void)
         WriteMemPtr((PVOID)0x0050DFF1, (PVOID)((ULONG_PTR)GrReadBackBufferHook - (0x0050DFF0 + 0x5)));
     }
 #endif
+
+    WriteMemPtr((PVOID)(0x004367CA + 2), &g_ScreenshotDirId);
 }
 
 void CleanupScreenshot(void)
 {
     free(g_ScreenshotScanlinesBuf);
+}
+
+void ScreenshotAfterGameInit()
+{
+    g_ScreenshotDirId = FsAddDirectoryEx("screenshots", "", 1);
 }

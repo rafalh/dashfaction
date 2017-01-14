@@ -1,4 +1,5 @@
 #pragma once
 
-void InitScreenshot(void);
-void CleanupScreenshot(void);
+void InitScreenshot();
+void CleanupScreenshot();
+void ScreenshotAfterGameInit();

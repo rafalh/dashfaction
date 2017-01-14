@@ -195,6 +195,8 @@ static const PFN_VFS_ADD_PACKFILE_ENTRIES VfsAddPackfileEntries = (PFN_VFS_ADD_P
 typedef uint32_t (*PFN_VFS_SETUP_FILE_OFFSETS)(PACKFILE *pPackfile, unsigned DataOffsetInBlocks);
 static const PFN_VFS_SETUP_FILE_OFFSETS VfsSetupFileOffsets = (PFN_VFS_SETUP_FILE_OFFSETS)0x0052BEB0;
 
+constexpr auto FsAddDirectoryEx = (int(*)(const char *pszDir, const char *pszExtList, char bUnknown))0x00514070;
+
 /* Network */
 
 typedef struct _NET_ADDR

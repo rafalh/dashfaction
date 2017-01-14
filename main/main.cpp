@@ -93,6 +93,7 @@ static void InitGameHook(void)
     ForceFileFromPackfile("strings.tbl", "ui.vpp");
     
     CommandsAfterGameInit();
+    ScreenshotAfterGameInit();
 }
 
 static void CleanupGameHook(void)
