@@ -5,5 +5,5 @@ project "ModCommon"
 	includedirs {
 		".",
 		"../vendor/subhook",
-		"../logger",
+		"../logger/include",
 	}

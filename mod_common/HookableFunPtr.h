@@ -2,6 +2,7 @@
 
 #include "FunPtr.h"
 #include "hooks/HookFunction.h"
+#include "log/Logger.h"
 
 template<uintptr_t DefaultAddr, typename RetType, typename... ArgTypes>
 class HookableFunPtr : public FunPtr<DefaultAddr, RetType, ArgTypes...>

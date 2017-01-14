@@ -5,7 +5,7 @@ project "DashFaction"
 	defines {"BUILD_DLL", "SUBHOOK_STATIC"}
 	includedirs {
 		"../mod_common",
-		"../logger",
+		"../logger/include",
 		"../vendor",
 		"../vendor/unzip",
 		"../vendor/zlib",

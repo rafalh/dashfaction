@@ -16,12 +16,12 @@ static void SetGammaRamp(D3DGAMMARAMP *pGammaRamp)
         IDirect3DDevice8_SetGammaRamp(*g_ppGrDevice, D3DSGR_NO_CALIBRATION, pGammaRamp);
 #else
     HDC hdc;
-        
+
     hdc = GetDC(*g_phWnd);
     if(hdc)
     {
         if(!SetDeviceGammaRamp(hdc, pGammaRamp))
-            ERR("SetDeviceGammaRamp failed");
+            ERR("SetDeviceGammaRamp failed %lu", GetLastError());
         ReleaseDC(*g_phWnd, hdc);
     }
     else

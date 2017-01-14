@@ -157,5 +157,11 @@ void CleanupScreenshot(void)
 
 void ScreenshotAfterGameInit()
 {
-    g_ScreenshotDirId = FsAddDirectoryEx("screenshots", "", 1);
+    char FullPath[MAX_PATH];
+    sprintf(FullPath, "%s\\%s", g_pszRootPath, SCREENSHOT_DIR_NAME);
+    if (CreateDirectoryA(FullPath, NULL))
+        INFO("Created screenshots directory");
+    else if (GetLastError() != ERROR_ALREADY_EXISTS)
+        ERR("Failed to create screenshots directory %lu", GetLastError());
+    g_ScreenshotDirId = FsAddDirectoryEx(SCREENSHOT_DIR_NAME, "", 1);
 }

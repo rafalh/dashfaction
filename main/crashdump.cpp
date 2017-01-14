@@ -4,9 +4,9 @@
 #define CRASHDUMP_USE_DMP 0
 #define CRASHDUMP_USE_HEURISTIC_STACK_TRACE 1
 #if CRASHDUMP_USE_DMP
-#define CRASHDUMP_FILENAME "rfmod_crash.dmp"
+#define CRASHDUMP_FILENAME "DashFaction.dmp"
 #else
-#define CRASHDUMP_FILENAME "rfmod_crash.txt"
+#define CRASHDUMP_FILENAME "DashFaction.crash.log"
 #endif
 
 #define CRASHDUMP_HEURISTIC_MAX_FUN_SIZE 4096

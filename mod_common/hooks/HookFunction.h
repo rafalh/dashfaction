@@ -2,8 +2,6 @@
 
 #include "precomp.h"
 #include "Revertable.h"
-#include "CLogger.h"
-//#include <MinHook.h>
 #include <subhook.h>
 
 template <typename T>
@@ -37,7 +35,7 @@ private:
 	{
         m_hook.Install(FunPtr, HookPtr);
         if (!m_hook.GetTrampoline())
-            CLogger::root().err() << "Trampoline is null for " << FunPtr;
+            logging::Logger::root().err() << "Trampoline is null for " << FunPtr;
 	}
 };
 

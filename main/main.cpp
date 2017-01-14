@@ -23,6 +23,10 @@
 #include "high_fps.h"
 #include "HookableFunPtr.h"
 
+#include <log/FileAppender.h>
+#include <log/ConsoleAppender.h>
+#include <log/Win32Appender.h>
+
 SHARED_OPTIONS g_Options;
 HookableFunPtr<0x004163C0, void, CPlayer*> RenderHitScreenHookable;
 HookableFunPtr<0x004B33F0, void, const char**, const char**> GetVersionStrHookable;
@@ -81,6 +85,8 @@ static void GetVersionStrHook(const char **ppszVersion, const char **a2)
 
 static void InitGameHook(void)
 {
+    INFO("Initializing game...");
+
     RfInitGame();
 
     GraphicsAfterGameInit();
@@ -94,6 +100,8 @@ static void InitGameHook(void)
     
     CommandsAfterGameInit();
     ScreenshotAfterGameInit();
+
+    INFO("Game initialized.");
 }
 
 static void CleanupGameHook(void)
@@ -159,12 +167,35 @@ void  __declspec(naked) CrashFix0055CE59()
     }
 }
 
+#ifndef NDEBUG
+class RfConsoleLogAppender : public logging::BaseAppender
+{
+    virtual void append(logging::LogLevel lvl, const std::string &str)
+    {
+        RfConsoleWrite(str.c_str(), NULL);
+    }
+};
+#endif // NDEBUG
+
+void InitLogging()
+{
+    CreateDirectoryA("logs", NULL);
+    logging::LoggerConfig::root().addAppender(std::move(std::make_unique<logging::FileAppender>("logs/DashFaction.log", false)));
+    logging::LoggerConfig::root().addAppender(std::move(std::make_unique<logging::ConsoleAppender>()));
+    logging::LoggerConfig::root().addAppender(std::move(std::make_unique<logging::Win32Appender>()));
+#ifndef NDEBUG
+    logging::LoggerConfig::root().addAppender(std::move(std::make_unique<RfConsoleLogAppender>()));
+#endif
+}
+
 extern "C" DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
 {
     g_Options = *pOptions;
 
     /* Init crash dump writer before anything else */
     InitCrashDumps();
+    
+    InitLogging();
     
     if (!SetProcessDEPPolicy(PROCESS_DEP_ENABLE))
         WARN("SetProcessDEPPolicy failed (error %ld)", GetLastError());

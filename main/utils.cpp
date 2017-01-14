@@ -2,6 +2,8 @@
 #include "utils.h"
 #include "rf.h"
 
+#define DEBUG_LOG_FILENAME "logs/DashFaction.log"
+
 void WriteMem(PVOID pAddr, PVOID pValue, unsigned cbValue)
 {
     DWORD dwOldProtect;
@@ -74,9 +76,9 @@ void DbgPrint(char *pszFormat, ...)
     static int bFirstFileDebug = 1;
     
     if(bFirstFileDebug)
-        pFile = fopen("rfmod_dbg.txt", "w");
+        pFile = fopen(DEBUG_LOG_FILENAME, "w");
     else
-        pFile = fopen("rfmod_dbg.txt", "a");
+        pFile = fopen(DEBUG_LOG_FILENAME, "a");
     
     if(pFile)
     {

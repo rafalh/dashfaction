@@ -1,6 +1,6 @@
 #include "precomp.h"
 #include "HookCall.h"
-#include "CLogger.h"
+#include "log/Logger.h"
 
 HookCallInternal::HookCallInternal(uintptr_t OpcodeAddr, uintptr_t ExpectedFunAddr) :
     MemChange(OpcodeAddr + 1)
@@ -8,7 +8,7 @@ HookCallInternal::HookCallInternal(uintptr_t OpcodeAddr, uintptr_t ExpectedFunAd
     unsigned char *OpcodePtr = reinterpret_cast<unsigned char*>(OpcodeAddr);
     m_bIsValid = (*OpcodePtr == 0xE8);
     if (!m_bIsValid)
-        CLogger::root().err() << "Failed to set hook at address " << std::hex << OpcodeAddr << " (opcode 0x" << std::hex << *OpcodePtr << ")";
+        logging::Logger::root().err() << "Failed to set hook at address " << std::hex << OpcodeAddr << " (opcode 0x" << std::hex << *OpcodePtr << ")";
     
 	if (ExpectedFunAddr)
     {
@@ -18,7 +18,7 @@ HookCallInternal::HookCallInternal(uintptr_t OpcodeAddr, uintptr_t ExpectedFunAd
         if (CurrentOffset != ExpectedOffset)
         {
 			uintptr_t CurrentFunAddr = static_cast<uintptr_t>(CurrentOffset + (reinterpret_cast<uintptr_t>(GetAddr()) + 4));
-			CLogger::root().warn() << "Unexpected function address in hook at " << std::hex << OpcodeAddr << ": expected " << ExpectedFunAddr << ", got " << CurrentFunAddr;
+            logging::Logger::root().warn() << "Unexpected function address in hook at " << std::hex << OpcodeAddr << ": expected " << ExpectedFunAddr << ", got " << CurrentFunAddr;
         }
     }
 }
