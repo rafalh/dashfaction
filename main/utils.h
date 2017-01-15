@@ -20,6 +20,8 @@ char *stristr(const char *haystack, const char *needle);
 
 #define COUNTOF(a) (sizeof(a)/sizeof((a)[0]))
 
+#define NAKED __declspec(naked)
+
 #define ASM_NOP           0x90
 #define ASM_LONG_CALL_REL 0xE8
 #define ASM_LONG_JMP_REL  0xE9

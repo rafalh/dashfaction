@@ -56,7 +56,7 @@ static void DrawConsoleAndProcessKbdFifoHook(BOOL bServer)
 #endif
 }
 
-void  __declspec(naked) VersionLabelPushArgs_0044343A()
+NAKED void VersionLabelPushArgs_0044343A()
 {
     _asm
     {
@@ -144,7 +144,7 @@ static void RenderHitScreenHook(CPlayer *pPlayer)
 #endif
 }
 
-void  __declspec(naked) CrashFix0055CE59()
+NAKED void CrashFix0055CE59()
 {
     _asm
     {
