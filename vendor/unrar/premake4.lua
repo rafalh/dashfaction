@@ -13,7 +13,6 @@ project "unrar"
 		"WHAT=RARDLL",
 	}
 	--links {"pthread"}
-	targetdir "lib"
 	pchheader "rar.hpp"
 	pchsource "rarpch.cpp"
 	files {
