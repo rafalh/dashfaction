@@ -234,9 +234,8 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
     /* Disable thqlogo.bik */
     if (g_gameConfig.fastStart)
     {
-        WriteMemUInt16((PVOID)0x004B2091, MAKEWORD(ASM_NOP, ASM_NOP));
-        WriteMemUInt16((PVOID)0x004B2093, MAKEWORD(ASM_NOP, ASM_NOP));
-        WriteMemUInt8((PVOID)0x004B2095, ASM_NOP);
+        WriteMemUInt8((PVOID)0x004B208A, ASM_SHORT_JMP_REL);
+        WriteMemUInt8((PVOID)0x004B24FD, ASM_SHORT_JMP_REL);
     }
 #endif /* NO_INTRO */
     
