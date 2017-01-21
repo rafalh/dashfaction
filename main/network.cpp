@@ -323,6 +323,9 @@ void NetworkInit()
     /* Show valid info for servers with incompatible version */
     WriteMemUInt8((PVOID)0x0047B3CB, ASM_SHORT_JMP_REL);
 
+    /* Change default Server List sort to players count */
+    WriteMemUInt32((PVOID)0x00599D20, 4);
+    
     /* Beep when new player joins */
     WriteMemPtr((PVOID)0x0059E158, HandleNewPlayerPacketHook);
 
