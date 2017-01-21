@@ -316,9 +316,8 @@ void NetworkInit()
     /* Default port: 0 */
     WriteMemUInt16((PVOID)0x0059CDE4, 0);
 
-    /* If server forces player character, don't save it in settings */
-    WriteMemUInt8Repeat((PVOID)0x004755C1, ASM_NOP, 6);
-    WriteMemUInt8Repeat((PVOID)0x004755C7, ASM_NOP, 6);
+    /* Dont overwrite MpCharacter in Single Player */
+    WriteMemUInt8Repeat((PVOID)0x004A415F, ASM_NOP, 10);
 
     /* Show valid info for servers with incompatible version */
     WriteMemUInt8((PVOID)0x0047B3CB, ASM_SHORT_JMP_REL);
