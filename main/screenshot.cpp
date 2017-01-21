@@ -140,7 +140,7 @@ void InitScreenshot(void)
 
     /* Override default because IDirect3DSurface8::LockRect fails on multisampled back-buffer */
 #if MULTISAMPLING_SUPPORT
-    if (g_Options.bMultiSampling)
+    if (g_gameConfig.msaa)
     {
         WriteMemUInt8((PVOID)0x0050DFF0, ASM_LONG_JMP_REL);
         WriteMemPtr((PVOID)0x0050DFF1, (PVOID)((ULONG_PTR)GrReadBackBufferHook - (0x0050DFF0 + 0x5)));

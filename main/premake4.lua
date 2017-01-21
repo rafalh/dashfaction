@@ -2,10 +2,15 @@ project "DashFaction"
 	kind "SharedLib"
 	language "C++"
 	files { "**.h", "**.c", "**.cpp" }
-	defines {"BUILD_DLL", "SUBHOOK_STATIC"}
+	defines {
+		"NOMINMAX",
+		"BUILD_DLL",
+		"SUBHOOK_STATIC",
+	}
 	includedirs {
 		"../mod_common",
 		"../logger/include",
+		"../common/include",
 		"../vendor",
 		"../vendor/unzip",
 		"../vendor/zlib",
@@ -13,7 +18,7 @@ project "DashFaction"
 		"../vendor/d3d8",
 		"../vendor/subhook",
 	}
-	links { "psapi", "wininet", "unrar", "unzip", "zlib", "ModCommon", "subhook", "logger" }
+	links { "psapi", "wininet", "unrar", "unzip", "zlib", "ModCommon", "subhook", "logger", "Common" }
 	
 	pchheader "stdafx.h"
 	pchsource "stdafx.cpp"

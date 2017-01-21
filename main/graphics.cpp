@@ -104,18 +104,18 @@ static void SetupPP(void)
     }*/
 
 #if MULTISAMPLING_SUPPORT
-    if (g_Options.bMultiSampling && *pFormat > 0)
+    if (g_gameConfig.msaa && *pFormat > 0)
     {
         HRESULT hr = IDirect3D8_CheckDeviceMultiSampleType(*g_ppDirect3D, *g_pAdapterIdx, D3DDEVTYPE_HAL, *pFormat, FALSE, D3DMULTISAMPLE_4_SAMPLES);
         if (SUCCEEDED(hr))
         {
-            INFO("Enabling Anti-Aliasing (4x MSAA)...");
-            pPP->MultiSampleType = D3DMULTISAMPLE_4_SAMPLES;
+            INFO("Enabling Anti-Aliasing (%ux MSAA)...", g_gameConfig.msaa);
+            pPP->MultiSampleType = (D3DMULTISAMPLE_TYPE)g_gameConfig.msaa;
         }
         else
         {
             WARN("MSAA not supported (0x%x)...", hr);
-            g_Options.bMultiSampling = FALSE;
+            g_gameConfig.msaa = 0;
         }
     }
 #endif
@@ -127,18 +127,19 @@ void GraphicsInit()
     WriteMemUInt8((PVOID)0x005460CD, ASM_SHORT_JMP_REL);
 
 #if WINDOWED_MODE_SUPPORT
-    if (g_Options.bWindowed)
+    if (g_gameConfig.wndMode != GameConfig::FULLSCREEN)
     {
         /* Enable windowed mode */
         WriteMemUInt32((PVOID)(0x004B29A5 + 6), 0xC8);
-        //WriteMemUInt32((PVOID)(0x0050C4E3 + 1), WS_POPUP|WS_SYSMENU);
+        if (g_gameConfig.wndMode == GameConfig::STRETCHED)
+            WriteMemUInt32((PVOID)(0x0050C4E3 + 1), WS_POPUP|WS_SYSMENU);
     }
 #endif
 
     //WriteMemUInt8((PVOID)0x00524C98, ASM_SHORT_JMP_REL); // disable window hooks
 
 #if MULTISAMPLING_SUPPORT
-    if (g_Options.bMultiSampling)
+    if (g_gameConfig.msaa)
     {
         WriteMemUInt32((PVOID)(0x00545B4D + 6), D3DSWAPEFFECT_DISCARD); // full screen
         WriteMemUInt32((PVOID)(0x00545AE3 + 6), D3DSWAPEFFECT_DISCARD); // windowed
@@ -160,7 +161,8 @@ void GraphicsInit()
 #endif
 
     /* Don't use LOD models */
-    WriteMemUInt8((PVOID)0x0052FACC, ASM_SHORT_JMP_REL);
+    if (g_gameConfig.disableLodModels)
+        WriteMemUInt8((PVOID)0x0052FACC, ASM_SHORT_JMP_REL);
 
     // Better error message in case of device creation error
     WriteMemUInt8((PVOID)0x00545BEF, ASM_LONG_JMP_REL);
@@ -186,7 +188,7 @@ void GraphicsAfterGameInit()
 {
 #if ANISOTROPIC_FILTERING
     /* Anisotropic texture filtering */
-    if (g_pRfGrDeviceCaps->MaxAnisotropy > 0)
+    if (g_pRfGrDeviceCaps->MaxAnisotropy > 0 && g_gameConfig.anisotropicFiltering)
     {
         DWORD AnisotropyLevel = std::min(g_pRfGrDeviceCaps->MaxAnisotropy, 16ul);
         SetTextureMinMagFilter(D3DTEXF_ANISOTROPIC);

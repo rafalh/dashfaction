@@ -4,7 +4,6 @@
 		"_CRT_SECURE_NO_WARNINGS",
 		"_CRT_NONSTDC_NO_DEPRECATE",
 		"_USE_MATH_DEFINES",
-		"NOMINMAX",
 	}
 	includedirs "include"
 	language "C" -- default
@@ -34,6 +33,8 @@
 	
 	include "vendor"
 	include "launcher"
+	include "launcher-mfc"
+	include "common"
 	include "main"
 	include "mod_common"
 	include "logger"

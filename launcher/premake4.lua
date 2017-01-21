@@ -1,4 +1,4 @@
-project "DashFactionLauncher"
+project "DashFactionLauncher_OLD"
 	kind "ConsoleApp"
 	language "C++"
 	files {"**.h", "**.c", "**.cpp", "*.rc"}

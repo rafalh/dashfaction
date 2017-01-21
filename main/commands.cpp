@@ -95,7 +95,7 @@ static void AntiAliasingCmdHandler(void)
 {
     if (*g_pbCmdRun)
     {
-        if (!g_Options.bMultiSampling)
+        if (!g_gameConfig.msaa)
             RfConsolePrintf("Anti-aliasing is not supported");
         else
         {

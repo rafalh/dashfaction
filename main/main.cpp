@@ -22,12 +22,13 @@
 #include "test.h"
 #include "high_fps.h"
 #include "HookableFunPtr.h"
+#include "GameConfig.h"
 
 #include <log/FileAppender.h>
 #include <log/ConsoleAppender.h>
 #include <log/Win32Appender.h>
 
-SHARED_OPTIONS g_Options;
+GameConfig g_gameConfig;
 HookableFunPtr<0x004163C0, void, CPlayer*> RenderHitScreenHookable;
 HookableFunPtr<0x004B33F0, void, const char**, const char**> GetVersionStrHookable;
 int g_VersionLabelX, g_VersionLabelWidth, g_VersionLabelHeight;
@@ -92,7 +93,7 @@ static void InitGameHook(void)
     GraphicsAfterGameInit();
 
 #if DIRECTINPUT_SUPPORT
-    *g_pbDirectInputDisabled = !DIRECTINPUT_ENABLED;
+    *g_pbDirectInputDisabled = !g_gameConfig.directInput;
 #endif
 
     /* Allow modded strings.tbl in ui.vpp */
@@ -188,9 +189,9 @@ void InitLogging()
 #endif
 }
 
-extern "C" DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
+extern "C" DWORD DLL_EXPORT Init(void *pUnused)
 {
-    g_Options = *pOptions;
+    g_gameConfig.load();
 
     /* Init crash dump writer before anything else */
     InitCrashDumps();
