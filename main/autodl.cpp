@@ -390,26 +390,32 @@ void RenderDownloadProgress(void)
     unsigned x, y, cxProgress, cyFont;
     const unsigned cx = 400, cy = 28;
 
-    if(!g_bDownloadActive)
+    if (!g_bDownloadActive)
         return;
 
     cxProgress = (unsigned)((float)cx * (float)g_cbDownloadProgress / (float)g_cbLevelSize);
-    if(cxProgress > cx)
+    if (cxProgress > cx)
         cxProgress = cx;
 
     x = (RfGetWidth() - cx) / 2;
     y = RfGetHeight() - 50;
     cyFont = GrGetFontHeight(-1);
 
-    GrSetColorRgb(0x80, 0x80, 0, 0x80);
-    GrDrawRect(x, y, cxProgress, cy, *((uint32_t*)0x17756C0));
+    if (cxProgress > 0)
+    {
+        GrSetColorRgb(0x80, 0x80, 0, 0x80);
+        GrDrawRect(x, y, cxProgress, cy, *g_pGrRectMaterial);
+    }
 
-    GrSetColorRgb(0, 0, 0x60, 0x80);
-    GrDrawRect(x + cxProgress, y, cx - cxProgress, cy, *((uint32_t*)0x17756C0));
+    if (cx > cxProgress)
+    {
+        GrSetColorRgb(0, 0, 0x60, 0x80);
+        GrDrawRect(x + cxProgress, y, cx - cxProgress, cy, *g_pGrRectMaterial);
+    }
 
     GrSetColorRgb(0, 0xFF, 0, 0x80);
     sprintf(szBuf, "Downloading: %.2f MB / %.2f MB", g_cbDownloadProgress/1024.0f/1024.0f, g_cbLevelSize/1024.0f/1024.0f);
-    GrDrawAlignedText(1, x + cx/2, y + cy/2 - cyFont/2, szBuf, -1, *((uint32_t*)0x17C7C5C));
+    GrDrawAlignedText(1, x + cx/2, y + cy/2 - cyFont/2, szBuf, -1, *g_pGrTextMaterial);
 }
 
 #endif /* LEVELS_AUTODOWNLOADER */

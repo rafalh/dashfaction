@@ -91,12 +91,20 @@ static BANLIST_ENTRY * const g_pBanlistNullEntry = (BANLIST_ENTRY*)0x0064EC08;
 
 /* Graphics */
 
-static IDirect3D8 ** const g_ppDirect3D = (IDirect3D8**)0x01CFCBE0;
-static IDirect3DDevice8 ** const g_ppGrDevice = (IDirect3DDevice8**)0x01CFCBE4;
-static uint32_t * const g_pGrGammaRamp = (uint32_t*)0x017C7C68;
-static uint32_t * const g_pAdapterIdx = (uint32_t*)0x01CFCC34;
-constexpr CVector3 *g_pGrScaleVec = (CVector3*)0x01818B48;
-constexpr CMatrix3 *g_GrViewMatrix = (CMatrix3*)0x018186C8;
+struct CObject;
+
+constexpr auto g_ppDirect3D = (IDirect3D8**)0x01CFCBE0;
+constexpr auto g_ppGrDevice = (IDirect3DDevice8**)0x01CFCBE4;
+constexpr auto g_pGrGammaRamp = (uint32_t*)0x017C7C68;
+constexpr auto g_pAdapterIdx = (uint32_t*)0x01CFCC34;
+constexpr auto g_pGrScaleVec = (CVector3*)0x01818B48;
+constexpr auto g_GrViewMatrix = (CMatrix3*)0x018186C8;
+constexpr auto g_pRfWndWidth = (int*)0x017C7BC4;
+constexpr auto g_pRfWndHeight = (int*)0x017C7BC8;
+constexpr auto g_pRfGrDeviceCaps = (D3DCAPS8*)0x01CFCAC8;
+constexpr auto g_pGrRectMaterial = (int*)0x17756C0;
+constexpr auto g_pGrTextMaterial = (uint32_t*)0x17C7C5C;
+constexpr auto g_pGrDefaultWFar = (float*)0x00596140;
 
 typedef void (*PFN_GR_SET_COLOR_RGB)(unsigned r, unsigned g, unsigned b, unsigned a);
 static const PFN_GR_SET_COLOR_RGB GrSetColorRgb = (PFN_GR_SET_COLOR_RGB)0x0050CF80;
@@ -104,13 +112,13 @@ static const PFN_GR_SET_COLOR_RGB GrSetColorRgb = (PFN_GR_SET_COLOR_RGB)0x0050CF
 typedef void (*PFN_GR_SET_COLOR_PTR)(uint32_t *pColor);
 static const PFN_GR_SET_COLOR_PTR GrSetColorPtr = (PFN_GR_SET_COLOR_PTR)0x0050D000;
 
-typedef void (*PFN_GR_DRAW_TEXT)(unsigned x, unsigned y, const char *pszText, int Font, unsigned Unknown);
+typedef void (*PFN_GR_DRAW_TEXT)(unsigned x, unsigned y, const char *pszText, int Font, unsigned Material);
 static const PFN_GR_DRAW_TEXT GrDrawText = (PFN_GR_DRAW_TEXT)0x0051FEB0;
 
-typedef void (*PFN_GR_DRAW_ALIGNED_TEXT)(unsigned Align, unsigned x, unsigned y, const char *pszText, int Font, unsigned Unknown);
+typedef void (*PFN_GR_DRAW_ALIGNED_TEXT)(unsigned Align, unsigned x, unsigned y, const char *pszText, int Font, unsigned Material);
 static const PFN_GR_DRAW_ALIGNED_TEXT GrDrawAlignedText = (PFN_GR_DRAW_ALIGNED_TEXT)0x0051FE50;
 
-typedef void (*PFN_GR_DRAW_RECT)(unsigned x, unsigned y, unsigned cx, unsigned cy, unsigned Unknown);
+typedef void (*PFN_GR_DRAW_RECT)(unsigned x, unsigned y, unsigned cx, unsigned cy, unsigned Material);
 static const PFN_GR_DRAW_RECT GrDrawRect = (PFN_GR_DRAW_RECT)0x0050DBE0;
 
 typedef unsigned (*PFN_GR_GET_FONT_HEIGHT)(int Font);
@@ -122,13 +130,23 @@ static const PFN_GR_FIT_TEXT GrFitText = (PFN_GR_FIT_TEXT)0x00471EC0;
 typedef int (*PFN_GR_LOAD_TEXTURE)(const char *pszFilename, int a2, BOOL a3);
 static const PFN_GR_LOAD_TEXTURE GrLoadTexture = (PFN_GR_LOAD_TEXTURE)0x0050F6A0;
 
-typedef int (*PFN_GR_DRAW_IMAGE)(int Texture, int x, int y, int a4);
+typedef int (*PFN_GR_DRAW_IMAGE)(int Texture, int x, int y, int Material);
 static const PFN_GR_DRAW_IMAGE GrDrawImage = (PFN_GR_DRAW_IMAGE)0x0050D2A0;
 
 typedef int(*PFN_GR_READ_BACK_BUFFER)(int x, int y, int Width, int Height, void *pBuffer);
 static const PFN_GR_READ_BACK_BUFFER GrReadBackBuffer = (PFN_GR_READ_BACK_BUFFER)0x0050DFF0;
 
 constexpr auto GrGetTextWidth = (void(*)(int *pOutWidth, int *pOutHeight, const char *pszText, int TextLen, int FontId))0x0051F530;
+
+typedef void(*PFN_OBJECT_RENDER)(CObject *pObj);
+static const PFN_OBJECT_RENDER RfRenderEntity = (PFN_OBJECT_RENDER)0x00421850;
+
+typedef void(*PFN_GR_FLUSH_BUFFERS)(void);
+static const PFN_GR_FLUSH_BUFFERS GrFlushBuffers = (PFN_GR_FLUSH_BUFFERS)0x00559D90;
+
+constexpr auto GrLoadFont = (int(*)(const char *pszFileName, int a2))0x0051F6E0;
+constexpr auto GrSetViewMatrix = (void(*)(CMatrix3 *pMatRot, CVector3 *pPos, float fFov, int a4, int a5))0x00517EB0;
+constexpr auto GrSetViewMatrixD3D = (void(*)(CMatrix3 *pMatRot, CVector3 *pPos, float fFov, int a4, int a5))0x00547150;
 
 /* GUI */
 
@@ -522,7 +540,7 @@ typedef struct SPosRotUnk
     CMatrix3 matYawRot;
 } SPosRotUnk;
 
-typedef struct _CObject
+struct CObject
 {
     int field_0;
     CVector3 field_4;
@@ -586,8 +604,8 @@ typedef struct _CObject
     int field_280;
     int field_284;
     int field_288;
-    struct _CObject *pNextObj;
-} CObject;
+    CObject *pNextObj;
+};
 
 /* Entity */
 
@@ -884,26 +902,6 @@ constexpr auto IsPlayerDying = (PFN_IS_PLAYER_DYING)0x004A4940;
 constexpr auto RegReadDword = (int(*)(char *pszSubKeyName, LPCSTR lpValueName, DWORD *lpData, int DefaultValue))0x004A4920;
 
 constexpr bool *g_pbDirectInputDisabled = (bool*)0x005A4F88;
-
-
-/* Graphics */
-
-typedef void (*PFN_OBJECT_RENDER)(CObject *pObj);
-static const PFN_OBJECT_RENDER RfRenderEntity = (PFN_OBJECT_RENDER)0x00421850;
-
-typedef void (*PFN_GR_FLUSH_BUFFERS)(void);
-static const PFN_GR_FLUSH_BUFFERS GrFlushBuffers = (PFN_GR_FLUSH_BUFFERS)0x00559D90;
-
-constexpr auto GrLoadFont = (int(*)(const char *pszFileName, int a2))0x0051F6E0;
-constexpr auto GrSetViewMatrix = (void(*)(CMatrix3 *pMatRot, CVector3 *pPos, float fFov, int a4, int a5))0x00517EB0;
-constexpr auto GrSetViewMatrixD3D = (void(*)(CMatrix3 *pMatRot, CVector3 *pPos, float fFov, int a4, int a5))0x00547150;
-
-static int *g_pRfWndWidth = (int*)0x017C7BC4;
-static int *g_pRfWndHeight = (int*)0x017C7BC8;
-
-constexpr auto g_pRfGrDeviceCaps = (D3DCAPS8*)0x01CFCAC8;
-constexpr auto g_pDrawTextUnk = (uint32_t*)0x17C7C5C;
-constexpr auto g_pGrDefaultWFar = (float*)0x00596140;
 
 /* RF stdlib functions are not compatible with GCC */
 
