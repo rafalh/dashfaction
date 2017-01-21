@@ -3,15 +3,17 @@
 #include "utils.h"
 #include "rf.h"
 
-static float g_FtolAccumulator_HitScreen = 0.0f;
-static float g_FtolAccumulated_ToggleConsole = 0.0f;
-static float g_FtolAccumulated_Timer = 0.0f;
+static double g_FtolAccumulator_HitScreen = 0.0f;
+static double g_FtolAccumulated_ToggleConsole = 0.0f;
+static double g_FtolAccumulated_Timer = 0.0f;
 
-long __stdcall AccumulatingFtoL(float fVal, float *pAccumulator)
+long __stdcall AccumulatingFtoL(double fVal, double *pAccumulator)
 {
+    //ERR("fVal %lf pAccumulator %lf", fVal, *pAccumulator);
     fVal += *pAccumulator;
     long Result = (long)fVal;
     *pAccumulator = fVal - Result;
+    //ERR("after Result %ld pAccumulator %lf", Result, *pAccumulator);
     return Result;
 }
 
@@ -19,10 +21,10 @@ void  __declspec(naked) ftol_HitScreen()  // Note: value is in ST(0), not on sta
 {
     _asm
     {
-        sub esp, 8
+        sub esp, 12
         lea ecx, [g_FtolAccumulator_HitScreen]
-        mov[esp + 4], ecx
-        fstp[esp + 0]
+        mov [esp + 8], ecx
+        fstp qword ptr [esp + 0]
         call AccumulatingFtoL
         ret
     }
@@ -32,10 +34,10 @@ void  __declspec(naked) ftol_ToggleConsole()
 {
     _asm
     {
-        sub esp, 8
+        sub esp, 12
         lea ecx, [g_FtolAccumulated_ToggleConsole]
-        mov[esp + 4], ecx
-        fstp[esp + 0]
+        mov [esp + 8], ecx
+        fstp qword ptr [esp + 0]
         call AccumulatingFtoL
         ret
     }
@@ -45,10 +47,10 @@ void  __declspec(naked) ftol_Timer()
 {
     _asm
     {
-        sub esp, 8
+        sub esp, 12
         lea ecx, [g_FtolAccumulated_Timer]
-        mov[esp + 4], ecx
-        fstp[esp + 0]
+        mov [esp + 8], ecx
+        fstp qword ptr [esp + 0]
         call AccumulatingFtoL
         ret
     }
@@ -69,7 +71,7 @@ void HighFpsInit()
     WriteMemUInt32((PVOID)(0x0050ABFB + 1), (ULONG_PTR)ftol_ToggleConsole - (0x0050ABFB + 0x5)); // console open/close
     WriteMemUInt32((PVOID)(0x005096A7 + 1), (ULONG_PTR)ftol_Timer - (0x005096A7 + 0x5)); // switching weapon and more
 
-                                                                                         /* Fix jumping on high FPS */
+    /* Fix jumping on high FPS */
     const static float JUMP_THRESHOLD = 0.05f;
     WriteMemPtr((PVOID)(0x004A09A6 + 2), &JUMP_THRESHOLD);
 
