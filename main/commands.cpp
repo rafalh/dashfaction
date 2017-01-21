@@ -145,6 +145,29 @@ static int CanPlayerFireHook(CPlayer *pPlayer)
 
 #endif // if CAMERA_1_3_COMMANDS
 
+static void MouseSensitivityCmdHandler(void)
+{
+    if (*g_pbCmdRun)
+    {
+        RfCmdGetNextArg(CMD_ARG_NONE | CMD_ARG_FLOAT, 0);
+
+        if ((*g_piCmdArgType & CMD_ARG_FLOAT))
+        {
+            float fValue = *g_pfCmdArg;
+            fValue = std::min(std::max(fValue, 0.0f), 1.0f);
+            (*g_ppLocalPlayer)->Controls.fMouseSensitivity = fValue;
+        }
+        RfConsolePrintf("Mouse sensitivity: %.1f", (*g_ppLocalPlayer)->Controls.fMouseSensitivity);
+    }
+
+    if (*g_pbCmdHelp)
+    {
+        RfConsoleWrite(g_ppszStringsTable[886], NULL);
+        RfConsoleWrite("     ms <value>", NULL);
+    }
+}
+
+
 CCmd g_Commands[] = {
 #if SPLITSCREEN_ENABLE
     {"splitscreen", "Starts split screen mode", SplitScreenCmdHandler},
@@ -163,7 +186,8 @@ CCmd g_Commands[] = {
 #if DIRECTINPUT_SUPPORT
     { "inputmode", "Toggles input mode", InputModeCmdHandler },
 #endif
-    {"unban_last", "Unbans last banned player", UnbanLastCmdHandler},
+    { "unban_last", "Unbans last banned player", UnbanLastCmdHandler },
+    { "ms", "Sets mouse sensitivity", MouseSensitivityCmdHandler },
 };
 
 void CommandsInit(void)
