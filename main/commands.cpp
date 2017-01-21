@@ -31,9 +31,18 @@ static void MaxFpsCmdHandler(void)
     if (*g_pbCmdRun)
     {
         RfCmdGetNextArg(CMD_ARG_NONE | CMD_ARG_FLOAT, 0);
-        
-        if((*g_piCmdArgType & CMD_ARG_FLOAT) && *g_pfCmdArg >= 5.0f)
-            *g_pfMinFramerate = 1.0f / *g_pfCmdArg;
+
+        if ((*g_piCmdArgType & CMD_ARG_FLOAT))
+        {
+#ifdef NDEBUG
+            float newLimit = std::min(std::max(*g_pfCmdArg, (float)MIN_FPS_LIMIT), (float)MAX_FPS_LIMIT);
+#else
+            float newLimit = *g_pfCmdArg;
+#endif
+            g_gameConfig.maxFps = (unsigned)newLimit;
+            g_gameConfig.save();
+            *g_pfMinFramerate = 1.0f / newLimit;
+        }
         else
             RfConsolePrintf("Maximal FPS: %.1f", 1.0f / *g_pfMinFramerate);
     }
@@ -45,6 +54,7 @@ static void MaxFpsCmdHandler(void)
     }
 }
 
+#ifndef NDEBUG
 static void DebugCmdHandler(void)
 {
     bool bDbg = !g_pbDbgFlagsArray[0];
@@ -53,6 +63,7 @@ static void DebugCmdHandler(void)
     *g_pbDbgNetwork = bDbg;
     *g_pbDbgWeapon = bDbg;
 }
+#endif
 
 #if SPECTATE_MODE_ENABLE
 
@@ -142,7 +153,9 @@ CCmd g_Commands[] = {
 #endif
     {"maxfps", "Sets maximal FPS", MaxFpsCmdHandler},
     {"hud", "Show and hide HUD", HudCmdHandler},
+#ifndef NDEBUG
     {"debug", "Switches debugging in RF", DebugCmdHandler},
+#endif
 #if SPECTATE_MODE_ENABLE
     {"spectate", "Starts spectating mode", SpectateCmdHandler},
 #endif

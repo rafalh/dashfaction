@@ -232,9 +232,12 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
 
 #ifdef NO_INTRO
     /* Disable thqlogo.bik */
-    WriteMemUInt16((PVOID)0x004B2091, MAKEWORD(ASM_NOP, ASM_NOP));
-    WriteMemUInt16((PVOID)0x004B2093, MAKEWORD(ASM_NOP, ASM_NOP));
-    WriteMemUInt8((PVOID)0x004B2095, ASM_NOP);
+    if (g_gameConfig.fastStart)
+    {
+        WriteMemUInt16((PVOID)0x004B2091, MAKEWORD(ASM_NOP, ASM_NOP));
+        WriteMemUInt16((PVOID)0x004B2093, MAKEWORD(ASM_NOP, ASM_NOP));
+        WriteMemUInt8((PVOID)0x004B2095, ASM_NOP);
+    }
 #endif /* NO_INTRO */
     
     /* Sound loop fix */
@@ -247,8 +250,8 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
     WriteMemPtr((PVOID)0x004B27CE, (PVOID)((ULONG_PTR)InitGameHook - (0x004B27CD + 0x5)));
     WriteMemPtr((PVOID)0x004B2822, (PVOID)((ULONG_PTR)CleanupGameHook - (0x004B2821 + 0x5)));
 
-    /* Set FPS limit to 60 */
-    WriteMemFloat((PVOID)0x005094CA, 1.0f / 60.0f);
+    /* Set initial FPS limit */
+    WriteMemFloat((PVOID)0x005094CA, 1.0f / g_gameConfig.maxFps);
     
     /* Crash-fix... (probably argument for function is invalid); Page Heap is needed */
     WriteMemUInt32((PVOID)(0x0056A28C + 1), 0);

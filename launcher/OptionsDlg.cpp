@@ -58,6 +58,7 @@ BOOL OptionsDlg::OnInitDialog()
     CheckDlgButton(IDC_VSYNC_CHECK, conf.vsync ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_FAST_ANIMS_CHECK, conf.fastAnims ? BST_CHECKED : BST_UNCHECKED);
     SetDlgItemInt(IDC_RENDERING_CACHE_EDIT, conf.geometryCacheSize);
+    SetDlgItemInt(IDC_MAX_FPS_EDIT, conf.maxFps);
 
     CComboBox *msaaCombo = (CComboBox*)GetDlgItem(IDC_MSAA_COMBO);
     auto multiSampleTypes = m_videoInfo.getMultiSampleTypes(D3DFMT_X8R8G8B8, FALSE);
@@ -80,9 +81,13 @@ BOOL OptionsDlg::OnInitDialog()
     else
         GetDlgItem(IDC_ANISOTROPIC_CHECK)->EnableWindow(FALSE);
     CheckDlgButton(IDC_DISABLE_LOD_CHECK, conf.disableLodModels ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(IDC_FPS_COUNTER_CHECK, conf.fpsCounter ? BST_CHECKED : BST_UNCHECKED);
+
     SetDlgItemTextA(IDC_TRACKER_EDIT, conf.tracker.c_str());
     CheckDlgButton(IDC_DIRECT_INPUT_CHECK, conf.directInput ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_EAX_SOUND_CHECK, conf.eaxSound ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(IDC_FAST_START_CHECK, conf.fastStart ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(IDC_ALLOW_OVERWRITE_GAME_CHECK, conf.allowOverwriteGameFiles ? BST_CHECKED : BST_UNCHECKED);
 
     return TRUE;
 }
@@ -133,16 +138,21 @@ void OptionsDlg::OnBnClickedOk()
     conf.vsync = (IsDlgButtonChecked(IDC_VSYNC_CHECK) == BST_CHECKED);
     conf.fastAnims = (IsDlgButtonChecked(IDC_FAST_ANIMS_CHECK) == BST_CHECKED);
     conf.geometryCacheSize = GetDlgItemInt(IDC_RENDERING_CACHE_EDIT);
+    conf.maxFps = GetDlgItemInt(IDC_MAX_FPS_EDIT);
 
     CComboBox *msaaCombo = (CComboBox*)GetDlgItem(IDC_MSAA_COMBO);
     conf.msaa = m_multiSampleTypes[msaaCombo->GetCurSel()];
 
     conf.anisotropicFiltering = (IsDlgButtonChecked(IDC_ANISOTROPIC_CHECK) == BST_CHECKED);
     conf.disableLodModels = (IsDlgButtonChecked(IDC_DISABLE_LOD_CHECK) == BST_CHECKED);
+    conf.fpsCounter = (IsDlgButtonChecked(IDC_FPS_COUNTER_CHECK) == BST_CHECKED);
+
     GetDlgItemTextA(IDC_TRACKER_EDIT, str);
     conf.tracker = str;
     conf.directInput = (IsDlgButtonChecked(IDC_DIRECT_INPUT_CHECK) == BST_CHECKED);
     conf.eaxSound = (IsDlgButtonChecked(IDC_EAX_SOUND_CHECK) == BST_CHECKED);
+    conf.fastStart = (IsDlgButtonChecked(IDC_FAST_START_CHECK) == BST_CHECKED);
+    conf.allowOverwriteGameFiles = (IsDlgButtonChecked(IDC_ALLOW_OVERWRITE_GAME_CHECK) == BST_CHECKED);
 
     try
     {

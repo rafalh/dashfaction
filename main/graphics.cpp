@@ -70,21 +70,6 @@ void  __declspec(naked) GrCreateD3DDeviceError_00545BEF()
     }
 }
 
-#if 0
-static void RenderEntityHook(CEntity *pEntity)
-{ // TODO
-    DWORD dwOldLightining;
-    GrFlushBuffers();
-    IDirect3DDevice8_GetRenderState(*g_ppGrDevice, D3DRS_LIGHTING, &dwOldLightining);
-    IDirect3DDevice8_SetRenderState(*g_ppGrDevice, D3DRS_LIGHTING, 1);
-    IDirect3DDevice8_SetRenderState(*g_ppGrDevice, D3DRS_AMBIENT, 0xFFFFFFFF);
-
-    RfRenderEntity((CObject*)pEntity);
-    GrFlushBuffers();
-    //IDirect3DDevice8_SetRenderState(*g_ppGrDevice, D3DRS_LIGHTING, dwOldLightining);
-}
-#endif
-
 static void SetupPP(void)
 {
     D3DPRESENT_PARAMETERS *pPP = (D3DPRESENT_PARAMETERS*)0x01CFCA18;
@@ -94,14 +79,6 @@ static void SetupPP(void)
     INFO("D3D Format: %ld", *pFormat);
 
     pPP->Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
-
-    /*int i, Format;
-    for (Format = 0; Format < 120; ++Format)
-    {
-    for (i = 2; i < 8; ++i)
-    if (SUCCEEDED(IDirect3D8_CheckDeviceMultiSampleType(*g_ppDirect3D, *g_pAdapterIdx, D3DDEVTYPE_HAL, Format, FALSE, i)))
-    WARN("AA (format %d %d samples) supported", Format, i);
-    }*/
 
 #if MULTISAMPLING_SUPPORT
     if (g_gameConfig.msaa && *pFormat > 0)
@@ -180,8 +157,6 @@ void GraphicsInit()
 
     //WriteMemUInt32((PVOID)0x005450DE, /*D3DUSAGE_DYNAMIC|*/D3DUSAGE_DONOTCLIP|D3DUSAGE_WRITEONLY);
     //WriteMemUInt32((PVOID)0x00545118, /*D3DUSAGE_DYNAMIC|*/D3DUSAGE_DONOTCLIP|D3DUSAGE_WRITEONLY);
-
-    //WriteMemUInt32((PVOID)0x00488BE9, ((ULONG_PTR)RenderEntityHook) - (0x00488BE8 + 0x5));
 }
 
 void GraphicsAfterGameInit()
@@ -201,8 +176,11 @@ void GraphicsAfterGameInit()
 
 void GraphicsDrawFpsCounter()
 {
-    char szBuf[32];
-    sprintf(szBuf, "FPS: %.1f", *g_fFps);
-    GrSetColorRgb(0, 255, 0, 255);
-    GrDrawAlignedText(2, RfGetWidth() - 10, 60, szBuf, -1, *((uint32_t*)0x17C7C5C));
+    if (g_gameConfig.fpsCounter)
+    {
+        char szBuf[32];
+        sprintf(szBuf, "FPS: %.1f", *g_fFps);
+        GrSetColorRgb(0, 255, 0, 255);
+        GrDrawAlignedText(2, RfGetWidth() - 10, 60, szBuf, -1, *((uint32_t*)0x17C7C5C));
+    }
 }

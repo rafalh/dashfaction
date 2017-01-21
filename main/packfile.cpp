@@ -2,6 +2,7 @@
 #include "packfile.h"
 #include "utils.h"
 #include "rf.h"
+#include "main.h"
 
 typedef struct _VFS_LOOKUP_TABLE_NEW
 {
@@ -260,7 +261,7 @@ static void VfsAddFileToLookupTableHook(PACKFILE_ENTRY *pEntry)
                 VFS_DBGPRINT("Add 2: %s (%x)", pEntry->pszFileName, pEntry->dwNameChecksum);
 #endif
             // file with the same name already exist
-            if (*g_pbVfsIgnoreTblFiles) // this is set to true for user_maps
+            if (*g_pbVfsIgnoreTblFiles && !g_gameConfig.allowOverwriteGameFiles) // this is set to true for user_maps
             {
                 TRACE("Denied overwriting game file %s (old archive %s, new archive %s)",
                     pEntry->pArchive->szName, pEntry->pszFileName, pLookupTableItem->pPackfileEntry->pArchive->szName);

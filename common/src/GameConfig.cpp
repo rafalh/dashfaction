@@ -5,29 +5,8 @@
 const char RF_KEY_NAME[] = "SOFTWARE\\Volition\\Red Faction";
 const char DF_SUBKEY_NAME[] = "Dash Faction";
 
-void GameConfig::setDefaults()
-{
-    gameExecutablePath = "C:\\games\\RedFaction\\rf.exe";
-    resWidth = 1024;
-    resHeight = 768;
-    resBpp = 32;
-    wndMode = FULLSCREEN;
-    vsync = true;
-    fastAnims = false;
-    disableLodModels = true;
-    anisotropicFiltering = true;
-    msaa = 4;
-    geometryCacheSize = 32;
-
-    tracker = DEFAULT_RF_TRACKER;
-    directInput = false;
-    eaxSound = true;
-}
-
 void GameConfig::load()
 {
-    setDefaults(); // FIXME
-
     RegKey regKey(HKEY_CURRENT_USER, RF_KEY_NAME, KEY_READ|KEY_CREATE_SUB_KEY);
 
     regKey.readValue("Resolution Width", &resWidth);
@@ -46,8 +25,19 @@ void GameConfig::load()
     dashFactionKey.readValue("Disable LOD Models", &disableLodModels);
     dashFactionKey.readValue("Anisotropic Filtering", &anisotropicFiltering);
     dashFactionKey.readValue("MSAA", &msaa);
+    dashFactionKey.readValue("FPS Counter", &fpsCounter);
+    dashFactionKey.readValue("Max FPS", &maxFps);
     if (!dashFactionKey.readValue("Executable Path", &gameExecutablePath))
         detectGamePath();
+    dashFactionKey.readValue("Fast Start", &fastStart);
+    dashFactionKey.readValue("Allow Overwriting Game Files", &allowOverwriteGameFiles);
+
+#ifdef NDEBUG
+    if (maxFps > MAX_FPS_LIMIT)
+        maxFps = MAX_FPS_LIMIT;
+    else if (maxFps < MIN_FPS_LIMIT)
+        maxFps = MIN_FPS_LIMIT;
+#endif
 }
 
 void GameConfig::save()
@@ -68,7 +58,11 @@ void GameConfig::save()
     dashFactionKey.writeValue("Disable LOD Models", disableLodModels);
     dashFactionKey.writeValue("Anisotropic Filtering", anisotropicFiltering);
     dashFactionKey.writeValue("MSAA", msaa);
+    dashFactionKey.writeValue("FPS Counter", fpsCounter);
+    dashFactionKey.writeValue("Max FPS", maxFps);
     dashFactionKey.writeValue("Executable Path", gameExecutablePath);
+    dashFactionKey.writeValue("Fast Start", fastStart);
+    dashFactionKey.writeValue("Allow Overwriting Game Files", allowOverwriteGameFiles);
 }
 
 bool GameConfig::detectGamePath()
