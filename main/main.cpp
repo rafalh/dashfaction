@@ -263,6 +263,13 @@ extern "C" DWORD DLL_EXPORT Init(SHARED_OPTIONS *pOptions)
     *g_pbDirectInputDisabled = 0;
 #endif
 
+    // Buffer overflows in RflLoadStaticGeometry
+    // Note: 1024 should be used as buffer size but opcode allows only one signed byte
+    WriteMemInt8((PVOID)(0x004ED612 + 1), 127);
+    WriteMemInt8((PVOID)(0x004ED66E + 1), 127);
+    WriteMemInt8((PVOID)(0x004ED72E + 1), 127);
+    WriteMemInt8((PVOID)(0x004EDB02 + 1), 127);
+
     /* Init modules */
     GraphicsInit();
     NetworkInit();
