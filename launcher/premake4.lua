@@ -1,11 +1,17 @@
-project "DashFactionLauncher_OLD"
-	kind "ConsoleApp"
+project "DashFactionLauncher"
+	kind "WindowedApp"
 	language "C++"
-	files {"**.h", "**.c", "**.cpp", "*.rc"}
-	links {"Shlwapi", "WinInet"}
+	files {"**.h", "**.c", "**.cpp", "**.rc"}
+	links {"Shlwapi", "WinInet", "psapi", "Common"}
+	flags { "MFC", "WinMain" }
 	
 	pchheader "stdafx.h"
 	pchsource "stdafx.cpp"
+	
+	includedirs {
+		"../vendor/d3d8",
+		"../common/include",
+	}
 	
 	configuration "Debug"
 		targetdir "../bin/debug"

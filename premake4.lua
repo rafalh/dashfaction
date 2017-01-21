@@ -32,8 +32,8 @@
 		buildoptions { "/Zc:threadSafeInit-" }
 	
 	include "vendor"
+	include "launcher-old"
 	include "launcher"
-	include "launcher-mfc"
 	include "common"
 	include "main"
 	include "mod_common"
