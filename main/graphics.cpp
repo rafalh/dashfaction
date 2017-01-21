@@ -8,7 +8,7 @@
 static void SetTextureMinMagFilter(D3DTEXTUREFILTERTYPE FilterType)
 {
     uintptr_t Addresses[] = {
-        // InitD3D
+        // GrInitD3D
         0x00546283, 0x00546295,
         0x005462A9, 0x005462BD,
         // GrSetMaterial
@@ -45,6 +45,7 @@ void GrSetViewMatrixLastCallHook()
     g_GrViewMatrix->rows[0].x *= fFovMod;
     g_GrViewMatrix->rows[0].y *= fFovMod;
     g_GrViewMatrix->rows[0].z *= fFovMod;
+
     GrUnkAfterWFarUpdateInternal();
 }
 
@@ -134,7 +135,7 @@ void GraphicsInit()
 #if WIDESCREEN_FIX
     /* Fix FOV for widescreen */
     WriteMemPtr((PVOID)(0x005473E4 + 1), (PVOID)((ULONG_PTR)GrSetViewMatrixLastCallHook - (0x005473E4 + 0x5)));
-    WriteMemFloat((PVOID)0x00596140, 200.0f); // reduce default wfar value to fix Assault Rifle rendering on wide screen
+    WriteMemFloat((PVOID)0x0058A29C, 0.0003f); // factor related to near plane, default is 0.000588f
 #endif
 
     /* Don't use LOD models */

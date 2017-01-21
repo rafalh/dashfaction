@@ -901,8 +901,9 @@ constexpr auto GrSetViewMatrixD3D = (void(*)(CMatrix3 *pMatRot, CVector3 *pPos, 
 static int *g_pRfWndWidth = (int*)0x017C7BC4;
 static int *g_pRfWndHeight = (int*)0x017C7BC8;
 
-static D3DCAPS8 *g_pRfGrDeviceCaps = (D3DCAPS8*)0x01CFCAC8;
-constexpr uint32_t *g_pDrawTextUnk = (uint32_t*)0x17C7C5C;
+constexpr auto g_pRfGrDeviceCaps = (D3DCAPS8*)0x01CFCAC8;
+constexpr auto g_pDrawTextUnk = (uint32_t*)0x17C7C5C;
+constexpr auto g_pGrDefaultWFar = (float*)0x00596140;
 
 /* RF stdlib functions are not compatible with GCC */
 
