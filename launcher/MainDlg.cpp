@@ -128,7 +128,7 @@ LRESULT MainDlg::OnUpdateCheck(WPARAM wParam, LPARAM lParam)
     {
         updateStatus->SetWindowTextA("New version available!");
         int iResult = MessageBoxA(m_pUpdateChecker->getMessage().c_str(), 
-            "DashFaction update is available!", MB_OKCANCEL | MB_ICONEXCLAMATION);
+            "Dash Faction update is available!", MB_OKCANCEL | MB_ICONEXCLAMATION);
         if (iResult == IDOK)
             ShellExecuteA(m_hWnd, "open", m_pUpdateChecker->getUrl().c_str(), NULL, NULL, SW_SHOW);
     }

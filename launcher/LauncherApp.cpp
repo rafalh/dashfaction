@@ -136,8 +136,8 @@ bool LauncherApp::LaunchGame(HWND hwnd)
             ss << "Game executable has not been found. Please set a proper path in Options.";
         else
         {
-            ss << "Unuspported game executable has been detected (CRC32 = 0x" << std::hex << e.getCrc32() << "). "
-                << "DashFaction supports only unmodified Red Faction 1.20 NA executable.\n"
+            ss << "Unsupported game executable has been detected (CRC32 = 0x" << std::hex << e.getCrc32() << "). "
+                << "Dash Faction supports only unmodified Red Faction 1.20 NA executable.\n"
                 << "If your game has not been updated to 1.20 please do it first. If the error still shows up "
                 << "replace your RF.exe file with original 1.20 NA RF.exe available on FactionFiles.com.\n"
                 << "Click OK to open download page.";
