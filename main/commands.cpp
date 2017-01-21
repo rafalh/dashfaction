@@ -5,10 +5,9 @@
 #include "hud.h"
 #include "lazyban.h"
 #include "main.h"
-#include "config.h"
+#include "BuildConfig.h"
 #include "spectate_mode.h"
 #include "main.h"
-#include "config.h"
 
 #if SPLITSCREEN_ENABLE
 

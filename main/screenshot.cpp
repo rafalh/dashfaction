@@ -2,7 +2,7 @@
 #include "screenshot.h"
 #include "utils.h"
 #include "rf.h"
-#include "config.h"
+#include "BuildConfig.h"
 #include "main.h"
 
 const char SCREENSHOT_DIR_NAME[] = "screenshots";

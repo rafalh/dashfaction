@@ -1,5 +1,4 @@
 #include "stdafx.h"
-#include "config.h"
 #include "autodl.h"
 #include "rf.h"
 #include "rfproto.h"

@@ -3,6 +3,9 @@ project "DashFactionLauncher_OLD"
 	language "C++"
 	files {"**.h", "**.c", "**.cpp", "*.rc"}
 	links {"Shlwapi", "WinInet"}
+	includedirs {
+		"../common/include"
+	}
 	
 	pchheader "stdafx.h"
 	pchsource "stdafx.cpp"

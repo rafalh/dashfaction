@@ -2,7 +2,6 @@
 #include "graphics.h"
 #include "utils.h"
 #include "rf.h"
-#include "config.h"
 #include "main.h"
 
 static void SetTextureMinMagFilter(D3DTEXTUREFILTERTYPE FilterType)

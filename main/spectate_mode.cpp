@@ -2,7 +2,7 @@
 #include "rf.h"
 #include "rfproto.h"
 #include "spectate_mode.h"
-#include "config.h"
+#include "BuildConfig.h"
 #include "utils.h"
 #include "scoreboard.h"
 

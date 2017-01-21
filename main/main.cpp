@@ -1,5 +1,4 @@
 #include "stdafx.h"
-#include "config.h"
 #include "exports.h"
 #include "version.h"
 #include "crashdump.h"

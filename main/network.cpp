@@ -3,7 +3,6 @@
 #include "rf.h"
 #include "pf.h"
 #include "utils.h"
-#include "config.h"
 
 //#define TEST_BUFFER_OVERFLOW_FIXES
 
