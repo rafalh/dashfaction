@@ -6,7 +6,6 @@
 #include "lazyban.h"
 #include "main.h"
 #include "config.h"
-#include "sharedoptions.h"
 #include "spectate_mode.h"
 #include "main.h"
 #include "config.h"

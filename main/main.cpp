@@ -2,7 +2,6 @@
 #include "config.h"
 #include "exports.h"
 #include "version.h"
-#include "sharedoptions.h"
 #include "crashdump.h"
 #include "autodl.h"
 #include "utils.h"

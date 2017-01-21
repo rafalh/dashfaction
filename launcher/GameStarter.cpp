@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "GameStarter.h"
 #include "GameConfig.h"
-#include "sharedoptions.h"
 #include "crc32.h"
 
 #define DLL_FILENAME "DashFaction.dll"

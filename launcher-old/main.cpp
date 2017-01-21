@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "version.h"
 #include "crc32.h"
-#include "sharedoptions.h"
 #include "Exception.h"
 
 #define HRESULT_CUST_BIT 0x20000000
@@ -14,7 +13,7 @@
 
 #define THROW_EXCEPTION_WITH_WIN32_ERROR() THROW_EXCEPTION("win32 error %lu", GetLastError())
 
-void InitProcess(HANDLE hProcess, const TCHAR *pszPath, SHARED_OPTIONS *pOptions)
+void InitProcess(HANDLE hProcess, const TCHAR *pszPath)
 {
     HANDLE hThread = NULL;
     PVOID pVirtBuf = NULL;
@@ -65,13 +64,7 @@ void InitProcess(HANDLE hProcess, const TCHAR *pszPath, SHARED_OPTIONS *pOptions
     
     CloseHandle(hThread);
 
-    pVirtBuf = VirtualAllocEx(hProcess, NULL, sizeof(*pOptions), MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
-    if (!pVirtBuf)
-        THROW_EXCEPTION_WITH_WIN32_ERROR();
-    
-    WriteProcessMemory(hProcess, pVirtBuf, pOptions, sizeof(*pOptions), NULL);
-
-    hThread = CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)((DWORD_PTR)pfnInit - (DWORD_PTR)hLib + dwExitCode), pVirtBuf, 0, NULL);
+    hThread = CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)((DWORD_PTR)pfnInit - (DWORD_PTR)hLib + dwExitCode), NULL, 0, NULL);
     if (!hThread)
         THROW_EXCEPTION_WITH_WIN32_ERROR();
     
@@ -266,7 +259,6 @@ int main(int argc, const char *argv[]) try
     char szRfPath[MAX_PATH];
     unsigned i;
     HRESULT hr;
-    SHARED_OPTIONS Options;
     
     printf("Starting " PRODUCT_NAME_VERSION "!\n");
 
@@ -282,24 +274,6 @@ int main(int argc, const char *argv[]) try
         fprintf(stderr, "Failed to check for update: %s\n", e.what());
     }
 #endif
-    
-    //Options.bMultiSampling = FALSE;
-    Options.bMultiSampling = TRUE;
-    Options.bWindowed = IsWindowedModeEnabled();
-    printf("Windowed mode: %d\n", Options.bWindowed);
-
-    for (i = 1; i < (unsigned) argc; ++i)
-    {
-        if (!strcmp(argv[i], "-msaa"))
-            Options.bMultiSampling = TRUE;
-        else if (!strcmp(argv[i], "-no-msaa"))
-            Options.bMultiSampling = FALSE;
-        else if (!strcmp(argv[i], "-windowed"))
-            Options.bWindowed = TRUE;
-        else if (!strcmp(argv[i], "-h"))
-            printf("Supported options:\n"
-                "\t-msaa  Enable experimental Multisample Anti-Aliasing support");
-    }
 
     hr = GetRfPath(szRfPath, sizeof(szRfPath));
     if (FAILED(hr) && FAILED(GetRfSteamPath(szRfPath, sizeof(szRfPath))))
@@ -367,7 +341,7 @@ int main(int argc, const char *argv[]) try
     sprintf(szBuf + i, "\\DashFaction.dll");
     try
     {
-        InitProcess(pi.hProcess, szBuf, &Options);
+        InitProcess(pi.hProcess, szBuf);
     }
     catch (const std::exception &e)
     {

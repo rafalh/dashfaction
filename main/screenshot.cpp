@@ -3,7 +3,6 @@
 #include "utils.h"
 #include "rf.h"
 #include "config.h"
-#include "sharedoptions.h"
 #include "main.h"
 
 const char SCREENSHOT_DIR_NAME[] = "screenshots";
