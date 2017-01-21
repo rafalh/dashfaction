@@ -33,6 +33,11 @@ class MemChange : public Revertable
 		{
 			return m_Backup.data();
 		}
+
+        bool IsApplied() const
+        {
+            return !m_Backup.empty();
+        }
         
     protected:
         void *m_Addr;

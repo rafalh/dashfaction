@@ -8,6 +8,7 @@
 #include "BuildConfig.h"
 #include "spectate_mode.h"
 #include "main.h"
+#include "hooks/MemChange.h"
 
 #if SPLITSCREEN_ENABLE
 
@@ -167,6 +168,18 @@ static void MouseSensitivityCmdHandler(void)
     }
 }
 
+static void VolumeLightsCmdHandler(void)
+{
+    if (*g_pbCmdRun)
+    {
+        static MemChange vliCallChange(0x0043233E);
+        if (vliCallChange.IsApplied())
+            vliCallChange.Revert();
+        else
+            vliCallChange.Write("\x90\x90\x90\x90\x90", 5);
+        RfConsolePrintf("Volumetric lightining is %s.", vliCallChange.IsApplied() ? "disabled" : "enabled");
+    }
+}
 
 CCmd g_Commands[] = {
 #if SPLITSCREEN_ENABLE
@@ -188,6 +201,7 @@ CCmd g_Commands[] = {
 #endif
     { "unban_last", "Unbans last banned player", UnbanLastCmdHandler },
     { "ms", "Sets mouse sensitivity", MouseSensitivityCmdHandler },
+    { "vli", "Toggles volumetric lightining", VolumeLightsCmdHandler },
 };
 
 void CommandsInit(void)
