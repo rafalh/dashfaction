@@ -22,3 +22,4 @@ ipch
 *.pdb
 *.idb
 *.lib
+*.aps
