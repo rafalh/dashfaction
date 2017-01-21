@@ -48,6 +48,28 @@ void GrSetViewMatrixLastCallHook()
     GrUnkAfterWFarUpdateInternal();
 }
 
+void DisplayD3DDeviceError(HRESULT hr)
+{
+    ERR("D3D CreateDevice failed (hr 0x%X)", hr);
+
+    char buf[1024];
+    sprintf(buf, "Failed to create Direct3D device object - error 0x%X.\n"
+        "A critical error has occurred and the program cannot continue.\n"
+        "Press OK to exit the program", hr);
+    MessageBoxA(nullptr, buf, "Error!", MB_OK | MB_ICONERROR);
+    ExitProcess(-1);
+}
+
+void  __declspec(naked) GrCreateD3DDeviceError_00545BEF()
+{
+    _asm
+    {
+        push eax
+        call DisplayD3DDeviceError
+        add esp, 4
+    }
+}
+
 #if 0
 static void RenderEntityHook(CEntity *pEntity)
 { // TODO
@@ -139,6 +161,11 @@ void GraphicsInit()
 
     /* Don't use LOD models */
     WriteMemUInt8((PVOID)0x0052FACC, ASM_SHORT_JMP_REL);
+
+    // Better error message in case of device creation error
+    WriteMemUInt8((PVOID)0x00545BEF, ASM_LONG_JMP_REL);
+    WriteMemPtr((PVOID)(0x00545BEF + 1), (PVOID)((ULONG_PTR)GrCreateD3DDeviceError_00545BEF - (0x00545BEF + 0x5)));
+    
 
     /* Use hardware vertex processing */
     //WriteMemUInt8((PVOID)0x00545BDF, D3DCREATE_HARDWARE_VERTEXPROCESSING);
