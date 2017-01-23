@@ -29,6 +29,7 @@ void GameConfig::load()
     dashFactionKey.readValue("Max FPS", &maxFps);
     if (!dashFactionKey.readValue("Executable Path", &gameExecutablePath))
         detectGamePath();
+    dashFactionKey.readValue("Direct Input", &directInput);
     dashFactionKey.readValue("Fast Start", &fastStart);
     dashFactionKey.readValue("Allow Overwriting Game Files", &allowOverwriteGameFiles);
 
@@ -61,6 +62,7 @@ void GameConfig::save()
     dashFactionKey.writeValue("FPS Counter", fpsCounter);
     dashFactionKey.writeValue("Max FPS", maxFps);
     dashFactionKey.writeValue("Executable Path", gameExecutablePath);
+    dashFactionKey.writeValue("Direct Input", directInput);
     dashFactionKey.writeValue("Fast Start", fastStart);
     dashFactionKey.writeValue("Allow Overwriting Game Files", allowOverwriteGameFiles);
 }

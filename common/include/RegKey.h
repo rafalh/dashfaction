@@ -52,7 +52,8 @@ public:
     {
         unsigned temp;
         bool result = readValue(name, &temp);
-        *value = (temp != 0);
+        if (result)
+            *value = (temp != 0);
         return result;
     }
 
