@@ -34,11 +34,16 @@ static const char g_szVersionInMenu[] = PRODUCT_NAME_VERSION;
 
 static void ProcessWaitingMessages()
 {
+    // Note: When using dedicated server we get WM_PAINT messages all the time
     MSG msg;
-    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+    constexpr int LIMIT = 4;
+    for (int i = 0; i < LIMIT; ++i)
     {
+        if (!PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+            break;
         TranslateMessage(&msg);
         DispatchMessage(&msg);
+        //INFO("msg %u\n", msg.message);
     }
 }
 
@@ -110,6 +115,12 @@ static void CleanupGameHook(void)
     RfCleanupGame();
 }
 
+static bool RunGameHook()
+{
+    ProcessWaitingMessages();
+    return RfRunGame();
+}
+
 CPlayer *FindPlayer(const char *pszName)
 {
     CPlayer *pPlayer = *g_ppPlayersList;
@@ -122,12 +133,6 @@ CPlayer *FindPlayer(const char *pszName)
             break;
     }
     return NULL;
-}
-
-static void GrSwitchBuffersHook(void)
-{
-    // We disabled msg loop thread so we have to process them somewhere
-    ProcessWaitingMessages();
 }
 
 static void RenderHitScreenHook(CPlayer *pPlayer)
@@ -203,7 +208,6 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
     WriteMemUInt8Repeat((PVOID)0x00524C48, ASM_NOP, 0x00524C83 - 0x00524C48); // disable msg loop thread
     WriteMemUInt8((PVOID)0x00524C48, ASM_LONG_CALL_REL);
     WriteMemPtr((PVOID)0x00524C49, (PVOID)((ULONG_PTR)0x00524E40 - (0x00524C48 + 0x5))); // CreateMainWindow
-    WriteMemPtr((PVOID)0x0050CE21, (PVOID)((ULONG_PTR)GrSwitchBuffersHook - (0x0050CE20 + 0x5)));
 
     /* Console init string */
     WriteMemPtr((PVOID)0x004B2534, "-- " PRODUCT_NAME " Initializing --\n");
@@ -244,8 +248,10 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
     WriteMemPtr((PVOID)0x004B2DD4, (PVOID)((ULONG_PTR)DrawConsoleAndProcessKbdFifoHook - (0x004B2DD3 + 0x5)));
 
     /* CleanupGame and InitGame hooks */
-    WriteMemPtr((PVOID)0x004B27CE, (PVOID)((ULONG_PTR)InitGameHook - (0x004B27CD + 0x5)));
-    WriteMemPtr((PVOID)0x004B2822, (PVOID)((ULONG_PTR)CleanupGameHook - (0x004B2821 + 0x5)));
+    WriteMemPtr((PVOID)(0x004B27CD+1), (PVOID)((ULONG_PTR)InitGameHook - (0x004B27CD + 0x5)));
+    WriteMemPtr((PVOID)(0x004B2821+1), (PVOID)((ULONG_PTR)CleanupGameHook - (0x004B2821 + 0x5)));
+    WriteMemPtr((PVOID)(0x004B2818+1), (PVOID)((ULONG_PTR)RunGameHook - (0x004B2818 + 0x5)));
+    
 
     /* Set initial FPS limit */
     WriteMemFloat((PVOID)0x005094CA, 1.0f / g_gameConfig.maxFps);
@@ -266,10 +272,12 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
 
     // Buffer overflows in RflLoadStaticGeometry
     // Note: 1024 should be used as buffer size but opcode allows only one signed byte
+#if 1
     WriteMemInt8((PVOID)(0x004ED612 + 1), 127);
     WriteMemInt8((PVOID)(0x004ED66E + 1), 127);
     WriteMemInt8((PVOID)(0x004ED72E + 1), 127);
     WriteMemInt8((PVOID)(0x004EDB02 + 1), 127);
+#endif
 
     /* Init modules */
     GraphicsInit();

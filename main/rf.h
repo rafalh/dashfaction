@@ -34,6 +34,8 @@ static PFN_STRING_ALLOC const StringAlloc = (PFN_STRING_ALLOC)0x004FF300;
 typedef void (*PFN_STRING_FREE)(void *pData);
 static PFN_STRING_FREE const StringFree = (PFN_STRING_FREE)0x004FF3A0;
 
+constexpr auto CString_Init = (void(__thiscall *)(CString *This, const char *pszInit))0x004FF3D0;
+
 /* Console */
 
 typedef unsigned (*PFN_CONSOLE_WRITE)(const char *pszText, uint32_t *pColor);
@@ -852,6 +854,8 @@ static PFN_INIT_GAME const RfInitGame = (PFN_INIT_GAME)0x004B13F0;
 typedef void (*PFN_CLEANUP_GAME)(void);
 static PFN_CLEANUP_GAME const RfCleanupGame = (PFN_CLEANUP_GAME)0x004B2D40;
 
+constexpr auto RfRunGame = (bool(*)())0x004B2D90;
+
 typedef char *(*PFN_GET_FILE_EXT)(char *pszPath);
 static PFN_GET_FILE_EXT const GetFileExt = (PFN_GET_FILE_EXT)0x005143F0;
 
@@ -902,6 +906,9 @@ constexpr auto IsPlayerDying = (PFN_IS_PLAYER_DYING)0x004A4940;
 constexpr auto RegReadDword = (int(*)(char *pszSubKeyName, LPCSTR lpValueName, DWORD *lpData, int DefaultValue))0x004A4920;
 
 constexpr bool *g_pbDirectInputDisabled = (bool*)0x005A4F88;
+
+constexpr auto SwitchMenu = (int(*)(int MenuId, bool bForce))0x00434190;
+constexpr auto SetNextLevelFilename = (void(*)(CString strFilename, CString strSecond))0x0045E2E0;
 
 /* RF stdlib functions are not compatible with GCC */
 
