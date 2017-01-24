@@ -17,7 +17,7 @@ long __stdcall AccumulatingFtoL(double fVal, double *pAccumulator)
     return Result;
 }
 
-void  __declspec(naked) ftol_HitScreen()  // Note: value is in ST(0), not on stack
+void NAKED ftol_HitScreen()  // Note: value is in ST(0), not on stack
 {
     _asm
     {
@@ -30,7 +30,7 @@ void  __declspec(naked) ftol_HitScreen()  // Note: value is in ST(0), not on sta
     }
 }
 
-void  __declspec(naked) ftol_ToggleConsole()
+void NAKED ftol_ToggleConsole()
 {
     _asm
     {
@@ -43,7 +43,7 @@ void  __declspec(naked) ftol_ToggleConsole()
     }
 }
 
-void  __declspec(naked) ftol_Timer()
+void NAKED ftol_Timer()
 {
     _asm
     {

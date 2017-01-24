@@ -62,7 +62,7 @@ void DisplayD3DDeviceError(HRESULT hr)
     ExitProcess(-1);
 }
 
-void  __declspec(naked) GrCreateD3DDeviceError_00545BEF()
+void NAKED GrCreateD3DDeviceError_00545BEF()
 {
     _asm
     {

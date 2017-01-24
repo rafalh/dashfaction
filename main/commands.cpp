@@ -197,7 +197,7 @@ static void LevelSpCmdHandler(void)
         {
             if (*g_pbNetworkGame)
             {
-                RfConsolePrintf("You cannot use it from network game");
+                RfConsolePrintf("You cannot use it in multiplayer game!");
                 return;
             }
             CString strUnk, strLevel;
@@ -237,7 +237,7 @@ CCmd g_Commands[] = {
     { "unban_last", "Unbans last banned player", UnbanLastCmdHandler },
     { "ms", "Sets mouse sensitivity", MouseSensitivityCmdHandler },
     { "vli", "Toggles volumetric lightining", VolumeLightsCmdHandler },
-    { "levelsp", "Load single player level", LevelSpCmdHandler },
+    { "levelsp", "Loads single player level", LevelSpCmdHandler },
 };
 
 void CommandsInit(void)
