@@ -173,14 +173,17 @@ static LONG WINAPI CrashDumpExceptionFilter(PEXCEPTION_POINTERS pExceptionPointe
     g_pFile = fopen(CRASHDUMP_LOG_FILENAME, "w");
     if (g_pFile)
     {
-        unsigned i;
+        time_t now = time(0);
+        tm *localtm = localtime(&now);
         
+
+        fprintf(g_pFile, "Error occurred at: %s", asctime(localtm));
         fprintf(g_pFile, "ExceptionCode: %08lX\n", pExceptionPointers->ExceptionRecord->ExceptionCode);
         fprintf(g_pFile, "ExceptionFlags: %08lX\n", pExceptionPointers->ExceptionRecord->ExceptionFlags);
         fprintf(g_pFile, "ExceptionAddress: %p\n", pExceptionPointers->ExceptionRecord->ExceptionAddress);
         
         fprintf(g_pFile, "ExceptionInformation:");
-        for (i = 0; i < pExceptionPointers->ExceptionRecord->NumberParameters; ++i)
+        for (unsigned i = 0; i < pExceptionPointers->ExceptionRecord->NumberParameters; ++i)
             fprintf(g_pFile, " %08lX", pExceptionPointers->ExceptionRecord->ExceptionInformation[i]);
         fprintf(g_pFile, "\n");
         
@@ -205,7 +208,7 @@ static LONG WINAPI CrashDumpExceptionFilter(PEXCEPTION_POINTERS pExceptionPointe
 #endif
 
         fprintf(g_pFile, "\nStack:\n");
-        for (i = 0; i < 1024; ++i)
+        for (unsigned i = 0; i < 1024; ++i)
         {
             DWORD *Ptr = ((DWORD*)pExceptionPointers->ContextRecord->Esp) + i;
             if (IsBadReadPtr(Ptr, sizeof(DWORD)))
@@ -221,7 +224,7 @@ static LONG WINAPI CrashDumpExceptionFilter(PEXCEPTION_POINTERS pExceptionPointe
             qsort(Modules, cModules, sizeof(HMODULE), ModuleHandleCompare);
             
             fprintf(g_pFile, "\nModules:\n");
-            for (i = 0; i < cModules; ++i)
+            for (unsigned i = 0; i < cModules; ++i)
             {
                 if (!GetModuleFileName(Modules[i], szBuffer, sizeof(szBuffer)))
                     szBuffer[0] = 0;
