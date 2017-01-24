@@ -53,8 +53,7 @@ struct CCmd
     void (*pfnHandler)(void);
 };
 
-#define MAX_COMMANDS_COUNT 30
-static CCmd ** const g_ppCommands = (CCmd**)0x01775530;
+//static CCmd ** const g_ppCommands = (CCmd**)0x01775530;
 static uint32_t * const g_pcCommands = (uint32_t*)0x0177567C;
 
 static uint32_t * const g_pbCmdRun = (uint32_t*)0x01775110;
@@ -909,6 +908,7 @@ constexpr bool *g_pbDirectInputDisabled = (bool*)0x005A4F88;
 
 constexpr auto SwitchMenu = (int(*)(int MenuId, bool bForce))0x00434190;
 constexpr auto SetNextLevelFilename = (void(*)(CString strFilename, CString strSecond))0x0045E2E0;
+constexpr auto DemoLoadLevel = (void(*)(const char *pszLevelFileName))0x004CC270;
 
 /* RF stdlib functions are not compatible with GCC */
 

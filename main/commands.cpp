@@ -10,6 +10,10 @@
 #include "main.h"
 #include "hooks/MemChange.h"
 
+constexpr int CMD_LIMIT = 128;
+
+static CCmd *g_CommandsBuffer[CMD_LIMIT];
+
 #if SPLITSCREEN_ENABLE
 
 static void SplitScreenCmdHandler(void)
@@ -181,6 +185,35 @@ static void VolumeLightsCmdHandler(void)
     }
 }
 
+static void LevelSpCmdHandler(void)
+{
+    if (*g_pbCmdRun)
+    {
+        RfCmdGetNextArg(CMD_ARG_STR, 0);
+
+        if ((*g_piCmdArgType & CMD_ARG_STR))
+        {
+            if (*g_pbNetworkGame)
+            {
+                RfConsolePrintf("You cannot use it from network game");
+                return;
+            }
+            CString strUnk, strLevel;
+            CString_Init(&strUnk, "");
+            CString_Init(&strLevel, g_pszCmdArg);
+            RfConsolePrintf("Loading level");
+            SetNextLevelFilename(strLevel, strUnk);
+            SwitchMenu(5, 0);
+        }
+    }
+
+    if (*g_pbCmdHelp)
+    {
+        RfConsoleWrite(g_ppszStringsTable[886], NULL);
+        RfConsoleWrite("     <rfl_name>", NULL);
+    }
+}
+
 CCmd g_Commands[] = {
 #if SPLITSCREEN_ENABLE
     {"splitscreen", "Starts split screen mode", SplitScreenCmdHandler},
@@ -202,6 +235,7 @@ CCmd g_Commands[] = {
     { "unban_last", "Unbans last banned player", UnbanLastCmdHandler },
     { "ms", "Sets mouse sensitivity", MouseSensitivityCmdHandler },
     { "vli", "Toggles volumetric lightining", VolumeLightsCmdHandler },
+    { "levelsp", "Load single player level", LevelSpCmdHandler },
 };
 
 void CommandsInit(void)
@@ -214,12 +248,27 @@ void CommandsInit(void)
     WriteMemUInt8((PVOID)0x004A68D0, ASM_LONG_JMP_REL);
     WriteMemUInt32((PVOID)0x004A68D1, ((ULONG_PTR)CanPlayerFireHook) - (0x004A68D0 + 0x5));
 #endif // if CAMERA_1_3_COMMANDS
+
+    // Change limit of commands
+    ASSERT(*g_pcCommands == 0);
+    WriteMemPtr((PVOID)(0x005099AC + 1), g_CommandsBuffer);
+    WriteMemPtr((PVOID)(0x00509A8A + 1), g_CommandsBuffer);
+    WriteMemPtr((PVOID)(0x00509AB0 + 3), g_CommandsBuffer);
+    WriteMemPtr((PVOID)(0x00509AE1 + 3), g_CommandsBuffer);
+    WriteMemPtr((PVOID)(0x00509AF5 + 3), g_CommandsBuffer);
+    WriteMemPtr((PVOID)(0x00509C8F + 1), g_CommandsBuffer);
+    WriteMemPtr((PVOID)(0x00509DB4 + 3), g_CommandsBuffer);
+    WriteMemPtr((PVOID)(0x00509E6F + 1), g_CommandsBuffer);
+    WriteMemPtr((PVOID)(0x0050A648 + 4), g_CommandsBuffer);
+    WriteMemPtr((PVOID)(0x0050A6A0 + 3), g_CommandsBuffer);
 }
 
 void CommandRegister(CCmd *pCmd)
 {
-    if (*g_pcCommands < MAX_COMMANDS_COUNT)
-        g_ppCommands[(*g_pcCommands)++] = pCmd;
+    if (*g_pcCommands < CMD_LIMIT)
+        g_CommandsBuffer[(*g_pcCommands)++] = pCmd;
+    else
+        ASSERT(false);
 }
 
 void CommandsAfterGameInit()
