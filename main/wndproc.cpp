@@ -22,6 +22,21 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch(uMsg)
     {
         case WM_ACTIVATE:
+            if (!*g_pbDedicatedServer)
+            {
+                // Show cursor if window is not active
+                if (wParam)
+                {
+                    ShowCursor(FALSE);
+                    while (ShowCursor(FALSE) >= 0);
+                }
+                else
+                {
+                    ShowCursor(TRUE);
+                    while (ShowCursor(TRUE) < 0);
+                }
+            }
+
             *g_pbIsActive = wParam ? 1 : 0;
             return DefWindowProcA(hWnd, uMsg, wParam, lParam);
         

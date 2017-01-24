@@ -3,12 +3,16 @@
 #include "rf.h"
 #include "utils.h"
 
+#ifndef D3DSGR_NO_CALIBRATION
+  #define D3DSGR_NO_CALIBRATION 0x0
+#endif
+
 static D3DGAMMARAMP g_GammaRamp;
 static bool g_GammaRampInitialized = false;
 
 static void SetGammaRamp(D3DGAMMARAMP *pGammaRamp)
 {
-#if 0
+#if 0 // Note: D3D Gamma Ramp doesn't work in windowed mode
     if (*g_ppGrDevice)
         IDirect3DDevice8_SetGammaRamp(*g_ppGrDevice, D3DSGR_NO_CALIBRATION, pGammaRamp);
 #else

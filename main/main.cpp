@@ -148,14 +148,14 @@ static void RenderHitScreenHook(CPlayer *pPlayer)
 #endif
 }
 
-NAKED void CrashFix0055CE59()
+NAKED void CrashFix_0055CE48()
 {
     _asm
     {
         shl   edi, 5
         lea   edx, [esp + 0x38 - 0x28]
         mov   eax, [eax + edi]
-        test  eax, eax
+        test  eax, eax // check if pD3DTexture is NULL
         jz    CrashFix0055CE59_label1
         //jmp CrashFix0055CE59_label1
         push  0
@@ -166,7 +166,7 @@ NAKED void CrashFix0055CE59()
         mov   ecx, 0x0055CE59
         jmp   ecx
     CrashFix0055CE59_label1:
-        mov   ecx, 0x0055CF23
+        mov   ecx, 0x0055CF23 // fail gr_lock
         jmp   ecx
     }
 }
@@ -261,7 +261,7 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
 
     /* Crash-fix for pdm04 (FIXME: monitors in game doesnt work) */
     WriteMemUInt8((PVOID)0x0055CE47, ASM_LONG_JMP_REL);
-    WriteMemPtr((PVOID)0x0055CE48, (PVOID)((ULONG_PTR)CrashFix0055CE59 - (0x0055CE48 + 0x4)));
+    WriteMemPtr((PVOID)(0x0055CE47 + 1), (PVOID)((ULONG_PTR)CrashFix_0055CE48 - (0x0055CE47 + 0x5)));
     WriteMemUInt8((PVOID)0x00412370, ASM_RET); // disable function calling GrLock without checking for success (no idea what it does)
     
     RenderHitScreenHookable.hook(RenderHitScreenHook);
