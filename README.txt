@@ -17,7 +17,7 @@ https://www.microsoft.com/pl-pl/download/details.aspx?id=48145 (select vc_redist
 Unpack Dash Faction files to any folder (there is no requirement to put it in Red Faction folder).
 Run DashFactionLauncher.exe.
 On first run select Options and check if everything is OK (especially make sure game executable path is valid).
-Close settings by clicking OK and click "Launch Game" to start modded Red Faction game.
+Close settings and click "Launch Game" to start modded Red Faction game.
 
 About
 -----
@@ -26,20 +26,19 @@ Pure Faction was making problems for me sometimes.
 My application works fine with updated Windows 10 in contrast to Pure Faction 3.0d.
 
 Features:
-- levels autodownloader (uses factionfiles.com just like Pure Faction)
-- added information about killer's weapon in chat
-- fixed HUD and FOV for wide screens
-- lazyban (you can ban using only part of nickname)
+- Levels Auto-Downloader (uses factionfiles.com just like Pure Faction)
+- Spectate Mode
+- wide-screen fixes
+- windowed and stretched display mode
+- better graphics quality (anti-aliasing, anisotropic filtering, disabled LOD models)
+- improved security (enabled Data Execution Prevention, multiple Buffer Overflows fixes)
 - removed limit of packfiles
-- gamma restored when switching window
-- disabled LOD models
+- information about killer's weapon in chat
+- lazyban (baning and kicking players using only part of nickname)
 - ui.vpp cheats prevention
-- fixed crash when making screenshots with high resolution
-- anisotropic texture filtering (better quality)
-- multiple fixes for high FPS
-- improved security
+- multiple fixes for high FPS (limited to 150 for now)
+- country-specific edition support (properly handles game directory structure for German and French edition)
 - other stability fixes
-- country-specific edition support (properly handles game directory structure)
 
 New commands:
 - maxfps <limit> - sets maximal FPS
@@ -59,7 +58,7 @@ USE IT AT YOUR OWN RISK.
 
 Changelog
 ---------
-Version 1.0.0 (not yet released):
+Version 1.0.0 (released 24-01-2017):
 - Spectate Mode
 - launcher GUI
 - DirectInput support
@@ -71,6 +70,7 @@ Version 1.0.0 (not yet released):
 - fixed multiple Buffer Overflows in RF code (security)
 - added "ms" command for changing mouse sensitivity
 - added "vli" command for disabling volumetric lightining
+- changed default sorting on Server List to player count
 
 Version 0.61:
 - added widescreen fixes

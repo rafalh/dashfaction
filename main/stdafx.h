@@ -17,6 +17,7 @@ typedef BOOL WINBOOL;
 #include <cstdint>
 #include <cmath>
 #include <cassert>
+#include <ctime>
 #include <algorithm>
 
 #include "BuildConfig.h"
