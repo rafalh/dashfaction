@@ -198,11 +198,12 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
 {
     g_gameConfig.load();
 
+    InitLogging();
+
     /* Init crash dump writer before anything else */
     InitCrashDumps();
     
-    InitLogging();
-    
+    /* Enable Data Execution Prevention */
     if (!SetProcessDEPPolicy(PROCESS_DEP_ENABLE))
         WARN("SetProcessDEPPolicy failed (error %ld)", GetLastError());
 
