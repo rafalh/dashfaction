@@ -272,13 +272,14 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
     *g_pbDirectInputDisabled = 0;
 #endif
 
-    // Buffer overflows in RflLoadStaticGeometry
-    // Note: 1024 should be used as buffer size but opcode allows only one signed byte
 #if 1
-    WriteMemInt8((PVOID)(0x004ED612 + 1), 127);
-    WriteMemInt8((PVOID)(0x004ED66E + 1), 127);
-    WriteMemInt8((PVOID)(0x004ED72E + 1), 127);
-    WriteMemInt8((PVOID)(0x004EDB02 + 1), 127);
+    // Buffer overflows in RflReadStaticGeometry
+    // Note: Buffer size is 1024 but opcode allows only 1 byte size
+    //       What is more important BmLoad copies texture name to 32 bytes long buffers
+    WriteMemInt8((PVOID)(0x004ED612 + 1), 32);
+    WriteMemInt8((PVOID)(0x004ED66E + 1), 32);
+    WriteMemInt8((PVOID)(0x004ED72E + 1), 32);
+    WriteMemInt8((PVOID)(0x004EDB02 + 1), 32);
 #endif
 
     /* Init modules */
