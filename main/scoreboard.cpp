@@ -4,6 +4,8 @@
 #include "rf.h"
 #include "rfproto.h"
 
+using namespace rf;
+
 static int g_ScoreRflogoTexture = 0;
 static int g_HudFlagRedTexture = 0;
 static int g_HudFlagBlueTexture = 0;

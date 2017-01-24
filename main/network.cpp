@@ -4,11 +4,13 @@
 #include "pf.h"
 #include "utils.h"
 
+using namespace rf;
+
 //#define TEST_BUFFER_OVERFLOW_FIXES
 
 static void ProcessUnreliableGamePacketsHook(const char *pData, int cbData, void *pAddr, void *pPlayer)
 {
-    RfProcessGamePackets(pData, cbData, pAddr, pPlayer);
+    NwProcessGamePackets(pData, cbData, pAddr, pPlayer);
 
 #if MASK_AS_PF
     ProcessPfPacket(pData, cbData, pAddr, pPlayer);

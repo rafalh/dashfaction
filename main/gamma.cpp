@@ -7,6 +7,8 @@
   #define D3DSGR_NO_CALIBRATION 0x0
 #endif
 
+using namespace rf;
+
 static D3DGAMMARAMP g_GammaRamp;
 static bool g_GammaRampInitialized = false;
 
@@ -77,5 +79,5 @@ void InitGamma(void)
     WriteMemUInt8((PVOID)0x00547A60, ASM_LONG_JMP_REL);
     WriteMemUInt32((PVOID)(0x00547A60 + 1), ((ULONG_PTR)GrUpdateGammaRampHook) - (0x00547A60 + 0x5));
     
-    RfAddMsgHandler(GammaMsgHandler);
+    rf::AddMsgHandler(GammaMsgHandler);
 }

@@ -26,6 +26,8 @@
 #include <log/ConsoleAppender.h>
 #include <log/Win32Appender.h>
 
+using namespace rf;
+
 GameConfig g_gameConfig;
 HookableFunPtr<0x004163C0, void, CPlayer*> RenderHitScreenHookable;
 HookableFunPtr<0x004B33F0, void, const char**, const char**> GetVersionStrHookable;
@@ -51,7 +53,7 @@ static void DrawConsoleAndProcessKbdFifoHook(BOOL bServer)
 {
     // Draw on top (after scene)
 
-    RfDrawConsoleAndProcessKbdFifo(bServer);
+    DrawConsoleAndProcessKbdFifo(bServer);
     
     GraphicsDrawFpsCounter();
     
@@ -91,7 +93,7 @@ static void InitGameHook(void)
 {
     INFO("Initializing game...");
 
-    RfInitGame();
+    rf::InitGame();
 
     GraphicsAfterGameInit();
 
@@ -112,13 +114,13 @@ static void CleanupGameHook(void)
 {
     ResetGammaRamp();
     CleanupScreenshot();
-    RfCleanupGame();
+    rf::CleanupGame();
 }
 
 static bool RunGameHook()
 {
     ProcessWaitingMessages();
-    return RfRunGame();
+    return rf::RunGame();
 }
 
 CPlayer *FindPlayer(const char *pszName)

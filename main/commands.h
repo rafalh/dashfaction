@@ -1,7 +1,10 @@
 #pragma once
 
-struct CCmd;
+namespace rf
+{
+    struct CCmd;
+}
 
 void CommandsInit();
 void CommandsAfterGameInit();
-void CommandRegister(CCmd *pCmd);
+void CommandRegister(rf::CCmd *pCmd);

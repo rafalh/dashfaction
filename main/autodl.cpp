@@ -6,6 +6,8 @@
 
 #ifdef LEVELS_AUTODOWNLOADER
 
+using namespace rf;
+
 static unsigned g_LevelTicketId;
 static unsigned g_cbLevelSize, g_cbDownloadProgress;
 static BOOL g_bDownloadActive = FALSE;
@@ -260,7 +262,7 @@ BOOL TryToDownloadLevel(const char *pszFileName)
 
     if(g_bDownloadActive)
     {
-        RfMsgBox("Error!", "You can download only one level at once!", NULL, FALSE);
+        rf::UiMsgBox("Error!", "You can download only one level at once!", NULL, FALSE);
         return FALSE;
     }
 
@@ -349,7 +351,7 @@ BOOL TryToDownloadLevel(const char *pszFileName)
     TRACE("Download ticket id: %u", g_LevelTicketId);
 
     sprintf(szMsgBuf, "You don't have needed level: %s (Author: %s, Size: %s MB)\nDo you want to download it now?", pszName, pszAuthor, pszSize);
-    RfCreateDialog("Download level", szMsgBuf, 2, ppszBtnTitles, ppfnCallbacks, 0, 0);
+    UiCreateDialog("Download level", szMsgBuf, 2, ppszBtnTitles, ppfnCallbacks, 0, 0);
     bRet = TRUE;
 
 cleanup:
@@ -374,8 +376,8 @@ void OnJoinFailed(unsigned Reason)
             return;
     }
 
-    pszReason = RfGetJoinFailedStr(Reason);
-    RfMsgBox(g_ppszStringsTable[884], pszReason, NULL, 0);
+    pszReason = rf::GetJoinFailedStr(Reason);
+    rf::UiMsgBox(g_ppszStringsTable[884], pszReason, NULL, 0);
 }
 
 void InitAutodownloader(void)

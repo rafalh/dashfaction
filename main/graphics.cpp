@@ -4,6 +4,8 @@
 #include "rf.h"
 #include "main.h"
 
+using namespace rf;
+
 static void SetTextureMinMagFilter(D3DTEXTUREFILTERTYPE FilterType)
 {
     uintptr_t Addresses[] = {
@@ -37,8 +39,8 @@ static void SetTextureMinMagFilter(D3DTEXTUREFILTERTYPE FilterType)
 void GrSetViewMatrixLastCallHook()
 {
     constexpr auto GrUnkAfterWFarUpdateInternal = (void(*)())0x00546A40;
-    float w = (float)*g_pRfWndWidth;
-    float h = (float)*g_pRfWndHeight;
+    float w = (float)*rf::g_pWndWidth;
+    float h = (float)*rf::g_pWndHeight;
     float fFovMod = (4.0f / 3.0f) / (w / h);
     g_pGrScaleVec->x *= fFovMod;
     g_GrViewMatrix->rows[0].x *= fFovMod;
@@ -163,9 +165,9 @@ void GraphicsAfterGameInit()
 {
 #if ANISOTROPIC_FILTERING
     /* Anisotropic texture filtering */
-    if (g_pRfGrDeviceCaps->MaxAnisotropy > 0 && g_gameConfig.anisotropicFiltering)
+    if (g_pGrDeviceCaps->MaxAnisotropy > 0 && g_gameConfig.anisotropicFiltering)
     {
-        DWORD AnisotropyLevel = std::min(g_pRfGrDeviceCaps->MaxAnisotropy, 16ul);
+        DWORD AnisotropyLevel = std::min(g_pGrDeviceCaps->MaxAnisotropy, 16ul);
         SetTextureMinMagFilter(D3DTEXF_ANISOTROPIC);
         IDirect3DDevice8_SetTextureStageState(*g_ppGrDevice, 0, D3DTSS_MAXANISOTROPY, AnisotropyLevel);
         IDirect3DDevice8_SetTextureStageState(*g_ppGrDevice, 1, D3DTSS_MAXANISOTROPY, AnisotropyLevel);

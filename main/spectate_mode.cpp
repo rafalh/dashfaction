@@ -9,6 +9,8 @@
 #include "HookableFunPtr.h"
 #include "hooks/HookCall.h"
 
+using namespace rf;
+
 #if SPECTATE_MODE_ENABLE
 
 static CPlayer *g_SpectateModeTarget;

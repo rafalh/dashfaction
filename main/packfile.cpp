@@ -4,6 +4,8 @@
 #include "rf.h"
 #include "main.h"
 
+using namespace rf;
+
 typedef struct _VFS_LOOKUP_TABLE_NEW
 {
     struct _VFS_LOOKUP_TABLE_NEW *pNext;

@@ -46,9 +46,9 @@ int GrReadBackBufferHook(LONG x, LONG y, int Width, int Height, BYTE *pBuffer)
     if (*((DWORD*)0x17C7BCC) != 102)
         return 0;
 
-    GrFlushBuffers();
+    rf::GrFlushBuffers();
 
-    hr = IDirect3DDevice8_GetBackBuffer(*g_ppGrDevice, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer);
+    hr = IDirect3DDevice8_GetBackBuffer(*rf::g_ppGrDevice, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer);
     if (FAILED(hr))
     {
         ERR("IDirect3DDevice8_GetBackBuffer failed %x", hr);
@@ -66,7 +66,7 @@ int GrReadBackBufferHook(LONG x, LONG y, int Width, int Height, BYTE *pBuffer)
 #if 1
     if (SUCCEEDED(hr))
     {
-        hr = IDirect3DDevice8_CreateRenderTarget(*g_ppGrDevice, Desc.Width, Desc.Height, Desc.Format, D3DMULTISAMPLE_NONE, TRUE, &pTmpSurface);
+        hr = IDirect3DDevice8_CreateRenderTarget(*rf::g_ppGrDevice, Desc.Width, Desc.Height, Desc.Format, D3DMULTISAMPLE_NONE, TRUE, &pTmpSurface);
         //hr = IDirect3DDevice8_CreateImageSurface(*g_ppGrDevice, Desc.Width, Desc.Height, Desc.Format, &pTmpSurface);
         if (FAILED(hr))
             ERR("IDirect3DDevice8_CreateImageSurface failed %x", hr);
@@ -77,7 +77,7 @@ int GrReadBackBufferHook(LONG x, LONG y, int Width, int Height, BYTE *pBuffer)
         RECT SrcRect;
         POINT DstPoint = { 0, 0 };
         SetRect(&SrcRect, 0, 0, Desc.Width, Desc.Height);
-        hr = IDirect3DDevice8_CopyRects(*g_ppGrDevice, pBackBuffer, &SrcRect, 1, pTmpSurface, &DstPoint);
+        hr = IDirect3DDevice8_CopyRects(*rf::g_ppGrDevice, pBackBuffer, &SrcRect, 1, pTmpSurface, &DstPoint);
         if (FAILED(hr))
             ERR("IDirect3DDevice8_CopyRects failed %x", hr);
     }
@@ -157,10 +157,10 @@ void CleanupScreenshot(void)
 void ScreenshotAfterGameInit()
 {
     char FullPath[MAX_PATH];
-    sprintf(FullPath, "%s\\%s", g_pszRootPath, SCREENSHOT_DIR_NAME);
+    sprintf(FullPath, "%s\\%s", rf::g_pszRootPath, SCREENSHOT_DIR_NAME);
     if (CreateDirectoryA(FullPath, NULL))
         INFO("Created screenshots directory");
     else if (GetLastError() != ERROR_ALREADY_EXISTS)
         ERR("Failed to create screenshots directory %lu", GetLastError());
-    g_ScreenshotDirId = FsAddDirectoryEx(SCREENSHOT_DIR_NAME, "", 1);
+    g_ScreenshotDirId = rf::FsAddDirectoryEx(SCREENSHOT_DIR_NAME, "", 1);
 }

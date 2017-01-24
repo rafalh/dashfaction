@@ -93,7 +93,7 @@ void DbgPrint(char *pszFormat, ...)
     va_start(pArgList, pszFormat);
     vsnprintf(szBuf, sizeof(szBuf), pszFormat, pArgList);
     va_end(pArgList);
-    RfConsoleWrite(szBuf, NULL);
+    rf::RfConsoleWrite(szBuf, NULL);
 }
 
 char *stristr(const char *haystack, const char *needle)

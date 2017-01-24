@@ -3,6 +3,8 @@
 #include "rf.h"
 #include "utils.h"
 
+using namespace rf;
+
 void OnPlayerKill(CPlayer *pKilled, CPlayer *pKiller)
 {
     CString strMsg, strPrefix, *pstrWeaponName;

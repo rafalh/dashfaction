@@ -4,6 +4,8 @@
 #include "rf.h"
 #include "main.h"
 
+using namespace rf;
+
 void BanCmdHandlerHook(void)
 {
     if(*g_pbNetworkGame && *g_pbLocalNetworkGame)
@@ -12,7 +14,7 @@ void BanCmdHandlerHook(void)
         {
             CPlayer *pPlayer;
             
-            RfCmdGetNextArg(CMD_ARG_STR, 1);
+            rf::CmdGetNextArg(CMD_ARG_STR, 1);
             pPlayer = FindPlayer(g_pszCmdArg);
             if(pPlayer)
             {
@@ -42,9 +44,9 @@ void KickCmdHandlerHook(void)
     {
         if(*g_pbCmdRun)
         {
-            CPlayer *pPlayer;
+            rf::CPlayer *pPlayer;
             
-            RfCmdGetNextArg(CMD_ARG_STR, 1);
+            rf::CmdGetNextArg(CMD_ARG_STR, 1);
             pPlayer = FindPlayer(g_pszCmdArg);
             if(pPlayer)
             {

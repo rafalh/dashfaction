@@ -56,9 +56,9 @@ void  __declspec(naked) ftol_Timer()
     }
 }
 
-void __stdcall EntityWaterDecelerateFix(CEntity *pEntity)
+void __stdcall EntityWaterDecelerateFix(rf::CEntity *pEntity)
 {
-    float fVelFactor = 1.0f - (*g_pfFramerate * 4.5f);
+    float fVelFactor = 1.0f - (*rf::g_pfFramerate * 4.5f);
     pEntity->Head.vVel.x *= fVelFactor;
     pEntity->Head.vVel.y *= fVelFactor;
     pEntity->Head.vVel.z *= fVelFactor;

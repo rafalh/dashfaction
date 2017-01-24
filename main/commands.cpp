@@ -12,7 +12,9 @@
 
 constexpr int CMD_LIMIT = 128;
 
-static CCmd *g_CommandsBuffer[CMD_LIMIT];
+static rf::CCmd *g_CommandsBuffer[CMD_LIMIT];
+
+using namespace rf;
 
 #if SPLITSCREEN_ENABLE
 
@@ -33,7 +35,7 @@ static void MaxFpsCmdHandler(void)
 {
     if (*g_pbCmdRun)
     {
-        RfCmdGetNextArg(CMD_ARG_NONE | CMD_ARG_FLOAT, 0);
+        rf::CmdGetNextArg(CMD_ARG_NONE | CMD_ARG_FLOAT, 0);
 
         if ((*g_piCmdArgType & CMD_ARG_FLOAT))
         {
@@ -76,8 +78,8 @@ static void SpectateCmdHandler(void)
     {
         if (*g_pbNetworkGame)
         {
-            CPlayer *pPlayer;
-            RfCmdGetNextArg(CMD_ARG_NONE | CMD_ARG_STR, 0);
+            rf::CPlayer *pPlayer;
+            rf::CmdGetNextArg(CMD_ARG_NONE | CMD_ARG_STR, 0);
             if (*g_piCmdArgType & CMD_ARG_STR)
             {
                 pPlayer = FindPlayer(g_pszCmdArg);
@@ -154,7 +156,7 @@ static void MouseSensitivityCmdHandler(void)
 {
     if (*g_pbCmdRun)
     {
-        RfCmdGetNextArg(CMD_ARG_NONE | CMD_ARG_FLOAT, 0);
+        rf::CmdGetNextArg(CMD_ARG_NONE | CMD_ARG_FLOAT, 0);
 
         if ((*g_piCmdArgType & CMD_ARG_FLOAT))
         {
@@ -189,7 +191,7 @@ static void LevelSpCmdHandler(void)
 {
     if (*g_pbCmdRun)
     {
-        RfCmdGetNextArg(CMD_ARG_STR, 0);
+        rf::CmdGetNextArg(CMD_ARG_STR, 0);
 
         if ((*g_piCmdArgType & CMD_ARG_STR))
         {

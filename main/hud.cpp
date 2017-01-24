@@ -3,6 +3,8 @@
 #include "utils.h"
 #include "rf.h"
 
+using namespace rf;
+
 void HudCmdHandler(void)
 {
     uint32_t bHide = !*((uint32_t*)0x006379F0);

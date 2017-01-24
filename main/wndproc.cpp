@@ -3,6 +3,8 @@
 #include "rf.h"
 #include "utils.h"
 
+using namespace rf;
+
 const char *GetWndMsgName(UINT uMsg);
 
 static BOOL IsMouseEnabled(void)
