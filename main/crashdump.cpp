@@ -1,15 +1,15 @@
 #include "stdafx.h"
 #include "crashdump.h"
+#include "version.h"
 
-#define CRASHDUMP_USE_DMP 0
+#define CRASHDUMP_SAVE_DMP 1
+#define CRASHDUMP_SAVE_LOG 1
 #define CRASHDUMP_USE_HEURISTIC_STACK_TRACE 1
-#if CRASHDUMP_USE_DMP
-#define CRASHDUMP_FILENAME "logs/DashFaction.dmp"
-#else
-#define CRASHDUMP_FILENAME "logs/DashFaction.crash.log"
-#endif
-
 #define CRASHDUMP_HEURISTIC_MAX_FUN_SIZE 4096
+
+#define CRASHDUMP_DMP_FILENAME "logs/DashFaction.dmp"
+#define CRASHDUMP_LOG_FILENAME "logs/DashFaction.crash.log"
+#define CRASHDUMP_MSG "Game has crashed!\nTo help resolve the problem please send files from logs subdirectory in RedFaction directory to " PRODUCT_NAME " author."
 
 #ifdef _MSC_VER
 #include <Dbghelp.h>
@@ -60,12 +60,13 @@ typedef BOOL (WINAPI *PMINIDUMPWRITEDUMP)(HANDLE hProcess,
     PMINIDUMP_CALLBACK_INFORMATION CallbackParam
 );
 
-#if CRASHDUMP_USE_DMP
+#if CRASHDUMP_SAVE_DMP
 static HMODULE g_hDbgHelpLib = NULL;
 static HANDLE g_hDumpFile = NULL;
 static PMINIDUMPWRITEDUMP g_pMiniDumpWriteDump = NULL;
 static MINIDUMP_EXCEPTION_INFORMATION g_MiniDumpInfo;
-#else
+#endif
+#if CRASHDUMP_SAVE_LOG
 static FILE *g_pFile = NULL;
 static HMODULE Modules[256];
 static DWORD cModules;
@@ -133,12 +134,12 @@ static int ModuleHandleCompare(const void *phMod1, const void *phMod2)
 
 static LONG WINAPI CrashDumpExceptionFilter(PEXCEPTION_POINTERS pExceptionPointers)
 {
-#if CRASHDUMP_USE_DMP
-    if(g_hDbgHelpLib)
+#if CRASHDUMP_SAVE_DMP
+    if (g_hDbgHelpLib)
     {
-        if(g_pMiniDumpWriteDump)
+        if (g_pMiniDumpWriteDump)
         {
-            g_hDumpFile = CreateFile(TEXT(CRASHDUMP_FILENAME),
+            g_hDumpFile = CreateFile(TEXT(CRASHDUMP_DMP_FILENAME),
                                      GENERIC_READ | GENERIC_WRITE,
                                      FILE_SHARE_WRITE | FILE_SHARE_READ,
                                      NULL,
@@ -146,7 +147,7 @@ static LONG WINAPI CrashDumpExceptionFilter(PEXCEPTION_POINTERS pExceptionPointe
                                      FILE_ATTRIBUTE_NORMAL,
                                      NULL);
             
-            if(INVALID_HANDLE_VALUE != g_hDumpFile)
+            if (INVALID_HANDLE_VALUE != g_hDumpFile)
             {
                 g_MiniDumpInfo.ThreadId = GetCurrentThreadId();
                 g_MiniDumpInfo.ExceptionPointers = pExceptionPointers;
@@ -161,16 +162,15 @@ static LONG WINAPI CrashDumpExceptionFilter(PEXCEPTION_POINTERS pExceptionPointe
                                      NULL);
                         
                 CloseHandle(g_hDumpFile);
-                
-                MessageBox(NULL, TEXT("Application has crashed! Crashdump has been saved in " CRASHDUMP_FILENAME ". Please send this file to program author. His E-Mail can be found in About window."), NULL, MB_ICONERROR|MB_OK);
             } else
                 MessageBox(NULL, TEXT("Error! CreateFile failed."), 0, MB_ICONERROR|MB_OK);
         } else
             MessageBox(NULL, TEXT("Error! GetProcAddress failed."), 0, MB_ICONERROR|MB_OK);
     } else
         MessageBox(NULL, TEXT("Error! LoadLibrary failed."), 0, MB_ICONERROR|MB_OK);
-#else // CRASHDUMP_USE_DMP
-    g_pFile = fopen(CRASHDUMP_FILENAME, "w");
+#endif // CRASHDUMP_SAVE_DMP
+#if CRASHDUMP_SAVE_LOG
+    g_pFile = fopen(CRASHDUMP_LOG_FILENAME, "w");
     if (g_pFile)
     {
         unsigned i;
@@ -231,26 +231,27 @@ static LONG WINAPI CrashDumpExceptionFilter(PEXCEPTION_POINTERS pExceptionPointe
         
 #endif // _X86_
         fclose(g_pFile);
-        MessageBox(NULL, TEXT("Application has crashed! Crashdump has been saved in " CRASHDUMP_FILENAME ". Please send this file to the program author."), NULL, MB_ICONERROR|MB_OK);
     }
-#endif // CRASHDUMP_USE_DMP
+#endif // CRASHDUMP_SAVE_LOG
+
+    MessageBox(NULL, TEXT(CRASHDUMP_MSG), "Fatal error!", MB_ICONERROR | MB_OK);
 
     return EXCEPTION_EXECUTE_HANDLER;
 }
 
 void InitCrashDumps(void)
 {
-#if CRASHDUMP_USE_DMP
+#if CRASHDUMP_SAVE_DMP
     g_hDbgHelpLib = LoadLibrary(TEXT("Dbghelp.dll"));
-    if(g_hDbgHelpLib)
+    if (g_hDbgHelpLib)
         g_pMiniDumpWriteDump = (PMINIDUMPWRITEDUMP)GetProcAddress(g_hDbgHelpLib, "MiniDumpWriteDump");
-#endif
+#endif // CRASHDUMP_SAVE_DMP
     SetUnhandledExceptionFilter(&CrashDumpExceptionFilter);
 }
 
 void UninitCrashDumps(void)
 {
-#if CRASHDUMP_USE_DMP
+#if CRASHDUMP_SAVE_DMP
     FreeLibrary(g_hDbgHelpLib);
 #endif
 }
