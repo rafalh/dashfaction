@@ -7,6 +7,9 @@
 class RegKey
 {
 public:
+    RegKey(RegKey const&) = delete;
+    RegKey& operator=(RegKey const&) = delete;
+
     RegKey(HKEY parentKey, const char *subKey, REGSAM accessRights)
     {
         LONG error = RegCreateKeyExA(parentKey, subKey, 0, NULL, 0, accessRights, NULL, &m_key, NULL);
@@ -14,7 +17,7 @@ public:
             THROW_EXCEPTION("RegCreateKeyExA failed: win32 error %lu", error);
     }
 
-    RegKey(RegKey parentKey, const char *subKey, REGSAM accessRights) :
+    RegKey(const RegKey &parentKey, const char *subKey, REGSAM accessRights) :
         RegKey(parentKey.m_key, subKey, accessRights) {}
 
     ~RegKey()
