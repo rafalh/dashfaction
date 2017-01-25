@@ -43,12 +43,16 @@ public:
         if (type != REG_SZ && type != REG_EXPAND_SZ)
             return false;
 
-        value->clear();
-        value->resize(cb + 1);
-        error = RegQueryValueEx(m_key, name, NULL, &type, (LPBYTE)value->data(), &cb);
+        char *buf = new char[cb + 1];
+        error = RegQueryValueEx(m_key, name, NULL, &type, (LPBYTE)buf, &cb);
         if (error != ERROR_SUCCESS)
+        {
+            delete[] buf;
             return false;
-        ((LPBYTE)value->data())[cb] = 0;
+        }
+        buf[cb] = '\0';
+        value->assign(buf);
+        delete[] buf;
         return true;
     }
 
