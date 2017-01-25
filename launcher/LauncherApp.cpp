@@ -161,7 +161,16 @@ bool LauncherApp::LaunchGame(HWND hwnd)
 bool LauncherApp::LaunchEditor(HWND hwnd)
 {
     GameConfig conf;
-    conf.load();
+    try
+    {
+        conf.load();
+    }
+    catch (std::exception &e)
+    {
+        MessageBoxA(hwnd, e.what(), NULL, MB_OK | MB_ICONERROR);
+        return false;
+    }
+    
     size_t pos = conf.gameExecutablePath.find_last_of("\\/");
     std::string gameWorkDir = conf.gameExecutablePath.substr(0, pos);
     std::string editorPath = gameWorkDir + "\\RED.exe";
