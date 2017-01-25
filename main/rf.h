@@ -109,8 +109,9 @@ namespace rf
     constexpr auto g_pWndWidth = (int*)0x017C7BC4;
     constexpr auto g_pWndHeight = (int*)0x017C7BC8;
     constexpr auto g_pGrDeviceCaps = (D3DCAPS8*)0x01CFCAC8;
-    constexpr auto g_pGrRectMaterial = (int*)0x17756C0;
+    constexpr auto g_pGrRectMaterial = (uint32_t*)0x17756C0;
     constexpr auto g_pGrTextMaterial = (uint32_t*)0x17C7C5C;
+    constexpr auto g_pGrImageMaterial = (uint32_t*)0x017756DC;
     constexpr auto g_pGrDefaultWFar = (float*)0x00596140;
 
     typedef void(*PFN_GR_SET_COLOR_RGB)(unsigned r, unsigned g, unsigned b, unsigned a);
@@ -930,6 +931,21 @@ namespace rf
     typedef void *(*PFN_MALLOC)(uint32_t cbSize);
     static const PFN_MALLOC RfMalloc = (PFN_MALLOC)0x00573B37;
 
+    struct CGuiPanel
+    {
+        void(__cdecl **field_0)();
+        CGuiPanel *pParent;
+        char field_8;
+        char field_9;
+        int x;
+        int y;
+        int w;
+        int h;
+        int Id;
+        void(*OnClick)(void);
+        int field_24;
+        int BgTexture;
+    };
 }
 
 #pragma pack(pop)

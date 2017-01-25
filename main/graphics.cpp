@@ -125,9 +125,10 @@ void GraphicsInit()
     }
 #endif
 
+    // Replace memset call to SetupPP
     WriteMemUInt8Repeat((PVOID)0x00545AA7, ASM_NOP, 0x00545AB5 - 0x00545AA7);
     WriteMemUInt8((PVOID)0x00545AA7, ASM_LONG_CALL_REL);
-    WriteMemPtr((PVOID)0x00545AA8, (PVOID)((ULONG_PTR)SetupPP - (0x00545AA7 + 0x5)));
+    WriteMemPtr((PVOID)(0x00545AA7 + 1), (PVOID)((ULONG_PTR)SetupPP - (0x00545AA7 + 0x5)));
     WriteMemUInt8Repeat((PVOID)(0x00545BA5), ASM_NOP, 6); // dont set PP.Flags
 
     /* nVidia issue fix (make sure D3Dsc is enabled) */
@@ -183,6 +184,6 @@ void GraphicsDrawFpsCounter()
         char szBuf[32];
         sprintf(szBuf, "FPS: %.1f", *g_fFps);
         GrSetColorRgb(0, 255, 0, 255);
-        GrDrawAlignedText(2, RfGetWidth() - 10, 60, szBuf, -1, *((uint32_t*)0x17C7C5C));
+        GrDrawAlignedText(2, RfGetWidth() - 10, 60, szBuf, -1, *g_pGrTextMaterial);
     }
 }
