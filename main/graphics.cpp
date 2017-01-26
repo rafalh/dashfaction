@@ -85,7 +85,9 @@ static void SetupPP(void)
 #if MULTISAMPLING_SUPPORT
     if (g_gameConfig.msaa && *pFormat > 0)
     {
-        HRESULT hr = IDirect3D8_CheckDeviceMultiSampleType(*g_ppDirect3D, *g_pAdapterIdx, D3DDEVTYPE_HAL, *pFormat, FALSE, D3DMULTISAMPLE_4_SAMPLES);
+        // Make sure selected MSAA mode is available
+        HRESULT hr = IDirect3D8_CheckDeviceMultiSampleType(*g_ppDirect3D, *g_pAdapterIdx, D3DDEVTYPE_HAL, *pFormat,
+            g_gameConfig.wndMode == GameConfig::WINDOWED, (D3DMULTISAMPLE_TYPE)g_gameConfig.msaa);
         if (SUCCEEDED(hr))
         {
             INFO("Enabling Anti-Aliasing (%ux MSAA)...", g_gameConfig.msaa);
@@ -94,7 +96,7 @@ static void SetupPP(void)
         else
         {
             WARN("MSAA not supported (0x%x)...", hr);
-            g_gameConfig.msaa = 0;
+            g_gameConfig.msaa = D3DMULTISAMPLE_NONE;
         }
     }
 #endif
