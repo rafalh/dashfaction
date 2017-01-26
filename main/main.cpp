@@ -196,13 +196,20 @@ void InitLogging()
 
 extern "C" DWORD DLL_EXPORT Init(void *pUnused)
 {
-    g_gameConfig.load();
-
+    // Init logging and crash dump support first
     InitLogging();
-
-    /* Init crash dump writer before anything else */
     InitCrashDumps();
     
+    // Load config
+    try
+    {
+        g_gameConfig.load();
+    }
+    catch (std::exception &e)
+    {
+        ERR("Failed to load config: %s", e.what());
+    }
+
     /* Enable Data Execution Prevention */
     if (!SetProcessDEPPolicy(PROCESS_DEP_ENABLE))
         WARN("SetProcessDEPPolicy failed (error %ld)", GetLastError());
