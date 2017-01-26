@@ -12,11 +12,14 @@ void GameConfig::load()
     regKey.readValue("Resolution Width", &resWidth);
     regKey.readValue("Resolution Height", &resHeight);
     regKey.readValue("Resolution Bit Depth", &resBpp);
+    regKey.readValue("Resolution Backbuffer Format", &resBackbufferFormat);
+    regKey.readValue("Selected Video Card", &selectedVideoCard);
     regKey.readValue("Vsync", &vsync);
     regKey.readValue("Fast Animations", &fastAnims);
     regKey.readValue("Geometry Cache Size", &geometryCacheSize);
     regKey.readValue("GameTracker", &tracker);
     regKey.readValue("EAX", &eaxSound);
+    regKey.readValue("UpdateRate", &updateRate);
 
     RegKey dashFactionKey(regKey, DF_SUBKEY_NAME, KEY_READ);
     unsigned temp;
@@ -47,11 +50,13 @@ void GameConfig::save()
     regKey.writeValue("Resolution Width", resWidth);
     regKey.writeValue("Resolution Height", resHeight);
     regKey.writeValue("Resolution Bit Depth", resBpp);
-    regKey.writeValue("Resolution Backbuffer Format", (unsigned)(resBpp == 16 ? D3DFMT_R5G6B5 : D3DFMT_X8R8G8B8));
+    regKey.writeValue("Resolution Backbuffer Format", resBackbufferFormat);
+    regKey.writeValue("Selected Video Card", selectedVideoCard);
     regKey.writeValue("Vsync", vsync);
     regKey.writeValue("Fast Animations", fastAnims);
     regKey.writeValue("Geometry Cache Size", geometryCacheSize);
     regKey.writeValue("GameTracker", tracker);
+    regKey.writeValue("UpdateRate", updateRate);
     regKey.writeValue("EAX", eaxSound);
 
     RegKey dashFactionKey(regKey, DF_SUBKEY_NAME, KEY_WRITE);

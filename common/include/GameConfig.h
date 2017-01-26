@@ -12,6 +12,8 @@ struct GameConfig
     unsigned resWidth = 1024;
     unsigned resHeight = 768;
     unsigned resBpp = 32;
+    unsigned resBackbufferFormat = D3DFMT_X8R8G8B8;
+    unsigned selectedVideoCard = (unsigned)D3DADAPTER_DEFAULT;
     enum WndMode { FULLSCREEN, WINDOWED, STRETCHED } wndMode = FULLSCREEN;
     bool vsync = true;
     bool fastAnims = false;
@@ -23,6 +25,7 @@ struct GameConfig
     bool fpsCounter = true;
 
     std::string tracker = DEFAULT_RF_TRACKER;
+    unsigned updateRate = 2600;
     bool directInput = false;
     bool eaxSound = true;
     bool fastStart = true;

@@ -127,6 +127,7 @@ void OptionsDlg::OnBnClickedOk()
     }
     
     conf.resBpp = IsDlgButtonChecked(IDC_16BIT_RADIO) == BST_CHECKED ? 16 : 32;
+    conf.resBackbufferFormat = conf.resBpp == 16 ? D3DFMT_R5G6B5 : D3DFMT_X8R8G8B8;
 
     if (IsDlgButtonChecked(IDC_FULL_SCREEN_RADIO) == BST_CHECKED)
         conf.wndMode = GameConfig::FULLSCREEN;
