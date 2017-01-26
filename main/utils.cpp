@@ -96,18 +96,54 @@ void DbgPrint(char *pszFormat, ...)
     rf::RfConsoleWrite(szBuf, NULL);
 }
 
-char *stristr(const char *haystack, const char *needle)
+const char *stristr(const char *haystack, const char *needle)
 {
     unsigned i, j;
     
-    for(i = 0; haystack[i]; ++i)
+    for (i = 0; haystack[i]; ++i)
     {
-        for(j = 0; needle[j]; ++j)
-            if(tolower(haystack[i + j]) != tolower(needle[j]))
+        for (j = 0; needle[j]; ++j)
+            if (tolower(haystack[i + j]) != tolower(needle[j]))
                 break;
         
-        if(!needle[j])
+        if (!needle[j])
             return (char*)(haystack+i);
     }
     return NULL;
+}
+
+#define DEFINE_HRESULT_ERROR(hr) { hr, #hr },
+
+const static std::map<HRESULT, const char*> DX_ERRORS = {
+    DEFINE_HRESULT_ERROR(D3D_OK)
+    DEFINE_HRESULT_ERROR(D3DERR_WRONGTEXTUREFORMAT)
+    DEFINE_HRESULT_ERROR(D3DERR_UNSUPPORTEDCOLOROPERATION)
+    DEFINE_HRESULT_ERROR(D3DERR_UNSUPPORTEDCOLORARG)
+    DEFINE_HRESULT_ERROR(D3DERR_UNSUPPORTEDALPHAOPERATION)
+    DEFINE_HRESULT_ERROR(D3DERR_UNSUPPORTEDALPHAARG)
+    DEFINE_HRESULT_ERROR(D3DERR_TOOMANYOPERATIONS)
+    DEFINE_HRESULT_ERROR(D3DERR_CONFLICTINGTEXTUREFILTER)
+    DEFINE_HRESULT_ERROR(D3DERR_UNSUPPORTEDFACTORVALUE)
+    DEFINE_HRESULT_ERROR(D3DERR_CONFLICTINGRENDERSTATE)
+    DEFINE_HRESULT_ERROR(D3DERR_UNSUPPORTEDTEXTUREFILTER)
+    DEFINE_HRESULT_ERROR(D3DERR_CONFLICTINGTEXTUREPALETTE)
+    DEFINE_HRESULT_ERROR(D3DERR_DRIVERINTERNALERROR)
+
+    DEFINE_HRESULT_ERROR(D3DERR_NOTFOUND)
+    DEFINE_HRESULT_ERROR(D3DERR_MOREDATA)
+    DEFINE_HRESULT_ERROR(D3DERR_DEVICELOST)
+    DEFINE_HRESULT_ERROR(D3DERR_DEVICENOTRESET)
+    DEFINE_HRESULT_ERROR(D3DERR_NOTAVAILABLE)
+    DEFINE_HRESULT_ERROR(D3DERR_OUTOFVIDEOMEMORY)
+    DEFINE_HRESULT_ERROR(D3DERR_INVALIDDEVICE)
+    DEFINE_HRESULT_ERROR(D3DERR_INVALIDCALL)
+    DEFINE_HRESULT_ERROR(D3DERR_DRIVERINVALIDCALL)
+};
+
+const char *getDxErrorStr(HRESULT hr)
+{
+    auto it = DX_ERRORS.find(hr);
+    if (it != DX_ERRORS.end())
+        return it->second;
+    return nullptr;
 }

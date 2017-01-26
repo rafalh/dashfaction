@@ -16,7 +16,9 @@ void WriteMemFloat(PVOID pAddr, float fValue);
 void WriteMemPtr(PVOID pAddr, const void *Ptr);
 void WriteMemStr(PVOID pAddr, const char *pStr);
 
-char *stristr(const char *haystack, const char *needle);
+const char *stristr(const char *haystack, const char *needle);
+
+const char *getDxErrorStr(HRESULT hr);
 
 #define COUNTOF(a) (sizeof(a)/sizeof((a)[0]))
 
