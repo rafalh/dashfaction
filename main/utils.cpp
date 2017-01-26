@@ -2,8 +2,6 @@
 #include "utils.h"
 #include "rf.h"
 
-#define DEBUG_LOG_FILENAME "logs/DashFaction.log"
-
 void WriteMem(PVOID pAddr, PVOID pValue, unsigned cbValue)
 {
     DWORD dwOldProtect;
@@ -66,34 +64,6 @@ void WriteMemPtr(PVOID pAddr, const void *Ptr)
 void WriteMemStr(PVOID pAddr, const char *pStr)
 {
     WriteMem(pAddr, (PVOID)pStr, strlen(pStr) + 1);
-}
-
-void DbgPrint(char *pszFormat, ...)
-{
-    va_list pArgList;
-    FILE *pFile;
-    char szBuf[256];
-    static int bFirstFileDebug = 1;
-    
-    if(bFirstFileDebug)
-        pFile = fopen(DEBUG_LOG_FILENAME, "w");
-    else
-        pFile = fopen(DEBUG_LOG_FILENAME, "a");
-    
-    if(pFile)
-    {
-        bFirstFileDebug = 0;
-        va_start(pArgList, pszFormat);
-        vfprintf(pFile, pszFormat, pArgList);
-        va_end(pArgList);
-        fputs("\n", pFile);
-        fclose(pFile);
-    }
-
-    va_start(pArgList, pszFormat);
-    vsnprintf(szBuf, sizeof(szBuf), pszFormat, pArgList);
-    va_end(pArgList);
-    rf::RfConsoleWrite(szBuf, NULL);
 }
 
 const char *stristr(const char *haystack, const char *needle)
