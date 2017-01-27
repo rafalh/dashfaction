@@ -41,7 +41,8 @@ int GrReadBackBufferHook(LONG x, LONG y, int Width, int Height, BYTE *pBuffer)
 {
     HRESULT hr;
     int Result = 0;
-    IDirect3DSurface8 *pBackBuffer = NULL, *pTmpSurface = NULL;
+    IDirect3DSurface8 *pBackBuffer = NULL;
+    IDirect3DSurface8 *pTmpSurface = NULL;
 
     if (*((DWORD*)0x17C7BCC) != 102)
         return 0;
@@ -51,7 +52,7 @@ int GrReadBackBufferHook(LONG x, LONG y, int Width, int Height, BYTE *pBuffer)
     hr = IDirect3DDevice8_GetBackBuffer(*rf::g_ppGrDevice, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer);
     if (FAILED(hr))
     {
-        ERR("IDirect3DDevice8_GetBackBuffer failed %x", hr);
+        ERR("IDirect3DDevice8_GetBackBuffer failed 0x%x", hr);
         return 0;
     }
 
@@ -59,7 +60,8 @@ int GrReadBackBufferHook(LONG x, LONG y, int Width, int Height, BYTE *pBuffer)
     hr = IDirect3DSurface8_GetDesc(pBackBuffer, &Desc);
     if (FAILED(hr))
     {
-        ERR("IDirect3DSurface8_GetDesc failed %x", hr);
+        ERR("IDirect3DSurface8_GetDesc failed 0x%x", hr);
+        IDirect3DSurface8_Release(pBackBuffer);
         return 0;
     }
 
@@ -67,33 +69,37 @@ int GrReadBackBufferHook(LONG x, LONG y, int Width, int Height, BYTE *pBuffer)
     if (SUCCEEDED(hr))
     {
         hr = IDirect3DDevice8_CreateRenderTarget(*rf::g_ppGrDevice, Desc.Width, Desc.Height, Desc.Format, D3DMULTISAMPLE_NONE, TRUE, &pTmpSurface);
-        //hr = IDirect3DDevice8_CreateImageSurface(*g_ppGrDevice, Desc.Width, Desc.Height, Desc.Format, &pTmpSurface);
+        //hr = IDirect3DDevice8_CreateImageSurface(*rf::g_ppGrDevice, Desc.Width, Desc.Height, Desc.Format, &pTmpSurface);
+        //hr = IDirect3DDevice8_CreateTexture(*rf::g_ppGrDevice, Desc.Width, Desc.Height, 1, 0, Desc.Format, D3DPOOL_MANAGED, &pTmpTexture);
         if (FAILED(hr))
-            ERR("IDirect3DDevice8_CreateImageSurface failed %x", hr);
+            ERR("IDirect3DDevice8_CreateRenderTarget failed 0x%x", hr);
     }
     
     if (SUCCEEDED(hr))
     {
         RECT SrcRect;
-        POINT DstPoint = { 0, 0 };
-        SetRect(&SrcRect, 0, 0, Desc.Width, Desc.Height);
-        hr = IDirect3DDevice8_CopyRects(*rf::g_ppGrDevice, pBackBuffer, &SrcRect, 1, pTmpSurface, &DstPoint);
-        if (FAILED(hr))
-            ERR("IDirect3DDevice8_CopyRects failed %x", hr);
+        POINT DstPoint = { x, y };
+        SetRect(&SrcRect, x, y, x + Width - 1, y + Height - 1);
+
+        if (Width > 0 && Height > 0)
+        {
+            hr = IDirect3DDevice8_CopyRects(*rf::g_ppGrDevice, pBackBuffer, &SrcRect, 1, pTmpSurface, &DstPoint);
+            if (FAILED(hr))
+                ERR("IDirect3DDevice8_CopyRects failed 0x%x", hr);
+        }
     }
 #else
-    pTmpSurface = pBackBuffer;
+    pTmpSurface = pBackBuffser;
     IDirect3DSurface8_AddRef(pBackBuffer);
 #endif
 
     if (SUCCEEDED(hr))
     {
-        RECT rc;
+        // Note: locking fragment of Render Target fails
         D3DLOCKED_RECT LockedRect;
-        SetRect(&rc, x, y, x + Width - 1, y + Height - 1);
-        hr = IDirect3DSurface8_LockRect(pTmpSurface, &LockedRect, &rc, D3DLOCK_READONLY);
+        hr = IDirect3DSurface8_LockRect(pTmpSurface, &LockedRect, NULL, D3DLOCK_READONLY | D3DLOCK_NO_DIRTY_UPDATE);
         if (FAILED(hr))
-            ERR("IDirect3DSurface8_LockRect failed %x", hr);
+            ERR("IDirect3DSurface8_LockRect failed 0x%x (%s)", hr, getDxErrorStr(hr));
         else
         {
             int i, BytesPerPixel;
@@ -142,7 +148,7 @@ void InitScreenshot(void)
     if (g_gameConfig.msaa)
     {
         WriteMemUInt8((PVOID)0x0050DFF0, ASM_LONG_JMP_REL);
-        WriteMemPtr((PVOID)0x0050DFF1, (PVOID)((ULONG_PTR)GrReadBackBufferHook - (0x0050DFF0 + 0x5)));
+        WriteMemPtr((PVOID)(0x0050DFF0 + 1), (PVOID)((ULONG_PTR)GrReadBackBufferHook - (0x0050DFF0 + 0x5)));
     }
 #endif
 
@@ -163,4 +169,6 @@ void ScreenshotAfterGameInit()
     else if (GetLastError() != ERROR_ALREADY_EXISTS)
         ERR("Failed to create screenshots directory %lu", GetLastError());
     g_ScreenshotDirId = rf::FsAddDirectoryEx(SCREENSHOT_DIR_NAME, "", 1);
+
+
 }
