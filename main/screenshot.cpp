@@ -47,6 +47,8 @@ int GrReadBackBufferHook(LONG x, LONG y, int Width, int Height, BYTE *pBuffer)
     if (*((DWORD*)0x17C7BCC) != 102)
         return 0;
 
+    // Note: function is sometimes called with all parameters set to 0 to get backbuffer format
+
     rf::GrFlushBuffers();
 
     hr = IDirect3DDevice8_GetBackBuffer(*rf::g_ppGrDevice, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer);
@@ -142,7 +144,7 @@ void InitScreenshot(void)
         WriteMemUInt32((PVOID)0x0055A0E0, (uint32_t)g_ScreenshotScanlinesBuf);
         WriteMemUInt8Repeat((PVOID)0x0055A0E4, ASM_NOP, 2);
     }
-
+    
     /* Override default because IDirect3DSurface8::LockRect fails on multisampled back-buffer */
 #if MULTISAMPLING_SUPPORT
     if (g_gameConfig.msaa)

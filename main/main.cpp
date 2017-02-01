@@ -120,6 +120,7 @@ static void CleanupGameHook(void)
 static bool RunGameHook()
 {
     ProcessWaitingMessages();
+
     return rf::RunGame();
 }
 
@@ -194,12 +195,31 @@ void InitLogging()
 #endif
 }
 
+void LogSystemInfo()
+{
+    try
+    {
+        std::string osVer = getRealOsVersion();
+        INFO("System version: %s", osVer.c_str());
+        osVer = getOsVersion();
+        INFO("Current system version (compatible): %s", osVer.c_str());
+        INFO("Running as %s (elevation type: %s)", IsUserAdmin() ? "admin" : "user", GetProcessElevationType());
+    }
+    catch (std::exception &e)
+    {
+        ERR("Failed to read system info: %s", e.what());
+    }
+}
+
 extern "C" DWORD DLL_EXPORT Init(void *pUnused)
 {
     // Init logging and crash dump support first
     InitLogging();
     InitCrashDumps();
     
+    // Log system info
+    LogSystemInfo();
+
     // Load config
     try
     {
