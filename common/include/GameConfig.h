@@ -13,7 +13,7 @@ struct GameConfig
     unsigned resHeight = 768;
     unsigned resBpp = 32;
     unsigned resBackbufferFormat = D3DFMT_X8R8G8B8;
-    unsigned selectedVideoCard = (unsigned)D3DADAPTER_DEFAULT;
+    unsigned selectedVideoCard = 0;
     enum WndMode { FULLSCREEN, WINDOWED, STRETCHED } wndMode = FULLSCREEN;
     bool vsync = true;
     bool fastAnims = false;
