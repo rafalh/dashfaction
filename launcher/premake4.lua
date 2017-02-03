@@ -1,8 +1,8 @@
 project "DashFactionLauncher"
 	kind "WindowedApp"
 	language "C++"
-	files {"**.h", "**.c", "**.cpp", "**.rc"}
-	links {"Shlwapi", "WinInet", "psapi", "Common"}
+	files { "**.h", "**.c", "**.cpp", "**.rc", "res/*.manifest" }
+	links { "Shlwapi", "WinInet", "psapi", "Common" }
 	flags { "MFC", "WinMain" }
 	
 	pchheader "stdafx.h"
