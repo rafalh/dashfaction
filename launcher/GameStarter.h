@@ -4,12 +4,16 @@
 
 class PrivilegeElevationRequiredException : public std::exception
 {
+public:
+    PrivilegeElevationRequiredException() :
+        std::exception("privilage elevation required") {}
 };
 
 class IntegrityCheckFailedException : public std::exception
 {
 public:
-    IntegrityCheckFailedException(uint32_t crc) : m_crc(crc) {}
+    IntegrityCheckFailedException(uint32_t crc) :
+        std::exception("integrity check failed"), m_crc(crc) {}
 
     uint32_t getCrc32()
     {
