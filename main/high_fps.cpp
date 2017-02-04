@@ -117,4 +117,7 @@ void HighFpsInit()
     // Fix water waves animation on high FPS
     WriteMemUInt8((PVOID)0x004E68A0, ASM_LONG_JMP_REL);
     WriteMemUInt32((PVOID)(0x004E68A0 + 1), (ULONG_PTR)WaterAnimateWaves_004E68A0 - (0x004E68A0 + 0x5));
+
+    // Fix incorrect frame time calculation
+    WriteMemUInt8Repeat((PVOID)0x00509595, ASM_NOP, 2);
 }
