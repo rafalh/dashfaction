@@ -18,7 +18,7 @@ project "DashFaction"
 		"../vendor/d3d8",
 		"../vendor/subhook",
 	}
-	links { "psapi", "wininet", "unrar", "unzip", "zlib", "ModCommon", "subhook", "logger", "Common" }
+	links { "psapi", "wininet", "version", "unrar", "unzip", "zlib", "ModCommon", "subhook", "logger", "Common" }
 	
 	pchheader "stdafx.h"
 	pchsource "stdafx.cpp"

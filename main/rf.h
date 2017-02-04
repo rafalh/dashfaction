@@ -100,14 +100,53 @@ namespace rf
 
     struct CObject;
 
+    struct GrScreen
+    {
+        int Signature;
+        int MaxWidth;
+        int MaxHeight;
+        int Mode;
+        int WindowMode;
+        int field_14;
+        float fAspect;
+        int field_1C;
+        int BitsPerPixel;
+        int BytesBerPixel;
+        int field_28;
+        int OffsetX;
+        int OffsetY;
+        int ViewportWidth;
+        int ViewportHeight;
+        int MaxTexWidthUnk3C;
+        int MaxTexHeightUnk40;
+        int ClipLeft;
+        int ClipRight;
+        int ClipTop;
+        int ClipBottom;
+        int CurrentColor;
+        int CurrentBitmap;
+        int field_5C;
+        int FogMode;
+        int FogColor;
+        float FogNear;
+        float FogFar;
+        float field_70;
+        int field_74;
+        float field_78;
+        float field_7C;
+        float field_80;
+        int field_84;
+        int field_88;
+        int field_8C;
+    };
+
     constexpr auto g_ppDirect3D = (IDirect3D8**)0x01CFCBE0;
     constexpr auto g_ppGrDevice = (IDirect3DDevice8**)0x01CFCBE4;
+    constexpr auto g_pGrScreen = (GrScreen*)0x017C7BC0;
     constexpr auto g_pGrGammaRamp = (uint32_t*)0x017C7C68;
     constexpr auto g_pAdapterIdx = (uint32_t*)0x01CFCC34;
     constexpr auto g_pGrScaleVec = (CVector3*)0x01818B48;
     constexpr auto g_GrViewMatrix = (CMatrix3*)0x018186C8;
-    constexpr auto g_pWndWidth = (int*)0x017C7BC4;
-    constexpr auto g_pWndHeight = (int*)0x017C7BC8;
     constexpr auto g_pGrDeviceCaps = (D3DCAPS8*)0x01CFCAC8;
     constexpr auto g_pGrRectMaterial = (uint32_t*)0x17756C0;
     constexpr auto g_pGrTextMaterial = (uint32_t*)0x17C7C5C;

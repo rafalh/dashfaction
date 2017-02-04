@@ -42,3 +42,4 @@ const char *GetProcessElevationType();
 #define ASM_PUSH_ESI      0x56
 #define ASM_PUSH_EDI      0x57
 #define ASM_ADD_ESP_BYTE  0xC483
+#define ASM_FADD          0xD8
