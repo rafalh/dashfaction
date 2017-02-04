@@ -108,6 +108,27 @@ void NAKED GrCreateD3DDeviceError_00545BEF()
     }
 }
 
+void GrClearZBuffer_SetRect(D3DRECT *pClearRect)
+{
+    pClearRect->x1 = g_pGrScreen->OffsetX + g_pGrScreen->ClipLeft;
+    pClearRect->y1 = g_pGrScreen->OffsetY + g_pGrScreen->ClipTop;
+    pClearRect->x2 = g_pGrScreen->OffsetX + g_pGrScreen->ClipRight + 1;
+    pClearRect->y2 = g_pGrScreen->OffsetY + g_pGrScreen->ClipBottom + 1;
+}
+
+void NAKED GrClearZBuffer_005509C4()
+{
+    _asm
+    {
+        lea eax, [esp + 14h - 10h] // Rect
+        push eax
+        call GrClearZBuffer_SetRect
+        add esp, 4
+        mov eax, 005509F0h
+        jmp eax
+    }
+}
+
 static void SetupPP(void)
 {
     D3DPRESENT_PARAMETERS *pPP = (D3DPRESENT_PARAMETERS*)0x01CFCA18;
@@ -186,19 +207,15 @@ void GraphicsInit()
     // Better error message in case of device creation error
     WriteMemUInt8((PVOID)0x00545BEF, ASM_LONG_JMP_REL);
     WriteMemPtr((PVOID)(0x00545BEF + 1), (PVOID)((ULONG_PTR)GrCreateD3DDeviceError_00545BEF - (0x00545BEF + 0x5)));
-    
 
-    /* Use hardware vertex processing */
-    //WriteMemUInt8((PVOID)0x00545BDF, D3DCREATE_HARDWARE_VERTEXPROCESSING);
-
-    //WriteMemUInt8((PVOID)0x005450A0, ASM_MOV_EAX32);
-    //WriteMemUInt32((PVOID)0x005450A1, 0 /*D3DPOOL_MANAGED*/); // FIXME: D3DPOOL_MANAGED makes game much slower
-    //WriteMemUInt8Repeat((PVOID)0x005450A6, ASM_NOP, 27);
-    //WriteMemUInt8Repeat((PVOID)0x005450C2, ASM_NOP, 4);
-    //WriteMemUInt8Repeat((PVOID)0x005450CB, ASM_NOP, 3);
-
-    //WriteMemUInt32((PVOID)0x005450DE, /*D3DUSAGE_DYNAMIC|*/D3DUSAGE_DONOTCLIP|D3DUSAGE_WRITEONLY);
-    //WriteMemUInt32((PVOID)0x00545118, /*D3DUSAGE_DYNAMIC|*/D3DUSAGE_DONOTCLIP|D3DUSAGE_WRITEONLY);
+    // Fix rendering of right and bottom edges of viewport
+    WriteMemUInt8((PVOID)0x00431D9F, ASM_SHORT_JMP_REL);
+    WriteMemUInt8((PVOID)0x00431F6B, ASM_SHORT_JMP_REL);
+    WriteMemUInt8((PVOID)0x004328CF, ASM_SHORT_JMP_REL);
+    WriteMemUInt8((PVOID)0x0043298F, ASM_LONG_JMP_REL);
+    WriteMemPtr((PVOID)(0x0043298F + 1), (PVOID)((ULONG_PTR)0x004329DC - (0x0043298F + 0x5)));
+    WriteMemUInt8((PVOID)0x005509C4, ASM_LONG_JMP_REL);
+    WriteMemPtr((PVOID)(0x005509C4 + 1), (PVOID)((ULONG_PTR)GrClearZBuffer_005509C4 - (0x005509C4 + 0x5)));
 }
 
 void GraphicsAfterGameInit()
