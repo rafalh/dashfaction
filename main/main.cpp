@@ -289,10 +289,9 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
     /* Crash-fix... (probably argument for function is invalid); Page Heap is needed */
     WriteMemUInt32((PVOID)(0x0056A28C + 1), 0);
 
-    /* Crash-fix for pdm04 (FIXME: monitors in game doesnt work) */
+    /* Crash-fix in case texture has not been created (this happens if GrReadBackbuffer fails) */
     WriteMemUInt8((PVOID)0x0055CE47, ASM_LONG_JMP_REL);
     WriteMemPtr((PVOID)(0x0055CE47 + 1), (PVOID)((ULONG_PTR)CrashFix_0055CE48 - (0x0055CE47 + 0x5)));
-    WriteMemUInt8((PVOID)0x00412370, ASM_RET); // disable function calling GrLock without checking for success (no idea what it does)
     
     RenderHitScreenHookable.hook(RenderHitScreenHook);
 
