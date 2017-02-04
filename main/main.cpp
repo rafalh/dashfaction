@@ -293,6 +293,10 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
     WriteMemUInt8((PVOID)0x0055CE47, ASM_LONG_JMP_REL);
     WriteMemPtr((PVOID)(0x0055CE47 + 1), (PVOID)((ULONG_PTR)CrashFix_0055CE48 - (0x0055CE47 + 0x5)));
     
+    // Dont overwrite player name and prefered weapons when loading saved game
+    WriteMemUInt8Repeat((PVOID)0x004B4D99, ASM_NOP, 0x004B4DA5 - 0x004B4D99);
+    WriteMemUInt8Repeat((PVOID)0x004B4E0A, ASM_NOP, 0x004B4E22 - 0x004B4E0A);
+
     RenderHitScreenHookable.hook(RenderHitScreenHook);
 
 #if DIRECTINPUT_SUPPORT
