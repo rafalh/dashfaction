@@ -6,6 +6,9 @@
 
 using namespace rf;
 
+static float g_GrClippedGeomOffsetX = -0.5;
+static float g_GrClippedGeomOffsetY = -0.5;
+
 static void SetTextureMinMagFilter(D3DTEXTUREFILTERTYPE FilterType)
 {
     uintptr_t Addresses[] = {
@@ -61,13 +64,10 @@ static void GrSetViewMatrix_FovFix(float fFovScale, float fWFarFactor)
     g_pGrScaleVec->y = fWFarFactor / fFovScale * fScaleY;
     g_pGrScaleVec->z = fWFarFactor;
 
-#if 0 // test
-    *(float*)0x01818B58 *= 1.01f;
-    *(float*)0x01818A5C *= 1.01f;
-    *(float*)0x01818A24 *= 1.01f;
-    *(float*)0x01818B60 *= 1.01f;
-#endif
-  
+    g_GrClippedGeomOffsetX = g_pGrScreen->OffsetX - 0.5f;
+    g_GrClippedGeomOffsetY = g_pGrScreen->OffsetY - 0.5f;
+    *(float*)0x01818B54 -= 0.5f; // viewport center x
+    *(float*)0x01818B5C -= 0.5f; // viewport center y
 }
 
 void NAKED GrSetViewMatrix_00547344()
@@ -216,6 +216,12 @@ void GraphicsInit()
     WriteMemPtr((PVOID)(0x0043298F + 1), (PVOID)((ULONG_PTR)0x004329DC - (0x0043298F + 0x5)));
     WriteMemUInt8((PVOID)0x005509C4, ASM_LONG_JMP_REL);
     WriteMemPtr((PVOID)(0x005509C4 + 1), (PVOID)((ULONG_PTR)GrClearZBuffer_005509C4 - (0x005509C4 + 0x5)));
+
+    // Left and top viewport edge fix for MSAA (RF does similar thing in GrDrawTextureD3D)
+    WriteMemUInt8((PVOID)0x005478C6, ASM_FADD);
+    WriteMemUInt8((PVOID)0x005478D7, ASM_FADD);
+    WriteMemPtr((PVOID)(0x005478C6 + 2), &g_GrClippedGeomOffsetX);
+    WriteMemPtr((PVOID)(0x005478D7 + 2), &g_GrClippedGeomOffsetY);
 }
 
 void GraphicsAfterGameInit()
