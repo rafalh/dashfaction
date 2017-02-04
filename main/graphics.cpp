@@ -36,18 +36,54 @@ static void SetTextureMinMagFilter(D3DTEXTUREFILTERTYPE FilterType)
         WriteMemUInt8((PVOID)(Addresses[i] + 1), (uint8_t)FilterType);
 }
 
-void GrSetViewMatrixLastCallHook()
-{
-    constexpr auto GrUnkAfterWFarUpdateInternal = (void(*)())0x00546A40;
-    float w = (float)*rf::g_pWndWidth;
-    float h = (float)*rf::g_pWndHeight;
-    float fFovMod = (4.0f / 3.0f) / (w / h);
-    g_pGrScaleVec->x *= fFovMod;
-    g_GrViewMatrix->rows[0].x *= fFovMod;
-    g_GrViewMatrix->rows[0].y *= fFovMod;
-    g_GrViewMatrix->rows[0].z *= fFovMod;
+static void GrSetViewMatrix_FovFix(float fFovScale, float fWFarFactor)
+{ 
+    constexpr float fRefAspectRatio = 4.0f / 3.0f;
+    constexpr float fMaxWideAspectRatio = 21.0f / 9.0f; // biggest aspect ratio currently in market
 
-    GrUnkAfterWFarUpdateInternal();
+    // g_pGrScreen->fAspect == ScrW / ScrH * 0.75 (1.0 for 4:3 monitors, 1.2 for 16:10) - looks like Pixel Aspect Ratio
+    // We use here MaxWidth and MaxHeight to calculate proper FOV for windowed mode
+
+    float fViewportAspectRatio = (float)g_pGrScreen->ViewportWidth / (float)g_pGrScreen->ViewportHeight;
+    float fAspectRatio = (float)g_pGrScreen->MaxWidth / (float)g_pGrScreen->MaxHeight;
+    float fScaleX = 1.0f;
+    float fScaleY = fRefAspectRatio * fViewportAspectRatio / fAspectRatio; // this is how RF does it and is needed for working scanner
+
+    if (fAspectRatio <= fMaxWideAspectRatio) // never make X scale too high in windowed mode
+        fScaleX *= fRefAspectRatio / fAspectRatio;
+    else
+    {
+        fScaleX *= fRefAspectRatio / fMaxWideAspectRatio;
+        fScaleY *= fAspectRatio / fMaxWideAspectRatio;
+    }
+
+    g_pGrScaleVec->x = fWFarFactor / fFovScale * fScaleX;
+    g_pGrScaleVec->y = fWFarFactor / fFovScale * fScaleY;
+    g_pGrScaleVec->z = fWFarFactor;
+
+#if 0 // test
+    *(float*)0x01818B58 *= 1.01f;
+    *(float*)0x01818A5C *= 1.01f;
+    *(float*)0x01818A24 *= 1.01f;
+    *(float*)0x01818B60 *= 1.01f;
+#endif
+  
+}
+
+void NAKED GrSetViewMatrix_00547344()
+{
+    _asm
+    {
+        mov eax, [esp + 10h + 14h]
+        sub esp, 8
+        fstp [esp + 4]
+        mov [esp + 0], eax
+        call GrSetViewMatrix_FovFix
+        fld [esp + 4]
+        add esp, 8
+        mov eax, 00547366h
+        jmp eax
+    }
 }
 
 void DisplayD3DDeviceError(HRESULT hr)
@@ -138,7 +174,8 @@ void GraphicsInit()
 
 #if WIDESCREEN_FIX
     /* Fix FOV for widescreen */
-    WriteMemPtr((PVOID)(0x005473E4 + 1), (PVOID)((ULONG_PTR)GrSetViewMatrixLastCallHook - (0x005473E4 + 0x5)));
+    WriteMemUInt8((PVOID)0x00547344, ASM_LONG_JMP_REL);
+    WriteMemPtr((PVOID)(0x00547344 + 1), (PVOID)((ULONG_PTR)GrSetViewMatrix_00547344 - (0x00547344 + 0x5)));
     WriteMemFloat((PVOID)0x0058A29C, 0.0003f); // factor related to near plane, default is 0.000588f
 #endif
 
