@@ -102,8 +102,8 @@ static BOOL VfsLoadPackfileHook(const char *pszFilename, const char *pszDir)
     pPackfile->cFiles = 0;
     pPackfile->pFileList = NULL;
     
-    if(fread(Buf, sizeof(Buf), 1, pFile) == 1 &&
-       VfsProcessPackfileHeader(pPackfile, Buf))
+    // Note: VfsProcessPackfileHeader returns number of files in packfile - result 0 is not always a true error
+    if (fread(Buf, sizeof(Buf), 1, pFile) == 1 && VfsProcessPackfileHeader(pPackfile, Buf))
     {
         pPackfile->pFileList = (PACKFILE_ENTRY*)malloc(pPackfile->cFiles * sizeof(PACKFILE_ENTRY));
         memset(pPackfile->pFileList, 0, pPackfile->cFiles * sizeof(PACKFILE_ENTRY));
@@ -242,39 +242,51 @@ static void VfsAddFileToLookupTableHook(PACKFILE_ENTRY *pEntry)
 {
     VFS_LOOKUP_TABLE_NEW *pLookupTableItem;
     
-    pLookupTableItem = &g_pVfsLookupTableNew[pEntry->dwNameChecksum % 20713];
+    constexpr int LOOKUP_TABLE_SIZE = 20713;
+    pLookupTableItem = &g_pVfsLookupTableNew[pEntry->dwNameChecksum % LOOKUP_TABLE_SIZE];
     
-    while(TRUE)
+    while (true)
     {
-        if(!pLookupTableItem->pPackfileEntry)
+        if (!pLookupTableItem->pPackfileEntry)
         {
 #if DEBUG_VFS && defined(DEBUG_VFS_FILENAME1) && defined(DEBUG_VFS_FILENAME2)
             if (!stricmp(pEntry->pszFileName, DEBUG_VFS_FILENAME1) || !stricmp(pEntry->pszFileName, DEBUG_VFS_FILENAME2))
                 VFS_DBGPRINT("Add 1: %s (%x)", pEntry->pszFileName, pEntry->dwNameChecksum);
 #endif
-                
             break;
         }
-            
-        if(!stricmp(pLookupTableItem->pPackfileEntry->pszFileName, pEntry->pszFileName))
+
+        if (!stricmp(pLookupTableItem->pPackfileEntry->pszFileName, pEntry->pszFileName))
         {
+            // file with the same name already exist
 #if DEBUG_VFS && defined(DEBUG_VFS_FILENAME1) && defined(DEBUG_VFS_FILENAME2)
             if (!stricmp(pEntry->pszFileName, DEBUG_VFS_FILENAME1) || !stricmp(pEntry->pszFileName, DEBUG_VFS_FILENAME2))
                 VFS_DBGPRINT("Add 2: %s (%x)", pEntry->pszFileName, pEntry->dwNameChecksum);
 #endif
-            // file with the same name already exist
-            if (*g_pbVfsIgnoreTblFiles && !g_gameConfig.allowOverwriteGameFiles) // this is set to true for user_maps
+            
+            const char *pszOldArchive = pLookupTableItem->pPackfileEntry->pArchive->szName;
+            const char *pszNewArchive = pEntry->pArchive->szName;
+
+            if (*g_pbVfsIgnoreTblFiles) // this is set to true for user_maps
             {
-                TRACE("Denied overwriting game file %s (old archive %s, new archive %s)",
-                    pEntry->pArchive->szName, pEntry->pszFileName, pLookupTableItem->pPackfileEntry->pArchive->szName);
-                return;
+                if (!g_gameConfig.allowOverwriteGameFiles)
+                {
+                    TRACE("Denied overwriting game file %s (old packfile %s, new packfile %s)", 
+                        pEntry->pszFileName, pszOldArchive, pszNewArchive);
+                    return;
+                }
+                else
+                {
+                    TRACE("Allowed overwriting game file %s (old packfile %s, new packfile %s)",
+                        pEntry->pszFileName, pszOldArchive, pszNewArchive);
+                }
             }
             else
             {
-                TRACE("Overwriting packfile item %s (old archive %s, new %s)",
-                    pEntry->pszFileName, pLookupTableItem->pPackfileEntry->pArchive->szName, pEntry->pArchive->szName);
-                break;
+                TRACE("Overwriting packfile item %s (old packfile %s, new packfile %s)",
+                    pEntry->pszFileName, pszOldArchive, pszNewArchive);
             }
+            break;
         }
         
         if(!pLookupTableItem->pNext)
