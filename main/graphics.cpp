@@ -159,6 +159,16 @@ static void SetupPP(void)
 #endif
 }
 
+void GrDrawRect_GrDrawPolyHook(int Num, GrVertex **ppVertices, int Flags, int iMat)
+{
+    for (int i = 0; i < Num; ++i)
+    {
+        ppVertices[i]->vScreenPos.x -= 0.5f;
+        ppVertices[i]->vScreenPos.y -= 0.5f;
+    }
+    GrDrawPoly(Num, ppVertices, Flags, iMat);
+}
+
 void GraphicsInit()
 {
     /* Fix for "At least 8 MB of available video memory" */
@@ -226,6 +236,7 @@ void GraphicsInit()
     WriteMemUInt8((PVOID)0x005478D7, ASM_FADD);
     WriteMemPtr((PVOID)(0x005478C6 + 2), &g_GrClippedGeomOffsetX);
     WriteMemPtr((PVOID)(0x005478D7 + 2), &g_GrClippedGeomOffsetY);
+    WriteMemPtr((PVOID)(0x0050DD69 + 1), (PVOID)((ULONG_PTR)GrDrawRect_GrDrawPolyHook - (0x0050DD69 + 0x5)));
 }
 
 void GraphicsAfterGameInit()
