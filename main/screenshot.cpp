@@ -132,19 +132,6 @@ int GrReadBackBufferHook(LONG x, LONG y, int Width, int Height, BYTE *pBuffer)
 
 void InitScreenshot(void)
 {
-    /* Fix for screenshots creation when height > 1024 */
-    int ScreenHeight = GetSystemMetrics(SM_CYSCREEN);
-    if(ScreenHeight > 1024)
-    {
-        g_ScreenshotScanlinesBuf = (BYTE**)malloc(ScreenHeight * sizeof(BYTE*));
-        WriteMemUInt8((PVOID)0x0055A066, ASM_MOV_ECX);
-        WriteMemUInt32((PVOID)0x0055A067, (uint32_t)&g_ScreenshotScanlinesBuf[0]);
-        WriteMemUInt8Repeat((PVOID)0x0055A06B, ASM_NOP, 2);
-        WriteMemUInt8((PVOID)0x0055A0DF, ASM_MOV_EAX);
-        WriteMemUInt32((PVOID)0x0055A0E0, (uint32_t)g_ScreenshotScanlinesBuf);
-        WriteMemUInt8Repeat((PVOID)0x0055A0E4, ASM_NOP, 2);
-    }
-    
     /* Override default because IDirect3DSurface8::LockRect fails on multisampled back-buffer */
 #if MULTISAMPLING_SUPPORT
     if (g_gameConfig.msaa)
@@ -164,6 +151,18 @@ void CleanupScreenshot(void)
 
 void ScreenshotAfterGameInit()
 {
+    /* Fix for screenshots creation when height > 1024 */
+    if (rf::g_pGrScreen->MaxHeight > 1024)
+    {
+        g_ScreenshotScanlinesBuf = (BYTE**)malloc(rf::g_pGrScreen->MaxHeight * sizeof(BYTE*));
+        WriteMemUInt8((PVOID)0x0055A066, ASM_MOV_ECX);
+        WriteMemPtr((PVOID)(0x0055A066 + 1), &g_ScreenshotScanlinesBuf[0]);
+        WriteMemUInt8Repeat((PVOID)0x0055A06B, ASM_NOP, 2);
+        WriteMemUInt8((PVOID)0x0055A0DF, ASM_MOV_EAX);
+        WriteMemPtr((PVOID)(0x0055A0DF + 1), g_ScreenshotScanlinesBuf);
+        WriteMemUInt8Repeat((PVOID)0x0055A0E4, ASM_NOP, 2);
+    }
+
     char FullPath[MAX_PATH];
     sprintf(FullPath, "%s\\%s", rf::g_pszRootPath, SCREENSHOT_DIR_NAME);
     if (CreateDirectoryA(FullPath, NULL))
@@ -171,6 +170,4 @@ void ScreenshotAfterGameInit()
     else if (GetLastError() != ERROR_ALREADY_EXISTS)
         ERR("Failed to create screenshots directory %lu", GetLastError());
     g_ScreenshotDirId = rf::FsAddDirectoryEx(SCREENSHOT_DIR_NAME, "", 1);
-
-
 }
