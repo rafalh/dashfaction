@@ -120,6 +120,7 @@ static void CleanupGameHook(void)
 static bool RunGameHook()
 {
     ProcessWaitingMessages();
+    HighFpsUpdate();
 
     return rf::RunGame();
 }
@@ -282,7 +283,6 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
     WriteMemPtr((PVOID)(0x004B2821+1), (PVOID)((ULONG_PTR)CleanupGameHook - (0x004B2821 + 0x5)));
     WriteMemPtr((PVOID)(0x004B2818+1), (PVOID)((ULONG_PTR)RunGameHook - (0x004B2818 + 0x5)));
     
-
     /* Set initial FPS limit */
     WriteMemFloat((PVOID)0x005094CA, 1.0f / g_gameConfig.maxFps);
     

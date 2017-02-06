@@ -3,12 +3,13 @@
 #include "utils.h"
 #include "rf.h"
 
+constexpr auto REF_FPS = 30.0f;
+constexpr auto REF_FRAMERATE = 1.0f / REF_FPS;
+
 static double g_FtolAccumulator_HitScreen = 0.0f;
 static double g_FtolAccumulated_ToggleConsole = 0.0f;
 static double g_FtolAccumulated_Timer = 0.0f;
-
-constexpr auto REF_FPS = 30.0f;
-constexpr auto REF_FRAMERATE = 1.0f / REF_FPS;
+static float g_JumpThreshold = 0.05f;
 
 long __stdcall AccumulatingFtoL(double fVal, double *pAccumulator)
 {
@@ -105,8 +106,7 @@ void HighFpsInit()
     WriteMemUInt32((PVOID)(0x005096A7 + 1), (ULONG_PTR)ftol_Timer - (0x005096A7 + 0x5)); // switching weapon and more
 
     // Fix jumping on high FPS
-    const static float JUMP_THRESHOLD = 0.05f;
-    WriteMemPtr((PVOID)(0x004A09A6 + 2), &JUMP_THRESHOLD);
+    WriteMemPtr((PVOID)(0x004A09A6 + 2), &g_JumpThreshold);
 
     // Fix water deceleration on high FPS
     WriteMemUInt8Repeat((PVOID)0x0049D816, ASM_NOP, 5);
@@ -120,4 +120,10 @@ void HighFpsInit()
 
     // Fix incorrect frame time calculation
     WriteMemUInt8Repeat((PVOID)0x00509595, ASM_NOP, 2);
+}
+
+void HighFpsUpdate()
+{
+    // Make jump fix framerate dependent to fix bouncing on small FPS
+    g_JumpThreshold = 0.1f * (*rf::g_pfFramerate) / (1/60.0f);
 }
