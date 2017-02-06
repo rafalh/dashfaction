@@ -144,7 +144,7 @@ static void SetupPP(void)
     {
         // Make sure selected MSAA mode is available
         HRESULT hr = IDirect3D8_CheckDeviceMultiSampleType(*g_ppDirect3D, *g_pAdapterIdx, D3DDEVTYPE_HAL, *pFormat,
-            g_gameConfig.wndMode == GameConfig::WINDOWED, (D3DMULTISAMPLE_TYPE)g_gameConfig.msaa);
+            g_gameConfig.wndMode != GameConfig::FULLSCREEN, (D3DMULTISAMPLE_TYPE)g_gameConfig.msaa);
         if (SUCCEEDED(hr))
         {
             INFO("Enabling Anti-Aliasing (%ux MSAA)...", g_gameConfig.msaa);
@@ -170,7 +170,11 @@ void GraphicsInit()
         /* Enable windowed mode */
         WriteMemUInt32((PVOID)(0x004B29A5 + 6), 0xC8);
         if (g_gameConfig.wndMode == GameConfig::STRETCHED)
-            WriteMemUInt32((PVOID)(0x0050C4E3 + 1), WS_POPUP|WS_SYSMENU);
+        {
+            uint32_t WndStyle = WS_POPUP | WS_SYSMENU;
+            WriteMemUInt32((PVOID)(0x0050C474 + 1), WndStyle);
+            WriteMemUInt32((PVOID)(0x0050C4E3 + 1), WndStyle);
+        }
     }
 #endif
 
