@@ -187,7 +187,7 @@ static bool CheckForUpdate()
     char buf[4096];
     LPCTSTR AcceptTypes[] = { TEXT("*/*"), NULL };
     DWORD dwStatus = 0, dwSize = sizeof(DWORD), dwBytesRead;
-
+    
     try
     {
         hInternet = InternetOpen("DashFaction", 0, NULL, NULL, 0);
@@ -198,8 +198,8 @@ static bool CheckForUpdate()
         if (!hConnect)
             THROW_EXCEPTION_WITH_WIN32_ERROR();
 
-        sprintf(buf, "api/rf/dashfaction/checkupdate.php?version=%u.%u&version_major=%d&version_minor=%d",
-            VERSION_MAJOR, VERSION_MINOR, VERSION_MAJOR, VERSION_MINOR);
+        sprintf(buf, "api/rf/dashfaction/checkupdate.php?version=%s",
+            VERSION_STR);
         hRequest = HttpOpenRequest(hConnect, NULL, buf, NULL, NULL, AcceptTypes, INTERNET_FLAG_RELOAD | INTERNET_FLAG_SECURE, 0);
         if (!hRequest)
             THROW_EXCEPTION_WITH_WIN32_ERROR();
