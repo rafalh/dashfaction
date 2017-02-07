@@ -5,9 +5,9 @@
 const char RF_KEY_NAME[] = "SOFTWARE\\Volition\\Red Faction";
 const char DF_SUBKEY_NAME[] = "Dash Faction";
 
-void GameConfig::load()
+bool GameConfig::load()
 {
-    RegKey regKey(HKEY_CURRENT_USER, RF_KEY_NAME, KEY_READ|KEY_CREATE_SUB_KEY);
+    RegKey regKey(HKEY_CURRENT_USER, RF_KEY_NAME, KEY_READ);
 
     regKey.readValue("Resolution Width", &resWidth);
     regKey.readValue("Resolution Height", &resHeight);
@@ -42,11 +42,13 @@ void GameConfig::load()
     else if (maxFps < MIN_FPS_LIMIT)
         maxFps = MIN_FPS_LIMIT;
 #endif
+
+    return regKey.isOpen();
 }
 
 void GameConfig::save()
 {
-    RegKey regKey(HKEY_CURRENT_USER, RF_KEY_NAME, KEY_WRITE);
+    RegKey regKey(HKEY_CURRENT_USER, RF_KEY_NAME, KEY_WRITE, true);
     regKey.writeValue("Resolution Width", resWidth);
     regKey.writeValue("Resolution Height", resHeight);
     regKey.writeValue("Resolution Bit Depth", resBpp);
@@ -59,7 +61,7 @@ void GameConfig::save()
     regKey.writeValue("UpdateRate", updateRate);
     regKey.writeValue("EAX", eaxSound);
 
-    RegKey dashFactionKey(regKey, DF_SUBKEY_NAME, KEY_WRITE);
+    RegKey dashFactionKey(regKey, DF_SUBKEY_NAME, KEY_WRITE, true);
     dashFactionKey.writeValue("Window Mode", (unsigned)wndMode);
     dashFactionKey.writeValue("Disable LOD Models", disableLodModels);
     dashFactionKey.writeValue("Anisotropic Filtering", anisotropicFiltering);
@@ -77,6 +79,7 @@ bool GameConfig::detectGamePath()
     std::string installPath;
 
     // Standard RF installer
+    try
     {
         RegKey regKey(HKEY_LOCAL_MACHINE, RF_KEY_NAME, KEY_READ);
         if (regKey.readValue("InstallPath", &installPath))
@@ -85,8 +88,13 @@ bool GameConfig::detectGamePath()
             return true;
         }
     }
+    catch (std::exception)
+    {
+        // ignore
+    }
     
     // Steam
+    try
     {
         RegKey regKey(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Steam App 20530", KEY_READ);
         if (regKey.readValue("InstallLocation", &installPath))
@@ -94,6 +102,10 @@ bool GameConfig::detectGamePath()
             gameExecutablePath = installPath + "\\RF.exe";
             return true;
         }
+    }
+    catch (std::exception)
+    {
+        // ignore
     }
     
     return false;

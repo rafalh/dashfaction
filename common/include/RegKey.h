@@ -10,23 +10,39 @@ public:
     RegKey(RegKey const&) = delete;
     RegKey& operator=(RegKey const&) = delete;
 
-    RegKey(HKEY parentKey, const char *subKey, REGSAM accessRights)
+    RegKey(HKEY parentKey, const char *subKey, REGSAM accessRights, bool create = false)
     {
-        LONG error = RegCreateKeyExA(parentKey, subKey, 0, NULL, 0, accessRights, NULL, &m_key, NULL);
+        if (!parentKey)
+            return; // empty parent
+
+        LONG error;
+        if (create)
+            error = RegCreateKeyExA(parentKey, subKey, 0, NULL, 0, accessRights, NULL, &m_key, NULL);
+        else
+        {
+            error = RegOpenKeyExA(parentKey, subKey, 0, accessRights, &m_key);
+            if (error == ERROR_FILE_NOT_FOUND)
+                return; // dont throw exception in this case
+        }
+        
         if (error != ERROR_SUCCESS)
             THROW_EXCEPTION("RegCreateKeyExA failed: win32 error %lu", error);
+        m_open = true;
     }
 
-    RegKey(const RegKey &parentKey, const char *subKey, REGSAM accessRights) :
-        RegKey(parentKey.m_key, subKey, accessRights) {}
+    RegKey(const RegKey &parentKey, const char *subKey, REGSAM accessRights, bool create = false) :
+        RegKey(parentKey.m_key, subKey, accessRights, create) {}
 
     ~RegKey()
     {
-        RegCloseKey(m_key);
+        if (m_open)
+            RegCloseKey(m_key);
     }
 
     bool readValue(const char *name, unsigned *value)
     {
+        if (!m_open)
+            return false;
         DWORD tempValue, type, cb = sizeof(tempValue);
         LONG error = RegQueryValueEx(m_key, name, NULL, &type, (LPBYTE)&tempValue, &cb);
         if (error != ERROR_SUCCESS)
@@ -39,6 +55,8 @@ public:
 
     bool readValue(const char *name, std::string *value)
     {
+        if (!m_open)
+            return false;
         DWORD type, cb = 0;
         LONG error = RegQueryValueEx(m_key, name, NULL, &type, NULL, &cb);
         if (error != ERROR_SUCCESS)
@@ -88,6 +106,12 @@ public:
         writeValue(name, value ? 1u : 0u);
     }
 
+    bool isOpen() const
+    {
+        return m_open;
+    }
+
 private:
-    HKEY m_key;
+    HKEY m_key = NULL;
+    bool m_open = false;
 };

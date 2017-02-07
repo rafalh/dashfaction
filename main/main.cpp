@@ -236,11 +236,12 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
     // Load config
     try
     {
-        g_gameConfig.load();
+        if (!g_gameConfig.load())
+            ERR("Configuration has not been found in registry!");
     }
     catch (std::exception &e)
     {
-        ERR("Failed to load config: %s", e.what());
+        ERR("Failed to load configuration: %s", e.what());
     }
 
     // Log information from config

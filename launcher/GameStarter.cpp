@@ -93,14 +93,11 @@ std::string ModdedAppLauncher::getModDllPath()
 
 void ModdedAppLauncher::launch()
 {
-    GameConfig conf;
-    conf.load();
-
-    uint32_t checksum = GetFileCRC32(conf.gameExecutablePath.c_str());
-    if (checksum != RF_120_NA_CRC32)
+    std::string appPath = getAppPath();
+    uint32_t checksum = GetFileCRC32(appPath.c_str());
+    if (checksum != m_expectedCrc)
         throw IntegrityCheckFailedException(checksum);
 
-    std::string appPath = getAppPath();
     size_t pos = appPath.find_last_of("\\/");
     std::string workDir = appPath.substr(0, pos);
 
@@ -110,7 +107,7 @@ void ModdedAppLauncher::launch()
     ZeroMemory(&si, sizeof(si));
     si.cb = sizeof(si);
 
-    BOOL result = CreateProcess(appPath.c_str(), GetCommandLine(),
+    BOOL result = CreateProcessA(appPath.c_str(), GetCommandLine(),
         NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, workDir.c_str(), &si, &pi);
     if (!result)
     {
@@ -130,7 +127,11 @@ void ModdedAppLauncher::launch()
 GameStarter::GameStarter() :
     ModdedAppLauncher("DashFaction.dll", RF_120_NA_CRC32)
 {
-    m_conf.load();
+    if (!m_conf.load())
+    {
+        // Failed to load config - save defaults
+        m_conf.save();
+    }
 }
 
 std::string GameStarter::getAppPath()

@@ -31,7 +31,7 @@ struct GameConfig
     bool fastStart = true;
     bool allowOverwriteGameFiles = false;
 
-    void load();
+    bool load();
     void save();
     bool detectGamePath();
 };
