@@ -143,9 +143,9 @@ static void InputModeCmdHandler(void)
 
 static int CanPlayerFireHook(CPlayer *pPlayer)
 {
-    if (!(pPlayer->field_10 & 0x10))
+    if (!(pPlayer->FireFlags & 0x10))
         return 0;
-    if (*g_pbNetworkGame && (pPlayer->pCamera->Type == RF_CAM_FREE || pPlayer->pCamera->pPlayer != pPlayer))
+    if (*g_pbNetworkGame && (pPlayer->pCamera->Type == rf::CAMERA::RF_CAM_FREE || pPlayer->pCamera->pPlayer != pPlayer))
         return 0;
     return 1;
 }

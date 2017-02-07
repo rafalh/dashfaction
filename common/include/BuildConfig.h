@@ -4,7 +4,13 @@
 #define NO_CD_FIX 1
 #define NO_INTRO 1
 #define LEVELS_AUTODOWNLOADER 1
+
+#ifdef DEBUG
+#define CAMERA_1_3_COMMANDS 1
+#else
 #define CAMERA_1_3_COMMANDS 0
+#endif
+
 #define SPECTATE_MODE_ENABLE 1
 #define SPECTATE_MODE_SHOW_WEAPON 1
 #define SPLITSCREEN_ENABLE 0
