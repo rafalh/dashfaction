@@ -23,7 +23,7 @@ void HudCmdHandler(void)
 
 void HudSetupPositionsHook(int Width)
 {
-    int Height = RfGetHeight();
+    int Height = GrGetMaxHeight();
     POINT *pPosData = NULL;
     
     TRACE("HudSetupPositionsHook(%d)", Width);

@@ -399,23 +399,23 @@ void RenderDownloadProgress(void)
     if (cxProgress > cx)
         cxProgress = cx;
 
-    x = (RfGetWidth() - cx) / 2;
-    y = RfGetHeight() - 50;
+    x = (GrGetMaxWidth() - cx) / 2;
+    y = GrGetMaxHeight() - 50;
     cyFont = GrGetFontHeight(-1);
 
     if (cxProgress > 0)
     {
-        GrSetColorRgb(0x80, 0x80, 0, 0x80);
+        GrSetColor(0x80, 0x80, 0, 0x80);
         GrDrawRect(x, y, cxProgress, cy, *g_pGrRectMaterial);
     }
 
     if (cx > cxProgress)
     {
-        GrSetColorRgb(0, 0, 0x60, 0x80);
+        GrSetColor(0, 0, 0x60, 0x80);
         GrDrawRect(x + cxProgress, y, cx - cxProgress, cy, *g_pGrRectMaterial);
     }
 
-    GrSetColorRgb(0, 0xFF, 0, 0x80);
+    GrSetColor(0, 0xFF, 0, 0x80);
     sprintf(szBuf, "Downloading: %.2f MB / %.2f MB", g_cbDownloadProgress/1024.0f/1024.0f, g_cbLevelSize/1024.0f/1024.0f);
     GrDrawAlignedText(1, x + cx/2, y + cy/2 - cyFont/2, szBuf, -1, *g_pGrTextMaterial);
 }

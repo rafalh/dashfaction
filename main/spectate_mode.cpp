@@ -263,7 +263,7 @@ void SpectateModeDrawUI()
     {
         if (IsPlayerEntityInvalid(*g_ppLocalPlayer))
         {
-            GrSetColorRgb(0xFF, 0xFF, 0xFF, 0xFF);
+            GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
             GrDrawAlignedText(0, 20, 200, "Press JUMP key to enter Spectate Mode", -1, *g_pGrTextMaterial);
         }
         return;
@@ -277,29 +277,29 @@ void SpectateModeDrawUI()
         g_SmallFont = GrLoadFont("rfpc-small.vf", -1);
 
     const unsigned cx = 500, cy = 50;
-    unsigned cxScr = RfGetWidth(), cySrc = RfGetHeight();
+    unsigned cxScr = GrGetMaxWidth(), cySrc = GrGetMaxHeight();
     unsigned x = (cxScr - cx) / 2;
     unsigned y = cySrc - 100;
     unsigned cyFont = GrGetFontHeight(-1);
 
-    GrSetColorRgb(0xFF, 0xFF, 0xFF, 0xFF);
+    GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
     GrDrawAlignedText(1, cxScr / 2, 150, "SPECTATE MODE", g_LargeFont, *g_pGrTextMaterial);
     GrDrawAlignedText(0, 20, 200, "Press JUMP key to exit Spectate Mode", g_MediumFont, *g_pGrTextMaterial);
     GrDrawAlignedText(0, 20, 215, "Press PRIMARY ATTACK key to switch to the next player", g_MediumFont, *g_pGrTextMaterial);
     GrDrawAlignedText(0, 20, 230, "Press SECONDARY ATTACK key to switch to the previous player", g_MediumFont, *g_pGrTextMaterial);
 
-    GrSetColorRgb(0, 0, 0x00, 0x60);
+    GrSetColor(0, 0, 0x00, 0x60);
     GrDrawRect(x, y, cx, cy, *((uint32_t*)0x17756C0));
 
     char szBuf[256];
-    GrSetColorRgb(0xFF, 0xFF, 0, 0x80);
+    GrSetColor(0xFF, 0xFF, 0, 0x80);
     sprintf(szBuf, "Spectating: %s", g_SpectateModeTarget->strName.psz);
     GrDrawAlignedText(1, x + cx / 2, y + cy / 2 - cyFont / 2, szBuf, g_LargeFont, *g_pGrTextMaterial);
 
     CEntity *pEntity = HandleToEntity(g_SpectateModeTarget->hEntity);
     if (!pEntity)
     {
-        GrSetColorRgb(0xC0, 0, 0, 0xC0);
+        GrSetColor(0xC0, 0, 0, 0xC0);
         GrDrawAlignedText(1, cxScr / 2, cySrc / 2, "DEAD", g_LargeFont, *g_pGrTextMaterial);
     }
 }

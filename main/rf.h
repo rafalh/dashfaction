@@ -12,41 +12,35 @@ typedef BOOL WINBOOL;
 
 namespace rf
 {
-    typedef struct _CVector3
+    /* Math */
+
+    struct CVector3
     {
         float x, y, z;
-    } CVector3;
+    };
 
-    typedef struct _CMatrix3
+    struct CMatrix3
     {
         CVector3 rows[3];
-    } CMatrix3;
+    };
 
     /* String */
 
-    typedef struct _CString
+    struct CString
     {
         uint32_t cch;
         char *psz;
-    } CString;
+    };
 
     typedef char *(*PFN_STRING_ALLOC)(unsigned cbSize);
-    static PFN_STRING_ALLOC const StringAlloc = (PFN_STRING_ALLOC)0x004FF300;
+    constexpr auto StringAlloc = (PFN_STRING_ALLOC)0x004FF300;
 
     typedef void(*PFN_STRING_FREE)(void *pData);
-    static PFN_STRING_FREE const StringFree = (PFN_STRING_FREE)0x004FF3A0;
+    constexpr auto StringFree = (PFN_STRING_FREE)0x004FF3A0;
 
     constexpr auto CString_Init = (void(__thiscall *)(CString *This, const char *pszInit))0x004FF3D0;
 
-    /* Console */
-
-    typedef unsigned(*PFN_CONSOLE_WRITE)(const char *pszText, uint32_t *pColor);
-    static const PFN_CONSOLE_WRITE RfConsoleWrite = (PFN_CONSOLE_WRITE)0x00509EC0;
-
-    typedef unsigned(*PFN_CONSOLE_PRINTF)(const char *pszFormat, ...);
-    static const PFN_CONSOLE_PRINTF RfConsolePrintf = (PFN_CONSOLE_PRINTF)0x0050B9F0;
-
-    /* Commands */
+    /* Debug Console */
 
     struct CCmd
     {
@@ -55,15 +49,21 @@ namespace rf
         void(*pfnHandler)(void);
     };
 
-    //static CCmd ** const g_ppCommands = (CCmd**)0x01775530;
-    static uint32_t * const g_pcCommands = (uint32_t*)0x0177567C;
+    typedef unsigned(*PFN_CONSOLE_WRITE)(const char *pszText, uint32_t *pColor);
+    constexpr auto RfConsoleWrite = (PFN_CONSOLE_WRITE)0x00509EC0;
 
-    static uint32_t * const g_pbCmdRun = (uint32_t*)0x01775110;
-    static uint32_t * const g_pbCmdHelp = (uint32_t*)0x01775224;
-    static uint32_t * const g_piCmdArgType = (uint32_t*)0x01774D04;
-    static char * const g_pszCmdArg = (char*)0x0175462C;
-    static int * const g_piCmdArg = (int*)0x01775220;
-    static float * const g_pfCmdArg = (float*)0x01754628;
+    typedef unsigned(*PFN_CONSOLE_PRINTF)(const char *pszFormat, ...);
+    constexpr auto RfConsolePrintf = (PFN_CONSOLE_PRINTF)0x0050B9F0;
+
+    //static CCmd ** const g_ppCommands = (CCmd**)0x01775530;
+    constexpr auto g_pcCommands = (uint32_t*)0x0177567C;
+
+    constexpr auto g_pbCmdRun = (uint32_t*)0x01775110;
+    constexpr auto g_pbCmdHelp = (uint32_t*)0x01775224;
+    constexpr auto g_piCmdArgType = (uint32_t*)0x01774D04;
+    constexpr auto g_pszCmdArg = (char*)0x0175462C;
+    constexpr auto g_piCmdArg = (int*)0x01775220;
+    constexpr auto g_pfCmdArg = (float*)0x01754628;
 
     enum CmdArgType
     {
@@ -80,24 +80,9 @@ namespace rf
     };
 
     typedef void(*PFN_CMD_GET_NEXT_ARG)(int Type, int bUnknown);
-    static const PFN_CMD_GET_NEXT_ARG CmdGetNextArg = (PFN_CMD_GET_NEXT_ARG)0x0050AED0;
-
-    /* Banlist */
-
-    typedef struct _BANLIST_ENTRY
-    {
-        char szIp[24];
-        struct _BANLIST_ENTRY *pNext;
-        struct _BANLIST_ENTRY *pPrev;
-    } BANLIST_ENTRY;
-
-    static BANLIST_ENTRY ** const g_ppBanlistFirstEntry = (BANLIST_ENTRY**)0x0064EC20;
-    static BANLIST_ENTRY ** const g_ppBanlistLastEntry = (BANLIST_ENTRY**)0x0064EC24;
-    static BANLIST_ENTRY * const g_pBanlistNullEntry = (BANLIST_ENTRY*)0x0064EC08;
+    constexpr auto CmdGetNextArg = (PFN_CMD_GET_NEXT_ARG)0x0050AED0;
 
     /* Graphics */
-
-    struct CObject;
 
     struct GrScreen
     {
@@ -176,43 +161,43 @@ namespace rf
     constexpr auto g_pGrImageMaterial = (uint32_t*)0x017756DC;
     constexpr auto g_pGrDefaultWFar = (float*)0x00596140;
 
-    typedef void(*PFN_GR_SET_COLOR_RGB)(unsigned r, unsigned g, unsigned b, unsigned a);
-    static const PFN_GR_SET_COLOR_RGB GrSetColorRgb = (PFN_GR_SET_COLOR_RGB)0x0050CF80;
+    typedef void(*PFN_GR_SET_COLOR)(unsigned r, unsigned g, unsigned b, unsigned a);
+    constexpr auto GrSetColor = (PFN_GR_SET_COLOR)0x0050CF80;
 
     typedef void(*PFN_GR_SET_COLOR_PTR)(uint32_t *pColor);
-    static const PFN_GR_SET_COLOR_PTR GrSetColorPtr = (PFN_GR_SET_COLOR_PTR)0x0050D000;
+    constexpr auto GrSetColorPtr = (PFN_GR_SET_COLOR_PTR)0x0050D000;
 
     typedef void(*PFN_GR_DRAW_TEXT)(unsigned x, unsigned y, const char *pszText, int Font, unsigned Material);
-    static const PFN_GR_DRAW_TEXT GrDrawText = (PFN_GR_DRAW_TEXT)0x0051FEB0;
+    constexpr auto GrDrawText = (PFN_GR_DRAW_TEXT)0x0051FEB0;
 
     typedef void(*PFN_GR_DRAW_ALIGNED_TEXT)(unsigned Align, unsigned x, unsigned y, const char *pszText, int Font, unsigned Material);
-    static const PFN_GR_DRAW_ALIGNED_TEXT GrDrawAlignedText = (PFN_GR_DRAW_ALIGNED_TEXT)0x0051FE50;
+    constexpr auto GrDrawAlignedText = (PFN_GR_DRAW_ALIGNED_TEXT)0x0051FE50;
 
     typedef void(*PFN_GR_DRAW_RECT)(unsigned x, unsigned y, unsigned cx, unsigned cy, unsigned Material);
-    static const PFN_GR_DRAW_RECT GrDrawRect = (PFN_GR_DRAW_RECT)0x0050DBE0;
+    constexpr auto GrDrawRect = (PFN_GR_DRAW_RECT)0x0050DBE0;
 
     typedef unsigned(*PFN_GR_GET_FONT_HEIGHT)(int Font);
-    static const PFN_GR_GET_FONT_HEIGHT GrGetFontHeight = (PFN_GR_GET_FONT_HEIGHT)0x0051F4D0;
+    constexpr auto GrGetFontHeight = (PFN_GR_GET_FONT_HEIGHT)0x0051F4D0;
 
     typedef CString *(*PFN_GR_FIT_TEXT)(CString *pstrDest, CString Str, int cxMax);
-    static const PFN_GR_FIT_TEXT GrFitText = (PFN_GR_FIT_TEXT)0x00471EC0;
+    constexpr auto GrFitText = (PFN_GR_FIT_TEXT)0x00471EC0;
 
-    typedef int(*PFN_GR_LOAD_TEXTURE)(const char *pszFilename, int a2, BOOL a3);
-    static const PFN_GR_LOAD_TEXTURE GrLoadTexture = (PFN_GR_LOAD_TEXTURE)0x0050F6A0;
-
-    typedef int(*PFN_GR_DRAW_IMAGE)(int Texture, int x, int y, int Material);
-    static const PFN_GR_DRAW_IMAGE GrDrawImage = (PFN_GR_DRAW_IMAGE)0x0050D2A0;
+    typedef int(*PFN_GR_DRAW_IMAGE)(int BmHandle, int x, int y, int Material);
+    constexpr auto GrDrawImage = (PFN_GR_DRAW_IMAGE)0x0050D2A0;
 
     typedef int(*PFN_GR_READ_BACK_BUFFER)(int x, int y, int Width, int Height, void *pBuffer);
-    static const PFN_GR_READ_BACK_BUFFER GrReadBackBuffer = (PFN_GR_READ_BACK_BUFFER)0x0050DFF0;
+    constexpr auto GrReadBackBuffer = (PFN_GR_READ_BACK_BUFFER)0x0050DFF0;
 
     constexpr auto GrGetTextWidth = (void(*)(int *pOutWidth, int *pOutHeight, const char *pszText, int TextLen, int FontId))0x0051F530;
 
-    typedef void(*PFN_OBJECT_RENDER)(CObject *pObj);
-    static const PFN_OBJECT_RENDER RenderEntity = (PFN_OBJECT_RENDER)0x00421850;
-
     typedef void(*PFN_GR_FLUSH_BUFFERS)(void);
-    static const PFN_GR_FLUSH_BUFFERS GrFlushBuffers = (PFN_GR_FLUSH_BUFFERS)0x00559D90;
+    constexpr auto GrFlushBuffers = (PFN_GR_FLUSH_BUFFERS)0x00559D90;
+
+    typedef unsigned(*PFN_GET_WIDTH)(void);
+    constexpr auto GrGetMaxWidth = (PFN_GET_WIDTH)0x0050C640;
+
+    typedef unsigned(*PFN_GET_HEIGHT)(void);
+    constexpr auto GrGetMaxHeight = (PFN_GET_HEIGHT)0x0050C650;
 
     constexpr auto GrLoadFont = (int(*)(const char *pszFileName, int a2))0x0051F6E0;
     constexpr auto GrSetViewMatrix = (void(*)(CMatrix3 *pMatRot, CVector3 *pPos, float fFov, int a4, int a5))0x00517EB0;
@@ -223,15 +208,34 @@ namespace rf
 
     /* Bmpman */
 
+    typedef int(*PFN_BM_LOAD)(const char *pszFilename, int a2, BOOL a3);
+    constexpr auto BmLoad = (PFN_BM_LOAD)0x0050F6A0;
+
     constexpr auto BmConvertFormat = (void(*)(void *pDstBits, int DstPixelFmt, const void *pSrcBits, int SrcPixelFmt, int NumPixels))0x0055DD20;
 
-    /* GUI */
+    /* UI */
+
+    struct CGuiPanel
+    {
+        void(__cdecl **field_0)();
+        CGuiPanel *pParent;
+        char field_8;
+        char field_9;
+        int x;
+        int y;
+        int w;
+        int h;
+        int Id;
+        void(*OnClick)(void);
+        int field_24;
+        int BgTexture;
+    };
 
     typedef void(*PFN_MSG_BOX)(const char *pszTitle, const char *pszText, void(*pfnCallback)(void), BOOL bInput);
-    static const PFN_MSG_BOX UiMsgBox = (PFN_MSG_BOX)0x004560B0;
+    constexpr auto UiMsgBox = (PFN_MSG_BOX)0x004560B0;
 
     typedef void(*PFN_CREATE_DIALOG)(const char *pszTitle, const char *pszText, unsigned cButtons, const char **ppszBtnTitles, void **ppfnCallbacks, unsigned Unknown1, unsigned Unknown2);
-    static const PFN_CREATE_DIALOG UiCreateDialog = (PFN_CREATE_DIALOG)0x004562A0;
+    constexpr auto UiCreateDialog = (PFN_CREATE_DIALOG)0x004562A0;
 
     /* VFS */
 
@@ -263,32 +267,32 @@ namespace rf
         PACKFILE_ENTRY *pArchiveEntry;
     } VFS_LOOKUP_TABLE;
 
-    static uint32_t * const g_pcArchives = (uint32_t*)0x01BDB214;
-    static PACKFILE * const g_pArchives = (PACKFILE*)0x01BA7AC8;
+    constexpr auto g_pcArchives = (uint32_t*)0x01BDB214;
+    constexpr auto g_pArchives = (PACKFILE*)0x01BA7AC8;
 #define VFS_LOOKUP_TABLE_SIZE 20713
-    static VFS_LOOKUP_TABLE * const g_pVfsLookupTable = (VFS_LOOKUP_TABLE*)0x01BB2AC8;
+    constexpr auto g_pVfsLookupTable = (VFS_LOOKUP_TABLE*)0x01BB2AC8;
     constexpr auto g_pbVfsIgnoreTblFiles = (uint8_t*)0x01BDB21C;
 
     typedef BOOL(*PFN_LOAD_PACKFILE)(const char *pszFileName, const char *pszDir);
-    static const PFN_LOAD_PACKFILE VfsLoadPackfile = (PFN_LOAD_PACKFILE)0x0052C070;
+    constexpr auto VfsLoadPackfile = (PFN_LOAD_PACKFILE)0x0052C070;
 
     typedef PACKFILE *(*PFN_VFS_FIND_PACKFILE)(const char *pszFilename);
-    static const PFN_VFS_FIND_PACKFILE VfsFindPackfile = (PFN_VFS_FIND_PACKFILE)0x0052C1D0;
+    constexpr auto VfsFindPackfile = (PFN_VFS_FIND_PACKFILE)0x0052C1D0;
 
     typedef uint32_t(*PFN_VFS_CALC_FILENAME_CHECKSUM)(const char *pszFileName);
-    static const PFN_VFS_CALC_FILENAME_CHECKSUM VfsCalcFileNameChecksum = (PFN_VFS_CALC_FILENAME_CHECKSUM)0x0052BE70;
+    constexpr auto VfsCalcFileNameChecksum = (PFN_VFS_CALC_FILENAME_CHECKSUM)0x0052BE70;
 
     typedef uint32_t(*PFN_VFS_ADD_FILE_TO_LOOKUP_TABLE)(const PACKFILE_ENTRY *pPackfileEntry);
-    static const PFN_VFS_ADD_FILE_TO_LOOKUP_TABLE VfsAddFileToLookupTable = (PFN_VFS_ADD_FILE_TO_LOOKUP_TABLE)0x0052BCA0;
+    constexpr auto VfsAddFileToLookupTable = (PFN_VFS_ADD_FILE_TO_LOOKUP_TABLE)0x0052BCA0;
 
     typedef uint32_t(*PFN_VFS_PROCESS_PACKFILE_HEADER)(PACKFILE *pPackfile, const void *pHeader);
-    static const PFN_VFS_PROCESS_PACKFILE_HEADER VfsProcessPackfileHeader = (PFN_VFS_PROCESS_PACKFILE_HEADER)0x0052BD10;
+    constexpr auto VfsProcessPackfileHeader = (PFN_VFS_PROCESS_PACKFILE_HEADER)0x0052BD10;
 
     typedef uint32_t(*PFN_VFS_ADD_PACKFILE_ENTRIES)(PACKFILE *pPackfile, const void *pBuf, unsigned cFilesInBlock, unsigned *pcAddedEntries);
-    static const PFN_VFS_ADD_PACKFILE_ENTRIES VfsAddPackfileEntries = (PFN_VFS_ADD_PACKFILE_ENTRIES)0x0052BD40;
+    constexpr auto VfsAddPackfileEntries = (PFN_VFS_ADD_PACKFILE_ENTRIES)0x0052BD40;
 
     typedef uint32_t(*PFN_VFS_SETUP_FILE_OFFSETS)(PACKFILE *pPackfile, unsigned DataOffsetInBlocks);
-    static const PFN_VFS_SETUP_FILE_OFFSETS VfsSetupFileOffsets = (PFN_VFS_SETUP_FILE_OFFSETS)0x0052BEB0;
+    constexpr auto VfsSetupFileOffsets = (PFN_VFS_SETUP_FILE_OFFSETS)0x0052BEB0;
 
     constexpr auto FsAddDirectoryEx = (int(*)(const char *pszDir, const char *pszExtList, char bUnknown))0x00514070;
 
@@ -300,32 +304,32 @@ namespace rf
         uint32_t Port;
     } NET_ADDR;
 
-    static SOCKET * const g_pNwSocket = (SOCKET*)0x005A660C;
+    constexpr auto g_pNwSocket = (SOCKET*)0x005A660C;
 
     typedef void(*PFN_PROCESS_GAME_PACKETS)(const char *pData, int cbData, const void *pAddr, void *pPlayer);
-    static const PFN_PROCESS_GAME_PACKETS NwProcessGamePackets = (PFN_PROCESS_GAME_PACKETS)0x004790D0;
+    constexpr auto NwProcessGamePackets = (PFN_PROCESS_GAME_PACKETS)0x004790D0;
 
     typedef void(*PFN_NW_SEND_NOT_RELIABLE_PACKET)(const void *pAddr, const void *pPacket, unsigned cbPacket);
-    static const PFN_NW_SEND_NOT_RELIABLE_PACKET NwSendNotReliablePacket = (PFN_NW_SEND_NOT_RELIABLE_PACKET)0x0052A080;
+    constexpr auto NwSendNotReliablePacket = (PFN_NW_SEND_NOT_RELIABLE_PACKET)0x0052A080;
 
     typedef void(*PFN_NW_ADDR_TO_STR)(char *pszDest, int cbDest, NET_ADDR *pAddr);
-    static const PFN_NW_ADDR_TO_STR NwAddrToStr = (PFN_NW_ADDR_TO_STR)0x00529FE0;
+    constexpr auto NwAddrToStr = (PFN_NW_ADDR_TO_STR)0x00529FE0;
 
     /* HUD */
 
 #define HUD_POINTS_COUNT 48
-    static POINT * const g_pHudPosData640 = (POINT*)0x00637868;
-    static POINT * const g_pHudPosData800 = (POINT*)0x006373D0;
-    static POINT * const g_pHudPosData1024 = (POINT*)0x00637230;
-    static POINT * const g_pHudPosData1280 = (POINT*)0x00637560;
-    static POINT * const g_pHudPosData = (POINT*)0x006376E8;
+    constexpr auto g_pHudPosData640 = (POINT*)0x00637868;
+    constexpr auto g_pHudPosData800 = (POINT*)0x006373D0;
+    constexpr auto g_pHudPosData1024 = (POINT*)0x00637230;
+    constexpr auto g_pHudPosData1280 = (POINT*)0x00637560;
+    constexpr auto g_pHudPosData = (POINT*)0x006376E8;
 
     /* Chat */
 
     typedef void(*PFN_CHAT_PRINT)(CString strText, unsigned ColorId, CString Prefix);
     static PFN_CHAT_PRINT const ChatPrint = (PFN_CHAT_PRINT)0x004785A0;
 
-    /* Players */
+    /* Player */
 
     struct SPlayerStats
     {
@@ -353,7 +357,7 @@ namespace rf
         uint32_t field_9C4;
     };
 
-    typedef struct _SKeyState
+    struct SKeyState
     {
         int field_0;
         int field_4;
@@ -363,9 +367,9 @@ namespace rf
         __int16 ScanCodes[2];
         __int16 MouseBtnId;
         __int16 field_1A;
-    } SKeyState;
+    };
 
-    typedef struct _CGameControls
+    struct CGameControls
     {
         float fMouseSensitivity;
         int bMouseLook;
@@ -386,7 +390,7 @@ namespace rf
         int field_F20;
         int field_F24;
         int field_F28;
-    } CGameControls;
+    };
 
     struct CPlayer;
     struct CEntity;
@@ -581,10 +585,54 @@ namespace rf
         CPlayerNetData *pNwData;
     };
 
-    static CPlayer ** const g_ppPlayersList = (CPlayer**)0x007C75CC;
-    static CPlayer ** const g_ppLocalPlayer = (CPlayer**)0x007C75D4;
+    enum EGameCtrl
+    {
+        GC_PRIMARY_ATTACK = 0x0,
+        GC_SECONDARY_ATTACK = 0x1,
+        GC_USE = 0x2,
+        GC_JUMP = 0x3,
+        GC_CROUCH = 0x4,
+        GC_HIDE_WEAPON = 0x5,
+        GC_RELOAD = 0x6,
+        GC_NEXT_WEAPON = 0x7,
+        GC_PREV_WEAPON = 0x8,
+        GC_CHAT = 0x9,
+        GC_TEAM_CHAT = 0xA,
+        GC_FORWARD = 0xB,
+        GC_BACKWARD = 0xC,
+        GC_SLIDE_LEFT = 0xD,
+        GC_SLIDE_RIGHT = 0xE,
+        GC_SLIDE_UP = 0xF,
+        GC_SLIDE_DOWN = 0x10,
+        GC_LOOK_DOWN = 0x11,
+        GC_LOOK_UP = 0x12,
+        GC_TURN_LEFT = 0x13,
+        GC_TURN_RIGHT = 0x14,
+        GC_MESSAGES = 0x15,
+        GC_MP_STATS = 0x16,
+        GC_QUICK_SAVE = 0x17,
+        GC_QUICK_LOAD = 0x18,
+    };
+
+    constexpr auto g_ppPlayersList = (CPlayer**)0x007C75CC;
+    constexpr auto g_ppLocalPlayer = (CPlayer**)0x007C75D4;
 
     constexpr auto KillLocalPlayer = (void(*)())0x004757A0;
+
+    typedef void(*PFN_RENDER_PLAYER_ARM)(CPlayer *pPlayer);
+    constexpr auto RenderPlayerArm = (PFN_RENDER_PLAYER_ARM)0x004A2B30;
+    constexpr auto RenderPlayerArm2 = (PFN_RENDER_PLAYER_ARM)0x004AB1A0;
+
+    typedef void(*PFN_SETUP_PLAYER_WEAPON_MESH)(CPlayer *pPlayer, int WeaponClsId);
+    constexpr auto SetupPlayerWeaponMesh = (PFN_SETUP_PLAYER_WEAPON_MESH)0x004AA230;
+
+    typedef bool(*PFN_IS_PLAYER_ENTITY_INVALID)(CPlayer *pPlayer);
+    constexpr auto IsPlayerEntityInvalid = (PFN_IS_PLAYER_ENTITY_INVALID)0x004A4920;
+
+    typedef bool(*PFN_IS_PLAYER_DYING)(CPlayer *pPlayer);
+    constexpr auto IsPlayerDying = (PFN_IS_PLAYER_DYING)0x004A4940;
+
+    constexpr auto HandleCtrlInGame = (void(*)(CPlayer *pPlayer, EGameCtrl KeyId, char WasPressed))0x004A6210;
 
     /* Object */
 
@@ -603,7 +651,7 @@ namespace rf
         OT_10 = 10,
     };
 
-    typedef struct SPosRotUnk
+    struct SPosRotUnk
     {
         int field_88;
         float field_8C;
@@ -615,7 +663,7 @@ namespace rf
         CVector3 Pos;
         CVector3 vNewPos;
         CMatrix3 matYawRot;
-    } SPosRotUnk;
+    };
 
     struct CObject
     {
@@ -684,6 +732,9 @@ namespace rf
         CObject *pNextObj;
     };
 
+    typedef void(*PFN_OBJECT_RENDER)(CObject *pObj);
+    constexpr auto RenderEntity = (PFN_OBJECT_RENDER)0x00421850;
+
     /* Entity */
 
     typedef void ENTITY_CLASS;
@@ -701,21 +752,21 @@ namespace rf
         int iRotRefZ;
     };
 
-    typedef struct SWeaponSelection
+    struct SWeaponSelection
     {
         int field_0;
         int WeaponClsId;
         int WeaponClsId2;
-    } SWeaponSelection;
+    };
 
-    typedef struct SEntityMotion
+    struct SEntityMotion
     {
         CVector3 vRotChange;
         CVector3 vPosChange;
         int field_18;
         float field_1C;
         float field_20;
-    } SEntityMotion;
+    };
 
     struct CEntity
     {
@@ -812,18 +863,7 @@ namespace rf
     };
 
     typedef CEntity *(*PFN_HANDLE_TO_ENTITY)(uint32_t hEntity);
-    static PFN_HANDLE_TO_ENTITY const HandleToEntity = (PFN_HANDLE_TO_ENTITY)0x00426FC0;
-
-    static unsigned * const g_pRiotStickClassId = (unsigned*)0x00872468;
-
-    /* Window messages */
-
-    typedef void(*PFN_MESSAGE_HANDLER)(UINT, WPARAM, LPARAM);
-    typedef unsigned(*PFN_ADD_MSG_HANDLER)(PFN_MESSAGE_HANDLER);
-    static const PFN_ADD_MSG_HANDLER AddMsgHandler = (PFN_ADD_MSG_HANDLER)0x00524AE0;
-
-    static PFN_MESSAGE_HANDLER * const g_MsgHandlers = (PFN_MESSAGE_HANDLER*)0x01B0D5A0;
-    static uint32_t * const g_pcMsgHandlers = (uint32_t*)0x01B0D760;
+    constexpr auto HandleToEntity = (PFN_HANDLE_TO_ENTITY)0x00426FC0;
 
     /* Weapons */
 
@@ -834,55 +874,71 @@ namespace rf
         BYTE Rest[0x550 - 2 * sizeof(CString)];
     } WEAPON_CLASS;
 
-    static WEAPON_CLASS * const g_pWeaponClasses = (WEAPON_CLASS*)0x0085CD08;
-    static char ** const g_ppszStringsTable = (char**)0x007CBBF0;
+    constexpr auto g_pWeaponClasses = (WEAPON_CLASS*)0x0085CD08;
+    constexpr auto g_pRiotStickClassId = (unsigned*)0x00872468;
     constexpr auto g_pRemoteChargeClsId = (uint32_t*)0x0087210C;
 
     constexpr auto UpdatePlayerWeaponMesh = (void(*)(CPlayer*))0x004AA6D0;
 
     /* Window */
 
-    static HWND * const g_phWnd = (HWND*)0x01B0D748;
-    static uint8_t * const g_pbIsActive = (uint8_t*)0x01B0D750;
-    static uint8_t * const g_pbClose = (uint8_t*)0x01B0D758;
-    static uint8_t * const g_pbMouseInitialized = (uint8_t*)0x01885461;
-    static uint32_t * const g_pcRedrawServer = (uint32_t*)0x01775698;
+    typedef void(*PFN_MESSAGE_HANDLER)(UINT, WPARAM, LPARAM);
+    typedef unsigned(*PFN_ADD_MSG_HANDLER)(PFN_MESSAGE_HANDLER);
+    constexpr auto AddMsgHandler = (PFN_ADD_MSG_HANDLER)0x00524AE0;
 
-    /* Server */
+    constexpr auto g_MsgHandlers = (PFN_MESSAGE_HANDLER*)0x01B0D5A0;
+    constexpr auto g_pcMsgHandlers = (uint32_t*)0x01B0D760;
 
-    static NET_ADDR * const g_pServAddr = (NET_ADDR*)0x0064EC5C;
-    static CString * const g_pstrServName = (CString*)0x0064EC28;
+    constexpr auto g_phWnd = (HWND*)0x01B0D748;
+    constexpr auto g_pbIsActive = (uint8_t*)0x01B0D750;
+    constexpr auto g_pbClose = (uint8_t*)0x01B0D758;
+    constexpr auto g_pbMouseInitialized = (uint8_t*)0x01885461;
+    constexpr auto g_pcRedrawServer = (uint32_t*)0x01775698;
+
+    /* Network Game */
+
+    typedef struct _BANLIST_ENTRY
+    {
+        char szIp[24];
+        struct _BANLIST_ENTRY *pNext;
+        struct _BANLIST_ENTRY *pPrev;
+    } BANLIST_ENTRY;
+
+    typedef unsigned(*PFN_GET_GAME_TYPE)(void);
+    constexpr auto RfGetGameType = (PFN_GET_GAME_TYPE)0x00470770;
+
+    typedef unsigned(*PFN_GET_PLAYERS_COUNT)(void);
+    constexpr auto RfGetPlayersCount = (PFN_GET_PLAYERS_COUNT)0x00484830;
+
+    typedef uint8_t(*PFN_GET_TEAM_SCORE)(void);
+    constexpr auto CtfGetRedScore = (PFN_GET_TEAM_SCORE)0x00475020;
+    constexpr auto CtfGetBlueScore = (PFN_GET_TEAM_SCORE)0x00475030;
+    constexpr auto TdmGetRedScore = (PFN_GET_TEAM_SCORE)0x004828F0;
+    constexpr auto TdmGetBlueScore = (PFN_GET_TEAM_SCORE)0x00482900;
+
+    typedef void(*PFN_PACKET_HANDLER)(BYTE *pData, NET_ADDR *pAddr);
+    constexpr auto RfHandleNewPlayerPacket = (PFN_PACKET_HANDLER)0x0047A580;
+
+    typedef const char *(*PFN_GET_JOIN_FAILED_STR)(unsigned Reason);
+    constexpr auto GetJoinFailedStr = (PFN_GET_JOIN_FAILED_STR)0x0047BE60;
+
+    typedef void(*PFN_KICK_PLAYER)(CPlayer *pPlayer);
+    constexpr auto RfKickPlayer = (PFN_KICK_PLAYER)0x0047BF00;
+
+    typedef void(*PFN_BAN_IP)(NET_ADDR *pAddr);
+    constexpr auto RfBanIp = (PFN_BAN_IP)0x0046D0F0;
+
+    constexpr auto g_pServAddr = (NET_ADDR*)0x0064EC5C;
+    constexpr auto g_pstrServName = (CString*)0x0064EC28;
+    constexpr auto g_pbNetworkGame = (uint8_t*)0x0064ECB9;
+    constexpr auto g_pbLocalNetworkGame = (uint8_t*)0x0064ECBA;
+    constexpr auto g_pbDedicatedServer = (uint32_t*)0x01B0D75C;
+    constexpr auto g_pGameOptions = (uint32_t*)0x0064EC40;
+    constexpr auto g_ppBanlistFirstEntry = (BANLIST_ENTRY**)0x0064EC20;
+    constexpr auto g_ppBanlistLastEntry = (BANLIST_ENTRY**)0x0064EC24;
+    constexpr auto g_pBanlistNullEntry = (BANLIST_ENTRY*)0x0064EC08;
 
     /* Other */
-
-    enum EGameCtrl
-    {
-        GC_PRIMARY_ATTACK = 0x0,
-        GC_SECONDARY_ATTACK = 0x1,
-        GC_USE = 0x2,
-        GC_JUMP = 0x3,
-        GC_CROUCH = 0x4,
-        GC_HIDE_WEAPON = 0x5,
-        GC_RELOAD = 0x6,
-        GC_NEXT_WEAPON = 0x7,
-        GC_PREV_WEAPON = 0x8,
-        GC_CHAT = 0x9,
-        GC_TEAM_CHAT = 0xA,
-        GC_FORWARD = 0xB,
-        GC_BACKWARD = 0xC,
-        GC_SLIDE_LEFT = 0xD,
-        GC_SLIDE_RIGHT = 0xE,
-        GC_SLIDE_UP = 0xF,
-        GC_SLIDE_DOWN = 0x10,
-        GC_LOOK_DOWN = 0x11,
-        GC_LOOK_UP = 0x12,
-        GC_TURN_LEFT = 0x13,
-        GC_TURN_RIGHT = 0x14,
-        GC_MESSAGES = 0x15,
-        GC_MP_STATS = 0x16,
-        GC_QUICK_SAVE = 0x17,
-        GC_QUICK_LOAD = 0x18,
-    };
 
     enum EGameLang
     {
@@ -901,96 +957,49 @@ namespace rf
         int unk2;
     };
 
-    static char * const g_pszRootPath = (char*)0x018060E8;
-    static float * const g_fFps = (float*)0x005A4018;
-    static float * const g_pfFramerate = (float*)0x005A4014;
-    static float * const g_pfMinFramerate = (float*)0x005A4024;
-    static uint32_t * const g_pSimultaneousPing = (uint32_t*)0x00599CD8;
-    static CString * const g_pstrLevelName = (CString*)0x00645FDC;
-    static CString * const g_pstrLevelFilename = (CString*)0x00645FE4;
-    static CString * const g_pstrLevelAuthor = (CString*)0x00645FEC;
-    static CString * const g_pstrLevelDate = (CString*)0x00645FF4;
-    static int * const g_pBigFontId = (int*)0x006C74C0;
-    static int * const g_pLargeFontId = (int*)0x0063C05C;
-    static int * const g_pMediumFontId = (int*)0x0063C060;
-    static int * const g_pSmallFontId = (int*)0x0063C068;
-    static uint8_t * const g_pbNetworkGame = (uint8_t*)0x0064ECB9;
-    static uint8_t * const g_pbLocalNetworkGame = (uint8_t*)0x0064ECBA;
-    static uint32_t * const g_pbDedicatedServer = (uint32_t*)0x01B0D75C;
-    static uint32_t * const g_pGameOptions = (uint32_t*)0x0064EC40;
+    constexpr auto g_pszRootPath = (char*)0x018060E8;
+    constexpr auto g_fFps = (float*)0x005A4018;
+    constexpr auto g_pfFramerate = (float*)0x005A4014;
+    constexpr auto g_pfMinFramerate = (float*)0x005A4024;
+    constexpr auto g_pSimultaneousPing = (uint32_t*)0x00599CD8;
+    constexpr auto g_pstrLevelName = (CString*)0x00645FDC;
+    constexpr auto g_pstrLevelFilename = (CString*)0x00645FE4;
+    constexpr auto g_pstrLevelAuthor = (CString*)0x00645FEC;
+    constexpr auto g_pstrLevelDate = (CString*)0x00645FF4;
+    constexpr auto g_pBigFontId = (int*)0x006C74C0;
+    constexpr auto g_pLargeFontId = (int*)0x0063C05C;
+    constexpr auto g_pMediumFontId = (int*)0x0063C060;
+    constexpr auto g_pSmallFontId = (int*)0x0063C068;
+    constexpr auto g_ppszStringsTable = (char**)0x007CBBF0;
 
     constexpr auto g_pbDbgNetwork = (uint32_t*)0x006FED24;
     constexpr auto g_pbDbgFlagsArray = (uint8_t*)0x0062FE19;
     constexpr auto g_pbRenderEventIcons = (uint8_t*)0x00856500;
     constexpr auto g_pbDbgWeapon = (uint8_t*)0x007CAB59;
 
-    typedef const char *(*PFN_GET_JOIN_FAILED_STR)(unsigned Reason);
-    static PFN_GET_JOIN_FAILED_STR const GetJoinFailedStr = (PFN_GET_JOIN_FAILED_STR)0x0047BE60;
-
     typedef void(*PFN_BEEP)(unsigned u1, unsigned u2, unsigned u3, float fVolume);
-    static PFN_BEEP const RfBeep = (PFN_BEEP)0x00505560;
+    constexpr auto RfBeep = (PFN_BEEP)0x00505560;
 
     typedef void(*PFN_DRAW_CONSOLE_AND_PROCESS_KBD_FIFO)(BOOL bServer);
-    static PFN_DRAW_CONSOLE_AND_PROCESS_KBD_FIFO const DrawConsoleAndProcessKbdFifo = (PFN_DRAW_CONSOLE_AND_PROCESS_KBD_FIFO)0x0050A720;
+    constexpr auto DrawConsoleAndProcessKbdFifo = (PFN_DRAW_CONSOLE_AND_PROCESS_KBD_FIFO)0x0050A720;
 
     typedef void(*PFN_INIT_GAME)(void);
-    static PFN_INIT_GAME const InitGame = (PFN_INIT_GAME)0x004B13F0;
+    constexpr auto InitGame = (PFN_INIT_GAME)0x004B13F0;
 
     typedef void(*PFN_CLEANUP_GAME)(void);
-    static PFN_CLEANUP_GAME const CleanupGame = (PFN_CLEANUP_GAME)0x004B2D40;
+    constexpr auto CleanupGame = (PFN_CLEANUP_GAME)0x004B2D40;
 
     constexpr auto RunGame = (bool(*)())0x004B2D90;
 
     typedef char *(*PFN_GET_FILE_EXT)(char *pszPath);
-    static PFN_GET_FILE_EXT const GetFileExt = (PFN_GET_FILE_EXT)0x005143F0;
-
-    typedef unsigned(*PFN_GET_WIDTH)(void);
-    static const PFN_GET_WIDTH RfGetWidth = (PFN_GET_WIDTH)0x0050C640;
-
-    typedef unsigned(*PFN_GET_HEIGHT)(void);
-    static const PFN_GET_HEIGHT RfGetHeight = (PFN_GET_HEIGHT)0x0050C650;
-
-    typedef unsigned(*PFN_GET_GAME_TYPE)(void);
-    static const PFN_GET_GAME_TYPE RfGetGameType = (PFN_GET_GAME_TYPE)0x00470770;
-
-    typedef unsigned(*PFN_GET_PLAYERS_COUNT)(void);
-    static const PFN_GET_PLAYERS_COUNT RfGetPlayersCount = (PFN_GET_PLAYERS_COUNT)0x00484830;
-
-    typedef uint8_t(*PFN_GET_TEAM_SCORE)(void);
-    static const PFN_GET_TEAM_SCORE CtfGetRedScore = (PFN_GET_TEAM_SCORE)0x00475020;
-    static const PFN_GET_TEAM_SCORE CtfGetBlueScore = (PFN_GET_TEAM_SCORE)0x00475030;
-    static const PFN_GET_TEAM_SCORE TdmGetRedScore = (PFN_GET_TEAM_SCORE)0x004828F0;
-    static const PFN_GET_TEAM_SCORE TdmGetBlueScore = (PFN_GET_TEAM_SCORE)0x00482900;
+    constexpr auto GetFileExt = (PFN_GET_FILE_EXT)0x005143F0;
 
     typedef void(*PFN_SPLIT_SCREEN)(void);
-    static const PFN_SPLIT_SCREEN RfSplitScreen = (PFN_SPLIT_SCREEN)0x00480D30;
-
-    typedef void(*PFN_KICK_PLAYER)(CPlayer *pPlayer);
-    static const PFN_KICK_PLAYER RfKickPlayer = (PFN_KICK_PLAYER)0x0047BF00;
-
-    typedef void(*PFN_BAN_IP)(NET_ADDR *pAddr);
-    static const PFN_BAN_IP RfBanIp = (PFN_BAN_IP)0x0046D0F0;
-
-    typedef void(*PFN_PACKET_HANDLER)(BYTE *pData, NET_ADDR *pAddr);
-    static const PFN_PACKET_HANDLER RfHandleNewPlayerPacket = (PFN_PACKET_HANDLER)0x0047A580;
-
-    typedef void(*PFN_RENDER_PLAYER_ARM)(CPlayer *pPlayer);
-    static const PFN_RENDER_PLAYER_ARM RenderPlayerArm = (PFN_RENDER_PLAYER_ARM)0x004A2B30;
-    static const PFN_RENDER_PLAYER_ARM RenderPlayerArm2 = (PFN_RENDER_PLAYER_ARM)0x004AB1A0;
-
-    typedef void(*PFN_SETUP_PLAYER_WEAPON_MESH)(CPlayer *pPlayer, int WeaponClsId);
-    static const PFN_SETUP_PLAYER_WEAPON_MESH SetupPlayerWeaponMesh = (PFN_SETUP_PLAYER_WEAPON_MESH)0x004AA230;
-
-    constexpr auto HandleCtrlInGame = (void(*)(CPlayer *pPlayer, EGameCtrl KeyId, char WasPressed))0x004A6210;
-
-    typedef bool(*PFN_IS_PLAYER_ENTITY_INVALID)(CPlayer *pPlayer);
-    constexpr auto IsPlayerEntityInvalid = (PFN_IS_PLAYER_ENTITY_INVALID)0x004A4920;
-    typedef bool(*PFN_IS_PLAYER_DYING)(CPlayer *pPlayer);
-    constexpr auto IsPlayerDying = (PFN_IS_PLAYER_DYING)0x004A4940;
+    constexpr auto RfSplitScreen = (PFN_SPLIT_SCREEN)0x00480D30;
 
     constexpr auto RegReadDword = (int(*)(char *pszSubKeyName, LPCSTR lpValueName, DWORD *lpData, int DefaultValue))0x004A4920;
 
-    constexpr bool *g_pbDirectInputDisabled = (bool*)0x005A4F88;
+    constexpr auto g_pbDirectInputDisabled = (bool*)0x005A4F88;
 
     constexpr auto SwitchMenu = (int(*)(int MenuId, bool bForce))0x00434190;
     constexpr auto SetNextLevelFilename = (void(*)(CString strFilename, CString strSecond))0x0045E2E0;
@@ -1000,32 +1009,16 @@ namespace rf
     /* RF stdlib functions are not compatible with GCC */
 
     typedef FILE *(*PFN_FOPEN)(const char *pszPath, const char *pszMode);
-    static const PFN_FOPEN RfFopen = (PFN_FOPEN)0x00574FFE;
+    constexpr auto RfFopen = (PFN_FOPEN)0x00574FFE;
 
     typedef void(*PFN_FSEEK)(FILE *pFile, uint32_t Offset, uint32_t Direction);
-    static const PFN_FSEEK RfSeek = (PFN_FSEEK)0x00574F14;
+    constexpr auto RfSeek = (PFN_FSEEK)0x00574F14;
 
     typedef void(*PFN_DELETE)(void *pMem);
-    static const PFN_DELETE RfDelete = (PFN_DELETE)0x0057360E;
+    constexpr auto RfDelete = (PFN_DELETE)0x0057360E;
 
     typedef void *(*PFN_MALLOC)(uint32_t cbSize);
-    static const PFN_MALLOC RfMalloc = (PFN_MALLOC)0x00573B37;
-
-    struct CGuiPanel
-    {
-        void(__cdecl **field_0)();
-        CGuiPanel *pParent;
-        char field_8;
-        char field_9;
-        int x;
-        int y;
-        int w;
-        int h;
-        int Id;
-        void(*OnClick)(void);
-        int field_24;
-        int BgTexture;
-    };
+    constexpr auto RfMalloc = (PFN_MALLOC)0x00573B37;
 }
 
 #pragma pack(pop)

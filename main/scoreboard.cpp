@@ -54,21 +54,21 @@ static void DrawScoreboardInternalHook(BOOL bDraw)
         cy = ((GameType == RF_DM) ? 110 : 170) + std::max(cLeftCol, cRightCol) * 15;
         cxNameMax = cx / (GameType == RF_DM ? 1 : 2) - 25 - 50 * (GameType == RF_CTF ? 3 : 2);
         
-        x = (RfGetWidth() - cx) / 2;
-        y = (RfGetHeight() - cy) / 2;
+        x = (GrGetMaxWidth() - cx) / 2;
+        y = (GrGetMaxHeight() - cy) / 2;
         cLeftCol = cRightCol = 0;
         
-        GrSetColorRgb(0, 0, 0, 0x80);
-        GrDrawRect(x, y, cx, cy, *((uint32_t*)0x17756C0));
+        GrSetColor(0, 0, 0, 0x80);
+        GrDrawRect(x, y, cx, cy, *g_pGrRectMaterial);
         
         /* Draw RF logo */
-        GrSetColorRgb(0xFF, 0xFF, 0xFF, 0xFF);
+        GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
         if (!g_ScoreRflogoTexture)
-            g_ScoreRflogoTexture = GrLoadTexture("score_rflogo.tga", -1, TRUE);
+            g_ScoreRflogoTexture = BmLoad("score_rflogo.tga", -1, TRUE);
         GrDrawImage(g_ScoreRflogoTexture, x + cx / 2 - 170, y + 10, *g_pGrImageMaterial);
         
         /* Draw map and server name */
-        GrSetColorRgb(0xB0, 0xB0, 0xB0, 0xFF);
+        GrSetColor(0xB0, 0xB0, 0xB0, 0xFF);
         sprintf(szBuf, "%s (%s) by %s", g_pstrLevelName->psz, g_pstrLevelFilename->psz, g_pstrLevelAuthor->psz);
         GrDrawAlignedText(1, x + cx/2, y + 45, szBuf, -1, *g_pGrTextMaterial);
         i = sprintf(szBuf, "%s (", g_pstrServName->psz);
@@ -82,9 +82,9 @@ static void DrawScoreboardInternalHook(BOOL bDraw)
         if (GameType == RF_CTF)
         {
             if(!g_HudFlagRedTexture)
-                g_HudFlagRedTexture = GrLoadTexture("hud_flag_red.tga", -1, TRUE);
+                g_HudFlagRedTexture = BmLoad("hud_flag_red.tga", -1, TRUE);
             if(!g_HudFlagBlueTexture)
-                g_HudFlagBlueTexture = GrLoadTexture("hud_flag_blue.tga", -1, TRUE);
+                g_HudFlagBlueTexture = BmLoad("hud_flag_blue.tga", -1, TRUE);
             GrDrawImage(g_HudFlagRedTexture, x + cx * 2 / 6, y, *g_pGrImageMaterial);
             GrDrawImage(g_HudFlagBlueTexture, x + cx * 4 / 6, y, *g_pGrImageMaterial);
             RedScore = CtfGetRedScore();
@@ -98,17 +98,17 @@ static void DrawScoreboardInternalHook(BOOL bDraw)
         
         if (GameType != RF_DM)
         {
-            GrSetColorRgb(0xD0, 0x20, 0x20, 0xFF);
+            GrSetColor(0xD0, 0x20, 0x20, 0xFF);
             sprintf(szBuf, "%u", RedScore);
             GrDrawAlignedText(1, x + cx * 1 / 6, y, szBuf, *g_pBigFontId, *g_pGrTextMaterial);
-            GrSetColorRgb(0x20, 0x20, 0xD0, 0xFF);
+            GrSetColor(0x20, 0x20, 0xD0, 0xFF);
             sprintf(szBuf, "%u", BlueScore);
             GrDrawAlignedText(1, x + cx * 5 / 6, y, szBuf, *g_pBigFontId, *g_pGrTextMaterial);
             y += 60;
         }
         
         /* Draw headers */
-        GrSetColorRgb(0xFF, 0xFF, 0xFF, 0xFF);
+        GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
         for (i = 0; i < (GameType == RF_DM ? 1u : 2u); ++i)
         {
             x2 = x + i*300 + 25;
@@ -144,9 +144,9 @@ static void DrawScoreboardInternalHook(BOOL bDraw)
             }
             
             if (pPlayer == *g_ppPlayersList)
-                GrSetColorRgb(0xFF, 0xFF, 0x80, 0xFF);
+                GrSetColor(0xFF, 0xFF, 0x80, 0xFF);
             else
-                GrSetColorRgb(0xFF, 0xFF, 0xFF, 0xFF);
+                GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
             
             strName.psz = StringAlloc(pPlayer->strName.cch + 1);
             strcpy(strName.psz, pPlayer->strName.psz);
