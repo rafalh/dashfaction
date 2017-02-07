@@ -12,7 +12,6 @@ typedef BOOL WINBOOL;
 
 namespace rf
 {
-
     typedef struct _CVector3
     {
         float x, y, z;
@@ -140,6 +139,30 @@ namespace rf
         int field_8C;
     };
 
+    struct GrVertex
+    {
+        CVector3 v3dPos;
+        CVector3 vScreenPos;
+        int ClipFlags;
+        float u0;
+        float v0;
+        float u1;
+        float v1;
+        int Color;
+    };
+
+    struct SGrLockData
+    {
+        int BmHandle;
+        int SectionIdx;
+        int PixelFormat;
+        BYTE *pBits;
+        int Width;
+        int Height;
+        int Pitch;
+        int field_1C;
+    };
+
     constexpr auto g_ppDirect3D = (IDirect3D8**)0x01CFCBE0;
     constexpr auto g_ppGrDevice = (IDirect3DDevice8**)0x01CFCBE4;
     constexpr auto g_pGrScreen = (GrScreen*)0x017C7BC0;
@@ -194,6 +217,13 @@ namespace rf
     constexpr auto GrLoadFont = (int(*)(const char *pszFileName, int a2))0x0051F6E0;
     constexpr auto GrSetViewMatrix = (void(*)(CMatrix3 *pMatRot, CVector3 *pPos, float fFov, int a4, int a5))0x00517EB0;
     constexpr auto GrSetViewMatrixD3D = (void(*)(CMatrix3 *pMatRot, CVector3 *pPos, float fFov, int a4, int a5))0x00547150;
+    constexpr auto GrDrawPoly = (void(*)(int Num, GrVertex **ppVertices, int Flags, int iMat))0x0050DF80;
+    constexpr auto GrLock = (int(*)(int BmHandle, int SectionIdx, SGrLockData *pData, int a4))0x0050E2E0;
+    constexpr auto GrUnlock = (void(*)(SGrLockData *pData))0x0050E310;
+
+    /* Bmpman */
+
+    constexpr auto BmConvertFormat = (void(*)(void *pDstBits, int DstPixelFmt, const void *pSrcBits, int SrcPixelFmt, int NumPixels))0x0055DD20;
 
     /* GUI */
 
@@ -861,6 +891,16 @@ namespace rf
         LANG_FR = 2,
     };
 
+    struct RflLightmap
+    {
+        BYTE *pUnk;
+        int w;
+        int h;
+        BYTE *pBuf;
+        int BmHandle;
+        int unk2;
+    };
+
     static char * const g_pszRootPath = (char*)0x018060E8;
     static float * const g_fFps = (float*)0x005A4018;
     static float * const g_pfFramerate = (float*)0x005A4014;
@@ -955,6 +995,7 @@ namespace rf
     constexpr auto SwitchMenu = (int(*)(int MenuId, bool bForce))0x00434190;
     constexpr auto SetNextLevelFilename = (void(*)(CString strFilename, CString strSecond))0x0045E2E0;
     constexpr auto DemoLoadLevel = (void(*)(const char *pszLevelFileName))0x004CC270;
+    constexpr auto KeyGetFromFifo = (int(*)())0x0051F000;
 
     /* RF stdlib functions are not compatible with GCC */
 
