@@ -31,6 +31,7 @@ using namespace rf;
 GameConfig g_gameConfig;
 HookableFunPtr<0x004163C0, void, CPlayer*> RenderHitScreenHookable;
 HookableFunPtr<0x004B33F0, void, const char**, const char**> GetVersionStrHookable;
+HookableFunPtr<0x0051F000, int> KeyGetFromFifoHookable;
 int g_VersionLabelX, g_VersionLabelWidth, g_VersionLabelHeight;
 static const char g_szVersionInMenu[] = PRODUCT_NAME_VERSION;
 
@@ -123,6 +124,13 @@ static bool RunGameHook()
     HighFpsUpdate();
 
     return rf::RunGame();
+}
+
+int KeyGetFromFifoHook()
+{
+    // Process messages here because when watching videos main loop is not running
+    ProcessWaitingMessages();
+    return KeyGetFromFifoHookable.callOrig();
 }
 
 CPlayer *FindPlayer(const char *pszName)
@@ -239,6 +247,7 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
     WriteMemUInt8Repeat((PVOID)0x00524C48, ASM_NOP, 0x00524C83 - 0x00524C48); // disable msg loop thread
     WriteMemUInt8((PVOID)0x00524C48, ASM_LONG_CALL_REL);
     WriteMemPtr((PVOID)0x00524C49, (PVOID)((ULONG_PTR)0x00524E40 - (0x00524C48 + 0x5))); // CreateMainWindow
+    KeyGetFromFifoHookable.hook(KeyGetFromFifoHook);
 
     /* Console init string */
     WriteMemPtr((PVOID)0x004B2534, "-- " PRODUCT_NAME " Initializing --\n");
