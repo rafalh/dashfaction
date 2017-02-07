@@ -209,9 +209,9 @@ void LogSystemInfo()
     try
     {
         std::string osVer = getRealOsVersion();
-        INFO("System version: %s", osVer.c_str());
+        INFO("Real system version: %s", osVer.c_str());
         osVer = getOsVersion();
-        INFO("Current system version (compatible): %s", osVer.c_str());
+        INFO("Emulated system version: %s", osVer.c_str());
         INFO("Running as %s (elevation type: %s)", IsUserAdmin() ? "admin" : "user", GetProcessElevationType());
     }
     catch (std::exception &e)
@@ -226,6 +226,10 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
     InitLogging();
     InitCrashDumps();
     
+    // Enable Data Execution Prevention
+    if (!SetProcessDEPPolicy(PROCESS_DEP_ENABLE))
+        WARN("SetProcessDEPPolicy failed (error %ld)", GetLastError());
+
     // Log system info
     LogSystemInfo();
 
@@ -239,9 +243,11 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
         ERR("Failed to load config: %s", e.what());
     }
 
-    /* Enable Data Execution Prevention */
-    if (!SetProcessDEPPolicy(PROCESS_DEP_ENABLE))
-        WARN("SetProcessDEPPolicy failed (error %ld)", GetLastError());
+    // Log information from config
+    INFO("Resolution: %dx%dx%d", g_gameConfig.resWidth, g_gameConfig.resHeight, g_gameConfig.resBpp);
+    INFO("Window Mode: %d", (int)g_gameConfig.wndMode);
+    INFO("Max FPS: %d", (int)g_gameConfig.maxFps);
+    INFO("Allow Overwriting Game Files: %d", (int)g_gameConfig.allowOverwriteGameFiles);
 
     /* Process messages in the same thread as DX processing (alternative: D3DCREATE_MULTITHREADED) */
     WriteMemUInt8Repeat((PVOID)0x00524C48, ASM_NOP, 0x00524C83 - 0x00524C48); // disable msg loop thread

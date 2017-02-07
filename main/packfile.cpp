@@ -30,12 +30,13 @@ static EGameLang DetectInstalledGameLang()
     const char *LangCodes[] = { "en", "gr", "fr" };
     for (unsigned i = 0; i < COUNTOF(LangCodes); ++i)
     {
-        sprintf(szFullPath, "%s/maps_%s.vpp", g_pszRootPath, LangCodes[i]);
+        sprintf(szFullPath, "%smaps_%s.vpp", g_pszRootPath, LangCodes[i]);
         FILE *pFile = fopen(szFullPath, "rb");
-        INFO("Checking file %s: %p", szFullPath, pFile);
+        INFO("Checking file %s: %s", szFullPath, pFile ? "found" : "not found");
         if (pFile)
         {
             fclose(pFile);
+            INFO("Detected game language: %s", LangCodes[i]);
             return (EGameLang)i;
         }
     }
@@ -51,7 +52,6 @@ EGameLang GetInstalledGameLang()
     {
         InstalledGameLang = DetectInstalledGameLang();
         Initialized = true;
-        INFO("Detected game language %d", InstalledGameLang);
     }
     return InstalledGameLang;
 }
