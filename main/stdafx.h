@@ -22,5 +22,6 @@ typedef BOOL WINBOOL;
 #include <map>
 
 #include <MemUtils.h>
+#include <AsmOpcodes.h>
 
 #include "BuildConfig.h"

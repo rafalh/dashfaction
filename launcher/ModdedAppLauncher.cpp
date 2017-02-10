@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "GameStarter.h"
+#include "ModdedAppLauncher.h"
 #include "GameConfig.h"
 #include "crc32.h"
 
@@ -10,6 +10,7 @@
 #define THROW_EXCEPTION_WITH_WIN32_ERROR() THROW_EXCEPTION("win32 error %lu", GetLastError())
 #define INIT_TIMEOUT 10000
 #define RF_120_NA_CRC32 0xA7BF79E4
+#define RED_120_NA_CRC32 0xBAF6C754
 
 void ModdedAppLauncher::injectDLL(HANDLE hProcess, const TCHAR *pszPath)
 {
@@ -124,7 +125,7 @@ void ModdedAppLauncher::launch()
     CloseHandle(pi.hThread);
 }
 
-GameStarter::GameStarter() :
+GameLauncher::GameLauncher() :
     ModdedAppLauncher("DashFaction.dll", RF_120_NA_CRC32)
 {
     if (!m_conf.load())
@@ -134,7 +135,24 @@ GameStarter::GameStarter() :
     }
 }
 
-std::string GameStarter::getAppPath()
+std::string GameLauncher::getAppPath()
 {
     return m_conf.gameExecutablePath;
+}
+
+EditorLauncher::EditorLauncher() :
+    ModdedAppLauncher("DashEditor.dll", RED_120_NA_CRC32)
+{
+    if (!m_conf.load())
+    {
+        // Failed to load config - save defaults
+        m_conf.save();
+    }
+}
+
+std::string EditorLauncher::getAppPath()
+{
+    size_t pos = m_conf.gameExecutablePath.find_last_of("\\/");
+    std::string workDir = m_conf.gameExecutablePath.substr(0, pos);
+    return workDir + "\\RED.exe";
 }

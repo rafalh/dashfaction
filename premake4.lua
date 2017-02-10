@@ -36,5 +36,6 @@
 	include "launcher"
 	include "common"
 	include "main"
+	include "editor_mod"
 	include "mod_common"
 	include "logger"

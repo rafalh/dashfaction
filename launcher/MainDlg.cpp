@@ -7,7 +7,6 @@
 #include "MainDlg.h"
 #include "OptionsDlg.h"
 #include "afxdialogex.h"
-#include "GameStarter.h"
 #include "GameConfig.h"
 #include "UpdateChecker.h"
 #include "version.h"

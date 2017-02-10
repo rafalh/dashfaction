@@ -5,7 +5,7 @@
 #include "stdafx.h"
 #include "LauncherApp.h"
 #include "MainDlg.h"
-#include "GameStarter.h"
+#include "ModdedAppLauncher.h"
 #include "GameConfig.h"
 
 #ifdef _DEBUG
@@ -114,7 +114,7 @@ BOOL LauncherApp::InitInstance()
 
 bool LauncherApp::LaunchGame(HWND hwnd)
 {
-    GameStarter starter;
+    GameLauncher starter;
     try
     {
         starter.launch();
@@ -160,30 +160,16 @@ bool LauncherApp::LaunchGame(HWND hwnd)
 
 bool LauncherApp::LaunchEditor(HWND hwnd)
 {
-    GameConfig conf;
+    EditorLauncher launcher;
     try
     {
-        conf.load();
+        launcher.launch();
+        return true;
     }
     catch (std::exception &e)
     {
-        MessageBoxA(hwnd, e.what(), NULL, MB_OK | MB_ICONERROR);
+        MessageBoxA(hwnd, e.what(), nullptr, MB_ICONERROR | MB_OK);
         return false;
     }
-    
-    size_t pos = conf.gameExecutablePath.find_last_of("\\/");
-    std::string gameWorkDir = conf.gameExecutablePath.substr(0, pos);
-    std::string editorPath = gameWorkDir + "\\RED.exe";
-    HINSTANCE res = ShellExecuteA(NULL, "open", editorPath.c_str(), GetCommandLineA(), gameWorkDir.c_str(), SW_SHOW);
-    if (res < (HINSTANCE)32)
-    {
-        std::stringstream ss;
-        ss << "Failed to start Level Editor. ShellExecute returned error " << (int)res << ".\n"
-            << "Verify if game executalbe path in Options is valid.";
-        std::string str = ss.str();
-        MessageBoxA(hwnd, str.c_str(), NULL, MB_OK | MB_ICONERROR);
-        return false;
-    }
-    return true;
 }
 

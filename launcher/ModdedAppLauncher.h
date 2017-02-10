@@ -41,10 +41,20 @@ protected:
     uint32_t m_expectedCrc;
 };
 
-class GameStarter : public ModdedAppLauncher
+class GameLauncher : public ModdedAppLauncher
 {
 public:
-    GameStarter();
+    GameLauncher();
+    virtual std::string getAppPath();
+
+private:
+    GameConfig m_conf;
+};
+
+class EditorLauncher : public ModdedAppLauncher
+{
+public:
+    EditorLauncher();
     virtual std::string getAppPath();
 
 private:
