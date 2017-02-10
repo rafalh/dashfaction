@@ -36,7 +36,7 @@ static void SetTextureMinMagFilter(D3DTEXTUREFILTERTYPE FilterType)
     };
     unsigned i;
     for (i = 0; i < sizeof(Addresses) / sizeof(Addresses[0]); ++i)
-        WriteMemUInt8((PVOID)(Addresses[i] + 1), (uint8_t)FilterType);
+        WriteMemUInt8(Addresses[i] + 1, (uint8_t)FilterType);
 }
 
 static void GrSetViewMatrix_FovFix(float fFovScale, float fWFarFactor)
@@ -172,71 +172,71 @@ void GrDrawRect_GrDrawPolyHook(int Num, GrVertex **ppVertices, int Flags, int iM
 void GraphicsInit()
 {
     /* Fix for "At least 8 MB of available video memory" */
-    WriteMemUInt8((PVOID)0x005460CD, ASM_SHORT_JMP_REL);
+    WriteMemUInt8(0x005460CD, ASM_SHORT_JMP_REL);
 
 #if WINDOWED_MODE_SUPPORT
     if (g_gameConfig.wndMode != GameConfig::FULLSCREEN)
     {
         /* Enable windowed mode */
-        WriteMemUInt32((PVOID)(0x004B29A5 + 6), 0xC8);
+        WriteMemUInt32(0x004B29A5 + 6, 0xC8);
         if (g_gameConfig.wndMode == GameConfig::STRETCHED)
         {
             uint32_t WndStyle = WS_POPUP | WS_SYSMENU;
-            WriteMemUInt32((PVOID)(0x0050C474 + 1), WndStyle);
-            WriteMemUInt32((PVOID)(0x0050C4E3 + 1), WndStyle);
+            WriteMemUInt32(0x0050C474 + 1, WndStyle);
+            WriteMemUInt32(0x0050C4E3 + 1, WndStyle);
         }
     }
 #endif
 
-    //WriteMemUInt8((PVOID)0x00524C98, ASM_SHORT_JMP_REL); // disable window hooks
+    //WriteMemUInt8(0x00524C98, ASM_SHORT_JMP_REL); // disable window hooks
 
 #if MULTISAMPLING_SUPPORT
     if (g_gameConfig.msaa)
     {
-        WriteMemUInt32((PVOID)(0x00545B4D + 6), D3DSWAPEFFECT_DISCARD); // full screen
-        WriteMemUInt32((PVOID)(0x00545AE3 + 6), D3DSWAPEFFECT_DISCARD); // windowed
+        WriteMemUInt32(0x00545B4D + 6, D3DSWAPEFFECT_DISCARD); // full screen
+        WriteMemUInt32(0x00545AE3 + 6, D3DSWAPEFFECT_DISCARD); // windowed
     }
 #endif
 
     // Replace memset call to SetupPP
-    WriteMemUInt8Repeat((PVOID)0x00545AA7, ASM_NOP, 0x00545AB5 - 0x00545AA7);
-    WriteMemUInt8((PVOID)0x00545AA7, ASM_LONG_CALL_REL);
-    WriteMemPtr((PVOID)(0x00545AA7 + 1), (PVOID)((ULONG_PTR)SetupPP - (0x00545AA7 + 0x5)));
-    WriteMemUInt8Repeat((PVOID)(0x00545BA5), ASM_NOP, 6); // dont set PP.Flags
+    WriteMemUInt8(0x00545AA7, ASM_NOP, 0x00545AB5 - 0x00545AA7);
+    WriteMemUInt8(0x00545AA7, ASM_LONG_CALL_REL);
+    WriteMemInt32(0x00545AA7 + 1, (uintptr_t)SetupPP - (0x00545AA7 + 0x5));
+    WriteMemUInt8(0x00545BA5, ASM_NOP, 6); // dont set PP.Flags
 
     /* nVidia issue fix (make sure D3Dsc is enabled) */
-    WriteMemUInt8((PVOID)0x00546154, 1);
+    WriteMemUInt8(0x00546154, 1);
 
 #if WIDESCREEN_FIX
     /* Fix FOV for widescreen */
-    WriteMemUInt8((PVOID)0x00547344, ASM_LONG_JMP_REL);
-    WriteMemPtr((PVOID)(0x00547344 + 1), (PVOID)((ULONG_PTR)GrSetViewMatrix_00547344 - (0x00547344 + 0x5)));
-    WriteMemFloat((PVOID)0x0058A29C, 0.0003f); // factor related to near plane, default is 0.000588f
+    WriteMemUInt8(0x00547344, ASM_LONG_JMP_REL);
+    WriteMemInt32(0x00547344 + 1, (uintptr_t)GrSetViewMatrix_00547344 - (0x00547344 + 0x5));
+    WriteMemFloat(0x0058A29C, 0.0003f); // factor related to near plane, default is 0.000588f
 #endif
 
     /* Don't use LOD models */
     if (g_gameConfig.disableLodModels)
-        WriteMemUInt8((PVOID)0x0052FACC, ASM_SHORT_JMP_REL);
+        WriteMemUInt8(0x0052FACC, ASM_SHORT_JMP_REL);
 
     // Better error message in case of device creation error
-    WriteMemUInt8((PVOID)0x00545BEF, ASM_LONG_JMP_REL);
-    WriteMemPtr((PVOID)(0x00545BEF + 1), (PVOID)((ULONG_PTR)GrCreateD3DDeviceError_00545BEF - (0x00545BEF + 0x5)));
+    WriteMemUInt8(0x00545BEF, ASM_LONG_JMP_REL);
+    WriteMemInt32(0x00545BEF + 1, (uintptr_t)GrCreateD3DDeviceError_00545BEF - (0x00545BEF + 0x5));
 
     // Fix rendering of right and bottom edges of viewport
-    WriteMemUInt8((PVOID)0x00431D9F, ASM_SHORT_JMP_REL);
-    WriteMemUInt8((PVOID)0x00431F6B, ASM_SHORT_JMP_REL);
-    WriteMemUInt8((PVOID)0x004328CF, ASM_SHORT_JMP_REL);
-    WriteMemUInt8((PVOID)0x0043298F, ASM_LONG_JMP_REL);
-    WriteMemPtr((PVOID)(0x0043298F + 1), (PVOID)((ULONG_PTR)0x004329DC - (0x0043298F + 0x5)));
-    WriteMemUInt8((PVOID)0x005509C4, ASM_LONG_JMP_REL);
-    WriteMemPtr((PVOID)(0x005509C4 + 1), (PVOID)((ULONG_PTR)GrClearZBuffer_005509C4 - (0x005509C4 + 0x5)));
+    WriteMemUInt8(0x00431D9F, ASM_SHORT_JMP_REL);
+    WriteMemUInt8(0x00431F6B, ASM_SHORT_JMP_REL);
+    WriteMemUInt8(0x004328CF, ASM_SHORT_JMP_REL);
+    WriteMemUInt8(0x0043298F, ASM_LONG_JMP_REL);
+    WriteMemInt32(0x0043298F + 1, (uintptr_t)0x004329DC - (0x0043298F + 0x5));
+    WriteMemUInt8(0x005509C4, ASM_LONG_JMP_REL);
+    WriteMemInt32(0x005509C4 + 1, (uintptr_t)GrClearZBuffer_005509C4 - (0x005509C4 + 0x5));
 
     // Left and top viewport edge fix for MSAA (RF does similar thing in GrDrawTextureD3D)
-    WriteMemUInt8((PVOID)0x005478C6, ASM_FADD);
-    WriteMemUInt8((PVOID)0x005478D7, ASM_FADD);
-    WriteMemPtr((PVOID)(0x005478C6 + 2), &g_GrClippedGeomOffsetX);
-    WriteMemPtr((PVOID)(0x005478D7 + 2), &g_GrClippedGeomOffsetY);
-    WriteMemPtr((PVOID)(0x0050DD69 + 1), (PVOID)((ULONG_PTR)GrDrawRect_GrDrawPolyHook - (0x0050DD69 + 0x5)));
+    WriteMemUInt8(0x005478C6, ASM_FADD);
+    WriteMemUInt8(0x005478D7, ASM_FADD);
+    WriteMemPtr(0x005478C6 + 2, &g_GrClippedGeomOffsetX);
+    WriteMemPtr(0x005478D7 + 2, &g_GrClippedGeomOffsetY);
+    WriteMemInt32(0x0050DD69 + 1, (uintptr_t)GrDrawRect_GrDrawPolyHook - (0x0050DD69 + 0x5));
 }
 
 void GraphicsAfterGameInit()

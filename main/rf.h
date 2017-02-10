@@ -359,11 +359,11 @@ namespace rf
 
     struct SKeyState
     {
-        int field_0;
-        int field_4;
+        __int16 DefaultScanCodes[2];
+        __int16 DefaultMouseBtnId;
+        __int16 field_6;
         int field_8;
-        int field_C;
-        int field_10;
+        CString strName;
         __int16 ScanCodes[2];
         __int16 MouseBtnId;
         __int16 field_1A;
@@ -391,6 +391,40 @@ namespace rf
         int field_F24;
         int field_F28;
     };
+    
+    struct SPlayerSettings
+    {
+        CGameControls Controls;
+        int field_F2C;
+        int field_F30;
+        BYTE field_F34[4];
+        char field_F38;
+        char field_F39;
+        char field_F3A;
+        char bHudVisible;
+        char field_F3C;
+        char field_E59;
+        char field_E5A;
+        char field_E5B;
+        char field_F40;
+        char field_F41;
+        char ShadowsEnabled;
+        char DecalsEnabled;
+        char DynamicLightiningEnabled;
+        char field_F45;
+        char field_F46;
+        char field_F47;
+        char FilteringLevel;
+        char field_F49;
+        char field_F4A;
+        char field_F4B;
+        int DetailLevel;
+        int TexturesResolutionLevel;
+        int CharacterDetailLevel;
+        float field_F58;
+        int MpCharacter;
+        char szName[12];
+    };
 
     struct CPlayer;
     struct CEntity;
@@ -399,10 +433,9 @@ namespace rf
     {
         CEntity *pEntity;
         CPlayer *pPlayer;
-        enum { RF_CAM_1ST_PERSON, RF_CAM_3RD_PERSON, RF_CAM_FREE } Type;
+        enum { CAM_1ST_PERSON, CAM_3RD_PERSON, CAM_FREE } Type;
     };
 
-    struct SPlayerStats;
     struct CAnimMesh;
 
     struct CPlayer
@@ -467,35 +500,7 @@ namespace rf
         float fFov;
         int ViewMode;
         int field_E0;
-        CGameControls Controls;
-        int field_F2C;
-        int field_F30;
-        BYTE field_F34[4];
-        char field_F38;
-        char field_F39;
-        char field_F3A;
-        char bHudVisible;
-        int field_F3C;
-        char field_F40;
-        char field_F41;
-        char ShadowsEnabled;
-        char DecalsEnabled;
-        char DynamicLightiningEnabled;
-        char field_F45;
-        char field_F46;
-        char field_F47;
-        char FilteringLevel;
-        char field_F49;
-        char field_F4A;
-        char field_F4B;
-        int DetailLevel;
-        int TexturesResolutionLevel;
-        int CharacterDetailLevel;
-        int field_F58;
-        int MpCharacter;
-        int field_F60;
-        int field_F64;
-        int field_F68;
+        SPlayerSettings Settings;
         int field_F6C;
         int field_F70;
         int field_F74;
@@ -505,7 +510,7 @@ namespace rf
         int WeaponSwitchCounter;
         int field_F88;
         int field_F8C;
-        int field_F90;
+        int UnkTimerF90;
         char bInZoomMode;
         char field_F95;
         char field_F96;
@@ -527,18 +532,8 @@ namespace rf
         int field_FB8;
         int field_FBC;
         float field_FC0;
-        int field_FC4;
-        int field_FC8;
-        int field_FCC;
-        int field_FD0;
-        int field_FD4;
-        int field_FD8;
-        int field_FDC;
-        int field_FE0;
-        int field_FE4;
-        int field_FE8;
-        int field_FEC;
-        int field_FF0;
+        CVector3 field_FC4;
+        CMatrix3 field_FD0;
         CMatrix3 matRotFpsWeapon;
         CVector3 vPosFpsWeapon;
         int field_1024;
@@ -566,7 +561,7 @@ namespace rf
         int field_107C;
         int field_1080;
         int field_1084;
-        int field_1088;
+        int RailgunScannerBmHandle;
         int field_108C[17];
         int HitScrColor;
         int HitScrTime;
@@ -579,7 +574,7 @@ namespace rf
         int PrefWeapons[32];
         float field_11D4;
         float field_11D8;
-        int field_11DC;
+        void(__cdecl *field_11DC)(CPlayer *);
         int field_11E0;
         int field_11E4[7];
         CPlayerNetData *pNwData;
@@ -737,7 +732,7 @@ namespace rf
 
     /* Entity */
 
-    typedef void ENTITY_CLASS;
+    typedef void SEntityClass;
 
     struct SMovementMode
     {
@@ -770,11 +765,11 @@ namespace rf
 
     struct CEntity
     {
-        CObject Head;
+        struct CObject Head;
         int field_290;
-        ENTITY_CLASS *pClass;
+        SEntityClass *pClass;
         int ClassId;
-        ENTITY_CLASS *pClass2;
+        SEntityClass *pClass2;
         SWeaponSelection WeaponSel;
         int Ammo[8];
         char field_2CC[492];
@@ -785,7 +780,7 @@ namespace rf
         int field_5C8[80];
         SEntityMotion MotionChange;
         int field_72C[12];
-        int field_75C;
+        int UnkHandle;
         int field_760[20];
         float LastRotTime;
         float LastMoveTime;
@@ -796,12 +791,16 @@ namespace rf
         CMatrix3 matWeaponRot;
         int field_804;
         int field_808;
-        int field_80C;
-        int field_810;
-        int field_814[4];
+        int MoveSnd;
+        int field_810_Flags;
+        int field_814;
+        int UnkTimer818;
+        int LaunchSnd;
+        int field_820;
         __int16 KillType;
         __int16 field_826;
-        int field_828[9];
+        int field_828[8];
+        CAnimMesh *field_848;
         int field_84C;
         int field_850;
         int field_854;
@@ -819,13 +818,28 @@ namespace rf
         int field_8C4;
         int field_8C8;
         int field_8CC;
-        int field_8D0[206];
-        int field_C08[200];
+        int field_8D0;
+        int field_8D4;
+        int field_8D8;
+        int field_8DC;
+        int field_8E0;
+        int field_8E4[96];
+        int field_A64[104];
+        int field_C04;
+        int field_C08[55];
+        int UnkAnimIdxCE4;
+        int field_CE8;
+        int field_CEC;
+        int field_CF0;
+        int UnkAnimIdxCF4;
+        int field_CF8[140];
         int field_F28[200];
         int field_1248[6];
         int field_1260;
         int field_1264;
-        int field_1268[71];
+        int field_1268[67];
+        int UnkTimer1374;
+        int field_1378[3];
         int field_1384;
         int field_1388;
         int field_138C;
@@ -839,17 +853,25 @@ namespace rf
         int field_13C4[7];
         CVector3 field_13E0;
         int field_13EC;
-        int field_13F0[4];
+        int field_13F0;
+        int UnkBoneId13F4;
+        void *field_13F8;
+        int field_13FC;
         int field_1400;
-        char field_1404[16];
-        int field_1414;
+        int field_1404;
+        float fUnkCountDownTime1408;
+        int UnkTimer140C;
+        int field_1410;
+        int SplashInCounter;
         char field_1418[16];
         int field_1428;
         int field_142C;
         CPlayer *pLocalPlayer;
         CVector3 vPitchMin;
         CVector3 vPitchMax;
-        int field_144C[8];
+        int field_144C[6];
+        float fTime;
+        int field_1468;
         int hUnkEntity;
         int field_1470;
         int AmbientColor;
@@ -858,7 +880,7 @@ namespace rf
         int field_1480;
         int field_1484;
         int field_1488;
-        int RespawnVfx;
+        CAnimMesh *RespawnVfx;
         int field_1490;
     };
 
@@ -905,10 +927,10 @@ namespace rf
     } BANLIST_ENTRY;
 
     typedef unsigned(*PFN_GET_GAME_TYPE)(void);
-    constexpr auto RfGetGameType = (PFN_GET_GAME_TYPE)0x00470770;
+    constexpr auto GetGameType = (PFN_GET_GAME_TYPE)0x00470770;
 
     typedef unsigned(*PFN_GET_PLAYERS_COUNT)(void);
-    constexpr auto RfGetPlayersCount = (PFN_GET_PLAYERS_COUNT)0x00484830;
+    constexpr auto GetPlayersCount = (PFN_GET_PLAYERS_COUNT)0x00484830;
 
     typedef uint8_t(*PFN_GET_TEAM_SCORE)(void);
     constexpr auto CtfGetRedScore = (PFN_GET_TEAM_SCORE)0x00475020;
@@ -917,16 +939,16 @@ namespace rf
     constexpr auto TdmGetBlueScore = (PFN_GET_TEAM_SCORE)0x00482900;
 
     typedef void(*PFN_PACKET_HANDLER)(BYTE *pData, NET_ADDR *pAddr);
-    constexpr auto RfHandleNewPlayerPacket = (PFN_PACKET_HANDLER)0x0047A580;
+    constexpr auto HandleNewPlayerPacket = (PFN_PACKET_HANDLER)0x0047A580;
 
     typedef const char *(*PFN_GET_JOIN_FAILED_STR)(unsigned Reason);
     constexpr auto GetJoinFailedStr = (PFN_GET_JOIN_FAILED_STR)0x0047BE60;
 
     typedef void(*PFN_KICK_PLAYER)(CPlayer *pPlayer);
-    constexpr auto RfKickPlayer = (PFN_KICK_PLAYER)0x0047BF00;
+    constexpr auto KickPlayer = (PFN_KICK_PLAYER)0x0047BF00;
 
     typedef void(*PFN_BAN_IP)(NET_ADDR *pAddr);
-    constexpr auto RfBanIp = (PFN_BAN_IP)0x0046D0F0;
+    constexpr auto BanIp = (PFN_BAN_IP)0x0046D0F0;
 
     constexpr auto g_pServAddr = (NET_ADDR*)0x0064EC5C;
     constexpr auto g_pstrServName = (CString*)0x0064EC28;
@@ -971,6 +993,7 @@ namespace rf
     constexpr auto g_pMediumFontId = (int*)0x0063C060;
     constexpr auto g_pSmallFontId = (int*)0x0063C068;
     constexpr auto g_ppszStringsTable = (char**)0x007CBBF0;
+    constexpr auto g_pbDirectInputDisabled = (bool*)0x005A4F88;
 
     constexpr auto g_pbDbgNetwork = (uint32_t*)0x006FED24;
     constexpr auto g_pbDbgFlagsArray = (uint8_t*)0x0062FE19;
@@ -998,8 +1021,6 @@ namespace rf
     constexpr auto RfSplitScreen = (PFN_SPLIT_SCREEN)0x00480D30;
 
     constexpr auto RegReadDword = (int(*)(char *pszSubKeyName, LPCSTR lpValueName, DWORD *lpData, int DefaultValue))0x004A4920;
-
-    constexpr auto g_pbDirectInputDisabled = (bool*)0x005A4F88;
 
     constexpr auto SwitchMenu = (int(*)(int MenuId, bool bForce))0x00434190;
     constexpr auto SetNextLevelFilename = (void(*)(CString strFilename, CString strSecond))0x0045E2E0;

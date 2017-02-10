@@ -107,12 +107,12 @@ void OnPlayerKill(CPlayer *pKilled, CPlayer *pKiller)
 void InitKill(void)
 {
     /* Player kill handling */
-    WriteMemUInt8((PVOID)0x00420703, ASM_PUSH_EBX);
-    WriteMemUInt8((PVOID)0x00420704, ASM_PUSH_EDI);
-    WriteMemUInt8((PVOID)0x00420705, ASM_LONG_CALL_REL);
-    WriteMemUInt32((PVOID)0x00420706, ((ULONG_PTR)OnPlayerKill) - (0x00420705 + 0x5));
-    WriteMemUInt16((PVOID)0x0042070A, ASM_ADD_ESP_BYTE);
-    WriteMemUInt8((PVOID)0x0042070C, 8);
-    WriteMemUInt8((PVOID)0x0042070D, ASM_LONG_JMP_REL);
-    WriteMemUInt32((PVOID)0x0042070E, 0x00420B03 - (0x0042070D + 0x5));
+    WriteMemUInt8(0x00420703, ASM_PUSH_EBX);
+    WriteMemUInt8(0x00420704, ASM_PUSH_EDI);
+    WriteMemUInt8(0x00420705, ASM_LONG_CALL_REL);
+    WriteMemInt32(0x00420705 + 1, (uintptr_t)OnPlayerKill - (0x00420705 + 0x5));
+    WriteMemUInt16(0x0042070A, ASM_ADD_ESP_BYTE);
+    WriteMemUInt8(0x0042070C, 8);
+    WriteMemUInt8(0x0042070D, ASM_LONG_JMP_REL);
+    WriteMemInt32(0x0042070D + 1, 0x00420B03 - (0x0042070D + 0x5));
 }

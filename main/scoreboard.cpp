@@ -31,7 +31,7 @@ static void DrawScoreboardInternalHook(BOOL bDraw)
         CPlayer *Players[32];
         CString strName, strNameNew;
         
-        GameType = RfGetGameType();
+        GameType = GetGameType();
         
         pPlayer = *g_ppPlayersList;
         cPlayers = 0;
@@ -81,9 +81,9 @@ static void DrawScoreboardInternalHook(BOOL bDraw)
         /* Draw team scores */
         if (GameType == RF_CTF)
         {
-            if(!g_HudFlagRedTexture)
+            if (!g_HudFlagRedTexture)
                 g_HudFlagRedTexture = BmLoad("hud_flag_red.tga", -1, TRUE);
-            if(!g_HudFlagBlueTexture)
+            if (!g_HudFlagBlueTexture)
                 g_HudFlagBlueTexture = BmLoad("hud_flag_blue.tga", -1, TRUE);
             GrDrawImage(g_HudFlagRedTexture, x + cx * 2 / 6, y, *g_pGrImageMaterial);
             GrDrawImage(g_HudFlagBlueTexture, x + cx * 4 / 6, y, *g_pGrImageMaterial);
@@ -177,8 +177,8 @@ static void DrawScoreboardInternalHook(BOOL bDraw)
 
 void InitScoreboard(void)
 {
-    WriteMemUInt8((PVOID)0x00470880, ASM_LONG_JMP_REL);
-    WriteMemUInt32((PVOID)(0x00470880 + 1), (ULONG_PTR)DrawScoreboardInternalHook - (0x00470880 + 0x5));
+    WriteMemUInt8(0x00470880, ASM_LONG_JMP_REL);
+    WriteMemInt32(0x00470880 + 1, (uintptr_t)DrawScoreboardInternalHook - (0x00470880 + 0x5));
 }
 
 void SetScoreboardHidden(bool hidden)

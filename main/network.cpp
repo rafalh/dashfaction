@@ -21,7 +21,7 @@ static void HandleNewPlayerPacketHook(BYTE *pData, NET_ADDR *pAddr)
 {
     if (*g_pbNetworkGame && !*g_pbLocalNetworkGame && GetForegroundWindow() != *g_phWnd)
         Beep(750, 300);
-    RfHandleNewPlayerPacket(pData, pAddr);
+    HandleNewPlayerPacket(pData, pAddr);
 }
 
 extern "C" void SafeStrCpy(char *pDest, const char *pSrc, size_t DestSize)
@@ -306,62 +306,62 @@ NAKED void HandleRconPacket_Security_0046C751()
 void NetworkInit()
 {
     /* ProcessGamePackets hook (not reliable only) */
-    WriteMemPtr((PVOID)0x00479245, (PVOID)((ULONG_PTR)ProcessUnreliableGamePacketsHook - (0x00479244 + 0x5)));
+    WriteMemInt32(0x00479245, (uintptr_t)ProcessUnreliableGamePacketsHook - (0x00479244 + 0x5));
 
     /* Improve SimultaneousPing */
     *g_pSimultaneousPing = 32;
 
     /* Allow ports < 1023 (especially 0 - any port) */
-    WriteMemUInt8Repeat((PVOID)0x00528F24, 0x90, 2);
+    WriteMemUInt8(0x00528F24, 0x90, 2);
 
     /* Default port: 0 */
-    WriteMemUInt16((PVOID)0x0059CDE4, 0);
+    WriteMemUInt16(0x0059CDE4, 0);
 
     /* Dont overwrite MpCharacter in Single Player */
-    WriteMemUInt8Repeat((PVOID)0x004A415F, ASM_NOP, 10);
+    WriteMemUInt8(0x004A415F, ASM_NOP, 10);
 
     /* Show valid info for servers with incompatible version */
-    WriteMemUInt8((PVOID)0x0047B3CB, ASM_SHORT_JMP_REL);
+    WriteMemUInt8(0x0047B3CB, ASM_SHORT_JMP_REL);
 
     /* Change default Server List sort to players count */
-    WriteMemUInt32((PVOID)0x00599D20, 4);
+    WriteMemUInt32(0x00599D20, 4);
     
     /* Beep when new player joins */
-    WriteMemPtr((PVOID)0x0059E158, HandleNewPlayerPacketHook);
+    WriteMemPtr(0x0059E158, HandleNewPlayerPacketHook);
 
     /* Buffer Overflow fixes */
-    WriteMemUInt8((PVOID)0x0047B2D3, ASM_LONG_JMP_REL);
-    WriteMemUInt32((PVOID)(0x0047B2D3 + 1), ((ULONG_PTR)HandleGameInfoPacket_Security_0047B2D3 - (0x0047B2D3 + 0x5)));
-    WriteMemUInt8((PVOID)0x0047B334, ASM_LONG_JMP_REL);
-    WriteMemUInt32((PVOID)(0x0047B334 + 1), ((ULONG_PTR)HandleGameInfoPacket_Security_0047B334 - (0x0047B334 + 0x5)));
+    WriteMemUInt8(0x0047B2D3, ASM_LONG_JMP_REL);
+    WriteMemUInt32(0x0047B2D3 + 1, (uintptr_t)HandleGameInfoPacket_Security_0047B2D3 - (0x0047B2D3 + 0x5));
+    WriteMemUInt8(0x0047B334, ASM_LONG_JMP_REL);
+    WriteMemUInt32(0x0047B334 + 1, (uintptr_t)HandleGameInfoPacket_Security_0047B334 - (0x0047B334 + 0x5));
 #ifndef TEST_BUFFER_OVERFLOW_FIXES
-    WriteMemUInt8((PVOID)0x0047B38E, ASM_LONG_JMP_REL);
-    WriteMemUInt32((PVOID)(0x0047B38E + 1), ((ULONG_PTR)HandleGameInfoPacket_Security_0047B38E - (0x0047B38E + 0x5)));
+    WriteMemUInt8(0x0047B38E, ASM_LONG_JMP_REL);
+    WriteMemUInt32(0x0047B38E + 1, (uintptr_t)HandleGameInfoPacket_Security_0047B38E - (0x0047B38E + 0x5));
 #endif
-    WriteMemUInt8((PVOID)0x0047AD4E, ASM_LONG_JMP_REL);
-    WriteMemUInt32((PVOID)(0x0047AD4E + 1), ((ULONG_PTR)HandleJoinReqPacket_Security_0047AD4E - (0x0047AD4E + 0x5)));
-    WriteMemUInt8((PVOID)0x0047A8AE, ASM_LONG_JMP_REL);
-    WriteMemUInt32((PVOID)(0x0047A8AE + 1), ((ULONG_PTR)HandleJoinAcceptPacket_Security_0047A8AE - (0x0047A8AE + 0x5)));
-    WriteMemUInt8((PVOID)0x0047A5F4, ASM_LONG_JMP_REL);
-    WriteMemUInt32((PVOID)(0x0047A5F4 + 1), ((ULONG_PTR)HandleNewPlayerPacket_Security_0047A5F4 - (0x0047A5F4 + 0x5)));
-    WriteMemUInt8((PVOID)0x00481EE6, ASM_LONG_JMP_REL);
-    WriteMemUInt32((PVOID)(0x00481EE6 + 1), ((ULONG_PTR)HandlePlayersPacket_Security_00481EE6 - (0x00481EE6 + 0x5)));
-    WriteMemUInt8((PVOID)0x00481BEC, ASM_LONG_JMP_REL);
-    WriteMemUInt32((PVOID)(0x00481BEC + 1), ((ULONG_PTR)HandleStateInfoReqPacket_Security_00481BEC - (0x00481BEC + 0x5)));
-    WriteMemUInt8((PVOID)0x004448B0, ASM_LONG_JMP_REL);
-    WriteMemUInt32((PVOID)(0x004448B0 + 1), ((ULONG_PTR)HandleChatLinePacket_Security_004448B0 - (0x004448B0 + 0x5)));
-    WriteMemUInt8((PVOID)0x0046EB24, ASM_LONG_JMP_REL);
-    WriteMemUInt32((PVOID)(0x0046EB24 + 1), ((ULONG_PTR)HandleNameChangePacket_Security_0046EB24 - (0x0046EB24 + 0x5)));
-    WriteMemUInt8((PVOID)0x0047C1C3, ASM_LONG_JMP_REL);
-    WriteMemUInt32((PVOID)(0x0047C1C3 + 1), ((ULONG_PTR)HandleLeaveLimboPacket_Security_0047C1C3 - (0x0047C1C3 + 0x5)));
-    WriteMemUInt8((PVOID)0x0047EE6E, ASM_LONG_JMP_REL);
-    WriteMemUInt32((PVOID)(0x0047EE6E + 1), ((ULONG_PTR)HandleObjKillPacket_Security_0047EE6E - (0x0047EE6E + 0x5)));
-    WriteMemUInt8((PVOID)0x00475474, ASM_LONG_JMP_REL);
-    WriteMemUInt32((PVOID)(0x00475474 + 1), ((ULONG_PTR)HandleEntityCreatePacket_Security_00475474 - (0x00475474 + 0x5)));
-    WriteMemUInt8((PVOID)0x00479FAA, ASM_LONG_JMP_REL);
-    WriteMemUInt32((PVOID)(0x00479FAA + 1), ((ULONG_PTR)HandleItemCreatePacket_Security_00479FAA - (0x00479FAA + 0x5)));
-    WriteMemUInt8((PVOID)0x0046C590, ASM_LONG_JMP_REL);
-    WriteMemUInt32((PVOID)(0x0046C590 + 1), ((ULONG_PTR)HandleRconReqPacket_Security_0046C590 - (0x0046C590 + 0x5)));
-    WriteMemUInt8((PVOID)0x0046C751, ASM_LONG_JMP_REL);
-    WriteMemUInt32((PVOID)(0x0046C751 + 1), ((ULONG_PTR)HandleRconPacket_Security_0046C751 - (0x0046C751 + 0x5)));
+    WriteMemUInt8(0x0047AD4E, ASM_LONG_JMP_REL);
+    WriteMemUInt32(0x0047AD4E + 1, (uintptr_t)HandleJoinReqPacket_Security_0047AD4E - (0x0047AD4E + 0x5));
+    WriteMemUInt8(0x0047A8AE, ASM_LONG_JMP_REL);
+    WriteMemUInt32(0x0047A8AE + 1, (uintptr_t)HandleJoinAcceptPacket_Security_0047A8AE - (0x0047A8AE + 0x5));
+    WriteMemUInt8(0x0047A5F4, ASM_LONG_JMP_REL);
+    WriteMemUInt32(0x0047A5F4 + 1, (uintptr_t)HandleNewPlayerPacket_Security_0047A5F4 - (0x0047A5F4 + 0x5));
+    WriteMemUInt8(0x00481EE6, ASM_LONG_JMP_REL);
+    WriteMemUInt32(0x00481EE6 + 1, (uintptr_t)HandlePlayersPacket_Security_00481EE6 - (0x00481EE6 + 0x5));
+    WriteMemUInt8(0x00481BEC, ASM_LONG_JMP_REL);
+    WriteMemUInt32(0x00481BEC + 1, (uintptr_t)HandleStateInfoReqPacket_Security_00481BEC - (0x00481BEC + 0x5));
+    WriteMemUInt8(0x004448B0, ASM_LONG_JMP_REL);
+    WriteMemUInt32(0x004448B0 + 1, (uintptr_t)HandleChatLinePacket_Security_004448B0 - (0x004448B0 + 0x5));
+    WriteMemUInt8(0x0046EB24, ASM_LONG_JMP_REL);
+    WriteMemUInt32(0x0046EB24 + 1, (uintptr_t)HandleNameChangePacket_Security_0046EB24 - (0x0046EB24 + 0x5));
+    WriteMemUInt8(0x0047C1C3, ASM_LONG_JMP_REL);
+    WriteMemUInt32(0x0047C1C3 + 1, (uintptr_t)HandleLeaveLimboPacket_Security_0047C1C3 - (0x0047C1C3 + 0x5));
+    WriteMemUInt8(0x0047EE6E, ASM_LONG_JMP_REL);
+    WriteMemUInt32(0x0047EE6E + 1, (uintptr_t)HandleObjKillPacket_Security_0047EE6E - (0x0047EE6E + 0x5));
+    WriteMemUInt8(0x00475474, ASM_LONG_JMP_REL);
+    WriteMemUInt32(0x00475474 + 1, (uintptr_t)HandleEntityCreatePacket_Security_00475474 - (0x00475474 + 0x5));
+    WriteMemUInt8(0x00479FAA, ASM_LONG_JMP_REL);
+    WriteMemUInt32(0x00479FAA + 1, (uintptr_t)HandleItemCreatePacket_Security_00479FAA - (0x00479FAA + 0x5));
+    WriteMemUInt8(0x0046C590, ASM_LONG_JMP_REL);
+    WriteMemUInt32(0x0046C590 + 1, (uintptr_t)HandleRconReqPacket_Security_0046C590 - (0x0046C590 + 0x5));
+    WriteMemUInt8(0x0046C751, ASM_LONG_JMP_REL);
+    WriteMemUInt32(0x0046C751 + 1, (uintptr_t)HandleRconPacket_Security_0046C751 - (0x0046C751 + 0x5));
 }

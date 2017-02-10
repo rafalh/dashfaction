@@ -76,8 +76,8 @@ static void GammaMsgHandler(UINT uMsg, WPARAM wParam, LPARAM lParam)
 void InitGamma(void)
 {
     /* Gamma fix */
-    WriteMemUInt8((PVOID)0x00547A60, ASM_LONG_JMP_REL);
-    WriteMemUInt32((PVOID)(0x00547A60 + 1), ((ULONG_PTR)GrUpdateGammaRampHook) - (0x00547A60 + 0x5));
+    WriteMemUInt8(0x00547A60, ASM_LONG_JMP_REL);
+    WriteMemInt32(0x00547A60 + 1, ((uintptr_t)GrUpdateGammaRampHook) - (0x00547A60 + 0x5));
     
     rf::AddMsgHandler(GammaMsgHandler);
 }

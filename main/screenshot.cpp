@@ -136,12 +136,12 @@ void InitScreenshot(void)
 #if MULTISAMPLING_SUPPORT
     if (g_gameConfig.msaa)
     {
-        WriteMemUInt8((PVOID)0x0050DFF0, ASM_LONG_JMP_REL);
-        WriteMemPtr((PVOID)(0x0050DFF0 + 1), (PVOID)((ULONG_PTR)GrReadBackBufferHook - (0x0050DFF0 + 0x5)));
+        WriteMemUInt8(0x0050DFF0, ASM_LONG_JMP_REL);
+        WriteMemInt32(0x0050DFF0 + 1, (uintptr_t)GrReadBackBufferHook - (0x0050DFF0 + 0x5));
     }
 #endif
 
-    WriteMemPtr((PVOID)(0x004367CA + 2), &g_ScreenshotDirId);
+    WriteMemPtr(0x004367CA + 2, &g_ScreenshotDirId);
 }
 
 void CleanupScreenshot(void)
@@ -155,12 +155,12 @@ void ScreenshotAfterGameInit()
     if (rf::g_pGrScreen->MaxHeight > 1024)
     {
         g_ScreenshotScanlinesBuf = (BYTE**)malloc(rf::g_pGrScreen->MaxHeight * sizeof(BYTE*));
-        WriteMemUInt8((PVOID)0x0055A066, ASM_MOV_ECX);
-        WriteMemPtr((PVOID)(0x0055A066 + 1), &g_ScreenshotScanlinesBuf[0]);
-        WriteMemUInt8Repeat((PVOID)0x0055A06B, ASM_NOP, 2);
-        WriteMemUInt8((PVOID)0x0055A0DF, ASM_MOV_EAX);
-        WriteMemPtr((PVOID)(0x0055A0DF + 1), g_ScreenshotScanlinesBuf);
-        WriteMemUInt8Repeat((PVOID)0x0055A0E4, ASM_NOP, 2);
+        WriteMemUInt8(0x0055A066, ASM_MOV_ECX);
+        WriteMemPtr(0x0055A066 + 1, &g_ScreenshotScanlinesBuf[0]);
+        WriteMemUInt8(0x0055A06B, ASM_NOP, 2);
+        WriteMemUInt8(0x0055A0DF, ASM_MOV_EAX);
+        WriteMemPtr(0x0055A0DF + 1, g_ScreenshotScanlinesBuf);
+        WriteMemUInt8(0x0055A0E4, ASM_NOP, 2);
     }
 
     char FullPath[MAX_PATH];

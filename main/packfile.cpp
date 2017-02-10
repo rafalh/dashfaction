@@ -396,14 +396,14 @@ static void VfsInitHook(void)
     // Note: language changes in binary are done here to make sure RootPath is already initialized
 
     // Switch UI language - can be anything even if this is US edition
-    WriteMemUInt8((PVOID)(0x004B27D2 + 1), (uint8_t)GetInstalledGameLang());
+    WriteMemUInt8(0x004B27D2 + 1, (uint8_t)GetInstalledGameLang());
 
     // Switch localized tables names
     if (GetInstalledGameLang() != LANG_EN)
     {
-        WriteMemPtr((PVOID)(0x0043DCAB + 1), (PVOID)"localized_credits.tbl");
-        WriteMemPtr((PVOID)(0x0043E50B + 1), (PVOID)"localized_endgame.tbl");
-        WriteMemPtr((PVOID)(0x004B082B + 1), (PVOID)"localized_strings.tbl");
+        WriteMemPtr(0x0043DCAB + 1, (PVOID)"localized_credits.tbl");
+        WriteMemPtr(0x0043E50B + 1, (PVOID)"localized_endgame.tbl");
+        WriteMemPtr(0x004B082B + 1, (PVOID)"localized_strings.tbl");
     }
 }
 
@@ -419,39 +419,39 @@ static void VfsCleanupHook(void)
 
 void VfsApplyHooks(void)
 {
-    WriteMemUInt8((PVOID)0x0052BCA0, ASM_LONG_JMP_REL);
-    WriteMemUInt32((PVOID)0x0052BCA1, ((ULONG_PTR)VfsAddFileToLookupTableHook) - (0x0052BCA0 + 0x5));
+    WriteMemUInt8(0x0052BCA0, ASM_LONG_JMP_REL);
+    WriteMemInt32(0x0052BCA0 + 1, (uintptr_t)VfsAddFileToLookupTableHook - (0x0052BCA0 + 0x5));
     
-    WriteMemUInt8((PVOID)0x0052BD40, ASM_LONG_JMP_REL);
-    WriteMemUInt32((PVOID)0x0052BD41, ((ULONG_PTR)VfsAddPackfileEntriesHook) - (0x0052BD40 + 0x5));
+    WriteMemUInt8(0x0052BD40, ASM_LONG_JMP_REL);
+    WriteMemInt32(0x0052BD40 + 1, (uintptr_t)VfsAddPackfileEntriesHook - (0x0052BD40 + 0x5));
     
-    WriteMemUInt8((PVOID)0x0052C4D0, ASM_LONG_JMP_REL);
-    WriteMemUInt32((PVOID)0x0052C4D1, ((ULONG_PTR)VfsBuildPackfileEntriesListHook) - (0x0052C4D0 + 0x5));
+    WriteMemUInt8(0x0052C4D0, ASM_LONG_JMP_REL);
+    WriteMemInt32(0x0052C4D0 + 1, (uintptr_t)VfsBuildPackfileEntriesListHook - (0x0052C4D0 + 0x5));
     
-    WriteMemUInt8((PVOID)0x0052C070, ASM_LONG_JMP_REL);
-    WriteMemUInt32((PVOID)0x0052C071, ((ULONG_PTR)VfsLoadPackfileHook) - (0x0052C070 + 0x5));
+    WriteMemUInt8(0x0052C070, ASM_LONG_JMP_REL);
+    WriteMemInt32(0x0052C070 + 1, (uintptr_t)VfsLoadPackfileHook - (0x0052C070 + 0x5));
     
-    WriteMemUInt8((PVOID)0x0052C1D0, ASM_LONG_JMP_REL);
-    WriteMemUInt32((PVOID)0x0052C1D1, ((ULONG_PTR)VfsFindPackfileHook) - (0x0052C1D0 + 0x5));
+    WriteMemUInt8(0x0052C1D0, ASM_LONG_JMP_REL);
+    WriteMemInt32(0x0052C1D0 + 1, (uintptr_t)VfsFindPackfileHook - (0x0052C1D0 + 0x5));
     
-    WriteMemUInt8((PVOID)0x0052C220, ASM_LONG_JMP_REL);
-    WriteMemUInt32((PVOID)0x0052C221, ((ULONG_PTR)VfsFindFileInternalHook) - (0x0052C220 + 0x5));
+    WriteMemUInt8(0x0052C220, ASM_LONG_JMP_REL);
+    WriteMemInt32(0x0052C220 + 1, (uintptr_t)VfsFindFileInternalHook - (0x0052C220 + 0x5));
     
-    WriteMemUInt8((PVOID)0x0052BB60, ASM_LONG_JMP_REL);
-    WriteMemUInt32((PVOID)0x0052BB61, ((ULONG_PTR)VfsInitHook) - (0x0052BB60 + 0x5));
+    WriteMemUInt8(0x0052BB60, ASM_LONG_JMP_REL);
+    WriteMemInt32(0x0052BB60 + 1, (uintptr_t)VfsInitHook - (0x0052BB60 + 0x5));
     
-    WriteMemUInt8((PVOID)0x0052BC80, ASM_LONG_JMP_REL);
-    WriteMemUInt32((PVOID)0x0052BC81, ((ULONG_PTR)VfsCleanupHook) - (0x0052BC80 + 0x5));
+    WriteMemUInt8(0x0052BC80, ASM_LONG_JMP_REL);
+    WriteMemInt32(0x0052BC80 + 1, (uintptr_t)VfsCleanupHook - (0x0052BC80 + 0x5));
 
 #ifdef DEBUG
-    WriteMemUInt8((PVOID)0x0052BEF0, 0xFF); // VfsInitPackfileFilesList
-    WriteMemUInt8((PVOID)0x0052BF50, 0xFF); // VfsLoadPackfileInternal
-    WriteMemUInt8((PVOID)0x0052C440, 0xFF); // VfsFindPackfileEntry
+    WriteMemUInt8(0x0052BEF0, 0xFF); // VfsInitPackfileFilesList
+    WriteMemUInt8(0x0052BF50, 0xFF); // VfsLoadPackfileInternal
+    WriteMemUInt8(0x0052C440, 0xFF); // VfsFindPackfileEntry
 #endif
 
     /* Load ui.vpp before tables.vpp - not used anymore */
-    //WriteMemPtr((PVOID)0x0052BC58, "ui.vpp");
-    //WriteMemPtr((PVOID)0x0052BC67, "tables.vpp");
+    //WriteMemPtr(0x0052BC58, "ui.vpp");
+    //WriteMemPtr(0x0052BC67, "tables.vpp");
 }
 
 void ForceFileFromPackfile(const char *pszName, const char *pszPackfile)

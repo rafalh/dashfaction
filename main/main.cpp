@@ -251,67 +251,67 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
     INFO("Allow Overwriting Game Files: %d", (int)g_gameConfig.allowOverwriteGameFiles);
 
     /* Process messages in the same thread as DX processing (alternative: D3DCREATE_MULTITHREADED) */
-    WriteMemUInt8Repeat((PVOID)0x00524C48, ASM_NOP, 0x00524C83 - 0x00524C48); // disable msg loop thread
-    WriteMemUInt8((PVOID)0x00524C48, ASM_LONG_CALL_REL);
-    WriteMemPtr((PVOID)0x00524C49, (PVOID)((ULONG_PTR)0x00524E40 - (0x00524C48 + 0x5))); // CreateMainWindow
+    WriteMemUInt8(0x00524C48, ASM_NOP, 0x00524C83 - 0x00524C48); // disable msg loop thread
+    WriteMemUInt8(0x00524C48, ASM_LONG_CALL_REL);
+    WriteMemUInt32(0x00524C49, 0x00524E40 - (0x00524C48 + 0x5)); // CreateMainWindow
     KeyGetFromFifoHookable.hook(KeyGetFromFifoHook);
 
     /* Console init string */
-    WriteMemPtr((PVOID)0x004B2534, "-- " PRODUCT_NAME " Initializing --\n");
+    WriteMemPtr(0x004B2534, "-- " PRODUCT_NAME " Initializing --\n");
 
     /* Version in Main Menu */
-    WriteMemUInt8((PVOID)0x0044343A, ASM_LONG_JMP_REL);
-    WriteMemPtr((PVOID)(0x0044343A + 1), (PVOID)((ULONG_PTR)VersionLabelPushArgs_0044343A - (0x0044343A + 0x5)));
+    WriteMemUInt8(0x0044343A, ASM_LONG_JMP_REL);
+    WriteMemInt32(0x0044343A + 1, (uintptr_t)VersionLabelPushArgs_0044343A - (0x0044343A + 0x5));
     GetVersionStrHookable.hook(GetVersionStrHook);
     
     /* Window title (client and server) */
-    WriteMemPtr((PVOID)0x004B2790, PRODUCT_NAME);
-    WriteMemPtr((PVOID)0x004B27A4, PRODUCT_NAME);
+    WriteMemPtr(0x004B2790, PRODUCT_NAME);
+    WriteMemPtr(0x004B27A4, PRODUCT_NAME);
     
     /* Console background color */
-    WriteMemUInt32((PVOID)0x005098D1, CONSOLE_BG_A); // Alpha
-    WriteMemUInt8((PVOID)0x005098D6, CONSOLE_BG_B); // Blue
-    WriteMemUInt8((PVOID)0x005098D8, CONSOLE_BG_G); // Green
-    WriteMemUInt8((PVOID)0x005098DA, CONSOLE_BG_R); // Red
+    WriteMemUInt32(0x005098D1, CONSOLE_BG_A); // Alpha
+    WriteMemUInt8(0x005098D6, CONSOLE_BG_B); // Blue
+    WriteMemUInt8(0x005098D8, CONSOLE_BG_G); // Green
+    WriteMemUInt8(0x005098DA, CONSOLE_BG_R); // Red
 
 #ifdef NO_CD_FIX
     /* No-CD fix */
-    WriteMemUInt8((PVOID)0x004B31B6, ASM_SHORT_JMP_REL);
+    WriteMemUInt8(0x004B31B6, ASM_SHORT_JMP_REL);
 #endif /* NO_CD_FIX */
 
 #ifdef NO_INTRO
     /* Disable thqlogo.bik */
     if (g_gameConfig.fastStart)
     {
-        WriteMemUInt8((PVOID)0x004B208A, ASM_SHORT_JMP_REL);
-        WriteMemUInt8((PVOID)0x004B24FD, ASM_SHORT_JMP_REL);
+        WriteMemUInt8(0x004B208A, ASM_SHORT_JMP_REL);
+        WriteMemUInt8(0x004B24FD, ASM_SHORT_JMP_REL);
     }
 #endif /* NO_INTRO */
     
     /* Sound loop fix */
-    WriteMemUInt8((PVOID)0x00505D08, 0x00505D5B - (0x00505D07 + 0x2));
+    WriteMemUInt8(0x00505D08, 0x00505D5B - (0x00505D07 + 0x2));
     
     /* DrawConsoleAndProcssKbdFifo hook */
-    WriteMemPtr((PVOID)0x004B2DD4, (PVOID)((ULONG_PTR)DrawConsoleAndProcessKbdFifoHook - (0x004B2DD3 + 0x5)));
+    WriteMemInt32(0x004B2DD3 + 1, (uintptr_t)DrawConsoleAndProcessKbdFifoHook - (0x004B2DD3 + 0x5));
 
     /* CleanupGame and InitGame hooks */
-    WriteMemPtr((PVOID)(0x004B27CD+1), (PVOID)((ULONG_PTR)InitGameHook - (0x004B27CD + 0x5)));
-    WriteMemPtr((PVOID)(0x004B2821+1), (PVOID)((ULONG_PTR)CleanupGameHook - (0x004B2821 + 0x5)));
-    WriteMemPtr((PVOID)(0x004B2818+1), (PVOID)((ULONG_PTR)RunGameHook - (0x004B2818 + 0x5)));
+    WriteMemInt32(0x004B27CD + 1, (uintptr_t)InitGameHook - (0x004B27CD + 0x5));
+    WriteMemInt32(0x004B2821 + 1, (uintptr_t)CleanupGameHook - (0x004B2821 + 0x5));
+    WriteMemInt32(0x004B2818 + 1, (uintptr_t)RunGameHook - (0x004B2818 + 0x5));
     
     /* Set initial FPS limit */
-    WriteMemFloat((PVOID)0x005094CA, 1.0f / g_gameConfig.maxFps);
+    WriteMemFloat(0x005094CA, 1.0f / g_gameConfig.maxFps);
     
     /* Crash-fix... (probably argument for function is invalid); Page Heap is needed */
-    WriteMemUInt32((PVOID)(0x0056A28C + 1), 0);
+    WriteMemUInt32(0x0056A28C + 1, 0);
 
     /* Crash-fix in case texture has not been created (this happens if GrReadBackbuffer fails) */
-    WriteMemUInt8((PVOID)0x0055CE47, ASM_LONG_JMP_REL);
-    WriteMemPtr((PVOID)(0x0055CE47 + 1), (PVOID)((ULONG_PTR)CrashFix_0055CE48 - (0x0055CE47 + 0x5)));
+    WriteMemUInt8(0x0055CE47, ASM_LONG_JMP_REL);
+    WriteMemInt32(0x0055CE47 + 1, (uintptr_t)CrashFix_0055CE48 - (0x0055CE47 + 0x5));
     
     // Dont overwrite player name and prefered weapons when loading saved game
-    WriteMemUInt8Repeat((PVOID)0x004B4D99, ASM_NOP, 0x004B4DA5 - 0x004B4D99);
-    WriteMemUInt8Repeat((PVOID)0x004B4E0A, ASM_NOP, 0x004B4E22 - 0x004B4E0A);
+    WriteMemUInt8(0x004B4D99, ASM_NOP, 0x004B4DA5 - 0x004B4D99);
+    WriteMemUInt8(0x004B4E0A, ASM_NOP, 0x004B4E22 - 0x004B4E0A);
 
     RenderHitScreenHookable.hook(RenderHitScreenHook);
 
@@ -323,10 +323,10 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
     // Buffer overflows in RflReadStaticGeometry
     // Note: Buffer size is 1024 but opcode allows only 1 byte size
     //       What is more important BmLoad copies texture name to 32 bytes long buffers
-    WriteMemInt8((PVOID)(0x004ED612 + 1), 32);
-    WriteMemInt8((PVOID)(0x004ED66E + 1), 32);
-    WriteMemInt8((PVOID)(0x004ED72E + 1), 32);
-    WriteMemInt8((PVOID)(0x004EDB02 + 1), 32);
+    WriteMemInt8(0x004ED612 + 1, 32);
+    WriteMemInt8(0x004ED66E + 1, 32);
+    WriteMemInt8(0x004ED72E + 1, 32);
+    WriteMemInt8(0x004EDB02 + 1, 32);
 #endif
 
     /* Init modules */

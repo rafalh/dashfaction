@@ -4,18 +4,6 @@
 #include <stdint.h>
 #include <log/Logger.h>
 
-void WriteMem(PVOID pAddr, PVOID pValue, unsigned cbValue);
-void WriteMemUInt32(PVOID pAddr, uint32_t uValue);
-void WriteMemInt32(PVOID pAddr, int32_t uValue);
-void WriteMemUInt16(PVOID pAddr, uint16_t uValue);
-void WriteMemInt16(PVOID pAddr, int16_t uValue);
-void WriteMemUInt8Repeat(PVOID pAddr, uint8_t uValue, unsigned cRepeat);
-void WriteMemUInt8(PVOID pAddr, uint8_t uValue);
-void WriteMemInt8(PVOID pAddr, int8_t uValue);
-void WriteMemFloat(PVOID pAddr, float fValue);
-void WriteMemPtr(PVOID pAddr, const void *Ptr);
-void WriteMemStr(PVOID pAddr, const char *pStr);
-
 const char *stristr(const char *haystack, const char *needle);
 
 const char *getDxErrorStr(HRESULT hr);

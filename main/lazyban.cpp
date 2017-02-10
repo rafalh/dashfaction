@@ -21,8 +21,8 @@ void BanCmdHandlerHook(void)
                 if(pPlayer != *g_ppLocalPlayer)
                 {
                     RfConsolePrintf(g_ppszStringsTable[959], pPlayer->strName.psz);
-                    RfBanIp(&(pPlayer->pNwData->Addr));
-                    RfKickPlayer(pPlayer);
+                    BanIp(&(pPlayer->pNwData->Addr));
+                    KickPlayer(pPlayer);
                 } else
                     RfConsolePrintf("You cannot ban yourself!");
             }
@@ -53,7 +53,7 @@ void KickCmdHandlerHook(void)
                 if(pPlayer != *g_ppLocalPlayer)
                 {
                     RfConsolePrintf(g_ppszStringsTable[958], pPlayer->strName.psz);
-                    RfKickPlayer(pPlayer);
+                    KickPlayer(pPlayer);
                 } else
                     RfConsolePrintf("You cannot kick yourself!");
             } else
@@ -85,9 +85,9 @@ void UnbanLastCmdHandler(void)
 
 void InitLazyban(void)
 {
-    WriteMemUInt8((PVOID)0x0047B6F0, ASM_LONG_JMP_REL);
-    WriteMemUInt32((PVOID)0x0047B6F1, ((ULONG_PTR)BanCmdHandlerHook) - (0x0047B6F0 + 0x5));
-    WriteMemUInt8((PVOID)0x0047B580, ASM_LONG_JMP_REL);
-    WriteMemUInt32((PVOID)0x0047B581, ((ULONG_PTR)KickCmdHandlerHook) - (0x0047B580 + 0x5));
+    WriteMemUInt8(0x0047B6F0, ASM_LONG_JMP_REL);
+    WriteMemInt32(0x0047B6F0 + 1, (uintptr_t)BanCmdHandlerHook - (0x0047B6F0 + 0x5));
+    WriteMemUInt8(0x0047B580, ASM_LONG_JMP_REL);
+    WriteMemInt32(0x0047B580 + 1, (uintptr_t)KickCmdHandlerHook - (0x0047B580 + 0x5));
     
 }

@@ -145,7 +145,7 @@ static int CanPlayerFireHook(CPlayer *pPlayer)
 {
     if (!(pPlayer->FireFlags & 0x10))
         return 0;
-    if (*g_pbNetworkGame && (pPlayer->pCamera->Type == rf::CAMERA::RF_CAM_FREE || pPlayer->pCamera->pPlayer != pPlayer))
+    if (*g_pbNetworkGame && (pPlayer->pCamera->Type == rf::CAMERA::CAM_FREE || pPlayer->pCamera->pPlayer != pPlayer))
         return 0;
     return 1;
 }
@@ -162,9 +162,9 @@ static void MouseSensitivityCmdHandler(void)
         {
             float fValue = *g_pfCmdArg;
             fValue = std::min(std::max(fValue, 0.0f), 1.0f);
-            (*g_ppLocalPlayer)->Controls.fMouseSensitivity = fValue;
+            (*g_ppLocalPlayer)->Settings.Controls.fMouseSensitivity = fValue;
         }
-        RfConsolePrintf("Mouse sensitivity: %.1f", (*g_ppLocalPlayer)->Controls.fMouseSensitivity);
+        RfConsolePrintf("Mouse sensitivity: %.1f", (*g_ppLocalPlayer)->Settings.Controls.fMouseSensitivity);
     }
 
     if (*g_pbCmdHelp)
@@ -244,25 +244,25 @@ void CommandsInit(void)
 {
 #if CAMERA_1_3_COMMANDS
     /* Enable camera1-3 in multiplayer and hook CanPlayerFire to disable shooting in camera2 */
-    WriteMemUInt8Repeat((PVOID)0x00431280, ASM_NOP, 2);
-    WriteMemUInt8Repeat((PVOID)0x004312E0, ASM_NOP, 2);
-    WriteMemUInt8Repeat((PVOID)0x00431340, ASM_NOP, 2);
-    WriteMemUInt8((PVOID)0x004A68D0, ASM_LONG_JMP_REL);
-    WriteMemUInt32((PVOID)0x004A68D1, ((ULONG_PTR)CanPlayerFireHook) - (0x004A68D0 + 0x5));
+    WriteMemUInt8(0x00431280, ASM_NOP, 2);
+    WriteMemUInt8(0x004312E0, ASM_NOP, 2);
+    WriteMemUInt8(0x00431340, ASM_NOP, 2);
+    WriteMemUInt8(0x004A68D0, ASM_LONG_JMP_REL);
+    WriteMemUInt32(0x004A68D1, (uintptr_t)CanPlayerFireHook - (0x004A68D0 + 0x5));
 #endif // if CAMERA_1_3_COMMANDS
 
     // Change limit of commands
     ASSERT(*g_pcCommands == 0);
-    WriteMemPtr((PVOID)(0x005099AC + 1), g_CommandsBuffer);
-    WriteMemPtr((PVOID)(0x00509A8A + 1), g_CommandsBuffer);
-    WriteMemPtr((PVOID)(0x00509AB0 + 3), g_CommandsBuffer);
-    WriteMemPtr((PVOID)(0x00509AE1 + 3), g_CommandsBuffer);
-    WriteMemPtr((PVOID)(0x00509AF5 + 3), g_CommandsBuffer);
-    WriteMemPtr((PVOID)(0x00509C8F + 1), g_CommandsBuffer);
-    WriteMemPtr((PVOID)(0x00509DB4 + 3), g_CommandsBuffer);
-    WriteMemPtr((PVOID)(0x00509E6F + 1), g_CommandsBuffer);
-    WriteMemPtr((PVOID)(0x0050A648 + 4), g_CommandsBuffer);
-    WriteMemPtr((PVOID)(0x0050A6A0 + 3), g_CommandsBuffer);
+    WriteMemPtr(0x005099AC + 1, g_CommandsBuffer);
+    WriteMemPtr(0x00509A8A + 1, g_CommandsBuffer);
+    WriteMemPtr(0x00509AB0 + 3, g_CommandsBuffer);
+    WriteMemPtr(0x00509AE1 + 3, g_CommandsBuffer);
+    WriteMemPtr(0x00509AF5 + 3, g_CommandsBuffer);
+    WriteMemPtr(0x00509C8F + 1, g_CommandsBuffer);
+    WriteMemPtr(0x00509DB4 + 3, g_CommandsBuffer);
+    WriteMemPtr(0x00509E6F + 1, g_CommandsBuffer);
+    WriteMemPtr(0x0050A648 + 4, g_CommandsBuffer);
+    WriteMemPtr(0x0050A6A0 + 3, g_CommandsBuffer);
 }
 
 void CommandRegister(CCmd *pCmd)

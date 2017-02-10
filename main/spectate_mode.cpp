@@ -29,7 +29,7 @@ static void SetCameraTarget(CPlayer *pPlayer)
         return;
 
     CAMERA *pCamera = (*g_ppLocalPlayer)->pCamera;
-    pCamera->Type = CAMERA::RF_CAM_1ST_PERSON;
+    pCamera->Type = CAMERA::CAM_1ST_PERSON;
     pCamera->pPlayer = pPlayer;
 
     g_OldTargetCamera = pPlayer->pCamera;
@@ -243,17 +243,17 @@ void SpectateModeInit()
     // Note: HUD rendering doesn't make sense because life and armor isn't synced
 
 #if SPECTATE_MODE_SHOW_WEAPON
-    WriteMemPtr((PVOID)(0x0043285D + 1), (PVOID)((ULONG_PTR)RenderPlayerArmHook - (0x0043285D + 0x5)));
-    //WriteMemPtr((PVOID)(0x004A2B56 + 1), (PVOID)((ULONG_PTR)RenderPlayerArm2Hook - (0x004A2B56 + 0x5)));
-    WriteMemUInt8Repeat((PVOID)0x004AB1B8, ASM_NOP, 6); // RenderPlayerArm2
-    WriteMemUInt8Repeat((PVOID)0x004AA23E, ASM_NOP, 6); // SetupPlayerWeaponMesh
-    WriteMemUInt8Repeat((PVOID)0x004AE0DF, ASM_NOP, 2); // PlayerLoadWeaponMesh
+    WriteMemInt32(0x0043285D + 1, (uintptr_t)RenderPlayerArmHook - (0x0043285D + 0x5));
+    //WriteMemInt32(0x004A2B56 + 1, (uintptr_t)RenderPlayerArm2Hook - (0x004A2B56 + 0x5));
+    WriteMemUInt8(0x004AB1B8, ASM_NOP, 6); // RenderPlayerArm2
+    WriteMemUInt8(0x004AA23E, ASM_NOP, 6); // SetupPlayerWeaponMesh
+    WriteMemUInt8(0x004AE0DF, ASM_NOP, 2); // PlayerLoadWeaponMesh
 
-    WriteMemUInt8Repeat((PVOID)0x004AA3B1, ASM_NOP, 6); // sub_4AA3A0
-    WriteMemUInt8((PVOID)0x004A952C, ASM_SHORT_JMP_REL); // sub_4A9520
-    WriteMemUInt8Repeat((PVOID)0x004AA56D, ASM_NOP, 6); // sub_4AA560
-    WriteMemUInt8Repeat((PVOID)0x004AE384, ASM_NOP, 6); // PlayerPrepareWeapon
-    WriteMemUInt8Repeat((PVOID)0x004AA6E7, ASM_NOP, 6); // UpdatePlayerWeaponMesh
+    WriteMemUInt8(0x004AA3B1, ASM_NOP, 6); // sub_4AA3A0
+    WriteMemUInt8(0x004A952C, ASM_SHORT_JMP_REL); // sub_4A9520
+    WriteMemUInt8(0x004AA56D, ASM_NOP, 6); // sub_4AA560
+    WriteMemUInt8(0x004AE384, ASM_NOP, 6); // PlayerPrepareWeapon
+    WriteMemUInt8(0x004AA6E7, ASM_NOP, 6); // UpdatePlayerWeaponMesh
 #endif // SPECTATE_MODE_SHOW_WEAPON
 }
 

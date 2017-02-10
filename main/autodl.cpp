@@ -382,8 +382,8 @@ void OnJoinFailed(unsigned Reason)
 
 void InitAutodownloader(void)
 {
-    WriteMemPtr((PVOID)0x0047C4EE, (PVOID)((ULONG_PTR)OnJoinFailed - (0x0047C4ED+5)));
-    WriteMemUInt8Repeat((PVOID)0x0047C4FD, ASM_NOP, 5);
+    WriteMemInt32(0x0047C4EE, (uintptr_t)OnJoinFailed - (0x0047C4ED + 5));
+    WriteMemUInt8(0x0047C4FD, ASM_NOP, 5);
 }
 
 void RenderDownloadProgress(void)

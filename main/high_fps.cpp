@@ -101,25 +101,25 @@ void NAKED WaterAnimateWaves_004E68A0()
 void HighFpsInit()
 {
     // Fix animations broken for high FPS
-    WriteMemUInt32((PVOID)(0x00416426 + 1), (ULONG_PTR)ftol_HitScreen - (0x00416426 + 0x5)); // hit screen
-    WriteMemUInt32((PVOID)(0x0050ABFB + 1), (ULONG_PTR)ftol_ToggleConsole - (0x0050ABFB + 0x5)); // console open/close
-    WriteMemUInt32((PVOID)(0x005096A7 + 1), (ULONG_PTR)ftol_Timer - (0x005096A7 + 0x5)); // switching weapon and more
+    WriteMemUInt32(0x00416426 + 1, (uintptr_t)ftol_HitScreen - (0x00416426 + 0x5)); // hit screen
+    WriteMemUInt32(0x0050ABFB + 1, (uintptr_t)ftol_ToggleConsole - (0x0050ABFB + 0x5)); // console open/close
+    WriteMemUInt32(0x005096A7 + 1, (uintptr_t)ftol_Timer - (0x005096A7 + 0x5)); // switching weapon and more
 
     // Fix jumping on high FPS
-    WriteMemPtr((PVOID)(0x004A09A6 + 2), &g_JumpThreshold);
+    WriteMemPtr(0x004A09A6 + 2, &g_JumpThreshold);
 
     // Fix water deceleration on high FPS
-    WriteMemUInt8Repeat((PVOID)0x0049D816, ASM_NOP, 5);
-    WriteMemUInt8Repeat((PVOID)0x0049D82A, ASM_NOP, 5);
-    WriteMemUInt8((PVOID)(0x0049D82A + 5), ASM_PUSH_ESI);
-    WriteMemPtr((PVOID)(0x0049D830 + 1), (PVOID)((ULONG_PTR)EntityWaterDecelerateFix - (0x0049D830 + 0x5)));
+    WriteMemUInt8(0x0049D816, ASM_NOP, 5);
+    WriteMemUInt8(0x0049D82A, ASM_NOP, 5);
+    WriteMemUInt8(0x0049D82A + 5, ASM_PUSH_ESI);
+    WriteMemInt32(0x0049D830 + 1, (uintptr_t)EntityWaterDecelerateFix - (0x0049D830 + 0x5));
 
     // Fix water waves animation on high FPS
-    WriteMemUInt8((PVOID)0x004E68A0, ASM_LONG_JMP_REL);
-    WriteMemUInt32((PVOID)(0x004E68A0 + 1), (ULONG_PTR)WaterAnimateWaves_004E68A0 - (0x004E68A0 + 0x5));
+    WriteMemUInt8(0x004E68A0, ASM_LONG_JMP_REL);
+    WriteMemInt32(0x004E68A0 + 1, (uintptr_t)WaterAnimateWaves_004E68A0 - (0x004E68A0 + 0x5));
 
     // Fix incorrect frame time calculation
-    WriteMemUInt8Repeat((PVOID)0x00509595, ASM_NOP, 2);
+    WriteMemUInt8(0x00509595, ASM_NOP, 2);
 }
 
 void HighFpsUpdate()

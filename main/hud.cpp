@@ -10,15 +10,15 @@ void HudCmdHandler(void)
     uint32_t bHide = !*((uint32_t*)0x006379F0);
     
     // g_bHideHud, g_bHideHud2
-    WriteMemUInt8((PVOID)0x006A1448, bHide);
-    WriteMemUInt8((PVOID)0x006379F0, bHide);
+    WriteMemUInt8(0x006A1448, bHide);
+    WriteMemUInt8(0x006379F0, bHide);
     
     // HudRender2
-    WriteMemUInt8((PVOID)0x00476D70, bHide ? ASM_RET : 0x51);
+    WriteMemUInt8(0x00476D70, bHide ? ASM_RET : 0x51);
     
     // Powerups textures
-    WriteMemInt32((PVOID)0x006FC43C, bHide ? -2 : -1);
-    WriteMemInt32((PVOID)0x006FC440, bHide ? -2 : -1);
+    WriteMemInt32(0x006FC43C, bHide ? -2 : -1);
+    WriteMemInt32(0x006FC440, bHide ? -2 : -1);
 }
 
 void HudSetupPositionsHook(int Width)
@@ -76,6 +76,6 @@ void HudSetupPositionsHook(int Width)
 void InitHud(void)
 {
     /* Fix HUD on not supported resolutions */
-    WriteMemUInt8((PVOID)0x004377C0, ASM_LONG_JMP_REL);
-    WriteMemPtr((PVOID)(0x004377C0 + 1), (PVOID)((ULONG_PTR)HudSetupPositionsHook - (0x004377C0 + 0x5)));
+    WriteMemUInt8(0x004377C0, ASM_LONG_JMP_REL);
+    WriteMemInt32(0x004377C0 + 1, (uintptr_t)HudSetupPositionsHook - (0x004377C0 + 0x5));
 }
