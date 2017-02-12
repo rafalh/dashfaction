@@ -350,6 +350,25 @@ static PACKFILE_ENTRY *VfsFindFileInternalHook(const char *pszFilename)
 static void VfsInitHook(void)
 {
     memset(g_pVfsLookupTableNew, 0, sizeof(VFS_LOOKUP_TABLE_NEW) * VFS_LOOKUP_TABLE_SIZE);
+
+    // Load DashFaction specific packfile
+    char szBuf[MAX_PATH];
+    GetModuleFileNameA(g_hModule, szBuf, sizeof(szBuf));
+    char *Ptr = strrchr(szBuf, '\\');
+    strcpy(Ptr + 1, "dashfaction.vpp");
+    if (!PathFileExistsA(szBuf)) // try to remove 2 path components (bin/(debug|release))
+    {
+        *Ptr = 0;
+        Ptr = strrchr(szBuf, '\\');
+        if (Ptr)
+            *Ptr = 0;
+        Ptr = strrchr(szBuf, '\\');
+        if (Ptr)
+            strcpy(Ptr + 1, "dashfaction.vpp");
+    }
+    INFO("Loading DF packfile: %s", szBuf);
+    VfsLoadPackfile(szBuf, 0);
+
     if (GetInstalledGameLang() == LANG_GR)
     {
         VfsLoadPackfile("audiog.vpp", 0);

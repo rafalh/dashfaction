@@ -29,6 +29,7 @@
 using namespace rf;
 
 GameConfig g_gameConfig;
+HMODULE g_hModule;
 HookableFunPtr<0x004163C0, void, CPlayer*> RenderHitScreenHookable;
 HookableFunPtr<0x004B33F0, void, const char**, const char**> GetVersionStrHookable;
 HookableFunPtr<0x0051F000, int> KeyGetFromFifoHookable;
@@ -355,6 +356,7 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
 
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD fdwReason, LPVOID lpvReserved)
 {
+    g_hModule = hInstance;
     DisableThreadLibraryCalls(hInstance);
     return TRUE;
 }

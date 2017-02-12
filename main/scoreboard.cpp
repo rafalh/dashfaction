@@ -111,7 +111,7 @@ static void DrawScoreboardInternalHook(BOOL bDraw)
         GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
         for (i = 0; i < (GameType == RF_DM ? 1u : 2u); ++i)
         {
-            x2 = x + i*300 + 25;
+            x2 = x + i*300 + 13 + 12;
             GrDrawText(x2, y, "Name", -1, *g_pGrTextMaterial);
             x2 += cxNameMax;
             GrDrawText(x2, y, "Score", -1, *g_pGrTextMaterial);
@@ -132,13 +132,13 @@ static void DrawScoreboardInternalHook(BOOL bDraw)
             
             if (GameType == RF_DM || !pPlayer->bBlueTeam)
             {
-                x2 = x + 25;
+                x2 = x + 13;
                 y2 = y + cLeftCol * 15;
                 ++cLeftCol;
             }
             else
             {
-                x2 = x + 300 + 25;
+                x2 = x + 300 + 13;
                 y2 = y + cRightCol * 15;
                 ++cRightCol;
             }
@@ -148,6 +148,13 @@ static void DrawScoreboardInternalHook(BOOL bDraw)
             else
                 GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
             
+            CEntity *pEntity = HandleToEntity(pPlayer->hEntity);
+            static int GreenBm = BmLoad("DF_green.tga", -1, 0);
+            static int RedBm = BmLoad("DF_red.tga", -1, 0);
+            int StatusBm = pEntity ? GreenBm : RedBm;
+            GrDrawImage(StatusBm, x2, y2+2, *g_pGrImageMaterial);
+            x2 += 12;
+
             strName.psz = StringAlloc(pPlayer->strName.cch + 1);
             strcpy(strName.psz, pPlayer->strName.psz);
             strName.cch = pPlayer->strName.cch;
