@@ -945,6 +945,8 @@ namespace rf
     constexpr auto CtfGetBlueScore = (PFN_GET_TEAM_SCORE)0x00475030;
     constexpr auto TdmGetRedScore = (PFN_GET_TEAM_SCORE)0x004828F0;
     constexpr auto TdmGetBlueScore = (PFN_GET_TEAM_SCORE)0x00482900;
+    constexpr auto CtfGetRedFlagPlayer = (CPlayer*(*)())0x00474E60;
+    constexpr auto CtfGetBlueFlagPlayer = (CPlayer*(*)())0x00474E70;
 
     typedef void(*PFN_PACKET_HANDLER)(BYTE *pData, NET_ADDR *pAddr);
     constexpr auto HandleNewPlayerPacket = (PFN_PACKET_HANDLER)0x0047A580;
@@ -1000,7 +1002,6 @@ namespace rf
     constexpr auto g_pLargeFontId = (int*)0x0063C05C;
     constexpr auto g_pMediumFontId = (int*)0x0063C060;
     constexpr auto g_pSmallFontId = (int*)0x0063C068;
-    constexpr auto g_ppszStringsTable = (char**)0x007CBBF0;
     constexpr auto g_pbDirectInputDisabled = (bool*)0x005A4F88;
 
     constexpr auto g_pbDbgNetwork = (uint32_t*)0x006FED24;
@@ -1034,6 +1035,17 @@ namespace rf
     constexpr auto SetNextLevelFilename = (void(*)(CString strFilename, CString strSecond))0x0045E2E0;
     constexpr auto DemoLoadLevel = (void(*)(const char *pszLevelFileName))0x004CC270;
     constexpr auto KeyGetFromFifo = (int(*)())0x0051F000;
+
+    /* Strings Table */
+    constexpr auto g_ppszStringsTable = (char**)0x007CBBF0;
+    enum StrId
+    {
+        STR_PLAYER = 675,
+        STR_FRAGS = 676,
+        STR_PING = 677,
+        STR_CAPS = 681,
+        STR_SCORE = 720,
+    };
 
     /* RF stdlib functions are not compatible with GCC */
 

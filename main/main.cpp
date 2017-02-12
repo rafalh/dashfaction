@@ -33,6 +33,7 @@ HMODULE g_hModule;
 HookableFunPtr<0x004163C0, void, CPlayer*> RenderHitScreenHookable;
 HookableFunPtr<0x004B33F0, void, const char**, const char**> GetVersionStrHookable;
 HookableFunPtr<0x0051F000, int> KeyGetFromFifoHookable;
+HookableFunPtr<0x004A35C0, void, CPlayer*> DestroyPlayerFun;
 int g_VersionLabelX, g_VersionLabelWidth, g_VersionLabelHeight;
 static const char g_szVersionInMenu[] = PRODUCT_NAME_VERSION;
 
@@ -159,6 +160,12 @@ static void RenderHitScreenHook(CPlayer *pPlayer)
 #ifndef NDEBUG
     TestRender();
 #endif
+}
+
+static void DestroyPlayerHook(CPlayer *pPlayer)
+{
+    SpectateModeOnDestroyPlayer(pPlayer);
+    DestroyPlayerFun.callOrig(pPlayer);
 }
 
 NAKED void CrashFix_0055CE48()
@@ -315,6 +322,7 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
     WriteMemUInt8(0x004B4E0A, ASM_NOP, 0x004B4E22 - 0x004B4E0A);
 
     RenderHitScreenHookable.hook(RenderHitScreenHook);
+    DestroyPlayerFun.hook(DestroyPlayerHook);
 
 #if DIRECTINPUT_SUPPORT
     *g_pbDirectInputDisabled = 0;

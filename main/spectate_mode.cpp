@@ -18,7 +18,6 @@ static CAMERA *g_OldTargetCamera = NULL;
 static bool g_SpectateModeEnabled = false;
 static int g_LargeFont = -1, g_MediumFont = -1, g_SmallFont = -1;
 
-static HookableFunPtr<0x004A35C0, void, CPlayer*> DestroyPlayerFun;
 static HookableFunPtr<0x004A6210, void, CPlayer*, EGameCtrl, char> HandleCtrlInGameFun;
 static HookableFunPtr<0x0043A2C0, void, CPlayer*> RenderReticleFun;
 
@@ -171,13 +170,12 @@ static bool IsPlayerDyingHook(CPlayer *pPlayer)
         return IsPlayerDying(pPlayer);
 }
 
-static void DestroyPlayerHook(CPlayer *pPlayer)
+void SpectateModeOnDestroyPlayer(CPlayer *pPlayer)
 {
     if (g_SpectateModeTarget == pPlayer)
         SpectateNextPlayer(true);
     if (g_SpectateModeTarget == pPlayer)
         SpectateModeSetTargetPlayer(nullptr);
-    DestroyPlayerFun.callOrig(pPlayer);
 }
 
 static void RenderReticleHook(CPlayer *pPlayer)
@@ -237,7 +235,6 @@ void SpectateModeInit()
     IsPlayerDying_Scoreboard_Hookable2.Hook(IsPlayerDyingHook);
     
     HandleCtrlInGameFun.hook(HandleCtrlInGameHook);
-    DestroyPlayerFun.hook(DestroyPlayerHook);
     RenderReticleFun.hook(RenderReticleHook);
 
     // Note: HUD rendering doesn't make sense because life and armor isn't synced

@@ -57,9 +57,9 @@ void DrawScoreboardInternalHook(BOOL bDraw)
     
     // Draw map and server name
     GrSetColor(0xB0, 0xB0, 0xB0, 0xFF);
-    sprintf(szBuf, "%s (%s) by %s", g_pstrLevelName->psz, g_pstrLevelFilename->psz, g_pstrLevelAuthor->psz);
+    sprintf(szBuf, "%s (%s) by %s", CString_CStr(g_pstrLevelName), CString_CStr(g_pstrLevelFilename), CString_CStr(g_pstrLevelAuthor));
     GrDrawAlignedText(GR_ALIGN_CENTER, x + cx/2, y + 45, szBuf, -1, *g_pGrTextMaterial);
-    unsigned i = sprintf(szBuf, "%s (", g_pstrServName->psz);
+    unsigned i = sprintf(szBuf, "%s (", CString_CStr(g_pstrServName));
     NwAddrToStr(szBuf + i, sizeof(szBuf) - i, g_pServAddr);
     i += strlen(szBuf + i);
     sprintf(szBuf + i, ")");
@@ -110,25 +110,28 @@ void DrawScoreboardInternalHook(BOOL bDraw)
         ColX += 12;
 
         ColOffsets[i].Name = ColX;
-        GrDrawText(ColX, y, "Name", -1, *g_pGrTextMaterial);
+        GrDrawText(ColX, y, g_ppszStringsTable[STR_PLAYER], -1, *g_pGrTextMaterial);
         ColX += cxNameMax;
 
         ColOffsets[i].Score = ColX;
-        GrDrawText(ColX, y, "Score", -1, *g_pGrTextMaterial);
+        GrDrawText(ColX, y, g_ppszStringsTable[STR_SCORE], -1, *g_pGrTextMaterial); // Note: RF uses "Frags"
         ColX += 50;
 
         if (GameType == RF_CTF)
         {
             ColOffsets[i].CtfFlags = ColX;
-            GrDrawText(ColX, y, "Flags", -1, *g_pGrTextMaterial);
+            GrDrawText(ColX, y, g_ppszStringsTable[STR_CAPS], -1, *g_pGrTextMaterial);
             ColX += 50;
         }
 
         ColOffsets[i].Ping = ColX;
-        GrDrawText(ColX, y, "Ping", -1, *g_pGrTextMaterial);
+        GrDrawText(ColX, y, g_ppszStringsTable[STR_PING], -1, *g_pGrTextMaterial);
     }
     y += 20;
     
+    CPlayer *pRedFlagPlayer = CtfGetRedFlagPlayer();
+    CPlayer *pBlueFlagPlayer = CtfGetBlueFlagPlayer();
+
     // Finally draw the list
     int SectCounter[2] = { 0, 0 };
     for (unsigned i = 0; i < cPlayers; ++i)
@@ -145,10 +148,16 @@ void DrawScoreboardInternalHook(BOOL bDraw)
         else
             GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
         
-        CEntity *pEntity = HandleToEntity(pPlayer->hEntity);
         static int GreenBm = BmLoad("DF_green.tga", -1, 0);
         static int RedBm = BmLoad("DF_red.tga", -1, 0);
+        static int HudMicroFlagRedBm = BmLoad("hud_microflag_red.tga", -1, 1);
+        static int HudMicroFlagBlueBm = BmLoad("hud_microflag_blue.tga", -1, 1);
+        CEntity *pEntity = HandleToEntity(pPlayer->hEntity);
         int StatusBm = pEntity ? GreenBm : RedBm;
+        if (pPlayer == pRedFlagPlayer)
+            StatusBm = HudMicroFlagRedBm;
+        else if (pPlayer == pBlueFlagPlayer)
+            StatusBm = HudMicroFlagBlueBm;
         GrDrawImage(StatusBm, Offsets.StatusBm, RowY + 2, *g_pGrImageMaterial);
 
         CString strName, strNameNew;
