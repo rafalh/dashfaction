@@ -31,11 +31,10 @@ static EGameLang DetectInstalledGameLang()
     for (unsigned i = 0; i < COUNTOF(LangCodes); ++i)
     {
         sprintf(szFullPath, "%smaps_%s.vpp", g_pszRootPath, LangCodes[i]);
-        FILE *pFile = fopen(szFullPath, "rb");
-        INFO("Checking file %s: %s", szFullPath, pFile ? "found" : "not found");
-        if (pFile)
+        BOOL bExists = PathFileExistsA(szFullPath);
+        INFO("Checking file %s: %s", szFullPath, bExists ? "found" : "not found");
+        if (bExists)
         {
-            fclose(pFile);
             INFO("Detected game language: %s", LangCodes[i]);
             return (EGameLang)i;
         }

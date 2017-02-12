@@ -6,6 +6,7 @@
 #include <psapi.h>
 #include <wininet.h>
 #include <WinSock.h>
+#include <Shlwapi.h>
 
 typedef BOOL WINBOOL;
 #include <d3d8.h>
