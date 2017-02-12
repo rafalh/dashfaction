@@ -6,17 +6,17 @@
 
 using namespace rf;
 
-typedef struct _VFS_LOOKUP_TABLE_NEW
+struct VFS_LOOKUP_TABLE_NEW
 {
-    struct _VFS_LOOKUP_TABLE_NEW *pNext;
+    VFS_LOOKUP_TABLE_NEW *pNext;
     PACKFILE_ENTRY *pPackfileEntry;
-} VFS_LOOKUP_TABLE_NEW;
+};
 
-static unsigned g_cPackfiles = 0;
+static unsigned g_cPackfiles = 0, g_cFilesInVfs = 0, g_cNameCollisions = 0;
 static PACKFILE **g_pPackfiles = NULL;
-static VFS_LOOKUP_TABLE_NEW *g_pVfsLookupTableNew = (VFS_LOOKUP_TABLE_NEW*)0x01BB2AC8; // g_pVfsLookupTable
-static BOOL g_bTest = FALSE;
-static unsigned g_cFilesInVfs = 0;
+
+constexpr auto g_pVfsLookupTableNew = (VFS_LOOKUP_TABLE_NEW*)0x01BB2AC8; // g_pVfsLookupTable
+constexpr auto LOOKUP_TABLE_SIZE = 20713;
 
 #define DEBUG_VFS 0
 #define DEBUG_VFS_FILENAME1 "DM RTS MiniGolf 2.1.rfl"
@@ -58,36 +58,34 @@ EGameLang GetInstalledGameLang()
 static BOOL VfsLoadPackfileHook(const char *pszFilename, const char *pszDir)
 {
     char szFullPath[256], Buf[0x800];
-    FILE *pFile;
-    PACKFILE *pPackfile;
     BOOL bRet = FALSE;
-    unsigned i, cFilesInBlock, cAdded, OffsetInBlocks;
+    unsigned cFilesInBlock, cAdded, OffsetInBlocks;
     
     VFS_DBGPRINT("Load packfile %s %s", pszDir, pszFilename);
     
     sprintf(szFullPath, "%s%s%s", g_pszRootPath, pszDir ? pszDir : "", pszFilename);
-    if(!pszFilename || strlen(pszFilename) > 0x1F || strlen(szFullPath) > 0x7F)
+    if (!pszFilename || strlen(pszFilename) > 0x1F || strlen(szFullPath) > 0x7F)
         return FALSE;
     
-    for(i = 0; i < g_cPackfiles; ++i)
+    for (unsigned i = 0; i < g_cPackfiles; ++i)
         if(!stricmp(g_pPackfiles[i]->szPath, szFullPath))
             return TRUE;
     
-    pFile = fopen(szFullPath, "rb");
-    if(!pFile)
+    FILE *pFile = fopen(szFullPath, "rb");
+    if (!pFile)
     {
         ERR("Failed to load vpp %s", szFullPath);
         return FALSE;
     }
     
-    if(g_cPackfiles % 64 == 0)
+    if (g_cPackfiles % 64 == 0)
     {
         g_pPackfiles = (PACKFILE**)realloc(g_pPackfiles, (g_cPackfiles + 64) * sizeof(PACKFILE*));
         memset(&g_pPackfiles[g_cPackfiles], 0, 64 * sizeof(PACKFILE*));
     }
     
-    pPackfile = (PACKFILE*)malloc(sizeof(*pPackfile));
-    if(!pPackfile)
+    PACKFILE *pPackfile = (PACKFILE*)malloc(sizeof(*pPackfile));
+    if (!pPackfile)
     {
         ERR("malloc failed");
         return FALSE;
@@ -110,9 +108,9 @@ static BOOL VfsLoadPackfileHook(const char *pszFilename, const char *pszDir)
         OffsetInBlocks = 1;
         bRet = TRUE;
         
-        for(i = 0; i < pPackfile->cFiles; i += 32)
+        for (unsigned i = 0; i < pPackfile->cFiles; i += 32)
         {
-            if(fread(Buf, sizeof(Buf), 1, pFile) != 1)
+            if (fread(Buf, sizeof(Buf), 1, pFile) != 1)
             {
                 bRet = FALSE;
                 ERR("Failed to fread vpp %s", szFullPath);
@@ -125,16 +123,18 @@ static BOOL VfsLoadPackfileHook(const char *pszFilename, const char *pszDir)
         }
     } else ERR("Failed to fread vpp 2 %s", szFullPath);
     
-    if(bRet)
+    if (bRet)
         VfsSetupFileOffsets(pPackfile, OffsetInBlocks);
     
     fclose(pFile);
     
-    if(bRet)
+    if (bRet)
     {
         g_pPackfiles[g_cPackfiles] = pPackfile;
         ++g_cPackfiles;
-    } else {
+    }
+    else
+    {
         free(pPackfile->pFileList);
         free(pPackfile);
     }
@@ -144,11 +144,9 @@ static BOOL VfsLoadPackfileHook(const char *pszFilename, const char *pszDir)
 
 static PACKFILE *VfsFindPackfileHook(const char *pszFilename)
 {
-    unsigned i;
-    
-    for(i = 0; i < g_cPackfiles; ++i)
+    for (unsigned i = 0; i < g_cPackfiles; ++i)
     {
-        if(!stricmp(g_pPackfiles[i]->szName, pszFilename))
+        if (!stricmp(g_pPackfiles[i]->szName, pszFilename))
             return g_pPackfiles[i];
     }
     
@@ -158,41 +156,39 @@ static PACKFILE *VfsFindPackfileHook(const char *pszFilename)
 
 static BOOL VfsBuildPackfileEntriesListHook(const char *pszExtList, char **ppFilenames, unsigned *pcFiles, const char *pszPackfileName)
 {
-    char *pszExt, *BufPtr;
-    unsigned i, j, cbBuf = 1;
-    PACKFILE *pPackfile;
+    unsigned cbBuf = 1;
     
     VFS_DBGPRINT("VfsBuildPackfileEntriesListHook called");
     *pcFiles = 0;
     *ppFilenames = 0;
     
-    for(i = 0; i < g_cPackfiles; ++i)
+    for (unsigned i = 0; i < g_cPackfiles; ++i)
     {
-        pPackfile = g_pPackfiles[i];
-        if(!pszPackfileName || !stricmp(pszPackfileName, pPackfile->szName))
+        PACKFILE *pPackfile = g_pPackfiles[i];
+        if (!pszPackfileName || !stricmp(pszPackfileName, pPackfile->szName))
         {
-            for(j = 0; j < pPackfile->cFiles; ++j)
+            for (unsigned j = 0; j < pPackfile->cFiles; ++j)
             {
-                pszExt = GetFileExt(pPackfile->pFileList[j].pszFileName);
-                if(pszExt[0] && strstr(pszExtList, pszExt + 1))
+                const char *pszExt = GetFileExt(pPackfile->pFileList[j].pszFileName);
+                if (pszExt[0] && strstr(pszExtList, pszExt + 1))
                     cbBuf += strlen(pPackfile->pFileList[j].pszFileName) + 1;
             }
         }
     }
     
     *ppFilenames = (char*)RfMalloc(cbBuf);
-    if(!*ppFilenames)
+    if (!*ppFilenames)
         return FALSE;
-    BufPtr = *ppFilenames;
-    for(i = 0; i < g_cPackfiles; ++i)
+    char *BufPtr = *ppFilenames;
+    for (unsigned i = 0; i < g_cPackfiles; ++i)
     {
-        pPackfile = g_pPackfiles[i];
-        if(!pszPackfileName || !stricmp(pszPackfileName, pPackfile->szName))
+        PACKFILE *pPackfile = g_pPackfiles[i];
+        if (!pszPackfileName || !stricmp(pszPackfileName, pPackfile->szName))
         {
-            for(j = 0; j < pPackfile->cFiles; ++j)
+            for (unsigned j = 0; j < pPackfile->cFiles; ++j)
             {
-                pszExt = GetFileExt(pPackfile->pFileList[j].pszFileName);
-                if(pszExt[0] && strstr(pszExtList, pszExt + 1))
+                const char *pszExt = GetFileExt(pPackfile->pFileList[j].pszFileName);
+                if (pszExt[0] && strstr(pszExtList, pszExt + 1))
                 {
                     strcpy(BufPtr, pPackfile->pFileList[j].pszFileName);
                     BufPtr += strlen(pPackfile->pFileList[j].pszFileName) + 1;
@@ -208,13 +204,11 @@ static BOOL VfsBuildPackfileEntriesListHook(const char *pszExtList, char **ppFil
 
 static BOOL VfsAddPackfileEntriesHook(PACKFILE *pPackfile, const void *pBlock, unsigned cFilesInBlock, unsigned *pcAddedFiles)
 {
-    unsigned i;
-    PACKFILE_ENTRY *pEntry;
-    BYTE *pData = (BYTE*)pBlock;
+    const BYTE *pData = (const BYTE*)pBlock;
     
-    for(i = 0; i < cFilesInBlock; ++i)
+    for (unsigned i = 0; i < cFilesInBlock; ++i)
     {
-        pEntry = &pPackfile->pFileList[*pcAddedFiles];
+        PACKFILE_ENTRY *pEntry = &pPackfile->pFileList[*pcAddedFiles];
         if (*g_pbVfsIgnoreTblFiles && !stricmp(GetFileExt((char*)pData), ".tbl"))
             pEntry->pszFileName = "DEADBEEF";
         else
@@ -239,10 +233,7 @@ static BOOL VfsAddPackfileEntriesHook(PACKFILE *pPackfile, const void *pBlock, u
 
 static void VfsAddFileToLookupTableHook(PACKFILE_ENTRY *pEntry)
 {
-    VFS_LOOKUP_TABLE_NEW *pLookupTableItem;
-    
-    constexpr int LOOKUP_TABLE_SIZE = 20713;
-    pLookupTableItem = &g_pVfsLookupTableNew[pEntry->dwNameChecksum % LOOKUP_TABLE_SIZE];
+     VFS_LOOKUP_TABLE_NEW *pLookupTableItem = &g_pVfsLookupTableNew[pEntry->dwNameChecksum % LOOKUP_TABLE_SIZE];
     
     while (true)
     {
@@ -288,7 +279,7 @@ static void VfsAddFileToLookupTableHook(PACKFILE_ENTRY *pEntry)
             break;
         }
         
-        if(!pLookupTableItem->pNext)
+        if (!pLookupTableItem->pNext)
         {
 #if DEBUG_VFS && defined(DEBUG_VFS_FILENAME1) && defined(DEBUG_VFS_FILENAME2)
             if (!stricmp(pEntry->pszFileName, DEBUG_VFS_FILENAME1) || !stricmp(pEntry->pszFileName, DEBUG_VFS_FILENAME2))
@@ -300,7 +291,9 @@ static void VfsAddFileToLookupTableHook(PACKFILE_ENTRY *pEntry)
             pLookupTableItem->pNext = NULL;
             break;
         }
+
         pLookupTableItem = pLookupTableItem->pNext;
+        ++g_cNameCollisions;
     }
     
     pLookupTableItem->pPackfileEntry = pEntry;
@@ -308,14 +301,11 @@ static void VfsAddFileToLookupTableHook(PACKFILE_ENTRY *pEntry)
 
 static PACKFILE_ENTRY *VfsFindFileInternalHook(const char *pszFilename)
 {
-    unsigned Checksum;
-    VFS_LOOKUP_TABLE_NEW *pLookupTableItem;
-    
-    Checksum = VfsCalcFileNameChecksum(pszFilename);
-    pLookupTableItem = &g_pVfsLookupTableNew[Checksum % 20713];
+    unsigned Checksum = VfsCalcFileNameChecksum(pszFilename);
+    VFS_LOOKUP_TABLE_NEW *pLookupTableItem = &g_pVfsLookupTableNew[Checksum % LOOKUP_TABLE_SIZE];
     do
     {
-        if(pLookupTableItem->pPackfileEntry &&
+        if (pLookupTableItem->pPackfileEntry &&
            pLookupTableItem->pPackfileEntry->dwNameChecksum == Checksum &&
            !stricmp(pLookupTableItem->pPackfileEntry->pszFileName, pszFilename))
         {
@@ -332,7 +322,7 @@ static PACKFILE_ENTRY *VfsFindFileInternalHook(const char *pszFilename)
     
     VFS_DBGPRINT("Cannot find: %s (%x)", pszFilename, Checksum);
     
-    /*pLookupTableItem = &g_pVfsLookupTableNew[Checksum % 20713];
+    /*pLookupTableItem = &g_pVfsLookupTableNew[Checksum % LOOKUP_TABLE_SIZE];
     do
     {
         if(pLookupTableItem->pPackfileEntry)
@@ -423,12 +413,13 @@ static void VfsInitHook(void)
         WriteMemPtr(0x0043E50B + 1, (PVOID)"localized_endgame.tbl");
         WriteMemPtr(0x004B082B + 1, (PVOID)"localized_strings.tbl");
     }
+
+    INFO("Packfile name collisions: %d", g_cNameCollisions);
 }
 
 static void VfsCleanupHook(void)
 {
-    unsigned i;
-    for(i = 0; i < g_cPackfiles; ++i)
+    for (unsigned i = 0; i < g_cPackfiles; ++i)
         free(g_pPackfiles[i]);
     free(g_pPackfiles);
     g_pPackfiles = NULL;
@@ -474,15 +465,12 @@ void VfsApplyHooks(void)
 
 void ForceFileFromPackfile(const char *pszName, const char *pszPackfile)
 {
-    PACKFILE *pPackfile;
-    unsigned i;
-    
-    pPackfile = VfsFindPackfile(pszPackfile);
-    if(pPackfile)
+    PACKFILE *pPackfile = VfsFindPackfile(pszPackfile);
+    if (pPackfile)
     {
-        for(i = 0; i < pPackfile->cFiles; ++i)
+        for (unsigned i = 0; i < pPackfile->cFiles; ++i)
         {
-            if(!stricmp(pPackfile->pFileList[i].pszFileName, pszName))
+            if (!stricmp(pPackfile->pFileList[i].pszFileName, pszName))
                 VfsAddFileToLookupTable(&pPackfile->pFileList[i]);
         }
     }
