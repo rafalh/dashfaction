@@ -32,8 +32,8 @@ void BanCmdHandlerHook(void)
         
         if(*g_pbCmdHelp)
         {
-            RfConsoleWrite(g_ppszStringsTable[886], NULL);
-            RfConsolePrintf("     ban <%s>", g_ppszStringsTable[835]);
+            RfConsoleWrite(g_ppszStringsTable[STR_USAGE], NULL);
+            RfConsolePrintf("     ban <%s>", g_ppszStringsTable[STR_PLAYER_NAME]);
         }
     }
 }
@@ -52,7 +52,7 @@ void KickCmdHandlerHook(void)
             {
                 if(pPlayer != *g_ppLocalPlayer)
                 {
-                    RfConsolePrintf(g_ppszStringsTable[958], pPlayer->strName.psz);
+                    RfConsolePrintf(g_ppszStringsTable[STR_KICKING_PLAYER], pPlayer->strName.psz);
                     KickPlayer(pPlayer);
                 } else
                     RfConsolePrintf("You cannot kick yourself!");
@@ -62,8 +62,8 @@ void KickCmdHandlerHook(void)
         
         if(*g_pbCmdHelp)
         {
-            RfConsoleWrite(g_ppszStringsTable[886], NULL);
-            RfConsolePrintf("     kick <%s>", g_ppszStringsTable[835]);
+            RfConsoleWrite(g_ppszStringsTable[STR_USAGE], NULL);
+            RfConsolePrintf("     kick <%s>", g_ppszStringsTable[STR_PLAYER_NAME]);
         }
     }
 }

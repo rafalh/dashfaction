@@ -14,19 +14,19 @@ void OnPlayerKill(CPlayer *pKilled, CPlayer *pKiller)
     
     pKillerEntity = pKiller ? HandleToEntity(pKiller->hEntity) : NULL;
     
-    if(!pKiller)
+    if (!pKiller)
     {
         ColorId = 5;
-        pszMuiMsg = g_ppszStringsTable[695] ? g_ppszStringsTable[695] : ""; // was killed mysteriously
+        pszMuiMsg = g_ppszStringsTable[STR_WAS_KILLED_MYSTERIOUSLY] ? g_ppszStringsTable[STR_WAS_KILLED_MYSTERIOUSLY] : "";
         strMsg.psz = StringAlloc(pKilled->strName.cch + strlen(pszMuiMsg) + 1);
         strMsg.cch = sprintf(strMsg.psz, "%s%s", pKilled->strName.psz, pszMuiMsg);
     }
-    else if(pKilled == *g_ppLocalPlayer)
+    else if (pKilled == *g_ppLocalPlayer)
     {
         ColorId = 4;
-        if(pKiller == pKilled)
+        if (pKiller == pKilled)
         {
-            pszMuiMsg = g_ppszStringsTable[942] ? g_ppszStringsTable[942] : ""; // You killed yourself!
+            pszMuiMsg = g_ppszStringsTable[STR_YOU_KILLED_YOURSELF] ? g_ppszStringsTable[STR_YOU_KILLED_YOURSELF] : "";
             strMsg.psz = StringAlloc(strlen(pszMuiMsg) + 1);
             strMsg.cch = sprintf(strMsg.psz, "%s", pszMuiMsg);
         }
@@ -34,20 +34,20 @@ void OnPlayerKill(CPlayer *pKilled, CPlayer *pKiller)
         {
             unsigned cchWeaponName = 0;
             
-            if(pKillerEntity && pKillerEntity->WeaponSel.WeaponClsId == *g_pRiotStickClassId)
+            if (pKillerEntity && pKillerEntity->WeaponSel.WeaponClsId == *g_pRiotStickClassId)
             {
-                pszMuiMsg = g_ppszStringsTable[943] ? g_ppszStringsTable[943] : ""; // You just got beat down by
+                pszMuiMsg = g_ppszStringsTable[STR_YOU_JUST_GOT_BEAT_DOWN_BY] ? g_ppszStringsTable[STR_YOU_JUST_GOT_BEAT_DOWN_BY] : "";
                 strMsg.psz = StringAlloc(strlen(pszMuiMsg) + pKiller->strName.cch + 2);
                 strMsg.cch = sprintf(strMsg.psz, "%s%s!", pszMuiMsg, pKiller->strName.psz);
             }
             else
             {
-                pszMuiMsg = g_ppszStringsTable[944] ? g_ppszStringsTable[944] : ""; // You were killed by
+                pszMuiMsg = g_ppszStringsTable[STR_YOU_WERE_KILLED_BY] ? g_ppszStringsTable[STR_YOU_WERE_KILLED_BY] : "";
                 
-                if(pKillerEntity && pKillerEntity->WeaponSel.WeaponClsId >= 0 && pKillerEntity->WeaponSel.WeaponClsId < 64)
+                if (pKillerEntity && pKillerEntity->WeaponSel.WeaponClsId >= 0 && pKillerEntity->WeaponSel.WeaponClsId < 64)
                 {
                     pstrWeaponName = &g_pWeaponClasses[pKillerEntity->WeaponSel.WeaponClsId].strDisplayName;
-                    if(pstrWeaponName->psz && pstrWeaponName->cch)
+                    if (pstrWeaponName->psz && pstrWeaponName->cch)
                     {
                         pszWeaponName = pstrWeaponName->psz;
                         cchWeaponName = pstrWeaponName->cch;
@@ -64,28 +64,28 @@ void OnPlayerKill(CPlayer *pKilled, CPlayer *pKiller)
             }
         }
     }
-    else if(pKiller == *g_ppLocalPlayer)
+    else if (pKiller == *g_ppLocalPlayer)
     {
         ColorId = 4;
-        pszMuiMsg = g_ppszStringsTable[945] ? g_ppszStringsTable[945] : ""; // You killed
+        pszMuiMsg = g_ppszStringsTable[STR_YOU_KILLED] ? g_ppszStringsTable[STR_YOU_KILLED] : "";
         strMsg.psz = StringAlloc(strlen(pszMuiMsg) + pKilled->strName.cch + 2);
         strMsg.cch = sprintf(strMsg.psz, "%s%s!", pszMuiMsg, pKilled->strName.psz);
     }
     else
     {
         ColorId = 5;
-        if(pKiller == pKilled)
+        if (pKiller == pKilled)
         {
-            pszMuiMsg = g_ppszStringsTable[693] ? g_ppszStringsTable[693] : ""; // was killed by his own hand
+            pszMuiMsg = g_ppszStringsTable[STR_WAS_KILLED_BY_HIW_OWN_HAND] ? g_ppszStringsTable[STR_WAS_KILLED_BY_HIW_OWN_HAND] : "";
             strMsg.psz = StringAlloc(pKilled->strName.cch + strlen(pszMuiMsg) + 1);
             strMsg.cch = sprintf(strMsg.psz, "%s%s", pKilled->strName.psz, pszMuiMsg);
         }
         else
         {
-            if(pKillerEntity && pKillerEntity->WeaponSel.WeaponClsId == *g_pRiotStickClassId)
-                pszMuiMsg = g_ppszStringsTable[946] ? g_ppszStringsTable[946] : ""; // got beat down by
+            if (pKillerEntity && pKillerEntity->WeaponSel.WeaponClsId == *g_pRiotStickClassId)
+                pszMuiMsg = g_ppszStringsTable[STR_GOT_BEAT_DOWN_BY] ? g_ppszStringsTable[STR_GOT_BEAT_DOWN_BY] : "";
             else
-                pszMuiMsg = g_ppszStringsTable[694] ? g_ppszStringsTable[694] : ""; // was killed by
+                pszMuiMsg = g_ppszStringsTable[STR_WAS_KILLED_BY] ? g_ppszStringsTable[STR_WAS_KILLED_BY] : "";
             strMsg.psz = StringAlloc(pKilled->strName.cch + strlen(pszMuiMsg) + pKiller->strName.cch + 1);
             strMsg.cch = sprintf(strMsg.psz, "%s%s%s", pKilled->strName.psz, pszMuiMsg, pKiller->strName.psz);
         }
@@ -95,9 +95,9 @@ void OnPlayerKill(CPlayer *pKilled, CPlayer *pKiller)
     strPrefix.cch = 0;
     ChatPrint(strMsg, ColorId, strPrefix);
     
-    if(pKiller)
+    if (pKiller)
     {
-        if(pKiller != pKilled)
+        if (pKiller != pKilled)
             ++pKiller->pStats->iScore;
         else
             --pKiller->pStats->iScore;

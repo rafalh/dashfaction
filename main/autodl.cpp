@@ -6,6 +6,9 @@
 
 #ifdef LEVELS_AUTODOWNLOADER
 
+#define AUTODL_AGENT_NAME "hoverlees"
+#define AUTODL_HOST "pfapi.factionfiles.com"
+
 using namespace rf;
 
 static unsigned g_LevelTicketId;
@@ -23,74 +26,74 @@ BOOL UnzipVpp(const char *pszPath)
     BOOL bRet = FALSE;
 
     Archive = unzOpen(pszPath);
-    if(!Archive)
+    if (!Archive)
     {
 #ifdef DEBUG
-        RfConsoleWrite("unzOpen failed\n", NULL);
+        ERR("unzOpen failed: %s", pszPath);
 #endif
         // maybe RAR file
         goto cleanup;
     }
 
     iCode = unzGetGlobalInfo(Archive, &GlobalInfo);
-    if(iCode != UNZ_OK)
+    if (iCode != UNZ_OK)
     {
-        RfConsoleWrite("unzGetGlobalInfo failed\n", NULL);
+        ERR("unzGetGlobalInfo failed - error %d, path %s", iCode, pszPath);
         goto cleanup;
     }
 
-    for(i = 0; i < (int)GlobalInfo.number_entry; i++)
+    for (i = 0; i < (int)GlobalInfo.number_entry; i++)
     {
         iCode = unzGetCurrentFileInfo(Archive, &FileInfo, szFileName, sizeof(szFileName), NULL, 0, NULL, 0);
-        if(iCode != UNZ_OK)
+        if (iCode != UNZ_OK)
         {
-            RfConsoleWrite("unzGetCurrentFileInfo failed\n", NULL);
+            ERR("unzGetCurrentFileInfo failed - error %d, path %s", iCode, pszPath);
             break;
         }
 
         cch = strlen(szFileName);
-        if(cch > 4 && stricmp(szFileName + cch - 4, ".vpp") == 0)
+        if (cch > 4 && stricmp(szFileName + cch - 4, ".vpp") == 0)
         {
 #ifdef DEBUG
-            RfConsolePrintf("Unpacking %s", szFileName);
+            TRACE("Unpacking %s", szFileName);
 #endif
             sprintf(Buf, "%suser_maps\\multi\\%s", g_pszRootPath, szFileName);
             pFile = fopen(Buf, "wb"); /* FIXME: overwrite file? */
-            if(!pFile)
+            if (!pFile)
             {
-                RfConsoleWrite("fopen failed\n", NULL);
+                ERR("fopen failed - %s", Buf);
                 break;
             }
 
             iCode = unzOpenCurrentFile(Archive);
-            if(iCode != UNZ_OK)
+            if (iCode != UNZ_OK)
             {
-                RfConsolePrintf("unzOpenCurrentFile failed: %d\n", iCode);
+                ERR("unzOpenCurrentFile failed - error %d, path %s", iCode, pszPath);
                 break;
             }
 
-            while((iCode = unzReadCurrentFile(Archive, Buf, sizeof(Buf))) > 0)
+            while ((iCode = unzReadCurrentFile(Archive, Buf, sizeof(Buf))) > 0)
                 fwrite(Buf, 1, iCode, pFile);
 
-            if(iCode < 0)
+            if (iCode < 0)
             {
-                RfConsoleWrite("unzReadCurrentFile failed\n", NULL);
+                ERR("unzReadCurrentFile failed - error %d, path %s", iCode, pszPath);
                 break;
             }
 
             fclose(pFile);
             unzCloseCurrentFile(Archive);
 
-            if(!VfsLoadPackfile(szFileName, "user_maps\\multi\\"))
-                RfConsoleWrite("RfLoadVpp failed\n", NULL);
+            if (!VfsLoadPackfile(szFileName, "user_maps\\multi\\"))
+                ERR("RfLoadVpp failed - %s", szFileName);
         }
 
-        if(i + 1 < (int)GlobalInfo.number_entry)
+        if (i + 1 < (int)GlobalInfo.number_entry)
         {
             iCode = unzGoToNextFile(Archive);
-            if(iCode != UNZ_OK)
+            if (iCode != UNZ_OK)
             {
-                RfConsoleWrite("unzGoToNextFile failed\n", NULL);
+                ERR("unzGoToNextFile failed - error %d, path %s", iCode, pszPath);
                 break;
             }
         }
@@ -121,9 +124,9 @@ BOOL UnrarVpp(const char *pszPath)
     OpenArchiveData.Callback = NULL;
     hArchive = RAROpenArchiveEx(&OpenArchiveData);
 
-    if(OpenArchiveData.OpenResult != 0)
+    if (OpenArchiveData.OpenResult != 0)
     {
-        RfConsoleWrite("RAROpenArchiveEx failed\n", NULL);
+        ERR("RAROpenArchiveEx failed - result %d, path %s", OpenArchiveData.OpenResult, pszPath);
         return FALSE;
     }
 
@@ -134,26 +137,26 @@ BOOL UnrarVpp(const char *pszPath)
     while ((iRHCode = RARReadHeader(hArchive, &HeaderData)) == 0)
     {
 #ifdef DEBUG
-        RfConsolePrintf("Unpacking %s", HeaderData.FileName);
+        INFO("Unpacking %s", HeaderData.FileName);
 #endif
         sprintf(szBuf, "%suser_maps\\multi", g_pszRootPath);
         iPFCode = RARProcessFile(hArchive, RAR_EXTRACT, szBuf, NULL);
         if (iPFCode == 0)
         {
-            if(!VfsLoadPackfile(HeaderData.FileName, "user_maps\\multi\\"))
-                RfConsoleWrite("RfLoadVpp failed\n", NULL);
+            if (!VfsLoadPackfile(HeaderData.FileName, "user_maps\\multi\\"))
+                ERR("RfLoadVpp failed - %s", pszPath);
         }
         else
         {
-            RfConsoleWrite("RARProcessFile failed\n", NULL);
+            ERR("RARProcessFile failed - result %d, path %s", iPFCode, pszPath);
             break;
         }
     }
 
     if (iRHCode == ERAR_BAD_DATA)
-        RfConsoleWrite("File header broken\n", NULL);
+        ERR("File header broken: %s", pszPath);
 
-    if(hArchive)
+    if (hArchive)
         RARCloseArchive(hArchive);
     return bRet;
 }
@@ -166,34 +169,32 @@ static DWORD WINAPI DownloadLevelThread(PVOID pParam)
     DWORD dwStatus = 0, dwSize = sizeof(DWORD), dwBytesRead;
     FILE *pTmpFile;
 
-    hInternet = InternetOpen("hoverlees", 0, NULL, NULL, 0);
-    if(!hInternet)
+    hInternet = InternetOpen(AUTODL_AGENT_NAME, 0, NULL, NULL, 0);
+    if (!hInternet)
         goto cleanup;
 
-    //hConnect = InternetConnect(hInternet, "nebulamods.com", INTERNET_DEFAULT_HTTP_PORT, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
-    hConnect = InternetConnect(hInternet, "pfapi.factionfiles.com", INTERNET_DEFAULT_HTTP_PORT, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
-    if(!hConnect)
+    hConnect = InternetConnect(hInternet, AUTODL_HOST, INTERNET_DEFAULT_HTTP_PORT, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
+    if (!hConnect)
     {
         ERR("InternetConnect failed");
         goto cleanup;
     }
 
-    //sprintf(buf, "nm_puredl.php?action=download&ticketid=%u", g_LevelTicketId);
     sprintf(buf, "downloadmap.php?ticketid=%u", g_LevelTicketId);
     hRequest = HttpOpenRequest(hConnect, NULL, buf, NULL, NULL, AcceptTypes, INTERNET_FLAG_RELOAD, 0);
-    if(!hRequest)
+    if (!hRequest)
     {
         ERR("HttpOpenRequest failed");
         goto cleanup;
     }
 
-    if(!HttpSendRequest(hRequest, NULL, 0, NULL, 0))
+    if (!HttpSendRequest(hRequest, NULL, 0, NULL, 0))
     {
         ERR("HttpSendRequest failed");
         goto cleanup;
     }
 
-    if(HttpQueryInfo(hRequest, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &dwStatus, &dwSize, NULL) && (dwStatus / 100) != 2)
+    if (HttpQueryInfo(hRequest, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &dwStatus, &dwSize, NULL) && (dwStatus / 100) != 2)
     {
         ERR("HttpQueryInfo failed or status code (%lu) is wrong", dwStatus);
         goto cleanup;
@@ -201,13 +202,13 @@ static DWORD WINAPI DownloadLevelThread(PVOID pParam)
 
     tmpnam(szTmpName);
     pTmpFile = fopen(szTmpName, "wb");
-    if(!pTmpFile)
+    if (!pTmpFile)
     {
         ERR("fopen failed");
         goto cleanup;
     }
 
-    while(InternetReadFile(hRequest, buf, sizeof(buf), &dwBytesRead) && dwBytesRead > 0)
+    while (InternetReadFile(hRequest, buf, sizeof(buf), &dwBytesRead) && dwBytesRead > 0)
     {
         g_cbDownloadProgress += dwBytesRead;
         fwrite(buf, 1, dwBytesRead, pTmpFile);
@@ -217,7 +218,7 @@ static DWORD WINAPI DownloadLevelThread(PVOID pParam)
 
     fclose(pTmpFile);
 
-    if(!UnzipVpp(szTmpName) && !UnrarVpp(szTmpName))
+    if (!UnzipVpp(szTmpName) && !UnrarVpp(szTmpName))
         ERR("UnzipVpp and UnrarVpp failed");
 
     remove(szTmpName);
@@ -225,11 +226,11 @@ static DWORD WINAPI DownloadLevelThread(PVOID pParam)
     g_bDownloadActive = FALSE;
 
 cleanup:
-    if(hRequest)
+    if (hRequest)
         InternetCloseHandle(hRequest);
-    if(hConnect)
+    if (hConnect)
         InternetCloseHandle(hConnect);
-    if(hInternet)
+    if (hInternet)
         InternetCloseHandle(hInternet);
     return 0;
 }
@@ -260,49 +261,47 @@ BOOL TryToDownloadLevel(const char *pszFileName)
     const char *ppszBtnTitles[] = {"Cancel", "Download"};
     void *ppfnCallbacks[] = {NULL, (void*)DownloadLevel};
 
-    if(g_bDownloadActive)
+    if (g_bDownloadActive)
     {
         rf::UiMsgBox("Error!", "You can download only one level at once!", NULL, FALSE);
         return FALSE;
     }
 
-    hInternet = InternetOpen("hoverlees", 0, NULL, NULL, 0);
-    if(!hInternet)
+    hInternet = InternetOpen(AUTODL_AGENT_NAME, 0, NULL, NULL, 0);
+    if (!hInternet)
     {
         ERR("InternetOpen failed");
         goto cleanup;
     }
 
-    //hConnect = InternetConnect(hInternet, "nebulamods.com", INTERNET_DEFAULT_HTTP_PORT, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
-    hConnect = InternetConnect(hInternet, "pfapi.factionfiles.com", INTERNET_DEFAULT_HTTP_PORT, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
-    if(!hConnect)
+    hConnect = InternetConnect(hInternet, AUTODL_HOST, INTERNET_DEFAULT_HTTP_PORT, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
+    if (!hConnect)
     {
         ERR("InternetConnect failed");
         goto cleanup;
     }
 
-    //hRequest = HttpOpenRequest(hConnect, "POST", "nm_puredl.php", NULL, NULL, AcceptTypes, INTERNET_FLAG_RELOAD, 0);
     hRequest = HttpOpenRequest(hConnect, "POST", "findmap.php", NULL, NULL, AcceptTypes, INTERNET_FLAG_RELOAD, 0);
-    if(!hRequest)
+    if (!hRequest)
     {
         ERR("HttpOpenRequest failed");
         goto cleanup;
     }
 
     dwSize = sprintf(szBuf, "rflName=%s", pszFileName);
-    if(!HttpSendRequest(hRequest, szHeaders, sizeof(szHeaders) - 1, szBuf, dwSize))
+    if (!HttpSendRequest(hRequest, szHeaders, sizeof(szHeaders) - 1, szBuf, dwSize))
     {
         ERR("HttpSendRequest failed");
         goto cleanup;
     }
 
-    if(HttpQueryInfo(hRequest, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &dwStatus, &dwSize, NULL) && (dwStatus / 100) != 2)
+    if (HttpQueryInfo(hRequest, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &dwStatus, &dwSize, NULL) && (dwStatus / 100) != 2)
     {
         ERR("HttpQueryInfo failed or status code (%lu) is wrong", dwStatus);
         goto cleanup;
     }
 
-    if(!InternetReadFile(hRequest, szBuf, sizeof(szBuf) - 1, &dwBytesRead))
+    if (!InternetReadFile(hRequest, szBuf, sizeof(szBuf) - 1, &dwBytesRead))
     {
         ERR("InternetReadFile failed", NULL);
         goto cleanup;
@@ -313,39 +312,39 @@ BOOL TryToDownloadLevel(const char *pszFileName)
     TRACE("Maps server response: %s", szBuf);
 
     pszName = strchr(szBuf, '\n');
-    if(!pszName)
+    if (!pszName)
         goto cleanup;
     *(pszName++) = 0; // terminate first line with 0
-    if(strcmp(szBuf, "found") != 0)
+    if (strcmp(szBuf, "found") != 0)
         goto cleanup;
 
     pszAuthor = strchr(pszName, '\n');
-    if(!pszAuthor) // terminate name with 0
+    if (!pszAuthor) // terminate name with 0
         goto cleanup;
     *(pszAuthor++) = 0;
 
     pszDescr = strchr(pszAuthor, '\n');
-    if(!pszDescr)
+    if (!pszDescr)
         goto cleanup;
     *(pszDescr++) = 0; // terminate author with 0
 
     pszSize = strchr(pszDescr, '\n');
-    if(!pszSize)
+    if (!pszSize)
         goto cleanup;
     *(pszSize++) = 0; // terminate description with 0
 
     pszTicketId = strchr(pszSize, '\n');
-    if(!pszTicketId)
+    if (!pszTicketId)
         goto cleanup;
     *(pszTicketId++) = 0; // terminate size with 0
 
     pszEnd = strchr(pszTicketId, '\n');
-    if(pszEnd)
+    if (pszEnd)
         *pszEnd = 0; // terminate ticket id with 0
 
     g_LevelTicketId = strtoul(pszTicketId, NULL, 0);
     g_cbLevelSize = (unsigned)(atof(pszSize) * 1024 * 1024);
-    if(!g_LevelTicketId || !g_cbLevelSize)
+    if (!g_LevelTicketId || !g_cbLevelSize)
         goto cleanup;
 
     TRACE("Download ticket id: %u", g_LevelTicketId);
@@ -355,11 +354,11 @@ BOOL TryToDownloadLevel(const char *pszFileName)
     bRet = TRUE;
 
 cleanup:
-    if(hRequest)
+    if (hRequest)
         InternetCloseHandle(hRequest);
-    if(hConnect)
+    if (hConnect)
         InternetCloseHandle(hConnect);
-    if(hInternet)
+    if (hInternet)
         InternetCloseHandle(hInternet);
     return bRet;
 }
@@ -377,7 +376,7 @@ void OnJoinFailed(unsigned Reason)
     }
 
     pszReason = rf::GetJoinFailedStr(Reason);
-    rf::UiMsgBox(g_ppszStringsTable[884], pszReason, NULL, 0);
+    rf::UiMsgBox(g_ppszStringsTable[STR_EXITING_GAME], pszReason, NULL, 0);
 }
 
 void InitAutodownloader(void)

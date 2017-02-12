@@ -1044,7 +1044,19 @@ namespace rf
         STR_FRAGS = 676,
         STR_PING = 677,
         STR_CAPS = 681,
+        STR_WAS_KILLED_BY_HIW_OWN_HAND = 693,
+        STR_WAS_KILLED_BY = 694,
+        STR_WAS_KILLED_MYSTERIOUSLY = 695,
         STR_SCORE = 720,
+        STR_PLAYER_NAME = 835,
+        STR_EXITING_GAME = 884,
+        STR_USAGE = 886,
+        STR_YOU_KILLED_YOURSELF = 942,
+        STR_YOU_JUST_GOT_BEAT_DOWN_BY = 943,
+        STR_YOU_WERE_KILLED_BY = 944,
+        STR_YOU_KILLED = 945,
+        STR_GOT_BEAT_DOWN_BY = 946,
+        STR_KICKING_PLAYER = 958,
     };
 
     /* RF stdlib functions are not compatible with GCC */

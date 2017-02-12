@@ -54,7 +54,7 @@ static void MaxFpsCmdHandler(void)
     
     if (*g_pbCmdHelp)
     {
-        RfConsoleWrite(g_ppszStringsTable[886], NULL);
+        RfConsoleWrite(g_ppszStringsTable[STR_USAGE], NULL);
         RfConsoleWrite("     maxfps <limit>", NULL);
     }
 }
@@ -99,8 +99,8 @@ static void SpectateCmdHandler(void)
     
     if (*g_pbCmdHelp)
     {
-        RfConsoleWrite(g_ppszStringsTable[886], NULL);
-        RfConsolePrintf("     spectate <%s>", g_ppszStringsTable[835]);
+        RfConsoleWrite(g_ppszStringsTable[STR_USAGE], NULL);
+        RfConsolePrintf("     spectate <%s>", g_ppszStringsTable[STR_PLAYER_NAME]);
     }
 }
 
@@ -169,7 +169,7 @@ static void MouseSensitivityCmdHandler(void)
 
     if (*g_pbCmdHelp)
     {
-        RfConsoleWrite(g_ppszStringsTable[886], NULL);
+        RfConsoleWrite(g_ppszStringsTable[STR_USAGE], NULL);
         RfConsoleWrite("     ms <value>", NULL);
     }
 }
@@ -211,7 +211,7 @@ static void LevelSpCmdHandler(void)
 
     if (*g_pbCmdHelp)
     {
-        RfConsoleWrite(g_ppszStringsTable[886], NULL);
+        RfConsoleWrite(g_ppszStringsTable[STR_USAGE], NULL);
         RfConsoleWrite("     <rfl_name>", NULL);
     }
 }
