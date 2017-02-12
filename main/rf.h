@@ -38,7 +38,10 @@ namespace rf
     typedef void(*PFN_STRING_FREE)(void *pData);
     constexpr auto StringFree = (PFN_STRING_FREE)0x004FF3A0;
 
-    constexpr auto CString_Init = (void(__thiscall *)(CString *This, const char *pszInit))0x004FF3D0;
+    constexpr auto CString_Init = (CString*(__thiscall *)(CString *This, const char *pszInit))0x004FF3D0;
+    constexpr auto CString_InitFromStr = (CString*(__thiscall *)(CString *This, const CString *pstrInit))0x004FF410;
+    constexpr auto CString_CStr = (const char*(__thiscall *)(CString *This))0x004FF480;
+    constexpr auto CString_Destroy = (void(__thiscall *)(CString *This))0x004FF470;
 
     /* Debug Console */
 
@@ -170,13 +173,20 @@ namespace rf
     typedef void(*PFN_GR_DRAW_TEXT)(unsigned x, unsigned y, const char *pszText, int Font, unsigned Material);
     constexpr auto GrDrawText = (PFN_GR_DRAW_TEXT)0x0051FEB0;
 
-    typedef void(*PFN_GR_DRAW_ALIGNED_TEXT)(unsigned Align, unsigned x, unsigned y, const char *pszText, int Font, unsigned Material);
+    enum GrTextAlignment
+    {
+        GR_ALIGN_LEFT = 0,
+        GR_ALIGN_CENTER = 1,
+        GR_ALIGN_RIGHT = 2,
+    };
+
+    typedef void(*PFN_GR_DRAW_ALIGNED_TEXT)(GrTextAlignment Align, unsigned x, unsigned y, const char *pszText, int Font, unsigned Material);
     constexpr auto GrDrawAlignedText = (PFN_GR_DRAW_ALIGNED_TEXT)0x0051FE50;
 
     typedef void(*PFN_GR_DRAW_RECT)(unsigned x, unsigned y, unsigned cx, unsigned cy, unsigned Material);
     constexpr auto GrDrawRect = (PFN_GR_DRAW_RECT)0x0050DBE0;
 
-    typedef unsigned(*PFN_GR_GET_FONT_HEIGHT)(int Font);
+    typedef unsigned(*PFN_GR_GET_FONT_HEIGHT)(int FontId);
     constexpr auto GrGetFontHeight = (PFN_GR_GET_FONT_HEIGHT)0x0051F4D0;
 
     typedef CString *(*PFN_GR_FIT_TEXT)(CString *pstrDest, CString Str, int cxMax);
@@ -193,12 +203,10 @@ namespace rf
     typedef void(*PFN_GR_FLUSH_BUFFERS)(void);
     constexpr auto GrFlushBuffers = (PFN_GR_FLUSH_BUFFERS)0x00559D90;
 
-    typedef unsigned(*PFN_GET_WIDTH)(void);
-    constexpr auto GrGetMaxWidth = (PFN_GET_WIDTH)0x0050C640;
-
-    typedef unsigned(*PFN_GET_HEIGHT)(void);
-    constexpr auto GrGetMaxHeight = (PFN_GET_HEIGHT)0x0050C650;
-
+    constexpr auto GrGetMaxWidth = (unsigned(*)())0x0050C640;
+    constexpr auto GrGetMaxHeight = (unsigned(*)())0x0050C650;
+    constexpr auto GrGetViewportWidth = (unsigned(*)())0x0050CDB0;
+    constexpr auto GrGetViewportHeight = (unsigned(*)())0x0050CDC0;
     constexpr auto GrLoadFont = (int(*)(const char *pszFileName, int a2))0x0051F6E0;
     constexpr auto GrSetViewMatrix = (void(*)(CMatrix3 *pMatRot, CVector3 *pPos, float fFov, int a4, int a5))0x00517EB0;
     constexpr auto GrSetViewMatrixD3D = (void(*)(CMatrix3 *pMatRot, CVector3 *pPos, float fFov, int a4, int a5))0x00547150;

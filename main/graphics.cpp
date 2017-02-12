@@ -261,6 +261,6 @@ void GraphicsDrawFpsCounter()
         char szBuf[32];
         sprintf(szBuf, "FPS: %.1f", *g_fFps);
         GrSetColor(0, 255, 0, 255);
-        GrDrawAlignedText(2, GrGetMaxWidth() - 10, 60, szBuf, -1, *g_pGrTextMaterial);
+        GrDrawAlignedText(GR_ALIGN_RIGHT, GrGetMaxWidth() - 10, 60, szBuf, -1, *g_pGrTextMaterial);
     }
 }

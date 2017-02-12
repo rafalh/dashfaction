@@ -417,7 +417,7 @@ void RenderDownloadProgress(void)
 
     GrSetColor(0, 0xFF, 0, 0x80);
     sprintf(szBuf, "Downloading: %.2f MB / %.2f MB", g_cbDownloadProgress/1024.0f/1024.0f, g_cbLevelSize/1024.0f/1024.0f);
-    GrDrawAlignedText(1, x + cx/2, y + cy/2 - cyFont/2, szBuf, -1, *g_pGrTextMaterial);
+    GrDrawAlignedText(GR_ALIGN_CENTER, x + cx/2, y + cy/2 - cyFont/2, szBuf, -1, *g_pGrTextMaterial);
 }
 
 #endif /* LEVELS_AUTODOWNLOADER */

@@ -264,7 +264,7 @@ void SpectateModeDrawUI()
         if (IsPlayerEntityInvalid(*g_ppLocalPlayer))
         {
             GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
-            GrDrawAlignedText(0, 20, 200, "Press JUMP key to enter Spectate Mode", -1, *g_pGrTextMaterial);
+            GrDrawAlignedText(GR_ALIGN_LEFT, 20, 200, "Press JUMP key to enter Spectate Mode", -1, *g_pGrTextMaterial);
         }
         return;
     }
@@ -283,10 +283,10 @@ void SpectateModeDrawUI()
     unsigned cyFont = GrGetFontHeight(-1);
 
     GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
-    GrDrawAlignedText(1, cxScr / 2, 150, "SPECTATE MODE", g_LargeFont, *g_pGrTextMaterial);
-    GrDrawAlignedText(0, 20, 200, "Press JUMP key to exit Spectate Mode", g_MediumFont, *g_pGrTextMaterial);
-    GrDrawAlignedText(0, 20, 215, "Press PRIMARY ATTACK key to switch to the next player", g_MediumFont, *g_pGrTextMaterial);
-    GrDrawAlignedText(0, 20, 230, "Press SECONDARY ATTACK key to switch to the previous player", g_MediumFont, *g_pGrTextMaterial);
+    GrDrawAlignedText(GR_ALIGN_CENTER, cxScr / 2, 150, "SPECTATE MODE", g_LargeFont, *g_pGrTextMaterial);
+    GrDrawAlignedText(GR_ALIGN_LEFT, 20, 200, "Press JUMP key to exit Spectate Mode", g_MediumFont, *g_pGrTextMaterial);
+    GrDrawAlignedText(GR_ALIGN_LEFT, 20, 215, "Press PRIMARY ATTACK key to switch to the next player", g_MediumFont, *g_pGrTextMaterial);
+    GrDrawAlignedText(GR_ALIGN_LEFT, 20, 230, "Press SECONDARY ATTACK key to switch to the previous player", g_MediumFont, *g_pGrTextMaterial);
 
     GrSetColor(0, 0, 0x00, 0x60);
     GrDrawRect(x, y, cx, cy, *((uint32_t*)0x17756C0));
@@ -294,13 +294,13 @@ void SpectateModeDrawUI()
     char szBuf[256];
     GrSetColor(0xFF, 0xFF, 0, 0x80);
     sprintf(szBuf, "Spectating: %s", g_SpectateModeTarget->strName.psz);
-    GrDrawAlignedText(1, x + cx / 2, y + cy / 2 - cyFont / 2, szBuf, g_LargeFont, *g_pGrTextMaterial);
+    GrDrawAlignedText(GR_ALIGN_CENTER, x + cx / 2, y + cy / 2 - cyFont / 2, szBuf, g_LargeFont, *g_pGrTextMaterial);
 
     CEntity *pEntity = HandleToEntity(g_SpectateModeTarget->hEntity);
     if (!pEntity)
     {
         GrSetColor(0xC0, 0, 0, 0xC0);
-        GrDrawAlignedText(1, cxScr / 2, cySrc / 2, "DEAD", g_LargeFont, *g_pGrTextMaterial);
+        GrDrawAlignedText(GR_ALIGN_CENTER, cxScr / 2, cySrc / 2, "DEAD", g_LargeFont, *g_pGrTextMaterial);
     }
 }
 
