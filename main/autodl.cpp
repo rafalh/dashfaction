@@ -15,17 +15,11 @@ static unsigned g_LevelTicketId;
 static unsigned g_cbLevelSize, g_cbDownloadProgress;
 static BOOL g_bDownloadActive = FALSE;
 
-BOOL UnzipVpp(const char *pszPath)
+bool UnzipVpp(const char *pszPath)
 {
-    unzFile Archive = 0;
-    unz_global_info GlobalInfo;
-    int iCode, i, cch;
-    char Buf[4096], szFileName[MAX_PATH];
-    unz_file_info FileInfo;
-    FILE *pFile;
-    BOOL bRet = FALSE;
+    bool bRet = false;
 
-    Archive = unzOpen(pszPath);
+    unzFile Archive = unzOpen(pszPath);
     if (!Archive)
     {
 #ifdef DEBUG
@@ -35,14 +29,17 @@ BOOL UnzipVpp(const char *pszPath)
         goto cleanup;
     }
 
-    iCode = unzGetGlobalInfo(Archive, &GlobalInfo);
+    unz_global_info GlobalInfo;
+    int iCode = unzGetGlobalInfo(Archive, &GlobalInfo);
     if (iCode != UNZ_OK)
     {
         ERR("unzGetGlobalInfo failed - error %d, path %s", iCode, pszPath);
         goto cleanup;
     }
 
-    for (i = 0; i < (int)GlobalInfo.number_entry; i++)
+    char Buf[4096], szFileName[MAX_PATH];
+    unz_file_info FileInfo;
+    for (int i = 0; i < (int)GlobalInfo.number_entry; i++)
     {
         iCode = unzGetCurrentFileInfo(Archive, &FileInfo, szFileName, sizeof(szFileName), NULL, 0, NULL, 0);
         if (iCode != UNZ_OK)
@@ -51,14 +48,14 @@ BOOL UnzipVpp(const char *pszPath)
             break;
         }
 
-        cch = strlen(szFileName);
-        if (cch > 4 && stricmp(szFileName + cch - 4, ".vpp") == 0)
+        const char *pszExt = strrchr(szFileName, '.');
+        if (pszExt && !stricmp(pszExt, ".vpp"))
         {
 #ifdef DEBUG
             TRACE("Unpacking %s", szFileName);
 #endif
             sprintf(Buf, "%suser_maps\\multi\\%s", g_pszRootPath, szFileName);
-            pFile = fopen(Buf, "wb"); /* FIXME: overwrite file? */
+            FILE *pFile = fopen(Buf, "wb"); /* FIXME: overwrite file? */
             if (!pFile)
             {
                 ERR("fopen failed - %s", Buf);
@@ -99,7 +96,7 @@ BOOL UnzipVpp(const char *pszPath)
         }
     }
 
-    bRet = TRUE;
+    bRet = true;
 
 cleanup:
     if (Archive)
@@ -107,54 +104,66 @@ cleanup:
     return bRet;
 }
 
-BOOL UnrarVpp(const char *pszPath)
+bool UnrarVpp(const char *pszPath)
 {
-    HANDLE hArchive;
-    int iRHCode, iPFCode;
     char CmtBuf[16384], szBuf[256];
-    struct RARHeaderData HeaderData;
-    struct RAROpenArchiveDataEx OpenArchiveData;
-    BOOL bRet = FALSE;
 
+    struct RAROpenArchiveDataEx OpenArchiveData;
     memset(&OpenArchiveData, 0, sizeof(OpenArchiveData));
     OpenArchiveData.ArcName = (char*)pszPath;
     OpenArchiveData.CmtBuf = CmtBuf;
     OpenArchiveData.CmtBufSize = sizeof(CmtBuf);
     OpenArchiveData.OpenMode = RAR_OM_EXTRACT;
     OpenArchiveData.Callback = NULL;
-    hArchive = RAROpenArchiveEx(&OpenArchiveData);
+    HANDLE hArchive = RAROpenArchiveEx(&OpenArchiveData);
 
-    if (OpenArchiveData.OpenResult != 0)
+    if (!hArchive || OpenArchiveData.OpenResult != 0)
     {
         ERR("RAROpenArchiveEx failed - result %d, path %s", OpenArchiveData.OpenResult, pszPath);
-        return FALSE;
+        return false;
     }
 
-    bRet = TRUE;
+    bool bRet = true;
+    struct RARHeaderData HeaderData;
     HeaderData.CmtBuf = NULL;
     memset(&OpenArchiveData.Reserved, 0, sizeof(OpenArchiveData.Reserved));
 
-    while ((iRHCode = RARReadHeader(hArchive, &HeaderData)) == 0)
+    while (true)
     {
-#ifdef DEBUG
-        INFO("Unpacking %s", HeaderData.FileName);
-#endif
-        sprintf(szBuf, "%suser_maps\\multi", g_pszRootPath);
-        iPFCode = RARProcessFile(hArchive, RAR_EXTRACT, szBuf, NULL);
-        if (iPFCode == 0)
+        int Code = RARReadHeader(hArchive, &HeaderData);
+        if (Code == ERAR_END_ARCHIVE)
+            break;
+
+        if (Code != 0)
         {
-            if (!VfsLoadPackfile(HeaderData.FileName, "user_maps\\multi\\"))
-                ERR("RfLoadVpp failed - %s", pszPath);
+            ERR("RARReadHeader failed - result %d, path %s", Code, pszPath);
+            break;
+        }
+
+        const char *pszExt = strrchr(HeaderData.FileName, '.');
+        if (pszExt && !stricmp(pszExt, ".vpp"))
+        {
+            TRACE("Unpacking %s", HeaderData.FileName);
+            sprintf(szBuf, "%suser_maps\\multi", g_pszRootPath);
+            Code = RARProcessFile(hArchive, RAR_EXTRACT, szBuf, NULL);
+            if (Code == 0)
+            {
+                if (!VfsLoadPackfile(HeaderData.FileName, "user_maps\\multi\\"))
+                    ERR("RfLoadVpp failed - %s", HeaderData.FileName);
+            }
         }
         else
         {
-            ERR("RARProcessFile failed - result %d, path %s", iPFCode, pszPath);
+            TRACE("Skipping %s", HeaderData.FileName);
+            Code = RARProcessFile(hArchive, RAR_SKIP, NULL, NULL);
+        }
+        
+        if (Code != 0)
+        {
+            ERR("RARProcessFile failed - result %d, path %s", Code, pszPath);
             break;
         }
     }
-
-    if (iRHCode == ERAR_BAD_DATA)
-        ERR("File header broken: %s", pszPath);
 
     if (hArchive)
         RARCloseArchive(hArchive);
