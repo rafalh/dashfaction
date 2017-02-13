@@ -32,12 +32,8 @@ namespace rf
         char *psz;
     };
 
-    typedef char *(*PFN_STRING_ALLOC)(unsigned cbSize);
-    constexpr auto StringAlloc = (PFN_STRING_ALLOC)0x004FF300;
-
-    typedef void(*PFN_STRING_FREE)(void *pData);
-    constexpr auto StringFree = (PFN_STRING_FREE)0x004FF3A0;
-
+    constexpr auto StringAlloc = (char*(*)(unsigned cbSize))0x004FF300;
+    constexpr auto StringFree = (void(*)(void *pData))0x004FF3A0;
     constexpr auto CString_Init = (CString*(__thiscall *)(CString *This, const char *pszInit))0x004FF3D0;
     constexpr auto CString_InitFromStr = (CString*(__thiscall *)(CString *This, const CString *pstrInit))0x004FF410;
     constexpr auto CString_CStr = (const char*(__thiscall *)(CString *This))0x004FF480;
@@ -146,6 +142,13 @@ namespace rf
         int field_1C;
     };
 
+    enum GrTextAlignment
+    {
+        GR_ALIGN_LEFT = 0,
+        GR_ALIGN_CENTER = 1,
+        GR_ALIGN_RIGHT = 2,
+    };
+
     constexpr auto g_ppDirect3D = (IDirect3D8**)0x01CFCBE0;
     constexpr auto g_ppGrDevice = (IDirect3DDevice8**)0x01CFCBE4;
     constexpr auto g_pGrScreen = (GrScreen*)0x017C7BC0;
@@ -159,62 +162,50 @@ namespace rf
     constexpr auto g_pGrImageMaterial = (uint32_t*)0x017756DC;
     constexpr auto g_pGrDefaultWFar = (float*)0x00596140;
 
-    typedef void(*PFN_GR_SET_COLOR)(unsigned r, unsigned g, unsigned b, unsigned a);
-    constexpr auto GrSetColor = (PFN_GR_SET_COLOR)0x0050CF80;
-
-    typedef void(*PFN_GR_SET_COLOR_PTR)(uint32_t *pColor);
-    constexpr auto GrSetColorPtr = (PFN_GR_SET_COLOR_PTR)0x0050D000;
-
-    typedef void(*PFN_GR_DRAW_TEXT)(unsigned x, unsigned y, const char *pszText, int Font, unsigned Material);
-    constexpr auto GrDrawText = (PFN_GR_DRAW_TEXT)0x0051FEB0;
-
-    enum GrTextAlignment
-    {
-        GR_ALIGN_LEFT = 0,
-        GR_ALIGN_CENTER = 1,
-        GR_ALIGN_RIGHT = 2,
-    };
-
-    typedef void(*PFN_GR_DRAW_ALIGNED_TEXT)(GrTextAlignment Align, unsigned x, unsigned y, const char *pszText, int Font, unsigned Material);
-    constexpr auto GrDrawAlignedText = (PFN_GR_DRAW_ALIGNED_TEXT)0x0051FE50;
-
-    typedef void(*PFN_GR_DRAW_RECT)(unsigned x, unsigned y, unsigned cx, unsigned cy, unsigned Material);
-    constexpr auto GrDrawRect = (PFN_GR_DRAW_RECT)0x0050DBE0;
-
-    typedef unsigned(*PFN_GR_GET_FONT_HEIGHT)(int FontId);
-    constexpr auto GrGetFontHeight = (PFN_GR_GET_FONT_HEIGHT)0x0051F4D0;
-
-    typedef CString *(*PFN_GR_FIT_TEXT)(CString *pstrDest, CString Str, int cxMax);
-    constexpr auto GrFitText = (PFN_GR_FIT_TEXT)0x00471EC0;
-
-    typedef int(*PFN_GR_DRAW_IMAGE)(int BmHandle, int x, int y, int Material);
-    constexpr auto GrDrawImage = (PFN_GR_DRAW_IMAGE)0x0050D2A0;
-
-    typedef int(*PFN_GR_READ_BACK_BUFFER)(int x, int y, int Width, int Height, void *pBuffer);
-    constexpr auto GrReadBackBuffer = (PFN_GR_READ_BACK_BUFFER)0x0050DFF0;
-
-    constexpr auto GrGetTextWidth = (void(*)(int *pOutWidth, int *pOutHeight, const char *pszText, int TextLen, int FontId))0x0051F530;
-
-    typedef void(*PFN_GR_FLUSH_BUFFERS)(void);
-    constexpr auto GrFlushBuffers = (PFN_GR_FLUSH_BUFFERS)0x00559D90;
-
     constexpr auto GrGetMaxWidth = (unsigned(*)())0x0050C640;
     constexpr auto GrGetMaxHeight = (unsigned(*)())0x0050C650;
     constexpr auto GrGetViewportWidth = (unsigned(*)())0x0050CDB0;
     constexpr auto GrGetViewportHeight = (unsigned(*)())0x0050CDC0;
+    constexpr auto GrSetColor = (void(*)(unsigned r, unsigned g, unsigned b, unsigned a))0x0050CF80;
+    constexpr auto GrSetColorPtr = (void(*)(uint32_t *pColor))0x0050D000;
+    constexpr auto GrDrawRect = (void(*)(unsigned x, unsigned y, unsigned cx, unsigned cy, unsigned Material))0x0050DBE0;
+    constexpr auto GrDrawImage = (void(*)(int BmHandle, int x, int y, int Material))0x0050D2A0;
+    constexpr auto GrDrawPoly = (void(*)(int Num, GrVertex **ppVertices, int Flags, int iMat))0x0050DF80;
+    constexpr auto GrDrawText = (void(*)(unsigned x, unsigned y, const char *pszText, int Font, unsigned Material))0x0051FEB0;
+    constexpr auto GrDrawAlignedText = (void(*)(GrTextAlignment Align, unsigned x, unsigned y, const char *pszText, int Font, unsigned Material))0x0051FE50;
+    constexpr auto GrFitText = (CString *(*)(CString *pstrDest, CString Str, int cxMax))0x00471EC0;
+    constexpr auto GrReadBackBuffer = (int(*)(int x, int y, int Width, int Height, void *pBuffer))0x0050DFF0;
     constexpr auto GrLoadFont = (int(*)(const char *pszFileName, int a2))0x0051F6E0;
+    constexpr auto GrGetFontHeight = (unsigned(*)(int FontId))0x0051F4D0;
+    constexpr auto GrGetTextWidth = (void(*)(int *pOutWidth, int *pOutHeight, const char *pszText, int TextLen, int FontId))0x0051F530;
+    constexpr auto GrFlushBuffers = (void(*)())0x00559D90;
     constexpr auto GrSetViewMatrix = (void(*)(CMatrix3 *pMatRot, CVector3 *pPos, float fFov, int a4, int a5))0x00517EB0;
     constexpr auto GrSetViewMatrixD3D = (void(*)(CMatrix3 *pMatRot, CVector3 *pPos, float fFov, int a4, int a5))0x00547150;
-    constexpr auto GrDrawPoly = (void(*)(int Num, GrVertex **ppVertices, int Flags, int iMat))0x0050DF80;
     constexpr auto GrLock = (int(*)(int BmHandle, int SectionIdx, SGrLockData *pData, int a4))0x0050E2E0;
     constexpr auto GrUnlock = (void(*)(SGrLockData *pData))0x0050E310;
 
     /* Bmpman */
 
-    typedef int(*PFN_BM_LOAD)(const char *pszFilename, int a2, BOOL a3);
-    constexpr auto BmLoad = (PFN_BM_LOAD)0x0050F6A0;
+    enum BmPixelFormat
+    {
+        BMPF_INVALID = 0x0,
+        BMPF_MONO8 = 0x1,
+        BMPF_UNK_2_8B = 0x2,
+        BMPF_565 = 0x3,
+        BMPF_4444 = 0x4,
+        BMPF_1555 = 0x5,
+        BMPF_888 = 0x6,
+        BMPF_8888 = 0x7,
+        BMPF_UNK_8_16B = 0x8,
+    };
 
-    constexpr auto BmConvertFormat = (void(*)(void *pDstBits, int DstPixelFmt, const void *pSrcBits, int SrcPixelFmt, int NumPixels))0x0055DD20;
+    constexpr auto BmLoad = (int(*)(const char *pszFilename, int a2, BOOL a3))0x0050F6A0;
+    constexpr auto BmCreateUserBmap = (int(*)(BmPixelFormat PixelFormat, int Width, int Height))0x005119C0;
+    constexpr auto BmConvertFormat = (void(*)(void *pDstBits, BmPixelFormat DstPixelFmt, const void *pSrcBits, BmPixelFormat SrcPixelFmt, int NumPixels))0x0055DD20;
+    constexpr auto BmGetBitmapSize = (void(*)(int BmHandle, int *pWidth, int *pHeight))0x00510630;
+    constexpr auto BmGetFilename = (const char*(*)(int BmHandle))0x00511710;
+    constexpr auto BmLock = (BmPixelFormat(*)(int BmHandle, BYTE **ppData, BYTE **ppPalette))0x00510780;
+    constexpr auto BmUnlock = (void(*)(int BmHandle))0x00511700;
 
     /* UI */
 
@@ -234,11 +225,9 @@ namespace rf
         int BgTexture;
     };
 
-    typedef void(*PFN_MSG_BOX)(const char *pszTitle, const char *pszText, void(*pfnCallback)(void), BOOL bInput);
-    constexpr auto UiMsgBox = (PFN_MSG_BOX)0x004560B0;
-
-    typedef void(*PFN_CREATE_DIALOG)(const char *pszTitle, const char *pszText, unsigned cButtons, const char **ppszBtnTitles, void **ppfnCallbacks, unsigned Unknown1, unsigned Unknown2);
-    constexpr auto UiCreateDialog = (PFN_CREATE_DIALOG)0x004562A0;
+    constexpr auto UiMsgBox = (void(*)(const char *pszTitle, const char *pszText, void(*pfnCallback)(void), BOOL bInput))0x004560B0;
+    constexpr auto UiCreateDialog = (void(*)(const char *pszTitle, const char *pszText, unsigned cButtons, const char **ppszBtnTitles, void **ppfnCallbacks, unsigned Unknown1, unsigned Unknown2))0x004562A0;
+    constexpr auto UiGetElementFromPos = (int(*)(int x, int y, CGuiPanel **ppGuiList, signed int cGuiList))0x00442ED0;
 
     /* VFS */
 
@@ -967,6 +956,11 @@ namespace rf
     constexpr auto g_ppBanlistLastEntry = (BANLIST_ENTRY**)0x0064EC24;
     constexpr auto g_pBanlistNullEntry = (BANLIST_ENTRY*)0x0064EC08;
 
+    /* Input */
+    constexpr auto MouseGetPos = (int(*)(int *pX, int *pY, int *pZ))0x0051E450;
+    constexpr auto MouseWasButtonPressed = (int(*)(int BtnIdx))0x0051E5D0;
+    constexpr auto KeyGetFromFifo = (int(*)())0x0051F000;
+
     /* Other */
 
     enum EGameLang
@@ -1031,7 +1025,6 @@ namespace rf
     constexpr auto SwitchMenu = (int(*)(int MenuId, bool bForce))0x00434190;
     constexpr auto SetNextLevelFilename = (void(*)(CString strFilename, CString strSecond))0x0045E2E0;
     constexpr auto DemoLoadLevel = (void(*)(const char *pszLevelFileName))0x004CC270;
-    constexpr auto KeyGetFromFifo = (int(*)())0x0051F000;
 
     /* Strings Table */
     constexpr auto g_ppszStringsTable = (char**)0x007CBBF0;

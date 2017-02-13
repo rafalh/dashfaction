@@ -252,7 +252,7 @@ void CommandsInit(void)
 #endif // if CAMERA_1_3_COMMANDS
 
     // Change limit of commands
-    ASSERT(*g_pcCommands == 0);
+    ASSERT(*g_pDcNumCommands == 0);
     WriteMemPtr(0x005099AC + 1, g_CommandsBuffer);
     WriteMemPtr(0x00509A8A + 1, g_CommandsBuffer);
     WriteMemPtr(0x00509AB0 + 3, g_CommandsBuffer);
