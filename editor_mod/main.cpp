@@ -18,7 +18,6 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
     // Change command for starting level test
     WriteMemPtr(0x00447973 + 1, CmdBuf);
     WriteMemPtr(0x00447CB9 + 1, CmdBuf);
-    MessageBox(0, CmdBuf, 0, 0);
 
     // Zero first argument for CreateProcess call
     WriteMemUInt8(0x00447B32, ASM_NOP, 0x00447B39 - 0x00447B32);
