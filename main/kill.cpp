@@ -2,8 +2,25 @@
 #include "kill.h"
 #include "rf.h"
 #include "utils.h"
+#include "scoreboard.h"
 
 using namespace rf;
+
+auto g_MpResetNetGameHook = makeFunHook(MpResetNetGame);
+
+void MpResetNetGame_New()
+{
+    CPlayer *pPlayer = *g_ppPlayersList;
+    while (pPlayer)
+    {
+        auto pStats = (PlayerStatsNew*)pPlayer->pStats;
+        pStats->cKills = 0;
+        pStats->cDeaths = 0;
+        pPlayer = pPlayer->pNext;
+        if (pPlayer == *g_ppPlayersList) break;
+    }
+    g_MpResetNetGameHook.callTrampoline();
+}
 
 void OnPlayerKill(CPlayer *pKilled, CPlayer *pKiller)
 {
@@ -95,18 +112,25 @@ void OnPlayerKill(CPlayer *pKilled, CPlayer *pKiller)
     strPrefix.cch = 0;
     ChatPrint(strMsg, ColorId, strPrefix);
     
+    auto pKilledStats = (PlayerStatsNew*)pKilled->pStats;
+    ++pKilledStats->cDeaths;
+
     if (pKiller)
     {
+        auto pKillerStats = (PlayerStatsNew*)pKiller->pStats;
         if (pKiller != pKilled)
-            ++pKiller->pStats->iScore;
+        {
+            ++pKillerStats->iScore;
+            ++pKillerStats->cKills;
+        }
         else
-            --pKiller->pStats->iScore;
+            --pKillerStats->iScore;
     }
 }
 
 void InitKill(void)
 {
-    /* Player kill handling */
+    // Player kill handling
     WriteMemUInt8(0x00420703, ASM_PUSH_EBX);
     WriteMemUInt8(0x00420704, ASM_PUSH_EDI);
     WriteMemUInt8(0x00420705, ASM_LONG_CALL_REL);
@@ -115,4 +139,8 @@ void InitKill(void)
     WriteMemUInt8(0x0042070C, 8);
     WriteMemUInt8(0x0042070D, ASM_LONG_JMP_REL);
     WriteMemInt32(0x0042070D + 1, 0x00420B03 - (0x0042070D + 0x5));
+
+    // Change player stats structure
+    WriteMemInt8(0x004A33B5 + 1, sizeof(PlayerStatsNew));
+    g_MpResetNetGameHook.hook(MpResetNetGame_New);
 }

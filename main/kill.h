@@ -1,3 +1,10 @@
 #pragma once
 
-void InitKill(void);
+#include "rf.h"
+
+struct PlayerStatsNew : rf::SPlayerStats
+{
+    unsigned short cKills, cDeaths;
+};
+
+void InitKill();

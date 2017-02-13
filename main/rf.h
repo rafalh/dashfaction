@@ -960,6 +960,8 @@ namespace rf
     typedef void(*PFN_BAN_IP)(NET_ADDR *pAddr);
     constexpr auto BanIp = (PFN_BAN_IP)0x0046D0F0;
 
+    constexpr auto MpResetNetGame = (void(*)())0x0046E450;
+
     constexpr auto g_pServAddr = (NET_ADDR*)0x0064EC5C;
     constexpr auto g_pstrServName = (CString*)0x0064EC28;
     constexpr auto g_pbNetworkGame = (uint8_t*)0x0064ECB9;

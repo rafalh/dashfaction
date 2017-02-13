@@ -3,6 +3,7 @@
 #include "utils.h"
 #include "rf.h"
 #include "rfproto.h"
+#include "kill.h"
 
 using namespace rf;
 
@@ -43,27 +44,37 @@ void DrawScoreboardInternalHook(BOOL bDraw)
     
     // Draw background
     constexpr int ROW_H = 15;
-    unsigned cx = (GameType == RF_DM) ? 450 : 600;
+    unsigned cx = std::min((GameType == RF_DM) ? 450u : 700u, GrGetViewportWidth());
     unsigned cy = ((GameType == RF_DM) ? 110 : 170) + std::max(cLeftCol, cRightCol) * ROW_H; // DM doesnt show team scores
     unsigned x = (GrGetViewportWidth() - cx) / 2;
     unsigned y = (GrGetViewportHeight() - cy) / 2;
+    unsigned xCenter = x + cx / 2;
     GrSetColor(0, 0, 0, 0x80);
     GrDrawRect(x, y, cx, cy, *g_pGrRectMaterial);
     
     // Draw RF logo
     GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
     static int ScoreRflogoBm = BmLoad("score_rflogo.tga", -1, TRUE);
-    GrDrawImage(ScoreRflogoBm, x + cx / 2 - 170, y + 10, *g_pGrImageMaterial);
+    GrDrawImage(ScoreRflogoBm, xCenter - 170, y + 10, *g_pGrImageMaterial);
     
-    // Draw map and server name
+    // Draw level
     GrSetColor(0xB0, 0xB0, 0xB0, 0xFF);
     sprintf(szBuf, "%s (%s) by %s", CString_CStr(g_pstrLevelName), CString_CStr(g_pstrLevelFilename), CString_CStr(g_pstrLevelAuthor));
-    GrDrawAlignedText(GR_ALIGN_CENTER, x + cx/2, y + 45, szBuf, -1, *g_pGrTextMaterial);
+    CString strLevelInfo, strLevelInfoNew;
+    CString_Init(&strLevelInfo, szBuf);
+    GrFitText(&strLevelInfoNew, strLevelInfo, cx - 20); // Note: this destroys input string
+    GrDrawAlignedText(GR_ALIGN_CENTER, xCenter, y + 45, CString_CStr(&strLevelInfoNew), -1, *g_pGrTextMaterial);
+    CString_Destroy(&strLevelInfoNew);
+
+    // Draw server info
     unsigned i = sprintf(szBuf, "%s (", CString_CStr(g_pstrServName));
     NwAddrToStr(szBuf + i, sizeof(szBuf) - i, g_pServAddr);
     i += strlen(szBuf + i);
     sprintf(szBuf + i, ")");
-    GrDrawAlignedText(GR_ALIGN_CENTER, x + cx/2, y + 60, szBuf, -1, *g_pGrTextMaterial);
+    CString strServerInfo, strServerInfoNew;
+    CString_Init(&strServerInfo, szBuf);
+    GrFitText(&strServerInfoNew, strServerInfo, cx - 20); // Note: this destroys input string
+    GrDrawAlignedText(GR_ALIGN_CENTER, xCenter, y + 60, CString_CStr(&strServerInfoNew), -1, *g_pGrTextMaterial);
     y += 80;
     
     // Draw team scores
@@ -96,36 +107,40 @@ void DrawScoreboardInternalHook(BOOL bDraw)
     
     struct
     {
-        int StatusBm, Name, Score, CtfFlags, Ping;
+        int StatusBm, Name, Score, KillsDeaths, CtfFlags, Ping;
     } ColOffsets[2];
 
     // Draw headers
-    unsigned NumColumns = (GameType == RF_DM ? 1 : 2);
-    unsigned cxNameMax = cx / NumColumns - 25 - 50 * (GameType == RF_CTF ? 3 : 2);
+    unsigned NumSect = (GameType == RF_DM ? 1 : 2);
+    unsigned cxNameMax = cx / NumSect - 25 - 50 * (GameType == RF_CTF ? 3 : 2) - 70;
     GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
-    for (unsigned i = 0; i < NumColumns; ++i)
+    for (unsigned i = 0; i < NumSect; ++i)
     {
-        int ColX = x + i * 300 + 13;
-        ColOffsets[i].StatusBm = ColX;
-        ColX += 12;
+        int xCol = x + i * (cx / 2) + 13;
+        ColOffsets[i].StatusBm = xCol;
+        xCol += 12;
 
-        ColOffsets[i].Name = ColX;
-        GrDrawText(ColX, y, g_ppszStringsTable[STR_PLAYER], -1, *g_pGrTextMaterial);
-        ColX += cxNameMax;
+        ColOffsets[i].Name = xCol;
+        GrDrawText(xCol, y, g_ppszStringsTable[STR_PLAYER], -1, *g_pGrTextMaterial);
+        xCol += cxNameMax;
 
-        ColOffsets[i].Score = ColX;
-        GrDrawText(ColX, y, g_ppszStringsTable[STR_SCORE], -1, *g_pGrTextMaterial); // Note: RF uses "Frags"
-        ColX += 50;
+        ColOffsets[i].Score = xCol;
+        GrDrawText(xCol, y, g_ppszStringsTable[STR_SCORE], -1, *g_pGrTextMaterial); // Note: RF uses "Frags"
+        xCol += 50;
+
+        ColOffsets[i].KillsDeaths = xCol;
+        GrDrawText(xCol, y, "K/D", -1, *g_pGrTextMaterial);
+        xCol += 70;
 
         if (GameType == RF_CTF)
         {
-            ColOffsets[i].CtfFlags = ColX;
-            GrDrawText(ColX, y, g_ppszStringsTable[STR_CAPS], -1, *g_pGrTextMaterial);
-            ColX += 50;
+            ColOffsets[i].CtfFlags = xCol;
+            GrDrawText(xCol, y, g_ppszStringsTable[STR_CAPS], -1, *g_pGrTextMaterial);
+            xCol += 50;
         }
 
-        ColOffsets[i].Ping = ColX;
-        GrDrawText(ColX, y, g_ppszStringsTable[STR_PING], -1, *g_pGrTextMaterial);
+        ColOffsets[i].Ping = xCol;
+        GrDrawText(xCol, y, g_ppszStringsTable[STR_PING], -1, *g_pGrTextMaterial);
     }
     y += 20;
     
@@ -162,16 +177,20 @@ void DrawScoreboardInternalHook(BOOL bDraw)
 
         CString strName, strNameNew;
         CString_InitFromStr(&strName, &pPlayer->strName);
-        GrFitText(&strNameNew, strName, cxNameMax); // Note: this destroys strName
+        GrFitText(&strNameNew, strName, cxNameMax - 10); // Note: this destroys strName
         GrDrawText(Offsets.Name, RowY, CString_CStr(&strNameNew), -1, *g_pGrTextMaterial);
         CString_Destroy(&strNameNew);
         
-        sprintf(szBuf, "%hd", pPlayer->pStats->iScore);
+        auto pStats = (PlayerStatsNew*)pPlayer->pStats;
+        sprintf(szBuf, "%hd", pStats->iScore);
         GrDrawText(Offsets.Score, RowY, szBuf, -1, *g_pGrTextMaterial);
+
+        sprintf(szBuf, "%hd/%hd", pStats->cKills, pStats->cDeaths);
+        GrDrawText(Offsets.KillsDeaths, RowY, szBuf, -1, *g_pGrTextMaterial);
         
         if (GameType == RF_CTF)
         {
-            sprintf(szBuf, "%hu", pPlayer->pStats->cCaps);
+            sprintf(szBuf, "%hu", pStats->cCaps);
             GrDrawText(Offsets.CtfFlags, RowY, szBuf, -1, *g_pGrTextMaterial);
         }
         
