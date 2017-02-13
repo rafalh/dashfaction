@@ -6,76 +6,76 @@
 
 using namespace rf;
 
-void BanCmdHandlerHook(void)
+void BanCmdHandlerHook()
 {
-    if(*g_pbNetworkGame && *g_pbLocalNetworkGame)
+    if (*g_pbNetworkGame && *g_pbLocalNetworkGame)
     {
-        if(*g_pbCmdRun)
+        if (*g_pbDcRun)
         {
             CPlayer *pPlayer;
             
-            rf::CmdGetNextArg(CMD_ARG_STR, 1);
-            pPlayer = FindPlayer(g_pszCmdArg);
-            if(pPlayer)
+            rf::DcGetArg(DC_ARG_STR, 1);
+            pPlayer = FindPlayer(g_pszDcArg);
+            if (pPlayer)
             {
-                if(pPlayer != *g_ppLocalPlayer)
+                if (pPlayer != *g_ppLocalPlayer)
                 {
-                    RfConsolePrintf(g_ppszStringsTable[959], pPlayer->strName.psz);
+                    DcPrintf(g_ppszStringsTable[959], pPlayer->strName.psz);
                     BanIp(&(pPlayer->pNwData->Addr));
                     KickPlayer(pPlayer);
                 } else
-                    RfConsolePrintf("You cannot ban yourself!");
+                    DcPrintf("You cannot ban yourself!");
             }
             else
-                RfConsolePrintf("Cannot find %s", g_pszCmdArg);
+                DcPrintf("Cannot find %s", g_pszDcArg);
         }
         
-        if(*g_pbCmdHelp)
+        if (*g_pbDcHelp)
         {
-            RfConsoleWrite(g_ppszStringsTable[STR_USAGE], NULL);
-            RfConsolePrintf("     ban <%s>", g_ppszStringsTable[STR_PLAYER_NAME]);
+            DcWrite(g_ppszStringsTable[STR_USAGE], NULL);
+            DcPrintf("     ban <%s>", g_ppszStringsTable[STR_PLAYER_NAME]);
         }
     }
 }
 
-void KickCmdHandlerHook(void)
+void KickCmdHandlerHook()
 {
-    if(*g_pbNetworkGame && *g_pbLocalNetworkGame)
+    if (*g_pbNetworkGame && *g_pbLocalNetworkGame)
     {
-        if(*g_pbCmdRun)
+        if (*g_pbDcRun)
         {
             rf::CPlayer *pPlayer;
             
-            rf::CmdGetNextArg(CMD_ARG_STR, 1);
-            pPlayer = FindPlayer(g_pszCmdArg);
-            if(pPlayer)
+            rf::DcGetArg(DC_ARG_STR, 1);
+            pPlayer = FindPlayer(g_pszDcArg);
+            if (pPlayer)
             {
-                if(pPlayer != *g_ppLocalPlayer)
+                if (pPlayer != *g_ppLocalPlayer)
                 {
-                    RfConsolePrintf(g_ppszStringsTable[STR_KICKING_PLAYER], pPlayer->strName.psz);
+                    DcPrintf(g_ppszStringsTable[STR_KICKING_PLAYER], pPlayer->strName.psz);
                     KickPlayer(pPlayer);
                 } else
-                    RfConsolePrintf("You cannot kick yourself!");
+                    DcPrintf("You cannot kick yourself!");
             } else
-                RfConsolePrintf("Cannot find %s", g_pszCmdArg);
+                DcPrintf("Cannot find %s", g_pszDcArg);
         }
         
-        if(*g_pbCmdHelp)
+        if (*g_pbDcHelp)
         {
-            RfConsoleWrite(g_ppszStringsTable[STR_USAGE], NULL);
-            RfConsolePrintf("     kick <%s>", g_ppszStringsTable[STR_PLAYER_NAME]);
+            DcWrite(g_ppszStringsTable[STR_USAGE], NULL);
+            DcPrintf("     kick <%s>", g_ppszStringsTable[STR_PLAYER_NAME]);
         }
     }
 }
 
 void UnbanLastCmdHandler(void)
 {
-    if(*g_pbNetworkGame && *g_pbLocalNetworkGame && *g_pbCmdRun)
+    if(*g_pbNetworkGame && *g_pbLocalNetworkGame && *g_pbDcRun)
     {
         BANLIST_ENTRY *pEntry = *g_ppBanlistLastEntry;
         if(pEntry != g_pBanlistNullEntry)
         {
-            RfConsolePrintf("%s has been unbanned!", pEntry->szIp);
+            DcPrintf("%s has been unbanned!", pEntry->szIp);
             pEntry->pNext->pPrev = pEntry->pPrev;
             pEntry->pPrev->pNext = pEntry->pPrev;
             RfDelete(pEntry);

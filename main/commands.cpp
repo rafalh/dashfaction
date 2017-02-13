@@ -12,7 +12,7 @@
 
 constexpr int CMD_LIMIT = 128;
 
-static rf::CCmd *g_CommandsBuffer[CMD_LIMIT];
+static rf::DcCommand *g_CommandsBuffer[CMD_LIMIT];
 
 using namespace rf;
 
@@ -20,12 +20,12 @@ using namespace rf;
 
 static void SplitScreenCmdHandler(void)
 {
-    if(*g_pbCmdRun)
+    if (*g_pbDcRun)
     {
-        if(*g_pbNetworkGame)
+        if (*g_pbNetworkGame)
             RfSplitScreen(); /* FIXME: set player 2 controls */
         else
-            RfConsolePrintf("Works only in multiplayer game!");
+            DcPrintf("Works only in multiplayer game!");
     }
 }
 
@@ -33,29 +33,29 @@ static void SplitScreenCmdHandler(void)
 
 static void MaxFpsCmdHandler(void)
 {
-    if (*g_pbCmdRun)
+    if (*g_pbDcRun)
     {
-        rf::CmdGetNextArg(CMD_ARG_NONE | CMD_ARG_FLOAT, 0);
+        rf::DcGetArg(DC_ARG_NONE | DC_ARG_FLOAT, 0);
 
-        if ((*g_piCmdArgType & CMD_ARG_FLOAT))
+        if ((*g_pDcArgType & DC_ARG_FLOAT))
         {
 #ifdef NDEBUG
-            float newLimit = std::min(std::max(*g_pfCmdArg, (float)MIN_FPS_LIMIT), (float)MAX_FPS_LIMIT);
+            float newLimit = std::min(std::max(*g_pfDcArg, (float)MIN_FPS_LIMIT), (float)MAX_FPS_LIMIT);
 #else
-            float newLimit = *g_pfCmdArg;
+            float newLimit = *g_pfDcArg;
 #endif
             g_gameConfig.maxFps = (unsigned)newLimit;
             g_gameConfig.save();
             *g_pfMinFramerate = 1.0f / newLimit;
         }
         else
-            RfConsolePrintf("Maximal FPS: %.1f", 1.0f / *g_pfMinFramerate);
+            DcPrintf("Maximal FPS: %.1f", 1.0f / *g_pfMinFramerate);
     }
     
-    if (*g_pbCmdHelp)
+    if (*g_pbDcHelp)
     {
-        RfConsoleWrite(g_ppszStringsTable[STR_USAGE], NULL);
-        RfConsoleWrite("     maxfps <limit>", NULL);
+        DcWrite(g_ppszStringsTable[STR_USAGE], NULL);
+        DcWrite("     maxfps <limit>", NULL);
     }
 }
 
@@ -74,33 +74,33 @@ static void DebugCmdHandler(void)
 
 static void SpectateCmdHandler(void)
 {
-    if (*g_pbCmdRun)
+    if (*g_pbDcRun)
     {
         if (*g_pbNetworkGame)
         {
             rf::CPlayer *pPlayer;
-            rf::CmdGetNextArg(CMD_ARG_NONE | CMD_ARG_STR, 0);
-            if (*g_piCmdArgType & CMD_ARG_STR)
+            rf::DcGetArg(DC_ARG_NONE | DC_ARG_STR, 0);
+            if (*g_pDcArgType & DC_ARG_STR)
             {
-                pPlayer = FindPlayer(g_pszCmdArg);
+                pPlayer = FindPlayer(g_pszDcArg);
                 if (!pPlayer)
-                    RfConsolePrintf("Cannot find player: %s", g_pszCmdArg);
+                    DcPrintf("Cannot find player: %s", g_pszDcArg);
             }
             else {
-                RfConsolePrintf("Expected player name.");
+                DcPrintf("Expected player name.");
                 pPlayer = *g_ppLocalPlayer;
             }
             
             if (pPlayer)
                 SpectateModeSetTargetPlayer(pPlayer);
         } else
-            RfConsoleWrite("Works only in multiplayer game!", NULL);
+            DcWrite("Works only in multiplayer game!", NULL);
     }
     
-    if (*g_pbCmdHelp)
+    if (*g_pbDcHelp)
     {
-        RfConsoleWrite(g_ppszStringsTable[STR_USAGE], NULL);
-        RfConsolePrintf("     spectate <%s>", g_ppszStringsTable[STR_PLAYER_NAME]);
+        DcWrite(g_ppszStringsTable[STR_USAGE], NULL);
+        DcPrintf("     spectate <%s>", g_ppszStringsTable[STR_PLAYER_NAME]);
     }
 }
 
@@ -109,17 +109,17 @@ static void SpectateCmdHandler(void)
 #if MULTISAMPLING_SUPPORT
 static void AntiAliasingCmdHandler(void)
 {
-    if (*g_pbCmdRun)
+    if (*g_pbDcRun)
     {
         if (!g_gameConfig.msaa)
-            RfConsolePrintf("Anti-aliasing is not supported");
+            DcPrintf("Anti-aliasing is not supported");
         else
         {
             DWORD Enabled = FALSE;
             IDirect3DDevice8_GetRenderState(*g_ppGrDevice, D3DRS_MULTISAMPLEANTIALIAS, &Enabled);
             Enabled = !Enabled;
             IDirect3DDevice8_SetRenderState(*g_ppGrDevice, D3DRS_MULTISAMPLEANTIALIAS, Enabled);
-            RfConsolePrintf("Anti-aliasing is %s", Enabled ? "enabled" : "disabled");
+            DcPrintf("Anti-aliasing is %s", Enabled ? "enabled" : "disabled");
         }
     }
 }
@@ -128,13 +128,13 @@ static void AntiAliasingCmdHandler(void)
 #if DIRECTINPUT_SUPPORT
 static void InputModeCmdHandler(void)
 {
-    if (*g_pbCmdRun)
+    if (*g_pbDcRun)
     {
         *g_pbDirectInputDisabled = !*g_pbDirectInputDisabled;
         if (*g_pbDirectInputDisabled)
-            RfConsolePrintf("DirectInput is disabled");
+            DcPrintf("DirectInput is disabled");
         else
-            RfConsolePrintf("DirectInput is enabled");
+            DcPrintf("DirectInput is enabled");
     }
 }
 #endif // DIRECTINPUT_SUPPORT
@@ -154,69 +154,69 @@ static int CanPlayerFireHook(CPlayer *pPlayer)
 
 static void MouseSensitivityCmdHandler(void)
 {
-    if (*g_pbCmdRun)
+    if (*g_pbDcRun)
     {
-        rf::CmdGetNextArg(CMD_ARG_NONE | CMD_ARG_FLOAT, 0);
+        rf::DcGetArg(DC_ARG_NONE | DC_ARG_FLOAT, 0);
 
-        if ((*g_piCmdArgType & CMD_ARG_FLOAT))
+        if ((*g_pDcArgType & DC_ARG_FLOAT))
         {
-            float fValue = *g_pfCmdArg;
+            float fValue = *g_pfDcArg;
             fValue = std::min(std::max(fValue, 0.0f), 1.0f);
             (*g_ppLocalPlayer)->Settings.Controls.fMouseSensitivity = fValue;
         }
-        RfConsolePrintf("Mouse sensitivity: %.1f", (*g_ppLocalPlayer)->Settings.Controls.fMouseSensitivity);
+        DcPrintf("Mouse sensitivity: %.1f", (*g_ppLocalPlayer)->Settings.Controls.fMouseSensitivity);
     }
 
-    if (*g_pbCmdHelp)
+    if (*g_pbDcHelp)
     {
-        RfConsoleWrite(g_ppszStringsTable[STR_USAGE], NULL);
-        RfConsoleWrite("     ms <value>", NULL);
+        DcWrite(g_ppszStringsTable[STR_USAGE], NULL);
+        DcWrite("     ms <value>", NULL);
     }
 }
 
 static void VolumeLightsCmdHandler(void)
 {
-    if (*g_pbCmdRun)
+    if (*g_pbDcRun)
     {
         static MemChange vliCallChange(0x0043233E);
         if (vliCallChange.IsApplied())
             vliCallChange.Revert();
         else
             vliCallChange.Write("\x90\x90\x90\x90\x90", 5);
-        RfConsolePrintf("Volumetric lightining is %s.", vliCallChange.IsApplied() ? "disabled" : "enabled");
+        DcPrintf("Volumetric lightining is %s.", vliCallChange.IsApplied() ? "disabled" : "enabled");
     }
 }
 
 static void LevelSpCmdHandler(void)
 {
-    if (*g_pbCmdRun)
+    if (*g_pbDcRun)
     {
-        rf::CmdGetNextArg(CMD_ARG_STR, 0);
+        rf::DcGetArg(DC_ARG_STR, 0);
 
-        if ((*g_piCmdArgType & CMD_ARG_STR))
+        if ((*g_pDcArgType & DC_ARG_STR))
         {
             if (*g_pbNetworkGame)
             {
-                RfConsolePrintf("You cannot use it in multiplayer game!");
+                DcPrintf("You cannot use it in multiplayer game!");
                 return;
             }
             CString strUnk, strLevel;
             CString_Init(&strUnk, "");
-            CString_Init(&strLevel, g_pszCmdArg);
-            RfConsolePrintf("Loading level");
+            CString_Init(&strLevel, g_pszDcArg);
+            DcPrintf("Loading level");
             SetNextLevelFilename(strLevel, strUnk);
             SwitchMenu(5, 0);
         }
     }
 
-    if (*g_pbCmdHelp)
+    if (*g_pbDcHelp)
     {
-        RfConsoleWrite(g_ppszStringsTable[STR_USAGE], NULL);
-        RfConsoleWrite("     <rfl_name>", NULL);
+        DcWrite(g_ppszStringsTable[STR_USAGE], NULL);
+        DcWrite("     <rfl_name>", NULL);
     }
 }
 
-CCmd g_Commands[] = {
+DcCommand g_Commands[] = {
 #if SPLITSCREEN_ENABLE
     {"splitscreen", "Starts split screen mode", SplitScreenCmdHandler},
 #endif
@@ -265,10 +265,10 @@ void CommandsInit(void)
     WriteMemPtr(0x0050A6A0 + 3, g_CommandsBuffer);
 }
 
-void CommandRegister(CCmd *pCmd)
+void CommandRegister(DcCommand *pCmd)
 {
-    if (*g_pcCommands < CMD_LIMIT)
-        g_CommandsBuffer[(*g_pcCommands)++] = pCmd;
+    if (*g_pDcNumCommands < CMD_LIMIT)
+        g_CommandsBuffer[(*g_pDcNumCommands)++] = pCmd;
     else
         ASSERT(false);
 }

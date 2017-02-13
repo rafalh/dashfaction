@@ -45,45 +45,40 @@ namespace rf
 
     /* Debug Console */
 
-    struct CCmd
+    struct DcCommand
     {
         const char *pszCmd;
         const char *pszDescr;
         void(*pfnHandler)(void);
     };
 
-    typedef unsigned(*PFN_CONSOLE_WRITE)(const char *pszText, uint32_t *pColor);
-    constexpr auto RfConsoleWrite = (PFN_CONSOLE_WRITE)0x00509EC0;
-
-    typedef unsigned(*PFN_CONSOLE_PRINTF)(const char *pszFormat, ...);
-    constexpr auto RfConsolePrintf = (PFN_CONSOLE_PRINTF)0x0050B9F0;
-
-    //static CCmd ** const g_ppCommands = (CCmd**)0x01775530;
-    constexpr auto g_pcCommands = (uint32_t*)0x0177567C;
-
-    constexpr auto g_pbCmdRun = (uint32_t*)0x01775110;
-    constexpr auto g_pbCmdHelp = (uint32_t*)0x01775224;
-    constexpr auto g_piCmdArgType = (uint32_t*)0x01774D04;
-    constexpr auto g_pszCmdArg = (char*)0x0175462C;
-    constexpr auto g_piCmdArg = (int*)0x01775220;
-    constexpr auto g_pfCmdArg = (float*)0x01754628;
-
-    enum CmdArgType
+    enum DcArgType
     {
-        CMD_ARG_NONE = 0x0001,
-        CMD_ARG_STR = 0x0002,
-        CMD_ARG_INT = 0x0008,
-        CMD_ARG_FLOAT = 0x0010,
-        CMD_ARG_HEX = 0x0020,
-        CMD_ARG_TRUE = 0x0040,
-        CMD_ARG_FALSE = 0x0080,
-        CMD_ARG_PLUS = 0x0100,
-        CMD_ARG_MINUS = 0x0200,
-        CMD_ARG_COMMA = 0x0400,
+        DC_ARG_NONE = 0x0001,
+        DC_ARG_STR = 0x0002,
+        DC_ARG_INT = 0x0008,
+        DC_ARG_FLOAT = 0x0010,
+        DC_ARG_HEX = 0x0020,
+        DC_ARG_TRUE = 0x0040,
+        DC_ARG_FALSE = 0x0080,
+        DC_ARG_PLUS = 0x0100,
+        DC_ARG_MINUS = 0x0200,
+        DC_ARG_COMMA = 0x0400,
     };
 
-    typedef void(*PFN_CMD_GET_NEXT_ARG)(int Type, int bUnknown);
-    constexpr auto CmdGetNextArg = (PFN_CMD_GET_NEXT_ARG)0x0050AED0;
+    constexpr auto DcWrite = (unsigned(*)(const char *pszText, uint32_t *pColor))0x00509EC0;
+    constexpr auto DcPrintf = (unsigned(*)(const char *pszFormat, ...))0x0050B9F0;
+    constexpr auto DcGetArg = (void(*)(int Type, int bUnknown))0x0050AED0;
+
+    //constexpr auto g_ppDcCommands = (DcCommand**)0x01775530;
+    constexpr auto g_pDcNumCommands = (uint32_t*)0x0177567C;
+
+    constexpr auto g_pbDcRun = (uint32_t*)0x01775110;
+    constexpr auto g_pbDcHelp = (uint32_t*)0x01775224;
+    constexpr auto g_pDcArgType = (uint32_t*)0x01774D04;
+    constexpr auto g_pszDcArg = (char*)0x0175462C;
+    constexpr auto g_piDcArg = (int*)0x01775220;
+    constexpr auto g_pfDcArg = (float*)0x01754628;
 
     /* Graphics */
 

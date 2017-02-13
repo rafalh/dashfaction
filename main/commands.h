@@ -2,9 +2,9 @@
 
 namespace rf
 {
-    struct CCmd;
+    struct DcCommand;
 }
 
 void CommandsInit();
 void CommandsAfterGameInit();
-void CommandRegister(rf::CCmd *pCmd);
+void CommandRegister(rf::DcCommand *pCmd);

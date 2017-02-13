@@ -196,7 +196,7 @@ class RfConsoleLogAppender : public logging::BaseAppender
 {
     virtual void append(logging::LogLevel lvl, const std::string &str)
     {
-        RfConsoleWrite(str.c_str(), NULL);
+        DcWrite(str.c_str(), NULL);
     }
 };
 #endif // NDEBUG
