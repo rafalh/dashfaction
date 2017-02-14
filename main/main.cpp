@@ -32,8 +32,9 @@ GameConfig g_gameConfig;
 HMODULE g_hModule;
 HookableFunPtr<0x004163C0, void, CPlayer*> RenderHitScreenHookable;
 HookableFunPtr<0x004B33F0, void, const char**, const char**> GetVersionStrHookable;
-HookableFunPtr<0x0051F000, int> KeyGetFromFifoHookable;
-HookableFunPtr<0x004A35C0, void, CPlayer*> DestroyPlayerFun;
+auto PlayerDestroyHook = makeFunHook(PlayerDestroy);
+auto PlayerCreateHook = makeFunHook(PlayerCreate);
+auto KeyGetFromFifo_Hook = makeFunHook(KeyGetFromFifo);
 int g_VersionLabelX, g_VersionLabelWidth, g_VersionLabelHeight;
 static const char g_szVersionInMenu[] = PRODUCT_NAME_VERSION;
 
@@ -52,11 +53,11 @@ static void ProcessWaitingMessages()
     }
 }
 
-static void DrawConsoleAndProcessKbdFifoHook(BOOL bServer)
+static void DcUpdateHook(BOOL bServer)
 {
     // Draw on top (after scene)
 
-    DrawConsoleAndProcessKbdFifo(bServer);
+    DcUpdate(bServer);
     
     GraphicsDrawFpsCounter();
     
@@ -128,11 +129,11 @@ static bool RunGameHook()
     return rf::RunGame();
 }
 
-int KeyGetFromFifoHook()
+int KeyGetFromFifo_New()
 {
     // Process messages here because when watching videos main loop is not running
     ProcessWaitingMessages();
-    return KeyGetFromFifoHookable.callOrig();
+    return KeyGetFromFifo_Hook.callTrampoline();
 }
 
 CPlayer *FindPlayer(const char *pszName)
@@ -162,10 +163,17 @@ static void RenderHitScreenHook(CPlayer *pPlayer)
 #endif
 }
 
-static void DestroyPlayerHook(CPlayer *pPlayer)
+static CPlayer *PlayerCreate_New(char bLocal)
+{
+    CPlayer *pPlayer = PlayerCreateHook.callTrampoline(bLocal);
+    KillInitPlayer(pPlayer);
+    return pPlayer;
+}
+
+static void PlayerDestroy_New(CPlayer *pPlayer)
 {
     SpectateModeOnDestroyPlayer(pPlayer);
-    DestroyPlayerFun.callOrig(pPlayer);
+    PlayerDestroyHook.callTrampoline(pPlayer);
 }
 
 NAKED void CrashFix_0055CE48()
@@ -262,7 +270,7 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
     WriteMemUInt8(0x00524C48, ASM_NOP, 0x00524C83 - 0x00524C48); // disable msg loop thread
     WriteMemUInt8(0x00524C48, ASM_LONG_CALL_REL);
     WriteMemUInt32(0x00524C49, 0x00524E40 - (0x00524C48 + 0x5)); // CreateMainWindow
-    KeyGetFromFifoHookable.hook(KeyGetFromFifoHook);
+    KeyGetFromFifo_Hook.hook(KeyGetFromFifo_New);
 
     /* Console init string */
     WriteMemPtr(0x004B2534, "-- " PRODUCT_NAME " Initializing --\n");
@@ -300,7 +308,7 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
     WriteMemUInt8(0x00505D08, 0x00505D5B - (0x00505D07 + 0x2));
     
     /* DrawConsoleAndProcssKbdFifo hook */
-    WriteMemInt32(0x004B2DD3 + 1, (uintptr_t)DrawConsoleAndProcessKbdFifoHook - (0x004B2DD3 + 0x5));
+    WriteMemInt32(0x004B2DD3 + 1, (uintptr_t)DcUpdateHook - (0x004B2DD3 + 0x5));
 
     /* CleanupGame and InitGame hooks */
     WriteMemInt32(0x004B27CD + 1, (uintptr_t)InitGameHook - (0x004B27CD + 0x5));
@@ -322,7 +330,8 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
     WriteMemUInt8(0x004B4E0A, ASM_NOP, 0x004B4E22 - 0x004B4E0A);
 
     RenderHitScreenHookable.hook(RenderHitScreenHook);
-    DestroyPlayerFun.hook(DestroyPlayerHook);
+    PlayerCreateHook.hook(PlayerCreate_New);
+    PlayerDestroyHook.hook(PlayerDestroy_New);
 
 #if DIRECTINPUT_SUPPORT
     *g_pbDirectInputDisabled = 0;

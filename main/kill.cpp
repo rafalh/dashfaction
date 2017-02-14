@@ -8,14 +8,19 @@ using namespace rf;
 
 auto g_MpResetNetGameHook = makeFunHook(MpResetNetGame);
 
+void KillInitPlayer(CPlayer *pPlayer)
+{
+    auto pStats = (PlayerStatsNew*)pPlayer->pStats;
+    pStats->cKills = 0;
+    pStats->cDeaths = 0;
+}
+
 void MpResetNetGame_New()
 {
     CPlayer *pPlayer = *g_ppPlayersList;
     while (pPlayer)
     {
-        auto pStats = (PlayerStatsNew*)pPlayer->pStats;
-        pStats->cKills = 0;
-        pStats->cDeaths = 0;
+        KillInitPlayer(pPlayer);
         pPlayer = pPlayer->pNext;
         if (pPlayer == *g_ppPlayersList) break;
     }

@@ -65,6 +65,7 @@ namespace rf
     constexpr auto DcWrite = (unsigned(*)(const char *pszText, uint32_t *pColor))0x00509EC0;
     constexpr auto DcPrintf = (unsigned(*)(const char *pszFormat, ...))0x0050B9F0;
     constexpr auto DcGetArg = (void(*)(int Type, int bUnknown))0x0050AED0;
+    constexpr auto DcUpdate = (void(*)(BOOL bServer))0x0050A720;
 
     //constexpr auto g_ppDcCommands = (DcCommand**)0x01775530;
     constexpr auto g_pDcNumCommands = (uint32_t*)0x0177567C;
@@ -231,19 +232,19 @@ namespace rf
 
     /* VFS */
 
-    struct _PACKFILE_ENTRY;
+    struct PACKFILE_ENTRY;
 
-    typedef struct _PACKFILE
+    struct PACKFILE
     {
         char szName[32];
         char szPath[128];
         uint32_t field_A0;
         uint32_t cFiles;
-        struct _PACKFILE_ENTRY *pFileList;
+        PACKFILE_ENTRY *pFileList;
         uint32_t cbSize;
-    } PACKFILE;
+    };
 
-    typedef struct _PACKFILE_ENTRY
+    struct PACKFILE_ENTRY
     {
         uint32_t dwNameChecksum;
         char *pszFileName;
@@ -251,13 +252,13 @@ namespace rf
         uint32_t cbFileSize;
         PACKFILE *pArchive;
         FILE *pRawFile;
-    } PACKFILE_ENTRY;
+    };
 
-    typedef struct _VFS_LOOKUP_TABLE
+    struct VFS_LOOKUP_TABLE
     {
         uint32_t dwNameChecksum;
         PACKFILE_ENTRY *pArchiveEntry;
-    } VFS_LOOKUP_TABLE;
+    };
 
     constexpr auto g_pcArchives = (uint32_t*)0x01BDB214;
     constexpr auto g_pArchives = (PACKFILE*)0x01BA7AC8;
@@ -290,11 +291,11 @@ namespace rf
 
     /* Network */
 
-    typedef struct _NET_ADDR
+    struct NET_ADDR
     {
         uint32_t IpAddr;
         uint32_t Port;
-    } NET_ADDR;
+    };
 
     constexpr auto g_pNwSocket = (SOCKET*)0x005A660C;
 
@@ -881,12 +882,12 @@ namespace rf
 
     /* Weapons */
 
-    typedef struct _WEAPON_CLASS
+    struct WEAPON_CLASS
     {
         CString strName;
         CString strDisplayName;
         BYTE Rest[0x550 - 2 * sizeof(CString)];
-    } WEAPON_CLASS;
+    };
 
     constexpr auto g_pWeaponClasses = (WEAPON_CLASS*)0x0085CD08;
     constexpr auto g_pRiotStickClassId = (unsigned*)0x00872468;
@@ -1003,9 +1004,6 @@ namespace rf
     typedef void(*PFN_BEEP)(unsigned u1, unsigned u2, unsigned u3, float fVolume);
     constexpr auto RfBeep = (PFN_BEEP)0x00505560;
 
-    typedef void(*PFN_DRAW_CONSOLE_AND_PROCESS_KBD_FIFO)(BOOL bServer);
-    constexpr auto DrawConsoleAndProcessKbdFifo = (PFN_DRAW_CONSOLE_AND_PROCESS_KBD_FIFO)0x0050A720;
-
     typedef void(*PFN_INIT_GAME)(void);
     constexpr auto InitGame = (PFN_INIT_GAME)0x004B13F0;
 
@@ -1013,6 +1011,8 @@ namespace rf
     constexpr auto CleanupGame = (PFN_CLEANUP_GAME)0x004B2D40;
 
     constexpr auto RunGame = (bool(*)())0x004B2D90;
+    constexpr auto PlayerCreate = (CPlayer *(*)(char bLocal))0x004A3310;
+    constexpr auto PlayerDestroy = (void (*)(CPlayer *pPlayer))0x004A35C0;
 
     typedef char *(*PFN_GET_FILE_EXT)(char *pszPath);
     constexpr auto GetFileExt = (PFN_GET_FILE_EXT)0x005143F0;

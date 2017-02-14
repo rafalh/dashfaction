@@ -18,7 +18,7 @@ static CAMERA *g_OldTargetCamera = NULL;
 static bool g_SpectateModeEnabled = false;
 static int g_LargeFont = -1, g_MediumFont = -1, g_SmallFont = -1;
 
-static HookableFunPtr<0x004A6210, void, CPlayer*, EGameCtrl, char> HandleCtrlInGameFun;
+auto HandleCtrlInGame_Hook = makeFunHook(HandleCtrlInGame);
 static HookableFunPtr<0x0043A2C0, void, CPlayer*> RenderReticleFun;
 
 static void SetCameraTarget(CPlayer *pPlayer)
@@ -151,7 +151,7 @@ static void HandleCtrlInGameHook(CPlayer *pPlayer, EGameCtrl KeyId, char WasPres
         }
     }
     
-    HandleCtrlInGameFun.callOrig(pPlayer, KeyId, WasPressed);
+    HandleCtrlInGame_Hook.callTrampoline(pPlayer, KeyId, WasPressed);
 }
 
 static bool IsPlayerEntityInvalidHook(CPlayer *pPlayer)
@@ -234,7 +234,7 @@ void SpectateModeInit()
     static HookCall<PFN_IS_PLAYER_DYING> IsPlayerDying_Scoreboard_Hookable2(0x00437C36, IsPlayerDying);
     IsPlayerDying_Scoreboard_Hookable2.Hook(IsPlayerDyingHook);
     
-    HandleCtrlInGameFun.hook(HandleCtrlInGameHook);
+    HandleCtrlInGame_Hook.hook(HandleCtrlInGameHook);
     RenderReticleFun.hook(RenderReticleHook);
 
     // Note: HUD rendering doesn't make sense because life and armor isn't synced
