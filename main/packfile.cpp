@@ -63,18 +63,25 @@ static BOOL VfsLoadPackfileHook(const char *pszFilename, const char *pszDir)
     
     VFS_DBGPRINT("Load packfile %s %s", pszDir, pszFilename);
     
-    sprintf(szFullPath, "%s%s%s", g_pszRootPath, pszDir ? pszDir : "", pszFilename);
+    if (pszDir && pszDir[0] && pszDir[1] == ':')
+        sprintf(szFullPath, "%s%s", pszDir, pszFilename); // absolute path
+    else
+        sprintf(szFullPath, "%s%s%s", g_pszRootPath, pszDir ? pszDir : "", pszFilename);
+
     if (!pszFilename || strlen(pszFilename) > 0x1F || strlen(szFullPath) > 0x7F)
+    {
+        ERR("Packfile name or path too long: %s", szFullPath);
         return FALSE;
+    }
     
     for (unsigned i = 0; i < g_cPackfiles; ++i)
         if(!stricmp(g_pPackfiles[i]->szPath, szFullPath))
             return TRUE;
-    
+
     FILE *pFile = fopen(szFullPath, "rb");
     if (!pFile)
     {
-        ERR("Failed to load vpp %s", szFullPath);
+        ERR("Failed to open packfile %s", szFullPath);
         return FALSE;
     }
     
@@ -346,57 +353,61 @@ static void VfsInitHook(void)
     GetModuleFileNameA(g_hModule, szBuf, sizeof(szBuf));
     char *Ptr = strrchr(szBuf, '\\');
     strcpy(Ptr + 1, "dashfaction.vpp");
-    if (!PathFileExistsA(szBuf)) // try to remove 2 path components (bin/(debug|release))
+    if (PathFileExistsA(szBuf))
+        *(Ptr + 1) = '\0';
+    else
     {
+        // try to remove 2 path components (bin/(debug|release))
         *Ptr = 0;
         Ptr = strrchr(szBuf, '\\');
         if (Ptr)
             *Ptr = 0;
         Ptr = strrchr(szBuf, '\\');
         if (Ptr)
-            strcpy(Ptr + 1, "dashfaction.vpp");
+            *(Ptr + 1) = '\0';
     }
-    INFO("Loading DF packfile: %s", szBuf);
-    VfsLoadPackfile(szBuf, 0);
+    INFO("Loading dashfaction.vpp from directory: %s", szBuf);
+    if (!VfsLoadPackfile("dashfaction.vpp", szBuf))
+        ERR("Failed to load dashfaction.vpp");
 
     if (GetInstalledGameLang() == LANG_GR)
     {
-        VfsLoadPackfile("audiog.vpp", 0);
-        VfsLoadPackfile("maps_gr.vpp", 0);
-        VfsLoadPackfile("levels1g.vpp", 0);
-        VfsLoadPackfile("levels2g.vpp", 0);
-        VfsLoadPackfile("levels3g.vpp", 0);
-        VfsLoadPackfile("ltables.vpp", 0);
+        VfsLoadPackfile("audiog.vpp", nullptr);
+        VfsLoadPackfile("maps_gr.vpp", nullptr);
+        VfsLoadPackfile("levels1g.vpp", nullptr);
+        VfsLoadPackfile("levels2g.vpp", nullptr);
+        VfsLoadPackfile("levels3g.vpp", nullptr);
+        VfsLoadPackfile("ltables.vpp", nullptr);
     }
     else if (GetInstalledGameLang() == LANG_FR)
     {
-        VfsLoadPackfile("audiof.vpp", 0);
-        VfsLoadPackfile("maps_fr.vpp", 0);
-        VfsLoadPackfile("levels1f.vpp", 0);
-        VfsLoadPackfile("levels2f.vpp", 0);
-        VfsLoadPackfile("levels3f.vpp", 0);
-        VfsLoadPackfile("ltables.vpp", 0);
+        VfsLoadPackfile("audiof.vpp", nullptr);
+        VfsLoadPackfile("maps_fr.vpp", nullptr);
+        VfsLoadPackfile("levels1f.vpp", nullptr);
+        VfsLoadPackfile("levels2f.vpp", nullptr);
+        VfsLoadPackfile("levels3f.vpp", nullptr);
+        VfsLoadPackfile("ltables.vpp", nullptr);
     }
     else
     {
-        VfsLoadPackfile("audio.vpp", 0);
-        VfsLoadPackfile("maps_en.vpp", 0);
-        VfsLoadPackfile("levels1.vpp", 0);
-        VfsLoadPackfile("levels2.vpp", 0);
-        VfsLoadPackfile("levels3.vpp", 0);
+        VfsLoadPackfile("audio.vpp", nullptr);
+        VfsLoadPackfile("maps_en.vpp", nullptr);
+        VfsLoadPackfile("levels1.vpp", nullptr);
+        VfsLoadPackfile("levels2.vpp", nullptr);
+        VfsLoadPackfile("levels3.vpp", nullptr);
     }
-    VfsLoadPackfile("levelsm.vpp", 0);
-    //VfsLoadPackfile("levelseb.vpp", 0);
-    //VfsLoadPackfile("levelsbg.vpp", 0);
-    VfsLoadPackfile("maps1.vpp", 0);
-    VfsLoadPackfile("maps2.vpp", 0);
-    VfsLoadPackfile("maps3.vpp", 0);
-    VfsLoadPackfile("maps4.vpp", 0);
-    VfsLoadPackfile("meshes.vpp", 0);
-    VfsLoadPackfile("motions.vpp", 0);
-    VfsLoadPackfile("music.vpp", 0);
-    VfsLoadPackfile("ui.vpp", 0);
-    VfsLoadPackfile("tables.vpp", 0);
+    VfsLoadPackfile("levelsm.vpp", nullptr);
+    //VfsLoadPackfile("levelseb.vpp", nullptr);
+    //VfsLoadPackfile("levelsbg.vpp", nullptr);
+    VfsLoadPackfile("maps1.vpp", nullptr);
+    VfsLoadPackfile("maps2.vpp", nullptr);
+    VfsLoadPackfile("maps3.vpp", nullptr);
+    VfsLoadPackfile("maps4.vpp", nullptr);
+    VfsLoadPackfile("meshes.vpp", nullptr);
+    VfsLoadPackfile("motions.vpp", nullptr);
+    VfsLoadPackfile("music.vpp", nullptr);
+    VfsLoadPackfile("ui.vpp", nullptr);
+    VfsLoadPackfile("tables.vpp", nullptr);
     *((BOOL*)0x01BDB218) = TRUE; // bPackfilesLoaded
     *((uint32_t*)0x01BDB210) = 10000; // cFilesInVfs
     *((uint32_t*)0x01BDB214) = 100; // cPackfiles

@@ -163,8 +163,8 @@ void DrawScoreboardInternalHook(BOOL bDraw)
         else
             GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
         
-        static int GreenBm = BmLoad("DF_green.tga", -1, 0);
-        static int RedBm = BmLoad("DF_red.tga", -1, 0);
+        static int GreenBm = BmLoad("DF_green.tga", -1, 1);
+        static int RedBm = BmLoad("DF_red.tga", -1, 1);
         static int HudMicroFlagRedBm = BmLoad("hud_microflag_red.tga", -1, 1);
         static int HudMicroFlagBlueBm = BmLoad("hud_microflag_blue.tga", -1, 1);
         CEntity *pEntity = HandleToEntity(pPlayer->hEntity);
