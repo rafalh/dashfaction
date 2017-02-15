@@ -37,15 +37,12 @@ int GetPixelFormatID(int PixelFormat, int *BytesPerPixel)
     }
 }
 
-int GrReadBackBufferHook(LONG x, LONG y, int Width, int Height, BYTE *pBuffer)
+int GrD3DReadBackBufferHook(LONG x, LONG y, int Width, int Height, BYTE *pBuffer)
 {
     HRESULT hr;
     int Result = 0;
     IDirect3DSurface8 *pBackBuffer = NULL;
     IDirect3DSurface8 *pTmpSurface = NULL;
-
-    if (*((DWORD*)0x17C7BCC) != 102)
-        return 0;
 
     // Note: function is sometimes called with all parameters set to 0 to get backbuffer format
 
@@ -136,8 +133,7 @@ void InitScreenshot(void)
 #if MULTISAMPLING_SUPPORT
     if (g_gameConfig.msaa)
     {
-        WriteMemUInt8(0x0050DFF0, ASM_LONG_JMP_REL);
-        WriteMemInt32(0x0050DFF0 + 1, (uintptr_t)GrReadBackBufferHook - (0x0050DFF0 + 0x5));
+        WriteMemInt32(0x0050E015 + 1, (uintptr_t)GrD3DReadBackBufferHook - (0x0050E015 + 0x5));
     }
 #endif
 

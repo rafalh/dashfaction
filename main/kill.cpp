@@ -6,7 +6,7 @@
 
 using namespace rf;
 
-auto g_MpResetNetGameHook = makeFunHook(MpResetNetGame);
+auto MpResetNetGame_Hook = makeFunHook(MpResetNetGame);
 
 void KillInitPlayer(CPlayer *pPlayer)
 {
@@ -24,7 +24,7 @@ void MpResetNetGame_New()
         pPlayer = pPlayer->pNext;
         if (pPlayer == *g_ppPlayersList) break;
     }
-    g_MpResetNetGameHook.callTrampoline();
+    MpResetNetGame_Hook.callTrampoline();
 }
 
 void OnPlayerKill(CPlayer *pKilled, CPlayer *pKiller)
@@ -147,5 +147,5 @@ void InitKill(void)
 
     // Change player stats structure
     WriteMemInt8(0x004A33B5 + 1, sizeof(PlayerStatsNew));
-    g_MpResetNetGameHook.hook(MpResetNetGame_New);
+    MpResetNetGame_Hook.hook(MpResetNetGame_New);
 }

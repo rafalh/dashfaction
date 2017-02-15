@@ -12,6 +12,10 @@ typedef BOOL WINBOOL;
 
 namespace rf
 {
+    /* Declarations */
+    struct CPlayer;
+    struct CEntity;
+
     /* Math */
 
     struct CVector3
@@ -291,7 +295,7 @@ namespace rf
 
     /* Network */
 
-    struct NET_ADDR
+    struct NwAddr
     {
         uint32_t IpAddr;
         uint32_t Port;
@@ -299,14 +303,14 @@ namespace rf
 
     constexpr auto g_pNwSocket = (SOCKET*)0x005A660C;
 
-    typedef void(*PFN_PROCESS_GAME_PACKETS)(const char *pData, int cbData, const void *pAddr, void *pPlayer);
-    constexpr auto NwProcessGamePackets = (PFN_PROCESS_GAME_PACKETS)0x004790D0;
+    typedef void(*NwProcessGamePackets_Type)(const char *pData, int cbData, const NwAddr *pAddr, CPlayer *pPlayer);
+    constexpr auto NwProcessGamePackets = (NwProcessGamePackets_Type)0x004790D0;
 
-    typedef void(*PFN_NW_SEND_NOT_RELIABLE_PACKET)(const void *pAddr, const void *pPacket, unsigned cbPacket);
-    constexpr auto NwSendNotReliablePacket = (PFN_NW_SEND_NOT_RELIABLE_PACKET)0x0052A080;
+    typedef void(*NwSendNotReliablePacket_Type)(const void *pAddr, const void *pPacket, unsigned cbPacket);
+    constexpr auto NwSendNotReliablePacket = (NwSendNotReliablePacket_Type)0x0052A080;
 
-    typedef void(*PFN_NW_ADDR_TO_STR)(char *pszDest, int cbDest, NET_ADDR *pAddr);
-    constexpr auto NwAddrToStr = (PFN_NW_ADDR_TO_STR)0x00529FE0;
+    typedef void(*NwAddrToStr_Type)(char *pszDest, int cbDest, NwAddr *pAddr);
+    constexpr auto NwAddrToStr = (NwAddrToStr_Type)0x00529FE0;
 
     /* HUD */
 
@@ -319,8 +323,8 @@ namespace rf
 
     /* Chat */
 
-    typedef void(*PFN_CHAT_PRINT)(CString strText, unsigned ColorId, CString Prefix);
-    static PFN_CHAT_PRINT const ChatPrint = (PFN_CHAT_PRINT)0x004785A0;
+    typedef void(*ChatPrint_Type)(CString strText, unsigned ColorId, CString Prefix);
+    constexpr auto ChatPrint = (ChatPrint_Type)0x004785A0;
 
     /* Player */
 
@@ -333,7 +337,7 @@ namespace rf
 
     struct CPlayerNetData
     {
-        NET_ADDR Addr;
+        NwAddr Addr;
         uint32_t Flags;
         uint32_t field_C;
         uint32_t field_10;
@@ -352,14 +356,14 @@ namespace rf
 
     struct SKeyState
     {
-        __int16 DefaultScanCodes[2];
-        __int16 DefaultMouseBtnId;
-        __int16 field_6;
+        short DefaultScanCodes[2];
+        short DefaultMouseBtnId;
+        short field_6;
         int field_8;
         CString strName;
-        __int16 ScanCodes[2];
-        __int16 MouseBtnId;
-        __int16 field_1A;
+        short ScanCodes[2];
+        short MouseBtnId;
+        short field_1A;
     };
 
     struct CGameControls
@@ -418,9 +422,6 @@ namespace rf
         int MpCharacter;
         char szName[12];
     };
-
-    struct CPlayer;
-    struct CEntity;
 
     struct CAMERA
     {
@@ -605,22 +606,22 @@ namespace rf
     constexpr auto g_ppPlayersList = (CPlayer**)0x007C75CC;
     constexpr auto g_ppLocalPlayer = (CPlayer**)0x007C75D4;
 
+    constexpr auto PlayerCreate = (CPlayer *(*)(char bLocal))0x004A3310;
+    constexpr auto PlayerDestroy = (void(*)(CPlayer *pPlayer))0x004A35C0;
     constexpr auto KillLocalPlayer = (void(*)())0x004757A0;
-
-    typedef void(*PFN_RENDER_PLAYER_ARM)(CPlayer *pPlayer);
-    constexpr auto RenderPlayerArm = (PFN_RENDER_PLAYER_ARM)0x004A2B30;
-    constexpr auto RenderPlayerArm2 = (PFN_RENDER_PLAYER_ARM)0x004AB1A0;
-
-    typedef void(*PFN_SETUP_PLAYER_WEAPON_MESH)(CPlayer *pPlayer, int WeaponClsId);
-    constexpr auto SetupPlayerWeaponMesh = (PFN_SETUP_PLAYER_WEAPON_MESH)0x004AA230;
-
-    typedef bool(*PFN_IS_PLAYER_ENTITY_INVALID)(CPlayer *pPlayer);
-    constexpr auto IsPlayerEntityInvalid = (PFN_IS_PLAYER_ENTITY_INVALID)0x004A4920;
-
-    typedef bool(*PFN_IS_PLAYER_DYING)(CPlayer *pPlayer);
-    constexpr auto IsPlayerDying = (PFN_IS_PLAYER_DYING)0x004A4940;
-
     constexpr auto HandleCtrlInGame = (void(*)(CPlayer *pPlayer, EGameCtrl KeyId, char WasPressed))0x004A6210;
+
+    typedef void(*RenderPlayerArm_Type)(CPlayer *pPlayer);
+    constexpr auto RenderPlayerArm = (RenderPlayerArm_Type)0x004A2B30;
+
+    typedef void(*SetupPlayerWeaponMesh_Type)(CPlayer *pPlayer, int WeaponClsId);
+    constexpr auto SetupPlayerWeaponMesh = (SetupPlayerWeaponMesh_Type)0x004AA230;
+
+    typedef bool(*IsPlayerEntityInvalid_Type)(CPlayer *pPlayer);
+    constexpr auto IsPlayerEntityInvalid = (IsPlayerEntityInvalid_Type)0x004A4920;
+
+    typedef bool(*IsPlayerDying_Type)(CPlayer *pPlayer);
+    constexpr auto IsPlayerDying = (IsPlayerDying_Type)0x004A4940;
 
     /* Object */
 
@@ -720,8 +721,8 @@ namespace rf
         CObject *pNextObj;
     };
 
-    typedef void(*PFN_OBJECT_RENDER)(CObject *pObj);
-    constexpr auto RenderEntity = (PFN_OBJECT_RENDER)0x00421850;
+    typedef void(*EntityRender_Type)(CEntity *pObj);
+    constexpr auto EntityRender = (EntityRender_Type)0x00421850;
 
     /* Entity */
 
@@ -877,8 +878,8 @@ namespace rf
         int field_1490;
     };
 
-    typedef CEntity *(*PFN_HANDLE_TO_ENTITY)(uint32_t hEntity);
-    constexpr auto HandleToEntity = (PFN_HANDLE_TO_ENTITY)0x00426FC0;
+    typedef CEntity *(*HandleToEntity_Type)(uint32_t hEntity);
+    constexpr auto HandleToEntity = (HandleToEntity_Type)0x00426FC0;
 
     /* Weapons */
 
@@ -912,50 +913,50 @@ namespace rf
 
     /* Network Game */
 
-    typedef struct _BANLIST_ENTRY
+    struct BanlistEntry
     {
         char szIp[24];
-        struct _BANLIST_ENTRY *pNext;
-        struct _BANLIST_ENTRY *pPrev;
-    } BANLIST_ENTRY;
+        BanlistEntry *pNext;
+        BanlistEntry *pPrev;
+    };
 
-    typedef unsigned(*PFN_GET_GAME_TYPE)(void);
-    constexpr auto GetGameType = (PFN_GET_GAME_TYPE)0x00470770;
+    typedef unsigned(*GetGameType_Type)();
+    constexpr auto GetGameType = (GetGameType_Type)0x00470770;
 
-    typedef unsigned(*PFN_GET_PLAYERS_COUNT)(void);
-    constexpr auto GetPlayersCount = (PFN_GET_PLAYERS_COUNT)0x00484830;
+    typedef unsigned(*GetPlayersCount_Type)();
+    constexpr auto GetPlayersCount = (GetPlayersCount_Type)0x00484830;
 
-    typedef uint8_t(*PFN_GET_TEAM_SCORE)(void);
-    constexpr auto CtfGetRedScore = (PFN_GET_TEAM_SCORE)0x00475020;
-    constexpr auto CtfGetBlueScore = (PFN_GET_TEAM_SCORE)0x00475030;
-    constexpr auto TdmGetRedScore = (PFN_GET_TEAM_SCORE)0x004828F0;
-    constexpr auto TdmGetBlueScore = (PFN_GET_TEAM_SCORE)0x00482900;
+    typedef uint8_t(*GetTeamScore_Type)();
+    constexpr auto CtfGetRedScore = (GetTeamScore_Type)0x00475020;
+    constexpr auto CtfGetBlueScore = (GetTeamScore_Type)0x00475030;
+    constexpr auto TdmGetRedScore = (GetTeamScore_Type)0x004828F0;
+    constexpr auto TdmGetBlueScore = (GetTeamScore_Type)0x00482900;
     constexpr auto CtfGetRedFlagPlayer = (CPlayer*(*)())0x00474E60;
     constexpr auto CtfGetBlueFlagPlayer = (CPlayer*(*)())0x00474E70;
 
-    typedef void(*PFN_PACKET_HANDLER)(BYTE *pData, NET_ADDR *pAddr);
-    constexpr auto HandleNewPlayerPacket = (PFN_PACKET_HANDLER)0x0047A580;
+    typedef void(*PacketHandler_Type)(const BYTE *pData, const NwAddr *pAddr);
+    constexpr auto HandleNewPlayerPacket = (PacketHandler_Type)0x0047A580;
 
-    typedef const char *(*PFN_GET_JOIN_FAILED_STR)(unsigned Reason);
-    constexpr auto GetJoinFailedStr = (PFN_GET_JOIN_FAILED_STR)0x0047BE60;
+    typedef const char *(*GetJoinFailedStr_Type)(unsigned Reason);
+    constexpr auto GetJoinFailedStr = (GetJoinFailedStr_Type)0x0047BE60;
 
-    typedef void(*PFN_KICK_PLAYER)(CPlayer *pPlayer);
-    constexpr auto KickPlayer = (PFN_KICK_PLAYER)0x0047BF00;
+    typedef void(*KickPlayer_Type)(CPlayer *pPlayer);
+    constexpr auto KickPlayer = (KickPlayer_Type)0x0047BF00;
 
-    typedef void(*PFN_BAN_IP)(NET_ADDR *pAddr);
-    constexpr auto BanIp = (PFN_BAN_IP)0x0046D0F0;
+    typedef void(*BanIp_Type)(const NwAddr *pAddr);
+    constexpr auto BanIp = (BanIp_Type)0x0046D0F0;
 
     constexpr auto MpResetNetGame = (void(*)())0x0046E450;
 
-    constexpr auto g_pServAddr = (NET_ADDR*)0x0064EC5C;
+    constexpr auto g_pServAddr = (NwAddr*)0x0064EC5C;
     constexpr auto g_pstrServName = (CString*)0x0064EC28;
     constexpr auto g_pbNetworkGame = (uint8_t*)0x0064ECB9;
     constexpr auto g_pbLocalNetworkGame = (uint8_t*)0x0064ECBA;
     constexpr auto g_pbDedicatedServer = (uint32_t*)0x01B0D75C;
     constexpr auto g_pGameOptions = (uint32_t*)0x0064EC40;
-    constexpr auto g_ppBanlistFirstEntry = (BANLIST_ENTRY**)0x0064EC20;
-    constexpr auto g_ppBanlistLastEntry = (BANLIST_ENTRY**)0x0064EC24;
-    constexpr auto g_pBanlistNullEntry = (BANLIST_ENTRY*)0x0064EC08;
+    constexpr auto g_ppBanlistFirstEntry = (BanlistEntry**)0x0064EC20;
+    constexpr auto g_ppBanlistLastEntry = (BanlistEntry**)0x0064EC24;
+    constexpr auto g_pBanlistNullEntry = (BanlistEntry*)0x0064EC08;
 
     /* Input */
     constexpr auto MouseGetPos = (int(*)(int *pX, int *pY, int *pZ))0x0051E450;
@@ -1001,30 +1002,18 @@ namespace rf
     constexpr auto g_pbRenderEventIcons = (uint8_t*)0x00856500;
     constexpr auto g_pbDbgWeapon = (uint8_t*)0x007CAB59;
 
-    typedef void(*PFN_BEEP)(unsigned u1, unsigned u2, unsigned u3, float fVolume);
-    constexpr auto RfBeep = (PFN_BEEP)0x00505560;
-
-    typedef void(*PFN_INIT_GAME)(void);
-    constexpr auto InitGame = (PFN_INIT_GAME)0x004B13F0;
-
-    typedef void(*PFN_CLEANUP_GAME)(void);
-    constexpr auto CleanupGame = (PFN_CLEANUP_GAME)0x004B2D40;
-
+    constexpr auto RfBeep = (void(*)(unsigned u1, unsigned u2, unsigned u3, float fVolume))0x00505560;
+    constexpr auto InitGame = (void(*)())0x004B13F0;
+    constexpr auto CleanupGame = (void(*)())0x004B2D40;
     constexpr auto RunGame = (bool(*)())0x004B2D90;
-    constexpr auto PlayerCreate = (CPlayer *(*)(char bLocal))0x004A3310;
-    constexpr auto PlayerDestroy = (void (*)(CPlayer *pPlayer))0x004A35C0;
-
-    typedef char *(*PFN_GET_FILE_EXT)(char *pszPath);
-    constexpr auto GetFileExt = (PFN_GET_FILE_EXT)0x005143F0;
-
-    typedef void(*PFN_SPLIT_SCREEN)(void);
-    constexpr auto RfSplitScreen = (PFN_SPLIT_SCREEN)0x00480D30;
-
-    constexpr auto RegReadDword = (int(*)(char *pszSubKeyName, LPCSTR lpValueName, DWORD *lpData, int DefaultValue))0x004A4920;
-
+    constexpr auto GetFileExt = (char *(*)(char *pszPath))0x005143F0;
+    constexpr auto SplitScreenStart = (void(*)())0x00480D30;
+    constexpr auto GetVersionStr = (void(*)(const char **ppszVersion, const char **a2))0x004B33F0;
     constexpr auto SwitchMenu = (int(*)(int MenuId, bool bForce))0x00434190;
     constexpr auto SetNextLevelFilename = (void(*)(CString strFilename, CString strSecond))0x0045E2E0;
     constexpr auto DemoLoadLevel = (void(*)(const char *pszLevelFileName))0x004CC270;
+    constexpr auto RenderHitScreen = (void(*)(CPlayer *pPlayer))0x004163C0;
+    constexpr auto RenderReticle = (void(*)(CPlayer *pPlayer))0x0043A2C0;
 
     /* Strings Table */
     constexpr auto g_ppszStringsTable = (char**)0x007CBBF0;
@@ -1051,17 +1040,17 @@ namespace rf
 
     /* RF stdlib functions are not compatible with GCC */
 
-    typedef FILE *(*PFN_FOPEN)(const char *pszPath, const char *pszMode);
-    constexpr auto RfFopen = (PFN_FOPEN)0x00574FFE;
+    typedef FILE *(*RfFopen_Type)(const char *pszPath, const char *pszMode);
+    constexpr auto RfFopen = (RfFopen_Type)0x00574FFE;
 
-    typedef void(*PFN_FSEEK)(FILE *pFile, uint32_t Offset, uint32_t Direction);
-    constexpr auto RfSeek = (PFN_FSEEK)0x00574F14;
+    typedef void(*RfSeek_Type)(FILE *pFile, uint32_t Offset, uint32_t Direction);
+    constexpr auto RfSeek = (RfSeek_Type)0x00574F14;
 
-    typedef void(*PFN_DELETE)(void *pMem);
-    constexpr auto RfDelete = (PFN_DELETE)0x0057360E;
+    typedef void(*RfDelete_Type)(void *pMem);
+    constexpr auto RfDelete = (RfDelete_Type)0x0057360E;
 
-    typedef void *(*PFN_MALLOC)(uint32_t cbSize);
-    constexpr auto RfMalloc = (PFN_MALLOC)0x00573B37;
+    typedef void *(*RfMalloc_Type)(uint32_t cbSize);
+    constexpr auto RfMalloc = (RfMalloc_Type)0x00573B37;
 }
 
 #pragma pack(pop)

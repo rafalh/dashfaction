@@ -70,10 +70,10 @@ void KickCmdHandlerHook()
 
 void UnbanLastCmdHandler(void)
 {
-    if(*g_pbNetworkGame && *g_pbLocalNetworkGame && *g_pbDcRun)
+    if (*g_pbNetworkGame && *g_pbLocalNetworkGame && *g_pbDcRun)
     {
-        BANLIST_ENTRY *pEntry = *g_ppBanlistLastEntry;
-        if(pEntry != g_pBanlistNullEntry)
+        BanlistEntry *pEntry = *g_ppBanlistLastEntry;
+        if (pEntry != g_pBanlistNullEntry)
         {
             DcPrintf("%s has been unbanned!", pEntry->szIp);
             pEntry->pNext->pPrev = pEntry->pPrev;

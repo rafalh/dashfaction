@@ -23,7 +23,7 @@ static void SplitScreenCmdHandler(void)
     if (*g_pbDcRun)
     {
         if (*g_pbNetworkGame)
-            RfSplitScreen(); /* FIXME: set player 2 controls */
+            SplitScreenStart(); /* FIXME: set player 2 controls */
         else
             DcPrintf("Works only in multiplayer game!");
     }

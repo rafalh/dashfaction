@@ -6,7 +6,6 @@
 #include "utils.h"
 #include "scoreboard.h"
 
-#include "HookableFunPtr.h"
 #include "hooks/HookCall.h"
 
 using namespace rf;
@@ -19,7 +18,7 @@ static bool g_SpectateModeEnabled = false;
 static int g_LargeFont = -1, g_MediumFont = -1, g_SmallFont = -1;
 
 auto HandleCtrlInGame_Hook = makeFunHook(HandleCtrlInGame);
-static HookableFunPtr<0x0043A2C0, void, CPlayer*> RenderReticleFun;
+auto RenderReticle_Hook = makeFunHook(RenderReticle);
 
 static void SetCameraTarget(CPlayer *pPlayer)
 {
@@ -178,12 +177,12 @@ void SpectateModeOnDestroyPlayer(CPlayer *pPlayer)
         SpectateModeSetTargetPlayer(nullptr);
 }
 
-static void RenderReticleHook(CPlayer *pPlayer)
+static void RenderReticle_New(CPlayer *pPlayer)
 {
     if (g_SpectateModeEnabled)
-        RenderReticleFun.callOrig(g_SpectateModeTarget);
+        RenderReticle_Hook.callTrampoline(g_SpectateModeTarget);
     else
-        RenderReticleFun.callOrig(pPlayer);
+        RenderReticle_Hook.callTrampoline(pPlayer);
 }
 
 #if SPECTATE_MODE_SHOW_WEAPON
@@ -204,44 +203,35 @@ static void RenderPlayerArmHook(CPlayer *pPlayer)
         RenderPlayerArm(pPlayer);
 }
 
-static void RenderPlayerArm2Hook(CPlayer *pPlayer)
-{
-    if (g_SpectateModeEnabled)
-        RenderPlayerArm2(g_SpectateModeTarget);
-    else
-        RenderPlayerArm2(pPlayer);
-}
-
 #endif // SPECTATE_MODE_SHOW_WEAPON
 
 void SpectateModeInit()
 {
-    static HookCall<PFN_IS_PLAYER_ENTITY_INVALID> IsPlayerEntityInvalid_RedBars_Hookable(0x00432A52, IsPlayerEntityInvalid);
+    static HookCall<IsPlayerEntityInvalid_Type> IsPlayerEntityInvalid_RedBars_Hookable(0x00432A52, IsPlayerEntityInvalid);
     IsPlayerEntityInvalid_RedBars_Hookable.Hook(IsPlayerEntityInvalidHook);
 
-    static HookCall<PFN_IS_PLAYER_DYING> IsPlayerDying_RedBars_Hookable(0x00432A5F, IsPlayerDying);
+    static HookCall<IsPlayerDying_Type> IsPlayerDying_RedBars_Hookable(0x00432A5F, IsPlayerDying);
     IsPlayerDying_RedBars_Hookable.Hook(IsPlayerDyingHook);
 
-    static HookCall<PFN_IS_PLAYER_ENTITY_INVALID> IsPlayerEntityInvalid_Scoreboard_Hookable(0x00437BEE, IsPlayerEntityInvalid);
+    static HookCall<IsPlayerEntityInvalid_Type> IsPlayerEntityInvalid_Scoreboard_Hookable(0x00437BEE, IsPlayerEntityInvalid);
     IsPlayerEntityInvalid_Scoreboard_Hookable.Hook(IsPlayerEntityInvalidHook);
 
-    static HookCall<PFN_IS_PLAYER_DYING> IsPlayerDying_Scoreboard_Hookable(0x00437C01, IsPlayerDying);
+    static HookCall<IsPlayerDying_Type> IsPlayerDying_Scoreboard_Hookable(0x00437C01, IsPlayerDying);
     IsPlayerDying_Scoreboard_Hookable.Hook(IsPlayerDyingHook);
 
-    static HookCall<PFN_IS_PLAYER_ENTITY_INVALID> IsPlayerEntityInvalid_Scoreboard_Hookable2(0x00437C25, IsPlayerEntityInvalid);
+    static HookCall<IsPlayerEntityInvalid_Type> IsPlayerEntityInvalid_Scoreboard_Hookable2(0x00437C25, IsPlayerEntityInvalid);
     IsPlayerEntityInvalid_Scoreboard_Hookable2.Hook(IsPlayerEntityInvalidHook);
 
-    static HookCall<PFN_IS_PLAYER_DYING> IsPlayerDying_Scoreboard_Hookable2(0x00437C36, IsPlayerDying);
+    static HookCall<IsPlayerDying_Type> IsPlayerDying_Scoreboard_Hookable2(0x00437C36, IsPlayerDying);
     IsPlayerDying_Scoreboard_Hookable2.Hook(IsPlayerDyingHook);
     
     HandleCtrlInGame_Hook.hook(HandleCtrlInGameHook);
-    RenderReticleFun.hook(RenderReticleHook);
+    RenderReticle_Hook.hook(RenderReticle_New);
 
     // Note: HUD rendering doesn't make sense because life and armor isn't synced
 
 #if SPECTATE_MODE_SHOW_WEAPON
     WriteMemInt32(0x0043285D + 1, (uintptr_t)RenderPlayerArmHook - (0x0043285D + 0x5));
-    //WriteMemInt32(0x004A2B56 + 1, (uintptr_t)RenderPlayerArm2Hook - (0x004A2B56 + 0x5));
     WriteMemUInt8(0x004AB1B8, ASM_NOP, 6); // RenderPlayerArm2
     WriteMemUInt8(0x004AA23E, ASM_NOP, 6); // SetupPlayerWeaponMesh
     WriteMemUInt8(0x004AE0DF, ASM_NOP, 2); // PlayerLoadWeaponMesh

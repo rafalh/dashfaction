@@ -8,7 +8,7 @@ using namespace rf;
 
 //#define TEST_BUFFER_OVERFLOW_FIXES
 
-static void ProcessUnreliableGamePacketsHook(const char *pData, int cbData, void *pAddr, void *pPlayer)
+static void ProcessUnreliableGamePacketsHook(const char *pData, int cbData, const NwAddr *pAddr, CPlayer *pPlayer)
 {
     NwProcessGamePackets(pData, cbData, pAddr, pPlayer);
 
@@ -17,7 +17,7 @@ static void ProcessUnreliableGamePacketsHook(const char *pData, int cbData, void
 #endif
 }
 
-static void HandleNewPlayerPacketHook(BYTE *pData, NET_ADDR *pAddr)
+static void HandleNewPlayerPacketHook(const BYTE *pData, const NwAddr *pAddr)
 {
     if (*g_pbNetworkGame && !*g_pbLocalNetworkGame && GetForegroundWindow() != *g_phWnd)
         Beep(750, 300);
@@ -316,6 +316,7 @@ void NetworkInit()
 
     /* Default port: 0 */
     WriteMemUInt16(0x0059CDE4, 0);
+    WriteMemInt32(0x004B159D + 1, 0); // TODO: add setting in launcher
 
     /* Dont overwrite MpCharacter in Single Player */
     WriteMemUInt8(0x004A415F, ASM_NOP, 10);

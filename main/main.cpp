@@ -30,10 +30,10 @@ using namespace rf;
 
 GameConfig g_gameConfig;
 HMODULE g_hModule;
-HookableFunPtr<0x004163C0, void, CPlayer*> RenderHitScreenHookable;
-HookableFunPtr<0x004B33F0, void, const char**, const char**> GetVersionStrHookable;
-auto PlayerDestroyHook = makeFunHook(PlayerDestroy);
-auto PlayerCreateHook = makeFunHook(PlayerCreate);
+auto RenderHitScreen_Hook = makeFunHook(RenderHitScreen);
+auto GetVersionStr_Hook = makeFunHook(GetVersionStr);
+auto PlayerCreate_Hook = makeFunHook(PlayerCreate);
+auto PlayerDestroy_Hook = makeFunHook(PlayerDestroy);
 auto KeyGetFromFifo_Hook = makeFunHook(KeyGetFromFifo);
 int g_VersionLabelX, g_VersionLabelWidth, g_VersionLabelHeight;
 static const char g_szVersionInMenu[] = PRODUCT_NAME_VERSION;
@@ -80,7 +80,7 @@ NAKED void VersionLabelPushArgs_0044343A()
     }
 }
 
-static void GetVersionStrHook(const char **ppszVersion, const char **a2)
+static void GetVersionStr_New(const char **ppszVersion, const char **a2)
 {
     if (ppszVersion)
         *ppszVersion = g_szVersionInMenu;
@@ -150,9 +150,9 @@ CPlayer *FindPlayer(const char *pszName)
     return NULL;
 }
 
-static void RenderHitScreenHook(CPlayer *pPlayer)
+static void RenderHitScreen_New(CPlayer *pPlayer)
 {
-    RenderHitScreenHookable.callOrig(pPlayer);
+    RenderHitScreen_Hook.callTrampoline(pPlayer);
 
 #if SPECTATE_MODE_ENABLE
     SpectateModeDrawUI();
@@ -165,7 +165,7 @@ static void RenderHitScreenHook(CPlayer *pPlayer)
 
 static CPlayer *PlayerCreate_New(char bLocal)
 {
-    CPlayer *pPlayer = PlayerCreateHook.callTrampoline(bLocal);
+    CPlayer *pPlayer = PlayerCreate_Hook.callTrampoline(bLocal);
     KillInitPlayer(pPlayer);
     return pPlayer;
 }
@@ -173,7 +173,7 @@ static CPlayer *PlayerCreate_New(char bLocal)
 static void PlayerDestroy_New(CPlayer *pPlayer)
 {
     SpectateModeOnDestroyPlayer(pPlayer);
-    PlayerDestroyHook.callTrampoline(pPlayer);
+    PlayerDestroy_Hook.callTrampoline(pPlayer);
 }
 
 NAKED void CrashFix_0055CE48()
@@ -278,7 +278,7 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
     /* Version in Main Menu */
     WriteMemUInt8(0x0044343A, ASM_LONG_JMP_REL);
     WriteMemInt32(0x0044343A + 1, (uintptr_t)VersionLabelPushArgs_0044343A - (0x0044343A + 0x5));
-    GetVersionStrHookable.hook(GetVersionStrHook);
+    GetVersionStr_Hook.hook(GetVersionStr_New);
     
     /* Window title (client and server) */
     WriteMemPtr(0x004B2790, PRODUCT_NAME);
@@ -329,9 +329,13 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
     WriteMemUInt8(0x004B4D99, ASM_NOP, 0x004B4DA5 - 0x004B4D99);
     WriteMemUInt8(0x004B4E0A, ASM_NOP, 0x004B4E22 - 0x004B4E0A);
 
-    RenderHitScreenHookable.hook(RenderHitScreenHook);
-    PlayerCreateHook.hook(PlayerCreate_New);
-    PlayerDestroyHook.hook(PlayerDestroy_New);
+    // Dont filter levels for DM and TeamDM
+    WriteMemUInt8(0x005995B0, 0);
+    WriteMemUInt8(0x005995B8, 0);
+
+    RenderHitScreen_Hook.hook(RenderHitScreen_New);
+    PlayerCreate_Hook.hook(PlayerCreate_New);
+    PlayerDestroy_Hook.hook(PlayerDestroy_New);
 
 #if DIRECTINPUT_SUPPORT
     *g_pbDirectInputDisabled = 0;

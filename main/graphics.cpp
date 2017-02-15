@@ -216,7 +216,10 @@ void GraphicsInit()
 
     /* Don't use LOD models */
     if (g_gameConfig.disableLodModels)
+    {
+        //WriteMemUInt8(0x00421A40, ASM_SHORT_JMP_REL);
         WriteMemUInt8(0x0052FACC, ASM_SHORT_JMP_REL);
+    }
 
     // Better error message in case of device creation error
     WriteMemUInt8(0x00545BEF, ASM_LONG_JMP_REL);
@@ -237,6 +240,33 @@ void GraphicsInit()
     WriteMemPtr(0x005478C6 + 2, &g_GrClippedGeomOffsetX);
     WriteMemPtr(0x005478D7 + 2, &g_GrClippedGeomOffsetY);
     WriteMemInt32(0x0050DD69 + 1, (uintptr_t)GrDrawRect_GrDrawPolyHook - (0x0050DD69 + 0x5));
+
+#if 1 // TODO: does it use lod models?
+    // Improved Railgun Scanner resolution
+    const int8_t ScannerResolution = 120; // default is 64, max is 127 (signed byte)
+    WriteMemUInt8(0x004325E6 + 1, ScannerResolution); // RenderInGame
+    WriteMemUInt8(0x004325E8 + 1, ScannerResolution);
+    WriteMemUInt8(0x004A34BB + 1, ScannerResolution); // PlayerCreate
+    WriteMemUInt8(0x004A34BD + 1, ScannerResolution);
+    WriteMemUInt8(0x004ADD70 + 1, ScannerResolution); // PlayerRenderRailgunScannerViewToTexture
+    WriteMemUInt8(0x004ADD72 + 1, ScannerResolution);
+    WriteMemUInt8(0x004AE0B7 + 1, ScannerResolution);
+    WriteMemUInt8(0x004AE0B9 + 1, ScannerResolution);
+    WriteMemUInt8(0x004AF0B0 + 1, ScannerResolution); // PlayerRenderScannerView
+    WriteMemUInt8(0x004AF0B4 + 1, ScannerResolution * 3 / 4);
+    WriteMemUInt8(0x004AF0B6 + 1, ScannerResolution);
+    WriteMemUInt8(0x004AF7B0 + 1, ScannerResolution);
+    WriteMemUInt8(0x004AF7B2 + 1, ScannerResolution);
+    WriteMemUInt8(0x004AF7CF + 1, ScannerResolution);
+    WriteMemUInt8(0x004AF7D1 + 1, ScannerResolution);
+    WriteMemUInt8(0x004AF818 + 1, ScannerResolution);
+    WriteMemUInt8(0x004AF81A + 1, ScannerResolution);
+    WriteMemUInt8(0x004AF820 + 1, ScannerResolution);
+    WriteMemUInt8(0x004AF822 + 1, ScannerResolution);
+    WriteMemUInt8(0x004AF855 + 1, ScannerResolution);
+    WriteMemUInt8(0x004AF860 + 1, ScannerResolution * 3 / 4);
+    WriteMemUInt8(0x004AF862 + 1, ScannerResolution);
+#endif
 }
 
 void GraphicsAfterGameInit()
@@ -252,6 +282,12 @@ void GraphicsAfterGameInit()
         INFO("Anisotropic Filtering enabled (level: %d)", AnisotropyLevel);
     }
 #endif
+
+    // Change font for Time Left text
+    static int TimeLeftFont = GrLoadFont("rfpc-large.vf", -1);
+    WriteMemInt8(0x00477157 + 1, TimeLeftFont);
+    WriteMemInt8(0x0047715F + 2, 25);
+    
 }
 
 void GraphicsDrawFpsCounter()
