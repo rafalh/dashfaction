@@ -7,9 +7,17 @@
 
 using namespace rf;
 
+constexpr auto pMenuVersionLabel = (rf::CGuiPanel*)0x0063C088;
+
+constexpr int EGG_ANIM_ENTER_TIME = 2000;
+constexpr int EGG_ANIM_LEAVE_TIME = 2000;
+constexpr int EGG_ANIM_IDLE_TIME = 3000;
+
 auto GetVersionStr_Hook = makeFunHook(GetVersionStr);
 int g_VersionLabelX, g_VersionLabelWidth, g_VersionLabelHeight;
 static const char g_szVersionInMenu[] = PRODUCT_NAME_VERSION;
+int g_VersionClickCounter = 0;
+int g_EggAnimStart;
 
 NAKED void VersionLabelPushArgs_0044343A()
 {
@@ -58,6 +66,91 @@ NAKED void CrashFix_0055CE48()
         CrashFix0055CE59_label1 :
         mov   ecx, 0x0055CF23 // fail gr_lock
             jmp   ecx
+    }
+}
+
+void MenuMainProcessMouseHook()
+{
+    MenuMainProcessMouse();
+    if (MouseWasButtonPressed(0))
+    {
+        int x, y, z;
+        MouseGetPos(&x, &y, &z);
+        CGuiPanel *PanelsToCheck[1] = { pMenuVersionLabel };
+        int Matched = UiGetElementFromPos(x, y, PanelsToCheck, COUNTOF(PanelsToCheck));
+        if (Matched == 0)
+        {
+            TRACE("Version clicked");
+            ++g_VersionClickCounter;
+            if (g_VersionClickCounter == 3)
+                g_EggAnimStart = GetTickCount();
+        }
+    }
+}
+
+int LoadEasterEggImage()
+{
+#if 1 // from resources?
+    HRSRC hRes = FindResourceA(g_hModule, MAKEINTRESOURCEA(100), RT_RCDATA);
+    if (!hRes)
+    {
+        ERR("FindResourceA failed");
+        return -1;
+    }
+    DWORD dwSize = SizeofResource(g_hModule, hRes);
+    HGLOBAL hResData = LoadResource(g_hModule, hRes);
+    if (!hResData)
+    {
+        ERR("LoadResource failed");
+        return -1;
+    }
+    void *pResData = LockResource(hResData);
+    if (!pResData)
+    {
+        ERR("LockResource failed");
+        return -1;
+    }
+
+    constexpr int EASTER_EGG_SIZE = 128;
+
+    int hbm = BmCreateUserBmap(BMPF_8888, EASTER_EGG_SIZE, EASTER_EGG_SIZE);
+
+    SGrLockData LockData;
+    if (!GrLock(hbm, 0, &LockData, 1))
+        return -1;
+
+    BmConvertFormat(LockData.pBits, (BmPixelFormat)LockData.PixelFormat, pResData, BMPF_8888, EASTER_EGG_SIZE * EASTER_EGG_SIZE);
+    GrUnlock(&LockData);
+
+    return hbm;
+#else
+    return BmLoad("DF_pony.tga", -1, 0);
+#endif
+}
+
+void MenuMainRenderHook()
+{
+    MenuMainRender();
+    if (g_VersionClickCounter >= 3)
+    {
+        static int PonyBitmap = LoadEasterEggImage(); // data.vpp
+        if (PonyBitmap == -1)
+            return;
+        int w, h;
+        BmGetBitmapSize(PonyBitmap, &w, &h);
+        int AnimDeltaTime = GetTickCount() - g_EggAnimStart;
+        int PosX = (g_pGrScreen->MaxWidth - w) / 2;
+        int PosY = g_pGrScreen->MaxHeight - h;
+        if (AnimDeltaTime < EGG_ANIM_ENTER_TIME)
+            PosY += h - (int)(sinf(AnimDeltaTime / (float)EGG_ANIM_ENTER_TIME * (float)M_PI / 2.0f) * h);
+        else if (AnimDeltaTime > EGG_ANIM_ENTER_TIME + EGG_ANIM_IDLE_TIME)
+        {
+            int LeaveDelta = AnimDeltaTime - (EGG_ANIM_ENTER_TIME + EGG_ANIM_IDLE_TIME);
+            PosY += (int)((1.0f - cosf(LeaveDelta / (float)EGG_ANIM_LEAVE_TIME * (float)M_PI / 2.0f)) * h);
+            if (LeaveDelta > EGG_ANIM_LEAVE_TIME)
+                g_VersionClickCounter = 0;
+        }
+        GrDrawImage(PonyBitmap, PosX, PosY, *g_pGrBitmapMaterial);
     }
 }
 
@@ -128,5 +221,10 @@ void MiscInit()
     WriteMemInt8(0x004ED66E + 1, 32);
     WriteMemInt8(0x004ED72E + 1, 32);
     WriteMemInt8(0x004EDB02 + 1, 32);
+#endif
+
+#if 1 // Version Easter Egg
+    WriteMemInt32(0x004437B9 + 1, (uintptr_t)MenuMainProcessMouseHook - (0x004437B9 + 0x5));
+    WriteMemInt32(0x00443802 + 1, (uintptr_t)MenuMainRenderHook - (0x00443802 + 0x5));
 #endif
 }

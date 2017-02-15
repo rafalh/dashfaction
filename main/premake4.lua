@@ -1,7 +1,7 @@
 project "DashFaction"
 	kind "SharedLib"
 	language "C++"
-	files { "**.h", "**.c", "**.cpp" }
+	files { "**.h", "**.c", "**.cpp", "*.rc" }
 	defines {
 		"NOMINMAX",
 		"BUILD_DLL",

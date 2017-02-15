@@ -164,6 +164,7 @@ namespace rf
     constexpr auto g_pGrDeviceCaps = (D3DCAPS8*)0x01CFCAC8;
     constexpr auto g_pGrRectMaterial = (uint32_t*)0x17756C0;
     constexpr auto g_pGrTextMaterial = (uint32_t*)0x17C7C5C;
+    constexpr auto g_pGrBitmapMaterial = (uint32_t*)0x017756BC;
     constexpr auto g_pGrImageMaterial = (uint32_t*)0x017756DC;
     constexpr auto g_pGrDefaultWFar = (float*)0x00596140;
 
@@ -963,6 +964,11 @@ namespace rf
     constexpr auto MouseWasButtonPressed = (int(*)(int BtnIdx))0x0051E5D0;
     constexpr auto KeyGetFromFifo = (int(*)())0x0051F000;
 
+    /* Menu */
+    constexpr auto SwitchMenu = (int(*)(int MenuId, bool bForce))0x00434190;
+    constexpr auto MenuMainProcessMouse = (void(*)())0x00443D90;
+    constexpr auto MenuMainRender = (void(*)())0x004435F0;
+
     /* Other */
 
     enum EGameLang
@@ -1009,7 +1015,6 @@ namespace rf
     constexpr auto GetFileExt = (char *(*)(char *pszPath))0x005143F0;
     constexpr auto SplitScreenStart = (void(*)())0x00480D30;
     constexpr auto GetVersionStr = (void(*)(const char **ppszVersion, const char **a2))0x004B33F0;
-    constexpr auto SwitchMenu = (int(*)(int MenuId, bool bForce))0x00434190;
     constexpr auto SetNextLevelFilename = (void(*)(CString strFilename, CString strSecond))0x0045E2E0;
     constexpr auto DemoLoadLevel = (void(*)(const char *pszLevelFileName))0x004CC270;
     constexpr auto RenderHitScreen = (void(*)(CPlayer *pPlayer))0x004163C0;
