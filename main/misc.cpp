@@ -14,6 +14,8 @@ constexpr int EGG_ANIM_LEAVE_TIME = 2000;
 constexpr int EGG_ANIM_IDLE_TIME = 3000;
 
 auto GetVersionStr_Hook = makeFunHook(GetVersionStr);
+auto MenuUpdate_Hook = makeFunHook(MenuUpdate);
+
 int g_VersionLabelX, g_VersionLabelWidth, g_VersionLabelHeight;
 static const char g_szVersionInMenu[] = PRODUCT_NAME_VERSION;
 int g_VersionClickCounter = 0;
@@ -44,6 +46,14 @@ static void GetVersionStr_New(const char **ppszVersion, const char **a2)
     g_VersionLabelX = 430 - g_VersionLabelWidth;
     g_VersionLabelWidth = g_VersionLabelWidth + 5;
     g_VersionLabelHeight = g_VersionLabelHeight + 2;
+}
+
+static int MenuUpdate_New()
+{
+    int MenuId = MenuUpdate_Hook.callTrampoline();
+    if (MenuId == 0x22) // hide cursor when changing level - hackfixed in RF by chaning rendering logic
+        rf::SetCursorVisible(false);
+    return MenuId;
 }
 
 NAKED void CrashFix_0055CE48()
@@ -227,4 +237,10 @@ void MiscInit()
     WriteMemInt32(0x004437B9 + 1, (uintptr_t)MenuMainProcessMouseHook - (0x004437B9 + 0x5));
     WriteMemInt32(0x00443802 + 1, (uintptr_t)MenuMainRenderHook - (0x00443802 + 0x5));
 #endif
+
+    // Fix console rendering when changing level
+    WriteMemUInt8(0x0047C490, ASM_RET);
+    WriteMemUInt8(0x0047C4AA, ASM_RET);
+    WriteMemUInt8(0x004B2E15, ASM_NOP, 2);
+    MenuUpdate_Hook.hook(MenuUpdate_New);
 }

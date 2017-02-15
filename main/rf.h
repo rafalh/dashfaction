@@ -185,6 +185,7 @@ namespace rf
     constexpr auto GrGetFontHeight = (unsigned(*)(int FontId))0x0051F4D0;
     constexpr auto GrGetTextWidth = (void(*)(int *pOutWidth, int *pOutHeight, const char *pszText, int TextLen, int FontId))0x0051F530;
     constexpr auto GrFlushBuffers = (void(*)())0x00559D90;
+    constexpr auto GrSwitchBuffers = (void(*)())0x0050CE20;
     constexpr auto GrSetViewMatrix = (void(*)(CMatrix3 *pMatRot, CVector3 *pPos, float fFov, int a4, int a5))0x00517EB0;
     constexpr auto GrSetViewMatrixD3D = (void(*)(CMatrix3 *pMatRot, CVector3 *pPos, float fFov, int a4, int a5))0x00547150;
     constexpr auto GrLock = (int(*)(int BmHandle, int SectionIdx, SGrLockData *pData, int a4))0x0050E2E0;
@@ -968,6 +969,10 @@ namespace rf
     constexpr auto SwitchMenu = (int(*)(int MenuId, bool bForce))0x00434190;
     constexpr auto MenuMainProcessMouse = (void(*)())0x00443D90;
     constexpr auto MenuMainRender = (void(*)())0x004435F0;
+    constexpr auto MenuUpdate = (int(*)())0x00434230;
+
+    constexpr auto g_MenuLevels = (int*)0x00630064;
+    constexpr auto g_pCurrentMenuLevel = (int*)0x005967A4;
 
     /* Other */
 
@@ -1019,6 +1024,7 @@ namespace rf
     constexpr auto DemoLoadLevel = (void(*)(const char *pszLevelFileName))0x004CC270;
     constexpr auto RenderHitScreen = (void(*)(CPlayer *pPlayer))0x004163C0;
     constexpr auto RenderReticle = (void(*)(CPlayer *pPlayer))0x0043A2C0;
+    constexpr auto SetCursorVisible = (void(*)(char bVisible))0x0051E680;
 
     /* Strings Table */
     constexpr auto g_ppszStringsTable = (char**)0x007CBBF0;
