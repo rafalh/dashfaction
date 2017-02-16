@@ -125,5 +125,5 @@ void HighFpsInit()
 void HighFpsUpdate()
 {
     // Make jump fix framerate dependent to fix bouncing on small FPS
-    g_JumpThreshold = 0.1f * (*rf::g_pfFramerate) / (1/60.0f);
+    g_JumpThreshold = 0.025f + 0.075f * (*rf::g_pfFramerate) / (1/60.0f);
 }
