@@ -7,7 +7,7 @@
 
 using namespace rf;
 
-constexpr auto pMenuVersionLabel = (rf::CGuiPanel*)0x0063C088;
+constexpr auto pMenuVersionLabel = (rf::UiPanel*)0x0063C088;
 
 constexpr int EGG_ANIM_ENTER_TIME = 2000;
 constexpr int EGG_ANIM_LEAVE_TIME = 2000;
@@ -86,7 +86,7 @@ void MenuMainProcessMouseHook()
     {
         int x, y, z;
         MouseGetPos(&x, &y, &z);
-        CGuiPanel *PanelsToCheck[1] = { pMenuVersionLabel };
+        UiPanel *PanelsToCheck[1] = { pMenuVersionLabel };
         int Matched = UiGetElementFromPos(x, y, PanelsToCheck, COUNTOF(PanelsToCheck));
         if (Matched == 0)
         {

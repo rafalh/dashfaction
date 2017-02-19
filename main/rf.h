@@ -176,6 +176,7 @@ namespace rf
     constexpr auto GrSetColorPtr = (void(*)(uint32_t *pColor))0x0050D000;
     constexpr auto GrDrawRect = (void(*)(unsigned x, unsigned y, unsigned cx, unsigned cy, unsigned Material))0x0050DBE0;
     constexpr auto GrDrawImage = (void(*)(int BmHandle, int x, int y, int Material))0x0050D2A0;
+    constexpr auto GrDrawBitmapStretched = (void(*)(int BmHandle, int dstX, int dstY, int dstW, int dstH, int srcX, int srcY, int srcW, int srcH, int a10, float a11, int a12))0x0050D250;
     constexpr auto GrDrawPoly = (void(*)(int Num, GrVertex **ppVertices, int Flags, int iMat))0x0050DF80;
     constexpr auto GrDrawText = (void(*)(unsigned x, unsigned y, const char *pszText, int Font, unsigned Material))0x0051FEB0;
     constexpr auto GrDrawAlignedText = (void(*)(GrTextAlignment Align, unsigned x, unsigned y, const char *pszText, int Font, unsigned Material))0x0051FE50;
@@ -214,12 +215,12 @@ namespace rf
     constexpr auto BmLock = (BmPixelFormat(*)(int BmHandle, BYTE **ppData, BYTE **ppPalette))0x00510780;
     constexpr auto BmUnlock = (void(*)(int BmHandle))0x00511700;
 
-    /* UI */
+    /* User Interface (UI) */
 
-    struct CGuiPanel
+    struct UiPanel
     {
         void(__cdecl **field_0)();
-        CGuiPanel *pParent;
+        UiPanel *pParent;
         char field_8;
         char field_9;
         int x;
@@ -234,7 +235,7 @@ namespace rf
 
     constexpr auto UiMsgBox = (void(*)(const char *pszTitle, const char *pszText, void(*pfnCallback)(void), BOOL bInput))0x004560B0;
     constexpr auto UiCreateDialog = (void(*)(const char *pszTitle, const char *pszText, unsigned cButtons, const char **ppszBtnTitles, void **ppfnCallbacks, unsigned Unknown1, unsigned Unknown2))0x004562A0;
-    constexpr auto UiGetElementFromPos = (int(*)(int x, int y, CGuiPanel **ppGuiList, signed int cGuiList))0x00442ED0;
+    constexpr auto UiGetElementFromPos = (int(*)(int x, int y, UiPanel **ppGuiList, signed int cGuiList))0x00442ED0;
 
     /* VFS */
 

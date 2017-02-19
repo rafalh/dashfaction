@@ -11,7 +11,7 @@ static double g_FtolAccumulated_ToggleConsole = 0.0f;
 static double g_FtolAccumulated_Timer = 0.0f;
 static float g_JumpThreshold = 0.05f;
 
-long __stdcall AccumulatingFtoL(double fVal, double *pAccumulator)
+long STDCALL AccumulatingFtoL(double fVal, double *pAccumulator)
 {
     //ERR("fVal %lf pAccumulator %lf", fVal, *pAccumulator);
     fVal += *pAccumulator;
@@ -60,7 +60,7 @@ void NAKED ftol_Timer()
     }
 }
 
-void __stdcall EntityWaterDecelerateFix(rf::CEntity *pEntity)
+void STDCALL EntityWaterDecelerateFix(rf::CEntity *pEntity)
 {
     float fVelFactor = 1.0f - (*rf::g_pfFramerate * 4.5f);
     pEntity->Head.vVel.x *= fVelFactor;
@@ -89,10 +89,6 @@ void NAKED WaterAnimateWaves_004E68A0()
         add esp, 4
         mov     ecx, [esi + 24h]
         lea     eax, [esp + 6Ch - 20h] // var_20
-        push    0
-        push    eax
-        push    0
-        push    ecx
         mov eax, 004E68D1h
         jmp eax
     }
@@ -115,8 +111,9 @@ void HighFpsInit()
     WriteMemInt32(0x0049D830 + 1, (uintptr_t)EntityWaterDecelerateFix - (0x0049D830 + 0x5));
 
     // Fix water waves animation on high FPS
-    WriteMemUInt8(0x004E68A0, ASM_LONG_JMP_REL);
-    WriteMemInt32(0x004E68A0 + 1, (uintptr_t)WaterAnimateWaves_004E68A0 - (0x004E68A0 + 0x5));
+    WriteMemUInt8(0x004E68A0, ASM_NOP, 9);
+    WriteMemUInt8(0x004E68B6, ASM_LONG_JMP_REL);
+    WriteMemInt32(0x004E68B6 + 1, (uintptr_t)WaterAnimateWaves_004E68A0 - (0x004E68B6 + 0x5));
 
     // Fix incorrect frame time calculation
     WriteMemUInt8(0x00509595, ASM_NOP, 2);

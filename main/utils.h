@@ -15,5 +15,6 @@ const char *GetProcessElevationType();
 #define COUNTOF(a) (sizeof(a)/sizeof((a)[0]))
 
 #define NAKED __declspec(naked)
+#define STDCALL __stdcall
 
 #define ASSERT(x) assert(x)
