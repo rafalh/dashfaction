@@ -11,6 +11,8 @@ static double g_FtolAccumulated_ToggleConsole = 0.0f;
 static double g_FtolAccumulated_Timer = 0.0f;
 static float g_JumpThreshold = 0.05f;
 
+auto RflLoad_Hook = makeFunHook(rf::RflLoad);
+
 long STDCALL AccumulatingFtoL(double fVal, double *pAccumulator)
 {
     //ERR("fVal %lf pAccumulator %lf", fVal, *pAccumulator);
@@ -94,6 +96,29 @@ void NAKED WaterAnimateWaves_004E68A0()
     }
 }
 
+int RflLoad_New(rf::CString *pstrLevelFilename, rf::CString *a2, char *pszError)
+{
+    int ret = RflLoad_Hook.callTrampoline(pstrLevelFilename, a2, pszError);
+    if (ret == 0 && strstr(pstrLevelFilename->psz, "L5S3"))
+    {
+        // Fix submarine exploding - change delay of two events to make submarine physics enabled later
+        //INFO("Fixing Submarine exploding bug...");
+        rf::CObject *pObj = rf::ObjGetFromUid(4679);
+        if (pObj && pObj->Type == rf::OT_EVENT)
+        {
+            rf::EventObj *pEvent = (rf::EventObj*)(((uintptr_t)pObj) - 4);
+            pEvent->fDelay += 1.5f;
+        }
+        pObj = rf::ObjGetFromUid(4680);
+        if (pObj && pObj->Type == rf::OT_EVENT)
+        {
+            rf::EventObj *pEvent = (rf::EventObj*)(((uintptr_t)pObj) - 4);
+            pEvent->fDelay += 1.5f;
+        }
+    }
+    return ret;
+}
+
 void HighFpsInit()
 {
     // Fix animations broken for high FPS
@@ -117,6 +142,9 @@ void HighFpsInit()
 
     // Fix incorrect frame time calculation
     WriteMemUInt8(0x00509595, ASM_NOP, 2);
+
+    // Fix submarine exploding on high FPS
+    RflLoad_Hook.hook(RflLoad_New);
 }
 
 void HighFpsUpdate()

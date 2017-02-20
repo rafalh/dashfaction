@@ -1,6 +1,7 @@
 #pragma once
 
 #include <subhook.h>
+#include "log/Logger.h"
 
 template<typename RetType, typename... ArgTypes>
 class FunHook
@@ -26,6 +27,8 @@ public:
     RetType callTrampoline(ArgTypes... args)
     {
         FunPtr trampoline = (FunPtr)m_hook.GetTrampoline();
+        if (!trampoline)
+            ERR("trampoline is null for 0x%X", m_fun);
         return trampoline(args...);
     }
 

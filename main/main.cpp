@@ -182,6 +182,11 @@ void LogSystemInfo()
     }
 }
 
+extern "C" void subhook_unk_opcode_handler(uint8_t opcode)
+{
+    ERR("SubHook unknown opcode 0x%X", opcode);
+}
+
 extern "C" DWORD DLL_EXPORT Init(void *pUnused)
 {
     // Init logging and crash dump support first

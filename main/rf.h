@@ -191,6 +191,7 @@ namespace rf
     constexpr auto GrSetViewMatrixD3D = (void(*)(CMatrix3 *pMatRot, CVector3 *pPos, float fFov, int a4, int a5))0x00547150;
     constexpr auto GrLock = (int(*)(int BmHandle, int SectionIdx, SGrLockData *pData, int a4))0x0050E2E0;
     constexpr auto GrUnlock = (void(*)(SGrLockData *pData))0x0050E310;
+    constexpr auto GrD3DSetTextureData = (int(*)(int Level, const BYTE *pSrcBits, const BYTE *pPallete, int cxBm, int cyBm, int PixelFmt, void *a7, int cxTex, int cyTex, IDirect3DTexture8 *pTextures))0x0055BA10;
 
     /* Bmpman */
 
@@ -724,6 +725,20 @@ namespace rf
         CObject *pNextObj;
     };
 
+    struct EventObj
+    {
+        int unk0;
+        CObject Head;
+        float fDelay;
+        int field_298;
+        int LinkList;
+        int field_2A0;
+        int field_2A4;
+        int field_2A8;
+        int field_2AC;
+        int field_2B0;
+    };
+
     typedef void(*EntityRender_Type)(CEntity *pObj);
     constexpr auto EntityRender = (EntityRender_Type)0x00421850;
 
@@ -1026,6 +1041,8 @@ namespace rf
     constexpr auto RenderHitScreen = (void(*)(CPlayer *pPlayer))0x004163C0;
     constexpr auto RenderReticle = (void(*)(CPlayer *pPlayer))0x0043A2C0;
     constexpr auto SetCursorVisible = (void(*)(char bVisible))0x0051E680;
+    constexpr auto RflLoad = (int(*)(CString *pstrLevelFilename, CString *a2, char *pszError))0x0045C540;
+    constexpr auto ObjGetFromUid = (CObject *(*)(int Uid))0x0048A4A0;
 
     /* Strings Table */
     constexpr auto g_ppszStringsTable = (char**)0x007CBBF0;
