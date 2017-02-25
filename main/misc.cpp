@@ -243,4 +243,7 @@ void MiscInit()
     WriteMemUInt8(0x0047C4AA, ASM_RET);
     WriteMemUInt8(0x004B2E15, ASM_NOP, 2);
     MenuUpdate_Hook.hook(MenuUpdate_New);
+
+    // Increase damage for kill command in Single Player
+    WriteMemFloat(0x004A4DF5 + 1, 100000.0f);
 }
