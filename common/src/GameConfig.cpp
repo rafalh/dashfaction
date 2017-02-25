@@ -30,6 +30,7 @@ bool GameConfig::load()
     dashFactionKey.readValue("MSAA", &msaa);
     dashFactionKey.readValue("FPS Counter", &fpsCounter);
     dashFactionKey.readValue("Max FPS", &maxFps);
+    dashFactionKey.readValue("True Color Textures", &trueColorTextures);
     if (!dashFactionKey.readValue("Executable Path", &gameExecutablePath))
         detectGamePath();
     dashFactionKey.readValue("Direct Input", &directInput);
@@ -68,6 +69,7 @@ void GameConfig::save()
     dashFactionKey.writeValue("MSAA", msaa);
     dashFactionKey.writeValue("FPS Counter", fpsCounter);
     dashFactionKey.writeValue("Max FPS", maxFps);
+    dashFactionKey.writeValue("True Color Textures", trueColorTextures);
     dashFactionKey.writeValue("Executable Path", gameExecutablePath);
     dashFactionKey.writeValue("Direct Input", directInput);
     dashFactionKey.writeValue("Fast Start", fastStart);

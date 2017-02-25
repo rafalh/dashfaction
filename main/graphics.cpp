@@ -3,6 +3,7 @@
 #include "utils.h"
 #include "rf.h"
 #include "main.h"
+#include "gr_color.h"
 
 using namespace rf;
 
@@ -225,6 +226,7 @@ void GraphicsInit()
     WriteMemUInt8(0x00545BEF, ASM_LONG_JMP_REL);
     WriteMemInt32(0x00545BEF + 1, (uintptr_t)GrCreateD3DDeviceError_00545BEF - (0x00545BEF + 0x5));
 
+#if 1
     // Fix rendering of right and bottom edges of viewport
     WriteMemUInt8(0x00431D9F, ASM_SHORT_JMP_REL);
     WriteMemUInt8(0x00431F6B, ASM_SHORT_JMP_REL);
@@ -240,8 +242,9 @@ void GraphicsInit()
     WriteMemPtr(0x005478C6 + 2, &g_GrClippedGeomOffsetX);
     WriteMemPtr(0x005478D7 + 2, &g_GrClippedGeomOffsetY);
     WriteMemInt32(0x0050DD69 + 1, (uintptr_t)GrDrawRect_GrDrawPolyHook - (0x0050DD69 + 0x5));
+#endif
 
-#if 1 // TODO: does it use lod models?
+#if 1
     // Improved Railgun Scanner resolution
     const int8_t ScannerResolution = 120; // default is 64, max is 127 (signed byte)
     WriteMemUInt8(0x004325E6 + 1, ScannerResolution); // RenderInGame
@@ -267,6 +270,8 @@ void GraphicsInit()
     WriteMemUInt8(0x004AF860 + 1, ScannerResolution * 3 / 4);
     WriteMemUInt8(0x004AF862 + 1, ScannerResolution);
 #endif
+
+    GrColorInit();
 }
 
 void GraphicsAfterGameInit()
