@@ -309,7 +309,7 @@ void GetAmbientColorFromLightmaps_004E5CE3(unsigned BmHandle, int x, int y, unsi
 
 void GrColorInit()
 {
-#if 1 // 32 bit texture formats
+    // True Color textures
     if (g_gameConfig.resBpp == 32 && g_gameConfig.trueColorTextures)
     {
         // Available texture formats (tested for compatibility)
@@ -343,5 +343,4 @@ void GrColorInit()
         WriteMemUInt8(0x00412370, 0xC3);
 #endif
     }
-#endif
 }

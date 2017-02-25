@@ -23,6 +23,7 @@ struct GameConfig
     unsigned geometryCacheSize = 32;
     unsigned maxFps = 60;
     bool fpsCounter = true;
+    bool highScannerRes = true;
     bool trueColorTextures = true;
 
     std::string tracker = DEFAULT_RF_TRACKER;

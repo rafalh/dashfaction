@@ -144,7 +144,7 @@ static void SetupPP(void)
     if (g_gameConfig.msaa && *pFormat > 0)
     {
         // Make sure selected MSAA mode is available
-        HRESULT hr = IDirect3D8_CheckDeviceMultiSampleType(*g_ppDirect3D, *g_pAdapterIdx, D3DDEVTYPE_HAL, *pFormat,
+        HRESULT hr = (*g_ppDirect3D)->CheckDeviceMultiSampleType(*g_pAdapterIdx, D3DDEVTYPE_HAL, *pFormat,
             g_gameConfig.wndMode != GameConfig::FULLSCREEN, (D3DMULTISAMPLE_TYPE)g_gameConfig.msaa);
         if (SUCCEEDED(hr))
         {
@@ -244,32 +244,33 @@ void GraphicsInit()
     WriteMemInt32(0x0050DD69 + 1, (uintptr_t)GrDrawRect_GrDrawPolyHook - (0x0050DD69 + 0x5));
 #endif
 
-#if 1
-    // Improved Railgun Scanner resolution
-    const int8_t ScannerResolution = 120; // default is 64, max is 127 (signed byte)
-    WriteMemUInt8(0x004325E6 + 1, ScannerResolution); // RenderInGame
-    WriteMemUInt8(0x004325E8 + 1, ScannerResolution);
-    WriteMemUInt8(0x004A34BB + 1, ScannerResolution); // PlayerCreate
-    WriteMemUInt8(0x004A34BD + 1, ScannerResolution);
-    WriteMemUInt8(0x004ADD70 + 1, ScannerResolution); // PlayerRenderRailgunScannerViewToTexture
-    WriteMemUInt8(0x004ADD72 + 1, ScannerResolution);
-    WriteMemUInt8(0x004AE0B7 + 1, ScannerResolution);
-    WriteMemUInt8(0x004AE0B9 + 1, ScannerResolution);
-    WriteMemUInt8(0x004AF0B0 + 1, ScannerResolution); // PlayerRenderScannerView
-    WriteMemUInt8(0x004AF0B4 + 1, ScannerResolution * 3 / 4);
-    WriteMemUInt8(0x004AF0B6 + 1, ScannerResolution);
-    WriteMemUInt8(0x004AF7B0 + 1, ScannerResolution);
-    WriteMemUInt8(0x004AF7B2 + 1, ScannerResolution);
-    WriteMemUInt8(0x004AF7CF + 1, ScannerResolution);
-    WriteMemUInt8(0x004AF7D1 + 1, ScannerResolution);
-    WriteMemUInt8(0x004AF818 + 1, ScannerResolution);
-    WriteMemUInt8(0x004AF81A + 1, ScannerResolution);
-    WriteMemUInt8(0x004AF820 + 1, ScannerResolution);
-    WriteMemUInt8(0x004AF822 + 1, ScannerResolution);
-    WriteMemUInt8(0x004AF855 + 1, ScannerResolution);
-    WriteMemUInt8(0x004AF860 + 1, ScannerResolution * 3 / 4);
-    WriteMemUInt8(0x004AF862 + 1, ScannerResolution);
-#endif
+    if (g_gameConfig.highScannerRes)
+    {
+        // Improved Railgun Scanner resolution
+        const int8_t ScannerResolution = 120; // default is 64, max is 127 (signed byte)
+        WriteMemUInt8(0x004325E6 + 1, ScannerResolution); // RenderInGame
+        WriteMemUInt8(0x004325E8 + 1, ScannerResolution);
+        WriteMemUInt8(0x004A34BB + 1, ScannerResolution); // PlayerCreate
+        WriteMemUInt8(0x004A34BD + 1, ScannerResolution);
+        WriteMemUInt8(0x004ADD70 + 1, ScannerResolution); // PlayerRenderRailgunScannerViewToTexture
+        WriteMemUInt8(0x004ADD72 + 1, ScannerResolution);
+        WriteMemUInt8(0x004AE0B7 + 1, ScannerResolution);
+        WriteMemUInt8(0x004AE0B9 + 1, ScannerResolution);
+        WriteMemUInt8(0x004AF0B0 + 1, ScannerResolution); // PlayerRenderScannerView
+        WriteMemUInt8(0x004AF0B4 + 1, ScannerResolution * 3 / 4);
+        WriteMemUInt8(0x004AF0B6 + 1, ScannerResolution);
+        WriteMemUInt8(0x004AF7B0 + 1, ScannerResolution);
+        WriteMemUInt8(0x004AF7B2 + 1, ScannerResolution);
+        WriteMemUInt8(0x004AF7CF + 1, ScannerResolution);
+        WriteMemUInt8(0x004AF7D1 + 1, ScannerResolution);
+        WriteMemUInt8(0x004AF818 + 1, ScannerResolution);
+        WriteMemUInt8(0x004AF81A + 1, ScannerResolution);
+        WriteMemUInt8(0x004AF820 + 1, ScannerResolution);
+        WriteMemUInt8(0x004AF822 + 1, ScannerResolution);
+        WriteMemUInt8(0x004AF855 + 1, ScannerResolution);
+        WriteMemUInt8(0x004AF860 + 1, ScannerResolution * 3 / 4);
+        WriteMemUInt8(0x004AF862 + 1, ScannerResolution);
+    }
 
     GrColorInit();
 }
@@ -282,16 +283,19 @@ void GraphicsAfterGameInit()
     {
         DWORD AnisotropyLevel = std::min(g_pGrDeviceCaps->MaxAnisotropy, 16ul);
         SetTextureMinMagFilter(D3DTEXF_ANISOTROPIC);
-        IDirect3DDevice8_SetTextureStageState(*g_ppGrDevice, 0, D3DTSS_MAXANISOTROPY, AnisotropyLevel);
-        IDirect3DDevice8_SetTextureStageState(*g_ppGrDevice, 1, D3DTSS_MAXANISOTROPY, AnisotropyLevel);
+        (*g_ppGrDevice)->SetTextureStageState(0, D3DTSS_MAXANISOTROPY, AnisotropyLevel);
+        (*g_ppGrDevice)->SetTextureStageState(1, D3DTSS_MAXANISOTROPY, AnisotropyLevel);
         INFO("Anisotropic Filtering enabled (level: %d)", AnisotropyLevel);
     }
 #endif
 
     // Change font for Time Left text
     static int TimeLeftFont = GrLoadFont("rfpc-large.vf", -1);
-    WriteMemInt8(0x00477157 + 1, TimeLeftFont);
-    WriteMemInt8(0x0047715F + 2, 25);
+    if (TimeLeftFont >= 0)
+    {
+        WriteMemInt8(0x00477157 + 1, TimeLeftFont);
+        WriteMemInt8(0x0047715F + 2, 25);
+    }
     
 }
 
