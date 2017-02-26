@@ -82,6 +82,8 @@ BOOL OptionsDlg::OnInitDialog()
         GetDlgItem(IDC_ANISOTROPIC_CHECK)->EnableWindow(FALSE);
     CheckDlgButton(IDC_DISABLE_LOD_CHECK, conf.disableLodModels ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_FPS_COUNTER_CHECK, conf.fpsCounter ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(IDC_HIGH_SCANNER_RES_CHECK, conf.highScannerRes ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(IDC_TRUE_COLOR_TEXTURES_CHECK, conf.trueColorTextures ? BST_CHECKED : BST_UNCHECKED);
 
     SetDlgItemTextA(IDC_TRACKER_EDIT, conf.tracker.c_str());
     CheckDlgButton(IDC_DIRECT_INPUT_CHECK, conf.directInput ? BST_CHECKED : BST_UNCHECKED);
@@ -147,6 +149,8 @@ void OptionsDlg::OnBnClickedOk()
     conf.anisotropicFiltering = (IsDlgButtonChecked(IDC_ANISOTROPIC_CHECK) == BST_CHECKED);
     conf.disableLodModels = (IsDlgButtonChecked(IDC_DISABLE_LOD_CHECK) == BST_CHECKED);
     conf.fpsCounter = (IsDlgButtonChecked(IDC_FPS_COUNTER_CHECK) == BST_CHECKED);
+    conf.highScannerRes = (IsDlgButtonChecked(IDC_HIGH_SCANNER_RES_CHECK) == BST_CHECKED);
+    conf.trueColorTextures = (IsDlgButtonChecked(IDC_TRUE_COLOR_TEXTURES_CHECK) == BST_CHECKED);
 
     GetDlgItemTextA(IDC_TRACKER_EDIT, str);
     conf.tracker = str;
