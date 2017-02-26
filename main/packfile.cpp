@@ -3,6 +3,13 @@
 #include "utils.h"
 #include "rf.h"
 #include "main.h"
+#include "xxhash.h"
+
+#define DEBUG_VFS 0
+#define DEBUG_VFS_FILENAME1 "DM RTS MiniGolf 2.1.rfl"
+#define DEBUG_VFS_FILENAME2 "JumpPad.wav"
+
+#define VFS_DBGPRINT TRACE
 
 using namespace rf;
 
@@ -12,17 +19,57 @@ struct VFS_LOOKUP_TABLE_NEW
     PACKFILE_ENTRY *pPackfileEntry;
 };
 
-static unsigned g_cPackfiles = 0, g_cFilesInVfs = 0, g_cNameCollisions = 0;
-static PACKFILE **g_pPackfiles = NULL;
+const char *ModFileWhitelist[] = {
+    "reticle_0.tga",
+    "scope_ret_0.tga",
+    "reticle_rocket_0.tga",
+};
+
+const std::map<std::string, unsigned> GameFileChecksums = {
+    { "levelsm.vpp", 0x17D0D38A },
+    { "maps1.vpp", 0x52EE4F99 },
+    { "maps2.vpp", 0xB053486F },
+    { "maps3.vpp", 0xA5ED6271 },
+    { "maps4.vpp", 0xE0AB4397 },
+    { "meshes.vpp", 0xEBA19172 },
+    { "motions.vpp", 0x17132D8E },
+    { "tables.vpp", 0x549DAABF },
+};
 
 constexpr auto g_pVfsLookupTableNew = (VFS_LOOKUP_TABLE_NEW*)0x01BB2AC8; // g_pVfsLookupTable
 constexpr auto LOOKUP_TABLE_SIZE = 20713;
 
-#define DEBUG_VFS 0
-#define DEBUG_VFS_FILENAME1 "DM RTS MiniGolf 2.1.rfl"
-#define DEBUG_VFS_FILENAME2 "JumpPad.wav"
+static unsigned g_cPackfiles = 0, g_cFilesInVfs = 0, g_cNameCollisions = 0;
+static PACKFILE **g_pPackfiles = nullptr;
+static bool g_bModdedGame = false;
 
-#define VFS_DBGPRINT TRACE
+static bool IsModFileInWhitelist(const char *Filename)
+{
+    for (int i = 0; i < COUNTOF(ModFileWhitelist); ++i)
+        if (!stricmp(ModFileWhitelist[i], Filename))
+            return true;
+}
+
+static unsigned HashFile(const char *Filename)
+{
+    FILE *pFile = fopen(Filename, "rb");
+    if (!pFile) return 0;
+
+    XXH32_state_t *state = XXH32_createState();
+    XXH32_reset(state, 0);
+
+    char Buffer[4096];
+    while (true)
+    {
+        size_t len = fread(Buffer, 1, sizeof(Buffer), pFile);
+        if (!len) break;
+        XXH32_update(state, Buffer, len);
+    }
+    fclose(pFile);
+    XXH32_hash_t hash = XXH32_digest(state);
+    XXH32_freeState(state);
+    return hash;
+}
 
 static EGameLang DetectInstalledGameLang()
 {
@@ -55,6 +102,11 @@ EGameLang GetInstalledGameLang()
     return InstalledGameLang;
 }
 
+bool IsModdedGame()
+{
+    return g_bModdedGame;
+}
+
 static BOOL VfsLoadPackfileHook(const char *pszFilename, const char *pszDir)
 {
     char szFullPath[256], Buf[0x800];
@@ -75,8 +127,22 @@ static BOOL VfsLoadPackfileHook(const char *pszFilename, const char *pszDir)
     }
     
     for (unsigned i = 0; i < g_cPackfiles; ++i)
-        if(!stricmp(g_pPackfiles[i]->szPath, szFullPath))
+        if (!stricmp(g_pPackfiles[i]->szPath, szFullPath))
             return TRUE;
+
+    if (!pszDir)
+    {
+        auto it = GameFileChecksums.find(pszFilename);
+        if (it != GameFileChecksums.end())
+        {
+            unsigned Checksum = HashFile(szFullPath);//FileGetChecksum(szFullPath);
+            if (Checksum != it->second)
+            {
+                INFO("Packfile %s has invalid checksum 0x%X", pszFilename, Checksum);
+                g_bModdedGame = true;
+            }
+        }
+    }
 
     FILE *pFile = fopen(szFullPath, "rb");
     if (!pFile)
@@ -266,7 +332,8 @@ static void VfsAddFileToLookupTableHook(PACKFILE_ENTRY *pEntry)
 
             if (*g_pbVfsIgnoreTblFiles) // this is set to true for user_maps
             {
-                if (!g_gameConfig.allowOverwriteGameFiles)
+                bool bWhitelisted = false;// IsModFileInWhitelist(pEntry->pszFileName);
+                if (!g_gameConfig.allowOverwriteGameFiles && !bWhitelisted)
                 {
                     TRACE("Denied overwriting game file %s (old packfile %s, new packfile %s)", 
                         pEntry->pszFileName, pszOldArchive, pszNewArchive);
@@ -276,6 +343,8 @@ static void VfsAddFileToLookupTableHook(PACKFILE_ENTRY *pEntry)
                 {
                     TRACE("Allowed overwriting game file %s (old packfile %s, new packfile %s)",
                         pEntry->pszFileName, pszOldArchive, pszNewArchive);
+                    if (!bWhitelisted)
+                        g_bModdedGame = true;
                 }
             }
             else
@@ -344,10 +413,8 @@ static PACKFILE_ENTRY *VfsFindFileInternalHook(const char *pszFilename)
     return NULL;
 }
 
-static void VfsInitHook(void)
+static void LoadDashFactionVpp()
 {
-    memset(g_pVfsLookupTableNew, 0, sizeof(VFS_LOOKUP_TABLE_NEW) * VFS_LOOKUP_TABLE_SIZE);
-
     // Load DashFaction specific packfile
     char szBuf[MAX_PATH];
     GetModuleFileNameA(g_hModule, szBuf, sizeof(szBuf));
@@ -369,6 +436,15 @@ static void VfsInitHook(void)
     INFO("Loading dashfaction.vpp from directory: %s", szBuf);
     if (!VfsLoadPackfile("dashfaction.vpp", szBuf))
         ERR("Failed to load dashfaction.vpp");
+}
+
+static void VfsInitHook(void)
+{
+    unsigned StartTicks = GetTickCount();
+
+    memset(g_pVfsLookupTableNew, 0, sizeof(VFS_LOOKUP_TABLE_NEW) * VFS_LOOKUP_TABLE_SIZE);
+
+    LoadDashFactionVpp();
 
     if (GetInstalledGameLang() == LANG_GR)
     {
@@ -425,7 +501,11 @@ static void VfsInitHook(void)
         WriteMemPtr(0x004B082B + 1, (PVOID)"localized_strings.tbl");
     }
 
+    INFO("Packfiles initialization took %dms", GetTickCount() - StartTicks);
     INFO("Packfile name collisions: %d", g_cNameCollisions);
+
+    if (g_bModdedGame)
+        INFO("Modded game detected!");
 }
 
 static void VfsCleanupHook(void)
@@ -433,7 +513,7 @@ static void VfsCleanupHook(void)
     for (unsigned i = 0; i < g_cPackfiles; ++i)
         free(g_pPackfiles[i]);
     free(g_pPackfiles);
-    g_pPackfiles = NULL;
+    g_pPackfiles = nullptr;
     g_cPackfiles = 0;
 }
 

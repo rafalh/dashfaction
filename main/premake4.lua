@@ -17,6 +17,7 @@ project "DashFaction"
 		"../vendor/unrar",
 		"../vendor/d3d8",
 		"../vendor/subhook",
+		"../vendor/xxhash",
 	}
 	links {
 		"psapi",
@@ -30,6 +31,7 @@ project "DashFaction"
 		"subhook",
 		"logger",
 		"Common",
+		"xxhash",
 	}
 	
 	pchheader "stdafx.h"

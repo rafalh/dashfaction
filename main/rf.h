@@ -297,6 +297,8 @@ namespace rf
 
     constexpr auto FsAddDirectoryEx = (int(*)(const char *pszDir, const char *pszExtList, char bUnknown))0x00514070;
 
+    constexpr auto FileGetChecksum = (unsigned(*)(const char *pszFilename))0x00436630;
+
     /* Network */
 
     struct NwAddr
