@@ -142,6 +142,7 @@ void HighFpsInit()
 
     // Fix incorrect frame time calculation
     WriteMemUInt8(0x00509595, ASM_NOP, 2);
+    WriteMemUInt8(0x00509532, ASM_SHORT_JMP_REL);
 
     // Fix submarine exploding on high FPS
     RflLoad_Hook.hook(RflLoad_New);
