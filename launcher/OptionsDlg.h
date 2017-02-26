@@ -12,6 +12,7 @@ public:
 	OptionsDlg(CWnd* pParent = NULL);   // standard constructor
 	virtual ~OptionsDlg();
     BOOL OnInitDialog();
+    void InitToolTip();
 
 // Dialog Data
 #ifdef AFX_DESIGN_TIME
@@ -20,6 +21,7 @@ public:
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+    BOOL PreTranslateMessage(MSG* pMsg);
 
 	DECLARE_MESSAGE_MAP()
 public:
@@ -30,4 +32,5 @@ public:
 private:
     VideoDeviceInfoProvider m_videoInfo;
     std::vector<unsigned> m_multiSampleTypes;
+    CToolTipCtrl *m_toolTip;
 };

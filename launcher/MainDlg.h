@@ -19,9 +19,8 @@ public:
 	enum { IDD = IDD_MAIN };
 #endif
 
-	protected:
+protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
-
 
 // Implementation
 protected:

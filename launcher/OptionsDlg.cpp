@@ -20,6 +20,12 @@ OptionsDlg::OptionsDlg(CWnd* pParent /*=NULL*/)
 
 OptionsDlg::~OptionsDlg()
 {
+    if (m_toolTip)
+    {
+        m_toolTip->DestroyToolTipCtrl();
+        delete m_toolTip;
+        m_toolTip = nullptr;
+    }
 }
 
 BOOL OptionsDlg::OnInitDialog()
@@ -91,12 +97,44 @@ BOOL OptionsDlg::OnInitDialog()
     CheckDlgButton(IDC_FAST_START_CHECK, conf.fastStart ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_ALLOW_OVERWRITE_GAME_CHECK, conf.allowOverwriteGameFiles ? BST_CHECKED : BST_UNCHECKED);
 
+    InitToolTip();
+
     return TRUE;
+}
+
+void OptionsDlg::InitToolTip()
+{
+    //create a tool tip control
+    m_toolTip = new CToolTipCtrl();
+    m_toolTip->Create(this);
+
+    m_toolTip->AddTool(GetDlgItem(IDC_STRETCHED_RADIO), "Full Screen Windowed - reduced performance but faster to switch to other window");
+    m_toolTip->AddTool(GetDlgItem(IDC_VSYNC_CHECK), "Enable vertical synchronization (should limit FPS to monitor refresh rate - usually 60)");
+    m_toolTip->AddTool(GetDlgItem(IDC_MAX_FPS_EDIT), "FPS limit - maximal value is 150 - high FPS can trigger minor bugs in game");
+    m_toolTip->AddTool(GetDlgItem(IDC_FAST_ANIMS_CHECK), "Reduce animation smoothness for far models");
+    m_toolTip->AddTool(GetDlgItem(IDC_DISABLE_LOD_CHECK), "Improve details for far models");
+    m_toolTip->AddTool(GetDlgItem(IDC_ANISOTROPIC_CHECK), "Improve far textures quality");
+    m_toolTip->AddTool(GetDlgItem(IDC_FPS_COUNTER_CHECK), "Enable FPS counter in right-top corner of the screen");
+    m_toolTip->AddTool(GetDlgItem(IDC_HIGH_SCANNER_RES_CHECK), "Increase scanner resolution (used by Rail Gun, Rocket Launcher and Fusion Launcher)");
+    m_toolTip->AddTool(GetDlgItem(IDC_TRUE_COLOR_TEXTURES_CHECK), "Increase texture color depth - especially visible for lightmaps and shadows");
+    m_toolTip->AddTool(GetDlgItem(IDC_TRACKER_EDIT), "Hostname of tracker used to find avaliable Multiplayer servers");
+    m_toolTip->AddTool(GetDlgItem(IDC_FAST_START_CHECK), "Skip game intro videos and go straight to Main Menu");
+    m_toolTip->AddTool(GetDlgItem(IDC_DIRECT_INPUT_CHECK), "Use DirectInput for mouse input handling");
+
+    m_toolTip->Activate(TRUE);
+}
+
+BOOL OptionsDlg::PreTranslateMessage(MSG* pMsg)
+{
+    if (m_toolTip)
+        m_toolTip->RelayEvent(pMsg);
+
+    return CDialogEx::PreTranslateMessage(pMsg);
 }
 
 void OptionsDlg::DoDataExchange(CDataExchange* pDX)
 {
-	CDialogEx::DoDataExchange(pDX);
+    CDialogEx::DoDataExchange(pDX);
 }
 
 
