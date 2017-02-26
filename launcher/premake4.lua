@@ -13,6 +13,9 @@ project "DashFactionLauncher"
 		"../common/include",
 	}
 	
+	configuration "vs*"
+		linkoptions { "/DEBUG" } -- generate PDB files
+	
 	configuration "Debug"
 		targetdir "../bin/debug"
 		debugdir "../bin/debug"

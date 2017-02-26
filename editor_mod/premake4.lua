@@ -13,8 +13,8 @@ project "DashEditor"
 	}
 	links { "ModCommon", "Common" }
 	
-	--pchheader "stdafx.h"
-	--pchsource "stdafx.cpp"
+	configuration "vs*"
+		linkoptions { "/DEBUG" } -- generate PDB files
 	
 	configuration "Debug"
 		targetdir "../bin/debug"

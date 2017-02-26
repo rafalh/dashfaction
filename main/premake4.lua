@@ -37,6 +37,9 @@ project "DashFaction"
 	pchheader "stdafx.h"
 	pchsource "stdafx.cpp"
 	
+	configuration "vs*"
+		linkoptions { "/DEBUG" } -- generate PDB files
+	
 	configuration "Debug"
 		targetdir "../bin/debug"
 	
