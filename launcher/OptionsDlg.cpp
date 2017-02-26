@@ -13,7 +13,7 @@
 IMPLEMENT_DYNAMIC(OptionsDlg, CDialogEx)
 
 OptionsDlg::OptionsDlg(CWnd* pParent /*=NULL*/)
-	: CDialogEx(IDD_OPTIONS, pParent)
+	: CDialogEx(IDD_OPTIONS, pParent), m_toolTip(nullptr)
 {
     
 }
@@ -22,7 +22,6 @@ OptionsDlg::~OptionsDlg()
 {
     if (m_toolTip)
     {
-        m_toolTip->DestroyToolTipCtrl();
         delete m_toolTip;
         m_toolTip = nullptr;
     }
@@ -111,7 +110,6 @@ BOOL OptionsDlg::OnInitDialog()
 
 void OptionsDlg::InitToolTip()
 {
-    //create a tool tip control
     m_toolTip = new CToolTipCtrl();
     m_toolTip->Create(this);
 
