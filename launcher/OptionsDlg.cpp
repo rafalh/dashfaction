@@ -46,7 +46,7 @@ BOOL OptionsDlg::OnInitDialog()
     char buf[256];
 
     auto resolutions = m_videoInfo.getResolutions(D3DFMT_X8R8G8B8);
-    int selectedRes = 0;
+    int selectedRes = -1;
     for (const auto &res : resolutions)
     {
         sprintf(buf, "%dx%d", res.width, res.height);
@@ -54,7 +54,14 @@ BOOL OptionsDlg::OnInitDialog()
         if (conf.resWidth == res.width && conf.resHeight == res.height)
             selectedRes = pos;
     }
-    resCombo->SetCurSel(selectedRes);
+    if (selectedRes != -1)
+        resCombo->SetCurSel(selectedRes);
+    else
+    {
+        char buf[32];
+        sprintf(buf, "%dx%d", conf.resWidth, conf.resHeight);
+        resCombo->SetWindowTextA(buf);
+    }
 
     CheckDlgButton(IDC_32BIT_RADIO, conf.resBpp == 32 ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_16BIT_RADIO, conf.resBpp == 16 ? BST_CHECKED : BST_UNCHECKED);
@@ -108,6 +115,7 @@ void OptionsDlg::InitToolTip()
     m_toolTip = new CToolTipCtrl();
     m_toolTip->Create(this);
 
+    m_toolTip->AddTool(GetDlgItem(IDC_RESOLUTIONS_COMBO), "Please select resolution from provided dropdown list - custom resolution is supposed to work in Windowed/Stretched mode only");
     m_toolTip->AddTool(GetDlgItem(IDC_STRETCHED_RADIO), "Full Screen Windowed - reduced performance but faster to switch to other window");
     m_toolTip->AddTool(GetDlgItem(IDC_VSYNC_CHECK), "Enable vertical synchronization (should limit FPS to monitor refresh rate - usually 60)");
     m_toolTip->AddTool(GetDlgItem(IDC_MAX_FPS_EDIT), "FPS limit - maximal value is 150 - high FPS can trigger minor bugs in game");
