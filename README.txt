@@ -1,4 +1,4 @@
-Dash Faction 1.0 by rafalh
+Dash Faction 1.1 by rafalh
 ==========================
 
 About
@@ -13,11 +13,11 @@ Features:
 - Spectate Mode
 - wide-screen fixes
 - windowed and stretched display mode
-- better graphics quality (anti-aliasing, anisotropic filtering, disabled LOD models)
+- better graphics quality (anti-aliasing, true-color textures, anisotropic filtering, higher scanner view resolution, disabled LOD models)
 - improved security (enabled Data Execution Prevention, multiple Buffer Overflows fixes)
 - removed limit of packfiles
+- improved Scoreboard with Kills/Deaths column
 - information about killer's weapon in chat
-- LazyBan (baning and kicking players using only part of nickname)
 - ui.vpp cheats prevention
 - multiple fixes for high FPS (limited to 150 for now)
 - country-specific edition support (properly handles game directory structure for German and French edition)
@@ -57,49 +57,11 @@ Run DashFactionLauncher.exe.
 On first run select Options and check if everything is OK (especially make sure game executable path is valid).
 Close settings and click "Launch Game" to start modded Red Faction game.
 
-Changelog
----------
-Version 1.0.1 (released 07-02-2017):
-- fixed monitors/mirrors in MSAA mode
-- fixed aspect ratio in windowed mode if window aspect ratio is different than screen aspect ratio
-- fixed left/top screen edges not rendering properly in MSAA mode
-- fixed right/bottom screen edges being always black due to bug in RF code
-- fixed water waves animation on high FPS (with help from Saber)
-- fixed invalid frame time calculation visible only on very high FPS
-- player name, character and weapons preferences are no longer overwritten when loading game from save
-- fixed exiting Bink videos by Escape
-- other stability fixes
-- launcher icon has higher resolution
-
-Version 1.0.0 (released 24-01-2017):
-- Spectate Mode
-- launcher GUI
-- DirectInput support
-- windowed and stretched mode support
-- support for country specific game edition (German and French)
-- added level author and filename information on scoreboard
-- fixed jump, hit-screen and toggle console animations on high FPS
-- added checking for new Dash Faction version in launcher
-- fixed multiple Buffer Overflows in RF code (security)
-- added "ms" command for changing mouse sensitivity
-- added "vli" command for disabling volumetric lightining
-- changed default sorting on Server List to player count
-
-Version 0.61:
-- added widescreen fixes
-- enabled anisotropic filtering
-- enabled DEP to improve security
-- implemented passing of launcher command-line arguments to game process
-
-Version 0.60:
-- use exclusive full screen mode (it was using windowed-stretched mode before)
-- check RF.exe checksum before starting (detects if RF.exe has compatible version)
-- added experimental Multisample Anti-aliasing (to enable start launcher from console with '-msaa' argument)
-- improved crashlog
-- added icon
-
-Version 0.52:
-- use working directory as fallback for finding RF.exe
-
-Version 0.51:
-- first public release
+Problems
+--------
+If antivirus detects Dash Faction as a malicious program try to disable Reputation Services. It can help
+because some antiviruses flags new not popular files as danger just because they are not popular among users
+and Dash Faction is certainly not very popular :)
+I had some problems with Avast silently removing launcher exe and had to add Dash Faction to exclusions of
+Behaviour Shield.
+If game crashes try to disable features in Options window - especially try disabling MSAA.
