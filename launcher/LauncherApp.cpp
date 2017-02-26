@@ -7,6 +7,7 @@
 #include "MainDlg.h"
 #include "ModdedAppLauncher.h"
 #include "GameConfig.h"
+#include "version.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -80,6 +81,8 @@ BOOL LauncherApp::InitInstance()
             "args...      Additional arguments passed to game or editor\n");
         return FALSE;
     }
+
+    MigrateConfig();
     
     if (strstr(m_lpCmdLine, "-game") || strstr(m_lpCmdLine, "-level"))
     {
@@ -110,6 +113,25 @@ BOOL LauncherApp::InitInstance()
 	// Since the dialog has been closed, return FALSE so that we exit the
 	//  application, rather than start the application's message pump.
 	return FALSE;
+}
+
+void LauncherApp::MigrateConfig()
+{
+    try
+    {
+        GameConfig config;
+        if (config.load() && config.dashFactionVersion != VERSION_STR)
+        {
+            if (config.tracker == "rf.thqmultiplay.net" && config.dashFactionVersion.empty()) // <= 1.0.1
+                config.tracker = DEFAULT_RF_TRACKER;
+            config.dashFactionVersion = VERSION_STR;
+            config.save();
+        }
+    }
+    catch (std::exception&)
+    {
+        // ignore
+    }
 }
 
 bool LauncherApp::LaunchGame(HWND hwnd)

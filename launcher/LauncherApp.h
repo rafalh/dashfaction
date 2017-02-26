@@ -22,13 +22,16 @@ public:
 
 // Overrides
 public:
-	virtual BOOL InitInstance();
+    virtual BOOL InitInstance();
 
 // Implementation
     bool LaunchGame(HWND hwnd);
     bool LaunchEditor(HWND hwnd);
 
 	DECLARE_MESSAGE_MAP()
+
+private:
+    void MigrateConfig();
 };
 
 extern LauncherApp theApp;

@@ -37,6 +37,7 @@ bool GameConfig::load()
     dashFactionKey.readValue("Direct Input", &directInput);
     dashFactionKey.readValue("Fast Start", &fastStart);
     dashFactionKey.readValue("Allow Overwriting Game Files", &allowOverwriteGameFiles);
+    dashFactionKey.readValue("Version", &dashFactionVersion);
 
 #ifdef NDEBUG
     if (maxFps > MAX_FPS_LIMIT)
@@ -76,6 +77,7 @@ void GameConfig::save()
     dashFactionKey.writeValue("Direct Input", directInput);
     dashFactionKey.writeValue("Fast Start", fastStart);
     dashFactionKey.writeValue("Allow Overwriting Game Files", allowOverwriteGameFiles);
+    dashFactionKey.writeValue("Version", dashFactionVersion);
 }
 
 bool GameConfig::detectGamePath()
