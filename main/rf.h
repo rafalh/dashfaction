@@ -14,13 +14,66 @@ namespace rf
 {
     /* Declarations */
     struct CPlayer;
-    struct CEntity;
+    struct EntityObj;
 
     /* Math */
 
     struct CVector3
     {
         float x, y, z;
+
+        CVector3() {}
+
+        CVector3(float x, float y, float z) :
+            x(x), y(y), z(z) {}
+
+        CVector3 &operator+=(const CVector3 &other)
+        {
+            x += other.x;
+            y += other.y;
+            z += other.z;
+            return *this;
+        }
+
+        CVector3 &operator*=(float m)
+        {
+            x *= m;
+            y *= m;
+            z *= m;
+            return *this;
+        }
+
+        CVector3 operator-() const
+        {
+            return CVector3(-x, -y, -z);
+        }
+
+        CVector3 &operator-=(const CVector3 &other)
+        {
+            return (*this += -other);
+        }
+
+        CVector3 operator+(const CVector3 &other) const
+        {
+            CVector3 tmp = *this;
+            tmp += other;
+            return tmp;
+        }
+
+        CVector3 operator*(float m) const
+        {
+            return CVector3(x * m, y * m, z * m);
+        }
+
+        float len() const
+        {
+            return sqrtf(lenPow2());
+        }
+
+        float lenPow2() const
+        {
+            return x * x + y * y + z * z;
+        }
     };
 
     struct CMatrix3
@@ -162,11 +215,13 @@ namespace rf
     constexpr auto g_pGrScaleVec = (CVector3*)0x01818B48;
     constexpr auto g_GrViewMatrix = (CMatrix3*)0x018186C8;
     constexpr auto g_pGrDeviceCaps = (D3DCAPS8*)0x01CFCAC8;
+    constexpr auto g_pGrDefaultWFar = (float*)0x00596140;
+
+    constexpr auto g_pGrLineMaterial = (uint32_t*)0x01775B00;
     constexpr auto g_pGrRectMaterial = (uint32_t*)0x17756C0;
     constexpr auto g_pGrTextMaterial = (uint32_t*)0x17C7C5C;
     constexpr auto g_pGrBitmapMaterial = (uint32_t*)0x017756BC;
     constexpr auto g_pGrImageMaterial = (uint32_t*)0x017756DC;
-    constexpr auto g_pGrDefaultWFar = (float*)0x00596140;
 
     constexpr auto GrGetMaxWidth = (unsigned(*)())0x0050C640;
     constexpr auto GrGetMaxHeight = (unsigned(*)())0x0050C650;
@@ -189,6 +244,8 @@ namespace rf
     constexpr auto GrSwitchBuffers = (void(*)())0x0050CE20;
     constexpr auto GrSetViewMatrix = (void(*)(CMatrix3 *pMatRot, CVector3 *pPos, float fFov, int a4, int a5))0x00517EB0;
     constexpr auto GrSetViewMatrixD3D = (void(*)(CMatrix3 *pMatRot, CVector3 *pPos, float fFov, int a4, int a5))0x00547150;
+    constexpr auto GrRenderLine = (char(*)(const CVector3 *pWorldPos1, const CVector3 *pWorldPos2, int Material))0x00515960;
+    constexpr auto GrRenderSphere = (char(*)(const CVector3 *pvPos, float fRadius, int Material))0x00515CD0;
     constexpr auto GrLock = (int(*)(int BmHandle, int SectionIdx, SGrLockData *pData, int a4))0x0050E2E0;
     constexpr auto GrUnlock = (void(*)(SGrLockData *pData))0x0050E310;
     constexpr auto GrD3DSetTextureData = (int(*)(int Level, const BYTE *pSrcBits, const BYTE *pPallete, int cxBm, int cyBm, int PixelFmt, void *a7, int cxTex, int cyTex, IDirect3DTexture8 *pTextures))0x0055BA10;
@@ -238,62 +295,74 @@ namespace rf
     constexpr auto UiCreateDialog = (void(*)(const char *pszTitle, const char *pszText, unsigned cButtons, const char **ppszBtnTitles, void **ppfnCallbacks, unsigned Unknown1, unsigned Unknown2))0x004562A0;
     constexpr auto UiGetElementFromPos = (int(*)(int x, int y, UiPanel **ppGuiList, signed int cGuiList))0x00442ED0;
 
-    /* VFS */
+    /* HUD */
 
-    struct PACKFILE_ENTRY;
+#define HUD_POINTS_COUNT 48
+    constexpr auto g_pHudPosData640 = (POINT*)0x00637868;
+    constexpr auto g_pHudPosData800 = (POINT*)0x006373D0;
+    constexpr auto g_pHudPosData1024 = (POINT*)0x00637230;
+    constexpr auto g_pHudPosData1280 = (POINT*)0x00637560;
+    constexpr auto g_pHudPosData = (POINT*)0x006376E8;
 
-    struct PACKFILE
+    typedef void(*ChatPrint_Type)(CString strText, unsigned ColorId, CString Prefix);
+    constexpr auto ChatPrint = (ChatPrint_Type)0x004785A0;
+
+    /* File System */
+
+    struct PackfileEntry;
+
+    struct Packfile
     {
         char szName[32];
         char szPath[128];
         uint32_t field_A0;
         uint32_t cFiles;
-        PACKFILE_ENTRY *pFileList;
+        PackfileEntry *pFileList;
         uint32_t cbSize;
     };
 
-    struct PACKFILE_ENTRY
+    struct PackfileEntry
     {
         uint32_t dwNameChecksum;
         char *pszFileName;
         uint32_t OffsetInBlocks;
         uint32_t cbFileSize;
-        PACKFILE *pArchive;
+        Packfile *pArchive;
         FILE *pRawFile;
     };
 
-    struct VFS_LOOKUP_TABLE
+    struct PackfileLookupTable
     {
         uint32_t dwNameChecksum;
-        PACKFILE_ENTRY *pArchiveEntry;
+        PackfileEntry *pArchiveEntry;
     };
 
     constexpr auto g_pcArchives = (uint32_t*)0x01BDB214;
-    constexpr auto g_pArchives = (PACKFILE*)0x01BA7AC8;
+    constexpr auto g_pArchives = (Packfile*)0x01BA7AC8;
 #define VFS_LOOKUP_TABLE_SIZE 20713
-    constexpr auto g_pVfsLookupTable = (VFS_LOOKUP_TABLE*)0x01BB2AC8;
+    constexpr auto g_pVfsLookupTable = (PackfileLookupTable*)0x01BB2AC8;
     constexpr auto g_pbVfsIgnoreTblFiles = (uint8_t*)0x01BDB21C;
 
-    typedef BOOL(*PFN_LOAD_PACKFILE)(const char *pszFileName, const char *pszDir);
-    constexpr auto VfsLoadPackfile = (PFN_LOAD_PACKFILE)0x0052C070;
+    typedef BOOL(*PackfileLoad_Type)(const char *pszFileName, const char *pszDir);
+    constexpr auto PackfileLoad = (PackfileLoad_Type)0x0052C070;
 
-    typedef PACKFILE *(*PFN_VFS_FIND_PACKFILE)(const char *pszFilename);
-    constexpr auto VfsFindPackfile = (PFN_VFS_FIND_PACKFILE)0x0052C1D0;
+    typedef Packfile *(*PackfileFindArchive_Type)(const char *pszFilename);
+    constexpr auto PackfileFindArchive = (PackfileFindArchive_Type)0x0052C1D0;
 
-    typedef uint32_t(*PFN_VFS_CALC_FILENAME_CHECKSUM)(const char *pszFileName);
-    constexpr auto VfsCalcFileNameChecksum = (PFN_VFS_CALC_FILENAME_CHECKSUM)0x0052BE70;
+    typedef uint32_t(*PackfileCalcFileNameChecksum_Type)(const char *pszFileName);
+    constexpr auto PackfileCalcFileNameChecksum = (PackfileCalcFileNameChecksum_Type)0x0052BE70;
 
-    typedef uint32_t(*PFN_VFS_ADD_FILE_TO_LOOKUP_TABLE)(const PACKFILE_ENTRY *pPackfileEntry);
-    constexpr auto VfsAddFileToLookupTable = (PFN_VFS_ADD_FILE_TO_LOOKUP_TABLE)0x0052BCA0;
+    typedef uint32_t(*PackfileAddToLookupTable_Type)(PackfileEntry *pPackfileEntry);
+    constexpr auto PackfileAddToLookupTable = (PackfileAddToLookupTable_Type)0x0052BCA0;
 
-    typedef uint32_t(*PFN_VFS_PROCESS_PACKFILE_HEADER)(PACKFILE *pPackfile, const void *pHeader);
-    constexpr auto VfsProcessPackfileHeader = (PFN_VFS_PROCESS_PACKFILE_HEADER)0x0052BD10;
+    typedef uint32_t(*PackfileProcessHeader_Type)(Packfile *pPackfile, const void *pHeader);
+    constexpr auto PackfileProcessHeader = (PackfileProcessHeader_Type)0x0052BD10;
 
-    typedef uint32_t(*PFN_VFS_ADD_PACKFILE_ENTRIES)(PACKFILE *pPackfile, const void *pBuf, unsigned cFilesInBlock, unsigned *pcAddedEntries);
-    constexpr auto VfsAddPackfileEntries = (PFN_VFS_ADD_PACKFILE_ENTRIES)0x0052BD40;
+    typedef uint32_t(*PackfileAddEntries_Type)(Packfile *pPackfile, const void *pBuf, unsigned cFilesInBlock, unsigned *pcAddedEntries);
+    constexpr auto PackfileAddEntries = (PackfileAddEntries_Type)0x0052BD40;
 
-    typedef uint32_t(*PFN_VFS_SETUP_FILE_OFFSETS)(PACKFILE *pPackfile, unsigned DataOffsetInBlocks);
-    constexpr auto VfsSetupFileOffsets = (PFN_VFS_SETUP_FILE_OFFSETS)0x0052BEB0;
+    typedef uint32_t(*PackfileSetupFileOffsets_Type)(Packfile *pPackfile, unsigned DataOffsetInBlocks);
+    constexpr auto PackfileSetupFileOffsets = (PackfileSetupFileOffsets_Type)0x0052BEB0;
 
     constexpr auto FsAddDirectoryEx = (int(*)(const char *pszDir, const char *pszExtList, char bUnknown))0x00514070;
 
@@ -317,20 +386,6 @@ namespace rf
 
     typedef void(*NwAddrToStr_Type)(char *pszDest, int cbDest, NwAddr *pAddr);
     constexpr auto NwAddrToStr = (NwAddrToStr_Type)0x00529FE0;
-
-    /* HUD */
-
-#define HUD_POINTS_COUNT 48
-    constexpr auto g_pHudPosData640 = (POINT*)0x00637868;
-    constexpr auto g_pHudPosData800 = (POINT*)0x006373D0;
-    constexpr auto g_pHudPosData1024 = (POINT*)0x00637230;
-    constexpr auto g_pHudPosData1280 = (POINT*)0x00637560;
-    constexpr auto g_pHudPosData = (POINT*)0x006376E8;
-
-    /* Chat */
-
-    typedef void(*ChatPrint_Type)(CString strText, unsigned ColorId, CString Prefix);
-    constexpr auto ChatPrint = (ChatPrint_Type)0x004785A0;
 
     /* Player */
 
@@ -429,9 +484,9 @@ namespace rf
         char szName[12];
     };
 
-    struct CAMERA
+    struct PlayerCamera
     {
-        CEntity *pEntity;
+        EntityObj *pCameraEntity;
         CPlayer *pPlayer;
         enum { CAM_1ST_PERSON, CAM_3RD_PERSON, CAM_FREE } Type;
     };
@@ -492,7 +547,7 @@ namespace rf
         int field_B8;
         int field_BC;
         int field_C0;
-        CAMERA *pCamera;
+        PlayerCamera *pCamera;
         int xViewport;
         int yViewport;
         int cxViewport;
@@ -633,17 +688,17 @@ namespace rf
 
     enum EObjectType
     {
-        OT_ENTITY = 0,
-        OT_ITEM = 1,
-        OT_WEAPON = 2,
-        OT_3 = 3,
-        OT_CLUTTER = 4,
-        OT_TRIGGER = 5,
-        OT_EVENT = 6,
-        OT_7 = 7,
-        OT_8 = 8,
-        OT_MOVER = 9,
-        OT_10 = 10,
+        OT_ENTITY = 0x0,
+        OT_ITEM = 0x1,
+        OT_WEAPON = 0x2,
+        OT_DEBRIS = 0x3,
+        OT_CLUTTER = 0x4,
+        OT_TRIGGER = 0x5,
+        OT_EVENT = 0x6,
+        OT_CORPSE = 0x7,
+        OT_KEYFRAME = 0x8,
+        OT_MOVER = 0x9,
+        OT_CORONA_10 = 0xA,
     };
 
     struct SPosRotUnk
@@ -660,15 +715,30 @@ namespace rf
         CMatrix3 matYawRot;
     };
 
-    struct CObject
+    struct SWaterSplashUnk
+    {
+        CVector3 field_1B4;
+        CVector3 field_1C0;
+        float field_1CC;
+        int field_1D0;
+        float field_1D4;
+        CVector3 field_1D8;
+        int hUnkEntity;
+        int field_1E8;
+        int bWaterSplash_1EC;
+        int field_3C;
+        int field_40;
+    };
+
+    struct Object
     {
         int field_0;
         CVector3 field_4;
-        int field_10;
-        int field_14;
+        Object *pNextObj;
+        Object *pPrevObj;
         CString strName;
         int Uid;
-        enum EObjectType Type;
+        EObjectType Type;
         int Team;
         int Handle;
         int unk2;
@@ -695,18 +765,9 @@ namespace rf
         CVector3 field_190;
         CVector3 field_19C;
         int MovementFlags;
-        int field_1AC;
-        float field_1B0;
-        int field_1B4;
-        int field_1B8;
-        int field_1BC;
-        CVector3 field_1C0;
-        float field_1CC;
-        int field_1D0[6];
-        int field_1E8;
-        int field_1EC;
-        int field_1F0;
-        int field_1F4;
+        int FlagsSplash_1AC;
+        int field_1B0;
+        SWaterSplashUnk WaterSplashUnk;
         int field_1F8;
         int iMaterial;
         int hParent;
@@ -724,13 +785,13 @@ namespace rf
         int field_280;
         int field_284;
         int field_288;
-        CObject *pNextObj;
     };
 
     struct EventObj
     {
         int unk0;
-        CObject Head;
+        Object Head;
+        int EventType;
         float fDelay;
         int field_298;
         int LinkList;
@@ -741,12 +802,27 @@ namespace rf
         int field_2B0;
     };
 
-    typedef void(*EntityRender_Type)(CEntity *pObj);
-    constexpr auto EntityRender = (EntityRender_Type)0x00421850;
+    struct ItemObj
+    {
+        Object Head;
+        ItemObj *pNext;
+        ItemObj *pPrev;
+        int field_294;
+        int ItemClsId;
+        CString field_29C;
+        int field_2A4;
+        int field_2A8;
+        int field_2AC;
+        char field_2B0[12];
+        int field_2BC;
+        int field_2C0;
+    };
+
+    constexpr auto *g_pItemObjList = (ItemObj*)0x00642DD8;
 
     /* Entity */
 
-    typedef void SEntityClass;
+    typedef void EntityClass;
 
     struct SMovementMode
     {
@@ -763,7 +839,7 @@ namespace rf
 
     struct SWeaponSelection
     {
-        int field_0;
+        EntityClass *pEntityCls;
         int WeaponClsId;
         int WeaponClsId2;
     };
@@ -777,13 +853,14 @@ namespace rf
         float field_20;
     };
 
-    struct CEntity
+    struct EntityObj
     {
-        struct CObject Head;
-        int field_290;
-        SEntityClass *pClass;
+        Object Head;
+        EntityObj *pNext;
+        EntityObj *pPrev;
+        EntityClass *pClass;
         int ClassId;
-        SEntityClass *pClass2;
+        EntityClass *pClass2;
         SWeaponSelection WeaponSel;
         int Ammo[8];
         char field_2CC[492];
@@ -898,20 +975,20 @@ namespace rf
         int field_1490;
     };
 
-    typedef CEntity *(*HandleToEntity_Type)(uint32_t hEntity);
+    typedef EntityObj *(*HandleToEntity_Type)(uint32_t hEntity);
     constexpr auto HandleToEntity = (HandleToEntity_Type)0x00426FC0;
 
     /* Weapons */
 
-    struct WEAPON_CLASS
+    struct WeaponClass
     {
         CString strName;
         CString strDisplayName;
         BYTE Rest[0x550 - 2 * sizeof(CString)];
     };
 
-    constexpr auto g_pWeaponClasses = (WEAPON_CLASS*)0x0085CD08;
-    constexpr auto g_pRiotStickClassId = (unsigned*)0x00872468;
+    constexpr auto g_pWeaponClasses = (WeaponClass*)0x0085CD08;
+    constexpr auto g_pRiotStickClsId = (uint32_t*)0x00872468;
     constexpr auto g_pRemoteChargeClsId = (uint32_t*)0x0087210C;
 
     constexpr auto UpdatePlayerWeaponMesh = (void(*)(CPlayer*))0x004AA6D0;
@@ -1044,7 +1121,7 @@ namespace rf
     constexpr auto RenderReticle = (void(*)(CPlayer *pPlayer))0x0043A2C0;
     constexpr auto SetCursorVisible = (void(*)(char bVisible))0x0051E680;
     constexpr auto RflLoad = (int(*)(CString *pstrLevelFilename, CString *a2, char *pszError))0x0045C540;
-    constexpr auto ObjGetFromUid = (CObject *(*)(int Uid))0x0048A4A0;
+    constexpr auto ObjGetFromUid = (Object *(*)(int Uid))0x0048A4A0;
 
     /* Strings Table */
     constexpr auto g_ppszStringsTable = (char**)0x007CBBF0;

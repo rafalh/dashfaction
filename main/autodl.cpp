@@ -81,7 +81,7 @@ bool UnzipVpp(const char *pszPath)
             fclose(pFile);
             unzCloseCurrentFile(Archive);
 
-            if (!VfsLoadPackfile(szFileName, "user_maps\\multi\\"))
+            if (!PackfileLoad(szFileName, "user_maps\\multi\\"))
                 ERR("RfLoadVpp failed - %s", szFileName);
         }
 
@@ -148,7 +148,7 @@ bool UnrarVpp(const char *pszPath)
             Code = RARProcessFile(hArchive, RAR_EXTRACT, szBuf, NULL);
             if (Code == 0)
             {
-                if (!VfsLoadPackfile(HeaderData.FileName, "user_maps\\multi\\"))
+                if (!PackfileLoad(HeaderData.FileName, "user_maps\\multi\\"))
                     ERR("RfLoadVpp failed - %s", HeaderData.FileName);
             }
         }

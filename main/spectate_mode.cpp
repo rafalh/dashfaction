@@ -13,7 +13,7 @@ using namespace rf;
 #if SPECTATE_MODE_ENABLE
 
 static CPlayer *g_SpectateModeTarget;
-static CAMERA *g_OldTargetCamera = NULL;
+static PlayerCamera *g_OldTargetCamera = NULL;
 static bool g_SpectateModeEnabled = false;
 static int g_LargeFont = -1, g_MediumFont = -1, g_SmallFont = -1;
 
@@ -26,17 +26,17 @@ static void SetCameraTarget(CPlayer *pPlayer)
     if (!*g_ppLocalPlayer || !(*g_ppLocalPlayer)->pCamera || !pPlayer)
         return;
 
-    CAMERA *pCamera = (*g_ppLocalPlayer)->pCamera;
-    pCamera->Type = CAMERA::CAM_1ST_PERSON;
+    PlayerCamera *pCamera = (*g_ppLocalPlayer)->pCamera;
+    pCamera->Type = PlayerCamera::CAM_1ST_PERSON;
     pCamera->pPlayer = pPlayer;
 
     g_OldTargetCamera = pPlayer->pCamera;
     pPlayer->pCamera = pCamera; // fix crash 0040D744
 
-    CEntity *pEntity = HandleToEntity(pPlayer->hEntity);
+    EntityObj *pEntity = HandleToEntity(pPlayer->hEntity);
     if (pEntity)
     {
-        CEntity *pCamEntity = pCamera->pEntity;
+        EntityObj *pCamEntity = pCamera->pCameraEntity;
         pCamEntity->Head.hParent = pPlayer->hEntity;
         // pCamEntity->Head.hParent = pEntity->Head.Handle;
         pCamEntity->Head.vPos = pEntity->vWeaponPos;
@@ -83,7 +83,7 @@ void SpectateModeSetTargetPlayer(CPlayer *pPlayer)
 #if SPECTATE_MODE_SHOW_WEAPON
     g_SpectateModeTarget = pPlayer;
     pPlayer->FireFlags |= 1 << 4;
-    CEntity *pEntity = HandleToEntity(pPlayer->hEntity);
+    EntityObj *pEntity = HandleToEntity(pPlayer->hEntity);
     if (pEntity)
     {
         SetupPlayerWeaponMesh(pPlayer, pEntity->WeaponSel.WeaponClsId);
@@ -191,7 +191,7 @@ static void RenderPlayerArmHook(CPlayer *pPlayer)
 {
     if (g_SpectateModeEnabled)
     {
-        CEntity *pEntity = HandleToEntity(g_SpectateModeTarget->hEntity);
+        EntityObj *pEntity = HandleToEntity(g_SpectateModeTarget->hEntity);
 
         // HACKFIX: RF uses function PlayerSetRemoteChargeVisible for local player only
         g_SpectateModeTarget->RemoteChargeVisible = (pEntity && pEntity->WeaponSel.WeaponClsId == *g_pRemoteChargeClsId);
@@ -283,7 +283,7 @@ void SpectateModeDrawUI()
     sprintf(szBuf, "Spectating: %s", g_SpectateModeTarget->strName.psz);
     GrDrawAlignedText(GR_ALIGN_CENTER, x + cx / 2, y + cy / 2 - cyFont / 2, szBuf, g_LargeFont, *g_pGrTextMaterial);
 
-    CEntity *pEntity = HandleToEntity(g_SpectateModeTarget->hEntity);
+    EntityObj *pEntity = HandleToEntity(g_SpectateModeTarget->hEntity);
     if (!pEntity)
     {
         GrSetColor(0xC0, 0, 0, 0xC0);

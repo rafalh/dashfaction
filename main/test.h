@@ -2,3 +2,4 @@
 
 void TestInit();
 void TestRender();
+void TestRenderInGame();

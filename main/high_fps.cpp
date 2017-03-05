@@ -62,7 +62,7 @@ void NAKED ftol_Timer()
     }
 }
 
-void STDCALL EntityWaterDecelerateFix(rf::CEntity *pEntity)
+void STDCALL EntityWaterDecelerateFix(rf::EntityObj *pEntity)
 {
     float fVelFactor = 1.0f - (*rf::g_pfFramerate * 4.5f);
     pEntity->Head.vVel.x *= fVelFactor;
@@ -103,7 +103,7 @@ int RflLoad_New(rf::CString *pstrLevelFilename, rf::CString *a2, char *pszError)
     {
         // Fix submarine exploding - change delay of two events to make submarine physics enabled later
         //INFO("Fixing Submarine exploding bug...");
-        rf::CObject *pObj = rf::ObjGetFromUid(4679);
+        rf::Object *pObj = rf::ObjGetFromUid(4679);
         if (pObj && pObj->Type == rf::OT_EVENT)
         {
             rf::EventObj *pEvent = (rf::EventObj*)(((uintptr_t)pObj) - 4);

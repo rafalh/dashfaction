@@ -32,7 +32,7 @@ void OnPlayerKill(CPlayer *pKilled, CPlayer *pKiller)
     CString strMsg, strPrefix, *pstrWeaponName;
     const char *pszMuiMsg, *pszWeaponName = NULL;
     unsigned ColorId;
-    CEntity *pKillerEntity;
+    EntityObj *pKillerEntity;
     
     pKillerEntity = pKiller ? HandleToEntity(pKiller->hEntity) : NULL;
     
@@ -56,7 +56,7 @@ void OnPlayerKill(CPlayer *pKilled, CPlayer *pKiller)
         {
             unsigned cchWeaponName = 0;
             
-            if (pKillerEntity && pKillerEntity->WeaponSel.WeaponClsId == *g_pRiotStickClassId)
+            if (pKillerEntity && pKillerEntity->WeaponSel.WeaponClsId == *g_pRiotStickClsId)
             {
                 pszMuiMsg = g_ppszStringsTable[STR_YOU_JUST_GOT_BEAT_DOWN_BY] ? g_ppszStringsTable[STR_YOU_JUST_GOT_BEAT_DOWN_BY] : "";
                 strMsg.psz = StringAlloc(strlen(pszMuiMsg) + pKiller->strName.cch + 2);
@@ -104,7 +104,7 @@ void OnPlayerKill(CPlayer *pKilled, CPlayer *pKiller)
         }
         else
         {
-            if (pKillerEntity && pKillerEntity->WeaponSel.WeaponClsId == *g_pRiotStickClassId)
+            if (pKillerEntity && pKillerEntity->WeaponSel.WeaponClsId == *g_pRiotStickClsId)
                 pszMuiMsg = g_ppszStringsTable[STR_GOT_BEAT_DOWN_BY] ? g_ppszStringsTable[STR_GOT_BEAT_DOWN_BY] : "";
             else
                 pszMuiMsg = g_ppszStringsTable[STR_WAS_KILLED_BY] ? g_ppszStringsTable[STR_WAS_KILLED_BY] : "";

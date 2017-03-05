@@ -112,6 +112,13 @@ static bool RunGameHook()
     return rf::RunGame();
 }
 
+void RenderInGameHook()
+{
+#ifdef DEBUG
+    TestRenderInGame();
+#endif
+}
+
 int KeyGetFromFifo_New()
 {
     // Process messages here because when watching videos main loop is not running
@@ -230,6 +237,8 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
     WriteMemInt32(0x004B27CD + 1, (uintptr_t)InitGameHook - (0x004B27CD + 0x5));
     WriteMemInt32(0x004B2821 + 1, (uintptr_t)CleanupGameHook - (0x004B2821 + 0x5));
     WriteMemInt32(0x004B2818 + 1, (uintptr_t)RunGameHook - (0x004B2818 + 0x5));
+    WriteMemInt32(0x00432375 + 1, (uintptr_t)RenderInGameHook - (0x00432375 + 0x5));
+    
 
     RenderHitScreen_Hook.hook(RenderHitScreen_New);
     PlayerCreate_Hook.hook(PlayerCreate_New);
