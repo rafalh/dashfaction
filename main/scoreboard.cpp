@@ -75,6 +75,7 @@ void DrawScoreboardInternalHook(BOOL bDraw)
     CString_Init(&strServerInfo, szBuf);
     GrFitText(&strServerInfoNew, strServerInfo, cx - 20); // Note: this destroys input string
     GrDrawAlignedText(GR_ALIGN_CENTER, xCenter, y + 60, CString_CStr(&strServerInfoNew), -1, *g_pGrTextMaterial);
+    CString_Destroy(&strServerInfoNew);
     y += 80;
     
     // Draw team scores
