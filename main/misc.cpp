@@ -51,8 +51,10 @@ static void GetVersionStr_New(const char **ppszVersion, const char **a2)
 static int MenuUpdate_New()
 {
     int MenuId = MenuUpdate_Hook.callTrampoline();
-    if (MenuId == 0x22) // hide cursor when changing level - hackfixed in RF by chaning rendering logic
+    if (MenuId == MENU_MP_LIMBO) // hide cursor when changing level - hackfixed in RF by chaning rendering logic
         rf::SetCursorVisible(false);
+    else if (MenuId == MENU_MAIN)
+        rf::SetCursorVisible(true);
     return MenuId;
 }
 
