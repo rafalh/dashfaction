@@ -8,6 +8,7 @@
 #include "ModdedAppLauncher.h"
 #include "GameConfig.h"
 #include "version.h"
+#include "LauncherCommandLineInfo.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -62,40 +63,40 @@ BOOL LauncherApp::InitInstance()
 	// Activate "Windows Native" visual manager for enabling themes in MFC controls
 	CMFCVisualManager::SetDefaultManager(RUNTIME_CLASS(CMFCVisualManagerWindows));
 
-	// Standard initialization
-	// If you are not using these features and wish to reduce the size
-	// of your final executable, you should remove from the following
-	// the specific initialization routines you do not need
-	// Change the registry key under which our settings are stored
-	// TODO: You should modify this string to be something appropriate
-	// such as the name of your company or organization
-	SetRegistryKey(_T("Dash Faction"));
+    // Command line parsing
+    LauncherCommandLineInfo CmdLineInfo;
+    ParseCommandLine(CmdLineInfo);
     
-    if (strstr(m_lpCmdLine, "-h"))
+    if (CmdLineInfo.HasHelpFlag())
     {
-        printf(
+        // Note: we can't use stdio console API in win32 application
+        MessageBoxA(NULL,
             "Usage: DashFactionLauncher [-game] [-level name] [-editor] args...\n"
             "-game        Starts game immediately\n"
             "-level name  Starts game immediately and loads specified level\n"
             "-editor      Starts level editor immediately\n"
-            "args...      Additional arguments passed to game or editor\n");
+            "args...      Additional arguments passed to game or editor\n",
+            "Dash Faction Launcher Help", MB_OK | MB_ICONINFORMATION);
         return FALSE;
     }
 
+    // Migrate Dash Faction config from old version
     MigrateConfig();
-    
-    if (strstr(m_lpCmdLine, "-game") || strstr(m_lpCmdLine, "-level"))
+
+    // Launch game or editor based on command line flag
+    if (CmdLineInfo.HasGameFlag())
     {
         LaunchGame(nullptr);
         return FALSE;
     }
 
-    if (strstr(m_lpCmdLine, "-editor"))
+    if (CmdLineInfo.HasEditorFlag())
     {
         LaunchEditor(nullptr);
         return FALSE;
     }
 
+    // Show main dialog
 	MainDlg dlg;
 	m_pMainWnd = &dlg;
 	INT_PTR nResponse = dlg.DoModal();
@@ -122,7 +123,7 @@ void LauncherApp::MigrateConfig()
         GameConfig config;
         if (config.load() && config.dashFactionVersion != VERSION_STR)
         {
-            if (config.tracker == "rf.thqmultiplay.net" && config.dashFactionVersion.empty()) // <= 1.0.1
+            if (config.tracker == "rf.thqmultiplay.net" && config.dashFactionVersion.empty()) // < 1.1.0
                 config.tracker = DEFAULT_RF_TRACKER;
             config.dashFactionVersion = VERSION_STR;
             config.save();
@@ -136,10 +137,10 @@ void LauncherApp::MigrateConfig()
 
 bool LauncherApp::LaunchGame(HWND hwnd)
 {
-    GameLauncher starter;
+    GameLauncher launcher;
     try
     {
-        starter.launch();
+        launcher.launch();
         return true;
     }
     catch (PrivilegeElevationRequiredException&)
