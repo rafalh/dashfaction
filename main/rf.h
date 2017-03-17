@@ -119,8 +119,8 @@ namespace rf
         DC_ARG_COMMA = 0x0400,
     };
 
-    constexpr auto DcWrite = (unsigned(*)(const char *pszText, uint32_t *pColor))0x00509EC0;
-    constexpr auto DcPrintf = (unsigned(*)(const char *pszFormat, ...))0x0050B9F0;
+    constexpr auto DcPrint = (void(*)(const char *pszText, const int *pColor))0x00509EC0;
+    constexpr auto DcPrintf = (void(*)(const char *pszFormat, ...))0x0050B9F0;
     constexpr auto DcGetArg = (void(*)(int Type, int bUnknown))0x0050AED0;
     constexpr auto DcUpdate = (void(*)(BOOL bServer))0x0050A720;
 
@@ -383,6 +383,8 @@ namespace rf
 
     typedef void(*NwSendNotReliablePacket_Type)(const void *pAddr, const void *pPacket, unsigned cbPacket);
     constexpr auto NwSendNotReliablePacket = (NwSendNotReliablePacket_Type)0x0052A080;
+
+    constexpr auto NwSendReliablePacket = (void(*)(CPlayer *pPlayer, const BYTE *pData, unsigned int cbData, int a4))0x00479480;
 
     typedef void(*NwAddrToStr_Type)(char *pszDest, int cbDest, NwAddr *pAddr);
     constexpr auto NwAddrToStr = (NwAddrToStr_Type)0x00529FE0;
@@ -1061,6 +1063,45 @@ namespace rf
     constexpr auto KeyGetFromFifo = (int(*)())0x0051F000;
 
     /* Menu */
+
+    enum MenuId
+    {
+        MENU_INIT = 0x1,
+        MENU_MAIN = 0x2,
+        MENU_EXTRAS = 0x3,
+        MENU_INTRO_VIDEO = 0x4,
+        MENU_LOADING_LEVEL = 0x5,
+        MENU_SAVE_GAME = 0x6,
+        MENU_LOAD_GAME = 0x7,
+        MENU_8 = 0x8,
+        MENU_9 = 0x9,
+        MENU_GAME_DYING = 0xA,
+        MENU_IN_GAME = 0xB,
+        MENU_C = 0xC,
+        MENU_EXIT_GAME = 0xD,
+        MENU_OPTIONS = 0xE,
+        MENU_MULTIPLAYER = 0xF,
+        MENU_HELP = 0x10,
+        MENU_11 = 0x11,
+        MENU_IN_SPLITSCREEN_GAME = 0x12,
+        MENU_GAME_OVER = 0x13,
+        MENU_14 = 0x14,
+        MENU_GAME_INTRO = 0x15,
+        MENU_16 = 0x16,
+        MENU_CREDITS = 0x17,
+        MENU_BOMB_TIMER = 0x18,
+        MENU_19 = 0x19,
+        MENU_1A = 0x1A,
+        MENU_1B = 0x1B,
+        MENU_1C = 0x1C,
+        MENU_1D = 0x1D,
+        MENU_SERVER_LIST = 0x1E,
+        MENU_MP_SPLITSCREEN = 0x1F,
+        MENU_MP_CREATE_GAME = 0x20,
+        MENU_21 = 0x21,
+        MENU_MP_LIMBO = 0x22,
+    };
+
     constexpr auto SwitchMenu = (int(*)(int MenuId, bool bForce))0x00434190;
     constexpr auto MenuMainProcessMouse = (void(*)())0x00443D90;
     constexpr auto MenuMainRender = (void(*)())0x004435F0;

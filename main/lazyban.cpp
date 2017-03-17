@@ -32,7 +32,7 @@ void BanCmdHandlerHook()
         
         if (*g_pbDcHelp)
         {
-            DcWrite(g_ppszStringsTable[STR_USAGE], NULL);
+            DcPrint(g_ppszStringsTable[STR_USAGE], NULL);
             DcPrintf("     ban <%s>", g_ppszStringsTable[STR_PLAYER_NAME]);
         }
     }
@@ -62,7 +62,7 @@ void KickCmdHandlerHook()
         
         if (*g_pbDcHelp)
         {
-            DcWrite(g_ppszStringsTable[STR_USAGE], NULL);
+            DcPrint(g_ppszStringsTable[STR_USAGE], NULL);
             DcPrintf("     kick <%s>", g_ppszStringsTable[STR_PLAYER_NAME]);
         }
     }

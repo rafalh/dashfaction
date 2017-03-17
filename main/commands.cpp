@@ -54,8 +54,8 @@ static void MaxFpsCmdHandler(void)
     
     if (*g_pbDcHelp)
     {
-        DcWrite(g_ppszStringsTable[STR_USAGE], NULL);
-        DcWrite("     maxfps <limit>", NULL);
+        DcPrint(g_ppszStringsTable[STR_USAGE], NULL);
+        DcPrint("     maxfps <limit>", NULL);
     }
 }
 
@@ -94,12 +94,12 @@ static void SpectateCmdHandler(void)
             if (pPlayer)
                 SpectateModeSetTargetPlayer(pPlayer);
         } else
-            DcWrite("Works only in multiplayer game!", NULL);
+            DcPrint("Works only in multiplayer game!", NULL);
     }
     
     if (*g_pbDcHelp)
     {
-        DcWrite(g_ppszStringsTable[STR_USAGE], NULL);
+        DcPrint(g_ppszStringsTable[STR_USAGE], NULL);
         DcPrintf("     spectate <%s>", g_ppszStringsTable[STR_PLAYER_NAME]);
     }
 }
@@ -169,8 +169,8 @@ static void MouseSensitivityCmdHandler(void)
 
     if (*g_pbDcHelp)
     {
-        DcWrite(g_ppszStringsTable[STR_USAGE], NULL);
-        DcWrite("     ms <value>", NULL);
+        DcPrint(g_ppszStringsTable[STR_USAGE], NULL);
+        DcPrint("     ms <value>", NULL);
     }
 }
 
@@ -211,8 +211,8 @@ static void LevelSpCmdHandler(void)
 
     if (*g_pbDcHelp)
     {
-        DcWrite(g_ppszStringsTable[STR_USAGE], NULL);
-        DcWrite("     <rfl_name>", NULL);
+        DcPrint(g_ppszStringsTable[STR_USAGE], NULL);
+        DcPrint("     <rfl_name>", NULL);
     }
 }
 
