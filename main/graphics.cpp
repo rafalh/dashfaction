@@ -10,13 +10,15 @@ using namespace rf;
 static float g_GrClippedGeomOffsetX = -0.5;
 static float g_GrClippedGeomOffsetY = -0.5;
 
-static void SetTextureMinMagFilter(D3DTEXTUREFILTERTYPE FilterType)
+auto GrInitBuffers_AfterReset_Hook = makeCallHook(GrInitBuffers);
+
+static void SetTextureMinMagFilterInCode(D3DTEXTUREFILTERTYPE FilterType)
 {
     uintptr_t Addresses[] = {
         // GrInitD3D
         0x00546283, 0x00546295,
         0x005462A9, 0x005462BD,
-        // GrSetMaterial
+        // GrD3DSetMaterialFlags
         0x0054F2E8, 0x0054F2FC,
         0x0054F438, 0x0054F44C,
         0x0054F567, 0x0054F57B,
@@ -170,6 +172,34 @@ void GrDrawRect_GrDrawPolyHook(int Num, GrVertex **ppVertices, int Flags, int iM
     GrDrawPoly(Num, ppVertices, Flags, iMat);
 }
 
+DWORD SetupMaxAnisotropy()
+{
+    DWORD AnisotropyLevel = std::min(g_pGrDeviceCaps->MaxAnisotropy, 16ul);
+    (*g_ppGrDevice)->SetTextureStageState(0, D3DTSS_MAXANISOTROPY, AnisotropyLevel);
+    (*g_ppGrDevice)->SetTextureStageState(1, D3DTSS_MAXANISOTROPY, AnisotropyLevel);
+    return AnisotropyLevel;
+}
+
+void GrInitBuffers_AfterReset_New()
+{
+    GrInitBuffers_AfterReset_Hook.callParent();
+
+    // Apply state change after reset
+    // Note: we dont have to set min/mag filtering because its set when selecting material
+
+    (*g_ppGrDevice)->SetRenderState(D3DRS_CULLMODE, 1);
+    (*g_ppGrDevice)->SetRenderState(D3DRS_SHADEMODE, 2);
+    (*g_ppGrDevice)->SetRenderState(D3DRS_SPECULARENABLE, 0);
+    (*g_ppGrDevice)->SetRenderState(D3DRS_AMBIENT, 0xFF545454);
+    (*g_ppGrDevice)->SetRenderState(D3DRS_CLIPPING, 0);
+
+    if (*g_ppLocalPlayer)
+        GrSetTextureMipFilter((*g_ppLocalPlayer)->Settings.FilteringLevel == 0);
+
+    if (g_pGrDeviceCaps->MaxAnisotropy > 0 && g_gameConfig.anisotropicFiltering)
+        SetupMaxAnisotropy();
+}
+
 void GraphicsInit()
 {
     /* Fix for "At least 8 MB of available video memory" */
@@ -205,8 +235,11 @@ void GraphicsInit()
     WriteMemInt32(0x00545AA7 + 1, (uintptr_t)SetupPP - (0x00545AA7 + 0x5));
     WriteMemUInt8(0x00545BA5, ASM_NOP, 6); // dont set PP.Flags
 
-    /* nVidia issue fix (make sure D3Dsc is enabled) */
+    // nVidia issue fix (make sure D3Dsc is enabled)
     WriteMemUInt8(0x00546154, 1);
+
+    // Properly restore state after device reset
+    GrInitBuffers_AfterReset_Hook.hook(0x00545045, GrInitBuffers_AfterReset_New);
 
 #if WIDESCREEN_FIX
     /* Fix FOV for widescreen */
@@ -281,10 +314,8 @@ void GraphicsAfterGameInit()
     /* Anisotropic texture filtering */
     if (g_pGrDeviceCaps->MaxAnisotropy > 0 && g_gameConfig.anisotropicFiltering)
     {
-        DWORD AnisotropyLevel = std::min(g_pGrDeviceCaps->MaxAnisotropy, 16ul);
-        SetTextureMinMagFilter(D3DTEXF_ANISOTROPIC);
-        (*g_ppGrDevice)->SetTextureStageState(0, D3DTSS_MAXANISOTROPY, AnisotropyLevel);
-        (*g_ppGrDevice)->SetTextureStageState(1, D3DTSS_MAXANISOTROPY, AnisotropyLevel);
+        SetTextureMinMagFilterInCode(D3DTEXF_ANISOTROPIC);
+        DWORD AnisotropyLevel = SetupMaxAnisotropy();
         INFO("Anisotropic Filtering enabled (level: %d)", AnisotropyLevel);
     }
 #endif
@@ -296,7 +327,6 @@ void GraphicsAfterGameInit()
         WriteMemInt8(0x00477157 + 1, TimeLeftFont);
         WriteMemInt8(0x0047715F + 2, 25);
     }
-    
 }
 
 void GraphicsDrawFpsCounter()

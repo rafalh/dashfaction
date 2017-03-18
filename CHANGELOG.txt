@@ -1,6 +1,13 @@
 DashFaction Changelog
 =====================
 
+Version 1.1.1 (not yet released):
+- fixed memory leak
+- fixed improper rendering after alt-tab in full screen (especially visible as glass rendered only from one side)
+- added Game Type name to Scoreboard
+- added fast show/hide animations to Scoreboard
+- fixed cursor being not visible in menu when changing level
+
 Version 1.1.0 (released 27-02-2017):
 - improved loading of 32 bit textures (improves quality of lightmaps and shadows)
 - launch DashFaction from level editor (editor must be started from DF launcher)
