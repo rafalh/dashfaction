@@ -249,6 +249,8 @@ namespace rf
     constexpr auto GrLock = (int(*)(int BmHandle, int SectionIdx, SGrLockData *pData, int a4))0x0050E2E0;
     constexpr auto GrUnlock = (void(*)(SGrLockData *pData))0x0050E310;
     constexpr auto GrD3DSetTextureData = (int(*)(int Level, const BYTE *pSrcBits, const BYTE *pPallete, int cxBm, int cyBm, int PixelFmt, void *a7, int cxTex, int cyTex, IDirect3DTexture8 *pTextures))0x0055BA10;
+    constexpr auto GrInitBuffers = (void(*)())0x005450A0;
+    constexpr auto GrSetTextureMipFilter = (void(*)(int bLinear))0x0050E830;
 
     /* Bmpman */
 
@@ -673,6 +675,7 @@ namespace rf
     constexpr auto PlayerDestroy = (void(*)(CPlayer *pPlayer))0x004A35C0;
     constexpr auto KillLocalPlayer = (void(*)())0x004757A0;
     constexpr auto HandleCtrlInGame = (void(*)(CPlayer *pPlayer, EGameCtrl KeyId, char WasPressed))0x004A6210;
+    constexpr auto IsEntityCtrlActive = (char(*)(CGameControls *pControlsState, EGameCtrl CtrlId, bool *pWasPressed))0x0043D4F0;
 
     typedef void(*RenderPlayerArm_Type)(CPlayer *pPlayer);
     constexpr auto RenderPlayerArm = (RenderPlayerArm_Type)0x004A2B30;
@@ -821,6 +824,8 @@ namespace rf
     };
 
     constexpr auto *g_pItemObjList = (ItemObj*)0x00642DD8;
+
+    constexpr auto ObjGetFromUid = (Object *(*)(int Uid))0x0048A4A0;
 
     /* Entity */
 
@@ -1106,6 +1111,7 @@ namespace rf
     constexpr auto MenuMainProcessMouse = (void(*)())0x00443D90;
     constexpr auto MenuMainRender = (void(*)())0x004435F0;
     constexpr auto MenuUpdate = (int(*)())0x00434230;
+    constexpr auto GetCurrentMenuId = (MenuId(*)())0x00434200;
 
     constexpr auto g_MenuLevels = (int*)0x00630064;
     constexpr auto g_pCurrentMenuLevel = (int*)0x005967A4;
@@ -1143,6 +1149,7 @@ namespace rf
     constexpr auto g_pMediumFontId = (int*)0x0063C060;
     constexpr auto g_pSmallFontId = (int*)0x0063C068;
     constexpr auto g_pbDirectInputDisabled = (bool*)0x005A4F88;
+    constexpr auto g_bScoreboardRendered = (bool*)0x006A1448;
 
     constexpr auto g_pbDbgNetwork = (uint32_t*)0x006FED24;
     constexpr auto g_pbDbgFlagsArray = (uint8_t*)0x0062FE19;
@@ -1162,7 +1169,9 @@ namespace rf
     constexpr auto RenderReticle = (void(*)(CPlayer *pPlayer))0x0043A2C0;
     constexpr auto SetCursorVisible = (void(*)(char bVisible))0x0051E680;
     constexpr auto RflLoad = (int(*)(CString *pstrLevelFilename, CString *a2, char *pszError))0x0045C540;
-    constexpr auto ObjGetFromUid = (Object *(*)(int Uid))0x0048A4A0;
+    constexpr auto DrawScoreboard = (void(*)(bool bDraw))0x00470860;
+    constexpr auto DrawScoreboardInternal = (void(*)(bool bDraw))0x00470880;
+
 
     /* Strings Table */
     constexpr auto g_ppszStringsTable = (char**)0x007CBBF0;

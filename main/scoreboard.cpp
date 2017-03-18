@@ -5,9 +5,22 @@
 #include "rfproto.h"
 #include "kill.h"
 
+#define SCOREBOARD_ANIMATION 1
+
 using namespace rf;
 
-static bool g_ScoreboardHidden = false;
+constexpr float ENTER_ANIM_MS = 100.0f;
+constexpr float LEAVE_ANIM_MS = 100.0f;
+constexpr float HALF_ENTER_ANIM_MS = ENTER_ANIM_MS / 2.0f;
+constexpr float HALF_LEAVE_ANIM_MS = LEAVE_ANIM_MS / 2.0f;
+
+static bool g_ScoreboardForceHide = false;
+static bool g_ScoreboardVisible = false;
+static unsigned g_AnimTicks = 0;
+static bool g_EnterAnim = false;
+static bool g_LeaveAnim = false;
+
+auto DrawScoreboardInternal_Hook = makeFunHook(DrawScoreboardInternal);
 
 static int ScoreboardSortFunc(const void *Ptr1, const void *Ptr2)
 {
@@ -15,10 +28,10 @@ static int ScoreboardSortFunc(const void *Ptr1, const void *Ptr2)
     return pPlayer2->pStats->iScore - pPlayer1->pStats->iScore;
 }
 
-void DrawScoreboardInternalHook(BOOL bDraw)
+void DrawScoreboardInternal_New(bool bDraw)
 {
-    if (g_ScoreboardHidden) return;
-    if (!bDraw) return;
+    if (g_ScoreboardForceHide || !bDraw)
+        return;
 
     unsigned cLeftCol = 0, cRightCol = 0;
     char szBuf[512];
@@ -41,30 +54,71 @@ void DrawScoreboardInternalHook(BOOL bDraw)
             break;
     }
     qsort(Players, cPlayers, sizeof(CPlayer*), ScoreboardSortFunc);
-    
+
+    // Animation
+    float fAnimProgress = 1.0f, fProgressW = 1.0f, fProgressH = 1.0f;
+#if SCOREBOARD_ANIMATION
+    unsigned AnimDelta = GetTickCount() - g_AnimTicks;
+    if (g_EnterAnim)
+        fAnimProgress = AnimDelta / ENTER_ANIM_MS;
+    else if (g_LeaveAnim)
+        fAnimProgress = (LEAVE_ANIM_MS - AnimDelta) / LEAVE_ANIM_MS;
+
+    if (g_LeaveAnim && fAnimProgress <= 0.0f)
+    {
+        g_ScoreboardVisible = false;
+        return;
+    }
+
+    fProgressW = fAnimProgress * 2.0f;
+    fProgressH = (fAnimProgress - 0.5f) * 2.0f;
+
+    fProgressW = std::min(std::max(fProgressW, 0.1f), 1.0f);
+    fProgressH = std::min(std::max(fProgressH, 0.1f), 1.0f);
+#endif // SCOREBOARD_ANIMATION
+
     // Draw background
     constexpr int ROW_H = 15;
     unsigned cx = std::min((GameType == RF_DM) ? 450u : 700u, GrGetViewportWidth());
-    unsigned cy = ((GameType == RF_DM) ? 110 : 170) + std::max(cLeftCol, cRightCol) * ROW_H; // DM doesnt show team scores
+    unsigned cy = ((GameType == RF_DM) ? 130 : 190) + std::max(cLeftCol, cRightCol) * ROW_H; // DM doesnt show team scores
+    cx = (unsigned)(fProgressW * cx);
+    cy = (unsigned)(fProgressH * cy);
     unsigned x = (GrGetViewportWidth() - cx) / 2;
     unsigned y = (GrGetViewportHeight() - cy) / 2;
     unsigned xCenter = x + cx / 2;
     GrSetColor(0, 0, 0, 0x80);
     GrDrawRect(x, y, cx, cy, *g_pGrRectMaterial);
+    y += 10;
+
+    if (fProgressH < 1.0f || fProgressW < 1.0f)
+        return;
     
     // Draw RF logo
     GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
     static int ScoreRflogoBm = BmLoad("score_rflogo.tga", -1, TRUE);
-    GrDrawImage(ScoreRflogoBm, xCenter - 170, y + 10, *g_pGrImageMaterial);
+    GrDrawImage(ScoreRflogoBm, xCenter - 170, y, *g_pGrImageMaterial);
+    y += 30;
     
+    // Draw Game Type name
+    const char *pszGameTypeName;
+    if (GameType == RF_DM)
+        pszGameTypeName = g_ppszStringsTable[974];
+    else if (GameType == RF_CTF)
+        pszGameTypeName = g_ppszStringsTable[975];
+    else
+        pszGameTypeName = g_ppszStringsTable[976];
+    GrDrawAlignedText(GR_ALIGN_CENTER, xCenter, y, pszGameTypeName, *g_pMediumFontId, *g_pGrTextMaterial);
+    y += 20;
+
     // Draw level
     GrSetColor(0xB0, 0xB0, 0xB0, 0xFF);
     sprintf(szBuf, "%s (%s) by %s", CString_CStr(g_pstrLevelName), CString_CStr(g_pstrLevelFilename), CString_CStr(g_pstrLevelAuthor));
     CString strLevelInfo, strLevelInfoNew;
     CString_Init(&strLevelInfo, szBuf);
     GrFitText(&strLevelInfoNew, strLevelInfo, cx - 20); // Note: this destroys input string
-    GrDrawAlignedText(GR_ALIGN_CENTER, xCenter, y + 45, CString_CStr(&strLevelInfoNew), -1, *g_pGrTextMaterial);
+    GrDrawAlignedText(GR_ALIGN_CENTER, xCenter, y, CString_CStr(&strLevelInfoNew), -1, *g_pGrTextMaterial);
     CString_Destroy(&strLevelInfoNew);
+    y += 15;
 
     // Draw server info
     unsigned i = sprintf(szBuf, "%s (", CString_CStr(g_pstrServName));
@@ -74,9 +128,9 @@ void DrawScoreboardInternalHook(BOOL bDraw)
     CString strServerInfo, strServerInfoNew;
     CString_Init(&strServerInfo, szBuf);
     GrFitText(&strServerInfoNew, strServerInfo, cx - 20); // Note: this destroys input string
-    GrDrawAlignedText(GR_ALIGN_CENTER, xCenter, y + 60, CString_CStr(&strServerInfoNew), -1, *g_pGrTextMaterial);
+    GrDrawAlignedText(GR_ALIGN_CENTER, xCenter, y, CString_CStr(&strServerInfoNew), -1, *g_pGrTextMaterial);
     CString_Destroy(&strServerInfoNew);
-    y += 80;
+    y += 20;
     
     // Draw team scores
     unsigned RedScore = 0, BlueScore = 0;
@@ -203,13 +257,50 @@ void DrawScoreboardInternalHook(BOOL bDraw)
     }
 }
 
+void HudRender_00437BC0()
+{
+    if (!*g_pbNetworkGame || !*g_ppLocalPlayer)
+        return;
+
+    bool bShowScoreboard = (IsEntityCtrlActive(&(*g_ppLocalPlayer)->Settings.Controls, GC_MP_STATS, 0) ||
+        IsPlayerEntityInvalid(*g_ppLocalPlayer) ||
+        IsPlayerDying(*g_ppLocalPlayer) ||
+        GetCurrentMenuId() == MENU_MP_LIMBO);
+
+#if SCOREBOARD_ANIMATION
+    if (!g_ScoreboardVisible && bShowScoreboard)
+    {
+        g_EnterAnim = true;
+        g_LeaveAnim = false;
+        g_AnimTicks = GetTickCount();
+        g_ScoreboardVisible = true;
+    }
+    if (g_ScoreboardVisible && !bShowScoreboard && !g_LeaveAnim)
+    {
+        g_EnterAnim = false;
+        g_LeaveAnim = true;
+        g_AnimTicks = GetTickCount();
+    }
+#else // !SCOREBOARD_ANIMATION
+    g_ScoreboardVisible = bShowScoreboard;
+#endif // SCOREBOARD_ANIMATION
+
+    if (g_ScoreboardVisible)
+        DrawScoreboard(true);
+}
+
 void InitScoreboard(void)
 {
-    WriteMemUInt8(0x00470880, ASM_LONG_JMP_REL);
-    WriteMemInt32(0x00470880 + 1, (uintptr_t)DrawScoreboardInternalHook - (0x00470880 + 0x5));
+    DrawScoreboardInternal_Hook.hook(DrawScoreboardInternal_New);
+
+    AsmWritter(0x00437BC0)
+        .callLong((uintptr_t)&HudRender_00437BC0)
+        .jmpLong(0x00437C24);
+    AsmWritter(0x00437D40)
+        .jmpNear(0x00437D5C);
 }
 
 void SetScoreboardHidden(bool hidden)
 {
-    g_ScoreboardHidden = hidden;
+    g_ScoreboardForceHide = hidden;
 }

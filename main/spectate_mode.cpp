@@ -179,6 +179,8 @@ void SpectateModeOnDestroyPlayer(CPlayer *pPlayer)
 
 static void RenderReticle_New(CPlayer *pPlayer)
 {
+    if (GetCurrentMenuId() == MENU_MP_LIMBO)
+        return;
     if (g_SpectateModeEnabled)
         RenderReticle_Hook.callTrampoline(g_SpectateModeTarget);
     else
