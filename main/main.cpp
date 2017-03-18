@@ -20,6 +20,7 @@
 #include "high_fps.h"
 #include "misc.h"
 #include "GameConfig.h"
+#include "CallHook.h"
 
 #include <log/FileAppender.h>
 #include <log/ConsoleAppender.h>
@@ -29,6 +30,12 @@ using namespace rf;
 
 GameConfig g_gameConfig;
 HMODULE g_hModule;
+
+auto InitGame_Hook = makeCallHook(InitGame);
+auto CleanupGame_Hook = makeCallHook(CleanupGame);
+auto RunGame_Hook = makeCallHook(RunGame);
+auto DcUpdate_Hook = makeCallHook(DcUpdate);
+
 auto RenderHitScreen_Hook = makeFunHook(RenderHitScreen);
 auto PlayerCreate_Hook = makeFunHook(PlayerCreate);
 auto PlayerDestroy_Hook = makeFunHook(PlayerDestroy);
@@ -63,11 +70,11 @@ CPlayer *FindPlayer(const char *pszName)
     return NULL;
 }
 
-static void DcUpdateHook(BOOL bServer)
+static void DcUpdate_New(BOOL bServer)
 {
     // Draw on top (after scene)
 
-    DcUpdate(bServer);
+    DcUpdate_Hook.callParent(bServer);
     
     GraphicsDrawFpsCounter();
     
@@ -76,11 +83,11 @@ static void DcUpdateHook(BOOL bServer)
 #endif
 }
 
-static void InitGameHook(void)
+static void InitGame_New(void)
 {
     INFO("Initializing game...");
 
-    rf::InitGame();
+    InitGame_Hook.callParent();
 
     GraphicsAfterGameInit();
 
@@ -97,19 +104,19 @@ static void InitGameHook(void)
     INFO("Game initialized.");
 }
 
-static void CleanupGameHook(void)
+static void CleanupGame_New(void)
 {
     ResetGammaRamp();
     CleanupScreenshot();
-    rf::CleanupGame();
+    CleanupGame_Hook.callParent();
 }
 
-static bool RunGameHook()
+static bool RunGame_New()
 {
     ProcessWaitingMessages();
     HighFpsUpdate();
 
-    return rf::RunGame();
+    return RunGame_Hook.callParent();
 }
 
 void RenderInGameHook()
@@ -229,16 +236,13 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
     WriteMemUInt8(0x00524C48, ASM_LONG_CALL_REL);
     WriteMemUInt32(0x00524C49, 0x00524E40 - (0x00524C48 + 0x5)); // CreateMainWindow
     KeyGetFromFifo_Hook.hook(KeyGetFromFifo_New);
-    
-    /* Debug Console update hook */
-    WriteMemInt32(0x004B2DD3 + 1, (uintptr_t)DcUpdateHook - (0x004B2DD3 + 0x5));
 
     /* General game hooks */
-    WriteMemInt32(0x004B27CD + 1, (uintptr_t)InitGameHook - (0x004B27CD + 0x5));
-    WriteMemInt32(0x004B2821 + 1, (uintptr_t)CleanupGameHook - (0x004B2821 + 0x5));
-    WriteMemInt32(0x004B2818 + 1, (uintptr_t)RunGameHook - (0x004B2818 + 0x5));
+    InitGame_Hook.hook(0x004B27CD, InitGame_New);
+    CleanupGame_Hook.hook(0x004B2821, CleanupGame_New);
+    RunGame_Hook.hook(0x004B2818, RunGame_New);
     WriteMemInt32(0x00432375 + 1, (uintptr_t)RenderInGameHook - (0x00432375 + 0x5));
-    
+    DcUpdate_Hook.hook(0x004B2DD3, DcUpdate_New);
 
     RenderHitScreen_Hook.hook(RenderHitScreen_New);
     PlayerCreate_Hook.hook(PlayerCreate_New);
