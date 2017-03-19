@@ -56,7 +56,7 @@ rf::BmPixelFormat GrD3DReadBackBufferHook(int x, int y, int Width, int Height, B
 
         if (Width > 0 && Height > 0)
         {
-            hr = (*rf::g_ppGrDevice) ->CopyRects(pBackBuffer, &SrcRect, 1, pTmpSurface, &DstPoint);
+            hr = (*rf::g_ppGrDevice)->CopyRects(pBackBuffer, &SrcRect, 1, pTmpSurface, &DstPoint);
             if (FAILED(hr))
                 ERR("IDirect3DDevice8_CopyRects failed 0x%x", hr);
         }

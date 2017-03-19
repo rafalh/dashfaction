@@ -237,7 +237,7 @@ static LONG WINAPI CrashDumpExceptionFilter(PEXCEPTION_POINTERS pExceptionPointe
     }
 #endif // CRASHDUMP_SAVE_LOG
 
-    MessageBox(NULL, TEXT(CRASHDUMP_MSG), "Fatal error!", MB_ICONERROR | MB_OK);
+    MessageBox(NULL, TEXT(CRASHDUMP_MSG), "Fatal error!", MB_ICONERROR | MB_OK | MB_SETFOREGROUND | MB_TASKMODAL);
 
     return EXCEPTION_EXECUTE_HANDLER;
 }
