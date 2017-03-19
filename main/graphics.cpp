@@ -140,7 +140,9 @@ static void SetupPP(void)
     D3DFORMAT *pFormat = (D3DFORMAT*)0x005A135C;
     INFO("D3D Format: %ld", *pFormat);
 
-    pPP->Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
+    // Note: in MSAA mode we don't lock back buffer
+    if (!g_gameConfig.msaa)
+        pPP->Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
 
 #if MULTISAMPLING_SUPPORT
     if (g_gameConfig.msaa && *pFormat > 0)
