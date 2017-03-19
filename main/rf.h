@@ -241,7 +241,7 @@ namespace rf
     constexpr auto GrGetFontHeight = (unsigned(*)(int FontId))0x0051F4D0;
     constexpr auto GrGetTextWidth = (void(*)(int *pOutWidth, int *pOutHeight, const char *pszText, int TextLen, int FontId))0x0051F530;
     constexpr auto GrFlushBuffers = (void(*)())0x00559D90;
-    constexpr auto GrSwitchBuffers = (void(*)())0x0050CE20;
+    constexpr auto GrSwapBuffers = (void(*)())0x0050CE20;
     constexpr auto GrSetViewMatrix = (void(*)(CMatrix3 *pMatRot, CVector3 *pPos, float fFov, int a4, int a5))0x00517EB0;
     constexpr auto GrSetViewMatrixD3D = (void(*)(CMatrix3 *pMatRot, CVector3 *pPos, float fFov, int a4, int a5))0x00547150;
     constexpr auto GrRenderLine = (char(*)(const CVector3 *pWorldPos1, const CVector3 *pWorldPos2, int Material))0x00515960;

@@ -259,6 +259,9 @@ void GraphicsInit()
     WriteMemUInt8(0x00545BEF, ASM_LONG_JMP_REL);
     WriteMemInt32(0x00545BEF + 1, (uintptr_t)GrCreateD3DDeviceError_00545BEF - (0x00545BEF + 0x5));
 
+    // Optimization - remove unused back buffer locking/unlocking in GrSwapBuffers
+    AsmWritter(0x0054504A).jmpNear(0x0054508B);
+
 #if 1
     // Fix rendering of right and bottom edges of viewport
     WriteMemUInt8(0x00431D9F, ASM_SHORT_JMP_REL);
