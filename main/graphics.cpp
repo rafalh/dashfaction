@@ -202,7 +202,7 @@ void GrInitBuffers_AfterReset_New()
 
 void GraphicsInit()
 {
-    /* Fix for "At least 8 MB of available video memory" */
+    // Fix for "At least 8 MB of available video memory"
     WriteMemUInt8(0x005460CD, ASM_SHORT_JMP_REL);
 
 #if WINDOWED_MODE_SUPPORT
@@ -242,13 +242,13 @@ void GraphicsInit()
     GrInitBuffers_AfterReset_Hook.hook(0x00545045, GrInitBuffers_AfterReset_New);
 
 #if WIDESCREEN_FIX
-    /* Fix FOV for widescreen */
+    // Fix FOV for widescreen
     WriteMemUInt8(0x00547344, ASM_LONG_JMP_REL);
     WriteMemInt32(0x00547344 + 1, (uintptr_t)GrSetViewMatrix_00547344 - (0x00547344 + 0x5));
     WriteMemFloat(0x0058A29C, 0.0003f); // factor related to near plane, default is 0.000588f
 #endif
 
-    /* Don't use LOD models */
+    // Don't use LOD models
     if (g_gameConfig.disableLodModels)
     {
         //WriteMemUInt8(0x00421A40, ASM_SHORT_JMP_REL);
@@ -311,7 +311,7 @@ void GraphicsInit()
 void GraphicsAfterGameInit()
 {
 #if ANISOTROPIC_FILTERING
-    /* Anisotropic texture filtering */
+    // Anisotropic texture filtering
     if (g_pGrDeviceCaps->MaxAnisotropy > 0 && g_gameConfig.anisotropicFiltering)
     {
         SetTextureMinMagFilterInCode(D3DTEXF_ANISOTROPIC);

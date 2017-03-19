@@ -168,48 +168,48 @@ void MenuMainRenderHook()
 
 void MiscInit()
 {
-    /* Console init string */
+    // Console init string
     WriteMemPtr(0x004B2534, "-- " PRODUCT_NAME " Initializing --\n");
 
-    /* Version in Main Menu */
+    // Version in Main Menu
     WriteMemUInt8(0x0044343A, ASM_LONG_JMP_REL);
     WriteMemInt32(0x0044343A + 1, (uintptr_t)VersionLabelPushArgs_0044343A - (0x0044343A + 0x5));
     GetVersionStr_Hook.hook(GetVersionStr_New);
 
-    /* Window title (client and server) */
+    // Window title (client and server)
     WriteMemPtr(0x004B2790, PRODUCT_NAME);
     WriteMemPtr(0x004B27A4, PRODUCT_NAME);
 
-    /* Console background color */
+    // Console background color
     WriteMemUInt32(0x005098D1, CONSOLE_BG_A); // Alpha
     WriteMemUInt8(0x005098D6, CONSOLE_BG_B); // Blue
     WriteMemUInt8(0x005098D8, CONSOLE_BG_G); // Green
     WriteMemUInt8(0x005098DA, CONSOLE_BG_R); // Red
 
 #ifdef NO_CD_FIX
-                                             /* No-CD fix */
+    // No-CD fix
     WriteMemUInt8(0x004B31B6, ASM_SHORT_JMP_REL);
-#endif /* NO_CD_FIX */
+#endif // NO_CD_FIX
 
 #ifdef NO_INTRO
-    /* Disable thqlogo.bik */
+    // Disable thqlogo.bik
     if (g_gameConfig.fastStart)
     {
         WriteMemUInt8(0x004B208A, ASM_SHORT_JMP_REL);
         WriteMemUInt8(0x004B24FD, ASM_SHORT_JMP_REL);
     }
-#endif /* NO_INTRO */
+#endif // NO_INTRO
 
-    /* Sound loop fix */
+    // Sound loop fix
     WriteMemUInt8(0x00505D08, 0x00505D5B - (0x00505D07 + 0x2));
 
-    /* Set initial FPS limit */
+    // Set initial FPS limit
     WriteMemFloat(0x005094CA, 1.0f / g_gameConfig.maxFps);
 
-    /* Crash-fix... (probably argument for function is invalid); Page Heap is needed */
+    // Crash-fix... (probably argument for function is invalid); Page Heap is needed
     WriteMemUInt32(0x0056A28C + 1, 0);
 
-    /* Crash-fix in case texture has not been created (this happens if GrReadBackbuffer fails) */
+    // Crash-fix in case texture has not been created (this happens if GrReadBackbuffer fails)
     WriteMemUInt8(0x0055CE47, ASM_LONG_JMP_REL);
     WriteMemInt32(0x0055CE47 + 1, (uintptr_t)CrashFix_0055CE48 - (0x0055CE47 + 0x5));
 
