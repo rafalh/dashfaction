@@ -4,6 +4,7 @@
 #include "rf.h"
 #include "rfproto.h"
 #include "kill.h"
+#include "spectate_mode.h"
 
 #define SCOREBOARD_ANIMATION 1
 
@@ -263,8 +264,7 @@ void HudRender_00437BC0()
         return;
 
     bool bShowScoreboard = (IsEntityCtrlActive(&(*g_ppLocalPlayer)->Settings.Controls, GC_MP_STATS, 0) ||
-        IsPlayerEntityInvalid(*g_ppLocalPlayer) ||
-        IsPlayerDying(*g_ppLocalPlayer) ||
+        (!SpectateModeIsActive() && (IsPlayerEntityInvalid(*g_ppLocalPlayer) || IsPlayerDying(*g_ppLocalPlayer))) ||
         GetCurrentMenuId() == MENU_MP_LIMBO);
 
 #if SCOREBOARD_ANIMATION

@@ -293,4 +293,9 @@ void SpectateModeDrawUI()
     }
 }
 
+bool SpectateModeIsActive()
+{
+    return g_SpectateModeEnabled;
+}
+
 #endif // SPECTATE_MODE_ENABLE
