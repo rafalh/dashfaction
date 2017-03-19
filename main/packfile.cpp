@@ -25,8 +25,12 @@ const char *ModFileWhitelist[] = {
     "reticle_rocket_0.tga",
 };
 
+#if CHECK_PACKFILE_CHECKSUM
+
 const std::map<std::string, unsigned> GameFileChecksums = {
-    { "levelsm.vpp", 0x17D0D38A },
+    // Note: Multiplayer level checksum is checked when loading level
+    //{ "levelsm.vpp", 0x17D0D38A },
+    // Note: maps are big and slow downs startup
     { "maps1.vpp", 0x52EE4F99 },
     { "maps2.vpp", 0xB053486F },
     { "maps3.vpp", 0xA5ED6271 },
@@ -35,6 +39,8 @@ const std::map<std::string, unsigned> GameFileChecksums = {
     { "motions.vpp", 0x17132D8E },
     { "tables.vpp", 0x549DAABF },
 };
+
+#endif // CHECK_PACKFILE_CHECKSUM
 
 constexpr auto g_pVfsLookupTableNew = (PackfileLookupTableNew*)0x01BB2AC8; // g_pVfsLookupTable
 constexpr auto LOOKUP_TABLE_SIZE = 20713;
@@ -130,7 +136,7 @@ static BOOL PackfileLoad_New(const char *pszFilename, const char *pszDir)
         if (!stricmp(g_pPackfiles[i]->szPath, szFullPath))
             return TRUE;
 
-#ifdef NDEBUG
+#if CHECK_PACKFILE_CHECKSUM
     if (!pszDir)
     {
         auto it = GameFileChecksums.find(pszFilename);
@@ -144,7 +150,7 @@ static BOOL PackfileLoad_New(const char *pszFilename, const char *pszDir)
             }
         }
     }
-#endif
+#endif // CHECK_PACKFILE_CHECKSUM
 
     FILE *pFile = fopen(szFullPath, "rb");
     if (!pFile)

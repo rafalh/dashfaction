@@ -20,6 +20,7 @@
 #define DIRECTINPUT_SUPPORT 1
 #define DIRECTINPUT_ENABLED 0
 #define WIDESCREEN_FIX 1
+#define CHECK_PACKFILE_CHECKSUM 0 // slow (1 second on SSD on first load after boot)
 
 #define CONSOLE_BG_R 0x00
 #define CONSOLE_BG_G 0x00
