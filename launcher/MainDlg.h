@@ -26,9 +26,11 @@ protected:
 protected:
 	HICON m_hIcon;
     UpdateChecker *m_pUpdateChecker;
+    CToolTipCtrl m_ToolTip;
 
 	// Generated message map functions
 	virtual BOOL OnInitDialog();
+    BOOL PreTranslateMessage(MSG* pMsg);
 	afx_msg void OnPaint();
     afx_msg HCURSOR OnQueryDragIcon();
     afx_msg LRESULT OnUpdateCheck(WPARAM wParam, LPARAM lParam);

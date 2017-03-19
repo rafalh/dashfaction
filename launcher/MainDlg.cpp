@@ -59,6 +59,9 @@ BOOL MainDlg::OnInitDialog()
     HBITMAP hbm = (HBITMAP)::LoadImage(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_HEADER), IMAGE_BITMAP, 0, 0, 0);
     picture->SetBitmap(hbm);
 
+    m_ToolTip.Create(this);
+    m_ToolTip.Activate(TRUE);
+
 #ifdef NDEBUG
     m_pUpdateChecker = new UpdateChecker(m_hWnd);
     m_pUpdateChecker->checkAsync([=]() {
@@ -69,6 +72,14 @@ BOOL MainDlg::OnInitDialog()
 #endif
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
+}
+
+BOOL MainDlg::PreTranslateMessage(MSG* pMsg)
+{
+    if (m_ToolTip)
+        m_ToolTip.RelayEvent(pMsg);
+
+    return CDialogEx::PreTranslateMessage(pMsg);
 }
 
 // If you add a minimize button to your dialog, you will need the code below
@@ -116,8 +127,8 @@ LRESULT MainDlg::OnUpdateCheck(WPARAM wParam, LPARAM lParam)
 
     if (m_pUpdateChecker->hasError())
     {
-        MessageBoxA(m_pUpdateChecker->getError().c_str(), NULL, MB_OK | MB_ICONERROR);
         updateStatus->SetWindowTextA("Failed to check for update");
+        m_ToolTip.AddTool(updateStatus, m_pUpdateChecker->getError().c_str());
         return 0;
     }
 
