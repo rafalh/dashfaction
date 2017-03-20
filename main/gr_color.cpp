@@ -6,6 +6,8 @@
 
 using namespace rf;
 
+auto GrD3DSetTextureData_Hook = makeFunHook(GrD3DSetTextureData);
+
 inline void ConvertPixel_RGB8_To_RGBA8(BYTE *&pDstPtr, const BYTE *&pSrcPtr)
 {
     *(pDstPtr++) = *(pSrcPtr++);
@@ -157,7 +159,7 @@ bool ConvertBitmapFormat(BYTE *pDstBits, BmPixelFormat DstFmt, const BYTE *pSrcB
     }
 }
 
-int GrD3DSetTextureDataHook(int Level, const BYTE *pSrcBits, const BYTE *pPallete, int cxBm, int cyBm, int PixelFmt, void *a7, int cxTex, int cyTex, IDirect3DTexture8 *pTexture)
+int GrD3DSetTextureData_New(int Level, const BYTE *pSrcBits, const BYTE *pPallete, int cxBm, int cyBm, int PixelFmt, void *a7, int cxTex, int cyTex, IDirect3DTexture8 *pTexture)
 {
     D3DLOCKED_RECT LockedRect;
     HRESULT hr = pTexture->LockRect(Level, &LockedRect, 0, 0);
@@ -175,7 +177,8 @@ int GrD3DSetTextureDataHook(int Level, const BYTE *pSrcBits, const BYTE *pPallet
     if (bSuccess)
         return 0;
 
-    return GrD3DSetTextureData(Level, pSrcBits, pPallete, cxBm, cyBm, PixelFmt, a7, cxTex, cyTex, pTexture);
+    WARN("Color conversion failed for format %d", PixelFmt);
+    return GrD3DSetTextureData_Hook.callTrampoline(Level, pSrcBits, pPallete, cxBm, cyBm, PixelFmt, a7, cxTex, cyTex, pTexture);
 }
 
 void RflLoadLightmaps_004ED3F6(RflLightmap *pLightmap)
@@ -319,8 +322,7 @@ void GrColorInit()
         WriteMemUInt32(0x005A7E08, D3DFMT_A8R8G8B8); // old: D3DFMT_A4R4G4B4
         WriteMemUInt32(0x005A7E0C, D3DFMT_A4R4G4B4); // old: D3DFMT_A8R3G3B2
 
-        AsmWritter(0x0055B80E).callLong((uintptr_t)GrD3DSetTextureDataHook);
-        AsmWritter(0x0055CA0B).callLong((uintptr_t)GrD3DSetTextureDataHook);
+        GrD3DSetTextureData_Hook.hook(GrD3DSetTextureData_New);
 
         // lightmaps
         AsmWritter(0x004ED3E9).pushEbx().callLong((uintptr_t)RflLoadLightmaps_004ED3F6).addEsp(4).jmpLong(0x004ED4FA);
