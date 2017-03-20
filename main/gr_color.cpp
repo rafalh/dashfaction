@@ -177,7 +177,7 @@ int GrD3DSetTextureData_New(int Level, const BYTE *pSrcBits, const BYTE *pPallet
     if (bSuccess)
         return 0;
 
-    WARN("Color conversion failed for format %d", PixelFmt);
+    WARN("Color conversion failed (format %d -> %d)", PixelFmt, GetPixelFormatFromD3DFormat(Desc.Format));
     return GrD3DSetTextureData_Hook.callTrampoline(Level, pSrcBits, pPallete, cxBm, cyBm, PixelFmt, a7, cxTex, cyTex, pTexture);
 }
 
@@ -316,8 +316,8 @@ void GrColorInit()
     if (g_gameConfig.resBpp == 32 && g_gameConfig.trueColorTextures)
     {
         // Available texture formats (tested for compatibility)
-        WriteMemUInt32(0x005A7DFC, D3DFMT_R8G8B8); // old: D3DFMT_R5G6B5
-        WriteMemUInt32(0x005A7E00, D3DFMT_R5G6B5); // old: D3DFMT_X1R5G5B5
+        WriteMemUInt32(0x005A7DFC, D3DFMT_X8R8G8B8); // old: D3DFMT_R5G6B5
+        WriteMemUInt32(0x005A7E00, D3DFMT_A8R8G8B8); // old: D3DFMT_X1R5G5B5
         WriteMemUInt32(0x005A7E04, D3DFMT_A8R8G8B8); // old: D3DFMT_A1R5G5B5, lightmaps
         WriteMemUInt32(0x005A7E08, D3DFMT_A8R8G8B8); // old: D3DFMT_A4R4G4B4
         WriteMemUInt32(0x005A7E0C, D3DFMT_A4R4G4B4); // old: D3DFMT_A8R3G3B2
