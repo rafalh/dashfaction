@@ -248,4 +248,13 @@ void MiscInit()
 
     // Increase damage for kill command in Single Player
     WriteMemFloat(0x004A4DF5 + 1, 100000.0f);
+    
+    // Fix keyboard layout
+    uint8_t KbdLayout = 0;
+    if (MapVirtualKeyA(0x10, MAPVK_VSC_TO_VK) == 'A')
+        KbdLayout = 2; // AZERTY
+    else if (MapVirtualKeyA(0x15, MAPVK_VSC_TO_VK) == 'Z')
+        KbdLayout = 3; // QWERTZ
+    INFO("Keyboard layout: %u", KbdLayout);
+    WriteMemUInt8(0x004B14B4 + 1, KbdLayout);
 }
