@@ -252,6 +252,7 @@ namespace rf
     constexpr auto GrD3DSetTextureData = (int(*)(int Level, const BYTE *pSrcBits, const BYTE *pPallete, int cxBm, int cyBm, int PixelFmt, void *a7, int cxTex, int cyTex, IDirect3DTexture8 *pTextures))0x0055BA10;
     constexpr auto GrInitBuffers = (void(*)())0x005450A0;
     constexpr auto GrSetTextureMipFilter = (void(*)(int bLinear))0x0050E830;
+    constexpr auto GrResetClip = (void(*)())0x0050CDD0;
 
     /* Bmpman */
 
@@ -691,6 +692,7 @@ namespace rf
     constexpr auto PlayerFpgunSetupMesh = (void(*)(CPlayer*, int WeaponClsId))0x004AA230;
     constexpr auto PlayerFpgunUpdate = (void(*)(CPlayer*))0x004A2700;
     constexpr auto PlayerFpgunUpdateMesh = (void(*)(CPlayer*))0x004AA6D0;
+    constexpr auto PlayerRenderRocketLauncherScannerView = (void(*)(CPlayer *pPlayer))0x004AEEF0;
 
     /* Object */
 

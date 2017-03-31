@@ -20,6 +20,7 @@ static int g_LargeFont = -1, g_MediumFont = -1, g_SmallFont = -1;
 auto HandleCtrlInGame_Hook = makeFunHook(HandleCtrlInGame);
 auto RenderReticle_Hook = makeFunHook(RenderReticle);
 auto PlayerCreateEntity_Hook = makeFunHook(PlayerCreateEntity);
+auto RenderScannerViewForLocalPlayers_Hook = makeCallHook(GrResetClip);
 
 static void SetCameraTarget(CPlayer *pPlayer)
 {
@@ -203,6 +204,14 @@ EntityObj *PlayerCreateEntity_New(CPlayer *pPlayer, int ClassId, const CVector3 
         pEntity->pLocalPlayer = pPlayer;
     return pEntity;
 }
+
+void RenderScannerViewForLocalPlayers_GrResetClip_New()
+{
+    if (g_SpectateModeEnabled)
+        PlayerRenderRocketLauncherScannerView(g_SpectateModeTarget);
+    GrResetClip();
+}
+
 #if SPECTATE_MODE_SHOW_WEAPON
 
 static void PlayerFpgunRender_New(CPlayer *pPlayer)
@@ -246,6 +255,7 @@ void SpectateModeInit()
     HandleCtrlInGame_Hook.hook(HandleCtrlInGameHook);
     RenderReticle_Hook.hook(RenderReticle_New);
     PlayerCreateEntity_Hook.hook(PlayerCreateEntity_New);
+    RenderScannerViewForLocalPlayers_Hook.hook(0x00431890, RenderScannerViewForLocalPlayers_GrResetClip_New);
 
     // Note: HUD rendering doesn't make sense because life and armor isn't synced
 
