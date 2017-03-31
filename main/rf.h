@@ -678,17 +678,18 @@ namespace rf
     constexpr auto HandleCtrlInGame = (void(*)(CPlayer *pPlayer, EGameCtrl KeyId, char WasPressed))0x004A6210;
     constexpr auto IsEntityCtrlActive = (char(*)(CGameControls *pControlsState, EGameCtrl CtrlId, bool *pWasPressed))0x0043D4F0;
 
-    typedef void(*RenderPlayerArm_Type)(CPlayer *pPlayer);
-    constexpr auto RenderPlayerArm = (RenderPlayerArm_Type)0x004A2B30;
-
-    typedef void(*SetupPlayerWeaponMesh_Type)(CPlayer *pPlayer, int WeaponClsId);
-    constexpr auto SetupPlayerWeaponMesh = (SetupPlayerWeaponMesh_Type)0x004AA230;
-
     typedef bool(*IsPlayerEntityInvalid_Type)(CPlayer *pPlayer);
     constexpr auto IsPlayerEntityInvalid = (IsPlayerEntityInvalid_Type)0x004A4920;
 
     typedef bool(*IsPlayerDying_Type)(CPlayer *pPlayer);
     constexpr auto IsPlayerDying = (IsPlayerDying_Type)0x004A4940;
+
+    /* Player Fpgun */
+
+    constexpr auto PlayerFpgunRender = (void(*)(CPlayer*))0x004A2B30;
+    constexpr auto PlayerFpgunSetupMesh = (void(*)(CPlayer*, int WeaponClsId))0x004AA230;
+    constexpr auto PlayerFpgunUpdate = (void(*)(CPlayer*))0x004A2700;
+    constexpr auto PlayerFpgunUpdateMesh = (void(*)(CPlayer*))0x004AA6D0;
 
     /* Object */
 
@@ -998,8 +999,6 @@ namespace rf
     constexpr auto g_pWeaponClasses = (WeaponClass*)0x0085CD08;
     constexpr auto g_pRiotStickClsId = (uint32_t*)0x00872468;
     constexpr auto g_pRemoteChargeClsId = (uint32_t*)0x0087210C;
-
-    constexpr auto UpdatePlayerWeaponMesh = (void(*)(CPlayer*))0x004AA6D0;
 
     /* Window */
 

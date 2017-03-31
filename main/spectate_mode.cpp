@@ -84,7 +84,8 @@ void SpectateModeSetTargetPlayer(CPlayer *pPlayer)
     EntityObj *pEntity = HandleToEntity(pPlayer->hEntity);
     if (pEntity)
     {
-        SetupPlayerWeaponMesh(pPlayer, pEntity->WeaponSel.WeaponClsId);
+        // make sure weapon mesh is loaded now
+        PlayerFpgunSetupMesh(pPlayer, pEntity->WeaponSel.WeaponClsId);
         TRACE("pWeaponMesh %p", pPlayer->pWeaponMesh);
     }
 #endif // SPECTATE_MODE_SHOW_WEAPON
@@ -187,7 +188,7 @@ static void RenderReticle_New(CPlayer *pPlayer)
 
 #if SPECTATE_MODE_SHOW_WEAPON
 
-static void RenderPlayerArmHook(CPlayer *pPlayer)
+static void PlayerFpgunRender_New(CPlayer *pPlayer)
 {
     if (g_SpectateModeEnabled)
     {
@@ -196,11 +197,11 @@ static void RenderPlayerArmHook(CPlayer *pPlayer)
         // HACKFIX: RF uses function PlayerSetRemoteChargeVisible for local player only
         g_SpectateModeTarget->RemoteChargeVisible = (pEntity && pEntity->WeaponSel.WeaponClsId == *g_pRemoteChargeClsId);
 
-        UpdatePlayerWeaponMesh(g_SpectateModeTarget);
-        RenderPlayerArm(g_SpectateModeTarget);
+        PlayerFpgunUpdateMesh(g_SpectateModeTarget);
+        PlayerFpgunRender(g_SpectateModeTarget);
     }
     else
-        RenderPlayerArm(pPlayer);
+        PlayerFpgunRender(pPlayer);
 }
 
 #endif // SPECTATE_MODE_SHOW_WEAPON
@@ -231,16 +232,17 @@ void SpectateModeInit()
     // Note: HUD rendering doesn't make sense because life and armor isn't synced
 
 #if SPECTATE_MODE_SHOW_WEAPON
-    WriteMemInt32(0x0043285D + 1, (uintptr_t)RenderPlayerArmHook - (0x0043285D + 0x5));
-    WriteMemUInt8(0x004AB1B8, ASM_NOP, 6); // RenderPlayerArm2
-    WriteMemUInt8(0x004AA23E, ASM_NOP, 6); // SetupPlayerWeaponMesh
-    WriteMemUInt8(0x004AE0DF, ASM_NOP, 2); // PlayerLoadWeaponMesh
+    WriteMemInt32(0x0043285D + 1, (uintptr_t)PlayerFpgunRender_New - (0x0043285D + 0x5));
+    WriteMemUInt8(0x004AB1B8, ASM_NOP, 6); // PlayerFpgunRenderInternal
+    WriteMemUInt8(0x004AA23E, ASM_NOP, 6); // PlayerFpgunSetupMesh
+    WriteMemUInt8(0x004AE0DF, ASM_NOP, 2); // PlayerFpgunLoadMesh
 
     WriteMemUInt8(0x004AA3B1, ASM_NOP, 6); // sub_4AA3A0
     WriteMemUInt8(0x004A952C, ASM_SHORT_JMP_REL); // sub_4A9520
     WriteMemUInt8(0x004AA56D, ASM_NOP, 6); // sub_4AA560
-    WriteMemUInt8(0x004AE384, ASM_NOP, 6); // PlayerPrepareWeapon
-    WriteMemUInt8(0x004AA6E7, ASM_NOP, 6); // UpdatePlayerWeaponMesh
+    WriteMemUInt8(0x004AE384, ASM_NOP, 6); // PlayerFpgunPrepareWeapon
+    WriteMemUInt8(0x004AA6E7, ASM_NOP, 6); // PlayerFpgunUpdateMesh
+
 #endif // SPECTATE_MODE_SHOW_WEAPON
 }
 
