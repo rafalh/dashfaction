@@ -677,6 +677,7 @@ namespace rf
     constexpr auto KillLocalPlayer = (void(*)())0x004757A0;
     constexpr auto HandleCtrlInGame = (void(*)(CPlayer *pPlayer, EGameCtrl KeyId, char WasPressed))0x004A6210;
     constexpr auto IsEntityCtrlActive = (char(*)(CGameControls *pControlsState, EGameCtrl CtrlId, bool *pWasPressed))0x0043D4F0;
+    constexpr auto PlayerCreateEntity = (EntityObj *(*)(CPlayer *pPlayer, int ClassId, const CVector3 *pPos, const CMatrix3 *pRotMatrix, int MpCharacter))0x004A4130;
 
     typedef bool(*IsPlayerEntityInvalid_Type)(CPlayer *pPlayer);
     constexpr auto IsPlayerEntityInvalid = (IsPlayerEntityInvalid_Type)0x004A4920;

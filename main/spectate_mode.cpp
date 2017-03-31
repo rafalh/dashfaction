@@ -19,6 +19,7 @@ static int g_LargeFont = -1, g_MediumFont = -1, g_SmallFont = -1;
 
 auto HandleCtrlInGame_Hook = makeFunHook(HandleCtrlInGame);
 auto RenderReticle_Hook = makeFunHook(RenderReticle);
+auto PlayerCreateEntity_Hook = makeFunHook(PlayerCreateEntity);
 
 static void SetCameraTarget(CPlayer *pPlayer)
 {
@@ -38,7 +39,6 @@ static void SetCameraTarget(CPlayer *pPlayer)
     {
         EntityObj *pCamEntity = pCamera->pCameraEntity;
         pCamEntity->Head.hParent = pPlayer->hEntity;
-        // pCamEntity->Head.hParent = pEntity->Head.Handle;
         pCamEntity->Head.vPos = pEntity->vWeaponPos;
         pCamEntity->Head.matRot = pEntity->Head.matRot;
         pCamEntity->matWeaponRot = pEntity->matWeaponRot;
@@ -52,7 +52,7 @@ void SpectateModeSetTargetPlayer(CPlayer *pPlayer)
     if (!pPlayer)
         pPlayer = *g_ppLocalPlayer;
 
-    if (!*g_ppLocalPlayer || !(*g_ppLocalPlayer)->pCamera)
+    if (!*g_ppLocalPlayer || !(*g_ppLocalPlayer)->pCamera || !g_SpectateModeTarget || g_SpectateModeTarget == pPlayer)
         return;
 
     if (*g_pGameOptions & RF_GO_FORCE_RESPAWN)
@@ -68,8 +68,14 @@ void SpectateModeSetTargetPlayer(CPlayer *pPlayer)
     if (g_SpectateModeTarget && g_SpectateModeTarget != *g_ppLocalPlayer)
     {
         g_SpectateModeTarget->pCamera = g_OldTargetCamera;
-        g_SpectateModeTarget->FireFlags &= ~(1 << 4);
         g_OldTargetCamera = NULL;
+
+#if SPECTATE_MODE_SHOW_WEAPON
+        g_SpectateModeTarget->FireFlags &= ~(1 << 4);
+        EntityObj *pEntity = HandleToEntity(g_SpectateModeTarget->hEntity);
+        if (pEntity)
+            pEntity->pLocalPlayer = NULL;
+#endif // SPECTATE_MODE_SHOW_WEAPON
     }
 
     g_SpectateModeEnabled = (pPlayer != *g_ppLocalPlayer);
@@ -79,7 +85,6 @@ void SpectateModeSetTargetPlayer(CPlayer *pPlayer)
     SetCameraTarget(pPlayer);
 
 #if SPECTATE_MODE_SHOW_WEAPON
-    g_SpectateModeTarget = pPlayer;
     pPlayer->FireFlags |= 1 << 4;
     EntityObj *pEntity = HandleToEntity(pPlayer->hEntity);
     if (pEntity)
@@ -87,6 +92,9 @@ void SpectateModeSetTargetPlayer(CPlayer *pPlayer)
         // make sure weapon mesh is loaded now
         PlayerFpgunSetupMesh(pPlayer, pEntity->WeaponSel.WeaponClsId);
         TRACE("pWeaponMesh %p", pPlayer->pWeaponMesh);
+
+        // Hide target player from camera
+        pEntity->pLocalPlayer = pPlayer;
     }
 #endif // SPECTATE_MODE_SHOW_WEAPON
 }
@@ -186,6 +194,15 @@ static void RenderReticle_New(CPlayer *pPlayer)
         RenderReticle_Hook.callTrampoline(pPlayer);
 }
 
+
+EntityObj *PlayerCreateEntity_New(CPlayer *pPlayer, int ClassId, const CVector3 *pPos, const CMatrix3 *pRotMatrix, int MpCharacter)
+{
+    // hide target player from camera after respawn
+    EntityObj *pEntity = PlayerCreateEntity_Hook.callTrampoline(pPlayer, ClassId, pPos, pRotMatrix, MpCharacter);
+    if (pEntity && pPlayer == g_SpectateModeTarget)
+        pEntity->pLocalPlayer = pPlayer;
+    return pEntity;
+}
 #if SPECTATE_MODE_SHOW_WEAPON
 
 static void PlayerFpgunRender_New(CPlayer *pPlayer)
@@ -228,6 +245,7 @@ void SpectateModeInit()
     
     HandleCtrlInGame_Hook.hook(HandleCtrlInGameHook);
     RenderReticle_Hook.hook(RenderReticle_New);
+    PlayerCreateEntity_Hook.hook(PlayerCreateEntity_New);
 
     // Note: HUD rendering doesn't make sense because life and armor isn't synced
 
@@ -243,7 +261,16 @@ void SpectateModeInit()
     WriteMemUInt8(0x004AE384, ASM_NOP, 6); // PlayerFpgunPrepareWeapon
     WriteMemUInt8(0x004AA6E7, ASM_NOP, 6); // PlayerFpgunUpdateMesh
 
+    WriteMemPtr(0x0048857E + 2, &g_SpectateModeTarget); // RenderObjects
+    WriteMemPtr(0x00488598 + 1, &g_SpectateModeTarget); // RenderObjects
+
 #endif // SPECTATE_MODE_SHOW_WEAPON
+    
+}
+
+void SpectateModeAfterFullGameInit()
+{
+    g_SpectateModeTarget = *g_ppLocalPlayer;
 }
 
 void SpectateModeDrawUI()

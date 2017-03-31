@@ -159,6 +159,11 @@ static void PlayerDestroy_New(CPlayer *pPlayer)
     PlayerDestroy_Hook.callTrampoline(pPlayer);
 }
 
+void AfterFullGameInit()
+{
+    SpectateModeAfterFullGameInit();
+}
+
 #ifndef NDEBUG
 class RfConsoleLogAppender : public logging::BaseAppender
 {
@@ -242,6 +247,7 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
     CleanupGame_Hook.hook(0x004B2821, CleanupGame_New);
     RunGame_Hook.hook(0x004B2818, RunGame_New);
     WriteMemInt32(0x00432375 + 1, (uintptr_t)RenderInGameHook - (0x00432375 + 0x5));
+    WriteMemInt32(0x004B2693 + 1, (uintptr_t)AfterFullGameInit - (0x004B2693 + 0x5));
     DcUpdate_Hook.hook(0x004B2DD3, DcUpdate_New);
 
     RenderHitScreen_Hook.hook(RenderHitScreen_New);
