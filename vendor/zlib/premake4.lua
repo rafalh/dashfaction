@@ -9,3 +9,5 @@ project "zlib"
 		"inftrees.c",
 		"zutil.c"
 	}
+
+include "contrib"
