@@ -93,6 +93,7 @@ namespace rf
     constexpr auto StringFree = (void(*)(void *pData))0x004FF3A0;
     constexpr auto CString_Init = (CString*(__thiscall *)(CString *This, const char *pszInit))0x004FF3D0;
     constexpr auto CString_InitFromStr = (CString*(__thiscall *)(CString *This, const CString *pstrInit))0x004FF410;
+    constexpr auto CString_InitEmpty = (CString*(__thiscall *)(CString *This))0x004FF3B0;
     constexpr auto CString_CStr = (const char*(__thiscall *)(CString *This))0x004FF480;
     constexpr auto CString_Destroy = (void(__thiscall *)(CString *This))0x004FF470;
 

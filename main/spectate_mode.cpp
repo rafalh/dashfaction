@@ -57,11 +57,9 @@ void SpectateModeSetTargetPlayer(CPlayer *pPlayer)
 
     if (*g_pGameOptions & RF_GO_FORCE_RESPAWN)
     {
-        const char szMessage[] = "You cannot use Spectate Mode because Force Respawn option is enabled on this server!";
-        CString strMessage = { strlen(szMessage), NULL };
-        CString strPrefix = { 0, NULL };
-        strMessage.psz = StringAlloc(strMessage.cch + 1);
-        strcpy(strMessage.psz, szMessage);
+        CString strMessage, strPrefix;
+        CString_Init(&strMessage, "You cannot use Spectate Mode because Force Respawn option is enabled on this server!");
+        CString_InitEmpty(&strPrefix);
         ChatPrint(strMessage, 4, strPrefix);
         return;
     }
@@ -271,19 +269,23 @@ void SpectateModeDrawUI()
     unsigned y = cySrc - 100;
     unsigned cyFont = GrGetFontHeight(-1);
 
+    GrSetColor(0, 0, 0, 0x80);
+    GrDrawAlignedText(GR_ALIGN_CENTER, cxScr / 2 + 2, 150 + 2, "SPECTATE MODE", g_LargeFont, *g_pGrTextMaterial);
     GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
     GrDrawAlignedText(GR_ALIGN_CENTER, cxScr / 2, 150, "SPECTATE MODE", g_LargeFont, *g_pGrTextMaterial);
+
+    GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
     GrDrawAlignedText(GR_ALIGN_LEFT, 20, 200, "Press JUMP key to exit Spectate Mode", g_MediumFont, *g_pGrTextMaterial);
     GrDrawAlignedText(GR_ALIGN_LEFT, 20, 215, "Press PRIMARY ATTACK key to switch to the next player", g_MediumFont, *g_pGrTextMaterial);
     GrDrawAlignedText(GR_ALIGN_LEFT, 20, 230, "Press SECONDARY ATTACK key to switch to the previous player", g_MediumFont, *g_pGrTextMaterial);
 
     GrSetColor(0, 0, 0x00, 0x60);
-    GrDrawRect(x, y, cx, cy, *((uint32_t*)0x17756C0));
+    GrDrawRect(x, y, cx, cy, *g_pGrRectMaterial);
 
     char szBuf[256];
     GrSetColor(0xFF, 0xFF, 0, 0x80);
-    sprintf(szBuf, "Spectating: %s", g_SpectateModeTarget->strName.psz);
-    GrDrawAlignedText(GR_ALIGN_CENTER, x + cx / 2, y + cy / 2 - cyFont / 2, szBuf, g_LargeFont, *g_pGrTextMaterial);
+    snprintf(szBuf, sizeof(szBuf), "Spectating: %s", CString_CStr(&g_SpectateModeTarget->strName));
+    GrDrawAlignedText(GR_ALIGN_CENTER, x + cx / 2, y + cy / 2 - cyFont / 2 - 5, szBuf, g_LargeFont, *g_pGrTextMaterial);
 
     EntityObj *pEntity = HandleToEntity(g_SpectateModeTarget->hEntity);
     if (!pEntity)
