@@ -216,6 +216,33 @@ static void LevelSpCmdHandler(void)
     }
 }
 
+static void LevelSoundCmdHandler(void)
+{
+    if (*g_pbDcRun)
+    {
+        rf::DcGetArg(DC_ARG_FLOAT, 0);
+
+        if ((*g_pDcArgType & DC_ARG_FLOAT))
+        {
+            float fVolScale = clamp(*g_pfDcArg, 0.0f, 1.0f);
+            unsigned Offsets[] = {
+                // Play Sound event
+                0x004BA4D8, 0x004BA515, 0x004BA71C, 0x004BA759, 0x004BA609, 0x004BA5F2, 0x004BA63F,
+                // Ambient Sound
+                0x00505FE6,
+            };
+            for (int i = 0; i < COUNTOF(Offsets); ++i)
+                WriteMemFloat(Offsets[i] + 1, fVolScale);
+        }
+    }
+
+    if (*g_pbDcHelp)
+    {
+        DcPrint(g_ppszStringsTable[STR_USAGE], NULL);
+        DcPrint("     <volume>", NULL);
+    }
+}
+
 DcCommand g_Commands[] = {
 #if SPLITSCREEN_ENABLE
     {"splitscreen", "Starts split screen mode", SplitScreenCmdHandler},
@@ -238,6 +265,7 @@ DcCommand g_Commands[] = {
     { "ms", "Sets mouse sensitivity", MouseSensitivityCmdHandler },
     { "vli", "Toggles volumetric lightining", VolumeLightsCmdHandler },
     { "levelsp", "Loads single player level", LevelSpCmdHandler },
+    { "levelsound", "Sets level sound volume scale", LevelSoundCmdHandler },
 };
 
 void CommandsInit(void)

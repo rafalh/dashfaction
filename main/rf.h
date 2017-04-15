@@ -377,7 +377,8 @@ namespace rf
     struct NwAddr
     {
         uint32_t IpAddr;
-        uint32_t Port;
+        uint16_t Port;
+        uint16_t _unused;
     };
 
     constexpr auto g_pNwSocket = (SOCKET*)0x005A660C;
