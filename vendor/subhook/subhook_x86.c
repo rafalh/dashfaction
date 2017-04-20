@@ -91,7 +91,7 @@ struct subhook_jmp64 {
 
 #pragma pack(pop)
 
-void subhook_unk_opcode_handler(uint8_t opcode);
+void subhook_unk_opcode_handler(uint8_t *opcode);
 
 static size_t subhook_disasm(void *src, int32_t *reloc_op_offset) {
   enum flags {
@@ -219,7 +219,7 @@ static size_t subhook_disasm(void *src, int32_t *reloc_op_offset) {
   }
 
   if (opcode == 0) {
-    subhook_unk_opcode_handler(code[0]);
+    subhook_unk_opcode_handler(code);
     return 0;
   }
 
