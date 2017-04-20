@@ -295,7 +295,7 @@ void InitScoreboard(void)
     DrawScoreboardInternal_Hook.hook(DrawScoreboardInternal_New);
 
     AsmWritter(0x00437BC0)
-        .callLong((uintptr_t)&HudRender_00437BC0)
+        .callLong(HudRender_00437BC0)
         .jmpLong(0x00437C24);
     AsmWritter(0x00437D40)
         .jmpNear(0x00437D5C);

@@ -394,6 +394,9 @@ namespace rf
     typedef void(*NwAddrToStr_Type)(char *pszDest, int cbDest, NwAddr *pAddr);
     constexpr auto NwAddrToStr = (NwAddrToStr_Type)0x00529FE0;
 
+    constexpr auto NwGetPlayerFromAddr = (CPlayer *(*)(const NwAddr *pAddr))0x00484850;
+    constexpr auto NwCompareAddr = (int(*)(const NwAddr *pAddr1, const NwAddr *pAddr2, char bCheckPort))0x0052A930;
+
     /* Player */
 
     struct SPlayerStats
