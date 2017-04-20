@@ -10,11 +10,13 @@
 #include "main.h"
 #include "hooks/MemChange.h"
 
+using namespace rf;
+
 constexpr int CMD_LIMIT = 128;
 
-static rf::DcCommand *g_CommandsBuffer[CMD_LIMIT];
+static DcCommand *g_CommandsBuffer[CMD_LIMIT];
 
-using namespace rf;
+auto DcAutoCompleteInput_Hook = makeFunHook(DcAutoCompleteInput);
 
 #if SPLITSCREEN_ENABLE
 
@@ -268,6 +270,38 @@ DcCommand g_Commands[] = {
     { "levelsound", "Sets level sound volume scale", LevelSoundCmdHandler },
 };
 
+void DcAutoCompleteInput_New()
+{
+    const char *pszArgs = strchr(g_szDcCmdLine, ' ');
+    size_t CmdLen = pszArgs ? pszArgs - g_szDcCmdLine : *g_pcchDcCmdLineLen;
+
+    std::vector<DcCommand*> MatchingCmds;
+    for (unsigned i = 0; i < *g_pDcNumCommands; ++i)
+    {
+        DcCommand *pCmd = g_CommandsBuffer[i];
+        if (!strnicmp(pCmd->pszCmd, g_szDcCmdLine, CmdLen) && (!pszArgs || !pCmd->pszCmd[CmdLen]))
+            MatchingCmds.push_back(pCmd);
+    }
+
+    if (pszArgs)
+    {
+        if (MatchingCmds.size() == 1)
+        {
+            *g_pbDcRun = 0;
+            *g_pbDcHelp = 1;
+            *g_pbDcStatus = 0;
+            MatchingCmds[0]->pfnHandler();
+        }
+    }
+    else if (MatchingCmds.size() > 1 && *g_pcchDcCmdLineLen > 0)
+    {
+        for (auto *pCmd : MatchingCmds)
+            DcPrintf("%s - %s", pCmd->pszCmd, pCmd->pszDescr);
+    }
+    else if (MatchingCmds.size() == 1)
+        *g_pcchDcCmdLineLen = sprintf(g_szDcCmdLine, "%s ", MatchingCmds[0]->pszCmd);
+}
+
 void CommandsInit(void)
 {
 #if CAMERA_1_3_COMMANDS
@@ -291,6 +325,9 @@ void CommandsInit(void)
     WriteMemPtr(0x00509E6F + 1, g_CommandsBuffer);
     WriteMemPtr(0x0050A648 + 4, g_CommandsBuffer);
     WriteMemPtr(0x0050A6A0 + 3, g_CommandsBuffer);
+
+    // Better console autocomplete
+    DcAutoCompleteInput_Hook.hook(DcAutoCompleteInput_New);
 }
 
 void CommandRegister(DcCommand *pCmd)

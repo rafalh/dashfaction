@@ -124,16 +124,20 @@ namespace rf
     constexpr auto DcPrintf = (void(*)(const char *pszFormat, ...))0x0050B9F0;
     constexpr auto DcGetArg = (void(*)(int Type, int bUnknown))0x0050AED0;
     constexpr auto DcUpdate = (void(*)(BOOL bServer))0x0050A720;
+    constexpr auto DcAutoCompleteInput = (void(*)())0x0050A620;
+    constexpr auto g_pcchDcCmdLineLen = (uint32_t*)0x0177568C;
 
     //constexpr auto g_ppDcCommands = (DcCommand**)0x01775530;
     constexpr auto g_pDcNumCommands = (uint32_t*)0x0177567C;
 
     constexpr auto g_pbDcRun = (uint32_t*)0x01775110;
     constexpr auto g_pbDcHelp = (uint32_t*)0x01775224;
+    constexpr auto g_pbDcStatus = (uint32_t*)0x01774D00;
     constexpr auto g_pDcArgType = (uint32_t*)0x01774D04;
     constexpr auto g_pszDcArg = (char*)0x0175462C;
     constexpr auto g_piDcArg = (int*)0x01775220;
     constexpr auto g_pfDcArg = (float*)0x01754628;
+    constexpr auto g_szDcCmdLine = (char*)0x01775330;
 
     /* Graphics */
 
