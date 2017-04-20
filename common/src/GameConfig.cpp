@@ -37,8 +37,9 @@ bool GameConfig::load()
         detectGamePath();
     dashFactionKey.readValue("Direct Input", &directInput);
     dashFactionKey.readValue("Fast Start", &fastStart);
-    dashFactionKey.readValue("Allow Overwriting Game Files", &allowOverwriteGameFiles);
     dashFactionKey.readValue("Scoreboard Animations", &scoreboardAnim);
+    dashFactionKey.readValue("Level Sound Volume", reinterpret_cast<unsigned*>(&levelSoundVolume));
+    dashFactionKey.readValue("Allow Overwriting Game Files", &allowOverwriteGameFiles);
     dashFactionKey.readValue("Version", &dashFactionVersion);
 
 #ifdef NDEBUG
@@ -79,8 +80,9 @@ void GameConfig::save()
     dashFactionKey.writeValue("Executable Path", gameExecutablePath);
     dashFactionKey.writeValue("Direct Input", directInput);
     dashFactionKey.writeValue("Fast Start", fastStart);
-    dashFactionKey.writeValue("Allow Overwriting Game Files", allowOverwriteGameFiles);
     dashFactionKey.writeValue("Scoreboard Animations", scoreboardAnim);
+    dashFactionKey.writeValue("Level Sound Volume", *reinterpret_cast<unsigned*>(&levelSoundVolume));
+    dashFactionKey.writeValue("Allow Overwriting Game Files", allowOverwriteGameFiles);
     dashFactionKey.writeValue("Version", dashFactionVersion);
 }
 

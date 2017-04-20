@@ -34,6 +34,7 @@ struct GameConfig
     bool fastStart = true;
     bool allowOverwriteGameFiles = false;
     bool scoreboardAnim = false;
+    float levelSoundVolume = 1.0f;
     std::string dashFactionVersion;
 
     bool load();

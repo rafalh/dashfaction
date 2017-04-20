@@ -166,6 +166,19 @@ void MenuMainRenderHook()
     }
 }
 
+void SetLevelSoundVolumeScale(float fVolScale)
+{
+    fVolScale = clamp(fVolScale, 0.0f, 1.0f);
+    unsigned Offsets[] = {
+        // Play Sound event
+        0x004BA4D8, 0x004BA515, 0x004BA71C, 0x004BA759, 0x004BA609, 0x004BA5F2, 0x004BA63F,
+        // Ambient Sound
+        0x00505FE6,
+    };
+    for (int i = 0; i < COUNTOF(Offsets); ++i)
+        WriteMemFloat(Offsets[i] + 1, fVolScale);
+}
+
 void MiscInit()
 {
     // Console init string
@@ -257,4 +270,7 @@ void MiscInit()
         KbdLayout = 3; // QWERTZ
     INFO("Keyboard layout: %u", KbdLayout);
     WriteMemUInt8(0x004B14B4 + 1, KbdLayout);
+
+    // Level sounds
+    SetLevelSoundVolumeScale(g_gameConfig.levelSoundVolume);
 }

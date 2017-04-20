@@ -107,6 +107,10 @@ BOOL OptionsDlg::OnInitDialog()
     CheckDlgButton(IDC_EAX_SOUND_CHECK, conf.eaxSound ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_FAST_START_CHECK, conf.fastStart ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_SCOREBOARD_ANIM_CHECK, conf.scoreboardAnim);
+    if (conf.levelSoundVolume == 1.0f)
+        CheckDlgButton(IDC_LEVEL_SOUNDS_CHECK, BST_CHECKED);
+    else
+        CheckDlgButton(IDC_LEVEL_SOUNDS_CHECK, conf.levelSoundVolume == 0.0f ? BST_UNCHECKED : BST_INDETERMINATE);
     CheckDlgButton(IDC_ALLOW_OVERWRITE_GAME_CHECK, conf.allowOverwriteGameFiles ? BST_CHECKED : BST_UNCHECKED);
 
     InitToolTip();
@@ -134,6 +138,8 @@ void OptionsDlg::InitToolTip()
     m_toolTip->AddTool(GetDlgItem(IDC_DIRECT_INPUT_CHECK), "Use DirectInput for mouse input handling");
     m_toolTip->AddTool(GetDlgItem(IDC_FORCE_PORT_CHECK), "If not checked automatic port is used");
     m_toolTip->AddTool(GetDlgItem(IDC_SCOREBOARD_ANIM_CHECK), "Scoreboard open/close animations");
+    m_toolTip->AddTool(GetDlgItem(IDC_LEVEL_SOUNDS_CHECK), "Enable/disable Play Sound and Ambient Sound objects in level. You can also specify volume multiplier by using levelsounds command in game.");
+    m_toolTip->AddTool(GetDlgItem(IDC_ALLOW_OVERWRITE_GAME_CHECK), "Enable this if you want to modify game content by putting mods into user_maps folder. Can have side effect of level packfiles modyfing common textures/sounds.");
 
     m_toolTip->Activate(TRUE);
 }
@@ -213,6 +219,8 @@ void OptionsDlg::OnBnClickedOk()
     conf.eaxSound = (IsDlgButtonChecked(IDC_EAX_SOUND_CHECK) == BST_CHECKED);
     conf.fastStart = (IsDlgButtonChecked(IDC_FAST_START_CHECK) == BST_CHECKED);
     conf.scoreboardAnim = (IsDlgButtonChecked(IDC_SCOREBOARD_ANIM_CHECK) == BST_CHECKED);
+    if (IsDlgButtonChecked(IDC_LEVEL_SOUNDS_CHECK) != BST_INDETERMINATE)
+        conf.levelSoundVolume = (IsDlgButtonChecked(IDC_LEVEL_SOUNDS_CHECK) == BST_CHECKED ? 1.0f : 0.0f);
     conf.allowOverwriteGameFiles = (IsDlgButtonChecked(IDC_ALLOW_OVERWRITE_GAME_CHECK) == BST_CHECKED);
 
     try
