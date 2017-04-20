@@ -28,6 +28,7 @@ public:
     afx_msg void OnBnClickedOk();
     afx_msg void OnBnClickedExeBrowse();
     afx_msg void OnBnClickedResetTrackerBtn();
+    afx_msg void OnForcePortClick();
 
 private:
     VideoDeviceInfoProvider m_videoInfo;

@@ -5,8 +5,7 @@
 #include "rfproto.h"
 #include "kill.h"
 #include "spectate_mode.h"
-
-#define SCOREBOARD_ANIMATION 1
+#include "main.h"
 
 using namespace rf;
 
@@ -58,25 +57,26 @@ void DrawScoreboardInternal_New(bool bDraw)
 
     // Animation
     float fAnimProgress = 1.0f, fProgressW = 1.0f, fProgressH = 1.0f;
-#if SCOREBOARD_ANIMATION
-    unsigned AnimDelta = GetTickCount() - g_AnimTicks;
-    if (g_EnterAnim)
-        fAnimProgress = AnimDelta / ENTER_ANIM_MS;
-    else if (g_LeaveAnim)
-        fAnimProgress = (LEAVE_ANIM_MS - AnimDelta) / LEAVE_ANIM_MS;
-
-    if (g_LeaveAnim && fAnimProgress <= 0.0f)
+    if (g_gameConfig.scoreboardAnim)
     {
-        g_ScoreboardVisible = false;
-        return;
+        unsigned AnimDelta = GetTickCount() - g_AnimTicks;
+        if (g_EnterAnim)
+            fAnimProgress = AnimDelta / ENTER_ANIM_MS;
+        else if (g_LeaveAnim)
+            fAnimProgress = (LEAVE_ANIM_MS - AnimDelta) / LEAVE_ANIM_MS;
+
+        if (g_LeaveAnim && fAnimProgress <= 0.0f)
+        {
+            g_ScoreboardVisible = false;
+            return;
+        }
+
+        fProgressW = fAnimProgress * 2.0f;
+        fProgressH = (fAnimProgress - 0.5f) * 2.0f;
+
+        fProgressW = std::min(std::max(fProgressW, 0.1f), 1.0f);
+        fProgressH = std::min(std::max(fProgressH, 0.1f), 1.0f);
     }
-
-    fProgressW = fAnimProgress * 2.0f;
-    fProgressH = (fAnimProgress - 0.5f) * 2.0f;
-
-    fProgressW = std::min(std::max(fProgressW, 0.1f), 1.0f);
-    fProgressH = std::min(std::max(fProgressH, 0.1f), 1.0f);
-#endif // SCOREBOARD_ANIMATION
 
     // Draw background
     constexpr int ROW_H = 15;
@@ -267,23 +267,24 @@ void HudRender_00437BC0()
         (!SpectateModeIsActive() && (IsPlayerEntityInvalid(*g_ppLocalPlayer) || IsPlayerDying(*g_ppLocalPlayer))) ||
         GetCurrentMenuId() == MENU_MP_LIMBO);
 
-#if SCOREBOARD_ANIMATION
-    if (!g_ScoreboardVisible && bShowScoreboard)
+    if (g_gameConfig.scoreboardAnim)
     {
-        g_EnterAnim = true;
-        g_LeaveAnim = false;
-        g_AnimTicks = GetTickCount();
-        g_ScoreboardVisible = true;
+        if (!g_ScoreboardVisible && bShowScoreboard)
+        {
+            g_EnterAnim = true;
+            g_LeaveAnim = false;
+            g_AnimTicks = GetTickCount();
+            g_ScoreboardVisible = true;
+        }
+        if (g_ScoreboardVisible && !bShowScoreboard && !g_LeaveAnim)
+        {
+            g_EnterAnim = false;
+            g_LeaveAnim = true;
+            g_AnimTicks = GetTickCount();
+        }
     }
-    if (g_ScoreboardVisible && !bShowScoreboard && !g_LeaveAnim)
-    {
-        g_EnterAnim = false;
-        g_LeaveAnim = true;
-        g_AnimTicks = GetTickCount();
-    }
-#else // !SCOREBOARD_ANIMATION
-    g_ScoreboardVisible = bShowScoreboard;
-#endif // SCOREBOARD_ANIMATION
+    else
+        g_ScoreboardVisible = bShowScoreboard;
 
     if (g_ScoreboardVisible)
         DrawScoreboard(true);

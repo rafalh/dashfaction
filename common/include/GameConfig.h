@@ -28,10 +28,12 @@ struct GameConfig
 
     std::string tracker = DEFAULT_RF_TRACKER;
     unsigned updateRate = 2600;
+    unsigned forcePort = 0;
     bool directInput = false;
     bool eaxSound = true;
     bool fastStart = true;
     bool allowOverwriteGameFiles = false;
+    bool scoreboardAnim = false;
     std::string dashFactionVersion;
 
     bool load();

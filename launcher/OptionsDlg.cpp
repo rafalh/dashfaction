@@ -98,9 +98,15 @@ BOOL OptionsDlg::OnInitDialog()
     CheckDlgButton(IDC_TRUE_COLOR_TEXTURES_CHECK, conf.trueColorTextures ? BST_CHECKED : BST_UNCHECKED);
 
     SetDlgItemTextA(IDC_TRACKER_EDIT, conf.tracker.c_str());
+    CheckDlgButton(IDC_FORCE_PORT_CHECK, conf.forcePort != 0);
+    if (conf.forcePort)
+        SetDlgItemInt(IDC_PORT_EDIT, conf.forcePort);
+    else
+        GetDlgItem(IDC_PORT_EDIT)->EnableWindow(FALSE);
     CheckDlgButton(IDC_DIRECT_INPUT_CHECK, conf.directInput ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_EAX_SOUND_CHECK, conf.eaxSound ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_FAST_START_CHECK, conf.fastStart ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(IDC_SCOREBOARD_ANIM_CHECK, conf.scoreboardAnim);
     CheckDlgButton(IDC_ALLOW_OVERWRITE_GAME_CHECK, conf.allowOverwriteGameFiles ? BST_CHECKED : BST_UNCHECKED);
 
     InitToolTip();
@@ -126,6 +132,8 @@ void OptionsDlg::InitToolTip()
     m_toolTip->AddTool(GetDlgItem(IDC_TRACKER_EDIT), "Hostname of tracker used to find avaliable Multiplayer servers");
     m_toolTip->AddTool(GetDlgItem(IDC_FAST_START_CHECK), "Skip game intro videos and go straight to Main Menu");
     m_toolTip->AddTool(GetDlgItem(IDC_DIRECT_INPUT_CHECK), "Use DirectInput for mouse input handling");
+    m_toolTip->AddTool(GetDlgItem(IDC_FORCE_PORT_CHECK), "If not checked automatic port is used");
+    m_toolTip->AddTool(GetDlgItem(IDC_SCOREBOARD_ANIM_CHECK), "Scoreboard open/close animations");
 
     m_toolTip->Activate(TRUE);
 }
@@ -148,6 +156,7 @@ BEGIN_MESSAGE_MAP(OptionsDlg, CDialogEx)
     ON_BN_CLICKED(IDOK, &OptionsDlg::OnBnClickedOk)
     ON_BN_CLICKED(IDC_EXE_BROWSE, &OptionsDlg::OnBnClickedExeBrowse)
     ON_BN_CLICKED(IDC_RESET_TRACKER_BTN, &OptionsDlg::OnBnClickedResetTrackerBtn)
+    ON_BN_CLICKED(IDC_FORCE_PORT_CHECK, &OptionsDlg::OnForcePortClick)
 END_MESSAGE_MAP()
 
 
@@ -198,9 +207,12 @@ void OptionsDlg::OnBnClickedOk()
 
     GetDlgItemTextA(IDC_TRACKER_EDIT, str);
     conf.tracker = str;
+    bool forcePort = IsDlgButtonChecked(IDC_FORCE_PORT_CHECK) == BST_CHECKED;
+    conf.forcePort = forcePort ? GetDlgItemInt(IDC_PORT_EDIT) : 0;
     conf.directInput = (IsDlgButtonChecked(IDC_DIRECT_INPUT_CHECK) == BST_CHECKED);
     conf.eaxSound = (IsDlgButtonChecked(IDC_EAX_SOUND_CHECK) == BST_CHECKED);
     conf.fastStart = (IsDlgButtonChecked(IDC_FAST_START_CHECK) == BST_CHECKED);
+    conf.scoreboardAnim = (IsDlgButtonChecked(IDC_SCOREBOARD_ANIM_CHECK) == BST_CHECKED);
     conf.allowOverwriteGameFiles = (IsDlgButtonChecked(IDC_ALLOW_OVERWRITE_GAME_CHECK) == BST_CHECKED);
 
     try
@@ -231,4 +243,10 @@ void OptionsDlg::OnBnClickedExeBrowse()
 void OptionsDlg::OnBnClickedResetTrackerBtn()
 {
     SetDlgItemTextA(IDC_TRACKER_EDIT, DEFAULT_RF_TRACKER);
+}
+
+void OptionsDlg::OnForcePortClick()
+{
+    bool forcePort = IsDlgButtonChecked(IDC_FORCE_PORT_CHECK) == BST_CHECKED;
+    GetDlgItem(IDC_PORT_EDIT)->EnableWindow(forcePort);
 }

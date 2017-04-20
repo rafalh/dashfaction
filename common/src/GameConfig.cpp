@@ -20,6 +20,7 @@ bool GameConfig::load()
     regKey.readValue("GameTracker", &tracker);
     regKey.readValue("EAX", &eaxSound);
     regKey.readValue("UpdateRate", &updateRate);
+    regKey.readValue("ForcePort", &forcePort);
 
     RegKey dashFactionKey(regKey, DF_SUBKEY_NAME, KEY_READ);
     unsigned temp;
@@ -37,6 +38,7 @@ bool GameConfig::load()
     dashFactionKey.readValue("Direct Input", &directInput);
     dashFactionKey.readValue("Fast Start", &fastStart);
     dashFactionKey.readValue("Allow Overwriting Game Files", &allowOverwriteGameFiles);
+    dashFactionKey.readValue("Scoreboard Animations", &scoreboardAnim);
     dashFactionKey.readValue("Version", &dashFactionVersion);
 
 #ifdef NDEBUG
@@ -63,6 +65,7 @@ void GameConfig::save()
     regKey.writeValue("GameTracker", tracker);
     regKey.writeValue("UpdateRate", updateRate);
     regKey.writeValue("EAX", eaxSound);
+    regKey.writeValue("ForcePort", forcePort);
 
     RegKey dashFactionKey(regKey, DF_SUBKEY_NAME, KEY_WRITE, true);
     dashFactionKey.writeValue("Window Mode", (unsigned)wndMode);
@@ -77,6 +80,7 @@ void GameConfig::save()
     dashFactionKey.writeValue("Direct Input", directInput);
     dashFactionKey.writeValue("Fast Start", fastStart);
     dashFactionKey.writeValue("Allow Overwriting Game Files", allowOverwriteGameFiles);
+    dashFactionKey.writeValue("Scoreboard Animations", scoreboardAnim);
     dashFactionKey.writeValue("Version", dashFactionVersion);
 }
 
