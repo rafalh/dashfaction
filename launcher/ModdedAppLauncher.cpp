@@ -68,7 +68,12 @@ void ModdedAppLauncher::injectDLL(HANDLE hProcess, const TCHAR *pszPath)
 
     dwWaitResult = WaitForSingleObject(hThread, INIT_TIMEOUT);
     if (dwWaitResult != WAIT_OBJECT_0)
-        THROW_EXCEPTION_WITH_WIN32_ERROR();
+    {
+        if (dwWaitResult == WAIT_TIMEOUT)
+            THROW_EXCEPTION("timeout");
+        else
+            THROW_EXCEPTION_WITH_WIN32_ERROR();
+    }
 
     if (!GetExitCodeThread(hThread, &dwExitCode))
         THROW_EXCEPTION_WITH_WIN32_ERROR();
