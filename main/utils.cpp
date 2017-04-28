@@ -153,3 +153,35 @@ const char *GetProcessElevationType()
         return "unknown";
     }
 }
+
+std::string getCpuId()
+{
+    int cpuInfo[4] = { 0 };
+    std::stringstream ss;
+    __cpuid(cpuInfo, 1);
+    ss << std::hex << std::uppercase << std::setfill('0') << std::setw(8) << cpuInfo[0] << ' ' << cpuInfo[1] << ' ' << cpuInfo[2] << ' ' << cpuInfo[3];
+    return ss.str();
+}
+
+std::string getCpuBrand()
+{
+    int cpuInfo[4] = { 0 };
+    char brandStr[0x40] = "";
+    // Get the information associated with each extended ID.
+    __cpuid(cpuInfo, 0x80000000);
+    unsigned maxExtId = cpuInfo[0];
+    for (unsigned i = 0x80000000; i <= maxExtId; ++i)
+    {
+        __cpuid(cpuInfo, i);
+        // Interpret CPU brand string
+        if (i == 0x80000002)
+            memcpy(brandStr, cpuInfo, sizeof(cpuInfo));
+        else if (i == 0x80000003)
+            memcpy(brandStr + 16, cpuInfo, sizeof(cpuInfo));
+        else if (i == 0x80000004)
+            memcpy(brandStr + 32, cpuInfo, sizeof(cpuInfo));
+    }
+
+    //string includes manufacturer, model and clockspeed
+    return brandStr;
+}

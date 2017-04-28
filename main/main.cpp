@@ -189,11 +189,11 @@ void LogSystemInfo()
 {
     try
     {
-        std::string osVer = getRealOsVersion();
-        INFO("Real system version: %s", osVer.c_str());
-        osVer = getOsVersion();
-        INFO("Emulated system version: %s", osVer.c_str());
+        logging::Logger::root().info() << "Real system version: " << getRealOsVersion();
+        logging::Logger::root().info() << "Emulated system version: " << getOsVersion();
         INFO("Running as %s (elevation type: %s)", IsUserAdmin() ? "admin" : "user", GetProcessElevationType());
+        logging::Logger::root().info() << "CPU Brand: " << getCpuBrand();
+        logging::Logger::root().info() << "CPU ID: " << getCpuId();
     }
     catch (std::exception &e)
     {

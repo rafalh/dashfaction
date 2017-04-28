@@ -21,6 +21,7 @@ typedef BOOL WINBOOL;
 #include <ctime>
 #include <algorithm>
 #include <map>
+#include <iomanip>
 
 #include <MemUtils.h>
 #include <AsmOpcodes.h>
