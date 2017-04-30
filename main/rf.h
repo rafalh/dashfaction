@@ -15,6 +15,7 @@ namespace rf
     /* Declarations */
     struct CPlayer;
     struct EntityObj;
+    struct CAnimMesh;
 
     /* Math */
 
@@ -96,6 +97,33 @@ namespace rf
     constexpr auto CString_InitEmpty = (CString*(__thiscall *)(CString *This))0x004FF3B0;
     constexpr auto CString_CStr = (const char*(__thiscall *)(CString *This))0x004FF480;
     constexpr auto CString_Destroy = (void(__thiscall *)(CString *This))0x004FF470;
+
+    /* Utils */
+
+    struct Timer
+    {
+        int EndTimeMs;
+    };
+
+    struct Color
+    {
+        int Val;
+    };
+
+    struct DynamicArray
+    {
+        int Size;
+        int AllocatedSize;
+        void *pData;
+    };
+
+    /* Stubs */
+    typedef int ObjectFlags;
+    typedef int PhysicsFlags;
+    typedef int EntityFlags;
+    typedef int EntityPowerups;
+    typedef int PlayerFlags;
+    typedef int NwPlayerFlags;
 
     /* Debug Console */
 
@@ -417,6 +445,53 @@ namespace rf
         uint16_t _unused;
     };
 
+    struct NwStats
+    {
+        int NumTotalSentBytes;
+        int NumTotalRecvBytes;
+        int NumSentBytesUnkIdxF8[30];
+        int NumRecvBytesUnkIdxF8[30];
+        int UnkIdxF8;
+        int NumSentBytesUnkIdx1EC[30];
+        int NumRecvBytesUnkIdx1EC[30];
+        int UnkIdx1EC;
+        Timer field_1F0;
+        int NumObjUpdatePacketsSent;
+        int NumObjUpdatePacketsRecv;
+        int field_1FC[3];
+        int NumSentBytesPerPacket[55];
+        int NumRecvBytesPerPacket[55];
+        int NumPacketsSent[55];
+        int NumPacketsRecv[55];
+        Timer field_578;
+        int field_57C;
+        int field_580;
+        int field_584;
+        Timer field_588;
+        int field_58C;
+    };
+
+    struct CPlayerNetData
+    {
+        NwAddr Addr;
+        NwPlayerFlags Flags;
+        int field_C;
+        int ConnectionId;
+        int PlayerId;
+        int field_18;
+        NwStats Stats;
+        int dwPing;
+        float field_5B0;
+        char PacketBuf[512];
+        int cbPacketBuf;
+        char OutReliableBuf[512];
+        int cbOutReliableBuf;
+        int ConnectionSpeed;
+        int field_9C0;
+        Timer field_9C4;
+    };
+    static_assert(sizeof(CPlayerNetData) == 0x9C8, "invalid size");
+
     constexpr auto g_pNwSocket = (SOCKET*)0x005A660C;
 
     typedef void(*NwProcessGamePackets_Type)(const char *pData, int cbData, const NwAddr *pAddr, CPlayer *pPlayer);
@@ -435,68 +510,58 @@ namespace rf
 
     /* Camera */
 
-    struct PlayerCamera
+    enum CameraType
+    {
+        CAM_FIRST_PERSON = 0x0,
+        CAM_THIRD_PERSON = 0x1,
+        CAM_FREELOOK = 0x2,
+        CAM_3 = 0x3,
+        CAM_FREELOOK2 = 0x4,
+        CAM_CUTSCENE_UNK = 0x5,
+        CAM_FIXED = 0x6,
+        CAM_ORBIT = 0x7,
+    };
+
+
+    struct Camera
     {
         EntityObj *pCameraEntity;
         CPlayer *pPlayer;
-        enum { CAM_1ST_PERSON, CAM_3RD_PERSON, CAM_FREE } Type;
+        CameraType Type;
     };
 
-    constexpr auto CameraSetFirstPerson = (void(*)(PlayerCamera *pCamera))0x0040DDF0;
-    constexpr auto CameraSetFreelook = (void(*)(PlayerCamera *pCamera))0x0040DCF0;
+    constexpr auto CameraSetFirstPerson = (void(*)(Camera *pCamera))0x0040DDF0;
+    constexpr auto CameraSetFreelook = (void(*)(Camera *pCamera))0x0040DCF0;
 
-    /* Player */
+    /* Config */
 
-    struct SPlayerStats
+    struct ControlConfigItem
     {
-        uint16_t field_0;
-        int16_t iScore;
-        int16_t cCaps;
-    };
-
-    struct CPlayerNetData
-    {
-        NwAddr Addr;
-        uint32_t Flags;
-        uint32_t field_C;
-        uint32_t field_10;
-        uint32_t PlayerId;
-        uint32_t field_18;
-        char field_1C[1424];
-        uint32_t dwPing;
-        uint32_t field_5B0;
-        char PacketBuf[512];
-        uint32_t cbPacketBuf;
-        uint32_t field_7B8[129];
-        uint32_t ConnectionSpeed;
-        uint32_t field_9C0;
-        uint32_t field_9C4;
-    };
-
-    struct SKeyState
-    {
-        short DefaultScanCodes[2];
-        short DefaultMouseBtnId;
-        short field_6;
+        __int16 DefaultScanCodes[2];
+        __int16 DefaultMouseBtnId;
+        __int16 field_6;
         int field_8;
         CString strName;
-        short ScanCodes[2];
-        short MouseBtnId;
-        short field_1A;
+        __int16 ScanCodes[2];
+        __int16 MouseBtnId;
+        __int16 field_1A;
     };
 
-    struct CGameControls
+    struct ControlConfig
     {
         float fMouseSensitivity;
         int bMouseLook;
         int field_EC;
-        SKeyState Keys[128];
+        ControlConfigItem Keys[128];
         int CtrlCount;
         int field_EF4;
         int field_EF8;
         int field_EFC;
         int field_F00;
-        int field_F04;
+        char field_F04;
+        char bMouseYInvert;
+        char field_E22;
+        char field_E23;
         int field_F08;
         int field_F0C;
         int field_F10;
@@ -507,14 +572,17 @@ namespace rf
         int field_F24;
         int field_F28;
     };
-    
-    struct SPlayerSettings
+
+    struct PlayerConfig
     {
-        CGameControls Controls;
+        ControlConfig Controls;
         int field_F2C;
         int field_F30;
-        BYTE field_F34[4];
-        char field_F38;
+        char field_F34;
+        char field_E51;
+        char bFirstPersonWeaponVisible;
+        char field_E53;
+        char bCrouchStay;
         char field_F39;
         char field_F3A;
         char bHudVisible;
@@ -522,8 +590,8 @@ namespace rf
         char field_E59;
         char field_E5A;
         char field_E5B;
-        char field_F40;
-        char field_F41;
+        char bAutoswitchWeapons;
+        char bAutoswitchExplosives;
         char ShadowsEnabled;
         char DecalsEnabled;
         char DynamicLightiningEnabled;
@@ -541,150 +609,7 @@ namespace rf
         int MpCharacter;
         char szName[12];
     };
-
-    struct CAnimMesh;
-
-    struct CPlayer
-    {
-        CPlayer *pNext;
-        CPlayer *pPrev;
-        CString strName;
-        int FireFlags;
-        int hEntity;
-        int EntityClsId;
-        CVector3 field_1C;
-        int field_28;
-        SPlayerStats *pStats;
-        char bBlueTeam;
-        char bCollide;
-        char field_32;
-        char field_33;
-        CAnimMesh *pWeaponMesh;
-        int field_38;
-        int field_3C;
-        int field_40;
-        int field_44;
-        int field_48;
-        int field_4C;
-        int field_50;
-        int field_54;
-        int field_58;
-        int field_5C;
-        int field_60;
-        int field_64;
-        int field_68;
-        int field_6C;
-        int field_70;
-        int field_74;
-        int field_78;
-        int field_7C;
-        int field_80;
-        int field_84;
-        int field_88;
-        int field_8C;
-        int field_90;
-        int field_94;
-        int field_98;
-        int field_9C;
-        int field_A0;
-        int field_A4;
-        int field_A8;
-        int field_AC;
-        char field_B0;
-        char IsCrouched;
-        char field_B2;
-        char field_B3;
-        int hViewObj;
-        int field_B8;
-        int field_BC;
-        int field_C0;
-        PlayerCamera *pCamera;
-        int xViewport;
-        int yViewport;
-        int cxViewport;
-        int cyViewport;
-        float fFov;
-        int ViewMode;
-        int field_E0;
-        SPlayerSettings Settings;
-        int field_F6C;
-        int field_F70;
-        int field_F74;
-        int field_F78;
-        int field_F7C;
-        int NextWeaponClsId;
-        int WeaponSwitchCounter;
-        int field_F88;
-        int field_F8C;
-        int UnkTimerF90;
-        char bInZoomMode;
-        char field_F95;
-        char field_F96;
-        char field_F97;
-        float field_F98;
-        int field_F9C;
-        int field_FA0;
-        int field_FA4;
-        int field_FA8;
-        int field_FAC;
-        char bRailgunScanner;
-        char bScannerView;
-        char clrUnkR;
-        char clrUnkG;
-        char clrUnkB;
-        char clrUnkA;
-        char field_FB6;
-        char field_FB7;
-        int field_FB8;
-        int field_FBC;
-        float field_FC0;
-        CVector3 field_FC4;
-        CMatrix3 field_FD0;
-        CMatrix3 matRotFpsWeapon;
-        CVector3 vPosFpsWeapon;
-        int field_1024;
-        float field_1028;
-        int field_102C;
-        float field_1030;
-        int field_1034_BoneId;
-        int field_1038;
-        int field_103C;
-        int field_1040;
-        int RemoteChargeVisible;
-        int field_1048;
-        int field_104C;
-        int field_1050;
-        int field_1054;
-        int field_1058;
-        int field_105C;
-        int field_1060;
-        int field_1064;
-        int field_1068;
-        int field_106C;
-        int field_1070;
-        int field_1074;
-        int field_1078;
-        int field_107C;
-        int field_1080;
-        int field_1084;
-        int RailgunScannerBmHandle;
-        int field_108C[17];
-        int HitScrColor;
-        int HitScrTime;
-        float field_10D8;
-        float field_10DC;
-        int field_10E0;
-        int field_10E4;
-        int field_10E8;
-        int field_10EC[26];
-        int PrefWeapons[32];
-        float field_11D4;
-        float field_11D8;
-        void(__cdecl *field_11DC)(CPlayer *);
-        int field_11E0;
-        int field_11E4[7];
-        CPlayerNetData *pNwData;
-    };
+    static_assert(sizeof(PlayerConfig) == 0xE88, "invalid size");
 
     enum EGameCtrl
     {
@@ -715,6 +640,141 @@ namespace rf
         GC_QUICK_LOAD = 0x18,
     };
 
+    /* Player */
+
+    struct SPlayerStats
+    {
+        uint16_t field_0;
+        int16_t iScore;
+        int16_t cCaps;
+    };
+
+    struct PlayerWeaponInfo
+    {
+        int NextWeaponClsId;
+        Timer WeaponSwitchTimer;
+        Timer UnkReloadTimer;
+        int field_F8C;
+        Timer UnkTimerF90;
+        char bInZoomMode;
+        char field_F95;
+        char field_F96;
+        char field_F97;
+        float field_F98;
+        char field_F9C;
+        char field_1D;
+        char field_1E;
+        char field_1F;
+        int field_FA0;
+        Timer field_FA4;
+        Timer TimerFA8;
+        Timer field_FAC;
+        char bRailgunScanner;
+        char bScannerView;
+        Color clrUnkR;
+        char field_FB6;
+        char field_FB7;
+        int field_FB8;
+        int field_FBC;
+        float field_FC0;
+        CVector3 field_FC4;
+        CMatrix3 field_FD0;
+        CMatrix3 matRotFpsWeapon;
+        CVector3 vPosFpsWeapon;
+        int field_1024;
+        float field_1028;
+        int field_102C;
+        float field_1030;
+        int Pivot1PropId;
+        Timer field_1038;
+        int field_103C;
+        int field_1040;
+        int RemoteChargeVisible;
+        CVector3 field_1048;
+        CMatrix3 field_1054;
+        int field_1078;
+        Timer field_107C;
+    };
+    static_assert(sizeof(PlayerWeaponInfo) == 0x100, "invalid size");
+
+    struct Player_1094
+    {
+        CVector3 field_1094;
+        CMatrix3 field_10A0;
+    };
+
+    struct CPlayer
+    {
+        CPlayer *pNext;
+        CPlayer *pPrev;
+        CString strName;
+        PlayerFlags Flags;
+        int hEntity;
+        int EntityClsId;
+        CVector3 field_1C;
+        int field_28;
+        SPlayerStats *pStats;
+        char bBlueTeam;
+        char bCollide;
+        char field_32;
+        char field_33;
+        CAnimMesh *pFpgunMesh;
+        CAnimMesh *pLastFpgunMesh;
+        Timer Timer3C;
+        int FpgunMuzzleProps[2];
+        int FpgunAmmoDigit1Prop;
+        int FpgunAmmoDigit2Prop;
+        int field_50[24];
+        char field_B0;
+        char IsCrouched;
+        char field_B2;
+        char field_B3;
+        int hViewObj;
+        Timer WeaponSwitchTimer2;
+        Timer UseKeyTimer;
+        Timer field_C0;
+        Camera *pCamera;
+        int xViewport;
+        int yViewport;
+        int cxViewport;
+        int cyViewport;
+        float fFov;
+        int ViewMode;
+        int field_E0;
+        PlayerConfig Config;
+        int field_F6C;
+        int field_F70;
+        int field_F74;
+        int field_F78;
+        int field_F7C;
+        PlayerWeaponInfo WeaponInfo;
+        int FpgunWeaponId;
+        int field_1084;
+        int ScannerBmHandle;
+        int field_108C[2];
+        Player_1094 field_1094;
+        int field_10C4[3];
+        Color HitScrColor;
+        int HitScrAlpha;
+        int field_10D8;
+        int field_10DC;
+        int field_10E0;
+        int field_10E4;
+        int field_10E8[26];
+        int Sound1150_NotSure;
+        int PrefWeapons[32];
+        float field_11D4;
+        float field_11D8;
+        void(__cdecl *field_11DC)(CPlayer *);
+        float field_11E0[4];
+        int field_11F0;
+        float field_11F4;
+        int field_11F8;
+        int field_11FC;
+        CPlayerNetData *pNwData;
+    };
+    static_assert(sizeof(CPlayer) == 0x1204, "invalid size");
+
     constexpr auto g_ppPlayersList = (CPlayer**)0x007C75CC;
     constexpr auto g_ppLocalPlayer = (CPlayer**)0x007C75D4;
 
@@ -722,7 +782,7 @@ namespace rf
     constexpr auto PlayerDestroy = (void(*)(CPlayer *pPlayer))0x004A35C0;
     constexpr auto KillLocalPlayer = (void(*)())0x004757A0;
     constexpr auto HandleCtrlInGame = (void(*)(CPlayer *pPlayer, EGameCtrl KeyId, char WasPressed))0x004A6210;
-    constexpr auto IsEntityCtrlActive = (char(*)(CGameControls *pControlsState, EGameCtrl CtrlId, bool *pWasPressed))0x0043D4F0;
+    constexpr auto IsEntityCtrlActive = (char(*)(ControlConfig *pCtrlConf, EGameCtrl CtrlId, bool *pWasPressed))0x0043D4F0;
     constexpr auto PlayerCreateEntity = (EntityObj *(*)(CPlayer *pPlayer, int ClassId, const CVector3 *pPos, const CMatrix3 *pRotMatrix, int MpCharacter))0x004A4130;
 
     typedef bool(*IsPlayerEntityInvalid_Type)(CPlayer *pPlayer);
@@ -785,28 +845,18 @@ namespace rf
         int field_40;
     };
 
-    struct Object
+    struct __declspec(align(4)) PhysicsInfo
     {
-        int field_0;
-        CVector3 field_4;
-        Object *pNextObj;
-        Object *pPrevObj;
-        CString strName;
-        int Uid;
-        EObjectType Type;
-        int Team;
-        int Handle;
-        int unk2;
-        float fLife;
-        float fArmor;
+        float fElasticity;
+        float field_8C;
+        float fFriction;
+        int field_94;
+        float fMass;
+        CMatrix3 field_9C;
+        CMatrix3 field_C0;
         CVector3 vPos;
-        CMatrix3 matRot;
-        CVector3 vPos2;
-        float fRadius;
-        int Flags;
-        CAnimMesh *pAnimMesh;
-        int field_84;
-        SPosRotUnk PosRotUnk;
+        CVector3 vNewPos;
+        CMatrix3 matYawRot;
         CMatrix3 field_120;
         CVector3 vVel;
         CVector3 vRotChangeUnk;
@@ -814,38 +864,59 @@ namespace rf
         CVector3 field_168;
         CVector3 RotChangeUnkDelta;
         float field_180;
-        int field_184;
-        int field_188;
-        int field_18C;
+        DynamicArray field_184;
         CVector3 field_190;
         CVector3 field_19C;
-        int MovementFlags;
+        PhysicsFlags Flags;
         int FlagsSplash_1AC;
         int field_1B0;
         SWaterSplashUnk WaterSplashUnk;
-        int field_1F8;
+    };
+
+    struct Object
+    {
+        int pRoomUnk;
+        CVector3 vLastPosInRoom;
+        Object *pNextObj;
+        Object *pPrevObj;
+        CString strName;
+        int Uid;
+        EObjectType Type;
+        int Team;
+        int Handle;
+        int hOwnerEntityUnk;
+        float fLife;
+        float fArmor;
+        CVector3 vPos;
+        CMatrix3 matOrient;
+        CVector3 vLastPos;
+        float fRadius;
+        ObjectFlags Flags;
+        CAnimMesh *pAnimMesh;
+        int field_84;
+        PhysicsInfo PhysInfo;
+        int Friendliness;
         int iMaterial;
         int hParent;
-        int field_204;
+        int UnkPropId_204;
         CVector3 field_208;
-        CMatrix3 field_214;
+        CMatrix3 mat214;
         CVector3 vPos3;
         CMatrix3 matRot2;
-        int field_268;
+        int *pEmitterListHead;
         int field_26C;
-        int KillerId;
-        int MpHandle;
+        char KillerId;
+        int MultiHandle;
         int pAnim;
         int field_27C;
-        int field_280;
-        int field_284;
-        int field_288;
+        CVector3 field_280;
     };
+    static_assert(sizeof(Object) == 0x28C, "invalid size");
 
     struct EventObj
     {
-        int unk0;
-        Object Head;
+        int pVtbl;
+        Object _Super;
         int EventType;
         float fDelay;
         int field_298;
@@ -859,7 +930,7 @@ namespace rf
 
     struct ItemObj
     {
-        Object Head;
+        Object _Super;
         ItemObj *pNext;
         ItemObj *pPrev;
         int field_294;
@@ -881,7 +952,7 @@ namespace rf
 
     typedef void EntityClass;
 
-    struct SMovementMode
+    struct MoveModeTbl
     {
         char bAvailable;
         char unk, unk2, unk3;
@@ -910,50 +981,151 @@ namespace rf
         float field_20;
     };
 
-    struct EntityObj
+    struct EntityWeapon_2E8_InnerUnk
     {
-        Object Head;
-        EntityObj *pNext;
-        EntityObj *pPrev;
-        EntityClass *pClass;
-        int ClassId;
-        EntityClass *pClass2;
-        SWeaponSelection WeaponSel;
-        int Ammo[8];
-        char field_2CC[492];
-        int field_4B8;
-        char field_4BC[100];
+        CVector3 field_0;
+        CVector3 field_C;
+        int field_18;
+        int field_1C;
+        float field_20;
+        int field_24;
+        DynamicArray field_28;
+        char field_34;
+        char field_35;
+        __int16 field_36;
+        int field_38;
+        int field_3C;
+        int field_40;
+        int field_44;
+        CMatrix3 field_48;
+        int field_6C;
+        DynamicArray field_70;
+    };
+
+    struct EntityWeapon_2E8
+    {
+        int field_0;
+        int field_4;
+        int field_8[5];
+        EntityWeapon_2E8_InnerUnk field_1C;
+        EntityWeapon_2E8_InnerUnk field_98;
+        int field_114;
+        int field_118;
+        Timer Timer_11C;
+        int field_120;
+        int field_124;
+        int field_128;
+        int field_12C;
+        int hEntityUnk;
+        Timer Timer_134;
+        CVector3 field_138;
+        int field_144;
+        int field_148;
+        CVector3 field_14C;
+        int field_158;
+        int field_15C;
+        int field_160;
+        CVector3 field_164;
+        int field_170;
+        CVector3 field_174;
+    };
+
+    struct EntityWeaponInfo
+    {
+        EntityObj *pEntity;
+        int WeaponClsId;
+        int WeaponClsId2;
+        int ClipAmmo[32];
+        int WeaponsAmmo[64];
+        char field_18C[64];
+        char field_1CC[64];
+        DynamicArray field_20C;
+        Timer FireWaitTimer;
+        Timer field_4BC;
+        Timer ImpactDelayTimer[2];
+        int field_228;
+        Timer Timer_22C;
+        Timer Timer_230;
+        Timer Timer_234;
+        Timer Timer_238;
+        Timer Timer_23C;
+        CVector3 field_240;
+        int field_24C;
+        Timer Timer_250;
+        Timer Timer_254;
+        Timer Timer_258;
+        Timer Timer_25C;
+        int field_260;
+        Timer Timer_264;
+        int field_268;
+        int field_26C;
+        int field_270;
+        Timer UnkWeaponTimer;
+        Timer field_518;
+        int field_51C;
         int field_520;
-        char field_524[164];
-        int field_5C8[80];
+        int field_524;
+        int UnkTime288;
+        int field_28C;
+        int field_290;
+        Timer Timer_294;
+        float fCreateTime;
+        char field_29C;
+        char field_29D;
+        __int16 field_29E;
+        Timer Timer_2A0;
+        Timer Timer_2A4;
+        Timer Timer_2A8;
+        int field_2AC[5];
+        int UnkObjHandle;
+        CVector3 field_2C4;
+        Timer field_2D0;
+        int field_2D4;
+        int field_2D8;
+        Timer field_2DC;
+        Timer field_2E0;
+        int field_2E4;
+        EntityWeapon_2E8 field_2E8;
         SEntityMotion MotionChange;
-        int field_72C[12];
+        Timer field_48C;
+        CVector3 field_490;
+        float fLastDmgTime;
+        int field_4A0;
+        Timer field_4A4;
+        int field_4A8[3];
+        Timer field_4B4;
+        Timer field_4B8;
         int UnkHandle;
-        int field_760[20];
+        int field_4C0;
+        Timer field_4C4;
+        int field_4C8;
+        int field_4CC;
+        Timer field_4D0;
+        Timer field_4D4;
+        Timer field_4D8;
+        Timer field_4DC;
+        Timer field_4E0;
+        Timer field_4E4;
+        Timer field_4E8;
+        CVector3 field_4EC;
+        Timer Timer_4F8;
+        Timer Timer_4FC;
+        CVector3 field_500;
+        int field_50C;
         float LastRotTime;
         float LastMoveTime;
-        int field_7B8;
-        int field_7BC[5];
-        int field_7D0;
-        CVector3 vWeaponPos;
-        CMatrix3 matWeaponRot;
-        int field_804;
-        int field_808;
-        int MoveSnd;
-        int field_810_Flags;
-        int field_814;
-        int UnkTimer818;
-        int LaunchSnd;
-        int field_820;
-        __int16 KillType;
-        __int16 field_826;
-        int field_828[8];
-        CAnimMesh *field_848;
-        int field_84C;
-        int field_850;
-        int field_854;
-        SMovementMode *MovementMode;
-        CMatrix3 *field_85C;
+        float LastFireLevelTime;
+        int field_51C_;
+        float fMovementRadius;
+        float field_524_;
+        int field_528;
+        int field_52C;
+        int Flags;
+    };
+    static_assert(sizeof(EntityWeaponInfo) == 0x534, "invalid size");
+
+    struct EntityCameraInfo
+    {
         int field_860;
         CVector3 vRotYaw;
         CVector3 vRotYawDelta;
@@ -961,79 +1133,124 @@ namespace rf
         CVector3 vRotPitchDelta;
         CVector3 field_894;
         CVector3 field_8A0;
-        int field_8AC[5];
+        int field_8AC;
+        int field_8B0;
+        float CameraShakeDist;
+        float CameraShakeTime;
+        Timer CameraShakeTimer;
+    };
+
+    struct EntityObj
+    {
+        Object _Super;
+        EntityObj *pNext;
+        EntityObj *pPrev;
+        EntityClass *pClass;
+        int ClassId;
+        EntityClass *pClass2;
+        EntityWeaponInfo WeaponInfo;
+        CVector3 vViewPos;
+        CMatrix3 matViewOrient;
+        int UnkAmbientSound;
+        int field_808;
+        int MoveSnd;
+        EntityFlags EntityFlags;
+        EntityPowerups Powerups;
+        Timer UnkTimer818;
+        int LaunchSnd;
+        int field_820;
+        __int16 KillType;
+        __int16 field_826;
+        int field_828;
+        int field_82C;
+        Timer field_830;
+        int field_834[5];
+        CAnimMesh *field_848;
+        CAnimMesh *field_84C;
+        int pNanoShield;
+        int Snd854;
+        MoveModeTbl *MovementMode;
+        CMatrix3 *field_85C;
+        EntityCameraInfo CameraInfo;
         float field_8C0;
         int field_8C4;
         int field_8C8;
-        int field_8CC;
-        int field_8D0;
-        int field_8D4;
-        int field_8D8;
-        int field_8DC;
-        int field_8E0;
-        int field_8E4[96];
-        int field_A64[104];
-        int field_C04;
-        int field_C08[55];
-        int UnkAnimIdxCE4;
-        int field_CE8;
-        int field_CEC;
-        int field_CF0;
-        int UnkAnimIdxCF4;
-        int field_CF8[140];
+        DynamicArray InterfaceProps;
+        DynamicArray UnkAnimMeshArray8D8;
+        int field_8E4[92];
+        int UnkAnims[180];
+        int field_D24[129];
         int field_F28[200];
         int field_1248[6];
         int field_1260;
         int field_1264;
-        int field_1268[67];
-        int UnkTimer1374;
-        int field_1378[3];
+        int field_1268[65];
+        Timer Timer_136C;
+        Timer Timer1370;
+        Timer ShellEjectTimer;
+        int field_1378;
+        Timer field_137C;
+        int field_1380;
         int field_1384;
         int field_1388;
         int field_138C;
         int field_1390;
         float field_1394;
         float field_1398;
-        int field_139C[5];
-        int field_13B0;
-        int field_13B4;
+        Timer field_139C;
+        Timer field_13A0;
+        Timer WeaponDrainTimer;
+        int ReloadAmmo;
+        int ReloadClipAmmo;
+        int ReloadWeaponClsId;
+        float field_13B4;
         CVector3 field_13B8;
-        int field_13C4[7];
+        int field_13C4[2];
+        Timer field_13CC;
+        int field_13D0[2];
+        int field_13D8;
+        int field_13DC;
         CVector3 field_13E0;
         int field_13EC;
         int field_13F0;
         int UnkBoneId13F4;
         void *field_13F8;
-        int field_13FC;
-        int field_1400;
+        Timer Timer13FC;
+        int SpeakerSound;
         int field_1404;
         float fUnkCountDownTime1408;
-        int UnkTimer140C;
-        int field_1410;
-        int SplashInCounter;
-        char field_1418[16];
+        Timer UnkTimer140C;
+        CAnimMesh *field_1410;
+        Timer SplashInCounter;
+        DynamicArray field_1418;
+        int field_1424;
         int field_1428;
         int field_142C;
         CPlayer *pLocalPlayer;
         CVector3 vPitchMin;
         CVector3 vPitchMax;
-        int field_144C[6];
+        int hKillerEntity;
+        int RiotShieldClutterHandle;
+        int field_1454;
+        Timer field_1458;
+        int UnkClutterHandles[2];
         float fTime;
         int field_1468;
         int hUnkEntity;
         int field_1470;
-        int AmbientColor;
+        Color AmbientColor;
         int field_1478;
         int field_147C;
         int field_1480;
         int field_1484;
         int field_1488;
         CAnimMesh *RespawnVfx;
-        int field_1490;
+        Timer field_1490;
     };
+    static_assert(sizeof(EntityObj) == 0x1494, "invalid size");
 
-    typedef EntityObj *(*HandleToEntity_Type)(uint32_t hEntity);
-    constexpr auto HandleToEntity = (HandleToEntity_Type)0x00426FC0;
+    typedef EntityObj *(*EntityGetFromHandle_Type)(uint32_t hEntity);
+    constexpr auto EntityGetFromHandle = (EntityGetFromHandle_Type)0x00426FC0;
 
     /* Weapons */
 
@@ -1265,9 +1482,6 @@ namespace rf
     constexpr auto TdmGetBlueScore = (GetTeamScore_Type)0x00482900;
     constexpr auto CtfGetRedFlagPlayer = (CPlayer*(*)())0x00474E60;
     constexpr auto CtfGetBlueFlagPlayer = (CPlayer*(*)())0x00474E70;
-
-    typedef void(*PacketHandler_Type)(const BYTE *pData, const NwAddr *pAddr);
-    constexpr auto HandleNewPlayerPacket = (PacketHandler_Type)0x0047A580;
 
     typedef const char *(*GetJoinFailedStr_Type)(unsigned Reason);
     constexpr auto GetJoinFailedStr = (GetJoinFailedStr_Type)0x0047BE60;

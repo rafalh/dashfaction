@@ -131,13 +131,6 @@ static void ProcessUnreliableGamePacketsHook(const char *pData, int cbData, cons
 #endif
 }
 
-static void HandleNewPlayerPacketHook(const BYTE *pData, const NwAddr *pAddr)
-{
-    if (*g_pbNetworkGame && !*g_pbLocalNetworkGame && GetForegroundWindow() != *g_phWnd)
-        Beep(750, 300);
-    HandleNewPlayerPacket(pData, pAddr);
-}
-
 extern "C" void SafeStrCpy(char *pDest, const char *pSrc, size_t DestSize)
 {
 #ifdef TEST_BUFFER_OVERFLOW_FIXES
@@ -148,7 +141,7 @@ extern "C" void SafeStrCpy(char *pDest, const char *pSrc, size_t DestSize)
 #endif
 }
 
-NAKED void HandleGameInfoPacket_Security_0047B2D3()
+NAKED void ProcessGameInfoPacket_Security_0047B2D3()
 { // ecx - num, esi - source, ebx - dest
     _asm
     {
@@ -165,7 +158,7 @@ NAKED void HandleGameInfoPacket_Security_0047B2D3()
     }
 }
 
-NAKED void HandleGameInfoPacket_Security_0047B334()
+NAKED void ProcessGameInfoPacket_Security_0047B334()
 { // ecx - num, esi -source, edi - dest
     _asm
     {
@@ -182,7 +175,7 @@ NAKED void HandleGameInfoPacket_Security_0047B334()
     }
 }
 
-NAKED void HandleGameInfoPacket_Security_0047B38E()
+NAKED void ProcessGameInfoPacket_Security_0047B38E()
 { // ecx - num, esi -source, edi - dest
     _asm
     {
@@ -199,7 +192,7 @@ NAKED void HandleGameInfoPacket_Security_0047B38E()
     }
 }
 
-NAKED void HandleJoinReqPacket_Security_0047AD4E()
+NAKED void ProcessJoinReqPacket_Security_0047AD4E()
 { // ecx - num, esi -source, edi - dest
     _asm
     {
@@ -215,7 +208,7 @@ NAKED void HandleJoinReqPacket_Security_0047AD4E()
     }
 }
 
-NAKED void HandleJoinAcceptPacket_Security_0047A8AE()
+NAKED void ProcessJoinAcceptPacket_Security_0047A8AE()
 { // ecx - num, esi -source, edi - dest
     _asm
     {
@@ -231,7 +224,7 @@ NAKED void HandleJoinAcceptPacket_Security_0047A8AE()
     }
 }
 
-NAKED void HandleNewPlayerPacket_Security_0047A5F4()
+NAKED void ProcessNewPlayerPacket_Security_0047A5F4()
 { // ecx - num, esi -source, edi - dest
     _asm
     {
@@ -248,7 +241,7 @@ NAKED void HandleNewPlayerPacket_Security_0047A5F4()
     }
 }
 
-NAKED void HandlePlayersPacket_Security_00481EE6()
+NAKED void ProcessPlayersPacket_Security_00481EE6()
 { // ecx - num, esi -source, edi - dest
     _asm
     {
@@ -265,7 +258,7 @@ NAKED void HandlePlayersPacket_Security_00481EE6()
     }
 }
 
-NAKED void HandleStateInfoReqPacket_Security_00481BEC()
+NAKED void ProcessStateInfoReqPacket_Security_00481BEC()
 { // ecx - num, esi -source, edi - dest
     _asm
     {
@@ -282,7 +275,7 @@ NAKED void HandleStateInfoReqPacket_Security_00481BEC()
     }
 }
 
-NAKED void HandleChatLinePacket_Security_004448B0()
+NAKED void ProcessChatLinePacket_Security_004448B0()
 { // ecx - num, esi -source, edi - dest
     _asm
     {
@@ -299,7 +292,7 @@ NAKED void HandleChatLinePacket_Security_004448B0()
     }
 }
 
-NAKED void HandleNameChangePacket_Security_0046EB24()
+NAKED void ProcessNameChangePacket_Security_0046EB24()
 { // ecx - num, esi -source, edi - dest
     _asm
     {
@@ -315,7 +308,7 @@ NAKED void HandleNameChangePacket_Security_0046EB24()
     }
 }
 
-NAKED void HandleLeaveLimboPacket_Security_0047C1C3()
+NAKED void ProcessLeaveLimboPacket_Security_0047C1C3()
 { // ecx - num, esi -source, edi - dest
     _asm
     {
@@ -331,7 +324,7 @@ NAKED void HandleLeaveLimboPacket_Security_0047C1C3()
     }
 }
 
-NAKED void HandleObjKillPacket_Security_0047EE6E()
+NAKED void ProcessObjKillPacket_Security_0047EE6E()
 { // ecx - num, esi -source, edi - dest
     _asm
     {
@@ -349,7 +342,7 @@ NAKED void HandleObjKillPacket_Security_0047EE6E()
     }
 }
 
-NAKED void HandleEntityCreatePacket_Security_00475474()
+NAKED void ProcessEntityCreatePacket_Security_00475474()
 { // ecx - num, esi -source, edi - dest
     _asm
     {
@@ -366,7 +359,7 @@ NAKED void HandleEntityCreatePacket_Security_00475474()
     }
 }
 
-NAKED void HandleItemCreatePacket_Security_00479FAA()
+NAKED void ProcessItemCreatePacket_Security_00479FAA()
 { // ecx - num, esi -source, edi - dest
     _asm
     {
@@ -383,7 +376,7 @@ NAKED void HandleItemCreatePacket_Security_00479FAA()
     }
 }
 
-NAKED void HandleRconReqPacket_Security_0046C590()
+NAKED void ProcessRconReqPacket_Security_0046C590()
 { // ecx - num, esi -source, edi - dest
     _asm
     {
@@ -400,7 +393,7 @@ NAKED void HandleRconReqPacket_Security_0046C590()
     }
 }
 
-NAKED void HandleRconPacket_Security_0046C751()
+NAKED void ProcessRconPacket_Security_0046C751()
 { // ecx - num, esi -source, edi - dest
     _asm
     {
@@ -451,7 +444,11 @@ void ProcessJoinDenyPacket_New(char *pData, const NwAddr *pAddr)
 void ProcessNewPlayerPacket_New(char *pData, const NwAddr *pAddr)
 {
     if (!*g_pbLocalNetworkGame) // client-side
+    {
+        if (GetForegroundWindow() != *g_phWnd)
+            Beep(750, 300);
         ProcessNewPlayerPacket_Hook.callTrampoline(pData, pAddr);
+    }
 }
 
 void ProcessPlayersPacket_New(char *pData, const NwAddr *pAddr)
@@ -781,7 +778,7 @@ EntityObj *SecureObjUpdatePacket(EntityObj *pEntity, uint8_t Flags, CPlayer *pSr
     if (*g_pbLocalNetworkGame)
     {
         // server-side
-        if (pEntity && pEntity->Head.Handle != pSrcPlayer->hEntity)
+        if (pEntity && pEntity->_Super.Handle != pSrcPlayer->hEntity)
             return nullptr;
         if (Flags & (0x4 | 0x20 | 0x80)) // OUF_WEAPON_TYPE | OUF_HEALTH_ARMOR | OUF_ARMOR_STATE
             return nullptr;
@@ -812,45 +809,42 @@ void NetworkInit()
 
     /* Change default Server List sort to players count */
     WriteMemUInt32(0x00599D20, 4);
-    
-    /* Beep when new player joins */
-    WriteMemPtr(0x0059E158, HandleNewPlayerPacketHook);
 
     /* Buffer Overflow fixes */
     WriteMemUInt8(0x0047B2D3, ASM_LONG_JMP_REL);
-    WriteMemUInt32(0x0047B2D3 + 1, (uintptr_t)HandleGameInfoPacket_Security_0047B2D3 - (0x0047B2D3 + 0x5));
+    WriteMemUInt32(0x0047B2D3 + 1, (uintptr_t)ProcessGameInfoPacket_Security_0047B2D3 - (0x0047B2D3 + 0x5));
     WriteMemUInt8(0x0047B334, ASM_LONG_JMP_REL);
-    WriteMemUInt32(0x0047B334 + 1, (uintptr_t)HandleGameInfoPacket_Security_0047B334 - (0x0047B334 + 0x5));
+    WriteMemUInt32(0x0047B334 + 1, (uintptr_t)ProcessGameInfoPacket_Security_0047B334 - (0x0047B334 + 0x5));
 #ifndef TEST_BUFFER_OVERFLOW_FIXES
     WriteMemUInt8(0x0047B38E, ASM_LONG_JMP_REL);
-    WriteMemUInt32(0x0047B38E + 1, (uintptr_t)HandleGameInfoPacket_Security_0047B38E - (0x0047B38E + 0x5));
+    WriteMemUInt32(0x0047B38E + 1, (uintptr_t)ProcessGameInfoPacket_Security_0047B38E - (0x0047B38E + 0x5));
 #endif
     WriteMemUInt8(0x0047AD4E, ASM_LONG_JMP_REL);
-    WriteMemUInt32(0x0047AD4E + 1, (uintptr_t)HandleJoinReqPacket_Security_0047AD4E - (0x0047AD4E + 0x5));
+    WriteMemUInt32(0x0047AD4E + 1, (uintptr_t)ProcessJoinReqPacket_Security_0047AD4E - (0x0047AD4E + 0x5));
     WriteMemUInt8(0x0047A8AE, ASM_LONG_JMP_REL);
-    WriteMemUInt32(0x0047A8AE + 1, (uintptr_t)HandleJoinAcceptPacket_Security_0047A8AE - (0x0047A8AE + 0x5));
+    WriteMemUInt32(0x0047A8AE + 1, (uintptr_t)ProcessJoinAcceptPacket_Security_0047A8AE - (0x0047A8AE + 0x5));
     WriteMemUInt8(0x0047A5F4, ASM_LONG_JMP_REL);
-    WriteMemUInt32(0x0047A5F4 + 1, (uintptr_t)HandleNewPlayerPacket_Security_0047A5F4 - (0x0047A5F4 + 0x5));
+    WriteMemUInt32(0x0047A5F4 + 1, (uintptr_t)ProcessNewPlayerPacket_Security_0047A5F4 - (0x0047A5F4 + 0x5));
     WriteMemUInt8(0x00481EE6, ASM_LONG_JMP_REL);
-    WriteMemUInt32(0x00481EE6 + 1, (uintptr_t)HandlePlayersPacket_Security_00481EE6 - (0x00481EE6 + 0x5));
+    WriteMemUInt32(0x00481EE6 + 1, (uintptr_t)ProcessPlayersPacket_Security_00481EE6 - (0x00481EE6 + 0x5));
     WriteMemUInt8(0x00481BEC, ASM_LONG_JMP_REL);
-    WriteMemUInt32(0x00481BEC + 1, (uintptr_t)HandleStateInfoReqPacket_Security_00481BEC - (0x00481BEC + 0x5));
+    WriteMemUInt32(0x00481BEC + 1, (uintptr_t)ProcessStateInfoReqPacket_Security_00481BEC - (0x00481BEC + 0x5));
     WriteMemUInt8(0x004448B0, ASM_LONG_JMP_REL);
-    WriteMemUInt32(0x004448B0 + 1, (uintptr_t)HandleChatLinePacket_Security_004448B0 - (0x004448B0 + 0x5));
+    WriteMemUInt32(0x004448B0 + 1, (uintptr_t)ProcessChatLinePacket_Security_004448B0 - (0x004448B0 + 0x5));
     WriteMemUInt8(0x0046EB24, ASM_LONG_JMP_REL);
-    WriteMemUInt32(0x0046EB24 + 1, (uintptr_t)HandleNameChangePacket_Security_0046EB24 - (0x0046EB24 + 0x5));
+    WriteMemUInt32(0x0046EB24 + 1, (uintptr_t)ProcessNameChangePacket_Security_0046EB24 - (0x0046EB24 + 0x5));
     WriteMemUInt8(0x0047C1C3, ASM_LONG_JMP_REL);
-    WriteMemUInt32(0x0047C1C3 + 1, (uintptr_t)HandleLeaveLimboPacket_Security_0047C1C3 - (0x0047C1C3 + 0x5));
+    WriteMemUInt32(0x0047C1C3 + 1, (uintptr_t)ProcessLeaveLimboPacket_Security_0047C1C3 - (0x0047C1C3 + 0x5));
     WriteMemUInt8(0x0047EE6E, ASM_LONG_JMP_REL);
-    WriteMemUInt32(0x0047EE6E + 1, (uintptr_t)HandleObjKillPacket_Security_0047EE6E - (0x0047EE6E + 0x5));
+    WriteMemUInt32(0x0047EE6E + 1, (uintptr_t)ProcessObjKillPacket_Security_0047EE6E - (0x0047EE6E + 0x5));
     WriteMemUInt8(0x00475474, ASM_LONG_JMP_REL);
-    WriteMemUInt32(0x00475474 + 1, (uintptr_t)HandleEntityCreatePacket_Security_00475474 - (0x00475474 + 0x5));
+    WriteMemUInt32(0x00475474 + 1, (uintptr_t)ProcessEntityCreatePacket_Security_00475474 - (0x00475474 + 0x5));
     WriteMemUInt8(0x00479FAA, ASM_LONG_JMP_REL);
-    WriteMemUInt32(0x00479FAA + 1, (uintptr_t)HandleItemCreatePacket_Security_00479FAA - (0x00479FAA + 0x5));
+    WriteMemUInt32(0x00479FAA + 1, (uintptr_t)ProcessItemCreatePacket_Security_00479FAA - (0x00479FAA + 0x5));
     WriteMemUInt8(0x0046C590, ASM_LONG_JMP_REL);
-    WriteMemUInt32(0x0046C590 + 1, (uintptr_t)HandleRconReqPacket_Security_0046C590 - (0x0046C590 + 0x5));
+    WriteMemUInt32(0x0046C590 + 1, (uintptr_t)ProcessRconReqPacket_Security_0046C590 - (0x0046C590 + 0x5));
     WriteMemUInt8(0x0046C751, ASM_LONG_JMP_REL);
-    WriteMemUInt32(0x0046C751 + 1, (uintptr_t)HandleRconPacket_Security_0046C751 - (0x0046C751 + 0x5));
+    WriteMemUInt32(0x0046C751 + 1, (uintptr_t)ProcessRconPacket_Security_0046C751 - (0x0046C751 + 0x5));
 
     // Hook all packet handlers
     ProcessGameInfoReqPacket_Hook.hook(ProcessGameInfoReqPacket_New);

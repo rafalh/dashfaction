@@ -65,9 +65,9 @@ void NAKED ftol_Timer()
 void STDCALL EntityWaterDecelerateFix(rf::EntityObj *pEntity)
 {
     float fVelFactor = 1.0f - (*rf::g_pfFramerate * 4.5f);
-    pEntity->Head.vVel.x *= fVelFactor;
-    pEntity->Head.vVel.y *= fVelFactor;
-    pEntity->Head.vVel.z *= fVelFactor;
+    pEntity->_Super.PhysInfo.vVel.x *= fVelFactor;
+    pEntity->_Super.PhysInfo.vVel.y *= fVelFactor;
+    pEntity->_Super.PhysInfo.vVel.z *= fVelFactor;
 }
 
 void WaterAnimateWaves_UpdatePos(rf::CVector3 *pResult)

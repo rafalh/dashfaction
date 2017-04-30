@@ -196,7 +196,7 @@ void GrInitBuffers_AfterReset_New()
     (*g_ppGrDevice)->SetRenderState(D3DRS_CLIPPING, 0);
 
     if (*g_ppLocalPlayer)
-        GrSetTextureMipFilter((*g_ppLocalPlayer)->Settings.FilteringLevel == 0);
+        GrSetTextureMipFilter((*g_ppLocalPlayer)->Config.FilteringLevel == 0);
 
     if (g_pGrDeviceCaps->MaxAnisotropy > 0 && g_gameConfig.anisotropicFiltering)
         SetupMaxAnisotropy();

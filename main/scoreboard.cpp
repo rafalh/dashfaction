@@ -223,7 +223,7 @@ void DrawScoreboardInternal_New(bool bDraw)
         static int RedBm = BmLoad("DF_red.tga", -1, 1);
         static int HudMicroFlagRedBm = BmLoad("hud_microflag_red.tga", -1, 1);
         static int HudMicroFlagBlueBm = BmLoad("hud_microflag_blue.tga", -1, 1);
-        EntityObj *pEntity = HandleToEntity(pPlayer->hEntity);
+        EntityObj *pEntity = EntityGetFromHandle(pPlayer->hEntity);
         int StatusBm = pEntity ? GreenBm : RedBm;
         if (pPlayer == pRedFlagPlayer)
             StatusBm = HudMicroFlagRedBm;
@@ -263,7 +263,7 @@ void HudRender_00437BC0()
     if (!*g_pbNetworkGame || !*g_ppLocalPlayer)
         return;
 
-    bool bShowScoreboard = (IsEntityCtrlActive(&(*g_ppLocalPlayer)->Settings.Controls, GC_MP_STATS, 0) ||
+    bool bShowScoreboard = (IsEntityCtrlActive(&(*g_ppLocalPlayer)->Config.Controls, GC_MP_STATS, 0) ||
         (!SpectateModeIsActive() && (IsPlayerEntityInvalid(*g_ppLocalPlayer) || IsPlayerDying(*g_ppLocalPlayer))) ||
         GetCurrentMenuId() == MENU_MP_LIMBO);
 

@@ -147,9 +147,9 @@ static void InputModeCmdHandler(void)
 
 static int CanPlayerFireHook(CPlayer *pPlayer)
 {
-    if (!(pPlayer->FireFlags & 0x10))
+    if (!(pPlayer->Flags & 0x10))
         return 0;
-    if (*g_pbNetworkGame && (pPlayer->pCamera->Type == rf::PlayerCamera::CAM_FREE || pPlayer->pCamera->pPlayer != pPlayer))
+    if (*g_pbNetworkGame && (pPlayer->pCamera->Type == rf::CAM_FREELOOK || pPlayer->pCamera->pPlayer != pPlayer))
         return 0;
     return 1;
 }
@@ -166,9 +166,9 @@ static void MouseSensitivityCmdHandler(void)
         {
             float fValue = *g_pfDcArg;
             fValue = std::min(std::max(fValue, 0.0f), 1.0f);
-            (*g_ppLocalPlayer)->Settings.Controls.fMouseSensitivity = fValue;
+            (*g_ppLocalPlayer)->Config.Controls.fMouseSensitivity = fValue;
         }
-        DcPrintf("Mouse sensitivity: %.1f", (*g_ppLocalPlayer)->Settings.Controls.fMouseSensitivity);
+        DcPrintf("Mouse sensitivity: %.1f", (*g_ppLocalPlayer)->Config.Controls.fMouseSensitivity);
     }
 
     if (*g_pbDcHelp)

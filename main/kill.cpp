@@ -34,7 +34,7 @@ void OnPlayerKill(CPlayer *pKilled, CPlayer *pKiller)
     unsigned ColorId;
     EntityObj *pKillerEntity;
     
-    pKillerEntity = pKiller ? HandleToEntity(pKiller->hEntity) : NULL;
+    pKillerEntity = pKiller ? EntityGetFromHandle(pKiller->hEntity) : NULL;
     
     if (!pKiller)
     {
@@ -56,7 +56,7 @@ void OnPlayerKill(CPlayer *pKilled, CPlayer *pKiller)
         {
             unsigned cchWeaponName = 0;
             
-            if (pKillerEntity && pKillerEntity->WeaponSel.WeaponClsId == *g_pRiotStickClsId)
+            if (pKillerEntity && pKillerEntity->WeaponInfo.WeaponClsId == *g_pRiotStickClsId)
             {
                 pszMuiMsg = g_ppszStringsTable[STR_YOU_JUST_GOT_BEAT_DOWN_BY] ? g_ppszStringsTable[STR_YOU_JUST_GOT_BEAT_DOWN_BY] : "";
                 strMsg.psz = StringAlloc(strlen(pszMuiMsg) + pKiller->strName.cch + 2);
@@ -66,9 +66,9 @@ void OnPlayerKill(CPlayer *pKilled, CPlayer *pKiller)
             {
                 pszMuiMsg = g_ppszStringsTable[STR_YOU_WERE_KILLED_BY] ? g_ppszStringsTable[STR_YOU_WERE_KILLED_BY] : "";
                 
-                if (pKillerEntity && pKillerEntity->WeaponSel.WeaponClsId >= 0 && pKillerEntity->WeaponSel.WeaponClsId < 64)
+                if (pKillerEntity && pKillerEntity->WeaponInfo.WeaponClsId >= 0 && pKillerEntity->WeaponInfo.WeaponClsId < 64)
                 {
-                    pstrWeaponName = &g_pWeaponClasses[pKillerEntity->WeaponSel.WeaponClsId].strDisplayName;
+                    pstrWeaponName = &g_pWeaponClasses[pKillerEntity->WeaponInfo.WeaponClsId].strDisplayName;
                     if (pstrWeaponName->psz && pstrWeaponName->cch)
                     {
                         pszWeaponName = pstrWeaponName->psz;
@@ -104,7 +104,7 @@ void OnPlayerKill(CPlayer *pKilled, CPlayer *pKiller)
         }
         else
         {
-            if (pKillerEntity && pKillerEntity->WeaponSel.WeaponClsId == *g_pRiotStickClsId)
+            if (pKillerEntity && pKillerEntity->WeaponInfo.WeaponClsId == *g_pRiotStickClsId)
                 pszMuiMsg = g_ppszStringsTable[STR_GOT_BEAT_DOWN_BY] ? g_ppszStringsTable[STR_GOT_BEAT_DOWN_BY] : "";
             else
                 pszMuiMsg = g_ppszStringsTable[STR_WAS_KILLED_BY] ? g_ppszStringsTable[STR_WAS_KILLED_BY] : "";
