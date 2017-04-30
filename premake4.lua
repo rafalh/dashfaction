@@ -29,7 +29,10 @@
 	
 	configuration "vs*"
 		if toolset then toolset "v140_xp" end
-		buildoptions { "/Zc:threadSafeInit-" }
+		buildoptions {
+			"/Zc:threadSafeInit-",
+			"/arch:IA32",
+		}
 	
 	include "vendor"
 	include "launcher-old"
