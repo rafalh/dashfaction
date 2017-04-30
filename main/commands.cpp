@@ -13,7 +13,8 @@
 
 using namespace rf;
 
-constexpr int CMD_LIMIT = 128;
+// Note: limit should fit in int8_t
+constexpr int CMD_LIMIT = 127;
 
 static DcCommand *g_CommandsBuffer[CMD_LIMIT];
 
@@ -308,12 +309,13 @@ void CommandsInit(void)
     WriteMemUInt8(0x004312E0, ASM_NOP, 2);
     WriteMemUInt8(0x00431340, ASM_NOP, 2);
     WriteMemUInt8(0x004A68D0, ASM_LONG_JMP_REL);
-    WriteMemUInt32(0x004A68D1, (uintptr_t)CanPlayerFireHook - (0x004A68D0 + 0x5));
+    WriteMemUInt32(0x004A68D0 + 1, (uintptr_t)CanPlayerFireHook - (0x004A68D0 + 0x5));
 #endif // if CAMERA_1_3_COMMANDS
 
     // Change limit of commands
     ASSERT(*g_pDcNumCommands == 0);
     WriteMemPtr(0x005099AC + 1, g_CommandsBuffer);
+    WriteMemUInt8(0x00509A78 + 2, CMD_LIMIT);
     WriteMemPtr(0x00509A8A + 1, g_CommandsBuffer);
     WriteMemPtr(0x00509AB0 + 3, g_CommandsBuffer);
     WriteMemPtr(0x00509AE1 + 3, g_CommandsBuffer);
@@ -334,6 +336,26 @@ void CommandRegister(DcCommand *pCmd)
         g_CommandsBuffer[(*g_pDcNumCommands)++] = pCmd;
     else
         ASSERT(false);
+
+    // Register some unused builtin commands
+    DC_REGISTER_CMD(kill_limit, "Sets kill limit", DcfKillLimit);
+    DC_REGISTER_CMD(time_limit, "Sets time limit", DcfTimeLimit);
+    DC_REGISTER_CMD(geomod_limit, "Sets geomod limit", DcfGeomodLimit);
+    DC_REGISTER_CMD(capture_limit, "Sets capture limit", DcfCaptureLimit);
+
+    DC_REGISTER_CMD(sound, "Toggle sound", DcfSound);
+    DC_REGISTER_CMD(difficulty, "Set game difficulty", DcfDifficulty);
+    //DC_REGISTER_CMD(ms, "Set mouse sensitivity", DcfMouseSensitivity);
+    DC_REGISTER_CMD(level_info, "Show level info", DcfLevelInfo);
+    DC_REGISTER_CMD(verify_level, "Verify level", DcfVerifyLevel);
+    DC_REGISTER_CMD(player_names, "Toggle player names on HUD", DcfPlayerNames);
+    DC_REGISTER_CMD(clients_count, "Show number of connected clients", DcfClientsCount);
+    DC_REGISTER_CMD(kick_all, "Kick all clients", DcfKickAll);
+    DC_REGISTER_CMD(timedemo, "Start timedemo", DcfTimedemo);
+    DC_REGISTER_CMD(frameratetest, "Start frame rate test", DcfFramerateTest);
+    DC_REGISTER_CMD(system_info, "Show system information", DcfSystemInfo);
+    DC_REGISTER_CMD(trilinear_filtering, "Toggle trilinear filtering", DcfTrilinearFiltering);
+    DC_REGISTER_CMD(detail_textures, "Toggle detail textures", DcfDetailTextures);
 }
 
 void CommandsAfterGameInit()

@@ -127,6 +127,15 @@ namespace rf
     constexpr auto DcAutoCompleteInput = (void(*)())0x0050A620;
     constexpr auto g_pcchDcCmdLineLen = (uint32_t*)0x0177568C;
 
+    typedef void(*DcCmdHandler)(void);
+    constexpr auto DcCommand__Init = (void(__thiscall *)(rf::DcCommand *This, const char *pszCmd, const char *pszDescr, DcCmdHandler pfnHandler))0x00509A70;
+
+#define DC_REGISTER_CMD(name, help, handler) \
+    do { \
+        static rf::DcCommand Dc_##name; \
+        DcCommand__Init(&Dc_##name, #name, help, handler); \
+    } while (false)
+
     //constexpr auto g_ppDcCommands = (DcCommand**)0x01775530;
     constexpr auto g_pDcNumCommands = (uint32_t*)0x0177567C;
 
@@ -138,6 +147,29 @@ namespace rf
     constexpr auto g_piDcArg = (int*)0x01775220;
     constexpr auto g_pfDcArg = (float*)0x01754628;
     constexpr auto g_szDcCmdLine = (char*)0x01775330;
+
+    /* Debug Console Commands */
+
+    // Server configuration commands
+    constexpr auto DcfKillLimit = (DcCmdHandler)0x0046CBC0;
+    constexpr auto DcfTimeLimit = (DcCmdHandler)0x0046CC10;
+    constexpr auto DcfGeomodLimit = (DcCmdHandler)0x0046CC70;
+    constexpr auto DcfCaptureLimit = (DcCmdHandler)0x0046CCC0;
+
+    // Misc commands
+    constexpr auto DcfSound = (DcCmdHandler)0x00434590;
+    constexpr auto DcfDifficulty = (DcCmdHandler)0x00434EB0;
+    constexpr auto DcfMouseSensitivity = (DcCmdHandler)0x0043CE90;
+    constexpr auto DcfLevelInfo = (DcCmdHandler)0x0045C210;
+    constexpr auto DcfVerifyLevel = (DcCmdHandler)0x0045E1F0;
+    constexpr auto DcfPlayerNames = (DcCmdHandler)0x0046CB80;
+    constexpr auto DcfClientsCount = (DcCmdHandler)0x0046CD10;
+    constexpr auto DcfKickAll = (DcCmdHandler)0x0047B9E0;
+    constexpr auto DcfTimedemo = (DcCmdHandler)0x004CC1B0;
+    constexpr auto DcfFramerateTest = (DcCmdHandler)0x004CC360;
+    constexpr auto DcfSystemInfo = (DcCmdHandler)0x00525A60;
+    constexpr auto DcfTrilinearFiltering = (DcCmdHandler)0x0054F050;
+    constexpr auto DcfDetailTextures = (DcCmdHandler)0x0054F0B0;
 
     /* Graphics */
 
@@ -1000,11 +1032,191 @@ namespace rf
 
     /* Weapons */
 
+    struct SWeaponStateAction
+    {
+        CString strName;
+        CString strAnim;
+        int iAnim;
+        int SoundId;
+        int pSound;
+    };
+
     struct WeaponClass
     {
         CString strName;
         CString strDisplayName;
-        BYTE Rest[0x550 - 2 * sizeof(CString)];
+        CString strV3dFilename;
+        int dwV3dType;
+        CString strEmbeddedV3dFilename;
+        int AmmoType;
+        CString str3rdPersonV3d;
+        int field_30;
+        int field_34;
+        int field_38;
+        int dw3rdPersonMuzzleFlashGlare;
+        CString str1stPersonMesh;
+        int *pMesh;
+        CVector3 v1stPersonOffset;
+        CVector3 v1stPersonOffsetSS;
+        int p1stPersonMuzzleFlashBitmap;
+        float f1stPersonMuzzleFlashRadius;
+        int p1stPersonAltMuzzleFlashBitmap;
+        float f1stPersonAltMuzzleFlashRadius;
+        float f1stPersonFov;
+        float g_fSplitscreenFov;
+        int cProjectiles;
+        int ClipSizeSP;
+        int ClipSizeMP;
+        int ClipSize;
+        float fClipReloadTime;
+        float fClipDrainTime;
+        int Bitmap;
+        int TrailEmitter;
+        float fHeadRadius;
+        float fTailRadius;
+        float fHeadLen;
+        int IsSecondary;
+        float fCollisionRadius;
+        int fLifetime;
+        float fLifetimeSP;
+        float fLifetimeMulti;
+        float fMass;
+        float fVelocity;
+        float fVelocityMulti;
+        float fVelocitySP;
+        int field_CC;
+        float fFireWait;
+        float fAltFireWait;
+        float fSpreadDegreesSP;
+        float fSpreadDegreesMulti;
+        int fSpreadDegrees;
+        float fAltSpreadDegreesSP;
+        float fAltSpreadDegreesMulti;
+        int fAltSpreadDegrees;
+        float fAiSpreadDegreesSP;
+        float fAiSpreadDegreesMulti;
+        int fAiSpreadDegrees;
+        float fAiAltSpreadDegreesSP;
+        float fAiAltSpreadDegreesMulti;
+        int fAiAltSpreadDegrees;
+        float fDamage;
+        float fDamageMulti;
+        float fAltDamage;
+        float fAltDamageMulti;
+        float fAIDmgScaleSP;
+        float fAIDmgScaleMP;
+        int fAIDmgScale;
+        int field_124;
+        int field_128;
+        int field_12C;
+        float fTurnTime;
+        float fViewCone;
+        float fScanningRange;
+        float fWakeupTime;
+        float fDrillTime;
+        float fDrillRange;
+        float fDrillCharge;
+        float fCraterRadius;
+        float ImpactDelay[2];
+        float AltImpactDelay[2];
+        int Launch;
+        int AltLaunch;
+        int SilentLaunch;
+        int UnderwaterLaunch;
+        int LaunchFail;
+        int FlySound;
+        int MaterialImpactSound[30];
+        int NearMissSnd;
+        int NearMissUnderwaterSnd;
+        int GeomodSound;
+        int StartSound;
+        float fStartDelay;
+        int StopSound;
+        int fDamageRadius;
+        float fDamageRadiusSP;
+        float fDamageRadiusMulti;
+        int Glow;
+        int field_218;
+        int Glow2;
+        int field_220;
+        int field_224;
+        int field_228;
+        int MuzzleFlashLight;
+        int field_230;
+        int MuzzleFlashLight2;
+        int field_238;
+        int field_23C;
+        int field_240;
+        int HudIcon;
+        int HudReticleTexture;
+        int HudZoomedReticleTexture;
+        int HudLockedReticleTexture;
+        int ZoomSound;
+        int cMaxAmmoSP;
+        int cMaxAmmoMP;
+        int cMaxAmmo;
+        int Flags;
+        int Flags2;
+        int field_26C;
+        int field_270;
+        int TracerFrequency;
+        int field_278;
+        float fPiercingPower;
+        float RicochetAngle;
+        int RicochetBitmap;
+        CVector3 vRicochetSize;
+        float fThrustLifetime;
+        int cStates;
+        int cActions;
+        SWeaponStateAction States[3];
+        SWeaponStateAction Actions[7];
+        int field_3B8[35];
+        int BurstCount;
+        float fBurstDelay;
+        int BurstLaunchSound;
+        int ImpactVclipsCount;
+        int ImpactVclips[3];
+        CString ImpactVclipNames[3];
+        float ImpactVclipsRadiusList[3];
+        int DecalTexture;
+        CVector3 vDecalSize;
+        int GlassDecalTexture;
+        CVector3 vGlassDecalSize;
+        int field_4A4_always1neg;
+        CVector3 vShellsEjectedBaseDir;
+        float fShellEjectVelocity;
+        CString strShellsEjectedV3d;
+        int ShellsEjectedCustomSoundSet;
+        float fPrimaryPauseTimeBeforeEject;
+        int field_4C8;
+        CString strClipsEjectedV3d;
+        float fClipsEjectedDropPauseTime;
+        int ClipsEjectedCustomSoundSet;
+        float fReloadZeroDrain;
+        float fCameraShakeDist;
+        float fCameraShakeTime;
+        CString strSilencerV3d;
+        int field_4F0_always0;
+        int field_4F4_always1neg;
+        CString strSparkVfx;
+        int field_500_always0;
+        int field_504_always1neg;
+        int field_508;
+        float fAIAttackRange1;
+        float fAIAttackRange2;
+        int field_514;
+        int field_518_always1neg;
+        int field_51C_always1neg;
+        int WeaponType;
+        CString strWeaponIcon;
+        int DamageType;
+        int CyclePos;
+        int PrefPos;
+        float fFineAimRegSize;
+        float fFineAimRegSizeSS;
+        CString strTracerEffect;
+        int field_548_always0;
+        float fMultiBBoxSizeFactor;
     };
 
     constexpr auto g_pWeaponClasses = (WeaponClass*)0x0085CD08;
