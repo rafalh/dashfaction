@@ -9,6 +9,7 @@ Version 1.1.1 (not yet released):
 - fixed cursor being not visible in menu when changing level
 - fixed keyboard layout for QWERTZ and AZERTY keyboards (automatic detection)
 - fixed spectated player entity being rendered (visible when player looks down)
+- hide client IP addresses in server packets
 
 Version 1.1.0 (released 27-02-2017):
 - improved loading of 32 bit textures (improves quality of lightmaps and shadows)

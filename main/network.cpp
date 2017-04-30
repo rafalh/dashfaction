@@ -917,4 +917,12 @@ void NetworkInit()
 
     // Client-side green team fix
     AsmWritter(0x0046CAD7, 0x0046CADA).cmpRegImm8(AsmReg::EAX, (int8_t)0xFF);
+
+    // Hide IP addresses in Players packet
+    AsmWritter(0x00481D31, 0x00481D33).xor(AsmReg::EAX, AsmReg::EAX);
+    AsmWritter(0x00481D40, 0x00481D44).xor(AsmReg::EDX, AsmReg::EDX);
+    // Hide IP addresses in New Player packet
+    AsmWritter(0x0047A4A0, 0x0047A4A2). xor (AsmReg::EDX, AsmReg::EDX);
+    AsmWritter(0x0047A4A6, 0x0047A4AA). xor (AsmReg::ECX, AsmReg::ECX);
+    
 }

@@ -182,7 +182,21 @@ public:
         return *this;
     }
 
-    
+    AsmWritter &xor(AsmReg dstReg, AsmReg srcReg)
+    {
+        WriteMemUInt8(m_addr++, 0x33);
+        if (dstReg == AsmReg::EAX && srcReg == AsmReg::EAX)
+            WriteMemUInt8(m_addr++, 0xC0);
+        else if (dstReg == AsmReg::EBX && srcReg == AsmReg::EBX)
+            WriteMemUInt8(m_addr++, 0xD8);
+        else if (dstReg == AsmReg::ECX && srcReg == AsmReg::ECX)
+            WriteMemUInt8(m_addr++, 0xC9);
+        else if (dstReg == AsmReg::EDX && srcReg == AsmReg::EDX)
+            WriteMemUInt8(m_addr++, 0xD2);
+        else
+            assert(false);
+        return *this;
+    }
 
 private:
     unsigned m_addr, m_endAddr;
