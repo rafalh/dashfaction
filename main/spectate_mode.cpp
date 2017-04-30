@@ -35,17 +35,7 @@ static void SetCameraTarget(CPlayer *pPlayer)
     g_OldTargetCamera = pPlayer->pCamera;
     pPlayer->pCamera = pCamera; // fix crash 0040D744
 
-    EntityObj *pEntity = HandleToEntity(pPlayer->hEntity);
-    if (pEntity)
-    {
-        EntityObj *pCamEntity = pCamera->pCameraEntity;
-        pCamEntity->Head.hParent = pPlayer->hEntity;
-        pCamEntity->Head.vPos = pEntity->vWeaponPos;
-        pCamEntity->Head.matRot = pEntity->Head.matRot;
-        pCamEntity->matWeaponRot = pEntity->matWeaponRot;
-        pCamEntity->Head.field_0 = pEntity->Head.field_0;
-        pCamEntity->Head.field_4 = pEntity->Head.vPos;
-    }
+    CameraSetFirstPerson(pCamera);
 }
 
 void SpectateModeSetTargetPlayer(CPlayer *pPlayer)

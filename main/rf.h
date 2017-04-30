@@ -433,6 +433,18 @@ namespace rf
     constexpr auto NwGetPlayerFromAddr = (CPlayer *(*)(const NwAddr *pAddr))0x00484850;
     constexpr auto NwCompareAddr = (int(*)(const NwAddr *pAddr1, const NwAddr *pAddr2, char bCheckPort))0x0052A930;
 
+    /* Camera */
+
+    struct PlayerCamera
+    {
+        EntityObj *pCameraEntity;
+        CPlayer *pPlayer;
+        enum { CAM_1ST_PERSON, CAM_3RD_PERSON, CAM_FREE } Type;
+    };
+
+    constexpr auto CameraSetFirstPerson = (void(*)(PlayerCamera *pCamera))0x0040DDF0;
+    constexpr auto CameraSetFreelook = (void(*)(PlayerCamera *pCamera))0x0040DCF0;
+
     /* Player */
 
     struct SPlayerStats
@@ -528,13 +540,6 @@ namespace rf
         float field_F58;
         int MpCharacter;
         char szName[12];
-    };
-
-    struct PlayerCamera
-    {
-        EntityObj *pCameraEntity;
-        CPlayer *pPlayer;
-        enum { CAM_1ST_PERSON, CAM_3RD_PERSON, CAM_FREE } Type;
     };
 
     struct CAnimMesh;
