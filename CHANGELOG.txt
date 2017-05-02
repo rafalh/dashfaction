@@ -2,16 +2,17 @@ DashFaction Changelog
 =====================
 
 Version 1.2.0 (not yet released):
-- fixed memory leak
-- fixed improper rendering after alt-tab in full screen (especially visible as glass rendered only from one side)
+- added running and jumping animations in Spectate Mode
+- fixed Spectate Mode target entity being rendered (visible when player looks down)
+- fixed keyboard layout for QWERTZ and AZERTY keyboards (automatic detection)
 - added Game Type name to Scoreboard
 - added fast show/hide animations to Scoreboard
+- added 'findmap' command
+- fixed improper rendering after alt-tab in full screen (especially visible as glass rendered only from one side)
 - fixed cursor being not visible in menu when changing level
-- fixed keyboard layout for QWERTZ and AZERTY keyboards (automatic detection)
-- fixed spectated player entity being rendered (visible when player looks down)
 - hidden client IP addresses in server packets
-- added running and jumping animations in Spectate Mode
 - fixed compatibility with old CPUs without SSE support
+- fixed memory leak
 
 Version 1.1.0 (released 27-02-2017):
 - improved loading of 32 bit textures (improves quality of lightmaps and shadows)

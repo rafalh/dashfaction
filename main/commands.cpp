@@ -9,6 +9,7 @@
 #include "spectate_mode.h"
 #include "main.h"
 #include "misc.h"
+#include "packfile.h"
 #include "hooks/MemChange.h"
 
 using namespace rf;
@@ -245,6 +246,25 @@ static void LevelSoundsCmdHandler(void)
     }
 }
 
+static void DcfFindMap()
+{
+    if (*g_pbDcRun)
+    {
+        rf::DcGetArg(DC_ARG_STR, 0);
+
+        if (*g_pDcArgType & DC_ARG_STR)
+        {
+            PackfileFindMatchingFiles(g_pszDcArg, ".rfl");
+        }
+    }
+
+    if (*g_pbDcHelp)
+    {
+        DcPrint(g_ppszStringsTable[STR_USAGE], NULL);
+        DcPrint("     <query>", NULL);
+    }
+}
+
 DcCommand g_Commands[] = {
 #if SPLITSCREEN_ENABLE
     {"splitscreen", "Starts split screen mode", SplitScreenCmdHandler},
@@ -357,6 +377,11 @@ void CommandRegister(DcCommand *pCmd)
     DC_REGISTER_CMD(system_info, "Show system information", DcfSystemInfo);
     DC_REGISTER_CMD(trilinear_filtering, "Toggle trilinear filtering", DcfTrilinearFiltering);
     DC_REGISTER_CMD(detail_textures, "Toggle detail textures", DcfDetailTextures);
+
+    // New commands
+    DC_REGISTER_CMD(findmap, "Find map by filename fragment", DcfFindMap);
+
+    
 }
 
 void CommandsAfterGameInit()
