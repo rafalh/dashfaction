@@ -163,13 +163,13 @@ static void MouseSensitivityCmdHandler(void)
     {
         rf::DcGetArg(DC_ARG_NONE | DC_ARG_FLOAT, 0);
 
-        if ((*g_pDcArgType & DC_ARG_FLOAT))
+        if (*g_pDcArgType & DC_ARG_FLOAT)
         {
             float fValue = *g_pfDcArg;
-            fValue = std::min(std::max(fValue, 0.0f), 1.0f);
+            fValue = clamp(fValue, 0.0f, 1.0f);
             (*g_ppLocalPlayer)->Config.Controls.fMouseSensitivity = fValue;
         }
-        DcPrintf("Mouse sensitivity: %.1f", (*g_ppLocalPlayer)->Config.Controls.fMouseSensitivity);
+        DcPrintf("Mouse sensitivity: %.2f", (*g_ppLocalPlayer)->Config.Controls.fMouseSensitivity);
     }
 
     if (*g_pbDcHelp)
