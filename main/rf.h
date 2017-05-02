@@ -1508,6 +1508,7 @@ namespace rf
     constexpr auto MouseGetPos = (int(*)(int *pX, int *pY, int *pZ))0x0051E450;
     constexpr auto MouseWasButtonPressed = (int(*)(int BtnIdx))0x0051E5D0;
     constexpr auto KeyGetFromFifo = (int(*)())0x0051F000;
+    constexpr auto MouseUpdateDirectInput = (void(*)())0x0051DEB0;
 
     /* Menu */
 

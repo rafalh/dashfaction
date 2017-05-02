@@ -15,6 +15,7 @@ constexpr int EGG_ANIM_IDLE_TIME = 3000;
 
 auto GetVersionStr_Hook = makeFunHook(GetVersionStr);
 auto MenuUpdate_Hook = makeFunHook(MenuUpdate);
+auto MouseUpdateDirectInput_Hook = makeFunHook(MouseUpdateDirectInput);
 
 int g_VersionLabelX, g_VersionLabelWidth, g_VersionLabelHeight;
 static const char g_szVersionInMenu[] = PRODUCT_NAME_VERSION;
@@ -179,6 +180,16 @@ void SetLevelSoundVolumeScale(float fVolScale)
         WriteMemFloat(Offsets[i] + 1, fVolScale);
 }
 
+void MouseUpdateDirectInput_New()
+{
+    MouseUpdateDirectInput_Hook.callTrampoline();
+
+    // center cursor
+    POINT pt = { g_pGrScreen->MaxWidth / 2, g_pGrScreen->MaxHeight / 2 };
+    ClientToScreen(*g_phWnd, &pt);
+    SetCursorPos(pt.x, pt.y);
+}
+
 void MiscInit()
 {
     // Console init string
@@ -273,4 +284,7 @@ void MiscInit()
 
     // Level sounds
     SetLevelSoundVolumeScale(g_gameConfig.levelSoundVolume);
+
+    // hook MouseUpdateDirectInput
+    MouseUpdateDirectInput_Hook.hook(MouseUpdateDirectInput_New);
 }
