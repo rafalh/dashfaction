@@ -6,10 +6,17 @@
 #define CRASHDUMP_SAVE_LOG 1
 #define CRASHDUMP_USE_HEURISTIC_STACK_TRACE 1
 #define CRASHDUMP_HEURISTIC_MAX_FUN_SIZE 4096
+#define CRASHDUMP_MSG_BOX 0
 
 #define CRASHDUMP_DMP_FILENAME "logs/DashFaction.dmp"
 #define CRASHDUMP_LOG_FILENAME "logs/DashFaction.crash.log"
 #define CRASHDUMP_MSG "Game has crashed!\nTo help resolve the problem please send files from logs subdirectory in RedFaction directory to " PRODUCT_NAME " author."
+
+#if CRASHDUMP_MSG_BOX
+#define CRASHDUMP_ERR(msg) MessageBox(NULL, TEXT(msg), 0, MB_ICONERROR | MB_OK | MB_SETFOREGROUND | MB_TASKMODAL)
+#else
+#define CRASHDUMP_ERR(msg) do {} while (0)
+#endif
 
 #ifdef _MSC_VER
 #include <Dbghelp.h>
@@ -163,11 +170,11 @@ static LONG WINAPI CrashDumpExceptionFilter(PEXCEPTION_POINTERS pExceptionPointe
                         
                 CloseHandle(g_hDumpFile);
             } else
-                MessageBox(NULL, TEXT("Error! CreateFile failed."), 0, MB_ICONERROR|MB_OK);
+                CRASHDUMP_ERR("Error! CreateFile failed.");
         } else
-            MessageBox(NULL, TEXT("Error! GetProcAddress failed."), 0, MB_ICONERROR|MB_OK);
+            CRASHDUMP_ERR("Error! GetProcAddress failed.");
     } else
-        MessageBox(NULL, TEXT("Error! LoadLibrary failed."), 0, MB_ICONERROR|MB_OK);
+        CRASHDUMP_ERR("Error! LoadLibrary failed.");
 #endif // CRASHDUMP_SAVE_DMP
 #if CRASHDUMP_SAVE_LOG
     g_pFile = fopen(CRASHDUMP_LOG_FILENAME, "w");
@@ -237,7 +244,9 @@ static LONG WINAPI CrashDumpExceptionFilter(PEXCEPTION_POINTERS pExceptionPointe
     }
 #endif // CRASHDUMP_SAVE_LOG
 
+#if CRASHDUMP_MSG_BOX
     MessageBox(NULL, TEXT(CRASHDUMP_MSG), "Fatal error!", MB_ICONERROR | MB_OK | MB_SETFOREGROUND | MB_TASKMODAL);
+#endif
 
     return EXCEPTION_EXECUTE_HANDLER;
 }
