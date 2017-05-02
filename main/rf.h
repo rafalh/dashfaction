@@ -61,6 +61,13 @@ namespace rf
             return tmp;
         }
 
+        CVector3 operator-(const CVector3 &other) const
+        {
+            CVector3 tmp = *this;
+            tmp -= other;
+            return tmp;
+        }
+
         CVector3 operator*(float m) const
         {
             return CVector3(x * m, y * m, z * m);
@@ -656,11 +663,11 @@ namespace rf
         Timer UnkReloadTimer;
         int field_F8C;
         Timer UnkTimerF90;
-        char bInZoomMode;
+        char bInScopeView;
         char field_F95;
         char field_F96;
         char field_F97;
-        float field_F98;
+        float fScopeZoom;
         char field_F9C;
         char field_1D;
         char field_1E;
@@ -794,10 +801,17 @@ namespace rf
     /* Player Fpgun */
 
     constexpr auto PlayerFpgunRender = (void(*)(CPlayer*))0x004A2B30;
-    constexpr auto PlayerFpgunSetupMesh = (void(*)(CPlayer*, int WeaponClsId))0x004AA230;
     constexpr auto PlayerFpgunUpdate = (void(*)(CPlayer*))0x004A2700;
+    constexpr auto PlayerFpgunSetupMesh = (void(*)(CPlayer*, int WeaponClsId))0x004AA230;
+    constexpr auto PlayerFpgunUpdateState = (void(*)(CPlayer*))0x004AA3A0;
     constexpr auto PlayerFpgunUpdateMesh = (void(*)(CPlayer*))0x004AA6D0;
     constexpr auto PlayerRenderRocketLauncherScannerView = (void(*)(CPlayer *pPlayer))0x004AEEF0;
+    constexpr auto PlayerFpgunSetState = (void(*)(CPlayer *pPlayer, int State))0x004AA560;
+    constexpr auto PlayerFpgunHasState = (bool(*)(CPlayer *pPlayer, int State))0x004A9520;
+
+    constexpr auto IsEntityLoopFire = (bool(*)(int hEntity, signed int WeaponClsId))0x0041A830;
+    constexpr auto EntityIsSwimming = (bool(*)(EntityObj *pEntity))0x0042A0A0;
+    constexpr auto EntityIsFalling = (bool(*)(EntityObj *pEntit))0x0042A020;
 
     /* Object */
 
@@ -1272,9 +1286,9 @@ namespace rf
         CString strEmbeddedV3dFilename;
         int AmmoType;
         CString str3rdPersonV3d;
-        int field_30;
-        int field_34;
-        int field_38;
+        CAnimMesh *p3rdPersonMeshNotSure;
+        int Muzzle1PropId;
+        int ThirdPersonGrip1MeshProp;
         int dw3rdPersonMuzzleFlashGlare;
         CString str1stPersonMesh;
         int *pMesh;
@@ -1306,7 +1320,7 @@ namespace rf
         float fVelocity;
         float fVelocityMulti;
         float fVelocitySP;
-        int field_CC;
+        float fLifetimeMulVel;
         float fFireWait;
         float fAltFireWait;
         float fSpreadDegreesSP;
@@ -1354,11 +1368,11 @@ namespace rf
         int StartSound;
         float fStartDelay;
         int StopSound;
-        int fDamageRadius;
+        float fDamageRadius;
         float fDamageRadiusSP;
         float fDamageRadiusMulti;
-        int Glow;
-        int field_218;
+        float Glow;
+        float field_218;
         int Glow2;
         int field_220;
         int field_224;
@@ -1404,13 +1418,13 @@ namespace rf
         CVector3 vDecalSize;
         int GlassDecalTexture;
         CVector3 vGlassDecalSize;
-        int field_4A4_always1neg;
+        int FpgunShellEjectPropId;
         CVector3 vShellsEjectedBaseDir;
         float fShellEjectVelocity;
         CString strShellsEjectedV3d;
         int ShellsEjectedCustomSoundSet;
         float fPrimaryPauseTimeBeforeEject;
-        int field_4C8;
+        int FpgunClipEjectPropId;
         CString strClipsEjectedV3d;
         float fClipsEjectedDropPauseTime;
         int ClipsEjectedCustomSoundSet;
@@ -1419,15 +1433,15 @@ namespace rf
         float fCameraShakeTime;
         CString strSilencerV3d;
         int field_4F0_always0;
-        int field_4F4_always1neg;
+        int FpgunSilencerPropId;
         CString strSparkVfx;
         int field_500_always0;
-        int field_504_always1neg;
+        int FpgunThrusterPropId;
         int field_508;
         float fAIAttackRange1;
         float fAIAttackRange2;
-        int field_514;
-        int field_518_always1neg;
+        float field_514;
+        int FpgunWeaponPropId;
         int field_51C_always1neg;
         int WeaponType;
         CString strWeaponIcon;
@@ -1440,6 +1454,7 @@ namespace rf
         int field_548_always0;
         float fMultiBBoxSizeFactor;
     };
+    static_assert(sizeof(WeaponClass) == 0x550, "invalid size");
 
     constexpr auto g_pWeaponClasses = (WeaponClass*)0x0085CD08;
     constexpr auto g_pRiotStickClsId = (uint32_t*)0x00872468;

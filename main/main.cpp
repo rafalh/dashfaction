@@ -162,7 +162,9 @@ static void PlayerDestroy_New(CPlayer *pPlayer)
 void AfterFullGameInit()
 {
     SpectateModeAfterFullGameInit();
+#ifndef NDEBUG
     TestInitAfterGame();
+#endif
 }
 
 #ifndef NDEBUG

@@ -21,6 +21,7 @@ auto HandleCtrlInGame_Hook = makeFunHook(HandleCtrlInGame);
 auto RenderReticle_Hook = makeFunHook(RenderReticle);
 auto PlayerCreateEntity_Hook = makeFunHook(PlayerCreateEntity);
 auto RenderScannerViewForLocalPlayers_Hook = makeCallHook(GrResetClip);
+auto PlayerFpgunUpdateState_Hook = makeFunHook(PlayerFpgunUpdateState);
 
 static void SetCameraTarget(CPlayer *pPlayer)
 {
@@ -192,6 +193,7 @@ EntityObj *PlayerCreateEntity_New(CPlayer *pPlayer, int ClassId, const CVector3 
     EntityObj *pEntity = PlayerCreateEntity_Hook.callTrampoline(pPlayer, ClassId, pPos, pRotMatrix, MpCharacter);
     if (pEntity && pPlayer == g_SpectateModeTarget)
         pEntity->pLocalPlayer = pPlayer;
+
     return pEntity;
 }
 
@@ -213,11 +215,50 @@ static void PlayerFpgunRender_New(CPlayer *pPlayer)
         // HACKFIX: RF uses function PlayerSetRemoteChargeVisible for local player only
         g_SpectateModeTarget->WeaponInfo.RemoteChargeVisible = (pEntity && pEntity->WeaponInfo.WeaponClsId == *g_pRemoteChargeClsId);
 
+        if (g_SpectateModeTarget != *g_ppLocalPlayer && pEntity)
+        {
+            static CVector3 vOldVel;
+            CVector3 vVelDiff = pEntity->_Super.PhysInfo.vVel - vOldVel;
+            vOldVel = pEntity->_Super.PhysInfo.vVel;
+
+            if (vVelDiff.y > 0.1f)
+                pEntity->EntityFlags |= 2; // jump
+        }
+
+
+        if (g_SpectateModeTarget->WeaponInfo.bInScopeView)
+            g_SpectateModeTarget->WeaponInfo.fScopeZoom = 2.0f;
+        (*g_ppLocalPlayer)->WeaponInfo.bInScopeView = g_SpectateModeTarget->WeaponInfo.bInScopeView;
+        (*g_ppLocalPlayer)->WeaponInfo.fScopeZoom = g_SpectateModeTarget->WeaponInfo.fScopeZoom;
+
         PlayerFpgunUpdateMesh(g_SpectateModeTarget);
         PlayerFpgunRender(g_SpectateModeTarget);
     }
     else
         PlayerFpgunRender(pPlayer);
+}
+
+void PlayerFpgunUpdateState_New(CPlayer *pPlayer)
+{
+    PlayerFpgunUpdateState_Hook.callTrampoline(pPlayer);
+    if (pPlayer != *g_ppLocalPlayer)
+    {
+        EntityObj *pEntity = EntityGetFromHandle(pPlayer->hEntity);
+        if (pEntity)
+        {
+            float fHorzSpeedPow2 = pEntity->_Super.PhysInfo.vVel.x * pEntity->_Super.PhysInfo.vVel.x
+                + pEntity->_Super.PhysInfo.vVel.z * pEntity->_Super.PhysInfo.vVel.z;
+            int State = 0;
+            if (IsEntityLoopFire(pEntity->_Super.Handle, pEntity->WeaponInfo.WeaponClsId))
+                State = 2;
+            else if (EntityIsSwimming(pEntity) || EntityIsFalling(pEntity))
+                State = 0;
+            else if (fHorzSpeedPow2 > 0.2f)
+                State = 1;
+            if (!PlayerFpgunHasState(pPlayer, State))
+                PlayerFpgunSetState(pPlayer, State);
+        }
+    }
 }
 
 #endif // SPECTATE_MODE_SHOW_WEAPON
@@ -245,7 +286,6 @@ void SpectateModeInit()
     HandleCtrlInGame_Hook.hook(HandleCtrlInGameHook);
     RenderReticle_Hook.hook(RenderReticle_New);
     PlayerCreateEntity_Hook.hook(PlayerCreateEntity_New);
-    RenderScannerViewForLocalPlayers_Hook.hook(0x00431890, RenderScannerViewForLocalPlayers_GrResetClip_New);
 
     // Note: HUD rendering doesn't make sense because life and armor isn't synced
 
@@ -255,15 +295,20 @@ void SpectateModeInit()
     WriteMemUInt8(0x004AA23E, ASM_NOP, 6); // PlayerFpgunSetupMesh
     WriteMemUInt8(0x004AE0DF, ASM_NOP, 2); // PlayerFpgunLoadMesh
 
-    WriteMemUInt8(0x004AA3B1, ASM_NOP, 6); // sub_4AA3A0
-    WriteMemUInt8(0x004A952C, ASM_SHORT_JMP_REL); // sub_4A9520
-    WriteMemUInt8(0x004AA56D, ASM_NOP, 6); // sub_4AA560
-    WriteMemUInt8(0x004AE384, ASM_NOP, 6); // PlayerFpgunPrepareWeapon
+    WriteMemUInt8(0x004A938F, ASM_NOP, 6); // PlayerFpgunSetAction
+    WriteMemUInt8(0x004A952C, ASM_SHORT_JMP_REL); // PlayerFpgunHasState
+    WriteMemUInt8(0x004AA56D, ASM_NOP, 6); // PlayerFpgunSetState
     WriteMemUInt8(0x004AA6E7, ASM_NOP, 6); // PlayerFpgunUpdateMesh
+    WriteMemUInt8(0x004AE384, ASM_NOP, 6); // PlayerFpgunPrepareWeapon
+    WriteMemUInt8(0x004ACE2C, ASM_SHORT_JMP_REL); // GetZoomValue
 
     WriteMemPtr(0x0048857E + 2, &g_SpectateModeTarget); // RenderObjects
     WriteMemPtr(0x00488598 + 1, &g_SpectateModeTarget); // RenderObjects
+    WriteMemPtr(0x00421889 + 2, &g_SpectateModeTarget); // EntityRender
+    WriteMemPtr(0x004218A2 + 2, &g_SpectateModeTarget); // EntityRender
 
+    RenderScannerViewForLocalPlayers_Hook.hook(0x00431890, RenderScannerViewForLocalPlayers_GrResetClip_New);
+    PlayerFpgunUpdateState_Hook.hook(PlayerFpgunUpdateState_New);
 #endif // SPECTATE_MODE_SHOW_WEAPON
     
 }

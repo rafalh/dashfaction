@@ -1,7 +1,7 @@
 DashFaction Changelog
 =====================
 
-Version 1.1.1 (not yet released):
+Version 1.2.0 (not yet released):
 - fixed memory leak
 - fixed improper rendering after alt-tab in full screen (especially visible as glass rendered only from one side)
 - added Game Type name to Scoreboard
@@ -10,6 +10,7 @@ Version 1.1.1 (not yet released):
 - fixed keyboard layout for QWERTZ and AZERTY keyboards (automatic detection)
 - fixed spectated player entity being rendered (visible when player looks down)
 - hidden client IP addresses in server packets
+- added running and jumping animations in Spectate Mode
 - fixed compatibility with old CPUs without SSE support
 
 Version 1.1.0 (released 27-02-2017):
