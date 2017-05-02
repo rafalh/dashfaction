@@ -364,7 +364,16 @@ void SpectateModeDrawUI()
     EntityObj *pEntity = EntityGetFromHandle(g_SpectateModeTarget->hEntity);
     if (!pEntity)
     {
-        GrSetColor(0xC0, 0, 0, 0xC0);
+        GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
+        static int BloodBm = BmLoad("bloodsmear07_A.tga", 0, 0);
+        int BloodW, BloodH;
+        BmGetBitmapSize(BloodBm, &BloodW, &BloodH);
+        GrDrawBitmapStretched(BloodBm, (cxScr - BloodW*2) / 2, (cySrc - BloodH*2) / 2, BloodW * 2 , BloodH * 2, 
+            0, 0, BloodW, BloodH, 0.0f, 0.0f, *g_pGrBitmapMaterial);
+
+        GrSetColor(0, 0, 0, 0x80);
+        GrDrawAlignedText(GR_ALIGN_CENTER, cxScr / 2 + 2, cySrc / 2 + 2, "DEAD", g_LargeFont, *g_pGrTextMaterial);
+        GrSetColor(0xF0, 0x20, 0x10, 0xC0);
         GrDrawAlignedText(GR_ALIGN_CENTER, cxScr / 2, cySrc / 2, "DEAD", g_LargeFont, *g_pGrTextMaterial);
     }
 }
