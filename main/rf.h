@@ -1593,10 +1593,11 @@ namespace rf
     constexpr auto g_pbDirectInputDisabled = (bool*)0x005A4F88;
     constexpr auto g_bScoreboardRendered = (bool*)0x006A1448;
 
-    constexpr auto g_pbDbgNetwork = (uint32_t*)0x006FED24;
     constexpr auto g_pbDbgFlagsArray = (uint8_t*)0x0062FE19;
-    constexpr auto g_pbRenderEventIcons = (uint8_t*)0x00856500;
+    constexpr auto g_pbDbgNetwork = (uint32_t*)0x006FED24;
     constexpr auto g_pbDbgWeapon = (uint8_t*)0x007CAB59;
+    constexpr auto g_pbRenderEventIcons = (uint8_t*)0x00856500;
+    constexpr auto g_pbDbgRenderTriggers = (uint8_t*)0x0085683C;
 
     constexpr auto RfBeep = (void(*)(unsigned u1, unsigned u2, unsigned u3, float fVolume))0x00505560;
     constexpr auto InitGame = (void(*)())0x004B13F0;

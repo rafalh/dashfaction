@@ -71,6 +71,7 @@ static void DebugCmdHandler(void)
     *g_pbRenderEventIcons = bDbg;
     *g_pbDbgNetwork = bDbg;
     *g_pbDbgWeapon = bDbg;
+    *g_pbDbgRenderTriggers = bDbg;
 }
 #endif
 
