@@ -3,6 +3,7 @@ DashFaction Changelog
 
 Version 1.2.0 (not yet released):
 - added running and jumping animations in Spectate Mode
+- added Rocket Launcher scanner rendering in Spectate Mode
 - fixed Spectate Mode target entity being rendered (visible when player looks down)
 - fixed keyboard layout for QWERTZ and AZERTY keyboards (automatic detection)
 - added Game Type name to Scoreboard
@@ -12,7 +13,9 @@ Version 1.2.0 (not yet released):
 - fixed cursor being not visible in menu when changing level
 - hidden client IP addresses in server packets
 - fixed compatibility with old CPUs without SSE support
-- fixed memory leak
+- removed error dialog box when launcher cannot check for updates
+- added small rendering optimizations
+- other minor fixes
 
 Version 1.1.0 (released 27-02-2017):
 - improved loading of 32 bit textures (improves quality of lightmaps and shadows)
