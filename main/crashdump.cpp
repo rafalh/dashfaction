@@ -8,6 +8,8 @@
 #define CRASHDUMP_HEURISTIC_MAX_FUN_SIZE 4096
 #define CRASHDUMP_MSG_BOX 0
 
+#define CRASHDUMP_DMP_LEVEL 0 // 0 - 1 for now
+
 #define CRASHDUMP_DMP_FILENAME "logs/DashFaction.dmp"
 #define CRASHDUMP_LOG_FILENAME "logs/DashFaction.crash.log"
 #define CRASHDUMP_MSG "Game has crashed!\nTo help resolve the problem please send files from logs subdirectory in RedFaction directory to " PRODUCT_NAME " author."
@@ -160,13 +162,24 @@ static LONG WINAPI CrashDumpExceptionFilter(PEXCEPTION_POINTERS pExceptionPointe
                 g_MiniDumpInfo.ExceptionPointers = pExceptionPointers;
                 g_MiniDumpInfo.ClientPointers = TRUE;
                 
+                // See http://www.debuginfo.com/articles/effminidumps2.html
+#if CRASHDUMP_DMP_LEVEL == 0
                 g_pMiniDumpWriteDump(GetCurrentProcess(),
                                      GetCurrentProcessId(),
                                      g_hDumpFile,
-                                     MiniDumpNormal,//MiniDumpWithDataSegs,//MiniDumpWithFullMemory|MiniDumpWithHandleData),
+                                     MiniDumpWithIndirectlyReferencedMemory,
                                      &g_MiniDumpInfo,
                                      NULL,
                                      NULL);
+#else // Maximal information
+                g_pMiniDumpWriteDump(GetCurrentProcess(),
+                    GetCurrentProcessId(),
+                    g_hDumpFile,
+                    (MINIDUMP_TYPE)(MiniDumpWithFullMemory|MiniDumpWithFullMemoryInfo|MiniDumpWithHandleData|MiniDumpWithThreadInfo|MiniDumpWithUnloadedModules|MiniDumpWithIndirectlyReferencedMemory),
+                    &g_MiniDumpInfo,
+                    NULL,
+                    NULL);
+#endif
                         
                 CloseHandle(g_hDumpFile);
             } else
