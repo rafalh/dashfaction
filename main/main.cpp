@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "exports.h"
-#include "crashdump.h"
+#include "crashhandler.h"
 #include "autodl.h"
 #include "utils.h"
 #include "rf.h"
@@ -81,6 +81,10 @@ static void DcUpdate_New(BOOL bServer)
 #ifdef LEVELS_AUTODOWNLOADER
     RenderDownloadProgress();
 #endif
+
+#ifndef NDEBUG
+    TestRender();
+#endif
 }
 
 static void InitGame_New(void)
@@ -139,10 +143,6 @@ static void RenderHitScreen_New(CPlayer *pPlayer)
 
 #if SPECTATE_MODE_ENABLE
     SpectateModeDrawUI();
-#endif
-
-#ifndef NDEBUG
-    TestRender();
 #endif
 }
 
@@ -213,7 +213,7 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
 {
     // Init logging and crash dump support first
     InitLogging();
-    InitCrashDumps();
+    CrashHandlerInit();
     
     // Enable Data Execution Prevention
     if (!SetProcessDEPPolicy(PROCESS_DEP_ENABLE))
