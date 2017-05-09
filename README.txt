@@ -18,6 +18,7 @@ Features:
 - removed limit of packfiles
 - improved Scoreboard with Kills/Deaths column
 - information about killer's weapon in chat
+- option to disable level ambient sounds
 - ui.vpp cheats prevention
 - multiple fixes for high FPS (limited to 150 for now)
 - country-specific edition support (properly handles game directory structure for German and French edition)

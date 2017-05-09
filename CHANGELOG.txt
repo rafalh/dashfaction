@@ -1,13 +1,14 @@
 DashFaction Changelog
 =====================
 
-Version 1.2.0 (not yet released):
+Version 1.2.0 (released 10-05-2017):
 - added running and jumping animations in Spectate Mode
 - added Rocket Launcher scanner rendering in Spectate Mode
 - fixed Spectate Mode target entity being rendered (visible when player looks down)
 - fixed keyboard layout for QWERTZ and AZERTY keyboards (automatic detection)
+- added option to disable level ambient sounds (in launcher or by levelsounds command)
 - added Game Type name to Scoreboard
-- added fast show/hide animations to Scoreboard
+- added fast show/hide animations to Scoreboard (configurable in launcher)
 - added 'findmap' command
 - fixed improper rendering after alt-tab in full screen (especially visible as glass rendered only from one side)
 - fixed cursor being not visible in menu when changing level
