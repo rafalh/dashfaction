@@ -287,4 +287,10 @@ void MiscInit()
 
     // hook MouseUpdateDirectInput
     MouseUpdateDirectInput_Hook.hook(MouseUpdateDirectInput_New);
+
+    // Chat color alpha
+    AsmWritter(0x00477490, 0x004774A4).mov(AsmReg::EAX, 0x30); // chatbox border
+    AsmWritter(0x00477528, 0x00477535).mov(AsmReg::EBX, 0x40); // chatbox background
+    AsmWritter(0x00478E00, 0x00478E14).mov(AsmReg::EAX, 0x30); // chat input border
+    AsmWritter(0x00478E91, 0x00478E9E).mov(AsmReg::EBX, 0x40); // chat input background
 }

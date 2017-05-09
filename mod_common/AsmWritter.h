@@ -128,6 +128,23 @@ public:
         return *this;
     }
 
+    AsmWritter &mov(AsmReg dst, int32_t imm)
+    {
+        if (dst == AsmReg::EAX)
+            WriteMemUInt8(m_addr++, 0xB8);
+        else if (dst == AsmReg::ECX)
+            WriteMemUInt8(m_addr++, 0xB9);
+        else if (dst == AsmReg::EDX)
+            WriteMemUInt8(m_addr++, 0xBA);
+        else if (dst == AsmReg::EBX)
+            WriteMemUInt8(m_addr++, 0xBB);
+        else
+            assert(false);
+        WriteMemInt32(m_addr, imm);
+        m_addr += 4;
+        return *this;
+    }
+
     AsmWritter &movEaxMemEsp(int8_t off)
     {
         WriteMemUInt8(m_addr++, 0x88);
