@@ -330,7 +330,8 @@ void GraphicsAfterGameInit()
     if (TimeLeftFont >= 0)
     {
         WriteMemInt8(0x00477157 + 1, TimeLeftFont);
-        WriteMemInt8(0x0047715F + 2, 25);
+        WriteMemInt8(0x0047715F + 2, 21);
+        WriteMemInt32(0x00477168 + 1, 154);
     }
 }
 
