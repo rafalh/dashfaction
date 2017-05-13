@@ -140,8 +140,9 @@ static void SetupPP(void)
     INFO("D3D Format: %ld", *pFormat);
 
     // Note: in MSAA mode we don't lock back buffer
-    if (!g_gameConfig.msaa)
-        g_pGrPP->Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
+#if !D3D_SWAP_DISCARD
+    g_pGrPP->Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
+#endif
 
 #if MULTISAMPLING_SUPPORT
     if (g_gameConfig.msaa && *pFormat > 0)
@@ -226,12 +227,10 @@ void GraphicsInit()
 
     //WriteMemUInt8(0x00524C98, ASM_SHORT_JMP_REL); // disable window hooks
 
-#if MULTISAMPLING_SUPPORT
-    if (g_gameConfig.msaa)
-    {
-        WriteMemUInt32(0x00545B4D + 6, D3DSWAPEFFECT_DISCARD); // full screen
-        WriteMemUInt32(0x00545AE3 + 6, D3DSWAPEFFECT_DISCARD); // windowed
-    }
+#if D3D_SWAP_DISCARD
+    // Use Discard Swap Mode
+    WriteMemUInt32(0x00545B4D + 6, D3DSWAPEFFECT_DISCARD); // full screen
+    WriteMemUInt32(0x00545AE3 + 6, D3DSWAPEFFECT_DISCARD); // windowed
 #endif
 
     // Replace memset call to SetupPP

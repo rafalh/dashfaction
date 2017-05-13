@@ -104,12 +104,9 @@ rf::BmPixelFormat GrD3DReadBackBufferHook(int x, int y, int Width, int Height, B
 
 void InitScreenshot(void)
 {
+#if D3D_SWAP_DISCARD
     /* Override default because IDirect3DSurface8::LockRect fails on multisampled back-buffer */
-#if MULTISAMPLING_SUPPORT
-    if (g_gameConfig.msaa)
-    {
-        WriteMemInt32(0x0050E015 + 1, (uintptr_t)GrD3DReadBackBufferHook - (0x0050E015 + 0x5));
-    }
+    WriteMemInt32(0x0050E015 + 1, (uintptr_t)GrD3DReadBackBufferHook - (0x0050E015 + 0x5));
 #endif
 
     WriteMemPtr(0x004367CA + 2, &g_ScreenshotDirId);
