@@ -168,7 +168,7 @@ namespace rf
 #define DC_REGISTER_CMD(name, help, handler) \
     do { \
         static rf::DcCommand Dc_##name; \
-        DcCommand__Init(&Dc_##name, #name, help, handler); \
+        rf::DcCommand__Init(&Dc_##name, #name, help, handler); \
     } while (false)
 
     //constexpr auto g_ppDcCommands = (DcCommand**)0x01775530;
@@ -282,6 +282,7 @@ namespace rf
     constexpr auto g_ppDirect3D = (IDirect3D8**)0x01CFCBE0;
     constexpr auto g_ppGrDevice = (IDirect3DDevice8**)0x01CFCBE4;
     constexpr auto g_pGrScreen = (GrScreen*)0x017C7BC0;
+    constexpr auto g_pGrPP = (D3DPRESENT_PARAMETERS*)0x01CFCA18;
     constexpr auto g_pGrGammaRamp = (uint32_t*)0x017C7C68;
     constexpr auto g_pAdapterIdx = (uint32_t*)0x01CFCC34;
     constexpr auto g_pGrScaleVec = (CVector3*)0x01818B48;

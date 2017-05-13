@@ -134,15 +134,14 @@ void NAKED GrClearZBuffer_005509C4()
 
 static void SetupPP(void)
 {
-    D3DPRESENT_PARAMETERS *pPP = (D3DPRESENT_PARAMETERS*)0x01CFCA18;
-    memset(pPP, 0, sizeof(*pPP));
+    memset(g_pGrPP, 0, sizeof(*g_pGrPP));
 
-    D3DFORMAT *pFormat = (D3DFORMAT*)0x005A135C;
+   constexpr D3DFORMAT *pFormat = (D3DFORMAT*)0x005A135C;
     INFO("D3D Format: %ld", *pFormat);
 
     // Note: in MSAA mode we don't lock back buffer
     if (!g_gameConfig.msaa)
-        pPP->Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
+        g_pGrPP->Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
 
 #if MULTISAMPLING_SUPPORT
     if (g_gameConfig.msaa && *pFormat > 0)
@@ -153,7 +152,7 @@ static void SetupPP(void)
         if (SUCCEEDED(hr))
         {
             INFO("Enabling Anti-Aliasing (%ux MSAA)...", g_gameConfig.msaa);
-            pPP->MultiSampleType = (D3DMULTISAMPLE_TYPE)g_gameConfig.msaa;
+            g_pGrPP->MultiSampleType = (D3DMULTISAMPLE_TYPE)g_gameConfig.msaa;
         }
         else
         {
@@ -285,7 +284,7 @@ void GraphicsInit()
     if (g_gameConfig.highScannerRes)
     {
         // Improved Railgun Scanner resolution
-        const int8_t ScannerResolution = 120; // default is 64, max is 127 (signed byte)
+        constexpr int8_t ScannerResolution = 120; // default is 64, max is 127 (signed byte)
         WriteMemUInt8(0x004325E6 + 1, ScannerResolution); // RenderInGame
         WriteMemUInt8(0x004325E8 + 1, ScannerResolution);
         WriteMemUInt8(0x004A34BB + 1, ScannerResolution); // PlayerCreate
