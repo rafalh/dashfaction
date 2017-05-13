@@ -161,6 +161,10 @@ static void SetupPP(void)
         }
     }
 #endif
+
+    // Make sure stretched window is always full screen
+    if (g_gameConfig.wndMode == GameConfig::STRETCHED)
+        SetWindowPos(*g_phWnd, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), SWP_NOZORDER);
 }
 
 void GrDrawRect_GrDrawPolyHook(int Num, GrVertex **ppVertices, int Flags, int iMat)
@@ -309,6 +313,10 @@ void GraphicsInit()
         WriteMemUInt8(0x004AF862 + 1, ScannerResolution);
     }
 
+    // Always transfer entire framebuffer to entire window in Present call
+    WriteMemUInt8(0x00544FE6, ASM_SHORT_JMP_REL);
+
+    // Init True Color improvements
     GrColorInit();
 }
 
