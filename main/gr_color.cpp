@@ -7,6 +7,7 @@
 using namespace rf;
 
 auto GrD3DSetTextureData_Hook = makeFunHook(GrD3DSetTextureData);
+auto BinkInitDeviceInfo_Hook = makeFunHook(BinkInitDeviceInfo);
 
 inline void ConvertPixel_RGB8_To_RGBA8(BYTE *&pDstPtr, const BYTE *&pSrcPtr)
 {
@@ -310,6 +311,20 @@ void GetAmbientColorFromLightmaps_004E5CE3(unsigned BmHandle, int x, int y, unsi
     }
 }
 
+unsigned BinkInitDeviceInfo_New()
+{
+    unsigned BinkFlags = BinkInitDeviceInfo_Hook.callTrampoline();
+
+    if (g_gameConfig.trueColorTextures && g_gameConfig.resBpp == 32)
+    {
+        constexpr auto pBinkBmPixelFmt = (uint32_t*)0x018871C0;
+        *pBinkBmPixelFmt = BMPF_888;
+        BinkFlags = 3;
+    }
+
+    return BinkFlags;
+}
+
 void GrColorInit()
 {
     // True Color textures
@@ -323,6 +338,7 @@ void GrColorInit()
         WriteMemUInt32(0x005A7E0C, D3DFMT_A4R4G4B4); // old: D3DFMT_A8R3G3B2
 
         GrD3DSetTextureData_Hook.hook(GrD3DSetTextureData_New);
+        BinkInitDeviceInfo_Hook.hook(BinkInitDeviceInfo_New);
 
         // lightmaps
         AsmWritter(0x004ED3E9).pushEbx().callLong((uintptr_t)RflLoadLightmaps_004ED3F6).addEsp(4).jmpLong(0x004ED4FA);

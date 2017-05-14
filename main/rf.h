@@ -1631,6 +1631,7 @@ namespace rf
     constexpr auto RflLoad = (int(*)(CString *pstrLevelFilename, CString *a2, char *pszError))0x0045C540;
     constexpr auto DrawScoreboard = (void(*)(bool bDraw))0x00470860;
     constexpr auto DrawScoreboardInternal = (void(*)(bool bDraw))0x00470880;
+    constexpr auto BinkInitDeviceInfo = (unsigned(*)())0x005210C0;
 
 
     /* Strings Table */
