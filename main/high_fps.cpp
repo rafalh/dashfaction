@@ -10,6 +10,7 @@ static double g_FtolAccumulator_HitScreen = 0.0f;
 static double g_FtolAccumulated_ToggleConsole = 0.0f;
 static double g_FtolAccumulated_Timer = 0.0f;
 static float g_JumpThreshold = 0.05f;
+static float g_fCameraShakeFactor = 0.6f;
 
 auto RflLoad_Hook = makeFunHook(rf::RflLoad);
 
@@ -146,10 +147,20 @@ void HighFpsInit()
 
     // Fix submarine exploding on high FPS
     RflLoad_Hook.hook(RflLoad_New);
+
+    // Fix screen shake caused by some weapons (eg. Assault Rifle)
+    WriteMemPtr(0x0040DBCC + 2, &g_fCameraShakeFactor);
 }
 
 void HighFpsUpdate()
 {
-    // Make jump fix framerate dependent to fix bouncing on small FPS
-    g_JumpThreshold = 0.025f + 0.075f * (*rf::g_pfFramerate) / (1/60.0f);
+    float fFrameTime = *rf::g_pfFramerate;
+    if (fFrameTime > 0.0001f)
+    {
+        // Make jump fix framerate dependent to fix bouncing on small FPS
+        g_JumpThreshold = 0.025f + 0.075f * fFrameTime / (1 / 60.0f);
+
+        // Fix screen shake caused by some weapons (eg. Assault Rifle)
+        g_fCameraShakeFactor = pow(0.6f, fFrameTime / (1 / 120.0f));
+    }
 }
