@@ -41,6 +41,7 @@ bool GameConfig::load()
     dashFactionKey.readValue("Level Sound Volume", reinterpret_cast<unsigned*>(&levelSoundVolume));
     dashFactionKey.readValue("Allow Overwriting Game Files", &allowOverwriteGameFiles);
     dashFactionKey.readValue("Version", &dashFactionVersion);
+    dashFactionKey.readValue("Swap Assault Rifle Controls", &swapAssaultRifleControls);
 
 #ifdef NDEBUG
     if (maxFps > MAX_FPS_LIMIT)
@@ -84,6 +85,7 @@ void GameConfig::save()
     dashFactionKey.writeValue("Level Sound Volume", *reinterpret_cast<unsigned*>(&levelSoundVolume));
     dashFactionKey.writeValue("Allow Overwriting Game Files", allowOverwriteGameFiles);
     dashFactionKey.writeValue("Version", dashFactionVersion);
+    dashFactionKey.writeValue("Swap Assault Rifle Controls", swapAssaultRifleControls);
 }
 
 bool GameConfig::detectGamePath()

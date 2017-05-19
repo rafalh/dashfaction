@@ -36,6 +36,7 @@ struct GameConfig
     bool scoreboardAnim = false;
     float levelSoundVolume = 1.0f;
     std::string dashFactionVersion;
+    bool swapAssaultRifleControls = false;
 
     bool load();
     void save();

@@ -809,6 +809,7 @@ namespace rf
     constexpr auto PlayerRenderRocketLauncherScannerView = (void(*)(CPlayer *pPlayer))0x004AEEF0;
     constexpr auto PlayerFpgunSetState = (void(*)(CPlayer *pPlayer, int State))0x004AA560;
     constexpr auto PlayerFpgunHasState = (bool(*)(CPlayer *pPlayer, int State))0x004A9520;
+    constexpr auto PlayerLocalFireControl = (void(*)(CPlayer *pPlayer, bool bSecondary, char WasPressed))0x004A4E80;
 
     constexpr auto IsEntityLoopFire = (bool(*)(int hEntity, signed int WeaponClsId))0x0041A830;
     constexpr auto EntityIsSwimming = (bool(*)(EntityObj *pEntity))0x0042A0A0;
@@ -1574,6 +1575,7 @@ namespace rf
 
     constexpr auto g_MenuLevels = (int*)0x00630064;
     constexpr auto g_pCurrentMenuLevel = (int*)0x005967A4;
+    constexpr auto g_pMenuVersionLabel = (UiPanel*)0x0063C088;
 
     /* Other */
 

@@ -7,8 +7,6 @@
 
 using namespace rf;
 
-constexpr auto pMenuVersionLabel = (rf::UiPanel*)0x0063C088;
-
 constexpr int EGG_ANIM_ENTER_TIME = 2000;
 constexpr int EGG_ANIM_LEAVE_TIME = 2000;
 constexpr int EGG_ANIM_IDLE_TIME = 3000;
@@ -17,6 +15,7 @@ auto GetVersionStr_Hook = makeFunHook(GetVersionStr);
 auto MenuUpdate_Hook = makeFunHook(MenuUpdate);
 auto MouseUpdateDirectInput_Hook = makeFunHook(MouseUpdateDirectInput);
 auto SndConvertVolume3D_AmbientSound_Hook = makeCallHook(SndConvertVolume3D);
+auto PlayerLocalFireControl_Hook = makeFunHook(PlayerLocalFireControl);
 
 int g_VersionLabelX, g_VersionLabelWidth, g_VersionLabelHeight;
 static const char g_szVersionInMenu[] = PRODUCT_NAME_VERSION;
@@ -90,7 +89,7 @@ void MenuMainProcessMouseHook()
     {
         int x, y, z;
         MouseGetPos(&x, &y, &z);
-        UiPanel *PanelsToCheck[1] = { pMenuVersionLabel };
+        UiPanel *PanelsToCheck[1] = { g_pMenuVersionLabel };
         int Matched = UiGetElementFromPos(x, y, PanelsToCheck, COUNTOF(PanelsToCheck));
         if (Matched == 0)
         {
@@ -193,6 +192,42 @@ void MouseUpdateDirectInput_New()
     POINT pt = { g_pGrScreen->MaxWidth / 2, g_pGrScreen->MaxHeight / 2 };
     ClientToScreen(*g_phWnd, &pt);
     SetCursorPos(pt.x, pt.y);
+}
+
+bool IsHoldingAssaultRifle()
+{
+    constexpr auto pAssaultRifleClassId = (int*)0x00872470;
+    EntityObj *pEntity = EntityGetFromHandle((*g_ppLocalPlayer)->hEntity);
+    return pEntity && pEntity->WeaponInfo.WeaponClsId == *pAssaultRifleClassId;
+}
+
+void PlayerLocalFireControl_New(CPlayer *pPlayer, bool bSecondary, char WasPressed)
+{
+    if (g_gameConfig.swapAssaultRifleControls && IsHoldingAssaultRifle())
+        bSecondary = !bSecondary;
+    PlayerLocalFireControl_Hook.callTrampoline(pPlayer, bSecondary, WasPressed);
+}
+
+char IsEntityCtrlActive_New(ControlConfig *pControlsState, EGameCtrl CtrlId, bool *pWasPressed)
+{
+    if (g_gameConfig.swapAssaultRifleControls && IsHoldingAssaultRifle())
+    {
+        if (CtrlId == GC_PRIMARY_ATTACK)
+            CtrlId = GC_SECONDARY_ATTACK;
+        else if (CtrlId == GC_SECONDARY_ATTACK)
+            CtrlId = GC_PRIMARY_ATTACK;
+    }
+    return IsEntityCtrlActive(pControlsState, CtrlId, pWasPressed);
+}
+
+void DcfSwapAssaultRifleControls()
+{
+    if (*g_pbDcRun)
+    {
+        g_gameConfig.swapAssaultRifleControls = !g_gameConfig.swapAssaultRifleControls;
+        g_gameConfig.save();
+        DcPrintf("Swap assault rifle controls: %s", g_gameConfig.swapAssaultRifleControls ? "enabled" : "disabled");
+    }
 }
 
 void MiscInit()
@@ -299,4 +334,10 @@ void MiscInit()
     AsmWritter(0x00477528, 0x00477535).mov(AsmReg::EBX, 0x40); // chatbox background
     AsmWritter(0x00478E00, 0x00478E14).mov(AsmReg::EAX, 0x30); // chat input border
     AsmWritter(0x00478E91, 0x00478E9E).mov(AsmReg::EBX, 0x40); // chat input background
+
+    // Swap Assault Rifle fire controls
+    PlayerLocalFireControl_Hook.hook(PlayerLocalFireControl_New);
+    WriteMemInt32(0x00430E65 + 1, (uintptr_t)IsEntityCtrlActive_New - (0x00430E65 + 5));
+    WriteMemInt32(0x00430EF7 + 1, (uintptr_t)IsEntityCtrlActive_New - (0x00430EF7 + 5));
+    DC_REGISTER_CMD(swap_assault_rifle_controls, "Swap Assault Rifle controls", DcfSwapAssaultRifleControls);
 }
