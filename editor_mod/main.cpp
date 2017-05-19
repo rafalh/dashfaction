@@ -2,10 +2,50 @@
 #include "exports.h"
 #include <MemUtils.h>
 #include <AsmOpcodes.h>
+#include <AsmWritter.h>
+#include <cstdio>
 
 #define LAUNCHER_FILENAME "DashFactionLauncher.exe"
 
 HMODULE g_hModule;
+HWND g_hEditorWnd;
+WNDPROC g_pEditorWndProc_Orig;
+
+constexpr auto g_pEditorApp = (void*)0x006F9DA0;
+
+void OpenLevel(const char *pszPath)
+{
+    void *pDocManager = *(void**)(((BYTE*)g_pEditorApp) + 0x80);
+    void *pDocManager_Vtbl = *(void**)pDocManager;
+    typedef int(__thiscall *CDocManager_OpenDocumentFile_Ptr)(void *This, LPCSTR lpString2);
+    CDocManager_OpenDocumentFile_Ptr pDocManager_OpenDocumentFile = (CDocManager_OpenDocumentFile_Ptr)*(((void**)pDocManager_Vtbl) + 7);
+    pDocManager_OpenDocumentFile(pDocManager, pszPath);
+}
+
+LRESULT CALLBACK EditorWndProc_New(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    if (uMsg == WM_DROPFILES)
+    {
+        HDROP hDropInfo = (HDROP)wParam;
+        char sItem[MAX_PATH];
+        // Handle only first droped file
+        if (DragQueryFile(hDropInfo, 0, sItem, sizeof(sItem)))
+            OpenLevel(sItem);
+        DragFinish(hDropInfo);
+    }
+    // Call original procedure
+    return g_pEditorWndProc_Orig(hwnd, uMsg, wParam, lParam);
+}
+
+BOOL CEditorApp__InitInstance_AfterHook()
+{
+    g_hEditorWnd = GetActiveWindow();
+    g_pEditorWndProc_Orig = (WNDPROC)GetWindowLongPtr(g_hEditorWnd, GWLP_WNDPROC);
+    SetWindowLongPtr(g_hEditorWnd, GWLP_WNDPROC, (LONG)EditorWndProc_New);
+    DWORD ExStyle = GetWindowLongPtr(g_hEditorWnd, GWL_EXSTYLE);
+    SetWindowLongPtr(g_hEditorWnd, GWL_EXSTYLE, ExStyle | WS_EX_ACCEPTFILES);
+    return TRUE;
+}
 
 extern "C" DWORD DLL_EXPORT Init(void *pUnused)
 {
@@ -25,6 +65,9 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
     WriteMemUInt8(0x00448024, ASM_NOP, 0x0044802B - 0x00448024);
     WriteMemUInt16(0x00448024, ASM_XOR_EAX_EAX);
     
+    // InitInstance hook
+    AsmWritter(0x00482C84).callLong(CEditorApp__InitInstance_AfterHook);
+
     return 1; // success
 }
 
