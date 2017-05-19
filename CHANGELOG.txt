@@ -3,6 +3,7 @@ DashFaction Changelog
 
 Version 1.2.1 (not released):
 - fixed camera shake dependence on FPS (e.g. for Assault Rifle)
+- fixed Level Sounds option not working in most levels
 - fixed Stretched Window Mode not using full screen if choosen framebuffer resolution was lower than screen resolution
 
 Version 1.2.0 (released 10-05-2017):

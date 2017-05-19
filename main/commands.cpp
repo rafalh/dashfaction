@@ -231,7 +231,7 @@ static void LevelSoundsCmdHandler(void)
         if ((*g_pDcArgType & DC_ARG_FLOAT))
         {
             float fVolScale = clamp(*g_pfDcArg, 0.0f, 1.0f);
-            SetLevelSoundVolumeScale(fVolScale);
+            SetPlaySoundEventsVolumeScale(fVolScale);
 
             g_gameConfig.levelSoundVolume = fVolScale;
             g_gameConfig.save();

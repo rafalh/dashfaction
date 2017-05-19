@@ -1632,6 +1632,7 @@ namespace rf
     constexpr auto DrawScoreboard = (void(*)(bool bDraw))0x00470860;
     constexpr auto DrawScoreboardInternal = (void(*)(bool bDraw))0x00470880;
     constexpr auto BinkInitDeviceInfo = (unsigned(*)())0x005210C0;
+    constexpr auto SndConvertVolume3D = (void(*)(int GameSndId, CVector3 *pSoundPos, float *pPanOut, float *pVolumeOut, float VolumeIn))0x00505740;
 
 
     /* Strings Table */

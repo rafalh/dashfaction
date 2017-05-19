@@ -1,4 +1,4 @@
 #pragma once
 
 void MiscInit();
-void SetLevelSoundVolumeScale(float fVolScale);
+void SetPlaySoundEventsVolumeScale(float fVolScale);

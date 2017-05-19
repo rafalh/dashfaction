@@ -16,6 +16,7 @@ constexpr int EGG_ANIM_IDLE_TIME = 3000;
 auto GetVersionStr_Hook = makeFunHook(GetVersionStr);
 auto MenuUpdate_Hook = makeFunHook(MenuUpdate);
 auto MouseUpdateDirectInput_Hook = makeFunHook(MouseUpdateDirectInput);
+auto SndConvertVolume3D_AmbientSound_Hook = makeCallHook(SndConvertVolume3D);
 
 int g_VersionLabelX, g_VersionLabelWidth, g_VersionLabelHeight;
 static const char g_szVersionInMenu[] = PRODUCT_NAME_VERSION;
@@ -167,17 +168,21 @@ void MenuMainRenderHook()
     }
 }
 
-void SetLevelSoundVolumeScale(float fVolScale)
+void SetPlaySoundEventsVolumeScale(float fVolScale)
 {
     fVolScale = clamp(fVolScale, 0.0f, 1.0f);
     unsigned Offsets[] = {
         // Play Sound event
         0x004BA4D8, 0x004BA515, 0x004BA71C, 0x004BA759, 0x004BA609, 0x004BA5F2, 0x004BA63F,
-        // Ambient Sound
-        0x00505FE6,
     };
     for (int i = 0; i < COUNTOF(Offsets); ++i)
         WriteMemFloat(Offsets[i] + 1, fVolScale);
+}
+
+void SndConvertVolume3D_AmbientSound_New(int GameSndId, CVector3 *pSoundPos, float *pPanOut, float *pVolumeOut, float VolumeIn)
+{
+    SndConvertVolume3D_AmbientSound_Hook.callParent(GameSndId, pSoundPos, pPanOut, pVolumeOut, VolumeIn);
+    *pVolumeOut *= g_gameConfig.levelSoundVolume;
 }
 
 void MouseUpdateDirectInput_New()
@@ -283,7 +288,8 @@ void MiscInit()
     WriteMemUInt8(0x004B14B4 + 1, KbdLayout);
 
     // Level sounds
-    SetLevelSoundVolumeScale(g_gameConfig.levelSoundVolume);
+    SetPlaySoundEventsVolumeScale(g_gameConfig.levelSoundVolume);
+    SndConvertVolume3D_AmbientSound_Hook.hook(0x00505F93, SndConvertVolume3D_AmbientSound_New);
 
     // hook MouseUpdateDirectInput
     MouseUpdateDirectInput_Hook.hook(MouseUpdateDirectInput_New);
