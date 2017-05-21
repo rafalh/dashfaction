@@ -21,6 +21,35 @@ static DcCommand *g_CommandsBuffer[CMD_LIMIT];
 
 auto DcAutoCompleteInput_Hook = makeFunHook(DcAutoCompleteInput);
 
+rf::CPlayer *FindBestMatchingPlayer(const char *pszName)
+{
+    rf::CPlayer *pFoundPlayer;
+    int NumFound = 0;
+    FindPlayer(StringMatcher().Exact(pszName), [&](rf::CPlayer *pPlayer)
+    {
+        pFoundPlayer = pPlayer;
+        ++NumFound;
+    });
+    if (NumFound == 1)
+        return pFoundPlayer;
+
+    NumFound = 0;
+    FindPlayer(StringMatcher().Infix(pszName), [&](rf::CPlayer *pPlayer)
+    {
+        pFoundPlayer = pPlayer;
+        ++NumFound;
+    });
+
+    if (NumFound == 1)
+        return pFoundPlayer;
+    else if (NumFound > 1)
+        rf::DcPrintf("Found %d players matching '%s'!", NumFound,  pszName);
+    else
+        rf::DcPrintf("Cannot find player matching '%s'", pszName);
+    return nullptr;
+}
+
+
 #if SPLITSCREEN_ENABLE
 
 static void SplitScreenCmdHandler(void)
@@ -85,17 +114,13 @@ static void SpectateCmdHandler(void)
         if (*g_pbNetworkGame)
         {
             rf::CPlayer *pPlayer;
-            rf::DcGetArg(DC_ARG_NONE | DC_ARG_STR, 0);
-            if (*g_pDcArgType & DC_ARG_STR)
-            {
-                pPlayer = FindPlayer(g_pszDcArg);
-                if (!pPlayer)
-                    DcPrintf("Cannot find player: %s", g_pszDcArg);
-            }
-            else {
-                DcPrintf("Expected player name.");
-                pPlayer = *g_ppLocalPlayer;
-            }
+            rf::DcGetArg(DC_ARG_NONE | DC_ARG_STR | DC_ARG_FALSE, 0);
+            if (*g_pDcArgType & DC_ARG_FALSE)
+                pPlayer = nullptr;
+            else if (*g_pDcArgType & DC_ARG_STR)
+                pPlayer = FindBestMatchingPlayer(g_pszDcArg);
+            else
+                pPlayer = nullptr;
             
             if (pPlayer)
                 SpectateModeSetTargetPlayer(pPlayer);
@@ -107,6 +132,7 @@ static void SpectateCmdHandler(void)
     {
         DcPrint(g_ppszStringsTable[STR_USAGE], NULL);
         DcPrintf("     spectate <%s>", g_ppszStringsTable[STR_PLAYER_NAME]);
+        DcPrintf("     spectate false", g_ppszStringsTable[STR_PLAYER_NAME]);
     }
 }
 
@@ -199,7 +225,7 @@ static void LevelSpCmdHandler(void)
     {
         rf::DcGetArg(DC_ARG_STR, 0);
 
-        if ((*g_pDcArgType & DC_ARG_STR))
+        if (*g_pDcArgType & DC_ARG_STR)
         {
             if (*g_pbNetworkGame)
             {
@@ -208,8 +234,16 @@ static void LevelSpCmdHandler(void)
             }
             CString strUnk, strLevel;
             CString_Init(&strUnk, "");
-            CString_Init(&strLevel, g_pszDcArg);
-            DcPrintf("Loading level");
+            if (stristr(g_pszDcArg, ".rfl"))
+                CString_Init(&strLevel, g_pszDcArg);
+            else
+            {
+                char Buf[256];
+                snprintf(Buf, sizeof(Buf), "%s.rfl", g_pszDcArg);
+                CString_Init(&strLevel, Buf);
+            }
+            
+            DcPrintf("Loading level.");
             SetNextLevelFilename(strLevel, strUnk);
             SwitchMenu(5, 0);
         }
@@ -254,7 +288,10 @@ static void DcfFindMap()
 
         if (*g_pDcArgType & DC_ARG_STR)
         {
-            PackfileFindMatchingFiles(g_pszDcArg, ".rfl");
+            PackfileFindMatchingFiles(StringMatcher().Infix(g_pszDcArg).Suffix(".rfl"), [](const char *pszName)
+            {
+                DcPrintf("%s\n", pszName);
+            });
         }
     }
 
@@ -290,36 +327,170 @@ DcCommand g_Commands[] = {
     { "levelsounds", "Sets level sounds volume scale", LevelSoundsCmdHandler },
 };
 
-void DcAutoCompleteInput_New()
+void DcShowCmdHelp(DcCommand *pCmd)
 {
-    const char *pszArgs = strchr(g_szDcCmdLine, ' ');
-    size_t CmdLen = pszArgs ? pszArgs - g_szDcCmdLine : *g_pcchDcCmdLineLen;
+    *g_pbDcRun = 0;
+    *g_pbDcHelp = 1;
+    *g_pbDcStatus = 0;
+    pCmd->pfnHandler();
+}
+
+int DcAutoCompleteGetComponent(int Offset, std::string &Result)
+{
+    const char *pszBegin = g_szDcCmdLine + Offset, *pszEnd = nullptr, *pszNext;
+    if (pszBegin[0] == '"')
+    {
+        ++pszBegin;
+        pszEnd = strchr(pszBegin, '"');
+        pszNext = pszEnd ? strchr(pszEnd, ' ') : nullptr;
+    }
+    else
+        pszEnd = pszNext = strchr(pszBegin, ' ');
+
+    if (!pszEnd)
+        pszEnd = g_szDcCmdLine + *g_pcchDcCmdLineLen;
+    
+    size_t Len = pszEnd - pszBegin;
+    Result.assign(pszBegin, Len);
+
+    return pszNext ? pszNext + 1 - g_szDcCmdLine : -1;
+}
+
+void DcAutoCompletePutComponent(int Offset, const std::string &Component, bool Finished)
+{
+    bool Quote = Component.find(' ') != std::string::npos;
+    if (Quote)
+        *g_pcchDcCmdLineLen = Offset + sprintf(g_szDcCmdLine + Offset, "\"%s\"", Component.c_str());
+    else
+        *g_pcchDcCmdLineLen = Offset + sprintf(g_szDcCmdLine + Offset, "%s", Component.c_str());
+    if (Finished)
+        *g_pcchDcCmdLineLen += sprintf(g_szDcCmdLine + *g_pcchDcCmdLineLen, " ");
+}
+
+template<typename T, typename F>
+void DcAutoCompletePrintSuggestions(T &Suggestions, F MappingFun)
+{
+    for (auto Item : Suggestions)
+        DcPrintf("%s\n", MappingFun(Item));
+}
+
+void DcAutoCompleteUpdateCommonPrefix(std::string &CommonPrefix, const std::string &Value, bool &First, bool CaseSensitive = false)
+{
+    if (First)
+    {
+        First = false;
+        CommonPrefix = Value;
+    }
+    if (CommonPrefix.size() > Value.size())
+        CommonPrefix.resize(Value.size());
+    for (size_t i = 0; i < CommonPrefix.size(); ++i)
+        if ((CaseSensitive && CommonPrefix[i] != Value[i]) || tolower(CommonPrefix[i]) != tolower(Value[i]))
+        {
+            CommonPrefix.resize(i);
+            break;
+        }
+}
+
+void DcAutoCompleteLevel(int Offset)
+{
+    std::string LevelName;
+    DcAutoCompleteGetComponent(Offset, LevelName);
+    if (LevelName.size() < 3)
+        return;
+
+    bool First = true;
+    std::string CommonPrefix;
+    std::vector<std::string> Matches;
+    PackfileFindMatchingFiles(StringMatcher().Prefix(LevelName).Suffix(".rfl"), [&](const char *pszName)
+    {
+        auto pszExt = strrchr(pszName, '.');
+        auto NameLen = pszExt ? pszExt - pszName : strlen(pszName);
+        std::string Name(pszName, NameLen);
+        Matches.push_back(Name);
+        DcAutoCompleteUpdateCommonPrefix(CommonPrefix, Name, First);
+    });
+
+    if (Matches.size() == 1)
+        DcAutoCompletePutComponent(Offset, Matches[0], true);
+    else
+    {
+        DcAutoCompletePrintSuggestions(Matches, [](std::string &Name) { return Name.c_str(); });
+        DcAutoCompletePutComponent(Offset, CommonPrefix, false);
+    }
+}
+
+void DcAutoCompletePlayer(int Offset)
+{
+    std::string PlayerName;
+    DcAutoCompleteGetComponent(Offset, PlayerName);
+    if (PlayerName.size() < 1)
+        return;
+
+    bool First = true;
+    std::string CommonPrefix;
+    std::vector<rf::CPlayer*> MatchingPlayers;
+    FindPlayer(StringMatcher().Prefix(PlayerName), [&](rf::CPlayer *pPlayer)
+    {
+        MatchingPlayers.push_back(pPlayer);
+        DcAutoCompleteUpdateCommonPrefix(CommonPrefix, pPlayer->strName.psz, First);
+    });
+
+    if (MatchingPlayers.size() == 1)
+        DcAutoCompletePutComponent(Offset, MatchingPlayers[0]->strName.psz, true);
+    else
+    {
+        DcAutoCompletePrintSuggestions(MatchingPlayers, [](rf::CPlayer *pPlayer) { return pPlayer->strName.psz; });
+        DcAutoCompletePutComponent(Offset, CommonPrefix, false);
+    }
+}
+
+void DcAutoCompleteCommand(int Offset)
+{
+    std::string Cmd;
+    int NextOffset = DcAutoCompleteGetComponent(Offset, Cmd);
+    if (Cmd.size() < 2)
+        return;
+
+    bool First = true;
+    std::string CommonPrefix;
 
     std::vector<DcCommand*> MatchingCmds;
     for (unsigned i = 0; i < *g_pDcNumCommands; ++i)
     {
         DcCommand *pCmd = g_CommandsBuffer[i];
-        if (!strnicmp(pCmd->pszCmd, g_szDcCmdLine, CmdLen) && (!pszArgs || !pCmd->pszCmd[CmdLen]))
-            MatchingCmds.push_back(pCmd);
-    }
-
-    if (pszArgs)
-    {
-        if (MatchingCmds.size() == 1)
+        if (!strnicmp(pCmd->pszCmd, Cmd.c_str(), Cmd.size()) && (NextOffset == -1 || !pCmd->pszCmd[Cmd.size()]))
         {
-            *g_pbDcRun = 0;
-            *g_pbDcHelp = 1;
-            *g_pbDcStatus = 0;
-            MatchingCmds[0]->pfnHandler();
+            MatchingCmds.push_back(pCmd);
+            DcAutoCompleteUpdateCommonPrefix(CommonPrefix, pCmd->pszCmd, First);
         }
     }
-    else if (MatchingCmds.size() > 1 && *g_pcchDcCmdLineLen > 0)
+
+    if (NextOffset != -1)
+    {
+        if (MatchingCmds.size() != 1)
+            return;
+        if (!stricmp(Cmd.c_str(), "level") || !stricmp(Cmd.c_str(), "levelsp"))
+            DcAutoCompleteLevel(NextOffset);
+        else if (!stricmp(Cmd.c_str(), "kick") || !stricmp(Cmd.c_str(), "ban"))
+            DcAutoCompletePlayer(NextOffset);
+        else if (!stricmp(Cmd.c_str(), "rcon"))
+            DcAutoCompleteCommand(NextOffset);
+        else
+            DcShowCmdHelp(MatchingCmds[0]);
+    }
+    else if (MatchingCmds.size() > 1)
     {
         for (auto *pCmd : MatchingCmds)
             DcPrintf("%s - %s", pCmd->pszCmd, pCmd->pszDescr);
+        DcAutoCompletePutComponent(Offset, CommonPrefix, false);
     }
     else if (MatchingCmds.size() == 1)
-        *g_pcchDcCmdLineLen = sprintf(g_szDcCmdLine, "%s ", MatchingCmds[0]->pszCmd);
+        DcAutoCompletePutComponent(Offset, MatchingCmds[0]->pszCmd, true);
+}
+
+void DcAutoCompleteInput_New()
+{
+    DcAutoCompleteCommand(0);
 }
 
 void CommandsInit(void)

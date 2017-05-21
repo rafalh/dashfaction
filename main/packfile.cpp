@@ -575,9 +575,8 @@ void ForceFileFromPackfile(const char *pszName, const char *pszPackfile)
     }
 }
 
-void PackfileFindMatchingFiles(const char *pszQuery, const char *pszSuffix)
+void PackfileFindMatchingFiles(const StringMatcher &Query, std::function<void(const char *)> ResultConsumer)
 {
-    size_t SuffixLen = strlen(pszSuffix);
     for (int i = 0; i < LOOKUP_TABLE_SIZE; ++i)
     {
         PackfileLookupTableNew *pLookupTableItem = &g_pVfsLookupTableNew[i];
@@ -587,11 +586,10 @@ void PackfileFindMatchingFiles(const char *pszQuery, const char *pszSuffix)
         do
         {
             const char *pszFilename = pLookupTableItem->pPackfileEntry->pszFileName;
-            size_t FilenameLen = strlen(pszFilename);
-
-            if (FilenameLen >= SuffixLen && !stricmp(pszFilename + FilenameLen - SuffixLen, pszSuffix) && stristr(pszFilename, pszQuery))
-                DcPrintf("%s\n", pLookupTableItem->pPackfileEntry->pszFileName);
+            if (Query(pszFilename))
+                ResultConsumer(pLookupTableItem->pPackfileEntry->pszFileName);
             pLookupTableItem = pLookupTableItem->pNext;
         } while (pLookupTableItem);
     }
 }
+

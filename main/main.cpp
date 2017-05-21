@@ -56,18 +56,17 @@ static void ProcessWaitingMessages()
     }
 }
 
-CPlayer *FindPlayer(const char *pszName)
+void FindPlayer(const StringMatcher &Query, std::function<void(CPlayer*)> Consumer)
 {
     CPlayer *pPlayer = *g_ppPlayersList;
     while (pPlayer)
     {
-        if (stristr(pPlayer->strName.psz, pszName))
-            return pPlayer;
+        if (Query(pPlayer->strName.psz))
+            Consumer(pPlayer);
         pPlayer = pPlayer->pNext;
         if (pPlayer == *g_ppPlayersList)
             break;
     }
-    return NULL;
 }
 
 static void DcUpdate_New(BOOL bServer)

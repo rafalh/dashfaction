@@ -2,8 +2,9 @@
 
 #include "rf.h"
 #include "GameConfig.h"
+#include "utils.h"
 
-rf::CPlayer *FindPlayer(const char *pszName);
+void FindPlayer(const StringMatcher &Query, std::function<void(rf::CPlayer*)> Consumer);
 
 extern GameConfig g_gameConfig;
 extern HMODULE g_hModule;

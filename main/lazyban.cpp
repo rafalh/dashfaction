@@ -2,7 +2,7 @@
 #include "lazyban.h"
 #include "utils.h"
 #include "rf.h"
-#include "main.h"
+#include "commands.h"
 
 using namespace rf;
 
@@ -15,7 +15,7 @@ void BanCmdHandlerHook()
             CPlayer *pPlayer;
             
             rf::DcGetArg(DC_ARG_STR, 1);
-            pPlayer = FindPlayer(g_pszDcArg);
+            pPlayer = FindBestMatchingPlayer(g_pszDcArg);
             if (pPlayer)
             {
                 if (pPlayer != *g_ppLocalPlayer)
@@ -26,8 +26,6 @@ void BanCmdHandlerHook()
                 } else
                     DcPrintf("You cannot ban yourself!");
             }
-            else
-                DcPrintf("Cannot find %s", g_pszDcArg);
         }
         
         if (*g_pbDcHelp)
@@ -47,7 +45,7 @@ void KickCmdHandlerHook()
             rf::CPlayer *pPlayer;
             
             rf::DcGetArg(DC_ARG_STR, 1);
-            pPlayer = FindPlayer(g_pszDcArg);
+            pPlayer = FindBestMatchingPlayer(g_pszDcArg);
             if (pPlayer)
             {
                 if (pPlayer != *g_ppLocalPlayer)
@@ -56,8 +54,7 @@ void KickCmdHandlerHook()
                     KickPlayer(pPlayer);
                 } else
                     DcPrintf("You cannot kick yourself!");
-            } else
-                DcPrintf("Cannot find %s", g_pszDcArg);
+            }
         }
         
         if (*g_pbDcHelp)
