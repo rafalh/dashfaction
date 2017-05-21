@@ -1,6 +1,7 @@
 #pragma once
 
 #include "VideoDeviceInfoProvider.h"
+#include "GameConfig.h"
 
 // OptionsDlg dialog
 
@@ -34,4 +35,5 @@ private:
     VideoDeviceInfoProvider m_videoInfo;
     std::vector<unsigned> m_multiSampleTypes;
     CToolTipCtrl *m_toolTip;
+    GameConfig m_conf;
 };
