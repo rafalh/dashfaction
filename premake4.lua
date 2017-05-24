@@ -42,3 +42,4 @@
 	include "editor_mod"
 	include "mod_common"
 	include "logger"
+	include "crash_handler"

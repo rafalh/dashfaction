@@ -212,7 +212,7 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
 {
     // Init logging and crash dump support first
     InitLogging();
-    CrashHandlerInit();
+    CrashHandlerInit(g_hModule);
     
     // Enable Data Execution Prevention
     if (!SetProcessDEPPolicy(PROCESS_DEP_ENABLE))

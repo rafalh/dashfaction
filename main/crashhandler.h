@@ -1,4 +1,4 @@
 #pragma once
 
-void CrashHandlerInit(void);
+void CrashHandlerInit(HMODULE hModule);
 void CrashHandlerCleanup(void);
