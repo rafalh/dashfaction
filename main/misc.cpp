@@ -230,6 +230,63 @@ void DcfSwapAssaultRifleControls()
     }
 }
 
+#if SERVER_WIN32_CONSOLE
+
+auto DcPrint_Hook = makeFunHook(DcPrint);
+
+void OsInitWindow_Server_New()
+{
+    AllocConsole();
+}
+
+void DcPrint_New(const char *pszText, const int *pColor)
+{
+    HANDLE hOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+
+    const char *Ptr = pszText;
+    while (*Ptr)
+    {
+        std::string Color;
+        if (Ptr[0] == '[' && Ptr[1] == '$')
+        {
+            const char *ColorEndPtr = strchr(Ptr + 2, ']');
+            if (ColorEndPtr)
+            {
+                Color.assign(Ptr + 2, ColorEndPtr - Ptr - 2);
+                Ptr = ColorEndPtr + 1;
+            }
+        }
+
+        const char *EndPtr = strstr(Ptr, "[$");
+        if (!EndPtr)
+            EndPtr = Ptr + strlen(Ptr);
+
+        WORD Attr;
+        if (Color == "Red")
+            Attr = FOREGROUND_RED | FOREGROUND_INTENSITY;
+        else if (Color == "Blue")
+            Attr = FOREGROUND_BLUE | FOREGROUND_INTENSITY;
+        else if (Color == "White")
+            Attr = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY;
+        else
+        {
+            if (!Color.empty())
+                ERR("unknown color %s", Color.c_str());
+            Attr = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
+        }
+
+        SetConsoleTextAttribute(hOutput, Attr);
+        DWORD NumChars = EndPtr - Ptr;
+        WriteConsoleA(hOutput, Ptr, NumChars, NULL, NULL);
+        Ptr = EndPtr;
+    }
+
+    if (Ptr > pszText && Ptr[-1] != '\n')
+        WriteConsoleA(hOutput, "\n", 1, NULL, NULL);
+}
+
+#endif // SERVER_WIN32_CONSOLE
+
 void MiscInit()
 {
     // Console init string
@@ -335,9 +392,18 @@ void MiscInit()
     AsmWritter(0x00478E00, 0x00478E14).mov(AsmReg::EAX, 0x30); // chat input border
     AsmWritter(0x00478E91, 0x00478E9E).mov(AsmReg::EBX, 0x40); // chat input background
 
+    // Show enemy bullets (FIXME: add config)
+    WriteMemUInt8(0x0042669C, ASM_SHORT_JMP_REL);
+
     // Swap Assault Rifle fire controls
     PlayerLocalFireControl_Hook.hook(PlayerLocalFireControl_New);
     WriteMemInt32(0x00430E65 + 1, (uintptr_t)IsEntityCtrlActive_New - (0x00430E65 + 5));
     WriteMemInt32(0x00430EF7 + 1, (uintptr_t)IsEntityCtrlActive_New - (0x00430EF7 + 5));
     DC_REGISTER_CMD(swap_assault_rifle_controls, "Swap Assault Rifle controls", DcfSwapAssaultRifleControls);
+
+#if SERVER_WIN32_CONSOLE // win32 console
+    WriteMemUInt32(0x004B27C5 + 1, (uintptr_t)OsInitWindow_Server_New - (0x004B27C5 + 0x5));
+    WriteMemUInt8(0x0050A770, ASM_RET); // null DcDrawServerConsole
+    DcPrint_Hook.hook(DcPrint_New);
+#endif
 }
