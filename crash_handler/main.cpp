@@ -1,226 +1,74 @@
 #include <windows.h>
-#include <Psapi.h>
 #include "version.h"
+#include "ZipHelper.h"
+#include "MiniDumpHelper.h"
+#include "HttpRequest.h"
+#include "Exception.h"
 
 // Config
-#define CRASHHANDLER_MSG_BOX 1
-
+#define CRASHHANDLER_LOG_PATH "logs/DashFaction.log"
+#define CRASHHANDLER_DMP_FILENAME "logs/DashFaction.dmp"
+#define CRASHHANDLER_TARGET_DIR "logs"
+#define CRASHHANDLER_TARGET_NAME "DashFaction-crash.zip"
+//#define CRASHHANDLER_MSG "Game has crashed!\nTo help resolve the problem please send " CRASHHANDLER_TARGET_NAME " file from logs subdirectory in RedFaction directory to " PRODUCT_NAME " author."
+#define CRASHHANDLER_MSG "Game has crashed!\nReport has been generated in " CRASHHANDLER_TARGET_DIR "\\" CRASHHANDLER_TARGET_NAME ".\nDo you want to send it to " PRODUCT_NAME " author to help resolve the problem?"
 // Information Level: 0 smallest - 2 - biggest
 #ifdef NDEBUG
-#define CRASHHANDLER_DMP_LEVEL 1
+#define CRASHHANDLER_DMP_LEVEL 0
 #else
-#define CRASHHANDLER_DMP_LEVEL 1
+#define CRASHHANDLER_DMP_LEVEL 0
 #endif
 
-#define CRASHHANDLER_DMP_FILENAME "logs/DashFaction.dmp"
-#define CRASHHANDLER_MSG "Game has crashed!\nTo help resolve the problem please send files from logs subdirectory in RedFaction directory to " PRODUCT_NAME " author."
+#define CRASHHANDLER_WEBSVC_ENABLED 1
+#define CRASHHANDLER_WEBSVC_HOST "ravin.tk"
+#define CRASHHANDLER_WEBSVC_PATH "/api/rf/dashfaction/crashreport.php"
+#define CRASHHANDLER_WEBSVC_AGENT "DashFaction"
 
-#if CRASHHANDLER_MSG_BOX
-#define CRASHHANDLER_ERR(msg) MessageBox(NULL, TEXT(msg), 0, MB_ICONERROR | MB_OK | MB_SETFOREGROUND | MB_TASKMODAL)
-#else
-#define CRASHHANDLER_ERR(msg) do {} while (0)
-#endif
-
-#include <Dbghelp.h>
-
-typedef typename decltype(&MiniDumpWriteDump) MiniDumpWriteDump_Type;
-
-static HMODULE g_hDbgHelpLib = NULL;
-static MiniDumpWriteDump_Type g_pMiniDumpWriteDump = NULL;
-
-//
-// This function determines whether we need data sections of the given module 
-//
-static inline bool IsDataSectionNeeded(const WCHAR* pModuleName)
+bool PrepareArchive(const char *CrashDumpFilename)
 {
-
-    // Extract the module name 
-    WCHAR szFileName[_MAX_FNAME] = L"";
-    _wsplitpath(pModuleName, NULL, NULL, szFileName, NULL);
-
-    // Compare the name with the list of known names and decide 
-    if (wcsicmp(szFileName, L"RF") == 0)
-    {
-        return true;
-    }
-    else if (wcsicmp(szFileName, L"DashFaction") == 0)
-    {
-        return true;
-    }
-    else if (wcsicmp(szFileName, L"ntdll") == 0)
-    {
-        return true;
-    }
-
-    // Complete 
-    return false;
-
+    CreateDirectoryA(CRASHHANDLER_TARGET_DIR, NULL);
+    ZipHelper zip(CRASHHANDLER_TARGET_DIR "/" CRASHHANDLER_TARGET_NAME);
+    zip.addFile(CrashDumpFilename, "CrashDump.dmp");
+    zip.addFile(CRASHHANDLER_LOG_PATH, "AppLog.log");
+    return true;
 }
 
-BOOL CALLBACK CrashHandlerMediumDumpCallback(
-    PVOID                            pParam,
-    const PMINIDUMP_CALLBACK_INPUT   pInput,
-    PMINIDUMP_CALLBACK_OUTPUT        pOutput
-)
+void SendArchive()
 {
-    BOOL bRet = FALSE;
+    HttpRequestInfo info;
+    info.method = "POST";
+    info.host = CRASHHANDLER_WEBSVC_HOST;
+    info.path = CRASHHANDLER_WEBSVC_PATH;
+    info.agent = CRASHHANDLER_WEBSVC_AGENT;
 
-    // Check parameters
-    if (pInput == 0 || pOutput == 0)
-        return FALSE;
+    FILE *file = fopen(CRASHHANDLER_TARGET_DIR "/" CRASHHANDLER_TARGET_NAME, "rb");
+    if (!file)
+        THROW_EXCEPTION("cannot open " CRASHHANDLER_TARGET_NAME);
 
-    // Process the callbacks
-    switch (pInput->CallbackType)
+    fseek(file, 0, SEEK_END);
+    size_t size = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    HttpRequest req(info);
+    req.addHeaders("Content-Type: application/octet-stream\r\n");
+    req.begin(size);
+    char buf[2048];
+    while (!feof(file))
     {
-    case IncludeModuleCallback:
-    {
-        // Include the module into the dump 
-        bRet = TRUE;
+        size_t num = fread(buf, 1, sizeof(buf), file);
+        req.write(buf, num);
     }
-    break;
-
-    case IncludeThreadCallback:
-    {
-        // Include the thread into the dump 
-        bRet = TRUE;
-    }
-    break;
-
-    case ModuleCallback:
-    {
-        // Are data sections available for this module ? 
-        if (pOutput->ModuleWriteFlags & ModuleWriteDataSeg)
-        {
-            // Yes, they are, but do we need them? 
-            if (!IsDataSectionNeeded(pInput->Module.FullPath))
-            {
-                //wprintf(L"Excluding module data sections: %s \n", pInput->Module.FullPath);
-                pOutput->ModuleWriteFlags &= (~ModuleWriteDataSeg);
-            }
-        }
-
-        bRet = TRUE;
-    }
-    break;
-
-    case ThreadCallback:
-    {
-        // Include all thread information into the minidump 
-        bRet = TRUE;
-    }
-    break;
-
-    case ThreadExCallback:
-    {
-        // Include this information 
-        bRet = TRUE;
-    }
-    break;
-
-    case MemoryCallback:
-    {
-        // We do not include any information here -> return FALSE 
-        bRet = FALSE;
-    }
-    break;
-
-    case CancelCallback:
-        break;
-    }
-
-    return bRet;
+    fclose(file);
+    req.end();
 }
 
-static inline bool CrashHandlerWriteDump(PEXCEPTION_POINTERS pExceptionPointers, HANDLE hProcess, DWORD dwThreadId)
-{
-    if (!g_pMiniDumpWriteDump)
-        return false;
-
-    static HANDLE hFile = NULL;
-    hFile = CreateFile(
-        TEXT(CRASHHANDLER_DMP_FILENAME),
-        GENERIC_READ | GENERIC_WRITE,
-        FILE_SHARE_READ,
-        NULL,
-        CREATE_ALWAYS,
-        FILE_ATTRIBUTE_NORMAL,
-        NULL);
-
-    if (INVALID_HANDLE_VALUE == hFile)
-    {
-        CRASHHANDLER_ERR("Error! CreateFile failed.");
-        return false;
-    }
-
-    static MINIDUMP_EXCEPTION_INFORMATION ExceptionInfo;
-    ExceptionInfo.ThreadId = dwThreadId;
-    ExceptionInfo.ExceptionPointers = pExceptionPointers;
-    ExceptionInfo.ClientPointers = TRUE;
-
-    static MINIDUMP_TYPE DumpType;
-    static MINIDUMP_CALLBACK_INFORMATION *pCallbackInfo;
-
-    // See http://www.debuginfo.com/articles/effminidumps2.html
-#if CRASHHANDLER_DMP_LEVEL == 0
-
-    DumpType = MiniDumpWithIndirectlyReferencedMemory;
-    pCallbackInfo = NULL;
-
-#elif CRASHHANDLER_DMP_LEVEL == 1 // medium information
-
-    DumpType = (MINIDUMP_TYPE)(
-        MiniDumpWithPrivateReadWriteMemory |
-        MiniDumpIgnoreInaccessibleMemory |
-        MiniDumpWithDataSegs |
-        MiniDumpWithHandleData |
-        MiniDumpWithFullMemoryInfo |
-        MiniDumpWithThreadInfo |
-        MiniDumpWithUnloadedModules);
-
-    static MINIDUMP_CALLBACK_INFORMATION CallbackInfo;
-    CallbackInfo.CallbackRoutine = (MINIDUMP_CALLBACK_ROUTINE)CrashHandlerMediumDumpCallback;
-    CallbackInfo.CallbackParam = 0;
-    pCallbackInfo = &CallbackInfo;
-
-#else // Maximal information
-
-    DumpType = (MINIDUMP_TYPE)(MiniDumpWithFullMemory |
-        MiniDumpWithFullMemoryInfo |
-        MiniDumpWithHandleData |
-        MiniDumpWithThreadInfo |
-        MiniDumpWithUnloadedModules |
-        MiniDumpWithIndirectlyReferencedMemory);
-    pCallbackInfo = NULL;
-
-#endif
-
-    BOOL Result = g_pMiniDumpWriteDump(hProcess, GetProcessId(hProcess), hFile, DumpType, &ExceptionInfo, NULL, pCallbackInfo);
-    if (!Result)
-        CRASHHANDLER_ERR("MiniDumpWriteDump failed");
-
-    CloseHandle(hFile);
-    return Result != FALSE;
-}
-
-void CrashHandlerInit(void)
-{
-    g_hDbgHelpLib = LoadLibraryW(L"Dbghelp.dll");
-    if (g_hDbgHelpLib)
-        g_pMiniDumpWriteDump = (MiniDumpWriteDump_Type)GetProcAddress(g_hDbgHelpLib, "MiniDumpWriteDump");
-}
-
-void CrashHandlerCleanup(void)
-{
-    FreeLibrary(g_hDbgHelpLib);
-    g_pMiniDumpWriteDump = NULL;
-}
 #if 0
 int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     auto argc = __argc;
     auto argv = __argv;
 #else
-int main(int argc, const char *argv[])
+int main(int argc, const char *argv[]) try
 {
 #endif
 
@@ -232,16 +80,39 @@ int main(int argc, const char *argv[])
     DWORD dwThreadId = (DWORD)strtoull(argv[3], nullptr, 0);
     HANDLE hEvent = (HANDLE)strtoull(argv[4], nullptr, 0);
 
-    CrashHandlerInit();
-    CrashHandlerWriteDump(pExceptionPtrs, hProcess, dwThreadId);
-    CrashHandlerCleanup();
+    char CrashDumpFilename[MAX_PATH];
+    tmpnam(CrashDumpFilename);
+
+    MiniDumpHelper dumpHelper;
+    dumpHelper.addKnownModule(L"ntdll");
+    dumpHelper.addKnownModule(L"DashFaction");
+    dumpHelper.addKnownModule(L"RF");
+    dumpHelper.setInfoLevel(CRASHHANDLER_DMP_LEVEL);
+    dumpHelper.writeDump(CrashDumpFilename, pExceptionPtrs, hProcess, dwThreadId);
 
     SetEvent(hEvent);
 
     CloseHandle(hProcess);
     CloseHandle(hEvent);
 
-    MessageBox(NULL, TEXT(CRASHHANDLER_MSG), TEXT("Fatal error!"), MB_ICONERROR | MB_OK | MB_SETFOREGROUND | MB_TASKMODAL);
+    PrepareArchive(CrashDumpFilename);
+    DeleteFileA(CrashDumpFilename);
+
+#if CRASHHANDLER_WEBSVC_ENABLED
+    if (MessageBox(NULL, TEXT(CRASHHANDLER_MSG), NULL, MB_ICONERROR | MB_YESNO | MB_SETFOREGROUND | MB_TASKMODAL) == IDYES)
+    {
+        SendArchive();
+        MessageBox(NULL, TEXT("Crash report has been sent. Thank you!"), NULL, MB_ICONINFORMATION | MB_OK | MB_SETFOREGROUND | MB_TASKMODAL);
+    }
+        
+#else // CRASHHANDLER_WEBSVC_ENABLED
+    MessageBox(NULL, TEXT(CRASHHANDLER_MSG), NULL, MB_ICONERROR | MB_OK | MB_SETFOREGROUND | MB_TASKMODAL);
+#endif // CRASHHANDLER_WEBSVC_ENABLED
 
     return 0;
+}
+catch (std::exception &e)
+{
+    MessageBoxA(NULL, e.what(), NULL, MB_ICONERROR | MB_OK | MB_SETFOREGROUND | MB_TASKMODAL);
+    return -1;
 }

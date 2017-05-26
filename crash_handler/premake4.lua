@@ -4,9 +4,14 @@ project "CrashHandler"
 	files {"**.h", "**.c", "**.cpp", "*.rc"}
 	links {
 		"psapi",
+		"zip",
+		"zlib",
+		"WinINet",
 	}
 	includedirs {
 		"../common/include",
+		"../vendor/zlib",
+		"../vendor/zlib/contrib/minizip",
 	}
 	
 	configuration "Debug"
