@@ -123,12 +123,8 @@ void ScreenshotAfterGameInit()
     if (rf::g_pGrScreen->MaxHeight > 1024)
     {
         g_ScreenshotScanlinesBuf = (BYTE**)malloc(rf::g_pGrScreen->MaxHeight * sizeof(BYTE*));
-        WriteMemUInt8(0x0055A066, ASM_MOV_ECX);
-        WriteMemPtr(0x0055A066 + 1, &g_ScreenshotScanlinesBuf[0]);
-        WriteMemUInt8(0x0055A06B, ASM_NOP, 2);
-        WriteMemUInt8(0x0055A0DF, ASM_MOV_EAX);
-        WriteMemPtr(0x0055A0DF + 1, g_ScreenshotScanlinesBuf);
-        WriteMemUInt8(0x0055A0E4, ASM_NOP, 2);
+        AsmWritter(0x0055A066, 0x0055A06D).mov(AsmRegs::ECX, (int32_t)&g_ScreenshotScanlinesBuf[0]);
+        AsmWritter(0x0055A0DF, 0x0055A0E6).mov(AsmRegs::EAX, (int32_t)g_ScreenshotScanlinesBuf);
     }
 
     char FullPath[MAX_PATH];

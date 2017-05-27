@@ -239,9 +239,8 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
     INFO("Allow Overwriting Game Files: %d", (int)g_gameConfig.allowOverwriteGameFiles);
 
     /* Process messages in the same thread as DX processing (alternative: D3DCREATE_MULTITHREADED) */
-    WriteMemUInt8(0x00524C48, ASM_NOP, 0x00524C83 - 0x00524C48); // disable msg loop thread
-    WriteMemUInt8(0x00524C48, ASM_LONG_CALL_REL);
-    WriteMemUInt32(0x00524C49, 0x00524E40 - (0x00524C48 + 0x5)); // CreateMainWindow
+    AsmWritter(0x00524C48, 0x00524C83).nop(); // disable msg loop thread
+    AsmWritter(0x00524C48).callLong(0x00524E40); // CreateMainWindow
     KeyGetFromFifo_Hook.hook(KeyGetFromFifo_New);
 
     /* General game hooks */

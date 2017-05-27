@@ -308,8 +308,7 @@ void MiscInit()
     WriteMemPtr(0x004B2534, "-- " PRODUCT_NAME " Initializing --\n");
 
     // Version in Main Menu
-    WriteMemUInt8(0x0044343A, ASM_LONG_JMP_REL);
-    WriteMemInt32(0x0044343A + 1, (uintptr_t)VersionLabelPushArgs_0044343A - (0x0044343A + 0x5));
+    AsmWritter(0x0044343A).jmpLong(VersionLabelPushArgs_0044343A);
     GetVersionStr_Hook.hook(GetVersionStr_New);
 
     // Window title (client and server)
@@ -346,12 +345,11 @@ void MiscInit()
     WriteMemUInt32(0x0056A28C + 1, 0);
 
     // Crash-fix in case texture has not been created (this happens if GrReadBackbuffer fails)
-    WriteMemUInt8(0x0055CE47, ASM_LONG_JMP_REL);
-    WriteMemInt32(0x0055CE47 + 1, (uintptr_t)CrashFix_0055CE48 - (0x0055CE47 + 0x5));
+    AsmWritter(0x0055CE47).jmpLong(CrashFix_0055CE48);
 
     // Dont overwrite player name and prefered weapons when loading saved game
-    WriteMemUInt8(0x004B4D99, ASM_NOP, 0x004B4DA5 - 0x004B4D99);
-    WriteMemUInt8(0x004B4E0A, ASM_NOP, 0x004B4E22 - 0x004B4E0A);
+    AsmWritter(0x004B4D99, 0x004B4DA5).nop();
+    AsmWritter(0x004B4E0A, 0x004B4E22).nop();
 
     // Dont filter levels for DM and TeamDM
     WriteMemUInt8(0x005995B0, 0);
@@ -377,8 +375,8 @@ void MiscInit()
 #endif
 
     // Fix console rendering when changing level
-    WriteMemUInt8(0x0047C490, ASM_RET);
-    WriteMemUInt8(0x0047C4AA, ASM_RET);
+    AsmWritter(0x0047C490).ret();
+    AsmWritter(0x0047C4AA).ret();
     WriteMemUInt8(0x004B2E15, ASM_NOP, 2);
     MenuUpdate_Hook.hook(MenuUpdate_New);
 
@@ -402,10 +400,10 @@ void MiscInit()
     MouseUpdateDirectInput_Hook.hook(MouseUpdateDirectInput_New);
 
     // Chat color alpha
-    AsmWritter(0x00477490, 0x004774A4).mov(AsmReg::EAX, 0x30); // chatbox border
-    AsmWritter(0x00477528, 0x00477535).mov(AsmReg::EBX, 0x40); // chatbox background
-    AsmWritter(0x00478E00, 0x00478E14).mov(AsmReg::EAX, 0x30); // chat input border
-    AsmWritter(0x00478E91, 0x00478E9E).mov(AsmReg::EBX, 0x40); // chat input background
+    AsmWritter(0x00477490, 0x004774A4).mov(AsmRegs::EAX, 0x30); // chatbox border
+    AsmWritter(0x00477528, 0x00477535).mov(AsmRegs::EBX, 0x40); // chatbox background
+    AsmWritter(0x00478E00, 0x00478E14).mov(AsmRegs::EAX, 0x30); // chat input border
+    AsmWritter(0x00478E91, 0x00478E9E).mov(AsmRegs::EBX, 0x40); // chat input background
 
     // Show enemy bullets (FIXME: add config)
     WriteMemUInt8(0x0042669C, ASM_SHORT_JMP_REL);
@@ -427,7 +425,7 @@ void MiscInit()
 
 #if SERVER_WIN32_CONSOLE // win32 console
     WriteMemUInt32(0x004B27C5 + 1, (uintptr_t)OsInitWindow_Server_New - (0x004B27C5 + 0x5));
-    WriteMemUInt8(0x0050A770, ASM_RET); // null DcDrawServerConsole
+    AsmWritter(0x0050A770).ret(); // null DcDrawServerConsole
     DcPrint_Hook.hook(DcPrint_New);
 #endif
 }

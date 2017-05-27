@@ -82,9 +82,6 @@ void UnbanLastCmdHandler(void)
 
 void InitLazyban(void)
 {
-    WriteMemUInt8(0x0047B6F0, ASM_LONG_JMP_REL);
-    WriteMemInt32(0x0047B6F0 + 1, (uintptr_t)BanCmdHandlerHook - (0x0047B6F0 + 0x5));
-    WriteMemUInt8(0x0047B580, ASM_LONG_JMP_REL);
-    WriteMemInt32(0x0047B580 + 1, (uintptr_t)KickCmdHandlerHook - (0x0047B580 + 0x5));
-    
+    AsmWritter(0x0047B6F0).jmpLong(BanCmdHandlerHook);
+    AsmWritter(0x0047B580).jmpLong(KickCmdHandlerHook);
 }

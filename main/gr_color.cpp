@@ -341,15 +341,15 @@ void GrColorInit()
         BinkInitDeviceInfo_Hook.hook(BinkInitDeviceInfo_New);
 
         // lightmaps
-        AsmWritter(0x004ED3E9).pushEbx().callLong((uintptr_t)RflLoadLightmaps_004ED3F6).addEsp(4).jmpLong(0x004ED4FA);
+        AsmWritter(0x004ED3E9).push(AsmRegs::EBX).callLong((uintptr_t)RflLoadLightmaps_004ED3F6).addEsp(4).jmpLong(0x004ED4FA);
         // geomod
-        AsmWritter(0x004F2F23).pushEsi().callLong((uintptr_t)GeoModGenerateTexture_004F2F23).addEsp(4).jmpLong(0x004F3023);
-        AsmWritter(0x004E487B).pushEsi().callLong((uintptr_t)GeoModGenerateLightmap_004E487B).addEsp(4).jmpLong(0x004E4993);
+        AsmWritter(0x004F2F23).push(AsmRegs::ESI).callLong((uintptr_t)GeoModGenerateTexture_004F2F23).addEsp(4).jmpLong(0x004F3023);
+        AsmWritter(0x004E487B).push(AsmRegs::ESI).callLong((uintptr_t)GeoModGenerateLightmap_004E487B).addEsp(4).jmpLong(0x004E4993);
         // water
         AsmWritter(0x004E68B0, 0x004E68B6).nop();
-        AsmWritter(0x004E68D1).pushEsi().callLong((uintptr_t)WaterGenerateTexture_004E68D1).addEsp(4).jmpLong(0x004E6B68);
+        AsmWritter(0x004E68D1).push(AsmRegs::ESI).callLong((uintptr_t)WaterGenerateTexture_004E68D1).addEsp(4).jmpLong(0x004E6B68);
         // ambient color
-        AsmWritter(0x004E5CE3).leaEdxEsp(0x34 - 0x28).pushEdx().pushEbx().pushEdi().pushEax()
+        AsmWritter(0x004E5CE3).leaEdxEsp(0x34 - 0x28).push(AsmRegs::EDX).push(AsmRegs::EBX).push(AsmRegs::EDI).push(AsmRegs::EAX)
             .callLong((uintptr_t)GetAmbientColorFromLightmaps_004E5CE3).addEsp(16).jmpNear(0x004E5D57);
         // sub_412410 (what is it?)
         WriteMemUInt8(0x00412430 + 3, 0x34 - 0x20 + 0x18); // pitch instead of width

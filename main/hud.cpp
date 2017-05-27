@@ -76,6 +76,5 @@ void HudSetupPositionsHook(int Width)
 void InitHud(void)
 {
     /* Fix HUD on not supported resolutions */
-    WriteMemUInt8(0x004377C0, ASM_LONG_JMP_REL);
-    WriteMemInt32(0x004377C0 + 1, (uintptr_t)HudSetupPositionsHook - (0x004377C0 + 0x5));
+    AsmWritter(0x004377C0).jmpLong(HudSetupPositionsHook);
 }

@@ -811,40 +811,24 @@ void NetworkInit()
     WriteMemUInt32(0x00599D20, 4);
 
     /* Buffer Overflow fixes */
-    WriteMemUInt8(0x0047B2D3, ASM_LONG_JMP_REL);
-    WriteMemUInt32(0x0047B2D3 + 1, (uintptr_t)ProcessGameInfoPacket_Security_0047B2D3 - (0x0047B2D3 + 0x5));
-    WriteMemUInt8(0x0047B334, ASM_LONG_JMP_REL);
-    WriteMemUInt32(0x0047B334 + 1, (uintptr_t)ProcessGameInfoPacket_Security_0047B334 - (0x0047B334 + 0x5));
+    AsmWritter(0x0047B2D3).jmpLong(ProcessGameInfoPacket_Security_0047B2D3);
+    AsmWritter(0x0047B334).jmpLong(ProcessGameInfoPacket_Security_0047B334);
 #ifndef TEST_BUFFER_OVERFLOW_FIXES
-    WriteMemUInt8(0x0047B38E, ASM_LONG_JMP_REL);
-    WriteMemUInt32(0x0047B38E + 1, (uintptr_t)ProcessGameInfoPacket_Security_0047B38E - (0x0047B38E + 0x5));
+    AsmWritter(0x0047B38E).jmpLong(ProcessGameInfoPacket_Security_0047B38E);
 #endif
-    WriteMemUInt8(0x0047AD4E, ASM_LONG_JMP_REL);
-    WriteMemUInt32(0x0047AD4E + 1, (uintptr_t)ProcessJoinReqPacket_Security_0047AD4E - (0x0047AD4E + 0x5));
-    WriteMemUInt8(0x0047A8AE, ASM_LONG_JMP_REL);
-    WriteMemUInt32(0x0047A8AE + 1, (uintptr_t)ProcessJoinAcceptPacket_Security_0047A8AE - (0x0047A8AE + 0x5));
-    WriteMemUInt8(0x0047A5F4, ASM_LONG_JMP_REL);
-    WriteMemUInt32(0x0047A5F4 + 1, (uintptr_t)ProcessNewPlayerPacket_Security_0047A5F4 - (0x0047A5F4 + 0x5));
-    WriteMemUInt8(0x00481EE6, ASM_LONG_JMP_REL);
-    WriteMemUInt32(0x00481EE6 + 1, (uintptr_t)ProcessPlayersPacket_Security_00481EE6 - (0x00481EE6 + 0x5));
-    WriteMemUInt8(0x00481BEC, ASM_LONG_JMP_REL);
-    WriteMemUInt32(0x00481BEC + 1, (uintptr_t)ProcessStateInfoReqPacket_Security_00481BEC - (0x00481BEC + 0x5));
-    WriteMemUInt8(0x004448B0, ASM_LONG_JMP_REL);
-    WriteMemUInt32(0x004448B0 + 1, (uintptr_t)ProcessChatLinePacket_Security_004448B0 - (0x004448B0 + 0x5));
-    WriteMemUInt8(0x0046EB24, ASM_LONG_JMP_REL);
-    WriteMemUInt32(0x0046EB24 + 1, (uintptr_t)ProcessNameChangePacket_Security_0046EB24 - (0x0046EB24 + 0x5));
-    WriteMemUInt8(0x0047C1C3, ASM_LONG_JMP_REL);
-    WriteMemUInt32(0x0047C1C3 + 1, (uintptr_t)ProcessLeaveLimboPacket_Security_0047C1C3 - (0x0047C1C3 + 0x5));
-    WriteMemUInt8(0x0047EE6E, ASM_LONG_JMP_REL);
-    WriteMemUInt32(0x0047EE6E + 1, (uintptr_t)ProcessObjKillPacket_Security_0047EE6E - (0x0047EE6E + 0x5));
-    WriteMemUInt8(0x00475474, ASM_LONG_JMP_REL);
-    WriteMemUInt32(0x00475474 + 1, (uintptr_t)ProcessEntityCreatePacket_Security_00475474 - (0x00475474 + 0x5));
-    WriteMemUInt8(0x00479FAA, ASM_LONG_JMP_REL);
-    WriteMemUInt32(0x00479FAA + 1, (uintptr_t)ProcessItemCreatePacket_Security_00479FAA - (0x00479FAA + 0x5));
-    WriteMemUInt8(0x0046C590, ASM_LONG_JMP_REL);
-    WriteMemUInt32(0x0046C590 + 1, (uintptr_t)ProcessRconReqPacket_Security_0046C590 - (0x0046C590 + 0x5));
-    WriteMemUInt8(0x0046C751, ASM_LONG_JMP_REL);
-    WriteMemUInt32(0x0046C751 + 1, (uintptr_t)ProcessRconPacket_Security_0046C751 - (0x0046C751 + 0x5));
+    AsmWritter(0x0047AD4E).jmpLong(ProcessJoinReqPacket_Security_0047AD4E);
+    AsmWritter(0x0047A8AE).jmpLong(ProcessJoinAcceptPacket_Security_0047A8AE);
+    AsmWritter(0x0047A5F4).jmpLong(ProcessNewPlayerPacket_Security_0047A5F4);
+    AsmWritter(0x00481EE6).jmpLong(ProcessPlayersPacket_Security_00481EE6);
+    AsmWritter(0x00481BEC).jmpLong(ProcessStateInfoReqPacket_Security_00481BEC);
+    AsmWritter(0x004448B0).jmpLong(ProcessChatLinePacket_Security_004448B0);
+    AsmWritter(0x0046EB24).jmpLong(ProcessNameChangePacket_Security_0046EB24);
+    AsmWritter(0x0047C1C3).jmpLong(ProcessLeaveLimboPacket_Security_0047C1C3);
+    AsmWritter(0x0047EE6E).jmpLong(ProcessObjKillPacket_Security_0047EE6E);
+    AsmWritter(0x00475474).jmpLong(ProcessEntityCreatePacket_Security_00475474);
+    AsmWritter(0x00479FAA).jmpLong(ProcessItemCreatePacket_Security_00479FAA);
+    AsmWritter(0x0046C590).jmpLong(ProcessRconReqPacket_Security_0046C590);
+    AsmWritter(0x0046C751).jmpLong(ProcessRconPacket_Security_0046C751);
 
     // Hook all packet handlers
     ProcessGameInfoReqPacket_Hook.hook(ProcessGameInfoReqPacket_New);
@@ -905,18 +889,18 @@ void NetworkInit()
     // Fix ObjUpdate packet handling
     AsmWritter(0x0047E058, 0x0047E06A)
         .movEaxMemEsp(0x9C - 0x6C) // pPlayer
-        .pushEax().pushEbx().pushEdi()
+        .push(AsmRegs::EAX).push(AsmRegs::EBX).push(AsmRegs::EDI)
         .callLong(SecureObjUpdatePacket)
-        .addEsp(12).mov(AsmReg::EDI, AsmReg::EAX);
+        .addEsp(12).mov(AsmRegs::EDI, AsmRegs::EAX);
 
     // Client-side green team fix
-    AsmWritter(0x0046CAD7, 0x0046CADA).cmpRegImm8(AsmReg::EAX, (int8_t)0xFF);
+    AsmWritter(0x0046CAD7, 0x0046CADA).cmp(AsmRegs::AL, (int8_t)0xFF);
 
     // Hide IP addresses in Players packet
-    AsmWritter(0x00481D31, 0x00481D33).xor(AsmReg::EAX, AsmReg::EAX);
-    AsmWritter(0x00481D40, 0x00481D44).xor(AsmReg::EDX, AsmReg::EDX);
+    AsmWritter(0x00481D31, 0x00481D33).xor(AsmRegs::EAX, AsmRegs::EAX);
+    AsmWritter(0x00481D40, 0x00481D44).xor(AsmRegs::EDX, AsmRegs::EDX);
     // Hide IP addresses in New Player packet
-    AsmWritter(0x0047A4A0, 0x0047A4A2). xor (AsmReg::EDX, AsmReg::EDX);
-    AsmWritter(0x0047A4A6, 0x0047A4AA). xor (AsmReg::ECX, AsmReg::ECX);
+    AsmWritter(0x0047A4A0, 0x0047A4A2). xor (AsmRegs::EDX, AsmRegs::EDX);
+    AsmWritter(0x0047A4A6, 0x0047A4AA). xor (AsmRegs::ECX, AsmRegs::ECX);
     
 }

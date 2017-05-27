@@ -527,29 +527,14 @@ static void PackfileCleanup_New(void)
 
 void VfsApplyHooks(void)
 {
-    WriteMemUInt8(0x0052BCA0, ASM_LONG_JMP_REL);
-    WriteMemInt32(0x0052BCA0 + 1, (uintptr_t)PackfileAddToLookupTable_New - (0x0052BCA0 + 0x5));
-    
-    WriteMemUInt8(0x0052BD40, ASM_LONG_JMP_REL);
-    WriteMemInt32(0x0052BD40 + 1, (uintptr_t)PackfileAddEntries_New - (0x0052BD40 + 0x5));
-    
-    WriteMemUInt8(0x0052C4D0, ASM_LONG_JMP_REL);
-    WriteMemInt32(0x0052C4D0 + 1, (uintptr_t)PackfileBuildEntriesList_New - (0x0052C4D0 + 0x5));
-    
-    WriteMemUInt8(0x0052C070, ASM_LONG_JMP_REL);
-    WriteMemInt32(0x0052C070 + 1, (uintptr_t)PackfileLoad_New - (0x0052C070 + 0x5));
-    
-    WriteMemUInt8(0x0052C1D0, ASM_LONG_JMP_REL);
-    WriteMemInt32(0x0052C1D0 + 1, (uintptr_t)PackfileFindArchive_New - (0x0052C1D0 + 0x5));
-    
-    WriteMemUInt8(0x0052C220, ASM_LONG_JMP_REL);
-    WriteMemInt32(0x0052C220 + 1, (uintptr_t)PackfileFindFileInternal_New - (0x0052C220 + 0x5));
-    
-    WriteMemUInt8(0x0052BB60, ASM_LONG_JMP_REL);
-    WriteMemInt32(0x0052BB60 + 1, (uintptr_t)PackfileInit_New - (0x0052BB60 + 0x5));
-    
-    WriteMemUInt8(0x0052BC80, ASM_LONG_JMP_REL);
-    WriteMemInt32(0x0052BC80 + 1, (uintptr_t)PackfileCleanup_New - (0x0052BC80 + 0x5));
+    AsmWritter(0x0052BCA0).jmpLong(PackfileAddToLookupTable_New);
+    AsmWritter(0x0052BD40).jmpLong(PackfileAddEntries_New);
+    AsmWritter(0x0052C4D0).jmpLong(PackfileBuildEntriesList_New);
+    AsmWritter(0x0052C070).jmpLong(PackfileLoad_New);
+    AsmWritter(0x0052C1D0).jmpLong(PackfileFindArchive_New);
+    AsmWritter(0x0052C220).jmpLong(PackfileFindFileInternal_New);
+    AsmWritter(0x0052BB60).jmpLong(PackfileInit_New);
+    AsmWritter(0x0052BC80).jmpLong(PackfileCleanup_New);
 
 #ifdef DEBUG
     WriteMemUInt8(0x0052BEF0, 0xFF); // VfsInitPackfileFilesList
