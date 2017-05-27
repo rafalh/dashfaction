@@ -9,6 +9,7 @@ Version 1.2.1 (not released):
 - added Drag&Drop support in Level Editor for opening RFL files
 - added auto-completition with TAB key for console commands: level, kick, ban, rcon
 - improved crash reporting functionality
+- stability improvements
 
 Version 1.2.0 (released 10-05-2017):
 - added running and jumping animations in Spectate Mode

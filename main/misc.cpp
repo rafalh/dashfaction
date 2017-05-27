@@ -401,6 +401,9 @@ void MiscInit()
     WriteMemInt32(0x00430EF7 + 1, (uintptr_t)IsEntityCtrlActive_New - (0x00430EF7 + 5));
     DC_REGISTER_CMD(swap_assault_rifle_controls, "Swap Assault Rifle controls", DcfSwapAssaultRifleControls);
 
+    // Fix crash in shadows rendering
+    WriteMemUInt8(0x0054A3C0 + 2, 16);
+
 #if SERVER_WIN32_CONSOLE // win32 console
     WriteMemUInt32(0x004B27C5 + 1, (uintptr_t)OsInitWindow_Server_New - (0x004B27C5 + 0x5));
     WriteMemUInt8(0x0050A770, ASM_RET); // null DcDrawServerConsole
