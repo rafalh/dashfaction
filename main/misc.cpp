@@ -287,6 +287,21 @@ void DcPrint_New(const char *pszText, const int *pColor)
 
 #endif // SERVER_WIN32_CONSOLE
 
+bool EntityIsReloading_SwitchWeapon_New(EntityObj *pEntity)
+{
+    if (EntityIsReloading(pEntity))
+        return true;
+
+    int WeaponClsId = pEntity->WeaponInfo.WeaponClsId;
+    if (WeaponClsId >= 0)
+    {
+        WeaponClass *pWeaponCls = &g_pWeaponClasses[pEntity->WeaponInfo.WeaponClsId];
+        if (pEntity->WeaponInfo.WeaponsAmmo[pEntity->WeaponInfo.WeaponClsId] == 0 && pEntity->WeaponInfo.ClipAmmo[pWeaponCls->AmmoType] > 0)
+            return true;
+    }
+    return false;
+}
+
 void MiscInit()
 {
     // Console init string
@@ -403,6 +418,12 @@ void MiscInit()
 
     // Fix crash in shadows rendering
     WriteMemUInt8(0x0054A3C0 + 2, 16);
+
+#if 0
+    // Fix weapon switch glitch when reloading (should be used on Match Mode)
+    AsmWritter(0x004A4B4B).callLong(EntityIsReloading_SwitchWeapon_New);
+    AsmWritter(0x004A4B77).callLong(EntityIsReloading_SwitchWeapon_New);
+#endif
 
 #if SERVER_WIN32_CONSOLE // win32 console
     WriteMemUInt32(0x004B27C5 + 1, (uintptr_t)OsInitWindow_Server_New - (0x004B27C5 + 0x5));

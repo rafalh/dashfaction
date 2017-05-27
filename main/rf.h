@@ -814,6 +814,7 @@ namespace rf
     constexpr auto IsEntityLoopFire = (bool(*)(int hEntity, signed int WeaponClsId))0x0041A830;
     constexpr auto EntityIsSwimming = (bool(*)(EntityObj *pEntity))0x0042A0A0;
     constexpr auto EntityIsFalling = (bool(*)(EntityObj *pEntit))0x0042A020;
+    constexpr auto EntityIsReloading = (bool(*)(EntityObj *pEntity))0x00425250;
 
     /* Object */
 
