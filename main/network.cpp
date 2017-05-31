@@ -710,7 +710,19 @@ void ProcessRespawnPacket_New(char *pData, const NwAddr *pAddr)
 void ProcessEntityCreatePacket_New(char *pData, const NwAddr *pAddr)
 {
     if (!*g_pbLocalNetworkGame) // client-side
+    {
+        // Update Default Player Weapon if server has it overriden
+        size_t NameSize = strlen(pData) + 1;
+        uint8_t PlayerId = pData[NameSize + 58];
+        if (PlayerId == (*g_ppLocalPlayer)->pNwData->PlayerId)
+        {
+            int32_t WeaponClsId = *(int32_t*)(pData + NameSize + 63);
+            CString_Assign(g_pstrDefaultPlayerWeapon, &g_pWeaponClasses[WeaponClsId].strName);
+            DcPrintf("spawn weapon %d", WeaponClsId);
+        }
+
         ProcessEntityCreatePacket_Hook.callTrampoline(pData, pAddr);
+    }
 }
 
 void ProcessItemCreatePacket_New(char *pData, const NwAddr *pAddr)
@@ -722,7 +734,20 @@ void ProcessItemCreatePacket_New(char *pData, const NwAddr *pAddr)
 void ProcessReloadPacket_New(char *pData, const NwAddr *pAddr)
 {
     if (!*g_pbLocalNetworkGame) // client-side
+    {
+        // Update ClipSize and MaxAmmo if received values are greater than values from local weapons.tbl
+        int WeaponClsId = *((int32_t *)pData + 1);
+        int ClipAmmo = *((int32_t *)pData + 2);
+        int Ammo = *((int32_t *)pData + 3);
+        if (g_pWeaponClasses[WeaponClsId].ClipSize < Ammo)
+            g_pWeaponClasses[WeaponClsId].ClipSize = Ammo;
+        if (g_pWeaponClasses[WeaponClsId].cMaxAmmo < ClipAmmo)
+            g_pWeaponClasses[WeaponClsId].cMaxAmmo = ClipAmmo;
+        DcPrintf("ProcessReloadPacket WeaponClsId %d ClipAmmo %d Ammo %d", WeaponClsId, ClipAmmo, Ammo);
+
+        // Call original handler
         ProcessReloadPacket_Hook.callTrampoline(pData, pAddr);
+    }
 }
 
 void ProcessReloadReqPacket_New(char *pData, const NwAddr *pAddr)
@@ -902,5 +927,4 @@ void NetworkInit()
     // Hide IP addresses in New Player packet
     AsmWritter(0x0047A4A0, 0x0047A4A2). xor (AsmRegs::EDX, AsmRegs::EDX);
     AsmWritter(0x0047A4A6, 0x0047A4AA). xor (AsmRegs::ECX, AsmRegs::ECX);
-    
 }

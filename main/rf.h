@@ -104,6 +104,7 @@ namespace rf
     constexpr auto CString_InitEmpty = (CString*(__thiscall *)(CString *This))0x004FF3B0;
     constexpr auto CString_CStr = (const char*(__thiscall *)(CString *This))0x004FF480;
     constexpr auto CString_Destroy = (void(__thiscall *)(CString *This))0x004FF470;
+    constexpr auto CString_Assign = (CString*(__thiscall *)(CString *This, CString *Src))0x004FFA20;
 
     /* Utils */
 
@@ -485,7 +486,8 @@ namespace rf
         NwPlayerFlags Flags;
         int field_C;
         int ConnectionId;
-        int PlayerId;
+        uint8_t PlayerId;
+        uint8_t _unused[3];
         int field_18;
         NwStats Stats;
         int dwPing;
@@ -1612,6 +1614,7 @@ namespace rf
     constexpr auto g_pSmallFontId = (int*)0x0063C068;
     constexpr auto g_pbDirectInputDisabled = (bool*)0x005A4F88;
     constexpr auto g_bScoreboardRendered = (bool*)0x006A1448;
+    constexpr auto g_pstrDefaultPlayerWeapon = (CString*)0x007C7600;
 
     constexpr auto g_pbDbgFlagsArray = (uint8_t*)0x0062FE19;
     constexpr auto g_pbDbgNetwork = (uint32_t*)0x006FED24;
