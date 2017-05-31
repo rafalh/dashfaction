@@ -16,6 +16,7 @@ auto MenuUpdate_Hook = makeFunHook(MenuUpdate);
 auto MouseUpdateDirectInput_Hook = makeFunHook(MouseUpdateDirectInput);
 auto SndConvertVolume3D_AmbientSound_Hook = makeCallHook(SndConvertVolume3D);
 auto PlayerLocalFireControl_Hook = makeFunHook(PlayerLocalFireControl);
+auto GeomCachePrepareRoom_Hook = makeFunHook(GeomCachePrepareRoom);
 
 int g_VersionLabelX, g_VersionLabelWidth, g_VersionLabelHeight;
 static const char g_szVersionInMenu[] = PRODUCT_NAME_VERSION;
@@ -302,6 +303,26 @@ bool EntityIsReloading_SwitchWeapon_New(EntityObj *pEntity)
     return false;
 }
 
+int GeomCachePrepareRoom_New(void *pGeom, void *pRoom)
+{
+    int ret = GeomCachePrepareRoom_Hook.callTrampoline(pGeom, pRoom);
+    char **ppRoomGeom = (char**)((char*)pRoom + 4);
+    char *pRoomGeom = *ppRoomGeom;
+    if (ret == 0 && pRoomGeom)
+    {
+        uint32_t *pRoomVertNum = (uint32_t*)(pRoomGeom + 4);
+        if (*pRoomVertNum > 8000)
+        {
+            static int Once = 0;
+            if (!(Once++))
+                WARN("Not rendering room with %u vertices!", *pRoomVertNum);
+            *ppRoomGeom = NULL;
+            return -1;
+        }
+    }
+    return ret;
+}
+
 void MiscInit()
 {
     // Console init string
@@ -416,6 +437,9 @@ void MiscInit()
 
     // Fix crash in shadows rendering
     WriteMemUInt8(0x0054A3C0 + 2, 16);
+
+    // Fix crash in geometry rendering
+    GeomCachePrepareRoom_Hook.hook(GeomCachePrepareRoom_New);
 
 #if 0
     // Fix weapon switch glitch when reloading (should be used on Match Mode)

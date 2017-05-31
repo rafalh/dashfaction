@@ -894,7 +894,7 @@ namespace rf
 
     struct Object
     {
-        int pRoomUnk;
+        void *pRoom;
         CVector3 vLastPosInRoom;
         Object *pNextObj;
         Object *pPrevObj;
@@ -1639,6 +1639,7 @@ namespace rf
     constexpr auto DrawScoreboardInternal = (void(*)(bool bDraw))0x00470880;
     constexpr auto BinkInitDeviceInfo = (unsigned(*)())0x005210C0;
     constexpr auto SndConvertVolume3D = (void(*)(int GameSndId, CVector3 *pSoundPos, float *pPanOut, float *pVolumeOut, float VolumeIn))0x00505740;
+    constexpr auto GeomCachePrepareRoom = (int(*)(void *pGeom, void *pRoom))0x004F0C00;
 
 
     /* Strings Table */

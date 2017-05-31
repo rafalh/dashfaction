@@ -12,7 +12,8 @@ Version 1.2.1 (not released):
 - improved crash reporting functionality
 - adjust game configuration (default weapon, clip size, max ammo) based on packets from server (improves gameplay
   on highly modified servers like Afaction)
-- stability improvements
+- fixed crash when level geometry is highly modified by GeoMod and has too many vertices
+- other stability improvements
 
 Version 1.2.0 (released 10-05-2017):
 - added running and jumping animations in Spectate Mode
