@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "GameConfig.h"
 #include "RegKey.h"
+#include <Shlwapi.h>
 
 const char RF_KEY_NAME[] = "SOFTWARE\\Volition\\Red Faction";
 const char DF_SUBKEY_NAME[] = "Dash Faction";
@@ -120,6 +121,15 @@ bool GameConfig::detectGamePath()
     catch (std::exception)
     {
         // ignore
+    }
+
+    char currentDir[MAX_PATH];
+    GetCurrentDirectoryA(sizeof(currentDir), currentDir);
+    std::string fullPath = std::string(currentDir) + "\\RF.exe";
+    if (PathFileExistsA(fullPath.c_str()))
+    {
+        gameExecutablePath = fullPath;
+        return true;
     }
     
     return false;
