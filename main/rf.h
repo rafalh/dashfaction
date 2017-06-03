@@ -320,7 +320,7 @@ namespace rf
     constexpr auto GrSetViewMatrixD3D = (void(*)(CMatrix3 *pMatRot, CVector3 *pPos, float fFov, int a4, int a5))0x00547150;
     constexpr auto GrRenderLine = (char(*)(const CVector3 *pWorldPos1, const CVector3 *pWorldPos2, int Material))0x00515960;
     constexpr auto GrRenderSphere = (char(*)(const CVector3 *pvPos, float fRadius, int Material))0x00515CD0;
-    constexpr auto GrLock = (int(*)(int BmHandle, int SectionIdx, SGrLockData *pData, int a4))0x0050E2E0;
+    constexpr auto GrLock = (char(*)(int BmHandle, int SectionIdx, SGrLockData *pData, int a4))0x0050E2E0;
     constexpr auto GrUnlock = (void(*)(SGrLockData *pData))0x0050E310;
     constexpr auto GrD3DSetTextureData = (int(*)(int Level, const BYTE *pSrcBits, const BYTE *pPallete, int cxBm, int cyBm, int PixelFmt, void *a7, int cxTex, int cyTex, IDirect3DTexture8 *pTextures))0x0055BA10;
     constexpr auto GrInitBuffers = (void(*)())0x005450A0;
