@@ -186,8 +186,8 @@ public:
 
     AsmWritter &movEaxMemEsp(int8_t off)
     {
-        WriteMemUInt8(m_addr++, 0x88);
-        WriteMemUInt8(m_addr++, 0x4C);
+        WriteMemUInt8(m_addr++, 0x8B);
+        WriteMemUInt8(m_addr++, 0x44);
         WriteMemUInt8(m_addr++, 0x24);
         WriteMemInt8(m_addr++, off);
         return *this;

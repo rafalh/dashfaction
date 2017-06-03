@@ -804,9 +804,16 @@ EntityObj *SecureObjUpdatePacket(EntityObj *pEntity, uint8_t Flags, CPlayer *pSr
     {
         // server-side
         if (pEntity && pEntity->_Super.Handle != pSrcPlayer->hEntity)
+        {
+            TRACE("Invalid ObjUpdate entity %x %x %s", pEntity->_Super.Handle, pSrcPlayer->hEntity, pSrcPlayer->strName.psz);
             return nullptr;
+        }
+
         if (Flags & (0x4 | 0x20 | 0x80)) // OUF_WEAPON_TYPE | OUF_HEALTH_ARMOR | OUF_ARMOR_STATE
+        {
+            TRACE("Invalid ObjUpdate flags %x", Flags);
             return nullptr;
+        }
     }
     return pEntity;
 }
