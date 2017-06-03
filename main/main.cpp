@@ -88,6 +88,7 @@ static void DcUpdate_New(BOOL bServer)
 
 static void InitGame_New(void)
 {
+    DWORD StartTicks = GetTickCount();
     INFO("Initializing game...");
 
     InitGame_Hook.callParent();
@@ -104,7 +105,7 @@ static void InitGame_New(void)
     CommandsAfterGameInit();
     ScreenshotAfterGameInit();
 
-    INFO("Game initialized.");
+    INFO("Game initialized (%u ms).", GetTickCount() - StartTicks);
 }
 
 static void CleanupGame_New(void)
@@ -210,6 +211,8 @@ extern "C" void subhook_unk_opcode_handler(uint8_t *opcode)
 
 extern "C" DWORD DLL_EXPORT Init(void *pUnused)
 {
+    DWORD StartTicks = GetTickCount();
+
     // Init logging and crash dump support first
     InitLogging();
     CrashHandlerInit(g_hModule);
@@ -276,6 +279,8 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
 #ifndef NDEBUG
     TestInit();
 #endif
+
+    INFO("Installing hooks took %u ms", GetTickCount() - StartTicks);
 
     return 1; /* success */
 }

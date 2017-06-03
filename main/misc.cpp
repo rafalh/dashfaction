@@ -441,6 +441,9 @@ void MiscInit()
     // Fix crash in geometry rendering
     GeomCachePrepareRoom_Hook.hook(GeomCachePrepareRoom_New);
 
+    // Remove Sleep calls in TimerInit
+    AsmWritter(0x00504A67, 0x00504A82).nop();
+
 #if 0
     // Fix weapon switch glitch when reloading (should be used on Match Mode)
     AsmWritter(0x004A4B4B).callLong(EntityIsReloading_SwitchWeapon_New);
