@@ -50,6 +50,8 @@ static void GetVersionStr_New(const char **ppszVersion, const char **a2)
     g_VersionLabelHeight = g_VersionLabelHeight + 2;
 }
 
+void ProcessQueuedCmd();
+
 static int MenuUpdate_New()
 {
     int MenuId = MenuUpdate_Hook.callTrampoline();
@@ -57,6 +59,10 @@ static int MenuUpdate_New()
         rf::SetCursorVisible(false);
     else if (MenuId == MENU_MAIN)
         rf::SetCursorVisible(true);
+
+#if SERVER_WIN32_CONSOLE
+    ProcessQueuedCmd();
+#endif
     return MenuId;
 }
 
@@ -234,10 +240,57 @@ void DcfSwapAssaultRifleControls()
 #if SERVER_WIN32_CONSOLE
 
 auto DcPrint_Hook = makeFunHook(DcPrint);
+static char g_QueuedCmd[1024] = "";
+static volatile bool g_bHasQueuedCmd = false;
+
+void ConsoleInputThreadProc()
+{
+    INFO("Input thread started!");
+    HANDLE hInput = GetStdHandle(STD_INPUT_HANDLE);
+    char Buf[256];
+    DWORD NumRead = 0;
+    while (true)
+    {
+        if (!ReadConsoleA(hInput, Buf, sizeof(Buf), &NumRead, NULL) || NumRead == 0)
+        {
+            WARN("ReadConsoleA failed - error %lu, read %lu!", GetLastError(), NumRead);
+            break;
+        }
+
+        if (NumRead > 0 && Buf[NumRead - 1] == '\n')
+            --NumRead;
+        if (NumRead > 0 && Buf[NumRead - 1] == '\r')
+            --NumRead;
+        Buf[clamp((size_t)NumRead, 0u, sizeof(Buf) - 1)] = '\0';
+
+        g_bHasQueuedCmd = false;
+        strcpy(g_QueuedCmd, Buf);
+        g_bHasQueuedCmd = true;
+    }
+}
+
+void ProcessQueuedCmd()
+{
+    if (g_bHasQueuedCmd)
+    {
+        DcRunCmd(g_QueuedCmd);
+        g_bHasQueuedCmd = false;
+    }
+}
+
+BOOL WINAPI ConsoleCtrlHandler(DWORD fdwCtrlType)
+{
+    constexpr int32_t *pClose = (int32_t*)0x01B0D758;
+    FreeConsole();
+    *pClose = 1;
+    return TRUE;
+}
 
 void OsInitWindow_Server_New()
 {
     AllocConsole();
+    static std::thread ConsoleInputThread(ConsoleInputThreadProc);
+    SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE);
 }
 
 void DcPrint_New(const char *pszText, const int *pColor)
@@ -427,7 +480,8 @@ void MiscInit()
     AsmWritter(0x00478E91, 0x00478E9E).mov(AsmRegs::EBX, 0x40); // chat input background
 
     // Show enemy bullets (FIXME: add config)
-    WriteMemUInt8(0x0042669C, ASM_SHORT_JMP_REL);
+    if (g_gameConfig.showEnemyBullets)
+        WriteMemUInt8(0x0042669C, ASM_SHORT_JMP_REL);
 
     // Swap Assault Rifle fire controls
     PlayerLocalFireControl_Hook.hook(PlayerLocalFireControl_New);
@@ -451,8 +505,11 @@ void MiscInit()
 #endif
 
 #if SERVER_WIN32_CONSOLE // win32 console
-    WriteMemUInt32(0x004B27C5 + 1, (uintptr_t)OsInitWindow_Server_New - (0x004B27C5 + 0x5));
-    AsmWritter(0x0050A770).ret(); // null DcDrawServerConsole
-    DcPrint_Hook.hook(DcPrint_New);
+    if (stristr(GetCommandLineA(), "-win32-console"))
+    {
+        WriteMemUInt32(0x004B27C5 + 1, (uintptr_t)OsInitWindow_Server_New - (0x004B27C5 + 0x5));
+        AsmWritter(0x0050A770).ret(); // null DcDrawServerConsole
+        DcPrint_Hook.hook(DcPrint_New);
+    }
 #endif
 }

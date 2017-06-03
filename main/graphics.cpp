@@ -323,7 +323,7 @@ void GraphicsAfterGameInit()
 {
 #if ANISOTROPIC_FILTERING
     // Anisotropic texture filtering
-    if (g_pGrDeviceCaps->MaxAnisotropy > 0 && g_gameConfig.anisotropicFiltering)
+    if (g_pGrDeviceCaps->MaxAnisotropy > 0 && g_gameConfig.anisotropicFiltering && !*g_pbDedicatedServer)
     {
         SetTextureMinMagFilterInCode(D3DTEXF_ANISOTROPIC);
         DWORD AnisotropyLevel = SetupMaxAnisotropy();

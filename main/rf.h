@@ -161,7 +161,7 @@ namespace rf
     constexpr auto DcGetArg = (void(*)(int Type, int bUnknown))0x0050AED0;
     constexpr auto DcUpdate = (void(*)(BOOL bServer))0x0050A720;
     constexpr auto DcAutoCompleteInput = (void(*)())0x0050A620;
-    constexpr auto g_pcchDcCmdLineLen = (uint32_t*)0x0177568C;
+    constexpr auto DcRunCmd = (int(*)(const char *pszCmd))0x00509B00;
 
     typedef void(*DcCmdHandler)(void);
     constexpr auto DcCommand__Init = (void(__thiscall *)(rf::DcCommand *This, const char *pszCmd, const char *pszDescr, DcCmdHandler pfnHandler))0x00509A70;
@@ -183,6 +183,7 @@ namespace rf
     constexpr auto g_piDcArg = (int*)0x01775220;
     constexpr auto g_pfDcArg = (float*)0x01754628;
     constexpr auto g_szDcCmdLine = (char*)0x01775330;
+    constexpr auto g_pcchDcCmdLineLen = (uint32_t*)0x0177568C;
 
     /* Debug Console Commands */
 

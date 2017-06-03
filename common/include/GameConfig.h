@@ -25,6 +25,7 @@ struct GameConfig
     bool fpsCounter = true;
     bool highScannerRes = true;
     bool trueColorTextures = true;
+    bool showEnemyBullets = true;
 
     std::string tracker = DEFAULT_RF_TRACKER;
     unsigned updateRate = 2600;
