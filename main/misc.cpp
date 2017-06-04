@@ -50,8 +50,6 @@ static void GetVersionStr_New(const char **ppszVersion, const char **a2)
     g_VersionLabelHeight = g_VersionLabelHeight + 2;
 }
 
-void ProcessQueuedCmd();
-
 static int MenuUpdate_New()
 {
     int MenuId = MenuUpdate_Hook.callTrampoline();
@@ -59,10 +57,6 @@ static int MenuUpdate_New()
         rf::SetCursorVisible(false);
     else if (MenuId == MENU_MAIN)
         rf::SetCursorVisible(true);
-
-#if SERVER_WIN32_CONSOLE
-    ProcessQueuedCmd();
-#endif
     return MenuId;
 }
 
@@ -239,63 +233,87 @@ void DcfSwapAssaultRifleControls()
 
 #if SERVER_WIN32_CONSOLE
 
+constexpr auto DcProcessKbd = (void(*)())0x00509F90;
+constexpr auto DcDrawServerConsole = (void(*)())0x0050A770;
+constexpr auto KeyGetFromQueue = (int(*)())0x0051F000;
+constexpr auto KeyProcessEvent = (void(*)(int ScanCode, int bKeyDown, int DeltaT))0x0051E6C0;
+
 auto DcPrint_Hook = makeFunHook(DcPrint);
-static char g_QueuedCmd[1024] = "";
-static volatile bool g_bHasQueuedCmd = false;
+auto DcDrawServerConsole_Hook = makeFunHook(DcDrawServerConsole);
+auto KeyGetFromQueue_Hook = makeFunHook(KeyGetFromQueue);
 
-void ConsoleInputThreadProc()
+void ResetConsoleCursorColumn(bool bClear)
 {
-    INFO("Input thread started!");
-    HANDLE hInput = GetStdHandle(STD_INPUT_HANDLE);
-    char Buf[256];
-    DWORD NumRead = 0;
-    while (true)
+    HANDLE hOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_SCREEN_BUFFER_INFO ScrBufInfo;
+    GetConsoleScreenBufferInfo(hOutput, &ScrBufInfo);
+    if (ScrBufInfo.dwCursorPosition.X == 0)
+        return;
+    COORD NewPos = ScrBufInfo.dwCursorPosition;
+    NewPos.X = 0;
+    SetConsoleCursorPosition(hOutput, NewPos);
+    if (bClear)
     {
-        if (!ReadConsoleA(hInput, Buf, sizeof(Buf), &NumRead, NULL) || NumRead == 0)
-        {
-            WARN("ReadConsoleA failed - error %lu, read %lu!", GetLastError(), NumRead);
-            break;
-        }
-
-        if (NumRead > 0 && Buf[NumRead - 1] == '\n')
-            --NumRead;
-        if (NumRead > 0 && Buf[NumRead - 1] == '\r')
-            --NumRead;
-        Buf[clamp((size_t)NumRead, 0u, sizeof(Buf) - 1)] = '\0';
-
-        g_bHasQueuedCmd = false;
-        strcpy(g_QueuedCmd, Buf);
-        g_bHasQueuedCmd = true;
+        for (int i = 0; i < ScrBufInfo.dwCursorPosition.X; ++i)
+            WriteConsoleA(hOutput, " ", 1, NULL, NULL);
+        SetConsoleCursorPosition(hOutput, NewPos);
     }
 }
 
-void ProcessQueuedCmd()
+void PrintCmdInputLine()
 {
-    if (g_bHasQueuedCmd)
-    {
-        DcRunCmd(g_QueuedCmd);
-        g_bHasQueuedCmd = false;
-    }
+    HANDLE hOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_SCREEN_BUFFER_INFO ScrBufInfo;
+    GetConsoleScreenBufferInfo(hOutput, &ScrBufInfo);
+    WriteConsoleA(hOutput, "] ", 2, NULL, NULL);
+    unsigned Offset = std::max(0, (int)*g_pcchDcCmdLineLen - ScrBufInfo.dwSize.X + 3);
+    WriteConsoleA(hOutput, g_szDcCmdLine + Offset, *g_pcchDcCmdLineLen - Offset, NULL, NULL);
 }
 
 BOOL WINAPI ConsoleCtrlHandler(DWORD fdwCtrlType)
 {
+    INFO("Quiting after Console CTRL");
     constexpr int32_t *pClose = (int32_t*)0x01B0D758;
-    FreeConsole();
     *pClose = 1;
     return TRUE;
+}
+
+void InputThreadProc()
+{
+    char Buf[1024];
+    DWORD NumRead;
+    while (true)
+    {
+        INPUT_RECORD InputRecord;
+        DWORD NumRead = 0;
+        ReadConsoleInput(GetStdHandle(STD_INPUT_HANDLE), &InputRecord, 1, &NumRead);
+    }
 }
 
 void OsInitWindow_Server_New()
 {
     AllocConsole();
-    static std::thread ConsoleInputThread(ConsoleInputThreadProc);
     SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE);
+
+    //std::thread InputThread(InputThreadProc);
+    //InputThread.detach();
+}
+
+void MiscCleanup()
+{
+    FreeConsole();
 }
 
 void DcPrint_New(const char *pszText, const int *pColor)
 {
     HANDLE hOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+    constexpr WORD RedAttr = FOREGROUND_RED | FOREGROUND_INTENSITY;
+    constexpr WORD BlueAttr = FOREGROUND_BLUE | FOREGROUND_INTENSITY;
+    constexpr WORD WhiteAttr = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY;
+    constexpr WORD GrayAttr = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
+    WORD CurrentAttr = 0;
+
+    ResetConsoleCursorColumn(true);
 
     const char *Ptr = pszText;
     while (*Ptr)
@@ -317,26 +335,75 @@ void DcPrint_New(const char *pszText, const int *pColor)
 
         WORD Attr;
         if (Color == "Red")
-            Attr = FOREGROUND_RED | FOREGROUND_INTENSITY;
+            Attr = RedAttr;
         else if (Color == "Blue")
-            Attr = FOREGROUND_BLUE | FOREGROUND_INTENSITY;
+            Attr = BlueAttr;
         else if (Color == "White")
-            Attr = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY;
+            Attr = WhiteAttr;
         else
         {
             if (!Color.empty())
                 ERR("unknown color %s", Color.c_str());
-            Attr = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
+            Attr = GrayAttr;
         }
 
-        SetConsoleTextAttribute(hOutput, Attr);
+        if (CurrentAttr != Attr)
+        {
+            CurrentAttr = Attr;
+            SetConsoleTextAttribute(hOutput, Attr);
+        }
+        
         DWORD NumChars = EndPtr - Ptr;
-        WriteConsoleA(hOutput, Ptr, NumChars, NULL, NULL);
+        WriteFile(hOutput, Ptr, NumChars, NULL, NULL);
         Ptr = EndPtr;
     }
 
     if (Ptr > pszText && Ptr[-1] != '\n')
-        WriteConsoleA(hOutput, "\n", 1, NULL, NULL);
+        WriteFile(hOutput, "\n", 1, NULL, NULL);
+
+    if (CurrentAttr != GrayAttr)
+        SetConsoleTextAttribute(hOutput, GrayAttr);
+
+    //PrintCmdInputLine();
+}
+
+void DcPutChar_NewLine_New()
+{
+    HANDLE hOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+    WriteConsoleA(hOutput, "\r\n", 2, NULL, NULL);
+}
+
+void DcDrawServerConsole_New()
+{
+    static char szPrevCmdLine[1024];
+    HANDLE hOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (strncmp(g_szDcCmdLine, szPrevCmdLine, _countof(szPrevCmdLine)) != 0)
+    {
+        ResetConsoleCursorColumn(true);
+        PrintCmdInputLine();
+        strncpy(szPrevCmdLine, g_szDcCmdLine, _countof(szPrevCmdLine));
+    }
+}
+
+int KeyGetFromQueue_New()
+{
+    if (!*g_pbDedicatedServer)
+        return KeyGetFromQueue_Hook.callTrampoline();
+
+    HANDLE hInput = GetStdHandle(STD_INPUT_HANDLE);
+    INPUT_RECORD InputRecord;
+    DWORD NumRead = 0;
+    while (false)
+    {
+        if (!PeekConsoleInput(hInput, &InputRecord, 1, &NumRead) || NumRead == 0)
+            break;
+        if (!ReadConsoleInput(hInput, &InputRecord, 1, &NumRead) || NumRead == 0)
+            break;
+        if (InputRecord.EventType == KEY_EVENT)
+            KeyProcessEvent(InputRecord.Event.KeyEvent.wVirtualScanCode, InputRecord.Event.KeyEvent.bKeyDown, 0);
+    }
+
+    return KeyGetFromQueue_Hook.callTrampoline();
 }
 
 #endif // SERVER_WIN32_CONSOLE
@@ -508,8 +575,11 @@ void MiscInit()
     if (stristr(GetCommandLineA(), "-win32-console"))
     {
         WriteMemUInt32(0x004B27C5 + 1, (uintptr_t)OsInitWindow_Server_New - (0x004B27C5 + 0x5));
-        AsmWritter(0x0050A770).ret(); // null DcDrawServerConsole
+        //AsmWritter(0x0050A770).ret(); // null DcDrawServerConsole
         DcPrint_Hook.hook(DcPrint_New);
+        DcDrawServerConsole_Hook.hook(DcDrawServerConsole_New);
+        KeyGetFromQueue_Hook.hook(KeyGetFromQueue_New);
+        AsmWritter(0x0050A081).callLong(DcPutChar_NewLine_New);
     }
 #endif
 }
