@@ -49,6 +49,9 @@ static void GrUpdateGammaRampHook(void)
 void ResetGammaRamp(void)
 {
     D3DGAMMARAMP GammaRamp;
+
+    if (!g_GammaRampInitialized)
+        return;
     
     for (unsigned i = 0; i < 256; ++i)
         GammaRamp.red[i] = GammaRamp.green[i] = GammaRamp.blue[i] = i << 8;
