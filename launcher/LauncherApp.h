@@ -32,6 +32,7 @@ public:
 
 private:
     void MigrateConfig();
+    int Message(HWND hwnd, const char *pszText, const char *pszTitle, int Flags);
 };
 
 extern LauncherApp theApp;

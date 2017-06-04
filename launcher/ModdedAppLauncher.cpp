@@ -113,6 +113,15 @@ void ModdedAppLauncher::launch()
     ZeroMemory(&si, sizeof(si));
     si.cb = sizeof(si);
 
+    if (GetSystemMetrics(SM_CMONITORS) == 0)
+    {
+        // Redirect std handles - fixes nohup logging
+        si.dwFlags |= STARTF_USESTDHANDLES;
+        si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
+        si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+        si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
+    }
+
     BOOL result = CreateProcessA(appPath.c_str(), GetCommandLine(),
         NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, workDir.c_str(), &si, &pi);
     if (!result)
@@ -127,7 +136,13 @@ void ModdedAppLauncher::launch()
     injectDLL(pi.hProcess, modPath.c_str());
 
     ResumeThread(pi.hThread);
+
+    // Wait for child process in Wine No GUI mode
+    if (GetSystemMetrics(SM_CMONITORS) == 0)
+        WaitForSingleObject(pi.hProcess, INFINITE);
+
     CloseHandle(pi.hThread);
+    CloseHandle(pi.hProcess);
 }
 
 GameLauncher::GameLauncher() :

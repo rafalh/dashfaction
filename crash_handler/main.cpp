@@ -98,16 +98,20 @@ int main(int argc, const char *argv[]) try
     PrepareArchive(CrashDumpFilename);
     DeleteFileA(CrashDumpFilename);
 
-#if CRASHHANDLER_WEBSVC_ENABLED
-    if (MessageBox(NULL, TEXT(CRASHHANDLER_MSG), NULL, MB_ICONERROR | MB_YESNO | MB_SETFOREGROUND | MB_TASKMODAL) == IDYES)
+    if (GetSystemMetrics(SM_CMONITORS) == 0)
+        printf("%s\n", CRASHHANDLER_MSG);
+    else
     {
-        SendArchive();
-        MessageBox(NULL, TEXT("Crash report has been sent. Thank you!"), NULL, MB_ICONINFORMATION | MB_OK | MB_SETFOREGROUND | MB_TASKMODAL);
-    }
-        
+#if CRASHHANDLER_WEBSVC_ENABLED
+        if (MessageBox(NULL, TEXT(CRASHHANDLER_MSG), NULL, MB_ICONERROR | MB_YESNO | MB_SETFOREGROUND | MB_TASKMODAL) == IDYES)
+        {
+            SendArchive();
+            MessageBox(NULL, TEXT("Crash report has been sent. Thank you!"), NULL, MB_ICONINFORMATION | MB_OK | MB_SETFOREGROUND | MB_TASKMODAL);
+        }
 #else // CRASHHANDLER_WEBSVC_ENABLED
-    MessageBox(NULL, TEXT(CRASHHANDLER_MSG), NULL, MB_ICONERROR | MB_OK | MB_SETFOREGROUND | MB_TASKMODAL);
+        MessageBox(NULL, TEXT(CRASHHANDLER_MSG), NULL, MB_ICONERROR | MB_OK | MB_SETFOREGROUND | MB_TASKMODAL);
 #endif // CRASHHANDLER_WEBSVC_ENABLED
+    }
 
     return 0;
 }

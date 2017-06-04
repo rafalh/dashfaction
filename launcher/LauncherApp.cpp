@@ -70,7 +70,7 @@ BOOL LauncherApp::InitInstance()
     if (CmdLineInfo.HasHelpFlag())
     {
         // Note: we can't use stdio console API in win32 application
-        MessageBoxA(NULL,
+        Message(NULL,
             "Usage: DashFactionLauncher [-game] [-level name] [-editor] args...\n"
             "-game        Starts game immediately\n"
             "-level name  Starts game immediately and loads specified level\n"
@@ -145,7 +145,7 @@ bool LauncherApp::LaunchGame(HWND hwnd)
     }
     catch (PrivilegeElevationRequiredException&)
     {
-        MessageBoxA(hwnd,
+        Message(hwnd,
             "Privilege elevation is required. Please change RF.exe file properties and disable all "
             "compatibility settings (Run as administrator, Compatibility mode for Windows XX, etc.) or run "
             "Dash Faction launcher as administrator.",
@@ -156,7 +156,7 @@ bool LauncherApp::LaunchGame(HWND hwnd)
     {
         if (e.getCrc32() == 0)
         {
-            MessageBoxA(hwnd, "Game executable has not been found. Please set a proper path in Options.",
+            Message(hwnd, "Game executable has not been found. Please set a proper path in Options.",
                 NULL, MB_OK | MB_ICONERROR);
         }
         else
@@ -168,14 +168,14 @@ bool LauncherApp::LaunchGame(HWND hwnd)
                 << "replace your RF.exe file with original 1.20 NA RF.exe available on FactionFiles.com.\n"
                 << "Click OK to open download page.";
             std::string str = ss.str();
-            if (MessageBoxA(hwnd, str.c_str(), NULL, MB_OKCANCEL | MB_ICONERROR) == IDOK)
+            if (Message(hwnd, str.c_str(), NULL, MB_OKCANCEL | MB_ICONERROR) == IDOK)
                 ShellExecuteA(hwnd, "open", "https://www.factionfiles.com/ff.php?action=file&id=517545", NULL, NULL, SW_SHOW);
         }
         return false;
     }
     catch (std::exception &e)
     {
-        MessageBoxA(hwnd, e.what(), nullptr, MB_ICONERROR | MB_OK);
+        Message(hwnd, e.what(), nullptr, MB_ICONERROR | MB_OK);
         return false;
     }
     return true;
@@ -191,8 +191,18 @@ bool LauncherApp::LaunchEditor(HWND hwnd)
     }
     catch (std::exception &e)
     {
-        MessageBoxA(hwnd, e.what(), nullptr, MB_ICONERROR | MB_OK);
+        Message(hwnd, e.what(), nullptr, MB_ICONERROR | MB_OK);
         return false;
     }
 }
 
+int LauncherApp::Message(HWND hwnd, const char *pszText, const char *pszTitle, int Flags)
+{
+    if (GetSystemMetrics(SM_CMONITORS) > 0)
+        return MessageBoxA(hwnd, pszText, pszTitle, Flags);
+    else
+    {
+        fprintf(stderr, "%s: %s", pszTitle ? pszTitle : "Error", pszText);
+        return -1;
+    }
+}
