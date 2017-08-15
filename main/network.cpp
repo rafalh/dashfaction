@@ -718,7 +718,14 @@ void ProcessEntityCreatePacket_New(char *pData, const NwAddr *pAddr)
         {
             int32_t WeaponClsId = *(int32_t*)(pData + NameSize + 63);
             CString_Assign(g_pstrDefaultPlayerWeapon, &g_pWeaponClasses[WeaponClsId].strName);
-            DcPrintf("spawn weapon %d", WeaponClsId);
+
+#if 0 // disabled because it sometimes helpful feature to switch to last used weapon
+            // Reset next weapon variable so entity wont switch after pickup
+            if (!(*g_ppLocalPlayer)->Config.bAutoswitchWeapons)
+                MultiSetNextWeapon(WeaponClsId);
+#endif
+
+            TRACE("spawn weapon %d", WeaponClsId);
         }
 
         ProcessEntityCreatePacket_Hook.callTrampoline(pData, pAddr);

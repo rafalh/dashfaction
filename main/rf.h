@@ -1514,6 +1514,7 @@ namespace rf
     constexpr auto BanIp = (BanIp_Type)0x0046D0F0;
 
     constexpr auto MpResetNetGame = (void(*)())0x0046E450;
+    constexpr auto MultiSetNextWeapon = (void(*)(int WeaponClsId))0x0047FCA0;
 
     constexpr auto g_pServAddr = (NwAddr*)0x0064EC5C;
     constexpr auto g_pstrServName = (CString*)0x0064EC28;
