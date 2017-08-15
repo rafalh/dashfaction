@@ -13,7 +13,8 @@ Version 1.2.1 (not released):
 - improved crash reporting functionality
 - adjust game configuration (default weapon, clip size, max ammo) based on packets from server (improves gameplay
   on highly modified servers like Afaction)
-- fixed crash when level geometry is highly modified by GeoMod and has too many vertices
+- fixed game crash when level geometry is highly modified by GeoMod and has too many vertices
+- speed up game startup
 - other stability improvements
 
 Version 1.2.0 (released 10-05-2017):
