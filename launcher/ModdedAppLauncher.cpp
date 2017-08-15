@@ -101,6 +101,13 @@ void ModdedAppLauncher::launch()
 {
     std::string appPath = getAppPath();
     uint32_t checksum = GetFileCRC32(appPath.c_str());
+
+    // Error reporting for headless env
+    if (checksum == 0)
+        printf("Invalid App Path %s\n", appPath.c_str());
+    else if (checksum != m_expectedCrc)
+        printf("Invalid App Checksum %lx, expected %lx\n", checksum, m_expectedCrc);
+
     if (checksum != m_expectedCrc)
         throw IntegrityCheckFailedException(checksum);
 
