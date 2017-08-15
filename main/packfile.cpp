@@ -452,8 +452,6 @@ static void PackfileInit_New(void)
 
     memset(g_pVfsLookupTableNew, 0, sizeof(PackfileLookupTableNew) * VFS_LOOKUP_TABLE_SIZE);
 
-    LoadDashFactionVpp();
-
     if (GetInstalledGameLang() == LANG_GR)
     {
         PackfileLoad("audiog.vpp", nullptr);
@@ -491,6 +489,7 @@ static void PackfileInit_New(void)
     PackfileLoad("motions.vpp", nullptr);
     PackfileLoad("music.vpp", nullptr);
     PackfileLoad("ui.vpp", nullptr);
+    LoadDashFactionVpp();
     PackfileLoad("tables.vpp", nullptr);
     *((BOOL*)0x01BDB218) = TRUE; // bPackfilesLoaded
     *((uint32_t*)0x01BDB210) = 10000; // cFilesInVfs
