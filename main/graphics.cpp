@@ -209,7 +209,7 @@ void GrInitBuffers_AfterReset_New()
 void GraphicsInit()
 {
     // Fix for "At least 8 MB of available video memory"
-    WriteMemUInt8(0x005460CD, ASM_SHORT_JMP_REL);
+    WriteMemUInt8(0x005460CD, ASM_JAE_SHORT);
 
 #if WINDOWED_MODE_SUPPORT
     if (g_gameConfig.wndMode != GameConfig::FULLSCREEN)

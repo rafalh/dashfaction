@@ -9,3 +9,4 @@
 #define ASM_RET           0xC3
 #define ASM_PUSH_ESI      0x56
 #define ASM_FADD          0xD8
+#define ASM_JAE_SHORT     0x73
