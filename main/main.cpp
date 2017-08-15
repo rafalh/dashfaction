@@ -112,6 +112,7 @@ static void CleanupGame_New(void)
 {
     ResetGammaRamp();
     CleanupScreenshot();
+    MiscCleanup();
     CleanupGame_Hook.callParent();
 }
 

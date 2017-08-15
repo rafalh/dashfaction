@@ -22,6 +22,7 @@ int g_VersionLabelX, g_VersionLabelWidth, g_VersionLabelHeight;
 static const char g_szVersionInMenu[] = PRODUCT_NAME_VERSION;
 int g_VersionClickCounter = 0;
 int g_EggAnimStart;
+bool g_bWin32Console = false;
 
 NAKED void VersionLabelPushArgs_0044343A()
 {
@@ -280,8 +281,6 @@ BOOL WINAPI ConsoleCtrlHandler(DWORD fdwCtrlType)
 
 void InputThreadProc()
 {
-    char Buf[1024];
-    DWORD NumRead;
     while (true)
     {
         INPUT_RECORD InputRecord;
@@ -297,11 +296,6 @@ void OsInitWindow_Server_New()
 
     //std::thread InputThread(InputThreadProc);
     //InputThread.detach();
-}
-
-void MiscCleanup()
-{
-    FreeConsole();
 }
 
 void DcPrint_New(const char *pszText, const int *pColor)
@@ -572,7 +566,8 @@ void MiscInit()
 #endif
 
 #if SERVER_WIN32_CONSOLE // win32 console
-    if (stristr(GetCommandLineA(), "-win32-console"))
+    g_bWin32Console = stristr(GetCommandLineA(), "-win32-console") != nullptr;
+    if (g_bWin32Console)
     {
         WriteMemUInt32(0x004B27C5 + 1, (uintptr_t)OsInitWindow_Server_New - (0x004B27C5 + 0x5));
         //AsmWritter(0x0050A770).ret(); // null DcDrawServerConsole
@@ -581,5 +576,13 @@ void MiscInit()
         KeyGetFromQueue_Hook.hook(KeyGetFromQueue_New);
         AsmWritter(0x0050A081).callLong(DcPutChar_NewLine_New);
     }
+#endif
+}
+
+void MiscCleanup()
+{
+#if SERVER_WIN32_CONSOLE // win32 console
+    if (g_bWin32Console)
+        FreeConsole();
 #endif
 }
