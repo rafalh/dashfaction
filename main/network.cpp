@@ -1,8 +1,11 @@
 #include "stdafx.h"
 #include "network.h"
 #include "rf.h"
-#include "pf.h"
 #include "utils.h"
+
+#if MASK_AS_PF
+ #include "pf.h"
+#endif
 
 using namespace rf;
 

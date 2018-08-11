@@ -23,3 +23,6 @@ ipch
 *.idb
 *.lib
 *.aps
+
+# Non-Open Source PF support code
+main/pf.*
