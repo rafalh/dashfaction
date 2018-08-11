@@ -1,7 +1,9 @@
 DashFaction Changelog
 =====================
 
-Version 1.2.1 (not released):
+Version 1.2.1 (released 2017-08-15)
+-----------------------------------
+
 - added high resolution scopes
 - fixed camera shake dependence on FPS (e.g. for Assault Rifle)
 - fixed Level Sounds option not working in most levels
@@ -17,7 +19,9 @@ Version 1.2.1 (not released):
 - speed up game startup
 - other stability improvements
 
-Version 1.2.0 (released 10-05-2017):
+Version 1.2.0 (released 2017-05-10)
+-----------------------------------
+
 - added running and jumping animations in Spectate Mode
 - added Rocket Launcher scanner rendering in Spectate Mode
 - fixed Spectate Mode target entity being rendered (visible when player looks down)
@@ -35,7 +39,9 @@ Version 1.2.0 (released 10-05-2017):
 - added small rendering optimizations
 - other minor fixes
 
-Version 1.1.0 (released 27-02-2017):
+Version 1.1.0 (released 2017-02-27)
+-----------------------------------
+
 - improved loading of 32 bit textures (improves quality of lightmaps and shadows)
 - launch DashFaction from level editor (editor must be started from DF launcher)
 - improved Scanner resolution (Rail Gun, Rocket Launcher, Fusion Launcher)
@@ -50,7 +56,9 @@ Version 1.1.0 (released 27-02-2017):
 - changed default tracker to rfgt.factionfiles.com
 - stability fixes
 
-Version 1.0.1 (released 07-02-2017):
+Version 1.0.1 (released 2017-02-07)
+-----------------------------------
+
 - fixed monitors/mirrors in MSAA mode
 - fixed aspect ratio in windowed mode if window aspect ratio is different than screen aspect ratio
 - fixed left/top screen edges not rendering properly in MSAA mode
@@ -62,7 +70,9 @@ Version 1.0.1 (released 07-02-2017):
 - other stability fixes
 - launcher icon has higher resolution
 
-Version 1.0.0 (released 24-01-2017):
+Version 1.0.0 (released 2017-01-24)
+-----------------------------------
+
 - Spectate Mode
 - launcher GUI
 - DirectInput support
@@ -76,21 +86,29 @@ Version 1.0.0 (released 24-01-2017):
 - added "vli" command for disabling volumetric lightining
 - changed default sorting on Server List to player count
 
-Version 0.61:
+Version 0.61
+------------
+
 - added widescreen fixes
 - enabled anisotropic filtering
 - enabled DEP to improve security
 - implemented passing of launcher command-line arguments to game process
 
-Version 0.60:
+Version 0.60
+------------
+
 - use exclusive full screen mode (it was using windowed-stretched mode before)
 - check RF.exe checksum before starting (detects if RF.exe has compatible version)
 - added experimental Multisample Anti-aliasing (to enable start launcher from console with '-msaa' argument)
 - improved crashlog
 - added icon
 
-Version 0.52:
+Version 0.52
+------------
+
 - use working directory as fallback for finding RF.exe
 
-Version 0.51:
+Version 0.51
+------------
+
 - first public release
