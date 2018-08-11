@@ -1,6 +1,11 @@
 #pragma once
 
-#define MASK_AS_PF 1
+#ifdef HAS_PF
+ #define MASK_AS_PF 1
+#else
+ #define MASK_AS_PF 0
+#endif
+
 #define NO_CD_FIX 1
 #define NO_INTRO 1
 #define LEVELS_AUTODOWNLOADER 1

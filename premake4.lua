@@ -14,6 +14,10 @@
 	if characterset then
 		characterset "MBCS" -- Premake 5
 	end
+
+	if os.isfile "main/pf.cpp" then
+		defines { "HAS_PF" }
+	end
 	
 	configuration "Debug"
 		defines { "DEBUG" }
