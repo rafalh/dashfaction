@@ -1,5 +1,5 @@
-Dash Faction 1.1 by rafalh
-==========================
+Dash Faction
+============
 
 About
 -----
@@ -33,13 +33,6 @@ New commands:
 - ms <value> - mouse sensitivity
 - vli - toggles volumetric lightining
 
-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
-INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
-AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
-PERFORMANCE OF THIS SOFTWARE.
-USE IT AT YOUR OWN RISK.
-
 Compatibility
 -------------
 Dash Faction is compatible with Red Faction 1.20 North America (NA).
@@ -47,16 +40,21 @@ If your game version is 1.00 or 1.10 you have to update it to 1.20 first.
 If your edition is not NA or you are using Steam version, you have to replace RF.exe file with one from
 1.20 NA version (it can be found on FactionFiles.com). Launcher will ask you to do it if it detects
 unsupported EXE file.
+
 Application should work on Windows XP SP3 and newer (tested mostly on Windows 10).
 
 Usage
 -----
-Install Visual C++ Redistributable for Visual Studio 2015 (x86) from:
-https://www.microsoft.com/pl-pl/download/details.aspx?id=48145 (select vc_redist.x86.exe).
-Unpack Dash Faction files to any folder (there is no requirement to put it in Red Faction folder).
-Run DashFactionLauncher.exe.
-On first run select Options and check if everything is OK (especially make sure game executable path is valid).
-Close settings and click "Launch Game" to start modded Red Faction game.
+1. Install Visual C++ Redistributable for Visual Studio 2015 (x86) from:
+https://www.microsoft.com/en-us/download/details.aspx?id=48145 (select *vc_redist.x86.exe*).
+
+2. Unpack Dash Faction files to any folder (there is no requirement to put it in Red Faction folder).
+
+3. Run DashFactionLauncher.exe.
+
+4. On first run select Options and check if everything is OK (especially make sure game executable path is valid).
+
+5. Close settings and click "Launch Game" to start modded Red Faction game.
 
 Problems
 --------
@@ -65,4 +63,14 @@ because some antiviruses flags new not popular files as danger just because they
 and Dash Faction is certainly not very popular :)
 I had some problems with Avast silently removing launcher exe and had to add Dash Faction to exclusions of
 Behaviour Shield.
+
 If game crashes try to disable features in Options window - especially try disabling MSAA.
+
+License
+-------
+Most of Dash Faction source code is licensed under Mozilla Public License 2.0. It is available in the GitHub repository. See LICENSE.txt.
+
+Only Pure Faction support code is not open sourced because it would make PF anti-cheat features basically useless.
+It consists of *pf.cpp* and *pf.h* files in main module. It is going to be linked statically during a release process of Dash Faction by owner of this project.
+
+Dash Faction uses some open source libraries. Their licenses can be found in *licenses* directory.
