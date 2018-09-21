@@ -15,6 +15,7 @@ project "unrar"
 	--links {"pthread"}
 	pchheader "rar.hpp"
 	pchsource "rarpch.cpp"
+	includedirs "."
 	files {
 		"rarpch.cpp",
 		"rar.cpp",

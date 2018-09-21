@@ -13,6 +13,10 @@ project "DashEditor"
 	}
 	links { "ModCommon", "Common" }
 	
+	-- fix target name in cross-compilation
+	targetextension ".dll"
+	targetprefix ""
+
 	configuration "vs*"
 		linkoptions { "/DEBUG" } -- generate PDB files
 	

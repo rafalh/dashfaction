@@ -41,8 +41,8 @@
 #endif
 
 
-#include <WinInet.h>
-#include <Shellapi.h>
+#include <wininet.h>
+#include <shellapi.h>
 
 #include <string>
 #include <set>

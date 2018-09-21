@@ -50,7 +50,8 @@ inline void WriteMemFloat(unsigned Addr, float Value, unsigned Repeat = 1)
     WriteMem(Addr, &Value, sizeof(Value), Repeat);
 }
 
-inline void WriteMemPtr(unsigned Addr, const void *Value, unsigned Repeat = 1)
+template<typename T>
+inline void WriteMemPtr(unsigned Addr, T *Value, unsigned Repeat = 1)
 {
     WriteMem(Addr, &Value, sizeof(Value), Repeat);
 }

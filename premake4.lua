@@ -37,10 +37,17 @@
 			"/Zc:threadSafeInit-",
 			"/arch:IA32",
 		}
+
+	configuration "linux"
+		gccprefix "i686-w64-mingw32-"
+		cppdialect "gnu++14"
+		linkoptions "-static"
 	
 	include "vendor"
 	include "launcher-old"
-	include "launcher"
+	if os.get() == "windows" then
+		include "launcher"
+	end
 	include "common"
 	include "main"
 	include "editor_mod"

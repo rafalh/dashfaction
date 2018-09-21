@@ -6,18 +6,24 @@ project "CrashHandler"
 		"psapi",
 		"zip",
 		"zlib",
-		"WinINet",
+		"wininet",
 	}
 	includedirs {
 		"../common/include",
 		"../vendor/zlib",
 		"../vendor/zlib/contrib/minizip",
 	}
+	-- override extension for cross-compilation
+	targetextension ".exe"
 	
 	configuration "Debug"
 		targetdir "../bin/debug"
-		debugdir "../bin/debug"
+		if debugdir then
+			debugdir "../bin/debug"
+		end
 	
 	configuration "Release"
 		targetdir "../bin/release"
-		debugdir "../bin/release"
+		if debugdir then
+			debugdir "../bin/release"
+		end

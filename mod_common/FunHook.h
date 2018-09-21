@@ -21,7 +21,7 @@ public:
 
     void hook(FunPtr newFun)
     {
-        m_hook.Install(m_fun, newFun);
+        m_hook.Install((void*)m_fun, (void*)newFun);
     }
 
     RetType callTrampoline(ArgTypes... args)

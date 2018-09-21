@@ -36,10 +36,10 @@ namespace logging
     class Logger
     {
     public:
-        Logger::Logger(const std::string &name = std::string()) :
+        Logger(const std::string &name = std::string()) :
             name(name), conf(LoggerConfig::root()) {}
 
-        Logger::Logger(const std::string &name, LoggerConfig &conf) :
+        Logger(const std::string &name, LoggerConfig &conf) :
             name(name), conf(conf) {}
 
         static Logger &root()

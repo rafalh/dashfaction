@@ -24,6 +24,8 @@ long STDCALL AccumulatingFtoL(double fVal, double *pAccumulator)
     return Result;
 }
 
+#ifndef __GNUC__ // FIXME
+
 void NAKED ftol_HitScreen()  // Note: value is in ST(0), not on stack
 {
     _asm
@@ -63,6 +65,8 @@ void NAKED ftol_Timer()
     }
 }
 
+#endif // __GNUC__
+
 void STDCALL EntityWaterDecelerateFix(rf::EntityObj *pEntity)
 {
     float fVelFactor = 1.0f - (*rf::g_pfFramerate * 4.5f);
@@ -81,6 +85,7 @@ void WaterAnimateWaves_UpdatePos(rf::CVector3 *pResult)
     pResult->z += flt_5A3C00 * (*rf::g_pfFramerate) / REF_FRAMERATE;
 }
 
+#ifndef __GNUC__ // FIXME
 void NAKED WaterAnimateWaves_004E68A0()
 {
     _asm
@@ -96,6 +101,7 @@ void NAKED WaterAnimateWaves_004E68A0()
         jmp eax
     }
 }
+#endif
 
 int RflLoad_New(rf::CString *pstrLevelFilename, rf::CString *a2, char *pszError)
 {
@@ -123,9 +129,11 @@ int RflLoad_New(rf::CString *pstrLevelFilename, rf::CString *a2, char *pszError)
 void HighFpsInit()
 {
     // Fix animations broken for high FPS
+#ifndef __GNUC__
     WriteMemUInt32(0x00416426 + 1, (uintptr_t)ftol_HitScreen - (0x00416426 + 0x5)); // hit screen
     WriteMemUInt32(0x0050ABFB + 1, (uintptr_t)ftol_ToggleConsole - (0x0050ABFB + 0x5)); // console open/close
     WriteMemUInt32(0x005096A7 + 1, (uintptr_t)ftol_Timer - (0x005096A7 + 0x5)); // switching weapon and more
+#endif
 
     // Fix jumping on high FPS
     WriteMemPtr(0x004A09A6 + 2, &g_JumpThreshold);
@@ -137,9 +145,11 @@ void HighFpsInit()
     WriteMemInt32(0x0049D830 + 1, (uintptr_t)EntityWaterDecelerateFix - (0x0049D830 + 0x5));
 
     // Fix water waves animation on high FPS
+#ifndef __GNUC__
     WriteMemUInt8(0x004E68A0, ASM_NOP, 9);
     WriteMemUInt8(0x004E68B6, ASM_LONG_JMP_REL);
     WriteMemInt32(0x004E68B6 + 1, (uintptr_t)WaterAnimateWaves_004E68A0 - (0x004E68B6 + 0x5));
+#endif
 
     // Fix incorrect frame time calculation
     WriteMemUInt8(0x00509595, ASM_NOP, 2);

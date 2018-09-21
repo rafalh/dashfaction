@@ -8,6 +8,12 @@ typedef BOOL WINBOOL;
 
 #include <d3d8.h>
 
+#ifndef __GNUC__
+#define ALIGN(n) __declspec(align(n))
+#else
+#define ALIGN(n) __attribute__((aligned(n)))
+#endif
+
 #pragma pack(push, 1)
 
 namespace rf
@@ -97,14 +103,14 @@ namespace rf
         char *psz;
     };
 
-    constexpr auto StringAlloc = (char*(*)(unsigned cbSize))0x004FF300;
-    constexpr auto StringFree = (void(*)(void *pData))0x004FF3A0;
-    constexpr auto CString_Init = (CString*(__thiscall *)(CString *This, const char *pszInit))0x004FF3D0;
-    constexpr auto CString_InitFromStr = (CString*(__thiscall *)(CString *This, const CString *pstrInit))0x004FF410;
-    constexpr auto CString_InitEmpty = (CString*(__thiscall *)(CString *This))0x004FF3B0;
-    constexpr auto CString_CStr = (const char*(__thiscall *)(CString *This))0x004FF480;
-    constexpr auto CString_Destroy = (void(__thiscall *)(CString *This))0x004FF470;
-    constexpr auto CString_Assign = (CString*(__thiscall *)(CString *This, CString *Src))0x004FFA20;
+    static const auto StringAlloc = (char*(*)(unsigned cbSize))0x004FF300;
+    static const auto StringFree = (void(*)(void *pData))0x004FF3A0;
+    static const auto CString_Init = (CString*(__thiscall *)(CString *This, const char *pszInit))0x004FF3D0;
+    static const auto CString_InitFromStr = (CString*(__thiscall *)(CString *This, const CString *pstrInit))0x004FF410;
+    static const auto CString_InitEmpty = (CString*(__thiscall *)(CString *This))0x004FF3B0;
+    static const auto CString_CStr = (const char*(__thiscall *)(CString *This))0x004FF480;
+    static const auto CString_Destroy = (void(__thiscall *)(CString *This))0x004FF470;
+    static const auto CString_Assign = (CString*(__thiscall *)(CString *This, CString *Src))0x004FFA20;
 
     /* Utils */
 
@@ -156,15 +162,15 @@ namespace rf
         DC_ARG_COMMA = 0x0400,
     };
 
-    constexpr auto DcPrint = (void(*)(const char *pszText, const int *pColor))0x00509EC0;
-    constexpr auto DcPrintf = (void(*)(const char *pszFormat, ...))0x0050B9F0;
-    constexpr auto DcGetArg = (void(*)(int Type, int bUnknown))0x0050AED0;
-    constexpr auto DcUpdate = (void(*)(BOOL bServer))0x0050A720;
-    constexpr auto DcAutoCompleteInput = (void(*)())0x0050A620;
-    constexpr auto DcRunCmd = (int(*)(const char *pszCmd))0x00509B00;
+    static const auto DcPrint = (void(*)(const char *pszText, const int *pColor))0x00509EC0;
+    static const auto DcPrintf = (void(*)(const char *pszFormat, ...))0x0050B9F0;
+    static const auto DcGetArg = (void(*)(int Type, int bUnknown))0x0050AED0;
+    static const auto DcUpdate = (void(*)(BOOL bServer))0x0050A720;
+    static const auto DcAutoCompleteInput = (void(*)())0x0050A620;
+    static const auto DcRunCmd = (int(*)(const char *pszCmd))0x00509B00;
 
     typedef void(*DcCmdHandler)(void);
-    constexpr auto DcCommand__Init = (void(__thiscall *)(rf::DcCommand *This, const char *pszCmd, const char *pszDescr, DcCmdHandler pfnHandler))0x00509A70;
+    static const auto DcCommand__Init = (void(__thiscall *)(rf::DcCommand *This, const char *pszCmd, const char *pszDescr, DcCmdHandler pfnHandler))0x00509A70;
 
 #define DC_REGISTER_CMD(name, help, handler) \
     do { \
@@ -172,41 +178,41 @@ namespace rf
         rf::DcCommand__Init(&Dc_##name, #name, help, handler); \
     } while (false)
 
-    //constexpr auto g_ppDcCommands = (DcCommand**)0x01775530;
-    constexpr auto g_pDcNumCommands = (uint32_t*)0x0177567C;
+    //static const auto g_ppDcCommands = (DcCommand**)0x01775530;
+    static const auto g_pDcNumCommands = (uint32_t*)0x0177567C;
 
-    constexpr auto g_pbDcRun = (uint32_t*)0x01775110;
-    constexpr auto g_pbDcHelp = (uint32_t*)0x01775224;
-    constexpr auto g_pbDcStatus = (uint32_t*)0x01774D00;
-    constexpr auto g_pDcArgType = (uint32_t*)0x01774D04;
-    constexpr auto g_pszDcArg = (char*)0x0175462C;
-    constexpr auto g_piDcArg = (int*)0x01775220;
-    constexpr auto g_pfDcArg = (float*)0x01754628;
-    constexpr auto g_szDcCmdLine = (char*)0x01775330;
-    constexpr auto g_pcchDcCmdLineLen = (uint32_t*)0x0177568C;
+    static const auto g_pbDcRun = (uint32_t*)0x01775110;
+    static const auto g_pbDcHelp = (uint32_t*)0x01775224;
+    static const auto g_pbDcStatus = (uint32_t*)0x01774D00;
+    static const auto g_pDcArgType = (uint32_t*)0x01774D04;
+    static const auto g_pszDcArg = (char*)0x0175462C;
+    static const auto g_piDcArg = (int*)0x01775220;
+    static const auto g_pfDcArg = (float*)0x01754628;
+    static const auto g_szDcCmdLine = (char*)0x01775330;
+    static const auto g_pcchDcCmdLineLen = (uint32_t*)0x0177568C;
 
     /* Debug Console Commands */
 
     // Server configuration commands
-    constexpr auto DcfKillLimit = (DcCmdHandler)0x0046CBC0;
-    constexpr auto DcfTimeLimit = (DcCmdHandler)0x0046CC10;
-    constexpr auto DcfGeomodLimit = (DcCmdHandler)0x0046CC70;
-    constexpr auto DcfCaptureLimit = (DcCmdHandler)0x0046CCC0;
+    static const auto DcfKillLimit = (DcCmdHandler)0x0046CBC0;
+    static const auto DcfTimeLimit = (DcCmdHandler)0x0046CC10;
+    static const auto DcfGeomodLimit = (DcCmdHandler)0x0046CC70;
+    static const auto DcfCaptureLimit = (DcCmdHandler)0x0046CCC0;
 
     // Misc commands
-    constexpr auto DcfSound = (DcCmdHandler)0x00434590;
-    constexpr auto DcfDifficulty = (DcCmdHandler)0x00434EB0;
-    constexpr auto DcfMouseSensitivity = (DcCmdHandler)0x0043CE90;
-    constexpr auto DcfLevelInfo = (DcCmdHandler)0x0045C210;
-    constexpr auto DcfVerifyLevel = (DcCmdHandler)0x0045E1F0;
-    constexpr auto DcfPlayerNames = (DcCmdHandler)0x0046CB80;
-    constexpr auto DcfClientsCount = (DcCmdHandler)0x0046CD10;
-    constexpr auto DcfKickAll = (DcCmdHandler)0x0047B9E0;
-    constexpr auto DcfTimedemo = (DcCmdHandler)0x004CC1B0;
-    constexpr auto DcfFramerateTest = (DcCmdHandler)0x004CC360;
-    constexpr auto DcfSystemInfo = (DcCmdHandler)0x00525A60;
-    constexpr auto DcfTrilinearFiltering = (DcCmdHandler)0x0054F050;
-    constexpr auto DcfDetailTextures = (DcCmdHandler)0x0054F0B0;
+    static const auto DcfSound = (DcCmdHandler)0x00434590;
+    static const auto DcfDifficulty = (DcCmdHandler)0x00434EB0;
+    static const auto DcfMouseSensitivity = (DcCmdHandler)0x0043CE90;
+    static const auto DcfLevelInfo = (DcCmdHandler)0x0045C210;
+    static const auto DcfVerifyLevel = (DcCmdHandler)0x0045E1F0;
+    static const auto DcfPlayerNames = (DcCmdHandler)0x0046CB80;
+    static const auto DcfClientsCount = (DcCmdHandler)0x0046CD10;
+    static const auto DcfKickAll = (DcCmdHandler)0x0047B9E0;
+    static const auto DcfTimedemo = (DcCmdHandler)0x004CC1B0;
+    static const auto DcfFramerateTest = (DcCmdHandler)0x004CC360;
+    static const auto DcfSystemInfo = (DcCmdHandler)0x00525A60;
+    static const auto DcfTrilinearFiltering = (DcCmdHandler)0x0054F050;
+    static const auto DcfDetailTextures = (DcCmdHandler)0x0054F0B0;
 
     /* Graphics */
 
@@ -281,52 +287,52 @@ namespace rf
         GR_ALIGN_RIGHT = 2,
     };
 
-    constexpr auto g_ppDirect3D = (IDirect3D8**)0x01CFCBE0;
-    constexpr auto g_ppGrDevice = (IDirect3DDevice8**)0x01CFCBE4;
-    constexpr auto g_pGrScreen = (GrScreen*)0x017C7BC0;
-    constexpr auto g_pGrPP = (D3DPRESENT_PARAMETERS*)0x01CFCA18;
-    constexpr auto g_pGrGammaRamp = (uint32_t*)0x017C7C68;
-    constexpr auto g_pAdapterIdx = (uint32_t*)0x01CFCC34;
-    constexpr auto g_pGrScaleVec = (CVector3*)0x01818B48;
-    constexpr auto g_GrViewMatrix = (CMatrix3*)0x018186C8;
-    constexpr auto g_pGrDeviceCaps = (D3DCAPS8*)0x01CFCAC8;
-    constexpr auto g_pGrDefaultWFar = (float*)0x00596140;
+    static const auto g_ppDirect3D = (IDirect3D8**)0x01CFCBE0;
+    static const auto g_ppGrDevice = (IDirect3DDevice8**)0x01CFCBE4;
+    static const auto g_pGrScreen = (GrScreen*)0x017C7BC0;
+    static const auto g_pGrPP = (D3DPRESENT_PARAMETERS*)0x01CFCA18;
+    static const auto g_pGrGammaRamp = (uint32_t*)0x017C7C68;
+    static const auto g_pAdapterIdx = (uint32_t*)0x01CFCC34;
+    static const auto g_pGrScaleVec = (CVector3*)0x01818B48;
+    static const auto g_GrViewMatrix = (CMatrix3*)0x018186C8;
+    static const auto g_pGrDeviceCaps = (D3DCAPS8*)0x01CFCAC8;
+    static const auto g_pGrDefaultWFar = (float*)0x00596140;
 
-    constexpr auto g_pGrLineMaterial = (uint32_t*)0x01775B00;
-    constexpr auto g_pGrRectMaterial = (uint32_t*)0x17756C0;
-    constexpr auto g_pGrTextMaterial = (uint32_t*)0x17C7C5C;
-    constexpr auto g_pGrBitmapMaterial = (uint32_t*)0x017756BC;
-    constexpr auto g_pGrImageMaterial = (uint32_t*)0x017756DC;
+    static const auto g_pGrLineMaterial = (uint32_t*)0x01775B00;
+    static const auto g_pGrRectMaterial = (uint32_t*)0x17756C0;
+    static const auto g_pGrTextMaterial = (uint32_t*)0x17C7C5C;
+    static const auto g_pGrBitmapMaterial = (uint32_t*)0x017756BC;
+    static const auto g_pGrImageMaterial = (uint32_t*)0x017756DC;
 
-    constexpr auto GrGetMaxWidth = (unsigned(*)())0x0050C640;
-    constexpr auto GrGetMaxHeight = (unsigned(*)())0x0050C650;
-    constexpr auto GrGetViewportWidth = (unsigned(*)())0x0050CDB0;
-    constexpr auto GrGetViewportHeight = (unsigned(*)())0x0050CDC0;
-    constexpr auto GrSetColor = (void(*)(unsigned r, unsigned g, unsigned b, unsigned a))0x0050CF80;
-    constexpr auto GrSetColorPtr = (void(*)(uint32_t *pColor))0x0050D000;
-    constexpr auto GrDrawRect = (void(*)(unsigned x, unsigned y, unsigned cx, unsigned cy, unsigned Material))0x0050DBE0;
-    constexpr auto GrDrawImage = (void(*)(int BmHandle, int x, int y, int Material))0x0050D2A0;
-    constexpr auto GrDrawBitmapStretched = (void(*)(int BmHandle, int dstX, int dstY, int dstW, int dstH, int srcX, int srcY, int srcW, int srcH, float a10, float a11, int Material))0x0050D250;
-    constexpr auto GrDrawPoly = (void(*)(int Num, GrVertex **ppVertices, int Flags, int iMat))0x0050DF80;
-    constexpr auto GrDrawText = (void(*)(unsigned x, unsigned y, const char *pszText, int Font, unsigned Material))0x0051FEB0;
-    constexpr auto GrDrawAlignedText = (void(*)(GrTextAlignment Align, unsigned x, unsigned y, const char *pszText, int Font, unsigned Material))0x0051FE50;
-    constexpr auto GrFitText = (CString *(*)(CString *pstrDest, CString Str, int cxMax))0x00471EC0;
-    constexpr auto GrReadBackBuffer = (int(*)(int x, int y, int Width, int Height, void *pBuffer))0x0050DFF0;
-    constexpr auto GrLoadFont = (int(*)(const char *pszFileName, int a2))0x0051F6E0;
-    constexpr auto GrGetFontHeight = (unsigned(*)(int FontId))0x0051F4D0;
-    constexpr auto GrGetTextWidth = (void(*)(int *pOutWidth, int *pOutHeight, const char *pszText, int TextLen, int FontId))0x0051F530;
-    constexpr auto GrFlushBuffers = (void(*)())0x00559D90;
-    constexpr auto GrSwapBuffers = (void(*)())0x0050CE20;
-    constexpr auto GrSetViewMatrix = (void(*)(CMatrix3 *pMatRot, CVector3 *pPos, float fFov, int a4, int a5))0x00517EB0;
-    constexpr auto GrSetViewMatrixD3D = (void(*)(CMatrix3 *pMatRot, CVector3 *pPos, float fFov, int a4, int a5))0x00547150;
-    constexpr auto GrRenderLine = (char(*)(const CVector3 *pWorldPos1, const CVector3 *pWorldPos2, int Material))0x00515960;
-    constexpr auto GrRenderSphere = (char(*)(const CVector3 *pvPos, float fRadius, int Material))0x00515CD0;
-    constexpr auto GrLock = (char(*)(int BmHandle, int SectionIdx, SGrLockData *pData, int a4))0x0050E2E0;
-    constexpr auto GrUnlock = (void(*)(SGrLockData *pData))0x0050E310;
-    constexpr auto GrD3DSetTextureData = (int(*)(int Level, const BYTE *pSrcBits, const BYTE *pPallete, int cxBm, int cyBm, int PixelFmt, void *a7, int cxTex, int cyTex, IDirect3DTexture8 *pTextures))0x0055BA10;
-    constexpr auto GrInitBuffers = (void(*)())0x005450A0;
-    constexpr auto GrSetTextureMipFilter = (void(*)(int bLinear))0x0050E830;
-    constexpr auto GrResetClip = (void(*)())0x0050CDD0;
+    static const auto GrGetMaxWidth = (unsigned(*)())0x0050C640;
+    static const auto GrGetMaxHeight = (unsigned(*)())0x0050C650;
+    static const auto GrGetViewportWidth = (unsigned(*)())0x0050CDB0;
+    static const auto GrGetViewportHeight = (unsigned(*)())0x0050CDC0;
+    static const auto GrSetColor = (void(*)(unsigned r, unsigned g, unsigned b, unsigned a))0x0050CF80;
+    static const auto GrSetColorPtr = (void(*)(uint32_t *pColor))0x0050D000;
+    static const auto GrDrawRect = (void(*)(unsigned x, unsigned y, unsigned cx, unsigned cy, unsigned Material))0x0050DBE0;
+    static const auto GrDrawImage = (void(*)(int BmHandle, int x, int y, int Material))0x0050D2A0;
+    static const auto GrDrawBitmapStretched = (void(*)(int BmHandle, int dstX, int dstY, int dstW, int dstH, int srcX, int srcY, int srcW, int srcH, float a10, float a11, int Material))0x0050D250;
+    static const auto GrDrawPoly = (void(*)(int Num, GrVertex **ppVertices, int Flags, int iMat))0x0050DF80;
+    static const auto GrDrawText = (void(*)(unsigned x, unsigned y, const char *pszText, int Font, unsigned Material))0x0051FEB0;
+    static const auto GrDrawAlignedText = (void(*)(GrTextAlignment Align, unsigned x, unsigned y, const char *pszText, int Font, unsigned Material))0x0051FE50;
+    static const auto GrFitText = (CString *(*)(CString *pstrDest, CString Str, int cxMax))0x00471EC0;
+    static const auto GrReadBackBuffer = (int(*)(int x, int y, int Width, int Height, void *pBuffer))0x0050DFF0;
+    static const auto GrLoadFont = (int(*)(const char *pszFileName, int a2))0x0051F6E0;
+    static const auto GrGetFontHeight = (unsigned(*)(int FontId))0x0051F4D0;
+    static const auto GrGetTextWidth = (void(*)(int *pOutWidth, int *pOutHeight, const char *pszText, int TextLen, int FontId))0x0051F530;
+    static const auto GrFlushBuffers = (void(*)())0x00559D90;
+    static const auto GrSwapBuffers = (void(*)())0x0050CE20;
+    static const auto GrSetViewMatrix = (void(*)(CMatrix3 *pMatRot, CVector3 *pPos, float fFov, int a4, int a5))0x00517EB0;
+    static const auto GrSetViewMatrixD3D = (void(*)(CMatrix3 *pMatRot, CVector3 *pPos, float fFov, int a4, int a5))0x00547150;
+    static const auto GrRenderLine = (char(*)(const CVector3 *pWorldPos1, const CVector3 *pWorldPos2, int Material))0x00515960;
+    static const auto GrRenderSphere = (char(*)(const CVector3 *pvPos, float fRadius, int Material))0x00515CD0;
+    static const auto GrLock = (char(*)(int BmHandle, int SectionIdx, SGrLockData *pData, int a4))0x0050E2E0;
+    static const auto GrUnlock = (void(*)(SGrLockData *pData))0x0050E310;
+    static const auto GrD3DSetTextureData = (int(*)(int Level, const BYTE *pSrcBits, const BYTE *pPallete, int cxBm, int cyBm, int PixelFmt, void *a7, int cxTex, int cyTex, IDirect3DTexture8 *pTextures))0x0055BA10;
+    static const auto GrInitBuffers = (void(*)())0x005450A0;
+    static const auto GrSetTextureMipFilter = (void(*)(int bLinear))0x0050E830;
+    static const auto GrResetClip = (void(*)())0x0050CDD0;
 
     /* Bmpman */
 
@@ -343,13 +349,13 @@ namespace rf
         BMPF_UNK_8_16B = 0x8,
     };
 
-    constexpr auto BmLoad = (int(*)(const char *pszFilename, int a2, BOOL a3))0x0050F6A0;
-    constexpr auto BmCreateUserBmap = (int(*)(BmPixelFormat PixelFormat, int Width, int Height))0x005119C0;
-    constexpr auto BmConvertFormat = (void(*)(void *pDstBits, BmPixelFormat DstPixelFmt, const void *pSrcBits, BmPixelFormat SrcPixelFmt, int NumPixels))0x0055DD20;
-    constexpr auto BmGetBitmapSize = (void(*)(int BmHandle, int *pWidth, int *pHeight))0x00510630;
-    constexpr auto BmGetFilename = (const char*(*)(int BmHandle))0x00511710;
-    constexpr auto BmLock = (BmPixelFormat(*)(int BmHandle, BYTE **ppData, BYTE **ppPalette))0x00510780;
-    constexpr auto BmUnlock = (void(*)(int BmHandle))0x00511700;
+    static const auto BmLoad = (int(*)(const char *pszFilename, int a2, BOOL a3))0x0050F6A0;
+    static const auto BmCreateUserBmap = (int(*)(BmPixelFormat PixelFormat, int Width, int Height))0x005119C0;
+    static const auto BmConvertFormat = (void(*)(void *pDstBits, BmPixelFormat DstPixelFmt, const void *pSrcBits, BmPixelFormat SrcPixelFmt, int NumPixels))0x0055DD20;
+    static const auto BmGetBitmapSize = (void(*)(int BmHandle, int *pWidth, int *pHeight))0x00510630;
+    static const auto BmGetFilename = (const char*(*)(int BmHandle))0x00511710;
+    static const auto BmLock = (BmPixelFormat(*)(int BmHandle, BYTE **ppData, BYTE **ppPalette))0x00510780;
+    static const auto BmUnlock = (void(*)(int BmHandle))0x00511700;
 
     /* User Interface (UI) */
 
@@ -369,21 +375,21 @@ namespace rf
         int BgTexture;
     };
 
-    constexpr auto UiMsgBox = (void(*)(const char *pszTitle, const char *pszText, void(*pfnCallback)(void), BOOL bInput))0x004560B0;
-    constexpr auto UiCreateDialog = (void(*)(const char *pszTitle, const char *pszText, unsigned cButtons, const char **ppszBtnTitles, void **ppfnCallbacks, unsigned Unknown1, unsigned Unknown2))0x004562A0;
-    constexpr auto UiGetElementFromPos = (int(*)(int x, int y, UiPanel **ppGuiList, signed int cGuiList))0x00442ED0;
+    static const auto UiMsgBox = (void(*)(const char *pszTitle, const char *pszText, void(*pfnCallback)(void), BOOL bInput))0x004560B0;
+    static const auto UiCreateDialog = (void(*)(const char *pszTitle, const char *pszText, unsigned cButtons, const char **ppszBtnTitles, void **ppfnCallbacks, unsigned Unknown1, unsigned Unknown2))0x004562A0;
+    static const auto UiGetElementFromPos = (int(*)(int x, int y, UiPanel **ppGuiList, signed int cGuiList))0x00442ED0;
 
     /* HUD */
 
 #define HUD_POINTS_COUNT 48
-    constexpr auto g_pHudPosData640 = (POINT*)0x00637868;
-    constexpr auto g_pHudPosData800 = (POINT*)0x006373D0;
-    constexpr auto g_pHudPosData1024 = (POINT*)0x00637230;
-    constexpr auto g_pHudPosData1280 = (POINT*)0x00637560;
-    constexpr auto g_pHudPosData = (POINT*)0x006376E8;
+    static const auto g_pHudPosData640 = (POINT*)0x00637868;
+    static const auto g_pHudPosData800 = (POINT*)0x006373D0;
+    static const auto g_pHudPosData1024 = (POINT*)0x00637230;
+    static const auto g_pHudPosData1280 = (POINT*)0x00637560;
+    static const auto g_pHudPosData = (POINT*)0x006376E8;
 
     typedef void(*ChatPrint_Type)(CString strText, unsigned ColorId, CString Prefix);
-    constexpr auto ChatPrint = (ChatPrint_Type)0x004785A0;
+    static const auto ChatPrint = (ChatPrint_Type)0x004785A0;
 
     /* File System */
 
@@ -415,36 +421,36 @@ namespace rf
         PackfileEntry *pArchiveEntry;
     };
 
-    constexpr auto g_pcArchives = (uint32_t*)0x01BDB214;
-    constexpr auto g_pArchives = (Packfile*)0x01BA7AC8;
+    static const auto g_pcArchives = (uint32_t*)0x01BDB214;
+    static const auto g_pArchives = (Packfile*)0x01BA7AC8;
 #define VFS_LOOKUP_TABLE_SIZE 20713
-    constexpr auto g_pVfsLookupTable = (PackfileLookupTable*)0x01BB2AC8;
-    constexpr auto g_pbVfsIgnoreTblFiles = (uint8_t*)0x01BDB21C;
+    static const auto g_pVfsLookupTable = (PackfileLookupTable*)0x01BB2AC8;
+    static const auto g_pbVfsIgnoreTblFiles = (uint8_t*)0x01BDB21C;
 
     typedef BOOL(*PackfileLoad_Type)(const char *pszFileName, const char *pszDir);
-    constexpr auto PackfileLoad = (PackfileLoad_Type)0x0052C070;
+    static const auto PackfileLoad = (PackfileLoad_Type)0x0052C070;
 
     typedef Packfile *(*PackfileFindArchive_Type)(const char *pszFilename);
-    constexpr auto PackfileFindArchive = (PackfileFindArchive_Type)0x0052C1D0;
+    static const auto PackfileFindArchive = (PackfileFindArchive_Type)0x0052C1D0;
 
     typedef uint32_t(*PackfileCalcFileNameChecksum_Type)(const char *pszFileName);
-    constexpr auto PackfileCalcFileNameChecksum = (PackfileCalcFileNameChecksum_Type)0x0052BE70;
+    static const auto PackfileCalcFileNameChecksum = (PackfileCalcFileNameChecksum_Type)0x0052BE70;
 
     typedef uint32_t(*PackfileAddToLookupTable_Type)(PackfileEntry *pPackfileEntry);
-    constexpr auto PackfileAddToLookupTable = (PackfileAddToLookupTable_Type)0x0052BCA0;
+    static const auto PackfileAddToLookupTable = (PackfileAddToLookupTable_Type)0x0052BCA0;
 
     typedef uint32_t(*PackfileProcessHeader_Type)(Packfile *pPackfile, const void *pHeader);
-    constexpr auto PackfileProcessHeader = (PackfileProcessHeader_Type)0x0052BD10;
+    static const auto PackfileProcessHeader = (PackfileProcessHeader_Type)0x0052BD10;
 
     typedef uint32_t(*PackfileAddEntries_Type)(Packfile *pPackfile, const void *pBuf, unsigned cFilesInBlock, unsigned *pcAddedEntries);
-    constexpr auto PackfileAddEntries = (PackfileAddEntries_Type)0x0052BD40;
+    static const auto PackfileAddEntries = (PackfileAddEntries_Type)0x0052BD40;
 
     typedef uint32_t(*PackfileSetupFileOffsets_Type)(Packfile *pPackfile, unsigned DataOffsetInBlocks);
-    constexpr auto PackfileSetupFileOffsets = (PackfileSetupFileOffsets_Type)0x0052BEB0;
+    static const auto PackfileSetupFileOffsets = (PackfileSetupFileOffsets_Type)0x0052BEB0;
 
-    constexpr auto FsAddDirectoryEx = (int(*)(const char *pszDir, const char *pszExtList, char bUnknown))0x00514070;
+    static const auto FsAddDirectoryEx = (int(*)(const char *pszDir, const char *pszExtList, char bUnknown))0x00514070;
 
-    constexpr auto FileGetChecksum = (unsigned(*)(const char *pszFilename))0x00436630;
+    static const auto FileGetChecksum = (unsigned(*)(const char *pszFilename))0x00436630;
 
     /* Network */
 
@@ -503,21 +509,21 @@ namespace rf
     };
     static_assert(sizeof(CPlayerNetData) == 0x9C8, "invalid size");
 
-    constexpr auto g_pNwSocket = (SOCKET*)0x005A660C;
+    static const auto g_pNwSocket = (SOCKET*)0x005A660C;
 
     typedef void(*NwProcessGamePackets_Type)(const char *pData, int cbData, const NwAddr *pAddr, CPlayer *pPlayer);
-    constexpr auto NwProcessGamePackets = (NwProcessGamePackets_Type)0x004790D0;
+    static const auto NwProcessGamePackets = (NwProcessGamePackets_Type)0x004790D0;
 
     typedef void(*NwSendNotReliablePacket_Type)(const void *pAddr, const void *pPacket, unsigned cbPacket);
-    constexpr auto NwSendNotReliablePacket = (NwSendNotReliablePacket_Type)0x0052A080;
+    static const auto NwSendNotReliablePacket = (NwSendNotReliablePacket_Type)0x0052A080;
 
-    constexpr auto NwSendReliablePacket = (void(*)(CPlayer *pPlayer, const BYTE *pData, unsigned int cbData, int a4))0x00479480;
+    static const auto NwSendReliablePacket = (void(*)(CPlayer *pPlayer, const BYTE *pData, unsigned int cbData, int a4))0x00479480;
 
     typedef void(*NwAddrToStr_Type)(char *pszDest, int cbDest, NwAddr *pAddr);
-    constexpr auto NwAddrToStr = (NwAddrToStr_Type)0x00529FE0;
+    static const auto NwAddrToStr = (NwAddrToStr_Type)0x00529FE0;
 
-    constexpr auto NwGetPlayerFromAddr = (CPlayer *(*)(const NwAddr *pAddr))0x00484850;
-    constexpr auto NwCompareAddr = (int(*)(const NwAddr *pAddr1, const NwAddr *pAddr2, char bCheckPort))0x0052A930;
+    static const auto NwGetPlayerFromAddr = (CPlayer *(*)(const NwAddr *pAddr))0x00484850;
+    static const auto NwCompareAddr = (int(*)(const NwAddr *pAddr1, const NwAddr *pAddr2, char bCheckPort))0x0052A930;
 
     /* Camera */
 
@@ -541,8 +547,8 @@ namespace rf
         CameraType Type;
     };
 
-    constexpr auto CameraSetFirstPerson = (void(*)(Camera *pCamera))0x0040DDF0;
-    constexpr auto CameraSetFreelook = (void(*)(Camera *pCamera))0x0040DCF0;
+    static const auto CameraSetFirstPerson = (void(*)(Camera *pCamera))0x0040DDF0;
+    static const auto CameraSetFreelook = (void(*)(Camera *pCamera))0x0040DCF0;
 
     /* Config */
 
@@ -786,38 +792,38 @@ namespace rf
     };
     static_assert(sizeof(CPlayer) == 0x1204, "invalid size");
 
-    constexpr auto g_ppPlayersList = (CPlayer**)0x007C75CC;
-    constexpr auto g_ppLocalPlayer = (CPlayer**)0x007C75D4;
+    static const auto g_ppPlayersList = (CPlayer**)0x007C75CC;
+    static const auto g_ppLocalPlayer = (CPlayer**)0x007C75D4;
 
-    constexpr auto PlayerCreate = (CPlayer *(*)(char bLocal))0x004A3310;
-    constexpr auto PlayerDestroy = (void(*)(CPlayer *pPlayer))0x004A35C0;
-    constexpr auto KillLocalPlayer = (void(*)())0x004757A0;
-    constexpr auto HandleCtrlInGame = (void(*)(CPlayer *pPlayer, EGameCtrl KeyId, char WasPressed))0x004A6210;
-    constexpr auto IsEntityCtrlActive = (char(*)(ControlConfig *pCtrlConf, EGameCtrl CtrlId, bool *pWasPressed))0x0043D4F0;
-    constexpr auto PlayerCreateEntity = (EntityObj *(*)(CPlayer *pPlayer, int ClassId, const CVector3 *pPos, const CMatrix3 *pRotMatrix, int MpCharacter))0x004A4130;
+    static const auto PlayerCreate = (CPlayer *(*)(char bLocal))0x004A3310;
+    static const auto PlayerDestroy = (void(*)(CPlayer *pPlayer))0x004A35C0;
+    static const auto KillLocalPlayer = (void(*)())0x004757A0;
+    static const auto HandleCtrlInGame = (void(*)(CPlayer *pPlayer, EGameCtrl KeyId, char WasPressed))0x004A6210;
+    static const auto IsEntityCtrlActive = (char(*)(ControlConfig *pCtrlConf, EGameCtrl CtrlId, bool *pWasPressed))0x0043D4F0;
+    static const auto PlayerCreateEntity = (EntityObj *(*)(CPlayer *pPlayer, int ClassId, const CVector3 *pPos, const CMatrix3 *pRotMatrix, int MpCharacter))0x004A4130;
 
     typedef bool(*IsPlayerEntityInvalid_Type)(CPlayer *pPlayer);
-    constexpr auto IsPlayerEntityInvalid = (IsPlayerEntityInvalid_Type)0x004A4920;
+    static const auto IsPlayerEntityInvalid = (IsPlayerEntityInvalid_Type)0x004A4920;
 
     typedef bool(*IsPlayerDying_Type)(CPlayer *pPlayer);
-    constexpr auto IsPlayerDying = (IsPlayerDying_Type)0x004A4940;
+    static const auto IsPlayerDying = (IsPlayerDying_Type)0x004A4940;
 
     /* Player Fpgun */
 
-    constexpr auto PlayerFpgunRender = (void(*)(CPlayer*))0x004A2B30;
-    constexpr auto PlayerFpgunUpdate = (void(*)(CPlayer*))0x004A2700;
-    constexpr auto PlayerFpgunSetupMesh = (void(*)(CPlayer*, int WeaponClsId))0x004AA230;
-    constexpr auto PlayerFpgunUpdateState = (void(*)(CPlayer*))0x004AA3A0;
-    constexpr auto PlayerFpgunUpdateMesh = (void(*)(CPlayer*))0x004AA6D0;
-    constexpr auto PlayerRenderRocketLauncherScannerView = (void(*)(CPlayer *pPlayer))0x004AEEF0;
-    constexpr auto PlayerFpgunSetState = (void(*)(CPlayer *pPlayer, int State))0x004AA560;
-    constexpr auto PlayerFpgunHasState = (bool(*)(CPlayer *pPlayer, int State))0x004A9520;
-    constexpr auto PlayerLocalFireControl = (void(*)(CPlayer *pPlayer, bool bSecondary, char WasPressed))0x004A4E80;
+    static const auto PlayerFpgunRender = (void(*)(CPlayer*))0x004A2B30;
+    static const auto PlayerFpgunUpdate = (void(*)(CPlayer*))0x004A2700;
+    static const auto PlayerFpgunSetupMesh = (void(*)(CPlayer*, int WeaponClsId))0x004AA230;
+    static const auto PlayerFpgunUpdateState = (void(*)(CPlayer*))0x004AA3A0;
+    static const auto PlayerFpgunUpdateMesh = (void(*)(CPlayer*))0x004AA6D0;
+    static const auto PlayerRenderRocketLauncherScannerView = (void(*)(CPlayer *pPlayer))0x004AEEF0;
+    static const auto PlayerFpgunSetState = (void(*)(CPlayer *pPlayer, int State))0x004AA560;
+    static const auto PlayerFpgunHasState = (bool(*)(CPlayer *pPlayer, int State))0x004A9520;
+    static const auto PlayerLocalFireControl = (void(*)(CPlayer *pPlayer, bool bSecondary, char WasPressed))0x004A4E80;
 
-    constexpr auto IsEntityLoopFire = (bool(*)(int hEntity, signed int WeaponClsId))0x0041A830;
-    constexpr auto EntityIsSwimming = (bool(*)(EntityObj *pEntity))0x0042A0A0;
-    constexpr auto EntityIsFalling = (bool(*)(EntityObj *pEntit))0x0042A020;
-    constexpr auto EntityIsReloading = (bool(*)(EntityObj *pEntity))0x00425250;
+    static const auto IsEntityLoopFire = (bool(*)(int hEntity, signed int WeaponClsId))0x0041A830;
+    static const auto EntityIsSwimming = (bool(*)(EntityObj *pEntity))0x0042A0A0;
+    static const auto EntityIsFalling = (bool(*)(EntityObj *pEntit))0x0042A020;
+    static const auto EntityIsReloading = (bool(*)(EntityObj *pEntity))0x00425250;
 
     /* Object */
 
@@ -865,7 +871,7 @@ namespace rf
         int field_40;
     };
 
-    struct __declspec(align(4)) PhysicsInfo
+    struct PhysicsInfo
     {
         float fElasticity;
         float field_8C;
@@ -892,6 +898,7 @@ namespace rf
         int field_1B0;
         SWaterSplashUnk WaterSplashUnk;
     };
+    static_assert(sizeof(PhysicsInfo) == 0x170, "invalid size");
 
     struct Object
     {
@@ -926,6 +933,7 @@ namespace rf
         int *pEmitterListHead;
         int field_26C;
         char KillerId;
+        char _pad[3]; // FIXME
         int MultiHandle;
         int pAnim;
         int field_27C;
@@ -964,9 +972,9 @@ namespace rf
         int field_2C0;
     };
 
-    constexpr auto *g_pItemObjList = (ItemObj*)0x00642DD8;
+    static const auto *g_pItemObjList = (ItemObj*)0x00642DD8;
 
-    constexpr auto ObjGetFromUid = (Object *(*)(int Uid))0x0048A4A0;
+    static const auto ObjGetFromUid = (Object *(*)(int Uid))0x0048A4A0;
 
     /* Entity */
 
@@ -1270,7 +1278,7 @@ namespace rf
     static_assert(sizeof(EntityObj) == 0x1494, "invalid size");
 
     typedef EntityObj *(*EntityGetFromHandle_Type)(uint32_t hEntity);
-    constexpr auto EntityGetFromHandle = (EntityGetFromHandle_Type)0x00426FC0;
+    static const auto EntityGetFromHandle = (EntityGetFromHandle_Type)0x00426FC0;
 
     /* Weapons */
 
@@ -1462,24 +1470,24 @@ namespace rf
     };
     static_assert(sizeof(WeaponClass) == 0x550, "invalid size");
 
-    constexpr auto g_pWeaponClasses = (WeaponClass*)0x0085CD08;
-    constexpr auto g_pRiotStickClsId = (uint32_t*)0x00872468;
-    constexpr auto g_pRemoteChargeClsId = (uint32_t*)0x0087210C;
+    static const auto g_pWeaponClasses = (WeaponClass*)0x0085CD08;
+    static const auto g_pRiotStickClsId = (uint32_t*)0x00872468;
+    static const auto g_pRemoteChargeClsId = (uint32_t*)0x0087210C;
 
     /* Window */
 
     typedef void(*PFN_MESSAGE_HANDLER)(UINT, WPARAM, LPARAM);
     typedef unsigned(*PFN_ADD_MSG_HANDLER)(PFN_MESSAGE_HANDLER);
-    constexpr auto AddMsgHandler = (PFN_ADD_MSG_HANDLER)0x00524AE0;
+    static const auto AddMsgHandler = (PFN_ADD_MSG_HANDLER)0x00524AE0;
 
-    constexpr auto g_MsgHandlers = (PFN_MESSAGE_HANDLER*)0x01B0D5A0;
-    constexpr auto g_pcMsgHandlers = (uint32_t*)0x01B0D760;
+    static const auto g_MsgHandlers = (PFN_MESSAGE_HANDLER*)0x01B0D5A0;
+    static const auto g_pcMsgHandlers = (uint32_t*)0x01B0D760;
 
-    constexpr auto g_phWnd = (HWND*)0x01B0D748;
-    constexpr auto g_pbIsActive = (uint8_t*)0x01B0D750;
-    constexpr auto g_pbClose = (uint8_t*)0x01B0D758;
-    constexpr auto g_pbMouseInitialized = (uint8_t*)0x01885461;
-    constexpr auto g_pcRedrawServer = (uint32_t*)0x01775698;
+    static const auto g_phWnd = (HWND*)0x01B0D748;
+    static const auto g_pbIsActive = (uint8_t*)0x01B0D750;
+    static const auto g_pbClose = (uint8_t*)0x01B0D758;
+    static const auto g_pbMouseInitialized = (uint8_t*)0x01885461;
+    static const auto g_pcRedrawServer = (uint32_t*)0x01775698;
 
     /* Network Game */
 
@@ -1491,46 +1499,46 @@ namespace rf
     };
 
     typedef unsigned(*GetGameType_Type)();
-    constexpr auto GetGameType = (GetGameType_Type)0x00470770;
+    static const auto GetGameType = (GetGameType_Type)0x00470770;
 
     typedef unsigned(*GetPlayersCount_Type)();
-    constexpr auto GetPlayersCount = (GetPlayersCount_Type)0x00484830;
+    static const auto GetPlayersCount = (GetPlayersCount_Type)0x00484830;
 
     typedef uint8_t(*GetTeamScore_Type)();
-    constexpr auto CtfGetRedScore = (GetTeamScore_Type)0x00475020;
-    constexpr auto CtfGetBlueScore = (GetTeamScore_Type)0x00475030;
-    constexpr auto TdmGetRedScore = (GetTeamScore_Type)0x004828F0;
-    constexpr auto TdmGetBlueScore = (GetTeamScore_Type)0x00482900;
-    constexpr auto CtfGetRedFlagPlayer = (CPlayer*(*)())0x00474E60;
-    constexpr auto CtfGetBlueFlagPlayer = (CPlayer*(*)())0x00474E70;
+    static const auto CtfGetRedScore = (GetTeamScore_Type)0x00475020;
+    static const auto CtfGetBlueScore = (GetTeamScore_Type)0x00475030;
+    static const auto TdmGetRedScore = (GetTeamScore_Type)0x004828F0;
+    static const auto TdmGetBlueScore = (GetTeamScore_Type)0x00482900;
+    static const auto CtfGetRedFlagPlayer = (CPlayer*(*)())0x00474E60;
+    static const auto CtfGetBlueFlagPlayer = (CPlayer*(*)())0x00474E70;
 
     typedef const char *(*GetJoinFailedStr_Type)(unsigned Reason);
-    constexpr auto GetJoinFailedStr = (GetJoinFailedStr_Type)0x0047BE60;
+    static const auto GetJoinFailedStr = (GetJoinFailedStr_Type)0x0047BE60;
 
     typedef void(*KickPlayer_Type)(CPlayer *pPlayer);
-    constexpr auto KickPlayer = (KickPlayer_Type)0x0047BF00;
+    static const auto KickPlayer = (KickPlayer_Type)0x0047BF00;
 
     typedef void(*BanIp_Type)(const NwAddr *pAddr);
-    constexpr auto BanIp = (BanIp_Type)0x0046D0F0;
+    static const auto BanIp = (BanIp_Type)0x0046D0F0;
 
-    constexpr auto MpResetNetGame = (void(*)())0x0046E450;
-    constexpr auto MultiSetNextWeapon = (void(*)(int WeaponClsId))0x0047FCA0;
+    static const auto MpResetNetGame = (void(*)())0x0046E450;
+    static const auto MultiSetNextWeapon = (void(*)(int WeaponClsId))0x0047FCA0;
 
-    constexpr auto g_pServAddr = (NwAddr*)0x0064EC5C;
-    constexpr auto g_pstrServName = (CString*)0x0064EC28;
-    constexpr auto g_pbNetworkGame = (uint8_t*)0x0064ECB9;
-    constexpr auto g_pbLocalNetworkGame = (uint8_t*)0x0064ECBA;
-    constexpr auto g_pbDedicatedServer = (uint32_t*)0x01B0D75C;
-    constexpr auto g_pGameOptions = (uint32_t*)0x0064EC40;
-    constexpr auto g_ppBanlistFirstEntry = (BanlistEntry**)0x0064EC20;
-    constexpr auto g_ppBanlistLastEntry = (BanlistEntry**)0x0064EC24;
-    constexpr auto g_pBanlistNullEntry = (BanlistEntry*)0x0064EC08;
+    static const auto g_pServAddr = (NwAddr*)0x0064EC5C;
+    static const auto g_pstrServName = (CString*)0x0064EC28;
+    static const auto g_pbNetworkGame = (uint8_t*)0x0064ECB9;
+    static const auto g_pbLocalNetworkGame = (uint8_t*)0x0064ECBA;
+    static const auto g_pbDedicatedServer = (uint32_t*)0x01B0D75C;
+    static const auto g_pGameOptions = (uint32_t*)0x0064EC40;
+    static const auto g_ppBanlistFirstEntry = (BanlistEntry**)0x0064EC20;
+    static const auto g_ppBanlistLastEntry = (BanlistEntry**)0x0064EC24;
+    static const auto g_pBanlistNullEntry = (BanlistEntry*)0x0064EC08;
 
     /* Input */
-    constexpr auto MouseGetPos = (int(*)(int *pX, int *pY, int *pZ))0x0051E450;
-    constexpr auto MouseWasButtonPressed = (int(*)(int BtnIdx))0x0051E5D0;
-    constexpr auto KeyGetFromFifo = (int(*)())0x0051F000;
-    constexpr auto MouseUpdateDirectInput = (void(*)())0x0051DEB0;
+    static const auto MouseGetPos = (int(*)(int *pX, int *pY, int *pZ))0x0051E450;
+    static const auto MouseWasButtonPressed = (int(*)(int BtnIdx))0x0051E5D0;
+    static const auto KeyGetFromFifo = (int(*)())0x0051F000;
+    static const auto MouseUpdateDirectInput = (void(*)())0x0051DEB0;
 
     /* Menu */
 
@@ -1572,15 +1580,15 @@ namespace rf
         MENU_MP_LIMBO = 0x22,
     };
 
-    constexpr auto SwitchMenu = (int(*)(int MenuId, bool bForce))0x00434190;
-    constexpr auto MenuMainProcessMouse = (void(*)())0x00443D90;
-    constexpr auto MenuMainRender = (void(*)())0x004435F0;
-    constexpr auto MenuUpdate = (int(*)())0x00434230;
-    constexpr auto GetCurrentMenuId = (MenuId(*)())0x00434200;
+    static const auto SwitchMenu = (int(*)(int MenuId, bool bForce))0x00434190;
+    static const auto MenuMainProcessMouse = (void(*)())0x00443D90;
+    static const auto MenuMainRender = (void(*)())0x004435F0;
+    static const auto MenuUpdate = (int(*)())0x00434230;
+    static const auto GetCurrentMenuId = (MenuId(*)())0x00434200;
 
-    constexpr auto g_MenuLevels = (int*)0x00630064;
-    constexpr auto g_pCurrentMenuLevel = (int*)0x005967A4;
-    constexpr auto g_pMenuVersionLabel = (UiPanel*)0x0063C088;
+    static const auto g_MenuLevels = (int*)0x00630064;
+    static const auto g_pCurrentMenuLevel = (int*)0x005967A4;
+    static const auto g_pMenuVersionLabel = (UiPanel*)0x0063C088;
 
     /* Other */
 
@@ -1601,51 +1609,51 @@ namespace rf
         int unk2;
     };
 
-    constexpr auto g_pszRootPath = (char*)0x018060E8;
-    constexpr auto g_fFps = (float*)0x005A4018;
-    constexpr auto g_pfFramerate = (float*)0x005A4014;
-    constexpr auto g_pfMinFramerate = (float*)0x005A4024;
-    constexpr auto g_pSimultaneousPing = (uint32_t*)0x00599CD8;
-    constexpr auto g_pstrLevelName = (CString*)0x00645FDC;
-    constexpr auto g_pstrLevelFilename = (CString*)0x00645FE4;
-    constexpr auto g_pstrLevelAuthor = (CString*)0x00645FEC;
-    constexpr auto g_pstrLevelDate = (CString*)0x00645FF4;
-    constexpr auto g_pBigFontId = (int*)0x006C74C0;
-    constexpr auto g_pLargeFontId = (int*)0x0063C05C;
-    constexpr auto g_pMediumFontId = (int*)0x0063C060;
-    constexpr auto g_pSmallFontId = (int*)0x0063C068;
-    constexpr auto g_pbDirectInputDisabled = (bool*)0x005A4F88;
-    constexpr auto g_bScoreboardRendered = (bool*)0x006A1448;
-    constexpr auto g_pstrDefaultPlayerWeapon = (CString*)0x007C7600;
+    static const auto g_pszRootPath = (char*)0x018060E8;
+    static const auto g_fFps = (float*)0x005A4018;
+    static const auto g_pfFramerate = (float*)0x005A4014;
+    static const auto g_pfMinFramerate = (float*)0x005A4024;
+    static const auto g_pSimultaneousPing = (uint32_t*)0x00599CD8;
+    static const auto g_pstrLevelName = (CString*)0x00645FDC;
+    static const auto g_pstrLevelFilename = (CString*)0x00645FE4;
+    static const auto g_pstrLevelAuthor = (CString*)0x00645FEC;
+    static const auto g_pstrLevelDate = (CString*)0x00645FF4;
+    static const auto g_pBigFontId = (int*)0x006C74C0;
+    static const auto g_pLargeFontId = (int*)0x0063C05C;
+    static const auto g_pMediumFontId = (int*)0x0063C060;
+    static const auto g_pSmallFontId = (int*)0x0063C068;
+    static const auto g_pbDirectInputDisabled = (bool*)0x005A4F88;
+    static const auto g_bScoreboardRendered = (bool*)0x006A1448;
+    static const auto g_pstrDefaultPlayerWeapon = (CString*)0x007C7600;
 
-    constexpr auto g_pbDbgFlagsArray = (uint8_t*)0x0062FE19;
-    constexpr auto g_pbDbgNetwork = (uint32_t*)0x006FED24;
-    constexpr auto g_pbDbgWeapon = (uint8_t*)0x007CAB59;
-    constexpr auto g_pbRenderEventIcons = (uint8_t*)0x00856500;
-    constexpr auto g_pbDbgRenderTriggers = (uint8_t*)0x0085683C;
+    static const auto g_pbDbgFlagsArray = (uint8_t*)0x0062FE19;
+    static const auto g_pbDbgNetwork = (uint32_t*)0x006FED24;
+    static const auto g_pbDbgWeapon = (uint8_t*)0x007CAB59;
+    static const auto g_pbRenderEventIcons = (uint8_t*)0x00856500;
+    static const auto g_pbDbgRenderTriggers = (uint8_t*)0x0085683C;
 
-    constexpr auto RfBeep = (void(*)(unsigned u1, unsigned u2, unsigned u3, float fVolume))0x00505560;
-    constexpr auto InitGame = (void(*)())0x004B13F0;
-    constexpr auto CleanupGame = (void(*)())0x004B2D40;
-    constexpr auto RunGame = (bool(*)())0x004B2D90;
-    constexpr auto GetFileExt = (char *(*)(char *pszPath))0x005143F0;
-    constexpr auto SplitScreenStart = (void(*)())0x00480D30;
-    constexpr auto GetVersionStr = (void(*)(const char **ppszVersion, const char **a2))0x004B33F0;
-    constexpr auto SetNextLevelFilename = (void(*)(CString strFilename, CString strSecond))0x0045E2E0;
-    constexpr auto DemoLoadLevel = (void(*)(const char *pszLevelFileName))0x004CC270;
-    constexpr auto RenderHitScreen = (void(*)(CPlayer *pPlayer))0x004163C0;
-    constexpr auto RenderReticle = (void(*)(CPlayer *pPlayer))0x0043A2C0;
-    constexpr auto SetCursorVisible = (void(*)(char bVisible))0x0051E680;
-    constexpr auto RflLoad = (int(*)(CString *pstrLevelFilename, CString *a2, char *pszError))0x0045C540;
-    constexpr auto DrawScoreboard = (void(*)(bool bDraw))0x00470860;
-    constexpr auto DrawScoreboardInternal = (void(*)(bool bDraw))0x00470880;
-    constexpr auto BinkInitDeviceInfo = (unsigned(*)())0x005210C0;
-    constexpr auto SndConvertVolume3D = (void(*)(int GameSndId, CVector3 *pSoundPos, float *pPanOut, float *pVolumeOut, float VolumeIn))0x00505740;
-    constexpr auto GeomCachePrepareRoom = (int(*)(void *pGeom, void *pRoom))0x004F0C00;
+    static const auto RfBeep = (void(*)(unsigned u1, unsigned u2, unsigned u3, float fVolume))0x00505560;
+    static const auto InitGame = (void(*)())0x004B13F0;
+    static const auto CleanupGame = (void(*)())0x004B2D40;
+    static const auto RunGame = (bool(*)())0x004B2D90;
+    static const auto GetFileExt = (char *(*)(char *pszPath))0x005143F0;
+    static const auto SplitScreenStart = (void(*)())0x00480D30;
+    static const auto GetVersionStr = (void(*)(const char **ppszVersion, const char **a2))0x004B33F0;
+    static const auto SetNextLevelFilename = (void(*)(CString strFilename, CString strSecond))0x0045E2E0;
+    static const auto DemoLoadLevel = (void(*)(const char *pszLevelFileName))0x004CC270;
+    static const auto RenderHitScreen = (void(*)(CPlayer *pPlayer))0x004163C0;
+    static const auto RenderReticle = (void(*)(CPlayer *pPlayer))0x0043A2C0;
+    static const auto SetCursorVisible = (void(*)(char bVisible))0x0051E680;
+    static const auto RflLoad = (int(*)(CString *pstrLevelFilename, CString *a2, char *pszError))0x0045C540;
+    static const auto DrawScoreboard = (void(*)(bool bDraw))0x00470860;
+    static const auto DrawScoreboardInternal = (void(*)(bool bDraw))0x00470880;
+    static const auto BinkInitDeviceInfo = (unsigned(*)())0x005210C0;
+    static const auto SndConvertVolume3D = (void(*)(int GameSndId, CVector3 *pSoundPos, float *pPanOut, float *pVolumeOut, float VolumeIn))0x00505740;
+    static const auto GeomCachePrepareRoom = (int(*)(void *pGeom, void *pRoom))0x004F0C00;
 
 
     /* Strings Table */
-    constexpr auto g_ppszStringsTable = (char**)0x007CBBF0;
+    static const auto g_ppszStringsTable = (char**)0x007CBBF0;
     enum StrId
     {
         STR_PLAYER = 675,
@@ -1670,16 +1678,16 @@ namespace rf
     /* RF stdlib functions are not compatible with GCC */
 
     typedef FILE *(*RfFopen_Type)(const char *pszPath, const char *pszMode);
-    constexpr auto RfFopen = (RfFopen_Type)0x00574FFE;
+    static const auto RfFopen = (RfFopen_Type)0x00574FFE;
 
     typedef void(*RfSeek_Type)(FILE *pFile, uint32_t Offset, uint32_t Direction);
-    constexpr auto RfSeek = (RfSeek_Type)0x00574F14;
+    static const auto RfSeek = (RfSeek_Type)0x00574F14;
 
     typedef void(*RfDelete_Type)(void *pMem);
-    constexpr auto RfDelete = (RfDelete_Type)0x0057360E;
+    static const auto RfDelete = (RfDelete_Type)0x0057360E;
 
     typedef void *(*RfMalloc_Type)(uint32_t cbSize);
-    constexpr auto RfMalloc = (RfMalloc_Type)0x00573B37;
+    static const auto RfMalloc = (RfMalloc_Type)0x00573B37;
 }
 
 #pragma pack(pop)

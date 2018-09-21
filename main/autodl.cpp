@@ -18,6 +18,7 @@ static BOOL g_bDownloadActive = FALSE;
 bool UnzipVpp(const char *pszPath)
 {
     bool bRet = false;
+    int iCode;
 
     unzFile Archive = unzOpen(pszPath);
     if (!Archive)
@@ -30,7 +31,7 @@ bool UnzipVpp(const char *pszPath)
     }
 
     unz_global_info GlobalInfo;
-    int iCode = unzGetGlobalInfo(Archive, &GlobalInfo);
+    iCode = unzGetGlobalInfo(Archive, &GlobalInfo);
     if (iCode != UNZ_OK)
     {
         ERR("unzGetGlobalInfo failed - error %d, path %s", iCode, pszPath);

@@ -9,64 +9,64 @@
 
 using namespace rf;
 
-constexpr auto MultiIsCurrentServer = (uint8_t(*)(const NwAddr *pAddr))0x0044AD80;
+static const auto MultiIsCurrentServer = (uint8_t(*)(const NwAddr *pAddr))0x0044AD80;
 
 typedef void(*NwPacketHandler_Type)(char *pData, const NwAddr *pAddr);
 
-constexpr auto ProcessGameInfoReqPacket = (NwPacketHandler_Type)0x0047B480;
-constexpr auto ProcessGameInfoPacket = (NwPacketHandler_Type)0x0047B2A0;
-constexpr auto ProcessJoinReqPacket = (NwPacketHandler_Type)0x0047AC60;
-constexpr auto ProcessJoinAcceptPacket = (NwPacketHandler_Type)0x0047A840;
-constexpr auto ProcessJoinDenyPacket = (NwPacketHandler_Type)0x0047A400;
-constexpr auto ProcessNewPlayerPacket = (NwPacketHandler_Type)0x0047A580;
-constexpr auto ProcessPlayersPacket = (NwPacketHandler_Type)0x00481E60;
-constexpr auto ProcessLeftGamePacket = (NwPacketHandler_Type)0x0047BBC0;
-constexpr auto ProcessEndGamePacket = (NwPacketHandler_Type)0x0047BAB0;
-constexpr auto ProcessStateInfoReqPacket = (NwPacketHandler_Type)0x00481BB0;
-constexpr auto ProcessStateInfoDonePacket = (NwPacketHandler_Type)0x00481AF0;
-constexpr auto ProcessClientInGamePacket = (NwPacketHandler_Type)0x004820D0;
-constexpr auto ProcessChatLinePacket = (NwPacketHandler_Type)0x00444860;
-constexpr auto ProcessNameChangePacket = (NwPacketHandler_Type)0x0046EAE0;
-constexpr auto ProcessRespawnReqPacket = (NwPacketHandler_Type)0x00480A20;
-constexpr auto ProcessTriggerActivatePacket = (NwPacketHandler_Type)0x004831D0;
-constexpr auto ProcessUseKeyPressedPacket = (NwPacketHandler_Type)0x00483260;
-constexpr auto ProcessPregameBooleanPacket = (NwPacketHandler_Type)0x004766B0;
-constexpr auto ProcessPregameGlassPacket = (NwPacketHandler_Type)0x004767B0;
-constexpr auto ProcessPregameRemoteChargePacket = (NwPacketHandler_Type)0x0047F9E0;
-constexpr auto ProcessSuicidePacket = (NwPacketHandler_Type)0x00475760;
-constexpr auto ProcessEnterLimboPacket = (NwPacketHandler_Type)0x0047C060;
-constexpr auto ProcessLeaveLimboPacket = (NwPacketHandler_Type)0x0047C160;
-constexpr auto ProcessTeamChangePacket = (NwPacketHandler_Type)0x004825B0;
-constexpr auto ProcessPingPacket = (NwPacketHandler_Type)0x00484CE0;
-constexpr auto ProcessPongPacket = (NwPacketHandler_Type)0x00484D50;
-constexpr auto ProcessNetgameUpdatePacket = (NwPacketHandler_Type)0x00484F40;
-constexpr auto ProcessRateChangePacket = (NwPacketHandler_Type)0x004807B0;
-constexpr auto ProcessSelectWeaponReqPacket = (NwPacketHandler_Type)0x00485920;
-constexpr auto ProcessClutterUpdatePacket = (NwPacketHandler_Type)0x0047F1A0;
-constexpr auto ProcessClutterKillPacket = (NwPacketHandler_Type)0x0047F380;
-constexpr auto ProcessCtfFlagPickedUpPacket = (NwPacketHandler_Type)0x00474040;
-constexpr auto ProcessCtfFlagCapturedPacket = (NwPacketHandler_Type)0x004742E0;
-constexpr auto ProcessCtfFlagUpdatePacket = (NwPacketHandler_Type)0x00474810;
-constexpr auto ProcessCtfFlagReturnedPacket = (NwPacketHandler_Type)0x00474420;
-constexpr auto ProcessCtfFlagDroppedPacket = (NwPacketHandler_Type)0x00474D70;
-constexpr auto ProcessRemoteChargeKillPacket = (NwPacketHandler_Type)0x00485BC0;
-constexpr auto ProcessItemUpdatePacket = (NwPacketHandler_Type)0x0047A220;
-constexpr auto ProcessObjUpdatePacket = (NwPacketHandler_Type)0x0047DF90;
-constexpr auto ProcessObjKillPacket = (NwPacketHandler_Type)0x0047EDE0;
-constexpr auto ProcessItemApplyPacket = (NwPacketHandler_Type)0x004798D0;
-constexpr auto ProcessBooleanPacket = (NwPacketHandler_Type)0x00476590;
-constexpr auto ProcessRespawnPacket = (NwPacketHandler_Type)0x004799E0;
-constexpr auto ProcessEntityCreatePacket = (NwPacketHandler_Type)0x00475420;
-constexpr auto ProcessItemCreatePacket = (NwPacketHandler_Type)0x00479F70;
-constexpr auto ProcessReloadPacket = (NwPacketHandler_Type)0x00485AB0;
-constexpr auto ProcessReloadReqPacket = (NwPacketHandler_Type)0x00485A60;
-constexpr auto ProcessWeaponFirePacket = (NwPacketHandler_Type)0x0047D6C0;
-constexpr auto ProcessFallDamagePacket = (NwPacketHandler_Type)0x00476370;
-constexpr auto ProcessRconReqPacket = (NwPacketHandler_Type)0x0046C520;
-constexpr auto ProcessRconPacket = (NwPacketHandler_Type)0x0046C6E0;
-constexpr auto ProcessSoundPacket = (NwPacketHandler_Type)0x00471FF0;
-constexpr auto ProcessTeamScorePacket = (NwPacketHandler_Type)0x00472210;
-constexpr auto ProcessGlassKillPacket = (NwPacketHandler_Type)0x00472350;
+static const auto ProcessGameInfoReqPacket = (NwPacketHandler_Type)0x0047B480;
+static const auto ProcessGameInfoPacket = (NwPacketHandler_Type)0x0047B2A0;
+static const auto ProcessJoinReqPacket = (NwPacketHandler_Type)0x0047AC60;
+static const auto ProcessJoinAcceptPacket = (NwPacketHandler_Type)0x0047A840;
+static const auto ProcessJoinDenyPacket = (NwPacketHandler_Type)0x0047A400;
+static const auto ProcessNewPlayerPacket = (NwPacketHandler_Type)0x0047A580;
+static const auto ProcessPlayersPacket = (NwPacketHandler_Type)0x00481E60;
+static const auto ProcessLeftGamePacket = (NwPacketHandler_Type)0x0047BBC0;
+static const auto ProcessEndGamePacket = (NwPacketHandler_Type)0x0047BAB0;
+static const auto ProcessStateInfoReqPacket = (NwPacketHandler_Type)0x00481BB0;
+static const auto ProcessStateInfoDonePacket = (NwPacketHandler_Type)0x00481AF0;
+static const auto ProcessClientInGamePacket = (NwPacketHandler_Type)0x004820D0;
+static const auto ProcessChatLinePacket = (NwPacketHandler_Type)0x00444860;
+static const auto ProcessNameChangePacket = (NwPacketHandler_Type)0x0046EAE0;
+static const auto ProcessRespawnReqPacket = (NwPacketHandler_Type)0x00480A20;
+static const auto ProcessTriggerActivatePacket = (NwPacketHandler_Type)0x004831D0;
+static const auto ProcessUseKeyPressedPacket = (NwPacketHandler_Type)0x00483260;
+static const auto ProcessPregameBooleanPacket = (NwPacketHandler_Type)0x004766B0;
+static const auto ProcessPregameGlassPacket = (NwPacketHandler_Type)0x004767B0;
+static const auto ProcessPregameRemoteChargePacket = (NwPacketHandler_Type)0x0047F9E0;
+static const auto ProcessSuicidePacket = (NwPacketHandler_Type)0x00475760;
+static const auto ProcessEnterLimboPacket = (NwPacketHandler_Type)0x0047C060;
+static const auto ProcessLeaveLimboPacket = (NwPacketHandler_Type)0x0047C160;
+static const auto ProcessTeamChangePacket = (NwPacketHandler_Type)0x004825B0;
+static const auto ProcessPingPacket = (NwPacketHandler_Type)0x00484CE0;
+static const auto ProcessPongPacket = (NwPacketHandler_Type)0x00484D50;
+static const auto ProcessNetgameUpdatePacket = (NwPacketHandler_Type)0x00484F40;
+static const auto ProcessRateChangePacket = (NwPacketHandler_Type)0x004807B0;
+static const auto ProcessSelectWeaponReqPacket = (NwPacketHandler_Type)0x00485920;
+static const auto ProcessClutterUpdatePacket = (NwPacketHandler_Type)0x0047F1A0;
+static const auto ProcessClutterKillPacket = (NwPacketHandler_Type)0x0047F380;
+static const auto ProcessCtfFlagPickedUpPacket = (NwPacketHandler_Type)0x00474040;
+static const auto ProcessCtfFlagCapturedPacket = (NwPacketHandler_Type)0x004742E0;
+static const auto ProcessCtfFlagUpdatePacket = (NwPacketHandler_Type)0x00474810;
+static const auto ProcessCtfFlagReturnedPacket = (NwPacketHandler_Type)0x00474420;
+static const auto ProcessCtfFlagDroppedPacket = (NwPacketHandler_Type)0x00474D70;
+static const auto ProcessRemoteChargeKillPacket = (NwPacketHandler_Type)0x00485BC0;
+static const auto ProcessItemUpdatePacket = (NwPacketHandler_Type)0x0047A220;
+static const auto ProcessObjUpdatePacket = (NwPacketHandler_Type)0x0047DF90;
+static const auto ProcessObjKillPacket = (NwPacketHandler_Type)0x0047EDE0;
+static const auto ProcessItemApplyPacket = (NwPacketHandler_Type)0x004798D0;
+static const auto ProcessBooleanPacket = (NwPacketHandler_Type)0x00476590;
+static const auto ProcessRespawnPacket = (NwPacketHandler_Type)0x004799E0;
+static const auto ProcessEntityCreatePacket = (NwPacketHandler_Type)0x00475420;
+static const auto ProcessItemCreatePacket = (NwPacketHandler_Type)0x00479F70;
+static const auto ProcessReloadPacket = (NwPacketHandler_Type)0x00485AB0;
+static const auto ProcessReloadReqPacket = (NwPacketHandler_Type)0x00485A60;
+static const auto ProcessWeaponFirePacket = (NwPacketHandler_Type)0x0047D6C0;
+static const auto ProcessFallDamagePacket = (NwPacketHandler_Type)0x00476370;
+static const auto ProcessRconReqPacket = (NwPacketHandler_Type)0x0046C520;
+static const auto ProcessRconPacket = (NwPacketHandler_Type)0x0046C6E0;
+static const auto ProcessSoundPacket = (NwPacketHandler_Type)0x00471FF0;
+static const auto ProcessTeamScorePacket = (NwPacketHandler_Type)0x00472210;
+static const auto ProcessGlassKillPacket = (NwPacketHandler_Type)0x00472350;
 
 auto ProcessGameInfoReqPacket_Hook = makeFunHook(ProcessGameInfoReqPacket);
 auto ProcessGameInfoPacket_Hook = makeFunHook(ProcessGameInfoPacket);
@@ -143,6 +143,8 @@ extern "C" void SafeStrCpy(char *pDest, const char *pSrc, size_t DestSize)
     pDest[DestSize - 1] = 0;
 #endif
 }
+
+#ifndef __GNUC__ // FIXME
 
 NAKED void ProcessGameInfoPacket_Security_0047B2D3()
 { // ecx - num, esi - source, ebx - dest
@@ -413,6 +415,7 @@ NAKED void ProcessRconPacket_Security_0046C751()
     }
 }
 
+#endif // __GNUC__
 
 void ProcessGameInfoReqPacket_New(char *pData, const NwAddr *pAddr)
 {
@@ -853,6 +856,7 @@ void NetworkInit()
     WriteMemUInt32(0x00599D20, 4);
 
     /* Buffer Overflow fixes */
+#ifndef __GNUC__ // FIXME
     AsmWritter(0x0047B2D3).jmpLong(ProcessGameInfoPacket_Security_0047B2D3);
     AsmWritter(0x0047B334).jmpLong(ProcessGameInfoPacket_Security_0047B334);
 #ifndef TEST_BUFFER_OVERFLOW_FIXES
@@ -871,6 +875,7 @@ void NetworkInit()
     AsmWritter(0x00479FAA).jmpLong(ProcessItemCreatePacket_Security_00479FAA);
     AsmWritter(0x0046C590).jmpLong(ProcessRconReqPacket_Security_0046C590);
     AsmWritter(0x0046C751).jmpLong(ProcessRconPacket_Security_0046C751);
+#endif // __GNUC__
 
     // Hook all packet handlers
     ProcessGameInfoReqPacket_Hook.hook(ProcessGameInfoReqPacket_New);
@@ -939,9 +944,9 @@ void NetworkInit()
     AsmWritter(0x0046CAD7, 0x0046CADA).cmp(AsmRegs::AL, (int8_t)0xFF);
 
     // Hide IP addresses in Players packet
-    AsmWritter(0x00481D31, 0x00481D33).xor(AsmRegs::EAX, AsmRegs::EAX);
-    AsmWritter(0x00481D40, 0x00481D44).xor(AsmRegs::EDX, AsmRegs::EDX);
+    AsmWritter(0x00481D31, 0x00481D33).xor_(AsmRegs::EAX, AsmRegs::EAX);
+    AsmWritter(0x00481D40, 0x00481D44).xor_(AsmRegs::EDX, AsmRegs::EDX);
     // Hide IP addresses in New Player packet
-    AsmWritter(0x0047A4A0, 0x0047A4A2). xor (AsmRegs::EDX, AsmRegs::EDX);
-    AsmWritter(0x0047A4A6, 0x0047A4AA). xor (AsmRegs::ECX, AsmRegs::ECX);
+    AsmWritter(0x0047A4A0, 0x0047A4A2).xor_(AsmRegs::EDX, AsmRegs::EDX);
+    AsmWritter(0x0047A4A6, 0x0047A4AA).xor_(AsmRegs::ECX, AsmRegs::ECX);
 }

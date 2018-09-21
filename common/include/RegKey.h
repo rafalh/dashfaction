@@ -1,8 +1,8 @@
 #pragma once
 
-#include <Windows.h>
+#include <windows.h>
 #include <stdexcept>
-#include "exception.h"
+#include "Exception.h"
 
 class RegKey
 {

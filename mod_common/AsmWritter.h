@@ -82,7 +82,7 @@ public:
         return *this;
     }
 
-    AsmWritter &xor(const AsmReg32 &dstReg, const AsmReg32 &srcReg)
+    AsmWritter &xor_(const AsmReg32 &dstReg, const AsmReg32 &srcReg)
     {
         WriteMemUInt8(m_addr++, 0x33); // Opcode
         WriteMemUInt8(m_addr++, 0xC0 | (srcReg.regNum << 3) | dstReg.regNum); // ModR/M
@@ -103,7 +103,8 @@ public:
         return *this;
     }
 
-    AsmWritter &jmpLong(void *addr)
+    template<typename T>
+    AsmWritter &jmpLong(T *addr)
     {
         return jmpLong(reinterpret_cast<uintptr_t>(addr));
     }
@@ -124,7 +125,8 @@ public:
         return *this;
     }
 
-    AsmWritter &callLong(void *addr)
+    template<typename T> 
+    AsmWritter &callLong(T *addr)
     {
         WriteMemUInt8(m_addr, 0xE8);
         WriteMemInt32(m_addr + 1, reinterpret_cast<intptr_t>(addr) - (m_addr + 0x5));

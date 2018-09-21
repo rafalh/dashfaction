@@ -272,9 +272,9 @@ void WaterGenerateTexture_004E68D1(uintptr_t v1)
         }
     }
 
-    constexpr auto byte_1370F90 = (uint8_t*)0x1370F90;
-    constexpr auto byte_1371B14 = (uint8_t*)0x1371B14;
-    constexpr auto byte_1371090 = (uint8_t*)0x1371090;
+    static const auto byte_1370F90 = (uint8_t*)0x1370F90;
+    static const auto byte_1371B14 = (uint8_t*)0x1371B14;
+    static const auto byte_1371090 = (uint8_t*)0x1371090;
 
     BYTE *pDstRow = DstLockData.pBits;
     int SrcPixelSize = GetPixelFormatSize((BmPixelFormat)SrcLockData.PixelFormat);
@@ -317,7 +317,7 @@ unsigned BinkInitDeviceInfo_New()
 
     if (g_gameConfig.trueColorTextures && g_gameConfig.resBpp == 32)
     {
-        constexpr auto pBinkBmPixelFmt = (uint32_t*)0x018871C0;
+        static const auto pBinkBmPixelFmt = (uint32_t*)0x018871C0;
         *pBinkBmPixelFmt = BMPF_888;
         BinkFlags = 3;
     }

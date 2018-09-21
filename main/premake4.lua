@@ -32,11 +32,16 @@ project "DashFaction"
 		"logger",
 		"Common",
 		"xxhash",
+		"gdi32",
 	}
 	
 	pchheader "stdafx.h"
 	pchsource "stdafx.cpp"
 	
+	-- fix target name in cross-compilation
+	targetextension ".dll"
+	targetprefix ""
+
 	configuration "vs*"
 		linkoptions { "/DEBUG" } -- generate PDB files
 	
@@ -45,3 +50,9 @@ project "DashFaction"
 	
 	configuration "Release"
 		targetdir "../bin/release"
+
+	configuration { "linux", "Debug" }
+		linkoptions "-Wl,-Map,../bin/debug/DashFaction.map"
+
+	configuration { "linux", "Release" }
+		linkoptions "-Wl,-Map,../bin/release/DashFaction.map"

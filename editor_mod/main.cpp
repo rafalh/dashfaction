@@ -11,7 +11,7 @@ HMODULE g_hModule;
 HWND g_hEditorWnd;
 WNDPROC g_pEditorWndProc_Orig;
 
-constexpr auto g_pEditorApp = (void*)0x006F9DA0;
+static const auto g_pEditorApp = (void*)0x006F9DA0;
 
 void OpenLevel(const char *pszPath)
 {
@@ -61,9 +61,9 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
 
     // Zero first argument for CreateProcess call
     AsmWritter(0x00447B32, 0x00447B39).nop();
-    AsmWritter(0x00447B32).xor(AsmRegs::EAX, AsmRegs::EAX);
+    AsmWritter(0x00447B32).xor_(AsmRegs::EAX, AsmRegs::EAX);
     AsmWritter(0x00448024, 0x0044802B).nop();
-    AsmWritter(0x00448024). xor (AsmRegs::EAX, AsmRegs::EAX);
+    AsmWritter(0x00448024).xor_(AsmRegs::EAX, AsmRegs::EAX);
     
     // InitInstance hook
     AsmWritter(0x00482C84).callLong(CEditorApp__InitInstance_AfterHook);

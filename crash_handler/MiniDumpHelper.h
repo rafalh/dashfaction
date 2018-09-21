@@ -1,11 +1,11 @@
 #pragma once
 
-#include <Windows.h>
-#include <Dbghelp.h>
+#include <windows.h>
+#include <dbghelp.h>
 #include <vector>
 #include <string>
 
-typedef typename decltype(&MiniDumpWriteDump) MiniDumpWriteDump_Type;
+typedef decltype(&MiniDumpWriteDump) MiniDumpWriteDump_Type;
 
 class MiniDumpHelper
 {

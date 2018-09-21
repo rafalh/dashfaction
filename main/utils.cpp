@@ -2,6 +2,9 @@
 #include "utils.h"
 #include "rf.h"
 #include "Exception.h"
+#ifdef __GNUC__
+  #include <cpuid.h>
+#endif
 
 const char *stristr(const char *haystack, const char *needle)
 {
@@ -158,7 +161,11 @@ std::string getCpuId()
 {
     int cpuInfo[4] = { 0 };
     std::stringstream ss;
+#ifndef __GNUC__
     __cpuid(cpuInfo, 1);
+#else
+    __cpuid(1, cpuInfo[0], cpuInfo[1], cpuInfo[2], cpuInfo[3]);
+#endif
     ss << std::hex << std::uppercase << std::setfill('0') << std::setw(8) << cpuInfo[0] << ' ' << cpuInfo[1] << ' ' << cpuInfo[2] << ' ' << cpuInfo[3];
     return ss.str();
 }
@@ -168,11 +175,19 @@ std::string getCpuBrand()
     int cpuInfo[4] = { 0 };
     char brandStr[0x40] = "";
     // Get the information associated with each extended ID.
+#ifndef __GNUC__
     __cpuid(cpuInfo, 0x80000000);
+#else
+    __cpuid(0x80000000, cpuInfo[0], cpuInfo[1], cpuInfo[2], cpuInfo[3]);
+#endif
     unsigned maxExtId = cpuInfo[0];
     for (unsigned i = 0x80000000; i <= maxExtId; ++i)
     {
-        __cpuid(cpuInfo, i);
+#ifndef __GNUC__
+    __cpuid(cpuInfo, i);
+#else
+    __cpuid(i, cpuInfo[0], cpuInfo[1], cpuInfo[2], cpuInfo[3]);
+#endif
         // Interpret CPU brand string
         if (i == 0x80000002)
             memcpy(brandStr, cpuInfo, sizeof(cpuInfo));

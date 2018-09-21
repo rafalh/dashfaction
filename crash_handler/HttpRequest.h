@@ -1,7 +1,7 @@
 #pragma once
 
-#include <Windows.h>
-#include <WinInet.h>
+#include <windows.h>
+#include <wininet.h>
 #include <string>
 
 

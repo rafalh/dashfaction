@@ -3,6 +3,8 @@
 #include <fstream>
 #include <mutex>
 #include <vector>
+#include <memory>
+#include <mutex>
 #include <stdarg.h>
 #include <log/LogLevel.h>
 #include <log/Appender.h>

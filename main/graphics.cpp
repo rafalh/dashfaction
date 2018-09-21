@@ -73,6 +73,7 @@ static void GrSetViewMatrix_FovFix(float fFovScale, float fWFarFactor)
     *(float*)0x01818B5C -= 0.5f; // viewport center y
 }
 
+#ifndef __GNUC__ // FIXME
 void NAKED GrSetViewMatrix_00547344()
 {
     _asm
@@ -88,6 +89,7 @@ void NAKED GrSetViewMatrix_00547344()
         jmp eax
     }
 }
+#endif // __GNUC__
 
 void DisplayD3DDeviceError(HRESULT hr)
 {
@@ -101,6 +103,7 @@ void DisplayD3DDeviceError(HRESULT hr)
     ExitProcess(-1);
 }
 
+#ifndef __GNUC__ // FIXME
 void NAKED GrCreateD3DDeviceError_00545BEF()
 {
     _asm
@@ -110,6 +113,7 @@ void NAKED GrCreateD3DDeviceError_00545BEF()
         add esp, 4
     }
 }
+#endif // __GNUC__
 
 void GrClearZBuffer_SetRect(D3DRECT *pClearRect)
 {
@@ -119,6 +123,7 @@ void GrClearZBuffer_SetRect(D3DRECT *pClearRect)
     pClearRect->y2 = g_pGrScreen->OffsetY + g_pGrScreen->ClipBottom + 1;
 }
 
+#ifndef __GNUC__ // FIXME
 void NAKED GrClearZBuffer_005509C4()
 {
     _asm
@@ -131,12 +136,13 @@ void NAKED GrClearZBuffer_005509C4()
         jmp eax
     }
 }
+#endif // __GNUC__
 
 static void SetupPP(void)
 {
     memset(g_pGrPP, 0, sizeof(*g_pGrPP));
 
-   constexpr D3DFORMAT *pFormat = (D3DFORMAT*)0x005A135C;
+   static const auto pFormat = (D3DFORMAT*)0x005A135C;
     INFO("D3D Format: %ld", *pFormat);
 
     // Note: in MSAA mode we don't lock back buffer
@@ -245,7 +251,7 @@ void GraphicsInit()
     // Properly restore state after device reset
     GrInitBuffers_AfterReset_Hook.hook(0x00545045, GrInitBuffers_AfterReset_New);
 
-#if WIDESCREEN_FIX
+#if WIDESCREEN_FIX && !defined(__GNUC__)
     // Fix FOV for widescreen
     WriteMemUInt8(0x00547344, ASM_LONG_JMP_REL);
     WriteMemInt32(0x00547344 + 1, (uintptr_t)GrSetViewMatrix_00547344 - (0x00547344 + 0x5));
@@ -259,15 +265,18 @@ void GraphicsInit()
         WriteMemUInt8(0x0052FACC, ASM_SHORT_JMP_REL);
     }
 
+#ifndef __GNUC__
     // Better error message in case of device creation error
     WriteMemUInt8(0x00545BEF, ASM_LONG_JMP_REL);
     WriteMemInt32(0x00545BEF + 1, (uintptr_t)GrCreateD3DDeviceError_00545BEF - (0x00545BEF + 0x5));
+#endif
 
     // Optimization - remove unused back buffer locking/unlocking in GrSwapBuffers
     AsmWritter(0x0054504A).jmpNear(0x0054508B);
 
 #if 1
     // Fix rendering of right and bottom edges of viewport
+#ifndef __GNUC__
     WriteMemUInt8(0x00431D9F, ASM_SHORT_JMP_REL);
     WriteMemUInt8(0x00431F6B, ASM_SHORT_JMP_REL);
     WriteMemUInt8(0x004328CF, ASM_SHORT_JMP_REL);
@@ -275,6 +284,7 @@ void GraphicsInit()
     WriteMemInt32(0x0043298F + 1, (uintptr_t)0x004329DC - (0x0043298F + 0x5));
     WriteMemUInt8(0x005509C4, ASM_LONG_JMP_REL);
     WriteMemInt32(0x005509C4 + 1, (uintptr_t)GrClearZBuffer_005509C4 - (0x005509C4 + 0x5));
+#endif
 
     // Left and top viewport edge fix for MSAA (RF does similar thing in GrDrawTextureD3D)
     WriteMemUInt8(0x005478C6, ASM_FADD);

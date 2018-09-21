@@ -18,8 +18,12 @@ project "DashFactionLauncher"
 	
 	configuration "Debug"
 		targetdir "../bin/debug"
-		debugdir "../bin/debug"
+		if debugdir then
+			debugdir "../bin/debug"
+		end
 	
 	configuration "Release"
 		targetdir "../bin/release"
-		debugdir "../bin/release"
+		if debugdir then
+			debugdir "../bin/release"
+		end

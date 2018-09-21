@@ -65,7 +65,7 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 void InitWndProc(void)
 {
     // Subclass window
-    WriteMemPtr(0x00524E66, WndProc);
+    WriteMemPtr(0x00524E66, &WndProc);
     
     // Disable mouse when window is not active
     WriteMemUInt8(0x0051DC70, ASM_LONG_CALL_REL);

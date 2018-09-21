@@ -9,5 +9,10 @@
 
 #include <windows.h>
 #include <shlwapi.h>
-#include <WinInet.h>
-#include <Shellapi.h>
+#include <wininet.h>
+#include <shellapi.h>
+
+// Needed by MinGW
+#ifndef ERROR_ELEVATION_REQUIRED
+#  define ERROR_ELEVATION_REQUIRED 740
+#endif

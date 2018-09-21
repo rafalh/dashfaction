@@ -24,6 +24,7 @@ int g_VersionClickCounter = 0;
 int g_EggAnimStart;
 bool g_bWin32Console = false;
 
+#ifndef __GNUC__ // FIXME
 NAKED void VersionLabelPushArgs_0044343A()
 {
     _asm
@@ -37,6 +38,7 @@ NAKED void VersionLabelPushArgs_0044343A()
         jmp eax
     }
 }
+#endif
 
 static void GetVersionStr_New(const char **ppszVersion, const char **a2)
 {
@@ -61,6 +63,7 @@ static int MenuUpdate_New()
     return MenuId;
 }
 
+#ifndef __GNUC__ // FIXME
 NAKED void CrashFix_0055CE48()
 {
     _asm
@@ -80,9 +83,10 @@ NAKED void CrashFix_0055CE48()
         jmp   ecx
         CrashFix0055CE59_label1 :
         mov   ecx, 0x0055CF23 // fail gr_lock
-            jmp   ecx
+        jmp   ecx
     }
 }
+#endif // __GNUC__
 
 void MenuMainProcessMouseHook()
 {
@@ -198,7 +202,7 @@ void MouseUpdateDirectInput_New()
 
 bool IsHoldingAssaultRifle()
 {
-    constexpr auto pAssaultRifleClassId = (int*)0x00872470;
+    static const auto pAssaultRifleClassId = (int*)0x00872470;
     EntityObj *pEntity = EntityGetFromHandle((*g_ppLocalPlayer)->hEntity);
     return pEntity && pEntity->WeaponInfo.WeaponClsId == *pAssaultRifleClassId;
 }
@@ -234,10 +238,10 @@ void DcfSwapAssaultRifleControls()
 
 #if SERVER_WIN32_CONSOLE
 
-constexpr auto DcProcessKbd = (void(*)())0x00509F90;
-constexpr auto DcDrawServerConsole = (void(*)())0x0050A770;
-constexpr auto KeyGetFromQueue = (int(*)())0x0051F000;
-constexpr auto KeyProcessEvent = (void(*)(int ScanCode, int bKeyDown, int DeltaT))0x0051E6C0;
+static const auto DcProcessKbd = (void(*)())0x00509F90;
+static const auto DcDrawServerConsole = (void(*)())0x0050A770;
+static const auto KeyGetFromQueue = (int(*)())0x0051F000;
+static const auto KeyProcessEvent = (void(*)(int ScanCode, int bKeyDown, int DeltaT))0x0051E6C0;
 
 auto DcPrint_Hook = makeFunHook(DcPrint);
 auto DcDrawServerConsole_Hook = makeFunHook(DcDrawServerConsole);
@@ -274,7 +278,7 @@ void PrintCmdInputLine()
 BOOL WINAPI ConsoleCtrlHandler(DWORD fdwCtrlType)
 {
     INFO("Quiting after Console CTRL");
-    constexpr int32_t *pClose = (int32_t*)0x01B0D758;
+    static const int32_t *pClose = (int32_t*)0x01B0D758;
     *pClose = 1;
     return TRUE;
 }
@@ -443,7 +447,9 @@ void MiscInit()
     WriteMemPtr(0x004B2534, "-- " PRODUCT_NAME " Initializing --\n");
 
     // Version in Main Menu
+#ifndef __GNUC__
     AsmWritter(0x0044343A).jmpLong(VersionLabelPushArgs_0044343A);
+#endif
     GetVersionStr_Hook.hook(GetVersionStr_New);
 
     // Window title (client and server)
@@ -480,7 +486,9 @@ void MiscInit()
     WriteMemUInt32(0x0056A28C + 1, 0);
 
     // Crash-fix in case texture has not been created (this happens if GrReadBackbuffer fails)
+#ifndef __GNUC__
     AsmWritter(0x0055CE47).jmpLong(CrashFix_0055CE48);
+#endif
 
     // Dont overwrite player name and prefered weapons when loading saved game
     AsmWritter(0x004B4D99, 0x004B4DA5).nop();

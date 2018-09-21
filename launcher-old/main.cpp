@@ -291,7 +291,7 @@ int main(int argc, const char *argv[]) try
     }
     
     /* Start RF process */
-    sprintf(szBuf, "%s\\rf.exe", szRfPath);
+    sprintf(szBuf, "%s\\RF.exe", szRfPath);
     if (!PathFileExists(szBuf))
     {
         sprintf(szBuf, "Error %lX! Cannot find Red Faction path. Reinstall is needed.", hr);

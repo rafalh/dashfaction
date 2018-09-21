@@ -42,8 +42,8 @@ const std::map<std::string, unsigned> GameFileChecksums = {
 
 #endif // CHECK_PACKFILE_CHECKSUM
 
-constexpr auto g_pVfsLookupTableNew = (PackfileLookupTableNew*)0x01BB2AC8; // g_pVfsLookupTable
-constexpr auto LOOKUP_TABLE_SIZE = 20713;
+static const auto g_pVfsLookupTableNew = (PackfileLookupTableNew*)0x01BB2AC8; // g_pVfsLookupTable
+static const auto LOOKUP_TABLE_SIZE = 20713;
 
 static unsigned g_cPackfiles = 0, g_cFilesInVfs = 0, g_cNameCollisions = 0;
 static Packfile **g_pPackfiles = nullptr;

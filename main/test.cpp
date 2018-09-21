@@ -3,9 +3,11 @@
 #include "utils.h"
 #include "commands.h"
 
+using namespace rf;
+
 #ifdef DEBUG
 
-#if 1 // research bones
+#if 0 // research bones
 
 #pragma pack(push, 8)
 namespace rf
@@ -137,12 +139,12 @@ namespace rf
 
 using namespace rf;
 
-constexpr auto SortBonesByLevel = (void(*)(BYTE *pResult, int cBones, CBone *pBones))0x0051CB50;
-constexpr auto Transform_Mul = (CTransform*(__thiscall*)(CTransform *This, CTransform *pResult, CTransform *pParentTransform))0x0051C620;
-constexpr auto CAnimMesh_UpdateTime = (void(__thiscall*)(CAnimMesh *This, float fDeltaTime, int a3, CVector3 *a4, CMatrix3 *a5, int a6))0x00501AB0;
-constexpr auto CharacterAnimatorUpdateBones = (void(*)(int NumBones, unsigned __int8 *BoneBranchIndices, CCharacterAnimator *pCharAnim))0x0051B500;
-constexpr auto MvfAnim_CalcBonePos = (CVector3*(__thiscall*)(CMvfAnim *This, CVector3 *pResult, int BoneId, int AnimTime))0x0053A130;
-constexpr auto MvfAnim_CalcBoneRot = (CQuaternion*(__thiscall*)(CMvfAnim *This, CQuaternion *pResult, int BoneId, int AnimTime))0x00539ED0;
+static const auto SortBonesByLevel = (void(*)(BYTE *pResult, int cBones, CBone *pBones))0x0051CB50;
+static const auto Transform_Mul = (CTransform*(__thiscall*)(CTransform *This, CTransform *pResult, CTransform *pParentTransform))0x0051C620;
+static const auto CAnimMesh_UpdateTime = (void(__thiscall*)(CAnimMesh *This, float fDeltaTime, int a3, CVector3 *a4, CMatrix3 *a5, int a6))0x00501AB0;
+static const auto CharacterAnimatorUpdateBones = (void(*)(int NumBones, unsigned __int8 *BoneBranchIndices, CCharacterAnimator *pCharAnim))0x0051B500;
+static const auto MvfAnim_CalcBonePos = (CVector3*(__thiscall*)(CMvfAnim *This, CVector3 *pResult, int BoneId, int AnimTime))0x0053A130;
+static const auto MvfAnim_CalcBoneRot = (CQuaternion*(__thiscall*)(CMvfAnim *This, CQuaternion *pResult, int BoneId, int AnimTime))0x00539ED0;
 
 #define BONE_NAME "park-bdbn-lowerleg-l"
 //#define BONE_NAME "park-bdbn-root"
@@ -242,7 +244,7 @@ void CharacterAnimatorBuildTransformHook(CTransform *pOutTransform, CQuaternion 
 #endif
 
 #if 0
-static void RenderEntityHook(CEntity *pEntity)
+static void RenderEntityHook(EntityObj *pEntity)
 { // TODO
     DWORD dwOldLightining;
     GrFlushBuffers();
@@ -258,88 +260,23 @@ static void RenderEntityHook(CEntity *pEntity)
 
 static void TestCmdHandler(void)
 {
-    if (*rf::g_pbCmdRun)
+    if (*rf::g_pbDcRun)
     {
         //RfCmdGetNextArg(CMD_ARG_FLOAT, 0);
         //*((float*)0x017C7BD8) = *g_pfCmdArg;
 
         //int *ptr = (int*)HeapAlloc(GetProcessHeap(), 0, 8);
         //ptr[10] = 1;
-        //RfConsolePrintf("test done %p", ptr);
+        //DcPrintf("test done %p", ptr);
     }
 
-    if (*g_pbCmdHelp)
-        rf::RfConsoleWrite("     test <n>", NULL);
+    if (*rf::g_pbDcHelp)
+        rf::DcPrintf("     test <n>", NULL);
 }
 
-static rf::CCmd TestCmd = { "test", "Test command", TestCmdHandler };
+static rf::DcCommand TestCmd = { "test", "Test command", TestCmdHandler };
 
-constexpr auto UiGetElementFromPos = (int(*)(int x, int y, CGuiPanel **ppGuiList, signed int cGuiList))0x00442ED0;
-constexpr auto GetMousePos = (int(*)(int *pX, int *pY, int *pZ))0x0051E450;
-constexpr auto MouseWasButtonPressed = (int(*)(int BtnIdx))0x0051E5D0;
-constexpr auto MenuMainProcessMouse = (void(*)())0x00443D90;
-constexpr auto MenuMainRender = (void(*)())0x004435F0;
-constexpr auto BmGetBitmapSize = (void(*)(int BmHandle, int *pWidth, int *pHeight))0x00510630;
-constexpr auto BmGetFilename = (const char*(*)(int BmHandle))0x00511710;
-
-constexpr auto g_pGrBitmapMaterial = (int*)0x017756BC;
-constexpr auto pMenuVersionLabel = (rf::CGuiPanel*)0x0063C088;
-
-constexpr int ANIM_ENTER_TIME = 2000;
-constexpr int ANIM_LEAVE_TIME = 2000;
-constexpr int ANIM_IDLE_TIME = 3000;
-
-int g_VersionClickCounter = 0;
-int g_AnimStart;
-
-void MenuMainProcessMouseHook()
-{
-    MenuMainProcessMouse();
-    if (MouseWasButtonPressed(0))
-    {
-        int x, y, z;
-        GetMousePos(&x, &y, &z);
-        CGuiPanel *PanelsToCheck[1] = { pMenuVersionLabel };
-        int Matched = UiGetElementFromPos(x, y, PanelsToCheck, COUNTOF(PanelsToCheck));
-        if (Matched == 0)
-        {
-            RfConsolePrintf("ver click");
-            ++g_VersionClickCounter;
-            if (g_VersionClickCounter == 3)
-                g_AnimStart = GetTickCount();
-        }
-    }
-}
-
-int LoadEasterEggImage()
-{
-    return BmLoad("DF_pony.tga", -1, 0);
-}
-
-void MenuMainRenderHook()
-{
-    MenuMainRender();
-    if (g_VersionClickCounter >= 3)
-    {
-        // TODO: embed pony as gzed data and use BmCreateUserBmap, example in RflLoadGeometry
-        static int PonyBitmap = LoadEasterEggImage(); // data.vpp
-        int w, h;
-        BmGetBitmapSize(PonyBitmap, &w, &h);
-        int AnimDeltaTime = GetTickCount() - g_AnimStart;
-        int PosX = (g_pGrScreen->MaxWidth - w) / 2;
-        int PosY = g_pGrScreen->MaxHeight - h;
-        if (AnimDeltaTime < ANIM_ENTER_TIME)
-            PosY += h - (int)(sinf(AnimDeltaTime / (float)ANIM_ENTER_TIME * (float)M_PI / 2.0f) * h);
-        else if (AnimDeltaTime > ANIM_ENTER_TIME + ANIM_IDLE_TIME)
-        {
-            int LeaveDelta = AnimDeltaTime - (ANIM_ENTER_TIME + ANIM_IDLE_TIME);
-            PosY += (int)((1.0f - cosf(LeaveDelta / (float)ANIM_LEAVE_TIME * (float)M_PI / 2.0f)) * h);
-            if (LeaveDelta > ANIM_LEAVE_TIME)
-                g_VersionClickCounter = 0;
-        }
-        GrDrawImage(PonyBitmap, PosX, PosY, *g_pGrBitmapMaterial);
-    }
-}
+static const auto GetMousePos = (int(*)(int *pX, int *pY, int *pZ))0x0051E450;
 
 bool g_InSetViewForScene = false;
 
@@ -432,25 +369,12 @@ void UiButton_BmGetBitmapSizeHook(int BmHandle, int *pWidth, int *pHeight)
     ERR("Unknown UiButton texture: %s %d %d", Filename, *pWidth, *pHeight);
 }
 
-enum BmPixelFormat
-{
-    BMFP_UNK = 0x0,
-    BMFP_MONO8 = 0x1,
-    BMFP_565 = 0x3,
-    BMFP_4444 = 0x4,
-    BMFP_1555 = 0x5,
-    BMFP_888 = 0x6,
-    BMFP_8888 = 0x7,
-};
-
-constexpr auto GrD3DSetTextureData = (int(*)(int Level, const BYTE *pSrcBits, const BYTE *pPallete, int cxBm, int cyBm, int PixelFmt, void *a7, int cxTex, int cyTex, IDirect3DTexture8 *pTextures))0x0055BA10;
-
 bool ConvertBitmapFormat(BYTE *pDstBits, BmPixelFormat DstPixelFmt, const BYTE *pSrcBits, BmPixelFormat SrcPixelFmt, int Width, int Height, int DstPitch, int SrcPitch)
 {
-    if (DstPixelFmt != BMFP_8888) return false;
+    if (DstPixelFmt != BMPF_8888) return false;
     switch (SrcPixelFmt)
     {
-    case BMFP_888:
+    case BMPF_888:
         for (int y = 0; y < Height; ++y)
         {
             BYTE *pDstPtr = pDstBits;
@@ -466,7 +390,7 @@ bool ConvertBitmapFormat(BYTE *pDstBits, BmPixelFormat DstPixelFmt, const BYTE *
             pSrcBits += SrcPitch;
         }
         return true;
-    case BMFP_4444:
+    case BMPF_4444:
         for (int y = 0; y < Height; ++y)
         {
             BYTE *pDstPtr = pDstBits;
@@ -482,7 +406,7 @@ bool ConvertBitmapFormat(BYTE *pDstBits, BmPixelFormat DstPixelFmt, const BYTE *
             pSrcBits += SrcPitch;
         }
         return true;
-    case BMFP_1555:
+    case BMPF_1555:
         for (int y = 0; y < Height; ++y)
         {
             BYTE *pDstPtr = pDstBits;
@@ -514,22 +438,22 @@ int GetPixelFormatFromD3DFormat(int PixelFormat, int *BytesPerPixel)
     {
     case D3DFMT_R5G6B5:
         *BytesPerPixel = 2;
-        return BMFP_565;
+        return BMPF_565;
     case D3DFMT_A4R4G4B4:
     case D3DFMT_X4R4G4B4:
         *BytesPerPixel = 2;
-        return BMFP_4444;
+        return BMPF_4444;
     case D3DFMT_X1R5G5B5:
     case D3DFMT_A1R5G5B5:
         *BytesPerPixel = 2;
-        return BMFP_1555;
+        return BMPF_1555;
     case D3DFMT_R8G8B8:
         *BytesPerPixel = 3;
-        return BMFP_888;
+        return BMPF_888;
     case D3DFMT_A8R8G8B8:
     case D3DFMT_X8R8G8B8:
         *BytesPerPixel = 4;
-        return BMFP_8888;
+        return BMPF_8888;
     default:
         return 0;
     }
@@ -559,21 +483,21 @@ int GrD3DSetTextureDataHook(int Level, const BYTE *pSrcBits, const BYTE *pPallet
             BYTE *pRowPtr = pDstPtr;
             for (int x = 0; x < cxBm; ++x)
             {
-                if (PixelFmt == BMFP_8888)
+                if (PixelFmt == BMPF_8888)
                 {
                     *(pDstPtr++) = *(pSrcPtr++); // b
                     *(pDstPtr++) = *(pSrcPtr++); // g
                     *(pDstPtr++) = *(pSrcPtr++); // r
                     *(pDstPtr++) = *(pSrcPtr++); // a
                 }
-                else if (PixelFmt == BMFP_4444)
+                else if (PixelFmt == BMPF_4444)
                 {
                     *(pDstPtr++) = (*(pSrcPtr) & 0x0F) * 17;
                     *(pDstPtr++) = ((*(pSrcPtr++) & 0xF0) >> 4) * 17;
                     *(pDstPtr++) = (*(pSrcPtr) & 0x0F) * 17;
                     *(pDstPtr++) = ((*(pSrcPtr++) & 0xF0) >> 4) * 17;
                 }
-                else if (PixelFmt == BMFP_1555)
+                else if (PixelFmt == BMPF_1555)
                 {
                     WORD SrcWord = *(WORD*)pSrcPtr;
                     pSrcPtr += 2;
@@ -602,15 +526,6 @@ ExitLoops:
     return GrD3DSetTextureData(Level, pSrcBits, pPallete, cxBm, cyBm, PixelFmt, a7, cxTex, cyTex, pTexture);
 }
 
-int RflLoadLightmaps_004ED3F6(RflLightmap *pLightmap)
-{
-    SGrLockData LockData;
-    int ret = GrLock(pLightmap->BmHandle, 0, &LockData, 2);
-    if (!ret) return ret;
-    ConvertBitmapFormat(LockData.pBits, (BmPixelFormat)LockData.PixelFormat, pLightmap->pBuf, BMFP_888, pLightmap->w, pLightmap->h, LockData.Pitch, 3 * pLightmap->w);
-    return 1;
-}
-
 #include <MemUtils.h>
 
 void TestInit()
@@ -632,11 +547,6 @@ void TestInit()
     WriteMemInt32(0x004353D3 + 1, 100);
 
     //WriteMemUInt32(0x00488BE9, ((uintptr_t)RenderEntityHook) - (0x00488BE8 + 0x5));
-
-#if 1 // Version Easter Egg
-    WriteMemInt32(0x004437B9 + 1, (uintptr_t)MenuMainProcessMouseHook - (0x004437B9 + 0x5));
-    WriteMemInt32(0x00443802 + 1, (uintptr_t)MenuMainRenderHook - (0x00443802 + 0x5));
-#endif
 
     // menu buttons speed
     //WriteMemFloat(0x00598FC0, 0.5f);
@@ -690,47 +600,48 @@ void TestInit()
 #endif
 }
 
+void TestRenderInGame()
+{
+
+}
+
+void TestInitAfterGame()
+{
+
+}
+
 void TestRender()
 {
     char Buffer[256];
     int x = 50, y = 200;
-    CEntity *pEntity = HandleToEntity((*g_ppLocalPlayer)->hEntity);
-    GrSetColor(255, 255, 255, 255);
+    EntityObj *pEntity = rf::EntityGetFromHandle((*g_ppLocalPlayer)->hEntity);
+    rf::GrSetColor(255, 255, 255, 255);
     //MemReference<float, 0x005A4014> FrameTime;
     auto &FrameTime = *(float*)0x005A4014;
 
     if (pEntity)
     {
-        sprintf(Buffer, "field_290 0x%X", pEntity->field_290);
-        GrDrawText(x, y, Buffer, -1, *g_pGrTextMaterial);
+        sprintf(Buffer, "Flags 0x%X", pEntity->_Super.Flags);
+        GrDrawText(x, y, Buffer, -1, *rf::g_pGrTextMaterial);
         y += 15;
-        sprintf(Buffer, "Flags 0x%X", pEntity->Head.Flags);
-        GrDrawText(x, y, Buffer, -1, *g_pGrTextMaterial);
-        y += 15;
-        sprintf(Buffer, "MovementFlags 0x%X", pEntity->Head.MovementFlags);
-        GrDrawText(x, y, Buffer, -1, *g_pGrTextMaterial);
+        sprintf(Buffer, "PhysInfo Flags 0x%X", pEntity->_Super.PhysInfo.Flags);
+        GrDrawText(x, y, Buffer, -1, *rf::g_pGrTextMaterial);
         y += 15;
         sprintf(Buffer, "MovementMode 0x%X", pEntity->MovementMode->Id);
-        GrDrawText(x, y, Buffer, -1, *g_pGrTextMaterial);
+        GrDrawText(x, y, Buffer, -1, *rf::g_pGrTextMaterial);
         y += 15;
         sprintf(Buffer, "pEntity 0x%p", pEntity);
-        GrDrawText(x, y, Buffer, -1, *g_pGrTextMaterial);
+        GrDrawText(x, y, Buffer, -1, *rf::g_pGrTextMaterial);
         y += 15;
         sprintf(Buffer, "framerate %f", FrameTime);
-        GrDrawText(x, y, Buffer, -1, *g_pGrTextMaterial);
+        GrDrawText(x, y, Buffer, -1, *rf::g_pGrTextMaterial);
         y += 15;
-        sprintf(Buffer, "field_1EC %d", pEntity->Head.field_1EC);
-        GrDrawText(x, y, Buffer, -1, *g_pGrTextMaterial);
-        y += 15;
-        sprintf(Buffer, "field_1AC %d", pEntity->Head.field_1AC);
-        GrDrawText(x, y, Buffer, -1, *g_pGrTextMaterial);
-        y += 15;
-        constexpr int *g_pAppTimeMs = (int*)0x5A3ED8;
+        static const auto *g_pAppTimeMs = (int*)0x5A3ED8;
         sprintf(Buffer, "AppTimeMs %d", *g_pAppTimeMs);
-        GrDrawText(x, y, Buffer, -1, *g_pGrTextMaterial);
+        GrDrawText(x, y, Buffer, -1, *rf::g_pGrTextMaterial);
         y += 15;
-        sprintf(Buffer, "WeaponClsId %d", pEntity->WeaponSel.WeaponClsId);
-        GrDrawText(x, y, Buffer, -1, *g_pGrTextMaterial);
+        sprintf(Buffer, "WeaponClsId %d", pEntity->WeaponInfo.WeaponClsId);
+        GrDrawText(x, y, Buffer, -1, *rf::g_pGrTextMaterial);
         y += 15;
     }
 }

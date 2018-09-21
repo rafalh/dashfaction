@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "GameConfig.h"
 #include "RegKey.h"
-#include <Shlwapi.h>
+#include <shlwapi.h>
 
 const char RF_KEY_NAME[] = "SOFTWARE\\Volition\\Red Faction";
 const char DF_SUBKEY_NAME[] = "Dash Faction";
