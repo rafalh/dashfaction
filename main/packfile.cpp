@@ -279,6 +279,8 @@ static BOOL PackfileBuildEntriesList_New(const char *pszExtList, char **ppFilena
             
         }
     }
+    // terminating zero
+    BufPtr[0] = 0;
     
     return TRUE;
 }
