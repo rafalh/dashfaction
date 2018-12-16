@@ -753,7 +753,7 @@ void ProcessReloadPacket_New(char *pData, const NwAddr *pAddr)
             g_pWeaponClasses[WeaponClsId].ClipSize = Ammo;
         if (g_pWeaponClasses[WeaponClsId].cMaxAmmo < ClipAmmo)
             g_pWeaponClasses[WeaponClsId].cMaxAmmo = ClipAmmo;
-        DcPrintf("ProcessReloadPacket WeaponClsId %d ClipAmmo %d Ammo %d", WeaponClsId, ClipAmmo, Ammo);
+        TRACE("ProcessReloadPacket WeaponClsId %d ClipAmmo %d Ammo %d", WeaponClsId, ClipAmmo, Ammo);
 
         // Call original handler
         ProcessReloadPacket_Hook.callTrampoline(pData, pAddr);
