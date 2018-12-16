@@ -43,14 +43,22 @@ BOOL OptionsDlg::OnInitDialog()
     CComboBox *resCombo = (CComboBox*)GetDlgItem(IDC_RESOLUTIONS_COMBO);
     char buf[256];
 
-    auto resolutions = m_videoInfo.getResolutions(D3DFMT_X8R8G8B8);
     int selectedRes = -1;
-    for (const auto &res : resolutions)
+    try
     {
-        sprintf(buf, "%dx%d", res.width, res.height);
-        int pos = resCombo->AddString(buf);
-        if (m_conf.resWidth == res.width && m_conf.resHeight == res.height)
-            selectedRes = pos;
+        auto resolutions = m_videoInfo.getResolutions(D3DFMT_X8R8G8B8);
+        for (const auto &res : resolutions)
+        {
+            sprintf(buf, "%dx%d", res.width, res.height);
+            int pos = resCombo->AddString(buf);
+            if (m_conf.resWidth == res.width && m_conf.resHeight == res.height)
+                selectedRes = pos;
+        }
+    }
+    catch (std::exception &e)
+    {
+        // Only 'Disabled' option available. Log error in console.
+        printf("Cannot get available screen resolutions: %s", e.what());
     }
     if (selectedRes != -1)
         resCombo->SetCurSel(selectedRes);
@@ -72,25 +80,42 @@ BOOL OptionsDlg::OnInitDialog()
     SetDlgItemInt(IDC_MAX_FPS_EDIT, m_conf.maxFps);
 
     CComboBox *msaaCombo = (CComboBox*)GetDlgItem(IDC_MSAA_COMBO);
-    auto multiSampleTypes = m_videoInfo.getMultiSampleTypes(D3DFMT_X8R8G8B8, FALSE);
     msaaCombo->AddString("Disabled");
     int selectedMsaa = 0;
     m_multiSampleTypes.push_back(0);
-    for (auto msaa : multiSampleTypes)
+    try
     {
-        char buf[16];
-        sprintf(buf, "MSAAx%u", msaa);
-        int idx = msaaCombo->AddString(buf);
-        if (m_conf.msaa == msaa)
-            selectedMsaa = idx;
-        m_multiSampleTypes.push_back(msaa);
+        auto multiSampleTypes = m_videoInfo.getMultiSampleTypes(D3DFMT_X8R8G8B8, FALSE);
+        for (auto msaa : multiSampleTypes)
+        {
+            char buf[16];
+            sprintf(buf, "MSAAx%u", msaa);
+            int idx = msaaCombo->AddString(buf);
+            if (m_conf.msaa == msaa)
+                selectedMsaa = idx;
+            m_multiSampleTypes.push_back(msaa);
+        }
+    }
+    catch (std::exception &e)
+    {
+        printf("Cannot check available MSAA modes: %s", e.what());
     }
     msaaCombo->SetCurSel(selectedMsaa);
 
-    if (m_videoInfo.hasAnisotropySupport())
+    bool anisotropySupported = false;
+    try
+    {
+        anisotropySupported = m_videoInfo.hasAnisotropySupport();
+    }
+    catch (std::exception &e)
+    {
+        printf("Cannot check anisotropy support: %s", e.what());
+    }
+    if (anisotropySupported)
         CheckDlgButton(IDC_ANISOTROPIC_CHECK, m_conf.anisotropicFiltering ? BST_CHECKED : BST_UNCHECKED);
     else
         GetDlgItem(IDC_ANISOTROPIC_CHECK)->EnableWindow(FALSE);
+
     CheckDlgButton(IDC_DISABLE_LOD_CHECK, m_conf.disableLodModels ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_FPS_COUNTER_CHECK, m_conf.fpsCounter ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_HIGH_SCANNER_RES_CHECK, m_conf.highScannerRes ? BST_CHECKED : BST_UNCHECKED);

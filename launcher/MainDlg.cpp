@@ -151,8 +151,15 @@ LRESULT MainDlg::OnUpdateCheck(WPARAM wParam, LPARAM lParam)
 
 void MainDlg::OnBnClickedOptionsBtn()
 {
-    OptionsDlg dlg;
-    INT_PTR nResponse = dlg.DoModal();
+    try
+    {
+        OptionsDlg dlg;
+        INT_PTR nResponse = dlg.DoModal();
+    }
+    catch (std::exception &e)
+    {
+        MessageBoxA(e.what(), NULL, MB_ICONERROR | MB_OK);
+    }
 }
 
 void MainDlg::OnBnClickedOk()
