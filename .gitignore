@@ -24,5 +24,8 @@ ipch
 *.lib
 *.aps
 
+# Visual Studio Code
+.vscode
+
 # Non-Open Source PF support code
 main/pf.*
