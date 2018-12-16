@@ -54,9 +54,9 @@ rf::CPlayer *FindBestMatchingPlayer(const char *pszName)
 
 static void SplitScreenCmdHandler(void)
 {
-    if (*g_pbDcRun)
+    if (g_bDcRun)
     {
-        if (*g_pbNetworkGame)
+        if (g_bNetworkGame)
             SplitScreenStart(); /* FIXME: set player 2 controls */
         else
             DcPrintf("Works only in multiplayer game!");
@@ -67,26 +67,26 @@ static void SplitScreenCmdHandler(void)
 
 static void MaxFpsCmdHandler(void)
 {
-    if (*g_pbDcRun)
+    if (g_bDcRun)
     {
         rf::DcGetArg(DC_ARG_NONE | DC_ARG_FLOAT, 0);
 
-        if ((*g_pDcArgType & DC_ARG_FLOAT))
+        if ((g_DcArgType & DC_ARG_FLOAT))
         {
 #ifdef NDEBUG
-            float newLimit = std::min(std::max(*g_pfDcArg, (float)MIN_FPS_LIMIT), (float)MAX_FPS_LIMIT);
+            float newLimit = std::min(std::max(g_fDcArg, (float)MIN_FPS_LIMIT), (float)MAX_FPS_LIMIT);
 #else
-            float newLimit = *g_pfDcArg;
+            float newLimit = g_fDcArg;
 #endif
             g_gameConfig.maxFps = (unsigned)newLimit;
             g_gameConfig.save();
-            *g_pfMinFramerate = 1.0f / newLimit;
+            g_fMinFramerate = 1.0f / newLimit;
         }
         else
-            DcPrintf("Maximal FPS: %.1f", 1.0f / *g_pfMinFramerate);
+            DcPrintf("Maximal FPS: %.1f", 1.0f / g_fMinFramerate);
     }
     
-    if (*g_pbDcHelp)
+    if (g_bDcHelp)
     {
         DcPrint(g_ppszStringsTable[STR_USAGE], NULL);
         DcPrint("     maxfps <limit>", NULL);
@@ -98,10 +98,10 @@ static void DebugCmdHandler(void)
 {
     bool bDbg = !g_pbDbgFlagsArray[0];
     memset((char*)g_pbDbgFlagsArray, bDbg, 9);
-    *g_pbRenderEventIcons = bDbg;
-    *g_pbDbgNetwork = bDbg;
-    *g_pbDbgWeapon = bDbg;
-    *g_pbDbgRenderTriggers = bDbg;
+    g_bRenderEventIcons = bDbg;
+    g_bDbgNetwork = bDbg;
+    g_bDbgWeapon = bDbg;
+    g_bDbgRenderTriggers = bDbg;
 }
 #endif
 
@@ -109,15 +109,15 @@ static void DebugCmdHandler(void)
 
 static void SpectateCmdHandler(void)
 {
-    if (*g_pbDcRun)
+    if (g_bDcRun)
     {
-        if (*g_pbNetworkGame)
+        if (g_bNetworkGame)
         {
             rf::CPlayer *pPlayer;
             rf::DcGetArg(DC_ARG_NONE | DC_ARG_STR | DC_ARG_FALSE, 0);
-            if (*g_pDcArgType & DC_ARG_FALSE)
+            if (g_DcArgType & DC_ARG_FALSE)
                 pPlayer = nullptr;
-            else if (*g_pDcArgType & DC_ARG_STR)
+            else if (g_DcArgType & DC_ARG_STR)
                 pPlayer = FindBestMatchingPlayer(g_pszDcArg);
             else
                 pPlayer = nullptr;
@@ -128,7 +128,7 @@ static void SpectateCmdHandler(void)
             DcPrint("Works only in multiplayer game!", NULL);
     }
     
-    if (*g_pbDcHelp)
+    if (g_bDcHelp)
     {
         DcPrint(g_ppszStringsTable[STR_USAGE], NULL);
         DcPrintf("     spectate <%s>", g_ppszStringsTable[STR_PLAYER_NAME]);
@@ -141,16 +141,16 @@ static void SpectateCmdHandler(void)
 #if MULTISAMPLING_SUPPORT
 static void AntiAliasingCmdHandler(void)
 {
-    if (*g_pbDcRun)
+    if (g_bDcRun)
     {
         if (!g_gameConfig.msaa)
             DcPrintf("Anti-aliasing is not supported");
         else
         {
             DWORD Enabled = FALSE;
-            IDirect3DDevice8_GetRenderState(*g_ppGrDevice, D3DRS_MULTISAMPLEANTIALIAS, &Enabled);
+            IDirect3DDevice8_GetRenderState(g_pGrDevice, D3DRS_MULTISAMPLEANTIALIAS, &Enabled);
             Enabled = !Enabled;
-            IDirect3DDevice8_SetRenderState(*g_ppGrDevice, D3DRS_MULTISAMPLEANTIALIAS, Enabled);
+            IDirect3DDevice8_SetRenderState(g_pGrDevice, D3DRS_MULTISAMPLEANTIALIAS, Enabled);
             DcPrintf("Anti-aliasing is %s", Enabled ? "enabled" : "disabled");
         }
     }
@@ -160,10 +160,10 @@ static void AntiAliasingCmdHandler(void)
 #if DIRECTINPUT_SUPPORT
 static void InputModeCmdHandler(void)
 {
-    if (*g_pbDcRun)
+    if (g_bDcRun)
     {
-        *g_pbDirectInputDisabled = !*g_pbDirectInputDisabled;
-        if (*g_pbDirectInputDisabled)
+        g_bDirectInputDisabled = !g_bDirectInputDisabled;
+        if (g_bDirectInputDisabled)
             DcPrintf("DirectInput is disabled");
         else
             DcPrintf("DirectInput is enabled");
@@ -177,7 +177,7 @@ static int CanPlayerFireHook(CPlayer *pPlayer)
 {
     if (!(pPlayer->Flags & 0x10))
         return 0;
-    if (*g_pbNetworkGame && (pPlayer->pCamera->Type == rf::CAM_FREELOOK || pPlayer->pCamera->pPlayer != pPlayer))
+    if (g_bNetworkGame && (pPlayer->pCamera->Type == rf::CAM_FREELOOK || pPlayer->pCamera->pPlayer != pPlayer))
         return 0;
     return 1;
 }
@@ -186,20 +186,20 @@ static int CanPlayerFireHook(CPlayer *pPlayer)
 
 static void MouseSensitivityCmdHandler(void)
 {
-    if (*g_pbDcRun)
+    if (g_bDcRun)
     {
         rf::DcGetArg(DC_ARG_NONE | DC_ARG_FLOAT, 0);
 
-        if (*g_pDcArgType & DC_ARG_FLOAT)
+        if (g_DcArgType & DC_ARG_FLOAT)
         {
-            float fValue = *g_pfDcArg;
+            float fValue = g_fDcArg;
             fValue = clamp(fValue, 0.0f, 1.0f);
-            (*g_ppLocalPlayer)->Config.Controls.fMouseSensitivity = fValue;
+            (g_pLocalPlayer)->Config.Controls.fMouseSensitivity = fValue;
         }
-        DcPrintf("Mouse sensitivity: %.2f", (*g_ppLocalPlayer)->Config.Controls.fMouseSensitivity);
+        DcPrintf("Mouse sensitivity: %.2f", (g_pLocalPlayer)->Config.Controls.fMouseSensitivity);
     }
 
-    if (*g_pbDcHelp)
+    if (g_bDcHelp)
     {
         DcPrint(g_ppszStringsTable[STR_USAGE], NULL);
         DcPrint("     ms <value>", NULL);
@@ -208,7 +208,7 @@ static void MouseSensitivityCmdHandler(void)
 
 static void VolumeLightsCmdHandler(void)
 {
-    if (*g_pbDcRun)
+    if (g_bDcRun)
     {
         static MemChange vliCallChange(0x0043233E);
         if (vliCallChange.IsApplied())
@@ -221,13 +221,13 @@ static void VolumeLightsCmdHandler(void)
 
 static void LevelSpCmdHandler(void)
 {
-    if (*g_pbDcRun)
+    if (g_bDcRun)
     {
         rf::DcGetArg(DC_ARG_STR, 0);
 
-        if (*g_pDcArgType & DC_ARG_STR)
+        if (g_DcArgType & DC_ARG_STR)
         {
-            if (*g_pbNetworkGame)
+            if (g_bNetworkGame)
             {
                 DcPrintf("You cannot use it in multiplayer game!");
                 return;
@@ -249,7 +249,7 @@ static void LevelSpCmdHandler(void)
         }
     }
 
-    if (*g_pbDcHelp)
+    if (g_bDcHelp)
     {
         DcPrint(g_ppszStringsTable[STR_USAGE], NULL);
         DcPrint("     <rfl_name>", NULL);
@@ -258,13 +258,13 @@ static void LevelSpCmdHandler(void)
 
 static void LevelSoundsCmdHandler(void)
 {
-    if (*g_pbDcRun)
+    if (g_bDcRun)
     {
         rf::DcGetArg(DC_ARG_FLOAT | DC_ARG_NONE, 0);
 
-        if ((*g_pDcArgType & DC_ARG_FLOAT))
+        if ((g_DcArgType & DC_ARG_FLOAT))
         {
-            float fVolScale = clamp(*g_pfDcArg, 0.0f, 1.0f);
+            float fVolScale = clamp(g_fDcArg, 0.0f, 1.0f);
             SetPlaySoundEventsVolumeScale(fVolScale);
 
             g_gameConfig.levelSoundVolume = fVolScale;
@@ -273,7 +273,7 @@ static void LevelSoundsCmdHandler(void)
         DcPrintf("Level sound volume: %.1f", g_gameConfig.levelSoundVolume);
     }
 
-    if (*g_pbDcHelp)
+    if (g_bDcHelp)
     {
         DcPrint(g_ppszStringsTable[STR_USAGE], NULL);
         DcPrint("     <volume>", NULL);
@@ -282,11 +282,11 @@ static void LevelSoundsCmdHandler(void)
 
 static void DcfFindMap()
 {
-    if (*g_pbDcRun)
+    if (g_bDcRun)
     {
         rf::DcGetArg(DC_ARG_STR, 0);
 
-        if (*g_pDcArgType & DC_ARG_STR)
+        if (g_DcArgType & DC_ARG_STR)
         {
             PackfileFindMatchingFiles(StringMatcher().Infix(g_pszDcArg).Suffix(".rfl"), [](const char *pszName)
             {
@@ -295,7 +295,7 @@ static void DcfFindMap()
         }
     }
 
-    if (*g_pbDcHelp)
+    if (g_bDcHelp)
     {
         DcPrint(g_ppszStringsTable[STR_USAGE], NULL);
         DcPrint("     <query>", NULL);
@@ -329,9 +329,9 @@ DcCommand g_Commands[] = {
 
 void DcShowCmdHelp(DcCommand *pCmd)
 {
-    *g_pbDcRun = 0;
-    *g_pbDcHelp = 1;
-    *g_pbDcStatus = 0;
+    g_bDcRun = 0;
+    g_bDcHelp = 1;
+    g_bDcStatus = 0;
     pCmd->pfnHandler();
 }
 
@@ -348,7 +348,7 @@ int DcAutoCompleteGetComponent(int Offset, std::string &Result)
         pszEnd = pszNext = strchr(pszBegin, ' ');
 
     if (!pszEnd)
-        pszEnd = g_szDcCmdLine + *g_pcchDcCmdLineLen;
+        pszEnd = g_szDcCmdLine + g_cchDcCmdLineLen;
     
     size_t Len = pszEnd - pszBegin;
     Result.assign(pszBegin, Len);
@@ -360,11 +360,11 @@ void DcAutoCompletePutComponent(int Offset, const std::string &Component, bool F
 {
     bool Quote = Component.find(' ') != std::string::npos;
     if (Quote)
-        *g_pcchDcCmdLineLen = Offset + sprintf(g_szDcCmdLine + Offset, "\"%s\"", Component.c_str());
+        g_cchDcCmdLineLen = Offset + sprintf(g_szDcCmdLine + Offset, "\"%s\"", Component.c_str());
     else
-        *g_pcchDcCmdLineLen = Offset + sprintf(g_szDcCmdLine + Offset, "%s", Component.c_str());
+        g_cchDcCmdLineLen = Offset + sprintf(g_szDcCmdLine + Offset, "%s", Component.c_str());
     if (Finished)
-        *g_pcchDcCmdLineLen += sprintf(g_szDcCmdLine + *g_pcchDcCmdLineLen, " ");
+        g_cchDcCmdLineLen += sprintf(g_szDcCmdLine + g_cchDcCmdLineLen, " ");
 }
 
 template<typename T, typename F>
@@ -455,7 +455,7 @@ void DcAutoCompleteCommand(int Offset)
     std::string CommonPrefix;
 
     std::vector<DcCommand*> MatchingCmds;
-    for (unsigned i = 0; i < *g_pDcNumCommands; ++i)
+    for (unsigned i = 0; i < g_DcNumCommands; ++i)
     {
         DcCommand *pCmd = g_CommandsBuffer[i];
         if (!strnicmp(pCmd->pszCmd, Cmd.c_str(), Cmd.size()) && (NextOffset == -1 || !pCmd->pszCmd[Cmd.size()]))
@@ -505,7 +505,7 @@ void CommandsInit(void)
 #endif // if CAMERA_1_3_COMMANDS
 
     // Change limit of commands
-    ASSERT(*g_pDcNumCommands == 0);
+    ASSERT(g_DcNumCommands == 0);
     WriteMemPtr(0x005099AC + 1, g_CommandsBuffer);
     WriteMemUInt8(0x00509A78 + 2, CMD_LIMIT);
     WriteMemPtr(0x00509A8A + 1, g_CommandsBuffer);
@@ -524,8 +524,8 @@ void CommandsInit(void)
 
 void CommandRegister(DcCommand *pCmd)
 {
-    if (*g_pDcNumCommands < CMD_LIMIT)
-        g_CommandsBuffer[(*g_pDcNumCommands)++] = pCmd;
+    if (g_DcNumCommands < CMD_LIMIT)
+        g_CommandsBuffer[(g_DcNumCommands)++] = pCmd;
     else
         ASSERT(false);
 

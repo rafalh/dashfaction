@@ -415,18 +415,18 @@ void RenderDownloadProgress(void)
     if (cxProgress > 0)
     {
         GrSetColor(0x80, 0x80, 0, 0x80);
-        GrDrawRect(x, y, cxProgress, cy, *g_pGrRectMaterial);
+        GrDrawRect(x, y, cxProgress, cy, g_GrRectMaterial);
     }
 
     if (cx > cxProgress)
     {
         GrSetColor(0, 0, 0x60, 0x80);
-        GrDrawRect(x + cxProgress, y, cx - cxProgress, cy, *g_pGrRectMaterial);
+        GrDrawRect(x + cxProgress, y, cx - cxProgress, cy, g_GrRectMaterial);
     }
 
     GrSetColor(0, 0xFF, 0, 0x80);
     sprintf(szBuf, "Downloading: %.2f MB / %.2f MB", g_cbDownloadProgress/1024.0f/1024.0f, g_cbLevelSize/1024.0f/1024.0f);
-    GrDrawAlignedText(GR_ALIGN_CENTER, x + cx/2, y + cy/2 - cyFont/2, szBuf, -1, *g_pGrTextMaterial);
+    GrDrawAlignedText(GR_ALIGN_CENTER, x + cx/2, y + cy/2 - cyFont/2, szBuf, -1, g_GrTextMaterial);
 }
 
 #endif /* LEVELS_AUTODOWNLOADER */

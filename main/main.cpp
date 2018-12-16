@@ -58,13 +58,13 @@ static void ProcessWaitingMessages()
 
 void FindPlayer(const StringMatcher &Query, std::function<void(CPlayer*)> Consumer)
 {
-    CPlayer *pPlayer = *g_ppPlayersList;
+    CPlayer *pPlayer = g_pPlayersList;
     while (pPlayer)
     {
         if (Query(pPlayer->strName.psz))
             Consumer(pPlayer);
         pPlayer = pPlayer->pNext;
-        if (pPlayer == *g_ppPlayersList)
+        if (pPlayer == g_pPlayersList)
             break;
     }
 }
@@ -96,7 +96,7 @@ static void InitGame_New(void)
     GraphicsAfterGameInit();
 
 #if DIRECTINPUT_SUPPORT
-    *g_pbDirectInputDisabled = !g_gameConfig.directInput;
+    g_bDirectInputDisabled = !g_gameConfig.directInput;
 #endif
 
     /* Allow modded strings.tbl in ui.vpp */

@@ -46,7 +46,7 @@ static void GetVersionStr_New(const char **ppszVersion, const char **a2)
         *ppszVersion = g_szVersionInMenu;
     if (a2)
         *a2 = "";
-    GrGetTextWidth(&g_VersionLabelWidth, &g_VersionLabelHeight, g_szVersionInMenu, -1, *g_pMediumFontId);
+    GrGetTextWidth(&g_VersionLabelWidth, &g_VersionLabelHeight, g_szVersionInMenu, -1, g_MediumFontId);
 
     g_VersionLabelX = 430 - g_VersionLabelWidth;
     g_VersionLabelWidth = g_VersionLabelWidth + 5;
@@ -95,7 +95,7 @@ void MenuMainProcessMouseHook()
     {
         int x, y, z;
         MouseGetPos(&x, &y, &z);
-        UiPanel *PanelsToCheck[1] = { g_pMenuVersionLabel };
+        UiPanel *PanelsToCheck[1] = { &g_MenuVersionLabel };
         int Matched = UiGetElementFromPos(x, y, PanelsToCheck, COUNTOF(PanelsToCheck));
         if (Matched == 0)
         {
@@ -158,8 +158,8 @@ void MenuMainRenderHook()
         int w, h;
         BmGetBitmapSize(PonyBitmap, &w, &h);
         int AnimDeltaTime = GetTickCount() - g_EggAnimStart;
-        int PosX = (g_pGrScreen->MaxWidth - w) / 2;
-        int PosY = g_pGrScreen->MaxHeight - h;
+        int PosX = (g_GrScreen.MaxWidth - w) / 2;
+        int PosY = g_GrScreen.MaxHeight - h;
         if (AnimDeltaTime < EGG_ANIM_ENTER_TIME)
             PosY += h - (int)(sinf(AnimDeltaTime / (float)EGG_ANIM_ENTER_TIME * (float)M_PI / 2.0f) * h);
         else if (AnimDeltaTime > EGG_ANIM_ENTER_TIME + EGG_ANIM_IDLE_TIME)
@@ -169,7 +169,7 @@ void MenuMainRenderHook()
             if (LeaveDelta > EGG_ANIM_LEAVE_TIME)
                 g_VersionClickCounter = 0;
         }
-        GrDrawImage(PonyBitmap, PosX, PosY, *g_pGrBitmapMaterial);
+        GrDrawImage(PonyBitmap, PosX, PosY, g_GrBitmapMaterial);
     }
 }
 
@@ -195,16 +195,16 @@ void MouseUpdateDirectInput_New()
     MouseUpdateDirectInput_Hook.callTrampoline();
 
     // center cursor
-    POINT pt = { g_pGrScreen->MaxWidth / 2, g_pGrScreen->MaxHeight / 2 };
-    ClientToScreen(*g_phWnd, &pt);
+    POINT pt = { g_GrScreen.MaxWidth / 2, g_GrScreen.MaxHeight / 2 };
+    ClientToScreen(g_hWnd, &pt);
     SetCursorPos(pt.x, pt.y);
 }
 
 bool IsHoldingAssaultRifle()
 {
-    static const auto pAssaultRifleClassId = (int*)0x00872470;
-    EntityObj *pEntity = EntityGetFromHandle((*g_ppLocalPlayer)->hEntity);
-    return pEntity && pEntity->WeaponInfo.WeaponClsId == *pAssaultRifleClassId;
+    static auto &AssaultRifleClassId = *(int*)0x00872470;
+    EntityObj *pEntity = EntityGetFromHandle((g_pLocalPlayer)->hEntity);
+    return pEntity && pEntity->WeaponInfo.WeaponClsId == AssaultRifleClassId;
 }
 
 void PlayerLocalFireControl_New(CPlayer *pPlayer, bool bSecondary, char WasPressed)
@@ -228,7 +228,7 @@ char IsEntityCtrlActive_New(ControlConfig *pControlsState, EGameCtrl CtrlId, boo
 
 void DcfSwapAssaultRifleControls()
 {
-    if (*g_pbDcRun)
+    if (g_bDcRun)
     {
         g_gameConfig.swapAssaultRifleControls = !g_gameConfig.swapAssaultRifleControls;
         g_gameConfig.save();
@@ -271,15 +271,15 @@ void PrintCmdInputLine()
     CONSOLE_SCREEN_BUFFER_INFO ScrBufInfo;
     GetConsoleScreenBufferInfo(hOutput, &ScrBufInfo);
     WriteConsoleA(hOutput, "] ", 2, NULL, NULL);
-    unsigned Offset = std::max(0, (int)*g_pcchDcCmdLineLen - ScrBufInfo.dwSize.X + 3);
-    WriteConsoleA(hOutput, g_szDcCmdLine + Offset, *g_pcchDcCmdLineLen - Offset, NULL, NULL);
+    unsigned Offset = std::max(0, (int)g_cchDcCmdLineLen - ScrBufInfo.dwSize.X + 3);
+    WriteConsoleA(hOutput, g_szDcCmdLine + Offset, g_cchDcCmdLineLen - Offset, NULL, NULL);
 }
 
 BOOL WINAPI ConsoleCtrlHandler(DWORD fdwCtrlType)
 {
     INFO("Quiting after Console CTRL");
-    static const int32_t *pClose = (int32_t*)0x01B0D758;
-    *pClose = 1;
+    static auto &Close = *(int32_t*)0x01B0D758;
+    Close = 1;
     return TRUE;
 }
 
@@ -385,7 +385,7 @@ void DcDrawServerConsole_New()
 
 int KeyGetFromQueue_New()
 {
-    if (!*g_pbDedicatedServer)
+    if (!g_bDedicatedServer)
         return KeyGetFromQueue_Hook.callTrampoline();
 
     HANDLE hInput = GetStdHandle(STD_INPUT_HANDLE);
@@ -499,7 +499,7 @@ void MiscInit()
     WriteMemUInt8(0x005995B8, 0);
 
 #if DIRECTINPUT_SUPPORT
-    *g_pbDirectInputDisabled = 0;
+    g_bDirectInputDisabled = 0;
 #endif
 
 #if 1

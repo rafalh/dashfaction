@@ -419,39 +419,39 @@ NAKED void ProcessRconPacket_Security_0046C751()
 
 void ProcessGameInfoReqPacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (*g_pbLocalNetworkGame) // server-side
+    if (g_bLocalNetworkGame) // server-side
         ProcessGameInfoReqPacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessGameInfoPacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (!*g_pbLocalNetworkGame) // client-side
+    if (!g_bLocalNetworkGame) // client-side
         ProcessGameInfoPacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessJoinReqPacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (*g_pbLocalNetworkGame) // server-side
+    if (g_bLocalNetworkGame) // server-side
         ProcessJoinReqPacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessJoinAcceptPacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (!*g_pbLocalNetworkGame) // client-side
+    if (!g_bLocalNetworkGame) // client-side
         ProcessJoinAcceptPacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessJoinDenyPacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (!*g_pbLocalNetworkGame && MultiIsCurrentServer(pAddr)) // client-side
+    if (!g_bLocalNetworkGame && MultiIsCurrentServer(pAddr)) // client-side
         ProcessJoinDenyPacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessNewPlayerPacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (!*g_pbLocalNetworkGame) // client-side
+    if (!g_bLocalNetworkGame) // client-side
     {
-        if (GetForegroundWindow() != *g_phWnd)
+        if (GetForegroundWindow() != g_hWnd)
             Beep(750, 300);
         ProcessNewPlayerPacket_Hook.callTrampoline(pData, pAddr);
     }
@@ -459,14 +459,14 @@ void ProcessNewPlayerPacket_New(char *pData, const NwAddr *pAddr)
 
 void ProcessPlayersPacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (!*g_pbLocalNetworkGame) // client-side
+    if (!g_bLocalNetworkGame) // client-side
         ProcessPlayersPacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessLeftGamePacket_New(char *pData, const NwAddr *pAddr)
 {
     // server-side and client-side
-    if (*g_pbLocalNetworkGame)
+    if (g_bLocalNetworkGame)
     {
         CPlayer *pSrcPlayer = NwGetPlayerFromAddr(pAddr);
         pData[0] = pSrcPlayer->pNwData->PlayerId; // fix player ID
@@ -476,32 +476,32 @@ void ProcessLeftGamePacket_New(char *pData, const NwAddr *pAddr)
 
 void ProcessEndGamePacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (!*g_pbLocalNetworkGame) // client-side
+    if (!g_bLocalNetworkGame) // client-side
         ProcessEndGamePacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessStateInfoReqPacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (*g_pbLocalNetworkGame) // server-side
+    if (g_bLocalNetworkGame) // server-side
         ProcessStateInfoReqPacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessStateInfoDonePacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (!*g_pbLocalNetworkGame) // client-side
+    if (!g_bLocalNetworkGame) // client-side
         ProcessStateInfoDonePacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessClientInGamePacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (*g_pbLocalNetworkGame) // server-side
+    if (g_bLocalNetworkGame) // server-side
         ProcessClientInGamePacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessChatLinePacket_New(char *pData, const NwAddr *pAddr)
 {
     // server-side and client-side
-    if (*g_pbLocalNetworkGame)
+    if (g_bLocalNetworkGame)
     {
         CPlayer *pSrcPlayer = NwGetPlayerFromAddr(pAddr);
         if (!pSrcPlayer)
@@ -514,7 +514,7 @@ void ProcessChatLinePacket_New(char *pData, const NwAddr *pAddr)
 void ProcessNameChangePacket_New(char *pData, const NwAddr *pAddr)
 {
     // server-side and client-side
-    if (*g_pbLocalNetworkGame)
+    if (g_bLocalNetworkGame)
     {
         CPlayer *pSrcPlayer = NwGetPlayerFromAddr(pAddr);
         if (!pSrcPlayer)
@@ -526,62 +526,62 @@ void ProcessNameChangePacket_New(char *pData, const NwAddr *pAddr)
 
 void ProcessRespawnReqPacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (*g_pbLocalNetworkGame) // server-side
+    if (g_bLocalNetworkGame) // server-side
         ProcessRespawnReqPacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessTriggerActivatePacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (!*g_pbLocalNetworkGame) // client-side
+    if (!g_bLocalNetworkGame) // client-side
         ProcessTriggerActivatePacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessUseKeyPressedPacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (*g_pbLocalNetworkGame) // server-side
+    if (g_bLocalNetworkGame) // server-side
         ProcessUseKeyPressedPacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessPregameBooleanPacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (!*g_pbLocalNetworkGame) // client-side
+    if (!g_bLocalNetworkGame) // client-side
         ProcessPregameBooleanPacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessPregameGlassPacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (!*g_pbLocalNetworkGame) // client-side
+    if (!g_bLocalNetworkGame) // client-side
         ProcessPregameGlassPacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessPregameRemoteChargePacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (!*g_pbLocalNetworkGame) // client-side
+    if (!g_bLocalNetworkGame) // client-side
         ProcessPregameRemoteChargePacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessSuicidePacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (*g_pbLocalNetworkGame) // server-side
+    if (g_bLocalNetworkGame) // server-side
         ProcessSuicidePacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessEnterLimboPacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (!*g_pbLocalNetworkGame) // client-side
+    if (!g_bLocalNetworkGame) // client-side
         ProcessEnterLimboPacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessLeaveLimboPacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (!*g_pbLocalNetworkGame) // client-side
+    if (!g_bLocalNetworkGame) // client-side
         ProcessLeaveLimboPacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessTeamChangePacket_New(char *pData, const NwAddr *pAddr)
 {
     // server-side and client-side
-    if (*g_pbLocalNetworkGame)
+    if (g_bLocalNetworkGame)
     {
         CPlayer *pSrcPlayer = NwGetPlayerFromAddr(pAddr);
         if (!pSrcPlayer)
@@ -594,26 +594,26 @@ void ProcessTeamChangePacket_New(char *pData, const NwAddr *pAddr)
 
 void ProcessPingPacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (!*g_pbLocalNetworkGame) // client-side
+    if (!g_bLocalNetworkGame) // client-side
         ProcessPingPacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessPongPacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (*g_pbLocalNetworkGame) // server-side
+    if (g_bLocalNetworkGame) // server-side
         ProcessPongPacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessNetgameUpdatePacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (!*g_pbLocalNetworkGame) // client-side
+    if (!g_bLocalNetworkGame) // client-side
         ProcessNetgameUpdatePacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessRateChangePacket_New(char *pData, const NwAddr *pAddr)
 {
     // server-side and client-side?
-    if (*g_pbLocalNetworkGame)
+    if (g_bLocalNetworkGame)
     {
         CPlayer *pSrcPlayer = NwGetPlayerFromAddr(pAddr);
         if (!pSrcPlayer)
@@ -625,61 +625,61 @@ void ProcessRateChangePacket_New(char *pData, const NwAddr *pAddr)
 
 void ProcessSelectWeaponReqPacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (*g_pbLocalNetworkGame) // server-side
+    if (g_bLocalNetworkGame) // server-side
         ProcessSelectWeaponReqPacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessClutterUpdatePacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (!*g_pbLocalNetworkGame) // client-side
+    if (!g_bLocalNetworkGame) // client-side
         ProcessClutterUpdatePacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessClutterKillPacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (!*g_pbLocalNetworkGame) // client-side
+    if (!g_bLocalNetworkGame) // client-side
         ProcessClutterKillPacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessCtfFlagPickedUpPacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (!*g_pbLocalNetworkGame) // client-side
+    if (!g_bLocalNetworkGame) // client-side
         ProcessCtfFlagPickedUpPacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessCtfFlagCapturedPacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (!*g_pbLocalNetworkGame) // client-side
+    if (!g_bLocalNetworkGame) // client-side
         ProcessCtfFlagCapturedPacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessCtfFlagUpdatePacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (!*g_pbLocalNetworkGame) // client-side
+    if (!g_bLocalNetworkGame) // client-side
         ProcessCtfFlagUpdatePacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessCtfFlagReturnedPacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (!*g_pbLocalNetworkGame) // client-side
+    if (!g_bLocalNetworkGame) // client-side
         ProcessCtfFlagReturnedPacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessCtfFlagDroppedPacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (!*g_pbLocalNetworkGame) // client-side
+    if (!g_bLocalNetworkGame) // client-side
         ProcessCtfFlagDroppedPacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessRemoteChargeKillPacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (!*g_pbLocalNetworkGame) // client-side
+    if (!g_bLocalNetworkGame) // client-side
         ProcessRemoteChargeKillPacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessItemUpdatePacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (!*g_pbLocalNetworkGame) // client-side
+    if (!g_bLocalNetworkGame) // client-side
         ProcessItemUpdatePacket_Hook.callTrampoline(pData, pAddr);
 }
 
@@ -691,43 +691,43 @@ void ProcessObjUpdatePacket_New(char *pData, const NwAddr *pAddr)
 
 void ProcessObjKillPacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (!*g_pbLocalNetworkGame) // client-side
+    if (!g_bLocalNetworkGame) // client-side
         ProcessObjKillPacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessItemApplyPacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (!*g_pbLocalNetworkGame) // client-side
+    if (!g_bLocalNetworkGame) // client-side
         ProcessItemApplyPacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessBooleanPacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (!*g_pbLocalNetworkGame) // client-side
+    if (!g_bLocalNetworkGame) // client-side
         ProcessBooleanPacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessRespawnPacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (!*g_pbLocalNetworkGame) // client-side
+    if (!g_bLocalNetworkGame) // client-side
         ProcessRespawnPacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessEntityCreatePacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (!*g_pbLocalNetworkGame) // client-side
+    if (!g_bLocalNetworkGame) // client-side
     {
         // Update Default Player Weapon if server has it overriden
         size_t NameSize = strlen(pData) + 1;
         uint8_t PlayerId = pData[NameSize + 58];
-        if (PlayerId == (*g_ppLocalPlayer)->pNwData->PlayerId)
+        if (PlayerId == (g_pLocalPlayer)->pNwData->PlayerId)
         {
             int32_t WeaponClsId = *(int32_t*)(pData + NameSize + 63);
-            CString_Assign(g_pstrDefaultPlayerWeapon, &g_pWeaponClasses[WeaponClsId].strName);
+            CString_Assign(&g_strDefaultPlayerWeapon, &g_pWeaponClasses[WeaponClsId].strName);
 
 #if 0 // disabled because it sometimes helpful feature to switch to last used weapon
             // Reset next weapon variable so entity wont switch after pickup
-            if (!(*g_ppLocalPlayer)->Config.bAutoswitchWeapons)
+            if (!(g_pLocalPlayer)->Config.bAutoswitchWeapons)
                 MultiSetNextWeapon(WeaponClsId);
 #endif
 
@@ -740,13 +740,13 @@ void ProcessEntityCreatePacket_New(char *pData, const NwAddr *pAddr)
 
 void ProcessItemCreatePacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (!*g_pbLocalNetworkGame) // client-side
+    if (!g_bLocalNetworkGame) // client-side
         ProcessItemCreatePacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessReloadPacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (!*g_pbLocalNetworkGame) // client-side
+    if (!g_bLocalNetworkGame) // client-side
     {
         // Update ClipSize and MaxAmmo if received values are greater than values from local weapons.tbl
         int WeaponClsId = *((int32_t *)pData + 1);
@@ -765,7 +765,7 @@ void ProcessReloadPacket_New(char *pData, const NwAddr *pAddr)
 
 void ProcessReloadReqPacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (*g_pbLocalNetworkGame) // server-side
+    if (g_bLocalNetworkGame) // server-side
         ProcessReloadReqPacket_Hook.callTrampoline(pData, pAddr);
 }
 
@@ -777,43 +777,43 @@ void ProcessWeaponFirePacket_New(char *pData, const NwAddr *pAddr)
 
 void ProcessFallDamagePacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (*g_pbLocalNetworkGame) // server-side
+    if (g_bLocalNetworkGame) // server-side
         ProcessFallDamagePacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessRconReqPacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (*g_pbLocalNetworkGame) // server-side
+    if (g_bLocalNetworkGame) // server-side
         ProcessRconReqPacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessRconPacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (*g_pbLocalNetworkGame) // server-side
+    if (g_bLocalNetworkGame) // server-side
         ProcessRconPacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessSoundPacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (!*g_pbLocalNetworkGame) // client-side
+    if (!g_bLocalNetworkGame) // client-side
         ProcessSoundPacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessTeamScorePacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (!*g_pbLocalNetworkGame) // client-side
+    if (!g_bLocalNetworkGame) // client-side
         ProcessTeamScorePacket_Hook.callTrampoline(pData, pAddr);
 }
 
 void ProcessGlassKillPacket_New(char *pData, const NwAddr *pAddr)
 {
-    if (!*g_pbLocalNetworkGame) // client-side
+    if (!g_bLocalNetworkGame) // client-side
         ProcessGlassKillPacket_Hook.callTrampoline(pData, pAddr);
 }
 
 EntityObj *SecureObjUpdatePacket(EntityObj *pEntity, uint8_t Flags, CPlayer *pSrcPlayer)
 {
-    if (*g_pbLocalNetworkGame)
+    if (g_bLocalNetworkGame)
     {
         // server-side
         if (pEntity && pEntity->_Super.Handle != pSrcPlayer->hEntity)
@@ -837,7 +837,7 @@ void NetworkInit()
     WriteMemInt32(0x00479245, (uintptr_t)ProcessUnreliableGamePacketsHook - (0x00479244 + 0x5));
 
     /* Improve SimultaneousPing */
-    *g_pSimultaneousPing = 32;
+    g_SimultaneousPing = 32;
 
     /* Allow ports < 1023 (especially 0 - any port) */
     WriteMemUInt8(0x00528F24, 0x90, 2);

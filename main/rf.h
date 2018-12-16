@@ -179,17 +179,17 @@ namespace rf
     } while (false)
 
     //static const auto g_ppDcCommands = (DcCommand**)0x01775530;
-    static const auto g_pDcNumCommands = (uint32_t*)0x0177567C;
+    static auto &g_DcNumCommands = *(uint32_t*)0x0177567C;
 
-    static const auto g_pbDcRun = (uint32_t*)0x01775110;
-    static const auto g_pbDcHelp = (uint32_t*)0x01775224;
-    static const auto g_pbDcStatus = (uint32_t*)0x01774D00;
-    static const auto g_pDcArgType = (uint32_t*)0x01774D04;
+    static auto &g_bDcRun = *(uint32_t*)0x01775110;
+    static auto &g_bDcHelp = *(uint32_t*)0x01775224;
+    static auto &g_bDcStatus = *(uint32_t*)0x01774D00;
+    static auto &g_DcArgType = *(uint32_t*)0x01774D04;
     static const auto g_pszDcArg = (char*)0x0175462C;
-    static const auto g_piDcArg = (int*)0x01775220;
-    static const auto g_pfDcArg = (float*)0x01754628;
+    static auto &g_iDcArg = *(int*)0x01775220;
+    static auto &g_fDcArg = *(float*)0x01754628;
     static const auto g_szDcCmdLine = (char*)0x01775330;
-    static const auto g_pcchDcCmdLineLen = (uint32_t*)0x0177568C;
+    static auto &g_cchDcCmdLineLen = *(uint32_t*)0x0177568C;
 
     /* Debug Console Commands */
 
@@ -287,22 +287,22 @@ namespace rf
         GR_ALIGN_RIGHT = 2,
     };
 
-    static const auto g_ppDirect3D = (IDirect3D8**)0x01CFCBE0;
-    static const auto g_ppGrDevice = (IDirect3DDevice8**)0x01CFCBE4;
-    static const auto g_pGrScreen = (GrScreen*)0x017C7BC0;
-    static const auto g_pGrPP = (D3DPRESENT_PARAMETERS*)0x01CFCA18;
+    static auto &g_pDirect3D = *(IDirect3D8**)0x01CFCBE0;
+    static auto &g_pGrDevice = *(IDirect3DDevice8**)0x01CFCBE4;
+    static auto &g_GrScreen = *(GrScreen*)0x017C7BC0;
+    static auto &g_GrPP = *(D3DPRESENT_PARAMETERS*)0x01CFCA18;
     static const auto g_pGrGammaRamp = (uint32_t*)0x017C7C68;
-    static const auto g_pAdapterIdx = (uint32_t*)0x01CFCC34;
-    static const auto g_pGrScaleVec = (CVector3*)0x01818B48;
-    static const auto g_GrViewMatrix = (CMatrix3*)0x018186C8;
-    static const auto g_pGrDeviceCaps = (D3DCAPS8*)0x01CFCAC8;
-    static const auto g_pGrDefaultWFar = (float*)0x00596140;
+    static auto &g_AdapterIdx = *(uint32_t*)0x01CFCC34;
+    static auto &g_GrScaleVec = *(CVector3*)0x01818B48;
+    static auto &g_GrViewMatrix = *(CMatrix3*)0x018186C8;
+    static auto &g_GrDeviceCaps = *(D3DCAPS8*)0x01CFCAC8;
+    static auto &g_GrDefaultWFar = *(float*)0x00596140;
 
-    static const auto g_pGrLineMaterial = (uint32_t*)0x01775B00;
-    static const auto g_pGrRectMaterial = (uint32_t*)0x17756C0;
-    static const auto g_pGrTextMaterial = (uint32_t*)0x17C7C5C;
-    static const auto g_pGrBitmapMaterial = (uint32_t*)0x017756BC;
-    static const auto g_pGrImageMaterial = (uint32_t*)0x017756DC;
+    static auto &g_GrLineMaterial = *(uint32_t*)0x01775B00;
+    static auto &g_GrRectMaterial = *(uint32_t*)0x17756C0;
+    static auto &g_GrTextMaterial = *(uint32_t*)0x17C7C5C;
+    static auto &g_GrBitmapMaterial = *(uint32_t*)0x017756BC;
+    static auto &g_GrImageMaterial = *(uint32_t*)0x017756DC;
 
     static const auto GrGetMaxWidth = (unsigned(*)())0x0050C640;
     static const auto GrGetMaxHeight = (unsigned(*)())0x0050C650;
@@ -421,11 +421,11 @@ namespace rf
         PackfileEntry *pArchiveEntry;
     };
 
-    static const auto g_pcArchives = (uint32_t*)0x01BDB214;
-    static const auto g_pArchives = (Packfile*)0x01BA7AC8;
+    static auto &g_cArchives = *(uint32_t*)0x01BDB214;
+    static auto &g_Archives = *(Packfile*)0x01BA7AC8;
 #define VFS_LOOKUP_TABLE_SIZE 20713
-    static const auto g_pVfsLookupTable = (PackfileLookupTable*)0x01BB2AC8;
-    static const auto g_pbVfsIgnoreTblFiles = (uint8_t*)0x01BDB21C;
+    static auto &g_VfsLookupTable = *(PackfileLookupTable*)0x01BB2AC8;
+    static auto &g_bVfsIgnoreTblFiles = *(uint8_t*)0x01BDB21C;
 
     typedef BOOL(*PackfileLoad_Type)(const char *pszFileName, const char *pszDir);
     static const auto PackfileLoad = (PackfileLoad_Type)0x0052C070;
@@ -509,7 +509,7 @@ namespace rf
     };
     static_assert(sizeof(CPlayerNetData) == 0x9C8, "invalid size");
 
-    static const auto g_pNwSocket = (SOCKET*)0x005A660C;
+    static auto &g_NwSocket = *(SOCKET*)0x005A660C;
 
     typedef void(*NwProcessGamePackets_Type)(const char *pData, int cbData, const NwAddr *pAddr, CPlayer *pPlayer);
     static const auto NwProcessGamePackets = (NwProcessGamePackets_Type)0x004790D0;
@@ -792,8 +792,8 @@ namespace rf
     };
     static_assert(sizeof(CPlayer) == 0x1204, "invalid size");
 
-    static const auto g_ppPlayersList = (CPlayer**)0x007C75CC;
-    static const auto g_ppLocalPlayer = (CPlayer**)0x007C75D4;
+    static auto &g_pPlayersList = *(CPlayer**)0x007C75CC;
+    static auto &g_pLocalPlayer = *(CPlayer**)0x007C75D4;
 
     static const auto PlayerCreate = (CPlayer *(*)(char bLocal))0x004A3310;
     static const auto PlayerDestroy = (void(*)(CPlayer *pPlayer))0x004A35C0;
@@ -972,7 +972,7 @@ namespace rf
         int field_2C0;
     };
 
-    static const auto *g_pItemObjList = (ItemObj*)0x00642DD8;
+    static auto &g_ItemObjList = *(ItemObj*)0x00642DD8;
 
     static const auto ObjGetFromUid = (Object *(*)(int Uid))0x0048A4A0;
 
@@ -1471,8 +1471,8 @@ namespace rf
     static_assert(sizeof(WeaponClass) == 0x550, "invalid size");
 
     static const auto g_pWeaponClasses = (WeaponClass*)0x0085CD08;
-    static const auto g_pRiotStickClsId = (uint32_t*)0x00872468;
-    static const auto g_pRemoteChargeClsId = (uint32_t*)0x0087210C;
+    static auto &g_RiotStickClsId = *(uint32_t*)0x00872468;
+    static auto &g_RemoteChargeClsId = *(uint32_t*)0x0087210C;
 
     /* Window */
 
@@ -1481,13 +1481,13 @@ namespace rf
     static const auto AddMsgHandler = (PFN_ADD_MSG_HANDLER)0x00524AE0;
 
     static const auto g_MsgHandlers = (PFN_MESSAGE_HANDLER*)0x01B0D5A0;
-    static const auto g_pcMsgHandlers = (uint32_t*)0x01B0D760;
+    static auto &g_cMsgHandlers = *(uint32_t*)0x01B0D760;
 
-    static const auto g_phWnd = (HWND*)0x01B0D748;
-    static const auto g_pbIsActive = (uint8_t*)0x01B0D750;
-    static const auto g_pbClose = (uint8_t*)0x01B0D758;
-    static const auto g_pbMouseInitialized = (uint8_t*)0x01885461;
-    static const auto g_pcRedrawServer = (uint32_t*)0x01775698;
+    static auto &g_hWnd = *(HWND*)0x01B0D748;
+    static auto &g_bIsActive = *(uint8_t*)0x01B0D750;
+    static auto &g_bClose = *(uint8_t*)0x01B0D758;
+    static auto &g_bMouseInitialized = *(uint8_t*)0x01885461;
+    static auto &g_cRedrawServer = *(uint32_t*)0x01775698;
 
     /* Network Game */
 
@@ -1524,15 +1524,15 @@ namespace rf
     static const auto MpResetNetGame = (void(*)())0x0046E450;
     static const auto MultiSetNextWeapon = (void(*)(int WeaponClsId))0x0047FCA0;
 
-    static const auto g_pServAddr = (NwAddr*)0x0064EC5C;
-    static const auto g_pstrServName = (CString*)0x0064EC28;
-    static const auto g_pbNetworkGame = (uint8_t*)0x0064ECB9;
-    static const auto g_pbLocalNetworkGame = (uint8_t*)0x0064ECBA;
-    static const auto g_pbDedicatedServer = (uint32_t*)0x01B0D75C;
-    static const auto g_pGameOptions = (uint32_t*)0x0064EC40;
-    static const auto g_ppBanlistFirstEntry = (BanlistEntry**)0x0064EC20;
-    static const auto g_ppBanlistLastEntry = (BanlistEntry**)0x0064EC24;
-    static const auto g_pBanlistNullEntry = (BanlistEntry*)0x0064EC08;
+    static auto &g_ServAddr = *(NwAddr*)0x0064EC5C;
+    static auto &g_strServName = *(CString*)0x0064EC28;
+    static auto &g_bNetworkGame = *(uint8_t*)0x0064ECB9;
+    static auto &g_bLocalNetworkGame = *(uint8_t*)0x0064ECBA;
+    static auto &g_bDedicatedServer = *(uint32_t*)0x01B0D75C;
+    static auto &g_GameOptions = *(uint32_t*)0x0064EC40;
+    static auto &g_pBanlistFirstEntry = *(BanlistEntry**)0x0064EC20;
+    static auto &g_pBanlistLastEntry = *(BanlistEntry**)0x0064EC24;
+    static auto &g_BanlistNullEntry = *(BanlistEntry*)0x0064EC08;
 
     /* Input */
     static const auto MouseGetPos = (int(*)(int *pX, int *pY, int *pZ))0x0051E450;
@@ -1586,9 +1586,9 @@ namespace rf
     static const auto MenuUpdate = (int(*)())0x00434230;
     static const auto GetCurrentMenuId = (MenuId(*)())0x00434200;
 
-    static const auto g_MenuLevels = (int*)0x00630064;
-    static const auto g_pCurrentMenuLevel = (int*)0x005967A4;
-    static const auto g_pMenuVersionLabel = (UiPanel*)0x0063C088;
+    static auto &g_MenuLevels = *(int*)0x00630064;
+    static auto &g_CurrentMenuLevel = *(int*)0x005967A4;
+    static auto &g_MenuVersionLabel = *(UiPanel*)0x0063C088;
 
     /* Other */
 
@@ -1610,27 +1610,27 @@ namespace rf
     };
 
     static const auto g_pszRootPath = (char*)0x018060E8;
-    static const auto g_fFps = (float*)0x005A4018;
-    static const auto g_pfFramerate = (float*)0x005A4014;
-    static const auto g_pfMinFramerate = (float*)0x005A4024;
-    static const auto g_pSimultaneousPing = (uint32_t*)0x00599CD8;
-    static const auto g_pstrLevelName = (CString*)0x00645FDC;
-    static const auto g_pstrLevelFilename = (CString*)0x00645FE4;
-    static const auto g_pstrLevelAuthor = (CString*)0x00645FEC;
-    static const auto g_pstrLevelDate = (CString*)0x00645FF4;
-    static const auto g_pBigFontId = (int*)0x006C74C0;
-    static const auto g_pLargeFontId = (int*)0x0063C05C;
-    static const auto g_pMediumFontId = (int*)0x0063C060;
-    static const auto g_pSmallFontId = (int*)0x0063C068;
-    static const auto g_pbDirectInputDisabled = (bool*)0x005A4F88;
-    static const auto g_bScoreboardRendered = (bool*)0x006A1448;
-    static const auto g_pstrDefaultPlayerWeapon = (CString*)0x007C7600;
+    static auto &g_fFps = *(float*)0x005A4018;
+    static auto &g_fFramerate = *(float*)0x005A4014;
+    static auto &g_fMinFramerate = *(float*)0x005A4024;
+    static auto &g_SimultaneousPing = *(uint32_t*)0x00599CD8;
+    static auto &g_strLevelName = *(CString*)0x00645FDC;
+    static auto &g_strLevelFilename = *(CString*)0x00645FE4;
+    static auto &g_strLevelAuthor = *(CString*)0x00645FEC;
+    static auto &g_strLevelDate = *(CString*)0x00645FF4;
+    static auto &g_BigFontId = *(int*)0x006C74C0;
+    static auto &g_LargeFontId = *(int*)0x0063C05C;
+    static auto &g_MediumFontId = *(int*)0x0063C060;
+    static auto &g_SmallFontId = *(int*)0x0063C068;
+    static auto &g_bDirectInputDisabled = *(bool*)0x005A4F88;
+    static auto &g_bScoreboardRendered = *(bool*)0x006A1448;
+    static auto &g_strDefaultPlayerWeapon = *(CString*)0x007C7600;
 
     static const auto g_pbDbgFlagsArray = (uint8_t*)0x0062FE19;
-    static const auto g_pbDbgNetwork = (uint32_t*)0x006FED24;
-    static const auto g_pbDbgWeapon = (uint8_t*)0x007CAB59;
-    static const auto g_pbRenderEventIcons = (uint8_t*)0x00856500;
-    static const auto g_pbDbgRenderTriggers = (uint8_t*)0x0085683C;
+    static auto &g_bDbgNetwork = *(uint32_t*)0x006FED24;
+    static auto &g_bDbgWeapon = *(uint8_t*)0x007CAB59;
+    static auto &g_bRenderEventIcons = *(uint8_t*)0x00856500;
+    static auto &g_bDbgRenderTriggers = *(uint8_t*)0x0085683C;
 
     static const auto RfBeep = (void(*)(unsigned u1, unsigned u2, unsigned u3, float fVolume))0x00505560;
     static const auto InitGame = (void(*)())0x004B13F0;

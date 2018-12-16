@@ -22,7 +22,7 @@ rf::BmPixelFormat GrD3DReadBackBufferHook(int x, int y, int Width, int Height, B
 
     rf::GrFlushBuffers();
 
-    hr = (*rf::g_ppGrDevice)->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer);
+    hr = rf::g_pGrDevice->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer);
     if (FAILED(hr))
     {
         ERR("IDirect3DDevice8_GetBackBuffer failed 0x%x", hr);
@@ -41,9 +41,9 @@ rf::BmPixelFormat GrD3DReadBackBufferHook(int x, int y, int Width, int Height, B
 #if 1
     if (SUCCEEDED(hr))
     {
-        hr = (*rf::g_ppGrDevice)->CreateRenderTarget(Desc.Width, Desc.Height, Desc.Format, D3DMULTISAMPLE_NONE, TRUE, &pTmpSurface);
-        //hr = (*rf::g_ppGrDevice)->CreateImageSurface(Desc.Width, Desc.Height, Desc.Format, &pTmpSurface);
-        //hr = (*rf::g_ppGrDevice)->CreateTexture(Desc.Width, Desc.Height, 1, 0, Desc.Format, D3DPOOL_MANAGED, &pTmpTexture);
+        hr = rf::g_pGrDevice->CreateRenderTarget(Desc.Width, Desc.Height, Desc.Format, D3DMULTISAMPLE_NONE, TRUE, &pTmpSurface);
+        //hr = rf::g_pGrDevice->CreateImageSurface(Desc.Width, Desc.Height, Desc.Format, &pTmpSurface);
+        //hr = rf::g_pGrDevice->CreateTexture(Desc.Width, Desc.Height, 1, 0, Desc.Format, D3DPOOL_MANAGED, &pTmpTexture);
         if (FAILED(hr))
             ERR("IDirect3DDevice8_CreateRenderTarget failed 0x%x", hr);
     }
@@ -56,7 +56,7 @@ rf::BmPixelFormat GrD3DReadBackBufferHook(int x, int y, int Width, int Height, B
 
         if (Width > 0 && Height > 0)
         {
-            hr = (*rf::g_ppGrDevice)->CopyRects(pBackBuffer, &SrcRect, 1, pTmpSurface, &DstPoint);
+            hr = rf::g_pGrDevice->CopyRects(pBackBuffer, &SrcRect, 1, pTmpSurface, &DstPoint);
             if (FAILED(hr))
                 ERR("IDirect3DDevice8_CopyRects failed 0x%x", hr);
         }
@@ -120,9 +120,9 @@ void CleanupScreenshot(void)
 void ScreenshotAfterGameInit()
 {
     /* Fix for screenshots creation when height > 1024 */
-    if (rf::g_pGrScreen->MaxHeight > 1024)
+    if (rf::g_GrScreen.MaxHeight > 1024)
     {
-        g_ScreenshotScanlinesBuf = (BYTE**)malloc(rf::g_pGrScreen->MaxHeight * sizeof(BYTE*));
+        g_ScreenshotScanlinesBuf = (BYTE**)malloc(rf::g_GrScreen.MaxHeight * sizeof(BYTE*));
         AsmWritter(0x0055A066, 0x0055A06D).mov(AsmRegs::ECX, (int32_t)&g_ScreenshotScanlinesBuf[0]);
         AsmWritter(0x0055A0DF, 0x0055A0E6).mov(AsmRegs::EAX, (int32_t)g_ScreenshotScanlinesBuf);
     }

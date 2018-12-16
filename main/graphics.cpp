@@ -47,11 +47,11 @@ static void GrSetViewMatrix_FovFix(float fFovScale, float fWFarFactor)
     constexpr float fRefAspectRatio = 4.0f / 3.0f;
     constexpr float fMaxWideAspectRatio = 21.0f / 9.0f; // biggest aspect ratio currently in market
 
-    // g_pGrScreen->fAspect == ScrW / ScrH * 0.75 (1.0 for 4:3 monitors, 1.2 for 16:10) - looks like Pixel Aspect Ratio
+    // g_GrScreen.fAspect == ScrW / ScrH * 0.75 (1.0 for 4:3 monitors, 1.2 for 16:10) - looks like Pixel Aspect Ratio
     // We use here MaxWidth and MaxHeight to calculate proper FOV for windowed mode
 
-    float fViewportAspectRatio = (float)g_pGrScreen->ViewportWidth / (float)g_pGrScreen->ViewportHeight;
-    float fAspectRatio = (float)g_pGrScreen->MaxWidth / (float)g_pGrScreen->MaxHeight;
+    float fViewportAspectRatio = (float)g_GrScreen.ViewportWidth / (float)g_GrScreen.ViewportHeight;
+    float fAspectRatio = (float)g_GrScreen.MaxWidth / (float)g_GrScreen.MaxHeight;
     float fScaleX = 1.0f;
     float fScaleY = fRefAspectRatio * fViewportAspectRatio / fAspectRatio; // this is how RF does it and is needed for working scanner
 
@@ -63,14 +63,16 @@ static void GrSetViewMatrix_FovFix(float fFovScale, float fWFarFactor)
         fScaleY *= fAspectRatio / fMaxWideAspectRatio;
     }
 
-    g_pGrScaleVec->x = fWFarFactor / fFovScale * fScaleX;
-    g_pGrScaleVec->y = fWFarFactor / fFovScale * fScaleY;
-    g_pGrScaleVec->z = fWFarFactor;
+    g_GrScaleVec.x = fWFarFactor / fFovScale * fScaleX;
+    g_GrScaleVec.y = fWFarFactor / fFovScale * fScaleY;
+    g_GrScaleVec.z = fWFarFactor;
 
-    g_GrClippedGeomOffsetX = g_pGrScreen->OffsetX - 0.5f;
-    g_GrClippedGeomOffsetY = g_pGrScreen->OffsetY - 0.5f;
-    *(float*)0x01818B54 -= 0.5f; // viewport center x
-    *(float*)0x01818B5C -= 0.5f; // viewport center y
+    g_GrClippedGeomOffsetX = g_GrScreen.OffsetX - 0.5f;
+    g_GrClippedGeomOffsetY = g_GrScreen.OffsetY - 0.5f;
+    static auto &GrViewportCenterX = *(float*)0x01818B54;
+    static auto &GrViewportCenterY = *(float*)0x01818B5C;
+    GrViewportCenterX -= 0.5f; // viewport center x
+    GrViewportCenterY -= 0.5f; // viewport center y
 }
 
 #ifndef __GNUC__ // FIXME
@@ -117,10 +119,10 @@ void NAKED GrCreateD3DDeviceError_00545BEF()
 
 void GrClearZBuffer_SetRect(D3DRECT *pClearRect)
 {
-    pClearRect->x1 = g_pGrScreen->OffsetX + g_pGrScreen->ClipLeft;
-    pClearRect->y1 = g_pGrScreen->OffsetY + g_pGrScreen->ClipTop;
-    pClearRect->x2 = g_pGrScreen->OffsetX + g_pGrScreen->ClipRight + 1;
-    pClearRect->y2 = g_pGrScreen->OffsetY + g_pGrScreen->ClipBottom + 1;
+    pClearRect->x1 = g_GrScreen.OffsetX + g_GrScreen.ClipLeft;
+    pClearRect->y1 = g_GrScreen.OffsetY + g_GrScreen.ClipTop;
+    pClearRect->x2 = g_GrScreen.OffsetX + g_GrScreen.ClipRight + 1;
+    pClearRect->y2 = g_GrScreen.OffsetY + g_GrScreen.ClipBottom + 1;
 }
 
 #ifndef __GNUC__ // FIXME
@@ -140,26 +142,26 @@ void NAKED GrClearZBuffer_005509C4()
 
 static void SetupPP(void)
 {
-    memset(g_pGrPP, 0, sizeof(*g_pGrPP));
+    memset(&g_GrPP, 0, sizeof(g_GrPP));
 
-   static const auto pFormat = (D3DFORMAT*)0x005A135C;
-    INFO("D3D Format: %ld", *pFormat);
+    static auto &Format = *(D3DFORMAT*)0x005A135C;
+    INFO("D3D Format: %ld", Format);
 
     // Note: in MSAA mode we don't lock back buffer
 #if !D3D_SWAP_DISCARD
-    g_pGrPP->Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
+    g_pGrPP.Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
 #endif
 
 #if MULTISAMPLING_SUPPORT
-    if (g_gameConfig.msaa && *pFormat > 0)
+    if (g_gameConfig.msaa && Format > 0)
     {
         // Make sure selected MSAA mode is available
-        HRESULT hr = (*g_ppDirect3D)->CheckDeviceMultiSampleType(*g_pAdapterIdx, D3DDEVTYPE_HAL, *pFormat,
+        HRESULT hr = (g_pDirect3D)->CheckDeviceMultiSampleType(g_AdapterIdx, D3DDEVTYPE_HAL, Format,
             g_gameConfig.wndMode != GameConfig::FULLSCREEN, (D3DMULTISAMPLE_TYPE)g_gameConfig.msaa);
         if (SUCCEEDED(hr))
         {
             INFO("Enabling Anti-Aliasing (%ux MSAA)...", g_gameConfig.msaa);
-            g_pGrPP->MultiSampleType = (D3DMULTISAMPLE_TYPE)g_gameConfig.msaa;
+            g_GrPP.MultiSampleType = (D3DMULTISAMPLE_TYPE)g_gameConfig.msaa;
         }
         else
         {
@@ -171,7 +173,7 @@ static void SetupPP(void)
 
     // Make sure stretched window is always full screen
     if (g_gameConfig.wndMode == GameConfig::STRETCHED)
-        SetWindowPos(*g_phWnd, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), SWP_NOZORDER);
+        SetWindowPos(g_hWnd, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), SWP_NOZORDER);
 }
 
 void GrDrawRect_GrDrawPolyHook(int Num, GrVertex **ppVertices, int Flags, int iMat)
@@ -186,9 +188,9 @@ void GrDrawRect_GrDrawPolyHook(int Num, GrVertex **ppVertices, int Flags, int iM
 
 DWORD SetupMaxAnisotropy()
 {
-    DWORD AnisotropyLevel = std::min(g_pGrDeviceCaps->MaxAnisotropy, 16ul);
-    (*g_ppGrDevice)->SetTextureStageState(0, D3DTSS_MAXANISOTROPY, AnisotropyLevel);
-    (*g_ppGrDevice)->SetTextureStageState(1, D3DTSS_MAXANISOTROPY, AnisotropyLevel);
+    DWORD AnisotropyLevel = std::min(g_GrDeviceCaps.MaxAnisotropy, 16ul);
+    (g_pGrDevice)->SetTextureStageState(0, D3DTSS_MAXANISOTROPY, AnisotropyLevel);
+    (g_pGrDevice)->SetTextureStageState(1, D3DTSS_MAXANISOTROPY, AnisotropyLevel);
     return AnisotropyLevel;
 }
 
@@ -199,16 +201,16 @@ void GrInitBuffers_AfterReset_New()
     // Apply state change after reset
     // Note: we dont have to set min/mag filtering because its set when selecting material
 
-    (*g_ppGrDevice)->SetRenderState(D3DRS_CULLMODE, 1);
-    (*g_ppGrDevice)->SetRenderState(D3DRS_SHADEMODE, 2);
-    (*g_ppGrDevice)->SetRenderState(D3DRS_SPECULARENABLE, 0);
-    (*g_ppGrDevice)->SetRenderState(D3DRS_AMBIENT, 0xFF545454);
-    (*g_ppGrDevice)->SetRenderState(D3DRS_CLIPPING, 0);
+    (g_pGrDevice)->SetRenderState(D3DRS_CULLMODE, 1);
+    (g_pGrDevice)->SetRenderState(D3DRS_SHADEMODE, 2);
+    (g_pGrDevice)->SetRenderState(D3DRS_SPECULARENABLE, 0);
+    (g_pGrDevice)->SetRenderState(D3DRS_AMBIENT, 0xFF545454);
+    (g_pGrDevice)->SetRenderState(D3DRS_CLIPPING, 0);
 
-    if (*g_ppLocalPlayer)
-        GrSetTextureMipFilter((*g_ppLocalPlayer)->Config.FilteringLevel == 0);
+    if (g_pLocalPlayer)
+        GrSetTextureMipFilter((g_pLocalPlayer)->Config.FilteringLevel == 0);
 
-    if (g_pGrDeviceCaps->MaxAnisotropy > 0 && g_gameConfig.anisotropicFiltering)
+    if (g_GrDeviceCaps.MaxAnisotropy > 0 && g_gameConfig.anisotropicFiltering)
         SetupMaxAnisotropy();
 }
 
@@ -333,7 +335,7 @@ void GraphicsAfterGameInit()
 {
 #if ANISOTROPIC_FILTERING
     // Anisotropic texture filtering
-    if (g_pGrDeviceCaps->MaxAnisotropy > 0 && g_gameConfig.anisotropicFiltering && !*g_pbDedicatedServer)
+    if (g_GrDeviceCaps.MaxAnisotropy > 0 && g_gameConfig.anisotropicFiltering && !g_bDedicatedServer)
     {
         SetTextureMinMagFilterInCode(D3DTEXF_ANISOTROPIC);
         DWORD AnisotropyLevel = SetupMaxAnisotropy();
@@ -356,8 +358,8 @@ void GraphicsDrawFpsCounter()
     if (g_gameConfig.fpsCounter)
     {
         char szBuf[32];
-        sprintf(szBuf, "FPS: %.1f", *g_fFps);
+        sprintf(szBuf, "FPS: %.1f", g_fFps);
         GrSetColor(0, 255, 0, 255);
-        GrDrawAlignedText(GR_ALIGN_RIGHT, GrGetMaxWidth() - 10, 60, szBuf, -1, *g_pGrTextMaterial);
+        GrDrawAlignedText(GR_ALIGN_RIGHT, GrGetMaxWidth() - 10, 60, szBuf, -1, g_GrTextMaterial);
     }
 }

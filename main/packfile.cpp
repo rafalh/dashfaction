@@ -290,7 +290,7 @@ static BOOL PackfileAddEntries_New(Packfile *pPackfile, const void *pBlock, unsi
     for (unsigned i = 0; i < cFilesInBlock; ++i)
     {
         PackfileEntry *pEntry = &pPackfile->pFileList[*pcAddedFiles];
-        if (*g_pbVfsIgnoreTblFiles && !stricmp(GetFileExt((char*)pData), ".tbl"))
+        if (g_bVfsIgnoreTblFiles && !stricmp(GetFileExt((char*)pData), ".tbl"))
             pEntry->pszFileName = "DEADBEEF";
         else
         {
@@ -338,7 +338,7 @@ static void PackfileAddToLookupTable_New(PackfileEntry *pEntry)
             const char *pszOldArchive = pLookupTableItem->pPackfileEntry->pArchive->szName;
             const char *pszNewArchive = pEntry->pArchive->szName;
 
-            if (*g_pbVfsIgnoreTblFiles) // this is set to true for user_maps
+            if (g_bVfsIgnoreTblFiles) // this is set to true for user_maps
             {
                 bool bWhitelisted = false;// IsModFileInWhitelist(pEntry->pszFileName);
                 if (!g_gameConfig.allowOverwriteGameFiles && !bWhitelisted)

@@ -17,12 +17,12 @@ void KillInitPlayer(CPlayer *pPlayer)
 
 void MpResetNetGame_New()
 {
-    CPlayer *pPlayer = *g_ppPlayersList;
+    CPlayer *pPlayer = g_pPlayersList;
     while (pPlayer)
     {
         KillInitPlayer(pPlayer);
         pPlayer = pPlayer->pNext;
-        if (pPlayer == *g_ppPlayersList) break;
+        if (pPlayer == g_pPlayersList) break;
     }
     MpResetNetGame_Hook.callTrampoline();
 }
@@ -43,7 +43,7 @@ void OnPlayerKill(CPlayer *pKilled, CPlayer *pKiller)
         strMsg.psz = StringAlloc(pKilled->strName.cch + strlen(pszMuiMsg) + 1);
         strMsg.cch = sprintf(strMsg.psz, "%s%s", pKilled->strName.psz, pszMuiMsg);
     }
-    else if (pKilled == *g_ppLocalPlayer)
+    else if (pKilled == g_pLocalPlayer)
     {
         ColorId = 4;
         if (pKiller == pKilled)
@@ -56,7 +56,7 @@ void OnPlayerKill(CPlayer *pKilled, CPlayer *pKiller)
         {
             unsigned cchWeaponName = 0;
             
-            if (pKillerEntity && pKillerEntity->WeaponInfo.WeaponClsId == *g_pRiotStickClsId)
+            if (pKillerEntity && pKillerEntity->WeaponInfo.WeaponClsId == g_RiotStickClsId)
             {
                 pszMuiMsg = g_ppszStringsTable[STR_YOU_JUST_GOT_BEAT_DOWN_BY] ? g_ppszStringsTable[STR_YOU_JUST_GOT_BEAT_DOWN_BY] : "";
                 strMsg.psz = StringAlloc(strlen(pszMuiMsg) + pKiller->strName.cch + 2);
@@ -86,7 +86,7 @@ void OnPlayerKill(CPlayer *pKilled, CPlayer *pKiller)
             }
         }
     }
-    else if (pKiller == *g_ppLocalPlayer)
+    else if (pKiller == g_pLocalPlayer)
     {
         ColorId = 4;
         pszMuiMsg = g_ppszStringsTable[STR_YOU_KILLED] ? g_ppszStringsTable[STR_YOU_KILLED] : "";
@@ -104,7 +104,7 @@ void OnPlayerKill(CPlayer *pKilled, CPlayer *pKiller)
         }
         else
         {
-            if (pKillerEntity && pKillerEntity->WeaponInfo.WeaponClsId == *g_pRiotStickClsId)
+            if (pKillerEntity && pKillerEntity->WeaponInfo.WeaponClsId == g_RiotStickClsId)
                 pszMuiMsg = g_ppszStringsTable[STR_GOT_BEAT_DOWN_BY] ? g_ppszStringsTable[STR_GOT_BEAT_DOWN_BY] : "";
             else
                 pszMuiMsg = g_ppszStringsTable[STR_WAS_KILLED_BY] ? g_ppszStringsTable[STR_WAS_KILLED_BY] : "";

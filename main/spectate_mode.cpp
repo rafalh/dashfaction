@@ -26,10 +26,10 @@ auto PlayerFpgunUpdateState_Hook = makeFunHook(PlayerFpgunUpdateState);
 static void SetCameraTarget(CPlayer *pPlayer)
 {
     // Based on function SetCamera1View
-    if (!*g_ppLocalPlayer || !(*g_ppLocalPlayer)->pCamera || !pPlayer)
+    if (!g_pLocalPlayer || !(g_pLocalPlayer)->pCamera || !pPlayer)
         return;
 
-    rf::Camera *pCamera = (*g_ppLocalPlayer)->pCamera;
+    rf::Camera *pCamera = (g_pLocalPlayer)->pCamera;
     pCamera->Type = rf::CAM_FIRST_PERSON;
     pCamera->pPlayer = pPlayer;
 
@@ -42,12 +42,12 @@ static void SetCameraTarget(CPlayer *pPlayer)
 void SpectateModeSetTargetPlayer(CPlayer *pPlayer)
 {
     if (!pPlayer)
-        pPlayer = *g_ppLocalPlayer;
+        pPlayer = g_pLocalPlayer;
 
-    if (!*g_ppLocalPlayer || !(*g_ppLocalPlayer)->pCamera || !g_SpectateModeTarget || g_SpectateModeTarget == pPlayer)
+    if (!g_pLocalPlayer || !(g_pLocalPlayer)->pCamera || !g_SpectateModeTarget || g_SpectateModeTarget == pPlayer)
         return;
 
-    if (*g_pGameOptions & RF_GO_FORCE_RESPAWN)
+    if (g_GameOptions & RF_GO_FORCE_RESPAWN)
     {
         CString strMessage, strPrefix;
         CString_Init(&strMessage, "You cannot use Spectate Mode because Force Respawn option is enabled on this server!");
@@ -57,7 +57,7 @@ void SpectateModeSetTargetPlayer(CPlayer *pPlayer)
     }
 
     // fix old target
-    if (g_SpectateModeTarget && g_SpectateModeTarget != *g_ppLocalPlayer)
+    if (g_SpectateModeTarget && g_SpectateModeTarget != g_pLocalPlayer)
     {
         g_SpectateModeTarget->pCamera = g_OldTargetCamera;
         g_OldTargetCamera = NULL;
@@ -70,7 +70,7 @@ void SpectateModeSetTargetPlayer(CPlayer *pPlayer)
 #endif // SPECTATE_MODE_SHOW_WEAPON
     }
 
-    g_SpectateModeEnabled = (pPlayer != *g_ppLocalPlayer);
+    g_SpectateModeEnabled = (pPlayer != g_pLocalPlayer);
     g_SpectateModeTarget = pPlayer;
 
     KillLocalPlayer();
@@ -97,7 +97,7 @@ static void SpectateNextPlayer(bool bDir, bool bTryAlivePlayersFirst = false)
     if (g_SpectateModeEnabled)
         pNewTarget = g_SpectateModeTarget;
     else
-        pNewTarget = *g_ppLocalPlayer;
+        pNewTarget = g_pLocalPlayer;
     while (true)
     {
         pNewTarget = bDir ? pNewTarget->pNext : pNewTarget->pPrev;
@@ -105,7 +105,7 @@ static void SpectateNextPlayer(bool bDir, bool bTryAlivePlayersFirst = false)
             break; // nothing found
         if (bTryAlivePlayersFirst && IsPlayerEntityInvalid(pNewTarget))
             continue;
-        if (pNewTarget != *g_ppLocalPlayer)
+        if (pNewTarget != g_pLocalPlayer)
         {
             SpectateModeSetTargetPlayer(pNewTarget);
             return;
@@ -141,9 +141,9 @@ static void HandleCtrlInGameHook(CPlayer *pPlayer, EGameCtrl KeyId, char WasPres
     }
     else if (!g_SpectateModeEnabled)
     {
-        if (KeyId == GC_JUMP && WasPressed && IsPlayerEntityInvalid(*g_ppLocalPlayer))
+        if (KeyId == GC_JUMP && WasPressed && IsPlayerEntityInvalid(g_pLocalPlayer))
         {
-            SpectateModeSetTargetPlayer(*g_ppLocalPlayer);
+            SpectateModeSetTargetPlayer(g_pLocalPlayer);
             SpectateNextPlayer(true, true);
             return;
         }
@@ -213,9 +213,9 @@ static void PlayerFpgunRender_New(CPlayer *pPlayer)
         EntityObj *pEntity = EntityGetFromHandle(g_SpectateModeTarget->hEntity);
 
         // HACKFIX: RF uses function PlayerSetRemoteChargeVisible for local player only
-        g_SpectateModeTarget->WeaponInfo.RemoteChargeVisible = (pEntity && pEntity->WeaponInfo.WeaponClsId == *g_pRemoteChargeClsId);
+        g_SpectateModeTarget->WeaponInfo.RemoteChargeVisible = (pEntity && pEntity->WeaponInfo.WeaponClsId == g_RemoteChargeClsId);
 
-        if (g_SpectateModeTarget != *g_ppLocalPlayer && pEntity)
+        if (g_SpectateModeTarget != g_pLocalPlayer && pEntity)
         {
             static CVector3 vOldVel;
             CVector3 vVelDiff = pEntity->_Super.PhysInfo.vVel - vOldVel;
@@ -228,8 +228,8 @@ static void PlayerFpgunRender_New(CPlayer *pPlayer)
 
         if (g_SpectateModeTarget->WeaponInfo.bInScopeView)
             g_SpectateModeTarget->WeaponInfo.fScopeZoom = 2.0f;
-        (*g_ppLocalPlayer)->WeaponInfo.bInScopeView = g_SpectateModeTarget->WeaponInfo.bInScopeView;
-        (*g_ppLocalPlayer)->WeaponInfo.fScopeZoom = g_SpectateModeTarget->WeaponInfo.fScopeZoom;
+        (g_pLocalPlayer)->WeaponInfo.bInScopeView = g_SpectateModeTarget->WeaponInfo.bInScopeView;
+        (g_pLocalPlayer)->WeaponInfo.fScopeZoom = g_SpectateModeTarget->WeaponInfo.fScopeZoom;
 
         PlayerFpgunUpdateMesh(g_SpectateModeTarget);
         PlayerFpgunRender(g_SpectateModeTarget);
@@ -241,7 +241,7 @@ static void PlayerFpgunRender_New(CPlayer *pPlayer)
 void PlayerFpgunUpdateState_New(CPlayer *pPlayer)
 {
     PlayerFpgunUpdateState_Hook.callTrampoline(pPlayer);
-    if (pPlayer != *g_ppLocalPlayer)
+    if (pPlayer != g_pLocalPlayer)
     {
         EntityObj *pEntity = EntityGetFromHandle(pPlayer->hEntity);
         if (pEntity)
@@ -315,17 +315,17 @@ void SpectateModeInit()
 
 void SpectateModeAfterFullGameInit()
 {
-    g_SpectateModeTarget = *g_ppLocalPlayer;
+    g_SpectateModeTarget = g_pLocalPlayer;
 }
 
 void SpectateModeDrawUI()
 {
     if (!g_SpectateModeEnabled)
     {
-        if (IsPlayerEntityInvalid(*g_ppLocalPlayer))
+        if (IsPlayerEntityInvalid(g_pLocalPlayer))
         {
             GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
-            GrDrawAlignedText(GR_ALIGN_LEFT, 20, 200, "Press JUMP key to enter Spectate Mode", -1, *g_pGrTextMaterial);
+            GrDrawAlignedText(GR_ALIGN_LEFT, 20, 200, "Press JUMP key to enter Spectate Mode", -1, g_GrTextMaterial);
         }
         return;
     }
@@ -344,22 +344,22 @@ void SpectateModeDrawUI()
     unsigned cyFont = GrGetFontHeight(-1);
 
     GrSetColor(0, 0, 0, 0x80);
-    GrDrawAlignedText(GR_ALIGN_CENTER, cxScr / 2 + 2, 150 + 2, "SPECTATE MODE", g_LargeFont, *g_pGrTextMaterial);
+    GrDrawAlignedText(GR_ALIGN_CENTER, cxScr / 2 + 2, 150 + 2, "SPECTATE MODE", g_LargeFont, g_GrTextMaterial);
     GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
-    GrDrawAlignedText(GR_ALIGN_CENTER, cxScr / 2, 150, "SPECTATE MODE", g_LargeFont, *g_pGrTextMaterial);
+    GrDrawAlignedText(GR_ALIGN_CENTER, cxScr / 2, 150, "SPECTATE MODE", g_LargeFont, g_GrTextMaterial);
 
     GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
-    GrDrawAlignedText(GR_ALIGN_LEFT, 20, 200, "Press JUMP key to exit Spectate Mode", g_MediumFont, *g_pGrTextMaterial);
-    GrDrawAlignedText(GR_ALIGN_LEFT, 20, 215, "Press PRIMARY ATTACK key to switch to the next player", g_MediumFont, *g_pGrTextMaterial);
-    GrDrawAlignedText(GR_ALIGN_LEFT, 20, 230, "Press SECONDARY ATTACK key to switch to the previous player", g_MediumFont, *g_pGrTextMaterial);
+    GrDrawAlignedText(GR_ALIGN_LEFT, 20, 200, "Press JUMP key to exit Spectate Mode", g_MediumFont, g_GrTextMaterial);
+    GrDrawAlignedText(GR_ALIGN_LEFT, 20, 215, "Press PRIMARY ATTACK key to switch to the next player", g_MediumFont, g_GrTextMaterial);
+    GrDrawAlignedText(GR_ALIGN_LEFT, 20, 230, "Press SECONDARY ATTACK key to switch to the previous player", g_MediumFont, g_GrTextMaterial);
 
     GrSetColor(0, 0, 0x00, 0x60);
-    GrDrawRect(x, y, cx, cy, *g_pGrRectMaterial);
+    GrDrawRect(x, y, cx, cy, g_GrRectMaterial);
 
     char szBuf[256];
     GrSetColor(0xFF, 0xFF, 0, 0x80);
     snprintf(szBuf, sizeof(szBuf), "Spectating: %s", CString_CStr(&g_SpectateModeTarget->strName));
-    GrDrawAlignedText(GR_ALIGN_CENTER, x + cx / 2, y + cy / 2 - cyFont / 2 - 5, szBuf, g_LargeFont, *g_pGrTextMaterial);
+    GrDrawAlignedText(GR_ALIGN_CENTER, x + cx / 2, y + cy / 2 - cyFont / 2 - 5, szBuf, g_LargeFont, g_GrTextMaterial);
 
     EntityObj *pEntity = EntityGetFromHandle(g_SpectateModeTarget->hEntity);
     if (!pEntity)
@@ -369,12 +369,12 @@ void SpectateModeDrawUI()
         int BloodW, BloodH;
         BmGetBitmapSize(BloodBm, &BloodW, &BloodH);
         GrDrawBitmapStretched(BloodBm, (cxScr - BloodW*2) / 2, (cySrc - BloodH*2) / 2, BloodW * 2 , BloodH * 2, 
-            0, 0, BloodW, BloodH, 0.0f, 0.0f, *g_pGrBitmapMaterial);
+            0, 0, BloodW, BloodH, 0.0f, 0.0f, g_GrBitmapMaterial);
 
         GrSetColor(0, 0, 0, 0x80);
-        GrDrawAlignedText(GR_ALIGN_CENTER, cxScr / 2 + 2, cySrc / 2 + 2, "DEAD", g_LargeFont, *g_pGrTextMaterial);
+        GrDrawAlignedText(GR_ALIGN_CENTER, cxScr / 2 + 2, cySrc / 2 + 2, "DEAD", g_LargeFont, g_GrTextMaterial);
         GrSetColor(0xF0, 0x20, 0x10, 0xC0);
-        GrDrawAlignedText(GR_ALIGN_CENTER, cxScr / 2, cySrc / 2, "DEAD", g_LargeFont, *g_pGrTextMaterial);
+        GrDrawAlignedText(GR_ALIGN_CENTER, cxScr / 2, cySrc / 2, "DEAD", g_LargeFont, g_GrTextMaterial);
     }
 }
 

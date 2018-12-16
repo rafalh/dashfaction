@@ -15,17 +15,17 @@ static bool g_GammaRampInitialized = false;
 static void SetGammaRamp(D3DGAMMARAMP *pGammaRamp)
 {
 #if 0 // Note: D3D Gamma Ramp doesn't work in windowed mode
-    if (*g_ppGrDevice)
-        IDirect3DDevice8_SetGammaRamp(*g_ppGrDevice, D3DSGR_NO_CALIBRATION, pGammaRamp);
+    if (g_pGrDevice)
+        IDirect3DDevice8_SetGammaRamp(g_pGrDevice, D3DSGR_NO_CALIBRATION, pGammaRamp);
 #else
     HDC hdc;
 
-    hdc = GetDC(*g_phWnd);
+    hdc = GetDC(g_hWnd);
     if (hdc)
     {
         if (!SetDeviceGammaRamp(hdc, pGammaRamp))
             ERR("SetDeviceGammaRamp failed %lu", GetLastError());
-        ReleaseDC(*g_phWnd, hdc);
+        ReleaseDC(g_hWnd, hdc);
     }
     else
         ERR("GetDC failed");

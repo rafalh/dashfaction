@@ -8,9 +8,9 @@ using namespace rf;
 
 void BanCmdHandlerHook()
 {
-    if (*g_pbNetworkGame && *g_pbLocalNetworkGame)
+    if (g_bNetworkGame && g_bLocalNetworkGame)
     {
-        if (*g_pbDcRun)
+        if (g_bDcRun)
         {
             CPlayer *pPlayer;
             
@@ -18,7 +18,7 @@ void BanCmdHandlerHook()
             pPlayer = FindBestMatchingPlayer(g_pszDcArg);
             if (pPlayer)
             {
-                if (pPlayer != *g_ppLocalPlayer)
+                if (pPlayer != g_pLocalPlayer)
                 {
                     DcPrintf(g_ppszStringsTable[959], pPlayer->strName.psz);
                     BanIp(&(pPlayer->pNwData->Addr));
@@ -28,7 +28,7 @@ void BanCmdHandlerHook()
             }
         }
         
-        if (*g_pbDcHelp)
+        if (g_bDcHelp)
         {
             DcPrint(g_ppszStringsTable[STR_USAGE], NULL);
             DcPrintf("     ban <%s>", g_ppszStringsTable[STR_PLAYER_NAME]);
@@ -38,9 +38,9 @@ void BanCmdHandlerHook()
 
 void KickCmdHandlerHook()
 {
-    if (*g_pbNetworkGame && *g_pbLocalNetworkGame)
+    if (g_bNetworkGame && g_bLocalNetworkGame)
     {
-        if (*g_pbDcRun)
+        if (g_bDcRun)
         {
             rf::CPlayer *pPlayer;
             
@@ -48,7 +48,7 @@ void KickCmdHandlerHook()
             pPlayer = FindBestMatchingPlayer(g_pszDcArg);
             if (pPlayer)
             {
-                if (pPlayer != *g_ppLocalPlayer)
+                if (pPlayer != g_pLocalPlayer)
                 {
                     DcPrintf(g_ppszStringsTable[STR_KICKING_PLAYER], pPlayer->strName.psz);
                     KickPlayer(pPlayer);
@@ -57,7 +57,7 @@ void KickCmdHandlerHook()
             }
         }
         
-        if (*g_pbDcHelp)
+        if (g_bDcHelp)
         {
             DcPrint(g_ppszStringsTable[STR_USAGE], NULL);
             DcPrintf("     kick <%s>", g_ppszStringsTable[STR_PLAYER_NAME]);
@@ -67,10 +67,10 @@ void KickCmdHandlerHook()
 
 void UnbanLastCmdHandler(void)
 {
-    if (*g_pbNetworkGame && *g_pbLocalNetworkGame && *g_pbDcRun)
+    if (g_bNetworkGame && g_bLocalNetworkGame && g_bDcRun)
     {
-        BanlistEntry *pEntry = *g_ppBanlistLastEntry;
-        if (pEntry != g_pBanlistNullEntry)
+        BanlistEntry *pEntry = g_pBanlistLastEntry;
+        if (pEntry != &g_BanlistNullEntry)
         {
             DcPrintf("%s has been unbanned!", pEntry->szIp);
             pEntry->pNext->pPrev = pEntry->pPrev;

@@ -248,19 +248,19 @@ static void RenderEntityHook(EntityObj *pEntity)
 { // TODO
     DWORD dwOldLightining;
     GrFlushBuffers();
-    IDirect3DDevice8_GetRenderState(*g_ppGrDevice, D3DRS_LIGHTING, &dwOldLightining);
-    IDirect3DDevice8_SetRenderState(*g_ppGrDevice, D3DRS_LIGHTING, 1);
-    IDirect3DDevice8_SetRenderState(*g_ppGrDevice, D3DRS_AMBIENT, 0xFFFFFFFF);
+    IDirect3DDevice8_GetRenderState(g_pGrDevice, D3DRS_LIGHTING, &dwOldLightining);
+    IDirect3DDevice8_SetRenderState(g_pGrDevice, D3DRS_LIGHTING, 1);
+    IDirect3DDevice8_SetRenderState(g_pGrDevice, D3DRS_AMBIENT, 0xFFFFFFFF);
 
     RfRenderEntity((CObject*)pEntity);
     GrFlushBuffers();
-    //IDirect3DDevice8_SetRenderState(*g_ppGrDevice, D3DRS_LIGHTING, dwOldLightining);
+    //IDirect3DDevice8_SetRenderState(g_pGrDevice, D3DRS_LIGHTING, dwOldLightining);
 }
 #endif
 
 static void TestCmdHandler(void)
 {
-    if (*rf::g_pbDcRun)
+    if (rf::g_bDcRun)
     {
         //RfCmdGetNextArg(CMD_ARG_FLOAT, 0);
         //*((float*)0x017C7BD8) = *g_pfCmdArg;
@@ -270,7 +270,7 @@ static void TestCmdHandler(void)
         //DcPrintf("test done %p", ptr);
     }
 
-    if (*rf::g_pbDcHelp)
+    if (rf::g_bDcHelp)
         rf::DcPrintf("     test <n>", NULL);
 }
 
@@ -283,26 +283,26 @@ bool g_InSetViewForScene = false;
 void GrSetViewMatrixHook(CMatrix3 *pMatRot, CVector3 *pPos, float Fov, int bClearZBuffer, int a5)
 {
     D3DRECT rc[2] = { { 0, 0, 1680, 1 },{ 0, 0, 1, 1050 } };
-    //(*rf::g_ppGrDevice)->Clear(1, &rc[1], D3DCLEAR_TARGET, 0xFF0000FF, 1.0f, 0);
+    //(rf::g_pGrDevice)->Clear(1, &rc[1], D3DCLEAR_TARGET, 0xFF0000FF, 1.0f, 0);
     g_InSetViewForScene = true;
     GrSetViewMatrix(pMatRot, pPos, Fov, bClearZBuffer, a5);
     g_InSetViewForScene = false;
-    //(*rf::g_ppGrDevice)->Clear(1, &rc[1], D3DCLEAR_ZBUFFER, 0, 0.0f, 0);
+    //(rf::g_pGrDevice)->Clear(1, &rc[1], D3DCLEAR_ZBUFFER, 0, 0.0f, 0);
 }
 
 void Test_GrClearZBuffer_SetRect()
 {
     if (g_InSetViewForScene)
     {
-        //(*rf::g_ppGrDevice)->Clear(0, NULL, D3DCLEAR_ZBUFFER, 0xFF00FF00, 1.0f, 0);
+        //(rf::g_pGrDevice)->Clear(0, NULL, D3DCLEAR_ZBUFFER, 0xFF00FF00, 1.0f, 0);
 
         D3DRECT rc[2] = { { 0, 0, 1680, 1 },{ 0, 0, 1, 1050 } };
-        /*(*rf::g_ppGrDevice)->Clear(0, NULL, D3DCLEAR_TARGET, 0xFFFF0000, 1.0f, 0);
-        (*rf::g_ppGrDevice)->Clear(1, &rc, D3DCLEAR_TARGET| D3DCLEAR_ZBUFFER, 0xFFFF0000, 1.0f, 0);*/
-        //(*rf::g_ppGrDevice)->Clear(1, &rc[1], D3DCLEAR_ZBUFFER, 0, 1.0f, 0);
+        /*(rf::g_pGrDevice)->Clear(0, NULL, D3DCLEAR_TARGET, 0xFFFF0000, 1.0f, 0);
+        (rf::g_pGrDevice)->Clear(1, &rc, D3DCLEAR_TARGET| D3DCLEAR_ZBUFFER, 0xFFFF0000, 1.0f, 0);*/
+        //(rf::g_pGrDevice)->Clear(1, &rc[1], D3DCLEAR_ZBUFFER, 0, 1.0f, 0);
         //GrSetColor(0, 255, 0, 255);
-        //GrDrawRect(0, 0, g_pGrScreen->MaxWidth, g_pGrScreen->MaxHeight, *g_pGrRectMaterial);
-        //g_pGrScreen->field_8C = 1;
+        //GrDrawRect(0, 0, g_GrScreen.MaxWidth, g_GrScreen.MaxHeight, g_GrRectMaterial);
+        //g_GrScreen.field_8C = 1;
     }
 
     *(int*)0x00637090 = 1;
@@ -310,7 +310,7 @@ void Test_GrClearZBuffer_SetRect()
 
 void FogClearHook()
 {
-    (*rf::g_ppGrDevice)->Clear(0, NULL, D3DCLEAR_TARGET, 0xFFFF0000, 1.0f, 0);
+    (rf::g_pGrDevice)->Clear(0, NULL, D3DCLEAR_TARGET, 0xFFFF0000, 1.0f, 0);
     
 #if 0
     *(float*)0x01818B58 += 0.5f; // g_fGrHalfViewportWidth_0
@@ -322,8 +322,8 @@ void FogClearHook()
     // Left and top edge fix for MSAA (RF does similar thing in GrDrawTextureD3D)
     static float OffsetGeomX = -0.5;
     static float OffsetGeomY = -0.5;
-    OffsetGeomX = g_pGrScreen->OffsetX - 0.5f;
-    OffsetGeomY = g_pGrScreen->OffsetY - 0.5f;
+    OffsetGeomX = g_GrScreen.OffsetX - 0.5f;
+    OffsetGeomY = g_GrScreen.OffsetY - 0.5f;
     *(float*)0x01818B54 -= 0.5f; // viewport center x
     *(float*)0x01818B5C -= 0.5f; // viewport center y
 
@@ -614,7 +614,7 @@ void TestRender()
 {
     char Buffer[256];
     int x = 50, y = 200;
-    EntityObj *pEntity = rf::EntityGetFromHandle((*g_ppLocalPlayer)->hEntity);
+    EntityObj *pEntity = g_pLocalPlayer ? rf::EntityGetFromHandle(g_pLocalPlayer->hEntity) : nullptr;
     rf::GrSetColor(255, 255, 255, 255);
     //MemReference<float, 0x005A4014> FrameTime;
     auto &FrameTime = *(float*)0x005A4014;
@@ -622,26 +622,26 @@ void TestRender()
     if (pEntity)
     {
         sprintf(Buffer, "Flags 0x%X", pEntity->_Super.Flags);
-        GrDrawText(x, y, Buffer, -1, *rf::g_pGrTextMaterial);
+        GrDrawText(x, y, Buffer, -1, rf::g_GrTextMaterial);
         y += 15;
         sprintf(Buffer, "PhysInfo Flags 0x%X", pEntity->_Super.PhysInfo.Flags);
-        GrDrawText(x, y, Buffer, -1, *rf::g_pGrTextMaterial);
+        GrDrawText(x, y, Buffer, -1, rf::g_GrTextMaterial);
         y += 15;
         sprintf(Buffer, "MovementMode 0x%X", pEntity->MovementMode->Id);
-        GrDrawText(x, y, Buffer, -1, *rf::g_pGrTextMaterial);
+        GrDrawText(x, y, Buffer, -1, rf::g_GrTextMaterial);
         y += 15;
         sprintf(Buffer, "pEntity 0x%p", pEntity);
-        GrDrawText(x, y, Buffer, -1, *rf::g_pGrTextMaterial);
+        GrDrawText(x, y, Buffer, -1, rf::g_GrTextMaterial);
         y += 15;
         sprintf(Buffer, "framerate %f", FrameTime);
-        GrDrawText(x, y, Buffer, -1, *rf::g_pGrTextMaterial);
+        GrDrawText(x, y, Buffer, -1, rf::g_GrTextMaterial);
         y += 15;
         static const auto *g_pAppTimeMs = (int*)0x5A3ED8;
         sprintf(Buffer, "AppTimeMs %d", *g_pAppTimeMs);
-        GrDrawText(x, y, Buffer, -1, *rf::g_pGrTextMaterial);
+        GrDrawText(x, y, Buffer, -1, rf::g_GrTextMaterial);
         y += 15;
         sprintf(Buffer, "WeaponClsId %d", pEntity->WeaponInfo.WeaponClsId);
-        GrDrawText(x, y, Buffer, -1, *rf::g_pGrTextMaterial);
+        GrDrawText(x, y, Buffer, -1, rf::g_GrTextMaterial);
         y += 15;
     }
 }

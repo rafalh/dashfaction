@@ -39,7 +39,7 @@ void DrawScoreboardInternal_New(bool bDraw)
     
     // Sort players by score
     CPlayer *Players[32];
-    CPlayer *pPlayer = *g_ppPlayersList;
+    CPlayer *pPlayer = g_pPlayersList;
     unsigned cPlayers = 0;
     while (cPlayers < 32)
     {
@@ -50,7 +50,7 @@ void DrawScoreboardInternal_New(bool bDraw)
             ++cRightCol;
             
         pPlayer = pPlayer->pNext;
-        if (!pPlayer || pPlayer == *g_ppPlayersList)
+        if (!pPlayer || pPlayer == g_pPlayersList)
             break;
     }
     qsort(Players, cPlayers, sizeof(CPlayer*), ScoreboardSortFunc);
@@ -88,7 +88,7 @@ void DrawScoreboardInternal_New(bool bDraw)
     unsigned y = (GrGetViewportHeight() - cy) / 2;
     unsigned xCenter = x + cx / 2;
     GrSetColor(0, 0, 0, 0x80);
-    GrDrawRect(x, y, cx, cy, *g_pGrRectMaterial);
+    GrDrawRect(x, y, cx, cy, g_GrRectMaterial);
     y += 10;
 
     if (fProgressH < 1.0f || fProgressW < 1.0f)
@@ -97,7 +97,7 @@ void DrawScoreboardInternal_New(bool bDraw)
     // Draw RF logo
     GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
     static int ScoreRflogoBm = BmLoad("score_rflogo.tga", -1, TRUE);
-    GrDrawImage(ScoreRflogoBm, xCenter - 170, y, *g_pGrImageMaterial);
+    GrDrawImage(ScoreRflogoBm, xCenter - 170, y, g_GrImageMaterial);
     y += 30;
     
     // Draw Game Type name
@@ -108,28 +108,28 @@ void DrawScoreboardInternal_New(bool bDraw)
         pszGameTypeName = g_ppszStringsTable[975];
     else
         pszGameTypeName = g_ppszStringsTable[976];
-    GrDrawAlignedText(GR_ALIGN_CENTER, xCenter, y, pszGameTypeName, *g_pMediumFontId, *g_pGrTextMaterial);
+    GrDrawAlignedText(GR_ALIGN_CENTER, xCenter, y, pszGameTypeName, g_MediumFontId, g_GrTextMaterial);
     y += 20;
 
     // Draw level
     GrSetColor(0xB0, 0xB0, 0xB0, 0xFF);
-    sprintf(szBuf, "%s (%s) by %s", CString_CStr(g_pstrLevelName), CString_CStr(g_pstrLevelFilename), CString_CStr(g_pstrLevelAuthor));
+    sprintf(szBuf, "%s (%s) by %s", CString_CStr(&g_strLevelName), CString_CStr(&g_strLevelFilename), CString_CStr(&g_strLevelAuthor));
     CString strLevelInfo, strLevelInfoNew;
     CString_Init(&strLevelInfo, szBuf);
     GrFitText(&strLevelInfoNew, strLevelInfo, cx - 20); // Note: this destroys input string
-    GrDrawAlignedText(GR_ALIGN_CENTER, xCenter, y, CString_CStr(&strLevelInfoNew), -1, *g_pGrTextMaterial);
+    GrDrawAlignedText(GR_ALIGN_CENTER, xCenter, y, CString_CStr(&strLevelInfoNew), -1, g_GrTextMaterial);
     CString_Destroy(&strLevelInfoNew);
     y += 15;
 
     // Draw server info
-    unsigned i = sprintf(szBuf, "%s (", CString_CStr(g_pstrServName));
-    NwAddrToStr(szBuf + i, sizeof(szBuf) - i, g_pServAddr);
+    unsigned i = sprintf(szBuf, "%s (", CString_CStr(&g_strServName));
+    NwAddrToStr(szBuf + i, sizeof(szBuf) - i, &g_ServAddr);
     i += strlen(szBuf + i);
     sprintf(szBuf + i, ")");
     CString strServerInfo, strServerInfoNew;
     CString_Init(&strServerInfo, szBuf);
     GrFitText(&strServerInfoNew, strServerInfo, cx - 20); // Note: this destroys input string
-    GrDrawAlignedText(GR_ALIGN_CENTER, xCenter, y, CString_CStr(&strServerInfoNew), -1, *g_pGrTextMaterial);
+    GrDrawAlignedText(GR_ALIGN_CENTER, xCenter, y, CString_CStr(&strServerInfoNew), -1, g_GrTextMaterial);
     CString_Destroy(&strServerInfoNew);
     y += 20;
     
@@ -139,8 +139,8 @@ void DrawScoreboardInternal_New(bool bDraw)
     {
         static int HudFlagRedBm = BmLoad("hud_flag_red.tga", -1, TRUE);
         static int HudFlagBlueBm = BmLoad("hud_flag_blue.tga", -1, TRUE);
-        GrDrawImage(HudFlagRedBm, x + cx * 2 / 6, y, *g_pGrImageMaterial);
-        GrDrawImage(HudFlagBlueBm, x + cx * 4 / 6, y, *g_pGrImageMaterial);
+        GrDrawImage(HudFlagRedBm, x + cx * 2 / 6, y, g_GrImageMaterial);
+        GrDrawImage(HudFlagBlueBm, x + cx * 4 / 6, y, g_GrImageMaterial);
         RedScore = CtfGetRedScore();
         BlueScore = CtfGetBlueScore();
     }
@@ -154,10 +154,10 @@ void DrawScoreboardInternal_New(bool bDraw)
     {
         GrSetColor(0xD0, 0x20, 0x20, 0xFF);
         sprintf(szBuf, "%u", RedScore);
-        GrDrawAlignedText(GR_ALIGN_CENTER, x + cx * 1 / 6, y, szBuf, *g_pBigFontId, *g_pGrTextMaterial);
+        GrDrawAlignedText(GR_ALIGN_CENTER, x + cx * 1 / 6, y, szBuf, g_BigFontId, g_GrTextMaterial);
         GrSetColor(0x20, 0x20, 0xD0, 0xFF);
         sprintf(szBuf, "%u", BlueScore);
-        GrDrawAlignedText(GR_ALIGN_CENTER, x + cx * 5 / 6, y, szBuf, *g_pBigFontId, *g_pGrTextMaterial);
+        GrDrawAlignedText(GR_ALIGN_CENTER, x + cx * 5 / 6, y, szBuf, g_BigFontId, g_GrTextMaterial);
         y += 60;
     }
     
@@ -177,26 +177,26 @@ void DrawScoreboardInternal_New(bool bDraw)
         xCol += 12;
 
         ColOffsets[i].Name = xCol;
-        GrDrawText(xCol, y, g_ppszStringsTable[STR_PLAYER], -1, *g_pGrTextMaterial);
+        GrDrawText(xCol, y, g_ppszStringsTable[STR_PLAYER], -1, g_GrTextMaterial);
         xCol += cxNameMax;
 
         ColOffsets[i].Score = xCol;
-        GrDrawText(xCol, y, g_ppszStringsTable[STR_SCORE], -1, *g_pGrTextMaterial); // Note: RF uses "Frags"
+        GrDrawText(xCol, y, g_ppszStringsTable[STR_SCORE], -1, g_GrTextMaterial); // Note: RF uses "Frags"
         xCol += 50;
 
         ColOffsets[i].KillsDeaths = xCol;
-        GrDrawText(xCol, y, "K/D", -1, *g_pGrTextMaterial);
+        GrDrawText(xCol, y, "K/D", -1, g_GrTextMaterial);
         xCol += 70;
 
         if (GameType == RF_CTF)
         {
             ColOffsets[i].CtfFlags = xCol;
-            GrDrawText(xCol, y, g_ppszStringsTable[STR_CAPS], -1, *g_pGrTextMaterial);
+            GrDrawText(xCol, y, g_ppszStringsTable[STR_CAPS], -1, g_GrTextMaterial);
             xCol += 50;
         }
 
         ColOffsets[i].Ping = xCol;
-        GrDrawText(xCol, y, g_ppszStringsTable[STR_PING], -1, *g_pGrTextMaterial);
+        GrDrawText(xCol, y, g_ppszStringsTable[STR_PING], -1, g_GrTextMaterial);
     }
     y += 20;
     
@@ -214,7 +214,7 @@ void DrawScoreboardInternal_New(bool bDraw)
         int RowY = y + SectCounter[SectIdx] * ROW_H;
         ++SectCounter[SectIdx];
         
-        if (pPlayer == *g_ppPlayersList) // local player
+        if (pPlayer == g_pPlayersList) // local player
             GrSetColor(0xFF, 0xFF, 0x80, 0xFF);
         else
             GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
@@ -229,42 +229,42 @@ void DrawScoreboardInternal_New(bool bDraw)
             StatusBm = HudMicroFlagRedBm;
         else if (pPlayer == pBlueFlagPlayer)
             StatusBm = HudMicroFlagBlueBm;
-        GrDrawImage(StatusBm, Offsets.StatusBm, RowY + 2, *g_pGrImageMaterial);
+        GrDrawImage(StatusBm, Offsets.StatusBm, RowY + 2, g_GrImageMaterial);
 
         CString strName, strNameNew;
         CString_InitFromStr(&strName, &pPlayer->strName);
         GrFitText(&strNameNew, strName, cxNameMax - 10); // Note: this destroys strName
-        GrDrawText(Offsets.Name, RowY, CString_CStr(&strNameNew), -1, *g_pGrTextMaterial);
+        GrDrawText(Offsets.Name, RowY, CString_CStr(&strNameNew), -1, g_GrTextMaterial);
         CString_Destroy(&strNameNew);
         
         auto pStats = (PlayerStatsNew*)pPlayer->pStats;
         sprintf(szBuf, "%hd", pStats->iScore);
-        GrDrawText(Offsets.Score, RowY, szBuf, -1, *g_pGrTextMaterial);
+        GrDrawText(Offsets.Score, RowY, szBuf, -1, g_GrTextMaterial);
 
         sprintf(szBuf, "%hd/%hd", pStats->cKills, pStats->cDeaths);
-        GrDrawText(Offsets.KillsDeaths, RowY, szBuf, -1, *g_pGrTextMaterial);
+        GrDrawText(Offsets.KillsDeaths, RowY, szBuf, -1, g_GrTextMaterial);
         
         if (GameType == RF_CTF)
         {
             sprintf(szBuf, "%hu", pStats->cCaps);
-            GrDrawText(Offsets.CtfFlags, RowY, szBuf, -1, *g_pGrTextMaterial);
+            GrDrawText(Offsets.CtfFlags, RowY, szBuf, -1, g_GrTextMaterial);
         }
         
         if (pPlayer->pNwData)
         {
             sprintf(szBuf, "%hu", pPlayer->pNwData->dwPing);
-            GrDrawText(Offsets.Ping, RowY, szBuf, -1, *g_pGrTextMaterial);
+            GrDrawText(Offsets.Ping, RowY, szBuf, -1, g_GrTextMaterial);
         }
     }
 }
 
 void HudRender_00437BC0()
 {
-    if (!*g_pbNetworkGame || !*g_ppLocalPlayer)
+    if (!g_bNetworkGame || !g_pLocalPlayer)
         return;
 
-    bool bShowScoreboard = (IsEntityCtrlActive(&(*g_ppLocalPlayer)->Config.Controls, GC_MP_STATS, 0) ||
-        (!SpectateModeIsActive() && (IsPlayerEntityInvalid(*g_ppLocalPlayer) || IsPlayerDying(*g_ppLocalPlayer))) ||
+    bool bShowScoreboard = (IsEntityCtrlActive(&(g_pLocalPlayer)->Config.Controls, GC_MP_STATS, 0) ||
+        (!SpectateModeIsActive() && (IsPlayerEntityInvalid(g_pLocalPlayer) || IsPlayerDying(g_pLocalPlayer))) ||
         GetCurrentMenuId() == MENU_MP_LIMBO);
 
     if (g_gameConfig.scoreboardAnim)

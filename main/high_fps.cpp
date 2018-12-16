@@ -69,7 +69,7 @@ void NAKED ftol_Timer()
 
 void STDCALL EntityWaterDecelerateFix(rf::EntityObj *pEntity)
 {
-    float fVelFactor = 1.0f - (*rf::g_pfFramerate * 4.5f);
+    float fVelFactor = 1.0f - (rf::g_fFramerate * 4.5f);
     pEntity->_Super.PhysInfo.vVel.x *= fVelFactor;
     pEntity->_Super.PhysInfo.vVel.y *= fVelFactor;
     pEntity->_Super.PhysInfo.vVel.z *= fVelFactor;
@@ -80,9 +80,9 @@ void WaterAnimateWaves_UpdatePos(rf::CVector3 *pResult)
     constexpr float flt_5A3BF4 = 12.8f;
     constexpr float flt_5A3C00 = 3.878788f;
     constexpr float flt_5A3C0C = 4.2666669f;
-    pResult->x += flt_5A3BF4 * (*rf::g_pfFramerate) / REF_FRAMERATE;
-    pResult->y += flt_5A3C0C * (*rf::g_pfFramerate) / REF_FRAMERATE;
-    pResult->z += flt_5A3C00 * (*rf::g_pfFramerate) / REF_FRAMERATE;
+    pResult->x += flt_5A3BF4 * (rf::g_fFramerate) / REF_FRAMERATE;
+    pResult->y += flt_5A3C0C * (rf::g_fFramerate) / REF_FRAMERATE;
+    pResult->z += flt_5A3C00 * (rf::g_fFramerate) / REF_FRAMERATE;
 }
 
 #ifndef __GNUC__ // FIXME
@@ -164,7 +164,7 @@ void HighFpsInit()
 
 void HighFpsUpdate()
 {
-    float fFrameTime = *rf::g_pfFramerate;
+    float fFrameTime = rf::g_fFramerate;
     if (fFrameTime > 0.0001f)
     {
         // Make jump fix framerate dependent to fix bouncing on small FPS
