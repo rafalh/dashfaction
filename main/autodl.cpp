@@ -14,6 +14,7 @@ using namespace rf;
 static unsigned g_LevelTicketId;
 static unsigned g_cbLevelSize, g_cbDownloadProgress;
 static BOOL g_bDownloadActive = FALSE;
+static bool g_bExitGameFromMulti = false;
 
 bool UnzipVpp(const char *pszPath)
 {
@@ -171,13 +172,14 @@ bool UnrarVpp(const char *pszPath)
     return bRet;
 }
 
-static DWORD WINAPI DownloadLevelThread(PVOID pParam)
+static bool FetchLevelFile(const char *TmpFileName)
 {
     HINTERNET hInternet = NULL, hConnect = NULL, hRequest = NULL;
-    char buf[4096], szTmpName[L_tmpnam];
+    char buf[4096];
     LPCTSTR AcceptTypes[] = {TEXT("*/*"), NULL};
     DWORD dwStatus = 0, dwSize = sizeof(DWORD), dwBytesRead;
     FILE *pTmpFile;
+    bool Success = false;
 
     hInternet = InternetOpen(AUTODL_AGENT_NAME, 0, NULL, NULL, 0);
     if (!hInternet)
@@ -210,11 +212,10 @@ static DWORD WINAPI DownloadLevelThread(PVOID pParam)
         goto cleanup;
     }
 
-    tmpnam(szTmpName);
-    pTmpFile = fopen(szTmpName, "wb");
+    pTmpFile = fopen(TmpFileName, "wb");
     if (!pTmpFile)
     {
-        ERR("fopen failed");
+        ERR("fopen failed: %s", TmpFileName);
         goto cleanup;
     }
 
@@ -227,13 +228,7 @@ static DWORD WINAPI DownloadLevelThread(PVOID pParam)
     g_cbLevelSize = g_cbDownloadProgress;
 
     fclose(pTmpFile);
-
-    if (!UnzipVpp(szTmpName) && !UnrarVpp(szTmpName))
-        ERR("UnzipVpp and UnrarVpp failed");
-
-    remove(szTmpName);
-
-    g_bDownloadActive = FALSE;
+    Success = true;
 
 cleanup:
     if (hRequest)
@@ -242,6 +237,48 @@ cleanup:
         InternetCloseHandle(hConnect);
     if (hInternet)
         InternetCloseHandle(hInternet);
+
+    return Success;
+}
+
+static DWORD WINAPI DownloadLevelThread(PVOID pParam)
+{
+    char TempDir[MAX_PATH], TempFileName[MAX_PATH] = "";
+    LPCTSTR AcceptTypes[] = {TEXT("*/*"), NULL};
+    bool Success = false;
+
+    DWORD dwRetVal;
+    dwRetVal = GetTempPathA(_countof(TempDir), TempDir);
+    if (dwRetVal == 0 || dwRetVal > _countof(TempDir))
+    {
+        ERR("GetTempPath failed");
+        goto cleanup;
+    }
+
+    UINT uRetVal;
+    uRetVal = GetTempFileNameA(TempDir, "DF_Level", 0, TempFileName);
+    if (uRetVal == 0)
+    {
+        ERR("GetTempFileName failed");
+        goto cleanup;
+    }
+
+    if (!FetchLevelFile(TempFileName))
+        goto cleanup;
+
+    if (!UnzipVpp(TempFileName) && !UnrarVpp(TempFileName))
+        ERR("UnzipVpp and UnrarVpp failed");
+    else
+        Success = true;
+
+cleanup:
+    if (TempFileName[0])
+        remove(TempFileName);
+    
+    g_bDownloadActive = FALSE;
+    if (!Success)
+        rf::UiMsgBox("Error!", "Failed to download level file! More information can be found in console.", NULL, FALSE);
+
     return 0;
 }
 
@@ -249,33 +286,25 @@ static void DownloadLevel(void)
 {
     HANDLE hThread;
 
+    g_cbDownloadProgress = 0;
     hThread = CreateThread(NULL, 0, DownloadLevelThread, NULL, 0, NULL);
     if (hThread)
     {
         CloseHandle(hThread);
-        g_cbDownloadProgress = 0;
         g_bDownloadActive = TRUE;
     }
     else
         ERR("CreateThread failed");
 }
 
-BOOL TryToDownloadLevel(const char *pszFileName)
+static bool FetchLevelInfo(const char *pszFileName, char *OutBuf, size_t OutBufSize)
 {
     HINTERNET hInternet = NULL, hConnect = NULL, hRequest = NULL;
-    char szBuf[256], szMsgBuf[256], *pszName, *pszAuthor, *pszDescr, *pszSize, *pszTicketId, *pszEnd;
+    char szBuf[256];
     static LPCSTR AcceptTypes[] = {"*/*", NULL};
     static char szHeaders[] = "Content-Type: application/x-www-form-urlencoded";
     DWORD dwBytesRead, dwStatus = 0, dwSize = sizeof(DWORD);
-    BOOL bRet = FALSE;
-    const char *ppszBtnTitles[] = {"Cancel", "Download"};
-    void *ppfnCallbacks[] = {NULL, (void*)DownloadLevel};
-
-    if (g_bDownloadActive)
-    {
-        rf::UiMsgBox("Error!", "You can download only one level at once!", NULL, FALSE);
-        return FALSE;
-    }
+    bool bRet = false;
 
     hInternet = InternetOpen(AUTODL_AGENT_NAME, 0, NULL, NULL, 0);
     if (!hInternet)
@@ -311,41 +340,57 @@ BOOL TryToDownloadLevel(const char *pszFileName)
         goto cleanup;
     }
 
-    if (!InternetReadFile(hRequest, szBuf, sizeof(szBuf) - 1, &dwBytesRead))
+    if (!InternetReadFile(hRequest, OutBuf, OutBufSize - 1, &dwBytesRead))
     {
         ERR("InternetReadFile failed", NULL);
         goto cleanup;
     }
 
-    szBuf[dwBytesRead] = '\0';
+    OutBuf[dwBytesRead] = '\0';
+    bRet = true;
 
-    TRACE("Maps server response: %s", szBuf);
+cleanup:
+    if (hRequest)
+        InternetCloseHandle(hRequest);
+    if (hConnect)
+        InternetCloseHandle(hConnect);
+    if (hInternet)
+        InternetCloseHandle(hInternet);
+
+    return bRet;
+}
+
+static bool DisplayDownloadDialog(const char *szBuf)
+{
+    char szMsgBuf[256], *pszName, *pszAuthor, *pszDescr, *pszSize, *pszTicketId, *pszEnd;
+    const char *ppszBtnTitles[] = {"Cancel", "Download"};
+    void *ppfnCallbacks[] = {NULL, (void*)DownloadLevel};
 
     pszName = strchr(szBuf, '\n');
     if (!pszName)
-        goto cleanup;
+        return false;
     *(pszName++) = 0; // terminate first line with 0
     if (strcmp(szBuf, "found") != 0)
-        goto cleanup;
+        return false;
 
     pszAuthor = strchr(pszName, '\n');
     if (!pszAuthor) // terminate name with 0
-        goto cleanup;
+        return false;
     *(pszAuthor++) = 0;
 
     pszDescr = strchr(pszAuthor, '\n');
     if (!pszDescr)
-        goto cleanup;
+        return false;
     *(pszDescr++) = 0; // terminate author with 0
 
     pszSize = strchr(pszDescr, '\n');
     if (!pszSize)
-        goto cleanup;
+        return false;
     *(pszSize++) = 0; // terminate description with 0
 
     pszTicketId = strchr(pszSize, '\n');
     if (!pszTicketId)
-        goto cleanup;
+        return false;
     *(pszTicketId++) = 0; // terminate size with 0
 
     pszEnd = strchr(pszTicketId, '\n');
@@ -355,22 +400,39 @@ BOOL TryToDownloadLevel(const char *pszFileName)
     g_LevelTicketId = strtoul(pszTicketId, NULL, 0);
     g_cbLevelSize = (unsigned)(atof(pszSize) * 1024 * 1024);
     if (!g_LevelTicketId || !g_cbLevelSize)
-        goto cleanup;
+        return false;
 
     TRACE("Download ticket id: %u", g_LevelTicketId);
 
     sprintf(szMsgBuf, "You don't have needed level: %s (Author: %s, Size: %s MB)\nDo you want to download it now?", pszName, pszAuthor, pszSize);
     UiCreateDialog("Download level", szMsgBuf, 2, ppszBtnTitles, ppfnCallbacks, 0, 0);
-    bRet = TRUE;
+    return true;
+}
 
-cleanup:
-    if (hRequest)
-        InternetCloseHandle(hRequest);
-    if (hConnect)
-        InternetCloseHandle(hConnect);
-    if (hInternet)
-        InternetCloseHandle(hInternet);
-    return bRet;
+bool TryToDownloadLevel(const char *pszFileName)
+{
+    char szBuf[256];
+
+    if (g_bDownloadActive)
+    {
+        rf::UiMsgBox("Error!", "You can download only one level at once!", NULL, FALSE);
+        return false;
+    }
+
+    if (!FetchLevelInfo(pszFileName, szBuf, sizeof(szBuf)))
+    {
+        ERR("Failed to fetch level information");
+        return false;
+    }
+
+    TRACE("Levels server response: %s", szBuf);
+    if (!DisplayDownloadDialog(szBuf))
+    {
+        ERR("Failed to parse level information or level not found");
+        return false;
+    }
+
+    return true;
 }
 
 void OnJoinFailed(unsigned Reason)
