@@ -89,14 +89,14 @@ public:
     void writeValue(const char *name, unsigned value)
     {
         DWORD temp = value;
-        LONG error = RegSetValueExA(m_key, name, NULL, REG_DWORD, (BYTE*)&temp, sizeof(temp));
+        LONG error = RegSetValueExA(m_key, name, 0, REG_DWORD, (BYTE*)&temp, sizeof(temp));
         if (error != ERROR_SUCCESS)
             THROW_EXCEPTION("RegSetValueExA failed: win32 error %lu", error);
     }
 
     void writeValue(const char *name, const std::string &value)
     {
-        LONG error = RegSetValueExA(m_key, name, NULL, REG_SZ, (BYTE*)value.c_str(), value.size() + 1);
+        LONG error = RegSetValueExA(m_key, name, 0, REG_SZ, (BYTE*)value.c_str(), value.size() + 1);
         if (error != ERROR_SUCCESS)
             THROW_EXCEPTION("RegSetValueExA failed: win32 error %lu", error);
     }
