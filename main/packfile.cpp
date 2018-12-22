@@ -296,9 +296,11 @@ static BOOL PackfileAddEntries_New(Packfile *pPackfile, const void *pBlock, unsi
             pEntry->pszFileName = "DEADBEEF";
         else
         {
-            pEntry->pszFileName = (char*)malloc(strlen((char*)pData) + 10);
-            memset(pEntry->pszFileName, 0, strlen((char*)pData) + 10);
-            strcpy(pEntry->pszFileName, (char*)pData);
+            // FIXME: free?
+            char *pFileNameBuf = (char*)malloc(strlen((char*)pData) + 10);
+            memset(pFileNameBuf, 0, strlen((char*)pData) + 10);
+            strcpy(pFileNameBuf, (char*)pData);
+            pEntry->pszFileName = pFileNameBuf;
         }
         pEntry->dwNameChecksum = PackfileCalcFileNameChecksum(pEntry->pszFileName);
         pEntry->cbFileSize = *((uint32_t*)(pData + 60));

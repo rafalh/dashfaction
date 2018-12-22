@@ -46,7 +46,7 @@ void HttpRequest::begin(size_t totalBodySize)
     memset(&inetBuffers, 0, sizeof(inetBuffers));
     inetBuffers.dwStructSize = sizeof(inetBuffers);
     inetBuffers.dwBufferTotal = totalBodySize;
-    if (!HttpSendRequestExA(m_req, &inetBuffers, NULL, 0, NULL))
+    if (!HttpSendRequestExA(m_req, &inetBuffers, NULL, 0, 0))
         THROW_EXCEPTION_WITH_WIN32_ERROR();
 }
 
@@ -59,7 +59,7 @@ void HttpRequest::write(const char *data, size_t len)
 
 void HttpRequest::end()
 {
-    if (!HttpEndRequestA(m_req, NULL, 0, NULL))
+    if (!HttpEndRequestA(m_req, NULL, 0, 0))
         THROW_EXCEPTION_WITH_WIN32_ERROR();
 }
 

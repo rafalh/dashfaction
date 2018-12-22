@@ -408,7 +408,7 @@ namespace rf
     struct PackfileEntry
     {
         uint32_t dwNameChecksum;
-        char *pszFileName;
+        const char *pszFileName;
         uint32_t OffsetInBlocks;
         uint32_t cbFileSize;
         Packfile *pArchive;
@@ -1636,7 +1636,7 @@ namespace rf
     static const auto InitGame = (void(*)())0x004B13F0;
     static const auto CleanupGame = (void(*)())0x004B2D40;
     static const auto RunGame = (bool(*)())0x004B2D90;
-    static const auto GetFileExt = (char *(*)(char *pszPath))0x005143F0;
+    static const auto GetFileExt = (char *(*)(const char *pszPath))0x005143F0;
     static const auto SplitScreenStart = (void(*)())0x00480D30;
     static const auto GetVersionStr = (void(*)(const char **ppszVersion, const char **a2))0x004B33F0;
     static const auto SetNextLevelFilename = (void(*)(CString strFilename, CString strSecond))0x0045E2E0;

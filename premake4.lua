@@ -40,7 +40,7 @@
 
 	configuration "linux"
 		gccprefix "i686-w64-mingw32-"
-		cppdialect "gnu++14"
+		cppdialect "c++14"
 		linkoptions "-static"
 	
 	include "vendor"
