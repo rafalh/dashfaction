@@ -25,7 +25,7 @@ rf::BmPixelFormat GrD3DReadBackBufferHook(int x, int y, int Width, int Height, B
     hr = rf::g_pGrDevice->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer);
     if (FAILED(hr))
     {
-        ERR("IDirect3DDevice8_GetBackBuffer failed 0x%x", hr);
+        ERR("IDirect3DDevice8::GetBackBuffer failed 0x%x", hr);
         return rf::BMPF_INVALID;
     }
 
@@ -33,7 +33,7 @@ rf::BmPixelFormat GrD3DReadBackBufferHook(int x, int y, int Width, int Height, B
     hr = pBackBuffer->GetDesc(&Desc);
     if (FAILED(hr))
     {
-        ERR("IDirect3DSurface8_GetDesc failed 0x%x", hr);
+        ERR("IDirect3DSurface8::GetDesc failed 0x%x", hr);
         pBackBuffer->Release();
         return rf::BMPF_INVALID;
     }
@@ -45,7 +45,7 @@ rf::BmPixelFormat GrD3DReadBackBufferHook(int x, int y, int Width, int Height, B
         //hr = rf::g_pGrDevice->CreateImageSurface(Desc.Width, Desc.Height, Desc.Format, &pTmpSurface);
         //hr = rf::g_pGrDevice->CreateTexture(Desc.Width, Desc.Height, 1, 0, Desc.Format, D3DPOOL_MANAGED, &pTmpTexture);
         if (FAILED(hr))
-            ERR("IDirect3DDevice8_CreateRenderTarget failed 0x%x", hr);
+            ERR("IDirect3DDevice8::CreateRenderTarget failed 0x%x", hr);
     }
     
     if (SUCCEEDED(hr))
@@ -58,12 +58,12 @@ rf::BmPixelFormat GrD3DReadBackBufferHook(int x, int y, int Width, int Height, B
         {
             hr = rf::g_pGrDevice->CopyRects(pBackBuffer, &SrcRect, 1, pTmpSurface, &DstPoint);
             if (FAILED(hr))
-                ERR("IDirect3DDevice8_CopyRects failed 0x%x", hr);
+                ERR("IDirect3DDevice8::CopyRects failed 0x%x", hr);
         }
     }
 #else
     pTmpSurface = pBackBuffser;
-    IDirect3DSurface8_AddRef(pBackBuffer);
+    pBackBuffer->AddRef();
 #endif
 
     if (SUCCEEDED(hr))
@@ -72,7 +72,7 @@ rf::BmPixelFormat GrD3DReadBackBufferHook(int x, int y, int Width, int Height, B
         D3DLOCKED_RECT LockedRect;
         hr = pTmpSurface->LockRect(&LockedRect, NULL, D3DLOCK_READONLY | D3DLOCK_NO_DIRTY_UPDATE);
         if (FAILED(hr))
-            ERR("IDirect3DSurface8_LockRect failed 0x%x (%s)", hr, getDxErrorStr(hr));
+            ERR("IDirect3DSurface8::LockRect failed 0x%x (%s)", hr, getDxErrorStr(hr));
         else
         {
             int i, BytesPerPixel;

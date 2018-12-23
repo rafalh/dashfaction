@@ -248,13 +248,13 @@ static void RenderEntityHook(EntityObj *pEntity)
 { // TODO
     DWORD dwOldLightining;
     GrFlushBuffers();
-    IDirect3DDevice8_GetRenderState(g_pGrDevice, D3DRS_LIGHTING, &dwOldLightining);
-    IDirect3DDevice8_SetRenderState(g_pGrDevice, D3DRS_LIGHTING, 1);
-    IDirect3DDevice8_SetRenderState(g_pGrDevice, D3DRS_AMBIENT, 0xFFFFFFFF);
+    g_pGrDevice->GetRenderState(D3DRS_LIGHTING, &dwOldLightining);
+    g_pGrDevice->SetRenderState(D3DRS_LIGHTING, 1);
+    g_pGrDevice->SetRenderState(D3DRS_AMBIENT, 0xFFFFFFFF);
 
     RfRenderEntity((CObject*)pEntity);
     GrFlushBuffers();
-    //IDirect3DDevice8_SetRenderState(g_pGrDevice, D3DRS_LIGHTING, dwOldLightining);
+    //g_pGrDevice->SetRenderState(D3DRS_LIGHTING, dwOldLightining);
 }
 #endif
 

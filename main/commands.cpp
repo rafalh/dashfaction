@@ -148,9 +148,9 @@ static void AntiAliasingCmdHandler(void)
         else
         {
             DWORD Enabled = FALSE;
-            IDirect3DDevice8_GetRenderState(g_pGrDevice, D3DRS_MULTISAMPLEANTIALIAS, &Enabled);
+            g_pGrDevice->GetRenderState(D3DRS_MULTISAMPLEANTIALIAS, &Enabled);
             Enabled = !Enabled;
-            IDirect3DDevice8_SetRenderState(g_pGrDevice, D3DRS_MULTISAMPLEANTIALIAS, Enabled);
+            g_pGrDevice->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, Enabled);
             DcPrintf("Anti-aliasing is %s", Enabled ? "enabled" : "disabled");
         }
     }

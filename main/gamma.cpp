@@ -16,7 +16,7 @@ static void SetGammaRamp(D3DGAMMARAMP *pGammaRamp)
 {
 #if 0 // Note: D3D Gamma Ramp doesn't work in windowed mode
     if (g_pGrDevice)
-        IDirect3DDevice8_SetGammaRamp(g_pGrDevice, D3DSGR_NO_CALIBRATION, pGammaRamp);
+        g_pGrDevice->SetGammaRamp(D3DSGR_NO_CALIBRATION, pGammaRamp);
 #else
     HDC hdc;
 
