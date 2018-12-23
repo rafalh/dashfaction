@@ -274,7 +274,8 @@ NAKED void ProcessStateInfoReqPacket_Security_00481BEC()
         call SafeStrCpy
         add esp, 12
         popad
-        mov al, byte ptr 0x0064EC40 // g_GameOptions
+        mov ecx, 0064EC40h
+        mov al, byte ptr [ecx] // g_GameOptions
         mov ecx, 00481BFDh
         jmp ecx
     }
