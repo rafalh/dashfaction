@@ -4,6 +4,7 @@
 #include "rf.h"
 #include "main.h"
 #include "gr_color.h"
+#include "inline_asm.h"
 
 using namespace rf;
 
@@ -42,7 +43,7 @@ static void SetTextureMinMagFilterInCode(D3DTEXTUREFILTERTYPE FilterType)
         WriteMemUInt8(Addresses[i] + 1, (uint8_t)FilterType);
 }
 
-static void GrSetViewMatrix_FovFix(float fFovScale, float fWFarFactor)
+extern "C" void GrSetViewMatrix_FovFix(float fFovScale, float fWFarFactor)
 { 
     constexpr float fRefAspectRatio = 4.0f / 3.0f;
     constexpr float fMaxWideAspectRatio = 21.0f / 9.0f; // biggest aspect ratio currently in market
@@ -75,25 +76,19 @@ static void GrSetViewMatrix_FovFix(float fFovScale, float fWFarFactor)
     GrViewportCenterY -= 0.5f; // viewport center y
 }
 
-#ifndef __GNUC__ // FIXME
-void NAKED GrSetViewMatrix_00547344()
-{
-    _asm
-    {
-        mov eax, [esp + 10h + 14h]
-        sub esp, 8
-        fstp [esp + 4]
-        mov [esp + 0], eax
-        call GrSetViewMatrix_FovFix
-        fld [esp + 4]
-        add esp, 8
-        mov eax, 00547366h
-        jmp eax
-    }
-}
-#endif // __GNUC__
+ASM_FUNC(GrSetViewMatrix_00547344,
+    ASM_I  mov eax, [esp + 0x10 + 0x14]
+    ASM_I  sub esp, 8
+    ASM_I  fstp dword ptr [esp + 4]
+    ASM_I  mov [esp + 0], eax
+    ASM_I  call ASM_SYM(GrSetViewMatrix_FovFix)
+    ASM_I  fld dword ptr [esp + 4]
+    ASM_I  add esp, 8
+    ASM_I  mov eax, 0x00547366
+    ASM_I  jmp eax
+)
 
-void DisplayD3DDeviceError(HRESULT hr)
+extern "C" void DisplayD3DDeviceError(HRESULT hr)
 {
     ERR("D3D CreateDevice failed (hr 0x%X - %s)", hr, getDxErrorStr(hr));
 
@@ -105,19 +100,13 @@ void DisplayD3DDeviceError(HRESULT hr)
     ExitProcess(-1);
 }
 
-#ifndef __GNUC__ // FIXME
-void NAKED GrCreateD3DDeviceError_00545BEF()
-{
-    _asm
-    {
-        push eax
-        call DisplayD3DDeviceError
-        add esp, 4
-    }
-}
-#endif // __GNUC__
+ASM_FUNC(GrCreateD3DDeviceError_00545BEF,
+    ASM_I  push eax
+    ASM_I  call ASM_SYM(DisplayD3DDeviceError)
+    ASM_I  add esp, 4
+)
 
-void GrClearZBuffer_SetRect(D3DRECT *pClearRect)
+extern "C" void GrClearZBuffer_SetRect(D3DRECT *pClearRect)
 {
     pClearRect->x1 = g_GrScreen.OffsetX + g_GrScreen.ClipLeft;
     pClearRect->y1 = g_GrScreen.OffsetY + g_GrScreen.ClipTop;
@@ -125,20 +114,14 @@ void GrClearZBuffer_SetRect(D3DRECT *pClearRect)
     pClearRect->y2 = g_GrScreen.OffsetY + g_GrScreen.ClipBottom + 1;
 }
 
-#ifndef __GNUC__ // FIXME
-void NAKED GrClearZBuffer_005509C4()
-{
-    _asm
-    {
-        lea eax, [esp + 14h - 10h] // Rect
-        push eax
-        call GrClearZBuffer_SetRect
-        add esp, 4
-        mov eax, 005509F0h
-        jmp eax
-    }
-}
-#endif // __GNUC__
+ASM_FUNC(GrClearZBuffer_005509C4,
+    ASM_I  lea eax, [esp + 0x14 - 0x10] // Rect
+    ASM_I  push eax
+    ASM_I  call ASM_SYM(GrClearZBuffer_SetRect)
+    ASM_I  add esp, 4
+    ASM_I  mov eax, 0x005509F0
+    ASM_I  jmp eax
+)
 
 static void SetupPP(void)
 {
@@ -253,7 +236,7 @@ void GraphicsInit()
     // Properly restore state after device reset
     GrInitBuffers_AfterReset_Hook.hook(0x00545045, GrInitBuffers_AfterReset_New);
 
-#if WIDESCREEN_FIX && !defined(__GNUC__)
+#if WIDESCREEN_FIX
     // Fix FOV for widescreen
     WriteMemUInt8(0x00547344, ASM_LONG_JMP_REL);
     WriteMemInt32(0x00547344 + 1, (uintptr_t)GrSetViewMatrix_00547344 - (0x00547344 + 0x5));
@@ -267,18 +250,15 @@ void GraphicsInit()
         WriteMemUInt8(0x0052FACC, ASM_SHORT_JMP_REL);
     }
 
-#ifndef __GNUC__
     // Better error message in case of device creation error
     WriteMemUInt8(0x00545BEF, ASM_LONG_JMP_REL);
     WriteMemInt32(0x00545BEF + 1, (uintptr_t)GrCreateD3DDeviceError_00545BEF - (0x00545BEF + 0x5));
-#endif
 
     // Optimization - remove unused back buffer locking/unlocking in GrSwapBuffers
     AsmWritter(0x0054504A).jmpNear(0x0054508B);
 
 #if 1
     // Fix rendering of right and bottom edges of viewport
-#ifndef __GNUC__
     WriteMemUInt8(0x00431D9F, ASM_SHORT_JMP_REL);
     WriteMemUInt8(0x00431F6B, ASM_SHORT_JMP_REL);
     WriteMemUInt8(0x004328CF, ASM_SHORT_JMP_REL);
@@ -286,7 +266,6 @@ void GraphicsInit()
     WriteMemInt32(0x0043298F + 1, (uintptr_t)0x004329DC - (0x0043298F + 0x5));
     WriteMemUInt8(0x005509C4, ASM_LONG_JMP_REL);
     WriteMemInt32(0x005509C4 + 1, (uintptr_t)GrClearZBuffer_005509C4 - (0x005509C4 + 0x5));
-#endif
 
     // Left and top viewport edge fix for MSAA (RF does similar thing in GrDrawTextureD3D)
     WriteMemUInt8(0x005478C6, ASM_FADD);

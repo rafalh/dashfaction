@@ -4,6 +4,7 @@
 #include "version.h"
 #include "utils.h"
 #include "main.h"
+#include "inline_asm.h"
 
 using namespace rf;
 
@@ -55,30 +56,24 @@ static int MenuUpdate_New()
     return MenuId;
 }
 
-#ifndef __GNUC__ // FIXME
-NAKED void CrashFix_0055CE48()
-{
-    _asm
-    {
-        shl   edi, 5
-        lea   edx, [esp + 0x38 - 0x28]
-        mov   eax, [eax + edi]
-        test  eax, eax // check if pD3DTexture is NULL
-        jz    CrashFix0055CE59_label1
-        //jmp CrashFix0055CE59_label1
-        push  0
-        push  0
-        push  edx
-        push  0
-        push  eax
-        mov   ecx, 0x0055CE59
-        jmp   ecx
-        CrashFix0055CE59_label1 :
-        mov   ecx, 0x0055CF23 // fail gr_lock
-        jmp   ecx
-    }
-}
-#endif // __GNUC__
+ASM_FUNC(CrashFix_0055CE48,
+// ecx - num, esi - source, ebx - dest
+    ASM_I  shl   edi, 5
+    ASM_I  lea   edx, [esp + 0x38 - 0x28]
+    ASM_I  mov   eax, [eax + edi]
+    ASM_I  test  eax, eax // check if pD3DTexture is NULL
+    ASM_I  jz    CrashFix_0055CE48_label1
+    ASM_I  push  0
+    ASM_I  push  0
+    ASM_I  push  edx
+    ASM_I  push  0
+    ASM_I  push  eax
+    ASM_I  mov   ecx, 0x0055CE59
+    ASM_I  jmp   ecx
+    ASM_I  CrashFix_0055CE48_label1 :
+    ASM_I  mov   ecx, 0x0055CF23 // fail gr_lock
+    ASM_I  jmp   ecx
+)
 
 void MenuMainProcessMouseHook()
 {
@@ -476,9 +471,7 @@ void MiscInit()
     WriteMemUInt32(0x0056A28C + 1, 0);
 
     // Crash-fix in case texture has not been created (this happens if GrReadBackbuffer fails)
-#ifndef __GNUC__
     AsmWritter(0x0055CE47).jmpLong(CrashFix_0055CE48);
-#endif
 
     // Dont overwrite player name and prefered weapons when loading saved game
     AsmWritter(0x004B4D99, 0x004B4DA5).nop();

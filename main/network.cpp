@@ -2,6 +2,7 @@
 #include "network.h"
 #include "rf.h"
 #include "utils.h"
+#include "inline_asm.h"
 
 #if MASK_AS_PF
  #include "pf.h"
@@ -144,279 +145,227 @@ extern "C" void SafeStrCpy(char *pDest, const char *pSrc, size_t DestSize)
 #endif
 }
 
-#ifndef __GNUC__ // FIXME
+ASM_FUNC(ProcessGameInfoPacket_Security_0047B2D3,
+// ecx - num, esi - source, ebx - dest
+    ASM_I  pushad
+    ASM_I  push 256
+    ASM_I  push esi
+    ASM_I  push ebx
+    ASM_I  call ASM_SYM(SafeStrCpy)
+    ASM_I  add esp, 12
+    ASM_I  popad
+    ASM_I  xor eax, eax
+    ASM_I  mov ecx, 0x0047B2E3
+    ASM_I  jmp ecx
+)
 
-NAKED void ProcessGameInfoPacket_Security_0047B2D3()
-{ // ecx - num, esi - source, ebx - dest
-    _asm
-    {
-        pushad
-        push 256
-        push esi
-        push ebx
-        call SafeStrCpy
-        add esp, 12
-        popad
-        xor eax, eax
-        mov ecx, 0047B2E3h
-        jmp ecx
-    }
-}
+ASM_FUNC(ProcessGameInfoPacket_Security_0047B334,
+// ecx - num, esi -source, edi - dest
+    ASM_I  push edx
+    ASM_I  push 256
+    ASM_I  push esi
+    ASM_I  push edi
+    ASM_I  call ASM_SYM(SafeStrCpy)
+    ASM_I  add esp, 12
+    ASM_I  pop edx
+    ASM_I  xor eax, eax
+    ASM_I  mov ecx, 0x0047B342
+    ASM_I  jmp ecx
+)
 
-NAKED void ProcessGameInfoPacket_Security_0047B334()
-{ // ecx - num, esi -source, edi - dest
-    _asm
-    {
-        push edx
-        push 256
-        push esi
-        push edi
-        call SafeStrCpy
-        add esp, 12
-        pop edx
-        xor eax, eax
-        mov ecx, 0047B342h
-        jmp ecx
-    }
-}
+ASM_FUNC(ProcessGameInfoPacket_Security_0047B38E,
+// ecx - num, esi -source, edi - dest
+    ASM_I  pushad
+    ASM_I  push 256
+    ASM_I  push esi
+    ASM_I  push edi
+    ASM_I  call ASM_SYM(SafeStrCpy)
+    ASM_I  add esp, 12
+    ASM_I  popad
+    ASM_I  xor eax, eax
+    ASM_I  mov ecx, 0x0047B39C
+    ASM_I  jmp ecx
+)
 
-NAKED void ProcessGameInfoPacket_Security_0047B38E()
-{ // ecx - num, esi -source, edi - dest
-    _asm
-    {
-        pushad
-        push 256
-        push esi
-        push edi
-        call SafeStrCpy
-        add esp, 12
-        popad
-        xor eax, eax
-        mov ecx, 0047B39Ch
-        jmp ecx
-    }
-}
+ASM_FUNC(ProcessJoinReqPacket_Security_0047AD4E,
+// ecx - num, esi -source, edi - dest
+    ASM_I  pushad
+    ASM_I  push 256
+    ASM_I  push esi
+    ASM_I  push edi
+    ASM_I  call ASM_SYM(SafeStrCpy)
+    ASM_I  add esp, 12
+    ASM_I  popad
+    ASM_I  mov ecx, 0x0047AD5A
+    ASM_I  jmp ecx
+)
 
-NAKED void ProcessJoinReqPacket_Security_0047AD4E()
-{ // ecx - num, esi -source, edi - dest
-    _asm
-    {
-        pushad
-        push 256
-        push esi
-        push edi
-        call SafeStrCpy
-        add esp, 12
-        popad
-        mov ecx, 0047AD5Ah
-        jmp ecx
-    }
-}
+ASM_FUNC(ProcessJoinAcceptPacket_Security_0047A8AE,
+// ecx - num, esi -source, edi - dest
+    ASM_I  pushad
+    ASM_I  push 256
+    ASM_I  push esi
+    ASM_I  push edi
+    ASM_I  call ASM_SYM(SafeStrCpy)
+    ASM_I  add esp, 12
+    ASM_I  popad
+    ASM_I  mov ecx, 0x0047A8BA
+    ASM_I  jmp ecx
+)
 
-NAKED void ProcessJoinAcceptPacket_Security_0047A8AE()
-{ // ecx - num, esi -source, edi - dest
-    _asm
-    {
-        pushad
-        push 256
-        push esi
-        push edi
-        call SafeStrCpy
-        add esp, 12
-        popad
-        mov ecx, 0047A8BAh
-        jmp ecx
-    }
-}
+ASM_FUNC(ProcessNewPlayerPacket_Security_0047A5F4,
+// ecx - num, esi -source, edi - dest
+    ASM_I  pushad
+    ASM_I  push 256
+    ASM_I  push esi
+    ASM_I  push edi
+    ASM_I  call ASM_SYM(SafeStrCpy)
+    ASM_I  add esp, 12
+    ASM_I  popad
+    ASM_I  mov byte ptr[esp + 0x12C - 0x118], bl
+    ASM_I  mov ecx, 0x0047A604
+    ASM_I  jmp ecx
+)
 
-NAKED void ProcessNewPlayerPacket_Security_0047A5F4()
-{ // ecx - num, esi -source, edi - dest
-    _asm
-    {
-        pushad
-        push 256
-        push esi
-        push edi
-        call SafeStrCpy
-        add esp, 12
-        popad
-        mov byte ptr[esp + 12Ch - 118h], bl
-        mov ecx, 0047A604h
-        jmp ecx
-    }
-}
+ASM_FUNC(ProcessPlayersPacket_Security_00481EE6,
+// ecx - num, esi -source, edi - dest
+    ASM_I  pushad
+    ASM_I  push 256
+    ASM_I  push esi
+    ASM_I  push edi
+    ASM_I  call ASM_SYM(SafeStrCpy)
+    ASM_I  add esp, 12
+    ASM_I  popad
+    ASM_I  xor eax, eax
+    ASM_I  mov ecx, 0x00481EF4
+    ASM_I  jmp ecx
+)
 
-NAKED void ProcessPlayersPacket_Security_00481EE6()
-{ // ecx - num, esi -source, edi - dest
-    _asm
-    {
-        pushad
-        push 256
-        push esi
-        push edi
-        call SafeStrCpy
-        add esp, 12
-        popad
-        xor eax, eax
-        mov ecx, 00481EF4h
-        jmp ecx
-    }
-}
+ASM_FUNC(ProcessStateInfoReqPacket_Security_00481BEC,
+// ecx - num, esi -source, edi - dest
+    ASM_I  pushad
+    ASM_I  push 256
+    ASM_I  push esi
+    ASM_I  push edi
+    ASM_I  call ASM_SYM(SafeStrCpy)
+    ASM_I  add esp, 12
+    ASM_I  popad
+    ASM_I  mov ecx, 0x0064EC40
+    ASM_I  mov al, [0x0064EC40] // g_GameOptions
+    ASM_I  mov ecx, 0x00481BFD
+    ASM_I  jmp ecx
+)
 
-NAKED void ProcessStateInfoReqPacket_Security_00481BEC()
-{ // ecx - num, esi -source, edi - dest
-    _asm
-    {
-        pushad
-        push 256
-        push esi
-        push edi
-        call SafeStrCpy
-        add esp, 12
-        popad
-        mov ecx, 0064EC40h
-        mov al, byte ptr [ecx] // g_GameOptions
-        mov ecx, 00481BFDh
-        jmp ecx
-    }
-}
+ASM_FUNC(ProcessChatLinePacket_Security_004448B0,
+// ecx - num, esi -source, edi - dest
+    ASM_I  pushad
+    ASM_I  push 256
+    ASM_I  push esi
+    ASM_I  push edi
+    ASM_I  call ASM_SYM(SafeStrCpy)
+    ASM_I  add esp, 12
+    ASM_I  popad
+    ASM_I  cmp bl, 0x0FF
+    ASM_I  mov ecx, 0x004448BF
+    ASM_I  jmp ecx
+)
 
-NAKED void ProcessChatLinePacket_Security_004448B0()
-{ // ecx - num, esi -source, edi - dest
-    _asm
-    {
-        pushad
-        push 256
-        push esi
-        push edi
-        call SafeStrCpy
-        add esp, 12
-        popad
-        cmp bl, 0FFh
-        mov ecx, 004448BFh
-        jmp ecx
-    }
-}
+ASM_FUNC(ProcessNameChangePacket_Security_0046EB24,
+// ecx - num, esi -source, edi - dest
+    ASM_I  pushad
+    ASM_I  push 256
+    ASM_I  push esi
+    ASM_I  push edi
+    ASM_I  call ASM_SYM(SafeStrCpy)
+    ASM_I  add esp, 12
+    ASM_I  popad
+    ASM_I  mov ecx, 0x0046EB30
+    ASM_I  jmp ecx
+)
 
-NAKED void ProcessNameChangePacket_Security_0046EB24()
-{ // ecx - num, esi -source, edi - dest
-    _asm
-    {
-        pushad
-        push 256
-        push esi
-        push edi
-        call SafeStrCpy
-        add esp, 12
-        popad
-        mov ecx, 0046EB30h
-        jmp ecx
-    }
-}
+ASM_FUNC(ProcessLeaveLimboPacket_Security_0047C1C3,
+// ecx - num, esi -source, edi - dest
+    ASM_I  pushad
+    ASM_I  push 256
+    ASM_I  push esi
+    ASM_I  push edi
+    ASM_I  call ASM_SYM(SafeStrCpy)
+    ASM_I  add esp, 12
+    ASM_I  popad
+    ASM_I  mov ecx, 0x0047C1CF
+    ASM_I  jmp ecx
+)
 
-NAKED void ProcessLeaveLimboPacket_Security_0047C1C3()
-{ // ecx - num, esi -source, edi - dest
-    _asm
-    {
-        pushad
-        push 256
-        push esi
-        push edi
-        call SafeStrCpy
-        add esp, 12
-        popad
-        mov ecx, 0047C1CFh
-        jmp ecx
-    }
-}
+ASM_FUNC(ProcessObjKillPacket_Security_0047EE6E,
+// ecx - num, esi -source, edi - dest
+    ASM_I  pushad
+    ASM_I  push 256
+    ASM_I  push esi
+    ASM_I  push edi
+    ASM_I  call ASM_SYM(SafeStrCpy)
+    ASM_I  add esp, 12
+    ASM_I  popad
+    ASM_I  xor eax, eax
+    ASM_I  push 0
+    ASM_I  mov ecx, 0x0047EE7E
+    ASM_I  jmp ecx
+)
 
-NAKED void ProcessObjKillPacket_Security_0047EE6E()
-{ // ecx - num, esi -source, edi - dest
-    _asm
-    {
-        pushad
-        push 256
-        push esi
-        push edi
-        call SafeStrCpy
-        add esp, 12
-        popad
-        xor eax, eax
-        push 0
-        mov ecx, 0047EE7Eh
-        jmp ecx
-    }
-}
+ASM_FUNC(ProcessEntityCreatePacket_Security_00475474,
+// ecx - num, esi -source, edi - dest
+    ASM_I  pushad
+    ASM_I  push 256
+    ASM_I  push esi
+    ASM_I  push edi
+    ASM_I  call ASM_SYM(SafeStrCpy)
+    ASM_I  add esp, 12
+    ASM_I  popad
+    ASM_I  xor eax, eax
+    ASM_I  mov ecx, 0x00475482
+    ASM_I  jmp ecx
+)
 
-NAKED void ProcessEntityCreatePacket_Security_00475474()
-{ // ecx - num, esi -source, edi - dest
-    _asm
-    {
-        pushad
-        push 256
-        push esi
-        push edi
-        call SafeStrCpy
-        add esp, 12
-        popad
-        xor eax, eax
-        mov ecx, 00475482h
-        jmp ecx
-    }
-}
+ASM_FUNC(ProcessItemCreatePacket_Security_00479FAA,
+// ecx - num, esi -source, edi - dest
+    ASM_I  pushad
+    ASM_I  push 256
+    ASM_I  push esi
+    ASM_I  push edi
+    ASM_I  call ASM_SYM(SafeStrCpy)
+    ASM_I  add esp, 12
+    ASM_I  popad
+    ASM_I  xor eax, eax
+    ASM_I  mov ecx, 0x00479FB8
+    ASM_I  jmp ecx
+)
 
-NAKED void ProcessItemCreatePacket_Security_00479FAA()
-{ // ecx - num, esi -source, edi - dest
-    _asm
-    {
-        pushad
-        push 256
-        push esi
-        push edi
-        call SafeStrCpy
-        add esp, 12
-        popad
-        xor eax, eax
-        mov ecx, 00479FB8h
-        jmp ecx
-    }
-}
+ASM_FUNC(ProcessRconReqPacket_Security_0046C590,
+// ecx - num, esi -source, edi - dest
+    ASM_I  pushad
+    ASM_I  push 256
+    ASM_I  push esi
+    ASM_I  push edi
+    ASM_I  call ASM_SYM(SafeStrCpy)
+    ASM_I  add esp, 12
+    ASM_I  popad
+    ASM_I  lea eax, [esp + 0x110 - 0x100]
+    ASM_I  mov ecx, 0x0046C5A0
+    ASM_I  jmp ecx
+)
 
-NAKED void ProcessRconReqPacket_Security_0046C590()
-{ // ecx - num, esi -source, edi - dest
-    _asm
-    {
-        pushad
-        push 256
-        push esi
-        push edi
-        call SafeStrCpy
-        add esp, 12
-        popad
-        lea eax, [esp + 110h - 100h]
-        mov ecx, 0046C5A0h
-        jmp ecx
-    }
-}
-
-NAKED void ProcessRconPacket_Security_0046C751()
-{ // ecx - num, esi -source, edi - dest
-    _asm
-    {
-        pushad
-        push 512
-        push esi
-        push edi
-        call SafeStrCpy
-        add esp, 12
-        popad
-        xor eax, eax
-        mov ecx, 0046C75Fh
-        jmp ecx
-    }
-}
-
-#endif // __GNUC__
+ASM_FUNC(ProcessRconPacket_Security_0046C751,
+// ecx - num, esi -source, edi - dest
+    ASM_I  pushad
+    ASM_I  push 512
+    ASM_I  push esi
+    ASM_I  push edi
+    ASM_I  call ASM_SYM(SafeStrCpy)
+    ASM_I  add esp, 12
+    ASM_I  popad
+    ASM_I  xor eax, eax
+    ASM_I  mov ecx, 0x0046C75F
+    ASM_I  jmp ecx
+)
 
 void ProcessGameInfoReqPacket_New(char *pData, const NwAddr *pAddr)
 {
@@ -857,7 +806,6 @@ void NetworkInit()
     WriteMemUInt32(0x00599D20, 4);
 
     /* Buffer Overflow fixes */
-#ifndef __GNUC__ // FIXME
     AsmWritter(0x0047B2D3).jmpLong(ProcessGameInfoPacket_Security_0047B2D3);
     AsmWritter(0x0047B334).jmpLong(ProcessGameInfoPacket_Security_0047B334);
 #ifndef TEST_BUFFER_OVERFLOW_FIXES
@@ -876,7 +824,6 @@ void NetworkInit()
     AsmWritter(0x00479FAA).jmpLong(ProcessItemCreatePacket_Security_00479FAA);
     AsmWritter(0x0046C590).jmpLong(ProcessRconReqPacket_Security_0046C590);
     AsmWritter(0x0046C751).jmpLong(ProcessRconPacket_Security_0046C751);
-#endif // __GNUC__
 
     // Hook all packet handlers
     ProcessGameInfoReqPacket_Hook.hook(ProcessGameInfoReqPacket_New);

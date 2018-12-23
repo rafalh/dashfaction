@@ -2,19 +2,20 @@
 #include "high_fps.h"
 #include "utils.h"
 #include "rf.h"
+#include "inline_asm.h"
 
 constexpr auto REF_FPS = 30.0f;
 constexpr auto REF_FRAMERATE = 1.0f / REF_FPS;
 
-static double g_FtolAccumulator_HitScreen = 0.0f;
-static double g_FtolAccumulated_ToggleConsole = 0.0f;
-static double g_FtolAccumulated_Timer = 0.0f;
+double g_FtolAccumulator_HitScreen = 0.0f;
+double g_FtolAccumulated_ToggleConsole = 0.0f;
+double g_FtolAccumulated_Timer = 0.0f;
 static float g_JumpThreshold = 0.05f;
 static float g_fCameraShakeFactor = 0.6f;
 
 auto RflLoad_Hook = makeFunHook(rf::RflLoad);
 
-long STDCALL AccumulatingFtoL(double fVal, double *pAccumulator)
+extern "C" long AccumulatingFtoL(double fVal, double *pAccumulator)
 {
     //ERR("fVal %lf pAccumulator %lf", fVal, *pAccumulator);
     fVal += *pAccumulator;
@@ -24,48 +25,35 @@ long STDCALL AccumulatingFtoL(double fVal, double *pAccumulator)
     return Result;
 }
 
-#ifndef __GNUC__ // FIXME
+ASM_FUNC(ftol_HitScreen, // Note: value is in ST(0), not on stack
+    ASM_I  sub esp, 12
+    ASM_I  lea ecx, [ASM_SYM(g_FtolAccumulator_HitScreen)]
+    ASM_I  mov [esp + 8], ecx
+    ASM_I  fstp qword ptr [esp + 0]
+    ASM_I  call ASM_SYM(AccumulatingFtoL)
+    ASM_I  add esp, 12
+    ASM_I  ret
+)
 
-void NAKED ftol_HitScreen()  // Note: value is in ST(0), not on stack
-{
-    _asm
-    {
-        sub esp, 12
-        lea ecx, [g_FtolAccumulator_HitScreen]
-        mov [esp + 8], ecx
-        fstp qword ptr [esp + 0]
-        call AccumulatingFtoL
-        ret
-    }
-}
+ASM_FUNC(ftol_ToggleConsole,
+    ASM_I  sub esp, 12
+    ASM_I  lea ecx, [ASM_SYM(g_FtolAccumulated_ToggleConsole)]
+    ASM_I  mov [esp + 8], ecx
+    ASM_I  fstp qword ptr [esp + 0]
+    ASM_I  call ASM_SYM(AccumulatingFtoL)
+    ASM_I  add esp, 12
+    ASM_I  ret
+)
 
-void NAKED ftol_ToggleConsole()
-{
-    _asm
-    {
-        sub esp, 12
-        lea ecx, [g_FtolAccumulated_ToggleConsole]
-        mov [esp + 8], ecx
-        fstp qword ptr [esp + 0]
-        call AccumulatingFtoL
-        ret
-    }
-}
-
-void NAKED ftol_Timer()
-{
-    _asm
-    {
-        sub esp, 12
-        lea ecx, [g_FtolAccumulated_Timer]
-        mov [esp + 8], ecx
-        fstp qword ptr [esp + 0]
-        call AccumulatingFtoL
-        ret
-    }
-}
-
-#endif // __GNUC__
+ASM_FUNC(ftol_Timer,
+    ASM_I  sub esp, 12
+    ASM_I  lea ecx, [ASM_SYM(g_FtolAccumulated_Timer)]
+    ASM_I  mov [esp + 8], ecx
+    ASM_I  fstp qword ptr [esp + 0]
+    ASM_I  call ASM_SYM(AccumulatingFtoL)
+    ASM_I  add esp, 12
+    ASM_I  ret
+)
 
 void STDCALL EntityWaterDecelerateFix(rf::EntityObj *pEntity)
 {
@@ -75,7 +63,7 @@ void STDCALL EntityWaterDecelerateFix(rf::EntityObj *pEntity)
     pEntity->_Super.PhysInfo.vVel.z *= fVelFactor;
 }
 
-void WaterAnimateWaves_UpdatePos(rf::CVector3 *pResult)
+extern "C" void WaterAnimateWaves_UpdatePos(rf::CVector3 *pResult)
 {
     constexpr float flt_5A3BF4 = 12.8f;
     constexpr float flt_5A3C00 = 3.878788f;
@@ -85,23 +73,17 @@ void WaterAnimateWaves_UpdatePos(rf::CVector3 *pResult)
     pResult->z += flt_5A3C00 * (rf::g_fFramerate) / REF_FRAMERATE;
 }
 
-#ifndef __GNUC__ // FIXME
-void NAKED WaterAnimateWaves_004E68A0()
-{
-    _asm
-    {
-        mov eax, esi
-        add eax, 2Ch
-        push eax
-        call WaterAnimateWaves_UpdatePos
-        add esp, 4
-        mov     ecx, [esi + 24h]
-        lea     eax, [esp + 6Ch - 20h] // var_20
-        mov eax, 004E68D1h
-        jmp eax
-    }
-}
-#endif
+ASM_FUNC(WaterAnimateWaves_004E68A0,
+    ASM_I  mov eax, esi
+    ASM_I  add eax, 0x2C
+    ASM_I  push eax
+    ASM_I  call ASM_SYM(WaterAnimateWaves_UpdatePos)
+    ASM_I  add esp, 4
+    ASM_I  mov ecx, [esi + 0x24]
+    ASM_I  lea eax, [esp + 0x6C - 0x20] // var_20
+    ASM_I  mov eax, 0x004E68D1
+    ASM_I  jmp eax
+)
 
 int RflLoad_New(rf::CString *pstrLevelFilename, rf::CString *a2, char *pszError)
 {
@@ -129,11 +111,9 @@ int RflLoad_New(rf::CString *pstrLevelFilename, rf::CString *a2, char *pszError)
 void HighFpsInit()
 {
     // Fix animations broken for high FPS
-#ifndef __GNUC__
     WriteMemUInt32(0x00416426 + 1, (uintptr_t)ftol_HitScreen - (0x00416426 + 0x5)); // hit screen
     WriteMemUInt32(0x0050ABFB + 1, (uintptr_t)ftol_ToggleConsole - (0x0050ABFB + 0x5)); // console open/close
     WriteMemUInt32(0x005096A7 + 1, (uintptr_t)ftol_Timer - (0x005096A7 + 0x5)); // switching weapon and more
-#endif
 
     // Fix jumping on high FPS
     WriteMemPtr(0x004A09A6 + 2, &g_JumpThreshold);
@@ -145,11 +125,9 @@ void HighFpsInit()
     WriteMemInt32(0x0049D830 + 1, (uintptr_t)EntityWaterDecelerateFix - (0x0049D830 + 0x5));
 
     // Fix water waves animation on high FPS
-#ifndef __GNUC__
     WriteMemUInt8(0x004E68A0, ASM_NOP, 9);
     WriteMemUInt8(0x004E68B6, ASM_LONG_JMP_REL);
     WriteMemInt32(0x004E68B6 + 1, (uintptr_t)WaterAnimateWaves_004E68A0 - (0x004E68B6 + 0x5));
-#endif
 
     // Fix incorrect frame time calculation
     WriteMemUInt8(0x00509595, ASM_NOP, 2);
