@@ -378,6 +378,8 @@ namespace rf
     static const auto UiMsgBox = (void(*)(const char *pszTitle, const char *pszText, void(*pfnCallback)(void), BOOL bInput))0x004560B0;
     static const auto UiCreateDialog = (void(*)(const char *pszTitle, const char *pszText, unsigned cButtons, const char **ppszBtnTitles, void **ppfnCallbacks, unsigned Unknown1, unsigned Unknown2))0x004562A0;
     static const auto UiGetElementFromPos = (int(*)(int x, int y, UiPanel **ppGuiList, signed int cGuiList))0x00442ED0;
+    static const auto UiLabel_Create2 = (void(__thiscall *)(UiPanel *pThis, UiPanel *pParent, int x, int y, int w, int h, const char *pszText, int FontId))0x00456C20;
+
 
     /* HUD */
 

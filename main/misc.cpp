@@ -24,21 +24,13 @@ int g_VersionClickCounter = 0;
 int g_EggAnimStart;
 bool g_bWin32Console = false;
 
-#ifndef __GNUC__ // FIXME
-NAKED void VersionLabelPushArgs_0044343A()
+void __fastcall UiLabel_Create2_VersionLabel(UiPanel *pThis, void *edx, UiPanel *pParent, int x, int y, int w, int h, const char *pszText, int FontId)
 {
-    _asm
-    {
-        // Default: 330, 340, 120, 15
-        push    g_VersionLabelHeight
-        push    g_VersionLabelWidth
-        push    340
-        push    g_VersionLabelX
-        mov eax, 0x00443448
-        jmp eax
-    }
+    x = g_VersionLabelX;
+    w = g_VersionLabelWidth;
+    h = g_VersionLabelHeight;
+    UiLabel_Create2(pThis, pParent, x, y, w, h, pszText, FontId);
 }
-#endif
 
 static void GetVersionStr_New(const char **ppszVersion, const char **a2)
 {
@@ -447,9 +439,7 @@ void MiscInit()
     WriteMemPtr(0x004B2534, "-- " PRODUCT_NAME " Initializing --\n");
 
     // Version in Main Menu
-#ifndef __GNUC__
-    AsmWritter(0x0044343A).jmpLong(VersionLabelPushArgs_0044343A);
-#endif
+    AsmWritter(0x0044344D).callLong(UiLabel_Create2_VersionLabel);
     GetVersionStr_Hook.hook(GetVersionStr_New);
 
     // Window title (client and server)
