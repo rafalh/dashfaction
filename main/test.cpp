@@ -5,258 +5,34 @@
 
 using namespace rf;
 
+//#define EMULATE_PACKET_LOSS
+#define PACKET_LOSS_RATE 2 // every n packet is lost
+
+#ifdef EMULATE_PACKET_LOSS
+
+static const auto NwSend = (int(*)(const void *pPacket, unsigned int cbPacket, int Flags, const NwAddr *pAddr, int MainType))0x00528820;
+static const auto NwAddPacketToBuffer = (void(*)(void *pBuffer, const void *pData, unsigned int cbData, NwAddr *pAddr))0x00528950;
+
+auto NwSend_Hook = makeFunHook(NwSend);
+auto NwAddPacketToBuffer_Hook = makeFunHook(NwAddPacketToBuffer);
+
+int NwSend_New(const void *pPacket, unsigned int cbPacket, int Flags, const NwAddr *pAddr, int MainType)
+{
+    if (rand() % PACKET_LOSS_RATE == 0)
+        return 0;
+    return NwSend_Hook.callTrampoline(pPacket, cbPacket, Flags, pAddr, MainType);
+}
+
+void NwAddPacketToBuffer_New(void *pBuffer, const void *pData, unsigned int cbData, NwAddr *pAddr)
+{
+    if (rand() % PACKET_LOSS_RATE == 0)
+        return;
+    return NwAddPacketToBuffer_Hook.callTrampoline(pBuffer, pData, cbData, pAddr);
+}
+
+#endif // EMULATE_PACKET_LOSS
+
 #ifdef DEBUG
-
-#if 0 // research bones
-
-#pragma pack(push, 8)
-namespace rf
-{
-    struct CQuaternion
-    {
-        float x, y, z, w;
-    };
-    struct CTransform
-    {
-        CMatrix3 matRot;
-        CVector3 vOrgin;
-    };
-    struct CBone
-    {
-        char szName[24];
-        CTransform Transform;
-        int Parent;
-    };
-    struct SAnimatorElement
-    {
-        int iAnim;
-        int AnimTime;
-        float field_8;
-    };
-    struct UnkMatOrTransformForAnim
-    {
-        __int16 UpdateSeq;
-        __int16 field_2;
-        CMatrix3 field_4;
-        int field_28;
-        float field_2C;
-    };
-    struct CSubMeshInfo;
-    struct CSubMesh;
-    struct CColSphere;
-    struct CMeshMaterial;
-    struct CMesh
-    {
-        char szName[68];
-        int Version;
-        int cSubMesh;
-        CSubMeshInfo *pSubMeshInfo;
-        int cSubMeshes;
-        CSubMesh *pSubMeshes;
-        int field_58;
-        int field_5C;
-        int cColSpheres;
-        CColSphere *pColSpheres;
-        int field_68;
-        int field_6C;
-        int field_70;
-        int field_74;
-        int cTotalMaterials;
-        CMeshMaterial *pAllMaterials;
-        int field_80;
-        int field_84;
-        int field_88;
-        int field_8C;
-        CSubMeshInfo *pSubMeshInfo2;
-    };
-    struct CMvfAnim;
-    struct CCharacterMesh
-    {
-        char szName[4];
-        int field_4[16];
-        int Flags;
-        int cBones;
-        CBone Bones[50];
-        BYTE BoneIndexes[32];
-        int field_F44;
-        int field_F48;
-        int field_F4C;
-        int field_F50;
-        int field_F54;
-        int cAnims;
-        CMvfAnim *Animations[16];
-        int field_F9C[102];
-        int field_1134[54];
-        BYTE IsStateSkeleton[16];
-        int field_121C[39];
-        int field_12B8;
-        int field_12BC;
-        CTransform field_12C0;
-        int field_12F0[280];
-        int field_1750[9];
-        int field_1774[50];
-        int field_183C[50];
-        int field_1904[20];
-        int field_1954[10];
-        int field_197C[10];
-        int field_19A4[5];
-        int field_19B8;
-        int cMeshes;
-        CMesh Meshes[1];
-        int RootBoneIndex;
-    };
-    struct CCharacterAnimator
-    {
-        CTransform BoneTransformsCombined[50];
-        CTransform BoneTransformsFinal[50];
-        CVector3 vMoveRootBoneTemp12C0;
-        int field_12CC;
-        int cElements;
-        SAnimatorElement Elements[16];
-        UnkMatOrTransformForAnim BoneStates1394[50];
-        int field_1CF4;
-        __int16 UpdateSeq;
-        __int16 field_1CFA;
-        int field_1CFC;
-        int field_1D00;
-        float field_1D04;
-        CVector3 field_1D08;
-        int field_1D14;
-        int field_1D18;
-        int field_1D1C;
-        CVector3 field_1D20;
-        CVector3 field_1D2C;
-        CVector3 field_1D38;
-        int field_1D44;
-        int field_1D48;
-        int field_1D4C;
-        CCharacterMesh *pCharacter;
-        int field_1D54;
-        int field_1D58;
-    };
-}
-#pragma pack(pop)
-
-using namespace rf;
-
-static const auto SortBonesByLevel = (void(*)(BYTE *pResult, int cBones, CBone *pBones))0x0051CB50;
-static const auto Transform_Mul = (CTransform*(__thiscall*)(CTransform *This, CTransform *pResult, CTransform *pParentTransform))0x0051C620;
-static const auto CAnimMesh_UpdateTime = (void(__thiscall*)(CAnimMesh *This, float fDeltaTime, int a3, CVector3 *a4, CMatrix3 *a5, int a6))0x00501AB0;
-static const auto CharacterAnimatorUpdateBones = (void(*)(int NumBones, unsigned __int8 *BoneBranchIndices, CCharacterAnimator *pCharAnim))0x0051B500;
-static const auto MvfAnim_CalcBonePos = (CVector3*(__thiscall*)(CMvfAnim *This, CVector3 *pResult, int BoneId, int AnimTime))0x0053A130;
-static const auto MvfAnim_CalcBoneRot = (CQuaternion*(__thiscall*)(CMvfAnim *This, CQuaternion *pResult, int BoneId, int AnimTime))0x00539ED0;
-
-#define BONE_NAME "park-bdbn-lowerleg-l"
-//#define BONE_NAME "park-bdbn-root"
-
-int g_TestBoneIdx = -1;
-
-void PrintTransform(CTransform *pTransform)
-{
-    ERR("origin %f %f %f", pTransform->vOrgin.x, pTransform->vOrgin.y, pTransform->vOrgin.z);
-    for (int i = 0; i < 3; ++i)
-        ERR("mat[%d] %f %f %f", i, pTransform->matRot.rows[i].x, pTransform->matRot.rows[i].y, pTransform->matRot.rows[i].z);
-}
-
-void SortBonesByLevelHook(BYTE *pResult, int cBones, CBone *pBones)
-{
-    for (int i = 0; i < cBones; ++i)
-    {
-        if (!strcmp(pBones[i].szName, BONE_NAME))
-        {
-            g_TestBoneIdx = i;
-            ERR("Bone %d - %s", i, pBones[i].szName);
-            ERR("trans");
-            PrintTransform(&pBones[i].Transform);
-
-            ERR("trans^2");
-            CTransform temp;
-            Transform_Mul(&pBones[i].Transform, &temp, &pBones[i].Transform);
-            PrintTransform(&temp);
-
-            //pBones[i].Transform.vOrgin.x = (rand() % 1000) / 1000.0f;
-            //pBones[i].Transform.vOrgin.y = (rand() % 1000) / 1000.0f;
-            //pBones[i].Transform.vOrgin.z = (rand() % 1000) / 1000.0f;
-
-            
-        }
-    }
-    SortBonesByLevel(pResult, cBones, pBones);
-}
-
-void AnimMeshUpdateTimeHook(CAnimMesh *pAnimMesh, float fDeltaTime, int a3, CVector3 *a4, CMatrix3 *a5, int bUnk)
-{
-    CAnimMesh_UpdateTime(pAnimMesh, 0.0f, a3, a4, a5, bUnk);
-}
-
-void CharacterAnimatorUpdateBonesHook(int NumBones, unsigned __int8 *BoneBranchIndices, CCharacterAnimator *pCharAnim)
-{
-    if (!strcmp(pCharAnim->pCharacter->szName, "miner") && NumBones > 10)
-    {
-        static int cnt = 0;
-        if (cnt++ == 10)
-        {
-            ERR("mesh %s NumBones %d", pCharAnim->pCharacter->szName, NumBones);
-            ERR("vMoveRootBoneTemp12C0 %f %f %f", pCharAnim->vMoveRootBoneTemp12C0.x, pCharAnim->vMoveRootBoneTemp12C0.y, pCharAnim->vMoveRootBoneTemp12C0.z);
-        }
-    }
-
-    CharacterAnimatorUpdateBones(NumBones, BoneBranchIndices, pCharAnim);
-
-    if (!strcmp(pCharAnim->pCharacter->szName, "miner") && NumBones > 10)
-    {
-        static int cnt = 0;
-        if (cnt++ == 10)
-        {
-            int BoneId = g_TestBoneIdx; // park-bdbn-lowerleg-l
-            ERR("vMoveRootBoneTemp12C0 %f %f %f", pCharAnim->vMoveRootBoneTemp12C0.x, pCharAnim->vMoveRootBoneTemp12C0.y, pCharAnim->vMoveRootBoneTemp12C0.z);
-            ERR("BoneTransformsCombined");
-            PrintTransform(&pCharAnim->BoneTransformsCombined[BoneId]);
-            ERR("BoneTransformsFinal");
-            PrintTransform(&pCharAnim->BoneTransformsFinal[BoneId]);
-            ERR("CombinedUpdateSeq %d FinalUpdateSeq %d field_28 %d field_2C %f field_4[0] %f %f %f",
-                pCharAnim->BoneStates1394[BoneId].UpdateSeq, pCharAnim->BoneStates1394[BoneId].field_2, 
-                pCharAnim->BoneStates1394[BoneId].field_28, pCharAnim->BoneStates1394[BoneId].field_2C,
-                pCharAnim->BoneStates1394[BoneId].field_4.rows[0].x, pCharAnim->BoneStates1394[BoneId].field_4.rows[0].y, pCharAnim->BoneStates1394[BoneId].field_4.rows[0].z);
-
-            //for (int i = 0; i < pCharAnim->pCharacter->cAnims; ++i)
-            //    ERR("%d %s", i, pCharAnim->pCharacter->Animations[i]);
-            int iAnim = 0; // ult2_stand.mvf
-            CVector3 BonePos;
-            CQuaternion BoneRot;
-            ERR("Anim %s", pCharAnim->pCharacter->Animations[iAnim]);
-            MvfAnim_CalcBonePos(pCharAnim->pCharacter->Animations[iAnim], &BonePos, g_TestBoneIdx, 0);
-            MvfAnim_CalcBoneRot(pCharAnim->pCharacter->Animations[iAnim], &BoneRot, g_TestBoneIdx, 0);
-            ERR("Bone pos %f %f %f", BonePos.x, BonePos.y, BonePos.z);
-            ERR("Bone rot %f %f %f %f", BoneRot.x, BoneRot.y, BoneRot.z, BoneRot.w);
-        }
-    }
-}
-
-auto CharacterAnimatorBuildTransform = (void(*)(CTransform *pOutTransform, CQuaternion *pRots, CVector3 *pPositions, int Num, float *a5))0x0051B110;
-
-void CharacterAnimatorBuildTransformHook(CTransform *pOutTransform, CQuaternion *pRots, CVector3 *pPositions, int Num, float *a5)
-{
-    CharacterAnimatorBuildTransform(pOutTransform, pRots, pPositions, Num, a5);
-    //ERR("CharacterAnimatorBuildTransform Num %d", Num);
-}
-
-#endif
-
-#if 0
-static void RenderEntityHook(EntityObj *pEntity)
-{ // TODO
-    DWORD dwOldLightining;
-    GrFlushBuffers();
-    g_pGrDevice->GetRenderState(D3DRS_LIGHTING, &dwOldLightining);
-    g_pGrDevice->SetRenderState(D3DRS_LIGHTING, 1);
-    g_pGrDevice->SetRenderState(D3DRS_AMBIENT, 0xFFFFFFFF);
-
-    RfRenderEntity((CObject*)pEntity);
-    GrFlushBuffers();
-    //g_pGrDevice->SetRenderState(D3DRS_LIGHTING, dwOldLightining);
-}
-#endif
 
 static void TestCmdHandler(void)
 {
@@ -276,64 +52,6 @@ static void TestCmdHandler(void)
 
 static rf::DcCommand TestCmd = { "test", "Test command", TestCmdHandler };
 
-static const auto GetMousePos = (int(*)(int *pX, int *pY, int *pZ))0x0051E450;
-
-bool g_InSetViewForScene = false;
-
-void GrSetViewMatrixHook(CMatrix3 *pMatRot, CVector3 *pPos, float Fov, int bClearZBuffer, int a5)
-{
-    D3DRECT rc[2] = { { 0, 0, 1680, 1 },{ 0, 0, 1, 1050 } };
-    //(rf::g_pGrDevice)->Clear(1, &rc[1], D3DCLEAR_TARGET, 0xFF0000FF, 1.0f, 0);
-    g_InSetViewForScene = true;
-    GrSetViewMatrix(pMatRot, pPos, Fov, bClearZBuffer, a5);
-    g_InSetViewForScene = false;
-    //(rf::g_pGrDevice)->Clear(1, &rc[1], D3DCLEAR_ZBUFFER, 0, 0.0f, 0);
-}
-
-void Test_GrClearZBuffer_SetRect()
-{
-    if (g_InSetViewForScene)
-    {
-        //(rf::g_pGrDevice)->Clear(0, NULL, D3DCLEAR_ZBUFFER, 0xFF00FF00, 1.0f, 0);
-
-        D3DRECT rc[2] = { { 0, 0, 1680, 1 },{ 0, 0, 1, 1050 } };
-        /*(rf::g_pGrDevice)->Clear(0, NULL, D3DCLEAR_TARGET, 0xFFFF0000, 1.0f, 0);
-        (rf::g_pGrDevice)->Clear(1, &rc, D3DCLEAR_TARGET| D3DCLEAR_ZBUFFER, 0xFFFF0000, 1.0f, 0);*/
-        //(rf::g_pGrDevice)->Clear(1, &rc[1], D3DCLEAR_ZBUFFER, 0, 1.0f, 0);
-        //GrSetColor(0, 255, 0, 255);
-        //GrDrawRect(0, 0, g_GrScreen.MaxWidth, g_GrScreen.MaxHeight, g_GrRectMaterial);
-        //g_GrScreen.field_8C = 1;
-    }
-
-    *(int*)0x00637090 = 1;
-}
-
-void FogClearHook()
-{
-    (rf::g_pGrDevice)->Clear(0, NULL, D3DCLEAR_TARGET, 0xFFFF0000, 1.0f, 0);
-    
-#if 0
-    *(float*)0x01818B58 += 0.5f; // g_fGrHalfViewportWidth_0
-    *(float*)0x01818B60 -= 0.5f; // g_fGrHalfViewportHeightNeg
-    *(float*)0x01818A5C += 0.5f; // g_fGrHalfViewportWidth
-    *(float*)0x01818A24 += 0.5f; // g_fGrHalfViewportHeight
-#endif
-
-    // Left and top edge fix for MSAA (RF does similar thing in GrDrawTextureD3D)
-    static float OffsetGeomX = -0.5;
-    static float OffsetGeomY = -0.5;
-    OffsetGeomX = g_GrScreen.OffsetX - 0.5f;
-    OffsetGeomY = g_GrScreen.OffsetY - 0.5f;
-    *(float*)0x01818B54 -= 0.5f; // viewport center x
-    *(float*)0x01818B5C -= 0.5f; // viewport center y
-
-    WriteMemUInt8(0x005478C6, ASM_FADD);
-    WriteMemUInt8(0x005478D7, ASM_FADD);
-    WriteMemPtr(0x005478C6 + 2, &OffsetGeomX);
-    WriteMemPtr(0x005478D7 + 2, &OffsetGeomY);
-}
-
-
 void UiButton_BmGetBitmapSizeHook(int BmHandle, int *pWidth, int *pHeight)
 {
     struct
@@ -351,6 +69,7 @@ void UiButton_BmGetBitmapSizeHook(int BmHandle, int *pWidth, int *pHeight)
         { "arrow_down_long.tga", 110, 20 },
         { "main_title.vbm", 512, 366 },
         { "indicator.tga", 14, 28 },
+        { "sort_arrow.tga", 16, 16 },
     };
 
     BmGetBitmapSize(BmHandle, pWidth, pHeight);
@@ -367,163 +86,6 @@ void UiButton_BmGetBitmapSizeHook(int BmHandle, int *pWidth, int *pHeight)
     }
 
     ERR("Unknown UiButton texture: %s %d %d", Filename, *pWidth, *pHeight);
-}
-
-bool ConvertBitmapFormat(BYTE *pDstBits, BmPixelFormat DstPixelFmt, const BYTE *pSrcBits, BmPixelFormat SrcPixelFmt, int Width, int Height, int DstPitch, int SrcPitch)
-{
-    if (DstPixelFmt != BMPF_8888) return false;
-    switch (SrcPixelFmt)
-    {
-    case BMPF_888:
-        for (int y = 0; y < Height; ++y)
-        {
-            BYTE *pDstPtr = pDstBits;
-            const BYTE *pSrcPtr = pSrcBits;
-            for (int x = 0; x < Width; ++x)
-            {
-                *(pDstPtr++) = *(pSrcPtr++);
-                *(pDstPtr++) = *(pSrcPtr++);
-                *(pDstPtr++) = *(pSrcPtr++);
-                *(pDstPtr++) = 255;
-            }
-            pDstBits += DstPitch;
-            pSrcBits += SrcPitch;
-        }
-        return true;
-    case BMPF_4444:
-        for (int y = 0; y < Height; ++y)
-        {
-            BYTE *pDstPtr = pDstBits;
-            const BYTE *pSrcPtr = pSrcBits;
-            for (int x = 0; x < Width; ++x)
-            {
-                *(pDstPtr++) = (*(pSrcPtr) & 0x0F) * 17;
-                *(pDstPtr++) = ((*(pSrcPtr++) & 0xF0) >> 4) * 17;
-                *(pDstPtr++) = (*(pSrcPtr) & 0x0F) * 17;
-                *(pDstPtr++) = ((*(pSrcPtr++) & 0xF0) >> 4) * 17;
-            }
-            pDstBits += DstPitch;
-            pSrcBits += SrcPitch;
-        }
-        return true;
-    case BMPF_1555:
-        for (int y = 0; y < Height; ++y)
-        {
-            BYTE *pDstPtr = pDstBits;
-            const BYTE *pSrcPtr = pSrcBits;
-            for (int x = 0; x < Width; ++x)
-            {
-                WORD SrcWord = *(WORD*)pSrcPtr;
-                pSrcPtr += 2;
-                *(pDstPtr++) = ((SrcWord & (0x1F << 0)) >> 0) * 255 / 31;
-                *(pDstPtr++) = ((SrcWord & (0x1F << 5)) >> 5) * 255 / 31;
-                *(pDstPtr++) = ((SrcWord & (0x1F << 10)) >> 10) * 255 / 31;
-                *(pDstPtr++) = (SrcWord & 0x8000) ? 255 : 0;
-            }
-            pDstBits += DstPitch;
-            pSrcBits += SrcPitch;
-        }
-        return true;
-    default:
-        return false;
-    }
-}
-
-int GetPixelFormatFromD3DFormat(int PixelFormat, int *BytesPerPixel)
-{
-    static int Dummy;
-    if (!BytesPerPixel)
-        BytesPerPixel = &Dummy;
-    switch (PixelFormat)
-    {
-    case D3DFMT_R5G6B5:
-        *BytesPerPixel = 2;
-        return BMPF_565;
-    case D3DFMT_A4R4G4B4:
-    case D3DFMT_X4R4G4B4:
-        *BytesPerPixel = 2;
-        return BMPF_4444;
-    case D3DFMT_X1R5G5B5:
-    case D3DFMT_A1R5G5B5:
-        *BytesPerPixel = 2;
-        return BMPF_1555;
-    case D3DFMT_R8G8B8:
-        *BytesPerPixel = 3;
-        return BMPF_888;
-    case D3DFMT_A8R8G8B8:
-    case D3DFMT_X8R8G8B8:
-        *BytesPerPixel = 4;
-        return BMPF_8888;
-    default:
-        return 0;
-    }
-}
-
-int GrD3DSetTextureDataHook(int Level, const BYTE *pSrcBits, const BYTE *pPallete, int cxBm, int cyBm, int PixelFmt, void *a7, int cxTex, int cyTex, IDirect3DTexture8 *pTexture)
-{
-    D3DLOCKED_RECT LockedRect;
-    HRESULT hr = pTexture->LockRect(Level, &LockedRect, 0, 0);
-    if (FAILED(hr))
-    {
-        ERR("LockRect failed");
-        return -1;
-    }
-    D3DSURFACE_DESC Desc;
-    pTexture->GetLevelDesc(Level, &Desc);
-
-    bool bUseFallback = false;
-    int Result = 0;
-
-    if (Desc.Format == D3DFMT_A8R8G8B8)
-    {
-        const BYTE *pSrcPtr = (const BYTE*)pSrcBits;
-        BYTE *pDstPtr = (BYTE*)LockedRect.pBits;
-        for (int y = 0; y < cyBm; ++y)
-        {
-            BYTE *pRowPtr = pDstPtr;
-            for (int x = 0; x < cxBm; ++x)
-            {
-                if (PixelFmt == BMPF_8888)
-                {
-                    *(pDstPtr++) = *(pSrcPtr++); // b
-                    *(pDstPtr++) = *(pSrcPtr++); // g
-                    *(pDstPtr++) = *(pSrcPtr++); // r
-                    *(pDstPtr++) = *(pSrcPtr++); // a
-                }
-                else if (PixelFmt == BMPF_4444)
-                {
-                    *(pDstPtr++) = (*(pSrcPtr) & 0x0F) * 17;
-                    *(pDstPtr++) = ((*(pSrcPtr++) & 0xF0) >> 4) * 17;
-                    *(pDstPtr++) = (*(pSrcPtr) & 0x0F) * 17;
-                    *(pDstPtr++) = ((*(pSrcPtr++) & 0xF0) >> 4) * 17;
-                }
-                else if (PixelFmt == BMPF_1555)
-                {
-                    WORD SrcWord = *(WORD*)pSrcPtr;
-                    pSrcPtr += 2;
-                    *(pDstPtr++) = ((SrcWord & (0x1F << 0)) >> 0) * 255 / 31;
-                    *(pDstPtr++) = ((SrcWord & (0x1F << 5)) >> 5) * 255 / 31;
-                    *(pDstPtr++) = ((SrcWord & (0x1F << 10)) >> 10) * 255 / 31;
-                    *(pDstPtr++) = (SrcWord & 0x8000) ? 255 : 0;
-                }
-                else
-                {
-                    ERR("Unsupported pixel format %d", PixelFmt);
-                    Result = -1;
-                    goto ExitLoops;
-                }
-            }
-            pDstPtr = pRowPtr + LockedRect.Pitch;
-        }
-    }
-    else
-        bUseFallback = true;
-ExitLoops:
-    pTexture->UnlockRect(Level);
-    if (!bUseFallback)
-        return Result;
-
-    return GrD3DSetTextureData(Level, pSrcBits, pPallete, cxBm, cyBm, PixelFmt, a7, cxTex, cyTex, pTexture);
 }
 
 #include <MemUtils.h>
@@ -598,6 +160,11 @@ void TestInit()
     WriteMemUInt8(0x00520AE0, ASM_NOP, 0x00520AED - 0x00520AE0);
     WriteMemUInt8(0x00520AF9, ASM_NOP, 0x00520B06 - 0x00520AF9);
 #endif
+
+#ifdef EMULATE_PACKET_LOSS
+    NwSend_Hook.hook(NwSend_New);
+    NwAddPacketToBuffer_Hook.hook(NwAddPacketToBuffer_New);
+#endif
 }
 
 void TestRenderInGame()
@@ -641,6 +208,9 @@ void TestRender()
         GrDrawText(x, y, Buffer, -1, rf::g_GrTextMaterial);
         y += 15;
         sprintf(Buffer, "WeaponClsId %d", pEntity->WeaponInfo.WeaponClsId);
+        GrDrawText(x, y, Buffer, -1, rf::g_GrTextMaterial);
+        y += 15;
+        sprintf(Buffer, "Max Texture Size %lux%lu", rf::g_GrScreen.MaxTexWidthUnk3C, rf::g_GrScreen.MaxTexHeightUnk40);
         GrDrawText(x, y, Buffer, -1, rf::g_GrTextMaterial);
         y += 15;
     }
