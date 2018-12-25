@@ -308,6 +308,10 @@ void GraphicsInit()
 
     // Init True Color improvements
     GrColorInit();
+
+    // Enable mip-mapping for textures bigger than 256x256
+    AsmWritter(0x0050FEDA, 0x0050FEE9).nop();
+    WriteMemUInt8(0x0055B739, ASM_SHORT_JMP_REL);
 }
 
 void GraphicsAfterGameInit()

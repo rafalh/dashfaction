@@ -4,6 +4,7 @@ DashFaction Changelog
 Version 1.2.2 (not released yet)
 -----------------------------------
 - added playercount command
+- enable mip-mapping support for textures bigger than 256x256
 - stability improvements
 
 Version 1.2.1 (released 2017-08-15)
