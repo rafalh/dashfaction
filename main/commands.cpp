@@ -280,6 +280,25 @@ static void LevelSoundsCmdHandler(void)
     }
 }
 
+static void PlayerCountCmdHandler()
+{
+    if (g_bDcRun)
+    {
+        if (!g_bNetworkGame) return;
+        int PlayerCount = 0;
+        CPlayer *pPlayer = g_pPlayersList;
+        while (pPlayer)
+        {
+            if (pPlayer != g_pPlayersList)
+                ++PlayerCount;
+            pPlayer = pPlayer->pNext;
+            if (pPlayer == g_pPlayersList)
+                break;
+        }
+        DcPrintf("Player count: %d\n", PlayerCount);
+    }
+}
+
 static void DcfFindMap()
 {
     if (g_bDcRun)
@@ -325,6 +344,7 @@ DcCommand g_Commands[] = {
     { "vli", "Toggles volumetric lightining", VolumeLightsCmdHandler },
     { "levelsp", "Loads single player level", LevelSpCmdHandler },
     { "levelsounds", "Sets level sounds volume scale", LevelSoundsCmdHandler },
+    { "playercount", "Get player count", PlayerCountCmdHandler },
 };
 
 void DcShowCmdHelp(DcCommand *pCmd)
@@ -528,6 +548,11 @@ void CommandRegister(DcCommand *pCmd)
         g_CommandsBuffer[(g_DcNumCommands)++] = pCmd;
     else
         ASSERT(false);
+}
+
+void CommandsAfterGameInit()
+{
+    unsigned i;
 
     // Register some unused builtin commands
     DC_REGISTER_CMD(kill_limit, "Sets kill limit", DcfKillLimit);
@@ -551,13 +576,6 @@ void CommandRegister(DcCommand *pCmd)
 
     // New commands
     DC_REGISTER_CMD(findmap, "Find map by filename fragment", DcfFindMap);
-
-    
-}
-
-void CommandsAfterGameInit()
-{
-    unsigned i;
 
     /* Add commands */
     for (i = 0; i < COUNTOF(g_Commands); ++i)
