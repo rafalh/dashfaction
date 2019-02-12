@@ -13,6 +13,7 @@
 
 #define ASM_I ;
 #define ASM_SYM(sym) _ ## sym
+#define ASM_LABEL(label) .L ## label
 
 #else // __GNUC__
 
@@ -21,5 +22,6 @@
     } }
 #define ASM_I __asm
 #define ASM_SYM(sym) sym
+#define ASM_LABEL(label) label
 
 #endif // __GNUC__

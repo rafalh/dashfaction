@@ -5,6 +5,8 @@
 #include "utils.h"
 #include "main.h"
 #include "inline_asm.h"
+#include <CallHook2.h>
+#include <FunHook2.h>
 
 using namespace rf;
 
@@ -12,49 +14,47 @@ constexpr int EGG_ANIM_ENTER_TIME = 2000;
 constexpr int EGG_ANIM_LEAVE_TIME = 2000;
 constexpr int EGG_ANIM_IDLE_TIME = 3000;
 
-auto GetVersionStr_Hook = makeFunHook(GetVersionStr);
-auto MenuUpdate_Hook = makeFunHook(MenuUpdate);
-auto MouseUpdateDirectInput_Hook = makeFunHook(MouseUpdateDirectInput);
-auto SndConvertVolume3D_AmbientSound_Hook = makeCallHook(SndConvertVolume3D);
-auto PlayerLocalFireControl_Hook = makeFunHook(PlayerLocalFireControl);
-auto GeomCachePrepareRoom_Hook = makeFunHook(GeomCachePrepareRoom);
-
 int g_VersionLabelX, g_VersionLabelWidth, g_VersionLabelHeight;
 static const char g_szVersionInMenu[] = PRODUCT_NAME_VERSION;
 int g_VersionClickCounter = 0;
 int g_EggAnimStart;
 bool g_bWin32Console = false;
 
-void __fastcall UiLabel_Create2_VersionLabel(UiPanel *pThis, void *edx, UiPanel *pParent, int x, int y, int w, int h, const char *pszText, int FontId)
+using UiLabel_Create2_Type = void __fastcall(UiPanel*, void*, UiPanel*, int, int, int, int, const char*, int);
+extern CallHook2<UiLabel_Create2_Type> UiLabel_Create2_VersionLabel_Hook;
+void __fastcall UiLabel_Create2_VersionLabel(UiPanel *pThis, void *edx, UiPanel *pParent, int x, int y, int w, int h,
+    const char *pszText, int FontId)
 {
     x = g_VersionLabelX;
     w = g_VersionLabelWidth;
     h = g_VersionLabelHeight;
-    UiLabel_Create2(pThis, pParent, x, y, w, h, pszText, FontId);
+    UiLabel_Create2_VersionLabel_Hook.CallTarget(pThis, edx, pParent, x, y, w, h, pszText, FontId);
 }
+CallHook2<UiLabel_Create2_Type> UiLabel_Create2_VersionLabel_Hook{ 0x0044344D, UiLabel_Create2_VersionLabel };
 
-static void GetVersionStr_New(const char **ppszVersion, const char **a2)
-{
-    if (ppszVersion)
-        *ppszVersion = g_szVersionInMenu;
-    if (a2)
-        *a2 = "";
-    GrGetTextWidth(&g_VersionLabelWidth, &g_VersionLabelHeight, g_szVersionInMenu, -1, g_MediumFontId);
+FunHook2<void(const char **, const char **)> GetVersionStr_Hook{ 0x004B33F0,
+    [](const char **ppszVersion, const char **a2) {
+        if (ppszVersion)
+            *ppszVersion = g_szVersionInMenu;
+        if (a2)
+            *a2 = "";
+        GrGetTextWidth(&g_VersionLabelWidth, &g_VersionLabelHeight, g_szVersionInMenu, -1, g_MediumFontId);
 
-    g_VersionLabelX = 430 - g_VersionLabelWidth;
-    g_VersionLabelWidth = g_VersionLabelWidth + 5;
-    g_VersionLabelHeight = g_VersionLabelHeight + 2;
-}
+        g_VersionLabelX = 430 - g_VersionLabelWidth;
+        g_VersionLabelWidth = g_VersionLabelWidth + 5;
+        g_VersionLabelHeight = g_VersionLabelHeight + 2;
+    }
+};
 
-static int MenuUpdate_New()
-{
-    int MenuId = MenuUpdate_Hook.callTrampoline();
-    if (MenuId == MENU_MP_LIMBO) // hide cursor when changing level - hackfixed in RF by chaning rendering logic
-        rf::SetCursorVisible(false);
-    else if (MenuId == MENU_MAIN)
-        rf::SetCursorVisible(true);
-    return MenuId;
-}
+FunHook2<int()> MenuUpdate_Hook{ 0x00434230,
+    []() {
+        int MenuId = MenuUpdate_Hook.CallTarget();
+        if (MenuId == MENU_MP_LIMBO) // hide cursor when changing level - hackfixed in RF by chaning rendering logic
+            rf::SetCursorVisible(false);
+        else if (MenuId == MENU_MAIN)
+            rf::SetCursorVisible(true);
+        return MenuId;
+    }};
 
 ASM_FUNC(CrashFix_0055CE48,
 // ecx - num, esi - source, ebx - dest
@@ -62,7 +62,7 @@ ASM_FUNC(CrashFix_0055CE48,
     ASM_I  lea   edx, [esp + 0x38 - 0x28]
     ASM_I  mov   eax, [eax + edi]
     ASM_I  test  eax, eax // check if pD3DTexture is NULL
-    ASM_I  jz    CrashFix_0055CE48_label1
+    ASM_I  jz    ASM_LABEL(CrashFix_0055CE48_label1)
     ASM_I  push  0
     ASM_I  push  0
     ASM_I  push  edx
@@ -70,29 +70,30 @@ ASM_FUNC(CrashFix_0055CE48,
     ASM_I  push  eax
     ASM_I  mov   ecx, 0x0055CE59
     ASM_I  jmp   ecx
-    ASM_I  CrashFix_0055CE48_label1 :
+    ASM_I  ASM_LABEL(CrashFix_0055CE48_label1) :
     ASM_I  mov   ecx, 0x0055CF23 // fail gr_lock
     ASM_I  jmp   ecx
 )
 
-void MenuMainProcessMouseHook()
-{
-    MenuMainProcessMouse();
-    if (MouseWasButtonPressed(0))
-    {
-        int x, y, z;
-        MouseGetPos(&x, &y, &z);
-        UiPanel *PanelsToCheck[1] = { &g_MenuVersionLabel };
-        int Matched = UiGetElementFromPos(x, y, PanelsToCheck, COUNTOF(PanelsToCheck));
-        if (Matched == 0)
+CallHook2<void()> MenuMainProcessMouse_Hook{ 0x004437B9,
+    []() {
+        MenuMainProcessMouse_Hook.CallTarget();
+        if (MouseWasButtonPressed(0))
         {
-            TRACE("Version clicked");
-            ++g_VersionClickCounter;
-            if (g_VersionClickCounter == 3)
-                g_EggAnimStart = GetTickCount();
+            int x, y, z;
+            MouseGetPos(&x, &y, &z);
+            UiPanel *PanelsToCheck[1] = { &g_MenuVersionLabel };
+            int Matched = UiGetElementFromPos(x, y, PanelsToCheck, COUNTOF(PanelsToCheck));
+            if (Matched == 0)
+            {
+                TRACE("Version clicked");
+                ++g_VersionClickCounter;
+                if (g_VersionClickCounter == 3)
+                    g_EggAnimStart = GetTickCount();
+            }
         }
     }
-}
+};
 
 int LoadEasterEggImage()
 {
@@ -134,31 +135,32 @@ int LoadEasterEggImage()
 #endif
 }
 
-void MenuMainRenderHook()
-{
-    MenuMainRender();
-    if (g_VersionClickCounter >= 3)
-    {
-        static int PonyBitmap = LoadEasterEggImage(); // data.vpp
-        if (PonyBitmap == -1)
-            return;
-        int w, h;
-        BmGetBitmapSize(PonyBitmap, &w, &h);
-        int AnimDeltaTime = GetTickCount() - g_EggAnimStart;
-        int PosX = (g_GrScreen.MaxWidth - w) / 2;
-        int PosY = g_GrScreen.MaxHeight - h;
-        if (AnimDeltaTime < EGG_ANIM_ENTER_TIME)
-            PosY += h - (int)(sinf(AnimDeltaTime / (float)EGG_ANIM_ENTER_TIME * (float)M_PI / 2.0f) * h);
-        else if (AnimDeltaTime > EGG_ANIM_ENTER_TIME + EGG_ANIM_IDLE_TIME)
+CallHook2<void()> MenuMainRender_Hook{ 0x00443802,
+    []() {
+        MenuMainRender_Hook.CallTarget();
+        if (g_VersionClickCounter >= 3)
         {
-            int LeaveDelta = AnimDeltaTime - (EGG_ANIM_ENTER_TIME + EGG_ANIM_IDLE_TIME);
-            PosY += (int)((1.0f - cosf(LeaveDelta / (float)EGG_ANIM_LEAVE_TIME * (float)M_PI / 2.0f)) * h);
-            if (LeaveDelta > EGG_ANIM_LEAVE_TIME)
-                g_VersionClickCounter = 0;
+            static int PonyBitmap = LoadEasterEggImage(); // data.vpp
+            if (PonyBitmap == -1)
+                return;
+            int w, h;
+            BmGetBitmapSize(PonyBitmap, &w, &h);
+            int AnimDeltaTime = GetTickCount() - g_EggAnimStart;
+            int PosX = (g_GrScreen.MaxWidth - w) / 2;
+            int PosY = g_GrScreen.MaxHeight - h;
+            if (AnimDeltaTime < EGG_ANIM_ENTER_TIME)
+                PosY += h - (int)(sinf(AnimDeltaTime / (float)EGG_ANIM_ENTER_TIME * (float)M_PI / 2.0f) * h);
+            else if (AnimDeltaTime > EGG_ANIM_ENTER_TIME + EGG_ANIM_IDLE_TIME)
+            {
+                int LeaveDelta = AnimDeltaTime - (EGG_ANIM_ENTER_TIME + EGG_ANIM_IDLE_TIME);
+                PosY += (int)((1.0f - cosf(LeaveDelta / (float)EGG_ANIM_LEAVE_TIME * (float)M_PI / 2.0f)) * h);
+                if (LeaveDelta > EGG_ANIM_LEAVE_TIME)
+                    g_VersionClickCounter = 0;
+            }
+            GrDrawImage(PonyBitmap, PosX, PosY, g_GrBitmapMaterial);
         }
-        GrDrawImage(PonyBitmap, PosX, PosY, g_GrBitmapMaterial);
     }
-}
+};
 
 void SetPlaySoundEventsVolumeScale(float fVolScale)
 {
@@ -171,21 +173,23 @@ void SetPlaySoundEventsVolumeScale(float fVolScale)
         WriteMemFloat(Offsets[i] + 1, fVolScale);
 }
 
-void SndConvertVolume3D_AmbientSound_New(int GameSndId, CVector3 *pSoundPos, float *pPanOut, float *pVolumeOut, float VolumeIn)
-{
-    SndConvertVolume3D_AmbientSound_Hook.callParent(GameSndId, pSoundPos, pPanOut, pVolumeOut, VolumeIn);
-    *pVolumeOut *= g_gameConfig.levelSoundVolume;
-}
+CallHook2<void(int, CVector3 *, float *, float *, float)> SndConvertVolume3D_AmbientSound_Hook{ 0x00505F93,
+    [](int GameSndId, CVector3 *pSoundPos, float *pPanOut, float *pVolumeOut, float VolumeIn) {
+        SndConvertVolume3D_AmbientSound_Hook.CallTarget(GameSndId, pSoundPos, pPanOut, pVolumeOut, VolumeIn);
+        *pVolumeOut *= g_gameConfig.levelSoundVolume;
+    }
+};
 
-void MouseUpdateDirectInput_New()
-{
-    MouseUpdateDirectInput_Hook.callTrampoline();
+FunHook2<void()> MouseUpdateDirectInput_Hook{ 0x0051DEB0,
+    []() {
+        MouseUpdateDirectInput_Hook.CallTarget();
 
-    // center cursor
-    POINT pt = { g_GrScreen.MaxWidth / 2, g_GrScreen.MaxHeight / 2 };
-    ClientToScreen(g_hWnd, &pt);
-    SetCursorPos(pt.x, pt.y);
-}
+        // center cursor
+        POINT pt = { g_GrScreen.MaxWidth / 2, g_GrScreen.MaxHeight / 2 };
+        ClientToScreen(g_hWnd, &pt);
+        SetCursorPos(pt.x, pt.y);
+    }
+};
 
 bool IsHoldingAssaultRifle()
 {
@@ -194,13 +198,16 @@ bool IsHoldingAssaultRifle()
     return pEntity && pEntity->WeaponInfo.WeaponClsId == AssaultRifleClassId;
 }
 
-void PlayerLocalFireControl_New(CPlayer *pPlayer, bool bSecondary, char WasPressed)
-{
-    if (g_gameConfig.swapAssaultRifleControls && IsHoldingAssaultRifle())
-        bSecondary = !bSecondary;
-    PlayerLocalFireControl_Hook.callTrampoline(pPlayer, bSecondary, WasPressed);
-}
+FunHook2<void(CPlayer *, bool, char)> PlayerLocalFireControl_Hook{ 0x004A4E80,
+    [](CPlayer *pPlayer, bool bSecondary, char WasPressed)
+    {
+        if (g_gameConfig.swapAssaultRifleControls && IsHoldingAssaultRifle())
+            bSecondary = !bSecondary;
+        PlayerLocalFireControl_Hook.CallTarget(pPlayer, bSecondary, WasPressed);
+    }
+};
 
+extern CallHook2<char(ControlConfig *, EGameCtrl, bool *)> IsEntityCtrlActive_Hook1;
 char IsEntityCtrlActive_New(ControlConfig *pControlsState, EGameCtrl CtrlId, bool *pWasPressed)
 {
     if (g_gameConfig.swapAssaultRifleControls && IsHoldingAssaultRifle())
@@ -210,8 +217,10 @@ char IsEntityCtrlActive_New(ControlConfig *pControlsState, EGameCtrl CtrlId, boo
         else if (CtrlId == GC_SECONDARY_ATTACK)
             CtrlId = GC_PRIMARY_ATTACK;
     }
-    return IsEntityCtrlActive(pControlsState, CtrlId, pWasPressed);
+    return IsEntityCtrlActive_Hook1.CallTarget(pControlsState, CtrlId, pWasPressed);
 }
+CallHook2<char(ControlConfig *, EGameCtrl, bool *)> IsEntityCtrlActive_Hook1{ 0x00430E65, IsEntityCtrlActive_New };
+CallHook2<char(ControlConfig *, EGameCtrl, bool *)> IsEntityCtrlActive_Hook2{ 0x00430EF7, IsEntityCtrlActive_New };
 
 void DcfSwapAssaultRifleControls()
 {
@@ -225,14 +234,7 @@ void DcfSwapAssaultRifleControls()
 
 #if SERVER_WIN32_CONSOLE
 
-static const auto DcProcessKbd = (void(*)())0x00509F90;
-static const auto DcDrawServerConsole = (void(*)())0x0050A770;
-static const auto KeyGetFromQueue = (int(*)())0x0051F000;
 static const auto KeyProcessEvent = (void(*)(int ScanCode, int bKeyDown, int DeltaT))0x0051E6C0;
-
-auto DcPrint_Hook = makeFunHook(DcPrint);
-auto DcDrawServerConsole_Hook = makeFunHook(DcDrawServerConsole);
-auto KeyGetFromQueue_Hook = makeFunHook(KeyGetFromQueue);
 
 void ResetConsoleCursorColumn(bool bClear)
 {
@@ -280,116 +282,121 @@ void InputThreadProc()
     }
 }
 
-void OsInitWindow_Server_New()
-{
-    AllocConsole();
-    SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE);
+CallHook2<void()> OsInitWindow_Server_Hook{ 0x004B27C5,
+    []() {
+        AllocConsole();
+        SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE);
 
-    //std::thread InputThread(InputThreadProc);
-    //InputThread.detach();
-}
-
-void DcPrint_New(const char *pszText, const int *pColor)
-{
-    HANDLE hOutput = GetStdHandle(STD_OUTPUT_HANDLE);
-    constexpr WORD RedAttr = FOREGROUND_RED | FOREGROUND_INTENSITY;
-    constexpr WORD BlueAttr = FOREGROUND_BLUE | FOREGROUND_INTENSITY;
-    constexpr WORD WhiteAttr = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY;
-    constexpr WORD GrayAttr = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
-    WORD CurrentAttr = 0;
-
-    ResetConsoleCursorColumn(true);
-
-    const char *Ptr = pszText;
-    while (*Ptr)
-    {
-        std::string Color;
-        if (Ptr[0] == '[' && Ptr[1] == '$')
-        {
-            const char *ColorEndPtr = strchr(Ptr + 2, ']');
-            if (ColorEndPtr)
-            {
-                Color.assign(Ptr + 2, ColorEndPtr - Ptr - 2);
-                Ptr = ColorEndPtr + 1;
-            }
-        }
-
-        const char *EndPtr = strstr(Ptr, "[$");
-        if (!EndPtr)
-            EndPtr = Ptr + strlen(Ptr);
-
-        WORD Attr;
-        if (Color == "Red")
-            Attr = RedAttr;
-        else if (Color == "Blue")
-            Attr = BlueAttr;
-        else if (Color == "White")
-            Attr = WhiteAttr;
-        else
-        {
-            if (!Color.empty())
-                ERR("unknown color %s", Color.c_str());
-            Attr = GrayAttr;
-        }
-
-        if (CurrentAttr != Attr)
-        {
-            CurrentAttr = Attr;
-            SetConsoleTextAttribute(hOutput, Attr);
-        }
-        
-        DWORD NumChars = EndPtr - Ptr;
-        WriteFile(hOutput, Ptr, NumChars, NULL, NULL);
-        Ptr = EndPtr;
+        //std::thread InputThread(InputThreadProc);
+        //InputThread.detach();
     }
+};
 
-    if (Ptr > pszText && Ptr[-1] != '\n')
-        WriteFile(hOutput, "\n", 1, NULL, NULL);
+FunHook2<void(const char *, const int *)> DcPrint_Hook{ reinterpret_cast<uintptr_t>(DcPrint),
+    [](const char *pszText, const int *pColor) {
+        HANDLE hOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+        constexpr WORD RedAttr = FOREGROUND_RED | FOREGROUND_INTENSITY;
+        constexpr WORD BlueAttr = FOREGROUND_BLUE | FOREGROUND_INTENSITY;
+        constexpr WORD WhiteAttr = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY;
+        constexpr WORD GrayAttr = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
+        WORD CurrentAttr = 0;
 
-    if (CurrentAttr != GrayAttr)
-        SetConsoleTextAttribute(hOutput, GrayAttr);
-
-    //PrintCmdInputLine();
-}
-
-void DcPutChar_NewLine_New()
-{
-    HANDLE hOutput = GetStdHandle(STD_OUTPUT_HANDLE);
-    WriteConsoleA(hOutput, "\r\n", 2, NULL, NULL);
-}
-
-void DcDrawServerConsole_New()
-{
-    static char szPrevCmdLine[1024];
-    HANDLE hOutput = GetStdHandle(STD_OUTPUT_HANDLE);
-    if (strncmp(g_szDcCmdLine, szPrevCmdLine, _countof(szPrevCmdLine)) != 0)
-    {
         ResetConsoleCursorColumn(true);
-        PrintCmdInputLine();
-        strncpy(szPrevCmdLine, g_szDcCmdLine, _countof(szPrevCmdLine));
+
+        const char *Ptr = pszText;
+        while (*Ptr)
+        {
+            std::string Color;
+            if (Ptr[0] == '[' && Ptr[1] == '$')
+            {
+                const char *ColorEndPtr = strchr(Ptr + 2, ']');
+                if (ColorEndPtr)
+                {
+                    Color.assign(Ptr + 2, ColorEndPtr - Ptr - 2);
+                    Ptr = ColorEndPtr + 1;
+                }
+            }
+
+            const char *EndPtr = strstr(Ptr, "[$");
+            if (!EndPtr)
+                EndPtr = Ptr + strlen(Ptr);
+
+            WORD Attr;
+            if (Color == "Red")
+                Attr = RedAttr;
+            else if (Color == "Blue")
+                Attr = BlueAttr;
+            else if (Color == "White")
+                Attr = WhiteAttr;
+            else
+            {
+                if (!Color.empty())
+                    ERR("unknown color %s", Color.c_str());
+                Attr = GrayAttr;
+            }
+
+            if (CurrentAttr != Attr)
+            {
+                CurrentAttr = Attr;
+                SetConsoleTextAttribute(hOutput, Attr);
+            }
+            
+            DWORD NumChars = EndPtr - Ptr;
+            WriteFile(hOutput, Ptr, NumChars, NULL, NULL);
+            Ptr = EndPtr;
+        }
+
+        if (Ptr > pszText && Ptr[-1] != '\n')
+            WriteFile(hOutput, "\n", 1, NULL, NULL);
+
+        if (CurrentAttr != GrayAttr)
+            SetConsoleTextAttribute(hOutput, GrayAttr);
+
+        //PrintCmdInputLine();
     }
-}
+};
 
-int KeyGetFromQueue_New()
-{
-    if (!g_bDedicatedServer)
-        return KeyGetFromQueue_Hook.callTrampoline();
-
-    HANDLE hInput = GetStdHandle(STD_INPUT_HANDLE);
-    INPUT_RECORD InputRecord;
-    DWORD NumRead = 0;
-    while (false)
-    {
-        if (!PeekConsoleInput(hInput, &InputRecord, 1, &NumRead) || NumRead == 0)
-            break;
-        if (!ReadConsoleInput(hInput, &InputRecord, 1, &NumRead) || NumRead == 0)
-            break;
-        if (InputRecord.EventType == KEY_EVENT)
-            KeyProcessEvent(InputRecord.Event.KeyEvent.wVirtualScanCode, InputRecord.Event.KeyEvent.bKeyDown, 0);
+CallHook2<void()> DcPutChar_NewLine_Hook{ 0x0050A081,
+    [] {
+        HANDLE hOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+        WriteConsoleA(hOutput, "\r\n", 2, NULL, NULL);
     }
+};
 
-    return KeyGetFromQueue_Hook.callTrampoline();
-}
+FunHook2<void()> DcDrawServerConsole_Hook{ 0x0050A770,
+    []() {
+        static char szPrevCmdLine[1024];
+        HANDLE hOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+        if (strncmp(g_szDcCmdLine, szPrevCmdLine, _countof(szPrevCmdLine)) != 0)
+        {
+            ResetConsoleCursorColumn(true);
+            PrintCmdInputLine();
+            strncpy(szPrevCmdLine, g_szDcCmdLine, _countof(szPrevCmdLine));
+        }
+    }
+};
+
+FunHook2<int()> KeyGetFromQueue_Hook{ 0x0051F000,
+    []() {
+        if (!g_bDedicatedServer)
+            return KeyGetFromQueue_Hook.CallTarget();
+
+        HANDLE hInput = GetStdHandle(STD_INPUT_HANDLE);
+        INPUT_RECORD InputRecord;
+        DWORD NumRead = 0;
+        while (false)
+        {
+            if (!PeekConsoleInput(hInput, &InputRecord, 1, &NumRead) || NumRead == 0)
+                break;
+            if (!ReadConsoleInput(hInput, &InputRecord, 1, &NumRead) || NumRead == 0)
+                break;
+            if (InputRecord.EventType == KEY_EVENT)
+                KeyProcessEvent(InputRecord.Event.KeyEvent.wVirtualScanCode, InputRecord.Event.KeyEvent.bKeyDown, 0);
+        }
+
+        return KeyGetFromQueue_Hook.CallTarget();
+    }
+};
 
 #endif // SERVER_WIN32_CONSOLE
 
@@ -408,25 +415,26 @@ bool EntityIsReloading_SwitchWeapon_New(EntityObj *pEntity)
     return false;
 }
 
-int GeomCachePrepareRoom_New(void *pGeom, void *pRoom)
-{
-    int ret = GeomCachePrepareRoom_Hook.callTrampoline(pGeom, pRoom);
-    char **ppRoomGeom = (char**)((char*)pRoom + 4);
-    char *pRoomGeom = *ppRoomGeom;
-    if (ret == 0 && pRoomGeom)
-    {
-        uint32_t *pRoomVertNum = (uint32_t*)(pRoomGeom + 4);
-        if (*pRoomVertNum > 8000)
+FunHook2<int(void *, void *)> GeomCachePrepareRoom_Hook{ 0x004F0C00,
+    [](void *pGeom, void *pRoom) {
+        int ret = GeomCachePrepareRoom_Hook.CallTarget(pGeom, pRoom);
+        char **ppRoomGeom = (char**)((char*)pRoom + 4);
+        char *pRoomGeom = *ppRoomGeom;
+        if (ret == 0 && pRoomGeom)
         {
-            static int Once = 0;
-            if (!(Once++))
-                WARN("Not rendering room with %u vertices!", *pRoomVertNum);
-            *ppRoomGeom = NULL;
-            return -1;
+            uint32_t *pRoomVertNum = (uint32_t*)(pRoomGeom + 4);
+            if (*pRoomVertNum > 8000)
+            {
+                static int Once = 0;
+                if (!(Once++))
+                    WARN("Not rendering room with %u vertices!", *pRoomVertNum);
+                *ppRoomGeom = NULL;
+                return -1;
+            }
         }
+        return ret;
     }
-    return ret;
-}
+};
 
 void MiscInit()
 {
@@ -434,8 +442,8 @@ void MiscInit()
     WriteMemPtr(0x004B2534, "-- " PRODUCT_NAME " Initializing --\n");
 
     // Version in Main Menu
-    AsmWritter(0x0044344D).callLong(UiLabel_Create2_VersionLabel);
-    GetVersionStr_Hook.hook(GetVersionStr_New);
+    UiLabel_Create2_VersionLabel_Hook.Install();
+    GetVersionStr_Hook.Install();
 
     // Window title (client and server)
     WriteMemPtr(0x004B2790, PRODUCT_NAME);
@@ -496,15 +504,15 @@ void MiscInit()
 #endif
 
 #if 1 // Version Easter Egg
-    WriteMemInt32(0x004437B9 + 1, (uintptr_t)MenuMainProcessMouseHook - (0x004437B9 + 0x5));
-    WriteMemInt32(0x00443802 + 1, (uintptr_t)MenuMainRenderHook - (0x00443802 + 0x5));
+    MenuMainProcessMouse_Hook.Install();
+    MenuMainRender_Hook.Install();
 #endif
 
     // Fix console rendering when changing level
     AsmWritter(0x0047C490).ret();
     AsmWritter(0x0047C4AA).ret();
     WriteMemUInt8(0x004B2E15, ASM_NOP, 2);
-    MenuUpdate_Hook.hook(MenuUpdate_New);
+    MenuUpdate_Hook.Install();
 
     // Increase damage for kill command in Single Player
     WriteMemFloat(0x004A4DF5 + 1, 100000.0f);
@@ -520,10 +528,10 @@ void MiscInit()
 
     // Level sounds
     SetPlaySoundEventsVolumeScale(g_gameConfig.levelSoundVolume);
-    SndConvertVolume3D_AmbientSound_Hook.hook(0x00505F93, SndConvertVolume3D_AmbientSound_New);
+    SndConvertVolume3D_AmbientSound_Hook.Install();
 
     // hook MouseUpdateDirectInput
-    MouseUpdateDirectInput_Hook.hook(MouseUpdateDirectInput_New);
+    MouseUpdateDirectInput_Hook.Install();
 
     // Chat color alpha
     AsmWritter(0x00477490, 0x004774A4).mov(AsmRegs::EAX, 0x30); // chatbox border
@@ -536,16 +544,16 @@ void MiscInit()
         WriteMemUInt8(0x0042669C, ASM_SHORT_JMP_REL);
 
     // Swap Assault Rifle fire controls
-    PlayerLocalFireControl_Hook.hook(PlayerLocalFireControl_New);
-    WriteMemInt32(0x00430E65 + 1, (uintptr_t)IsEntityCtrlActive_New - (0x00430E65 + 5));
-    WriteMemInt32(0x00430EF7 + 1, (uintptr_t)IsEntityCtrlActive_New - (0x00430EF7 + 5));
+    PlayerLocalFireControl_Hook.Install();
+    IsEntityCtrlActive_Hook1.Install();
+    IsEntityCtrlActive_Hook2.Install();
     DC_REGISTER_CMD(swap_assault_rifle_controls, "Swap Assault Rifle controls", DcfSwapAssaultRifleControls);
 
     // Fix crash in shadows rendering
     WriteMemUInt8(0x0054A3C0 + 2, 16);
 
     // Fix crash in geometry rendering
-    GeomCachePrepareRoom_Hook.hook(GeomCachePrepareRoom_New);
+    GeomCachePrepareRoom_Hook.Install();
 
     // Remove Sleep calls in TimerInit
     AsmWritter(0x00504A67, 0x00504A82).nop();
@@ -560,12 +568,12 @@ void MiscInit()
     g_bWin32Console = stristr(GetCommandLineA(), "-win32-console") != nullptr;
     if (g_bWin32Console)
     {
-        WriteMemUInt32(0x004B27C5 + 1, (uintptr_t)OsInitWindow_Server_New - (0x004B27C5 + 0x5));
+        OsInitWindow_Server_Hook.Install();
         //AsmWritter(0x0050A770).ret(); // null DcDrawServerConsole
-        DcPrint_Hook.hook(DcPrint_New);
-        DcDrawServerConsole_Hook.hook(DcDrawServerConsole_New);
-        KeyGetFromQueue_Hook.hook(KeyGetFromQueue_New);
-        AsmWritter(0x0050A081).callLong(DcPutChar_NewLine_New);
+        DcPrint_Hook.Install();
+        DcDrawServerConsole_Hook.Install();
+        KeyGetFromQueue_Hook.Install();
+        DcPutChar_NewLine_Hook.Install();
     }
 #endif
 }

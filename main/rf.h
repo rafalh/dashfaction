@@ -165,7 +165,6 @@ namespace rf
     static const auto DcPrint = (void(*)(const char *pszText, const int *pColor))0x00509EC0;
     static const auto DcPrintf = (void(*)(const char *pszFormat, ...))0x0050B9F0;
     static const auto DcGetArg = (void(*)(int Type, int bUnknown))0x0050AED0;
-    static const auto DcUpdate = (void(*)(BOOL bServer))0x0050A720;
     static const auto DcAutoCompleteInput = (void(*)())0x0050A620;
     static const auto DcRunCmd = (int(*)(const char *pszCmd))0x00509B00;
 
@@ -797,8 +796,6 @@ namespace rf
     static auto &g_pPlayersList = *(CPlayer**)0x007C75CC;
     static auto &g_pLocalPlayer = *(CPlayer**)0x007C75D4;
 
-    static const auto PlayerCreate = (CPlayer *(*)(char bLocal))0x004A3310;
-    static const auto PlayerDestroy = (void(*)(CPlayer *pPlayer))0x004A35C0;
     static const auto KillLocalPlayer = (void(*)())0x004757A0;
     static const auto HandleCtrlInGame = (void(*)(CPlayer *pPlayer, EGameCtrl KeyId, char WasPressed))0x004A6210;
     static const auto IsEntityCtrlActive = (char(*)(ControlConfig *pCtrlConf, EGameCtrl CtrlId, bool *pWasPressed))0x0043D4F0;
@@ -820,7 +817,6 @@ namespace rf
     static const auto PlayerRenderRocketLauncherScannerView = (void(*)(CPlayer *pPlayer))0x004AEEF0;
     static const auto PlayerFpgunSetState = (void(*)(CPlayer *pPlayer, int State))0x004AA560;
     static const auto PlayerFpgunHasState = (bool(*)(CPlayer *pPlayer, int State))0x004A9520;
-    static const auto PlayerLocalFireControl = (void(*)(CPlayer *pPlayer, bool bSecondary, char WasPressed))0x004A4E80;
 
     static const auto IsEntityLoopFire = (bool(*)(int hEntity, signed int WeaponClsId))0x0041A830;
     static const auto EntityIsSwimming = (bool(*)(EntityObj *pEntity))0x0042A0A0;
@@ -1539,8 +1535,6 @@ namespace rf
     /* Input */
     static const auto MouseGetPos = (int(*)(int *pX, int *pY, int *pZ))0x0051E450;
     static const auto MouseWasButtonPressed = (int(*)(int BtnIdx))0x0051E5D0;
-    static const auto KeyGetFromFifo = (int(*)())0x0051F000;
-    static const auto MouseUpdateDirectInput = (void(*)())0x0051DEB0;
 
     /* Menu */
 
@@ -1583,9 +1577,6 @@ namespace rf
     };
 
     static const auto SwitchMenu = (int(*)(int MenuId, bool bForce))0x00434190;
-    static const auto MenuMainProcessMouse = (void(*)())0x00443D90;
-    static const auto MenuMainRender = (void(*)())0x004435F0;
-    static const auto MenuUpdate = (int(*)())0x00434230;
     static const auto GetCurrentMenuId = (MenuId(*)())0x00434200;
 
     static auto &g_MenuLevels = *(int*)0x00630064;
@@ -1635,15 +1626,10 @@ namespace rf
     static auto &g_bDbgRenderTriggers = *(uint8_t*)0x0085683C;
 
     static const auto RfBeep = (void(*)(unsigned u1, unsigned u2, unsigned u3, float fVolume))0x00505560;
-    static const auto InitGame = (void(*)())0x004B13F0;
-    static const auto CleanupGame = (void(*)())0x004B2D40;
-    static const auto RunGame = (bool(*)())0x004B2D90;
     static const auto GetFileExt = (char *(*)(const char *pszPath))0x005143F0;
     static const auto SplitScreenStart = (void(*)())0x00480D30;
-    static const auto GetVersionStr = (void(*)(const char **ppszVersion, const char **a2))0x004B33F0;
     static const auto SetNextLevelFilename = (void(*)(CString strFilename, CString strSecond))0x0045E2E0;
     static const auto DemoLoadLevel = (void(*)(const char *pszLevelFileName))0x004CC270;
-    static const auto RenderHitScreen = (void(*)(CPlayer *pPlayer))0x004163C0;
     static const auto RenderReticle = (void(*)(CPlayer *pPlayer))0x0043A2C0;
     static const auto SetCursorVisible = (void(*)(char bVisible))0x0051E680;
     static const auto RflLoad = (int(*)(CString *pstrLevelFilename, CString *a2, char *pszError))0x0045C540;
@@ -1651,7 +1637,6 @@ namespace rf
     static const auto DrawScoreboardInternal = (void(*)(bool bDraw))0x00470880;
     static const auto BinkInitDeviceInfo = (unsigned(*)())0x005210C0;
     static const auto SndConvertVolume3D = (void(*)(int GameSndId, CVector3 *pSoundPos, float *pPanOut, float *pVolumeOut, float VolumeIn))0x00505740;
-    static const auto GeomCachePrepareRoom = (int(*)(void *pGeom, void *pRoom))0x004F0C00;
 
 
     /* Strings Table */
