@@ -9,6 +9,7 @@ Version 1.2.2 (not released yet)
 - put not responding servers at the bottom of server list
 - change maximal FPS limit to 240
 - change screen-shake emulated FPS to 150 to match most common PF configuration
+- fix bullet collision testing if mover is in the line of the shot
 - stability improvements
 
 Version 1.2.1 (released 2017-08-15)

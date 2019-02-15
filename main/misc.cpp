@@ -593,6 +593,10 @@ void MiscInit()
     // Put not responding servers at the bottom of server list
     ServerListCmpFunc_Hook.Install();
 
+    // Disable broken optimization of segment vs geometry collision test
+    // Fixes hitting objects if mover is in the line of the shot
+    AsmWritter(0x00499055).jmpLong(0x004990B4);
+
 #if 0
     // Fix weapon switch glitch when reloading (should be used on Match Mode)
     AsmWritter(0x004A4B4B).callLong(EntityIsReloading_SwitchWeapon_New);
