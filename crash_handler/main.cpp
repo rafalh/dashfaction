@@ -62,6 +62,20 @@ void SendArchive()
     req.end();
 }
 
+int GetTempFileNameInTempDir(const char *Prefix, char Result[MAX_PATH])
+{
+    char TempDir[MAX_PATH];
+    DWORD dwRetVal = GetTempPathA(_countof(TempDir), TempDir);
+    if (dwRetVal == 0 || dwRetVal > _countof(TempDir))
+        return -1;
+
+    UINT uRetVal = GetTempFileNameA(TempDir, Prefix, 0, Result);
+    if (uRetVal == 0)
+        return -1;
+    
+    return 0;
+}
+
 #if 0
 int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
@@ -80,15 +94,8 @@ int main(int argc, const char *argv[]) try
     DWORD dwThreadId = (DWORD)strtoull(argv[3], nullptr, 0);
     HANDLE hEvent = (HANDLE)strtoull(argv[4], nullptr, 0);
 
-    char TempDir[MAX_PATH], CrashDumpFilename[MAX_PATH];
-    DWORD dwRetVal;
-    dwRetVal = GetTempPathA(_countof(TempDir), TempDir);
-    if (dwRetVal == 0 || dwRetVal > _countof(TempDir))
-        return -1;
-
-    UINT uRetVal;
-    uRetVal = GetTempFileNameA(TempDir, "DF_Crash", 0, CrashDumpFilename);
-    if (uRetVal == 0)
+    char CrashDumpFilename[MAX_PATH];
+    if (GetTempFileNameInTempDir("DF_Dump", CrashDumpFilename) != 0)
         return -1;
 
     MiniDumpHelper dumpHelper;

@@ -117,7 +117,9 @@ bool MiniDumpHelper::writeDump(const char *Path, PEXCEPTION_POINTERS pExceptionP
 
     if (INVALID_HANDLE_VALUE == hFile)
     {
-        CRASHHANDLER_ERR("Error! CreateFile failed.");
+        char Buf[256];
+        sprintf(Buf, "Error %lu! CreateFile failed when writing a Minidump.", GetLastError());
+        CRASHHANDLER_ERR(Buf);
         return false;
     }
 

@@ -11,6 +11,11 @@ static LONG WINAPI CrashHandlerExceptionFilter(PEXCEPTION_POINTERS pExceptionInf
     static PROCESS_INFORMATION ProcInfo;
     static WCHAR CmdLine[256];
 
+    ERR("Unhandled exception: ExceptionAddress=0x%X ExceptionCode=0x%X",
+        pExceptionInfo->ExceptionRecord->ExceptionAddress, pExceptionInfo->ExceptionRecord->ExceptionCode);
+    for (int i = 0; i < pExceptionInfo->ExceptionRecord->NumberParameters; ++i)
+        ERR("ExceptionInformation[%d]=0x%X", pExceptionInfo->ExceptionRecord->ExceptionInformation[i]);
+
     do
     {
         if (!DuplicateHandle(GetCurrentProcess(), GetCurrentProcess(), GetCurrentProcess(), &hProcess, 0, TRUE, DUPLICATE_SAME_ACCESS))
@@ -25,7 +30,10 @@ static LONG WINAPI CrashHandlerExceptionFilter(PEXCEPTION_POINTERS pExceptionInf
         StartupInfo.cb = sizeof(StartupInfo);
         swprintf(CmdLine, ARRAYSIZE(CmdLine), L"%ls\\CrashHandler.exe 0x%p 0x%p %lu 0x%p", g_ModulePath, pExceptionInfo, hProcess, GetCurrentThreadId(), hEvent);
         if (!CreateProcessW(NULL, CmdLine, NULL, NULL, TRUE, 0, NULL, NULL, &StartupInfo, &ProcInfo))
+        {
+            ERR("Failed to start CrashHandler process - CreateProcessW failed with error %ls", CmdLine);
             break;
+        }
 
         WaitForSingleObject(hEvent, 2000);
         CloseHandle(ProcInfo.hProcess);
@@ -43,6 +51,7 @@ static LONG WINAPI CrashHandlerExceptionFilter(PEXCEPTION_POINTERS pExceptionInf
 void CrashHandlerInit(HMODULE hModule)
 {
     GetModuleFileNameW(hModule, g_ModulePath, ARRAYSIZE(g_ModulePath));
+
     WCHAR *Filename = wcsrchr(g_ModulePath, L'\\');
     if (Filename)
         *Filename = L'\0';
