@@ -1,4 +1,5 @@
-(workspace or solution) "DashFaction"
+-- Note: Premake 5 is required!
+workspace "DashFaction"
 	configurations { "Debug", "Release" }
 	defines {
 		"_CRT_SECURE_NO_WARNINGS",
@@ -11,9 +12,7 @@
 		location "premake-build"
 	end
 	
-	if characterset then
-		characterset "MBCS" -- Premake 5
-	end
+	characterset "MBCS"
 
 	if os.isfile "main/pf.cpp" then
 		defines { "HAS_PF" }
@@ -21,18 +20,17 @@
 	
 	configuration "Debug"
 		defines { "DEBUG" }
-		if symbols then symbols "On"
-		else flags { "Symbols" } end
+		symbols "On"
 	
 	configuration "Release"
 		defines { "NDEBUG" }
-		flags { "OptimizeSize" }
+		optimize "Size"
 
 	configuration "linux"
 		defines { "LINUX" }
 	
 	configuration "vs*"
-		if toolset then toolset "v141_xp" end
+		toolset "v141_xp"
 		buildoptions {
 			"/Zc:threadSafeInit-",
 			"/arch:IA32",
@@ -45,7 +43,7 @@
 	
 	include "vendor"
 	include "launcher-old"
-	if os.get() == "windows" then
+	if os.host() == "windows" then
 		include "launcher"
 	end
 	include "common"
