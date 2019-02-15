@@ -32,7 +32,7 @@
 		defines { "LINUX" }
 	
 	configuration "vs*"
-		if toolset then toolset "v140_xp" end
+		if toolset then toolset "v141_xp" end
 		buildoptions {
 			"/Zc:threadSafeInit-",
 			"/arch:IA32",
@@ -40,7 +40,7 @@
 
 	configuration "linux"
 		gccprefix "i686-w64-mingw32-"
-		cppdialect "c++14"
+		cppdialect "c++17"
 		linkoptions "-static"
 	
 	include "vendor"
