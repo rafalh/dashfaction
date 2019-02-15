@@ -597,6 +597,10 @@ void MiscInit()
     // Fixes hitting objects if mover is in the line of the shot
     AsmWritter(0x00499055).jmpLong(0x004990B4);
 
+    // Disable Flamethower debug sphere drawing (optimization)
+    // It is not visible in game because other things are drawn over it
+    AsmWritter(0x0041AE47, 0x0041AE4C).nop();
+
 #if 0
     // Fix weapon switch glitch when reloading (should be used on Match Mode)
     AsmWritter(0x004A4B4B).callLong(EntityIsReloading_SwitchWeapon_New);
