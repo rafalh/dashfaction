@@ -558,6 +558,10 @@ void MiscInit()
     // Remove Sleep calls in TimerInit
     AsmWritter(0x00504A67, 0x00504A82).nop();
 
+    // Use spawnpoint team property in TeamDM game (PF compatible)
+    WriteMemUInt8(0x00470395 + 4, 0); // change cmp argument: CTF -> DM
+    WriteMemUInt8(0x0047039A, 0x74); // invert jump condition: jnz -> jz
+
 #if 0
     // Fix weapon switch glitch when reloading (should be used on Match Mode)
     AsmWritter(0x004A4B4B).callLong(EntityIsReloading_SwitchWeapon_New);
