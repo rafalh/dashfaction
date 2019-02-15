@@ -60,3 +60,9 @@ inline void WriteMemStr(unsigned Addr, const char *pStr)
 {
     WriteMem(Addr, pStr, strlen(pStr) + 1);
 }
+
+template<typename T>
+constexpr T &AddrAsRef(uintptr_t Addr)
+{
+    return *(T*)Addr;
+}
