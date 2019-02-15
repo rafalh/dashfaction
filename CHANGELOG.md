@@ -7,6 +7,7 @@ Version 1.2.2 (not released yet)
 - enable mip-mapping support for textures bigger than 256x256
 - properly handle Team property in Spawnpoint object in TeamDM game (server-side) - improves PF compatibility
 - put not responding servers at the bottom of server list
+- change maximal FPS limit to 240
 - stability improvements
 
 Version 1.2.1 (released 2017-08-15)

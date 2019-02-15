@@ -3,7 +3,7 @@
 #define DEFAULT_RF_TRACKER "rfgt.factionfiles.com"
 #define DEFAULT_EXECUTABLE_PATH "C:\\games\\RedFaction\\rf.exe"
 #define MIN_FPS_LIMIT 10
-#define MAX_FPS_LIMIT 150
+#define MAX_FPS_LIMIT 240
 
 struct GameConfig
 {
