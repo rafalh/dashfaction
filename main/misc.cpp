@@ -436,6 +436,34 @@ FunHook2<int(void *, void *)> GeomCachePrepareRoom_Hook{ 0x004F0C00,
     }
 };
 
+struct ServerListEntry
+{
+  char szName[32];
+  char szLevel[32];
+  char szMod[16];
+  int GameType;
+  NwAddr Addr;
+  char CurrentPlayers;
+  char MaxPlayers;
+  int16_t Ping;
+  int field_60;
+  char field_64;
+  int Flags;
+};
+static_assert(sizeof(ServerListEntry) == 0x6C, "invalid size");
+
+FunHook2<int (const int &Index1, const int &Index2)> ServerListCmpFunc_Hook = FunHook2{ 0x0044A6D0,
+    [](const int &Index1, const int &Index2) {
+        auto ServerList = AddrAsRef<ServerListEntry*>(0x0063F62C);
+        bool HasPing1 = ServerList[Index1].Ping >= 0;
+        bool HasPing2 = ServerList[Index2].Ping >= 0;
+        if (HasPing1 != HasPing2)
+            return HasPing1 ? -1 : 1;
+        else
+            return ServerListCmpFunc_Hook.CallTarget(Index1, Index2);
+    }
+};
+
 void MiscInit()
 {
     // Console init string
@@ -561,6 +589,9 @@ void MiscInit()
     // Use spawnpoint team property in TeamDM game (PF compatible)
     WriteMemUInt8(0x00470395 + 4, 0); // change cmp argument: CTF -> DM
     WriteMemUInt8(0x0047039A, 0x74); // invert jump condition: jnz -> jz
+
+    // Put not responding servers at the bottom of server list
+    ServerListCmpFunc_Hook.Install();
 
 #if 0
     // Fix weapon switch glitch when reloading (should be used on Match Mode)
