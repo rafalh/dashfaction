@@ -6,6 +6,7 @@
 
 constexpr auto REF_FPS = 30.0f;
 constexpr auto REF_FRAMERATE = 1.0f / REF_FPS;
+constexpr auto SCREEN_SHAKE_FPS = 150.0f;
 
 double g_FtolAccumulator_HitScreen = 0.0f;
 double g_FtolAccumulated_ToggleConsole = 0.0f;
@@ -149,6 +150,6 @@ void HighFpsUpdate()
         g_JumpThreshold = 0.025f + 0.075f * fFrameTime / (1 / 60.0f);
 
         // Fix screen shake caused by some weapons (eg. Assault Rifle)
-        g_fCameraShakeFactor = pow(0.6f, fFrameTime / (1 / 120.0f));
+        g_fCameraShakeFactor = pow(0.6f, fFrameTime / (1 / SCREEN_SHAKE_FPS));
     }
 }
