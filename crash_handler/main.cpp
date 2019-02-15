@@ -80,8 +80,16 @@ int main(int argc, const char *argv[]) try
     DWORD dwThreadId = (DWORD)strtoull(argv[3], nullptr, 0);
     HANDLE hEvent = (HANDLE)strtoull(argv[4], nullptr, 0);
 
-    char CrashDumpFilename[MAX_PATH];
-    tmpnam(CrashDumpFilename);
+    char TempDir[MAX_PATH], CrashDumpFilename[MAX_PATH];
+    DWORD dwRetVal;
+    dwRetVal = GetTempPathA(_countof(TempDir), TempDir);
+    if (dwRetVal == 0 || dwRetVal > _countof(TempDir))
+        return -1;
+
+    UINT uRetVal;
+    uRetVal = GetTempFileNameA(TempDir, "DF_Crash", 0, CrashDumpFilename);
+    if (uRetVal == 0)
+        return -1;
 
     MiniDumpHelper dumpHelper;
     dumpHelper.addKnownModule(L"ntdll");

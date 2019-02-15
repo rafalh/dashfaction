@@ -23,7 +23,7 @@ static LONG WINAPI CrashHandlerExceptionFilter(PEXCEPTION_POINTERS pExceptionInf
 
         memset(&StartupInfo, 0, sizeof(StartupInfo));
         StartupInfo.cb = sizeof(StartupInfo);
-        swprintf(CmdLine, ARRAYSIZE(CmdLine), L"%s\\CrashHandler.exe 0x%p 0x%p %lu 0x%p", g_ModulePath, pExceptionInfo, hProcess, GetCurrentThreadId(), hEvent);
+        swprintf(CmdLine, ARRAYSIZE(CmdLine), L"%ls\\CrashHandler.exe 0x%p 0x%p %lu 0x%p", g_ModulePath, pExceptionInfo, hProcess, GetCurrentThreadId(), hEvent);
         if (!CreateProcessW(NULL, CmdLine, NULL, NULL, TRUE, 0, NULL, NULL, &StartupInfo, &ProcInfo))
             break;
 
