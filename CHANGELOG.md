@@ -1,6 +1,10 @@
 DashFaction Changelog
 =====================
 
+Version 1.2.2 (not released yet)
+-----------------------------------
+- stability improvements
+
 Version 1.2.1 (released 2017-08-15)
 -----------------------------------
 
