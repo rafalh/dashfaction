@@ -628,6 +628,9 @@ void MiscInit()
     // Add chat message limit for say/teamsay commands
     ChatSayAccept_Hook.Install();
 
+    // Preserve password case when processing rcon_request command
+    WriteMemInt8(0x0046C85A + 1, 1);
+
 #if 0
     // Fix weapon switch glitch when reloading (should be used on Match Mode)
     AsmWritter(0x004A4B4B).callLong(EntityIsReloading_SwitchWeapon_New);
