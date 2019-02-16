@@ -464,6 +464,24 @@ FunHook2<int (const int &Index1, const int &Index2)> ServerListCmpFunc_Hook = Fu
     }
 };
 
+constexpr int CHAT_MSG_MAX_LEN = 224;
+
+FunHook2<void(uint16_t)> ChatSayAddChar_Hook{ 0x00444740,
+    [](uint16_t Key) {
+        if (Key)
+            ChatSayAddChar_Hook.CallTarget(Key);
+    }
+};
+
+FunHook2<void(const char *, bool)> ChatSayAccept_Hook{ 0x00444440,
+    [](const char *Msg, bool IsTeamMsg) {
+        std::string MsgStr{Msg};
+        if (MsgStr.size() > CHAT_MSG_MAX_LEN)
+            MsgStr.resize(CHAT_MSG_MAX_LEN);
+        ChatSayAccept_Hook.CallTarget(MsgStr.c_str(), IsTeamMsg);
+    }
+};
+
 void MiscInit()
 {
     // Console init string
@@ -600,6 +618,15 @@ void MiscInit()
     // Disable Flamethower debug sphere drawing (optimization)
     // It is not visible in game because other things are drawn over it
     AsmWritter(0x0041AE47, 0x0041AE4C).nop();
+
+    // Fix game beeping every frame if chat input buffer is full
+    ChatSayAddChar_Hook.Install();
+
+    // Change chat input limit to 224 (RF can support 255 safely but PF kicks if message is longer than 224)
+    WriteMemInt32(0x0044474A + 1, CHAT_MSG_MAX_LEN);
+
+    // Add chat message limit for say/teamsay commands
+    ChatSayAccept_Hook.Install();
 
 #if 0
     // Fix weapon switch glitch when reloading (should be used on Match Mode)
