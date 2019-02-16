@@ -221,20 +221,82 @@ DcCommand2 MaxFpsCmd{ "maxfps",
     "maxfps <limit>"
 };
 
-#ifndef NDEBUG
-
 DcCommand2 DebugCmd{ "debug",
-    []() {
-        bool bDbg = !g_pbDbgFlagsArray[0];
-        memset((char*)g_pbDbgFlagsArray, bDbg, 9);
-        g_bRenderEventIcons = bDbg;
-        g_bDbgNetwork = bDbg;
-        g_bDbgWeapon = bDbg;
-        g_bDbgRenderTriggers = bDbg;
-    },
-    "Toggles debugging flags in RF"
-};
+    [](std::optional<std::string> TypeOpt) {
+
+#ifdef NDEBUG
+        if (g_bNetworkGame)
+        {
+            DcPrintf("This command disabled in multiplayer!", nullptr);
+            return;
+        }
 #endif
+
+        auto Type = TypeOpt ? TypeOpt.value() : "";
+        bool Handled = false;
+        static bool AllFlags = false;
+
+        if (Type.empty())
+        {
+            AllFlags = !AllFlags;
+            Handled = true;
+            DcPrintf("All debug flags are %s", AllFlags ? "enabled" : "disabled");
+        }
+
+        auto HandleFlag = [&](bool &FlagRef, const char *FlagName) {
+            if (Type == FlagName)
+            {
+                FlagRef = !FlagRef;
+                Handled = true;
+                DcPrintf("Debug flag %s is %s", FlagName, FlagRef ? "enabled" : "disabled");
+            } else if (Type.empty()) {
+                FlagRef = AllFlags;
+            }
+        };
+
+        auto &bDbgThruster               = AddrAsRef<bool>(0x0062F3AA);
+        auto &bDbgLights                 = AddrAsRef<bool>(0x0062FE19);
+        auto &bDbgPushAndClimbingRegions = AddrAsRef<bool>(0x0062FE1A);
+        auto &bDbgGeoRegions             = AddrAsRef<bool>(0x0062FE1B);
+        auto &bDbgGlass                  = AddrAsRef<bool>(0x0062FE1C);
+        auto &bDbgMovers                 = AddrAsRef<bool>(0x0062FE1D);
+        auto &bDbgEntityBurn             = AddrAsRef<bool>(0x0062FE1E);
+        auto &bDbgMovementMode           = AddrAsRef<bool>(0x0062FE1F);
+        auto &bDbgPerfomance             = AddrAsRef<bool>(0x0062FE20);
+        auto &bDbgPerfBar                = AddrAsRef<bool>(0x0062FE21);
+        auto &bDbgWaypoints              = AddrAsRef<bool>(0x0064E39C);
+        auto &bDbgNetwork                = AddrAsRef<bool>(0x006FED24);
+        auto &bDbgWeapon                 = AddrAsRef<bool>(0x007CAB59);
+        auto &bDbgEvents                 = AddrAsRef<bool>(0x00856500);
+        auto &bDbgTriggers               = AddrAsRef<bool>(0x0085683C);
+        auto &bDbgObjRendering           = AddrAsRef<bool>(0x009BB5AC);
+
+        HandleFlag(bDbgThruster, "thruster");
+        // debug string at the left-top corner
+        HandleFlag(bDbgLights, "light");
+        HandleFlag(bDbgPushAndClimbingRegions, "push_climb_reg");
+        HandleFlag(bDbgGeoRegions, "geo_reg");
+        HandleFlag(bDbgGlass, "glass");
+        HandleFlag(bDbgMovers, "mover");
+        HandleFlag(bDbgEntityBurn, "ignite");
+        HandleFlag(bDbgMovementMode, "movemode");
+        HandleFlag(bDbgPerfomance, "perf");
+        HandleFlag(bDbgPerfBar, "perfbar");
+        HandleFlag(bDbgWaypoints, "waypoint");
+        // network meter in left-top corner
+        HandleFlag(bDbgNetwork, "network");
+        // debug strings at the left side of the screen
+        HandleFlag(bDbgWeapon, "weapon");
+        HandleFlag(bDbgEvents, "event");
+        HandleFlag(bDbgTriggers, "trigger");
+        HandleFlag(bDbgObjRendering, "objrender");
+
+        if (!Handled)
+            DcPrintf("Invalid debug flag: %s", Type.c_str());
+    },
+    nullptr,
+    "debug [thruster|light|push_climb_reg|geo_reg|glass|mover|ignite|movemode|perf|perfbar|waypoint|network|weapon|event|trigger|objrender]"
+};
 
 #if SPECTATE_MODE_ENABLE
 
