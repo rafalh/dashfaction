@@ -13,6 +13,7 @@ Version 1.2.2 (not released yet)
 - optimize Flamethower rendering (client-side)
 - add 'debug' command for enabling RF built-in debugging features
 - fix 'Orion bug' - default 'miner1' entity spawning periodically on clients (server-side)
+- fix multiple security vulnerabilities
 - stability improvements
 
 Version 1.2.1 (released 2017-08-15)

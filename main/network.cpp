@@ -791,6 +791,35 @@ FunHook2<uint8_t()> MultiAllocPlayerId_Hook{ 0x0046EF00,
     }
 };
 
+constexpr int MULTI_HANDLE_MAPPING_ARRAY_SIZE = 1024;
+
+FunHook2<rf::Object*(int32_t)> MultiGetObjFromRemoteHandle_Hook{ 0x00484B00,
+    [](int32_t RemoteHandle) {
+        int Index = static_cast<uint16_t>(RemoteHandle);
+        if (Index >= MULTI_HANDLE_MAPPING_ARRAY_SIZE)
+            return static_cast<rf::Object*>(nullptr);
+        return MultiGetObjFromRemoteHandle_Hook.CallTarget(RemoteHandle);
+    }
+};
+
+FunHook2<int32_t(int32_t)> MultiGetLocalHandleFromRemoteHandle_Hook{ 0x00484B30,
+    [](int32_t RemoteHandle) {
+        int Index = static_cast<uint16_t>(RemoteHandle);
+        if (Index >= MULTI_HANDLE_MAPPING_ARRAY_SIZE)
+            return -1;
+        return MultiGetLocalHandleFromRemoteHandle_Hook.CallTarget(RemoteHandle);
+    }
+};
+
+FunHook2<void(int32_t, int32_t)> MultiSetObjHandleMapping_Hook{ 0x00484B70,
+    [](int32_t RemoteHandle, int32_t LocalHandle) {
+        int Index = static_cast<uint16_t>(RemoteHandle);
+        if (Index >= MULTI_HANDLE_MAPPING_ARRAY_SIZE)
+            return;
+        MultiSetObjHandleMapping_Hook.CallTarget(RemoteHandle, LocalHandle);
+    }
+};
+
 void NetworkInit()
 {
     /* ProcessGamePackets hook (not reliable only) */
@@ -910,4 +939,9 @@ void NetworkInit()
 
     // Fix "Orion bug" - default 'miner1' entity spawning client-side periodically
     MultiAllocPlayerId_Hook.Install();
+
+    // Fix buffer-overflows in multi handle mapping
+    MultiGetObjFromRemoteHandle_Hook.Install();
+    MultiGetLocalHandleFromRemoteHandle_Hook.Install();
+    MultiSetObjHandleMapping_Hook.Install();
 }
