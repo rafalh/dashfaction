@@ -183,36 +183,50 @@ void TestRender()
     int x = 50, y = 200;
     EntityObj *pEntity = g_pLocalPlayer ? rf::EntityGetFromHandle(g_pLocalPlayer->hEntity) : nullptr;
     rf::GrSetColor(255, 255, 255, 255);
-    //MemReference<float, 0x005A4014> FrameTime;
-    auto &FrameTime = *(float*)0x005A4014;
+
+    auto &FrameTime = AddrAsRef<float>(0x005A4014);
+    auto &NwPort = AddrAsRef<int32_t>(0x0059CDE4);
+    auto &AppTimeMs = AddrAsRef<int32_t>(0x5A3ED8);
 
     if (pEntity)
     {
-        sprintf(Buffer, "Flags 0x%X", pEntity->_Super.Flags);
+        sprintf(Buffer, "Player Position %.2f %.2f %.2f",
+            pEntity->_Super.PhysInfo.vPos.x, pEntity->_Super.PhysInfo.vPos.y, pEntity->_Super.PhysInfo.vPos.z);
+        GrDrawText(x, y, Buffer, -1, rf::g_GrTextMaterial);
+        y += 15;
+        sprintf(Buffer, "Process ID 0x%X", GetCurrentProcessId());
+        GrDrawText(x, y, Buffer, -1, rf::g_GrTextMaterial);
+        y += 15;
+        sprintf(Buffer, "Multiplayer UDP Port %d", NwPort);
+        GrDrawText(x, y, Buffer, -1, rf::g_GrTextMaterial);
+        y += 15;
+        sprintf(Buffer, "Object Flags 0x%X", pEntity->_Super.Flags);
         GrDrawText(x, y, Buffer, -1, rf::g_GrTextMaterial);
         y += 15;
         sprintf(Buffer, "PhysInfo Flags 0x%X", pEntity->_Super.PhysInfo.Flags);
         GrDrawText(x, y, Buffer, -1, rf::g_GrTextMaterial);
         y += 15;
+        sprintf(Buffer, "Entity Flags 0x%X", pEntity->EntityFlags);
+        GrDrawText(x, y, Buffer, -1, rf::g_GrTextMaterial);
+        y += 15;
         sprintf(Buffer, "MovementMode 0x%X", pEntity->MovementMode->Id);
         GrDrawText(x, y, Buffer, -1, rf::g_GrTextMaterial);
         y += 15;
-        sprintf(Buffer, "pEntity 0x%p", pEntity);
+        sprintf(Buffer, "Framerate %f", FrameTime);
         GrDrawText(x, y, Buffer, -1, rf::g_GrTextMaterial);
         y += 15;
-        sprintf(Buffer, "framerate %f", FrameTime);
-        GrDrawText(x, y, Buffer, -1, rf::g_GrTextMaterial);
-        y += 15;
-        static const auto *g_pAppTimeMs = (int*)0x5A3ED8;
-        sprintf(Buffer, "AppTimeMs %d", *g_pAppTimeMs);
+        sprintf(Buffer, "AppTimeMs %d", AppTimeMs);
         GrDrawText(x, y, Buffer, -1, rf::g_GrTextMaterial);
         y += 15;
         sprintf(Buffer, "WeaponClsId %d", pEntity->WeaponInfo.WeaponClsId);
         GrDrawText(x, y, Buffer, -1, rf::g_GrTextMaterial);
         y += 15;
-        sprintf(Buffer, "Max Texture Size %lux%lu", rf::g_GrScreen.MaxTexWidthUnk3C, rf::g_GrScreen.MaxTexHeightUnk40);
-        GrDrawText(x, y, Buffer, -1, rf::g_GrTextMaterial);
-        y += 15;
+        if (g_pLocalPlayer->pNwData)
+        {
+            sprintf(Buffer, "Multiplayer Player UID 0x%X", g_pLocalPlayer->pNwData->PlayerId);
+            GrDrawText(x, y, Buffer, -1, rf::g_GrTextMaterial);
+            y += 15;
+        }
     }
 }
 

@@ -1619,12 +1619,6 @@ namespace rf
     static auto &g_bScoreboardRendered = *(bool*)0x006A1448;
     static auto &g_strDefaultPlayerWeapon = *(CString*)0x007C7600;
 
-    static const auto g_pbDbgFlagsArray = (uint8_t*)0x0062FE19;
-    static auto &g_bDbgNetwork = *(uint32_t*)0x006FED24;
-    static auto &g_bDbgWeapon = *(uint8_t*)0x007CAB59;
-    static auto &g_bRenderEventIcons = *(uint8_t*)0x00856500;
-    static auto &g_bDbgRenderTriggers = *(uint8_t*)0x0085683C;
-
     static const auto RfBeep = (void(*)(unsigned u1, unsigned u2, unsigned u3, float fVolume))0x00505560;
     static const auto GetFileExt = (char *(*)(const char *pszPath))0x005143F0;
     static const auto SplitScreenStart = (void(*)())0x00480D30;

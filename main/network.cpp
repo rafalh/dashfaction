@@ -671,14 +671,14 @@ void ProcessEntityCreatePacket_New(char *pData, const NwAddr *pAddr)
         // Update Default Player Weapon if server has it overriden
         size_t NameSize = strlen(pData) + 1;
         uint8_t PlayerId = pData[NameSize + 58];
-        if (PlayerId == (g_pLocalPlayer)->pNwData->PlayerId)
+        if (PlayerId == g_pLocalPlayer->pNwData->PlayerId)
         {
             int32_t WeaponClsId = *(int32_t*)(pData + NameSize + 63);
             CString_Assign(&g_strDefaultPlayerWeapon, &g_pWeaponClasses[WeaponClsId].strName);
 
 #if 0 // disabled because it sometimes helpful feature to switch to last used weapon
             // Reset next weapon variable so entity wont switch after pickup
-            if (!(g_pLocalPlayer)->Config.bAutoswitchWeapons)
+            if (!g_pLocalPlayer->Config.bAutoswitchWeapons)
                 MultiSetNextWeapon(WeaponClsId);
 #endif
 
