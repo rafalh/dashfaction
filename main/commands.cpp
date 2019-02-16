@@ -17,9 +17,11 @@ using namespace rf;
 
 // Note: limit should fit in int8_t
 constexpr int CMD_LIMIT = 127;
-DcCommand *g_CommandsBuffer[CMD_LIMIT];
-
 constexpr int DC_ARG_ANY = 0xFFFFFFFF;
+
+DcCommand *g_CommandsBuffer[CMD_LIMIT];
+bool g_DbgGeometryRenderingStats = false;
+bool g_DbgStaticLights = false;
 
 class DcInvalidArgTypeError : public std::exception {};
 class DcRequiredArgMissingError : public std::exception {};
@@ -266,14 +268,17 @@ DcCommand2 DebugCmd{ "debug",
         auto &bDbgPerfBar                = AddrAsRef<bool>(0x0062FE21);
         auto &bDbgWaypoints              = AddrAsRef<bool>(0x0064E39C);
         auto &bDbgNetwork                = AddrAsRef<bool>(0x006FED24);
+        auto &bDbgParticleStats          = AddrAsRef<bool>(0x007B2758);
         auto &bDbgWeapon                 = AddrAsRef<bool>(0x007CAB59);
         auto &bDbgEvents                 = AddrAsRef<bool>(0x00856500);
         auto &bDbgTriggers               = AddrAsRef<bool>(0x0085683C);
         auto &bDbgObjRendering           = AddrAsRef<bool>(0x009BB5AC);
+        
 
         HandleFlag(bDbgThruster, "thruster");
         // debug string at the left-top corner
         HandleFlag(bDbgLights, "light");
+        HandleFlag(g_DbgStaticLights, "light2");
         HandleFlag(bDbgPushAndClimbingRegions, "push_climb_reg");
         HandleFlag(bDbgGeoRegions, "geo_reg");
         HandleFlag(bDbgGlass, "glass");
@@ -285,18 +290,40 @@ DcCommand2 DebugCmd{ "debug",
         HandleFlag(bDbgWaypoints, "waypoint");
         // network meter in left-top corner
         HandleFlag(bDbgNetwork, "network");
+        HandleFlag(bDbgParticleStats, "particlestats");
         // debug strings at the left side of the screen
         HandleFlag(bDbgWeapon, "weapon");
         HandleFlag(bDbgEvents, "event");
         HandleFlag(bDbgTriggers, "trigger");
         HandleFlag(bDbgObjRendering, "objrender");
+        HandleFlag(g_DbgGeometryRenderingStats, "roomstats");
 
         if (!Handled)
             DcPrintf("Invalid debug flag: %s", Type.c_str());
     },
     nullptr,
-    "debug [thruster|light|push_climb_reg|geo_reg|glass|mover|ignite|movemode|perf|perfbar|waypoint|network|weapon|event|trigger|objrender]"
+    "debug [thruster | light | light2 | push_climb_reg | geo_reg | glass | mover | ignite | movemode | perf | perfbar | "
+    "waypoint | network | particlestats | weapon | event | trigger | objrender | roomstats]"
 };
+
+void DebugRender3d()
+{
+    const auto DbgWaypoints       = (void(*)()) 0x00468F00;
+    const auto DbgInternalLights  = (void(*)()) 0x004DB830;
+    
+    DbgWaypoints();
+    if (g_DbgStaticLights)
+        DbgInternalLights();
+}
+
+void DebugRender2d()
+{
+    const auto DbgRenderingStats  = (void(*)()) 0x004D36B0;
+    const auto DbgParticleStats   = (void(*)()) 0x004964E0;
+    if (g_DbgGeometryRenderingStats)
+        DbgRenderingStats();
+    DbgParticleStats();
+}
 
 #if SPECTATE_MODE_ENABLE
 
@@ -726,7 +753,5 @@ void CommandsAfterGameInit()
 #if MULTISAMPLING_SUPPORT
     AntiAliasingCmd.Register();
 #endif
-#ifndef NDEBUG
     DebugCmd.Register();
-#endif
 }

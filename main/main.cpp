@@ -83,6 +83,7 @@ CallHook2<void(u8)> DcUpdate_Hook{ 0x004B2DD3,
 #ifndef NDEBUG
         TestRender();
 #endif
+        DebugRender2d();
     } };
 
 CallHook2<void()> InitGame_Hook{ 0x004B27CD,
@@ -128,7 +129,9 @@ CallHook2<void()> RenderInGame_Hook{ 0x00432375,
 #ifdef DEBUG
         TestRenderInGame();
 #endif
-    } };
+        DebugRender3d();
+    }
+};
 
 FunHook2<int()> KeyGetFromFifo_Hook{ 0x0051F000,
     []() {
