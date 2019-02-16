@@ -21,8 +21,8 @@ DcCommand *g_CommandsBuffer[CMD_LIMIT];
 
 constexpr int DC_ARG_ANY = 0xFFFFFFFF;
 
-class DcInvalidArgTypeError {};
-class DcRequiredArgMissingError {};
+class DcInvalidArgTypeError : public std::exception {};
+class DcRequiredArgMissingError : public std::exception {};
 
 static bool ReadArgInternal(int TypeFlag, bool PreserveCase = false)
 {
