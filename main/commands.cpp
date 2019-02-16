@@ -246,14 +246,16 @@ DcCommand2 DebugCmd{ "debug",
         }
 
         auto HandleFlag = [&](bool &FlagRef, const char *FlagName) {
+            bool OldFlagValue = FlagRef;
             if (Type == FlagName)
             {
                 FlagRef = !FlagRef;
                 Handled = true;
-                DcPrintf("Debug flag %s is %s", FlagName, FlagRef ? "enabled" : "disabled");
+                DcPrintf("Debug flag '%s' is %s", FlagName, FlagRef ? "enabled" : "disabled");
             } else if (Type.empty()) {
                 FlagRef = AllFlags;
             }
+            return OldFlagValue != FlagRef;
         };
 
         auto &bDbgThruster               = AddrAsRef<bool>(0x0062F3AA);
@@ -273,7 +275,12 @@ DcCommand2 DebugCmd{ "debug",
         auto &bDbgEvents                 = AddrAsRef<bool>(0x00856500);
         auto &bDbgTriggers               = AddrAsRef<bool>(0x0085683C);
         auto &bDbgObjRendering           = AddrAsRef<bool>(0x009BB5AC);
-        
+        // Geometry rendering flags
+        auto &RenderEverythingSeeThrough     = AddrAsRef<bool>(0x009BB594);
+        auto &RenderRoomsInDifferentColors   = AddrAsRef<bool>(0x009BB598);
+        auto &RenderNonSeeThroughPortalFaces = AddrAsRef<bool>(0x009BB59C);
+        auto &RenderLightmapsOnly            = AddrAsRef<bool>(0x009BB5A4);
+        auto &RenderNoLightmaps              = AddrAsRef<bool>(0x009BB5A8);
 
         HandleFlag(bDbgThruster, "thruster");
         // debug string at the left-top corner
@@ -297,13 +304,28 @@ DcCommand2 DebugCmd{ "debug",
         HandleFlag(bDbgTriggers, "trigger");
         HandleFlag(bDbgObjRendering, "objrender");
         HandleFlag(g_DbgGeometryRenderingStats, "roomstats");
+        // geometry rendering
+        bool GeomRenderingChanged = false;
+        GeomRenderingChanged |= HandleFlag(RenderEverythingSeeThrough, "trans");
+        GeomRenderingChanged |= HandleFlag(RenderRoomsInDifferentColors, "room");
+        GeomRenderingChanged |= HandleFlag(RenderNonSeeThroughPortalFaces, "portal");
+        GeomRenderingChanged |= HandleFlag(RenderLightmapsOnly, "lightmap");
+        GeomRenderingChanged |= HandleFlag(RenderNoLightmaps, "nolightmap");
+
+        // Clear geometry cache (needed for geometry rendering flags)
+        if (GeomRenderingChanged)
+        {
+            auto GeomCacheClear = (void(*)())0x004F0B90;
+            GeomCacheClear();
+        }
 
         if (!Handled)
             DcPrintf("Invalid debug flag: %s", Type.c_str());
     },
     nullptr,
     "debug [thruster | light | light2 | push_climb_reg | geo_reg | glass | mover | ignite | movemode | perf | perfbar | "
-    "waypoint | network | particlestats | weapon | event | trigger | objrender | roomstats]"
+    "waypoint | network | particlestats | weapon | event | trigger | objrender | roomstats | "
+    "trans | room | portal | lightmap | nolightmap]"
 };
 
 void DebugRender3d()
