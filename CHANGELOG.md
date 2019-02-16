@@ -16,6 +16,8 @@ Version 1.2.2 (not released yet)
 - fix beeping every frame if chat input buffer is full
 - apply proper chat input limits client-side so PF server does not kick the sender
 - preserve password case when processing rcon_request command
+- client-side/solo/teleport triggers handling - improves PF compatibility
+- handle trigger team property - improves PF compatibility
 - fix multiple security vulnerabilities
 - stability improvements
 

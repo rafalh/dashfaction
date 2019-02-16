@@ -800,6 +800,7 @@ namespace rf
     static const auto HandleCtrlInGame = (void(*)(CPlayer *pPlayer, EGameCtrl KeyId, char WasPressed))0x004A6210;
     static const auto IsEntityCtrlActive = (char(*)(ControlConfig *pCtrlConf, EGameCtrl CtrlId, bool *pWasPressed))0x0043D4F0;
     static const auto PlayerCreateEntity = (EntityObj *(*)(CPlayer *pPlayer, int ClassId, const CVector3 *pPos, const CMatrix3 *pRotMatrix, int MpCharacter))0x004A4130;
+    static const auto GetPlayerFromEntityHandle = (CPlayer*(*)(int32_t hEntity))0x004A3740;
 
     typedef bool(*IsPlayerEntityInvalid_Type)(CPlayer *pPlayer);
     static const auto IsPlayerEntityInvalid = (IsPlayerEntityInvalid_Type)0x004A4920;
@@ -969,6 +970,40 @@ namespace rf
         int field_2BC;
         int field_2C0;
     };
+
+    struct TriggerObj
+    {
+        Object _Super;
+        TriggerObj *pNext;
+        TriggerObj *pPrev;
+        int Shape;
+        Timer ResetsAfterTimer;
+        int ResetsAfterMs;
+        int ResetsCounter;
+        int ResetsTimes;
+        float fLastActivationTime;
+        int KeyItemClsId;
+        int Flags;
+        CString field_2B4;
+        int field_2BC;
+        int AirlockRoomUid;
+        int ActivatedBy;
+        CVector3 BoxSize;
+        DynamicArray Links;
+        Timer ActivationFailedTimer;
+        int hActivationFailedEntity;
+        Timer field_2E8;
+        char bOneWay;
+        char _padding[3];
+        float ButtonActiveTimeSeconds;
+        Timer field_2F4;
+        float fInsideTimeSeconds;
+        Timer InsideTimer;
+        int AttachedToUid;
+        int UseClutterUid;
+        int Team;
+    };
+    static_assert(sizeof(TriggerObj) == 0x30C, "invalid size");
 
     static auto &g_ItemObjList = *(ItemObj*)0x00642DD8;
 

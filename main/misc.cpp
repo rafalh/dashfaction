@@ -7,6 +7,7 @@
 #include "inline_asm.h"
 #include <CallHook2.h>
 #include <FunHook2.h>
+#include <rfproto.h>
 
 using namespace rf;
 
@@ -482,6 +483,73 @@ FunHook2<void(const char *, bool)> ChatSayAccept_Hook{ 0x00444440,
     }
 };
 
+constexpr uint8_t TRIGGER_CLIENT_SIDE = 0x2;
+constexpr uint8_t TRIGGER_SOLO        = 0x4;
+constexpr uint8_t TRIGGER_TELEPORT    = 0x8;
+
+void SendTriggerActivatePacket(CPlayer *Player, TriggerObj *Trigger, int32_t hEntity)
+{
+    rfTriggerActivate Packet;
+    Packet.type = RF_TRIGGER_ACTIVATE;
+    Packet.size = sizeof(Packet) - sizeof(rfPacketHeader);
+    Packet.uid = Trigger->_Super.Uid;
+    Packet.entity_handle = hEntity;
+    NwSendReliablePacket(Player, reinterpret_cast<uint8_t*>(&Packet), sizeof(Packet), 0);
+}
+
+FunHook2<void(TriggerObj*, int32_t, bool)> TriggerActivate_Hook{ 0x004C0220,
+    [](TriggerObj *Trigger, int32_t hEntity, bool SkipMovers) {
+        // Check team
+        auto Player = GetPlayerFromEntityHandle(hEntity);
+        auto TriggerName = CString_CStr(&Trigger->_Super.strName);
+        if (Player && Trigger->Team != 0xFF && Trigger->Team != Player->bBlueTeam)
+        {
+            //DcPrintf("Trigger team does not match: %d vs %d (%s)", Trigger->Team, Player->bBlueTeam, TriggerName);
+            return;
+        }
+
+        // Check if this is Solo or Teleport trigger (REDPF feature)
+        uint8_t ExtFlags = TriggerName[0] == '\xAB' ? TriggerName[1] : 0;
+        bool IsSoloTrigger = (ExtFlags & (TRIGGER_SOLO | TRIGGER_TELEPORT)) != 0;
+        if (g_bNetworkGame && g_bLocalNetworkGame && IsSoloTrigger && Player)
+        {
+            //DcPrintf("Solo/Teleport trigger activated %s", TriggerName);
+            SendTriggerActivatePacket(Player, Trigger, hEntity);
+            return;
+        }
+
+        // Normal activation
+        //DcPrintf("trigger normal activation %s %d", TriggerName, ExtFlags);
+        TriggerActivate_Hook.CallTarget(Trigger, hEntity, SkipMovers);
+    }
+};
+
+extern "C" bool IsClientSideTrigger(TriggerObj *Trigger)
+{
+    auto TriggerName = CString_CStr(&Trigger->_Super.strName);
+    uint8_t ExtFlags = TriggerName[0] == '\xAB' ? TriggerName[1] : 0;
+    return (ExtFlags & TRIGGER_CLIENT_SIDE) != 0;
+}
+
+ASM_FUNC(TriggerCheckActivation_Patch_004BFCCD,
+    ASM_I  cmp  ebp, eax
+    ASM_I  jz   ASM_LABEL(TriggerCheckActivation_Patch_Activate)
+    ASM_I  push [esp+0x1C+0x4] // Trigger
+    ASM_I  call ASM_SYM(IsClientSideTrigger)
+    ASM_I  add  esp, 4
+    ASM_I  jnz  ASM_LABEL(TriggerCheckActivation_Patch_Activate)
+
+    ASM_I  pop  edi
+    ASM_I  pop  esi
+    ASM_I  pop  ebp
+    ASM_I  push 0x004BFCD4
+    ASM_I  ret
+
+    ASM_I  ASM_LABEL(TriggerCheckActivation_Patch_Activate) :
+    ASM_I  push 0x004BFCDB
+    ASM_I  ret
+)
+
 void MiscInit()
 {
     // Console init string
@@ -630,6 +698,12 @@ void MiscInit()
 
     // Preserve password case when processing rcon_request command
     WriteMemInt8(0x0046C85A + 1, 1);
+
+    // Solo/Teleport triggers handling + filtering by team ID
+    TriggerActivate_Hook.Install();
+
+    // Client-side trigger flag handling
+    AsmWritter(0x004BFCCD, 0x004BFCD4).jmpLong(TriggerCheckActivation_Patch_004BFCCD);
 
 #if 0
     // Fix weapon switch glitch when reloading (should be used on Match Mode)
