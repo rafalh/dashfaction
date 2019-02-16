@@ -136,13 +136,19 @@ private:
         if (m_Usage)
         {
             DcPrint(g_ppszStringsTable[STR_USAGE], nullptr);
-            DcPrint(m_Usage, nullptr);
+            DcPrintf("     %s", m_Usage);
         }
     }
 };
 
 #ifdef __cpp_deduction_guides
 // deduction guide for lambda functions
+template <class T>
+DcCommand2(const char *, T)
+    -> DcCommand2<typename std::remove_pointer_t<decltype(+std::declval<T>())>>;
+template <class T>
+DcCommand2(const char *, T, const char *)
+    -> DcCommand2<typename std::remove_pointer_t<decltype(+std::declval<T>())>>;
 template <class T>
 DcCommand2(const char *, T, const char *, const char *)
     -> DcCommand2<typename std::remove_pointer_t<decltype(+std::declval<T>())>>;
@@ -182,31 +188,27 @@ rf::CPlayer *FindBestMatchingPlayer(const char *pszName)
 
 #if SPLITSCREEN_ENABLE
 
-static void SplitScreenCmdHandler(void)
-{
-    if (g_bDcRun)
-    {
+DcCommand2 SplitScreenCmd{ "splitscreen",
+    []() {
         if (g_bNetworkGame)
             SplitScreenStart(); /* FIXME: set player 2 controls */
         else
             DcPrintf("Works only in multiplayer game!");
-    }
-}
+    },
+    "Starts split screen mode"
+};
 
 #endif // SPLITSCREEN_ENABLE
 
-static void MaxFpsCmdHandler(void)
-{
-    if (g_bDcRun)
-    {
-        rf::DcGetArg(DC_ARG_NONE | DC_ARG_FLOAT, 0);
+DcCommand2 MaxFpsCmd{ "maxfps",
+    [](std::optional<float> LimitOpt) {
 
-        if ((g_DcArgType & DC_ARG_FLOAT))
+        if (LimitOpt)
         {
 #ifdef NDEBUG
-            float newLimit = std::min(std::max(g_fDcArg, (float)MIN_FPS_LIMIT), (float)MAX_FPS_LIMIT);
+            float newLimit = std::min(std::max(LimitOpt.value(), (float)MIN_FPS_LIMIT), (float)MAX_FPS_LIMIT);
 #else
-            float newLimit = g_fDcArg;
+            float newLimit = LimitOpt.value();
 #endif
             g_gameConfig.maxFps = (unsigned)newLimit;
             g_gameConfig.save();
@@ -214,41 +216,37 @@ static void MaxFpsCmdHandler(void)
         }
         else
             DcPrintf("Maximal FPS: %.1f", 1.0f / g_fMinFramerate);
-    }
-    
-    if (g_bDcHelp)
-    {
-        DcPrint(g_ppszStringsTable[STR_USAGE], NULL);
-        DcPrint("     maxfps <limit>", NULL);
-    }
-}
+    },
+    "Sets maximal FPS",
+    "maxfps <limit>"
+};
 
 #ifndef NDEBUG
-static void DebugCmdHandler(void)
-{
-    bool bDbg = !g_pbDbgFlagsArray[0];
-    memset((char*)g_pbDbgFlagsArray, bDbg, 9);
-    g_bRenderEventIcons = bDbg;
-    g_bDbgNetwork = bDbg;
-    g_bDbgWeapon = bDbg;
-    g_bDbgRenderTriggers = bDbg;
-}
+
+DcCommand2 DebugCmd{ "debug",
+    []() {
+        bool bDbg = !g_pbDbgFlagsArray[0];
+        memset((char*)g_pbDbgFlagsArray, bDbg, 9);
+        g_bRenderEventIcons = bDbg;
+        g_bDbgNetwork = bDbg;
+        g_bDbgWeapon = bDbg;
+        g_bDbgRenderTriggers = bDbg;
+    },
+    "Toggles debugging flags in RF"
+};
 #endif
 
 #if SPECTATE_MODE_ENABLE
 
-static void SpectateCmdHandler(void)
-{
-    if (g_bDcRun)
-    {
+DcCommand2 SpectateCmd { "spectate",
+    [](std::optional<std::string> PlayerName) {
         if (g_bNetworkGame)
         {
             rf::CPlayer *pPlayer;
-            rf::DcGetArg(DC_ARG_NONE | DC_ARG_STR | DC_ARG_FALSE, 0);
-            if (g_DcArgType & DC_ARG_FALSE)
+            if (PlayerName && PlayerName.value() == "false")
                 pPlayer = nullptr;
-            else if (g_DcArgType & DC_ARG_STR)
-                pPlayer = FindBestMatchingPlayer(g_pszDcArg);
+            else if (PlayerName)
+                pPlayer = FindBestMatchingPlayer(PlayerName.value().c_str());
             else
                 pPlayer = nullptr;
             
@@ -256,23 +254,18 @@ static void SpectateCmdHandler(void)
                 SpectateModeSetTargetPlayer(pPlayer);
         } else
             DcPrint("Works only in multiplayer game!", NULL);
-    }
-    
-    if (g_bDcHelp)
-    {
-        DcPrint(g_ppszStringsTable[STR_USAGE], NULL);
-        DcPrintf("     spectate <%s>", g_ppszStringsTable[STR_PLAYER_NAME]);
-        DcPrintf("     spectate false", g_ppszStringsTable[STR_PLAYER_NAME]);
-    }
-}
+    },
+    "Starts spectating mode",
+    "spectate <player_name/false>"
+    // DcPrintf("     spectate <%s>", g_ppszStringsTable[STR_PLAYER_NAME]);
+    // DcPrintf("     spectate false");
+};
 
 #endif // SPECTATE_MODE_ENABLE
 
 #if MULTISAMPLING_SUPPORT
-static void AntiAliasingCmdHandler(void)
-{
-    if (g_bDcRun)
-    {
+DcCommand2 AntiAliasingCmd{ "antialiasing",
+    []() {
         if (!g_gameConfig.msaa)
             DcPrintf("Anti-aliasing is not supported");
         else
@@ -283,22 +276,22 @@ static void AntiAliasingCmdHandler(void)
             g_pGrDevice->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, Enabled);
             DcPrintf("Anti-aliasing is %s", Enabled ? "enabled" : "disabled");
         }
-    }
-}
+    },
+    "Toggles anti-aliasing"
+};
 #endif // MULTISAMPLING_SUPPORT
 
 #if DIRECTINPUT_SUPPORT
-static void InputModeCmdHandler(void)
-{
-    if (g_bDcRun)
-    {
+DcCommand2 InputModeCmd{ "inputmode",
+    []() {
         g_bDirectInputDisabled = !g_bDirectInputDisabled;
         if (g_bDirectInputDisabled)
             DcPrintf("DirectInput is disabled");
         else
             DcPrintf("DirectInput is enabled");
-    }
-}
+    },
+    "Toggles input mode"
+};
 #endif // DIRECTINPUT_SUPPORT
 
 #if CAMERA_1_3_COMMANDS
@@ -314,106 +307,71 @@ static int CanPlayerFireHook(CPlayer *pPlayer)
 
 #endif // if CAMERA_1_3_COMMANDS
 
-static void MouseSensitivityCmdHandler(void)
-{
-    if (g_bDcRun)
-    {
-        rf::DcGetArg(DC_ARG_NONE | DC_ARG_FLOAT, 0);
-
-        if (g_DcArgType & DC_ARG_FLOAT)
-        {
+DcCommand2 MouseSensitivityCmd{ "ms",
+    [](std::optional<float> Value) {
+        if (Value) {
             float fValue = g_fDcArg;
             fValue = clamp(fValue, 0.0f, 1.0f);
-            (g_pLocalPlayer)->Config.Controls.fMouseSensitivity = fValue;
+            g_pLocalPlayer->Config.Controls.fMouseSensitivity = fValue;
         }
-        DcPrintf("Mouse sensitivity: %.2f", (g_pLocalPlayer)->Config.Controls.fMouseSensitivity);
-    }
+        DcPrintf("Mouse sensitivity: %.2f", g_pLocalPlayer->Config.Controls.fMouseSensitivity);
+    },
+    "Sets mouse sensitivity",
+    "ms <value>"
+};
 
-    if (g_bDcHelp)
-    {
-        DcPrint(g_ppszStringsTable[STR_USAGE], NULL);
-        DcPrint("     ms <value>", NULL);
-    }
-}
-
-static void VolumeLightsCmdHandler(void)
-{
-    if (g_bDcRun)
-    {
+DcCommand2 VolumeLightsCmd{ "vli",
+    []() {
         static MemChange vliCallChange(0x0043233E);
         if (vliCallChange.IsApplied())
             vliCallChange.Revert();
         else
             vliCallChange.Write("\x90\x90\x90\x90\x90", 5);
         DcPrintf("Volumetric lightining is %s.", vliCallChange.IsApplied() ? "disabled" : "enabled");
-    }
-}
+    },
+    "Toggles volumetric lightining"
+};
 
-static void LevelSpCmdHandler(void)
-{
-    if (g_bDcRun)
-    {
-        rf::DcGetArg(DC_ARG_STR, 0);
-
-        if (g_DcArgType & DC_ARG_STR)
+DcCommand2 LevelSpCmd{ "levelsp",
+    [](std::string LevelFilename) {
+        if (g_bNetworkGame)
         {
-            if (g_bNetworkGame)
-            {
-                DcPrintf("You cannot use it in multiplayer game!");
-                return;
-            }
-            CString strUnk, strLevel;
-            CString_Init(&strUnk, "");
-            if (stristr(g_pszDcArg, ".rfl"))
-                CString_Init(&strLevel, g_pszDcArg);
-            else
-            {
-                char Buf[256];
-                snprintf(Buf, sizeof(Buf), "%s.rfl", g_pszDcArg);
-                CString_Init(&strLevel, Buf);
-            }
-            
-            DcPrintf("Loading level.");
-            SetNextLevelFilename(strLevel, strUnk);
-            SwitchMenu(5, 0);
+            DcPrintf("You cannot use it in multiplayer game!");
+            return;
         }
-    }
+        if (LevelFilename.find(".rfl") == std::string::npos)
+            LevelFilename += ".rfl";
 
-    if (g_bDcHelp)
-    {
-        DcPrint(g_ppszStringsTable[STR_USAGE], NULL);
-        DcPrint("     <rfl_name>", NULL);
-    }
-}
+        CString strUnk, strLevel;
+        CString_Init(&strUnk, "");
+        CString_Init(&strLevel, LevelFilename.c_str());
 
-static void LevelSoundsCmdHandler(void)
-{
-    if (g_bDcRun)
-    {
-        rf::DcGetArg(DC_ARG_FLOAT | DC_ARG_NONE, 0);
+        DcPrintf("Loading level.");
+        SetNextLevelFilename(strLevel, strUnk);
+        SwitchMenu(5, 0);
+    },
+    "Loads single player level",
+    "levelsp <rfl_name>"
+};
 
-        if ((g_DcArgType & DC_ARG_FLOAT))
+DcCommand2 LevelSoundsCmd{ "levelsounds",
+    [](std::optional<float> Volume) {
+        if (Volume)
         {
-            float fVolScale = clamp(g_fDcArg, 0.0f, 1.0f);
+            float fVolScale = clamp(Volume.value(), 0.0f, 1.0f);
             SetPlaySoundEventsVolumeScale(fVolScale);
 
             g_gameConfig.levelSoundVolume = fVolScale;
             g_gameConfig.save();
         }
         DcPrintf("Level sound volume: %.1f", g_gameConfig.levelSoundVolume);
-    }
+    },
+    "Sets level sounds volume scale",
+    "levelsounds <volume>"
+};
 
-    if (g_bDcHelp)
-    {
-        DcPrint(g_ppszStringsTable[STR_USAGE], NULL);
-        DcPrint("     <volume>", NULL);
-    }
-}
-
-static void PlayerCountCmdHandler()
-{
-    if (g_bDcRun)
-    {
+DcCommand2 PlayerCountCmd{ "playercount",
+    []() {
         if (!g_bNetworkGame) return;
         int PlayerCount = 0;
         CPlayer *pPlayer = g_pPlayersList;
@@ -426,55 +384,24 @@ static void PlayerCountCmdHandler()
                 break;
         }
         DcPrintf("Player count: %d\n", PlayerCount);
-    }
-}
+    },
+    "Get player count"
+};
 
-static void DcfFindMap()
-{
-    if (g_bDcRun)
-    {
-        rf::DcGetArg(DC_ARG_STR, 0);
-
-        if (g_DcArgType & DC_ARG_STR)
+DcCommand2 FindMapCmd{ "findmap",
+    [](std::string Pattern) {
+        PackfileFindMatchingFiles(StringMatcher().Infix(Pattern).Suffix(".rfl"), [](const char *pszName)
         {
-            PackfileFindMatchingFiles(StringMatcher().Infix(g_pszDcArg).Suffix(".rfl"), [](const char *pszName)
-            {
-                DcPrintf("%s\n", pszName);
-            });
-        }
-    }
-
-    if (g_bDcHelp)
-    {
-        DcPrint(g_ppszStringsTable[STR_USAGE], NULL);
-        DcPrint("     <query>", NULL);
-    }
-}
+            DcPrintf("%s\n", pszName);
+        });
+    },
+    "Find map by filename fragment",
+    "findmap <query>"
+};
 
 DcCommand g_Commands[] = {
-#if SPLITSCREEN_ENABLE
-    {"splitscreen", "Starts split screen mode", SplitScreenCmdHandler},
-#endif
-    {"maxfps", "Sets maximal FPS", MaxFpsCmdHandler},
     {"hud", "Show and hide HUD", HudCmdHandler},
-#ifndef NDEBUG
-    {"debug", "Switches debugging in RF", DebugCmdHandler},
-#endif
-#if SPECTATE_MODE_ENABLE
-    {"spectate", "Starts spectating mode", SpectateCmdHandler},
-#endif
-#if MULTISAMPLING_SUPPORT
-    { "antialiasing", "Toggles anti-aliasing", AntiAliasingCmdHandler },
-#endif
-#if DIRECTINPUT_SUPPORT
-    { "inputmode", "Toggles input mode", InputModeCmdHandler },
-#endif
     { "unban_last", "Unbans last banned player", UnbanLastCmdHandler },
-    { "ms", "Sets mouse sensitivity", MouseSensitivityCmdHandler },
-    { "vli", "Toggles volumetric lightining", VolumeLightsCmdHandler },
-    { "levelsp", "Loads single player level", LevelSpCmdHandler },
-    { "levelsounds", "Sets level sounds volume scale", LevelSoundsCmdHandler },
-    { "playercount", "Get player count", PlayerCountCmdHandler },
 };
 
 void DcShowCmdHelp(DcCommand *pCmd)
@@ -713,10 +640,31 @@ void CommandsAfterGameInit()
     DC_REGISTER_CMD(trilinear_filtering, "Toggle trilinear filtering", DcfTrilinearFiltering);
     DC_REGISTER_CMD(detail_textures, "Toggle detail textures", DcfDetailTextures);
 
-    // New commands
-    DC_REGISTER_CMD(findmap, "Find map by filename fragment", DcfFindMap);
-
     /* Add commands */
     for (i = 0; i < COUNTOF(g_Commands); ++i)
         CommandRegister(&g_Commands[i]);
+
+    MaxFpsCmd.Register();
+    MouseSensitivityCmd.Register();
+    VolumeLightsCmd.Register();
+    LevelSpCmd.Register();
+    LevelSoundsCmd.Register();
+    PlayerCountCmd.Register();
+    FindMapCmd.Register();
+
+#if SPECTATE_MODE_ENABLE
+    SpectateCmd.Register();
+#endif
+#if SPLITSCREEN_ENABLE
+    SplitScreenCmd.Register();
+#endif
+#if DIRECTINPUT_SUPPORT
+    InputModeCmd.Register();
+#endif
+#if MULTISAMPLING_SUPPORT
+    AntiAliasingCmd.Register();
+#endif
+#ifndef NDEBUG
+    DebugCmd.Register();
+#endif
 }
