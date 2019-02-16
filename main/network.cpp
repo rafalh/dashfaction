@@ -3,6 +3,7 @@
 #include "rf.h"
 #include "utils.h"
 #include "inline_asm.h"
+#include "FunHook2.h"
 
 #if MASK_AS_PF
  #include "pf.h"
@@ -781,6 +782,15 @@ EntityObj *SecureObjUpdatePacket(EntityObj *pEntity, uint8_t Flags, CPlayer *pSr
     return pEntity;
 }
 
+FunHook2<uint8_t()> MultiAllocPlayerId_Hook{ 0x0046EF00,
+    []() {
+        uint8_t PlayerId = MultiAllocPlayerId_Hook.CallTarget();
+        if (PlayerId == 0xFF)
+            PlayerId = MultiAllocPlayerId_Hook.CallTarget();
+        return PlayerId;
+    }
+};
+
 void NetworkInit()
 {
     /* ProcessGamePackets hook (not reliable only) */
@@ -897,4 +907,7 @@ void NetworkInit()
     // Hide IP addresses in New Player packet
     AsmWritter(0x0047A4A0, 0x0047A4A2).xor_(AsmRegs::EDX, AsmRegs::EDX);
     AsmWritter(0x0047A4A6, 0x0047A4AA).xor_(AsmRegs::ECX, AsmRegs::ECX);
+
+    // Fix "Orion bug" - default 'miner1' entity spawning client-side periodically
+    MultiAllocPlayerId_Hook.Install();
 }
