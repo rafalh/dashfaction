@@ -7,6 +7,7 @@
 #include "inline_asm.h"
 #include <CallHook2.h>
 #include <FunHook2.h>
+#include <RegsPatch.h>
 #include <rfproto.h>
 
 using namespace rf;
@@ -550,6 +551,23 @@ ASM_FUNC(TriggerCheckActivation_Patch_004BFCCD,
     ASM_I  ret
 )
 
+RegsPatch RflLoadInternal_CheckRestoreStatus_Patch{
+    0x00461195,
+    [](X86Regs &Regs) {
+        // check if SaveRestoreLoadAll is successful
+        if (Regs.EAX) return;
+        // check if this is auto-load when changing level
+        const char *SaveFilename = reinterpret_cast<const char*>(Regs.EDI);
+        if (!strcmp(SaveFilename, "auto.svl")) return;
+        // manual load failed
+        ERR("Restoring game state failed");
+        char *ErrorInfo = *reinterpret_cast<char**>(Regs.ESP + 0x2B0 + 0xC);
+        strcpy(ErrorInfo, "Save file is corrupted");
+        // return to RflLoadInternal failure path
+        Regs.EIP = 0x004608CC;
+    }
+};
+
 void MiscInit()
 {
     // Console init string
@@ -704,6 +722,12 @@ void MiscInit()
 
     // Client-side trigger flag handling
     AsmWritter(0x004BFCCD, 0x004BFCD4).jmpLong(TriggerCheckActivation_Patch_004BFCCD);
+
+    // Fix crash when loading savegame with missing player entity data
+    AsmWritter(0x004B4B47).jmpNear(0x004B4B7B);
+
+    // Add checking if restoring game state from save file failed during level loading
+    RflLoadInternal_CheckRestoreStatus_Patch.Install();
 
 #if 0
     // Fix weapon switch glitch when reloading (should be used on Match Mode)

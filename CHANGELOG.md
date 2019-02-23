@@ -18,6 +18,7 @@ Version 1.2.2 (not released yet)
 - preserve password case when processing rcon_request command
 - client-side/solo/teleport triggers handling - improves PF compatibility
 - handle trigger team property - improves PF compatibility
+- fix possible crash when loading corrupted save file
 - fix multiple security vulnerabilities
 - stability improvements
 
