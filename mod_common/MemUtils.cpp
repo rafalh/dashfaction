@@ -9,3 +9,9 @@ void WriteMem(unsigned Addr, const void *pValue, unsigned cbValue)
     memcpy((void*)Addr, pValue, cbValue);
     VirtualProtect((void*)Addr, cbValue, dwOldProtect, NULL);
 }
+
+void UnprotectMem(void *Ptr, unsigned Len)
+{
+    DWORD dwOldProtect;
+    VirtualProtect(Ptr, Len, PAGE_EXECUTE_READWRITE, &dwOldProtect);
+}

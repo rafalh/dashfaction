@@ -3,6 +3,7 @@
 #include "MemUtils.h"
 #include "AsmOpcodes.h"
 #include <cassert>
+#include <optional>
 
 class AsmReg
 {
@@ -27,6 +28,17 @@ struct AsmReg16 : public AsmReg
 struct AsmReg8 : public AsmReg
 {
     constexpr AsmReg8(int num) : AsmReg(num, 1) {}
+};
+
+struct AsmRegMem
+{
+    bool memory;
+    std::optional<AsmReg> regOpt;
+    int32_t displacement;
+
+    AsmRegMem(bool memory, std::optional<AsmReg> regOpt, int32_t displacement = 0) :
+        memory(memory), regOpt(regOpt), displacement(displacement)
+    {}
 };
 
 namespace AsmRegs
@@ -69,6 +81,18 @@ public:
         }
     }
 
+    AsmWritter &pusha()
+    {
+        WriteMemUInt8(m_addr++, 0x60); // Opcode
+        return *this;
+    }
+
+    AsmWritter &popa()
+    {
+        WriteMemUInt8(m_addr++, 0x61); // Opcode
+        return *this;
+    }
+
     AsmWritter &push(const AsmReg32 &reg)
     {
         WriteMemUInt8(m_addr++, 0x50 | reg.regNum); // Opcode
@@ -82,10 +106,27 @@ public:
         return *this;
     }
 
+    AsmWritter &push(int32_t Val)
+    {
+        WriteMemUInt8(m_addr++, 0x68); // Opcode
+        WriteMemInt32(m_addr, Val);
+        m_addr += 4;
+        return *this;
+    }
+
     AsmWritter &xor_(const AsmReg32 &dstReg, const AsmReg32 &srcReg)
     {
         WriteMemUInt8(m_addr++, 0x33); // Opcode
         WriteMemUInt8(m_addr++, 0xC0 | (srcReg.regNum << 3) | dstReg.regNum); // ModR/M
+        return *this;
+    }
+
+    AsmWritter &add(const AsmRegMem &dst, int32_t imm32)
+    {
+        WriteMemUInt8(m_addr++, 0x81); // Opcode
+        writeModRm(dst, 0);
+        WriteMemInt32(m_addr, imm32);
+        m_addr += 4;
         return *this;
     }
 
@@ -242,4 +283,36 @@ public:
 
 private:
     unsigned m_addr, m_endAddr;
+
+    void writeModRm(const AsmRegMem &regMem, uint8_t regField)
+    {
+        uint8_t modField = 0;
+        if (!regMem.memory)
+            modField = 3;
+        else if (regMem.displacement == 0 || !regMem.regOpt)
+            modField = 0;
+        else if (abs(regMem.displacement) < 128)
+            modField = 1;
+        else
+            modField = 2;
+
+        uint8_t rmField = regMem.regOpt ? regMem.regOpt.value().regNum : 5;
+        uint8_t modRegRmByte = (modField << 6) | (regField << 3) | rmField;
+        WriteMemUInt8(m_addr++, modRegRmByte);
+
+        // TODO: full SIB
+        if (rmField == 4 && modField != 3)
+            WriteMemUInt8(m_addr++, 4);
+        
+        if (modField == 1)
+            WriteMemInt8(m_addr++, regMem.displacement);
+        else if (modField == 2 || !regMem.regOpt)
+            WriteMemInt32(m_addr++, regMem.displacement);
+    }
+
+    uint8_t modRegRmByte()
+    {
+        
+
+    }
 };

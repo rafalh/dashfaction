@@ -4,6 +4,7 @@
 #include <cstring>
 
 void WriteMem(unsigned Addr, const void *pValue, unsigned cbValue);
+void UnprotectMem(void *Ptr, unsigned Len);
 
 inline void WriteMem(unsigned Addr, const void *pValue, unsigned cbValue, unsigned cRepeat)
 {
