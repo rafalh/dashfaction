@@ -502,7 +502,7 @@ FunHook2<void(TriggerObj*, int32_t, bool)> TriggerActivate_Hook{ 0x004C0220,
         // Check team
         auto Player = GetPlayerFromEntityHandle(hEntity);
         auto TriggerName = CString_CStr(&Trigger->_Super.strName);
-        if (Player && Trigger->Team != 0xFF && Trigger->Team != Player->bBlueTeam)
+        if (Player && Trigger->Team != -1 && Trigger->Team != Player->bBlueTeam)
         {
             //DcPrintf("Trigger team does not match: %d vs %d (%s)", Trigger->Team, Player->bBlueTeam, TriggerName);
             return;

@@ -1001,7 +1001,8 @@ namespace rf
         Timer InsideTimer;
         int AttachedToUid;
         int UseClutterUid;
-        int Team;
+        char Team;
+        char _padding2[3];
     };
     static_assert(sizeof(TriggerObj) == 0x30C, "invalid size");
 
