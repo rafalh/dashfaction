@@ -4,6 +4,7 @@
 #include "utils.h"
 #include "inline_asm.h"
 #include "FunHook2.h"
+#include "RegsPatch.h"
 
 #if MASK_AS_PF
  #include "pf.h"
@@ -159,6 +160,13 @@ ASM_FUNC(ProcessGameInfoPacket_Security_0047B2D3,
     ASM_I  mov ecx, 0x0047B2E3
     ASM_I  jmp ecx
 )
+
+RegsPatch ProcessGameInfoPacket_GameTypeBounds_Patch{
+    0x0047B30B,
+    [](X86Regs &Regs) {
+        Regs.ECX = std::min(Regs.ECX, 2);
+    }
+};
 
 ASM_FUNC(ProcessGameInfoPacket_Security_0047B334,
 // ecx - num, esi -source, edi - dest
@@ -944,4 +952,7 @@ void NetworkInit()
     MultiGetObjFromRemoteHandle_Hook.Install();
     MultiGetLocalHandleFromRemoteHandle_Hook.Install();
     MultiSetObjHandleMapping_Hook.Install();
+
+    // Fix GameType out of bounds vulnerability
+    ProcessGameInfoPacket_GameTypeBounds_Patch.Install();
 }
