@@ -568,6 +568,57 @@ RegsPatch RflLoadInternal_CheckRestoreStatus_Patch{
     }
 };
 
+static int g_CutsceneBackgroundSoundSig = -1;
+
+FunHook2<void(char)> MenuInGameUpdateCutscene_Hook{
+    0x0045B5E0,
+    [](char bDlgOpen) {
+        bool SkipCutscene = false;
+        IsEntityCtrlActive(&g_pLocalPlayer->Config.Controls, GC_JUMP, &SkipCutscene);
+
+        if (!SkipCutscene)
+        {
+            MenuInGameUpdateCutscene_Hook.CallTarget(bDlgOpen);
+            
+            GrSetColor(255, 255, 255, 255);
+            GrDrawAlignedText(GR_ALIGN_CENTER, g_GrScreen.MaxWidth / 2, g_GrScreen.MaxHeight - 30,
+                "Press JUMP key to skip the cutscene", -1, rf::g_GrTextMaterial);
+        }
+        else
+        {
+            auto CutsceneIsActive = (bool(*)()) 0x0045BE80;
+            auto TimerAddDeltaTime = (int(*)(int DeltaMs)) 0x004FA2D0;
+            auto SndStop = (char(*)(int Sig)) 0x005442B0;
+            auto Timer__GetTimeLeftMs = (int (__thiscall*)(void *Timer)) 0x004FA420;
+
+            auto &FrameTime = AddrAsRef<float>(0x005A4014);
+            auto &ActiveCutscene = AddrAsRef<void*>(0x00645320);
+
+            if (g_CutsceneBackgroundSoundSig != -1)
+            {
+                SndStop(g_CutsceneBackgroundSoundSig);
+                g_CutsceneBackgroundSoundSig = -1;
+            }
+            while (CutsceneIsActive())
+            {
+                void *CurrentShotTimer = reinterpret_cast<char*>(ActiveCutscene) + 0x810;
+                int ShotTimeLeft = Timer__GetTimeLeftMs(CurrentShotTimer);
+                TimerAddDeltaTime(ShotTimeLeft);
+                FrameTime = ShotTimeLeft;
+                MenuInGameUpdateCutscene_Hook.CallTarget(bDlgOpen);
+            }
+        }
+    }
+};
+
+CallHook2<int()> PlayHardcodedBackgroundMusicForCutscene_Hook {
+    0x0045BB85,
+    []() {
+        g_CutsceneBackgroundSoundSig = PlayHardcodedBackgroundMusicForCutscene_Hook.CallTarget();
+        return g_CutsceneBackgroundSoundSig;
+    }
+};
+
 void MiscInit()
 {
     // Console init string
@@ -728,6 +779,10 @@ void MiscInit()
 
     // Add checking if restoring game state from save file failed during level loading
     RflLoadInternal_CheckRestoreStatus_Patch.Install();
+
+    // Support skipping cutscenes
+    MenuInGameUpdateCutscene_Hook.Install();
+    PlayHardcodedBackgroundMusicForCutscene_Hook.Install();
 
 #if 0
     // Fix weapon switch glitch when reloading (should be used on Match Mode)
