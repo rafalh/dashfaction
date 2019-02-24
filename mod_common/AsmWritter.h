@@ -114,6 +114,18 @@ public:
         return *this;
     }
 
+    AsmWritter &pushf()
+    {
+        WriteMemUInt8(m_addr++, 0x9C); // Opcode
+        return *this;
+    }
+
+    AsmWritter &popf()
+    {
+        WriteMemUInt8(m_addr++, 0x9D); // Opcode
+        return *this;
+    }
+
     AsmWritter &xor_(const AsmReg32 &dstReg, const AsmReg32 &srcReg)
     {
         WriteMemUInt8(m_addr++, 0x33); // Opcode

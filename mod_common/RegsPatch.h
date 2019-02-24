@@ -17,6 +17,7 @@
 
 struct X86Regs
 {
+    uint32_t Flags;
     // reversed PUSHA order of registers
     int32_t EDI;
     int32_t ESI;
@@ -26,6 +27,7 @@ struct X86Regs
     REG_UNION(D);
     REG_UNION(C);
     REG_UNION(A);
+    // return address
     uint32_t EIP;
 };
 
@@ -55,9 +57,11 @@ public:
             .push(reinterpret_cast<int32_t>(Trampoline))
             .pusha()
             .add({true, {AsmRegs::ESP}, offsetof(X86Regs, ESP)}, 4)
+            .pushf()
             .push(AsmRegs::ESP)
             .callLong(m_FunPtr)
             .addEsp(4)
+            .popf()
             .add({true, {AsmRegs::ESP}, offsetof(X86Regs, ESP)}, -4)
             .popa()
             .ret();
