@@ -593,6 +593,8 @@ FunHook2<void(char)> MenuInGameUpdateCutscene_Hook{
 
             auto &FrameTime = AddrAsRef<float>(0x005A4014);
             auto &ActiveCutscene = AddrAsRef<void*>(0x00645320);
+            auto &CurrentShotIdx = StructFieldRef<int>(ActiveCutscene, 0x808);
+            auto &NumShots = StructFieldRef<int>(ActiveCutscene, 4);
 
             if (g_CutsceneBackgroundSoundSig != -1)
             {
@@ -603,8 +605,11 @@ FunHook2<void(char)> MenuInGameUpdateCutscene_Hook{
             {
                 void *CurrentShotTimer = reinterpret_cast<char*>(ActiveCutscene) + 0x810;
                 int ShotTimeLeft = Timer__GetTimeLeftMs(CurrentShotTimer);
+                // run the frame when cutscene ends with normal speed so nothing weird happens
+                if (CurrentShotIdx == NumShots - 1 && ShotTimeLeft > 100)
+                    ShotTimeLeft -= 10;
                 TimerAddDeltaTime(ShotTimeLeft);
-                FrameTime = ShotTimeLeft;
+                FrameTime = ShotTimeLeft / 1000.0f;
                 MenuInGameUpdateCutscene_Hook.CallTarget(bDlgOpen);
             }
         }

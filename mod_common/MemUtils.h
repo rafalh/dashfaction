@@ -67,3 +67,10 @@ constexpr T &AddrAsRef(uintptr_t Addr)
 {
     return *(T*)Addr;
 }
+
+template<typename T>
+T &StructFieldRef(void *StructPtr, size_t Offset)
+{
+    auto Addr = reinterpret_cast<uintptr_t>(StructPtr) + Offset;
+    return *reinterpret_cast<T*>(Addr);
+}
