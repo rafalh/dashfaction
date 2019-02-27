@@ -106,6 +106,19 @@ public:
         return *this;
     }
 
+    AsmWritter &pop(const AsmReg32 &reg)
+    {
+        WriteMemUInt8(m_addr++, 0x58 | reg.regNum); // Opcode
+        return *this;
+    }
+
+    AsmWritter &pop(const AsmReg16 &reg)
+    {
+        WriteMemUInt8(m_addr++, PR_OPERAND_SIZE_OVERRIDE); // Prefix
+        WriteMemUInt8(m_addr++, 0x58 | reg.regNum); // Opcode
+        return *this;
+    }
+
     AsmWritter &push(int32_t Val)
     {
         WriteMemUInt8(m_addr++, 0x68); // Opcode
@@ -133,12 +146,22 @@ public:
         return *this;
     }
 
-    AsmWritter &add(const AsmRegMem &dst, int32_t imm32)
+    AsmWritter &add(const AsmRegMem &dstRM, int32_t imm32)
     {
+        if (abs(imm32) < 128)
+            return add(dstRM, static_cast<int8_t>(imm32));
         WriteMemUInt8(m_addr++, 0x81); // Opcode
-        writeModRm(dst, 0);
+        writeModRm(dstRM, 0);
         WriteMemInt32(m_addr, imm32);
         m_addr += 4;
+        return *this;
+    }
+
+    AsmWritter &add(const AsmRegMem &dstRM, int8_t imm8)
+    {
+        WriteMemUInt8(m_addr++, 0x83); // Opcode
+        writeModRm(dstRM, 0);
+        WriteMemInt8(m_addr++, imm8);
         return *this;
     }
 
@@ -190,6 +213,20 @@ public:
     AsmWritter &ret()
     {
         WriteMemUInt8(m_addr++, 0xC3);
+        return *this;
+    }
+
+    AsmWritter &mov(const AsmRegMem &dstRM, const AsmReg32 &srcReg)
+    {
+        WriteMemUInt8(m_addr++, 0x89); // Opcode
+        writeModRm(dstRM, srcReg.regNum);
+        return *this;
+    }
+
+    AsmWritter &mov(const AsmReg32 &dstReg, const AsmRegMem &srcRM)
+    {
+        WriteMemUInt8(m_addr++, 0x8B); // Opcode
+        writeModRm(srcRM, dstReg.regNum);
         return *this;
     }
 
@@ -312,10 +349,16 @@ private:
         uint8_t modRegRmByte = (modField << 6) | (regField << 3) | rmField;
         WriteMemUInt8(m_addr++, modRegRmByte);
 
-        // TODO: full SIB
+        // TODO: full SIB support?
         if (rmField == 4 && modField != 3)
-            WriteMemUInt8(m_addr++, 4);
-        
+        {
+            uint8_t scaleField = 0;
+            uint8_t indexField = 4; // no index
+            uint8_t baseField = 4; // esp
+            uint8_t sibByte = (scaleField << 6) | (indexField << 3) | baseField;
+            WriteMemUInt8(m_addr++, sibByte);
+        }
+
         if (modField == 1)
             WriteMemInt8(m_addr++, regMem.displacement);
         else if (modField == 2 || !regMem.regOpt)
