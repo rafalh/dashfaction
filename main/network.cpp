@@ -14,6 +14,8 @@ using namespace rf;
 
 static const auto MultiIsCurrentServer = (uint8_t(*)(const NwAddr *pAddr))0x0044AD80;
 
+auto &RflStaticGeometry = AddrAsRef<void*>(0x006460E8);
+
 typedef void(*NwPacketHandler_Type)(char *pData, const NwAddr *pAddr);
 
 static const auto ProcessGameInfoReqPacket = (NwPacketHandler_Type)0x0047B480;
@@ -164,6 +166,7 @@ ASM_FUNC(ProcessGameInfoPacket_Security_0047B2D3,
 RegsPatch ProcessGameInfoPacket_GameTypeBounds_Patch{
     0x0047B30B,
     [](X86Regs &Regs) {
+        Regs.ECX = std::max(Regs.ECX, 0);
         Regs.ECX = std::min(Regs.ECX, 2);
     }
 };
@@ -828,6 +831,54 @@ FunHook2<void(int32_t, int32_t)> MultiSetObjHandleMapping_Hook{ 0x00484B70,
     }
 };
 
+RegsPatch ProcessBooleanPacket_ValidateMeshId_Patch{
+    0x004765A3,
+    [](auto &Regs) {
+        Regs.ECX = std::max(Regs.ECX, 0);
+        Regs.ECX = std::min(Regs.ECX, 3);
+    }
+};
+
+RegsPatch ProcessBooleanPacket_ValidateRoomId_Patch{
+    0x0047661C,
+    [](auto &Regs) {
+        int NumRooms = StructFieldRef<int>(RflStaticGeometry, 0x90);
+        if (Regs.EDX < 0 || Regs.EDX >= NumRooms) {
+            WARN("Invalid room in Boolean packet - skipping");
+            Regs.ESP += 0x64;
+            Regs.EIP = 0x004766A5;
+        }
+    }
+};
+
+RegsPatch ProcessPregameBooleanPacket_ValidateMeshId_Patch{
+    0x0047672F,
+    [](auto &Regs) {
+        Regs.ECX = std::max(Regs.ECX, 0);
+        Regs.ECX = std::min(Regs.ECX, 3);
+    }
+};
+
+RegsPatch ProcessPregameBooleanPacket_ValidateRoomId_Patch{
+    0x00476752,
+    [](auto &Regs) {
+        int NumRooms = StructFieldRef<int>(RflStaticGeometry, 0x90);
+        if (Regs.EDX < 0 || Regs.EDX >= NumRooms) {
+            WARN("Invalid room in PregameBoolean packet - skipping");
+            Regs.ESP += 0x68;
+            Regs.EIP = 0x004767AA;
+        }
+    }
+};
+
+RegsPatch ProcessGlassKillPacket_CheckRoomExists_Patch{
+    0x004723B3,
+    [](auto &Regs) {
+        if (!Regs.EAX)
+            Regs.EIP = 0x004723EC;
+    }
+};
+
 void NetworkInit()
 {
     /* ProcessGamePackets hook (not reliable only) */
@@ -953,6 +1004,21 @@ void NetworkInit()
     MultiGetLocalHandleFromRemoteHandle_Hook.Install();
     MultiSetObjHandleMapping_Hook.Install();
 
-    // Fix GameType out of bounds vulnerability
+    // Fix GameType out of bounds vulnerability in GameInfo packet
     ProcessGameInfoPacket_GameTypeBounds_Patch.Install();
+
+    // Fix MeshId out of bounds vulnerability in Boolean packet
+    ProcessBooleanPacket_ValidateMeshId_Patch.Install();
+
+    // Fix RoomId out of bounds vulnerability in Boolean packet
+    ProcessBooleanPacket_ValidateRoomId_Patch.Install();
+
+    // Fix MeshId out of bounds vulnerability in PregameBoolean packet
+    ProcessPregameBooleanPacket_ValidateMeshId_Patch.Install();
+
+    // Fix RoomId out of bounds vulnerability in PregameBoolean packet
+    ProcessPregameBooleanPacket_ValidateRoomId_Patch.Install();
+
+    // Fix crash if room does not exist in GlassKill packet
+    ProcessGlassKillPacket_CheckRoomExists_Patch.Install();
 }
