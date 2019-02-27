@@ -624,6 +624,16 @@ CallHook2<int()> PlayHardcodedBackgroundMusicForCutscene_Hook {
     }
 };
 
+auto CanSave = AddrAsRef<bool()>(0x004B61A0);
+
+FunHook2<void()> DoQuickSave_Hook {
+    0x004B5E20,
+    []() {
+        if (CanSave())
+            DoQuickSave_Hook.CallTarget();
+    }
+};
+
 void MiscInit()
 {
     // Console init string
@@ -784,6 +794,9 @@ void MiscInit()
 
     // Add checking if restoring game state from save file failed during level loading
     RflLoadInternal_CheckRestoreStatus_Patch.Install();
+
+    // Fix creating corrupted saves if cutscene starts in the same frame as quick save button is pressed
+    DoQuickSave_Hook.Install();
 
     // Support skipping cutscenes
     MenuInGameUpdateCutscene_Hook.Install();

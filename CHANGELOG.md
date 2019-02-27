@@ -19,6 +19,7 @@ Version 1.2.2 (not released yet)
 - client-side/solo/teleport triggers handling - improves PF compatibility
 - handle trigger team property - improves PF compatibility
 - fix possible crash when loading corrupted save file
+- block creation of corrupted save files when cutscene starts
 - allow skipping cutscenes by pressing jump key
 - fix multiple security vulnerabilities
 - stability improvements
