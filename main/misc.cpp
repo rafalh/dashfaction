@@ -634,6 +634,36 @@ FunHook2<void()> DoQuickSave_Hook {
     }
 };
 
+auto MultiIsConnected = AddrAsRef<bool()>(0x0044AD70);
+auto GameSeqPushState = AddrAsRef<int(int state, bool update_parent_state, bool parent_dlg_open)>(0x00434410);
+
+bool g_jump_to_multi_server_list = false;
+
+FunHook2<void(int, int)> GameEnterState_Hook {
+    0x004B1AC0,
+    [](int State, int OldState) {
+        GameEnterState_Hook.CallTarget(State, OldState);
+        // Note: MultiIsConnected() returns false (cleared after successful join)
+        if (State == 0x2 && OldState == 0xD && g_jump_to_multi_server_list) { // GS_EXIT_GAME -> GS_MAIN_MENU
+            // TODO
+            DcPrintf("go to multi!");
+            GameSeqPushState(0xF, false, false); // GS_MULTI_MENU
+        }
+        if (State == 0xF && g_jump_to_multi_server_list) { // GS_MULTI_MENU
+            GameSeqPushState(0x1E, false, false); // GS_MULTI_SERVER_LIST
+            g_jump_to_multi_server_list = false;
+        }
+    }
+};
+
+FunHook2<void()> MultiAfterPlayersPackets_Hook {
+    0x00482080,
+    []() {
+        MultiAfterPlayersPackets_Hook.CallTarget();
+        g_jump_to_multi_server_list = true;
+    }
+};
+
 void MiscInit()
 {
     // Console init string
@@ -801,6 +831,10 @@ void MiscInit()
     // Support skipping cutscenes
     MenuInGameUpdateCutscene_Hook.Install();
     PlayHardcodedBackgroundMusicForCutscene_Hook.Install();
+
+    // Open server list menu instead of main menu when leaving multiplayer game
+    GameEnterState_Hook.Install();
+    MultiAfterPlayersPackets_Hook.Install();
 
 #if 0
     // Fix weapon switch glitch when reloading (should be used on Match Mode)

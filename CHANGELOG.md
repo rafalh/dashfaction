@@ -21,6 +21,7 @@ Version 1.2.2 (not released yet)
 - fix possible crash when loading corrupted save file
 - block creation of corrupted save files when cutscene starts
 - allow skipping cutscenes by pressing jump key
+- open server list menu instead of main menu when leaving multiplayer game (affects level download too)
 - fix multiple security vulnerabilities
 - stability improvements
 
