@@ -586,32 +586,52 @@ FunHook2<void(char)> MenuInGameUpdateCutscene_Hook{
         }
         else
         {
-            auto CutsceneIsActive = (bool(*)()) 0x0045BE80;
-            auto TimerAddDeltaTime = (int(*)(int DeltaMs)) 0x004FA2D0;
-            auto SndStop = (char(*)(int Sig)) 0x005442B0;
-            auto Timer__GetTimeLeftMs = (int (__thiscall*)(void *Timer)) 0x004FA420;
-
+            auto CutsceneIsActive = AddrAsRef<bool()>(0x0045BE80);
+            auto TimerAddDeltaTime = AddrAsRef<int(int DeltaMs)>(0x004FA2D0);
+            auto SndStop = AddrAsRef<char(int Sig)>(0x005442B0);
+            auto Timer__GetTimeLeftMs = AddrAsRef<int __thiscall(void *Timer)>(0x004FA420);
+            auto DestroyAllPausedSounds = AddrAsRef<void()>(0x005059F0);
+            auto SetAllPlayingSoundsPaused = AddrAsRef<void(bool Paused)>(0x00505C70);
+            
+            auto &TimerBase = AddrAsRef<int64_t>(0x01751BF8);
+            auto &TimerFreq = AddrAsRef<int32_t>(0x01751C04);
             auto &FrameTime = AddrAsRef<float>(0x005A4014);
             auto &ActiveCutscene = AddrAsRef<void*>(0x00645320);
             auto &CurrentShotIdx = StructFieldRef<int>(ActiveCutscene, 0x808);
             auto &NumShots = StructFieldRef<int>(ActiveCutscene, 4);
+            auto &SoundEnabled = AddrAsRef<bool>(0x017543D8);
 
             if (g_CutsceneBackgroundSoundSig != -1)
             {
                 SndStop(g_CutsceneBackgroundSoundSig);
                 g_CutsceneBackgroundSoundSig = -1;
             }
+
+            SetAllPlayingSoundsPaused(true);
+            DestroyAllPausedSounds();
+            SoundEnabled = false;
+
             while (CutsceneIsActive())
             {
                 void *CurrentShotTimer = reinterpret_cast<char*>(ActiveCutscene) + 0x810;
-                int ShotTimeLeft = Timer__GetTimeLeftMs(CurrentShotTimer);
-                // run the frame when cutscene ends with normal speed so nothing weird happens
-                if (CurrentShotIdx == NumShots - 1 && ShotTimeLeft > 100)
-                    ShotTimeLeft -= 10;
-                TimerAddDeltaTime(ShotTimeLeft);
-                FrameTime = ShotTimeLeft / 1000.0f;
+                int ShotTimeLeftMs = Timer__GetTimeLeftMs(CurrentShotTimer);
+                
+                if (CurrentShotIdx == NumShots - 1)
+                {
+                    // run last half second with a speed of 10 FPS so all events get properly processed before
+                    // going back to normal gameplay
+                    if (ShotTimeLeftMs > 500)
+                        ShotTimeLeftMs -= 500;
+                    else
+                        ShotTimeLeftMs = std::min(ShotTimeLeftMs, 100);
+                }
+                TimerAddDeltaTime(ShotTimeLeftMs);
+                FrameTime = ShotTimeLeftMs / 1000.0f;
+                TimerBase -= static_cast<int64_t>(ShotTimeLeftMs) * TimerFreq / 1000;
                 MenuInGameUpdateCutscene_Hook.CallTarget(bDlgOpen);
             }
+
+            SoundEnabled = true;
         }
     }
 };
