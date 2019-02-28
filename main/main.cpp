@@ -16,7 +16,6 @@
 #include "wndproc.h"
 #include "graphics.h"
 #include "network.h"
-#include "test.h"
 #include "high_fps.h"
 #include "misc.h"
 #include "GameConfig.h"
@@ -26,6 +25,10 @@
 #include <log/FileAppender.h>
 #include <log/ConsoleAppender.h>
 #include <log/Win32Appender.h>
+
+#ifdef HAS_EXPERIMENTAL
+    #include "experimental.h"
+#endif
 
 using namespace rf;
 
@@ -80,8 +83,8 @@ CallHook2<void(u8)> DcUpdate_Hook{ 0x004B2DD3,
         RenderDownloadProgress();
 #endif
 
-#ifndef NDEBUG
-        TestRender();
+#if !defined(NDEBUG) && defined(HAS_EXPERIMENTAL)
+        ExperimentalRender();
 #endif
         DebugRender2d();
     } };
@@ -126,8 +129,8 @@ CallHook2<bool()> RunGame_Hook{ 0x004B2818,
 
 CallHook2<void()> RenderInGame_Hook{ 0x00432375,
     []() {
-#ifdef DEBUG
-        TestRenderInGame();
+#if !defined(NDEBUG) && defined(HAS_EXPERIMENTAL)
+        ExperimentalRenderInGame();
 #endif
         DebugRender3d();
     }
@@ -165,8 +168,8 @@ FunHook2<void(CPlayer*)> PlayerDestroy_Hook{ 0x004A35C0,
 CallHook2<void()> AfterFullGameInit_Hook{ 0x004B2693,
     []() {
         SpectateModeAfterFullGameInit();
-#ifndef NDEBUG
-        TestInitAfterGame();
+#if !defined(NDEBUG) && defined(HAS_EXPERIMENTAL)
+        ExperimentalInitAfterGame();
 #endif
     } };
 
@@ -279,8 +282,8 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
     CommandsInit();
     HighFpsInit();
     MiscInit();
-#ifndef NDEBUG
-    TestInit();
+#if !defined(NDEBUG) && defined(HAS_EXPERIMENTAL)
+    ExperimentalInit();
 #endif
 
     INFO("Installing hooks took %u ms", GetTickCount() - StartTicks);

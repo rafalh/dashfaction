@@ -29,3 +29,6 @@ ipch
 
 # Non-Open Source PF support code
 main/pf.*
+
+# Experimental code
+main/experimental.*

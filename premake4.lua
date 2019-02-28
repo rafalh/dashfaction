@@ -17,6 +17,9 @@ workspace "DashFaction"
 	if os.isfile "main/pf.cpp" then
 		defines { "HAS_PF" }
 	end
+	if os.isfile "main/experimental.cpp" then
+		defines { "HAS_EXPERIMENTAL" }
+	end
 	
 	configuration "Debug"
 		defines { "DEBUG" }
