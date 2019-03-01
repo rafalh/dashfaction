@@ -4,83 +4,79 @@
 #include "rf.h"
 #include "commands.h"
 
-using namespace rf;
+namespace rf {
+struct BanlistEntry {
+    char ip_addr[24];
+    BanlistEntry* next;
+    BanlistEntry* prev;
+};
+
+static auto &banlist_first_entry = *(BanlistEntry**)0x0064EC20;
+static auto &banlist_last_entry = *(BanlistEntry**)0x0064EC24;
+static auto &banlist_null_entry = *(BanlistEntry*)0x0064EC08;
+}
 
 void BanCmdHandlerHook()
 {
-    if (g_bNetworkGame && g_bLocalNetworkGame)
-    {
-        if (g_bDcRun)
-        {
-            CPlayer *pPlayer;
-            
-            rf::DcGetArg(DC_ARG_STR, 1);
-            pPlayer = FindBestMatchingPlayer(g_pszDcArg);
-            if (pPlayer)
-            {
-                if (pPlayer != g_pLocalPlayer)
-                {
-                    DcPrintf(g_ppszStringsTable[959], pPlayer->strName.psz);
-                    BanIp(&(pPlayer->pNwData->Addr));
-                    KickPlayer(pPlayer);
+    if (rf::g_bNetworkGame && rf::g_bLocalNetworkGame) {
+        if (rf::g_bDcRun) {
+            rf::DcGetArg(rf::DC_ARG_STR, 1);
+            rf::Player* player = FindBestMatchingPlayer(rf::g_pszDcArg);
+
+            if (player) {
+                if (player != rf::g_pLocalPlayer) {
+                    rf::DcPrintf(rf::g_ppszStringsTable[959], player->strName.psz);
+                    rf::BanIp(&(player->pNwData->Addr));
+                    rf::KickPlayer(player);
                 } else
-                    DcPrintf("You cannot ban yourself!");
+                    rf::DcPrintf("You cannot ban yourself!");
             }
         }
-        
-        if (g_bDcHelp)
-        {
-            DcPrint(g_ppszStringsTable[STR_USAGE], NULL);
-            DcPrintf("     ban <%s>", g_ppszStringsTable[STR_PLAYER_NAME]);
+
+        if (rf::g_bDcHelp) {
+            rf::DcPrint(rf::g_ppszStringsTable[rf::STR_USAGE], NULL);
+            rf::DcPrintf("     ban <%s>", rf::g_ppszStringsTable[rf::STR_PLAYER_NAME]);
         }
     }
 }
 
 void KickCmdHandlerHook()
 {
-    if (g_bNetworkGame && g_bLocalNetworkGame)
-    {
-        if (g_bDcRun)
-        {
-            rf::CPlayer *pPlayer;
-            
-            rf::DcGetArg(DC_ARG_STR, 1);
-            pPlayer = FindBestMatchingPlayer(g_pszDcArg);
-            if (pPlayer)
-            {
-                if (pPlayer != g_pLocalPlayer)
-                {
-                    DcPrintf(g_ppszStringsTable[STR_KICKING_PLAYER], pPlayer->strName.psz);
-                    KickPlayer(pPlayer);
+    if (rf::g_bNetworkGame && rf::g_bLocalNetworkGame) {
+        if (rf::g_bDcRun) {
+            rf::DcGetArg(rf::DC_ARG_STR, 1);
+            rf::Player* player = FindBestMatchingPlayer(rf::g_pszDcArg);
+
+            if (player) {
+                if (player != rf::g_pLocalPlayer) {
+                    rf::DcPrintf(rf::g_ppszStringsTable[rf::STR_KICKING_PLAYER], player->strName.psz);
+                    rf::KickPlayer(player);
                 } else
-                    DcPrintf("You cannot kick yourself!");
+                    rf::DcPrintf("You cannot kick yourself!");
             }
         }
-        
-        if (g_bDcHelp)
-        {
-            DcPrint(g_ppszStringsTable[STR_USAGE], NULL);
-            DcPrintf("     kick <%s>", g_ppszStringsTable[STR_PLAYER_NAME]);
+
+        if (rf::g_bDcHelp) {
+            rf::DcPrint(rf::g_ppszStringsTable[rf::STR_USAGE], NULL);
+            rf::DcPrintf("     kick <%s>", rf::g_ppszStringsTable[rf::STR_PLAYER_NAME]);
         }
     }
 }
 
-void UnbanLastCmdHandler(void)
+void UnbanLastCmdHandler()
 {
-    if (g_bNetworkGame && g_bLocalNetworkGame && g_bDcRun)
-    {
-        BanlistEntry *pEntry = g_pBanlistLastEntry;
-        if (pEntry != &g_BanlistNullEntry)
-        {
-            DcPrintf("%s has been unbanned!", pEntry->szIp);
-            pEntry->pNext->pPrev = pEntry->pPrev;
-            pEntry->pPrev->pNext = pEntry->pPrev;
-            RfDelete(pEntry);
+    if (rf::g_bNetworkGame && rf::g_bLocalNetworkGame && rf::g_bDcRun) {
+        rf::BanlistEntry* entry = rf::banlist_last_entry;
+        if (entry != &rf::banlist_null_entry) {
+            rf::DcPrintf("%s has been unbanned!", entry->ip_addr);
+            entry->next->prev = entry->prev;
+            entry->prev->next = entry->next;
+            rf::Free(entry);
         }
     }
 }
 
-void InitLazyban(void)
+void InitLazyban()
 {
     AsmWritter(0x0047B6F0).jmpLong(BanCmdHandlerHook);
     AsmWritter(0x0047B580).jmpLong(KickCmdHandlerHook);

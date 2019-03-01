@@ -24,7 +24,7 @@ auto DrawScoreboardInternal_Hook = makeFunHook(DrawScoreboardInternal);
 
 static int ScoreboardSortFunc(const void *Ptr1, const void *Ptr2)
 {
-    CPlayer *pPlayer1 = *((CPlayer**)Ptr1), *pPlayer2 = *((CPlayer**)Ptr2);
+    rf::Player *pPlayer1 = *((rf::Player**)Ptr1), *pPlayer2 = *((rf::Player**)Ptr2);
     return pPlayer2->pStats->iScore - pPlayer1->pStats->iScore;
 }
 
@@ -38,8 +38,8 @@ void DrawScoreboardInternal_New(bool bDraw)
     unsigned GameType = GetGameType();
     
     // Sort players by score
-    CPlayer *Players[32];
-    CPlayer *pPlayer = g_pPlayersList;
+    rf::Player *Players[32];
+    rf::Player *pPlayer = g_pPlayersList;
     unsigned cPlayers = 0;
     while (cPlayers < 32)
     {
@@ -53,7 +53,7 @@ void DrawScoreboardInternal_New(bool bDraw)
         if (!pPlayer || pPlayer == g_pPlayersList)
             break;
     }
-    qsort(Players, cPlayers, sizeof(CPlayer*), ScoreboardSortFunc);
+    qsort(Players, cPlayers, sizeof(rf::Player*), ScoreboardSortFunc);
 
     // Animation
     float fAnimProgress = 1.0f, fProgressW = 1.0f, fProgressH = 1.0f;
@@ -113,24 +113,24 @@ void DrawScoreboardInternal_New(bool bDraw)
 
     // Draw level
     GrSetColor(0xB0, 0xB0, 0xB0, 0xFF);
-    sprintf(szBuf, "%s (%s) by %s", CString_CStr(&g_strLevelName), CString_CStr(&g_strLevelFilename), CString_CStr(&g_strLevelAuthor));
-    CString strLevelInfo, strLevelInfoNew;
-    CString_Init(&strLevelInfo, szBuf);
+    sprintf(szBuf, "%s (%s) by %s",rf::String::CStr(&g_strLevelName),rf::String::CStr(&g_strLevelFilename),rf::String::CStr(&g_strLevelAuthor));
+    rf::String strLevelInfo, strLevelInfoNew;
+    rf::String::Init(&strLevelInfo, szBuf);
     GrFitText(&strLevelInfoNew, strLevelInfo, cx - 20); // Note: this destroys input string
-    GrDrawAlignedText(GR_ALIGN_CENTER, xCenter, y, CString_CStr(&strLevelInfoNew), -1, g_GrTextMaterial);
-    CString_Destroy(&strLevelInfoNew);
+    GrDrawAlignedText(GR_ALIGN_CENTER, xCenter, y,rf::String::CStr(&strLevelInfoNew), -1, g_GrTextMaterial);
+    rf::String::Destroy(&strLevelInfoNew);
     y += 15;
 
     // Draw server info
-    unsigned i = sprintf(szBuf, "%s (", CString_CStr(&g_strServName));
+    unsigned i = sprintf(szBuf, "%s (",rf::String::CStr(&g_strServName));
     NwAddrToStr(szBuf + i, sizeof(szBuf) - i, &g_ServAddr);
     i += strlen(szBuf + i);
     sprintf(szBuf + i, ")");
-    CString strServerInfo, strServerInfoNew;
-    CString_Init(&strServerInfo, szBuf);
+    rf::String strServerInfo, strServerInfoNew;
+    rf::String::Init(&strServerInfo, szBuf);
     GrFitText(&strServerInfoNew, strServerInfo, cx - 20); // Note: this destroys input string
-    GrDrawAlignedText(GR_ALIGN_CENTER, xCenter, y, CString_CStr(&strServerInfoNew), -1, g_GrTextMaterial);
-    CString_Destroy(&strServerInfoNew);
+    GrDrawAlignedText(GR_ALIGN_CENTER, xCenter, y,rf::String::CStr(&strServerInfoNew), -1, g_GrTextMaterial);
+    rf::String::Destroy(&strServerInfoNew);
     y += 20;
     
     // Draw team scores
@@ -200,8 +200,8 @@ void DrawScoreboardInternal_New(bool bDraw)
     }
     y += 20;
     
-    CPlayer *pRedFlagPlayer = CtfGetRedFlagPlayer();
-    CPlayer *pBlueFlagPlayer = CtfGetBlueFlagPlayer();
+    rf::Player *pRedFlagPlayer = CtfGetRedFlagPlayer();
+    rf::Player *pBlueFlagPlayer = CtfGetBlueFlagPlayer();
 
     // Finally draw the list
     int SectCounter[2] = { 0, 0 };
@@ -231,11 +231,11 @@ void DrawScoreboardInternal_New(bool bDraw)
             StatusBm = HudMicroFlagBlueBm;
         GrDrawImage(StatusBm, Offsets.StatusBm, RowY + 2, g_GrImageMaterial);
 
-        CString strName, strNameNew;
-        CString_InitFromStr(&strName, &pPlayer->strName);
+        rf::String strName, strNameNew;
+        rf::String::InitFromStr(&strName, &pPlayer->strName);
         GrFitText(&strNameNew, strName, cxNameMax - 10); // Note: this destroys strName
-        GrDrawText(Offsets.Name, RowY, CString_CStr(&strNameNew), -1, g_GrTextMaterial);
-        CString_Destroy(&strNameNew);
+        GrDrawText(Offsets.Name, RowY,rf::String::CStr(&strNameNew), -1, g_GrTextMaterial);
+        rf::String::Destroy(&strNameNew);
         
         auto pStats = (PlayerStatsNew*)pPlayer->pStats;
         sprintf(szBuf, "%hd", pStats->iScore);

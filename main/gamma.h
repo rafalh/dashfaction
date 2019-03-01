@@ -1,4 +1,4 @@
 #pragma once
 
-void InitGamma(void);
-void ResetGammaRamp(void);
+void InitGamma();
+void ResetGammaRamp();

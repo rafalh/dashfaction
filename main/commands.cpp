@@ -159,11 +159,11 @@ DcCommand2(const char *, T, const char *, const char *)
 
 auto DcAutoCompleteInput_Hook = makeFunHook(DcAutoCompleteInput);
 
-rf::CPlayer *FindBestMatchingPlayer(const char *pszName)
+rf::Player *FindBestMatchingPlayer(const char *pszName)
 {
-    rf::CPlayer *pFoundPlayer;
+    rf::Player *pFoundPlayer;
     int NumFound = 0;
-    FindPlayer(StringMatcher().Exact(pszName), [&](rf::CPlayer *pPlayer)
+    FindPlayer(StringMatcher().Exact(pszName), [&](rf::Player *pPlayer)
     {
         pFoundPlayer = pPlayer;
         ++NumFound;
@@ -172,7 +172,7 @@ rf::CPlayer *FindBestMatchingPlayer(const char *pszName)
         return pFoundPlayer;
 
     NumFound = 0;
-    FindPlayer(StringMatcher().Infix(pszName), [&](rf::CPlayer *pPlayer)
+    FindPlayer(StringMatcher().Infix(pszName), [&](rf::Player *pPlayer)
     {
         pFoundPlayer = pPlayer;
         ++NumFound;
@@ -353,7 +353,7 @@ DcCommand2 SpectateCmd { "spectate",
     [](std::optional<std::string> PlayerName) {
         if (g_bNetworkGame)
         {
-            rf::CPlayer *pPlayer;
+            rf::Player *pPlayer;
             if (PlayerName && PlayerName.value() == "false")
                 pPlayer = nullptr;
             else if (PlayerName)
@@ -407,7 +407,7 @@ DcCommand2 InputModeCmd{ "inputmode",
 
 #if CAMERA_1_3_COMMANDS
 
-static int CanPlayerFireHook(CPlayer *pPlayer)
+static int CanPlayerFireHook(rf::Player *pPlayer)
 {
     if (!(pPlayer->Flags & 0x10))
         return 0;
@@ -453,9 +453,9 @@ DcCommand2 LevelSpCmd{ "levelsp",
         if (LevelFilename.find(".rfl") == std::string::npos)
             LevelFilename += ".rfl";
 
-        CString strUnk, strLevel;
-        CString_Init(&strUnk, "");
-        CString_Init(&strLevel, LevelFilename.c_str());
+        rf::String strUnk, strLevel;
+        rf::String::Init(&strUnk, "");
+        rf::String::Init(&strLevel, LevelFilename.c_str());
 
         DcPrintf("Loading level.");
         SetNextLevelFilename(strLevel, strUnk);
@@ -485,7 +485,7 @@ DcCommand2 PlayerCountCmd{ "playercount",
     []() {
         if (!g_bNetworkGame) return;
         int PlayerCount = 0;
-        CPlayer *pPlayer = g_pPlayersList;
+        rf::Player *pPlayer = g_pPlayersList;
         while (pPlayer)
         {
             if (pPlayer != g_pPlayersList)
@@ -616,8 +616,8 @@ void DcAutoCompletePlayer(int Offset)
 
     bool First = true;
     std::string CommonPrefix;
-    std::vector<rf::CPlayer*> MatchingPlayers;
-    FindPlayer(StringMatcher().Prefix(PlayerName), [&](rf::CPlayer *pPlayer)
+    std::vector<rf::Player*> MatchingPlayers;
+    FindPlayer(StringMatcher().Prefix(PlayerName), [&](rf::Player *pPlayer)
     {
         MatchingPlayers.push_back(pPlayer);
         DcAutoCompleteUpdateCommonPrefix(CommonPrefix, pPlayer->strName.psz, First);
@@ -627,7 +627,7 @@ void DcAutoCompletePlayer(int Offset)
         DcAutoCompletePutComponent(Offset, MatchingPlayers[0]->strName.psz, true);
     else
     {
-        DcAutoCompletePrintSuggestions(MatchingPlayers, [](rf::CPlayer *pPlayer) { return pPlayer->strName.psz; });
+        DcAutoCompletePrintSuggestions(MatchingPlayers, [](rf::Player *pPlayer) { return pPlayer->strName.psz; });
         DcAutoCompletePutComponent(Offset, CommonPrefix, false);
     }
 }

@@ -3,32 +3,31 @@
 #include "utils.h"
 #include "rf.h"
 #include "inline_asm.h"
+#include <FunHook2.h>
 
-constexpr auto REF_FPS = 30.0f;
-constexpr auto REF_FRAMERATE = 1.0f / REF_FPS;
-constexpr auto SCREEN_SHAKE_FPS = 150.0f;
+constexpr auto reference_fps = 30.0f;
+constexpr auto reference_framerate = 1.0f / reference_fps;
+constexpr auto screen_shake_fps = 150.0f;
 
-double g_FtolAccumulator_HitScreen = 0.0f;
-double g_FtolAccumulated_ToggleConsole = 0.0f;
-double g_FtolAccumulated_Timer = 0.0f;
-static float g_JumpThreshold = 0.05f;
-static float g_fCameraShakeFactor = 0.6f;
+double g_ftol_accumulated_HitScreen = 0.0f;
+double g_ftol_accumulated_ToggleConsole = 0.0f;
+double g_ftol_accumulated_Timer = 0.0f;
+static float g_jump_threshold = 0.05f;
+static float g_camera_shake_factor = 0.6f;
 
-auto RflLoad_Hook = makeFunHook(rf::RflLoad);
-
-extern "C" long AccumulatingFtoL(double fVal, double *pAccumulator)
+extern "C" long AccumulatingFtoL(double value, double& accumulator)
 {
-    //ERR("fVal %lf pAccumulator %lf", fVal, *pAccumulator);
-    fVal += *pAccumulator;
-    long Result = (long)fVal;
-    *pAccumulator = fVal - Result;
-    //ERR("after Result %ld pAccumulator %lf", Result, *pAccumulator);
-    return Result;
+    //ERR("value %lf accumulator %lf", value, accumulator);
+    value += accumulator;
+    long result = static_cast<long>(value);
+    accumulator = value - result;
+    //ERR("after result %ld accumulator %lf", result, accumulator);
+    return result;
 }
 
 ASM_FUNC(ftol_HitScreen, // Note: value is in ST(0), not on stack
     ASM_I  sub esp, 12
-    ASM_I  lea ecx, [ASM_SYM(g_FtolAccumulator_HitScreen)]
+    ASM_I  lea ecx, [ASM_SYM(g_ftol_accumulated_HitScreen)]
     ASM_I  mov [esp + 8], ecx
     ASM_I  fstp qword ptr [esp + 0]
     ASM_I  call ASM_SYM(AccumulatingFtoL)
@@ -38,7 +37,7 @@ ASM_FUNC(ftol_HitScreen, // Note: value is in ST(0), not on stack
 
 ASM_FUNC(ftol_ToggleConsole,
     ASM_I  sub esp, 12
-    ASM_I  lea ecx, [ASM_SYM(g_FtolAccumulated_ToggleConsole)]
+    ASM_I  lea ecx, [ASM_SYM(g_ftol_accumulated_ToggleConsole)]
     ASM_I  mov [esp + 8], ecx
     ASM_I  fstp qword ptr [esp + 0]
     ASM_I  call ASM_SYM(AccumulatingFtoL)
@@ -48,7 +47,7 @@ ASM_FUNC(ftol_ToggleConsole,
 
 ASM_FUNC(ftol_Timer,
     ASM_I  sub esp, 12
-    ASM_I  lea ecx, [ASM_SYM(g_FtolAccumulated_Timer)]
+    ASM_I  lea ecx, [ASM_SYM(g_ftol_accumulated_Timer)]
     ASM_I  mov [esp + 8], ecx
     ASM_I  fstp qword ptr [esp + 0]
     ASM_I  call ASM_SYM(AccumulatingFtoL)
@@ -56,22 +55,22 @@ ASM_FUNC(ftol_Timer,
     ASM_I  ret
 )
 
-void STDCALL EntityWaterDecelerateFix(rf::EntityObj *pEntity)
+void STDCALL EntityWaterDecelerateFix(rf::EntityObj* entity)
 {
-    float fVelFactor = 1.0f - (rf::g_fFramerate * 4.5f);
-    pEntity->_Super.PhysInfo.vVel.x *= fVelFactor;
-    pEntity->_Super.PhysInfo.vVel.y *= fVelFactor;
-    pEntity->_Super.PhysInfo.vVel.z *= fVelFactor;
+    float vel_factor = 1.0f - (rf::g_fFramerate * 4.5f);
+    entity->_Super.PhysInfo.vVel.x *= vel_factor;
+    entity->_Super.PhysInfo.vVel.y *= vel_factor;
+    entity->_Super.PhysInfo.vVel.z *= vel_factor;
 }
 
-extern "C" void WaterAnimateWaves_UpdatePos(rf::CVector3 *pResult)
+extern "C" void WaterAnimateWaves_UpdatePos(rf::Vector3* result)
 {
     constexpr float flt_5A3BF4 = 12.8f;
     constexpr float flt_5A3C00 = 3.878788f;
     constexpr float flt_5A3C0C = 4.2666669f;
-    pResult->x += flt_5A3BF4 * (rf::g_fFramerate) / REF_FRAMERATE;
-    pResult->y += flt_5A3C0C * (rf::g_fFramerate) / REF_FRAMERATE;
-    pResult->z += flt_5A3C00 * (rf::g_fFramerate) / REF_FRAMERATE;
+    result->x += flt_5A3BF4 * (rf::g_fFramerate) / reference_framerate;
+    result->y += flt_5A3C0C * (rf::g_fFramerate) / reference_framerate;
+    result->z += flt_5A3C00 * (rf::g_fFramerate) / reference_framerate;
 }
 
 ASM_FUNC(WaterAnimateWaves_004E68A0,
@@ -86,70 +85,68 @@ ASM_FUNC(WaterAnimateWaves_004E68A0,
     ASM_I  jmp eax
 )
 
-int RflLoad_New(rf::CString *pstrLevelFilename, rf::CString *a2, char *pszError)
-{
-    int ret = RflLoad_Hook.callTrampoline(pstrLevelFilename, a2, pszError);
-    if (ret == 0 && strstr(pstrLevelFilename->psz, "L5S3"))
-    {
-        // Fix submarine exploding - change delay of two events to make submarine physics enabled later
-        //INFO("Fixing Submarine exploding bug...");
-        rf::Object *pObj = rf::ObjGetFromUid(4679);
-        if (pObj && pObj->Type == rf::OT_EVENT)
-        {
-            rf::EventObj *pEvent = (rf::EventObj*)(((uintptr_t)pObj) - 4);
-            pEvent->fDelay += 1.5f;
+FunHook2<int(rf::String*, rf::String*, char*)> RflLoad_Hook{
+    0x0045C540,
+    [](rf::String* level_filename, rf::String* a2, char* error_desc) {
+        int ret = RflLoad_Hook.CallTarget(level_filename, a2, error_desc);
+        if (ret == 0 && strstr(level_filename->psz, "L5S3")) {
+            // Fix submarine exploding - change delay of two events to make submarine physics enabled later
+            //INFO("Fixing Submarine exploding bug...");
+            rf::Object* obj = rf::ObjGetFromUid(4679);
+            if (obj && obj->Type == rf::OT_EVENT) {
+                rf::EventObj* event = reinterpret_cast<rf::EventObj*>(reinterpret_cast<uintptr_t>(obj) - 4);
+                event->fDelay += 1.5f;
+            }
+            obj = rf::ObjGetFromUid(4680);
+            if (obj && obj->Type == rf::OT_EVENT) {
+                rf::EventObj* event = reinterpret_cast<rf::EventObj*>(reinterpret_cast<uintptr_t>(obj) - 4);
+                event->fDelay += 1.5f;
+            }
         }
-        pObj = rf::ObjGetFromUid(4680);
-        if (pObj && pObj->Type == rf::OT_EVENT)
-        {
-            rf::EventObj *pEvent = (rf::EventObj*)(((uintptr_t)pObj) - 4);
-            pEvent->fDelay += 1.5f;
-        }
+        return ret;
     }
-    return ret;
-}
+};
 
 void HighFpsInit()
 {
     // Fix animations broken for high FPS
-    WriteMemUInt32(0x00416426 + 1, (uintptr_t)ftol_HitScreen - (0x00416426 + 0x5)); // hit screen
-    WriteMemUInt32(0x0050ABFB + 1, (uintptr_t)ftol_ToggleConsole - (0x0050ABFB + 0x5)); // console open/close
-    WriteMemUInt32(0x005096A7 + 1, (uintptr_t)ftol_Timer - (0x005096A7 + 0x5)); // switching weapon and more
+    AsmWritter(0x00416426).callLong(ftol_HitScreen); // hit screen
+    AsmWritter(0x0050ABFB).callLong(ftol_ToggleConsole); // console open/close
+    AsmWritter(0x005096A7).callLong(ftol_Timer); // switching weapon and more
 
     // Fix jumping on high FPS
-    WriteMemPtr(0x004A09A6 + 2, &g_JumpThreshold);
+    WriteMemPtr(0x004A09A6 + 2, &g_jump_threshold);
 
     // Fix water deceleration on high FPS
     WriteMemUInt8(0x0049D816, ASM_NOP, 5);
     WriteMemUInt8(0x0049D82A, ASM_NOP, 5);
     WriteMemUInt8(0x0049D82A + 5, ASM_PUSH_ESI);
-    WriteMemInt32(0x0049D830 + 1, (uintptr_t)EntityWaterDecelerateFix - (0x0049D830 + 0x5));
+    AsmWritter(0x0049D830).callLong(EntityWaterDecelerateFix);
 
     // Fix water waves animation on high FPS
     WriteMemUInt8(0x004E68A0, ASM_NOP, 9);
     WriteMemUInt8(0x004E68B6, ASM_LONG_JMP_REL);
-    WriteMemInt32(0x004E68B6 + 1, (uintptr_t)WaterAnimateWaves_004E68A0 - (0x004E68B6 + 0x5));
+    AsmWritter(0x004E68B6).jmpLong(WaterAnimateWaves_004E68A0);
 
     // Fix incorrect frame time calculation
     WriteMemUInt8(0x00509595, ASM_NOP, 2);
     WriteMemUInt8(0x00509532, ASM_SHORT_JMP_REL);
 
     // Fix submarine exploding on high FPS
-    RflLoad_Hook.hook(RflLoad_New);
+    RflLoad_Hook.Install();
 
     // Fix screen shake caused by some weapons (eg. Assault Rifle)
-    WriteMemPtr(0x0040DBCC + 2, &g_fCameraShakeFactor);
+    WriteMemPtr(0x0040DBCC + 2, &g_camera_shake_factor);
 }
 
 void HighFpsUpdate()
 {
-    float fFrameTime = rf::g_fFramerate;
-    if (fFrameTime > 0.0001f)
-    {
+    float frame_time = rf::g_fFramerate;
+    if (frame_time > 0.0001f) {
         // Make jump fix framerate dependent to fix bouncing on small FPS
-        g_JumpThreshold = 0.025f + 0.075f * fFrameTime / (1 / 60.0f);
+        g_jump_threshold = 0.025f + 0.075f * frame_time / (1 / 60.0f);
 
         // Fix screen shake caused by some weapons (eg. Assault Rifle)
-        g_fCameraShakeFactor = pow(0.6f, fFrameTime / (1 / SCREEN_SHAKE_FPS));
+        g_camera_shake_factor = pow(0.6f, frame_time / (1 / screen_shake_fps));
     }
 }

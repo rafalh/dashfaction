@@ -30,8 +30,6 @@
     #include "experimental.h"
 #endif
 
-using namespace rf;
-
 GameConfig g_gameConfig;
 HMODULE g_hModule;
 
@@ -48,8 +46,7 @@ static void ProcessWaitingMessages()
     // Note: When using dedicated server we get WM_PAINT messages all the time
     MSG msg;
     constexpr int LIMIT = 4;
-    for (int i = 0; i < LIMIT; ++i)
-    {
+    for (int i = 0; i < LIMIT; ++i) {
         if (!PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
             break;
         TranslateMessage(&msg);
@@ -58,24 +55,24 @@ static void ProcessWaitingMessages()
     }
 }
 
-void FindPlayer(const StringMatcher &Query, std::function<void(CPlayer*)> Consumer)
+void FindPlayer(const StringMatcher& Query, std::function<void(rf::Player*)> Consumer)
 {
-    CPlayer *pPlayer = g_pPlayersList;
-    while (pPlayer)
-    {
-        if (Query(pPlayer->strName.psz))
-            Consumer(pPlayer);
-        pPlayer = pPlayer->pNext;
-        if (pPlayer == g_pPlayersList)
+    rf::Player* player = rf::g_pPlayersList;
+    while (player) {
+        if (Query(player->strName.psz))
+            Consumer(player);
+        player = player->pNext;
+        if (player == rf::g_pPlayersList)
             break;
     }
 }
 
-CallHook2<void(u8)> DcUpdate_Hook{ 0x004B2DD3,
-    [](u8 bServer) {
+CallHook2<void(bool)> DcUpdate_Hook{
+    0x004B2DD3,
+    [](bool is_server) {
         // Draw on top (after scene)
 
-        DcUpdate_Hook.CallTarget(bServer);
+        DcUpdate_Hook.CallTarget(is_server);
 
         GraphicsDrawFpsCounter();
 
@@ -87,11 +84,13 @@ CallHook2<void(u8)> DcUpdate_Hook{ 0x004B2DD3,
         ExperimentalRender();
 #endif
         DebugRender2d();
-    } };
+    }
+};
 
-CallHook2<void()> InitGame_Hook{ 0x004B27CD,
+CallHook2<void()> InitGame_Hook{
+    0x004B27CD,
     []() {
-        DWORD StartTicks = GetTickCount();
+        DWORD start_ticks = GetTickCount();
         INFO("Initializing game...");
 
         InitGame_Hook.CallTarget();
@@ -99,7 +98,7 @@ CallHook2<void()> InitGame_Hook{ 0x004B27CD,
         GraphicsAfterGameInit();
 
 #if DIRECTINPUT_SUPPORT
-        g_bDirectInputDisabled = !g_gameConfig.directInput;
+        rf::g_bDirectInputDisabled = !g_gameConfig.directInput;
 #endif
 
         /* Allow modded strings.tbl in ui.vpp */
@@ -108,26 +107,32 @@ CallHook2<void()> InitGame_Hook{ 0x004B27CD,
         CommandsAfterGameInit();
         ScreenshotAfterGameInit();
 
-        INFO("Game initialized (%u ms).", GetTickCount() - StartTicks);
-    } };
+        INFO("Game initialized (%u ms).", GetTickCount() - start_ticks);
+    }
+};
 
-CallHook2<void()> CleanupGame_Hook{ 0x004B2821,
+CallHook2<void()> CleanupGame_Hook{
+    0x004B2821,
     []() {
         ResetGammaRamp();
         CleanupScreenshot();
         MiscCleanup();
         CleanupGame_Hook.CallTarget();
-    } };
+    }
+};
 
-CallHook2<bool()> RunGame_Hook{ 0x004B2818,
+CallHook2<bool()> RunGame_Hook{
+    0x004B2818,
     []() {
         ProcessWaitingMessages();
         HighFpsUpdate();
 
         return RunGame_Hook.CallTarget();
-    } };
+    }
+};
 
-CallHook2<void()> RenderInGame_Hook{ 0x00432375,
+CallHook2<void()> RenderInGame_Hook{
+    0x00432375,
     []() {
 #if !defined(NDEBUG) && defined(HAS_EXPERIMENTAL)
         ExperimentalRenderInGame();
@@ -136,49 +141,59 @@ CallHook2<void()> RenderInGame_Hook{ 0x00432375,
     }
 };
 
-FunHook2<int()> KeyGetFromFifo_Hook{ 0x0051F000,
+FunHook2<int()> KeyGetFromFifo_Hook{
+    0x0051F000,
     []() {
         // Process messages here because when watching videos main loop is not running
         ProcessWaitingMessages();
         return KeyGetFromFifo_Hook.CallTarget();
-    } };
+    }
+};
 
-FunHook2<void(CPlayer*)> RenderHitScreen_Hook{ 0x004163C0,
-    [](CPlayer* pPlayer) {
-        RenderHitScreen_Hook.CallTarget(pPlayer);
+FunHook2<void(rf::Player*)> RenderHitScreen_Hook{
+    0x004163C0,
+    [](rf::Player* player) {
+        RenderHitScreen_Hook.CallTarget(player);
 
 #if SPECTATE_MODE_ENABLE
         SpectateModeDrawUI();
 #endif
-    } };
+    }
+};
 
-FunHook2<CPlayer*(char)> PlayerCreate_Hook{ 0x004A3310,
-    [](char bLocal) {
-        CPlayer* pPlayer = PlayerCreate_Hook.CallTarget(bLocal);
-        KillInitPlayer(pPlayer);
-        return pPlayer;
-    } };
+FunHook2<rf::Player*(bool)> PlayerCreate_Hook{
+    0x004A3310,
+    [](bool is_local) {
+        rf::Player* player = PlayerCreate_Hook.CallTarget(is_local);
+        KillInitPlayer(player);
+        return player;
+    }
+};
 
-FunHook2<void(CPlayer*)> PlayerDestroy_Hook{ 0x004A35C0,
-    [](CPlayer* pPlayer) {
-        SpectateModeOnDestroyPlayer(pPlayer);
-        PlayerDestroy_Hook.CallTarget(pPlayer);
-    } };
+FunHook2<void(rf::Player*)> PlayerDestroy_Hook{
+    0x004A35C0,
+    [](rf::Player* player) {
+        SpectateModeOnDestroyPlayer(player);
+        PlayerDestroy_Hook.CallTarget(player);
+    }
+};
 
-CallHook2<void()> AfterFullGameInit_Hook{ 0x004B2693,
+CallHook2<void()> AfterFullGameInit_Hook{
+    0x004B2693,
     []() {
         SpectateModeAfterFullGameInit();
 #if !defined(NDEBUG) && defined(HAS_EXPERIMENTAL)
         ExperimentalInitAfterGame();
 #endif
-    } };
+    }
+};
 
 #ifndef NDEBUG
 class RfConsoleLogAppender : public logging::BaseAppender
 {
     virtual void append(logging::LogLevel lvl, const std::string &str)
     {
-        DcPrint(str.c_str(), NULL);
+        rf::DcPrint(str.c_str(), NULL);
     }
 };
 #endif // NDEBUG
@@ -217,7 +232,7 @@ extern "C" void subhook_unk_opcode_handler(uint8_t *opcode)
 
 extern "C" DWORD DLL_EXPORT Init(void *pUnused)
 {
-    DWORD StartTicks = GetTickCount();
+    DWORD start_ticks = GetTickCount();
 
     // Init logging and crash dump support first
     InitLogging();
@@ -286,7 +301,7 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
     ExperimentalInit();
 #endif
 
-    INFO("Installing hooks took %u ms", GetTickCount() - StartTicks);
+    INFO("Installing hooks took %u ms", GetTickCount() - start_ticks);
 
     return 1; /* success */
 }

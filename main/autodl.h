@@ -1,4 +1,4 @@
 #pragma once
 
-void RenderDownloadProgress(void);
-void InitAutodownloader(void);
+void RenderDownloadProgress();
+void InitAutodownloader();

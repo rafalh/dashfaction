@@ -19,22 +19,22 @@ typedef BOOL WINBOOL;
 namespace rf
 {
     /* Declarations */
-    struct CPlayer;
+    struct Player;
     struct EntityObj;
-    struct CAnimMesh;
+    struct AnimMesh;
 
     /* Math */
 
-    struct CVector3
+    struct Vector3
     {
         float x, y, z;
 
-        CVector3() {}
+        Vector3() {}
 
-        CVector3(float x, float y, float z) :
+        Vector3(float x, float y, float z) :
             x(x), y(y), z(z) {}
 
-        CVector3 &operator+=(const CVector3 &other)
+        Vector3 &operator+=(const Vector3 &other)
         {
             x += other.x;
             y += other.y;
@@ -42,7 +42,7 @@ namespace rf
             return *this;
         }
 
-        CVector3 &operator*=(float m)
+        Vector3 &operator*=(float m)
         {
             x *= m;
             y *= m;
@@ -50,33 +50,33 @@ namespace rf
             return *this;
         }
 
-        CVector3 operator-() const
+        Vector3 operator-() const
         {
-            return CVector3(-x, -y, -z);
+            return Vector3(-x, -y, -z);
         }
 
-        CVector3 &operator-=(const CVector3 &other)
+        Vector3 &operator-=(const Vector3 &other)
         {
             return (*this += -other);
         }
 
-        CVector3 operator+(const CVector3 &other) const
+        Vector3 operator+(const Vector3 &other) const
         {
-            CVector3 tmp = *this;
+            Vector3 tmp = *this;
             tmp += other;
             return tmp;
         }
 
-        CVector3 operator-(const CVector3 &other) const
+        Vector3 operator-(const Vector3 &other) const
         {
-            CVector3 tmp = *this;
+            Vector3 tmp = *this;
             tmp -= other;
             return tmp;
         }
 
-        CVector3 operator*(float m) const
+        Vector3 operator*(float m) const
         {
-            return CVector3(x * m, y * m, z * m);
+            return Vector3(x * m, y * m, z * m);
         }
 
         float len() const
@@ -90,27 +90,28 @@ namespace rf
         }
     };
 
-    struct CMatrix3
+    struct Matrix3
     {
-        CVector3 rows[3];
+        Vector3 rows[3];
     };
 
     /* String */
 
-    struct CString
+    struct String
     {
         uint32_t cch;
         char *psz;
+
+        inline static const auto Init = (String*(__thiscall *)(String *This, const char *pszInit))0x004FF3D0;
+        inline static const auto InitFromStr = (String*(__thiscall *)(String *This, const String *pstrInit))0x004FF410;
+        inline static const auto InitEmpty = (String*(__thiscall *)(String *This))0x004FF3B0;
+        inline static const auto CStr = (const char*(__thiscall *)(String *This))0x004FF480;
+        inline static const auto Destroy = (void(__thiscall *)(String *This))0x004FF470;
+        inline static const auto Assign = (String*(__thiscall *)(String *This, String *Src))0x004FFA20;
     };
 
     static const auto StringAlloc = (char*(*)(unsigned cbSize))0x004FF300;
     static const auto StringFree = (void(*)(void *pData))0x004FF3A0;
-    static const auto CString_Init = (CString*(__thiscall *)(CString *This, const char *pszInit))0x004FF3D0;
-    static const auto CString_InitFromStr = (CString*(__thiscall *)(CString *This, const CString *pstrInit))0x004FF410;
-    static const auto CString_InitEmpty = (CString*(__thiscall *)(CString *This))0x004FF3B0;
-    static const auto CString_CStr = (const char*(__thiscall *)(CString *This))0x004FF480;
-    static const auto CString_Destroy = (void(__thiscall *)(CString *This))0x004FF470;
-    static const auto CString_Assign = (CString*(__thiscall *)(CString *This, CString *Src))0x004FFA20;
 
     /* Utils */
 
@@ -141,11 +142,15 @@ namespace rf
 
     /* Debug Console */
 
+    typedef void(*DcCmdHandler)(void);
+
     struct DcCommand
     {
         const char *pszCmd;
         const char *pszDescr;
         void(*pfnHandler)(void);
+
+        inline static const auto Init = (void(__thiscall *)(rf::DcCommand *This, const char *pszCmd, const char *pszDescr, DcCmdHandler pfnHandler))0x00509A70;
     };
 
     enum DcArgType
@@ -168,13 +173,10 @@ namespace rf
     static const auto DcAutoCompleteInput = (void(*)())0x0050A620;
     static const auto DcRunCmd = (int(*)(const char *pszCmd))0x00509B00;
 
-    typedef void(*DcCmdHandler)(void);
-    static const auto DcCommand__Init = (void(__thiscall *)(rf::DcCommand *This, const char *pszCmd, const char *pszDescr, DcCmdHandler pfnHandler))0x00509A70;
-
 #define DC_REGISTER_CMD(name, help, handler) \
     do { \
         static rf::DcCommand Dc_##name; \
-        rf::DcCommand__Init(&Dc_##name, #name, help, handler); \
+        rf::DcCommand::Init(&Dc_##name, #name, help, handler); \
     } while (false)
 
     //static const auto g_ppDcCommands = (DcCommand**)0x01775530;
@@ -257,8 +259,8 @@ namespace rf
 
     struct GrVertex
     {
-        CVector3 v3dPos;
-        CVector3 vScreenPos;
+        Vector3 v3dPos;
+        Vector3 vScreenPos;
         int ClipFlags;
         float u0;
         float v0;
@@ -267,7 +269,7 @@ namespace rf
         int Color;
     };
 
-    struct SGrLockData
+    struct GrLockData
     {
         int BmHandle;
         int SectionIdx;
@@ -290,10 +292,9 @@ namespace rf
     static auto &g_pGrDevice = *(IDirect3DDevice8**)0x01CFCBE4;
     static auto &g_GrScreen = *(GrScreen*)0x017C7BC0;
     static auto &g_GrPP = *(D3DPRESENT_PARAMETERS*)0x01CFCA18;
-    static const auto g_pGrGammaRamp = (uint32_t*)0x017C7C68;
     static auto &g_AdapterIdx = *(uint32_t*)0x01CFCC34;
-    static auto &g_GrScaleVec = *(CVector3*)0x01818B48;
-    static auto &g_GrViewMatrix = *(CMatrix3*)0x018186C8;
+    static auto &g_GrScaleVec = *(Vector3*)0x01818B48;
+    static auto &g_GrViewMatrix = *(Matrix3*)0x018186C8;
     static auto &g_GrDeviceCaps = *(D3DCAPS8*)0x01CFCAC8;
     static auto &g_GrDefaultWFar = *(float*)0x00596140;
 
@@ -303,8 +304,8 @@ namespace rf
     static auto &g_GrBitmapMaterial = *(uint32_t*)0x017756BC;
     static auto &g_GrImageMaterial = *(uint32_t*)0x017756DC;
 
-    static const auto GrGetMaxWidth = (unsigned(*)())0x0050C640;
-    static const auto GrGetMaxHeight = (unsigned(*)())0x0050C650;
+    static const auto GrGetMaxWidth = (int(*)())0x0050C640;
+    static const auto GrGetMaxHeight = (int(*)())0x0050C650;
     static const auto GrGetViewportWidth = (unsigned(*)())0x0050CDB0;
     static const auto GrGetViewportHeight = (unsigned(*)())0x0050CDC0;
     static const auto GrSetColor = (void(*)(unsigned r, unsigned g, unsigned b, unsigned a))0x0050CF80;
@@ -315,20 +316,19 @@ namespace rf
     static const auto GrDrawPoly = (void(*)(int Num, GrVertex **ppVertices, int Flags, int iMat))0x0050DF80;
     static const auto GrDrawText = (void(*)(unsigned x, unsigned y, const char *pszText, int Font, unsigned Material))0x0051FEB0;
     static const auto GrDrawAlignedText = (void(*)(GrTextAlignment Align, unsigned x, unsigned y, const char *pszText, int Font, unsigned Material))0x0051FE50;
-    static const auto GrFitText = (CString *(*)(CString *pstrDest, CString Str, int cxMax))0x00471EC0;
+    static const auto GrFitText = (String *(*)(String *pstrDest, String Str, int cxMax))0x00471EC0;
     static const auto GrReadBackBuffer = (int(*)(int x, int y, int Width, int Height, void *pBuffer))0x0050DFF0;
     static const auto GrLoadFont = (int(*)(const char *pszFileName, int a2))0x0051F6E0;
     static const auto GrGetFontHeight = (unsigned(*)(int FontId))0x0051F4D0;
     static const auto GrGetTextWidth = (void(*)(int *pOutWidth, int *pOutHeight, const char *pszText, int TextLen, int FontId))0x0051F530;
     static const auto GrFlushBuffers = (void(*)())0x00559D90;
     static const auto GrSwapBuffers = (void(*)())0x0050CE20;
-    static const auto GrSetViewMatrix = (void(*)(CMatrix3 *pMatRot, CVector3 *pPos, float fFov, int a4, int a5))0x00517EB0;
-    static const auto GrSetViewMatrixD3D = (void(*)(CMatrix3 *pMatRot, CVector3 *pPos, float fFov, int a4, int a5))0x00547150;
-    static const auto GrRenderLine = (char(*)(const CVector3 *pWorldPos1, const CVector3 *pWorldPos2, int Material))0x00515960;
-    static const auto GrRenderSphere = (char(*)(const CVector3 *pvPos, float fRadius, int Material))0x00515CD0;
-    static const auto GrLock = (char(*)(int BmHandle, int SectionIdx, SGrLockData *pData, int a4))0x0050E2E0;
-    static const auto GrUnlock = (void(*)(SGrLockData *pData))0x0050E310;
-    static const auto GrD3DSetTextureData = (int(*)(int Level, const BYTE *pSrcBits, const BYTE *pPallete, int cxBm, int cyBm, int PixelFmt, void *a7, int cxTex, int cyTex, IDirect3DTexture8 *pTextures))0x0055BA10;
+    static const auto GrSetViewMatrix = (void(*)(Matrix3 *pMatRot, Vector3 *pPos, float fFov, int a4, int a5))0x00517EB0;
+    static const auto GrSetViewMatrixD3D = (void(*)(Matrix3 *pMatRot, Vector3 *pPos, float fFov, int a4, int a5))0x00547150;
+    static const auto GrRenderLine = (char(*)(const Vector3 *pWorldPos1, const Vector3 *pWorldPos2, int Material))0x00515960;
+    static const auto GrRenderSphere = (char(*)(const Vector3 *pvPos, float fRadius, int Material))0x00515CD0;
+    static const auto GrLock = (char(*)(int BmHandle, int SectionIdx, GrLockData *pData, int a4))0x0050E2E0;
+    static const auto GrUnlock = (void(*)(GrLockData *pData))0x0050E310;
     static const auto GrInitBuffers = (void(*)())0x005450A0;
     static const auto GrSetTextureMipFilter = (void(*)(int bLinear))0x0050E830;
     static const auto GrResetClip = (void(*)())0x0050CDD0;
@@ -348,7 +348,7 @@ namespace rf
         BMPF_UNK_8_16B = 0x8,
     };
 
-    static const auto BmLoad = (int(*)(const char *pszFilename, int a2, BOOL a3))0x0050F6A0;
+    static const auto BmLoad = (int(*)(const char *pszFilename, int a2, bool a3))0x0050F6A0;
     static const auto BmCreateUserBmap = (int(*)(BmPixelFormat PixelFormat, int Width, int Height))0x005119C0;
     static const auto BmConvertFormat = (void(*)(void *pDstBits, BmPixelFormat DstPixelFmt, const void *pSrcBits, BmPixelFormat SrcPixelFmt, int NumPixels))0x0055DD20;
     static const auto BmGetBitmapSize = (void(*)(int BmHandle, int *pWidth, int *pHeight))0x00510630;
@@ -374,84 +374,22 @@ namespace rf
         int BgTexture;
     };
 
-    static const auto UiMsgBox = (void(*)(const char *pszTitle, const char *pszText, void(*pfnCallback)(void), BOOL bInput))0x004560B0;
+    static const auto UiMsgBox = (void(*)(const char *pszTitle, const char *pszText, void(*pfnCallback)(void), bool bInput))0x004560B0;
     static const auto UiCreateDialog = (void(*)(const char *pszTitle, const char *pszText, unsigned cButtons, const char **ppszBtnTitles, void **ppfnCallbacks, unsigned Unknown1, unsigned Unknown2))0x004562A0;
     static const auto UiGetElementFromPos = (int(*)(int x, int y, UiPanel **ppGuiList, signed int cGuiList))0x00442ED0;
     static const auto UiLabel_Create2 = (void(__thiscall *)(UiPanel *pThis, UiPanel *pParent, int x, int y, int w, int h, const char *pszText, int FontId))0x00456C20;
 
+    /* Chat */
 
-    /* HUD */
-
-#define HUD_POINTS_COUNT 48
-    static const auto g_pHudPosData640 = (POINT*)0x00637868;
-    static const auto g_pHudPosData800 = (POINT*)0x006373D0;
-    static const auto g_pHudPosData1024 = (POINT*)0x00637230;
-    static const auto g_pHudPosData1280 = (POINT*)0x00637560;
-    static const auto g_pHudPosData = (POINT*)0x006376E8;
-
-    typedef void(*ChatPrint_Type)(CString strText, unsigned ColorId, CString Prefix);
+    typedef void(*ChatPrint_Type)(String strText, unsigned ColorId, String Prefix);
     static const auto ChatPrint = (ChatPrint_Type)0x004785A0;
 
     /* File System */
 
-    struct PackfileEntry;
-
-    struct Packfile
-    {
-        char szName[32];
-        char szPath[128];
-        uint32_t field_A0;
-        uint32_t cFiles;
-        PackfileEntry *pFileList;
-        uint32_t cbSize;
-    };
-
-    struct PackfileEntry
-    {
-        uint32_t dwNameChecksum;
-        const char *pszFileName;
-        uint32_t OffsetInBlocks;
-        uint32_t cbFileSize;
-        Packfile *pArchive;
-        FILE *pRawFile;
-    };
-
-    struct PackfileLookupTable
-    {
-        uint32_t dwNameChecksum;
-        PackfileEntry *pArchiveEntry;
-    };
-
-    static auto &g_cArchives = *(uint32_t*)0x01BDB214;
-    static auto &g_Archives = *(Packfile*)0x01BA7AC8;
-#define VFS_LOOKUP_TABLE_SIZE 20713
-    static auto &g_VfsLookupTable = *(PackfileLookupTable*)0x01BB2AC8;
-    static auto &g_bVfsIgnoreTblFiles = *(uint8_t*)0x01BDB21C;
-
-    typedef BOOL(*PackfileLoad_Type)(const char *pszFileName, const char *pszDir);
+    typedef int(*PackfileLoad_Type)(const char *pszFileName, const char *pszDir);
     static const auto PackfileLoad = (PackfileLoad_Type)0x0052C070;
 
-    typedef Packfile *(*PackfileFindArchive_Type)(const char *pszFilename);
-    static const auto PackfileFindArchive = (PackfileFindArchive_Type)0x0052C1D0;
-
-    typedef uint32_t(*PackfileCalcFileNameChecksum_Type)(const char *pszFileName);
-    static const auto PackfileCalcFileNameChecksum = (PackfileCalcFileNameChecksum_Type)0x0052BE70;
-
-    typedef uint32_t(*PackfileAddToLookupTable_Type)(PackfileEntry *pPackfileEntry);
-    static const auto PackfileAddToLookupTable = (PackfileAddToLookupTable_Type)0x0052BCA0;
-
-    typedef uint32_t(*PackfileProcessHeader_Type)(Packfile *pPackfile, const void *pHeader);
-    static const auto PackfileProcessHeader = (PackfileProcessHeader_Type)0x0052BD10;
-
-    typedef uint32_t(*PackfileAddEntries_Type)(Packfile *pPackfile, const void *pBuf, unsigned cFilesInBlock, unsigned *pcAddedEntries);
-    static const auto PackfileAddEntries = (PackfileAddEntries_Type)0x0052BD40;
-
-    typedef uint32_t(*PackfileSetupFileOffsets_Type)(Packfile *pPackfile, unsigned DataOffsetInBlocks);
-    static const auto PackfileSetupFileOffsets = (PackfileSetupFileOffsets_Type)0x0052BEB0;
-
     static const auto FsAddDirectoryEx = (int(*)(const char *pszDir, const char *pszExtList, char bUnknown))0x00514070;
-
-    static const auto FileGetChecksum = (unsigned(*)(const char *pszFilename))0x00436630;
 
     /* Network */
 
@@ -512,18 +450,18 @@ namespace rf
 
     static auto &g_NwSocket = *(SOCKET*)0x005A660C;
 
-    typedef void(*NwProcessGamePackets_Type)(const char *pData, int cbData, const NwAddr *pAddr, CPlayer *pPlayer);
+    typedef void(*NwProcessGamePackets_Type)(const char *pData, int cbData, const NwAddr *pAddr, Player *pPlayer);
     static const auto NwProcessGamePackets = (NwProcessGamePackets_Type)0x004790D0;
 
     typedef void(*NwSendNotReliablePacket_Type)(const void *pAddr, const void *pPacket, unsigned cbPacket);
     static const auto NwSendNotReliablePacket = (NwSendNotReliablePacket_Type)0x0052A080;
 
-    static const auto NwSendReliablePacket = (void(*)(CPlayer *pPlayer, const BYTE *pData, unsigned int cbData, int a4))0x00479480;
+    static const auto NwSendReliablePacket = (void(*)(Player *pPlayer, const BYTE *pData, unsigned int cbData, int a4))0x00479480;
 
     typedef void(*NwAddrToStr_Type)(char *pszDest, int cbDest, NwAddr *pAddr);
     static const auto NwAddrToStr = (NwAddrToStr_Type)0x00529FE0;
 
-    static const auto NwGetPlayerFromAddr = (CPlayer *(*)(const NwAddr *pAddr))0x00484850;
+    static const auto NwGetPlayerFromAddr = (Player *(*)(const NwAddr *pAddr))0x00484850;
     static const auto NwCompareAddr = (int(*)(const NwAddr *pAddr1, const NwAddr *pAddr2, char bCheckPort))0x0052A930;
 
     /* Camera */
@@ -544,7 +482,7 @@ namespace rf
     struct Camera
     {
         EntityObj *pCameraEntity;
-        CPlayer *pPlayer;
+        Player *pPlayer;
         CameraType Type;
     };
 
@@ -555,14 +493,14 @@ namespace rf
 
     struct ControlConfigItem
     {
-        __int16 DefaultScanCodes[2];
-        __int16 DefaultMouseBtnId;
-        __int16 field_6;
+        int16_t DefaultScanCodes[2];
+        int16_t DefaultMouseBtnId;
+        int16_t field_6;
         int field_8;
-        CString strName;
-        __int16 ScanCodes[2];
-        __int16 MouseBtnId;
-        __int16 field_1A;
+        String strName;
+        int16_t ScanCodes[2];
+        int16_t MouseBtnId;
+        int16_t field_1A;
     };
 
     struct ControlConfig
@@ -629,7 +567,7 @@ namespace rf
     };
     static_assert(sizeof(PlayerConfig) == 0xE88, "invalid size");
 
-    enum EGameCtrl
+    enum GameCtrl
     {
         GC_PRIMARY_ATTACK = 0x0,
         GC_SECONDARY_ATTACK = 0x1,
@@ -660,7 +598,7 @@ namespace rf
 
     /* Player */
 
-    struct SPlayerStats
+    struct PlayerStats
     {
         uint16_t field_0;
         int16_t iScore;
@@ -695,10 +633,10 @@ namespace rf
         int field_FB8;
         int field_FBC;
         float field_FC0;
-        CVector3 field_FC4;
-        CMatrix3 field_FD0;
-        CMatrix3 matRotFpsWeapon;
-        CVector3 vPosFpsWeapon;
+        Vector3 field_FC4;
+        Matrix3 field_FD0;
+        Matrix3 matRotFpsWeapon;
+        Vector3 vPosFpsWeapon;
         int field_1024;
         float field_1028;
         int field_102C;
@@ -708,8 +646,8 @@ namespace rf
         int field_103C;
         int field_1040;
         int RemoteChargeVisible;
-        CVector3 field_1048;
-        CMatrix3 field_1054;
+        Vector3 field_1048;
+        Matrix3 field_1054;
         int field_1078;
         Timer field_107C;
     };
@@ -717,27 +655,27 @@ namespace rf
 
     struct Player_1094
     {
-        CVector3 field_1094;
-        CMatrix3 field_10A0;
+        Vector3 field_1094;
+        Matrix3 field_10A0;
     };
 
-    struct CPlayer
+    struct Player
     {
-        CPlayer *pNext;
-        CPlayer *pPrev;
-        CString strName;
+        Player *pNext;
+        Player *pPrev;
+        String strName;
         PlayerFlags Flags;
         int hEntity;
         int EntityClsId;
-        CVector3 field_1C;
+        Vector3 field_1C;
         int field_28;
-        SPlayerStats *pStats;
+        PlayerStats *pStats;
         char bBlueTeam;
         char bCollide;
         char field_32;
         char field_33;
-        CAnimMesh *pFpgunMesh;
-        CAnimMesh *pLastFpgunMesh;
+        AnimMesh *pFpgunMesh;
+        AnimMesh *pLastFpgunMesh;
         Timer Timer3C;
         int FpgunMuzzleProps[2];
         int FpgunAmmoDigit1Prop;
@@ -783,7 +721,7 @@ namespace rf
         int PrefWeapons[32];
         float field_11D4;
         float field_11D8;
-        void(__cdecl *field_11DC)(CPlayer *);
+        void(__cdecl *field_11DC)(Player *);
         float field_11E0[4];
         int field_11F0;
         float field_11F4;
@@ -791,33 +729,33 @@ namespace rf
         int field_11FC;
         CPlayerNetData *pNwData;
     };
-    static_assert(sizeof(CPlayer) == 0x1204, "invalid size");
+    static_assert(sizeof(Player) == 0x1204, "invalid size");
 
-    static auto &g_pPlayersList = *(CPlayer**)0x007C75CC;
-    static auto &g_pLocalPlayer = *(CPlayer**)0x007C75D4;
+    static auto &g_pPlayersList = *(Player**)0x007C75CC;
+    static auto &g_pLocalPlayer = *(Player**)0x007C75D4;
 
     static const auto KillLocalPlayer = (void(*)())0x004757A0;
-    static const auto HandleCtrlInGame = (void(*)(CPlayer *pPlayer, EGameCtrl KeyId, char WasPressed))0x004A6210;
-    static const auto IsEntityCtrlActive = (char(*)(ControlConfig *pCtrlConf, EGameCtrl CtrlId, bool *pWasPressed))0x0043D4F0;
-    static const auto PlayerCreateEntity = (EntityObj *(*)(CPlayer *pPlayer, int ClassId, const CVector3 *pPos, const CMatrix3 *pRotMatrix, int MpCharacter))0x004A4130;
-    static const auto GetPlayerFromEntityHandle = (CPlayer*(*)(int32_t hEntity))0x004A3740;
+    static const auto HandleCtrlInGame = (void(*)(Player *pPlayer, GameCtrl KeyId, char WasPressed))0x004A6210;
+    static const auto IsEntityCtrlActive = (char(*)(ControlConfig *pCtrlConf, GameCtrl CtrlId, bool *pWasPressed))0x0043D4F0;
+    static const auto PlayerCreateEntity = (EntityObj *(*)(Player *pPlayer, int ClassId, const Vector3 *pPos, const Matrix3 *pRotMatrix, int MpCharacter))0x004A4130;
+    static const auto GetPlayerFromEntityHandle = (Player*(*)(int32_t hEntity))0x004A3740;
 
-    typedef bool(*IsPlayerEntityInvalid_Type)(CPlayer *pPlayer);
+    typedef bool(*IsPlayerEntityInvalid_Type)(Player *pPlayer);
     static const auto IsPlayerEntityInvalid = (IsPlayerEntityInvalid_Type)0x004A4920;
 
-    typedef bool(*IsPlayerDying_Type)(CPlayer *pPlayer);
+    typedef bool(*IsPlayerDying_Type)(Player *pPlayer);
     static const auto IsPlayerDying = (IsPlayerDying_Type)0x004A4940;
 
     /* Player Fpgun */
 
-    static const auto PlayerFpgunRender = (void(*)(CPlayer*))0x004A2B30;
-    static const auto PlayerFpgunUpdate = (void(*)(CPlayer*))0x004A2700;
-    static const auto PlayerFpgunSetupMesh = (void(*)(CPlayer*, int WeaponClsId))0x004AA230;
-    static const auto PlayerFpgunUpdateState = (void(*)(CPlayer*))0x004AA3A0;
-    static const auto PlayerFpgunUpdateMesh = (void(*)(CPlayer*))0x004AA6D0;
-    static const auto PlayerRenderRocketLauncherScannerView = (void(*)(CPlayer *pPlayer))0x004AEEF0;
-    static const auto PlayerFpgunSetState = (void(*)(CPlayer *pPlayer, int State))0x004AA560;
-    static const auto PlayerFpgunHasState = (bool(*)(CPlayer *pPlayer, int State))0x004A9520;
+    static const auto PlayerFpgunRender = (void(*)(Player*))0x004A2B30;
+    static const auto PlayerFpgunUpdate = (void(*)(Player*))0x004A2700;
+    static const auto PlayerFpgunSetupMesh = (void(*)(Player*, int WeaponClsId))0x004AA230;
+    static const auto PlayerFpgunUpdateState = (void(*)(Player*))0x004AA3A0;
+    static const auto PlayerFpgunUpdateMesh = (void(*)(Player*))0x004AA6D0;
+    static const auto PlayerRenderRocketLauncherScannerView = (void(*)(Player *pPlayer))0x004AEEF0;
+    static const auto PlayerFpgunSetState = (void(*)(Player *pPlayer, int State))0x004AA560;
+    static const auto PlayerFpgunHasState = (bool(*)(Player *pPlayer, int State))0x004A9520;
 
     static const auto IsEntityLoopFire = (bool(*)(int hEntity, signed int WeaponClsId))0x0041A830;
     static const auto EntityIsSwimming = (bool(*)(EntityObj *pEntity))0x0042A0A0;
@@ -826,7 +764,7 @@ namespace rf
 
     /* Object */
 
-    enum EObjectType
+    enum ObjectType
     {
         OT_ENTITY = 0x0,
         OT_ITEM = 0x1,
@@ -841,28 +779,28 @@ namespace rf
         OT_CORONA_10 = 0xA,
     };
 
-    struct SPosRotUnk
+    struct PosRotUnk
     {
         int field_88;
         float field_8C;
         int field_90;
         int field_94;
         float fMass;
-        CMatrix3 field_9C;
-        CMatrix3 field_C0;
-        CVector3 Pos;
-        CVector3 vNewPos;
-        CMatrix3 matYawRot;
+        Matrix3 field_9C;
+        Matrix3 field_C0;
+        Vector3 Pos;
+        Vector3 vNewPos;
+        Matrix3 matYawRot;
     };
 
-    struct SWaterSplashUnk
+    struct WaterSplashUnk
     {
-        CVector3 field_1B4;
-        CVector3 field_1C0;
+        Vector3 field_1B4;
+        Vector3 field_1C0;
         float field_1CC;
         int field_1D0;
         float field_1D4;
-        CVector3 field_1D8;
+        Vector3 field_1D8;
         int hUnkEntity;
         int field_1E8;
         int bWaterSplash_1EC;
@@ -877,58 +815,58 @@ namespace rf
         float fFriction;
         int field_94;
         float fMass;
-        CMatrix3 field_9C;
-        CMatrix3 field_C0;
-        CVector3 vPos;
-        CVector3 vNewPos;
-        CMatrix3 matYawRot;
-        CMatrix3 field_120;
-        CVector3 vVel;
-        CVector3 vRotChangeUnk;
-        CVector3 field_15C;
-        CVector3 field_168;
-        CVector3 RotChangeUnkDelta;
+        Matrix3 field_9C;
+        Matrix3 field_C0;
+        Vector3 vPos;
+        Vector3 vNewPos;
+        Matrix3 matYawRot;
+        Matrix3 field_120;
+        Vector3 vVel;
+        Vector3 vRotChangeUnk;
+        Vector3 field_15C;
+        Vector3 field_168;
+        Vector3 RotChangeUnkDelta;
         float field_180;
         DynamicArray field_184;
-        CVector3 field_190;
-        CVector3 field_19C;
+        Vector3 field_190;
+        Vector3 field_19C;
         PhysicsFlags Flags;
         int FlagsSplash_1AC;
         int field_1B0;
-        SWaterSplashUnk WaterSplashUnk;
+        WaterSplashUnk WaterSplashUnk;
     };
     static_assert(sizeof(PhysicsInfo) == 0x170, "invalid size");
 
     struct Object
     {
         void *pRoom;
-        CVector3 vLastPosInRoom;
+        Vector3 vLastPosInRoom;
         Object *pNextObj;
         Object *pPrevObj;
-        CString strName;
+        String strName;
         int Uid;
-        EObjectType Type;
+        ObjectType Type;
         int Team;
         int Handle;
         int hOwnerEntityUnk;
         float fLife;
         float fArmor;
-        CVector3 vPos;
-        CMatrix3 matOrient;
-        CVector3 vLastPos;
+        Vector3 vPos;
+        Matrix3 matOrient;
+        Vector3 vLastPos;
         float fRadius;
         ObjectFlags Flags;
-        CAnimMesh *pAnimMesh;
+        AnimMesh *pAnimMesh;
         int field_84;
         PhysicsInfo PhysInfo;
         int Friendliness;
         int iMaterial;
         int hParent;
         int UnkPropId_204;
-        CVector3 field_208;
-        CMatrix3 mat214;
-        CVector3 vPos3;
-        CMatrix3 matRot2;
+        Vector3 field_208;
+        Matrix3 mat214;
+        Vector3 vPos3;
+        Matrix3 matRot2;
         int *pEmitterListHead;
         int field_26C;
         char KillerId;
@@ -936,7 +874,7 @@ namespace rf
         int MultiHandle;
         int pAnim;
         int field_27C;
-        CVector3 field_280;
+        Vector3 field_280;
     };
     static_assert(sizeof(Object) == 0x28C, "invalid size");
 
@@ -962,7 +900,7 @@ namespace rf
         ItemObj *pPrev;
         int field_294;
         int ItemClsId;
-        CString field_29C;
+        String field_29C;
         int field_2A4;
         int field_2A8;
         int field_2AC;
@@ -984,11 +922,11 @@ namespace rf
         float fLastActivationTime;
         int KeyItemClsId;
         int Flags;
-        CString field_2B4;
+        String field_2B4;
         int field_2BC;
         int AirlockRoomUid;
         int ActivatedBy;
-        CVector3 BoxSize;
+        Vector3 BoxSize;
         DynamicArray Links;
         Timer ActivationFailedTimer;
         int hActivationFailedEntity;
@@ -1036,8 +974,8 @@ namespace rf
 
     struct SEntityMotion
     {
-        CVector3 vRotChange;
-        CVector3 vPosChange;
+        Vector3 vRotChange;
+        Vector3 vPosChange;
         int field_18;
         float field_1C;
         float field_20;
@@ -1045,8 +983,8 @@ namespace rf
 
     struct EntityWeapon_2E8_InnerUnk
     {
-        CVector3 field_0;
-        CVector3 field_C;
+        Vector3 field_0;
+        Vector3 field_C;
         int field_18;
         int field_1C;
         float field_20;
@@ -1054,12 +992,12 @@ namespace rf
         DynamicArray field_28;
         char field_34;
         char field_35;
-        __int16 field_36;
+        int16_t field_36;
         int field_38;
         int field_3C;
         int field_40;
         int field_44;
-        CMatrix3 field_48;
+        Matrix3 field_48;
         int field_6C;
         DynamicArray field_70;
     };
@@ -1080,16 +1018,16 @@ namespace rf
         int field_12C;
         int hEntityUnk;
         Timer Timer_134;
-        CVector3 field_138;
+        Vector3 field_138;
         int field_144;
         int field_148;
-        CVector3 field_14C;
+        Vector3 field_14C;
         int field_158;
         int field_15C;
         int field_160;
-        CVector3 field_164;
+        Vector3 field_164;
         int field_170;
-        CVector3 field_174;
+        Vector3 field_174;
     };
 
     struct EntityWeaponInfo
@@ -1111,7 +1049,7 @@ namespace rf
         Timer Timer_234;
         Timer Timer_238;
         Timer Timer_23C;
-        CVector3 field_240;
+        Vector3 field_240;
         int field_24C;
         Timer Timer_250;
         Timer Timer_254;
@@ -1134,13 +1072,13 @@ namespace rf
         float fCreateTime;
         char field_29C;
         char field_29D;
-        __int16 field_29E;
+        int16_t field_29E;
         Timer Timer_2A0;
         Timer Timer_2A4;
         Timer Timer_2A8;
         int field_2AC[5];
         int UnkObjHandle;
-        CVector3 field_2C4;
+        Vector3 field_2C4;
         Timer field_2D0;
         int field_2D4;
         int field_2D8;
@@ -1150,7 +1088,7 @@ namespace rf
         EntityWeapon_2E8 field_2E8;
         SEntityMotion MotionChange;
         Timer field_48C;
-        CVector3 field_490;
+        Vector3 field_490;
         float fLastDmgTime;
         int field_4A0;
         Timer field_4A4;
@@ -1169,10 +1107,10 @@ namespace rf
         Timer field_4E0;
         Timer field_4E4;
         Timer field_4E8;
-        CVector3 field_4EC;
+        Vector3 field_4EC;
         Timer Timer_4F8;
         Timer Timer_4FC;
-        CVector3 field_500;
+        Vector3 field_500;
         int field_50C;
         float LastRotTime;
         float LastMoveTime;
@@ -1189,12 +1127,12 @@ namespace rf
     struct EntityCameraInfo
     {
         int field_860;
-        CVector3 vRotYaw;
-        CVector3 vRotYawDelta;
-        CVector3 vRotPitch;
-        CVector3 vRotPitchDelta;
-        CVector3 field_894;
-        CVector3 field_8A0;
+        Vector3 vRotYaw;
+        Vector3 vRotYawDelta;
+        Vector3 vRotPitch;
+        Vector3 vRotPitchDelta;
+        Vector3 field_894;
+        Vector3 field_8A0;
         int field_8AC;
         int field_8B0;
         float CameraShakeDist;
@@ -1211,8 +1149,8 @@ namespace rf
         int ClassId;
         EntityClass *pClass2;
         EntityWeaponInfo WeaponInfo;
-        CVector3 vViewPos;
-        CMatrix3 matViewOrient;
+        Vector3 vViewPos;
+        Matrix3 matViewOrient;
         int UnkAmbientSound;
         int field_808;
         int MoveSnd;
@@ -1221,18 +1159,18 @@ namespace rf
         Timer UnkTimer818;
         int LaunchSnd;
         int field_820;
-        __int16 KillType;
-        __int16 field_826;
+        int16_t KillType;
+        int16_t field_826;
         int field_828;
         int field_82C;
         Timer field_830;
         int field_834[5];
-        CAnimMesh *field_848;
-        CAnimMesh *field_84C;
+        AnimMesh *field_848;
+        AnimMesh *field_84C;
         int pNanoShield;
         int Snd854;
         MoveModeTbl *MovementMode;
-        CMatrix3 *field_85C;
+        Matrix3 *field_85C;
         EntityCameraInfo CameraInfo;
         float field_8C0;
         int field_8C4;
@@ -1266,13 +1204,13 @@ namespace rf
         int ReloadClipAmmo;
         int ReloadWeaponClsId;
         float field_13B4;
-        CVector3 field_13B8;
+        Vector3 field_13B8;
         int field_13C4[2];
         Timer field_13CC;
         int field_13D0[2];
         int field_13D8;
         int field_13DC;
-        CVector3 field_13E0;
+        Vector3 field_13E0;
         int field_13EC;
         int field_13F0;
         int UnkBoneId13F4;
@@ -1282,15 +1220,15 @@ namespace rf
         int field_1404;
         float fUnkCountDownTime1408;
         Timer UnkTimer140C;
-        CAnimMesh *field_1410;
+        AnimMesh *field_1410;
         Timer SplashInCounter;
         DynamicArray field_1418;
         int field_1424;
         int field_1428;
         int field_142C;
-        CPlayer *pLocalPlayer;
-        CVector3 vPitchMin;
-        CVector3 vPitchMax;
+        Player *pLocalPlayer;
+        Vector3 vPitchMin;
+        Vector3 vPitchMax;
         int hKillerEntity;
         int RiotShieldClutterHandle;
         int field_1454;
@@ -1306,7 +1244,7 @@ namespace rf
         int field_1480;
         int field_1484;
         int field_1488;
-        CAnimMesh *RespawnVfx;
+        AnimMesh *RespawnVfx;
         Timer field_1490;
     };
     static_assert(sizeof(EntityObj) == 0x1494, "invalid size");
@@ -1316,10 +1254,10 @@ namespace rf
 
     /* Weapons */
 
-    struct SWeaponStateAction
+    struct WeaponStateAction
     {
-        CString strName;
-        CString strAnim;
+        String strName;
+        String strAnim;
         int iAnim;
         int SoundId;
         int pSound;
@@ -1327,21 +1265,21 @@ namespace rf
 
     struct WeaponClass
     {
-        CString strName;
-        CString strDisplayName;
-        CString strV3dFilename;
+        String strName;
+        String strDisplayName;
+        String strV3dFilename;
         int dwV3dType;
-        CString strEmbeddedV3dFilename;
+        String strEmbeddedV3dFilename;
         int AmmoType;
-        CString str3rdPersonV3d;
-        CAnimMesh *p3rdPersonMeshNotSure;
+        String str3rdPersonV3d;
+        AnimMesh *p3rdPersonMeshNotSure;
         int Muzzle1PropId;
         int ThirdPersonGrip1MeshProp;
         int dw3rdPersonMuzzleFlashGlare;
-        CString str1stPersonMesh;
+        String str1stPersonMesh;
         int *pMesh;
-        CVector3 v1stPersonOffset;
-        CVector3 v1stPersonOffsetSS;
+        Vector3 v1stPersonOffset;
+        Vector3 v1stPersonOffsetSS;
         int p1stPersonMuzzleFlashBitmap;
         float f1stPersonMuzzleFlashRadius;
         int p1stPersonAltMuzzleFlashBitmap;
@@ -1448,41 +1386,41 @@ namespace rf
         float fPiercingPower;
         float RicochetAngle;
         int RicochetBitmap;
-        CVector3 vRicochetSize;
+        Vector3 vRicochetSize;
         float fThrustLifetime;
         int cStates;
         int cActions;
-        SWeaponStateAction States[3];
-        SWeaponStateAction Actions[7];
+        WeaponStateAction States[3];
+        WeaponStateAction Actions[7];
         int field_3B8[35];
         int BurstCount;
         float fBurstDelay;
         int BurstLaunchSound;
         int ImpactVclipsCount;
         int ImpactVclips[3];
-        CString ImpactVclipNames[3];
+        String ImpactVclipNames[3];
         float ImpactVclipsRadiusList[3];
         int DecalTexture;
-        CVector3 vDecalSize;
+        Vector3 vDecalSize;
         int GlassDecalTexture;
-        CVector3 vGlassDecalSize;
+        Vector3 vGlassDecalSize;
         int FpgunShellEjectPropId;
-        CVector3 vShellsEjectedBaseDir;
+        Vector3 vShellsEjectedBaseDir;
         float fShellEjectVelocity;
-        CString strShellsEjectedV3d;
+        String strShellsEjectedV3d;
         int ShellsEjectedCustomSoundSet;
         float fPrimaryPauseTimeBeforeEject;
         int FpgunClipEjectPropId;
-        CString strClipsEjectedV3d;
+        String strClipsEjectedV3d;
         float fClipsEjectedDropPauseTime;
         int ClipsEjectedCustomSoundSet;
         float fReloadZeroDrain;
         float fCameraShakeDist;
         float fCameraShakeTime;
-        CString strSilencerV3d;
+        String strSilencerV3d;
         int field_4F0_always0;
         int FpgunSilencerPropId;
-        CString strSparkVfx;
+        String strSparkVfx;
         int field_500_always0;
         int FpgunThrusterPropId;
         int field_508;
@@ -1492,13 +1430,13 @@ namespace rf
         int FpgunWeaponPropId;
         int field_51C_always1neg;
         int WeaponType;
-        CString strWeaponIcon;
+        String strWeaponIcon;
         int DamageType;
         int CyclePos;
         int PrefPos;
         float fFineAimRegSize;
         float fFineAimRegSizeSS;
-        CString strTracerEffect;
+        String strTracerEffect;
         int field_548_always0;
         float fMultiBBoxSizeFactor;
     };
@@ -1525,13 +1463,6 @@ namespace rf
 
     /* Network Game */
 
-    struct BanlistEntry
-    {
-        char szIp[24];
-        BanlistEntry *pNext;
-        BanlistEntry *pPrev;
-    };
-
     typedef unsigned(*GetGameType_Type)();
     static const auto GetGameType = (GetGameType_Type)0x00470770;
 
@@ -1543,30 +1474,26 @@ namespace rf
     static const auto CtfGetBlueScore = (GetTeamScore_Type)0x00475030;
     static const auto TdmGetRedScore = (GetTeamScore_Type)0x004828F0;
     static const auto TdmGetBlueScore = (GetTeamScore_Type)0x00482900;
-    static const auto CtfGetRedFlagPlayer = (CPlayer*(*)())0x00474E60;
-    static const auto CtfGetBlueFlagPlayer = (CPlayer*(*)())0x00474E70;
+    static const auto CtfGetRedFlagPlayer = (Player*(*)())0x00474E60;
+    static const auto CtfGetBlueFlagPlayer = (Player*(*)())0x00474E70;
 
     typedef const char *(*GetJoinFailedStr_Type)(unsigned Reason);
     static const auto GetJoinFailedStr = (GetJoinFailedStr_Type)0x0047BE60;
 
-    typedef void(*KickPlayer_Type)(CPlayer *pPlayer);
+    typedef void(*KickPlayer_Type)(Player *pPlayer);
     static const auto KickPlayer = (KickPlayer_Type)0x0047BF00;
 
     typedef void(*BanIp_Type)(const NwAddr *pAddr);
     static const auto BanIp = (BanIp_Type)0x0046D0F0;
 
-    static const auto MpResetNetGame = (void(*)())0x0046E450;
     static const auto MultiSetNextWeapon = (void(*)(int WeaponClsId))0x0047FCA0;
 
     static auto &g_ServAddr = *(NwAddr*)0x0064EC5C;
-    static auto &g_strServName = *(CString*)0x0064EC28;
+    static auto &g_strServName = *(String*)0x0064EC28;
     static auto &g_bNetworkGame = *(uint8_t*)0x0064ECB9;
     static auto &g_bLocalNetworkGame = *(uint8_t*)0x0064ECBA;
     static auto &g_bDedicatedServer = *(uint32_t*)0x01B0D75C;
     static auto &g_GameOptions = *(uint32_t*)0x0064EC40;
-    static auto &g_pBanlistFirstEntry = *(BanlistEntry**)0x0064EC20;
-    static auto &g_pBanlistLastEntry = *(BanlistEntry**)0x0064EC24;
-    static auto &g_BanlistNullEntry = *(BanlistEntry*)0x0064EC08;
 
     /* Input */
     static const auto MouseGetPos = (int(*)(int *pX, int *pY, int *pZ))0x0051E450;
@@ -1621,13 +1548,6 @@ namespace rf
 
     /* Other */
 
-    enum EGameLang
-    {
-        LANG_EN = 0,
-        LANG_GR = 1,
-        LANG_FR = 2,
-    };
-
     struct RflLightmap
     {
         BYTE *pUnk;
@@ -1642,31 +1562,28 @@ namespace rf
     static auto &g_fFps = *(float*)0x005A4018;
     static auto &g_fFramerate = *(float*)0x005A4014;
     static auto &g_fMinFramerate = *(float*)0x005A4024;
-    static auto &g_SimultaneousPing = *(uint32_t*)0x00599CD8;
-    static auto &g_strLevelName = *(CString*)0x00645FDC;
-    static auto &g_strLevelFilename = *(CString*)0x00645FE4;
-    static auto &g_strLevelAuthor = *(CString*)0x00645FEC;
-    static auto &g_strLevelDate = *(CString*)0x00645FF4;
+    static auto &g_strLevelName = *(String*)0x00645FDC;
+    static auto &g_strLevelFilename = *(String*)0x00645FE4;
+    static auto &g_strLevelAuthor = *(String*)0x00645FEC;
+    static auto &g_strLevelDate = *(String*)0x00645FF4;
     static auto &g_BigFontId = *(int*)0x006C74C0;
     static auto &g_LargeFontId = *(int*)0x0063C05C;
     static auto &g_MediumFontId = *(int*)0x0063C060;
     static auto &g_SmallFontId = *(int*)0x0063C068;
     static auto &g_bDirectInputDisabled = *(bool*)0x005A4F88;
     static auto &g_bScoreboardRendered = *(bool*)0x006A1448;
-    static auto &g_strDefaultPlayerWeapon = *(CString*)0x007C7600;
+    static auto &g_strDefaultPlayerWeapon = *(String*)0x007C7600;
 
     static const auto RfBeep = (void(*)(unsigned u1, unsigned u2, unsigned u3, float fVolume))0x00505560;
     static const auto GetFileExt = (char *(*)(const char *pszPath))0x005143F0;
     static const auto SplitScreenStart = (void(*)())0x00480D30;
-    static const auto SetNextLevelFilename = (void(*)(CString strFilename, CString strSecond))0x0045E2E0;
+    static const auto SetNextLevelFilename = (void(*)(String strFilename, String strSecond))0x0045E2E0;
     static const auto DemoLoadLevel = (void(*)(const char *pszLevelFileName))0x004CC270;
-    static const auto RenderReticle = (void(*)(CPlayer *pPlayer))0x0043A2C0;
+    static const auto RenderReticle = (void(*)(Player *pPlayer))0x0043A2C0;
     static const auto SetCursorVisible = (void(*)(char bVisible))0x0051E680;
-    static const auto RflLoad = (int(*)(CString *pstrLevelFilename, CString *a2, char *pszError))0x0045C540;
     static const auto DrawScoreboard = (void(*)(bool bDraw))0x00470860;
     static const auto DrawScoreboardInternal = (void(*)(bool bDraw))0x00470880;
-    static const auto BinkInitDeviceInfo = (unsigned(*)())0x005210C0;
-    static const auto SndConvertVolume3D = (void(*)(int GameSndId, CVector3 *pSoundPos, float *pPanOut, float *pVolumeOut, float VolumeIn))0x00505740;
+    static const auto SndConvertVolume3D = (void(*)(int GameSndId, Vector3 *pSoundPos, float *pPanOut, float *pVolumeOut, float VolumeIn))0x00505740;
 
 
     /* Strings Table */
@@ -1694,17 +1611,11 @@ namespace rf
 
     /* RF stdlib functions are not compatible with GCC */
 
-    typedef FILE *(*RfFopen_Type)(const char *pszPath, const char *pszMode);
-    static const auto RfFopen = (RfFopen_Type)0x00574FFE;
+    typedef void(*Free_Type)(void *pMem);
+    static const auto Free = (Free_Type)0x00573C71;
 
-    typedef void(*RfSeek_Type)(FILE *pFile, uint32_t Offset, uint32_t Direction);
-    static const auto RfSeek = (RfSeek_Type)0x00574F14;
-
-    typedef void(*RfDelete_Type)(void *pMem);
-    static const auto RfDelete = (RfDelete_Type)0x0057360E;
-
-    typedef void *(*RfMalloc_Type)(uint32_t cbSize);
-    static const auto RfMalloc = (RfMalloc_Type)0x00573B37;
+    typedef void *(*Malloc_Type)(uint32_t cbSize);
+    static const auto Malloc = (Malloc_Type)0x00573B37;
 }
 
 #pragma pack(pop)

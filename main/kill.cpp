@@ -3,137 +3,122 @@
 #include "rf.h"
 #include "utils.h"
 #include "scoreboard.h"
+#include <FunHook2.h>
 
-using namespace rf;
-
-auto MpResetNetGame_Hook = makeFunHook(MpResetNetGame);
-
-void KillInitPlayer(CPlayer *pPlayer)
+void KillInitPlayer(rf::Player *player)
 {
-    auto pStats = (PlayerStatsNew*)pPlayer->pStats;
+    auto pStats = (PlayerStatsNew*)player->pStats;
     pStats->cKills = 0;
     pStats->cDeaths = 0;
 }
 
-void MpResetNetGame_New()
-{
-    CPlayer *pPlayer = g_pPlayersList;
-    while (pPlayer)
-    {
-        KillInitPlayer(pPlayer);
-        pPlayer = pPlayer->pNext;
-        if (pPlayer == g_pPlayersList) break;
-    }
-    MpResetNetGame_Hook.callTrampoline();
-}
+FunHook2<void()> MpResetNetGame_Hook{
+    0x0046E450,
+    []() {
+        rf::Player *player = rf::g_pPlayersList;
+        while (player) {
+            KillInitPlayer(player);
+            player = player->pNext;
 
-void OnPlayerKill(CPlayer *pKilled, CPlayer *pKiller)
-{
-    CString strMsg, strPrefix, *pstrWeaponName;
-    const char *pszMuiMsg, *pszWeaponName = NULL;
-    unsigned ColorId;
-    EntityObj *pKillerEntity;
-    
-    pKillerEntity = pKiller ? EntityGetFromHandle(pKiller->hEntity) : NULL;
-    
-    if (!pKiller)
-    {
-        ColorId = 5;
-        pszMuiMsg = g_ppszStringsTable[STR_WAS_KILLED_MYSTERIOUSLY] ? g_ppszStringsTable[STR_WAS_KILLED_MYSTERIOUSLY] : "";
-        strMsg.psz = StringAlloc(pKilled->strName.cch + strlen(pszMuiMsg) + 1);
-        strMsg.cch = sprintf(strMsg.psz, "%s%s", pKilled->strName.psz, pszMuiMsg);
-    }
-    else if (pKilled == g_pLocalPlayer)
-    {
-        ColorId = 4;
-        if (pKiller == pKilled)
-        {
-            pszMuiMsg = g_ppszStringsTable[STR_YOU_KILLED_YOURSELF] ? g_ppszStringsTable[STR_YOU_KILLED_YOURSELF] : "";
-            strMsg.psz = StringAlloc(strlen(pszMuiMsg) + 1);
-            strMsg.cch = sprintf(strMsg.psz, "%s", pszMuiMsg);
+            if (player == rf::g_pPlayersList)
+                break;
         }
-        else
-        {
-            unsigned cchWeaponName = 0;
+        MpResetNetGame_Hook.CallTarget();
+    }
+};
+
+void OnPlayerKill(rf::Player *killed_player, rf::Player *killer_player)
+{
+    rf::String msg;
+    const char *mui_msg, *weapon_name = NULL;
+    unsigned color_id;
+    
+    rf::EntityObj *killer_entity = killer_player ? rf::EntityGetFromHandle(killer_player->hEntity) : NULL;
+    
+    if (!killer_player) {
+        color_id = 5;
+        mui_msg = rf::g_ppszStringsTable[rf::STR_WAS_KILLED_MYSTERIOUSLY] ? rf::g_ppszStringsTable[rf::STR_WAS_KILLED_MYSTERIOUSLY] : "";
+        msg.psz = rf::StringAlloc(killed_player->strName.cch + strlen(mui_msg) + 1);
+        msg.cch = sprintf(msg.psz, "%s%s", killed_player->strName.psz, mui_msg);
+    }
+    else if (killed_player == rf::g_pLocalPlayer) {
+        color_id = 4;
+        if (killer_player == killed_player) {
+            mui_msg = rf::g_ppszStringsTable[rf::STR_YOU_KILLED_YOURSELF] ? rf::g_ppszStringsTable[rf::STR_YOU_KILLED_YOURSELF] : "";
+            msg.psz = rf::StringAlloc(strlen(mui_msg) + 1);
+            msg.cch = sprintf(msg.psz, "%s", mui_msg);
+        }
+        else {
+            unsigned weapon_name_len = 0;
             
-            if (pKillerEntity && pKillerEntity->WeaponInfo.WeaponClsId == g_RiotStickClsId)
-            {
-                pszMuiMsg = g_ppszStringsTable[STR_YOU_JUST_GOT_BEAT_DOWN_BY] ? g_ppszStringsTable[STR_YOU_JUST_GOT_BEAT_DOWN_BY] : "";
-                strMsg.psz = StringAlloc(strlen(pszMuiMsg) + pKiller->strName.cch + 2);
-                strMsg.cch = sprintf(strMsg.psz, "%s%s!", pszMuiMsg, pKiller->strName.psz);
+            if (killer_entity && killer_entity->WeaponInfo.WeaponClsId == rf::g_RiotStickClsId) {
+                mui_msg = rf::g_ppszStringsTable[rf::STR_YOU_JUST_GOT_BEAT_DOWN_BY] ? rf::g_ppszStringsTable[rf::STR_YOU_JUST_GOT_BEAT_DOWN_BY] : "";
+                msg.psz = rf::StringAlloc(strlen(mui_msg) + killer_player->strName.cch + 2);
+                msg.cch = sprintf(msg.psz, "%s%s!", mui_msg, killer_player->strName.psz);
             }
-            else
-            {
-                pszMuiMsg = g_ppszStringsTable[STR_YOU_WERE_KILLED_BY] ? g_ppszStringsTable[STR_YOU_WERE_KILLED_BY] : "";
+            else {
+                mui_msg = rf::g_ppszStringsTable[rf::STR_YOU_WERE_KILLED_BY] ? rf::g_ppszStringsTable[rf::STR_YOU_WERE_KILLED_BY] : "";
                 
-                if (pKillerEntity && pKillerEntity->WeaponInfo.WeaponClsId >= 0 && pKillerEntity->WeaponInfo.WeaponClsId < 64)
-                {
-                    pstrWeaponName = &g_pWeaponClasses[pKillerEntity->WeaponInfo.WeaponClsId].strDisplayName;
-                    if (pstrWeaponName->psz && pstrWeaponName->cch)
-                    {
-                        pszWeaponName = pstrWeaponName->psz;
-                        cchWeaponName = pstrWeaponName->cch;
+                if (killer_entity && killer_entity->WeaponInfo.WeaponClsId >= 0 && killer_entity->WeaponInfo.WeaponClsId < 64) {
+                    rf::String *weapon_name_str = &rf::g_pWeaponClasses[killer_entity->WeaponInfo.WeaponClsId].strDisplayName;
+                    if (weapon_name_str->psz && weapon_name_str->cch) {
+                        weapon_name = weapon_name_str->psz;
+                        weapon_name_len = weapon_name_str->cch;
                     }
                 }
                 
-                strMsg.psz = StringAlloc(strlen(pszMuiMsg) + pKiller->strName.cch + 3 + cchWeaponName + 2);
-                strMsg.cch = sprintf(strMsg.psz, "%s%s%s%s%s!",
-                                     pszMuiMsg,
-                                     pKiller->strName.psz,
-                                     pszWeaponName ? " (" : "",
-                                     pszWeaponName ? pszWeaponName : "",
-                                     pszWeaponName ? ")" : "");
+                msg.psz = rf::StringAlloc(strlen(mui_msg) + killer_player->strName.cch + 3 + weapon_name_len + 2);
+                msg.cch = sprintf(msg.psz, "%s%s%s%s%s!",
+                                     mui_msg,
+                                     killer_player->strName.psz,
+                                     weapon_name ? " (" : "",
+                                     weapon_name ? weapon_name : "",
+                                     weapon_name ? ")" : "");
             }
         }
     }
-    else if (pKiller == g_pLocalPlayer)
-    {
-        ColorId = 4;
-        pszMuiMsg = g_ppszStringsTable[STR_YOU_KILLED] ? g_ppszStringsTable[STR_YOU_KILLED] : "";
-        strMsg.psz = StringAlloc(strlen(pszMuiMsg) + pKilled->strName.cch + 2);
-        strMsg.cch = sprintf(strMsg.psz, "%s%s!", pszMuiMsg, pKilled->strName.psz);
+    else if (killer_player == rf::g_pLocalPlayer) {
+        color_id = 4;
+        mui_msg = rf::g_ppszStringsTable[rf::STR_YOU_KILLED] ? rf::g_ppszStringsTable[rf::STR_YOU_KILLED] : "";
+        msg.psz = rf::StringAlloc(strlen(mui_msg) + killed_player->strName.cch + 2);
+        msg.cch = sprintf(msg.psz, "%s%s!", mui_msg, killed_player->strName.psz);
     }
-    else
-    {
-        ColorId = 5;
-        if (pKiller == pKilled)
-        {
-            pszMuiMsg = g_ppszStringsTable[STR_WAS_KILLED_BY_HIW_OWN_HAND] ? g_ppszStringsTable[STR_WAS_KILLED_BY_HIW_OWN_HAND] : "";
-            strMsg.psz = StringAlloc(pKilled->strName.cch + strlen(pszMuiMsg) + 1);
-            strMsg.cch = sprintf(strMsg.psz, "%s%s", pKilled->strName.psz, pszMuiMsg);
+    else {
+        color_id = 5;
+        if (killer_player == killed_player) {
+            mui_msg = rf::g_ppszStringsTable[rf::STR_WAS_KILLED_BY_HIW_OWN_HAND] ? rf::g_ppszStringsTable[rf::STR_WAS_KILLED_BY_HIW_OWN_HAND] : "";
+            msg.psz = rf::StringAlloc(killed_player->strName.cch + strlen(mui_msg) + 1);
+            msg.cch = sprintf(msg.psz, "%s%s", killed_player->strName.psz, mui_msg);
         }
-        else
-        {
-            if (pKillerEntity && pKillerEntity->WeaponInfo.WeaponClsId == g_RiotStickClsId)
-                pszMuiMsg = g_ppszStringsTable[STR_GOT_BEAT_DOWN_BY] ? g_ppszStringsTable[STR_GOT_BEAT_DOWN_BY] : "";
+        else {
+            if (killer_entity && killer_entity->WeaponInfo.WeaponClsId == rf::g_RiotStickClsId)
+                mui_msg = rf::g_ppszStringsTable[rf::STR_GOT_BEAT_DOWN_BY] ? rf::g_ppszStringsTable[rf::STR_GOT_BEAT_DOWN_BY] : "";
             else
-                pszMuiMsg = g_ppszStringsTable[STR_WAS_KILLED_BY] ? g_ppszStringsTable[STR_WAS_KILLED_BY] : "";
-            strMsg.psz = StringAlloc(pKilled->strName.cch + strlen(pszMuiMsg) + pKiller->strName.cch + 1);
-            strMsg.cch = sprintf(strMsg.psz, "%s%s%s", pKilled->strName.psz, pszMuiMsg, pKiller->strName.psz);
+                mui_msg = rf::g_ppszStringsTable[rf::STR_WAS_KILLED_BY] ? rf::g_ppszStringsTable[rf::STR_WAS_KILLED_BY] : "";
+            msg.psz = rf::StringAlloc(killed_player->strName.cch + strlen(mui_msg) + killer_player->strName.cch + 1);
+            msg.cch = sprintf(msg.psz, "%s%s%s", killed_player->strName.psz, mui_msg, killer_player->strName.psz);
         }
     }
-    
-    strPrefix.psz = NULL;
-    strPrefix.cch = 0;
-    ChatPrint(strMsg, ColorId, strPrefix);
-    
-    auto pKilledStats = (PlayerStatsNew*)pKilled->pStats;
-    ++pKilledStats->cDeaths;
 
-    if (pKiller)
-    {
-        auto pKillerStats = (PlayerStatsNew*)pKiller->pStats;
-        if (pKiller != pKilled)
-        {
-            ++pKillerStats->iScore;
-            ++pKillerStats->cKills;
+    rf::String prefix;
+    rf::String::InitEmpty(&prefix);
+    rf::ChatPrint(msg, color_id, prefix);
+    
+    auto killed_stats = (PlayerStatsNew*)killed_player->pStats;
+    ++killed_stats->cDeaths;
+
+    if (killer_player) {
+        auto killer_stats = (PlayerStatsNew*)killer_player->pStats;
+        if (killer_player != killed_player) {
+            ++killer_stats->iScore;
+            ++killer_stats->cKills;
         }
         else
-            --pKillerStats->iScore;
+            --killer_stats->iScore;
     }
 }
 
-void InitKill(void)
+void InitKill()
 {
     // Player kill handling
     AsmWritter(0x00420703)
@@ -145,5 +130,5 @@ void InitKill(void)
 
     // Change player stats structure
     WriteMemInt8(0x004A33B5 + 1, sizeof(PlayerStatsNew));
-    MpResetNetGame_Hook.hook(MpResetNetGame_New);
+    MpResetNetGame_Hook.Install();
 }

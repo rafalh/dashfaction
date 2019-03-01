@@ -12,7 +12,7 @@ using namespace rf;
 
 #if SPECTATE_MODE_ENABLE
 
-static CPlayer *g_SpectateModeTarget;
+static rf::Player *g_SpectateModeTarget;
 static rf::Camera *g_OldTargetCamera = NULL;
 static bool g_SpectateModeEnabled = false;
 static int g_LargeFont = -1, g_MediumFont = -1, g_SmallFont = -1;
@@ -23,7 +23,7 @@ auto PlayerCreateEntity_Hook = makeFunHook(PlayerCreateEntity);
 auto RenderScannerViewForLocalPlayers_Hook = makeCallHook(GrResetClip);
 auto PlayerFpgunUpdateState_Hook = makeFunHook(PlayerFpgunUpdateState);
 
-static void SetCameraTarget(CPlayer *pPlayer)
+static void SetCameraTarget(rf::Player *pPlayer)
 {
     // Based on function SetCamera1View
     if (!g_pLocalPlayer || !(g_pLocalPlayer)->pCamera || !pPlayer)
@@ -39,7 +39,7 @@ static void SetCameraTarget(CPlayer *pPlayer)
     CameraSetFirstPerson(pCamera);
 }
 
-void SpectateModeSetTargetPlayer(CPlayer *pPlayer)
+void SpectateModeSetTargetPlayer(rf::Player *pPlayer)
 {
     if (!pPlayer)
         pPlayer = g_pLocalPlayer;
@@ -49,9 +49,9 @@ void SpectateModeSetTargetPlayer(CPlayer *pPlayer)
 
     if (g_GameOptions & RF_GO_FORCE_RESPAWN)
     {
-        CString strMessage, strPrefix;
-        CString_Init(&strMessage, "You cannot use Spectate Mode because Force Respawn option is enabled on this server!");
-        CString_InitEmpty(&strPrefix);
+        rf::String strMessage, strPrefix;
+        rf::String::Init(&strMessage, "You cannot use Spectate Mode because Force Respawn option is enabled on this server!");
+        rf::String::InitEmpty(&strPrefix);
         ChatPrint(strMessage, 4, strPrefix);
         return;
     }
@@ -93,7 +93,7 @@ void SpectateModeSetTargetPlayer(CPlayer *pPlayer)
 
 static void SpectateNextPlayer(bool bDir, bool bTryAlivePlayersFirst = false)
 {
-    CPlayer *pNewTarget;
+    rf::Player *pNewTarget;
     if (g_SpectateModeEnabled)
         pNewTarget = g_SpectateModeTarget;
     else
@@ -116,7 +116,7 @@ static void SpectateNextPlayer(bool bDir, bool bTryAlivePlayersFirst = false)
         SpectateNextPlayer(bDir, false);
 }
 
-static void HandleCtrlInGameHook(CPlayer *pPlayer, EGameCtrl KeyId, char WasPressed)
+static void HandleCtrlInGameHook(rf::Player *pPlayer, rf::GameCtrl KeyId, char WasPressed)
 {
     if (g_SpectateModeEnabled)
     {
@@ -152,7 +152,7 @@ static void HandleCtrlInGameHook(CPlayer *pPlayer, EGameCtrl KeyId, char WasPres
     HandleCtrlInGame_Hook.callTrampoline(pPlayer, KeyId, WasPressed);
 }
 
-static bool IsPlayerEntityInvalidHook(CPlayer *pPlayer)
+static bool IsPlayerEntityInvalidHook(rf::Player *pPlayer)
 {
     if (g_SpectateModeEnabled)
         return false;
@@ -160,7 +160,7 @@ static bool IsPlayerEntityInvalidHook(CPlayer *pPlayer)
         return IsPlayerEntityInvalid(pPlayer);
 }
 
-static bool IsPlayerDyingHook(CPlayer *pPlayer)
+static bool IsPlayerDyingHook(rf::Player *pPlayer)
 {
     if (g_SpectateModeEnabled)
         return false;
@@ -168,7 +168,7 @@ static bool IsPlayerDyingHook(CPlayer *pPlayer)
         return IsPlayerDying(pPlayer);
 }
 
-void SpectateModeOnDestroyPlayer(CPlayer *pPlayer)
+void SpectateModeOnDestroyPlayer(rf::Player *pPlayer)
 {
     if (g_SpectateModeTarget == pPlayer)
         SpectateNextPlayer(true);
@@ -176,7 +176,7 @@ void SpectateModeOnDestroyPlayer(CPlayer *pPlayer)
         SpectateModeSetTargetPlayer(nullptr);
 }
 
-static void RenderReticle_New(CPlayer *pPlayer)
+static void RenderReticle_New(rf::Player *pPlayer)
 {
     if (GetCurrentMenuId() == MENU_MP_LIMBO)
         return;
@@ -187,7 +187,7 @@ static void RenderReticle_New(CPlayer *pPlayer)
 }
 
 
-EntityObj *PlayerCreateEntity_New(CPlayer *pPlayer, int ClassId, const CVector3 *pPos, const CMatrix3 *pRotMatrix, int MpCharacter)
+EntityObj *PlayerCreateEntity_New(rf::Player *pPlayer, int ClassId, const rf::Vector3 *pPos, const rf::Matrix3 *pRotMatrix, int MpCharacter)
 {
     // hide target player from camera after respawn
     EntityObj *pEntity = PlayerCreateEntity_Hook.callTrampoline(pPlayer, ClassId, pPos, pRotMatrix, MpCharacter);
@@ -206,7 +206,7 @@ void RenderScannerViewForLocalPlayers_GrResetClip_New()
 
 #if SPECTATE_MODE_SHOW_WEAPON
 
-static void PlayerFpgunRender_New(CPlayer *pPlayer)
+static void PlayerFpgunRender_New(rf::Player *pPlayer)
 {
     if (g_SpectateModeEnabled)
     {
@@ -217,8 +217,8 @@ static void PlayerFpgunRender_New(CPlayer *pPlayer)
 
         if (g_SpectateModeTarget != g_pLocalPlayer && pEntity)
         {
-            static CVector3 vOldVel;
-            CVector3 vVelDiff = pEntity->_Super.PhysInfo.vVel - vOldVel;
+            static rf::Vector3 vOldVel;
+            rf::Vector3 vVelDiff = pEntity->_Super.PhysInfo.vVel - vOldVel;
             vOldVel = pEntity->_Super.PhysInfo.vVel;
 
             if (vVelDiff.y > 0.1f)
@@ -238,7 +238,7 @@ static void PlayerFpgunRender_New(CPlayer *pPlayer)
         PlayerFpgunRender(pPlayer);
 }
 
-void PlayerFpgunUpdateState_New(CPlayer *pPlayer)
+void PlayerFpgunUpdateState_New(rf::Player *pPlayer)
 {
     PlayerFpgunUpdateState_Hook.callTrampoline(pPlayer);
     if (pPlayer != g_pLocalPlayer)
@@ -358,7 +358,7 @@ void SpectateModeDrawUI()
 
     char szBuf[256];
     GrSetColor(0xFF, 0xFF, 0, 0x80);
-    snprintf(szBuf, sizeof(szBuf), "Spectating: %s", CString_CStr(&g_SpectateModeTarget->strName));
+    snprintf(szBuf, sizeof(szBuf), "Spectating: %s",rf::String::CStr(&g_SpectateModeTarget->strName));
     GrDrawAlignedText(GR_ALIGN_CENTER, x + cx / 2, y + cy / 2 - cyFont / 2 - 5, szBuf, g_LargeFont, g_GrTextMaterial);
 
     EntityObj *pEntity = EntityGetFromHandle(g_SpectateModeTarget->hEntity);

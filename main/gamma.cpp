@@ -7,76 +7,71 @@
   #define D3DSGR_NO_CALIBRATION 0x0
 #endif
 
-using namespace rf;
+static D3DGAMMARAMP g_gamma_ramp;
+static bool g_gamma_ramp_initialized = false;
 
-static D3DGAMMARAMP g_GammaRamp;
-static bool g_GammaRampInitialized = false;
+namespace rf {
+static const auto gr_gamma_ramp = (uint32_t*)0x017C7C68;
+}
 
-static void SetGammaRamp(D3DGAMMARAMP *pGammaRamp)
+static void SetGammaRamp(D3DGAMMARAMP *gamma_ramp)
 {
 #if 0 // Note: D3D Gamma Ramp doesn't work in windowed mode
     if (g_pGrDevice)
-        g_pGrDevice->SetGammaRamp(D3DSGR_NO_CALIBRATION, pGammaRamp);
+        g_pGrDevice->SetGammaRamp(D3DSGR_NO_CALIBRATION, gamma_ramp);
 #else
-    HDC hdc;
-
-    hdc = GetDC(g_hWnd);
-    if (hdc)
-    {
-        if (!SetDeviceGammaRamp(hdc, pGammaRamp))
+    HDC hdc = GetDC(rf::g_hWnd);
+    if (hdc) {
+        if (!SetDeviceGammaRamp(hdc, gamma_ramp))
             ERR("SetDeviceGammaRamp failed %lu", GetLastError());
-        ReleaseDC(g_hWnd, hdc);
-    }
-    else
+        ReleaseDC(rf::g_hWnd, hdc);
+    } else
         ERR("GetDC failed");
 #endif
 }
 
-static void GrUpdateGammaRampHook(void)
+static void GrUpdateGammaRampHook()
 {
-    for (unsigned i = 0; i < 256; ++i)
-    {
-        unsigned Val = g_pGrGammaRamp[i] << 8;
-        g_GammaRamp.red[i] = Val;
-        g_GammaRamp.green[i] = Val;
-        g_GammaRamp.blue[i] = Val;
+    for (unsigned i = 0; i < 256; ++i) {
+        unsigned Val = rf::gr_gamma_ramp[i] << 8;
+        g_gamma_ramp.red[i] = Val;
+        g_gamma_ramp.green[i] = Val;
+        g_gamma_ramp.blue[i] = Val;
     }
 
-    g_GammaRampInitialized = true;
-    SetGammaRamp(&g_GammaRamp);
+    g_gamma_ramp_initialized = true;
+    SetGammaRamp(&g_gamma_ramp);
 }
 
-void ResetGammaRamp(void)
+void ResetGammaRamp()
 {
-    D3DGAMMARAMP GammaRamp;
+    D3DGAMMARAMP gamma_ramp;
 
-    if (!g_GammaRampInitialized)
+    if (!g_gamma_ramp_initialized)
         return;
     
     for (unsigned i = 0; i < 256; ++i)
-        GammaRamp.red[i] = GammaRamp.green[i] = GammaRamp.blue[i] = i << 8;
+        gamma_ramp.red[i] = gamma_ramp.green[i] = gamma_ramp.blue[i] = i << 8;
     
-    SetGammaRamp(&GammaRamp);
+    SetGammaRamp(&gamma_ramp);
 }
 
 static void GammaMsgHandler(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    switch (uMsg)
-    {
+    switch (uMsg) {
     case WM_ACTIVATE:
     case WM_ACTIVATEAPP:
         TRACE("WM_ACTIVATE %lx", wParam);
-        if (g_GammaRampInitialized)
-        {
+        if (g_gamma_ramp_initialized) {
             if (wParam)
-                SetGammaRamp(&g_GammaRamp);
+                SetGammaRamp(&g_gamma_ramp);
             else
                 ResetGammaRamp();
         }
     }
 }
 
-void InitGamma(void)
+void InitGamma()
 {
     /* Gamma fix */
     AsmWritter(0x00547A60).jmpLong(GrUpdateGammaRampHook);

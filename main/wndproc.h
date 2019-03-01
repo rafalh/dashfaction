@@ -1,3 +1,3 @@
 #pragma once
 
-void InitWndProc(void);
+void InitWndProc();

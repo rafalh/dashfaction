@@ -11,12 +11,66 @@
 
 #define VFS_DBGPRINT TRACE
 
-using namespace rf;
+namespace rf {
+struct PackfileEntry;
+
+struct Packfile
+{
+    char szName[32];
+    char szPath[128];
+    uint32_t field_A0;
+    uint32_t cFiles;
+    PackfileEntry *pFileList;
+    uint32_t cbSize;
+};
+
+struct PackfileEntry
+{
+    uint32_t dwNameChecksum;
+    const char *pszFileName;
+    uint32_t OffsetInBlocks;
+    uint32_t cbFileSize;
+    Packfile *pArchive;
+    FILE *pRawFile;
+};
+
+struct PackfileLookupTable
+{
+    uint32_t dwNameChecksum;
+    PackfileEntry *pArchiveEntry;
+};
+
+static auto &g_cArchives = *(uint32_t*)0x01BDB214;
+static auto &g_Archives = *(Packfile*)0x01BA7AC8;
+#define VFS_LOOKUP_TABLE_SIZE 20713
+static auto &g_VfsLookupTable = *(PackfileLookupTable*)0x01BB2AC8;
+static auto &g_bVfsIgnoreTblFiles = *(uint8_t*)0x01BDB21C;
+
+typedef Packfile *(*PackfileFindArchive_Type)(const char *pszFilename);
+static const auto PackfileFindArchive = (PackfileFindArchive_Type)0x0052C1D0;
+
+typedef uint32_t(*PackfileCalcFileNameChecksum_Type)(const char *pszFileName);
+static const auto PackfileCalcFileNameChecksum = (PackfileCalcFileNameChecksum_Type)0x0052BE70;
+
+typedef uint32_t(*PackfileAddToLookupTable_Type)(PackfileEntry *pPackfileEntry);
+static const auto PackfileAddToLookupTable = (PackfileAddToLookupTable_Type)0x0052BCA0;
+
+typedef uint32_t(*PackfileProcessHeader_Type)(Packfile *pPackfile, const void *pHeader);
+static const auto PackfileProcessHeader = (PackfileProcessHeader_Type)0x0052BD10;
+
+typedef uint32_t(*PackfileAddEntries_Type)(Packfile *pPackfile, const void *pBuf, unsigned cFilesInBlock, unsigned *pcAddedEntries);
+static const auto PackfileAddEntries = (PackfileAddEntries_Type)0x0052BD40;
+
+typedef uint32_t(*PackfileSetupFileOffsets_Type)(Packfile *pPackfile, unsigned DataOffsetInBlocks);
+static const auto PackfileSetupFileOffsets = (PackfileSetupFileOffsets_Type)0x0052BEB0;
+
+static const auto FileGetChecksum = (unsigned(*)(const char *pszFilename))0x00436630;
+}
 
 struct PackfileLookupTableNew
 {
     PackfileLookupTableNew *pNext;
-    PackfileEntry *pPackfileEntry;
+    rf::PackfileEntry *pPackfileEntry;
 };
 
 const char *ModFileWhitelist[] = {
@@ -46,7 +100,7 @@ static const auto g_pVfsLookupTableNew = (PackfileLookupTableNew*)0x01BB2AC8; //
 static const auto LOOKUP_TABLE_SIZE = 20713;
 
 static unsigned g_cPackfiles = 0, g_cFilesInVfs = 0, g_cNameCollisions = 0;
-static Packfile **g_pPackfiles = nullptr;
+static rf::Packfile **g_pPackfiles = nullptr;
 static bool g_bModdedGame = false;
 
 static bool IsModFileInWhitelist(const char *Filename)
@@ -77,29 +131,29 @@ static unsigned HashFile(const char *Filename)
     return hash;
 }
 
-static EGameLang DetectInstalledGameLang()
+static GameLang DetectInstalledGameLang()
 {
     char szFullPath[MAX_PATH];
     const char *LangCodes[] = { "en", "gr", "fr" };
     for (unsigned i = 0; i < COUNTOF(LangCodes); ++i)
     {
-        sprintf(szFullPath, "%smaps_%s.vpp", g_pszRootPath, LangCodes[i]);
+        sprintf(szFullPath, "%smaps_%s.vpp", rf::g_pszRootPath, LangCodes[i]);
         BOOL bExists = PathFileExistsA(szFullPath);
         INFO("Checking file %s: %s", szFullPath, bExists ? "found" : "not found");
         if (bExists)
         {
             INFO("Detected game language: %s", LangCodes[i]);
-            return (EGameLang)i;
+            return (GameLang)i;
         }
     }
     WARN("Cannot detect game language");
     return LANG_EN; // default
 }
 
-EGameLang GetInstalledGameLang()
+GameLang GetInstalledGameLang()
 {
     static bool Initialized = false;
-    static EGameLang InstalledGameLang;
+    static GameLang InstalledGameLang;
     if (!Initialized)
     {
         InstalledGameLang = DetectInstalledGameLang();
@@ -124,7 +178,7 @@ static BOOL PackfileLoad_New(const char *pszFilename, const char *pszDir)
     if (pszDir && pszDir[0] && pszDir[1] == ':')
         sprintf(szFullPath, "%s%s", pszDir, pszFilename); // absolute path
     else
-        sprintf(szFullPath, "%s%s%s", g_pszRootPath, pszDir ? pszDir : "", pszFilename);
+        sprintf(szFullPath, "%s%s%s", rf::g_pszRootPath, pszDir ? pszDir : "", pszFilename);
 
     if (!pszFilename || strlen(pszFilename) > 0x1F || strlen(szFullPath) > 0x7F)
     {
@@ -161,11 +215,11 @@ static BOOL PackfileLoad_New(const char *pszFilename, const char *pszDir)
     
     if (g_cPackfiles % 64 == 0)
     {
-        g_pPackfiles = (Packfile**)realloc(g_pPackfiles, (g_cPackfiles + 64) * sizeof(Packfile*));
-        memset(&g_pPackfiles[g_cPackfiles], 0, 64 * sizeof(Packfile*));
+        g_pPackfiles = (rf::Packfile**)realloc(g_pPackfiles, (g_cPackfiles + 64) * sizeof(rf::Packfile*));
+        memset(&g_pPackfiles[g_cPackfiles], 0, 64 * sizeof(rf::Packfile*));
     }
     
-    Packfile *pPackfile = (Packfile*)malloc(sizeof(*pPackfile));
+    rf::Packfile *pPackfile = (rf::Packfile*)malloc(sizeof(*pPackfile));
     if (!pPackfile)
     {
         ERR("malloc failed");
@@ -181,10 +235,10 @@ static BOOL PackfileLoad_New(const char *pszFilename, const char *pszDir)
     pPackfile->pFileList = NULL;
     
     // Note: VfsProcessPackfileHeader returns number of files in packfile - result 0 is not always a true error
-    if (fread(Buf, sizeof(Buf), 1, pFile) == 1 && PackfileProcessHeader(pPackfile, Buf))
+    if (fread(Buf, sizeof(Buf), 1, pFile) == 1 && rf::PackfileProcessHeader(pPackfile, Buf))
     {
-        pPackfile->pFileList = (PackfileEntry*)malloc(pPackfile->cFiles * sizeof(PackfileEntry));
-        memset(pPackfile->pFileList, 0, pPackfile->cFiles * sizeof(PackfileEntry));
+        pPackfile->pFileList = (rf::PackfileEntry*)malloc(pPackfile->cFiles * sizeof(rf::PackfileEntry));
+        memset(pPackfile->pFileList, 0, pPackfile->cFiles * sizeof(rf::PackfileEntry));
         cAdded = 0;
         OffsetInBlocks = 1;
         bRet = TRUE;
@@ -199,13 +253,13 @@ static BOOL PackfileLoad_New(const char *pszFilename, const char *pszDir)
             }
             
             cFilesInBlock = std::min(pPackfile->cFiles - i, 32u);
-            PackfileAddEntries(pPackfile, Buf, cFilesInBlock, &cAdded);
+            rf::PackfileAddEntries(pPackfile, Buf, cFilesInBlock, &cAdded);
             ++OffsetInBlocks;
         }
     } else ERR("Failed to fread vpp 2 %s", szFullPath);
     
     if (bRet)
-        PackfileSetupFileOffsets(pPackfile, OffsetInBlocks);
+        rf::PackfileSetupFileOffsets(pPackfile, OffsetInBlocks);
     
     fclose(pFile);
     
@@ -223,7 +277,7 @@ static BOOL PackfileLoad_New(const char *pszFilename, const char *pszDir)
     return bRet;
 }
 
-static Packfile *PackfileFindArchive_New(const char *pszFilename)
+static rf::Packfile *PackfileFindArchive_New(const char *pszFilename)
 {
     for (unsigned i = 0; i < g_cPackfiles; ++i)
     {
@@ -245,30 +299,30 @@ static BOOL PackfileBuildEntriesList_New(const char *pszExtList, char **ppFilena
     
     for (unsigned i = 0; i < g_cPackfiles; ++i)
     {
-        Packfile *pPackfile = g_pPackfiles[i];
+        rf::Packfile *pPackfile = g_pPackfiles[i];
         if (!pszPackfileName || !stricmp(pszPackfileName, pPackfile->szName))
         {
             for (unsigned j = 0; j < pPackfile->cFiles; ++j)
             {
-                const char *pszExt = GetFileExt(pPackfile->pFileList[j].pszFileName);
+                const char *pszExt = rf::GetFileExt(pPackfile->pFileList[j].pszFileName);
                 if (pszExt[0] && strstr(pszExtList, pszExt + 1))
                     cbBuf += strlen(pPackfile->pFileList[j].pszFileName) + 1;
             }
         }
     }
     
-    *ppFilenames = (char*)RfMalloc(cbBuf);
+    *ppFilenames = (char*)rf::Malloc(cbBuf);
     if (!*ppFilenames)
         return FALSE;
     char *BufPtr = *ppFilenames;
     for (unsigned i = 0; i < g_cPackfiles; ++i)
     {
-        Packfile *pPackfile = g_pPackfiles[i];
+        rf::Packfile *pPackfile = g_pPackfiles[i];
         if (!pszPackfileName || !stricmp(pszPackfileName, pPackfile->szName))
         {
             for (unsigned j = 0; j < pPackfile->cFiles; ++j)
             {
-                const char *pszExt = GetFileExt(pPackfile->pFileList[j].pszFileName);
+                const char *pszExt = rf::GetFileExt(pPackfile->pFileList[j].pszFileName);
                 if (pszExt[0] && strstr(pszExtList, pszExt + 1))
                 {
                     strcpy(BufPtr, pPackfile->pFileList[j].pszFileName);
@@ -285,14 +339,14 @@ static BOOL PackfileBuildEntriesList_New(const char *pszExtList, char **ppFilena
     return TRUE;
 }
 
-static BOOL PackfileAddEntries_New(Packfile *pPackfile, const void *pBlock, unsigned cFilesInBlock, unsigned *pcAddedFiles)
+static BOOL PackfileAddEntries_New(rf::Packfile *pPackfile, const void *pBlock, unsigned cFilesInBlock, unsigned *pcAddedFiles)
 {
     const BYTE *pData = (const BYTE*)pBlock;
     
     for (unsigned i = 0; i < cFilesInBlock; ++i)
     {
-        PackfileEntry *pEntry = &pPackfile->pFileList[*pcAddedFiles];
-        if (g_bVfsIgnoreTblFiles && !stricmp(GetFileExt((char*)pData), ".tbl"))
+        rf::PackfileEntry *pEntry = &pPackfile->pFileList[*pcAddedFiles];
+        if (rf::g_bVfsIgnoreTblFiles && !stricmp(rf::GetFileExt((char*)pData), ".tbl"))
             pEntry->pszFileName = "DEADBEEF";
         else
         {
@@ -302,7 +356,7 @@ static BOOL PackfileAddEntries_New(Packfile *pPackfile, const void *pBlock, unsi
             strcpy(pFileNameBuf, (char*)pData);
             pEntry->pszFileName = pFileNameBuf;
         }
-        pEntry->dwNameChecksum = PackfileCalcFileNameChecksum(pEntry->pszFileName);
+        pEntry->dwNameChecksum = rf::PackfileCalcFileNameChecksum(pEntry->pszFileName);
         pEntry->cbFileSize = *((uint32_t*)(pData + 60));
         pEntry->pArchive = pPackfile;
         pEntry->pRawFile = NULL;
@@ -310,13 +364,13 @@ static BOOL PackfileAddEntries_New(Packfile *pPackfile, const void *pBlock, unsi
         pData += 64;
         ++(*pcAddedFiles);
         
-        PackfileAddToLookupTable(pEntry);
+        rf::PackfileAddToLookupTable(pEntry);
         ++g_cFilesInVfs;
     }
     return TRUE;
 }
 
-static void PackfileAddToLookupTable_New(PackfileEntry *pEntry)
+static void PackfileAddToLookupTable_New(rf::PackfileEntry *pEntry)
 {
     PackfileLookupTableNew *pLookupTableItem = &g_pVfsLookupTableNew[pEntry->dwNameChecksum % LOOKUP_TABLE_SIZE];
     
@@ -342,7 +396,7 @@ static void PackfileAddToLookupTable_New(PackfileEntry *pEntry)
             const char *pszOldArchive = pLookupTableItem->pPackfileEntry->pArchive->szName;
             const char *pszNewArchive = pEntry->pArchive->szName;
 
-            if (g_bVfsIgnoreTblFiles) // this is set to true for user_maps
+            if (rf::g_bVfsIgnoreTblFiles) // this is set to true for user_maps
             {
                 bool bWhitelisted = false;// IsModFileInWhitelist(pEntry->pszFileName);
                 if (!g_gameConfig.allowOverwriteGameFiles && !bWhitelisted)
@@ -387,9 +441,9 @@ static void PackfileAddToLookupTable_New(PackfileEntry *pEntry)
     pLookupTableItem->pPackfileEntry = pEntry;
 }
 
-static PackfileEntry *PackfileFindFileInternal_New(const char *pszFilename)
+static rf::PackfileEntry *PackfileFindFileInternal_New(const char *pszFilename)
 {
-    unsigned Checksum = PackfileCalcFileNameChecksum(pszFilename);
+    unsigned Checksum = rf::PackfileCalcFileNameChecksum(pszFilename);
     PackfileLookupTableNew *pLookupTableItem = &g_pVfsLookupTableNew[Checksum % LOOKUP_TABLE_SIZE];
     do
     {
@@ -446,7 +500,7 @@ static void LoadDashFactionVpp()
             *(Ptr + 1) = '\0';
     }
     INFO("Loading dashfaction.vpp from directory: %s", szBuf);
-    if (!PackfileLoad("dashfaction.vpp", szBuf))
+    if (!rf::PackfileLoad("dashfaction.vpp", szBuf))
         ERR("Failed to load dashfaction.vpp");
 }
 
@@ -458,43 +512,43 @@ static void PackfileInit_New(void)
 
     if (GetInstalledGameLang() == LANG_GR)
     {
-        PackfileLoad("audiog.vpp", nullptr);
-        PackfileLoad("maps_gr.vpp", nullptr);
-        PackfileLoad("levels1g.vpp", nullptr);
-        PackfileLoad("levels2g.vpp", nullptr);
-        PackfileLoad("levels3g.vpp", nullptr);
-        PackfileLoad("ltables.vpp", nullptr);
+        rf::PackfileLoad("audiog.vpp", nullptr);
+        rf::PackfileLoad("maps_gr.vpp", nullptr);
+        rf::PackfileLoad("levels1g.vpp", nullptr);
+        rf::PackfileLoad("levels2g.vpp", nullptr);
+        rf::PackfileLoad("levels3g.vpp", nullptr);
+        rf::PackfileLoad("ltables.vpp", nullptr);
     }
     else if (GetInstalledGameLang() == LANG_FR)
     {
-        PackfileLoad("audiof.vpp", nullptr);
-        PackfileLoad("maps_fr.vpp", nullptr);
-        PackfileLoad("levels1f.vpp", nullptr);
-        PackfileLoad("levels2f.vpp", nullptr);
-        PackfileLoad("levels3f.vpp", nullptr);
-        PackfileLoad("ltables.vpp", nullptr);
+        rf::PackfileLoad("audiof.vpp", nullptr);
+        rf::PackfileLoad("maps_fr.vpp", nullptr);
+        rf::PackfileLoad("levels1f.vpp", nullptr);
+        rf::PackfileLoad("levels2f.vpp", nullptr);
+        rf::PackfileLoad("levels3f.vpp", nullptr);
+        rf::PackfileLoad("ltables.vpp", nullptr);
     }
     else
     {
-        PackfileLoad("audio.vpp", nullptr);
-        PackfileLoad("maps_en.vpp", nullptr);
-        PackfileLoad("levels1.vpp", nullptr);
-        PackfileLoad("levels2.vpp", nullptr);
-        PackfileLoad("levels3.vpp", nullptr);
+        rf::PackfileLoad("audio.vpp", nullptr);
+        rf::PackfileLoad("maps_en.vpp", nullptr);
+        rf::PackfileLoad("levels1.vpp", nullptr);
+        rf::PackfileLoad("levels2.vpp", nullptr);
+        rf::PackfileLoad("levels3.vpp", nullptr);
     }
-    PackfileLoad("levelsm.vpp", nullptr);
-    //PackfileLoad("levelseb.vpp", nullptr);
-    //PackfileLoad("levelsbg.vpp", nullptr);
-    PackfileLoad("maps1.vpp", nullptr);
-    PackfileLoad("maps2.vpp", nullptr);
-    PackfileLoad("maps3.vpp", nullptr);
-    PackfileLoad("maps4.vpp", nullptr);
-    PackfileLoad("meshes.vpp", nullptr);
-    PackfileLoad("motions.vpp", nullptr);
-    PackfileLoad("music.vpp", nullptr);
-    PackfileLoad("ui.vpp", nullptr);
+    rf::PackfileLoad("levelsm.vpp", nullptr);
+    //rf::PackfileLoad("levelseb.vpp", nullptr);
+    //rf::PackfileLoad("levelsbg.vpp", nullptr);
+    rf::PackfileLoad("maps1.vpp", nullptr);
+    rf::PackfileLoad("maps2.vpp", nullptr);
+    rf::PackfileLoad("maps3.vpp", nullptr);
+    rf::PackfileLoad("maps4.vpp", nullptr);
+    rf::PackfileLoad("meshes.vpp", nullptr);
+    rf::PackfileLoad("motions.vpp", nullptr);
+    rf::PackfileLoad("music.vpp", nullptr);
+    rf::PackfileLoad("ui.vpp", nullptr);
     LoadDashFactionVpp();
-    PackfileLoad("tables.vpp", nullptr);
+    rf::PackfileLoad("tables.vpp", nullptr);
     *((BOOL*)0x01BDB218) = TRUE; // bPackfilesLoaded
     *((uint32_t*)0x01BDB210) = 10000; // cFilesInVfs
     *((uint32_t*)0x01BDB214) = 100; // cPackfiles
@@ -552,13 +606,13 @@ void VfsApplyHooks(void)
 
 void ForceFileFromPackfile(const char *pszName, const char *pszPackfile)
 {
-    Packfile *pPackfile = PackfileFindArchive(pszPackfile);
+    rf::Packfile *pPackfile = rf::PackfileFindArchive(pszPackfile);
     if (pPackfile)
     {
         for (unsigned i = 0; i < pPackfile->cFiles; ++i)
         {
             if (!stricmp(pPackfile->pFileList[i].pszFileName, pszName))
-                PackfileAddToLookupTable(&pPackfile->pFileList[i]);
+                rf::PackfileAddToLookupTable(&pPackfile->pFileList[i]);
         }
     }
 }
@@ -580,4 +634,3 @@ void PackfileFindMatchingFiles(const StringMatcher &Query, std::function<void(co
         } while (pLookupTableItem);
     }
 }
-

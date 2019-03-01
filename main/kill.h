@@ -2,10 +2,10 @@
 
 #include "rf.h"
 
-struct PlayerStatsNew : rf::SPlayerStats
+struct PlayerStatsNew : rf::PlayerStats
 {
     unsigned short cKills, cDeaths;
 };
 
 void InitKill();
-void KillInitPlayer(rf::CPlayer *pPlayer);
+void KillInitPlayer(rf::Player *pPlayer);

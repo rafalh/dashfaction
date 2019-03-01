@@ -1,4 +1,4 @@
 #pragma once
 
-void InitLazyban(void);
-void UnbanLastCmdHandler(void);
+void InitLazyban();
+void UnbanLastCmdHandler();
