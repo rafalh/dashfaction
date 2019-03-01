@@ -10,9 +10,9 @@
 #include "main.h"
 #include "misc.h"
 #include "packfile.h"
-#include "hooks/MemChange.h"
 #include "inline_asm.h"
 #include <FunHook2.h>
+#include <CallHook2.h>
 
 using namespace rf;
 
@@ -23,6 +23,7 @@ constexpr int DC_ARG_ANY = 0xFFFFFFFF;
 DcCommand *g_CommandsBuffer[CMD_LIMIT];
 bool g_DbgGeometryRenderingStats = false;
 bool g_DbgStaticLights = false;
+bool g_volumetric_lights = true;
 
 class DcInvalidArgTypeError : public std::exception {};
 class DcRequiredArgMissingError : public std::exception {};
@@ -429,14 +430,18 @@ DcCommand2 MouseSensitivityCmd{ "ms",
     "ms <value>"
 };
 
+CallHook2<void()> CoronaRenderAll_Hook{
+    0x0043233E,
+    []() {
+        if (g_volumetric_lights)
+            CoronaRenderAll_Hook.CallTarget();
+    }
+};
+
 DcCommand2 VolumeLightsCmd{ "vli",
     []() {
-        static MemChange vliCallChange(0x0043233E);
-        if (vliCallChange.IsApplied())
-            vliCallChange.Revert();
-        else
-            vliCallChange.Write("\x90\x90\x90\x90\x90", 5);
-        DcPrintf("Volumetric lightining is %s.", vliCallChange.IsApplied() ? "disabled" : "enabled");
+        g_volumetric_lights = !g_volumetric_lights;
+        DcPrintf("Volumetric lightining is %s.", g_volumetric_lights ? "disabled" : "enabled");
     },
     "Toggles volumetric lightining"
 };

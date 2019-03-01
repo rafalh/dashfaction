@@ -5,10 +5,8 @@
 #include "BuildConfig.h"
 #include "utils.h"
 #include "scoreboard.h"
-#include "hooks/HookCall.h"
 #include <FunHook2.h>
 #include <CallHook2.h>
-
 
 #if SPECTATE_MODE_ENABLE
 
@@ -142,21 +140,28 @@ FunHook2<void(rf::Player*, rf::GameCtrl, bool)> HandleCtrlInGame_Hook{
     }
 };
 
-static bool IsPlayerEntityInvalidHook(rf::Player *pPlayer)
-{
+bool IsPlayerEntityInvalid_New(rf::Player* player) {
     if (g_SpectateModeEnabled)
         return false;
     else
-        return rf::IsPlayerEntityInvalid(pPlayer);
+        return rf::IsPlayerEntityInvalid(player);
 }
 
-static bool IsPlayerDyingHook(rf::Player *pPlayer)
+CallHook2<bool(rf::Player*)> IsPlayerEntityInvalid_RedBars_Hook{ 0x00432A52, IsPlayerEntityInvalid_New };
+CallHook2<bool(rf::Player*)> IsPlayerEntityInvalid_Scoreboard_Hook{ 0x00437BEE, IsPlayerEntityInvalid_New };
+CallHook2<bool(rf::Player*)> IsPlayerEntityInvalid_Scoreboard2_Hook{ 0x00437C25, IsPlayerEntityInvalid_New };
+
+static bool IsPlayerDying_New(rf::Player* player)
 {
     if (g_SpectateModeEnabled)
         return false;
     else
-        return rf::IsPlayerDying(pPlayer);
+        return rf::IsPlayerDying(player);
 }
+
+CallHook2 IsPlayerDying_RedBars_Hook{ 0x00432A5F, IsPlayerDying_New };
+CallHook2 IsPlayerDying_Scoreboard_Hook{ 0x00437C01, IsPlayerDying_New };
+CallHook2 IsPlayerDying_Scoreboard2_Hook{ 0x00437C36, IsPlayerDying_New };
 
 void SpectateModeOnDestroyPlayer(rf::Player *pPlayer)
 {
@@ -260,23 +265,13 @@ FunHook2<void(rf::Player*)> PlayerFpgunUpdateState_Hook{
 
 void SpectateModeInit()
 {
-    static HookCall<rf::IsPlayerEntityInvalid_Type> IsPlayerEntityInvalid_RedBars_Hookable(0x00432A52, rf::IsPlayerEntityInvalid);
-    IsPlayerEntityInvalid_RedBars_Hookable.Hook(IsPlayerEntityInvalidHook);
+    IsPlayerDying_RedBars_Hook.Install();
+    IsPlayerDying_Scoreboard_Hook.Install();
+    IsPlayerDying_Scoreboard2_Hook.Install();
 
-    static HookCall<rf::IsPlayerDying_Type> IsPlayerDying_RedBars_Hookable(0x00432A5F, rf::IsPlayerDying);
-    IsPlayerDying_RedBars_Hookable.Hook(IsPlayerDyingHook);
-
-    static HookCall<rf::IsPlayerEntityInvalid_Type> IsPlayerEntityInvalid_Scoreboard_Hookable(0x00437BEE, rf::IsPlayerEntityInvalid);
-    IsPlayerEntityInvalid_Scoreboard_Hookable.Hook(IsPlayerEntityInvalidHook);
-
-    static HookCall<rf::IsPlayerDying_Type> IsPlayerDying_Scoreboard_Hookable(0x00437C01, rf::IsPlayerDying);
-    IsPlayerDying_Scoreboard_Hookable.Hook(IsPlayerDyingHook);
-
-    static HookCall<rf::IsPlayerEntityInvalid_Type> IsPlayerEntityInvalid_Scoreboard_Hookable2(0x00437C25, rf::IsPlayerEntityInvalid);
-    IsPlayerEntityInvalid_Scoreboard_Hookable2.Hook(IsPlayerEntityInvalidHook);
-
-    static HookCall<rf::IsPlayerDying_Type> IsPlayerDying_Scoreboard_Hookable2(0x00437C36, rf::IsPlayerDying);
-    IsPlayerDying_Scoreboard_Hookable2.Hook(IsPlayerDyingHook);
+    IsPlayerEntityInvalid_RedBars_Hook.Install();
+    IsPlayerEntityInvalid_Scoreboard_Hook.Install();
+    IsPlayerEntityInvalid_Scoreboard2_Hook.Install();
     
     HandleCtrlInGame_Hook.Install();
     RenderReticle_Hook.Install();
@@ -305,7 +300,6 @@ void SpectateModeInit()
     GrResetClip_RenderScannerViewForLocalPlayers_Hook.Install();
     PlayerFpgunUpdateState_Hook.Install();
 #endif // SPECTATE_MODE_SHOW_WEAPON
-    
 }
 
 void SpectateModeAfterFullGameInit()
