@@ -212,8 +212,8 @@ DcCommand2 MaxFpsCmd{ "maxfps",
 #else
             float newLimit = LimitOpt.value();
 #endif
-            g_gameConfig.maxFps = (unsigned)newLimit;
-            g_gameConfig.save();
+            g_game_config.maxFps = (unsigned)newLimit;
+            g_game_config.save();
             g_fMinFramerate = 1.0f / newLimit;
         }
         else
@@ -377,7 +377,7 @@ DcCommand2 SpectateCmd { "spectate",
 #if MULTISAMPLING_SUPPORT
 DcCommand2 AntiAliasingCmd{ "antialiasing",
     []() {
-        if (!g_gameConfig.msaa)
+        if (!g_game_config.msaa)
             DcPrintf("Anti-aliasing is not supported");
         else
         {
@@ -472,10 +472,10 @@ DcCommand2 LevelSoundsCmd{ "levelsounds",
             float fVolScale = clamp(Volume.value(), 0.0f, 1.0f);
             SetPlaySoundEventsVolumeScale(fVolScale);
 
-            g_gameConfig.levelSoundVolume = fVolScale;
-            g_gameConfig.save();
+            g_game_config.levelSoundVolume = fVolScale;
+            g_game_config.save();
         }
-        DcPrintf("Level sound volume: %.1f", g_gameConfig.levelSoundVolume);
+        DcPrintf("Level sound volume: %.1f", g_game_config.levelSoundVolume);
     },
     "Sets level sounds volume scale",
     "levelsounds <volume>"

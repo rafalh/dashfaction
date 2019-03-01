@@ -8,4 +8,4 @@ struct PlayerStatsNew : rf::PlayerStats
 };
 
 void InitKill();
-void KillInitPlayer(rf::Player *pPlayer);
+void KillInitPlayer(rf::Player* player);

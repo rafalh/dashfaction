@@ -5,245 +5,244 @@
 #include "gr_color.h"
 #include <FunHook2.h>
 
-inline void ConvertPixel_RGB8_To_RGBA8(BYTE *&pDstPtr, const BYTE *&pSrcPtr)
+inline void ConvertPixel_RGB8_To_RGBA8(uint8_t*& dst_ptr, const uint8_t*& src_ptr)
 {
-    *(pDstPtr++) = *(pSrcPtr++);
-    *(pDstPtr++) = *(pSrcPtr++);
-    *(pDstPtr++) = *(pSrcPtr++);
-    *(pDstPtr++) = 255;
+    *(dst_ptr++) = *(src_ptr++);
+    *(dst_ptr++) = *(src_ptr++);
+    *(dst_ptr++) = *(src_ptr++);
+    *(dst_ptr++) = 255;
 }
 
-inline void ConvertPixel_BGR8_To_RGBA8(BYTE *&pDstPtr, const BYTE *&pSrcPtr)
+inline void ConvertPixel_BGR8_To_RGBA8(uint8_t*& dst_ptr, const uint8_t*& src_ptr)
 {
-    BYTE r = *(pSrcPtr++), g = *(pSrcPtr++), b = *(pSrcPtr++);
-    *(pDstPtr++) = b;
-    *(pDstPtr++) = g;
-    *(pDstPtr++) = r;
-    *(pDstPtr++) = 255;
+    uint8_t r = *(src_ptr++), g = *(src_ptr++), b = *(src_ptr++);
+    *(dst_ptr++) = b;
+    *(dst_ptr++) = g;
+    *(dst_ptr++) = r;
+    *(dst_ptr++) = 255;
 }
 
-inline void ConvertPixel_RGBA4_To_RGBA8(BYTE *&pDstPtr, const BYTE *&pSrcPtr)
+inline void ConvertPixel_RGBA4_To_RGBA8(uint8_t*& dst_ptr, const uint8_t*& src_ptr)
 {
-    *(pDstPtr++) = (*(pSrcPtr) & 0x0F) * 17;
-    *(pDstPtr++) = ((*(pSrcPtr++) & 0xF0) >> 4) * 17;
-    *(pDstPtr++) = (*(pSrcPtr) & 0x0F) * 17;
-    *(pDstPtr++) = ((*(pSrcPtr++) & 0xF0) >> 4) * 17;
+    *(dst_ptr++) = (*(src_ptr)&0x0F) * 17;
+    *(dst_ptr++) = ((*(src_ptr++) & 0xF0) >> 4) * 17;
+    *(dst_ptr++) = (*(src_ptr)&0x0F) * 17;
+    *(dst_ptr++) = ((*(src_ptr++) & 0xF0) >> 4) * 17;
 }
 
-inline void ConvertPixel_ARGB1555_To_RGBA8(BYTE *&pDstPtr, const BYTE *&pSrcPtr)
+inline void ConvertPixel_ARGB1555_To_RGBA8(uint8_t*& dst_ptr, const uint8_t*& src_ptr)
 {
-    WORD SrcWord = *(WORD*)pSrcPtr;
-    pSrcPtr += 2;
-    *(pDstPtr++) = ((SrcWord & (0x1F << 0)) >> 0) * 255 / 31;
-    *(pDstPtr++) = ((SrcWord & (0x1F << 5)) >> 5) * 255 / 31;
-    *(pDstPtr++) = ((SrcWord & (0x1F << 10)) >> 10) * 255 / 31;
-    *(pDstPtr++) = (SrcWord & 0x8000) ? 255 : 0;
+    uint16_t src_word = *(uint16_t*)src_ptr;
+    src_ptr += 2;
+    *(dst_ptr++) = ((src_word & (0x1F << 0)) >> 0) * 255 / 31;
+    *(dst_ptr++) = ((src_word & (0x1F << 5)) >> 5) * 255 / 31;
+    *(dst_ptr++) = ((src_word & (0x1F << 10)) >> 10) * 255 / 31;
+    *(dst_ptr++) = (src_word & 0x8000) ? 255 : 0;
 }
 
-inline void ConvertPixel_RGB565_To_RGBA8(BYTE *&pDstPtr, const BYTE *&pSrcPtr)
+inline void ConvertPixel_RGB565_To_RGBA8(uint8_t*& dst_ptr, const uint8_t*& src_ptr)
 {
-    WORD SrcWord = *(WORD*)pSrcPtr;
-    pSrcPtr += 2;
-    *(pDstPtr++) = ((SrcWord & (0x1F << 0)) >> 0) * 255 / 31;
-    *(pDstPtr++) = ((SrcWord & (0x3F << 5)) >> 5) * 255 / 63;
-    *(pDstPtr++) = ((SrcWord & (0x1F << 11)) >> 11) * 255 / 31;
-    *(pDstPtr++) = 255;
+    uint16_t src_word = *(uint16_t*)src_ptr;
+    src_ptr += 2;
+    *(dst_ptr++) = ((src_word & (0x1F << 0)) >> 0) * 255 / 31;
+    *(dst_ptr++) = ((src_word & (0x3F << 5)) >> 5) * 255 / 63;
+    *(dst_ptr++) = ((src_word & (0x1F << 11)) >> 11) * 255 / 31;
+    *(dst_ptr++) = 255;
 }
 
-bool ConvertPixelFormat(BYTE *&pDstPtr, rf::BmPixelFormat DstFmt, const BYTE *&pSrcPtr, rf::BmPixelFormat SrcFmt)
+bool ConvertPixelFormat(uint8_t*& dst_ptr, rf::BmPixelFormat dst_fmt, const uint8_t*& src_ptr, rf::BmPixelFormat src_fmt)
 {
-    if (DstFmt == SrcFmt) {
-        int PixelSize = GetPixelFormatSize(SrcFmt);
-        memcpy(pDstPtr, pSrcPtr, PixelSize);
-        pDstPtr += PixelSize;
-        pSrcPtr += PixelSize;
+    if (dst_fmt == src_fmt) {
+        int PixelSize = GetPixelFormatSize(src_fmt);
+        memcpy(dst_ptr, src_ptr, PixelSize);
+        dst_ptr += PixelSize;
+        src_ptr += PixelSize;
         return true;
     }
-    if (DstFmt != rf::BMPF_8888) {
-        ERR("unsupported dest pixel format %d (ConvertPixelFormat)", DstFmt);
+    if (dst_fmt != rf::BMPF_8888) {
+        ERR("unsupported dest pixel format %d (ConvertPixelFormat)", dst_fmt);
         return false;
     }
-    switch (SrcFmt)
-    {
+    switch (src_fmt) {
     case rf::BMPF_888:
-        ConvertPixel_RGB8_To_RGBA8(pDstPtr, pSrcPtr);
+        ConvertPixel_RGB8_To_RGBA8(dst_ptr, src_ptr);
         return true;
     case rf::BMPF_4444:
-        ConvertPixel_RGBA4_To_RGBA8(pDstPtr, pSrcPtr);
+        ConvertPixel_RGBA4_To_RGBA8(dst_ptr, src_ptr);
         return true;
     case rf::BMPF_565:
-        ConvertPixel_RGB565_To_RGBA8(pDstPtr, pSrcPtr);
+        ConvertPixel_RGB565_To_RGBA8(dst_ptr, src_ptr);
         return true;
     case rf::BMPF_1555:
-        ConvertPixel_ARGB1555_To_RGBA8(pDstPtr, pSrcPtr);
+        ConvertPixel_ARGB1555_To_RGBA8(dst_ptr, src_ptr);
         return true;
     default:
-        ERR("unsupported src pixel format %d", SrcFmt);
+        ERR("unsupported src pixel format %d", src_fmt);
         return false;
     }
 }
 
-bool ConvertBitmapFormat(BYTE *pDstBits, rf::BmPixelFormat DstFmt, const BYTE *pSrcBits, rf::BmPixelFormat SrcFmt, int Width, int Height, int DstPitch, int SrcPitch, bool bByteSwap = false)
+bool ConvertBitmapFormat(uint8_t* dst_bits_ptr, rf::BmPixelFormat dst_fmt, const uint8_t* src_bits_ptr, rf::BmPixelFormat src_fmt,
+    int width, int height, int dst_pitch, int src_pitch, bool swap_bytes = false)
 {
-    if (DstFmt == SrcFmt)
-    {
-        for (int y = 0; y < Height; ++y)
-        {
-            memcpy(pDstBits, pSrcBits, std::min(SrcPitch, DstPitch));
-            pDstBits += DstPitch;
-            pSrcBits += SrcPitch;
+    if (dst_fmt == src_fmt) {
+        for (int y = 0; y < height; ++y) {
+            memcpy(dst_bits_ptr, src_bits_ptr, std::min(src_pitch, dst_pitch));
+            dst_bits_ptr += dst_pitch;
+            src_bits_ptr += src_pitch;
         }
         return true;
     }
-    if (DstFmt != rf::BMPF_8888)
+    if (dst_fmt != rf::BMPF_8888)
         return false;
-    switch (SrcFmt)
-    {
+    switch (src_fmt) {
     case rf::BMPF_888:
-        for (int y = 0; y < Height; ++y) {
-            BYTE *pDstPtr = pDstBits;
-            const BYTE *pSrcPtr = pSrcBits;
-            for (int x = 0; x < Width; ++x) {
-                if (bByteSwap)
-                    ConvertPixel_BGR8_To_RGBA8(pDstPtr, pSrcPtr);
+        for (int y = 0; y < height; ++y) {
+            uint8_t* dst_ptr = dst_bits_ptr;
+            const uint8_t* src_ptr = src_bits_ptr;
+            for (int x = 0; x < width; ++x) {
+                if (swap_bytes)
+                    ConvertPixel_BGR8_To_RGBA8(dst_ptr, src_ptr);
                 else
-                    ConvertPixel_RGB8_To_RGBA8(pDstPtr, pSrcPtr);
+                    ConvertPixel_RGB8_To_RGBA8(dst_ptr, src_ptr);
             }
-            pDstBits += DstPitch;
-            pSrcBits += SrcPitch;
+            dst_bits_ptr += dst_pitch;
+            src_bits_ptr += src_pitch;
         }
         return true;
     case rf::BMPF_4444:
-        for (int y = 0; y < Height; ++y) {
-            BYTE *pDstPtr = pDstBits;
-            const BYTE *pSrcPtr = pSrcBits;
-            for (int x = 0; x < Width; ++x)
-                ConvertPixel_RGBA4_To_RGBA8(pDstPtr, pSrcPtr);
-            pDstBits += DstPitch;
-            pSrcBits += SrcPitch;
+        for (int y = 0; y < height; ++y) {
+            uint8_t* dst_ptr = dst_bits_ptr;
+            const uint8_t* src_ptr = src_bits_ptr;
+            for (int x = 0; x < width; ++x)
+                ConvertPixel_RGBA4_To_RGBA8(dst_ptr, src_ptr);
+            dst_bits_ptr += dst_pitch;
+            src_bits_ptr += src_pitch;
         }
         return true;
     case rf::BMPF_1555:
-        for (int y = 0; y < Height; ++y) {
-            BYTE *pDstPtr = pDstBits;
-            const BYTE *pSrcPtr = pSrcBits;
-            for (int x = 0; x < Width; ++x)
-                ConvertPixel_ARGB1555_To_RGBA8(pDstPtr, pSrcPtr);
-            pDstBits += DstPitch;
-            pSrcBits += SrcPitch;
+        for (int y = 0; y < height; ++y) {
+            uint8_t* dst_ptr = dst_bits_ptr;
+            const uint8_t* src_ptr = src_bits_ptr;
+            for (int x = 0; x < width; ++x)
+                ConvertPixel_ARGB1555_To_RGBA8(dst_ptr, src_ptr);
+            dst_bits_ptr += dst_pitch;
+            src_bits_ptr += src_pitch;
         }
         return true;
     case rf::BMPF_565:
-        for (int y = 0; y < Height; ++y) {
-            BYTE *pDstPtr = pDstBits;
-            const BYTE *pSrcPtr = pSrcBits;
-            for (int x = 0; x < Width; ++x)
-                ConvertPixel_RGB565_To_RGBA8(pDstPtr, pSrcPtr);
-            pDstBits += DstPitch;
-            pSrcBits += SrcPitch;
+        for (int y = 0; y < height; ++y) {
+            uint8_t* dst_ptr = dst_bits_ptr;
+            const uint8_t* src_ptr = src_bits_ptr;
+            for (int x = 0; x < width; ++x)
+                ConvertPixel_RGB565_To_RGBA8(dst_ptr, src_ptr);
+            dst_bits_ptr += dst_pitch;
+            src_bits_ptr += src_pitch;
         }
         return true;
     default:
-        ERR("unsupported src format %d", SrcFmt);
+        ERR("unsupported src format %d", src_fmt);
         return false;
     }
 }
 
-FunHook2<int(int, const BYTE*, const BYTE*, int, int, int, void*, int, int, IDirect3DTexture8*)> GrD3DSetTextureData_Hook{
+FunHook2<int(int, const uint8_t*, const uint8_t*, int, int, rf::BmPixelFormat, void*, int, int, IDirect3DTexture8*)> GrD3DSetTextureData_Hook{
     0x0055BA10,
-    [](int Level, const BYTE *pSrcBits, const BYTE *pPallete, int cxBm, int cyBm, int PixelFmt, void *a7, int cxTex, int cyTex, IDirect3DTexture8 *pTexture) {
-        D3DLOCKED_RECT LockedRect;
-        HRESULT hr = pTexture->LockRect(Level, &LockedRect, 0, 0);
+    [](int level, const uint8_t* src_bits_ptr, const uint8_t* palette, int bm_w, int bm_h, rf::BmPixelFormat pixel_fmt, void* a7, int tex_w, int tex_h, IDirect3DTexture8* texture) {
+        D3DLOCKED_RECT locked_rect;
+        HRESULT hr = texture->LockRect(level, &locked_rect, 0, 0);
         if (FAILED(hr)) {
             ERR("LockRect failed");
             return -1;
         }
-        D3DSURFACE_DESC Desc;
-        pTexture->GetLevelDesc(Level, &Desc);
-        bool bSuccess = ConvertBitmapFormat((BYTE*)LockedRect.pBits, GetPixelFormatFromD3DFormat(Desc.Format), pSrcBits, (rf::BmPixelFormat)PixelFmt,
-            cxBm, cyBm, LockedRect.Pitch, GetPixelFormatSize((rf::BmPixelFormat)PixelFmt)*cxBm);
-        pTexture->UnlockRect(Level);
+        D3DSURFACE_DESC desc;
+        texture->GetLevelDesc(level, &desc);
+        auto tex_pixel_fmt = GetPixelFormatFromD3DFormat(desc.Format);
+        bool success = ConvertBitmapFormat((uint8_t*)locked_rect.pBits, tex_pixel_fmt, src_bits_ptr, pixel_fmt,
+            bm_w, bm_h, locked_rect.Pitch, GetPixelFormatSize(pixel_fmt) * bm_w);
+        texture->UnlockRect(level);
 
-        if (bSuccess)
+        if (success)
             return 0;
 
-        WARN("Color conversion failed (format %d -> %d)", PixelFmt, GetPixelFormatFromD3DFormat(Desc.Format));
-        return GrD3DSetTextureData_Hook.CallTarget(Level, pSrcBits, pPallete, cxBm, cyBm, PixelFmt, a7, cxTex, cyTex, pTexture);
+        WARN("Color conversion failed (format %d -> %d)", pixel_fmt, tex_pixel_fmt);
+        return GrD3DSetTextureData_Hook.CallTarget(level, src_bits_ptr, palette, bm_w, bm_h, pixel_fmt, a7, tex_w, tex_h, texture);
     }
 };
 
-void RflLoadLightmaps_004ED3F6(rf::RflLightmap *pLightmap)
+void RflLoadLightmaps_004ED3F6(rf::RflLightmap* lightmap)
 {
-    rf::GrLockData LockData;
-    int ret = rf::GrLock(pLightmap->BmHandle, 0, &LockData, 2);
-    if (!ret) return;
+    rf::GrLockData lock_data;
+    int ret = rf::GrLock(lightmap->BmHandle, 0, &lock_data, 2);
+    if (!ret)
+        return;
 
 #if 1 // cap minimal color channel value as RF does
-    for (int i = 0; i < pLightmap->w * pLightmap->h * 3; ++i)
-        pLightmap->pBuf[i] = std::max(pLightmap->pBuf[i], (BYTE)(4 << 3)); // 32
+    for (int i = 0; i < lightmap->w * lightmap->h * 3; ++i)
+        lightmap->pBuf[i] = std::max(lightmap->pBuf[i], (uint8_t)(4 << 3)); // 32
 #endif
 
-    bool success = ConvertBitmapFormat(LockData.pBits, (rf::BmPixelFormat)LockData.PixelFormat,
-        pLightmap->pBuf, rf::BMPF_888, pLightmap->w, pLightmap->h, LockData.Pitch, 3 * pLightmap->w, true);
+    bool success = ConvertBitmapFormat(lock_data.pBits, lock_data.PixelFormat,
+        lightmap->pBuf, rf::BMPF_888, lightmap->w, lightmap->h, lock_data.Pitch, 3 * lightmap->w, true);
     if (!success)
         ERR("ConvertBitmapFormat failed for lightmap");
 
-    rf::GrUnlock(&LockData);
+    rf::GrUnlock(&lock_data);
 }
 
 void GeoModGenerateTexture_004F2F23(uintptr_t v3)
 {
     uintptr_t v75 = *(uintptr_t*)(v3 + 12);
-    unsigned hbm = *(unsigned *)(v75 + 16);
-    rf::GrLockData LockData;
-    if (rf::GrLock(hbm, 0, &LockData, 1)) {
-        int OffsetY = *(int *)(v3 + 20);
-        int OffsetX = *(int *)(v3 + 16);
-        int cxSrcWidth = *(int *)(v75 + 4);
-        int DstPixelSize = GetPixelFormatSize((rf::BmPixelFormat)LockData.PixelFormat);
-        BYTE *pSrcData = *(BYTE**)(v75 + 12) + 3 * (OffsetX + OffsetY * cxSrcWidth);
-        BYTE *pDstData = &LockData.pBits[DstPixelSize * OffsetX + OffsetY * LockData.Pitch];
-        int cyHeight = *(int*)(v3 + 28);
-        bool bSuccess = ConvertBitmapFormat(pDstData, (rf::BmPixelFormat)LockData.PixelFormat, pSrcData, rf::BMPF_888,
-            cxSrcWidth, cyHeight, LockData.Pitch, 3 * cxSrcWidth);
-        if (!bSuccess)
-            ERR("ConvertBitmapFormat failed for geomod (fmt %d)", LockData.PixelFormat);
-        rf::GrUnlock(&LockData);
+    unsigned hbm = *(unsigned*)(v75 + 16);
+    rf::GrLockData lock_data;
+    if (rf::GrLock(hbm, 0, &lock_data, 1)) {
+        int offset_y = *(int*)(v3 + 20);
+        int offset_x = *(int*)(v3 + 16);
+        int src_width = *(int*)(v75 + 4);
+        int dst_pixel_size = GetPixelFormatSize(lock_data.PixelFormat);
+        uint8_t* src_data = *(uint8_t**)(v75 + 12) + 3 * (offset_x + offset_y * src_width);
+        uint8_t* dst_data = &lock_data.pBits[dst_pixel_size * offset_x + offset_y * lock_data.Pitch];
+        int height = *(int*)(v3 + 28);
+        bool success = ConvertBitmapFormat(dst_data, lock_data.PixelFormat, src_data, rf::BMPF_888,
+            src_width, height, lock_data.Pitch, 3 * src_width);
+        if (!success)
+            ERR("ConvertBitmapFormat failed for geomod (fmt %d)", lock_data.PixelFormat);
+        rf::GrUnlock(&lock_data);
     }
 }
 
 int GeoModGenerateLightmap_004E487B(uintptr_t v6)
 {
     uintptr_t v48 = *(uintptr_t*)(v6 + 12);
-    rf::GrLockData LockData;
-    unsigned hbm = *(unsigned *)(v48 + 16);
-    int ret = rf::GrLock(hbm, 0, &LockData, 1);
+    rf::GrLockData lock_data;
+    unsigned hbm = *(unsigned*)(v48 + 16);
+    int ret = rf::GrLock(hbm, 0, &lock_data, 1);
     if (ret) {
-        int OffsetY = *(int *)(v6 + 20);
-        int cxSrcWidth = *(int *)(v48 + 4);
-        int OffsetX = *(int *)(v6 + 16);
-        BYTE *pSrcDataBegin = *(BYTE **)(v48 + 12);
-        int SrcOffset = 3 * (OffsetX + cxSrcWidth * *(int *)(v6 + 20)); // src offset
-        BYTE *pSrcData = SrcOffset + pSrcDataBegin;
-        int cyHeight = *(int *)(v6 + 28);
-        int DstPixelSize = GetPixelFormatSize((rf::BmPixelFormat)LockData.PixelFormat);
-        BYTE *pDstRow = &LockData.pBits[DstPixelSize * OffsetX + OffsetY * LockData.Pitch];
-        bool bSuccess = ConvertBitmapFormat(pDstRow, (rf::BmPixelFormat)LockData.PixelFormat, pSrcData, rf::BMPF_888,
-            cxSrcWidth, cyHeight, LockData.Pitch, 3 * cxSrcWidth);
-        if (!bSuccess)
-            ERR("ConvertBitmapFormat failed for geomod2 (fmt %d)", LockData.PixelFormat);
-        rf::GrUnlock(&LockData);
+        int offset_y = *(int*)(v6 + 20);
+        int src_width = *(int*)(v48 + 4);
+        int offset_x = *(int*)(v6 + 16);
+        uint8_t* src_data_begin = *(uint8_t**)(v48 + 12);
+        int src_offset = 3 * (offset_x + src_width * *(int*)(v6 + 20)); // src offset
+        uint8_t* src_data = src_offset + src_data_begin;
+        int height = *(int*)(v6 + 28);
+        int dst_pixel_size = GetPixelFormatSize(lock_data.PixelFormat);
+        uint8_t* dst_row_ptr = &lock_data.pBits[dst_pixel_size * offset_x + offset_y * lock_data.Pitch];
+        bool success = ConvertBitmapFormat(dst_row_ptr, lock_data.PixelFormat, src_data, rf::BMPF_888,
+            src_width, height, lock_data.Pitch, 3 * src_width);
+        if (!success)
+            ERR("ConvertBitmapFormat failed for geomod2 (fmt %d)", lock_data.PixelFormat);
+        rf::GrUnlock(&lock_data);
     }
     return ret;
 }
 
 void WaterGenerateTexture_004E68D1(uintptr_t v1)
 {
-    unsigned v8 = *(unsigned *)(v1 + 36);
-    rf::GrLockData SrcLockData, DstLockData;
-    rf::GrLock(v8, 0, &SrcLockData, 0);
-    rf::GrLock(*(unsigned *)(v1 + 24), 0, &DstLockData, 2);
-    int v9 = *(unsigned *)(v1 + 16);
+    unsigned v8 = *(unsigned*)(v1 + 36);
+    rf::GrLockData src_lock_data, dst_lock_data;
+    rf::GrLock(v8, 0, &src_lock_data, 0);
+    rf::GrLock(*(unsigned*)(v1 + 24), 0, &dst_lock_data, 2);
+    int v9 = *(unsigned*)(v1 + 16);
     int8_t v10 = 0;
     int8_t v41 = 0;
     if (v9 > 0) {
@@ -261,57 +260,57 @@ void WaterGenerateTexture_004E68D1(uintptr_t v1)
     static const auto byte_1371B14 = (uint8_t*)0x1371B14;
     static const auto byte_1371090 = (uint8_t*)0x1371090;
 
-    BYTE *pDstRow = DstLockData.pBits;
-    int SrcPixelSize = GetPixelFormatSize((rf::BmPixelFormat)SrcLockData.PixelFormat);
+    uint8_t* dst_row_ptr = dst_lock_data.pBits;
+    int src_pixel_size = GetPixelFormatSize(src_lock_data.PixelFormat);
 
-    for (int y = 0; y < DstLockData.Height; ++y) {
+    for (int y = 0; y < dst_lock_data.Height; ++y) {
         int v30 = byte_1370F90[y];
         int v38 = byte_1371B14[y];
-        uint8_t *v32 = &byte_1371090[-v30];
-        BYTE *pDstPtr = pDstRow;
-        for (int x = 0; x < DstLockData.Width; ++x) {
-            int SrcOffset = (v30 & (DstLockData.Width - 1)) + (((DstLockData.Height - 1) & (v38 + v32[v30])) << v41);
-            const BYTE *pSrcPtr = SrcLockData.pBits + SrcOffset*SrcPixelSize;
-            ConvertPixelFormat(pDstPtr, (rf::BmPixelFormat)DstLockData.PixelFormat, pSrcPtr, (rf::BmPixelFormat)SrcLockData.PixelFormat);
+        uint8_t* v32 = &byte_1371090[-v30];
+        uint8_t* dst_ptr = dst_row_ptr;
+        for (int x = 0; x < dst_lock_data.Width; ++x) {
+            int src_offset = (v30 & (dst_lock_data.Width - 1)) + (((dst_lock_data.Height - 1) & (v38 + v32[v30])) << v41);
+            const uint8_t* src_ptr = src_lock_data.pBits + src_offset * src_pixel_size;
+            ConvertPixelFormat(dst_ptr, dst_lock_data.PixelFormat, src_ptr, src_lock_data.PixelFormat);
             ++v30;
         }
-        pDstRow += DstLockData.Pitch;
+        dst_row_ptr += dst_lock_data.Pitch;
     }
 
-    rf::GrUnlock(&SrcLockData);
-    rf::GrUnlock(&DstLockData);
+    rf::GrUnlock(&src_lock_data);
+    rf::GrUnlock(&dst_lock_data);
 }
 
-void GetAmbientColorFromLightmaps_004E5CE3(unsigned BmHandle, int x, int y, unsigned *pColor)
+void GetAmbientColorFromLightmaps_004E5CE3(unsigned BmHandle, int x, int y, unsigned& color)
 {
-    rf::GrLockData LockData;
-    if (rf::GrLock(BmHandle, 0, &LockData, 0)) {
-        const BYTE *pSrcPtr = LockData.pBits + y * LockData.Pitch + x * GetPixelFormatSize((rf::BmPixelFormat)LockData.PixelFormat);
-        BYTE *pDestPtr = (BYTE*)pColor;
-        ConvertPixelFormat(pDestPtr, rf::BMPF_8888, pSrcPtr, (rf::BmPixelFormat)LockData.PixelFormat);
-        rf::GrUnlock(&LockData);
+    rf::GrLockData lock_data;
+    if (rf::GrLock(BmHandle, 0, &lock_data, 0)) {
+        const uint8_t* src_ptr = lock_data.pBits + y * lock_data.Pitch + x * GetPixelFormatSize(lock_data.PixelFormat);
+        uint8_t* dst_ptr = (uint8_t*)&color;
+        ConvertPixelFormat(dst_ptr, rf::BMPF_8888, src_ptr, lock_data.PixelFormat);
+        rf::GrUnlock(&lock_data);
     }
 }
 
 FunHook2<unsigned()> BinkInitDeviceInfo_Hook{
     0x005210C0,
     []() {
-        unsigned BinkFlags = BinkInitDeviceInfo_Hook.CallTarget();
+        unsigned bink_flags = BinkInitDeviceInfo_Hook.CallTarget();
 
-        if (g_gameConfig.trueColorTextures && g_gameConfig.resBpp == 32) {
-            static const auto pBinkBmPixelFmt = (uint32_t*)0x018871C0;
-            *pBinkBmPixelFmt = rf::BMPF_888;
-            BinkFlags = 3;
+        if (g_game_config.trueColorTextures && g_game_config.resBpp == 32) {
+            static auto &bink_bm_pixel_fmt = AddrAsRef<uint32_t>(0x018871C0);
+            bink_bm_pixel_fmt = rf::BMPF_888;
+            bink_flags = 3;
         }
 
-        return BinkFlags;
+        return bink_flags;
     }
 };
 
 void GrColorInit()
 {
     // True Color textures
-    if (g_gameConfig.resBpp == 32 && g_gameConfig.trueColorTextures) {
+    if (g_game_config.resBpp == 32 && g_game_config.trueColorTextures) {
         // Available texture formats (tested for compatibility)
         WriteMemUInt32(0x005A7DFC, D3DFMT_X8R8G8B8); // old: D3DFMT_R5G6B5
         WriteMemUInt32(0x005A7E00, D3DFMT_A8R8G8B8); // old: D3DFMT_X1R5G5B5

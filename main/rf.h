@@ -14,6 +14,12 @@ typedef BOOL WINBOOL;
 #define ALIGN(n) __attribute__((aligned(n)))
 #endif
 
+// Forward definitions
+// class IDirect3D8;
+// class IDirect3DDevice8;
+// class D3DPRESENT_PARAMETERS;
+// class D3DCAPS8;
+
 #pragma pack(push, 1)
 
 namespace rf
@@ -34,7 +40,7 @@ namespace rf
         Vector3(float x, float y, float z) :
             x(x), y(y), z(z) {}
 
-        Vector3 &operator+=(const Vector3 &other)
+        Vector3& operator+=(const Vector3& other)
         {
             x += other.x;
             y += other.y;
@@ -42,7 +48,7 @@ namespace rf
             return *this;
         }
 
-        Vector3 &operator*=(float m)
+        Vector3& operator*=(float m)
         {
             x *= m;
             y *= m;
@@ -55,19 +61,19 @@ namespace rf
             return Vector3(-x, -y, -z);
         }
 
-        Vector3 &operator-=(const Vector3 &other)
+        Vector3& operator-=(const Vector3& other)
         {
             return (*this += -other);
         }
 
-        Vector3 operator+(const Vector3 &other) const
+        Vector3 operator+(const Vector3& other) const
         {
             Vector3 tmp = *this;
             tmp += other;
             return tmp;
         }
 
-        Vector3 operator-(const Vector3 &other) const
+        Vector3 operator-(const Vector3& other) const
         {
             Vector3 tmp = *this;
             tmp -= other;
@@ -215,6 +221,29 @@ namespace rf
     static const auto DcfTrilinearFiltering = (DcCmdHandler)0x0054F050;
     static const auto DcfDetailTextures = (DcCmdHandler)0x0054F0B0;
 
+    /* Bmpman */
+
+    enum BmPixelFormat
+    {
+        BMPF_INVALID = 0x0,
+        BMPF_MONO8 = 0x1,
+        BMPF_UNK_2_8B = 0x2,
+        BMPF_565 = 0x3,
+        BMPF_4444 = 0x4,
+        BMPF_1555 = 0x5,
+        BMPF_888 = 0x6,
+        BMPF_8888 = 0x7,
+        BMPF_UNK_8_16B = 0x8,
+    };
+
+    static const auto BmLoad = (int(*)(const char *pszFilename, int a2, bool a3))0x0050F6A0;
+    static const auto BmCreateUserBmap = (int(*)(BmPixelFormat PixelFormat, int Width, int Height))0x005119C0;
+    static const auto BmConvertFormat = (void(*)(void *pDstBits, BmPixelFormat DstPixelFmt, const void *pSrcBits, BmPixelFormat SrcPixelFmt, int NumPixels))0x0055DD20;
+    static const auto BmGetBitmapSize = (void(*)(int BmHandle, int *pWidth, int *pHeight))0x00510630;
+    static const auto BmGetFilename = (const char*(*)(int BmHandle))0x00511710;
+    static const auto BmLock = (BmPixelFormat(*)(int BmHandle, BYTE **ppData, BYTE **ppPalette))0x00510780;
+    static const auto BmUnlock = (void(*)(int BmHandle))0x00511700;
+
     /* Graphics */
 
     struct GrScreen
@@ -273,13 +302,14 @@ namespace rf
     {
         int BmHandle;
         int SectionIdx;
-        int PixelFormat;
-        BYTE *pBits;
+        BmPixelFormat PixelFormat;
+        uint8_t *pBits;
         int Width;
         int Height;
         int Pitch;
         int field_1C;
     };
+    static_assert(sizeof(GrLockData) == 0x20);
 
     enum GrTextAlignment
     {
@@ -332,29 +362,6 @@ namespace rf
     static const auto GrInitBuffers = (void(*)())0x005450A0;
     static const auto GrSetTextureMipFilter = (void(*)(int bLinear))0x0050E830;
     static const auto GrResetClip = (void(*)())0x0050CDD0;
-
-    /* Bmpman */
-
-    enum BmPixelFormat
-    {
-        BMPF_INVALID = 0x0,
-        BMPF_MONO8 = 0x1,
-        BMPF_UNK_2_8B = 0x2,
-        BMPF_565 = 0x3,
-        BMPF_4444 = 0x4,
-        BMPF_1555 = 0x5,
-        BMPF_888 = 0x6,
-        BMPF_8888 = 0x7,
-        BMPF_UNK_8_16B = 0x8,
-    };
-
-    static const auto BmLoad = (int(*)(const char *pszFilename, int a2, bool a3))0x0050F6A0;
-    static const auto BmCreateUserBmap = (int(*)(BmPixelFormat PixelFormat, int Width, int Height))0x005119C0;
-    static const auto BmConvertFormat = (void(*)(void *pDstBits, BmPixelFormat DstPixelFmt, const void *pSrcBits, BmPixelFormat SrcPixelFmt, int NumPixels))0x0055DD20;
-    static const auto BmGetBitmapSize = (void(*)(int BmHandle, int *pWidth, int *pHeight))0x00510630;
-    static const auto BmGetFilename = (const char*(*)(int BmHandle))0x00511710;
-    static const auto BmLock = (BmPixelFormat(*)(int BmHandle, BYTE **ppData, BYTE **ppPalette))0x00510780;
-    static const auto BmUnlock = (void(*)(int BmHandle))0x00511700;
 
     /* User Interface (UI) */
 
@@ -735,7 +742,7 @@ namespace rf
     static auto &g_pLocalPlayer = *(Player**)0x007C75D4;
 
     static const auto KillLocalPlayer = (void(*)())0x004757A0;
-    static const auto HandleCtrlInGame = (void(*)(Player *pPlayer, GameCtrl KeyId, char WasPressed))0x004A6210;
+    static const auto HandleCtrlInGame = (void(*)(Player *pPlayer, GameCtrl KeyId, bool WasPressed))0x004A6210;
     static const auto IsEntityCtrlActive = (char(*)(ControlConfig *pCtrlConf, GameCtrl CtrlId, bool *pWasPressed))0x0043D4F0;
     static const auto PlayerCreateEntity = (EntityObj *(*)(Player *pPlayer, int ClassId, const Vector3 *pPos, const Matrix3 *pRotMatrix, int MpCharacter))0x004A4130;
     static const auto GetPlayerFromEntityHandle = (Player*(*)(int32_t hEntity))0x004A3740;

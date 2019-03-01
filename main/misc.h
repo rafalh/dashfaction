@@ -2,4 +2,4 @@
 
 void MiscInit();
 void MiscCleanup();
-void SetPlaySoundEventsVolumeScale(float fVolScale);
+void SetPlaySoundEventsVolumeScale(float volume_scale);

@@ -59,8 +59,8 @@ ASM_FUNC(ProcessGameInfoPacket_Security_0047B2D3,
 RegsPatch ProcessGameInfoPacket_GameTypeBounds_Patch{
     0x0047B30B,
     [](X86Regs& regs) {
-        regs.ECX = std::max(regs.ECX, 0);
-        regs.ECX = std::min(regs.ECX, 2);
+        regs.ecx = std::max(regs.ecx, 0);
+        regs.ecx = std::min(regs.ecx, 2);
     }
 };
 
@@ -517,8 +517,7 @@ FunHook2<NwPacketHandler_Type> ProcessRateChangePacket_Hook{
     0x004807B0,
     [](char* data, const rf::NwAddr* addr) {
         // server-side and client-side?
-        if (rf::g_bLocalNetworkGame)
-        {
+        if (rf::g_bLocalNetworkGame) {
             rf::Player *src_player = rf::NwGetPlayerFromAddr(addr);
             if (!src_player)
                 return; // shouldnt happen (protected in rf::NwProcessGamePackets)
@@ -684,8 +683,7 @@ FunHook2<NwPacketHandler_Type> ProcessItemCreatePacket_Hook{
 FunHook2<NwPacketHandler_Type> ProcessReloadPacket_Hook{
     0x00485AB0,
     [](char* data, const rf::NwAddr* addr) {
-        if (!rf::g_bLocalNetworkGame) // client-side
-        {
+        if (!rf::g_bLocalNetworkGame) { // client-side
             // Update ClipSize and MaxAmmo if received values are greater than values from local weapons.tbl
             int WeaponClsId = *((int32_t*)data + 1);
             int ClipAmmo = *((int32_t*)data + 2);
@@ -768,17 +766,14 @@ FunHook2<NwPacketHandler_Type> ProcessGlassKillPacket_Hook{
 
 rf::EntityObj* SecureObjUpdatePacket(rf::EntityObj *entity, uint8_t flags, rf::Player *src_player)
 {
-    if (rf::g_bLocalNetworkGame)
-    {
+    if (rf::g_bLocalNetworkGame) {
         // server-side
-        if (entity && entity->_Super.Handle != src_player->hEntity)
-        {
+        if (entity && entity->_Super.Handle != src_player->hEntity) {
             TRACE("Invalid ObjUpdate entity %x %x %s", entity->_Super.Handle, src_player->hEntity, src_player->strName.psz);
             return nullptr;
         }
 
-        if (flags & (0x4 | 0x20 | 0x80)) // OUF_WEAPON_TYPE | OUF_HEALTH_ARMOR | OUF_ARMOR_STATE
-        {
+        if (flags & (0x4 | 0x20 | 0x80)) { // OUF_WEAPON_TYPE | OUF_HEALTH_ARMOR | OUF_ARMOR_STATE
             TRACE("Invalid ObjUpdate flags %x", flags);
             return nullptr;
         }
@@ -820,19 +815,19 @@ FunHook2<int32_t(int32_t)> MultiGetLocalHandleFromRemoteHandle_Hook{
 
 FunHook2<void(int32_t, int32_t)> MultiSetObjHandleMapping_Hook{
     0x00484B70,
-    [](int32_t remote_handle, int32_t LocalHandle) {
+    [](int32_t remote_handle, int32_t local_handle) {
         int index = static_cast<uint16_t>(remote_handle);
         if (index >= MULTI_HANDLE_MAPPING_ARRAY_SIZE)
             return;
-        MultiSetObjHandleMapping_Hook.CallTarget(remote_handle, LocalHandle);
+        MultiSetObjHandleMapping_Hook.CallTarget(remote_handle, local_handle);
     }
 };
 
 RegsPatch ProcessBooleanPacket_ValidateMeshId_Patch{
     0x004765A3,
     [](auto& regs) {
-        regs.ECX = std::max(regs.ECX, 0);
-        regs.ECX = std::min(regs.ECX, 3);
+        regs.ecx = std::max(regs.ecx, 0);
+        regs.ecx = std::min(regs.ecx, 3);
     }
 };
 
@@ -840,10 +835,10 @@ RegsPatch ProcessBooleanPacket_ValidateRoomId_Patch{
     0x0047661C,
     [](auto &regs) {
         int num_rooms = StructFieldRef<int>(rf::RflStaticGeometry, 0x90);
-        if (regs.EDX < 0 || regs.EDX >= num_rooms) {
+        if (regs.edx < 0 || regs.edx >= num_rooms) {
             WARN("Invalid room in Boolean packet - skipping");
-            regs.ESP += 0x64;
-            regs.EIP = 0x004766A5;
+            regs.esp += 0x64;
+            regs.eip = 0x004766A5;
         }
     }
 };
@@ -851,8 +846,8 @@ RegsPatch ProcessBooleanPacket_ValidateRoomId_Patch{
 RegsPatch ProcessPregameBooleanPacket_ValidateMeshId_Patch{
     0x0047672F,
     [](auto &regs) {
-        regs.ECX = std::max(regs.ECX, 0);
-        regs.ECX = std::min(regs.ECX, 3);
+        regs.ecx = std::max(regs.ecx, 0);
+        regs.ecx = std::min(regs.ecx, 3);
     }
 };
 
@@ -860,10 +855,10 @@ RegsPatch ProcessPregameBooleanPacket_ValidateRoomId_Patch{
     0x00476752,
     [](auto &regs) {
         int num_rooms = StructFieldRef<int>(rf::RflStaticGeometry, 0x90);
-        if (regs.EDX < 0 || regs.EDX >= num_rooms) {
+        if (regs.edx < 0 || regs.edx >= num_rooms) {
             WARN("Invalid room in PregameBoolean packet - skipping");
-            regs.ESP += 0x68;
-            regs.EIP = 0x004767AA;
+            regs.esp += 0x68;
+            regs.eip = 0x004767AA;
         }
     }
 };
@@ -871,8 +866,8 @@ RegsPatch ProcessPregameBooleanPacket_ValidateRoomId_Patch{
 RegsPatch ProcessGlassKillPacket_CheckRoomExists_Patch{
     0x004723B3,
     [](auto &regs) {
-        if (!regs.EAX)
-            regs.EIP = 0x004723EC;
+        if (!regs.eax)
+            regs.eip = 0x004723EC;
     }
 };
 

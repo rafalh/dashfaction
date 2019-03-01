@@ -101,13 +101,13 @@ CallHook2<void()> MenuMainProcessMouse_Hook{
 int LoadEasterEggImage()
 {
 #if 1 // from resources?
-    HRSRC h_res = FindResourceA(g_hModule, MAKEINTRESOURCEA(100), RT_RCDATA);
+    HRSRC h_res = FindResourceA(g_hmodule, MAKEINTRESOURCEA(100), RT_RCDATA);
     if (!h_res)
     {
         ERR("FindResourceA failed");
         return -1;
     }
-    HGLOBAL h_res_data = LoadResource(g_hModule, h_res);
+    HGLOBAL h_res_data = LoadResource(g_hmodule, h_res);
     if (!h_res_data)
     {
         ERR("LoadResource failed");
@@ -179,7 +179,7 @@ CallHook2<void(int, rf::Vector3*, float*, float*, float)> SndConvertVolume3D_Amb
     0x00505F93,
     [](int game_snd_id, rf::Vector3* sound_pos, float* pan_out, float* volume_out, float volume_in) {
         SndConvertVolume3D_AmbientSound_Hook.CallTarget(game_snd_id, sound_pos, pan_out, volume_out, volume_in);
-        *volume_out *= g_gameConfig.levelSoundVolume;
+        *volume_out *= g_game_config.levelSoundVolume;
     }
 };
 
@@ -205,7 +205,7 @@ bool IsHoldingAssaultRifle()
 FunHook2<void(rf::Player*, bool, bool)> PlayerLocalFireControl_Hook{
     0x004A4E80,
     [](rf::Player* player, bool secondary, bool was_pressed) {
-        if (g_gameConfig.swapAssaultRifleControls && IsHoldingAssaultRifle())
+        if (g_game_config.swapAssaultRifleControls && IsHoldingAssaultRifle())
             secondary = !secondary;
         PlayerLocalFireControl_Hook.CallTarget(player, secondary, was_pressed);
     }
@@ -214,7 +214,7 @@ FunHook2<void(rf::Player*, bool, bool)> PlayerLocalFireControl_Hook{
 extern CallHook2<char(rf::ControlConfig*, rf::GameCtrl, bool*)> IsEntityCtrlActive_Hook1;
 char IsEntityCtrlActive_New(rf::ControlConfig* control_config, rf::GameCtrl game_ctrl, bool* was_pressed)
 {
-    if (g_gameConfig.swapAssaultRifleControls && IsHoldingAssaultRifle()) {
+    if (g_game_config.swapAssaultRifleControls && IsHoldingAssaultRifle()) {
         if (game_ctrl == rf::GC_PRIMARY_ATTACK)
             game_ctrl = rf::GC_SECONDARY_ATTACK;
         else if (game_ctrl == rf::GC_SECONDARY_ATTACK)
@@ -228,9 +228,9 @@ CallHook2<char(rf::ControlConfig*, rf::GameCtrl, bool*)> IsEntityCtrlActive_Hook
 void DcfSwapAssaultRifleControls()
 {
     if (rf::g_bDcRun) {
-        g_gameConfig.swapAssaultRifleControls = !g_gameConfig.swapAssaultRifleControls;
-        g_gameConfig.save();
-        rf::DcPrintf("Swap assault rifle controls: %s", g_gameConfig.swapAssaultRifleControls ? "enabled" : "disabled");
+        g_game_config.swapAssaultRifleControls = !g_game_config.swapAssaultRifleControls;
+        g_game_config.save();
+        rf::DcPrintf("Swap assault rifle controls: %s", g_game_config.swapAssaultRifleControls ? "enabled" : "disabled");
     }
 }
 
@@ -552,16 +552,16 @@ RegsPatch RflLoadInternal_CheckRestoreStatus_Patch{
     0x00461195,
     [](X86Regs& regs) {
         // check if SaveRestoreLoadAll is successful
-        if (regs.EAX) return;
+        if (regs.eax) return;
         // check if this is auto-load when changing level
-        const char *SaveFilename = reinterpret_cast<const char*>(regs.EDI);
+        const char *SaveFilename = reinterpret_cast<const char*>(regs.edi);
         if (!strcmp(SaveFilename, "auto.svl")) return;
         // manual load failed
         ERR("Restoring game state failed");
-        char *ErrorInfo = *reinterpret_cast<char**>(regs.ESP + 0x2B0 + 0xC);
+        char *ErrorInfo = *reinterpret_cast<char**>(regs.esp + 0x2B0 + 0xC);
         strcpy(ErrorInfo, "Save file is corrupted");
         // return to RflLoadInternal failure path
-        regs.EIP = 0x004608CC;
+        regs.eip = 0x004608CC;
     }
 };
 
@@ -701,7 +701,7 @@ void MiscInit()
 
 #ifdef NO_INTRO
     // Disable thqlogo.bik
-    if (g_gameConfig.fastStart) {
+    if (g_game_config.fastStart) {
         WriteMemUInt8(0x004B208A, ASM_SHORT_JMP_REL);
         WriteMemUInt8(0x004B24FD, ASM_SHORT_JMP_REL);
     }
@@ -711,7 +711,7 @@ void MiscInit()
     WriteMemUInt8(0x00505D08, 0x00505D5B - (0x00505D07 + 0x2));
 
     // Set initial FPS limit
-    WriteMemFloat(0x005094CA, 1.0f / g_gameConfig.maxFps);
+    WriteMemFloat(0x005094CA, 1.0f / g_game_config.maxFps);
 
     // Crash-fix... (probably argument for function is invalid); Page Heap is needed
     WriteMemUInt32(0x0056A28C + 1, 0);
@@ -765,7 +765,7 @@ void MiscInit()
     WriteMemUInt8(0x004B14B4 + 1, kbd_layout);
 
     // Level sounds
-    SetPlaySoundEventsVolumeScale(g_gameConfig.levelSoundVolume);
+    SetPlaySoundEventsVolumeScale(g_game_config.levelSoundVolume);
     SndConvertVolume3D_AmbientSound_Hook.Install();
 
     // hook MouseUpdateDirectInput
@@ -778,7 +778,7 @@ void MiscInit()
     AsmWritter(0x00478E91, 0x00478E9E).mov(AsmRegs::EBX, 0x40); // chat input background
 
     // Show enemy bullets (FIXME: add config)
-    if (g_gameConfig.showEnemyBullets)
+    if (g_game_config.showEnemyBullets)
         WriteMemUInt8(0x0042669C, ASM_SHORT_JMP_REL);
 
     // Swap Assault Rifle fire controls

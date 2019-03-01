@@ -1,8 +1,8 @@
 #pragma once
 
-inline int GetPixelFormatSize(rf::BmPixelFormat PixelFmt)
+inline int GetPixelFormatSize(rf::BmPixelFormat pixel_fmt)
 {
-    switch (PixelFmt)
+    switch (pixel_fmt)
     {
     case rf::BMPF_MONO8:
         return 1;
@@ -15,14 +15,14 @@ inline int GetPixelFormatSize(rf::BmPixelFormat PixelFmt)
     case rf::BMPF_8888:
         return 4;
     default:
-        WARN("unknown pixel format %d", PixelFmt);
+        WARN("unknown pixel format %d", pixel_fmt);
         return 2;
     }
 }
 
-inline D3DFORMAT GetD3DFormatFromPixelFormat(rf::BmPixelFormat PixelFmt)
+inline D3DFORMAT GetD3DFormatFromPixelFormat(rf::BmPixelFormat pixel_fmt)
 {
-    switch (PixelFmt)
+    switch (pixel_fmt)
     {
     case rf::BMPF_8888:
         return D3DFMT_A8R8G8B8;
@@ -35,14 +35,14 @@ inline D3DFORMAT GetD3DFormatFromPixelFormat(rf::BmPixelFormat PixelFmt)
     case rf::BMPF_4444:
         return D3DFMT_A4R4G4B4;
     default:
-        ERR("unknown pixel format %d", PixelFmt);
+        ERR("unknown pixel format %d", pixel_fmt);
         return D3DFMT_UNKNOWN;
     }
 }
 
-inline rf::BmPixelFormat GetPixelFormatFromD3DFormat(D3DFORMAT D3DFormat)
+inline rf::BmPixelFormat GetPixelFormatFromD3DFormat(D3DFORMAT d3d_fmt)
 {
-    switch (D3DFormat)
+    switch (d3d_fmt)
     {
     case D3DFMT_R5G6B5:
         return rf::BMPF_565;
@@ -58,7 +58,7 @@ inline rf::BmPixelFormat GetPixelFormatFromD3DFormat(D3DFORMAT D3DFormat)
     case D3DFMT_X8R8G8B8:
         return rf::BMPF_8888;
     default:
-        ERR("unknown D3D format 0x%X", D3DFormat);
+        ERR("unknown D3D format 0x%X", d3d_fmt);
         return rf::BMPF_INVALID;
     }
 }

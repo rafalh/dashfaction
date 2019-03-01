@@ -7,9 +7,9 @@
 
 void KillInitPlayer(rf::Player *player)
 {
-    auto pStats = (PlayerStatsNew*)player->pStats;
-    pStats->cKills = 0;
-    pStats->cDeaths = 0;
+    auto stats = reinterpret_cast<PlayerStatsNew*>(player->pStats);
+    stats->cKills = 0;
+    stats->cDeaths = 0;
 }
 
 FunHook2<void()> MpResetNetGame_Hook{

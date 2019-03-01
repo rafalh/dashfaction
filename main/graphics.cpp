@@ -133,23 +133,23 @@ static void SetupPP(void)
 #endif
 
 #if MULTISAMPLING_SUPPORT
-    if (g_gameConfig.msaa && Format > 0) {
+    if (g_game_config.msaa && Format > 0) {
         // Make sure selected MSAA mode is available
         HRESULT hr = rf::g_pDirect3D->CheckDeviceMultiSampleType(rf::g_AdapterIdx, D3DDEVTYPE_HAL, Format,
-            g_gameConfig.wndMode != GameConfig::FULLSCREEN, (D3DMULTISAMPLE_TYPE)g_gameConfig.msaa);
+            g_game_config.wndMode != GameConfig::FULLSCREEN, (D3DMULTISAMPLE_TYPE)g_game_config.msaa);
         if (SUCCEEDED(hr)) {
-            INFO("Enabling Anti-Aliasing (%ux MSAA)...", g_gameConfig.msaa);
-            rf::g_GrPP.MultiSampleType = (D3DMULTISAMPLE_TYPE)g_gameConfig.msaa;
+            INFO("Enabling Anti-Aliasing (%ux MSAA)...", g_game_config.msaa);
+            rf::g_GrPP.MultiSampleType = (D3DMULTISAMPLE_TYPE)g_game_config.msaa;
         }
         else {
             WARN("MSAA not supported (0x%x)...", hr);
-            g_gameConfig.msaa = D3DMULTISAMPLE_NONE;
+            g_game_config.msaa = D3DMULTISAMPLE_NONE;
         }
     }
 #endif
 
     // Make sure stretched window is always full screen
-    if (g_gameConfig.wndMode == GameConfig::STRETCHED)
+    if (g_game_config.wndMode == GameConfig::STRETCHED)
         SetWindowPos(rf::g_hWnd, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), SWP_NOZORDER);
 }
 
@@ -187,7 +187,7 @@ CallHook2<void()> GrInitBuffers_AfterReset_Hook{
         if (rf::g_pLocalPlayer)
             rf::GrSetTextureMipFilter(rf::g_pLocalPlayer->Config.FilteringLevel == 0);
 
-        if (rf::g_GrDeviceCaps.MaxAnisotropy > 0 && g_gameConfig.anisotropicFiltering)
+        if (rf::g_GrDeviceCaps.MaxAnisotropy > 0 && g_game_config.anisotropicFiltering)
             SetupMaxAnisotropy();
     }
 };
@@ -198,10 +198,10 @@ void GraphicsInit()
     WriteMemUInt8(0x005460CD, ASM_JAE_SHORT);
 
 #if WINDOWED_MODE_SUPPORT
-    if (g_gameConfig.wndMode != GameConfig::FULLSCREEN) {
+    if (g_game_config.wndMode != GameConfig::FULLSCREEN) {
         /* Enable windowed mode */
         WriteMemUInt32(0x004B29A5 + 6, 0xC8);
-        if (g_gameConfig.wndMode == GameConfig::STRETCHED) {
+        if (g_game_config.wndMode == GameConfig::STRETCHED) {
             uint32_t WndStyle = WS_POPUP | WS_SYSMENU;
             WriteMemUInt32(0x0050C474 + 1, WndStyle);
             WriteMemUInt32(0x0050C4E3 + 1, WndStyle);
@@ -237,7 +237,7 @@ void GraphicsInit()
 #endif
 
     // Don't use LOD models
-    if (g_gameConfig.disableLodModels) {
+    if (g_game_config.disableLodModels) {
         //WriteMemUInt8(0x00421A40, ASM_SHORT_JMP_REL);
         WriteMemUInt8(0x0052FACC, ASM_SHORT_JMP_REL);
     }
@@ -267,7 +267,7 @@ void GraphicsInit()
     WriteMemInt32(0x0050DD69 + 1, (uintptr_t)GrDrawRect_GrDrawPolyHook - (0x0050DD69 + 0x5));
 #endif
 
-    if (g_gameConfig.highScannerRes) {
+    if (g_game_config.highScannerRes) {
         // Improved Railgun Scanner resolution
         constexpr int8_t ScannerResolution = 120; // default is 64, max is 127 (signed byte)
         WriteMemUInt8(0x004325E6 + 1, ScannerResolution); // RenderInGame
@@ -309,7 +309,7 @@ void GraphicsAfterGameInit()
 {
 #if ANISOTROPIC_FILTERING
     // Anisotropic texture filtering
-    if (rf::g_GrDeviceCaps.MaxAnisotropy > 0 && g_gameConfig.anisotropicFiltering && !rf::g_bDedicatedServer) {
+    if (rf::g_GrDeviceCaps.MaxAnisotropy > 0 && g_game_config.anisotropicFiltering && !rf::g_bDedicatedServer) {
         SetTextureMinMagFilterInCode(D3DTEXF_ANISOTROPIC);
         DWORD AnisotropyLevel = SetupMaxAnisotropy();
         INFO("Anisotropic Filtering enabled (level: %d)", AnisotropyLevel);
@@ -327,7 +327,7 @@ void GraphicsAfterGameInit()
 
 void GraphicsDrawFpsCounter()
 {
-    if (g_gameConfig.fpsCounter) {
+    if (g_game_config.fpsCounter) {
         char szBuf[32];
         sprintf(szBuf, "FPS: %.1f", rf::g_fFps);
         rf::GrSetColor(0, 255, 0, 255);

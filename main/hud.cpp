@@ -5,11 +5,11 @@
 
 namespace rf {
 constexpr int num_hud_points = 48;
-static const auto hud_points_640 = (POINT*)0x00637868;
-static const auto hud_points_800 = (POINT*)0x006373D0;
-static const auto hud_points_1024 = (POINT*)0x00637230;
-static const auto hud_points_1280 = (POINT*)0x00637560;
-static const auto hud_points = (POINT*)0x006376E8;
+static const auto hud_points_640 = reinterpret_cast<POINT*>(0x00637868);
+static const auto hud_points_800 = reinterpret_cast<POINT*>(0x006373D0);
+static const auto hud_points_1024 = reinterpret_cast<POINT*>(0x00637230);
+static const auto hud_points_1280 = reinterpret_cast<POINT*>(0x00637560);
+static const auto hud_points = reinterpret_cast<POINT*>(0x006376E8);
 }
 
 void HudCmdHandler()
@@ -36,8 +36,7 @@ void HudSetupPositionsHook(int width)
     
     TRACE("HudSetupPositionsHook(%d)", width);
     
-    switch (width)
-    {
+    switch (width) {
         case 640:
             if (height == 480)
                 pos_data = rf::hud_points_640;
@@ -55,10 +54,10 @@ void HudSetupPositionsHook(int width)
                 pos_data = rf::hud_points_1280;
             break;
     }
-    if (pos_data)
+    if (pos_data) {
         memcpy(rf::hud_points, pos_data, rf::num_hud_points * sizeof(POINT));
-    else
-    {
+    }
+    else {
         // We have to scale positions from other resolution here
         for (unsigned i = 0; i < rf::num_hud_points; ++i) {
             if (rf::hud_points_1024[i].x <= 1024/3)

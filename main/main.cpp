@@ -30,8 +30,8 @@
     #include "experimental.h"
 #endif
 
-GameConfig g_gameConfig;
-HMODULE g_hModule;
+GameConfig g_game_config;
+HMODULE g_hmodule;
 
 // Short type names
 typedef int8_t i8;
@@ -45,8 +45,8 @@ static void ProcessWaitingMessages()
 {
     // Note: When using dedicated server we get WM_PAINT messages all the time
     MSG msg;
-    constexpr int LIMIT = 4;
-    for (int i = 0; i < LIMIT; ++i) {
+    constexpr int limit = 4;
+    for (int i = 0; i < limit; ++i) {
         if (!PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
             break;
         TranslateMessage(&msg);
@@ -55,12 +55,12 @@ static void ProcessWaitingMessages()
     }
 }
 
-void FindPlayer(const StringMatcher& Query, std::function<void(rf::Player*)> Consumer)
+void FindPlayer(const StringMatcher& query, std::function<void(rf::Player*)> consumer)
 {
     rf::Player* player = rf::g_pPlayersList;
     while (player) {
-        if (Query(player->strName.psz))
-            Consumer(player);
+        if (query(player->strName.psz))
+            consumer(player);
         player = player->pNext;
         if (player == rf::g_pPlayersList)
             break;
@@ -98,7 +98,7 @@ CallHook2<void()> InitGame_Hook{
         GraphicsAfterGameInit();
 
 #if DIRECTINPUT_SUPPORT
-        rf::g_bDirectInputDisabled = !g_gameConfig.directInput;
+        rf::g_bDirectInputDisabled = !g_game_config.directInput;
 #endif
 
         /* Allow modded strings.tbl in ui.vpp */
@@ -225,18 +225,18 @@ void LogSystemInfo()
     }
 }
 
-extern "C" void subhook_unk_opcode_handler(uint8_t *opcode)
+extern "C" void subhook_unk_opcode_handler(uint8_t* opcode)
 {
     ERR("SubHook unknown opcode 0x%X at 0x%p", *opcode, opcode);
 }
 
-extern "C" DWORD DLL_EXPORT Init(void *pUnused)
+extern "C" DWORD DLL_EXPORT Init(void* unused)
 {
     DWORD start_ticks = GetTickCount();
 
     // Init logging and crash dump support first
     InitLogging();
-    CrashHandlerInit(g_hModule);
+    CrashHandlerInit(g_hmodule);
     
     // Enable Data Execution Prevention
     if (!SetProcessDEPPolicy(PROCESS_DEP_ENABLE))
@@ -248,7 +248,7 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
     // Load config
     try
     {
-        if (!g_gameConfig.load())
+        if (!g_game_config.load())
             ERR("Configuration has not been found in registry!");
     }
     catch (std::exception &e)
@@ -257,10 +257,10 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
     }
 
     // Log information from config
-    INFO("Resolution: %dx%dx%d", g_gameConfig.resWidth, g_gameConfig.resHeight, g_gameConfig.resBpp);
-    INFO("Window Mode: %d", (int)g_gameConfig.wndMode);
-    INFO("Max FPS: %d", (int)g_gameConfig.maxFps);
-    INFO("Allow Overwriting Game Files: %d", (int)g_gameConfig.allowOverwriteGameFiles);
+    INFO("Resolution: %dx%dx%d", g_game_config.resWidth, g_game_config.resHeight, g_game_config.resBpp);
+    INFO("Window Mode: %d", (int)g_game_config.wndMode);
+    INFO("Max FPS: %d", (int)g_game_config.maxFps);
+    INFO("Allow Overwriting Game Files: %d", (int)g_game_config.allowOverwriteGameFiles);
 
     /* Process messages in the same thread as DX processing (alternative: D3DCREATE_MULTITHREADED) */
     AsmWritter(0x00524C48, 0x00524C83).nop(); // disable msg loop thread
@@ -308,7 +308,7 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
 
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD fdwReason, LPVOID lpvReserved)
 {
-    g_hModule = hInstance;
+    g_hmodule = hInstance;
     DisableThreadLibraryCalls(hInstance);
     return TRUE;
 }

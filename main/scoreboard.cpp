@@ -7,8 +7,6 @@
 #include "spectate_mode.h"
 #include "main.h"
 
-using namespace rf;
-
 constexpr float ENTER_ANIM_MS = 100.0f;
 constexpr float LEAVE_ANIM_MS = 100.0f;
 constexpr float HALF_ENTER_ANIM_MS = ENTER_ANIM_MS / 2.0f;
@@ -20,7 +18,7 @@ static unsigned g_AnimTicks = 0;
 static bool g_EnterAnim = false;
 static bool g_LeaveAnim = false;
 
-auto DrawScoreboardInternal_Hook = makeFunHook(DrawScoreboardInternal);
+auto DrawScoreboardInternal_Hook = makeFunHook(rf::DrawScoreboardInternal);
 
 static int ScoreboardSortFunc(const void *Ptr1, const void *Ptr2)
 {
@@ -35,11 +33,11 @@ void DrawScoreboardInternal_New(bool bDraw)
 
     unsigned cLeftCol = 0, cRightCol = 0;
     char szBuf[512];
-    unsigned GameType = GetGameType();
+    unsigned GameType = rf::GetGameType();
     
     // Sort players by score
     rf::Player *Players[32];
-    rf::Player *pPlayer = g_pPlayersList;
+    rf::Player *pPlayer = rf::g_pPlayersList;
     unsigned cPlayers = 0;
     while (cPlayers < 32)
     {
@@ -50,14 +48,14 @@ void DrawScoreboardInternal_New(bool bDraw)
             ++cRightCol;
             
         pPlayer = pPlayer->pNext;
-        if (!pPlayer || pPlayer == g_pPlayersList)
+        if (!pPlayer || pPlayer == rf::g_pPlayersList)
             break;
     }
     qsort(Players, cPlayers, sizeof(rf::Player*), ScoreboardSortFunc);
 
     // Animation
     float fAnimProgress = 1.0f, fProgressW = 1.0f, fProgressH = 1.0f;
-    if (g_gameConfig.scoreboardAnim)
+    if (g_game_config.scoreboardAnim)
     {
         unsigned AnimDelta = GetTickCount() - g_AnimTicks;
         if (g_EnterAnim)
@@ -80,56 +78,57 @@ void DrawScoreboardInternal_New(bool bDraw)
 
     // Draw background
     constexpr int ROW_H = 15;
-    unsigned cx = std::min((GameType == RF_DM) ? 450u : 700u, GrGetViewportWidth());
+    unsigned cx = std::min((GameType == RF_DM) ? 450u : 700u, rf::GrGetViewportWidth());
     unsigned cy = ((GameType == RF_DM) ? 130 : 190) + std::max(cLeftCol, cRightCol) * ROW_H; // DM doesnt show team scores
     cx = (unsigned)(fProgressW * cx);
     cy = (unsigned)(fProgressH * cy);
-    unsigned x = (GrGetViewportWidth() - cx) / 2;
-    unsigned y = (GrGetViewportHeight() - cy) / 2;
+    unsigned x = (rf::GrGetViewportWidth() - cx) / 2;
+    unsigned y = (rf::GrGetViewportHeight() - cy) / 2;
     unsigned xCenter = x + cx / 2;
-    GrSetColor(0, 0, 0, 0x80);
-    GrDrawRect(x, y, cx, cy, g_GrRectMaterial);
+    rf::GrSetColor(0, 0, 0, 0x80);
+    rf::GrDrawRect(x, y, cx, cy, rf::g_GrRectMaterial);
     y += 10;
 
     if (fProgressH < 1.0f || fProgressW < 1.0f)
         return;
     
     // Draw RF logo
-    GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
-    static int ScoreRflogoBm = BmLoad("score_rflogo.tga", -1, TRUE);
-    GrDrawImage(ScoreRflogoBm, xCenter - 170, y, g_GrImageMaterial);
+    rf::GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
+    static int ScoreRflogoBm = rf::BmLoad("score_rflogo.tga", -1, TRUE);
+    rf::GrDrawImage(ScoreRflogoBm, xCenter - 170, y, rf::g_GrImageMaterial);
     y += 30;
     
     // Draw Game Type name
     const char *pszGameTypeName;
     if (GameType == RF_DM)
-        pszGameTypeName = g_ppszStringsTable[974];
+        pszGameTypeName = rf::g_ppszStringsTable[974];
     else if (GameType == RF_CTF)
-        pszGameTypeName = g_ppszStringsTable[975];
+        pszGameTypeName = rf::g_ppszStringsTable[975];
     else
-        pszGameTypeName = g_ppszStringsTable[976];
-    GrDrawAlignedText(GR_ALIGN_CENTER, xCenter, y, pszGameTypeName, g_MediumFontId, g_GrTextMaterial);
+        pszGameTypeName = rf::g_ppszStringsTable[976];
+    rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, xCenter, y, pszGameTypeName, rf::g_MediumFontId, rf::g_GrTextMaterial);
     y += 20;
 
     // Draw level
-    GrSetColor(0xB0, 0xB0, 0xB0, 0xFF);
-    sprintf(szBuf, "%s (%s) by %s",rf::String::CStr(&g_strLevelName),rf::String::CStr(&g_strLevelFilename),rf::String::CStr(&g_strLevelAuthor));
+    rf::GrSetColor(0xB0, 0xB0, 0xB0, 0xFF);
+    sprintf(szBuf, "%s (%s) by %s", rf::String::CStr(&rf::g_strLevelName), rf::String::CStr(&rf::g_strLevelFilename),
+        rf::String::CStr(&rf::g_strLevelAuthor));
     rf::String strLevelInfo, strLevelInfoNew;
     rf::String::Init(&strLevelInfo, szBuf);
-    GrFitText(&strLevelInfoNew, strLevelInfo, cx - 20); // Note: this destroys input string
-    GrDrawAlignedText(GR_ALIGN_CENTER, xCenter, y,rf::String::CStr(&strLevelInfoNew), -1, g_GrTextMaterial);
+    rf::GrFitText(&strLevelInfoNew, strLevelInfo, cx - 20); // Note: this destroys input string
+    rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, xCenter, y,rf::String::CStr(&strLevelInfoNew), -1, rf::g_GrTextMaterial);
     rf::String::Destroy(&strLevelInfoNew);
     y += 15;
 
     // Draw server info
-    unsigned i = sprintf(szBuf, "%s (",rf::String::CStr(&g_strServName));
-    NwAddrToStr(szBuf + i, sizeof(szBuf) - i, &g_ServAddr);
+    unsigned i = sprintf(szBuf, "%s (",rf::String::CStr(&rf::g_strServName));
+    rf::NwAddrToStr(szBuf + i, sizeof(szBuf) - i, &rf::g_ServAddr);
     i += strlen(szBuf + i);
     sprintf(szBuf + i, ")");
     rf::String strServerInfo, strServerInfoNew;
     rf::String::Init(&strServerInfo, szBuf);
-    GrFitText(&strServerInfoNew, strServerInfo, cx - 20); // Note: this destroys input string
-    GrDrawAlignedText(GR_ALIGN_CENTER, xCenter, y,rf::String::CStr(&strServerInfoNew), -1, g_GrTextMaterial);
+    rf::GrFitText(&strServerInfoNew, strServerInfo, cx - 20); // Note: this destroys input string
+    rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, xCenter, y,rf::String::CStr(&strServerInfoNew), -1, rf::g_GrTextMaterial);
     rf::String::Destroy(&strServerInfoNew);
     y += 20;
     
@@ -137,27 +136,27 @@ void DrawScoreboardInternal_New(bool bDraw)
     unsigned RedScore = 0, BlueScore = 0;
     if (GameType == RF_CTF)
     {
-        static int HudFlagRedBm = BmLoad("hud_flag_red.tga", -1, TRUE);
-        static int HudFlagBlueBm = BmLoad("hud_flag_blue.tga", -1, TRUE);
-        GrDrawImage(HudFlagRedBm, x + cx * 2 / 6, y, g_GrImageMaterial);
-        GrDrawImage(HudFlagBlueBm, x + cx * 4 / 6, y, g_GrImageMaterial);
-        RedScore = CtfGetRedScore();
-        BlueScore = CtfGetBlueScore();
+        static int HudFlagRedBm = rf::BmLoad("hud_flag_red.tga", -1, TRUE);
+        static int HudFlagBlueBm = rf::BmLoad("hud_flag_blue.tga", -1, TRUE);
+        rf::GrDrawImage(HudFlagRedBm, x + cx * 2 / 6, y, rf::g_GrImageMaterial);
+        rf::GrDrawImage(HudFlagBlueBm, x + cx * 4 / 6, y, rf::g_GrImageMaterial);
+        RedScore = rf::CtfGetRedScore();
+        BlueScore = rf::CtfGetBlueScore();
     }
     else if (GameType == RF_TEAMDM)
     {
-        RedScore = TdmGetRedScore();
-        BlueScore = TdmGetBlueScore();
+        RedScore = rf::TdmGetRedScore();
+        BlueScore = rf::TdmGetBlueScore();
     }
     
     if (GameType != RF_DM)
     {
-        GrSetColor(0xD0, 0x20, 0x20, 0xFF);
+        rf::GrSetColor(0xD0, 0x20, 0x20, 0xFF);
         sprintf(szBuf, "%u", RedScore);
-        GrDrawAlignedText(GR_ALIGN_CENTER, x + cx * 1 / 6, y, szBuf, g_BigFontId, g_GrTextMaterial);
-        GrSetColor(0x20, 0x20, 0xD0, 0xFF);
+        rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, x + cx * 1 / 6, y, szBuf, rf::g_BigFontId, rf::g_GrTextMaterial);
+        rf::GrSetColor(0x20, 0x20, 0xD0, 0xFF);
         sprintf(szBuf, "%u", BlueScore);
-        GrDrawAlignedText(GR_ALIGN_CENTER, x + cx * 5 / 6, y, szBuf, g_BigFontId, g_GrTextMaterial);
+        rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, x + cx * 5 / 6, y, szBuf, rf::g_BigFontId, rf::g_GrTextMaterial);
         y += 60;
     }
     
@@ -169,7 +168,7 @@ void DrawScoreboardInternal_New(bool bDraw)
     // Draw headers
     unsigned NumSect = (GameType == RF_DM ? 1 : 2);
     unsigned cxNameMax = cx / NumSect - 25 - 50 * (GameType == RF_CTF ? 3 : 2) - 70;
-    GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
+    rf::GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
     for (unsigned i = 0; i < NumSect; ++i)
     {
         int xCol = x + i * (cx / 2) + 13;
@@ -177,31 +176,31 @@ void DrawScoreboardInternal_New(bool bDraw)
         xCol += 12;
 
         ColOffsets[i].Name = xCol;
-        GrDrawText(xCol, y, g_ppszStringsTable[STR_PLAYER], -1, g_GrTextMaterial);
+        rf::GrDrawText(xCol, y, rf::g_ppszStringsTable[rf::STR_PLAYER], -1, rf::g_GrTextMaterial);
         xCol += cxNameMax;
 
         ColOffsets[i].Score = xCol;
-        GrDrawText(xCol, y, g_ppszStringsTable[STR_SCORE], -1, g_GrTextMaterial); // Note: RF uses "Frags"
+        rf::GrDrawText(xCol, y, rf::g_ppszStringsTable[rf::STR_SCORE], -1, rf::g_GrTextMaterial); // Note: RF uses "Frags"
         xCol += 50;
 
         ColOffsets[i].KillsDeaths = xCol;
-        GrDrawText(xCol, y, "K/D", -1, g_GrTextMaterial);
+        rf::GrDrawText(xCol, y, "K/D", -1, rf::g_GrTextMaterial);
         xCol += 70;
 
         if (GameType == RF_CTF)
         {
             ColOffsets[i].CtfFlags = xCol;
-            GrDrawText(xCol, y, g_ppszStringsTable[STR_CAPS], -1, g_GrTextMaterial);
+            rf::GrDrawText(xCol, y, rf::g_ppszStringsTable[rf::STR_CAPS], -1, rf::g_GrTextMaterial);
             xCol += 50;
         }
 
         ColOffsets[i].Ping = xCol;
-        GrDrawText(xCol, y, g_ppszStringsTable[STR_PING], -1, g_GrTextMaterial);
+        rf::GrDrawText(xCol, y, rf::g_ppszStringsTable[rf::STR_PING], -1, rf::g_GrTextMaterial);
     }
     y += 20;
     
-    rf::Player *pRedFlagPlayer = CtfGetRedFlagPlayer();
-    rf::Player *pBlueFlagPlayer = CtfGetBlueFlagPlayer();
+    rf::Player *pRedFlagPlayer = rf::CtfGetRedFlagPlayer();
+    rf::Player *pBlueFlagPlayer = rf::CtfGetBlueFlagPlayer();
 
     // Finally draw the list
     int SectCounter[2] = { 0, 0 };
@@ -214,60 +213,60 @@ void DrawScoreboardInternal_New(bool bDraw)
         int RowY = y + SectCounter[SectIdx] * ROW_H;
         ++SectCounter[SectIdx];
         
-        if (pPlayer == g_pPlayersList) // local player
-            GrSetColor(0xFF, 0xFF, 0x80, 0xFF);
+        if (pPlayer == rf::g_pPlayersList) // local player
+            rf::GrSetColor(0xFF, 0xFF, 0x80, 0xFF);
         else
-            GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
+            rf::GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
         
-        static int GreenBm = BmLoad("DF_green.tga", -1, 1);
-        static int RedBm = BmLoad("DF_red.tga", -1, 1);
-        static int HudMicroFlagRedBm = BmLoad("hud_microflag_red.tga", -1, 1);
-        static int HudMicroFlagBlueBm = BmLoad("hud_microflag_blue.tga", -1, 1);
-        EntityObj *pEntity = EntityGetFromHandle(pPlayer->hEntity);
+        static int GreenBm = rf::BmLoad("DF_green.tga", -1, 1);
+        static int RedBm = rf::BmLoad("DF_red.tga", -1, 1);
+        static int HudMicroFlagRedBm = rf::BmLoad("hud_microflag_red.tga", -1, 1);
+        static int HudMicroFlagBlueBm = rf::BmLoad("hud_microflag_blue.tga", -1, 1);
+        rf::EntityObj *pEntity = rf::EntityGetFromHandle(pPlayer->hEntity);
         int StatusBm = pEntity ? GreenBm : RedBm;
         if (pPlayer == pRedFlagPlayer)
             StatusBm = HudMicroFlagRedBm;
         else if (pPlayer == pBlueFlagPlayer)
             StatusBm = HudMicroFlagBlueBm;
-        GrDrawImage(StatusBm, Offsets.StatusBm, RowY + 2, g_GrImageMaterial);
+        rf::GrDrawImage(StatusBm, Offsets.StatusBm, RowY + 2, rf::g_GrImageMaterial);
 
         rf::String strName, strNameNew;
         rf::String::InitFromStr(&strName, &pPlayer->strName);
-        GrFitText(&strNameNew, strName, cxNameMax - 10); // Note: this destroys strName
-        GrDrawText(Offsets.Name, RowY,rf::String::CStr(&strNameNew), -1, g_GrTextMaterial);
+        rf::GrFitText(&strNameNew, strName, cxNameMax - 10); // Note: this destroys strName
+        rf::GrDrawText(Offsets.Name, RowY,rf::String::CStr(&strNameNew), -1, rf::g_GrTextMaterial);
         rf::String::Destroy(&strNameNew);
         
         auto pStats = (PlayerStatsNew*)pPlayer->pStats;
         sprintf(szBuf, "%hd", pStats->iScore);
-        GrDrawText(Offsets.Score, RowY, szBuf, -1, g_GrTextMaterial);
+        rf::GrDrawText(Offsets.Score, RowY, szBuf, -1, rf::g_GrTextMaterial);
 
         sprintf(szBuf, "%hd/%hd", pStats->cKills, pStats->cDeaths);
-        GrDrawText(Offsets.KillsDeaths, RowY, szBuf, -1, g_GrTextMaterial);
+        rf::GrDrawText(Offsets.KillsDeaths, RowY, szBuf, -1, rf::g_GrTextMaterial);
         
         if (GameType == RF_CTF)
         {
             sprintf(szBuf, "%hu", pStats->cCaps);
-            GrDrawText(Offsets.CtfFlags, RowY, szBuf, -1, g_GrTextMaterial);
+            rf::GrDrawText(Offsets.CtfFlags, RowY, szBuf, -1, rf::g_GrTextMaterial);
         }
         
         if (pPlayer->pNwData)
         {
             sprintf(szBuf, "%hu", pPlayer->pNwData->dwPing);
-            GrDrawText(Offsets.Ping, RowY, szBuf, -1, g_GrTextMaterial);
+            rf::GrDrawText(Offsets.Ping, RowY, szBuf, -1, rf::g_GrTextMaterial);
         }
     }
 }
 
 void HudRender_00437BC0()
 {
-    if (!g_bNetworkGame || !g_pLocalPlayer)
+    if (!rf::g_bNetworkGame || !rf::g_pLocalPlayer)
         return;
 
-    bool bShowScoreboard = (IsEntityCtrlActive(&(g_pLocalPlayer)->Config.Controls, GC_MP_STATS, 0) ||
-        (!SpectateModeIsActive() && (IsPlayerEntityInvalid(g_pLocalPlayer) || IsPlayerDying(g_pLocalPlayer))) ||
-        GetCurrentMenuId() == MENU_MP_LIMBO);
+    bool bShowScoreboard = (rf::IsEntityCtrlActive(&rf::g_pLocalPlayer->Config.Controls, rf::GC_MP_STATS, 0) ||
+        (!SpectateModeIsActive() && (rf::IsPlayerEntityInvalid(rf::g_pLocalPlayer) || rf::IsPlayerDying(rf::g_pLocalPlayer))) ||
+        rf::GetCurrentMenuId() == rf::MENU_MP_LIMBO);
 
-    if (g_gameConfig.scoreboardAnim)
+    if (g_game_config.scoreboardAnim)
     {
         if (!g_ScoreboardVisible && bShowScoreboard)
         {
@@ -287,7 +286,7 @@ void HudRender_00437BC0()
         g_ScoreboardVisible = bShowScoreboard;
 
     if (g_ScoreboardVisible)
-        DrawScoreboard(true);
+        rf::DrawScoreboard(true);
 }
 
 void InitScoreboard(void)

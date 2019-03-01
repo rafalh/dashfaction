@@ -4,7 +4,7 @@
 #include "GameConfig.h"
 #include "utils.h"
 
-void FindPlayer(const StringMatcher &Query, std::function<void(rf::Player*)> Consumer);
+void FindPlayer(const StringMatcher& query, std::function<void(rf::Player*)> consumer);
 
-extern GameConfig g_gameConfig;
-extern HMODULE g_hModule;
+extern GameConfig g_game_config;
+extern HMODULE g_hmodule;

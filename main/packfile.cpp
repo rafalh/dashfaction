@@ -399,7 +399,7 @@ static void PackfileAddToLookupTable_New(rf::PackfileEntry *pEntry)
             if (rf::g_bVfsIgnoreTblFiles) // this is set to true for user_maps
             {
                 bool bWhitelisted = false;// IsModFileInWhitelist(pEntry->pszFileName);
-                if (!g_gameConfig.allowOverwriteGameFiles && !bWhitelisted)
+                if (!g_game_config.allowOverwriteGameFiles && !bWhitelisted)
                 {
                     TRACE("Denied overwriting game file %s (old packfile %s, new packfile %s)", 
                         pEntry->pszFileName, pszOldArchive, pszNewArchive);
@@ -483,7 +483,7 @@ static void LoadDashFactionVpp()
 {
     // Load DashFaction specific packfile
     char szBuf[MAX_PATH];
-    GetModuleFileNameA(g_hModule, szBuf, sizeof(szBuf));
+    GetModuleFileNameA(g_hmodule, szBuf, sizeof(szBuf));
     char *Ptr = strrchr(szBuf, '\\');
     strcpy(Ptr + 1, "dashfaction.vpp");
     if (PathFileExistsA(szBuf))

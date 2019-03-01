@@ -7,66 +7,66 @@
 
 #define REG_UNION(letter) \
     union { \
-        int32_t E ## letter ## X; \
-        int16_t letter ## X; \
+        int32_t e ## letter ## x; \
+        int16_t letter ## x; \
         struct { \
-            int8_t letter ## L; \
-            int8_t letter ## H; \
+            int8_t letter ## l; \
+            int8_t letter ## h; \
         }; \
     }
 
 struct X86Regs
 {
-    uint32_t Flags;
+    uint32_t eflags;
     // reversed PUSHA order of registers
-    int32_t EDI;
-    int32_t ESI;
-    int32_t EBP;
-    int32_t _reserved; // unused ESP
-    REG_UNION(B);
-    REG_UNION(D);
-    REG_UNION(C);
-    REG_UNION(A);
-    // real ESP
-    int32_t ESP;
+    int32_t edi;
+    int32_t esi;
+    int32_t ebp;
+    int32_t reserved; // unused ESP
+    REG_UNION(b);
+    REG_UNION(d);
+    REG_UNION(c);
+    REG_UNION(a);
+    // real esp
+    int32_t esp;
     // return address
-    uint32_t EIP;
+    uint32_t eip;
 };
 
 class RegsPatch
 {
 private:
-    uintptr_t m_Addr;
-    void (*m_FunPtr)(X86Regs &Regs);
-    subhook::Hook m_Subhook;
+    uintptr_t m_addr;
+    void (*m_fun_ptr)(X86Regs& regs);
+    subhook::Hook m_subhook;
 
 public:
-    RegsPatch(uintptr_t Addr, void (*FunPtr)(X86Regs &Regs)) :
-        m_Addr(Addr), m_FunPtr(FunPtr)
+    RegsPatch(uintptr_t addr, void (*fun_ptr)(X86Regs& regs)) :
+        m_addr(addr), m_fun_ptr(fun_ptr)
     {}
 
     void Install()
     {
-        void *Wrapper = new char[256];
-        UnprotectMem(Wrapper, 256);
+        void *wrapper = new char[256];
+        UnprotectMem(wrapper, 256);
 
-        m_Subhook.Install(reinterpret_cast<void*>(m_Addr), Wrapper);
-        void *Trampoline = m_Subhook.GetTrampoline();
-        if (!Trampoline)
-            WARN("trampoline is null for 0x%p", m_Addr);
+        m_subhook.Install(reinterpret_cast<void*>(m_addr), wrapper);
+        void *trampoline = m_subhook.GetTrampoline();
+        if (!trampoline)
+            WARN("trampoline is null for 0x%p", m_addr);
 
-        AsmWritter(reinterpret_cast<uintptr_t>(Wrapper))
-            .push(reinterpret_cast<int32_t>(Trampoline))            // Push default EIP = trampoline
+        AsmWritter(reinterpret_cast<uintptr_t>(wrapper))
+            .push(reinterpret_cast<int32_t>(trampoline))            // Push default EIP = trampoline
             .push(AsmRegs::ESP)                                     // push ESP before PUSHA so it can be popped manually after POPA
             .pusha()                                                // push general registers
             .pushf()                                                // push EFLAGS
-            .add({true, {AsmRegs::ESP}, offsetof(X86Regs, ESP)}, 4) // restore ESP value from before pushing the return address
+            .add({true, {AsmRegs::ESP}, offsetof(X86Regs, esp)}, 4) // restore ESP value from before pushing the return address
             .push(AsmRegs::ESP)                                     // push address of X86Regs struct (handler param)
-            .callLong(m_FunPtr)                                     // call handler
+            .callLong(m_fun_ptr)                                     // call handler
             .add({false, {AsmRegs::ESP}}, 4)                        // free handler param
-            .add({true, {AsmRegs::ESP}, offsetof(X86Regs, ESP)}, -4) // make ESP value return address aware (again)
-            .mov(AsmRegs::EAX, {true, {AsmRegs::ESP}, offsetof(X86Regs, EIP)}) // read EIP from X86Regs
-            .mov(AsmRegs::ECX, {true, {AsmRegs::ESP}, offsetof(X86Regs, ESP)}) // read ESP from X86Regs
+            .add({true, {AsmRegs::ESP}, offsetof(X86Regs, esp)}, -4) // make ESP value return address aware (again)
+            .mov(AsmRegs::EAX, {true, {AsmRegs::ESP}, offsetof(X86Regs, eip)}) // read EIP from X86Regs
+            .mov(AsmRegs::ECX, {true, {AsmRegs::ESP}, offsetof(X86Regs, esp)}) // read ESP from X86Regs
             .mov({true, {AsmRegs::ECX}, 0}, AsmRegs::EAX)           // copy EIP to new address of the stack pointer
             .popf()                                                 // pop EFLAGS
             .popa()                                                 // pop general registers. Note: POPA discards ESP value
