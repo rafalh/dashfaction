@@ -27,7 +27,5 @@ typedef BOOL WINBOOL;
 #include <MemUtils.h>
 #include <AsmOpcodes.h>
 #include <AsmWritter.h>
-#include <FunHook.h>
-#include <CallHook.h>
 
 #include "BuildConfig.h"

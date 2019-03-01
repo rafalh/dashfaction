@@ -176,7 +176,6 @@ namespace rf
     static const auto DcPrint = (void(*)(const char *pszText, const int *pColor))0x00509EC0;
     static const auto DcPrintf = (void(*)(const char *pszFormat, ...))0x0050B9F0;
     static const auto DcGetArg = (void(*)(int Type, int bUnknown))0x0050AED0;
-    static const auto DcAutoCompleteInput = (void(*)())0x0050A620;
     static const auto DcRunCmd = (int(*)(const char *pszCmd))0x00509B00;
 
 #define DC_REGISTER_CMD(name, help, handler) \
@@ -361,7 +360,6 @@ namespace rf
     static const auto GrUnlock = (void(*)(GrLockData *pData))0x0050E310;
     static const auto GrInitBuffers = (void(*)())0x005450A0;
     static const auto GrSetTextureMipFilter = (void(*)(int bLinear))0x0050E830;
-    static const auto GrResetClip = (void(*)())0x0050CDD0;
 
     /* User Interface (UI) */
 
@@ -742,9 +740,7 @@ namespace rf
     static auto &g_pLocalPlayer = *(Player**)0x007C75D4;
 
     static const auto KillLocalPlayer = (void(*)())0x004757A0;
-    static const auto HandleCtrlInGame = (void(*)(Player *pPlayer, GameCtrl KeyId, bool WasPressed))0x004A6210;
     static const auto IsEntityCtrlActive = (char(*)(ControlConfig *pCtrlConf, GameCtrl CtrlId, bool *pWasPressed))0x0043D4F0;
-    static const auto PlayerCreateEntity = (EntityObj *(*)(Player *pPlayer, int ClassId, const Vector3 *pPos, const Matrix3 *pRotMatrix, int MpCharacter))0x004A4130;
     static const auto GetPlayerFromEntityHandle = (Player*(*)(int32_t hEntity))0x004A3740;
 
     typedef bool(*IsPlayerEntityInvalid_Type)(Player *pPlayer);
@@ -758,7 +754,6 @@ namespace rf
     static const auto PlayerFpgunRender = (void(*)(Player*))0x004A2B30;
     static const auto PlayerFpgunUpdate = (void(*)(Player*))0x004A2700;
     static const auto PlayerFpgunSetupMesh = (void(*)(Player*, int WeaponClsId))0x004AA230;
-    static const auto PlayerFpgunUpdateState = (void(*)(Player*))0x004AA3A0;
     static const auto PlayerFpgunUpdateMesh = (void(*)(Player*))0x004AA6D0;
     static const auto PlayerRenderRocketLauncherScannerView = (void(*)(Player *pPlayer))0x004AEEF0;
     static const auto PlayerFpgunSetState = (void(*)(Player *pPlayer, int State))0x004AA560;
@@ -1586,10 +1581,8 @@ namespace rf
     static const auto SplitScreenStart = (void(*)())0x00480D30;
     static const auto SetNextLevelFilename = (void(*)(String strFilename, String strSecond))0x0045E2E0;
     static const auto DemoLoadLevel = (void(*)(const char *pszLevelFileName))0x004CC270;
-    static const auto RenderReticle = (void(*)(Player *pPlayer))0x0043A2C0;
     static const auto SetCursorVisible = (void(*)(char bVisible))0x0051E680;
     static const auto DrawScoreboard = (void(*)(bool bDraw))0x00470860;
-    static const auto DrawScoreboardInternal = (void(*)(bool bDraw))0x00470880;
     static const auto SndConvertVolume3D = (void(*)(int GameSndId, Vector3 *pSoundPos, float *pPanOut, float *pVolumeOut, float VolumeIn))0x00505740;
 
 

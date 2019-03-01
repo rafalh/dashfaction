@@ -12,6 +12,7 @@
 #include "packfile.h"
 #include "hooks/MemChange.h"
 #include "inline_asm.h"
+#include <FunHook2.h>
 
 using namespace rf;
 
@@ -155,9 +156,6 @@ template <class T>
 DcCommand2(const char *, T, const char *, const char *)
     -> DcCommand2<typename std::remove_pointer_t<decltype(+std::declval<T>())>>;
 #endif
-
-
-auto DcAutoCompleteInput_Hook = makeFunHook(DcAutoCompleteInput);
 
 rf::Player *FindBestMatchingPlayer(const char *pszName)
 {
@@ -676,10 +674,12 @@ void DcAutoCompleteCommand(int Offset)
         DcAutoCompletePutComponent(Offset, MatchingCmds[0]->pszCmd, true);
 }
 
-void DcAutoCompleteInput_New()
-{
-    DcAutoCompleteCommand(0);
-}
+FunHook2<void()> DcAutoCompleteInput_Hook{
+    0x0050A620,
+    []() {
+        DcAutoCompleteCommand(0);
+    }
+};
 
 ASM_FUNC(DcRunCmd_CallHandlerPatch,
     ASM_I  mov   ecx, ASM_SYM(g_CommandsBuffer)[edi*4]
@@ -688,7 +688,7 @@ ASM_FUNC(DcRunCmd_CallHandlerPatch,
     ASM_I  ret
 )
 
-void CommandsInit(void)
+void CommandsInit()
 {
 #if CAMERA_1_3_COMMANDS
     /* Enable camera1-3 in multiplayer and hook CanPlayerFire to disable shooting in camera2 */
@@ -716,7 +716,7 @@ void CommandsInit(void)
     AsmWritter(0x00509DB4).jmpLong(DcRunCmd_CallHandlerPatch);
 
     // Better console autocomplete
-    DcAutoCompleteInput_Hook.hook(DcAutoCompleteInput_New);
+    DcAutoCompleteInput_Hook.Install();
 }
 
 void CommandRegister(DcCommand *pCmd)

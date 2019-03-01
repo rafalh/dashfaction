@@ -5,8 +5,10 @@
 #include "BuildConfig.h"
 #include "utils.h"
 #include "scoreboard.h"
-
 #include "hooks/HookCall.h"
+#include <FunHook2.h>
+#include <CallHook2.h>
+
 
 #if SPECTATE_MODE_ENABLE
 
@@ -14,12 +16,6 @@ static rf::Player *g_SpectateModeTarget;
 static rf::Camera *g_OldTargetCamera = NULL;
 static bool g_SpectateModeEnabled = false;
 static int g_LargeFont = -1, g_MediumFont = -1, g_SmallFont = -1;
-
-auto HandleCtrlInGame_Hook = makeFunHook(rf::HandleCtrlInGame);
-auto RenderReticle_Hook = makeFunHook(rf::RenderReticle);
-auto PlayerCreateEntity_Hook = makeFunHook(rf::PlayerCreateEntity);
-auto RenderScannerViewForLocalPlayers_Hook = makeCallHook(rf::GrResetClip);
-auto PlayerFpgunUpdateState_Hook = makeFunHook(rf::PlayerFpgunUpdateState);
 
 static void SetCameraTarget(rf::Player *pPlayer)
 {
@@ -114,41 +110,37 @@ static void SpectateNextPlayer(bool bDir, bool bTryAlivePlayersFirst = false)
         SpectateNextPlayer(bDir, false);
 }
 
-static void HandleCtrlInGameHook(rf::Player *pPlayer, rf::GameCtrl KeyId, bool WasPressed)
-{
-    if (g_SpectateModeEnabled)
-    {
-        if (KeyId == rf::GC_PRIMARY_ATTACK || KeyId == rf::GC_SLIDE_RIGHT)
-        {
-            if (WasPressed)
-                SpectateNextPlayer(true);
-            return; // dont allow spawn
+FunHook2<void(rf::Player*, rf::GameCtrl, bool)> HandleCtrlInGame_Hook{
+    0x004A6210,
+    [](rf::Player* player, rf::GameCtrl key_id, bool was_pressed) {
+        if (g_SpectateModeEnabled) {
+            if (key_id == rf::GC_PRIMARY_ATTACK || key_id == rf::GC_SLIDE_RIGHT) {
+                if (was_pressed)
+                    SpectateNextPlayer(true);
+                return; // dont allow spawn
+            }
+            else if (key_id == rf::GC_SECONDARY_ATTACK || key_id == rf::GC_SLIDE_LEFT) {
+                if (was_pressed)
+                    SpectateNextPlayer(false);
+                return;
+            }
+            else if (key_id == rf::GC_JUMP) {
+                if (was_pressed)
+                    SpectateModeSetTargetPlayer(nullptr);
+                return;
+            }
         }
-        else if (KeyId == rf::GC_SECONDARY_ATTACK || KeyId == rf::GC_SLIDE_LEFT)
-        {
-            if (WasPressed)
-                SpectateNextPlayer(false);
-            return;
+        else if (!g_SpectateModeEnabled) {
+            if (key_id == rf::GC_JUMP && was_pressed && rf::IsPlayerEntityInvalid(rf::g_pLocalPlayer)) {
+                SpectateModeSetTargetPlayer(rf::g_pLocalPlayer);
+                SpectateNextPlayer(true, true);
+                return;
+            }
         }
-        else if (KeyId == rf::GC_JUMP)
-        {
-            if (WasPressed)
-                SpectateModeSetTargetPlayer(nullptr);
-            return;
-        }
+        
+        HandleCtrlInGame_Hook.CallTarget(player, key_id, was_pressed);
     }
-    else if (!g_SpectateModeEnabled)
-    {
-        if (KeyId == rf::GC_JUMP && WasPressed && rf::IsPlayerEntityInvalid(rf::g_pLocalPlayer))
-        {
-            SpectateModeSetTargetPlayer(rf::g_pLocalPlayer);
-            SpectateNextPlayer(true, true);
-            return;
-        }
-    }
-    
-    HandleCtrlInGame_Hook.callTrampoline(pPlayer, KeyId, WasPressed);
-}
+};
 
 static bool IsPlayerEntityInvalidHook(rf::Player *pPlayer)
 {
@@ -174,33 +166,38 @@ void SpectateModeOnDestroyPlayer(rf::Player *pPlayer)
         SpectateModeSetTargetPlayer(nullptr);
 }
 
-static void RenderReticle_New(rf::Player *pPlayer)
-{
-    if (rf::GetCurrentMenuId() == rf::MENU_MP_LIMBO)
-        return;
-    if (g_SpectateModeEnabled)
-        RenderReticle_Hook.callTrampoline(g_SpectateModeTarget);
-    else
-        RenderReticle_Hook.callTrampoline(pPlayer);
-}
+FunHook2<void(rf::Player*)> RenderReticle_Hook{
+    0x0043A2C0,
+    [](rf::Player* player) {
+        if (rf::GetCurrentMenuId() == rf::MENU_MP_LIMBO)
+            return;
+        if (g_SpectateModeEnabled)
+            RenderReticle_Hook.CallTarget(g_SpectateModeTarget);
+        else
+            RenderReticle_Hook.CallTarget(player);
+    }
+};
 
+FunHook2<rf::EntityObj*(rf::Player*, int, const rf::Vector3*, const rf::Matrix3*, int)> PlayerCreateEntity_Hook{
+    0x004A4130,
+    [](rf::Player* player, int cls_id, const rf::Vector3* pos, const rf::Matrix3* orient, int mp_character) {
+        // hide target player from camera after respawn
+        rf::EntityObj* entity = PlayerCreateEntity_Hook.CallTarget(player, cls_id, pos, orient, mp_character);
+        if (entity && player == g_SpectateModeTarget)
+            entity->pLocalPlayer = player;
 
-rf::EntityObj *PlayerCreateEntity_New(rf::Player *pPlayer, int ClassId, const rf::Vector3 *pPos, const rf::Matrix3 *pRotMatrix, int MpCharacter)
-{
-    // hide target player from camera after respawn
-    rf::EntityObj *pEntity = PlayerCreateEntity_Hook.callTrampoline(pPlayer, ClassId, pPos, pRotMatrix, MpCharacter);
-    if (pEntity && pPlayer == g_SpectateModeTarget)
-        pEntity->pLocalPlayer = pPlayer;
+        return entity;
+    }
+};
 
-    return pEntity;
-}
-
-void RenderScannerViewForLocalPlayers_GrResetClip_New()
-{
-    if (g_SpectateModeEnabled)
-        rf::PlayerRenderRocketLauncherScannerView(g_SpectateModeTarget);
-    rf::GrResetClip();
-}
+CallHook2<void()> GrResetClip_RenderScannerViewForLocalPlayers_Hook{
+    0x00431890,
+    []() {
+        if (g_SpectateModeEnabled)
+            rf::PlayerRenderRocketLauncherScannerView(g_SpectateModeTarget);
+        GrResetClip_RenderScannerViewForLocalPlayers_Hook.CallTarget();
+    }
+};
 
 #if SPECTATE_MODE_SHOW_WEAPON
 
@@ -236,28 +233,28 @@ static void PlayerFpgunRender_New(rf::Player *pPlayer)
         rf::PlayerFpgunRender(pPlayer);
 }
 
-void PlayerFpgunUpdateState_New(rf::Player *pPlayer)
-{
-    PlayerFpgunUpdateState_Hook.callTrampoline(pPlayer);
-    if (pPlayer != rf::g_pLocalPlayer)
-    {
-        rf::EntityObj *pEntity = rf::EntityGetFromHandle(pPlayer->hEntity);
-        if (pEntity)
-        {
-            float fHorzSpeedPow2 = pEntity->_Super.PhysInfo.vVel.x * pEntity->_Super.PhysInfo.vVel.x
-                + pEntity->_Super.PhysInfo.vVel.z * pEntity->_Super.PhysInfo.vVel.z;
-            int State = 0;
-            if (rf::IsEntityLoopFire(pEntity->_Super.Handle, pEntity->WeaponInfo.WeaponClsId))
-                State = 2;
-            else if (rf::EntityIsSwimming(pEntity) || rf::EntityIsFalling(pEntity))
-                State = 0;
-            else if (fHorzSpeedPow2 > 0.2f)
-                State = 1;
-            if (!rf::PlayerFpgunHasState(pPlayer, State))
-                rf::PlayerFpgunSetState(pPlayer, State);
+FunHook2<void(rf::Player*)> PlayerFpgunUpdateState_Hook{
+    0x004AA3A0,
+    [](rf::Player* player) {
+        PlayerFpgunUpdateState_Hook.CallTarget(player);
+        if (player != rf::g_pLocalPlayer) {
+            rf::EntityObj* entity = rf::EntityGetFromHandle(player->hEntity);
+            if (entity) {
+                float fHorzSpeedPow2 = entity->_Super.PhysInfo.vVel.x * entity->_Super.PhysInfo.vVel.x
+                    + entity->_Super.PhysInfo.vVel.z * entity->_Super.PhysInfo.vVel.z;
+                int state = 0;
+                if (rf::IsEntityLoopFire(entity->_Super.Handle, entity->WeaponInfo.WeaponClsId))
+                    state = 2;
+                else if (rf::EntityIsSwimming(entity) || rf::EntityIsFalling(entity))
+                    state = 0;
+                else if (fHorzSpeedPow2 > 0.2f)
+                    state = 1;
+                if (!rf::PlayerFpgunHasState(player, state))
+                    rf::PlayerFpgunSetState(player, state);
+            }
         }
     }
-}
+};
 
 #endif // SPECTATE_MODE_SHOW_WEAPON
 
@@ -281,9 +278,9 @@ void SpectateModeInit()
     static HookCall<rf::IsPlayerDying_Type> IsPlayerDying_Scoreboard_Hookable2(0x00437C36, rf::IsPlayerDying);
     IsPlayerDying_Scoreboard_Hookable2.Hook(IsPlayerDyingHook);
     
-    HandleCtrlInGame_Hook.hook(HandleCtrlInGameHook);
-    RenderReticle_Hook.hook(RenderReticle_New);
-    PlayerCreateEntity_Hook.hook(PlayerCreateEntity_New);
+    HandleCtrlInGame_Hook.Install();
+    RenderReticle_Hook.Install();
+    PlayerCreateEntity_Hook.Install();
 
     // Note: HUD rendering doesn't make sense because life and armor isn't synced
 
@@ -305,8 +302,8 @@ void SpectateModeInit()
     WriteMemPtr(0x00421889 + 2, &g_SpectateModeTarget); // EntityRender
     WriteMemPtr(0x004218A2 + 2, &g_SpectateModeTarget); // EntityRender
 
-    RenderScannerViewForLocalPlayers_Hook.hook(0x00431890, RenderScannerViewForLocalPlayers_GrResetClip_New);
-    PlayerFpgunUpdateState_Hook.hook(PlayerFpgunUpdateState_New);
+    GrResetClip_RenderScannerViewForLocalPlayers_Hook.Install();
+    PlayerFpgunUpdateState_Hook.Install();
 #endif // SPECTATE_MODE_SHOW_WEAPON
     
 }

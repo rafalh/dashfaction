@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "crashhandler.h"
+#include <log/Logger.h>
 
 static WCHAR g_ModulePath[MAX_PATH];
 static LPTOP_LEVEL_EXCEPTION_FILTER g_OldExceptionFilter;

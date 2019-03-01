@@ -6,6 +6,7 @@
 #include "kill.h"
 #include "spectate_mode.h"
 #include "main.h"
+#include <FunHook2.h>
 
 constexpr float ENTER_ANIM_MS = 100.0f;
 constexpr float LEAVE_ANIM_MS = 100.0f;
@@ -17,8 +18,6 @@ static bool g_ScoreboardVisible = false;
 static unsigned g_AnimTicks = 0;
 static bool g_EnterAnim = false;
 static bool g_LeaveAnim = false;
-
-auto DrawScoreboardInternal_Hook = makeFunHook(rf::DrawScoreboardInternal);
 
 static int ScoreboardSortFunc(const void *Ptr1, const void *Ptr2)
 {
@@ -257,6 +256,8 @@ void DrawScoreboardInternal_New(bool bDraw)
     }
 }
 
+FunHook2<void(bool)> DrawScoreboardInternal_Hook{0x00470880, DrawScoreboardInternal_New};
+
 void HudRender_00437BC0()
 {
     if (!rf::g_bNetworkGame || !rf::g_pLocalPlayer)
@@ -291,7 +292,7 @@ void HudRender_00437BC0()
 
 void InitScoreboard(void)
 {
-    DrawScoreboardInternal_Hook.hook(DrawScoreboardInternal_New);
+    DrawScoreboardInternal_Hook.Install();
 
     AsmWritter(0x00437BC0)
         .callLong(HudRender_00437BC0)
