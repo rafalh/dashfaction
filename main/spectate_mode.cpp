@@ -10,6 +10,22 @@
 
 #if SPECTATE_MODE_ENABLE
 
+namespace rf {
+
+static const auto IsEntityLoopFire = (bool(*)(int hEntity, signed int WeaponClsId))0x0041A830;
+static const auto EntityIsSwimming = (bool(*)(EntityObj *pEntity))0x0042A0A0;
+static const auto EntityIsFalling = (bool(*)(EntityObj *pEntit))0x0042A020;
+
+static const auto PlayerFpgunRender = (void(*)(Player*))0x004A2B30;
+static const auto PlayerFpgunUpdate = (void(*)(Player*))0x004A2700;
+static const auto PlayerFpgunSetupMesh = (void(*)(Player*, int WeaponClsId))0x004AA230;
+static const auto PlayerFpgunUpdateMesh = (void(*)(Player*))0x004AA6D0;
+static const auto PlayerRenderRocketLauncherScannerView = (void(*)(Player *pPlayer))0x004AEEF0;
+static const auto PlayerFpgunSetState = (void(*)(Player *pPlayer, int State))0x004AA560;
+static const auto PlayerFpgunHasState = (bool(*)(Player *pPlayer, int State))0x004A9520;
+
+}
+
 static rf::Player *g_SpectateModeTarget;
 static rf::Camera *g_OldTargetCamera = NULL;
 static bool g_SpectateModeEnabled = false;
@@ -353,7 +369,7 @@ void SpectateModeDrawUI()
     if (!pEntity)
     {
         rf::GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
-        static int BloodBm = rf::BmLoad("bloodsmear07_A.tga", 0, 0);
+        static int BloodBm = rf::BmLoad("bloodsmear07_A.tga", -1, true);
         int BloodW, BloodH;
         rf::BmGetBitmapSize(BloodBm, &BloodW, &BloodH);
         rf::GrDrawBitmapStretched(BloodBm, (cxScr - BloodW*2) / 2, (cySrc - BloodH*2) / 2, BloodW * 2 , BloodH * 2, 

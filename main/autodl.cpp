@@ -9,10 +9,15 @@
 #define AUTODL_AGENT_NAME "hoverlees"
 #define AUTODL_HOST "pfapi.factionfiles.com"
 
+namespace rf {
+static const auto GetJoinFailedReasonStr = AddrAsRef<const char *(unsigned Reason)>(0x0047BE60);
+}
+
 static unsigned g_LevelTicketId;
 static unsigned g_cbLevelSize, g_cbDownloadProgress;
 static bool g_bDownloadActive = false;
 static bool g_bExitGameFromMulti = false;
+
 
 bool UnzipVpp(const char *pszPath)
 {
@@ -251,12 +256,12 @@ cleanup:
     
     g_bDownloadActive = false;
     if (!Success)
-        rf::UiMsgBox("Error!", "Failed to download level file! More information can be found in console.", NULL, FALSE);
+        rf::UiMsgBox("Error!", "Failed to download level file! More information can be found in console.", nullptr, false);
 
     return 0;
 }
 
-static void DownloadLevel(void)
+static void DownloadLevel()
 {
     HANDLE hThread;
 
@@ -410,13 +415,13 @@ void OnJoinFailed(unsigned Reason)
             return;
     }
 
-    pszReason = rf::GetJoinFailedStr(Reason);
+    pszReason = rf::GetJoinFailedReasonStr(Reason);
     rf::UiMsgBox(rf::g_ppszStringsTable[rf::STR_EXITING_GAME], pszReason, NULL, 0);
 }
 
 void InitAutodownloader()
 {
-    WriteMemInt32(0x0047C4EE, (uintptr_t)OnJoinFailed - (0x0047C4ED + 5));
+    AsmWritter(0x0047C4ED).callLong(OnJoinFailed);
     WriteMemUInt8(0x0047C4FD, ASM_NOP, 5);
 }
 
@@ -448,7 +453,7 @@ void RenderDownloadProgress()
     }
 
     rf::GrSetColor(0, 0xFF, 0, 0x80);
-    sprintf(szBuf, "Downloading: %.2f MB / %.2f MB", g_cbDownloadProgress/1024.0f/1024.0f, g_cbLevelSize/1024.0f/1024.0f);
+    std::sprintf(szBuf, "Downloading: %.2f MB / %.2f MB", g_cbDownloadProgress/1024.0f/1024.0f, g_cbLevelSize/1024.0f/1024.0f);
     rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, x + cx/2, y + cy/2 - cyFont/2, szBuf, -1, rf::g_GrTextMaterial);
 }
 

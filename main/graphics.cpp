@@ -7,6 +7,19 @@
 #include "inline_asm.h"
 #include <CallHook2.h>
 
+namespace rf {
+
+static auto &g_pDirect3D = *(IDirect3D8**)0x01CFCBE0;
+static auto &g_GrPP = *(D3DPRESENT_PARAMETERS*)0x01CFCA18;
+static auto &g_AdapterIdx = *(uint32_t*)0x01CFCC34;
+static auto &g_GrScaleVec = *(Vector3*)0x01818B48;
+static auto &g_GrViewMatrix = *(Matrix3*)0x018186C8;
+static auto &g_GrDeviceCaps = *(D3DCAPS8*)0x01CFCAC8;
+static auto &g_GrDefaultWFar = *(float*)0x00596140;
+
+static const auto GrSetTextureMipFilter = (void(*)(int bLinear))0x0050E830;
+}
+
 static float g_GrClippedGeomOffsetX = -0.5;
 static float g_GrClippedGeomOffsetY = -0.5;
 
@@ -153,14 +166,16 @@ static void SetupPP(void)
         SetWindowPos(rf::g_hWnd, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), SWP_NOZORDER);
 }
 
-void GrDrawRect_GrDrawPolyHook(int Num, rf::GrVertex **ppVertices, int Flags, int iMat)
-{
-    for (int i = 0; i < Num; ++i) {
-        ppVertices[i]->vScreenPos.x -= 0.5f;
-        ppVertices[i]->vScreenPos.y -= 0.5f;
+CallHook2<void(int, rf::GrVertex**, int, int)> GrDrawRect_GrDrawPoly_Hook{
+    0x0050DD69,
+    [](int Num, rf::GrVertex **ppVertices, int Flags, int iMat) {
+        for (int i = 0; i < Num; ++i) {
+            ppVertices[i]->vScreenPos.x -= 0.5f;
+            ppVertices[i]->vScreenPos.y -= 0.5f;
+        }
+        GrDrawRect_GrDrawPoly_Hook.CallTarget(Num, ppVertices, Flags, iMat);
     }
-    rf::GrDrawPoly(Num, ppVertices, Flags, iMat);
-}
+};
 
 DWORD SetupMaxAnisotropy()
 {
@@ -264,7 +279,7 @@ void GraphicsInit()
     WriteMemUInt8(0x005478D7, ASM_FADD);
     WriteMemPtr(0x005478C6 + 2, &g_GrClippedGeomOffsetX);
     WriteMemPtr(0x005478D7 + 2, &g_GrClippedGeomOffsetY);
-    WriteMemInt32(0x0050DD69 + 1, (uintptr_t)GrDrawRect_GrDrawPolyHook - (0x0050DD69 + 0x5));
+    GrDrawRect_GrDrawPoly_Hook.Install();
 #endif
 
     if (g_game_config.highScannerRes) {

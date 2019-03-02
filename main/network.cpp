@@ -12,22 +12,25 @@
 #endif
 
 namespace rf {
-static const auto MultiIsCurrentServer = AddrAsRef<uint8_t(const rf::NwAddr* addr)>(0x0044AD80);
+static const auto MpIsConnectingToServer = AddrAsRef<uint8_t(const rf::NwAddr& addr)>(0x0044AD80);
 static auto& RflStaticGeometry = AddrAsRef<void*>(0x006460E8);
 static auto& SimultaneousPing = AddrAsRef<uint32_t>(0x00599CD8);
+
+typedef void(*NwProcessGamePackets_Type)(const char *pData, int cbData, const NwAddr &pAddr, Player *pPlayer);
+static const auto NwProcessGamePackets = (NwProcessGamePackets_Type)0x004790D0;
 }
 
-typedef void NwPacketHandler_Type(char* data, const rf::NwAddr* addr);
+typedef void NwPacketHandler_Type(char* data, const rf::NwAddr& addr);
 
 //#define TEST_BUFFER_OVERFLOW_FIXES
 
-CallHook2<void(const char*, int, const rf::NwAddr*, rf::Player*)> ProcessUnreliableGamePackets_Hook{
+CallHook2<void(const char*, int, const rf::NwAddr&, rf::Player*)> ProcessUnreliableGamePackets_Hook{
     0x00479244,
-    [](const char* data, int data_len, const rf::NwAddr* addr, rf::Player* player) {
+    [](const char* data, int data_len, const rf::NwAddr& addr, rf::Player* player) {
         rf::NwProcessGamePackets(data, data_len, addr, player);
 
     #if MASK_AS_PF
-        ProcessPfPacket(data, data_len, addr, player);
+        ProcessPfPacket(data, data_len, &addr, player);
     #endif
     }
 };
@@ -274,7 +277,7 @@ ASM_FUNC(ProcessRconPacket_Security_0046C751,
 
 FunHook2<NwPacketHandler_Type> ProcessGameInfoReqPacket_Hook{
     0x0047B480,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (rf::g_bLocalNetworkGame) // server-side
             ProcessGameInfoReqPacket_Hook.CallTarget(data, addr);
     }
@@ -282,7 +285,7 @@ FunHook2<NwPacketHandler_Type> ProcessGameInfoReqPacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessGameInfoPacket_Hook{
     0x0047B2A0,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (!rf::g_bLocalNetworkGame) // client-side
             ProcessGameInfoPacket_Hook.CallTarget(data, addr);
     }
@@ -290,7 +293,7 @@ FunHook2<NwPacketHandler_Type> ProcessGameInfoPacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessJoinReqPacket_Hook{
     0x0047AC60,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (rf::g_bLocalNetworkGame) // server-side
             ProcessJoinReqPacket_Hook.CallTarget(data, addr);
     }
@@ -298,7 +301,7 @@ FunHook2<NwPacketHandler_Type> ProcessJoinReqPacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessJoinAcceptPacket_Hook{
     0x0047A840,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (!rf::g_bLocalNetworkGame) // client-side
             ProcessJoinAcceptPacket_Hook.CallTarget(data, addr);
     }
@@ -306,14 +309,14 @@ FunHook2<NwPacketHandler_Type> ProcessJoinAcceptPacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessJoinDenyPacket_Hook{
     0x0047A400,
-    [](char* data, const rf::NwAddr* addr) {
-        if (!rf::g_bLocalNetworkGame && rf::MultiIsCurrentServer(addr)) // client-side
+    [](char* data, const rf::NwAddr& addr) {
+        if (!rf::g_bLocalNetworkGame && rf::MpIsConnectingToServer(addr)) // client-side
             ProcessJoinDenyPacket_Hook.CallTarget(data, addr);
     }
 };
 FunHook2<NwPacketHandler_Type> ProcessNewPlayerPacket_Hook{
     0x0047A580,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (!rf::g_bLocalNetworkGame) { // client-side
             if (GetForegroundWindow() != rf::g_hWnd)
                 Beep(750, 300);
@@ -324,7 +327,7 @@ FunHook2<NwPacketHandler_Type> ProcessNewPlayerPacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessPlayersPacket_Hook{
     0x00481E60,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (!rf::g_bLocalNetworkGame) // client-side
             ProcessPlayersPacket_Hook.CallTarget(data, addr);
     }
@@ -332,7 +335,7 @@ FunHook2<NwPacketHandler_Type> ProcessPlayersPacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessLeftGamePacket_Hook{
     0x0047BBC0,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         // server-side and client-side
         if (rf::g_bLocalNetworkGame) {
             rf::Player* src_player = rf::NwGetPlayerFromAddr(addr);
@@ -344,7 +347,7 @@ FunHook2<NwPacketHandler_Type> ProcessLeftGamePacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessEndGamePacket_Hook{
     0x0047BAB0,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (!rf::g_bLocalNetworkGame) // client-side
             ProcessEndGamePacket_Hook.CallTarget(data, addr);
     }
@@ -352,7 +355,7 @@ FunHook2<NwPacketHandler_Type> ProcessEndGamePacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessStateInfoReqPacket_Hook{
     0x00481BB0,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (rf::g_bLocalNetworkGame) // server-side
             ProcessStateInfoReqPacket_Hook.CallTarget(data, addr);
     }
@@ -360,7 +363,7 @@ FunHook2<NwPacketHandler_Type> ProcessStateInfoReqPacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessStateInfoDonePacket_Hook{
     0x00481AF0,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (!rf::g_bLocalNetworkGame) // client-side
             ProcessStateInfoDonePacket_Hook.CallTarget(data, addr);
     }
@@ -368,7 +371,7 @@ FunHook2<NwPacketHandler_Type> ProcessStateInfoDonePacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessClientInGamePacket_Hook{
     0x004820D0,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (rf::g_bLocalNetworkGame) // server-side
             ProcessClientInGamePacket_Hook.CallTarget(data, addr);
     }
@@ -376,7 +379,7 @@ FunHook2<NwPacketHandler_Type> ProcessClientInGamePacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessChatLinePacket_Hook{
     0x00444860,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         // server-side and client-side
         if (rf::g_bLocalNetworkGame) {
             rf::Player *src_player = rf::NwGetPlayerFromAddr(addr);
@@ -390,7 +393,7 @@ FunHook2<NwPacketHandler_Type> ProcessChatLinePacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessNameChangePacket_Hook{
     0x0046EAE0,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         // server-side and client-side
         if (rf::g_bLocalNetworkGame) {
             rf::Player* src_player = rf::NwGetPlayerFromAddr(addr);
@@ -404,7 +407,7 @@ FunHook2<NwPacketHandler_Type> ProcessNameChangePacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessRespawnReqPacket_Hook{
     0x00480A20,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (rf::g_bLocalNetworkGame) // server-side
             ProcessRespawnReqPacket_Hook.CallTarget(data, addr);
     }
@@ -412,7 +415,7 @@ FunHook2<NwPacketHandler_Type> ProcessRespawnReqPacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessTriggerActivatePacket_Hook{
     0x004831D0,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (!rf::g_bLocalNetworkGame) // client-side
             ProcessTriggerActivatePacket_Hook.CallTarget(data, addr);
     }
@@ -420,7 +423,7 @@ FunHook2<NwPacketHandler_Type> ProcessTriggerActivatePacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessUseKeyPressedPacket_Hook{
     0x00483260,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (rf::g_bLocalNetworkGame) // server-side
             ProcessUseKeyPressedPacket_Hook.CallTarget(data, addr);
     }
@@ -428,7 +431,7 @@ FunHook2<NwPacketHandler_Type> ProcessUseKeyPressedPacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessPregameBooleanPacket_Hook{
     0x004766B0,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (!rf::g_bLocalNetworkGame) // client-side
             ProcessPregameBooleanPacket_Hook.CallTarget(data, addr);
     }
@@ -436,7 +439,7 @@ FunHook2<NwPacketHandler_Type> ProcessPregameBooleanPacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessPregameGlassPacket_Hook{
     0x004767B0,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (!rf::g_bLocalNetworkGame) // client-side
             ProcessPregameGlassPacket_Hook.CallTarget(data, addr);
     }
@@ -444,7 +447,7 @@ FunHook2<NwPacketHandler_Type> ProcessPregameGlassPacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessPregameRemoteChargePacket_Hook{
     0x0047F9E0,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (!rf::g_bLocalNetworkGame) // client-side
             ProcessPregameRemoteChargePacket_Hook.CallTarget(data, addr);
     }
@@ -452,7 +455,7 @@ FunHook2<NwPacketHandler_Type> ProcessPregameRemoteChargePacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessSuicidePacket_Hook{
     0x00475760,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (rf::g_bLocalNetworkGame) // server-side
             ProcessSuicidePacket_Hook.CallTarget(data, addr);
     }
@@ -460,7 +463,7 @@ FunHook2<NwPacketHandler_Type> ProcessSuicidePacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessEnterLimboPacket_Hook{
     0x0047C060,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (!rf::g_bLocalNetworkGame) // client-side
             ProcessEnterLimboPacket_Hook.CallTarget(data, addr);
     }
@@ -468,7 +471,7 @@ FunHook2<NwPacketHandler_Type> ProcessEnterLimboPacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessLeaveLimboPacket_Hook{
     0x0047C160,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (!rf::g_bLocalNetworkGame) // client-side
             ProcessLeaveLimboPacket_Hook.CallTarget(data, addr);
     }
@@ -476,7 +479,7 @@ FunHook2<NwPacketHandler_Type> ProcessLeaveLimboPacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessTeamChangePacket_Hook{
     0x004825B0,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         // server-side and client-side
         if (rf::g_bLocalNetworkGame) {
             rf::Player *src_player = rf::NwGetPlayerFromAddr(addr);
@@ -491,7 +494,7 @@ FunHook2<NwPacketHandler_Type> ProcessTeamChangePacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessPingPacket_Hook{
     0x00484CE0,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (!rf::g_bLocalNetworkGame) // client-side
             ProcessPingPacket_Hook.CallTarget(data, addr);
     }
@@ -499,7 +502,7 @@ FunHook2<NwPacketHandler_Type> ProcessPingPacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessPongPacket_Hook{
     0x00484D50,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (rf::g_bLocalNetworkGame) // server-side
             ProcessPongPacket_Hook.CallTarget(data, addr);
     }
@@ -507,7 +510,7 @@ FunHook2<NwPacketHandler_Type> ProcessPongPacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessNetgameUpdatePacket_Hook{
     0x00484F40,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (!rf::g_bLocalNetworkGame) // client-side
             ProcessNetgameUpdatePacket_Hook.CallTarget(data, addr);
     }
@@ -515,7 +518,7 @@ FunHook2<NwPacketHandler_Type> ProcessNetgameUpdatePacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessRateChangePacket_Hook{
     0x004807B0,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         // server-side and client-side?
         if (rf::g_bLocalNetworkGame) {
             rf::Player *src_player = rf::NwGetPlayerFromAddr(addr);
@@ -529,7 +532,7 @@ FunHook2<NwPacketHandler_Type> ProcessRateChangePacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessSelectWeaponReqPacket_Hook{
     0x00485920,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (rf::g_bLocalNetworkGame) // server-side
             ProcessSelectWeaponReqPacket_Hook.CallTarget(data, addr);
     }
@@ -537,7 +540,7 @@ FunHook2<NwPacketHandler_Type> ProcessSelectWeaponReqPacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessClutterUpdatePacket_Hook{
     0x0047F1A0,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (!rf::g_bLocalNetworkGame) // client-side
             ProcessClutterUpdatePacket_Hook.CallTarget(data, addr);
     }
@@ -545,7 +548,7 @@ FunHook2<NwPacketHandler_Type> ProcessClutterUpdatePacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessClutterKillPacket_Hook{
     0x0047F380,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (!rf::g_bLocalNetworkGame) // client-side
             ProcessClutterKillPacket_Hook.CallTarget(data, addr);
     }
@@ -553,7 +556,7 @@ FunHook2<NwPacketHandler_Type> ProcessClutterKillPacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessCtfFlagPickedUpPacket_Hook{
     0x00474040,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (!rf::g_bLocalNetworkGame) // client-side
             ProcessCtfFlagPickedUpPacket_Hook.CallTarget(data, addr);
     }
@@ -561,7 +564,7 @@ FunHook2<NwPacketHandler_Type> ProcessCtfFlagPickedUpPacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessCtfFlagCapturedPacket_Hook{
     0x004742E0,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (!rf::g_bLocalNetworkGame) // client-side
             ProcessCtfFlagCapturedPacket_Hook.CallTarget(data, addr);
     }
@@ -569,7 +572,7 @@ FunHook2<NwPacketHandler_Type> ProcessCtfFlagCapturedPacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessCtfFlagUpdatePacket_Hook{
     0x00474810,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (!rf::g_bLocalNetworkGame) // client-side
             ProcessCtfFlagUpdatePacket_Hook.CallTarget(data, addr);
     }
@@ -577,7 +580,7 @@ FunHook2<NwPacketHandler_Type> ProcessCtfFlagUpdatePacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessCtfFlagReturnedPacket_Hook{
     0x00474420,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (!rf::g_bLocalNetworkGame) // client-side
             ProcessCtfFlagReturnedPacket_Hook.CallTarget(data, addr);
     }
@@ -585,7 +588,7 @@ FunHook2<NwPacketHandler_Type> ProcessCtfFlagReturnedPacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessCtfFlagDroppedPacket_Hook{
     0x00474D70,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (!rf::g_bLocalNetworkGame) // client-side
             ProcessCtfFlagDroppedPacket_Hook.CallTarget(data, addr);
     }
@@ -593,7 +596,7 @@ FunHook2<NwPacketHandler_Type> ProcessCtfFlagDroppedPacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessRemoteChargeKillPacket_Hook{
     0x00485BC0,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (!rf::g_bLocalNetworkGame) // client-side
             ProcessRemoteChargeKillPacket_Hook.CallTarget(data, addr);
     }
@@ -601,7 +604,7 @@ FunHook2<NwPacketHandler_Type> ProcessRemoteChargeKillPacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessItemUpdatePacket_Hook{
     0x0047A220,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (!rf::g_bLocalNetworkGame) // client-side
             ProcessItemUpdatePacket_Hook.CallTarget(data, addr);
     }
@@ -609,7 +612,7 @@ FunHook2<NwPacketHandler_Type> ProcessItemUpdatePacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessObjUpdatePacket_Hook{
     0x0047DF90,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         // server-side and client-side
         ProcessObjUpdatePacket_Hook.CallTarget(data, addr);
     }
@@ -617,7 +620,7 @@ FunHook2<NwPacketHandler_Type> ProcessObjUpdatePacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessObjKillPacket_Hook{
     0x0047EDE0,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (!rf::g_bLocalNetworkGame) // client-side
             ProcessObjKillPacket_Hook.CallTarget(data, addr);
     }
@@ -625,7 +628,7 @@ FunHook2<NwPacketHandler_Type> ProcessObjKillPacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessItemApplyPacket_Hook{
     0x004798D0,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (!rf::g_bLocalNetworkGame) // client-side
             ProcessItemApplyPacket_Hook.CallTarget(data, addr);
     }
@@ -633,7 +636,7 @@ FunHook2<NwPacketHandler_Type> ProcessItemApplyPacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessBooleanPacket_Hook{
     0x00476590,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (!rf::g_bLocalNetworkGame) // client-side
             ProcessBooleanPacket_Hook.CallTarget(data, addr);
     }
@@ -641,7 +644,7 @@ FunHook2<NwPacketHandler_Type> ProcessBooleanPacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessRespawnPacket_Hook{
     0x004799E0,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (!rf::g_bLocalNetworkGame) // client-side
             ProcessRespawnPacket_Hook.CallTarget(data, addr);
     }
@@ -649,7 +652,7 @@ FunHook2<NwPacketHandler_Type> ProcessRespawnPacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessEntityCreatePacket_Hook{
     0x00475420,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (!rf::g_bLocalNetworkGame) { // client-side
             // Update Default Player Weapon if server has it overriden
             size_t name_size = strlen(data) + 1;
@@ -674,7 +677,7 @@ FunHook2<NwPacketHandler_Type> ProcessEntityCreatePacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessItemCreatePacket_Hook{
     0x00479F70,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (!rf::g_bLocalNetworkGame) // client-side
             ProcessItemCreatePacket_Hook.CallTarget(data, addr);
     }
@@ -682,7 +685,7 @@ FunHook2<NwPacketHandler_Type> ProcessItemCreatePacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessReloadPacket_Hook{
     0x00485AB0,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (!rf::g_bLocalNetworkGame) { // client-side
             // Update ClipSize and MaxAmmo if received values are greater than values from local weapons.tbl
             int WeaponClsId = *((int32_t*)data + 1);
@@ -702,7 +705,7 @@ FunHook2<NwPacketHandler_Type> ProcessReloadPacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessReloadReqPacket_Hook{
     0x00485A60,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (rf::g_bLocalNetworkGame) // server-side
             ProcessReloadReqPacket_Hook.CallTarget(data, addr);
     }
@@ -710,7 +713,7 @@ FunHook2<NwPacketHandler_Type> ProcessReloadReqPacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessWeaponFirePacket_Hook{
     0x0047D6C0,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         // server-side and client-side
         ProcessWeaponFirePacket_Hook.CallTarget(data, addr);
     }
@@ -718,7 +721,7 @@ FunHook2<NwPacketHandler_Type> ProcessWeaponFirePacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessFallDamagePacket_Hook{
     0x00476370,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (rf::g_bLocalNetworkGame) // server-side
             ProcessFallDamagePacket_Hook.CallTarget(data, addr);
     }
@@ -726,7 +729,7 @@ FunHook2<NwPacketHandler_Type> ProcessFallDamagePacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessRconReqPacket_Hook{
     0x0046C520,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (rf::g_bLocalNetworkGame) // server-side
             ProcessRconReqPacket_Hook.CallTarget(data, addr);
     }
@@ -734,7 +737,7 @@ FunHook2<NwPacketHandler_Type> ProcessRconReqPacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessRconPacket_Hook{
     0x0046C6E0,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (rf::g_bLocalNetworkGame) // server-side
             ProcessRconPacket_Hook.CallTarget(data, addr);
     }
@@ -742,7 +745,7 @@ FunHook2<NwPacketHandler_Type> ProcessRconPacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessSoundPacket_Hook{
     0x00471FF0,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (!rf::g_bLocalNetworkGame) // client-side
             ProcessSoundPacket_Hook.CallTarget(data, addr);
     }
@@ -750,7 +753,7 @@ FunHook2<NwPacketHandler_Type> ProcessSoundPacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessTeamScorePacket_Hook{
     0x00472210,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (!rf::g_bLocalNetworkGame) // client-side
             ProcessTeamScorePacket_Hook.CallTarget(data, addr);
     }
@@ -758,7 +761,7 @@ FunHook2<NwPacketHandler_Type> ProcessTeamScorePacket_Hook{
 
 FunHook2<NwPacketHandler_Type> ProcessGlassKillPacket_Hook{
     0x00472350,
-    [](char* data, const rf::NwAddr* addr) {
+    [](char* data, const rf::NwAddr& addr) {
         if (!rf::g_bLocalNetworkGame) // client-side
             ProcessGlassKillPacket_Hook.CallTarget(data, addr);
     }

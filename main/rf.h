@@ -247,7 +247,7 @@ namespace rf
 
     static const auto DcPrint = (void(*)(const char *pszText, const int *pColor))0x00509EC0;
     static const auto DcPrintf = (void(*)(const char *pszFormat, ...))0x0050B9F0;
-    static const auto DcGetArg = (void(*)(int Type, int bUnknown))0x0050AED0;
+    static const auto DcGetArg = (void(*)(int Type, bool bPreserveCase))0x0050AED0;
     static const auto DcRunCmd = (int(*)(const char *pszCmd))0x00509B00;
 
     //static const auto g_ppDcCommands = (DcCommand**)0x01775530;
@@ -289,7 +289,7 @@ namespace rf
     static const auto BmConvertFormat = (void(*)(void *pDstBits, BmPixelFormat DstPixelFmt, const void *pSrcBits, BmPixelFormat SrcPixelFmt, int NumPixels))0x0055DD20;
     static const auto BmGetBitmapSize = (void(*)(int BmHandle, int *pWidth, int *pHeight))0x00510630;
     static const auto BmGetFilename = (const char*(*)(int BmHandle))0x00511710;
-    static const auto BmLock = (BmPixelFormat(*)(int BmHandle, BYTE **ppData, BYTE **ppPalette))0x00510780;
+    static const auto BmLock = (BmPixelFormat(*)(int BmHandle, uint8_t **ppData, uint8_t **ppPalette))0x00510780;
     static const auto BmUnlock = (void(*)(int BmHandle))0x00511700;
 
     /* Graphics */
@@ -366,16 +366,9 @@ namespace rf
         GR_ALIGN_RIGHT = 2,
     };
 
-    static auto &g_pDirect3D = *(IDirect3D8**)0x01CFCBE0;
     static auto &g_pGrDevice = *(IDirect3DDevice8**)0x01CFCBE4;
     static auto &g_GrScreen = *(GrScreen*)0x017C7BC0;
-    static auto &g_GrPP = *(D3DPRESENT_PARAMETERS*)0x01CFCA18;
-    static auto &g_AdapterIdx = *(uint32_t*)0x01CFCC34;
-    static auto &g_GrScaleVec = *(Vector3*)0x01818B48;
-    static auto &g_GrViewMatrix = *(Matrix3*)0x018186C8;
-    static auto &g_GrDeviceCaps = *(D3DCAPS8*)0x01CFCAC8;
-    static auto &g_GrDefaultWFar = *(float*)0x00596140;
-
+    
     static auto &g_GrLineMaterial = *(uint32_t*)0x01775B00;
     static auto &g_GrRectMaterial = *(uint32_t*)0x17756C0;
     static auto &g_GrTextMaterial = *(uint32_t*)0x17C7C5C;
@@ -388,27 +381,25 @@ namespace rf
     static const auto GrGetViewportHeight = (unsigned(*)())0x0050CDC0;
     static const auto GrSetColor = (void(*)(unsigned r, unsigned g, unsigned b, unsigned a))0x0050CF80;
     static const auto GrSetColorPtr = (void(*)(uint32_t *pColor))0x0050D000;
+    static const auto GrReadBackBuffer = (int(*)(int x, int y, int Width, int Height, void *pBuffer))0x0050DFF0;
+    static const auto GrFlushBuffers = (void(*)())0x00559D90;
+
     static const auto GrDrawRect = (void(*)(unsigned x, unsigned y, unsigned cx, unsigned cy, unsigned Material))0x0050DBE0;
     static const auto GrDrawImage = (void(*)(int BmHandle, int x, int y, int Material))0x0050D2A0;
     static const auto GrDrawBitmapStretched = (void(*)(int BmHandle, int dstX, int dstY, int dstW, int dstH, int srcX, int srcY, int srcW, int srcH, float a10, float a11, int Material))0x0050D250;
-    static const auto GrDrawPoly = (void(*)(int Num, GrVertex **ppVertices, int Flags, int iMat))0x0050DF80;
     static const auto GrDrawText = (void(*)(unsigned x, unsigned y, const char *pszText, int Font, unsigned Material))0x0051FEB0;
     static const auto GrDrawAlignedText = (void(*)(GrTextAlignment Align, unsigned x, unsigned y, const char *pszText, int Font, unsigned Material))0x0051FE50;
+
+    static const auto GrRenderLine = (char(*)(const Vector3 *pWorldPos1, const Vector3 *pWorldPos2, int Material))0x00515960;
+    static const auto GrRenderSphere = (char(*)(const Vector3 *pvPos, float fRadius, int Material))0x00515CD0;
+
     static const auto GrFitText = (String* (*)(String* pstrDest, String::Pod Str, int cxMax))0x00471EC0;
-    static const auto GrReadBackBuffer = (int(*)(int x, int y, int Width, int Height, void *pBuffer))0x0050DFF0;
     static const auto GrLoadFont = (int(*)(const char *pszFileName, int a2))0x0051F6E0;
     static const auto GrGetFontHeight = (unsigned(*)(int FontId))0x0051F4D0;
     static const auto GrGetTextWidth = (void(*)(int *pOutWidth, int *pOutHeight, const char *pszText, int TextLen, int FontId))0x0051F530;
-    static const auto GrFlushBuffers = (void(*)())0x00559D90;
-    static const auto GrSwapBuffers = (void(*)())0x0050CE20;
-    static const auto GrSetViewMatrix = (void(*)(Matrix3 *pMatRot, Vector3 *pPos, float fFov, int a4, int a5))0x00517EB0;
-    static const auto GrSetViewMatrixD3D = (void(*)(Matrix3 *pMatRot, Vector3 *pPos, float fFov, int a4, int a5))0x00547150;
-    static const auto GrRenderLine = (char(*)(const Vector3 *pWorldPos1, const Vector3 *pWorldPos2, int Material))0x00515960;
-    static const auto GrRenderSphere = (char(*)(const Vector3 *pvPos, float fRadius, int Material))0x00515CD0;
+
     static const auto GrLock = (char(*)(int BmHandle, int SectionIdx, GrLockData *pData, int a4))0x0050E2E0;
     static const auto GrUnlock = (void(*)(GrLockData *pData))0x0050E310;
-    static const auto GrInitBuffers = (void(*)())0x005450A0;
-    static const auto GrSetTextureMipFilter = (void(*)(int bLinear))0x0050E830;
 
     /* User Interface (UI) */
 
@@ -452,7 +443,7 @@ namespace rf
     typedef int(*PackfileLoad_Type)(const char *pszFileName, const char *pszDir);
     static const auto PackfileLoad = (PackfileLoad_Type)0x0052C070;
 
-    static const auto FsAddDirectoryEx = (int(*)(const char *pszDir, const char *pszExtList, char bUnknown))0x00514070;
+    static const auto FsAddDirectoryEx = (int(*)(const char *pszDir, const char *pszExtList, bool bUnknown))0x00514070;
 
     /* Network */
 
@@ -511,21 +502,16 @@ namespace rf
     };
     static_assert(sizeof(CPlayerNetData) == 0x9C8, "invalid size");
 
-    static auto &g_NwSocket = *(SOCKET*)0x005A660C;
-
-    typedef void(*NwProcessGamePackets_Type)(const char *pData, int cbData, const NwAddr *pAddr, Player *pPlayer);
-    static const auto NwProcessGamePackets = (NwProcessGamePackets_Type)0x004790D0;
-
     typedef void(*NwSendNotReliablePacket_Type)(const void *pAddr, const void *pPacket, unsigned cbPacket);
     static const auto NwSendNotReliablePacket = (NwSendNotReliablePacket_Type)0x0052A080;
 
-    static const auto NwSendReliablePacket = (void(*)(Player *pPlayer, const BYTE *pData, unsigned int cbData, int a4))0x00479480;
+    static const auto NwSendReliablePacket = (void(*)(Player *pPlayer, const uint8_t *pData, unsigned int cbData, int a4))0x00479480;
 
-    typedef void(*NwAddrToStr_Type)(char *pszDest, int cbDest, NwAddr *pAddr);
+    typedef void(*NwAddrToStr_Type)(char *pszDest, int cbDest, NwAddr& Addr);
     static const auto NwAddrToStr = (NwAddrToStr_Type)0x00529FE0;
 
-    static const auto NwGetPlayerFromAddr = (Player *(*)(const NwAddr *pAddr))0x00484850;
-    static const auto NwCompareAddr = (int(*)(const NwAddr *pAddr1, const NwAddr *pAddr2, char bCheckPort))0x0052A930;
+    static const auto NwGetPlayerFromAddr = (Player *(*)(const NwAddr& Addr))0x00484850;
+    static const auto NwCompareAddr = (int(*)(const NwAddr &pAddr1, const NwAddr &pAddr2, bool bCheckPort))0x0052A930;
 
     /* Camera */
 
@@ -805,21 +791,6 @@ namespace rf
 
     typedef bool(*IsPlayerDying_Type)(Player *pPlayer);
     static const auto IsPlayerDying = (IsPlayerDying_Type)0x004A4940;
-
-    /* Player Fpgun */
-
-    static const auto PlayerFpgunRender = (void(*)(Player*))0x004A2B30;
-    static const auto PlayerFpgunUpdate = (void(*)(Player*))0x004A2700;
-    static const auto PlayerFpgunSetupMesh = (void(*)(Player*, int WeaponClsId))0x004AA230;
-    static const auto PlayerFpgunUpdateMesh = (void(*)(Player*))0x004AA6D0;
-    static const auto PlayerRenderRocketLauncherScannerView = (void(*)(Player *pPlayer))0x004AEEF0;
-    static const auto PlayerFpgunSetState = (void(*)(Player *pPlayer, int State))0x004AA560;
-    static const auto PlayerFpgunHasState = (bool(*)(Player *pPlayer, int State))0x004A9520;
-
-    static const auto IsEntityLoopFire = (bool(*)(int hEntity, signed int WeaponClsId))0x0041A830;
-    static const auto EntityIsSwimming = (bool(*)(EntityObj *pEntity))0x0042A0A0;
-    static const auto EntityIsFalling = (bool(*)(EntityObj *pEntit))0x0042A020;
-    static const auto EntityIsReloading = (bool(*)(EntityObj *pEntity))0x00425250;
 
     /* Object */
 
@@ -1536,13 +1507,10 @@ namespace rf
     static const auto CtfGetRedFlagPlayer = (Player*(*)())0x00474E60;
     static const auto CtfGetBlueFlagPlayer = (Player*(*)())0x00474E70;
 
-    typedef const char *(*GetJoinFailedStr_Type)(unsigned Reason);
-    static const auto GetJoinFailedStr = (GetJoinFailedStr_Type)0x0047BE60;
-
     typedef void(*KickPlayer_Type)(Player *pPlayer);
     static const auto KickPlayer = (KickPlayer_Type)0x0047BF00;
 
-    typedef void(*BanIp_Type)(const NwAddr *pAddr);
+    typedef void(*BanIp_Type)(const NwAddr& addr);
     static const auto BanIp = (BanIp_Type)0x0046D0F0;
 
     static const auto MultiSetNextWeapon = (void(*)(int WeaponClsId))0x0047FCA0;
@@ -1555,7 +1523,7 @@ namespace rf
     static auto &g_GameOptions = *(uint32_t*)0x0064EC40;
 
     /* Input */
-    static const auto MouseGetPos = (int(*)(int *pX, int *pY, int *pZ))0x0051E450;
+    static const auto MouseGetPos = (int(*)(int &x, int &y, int &z))0x0051E450;
     static const auto MouseWasButtonPressed = (int(*)(int BtnIdx))0x0051E5D0;
 
     /* Game Sequence */
@@ -1605,10 +1573,10 @@ namespace rf
 
     struct RflLightmap
     {
-        BYTE *pUnk;
+        uint8_t *pUnk;
         int w;
         int h;
-        BYTE *pBuf;
+        uint8_t *pBuf;
         int BmHandle;
         int unk2;
     };
@@ -1626,7 +1594,6 @@ namespace rf
     static auto &g_MediumFontId = *(int*)0x0063C060;
     static auto &g_SmallFontId = *(int*)0x0063C068;
     static auto &g_bDirectInputDisabled = *(bool*)0x005A4F88;
-    static auto &g_bScoreboardRendered = *(bool*)0x006A1448;
     static auto &g_strDefaultPlayerWeapon = *(String*)0x007C7600;
 
     static const auto RfBeep = (void(*)(unsigned u1, unsigned u2, unsigned u3, float fVolume))0x00505560;
@@ -1634,10 +1601,7 @@ namespace rf
     static const auto SplitScreenStart = (void(*)())0x00480D30;
     static const auto SetNextLevelFilename = (void(*)(String::Pod strFilename, String::Pod strSecond))0x0045E2E0;
     static const auto DemoLoadLevel = (void(*)(const char *pszLevelFileName))0x004CC270;
-    static const auto SetCursorVisible = (void(*)(char bVisible))0x0051E680;
-    static const auto DrawScoreboard = (void(*)(bool bDraw))0x00470860;
-    static const auto SndConvertVolume3D = (void(*)(int GameSndId, Vector3 *pSoundPos, float *pPanOut, float *pVolumeOut, float VolumeIn))0x00505740;
-
+    static const auto SetCursorVisible = (void(*)(bool bVisible))0x0051E680;
 
     /* Strings Table */
     static const auto g_ppszStringsTable = (char**)0x007CBBF0;

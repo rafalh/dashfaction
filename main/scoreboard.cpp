@@ -8,6 +8,10 @@
 #include "main.h"
 #include <FunHook2.h>
 
+namespace rf {
+    static const auto DrawScoreboard = (void(*)(bool bDraw))0x00470860;
+}
+
 constexpr float ENTER_ANIM_MS = 100.0f;
 constexpr float LEAVE_ANIM_MS = 100.0f;
 constexpr float HALF_ENTER_ANIM_MS = ENTER_ANIM_MS / 2.0f;
@@ -93,7 +97,7 @@ void DrawScoreboardInternal_New(bool bDraw)
 
     // Draw RF logo
     rf::GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
-    static int ScoreRflogoBm = rf::BmLoad("score_rflogo.tga", -1, TRUE);
+    static int ScoreRflogoBm = rf::BmLoad("score_rflogo.tga", -1, true);
     rf::GrDrawImage(ScoreRflogoBm, xCenter - 170, y, rf::g_GrImageMaterial);
     y += 30;
     
@@ -120,7 +124,7 @@ void DrawScoreboardInternal_New(bool bDraw)
 
     // Draw server info
     char ip_addr_buf[64];
-    rf::NwAddrToStr(ip_addr_buf, sizeof(ip_addr_buf), &rf::g_ServAddr);
+    rf::NwAddrToStr(ip_addr_buf, sizeof(ip_addr_buf), rf::g_ServAddr);
     auto server_info = rf::String::Format("%s (%s)", rf::g_strServName.CStr(), ip_addr_buf);
     rf::String server_info_stripped;
     rf::GrFitText(&server_info_stripped, server_info, cx - 20); // Note: this destroys input string
@@ -214,10 +218,10 @@ void DrawScoreboardInternal_New(bool bDraw)
         else
             rf::GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
         
-        static int GreenBm = rf::BmLoad("DF_green.tga", -1, 1);
-        static int RedBm = rf::BmLoad("DF_red.tga", -1, 1);
-        static int HudMicroFlagRedBm = rf::BmLoad("hud_microflag_red.tga", -1, 1);
-        static int HudMicroFlagBlueBm = rf::BmLoad("hud_microflag_blue.tga", -1, 1);
+        static int GreenBm = rf::BmLoad("DF_green.tga", -1, true);
+        static int RedBm = rf::BmLoad("DF_red.tga", -1, true);
+        static int HudMicroFlagRedBm = rf::BmLoad("hud_microflag_red.tga", -1, true);
+        static int HudMicroFlagBlueBm = rf::BmLoad("hud_microflag_blue.tga", -1, true);
         rf::EntityObj *pEntity = rf::EntityGetFromHandle(pPlayer->hEntity);
         int StatusBm = pEntity ? GreenBm : RedBm;
         if (pPlayer == pRedFlagPlayer)

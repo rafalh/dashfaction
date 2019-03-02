@@ -11,8 +11,12 @@
 #include <rfproto.h>
 
 namespace rf {
-static auto &g_MenuVersionLabel = *(UiPanel*)0x0063C088;
-auto& g_sound_enabled = AddrAsRef<bool>(0x017543D8);
+
+static const auto EntityIsReloading = (bool(*)(EntityObj *pEntity))0x00425250;
+
+static auto& g_MenuVersionLabel = *(UiPanel*)0x0063C088;
+static auto& g_sound_enabled = AddrAsRef<bool>(0x017543D8);
+
 }
 
 constexpr int EGG_ANIM_ENTER_TIME = 2000;
@@ -89,7 +93,7 @@ CallHook2<void()> MenuMainProcessMouse_Hook{
         if (rf::MouseWasButtonPressed(0))
         {
             int x, y, z;
-            rf::MouseGetPos(&x, &y, &z);
+            rf::MouseGetPos(x, y, z);
             rf::UiPanel *panels_to_check[1] = { &rf::g_MenuVersionLabel };
             int matched = rf::UiGetElementFromPos(x, y, panels_to_check, _countof(panels_to_check));
             if (matched == 0)
@@ -105,7 +109,6 @@ CallHook2<void()> MenuMainProcessMouse_Hook{
 
 int LoadEasterEggImage()
 {
-#if 1 // from resources?
     HRSRC h_res = FindResourceA(g_hmodule, MAKEINTRESOURCEA(100), RT_RCDATA);
     if (!h_res)
     {
@@ -138,9 +141,6 @@ int LoadEasterEggImage()
     rf::GrUnlock(&lock_data);
 
     return hbm;
-#else
-    return BmLoad("DF_pony.tga", -1, 0);
-#endif
 }
 
 CallHook2<void()> MenuMainRender_Hook{

@@ -71,11 +71,11 @@ CallHook2<rf::BmPixelFormat(int, int, int, int, byte*)> GrD3DReadBackBuffer_Hook
                 ERR("IDirect3DSurface8::LockRect failed 0x%x (%s)", hr, getDxErrorStr(hr));
             else {
                 int i, bytes_per_pixel;
-                BYTE *src_ptr, *dst_ptr = buffer;
+                uint8_t *src_ptr, *dst_ptr = buffer;
 
                 pixel_fmt = GetPixelFormatFromD3DFormat(desc.Format);
                 bytes_per_pixel = GetPixelFormatSize(pixel_fmt);
-                src_ptr = ((BYTE*)locked_rect.pBits) + y * locked_rect.Pitch + x * bytes_per_pixel;
+                src_ptr = ((uint8_t*)locked_rect.pBits) + y * locked_rect.Pitch + x * bytes_per_pixel;
 
                 for (i = 0; i < height; ++i) {
                     memcpy(dst_ptr, src_ptr, width * bytes_per_pixel);

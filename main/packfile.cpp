@@ -167,10 +167,10 @@ bool IsModdedGame()
     return g_bModdedGame;
 }
 
-static BOOL PackfileLoad_New(const char *pszFilename, const char *pszDir)
+static int PackfileLoad_New(const char *pszFilename, const char *pszDir)
 {
     char szFullPath[256], Buf[0x800];
-    BOOL bRet = FALSE;
+    int bRet = 0;
     unsigned cFilesInBlock, cAdded, OffsetInBlocks;
     
     VFS_DBGPRINT("Load packfile %s %s", pszDir, pszFilename);
@@ -183,12 +183,12 @@ static BOOL PackfileLoad_New(const char *pszFilename, const char *pszDir)
     if (!pszFilename || strlen(pszFilename) > 0x1F || strlen(szFullPath) > 0x7F)
     {
         ERR("Packfile name or path too long: %s", szFullPath);
-        return FALSE;
+        return 0;
     }
     
     for (unsigned i = 0; i < g_cPackfiles; ++i)
         if (!stricmp(g_pPackfiles[i]->szPath, szFullPath))
-            return TRUE;
+            return 1;
 
 #if CHECK_PACKFILE_CHECKSUM
     if (!pszDir)
@@ -210,7 +210,7 @@ static BOOL PackfileLoad_New(const char *pszFilename, const char *pszDir)
     if (!pFile)
     {
         ERR("Failed to open packfile %s", szFullPath);
-        return FALSE;
+        return 0;
     }
     
     if (g_cPackfiles % 64 == 0)
@@ -223,7 +223,7 @@ static BOOL PackfileLoad_New(const char *pszFilename, const char *pszDir)
     if (!pPackfile)
     {
         ERR("malloc failed");
-        return FALSE;
+        return 0;
     }
     
     strncpy(pPackfile->szName, pszFilename, sizeof(pPackfile->szName) - 1);
@@ -241,13 +241,13 @@ static BOOL PackfileLoad_New(const char *pszFilename, const char *pszDir)
         memset(pPackfile->pFileList, 0, pPackfile->cFiles * sizeof(rf::PackfileEntry));
         cAdded = 0;
         OffsetInBlocks = 1;
-        bRet = TRUE;
+        bRet = 1;
         
         for (unsigned i = 0; i < pPackfile->cFiles; i += 32)
         {
             if (fread(Buf, sizeof(Buf), 1, pFile) != 1)
             {
-                bRet = FALSE;
+                bRet = 0;
                 ERR("Failed to fread vpp %s", szFullPath);
                 break;
             }
@@ -289,7 +289,7 @@ static rf::Packfile *PackfileFindArchive_New(const char *pszFilename)
     return NULL;
 }
 
-static BOOL PackfileBuildEntriesList_New(const char *pszExtList, char **ppFilenames, unsigned *pcFiles, const char *pszPackfileName)
+static int PackfileBuildEntriesList_New(const char *pszExtList, char **ppFilenames, unsigned *pcFiles, const char *pszPackfileName)
 {
     unsigned cbBuf = 1;
     
@@ -313,7 +313,7 @@ static BOOL PackfileBuildEntriesList_New(const char *pszExtList, char **ppFilena
     
     *ppFilenames = (char*)rf::Malloc(cbBuf);
     if (!*ppFilenames)
-        return FALSE;
+        return 0;
     char *BufPtr = *ppFilenames;
     for (unsigned i = 0; i < g_cPackfiles; ++i)
     {
@@ -336,12 +336,12 @@ static BOOL PackfileBuildEntriesList_New(const char *pszExtList, char **ppFilena
     // terminating zero
     BufPtr[0] = 0;
     
-    return TRUE;
+    return 1;
 }
 
-static BOOL PackfileAddEntries_New(rf::Packfile *pPackfile, const void *pBlock, unsigned cFilesInBlock, unsigned *pcAddedFiles)
+static int PackfileAddEntries_New(rf::Packfile *pPackfile, const void *pBlock, unsigned cFilesInBlock, unsigned *pcAddedFiles)
 {
-    const BYTE *pData = (const BYTE*)pBlock;
+    const uint8_t *pData = (const uint8_t*)pBlock;
     
     for (unsigned i = 0; i < cFilesInBlock; ++i)
     {
@@ -367,7 +367,7 @@ static BOOL PackfileAddEntries_New(rf::Packfile *pPackfile, const void *pBlock, 
         rf::PackfileAddToLookupTable(pEntry);
         ++g_cFilesInVfs;
     }
-    return TRUE;
+    return 1;
 }
 
 static void PackfileAddToLookupTable_New(rf::PackfileEntry *pEntry)
@@ -504,7 +504,7 @@ static void LoadDashFactionVpp()
         ERR("Failed to load dashfaction.vpp");
 }
 
-static void PackfileInit_New(void)
+static void PackfileInit_New()
 {
     unsigned StartTicks = GetTickCount();
 
@@ -549,7 +549,7 @@ static void PackfileInit_New(void)
     rf::PackfileLoad("ui.vpp", nullptr);
     LoadDashFactionVpp();
     rf::PackfileLoad("tables.vpp", nullptr);
-    *((BOOL*)0x01BDB218) = TRUE; // bPackfilesLoaded
+    *((int*)0x01BDB218) = 1; // bPackfilesLoaded
     *((uint32_t*)0x01BDB210) = 10000; // cFilesInVfs
     *((uint32_t*)0x01BDB214) = 100; // cPackfiles
 
@@ -573,7 +573,7 @@ static void PackfileInit_New(void)
         INFO("Modded game detected!");
 }
 
-static void PackfileCleanup_New(void)
+static void PackfileCleanup_New()
 {
     for (unsigned i = 0; i < g_cPackfiles; ++i)
         free(g_pPackfiles[i]);
@@ -582,7 +582,7 @@ static void PackfileCleanup_New(void)
     g_cPackfiles = 0;
 }
 
-void VfsApplyHooks(void)
+void VfsApplyHooks()
 {
     AsmWritter(0x0052BCA0).jmpLong(PackfileAddToLookupTable_New);
     AsmWritter(0x0052BD40).jmpLong(PackfileAddEntries_New);

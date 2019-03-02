@@ -394,7 +394,7 @@ DcCommand2 AntiAliasingCmd{ "antialiasing",
             rf::DcPrintf("Anti-aliasing is not supported");
         else
         {
-            DWORD Enabled = FALSE;
+            DWORD Enabled = 0;
             rf::g_pGrDevice->GetRenderState(D3DRS_MULTISAMPLEANTIALIAS, &Enabled);
             Enabled = !Enabled;
             rf::g_pGrDevice->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, Enabled);
@@ -463,7 +463,8 @@ DcCommand2 VolumeLightsCmd{
     "Toggles volumetric lightining"
 };
 
-DcCommand2 LevelSpCmd{ "levelsp",
+DcCommand2 LevelSpCmd{
+    "levelsp",
     [](std::string LevelFilename) {
         if (rf::g_bNetworkGame) {
             rf::DcPrintf("You cannot use it in multiplayer game!");
