@@ -1,7 +1,7 @@
 bin
 dist
 obj
-build
+build*
 lib
 premake-build
 research

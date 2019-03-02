@@ -1,13 +1,14 @@
 #pragma once
 
-#include <stdint.h>
-#include <stdio.h>
+#include <cstdint>
+#include <cstdio>
+#include <cmath>
+#include <cstdarg>
 
 #include <windef.h>
 
 typedef BOOL WINBOOL;
-
-#include <d3d8types.h>
+#include <d3d8.h>
 
 #ifndef __GNUC__
 #define ALIGN(n) __declspec(align(n))
