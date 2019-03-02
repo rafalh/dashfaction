@@ -45,8 +45,8 @@ Application should work on Windows XP SP3 and newer (tested mostly on Windows 10
 
 Usage
 -----
-1. Install Visual C++ Redistributable for Visual Studio 2015 (x86) from:
-https://www.microsoft.com/en-us/download/details.aspx?id=48145 (select *vc_redist.x86.exe*).
+1. Install Visual C++ Redistributable for Visual Studio 2017 (x86) from:
+https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads (select *vc_redist.x86.exe* in *Visual Studio 2017* section).
 
 2. Unpack Dash Faction files to any folder (there is no requirement to put it in Red Faction folder).
 
