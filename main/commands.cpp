@@ -14,13 +14,35 @@
 #include <FunHook2.h>
 #include <CallHook2.h>
 
-using namespace rf;
+namespace rf {
+
+// Server configuration commands
+static const auto DcfKillLimit = (DcCmdHandler)0x0046CBC0;
+static const auto DcfTimeLimit = (DcCmdHandler)0x0046CC10;
+static const auto DcfGeomodLimit = (DcCmdHandler)0x0046CC70;
+static const auto DcfCaptureLimit = (DcCmdHandler)0x0046CCC0;
+
+// Misc commands
+static const auto DcfSound = (DcCmdHandler)0x00434590;
+static const auto DcfDifficulty = (DcCmdHandler)0x00434EB0;
+static const auto DcfMouseSensitivity = (DcCmdHandler)0x0043CE90;
+static const auto DcfLevelInfo = (DcCmdHandler)0x0045C210;
+static const auto DcfVerifyLevel = (DcCmdHandler)0x0045E1F0;
+static const auto DcfPlayerNames = (DcCmdHandler)0x0046CB80;
+static const auto DcfClientsCount = (DcCmdHandler)0x0046CD10;
+static const auto DcfKickAll = (DcCmdHandler)0x0047B9E0;
+static const auto DcfTimedemo = (DcCmdHandler)0x004CC1B0;
+static const auto DcfFramerateTest = (DcCmdHandler)0x004CC360;
+static const auto DcfSystemInfo = (DcCmdHandler)0x00525A60;
+static const auto DcfTrilinearFiltering = (DcCmdHandler)0x0054F050;
+static const auto DcfDetailTextures = (DcCmdHandler)0x0054F0B0;
+
+}
 
 // Note: limit should fit in int8_t
 constexpr int CMD_LIMIT = 127;
-constexpr int DC_ARG_ANY = 0xFFFFFFFF;
 
-DcCommand *g_CommandsBuffer[CMD_LIMIT];
+rf::DcCommand *g_CommandsBuffer[CMD_LIMIT];
 bool g_DbgGeometryRenderingStats = false;
 bool g_DbgStaticLights = false;
 bool g_volumetric_lights = true;
@@ -30,10 +52,10 @@ class DcRequiredArgMissingError : public std::exception {};
 
 static bool ReadArgInternal(int TypeFlag, bool PreserveCase = false)
 {
-    DcGetArg(DC_ARG_ANY, PreserveCase);
-    if (g_DcArgType & TypeFlag)
+    rf::DcGetArg(rf::DC_ARG_ANY, PreserveCase);
+    if (rf::g_DcArgType & TypeFlag)
         return true;
-    if (!(g_DcArgType & DC_ARG_NONE))
+    if (!(rf::g_DcArgType & rf::DC_ARG_NONE))
         throw DcInvalidArgTypeError();
     return false;
 }
@@ -50,34 +72,34 @@ T DcReadArg()
 template<>
 std::optional<int> DcReadArg()
 {
-    if (!ReadArgInternal(DC_ARG_INT))
+    if (!ReadArgInternal(rf::DC_ARG_INT))
         return {};
-    return std::optional{g_iDcArg};
+    return std::optional{rf::g_iDcArg};
 }
 
 template<>
 std::optional<float> DcReadArg()
 {
-    if (!ReadArgInternal(DC_ARG_FLOAT))
+    if (!ReadArgInternal(rf::DC_ARG_FLOAT))
         return {};
-    return std::optional{g_fDcArg};
+    return std::optional{rf::g_fDcArg};
 }
 
 template<>
 std::optional<bool> DcReadArg()
 {
-    if (!ReadArgInternal(DC_ARG_TRUE | DC_ARG_FALSE))
+    if (!ReadArgInternal(rf::DC_ARG_TRUE | rf::DC_ARG_FALSE))
         return {};
-    bool Value = (g_DcArgType & DC_ARG_TRUE) == DC_ARG_TRUE;
+    bool Value = (rf::g_DcArgType & rf::DC_ARG_TRUE) == rf::DC_ARG_TRUE;
     return std::optional{Value};
 }
 
 template<>
 std::optional<std::string> DcReadArg()
 {
-    if (!ReadArgInternal(DC_ARG_STR))
+    if (!ReadArgInternal(rf::DC_ARG_STR))
         return {};
-    return std::optional{g_pszDcArg};
+    return std::optional{rf::g_pszDcArg};
 }
 
 template<typename... Args>
@@ -113,34 +135,29 @@ private:
 
     void Handler()
     {
-        if (g_bDcRun)
+        if (rf::g_bDcRun)
             Run();
-        else if (g_bDcHelp)
+        else if (rf::g_bDcHelp)
             Help();
     }
 
     void Run()
     {
-        try
-        {
+        try {
             m_HandlerFunc(DcReadArg<Args>()...);
         }
-        catch (DcInvalidArgTypeError e)
-        {
-            DcPrint("Invalid arg type!", nullptr);
+        catch (DcInvalidArgTypeError e) {
+            rf::DcPrint("Invalid arg type!", nullptr);
         }
-        catch (DcRequiredArgMissingError e)
-        {
-            DcPrint("Required arg is missing!", nullptr);
+        catch (DcRequiredArgMissingError e) {
+            rf::DcPrint("Required arg is missing!", nullptr);
         }
     }
 
-    void Help()
-    {
-        if (m_Usage)
-        {
-            DcPrint(g_ppszStringsTable[STR_USAGE], nullptr);
-            DcPrintf("     %s", m_Usage);
+    void Help() {
+        if (m_Usage) {
+            rf::DcPrint(rf::g_ppszStringsTable[rf::STR_USAGE], nullptr);
+            rf::DcPrintf("     %s", m_Usage);
         }
     }
 };
@@ -191,21 +208,21 @@ rf::Player *FindBestMatchingPlayer(const char *pszName)
 
 DcCommand2 SplitScreenCmd{ "splitscreen",
     []() {
-        if (g_bNetworkGame)
+        if (rf::g_bNetworkGame)
             SplitScreenStart(); /* FIXME: set player 2 controls */
         else
-            DcPrintf("Works only in multiplayer game!");
+            rf::DcPrintf("Works only in multiplayer game!");
     },
     "Starts split screen mode"
 };
 
 #endif // SPLITSCREEN_ENABLE
 
-DcCommand2 MaxFpsCmd{ "maxfps",
+DcCommand2 MaxFpsCmd{
+    "maxfps",
     [](std::optional<float> LimitOpt) {
 
-        if (LimitOpt)
-        {
+        if (LimitOpt) {
 #ifdef NDEBUG
             float newLimit = std::min(std::max(LimitOpt.value(), (float)MIN_FPS_LIMIT), (float)MAX_FPS_LIMIT);
 #else
@@ -213,22 +230,22 @@ DcCommand2 MaxFpsCmd{ "maxfps",
 #endif
             g_game_config.maxFps = (unsigned)newLimit;
             g_game_config.save();
-            g_fMinFramerate = 1.0f / newLimit;
+            rf::g_fMinFramerate = 1.0f / newLimit;
         }
         else
-            DcPrintf("Maximal FPS: %.1f", 1.0f / g_fMinFramerate);
+            rf::DcPrintf("Maximal FPS: %.1f", 1.0f / rf::g_fMinFramerate);
     },
     "Sets maximal FPS",
     "maxfps <limit>"
 };
 
-DcCommand2 DebugCmd{ "debug",
+DcCommand2 DebugCmd{
+    "debug",
     [](std::optional<std::string> TypeOpt) {
 
 #ifdef NDEBUG
-        if (g_bNetworkGame)
-        {
-            DcPrintf("This command disabled in multiplayer!", nullptr);
+        if (rf::g_bNetworkGame) {
+            rf::DcPrintf("This command disabled in multiplayer!", nullptr);
             return;
         }
 #endif
@@ -237,21 +254,20 @@ DcCommand2 DebugCmd{ "debug",
         bool Handled = false;
         static bool AllFlags = false;
 
-        if (Type.empty())
-        {
+        if (Type.empty()) {
             AllFlags = !AllFlags;
             Handled = true;
-            DcPrintf("All debug flags are %s", AllFlags ? "enabled" : "disabled");
+            rf::DcPrintf("All debug flags are %s", AllFlags ? "enabled" : "disabled");
         }
 
         auto HandleFlag = [&](bool &FlagRef, const char *FlagName) {
             bool OldFlagValue = FlagRef;
-            if (Type == FlagName)
-            {
+            if (Type == FlagName) {
                 FlagRef = !FlagRef;
                 Handled = true;
-                DcPrintf("Debug flag '%s' is %s", FlagName, FlagRef ? "enabled" : "disabled");
-            } else if (Type.empty()) {
+                rf::DcPrintf("Debug flag '%s' is %s", FlagName, FlagRef ? "enabled" : "disabled");
+            }
+            else if (Type.empty()) {
                 FlagRef = AllFlags;
             }
             return OldFlagValue != FlagRef;
@@ -312,14 +328,13 @@ DcCommand2 DebugCmd{ "debug",
         GeomRenderingChanged |= HandleFlag(RenderNoLightmaps, "nolightmap");
 
         // Clear geometry cache (needed for geometry rendering flags)
-        if (GeomRenderingChanged)
-        {
+        if (GeomRenderingChanged) {
             auto GeomCacheClear = (void(*)())0x004F0B90;
             GeomCacheClear();
         }
 
         if (!Handled)
-            DcPrintf("Invalid debug flag: %s", Type.c_str());
+            rf::DcPrintf("Invalid debug flag: %s", Type.c_str());
     },
     nullptr,
     "debug [thruster | light | light2 | push_climb_reg | geo_reg | glass | mover | ignite | movemode | perf | perfbar | "
@@ -350,8 +365,7 @@ void DebugRender2d()
 
 DcCommand2 SpectateCmd { "spectate",
     [](std::optional<std::string> PlayerName) {
-        if (g_bNetworkGame)
-        {
+        if (rf::g_bNetworkGame) {
             rf::Player *pPlayer;
             if (PlayerName && PlayerName.value() == "false")
                 pPlayer = nullptr;
@@ -363,12 +377,12 @@ DcCommand2 SpectateCmd { "spectate",
             if (pPlayer)
                 SpectateModeSetTargetPlayer(pPlayer);
         } else
-            DcPrint("Works only in multiplayer game!", NULL);
+            rf::DcPrint("Works only in multiplayer game!", NULL);
     },
     "Starts spectating mode",
     "spectate <player_name/false>"
-    // DcPrintf("     spectate <%s>", g_ppszStringsTable[STR_PLAYER_NAME]);
-    // DcPrintf("     spectate false");
+    // rf::DcPrintf("     spectate <%s>", g_ppszStringsTable[STR_PLAYER_NAME]);
+    // rf::DcPrintf("     spectate false");
 };
 
 #endif // SPECTATE_MODE_ENABLE
@@ -377,14 +391,14 @@ DcCommand2 SpectateCmd { "spectate",
 DcCommand2 AntiAliasingCmd{ "antialiasing",
     []() {
         if (!g_game_config.msaa)
-            DcPrintf("Anti-aliasing is not supported");
+            rf::DcPrintf("Anti-aliasing is not supported");
         else
         {
             DWORD Enabled = FALSE;
-            g_pGrDevice->GetRenderState(D3DRS_MULTISAMPLEANTIALIAS, &Enabled);
+            rf::g_pGrDevice->GetRenderState(D3DRS_MULTISAMPLEANTIALIAS, &Enabled);
             Enabled = !Enabled;
-            g_pGrDevice->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, Enabled);
-            DcPrintf("Anti-aliasing is %s", Enabled ? "enabled" : "disabled");
+            rf::g_pGrDevice->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, Enabled);
+            rf::DcPrintf("Anti-aliasing is %s", Enabled ? "enabled" : "disabled");
         }
     },
     "Toggles anti-aliasing"
@@ -392,13 +406,14 @@ DcCommand2 AntiAliasingCmd{ "antialiasing",
 #endif // MULTISAMPLING_SUPPORT
 
 #if DIRECTINPUT_SUPPORT
-DcCommand2 InputModeCmd{ "inputmode",
+DcCommand2 InputModeCmd{
+    "inputmode",
     []() {
-        g_bDirectInputDisabled = !g_bDirectInputDisabled;
-        if (g_bDirectInputDisabled)
-            DcPrintf("DirectInput is disabled");
+        rf::g_bDirectInputDisabled = !rf::g_bDirectInputDisabled;
+        if (rf::g_bDirectInputDisabled)
+            rf::DcPrintf("DirectInput is disabled");
         else
-            DcPrintf("DirectInput is enabled");
+            rf::DcPrintf("DirectInput is enabled");
     },
     "Toggles input mode"
 };
@@ -410,21 +425,22 @@ static int CanPlayerFireHook(rf::Player *pPlayer)
 {
     if (!(pPlayer->Flags & 0x10))
         return 0;
-    if (g_bNetworkGame && (pPlayer->pCamera->Type == rf::CAM_FREELOOK || pPlayer->pCamera->pPlayer != pPlayer))
+    if (rf::g_bNetworkGame && (pPlayer->pCamera->Type == rf::CAM_FREELOOK || pPlayer->pCamera->pPlayer != pPlayer))
         return 0;
     return 1;
 }
 
 #endif // if CAMERA_1_3_COMMANDS
 
-DcCommand2 MouseSensitivityCmd{ "ms",
+DcCommand2 MouseSensitivityCmd{
+    "ms",
     [](std::optional<float> Value) {
         if (Value) {
-            float fValue = g_fDcArg;
+            float fValue = Value.value();
             fValue = clamp(fValue, 0.0f, 1.0f);
-            g_pLocalPlayer->Config.Controls.fMouseSensitivity = fValue;
+            rf::g_pLocalPlayer->Config.Controls.fMouseSensitivity = fValue;
         }
-        DcPrintf("Mouse sensitivity: %.2f", g_pLocalPlayer->Config.Controls.fMouseSensitivity);
+        rf::DcPrintf("Mouse sensitivity: %.2f", rf::g_pLocalPlayer->Config.Controls.fMouseSensitivity);
     },
     "Sets mouse sensitivity",
     "ms <value>"
@@ -438,97 +454,100 @@ CallHook2<void()> CoronaRenderAll_Hook{
     }
 };
 
-DcCommand2 VolumeLightsCmd{ "vli",
+DcCommand2 VolumeLightsCmd{
+    "vli",
     []() {
         g_volumetric_lights = !g_volumetric_lights;
-        DcPrintf("Volumetric lightining is %s.", g_volumetric_lights ? "disabled" : "enabled");
+        rf::DcPrintf("Volumetric lightining is %s.", g_volumetric_lights ? "disabled" : "enabled");
     },
     "Toggles volumetric lightining"
 };
 
 DcCommand2 LevelSpCmd{ "levelsp",
     [](std::string LevelFilename) {
-        if (g_bNetworkGame)
-        {
-            DcPrintf("You cannot use it in multiplayer game!");
+        if (rf::g_bNetworkGame) {
+            rf::DcPrintf("You cannot use it in multiplayer game!");
             return;
         }
         if (LevelFilename.find(".rfl") == std::string::npos)
             LevelFilename += ".rfl";
 
-        rf::String strUnk, strLevel;
-        rf::String::Init(&strUnk, "");
-        rf::String::Init(&strLevel, LevelFilename.c_str());
+        // rf::String unk_str;
+        // rf::String level_str(LevelFilename.c_str());
 
-        DcPrintf("Loading level.");
-        SetNextLevelFilename(strLevel, strUnk);
-        SwitchMenu(5, 0);
+        // rf::DcPrintf("Loading level.");
+        // rf::SetNextLevelFilename(level_str, unk_str);
+        // rf::GameSeqSetState(rf::GS_LOADING_LEVEL, false);
     },
     "Loads single player level",
     "levelsp <rfl_name>"
 };
 
-DcCommand2 LevelSoundsCmd{ "levelsounds",
+DcCommand2 LevelSoundsCmd{
+    "levelsounds",
     [](std::optional<float> Volume) {
-        if (Volume)
-        {
+        if (Volume) {
             float fVolScale = clamp(Volume.value(), 0.0f, 1.0f);
             SetPlaySoundEventsVolumeScale(fVolScale);
 
             g_game_config.levelSoundVolume = fVolScale;
             g_game_config.save();
         }
-        DcPrintf("Level sound volume: %.1f", g_game_config.levelSoundVolume);
+        rf::DcPrintf("Level sound volume: %.1f", g_game_config.levelSoundVolume);
     },
     "Sets level sounds volume scale",
     "levelsounds <volume>"
 };
 
-DcCommand2 PlayerCountCmd{ "playercount",
+DcCommand2 PlayerCountCmd{
+    "playercount",
     []() {
-        if (!g_bNetworkGame) return;
+        if (!rf::g_bNetworkGame)
+            return;
+
         int PlayerCount = 0;
-        rf::Player *pPlayer = g_pPlayersList;
+        rf::Player *pPlayer = rf::g_pPlayersList;
         while (pPlayer)
         {
-            if (pPlayer != g_pPlayersList)
+            if (pPlayer != rf::g_pPlayersList)
                 ++PlayerCount;
             pPlayer = pPlayer->pNext;
-            if (pPlayer == g_pPlayersList)
+            if (pPlayer == rf::g_pPlayersList)
                 break;
         }
-        DcPrintf("Player count: %d\n", PlayerCount);
+        rf::DcPrintf("Player count: %d\n", PlayerCount);
     },
     "Get player count"
 };
 
-DcCommand2 FindMapCmd{ "findmap",
+DcCommand2 FindMapCmd{
+    "findmap",
     [](std::string Pattern) {
         PackfileFindMatchingFiles(StringMatcher().Infix(Pattern).Suffix(".rfl"), [](const char *pszName)
         {
-            DcPrintf("%s\n", pszName);
+            rf::DcPrintf("%s\n", pszName);
         });
     },
     "Find map by filename fragment",
     "findmap <query>"
 };
 
-DcCommand g_Commands[] = {
-    {"hud", "Show and hide HUD", HudCmdHandler},
+rf::DcCommand g_Commands[] = {
+    { "hud", "Show and hide HUD", HudCmdHandler },
     { "unban_last", "Unbans last banned player", UnbanLastCmdHandler },
 };
 
-void DcShowCmdHelp(DcCommand *pCmd)
+void DcShowCmdHelp(rf::DcCommand *pCmd)
 {
-    g_bDcRun = 0;
-    g_bDcHelp = 1;
-    g_bDcStatus = 0;
+    rf::g_bDcRun = 0;
+    rf::g_bDcHelp = 1;
+    rf::g_bDcStatus = 0;
     pCmd->pfnHandler();
 }
 
 int DcAutoCompleteGetComponent(int Offset, std::string &Result)
 {
-    const char *pszBegin = g_szDcCmdLine + Offset, *pszEnd = nullptr, *pszNext;
+    const char *pszBegin = rf::g_szDcCmdLine + Offset, *pszEnd = nullptr, *pszNext;
     if (pszBegin[0] == '"')
     {
         ++pszBegin;
@@ -539,30 +558,30 @@ int DcAutoCompleteGetComponent(int Offset, std::string &Result)
         pszEnd = pszNext = strchr(pszBegin, ' ');
 
     if (!pszEnd)
-        pszEnd = g_szDcCmdLine + g_cchDcCmdLineLen;
+        pszEnd = rf::g_szDcCmdLine + rf::g_cchDcCmdLineLen;
     
     size_t Len = pszEnd - pszBegin;
     Result.assign(pszBegin, Len);
 
-    return pszNext ? pszNext + 1 - g_szDcCmdLine : -1;
+    return pszNext ? pszNext + 1 - rf::g_szDcCmdLine : -1;
 }
 
 void DcAutoCompletePutComponent(int Offset, const std::string &Component, bool Finished)
 {
     bool Quote = Component.find(' ') != std::string::npos;
     if (Quote)
-        g_cchDcCmdLineLen = Offset + sprintf(g_szDcCmdLine + Offset, "\"%s\"", Component.c_str());
+        rf::g_cchDcCmdLineLen = Offset + sprintf(rf::g_szDcCmdLine + Offset, "\"%s\"", Component.c_str());
     else
-        g_cchDcCmdLineLen = Offset + sprintf(g_szDcCmdLine + Offset, "%s", Component.c_str());
+        rf::g_cchDcCmdLineLen = Offset + sprintf(rf::g_szDcCmdLine + Offset, "%s", Component.c_str());
     if (Finished)
-        g_cchDcCmdLineLen += sprintf(g_szDcCmdLine + g_cchDcCmdLineLen, " ");
+        rf::g_cchDcCmdLineLen += sprintf(rf::g_szDcCmdLine + rf::g_cchDcCmdLineLen, " ");
 }
 
 template<typename T, typename F>
 void DcAutoCompletePrintSuggestions(T &Suggestions, F MappingFun)
 {
     for (auto Item : Suggestions)
-        DcPrintf("%s\n", MappingFun(Item));
+        rf::DcPrintf("%s\n", MappingFun(Item));
 }
 
 void DcAutoCompleteUpdateCommonPrefix(std::string &CommonPrefix, const std::string &Value, bool &First, bool CaseSensitive = false)
@@ -623,14 +642,16 @@ void DcAutoCompletePlayer(int Offset)
     FindPlayer(StringMatcher().Prefix(PlayerName), [&](rf::Player *pPlayer)
     {
         MatchingPlayers.push_back(pPlayer);
-        DcAutoCompleteUpdateCommonPrefix(CommonPrefix, pPlayer->strName.psz, First);
+        DcAutoCompleteUpdateCommonPrefix(CommonPrefix, pPlayer->strName.CStr(), First);
     });
 
     if (MatchingPlayers.size() == 1)
-        DcAutoCompletePutComponent(Offset, MatchingPlayers[0]->strName.psz, true);
+        DcAutoCompletePutComponent(Offset, MatchingPlayers[0]->strName.CStr(), true);
     else
     {
-        DcAutoCompletePrintSuggestions(MatchingPlayers, [](rf::Player *pPlayer) { return pPlayer->strName.psz; });
+        DcAutoCompletePrintSuggestions(MatchingPlayers, [](rf::Player *pPlayer) {
+            return pPlayer->strName.CStr();
+        });
         DcAutoCompletePutComponent(Offset, CommonPrefix, false);
     }
 }
@@ -645,10 +666,10 @@ void DcAutoCompleteCommand(int Offset)
     bool First = true;
     std::string CommonPrefix;
 
-    std::vector<DcCommand*> MatchingCmds;
-    for (unsigned i = 0; i < g_DcNumCommands; ++i)
+    std::vector<rf::DcCommand*> MatchingCmds;
+    for (unsigned i = 0; i < rf::g_DcNumCommands; ++i)
     {
-        DcCommand *pCmd = g_CommandsBuffer[i];
+        rf::DcCommand *pCmd = g_CommandsBuffer[i];
         if (!strnicmp(pCmd->pszCmd, Cmd.c_str(), Cmd.size()) && (NextOffset == -1 || !pCmd->pszCmd[Cmd.size()]))
         {
             MatchingCmds.push_back(pCmd);
@@ -672,7 +693,7 @@ void DcAutoCompleteCommand(int Offset)
     else if (MatchingCmds.size() > 1)
     {
         for (auto *pCmd : MatchingCmds)
-            DcPrintf("%s - %s", pCmd->pszCmd, pCmd->pszDescr);
+            rf::DcPrintf("%s - %s", pCmd->pszCmd, pCmd->pszDescr);
         DcAutoCompletePutComponent(Offset, CommonPrefix, false);
     }
     else if (MatchingCmds.size() == 1)
@@ -705,7 +726,7 @@ void CommandsInit()
 #endif // if CAMERA_1_3_COMMANDS
 
     // Change limit of commands
-    ASSERT(g_DcNumCommands == 0);
+    ASSERT(rf::g_DcNumCommands == 0);
     WriteMemPtr(0x005099AC + 1, g_CommandsBuffer);
     WriteMemUInt8(0x00509A78 + 2, CMD_LIMIT);
     WriteMemPtr(0x00509A8A + 1, g_CommandsBuffer);
@@ -724,10 +745,10 @@ void CommandsInit()
     DcAutoCompleteInput_Hook.Install();
 }
 
-void CommandRegister(DcCommand *pCmd)
+void CommandRegister(rf::DcCommand *pCmd)
 {
-    if (g_DcNumCommands < CMD_LIMIT)
-        g_CommandsBuffer[(g_DcNumCommands)++] = pCmd;
+    if (rf::g_DcNumCommands < CMD_LIMIT)
+        g_CommandsBuffer[rf::g_DcNumCommands++] = pCmd;
     else
         ASSERT(false);
 }
@@ -737,24 +758,24 @@ void CommandsAfterGameInit()
     unsigned i;
 
     // Register some unused builtin commands
-    DC_REGISTER_CMD(kill_limit, "Sets kill limit", DcfKillLimit);
-    DC_REGISTER_CMD(time_limit, "Sets time limit", DcfTimeLimit);
-    DC_REGISTER_CMD(geomod_limit, "Sets geomod limit", DcfGeomodLimit);
-    DC_REGISTER_CMD(capture_limit, "Sets capture limit", DcfCaptureLimit);
+    DC_REGISTER_CMD(kill_limit, "Sets kill limit", rf::DcfKillLimit);
+    DC_REGISTER_CMD(time_limit, "Sets time limit", rf::DcfTimeLimit);
+    DC_REGISTER_CMD(geomod_limit, "Sets geomod limit", rf::DcfGeomodLimit);
+    DC_REGISTER_CMD(capture_limit, "Sets capture limit", rf::DcfCaptureLimit);
 
-    DC_REGISTER_CMD(sound, "Toggle sound", DcfSound);
-    DC_REGISTER_CMD(difficulty, "Set game difficulty", DcfDifficulty);
-    //DC_REGISTER_CMD(ms, "Set mouse sensitivity", DcfMouseSensitivity);
-    DC_REGISTER_CMD(level_info, "Show level info", DcfLevelInfo);
-    DC_REGISTER_CMD(verify_level, "Verify level", DcfVerifyLevel);
-    DC_REGISTER_CMD(player_names, "Toggle player names on HUD", DcfPlayerNames);
-    DC_REGISTER_CMD(clients_count, "Show number of connected clients", DcfClientsCount);
-    DC_REGISTER_CMD(kick_all, "Kick all clients", DcfKickAll);
-    DC_REGISTER_CMD(timedemo, "Start timedemo", DcfTimedemo);
-    DC_REGISTER_CMD(frameratetest, "Start frame rate test", DcfFramerateTest);
-    DC_REGISTER_CMD(system_info, "Show system information", DcfSystemInfo);
-    DC_REGISTER_CMD(trilinear_filtering, "Toggle trilinear filtering", DcfTrilinearFiltering);
-    DC_REGISTER_CMD(detail_textures, "Toggle detail textures", DcfDetailTextures);
+    DC_REGISTER_CMD(sound, "Toggle sound", rf::DcfSound);
+    DC_REGISTER_CMD(difficulty, "Set game difficulty", rf::DcfDifficulty);
+    //DC_REGISTER_CMD(ms, "Set mouse sensitivity", rf::DcfMouseSensitivity);
+    DC_REGISTER_CMD(level_info, "Show level info", rf::DcfLevelInfo);
+    DC_REGISTER_CMD(verify_level, "Verify level", rf::DcfVerifyLevel);
+    DC_REGISTER_CMD(player_names, "Toggle player names on HUD", rf::DcfPlayerNames);
+    DC_REGISTER_CMD(clients_count, "Show number of connected clients", rf::DcfClientsCount);
+    DC_REGISTER_CMD(kick_all, "Kick all clients", rf::DcfKickAll);
+    DC_REGISTER_CMD(timedemo, "Start timedemo", rf::DcfTimedemo);
+    DC_REGISTER_CMD(frameratetest, "Start frame rate test", rf::DcfFramerateTest);
+    DC_REGISTER_CMD(system_info, "Show system information", rf::DcfSystemInfo);
+    DC_REGISTER_CMD(trilinear_filtering, "Toggle trilinear filtering", rf::DcfTrilinearFiltering);
+    DC_REGISTER_CMD(detail_textures, "Toggle detail textures", rf::DcfDetailTextures);
 
     /* Add commands */
     for (i = 0; i < COUNTOF(g_Commands); ++i)

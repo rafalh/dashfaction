@@ -85,11 +85,11 @@ ASM_FUNC(WaterAnimateWaves_004E68A0,
     ASM_I  jmp eax
 )
 
-FunHook2<int(rf::String*, rf::String*, char*)> RflLoad_Hook{
+FunHook2<int(rf::String&, rf::String&, char*)> RflLoad_Hook{
     0x0045C540,
-    [](rf::String* level_filename, rf::String* a2, char* error_desc) {
+    [](rf::String& level_filename, rf::String& a2, char* error_desc) {
         int ret = RflLoad_Hook.CallTarget(level_filename, a2, error_desc);
-        if (ret == 0 && strstr(level_filename->psz, "L5S3")) {
+        if (ret == 0 && strstr(level_filename, "L5S3")) {
             // Fix submarine exploding - change delay of two events to make submarine physics enabled later
             //INFO("Fixing Submarine exploding bug...");
             rf::Object* obj = rf::ObjGetFromUid(4679);

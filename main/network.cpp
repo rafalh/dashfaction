@@ -656,7 +656,7 @@ FunHook2<NwPacketHandler_Type> ProcessEntityCreatePacket_Hook{
             uint8_t player_id = data[name_size + 58];
             if (player_id == rf::g_pLocalPlayer->pNwData->PlayerId) {
                 int32_t weapon_cls_id = *(int32_t*)(data + name_size + 63);
-                rf::String::Assign(&rf::g_strDefaultPlayerWeapon, &rf::g_pWeaponClasses[weapon_cls_id].strName);
+                rf::g_strDefaultPlayerWeapon = rf::g_pWeaponClasses[weapon_cls_id].strName;
 
 #if 0 // disabled because it sometimes helpful feature to switch to last used weapon \
     // Reset next weapon variable so entity wont switch after pickup
@@ -769,7 +769,7 @@ rf::EntityObj* SecureObjUpdatePacket(rf::EntityObj *entity, uint8_t flags, rf::P
     if (rf::g_bLocalNetworkGame) {
         // server-side
         if (entity && entity->_Super.Handle != src_player->hEntity) {
-            TRACE("Invalid ObjUpdate entity %x %x %s", entity->_Super.Handle, src_player->hEntity, src_player->strName.psz);
+            TRACE("Invalid ObjUpdate entity %x %x %s", entity->_Super.Handle, src_player->hEntity, src_player->strName.CStr());
             return nullptr;
         }
 

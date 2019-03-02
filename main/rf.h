@@ -2,23 +2,18 @@
 
 #include <stdint.h>
 #include <stdio.h>
-#include <windows.h>
+
+#include <windef.h>
 
 typedef BOOL WINBOOL;
 
-#include <d3d8.h>
+#include <d3d8types.h>
 
 #ifndef __GNUC__
 #define ALIGN(n) __declspec(align(n))
 #else
 #define ALIGN(n) __attribute__((aligned(n)))
 #endif
-
-// Forward definitions
-// class IDirect3D8;
-// class IDirect3DDevice8;
-// class D3DPRESENT_PARAMETERS;
-// class D3DCAPS8;
 
 #pragma pack(push, 1)
 
@@ -103,21 +98,97 @@ namespace rf
 
     /* String */
 
-    struct String
+    static const auto StringAlloc = (char*(*)(unsigned size))0x004FF300;
+    static const auto StringFree = (void(*)(void* ptr))0x004FF3A0;
+
+    class String
     {
-        uint32_t cch;
-        char *psz;
+    public:
+        // GCC follows closely Itanium ABI which requires to always pass objects by reference if class has
+        // non-trivial destructor. Therefore for passing String by value Pod struct should be used.
+        struct Pod
+        {
+            int32_t buf_size;
+            char* buf;
+        };
 
-        inline static const auto Init = (String*(__thiscall *)(String *This, const char *pszInit))0x004FF3D0;
-        inline static const auto InitFromStr = (String*(__thiscall *)(String *This, const String *pstrInit))0x004FF410;
-        inline static const auto InitEmpty = (String*(__thiscall *)(String *This))0x004FF3B0;
-        inline static const auto CStr = (const char*(__thiscall *)(String *This))0x004FF480;
-        inline static const auto Destroy = (void(__thiscall *)(String *This))0x004FF470;
-        inline static const auto Assign = (String*(__thiscall *)(String *This, String *Src))0x004FFA20;
+    private:
+        Pod m_pod;
+
+    public:
+        String()
+        {
+            const auto fun_ptr = (String&(__thiscall *)(String& this_))0x004FF3B0;
+            fun_ptr(*this);
+        }
+
+        String(const char* c_str)
+        {
+            const auto fun_ptr = (String&(__thiscall *)(String& this_, const char* c_str))0x004FF3D0;
+            fun_ptr(*this, c_str);
+        }
+
+        String(const String& str)
+        {
+            // Use Pod cast operator to make a clone
+            m_pod = str;
+        }
+
+        ~String()
+        {
+            const auto fun_ptr = (void(__thiscall *)(String& this_))0x004FF470;
+            fun_ptr(*this);
+        }
+
+        operator const char*() const
+        {
+            return CStr();
+        }
+
+        operator Pod() const
+        {
+            // Make a copy
+            const auto fun_ptr = (Pod&(__thiscall *)(Pod& this_, const Pod& str))0x004FF410;
+            Pod pod_copy;
+            fun_ptr(pod_copy, m_pod);
+            return pod_copy;
+        }
+
+        String& operator=(const String& other)
+        {
+            const auto fun_ptr = (String&(__thiscall *)(String& this_, const String& str))0x004FFA20;
+            fun_ptr(*this, other);
+            return *this;
+        }
+
+        const char *CStr() const
+        {
+            const auto fun_ptr = (const char*(__thiscall *)(const String& this_))0x004FF480;
+            return fun_ptr(*this);
+        }
+
+        int Size() const
+        {
+            const auto fun_ptr = (int(__thiscall *)(const String& this_))0x004FF490;
+            return fun_ptr(*this);
+        }
+
+        static String Format(const char* fmt, ...)
+        {
+            String str;
+            va_list args;
+            va_start(args, fmt);
+            int n = vsnprintf(nullptr, 0, fmt, args);
+            va_end(args);
+            va_start(args, fmt);
+            str.m_pod.buf_size = n + 1;
+            str.m_pod.buf = StringAlloc(str.m_pod.buf_size);
+            vsnprintf(str.m_pod.buf, n + 1, fmt, args);
+            va_end(args);
+            return str;
+        }
     };
-
-    static const auto StringAlloc = (char*(*)(unsigned cbSize))0x004FF300;
-    static const auto StringFree = (void(*)(void *pData))0x004FF3A0;
+    static_assert(sizeof(String) == 8);
 
     /* Utils */
 
@@ -171,18 +242,13 @@ namespace rf
         DC_ARG_PLUS = 0x0100,
         DC_ARG_MINUS = 0x0200,
         DC_ARG_COMMA = 0x0400,
+        DC_ARG_ANY = 0xFFFFFFFF,
     };
 
     static const auto DcPrint = (void(*)(const char *pszText, const int *pColor))0x00509EC0;
     static const auto DcPrintf = (void(*)(const char *pszFormat, ...))0x0050B9F0;
     static const auto DcGetArg = (void(*)(int Type, int bUnknown))0x0050AED0;
     static const auto DcRunCmd = (int(*)(const char *pszCmd))0x00509B00;
-
-#define DC_REGISTER_CMD(name, help, handler) \
-    do { \
-        static rf::DcCommand Dc_##name; \
-        rf::DcCommand::Init(&Dc_##name, #name, help, handler); \
-    } while (false)
 
     //static const auto g_ppDcCommands = (DcCommand**)0x01775530;
     static auto &g_DcNumCommands = *(uint32_t*)0x0177567C;
@@ -197,28 +263,11 @@ namespace rf
     static const auto g_szDcCmdLine = (char*)0x01775330;
     static auto &g_cchDcCmdLineLen = *(uint32_t*)0x0177568C;
 
-    /* Debug Console Commands */
-
-    // Server configuration commands
-    static const auto DcfKillLimit = (DcCmdHandler)0x0046CBC0;
-    static const auto DcfTimeLimit = (DcCmdHandler)0x0046CC10;
-    static const auto DcfGeomodLimit = (DcCmdHandler)0x0046CC70;
-    static const auto DcfCaptureLimit = (DcCmdHandler)0x0046CCC0;
-
-    // Misc commands
-    static const auto DcfSound = (DcCmdHandler)0x00434590;
-    static const auto DcfDifficulty = (DcCmdHandler)0x00434EB0;
-    static const auto DcfMouseSensitivity = (DcCmdHandler)0x0043CE90;
-    static const auto DcfLevelInfo = (DcCmdHandler)0x0045C210;
-    static const auto DcfVerifyLevel = (DcCmdHandler)0x0045E1F0;
-    static const auto DcfPlayerNames = (DcCmdHandler)0x0046CB80;
-    static const auto DcfClientsCount = (DcCmdHandler)0x0046CD10;
-    static const auto DcfKickAll = (DcCmdHandler)0x0047B9E0;
-    static const auto DcfTimedemo = (DcCmdHandler)0x004CC1B0;
-    static const auto DcfFramerateTest = (DcCmdHandler)0x004CC360;
-    static const auto DcfSystemInfo = (DcCmdHandler)0x00525A60;
-    static const auto DcfTrilinearFiltering = (DcCmdHandler)0x0054F050;
-    static const auto DcfDetailTextures = (DcCmdHandler)0x0054F0B0;
+    #define DC_REGISTER_CMD(name, help, handler) \
+        do { \
+            static rf::DcCommand Dc_##name; \
+            rf::DcCommand::Init(&Dc_##name, #name, help, handler); \
+        } while (false)
 
     /* Bmpman */
 
@@ -345,7 +394,7 @@ namespace rf
     static const auto GrDrawPoly = (void(*)(int Num, GrVertex **ppVertices, int Flags, int iMat))0x0050DF80;
     static const auto GrDrawText = (void(*)(unsigned x, unsigned y, const char *pszText, int Font, unsigned Material))0x0051FEB0;
     static const auto GrDrawAlignedText = (void(*)(GrTextAlignment Align, unsigned x, unsigned y, const char *pszText, int Font, unsigned Material))0x0051FE50;
-    static const auto GrFitText = (String *(*)(String *pstrDest, String Str, int cxMax))0x00471EC0;
+    static const auto GrFitText = (String* (*)(String* pstrDest, String::Pod Str, int cxMax))0x00471EC0;
     static const auto GrReadBackBuffer = (int(*)(int x, int y, int Width, int Height, void *pBuffer))0x0050DFF0;
     static const auto GrLoadFont = (int(*)(const char *pszFileName, int a2))0x0051F6E0;
     static const auto GrGetFontHeight = (unsigned(*)(int FontId))0x0051F4D0;
@@ -382,11 +431,20 @@ namespace rf
     static const auto UiMsgBox = (void(*)(const char *pszTitle, const char *pszText, void(*pfnCallback)(void), bool bInput))0x004560B0;
     static const auto UiCreateDialog = (void(*)(const char *pszTitle, const char *pszText, unsigned cButtons, const char **ppszBtnTitles, void **ppfnCallbacks, unsigned Unknown1, unsigned Unknown2))0x004562A0;
     static const auto UiGetElementFromPos = (int(*)(int x, int y, UiPanel **ppGuiList, signed int cGuiList))0x00442ED0;
-    static const auto UiLabel_Create2 = (void(__thiscall *)(UiPanel *pThis, UiPanel *pParent, int x, int y, int w, int h, const char *pszText, int FontId))0x00456C20;
 
     /* Chat */
 
-    typedef void(*ChatPrint_Type)(String strText, unsigned ColorId, String Prefix);
+    enum class ChatMsgColor
+    {
+        red_white = 0,
+        blue_white = 1,
+        red_red = 2,
+        blue_blue = 3,
+        white_white = 4,
+        default_ = 5,
+    };
+
+    typedef void(*ChatPrint_Type)(String::Pod strText, ChatMsgColor Color, String::Pod Prefix);
     static const auto ChatPrint = (ChatPrint_Type)0x004785A0;
 
     /* File System */
@@ -482,7 +540,6 @@ namespace rf
         CAM_FIXED = 0x6,
         CAM_ORBIT = 0x7,
     };
-
 
     struct Camera
     {
@@ -1501,52 +1558,48 @@ namespace rf
     static const auto MouseGetPos = (int(*)(int *pX, int *pY, int *pZ))0x0051E450;
     static const auto MouseWasButtonPressed = (int(*)(int BtnIdx))0x0051E5D0;
 
-    /* Menu */
+    /* Game Sequence */
 
-    enum MenuId
+    enum GameSeqState
     {
-        MENU_INIT = 0x1,
-        MENU_MAIN = 0x2,
-        MENU_EXTRAS = 0x3,
-        MENU_INTRO_VIDEO = 0x4,
-        MENU_LOADING_LEVEL = 0x5,
-        MENU_SAVE_GAME = 0x6,
-        MENU_LOAD_GAME = 0x7,
-        MENU_8 = 0x8,
-        MENU_9 = 0x9,
-        MENU_GAME_DYING = 0xA,
-        MENU_IN_GAME = 0xB,
-        MENU_C = 0xC,
-        MENU_EXIT_GAME = 0xD,
-        MENU_OPTIONS = 0xE,
-        MENU_MULTIPLAYER = 0xF,
-        MENU_HELP = 0x10,
-        MENU_11 = 0x11,
-        MENU_IN_SPLITSCREEN_GAME = 0x12,
-        MENU_GAME_OVER = 0x13,
-        MENU_14 = 0x14,
-        MENU_GAME_INTRO = 0x15,
-        MENU_16 = 0x16,
-        MENU_CREDITS = 0x17,
-        MENU_BOMB_TIMER = 0x18,
-        MENU_19 = 0x19,
-        MENU_1A = 0x1A,
-        MENU_1B = 0x1B,
-        MENU_1C = 0x1C,
-        MENU_1D = 0x1D,
-        MENU_SERVER_LIST = 0x1E,
-        MENU_MP_SPLITSCREEN = 0x1F,
-        MENU_MP_CREATE_GAME = 0x20,
-        MENU_21 = 0x21,
-        MENU_MP_LIMBO = 0x22,
+        GS_INIT = 0x1,
+        GS_MAIN_MENU = 0x2,
+        GS_EXTRAS_MENU = 0x3,
+        GS_INTRO_VIDEO = 0x4,
+        GS_LOADING_LEVEL = 0x5,
+        GS_SAVE_GAME_MENU = 0x6,
+        GS_LOAD_GAME_MENU = 0x7,
+        GS_8 = 0x8,
+        GS_9 = 0x9,
+        GS_AUTO_SAVE = 0xA,
+        GS_IN_GAME = 0xB,
+        GS_C = 0xC,
+        GS_EXIT_GAME = 0xD,
+        GS_OPTIONS_MENU = 0xE,
+        GS_MULTIPLAYER_MENU = 0xF,
+        GS_HELP = 0x10,
+        GS_11 = 0x11,
+        GS_IN_SPLITSCREEN_GAME = 0x12,
+        GS_GAME_OVER = 0x13,
+        GS_14 = 0x14,
+        GS_GAME_INTRO = 0x15,
+        GS_16 = 0x16,
+        GS_CREDITS = 0x17,
+        GS_BOMB_TIMER = 0x18,
+        GS_19 = 0x19,
+        GS_1A = 0x1A,
+        GS_1B = 0x1B,
+        GS_1C = 0x1C,
+        GS_1D = 0x1D,
+        GS_SERVER_LIST_MENU = 0x1E,
+        GS_MP_SPLITSCREEN_MENU = 0x1F,
+        GS_MP_CREATE_GAME_MENU = 0x20,
+        GS_21 = 0x21,
+        GS_MP_LIMBO = 0x22,
     };
 
-    static const auto SwitchMenu = (int(*)(int MenuId, bool bForce))0x00434190;
-    static const auto GetCurrentMenuId = (MenuId(*)())0x00434200;
-
-    static auto &g_MenuLevels = *(int*)0x00630064;
-    static auto &g_CurrentMenuLevel = *(int*)0x005967A4;
-    static auto &g_MenuVersionLabel = *(UiPanel*)0x0063C088;
+    static const auto GameSeqSetState = (int(*)(int state, bool force))0x00434190;
+    static const auto GameSeqGetState = (GameSeqState(*)())0x00434200;
 
     /* Other */
 
@@ -1579,7 +1632,7 @@ namespace rf
     static const auto RfBeep = (void(*)(unsigned u1, unsigned u2, unsigned u3, float fVolume))0x00505560;
     static const auto GetFileExt = (char *(*)(const char *pszPath))0x005143F0;
     static const auto SplitScreenStart = (void(*)())0x00480D30;
-    static const auto SetNextLevelFilename = (void(*)(String strFilename, String strSecond))0x0045E2E0;
+    static const auto SetNextLevelFilename = (void(*)(String::Pod strFilename, String::Pod strSecond))0x0045E2E0;
     static const auto DemoLoadLevel = (void(*)(const char *pszLevelFileName))0x004CC270;
     static const auto SetCursorVisible = (void(*)(char bVisible))0x0051E680;
     static const auto DrawScoreboard = (void(*)(bool bDraw))0x00470860;

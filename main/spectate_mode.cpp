@@ -41,10 +41,9 @@ void SpectateModeSetTargetPlayer(rf::Player *pPlayer)
 
     if (rf::g_GameOptions & RF_GO_FORCE_RESPAWN)
     {
-        rf::String strMessage, strPrefix;
-        rf::String::Init(&strMessage, "You cannot use Spectate Mode because Force Respawn option is enabled on this server!");
-        rf::String::InitEmpty(&strPrefix);
-        rf::ChatPrint(strMessage, 4, strPrefix);
+        // rf::String msg{ "You cannot use Spectate Mode because Force Respawn option is enabled on this server!" };
+        // rf::String prefix;
+        // rf::ChatPrint(msg, 4, prefix);
         return;
     }
 
@@ -174,7 +173,7 @@ void SpectateModeOnDestroyPlayer(rf::Player *pPlayer)
 FunHook2<void(rf::Player*)> RenderReticle_Hook{
     0x0043A2C0,
     [](rf::Player* player) {
-        if (rf::GetCurrentMenuId() == rf::MENU_MP_LIMBO)
+        if (rf::GameSeqGetState() == rf::GS_MP_LIMBO)
             return;
         if (g_SpectateModeEnabled)
             RenderReticle_Hook.CallTarget(g_SpectateModeTarget);
@@ -347,7 +346,7 @@ void SpectateModeDrawUI()
 
     char szBuf[256];
     rf::GrSetColor(0xFF, 0xFF, 0, 0x80);
-    snprintf(szBuf, sizeof(szBuf), "Spectating: %s",rf::String::CStr(&g_SpectateModeTarget->strName));
+    snprintf(szBuf, sizeof(szBuf), "Spectating: %s", g_SpectateModeTarget->strName.CStr());
     rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, x + cx / 2, y + cy / 2 - cyFont / 2 - 5, szBuf, g_LargeFont, rf::g_GrTextMaterial);
 
     rf::EntityObj *pEntity = rf::EntityGetFromHandle(g_SpectateModeTarget->hEntity);

@@ -55,24 +55,27 @@ void HudSetupPositionsHook(int width)
             break;
     }
     if (pos_data) {
-        memcpy(rf::hud_points, pos_data, rf::num_hud_points * sizeof(POINT));
+        std::copy(pos_data, pos_data + rf::num_hud_points, rf::hud_points);
     }
     else {
         // We have to scale positions from other resolution here
-        for (unsigned i = 0; i < rf::num_hud_points; ++i) {
-            if (rf::hud_points_1024[i].x <= 1024/3)
-                rf::hud_points[i].x = rf::hud_points_1024[i].x;
-            else if (rf::hud_points_1024[i].x > 1024/3 && rf::hud_points_1024[i].x < 1024*2/3)
-                rf::hud_points[i].x = rf::hud_points_1024[i].x + width/2 - 1024/2;
+        for (int i = 0; i < rf::num_hud_points; ++i) {
+            POINT& src_pt = rf::hud_points_1024[i];
+            POINT& dst_pt = rf::hud_points[i];
+
+            if (src_pt.x <= 1024/3)
+                dst_pt.x = src_pt.x;
+            else if (src_pt.x > 1024/3 && src_pt.x < 1024*2/3)
+                dst_pt.x = src_pt.x + (width - 1024) / 2;
             else
-                rf::hud_points[i].x = rf::hud_points_1024[i].x + width - 1024;
+                dst_pt.x = src_pt.x + width - 1024;
             
-            if (rf::hud_points_1024[i].y <= 768/3)
-                rf::hud_points[i].y = rf::hud_points_1024[i].y;
-            else if (rf::hud_points_1024[i].y > 768/3 && rf::hud_points_1024[i].y < 768*2/3)
-                rf::hud_points[i].y = rf::hud_points_1024[i].y + (height - 768)/2;
+            if (src_pt.y <= 768/3)
+                dst_pt.y = src_pt.y;
+            else if (src_pt.y > 768/3 && src_pt.y < 768*2/3)
+                dst_pt.y = src_pt.y + (height - 768) / 2;
             else // hud_points_1024[i].y >= 768*2/3
-                rf::hud_points[i].y = rf::hud_points_1024[i].y + height - 768;
+                dst_pt.y = src_pt.y + height - 768;
         }
     }
 }

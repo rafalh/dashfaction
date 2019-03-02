@@ -10,6 +10,10 @@
 #include <RegsPatch.h>
 #include <rfproto.h>
 
+namespace rf {
+static auto &g_MenuVersionLabel = *(UiPanel*)0x0063C088;
+}
+
 constexpr int EGG_ANIM_ENTER_TIME = 2000;
 constexpr int EGG_ANIM_LEAVE_TIME = 2000;
 constexpr int EGG_ANIM_IDLE_TIME = 3000;
@@ -51,9 +55,9 @@ FunHook2<int()> MenuUpdate_Hook{
     0x00434230,
     []() {
         int MenuId = MenuUpdate_Hook.CallTarget();
-        if (MenuId == rf::MENU_MP_LIMBO) // hide cursor when changing level - hackfixed in RF by chaning rendering logic
+        if (MenuId == rf::GS_MP_LIMBO) // hide cursor when changing level - hackfixed in RF by chaning rendering logic
             rf::SetCursorVisible(false);
-        else if (MenuId == rf::MENU_MAIN)
+        else if (MenuId == rf::GS_MAIN_MENU)
             rf::SetCursorVisible(true);
         return MenuId;
     }};
@@ -501,7 +505,7 @@ FunHook2<void(rf::TriggerObj*, int32_t, bool)> TriggerActivate_Hook{
     [](rf::TriggerObj *trigger, int32_t h_entity, bool skip_movers) {
         // Check team
         auto player = rf::GetPlayerFromEntityHandle(h_entity);
-        auto trigger_name =rf::String::CStr(&trigger->_Super.strName);
+        auto trigger_name = trigger->_Super.strName.CStr();
         if (player && trigger->Team != -1 && trigger->Team != player->bBlueTeam) {
             //rf::DcPrintf("Trigger team does not match: %d vs %d (%s)", trigger->Team, Player->bBlueTeam, trigger_name);
             return;
@@ -524,7 +528,7 @@ FunHook2<void(rf::TriggerObj*, int32_t, bool)> TriggerActivate_Hook{
 
 extern "C" bool IsClientSideTrigger(rf::TriggerObj *trigger)
 {
-    auto trigger_name =rf::String::CStr(&trigger->_Super.strName);
+    auto trigger_name = trigger->_Super.strName.CStr();
     uint8_t ext_flags = trigger_name[0] == '\xAB' ? trigger_name[1] : 0;
     return (ext_flags & TRIGGER_CLIENT_SIDE) != 0;
 }

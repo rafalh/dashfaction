@@ -90,7 +90,7 @@ void DrawScoreboardInternal_New(bool bDraw)
 
     if (fProgressH < 1.0f || fProgressW < 1.0f)
         return;
-    
+
     // Draw RF logo
     rf::GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
     static int ScoreRflogoBm = rf::BmLoad("score_rflogo.tga", -1, TRUE);
@@ -110,33 +110,30 @@ void DrawScoreboardInternal_New(bool bDraw)
 
     // Draw level
     rf::GrSetColor(0xB0, 0xB0, 0xB0, 0xFF);
-    sprintf(szBuf, "%s (%s) by %s", rf::String::CStr(&rf::g_strLevelName), rf::String::CStr(&rf::g_strLevelFilename),
-        rf::String::CStr(&rf::g_strLevelAuthor));
-    rf::String strLevelInfo, strLevelInfoNew;
-    rf::String::Init(&strLevelInfo, szBuf);
-    rf::GrFitText(&strLevelInfoNew, strLevelInfo, cx - 20); // Note: this destroys input string
-    rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, xCenter, y,rf::String::CStr(&strLevelInfoNew), -1, rf::g_GrTextMaterial);
-    rf::String::Destroy(&strLevelInfoNew);
+    auto level_info = rf::String::Format("%s (%s) by %s", rf::g_strLevelName.CStr(), rf::g_strLevelFilename.CStr(),
+        rf::g_strLevelAuthor.CStr());
+    rf::String level_info_stripped;
+    rf::GrFitText(&level_info_stripped, level_info, cx - 20); // Note: this destroys input string
+    //level_info.Forget();
+    rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, xCenter, y, level_info_stripped, -1, rf::g_GrTextMaterial);
     y += 15;
 
     // Draw server info
-    unsigned i = sprintf(szBuf, "%s (",rf::String::CStr(&rf::g_strServName));
-    rf::NwAddrToStr(szBuf + i, sizeof(szBuf) - i, &rf::g_ServAddr);
-    i += strlen(szBuf + i);
-    sprintf(szBuf + i, ")");
-    rf::String strServerInfo, strServerInfoNew;
-    rf::String::Init(&strServerInfo, szBuf);
-    rf::GrFitText(&strServerInfoNew, strServerInfo, cx - 20); // Note: this destroys input string
-    rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, xCenter, y,rf::String::CStr(&strServerInfoNew), -1, rf::g_GrTextMaterial);
-    rf::String::Destroy(&strServerInfoNew);
+    char ip_addr_buf[64];
+    rf::NwAddrToStr(ip_addr_buf, sizeof(ip_addr_buf), &rf::g_ServAddr);
+    auto server_info = rf::String::Format("%s (%s)", rf::g_strServName.CStr(), ip_addr_buf);
+    rf::String server_info_stripped;
+    rf::GrFitText(&server_info_stripped, server_info, cx - 20); // Note: this destroys input string
+    //server_info.Forget();
+    rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, xCenter, y, server_info_stripped, -1, rf::g_GrTextMaterial);
     y += 20;
     
     // Draw team scores
     unsigned RedScore = 0, BlueScore = 0;
     if (GameType == RF_CTF)
     {
-        static int HudFlagRedBm = rf::BmLoad("hud_flag_red.tga", -1, TRUE);
-        static int HudFlagBlueBm = rf::BmLoad("hud_flag_blue.tga", -1, TRUE);
+        static int HudFlagRedBm = rf::BmLoad("hud_flag_red.tga", -1, true);
+        static int HudFlagBlueBm = rf::BmLoad("hud_flag_blue.tga", -1, true);
         rf::GrDrawImage(HudFlagRedBm, x + cx * 2 / 6, y, rf::g_GrImageMaterial);
         rf::GrDrawImage(HudFlagBlueBm, x + cx * 4 / 6, y, rf::g_GrImageMaterial);
         RedScore = rf::CtfGetRedScore();
@@ -229,11 +226,10 @@ void DrawScoreboardInternal_New(bool bDraw)
             StatusBm = HudMicroFlagBlueBm;
         rf::GrDrawImage(StatusBm, Offsets.StatusBm, RowY + 2, rf::g_GrImageMaterial);
 
-        rf::String strName, strNameNew;
-        rf::String::InitFromStr(&strName, &pPlayer->strName);
-        rf::GrFitText(&strNameNew, strName, cxNameMax - 10); // Note: this destroys strName
-        rf::GrDrawText(Offsets.Name, RowY,rf::String::CStr(&strNameNew), -1, rf::g_GrTextMaterial);
-        rf::String::Destroy(&strNameNew);
+        rf::String player_name_stripped;
+        rf::GrFitText(&player_name_stripped, pPlayer->strName, cxNameMax - 10); // Note: this destroys strName
+        //player_name.Forget();
+        rf::GrDrawText(Offsets.Name, RowY, player_name_stripped, -1, rf::g_GrTextMaterial);
         
         auto pStats = (PlayerStatsNew*)pPlayer->pStats;
         sprintf(szBuf, "%hd", pStats->iScore);
@@ -265,7 +261,7 @@ void HudRender_00437BC0()
 
     bool bShowScoreboard = (rf::IsEntityCtrlActive(&rf::g_pLocalPlayer->Config.Controls, rf::GC_MP_STATS, 0) ||
         (!SpectateModeIsActive() && (rf::IsPlayerEntityInvalid(rf::g_pLocalPlayer) || rf::IsPlayerDying(rf::g_pLocalPlayer))) ||
-        rf::GetCurrentMenuId() == rf::MENU_MP_LIMBO);
+        rf::GameSeqGetState() == rf::GS_MP_LIMBO);
 
     if (g_game_config.scoreboardAnim)
     {

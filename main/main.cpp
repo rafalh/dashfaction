@@ -59,7 +59,7 @@ void FindPlayer(const StringMatcher& query, std::function<void(rf::Player*)> con
 {
     rf::Player* player = rf::g_pPlayersList;
     while (player) {
-        if (query(player->strName.psz))
+        if (query(player->strName))
             consumer(player);
         player = player->pNext;
         if (player == rf::g_pPlayersList)
@@ -193,7 +193,7 @@ class RfConsoleLogAppender : public logging::BaseAppender
 {
     virtual void append(logging::LogLevel lvl, const std::string &str)
     {
-        rf::DcPrint(str.c_str(), NULL);
+        rf::DcPrint(str.c_str(), nullptr);
     }
 };
 #endif // NDEBUG
