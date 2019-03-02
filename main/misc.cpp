@@ -12,6 +12,7 @@
 
 namespace rf {
 static auto &g_MenuVersionLabel = *(UiPanel*)0x0063C088;
+auto& g_sound_enabled = AddrAsRef<bool>(0x017543D8);
 }
 
 constexpr int EGG_ANIM_ENTER_TIME = 2000;
@@ -599,7 +600,6 @@ FunHook2<void(bool)> MenuInGameUpdateCutscene_Hook{
             auto &current_shot_idx = StructFieldRef<int>(active_cutscene, 0x808);
             void *current_shot_timer = reinterpret_cast<char*>(active_cutscene) + 0x810;
             auto &num_shots = StructFieldRef<int>(active_cutscene, 4);
-            auto &sound_enabled = AddrAsRef<bool>(0x017543D8);
 
             if (g_cutscene_bg_sound_sig != -1) {
                 SndStop(g_cutscene_bg_sound_sig);
@@ -608,7 +608,7 @@ FunHook2<void(bool)> MenuInGameUpdateCutscene_Hook{
 
             SetAllPlayingSoundsPaused(true);
             DestroyAllPausedSounds();
-            sound_enabled = false;
+            rf::g_sound_enabled = false;
 
             while (CutsceneIsActive()) {
                 int shot_time_left_ms = Timer__GetTimeLeftMs(current_shot_timer);
@@ -628,7 +628,7 @@ FunHook2<void(bool)> MenuInGameUpdateCutscene_Hook{
                 MenuInGameUpdateCutscene_Hook.CallTarget(dlg_open);
             }
 
-            sound_enabled = true;
+            rf::g_sound_enabled = true;
         }
     }
 };
@@ -660,13 +660,14 @@ FunHook2<void(int, int)> GameEnterState_Hook{
     0x004B1AC0,
     [](int state, int old_state) {
         GameEnterState_Hook.CallTarget(state, old_state);
-        // Note: MultiIsConnected() returns false (cleared after successful join)
-        if (state == 0x2 && old_state == 0xD && g_jump_to_multi_server_list) { // GS_EXIT_GAME -> GS_MAIN_MENU
-            GameSeqPushState(0xF, false, false); // GS_MULTI_MENU
+        if (state == rf::GS_MAIN_MENU && old_state == rf::GS_EXIT_GAME && g_jump_to_multi_server_list) {
+            rf::g_sound_enabled = false;
+            GameSeqPushState(rf::GS_MP_MENU, false, false);
         }
-        if (state == 0xF && g_jump_to_multi_server_list) { // GS_MULTI_MENU
-            GameSeqPushState(0x1E, false, false); // GS_MULTI_SERVER_LIST
+        if (state == rf::GS_MP_MENU && g_jump_to_multi_server_list) {
+            GameSeqPushState(rf::GS_MP_SERVER_LIST_MENU, false, false);
             g_jump_to_multi_server_list = false;
+            rf::g_sound_enabled = true;
         }
     }
 };
