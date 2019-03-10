@@ -318,6 +318,9 @@ void GraphicsInit()
     // Enable mip-mapping for textures bigger than 256x256
     AsmWritter(0x0050FEDA, 0x0050FEE9).nop();
     WriteMemUInt8(0x0055B739, ASM_SHORT_JMP_REL);
+
+    // Fix decal fade out
+    WriteMemUInt8(0x00560994 + 1, 3);
 }
 
 void GraphicsAfterGameInit()
