@@ -1,6 +1,6 @@
+#include "stdafx.h"
 #include "wndproc.h"
 #include "rf.h"
-#include "stdafx.h"
 #include "utils.h"
 
 const char* GetWndMsgName(UINT uMsg);
