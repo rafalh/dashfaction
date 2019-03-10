@@ -346,7 +346,7 @@ void DebugRender3d()
 {
     const auto DbgWaypoints       = (void(*)()) 0x00468F00;
     const auto DbgInternalLights  = (void(*)()) 0x004DB830;
-    
+
     DbgWaypoints();
     if (g_DbgStaticLights)
         DbgInternalLights();
@@ -373,7 +373,7 @@ DcCommand2 SpectateCmd { "spectate",
                 pPlayer = FindBestMatchingPlayer(PlayerName.value().c_str());
             else
                 pPlayer = nullptr;
-            
+
             if (pPlayer)
                 SpectateModeSetTargetPlayer(pPlayer);
         } else
@@ -473,12 +473,12 @@ DcCommand2 LevelSpCmd{
         if (LevelFilename.find(".rfl") == std::string::npos)
             LevelFilename += ".rfl";
 
-        // rf::String unk_str;
-        // rf::String level_str(LevelFilename.c_str());
+        rf::String unk_str;
+        rf::String level_str(LevelFilename.c_str());
 
-        // rf::DcPrintf("Loading level.");
-        // rf::SetNextLevelFilename(level_str, unk_str);
-        // rf::GameSeqSetState(rf::GS_LOADING_LEVEL, false);
+        rf::DcPrintf("Loading level.");
+        rf::SetNextLevelFilename(level_str, unk_str);
+        rf::GameSeqSetState(rf::GS_LOADING_LEVEL, false);
     },
     "Loads single player level",
     "levelsp <rfl_name>"
@@ -560,7 +560,7 @@ int DcAutoCompleteGetComponent(int Offset, std::string &Result)
 
     if (!pszEnd)
         pszEnd = rf::g_szDcCmdLine + rf::g_cchDcCmdLineLen;
-    
+
     size_t Len = pszEnd - pszBegin;
     Result.assign(pszBegin, Len);
 
@@ -744,6 +744,9 @@ void CommandsInit()
 
     // Better console autocomplete
     DcAutoCompleteInput_Hook.Install();
+
+    // vli command support
+    CoronaRenderAll_Hook.Install();
 }
 
 void CommandRegister(rf::DcCommand *pCmd)
