@@ -23,6 +23,7 @@ Version 1.2.2 (not released yet)
 - allow skipping cutscenes by pressing jump key
 - open server list menu instead of main menu when leaving multiplayer game (affects level download too)
 - fix decal fade out effect (RF bug)
+- speed up server list refreshing
 - fix multiple security vulnerabilities
 - stability improvements
 

@@ -882,6 +882,12 @@ void NetworkInit()
     /* Improve SimultaneousPing */
     rf::SimultaneousPing = 32;
 
+    /* Change server info timeout to 2s */
+    WriteMemUInt32(0x0044D357 + 2, 2000);
+
+    /* Change delay between server info requests */
+    WriteMemUInt8(0x0044D338 + 1, 20);
+
     /* Allow ports < 1023 (especially 0 - any port) */
     WriteMemUInt8(0x00528F24, 0x90, 2);
 
