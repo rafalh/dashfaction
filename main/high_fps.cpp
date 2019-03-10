@@ -4,6 +4,7 @@
 #include "rf.h"
 #include "inline_asm.h"
 #include <FunHook2.h>
+#include <RegsPatch.h>
 
 constexpr auto reference_fps = 30.0f;
 constexpr auto reference_framerate = 1.0f / reference_fps;
@@ -107,6 +108,22 @@ FunHook2<int(rf::String&, rf::String&, char*)> RflLoad_Hook{
     }
 };
 
+RegsPatch CutsceneShotSyncFix{
+    0x0045B43B,
+    [](X86Regs& regs) {
+        auto &current_shot_idx = StructFieldRef<int>(rf::g_active_cutscene, 0x808);
+        void *current_shot_timer = reinterpret_cast<char*>(rf::g_active_cutscene) + 0x810;
+        if (current_shot_idx > 1)
+        {
+            // decrease time for next shot using current shot timer value
+            int shot_time_left_ms = rf::Timer__GetTimeLeftMs(current_shot_timer);
+            if (shot_time_left_ms > 0 || shot_time_left_ms < -100)
+                WARN("invalid shot_time_left_ms %d", shot_time_left_ms);
+            regs.eax += shot_time_left_ms;
+        }
+    }
+};
+
 void HighFpsInit()
 {
     // Fix animations broken for high FPS
@@ -137,6 +154,15 @@ void HighFpsInit()
 
     // Fix screen shake caused by some weapons (eg. Assault Rifle)
     WriteMemPtr(0x0040DBCC + 2, &g_camera_shake_factor);
+
+    // Remove cutscene sync RF hackfix
+    WriteMemFloat(0x005897B4, 1000.0f);
+    WriteMemFloat(0x005897B8, 1.0f);
+    static float zero = 0.0f;
+    WriteMemPtr(0x0045B42A + 2, &zero);
+
+    // Fix cutscene shot timer sync on high fps
+    CutsceneShotSyncFix.Install();
 }
 
 void HighFpsUpdate()

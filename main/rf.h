@@ -369,7 +369,7 @@ namespace rf
 
     static auto &g_pGrDevice = *(IDirect3DDevice8**)0x01CFCBE4;
     static auto &g_GrScreen = *(GrScreen*)0x017C7BC0;
-    
+
     static auto &g_GrLineMaterial = *(uint32_t*)0x01775B00;
     static auto &g_GrRectMaterial = *(uint32_t*)0x17756C0;
     static auto &g_GrTextMaterial = *(uint32_t*)0x17C7C5C;
@@ -1596,6 +1596,7 @@ namespace rf
     static auto &g_SmallFontId = *(int*)0x0063C068;
     static auto &g_bDirectInputDisabled = *(bool*)0x005A4F88;
     static auto &g_strDefaultPlayerWeapon = *(String*)0x007C7600;
+    static auto &g_active_cutscene = *reinterpret_cast<void**>(0x00645320);
 
     static const auto RfBeep = (void(*)(unsigned u1, unsigned u2, unsigned u3, float fVolume))0x00505560;
     static const auto GetFileExt = (char *(*)(const char *pszPath))0x005143F0;
@@ -1603,6 +1604,8 @@ namespace rf
     static const auto SetNextLevelFilename = (void(*)(String::Pod strFilename, String::Pod strSecond))0x0045E2E0;
     static const auto DemoLoadLevel = (void(*)(const char *pszLevelFileName))0x004CC270;
     static const auto SetCursorVisible = (void(*)(bool bVisible))0x0051E680;
+    static const auto CutsceneIsActive = reinterpret_cast<bool(*)()>(0x0045BE80);
+    static const auto Timer__GetTimeLeftMs = reinterpret_cast<int (__thiscall*)(void* timer)>(0x004FA420);
 
     /* Strings Table */
     static const auto g_ppszStringsTable = (char**)0x007CBBF0;

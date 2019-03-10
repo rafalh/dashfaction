@@ -341,7 +341,7 @@ FunHook2<void(const char*, const int*)> DcPrint_Hook{
                 CurrentAttr = Attr;
                 SetConsoleTextAttribute(hOutput, Attr);
             }
-            
+
             DWORD NumChars = EndPtr - Ptr;
             WriteFile(hOutput, Ptr, NumChars, NULL, NULL);
             Ptr = EndPtr;
@@ -580,26 +580,23 @@ FunHook2<void(bool)> MenuInGameUpdateCutscene_Hook{
 
         if (!skip_cutscene) {
             MenuInGameUpdateCutscene_Hook.CallTarget(dlg_open);
-            
+
             rf::GrSetColor(255, 255, 255, 255);
             rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, rf::GrGetMaxWidth() / 2, rf::GrGetMaxHeight() - 30,
                 "Press JUMP key to skip the cutscene", -1, rf::g_GrTextMaterial);
         }
         else {
-            auto CutsceneIsActive = AddrAsRef<bool()>(0x0045BE80);
             auto TimerAddDeltaTime = AddrAsRef<int(int DeltaMs)>(0x004FA2D0);
             auto SndStop = AddrAsRef<char(int Sig)>(0x005442B0);
-            auto Timer__GetTimeLeftMs = AddrAsRef<int __thiscall(void *Timer)>(0x004FA420);
             auto DestroyAllPausedSounds = AddrAsRef<void()>(0x005059F0);
             auto SetAllPlayingSoundsPaused = AddrAsRef<void(bool Paused)>(0x00505C70);
-            
+
             auto &timer_base = AddrAsRef<int64_t>(0x01751BF8);
             auto &timer_freq = AddrAsRef<int32_t>(0x01751C04);
             auto &frame_time = AddrAsRef<float>(0x005A4014);
-            auto &active_cutscene = AddrAsRef<void*>(0x00645320);
-            auto &current_shot_idx = StructFieldRef<int>(active_cutscene, 0x808);
-            void *current_shot_timer = reinterpret_cast<char*>(active_cutscene) + 0x810;
-            auto &num_shots = StructFieldRef<int>(active_cutscene, 4);
+            auto &current_shot_idx = StructFieldRef<int>(rf::g_active_cutscene, 0x808);
+            void *current_shot_timer = reinterpret_cast<char*>(rf::g_active_cutscene) + 0x810;
+            auto &num_shots = StructFieldRef<int>(rf::g_active_cutscene, 4);
 
             if (g_cutscene_bg_sound_sig != -1) {
                 SndStop(g_cutscene_bg_sound_sig);
@@ -610,9 +607,9 @@ FunHook2<void(bool)> MenuInGameUpdateCutscene_Hook{
             DestroyAllPausedSounds();
             rf::g_sound_enabled = false;
 
-            while (CutsceneIsActive()) {
-                int shot_time_left_ms = Timer__GetTimeLeftMs(current_shot_timer);
-                
+            while (rf::CutsceneIsActive()) {
+                int shot_time_left_ms = rf::Timer__GetTimeLeftMs(current_shot_timer);
+
                 if (current_shot_idx == num_shots - 1)
                 {
                     // run last half second with a speed of 10 FPS so all events get properly processed before
@@ -759,7 +756,7 @@ void MiscInit()
 
     // Increase damage for kill command in Single Player
     WriteMemFloat(0x004A4DF5 + 1, 100000.0f);
-    
+
     // Fix keyboard layout
     uint8_t kbd_layout = 0;
     if (MapVirtualKeyA(0x10, MAPVK_VSC_TO_VK) == 'A')
