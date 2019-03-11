@@ -22,6 +22,7 @@ Version 1.2.2 (not released yet)
 - block creation of corrupted save files when cutscene starts
 - allow skipping cutscenes by pressing jump key
 - fix time synchronization on high FPS in cutscenes
+- fix glares being visible through characters in some cutscenes
 - open server list menu instead of main menu when leaving multiplayer game (affects level download too)
 - fix decal fade out effect (RF bug)
 - speed up server list refreshing

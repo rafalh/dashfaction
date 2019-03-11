@@ -638,6 +638,30 @@ CallHook2<int()> PlayHardcodedBackgroundMusicForCutscene_Hook{
     }
 };
 
+RegsPatch CoronaEntityCollisionTestFix{
+    0x004152F1,
+    [](X86Regs& regs) {
+        auto GetEntityRootBonePos = AddrAsRef<void(rf::EntityObj*, rf::Vector3&)>(0x48AC70);
+        using IntersectLineWithAabbType = bool(rf::Vector3 *aabb1, rf::Vector3 *aabb2, rf::Vector3 *pos1, rf::Vector3 *pos2, rf::Vector3 *out_pos);
+        auto IntersectLineWithAabb = reinterpret_cast<IntersectLineWithAabbType*>(0x00508B70);
+
+        rf::EntityObj* entity = reinterpret_cast<rf::EntityObj*>(regs.esi);
+        if (!rf::CutsceneIsActive()) {
+            return;
+        }
+
+        rf::Vector3 root_bone_pos;
+        GetEntityRootBonePos(entity, root_bone_pos);
+        rf::Vector3 aabb_min = root_bone_pos - entity->_Super.PhysInfo.Radius;
+        rf::Vector3 aabb_max = root_bone_pos + entity->_Super.PhysInfo.Radius;
+        auto corona_pos = reinterpret_cast<rf::Vector3*>(regs.edi);
+        auto eye_pos = reinterpret_cast<rf::Vector3*>(regs.ebx);
+        auto tmp_vec = reinterpret_cast<rf::Vector3*>(regs.ecx);
+        regs.eax = IntersectLineWithAabb(&aabb_min, &aabb_max, corona_pos, eye_pos, tmp_vec);
+        regs.eip = 0x004152F6;
+    }
+};
+
 auto CanSave = AddrAsRef<bool()>(0x004B61A0);
 
 FunHook2<void()> DoQuickSave_Hook{
@@ -847,6 +871,9 @@ void MiscInit()
     // Open server list menu instead of main menu when leaving multiplayer game
     GameEnterState_Hook.Install();
     MultiAfterPlayersPackets_Hook.Install();
+
+    // Fix glares/coronas being visible through characters
+    CoronaEntityCollisionTestFix.Install();
 
 #if 0
     // Fix weapon switch glitch when reloading (should be used on Match Mode)

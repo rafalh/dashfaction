@@ -44,6 +44,14 @@ namespace rf
             return *this;
         }
 
+        Vector3& operator+=(float scalar)
+        {
+            x += scalar;
+            y += scalar;
+            z += scalar;
+            return *this;
+        }
+
         Vector3& operator*=(float m)
         {
             x *= m;
@@ -62,6 +70,11 @@ namespace rf
             return (*this += -other);
         }
 
+        Vector3& operator-=(float scalar)
+        {
+            return (*this += -scalar);
+        }
+
         Vector3 operator+(const Vector3& other) const
         {
             Vector3 tmp = *this;
@@ -73,6 +86,20 @@ namespace rf
         {
             Vector3 tmp = *this;
             tmp -= other;
+            return tmp;
+        }
+
+        Vector3 operator+(float scalar) const
+        {
+            Vector3 tmp = *this;
+            tmp += scalar;
+            return tmp;
+        }
+
+        Vector3 operator-(float scalar) const
+        {
+            Vector3 tmp = *this;
+            tmp -= scalar;
             return tmp;
         }
 
@@ -857,10 +884,10 @@ namespace rf
         Vector3 field_15C;
         Vector3 field_168;
         Vector3 RotChangeUnkDelta;
-        float field_180;
+        float Radius;
         DynamicArray field_184;
-        Vector3 field_190;
-        Vector3 field_19C;
+        Vector3 AabbMin;
+        Vector3 AabbMax;
         PhysicsFlags Flags;
         int FlagsSplash_1AC;
         int field_1B0;
