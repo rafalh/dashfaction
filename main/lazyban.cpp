@@ -63,21 +63,27 @@ void KickCmdHandlerHook()
     }
 }
 
-void UnbanLastCmdHandler()
-{
-    if (rf::g_bNetworkGame && rf::g_bLocalNetworkGame && rf::g_bDcRun) {
-        rf::BanlistEntry* entry = rf::banlist_last_entry;
-        if (entry != &rf::banlist_null_entry) {
-            rf::DcPrintf("%s has been unbanned!", entry->ip_addr);
-            entry->next->prev = entry->prev;
-            entry->prev->next = entry->next;
-            rf::Free(entry);
+DcCommand2 unban_last_cmd{
+    "unban_last",
+    []() {
+        if (rf::g_bNetworkGame && rf::g_bLocalNetworkGame) {
+            rf::BanlistEntry* entry = rf::banlist_last_entry;
+            if (entry != &rf::banlist_null_entry) {
+                rf::DcPrintf("%s has been unbanned!", entry->ip_addr);
+                entry->next->prev = entry->prev;
+                entry->prev->next = entry->next;
+                rf::Free(entry);
+            }
         }
-    }
-}
+    },
+    "Unbans last banned player"
+};
+
 
 void InitLazyban()
 {
     AsmWritter(0x0047B6F0).jmpLong(BanCmdHandlerHook);
     AsmWritter(0x0047B580).jmpLong(KickCmdHandlerHook);
+
+    unban_last_cmd.Register();
 }

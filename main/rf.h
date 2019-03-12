@@ -247,13 +247,13 @@ namespace rf
 
     /* Debug Console */
 
-    typedef void(*DcCmdHandler)(void);
+    typedef void(*DcCmdHandler)();
 
     struct DcCommand
     {
         const char *pszCmd;
         const char *pszDescr;
-        void(*pfnHandler)(void);
+        void(*pfnHandler)();
 
         inline static const auto Init = (void(__thiscall *)(rf::DcCommand *This, const char *pszCmd, const char *pszDescr, DcCmdHandler pfnHandler))0x00509A70;
     };

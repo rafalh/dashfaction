@@ -237,7 +237,7 @@ extern "C" DWORD DLL_EXPORT Init(void* unused)
     // Init logging and crash dump support first
     InitLogging();
     CrashHandlerInit(g_hmodule);
-    
+
     // Enable Data Execution Prevention
     if (!SetProcessDEPPolicy(PROCESS_DEP_ENABLE))
         WARN("SetProcessDEPPolicy failed (error %ld)", GetLastError());
@@ -280,6 +280,7 @@ extern "C" DWORD DLL_EXPORT Init(void* unused)
     PlayerDestroy_Hook.Install();
 
     /* Init modules */
+    CommandsInit();
     GraphicsInit();
     NetworkInit();
     InitGamma();
@@ -294,7 +295,6 @@ extern "C" DWORD DLL_EXPORT Init(void* unused)
     InitKill();
     VfsApplyHooks(); /* Use new VFS without file count limit */
     SpectateModeInit();
-    CommandsInit();
     HighFpsInit();
     MiscInit();
 #if !defined(NDEBUG) && defined(HAS_EXPERIMENTAL)

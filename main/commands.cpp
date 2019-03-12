@@ -2,7 +2,6 @@
 #include "commands.h"
 #include "rf.h"
 #include "utils.h"
-#include "hud.h"
 #include "lazyban.h"
 #include "main.h"
 #include "BuildConfig.h"
@@ -47,134 +46,6 @@ bool g_DbgGeometryRenderingStats = false;
 bool g_DbgStaticLights = false;
 bool g_volumetric_lights = true;
 
-class DcInvalidArgTypeError : public std::exception {};
-class DcRequiredArgMissingError : public std::exception {};
-
-static bool ReadArgInternal(int TypeFlag, bool PreserveCase = false)
-{
-    rf::DcGetArg(rf::DC_ARG_ANY, PreserveCase);
-    if (rf::g_DcArgType & TypeFlag)
-        return true;
-    if (!(rf::g_DcArgType & rf::DC_ARG_NONE))
-        throw DcInvalidArgTypeError();
-    return false;
-}
-
-template<typename T>
-T DcReadArg()
-{
-    auto ValueOpt = DcReadArg<std::optional<T>>();
-    if (!ValueOpt)
-        throw DcRequiredArgMissingError();
-    return ValueOpt.value();
-}
-
-template<>
-std::optional<int> DcReadArg()
-{
-    if (!ReadArgInternal(rf::DC_ARG_INT))
-        return {};
-    return std::optional{rf::g_iDcArg};
-}
-
-template<>
-std::optional<float> DcReadArg()
-{
-    if (!ReadArgInternal(rf::DC_ARG_FLOAT))
-        return {};
-    return std::optional{rf::g_fDcArg};
-}
-
-template<>
-std::optional<bool> DcReadArg()
-{
-    if (!ReadArgInternal(rf::DC_ARG_TRUE | rf::DC_ARG_FALSE))
-        return {};
-    bool Value = (rf::g_DcArgType & rf::DC_ARG_TRUE) == rf::DC_ARG_TRUE;
-    return std::optional{Value};
-}
-
-template<>
-std::optional<std::string> DcReadArg()
-{
-    if (!ReadArgInternal(rf::DC_ARG_STR))
-        return {};
-    return std::optional{rf::g_pszDcArg};
-}
-
-template<typename... Args>
-class DcCommand2;
-
-template<typename... Args>
-class DcCommand2<void(Args...)> : public rf::DcCommand
-{
-private:
-    std::function<void(Args...)> m_HandlerFunc;
-    const char *m_Usage;
-
-public:
-    DcCommand2(const char *Name, void(*HandlerFunc)(Args...) ,
-        const char *Description = nullptr, const char *Usage = nullptr) :
-        m_HandlerFunc(HandlerFunc), m_Usage(Usage)
-    {
-        pszCmd = Name;
-        pszDescr = Description;
-        pfnHandler = (void (*)()) StaticHandler;
-    }
-
-    void Register()
-    {
-        CommandRegister(this);
-    }
-
-private:
-    static __fastcall void StaticHandler(DcCommand2 *This)
-    {
-        This->Handler();
-    }
-
-    void Handler()
-    {
-        if (rf::g_bDcRun)
-            Run();
-        else if (rf::g_bDcHelp)
-            Help();
-    }
-
-    void Run()
-    {
-        try {
-            m_HandlerFunc(DcReadArg<Args>()...);
-        }
-        catch (DcInvalidArgTypeError e) {
-            rf::DcPrint("Invalid arg type!", nullptr);
-        }
-        catch (DcRequiredArgMissingError e) {
-            rf::DcPrint("Required arg is missing!", nullptr);
-        }
-    }
-
-    void Help() {
-        if (m_Usage) {
-            rf::DcPrint(rf::g_ppszStringsTable[rf::STR_USAGE], nullptr);
-            rf::DcPrintf("     %s", m_Usage);
-        }
-    }
-};
-
-#ifdef __cpp_deduction_guides
-// deduction guide for lambda functions
-template <class T>
-DcCommand2(const char *, T)
-    -> DcCommand2<typename std::remove_pointer_t<decltype(+std::declval<T>())>>;
-template <class T>
-DcCommand2(const char *, T, const char *)
-    -> DcCommand2<typename std::remove_pointer_t<decltype(+std::declval<T>())>>;
-template <class T>
-DcCommand2(const char *, T, const char *, const char *)
-    -> DcCommand2<typename std::remove_pointer_t<decltype(+std::declval<T>())>>;
-#endif
-
 rf::Player *FindBestMatchingPlayer(const char *pszName)
 {
     rf::Player *pFoundPlayer;
@@ -202,7 +73,6 @@ rf::Player *FindBestMatchingPlayer(const char *pszName)
         rf::DcPrintf("Cannot find player matching '%s'", pszName);
     return nullptr;
 }
-
 
 #if SPLITSCREEN_ENABLE
 
@@ -533,11 +403,6 @@ DcCommand2 FindMapCmd{
     "findmap <query>"
 };
 
-rf::DcCommand g_Commands[] = {
-    { "hud", "Show and hide HUD", HudCmdHandler },
-    { "unban_last", "Unbans last banned player", UnbanLastCmdHandler },
-};
-
 void DcShowCmdHelp(rf::DcCommand *pCmd)
 {
     rf::g_bDcRun = 0;
@@ -780,10 +645,6 @@ void CommandsAfterGameInit()
     DC_REGISTER_CMD(system_info, "Show system information", rf::DcfSystemInfo);
     DC_REGISTER_CMD(trilinear_filtering, "Toggle trilinear filtering", rf::DcfTrilinearFiltering);
     DC_REGISTER_CMD(detail_textures, "Toggle detail textures", rf::DcfDetailTextures);
-
-    /* Add commands */
-    for (i = 0; i < COUNTOF(g_Commands); ++i)
-        CommandRegister(&g_Commands[i]);
 
     MaxFpsCmd.Register();
     MouseSensitivityCmd.Register();
