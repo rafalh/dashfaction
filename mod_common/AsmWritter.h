@@ -11,13 +11,21 @@ public:
     int regNum;
     int size;
 
-    constexpr explicit AsmReg(int regNum, int size) : regNum(regNum), size(size) {}
-    constexpr bool operator==(const AsmReg &other) const { return regNum == other.regNum && size == other.size; }
+    constexpr explicit AsmReg(int regNum, int size) :
+        regNum(regNum), size(size) {}
+
+    constexpr bool operator==(const AsmReg &other) const {
+        return regNum == other.regNum && size == other.size;
+    }
 };
 
 struct AsmReg32 : public AsmReg
 {
     constexpr AsmReg32(int num) : AsmReg(num, 4) {}
+
+    std::pair<AsmReg32, int> operator+(int n) const {
+        return {*this, n};
+    }
 };
 
 struct AsmReg16 : public AsmReg
@@ -30,6 +38,24 @@ struct AsmReg8 : public AsmReg
     constexpr AsmReg8(int num) : AsmReg(num, 1) {}
 };
 
+struct AsmMem
+{
+    std::optional<AsmReg32> regOpt;
+    int32_t displacement;
+
+    AsmMem(AsmReg32 reg, int32_t displacement = 0) :
+        regOpt(reg), displacement(displacement)
+    {}
+
+    AsmMem(int32_t displacement) :
+        displacement(displacement)
+    {}
+
+    AsmMem(std::pair<AsmReg32, int> pair) :
+        regOpt(pair.first), displacement(pair.second)
+    {}
+};
+
 struct AsmRegMem
 {
     bool memory;
@@ -38,6 +64,14 @@ struct AsmRegMem
 
     AsmRegMem(bool memory, std::optional<AsmReg> regOpt, int32_t displacement = 0) :
         memory(memory), regOpt(regOpt), displacement(displacement)
+    {}
+
+    AsmRegMem(AsmReg reg) :
+        memory(false), regOpt({reg}), displacement(0)
+    {}
+
+    AsmRegMem(AsmMem mem) :
+        memory(true), regOpt(mem.regOpt), displacement(mem.displacement)
     {}
 };
 
@@ -157,10 +191,29 @@ public:
         return *this;
     }
 
+    AsmWritter &sub(const AsmRegMem &dstRM, int32_t imm32)
+    {
+        if (abs(imm32) < 128)
+            return sub(dstRM, static_cast<int8_t>(imm32));
+        WriteMemUInt8(m_addr++, 0x81); // Opcode
+        writeModRm(dstRM, 5);
+        WriteMemInt32(m_addr, imm32);
+        m_addr += 4;
+        return *this;
+    }
+
     AsmWritter &add(const AsmRegMem &dstRM, int8_t imm8)
     {
         WriteMemUInt8(m_addr++, 0x83); // Opcode
         writeModRm(dstRM, 0);
+        WriteMemInt8(m_addr++, imm8);
+        return *this;
+    }
+
+    AsmWritter &sub(const AsmRegMem &dstRM, int8_t imm8)
+    {
+        WriteMemUInt8(m_addr++, 0x83); // Opcode
+        writeModRm(dstRM, 5);
         WriteMemInt8(m_addr++, imm8);
         return *this;
     }
@@ -201,7 +254,7 @@ public:
         return *this;
     }
 
-    template<typename T> 
+    template<typename T>
     AsmWritter &callLong(T *addr)
     {
         WriteMemUInt8(m_addr, 0xE8);
@@ -330,6 +383,9 @@ public:
         return *this;
     }
 
+    template<typename T>
+    AsmWritter &fstp(const AsmRegMem &regMem);
+
 private:
     unsigned m_addr, m_endAddr;
 
@@ -364,10 +420,12 @@ private:
         else if (modField == 2 || !regMem.regOpt)
             WriteMemInt32(m_addr++, regMem.displacement);
     }
-
-    uint8_t modRegRmByte()
-    {
-        
-
-    }
 };
+
+template<>
+inline AsmWritter &AsmWritter::fstp<double>(const AsmRegMem &regMem)
+{
+    WriteMemInt8(m_addr++, 0xDD);
+    writeModRm(regMem, 3);
+    return *this;
+}

@@ -20,6 +20,7 @@ static auto &g_GrDefaultWFar = *(float*)0x00596140;
 static const auto GrSetTextureMipFilter = (void(*)(int bLinear))0x0050E830;
 }
 
+
 static float g_GrClippedGeomOffsetX = -0.5;
 static float g_GrClippedGeomOffsetY = -0.5;
 
@@ -54,7 +55,7 @@ static void SetTextureMinMagFilterInCode(D3DTEXTUREFILTERTYPE FilterType)
 }
 
 extern "C" void GrSetViewMatrix_FovFix(float fFovScale, float fWFarFactor)
-{ 
+{
     constexpr float fRefAspectRatio = 4.0f / 3.0f;
     constexpr float fMaxWideAspectRatio = 21.0f / 9.0f; // biggest aspect ratio currently in market
 

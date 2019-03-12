@@ -21,6 +21,10 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/experimental.cpp")
     add_definitions(-DHAS_EXPERIMENTAL)
 endif()
 
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    add_compile_options(-Wno-pmf-conversions)
+endif()
+
 file(GLOB SRCS *.cpp *.h *.res)
 add_library(DashFaction SHARED ${SRCS})
 set_property(TARGET DashFaction PROPERTY CXX_STANDARD 17)
