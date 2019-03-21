@@ -875,6 +875,10 @@ void MiscInit()
     // Fix glares/coronas being visible through characters
     CoronaEntityCollisionTestFix.Install();
 
+    // Allow undefined mp_character in PlayerCreateEntity
+    // Fixes Go_Undercover event not changing player 3rd person character
+    AsmWritter(0x004A414F, 0x004A4153).nop();
+
 #if 0
     // Fix weapon switch glitch when reloading (should be used on Match Mode)
     AsmWritter(0x004A4B4B).callLong(EntityIsReloading_SwitchWeapon_New);
