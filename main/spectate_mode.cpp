@@ -150,7 +150,7 @@ FunHook2<void(rf::Player*, rf::GameCtrl, bool)> HandleCtrlInGame_Hook{
                 return;
             }
         }
-        
+
         HandleCtrlInGame_Hook.CallTarget(player, key_id, was_pressed);
     }
 };
@@ -287,7 +287,7 @@ void SpectateModeInit()
     IsPlayerEntityInvalid_RedBars_Hook.Install();
     IsPlayerEntityInvalid_Scoreboard_Hook.Install();
     IsPlayerEntityInvalid_Scoreboard2_Hook.Install();
-    
+
     HandleCtrlInGame_Hook.Install();
     RenderReticle_Hook.Install();
     PlayerCreateEntity_Hook.Install();
@@ -295,17 +295,17 @@ void SpectateModeInit()
     // Note: HUD rendering doesn't make sense because life and armor isn't synced
 
 #if SPECTATE_MODE_SHOW_WEAPON
-    WriteMemInt32(0x0043285D + 1, (uintptr_t)PlayerFpgunRender_New - (0x0043285D + 0x5));
-    WriteMemUInt8(0x004AB1B8, ASM_NOP, 6); // PlayerFpgunRenderInternal
-    WriteMemUInt8(0x004AA23E, ASM_NOP, 6); // PlayerFpgunSetupMesh
-    WriteMemUInt8(0x004AE0DF, ASM_NOP, 2); // PlayerFpgunLoadMesh
+    WriteMem<i32>(0x0043285D + 1, (uintptr_t)PlayerFpgunRender_New - (0x0043285D + 0x5));
+    AsmWritter(0x004AB1B8).nop(6); // PlayerFpgunRenderInternal
+    AsmWritter(0x004AA23E).nop(6); // PlayerFpgunSetupMesh
+    AsmWritter(0x004AE0DF).nop(2); // PlayerFpgunLoadMesh
 
-    WriteMemUInt8(0x004A938F, ASM_NOP, 6); // PlayerFpgunSetAction
-    WriteMemUInt8(0x004A952C, ASM_SHORT_JMP_REL); // PlayerFpgunHasState
-    WriteMemUInt8(0x004AA56D, ASM_NOP, 6); // PlayerFpgunSetState
-    WriteMemUInt8(0x004AA6E7, ASM_NOP, 6); // PlayerFpgunUpdateMesh
-    WriteMemUInt8(0x004AE384, ASM_NOP, 6); // PlayerFpgunPrepareWeapon
-    WriteMemUInt8(0x004ACE2C, ASM_SHORT_JMP_REL); // GetZoomValue
+    AsmWritter(0x004A938F).nop(6); // PlayerFpgunSetAction
+    WriteMem<u8>(0x004A952C, ASM_SHORT_JMP_REL); // PlayerFpgunHasState
+    AsmWritter(0x004AA56D).nop(6); // PlayerFpgunSetState
+    AsmWritter(0x004AA6E7).nop(6); // PlayerFpgunUpdateMesh
+    AsmWritter(0x004AE384).nop(6); // PlayerFpgunPrepareWeapon
+    WriteMem<u8>(0x004ACE2C, ASM_SHORT_JMP_REL); // GetZoomValue
 
     WriteMemPtr(0x0048857E + 2, &g_SpectateModeTarget); // RenderObjects
     WriteMemPtr(0x00488598 + 1, &g_SpectateModeTarget); // RenderObjects
@@ -333,7 +333,7 @@ void SpectateModeDrawUI()
         }
         return;
     }
-    
+
     if (g_LargeFont == -1)
         g_LargeFont = rf::GrLoadFont("rfpc-large.vf", -1);
     if (g_MediumFont == -1)
@@ -372,7 +372,7 @@ void SpectateModeDrawUI()
         static int BloodBm = rf::BmLoad("bloodsmear07_A.tga", -1, true);
         int BloodW, BloodH;
         rf::BmGetBitmapSize(BloodBm, &BloodW, &BloodH);
-        rf::GrDrawBitmapStretched(BloodBm, (cxScr - BloodW*2) / 2, (cySrc - BloodH*2) / 2, BloodW * 2 , BloodH * 2, 
+        rf::GrDrawBitmapStretched(BloodBm, (cxScr - BloodW*2) / 2, (cySrc - BloodH*2) / 2, BloodW * 2 , BloodH * 2,
             0, 0, BloodW, BloodH, 0.0f, 0.0f, rf::g_GrBitmapMaterial);
 
         rf::GrSetColor(0, 0, 0, 0x80);

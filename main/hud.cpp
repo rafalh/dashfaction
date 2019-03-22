@@ -3,6 +3,7 @@
 #include "utils.h"
 #include "commands.h"
 #include "rf.h"
+#include <ShortTypes.h>
 
 namespace rf {
 constexpr int num_hud_points = 48;
@@ -27,11 +28,11 @@ DcCommand2 hud_cmd{
         hud_hidden2 = !hud_visible;
 
         // HudRender2
-        WriteMemUInt8(0x00476D70, hud_hidden ? ASM_RET : 0x51);
+        WriteMem<u8>(0x00476D70, hud_hidden ? ASM_RET : 0x51);
 
         // Powerups textures
-        WriteMemInt32(0x006FC43C, hud_hidden ? -2 : -1);
-        WriteMemInt32(0x006FC440, hud_hidden ? -2 : -1);
+        WriteMem<i32>(0x006FC43C, hud_hidden ? -2 : -1);
+        WriteMem<i32>(0x006FC440, hud_hidden ? -2 : -1);
     },
     "Show and hide HUD"
 };

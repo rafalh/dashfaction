@@ -3,6 +3,7 @@
 #include "rf.h"
 #include "rfproto.h"
 #include "utils.h"
+#include <ShortTypes.h>
 
 #ifdef LEVELS_AUTODOWNLOADER
 
@@ -147,7 +148,7 @@ bool UnrarVpp(const char *pszPath)
             TRACE("Skipping %s", HeaderData.FileName);
             Code = RARProcessFile(hArchive, RAR_SKIP, NULL, NULL);
         }
-        
+
         if (Code != 0) {
             ERR("RARProcessFile failed - result %d, path %s", Code, pszPath);
             break;
@@ -253,7 +254,7 @@ static DWORD WINAPI DownloadLevelThread(PVOID pParam)
 cleanup:
     if (TempFileName[0])
         remove(TempFileName);
-    
+
     g_bDownloadActive = false;
     if (!Success)
         rf::UiMsgBox("Error!", "Failed to download level file! More information can be found in console.", nullptr, false);
@@ -422,7 +423,7 @@ void OnJoinFailed(unsigned Reason)
 void InitAutodownloader()
 {
     AsmWritter(0x0047C4ED).callLong(OnJoinFailed);
-    WriteMemUInt8(0x0047C4FD, ASM_NOP, 5);
+    AsmWritter(0x0047C4FD).nop(5);
 }
 
 void RenderDownloadProgress()

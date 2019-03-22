@@ -6,6 +6,7 @@
 #include "main.h"
 #include "inline_asm.h"
 #include "commands.h"
+#include <ShortTypes.h>
 #include <CallHook2.h>
 #include <FunHook2.h>
 #include <RegsPatch.h>
@@ -179,7 +180,7 @@ void SetPlaySoundEventsVolumeScale(float volume_scale)
         0x004BA4D8, 0x004BA515, 0x004BA71C, 0x004BA759, 0x004BA609, 0x004BA5F2, 0x004BA63F,
     };
     for (int i = 0; i < COUNTOF(Offsets); ++i)
-        WriteMemFloat(Offsets[i] + 1, volume_scale);
+        WriteMem<float>(Offsets[i] + 1, volume_scale);
 }
 
 CallHook2<void(int, rf::Vector3*, float*, float*, float)> SndConvertVolume3D_AmbientSound_Hook{
@@ -836,32 +837,32 @@ void MiscInit()
     WriteMemPtr(0x004B27A4, PRODUCT_NAME);
 
     // Console background color
-    WriteMemUInt32(0x005098D1, CONSOLE_BG_A); // Alpha
-    WriteMemUInt8(0x005098D6, CONSOLE_BG_B); // Blue
-    WriteMemUInt8(0x005098D8, CONSOLE_BG_G); // Green
-    WriteMemUInt8(0x005098DA, CONSOLE_BG_R); // Red
+    WriteMem<u32>(0x005098D1, CONSOLE_BG_A); // Alpha
+    WriteMem<u8>(0x005098D6, CONSOLE_BG_B); // Blue
+    WriteMem<u8>(0x005098D8, CONSOLE_BG_G); // Green
+    WriteMem<u8>(0x005098DA, CONSOLE_BG_R); // Red
 
 #ifdef NO_CD_FIX
     // No-CD fix
-    WriteMemUInt8(0x004B31B6, ASM_SHORT_JMP_REL);
+    WriteMem<u8>(0x004B31B6, ASM_SHORT_JMP_REL);
 #endif // NO_CD_FIX
 
 #ifdef NO_INTRO
     // Disable thqlogo.bik
     if (g_game_config.fastStart) {
-        WriteMemUInt8(0x004B208A, ASM_SHORT_JMP_REL);
-        WriteMemUInt8(0x004B24FD, ASM_SHORT_JMP_REL);
+        WriteMem<u8>(0x004B208A, ASM_SHORT_JMP_REL);
+        WriteMem<u8>(0x004B24FD, ASM_SHORT_JMP_REL);
     }
 #endif // NO_INTRO
 
     // Sound loop fix
-    WriteMemUInt8(0x00505D08, 0x00505D5B - (0x00505D07 + 0x2));
+    WriteMem<u8>(0x00505D08, 0x00505D5B - (0x00505D07 + 0x2));
 
     // Set initial FPS limit
-    WriteMemFloat(0x005094CA, 1.0f / g_game_config.maxFps);
+    WriteMem<float>(0x005094CA, 1.0f / g_game_config.maxFps);
 
     // Crash-fix... (probably argument for function is invalid); Page Heap is needed
-    WriteMemUInt32(0x0056A28C + 1, 0);
+    WriteMem<u32>(0x0056A28C + 1, 0);
 
     // Crash-fix in case texture has not been created (this happens if GrReadBackbuffer fails)
     AsmWritter(0x0055CE47).jmpLong(CrashFix_0055CE48);
@@ -871,8 +872,8 @@ void MiscInit()
     AsmWritter(0x004B4E0A, 0x004B4E22).nop();
 
     // Dont filter levels for DM and TeamDM
-    WriteMemUInt8(0x005995B0, 0);
-    WriteMemUInt8(0x005995B8, 0);
+    WriteMem<u8>(0x005995B0, 0);
+    WriteMem<u8>(0x005995B8, 0);
 
 #if DIRECTINPUT_SUPPORT
     rf::g_bDirectInputDisabled = 0;
@@ -882,10 +883,10 @@ void MiscInit()
     // Buffer overflows in RflReadStaticGeometry
     // Note: Buffer size is 1024 but opcode allows only 1 byte size
     //       What is more important BmLoad copies texture name to 32 bytes long buffers
-    WriteMemInt8(0x004ED612 + 1, 32);
-    WriteMemInt8(0x004ED66E + 1, 32);
-    WriteMemInt8(0x004ED72E + 1, 32);
-    WriteMemInt8(0x004EDB02 + 1, 32);
+    WriteMem<i8>(0x004ED612 + 1, 32);
+    WriteMem<i8>(0x004ED66E + 1, 32);
+    WriteMem<i8>(0x004ED72E + 1, 32);
+    WriteMem<i8>(0x004EDB02 + 1, 32);
 #endif
 
 #if 1 // Version Easter Egg
@@ -896,11 +897,11 @@ void MiscInit()
     // Fix console rendering when changing level
     AsmWritter(0x0047C490).ret();
     AsmWritter(0x0047C4AA).ret();
-    WriteMemUInt8(0x004B2E15, ASM_NOP, 2);
+    AsmWritter(0x004B2E15).nop(2);
     MenuUpdate_Hook.Install();
 
     // Increase damage for kill command in Single Player
-    WriteMemFloat(0x004A4DF5 + 1, 100000.0f);
+    WriteMem<float>(0x004A4DF5 + 1, 100000.0f);
 
     // Fix keyboard layout
     uint8_t kbd_layout = 0;
@@ -909,7 +910,7 @@ void MiscInit()
     else if (MapVirtualKeyA(0x15, MAPVK_VSC_TO_VK) == 'Z')
         kbd_layout = 3; // QWERTZ
     INFO("Keyboard layout: %u", kbd_layout);
-    WriteMemUInt8(0x004B14B4 + 1, kbd_layout);
+    WriteMem<u8>(0x004B14B4 + 1, kbd_layout);
 
     // Level sounds
     SetPlaySoundEventsVolumeScale(g_game_config.levelSoundVolume);
@@ -926,7 +927,7 @@ void MiscInit()
 
     // Show enemy bullets (FIXME: add config)
     if (g_game_config.showEnemyBullets)
-        WriteMemUInt8(0x0042669C, ASM_SHORT_JMP_REL);
+        WriteMem<u8>(0x0042669C, ASM_SHORT_JMP_REL);
 
     // Swap Assault Rifle fire controls
     PlayerLocalFireControl_Hook.Install();
@@ -935,7 +936,7 @@ void MiscInit()
     DC_REGISTER_CMD(swap_assault_rifle_controls, "Swap Assault Rifle controls", DcfSwapAssaultRifleControls);
 
     // Fix crash in shadows rendering
-    WriteMemUInt8(0x0054A3C0 + 2, 16);
+    WriteMem<u8>(0x0054A3C0 + 2, 16);
 
     // Fix crash in geometry rendering
     GeomCachePrepareRoom_Hook.Install();
@@ -944,8 +945,8 @@ void MiscInit()
     AsmWritter(0x00504A67, 0x00504A82).nop();
 
     // Use spawnpoint team property in TeamDM game (PF compatible)
-    WriteMemUInt8(0x00470395 + 4, 0); // change cmp argument: CTF -> DM
-    WriteMemUInt8(0x0047039A, 0x74); // invert jump condition: jnz -> jz
+    WriteMem<u8>(0x00470395 + 4, 0); // change cmp argument: CTF -> DM
+    WriteMem<u8>(0x0047039A, 0x74); // invert jump condition: jnz -> jz
 
     // Put not responding servers at the bottom of server list
     ServerListCmpFunc_Hook.Install();
@@ -962,13 +963,13 @@ void MiscInit()
     ChatSayAddChar_Hook.Install();
 
     // Change chat input limit to 224 (RF can support 255 safely but PF kicks if message is longer than 224)
-    WriteMemInt32(0x0044474A + 1, CHAT_MSG_MAX_LEN);
+    WriteMem<i32>(0x0044474A + 1, CHAT_MSG_MAX_LEN);
 
     // Add chat message limit for say/teamsay commands
     ChatSayAccept_Hook.Install();
 
     // Preserve password case when processing rcon_request command
-    WriteMemInt8(0x0046C85A + 1, 1);
+    WriteMem<i8>(0x0046C85A + 1, 1);
 
     // Solo/Teleport triggers handling + filtering by team ID
     TriggerActivate_Hook.Install();

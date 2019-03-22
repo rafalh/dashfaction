@@ -3,6 +3,7 @@
 #include "AsmWritter.h"
 #include "main.h"
 #include "gr_color.h"
+#include <ShortTypes.h>
 #include <FunHook2.h>
 
 inline void ConvertPixel_RGB8_To_RGBA8(uint8_t*& dst_ptr, const uint8_t*& src_ptr)
@@ -312,11 +313,11 @@ void GrColorInit()
     // True Color textures
     if (g_game_config.resBpp == 32 && g_game_config.trueColorTextures) {
         // Available texture formats (tested for compatibility)
-        WriteMemUInt32(0x005A7DFC, D3DFMT_X8R8G8B8); // old: D3DFMT_R5G6B5
-        WriteMemUInt32(0x005A7E00, D3DFMT_A8R8G8B8); // old: D3DFMT_X1R5G5B5
-        WriteMemUInt32(0x005A7E04, D3DFMT_A8R8G8B8); // old: D3DFMT_A1R5G5B5, lightmaps
-        WriteMemUInt32(0x005A7E08, D3DFMT_A8R8G8B8); // old: D3DFMT_A4R4G4B4
-        WriteMemUInt32(0x005A7E0C, D3DFMT_A4R4G4B4); // old: D3DFMT_A8R3G3B2
+        WriteMem<u32>(0x005A7DFC, D3DFMT_X8R8G8B8); // old: D3DFMT_R5G6B5
+        WriteMem<u32>(0x005A7E00, D3DFMT_A8R8G8B8); // old: D3DFMT_X1R5G5B5
+        WriteMem<u32>(0x005A7E04, D3DFMT_A8R8G8B8); // old: D3DFMT_A1R5G5B5, lightmaps
+        WriteMem<u32>(0x005A7E08, D3DFMT_A8R8G8B8); // old: D3DFMT_A4R4G4B4
+        WriteMem<u32>(0x005A7E0C, D3DFMT_A4R4G4B4); // old: D3DFMT_A8R3G3B2
 
         GrD3DSetTextureData_Hook.Install();
         BinkInitDeviceInfo_Hook.Install();
@@ -333,13 +334,13 @@ void GrColorInit()
         AsmWritter(0x004E5CE3).leaEdxEsp(0x34 - 0x28).push(AsmRegs::EDX).push(AsmRegs::EBX).push(AsmRegs::EDI).push(AsmRegs::EAX)
             .callLong(GetAmbientColorFromLightmaps_004E5CE3).addEsp(16).jmpNear(0x004E5D57);
         // sub_412410 (what is it?)
-        WriteMemUInt8(0x00412430 + 3, 0x34 - 0x20 + 0x18); // pitch instead of width
-        WriteMemUInt8(0x0041243D, ASM_NOP, 2); // dont multiply by 2
+        WriteMem<u8>(0x00412430 + 3, 0x34 - 0x20 + 0x18); // pitch instead of width
+        AsmWritter(0x0041243D).nop(2); // dont multiply by 2
 
 #ifdef DEBUG
         // FIXME: is it used?
-        WriteMemUInt8(0x00412410, 0xC3);
-        WriteMemUInt8(0x00412370, 0xC3);
+        WriteMem<u8>(0x00412410, 0xC3);
+        WriteMem<u8>(0x00412370, 0xC3);
 #endif
     }
 }

@@ -27,7 +27,7 @@ public:
         int call_op_size = 1 + sizeof(uintptr_t);
         m_target_fun_ptr = reinterpret_cast<void*>(m_call_op_addr + call_op_size + call_offset);
         intptr_t new_offset = reinterpret_cast<intptr_t>(m_hook_fun_ptr) - m_call_op_addr - call_op_size;
-        WriteMemInt32(m_call_op_addr + 1, new_offset);
+        WriteMem<i32>(m_call_op_addr + 1, new_offset);
     }
 };
 

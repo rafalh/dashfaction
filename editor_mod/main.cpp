@@ -64,7 +64,7 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
     AsmWritter(0x00447B32).xor_(AsmRegs::EAX, AsmRegs::EAX);
     AsmWritter(0x00448024, 0x0044802B).nop();
     AsmWritter(0x00448024).xor_(AsmRegs::EAX, AsmRegs::EAX);
-    
+
     // InitInstance hook
     AsmWritter(0x00482C84).callLong(CEditorApp__InitInstance_AfterHook);
 

@@ -584,17 +584,17 @@ void CommandsInit()
 {
 #if CAMERA_1_3_COMMANDS
     /* Enable camera1-3 in multiplayer and hook CanPlayerFire to disable shooting in camera2 */
-    WriteMemUInt8(0x00431280, ASM_NOP, 2);
-    WriteMemUInt8(0x004312E0, ASM_NOP, 2);
-    WriteMemUInt8(0x00431340, ASM_NOP, 2);
-    WriteMemUInt8(0x004A68D0, ASM_LONG_JMP_REL);
-    WriteMemUInt32(0x004A68D0 + 1, (uintptr_t)CanPlayerFireHook - (0x004A68D0 + 0x5));
+    AsmWritter(0x00431280).nop(2);
+    AsmWritter(0x004312E0).nop(2);
+    AsmWritter(0x00431340).nop(2);
+    WriteMem<u8>(0x004A68D0, ASM_LONG_JMP_REL);
+    WriteMem<u32>(0x004A68D0 + 1, (uintptr_t)CanPlayerFireHook - (0x004A68D0 + 0x5));
 #endif // if CAMERA_1_3_COMMANDS
 
     // Change limit of commands
     ASSERT(rf::g_DcNumCommands == 0);
     WriteMemPtr(0x005099AC + 1, g_CommandsBuffer);
-    WriteMemUInt8(0x00509A78 + 2, CMD_LIMIT);
+    WriteMem<u8>(0x00509A78 + 2, CMD_LIMIT);
     WriteMemPtr(0x00509A8A + 1, g_CommandsBuffer);
     WriteMemPtr(0x00509AB0 + 3, g_CommandsBuffer);
     WriteMemPtr(0x00509AE1 + 3, g_CommandsBuffer);

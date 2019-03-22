@@ -4,6 +4,7 @@
 #include "rf.h"
 #include "main.h"
 #include "xxhash.h"
+#include <ShortTypes.h>
 
 #define DEBUG_VFS 0
 #define DEBUG_VFS_FILENAME1 "DM RTS MiniGolf 2.1.rfl"
@@ -172,9 +173,9 @@ static int PackfileLoad_New(const char *pszFilename, const char *pszDir)
     char szFullPath[256], Buf[0x800];
     int bRet = 0;
     unsigned cFilesInBlock, cAdded, OffsetInBlocks;
-    
+
     VFS_DBGPRINT("Load packfile %s %s", pszDir, pszFilename);
-    
+
     if (pszDir && pszDir[0] && pszDir[1] == ':')
         sprintf(szFullPath, "%s%s", pszDir, pszFilename); // absolute path
     else
@@ -185,7 +186,7 @@ static int PackfileLoad_New(const char *pszFilename, const char *pszDir)
         ERR("Packfile name or path too long: %s", szFullPath);
         return 0;
     }
-    
+
     for (unsigned i = 0; i < g_cPackfiles; ++i)
         if (!stricmp(g_pPackfiles[i]->szPath, szFullPath))
             return 1;
@@ -212,20 +213,20 @@ static int PackfileLoad_New(const char *pszFilename, const char *pszDir)
         ERR("Failed to open packfile %s", szFullPath);
         return 0;
     }
-    
+
     if (g_cPackfiles % 64 == 0)
     {
         g_pPackfiles = (rf::Packfile**)realloc(g_pPackfiles, (g_cPackfiles + 64) * sizeof(rf::Packfile*));
         memset(&g_pPackfiles[g_cPackfiles], 0, 64 * sizeof(rf::Packfile*));
     }
-    
+
     rf::Packfile *pPackfile = (rf::Packfile*)malloc(sizeof(*pPackfile));
     if (!pPackfile)
     {
         ERR("malloc failed");
         return 0;
     }
-    
+
     strncpy(pPackfile->szName, pszFilename, sizeof(pPackfile->szName) - 1);
     pPackfile->szName[sizeof(pPackfile->szName) - 1] = '\0';
     strncpy(pPackfile->szPath, szFullPath, sizeof(pPackfile->szPath) - 1);
@@ -233,7 +234,7 @@ static int PackfileLoad_New(const char *pszFilename, const char *pszDir)
     pPackfile->field_A0 = 0;
     pPackfile->cFiles = 0;
     pPackfile->pFileList = NULL;
-    
+
     // Note: VfsProcessPackfileHeader returns number of files in packfile - result 0 is not always a true error
     if (fread(Buf, sizeof(Buf), 1, pFile) == 1 && rf::PackfileProcessHeader(pPackfile, Buf))
     {
@@ -242,7 +243,7 @@ static int PackfileLoad_New(const char *pszFilename, const char *pszDir)
         cAdded = 0;
         OffsetInBlocks = 1;
         bRet = 1;
-        
+
         for (unsigned i = 0; i < pPackfile->cFiles; i += 32)
         {
             if (fread(Buf, sizeof(Buf), 1, pFile) != 1)
@@ -251,18 +252,18 @@ static int PackfileLoad_New(const char *pszFilename, const char *pszDir)
                 ERR("Failed to fread vpp %s", szFullPath);
                 break;
             }
-            
+
             cFilesInBlock = std::min(pPackfile->cFiles - i, 32u);
             rf::PackfileAddEntries(pPackfile, Buf, cFilesInBlock, &cAdded);
             ++OffsetInBlocks;
         }
     } else ERR("Failed to fread vpp 2 %s", szFullPath);
-    
+
     if (bRet)
         rf::PackfileSetupFileOffsets(pPackfile, OffsetInBlocks);
-    
+
     fclose(pFile);
-    
+
     if (bRet)
     {
         g_pPackfiles[g_cPackfiles] = pPackfile;
@@ -273,7 +274,7 @@ static int PackfileLoad_New(const char *pszFilename, const char *pszDir)
         free(pPackfile->pFileList);
         free(pPackfile);
     }
-    
+
     return bRet;
 }
 
@@ -284,7 +285,7 @@ static rf::Packfile *PackfileFindArchive_New(const char *pszFilename)
         if (!stricmp(g_pPackfiles[i]->szName, pszFilename))
             return g_pPackfiles[i];
     }
-    
+
     ERR("Packfile %s not found", pszFilename);
     return NULL;
 }
@@ -292,11 +293,11 @@ static rf::Packfile *PackfileFindArchive_New(const char *pszFilename)
 static int PackfileBuildEntriesList_New(const char *pszExtList, char **ppFilenames, unsigned *pcFiles, const char *pszPackfileName)
 {
     unsigned cbBuf = 1;
-    
+
     VFS_DBGPRINT("VfsBuildPackfileEntriesListHook called");
     *pcFiles = 0;
     *ppFilenames = 0;
-    
+
     for (unsigned i = 0; i < g_cPackfiles; ++i)
     {
         rf::Packfile *pPackfile = g_pPackfiles[i];
@@ -310,7 +311,7 @@ static int PackfileBuildEntriesList_New(const char *pszExtList, char **ppFilenam
             }
         }
     }
-    
+
     *ppFilenames = (char*)rf::Malloc(cbBuf);
     if (!*ppFilenames)
         return 0;
@@ -330,19 +331,19 @@ static int PackfileBuildEntriesList_New(const char *pszExtList, char **ppFilenam
                     ++(*pcFiles);
                 }
             }
-            
+
         }
     }
     // terminating zero
     BufPtr[0] = 0;
-    
+
     return 1;
 }
 
 static int PackfileAddEntries_New(rf::Packfile *pPackfile, const void *pBlock, unsigned cFilesInBlock, unsigned *pcAddedFiles)
 {
     const uint8_t *pData = (const uint8_t*)pBlock;
-    
+
     for (unsigned i = 0; i < cFilesInBlock; ++i)
     {
         rf::PackfileEntry *pEntry = &pPackfile->pFileList[*pcAddedFiles];
@@ -360,10 +361,10 @@ static int PackfileAddEntries_New(rf::Packfile *pPackfile, const void *pBlock, u
         pEntry->cbFileSize = *((uint32_t*)(pData + 60));
         pEntry->pArchive = pPackfile;
         pEntry->pRawFile = NULL;
-        
+
         pData += 64;
         ++(*pcAddedFiles);
-        
+
         rf::PackfileAddToLookupTable(pEntry);
         ++g_cFilesInVfs;
     }
@@ -373,7 +374,7 @@ static int PackfileAddEntries_New(rf::Packfile *pPackfile, const void *pBlock, u
 static void PackfileAddToLookupTable_New(rf::PackfileEntry *pEntry)
 {
     PackfileLookupTableNew *pLookupTableItem = &g_pVfsLookupTableNew[pEntry->dwNameChecksum % LOOKUP_TABLE_SIZE];
-    
+
     while (true)
     {
         if (!pLookupTableItem->pPackfileEntry)
@@ -392,7 +393,7 @@ static void PackfileAddToLookupTable_New(rf::PackfileEntry *pEntry)
             if (!stricmp(pEntry->pszFileName, DEBUG_VFS_FILENAME1) || !stricmp(pEntry->pszFileName, DEBUG_VFS_FILENAME2))
                 VFS_DBGPRINT("Add 2: %s (%x)", pEntry->pszFileName, pEntry->dwNameChecksum);
 #endif
-            
+
             const char *pszOldArchive = pLookupTableItem->pPackfileEntry->pArchive->szName;
             const char *pszNewArchive = pEntry->pArchive->szName;
 
@@ -401,7 +402,7 @@ static void PackfileAddToLookupTable_New(rf::PackfileEntry *pEntry)
                 bool bWhitelisted = false;// IsModFileInWhitelist(pEntry->pszFileName);
                 if (!g_game_config.allowOverwriteGameFiles && !bWhitelisted)
                 {
-                    TRACE("Denied overwriting game file %s (old packfile %s, new packfile %s)", 
+                    TRACE("Denied overwriting game file %s (old packfile %s, new packfile %s)",
                         pEntry->pszFileName, pszOldArchive, pszNewArchive);
                     return;
                 }
@@ -420,14 +421,14 @@ static void PackfileAddToLookupTable_New(rf::PackfileEntry *pEntry)
             }
             break;
         }
-        
+
         if (!pLookupTableItem->pNext)
         {
 #if DEBUG_VFS && defined(DEBUG_VFS_FILENAME1) && defined(DEBUG_VFS_FILENAME2)
             if (!stricmp(pEntry->pszFileName, DEBUG_VFS_FILENAME1) || !stricmp(pEntry->pszFileName, DEBUG_VFS_FILENAME2))
                 VFS_DBGPRINT("Add 3: %s (%x)", pEntry->pszFileName, pEntry->dwNameChecksum);
 #endif
-            
+
             pLookupTableItem->pNext = (PackfileLookupTableNew*)malloc(sizeof(PackfileLookupTableNew));
             pLookupTableItem = pLookupTableItem->pNext;
             pLookupTableItem->pNext = NULL;
@@ -437,7 +438,7 @@ static void PackfileAddToLookupTable_New(rf::PackfileEntry *pEntry)
         pLookupTableItem = pLookupTableItem->pNext;
         ++g_cNameCollisions;
     }
-    
+
     pLookupTableItem->pPackfileEntry = pEntry;
 }
 
@@ -457,13 +458,13 @@ static rf::PackfileEntry *PackfileFindFileInternal_New(const char *pszFilename)
 #endif
             return pLookupTableItem->pPackfileEntry;
         }
-        
+
         pLookupTableItem = pLookupTableItem->pNext;
     }
     while(pLookupTableItem);
-    
+
     VFS_DBGPRINT("Cannot find: %s (%x)", pszFilename, Checksum);
-    
+
     /*pLookupTableItem = &g_pVfsLookupTableNew[Checksum % LOOKUP_TABLE_SIZE];
     do
     {
@@ -471,11 +472,11 @@ static rf::PackfileEntry *PackfileFindFileInternal_New(const char *pszFilename)
         {
             MessageBox(0, pLookupTableItem->pPackfileEntry->pszFileName, "List", 0);
         }
-        
+
         pLookupTableItem = pLookupTableItem->pNext;
     }
     while(pLookupTableItem);*/
-    
+
     return NULL;
 }
 
@@ -556,14 +557,14 @@ static void PackfileInit_New()
     // Note: language changes in binary are done here to make sure RootPath is already initialized
 
     // Switch UI language - can be anything even if this is US edition
-    WriteMemUInt8(0x004B27D2 + 1, (uint8_t)GetInstalledGameLang());
+    WriteMem<u8>(0x004B27D2 + 1, (uint8_t)GetInstalledGameLang());
 
     // Switch localized tables names
     if (GetInstalledGameLang() != LANG_EN)
     {
-        WriteMemPtr(0x0043DCAB + 1, (PVOID)"localized_credits.tbl");
-        WriteMemPtr(0x0043E50B + 1, (PVOID)"localized_endgame.tbl");
-        WriteMemPtr(0x004B082B + 1, (PVOID)"localized_strings.tbl");
+        WriteMemPtr(0x0043DCAB + 1, "localized_credits.tbl");
+        WriteMemPtr(0x0043E50B + 1, "localized_endgame.tbl");
+        WriteMemPtr(0x004B082B + 1, "localized_strings.tbl");
     }
 
     INFO("Packfiles initialization took %dms", GetTickCount() - StartTicks);
@@ -594,9 +595,9 @@ void VfsApplyHooks()
     AsmWritter(0x0052BC80).jmpLong(PackfileCleanup_New);
 
 #ifdef DEBUG
-    WriteMemUInt8(0x0052BEF0, 0xFF); // VfsInitPackfileFilesList
-    WriteMemUInt8(0x0052BF50, 0xFF); // VfsLoadPackfileInternal
-    WriteMemUInt8(0x0052C440, 0xFF); // VfsFindPackfileEntry
+    WriteMem<u8>(0x0052BEF0, 0xFF); // VfsInitPackfileFilesList
+    WriteMem<u8>(0x0052BF50, 0xFF); // VfsLoadPackfileInternal
+    WriteMem<u8>(0x0052C440, 0xFF); // VfsFindPackfileEntry
 #endif
 
     /* Load ui.vpp before tables.vpp - not used anymore */

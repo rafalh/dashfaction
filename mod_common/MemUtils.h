@@ -3,8 +3,19 @@
 #include <stdint.h>
 #include <cstring>
 
+template<typename T>
+struct TypeIdentity {
+    using type = T;
+};
+
 void WriteMem(unsigned Addr, const void *pValue, unsigned cbValue);
 void UnprotectMem(void *Ptr, unsigned Len);
+
+template<typename T>
+void WriteMem(uintptr_t addr, typename TypeIdentity<T>::type value)
+{
+    WriteMem(addr, &value, sizeof(value));
+}
 
 inline void WriteMem(unsigned Addr, const void *pValue, unsigned cbValue, unsigned cRepeat)
 {
@@ -16,45 +27,10 @@ inline void WriteMem(unsigned Addr, const void *pValue, unsigned cbValue, unsign
     }
 }
 
-inline void WriteMemUInt32(unsigned Addr, uint32_t Value, unsigned Repeat = 1)
-{
-    WriteMem(Addr, &Value, sizeof(Value), Repeat);
-}
-
-inline void WriteMemInt32(unsigned Addr, int32_t Value, unsigned Repeat = 1)
-{
-    WriteMem(Addr, &Value, sizeof(Value), Repeat);
-}
-
-inline void WriteMemUInt16(unsigned Addr, uint16_t Value, unsigned Repeat = 1)
-{
-    WriteMem(Addr, &Value, sizeof(Value), Repeat);
-}
-
-inline void WriteMemInt16(unsigned Addr, int16_t Value, unsigned Repeat = 1)
-{
-    WriteMem(Addr, &Value, sizeof(Value), Repeat);
-}
-
-inline void WriteMemUInt8(unsigned Addr, uint8_t Value, unsigned Repeat = 1)
-{
-    WriteMem(Addr, &Value, sizeof(Value), Repeat);
-}
-
-inline void WriteMemInt8(unsigned Addr, int8_t Value, unsigned Repeat = 1)
-{
-    WriteMem(Addr, &Value, sizeof(Value), Repeat);
-}
-
-inline void WriteMemFloat(unsigned Addr, float Value, unsigned Repeat = 1)
-{
-    WriteMem(Addr, &Value, sizeof(Value), Repeat);
-}
-
 template<typename T>
-inline void WriteMemPtr(unsigned Addr, T *Value, unsigned Repeat = 1)
+inline void WriteMemPtr(unsigned Addr, T *Value)
 {
-    WriteMem(Addr, &Value, sizeof(Value), Repeat);
+    WriteMem(Addr, &Value, sizeof(Value));
 }
 
 inline void WriteMemStr(unsigned Addr, const char *pStr)

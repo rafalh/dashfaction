@@ -2,6 +2,7 @@
 #include "kill.h"
 #include "rf.h"
 #include "utils.h"
+#include <ShortTypes.h>
 #include <FunHook2.h>
 
 void KillInitPlayer(rf::Player* player)
@@ -36,9 +37,9 @@ void OnPlayerKill(rf::Player *killed_player, rf::Player *killer_player)
     rf::String msg;
     const char *mui_msg;
     rf::ChatMsgColor color_id;
-    
+
     rf::EntityObj* killer_entity = killer_player ? rf::EntityGetFromHandle(killer_player->hEntity) : NULL;
-    
+
     if (!killer_player) {
         color_id = rf::ChatMsgColor::default_;
         mui_msg = NullToEmpty(rf::g_ppszStringsTable[rf::STR_WAS_KILLED_MYSTERIOUSLY]);
@@ -56,14 +57,14 @@ void OnPlayerKill(rf::Player *killed_player, rf::Player *killer_player)
         }
         else {
             mui_msg = NullToEmpty(rf::g_ppszStringsTable[rf::STR_YOU_WERE_KILLED_BY]);
-            
+
             const char* weapon_name = nullptr;
             int killer_weapon_cls_id = killer_entity ? killer_entity->WeaponInfo.WeaponClsId : -1;
             if (killer_weapon_cls_id >= 0 && killer_weapon_cls_id < 64) {
                 auto &weapon_cls = rf::g_pWeaponClasses[killer_weapon_cls_id];
                 weapon_name = weapon_cls.strDisplayName.CStr();
             }
-            
+
             auto killer_name = killer_player->strName.CStr();
             if (weapon_name)
                 msg = rf::String::Format("%s%s (%s)!", mui_msg, killer_name, weapon_name);
@@ -119,6 +120,6 @@ void InitKill()
         .jmpLong(0x00420B03);
 
     // Change player stats structure
-    WriteMemInt8(0x004A33B5 + 1, sizeof(PlayerStatsNew));
+    WriteMem<i8>(0x004A33B5 + 1, sizeof(PlayerStatsNew));
     MpResetNetGame_Hook.Install();
 }

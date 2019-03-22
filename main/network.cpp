@@ -3,6 +3,7 @@
 #include "rf.h"
 #include "utils.h"
 #include "inline_asm.h"
+#include <ShortTypes.h>
 #include <FunHook2.h>
 #include <CallHook2.h>
 #include <RegsPatch.h>
@@ -883,26 +884,26 @@ void NetworkInit()
     rf::SimultaneousPing = 32;
 
     /* Change server info timeout to 2s */
-    WriteMemUInt32(0x0044D357 + 2, 2000);
+    WriteMem<u32>(0x0044D357 + 2, 2000);
 
     /* Change delay between server info requests */
-    WriteMemUInt8(0x0044D338 + 1, 20);
+    WriteMem<u8>(0x0044D338 + 1, 20);
 
     /* Allow ports < 1023 (especially 0 - any port) */
-    WriteMemUInt8(0x00528F24, 0x90, 2);
+    AsmWritter(0x00528F24).nop(2);
 
     /* Default port: 0 */
-    WriteMemUInt16(0x0059CDE4, 0);
-    WriteMemInt32(0x004B159D + 1, 0); // TODO: add setting in launcher
+    WriteMem<u16>(0x0059CDE4, 0);
+    WriteMem<i32>(0x004B159D + 1, 0); // TODO: add setting in launcher
 
     /* Dont overwrite MpCharacter in Single Player */
-    WriteMemUInt8(0x004A415F, ASM_NOP, 10);
+    AsmWritter(0x004A415F).nop(10);
 
     /* Show valid info for servers with incompatible version */
-    WriteMemUInt8(0x0047B3CB, ASM_SHORT_JMP_REL);
+    WriteMem<u8>(0x0047B3CB, ASM_SHORT_JMP_REL);
 
     /* Change default Server List sort to players count */
-    WriteMemUInt32(0x00599D20, 4);
+    WriteMem<u32>(0x00599D20, 4);
 
     /* Buffer Overflow fixes */
     AsmWritter(0x0047B2D3).jmpLong(ProcessGameInfoPacket_Security_0047B2D3);

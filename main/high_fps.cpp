@@ -6,6 +6,7 @@
 #include "commands.h"
 #include <FunHook2.h>
 #include <RegsPatch.h>
+#include <ShortTypes.h>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -220,7 +221,7 @@ FunHook2<int(rf::String&, rf::String&, char*)> RflLoad_Hook{
     0x0045C540,
     [](rf::String& level_filename, rf::String& a2, char* error_desc) {
         int ret = RflLoad_Hook.CallTarget(level_filename, a2, error_desc);
-        if (ret == 0 && strstr(level_filename, "L5S3")) {
+        if (ret == 0 && std::strstr(level_filename, "L5S3")) {
             // Fix submarine exploding - change delay of two events to make submarine physics enabled later
             //INFO("Fixing Submarine exploding bug...");
             rf::Object* obj = rf::ObjGetFromUid(4679);
@@ -254,6 +255,15 @@ RegsPatch CutsceneShotSyncFix{
     }
 };
 
+DcCommand2 test_mouse{
+    "testmouse",
+    []() {
+        POINT pt;
+        GetCursorPos(&pt);
+        SetCursorPos(pt.x + 200, pt.y + 100);
+    }
+};
+
 void HighFpsInit()
 {
     // Fix animations broken on high FPS because of ignored ftol remainder
@@ -270,19 +280,19 @@ void HighFpsInit()
     WriteMemPtr(0x004A09A6 + 2, &g_jump_threshold);
 
     // Fix water deceleration on high FPS
-    WriteMemUInt8(0x0049D816, ASM_NOP, 5);
-    WriteMemUInt8(0x0049D82A, ASM_NOP, 5);
-    WriteMemUInt8(0x0049D82A + 5, ASM_PUSH_ESI);
+    AsmWritter(0x0049D816).nop(5);
+    AsmWritter(0x0049D82A).nop(5);
+    WriteMem<u8>(0x0049D82A + 5, ASM_PUSH_ESI);
     AsmWritter(0x0049D830).callLong(EntityWaterDecelerateFix);
 
     // Fix water waves animation on high FPS
-    WriteMemUInt8(0x004E68A0, ASM_NOP, 9);
-    WriteMemUInt8(0x004E68B6, ASM_LONG_JMP_REL);
+    AsmWritter(0x004E68A0).nop(9);
+    WriteMem<u8>(0x004E68B6, ASM_LONG_JMP_REL);
     AsmWritter(0x004E68B6).jmpLong(WaterAnimateWaves_004E68A0);
 
     // Fix incorrect frame time calculation
-    WriteMemUInt8(0x00509595, ASM_NOP, 2);
-    WriteMemUInt8(0x00509532, ASM_SHORT_JMP_REL);
+    AsmWritter(0x00509595).nop(2);
+    WriteMem<u8>(0x00509532, ASM_SHORT_JMP_REL);
 
     // Fix submarine exploding on high FPS
     RflLoad_Hook.Install();
@@ -291,13 +301,15 @@ void HighFpsInit()
     WriteMemPtr(0x0040DBCC + 2, &g_camera_shake_factor);
 
     // Remove cutscene sync RF hackfix
-    WriteMemFloat(0x005897B4, 1000.0f);
-    WriteMemFloat(0x005897B8, 1.0f);
+    WriteMem<float>(0x005897B4, 1000.0f);
+    WriteMem<float>(0x005897B8, 1.0f);
     static float zero = 0.0f;
     WriteMemPtr(0x0045B42A + 2, &zero);
 
     // Fix cutscene shot timer sync on high fps
     CutsceneShotSyncFix.Install();
+
+    test_mouse.Register();
 }
 
 void HighFpsUpdate()
@@ -308,7 +320,7 @@ void HighFpsUpdate()
         g_jump_threshold = 0.025f + 0.075f * frame_time / (1 / 60.0f);
 
         // Fix screen shake caused by some weapons (eg. Assault Rifle)
-        g_camera_shake_factor = pow(0.6f, frame_time / (1 / screen_shake_fps));
+        g_camera_shake_factor = std::pow(0.6f, frame_time / (1 / screen_shake_fps));
     }
 
 #if DEBUG

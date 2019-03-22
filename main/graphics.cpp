@@ -6,6 +6,7 @@
 #include "gr_color.h"
 #include "inline_asm.h"
 #include <CallHook2.h>
+#include <ShortTypes.h>
 
 namespace rf {
 
@@ -51,7 +52,7 @@ static void SetTextureMinMagFilterInCode(D3DTEXTUREFILTERTYPE FilterType)
     };
     unsigned i;
     for (i = 0; i < _countof(Addresses); ++i)
-        WriteMemUInt8(Addresses[i] + 1, (uint8_t)FilterType);
+        WriteMem<u8>(Addresses[i] + 1, (uint8_t)FilterType);
 }
 
 extern "C" void GrSetViewMatrix_FovFix(float fFovScale, float fWFarFactor)
@@ -211,73 +212,73 @@ CallHook2<void()> GrInitBuffers_AfterReset_Hook{
 void GraphicsInit()
 {
     // Fix for "At least 8 MB of available video memory"
-    WriteMemUInt8(0x005460CD, ASM_JAE_SHORT);
+    WriteMem<u8>(0x005460CD, ASM_JAE_SHORT);
 
 #if WINDOWED_MODE_SUPPORT
     if (g_game_config.wndMode != GameConfig::FULLSCREEN) {
         /* Enable windowed mode */
-        WriteMemUInt32(0x004B29A5 + 6, 0xC8);
+        WriteMem<u32>(0x004B29A5 + 6, 0xC8);
         if (g_game_config.wndMode == GameConfig::STRETCHED) {
             uint32_t WndStyle = WS_POPUP | WS_SYSMENU;
-            WriteMemUInt32(0x0050C474 + 1, WndStyle);
-            WriteMemUInt32(0x0050C4E3 + 1, WndStyle);
+            WriteMem<u32>(0x0050C474 + 1, WndStyle);
+            WriteMem<u32>(0x0050C4E3 + 1, WndStyle);
         }
     }
 #endif
 
-    //WriteMemUInt8(0x00524C98, ASM_SHORT_JMP_REL); // disable window hooks
+    //WriteMem<u8>(0x00524C98, ASM_SHORT_JMP_REL); // disable window hooks
 
 #if D3D_SWAP_DISCARD
     // Use Discard Swap Mode
-    WriteMemUInt32(0x00545B4D + 6, D3DSWAPEFFECT_DISCARD); // full screen
-    WriteMemUInt32(0x00545AE3 + 6, D3DSWAPEFFECT_DISCARD); // windowed
+    WriteMem<u32>(0x00545B4D + 6, D3DSWAPEFFECT_DISCARD); // full screen
+    WriteMem<u32>(0x00545AE3 + 6, D3DSWAPEFFECT_DISCARD); // windowed
 #endif
 
     // Replace memset call to SetupPP
-    WriteMemUInt8(0x00545AA7, ASM_NOP, 0x00545AB5 - 0x00545AA7);
-    WriteMemUInt8(0x00545AA7, ASM_LONG_CALL_REL);
-    WriteMemInt32(0x00545AA7 + 1, (uintptr_t)SetupPP - (0x00545AA7 + 0x5));
-    WriteMemUInt8(0x00545BA5, ASM_NOP, 6); // dont set PP.Flags
+    AsmWritter(0x00545AA7, 0x00545AB5).nop();
+    WriteMem<u8>(0x00545AA7, ASM_LONG_CALL_REL);
+    WriteMem<i32>(0x00545AA7 + 1, (uintptr_t)SetupPP - (0x00545AA7 + 0x5));
+    AsmWritter(0x00545BA5).nop(6); // dont set PP.Flags
 
     // nVidia issue fix (make sure D3Dsc is enabled)
-    WriteMemUInt8(0x00546154, 1);
+    WriteMem<u8>(0x00546154, 1);
 
     // Properly restore state after device reset
     GrInitBuffers_AfterReset_Hook.Install();
 
 #if WIDESCREEN_FIX
     // Fix FOV for widescreen
-    WriteMemUInt8(0x00547344, ASM_LONG_JMP_REL);
-    WriteMemInt32(0x00547344 + 1, (uintptr_t)GrSetViewMatrix_00547344 - (0x00547344 + 0x5));
-    WriteMemFloat(0x0058A29C, 0.0003f); // factor related to near plane, default is 0.000588f
+    WriteMem<u8>(0x00547344, ASM_LONG_JMP_REL);
+    WriteMem<i32>(0x00547344 + 1, (uintptr_t)GrSetViewMatrix_00547344 - (0x00547344 + 0x5));
+    WriteMem<float>(0x0058A29C, 0.0003f); // factor related to near plane, default is 0.000588f
 #endif
 
     // Don't use LOD models
     if (g_game_config.disableLodModels) {
-        //WriteMemUInt8(0x00421A40, ASM_SHORT_JMP_REL);
-        WriteMemUInt8(0x0052FACC, ASM_SHORT_JMP_REL);
+        //WriteMem<u8>(0x00421A40, ASM_SHORT_JMP_REL);
+        WriteMem<u8>(0x0052FACC, ASM_SHORT_JMP_REL);
     }
 
     // Better error message in case of device creation error
-    WriteMemUInt8(0x00545BEF, ASM_LONG_JMP_REL);
-    WriteMemInt32(0x00545BEF + 1, (uintptr_t)GrCreateD3DDeviceError_00545BEF - (0x00545BEF + 0x5));
+    WriteMem<u8>(0x00545BEF, ASM_LONG_JMP_REL);
+    WriteMem<i32>(0x00545BEF + 1, (uintptr_t)GrCreateD3DDeviceError_00545BEF - (0x00545BEF + 0x5));
 
     // Optimization - remove unused back buffer locking/unlocking in GrSwapBuffers
     AsmWritter(0x0054504A).jmpNear(0x0054508B);
 
 #if 1
     // Fix rendering of right and bottom edges of viewport
-    WriteMemUInt8(0x00431D9F, ASM_SHORT_JMP_REL);
-    WriteMemUInt8(0x00431F6B, ASM_SHORT_JMP_REL);
-    WriteMemUInt8(0x004328CF, ASM_SHORT_JMP_REL);
-    WriteMemUInt8(0x0043298F, ASM_LONG_JMP_REL);
-    WriteMemInt32(0x0043298F + 1, (uintptr_t)0x004329DC - (0x0043298F + 0x5));
-    WriteMemUInt8(0x005509C4, ASM_LONG_JMP_REL);
-    WriteMemInt32(0x005509C4 + 1, (uintptr_t)GrClearZBuffer_005509C4 - (0x005509C4 + 0x5));
+    WriteMem<u8>(0x00431D9F, ASM_SHORT_JMP_REL);
+    WriteMem<u8>(0x00431F6B, ASM_SHORT_JMP_REL);
+    WriteMem<u8>(0x004328CF, ASM_SHORT_JMP_REL);
+    WriteMem<u8>(0x0043298F, ASM_LONG_JMP_REL);
+    WriteMem<i32>(0x0043298F + 1, (uintptr_t)0x004329DC - (0x0043298F + 0x5));
+    WriteMem<u8>(0x005509C4, ASM_LONG_JMP_REL);
+    WriteMem<i32>(0x005509C4 + 1, (uintptr_t)GrClearZBuffer_005509C4 - (0x005509C4 + 0x5));
 
     // Left and top viewport edge fix for MSAA (RF does similar thing in GrDrawTextureD3D)
-    WriteMemUInt8(0x005478C6, ASM_FADD);
-    WriteMemUInt8(0x005478D7, ASM_FADD);
+    WriteMem<u8>(0x005478C6, ASM_FADD);
+    WriteMem<u8>(0x005478D7, ASM_FADD);
     WriteMemPtr(0x005478C6 + 2, &g_GrClippedGeomOffsetX);
     WriteMemPtr(0x005478D7 + 2, &g_GrClippedGeomOffsetY);
     GrDrawRect_GrDrawPoly_Hook.Install();
@@ -286,42 +287,42 @@ void GraphicsInit()
     if (g_game_config.highScannerRes) {
         // Improved Railgun Scanner resolution
         constexpr int8_t ScannerResolution = 120; // default is 64, max is 127 (signed byte)
-        WriteMemUInt8(0x004325E6 + 1, ScannerResolution); // RenderInGame
-        WriteMemUInt8(0x004325E8 + 1, ScannerResolution);
-        WriteMemUInt8(0x004A34BB + 1, ScannerResolution); // PlayerCreate
-        WriteMemUInt8(0x004A34BD + 1, ScannerResolution);
-        WriteMemUInt8(0x004ADD70 + 1, ScannerResolution); // PlayerRenderRailgunScannerViewToTexture
-        WriteMemUInt8(0x004ADD72 + 1, ScannerResolution);
-        WriteMemUInt8(0x004AE0B7 + 1, ScannerResolution);
-        WriteMemUInt8(0x004AE0B9 + 1, ScannerResolution);
-        WriteMemUInt8(0x004AF0B0 + 1, ScannerResolution); // PlayerRenderScannerView
-        WriteMemUInt8(0x004AF0B4 + 1, ScannerResolution * 3 / 4);
-        WriteMemUInt8(0x004AF0B6 + 1, ScannerResolution);
-        WriteMemUInt8(0x004AF7B0 + 1, ScannerResolution);
-        WriteMemUInt8(0x004AF7B2 + 1, ScannerResolution);
-        WriteMemUInt8(0x004AF7CF + 1, ScannerResolution);
-        WriteMemUInt8(0x004AF7D1 + 1, ScannerResolution);
-        WriteMemUInt8(0x004AF818 + 1, ScannerResolution);
-        WriteMemUInt8(0x004AF81A + 1, ScannerResolution);
-        WriteMemUInt8(0x004AF820 + 1, ScannerResolution);
-        WriteMemUInt8(0x004AF822 + 1, ScannerResolution);
-        WriteMemUInt8(0x004AF855 + 1, ScannerResolution);
-        WriteMemUInt8(0x004AF860 + 1, ScannerResolution * 3 / 4);
-        WriteMemUInt8(0x004AF862 + 1, ScannerResolution);
+        WriteMem<u8>(0x004325E6 + 1, ScannerResolution); // RenderInGame
+        WriteMem<u8>(0x004325E8 + 1, ScannerResolution);
+        WriteMem<u8>(0x004A34BB + 1, ScannerResolution); // PlayerCreate
+        WriteMem<u8>(0x004A34BD + 1, ScannerResolution);
+        WriteMem<u8>(0x004ADD70 + 1, ScannerResolution); // PlayerRenderRailgunScannerViewToTexture
+        WriteMem<u8>(0x004ADD72 + 1, ScannerResolution);
+        WriteMem<u8>(0x004AE0B7 + 1, ScannerResolution);
+        WriteMem<u8>(0x004AE0B9 + 1, ScannerResolution);
+        WriteMem<u8>(0x004AF0B0 + 1, ScannerResolution); // PlayerRenderScannerView
+        WriteMem<u8>(0x004AF0B4 + 1, ScannerResolution * 3 / 4);
+        WriteMem<u8>(0x004AF0B6 + 1, ScannerResolution);
+        WriteMem<u8>(0x004AF7B0 + 1, ScannerResolution);
+        WriteMem<u8>(0x004AF7B2 + 1, ScannerResolution);
+        WriteMem<u8>(0x004AF7CF + 1, ScannerResolution);
+        WriteMem<u8>(0x004AF7D1 + 1, ScannerResolution);
+        WriteMem<u8>(0x004AF818 + 1, ScannerResolution);
+        WriteMem<u8>(0x004AF81A + 1, ScannerResolution);
+        WriteMem<u8>(0x004AF820 + 1, ScannerResolution);
+        WriteMem<u8>(0x004AF822 + 1, ScannerResolution);
+        WriteMem<u8>(0x004AF855 + 1, ScannerResolution);
+        WriteMem<u8>(0x004AF860 + 1, ScannerResolution * 3 / 4);
+        WriteMem<u8>(0x004AF862 + 1, ScannerResolution);
     }
 
     // Always transfer entire framebuffer to entire window in Present call
-    WriteMemUInt8(0x00544FE6, ASM_SHORT_JMP_REL);
+    WriteMem<u8>(0x00544FE6, ASM_SHORT_JMP_REL);
 
     // Init True Color improvements
     GrColorInit();
 
     // Enable mip-mapping for textures bigger than 256x256
     AsmWritter(0x0050FEDA, 0x0050FEE9).nop();
-    WriteMemUInt8(0x0055B739, ASM_SHORT_JMP_REL);
+    WriteMem<u8>(0x0055B739, ASM_SHORT_JMP_REL);
 
     // Fix decal fade out
-    WriteMemUInt8(0x00560994 + 1, 3);
+    WriteMem<u8>(0x00560994 + 1, 3);
 }
 
 void GraphicsAfterGameInit()
@@ -338,9 +339,9 @@ void GraphicsAfterGameInit()
     // Change font for Time Left text
     static int TimeLeftFont = rf::GrLoadFont("rfpc-large.vf", -1);
     if (TimeLeftFont >= 0) {
-        WriteMemInt8(0x00477157 + 1, TimeLeftFont);
-        WriteMemInt8(0x0047715F + 2, 21);
-        WriteMemInt32(0x00477168 + 1, 154);
+        WriteMem<i8>(0x00477157 + 1, TimeLeftFont);
+        WriteMem<i8>(0x0047715F + 2, 21);
+        WriteMem<i32>(0x00477168 + 1, 154);
     }
 }
 
