@@ -5,6 +5,7 @@
 #include "utils.h"
 #include "main.h"
 #include "inline_asm.h"
+#include "commands.h"
 #include <CallHook2.h>
 #include <FunHook2.h>
 #include <RegsPatch.h>
@@ -28,6 +29,7 @@ static const char g_szVersionInMenu[] = PRODUCT_NAME_VERSION;
 int g_VersionClickCounter = 0;
 int g_EggAnimStart;
 bool g_bWin32Console = false;
+bool g_linear_pitch = false;
 
 using UiLabel_Create2_Type = void __fastcall(rf::UiPanel*, void*, rf::UiPanel*, int, int, int, int, const char*, int);
 extern CallHook2<UiLabel_Create2_Type> UiLabel_Create2_VersionLabel_Hook;
@@ -701,6 +703,125 @@ FunHook2<void()> MultiAfterPlayersPackets_Hook{
     }
 };
 
+rf::Vector3 ForwardVectorFromNonLinearYawPitch(float yaw, float pitch)
+{
+    // Based on RF code
+    rf::Vector3 fvec0;
+    fvec0.y = std::sin(pitch);
+    float factor = 1.0f - std::abs(fvec0.y);
+    fvec0.x = factor * std::sin(yaw);
+    fvec0.z = factor * std::cos(yaw);
+
+    rf::Vector3 fvec = fvec0;
+    fvec.normalize(); // vector is never zero
+
+    return fvec;
+}
+
+float LinearPitchFromForwardVector(const rf::Vector3 &fvec)
+{
+    return std::asin(fvec.y);
+}
+
+rf::Vector3 ForwardVectorFromLinearYawPitch(float yaw, float pitch)
+{
+    rf::Vector3 fvec;
+    fvec.y = std::sin(pitch);
+    fvec.x = std::cos(pitch) * std::sin(yaw);
+    fvec.z = std::cos(pitch) * std::cos(yaw);
+    fvec.normalize();
+    return fvec;
+}
+
+float NonLinearPitchFromForwardVector(rf::Vector3 fvec)
+{
+    float yaw = std::atan2(fvec.x, fvec.z);
+    float fvec_y_2 = fvec.y * fvec.y;
+    float y_sin = std::sin(yaw);
+    float y_cos = std::cos(yaw);
+    float y_sin_2 = y_sin * y_sin;
+    float y_cos_2 = y_cos * y_cos;
+    float p_sgn = std::signbit(fvec.y) ? -1.f : 1.f;
+    if (fvec.y == 0.0f) {
+        return 0.0f;
+    }
+
+    float a = 1.f / fvec_y_2 - y_sin_2 - 1.f - y_cos_2;
+    float b = 2.f * p_sgn * y_sin_2 + 2.f * p_sgn * y_cos_2;
+    float c = -y_sin_2 - y_cos_2;
+    float delta = b * b - 4.f * a * c;
+    float delta_sqrt = std::sqrt(delta);
+
+    if (a == 0.0f) {
+        return 0.0f;
+    }
+
+    float p_sin_1 = (-b - delta_sqrt) / (2.f * a);
+    float p_sin_2 = (-b + delta_sqrt) / (2.f * a);
+
+    if (std::abs(p_sin_1) < std::abs(p_sin_2))
+        return std::asin(p_sin_1);
+    else
+        return std::asin(p_sin_2);
+}
+
+#ifdef DEBUG
+void LinearPitchTest()
+{
+    float yaw = 3.141592f / 4.0f;
+    float pitch = 3.141592f / 4.0f;
+    rf::Vector3 fvec = ForwardVectorFromNonLinearYawPitch(yaw, pitch);
+    float lin_pitch = LinearPitchFromForwardVector(fvec);
+    rf::Vector3 fvec2 = ForwardVectorFromLinearYawPitch(yaw, lin_pitch);
+    float pitch2 = NonLinearPitchFromForwardVector(fvec2);
+    assert(std::abs(pitch - pitch2) < 0.00001);
+}
+#endif // DEBUG
+
+RegsPatch LinearPitchPatch{
+    0x0049DEC9,
+    [](X86Regs& regs) {
+        if (!g_linear_pitch)
+            return;
+        // Non-linear pitch value and delta from RF
+        float& current_yaw = *reinterpret_cast<float*>(regs.esi + 0x868);
+        float& current_pitch_non_lin = *reinterpret_cast<float*>(regs.esi + 0x87C);
+        float& pitch_delta = *reinterpret_cast<float*>(regs.esp + 0x44 - 0x34);
+        float& yaw_delta = *reinterpret_cast<float*>(regs.esp + 0x44 + 0x4);
+        rf::EntityObj* entity = reinterpret_cast<rf::EntityObj*>(regs.esi);
+        if (pitch_delta == 0)
+            return;
+        // Convert to linear space (see RotMatixFromEuler function at 004A0D70)
+        auto fvec = ForwardVectorFromNonLinearYawPitch(current_yaw, current_pitch_non_lin);
+        float current_pitch_lin = LinearPitchFromForwardVector(fvec);
+        // Calculate new pitch in linear space
+        float new_pitch_lin = current_pitch_lin + pitch_delta;
+        float new_yaw = current_yaw + yaw_delta;
+        // Clamp to [-pi, pi]
+        constexpr float half_pi = 1.5707964f;
+        new_pitch_lin = std::clamp(new_pitch_lin, -half_pi, half_pi);
+        // Convert back to non-linear space
+        auto fvec_new = ForwardVectorFromLinearYawPitch(new_yaw, new_pitch_lin);
+        float new_pitch_non_lin = NonLinearPitchFromForwardVector(fvec_new);
+        // Update non-linear pitch delta
+        float new_pitch_delta = new_pitch_non_lin - current_pitch_non_lin;
+        TRACE("non-lin %f lin %f delta %f new %f", current_pitch_non_lin, current_pitch_lin, pitch_delta, new_pitch_delta);
+        pitch_delta = new_pitch_delta;
+    }
+};
+
+DcCommand2 linear_pitch_cmd{
+    "linear_pitch",
+    []() {
+#ifdef DEBUG
+        LinearPitchTest();
+#endif
+
+        g_linear_pitch = !g_linear_pitch;
+        rf::DcPrintf("Linear pitch is %s", g_linear_pitch ? "enabled" : "disabled");
+    }
+};
+
 void MiscInit()
 {
     // Console init string
@@ -874,6 +995,10 @@ void MiscInit()
 
     // Fix glares/coronas being visible through characters
     CoronaEntityCollisionTestFix.Install();
+
+    // Linear vertical rotation (pitch)
+    LinearPitchPatch.Install();
+    linear_pitch_cmd.Register();
 
     // Allow undefined mp_character in PlayerCreateEntity
     // Fixes Go_Undercover event not changing player 3rd person character

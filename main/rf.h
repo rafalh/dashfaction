@@ -60,6 +60,11 @@ namespace rf
             return *this;
         }
 
+        Vector3& operator/=(float m)
+        {
+            *this *= 1.0f / m;
+        }
+
         Vector3 operator-() const
         {
             return Vector3(-x, -y, -z);
@@ -116,6 +121,11 @@ namespace rf
         float lenPow2() const
         {
             return x * x + y * y + z * z;
+        }
+
+        void normalize()
+        {
+            *this /= len();
         }
     };
 
@@ -890,7 +900,7 @@ namespace rf
         Vector3 AabbMax;
         PhysicsFlags Flags;
         int FlagsSplash_1AC;
-        int field_1B0;
+        float field_1B0;
         WaterSplashUnk WaterSplashUnk;
     };
     static_assert(sizeof(PhysicsInfo) == 0x170, "invalid size");

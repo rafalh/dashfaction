@@ -27,6 +27,7 @@ Version 1.2.2 (not released yet)
 - fix decal fade out effect (RF bug)
 - fix invalid player entity model when undercover (RF bug)
 - speed up server list refreshing
+- add linear_pitch command for making pitch control linear
 - fix multiple security vulnerabilities
 - stability improvements
 
