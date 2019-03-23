@@ -333,27 +333,6 @@ DcCommand2 VolumeLightsCmd{
     "Toggles volumetric lightining"
 };
 
-DcCommand2 LevelSpCmd{
-    "levelsp",
-    [](std::string LevelFilename) {
-        if (rf::g_bNetworkGame) {
-            rf::DcPrintf("You cannot use it in multiplayer game!");
-            return;
-        }
-        if (LevelFilename.find(".rfl") == std::string::npos)
-            LevelFilename += ".rfl";
-
-        rf::String unk_str;
-        rf::String level_str(LevelFilename.c_str());
-
-        rf::DcPrintf("Loading level.");
-        rf::SetNextLevelFilename(level_str, unk_str);
-        rf::GameSeqSetState(rf::GS_LOADING_LEVEL, false);
-    },
-    "Loads single player level",
-    "levelsp <rfl_name>"
-};
-
 DcCommand2 LevelSoundsCmd{
     "levelsounds",
     [](std::optional<float> Volume) {
@@ -611,6 +590,9 @@ void CommandsInit()
 
     // vli command support
     CoronaRenderAll_Hook.Install();
+
+    // Allow 'level' command outside of multiplayer game
+    AsmWritter(0x00434FEC, 0x00434FF2).nop();
 }
 
 void CommandRegister(rf::DcCommand *pCmd)
@@ -648,7 +630,6 @@ void CommandsAfterGameInit()
     MaxFpsCmd.Register();
     MouseSensitivityCmd.Register();
     VolumeLightsCmd.Register();
-    LevelSpCmd.Register();
     LevelSoundsCmd.Register();
     PlayerCountCmd.Register();
     FindMapCmd.Register();
