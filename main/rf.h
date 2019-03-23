@@ -687,8 +687,8 @@ namespace rf
     struct PlayerStats
     {
         uint16_t field_0;
-        int16_t iScore;
-        int16_t cCaps;
+        int16_t score;
+        int16_t caps;
     };
 
     struct PlayerWeaponInfo

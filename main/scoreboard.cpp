@@ -26,7 +26,7 @@ static bool g_LeaveAnim = false;
 static int ScoreboardSortFunc(const void *Ptr1, const void *Ptr2)
 {
     rf::Player *pPlayer1 = *((rf::Player**)Ptr1), *pPlayer2 = *((rf::Player**)Ptr2);
-    return pPlayer2->pStats->iScore - pPlayer1->pStats->iScore;
+    return pPlayer2->pStats->score - pPlayer1->pStats->score;
 }
 
 void DrawScoreboardInternal_New(bool bDraw)
@@ -236,15 +236,15 @@ void DrawScoreboardInternal_New(bool bDraw)
         rf::GrDrawText(Offsets.Name, RowY, player_name_stripped, -1, rf::g_GrTextMaterial);
 
         auto pStats = (PlayerStatsNew*)pPlayer->pStats;
-        sprintf(szBuf, "%hd", pStats->iScore);
+        sprintf(szBuf, "%hd", pStats->score);
         rf::GrDrawText(Offsets.Score, RowY, szBuf, -1, rf::g_GrTextMaterial);
 
-        sprintf(szBuf, "%hd/%hd", pStats->cKills, pStats->cDeaths);
+        sprintf(szBuf, "%hd/%hd", pStats->num_kills, pStats->num_deaths);
         rf::GrDrawText(Offsets.KillsDeaths, RowY, szBuf, -1, rf::g_GrTextMaterial);
 
         if (GameType == RF_CTF)
         {
-            sprintf(szBuf, "%hu", pStats->cCaps);
+            sprintf(szBuf, "%hu", pStats->caps);
             rf::GrDrawText(Offsets.CtfFlags, RowY, szBuf, -1, rf::g_GrTextMaterial);
         }
 

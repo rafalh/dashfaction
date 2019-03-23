@@ -34,7 +34,7 @@ void BanCmdHandlerHook()
         }
 
         if (rf::g_bDcHelp) {
-            rf::DcPrint(rf::strings::usage, NULL);
+            rf::DcPrint(rf::strings::usage, nullptr);
             rf::DcPrintf("     ban <%s>", rf::strings::player_name);
         }
     }
@@ -57,7 +57,7 @@ void KickCmdHandlerHook()
         }
 
         if (rf::g_bDcHelp) {
-            rf::DcPrint(rf::strings::usage, NULL);
+            rf::DcPrint(rf::strings::usage, nullptr);
             rf::DcPrintf("     kick <%s>", rf::strings::player_name);
         }
     }

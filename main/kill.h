@@ -4,7 +4,7 @@
 
 struct PlayerStatsNew : rf::PlayerStats
 {
-    unsigned short cKills, cDeaths;
+    unsigned short num_kills, num_deaths;
 };
 
 void InitKill();

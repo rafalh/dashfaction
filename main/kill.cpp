@@ -8,8 +8,8 @@
 void KillInitPlayer(rf::Player* player)
 {
     auto stats = reinterpret_cast<PlayerStatsNew*>(player->pStats);
-    stats->cKills = 0;
-    stats->cDeaths = 0;
+    stats->num_kills = 0;
+    stats->num_deaths = 0;
 }
 
 FunHook2<void()> MpResetNetGame_Hook{
@@ -38,7 +38,7 @@ void OnPlayerKill(rf::Player *killed_player, rf::Player *killer_player)
     const char *mui_msg;
     rf::ChatMsgColor color_id;
 
-    rf::EntityObj* killer_entity = killer_player ? rf::EntityGetFromHandle(killer_player->hEntity) : NULL;
+    rf::EntityObj* killer_entity = killer_player ? rf::EntityGetFromHandle(killer_player->hEntity) : nullptr;
 
     if (!killer_player) {
         color_id = rf::ChatMsgColor::default_;
@@ -96,16 +96,16 @@ void OnPlayerKill(rf::Player *killed_player, rf::Player *killer_player)
     rf::ChatPrint(msg, color_id, prefix);
 
     auto killed_stats = reinterpret_cast<PlayerStatsNew*>(killed_player->pStats);
-    ++killed_stats->cDeaths;
+    ++killed_stats->num_deaths;
 
     if (killer_player) {
         auto killer_stats = reinterpret_cast<PlayerStatsNew*>(killer_player->pStats);
         if (killer_player != killed_player) {
-            ++killer_stats->iScore;
-            ++killer_stats->cKills;
+            ++killer_stats->score;
+            ++killer_stats->num_kills;
         }
         else
-            --killer_stats->iScore;
+            --killer_stats->score;
     }
 }
 

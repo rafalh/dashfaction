@@ -76,7 +76,8 @@ rf::Player *FindBestMatchingPlayer(const char *pszName)
 
 #if SPLITSCREEN_ENABLE
 
-DcCommand2 SplitScreenCmd{ "splitscreen",
+DcCommand2 SplitScreenCmd{
+    "splitscreen",
     []() {
         if (rf::g_bNetworkGame)
             SplitScreenStart(); /* FIXME: set player 2 controls */
@@ -115,7 +116,7 @@ DcCommand2 DebugCmd{
 
 #ifdef NDEBUG
         if (rf::g_bNetworkGame) {
-            rf::DcPrintf("This command disabled in multiplayer!", nullptr);
+            rf::DcPrintf("This command is disabled in multiplayer!", nullptr);
             return;
         }
 #endif
