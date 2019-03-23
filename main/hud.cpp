@@ -31,7 +31,7 @@ DcCommand2 hud_cmd{
         if (hud_hidden) {
             AsmWritter(0x00476D70).ret();
         } else {
-            AsmWritter(0x00476D70).push(AsmRegs::ecx);
+            AsmWritter(0x00476D70).push(asm_regs::ecx);
         }
 
         // Powerups textures

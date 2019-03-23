@@ -117,8 +117,8 @@ void ScreenshotAfterGameInit()
     /* Fix for screenshots creation when height > 1024 */
     if (rf::g_GrScreen.MaxHeight > 1024) {
         g_screenshot_scanlines_buf = std::make_unique<byte* []>(rf::g_GrScreen.MaxHeight);
-        AsmWritter(0x0055A066, 0x0055A06D).mov(AsmRegs::ecx, (int32_t)&g_screenshot_scanlines_buf[0]);
-        AsmWritter(0x0055A0DF, 0x0055A0E6).mov(AsmRegs::eax, (int32_t)g_screenshot_scanlines_buf.get());
+        AsmWritter(0x0055A066, 0x0055A06D).mov(asm_regs::ecx, (int32_t)&g_screenshot_scanlines_buf[0]);
+        AsmWritter(0x0055A0DF, 0x0055A0E6).mov(asm_regs::eax, (int32_t)g_screenshot_scanlines_buf.get());
     }
 
     char full_path[MAX_PATH];

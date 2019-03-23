@@ -920,10 +920,10 @@ void MiscInit()
     MouseUpdateDirectInput_Hook.Install();
 
     // Chat color alpha
-    AsmWritter(0x00477490, 0x004774A4).mov(AsmRegs::eax, 0x30); // chatbox border
-    AsmWritter(0x00477528, 0x00477535).mov(AsmRegs::ebx, 0x40); // chatbox background
-    AsmWritter(0x00478E00, 0x00478E14).mov(AsmRegs::eax, 0x30); // chat input border
-    AsmWritter(0x00478E91, 0x00478E9E).mov(AsmRegs::ebx, 0x40); // chat input background
+    AsmWritter(0x00477490, 0x004774A4).mov(asm_regs::eax, 0x30); // chatbox border
+    AsmWritter(0x00477528, 0x00477535).mov(asm_regs::ebx, 0x40); // chatbox background
+    AsmWritter(0x00478E00, 0x00478E14).mov(asm_regs::eax, 0x30); // chat input border
+    AsmWritter(0x00478E91, 0x00478E9E).mov(asm_regs::ebx, 0x40); // chat input background
 
     // Show enemy bullets (FIXME: add config)
     if (g_game_config.showEnemyBullets)

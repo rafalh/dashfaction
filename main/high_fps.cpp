@@ -71,7 +71,7 @@ public:
         char *code_buf = new char[512];
         UnprotectMem(code_buf, 512);
 
-        using namespace AsmRegs;
+        using namespace asm_regs;
         AsmWritter(reinterpret_cast<unsigned>(code_buf))
             .mov(ecx, reinterpret_cast<int32_t>(this)) // thiscall
             .sub(esp, 12)
@@ -88,10 +88,10 @@ public:
 
 std::array<FtolAccuracyFix, 5> g_ftol_accuracy_fixes{
     FtolAccuracyFix{0x00416426}, // hit screen
-    FtolAccuracyFix{0x004D5214, AsmRegs::esi}, // decal fade out
+    FtolAccuracyFix{0x004D5214, asm_regs::esi}, // decal fade out
     FtolAccuracyFix{0x005096A7}, // timer
     FtolAccuracyFix{0x0050ABFB}, // console open/close
-    FtolAccuracyFix{0x0051BAD7, AsmRegs::esi}, // anim mesh
+    FtolAccuracyFix{0x0051BAD7, asm_regs::esi}, // anim mesh
 };
 
 #ifdef DEBUG
@@ -282,7 +282,7 @@ void HighFpsInit()
     // Fix water deceleration on high FPS
     AsmWritter(0x0049D816).nop(5);
     AsmWritter(0x0049D82A).nop(5);
-    AsmWritter(0x0049D82A + 5).push(AsmRegs::esi);
+    AsmWritter(0x0049D82A + 5).push(asm_regs::esi);
     AsmWritter(0x0049D830).call(EntityWaterDecelerateFix);
 
     // Fix water waves animation on high FPS

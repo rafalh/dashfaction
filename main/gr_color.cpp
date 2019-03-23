@@ -323,7 +323,7 @@ void GrColorInit()
         BinkInitDeviceInfo_Hook.Install();
 
         // lightmaps
-        using namespace AsmRegs;
+        using namespace asm_regs;
         AsmWritter(0x004ED3E9)
             .push(ebx)
             .call(RflLoadLightmaps_004ED3F6)

@@ -61,9 +61,9 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
 
     // Zero first argument for CreateProcess call
     AsmWritter(0x00447B32, 0x00447B39).nop();
-    AsmWritter(0x00447B32).xor_(AsmRegs::eax, AsmRegs::eax);
+    AsmWritter(0x00447B32).xor_(asm_regs::eax, asm_regs::eax);
     AsmWritter(0x00448024, 0x0044802B).nop();
-    AsmWritter(0x00448024).xor_(AsmRegs::eax, AsmRegs::eax);
+    AsmWritter(0x00448024).xor_(asm_regs::eax, asm_regs::eax);
 
     // InitInstance hook
     AsmWritter(0x00482C84).call(CEditorApp__InitInstance_AfterHook);

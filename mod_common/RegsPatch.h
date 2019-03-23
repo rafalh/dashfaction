@@ -57,20 +57,20 @@ public:
 
         AsmWritter(reinterpret_cast<uintptr_t>(wrapper))
             .push(reinterpret_cast<int32_t>(trampoline))            // Push default EIP = trampoline
-            .push(AsmRegs::esp)                                     // push esp before PUSHA so it can be popped manually after POPA
+            .push(asm_regs::esp)                                     // push esp before PUSHA so it can be popped manually after POPA
             .pusha()                                                // push general registers
             .pushf()                                                // push EFLAGS
-            .add({true, {AsmRegs::esp}, offsetof(X86Regs, esp)}, 4) // restore esp value from before pushing the return address
-            .push(AsmRegs::esp)                                     // push address of X86Regs struct (handler param)
+            .add({true, {asm_regs::esp}, offsetof(X86Regs, esp)}, 4) // restore esp value from before pushing the return address
+            .push(asm_regs::esp)                                     // push address of X86Regs struct (handler param)
             .call(m_fun_ptr)                                     // call handler
-            .add({false, {AsmRegs::esp}}, 4)                        // free handler param
-            .add({true, {AsmRegs::esp}, offsetof(X86Regs, esp)}, -4) // make esp value return address aware (again)
-            .mov(AsmRegs::eax, {true, {AsmRegs::esp}, offsetof(X86Regs, eip)}) // read EIP from X86Regs
-            .mov(AsmRegs::ecx, {true, {AsmRegs::esp}, offsetof(X86Regs, esp)}) // read esp from X86Regs
-            .mov({true, {AsmRegs::ecx}, 0}, AsmRegs::eax)           // copy EIP to new address of the stack pointer
+            .add({false, {asm_regs::esp}}, 4)                        // free handler param
+            .add({true, {asm_regs::esp}, offsetof(X86Regs, esp)}, -4) // make esp value return address aware (again)
+            .mov(asm_regs::eax, {true, {asm_regs::esp}, offsetof(X86Regs, eip)}) // read EIP from X86Regs
+            .mov(asm_regs::ecx, {true, {asm_regs::esp}, offsetof(X86Regs, esp)}) // read esp from X86Regs
+            .mov({true, {asm_regs::ecx}, 0}, asm_regs::eax)           // copy EIP to new address of the stack pointer
             .popf()                                                 // pop EFLAGS
             .popa()                                                 // pop general registers. Note: POPA discards esp value
-            .pop(AsmRegs::esp)                                      // pop esp manually
+            .pop(asm_regs::esp)                                      // pop esp manually
             .ret();                                                 // return to address read from EIP field in X86Regs
     }
 };

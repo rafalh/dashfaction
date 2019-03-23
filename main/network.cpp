@@ -983,23 +983,23 @@ void NetworkInit()
 
     // Fix ObjUpdate packet handling
     AsmWritter(0x0047E058, 0x0047E06A)
-        .mov(AsmRegs::eax, AsmMem(AsmRegs::esp + (0x9C - 0x6C))) // pPlayer
-        .push(AsmRegs::eax)
-        .push(AsmRegs::ebx)
-        .push(AsmRegs::edi)
+        .mov(asm_regs::eax, AsmMem(asm_regs::esp + (0x9C - 0x6C))) // pPlayer
+        .push(asm_regs::eax)
+        .push(asm_regs::ebx)
+        .push(asm_regs::edi)
         .call(SecureObjUpdatePacket)
-        .add(AsmRegs::esp, 12)
-        .mov(AsmRegs::edi, AsmRegs::eax);
+        .add(asm_regs::esp, 12)
+        .mov(asm_regs::edi, asm_regs::eax);
 
     // Client-side green team fix
-    AsmWritter(0x0046CAD7, 0x0046CADA).cmp(AsmRegs::al, (int8_t)0xFF);
+    AsmWritter(0x0046CAD7, 0x0046CADA).cmp(asm_regs::al, (int8_t)0xFF);
 
     // Hide IP addresses in Players packet
-    AsmWritter(0x00481D31, 0x00481D33).xor_(AsmRegs::eax, AsmRegs::eax);
-    AsmWritter(0x00481D40, 0x00481D44).xor_(AsmRegs::edx, AsmRegs::edx);
+    AsmWritter(0x00481D31, 0x00481D33).xor_(asm_regs::eax, asm_regs::eax);
+    AsmWritter(0x00481D40, 0x00481D44).xor_(asm_regs::edx, asm_regs::edx);
     // Hide IP addresses in New Player packet
-    AsmWritter(0x0047A4A0, 0x0047A4A2).xor_(AsmRegs::edx, AsmRegs::edx);
-    AsmWritter(0x0047A4A6, 0x0047A4AA).xor_(AsmRegs::ecx, AsmRegs::ecx);
+    AsmWritter(0x0047A4A0, 0x0047A4A2).xor_(asm_regs::edx, asm_regs::edx);
+    AsmWritter(0x0047A4A6, 0x0047A4AA).xor_(asm_regs::ecx, asm_regs::ecx);
 
     // Fix "Orion bug" - default 'miner1' entity spawning client-side periodically
     MultiAllocPlayerId_Hook.Install();

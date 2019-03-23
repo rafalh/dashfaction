@@ -76,7 +76,7 @@ struct AsmRegMem
     {}
 };
 
-namespace AsmRegs
+namespace asm_regs
 {
     enum GenPurpRegNum
     {
@@ -125,7 +125,7 @@ public:
 
     AsmWritter &cmp(const AsmReg8 &reg, int8_t imm)
     {
-        if (reg == AsmRegs::al) // al
+        if (reg == asm_regs::al) // al
             WriteMem<u8>(m_addr++, 0x3C);
         else
             assert(false);
