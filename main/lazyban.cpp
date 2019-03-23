@@ -25,7 +25,7 @@ void BanCmdHandlerHook()
 
             if (player) {
                 if (player != rf::g_pLocalPlayer) {
-                    rf::DcPrintf(rf::g_ppszStringsTable[959], player->strName.CStr());
+                    rf::DcPrintf(rf::strings::array[959], player->strName.CStr());
                     rf::BanIp(player->pNwData->Addr);
                     rf::KickPlayer(player);
                 } else
@@ -34,8 +34,8 @@ void BanCmdHandlerHook()
         }
 
         if (rf::g_bDcHelp) {
-            rf::DcPrint(rf::g_ppszStringsTable[rf::STR_USAGE], NULL);
-            rf::DcPrintf("     ban <%s>", rf::g_ppszStringsTable[rf::STR_PLAYER_NAME]);
+            rf::DcPrint(rf::strings::usage, NULL);
+            rf::DcPrintf("     ban <%s>", rf::strings::player_name);
         }
     }
 }
@@ -49,7 +49,7 @@ void KickCmdHandlerHook()
 
             if (player) {
                 if (player != rf::g_pLocalPlayer) {
-                    rf::DcPrintf(rf::g_ppszStringsTable[rf::STR_KICKING_PLAYER], player->strName.CStr());
+                    rf::DcPrintf(rf::strings::kicking_player, player->strName.CStr());
                     rf::KickPlayer(player);
                 } else
                     rf::DcPrintf("You cannot kick yourself!");
@@ -57,8 +57,8 @@ void KickCmdHandlerHook()
         }
 
         if (rf::g_bDcHelp) {
-            rf::DcPrint(rf::g_ppszStringsTable[rf::STR_USAGE], NULL);
-            rf::DcPrintf("     kick <%s>", rf::g_ppszStringsTable[rf::STR_PLAYER_NAME]);
+            rf::DcPrint(rf::strings::usage, NULL);
+            rf::DcPrintf("     kick <%s>", rf::strings::player_name);
         }
     }
 }

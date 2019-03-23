@@ -118,7 +118,7 @@ private:
 
     void Help() {
         if (m_usage_text) {
-            rf::DcPrint(rf::g_ppszStringsTable[rf::STR_USAGE], nullptr);
+            rf::DcPrint(rf::strings::usage, nullptr);
             rf::DcPrintf("     %s", m_usage_text);
         }
     }

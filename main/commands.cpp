@@ -251,7 +251,7 @@ DcCommand2 SpectateCmd { "spectate",
     },
     "Starts spectating mode",
     "spectate <player_name/false>"
-    // rf::DcPrintf("     spectate <%s>", g_ppszStringsTable[STR_PLAYER_NAME]);
+    // rf::DcPrintf("     spectate <%s>", rf::strings::player_name);
     // rf::DcPrintf("     spectate false");
 };
 

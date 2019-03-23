@@ -104,11 +104,11 @@ void DrawScoreboardInternal_New(bool bDraw)
     // Draw Game Type name
     const char *pszGameTypeName;
     if (GameType == RF_DM)
-        pszGameTypeName = rf::g_ppszStringsTable[974];
+        pszGameTypeName = rf::strings::array[974];
     else if (GameType == RF_CTF)
-        pszGameTypeName = rf::g_ppszStringsTable[975];
+        pszGameTypeName = rf::strings::array[975];
     else
-        pszGameTypeName = rf::g_ppszStringsTable[976];
+        pszGameTypeName = rf::strings::array[976];
     rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, xCenter, y, pszGameTypeName, rf::g_MediumFontId, rf::g_GrTextMaterial);
     y += 20;
 
@@ -176,11 +176,11 @@ void DrawScoreboardInternal_New(bool bDraw)
         xCol += 12;
 
         ColOffsets[i].Name = xCol;
-        rf::GrDrawText(xCol, y, rf::g_ppszStringsTable[rf::STR_PLAYER], -1, rf::g_GrTextMaterial);
+        rf::GrDrawText(xCol, y, rf::strings::player, -1, rf::g_GrTextMaterial);
         xCol += cxNameMax;
 
         ColOffsets[i].Score = xCol;
-        rf::GrDrawText(xCol, y, rf::g_ppszStringsTable[rf::STR_SCORE], -1, rf::g_GrTextMaterial); // Note: RF uses "Frags"
+        rf::GrDrawText(xCol, y, rf::strings::score, -1, rf::g_GrTextMaterial); // Note: RF uses "Frags"
         xCol += 50;
 
         ColOffsets[i].KillsDeaths = xCol;
@@ -190,12 +190,12 @@ void DrawScoreboardInternal_New(bool bDraw)
         if (GameType == RF_CTF)
         {
             ColOffsets[i].CtfFlags = xCol;
-            rf::GrDrawText(xCol, y, rf::g_ppszStringsTable[rf::STR_CAPS], -1, rf::g_GrTextMaterial);
+            rf::GrDrawText(xCol, y, rf::strings::caps, -1, rf::g_GrTextMaterial);
             xCol += 50;
         }
 
         ColOffsets[i].Ping = xCol;
-        rf::GrDrawText(xCol, y, rf::g_ppszStringsTable[rf::STR_PING], -1, rf::g_GrTextMaterial);
+        rf::GrDrawText(xCol, y, rf::strings::ping, -1, rf::g_GrTextMaterial);
     }
     y += 20;
 

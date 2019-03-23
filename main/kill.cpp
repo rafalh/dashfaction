@@ -42,21 +42,21 @@ void OnPlayerKill(rf::Player *killed_player, rf::Player *killer_player)
 
     if (!killer_player) {
         color_id = rf::ChatMsgColor::default_;
-        mui_msg = NullToEmpty(rf::g_ppszStringsTable[rf::STR_WAS_KILLED_MYSTERIOUSLY]);
+        mui_msg = NullToEmpty(rf::strings::was_killed_mysteriously);
         msg = rf::String::Format("%s%s", killed_player->strName.CStr(), mui_msg);
     }
     else if (killed_player == rf::g_pLocalPlayer) {
         color_id = rf::ChatMsgColor::white_white;
         if (killer_player == killed_player) {
-            mui_msg = NullToEmpty(rf::g_ppszStringsTable[rf::STR_YOU_KILLED_YOURSELF]);
+            mui_msg = NullToEmpty(rf::strings::you_killed_yourself);
             msg = rf::String::Format("%s", mui_msg);
         }
         else if (killer_entity && killer_entity->WeaponInfo.WeaponClsId == rf::g_RiotStickClsId) {
-            mui_msg = NullToEmpty(rf::g_ppszStringsTable[rf::STR_YOU_JUST_GOT_BEAT_DOWN_BY]);
+            mui_msg = NullToEmpty(rf::strings::you_just_got_beat_down_by);
             msg = rf::String::Format("%s%s!", mui_msg, killer_player->strName.CStr());
         }
         else {
-            mui_msg = NullToEmpty(rf::g_ppszStringsTable[rf::STR_YOU_WERE_KILLED_BY]);
+            mui_msg = NullToEmpty(rf::strings::you_were_killed_by);
 
             const char* weapon_name = nullptr;
             int killer_weapon_cls_id = killer_entity ? killer_entity->WeaponInfo.WeaponClsId : -1;
@@ -74,20 +74,20 @@ void OnPlayerKill(rf::Player *killed_player, rf::Player *killer_player)
     }
     else if (killer_player == rf::g_pLocalPlayer) {
         color_id = rf::ChatMsgColor::white_white;
-        mui_msg = NullToEmpty(rf::g_ppszStringsTable[rf::STR_YOU_KILLED]);
+        mui_msg = NullToEmpty(rf::strings::you_killed);
         msg = rf::String::Format("%s%s!", mui_msg, killed_player->strName.CStr());
     }
     else {
         color_id = rf::ChatMsgColor::default_;
         if (killer_player == killed_player) {
-            mui_msg = NullToEmpty(rf::g_ppszStringsTable[rf::STR_WAS_KILLED_BY_HIW_OWN_HAND]);
+            mui_msg = NullToEmpty(rf::strings::was_killed_by_his_own_hand);
             msg = rf::String::Format("%s%s", killed_player->strName.CStr(), mui_msg);
         }
         else {
             if (killer_entity && killer_entity->WeaponInfo.WeaponClsId == rf::g_RiotStickClsId)
-                mui_msg = NullToEmpty(rf::g_ppszStringsTable[rf::STR_GOT_BEAT_DOWN_BY]);
+                mui_msg = NullToEmpty(rf::strings::got_beat_down_by);
             else
-                mui_msg = NullToEmpty(rf::g_ppszStringsTable[rf::STR_WAS_KILLED_BY]);
+                mui_msg = NullToEmpty(rf::strings::was_killed_by);
             msg = rf::String::Format("%s%s%s", killed_player->strName.CStr(), mui_msg, killer_player->strName.CStr());
         }
     }

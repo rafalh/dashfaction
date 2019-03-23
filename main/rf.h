@@ -1645,27 +1645,26 @@ namespace rf
     static const auto Timer__GetTimeLeftMs = reinterpret_cast<int (__thiscall*)(void* timer)>(0x004FA420);
 
     /* Strings Table */
-    static const auto g_ppszStringsTable = (char**)0x007CBBF0;
-    enum StrId
-    {
-        STR_PLAYER = 675,
-        STR_FRAGS = 676,
-        STR_PING = 677,
-        STR_CAPS = 681,
-        STR_WAS_KILLED_BY_HIW_OWN_HAND = 693,
-        STR_WAS_KILLED_BY = 694,
-        STR_WAS_KILLED_MYSTERIOUSLY = 695,
-        STR_SCORE = 720,
-        STR_PLAYER_NAME = 835,
-        STR_EXITING_GAME = 884,
-        STR_USAGE = 886,
-        STR_YOU_KILLED_YOURSELF = 942,
-        STR_YOU_JUST_GOT_BEAT_DOWN_BY = 943,
-        STR_YOU_WERE_KILLED_BY = 944,
-        STR_YOU_KILLED = 945,
-        STR_GOT_BEAT_DOWN_BY = 946,
-        STR_KICKING_PLAYER = 958,
-    };
+    namespace strings {
+        static const auto array = (char**)0x007CBBF0;
+        static const auto &player = array[675];
+        static const auto &frags = array[676];
+        static const auto &ping = array[677];
+        static const auto &caps = array[681];
+        static const auto &was_killed_by_his_own_hand = array[693];
+        static const auto &was_killed_by = array[694];
+        static const auto &was_killed_mysteriously = array[695];
+        static const auto &score = array[720];
+        static const auto &player_name = array[835];
+        static const auto &exiting_game = array[884];
+        static const auto &usage = array[886];
+        static const auto &you_killed_yourself = array[942];
+        static const auto &you_just_got_beat_down_by = array[943];
+        static const auto &you_were_killed_by = array[944];
+        static const auto &you_killed = array[945];
+        static const auto &got_beat_down_by = array[946];
+        static const auto &kicking_player = array[958];
+    }
 
     /* RF stdlib functions are not compatible with GCC */
 

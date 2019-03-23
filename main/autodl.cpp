@@ -417,7 +417,7 @@ void OnJoinFailed(unsigned Reason)
     }
 
     pszReason = rf::GetJoinFailedReasonStr(Reason);
-    rf::UiMsgBox(rf::g_ppszStringsTable[rf::STR_EXITING_GAME], pszReason, NULL, 0);
+    rf::UiMsgBox(rf::strings::exiting_game, pszReason, NULL, 0);
 }
 
 void InitAutodownloader()
