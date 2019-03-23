@@ -37,7 +37,7 @@ void DrawScoreboardInternal_New(bool bDraw)
     unsigned cLeftCol = 0, cRightCol = 0;
     char szBuf[512];
     unsigned GameType = rf::GetGameType();
-    
+
     // Sort players by score
     rf::Player *Players[32];
     rf::Player *pPlayer = rf::g_pPlayersList;
@@ -49,7 +49,7 @@ void DrawScoreboardInternal_New(bool bDraw)
             ++cLeftCol;
         else
             ++cRightCol;
-            
+
         pPlayer = pPlayer->pNext;
         if (!pPlayer || pPlayer == rf::g_pPlayersList)
             break;
@@ -100,7 +100,7 @@ void DrawScoreboardInternal_New(bool bDraw)
     static int ScoreRflogoBm = rf::BmLoad("score_rflogo.tga", -1, true);
     rf::GrDrawImage(ScoreRflogoBm, xCenter - 170, y, rf::g_GrImageMaterial);
     y += 30;
-    
+
     // Draw Game Type name
     const char *pszGameTypeName;
     if (GameType == RF_DM)
@@ -131,7 +131,7 @@ void DrawScoreboardInternal_New(bool bDraw)
     //server_info.Forget();
     rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, xCenter, y, server_info_stripped, -1, rf::g_GrTextMaterial);
     y += 20;
-    
+
     // Draw team scores
     unsigned RedScore = 0, BlueScore = 0;
     if (GameType == RF_CTF)
@@ -148,7 +148,7 @@ void DrawScoreboardInternal_New(bool bDraw)
         RedScore = rf::TdmGetRedScore();
         BlueScore = rf::TdmGetBlueScore();
     }
-    
+
     if (GameType != RF_DM)
     {
         rf::GrSetColor(0xD0, 0x20, 0x20, 0xFF);
@@ -159,7 +159,7 @@ void DrawScoreboardInternal_New(bool bDraw)
         rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, x + cx * 5 / 6, y, szBuf, rf::g_BigFontId, rf::g_GrTextMaterial);
         y += 60;
     }
-    
+
     struct
     {
         int StatusBm, Name, Score, KillsDeaths, CtfFlags, Ping;
@@ -198,7 +198,7 @@ void DrawScoreboardInternal_New(bool bDraw)
         rf::GrDrawText(xCol, y, rf::g_ppszStringsTable[rf::STR_PING], -1, rf::g_GrTextMaterial);
     }
     y += 20;
-    
+
     rf::Player *pRedFlagPlayer = rf::CtfGetRedFlagPlayer();
     rf::Player *pBlueFlagPlayer = rf::CtfGetBlueFlagPlayer();
 
@@ -207,17 +207,17 @@ void DrawScoreboardInternal_New(bool bDraw)
     for (unsigned i = 0; i < cPlayers; ++i)
     {
         pPlayer = Players[i];
-        
+
         unsigned SectIdx = GameType == RF_DM || !pPlayer->bBlueTeam ? 0 : 1;
         auto &Offsets = ColOffsets[SectIdx];
         int RowY = y + SectCounter[SectIdx] * ROW_H;
         ++SectCounter[SectIdx];
-        
+
         if (pPlayer == rf::g_pPlayersList) // local player
             rf::GrSetColor(0xFF, 0xFF, 0x80, 0xFF);
         else
             rf::GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
-        
+
         static int GreenBm = rf::BmLoad("DF_green.tga", -1, true);
         static int RedBm = rf::BmLoad("DF_red.tga", -1, true);
         static int HudMicroFlagRedBm = rf::BmLoad("hud_microflag_red.tga", -1, true);
@@ -234,20 +234,20 @@ void DrawScoreboardInternal_New(bool bDraw)
         rf::GrFitText(&player_name_stripped, pPlayer->strName, cxNameMax - 10); // Note: this destroys strName
         //player_name.Forget();
         rf::GrDrawText(Offsets.Name, RowY, player_name_stripped, -1, rf::g_GrTextMaterial);
-        
+
         auto pStats = (PlayerStatsNew*)pPlayer->pStats;
         sprintf(szBuf, "%hd", pStats->iScore);
         rf::GrDrawText(Offsets.Score, RowY, szBuf, -1, rf::g_GrTextMaterial);
 
         sprintf(szBuf, "%hd/%hd", pStats->cKills, pStats->cDeaths);
         rf::GrDrawText(Offsets.KillsDeaths, RowY, szBuf, -1, rf::g_GrTextMaterial);
-        
+
         if (GameType == RF_CTF)
         {
             sprintf(szBuf, "%hu", pStats->cCaps);
             rf::GrDrawText(Offsets.CtfFlags, RowY, szBuf, -1, rf::g_GrTextMaterial);
         }
-        
+
         if (pPlayer->pNwData)
         {
             sprintf(szBuf, "%hu", pPlayer->pNwData->dwPing);
@@ -295,10 +295,10 @@ void InitScoreboard(void)
     DrawScoreboardInternal_Hook.Install();
 
     AsmWritter(0x00437BC0)
-        .callLong(HudRender_00437BC0)
-        .jmpLong(0x00437C24);
+        .call(HudRender_00437BC0)
+        .jmp(0x00437C24);
     AsmWritter(0x00437D40)
-        .jmpNear(0x00437D5C);
+        .jmp(0x00437D5C);
 }
 
 void SetScoreboardHidden(bool hidden)

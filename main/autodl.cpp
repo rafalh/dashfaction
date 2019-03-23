@@ -422,7 +422,7 @@ void OnJoinFailed(unsigned Reason)
 
 void InitAutodownloader()
 {
-    AsmWritter(0x0047C4ED).callLong(OnJoinFailed);
+    AsmWritter(0x0047C4ED).call(OnJoinFailed);
     AsmWritter(0x0047C4FD).nop(5);
 }
 

@@ -73,25 +73,25 @@ public:
 
         using namespace AsmRegs;
         AsmWritter(reinterpret_cast<unsigned>(code_buf))
-            .mov(ECX, reinterpret_cast<int32_t>(this)) // thiscall
-            .sub(ESP, 12)
-            .mov(EAX, m_key_loc_opt.value_or(ECX))
-            .mov(AsmMem(ESP + 8), EAX)
-            .fstp<double>(AsmMem(ESP + 0))
-            .callLong(reinterpret_cast<void*>(&ftol))
+            .mov(ecx, reinterpret_cast<int32_t>(this)) // thiscall
+            .sub(esp, 12)
+            .mov(eax, m_key_loc_opt.value_or(ecx))
+            .mov(AsmMem(esp + 8), eax)
+            .fstp<double>(AsmMem(esp + 0))
+            .call(reinterpret_cast<void*>(&ftol))
             .ret();
 
         AsmWritter(m_ftol_call_addr)
-            .callLong(code_buf);
+            .call(code_buf);
     }
 };
 
 std::array<FtolAccuracyFix, 5> g_ftol_accuracy_fixes{
     FtolAccuracyFix{0x00416426}, // hit screen
-    FtolAccuracyFix{0x004D5214, AsmRegs::ESI}, // decal fade out
+    FtolAccuracyFix{0x004D5214, AsmRegs::esi}, // decal fade out
     FtolAccuracyFix{0x005096A7}, // timer
     FtolAccuracyFix{0x0050ABFB}, // console open/close
-    FtolAccuracyFix{0x0051BAD7, AsmRegs::ESI}, // anim mesh
+    FtolAccuracyFix{0x0051BAD7, AsmRegs::esi}, // anim mesh
 };
 
 #ifdef DEBUG
@@ -272,7 +272,7 @@ void HighFpsInit()
     }
 
 #ifdef DEBUG
-    AsmWritter(0x00573528).jmpLong(ftol_Wrapper);
+    AsmWritter(0x00573528).jmp(ftol_Wrapper);
     detect_ftol_issues_cmd.Register();
 #endif
 
@@ -282,13 +282,12 @@ void HighFpsInit()
     // Fix water deceleration on high FPS
     AsmWritter(0x0049D816).nop(5);
     AsmWritter(0x0049D82A).nop(5);
-    WriteMem<u8>(0x0049D82A + 5, ASM_PUSH_ESI);
-    AsmWritter(0x0049D830).callLong(EntityWaterDecelerateFix);
+    AsmWritter(0x0049D82A + 5).push(AsmRegs::esi);
+    AsmWritter(0x0049D830).call(EntityWaterDecelerateFix);
 
     // Fix water waves animation on high FPS
     AsmWritter(0x004E68A0).nop(9);
-    WriteMem<u8>(0x004E68B6, ASM_LONG_JMP_REL);
-    AsmWritter(0x004E68B6).jmpLong(WaterAnimateWaves_004E68A0);
+    AsmWritter(0x004E68B6).jmp(WaterAnimateWaves_004E68A0);
 
     // Fix incorrect frame time calculation
     AsmWritter(0x00509595).nop(2);

@@ -323,16 +323,40 @@ void GrColorInit()
         BinkInitDeviceInfo_Hook.Install();
 
         // lightmaps
-        AsmWritter(0x004ED3E9).push(AsmRegs::EBX).callLong(RflLoadLightmaps_004ED3F6).addEsp(4).jmpLong(0x004ED4FA);
+        using namespace AsmRegs;
+        AsmWritter(0x004ED3E9)
+            .push(ebx)
+            .call(RflLoadLightmaps_004ED3F6)
+            .add(esp, 4)
+            .jmp(0x004ED4FA);
         // geomod
-        AsmWritter(0x004F2F23).push(AsmRegs::ESI).callLong(GeoModGenerateTexture_004F2F23).addEsp(4).jmpLong(0x004F3023);
-        AsmWritter(0x004E487B).push(AsmRegs::ESI).callLong(GeoModGenerateLightmap_004E487B).addEsp(4).jmpLong(0x004E4993);
+        AsmWritter(0x004F2F23)
+            .push(esi)
+            .call(GeoModGenerateTexture_004F2F23)
+            .add(esp, 4)
+            .jmp(0x004F3023);
+        AsmWritter(0x004E487B)
+            .push(esi)
+            .call(GeoModGenerateLightmap_004E487B)
+            .add(esp, 4)
+            .jmp(0x004E4993);
         // water
         AsmWritter(0x004E68B0, 0x004E68B6).nop();
-        AsmWritter(0x004E68D1).push(AsmRegs::ESI).callLong(WaterGenerateTexture_004E68D1).addEsp(4).jmpLong(0x004E6B68);
+        AsmWritter(0x004E68D1)
+            .push(esi)
+            .call(WaterGenerateTexture_004E68D1)
+            .add(esp, 4)
+            .jmp(0x004E6B68);
         // ambient color
-        AsmWritter(0x004E5CE3).leaEdxEsp(0x34 - 0x28).push(AsmRegs::EDX).push(AsmRegs::EBX).push(AsmRegs::EDI).push(AsmRegs::EAX)
-            .callLong(GetAmbientColorFromLightmaps_004E5CE3).addEsp(16).jmpNear(0x004E5D57);
+        AsmWritter(0x004E5CE3)
+            .lea(edx, AsmMem(esp + (0x34 - 0x28)))
+            .push(edx)
+            .push(ebx)
+            .push(edi)
+            .push(eax)
+            .call(GetAmbientColorFromLightmaps_004E5CE3)
+            .add(esp, 16)
+            .jmp(0x004E5D57);
         // sub_412410 (what is it?)
         WriteMem<u8>(0x00412430 + 3, 0x34 - 0x20 + 0x18); // pitch instead of width
         AsmWritter(0x0041243D).nop(2); // dont multiply by 2

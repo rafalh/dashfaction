@@ -585,14 +585,14 @@ static void PackfileCleanup_New()
 
 void VfsApplyHooks()
 {
-    AsmWritter(0x0052BCA0).jmpLong(PackfileAddToLookupTable_New);
-    AsmWritter(0x0052BD40).jmpLong(PackfileAddEntries_New);
-    AsmWritter(0x0052C4D0).jmpLong(PackfileBuildEntriesList_New);
-    AsmWritter(0x0052C070).jmpLong(PackfileLoad_New);
-    AsmWritter(0x0052C1D0).jmpLong(PackfileFindArchive_New);
-    AsmWritter(0x0052C220).jmpLong(PackfileFindFileInternal_New);
-    AsmWritter(0x0052BB60).jmpLong(PackfileInit_New);
-    AsmWritter(0x0052BC80).jmpLong(PackfileCleanup_New);
+    AsmWritter(0x0052BCA0).jmp(PackfileAddToLookupTable_New);
+    AsmWritter(0x0052BD40).jmp(PackfileAddEntries_New);
+    AsmWritter(0x0052C4D0).jmp(PackfileBuildEntriesList_New);
+    AsmWritter(0x0052C070).jmp(PackfileLoad_New);
+    AsmWritter(0x0052C1D0).jmp(PackfileFindArchive_New);
+    AsmWritter(0x0052C220).jmp(PackfileFindFileInternal_New);
+    AsmWritter(0x0052BB60).jmp(PackfileInit_New);
+    AsmWritter(0x0052BC80).jmp(PackfileCleanup_New);
 
 #ifdef DEBUG
     WriteMem<u8>(0x0052BEF0, 0xFF); // VfsInitPackfileFilesList

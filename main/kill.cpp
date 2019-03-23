@@ -113,11 +113,11 @@ void InitKill()
 {
     // Player kill handling
     AsmWritter(0x00420703)
-        .push(AsmRegs::EBX)
-        .push(AsmRegs::EDI)
-        .callLong(OnPlayerKill)
-        .addEsp(8)
-        .jmpLong(0x00420B03);
+        .push(AsmRegs::ebx)
+        .push(AsmRegs::edi)
+        .call(OnPlayerKill)
+        .add(AsmRegs::esp, 8)
+        .jmp(0x00420B03);
 
     // Change player stats structure
     WriteMem<i8>(0x004A33B5 + 1, sizeof(PlayerStatsNew));

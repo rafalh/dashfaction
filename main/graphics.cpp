@@ -236,8 +236,7 @@ void GraphicsInit()
 
     // Replace memset call to SetupPP
     AsmWritter(0x00545AA7, 0x00545AB5).nop();
-    WriteMem<u8>(0x00545AA7, ASM_LONG_CALL_REL);
-    WriteMem<i32>(0x00545AA7 + 1, (uintptr_t)SetupPP - (0x00545AA7 + 0x5));
+    AsmWritter(0x00545AA7).call(SetupPP);
     AsmWritter(0x00545BA5).nop(6); // dont set PP.Flags
 
     // nVidia issue fix (make sure D3Dsc is enabled)
@@ -248,8 +247,7 @@ void GraphicsInit()
 
 #if WIDESCREEN_FIX
     // Fix FOV for widescreen
-    WriteMem<u8>(0x00547344, ASM_LONG_JMP_REL);
-    WriteMem<i32>(0x00547344 + 1, (uintptr_t)GrSetViewMatrix_00547344 - (0x00547344 + 0x5));
+    AsmWritter(0x00547344).jmp(GrSetViewMatrix_00547344);
     WriteMem<float>(0x0058A29C, 0.0003f); // factor related to near plane, default is 0.000588f
 #endif
 
@@ -260,21 +258,18 @@ void GraphicsInit()
     }
 
     // Better error message in case of device creation error
-    WriteMem<u8>(0x00545BEF, ASM_LONG_JMP_REL);
-    WriteMem<i32>(0x00545BEF + 1, (uintptr_t)GrCreateD3DDeviceError_00545BEF - (0x00545BEF + 0x5));
+    AsmWritter(0x00545BEF).jmp(GrCreateD3DDeviceError_00545BEF);
 
     // Optimization - remove unused back buffer locking/unlocking in GrSwapBuffers
-    AsmWritter(0x0054504A).jmpNear(0x0054508B);
+    AsmWritter(0x0054504A).jmp(0x0054508B);
 
 #if 1
     // Fix rendering of right and bottom edges of viewport
     WriteMem<u8>(0x00431D9F, ASM_SHORT_JMP_REL);
     WriteMem<u8>(0x00431F6B, ASM_SHORT_JMP_REL);
     WriteMem<u8>(0x004328CF, ASM_SHORT_JMP_REL);
-    WriteMem<u8>(0x0043298F, ASM_LONG_JMP_REL);
-    WriteMem<i32>(0x0043298F + 1, (uintptr_t)0x004329DC - (0x0043298F + 0x5));
-    WriteMem<u8>(0x005509C4, ASM_LONG_JMP_REL);
-    WriteMem<i32>(0x005509C4 + 1, (uintptr_t)GrClearZBuffer_005509C4 - (0x005509C4 + 0x5));
+    AsmWritter(0x0043298F).jmp(0x004329DC);
+    AsmWritter(0x005509C4).jmp(GrClearZBuffer_005509C4);
 
     // Left and top viewport edge fix for MSAA (RF does similar thing in GrDrawTextureD3D)
     WriteMem<u8>(0x005478C6, ASM_FADD);

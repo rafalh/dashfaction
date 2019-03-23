@@ -84,12 +84,12 @@ namespace AsmRegs
         GPRN_SP, GPRN_BP, GPRN_SI, GPRN_DI,
     };
 
-    constexpr AsmReg32 EAX(GPRN_AX), ECX(GPRN_CX), EDX(GPRN_DX), EBX(GPRN_BX);
-    constexpr AsmReg32 ESP(GPRN_SP), EBP(GPRN_BP), ESI(GPRN_SI), EDI(GPRN_DI);
-    constexpr AsmReg16 AX(GPRN_AX), CX(GPRN_CX), DX(GPRN_DX), BX(GPRN_BX);
-    constexpr AsmReg16 SP(GPRN_SP), BP(GPRN_BP), SI(GPRN_SI), DI(GPRN_DI);
-    constexpr AsmReg8 AL(GPRN_AX), CL(GPRN_CX), DL(GPRN_DX), BL(GPRN_BX);
-    constexpr AsmReg8 AH(GPRN_SP), CH(GPRN_BP), DH(GPRN_SI), BH(GPRN_DI);
+    constexpr AsmReg32 eax(GPRN_AX), ecx(GPRN_CX), edx(GPRN_DX), ebx(GPRN_BX);
+    constexpr AsmReg32 esp(GPRN_SP), ebp(GPRN_BP), esi(GPRN_SI), edi(GPRN_DI);
+    constexpr AsmReg16 ax(GPRN_AX), cx(GPRN_CX), dx(GPRN_DX), bx(GPRN_BX);
+    constexpr AsmReg16 sp(GPRN_SP), bp(GPRN_BP), si(GPRN_SI), di(GPRN_DI);
+    constexpr AsmReg8 al(GPRN_AX), cl(GPRN_CX), dl(GPRN_DX), bl(GPRN_BX);
+    constexpr AsmReg8 ah(GPRN_SP), ch(GPRN_BP), dh(GPRN_SI), bh(GPRN_DI);
 }
 
 class AsmWritter
@@ -116,15 +116,20 @@ public:
         }
     }
 
-    AsmWritter &pusha()
+    AsmWritter &xor_(const AsmReg32 &dst_reg, const AsmRegMem &src_reg_mem)
     {
-        WriteMem<u8>(m_addr++, 0x60); // Opcode
+        WriteMem<u8>(m_addr++, 0x33); // Opcode
+        writeModRm(src_reg_mem, dst_reg);
         return *this;
     }
 
-    AsmWritter &popa()
+    AsmWritter &cmp(const AsmReg8 &reg, int8_t imm)
     {
-        WriteMem<u8>(m_addr++, 0x61); // Opcode
+        if (reg == AsmRegs::al) // al
+            WriteMem<u8>(m_addr++, 0x3C);
+        else
+            assert(false);
+        WriteMem<i8>(m_addr++, imm);
         return *this;
     }
 
@@ -154,30 +159,23 @@ public:
         return *this;
     }
 
+    AsmWritter &pusha()
+    {
+        WriteMem<u8>(m_addr++, 0x60); // Opcode
+        return *this;
+    }
+
+    AsmWritter &popa()
+    {
+        WriteMem<u8>(m_addr++, 0x61); // Opcode
+        return *this;
+    }
+
     AsmWritter &push(int32_t Val)
     {
         WriteMem<u8>(m_addr++, 0x68); // Opcode
         WriteMem<i32>(m_addr, Val);
         m_addr += 4;
-        return *this;
-    }
-
-    AsmWritter &pushf()
-    {
-        WriteMem<u8>(m_addr++, 0x9C); // Opcode
-        return *this;
-    }
-
-    AsmWritter &popf()
-    {
-        WriteMem<u8>(m_addr++, 0x9D); // Opcode
-        return *this;
-    }
-
-    AsmWritter &xor_(const AsmReg32 &dstReg, const AsmReg32 &srcReg)
-    {
-        WriteMem<u8>(m_addr++, 0x33); // Opcode
-        WriteMem<u8>(m_addr++, 0xC0 | (srcReg.regNum << 3) | dstReg.regNum); // ModR/M
         return *this;
     }
 
@@ -219,6 +217,48 @@ public:
         return *this;
     }
 
+    AsmWritter &mov(const AsmRegMem &dstRM, const AsmReg8 &srcReg)
+    {
+        WriteMem<u8>(m_addr++, 0x88); // Opcode
+        writeModRm(dstRM, srcReg);
+        return *this;
+    }
+
+    AsmWritter &mov(const AsmRegMem &dstRM, const AsmReg32 &srcReg)
+    {
+        WriteMem<u8>(m_addr++, 0x89); // Opcode
+        writeModRm(dstRM, srcReg);
+        return *this;
+    }
+
+    AsmWritter &mov(const AsmReg32 &dstReg, const AsmReg32 &srcReg)
+    {
+        // Fix ambiguous 'mov r, r' operation
+        return mov(AsmRegMem(dstReg), srcReg);
+    }
+
+    AsmWritter &mov(const AsmRegMem &dstRM, const AsmReg16 &srcReg)
+    {
+        WriteMem<u8>(m_addr++, PR_OPERAND_SIZE_OVERRIDE); // Prefix
+        WriteMem<u8>(m_addr++, 0x89); // Opcode
+        writeModRm(dstRM, srcReg);
+        return *this;
+    }
+
+    AsmWritter &mov(const AsmReg32 &dstReg, const AsmRegMem &srcRM)
+    {
+        WriteMem<u8>(m_addr++, 0x8B); // Opcode
+        writeModRm(srcRM, dstReg);
+        return *this;
+    }
+
+    AsmWritter &lea(const AsmReg32 &dstReg, const AsmRegMem &srcRM)
+    {
+        WriteMem<u8>(m_addr++, 0x8D);
+        writeModRm(srcRM, dstReg);
+        return *this;
+    }
+
     AsmWritter &nop(int num = 1)
     {
         for (int i = 0; i < num; i++) {
@@ -227,25 +267,15 @@ public:
         return *this;
     }
 
-    AsmWritter &jmpLong(uint32_t addr)
+    AsmWritter &pushf()
     {
-        WriteMem<u8>(m_addr, 0xE9);
-        WriteMem<i32>(m_addr + 1, addr - (m_addr + 0x5));
-        m_addr += 5;
+        WriteMem<u8>(m_addr++, 0x9C); // Opcode
         return *this;
     }
 
-    template<typename T>
-    AsmWritter &jmpLong(T *addr)
+    AsmWritter &popf()
     {
-        return jmpLong(reinterpret_cast<uintptr_t>(addr));
-    }
-
-    AsmWritter &jmpNear(uint32_t addr)
-    {
-        WriteMem<u8>(m_addr, 0xEB);
-        WriteMem<i8>(m_addr + 1, addr - (m_addr + 0x2));
-        m_addr += 2;
+        WriteMem<u8>(m_addr++, 0x9D); // Opcode
         return *this;
     }
 
@@ -257,54 +287,51 @@ public:
         return *this;
     }
 
-    template<typename T>
-    AsmWritter &callLong(T *addr)
+    AsmWritter &call(uint32_t addr)
     {
-        WriteMem<u8>(m_addr, 0xE8);
-        WriteMem<i32>(m_addr + 1, reinterpret_cast<intptr_t>(addr) - (m_addr + 0x5));
+        callLong(addr);
+    }
+
+    template<typename T>
+    AsmWritter &call(T *addr)
+    {
+        return callLong(reinterpret_cast<uint32_t>(addr));
+    }
+
+    AsmWritter &jmpLong(uint32_t addr)
+    {
+        WriteMem<u8>(m_addr, 0xE9);
+        WriteMem<i32>(m_addr + 1, addr - (m_addr + 0x5));
         m_addr += 5;
         return *this;
     }
 
-    AsmWritter &ret()
+    AsmWritter &jmpShort(uint32_t addr)
     {
-        WriteMem<u8>(m_addr++, 0xC3);
+        WriteMem<u8>(m_addr, 0xEB);
+        WriteMem<i8>(m_addr + 1, addr - (m_addr + 0x2));
+        m_addr += 2;
         return *this;
     }
 
-    AsmWritter &mov(const AsmRegMem &dstRM, const AsmReg32 &srcReg)
+    AsmWritter &jmp(uint32_t addr)
     {
-        WriteMem<u8>(m_addr++, 0x89); // Opcode
-        writeModRm(dstRM, srcReg.regNum);
-        return *this;
+        if (std::abs(static_cast<int>(addr - (m_addr + 0x2))) < 127)
+            return jmpShort(addr);
+        else
+            return jmpLong(addr);
     }
 
-    AsmWritter &mov(const AsmReg32 &dstReg, const AsmRegMem &srcRM)
+    template<typename T>
+    AsmWritter &jmp(T *addr)
     {
-        WriteMem<u8>(m_addr++, 0x8B); // Opcode
-        writeModRm(srcRM, dstReg.regNum);
-        return *this;
+        return jmp(reinterpret_cast<uintptr_t>(addr));
     }
 
-    AsmWritter &mov(const AsmReg32 &dstReg, const AsmReg32 &srcReg)
+    AsmWritter &mov(const AsmReg8 &dstReg, int8_t imm)
     {
-        WriteMem<u8>(m_addr++, 0x89); // Opcode
-        WriteMem<u8>(m_addr++, 0xC0 | (srcReg.regNum << 3) | dstReg.regNum); // ModR/M
-        return *this;
-    }
-
-    AsmWritter &mov(const AsmReg16 &dstReg, const AsmReg16 &srcReg)
-    {
-        WriteMem<u8>(m_addr++, PR_OPERAND_SIZE_OVERRIDE); // Prefix
-        WriteMem<u8>(m_addr++, 0x89); // Opcode
-        WriteMem<u8>(m_addr++, 0xC0 | (srcReg.regNum << 3) | dstReg.regNum); // ModR/M
-        return *this;
-    }
-
-    AsmWritter &mov(const AsmReg8 &dstReg, const AsmReg8 &srcReg)
-    {
-        WriteMem<u8>(m_addr++, 0x88); // Opcode
-        WriteMem<u8>(m_addr++, 0xC0 | (srcReg.regNum << 3) | dstReg.regNum); // ModR/M
+        WriteMem<u8>(m_addr++, 0xB0 | dstReg.regNum); // Opcode
+        WriteMem<i8>(m_addr++, imm);
         return *this;
     }
 
@@ -325,64 +352,9 @@ public:
         return *this;
     }
 
-    AsmWritter &mov(const AsmReg8 &dstReg, int8_t imm)
+    AsmWritter &ret()
     {
-        WriteMem<u8>(m_addr++, 0xB0 | dstReg.regNum); // Opcode
-        WriteMem<i8>(m_addr++, imm);
-        return *this;
-    }
-
-    AsmWritter &movEaxMemEsp(int8_t off)
-    {
-        WriteMem<u8>(m_addr++, 0x8B);
-        WriteMem<u8>(m_addr++, 0x44);
-        WriteMem<u8>(m_addr++, 0x24);
-        WriteMem<i8>(m_addr++, off);
-        return *this;
-    }
-
-    AsmWritter &movEaxMemEsp32(int32_t off)
-    {
-        WriteMem<u8>(m_addr++, 0x8B);
-        WriteMem<u8>(m_addr++, 0x84);
-        WriteMem<u8>(m_addr++, 0x24);
-        WriteMem<i32>(m_addr++, off);
-        return *this;
-    }
-
-    AsmWritter &addEsp(int8_t val)
-    {
-        WriteMem<u8>(m_addr++, 0x83);
-        WriteMem<u8>(m_addr++, 0xC4);
-        WriteMem<i8>(m_addr++, val);
-        return *this;
-    }
-
-    AsmWritter &leaEaxEsp(int8_t addVal)
-    {
-        WriteMem<u8>(m_addr++, 0x8D);
-        WriteMem<u8>(m_addr++, 0x44);
-        WriteMem<u8>(m_addr++, 0x24);
-        WriteMem<i8>(m_addr++, addVal);
-        return *this;
-    }
-
-    AsmWritter &leaEdxEsp(int8_t addVal)
-    {
-        WriteMem<u8>(m_addr++, 0x8D);
-        WriteMem<u8>(m_addr++, 0x54);
-        WriteMem<u8>(m_addr++, 0x24);
-        WriteMem<i8>(m_addr++, addVal);
-        return *this;
-    }
-
-    AsmWritter &cmp(const AsmReg8 &reg, int8_t imm)
-    {
-        if (reg == AsmRegs::AL) // al
-            WriteMem<u8>(m_addr++, 0x3C);
-        else
-            assert(false);
-        WriteMem<i8>(m_addr++, imm);
+        WriteMem<u8>(m_addr++, 0xC3);
         return *this;
     }
 
@@ -422,6 +394,11 @@ private:
             WriteMem<i8>(m_addr++, regMem.displacement);
         else if (modField == 2 || !regMem.regOpt)
             WriteMem<i32>(m_addr++, regMem.displacement);
+    }
+
+    void writeModRm(const AsmRegMem &regMem, const AsmReg &reg)
+    {
+        writeModRm(regMem, reg.regNum);
     }
 };
 

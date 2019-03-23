@@ -587,8 +587,7 @@ void CommandsInit()
     AsmWritter(0x00431280).nop(2);
     AsmWritter(0x004312E0).nop(2);
     AsmWritter(0x00431340).nop(2);
-    WriteMem<u8>(0x004A68D0, ASM_LONG_JMP_REL);
-    WriteMem<u32>(0x004A68D0 + 1, (uintptr_t)CanPlayerFireHook - (0x004A68D0 + 0x5));
+    AsmWritter(0x004A68D0).jmp(CanPlayerFireHook);
 #endif // if CAMERA_1_3_COMMANDS
 
     // Change limit of commands
@@ -605,7 +604,7 @@ void CommandsInit()
     WriteMemPtr(0x0050A648 + 4, g_CommandsBuffer);
     WriteMemPtr(0x0050A6A0 + 3, g_CommandsBuffer);
 
-    AsmWritter(0x00509DB4).jmpLong(DcRunCmd_CallHandlerPatch);
+    AsmWritter(0x00509DB4).jmp(DcRunCmd_CallHandlerPatch);
 
     // Better console autocomplete
     DcAutoCompleteInput_Hook.Install();

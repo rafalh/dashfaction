@@ -59,5 +59,5 @@ void InitWndProc()
     WriteMemPtr(0x00524E66, &WndProc);
 
     // Disable mouse when window is not active
-    AsmWritter(0x0051DC70).callLong(IsMouseEnabled);
+    AsmWritter(0x0051DC70).call(IsMouseEnabled);
 }

@@ -22,7 +22,7 @@ struct X86Regs
     int32_t edi;
     int32_t esi;
     int32_t ebp;
-    int32_t reserved; // unused ESP
+    int32_t reserved; // unused esp
     REG_UNION(b);
     REG_UNION(d);
     REG_UNION(c);
@@ -57,20 +57,20 @@ public:
 
         AsmWritter(reinterpret_cast<uintptr_t>(wrapper))
             .push(reinterpret_cast<int32_t>(trampoline))            // Push default EIP = trampoline
-            .push(AsmRegs::ESP)                                     // push ESP before PUSHA so it can be popped manually after POPA
+            .push(AsmRegs::esp)                                     // push esp before PUSHA so it can be popped manually after POPA
             .pusha()                                                // push general registers
             .pushf()                                                // push EFLAGS
-            .add({true, {AsmRegs::ESP}, offsetof(X86Regs, esp)}, 4) // restore ESP value from before pushing the return address
-            .push(AsmRegs::ESP)                                     // push address of X86Regs struct (handler param)
-            .callLong(m_fun_ptr)                                     // call handler
-            .add({false, {AsmRegs::ESP}}, 4)                        // free handler param
-            .add({true, {AsmRegs::ESP}, offsetof(X86Regs, esp)}, -4) // make ESP value return address aware (again)
-            .mov(AsmRegs::EAX, {true, {AsmRegs::ESP}, offsetof(X86Regs, eip)}) // read EIP from X86Regs
-            .mov(AsmRegs::ECX, {true, {AsmRegs::ESP}, offsetof(X86Regs, esp)}) // read ESP from X86Regs
-            .mov({true, {AsmRegs::ECX}, 0}, AsmRegs::EAX)           // copy EIP to new address of the stack pointer
+            .add({true, {AsmRegs::esp}, offsetof(X86Regs, esp)}, 4) // restore esp value from before pushing the return address
+            .push(AsmRegs::esp)                                     // push address of X86Regs struct (handler param)
+            .call(m_fun_ptr)                                     // call handler
+            .add({false, {AsmRegs::esp}}, 4)                        // free handler param
+            .add({true, {AsmRegs::esp}, offsetof(X86Regs, esp)}, -4) // make esp value return address aware (again)
+            .mov(AsmRegs::eax, {true, {AsmRegs::esp}, offsetof(X86Regs, eip)}) // read EIP from X86Regs
+            .mov(AsmRegs::ecx, {true, {AsmRegs::esp}, offsetof(X86Regs, esp)}) // read esp from X86Regs
+            .mov({true, {AsmRegs::ecx}, 0}, AsmRegs::eax)           // copy EIP to new address of the stack pointer
             .popf()                                                 // pop EFLAGS
-            .popa()                                                 // pop general registers. Note: POPA discards ESP value
-            .pop(AsmRegs::ESP)                                      // pop ESP manually
+            .popa()                                                 // pop general registers. Note: POPA discards esp value
+            .pop(AsmRegs::esp)                                      // pop esp manually
             .ret();                                                 // return to address read from EIP field in X86Regs
     }
 };

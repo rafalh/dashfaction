@@ -82,8 +82,8 @@ DcCommand2 unban_last_cmd{
 
 void InitLazyban()
 {
-    AsmWritter(0x0047B6F0).jmpLong(BanCmdHandlerHook);
-    AsmWritter(0x0047B580).jmpLong(KickCmdHandlerHook);
+    AsmWritter(0x0047B6F0).jmp(BanCmdHandlerHook);
+    AsmWritter(0x0047B580).jmp(KickCmdHandlerHook);
 
     unban_last_cmd.Register();
 }

@@ -49,10 +49,10 @@ void ResetGammaRamp()
 
     if (!g_gamma_ramp_initialized)
         return;
-    
+
     for (unsigned i = 0; i < 256; ++i)
         gamma_ramp.red[i] = gamma_ramp.green[i] = gamma_ramp.blue[i] = i << 8;
-    
+
     SetGammaRamp(&gamma_ramp);
 }
 
@@ -74,7 +74,7 @@ static void GammaMsgHandler(UINT uMsg, WPARAM wParam, LPARAM lParam)
 void InitGamma()
 {
     /* Gamma fix */
-    AsmWritter(0x00547A60).jmpLong(GrUpdateGammaRampHook);
-    
+    AsmWritter(0x00547A60).jmp(GrUpdateGammaRampHook);
+
     rf::AddMsgHandler(GammaMsgHandler);
 }

@@ -906,24 +906,24 @@ void NetworkInit()
     WriteMem<u32>(0x00599D20, 4);
 
     /* Buffer Overflow fixes */
-    AsmWritter(0x0047B2D3).jmpLong(ProcessGameInfoPacket_Security_0047B2D3);
-    AsmWritter(0x0047B334).jmpLong(ProcessGameInfoPacket_Security_0047B334);
+    AsmWritter(0x0047B2D3).jmp(ProcessGameInfoPacket_Security_0047B2D3);
+    AsmWritter(0x0047B334).jmp(ProcessGameInfoPacket_Security_0047B334);
 #ifndef TEST_BUFFER_OVERFLOW_FIXES
-    AsmWritter(0x0047B38E).jmpLong(ProcessGameInfoPacket_Security_0047B38E);
+    AsmWritter(0x0047B38E).jmp(ProcessGameInfoPacket_Security_0047B38E);
 #endif
-    AsmWritter(0x0047AD4E).jmpLong(ProcessJoinReqPacket_Security_0047AD4E);
-    AsmWritter(0x0047A8AE).jmpLong(ProcessJoinAcceptPacket_Security_0047A8AE);
-    AsmWritter(0x0047A5F4).jmpLong(ProcessNewPlayerPacket_Security_0047A5F4);
-    AsmWritter(0x00481EE6).jmpLong(ProcessPlayersPacket_Security_00481EE6);
-    AsmWritter(0x00481BEC).jmpLong(ProcessStateInfoReqPacket_Security_00481BEC);
-    AsmWritter(0x004448B0).jmpLong(ProcessChatLinePacket_Security_004448B0);
-    AsmWritter(0x0046EB24).jmpLong(ProcessNameChangePacket_Security_0046EB24);
-    AsmWritter(0x0047C1C3).jmpLong(ProcessLeaveLimboPacket_Security_0047C1C3);
-    AsmWritter(0x0047EE6E).jmpLong(ProcessObjKillPacket_Security_0047EE6E);
-    AsmWritter(0x00475474).jmpLong(ProcessEntityCreatePacket_Security_00475474);
-    AsmWritter(0x00479FAA).jmpLong(ProcessItemCreatePacket_Security_00479FAA);
-    AsmWritter(0x0046C590).jmpLong(ProcessRconReqPacket_Security_0046C590);
-    AsmWritter(0x0046C751).jmpLong(ProcessRconPacket_Security_0046C751);
+    AsmWritter(0x0047AD4E).jmp(ProcessJoinReqPacket_Security_0047AD4E);
+    AsmWritter(0x0047A8AE).jmp(ProcessJoinAcceptPacket_Security_0047A8AE);
+    AsmWritter(0x0047A5F4).jmp(ProcessNewPlayerPacket_Security_0047A5F4);
+    AsmWritter(0x00481EE6).jmp(ProcessPlayersPacket_Security_00481EE6);
+    AsmWritter(0x00481BEC).jmp(ProcessStateInfoReqPacket_Security_00481BEC);
+    AsmWritter(0x004448B0).jmp(ProcessChatLinePacket_Security_004448B0);
+    AsmWritter(0x0046EB24).jmp(ProcessNameChangePacket_Security_0046EB24);
+    AsmWritter(0x0047C1C3).jmp(ProcessLeaveLimboPacket_Security_0047C1C3);
+    AsmWritter(0x0047EE6E).jmp(ProcessObjKillPacket_Security_0047EE6E);
+    AsmWritter(0x00475474).jmp(ProcessEntityCreatePacket_Security_00475474);
+    AsmWritter(0x00479FAA).jmp(ProcessItemCreatePacket_Security_00479FAA);
+    AsmWritter(0x0046C590).jmp(ProcessRconReqPacket_Security_0046C590);
+    AsmWritter(0x0046C751).jmp(ProcessRconPacket_Security_0046C751);
 
     // Hook all packet handlers
     ProcessGameInfoReqPacket_Hook.Install();
@@ -983,20 +983,23 @@ void NetworkInit()
 
     // Fix ObjUpdate packet handling
     AsmWritter(0x0047E058, 0x0047E06A)
-        .movEaxMemEsp(0x9C - 0x6C) // pPlayer
-        .push(AsmRegs::EAX).push(AsmRegs::EBX).push(AsmRegs::EDI)
-        .callLong(SecureObjUpdatePacket)
-        .addEsp(12).mov(AsmRegs::EDI, AsmRegs::EAX);
+        .mov(AsmRegs::eax, AsmMem(AsmRegs::esp + (0x9C - 0x6C))) // pPlayer
+        .push(AsmRegs::eax)
+        .push(AsmRegs::ebx)
+        .push(AsmRegs::edi)
+        .call(SecureObjUpdatePacket)
+        .add(AsmRegs::esp, 12)
+        .mov(AsmRegs::edi, AsmRegs::eax);
 
     // Client-side green team fix
-    AsmWritter(0x0046CAD7, 0x0046CADA).cmp(AsmRegs::AL, (int8_t)0xFF);
+    AsmWritter(0x0046CAD7, 0x0046CADA).cmp(AsmRegs::al, (int8_t)0xFF);
 
     // Hide IP addresses in Players packet
-    AsmWritter(0x00481D31, 0x00481D33).xor_(AsmRegs::EAX, AsmRegs::EAX);
-    AsmWritter(0x00481D40, 0x00481D44).xor_(AsmRegs::EDX, AsmRegs::EDX);
+    AsmWritter(0x00481D31, 0x00481D33).xor_(AsmRegs::eax, AsmRegs::eax);
+    AsmWritter(0x00481D40, 0x00481D44).xor_(AsmRegs::edx, AsmRegs::edx);
     // Hide IP addresses in New Player packet
-    AsmWritter(0x0047A4A0, 0x0047A4A2).xor_(AsmRegs::EDX, AsmRegs::EDX);
-    AsmWritter(0x0047A4A6, 0x0047A4AA).xor_(AsmRegs::ECX, AsmRegs::ECX);
+    AsmWritter(0x0047A4A0, 0x0047A4A2).xor_(AsmRegs::edx, AsmRegs::edx);
+    AsmWritter(0x0047A4A6, 0x0047A4AA).xor_(AsmRegs::ecx, AsmRegs::ecx);
 
     // Fix "Orion bug" - default 'miner1' entity spawning client-side periodically
     MultiAllocPlayerId_Hook.Install();

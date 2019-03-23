@@ -865,7 +865,7 @@ void MiscInit()
     WriteMem<u32>(0x0056A28C + 1, 0);
 
     // Crash-fix in case texture has not been created (this happens if GrReadBackbuffer fails)
-    AsmWritter(0x0055CE47).jmpLong(CrashFix_0055CE48);
+    AsmWritter(0x0055CE47).jmp(CrashFix_0055CE48);
 
     // Dont overwrite player name and prefered weapons when loading saved game
     AsmWritter(0x004B4D99, 0x004B4DA5).nop();
@@ -920,10 +920,10 @@ void MiscInit()
     MouseUpdateDirectInput_Hook.Install();
 
     // Chat color alpha
-    AsmWritter(0x00477490, 0x004774A4).mov(AsmRegs::EAX, 0x30); // chatbox border
-    AsmWritter(0x00477528, 0x00477535).mov(AsmRegs::EBX, 0x40); // chatbox background
-    AsmWritter(0x00478E00, 0x00478E14).mov(AsmRegs::EAX, 0x30); // chat input border
-    AsmWritter(0x00478E91, 0x00478E9E).mov(AsmRegs::EBX, 0x40); // chat input background
+    AsmWritter(0x00477490, 0x004774A4).mov(AsmRegs::eax, 0x30); // chatbox border
+    AsmWritter(0x00477528, 0x00477535).mov(AsmRegs::ebx, 0x40); // chatbox background
+    AsmWritter(0x00478E00, 0x00478E14).mov(AsmRegs::eax, 0x30); // chat input border
+    AsmWritter(0x00478E91, 0x00478E9E).mov(AsmRegs::ebx, 0x40); // chat input background
 
     // Show enemy bullets (FIXME: add config)
     if (g_game_config.showEnemyBullets)
@@ -953,7 +953,7 @@ void MiscInit()
 
     // Disable broken optimization of segment vs geometry collision test
     // Fixes hitting objects if mover is in the line of the shot
-    AsmWritter(0x00499055).jmpLong(0x004990B4);
+    AsmWritter(0x00499055).jmp(0x004990B4);
 
     // Disable Flamethower debug sphere drawing (optimization)
     // It is not visible in game because other things are drawn over it
@@ -975,10 +975,10 @@ void MiscInit()
     TriggerActivate_Hook.Install();
 
     // Client-side trigger flag handling
-    AsmWritter(0x004BFCCD, 0x004BFCD4).jmpLong(TriggerCheckActivation_Patch_004BFCCD);
+    AsmWritter(0x004BFCCD, 0x004BFCD4).jmp(TriggerCheckActivation_Patch_004BFCCD);
 
     // Fix crash when loading savegame with missing player entity data
-    AsmWritter(0x004B4B47).jmpNear(0x004B4B7B);
+    AsmWritter(0x004B4B47).jmp(0x004B4B7B);
 
     // Add checking if restoring game state from save file failed during level loading
     RflLoadInternal_CheckRestoreStatus_Patch.Install();
@@ -1007,8 +1007,8 @@ void MiscInit()
 
 #if 0
     // Fix weapon switch glitch when reloading (should be used on Match Mode)
-    AsmWritter(0x004A4B4B).callLong(EntityIsReloading_SwitchWeapon_New);
-    AsmWritter(0x004A4B77).callLong(EntityIsReloading_SwitchWeapon_New);
+    AsmWritter(0x004A4B4B).call(EntityIsReloading_SwitchWeapon_New);
+    AsmWritter(0x004A4B77).call(EntityIsReloading_SwitchWeapon_New);
 #endif
 
 #if SERVER_WIN32_CONSOLE // win32 console

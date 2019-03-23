@@ -256,7 +256,7 @@ extern "C" DWORD DLL_EXPORT Init(void* unused)
 
     /* Process messages in the same thread as DX processing (alternative: D3DCREATE_MULTITHREADED) */
     AsmWritter(0x00524C48, 0x00524C83).nop(); // disable msg loop thread
-    AsmWritter(0x00524C48).callLong(0x00524E40); // CreateMainWindow
+    AsmWritter(0x00524C48).call(0x00524E40); // CreateMainWindow
     KeyGetFromFifo_Hook.Install();
 
     /* General game hooks */
