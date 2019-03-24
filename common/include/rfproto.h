@@ -1,3 +1,13 @@
+/*****************************************************************************
+*
+*  PROJECT:     Open Faction
+*  LICENSE:     See LICENSE in the top level directory
+*  FILE:        include/rfproto.h
+*  PURPOSE:     RF protocol documentation
+*  DEVELOPERS:  Rafal Harabien
+*
+*****************************************************************************/
+
 #ifndef _RFPROTO_H
 #define _RFPROTO_H
 
@@ -69,8 +79,8 @@ enum rfPacketType
     RF_GLASS_STATE            = 0x12,
     /*  13  remote_charges_state */
     RF_SUICIDE                = 0x14,
-    RF_LEVEL_END              = 0x15,
-    RF_LEVEL_CHANGE           = 0x16,
+    RF_LEVEL_END              = 0x15, // enter limbo
+    RF_LEVEL_CHANGE           = 0x16, // leave limbo
     RF_TEAM_CHANGE            = 0x17,
     RF_PING                   = 0x18,
     RF_PONG                   = 0x19,
@@ -196,7 +206,7 @@ typedef struct _rfJoinRequest
     uint8_t version; /* Supported version of protocol */
     char rest[];
     /*char name[];
-    uint32_t unknown; * 0x5 *
+    uint32_t entity_type; * 0x5 *
     char password[];
     uint32_t connection_speed; * In bytes/second *
     uint32_t meshes_vpp_checksum; * exists only if version==RF_VER_10_11 *
@@ -205,7 +215,8 @@ typedef struct _rfJoinRequest
     uint32_t motions_vpp_size; * exists only if version==RF_VER_10_11 *
     uint32_t tables_vpp_checksum; * not a public algorithm, for 1.2 it's 7e 40 c2 1a *
     uint32_t tables_vpp_size; * Size of tables.vpp *
-    char unknown3[8]; * Ie. 00 00 ... *
+    uint32_t mod_vpp_checksum; * Checksum of mod VPP if exists (modname.vpp) *
+    uint32_t mod_vpp_size; * Size of mod VPP if exists (modname.vpp) *
     [struct rfJoinEx joinEx;]*/
 } rfJoinRequest;
 
@@ -533,7 +544,7 @@ enum rfWeapon
     RF_HEAVY_MACHINE_GUN         = 0x0F,
     RF_PRECISION_RIFLE           = 0x10,
     RF_FUSION_ROCKET_LAUNCHER    = 0x11,
-    
+
     RF_VAUSS                     = 0x12,
     RF_TANKBOT_CHAINGUN          = 0x13,
     RF_TRIBEAM_LASER             = 0x14,
@@ -560,7 +571,7 @@ enum rfWeapon
     RF_TANKBOT_MISSILE           = 0x29,
     RF_FIGHTER_ROCKET            = 0x2A,
     RF_APC_ROCKET                = 0x2B,
-    
+
     RF_UNKNOWN_WEAPON            = 0xFF,
 };
 
@@ -588,22 +599,41 @@ enum rfEntityArmorStateFlags
     RF_EDAS_INVULNERABILITY  = 0x02,
 };
 
+enum rfAnimFlags
+{
+    RF_AF_HIDDEN_WEAPON = 0x01, // not used in multi
+    RF_AF_CROUCH        = 0x04,
+	RF_AF_ZOOM          = 0x08,
+    RF_AF_WEAPON_FIRE   = 0x10, // used only for remote charges and granades
+	RF_AF_WEAPON_FIRE2  = 0x20, // unknown
+};
+
 typedef struct _rfEntityData
 {
-    uint16_t entity_handle; /* Object handle */
+    uint32_t entity_handle; /* Entity object handle */
     uint8_t flags; /* Bitfield (RF_ODF_*) */
     uint16_t ticks; /* Milliseconds since app. start, exists if RF_ODF_POS_ROT is set */
+
+    /* Position and rotation */
     float x; /* X coordinate,                         exists if RF_ODF_POS_ROT is set */
     float y; /* Y coordinate,                         exists if RF_ODF_POS_ROT is set */
     float z; /* Z coordinate,                         exists if RF_ODF_POS_ROT is set */
     int16_t angle_x; /* Rotation in X axis (pitch),   exists if RF_ODF_POS_ROT is set */
     int16_t angle_y; /* Rotation in Y axis (yaw),     exists if RF_ODF_POS_ROT is set */
-    uint32_t state; /* Ie. 00 00 00 80 (animation?),  exists if RF_ODF_POS_ROT is set */
-    uint8_t armor_state; /* Bitfield (RF_EDAS_*),     exists if RF_ARMOR_STATE is set */
+
+    /* Animation */
+    uint8_t anim_flags; /* See rfAnimFlags,           exists if RF_ODF_POS_ROT is set */
+    int8_t anim_dir_x; /* Normalized velocity in X axis, exists if RF_ODF_POS_ROT is set */
+    int8_t anim_dir_y; /* Normalized velocity in Y axis, exists if RF_ODF_POS_ROT is set */
+    int8_t anim_speed; /* Speed, MSB is sign of anim_dir_z, exists if RF_ODF_POS_ROT is set */
+    /* Note: you can calculate anim_dir_z from anim_dir_x, anim_dir_y and anim_speed */
+
+    /* Other */
+    uint8_t armor_state; /* Bitfield (RF_EDAS_*),     exists if RF_ODF_ARMOR_STATE is set */
     uint8_t weapon; /* Weapon type,                   exists if RF_ODF_WEAPON_TYPE is set */
     uint8_t health; /* Entity health points,          exists if RF_ODF_HEATH_ARMOR is set */
     uint8_t armor; /* Entity armor,                   exists if RF_ODF_HEATH_ARMOR is set */
-    uint8_t unknown2; /* Ie. 00,                      exists if  RF_ODF_HEATH_ARMOR is set */
+    uint8_t unknown2; /* Ie. 00,                      exists if RF_ODF_HEATH_ARMOR is set */
     uint8_t unknown3; /* Ie. 00,                      exists if RF_ODF_UNKNOWN3 is set */
     /*uint8_t _unknown3[unknown3*3]; *                exists if RF_ODF_UNKNOWN3 is set *
     uint16_t unknown4; * Ie. 00 00,                   exists if RF_ODF_UNKNOWN4 is set */
@@ -614,7 +644,7 @@ typedef struct _rfEntityUpdate
     uint8_t type; /* RF_ENTITY_UPDATE */
     uint16_t size; /* Size of the following part */
     rfEntityData entities[]; /* Entities data */
-    /*uint32_t unknown; * Ie. FF FF FF FF */
+    /*uint32_t terminator; * 0xFFFFFFFF */
 } rfObjectUpdate;
 
 enum rfKillFlags
@@ -628,12 +658,12 @@ typedef struct _rfEntityKill
     uint8_t type; /* RF_ENTITY_KILL */
     uint16_t size; /* Size of the following part */
     uint32_t entity_handle; /* Entity handle */
-    uint32_t unknown2; /* Ie. 0xC47A0000 */
+    float unknown; /* Ie. 0xC47A0000 (life?) */
     uint8_t id_killer; /* Player ID of killer */
     uint8_t id_killed; /* Player ID of killed player, probably 0xFF if entity is not player */
     uint16_t animation; /* For suicide - 0x5, headshot - 0x9 */
     uint8_t flags; /* Bitfield (RF_KF_*) */
-    uint16_t unknown3; /* Ie. 0x0000,                                                           exists if RF_KF_ITEM or RF_KF_ITEM_UNKNOWN is set */
+    uint16_t unknown2; /* Ie. 0x0000,  (its char unknown2[]; char unknown3;)                    exists if RF_KF_ITEM or RF_KF_ITEM_UNKNOWN is set */
     uint32_t item_type; /* Type of item in place of killed player, Note: it must not be weapon, exists if RF_KF_ITEM or RF_KF_ITEM_UNKNOWN is set */
     char unknown4[8]; /* Ie. FF FF FF FF 80 00 00 00,                                           exists if RF_KF_ITEM or RF_KF_ITEM_UNKNOWN is set */
     uint32_t item_handle; /* Item handle,                                                       exists if RF_KF_ITEM or RF_KF_ITEM_UNKNOWN is set */
@@ -675,7 +705,7 @@ typedef struct _rfEntitySpawn2
     float y; /* Y coordinate */
     float z; /* Z coordinate */
     float rot_matrix[3][3];
-    uint8_t player_id; /* Player ID, probably 0xFF if entity is not player */
+    uint8_t id; /* Player ID, probably 0xFF if entity is not player */
     uint32_t character; /* Entity character (index in pc_multi.tbl) */
     uint32_t weapon; /* Entity weapon */
     uint32_t unknown3; /* Ie. FF FF FF FF */
@@ -751,9 +781,7 @@ typedef struct _rfSound
     uint8_t type; /* RF_SOUND */
     uint16_t size; /* Size of the following part */
     uint16_t sound_id; /* Sound ID from sounds.tbl */
-    float pos_x; /* Sound position or 0xFFFFFFFF */
-    float pos_y; /* Sound position or 0xFFFFFFFF */
-    float pos_z; /* Sound position or 0xFFFFFFFF */
+    float x, y, z; /* FF FF FF FF FF FF FF FF FF FF FF FF */
 } rfSound;
 
 typedef struct _rfTeamsScores
