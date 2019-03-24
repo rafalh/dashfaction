@@ -17,8 +17,6 @@ static const auto GetJoinFailedReasonStr = AddrAsRef<const char *(unsigned Reaso
 static unsigned g_LevelTicketId;
 static unsigned g_cbLevelSize, g_cbDownloadProgress;
 static bool g_bDownloadActive = false;
-static bool g_bExitGameFromMulti = false;
-
 
 bool UnzipVpp(const char *pszPath)
 {
@@ -226,8 +224,9 @@ cleanup:
 static DWORD WINAPI DownloadLevelThread(PVOID pParam)
 {
     char TempDir[MAX_PATH], TempFileName[MAX_PATH] = "";
-    LPCTSTR AcceptTypes[] = {TEXT("*/*"), NULL};
     bool Success = false;
+
+    (void)pParam; // unused parameter
 
     DWORD dwRetVal;
     dwRetVal = GetTempPathA(_countof(TempDir), TempDir);

@@ -179,7 +179,7 @@ void SetPlaySoundEventsVolumeScale(float volume_scale)
         // Play Sound event
         0x004BA4D8, 0x004BA515, 0x004BA71C, 0x004BA759, 0x004BA609, 0x004BA5F2, 0x004BA63F,
     };
-    for (int i = 0; i < COUNTOF(Offsets); ++i)
+    for (unsigned i = 0; i < COUNTOF(Offsets); ++i)
         WriteMem<float>(Offsets[i] + 1, volume_scale);
 }
 
@@ -662,7 +662,7 @@ RegsPatch CoronaEntityCollisionTestFix{
         auto tmp_vec = reinterpret_cast<rf::Vector3*>(regs.ecx);
         regs.eax = IntersectLineWithAabb(&aabb_min, &aabb_max, corona_pos, eye_pos, tmp_vec);
         regs.eip = 0x004152F6;
-    }
+    },
 };
 
 auto CanSave = AddrAsRef<bool()>(0x004B61A0);
@@ -789,7 +789,6 @@ RegsPatch LinearPitchPatch{
         float& current_pitch_non_lin = *reinterpret_cast<float*>(regs.esi + 0x87C);
         float& pitch_delta = *reinterpret_cast<float*>(regs.esp + 0x44 - 0x34);
         float& yaw_delta = *reinterpret_cast<float*>(regs.esp + 0x44 + 0x4);
-        rf::EntityObj* entity = reinterpret_cast<rf::EntityObj*>(regs.esi);
         if (pitch_delta == 0)
             return;
         // Convert to linear space (see RotMatixFromEuler function at 004A0D70)

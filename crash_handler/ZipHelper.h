@@ -52,29 +52,31 @@ private:
     uLong getFileTime(const char *filename, tm_zip *tmzip, uLong *dt)
     {
         int ret = 0;
-        {
-            FILETIME ftLocal;
-            HANDLE hFind;
-            WIN32_FIND_DATAA ff32;
+        FILETIME ftLocal;
+        HANDLE hFind;
+        WIN32_FIND_DATAA ff32;
 
-            hFind = FindFirstFileA(filename, &ff32);
-            if (hFind != INVALID_HANDLE_VALUE)
-            {
-                FileTimeToLocalFileTime(&(ff32.ftLastWriteTime), &ftLocal);
-                FileTimeToDosDateTime(&ftLocal, ((LPWORD)dt) + 1, ((LPWORD)dt) + 0);
-                FindClose(hFind);
-                ret = 1;
-            }
+        (void)tmzip; // unused parameter (dt is filled instead)
+
+        hFind = FindFirstFileA(filename, &ff32);
+        if (hFind != INVALID_HANDLE_VALUE)
+        {
+            FileTimeToLocalFileTime(&(ff32.ftLastWriteTime), &ftLocal);
+            FileTimeToDosDateTime(&ftLocal, ((LPWORD)dt) + 1, ((LPWORD)dt) + 0);
+            FindClose(hFind);
+            ret = 1;
         }
         return ret;
     }
-#else
+#else // WIN32
     uLong getFileTime(const char *filename, tm_zip *tmzip, uLong *dt)
     {
         int ret = 0;
         struct stat s;        /* results of stat() */
         struct tm* filedate;
         time_t tm_t = 0;
+
+        (void)dt; // unused parameter (tmzip is filled instead)
 
         if (stat(filename, &s) == 0)
         {
@@ -92,5 +94,5 @@ private:
 
         return ret;
     }
-#endif
+#endif // WIN32
 };

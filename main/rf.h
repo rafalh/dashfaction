@@ -63,6 +63,7 @@ namespace rf
         Vector3& operator/=(float m)
         {
             *this *= 1.0f / m;
+            return *this;
         }
 
         Vector3 operator-() const
@@ -1511,8 +1512,8 @@ namespace rf
     static_assert(sizeof(WeaponClass) == 0x550, "invalid size");
 
     static const auto g_pWeaponClasses = (WeaponClass*)0x0085CD08;
-    static auto &g_RiotStickClsId = *(uint32_t*)0x00872468;
-    static auto &g_RemoteChargeClsId = *(uint32_t*)0x0087210C;
+    static auto &g_RiotStickClsId = *(int32_t*)0x00872468;
+    static auto &g_RemoteChargeClsId = *(int32_t*)0x0087210C;
 
     /* Window */
 

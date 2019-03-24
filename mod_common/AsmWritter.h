@@ -289,7 +289,7 @@ public:
 
     AsmWritter &call(uint32_t addr)
     {
-        callLong(addr);
+        return callLong(addr);
     }
 
     template<typename T>

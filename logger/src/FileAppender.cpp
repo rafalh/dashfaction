@@ -5,6 +5,8 @@ using namespace logging;
 
 void FileAppender::append(LogLevel lvl, const std::string &str)
 {
+    (void)lvl; // unused parameter
+
     if (!m_fileStream.is_open())
     {
         std::ios_base::openmode m = std::ios_base::out;

@@ -21,23 +21,23 @@ void InitProcess(HANDLE hProcess, const TCHAR *pszPath)
     FARPROC pfnLoadLibrary, pfnInit;
     unsigned cbPath = strlen(pszPath) + 1;
     HMODULE hLib;
-    
+
     pfnLoadLibrary = GetProcAddress(GetModuleHandle("kernel32.dll"), "LoadLibraryA");
     if (!pfnLoadLibrary)
         THROW_EXCEPTION_WITH_WIN32_ERROR();
-    
+
     pVirtBuf = VirtualAllocEx(hProcess, NULL, cbPath, MEM_RESERVE|MEM_COMMIT, PAGE_EXECUTE_READWRITE);
     if (!pVirtBuf)
         THROW_EXCEPTION_WITH_WIN32_ERROR();
-    
+
     /* For some reason WriteProcessMemory returns 0, but memory is written */
     WriteProcessMemory(hProcess, pVirtBuf, pszPath, cbPath, NULL);
-    
+
     printf("Loading %s\n", pszPath);
     hThread = CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)pfnLoadLibrary, pVirtBuf, 0, NULL);
     if (!hThread)
         THROW_EXCEPTION_WITH_WIN32_ERROR();
-    
+
     dwWaitResult = WaitForSingleObject(hThread, INIT_TIMEOUT);
     if (dwWaitResult != WAIT_OBJECT_0)
     {
@@ -46,13 +46,13 @@ void InitProcess(HANDLE hProcess, const TCHAR *pszPath)
         else
             THROW_EXCEPTION_WITH_WIN32_ERROR();
     }
-    
+
     if (!GetExitCodeThread(hThread, &dwExitCode))
         THROW_EXCEPTION_WITH_WIN32_ERROR();
-    
+
     if (!dwExitCode)
         THROW_EXCEPTION("remote LoadLibrary failed");
-    
+
     hLib = LoadLibrary(pszPath);
     if (!hLib)
         THROW_EXCEPTION_WITH_WIN32_ERROR();
@@ -61,20 +61,20 @@ void InitProcess(HANDLE hProcess, const TCHAR *pszPath)
     FreeLibrary(hLib);
     if (!pfnInit)
         THROW_EXCEPTION_WITH_WIN32_ERROR();
-    
+
     CloseHandle(hThread);
 
     hThread = CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)((DWORD_PTR)pfnInit - (DWORD_PTR)hLib + dwExitCode), NULL, 0, NULL);
     if (!hThread)
         THROW_EXCEPTION_WITH_WIN32_ERROR();
-    
+
     dwWaitResult = WaitForSingleObject(hThread, INIT_TIMEOUT);
     if (dwWaitResult != WAIT_OBJECT_0)
         THROW_EXCEPTION_WITH_WIN32_ERROR();
-    
+
     if (!GetExitCodeThread(hThread, &dwExitCode))
         THROW_EXCEPTION_WITH_WIN32_ERROR();
-    
+
     if (!dwExitCode)
         THROW_EXCEPTION("Init failed");
 
@@ -87,7 +87,7 @@ HRESULT GetRfPath(char *pszPath, DWORD cbPath)
     HKEY hKey;
     LONG iError;
     DWORD dwType;
-    
+
     /* Open RF registry key */
     iError = RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SOFTWARE\\Volition\\Red Faction", 0, KEY_READ, &hKey);
     if (iError != ERROR_SUCCESS)
@@ -95,20 +95,20 @@ HRESULT GetRfPath(char *pszPath, DWORD cbPath)
         printf("RegOpenKeyEx failed: %lu\n", GetLastError());
         return HRESULT_FROM_WIN32(iError);
     }
-    
+
     /* Read install path and close key */
     iError = RegQueryValueEx(hKey, "InstallPath", NULL, &dwType, (LPBYTE)pszPath, &cbPath);
     RegCloseKey(hKey);
     if (iError != ERROR_SUCCESS)
         return HRESULT_FROM_WIN32(iError);
-    
+
     if (dwType != REG_SZ)
         return MAKE_MOD_ERROR(0x04);
-    
+
     /* Is path NULL terminated? */
     if (cbPath == 0 || pszPath[cbPath - 1] != 0)
         return MAKE_MOD_ERROR(0x05);
-    
+
     return S_OK;
 }
 
@@ -181,19 +181,21 @@ uint32_t GetFileCRC32(const char *path)
     return hash;
 }
 
+#ifndef DEBUG
+
 static bool CheckForUpdate()
 {
     HINTERNET hInternet = NULL, hConnect = NULL, hRequest = NULL;
     char buf[4096];
     LPCTSTR AcceptTypes[] = { TEXT("*/*"), NULL };
     DWORD dwStatus = 0, dwSize = sizeof(DWORD), dwBytesRead;
-    
+
     try
     {
         hInternet = InternetOpen("DashFaction", 0, NULL, NULL, 0);
         if (!hInternet)
             THROW_EXCEPTION_WITH_WIN32_ERROR();
-        
+
         hConnect = InternetConnect(hInternet, "ravin.tk", INTERNET_DEFAULT_HTTPS_PORT, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
         if (!hConnect)
             THROW_EXCEPTION_WITH_WIN32_ERROR();
@@ -203,13 +205,13 @@ static bool CheckForUpdate()
         hRequest = HttpOpenRequest(hConnect, NULL, buf, NULL, NULL, AcceptTypes, INTERNET_FLAG_RELOAD | INTERNET_FLAG_SECURE, 0);
         if (!hRequest)
             THROW_EXCEPTION_WITH_WIN32_ERROR();
-        
+
         if (!HttpSendRequest(hRequest, NULL, 0, NULL, 0))
             THROW_EXCEPTION_WITH_WIN32_ERROR();
-        
+
         if (HttpQueryInfo(hRequest, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &dwStatus, &dwSize, NULL) && (dwStatus / 100) != 2)
             THROW_EXCEPTION("Invalid status: %lu", dwStatus);
-        
+
         InternetReadFile(hRequest, buf, sizeof(buf), &dwBytesRead);
         buf[dwBytesRead] = 0;
 
@@ -245,13 +247,15 @@ static bool CheckForUpdate()
             InternetCloseHandle(hInternet);
         throw;
     }
-    
+
     InternetCloseHandle(hRequest);
     InternetCloseHandle(hConnect);
     InternetCloseHandle(hInternet);
 }
 
-int main(int argc, const char *argv[]) try
+#endif // DEBUG
+
+int main() try
 {
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
@@ -259,7 +263,7 @@ int main(int argc, const char *argv[]) try
     char szRfPath[MAX_PATH];
     unsigned i;
     HRESULT hr;
-    
+
     printf("Starting " PRODUCT_NAME_VERSION "!\n");
 
 #ifndef DEBUG
@@ -289,7 +293,7 @@ int main(int argc, const char *argv[]) try
             GetCurrentDirectory(sizeof(szRfPath), szRfPath);
         }
     }
-    
+
     /* Start RF process */
     sprintf(szBuf, "%s\\RF.exe", szRfPath);
     if (!PathFileExists(szBuf))
@@ -298,7 +302,7 @@ int main(int argc, const char *argv[]) try
         MessageBox(NULL, szBuf, NULL, MB_OK|MB_ICONERROR);
         return (int)hr;
     }
-    
+
     uint32_t hash = GetFileCRC32(szBuf);
     printf("CRC32: %X\n", hash);
     if (hash != RF_120_NA_CRC32)
@@ -307,7 +311,7 @@ int main(int argc, const char *argv[]) try
         MessageBox(NULL, szBuf, NULL, MB_OK | MB_ICONERROR);
         return -1;
     }
-    
+
     ZeroMemory(&si, sizeof(si));
     printf("Starting %s...\n", szBuf);
     if (!CreateProcess(szBuf, GetCommandLine(), NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, szRfPath, &si, &pi))
@@ -321,13 +325,13 @@ int main(int argc, const char *argv[]) try
                 NULL, MB_OK | MB_ICONERROR);
             return -1;
         }
-        
+
         hr = GET_LAST_WIN32_ERROR();
         sprintf(szBuf2, "Error %lX! Failed to start: %s", hr, szBuf);
         MessageBox(NULL, szBuf2, NULL, MB_OK|MB_ICONERROR);
         return (int)hr;
     }
-    
+
     i = GetCurrentDirectory(sizeof(szBuf)/sizeof(szBuf[0]), szBuf);
     if (!i)
     {
@@ -337,7 +341,7 @@ int main(int argc, const char *argv[]) try
         TerminateProcess(pi.hProcess, 0);
         return (int)hr;
     }
-    
+
     sprintf(szBuf + i, "\\DashFaction.dll");
     try
     {
@@ -350,7 +354,7 @@ int main(int argc, const char *argv[]) try
         TerminateProcess(pi.hProcess, 0);
         return -1;
     }
-    
+
 #if 0
     printf("Press ENTER to resume game launch...");
     getchar();
@@ -360,7 +364,7 @@ int main(int argc, const char *argv[]) try
 
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
-    
+
     return hr;
 }
 catch (const std::exception &e)

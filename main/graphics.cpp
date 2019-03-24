@@ -105,7 +105,7 @@ extern "C" void DisplayD3DDeviceError(HRESULT hr)
     ERR("D3D CreateDevice failed (hr 0x%X - %s)", hr, getDxErrorStr(hr));
 
     char buf[1024];
-    sprintf(buf, "Failed to create Direct3D device object - error 0x%X (%s).\n"
+    sprintf(buf, "Failed to create Direct3D device object - error 0x%lX (%s).\n"
         "A critical error has occurred and the program cannot continue.\n"
         "Press OK to exit the program", hr, getDxErrorStr(hr));
     MessageBoxA(nullptr, buf, "Error!", MB_OK | MB_ICONERROR | MB_SETFOREGROUND | MB_TASKMODAL);

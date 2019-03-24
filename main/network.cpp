@@ -662,7 +662,7 @@ FunHook2<NwPacketHandler_Type> ProcessEntityCreatePacket_Hook{
                 int32_t weapon_cls_id = *(int32_t*)(data + name_size + 63);
                 rf::g_strDefaultPlayerWeapon = rf::g_pWeaponClasses[weapon_cls_id].strName;
 
-#if 0 // disabled because it sometimes helpful feature to switch to last used weapon \
+#if 0 // disabled because it sometimes helpful feature to switch to last used weapon
     // Reset next weapon variable so entity wont switch after pickup
             if (!g_pLocalPlayer->Config.bAutoswitchWeapons)
                 MultiSetNextWeapon(weapon_cls_id);

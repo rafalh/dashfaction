@@ -25,7 +25,10 @@ void BaseAppender::append(LogLevel lvl, const std::string &loggerName, const std
 #endif
     char timeBuf[32] = "";
     strftime(timeBuf, sizeof(timeBuf), "%H:%M:%S", &nowInfo);
-    buf << "[" << timeBuf << "] " << lvlStr << str;
+    buf << "[" << timeBuf << "] " << lvlStr;
+    if (!loggerName.empty())
+        buf << loggerName << ' ';
+    buf << str;
 
     append(lvl, buf.str());
 }

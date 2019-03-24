@@ -9,13 +9,13 @@
 const char *stristr(const char *haystack, const char *needle)
 {
     unsigned i, j;
-    
+
     for (i = 0; haystack[i]; ++i)
     {
         for (j = 0; needle[j]; ++j)
             if (tolower(haystack[i + j]) != tolower(needle[j]))
                 break;
-        
+
         if (!needle[j])
             return (char*)(haystack+i);
     }
@@ -60,12 +60,13 @@ const char *getDxErrorStr(HRESULT hr)
 
 std::string getOsVersion()
 {
-    OSVERSIONINFO verInfo = { sizeof(verInfo) };
+    OSVERSIONINFO verInfo;
+    verInfo.dwOSVersionInfoSize = sizeof(verInfo);
     if (!GetVersionEx(&verInfo))
         THROW_EXCEPTION("GetVersionEx failed");
 
     char buf[64];
-    sprintf(buf, "%d.%d.%d", verInfo.dwMajorVersion, verInfo.dwMinorVersion, verInfo.dwBuildNumber);
+    sprintf(buf, "%lu.%lu.%lu", verInfo.dwMajorVersion, verInfo.dwMinorVersion, verInfo.dwBuildNumber);
     return buf;
 }
 

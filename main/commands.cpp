@@ -234,7 +234,8 @@ void DebugRender2d()
 
 #if SPECTATE_MODE_ENABLE
 
-DcCommand2 SpectateCmd { "spectate",
+DcCommand2 SpectateCmd {
+    "spectate",
     [](std::optional<std::string> PlayerName) {
         if (rf::g_bNetworkGame) {
             rf::Player *pPlayer;
@@ -259,7 +260,8 @@ DcCommand2 SpectateCmd { "spectate",
 #endif // SPECTATE_MODE_ENABLE
 
 #if MULTISAMPLING_SUPPORT
-DcCommand2 AntiAliasingCmd{ "antialiasing",
+DcCommand2 AntiAliasingCmd{
+    "antialiasing",
     []() {
         if (!g_game_config.msaa)
             rf::DcPrintf("Anti-aliasing is not supported");
@@ -606,8 +608,6 @@ void CommandRegister(rf::DcCommand *pCmd)
 
 void CommandsAfterGameInit()
 {
-    unsigned i;
-
     // Register some unused builtin commands
     DC_REGISTER_CMD(kill_limit, "Sets kill limit", rf::DcfKillLimit);
     DC_REGISTER_CMD(time_limit, "Sets time limit", rf::DcfTimeLimit);

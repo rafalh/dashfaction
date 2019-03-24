@@ -11,7 +11,7 @@ namespace logging
         ConsoleAppender(LogLevel maxStdErrLevel = LOG_LVL_WARNING) :
             m_maxStdErrLevel(maxStdErrLevel) {}
 
-        virtual void append(LogLevel lvl, const std::string &str)
+        virtual void append(LogLevel lvl, const std::string &str) override
         {
             if (lvl <= m_maxStdErrLevel)
                 std::cerr << str << std::endl;

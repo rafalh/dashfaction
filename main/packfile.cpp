@@ -74,12 +74,6 @@ struct PackfileLookupTableNew
     rf::PackfileEntry *pPackfileEntry;
 };
 
-const char *ModFileWhitelist[] = {
-    "reticle_0.tga",
-    "scope_ret_0.tga",
-    "reticle_rocket_0.tga",
-};
-
 #if CHECK_PACKFILE_CHECKSUM
 
 const std::map<std::string, unsigned> GameFileChecksums = {
@@ -104,12 +98,25 @@ static unsigned g_cPackfiles = 0, g_cFilesInVfs = 0, g_cNameCollisions = 0;
 static rf::Packfile **g_pPackfiles = nullptr;
 static bool g_bModdedGame = false;
 
+#ifdef MOD_FILE_WHITELIST
+
+const char *ModFileWhitelist[] = {
+    "reticle_0.tga",
+    "scope_ret_0.tga",
+    "reticle_rocket_0.tga",
+};
+
 static bool IsModFileInWhitelist(const char *Filename)
 {
-    for (int i = 0; i < COUNTOF(ModFileWhitelist); ++i)
+    for (unsigned i = 0; i < COUNTOF(ModFileWhitelist); ++i)
         if (!stricmp(ModFileWhitelist[i], Filename))
             return true;
+    return false;
 }
+
+#endif // MOD_FILE_WHITELIST
+
+#if CHECK_PACKFILE_CHECKSUM
 
 static unsigned HashFile(const char *Filename)
 {
@@ -131,6 +138,7 @@ static unsigned HashFile(const char *Filename)
     XXH32_freeState(state);
     return hash;
 }
+#endif // CHECK_PACKFILE_CHECKSUM
 
 static GameLang DetectInstalledGameLang()
 {
@@ -399,7 +407,10 @@ static void PackfileAddToLookupTable_New(rf::PackfileEntry *pEntry)
 
             if (rf::g_bVfsIgnoreTblFiles) // this is set to true for user_maps
             {
-                bool bWhitelisted = false;// IsModFileInWhitelist(pEntry->pszFileName);
+                bool bWhitelisted = false;
+#ifdef MOD_FILE_WHITELIST
+                bWhitelisted = IsModFileInWhitelist(pEntry->pszFileName);
+#endif
                 if (!g_game_config.allowOverwriteGameFiles && !bWhitelisted)
                 {
                     TRACE("Denied overwriting game file %s (old packfile %s, new packfile %s)",

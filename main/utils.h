@@ -61,7 +61,6 @@ struct StringMatcher
     bool operator()(const char *Input) const
     {
         size_t InputLen = strlen(Input);
-        bool Matches = true;
         if (m_CaseSensitive)
         {
             if (!m_Exact.empty() && strcmp(Input, m_Exact.c_str()) != 0)

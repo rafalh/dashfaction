@@ -13,7 +13,7 @@ namespace logging
             level(lvl), loggerName(loggerName), loggerConfig(loggerConfig) {}
 
         LogStream(const LogStream &e) :
-            level(e.level), loggerName(loggerName), loggerConfig(e.loggerConfig) {}
+            level(e.level), loggerName(e.loggerName), loggerConfig(e.loggerConfig) {}
 
         template<typename T> LogStream &operator<<(const T &v)
         {

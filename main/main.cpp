@@ -183,8 +183,9 @@ CallHook2<void()> AfterFullGameInit_Hook{
 #ifndef NDEBUG
 class RfConsoleLogAppender : public logging::BaseAppender
 {
-    virtual void append(logging::LogLevel lvl, const std::string &str)
+    virtual void append(logging::LogLevel lvl, const std::string &str) override
     {
+        (void)lvl; // unused parameter
         rf::DcPrint(str.c_str(), nullptr);
     }
 };
@@ -225,6 +226,8 @@ extern "C" void subhook_unk_opcode_handler(uint8_t* opcode)
 extern "C" DWORD DLL_EXPORT Init(void* unused)
 {
     DWORD start_ticks = GetTickCount();
+
+    (void)unused; // unused parameter
 
     // Init logging and crash dump support first
     InitLogging();
@@ -300,6 +303,8 @@ extern "C" DWORD DLL_EXPORT Init(void* unused)
 
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD fdwReason, LPVOID lpvReserved)
 {
+    (void)fdwReason; // unused parameter
+    (void)lpvReserved; // unused parameter
     g_hmodule = hInstance;
     DisableThreadLibraryCalls(hInstance);
     return TRUE;

@@ -11,7 +11,7 @@ namespace logging
         FileAppender(const std::string &filename, bool append = true, bool flush = true) :
             m_filename(filename), m_append(append), m_flush(flush) {}
 
-        virtual void append(LogLevel lvl, const std::string &str);
+        virtual void append(LogLevel lvl, const std::string &str) override;
 
     private:
         std::string m_filename;

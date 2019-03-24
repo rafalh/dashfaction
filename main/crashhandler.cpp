@@ -14,7 +14,7 @@ static LONG WINAPI CrashHandlerExceptionFilter(PEXCEPTION_POINTERS pExceptionInf
 
     ERR("Unhandled exception: ExceptionAddress=0x%X ExceptionCode=0x%X",
         pExceptionInfo->ExceptionRecord->ExceptionAddress, pExceptionInfo->ExceptionRecord->ExceptionCode);
-    for (int i = 0; i < pExceptionInfo->ExceptionRecord->NumberParameters; ++i)
+    for (unsigned i = 0; i < pExceptionInfo->ExceptionRecord->NumberParameters; ++i)
         ERR("ExceptionInformation[%d]=0x%X", i, pExceptionInfo->ExceptionRecord->ExceptionInformation[i]);
 
     do
@@ -40,7 +40,7 @@ static LONG WINAPI CrashHandlerExceptionFilter(PEXCEPTION_POINTERS pExceptionInf
         CloseHandle(ProcInfo.hProcess);
         CloseHandle(ProcInfo.hThread);
     } while (false);
-    
+
     if (hProcess)
         CloseHandle(hProcess);
     if (hEvent)
