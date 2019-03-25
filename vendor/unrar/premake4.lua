@@ -5,11 +5,11 @@ project "unrar"
 		--"_FILE_OFFSET_BITS=64",
 		--"_LARGEFILE_SOURCE",
 		--"RAR_SMP",
-		
+
 		"RARDLL",
 		"UNRAR",
 		"SILENT",
-		
+
 		"WHAT=RARDLL",
 	}
 	--links {"pthread"}
@@ -63,12 +63,10 @@ project "unrar"
 		"cmddata.cpp",
 		"ui.cpp",
 		"**.hpp",
-		
+
 		-- LIB
 		"filestr.cpp",
 		"scantree.cpp",
 		"dll.cpp",
 		"qopen.cpp",
-		
-		"_unrar_global_fix.cpp",
 	}

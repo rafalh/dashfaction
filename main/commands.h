@@ -85,12 +85,6 @@ public:
         pfnHandler = (void (*)()) StaticHandler;
     }
 
-
-    DcCommand2(std::function<void(Args...)> handler_fun, int a)
-    {
-        
-    }
-
     void Register()
     {
         CommandRegister(this);

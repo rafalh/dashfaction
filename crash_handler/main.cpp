@@ -72,13 +72,19 @@ int GetTempFileNameInTempDir(const char *Prefix, char Result[MAX_PATH])
     UINT uRetVal = GetTempFileNameA(TempDir, Prefix, 0, Result);
     if (uRetVal == 0)
         return -1;
-    
+
     return 0;
 }
 
 #if 1
 int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) try
 {
+    // Unused parameters
+    (void)hInstance;
+    (void)hPrevInstance;
+    (void)lpCmdLine;
+    (void)nCmdShow;
+
     auto argc = __argc;
     auto argv = __argv;
 #else

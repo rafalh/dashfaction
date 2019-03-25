@@ -56,6 +56,4 @@ add_library(unrar STATIC
     scantree.cpp
     dll.cpp
     qopen.cpp
-
-    _unrar_global_fix.cpp
 )

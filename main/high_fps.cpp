@@ -37,6 +37,8 @@ public:
 
     static long __fastcall ftol(FtolAccuracyFix *this_, void *edx, double value, void *key)
     {
+        (void)edx; // usused parameter
+
         auto& state = this_->m_state_map[key];
 
         if (state.num_calls_in_frame > 0 && state.last_val != value)
