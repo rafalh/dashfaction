@@ -332,7 +332,7 @@ cleanup:
     return bRet;
 }
 
-static bool DisplayDownloadDialog(const char *szBuf)
+static bool DisplayDownloadDialog(char *szBuf)
 {
     char szMsgBuf[256], *pszName, *pszAuthor, *pszDescr, *pszSize, *pszTicketId, *pszEnd;
     const char *ppszBtnTitles[] = {"Cancel", "Download"};

@@ -4,6 +4,7 @@
 #include <MemUtils.h>
 #include <AsmOpcodes.h>
 #include <log/Logger.h>
+#include "Traits.h"
 
 class CallHook2Impl {
 protected:
@@ -68,5 +69,6 @@ public:
 
 #ifdef __cpp_deduction_guides
 // deduction guide for lambda functions
-template<class T> CallHook2(uintptr_t addr, T) -> CallHook2<typename std::remove_pointer_t<decltype(+std::declval<T>())>>;
+template <class T>
+CallHook2(uintptr_t addr, T) -> CallHook2<typename function_traits<T>::f_type>;
 #endif

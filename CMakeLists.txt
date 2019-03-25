@@ -18,7 +18,7 @@ include_directories(include)
 add_compile_options("$<$<CONFIG:DEBUG>:-DDEBUG>")
 add_compile_options("$<$<CONFIG:RELEASE>:-DNDEBUG>")
 
-if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+if(NOT MSVC)
     # Strip binaries in Release configuration
     set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
@@ -33,6 +33,13 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 if(MSVC)
     add_compile_options(/Zc:threadSafeInit-)
     add_compile_options(/arch:IA32)
+	# Static linked CRT
+	add_compile_options(
+        "$<$<CONFIG:Debug>:/MTd>"
+        "$<$<CONFIG:RelWithDebInfo>:/MT>"
+        "$<$<CONFIG:Release>:/MT>"
+        "$<$<CONFIG:MinSizeRel>:/MT>"
+    )
 endif()
 
 # FIXME

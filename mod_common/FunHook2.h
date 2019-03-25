@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <log/Logger.h>
 #include <subhook.h>
+#include "Traits.h"
 
 class FunHook2Impl {
 protected:
@@ -63,5 +64,5 @@ public:
 #ifdef __cpp_deduction_guides
 // deduction guide for lambda functions
 template <class T>
-FunHook2(uintptr_t addr, T)->FunHook2<typename std::remove_pointer_t<decltype(+std::declval<T>())>>;
+FunHook2(uintptr_t addr, T)->FunHook2<typename function_traits<T>::f_type>;
 #endif

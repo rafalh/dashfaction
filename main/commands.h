@@ -2,6 +2,7 @@
 
 #include "rf.h"
 #include <functional>
+#include <Traits.h>
 
 namespace rf
 {
@@ -75,7 +76,7 @@ private:
     const char *m_usage_text;
 
 public:
-    DcCommand2(const char *name, void(*handler_fun)(Args...) ,
+    DcCommand2(const char *name, void(*handler_fun)(Args...),
         const char *description = nullptr, const char *usage_text = nullptr) :
         m_handler_fun(handler_fun), m_usage_text(usage_text)
     {
@@ -84,13 +85,19 @@ public:
         pfnHandler = (void (*)()) StaticHandler;
     }
 
+
+    DcCommand2(std::function<void(Args...)> handler_fun, int a)
+    {
+        
+    }
+
     void Register()
     {
         CommandRegister(this);
     }
 
 private:
-    static __fastcall void StaticHandler(DcCommand2 *cmd)
+    static void __fastcall StaticHandler(DcCommand2 *cmd)
     {
         cmd->Handler();
     }
@@ -124,17 +131,19 @@ private:
     }
 };
 
+// TODO: move to different header
+
 #ifdef __cpp_deduction_guides
 // deduction guide for lambda functions
 template <class T>
 DcCommand2(const char *, T)
-    -> DcCommand2<typename std::remove_pointer_t<decltype(+std::declval<T>())>>;
+    -> DcCommand2<typename function_traits<T>::f_type>;
 template <class T>
 DcCommand2(const char *, T, const char *)
-    -> DcCommand2<typename std::remove_pointer_t<decltype(+std::declval<T>())>>;
+    -> DcCommand2<typename function_traits<T>::f_type>;
 template <class T>
 DcCommand2(const char *, T, const char *, const char *)
-    -> DcCommand2<typename std::remove_pointer_t<decltype(+std::declval<T>())>>;
+    -> DcCommand2<typename function_traits<T>::f_type>;
 #endif
 
 void CommandsInit();

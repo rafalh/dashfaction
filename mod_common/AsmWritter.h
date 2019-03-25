@@ -405,7 +405,7 @@ private:
 template<>
 inline AsmWritter &AsmWritter::fstp<double>(const AsmRegMem &regMem)
 {
-    WriteMem<i8>(m_addr++, 0xDD);
+    WriteMem<u8>(m_addr++, 0xDD);
     writeModRm(regMem, 3);
     return *this;
 }

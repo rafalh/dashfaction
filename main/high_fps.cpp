@@ -9,6 +9,7 @@
 #include <ShortTypes.h>
 #include <unordered_map>
 #include <unordered_set>
+#include <array>
 
 constexpr auto reference_fps = 30.0f;
 constexpr auto reference_framerate = 1.0f / reference_fps;
@@ -34,12 +35,12 @@ public:
     FtolAccuracyFix(uintptr_t ftol_call_addr, std::optional<AsmRegMem> key_loc = {}) :
         m_ftol_call_addr(ftol_call_addr), m_key_loc_opt(key_loc) {}
 
-    long ftol(double value, void *key)
+    static long __fastcall ftol(FtolAccuracyFix *this_, void *edx, double value, void *key)
     {
-        auto& state = m_state_map[key];
+        auto& state = this_->m_state_map[key];
 
         if (state.num_calls_in_frame > 0 && state.last_val != value)
-            TRACE("Different ftol argument during a single frame in address %p", m_ftol_call_addr);
+            TRACE("Different ftol argument during a single frame in address %p", this_->m_ftol_call_addr);
 
         value += state.remainder;
         long result = static_cast<long>(value);
@@ -141,8 +142,8 @@ void FtolIssuesDetectionDoFrame()
         for (auto p : g_ftol_debug_info_map) {
             auto& info_60 = p.second;
             auto& info_30 = g_ftol_debug_info_map_old[p.first];
-            float avg_60 = info_60.val_sum / info_60.num_calls;
-            float avg_30 = info_30.val_sum / info_30.num_calls;
+            float avg_60 = static_cast<float>(info_60.val_sum / info_60.num_calls);
+            float avg_30 = static_cast<float>(info_30.val_sum / info_30.num_calls);
             float value_ratio = avg_60 / avg_30;
             float framerate_ratio = 30.0f / 60.0f;
             float ratio = value_ratio / framerate_ratio;

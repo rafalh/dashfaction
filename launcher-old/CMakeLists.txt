@@ -5,5 +5,5 @@ if(NOT MSVC)
 endif()
 
 file(GLOB SRCS *.cpp *.h *.rc)
-add_executable(DashFactionLauncher_OLD WIN32 ${SRCS})
+add_executable(DashFactionLauncher_OLD ${SRCS})
 target_link_libraries(DashFactionLauncher_OLD shlwapi wininet)

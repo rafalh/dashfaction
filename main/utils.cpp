@@ -4,6 +4,8 @@
 #include "Exception.h"
 #ifdef __GNUC__
   #include <cpuid.h>
+#else
+  #include <intrin.h>
 #endif
 
 const char *stristr(const char *haystack, const char *needle)
