@@ -55,7 +55,7 @@ FunHook2<void(const char**, const char**)> GetVersionStr_Hook{
         g_VersionLabelX = 430 - g_VersionLabelWidth;
         g_VersionLabelWidth = g_VersionLabelWidth + 5;
         g_VersionLabelHeight = g_VersionLabelHeight + 2;
-    }
+    },
 };
 
 FunHook2<int()> MenuUpdate_Hook{
@@ -97,7 +97,7 @@ CallHook2<void()> MenuMainProcessMouse_Hook{
                     g_EggAnimStart = GetTickCount();
             }
         }
-    }
+    },
 };
 
 int LoadEasterEggImage()
@@ -159,7 +159,7 @@ CallHook2<void()> MenuMainRender_Hook{
             }
             rf::GrDrawImage(img, pos_x, pos_y, rf::g_GrBitmapMaterial);
         }
-    }
+    },
 };
 
 void SetPlaySoundEventsVolumeScale(float volume_scale)
@@ -178,7 +178,7 @@ CallHook2<void(int, rf::Vector3*, float*, float*, float)> SndConvertVolume3D_Amb
     [](int game_snd_id, rf::Vector3* sound_pos, float* pan_out, float* volume_out, float volume_in) {
         SndConvertVolume3D_AmbientSound_Hook.CallTarget(game_snd_id, sound_pos, pan_out, volume_out, volume_in);
         *volume_out *= g_game_config.levelSoundVolume;
-    }
+    },
 };
 
 FunHook2<void()> MouseUpdateDirectInput_Hook{
@@ -190,7 +190,7 @@ FunHook2<void()> MouseUpdateDirectInput_Hook{
         POINT pt{ rf::GrGetMaxWidth() / 2, rf::GrGetMaxHeight() / 2 };
         ClientToScreen(rf::g_hWnd, &pt);
         SetCursorPos(pt.x, pt.y);
-    }
+    },
 };
 
 bool IsHoldingAssaultRifle()
@@ -206,7 +206,7 @@ FunHook2<void(rf::Player*, bool, bool)> PlayerLocalFireControl_Hook{
         if (g_game_config.swapAssaultRifleControls && IsHoldingAssaultRifle())
             secondary = !secondary;
         PlayerLocalFireControl_Hook.CallTarget(player, secondary, was_pressed);
-    }
+    },
 };
 
 extern CallHook2<char(rf::ControlConfig*, rf::GameCtrl, bool*)> IsEntityCtrlActive_Hook1;
@@ -287,7 +287,7 @@ CallHook2<void()> OsInitWindow_Server_Hook{ 0x004B27C5,
 
         //std::thread InputThread(InputThreadProc);
         //InputThread.detach();
-    }
+    },
 };
 
 FunHook2<void(const char*, const int*)> DcPrint_Hook{
@@ -347,7 +347,7 @@ FunHook2<void(const char*, const int*)> DcPrint_Hook{
             SetConsoleTextAttribute(Output_handle, GrayAttr);
 
         //PrintCmdInputLine();
-    }
+    },
 };
 
 CallHook2<void()> DcPutChar_NewLine_Hook{
@@ -355,7 +355,7 @@ CallHook2<void()> DcPutChar_NewLine_Hook{
     [] {
         HANDLE Output_handle = GetStdHandle(STD_OUTPUT_HANDLE);
         WriteConsoleA(Output_handle, "\r\n", 2, NULL, NULL);
-    }
+    },
 };
 
 FunHook2<void()> DcDrawServerConsole_Hook{
@@ -368,7 +368,7 @@ FunHook2<void()> DcDrawServerConsole_Hook{
             PrintCmdInputLine();
             strncpy(PrevCmdLine, g_DcCmdLine, std::size(PrevCmdLine));
         }
-    }
+    },
 };
 
 FunHook2<int()> KeyGetFromQueue_Hook{
@@ -390,7 +390,7 @@ FunHook2<int()> KeyGetFromQueue_Hook{
         }
 
         return KeyGetFromQueue_Hook.CallTarget();
-    }
+    },
 };
 
 #endif // SERVER_WIN32_CONSOLE
@@ -428,7 +428,7 @@ FunHook2<int(void*, void*)> GeomCachePrepareRoom_Hook{
             }
         }
         return ret;
-    }
+    },
 };
 
 struct ServerListEntry
@@ -457,7 +457,7 @@ FunHook2<int (const int&, const int&)> ServerListCmpFunc_Hook{
             return has_ping1 ? -1 : 1;
         else
             return ServerListCmpFunc_Hook.CallTarget(index1, index2);
-    }
+    },
 };
 
 constexpr int CHAT_MSG_MAX_LEN = 224;
@@ -467,7 +467,7 @@ FunHook2<void(uint16_t)> ChatSayAddChar_Hook{
     [](uint16_t key) {
         if (key)
             ChatSayAddChar_Hook.CallTarget(key);
-    }
+    },
 };
 
 FunHook2<void(const char*, bool)> ChatSayAccept_Hook{
@@ -477,7 +477,7 @@ FunHook2<void(const char*, bool)> ChatSayAccept_Hook{
         if (msg_str.size() > CHAT_MSG_MAX_LEN)
             msg_str.resize(CHAT_MSG_MAX_LEN);
         ChatSayAccept_Hook.CallTarget(msg_str.c_str(), is_team_msg);
-    }
+    },
 };
 
 constexpr uint8_t TRIGGER_CLIENT_SIDE = 0x2;
@@ -535,7 +535,7 @@ FunHook2<void(rf::TriggerObj*, int32_t, bool)> TriggerActivate_Hook{
         //rf::DcPrintf("trigger normal activation %s %d", trigger_name, ext_flags);
         TriggerActivate_Hook.CallTarget(trigger, h_entity, skip_movers);
         g_trigger_solo_player = nullptr;
-    }
+    },
 };
 
 RegsPatch TriggerCheckActivation_Patch{
@@ -565,7 +565,7 @@ RegsPatch RflLoadInternal_CheckRestoreStatus_Patch{
         strcpy(error_info, "Save file is corrupted");
         // return to RflLoadInternal failure path
         regs.eip = 0x004608CC;
-    }
+    },
 };
 
 static int g_cutscene_bg_sound_sig = -1;
@@ -625,7 +625,7 @@ FunHook2<void(bool)> MenuInGameUpdateCutscene_Hook{
 
             rf::g_sound_enabled = true;
         }
-    }
+    },
 };
 
 CallHook2<int()> PlayHardcodedBackgroundMusicForCutscene_Hook{
@@ -633,7 +633,7 @@ CallHook2<int()> PlayHardcodedBackgroundMusicForCutscene_Hook{
     []() {
         g_cutscene_bg_sound_sig = PlayHardcodedBackgroundMusicForCutscene_Hook.CallTarget();
         return g_cutscene_bg_sound_sig;
-    }
+    },
 };
 
 RegsPatch CoronaEntityCollisionTestFix{
@@ -667,7 +667,7 @@ FunHook2<void()> DoQuickSave_Hook{
     []() {
         if (CanSave())
             DoQuickSave_Hook.CallTarget();
-    }
+    },
 };
 
 auto MultiIsConnected = AddrAsRef<bool()>(0x0044AD70);
@@ -695,7 +695,7 @@ FunHook2<void(int, int)> GameEnterState_Hook{
             g_jump_to_multi_server_list = false;
             rf::g_sound_enabled = true;
         }
-    }
+    },
 };
 
 FunHook2<void()> MultiAfterPlayersPackets_Hook{
@@ -703,7 +703,7 @@ FunHook2<void()> MultiAfterPlayersPackets_Hook{
     []() {
         MultiAfterPlayersPackets_Hook.CallTarget();
         g_jump_to_multi_server_list = true;
-    }
+    },
 };
 
 rf::Vector3 ForwardVectorFromNonLinearYawPitch(float yaw, float pitch)
@@ -809,7 +809,7 @@ RegsPatch LinearPitchPatch{
         float new_pitch_delta = new_pitch_non_lin - current_pitch_non_lin;
         TRACE("non-lin %f lin %f delta %f new %f", current_pitch_non_lin, current_pitch_lin, pitch_delta, new_pitch_delta);
         pitch_delta = new_pitch_delta;
-    }
+    },
 };
 
 DcCommand2 linear_pitch_cmd{

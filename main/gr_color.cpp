@@ -168,7 +168,7 @@ FunHook2<int(int, const uint8_t*, const uint8_t*, int, int, rf::BmPixelFormat, v
 
         WARN("Color conversion failed (format %d -> %d)", pixel_fmt, tex_pixel_fmt);
         return GrD3DSetTextureData_Hook.CallTarget(level, src_bits_ptr, palette, bm_w, bm_h, pixel_fmt, a7, tex_w, tex_h, texture);
-    }
+    },
 };
 
 void RflLoadLightmaps_004ED3F6(rf::RflLightmap* lightmap)
@@ -305,7 +305,7 @@ FunHook2<unsigned()> BinkInitDeviceInfo_Hook{
         }
 
         return bink_flags;
-    }
+    },
 };
 
 void GrColorInit()

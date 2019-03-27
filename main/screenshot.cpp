@@ -94,7 +94,7 @@ CallHook2<rf::BmPixelFormat(int, int, int, int, byte*)> GrD3DReadBackBuffer_Hook
             back_buffer->Release();
 
         return pixel_fmt;
-    }
+    },
 };
 
 void InitScreenshot()

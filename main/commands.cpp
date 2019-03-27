@@ -83,7 +83,7 @@ DcCommand2 SplitScreenCmd{
         else
             rf::DcPrintf("Works only in multiplayer game!");
     },
-    "Starts split screen mode"
+    "Starts split screen mode",
 };
 
 #endif // SPLITSCREEN_ENABLE
@@ -106,7 +106,7 @@ DcCommand2 MaxFpsCmd{
             rf::DcPrintf("Maximal FPS: %.1f", 1.0f / rf::g_fMinFramerate);
     },
     "Sets maximal FPS",
-    "maxfps <limit>"
+    "maxfps <limit>",
 };
 
 DcCommand2 DebugCmd{
@@ -209,7 +209,7 @@ DcCommand2 DebugCmd{
     nullptr,
     "debug [thruster | light | light2 | push_climb_reg | geo_reg | glass | mover | ignite | movemode | perf | perfbar | "
     "waypoint | network | particlestats | weapon | event | trigger | objrender | roomstats | "
-    "trans | room | portal | lightmap | nolightmap]"
+    "trans | room | portal | lightmap | nolightmap]",
 };
 
 void DebugRender3d()
@@ -273,7 +273,7 @@ DcCommand2 AntiAliasingCmd{
             rf::DcPrintf("Anti-aliasing is %s", enabled ? "enabled" : "disabled");
         }
     },
-    "Toggles anti-aliasing"
+    "Toggles anti-aliasing",
 };
 #endif // MULTISAMPLING_SUPPORT
 
@@ -287,7 +287,7 @@ DcCommand2 InputModeCmd{
         else
             rf::DcPrintf("DirectInput is enabled");
     },
-    "Toggles input mode"
+    "Toggles input mode",
 };
 #endif // DIRECTINPUT_SUPPORT
 
@@ -315,7 +315,7 @@ DcCommand2 MouseSensitivityCmd{
         rf::DcPrintf("Mouse sensitivity: %.2f", rf::g_LocalPlayer->Config.Controls.fMouseSensitivity);
     },
     "Sets mouse sensitivity",
-    "ms <value>"
+    "ms <value>",
 };
 
 CallHook2<void()> CoronaRenderAll_Hook{
@@ -323,7 +323,7 @@ CallHook2<void()> CoronaRenderAll_Hook{
     []() {
         if (g_game_config.glares)
             CoronaRenderAll_Hook.CallTarget();
-    }
+    },
 };
 
 DcCommand2 VolumeLightsCmd{
@@ -333,7 +333,7 @@ DcCommand2 VolumeLightsCmd{
         g_game_config.save();
         rf::DcPrintf("Volumetric lightining is %s.", g_game_config.glares ? "disabled" : "enabled");
     },
-    "Toggles volumetric lightining"
+    "Toggles volumetric lightining",
 };
 
 DcCommand2 LevelSoundsCmd{
@@ -349,7 +349,7 @@ DcCommand2 LevelSoundsCmd{
         rf::DcPrintf("Level sound volume: %.1f", g_game_config.levelSoundVolume);
     },
     "Sets level sounds volume scale",
-    "levelsounds <volume>"
+    "levelsounds <volume>",
 };
 
 DcCommand2 PlayerCountCmd{
@@ -370,7 +370,7 @@ DcCommand2 PlayerCountCmd{
         }
         rf::DcPrintf("Player count: %d\n", player_count);
     },
-    "Get player count"
+    "Get player count",
 };
 
 DcCommand2 FindLevelCmd{
@@ -567,7 +567,7 @@ FunHook2<void()> DcAutoCompleteInput_Hook{
     0x0050A620,
     []() {
         DcAutoCompleteCommand(0);
-    }
+    },
 };
 
 RegsPatch DcRunCmd_CallHandlerPatch{

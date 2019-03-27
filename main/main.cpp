@@ -76,7 +76,7 @@ CallHook2<void(bool)> DcUpdate_Hook{
         ExperimentalRender();
 #endif
         DebugRender2d();
-    }
+    },
 };
 
 CallHook2<void()> InitGame_Hook{
@@ -100,7 +100,7 @@ CallHook2<void()> InitGame_Hook{
         ScreenshotAfterGameInit();
 
         INFO("Game initialized (%u ms).", GetTickCount() - start_ticks);
-    }
+    },
 };
 
 CallHook2<void()> CleanupGame_Hook{
@@ -110,7 +110,7 @@ CallHook2<void()> CleanupGame_Hook{
         CleanupScreenshot();
         MiscCleanup();
         CleanupGame_Hook.CallTarget();
-    }
+    },
 };
 
 CallHook2<bool()> RunGame_Hook{
@@ -120,7 +120,7 @@ CallHook2<bool()> RunGame_Hook{
         HighFpsUpdate();
 
         return RunGame_Hook.CallTarget();
-    }
+    },
 };
 
 CallHook2<void()> RenderInGame_Hook{
@@ -130,7 +130,7 @@ CallHook2<void()> RenderInGame_Hook{
         ExperimentalRenderInGame();
 #endif
         DebugRender3d();
-    }
+    },
 };
 
 FunHook2<int()> KeyGetFromFifo_Hook{
@@ -139,7 +139,7 @@ FunHook2<int()> KeyGetFromFifo_Hook{
         // Process messages here because when watching videos main loop is not running
         ProcessWaitingMessages();
         return KeyGetFromFifo_Hook.CallTarget();
-    }
+    },
 };
 
 FunHook2<void(rf::Player*)> RenderHitScreen_Hook{
@@ -150,7 +150,7 @@ FunHook2<void(rf::Player*)> RenderHitScreen_Hook{
 #if SPECTATE_MODE_ENABLE
         SpectateModeDrawUI();
 #endif
-    }
+    },
 };
 
 FunHook2<rf::Player*(bool)> PlayerCreate_Hook{
@@ -159,7 +159,7 @@ FunHook2<rf::Player*(bool)> PlayerCreate_Hook{
         rf::Player* player = PlayerCreate_Hook.CallTarget(is_local);
         KillInitPlayer(player);
         return player;
-    }
+    },
 };
 
 FunHook2<void(rf::Player*)> PlayerDestroy_Hook{
@@ -167,7 +167,7 @@ FunHook2<void(rf::Player*)> PlayerDestroy_Hook{
     [](rf::Player* player) {
         SpectateModeOnDestroyPlayer(player);
         PlayerDestroy_Hook.CallTarget(player);
-    }
+    },
 };
 
 CallHook2<void()> AfterFullGameInit_Hook{
@@ -177,7 +177,7 @@ CallHook2<void()> AfterFullGameInit_Hook{
 #if !defined(NDEBUG) && defined(HAS_EXPERIMENTAL)
         ExperimentalInitAfterGame();
 #endif
-    }
+    },
 };
 
 #ifndef NDEBUG

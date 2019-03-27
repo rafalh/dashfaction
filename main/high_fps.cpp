@@ -185,7 +185,7 @@ DcCommand2 detect_ftol_issues_cmd{
         }
         rf::DcPrintf("ftol issues detection is %s", g_ftol_issue_detection ? "enabled" : "disabled");
     },
-    "detect_ftol_issues <fps>"
+    "detect_ftol_issues <fps>",
 };
 
 #endif // DEBUG
@@ -227,7 +227,7 @@ FunHook2<int(rf::String&, rf::String&, char*)> RflLoad_Hook{
             }
         }
         return ret;
-    }
+    },
 };
 
 RegsPatch CutsceneShotSyncFix{
@@ -243,7 +243,7 @@ RegsPatch CutsceneShotSyncFix{
                 WARN("invalid shot_time_left_ms %d", shot_time_left_ms);
             regs.eax += shot_time_left_ms;
         }
-    }
+    },
 };
 
 void HighFpsInit()

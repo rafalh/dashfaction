@@ -156,7 +156,7 @@ CallHook2<void(int, rf::GrVertex**, int, int)> GrDrawRect_GrDrawPoly_Hook{
             pp_vertices[i]->ScreenPos.y -= 0.5f;
         }
         GrDrawRect_GrDrawPoly_Hook.CallTarget(num, pp_vertices, flags, mat);
-    }
+    },
 };
 
 DWORD SetupMaxAnisotropy()
@@ -186,7 +186,7 @@ CallHook2<void()> GrInitBuffers_AfterReset_Hook{
 
         if (rf::g_GrDeviceCaps.MaxAnisotropy > 0 && g_game_config.anisotropicFiltering)
             SetupMaxAnisotropy();
-    }
+    },
 };
 
 bool g_reset_device_req = false;
@@ -198,7 +198,7 @@ RegsPatch switch_d3d_mode_patch{
             g_reset_device_req = false;
             regs.eip = 0x00545017;
         }
-    }
+    },
 };
 
 DcCommand2 fullscreen_cmd{
@@ -206,7 +206,7 @@ DcCommand2 fullscreen_cmd{
     []() {
         rf::g_GrPP.Windowed = false;
         g_reset_device_req = true;
-    }
+    },
 };
 
 DcCommand2 windowed_cmd{
@@ -214,7 +214,7 @@ DcCommand2 windowed_cmd{
     []() {
         rf::g_GrPP.Windowed = true;
         g_reset_device_req = true;
-    }
+    },
 };
 
 void GraphicsInit()

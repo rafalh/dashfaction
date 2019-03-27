@@ -154,7 +154,7 @@ FunHook2<void(rf::Player*, rf::GameCtrl, bool)> HandleCtrlInGame_Hook{
         }
 
         HandleCtrlInGame_Hook.CallTarget(player, key_id, was_pressed);
-    }
+    },
 };
 
 bool IsPlayerEntityInvalid_New(rf::Player* player) {
@@ -197,7 +197,7 @@ FunHook2<void(rf::Player*)> RenderReticle_Hook{
             RenderReticle_Hook.CallTarget(g_SpectateModeTarget);
         else
             RenderReticle_Hook.CallTarget(player);
-    }
+    },
 };
 
 FunHook2<rf::EntityObj*(rf::Player*, int, const rf::Vector3*, const rf::Matrix3*, int)> PlayerCreateEntity_Hook{
@@ -209,7 +209,7 @@ FunHook2<rf::EntityObj*(rf::Player*, int, const rf::Vector3*, const rf::Matrix3*
             entity->LocalPlayer = player;
 
         return entity;
-    }
+    },
 };
 
 CallHook2<void()> GrResetClip_RenderScannerViewForLocalPlayers_Hook{
@@ -218,7 +218,7 @@ CallHook2<void()> GrResetClip_RenderScannerViewForLocalPlayers_Hook{
         if (g_SpectateModeEnabled)
             rf::PlayerRenderRocketLauncherScannerView(g_SpectateModeTarget);
         GrResetClip_RenderScannerViewForLocalPlayers_Hook.CallTarget();
-    }
+    },
 };
 
 #if SPECTATE_MODE_SHOW_WEAPON
@@ -275,7 +275,7 @@ FunHook2<void(rf::Player*)> PlayerFpgunUpdateState_Hook{
                     rf::PlayerFpgunSetState(player, state);
             }
         }
-    }
+    },
 };
 
 #endif // SPECTATE_MODE_SHOW_WEAPON

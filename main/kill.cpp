@@ -24,7 +24,7 @@ FunHook2<void()> MpResetNetGame_Hook{
                 break;
         }
         MpResetNetGame_Hook.CallTarget();
-    }
+    },
 };
 
 static const char *NullToEmpty(const char* str)

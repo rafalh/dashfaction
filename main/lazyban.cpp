@@ -76,7 +76,7 @@ DcCommand2 unban_last_cmd{
             }
         }
     },
-    "Unbans last banned player"
+    "Unbans last banned player",
 };
 
 

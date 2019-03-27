@@ -32,7 +32,7 @@ CallHook2<void(const char*, int, const rf::NwAddr&, rf::Player*)> ProcessUnrelia
     #if MASK_AS_PF
         ProcessPfPacket(data, data_len, &addr, player);
     #endif
-    }
+    },
 };
 
 class BufferOverflowPatch
@@ -272,14 +272,14 @@ RegsPatch ProcessGamePacket_whitelist_filter{
         else {
             TRACE("Processing packet 0x%X", packet_type);
         }
-    }
+    },
 };
 
 RegsPatch ProcessGameInfoPacket_GameTypeBounds_Patch{
     0x0047B30B,
     [](X86Regs& regs) {
         regs.ecx = std::clamp(regs.ecx, 0, 2);
-    }
+    },
 };
 
 FunHook2<NwPacketHandler_Type> ProcessJoinDenyPacket_Hook{
@@ -287,7 +287,7 @@ FunHook2<NwPacketHandler_Type> ProcessJoinDenyPacket_Hook{
     [](char* data, const rf::NwAddr& addr) {
         if (rf::MpIsConnectingToServer(addr)) // client-side
             ProcessJoinDenyPacket_Hook.CallTarget(data, addr);
-    }
+    },
 };
 
 FunHook2<NwPacketHandler_Type> ProcessNewPlayerPacket_Hook{
@@ -296,7 +296,7 @@ FunHook2<NwPacketHandler_Type> ProcessNewPlayerPacket_Hook{
         if (GetForegroundWindow() != rf::g_hWnd)
             Beep(750, 300);
         ProcessNewPlayerPacket_Hook.CallTarget(data, addr);
-    }
+    },
 };
 
 FunHook2<NwPacketHandler_Type> ProcessLeftGamePacket_Hook{
@@ -308,7 +308,7 @@ FunHook2<NwPacketHandler_Type> ProcessLeftGamePacket_Hook{
             data[0] = src_player->NwData->PlayerId; // fix player ID
         }
         ProcessLeftGamePacket_Hook.CallTarget(data, addr);
-    }
+    },
 };
 
 FunHook2<NwPacketHandler_Type> ProcessChatLinePacket_Hook{
@@ -322,7 +322,7 @@ FunHook2<NwPacketHandler_Type> ProcessChatLinePacket_Hook{
             data[0] = src_player->NwData->PlayerId; // fix player ID
         }
         ProcessChatLinePacket_Hook.CallTarget(data, addr);
-    }
+    },
 };
 
 FunHook2<NwPacketHandler_Type> ProcessNameChangePacket_Hook{
@@ -336,7 +336,7 @@ FunHook2<NwPacketHandler_Type> ProcessNameChangePacket_Hook{
             data[0] = src_player->NwData->PlayerId; // fix player ID
         }
         ProcessNameChangePacket_Hook.CallTarget(data, addr);
-    }
+    },
 };
 
 FunHook2<NwPacketHandler_Type> ProcessTeamChangePacket_Hook{
@@ -351,7 +351,7 @@ FunHook2<NwPacketHandler_Type> ProcessTeamChangePacket_Hook{
             data[1] = std::clamp((int)data[1], 0, 1); // team validation (fixes "green team")
         }
         ProcessTeamChangePacket_Hook.CallTarget(data, addr);
-    }
+    },
 };
 
 FunHook2<NwPacketHandler_Type> ProcessRateChangePacket_Hook{
@@ -365,7 +365,7 @@ FunHook2<NwPacketHandler_Type> ProcessRateChangePacket_Hook{
             data[0] = src_player->NwData->PlayerId; // fix player ID
         }
         ProcessRateChangePacket_Hook.CallTarget(data, addr);
-    }
+    },
 };
 
 FunHook2<NwPacketHandler_Type> ProcessEntityCreatePacket_Hook{
@@ -388,7 +388,7 @@ FunHook2<NwPacketHandler_Type> ProcessEntityCreatePacket_Hook{
         }
 
         ProcessEntityCreatePacket_Hook.CallTarget(data, addr);
-    }
+    },
 };
 
 FunHook2<NwPacketHandler_Type> ProcessReloadPacket_Hook{
@@ -408,7 +408,7 @@ FunHook2<NwPacketHandler_Type> ProcessReloadPacket_Hook{
             // Call original handler
             ProcessReloadPacket_Hook.CallTarget(data, addr);
         }
-    }
+    },
 };
 
 rf::EntityObj* SecureObjUpdatePacket(rf::EntityObj *entity, uint8_t flags, rf::Player *src_player)
@@ -435,7 +435,7 @@ FunHook2<uint8_t()> MultiAllocPlayerId_Hook{
         if (player_id == 0xFF)
             player_id = MultiAllocPlayerId_Hook.CallTarget();
         return player_id;
-    }
+    },
 };
 
 constexpr int MULTI_HANDLE_MAPPING_ARRAY_SIZE = 1024;
@@ -447,7 +447,7 @@ FunHook2<rf::Object*(int32_t)> MultiGetObjFromRemoteHandle_Hook{
         if (index >= MULTI_HANDLE_MAPPING_ARRAY_SIZE)
             return static_cast<rf::Object*>(nullptr);
         return MultiGetObjFromRemoteHandle_Hook.CallTarget(remote_handle);
-    }
+    },
 };
 
 FunHook2<int32_t(int32_t)> MultiGetLocalHandleFromRemoteHandle_Hook{
@@ -457,7 +457,7 @@ FunHook2<int32_t(int32_t)> MultiGetLocalHandleFromRemoteHandle_Hook{
         if (index >= MULTI_HANDLE_MAPPING_ARRAY_SIZE)
             return -1;
         return MultiGetLocalHandleFromRemoteHandle_Hook.CallTarget(remote_handle);
-    }
+    },
 };
 
 FunHook2<void(int32_t, int32_t)> MultiSetObjHandleMapping_Hook{
@@ -467,14 +467,14 @@ FunHook2<void(int32_t, int32_t)> MultiSetObjHandleMapping_Hook{
         if (index >= MULTI_HANDLE_MAPPING_ARRAY_SIZE)
             return;
         MultiSetObjHandleMapping_Hook.CallTarget(remote_handle, local_handle);
-    }
+    },
 };
 
 RegsPatch ProcessBooleanPacket_ValidateMeshId_Patch{
     0x004765A3,
     [](auto& regs) {
         regs.ecx = std::clamp(regs.ecx, 0, 3);
-    }
+    },
 };
 
 RegsPatch ProcessBooleanPacket_ValidateRoomId_Patch{
@@ -486,7 +486,7 @@ RegsPatch ProcessBooleanPacket_ValidateRoomId_Patch{
             regs.esp += 0x64;
             regs.eip = 0x004766A5;
         }
-    }
+    },
 };
 
 RegsPatch ProcessPregameBooleanPacket_ValidateMeshId_Patch{
@@ -505,7 +505,7 @@ RegsPatch ProcessPregameBooleanPacket_ValidateRoomId_Patch{
             regs.esp += 0x68;
             regs.eip = 0x004767AA;
         }
-    }
+    },
 };
 
 RegsPatch ProcessGlassKillPacket_CheckRoomExists_Patch{
@@ -513,7 +513,7 @@ RegsPatch ProcessGlassKillPacket_CheckRoomExists_Patch{
     [](auto &regs) {
         if (!regs.eax)
             regs.eip = 0x004723EC;
-    }
+    },
 };
 
 CallHook2<int(void*, int, int, rf::NwAddr&, int)> nw_get_packet_tracker_hook{

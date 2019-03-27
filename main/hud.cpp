@@ -38,7 +38,7 @@ DcCommand2 hud_cmd{
         WriteMem<i32>(0x006FC43C, hud_hidden ? -2 : -1);
         WriteMem<i32>(0x006FC440, hud_hidden ? -2 : -1);
     },
-    "Show and hide HUD"
+    "Show and hide HUD",
 };
 
 void HudSetupPositionsHook(int width)
