@@ -10,6 +10,13 @@ namespace rf
     struct Player;
 }
 
+void CommandsInit();
+void CommandsAfterGameInit();
+void CommandRegister(rf::DcCommand *pCmd);
+rf::Player *FindBestMatchingPlayer(const char *pszName);
+void DebugRender3d();
+void DebugRender2d();
+
 class DcInvalidArgTypeError : public std::exception {};
 class DcRequiredArgMissingError : public std::exception {};
 
@@ -65,11 +72,36 @@ inline std::optional<std::string> DcReadArg()
     return std::optional{rf::g_pszDcArg};
 }
 
+class BaseCommand : public rf::DcCommand
+{
+protected:
+    BaseCommand(const char *name, const char *description = nullptr)
+    {
+        pszCmd = name;
+        pszDescr = description;
+        pfnHandler = reinterpret_cast<void (*)()>(StaticHandler);
+    }
+
+    static void __fastcall StaticHandler(rf::DcCommand *cmd)
+    {
+        BaseCommand *cmd2 = static_cast<BaseCommand*>(cmd);
+        cmd2->Handler();
+    }
+
+    virtual void Handler() = 0;
+
+public:
+    void Register()
+    {
+        CommandRegister(this);
+    }
+};
+
 template<typename... Args>
 class DcCommand2;
 
 template<typename... Args>
-class DcCommand2<void(Args...)> : public rf::DcCommand
+class DcCommand2<void(Args...)> : public BaseCommand
 {
 private:
     std::function<void(Args...)> m_handler_fun;
@@ -78,25 +110,11 @@ private:
 public:
     DcCommand2(const char *name, void(*handler_fun)(Args...),
         const char *description = nullptr, const char *usage_text = nullptr) :
-        m_handler_fun(handler_fun), m_usage_text(usage_text)
-    {
-        pszCmd = name;
-        pszDescr = description;
-        pfnHandler = (void (*)()) StaticHandler;
-    }
-
-    void Register()
-    {
-        CommandRegister(this);
-    }
+        BaseCommand(name, description), m_handler_fun(handler_fun), m_usage_text(usage_text)
+    {}
 
 private:
-    static void __fastcall StaticHandler(DcCommand2 *cmd)
-    {
-        cmd->Handler();
-    }
-
-    void Handler()
+    void Handler() override
     {
         if (rf::g_bDcRun)
             Run();
@@ -117,15 +135,14 @@ private:
         }
     }
 
-    void Help() {
+    void Help()
+    {
         if (m_usage_text) {
             rf::DcPrint(rf::strings::usage, nullptr);
             rf::DcPrintf("     %s", m_usage_text);
         }
     }
 };
-
-// TODO: move to different header
 
 #ifdef __cpp_deduction_guides
 // deduction guide for lambda functions
@@ -140,9 +157,20 @@ DcCommand2(const char *, T, const char *, const char *)
     -> DcCommand2<typename function_traits<T>::f_type>;
 #endif
 
-void CommandsInit();
-void CommandsAfterGameInit();
-void CommandRegister(rf::DcCommand *pCmd);
-rf::Player *FindBestMatchingPlayer(const char *pszName);
-void DebugRender3d();
-void DebugRender2d();
+class DcCommandAlias : public BaseCommand
+{
+private:
+    rf::DcCommand &m_target_cmd;
+
+public:
+    DcCommandAlias(const char *name, rf::DcCommand &target_cmd) :
+        BaseCommand(name), m_target_cmd(target_cmd)
+    {}
+
+private:
+    void Handler() override
+    {
+        auto handler_fun = reinterpret_cast<void __fastcall(*)(rf::DcCommand*)>(m_target_cmd.pfnHandler);
+        handler_fun(&m_target_cmd);
+    }
+};

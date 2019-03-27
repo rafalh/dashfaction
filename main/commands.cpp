@@ -373,16 +373,27 @@ DcCommand2 PlayerCountCmd{
     "Get player count"
 };
 
-DcCommand2 FindMapCmd{
-    "findmap",
+DcCommand2 FindLevelCmd{
+    "findlevel",
     [](std::string Pattern) {
         PackfileFindMatchingFiles(StringMatcher().Infix(Pattern).Suffix(".rfl"), [](const char *pszName)
         {
             rf::DcPrintf("%s\n", pszName);
         });
     },
-    "Find map by filename fragment",
-    "findmap <query>"
+    "Find a level by a filename fragment",
+    "findlevel <query>",
+};
+
+DcCommandAlias FindMapCmd{
+    "findmap",
+    FindLevelCmd,
+};
+
+auto &LevelCmd = AddrAsRef<rf::DcCommand>(0x00637078);
+DcCommandAlias MapCmd{
+    "map",
+    LevelCmd,
 };
 
 void DcShowCmdHelp(rf::DcCommand *pCmd)
@@ -633,7 +644,9 @@ void CommandsAfterGameInit()
     VolumeLightsCmd.Register();
     LevelSoundsCmd.Register();
     PlayerCountCmd.Register();
+    FindLevelCmd.Register();
     FindMapCmd.Register();
+    MapCmd.Register();
 
 #if SPECTATE_MODE_ENABLE
     SpectateCmd.Register();

@@ -28,6 +28,8 @@ Version 1.2.2 (not released yet)
 - fix invalid player entity model when undercover (RF bug)
 - speed up server list refreshing
 - add linear_pitch command for making pitch control linear
+- add 'findlevel' command as alias for 'findmap'
+- add 'map' command as alias for 'level'
 - allow 'level' command outside of multiplayer game and remove now redundant 'levelsp' command
 - fix multiple security vulnerabilities
 - stability improvements
