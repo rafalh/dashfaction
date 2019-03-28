@@ -53,6 +53,18 @@ endif()
 #     set(CMAKE_GENERATOR_TOOLSET v141_xp)
 # endif()
 
+find_program(
+    CLANG_TIDY_EXE
+    NAMES "clang-tidy"
+    DOC "Path to clang-tidy executable"
+)
+if(NOT CLANG_TIDY_EXE)
+    message(STATUS "clang-tidy not found.")
+else()
+    message(STATUS "clang-tidy found: ${CLANG_TIDY_EXE}")
+    set(DO_CLANG_TIDY "${CLANG_TIDY_EXE}" "-fix")
+endif()
+
 add_subdirectory(vendor)
 add_subdirectory(launcher-old)
 if(CMAKE_HOST_WIN32)
