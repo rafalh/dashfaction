@@ -4,6 +4,7 @@
 #include <MemUtils.h>
 #include <AsmOpcodes.h>
 #include <log/Logger.h>
+#include "ShortTypes.h"
 #include "Traits.h"
 
 class CallHook2Impl {

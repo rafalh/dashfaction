@@ -1,6 +1,6 @@
 #pragma once
 
-#include <windows.h>
+#include <windef.h>
 
 #define WINBOOL BOOL
 #include <d3d8.h>

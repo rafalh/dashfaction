@@ -1,3 +1,7 @@
+#include <FunHook2.h>
+#include <CallHook2.h>
+#include <windef.h>
+#include <shlwapi.h>
 #include "stdafx.h"
 #include "rf.h"
 #include "rfproto.h"
@@ -5,8 +9,6 @@
 #include "BuildConfig.h"
 #include "utils.h"
 #include "scoreboard.h"
-#include <FunHook2.h>
-#include <CallHook2.h>
 
 #if SPECTATE_MODE_ENABLE
 

@@ -30,6 +30,7 @@ file(GLOB SRCS *.cpp *.h *.res)
 add_library(DashFaction SHARED ${SRCS})
 set_property(TARGET DashFaction PROPERTY CXX_STANDARD 17)
 set_property(TARGET DashFaction PROPERTY PREFIX "")
+cotire(DashFaction)
 
 target_link_libraries(DashFaction
     psapi

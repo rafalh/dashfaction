@@ -4,6 +4,7 @@
 #include "rf.h"
 #include "main.h"
 #include "xxhash.h"
+#include <shlwapi.h>
 #include <ShortTypes.h>
 
 #define DEBUG_VFS 0

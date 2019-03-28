@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.0)
 project(DashFaction)
 
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+include(cotire)
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 if(MSVC)
@@ -12,6 +15,9 @@ if(MSVC)
         -D_CRT_SECURE_NO_DEPRECATE
     )
 endif()
+
+# needed for PROCESS_DEP_ENABLE on MinGW
+add_definitions(-D_WIN32_WINNT=0x0601)
 
 include_directories(include)
 

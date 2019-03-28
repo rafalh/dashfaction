@@ -1,6 +1,6 @@
 #pragma once
 
-#include <windows.h>
+#include <windef.h>
 
 /*  To use this exported function of dll, include this header
  *  in your project.

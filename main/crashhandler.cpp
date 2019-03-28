@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "crashhandler.h"
+#include <windows.h>
 #include <log/Logger.h>
 
 static WCHAR g_ModulePath[MAX_PATH];

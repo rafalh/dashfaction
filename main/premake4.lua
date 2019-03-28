@@ -34,20 +34,17 @@ project "DashFaction"
 		"xxhash",
 		"gdi32",
 	}
-	
-	pchheader "stdafx.h"
-	pchsource "stdafx.cpp"
-	
+
 	-- fix target name in cross-compilation
 	targetextension ".dll"
 	targetprefix ""
 
 	configuration "vs*"
 		linkoptions { "/DEBUG" } -- generate PDB files
-	
+
 	configuration "Debug"
 		targetdir "../bin/debug"
-	
+
 	configuration "Release"
 		targetdir "../bin/release"
 

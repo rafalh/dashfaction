@@ -2,8 +2,13 @@
 #include "utils.h"
 #include "rf.h"
 #include "Exception.h"
+#include <iomanip>
+#include <map>
+
 #ifdef __GNUC__
-  #include <cpuid.h>
+  #ifndef __cpuid
+    #include <cpuid.h>
+  #endif
 #else
   #include <intrin.h>
 #endif

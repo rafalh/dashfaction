@@ -1,7 +1,6 @@
 #pragma once
 
-#include <windows.h>
-#include <stdint.h>
+#include <windef.h>
 #include <log/Logger.h>
 
 const char *stristr(const char *haystack, const char *needle);

@@ -1,9 +1,14 @@
-#include "stdafx.h"
+#include <BuildConfig.h>
+#include <ShortTypes.h>
+#include <AsmWritter.h>
+#include <windows.h>
+#include <wininet.h>
+#include <unrar/dll.hpp>
+#include <unzip.h>
 #include "autodl.h"
 #include "rf.h"
 #include "rfproto.h"
 #include "utils.h"
-#include <ShortTypes.h>
 
 #ifdef LEVELS_AUTODOWNLOADER
 
