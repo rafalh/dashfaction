@@ -206,7 +206,7 @@ FunHook2<void()> MouseUpdateDirectInput_Hook{
 bool IsHoldingAssaultRifle()
 {
     static auto &assault_rifle_cls_id = AddrAsRef<int>(0x00872470);
-    rf::EntityObj *entity = rf::EntityGetFromHandle(rf::g_LocalPlayer->hEntity);
+    rf::EntityObj *entity = rf::EntityGetFromHandle(rf::g_LocalPlayer->Entity_handle);
     return entity && entity->WeaponInfo.WeaponClsId == assault_rifle_cls_id;
 }
 
@@ -248,29 +248,29 @@ static const auto KeyProcessEvent = (void(*)(int ScanCode, int KeyDown, int Delt
 
 void ResetConsoleCursorColumn(bool clear)
 {
-    HANDLE hOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+    HANDLE Output_handle = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_SCREEN_BUFFER_INFO ScrBufInfo;
-    GetConsoleScreenBufferInfo(hOutput, &ScrBufInfo);
+    GetConsoleScreenBufferInfo(Output_handle, &ScrBufInfo);
     if (ScrBufInfo.dwCursorPosition.X == 0)
         return;
     COORD NewPos = ScrBufInfo.dwCursorPosition;
     NewPos.X = 0;
-    SetConsoleCursorPosition(hOutput, NewPos);
+    SetConsoleCursorPosition(Output_handle, NewPos);
     if (clear) {
         for (int i = 0; i < ScrBufInfo.dwCursorPosition.X; ++i)
-            WriteConsoleA(hOutput, " ", 1, NULL, NULL);
-        SetConsoleCursorPosition(hOutput, NewPos);
+            WriteConsoleA(Output_handle, " ", 1, NULL, NULL);
+        SetConsoleCursorPosition(Output_handle, NewPos);
     }
 }
 
 void PrintCmdInputLine()
 {
-    HANDLE hOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+    HANDLE Output_handle = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_SCREEN_BUFFER_INFO ScrBufInfo;
-    GetConsoleScreenBufferInfo(hOutput, &ScrBufInfo);
-    WriteConsoleA(hOutput, "] ", 2, NULL, NULL);
+    GetConsoleScreenBufferInfo(Output_handle, &ScrBufInfo);
+    WriteConsoleA(Output_handle, "] ", 2, NULL, NULL);
     unsigned Offset = std::max(0, (int)g_cchDcCmdLineLen - ScrBufInfo.dwSize.X + 3);
-    WriteConsoleA(hOutput, g_szDcCmdLine + Offset, g_cchDcCmdLineLen - Offset, NULL, NULL);
+    WriteConsoleA(Output_handle, g_szDcCmdLine + Offset, g_cchDcCmdLineLen - Offset, NULL, NULL);
 }
 
 BOOL WINAPI ConsoleCtrlHandler(DWORD fdwCtrlType)
@@ -303,7 +303,7 @@ CallHook2<void()> OsInitWindow_Server_Hook{ 0x004B27C5,
 FunHook2<void(const char*, const int*)> DcPrint_Hook{
     reinterpret_cast<uintptr_t>(DcPrint),
     [](const char* Text, const int* Color) {
-        HANDLE hOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+        HANDLE Output_handle = GetStdHandle(STD_OUTPUT_HANDLE);
         constexpr WORD RedAttr = FOREGROUND_RED | FOREGROUND_INTENSITY;
         constexpr WORD BlueAttr = FOREGROUND_BLUE | FOREGROUND_INTENSITY;
         constexpr WORD WhiteAttr = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY;
@@ -342,19 +342,19 @@ FunHook2<void(const char*, const int*)> DcPrint_Hook{
 
             if (CurrentAttr != Attr) {
                 CurrentAttr = Attr;
-                SetConsoleTextAttribute(hOutput, Attr);
+                SetConsoleTextAttribute(Output_handle, Attr);
             }
 
             DWORD NumChars = EndPtr - Ptr;
-            WriteFile(hOutput, Ptr, NumChars, NULL, NULL);
+            WriteFile(Output_handle, Ptr, NumChars, NULL, NULL);
             Ptr = EndPtr;
         }
 
         if (Ptr > Text && Ptr[-1] != '\n')
-            WriteFile(hOutput, "\n", 1, NULL, NULL);
+            WriteFile(Output_handle, "\n", 1, NULL, NULL);
 
         if (CurrentAttr != GrayAttr)
-            SetConsoleTextAttribute(hOutput, GrayAttr);
+            SetConsoleTextAttribute(Output_handle, GrayAttr);
 
         //PrintCmdInputLine();
     }
@@ -363,8 +363,8 @@ FunHook2<void(const char*, const int*)> DcPrint_Hook{
 CallHook2<void()> DcPutChar_NewLine_Hook{
     0x0050A081,
     [] {
-        HANDLE hOutput = GetStdHandle(STD_OUTPUT_HANDLE);
-        WriteConsoleA(hOutput, "\r\n", 2, NULL, NULL);
+        HANDLE Output_handle = GetStdHandle(STD_OUTPUT_HANDLE);
+        WriteConsoleA(Output_handle, "\r\n", 2, NULL, NULL);
     }
 };
 
@@ -372,7 +372,7 @@ FunHook2<void()> DcDrawServerConsole_Hook{
     0x0050A770,
     []() {
         static char PrevCmdLine[1024];
-        HANDLE hOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+        HANDLE Output_handle = GetStdHandle(STD_OUTPUT_HANDLE);
         if (strncmp(g_szDcCmdLine, PrevCmdLine, _countof(PrevCmdLine)) != 0) {
             ResetConsoleCursorColumn(true);
             PrintCmdInputLine();
@@ -387,13 +387,13 @@ FunHook2<int()> KeyGetFromQueue_Hook{
         if (!rf::g_IsDedicatedServer)
             return KeyGetFromQueue_Hook.CallTarget();
 
-        HANDLE hInput = GetStdHandle(STD_INPUT_HANDLE);
+        HANDLE Input_handle = GetStdHandle(STD_INPUT_HANDLE);
         INPUT_RECORD InputRecord;
         DWORD NumRead = 0;
         while (false) {
-            if (!PeekConsoleInput(hInput, &InputRecord, 1, &NumRead) || NumRead == 0)
+            if (!PeekConsoleInput(Input_handle, &InputRecord, 1, &NumRead) || NumRead == 0)
                 break;
-            if (!ReadConsoleInput(hInput, &InputRecord, 1, &NumRead) || NumRead == 0)
+            if (!ReadConsoleInput(Input_handle, &InputRecord, 1, &NumRead) || NumRead == 0)
                 break;
             if (InputRecord.EventType == KEY_EVENT)
                 KeyProcessEvent(InputRecord.Event.KeyEvent.wVirtualScanCode, InputRecord.Event.KeyEvent.KeyDown, 0);

@@ -38,7 +38,7 @@ void OnPlayerKill(rf::Player *killed_player, rf::Player *killer_player)
     const char *mui_msg;
     rf::ChatMsgColor color_id;
 
-    rf::EntityObj* killer_entity = killer_player ? rf::EntityGetFromHandle(killer_player->hEntity) : nullptr;
+    rf::EntityObj* killer_entity = killer_player ? rf::EntityGetFromHandle(killer_player->Entity_handle) : nullptr;
 
     if (!killer_player) {
         color_id = rf::ChatMsgColor::default_;

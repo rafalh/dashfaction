@@ -14,7 +14,7 @@
 
 namespace rf {
 
-static const auto IsEntityLoopFire = (bool(*)(int hEntity, signed int WeaponClsId))0x0041A830;
+static const auto IsEntityLoopFire = (bool(*)(int Entity_handle, signed int WeaponClsId))0x0041A830;
 static const auto EntityIsSwimming = (bool(*)(EntityObj *Entity))0x0042A0A0;
 static const auto EntityIsFalling = (bool(*)(EntityObj *Entit))0x0042A020;
 
@@ -73,7 +73,7 @@ void SpectateModeSetTargetPlayer(rf::Player *Player)
 
 #if SPECTATE_MODE_SHOW_WEAPON
         g_SpectateModeTarget->Flags &= ~(1 << 4);
-        rf::EntityObj *Entity = rf::EntityGetFromHandle(g_SpectateModeTarget->hEntity);
+        rf::EntityObj *Entity = rf::EntityGetFromHandle(g_SpectateModeTarget->Entity_handle);
         if (Entity)
             Entity->LocalPlayer = NULL;
 #endif // SPECTATE_MODE_SHOW_WEAPON
@@ -87,7 +87,7 @@ void SpectateModeSetTargetPlayer(rf::Player *Player)
 
 #if SPECTATE_MODE_SHOW_WEAPON
     Player->Flags |= 1 << 4;
-    rf::EntityObj *Entity = rf::EntityGetFromHandle(Player->hEntity);
+    rf::EntityObj *Entity = rf::EntityGetFromHandle(Player->Entity_handle);
     if (Entity)
     {
         // make sure weapon mesh is loaded now
@@ -227,7 +227,7 @@ static void PlayerFpgunRender_New(rf::Player *Player)
 {
     if (g_SpectateModeEnabled)
     {
-        rf::EntityObj *Entity = rf::EntityGetFromHandle(g_SpectateModeTarget->hEntity);
+        rf::EntityObj *Entity = rf::EntityGetFromHandle(g_SpectateModeTarget->Entity_handle);
 
         // HACKFIX: RF uses function PlayerSetRemoteChargeVisible for local player only
         g_SpectateModeTarget->WeaponInfo.RemoteChargeVisible = (Entity && Entity->WeaponInfo.WeaponClsId == rf::g_RemoteChargeClsId);
@@ -260,7 +260,7 @@ FunHook2<void(rf::Player*)> PlayerFpgunUpdateState_Hook{
     [](rf::Player* player) {
         PlayerFpgunUpdateState_Hook.CallTarget(player);
         if (player != rf::g_LocalPlayer) {
-            rf::EntityObj* entity = rf::EntityGetFromHandle(player->hEntity);
+            rf::EntityObj* entity = rf::EntityGetFromHandle(player->Entity_handle);
             if (entity) {
                 float fHorzSpeedPow2 = entity->_Super.PhysInfo.Vel.x * entity->_Super.PhysInfo.Vel.x
                     + entity->_Super.PhysInfo.Vel.z * entity->_Super.PhysInfo.Vel.z;
@@ -367,7 +367,7 @@ void SpectateModeDrawUI()
     snprintf(Buf, sizeof(Buf), "Spectating: %s", g_SpectateModeTarget->strName.CStr());
     rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, x + cx / 2, y + cy / 2 - cyFont / 2 - 5, Buf, g_LargeFont, rf::g_GrTextMaterial);
 
-    rf::EntityObj *Entity = rf::EntityGetFromHandle(g_SpectateModeTarget->hEntity);
+    rf::EntityObj *Entity = rf::EntityGetFromHandle(g_SpectateModeTarget->Entity_handle);
     if (!Entity)
     {
         rf::GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);

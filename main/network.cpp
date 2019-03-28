@@ -772,8 +772,8 @@ rf::EntityObj* SecureObjUpdatePacket(rf::EntityObj *entity, uint8_t flags, rf::P
 {
     if (rf::g_IsLocalNetworkGame) {
         // server-side
-        if (entity && entity->_Super.Handle != src_player->hEntity) {
-            TRACE("Invalid ObjUpdate entity %x %x %s", entity->_Super.Handle, src_player->hEntity, src_player->strName.CStr());
+        if (entity && entity->_Super.Handle != src_player->Entity_handle) {
+            TRACE("Invalid ObjUpdate entity %x %x %s", entity->_Super.Handle, src_player->Entity_handle, src_player->strName.CStr());
             return nullptr;
         }
 

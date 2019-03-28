@@ -10,7 +10,7 @@ static bool IsMouseEnabled()
     return rf::g_MouseInitialized && rf::g_IsActive;
 }
 
-LRESULT WINAPI WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
+LRESULT WINAPI WndProc(HWND Wnd_handle, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
     //TRACE("%08x: msg %s %x %x", GetTickCount(), GetWndMsgName(Msg), wParam, lParam);
 
@@ -31,7 +31,7 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
         }
 
         rf::g_IsActive = wParam ? 1 : 0;
-        return DefWindowProcA(hWnd, Msg, wParam, lParam);
+        return DefWindowProcA(Wnd_handle, Msg, wParam, lParam);
 
     case WM_QUIT:
     case WM_CLOSE:
@@ -43,11 +43,11 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
         if (rf::g_IsDedicatedServer)
             ++rf::g_cRedrawServer;
         else
-            return DefWindowProcA(hWnd, Msg, wParam, lParam);
+            return DefWindowProcA(Wnd_handle, Msg, wParam, lParam);
         break;
 
     default:
-        return DefWindowProcA(hWnd, Msg, wParam, lParam);
+        return DefWindowProcA(Wnd_handle, Msg, wParam, lParam);
     }
 
     return 0;

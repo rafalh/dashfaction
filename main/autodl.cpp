@@ -115,9 +115,9 @@ bool UnrarVpp(const char *Path)
     OpenArchiveData.CmtBufSize = sizeof(CmtBuf);
     OpenArchiveData.OpenMode = RAR_OM_EXTRACT;
     OpenArchiveData.Callback = NULL;
-    HANDLE hArchive = RAROpenArchiveEx(&OpenArchiveData);
+    HANDLE Archive_handle = RAROpenArchiveEx(&OpenArchiveData);
 
-    if (!hArchive || OpenArchiveData.OpenResult != 0) {
+    if (!Archive_handle || OpenArchiveData.OpenResult != 0) {
         ERR("RAROpenArchiveEx failed - result %d, path %s", OpenArchiveData.OpenResult, Path);
         return false;
     }
@@ -128,7 +128,7 @@ bool UnrarVpp(const char *Path)
     memset(&OpenArchiveData.Reserved, 0, sizeof(OpenArchiveData.Reserved));
 
     while (true) {
-        int Code = RARReadHeader(hArchive, &HeaderData);
+        int Code = RARReadHeader(Archive_handle, &HeaderData);
         if (Code == ERAR_END_ARCHIVE)
             break;
 
@@ -141,7 +141,7 @@ bool UnrarVpp(const char *Path)
         if (Ext && !stricmp(Ext, ".vpp")) {
             TRACE("Unpacking %s", HeaderData.FileName);
             sprintf(Buf, "%suser_maps\\multi", rf::g_RootPath);
-            Code = RARProcessFile(hArchive, RAR_EXTRACT, Buf, NULL);
+            Code = RARProcessFile(Archive_handle, RAR_EXTRACT, Buf, NULL);
             if (Code == 0) {
                 if (!rf::PackfileLoad(HeaderData.FileName, "user_maps\\multi\\"))
                     ERR("RfLoadVpp failed - %s", HeaderData.FileName);
@@ -149,7 +149,7 @@ bool UnrarVpp(const char *Path)
         }
         else {
             TRACE("Skipping %s", HeaderData.FileName);
-            Code = RARProcessFile(hArchive, RAR_SKIP, NULL, NULL);
+            Code = RARProcessFile(Archive_handle, RAR_SKIP, NULL, NULL);
         }
 
         if (Code != 0) {
@@ -158,43 +158,43 @@ bool UnrarVpp(const char *Path)
         }
     }
 
-    if (hArchive)
-        RARCloseArchive(hArchive);
+    if (Archive_handle)
+        RARCloseArchive(Archive_handle);
     return Ret;
 }
 
 static bool FetchLevelFile(const char *TmpFileName)
 {
-    HINTERNET hInternet = NULL, hConnect = NULL, hRequest = NULL;
+    HINTERNET Internet_handle = NULL, Connect_handle = NULL, Request_handle = NULL;
     char buf[4096];
     LPCTSTR AcceptTypes[] = {TEXT("*/*"), NULL};
     DWORD dwStatus = 0, dwSize = sizeof(DWORD), dwBytesRead;
     FILE *TmpFile;
     bool Success = false;
 
-    hInternet = InternetOpen(AUTODL_AGENT_NAME, 0, NULL, NULL, 0);
-    if (!hInternet)
+    Internet_handle = InternetOpen(AUTODL_AGENT_NAME, 0, NULL, NULL, 0);
+    if (!Internet_handle)
         goto cleanup;
 
-    hConnect = InternetConnect(hInternet, AUTODL_HOST, INTERNET_DEFAULT_HTTP_PORT, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
-    if (!hConnect) {
+    Connect_handle = InternetConnect(Internet_handle, AUTODL_HOST, INTERNET_DEFAULT_HTTP_PORT, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
+    if (!Connect_handle) {
         ERR("InternetConnect failed");
         goto cleanup;
     }
 
     sprintf(buf, "downloadmap.php?ticketid=%u", g_LevelTicketId);
-    hRequest = HttpOpenRequest(hConnect, NULL, buf, NULL, NULL, AcceptTypes, INTERNET_FLAG_RELOAD, 0);
-    if (!hRequest) {
+    Request_handle = HttpOpenRequest(Connect_handle, NULL, buf, NULL, NULL, AcceptTypes, INTERNET_FLAG_RELOAD, 0);
+    if (!Request_handle) {
         ERR("HttpOpenRequest failed");
         goto cleanup;
     }
 
-    if (!HttpSendRequest(hRequest, NULL, 0, NULL, 0)) {
+    if (!HttpSendRequest(Request_handle, NULL, 0, NULL, 0)) {
         ERR("HttpSendRequest failed");
         goto cleanup;
     }
 
-    if (HttpQueryInfo(hRequest, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &dwStatus, &dwSize, NULL) && (dwStatus / 100) != 2) {
+    if (HttpQueryInfo(Request_handle, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &dwStatus, &dwSize, NULL) && (dwStatus / 100) != 2) {
         ERR("HttpQueryInfo failed or status code (%lu) is wrong", dwStatus);
         goto cleanup;
     }
@@ -205,7 +205,7 @@ static bool FetchLevelFile(const char *TmpFileName)
         goto cleanup;
     }
 
-    while (InternetReadFile(hRequest, buf, sizeof(buf), &dwBytesRead) && dwBytesRead > 0) {
+    while (InternetReadFile(Request_handle, buf, sizeof(buf), &dwBytesRead) && dwBytesRead > 0) {
         g_cbDownloadProgress += dwBytesRead;
         fwrite(buf, 1, dwBytesRead, TmpFile);
     }
@@ -216,12 +216,12 @@ static bool FetchLevelFile(const char *TmpFileName)
     Success = true;
 
 cleanup:
-    if (hRequest)
-        InternetCloseHandle(hRequest);
-    if (hConnect)
-        InternetCloseHandle(hConnect);
-    if (hInternet)
-        InternetCloseHandle(hInternet);
+    if (Request_handle)
+        InternetCloseHandle(Request_handle);
+    if (Connect_handle)
+        InternetCloseHandle(Connect_handle);
+    if (Internet_handle)
+        InternetCloseHandle(Internet_handle);
 
     return Success;
 }
@@ -268,12 +268,12 @@ cleanup:
 
 static void DownloadLevel()
 {
-    HANDLE hThread;
+    HANDLE Thread_handle;
 
     g_cbDownloadProgress = 0;
-    hThread = CreateThread(NULL, 0, DownloadLevelThread, NULL, 0, NULL);
-    if (hThread) {
-        CloseHandle(hThread);
+    Thread_handle = CreateThread(NULL, 0, DownloadLevelThread, NULL, 0, NULL);
+    if (Thread_handle) {
+        CloseHandle(Thread_handle);
         g_DownloadActive = true;
     }
     else
@@ -282,43 +282,43 @@ static void DownloadLevel()
 
 static bool FetchLevelInfo(const char *FileName, char *OutBuf, size_t OutBufSize)
 {
-    HINTERNET hInternet = NULL, hConnect = NULL, hRequest = NULL;
+    HINTERNET Internet_handle = NULL, Connect_handle = NULL, Request_handle = NULL;
     char Buf[256];
     static LPCSTR AcceptTypes[] = {"*/*", NULL};
     static char Headers[] = "Content-Type: application/x-www-form-urlencoded";
     DWORD dwBytesRead, dwStatus = 0, dwSize = sizeof(DWORD);
     bool Ret = false;
 
-    hInternet = InternetOpen(AUTODL_AGENT_NAME, 0, NULL, NULL, 0);
-    if (!hInternet) {
+    Internet_handle = InternetOpen(AUTODL_AGENT_NAME, 0, NULL, NULL, 0);
+    if (!Internet_handle) {
         ERR("InternetOpen failed");
         goto cleanup;
     }
 
-    hConnect = InternetConnect(hInternet, AUTODL_HOST, INTERNET_DEFAULT_HTTP_PORT, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
-    if (!hConnect) {
+    Connect_handle = InternetConnect(Internet_handle, AUTODL_HOST, INTERNET_DEFAULT_HTTP_PORT, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
+    if (!Connect_handle) {
         ERR("InternetConnect failed");
         goto cleanup;
     }
 
-    hRequest = HttpOpenRequest(hConnect, "POST", "findmap.php", NULL, NULL, AcceptTypes, INTERNET_FLAG_RELOAD, 0);
-    if (!hRequest) {
+    Request_handle = HttpOpenRequest(Connect_handle, "POST", "findmap.php", NULL, NULL, AcceptTypes, INTERNET_FLAG_RELOAD, 0);
+    if (!Request_handle) {
         ERR("HttpOpenRequest failed");
         goto cleanup;
     }
 
     dwSize = sprintf(Buf, "rflName=%s", FileName);
-    if (!HttpSendRequest(hRequest, Headers, sizeof(Headers) - 1, Buf, dwSize)) {
+    if (!HttpSendRequest(Request_handle, Headers, sizeof(Headers) - 1, Buf, dwSize)) {
         ERR("HttpSendRequest failed");
         goto cleanup;
     }
 
-    if (HttpQueryInfo(hRequest, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &dwStatus, &dwSize, NULL) && (dwStatus / 100) != 2) {
+    if (HttpQueryInfo(Request_handle, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &dwStatus, &dwSize, NULL) && (dwStatus / 100) != 2) {
         ERR("HttpQueryInfo failed or status code (%lu) is wrong", dwStatus);
         goto cleanup;
     }
 
-    if (!InternetReadFile(hRequest, OutBuf, OutBufSize - 1, &dwBytesRead)) {
+    if (!InternetReadFile(Request_handle, OutBuf, OutBufSize - 1, &dwBytesRead)) {
         ERR("InternetReadFile failed", NULL);
         goto cleanup;
     }
@@ -327,12 +327,12 @@ static bool FetchLevelInfo(const char *FileName, char *OutBuf, size_t OutBufSize
     Ret = true;
 
 cleanup:
-    if (hRequest)
-        InternetCloseHandle(hRequest);
-    if (hConnect)
-        InternetCloseHandle(hConnect);
-    if (hInternet)
-        InternetCloseHandle(hInternet);
+    if (Request_handle)
+        InternetCloseHandle(Request_handle);
+    if (Connect_handle)
+        InternetCloseHandle(Connect_handle);
+    if (Internet_handle)
+        InternetCloseHandle(Internet_handle);
 
     return Ret;
 }

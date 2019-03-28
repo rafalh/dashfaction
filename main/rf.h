@@ -752,7 +752,7 @@ namespace rf
         Player *Prev;
         String strName;
         PlayerFlags Flags;
-        int hEntity;
+        int Entity_handle;
         int EntityClsId;
         Vector3 field_1C;
         int field_28;
@@ -772,7 +772,7 @@ namespace rf
         char IsCrouched;
         char field_B2;
         char field_B3;
-        int hViewObj;
+        int ViewObj_handle;
         Timer WeaponSwitchTimer2;
         Timer UseKeyTimer;
         Timer field_C0;
@@ -823,7 +823,7 @@ namespace rf
 
     static const auto KillLocalPlayer = (void(*)())0x004757A0;
     static const auto IsEntityCtrlActive = (char(*)(ControlConfig *CtrlConf, GameCtrl CtrlId, bool *WasPressed))0x0043D4F0;
-    static const auto GetPlayerFromEntityHandle = (Player*(*)(int32_t hEntity))0x004A3740;
+    static const auto GetPlayerFromEntityHandle = (Player*(*)(int32_t Entity_handle))0x004A3740;
 
     typedef bool(*IsPlayerEntityInvalid_Type)(Player *Player);
     static const auto IsPlayerEntityInvalid = (IsPlayerEntityInvalid_Type)0x004A4920;
@@ -870,7 +870,7 @@ namespace rf
         int field_1D0;
         float field_1D4;
         Vector3 field_1D8;
-        int hUnkEntity;
+        int UnkEntity_handle;
         int field_1E8;
         int WaterSplash_1EC;
         int field_3C;
@@ -917,7 +917,7 @@ namespace rf
         ObjectType Type;
         int Team;
         int Handle;
-        int hOwnerEntityUnk;
+        int OwnerEntityUnk_handle;
         float fLife;
         float fArmor;
         Vector3 Pos;
@@ -930,7 +930,7 @@ namespace rf
         PhysicsInfo PhysInfo;
         int Friendliness;
         int Material;
-        int hParent;
+        int Parent_handle;
         int UnkPropId_204;
         Vector3 field_208;
         Matrix3 mat214;
@@ -998,7 +998,7 @@ namespace rf
         Vector3 BoxSize;
         DynamicArray Links;
         Timer ActivationFailedTimer;
-        int hActivationFailedEntity;
+        int ActivationFailedEntity_handle;
         Timer field_2E8;
         char OneWay;
         char _padding[3];
@@ -1085,7 +1085,7 @@ namespace rf
         int field_124;
         int field_128;
         int field_12C;
-        int hEntityUnk;
+        int EntityUnk_handle;
         Timer Timer_134;
         Vector3 field_138;
         int field_144;
@@ -1298,14 +1298,14 @@ namespace rf
         Player *LocalPlayer;
         Vector3 PitchMin;
         Vector3 PitchMax;
-        int hKillerEntity;
+        int KillerEntity_handle;
         int RiotShieldClutterHandle;
         int field_1454;
         Timer field_1458;
         int UnkClutterHandles[2];
         float fTime;
         int field_1468;
-        int hUnkEntity;
+        int UnkEntity_handle;
         int field_1470;
         Color AmbientColor;
         int field_1478;
@@ -1318,7 +1318,7 @@ namespace rf
     };
     static_assert(sizeof(EntityObj) == 0x1494, "invalid size");
 
-    typedef EntityObj *(*EntityGetFromHandle_Type)(uint32_t hEntity);
+    typedef EntityObj *(*EntityGetFromHandle_Type)(uint32_t Entity_handle);
     static const auto EntityGetFromHandle = (EntityGetFromHandle_Type)0x00426FC0;
 
     /* Weapons */

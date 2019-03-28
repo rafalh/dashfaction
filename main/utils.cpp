@@ -138,19 +138,19 @@ bool IsUserAdmin()
 
 const char *GetProcessElevationType()
 {
-    HANDLE hToken;
+    HANDLE Token_handle;
     TOKEN_ELEVATION_TYPE elevationType;
     DWORD dwSize;
 
-    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &Token_handle))
     {
         ERR("OpenProcessToken failed");
         return "unknown";
     }
-    if (!GetTokenInformation(hToken, TokenElevationType, &elevationType, sizeof(elevationType), &dwSize))
+    if (!GetTokenInformation(Token_handle, TokenElevationType, &elevationType, sizeof(elevationType), &dwSize))
         elevationType = TokenElevationTypeDefault;
 
-    CloseHandle(hToken);
+    CloseHandle(Token_handle);
 
     switch (elevationType)
     {
