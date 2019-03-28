@@ -67,13 +67,13 @@ const char *getDxErrorStr(HRESULT hr)
 
 std::string getOsVersion()
 {
-    OSVERSIONINFO verInfo;
-    verInfo.dwOSVersionInfoSize = sizeof(verInfo);
-    if (!GetVersionEx(&verInfo))
+    OSVERSIONINFO ver_info;
+    ver_info.dwOSVersionInfoSize = sizeof(ver_info);
+    if (!GetVersionEx(&ver_info))
         THROW_EXCEPTION("GetVersionEx failed");
 
     char buf[64];
-    sprintf(buf, "%lu.%lu.%lu", verInfo.dwMajorVersion, verInfo.dwMinorVersion, verInfo.dwBuildNumber);
+    sprintf(buf, "%lu.%lu.%lu", ver_info.dwMajorVersion, ver_info.dwMinorVersion, ver_info.dwBuildNumber);
     return buf;
 }
 
@@ -88,71 +88,71 @@ std::string getRealOsVersion()
         THROW_EXCEPTION("GetSystemDirectory failed");
 
     strcpy(path + count, "\\kernel32.dll");
-    DWORD verSize = GetFileVersionInfoSize(path, NULL);
-    if (verSize == 0)
+    DWORD ver_size = GetFileVersionInfoSize(path, NULL);
+    if (ver_size == 0)
         THROW_EXCEPTION("GetFileVersionInfoSize failed");
-    BYTE *ver = new BYTE[verSize];
-    if (!GetFileVersionInfo(path, 0, verSize, ver))
+    BYTE *ver = new BYTE[ver_size];
+    if (!GetFileVersionInfo(path, 0, ver_size, ver))
         THROW_EXCEPTION("GetFileVersionInfo failed");
 
     void *block;
-    UINT blockSize;
-    BOOL ret = VerQueryValueA(ver, "\\", &block, &blockSize);
-    if (!ret || blockSize < sizeof(VS_FIXEDFILEINFO))
+    UINT block_size;
+    BOOL ret = VerQueryValueA(ver, "\\", &block, &block_size);
+    if (!ret || block_size < sizeof(VS_FIXEDFILEINFO))
         THROW_EXCEPTION("VerQueryValueA returned unknown block");
-    VS_FIXEDFILEINFO *fileInfo = (VS_FIXEDFILEINFO *)block;
+    VS_FIXEDFILEINFO *file_info = (VS_FIXEDFILEINFO *)block;
 
     char buf[64];
-    sprintf(buf, "%d.%d.%d", HIWORD(fileInfo->dwProductVersionMS), LOWORD(fileInfo->dwProductVersionMS), HIWORD(fileInfo->dwProductVersionLS));
+    sprintf(buf, "%d.%d.%d", HIWORD(file_info->dwProductVersionMS), LOWORD(file_info->dwProductVersionMS), HIWORD(file_info->dwProductVersionLS));
     delete[] ver;
     return buf;
 }
 
 bool IsUserAdmin()
 {
-    SID_IDENTIFIER_AUTHORITY NtAuthority = SECURITY_NT_AUTHORITY;
-    PSID AdministratorsGroup;
+    SID_IDENTIFIER_AUTHORITY nt_authority = SECURITY_NT_AUTHORITY;
+    PSID administrators_group;
     BOOL ret = AllocateAndInitializeSid(
-        &NtAuthority,
+        &nt_authority,
         2,
         SECURITY_BUILTIN_DOMAIN_RID,
         DOMAIN_ALIAS_RID_ADMINS,
         0, 0, 0, 0, 0, 0,
-        &AdministratorsGroup);
+        &administrators_group);
     if (!ret)
     {
         ERR("AllocateAndInitializeSid failed");
         return false;
     }
 
-    BOOL isMember;
-    if (!CheckTokenMembership(NULL, AdministratorsGroup, &isMember))
+    BOOL is_member;
+    if (!CheckTokenMembership(NULL, administrators_group, &is_member))
     {
         ERR("CheckTokenMembership failed");
-        isMember = false;
+        is_member = false;
     }
-    FreeSid(AdministratorsGroup);
+    FreeSid(administrators_group);
 
-    return isMember != 0;
+    return is_member != 0;
 }
 
 const char *GetProcessElevationType()
 {
-    HANDLE Token_handle;
-    TOKEN_ELEVATION_TYPE elevationType;
-    DWORD dwSize;
+    HANDLE token_handle;
+    TOKEN_ELEVATION_TYPE elevation_type;
+    DWORD dw_size;
 
-    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &Token_handle))
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token_handle))
     {
         ERR("OpenProcessToken failed");
         return "unknown";
     }
-    if (!GetTokenInformation(Token_handle, TokenElevationType, &elevationType, sizeof(elevationType), &dwSize))
-        elevationType = TokenElevationTypeDefault;
+    if (!GetTokenInformation(token_handle, TokenElevationType, &elevation_type, sizeof(elevation_type), &dw_size))
+        elevation_type = TokenElevationTypeDefault;
 
-    CloseHandle(Token_handle);
+    CloseHandle(token_handle);
 
-    switch (elevationType)
+    switch (elevation_type)
     {
     case TokenElevationTypeDefault:
         return "default";
@@ -167,44 +167,44 @@ const char *GetProcessElevationType()
 
 std::string getCpuId()
 {
-    int cpuInfo[4] = { 0 };
+    int cpu_info[4] = { 0 };
     std::stringstream ss;
 #ifndef __GNUC__
     __cpuid(cpuInfo, 1);
 #else
-    __cpuid(1, cpuInfo[0], cpuInfo[1], cpuInfo[2], cpuInfo[3]);
+    __cpuid(1, cpu_info[0], cpu_info[1], cpu_info[2], cpu_info[3]);
 #endif
-    ss << std::hex << std::uppercase << std::setfill('0') << std::setw(8) << cpuInfo[0] << ' ' << cpuInfo[1] << ' ' << cpuInfo[2] << ' ' << cpuInfo[3];
+    ss << std::hex << std::uppercase << std::setfill('0') << std::setw(8) << cpu_info[0] << ' ' << cpu_info[1] << ' ' << cpu_info[2] << ' ' << cpu_info[3];
     return ss.str();
 }
 
 std::string getCpuBrand()
 {
-    int cpuInfo[4] = { 0 };
-    char brandStr[0x40] = "";
+    int cpu_info[4] = { 0 };
+    char brand_str[0x40] = "";
     // Get the information associated with each extended ID.
 #ifndef __GNUC__
     __cpuid(cpuInfo, 0x80000000);
 #else
-    __cpuid(0x80000000, cpuInfo[0], cpuInfo[1], cpuInfo[2], cpuInfo[3]);
+    __cpuid(0x80000000, cpu_info[0], cpu_info[1], cpu_info[2], cpu_info[3]);
 #endif
-    unsigned maxExtId = cpuInfo[0];
-    for (unsigned i = 0x80000000; i <= maxExtId; ++i)
+    unsigned max_ext_id = cpu_info[0];
+    for (unsigned i = 0x80000000; i <= max_ext_id; ++i)
     {
 #ifndef __GNUC__
     __cpuid(cpuInfo, i);
 #else
-    __cpuid(i, cpuInfo[0], cpuInfo[1], cpuInfo[2], cpuInfo[3]);
+    __cpuid(i, cpu_info[0], cpu_info[1], cpu_info[2], cpu_info[3]);
 #endif
         // Interpret CPU brand string
         if (i == 0x80000002)
-            memcpy(brandStr, cpuInfo, sizeof(cpuInfo));
+            memcpy(brand_str, cpu_info, sizeof(cpu_info));
         else if (i == 0x80000003)
-            memcpy(brandStr + 16, cpuInfo, sizeof(cpuInfo));
+            memcpy(brand_str + 16, cpu_info, sizeof(cpu_info));
         else if (i == 0x80000004)
-            memcpy(brandStr + 32, cpuInfo, sizeof(cpuInfo));
+            memcpy(brand_str + 32, cpu_info, sizeof(cpu_info));
     }
 
     //string includes manufacturer, model and clockspeed
-    return brandStr;
+    return brand_str;
 }

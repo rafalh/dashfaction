@@ -33,10 +33,10 @@ static void SetGammaRamp(D3DGAMMARAMP *gamma_ramp)
 static void GrUpdateGammaRampHook()
 {
     for (unsigned i = 0; i < 256; ++i) {
-        unsigned Val = rf::gr_gamma_ramp[i] << 8;
-        g_gamma_ramp.red[i] = Val;
-        g_gamma_ramp.green[i] = Val;
-        g_gamma_ramp.blue[i] = Val;
+        unsigned val = rf::gr_gamma_ramp[i] << 8;
+        g_gamma_ramp.red[i] = val;
+        g_gamma_ramp.green[i] = val;
+        g_gamma_ramp.blue[i] = val;
     }
 
     g_gamma_ramp_initialized = true;

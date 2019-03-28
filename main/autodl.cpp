@@ -25,11 +25,11 @@ static bool g_DownloadActive = false;
 
 bool UnzipVpp(const char *path)
 {
-    bool Ret = false;
-    int Code;
+    bool ret = false;
+    int code;
 
-    unzFile Archive = unzOpen(path);
-    if (!Archive) {
+    unzFile archive = unzOpen(path);
+    if (!archive) {
 #ifdef DEBUG
         ERR("unzOpen failed: %s", path);
 #endif
@@ -37,230 +37,230 @@ bool UnzipVpp(const char *path)
         goto cleanup;
     }
 
-    unz_global_info GlobalInfo;
-    Code = unzGetGlobalInfo(Archive, &GlobalInfo);
-    if (Code != UNZ_OK) {
-        ERR("unzGetGlobalInfo failed - error %d, path %s", Code, path);
+    unz_global_info global_info;
+    code = unzGetGlobalInfo(archive, &global_info);
+    if (code != UNZ_OK) {
+        ERR("unzGetGlobalInfo failed - error %d, path %s", code, path);
         goto cleanup;
     }
 
-    char Buf[4096], FileName[MAX_PATH];
-    unz_file_info FileInfo;
-    for (int i = 0; i < (int)GlobalInfo.number_entry; i++) {
-        Code = unzGetCurrentFileInfo(Archive, &FileInfo, FileName, sizeof(FileName), NULL, 0, NULL, 0);
-        if (Code != UNZ_OK) {
-            ERR("unzGetCurrentFileInfo failed - error %d, path %s", Code, path);
+    char buf[4096], file_name[MAX_PATH];
+    unz_file_info file_info;
+    for (int i = 0; i < (int)global_info.number_entry; i++) {
+        code = unzGetCurrentFileInfo(archive, &file_info, file_name, sizeof(file_name), NULL, 0, NULL, 0);
+        if (code != UNZ_OK) {
+            ERR("unzGetCurrentFileInfo failed - error %d, path %s", code, path);
             break;
         }
 
-        const char *Ext = strrchr(FileName, '.');
-        if (Ext && !stricmp(Ext, ".vpp"))
+        const char *ext = strrchr(file_name, '.');
+        if (ext && !stricmp(ext, ".vpp"))
         {
 #ifdef DEBUG
-            TRACE("Unpacking %s", FileName);
+            TRACE("Unpacking %s", file_name);
 #endif
-            sprintf(Buf, "%suser_maps\\multi\\%s", rf::g_RootPath, FileName);
-            FILE *File = fopen(Buf, "wb"); /* FIXME: overwrite file? */
-            if (!File) {
-                ERR("fopen failed - %s", Buf);
+            sprintf(buf, "%suser_maps\\multi\\%s", rf::g_RootPath, file_name);
+            FILE *file = fopen(buf, "wb"); /* FIXME: overwrite file? */
+            if (!file) {
+                ERR("fopen failed - %s", buf);
                 break;
             }
 
-            Code = unzOpenCurrentFile(Archive);
-            if (Code != UNZ_OK) {
-                ERR("unzOpenCurrentFile failed - error %d, path %s", Code, path);
+            code = unzOpenCurrentFile(archive);
+            if (code != UNZ_OK) {
+                ERR("unzOpenCurrentFile failed - error %d, path %s", code, path);
                 break;
             }
 
-            while ((Code = unzReadCurrentFile(Archive, Buf, sizeof(Buf))) > 0)
-                fwrite(Buf, 1, Code, File);
+            while ((code = unzReadCurrentFile(archive, buf, sizeof(buf))) > 0)
+                fwrite(buf, 1, code, file);
 
-            if (Code < 0) {
-                ERR("unzReadCurrentFile failed - error %d, path %s", Code, path);
+            if (code < 0) {
+                ERR("unzReadCurrentFile failed - error %d, path %s", code, path);
                 break;
             }
 
-            fclose(File);
-            unzCloseCurrentFile(Archive);
+            fclose(file);
+            unzCloseCurrentFile(archive);
 
-            if (!rf::PackfileLoad(FileName, "user_maps\\multi\\"))
-                ERR("RfLoadVpp failed - %s", FileName);
+            if (!rf::PackfileLoad(file_name, "user_maps\\multi\\"))
+                ERR("RfLoadVpp failed - %s", file_name);
         }
 
-        if (i + 1 < (int)GlobalInfo.number_entry) {
-            Code = unzGoToNextFile(Archive);
-            if (Code != UNZ_OK) {
-                ERR("unzGoToNextFile failed - error %d, path %s", Code, path);
+        if (i + 1 < (int)global_info.number_entry) {
+            code = unzGoToNextFile(archive);
+            if (code != UNZ_OK) {
+                ERR("unzGoToNextFile failed - error %d, path %s", code, path);
                 break;
             }
         }
     }
 
-    Ret = true;
+    ret = true;
 
 cleanup:
-    if (Archive)
-        unzClose(Archive);
-    return Ret;
+    if (archive)
+        unzClose(archive);
+    return ret;
 }
 
 bool UnrarVpp(const char *path)
 {
-    char CmtBuf[16384], Buf[256];
+    char cmt_buf[16384], buf[256];
 
-    struct RAROpenArchiveDataEx OpenArchiveData;
-    memset(&OpenArchiveData, 0, sizeof(OpenArchiveData));
-    OpenArchiveData.ArcName = (char*)path;
-    OpenArchiveData.CmtBuf = CmtBuf;
-    OpenArchiveData.CmtBufSize = sizeof(CmtBuf);
-    OpenArchiveData.OpenMode = RAR_OM_EXTRACT;
-    OpenArchiveData.Callback = NULL;
-    HANDLE Archive_handle = RAROpenArchiveEx(&OpenArchiveData);
+    struct RAROpenArchiveDataEx open_archive_data;
+    memset(&open_archive_data, 0, sizeof(open_archive_data));
+    open_archive_data.ArcName = (char*)path;
+    open_archive_data.CmtBuf = cmt_buf;
+    open_archive_data.CmtBufSize = sizeof(cmt_buf);
+    open_archive_data.OpenMode = RAR_OM_EXTRACT;
+    open_archive_data.Callback = NULL;
+    HANDLE archive_handle = RAROpenArchiveEx(&open_archive_data);
 
-    if (!Archive_handle || OpenArchiveData.OpenResult != 0) {
-        ERR("RAROpenArchiveEx failed - result %d, path %s", OpenArchiveData.OpenResult, path);
+    if (!archive_handle || open_archive_data.OpenResult != 0) {
+        ERR("RAROpenArchiveEx failed - result %d, path %s", open_archive_data.OpenResult, path);
         return false;
     }
 
-    bool Ret = true;
-    struct RARHeaderData HeaderData;
-    HeaderData.CmtBuf = NULL;
-    memset(&OpenArchiveData.Reserved, 0, sizeof(OpenArchiveData.Reserved));
+    bool ret = true;
+    struct RARHeaderData header_data;
+    header_data.CmtBuf = NULL;
+    memset(&open_archive_data.Reserved, 0, sizeof(open_archive_data.Reserved));
 
     while (true) {
-        int Code = RARReadHeader(Archive_handle, &HeaderData);
-        if (Code == ERAR_END_ARCHIVE)
+        int code = RARReadHeader(archive_handle, &header_data);
+        if (code == ERAR_END_ARCHIVE)
             break;
 
-        if (Code != 0) {
-            ERR("RARReadHeader failed - result %d, path %s", Code, path);
+        if (code != 0) {
+            ERR("RARReadHeader failed - result %d, path %s", code, path);
             break;
         }
 
-        const char *Ext = strrchr(HeaderData.FileName, '.');
-        if (Ext && !stricmp(Ext, ".vpp")) {
-            TRACE("Unpacking %s", HeaderData.FileName);
-            sprintf(Buf, "%suser_maps\\multi", rf::g_RootPath);
-            Code = RARProcessFile(Archive_handle, RAR_EXTRACT, Buf, NULL);
-            if (Code == 0) {
-                if (!rf::PackfileLoad(HeaderData.FileName, "user_maps\\multi\\"))
-                    ERR("RfLoadVpp failed - %s", HeaderData.FileName);
+        const char *ext = strrchr(header_data.FileName, '.');
+        if (ext && !stricmp(ext, ".vpp")) {
+            TRACE("Unpacking %s", header_data.FileName);
+            sprintf(buf, "%suser_maps\\multi", rf::g_RootPath);
+            code = RARProcessFile(archive_handle, RAR_EXTRACT, buf, NULL);
+            if (code == 0) {
+                if (!rf::PackfileLoad(header_data.FileName, "user_maps\\multi\\"))
+                    ERR("RfLoadVpp failed - %s", header_data.FileName);
             }
         }
         else {
-            TRACE("Skipping %s", HeaderData.FileName);
-            Code = RARProcessFile(Archive_handle, RAR_SKIP, NULL, NULL);
+            TRACE("Skipping %s", header_data.FileName);
+            code = RARProcessFile(archive_handle, RAR_SKIP, NULL, NULL);
         }
 
-        if (Code != 0) {
-            ERR("RARProcessFile failed - result %d, path %s", Code, path);
+        if (code != 0) {
+            ERR("RARProcessFile failed - result %d, path %s", code, path);
             break;
         }
     }
 
-    if (Archive_handle)
-        RARCloseArchive(Archive_handle);
-    return Ret;
+    if (archive_handle)
+        RARCloseArchive(archive_handle);
+    return ret;
 }
 
 static bool FetchLevelFile(const char *tmp_file_name)
 {
-    HINTERNET Internet_handle = NULL, Connect_handle = NULL, Request_handle = NULL;
+    HINTERNET internet_handle = NULL, connect_handle = NULL, request_handle = NULL;
     char buf[4096];
-    LPCTSTR AcceptTypes[] = {TEXT("*/*"), NULL};
-    DWORD dwStatus = 0, dwSize = sizeof(DWORD), dwBytesRead;
-    FILE *TmpFile;
-    bool Success = false;
+    LPCTSTR accept_types[] = {TEXT("*/*"), NULL};
+    DWORD dw_status = 0, dw_size = sizeof(DWORD), dw_bytes_read;
+    FILE *tmp_file;
+    bool success = false;
 
-    Internet_handle = InternetOpen(AUTODL_AGENT_NAME, 0, NULL, NULL, 0);
-    if (!Internet_handle)
+    internet_handle = InternetOpen(AUTODL_AGENT_NAME, 0, NULL, NULL, 0);
+    if (!internet_handle)
         goto cleanup;
 
-    Connect_handle = InternetConnect(Internet_handle, AUTODL_HOST, INTERNET_DEFAULT_HTTP_PORT, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
-    if (!Connect_handle) {
+    connect_handle = InternetConnect(internet_handle, AUTODL_HOST, INTERNET_DEFAULT_HTTP_PORT, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
+    if (!connect_handle) {
         ERR("InternetConnect failed");
         goto cleanup;
     }
 
     sprintf(buf, "downloadmap.php?ticketid=%u", g_LevelTicketId);
-    Request_handle = HttpOpenRequest(Connect_handle, NULL, buf, NULL, NULL, AcceptTypes, INTERNET_FLAG_RELOAD, 0);
-    if (!Request_handle) {
+    request_handle = HttpOpenRequest(connect_handle, NULL, buf, NULL, NULL, accept_types, INTERNET_FLAG_RELOAD, 0);
+    if (!request_handle) {
         ERR("HttpOpenRequest failed");
         goto cleanup;
     }
 
-    if (!HttpSendRequest(Request_handle, NULL, 0, NULL, 0)) {
+    if (!HttpSendRequest(request_handle, NULL, 0, NULL, 0)) {
         ERR("HttpSendRequest failed");
         goto cleanup;
     }
 
-    if (HttpQueryInfo(Request_handle, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &dwStatus, &dwSize, NULL) && (dwStatus / 100) != 2) {
-        ERR("HttpQueryInfo failed or status code (%lu) is wrong", dwStatus);
+    if (HttpQueryInfo(request_handle, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &dw_status, &dw_size, NULL) && (dw_status / 100) != 2) {
+        ERR("HttpQueryInfo failed or status code (%lu) is wrong", dw_status);
         goto cleanup;
     }
 
-    TmpFile = fopen(tmp_file_name, "wb");
-    if (!TmpFile) {
+    tmp_file = fopen(tmp_file_name, "wb");
+    if (!tmp_file) {
         ERR("fopen failed: %s", tmp_file_name);
         goto cleanup;
     }
 
-    while (InternetReadFile(Request_handle, buf, sizeof(buf), &dwBytesRead) && dwBytesRead > 0) {
-        g_cbDownloadProgress += dwBytesRead;
-        fwrite(buf, 1, dwBytesRead, TmpFile);
+    while (InternetReadFile(request_handle, buf, sizeof(buf), &dw_bytes_read) && dw_bytes_read > 0) {
+        g_cbDownloadProgress += dw_bytes_read;
+        fwrite(buf, 1, dw_bytes_read, tmp_file);
     }
 
     g_cbLevelSize = g_cbDownloadProgress;
 
-    fclose(TmpFile);
-    Success = true;
+    fclose(tmp_file);
+    success = true;
 
 cleanup:
-    if (Request_handle)
-        InternetCloseHandle(Request_handle);
-    if (Connect_handle)
-        InternetCloseHandle(Connect_handle);
-    if (Internet_handle)
-        InternetCloseHandle(Internet_handle);
+    if (request_handle)
+        InternetCloseHandle(request_handle);
+    if (connect_handle)
+        InternetCloseHandle(connect_handle);
+    if (internet_handle)
+        InternetCloseHandle(internet_handle);
 
-    return Success;
+    return success;
 }
 
 static DWORD WINAPI DownloadLevelThread(PVOID param)
 {
-    char TempDir[MAX_PATH], TempFileName[MAX_PATH] = "";
-    bool Success = false;
+    char temp_dir[MAX_PATH], temp_file_name[MAX_PATH] = "";
+    bool success = false;
 
     (void)param; // unused parameter
 
-    DWORD dwRetVal;
-    dwRetVal = GetTempPathA(_countof(TempDir), TempDir);
-    if (dwRetVal == 0 || dwRetVal > _countof(TempDir)) {
+    DWORD dw_ret_val;
+    dw_ret_val = GetTempPathA(_countof(temp_dir), temp_dir);
+    if (dw_ret_val == 0 || dw_ret_val > _countof(temp_dir)) {
         ERR("GetTempPath failed");
         goto cleanup;
     }
 
-    UINT RetVal;
-    RetVal = GetTempFileNameA(TempDir, "DF_Level", 0, TempFileName);
-    if (RetVal == 0) {
+    UINT ret_val;
+    ret_val = GetTempFileNameA(temp_dir, "DF_Level", 0, temp_file_name);
+    if (ret_val == 0) {
         ERR("GetTempFileName failed");
         goto cleanup;
     }
 
-    if (!FetchLevelFile(TempFileName))
+    if (!FetchLevelFile(temp_file_name))
         goto cleanup;
 
-    if (!UnzipVpp(TempFileName) && !UnrarVpp(TempFileName))
+    if (!UnzipVpp(temp_file_name) && !UnrarVpp(temp_file_name))
         ERR("UnzipVpp and UnrarVpp failed");
     else
-        Success = true;
+        success = true;
 
 cleanup:
-    if (TempFileName[0])
-        remove(TempFileName);
+    if (temp_file_name[0])
+        remove(temp_file_name);
 
     g_DownloadActive = false;
-    if (!Success)
+    if (!success)
         rf::UiMsgBox("Error!", "Failed to download level file! More information can be found in console.", nullptr, false);
 
     return 0;
@@ -268,12 +268,12 @@ cleanup:
 
 static void DownloadLevel()
 {
-    HANDLE Thread_handle;
+    HANDLE thread_handle;
 
     g_cbDownloadProgress = 0;
-    Thread_handle = CreateThread(NULL, 0, DownloadLevelThread, NULL, 0, NULL);
-    if (Thread_handle) {
-        CloseHandle(Thread_handle);
+    thread_handle = CreateThread(NULL, 0, DownloadLevelThread, NULL, 0, NULL);
+    if (thread_handle) {
+        CloseHandle(thread_handle);
         g_DownloadActive = true;
     }
     else
@@ -282,126 +282,126 @@ static void DownloadLevel()
 
 static bool FetchLevelInfo(const char *file_name, char *out_buf, size_t out_buf_size)
 {
-    HINTERNET Internet_handle = NULL, Connect_handle = NULL, Request_handle = NULL;
-    char Buf[256];
-    static LPCSTR AcceptTypes[] = {"*/*", NULL};
-    static char Headers[] = "Content-Type: application/x-www-form-urlencoded";
-    DWORD dwBytesRead, dwStatus = 0, dwSize = sizeof(DWORD);
-    bool Ret = false;
+    HINTERNET internet_handle = NULL, connect_handle = NULL, request_handle = NULL;
+    char buf[256];
+    static LPCSTR accept_types[] = {"*/*", NULL};
+    static char headers[] = "Content-Type: application/x-www-form-urlencoded";
+    DWORD dw_bytes_read, dw_status = 0, dw_size = sizeof(DWORD);
+    bool ret = false;
 
-    Internet_handle = InternetOpen(AUTODL_AGENT_NAME, 0, NULL, NULL, 0);
-    if (!Internet_handle) {
+    internet_handle = InternetOpen(AUTODL_AGENT_NAME, 0, NULL, NULL, 0);
+    if (!internet_handle) {
         ERR("InternetOpen failed");
         goto cleanup;
     }
 
-    Connect_handle = InternetConnect(Internet_handle, AUTODL_HOST, INTERNET_DEFAULT_HTTP_PORT, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
-    if (!Connect_handle) {
+    connect_handle = InternetConnect(internet_handle, AUTODL_HOST, INTERNET_DEFAULT_HTTP_PORT, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
+    if (!connect_handle) {
         ERR("InternetConnect failed");
         goto cleanup;
     }
 
-    Request_handle = HttpOpenRequest(Connect_handle, "POST", "findmap.php", NULL, NULL, AcceptTypes, INTERNET_FLAG_RELOAD, 0);
-    if (!Request_handle) {
+    request_handle = HttpOpenRequest(connect_handle, "POST", "findmap.php", NULL, NULL, accept_types, INTERNET_FLAG_RELOAD, 0);
+    if (!request_handle) {
         ERR("HttpOpenRequest failed");
         goto cleanup;
     }
 
-    dwSize = sprintf(Buf, "rflName=%s", file_name);
-    if (!HttpSendRequest(Request_handle, Headers, sizeof(Headers) - 1, Buf, dwSize)) {
+    dw_size = sprintf(buf, "rflName=%s", file_name);
+    if (!HttpSendRequest(request_handle, headers, sizeof(headers) - 1, buf, dw_size)) {
         ERR("HttpSendRequest failed");
         goto cleanup;
     }
 
-    if (HttpQueryInfo(Request_handle, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &dwStatus, &dwSize, NULL) && (dwStatus / 100) != 2) {
-        ERR("HttpQueryInfo failed or status code (%lu) is wrong", dwStatus);
+    if (HttpQueryInfo(request_handle, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &dw_status, &dw_size, NULL) && (dw_status / 100) != 2) {
+        ERR("HttpQueryInfo failed or status code (%lu) is wrong", dw_status);
         goto cleanup;
     }
 
-    if (!InternetReadFile(Request_handle, out_buf, out_buf_size - 1, &dwBytesRead)) {
+    if (!InternetReadFile(request_handle, out_buf, out_buf_size - 1, &dw_bytes_read)) {
         ERR("InternetReadFile failed", NULL);
         goto cleanup;
     }
 
-    out_buf[dwBytesRead] = '\0';
-    Ret = true;
+    out_buf[dw_bytes_read] = '\0';
+    ret = true;
 
 cleanup:
-    if (Request_handle)
-        InternetCloseHandle(Request_handle);
-    if (Connect_handle)
-        InternetCloseHandle(Connect_handle);
-    if (Internet_handle)
-        InternetCloseHandle(Internet_handle);
+    if (request_handle)
+        InternetCloseHandle(request_handle);
+    if (connect_handle)
+        InternetCloseHandle(connect_handle);
+    if (internet_handle)
+        InternetCloseHandle(internet_handle);
 
-    return Ret;
+    return ret;
 }
 
 static bool DisplayDownloadDialog(char *buf)
 {
-    char MsgBuf[256], *Name, *Author, *Descr, *Size, *TicketId, *End;
-    const char *ppszBtnTitles[] = {"Cancel", "Download"};
-    void *ppfnCallbacks[] = {NULL, (void*)DownloadLevel};
+    char msg_buf[256], *name, *author, *descr, *size, *ticket_id, *end;
+    const char *ppsz_btn_titles[] = {"Cancel", "Download"};
+    void *ppfn_callbacks[] = {NULL, (void*)DownloadLevel};
 
-    Name = strchr(buf, '\n');
-    if (!Name)
+    name = strchr(buf, '\n');
+    if (!name)
         return false;
-    *(Name++) = 0; // terminate first line with 0
+    *(name++) = 0; // terminate first line with 0
     if (strcmp(buf, "found") != 0)
         return false;
 
-    Author = strchr(Name, '\n');
-    if (!Author) // terminate name with 0
+    author = strchr(name, '\n');
+    if (!author) // terminate name with 0
         return false;
-    *(Author++) = 0;
+    *(author++) = 0;
 
-    Descr = strchr(Author, '\n');
-    if (!Descr)
+    descr = strchr(author, '\n');
+    if (!descr)
         return false;
-    *(Descr++) = 0; // terminate author with 0
+    *(descr++) = 0; // terminate author with 0
 
-    Size = strchr(Descr, '\n');
-    if (!Size)
+    size = strchr(descr, '\n');
+    if (!size)
         return false;
-    *(Size++) = 0; // terminate description with 0
+    *(size++) = 0; // terminate description with 0
 
-    TicketId = strchr(Size, '\n');
-    if (!TicketId)
+    ticket_id = strchr(size, '\n');
+    if (!ticket_id)
         return false;
-    *(TicketId++) = 0; // terminate size with 0
+    *(ticket_id++) = 0; // terminate size with 0
 
-    End = strchr(TicketId, '\n');
-    if (End)
-        *End = 0; // terminate ticket id with 0
+    end = strchr(ticket_id, '\n');
+    if (end)
+        *end = 0; // terminate ticket id with 0
 
-    g_LevelTicketId = strtoul(TicketId, NULL, 0);
-    g_cbLevelSize = (unsigned)(atof(Size) * 1024 * 1024);
+    g_LevelTicketId = strtoul(ticket_id, NULL, 0);
+    g_cbLevelSize = (unsigned)(atof(size) * 1024 * 1024);
     if (!g_LevelTicketId || !g_cbLevelSize)
         return false;
 
     TRACE("Download ticket id: %u", g_LevelTicketId);
 
-    sprintf(MsgBuf, "You don't have needed level: %s (Author: %s, Size: %s MB)\nDo you want to download it now?", Name, Author, Size);
-    rf::UiCreateDialog("Download level", MsgBuf, 2, ppszBtnTitles, ppfnCallbacks, 0, 0);
+    sprintf(msg_buf, "You don't have needed level: %s (Author: %s, Size: %s MB)\nDo you want to download it now?", name, author, size);
+    rf::UiCreateDialog("Download level", msg_buf, 2, ppsz_btn_titles, ppfn_callbacks, 0, 0);
     return true;
 }
 
 bool TryToDownloadLevel(const char *file_name)
 {
-    char Buf[256];
+    char buf[256];
 
     if (g_DownloadActive) {
         rf::UiMsgBox("Error!", "You can download only one level at once!", NULL, FALSE);
         return false;
     }
 
-    if (!FetchLevelInfo(file_name, Buf, sizeof(Buf))) {
+    if (!FetchLevelInfo(file_name, buf, sizeof(buf))) {
         ERR("Failed to fetch level information");
         return false;
     }
 
-    TRACE("Levels server response: %s", Buf);
-    if (!DisplayDownloadDialog(Buf)) {
+    TRACE("Levels server response: %s", buf);
+    if (!DisplayDownloadDialog(buf)) {
         ERR("Failed to parse level information or level not found");
         return false;
     }
@@ -412,14 +412,14 @@ bool TryToDownloadLevel(const char *file_name)
 void OnJoinFailed(unsigned reason_id)
 {
     if (reason_id == RF_LR_NO_LEVEL_FILE) {
-        char *LevelFileName = *((char**)0x646078);
+        char *level_file_name = *((char**)0x646078);
 
-        if(TryToDownloadLevel(LevelFileName))
+        if(TryToDownloadLevel(level_file_name))
             return;
     }
 
-    const char *ReasonStr = rf::GetJoinFailedReasonStr(reason_id);
-    rf::UiMsgBox(rf::strings::exiting_game, ReasonStr, NULL, 0);
+    const char *reason_str = rf::GetJoinFailedReasonStr(reason_id);
+    rf::UiMsgBox(rf::strings::exiting_game, reason_str, NULL, 0);
 }
 
 void InitAutodownloader()
@@ -430,34 +430,34 @@ void InitAutodownloader()
 
 void RenderDownloadProgress()
 {
-    char Buf[256];
-    unsigned x, y, cxProgress, cyFont;
+    char buf[256];
+    unsigned x, y, cx_progress, cy_font;
     const unsigned cx = 400, cy = 28;
 
     if (!g_DownloadActive)
         return;
 
-    cxProgress = (unsigned)((float)cx * (float)g_cbDownloadProgress / (float)g_cbLevelSize);
-    if (cxProgress > cx)
-        cxProgress = cx;
+    cx_progress = (unsigned)((float)cx * (float)g_cbDownloadProgress / (float)g_cbLevelSize);
+    if (cx_progress > cx)
+        cx_progress = cx;
 
     x = (rf::GrGetMaxWidth() - cx) / 2;
     y = rf::GrGetMaxHeight() - 50;
-    cyFont = rf::GrGetFontHeight(-1);
+    cy_font = rf::GrGetFontHeight(-1);
 
-    if (cxProgress > 0) {
+    if (cx_progress > 0) {
         rf::GrSetColor(0x80, 0x80, 0, 0x80);
-        rf::GrDrawRect(x, y, cxProgress, cy, rf::g_GrRectMaterial);
+        rf::GrDrawRect(x, y, cx_progress, cy, rf::g_GrRectMaterial);
     }
 
-    if (cx > cxProgress) {
+    if (cx > cx_progress) {
         rf::GrSetColor(0, 0, 0x60, 0x80);
-        rf::GrDrawRect(x + cxProgress, y, cx - cxProgress, cy, rf::g_GrRectMaterial);
+        rf::GrDrawRect(x + cx_progress, y, cx - cx_progress, cy, rf::g_GrRectMaterial);
     }
 
     rf::GrSetColor(0, 0xFF, 0, 0x80);
-    std::sprintf(Buf, "Downloading: %.2f MB / %.2f MB", g_cbDownloadProgress/1024.0f/1024.0f, g_cbLevelSize/1024.0f/1024.0f);
-    rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, x + cx/2, y + cy/2 - cyFont/2, Buf, -1, rf::g_GrTextMaterial);
+    std::sprintf(buf, "Downloading: %.2f MB / %.2f MB", g_cbDownloadProgress/1024.0f/1024.0f, g_cbLevelSize/1024.0f/1024.0f);
+    rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, x + cx/2, y + cy/2 - cy_font/2, buf, -1, rf::g_GrTextMaterial);
 }
 
 #endif /* LEVELS_AUTODOWNLOADER */

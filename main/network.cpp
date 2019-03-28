@@ -689,14 +689,14 @@ FunHook2<NwPacketHandler_Type> ProcessReloadPacket_Hook{
     [](char* data, const rf::NwAddr& addr) {
         if (!rf::g_IsLocalNetworkGame) { // client-side
             // Update ClipSize and MaxAmmo if received values are greater than values from local weapons.tbl
-            int WeaponClsId = *((int32_t*)data + 1);
-            int ClipAmmo = *((int32_t*)data + 2);
-            int Ammo = *((int32_t*)data + 3);
-            if (rf::g_WeaponClasses[WeaponClsId].ClipSize < Ammo)
-                rf::g_WeaponClasses[WeaponClsId].ClipSize = Ammo;
-            if (rf::g_WeaponClasses[WeaponClsId].cMaxAmmo < ClipAmmo)
-                rf::g_WeaponClasses[WeaponClsId].cMaxAmmo = ClipAmmo;
-            TRACE("ProcessReloadPacket WeaponClsId %d ClipAmmo %d Ammo %d", WeaponClsId, ClipAmmo, Ammo);
+            int weapon_cls_id = *((int32_t*)data + 1);
+            int clip_ammo = *((int32_t*)data + 2);
+            int ammo = *((int32_t*)data + 3);
+            if (rf::g_WeaponClasses[weapon_cls_id].ClipSize < ammo)
+                rf::g_WeaponClasses[weapon_cls_id].ClipSize = ammo;
+            if (rf::g_WeaponClasses[weapon_cls_id].cMaxAmmo < clip_ammo)
+                rf::g_WeaponClasses[weapon_cls_id].cMaxAmmo = clip_ammo;
+            TRACE("ProcessReloadPacket WeaponClsId %d ClipAmmo %d Ammo %d", weapon_cls_id, clip_ammo, ammo);
 
             // Call original handler
             ProcessReloadPacket_Hook.CallTarget(data, addr);

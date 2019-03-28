@@ -27,7 +27,7 @@ static float g_GrClippedGeomOffsetY = -0.5;
 
 static void SetTextureMinMagFilterInCode(D3DTEXTUREFILTERTYPE filter_type)
 {
-    uintptr_t Addresses[] = {
+    uintptr_t addresses[] = {
         // GrInitD3D
         0x00546283, 0x00546295,
         0x005462A9, 0x005462BD,
@@ -51,41 +51,41 @@ static void SetTextureMinMagFilterInCode(D3DTEXTUREFILTERTYPE filter_type)
         0x005501A2, 0x005501B6,
     };
     unsigned i;
-    for (i = 0; i < _countof(Addresses); ++i)
-        WriteMem<u8>(Addresses[i] + 1, (uint8_t)filter_type);
+    for (i = 0; i < _countof(addresses); ++i)
+        WriteMem<u8>(addresses[i] + 1, (uint8_t)filter_type);
 }
 
 extern "C" void GrSetViewMatrix_FovFix(float f_fov_scale, float f_w_far_factor)
 {
-    constexpr float fRefAspectRatio = 4.0f / 3.0f;
-    constexpr float fMaxWideAspectRatio = 21.0f / 9.0f; // biggest aspect ratio currently in market
+    constexpr float f_ref_aspect_ratio = 4.0f / 3.0f;
+    constexpr float f_max_wide_aspect_ratio = 21.0f / 9.0f; // biggest aspect ratio currently in market
 
     // g_GrScreen.fAspect == ScrW / ScrH * 0.75 (1.0 for 4:3 monitors, 1.2 for 16:10) - looks like Pixel Aspect Ratio
     // We use here MaxWidth and MaxHeight to calculate proper FOV for windowed mode
 
-    float fViewportAspectRatio = (float)rf::g_GrScreen.ViewportWidth / (float)rf::g_GrScreen.ViewportHeight;
-    float fAspectRatio = (float)rf::g_GrScreen.MaxWidth / (float)rf::g_GrScreen.MaxHeight;
-    float fScaleX = 1.0f;
-    float fScaleY = fRefAspectRatio * fViewportAspectRatio / fAspectRatio; // this is how RF does it and is needed for working scanner
+    float f_viewport_aspect_ratio = (float)rf::g_GrScreen.ViewportWidth / (float)rf::g_GrScreen.ViewportHeight;
+    float f_aspect_ratio = (float)rf::g_GrScreen.MaxWidth / (float)rf::g_GrScreen.MaxHeight;
+    float f_scale_x = 1.0f;
+    float f_scale_y = f_ref_aspect_ratio * f_viewport_aspect_ratio / f_aspect_ratio; // this is how RF does it and is needed for working scanner
 
-    if (fAspectRatio <= fMaxWideAspectRatio) // never make X scale too high in windowed mode
-        fScaleX *= fRefAspectRatio / fAspectRatio;
+    if (f_aspect_ratio <= f_max_wide_aspect_ratio) // never make X scale too high in windowed mode
+        f_scale_x *= f_ref_aspect_ratio / f_aspect_ratio;
     else
     {
-        fScaleX *= fRefAspectRatio / fMaxWideAspectRatio;
-        fScaleY *= fAspectRatio / fMaxWideAspectRatio;
+        f_scale_x *= f_ref_aspect_ratio / f_max_wide_aspect_ratio;
+        f_scale_y *= f_aspect_ratio / f_max_wide_aspect_ratio;
     }
 
-    rf::g_GrScaleVec.x = f_w_far_factor / f_fov_scale * fScaleX;
-    rf::g_GrScaleVec.y = f_w_far_factor / f_fov_scale * fScaleY;
+    rf::g_GrScaleVec.x = f_w_far_factor / f_fov_scale * f_scale_x;
+    rf::g_GrScaleVec.y = f_w_far_factor / f_fov_scale * f_scale_y;
     rf::g_GrScaleVec.z = f_w_far_factor;
 
     g_GrClippedGeomOffsetX = rf::g_GrScreen.OffsetX - 0.5f;
     g_GrClippedGeomOffsetY = rf::g_GrScreen.OffsetY - 0.5f;
-    static auto &GrViewportCenterX = *(float*)0x01818B54;
-    static auto &GrViewportCenterY = *(float*)0x01818B5C;
-    GrViewportCenterX -= 0.5f; // viewport center x
-    GrViewportCenterY -= 0.5f; // viewport center y
+    static auto &gr_viewport_center_x = *(float*)0x01818B54;
+    static auto &gr_viewport_center_y = *(float*)0x01818B5C;
+    gr_viewport_center_x -= 0.5f; // viewport center x
+    gr_viewport_center_y -= 0.5f; // viewport center y
 }
 
 ASM_FUNC(GrSetViewMatrix_00547344,
@@ -139,8 +139,8 @@ static void SetupPP(void)
 {
     memset(&rf::g_GrPP, 0, sizeof(rf::g_GrPP));
 
-    static auto &Format = *(D3DFORMAT*)0x005A135C;
-    INFO("D3D Format: %ld", Format);
+    static auto &format = *(D3DFORMAT*)0x005A135C;
+    INFO("D3D Format: %ld", format);
 
     // Note: in MSAA mode we don't lock back buffer
 #if !D3D_SWAP_DISCARD
@@ -148,9 +148,9 @@ static void SetupPP(void)
 #endif
 
 #if MULTISAMPLING_SUPPORT
-    if (g_game_config.msaa && Format > 0) {
+    if (g_game_config.msaa && format > 0) {
         // Make sure selected MSAA mode is available
-        HRESULT hr = rf::g_Direct3D->CheckDeviceMultiSampleType(rf::g_AdapterIdx, D3DDEVTYPE_HAL, Format,
+        HRESULT hr = rf::g_Direct3D->CheckDeviceMultiSampleType(rf::g_AdapterIdx, D3DDEVTYPE_HAL, format,
             g_game_config.wndMode != GameConfig::FULLSCREEN, (D3DMULTISAMPLE_TYPE)g_game_config.msaa);
         if (SUCCEEDED(hr)) {
             INFO("Enabling Anti-Aliasing (%ux MSAA)...", g_game_config.msaa);
@@ -181,10 +181,10 @@ CallHook2<void(int, rf::GrVertex**, int, int)> GrDrawRect_GrDrawPoly_Hook{
 
 DWORD SetupMaxAnisotropy()
 {
-    DWORD AnisotropyLevel = std::min(rf::g_GrDeviceCaps.MaxAnisotropy, 16ul);
-    rf::g_GrDevice->SetTextureStageState(0, D3DTSS_MAXANISOTROPY, AnisotropyLevel);
-    rf::g_GrDevice->SetTextureStageState(1, D3DTSS_MAXANISOTROPY, AnisotropyLevel);
-    return AnisotropyLevel;
+    DWORD anisotropy_level = std::min(rf::g_GrDeviceCaps.MaxAnisotropy, 16ul);
+    rf::g_GrDevice->SetTextureStageState(0, D3DTSS_MAXANISOTROPY, anisotropy_level);
+    rf::g_GrDevice->SetTextureStageState(1, D3DTSS_MAXANISOTROPY, anisotropy_level);
+    return anisotropy_level;
 }
 
 CallHook2<void()> GrInitBuffers_AfterReset_Hook{
@@ -219,9 +219,9 @@ void GraphicsInit()
         /* Enable windowed mode */
         WriteMem<u32>(0x004B29A5 + 6, 0xC8);
         if (g_game_config.wndMode == GameConfig::STRETCHED) {
-            uint32_t WndStyle = WS_POPUP | WS_SYSMENU;
-            WriteMem<u32>(0x0050C474 + 1, WndStyle);
-            WriteMem<u32>(0x0050C4E3 + 1, WndStyle);
+            uint32_t wnd_style = WS_POPUP | WS_SYSMENU;
+            WriteMem<u32>(0x0050C474 + 1, wnd_style);
+            WriteMem<u32>(0x0050C4E3 + 1, wnd_style);
         }
     }
 #endif
@@ -281,29 +281,29 @@ void GraphicsInit()
 
     if (g_game_config.highScannerRes) {
         // Improved Railgun Scanner resolution
-        constexpr int8_t ScannerResolution = 120; // default is 64, max is 127 (signed byte)
-        WriteMem<u8>(0x004325E6 + 1, ScannerResolution); // RenderInGame
-        WriteMem<u8>(0x004325E8 + 1, ScannerResolution);
-        WriteMem<u8>(0x004A34BB + 1, ScannerResolution); // PlayerCreate
-        WriteMem<u8>(0x004A34BD + 1, ScannerResolution);
-        WriteMem<u8>(0x004ADD70 + 1, ScannerResolution); // PlayerRenderRailgunScannerViewToTexture
-        WriteMem<u8>(0x004ADD72 + 1, ScannerResolution);
-        WriteMem<u8>(0x004AE0B7 + 1, ScannerResolution);
-        WriteMem<u8>(0x004AE0B9 + 1, ScannerResolution);
-        WriteMem<u8>(0x004AF0B0 + 1, ScannerResolution); // PlayerRenderScannerView
-        WriteMem<u8>(0x004AF0B4 + 1, ScannerResolution * 3 / 4);
-        WriteMem<u8>(0x004AF0B6 + 1, ScannerResolution);
-        WriteMem<u8>(0x004AF7B0 + 1, ScannerResolution);
-        WriteMem<u8>(0x004AF7B2 + 1, ScannerResolution);
-        WriteMem<u8>(0x004AF7CF + 1, ScannerResolution);
-        WriteMem<u8>(0x004AF7D1 + 1, ScannerResolution);
-        WriteMem<u8>(0x004AF818 + 1, ScannerResolution);
-        WriteMem<u8>(0x004AF81A + 1, ScannerResolution);
-        WriteMem<u8>(0x004AF820 + 1, ScannerResolution);
-        WriteMem<u8>(0x004AF822 + 1, ScannerResolution);
-        WriteMem<u8>(0x004AF855 + 1, ScannerResolution);
-        WriteMem<u8>(0x004AF860 + 1, ScannerResolution * 3 / 4);
-        WriteMem<u8>(0x004AF862 + 1, ScannerResolution);
+        constexpr int8_t scanner_resolution = 120; // default is 64, max is 127 (signed byte)
+        WriteMem<u8>(0x004325E6 + 1, scanner_resolution); // RenderInGame
+        WriteMem<u8>(0x004325E8 + 1, scanner_resolution);
+        WriteMem<u8>(0x004A34BB + 1, scanner_resolution); // PlayerCreate
+        WriteMem<u8>(0x004A34BD + 1, scanner_resolution);
+        WriteMem<u8>(0x004ADD70 + 1, scanner_resolution); // PlayerRenderRailgunScannerViewToTexture
+        WriteMem<u8>(0x004ADD72 + 1, scanner_resolution);
+        WriteMem<u8>(0x004AE0B7 + 1, scanner_resolution);
+        WriteMem<u8>(0x004AE0B9 + 1, scanner_resolution);
+        WriteMem<u8>(0x004AF0B0 + 1, scanner_resolution); // PlayerRenderScannerView
+        WriteMem<u8>(0x004AF0B4 + 1, scanner_resolution * 3 / 4);
+        WriteMem<u8>(0x004AF0B6 + 1, scanner_resolution);
+        WriteMem<u8>(0x004AF7B0 + 1, scanner_resolution);
+        WriteMem<u8>(0x004AF7B2 + 1, scanner_resolution);
+        WriteMem<u8>(0x004AF7CF + 1, scanner_resolution);
+        WriteMem<u8>(0x004AF7D1 + 1, scanner_resolution);
+        WriteMem<u8>(0x004AF818 + 1, scanner_resolution);
+        WriteMem<u8>(0x004AF81A + 1, scanner_resolution);
+        WriteMem<u8>(0x004AF820 + 1, scanner_resolution);
+        WriteMem<u8>(0x004AF822 + 1, scanner_resolution);
+        WriteMem<u8>(0x004AF855 + 1, scanner_resolution);
+        WriteMem<u8>(0x004AF860 + 1, scanner_resolution * 3 / 4);
+        WriteMem<u8>(0x004AF862 + 1, scanner_resolution);
     }
 
     // Always transfer entire framebuffer to entire window in Present call
@@ -326,15 +326,15 @@ void GraphicsAfterGameInit()
     // Anisotropic texture filtering
     if (rf::g_GrDeviceCaps.MaxAnisotropy > 0 && g_game_config.anisotropicFiltering && !rf::g_IsDedicatedServer) {
         SetTextureMinMagFilterInCode(D3DTEXF_ANISOTROPIC);
-        DWORD AnisotropyLevel = SetupMaxAnisotropy();
-        INFO("Anisotropic Filtering enabled (level: %d)", AnisotropyLevel);
+        DWORD anisotropy_level = SetupMaxAnisotropy();
+        INFO("Anisotropic Filtering enabled (level: %d)", anisotropy_level);
     }
 #endif
 
     // Change font for Time Left text
-    static int TimeLeftFont = rf::GrLoadFont("rfpc-large.vf", -1);
-    if (TimeLeftFont >= 0) {
-        WriteMem<i8>(0x00477157 + 1, TimeLeftFont);
+    static int time_left_font = rf::GrLoadFont("rfpc-large.vf", -1);
+    if (time_left_font >= 0) {
+        WriteMem<i8>(0x00477157 + 1, time_left_font);
         WriteMem<i8>(0x0047715F + 2, 21);
         WriteMem<i32>(0x00477168 + 1, 154);
     }
@@ -343,9 +343,9 @@ void GraphicsAfterGameInit()
 void GraphicsDrawFpsCounter()
 {
     if (g_game_config.fpsCounter) {
-        char Buf[32];
-        sprintf(Buf, "FPS: %.1f", rf::g_fFps);
+        char buf[32];
+        sprintf(buf, "FPS: %.1f", rf::g_fFps);
         rf::GrSetColor(0, 255, 0, 255);
-        rf::GrDrawAlignedText(rf::GR_ALIGN_RIGHT, rf::GrGetMaxWidth() - 10, 60, Buf, -1, rf::g_GrTextMaterial);
+        rf::GrDrawAlignedText(rf::GR_ALIGN_RIGHT, rf::GrGetMaxWidth() - 10, 60, buf, -1, rf::g_GrTextMaterial);
     }
 }

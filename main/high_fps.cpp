@@ -200,12 +200,12 @@ void STDCALL EntityWaterDecelerateFix(rf::EntityObj* entity)
 
 extern "C" void WaterAnimateWaves_UpdatePos(rf::Vector3* result)
 {
-    constexpr float flt_5A3BF4 = 12.8f;
-    constexpr float flt_5A3C00 = 3.878788f;
-    constexpr float flt_5A3C0C = 4.2666669f;
-    result->x += flt_5A3BF4 * (rf::g_fFramerate) / reference_framerate;
-    result->y += flt_5A3C0C * (rf::g_fFramerate) / reference_framerate;
-    result->z += flt_5A3C00 * (rf::g_fFramerate) / reference_framerate;
+    constexpr float flt_5_a3_b_f4 = 12.8f;
+    constexpr float flt_5_a3_c00 = 3.878788f;
+    constexpr float flt_5_a3_c0_c = 4.2666669f;
+    result->x += flt_5_a3_b_f4 * (rf::g_fFramerate) / reference_framerate;
+    result->y += flt_5_a3_c0_c * (rf::g_fFramerate) / reference_framerate;
+    result->z += flt_5_a3_c00 * (rf::g_fFramerate) / reference_framerate;
 }
 
 ASM_FUNC(WaterAnimateWaves_004E68A0,

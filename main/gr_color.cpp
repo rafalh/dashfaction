@@ -54,10 +54,10 @@ inline void ConvertPixel_RGB565_To_RGBA8(uint8_t*& dst_ptr, const uint8_t*& src_
 bool ConvertPixelFormat(uint8_t*& dst_ptr, rf::BmPixelFormat dst_fmt, const uint8_t*& src_ptr, rf::BmPixelFormat src_fmt)
 {
     if (dst_fmt == src_fmt) {
-        int PixelSize = GetPixelFormatSize(src_fmt);
-        memcpy(dst_ptr, src_ptr, PixelSize);
-        dst_ptr += PixelSize;
-        src_ptr += PixelSize;
+        int pixel_size = GetPixelFormatSize(src_fmt);
+        memcpy(dst_ptr, src_ptr, pixel_size);
+        dst_ptr += pixel_size;
+        src_ptr += pixel_size;
         return true;
     }
     if (dst_fmt != rf::BMPF_8888) {
@@ -257,16 +257,16 @@ void WaterGenerateTexture_004E68D1(uintptr_t v1)
         }
     }
 
-    static const auto byte_1370F90 = (uint8_t*)0x1370F90;
-    static const auto byte_1371B14 = (uint8_t*)0x1371B14;
+    static const auto byte_1370_f90 = (uint8_t*)0x1370F90;
+    static const auto byte_1371_b14 = (uint8_t*)0x1371B14;
     static const auto byte_1371090 = (uint8_t*)0x1371090;
 
     uint8_t* dst_row_ptr = dst_lock_data.Bits;
     int src_pixel_size = GetPixelFormatSize(src_lock_data.PixelFormat);
 
     for (int y = 0; y < dst_lock_data.Height; ++y) {
-        int v30 = byte_1370F90[y];
-        int v38 = byte_1371B14[y];
+        int v30 = byte_1370_f90[y];
+        int v38 = byte_1371_b14[y];
         uint8_t* v32 = &byte_1371090[-v30];
         uint8_t* dst_ptr = dst_row_ptr;
         for (int x = 0; x < dst_lock_data.Width; ++x) {

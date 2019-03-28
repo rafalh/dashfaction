@@ -33,10 +33,10 @@ inline bool ReadArgInternal(int type_flag, bool preserve_case = false)
 template<typename T>
 inline T DcReadArg()
 {
-    auto ValueOpt = DcReadArg<std::optional<T>>();
-    if (!ValueOpt)
+    auto value_opt = DcReadArg<std::optional<T>>();
+    if (!value_opt)
         throw DcRequiredArgMissingError();
-    return ValueOpt.value();
+    return value_opt.value();
 }
 
 template<>
@@ -60,8 +60,8 @@ inline std::optional<bool> DcReadArg()
 {
     if (!ReadArgInternal(rf::DC_ARG_TRUE | rf::DC_ARG_FALSE))
         return {};
-    bool Value = (rf::g_DcArgType & rf::DC_ARG_TRUE) == rf::DC_ARG_TRUE;
-    return std::optional{Value};
+    bool value = (rf::g_DcArgType & rf::DC_ARG_TRUE) == rf::DC_ARG_TRUE;
+    return std::optional{value};
 }
 
 template<>

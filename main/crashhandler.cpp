@@ -8,10 +8,10 @@ static LPTOP_LEVEL_EXCEPTION_FILTER g_OldExceptionFilter;
 
 static LONG WINAPI CrashHandlerExceptionFilter(PEXCEPTION_POINTERS exception_ptrs)
 {
-    static HANDLE Process_handle = NULL, Event_handle = NULL;
-    static STARTUPINFOW StartupInfo;
-    static PROCESS_INFORMATION ProcInfo;
-    static WCHAR CmdLine[256];
+    static HANDLE process_handle = NULL, event_handle = NULL;
+    static STARTUPINFOW startup_info;
+    static PROCESS_INFORMATION proc_info;
+    static WCHAR cmd_line[256];
 
     ERR("Unhandled exception: ExceptionAddress=0x%X ExceptionCode=0x%X",
         exception_ptrs->ExceptionRecord->ExceptionAddress, exception_ptrs->ExceptionRecord->ExceptionCode);
@@ -20,32 +20,32 @@ static LONG WINAPI CrashHandlerExceptionFilter(PEXCEPTION_POINTERS exception_ptr
 
     do
     {
-        if (!DuplicateHandle(GetCurrentProcess(), GetCurrentProcess(), GetCurrentProcess(), &Process_handle, 0, TRUE, DUPLICATE_SAME_ACCESS))
+        if (!DuplicateHandle(GetCurrentProcess(), GetCurrentProcess(), GetCurrentProcess(), &process_handle, 0, TRUE, DUPLICATE_SAME_ACCESS))
             break;
 
-        static SECURITY_ATTRIBUTES SecAttribs = { sizeof(SecAttribs), NULL, TRUE };
-        Event_handle = CreateEventW(&SecAttribs, FALSE, FALSE, NULL);
-        if (!Event_handle)
+        static SECURITY_ATTRIBUTES sec_attribs = { sizeof(sec_attribs), NULL, TRUE };
+        event_handle = CreateEventW(&sec_attribs, FALSE, FALSE, NULL);
+        if (!event_handle)
             break;
 
-        memset(&StartupInfo, 0, sizeof(StartupInfo));
-        StartupInfo.cb = sizeof(StartupInfo);
-        swprintf(CmdLine, ARRAYSIZE(CmdLine), L"%ls\\CrashHandler.exe 0x%p 0x%p %lu 0x%p", g_ModulePath, exception_ptrs, Process_handle, GetCurrentThreadId(), Event_handle);
-        if (!CreateProcessW(NULL, CmdLine, NULL, NULL, TRUE, 0, NULL, NULL, &StartupInfo, &ProcInfo))
+        memset(&startup_info, 0, sizeof(startup_info));
+        startup_info.cb = sizeof(startup_info);
+        swprintf(cmd_line, ARRAYSIZE(cmd_line), L"%ls\\CrashHandler.exe 0x%p 0x%p %lu 0x%p", g_ModulePath, exception_ptrs, process_handle, GetCurrentThreadId(), event_handle);
+        if (!CreateProcessW(NULL, cmd_line, NULL, NULL, TRUE, 0, NULL, NULL, &startup_info, &proc_info))
         {
-            ERR("Failed to start CrashHandler process - CreateProcessW failed with error %ls", CmdLine);
+            ERR("Failed to start CrashHandler process - CreateProcessW failed with error %ls", cmd_line);
             break;
         }
 
-        WaitForSingleObject(Event_handle, 2000);
-        CloseHandle(ProcInfo.hProcess);
-        CloseHandle(ProcInfo.hThread);
+        WaitForSingleObject(event_handle, 2000);
+        CloseHandle(proc_info.hProcess);
+        CloseHandle(proc_info.hThread);
     } while (false);
 
-    if (Process_handle)
-        CloseHandle(Process_handle);
-    if (Event_handle)
-        CloseHandle(Event_handle);
+    if (process_handle)
+        CloseHandle(process_handle);
+    if (event_handle)
+        CloseHandle(event_handle);
 
     return g_OldExceptionFilter ? g_OldExceptionFilter(exception_ptrs) : EXCEPTION_EXECUTE_HANDLER;
 }
@@ -54,9 +54,9 @@ void CrashHandlerInit(HMODULE module_handle)
 {
     GetModuleFileNameW(module_handle, g_ModulePath, ARRAYSIZE(g_ModulePath));
 
-    WCHAR *Filename = wcsrchr(g_ModulePath, L'\\');
-    if (Filename)
-        *Filename = L'\0';
+    WCHAR *filename = wcsrchr(g_ModulePath, L'\\');
+    if (filename)
+        *filename = L'\0';
 
     g_OldExceptionFilter = SetUnhandledExceptionFilter(CrashHandlerExceptionFilter);
 }

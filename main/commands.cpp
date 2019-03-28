@@ -48,27 +48,27 @@ bool g_volumetric_lights = true;
 
 rf::Player *FindBestMatchingPlayer(const char *name)
 {
-    rf::Player *FoundPlayer;
-    int NumFound = 0;
+    rf::Player *found_player;
+    int num_found = 0;
     FindPlayer(StringMatcher().Exact(name), [&](rf::Player *player)
     {
-        FoundPlayer = player;
-        ++NumFound;
+        found_player = player;
+        ++num_found;
     });
-    if (NumFound == 1)
-        return FoundPlayer;
+    if (num_found == 1)
+        return found_player;
 
-    NumFound = 0;
+    num_found = 0;
     FindPlayer(StringMatcher().Infix(name), [&](rf::Player *player)
     {
-        FoundPlayer = player;
-        ++NumFound;
+        found_player = player;
+        ++num_found;
     });
 
-    if (NumFound == 1)
-        return FoundPlayer;
-    else if (NumFound > 1)
-        rf::DcPrintf("Found %d players matching '%s'!", NumFound,  name);
+    if (num_found == 1)
+        return found_player;
+    else if (num_found > 1)
+        rf::DcPrintf("Found %d players matching '%s'!", num_found,  name);
     else
         rf::DcPrintf("Cannot find player matching '%s'", name);
     return nullptr;
@@ -97,11 +97,11 @@ DcCommand2 MaxFpsCmd{
 #ifdef NDEBUG
             float newLimit = std::min(std::max(LimitOpt.value(), (float)MIN_FPS_LIMIT), (float)MAX_FPS_LIMIT);
 #else
-            float newLimit = limit_opt.value();
+            float new_limit = limit_opt.value();
 #endif
-            g_game_config.maxFps = (unsigned)newLimit;
+            g_game_config.maxFps = (unsigned)new_limit;
             g_game_config.save();
-            rf::g_fMinFramerate = 1.0f / newLimit;
+            rf::g_fMinFramerate = 1.0f / new_limit;
         }
         else
             rf::DcPrintf("Maximal FPS: %.1f", 1.0f / rf::g_fMinFramerate);
@@ -121,91 +121,91 @@ DcCommand2 DebugCmd{
         }
 #endif
 
-        auto Type = type_opt ? type_opt.value() : "";
-        bool Handled = false;
-        static bool AllFlags = false;
+        auto type = type_opt ? type_opt.value() : "";
+        bool handled = false;
+        static bool all_flags = false;
 
-        if (Type.empty()) {
-            AllFlags = !AllFlags;
-            Handled = true;
-            rf::DcPrintf("All debug flags are %s", AllFlags ? "enabled" : "disabled");
+        if (type.empty()) {
+            all_flags = !all_flags;
+            handled = true;
+            rf::DcPrintf("All debug flags are %s", all_flags ? "enabled" : "disabled");
         }
 
-        auto HandleFlag = [&](bool &flag_ref, const char *flag_name) {
-            bool OldFlagValue = flag_ref;
-            if (Type == flag_name) {
+        auto handle_flag = [&](bool &flag_ref, const char *flag_name) {
+            bool old_flag_value = flag_ref;
+            if (type == flag_name) {
                 flag_ref = !flag_ref;
-                Handled = true;
+                handled = true;
                 rf::DcPrintf("Debug flag '%s' is %s", flag_name, flag_ref ? "enabled" : "disabled");
             }
-            else if (Type.empty()) {
-                flag_ref = AllFlags;
+            else if (type.empty()) {
+                flag_ref = all_flags;
             }
-            return OldFlagValue != flag_ref;
+            return old_flag_value != flag_ref;
         };
 
-        auto &DgThruster               = AddrAsRef<bool>(0x0062F3AA);
-        auto &DgLights                 = AddrAsRef<bool>(0x0062FE19);
-        auto &DgPushAndClimbingRegions = AddrAsRef<bool>(0x0062FE1A);
-        auto &DgGeoRegions             = AddrAsRef<bool>(0x0062FE1B);
-        auto &DgGlass                  = AddrAsRef<bool>(0x0062FE1C);
-        auto &DgMovers                 = AddrAsRef<bool>(0x0062FE1D);
-        auto &DgEntityBurn             = AddrAsRef<bool>(0x0062FE1E);
-        auto &DgMovementMode           = AddrAsRef<bool>(0x0062FE1F);
-        auto &DgPerfomance             = AddrAsRef<bool>(0x0062FE20);
-        auto &DgPerfBar                = AddrAsRef<bool>(0x0062FE21);
-        auto &DgWaypoints              = AddrAsRef<bool>(0x0064E39C);
-        auto &DgNetwork                = AddrAsRef<bool>(0x006FED24);
-        auto &DgParticleStats          = AddrAsRef<bool>(0x007B2758);
-        auto &DgWeapon                 = AddrAsRef<bool>(0x007CAB59);
-        auto &DgEvents                 = AddrAsRef<bool>(0x00856500);
-        auto &DgTriggers               = AddrAsRef<bool>(0x0085683C);
-        auto &DgObjRendering           = AddrAsRef<bool>(0x009BB5AC);
+        auto &dg_thruster               = AddrAsRef<bool>(0x0062F3AA);
+        auto &dg_lights                 = AddrAsRef<bool>(0x0062FE19);
+        auto &dg_push_and_climbing_regions = AddrAsRef<bool>(0x0062FE1A);
+        auto &dg_geo_regions             = AddrAsRef<bool>(0x0062FE1B);
+        auto &dg_glass                  = AddrAsRef<bool>(0x0062FE1C);
+        auto &dg_movers                 = AddrAsRef<bool>(0x0062FE1D);
+        auto &dg_entity_burn             = AddrAsRef<bool>(0x0062FE1E);
+        auto &dg_movement_mode           = AddrAsRef<bool>(0x0062FE1F);
+        auto &dg_perfomance             = AddrAsRef<bool>(0x0062FE20);
+        auto &dg_perf_bar                = AddrAsRef<bool>(0x0062FE21);
+        auto &dg_waypoints              = AddrAsRef<bool>(0x0064E39C);
+        auto &dg_network                = AddrAsRef<bool>(0x006FED24);
+        auto &dg_particle_stats          = AddrAsRef<bool>(0x007B2758);
+        auto &dg_weapon                 = AddrAsRef<bool>(0x007CAB59);
+        auto &dg_events                 = AddrAsRef<bool>(0x00856500);
+        auto &dg_triggers               = AddrAsRef<bool>(0x0085683C);
+        auto &dg_obj_rendering           = AddrAsRef<bool>(0x009BB5AC);
         // Geometry rendering flags
-        auto &RenderEverythingSeeThrough     = AddrAsRef<bool>(0x009BB594);
-        auto &RenderRoomsInDifferentColors   = AddrAsRef<bool>(0x009BB598);
-        auto &RenderNonSeeThroughPortalFaces = AddrAsRef<bool>(0x009BB59C);
-        auto &RenderLightmapsOnly            = AddrAsRef<bool>(0x009BB5A4);
-        auto &RenderNoLightmaps              = AddrAsRef<bool>(0x009BB5A8);
+        auto &render_everything_see_through     = AddrAsRef<bool>(0x009BB594);
+        auto &render_rooms_in_different_colors   = AddrAsRef<bool>(0x009BB598);
+        auto &render_non_see_through_portal_faces = AddrAsRef<bool>(0x009BB59C);
+        auto &render_lightmaps_only            = AddrAsRef<bool>(0x009BB5A4);
+        auto &render_no_lightmaps              = AddrAsRef<bool>(0x009BB5A8);
 
-        HandleFlag(DgThruster, "thruster");
+        handle_flag(dg_thruster, "thruster");
         // debug string at the left-top corner
-        HandleFlag(DgLights, "light");
-        HandleFlag(g_DbgStaticLights, "light2");
-        HandleFlag(DgPushAndClimbingRegions, "push_climb_reg");
-        HandleFlag(DgGeoRegions, "geo_reg");
-        HandleFlag(DgGlass, "glass");
-        HandleFlag(DgMovers, "mover");
-        HandleFlag(DgEntityBurn, "ignite");
-        HandleFlag(DgMovementMode, "movemode");
-        HandleFlag(DgPerfomance, "perf");
-        HandleFlag(DgPerfBar, "perfbar");
-        HandleFlag(DgWaypoints, "waypoint");
+        handle_flag(dg_lights, "light");
+        handle_flag(g_DbgStaticLights, "light2");
+        handle_flag(dg_push_and_climbing_regions, "push_climb_reg");
+        handle_flag(dg_geo_regions, "geo_reg");
+        handle_flag(dg_glass, "glass");
+        handle_flag(dg_movers, "mover");
+        handle_flag(dg_entity_burn, "ignite");
+        handle_flag(dg_movement_mode, "movemode");
+        handle_flag(dg_perfomance, "perf");
+        handle_flag(dg_perf_bar, "perfbar");
+        handle_flag(dg_waypoints, "waypoint");
         // network meter in left-top corner
-        HandleFlag(DgNetwork, "network");
-        HandleFlag(DgParticleStats, "particlestats");
+        handle_flag(dg_network, "network");
+        handle_flag(dg_particle_stats, "particlestats");
         // debug strings at the left side of the screen
-        HandleFlag(DgWeapon, "weapon");
-        HandleFlag(DgEvents, "event");
-        HandleFlag(DgTriggers, "trigger");
-        HandleFlag(DgObjRendering, "objrender");
-        HandleFlag(g_DbgGeometryRenderingStats, "roomstats");
+        handle_flag(dg_weapon, "weapon");
+        handle_flag(dg_events, "event");
+        handle_flag(dg_triggers, "trigger");
+        handle_flag(dg_obj_rendering, "objrender");
+        handle_flag(g_DbgGeometryRenderingStats, "roomstats");
         // geometry rendering
-        bool GeomRenderingChanged = false;
-        GeomRenderingChanged |= HandleFlag(RenderEverythingSeeThrough, "trans");
-        GeomRenderingChanged |= HandleFlag(RenderRoomsInDifferentColors, "room");
-        GeomRenderingChanged |= HandleFlag(RenderNonSeeThroughPortalFaces, "portal");
-        GeomRenderingChanged |= HandleFlag(RenderLightmapsOnly, "lightmap");
-        GeomRenderingChanged |= HandleFlag(RenderNoLightmaps, "nolightmap");
+        bool geom_rendering_changed = false;
+        geom_rendering_changed |= handle_flag(render_everything_see_through, "trans");
+        geom_rendering_changed |= handle_flag(render_rooms_in_different_colors, "room");
+        geom_rendering_changed |= handle_flag(render_non_see_through_portal_faces, "portal");
+        geom_rendering_changed |= handle_flag(render_lightmaps_only, "lightmap");
+        geom_rendering_changed |= handle_flag(render_no_lightmaps, "nolightmap");
 
         // Clear geometry cache (needed for geometry rendering flags)
-        if (GeomRenderingChanged) {
-            auto GeomCacheClear = (void(*)())0x004F0B90;
-            GeomCacheClear();
+        if (geom_rendering_changed) {
+            auto geom_cache_clear = (void(*)())0x004F0B90;
+            geom_cache_clear();
         }
 
-        if (!Handled)
-            rf::DcPrintf("Invalid debug flag: %s", Type.c_str());
+        if (!handled)
+            rf::DcPrintf("Invalid debug flag: %s", type.c_str());
     },
     nullptr,
     "debug [thruster | light | light2 | push_climb_reg | geo_reg | glass | mover | ignite | movemode | perf | perfbar | "
@@ -215,21 +215,21 @@ DcCommand2 DebugCmd{
 
 void DebugRender3d()
 {
-    const auto DbgWaypoints       = (void(*)()) 0x00468F00;
-    const auto DbgInternalLights  = (void(*)()) 0x004DB830;
+    const auto dbg_waypoints       = (void(*)()) 0x00468F00;
+    const auto dbg_internal_lights  = (void(*)()) 0x004DB830;
 
-    DbgWaypoints();
+    dbg_waypoints();
     if (g_DbgStaticLights)
-        DbgInternalLights();
+        dbg_internal_lights();
 }
 
 void DebugRender2d()
 {
-    const auto DbgRenderingStats  = (void(*)()) 0x004D36B0;
-    const auto DbgParticleStats   = (void(*)()) 0x004964E0;
+    const auto dbg_rendering_stats  = (void(*)()) 0x004D36B0;
+    const auto dbg_particle_stats   = (void(*)()) 0x004964E0;
     if (g_DbgGeometryRenderingStats)
-        DbgRenderingStats();
-    DbgParticleStats();
+        dbg_rendering_stats();
+    dbg_particle_stats();
 }
 
 #if SPECTATE_MODE_ENABLE
@@ -238,16 +238,16 @@ DcCommand2 SpectateCmd {
     "spectate",
     [](std::optional<std::string> player_name) {
         if (rf::g_IsNetworkGame) {
-            rf::Player *Player;
+            rf::Player *player;
             if (player_name && player_name.value() == "false")
-                Player = nullptr;
+                player = nullptr;
             else if (player_name)
-                Player = FindBestMatchingPlayer(player_name.value().c_str());
+                player = FindBestMatchingPlayer(player_name.value().c_str());
             else
-                Player = nullptr;
+                player = nullptr;
 
-            if (Player)
-                SpectateModeSetTargetPlayer(Player);
+            if (player)
+                SpectateModeSetTargetPlayer(player);
         } else
             rf::DcPrint("Works only in multiplayer game!", NULL);
     },
@@ -267,11 +267,11 @@ DcCommand2 AntiAliasingCmd{
             rf::DcPrintf("Anti-aliasing is not supported");
         else
         {
-            DWORD Enabled = 0;
-            rf::g_GrDevice->GetRenderState(D3DRS_MULTISAMPLEANTIALIAS, &Enabled);
-            Enabled = !Enabled;
-            rf::g_GrDevice->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, Enabled);
-            rf::DcPrintf("Anti-aliasing is %s", Enabled ? "enabled" : "disabled");
+            DWORD enabled = 0;
+            rf::g_GrDevice->GetRenderState(D3DRS_MULTISAMPLEANTIALIAS, &enabled);
+            enabled = !enabled;
+            rf::g_GrDevice->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, enabled);
+            rf::DcPrintf("Anti-aliasing is %s", enabled ? "enabled" : "disabled");
         }
     },
     "Toggles anti-aliasing"
@@ -309,9 +309,9 @@ DcCommand2 MouseSensitivityCmd{
     "ms",
     [](std::optional<float> value) {
         if (value) {
-            float fValue = value.value();
-            fValue = clamp(fValue, 0.0f, 1.0f);
-            rf::g_LocalPlayer->Config.Controls.fMouseSensitivity = fValue;
+            float f_value = value.value();
+            f_value = clamp(f_value, 0.0f, 1.0f);
+            rf::g_LocalPlayer->Config.Controls.fMouseSensitivity = f_value;
         }
         rf::DcPrintf("Mouse sensitivity: %.2f", rf::g_LocalPlayer->Config.Controls.fMouseSensitivity);
     },
@@ -340,10 +340,10 @@ DcCommand2 LevelSoundsCmd{
     "levelsounds",
     [](std::optional<float> volume) {
         if (volume) {
-            float fVolScale = clamp(volume.value(), 0.0f, 1.0f);
-            SetPlaySoundEventsVolumeScale(fVolScale);
+            float f_vol_scale = clamp(volume.value(), 0.0f, 1.0f);
+            SetPlaySoundEventsVolumeScale(f_vol_scale);
 
-            g_game_config.levelSoundVolume = fVolScale;
+            g_game_config.levelSoundVolume = f_vol_scale;
             g_game_config.save();
         }
         rf::DcPrintf("Level sound volume: %.1f", g_game_config.levelSoundVolume);
@@ -358,17 +358,17 @@ DcCommand2 PlayerCountCmd{
         if (!rf::g_IsNetworkGame)
             return;
 
-        int PlayerCount = 0;
-        rf::Player *Player = rf::g_PlayersList;
-        while (Player)
+        int player_count = 0;
+        rf::Player *player = rf::g_PlayersList;
+        while (player)
         {
-            if (Player != rf::g_PlayersList)
-                ++PlayerCount;
-            Player = Player->Next;
-            if (Player == rf::g_PlayersList)
+            if (player != rf::g_PlayersList)
+                ++player_count;
+            player = player->Next;
+            if (player == rf::g_PlayersList)
                 break;
         }
-        rf::DcPrintf("Player count: %d\n", PlayerCount);
+        rf::DcPrintf("Player count: %d\n", player_count);
     },
     "Get player count"
 };
@@ -406,29 +406,29 @@ void DcShowCmdHelp(rf::DcCommand *cmd)
 
 int DcAutoCompleteGetComponent(int offset, std::string &result)
 {
-    const char *Begin = rf::g_DcCmdLine + offset, *End = nullptr, *Next;
-    if (Begin[0] == '"')
+    const char *begin = rf::g_DcCmdLine + offset, *end = nullptr, *next;
+    if (begin[0] == '"')
     {
-        ++Begin;
-        End = strchr(Begin, '"');
-        Next = End ? strchr(End, ' ') : nullptr;
+        ++begin;
+        end = strchr(begin, '"');
+        next = end ? strchr(end, ' ') : nullptr;
     }
     else
-        End = Next = strchr(Begin, ' ');
+        end = next = strchr(begin, ' ');
 
-    if (!End)
-        End = rf::g_DcCmdLine + rf::g_DcCmdLineLen;
+    if (!end)
+        end = rf::g_DcCmdLine + rf::g_DcCmdLineLen;
 
-    size_t Len = End - Begin;
-    result.assign(Begin, Len);
+    size_t len = end - begin;
+    result.assign(begin, len);
 
-    return Next ? Next + 1 - rf::g_DcCmdLine : -1;
+    return next ? next + 1 - rf::g_DcCmdLine : -1;
 }
 
 void DcAutoCompletePutComponent(int offset, const std::string &component, bool finished)
 {
-    bool Quote = component.find(' ') != std::string::npos;
-    if (Quote)
+    bool quote = component.find(' ') != std::string::npos;
+    if (quote)
         rf::g_DcCmdLineLen = offset + sprintf(rf::g_DcCmdLine + offset, "\"%s\"", component.c_str());
     else
         rf::g_DcCmdLineLen = offset + sprintf(rf::g_DcCmdLine + offset, "%s", component.c_str());
@@ -439,8 +439,8 @@ void DcAutoCompletePutComponent(int offset, const std::string &component, bool f
 template<typename T, typename F>
 void DcAutoCompletePrintSuggestions(T &suggestions, F mapping_fun)
 {
-    for (auto Item : suggestions)
-        rf::DcPrintf("%s\n", mapping_fun(Item));
+    for (auto item : suggestions)
+        rf::DcPrintf("%s\n", mapping_fun(item));
 }
 
 void DcAutoCompleteUpdateCommonPrefix(std::string &common_prefix, const std::string &value, bool &first, bool case_sensitive = false)
@@ -462,101 +462,101 @@ void DcAutoCompleteUpdateCommonPrefix(std::string &common_prefix, const std::str
 
 void DcAutoCompleteLevel(int offset)
 {
-    std::string LevelName;
-    DcAutoCompleteGetComponent(offset, LevelName);
-    if (LevelName.size() < 3)
+    std::string level_name;
+    DcAutoCompleteGetComponent(offset, level_name);
+    if (level_name.size() < 3)
         return;
 
-    bool First = true;
-    std::string CommonPrefix;
-    std::vector<std::string> Matches;
-    PackfileFindMatchingFiles(StringMatcher().Prefix(LevelName).Suffix(".rfl"), [&](const char *name)
+    bool first = true;
+    std::string common_prefix;
+    std::vector<std::string> matches;
+    PackfileFindMatchingFiles(StringMatcher().Prefix(level_name).Suffix(".rfl"), [&](const char *name)
     {
-        auto Ext = strrchr(name, '.');
-        auto NameLen = Ext ? Ext - name : strlen(name);
-        std::string NameWithoutExt(name, NameLen);
-        Matches.push_back(NameWithoutExt);
-        DcAutoCompleteUpdateCommonPrefix(CommonPrefix, NameWithoutExt, First);
+        auto ext = strrchr(name, '.');
+        auto name_len = ext ? ext - name : strlen(name);
+        std::string name_without_ext(name, name_len);
+        matches.push_back(name_without_ext);
+        DcAutoCompleteUpdateCommonPrefix(common_prefix, name_without_ext, first);
     });
 
-    if (Matches.size() == 1)
-        DcAutoCompletePutComponent(offset, Matches[0], true);
+    if (matches.size() == 1)
+        DcAutoCompletePutComponent(offset, matches[0], true);
     else
     {
-        DcAutoCompletePrintSuggestions(Matches, [](std::string &name) { return name.c_str(); });
-        DcAutoCompletePutComponent(offset, CommonPrefix, false);
+        DcAutoCompletePrintSuggestions(matches, [](std::string &name) { return name.c_str(); });
+        DcAutoCompletePutComponent(offset, common_prefix, false);
     }
 }
 
 void DcAutoCompletePlayer(int offset)
 {
-    std::string PlayerName;
-    DcAutoCompleteGetComponent(offset, PlayerName);
-    if (PlayerName.size() < 1)
+    std::string player_name;
+    DcAutoCompleteGetComponent(offset, player_name);
+    if (player_name.size() < 1)
         return;
 
-    bool First = true;
-    std::string CommonPrefix;
-    std::vector<rf::Player*> MatchingPlayers;
-    FindPlayer(StringMatcher().Prefix(PlayerName), [&](rf::Player *player)
+    bool first = true;
+    std::string common_prefix;
+    std::vector<rf::Player*> matching_players;
+    FindPlayer(StringMatcher().Prefix(player_name), [&](rf::Player *player)
     {
-        MatchingPlayers.push_back(player);
-        DcAutoCompleteUpdateCommonPrefix(CommonPrefix, player->strName.CStr(), First);
+        matching_players.push_back(player);
+        DcAutoCompleteUpdateCommonPrefix(common_prefix, player->strName.CStr(), first);
     });
 
-    if (MatchingPlayers.size() == 1)
-        DcAutoCompletePutComponent(offset, MatchingPlayers[0]->strName.CStr(), true);
+    if (matching_players.size() == 1)
+        DcAutoCompletePutComponent(offset, matching_players[0]->strName.CStr(), true);
     else
     {
-        DcAutoCompletePrintSuggestions(MatchingPlayers, [](rf::Player *player) {
+        DcAutoCompletePrintSuggestions(matching_players, [](rf::Player *player) {
             return player->strName.CStr();
         });
-        DcAutoCompletePutComponent(offset, CommonPrefix, false);
+        DcAutoCompletePutComponent(offset, common_prefix, false);
     }
 }
 
 void DcAutoCompleteCommand(int offset)
 {
-    std::string CmdName;
-    int NextOffset = DcAutoCompleteGetComponent(offset, CmdName);
-    if (CmdName.size() < 2)
+    std::string cmd_name;
+    int next_offset = DcAutoCompleteGetComponent(offset, cmd_name);
+    if (cmd_name.size() < 2)
         return;
 
-    bool First = true;
-    std::string CommonPrefix;
+    bool first = true;
+    std::string common_prefix;
 
-    std::vector<rf::DcCommand*> MatchingCmds;
+    std::vector<rf::DcCommand*> matching_cmds;
     for (unsigned i = 0; i < rf::g_DcNumCommands; ++i)
     {
-        rf::DcCommand *Cmd = g_CommandsBuffer[i];
-        if (!strnicmp(Cmd->Cmd, CmdName.c_str(), CmdName.size()) && (NextOffset == -1 || !Cmd->Cmd[CmdName.size()]))
+        rf::DcCommand *cmd = g_CommandsBuffer[i];
+        if (!strnicmp(cmd->Cmd, cmd_name.c_str(), cmd_name.size()) && (next_offset == -1 || !cmd->Cmd[cmd_name.size()]))
         {
-            MatchingCmds.push_back(Cmd);
-            DcAutoCompleteUpdateCommonPrefix(CommonPrefix, Cmd->Cmd, First);
+            matching_cmds.push_back(cmd);
+            DcAutoCompleteUpdateCommonPrefix(common_prefix, cmd->Cmd, first);
         }
     }
 
-    if (NextOffset != -1)
+    if (next_offset != -1)
     {
-        if (MatchingCmds.size() != 1)
+        if (matching_cmds.size() != 1)
             return;
-        if (!stricmp(CmdName.c_str(), "level") || !stricmp(CmdName.c_str(), "levelsp"))
-            DcAutoCompleteLevel(NextOffset);
-        else if (!stricmp(CmdName.c_str(), "kick") || !stricmp(CmdName.c_str(), "ban"))
-            DcAutoCompletePlayer(NextOffset);
-        else if (!stricmp(CmdName.c_str(), "rcon"))
-            DcAutoCompleteCommand(NextOffset);
+        if (!stricmp(cmd_name.c_str(), "level") || !stricmp(cmd_name.c_str(), "levelsp"))
+            DcAutoCompleteLevel(next_offset);
+        else if (!stricmp(cmd_name.c_str(), "kick") || !stricmp(cmd_name.c_str(), "ban"))
+            DcAutoCompletePlayer(next_offset);
+        else if (!stricmp(cmd_name.c_str(), "rcon"))
+            DcAutoCompleteCommand(next_offset);
         else
-            DcShowCmdHelp(MatchingCmds[0]);
+            DcShowCmdHelp(matching_cmds[0]);
     }
-    else if (MatchingCmds.size() > 1)
+    else if (matching_cmds.size() > 1)
     {
-        for (auto *Cmd : MatchingCmds)
-            rf::DcPrintf("%s - %s", Cmd->Cmd, Cmd->Descr);
-        DcAutoCompletePutComponent(offset, CommonPrefix, false);
+        for (auto *cmd : matching_cmds)
+            rf::DcPrintf("%s - %s", cmd->Cmd, cmd->Descr);
+        DcAutoCompletePutComponent(offset, common_prefix, false);
     }
-    else if (MatchingCmds.size() == 1)
-        DcAutoCompletePutComponent(offset, MatchingCmds[0]->Cmd, true);
+    else if (matching_cmds.size() == 1)
+        DcAutoCompletePutComponent(offset, matching_cmds[0]->Cmd, true);
 }
 
 FunHook2<void()> DcAutoCompleteInput_Hook{

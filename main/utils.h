@@ -59,27 +59,27 @@ struct StringMatcher
 
     bool operator()(const char *input) const
     {
-        size_t InputLen = strlen(input);
+        size_t input_len = strlen(input);
         if (m_CaseSensitive)
         {
             if (!m_Exact.empty() && strcmp(input, m_Exact.c_str()) != 0)
                 return false;
-            if (!m_Prefix.empty() && (InputLen < m_Prefix.size() || strncmp(input, m_Prefix.c_str(), m_Prefix.size()) != 0))
+            if (!m_Prefix.empty() && (input_len < m_Prefix.size() || strncmp(input, m_Prefix.c_str(), m_Prefix.size()) != 0))
                 return false;
-            if (!m_Infix.empty() && (InputLen < m_Infix.size() || !strstr(input, m_Infix.c_str())))
+            if (!m_Infix.empty() && (input_len < m_Infix.size() || !strstr(input, m_Infix.c_str())))
                 return false;
-            if (!m_Suffix.empty() && (InputLen < m_Suffix.size() || strncmp(input + InputLen - m_Suffix.size(), m_Suffix.c_str(), m_Suffix.size()) != 0))
+            if (!m_Suffix.empty() && (input_len < m_Suffix.size() || strncmp(input + input_len - m_Suffix.size(), m_Suffix.c_str(), m_Suffix.size()) != 0))
                 return false;
         }
         else
         {
             if (!m_Exact.empty() && stricmp(input, m_Exact.c_str()) != 0)
                 return false;
-            if (!m_Prefix.empty() && (InputLen < m_Prefix.size() || strnicmp(input, m_Prefix.c_str(), m_Prefix.size()) != 0))
+            if (!m_Prefix.empty() && (input_len < m_Prefix.size() || strnicmp(input, m_Prefix.c_str(), m_Prefix.size()) != 0))
                 return false;
-            if (!m_Infix.empty() && (InputLen < m_Infix.size() || !stristr(input, m_Infix.c_str())))
+            if (!m_Infix.empty() && (input_len < m_Infix.size() || !stristr(input, m_Infix.c_str())))
                 return false;
-            if (!m_Suffix.empty() && (InputLen < m_Suffix.size() || strnicmp(input + InputLen - m_Suffix.size(), m_Suffix.c_str(), m_Suffix.size()) != 0))
+            if (!m_Suffix.empty() && (input_len < m_Suffix.size() || strnicmp(input + input_len - m_Suffix.size(), m_Suffix.c_str(), m_Suffix.size()) != 0))
                 return false;
         }
         return true;

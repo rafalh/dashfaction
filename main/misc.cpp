@@ -62,12 +62,12 @@ FunHook2<void(const char**, const char**)> GetVersionStr_Hook{
 FunHook2<int()> MenuUpdate_Hook{
     0x00434230,
     []() {
-        int MenuId = MenuUpdate_Hook.CallTarget();
-        if (MenuId == rf::GS_MP_LIMBO) // hide cursor when changing level - hackfixed in RF by chaning rendering logic
+        int menu_id = MenuUpdate_Hook.CallTarget();
+        if (menu_id == rf::GS_MP_LIMBO) // hide cursor when changing level - hackfixed in RF by chaning rendering logic
             rf::SetCursorVisible(false);
-        else if (MenuId == rf::GS_MAIN_MENU)
+        else if (menu_id == rf::GS_MAIN_MENU)
             rf::SetCursorVisible(true);
-        return MenuId;
+        return menu_id;
     }};
 
 ASM_FUNC(CrashFix_0055CE48,
@@ -131,16 +131,16 @@ int LoadEasterEggImage()
         return -1;
     }
 
-    constexpr int EASTER_EGG_SIZE = 128;
+    constexpr int easter_egg_size = 128;
 
-    int hbm = rf::BmCreateUserBmap(rf::BMPF_8888, EASTER_EGG_SIZE, EASTER_EGG_SIZE);
+    int hbm = rf::BmCreateUserBmap(rf::BMPF_8888, easter_egg_size, easter_egg_size);
 
     rf::GrLockData lock_data;
     if (!rf::GrLock(hbm, 0, &lock_data, 1))
         return -1;
 
     rf::BmConvertFormat(lock_data.Bits, (rf::BmPixelFormat)lock_data.PixelFormat, res_data, rf::BMPF_8888,
-        EASTER_EGG_SIZE * EASTER_EGG_SIZE);
+        easter_egg_size * easter_egg_size);
     rf::GrUnlock(&lock_data);
 
     return hbm;
@@ -175,12 +175,12 @@ CallHook2<void()> MenuMainRender_Hook{
 void SetPlaySoundEventsVolumeScale(float volume_scale)
 {
     volume_scale = clamp(volume_scale, 0.0f, 1.0f);
-    uintptr_t Offsets[] = {
+    uintptr_t offsets[] = {
         // Play Sound event
         0x004BA4D8, 0x004BA515, 0x004BA71C, 0x004BA759, 0x004BA609, 0x004BA5F2, 0x004BA63F,
     };
-    for (unsigned i = 0; i < COUNTOF(Offsets); ++i)
-        WriteMem<float>(Offsets[i] + 1, volume_scale);
+    for (unsigned i = 0; i < COUNTOF(offsets); ++i)
+        WriteMem<float>(offsets[i] + 1, volume_scale);
 }
 
 CallHook2<void(int, rf::Vector3*, float*, float*, float)> SndConvertVolume3D_AmbientSound_Hook{
@@ -423,17 +423,17 @@ FunHook2<int(void*, void*)> GeomCachePrepareRoom_Hook{
     0x004F0C00,
     [](void* geom, void* room) {
         int ret = GeomCachePrepareRoom_Hook.CallTarget(geom, room);
-        char** ppRoomGeom = (char**)((char*)room + 4);
-        char* RoomGeom = *ppRoomGeom;
-        if (ret == 0 && RoomGeom)
+        char** pp_room_geom = (char**)((char*)room + 4);
+        char* room_geom = *pp_room_geom;
+        if (ret == 0 && room_geom)
         {
-            uint32_t *RoomVertNum = (uint32_t*)(RoomGeom + 4);
-            if (*RoomVertNum > 8000)
+            uint32_t *room_vert_num = (uint32_t*)(room_geom + 4);
+            if (*room_vert_num > 8000)
             {
-                static int Once = 0;
-                if (!(Once++))
-                    WARN("Not rendering room with %u vertices!", *RoomVertNum);
-                *ppRoomGeom = NULL;
+                static int once = 0;
+                if (!(once++))
+                    WARN("Not rendering room with %u vertices!", *room_vert_num);
+                *pp_room_geom = NULL;
                 return -1;
             }
         }
@@ -460,9 +460,9 @@ static_assert(sizeof(ServerListEntry) == 0x6C, "invalid size");
 FunHook2<int (const int&, const int&)> ServerListCmpFunc_Hook{
     0x0044A6D0,
     [](const int& index1, const int& index2) {
-        auto ServerList = AddrAsRef<ServerListEntry*>(0x0063F62C);
-        bool has_ping1 = ServerList[index1].ping >= 0;
-        bool has_ping2 = ServerList[index2].ping >= 0;
+        auto server_list = AddrAsRef<ServerListEntry*>(0x0063F62C);
+        bool has_ping1 = server_list[index1].ping >= 0;
+        bool has_ping2 = server_list[index2].ping >= 0;
         if (has_ping1 != has_ping2)
             return has_ping1 ? -1 : 1;
         else
@@ -562,12 +562,12 @@ RegsPatch RflLoadInternal_CheckRestoreStatus_Patch{
         // check if SaveRestoreLoadAll is successful
         if (regs.eax) return;
         // check if this is auto-load when changing level
-        const char *SaveFilename = reinterpret_cast<const char*>(regs.edi);
-        if (!strcmp(SaveFilename, "auto.svl")) return;
+        const char *save_filename = reinterpret_cast<const char*>(regs.edi);
+        if (!strcmp(save_filename, "auto.svl")) return;
         // manual load failed
         ERR("Restoring game state failed");
-        char *ErrorInfo = *reinterpret_cast<char**>(regs.esp + 0x2B0 + 0xC);
-        strcpy(ErrorInfo, "Save file is corrupted");
+        char *error_info = *reinterpret_cast<char**>(regs.esp + 0x2B0 + 0xC);
+        strcpy(error_info, "Save file is corrupted");
         // return to RflLoadInternal failure path
         regs.eip = 0x004608CC;
     }
@@ -589,10 +589,10 @@ FunHook2<void(bool)> MenuInGameUpdateCutscene_Hook{
                 "Press JUMP key to skip the cutscene", -1, rf::g_GrTextMaterial);
         }
         else {
-            auto TimerAddDeltaTime = AddrAsRef<int(int delta_ms)>(0x004FA2D0);
-            auto SndStop = AddrAsRef<char(int sig)>(0x005442B0);
-            auto DestroyAllPausedSounds = AddrAsRef<void()>(0x005059F0);
-            auto SetAllPlayingSoundsPaused = AddrAsRef<void(bool paused)>(0x00505C70);
+            auto timer_add_delta_time = AddrAsRef<int(int delta_ms)>(0x004FA2D0);
+            auto snd_stop = AddrAsRef<char(int sig)>(0x005442B0);
+            auto destroy_all_paused_sounds = AddrAsRef<void()>(0x005059F0);
+            auto set_all_playing_sounds_paused = AddrAsRef<void(bool paused)>(0x00505C70);
 
             auto &timer_base = AddrAsRef<int64_t>(0x01751BF8);
             auto &timer_freq = AddrAsRef<int32_t>(0x01751C04);
@@ -602,12 +602,12 @@ FunHook2<void(bool)> MenuInGameUpdateCutscene_Hook{
             auto &num_shots = StructFieldRef<int>(rf::g_active_cutscene, 4);
 
             if (g_cutscene_bg_sound_sig != -1) {
-                SndStop(g_cutscene_bg_sound_sig);
+                snd_stop(g_cutscene_bg_sound_sig);
                 g_cutscene_bg_sound_sig = -1;
             }
 
-            SetAllPlayingSoundsPaused(true);
-            DestroyAllPausedSounds();
+            set_all_playing_sounds_paused(true);
+            destroy_all_paused_sounds();
             rf::g_sound_enabled = false;
 
             while (rf::CutsceneIsActive()) {
@@ -622,7 +622,7 @@ FunHook2<void(bool)> MenuInGameUpdateCutscene_Hook{
                     else
                         shot_time_left_ms = std::min(shot_time_left_ms, 100);
                 }
-                TimerAddDeltaTime(shot_time_left_ms);
+                timer_add_delta_time(shot_time_left_ms);
                 frame_time = shot_time_left_ms / 1000.0f;
                 timer_base -= static_cast<int64_t>(shot_time_left_ms) * timer_freq / 1000;
                 MenuInGameUpdateCutscene_Hook.CallTarget(dlg_open);
@@ -644,9 +644,9 @@ CallHook2<int()> PlayHardcodedBackgroundMusicForCutscene_Hook{
 RegsPatch CoronaEntityCollisionTestFix{
     0x004152F1,
     [](X86Regs& regs) {
-        auto GetEntityRootBonePos = AddrAsRef<void(rf::EntityObj*, rf::Vector3&)>(0x48AC70);
+        auto get_entity_root_bone_pos = AddrAsRef<void(rf::EntityObj*, rf::Vector3&)>(0x48AC70);
         using IntersectLineWithAabbType = bool(rf::Vector3 *aabb1, rf::Vector3 *aabb2, rf::Vector3 *pos1, rf::Vector3 *pos2, rf::Vector3 *out_pos);
-        auto IntersectLineWithAabb = reinterpret_cast<IntersectLineWithAabbType*>(0x00508B70);
+        auto intersect_line_with_aabb = reinterpret_cast<IntersectLineWithAabbType*>(0x00508B70);
 
         rf::EntityObj* entity = reinterpret_cast<rf::EntityObj*>(regs.esi);
         if (!rf::CutsceneIsActive()) {
@@ -654,13 +654,13 @@ RegsPatch CoronaEntityCollisionTestFix{
         }
 
         rf::Vector3 root_bone_pos;
-        GetEntityRootBonePos(entity, root_bone_pos);
+        get_entity_root_bone_pos(entity, root_bone_pos);
         rf::Vector3 aabb_min = root_bone_pos - entity->_Super.PhysInfo.Radius;
         rf::Vector3 aabb_max = root_bone_pos + entity->_Super.PhysInfo.Radius;
         auto corona_pos = reinterpret_cast<rf::Vector3*>(regs.edi);
         auto eye_pos = reinterpret_cast<rf::Vector3*>(regs.ebx);
         auto tmp_vec = reinterpret_cast<rf::Vector3*>(regs.ecx);
-        regs.eax = IntersectLineWithAabb(&aabb_min, &aabb_max, corona_pos, eye_pos, tmp_vec);
+        regs.eax = intersect_line_with_aabb(&aabb_min, &aabb_max, corona_pos, eye_pos, tmp_vec);
         regs.eip = 0x004152F6;
     },
 };

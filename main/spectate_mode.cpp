@@ -39,14 +39,14 @@ static void SetCameraTarget(rf::Player *player)
     if (!rf::g_LocalPlayer || !rf::g_LocalPlayer->Camera || !player)
         return;
 
-    rf::Camera *Camera = rf::g_LocalPlayer->Camera;
-    Camera->Type = rf::CAM_FIRST_PERSON;
-    Camera->Player = player;
+    rf::Camera *camera = rf::g_LocalPlayer->Camera;
+    camera->Type = rf::CAM_FIRST_PERSON;
+    camera->Player = player;
 
     g_OldTargetCamera = player->Camera;
-    player->Camera = Camera; // fix crash 0040D744
+    player->Camera = camera; // fix crash 0040D744
 
-    rf::CameraSetFirstPerson(Camera);
+    rf::CameraSetFirstPerson(camera);
 }
 
 void SpectateModeSetTargetPlayer(rf::Player *player)
@@ -73,9 +73,9 @@ void SpectateModeSetTargetPlayer(rf::Player *player)
 
 #if SPECTATE_MODE_SHOW_WEAPON
         g_SpectateModeTarget->Flags &= ~(1 << 4);
-        rf::EntityObj *Entity = rf::EntityGetFromHandle(g_SpectateModeTarget->Entity_handle);
-        if (Entity)
-            Entity->LocalPlayer = NULL;
+        rf::EntityObj *entity = rf::EntityGetFromHandle(g_SpectateModeTarget->Entity_handle);
+        if (entity)
+            entity->LocalPlayer = NULL;
 #endif // SPECTATE_MODE_SHOW_WEAPON
     }
 
@@ -87,36 +87,36 @@ void SpectateModeSetTargetPlayer(rf::Player *player)
 
 #if SPECTATE_MODE_SHOW_WEAPON
     player->Flags |= 1 << 4;
-    rf::EntityObj *Entity = rf::EntityGetFromHandle(player->Entity_handle);
-    if (Entity)
+    rf::EntityObj *entity = rf::EntityGetFromHandle(player->Entity_handle);
+    if (entity)
     {
         // make sure weapon mesh is loaded now
-        rf::PlayerFpgunSetupMesh(player, Entity->WeaponInfo.WeaponClsId);
+        rf::PlayerFpgunSetupMesh(player, entity->WeaponInfo.WeaponClsId);
         TRACE("FpgunMesh %p", player->FpgunMesh);
 
         // Hide target player from camera
-        Entity->LocalPlayer = player;
+        entity->LocalPlayer = player;
     }
 #endif // SPECTATE_MODE_SHOW_WEAPON
 }
 
 static void SpectateNextPlayer(bool dir, bool try_alive_players_first = false)
 {
-    rf::Player *NewTarget;
+    rf::Player *new_target;
     if (g_SpectateModeEnabled)
-        NewTarget = g_SpectateModeTarget;
+        new_target = g_SpectateModeTarget;
     else
-        NewTarget = rf::g_LocalPlayer;
+        new_target = rf::g_LocalPlayer;
     while (true)
     {
-        NewTarget = dir ? NewTarget->Next : NewTarget->Prev;
-        if (!NewTarget || NewTarget == g_SpectateModeTarget)
+        new_target = dir ? new_target->Next : new_target->Prev;
+        if (!new_target || new_target == g_SpectateModeTarget)
             break; // nothing found
-        if (try_alive_players_first && rf::IsPlayerEntityInvalid(NewTarget))
+        if (try_alive_players_first && rf::IsPlayerEntityInvalid(new_target))
             continue;
-        if (NewTarget != rf::g_LocalPlayer)
+        if (new_target != rf::g_LocalPlayer)
         {
-            SpectateModeSetTargetPlayer(NewTarget);
+            SpectateModeSetTargetPlayer(new_target);
             return;
         }
     }
@@ -227,19 +227,19 @@ static void PlayerFpgunRender_New(rf::Player *player)
 {
     if (g_SpectateModeEnabled)
     {
-        rf::EntityObj *Entity = rf::EntityGetFromHandle(g_SpectateModeTarget->Entity_handle);
+        rf::EntityObj *entity = rf::EntityGetFromHandle(g_SpectateModeTarget->Entity_handle);
 
         // HACKFIX: RF uses function PlayerSetRemoteChargeVisible for local player only
-        g_SpectateModeTarget->WeaponInfo.RemoteChargeVisible = (Entity && Entity->WeaponInfo.WeaponClsId == rf::g_RemoteChargeClsId);
+        g_SpectateModeTarget->WeaponInfo.RemoteChargeVisible = (entity && entity->WeaponInfo.WeaponClsId == rf::g_RemoteChargeClsId);
 
-        if (g_SpectateModeTarget != rf::g_LocalPlayer && Entity)
+        if (g_SpectateModeTarget != rf::g_LocalPlayer && entity)
         {
-            static rf::Vector3 OldVel;
-            rf::Vector3 VelDiff = Entity->_Super.PhysInfo.Vel - OldVel;
-            OldVel = Entity->_Super.PhysInfo.Vel;
+            static rf::Vector3 old_vel;
+            rf::Vector3 vel_diff = entity->_Super.PhysInfo.Vel - old_vel;
+            old_vel = entity->_Super.PhysInfo.Vel;
 
-            if (VelDiff.y > 0.1f)
-                Entity->EntityFlags |= 2; // jump
+            if (vel_diff.y > 0.1f)
+                entity->EntityFlags |= 2; // jump
         }
 
 
@@ -262,14 +262,14 @@ FunHook2<void(rf::Player*)> PlayerFpgunUpdateState_Hook{
         if (player != rf::g_LocalPlayer) {
             rf::EntityObj* entity = rf::EntityGetFromHandle(player->Entity_handle);
             if (entity) {
-                float fHorzSpeedPow2 = entity->_Super.PhysInfo.Vel.x * entity->_Super.PhysInfo.Vel.x
+                float f_horz_speed_pow2 = entity->_Super.PhysInfo.Vel.x * entity->_Super.PhysInfo.Vel.x
                     + entity->_Super.PhysInfo.Vel.z * entity->_Super.PhysInfo.Vel.z;
                 int state = 0;
                 if (rf::IsEntityLoopFire(entity->_Super.Handle, entity->WeaponInfo.WeaponClsId))
                     state = 2;
                 else if (rf::EntityIsSwimming(entity) || rf::EntityIsFalling(entity))
                     state = 0;
-                else if (fHorzSpeedPow2 > 0.2f)
+                else if (f_horz_speed_pow2 > 0.2f)
                     state = 1;
                 if (!rf::PlayerFpgunHasState(player, state))
                     rf::PlayerFpgunSetState(player, state);
@@ -344,15 +344,15 @@ void SpectateModeDrawUI()
         g_SmallFont = rf::GrLoadFont("rfpc-small.vf", -1);
 
     const unsigned cx = 500, cy = 50;
-    unsigned cxScr = rf::GrGetMaxWidth(), cySrc = rf::GrGetMaxHeight();
-    unsigned x = (cxScr - cx) / 2;
-    unsigned y = cySrc - 100;
-    unsigned cyFont = rf::GrGetFontHeight(-1);
+    unsigned cx_scr = rf::GrGetMaxWidth(), cy_src = rf::GrGetMaxHeight();
+    unsigned x = (cx_scr - cx) / 2;
+    unsigned y = cy_src - 100;
+    unsigned cy_font = rf::GrGetFontHeight(-1);
 
     rf::GrSetColor(0, 0, 0, 0x80);
-    rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, cxScr / 2 + 2, 150 + 2, "SPECTATE MODE", g_LargeFont, rf::g_GrTextMaterial);
+    rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, cx_scr / 2 + 2, 150 + 2, "SPECTATE MODE", g_LargeFont, rf::g_GrTextMaterial);
     rf::GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
-    rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, cxScr / 2, 150, "SPECTATE MODE", g_LargeFont, rf::g_GrTextMaterial);
+    rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, cx_scr / 2, 150, "SPECTATE MODE", g_LargeFont, rf::g_GrTextMaterial);
 
     rf::GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
     rf::GrDrawAlignedText(rf::GR_ALIGN_LEFT, 20, 200, "Press JUMP key to exit Spectate Mode", g_MediumFont, rf::g_GrTextMaterial);
@@ -362,25 +362,25 @@ void SpectateModeDrawUI()
     rf::GrSetColor(0, 0, 0x00, 0x60);
     rf::GrDrawRect(x, y, cx, cy, rf::g_GrRectMaterial);
 
-    char Buf[256];
+    char buf[256];
     rf::GrSetColor(0xFF, 0xFF, 0, 0x80);
-    snprintf(Buf, sizeof(Buf), "Spectating: %s", g_SpectateModeTarget->strName.CStr());
-    rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, x + cx / 2, y + cy / 2 - cyFont / 2 - 5, Buf, g_LargeFont, rf::g_GrTextMaterial);
+    snprintf(buf, sizeof(buf), "Spectating: %s", g_SpectateModeTarget->strName.CStr());
+    rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, x + cx / 2, y + cy / 2 - cy_font / 2 - 5, buf, g_LargeFont, rf::g_GrTextMaterial);
 
-    rf::EntityObj *Entity = rf::EntityGetFromHandle(g_SpectateModeTarget->Entity_handle);
-    if (!Entity)
+    rf::EntityObj *entity = rf::EntityGetFromHandle(g_SpectateModeTarget->Entity_handle);
+    if (!entity)
     {
         rf::GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
-        static int BloodBm = rf::BmLoad("bloodsmear07_A.tga", -1, true);
-        int BloodW, BloodH;
-        rf::BmGetBitmapSize(BloodBm, &BloodW, &BloodH);
-        rf::GrDrawBitmapStretched(BloodBm, (cxScr - BloodW*2) / 2, (cySrc - BloodH*2) / 2, BloodW * 2 , BloodH * 2,
-            0, 0, BloodW, BloodH, 0.0f, 0.0f, rf::g_GrBitmapMaterial);
+        static int blood_bm = rf::BmLoad("bloodsmear07_A.tga", -1, true);
+        int blood_w, blood_h;
+        rf::BmGetBitmapSize(blood_bm, &blood_w, &blood_h);
+        rf::GrDrawBitmapStretched(blood_bm, (cx_scr - blood_w*2) / 2, (cy_src - blood_h*2) / 2, blood_w * 2 , blood_h * 2,
+            0, 0, blood_w, blood_h, 0.0f, 0.0f, rf::g_GrBitmapMaterial);
 
         rf::GrSetColor(0, 0, 0, 0x80);
-        rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, cxScr / 2 + 2, cySrc / 2 + 2, "DEAD", g_LargeFont, rf::g_GrTextMaterial);
+        rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, cx_scr / 2 + 2, cy_src / 2 + 2, "DEAD", g_LargeFont, rf::g_GrTextMaterial);
         rf::GrSetColor(0xF0, 0x20, 0x10, 0xC0);
-        rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, cxScr / 2, cySrc / 2, "DEAD", g_LargeFont, rf::g_GrTextMaterial);
+        rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, cx_scr / 2, cy_src / 2, "DEAD", g_LargeFont, rf::g_GrTextMaterial);
     }
 }
 
