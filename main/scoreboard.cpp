@@ -9,7 +9,7 @@
 #include <FunHook2.h>
 
 namespace rf {
-    static const auto DrawScoreboard = (void(*)(bool Draw))0x00470860;
+    static const auto DrawScoreboard = (void(*)(bool draw))0x00470860;
 }
 
 constexpr float ENTER_ANIM_MS = 100.0f;
@@ -23,15 +23,15 @@ static unsigned g_AnimTicks = 0;
 static bool g_EnterAnim = false;
 static bool g_LeaveAnim = false;
 
-static int ScoreboardSortFunc(const void *Ptr1, const void *Ptr2)
+static int ScoreboardSortFunc(const void *ptr1, const void *ptr2)
 {
-    rf::Player *Player1 = *((rf::Player**)Ptr1), *Player2 = *((rf::Player**)Ptr2);
+    rf::Player *Player1 = *((rf::Player**)ptr1), *Player2 = *((rf::Player**)ptr2);
     return Player2->Stats->score - Player1->Stats->score;
 }
 
-void DrawScoreboardInternal_New(bool Draw)
+void DrawScoreboardInternal_New(bool draw)
 {
-    if (g_ScoreboardForceHide || !Draw)
+    if (g_ScoreboardForceHide || !draw)
         return;
 
     unsigned cLeftCol = 0, cRightCol = 0;

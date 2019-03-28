@@ -3,25 +3,25 @@
 #include "rf.h"
 #include "utils.h"
 
-const char* GetWndMsgName(UINT Msg);
+const char* GetWndMsgName(UINT msg);
 
 static bool IsMouseEnabled()
 {
     return rf::g_MouseInitialized && rf::g_IsActive;
 }
 
-LRESULT WINAPI WndProc(HWND Wnd_handle, UINT Msg, WPARAM wParam, LPARAM lParam)
+LRESULT WINAPI WndProc(HWND wnd_handle, UINT msg, WPARAM w_param, LPARAM l_param)
 {
     //TRACE("%08x: msg %s %x %x", GetTickCount(), GetWndMsgName(Msg), wParam, lParam);
 
     for (unsigned i = 0; i < rf::g_cMsgHandlers; ++i)
-        rf::g_MsgHandlers[i](Msg, wParam, lParam);
+        rf::g_MsgHandlers[i](msg, w_param, l_param);
 
-    switch (Msg) {
+    switch (msg) {
     case WM_ACTIVATE:
         if (!rf::g_IsDedicatedServer) {
             // Show cursor if window is not active
-            if (wParam) {
+            if (w_param) {
                 ShowCursor(FALSE);
                 while (ShowCursor(FALSE) >= 0);
             } else {
@@ -30,8 +30,8 @@ LRESULT WINAPI WndProc(HWND Wnd_handle, UINT Msg, WPARAM wParam, LPARAM lParam)
             }
         }
 
-        rf::g_IsActive = wParam ? 1 : 0;
-        return DefWindowProcA(Wnd_handle, Msg, wParam, lParam);
+        rf::g_IsActive = w_param ? 1 : 0;
+        return DefWindowProcA(wnd_handle, msg, w_param, l_param);
 
     case WM_QUIT:
     case WM_CLOSE:
@@ -43,11 +43,11 @@ LRESULT WINAPI WndProc(HWND Wnd_handle, UINT Msg, WPARAM wParam, LPARAM lParam)
         if (rf::g_IsDedicatedServer)
             ++rf::g_cRedrawServer;
         else
-            return DefWindowProcA(Wnd_handle, Msg, wParam, lParam);
+            return DefWindowProcA(wnd_handle, msg, w_param, l_param);
         break;
 
     default:
-        return DefWindowProcA(Wnd_handle, Msg, wParam, lParam);
+        return DefWindowProcA(wnd_handle, msg, w_param, l_param);
     }
 
     return 0;

@@ -56,16 +56,16 @@ void ResetGammaRamp()
     SetGammaRamp(&gamma_ramp);
 }
 
-static void GammaMsgHandler(UINT Msg, WPARAM wParam, LPARAM lParam)
+static void GammaMsgHandler(UINT msg, WPARAM w_param, LPARAM l_param)
 {
-    (void)lParam; // unused parameter
+    (void)l_param; // unused parameter
 
-    switch (Msg) {
+    switch (msg) {
     case WM_ACTIVATE:
     case WM_ACTIVATEAPP:
-        TRACE("WM_ACTIVATE %lx", wParam);
+        TRACE("WM_ACTIVATE %lx", w_param);
         if (g_gamma_ramp_initialized) {
-            if (wParam)
+            if (w_param)
                 SetGammaRamp(&g_gamma_ramp);
             else
                 ResetGammaRamp();

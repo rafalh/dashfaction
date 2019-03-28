@@ -17,7 +17,7 @@ static const auto MpIsConnectingToServer = AddrAsRef<uint8_t(const rf::NwAddr& a
 static auto& RflStaticGeometry = AddrAsRef<void*>(0x006460E8);
 static auto& SimultaneousPing = AddrAsRef<uint32_t>(0x00599CD8);
 
-typedef void(*NwProcessGamePackets_Type)(const char *Data, int cbData, const NwAddr &Addr, Player *Player);
+typedef void(*NwProcessGamePackets_Type)(const char *data, int num_bytes, const NwAddr &addr, Player *player);
 static const auto NwProcessGamePackets = (NwProcessGamePackets_Type)0x004790D0;
 }
 

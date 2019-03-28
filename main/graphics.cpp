@@ -18,14 +18,14 @@ static auto &g_GrViewMatrix = *(Matrix3*)0x018186C8;
 static auto &g_GrDeviceCaps = *(D3DCAPS8*)0x01CFCAC8;
 static auto &g_GrDefaultWFar = *(float*)0x00596140;
 
-static const auto GrSetTextureMipFilter = (void(*)(int Linear))0x0050E830;
+static const auto GrSetTextureMipFilter = (void(*)(int linear))0x0050E830;
 }
 
 
 static float g_GrClippedGeomOffsetX = -0.5;
 static float g_GrClippedGeomOffsetY = -0.5;
 
-static void SetTextureMinMagFilterInCode(D3DTEXTUREFILTERTYPE FilterType)
+static void SetTextureMinMagFilterInCode(D3DTEXTUREFILTERTYPE filter_type)
 {
     uintptr_t Addresses[] = {
         // GrInitD3D
@@ -52,10 +52,10 @@ static void SetTextureMinMagFilterInCode(D3DTEXTUREFILTERTYPE FilterType)
     };
     unsigned i;
     for (i = 0; i < _countof(Addresses); ++i)
-        WriteMem<u8>(Addresses[i] + 1, (uint8_t)FilterType);
+        WriteMem<u8>(Addresses[i] + 1, (uint8_t)filter_type);
 }
 
-extern "C" void GrSetViewMatrix_FovFix(float fFovScale, float fWFarFactor)
+extern "C" void GrSetViewMatrix_FovFix(float f_fov_scale, float f_w_far_factor)
 {
     constexpr float fRefAspectRatio = 4.0f / 3.0f;
     constexpr float fMaxWideAspectRatio = 21.0f / 9.0f; // biggest aspect ratio currently in market
@@ -76,9 +76,9 @@ extern "C" void GrSetViewMatrix_FovFix(float fFovScale, float fWFarFactor)
         fScaleY *= fAspectRatio / fMaxWideAspectRatio;
     }
 
-    rf::g_GrScaleVec.x = fWFarFactor / fFovScale * fScaleX;
-    rf::g_GrScaleVec.y = fWFarFactor / fFovScale * fScaleY;
-    rf::g_GrScaleVec.z = fWFarFactor;
+    rf::g_GrScaleVec.x = f_w_far_factor / f_fov_scale * fScaleX;
+    rf::g_GrScaleVec.y = f_w_far_factor / f_fov_scale * fScaleY;
+    rf::g_GrScaleVec.z = f_w_far_factor;
 
     g_GrClippedGeomOffsetX = rf::g_GrScreen.OffsetX - 0.5f;
     g_GrClippedGeomOffsetY = rf::g_GrScreen.OffsetY - 0.5f;
@@ -118,12 +118,12 @@ ASM_FUNC(GrCreateD3DDeviceError_00545BEF,
     ASM_I  add esp, 4
 )
 
-extern "C" void GrClearZBuffer_SetRect(D3DRECT *ClearRect)
+extern "C" void GrClearZBuffer_SetRect(D3DRECT *clear_rect)
 {
-    ClearRect->x1 = rf::g_GrScreen.OffsetX + rf::g_GrScreen.ClipLeft;
-    ClearRect->y1 = rf::g_GrScreen.OffsetY + rf::g_GrScreen.ClipTop;
-    ClearRect->x2 = rf::g_GrScreen.OffsetX + rf::g_GrScreen.ClipRight + 1;
-    ClearRect->y2 = rf::g_GrScreen.OffsetY + rf::g_GrScreen.ClipBottom + 1;
+    clear_rect->x1 = rf::g_GrScreen.OffsetX + rf::g_GrScreen.ClipLeft;
+    clear_rect->y1 = rf::g_GrScreen.OffsetY + rf::g_GrScreen.ClipTop;
+    clear_rect->x2 = rf::g_GrScreen.OffsetX + rf::g_GrScreen.ClipRight + 1;
+    clear_rect->y2 = rf::g_GrScreen.OffsetY + rf::g_GrScreen.ClipBottom + 1;
 }
 
 ASM_FUNC(GrClearZBuffer_005509C4,
@@ -170,12 +170,12 @@ static void SetupPP(void)
 
 CallHook2<void(int, rf::GrVertex**, int, int)> GrDrawRect_GrDrawPoly_Hook{
     0x0050DD69,
-    [](int Num, rf::GrVertex **ppVertices, int Flags, int Mat) {
-        for (int i = 0; i < Num; ++i) {
-            ppVertices[i]->ScreenPos.x -= 0.5f;
-            ppVertices[i]->ScreenPos.y -= 0.5f;
+    [](int num, rf::GrVertex **pp_vertices, int flags, int mat) {
+        for (int i = 0; i < num; ++i) {
+            pp_vertices[i]->ScreenPos.x -= 0.5f;
+            pp_vertices[i]->ScreenPos.y -= 0.5f;
         }
-        GrDrawRect_GrDrawPoly_Hook.CallTarget(Num, ppVertices, Flags, Mat);
+        GrDrawRect_GrDrawPoly_Hook.CallTarget(num, pp_vertices, flags, mat);
     }
 };
 

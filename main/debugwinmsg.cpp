@@ -197,12 +197,12 @@ static const WIN_MSG_NAME_MAPPING allMessages[] =
     { 0, NULL, }    // end of message list
 };
 
-const char *GetWndMsgName(UINT Msg)
+const char *GetWndMsgName(UINT msg)
 {
     const WIN_MSG_NAME_MAPPING* MapMsg = allMessages;
     for (/*null*/; MapMsg->lpszMsg != NULL; MapMsg++)
     {
-        if (MapMsg->nMsg == Msg)
+        if (MapMsg->nMsg == msg)
         {
             return (char *)MapMsg->lpszMsg;
         }

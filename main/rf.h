@@ -157,13 +157,13 @@ namespace rf
     public:
         String()
         {
-            const auto fun_ptr = (String&(__thiscall *)(String& this_))0x004FF3B0;
+            const auto fun_ptr = (String&(__thiscall *)(String& self))0x004FF3B0;
             fun_ptr(*this);
         }
 
         String(const char* c_str)
         {
-            const auto fun_ptr = (String&(__thiscall *)(String& this_, const char* c_str))0x004FF3D0;
+            const auto fun_ptr = (String&(__thiscall *)(String& self, const char* c_str))0x004FF3D0;
             fun_ptr(*this, c_str);
         }
 
@@ -175,7 +175,7 @@ namespace rf
 
         ~String()
         {
-            const auto fun_ptr = (void(__thiscall *)(String& this_))0x004FF470;
+            const auto fun_ptr = (void(__thiscall *)(String& self))0x004FF470;
             fun_ptr(*this);
         }
 
@@ -187,7 +187,7 @@ namespace rf
         operator Pod() const
         {
             // Make a copy
-            const auto fun_ptr = (Pod&(__thiscall *)(Pod& this_, const Pod& str))0x004FF410;
+            const auto fun_ptr = (Pod&(__thiscall *)(Pod& self, const Pod& str))0x004FF410;
             Pod pod_copy;
             fun_ptr(pod_copy, m_pod);
             return pod_copy;
@@ -195,20 +195,20 @@ namespace rf
 
         String& operator=(const String& other)
         {
-            const auto fun_ptr = (String&(__thiscall *)(String& this_, const String& str))0x004FFA20;
+            const auto fun_ptr = (String&(__thiscall *)(String& self, const String& str))0x004FFA20;
             fun_ptr(*this, other);
             return *this;
         }
 
         const char *CStr() const
         {
-            const auto fun_ptr = (const char*(__thiscall *)(const String& this_))0x004FF480;
+            const auto fun_ptr = (const char*(__thiscall *)(const String& self))0x004FF480;
             return fun_ptr(*this);
         }
 
         int Size() const
         {
-            const auto fun_ptr = (int(__thiscall *)(const String& this_))0x004FF490;
+            const auto fun_ptr = (int(__thiscall *)(const String& self))0x004FF490;
             return fun_ptr(*this);
         }
 
@@ -266,7 +266,7 @@ namespace rf
         const char *Descr;
         void(*pfnHandler)();
 
-        inline static const auto Init = (void(__thiscall *)(rf::DcCommand *This, const char *Cmd, const char *Descr, DcCmdHandler pfnHandler))0x00509A70;
+        inline static const auto Init = (void(__thiscall *)(rf::DcCommand *self, const char *cmd, const char *descr, DcCmdHandler pfn_handler))0x00509A70;
     };
 
     enum DcArgType
@@ -284,10 +284,10 @@ namespace rf
         DC_ARG_ANY = 0xFFFFFFFF,
     };
 
-    static const auto DcPrint = (void(*)(const char *Text, const int *Color))0x00509EC0;
-    static const auto DcPrintf = (void(*)(const char *Format, ...))0x0050B9F0;
-    static const auto DcGetArg = (void(*)(int Type, bool PreserveCase))0x0050AED0;
-    static const auto DcRunCmd = (int(*)(const char *Cmd))0x00509B00;
+    static const auto DcPrint = (void(*)(const char *text, const int *color))0x00509EC0;
+    static const auto DcPrintf = (void(*)(const char *format, ...))0x0050B9F0;
+    static const auto DcGetArg = (void(*)(int type, bool preserve_case))0x0050AED0;
+    static const auto DcRunCmd = (int(*)(const char *cmd))0x00509B00;
 
     //static const auto g_ppDcCommands = (DcCommand**)0x01775530;
     static auto &g_DcNumCommands = *(uint32_t*)0x0177567C;
@@ -299,8 +299,8 @@ namespace rf
     static const auto g_DcStrArg = (char*)0x0175462C;
     static auto &g_DcIntArg = *(int*)0x01775220;
     static auto &g_DcFloatArg = *(float*)0x01754628;
-    static const auto g_szDcCmdLine = (char*)0x01775330;
-    static auto &g_cchDcCmdLineLen = *(uint32_t*)0x0177568C;
+    static const auto g_DcCmdLine = (char*)0x01775330;
+    static auto &g_DcCmdLineLen = *(uint32_t*)0x0177568C;
 
     #define DC_REGISTER_CMD(name, help, handler) \
         do { \
@@ -323,13 +323,13 @@ namespace rf
         BMPF_UNK_8_16B = 0x8,
     };
 
-    static const auto BmLoad = (int(*)(const char *Filename, int a2, bool a3))0x0050F6A0;
-    static const auto BmCreateUserBmap = (int(*)(BmPixelFormat PixelFormat, int Width, int Height))0x005119C0;
-    static const auto BmConvertFormat = (void(*)(void *DstBits, BmPixelFormat DstPixelFmt, const void *SrcBits, BmPixelFormat SrcPixelFmt, int NumPixels))0x0055DD20;
-    static const auto BmGetBitmapSize = (void(*)(int BmHandle, int *Width, int *Height))0x00510630;
-    static const auto BmGetFilename = (const char*(*)(int BmHandle))0x00511710;
-    static const auto BmLock = (BmPixelFormat(*)(int BmHandle, uint8_t **ppData, uint8_t **ppPalette))0x00510780;
-    static const auto BmUnlock = (void(*)(int BmHandle))0x00511700;
+    static const auto BmLoad = (int(*)(const char *filename, int a2, bool a3))0x0050F6A0;
+    static const auto BmCreateUserBmap = (int(*)(BmPixelFormat pixel_format, int width, int height))0x005119C0;
+    static const auto BmConvertFormat = (void(*)(void *dst_bits, BmPixelFormat dst_pixel_fmt, const void *src_bits, BmPixelFormat src_pixel_fmt, int num_pixels))0x0055DD20;
+    static const auto BmGetBitmapSize = (void(*)(int bm_handle, int *width, int *height))0x00510630;
+    static const auto BmGetFilename = (const char*(*)(int bm_handle))0x00511710;
+    static const auto BmLock = (BmPixelFormat(*)(int bm_handle, uint8_t **pp_data, uint8_t **pp_palette))0x00510780;
+    static const auto BmUnlock = (void(*)(int bm_handle))0x00511700;
 
     /* Graphics */
 
@@ -419,26 +419,26 @@ namespace rf
     static const auto GrGetViewportWidth = (unsigned(*)())0x0050CDB0;
     static const auto GrGetViewportHeight = (unsigned(*)())0x0050CDC0;
     static const auto GrSetColor = (void(*)(unsigned r, unsigned g, unsigned b, unsigned a))0x0050CF80;
-    static const auto GrSetColorPtr = (void(*)(uint32_t *Color))0x0050D000;
-    static const auto GrReadBackBuffer = (int(*)(int x, int y, int Width, int Height, void *Buffer))0x0050DFF0;
+    static const auto GrSetColorPtr = (void(*)(uint32_t *color))0x0050D000;
+    static const auto GrReadBackBuffer = (int(*)(int x, int y, int width, int height, void *buffer))0x0050DFF0;
     static const auto GrFlushBuffers = (void(*)())0x00559D90;
 
-    static const auto GrDrawRect = (void(*)(unsigned x, unsigned y, unsigned cx, unsigned cy, unsigned Material))0x0050DBE0;
-    static const auto GrDrawImage = (void(*)(int BmHandle, int x, int y, int Material))0x0050D2A0;
-    static const auto GrDrawBitmapStretched = (void(*)(int BmHandle, int dstX, int dstY, int dstW, int dstH, int srcX, int srcY, int srcW, int srcH, float a10, float a11, int Material))0x0050D250;
-    static const auto GrDrawText = (void(*)(unsigned x, unsigned y, const char *Text, int Font, unsigned Material))0x0051FEB0;
-    static const auto GrDrawAlignedText = (void(*)(GrTextAlignment Align, unsigned x, unsigned y, const char *Text, int Font, unsigned Material))0x0051FE50;
+    static const auto GrDrawRect = (void(*)(unsigned x, unsigned y, unsigned cx, unsigned cy, unsigned material))0x0050DBE0;
+    static const auto GrDrawImage = (void(*)(int bm_handle, int x, int y, int material))0x0050D2A0;
+    static const auto GrDrawBitmapStretched = (void(*)(int bm_handle, int dst_x, int dst_y, int dst_w, int dst_h, int src_x, int src_y, int src_w, int src_h, float a10, float a11, int material))0x0050D250;
+    static const auto GrDrawText = (void(*)(unsigned x, unsigned y, const char *text, int font, unsigned material))0x0051FEB0;
+    static const auto GrDrawAlignedText = (void(*)(GrTextAlignment align, unsigned x, unsigned y, const char *text, int font, unsigned material))0x0051FE50;
 
-    static const auto GrRenderLine = (char(*)(const Vector3 *WorldPos1, const Vector3 *WorldPos2, int Material))0x00515960;
-    static const auto GrRenderSphere = (char(*)(const Vector3 *pvPos, float fRadius, int Material))0x00515CD0;
+    static const auto GrRenderLine = (char(*)(const Vector3 *world_pos1, const Vector3 *world_pos2, int material))0x00515960;
+    static const auto GrRenderSphere = (char(*)(const Vector3 *pv_pos, float f_radius, int material))0x00515CD0;
 
-    static const auto GrFitText = (String* (*)(String* pstrDest, String::Pod Str, int cxMax))0x00471EC0;
-    static const auto GrLoadFont = (int(*)(const char *FileName, int a2))0x0051F6E0;
-    static const auto GrGetFontHeight = (unsigned(*)(int FontId))0x0051F4D0;
-    static const auto GrGetTextWidth = (void(*)(int *OutWidth, int *OutHeight, const char *Text, int TextLen, int FontId))0x0051F530;
+    static const auto GrFitText = (String* (*)(String* pstr_dest, String::Pod str, int cx_max))0x00471EC0;
+    static const auto GrLoadFont = (int(*)(const char *file_name, int a2))0x0051F6E0;
+    static const auto GrGetFontHeight = (unsigned(*)(int font_id))0x0051F4D0;
+    static const auto GrGetTextWidth = (void(*)(int *out_width, int *out_height, const char *text, int text_len, int font_id))0x0051F530;
 
-    static const auto GrLock = (char(*)(int BmHandle, int SectionIdx, GrLockData *Data, int a4))0x0050E2E0;
-    static const auto GrUnlock = (void(*)(GrLockData *Data))0x0050E310;
+    static const auto GrLock = (char(*)(int bm_handle, int section_idx, GrLockData *data, int a4))0x0050E2E0;
+    static const auto GrUnlock = (void(*)(GrLockData *data))0x0050E310;
 
     /* User Interface (UI) */
 
@@ -458,9 +458,9 @@ namespace rf
         int BgTexture;
     };
 
-    static const auto UiMsgBox = (void(*)(const char *Title, const char *Text, void(*pfnCallback)(void), bool Input))0x004560B0;
-    static const auto UiCreateDialog = (void(*)(const char *Title, const char *Text, unsigned cButtons, const char **ppszBtnTitles, void **ppfnCallbacks, unsigned Unknown1, unsigned Unknown2))0x004562A0;
-    static const auto UiGetElementFromPos = (int(*)(int x, int y, UiPanel **ppGuiList, signed int cGuiList))0x00442ED0;
+    static const auto UiMsgBox = (void(*)(const char *title, const char *text, void(*pfn_callback)(void), bool input))0x004560B0;
+    static const auto UiCreateDialog = (void(*)(const char *title, const char *text, unsigned c_buttons, const char **ppsz_btn_titles, void **ppfn_callbacks, unsigned unknown1, unsigned unknown2))0x004562A0;
+    static const auto UiGetElementFromPos = (int(*)(int x, int y, UiPanel **pp_gui_list, signed int c_gui_list))0x00442ED0;
 
     /* Chat */
 
@@ -474,15 +474,15 @@ namespace rf
         default_ = 5,
     };
 
-    typedef void(*ChatPrint_Type)(String::Pod strText, ChatMsgColor Color, String::Pod Prefix);
+    typedef void(*ChatPrint_Type)(String::Pod str_text, ChatMsgColor color, String::Pod prefix);
     static const auto ChatPrint = (ChatPrint_Type)0x004785A0;
 
     /* File System */
 
-    typedef int(*PackfileLoad_Type)(const char *FileName, const char *Dir);
+    typedef int(*PackfileLoad_Type)(const char *file_name, const char *dir);
     static const auto PackfileLoad = (PackfileLoad_Type)0x0052C070;
 
-    static const auto FsAddDirectoryEx = (int(*)(const char *Dir, const char *ExtList, bool Unknown))0x00514070;
+    static const auto FsAddDirectoryEx = (int(*)(const char *dir, const char *ext_list, bool unknown))0x00514070;
 
     /* Network */
 
@@ -541,16 +541,16 @@ namespace rf
     };
     static_assert(sizeof(CPlayerNetData) == 0x9C8, "invalid size");
 
-    typedef void(*NwSendNotReliablePacket_Type)(const void *Addr, const void *Packet, unsigned cbPacket);
+    typedef void(*NwSendNotReliablePacket_Type)(const void *addr, const void *packet, unsigned cb_packet);
     static const auto NwSendNotReliablePacket = (NwSendNotReliablePacket_Type)0x0052A080;
 
-    static const auto NwSendReliablePacket = (void(*)(Player *Player, const uint8_t *Data, unsigned int cbData, int a4))0x00479480;
+    static const auto NwSendReliablePacket = (void(*)(Player *player, const uint8_t *data, unsigned int num_bytes, int a4))0x00479480;
 
-    typedef void(*NwAddrToStr_Type)(char *Dest, int cbDest, NwAddr& Addr);
+    typedef void(*NwAddrToStr_Type)(char *dest, int cb_dest, NwAddr& addr);
     static const auto NwAddrToStr = (NwAddrToStr_Type)0x00529FE0;
 
-    static const auto NwGetPlayerFromAddr = (Player *(*)(const NwAddr& Addr))0x00484850;
-    static const auto NwCompareAddr = (int(*)(const NwAddr &Addr1, const NwAddr &Addr2, bool CheckPort))0x0052A930;
+    static const auto NwGetPlayerFromAddr = (Player *(*)(const NwAddr& addr))0x00484850;
+    static const auto NwCompareAddr = (int(*)(const NwAddr &addr1, const NwAddr &addr2, bool check_port))0x0052A930;
 
     /* Camera */
 
@@ -573,8 +573,8 @@ namespace rf
         CameraType Type;
     };
 
-    static const auto CameraSetFirstPerson = (void(*)(Camera *Camera))0x0040DDF0;
-    static const auto CameraSetFreelook = (void(*)(Camera *Camera))0x0040DCF0;
+    static const auto CameraSetFirstPerson = (void(*)(Camera *camera))0x0040DDF0;
+    static const auto CameraSetFreelook = (void(*)(Camera *camera))0x0040DCF0;
 
     /* Config */
 
@@ -740,7 +740,7 @@ namespace rf
     };
     static_assert(sizeof(PlayerWeaponInfo) == 0x100, "invalid size");
 
-    struct Player_1094
+    struct Player1094
     {
         Vector3 field_1094;
         Matrix3 field_10A0;
@@ -795,7 +795,7 @@ namespace rf
         int field_1084;
         int ScannerBmHandle;
         int field_108C[2];
-        Player_1094 field_1094;
+        Player1094 field_1094;
         int field_10C4[3];
         Color HitScrColor;
         int HitScrAlpha;
@@ -822,13 +822,13 @@ namespace rf
     static auto &g_LocalPlayer = *(Player**)0x007C75D4;
 
     static const auto KillLocalPlayer = (void(*)())0x004757A0;
-    static const auto IsEntityCtrlActive = (char(*)(ControlConfig *CtrlConf, GameCtrl CtrlId, bool *WasPressed))0x0043D4F0;
-    static const auto GetPlayerFromEntityHandle = (Player*(*)(int32_t Entity_handle))0x004A3740;
+    static const auto IsEntityCtrlActive = (char(*)(ControlConfig *ctrl_conf, GameCtrl ctrl_id, bool *was_pressed))0x0043D4F0;
+    static const auto GetPlayerFromEntityHandle = (Player*(*)(int32_t entity_handle))0x004A3740;
 
-    typedef bool(*IsPlayerEntityInvalid_Type)(Player *Player);
+    typedef bool(*IsPlayerEntityInvalid_Type)(Player *player);
     static const auto IsPlayerEntityInvalid = (IsPlayerEntityInvalid_Type)0x004A4920;
 
-    typedef bool(*IsPlayerDying_Type)(Player *Player);
+    typedef bool(*IsPlayerDying_Type)(Player *player);
     static const auto IsPlayerDying = (IsPlayerDying_Type)0x004A4940;
 
     /* Object */
@@ -1015,7 +1015,7 @@ namespace rf
 
     static auto &g_ItemObjList = *(ItemObj*)0x00642DD8;
 
-    static const auto ObjGetFromUid = (Object *(*)(int Uid))0x0048A4A0;
+    static const auto ObjGetFromUid = (Object *(*)(int uid))0x0048A4A0;
 
     /* Entity */
 
@@ -1050,7 +1050,7 @@ namespace rf
         float field_20;
     };
 
-    struct EntityWeapon_2E8_InnerUnk
+    struct EntityWeapon2E8InnerUnk
     {
         Vector3 field_0;
         Vector3 field_C;
@@ -1071,13 +1071,13 @@ namespace rf
         DynamicArray field_70;
     };
 
-    struct EntityWeapon_2E8
+    struct EntityWeapon2E8
     {
         int field_0;
         int field_4;
         int field_8[5];
-        EntityWeapon_2E8_InnerUnk field_1C;
-        EntityWeapon_2E8_InnerUnk field_98;
+        EntityWeapon2E8InnerUnk field_1C;
+        EntityWeapon2E8InnerUnk field_98;
         int field_114;
         int field_118;
         Timer Timer_11C;
@@ -1154,7 +1154,7 @@ namespace rf
         Timer field_2DC;
         Timer field_2E0;
         int field_2E4;
-        EntityWeapon_2E8 field_2E8;
+        EntityWeapon2E8 field_2E8;
         SEntityMotion MotionChange;
         Timer field_48C;
         Vector3 field_490;
@@ -1318,7 +1318,7 @@ namespace rf
     };
     static_assert(sizeof(EntityObj) == 0x1494, "invalid size");
 
-    typedef EntityObj *(*EntityGetFromHandle_Type)(uint32_t Entity_handle);
+    typedef EntityObj *(*EntityGetFromHandle_Type)(uint32_t entity_handle);
     static const auto EntityGetFromHandle = (EntityGetFromHandle_Type)0x00426FC0;
 
     /* Weapons */
@@ -1546,13 +1546,13 @@ namespace rf
     static const auto CtfGetRedFlagPlayer = (Player*(*)())0x00474E60;
     static const auto CtfGetBlueFlagPlayer = (Player*(*)())0x00474E70;
 
-    typedef void(*KickPlayer_Type)(Player *Player);
+    typedef void(*KickPlayer_Type)(Player *player);
     static const auto KickPlayer = (KickPlayer_Type)0x0047BF00;
 
     typedef void(*BanIp_Type)(const NwAddr& addr);
     static const auto BanIp = (BanIp_Type)0x0046D0F0;
 
-    static const auto MultiSetNextWeapon = (void(*)(int WeaponClsId))0x0047FCA0;
+    static const auto MultiSetNextWeapon = (void(*)(int weapon_cls_id))0x0047FCA0;
 
     static auto &g_ServAddr = *(NwAddr*)0x0064EC5C;
     static auto &g_strServName = *(String*)0x0064EC28;
@@ -1563,7 +1563,7 @@ namespace rf
 
     /* Input */
     static const auto MouseGetPos = (int(*)(int &x, int &y, int &z))0x0051E450;
-    static const auto MouseWasButtonPressed = (int(*)(int BtnIdx))0x0051E5D0;
+    static const auto MouseWasButtonPressed = (int(*)(int btn_idx))0x0051E5D0;
 
     /* Game Sequence */
 
@@ -1636,12 +1636,12 @@ namespace rf
     static auto &g_strDefaultPlayerWeapon = *(String*)0x007C7600;
     static auto &g_active_cutscene = *reinterpret_cast<void**>(0x00645320);
 
-    static const auto RfBeep = (void(*)(unsigned u1, unsigned u2, unsigned u3, float fVolume))0x00505560;
-    static const auto GetFileExt = (char *(*)(const char *Path))0x005143F0;
+    static const auto RfBeep = (void(*)(unsigned u1, unsigned u2, unsigned u3, float f_volume))0x00505560;
+    static const auto GetFileExt = (char *(*)(const char *path))0x005143F0;
     static const auto SplitScreenStart = (void(*)())0x00480D30;
-    static const auto SetNextLevelFilename = (void(*)(String::Pod strFilename, String::Pod strSecond))0x0045E2E0;
-    static const auto DemoLoadLevel = (void(*)(const char *LevelFileName))0x004CC270;
-    static const auto SetCursorVisible = (void(*)(bool Visible))0x0051E680;
+    static const auto SetNextLevelFilename = (void(*)(String::Pod str_filename, String::Pod str_second))0x0045E2E0;
+    static const auto DemoLoadLevel = (void(*)(const char *level_file_name))0x004CC270;
+    static const auto SetCursorVisible = (void(*)(bool visible))0x0051E680;
     static const auto CutsceneIsActive = reinterpret_cast<bool(*)()>(0x0045BE80);
     static const auto Timer__GetTimeLeftMs = reinterpret_cast<int (__thiscall*)(void* timer)>(0x004FA420);
 
@@ -1669,10 +1669,10 @@ namespace rf
 
     /* RF stdlib functions are not compatible with GCC */
 
-    typedef void(*Free_Type)(void *Mem);
+    typedef void(*Free_Type)(void *mem);
     static const auto Free = (Free_Type)0x00573C71;
 
-    typedef void *(*Malloc_Type)(uint32_t cbSize);
+    typedef void *(*Malloc_Type)(uint32_t cb_size);
     static const auto Malloc = (Malloc_Type)0x00573B37;
 }
 

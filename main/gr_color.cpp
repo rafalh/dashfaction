@@ -282,10 +282,10 @@ void WaterGenerateTexture_004E68D1(uintptr_t v1)
     rf::GrUnlock(&dst_lock_data);
 }
 
-void GetAmbientColorFromLightmaps_004E5CE3(unsigned BmHandle, int x, int y, unsigned& color)
+void GetAmbientColorFromLightmaps_004E5CE3(unsigned bm_handle, int x, int y, unsigned& color)
 {
     rf::GrLockData lock_data;
-    if (rf::GrLock(BmHandle, 0, &lock_data, 0)) {
+    if (rf::GrLock(bm_handle, 0, &lock_data, 0)) {
         const uint8_t* src_ptr = lock_data.Bits + y * lock_data.Pitch + x * GetPixelFormatSize(lock_data.PixelFormat);
         uint8_t* dst_ptr = (uint8_t*)&color;
         ConvertPixelFormat(dst_ptr, rf::BMPF_8888, src_ptr, lock_data.PixelFormat);

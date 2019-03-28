@@ -16,22 +16,22 @@
 #define AUTODL_HOST "pfapi.factionfiles.com"
 
 namespace rf {
-static const auto GetJoinFailedReasonStr = AddrAsRef<const char *(unsigned Reason)>(0x0047BE60);
+static const auto GetJoinFailedReasonStr = AddrAsRef<const char *(unsigned reason)>(0x0047BE60);
 }
 
 static unsigned g_LevelTicketId;
 static unsigned g_cbLevelSize, g_cbDownloadProgress;
 static bool g_DownloadActive = false;
 
-bool UnzipVpp(const char *Path)
+bool UnzipVpp(const char *path)
 {
     bool Ret = false;
     int Code;
 
-    unzFile Archive = unzOpen(Path);
+    unzFile Archive = unzOpen(path);
     if (!Archive) {
 #ifdef DEBUG
-        ERR("unzOpen failed: %s", Path);
+        ERR("unzOpen failed: %s", path);
 #endif
         // maybe RAR file
         goto cleanup;
@@ -40,7 +40,7 @@ bool UnzipVpp(const char *Path)
     unz_global_info GlobalInfo;
     Code = unzGetGlobalInfo(Archive, &GlobalInfo);
     if (Code != UNZ_OK) {
-        ERR("unzGetGlobalInfo failed - error %d, path %s", Code, Path);
+        ERR("unzGetGlobalInfo failed - error %d, path %s", Code, path);
         goto cleanup;
     }
 
@@ -49,7 +49,7 @@ bool UnzipVpp(const char *Path)
     for (int i = 0; i < (int)GlobalInfo.number_entry; i++) {
         Code = unzGetCurrentFileInfo(Archive, &FileInfo, FileName, sizeof(FileName), NULL, 0, NULL, 0);
         if (Code != UNZ_OK) {
-            ERR("unzGetCurrentFileInfo failed - error %d, path %s", Code, Path);
+            ERR("unzGetCurrentFileInfo failed - error %d, path %s", Code, path);
             break;
         }
 
@@ -68,7 +68,7 @@ bool UnzipVpp(const char *Path)
 
             Code = unzOpenCurrentFile(Archive);
             if (Code != UNZ_OK) {
-                ERR("unzOpenCurrentFile failed - error %d, path %s", Code, Path);
+                ERR("unzOpenCurrentFile failed - error %d, path %s", Code, path);
                 break;
             }
 
@@ -76,7 +76,7 @@ bool UnzipVpp(const char *Path)
                 fwrite(Buf, 1, Code, File);
 
             if (Code < 0) {
-                ERR("unzReadCurrentFile failed - error %d, path %s", Code, Path);
+                ERR("unzReadCurrentFile failed - error %d, path %s", Code, path);
                 break;
             }
 
@@ -90,7 +90,7 @@ bool UnzipVpp(const char *Path)
         if (i + 1 < (int)GlobalInfo.number_entry) {
             Code = unzGoToNextFile(Archive);
             if (Code != UNZ_OK) {
-                ERR("unzGoToNextFile failed - error %d, path %s", Code, Path);
+                ERR("unzGoToNextFile failed - error %d, path %s", Code, path);
                 break;
             }
         }
@@ -104,13 +104,13 @@ cleanup:
     return Ret;
 }
 
-bool UnrarVpp(const char *Path)
+bool UnrarVpp(const char *path)
 {
     char CmtBuf[16384], Buf[256];
 
     struct RAROpenArchiveDataEx OpenArchiveData;
     memset(&OpenArchiveData, 0, sizeof(OpenArchiveData));
-    OpenArchiveData.ArcName = (char*)Path;
+    OpenArchiveData.ArcName = (char*)path;
     OpenArchiveData.CmtBuf = CmtBuf;
     OpenArchiveData.CmtBufSize = sizeof(CmtBuf);
     OpenArchiveData.OpenMode = RAR_OM_EXTRACT;
@@ -118,7 +118,7 @@ bool UnrarVpp(const char *Path)
     HANDLE Archive_handle = RAROpenArchiveEx(&OpenArchiveData);
 
     if (!Archive_handle || OpenArchiveData.OpenResult != 0) {
-        ERR("RAROpenArchiveEx failed - result %d, path %s", OpenArchiveData.OpenResult, Path);
+        ERR("RAROpenArchiveEx failed - result %d, path %s", OpenArchiveData.OpenResult, path);
         return false;
     }
 
@@ -133,7 +133,7 @@ bool UnrarVpp(const char *Path)
             break;
 
         if (Code != 0) {
-            ERR("RARReadHeader failed - result %d, path %s", Code, Path);
+            ERR("RARReadHeader failed - result %d, path %s", Code, path);
             break;
         }
 
@@ -153,7 +153,7 @@ bool UnrarVpp(const char *Path)
         }
 
         if (Code != 0) {
-            ERR("RARProcessFile failed - result %d, path %s", Code, Path);
+            ERR("RARProcessFile failed - result %d, path %s", Code, path);
             break;
         }
     }
@@ -163,7 +163,7 @@ bool UnrarVpp(const char *Path)
     return Ret;
 }
 
-static bool FetchLevelFile(const char *TmpFileName)
+static bool FetchLevelFile(const char *tmp_file_name)
 {
     HINTERNET Internet_handle = NULL, Connect_handle = NULL, Request_handle = NULL;
     char buf[4096];
@@ -199,9 +199,9 @@ static bool FetchLevelFile(const char *TmpFileName)
         goto cleanup;
     }
 
-    TmpFile = fopen(TmpFileName, "wb");
+    TmpFile = fopen(tmp_file_name, "wb");
     if (!TmpFile) {
-        ERR("fopen failed: %s", TmpFileName);
+        ERR("fopen failed: %s", tmp_file_name);
         goto cleanup;
     }
 
@@ -226,12 +226,12 @@ cleanup:
     return Success;
 }
 
-static DWORD WINAPI DownloadLevelThread(PVOID Param)
+static DWORD WINAPI DownloadLevelThread(PVOID param)
 {
     char TempDir[MAX_PATH], TempFileName[MAX_PATH] = "";
     bool Success = false;
 
-    (void)Param; // unused parameter
+    (void)param; // unused parameter
 
     DWORD dwRetVal;
     dwRetVal = GetTempPathA(_countof(TempDir), TempDir);
@@ -280,7 +280,7 @@ static void DownloadLevel()
         ERR("CreateThread failed");
 }
 
-static bool FetchLevelInfo(const char *FileName, char *OutBuf, size_t OutBufSize)
+static bool FetchLevelInfo(const char *file_name, char *out_buf, size_t out_buf_size)
 {
     HINTERNET Internet_handle = NULL, Connect_handle = NULL, Request_handle = NULL;
     char Buf[256];
@@ -307,7 +307,7 @@ static bool FetchLevelInfo(const char *FileName, char *OutBuf, size_t OutBufSize
         goto cleanup;
     }
 
-    dwSize = sprintf(Buf, "rflName=%s", FileName);
+    dwSize = sprintf(Buf, "rflName=%s", file_name);
     if (!HttpSendRequest(Request_handle, Headers, sizeof(Headers) - 1, Buf, dwSize)) {
         ERR("HttpSendRequest failed");
         goto cleanup;
@@ -318,12 +318,12 @@ static bool FetchLevelInfo(const char *FileName, char *OutBuf, size_t OutBufSize
         goto cleanup;
     }
 
-    if (!InternetReadFile(Request_handle, OutBuf, OutBufSize - 1, &dwBytesRead)) {
+    if (!InternetReadFile(Request_handle, out_buf, out_buf_size - 1, &dwBytesRead)) {
         ERR("InternetReadFile failed", NULL);
         goto cleanup;
     }
 
-    OutBuf[dwBytesRead] = '\0';
+    out_buf[dwBytesRead] = '\0';
     Ret = true;
 
 cleanup:
@@ -337,17 +337,17 @@ cleanup:
     return Ret;
 }
 
-static bool DisplayDownloadDialog(char *Buf)
+static bool DisplayDownloadDialog(char *buf)
 {
     char MsgBuf[256], *Name, *Author, *Descr, *Size, *TicketId, *End;
     const char *ppszBtnTitles[] = {"Cancel", "Download"};
     void *ppfnCallbacks[] = {NULL, (void*)DownloadLevel};
 
-    Name = strchr(Buf, '\n');
+    Name = strchr(buf, '\n');
     if (!Name)
         return false;
     *(Name++) = 0; // terminate first line with 0
-    if (strcmp(Buf, "found") != 0)
+    if (strcmp(buf, "found") != 0)
         return false;
 
     Author = strchr(Name, '\n');
@@ -386,7 +386,7 @@ static bool DisplayDownloadDialog(char *Buf)
     return true;
 }
 
-bool TryToDownloadLevel(const char *FileName)
+bool TryToDownloadLevel(const char *file_name)
 {
     char Buf[256];
 
@@ -395,7 +395,7 @@ bool TryToDownloadLevel(const char *FileName)
         return false;
     }
 
-    if (!FetchLevelInfo(FileName, Buf, sizeof(Buf))) {
+    if (!FetchLevelInfo(file_name, Buf, sizeof(Buf))) {
         ERR("Failed to fetch level information");
         return false;
     }
@@ -409,16 +409,16 @@ bool TryToDownloadLevel(const char *FileName)
     return true;
 }
 
-void OnJoinFailed(unsigned ReasonId)
+void OnJoinFailed(unsigned reason_id)
 {
-    if (ReasonId == RF_LR_NO_LEVEL_FILE) {
+    if (reason_id == RF_LR_NO_LEVEL_FILE) {
         char *LevelFileName = *((char**)0x646078);
 
         if(TryToDownloadLevel(LevelFileName))
             return;
     }
 
-    const char *ReasonStr = rf::GetJoinFailedReasonStr(ReasonId);
+    const char *ReasonStr = rf::GetJoinFailedReasonStr(reason_id);
     rf::UiMsgBox(rf::strings::exiting_game, ReasonStr, NULL, 0);
 }
 

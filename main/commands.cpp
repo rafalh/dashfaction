@@ -46,31 +46,31 @@ bool g_DbgGeometryRenderingStats = false;
 bool g_DbgStaticLights = false;
 bool g_volumetric_lights = true;
 
-rf::Player *FindBestMatchingPlayer(const char *Name)
+rf::Player *FindBestMatchingPlayer(const char *name)
 {
     rf::Player *FoundPlayer;
     int NumFound = 0;
-    FindPlayer(StringMatcher().Exact(Name), [&](rf::Player *Player)
+    FindPlayer(StringMatcher().Exact(name), [&](rf::Player *player)
     {
-        FoundPlayer = Player;
+        FoundPlayer = player;
         ++NumFound;
     });
     if (NumFound == 1)
         return FoundPlayer;
 
     NumFound = 0;
-    FindPlayer(StringMatcher().Infix(Name), [&](rf::Player *Player)
+    FindPlayer(StringMatcher().Infix(name), [&](rf::Player *player)
     {
-        FoundPlayer = Player;
+        FoundPlayer = player;
         ++NumFound;
     });
 
     if (NumFound == 1)
         return FoundPlayer;
     else if (NumFound > 1)
-        rf::DcPrintf("Found %d players matching '%s'!", NumFound,  Name);
+        rf::DcPrintf("Found %d players matching '%s'!", NumFound,  name);
     else
-        rf::DcPrintf("Cannot find player matching '%s'", Name);
+        rf::DcPrintf("Cannot find player matching '%s'", name);
     return nullptr;
 }
 
@@ -91,13 +91,13 @@ DcCommand2 SplitScreenCmd{
 
 DcCommand2 MaxFpsCmd{
     "maxfps",
-    [](std::optional<float> LimitOpt) {
+    [](std::optional<float> limit_opt) {
 
-        if (LimitOpt) {
+        if (limit_opt) {
 #ifdef NDEBUG
             float newLimit = std::min(std::max(LimitOpt.value(), (float)MIN_FPS_LIMIT), (float)MAX_FPS_LIMIT);
 #else
-            float newLimit = LimitOpt.value();
+            float newLimit = limit_opt.value();
 #endif
             g_game_config.maxFps = (unsigned)newLimit;
             g_game_config.save();
@@ -112,7 +112,7 @@ DcCommand2 MaxFpsCmd{
 
 DcCommand2 DebugCmd{
     "debug",
-    [](std::optional<std::string> TypeOpt) {
+    [](std::optional<std::string> type_opt) {
 
 #ifdef NDEBUG
         if (rf::g_IsNetworkGame) {
@@ -121,7 +121,7 @@ DcCommand2 DebugCmd{
         }
 #endif
 
-        auto Type = TypeOpt ? TypeOpt.value() : "";
+        auto Type = type_opt ? type_opt.value() : "";
         bool Handled = false;
         static bool AllFlags = false;
 
@@ -131,17 +131,17 @@ DcCommand2 DebugCmd{
             rf::DcPrintf("All debug flags are %s", AllFlags ? "enabled" : "disabled");
         }
 
-        auto HandleFlag = [&](bool &FlagRef, const char *FlagName) {
-            bool OldFlagValue = FlagRef;
-            if (Type == FlagName) {
-                FlagRef = !FlagRef;
+        auto HandleFlag = [&](bool &flag_ref, const char *flag_name) {
+            bool OldFlagValue = flag_ref;
+            if (Type == flag_name) {
+                flag_ref = !flag_ref;
                 Handled = true;
-                rf::DcPrintf("Debug flag '%s' is %s", FlagName, FlagRef ? "enabled" : "disabled");
+                rf::DcPrintf("Debug flag '%s' is %s", flag_name, flag_ref ? "enabled" : "disabled");
             }
             else if (Type.empty()) {
-                FlagRef = AllFlags;
+                flag_ref = AllFlags;
             }
-            return OldFlagValue != FlagRef;
+            return OldFlagValue != flag_ref;
         };
 
         auto &DgThruster               = AddrAsRef<bool>(0x0062F3AA);
@@ -236,13 +236,13 @@ void DebugRender2d()
 
 DcCommand2 SpectateCmd {
     "spectate",
-    [](std::optional<std::string> PlayerName) {
+    [](std::optional<std::string> player_name) {
         if (rf::g_IsNetworkGame) {
             rf::Player *Player;
-            if (PlayerName && PlayerName.value() == "false")
+            if (player_name && player_name.value() == "false")
                 Player = nullptr;
-            else if (PlayerName)
-                Player = FindBestMatchingPlayer(PlayerName.value().c_str());
+            else if (player_name)
+                Player = FindBestMatchingPlayer(player_name.value().c_str());
             else
                 Player = nullptr;
 
@@ -294,11 +294,11 @@ DcCommand2 InputModeCmd{
 
 #if CAMERA_1_3_COMMANDS
 
-static int CanPlayerFireHook(rf::Player *Player)
+static int CanPlayerFireHook(rf::Player *player)
 {
-    if (!(Player->Flags & 0x10))
+    if (!(player->Flags & 0x10))
         return 0;
-    if (rf::g_IsNetworkGame && (Player->Camera->Type == rf::CAM_FREELOOK || Player->Camera->Player != Player))
+    if (rf::g_IsNetworkGame && (player->Camera->Type == rf::CAM_FREELOOK || player->Camera->Player != player))
         return 0;
     return 1;
 }
@@ -307,9 +307,9 @@ static int CanPlayerFireHook(rf::Player *Player)
 
 DcCommand2 MouseSensitivityCmd{
     "ms",
-    [](std::optional<float> Value) {
-        if (Value) {
-            float fValue = Value.value();
+    [](std::optional<float> value) {
+        if (value) {
+            float fValue = value.value();
             fValue = clamp(fValue, 0.0f, 1.0f);
             rf::g_LocalPlayer->Config.Controls.fMouseSensitivity = fValue;
         }
@@ -338,9 +338,9 @@ DcCommand2 VolumeLightsCmd{
 
 DcCommand2 LevelSoundsCmd{
     "levelsounds",
-    [](std::optional<float> Volume) {
-        if (Volume) {
-            float fVolScale = clamp(Volume.value(), 0.0f, 1.0f);
+    [](std::optional<float> volume) {
+        if (volume) {
+            float fVolScale = clamp(volume.value(), 0.0f, 1.0f);
             SetPlaySoundEventsVolumeScale(fVolScale);
 
             g_game_config.levelSoundVolume = fVolScale;
@@ -375,10 +375,10 @@ DcCommand2 PlayerCountCmd{
 
 DcCommand2 FindLevelCmd{
     "findlevel",
-    [](std::string Pattern) {
-        PackfileFindMatchingFiles(StringMatcher().Infix(Pattern).Suffix(".rfl"), [](const char *Name)
+    [](std::string pattern) {
+        PackfileFindMatchingFiles(StringMatcher().Infix(pattern).Suffix(".rfl"), [](const char *name)
         {
-            rf::DcPrintf("%s\n", Name);
+            rf::DcPrintf("%s\n", name);
         });
     },
     "Find a level by a filename fragment",
@@ -396,17 +396,17 @@ DcCommandAlias MapCmd{
     LevelCmd,
 };
 
-void DcShowCmdHelp(rf::DcCommand *Cmd)
+void DcShowCmdHelp(rf::DcCommand *cmd)
 {
     rf::g_DcRun = 0;
     rf::g_DcHelp = 1;
     rf::g_DcStatus = 0;
-    Cmd->pfnHandler();
+    cmd->pfnHandler();
 }
 
-int DcAutoCompleteGetComponent(int Offset, std::string &Result)
+int DcAutoCompleteGetComponent(int offset, std::string &result)
 {
-    const char *Begin = rf::g_szDcCmdLine + Offset, *End = nullptr, *Next;
+    const char *Begin = rf::g_DcCmdLine + offset, *End = nullptr, *Next;
     if (Begin[0] == '"')
     {
         ++Begin;
@@ -417,108 +417,108 @@ int DcAutoCompleteGetComponent(int Offset, std::string &Result)
         End = Next = strchr(Begin, ' ');
 
     if (!End)
-        End = rf::g_szDcCmdLine + rf::g_cchDcCmdLineLen;
+        End = rf::g_DcCmdLine + rf::g_DcCmdLineLen;
 
     size_t Len = End - Begin;
-    Result.assign(Begin, Len);
+    result.assign(Begin, Len);
 
-    return Next ? Next + 1 - rf::g_szDcCmdLine : -1;
+    return Next ? Next + 1 - rf::g_DcCmdLine : -1;
 }
 
-void DcAutoCompletePutComponent(int Offset, const std::string &Component, bool Finished)
+void DcAutoCompletePutComponent(int offset, const std::string &component, bool finished)
 {
-    bool Quote = Component.find(' ') != std::string::npos;
+    bool Quote = component.find(' ') != std::string::npos;
     if (Quote)
-        rf::g_cchDcCmdLineLen = Offset + sprintf(rf::g_szDcCmdLine + Offset, "\"%s\"", Component.c_str());
+        rf::g_DcCmdLineLen = offset + sprintf(rf::g_DcCmdLine + offset, "\"%s\"", component.c_str());
     else
-        rf::g_cchDcCmdLineLen = Offset + sprintf(rf::g_szDcCmdLine + Offset, "%s", Component.c_str());
-    if (Finished)
-        rf::g_cchDcCmdLineLen += sprintf(rf::g_szDcCmdLine + rf::g_cchDcCmdLineLen, " ");
+        rf::g_DcCmdLineLen = offset + sprintf(rf::g_DcCmdLine + offset, "%s", component.c_str());
+    if (finished)
+        rf::g_DcCmdLineLen += sprintf(rf::g_DcCmdLine + rf::g_DcCmdLineLen, " ");
 }
 
 template<typename T, typename F>
-void DcAutoCompletePrintSuggestions(T &Suggestions, F MappingFun)
+void DcAutoCompletePrintSuggestions(T &suggestions, F mapping_fun)
 {
-    for (auto Item : Suggestions)
-        rf::DcPrintf("%s\n", MappingFun(Item));
+    for (auto Item : suggestions)
+        rf::DcPrintf("%s\n", mapping_fun(Item));
 }
 
-void DcAutoCompleteUpdateCommonPrefix(std::string &CommonPrefix, const std::string &Value, bool &First, bool CaseSensitive = false)
+void DcAutoCompleteUpdateCommonPrefix(std::string &common_prefix, const std::string &value, bool &first, bool case_sensitive = false)
 {
-    if (First)
+    if (first)
     {
-        First = false;
-        CommonPrefix = Value;
+        first = false;
+        common_prefix = value;
     }
-    if (CommonPrefix.size() > Value.size())
-        CommonPrefix.resize(Value.size());
-    for (size_t i = 0; i < CommonPrefix.size(); ++i)
-        if ((CaseSensitive && CommonPrefix[i] != Value[i]) || tolower(CommonPrefix[i]) != tolower(Value[i]))
+    if (common_prefix.size() > value.size())
+        common_prefix.resize(value.size());
+    for (size_t i = 0; i < common_prefix.size(); ++i)
+        if ((case_sensitive && common_prefix[i] != value[i]) || tolower(common_prefix[i]) != tolower(value[i]))
         {
-            CommonPrefix.resize(i);
+            common_prefix.resize(i);
             break;
         }
 }
 
-void DcAutoCompleteLevel(int Offset)
+void DcAutoCompleteLevel(int offset)
 {
     std::string LevelName;
-    DcAutoCompleteGetComponent(Offset, LevelName);
+    DcAutoCompleteGetComponent(offset, LevelName);
     if (LevelName.size() < 3)
         return;
 
     bool First = true;
     std::string CommonPrefix;
     std::vector<std::string> Matches;
-    PackfileFindMatchingFiles(StringMatcher().Prefix(LevelName).Suffix(".rfl"), [&](const char *Name)
+    PackfileFindMatchingFiles(StringMatcher().Prefix(LevelName).Suffix(".rfl"), [&](const char *name)
     {
-        auto Ext = strrchr(Name, '.');
-        auto NameLen = Ext ? Ext - Name : strlen(Name);
-        std::string NameWithoutExt(Name, NameLen);
+        auto Ext = strrchr(name, '.');
+        auto NameLen = Ext ? Ext - name : strlen(name);
+        std::string NameWithoutExt(name, NameLen);
         Matches.push_back(NameWithoutExt);
         DcAutoCompleteUpdateCommonPrefix(CommonPrefix, NameWithoutExt, First);
     });
 
     if (Matches.size() == 1)
-        DcAutoCompletePutComponent(Offset, Matches[0], true);
+        DcAutoCompletePutComponent(offset, Matches[0], true);
     else
     {
-        DcAutoCompletePrintSuggestions(Matches, [](std::string &Name) { return Name.c_str(); });
-        DcAutoCompletePutComponent(Offset, CommonPrefix, false);
+        DcAutoCompletePrintSuggestions(Matches, [](std::string &name) { return name.c_str(); });
+        DcAutoCompletePutComponent(offset, CommonPrefix, false);
     }
 }
 
-void DcAutoCompletePlayer(int Offset)
+void DcAutoCompletePlayer(int offset)
 {
     std::string PlayerName;
-    DcAutoCompleteGetComponent(Offset, PlayerName);
+    DcAutoCompleteGetComponent(offset, PlayerName);
     if (PlayerName.size() < 1)
         return;
 
     bool First = true;
     std::string CommonPrefix;
     std::vector<rf::Player*> MatchingPlayers;
-    FindPlayer(StringMatcher().Prefix(PlayerName), [&](rf::Player *Player)
+    FindPlayer(StringMatcher().Prefix(PlayerName), [&](rf::Player *player)
     {
-        MatchingPlayers.push_back(Player);
-        DcAutoCompleteUpdateCommonPrefix(CommonPrefix, Player->strName.CStr(), First);
+        MatchingPlayers.push_back(player);
+        DcAutoCompleteUpdateCommonPrefix(CommonPrefix, player->strName.CStr(), First);
     });
 
     if (MatchingPlayers.size() == 1)
-        DcAutoCompletePutComponent(Offset, MatchingPlayers[0]->strName.CStr(), true);
+        DcAutoCompletePutComponent(offset, MatchingPlayers[0]->strName.CStr(), true);
     else
     {
-        DcAutoCompletePrintSuggestions(MatchingPlayers, [](rf::Player *Player) {
-            return Player->strName.CStr();
+        DcAutoCompletePrintSuggestions(MatchingPlayers, [](rf::Player *player) {
+            return player->strName.CStr();
         });
-        DcAutoCompletePutComponent(Offset, CommonPrefix, false);
+        DcAutoCompletePutComponent(offset, CommonPrefix, false);
     }
 }
 
-void DcAutoCompleteCommand(int Offset)
+void DcAutoCompleteCommand(int offset)
 {
     std::string CmdName;
-    int NextOffset = DcAutoCompleteGetComponent(Offset, CmdName);
+    int NextOffset = DcAutoCompleteGetComponent(offset, CmdName);
     if (CmdName.size() < 2)
         return;
 
@@ -553,10 +553,10 @@ void DcAutoCompleteCommand(int Offset)
     {
         for (auto *Cmd : MatchingCmds)
             rf::DcPrintf("%s - %s", Cmd->Cmd, Cmd->Descr);
-        DcAutoCompletePutComponent(Offset, CommonPrefix, false);
+        DcAutoCompletePutComponent(offset, CommonPrefix, false);
     }
     else if (MatchingCmds.size() == 1)
-        DcAutoCompletePutComponent(Offset, MatchingCmds[0]->Cmd, true);
+        DcAutoCompletePutComponent(offset, MatchingCmds[0]->Cmd, true);
 }
 
 FunHook2<void()> DcAutoCompleteInput_Hook{
@@ -609,10 +609,10 @@ void CommandsInit()
     AsmWritter(0x00434FEC, 0x00434FF2).nop();
 }
 
-void CommandRegister(rf::DcCommand *Cmd)
+void CommandRegister(rf::DcCommand *cmd)
 {
     if (rf::g_DcNumCommands < CMD_LIMIT)
-        g_CommandsBuffer[rf::g_DcNumCommands++] = Cmd;
+        g_CommandsBuffer[rf::g_DcNumCommands++] = cmd;
     else
         ASSERT(false);
 }

@@ -35,14 +35,14 @@ public:
     FtolAccuracyFix(uintptr_t ftol_call_addr, std::optional<AsmRegMem> key_loc = {}) :
         m_ftol_call_addr(ftol_call_addr), m_key_loc_opt(key_loc) {}
 
-    static long __fastcall ftol(FtolAccuracyFix *this_, void *edx, double value, void *key)
+    static long __fastcall ftol(FtolAccuracyFix *self, void *edx, double value, void *key)
     {
         (void)edx; // usused parameter
 
-        auto& state = this_->m_state_map[key];
+        auto& state = self->m_state_map[key];
 
         if (state.num_calls_in_frame > 0 && state.last_val != value)
-            TRACE("Different ftol argument during a single frame in address %p", this_->m_ftol_call_addr);
+            TRACE("Different ftol argument during a single frame in address %p", self->m_ftol_call_addr);
 
         value += state.remainder;
         long result = static_cast<long>(value);

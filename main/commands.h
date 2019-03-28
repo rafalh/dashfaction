@@ -12,18 +12,18 @@ namespace rf
 
 void CommandsInit();
 void CommandsAfterGameInit();
-void CommandRegister(rf::DcCommand *Cmd);
-rf::Player *FindBestMatchingPlayer(const char *Name);
+void CommandRegister(rf::DcCommand *cmd);
+rf::Player *FindBestMatchingPlayer(const char *name);
 void DebugRender3d();
 void DebugRender2d();
 
 class DcInvalidArgTypeError : public std::exception {};
 class DcRequiredArgMissingError : public std::exception {};
 
-inline bool ReadArgInternal(int TypeFlag, bool PreserveCase = false)
+inline bool ReadArgInternal(int type_flag, bool preserve_case = false)
 {
-    rf::DcGetArg(rf::DC_ARG_ANY, PreserveCase);
-    if (rf::g_DcArgType & TypeFlag)
+    rf::DcGetArg(rf::DC_ARG_ANY, preserve_case);
+    if (rf::g_DcArgType & type_flag)
         return true;
     if (!(rf::g_DcArgType & rf::DC_ARG_NONE))
         throw DcInvalidArgTypeError();

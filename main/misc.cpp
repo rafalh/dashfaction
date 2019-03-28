@@ -14,7 +14,7 @@
 
 namespace rf {
 
-static const auto EntityIsReloading = (bool(*)(EntityObj *Entity))0x00425250;
+static const auto EntityIsReloading = (bool(*)(EntityObj *entity))0x00425250;
 
 static auto& g_MenuVersionLabel = *(UiPanel*)0x0063C088;
 static auto& g_sound_enabled = AddrAsRef<bool>(0x017543D8);
@@ -26,7 +26,7 @@ constexpr int EGG_ANIM_LEAVE_TIME = 2000;
 constexpr int EGG_ANIM_IDLE_TIME = 3000;
 
 int g_VersionLabelX, g_VersionLabelWidth, g_VersionLabelHeight;
-static const char g_szVersionInMenu[] = PRODUCT_NAME_VERSION;
+static const char g_VersionInMenu[] = PRODUCT_NAME_VERSION;
 int g_VersionClickCounter = 0;
 int g_EggAnimStart;
 bool g_Win32Console = false;
@@ -34,13 +34,13 @@ bool g_linear_pitch = false;
 
 using UiLabel_Create2_Type = void __fastcall(rf::UiPanel*, void*, rf::UiPanel*, int, int, int, int, const char*, int);
 extern CallHook2<UiLabel_Create2_Type> UiLabel_Create2_VersionLabel_Hook;
-void __fastcall UiLabel_Create2_VersionLabel(rf::UiPanel *This, void *edx, rf::UiPanel *Parent, int x, int y, int w, int h,
-    const char *Text, int FontId)
+void __fastcall UiLabel_Create2_VersionLabel(rf::UiPanel *self, void *edx, rf::UiPanel *parent, int x, int y, int w, int h,
+    const char *text, int font_id)
 {
     x = g_VersionLabelX;
     w = g_VersionLabelWidth;
     h = g_VersionLabelHeight;
-    UiLabel_Create2_VersionLabel_Hook.CallTarget(This, edx, Parent, x, y, w, h, Text, FontId);
+    UiLabel_Create2_VersionLabel_Hook.CallTarget(self, edx, parent, x, y, w, h, text, font_id);
 }
 CallHook2<UiLabel_Create2_Type> UiLabel_Create2_VersionLabel_Hook{ 0x0044344D, UiLabel_Create2_VersionLabel };
 
@@ -48,10 +48,10 @@ FunHook2<void(const char**, const char**)> GetVersionStr_Hook{
     0x004B33F0,
     [](const char** version, const char** a2) {
         if (version)
-            *version = g_szVersionInMenu;
+            *version = g_VersionInMenu;
         if (a2)
             *a2 = "";
-        rf::GrGetTextWidth(&g_VersionLabelWidth, &g_VersionLabelHeight, g_szVersionInMenu, -1, rf::g_MediumFontId);
+        rf::GrGetTextWidth(&g_VersionLabelWidth, &g_VersionLabelHeight, g_VersionInMenu, -1, rf::g_MediumFontId);
 
         g_VersionLabelX = 430 - g_VersionLabelWidth;
         g_VersionLabelWidth = g_VersionLabelWidth + 5;
@@ -269,8 +269,8 @@ void PrintCmdInputLine()
     CONSOLE_SCREEN_BUFFER_INFO ScrBufInfo;
     GetConsoleScreenBufferInfo(Output_handle, &ScrBufInfo);
     WriteConsoleA(Output_handle, "] ", 2, NULL, NULL);
-    unsigned Offset = std::max(0, (int)g_cchDcCmdLineLen - ScrBufInfo.dwSize.X + 3);
-    WriteConsoleA(Output_handle, g_szDcCmdLine + Offset, g_cchDcCmdLineLen - Offset, NULL, NULL);
+    unsigned Offset = std::max(0, (int)g_DcCmdLineLen - ScrBufInfo.dwSize.X + 3);
+    WriteConsoleA(Output_handle, g_DcCmdLine + Offset, g_DcCmdLineLen - Offset, NULL, NULL);
 }
 
 BOOL WINAPI ConsoleCtrlHandler(DWORD fdwCtrlType)
@@ -373,10 +373,10 @@ FunHook2<void()> DcDrawServerConsole_Hook{
     []() {
         static char PrevCmdLine[1024];
         HANDLE Output_handle = GetStdHandle(STD_OUTPUT_HANDLE);
-        if (strncmp(g_szDcCmdLine, PrevCmdLine, _countof(PrevCmdLine)) != 0) {
+        if (strncmp(g_DcCmdLine, PrevCmdLine, _countof(PrevCmdLine)) != 0) {
             ResetConsoleCursorColumn(true);
             PrintCmdInputLine();
-            strncpy(PrevCmdLine, g_szDcCmdLine, _countof(PrevCmdLine));
+            strncpy(PrevCmdLine, g_DcCmdLine, _countof(PrevCmdLine));
         }
     }
 };
@@ -589,10 +589,10 @@ FunHook2<void(bool)> MenuInGameUpdateCutscene_Hook{
                 "Press JUMP key to skip the cutscene", -1, rf::g_GrTextMaterial);
         }
         else {
-            auto TimerAddDeltaTime = AddrAsRef<int(int DeltaMs)>(0x004FA2D0);
-            auto SndStop = AddrAsRef<char(int Sig)>(0x005442B0);
+            auto TimerAddDeltaTime = AddrAsRef<int(int delta_ms)>(0x004FA2D0);
+            auto SndStop = AddrAsRef<char(int sig)>(0x005442B0);
             auto DestroyAllPausedSounds = AddrAsRef<void()>(0x005059F0);
-            auto SetAllPlayingSoundsPaused = AddrAsRef<void(bool Paused)>(0x00505C70);
+            auto SetAllPlayingSoundsPaused = AddrAsRef<void(bool paused)>(0x00505C70);
 
             auto &timer_base = AddrAsRef<int64_t>(0x01751BF8);
             auto &timer_freq = AddrAsRef<int32_t>(0x01751C04);

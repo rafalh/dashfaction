@@ -14,17 +14,17 @@
 
 namespace rf {
 
-static const auto IsEntityLoopFire = (bool(*)(int Entity_handle, signed int WeaponClsId))0x0041A830;
-static const auto EntityIsSwimming = (bool(*)(EntityObj *Entity))0x0042A0A0;
-static const auto EntityIsFalling = (bool(*)(EntityObj *Entit))0x0042A020;
+static const auto IsEntityLoopFire = (bool(*)(int entity_handle, signed int weapon_cls_id))0x0041A830;
+static const auto EntityIsSwimming = (bool(*)(EntityObj *entity))0x0042A0A0;
+static const auto EntityIsFalling = (bool(*)(EntityObj *entit))0x0042A020;
 
 static const auto PlayerFpgunRender = (void(*)(Player*))0x004A2B30;
 static const auto PlayerFpgunUpdate = (void(*)(Player*))0x004A2700;
-static const auto PlayerFpgunSetupMesh = (void(*)(Player*, int WeaponClsId))0x004AA230;
+static const auto PlayerFpgunSetupMesh = (void(*)(Player*, int weapon_cls_id))0x004AA230;
 static const auto PlayerFpgunUpdateMesh = (void(*)(Player*))0x004AA6D0;
-static const auto PlayerRenderRocketLauncherScannerView = (void(*)(Player *Player))0x004AEEF0;
-static const auto PlayerFpgunSetState = (void(*)(Player *Player, int State))0x004AA560;
-static const auto PlayerFpgunHasState = (bool(*)(Player *Player, int State))0x004A9520;
+static const auto PlayerRenderRocketLauncherScannerView = (void(*)(Player *player))0x004AEEF0;
+static const auto PlayerFpgunSetState = (void(*)(Player *player, int state))0x004AA560;
+static const auto PlayerFpgunHasState = (bool(*)(Player *player, int state))0x004A9520;
 
 }
 
@@ -33,28 +33,28 @@ static rf::Camera *g_OldTargetCamera = NULL;
 static bool g_SpectateModeEnabled = false;
 static int g_LargeFont = -1, g_MediumFont = -1, g_SmallFont = -1;
 
-static void SetCameraTarget(rf::Player *Player)
+static void SetCameraTarget(rf::Player *player)
 {
     // Based on function SetCamera1View
-    if (!rf::g_LocalPlayer || !rf::g_LocalPlayer->Camera || !Player)
+    if (!rf::g_LocalPlayer || !rf::g_LocalPlayer->Camera || !player)
         return;
 
     rf::Camera *Camera = rf::g_LocalPlayer->Camera;
     Camera->Type = rf::CAM_FIRST_PERSON;
-    Camera->Player = Player;
+    Camera->Player = player;
 
-    g_OldTargetCamera = Player->Camera;
-    Player->Camera = Camera; // fix crash 0040D744
+    g_OldTargetCamera = player->Camera;
+    player->Camera = Camera; // fix crash 0040D744
 
     rf::CameraSetFirstPerson(Camera);
 }
 
-void SpectateModeSetTargetPlayer(rf::Player *Player)
+void SpectateModeSetTargetPlayer(rf::Player *player)
 {
-    if (!Player)
-        Player = rf::g_LocalPlayer;
+    if (!player)
+        player = rf::g_LocalPlayer;
 
-    if (!rf::g_LocalPlayer || !rf::g_LocalPlayer->Camera || !g_SpectateModeTarget || g_SpectateModeTarget == Player)
+    if (!rf::g_LocalPlayer || !rf::g_LocalPlayer->Camera || !g_SpectateModeTarget || g_SpectateModeTarget == player)
         return;
 
     if (rf::g_GameOptions & RF_GO_FORCE_RESPAWN)
@@ -79,28 +79,28 @@ void SpectateModeSetTargetPlayer(rf::Player *Player)
 #endif // SPECTATE_MODE_SHOW_WEAPON
     }
 
-    g_SpectateModeEnabled = (Player != rf::g_LocalPlayer);
-    g_SpectateModeTarget = Player;
+    g_SpectateModeEnabled = (player != rf::g_LocalPlayer);
+    g_SpectateModeTarget = player;
 
     rf::KillLocalPlayer();
-    SetCameraTarget(Player);
+    SetCameraTarget(player);
 
 #if SPECTATE_MODE_SHOW_WEAPON
-    Player->Flags |= 1 << 4;
-    rf::EntityObj *Entity = rf::EntityGetFromHandle(Player->Entity_handle);
+    player->Flags |= 1 << 4;
+    rf::EntityObj *Entity = rf::EntityGetFromHandle(player->Entity_handle);
     if (Entity)
     {
         // make sure weapon mesh is loaded now
-        rf::PlayerFpgunSetupMesh(Player, Entity->WeaponInfo.WeaponClsId);
-        TRACE("FpgunMesh %p", Player->FpgunMesh);
+        rf::PlayerFpgunSetupMesh(player, Entity->WeaponInfo.WeaponClsId);
+        TRACE("FpgunMesh %p", player->FpgunMesh);
 
         // Hide target player from camera
-        Entity->LocalPlayer = Player;
+        Entity->LocalPlayer = player;
     }
 #endif // SPECTATE_MODE_SHOW_WEAPON
 }
 
-static void SpectateNextPlayer(bool Dir, bool TryAlivePlayersFirst = false)
+static void SpectateNextPlayer(bool dir, bool try_alive_players_first = false)
 {
     rf::Player *NewTarget;
     if (g_SpectateModeEnabled)
@@ -109,10 +109,10 @@ static void SpectateNextPlayer(bool Dir, bool TryAlivePlayersFirst = false)
         NewTarget = rf::g_LocalPlayer;
     while (true)
     {
-        NewTarget = Dir ? NewTarget->Next : NewTarget->Prev;
+        NewTarget = dir ? NewTarget->Next : NewTarget->Prev;
         if (!NewTarget || NewTarget == g_SpectateModeTarget)
             break; // nothing found
-        if (TryAlivePlayersFirst && rf::IsPlayerEntityInvalid(NewTarget))
+        if (try_alive_players_first && rf::IsPlayerEntityInvalid(NewTarget))
             continue;
         if (NewTarget != rf::g_LocalPlayer)
         {
@@ -121,8 +121,8 @@ static void SpectateNextPlayer(bool Dir, bool TryAlivePlayersFirst = false)
         }
     }
 
-    if (TryAlivePlayersFirst)
-        SpectateNextPlayer(Dir, false);
+    if (try_alive_players_first)
+        SpectateNextPlayer(dir, false);
 }
 
 FunHook2<void(rf::Player*, rf::GameCtrl, bool)> HandleCtrlInGame_Hook{
@@ -180,11 +180,11 @@ CallHook2 IsPlayerDying_RedBars_Hook{ 0x00432A5F, IsPlayerDying_New };
 CallHook2 IsPlayerDying_Scoreboard_Hook{ 0x00437C01, IsPlayerDying_New };
 CallHook2 IsPlayerDying_Scoreboard2_Hook{ 0x00437C36, IsPlayerDying_New };
 
-void SpectateModeOnDestroyPlayer(rf::Player *Player)
+void SpectateModeOnDestroyPlayer(rf::Player *player)
 {
-    if (g_SpectateModeTarget == Player)
+    if (g_SpectateModeTarget == player)
         SpectateNextPlayer(true);
-    if (g_SpectateModeTarget == Player)
+    if (g_SpectateModeTarget == player)
         SpectateModeSetTargetPlayer(nullptr);
 }
 
@@ -223,7 +223,7 @@ CallHook2<void()> GrResetClip_RenderScannerViewForLocalPlayers_Hook{
 
 #if SPECTATE_MODE_SHOW_WEAPON
 
-static void PlayerFpgunRender_New(rf::Player *Player)
+static void PlayerFpgunRender_New(rf::Player *player)
 {
     if (g_SpectateModeEnabled)
     {
@@ -252,7 +252,7 @@ static void PlayerFpgunRender_New(rf::Player *Player)
         rf::PlayerFpgunRender(g_SpectateModeTarget);
     }
     else
-        rf::PlayerFpgunRender(Player);
+        rf::PlayerFpgunRender(player);
 }
 
 FunHook2<void(rf::Player*)> PlayerFpgunUpdateState_Hook{

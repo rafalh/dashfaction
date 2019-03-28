@@ -301,11 +301,11 @@ extern "C" DWORD DLL_EXPORT Init(void* unused)
     return 1; /* success */
 }
 
-BOOL WINAPI DllMain(HINSTANCE Instance_handle, DWORD fdwReason, LPVOID lpvReserved)
+BOOL WINAPI DllMain(HINSTANCE instance_handle, DWORD fdw_reason, LPVOID lpv_reserved)
 {
-    (void)fdwReason; // unused parameter
-    (void)lpvReserved; // unused parameter
-    g_hmodule = Instance_handle;
-    DisableThreadLibraryCalls(Instance_handle);
+    (void)fdw_reason; // unused parameter
+    (void)lpv_reserved; // unused parameter
+    g_hmodule = instance_handle;
+    DisableThreadLibraryCalls(instance_handle);
     return TRUE;
 }
