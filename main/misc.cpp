@@ -14,7 +14,7 @@
 
 namespace rf {
 
-static const auto EntityIsReloading = (bool(*)(EntityObj *pEntity))0x00425250;
+static const auto EntityIsReloading = (bool(*)(EntityObj *Entity))0x00425250;
 
 static auto& g_MenuVersionLabel = *(UiPanel*)0x0063C088;
 static auto& g_sound_enabled = AddrAsRef<bool>(0x017543D8);
@@ -29,18 +29,18 @@ int g_VersionLabelX, g_VersionLabelWidth, g_VersionLabelHeight;
 static const char g_szVersionInMenu[] = PRODUCT_NAME_VERSION;
 int g_VersionClickCounter = 0;
 int g_EggAnimStart;
-bool g_bWin32Console = false;
+bool g_Win32Console = false;
 bool g_linear_pitch = false;
 
 using UiLabel_Create2_Type = void __fastcall(rf::UiPanel*, void*, rf::UiPanel*, int, int, int, int, const char*, int);
 extern CallHook2<UiLabel_Create2_Type> UiLabel_Create2_VersionLabel_Hook;
-void __fastcall UiLabel_Create2_VersionLabel(rf::UiPanel *pThis, void *edx, rf::UiPanel *pParent, int x, int y, int w, int h,
-    const char *pszText, int FontId)
+void __fastcall UiLabel_Create2_VersionLabel(rf::UiPanel *This, void *edx, rf::UiPanel *Parent, int x, int y, int w, int h,
+    const char *Text, int FontId)
 {
     x = g_VersionLabelX;
     w = g_VersionLabelWidth;
     h = g_VersionLabelHeight;
-    UiLabel_Create2_VersionLabel_Hook.CallTarget(pThis, edx, pParent, x, y, w, h, pszText, FontId);
+    UiLabel_Create2_VersionLabel_Hook.CallTarget(This, edx, Parent, x, y, w, h, Text, FontId);
 }
 CallHook2<UiLabel_Create2_Type> UiLabel_Create2_VersionLabel_Hook{ 0x0044344D, UiLabel_Create2_VersionLabel };
 
@@ -75,7 +75,7 @@ ASM_FUNC(CrashFix_0055CE48,
     ASM_I  shl   edi, 5
     ASM_I  lea   edx, [esp + 0x38 - 0x28]
     ASM_I  mov   eax, [eax + edi]
-    ASM_I  test  eax, eax // check if pD3DTexture is NULL
+    ASM_I  test  eax, eax // check if D3DTexture is NULL
     ASM_I  jz    ASM_LABEL(CrashFix_0055CE48_label1)
     ASM_I  push  0
     ASM_I  push  0
@@ -139,7 +139,7 @@ int LoadEasterEggImage()
     if (!rf::GrLock(hbm, 0, &lock_data, 1))
         return -1;
 
-    rf::BmConvertFormat(lock_data.pBits, (rf::BmPixelFormat)lock_data.PixelFormat, res_data, rf::BMPF_8888,
+    rf::BmConvertFormat(lock_data.Bits, (rf::BmPixelFormat)lock_data.PixelFormat, res_data, rf::BMPF_8888,
         EASTER_EGG_SIZE * EASTER_EGG_SIZE);
     rf::GrUnlock(&lock_data);
 
@@ -206,7 +206,7 @@ FunHook2<void()> MouseUpdateDirectInput_Hook{
 bool IsHoldingAssaultRifle()
 {
     static auto &assault_rifle_cls_id = AddrAsRef<int>(0x00872470);
-    rf::EntityObj *entity = rf::EntityGetFromHandle(rf::g_pLocalPlayer->hEntity);
+    rf::EntityObj *entity = rf::EntityGetFromHandle(rf::g_LocalPlayer->hEntity);
     return entity && entity->WeaponInfo.WeaponClsId == assault_rifle_cls_id;
 }
 
@@ -235,7 +235,7 @@ CallHook2<char(rf::ControlConfig*, rf::GameCtrl, bool*)> IsEntityCtrlActive_Hook
 
 void DcfSwapAssaultRifleControls()
 {
-    if (rf::g_bDcRun) {
+    if (rf::g_DcRun) {
         g_game_config.swapAssaultRifleControls = !g_game_config.swapAssaultRifleControls;
         g_game_config.save();
         rf::DcPrintf("Swap assault rifle controls: %s", g_game_config.swapAssaultRifleControls ? "enabled" : "disabled");
@@ -244,7 +244,7 @@ void DcfSwapAssaultRifleControls()
 
 #if SERVER_WIN32_CONSOLE
 
-static const auto KeyProcessEvent = (void(*)(int ScanCode, int bKeyDown, int DeltaT))0x0051E6C0;
+static const auto KeyProcessEvent = (void(*)(int ScanCode, int KeyDown, int DeltaT))0x0051E6C0;
 
 void ResetConsoleCursorColumn(bool clear)
 {
@@ -302,7 +302,7 @@ CallHook2<void()> OsInitWindow_Server_Hook{ 0x004B27C5,
 
 FunHook2<void(const char*, const int*)> DcPrint_Hook{
     reinterpret_cast<uintptr_t>(DcPrint),
-    [](const char* pszText, const int* pColor) {
+    [](const char* Text, const int* Color) {
         HANDLE hOutput = GetStdHandle(STD_OUTPUT_HANDLE);
         constexpr WORD RedAttr = FOREGROUND_RED | FOREGROUND_INTENSITY;
         constexpr WORD BlueAttr = FOREGROUND_BLUE | FOREGROUND_INTENSITY;
@@ -312,7 +312,7 @@ FunHook2<void(const char*, const int*)> DcPrint_Hook{
 
         ResetConsoleCursorColumn(true);
 
-        const char *Ptr = pszText;
+        const char *Ptr = Text;
         while (*Ptr) {
             std::string Color;
             if (Ptr[0] == '[' && Ptr[1] == '$') {
@@ -350,7 +350,7 @@ FunHook2<void(const char*, const int*)> DcPrint_Hook{
             Ptr = EndPtr;
         }
 
-        if (Ptr > pszText && Ptr[-1] != '\n')
+        if (Ptr > Text && Ptr[-1] != '\n')
             WriteFile(hOutput, "\n", 1, NULL, NULL);
 
         if (CurrentAttr != GrayAttr)
@@ -371,12 +371,12 @@ CallHook2<void()> DcPutChar_NewLine_Hook{
 FunHook2<void()> DcDrawServerConsole_Hook{
     0x0050A770,
     []() {
-        static char szPrevCmdLine[1024];
+        static char PrevCmdLine[1024];
         HANDLE hOutput = GetStdHandle(STD_OUTPUT_HANDLE);
-        if (strncmp(g_szDcCmdLine, szPrevCmdLine, _countof(szPrevCmdLine)) != 0) {
+        if (strncmp(g_szDcCmdLine, PrevCmdLine, _countof(PrevCmdLine)) != 0) {
             ResetConsoleCursorColumn(true);
             PrintCmdInputLine();
-            strncpy(szPrevCmdLine, g_szDcCmdLine, _countof(szPrevCmdLine));
+            strncpy(PrevCmdLine, g_szDcCmdLine, _countof(PrevCmdLine));
         }
     }
 };
@@ -384,7 +384,7 @@ FunHook2<void()> DcDrawServerConsole_Hook{
 FunHook2<int()> KeyGetFromQueue_Hook{
     0x0051F000,
     []() {
-        if (!rf::g_bDedicatedServer)
+        if (!rf::g_IsDedicatedServer)
             return KeyGetFromQueue_Hook.CallTarget();
 
         HANDLE hInput = GetStdHandle(STD_INPUT_HANDLE);
@@ -396,7 +396,7 @@ FunHook2<int()> KeyGetFromQueue_Hook{
             if (!ReadConsoleInput(hInput, &InputRecord, 1, &NumRead) || NumRead == 0)
                 break;
             if (InputRecord.EventType == KEY_EVENT)
-                KeyProcessEvent(InputRecord.Event.KeyEvent.wVirtualScanCode, InputRecord.Event.KeyEvent.bKeyDown, 0);
+                KeyProcessEvent(InputRecord.Event.KeyEvent.wVirtualScanCode, InputRecord.Event.KeyEvent.KeyDown, 0);
         }
 
         return KeyGetFromQueue_Hook.CallTarget();
@@ -412,7 +412,7 @@ bool EntityIsReloading_SwitchWeapon_New(rf::EntityObj *entity)
 
     int weapon_cls_id = entity->WeaponInfo.WeaponClsId;
     if (weapon_cls_id >= 0) {
-        rf::WeaponClass* weapon_cls = &rf::g_pWeaponClasses[weapon_cls_id];
+        rf::WeaponClass* weapon_cls = &rf::g_WeaponClasses[weapon_cls_id];
         if (entity->WeaponInfo.WeaponsAmmo[weapon_cls_id] == 0 && entity->WeaponInfo.ClipAmmo[weapon_cls->AmmoType] > 0)
             return true;
     }
@@ -424,15 +424,15 @@ FunHook2<int(void*, void*)> GeomCachePrepareRoom_Hook{
     [](void* geom, void* room) {
         int ret = GeomCachePrepareRoom_Hook.CallTarget(geom, room);
         char** ppRoomGeom = (char**)((char*)room + 4);
-        char* pRoomGeom = *ppRoomGeom;
-        if (ret == 0 && pRoomGeom)
+        char* RoomGeom = *ppRoomGeom;
+        if (ret == 0 && RoomGeom)
         {
-            uint32_t *pRoomVertNum = (uint32_t*)(pRoomGeom + 4);
-            if (*pRoomVertNum > 8000)
+            uint32_t *RoomVertNum = (uint32_t*)(RoomGeom + 4);
+            if (*RoomVertNum > 8000)
             {
                 static int Once = 0;
                 if (!(Once++))
-                    WARN("Not rendering room with %u vertices!", *pRoomVertNum);
+                    WARN("Not rendering room with %u vertices!", *RoomVertNum);
                 *ppRoomGeom = NULL;
                 return -1;
             }
@@ -510,15 +510,15 @@ FunHook2<void(rf::TriggerObj*, int32_t, bool)> TriggerActivate_Hook{
         // Check team
         auto player = rf::GetPlayerFromEntityHandle(h_entity);
         auto trigger_name = trigger->_Super.strName.CStr();
-        if (player && trigger->Team != -1 && trigger->Team != player->bBlueTeam) {
-            //rf::DcPrintf("Trigger team does not match: %d vs %d (%s)", trigger->Team, Player->bBlueTeam, trigger_name);
+        if (player && trigger->Team != -1 && trigger->Team != player->BlueTeam) {
+            //rf::DcPrintf("Trigger team does not match: %d vs %d (%s)", trigger->Team, Player->BlueTeam, trigger_name);
             return;
         }
 
         // Check if this is Solo or Teleport trigger (REDPF feature)
         uint8_t ext_flags = trigger_name[0] == '\xAB' ? trigger_name[1] : 0;
         bool is_solo_trigger = (ext_flags & (TRIGGER_SOLO | TRIGGER_TELEPORT)) != 0;
-        if (rf::g_bNetworkGame && rf::g_bLocalNetworkGame && is_solo_trigger && player) {
+        if (rf::g_IsNetworkGame && rf::g_IsLocalNetworkGame && is_solo_trigger && player) {
             //rf::DcPrintf("Solo/Teleport trigger activated %s", trigger_name);
             SendTriggerActivatePacket(player, trigger, h_entity);
             return;
@@ -579,7 +579,7 @@ FunHook2<void(bool)> MenuInGameUpdateCutscene_Hook{
     0x0045B5E0,
     [](bool dlg_open) {
         bool skip_cutscene = false;
-        rf::IsEntityCtrlActive(&rf::g_pLocalPlayer->Config.Controls, rf::GC_JUMP, &skip_cutscene);
+        rf::IsEntityCtrlActive(&rf::g_LocalPlayer->Config.Controls, rf::GC_JUMP, &skip_cutscene);
 
         if (!skip_cutscene) {
             MenuInGameUpdateCutscene_Hook.CallTarget(dlg_open);
@@ -875,7 +875,7 @@ void MiscInit()
     WriteMem<u8>(0x005995B8, 0);
 
 #if DIRECTINPUT_SUPPORT
-    rf::g_bDirectInputDisabled = 0;
+    rf::g_DirectInputDisabled = 0;
 #endif
 
 #if 1
@@ -1011,8 +1011,8 @@ void MiscInit()
 #endif
 
 #if SERVER_WIN32_CONSOLE // win32 console
-    g_bWin32Console = stristr(GetCommandLineA(), "-win32-console") != nullptr;
-    if (g_bWin32Console) {
+    g_Win32Console = stristr(GetCommandLineA(), "-win32-console") != nullptr;
+    if (g_Win32Console) {
         OsInitWindow_Server_Hook.Install();
         //AsmWritter(0x0050A770).ret(); // null DcDrawServerConsole
         DcPrint_Hook.Install();
@@ -1026,7 +1026,7 @@ void MiscInit()
 void MiscCleanup()
 {
 #if SERVER_WIN32_CONSOLE // win32 console
-    if (g_bWin32Console)
+    if (g_Win32Console)
         FreeConsole();
 #endif
 }

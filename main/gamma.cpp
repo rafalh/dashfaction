@@ -17,8 +17,8 @@ static const auto gr_gamma_ramp = (uint32_t*)0x017C7C68;
 static void SetGammaRamp(D3DGAMMARAMP *gamma_ramp)
 {
 #if 0 // Note: D3D Gamma Ramp doesn't work in windowed mode
-    if (g_pGrDevice)
-        g_pGrDevice->SetGammaRamp(D3DSGR_NO_CALIBRATION, gamma_ramp);
+    if (g_GrDevice)
+        g_GrDevice->SetGammaRamp(D3DSGR_NO_CALIBRATION, gamma_ramp);
 #else
     HDC hdc = GetDC(rf::g_hWnd);
     if (hdc) {
@@ -56,11 +56,11 @@ void ResetGammaRamp()
     SetGammaRamp(&gamma_ramp);
 }
 
-static void GammaMsgHandler(UINT uMsg, WPARAM wParam, LPARAM lParam)
+static void GammaMsgHandler(UINT Msg, WPARAM wParam, LPARAM lParam)
 {
     (void)lParam; // unused parameter
 
-    switch (uMsg) {
+    switch (Msg) {
     case WM_ACTIVATE:
     case WM_ACTIVATEAPP:
         TRACE("WM_ACTIVATE %lx", wParam);

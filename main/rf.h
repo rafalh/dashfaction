@@ -245,7 +245,7 @@ namespace rf
     {
         int Size;
         int AllocatedSize;
-        void *pData;
+        void *Data;
     };
 
     /* Stubs */
@@ -262,11 +262,11 @@ namespace rf
 
     struct DcCommand
     {
-        const char *pszCmd;
-        const char *pszDescr;
+        const char *Cmd;
+        const char *Descr;
         void(*pfnHandler)();
 
-        inline static const auto Init = (void(__thiscall *)(rf::DcCommand *This, const char *pszCmd, const char *pszDescr, DcCmdHandler pfnHandler))0x00509A70;
+        inline static const auto Init = (void(__thiscall *)(rf::DcCommand *This, const char *Cmd, const char *Descr, DcCmdHandler pfnHandler))0x00509A70;
     };
 
     enum DcArgType
@@ -284,21 +284,21 @@ namespace rf
         DC_ARG_ANY = 0xFFFFFFFF,
     };
 
-    static const auto DcPrint = (void(*)(const char *pszText, const int *pColor))0x00509EC0;
-    static const auto DcPrintf = (void(*)(const char *pszFormat, ...))0x0050B9F0;
-    static const auto DcGetArg = (void(*)(int Type, bool bPreserveCase))0x0050AED0;
-    static const auto DcRunCmd = (int(*)(const char *pszCmd))0x00509B00;
+    static const auto DcPrint = (void(*)(const char *Text, const int *Color))0x00509EC0;
+    static const auto DcPrintf = (void(*)(const char *Format, ...))0x0050B9F0;
+    static const auto DcGetArg = (void(*)(int Type, bool PreserveCase))0x0050AED0;
+    static const auto DcRunCmd = (int(*)(const char *Cmd))0x00509B00;
 
     //static const auto g_ppDcCommands = (DcCommand**)0x01775530;
     static auto &g_DcNumCommands = *(uint32_t*)0x0177567C;
 
-    static auto &g_bDcRun = *(uint32_t*)0x01775110;
-    static auto &g_bDcHelp = *(uint32_t*)0x01775224;
-    static auto &g_bDcStatus = *(uint32_t*)0x01774D00;
+    static auto &g_DcRun = *(uint32_t*)0x01775110;
+    static auto &g_DcHelp = *(uint32_t*)0x01775224;
+    static auto &g_DcStatus = *(uint32_t*)0x01774D00;
     static auto &g_DcArgType = *(uint32_t*)0x01774D04;
-    static const auto g_pszDcArg = (char*)0x0175462C;
-    static auto &g_iDcArg = *(int*)0x01775220;
-    static auto &g_fDcArg = *(float*)0x01754628;
+    static const auto g_DcStrArg = (char*)0x0175462C;
+    static auto &g_DcIntArg = *(int*)0x01775220;
+    static auto &g_DcFloatArg = *(float*)0x01754628;
     static const auto g_szDcCmdLine = (char*)0x01775330;
     static auto &g_cchDcCmdLineLen = *(uint32_t*)0x0177568C;
 
@@ -323,10 +323,10 @@ namespace rf
         BMPF_UNK_8_16B = 0x8,
     };
 
-    static const auto BmLoad = (int(*)(const char *pszFilename, int a2, bool a3))0x0050F6A0;
+    static const auto BmLoad = (int(*)(const char *Filename, int a2, bool a3))0x0050F6A0;
     static const auto BmCreateUserBmap = (int(*)(BmPixelFormat PixelFormat, int Width, int Height))0x005119C0;
-    static const auto BmConvertFormat = (void(*)(void *pDstBits, BmPixelFormat DstPixelFmt, const void *pSrcBits, BmPixelFormat SrcPixelFmt, int NumPixels))0x0055DD20;
-    static const auto BmGetBitmapSize = (void(*)(int BmHandle, int *pWidth, int *pHeight))0x00510630;
+    static const auto BmConvertFormat = (void(*)(void *DstBits, BmPixelFormat DstPixelFmt, const void *SrcBits, BmPixelFormat SrcPixelFmt, int NumPixels))0x0055DD20;
+    static const auto BmGetBitmapSize = (void(*)(int BmHandle, int *Width, int *Height))0x00510630;
     static const auto BmGetFilename = (const char*(*)(int BmHandle))0x00511710;
     static const auto BmLock = (BmPixelFormat(*)(int BmHandle, uint8_t **ppData, uint8_t **ppPalette))0x00510780;
     static const auto BmUnlock = (void(*)(int BmHandle))0x00511700;
@@ -376,7 +376,7 @@ namespace rf
     struct GrVertex
     {
         Vector3 v3dPos;
-        Vector3 vScreenPos;
+        Vector3 ScreenPos;
         int ClipFlags;
         float u0;
         float v0;
@@ -390,7 +390,7 @@ namespace rf
         int BmHandle;
         int SectionIdx;
         BmPixelFormat PixelFormat;
-        uint8_t *pBits;
+        uint8_t *Bits;
         int Width;
         int Height;
         int Pitch;
@@ -405,7 +405,7 @@ namespace rf
         GR_ALIGN_RIGHT = 2,
     };
 
-    static auto &g_pGrDevice = *(IDirect3DDevice8**)0x01CFCBE4;
+    static auto &g_GrDevice = *(IDirect3DDevice8**)0x01CFCBE4;
     static auto &g_GrScreen = *(GrScreen*)0x017C7BC0;
 
     static auto &g_GrLineMaterial = *(uint32_t*)0x01775B00;
@@ -419,33 +419,33 @@ namespace rf
     static const auto GrGetViewportWidth = (unsigned(*)())0x0050CDB0;
     static const auto GrGetViewportHeight = (unsigned(*)())0x0050CDC0;
     static const auto GrSetColor = (void(*)(unsigned r, unsigned g, unsigned b, unsigned a))0x0050CF80;
-    static const auto GrSetColorPtr = (void(*)(uint32_t *pColor))0x0050D000;
-    static const auto GrReadBackBuffer = (int(*)(int x, int y, int Width, int Height, void *pBuffer))0x0050DFF0;
+    static const auto GrSetColorPtr = (void(*)(uint32_t *Color))0x0050D000;
+    static const auto GrReadBackBuffer = (int(*)(int x, int y, int Width, int Height, void *Buffer))0x0050DFF0;
     static const auto GrFlushBuffers = (void(*)())0x00559D90;
 
     static const auto GrDrawRect = (void(*)(unsigned x, unsigned y, unsigned cx, unsigned cy, unsigned Material))0x0050DBE0;
     static const auto GrDrawImage = (void(*)(int BmHandle, int x, int y, int Material))0x0050D2A0;
     static const auto GrDrawBitmapStretched = (void(*)(int BmHandle, int dstX, int dstY, int dstW, int dstH, int srcX, int srcY, int srcW, int srcH, float a10, float a11, int Material))0x0050D250;
-    static const auto GrDrawText = (void(*)(unsigned x, unsigned y, const char *pszText, int Font, unsigned Material))0x0051FEB0;
-    static const auto GrDrawAlignedText = (void(*)(GrTextAlignment Align, unsigned x, unsigned y, const char *pszText, int Font, unsigned Material))0x0051FE50;
+    static const auto GrDrawText = (void(*)(unsigned x, unsigned y, const char *Text, int Font, unsigned Material))0x0051FEB0;
+    static const auto GrDrawAlignedText = (void(*)(GrTextAlignment Align, unsigned x, unsigned y, const char *Text, int Font, unsigned Material))0x0051FE50;
 
-    static const auto GrRenderLine = (char(*)(const Vector3 *pWorldPos1, const Vector3 *pWorldPos2, int Material))0x00515960;
+    static const auto GrRenderLine = (char(*)(const Vector3 *WorldPos1, const Vector3 *WorldPos2, int Material))0x00515960;
     static const auto GrRenderSphere = (char(*)(const Vector3 *pvPos, float fRadius, int Material))0x00515CD0;
 
     static const auto GrFitText = (String* (*)(String* pstrDest, String::Pod Str, int cxMax))0x00471EC0;
-    static const auto GrLoadFont = (int(*)(const char *pszFileName, int a2))0x0051F6E0;
+    static const auto GrLoadFont = (int(*)(const char *FileName, int a2))0x0051F6E0;
     static const auto GrGetFontHeight = (unsigned(*)(int FontId))0x0051F4D0;
-    static const auto GrGetTextWidth = (void(*)(int *pOutWidth, int *pOutHeight, const char *pszText, int TextLen, int FontId))0x0051F530;
+    static const auto GrGetTextWidth = (void(*)(int *OutWidth, int *OutHeight, const char *Text, int TextLen, int FontId))0x0051F530;
 
-    static const auto GrLock = (char(*)(int BmHandle, int SectionIdx, GrLockData *pData, int a4))0x0050E2E0;
-    static const auto GrUnlock = (void(*)(GrLockData *pData))0x0050E310;
+    static const auto GrLock = (char(*)(int BmHandle, int SectionIdx, GrLockData *Data, int a4))0x0050E2E0;
+    static const auto GrUnlock = (void(*)(GrLockData *Data))0x0050E310;
 
     /* User Interface (UI) */
 
     struct UiPanel
     {
         void(__cdecl **field_0)();
-        UiPanel *pParent;
+        UiPanel *Parent;
         char field_8;
         char field_9;
         int x;
@@ -458,8 +458,8 @@ namespace rf
         int BgTexture;
     };
 
-    static const auto UiMsgBox = (void(*)(const char *pszTitle, const char *pszText, void(*pfnCallback)(void), bool bInput))0x004560B0;
-    static const auto UiCreateDialog = (void(*)(const char *pszTitle, const char *pszText, unsigned cButtons, const char **ppszBtnTitles, void **ppfnCallbacks, unsigned Unknown1, unsigned Unknown2))0x004562A0;
+    static const auto UiMsgBox = (void(*)(const char *Title, const char *Text, void(*pfnCallback)(void), bool Input))0x004560B0;
+    static const auto UiCreateDialog = (void(*)(const char *Title, const char *Text, unsigned cButtons, const char **ppszBtnTitles, void **ppfnCallbacks, unsigned Unknown1, unsigned Unknown2))0x004562A0;
     static const auto UiGetElementFromPos = (int(*)(int x, int y, UiPanel **ppGuiList, signed int cGuiList))0x00442ED0;
 
     /* Chat */
@@ -479,10 +479,10 @@ namespace rf
 
     /* File System */
 
-    typedef int(*PackfileLoad_Type)(const char *pszFileName, const char *pszDir);
+    typedef int(*PackfileLoad_Type)(const char *FileName, const char *Dir);
     static const auto PackfileLoad = (PackfileLoad_Type)0x0052C070;
 
-    static const auto FsAddDirectoryEx = (int(*)(const char *pszDir, const char *pszExtList, bool bUnknown))0x00514070;
+    static const auto FsAddDirectoryEx = (int(*)(const char *Dir, const char *ExtList, bool Unknown))0x00514070;
 
     /* Network */
 
@@ -541,16 +541,16 @@ namespace rf
     };
     static_assert(sizeof(CPlayerNetData) == 0x9C8, "invalid size");
 
-    typedef void(*NwSendNotReliablePacket_Type)(const void *pAddr, const void *pPacket, unsigned cbPacket);
+    typedef void(*NwSendNotReliablePacket_Type)(const void *Addr, const void *Packet, unsigned cbPacket);
     static const auto NwSendNotReliablePacket = (NwSendNotReliablePacket_Type)0x0052A080;
 
-    static const auto NwSendReliablePacket = (void(*)(Player *pPlayer, const uint8_t *pData, unsigned int cbData, int a4))0x00479480;
+    static const auto NwSendReliablePacket = (void(*)(Player *Player, const uint8_t *Data, unsigned int cbData, int a4))0x00479480;
 
-    typedef void(*NwAddrToStr_Type)(char *pszDest, int cbDest, NwAddr& Addr);
+    typedef void(*NwAddrToStr_Type)(char *Dest, int cbDest, NwAddr& Addr);
     static const auto NwAddrToStr = (NwAddrToStr_Type)0x00529FE0;
 
     static const auto NwGetPlayerFromAddr = (Player *(*)(const NwAddr& Addr))0x00484850;
-    static const auto NwCompareAddr = (int(*)(const NwAddr &pAddr1, const NwAddr &pAddr2, bool bCheckPort))0x0052A930;
+    static const auto NwCompareAddr = (int(*)(const NwAddr &Addr1, const NwAddr &Addr2, bool CheckPort))0x0052A930;
 
     /* Camera */
 
@@ -568,13 +568,13 @@ namespace rf
 
     struct Camera
     {
-        EntityObj *pCameraEntity;
-        Player *pPlayer;
+        EntityObj *CameraEntity;
+        Player *Player;
         CameraType Type;
     };
 
-    static const auto CameraSetFirstPerson = (void(*)(Camera *pCamera))0x0040DDF0;
-    static const auto CameraSetFreelook = (void(*)(Camera *pCamera))0x0040DCF0;
+    static const auto CameraSetFirstPerson = (void(*)(Camera *Camera))0x0040DDF0;
+    static const auto CameraSetFreelook = (void(*)(Camera *Camera))0x0040DCF0;
 
     /* Config */
 
@@ -593,7 +593,7 @@ namespace rf
     struct ControlConfig
     {
         float fMouseSensitivity;
-        int bMouseLook;
+        int MouseLook;
         int field_EC;
         ControlConfigItem Keys[128];
         int CtrlCount;
@@ -602,7 +602,7 @@ namespace rf
         int field_EFC;
         int field_F00;
         char field_F04;
-        char bMouseYInvert;
+        char MouseYInvert;
         char field_E22;
         char field_E23;
         int field_F08;
@@ -623,18 +623,18 @@ namespace rf
         int field_F30;
         char field_F34;
         char field_E51;
-        char bFirstPersonWeaponVisible;
+        char FirstPersonWeaponVisible;
         char field_E53;
-        char bCrouchStay;
+        char CrouchStay;
         char field_F39;
         char field_F3A;
-        char bHudVisible;
+        char HudVisible;
         char field_F3C;
         char field_E59;
         char field_E5A;
         char field_E5B;
-        char bAutoswitchWeapons;
-        char bAutoswitchExplosives;
+        char AutoswitchWeapons;
+        char AutoswitchExplosives;
         char ShadowsEnabled;
         char DecalsEnabled;
         char DynamicLightiningEnabled;
@@ -650,7 +650,7 @@ namespace rf
         int CharacterDetailLevel;
         float field_F58;
         int MpCharacter;
-        char szName[12];
+        char Name[12];
     };
     static_assert(sizeof(PlayerConfig) == 0xE88, "invalid size");
 
@@ -699,7 +699,7 @@ namespace rf
         Timer UnkReloadTimer;
         int field_F8C;
         Timer UnkTimerF90;
-        char bInScopeView;
+        char InScopeView;
         char field_F95;
         char field_F96;
         char field_F97;
@@ -712,8 +712,8 @@ namespace rf
         Timer field_FA4;
         Timer TimerFA8;
         Timer field_FAC;
-        char bRailgunScanner;
-        char bScannerView;
+        char RailgunScanner;
+        char ScannerView;
         Color clrUnkR;
         char field_FB6;
         char field_FB7;
@@ -722,8 +722,8 @@ namespace rf
         float field_FC0;
         Vector3 field_FC4;
         Matrix3 field_FD0;
-        Matrix3 matRotFpsWeapon;
-        Vector3 vPosFpsWeapon;
+        Matrix3 RotFpsWeapon;
+        Vector3 PosFpsWeapon;
         int field_1024;
         float field_1028;
         int field_102C;
@@ -748,21 +748,21 @@ namespace rf
 
     struct Player
     {
-        Player *pNext;
-        Player *pPrev;
+        Player *Next;
+        Player *Prev;
         String strName;
         PlayerFlags Flags;
         int hEntity;
         int EntityClsId;
         Vector3 field_1C;
         int field_28;
-        PlayerStats *pStats;
-        char bBlueTeam;
-        char bCollide;
+        PlayerStats *Stats;
+        char BlueTeam;
+        char Collide;
         char field_32;
         char field_33;
-        AnimMesh *pFpgunMesh;
-        AnimMesh *pLastFpgunMesh;
+        AnimMesh *FpgunMesh;
+        AnimMesh *LastFpgunMesh;
         Timer Timer3C;
         int FpgunMuzzleProps[2];
         int FpgunAmmoDigit1Prop;
@@ -776,7 +776,7 @@ namespace rf
         Timer WeaponSwitchTimer2;
         Timer UseKeyTimer;
         Timer field_C0;
-        Camera *pCamera;
+        Camera *Camera;
         int xViewport;
         int yViewport;
         int cxViewport;
@@ -814,21 +814,21 @@ namespace rf
         float field_11F4;
         int field_11F8;
         int field_11FC;
-        CPlayerNetData *pNwData;
+        CPlayerNetData *NwData;
     };
     static_assert(sizeof(Player) == 0x1204, "invalid size");
 
-    static auto &g_pPlayersList = *(Player**)0x007C75CC;
-    static auto &g_pLocalPlayer = *(Player**)0x007C75D4;
+    static auto &g_PlayersList = *(Player**)0x007C75CC;
+    static auto &g_LocalPlayer = *(Player**)0x007C75D4;
 
     static const auto KillLocalPlayer = (void(*)())0x004757A0;
-    static const auto IsEntityCtrlActive = (char(*)(ControlConfig *pCtrlConf, GameCtrl CtrlId, bool *pWasPressed))0x0043D4F0;
+    static const auto IsEntityCtrlActive = (char(*)(ControlConfig *CtrlConf, GameCtrl CtrlId, bool *WasPressed))0x0043D4F0;
     static const auto GetPlayerFromEntityHandle = (Player*(*)(int32_t hEntity))0x004A3740;
 
-    typedef bool(*IsPlayerEntityInvalid_Type)(Player *pPlayer);
+    typedef bool(*IsPlayerEntityInvalid_Type)(Player *Player);
     static const auto IsPlayerEntityInvalid = (IsPlayerEntityInvalid_Type)0x004A4920;
 
-    typedef bool(*IsPlayerDying_Type)(Player *pPlayer);
+    typedef bool(*IsPlayerDying_Type)(Player *Player);
     static const auto IsPlayerDying = (IsPlayerDying_Type)0x004A4940;
 
     /* Object */
@@ -858,8 +858,8 @@ namespace rf
         Matrix3 field_9C;
         Matrix3 field_C0;
         Vector3 Pos;
-        Vector3 vNewPos;
-        Matrix3 matYawRot;
+        Vector3 NewPos;
+        Matrix3 YawRot;
     };
 
     struct WaterSplashUnk
@@ -872,7 +872,7 @@ namespace rf
         Vector3 field_1D8;
         int hUnkEntity;
         int field_1E8;
-        int bWaterSplash_1EC;
+        int WaterSplash_1EC;
         int field_3C;
         int field_40;
     };
@@ -886,12 +886,12 @@ namespace rf
         float fMass;
         Matrix3 field_9C;
         Matrix3 field_C0;
-        Vector3 vPos;
-        Vector3 vNewPos;
-        Matrix3 matYawRot;
+        Vector3 Pos;
+        Vector3 NewPos;
+        Matrix3 YawRot;
         Matrix3 field_120;
-        Vector3 vVel;
-        Vector3 vRotChangeUnk;
+        Vector3 Vel;
+        Vector3 RotChangeUnk;
         Vector3 field_15C;
         Vector3 field_168;
         Vector3 RotChangeUnkDelta;
@@ -908,10 +908,10 @@ namespace rf
 
     struct Object
     {
-        void *pRoom;
-        Vector3 vLastPosInRoom;
-        Object *pNextObj;
-        Object *pPrevObj;
+        void *Room;
+        Vector3 LastPosInRoom;
+        Object *NextObj;
+        Object *PrevObj;
         String strName;
         int Uid;
         ObjectType Type;
@@ -920,28 +920,28 @@ namespace rf
         int hOwnerEntityUnk;
         float fLife;
         float fArmor;
-        Vector3 vPos;
-        Matrix3 matOrient;
-        Vector3 vLastPos;
+        Vector3 Pos;
+        Matrix3 Orient;
+        Vector3 LastPos;
         float fRadius;
         ObjectFlags Flags;
-        AnimMesh *pAnimMesh;
+        AnimMesh *AnimMesh;
         int field_84;
         PhysicsInfo PhysInfo;
         int Friendliness;
-        int iMaterial;
+        int Material;
         int hParent;
         int UnkPropId_204;
         Vector3 field_208;
         Matrix3 mat214;
-        Vector3 vPos3;
-        Matrix3 matRot2;
-        int *pEmitterListHead;
+        Vector3 Pos3;
+        Matrix3 Rot2;
+        int *EmitterListHead;
         int field_26C;
         char KillerId;
         char _pad[3]; // FIXME
         int MultiHandle;
-        int pAnim;
+        int Anim;
         int field_27C;
         Vector3 field_280;
     };
@@ -949,7 +949,7 @@ namespace rf
 
     struct EventObj
     {
-        int pVtbl;
+        int Vtbl;
         Object _Super;
         int EventType;
         float fDelay;
@@ -965,8 +965,8 @@ namespace rf
     struct ItemObj
     {
         Object _Super;
-        ItemObj *pNext;
-        ItemObj *pPrev;
+        ItemObj *Next;
+        ItemObj *Prev;
         int field_294;
         int ItemClsId;
         String field_29C;
@@ -981,8 +981,8 @@ namespace rf
     struct TriggerObj
     {
         Object _Super;
-        TriggerObj *pNext;
-        TriggerObj *pPrev;
+        TriggerObj *Next;
+        TriggerObj *Prev;
         int Shape;
         Timer ResetsAfterTimer;
         int ResetsAfterMs;
@@ -1000,7 +1000,7 @@ namespace rf
         Timer ActivationFailedTimer;
         int hActivationFailedEntity;
         Timer field_2E8;
-        char bOneWay;
+        char OneWay;
         char _padding[3];
         float ButtonActiveTimeSeconds;
         Timer field_2F4;
@@ -1023,28 +1023,28 @@ namespace rf
 
     struct MoveModeTbl
     {
-        char bAvailable;
+        char Available;
         char unk, unk2, unk3;
         int Id;
-        int iMoveRefX;
-        int iMoveRefY;
-        int iMoveRefZ;
-        int iRotRefX;
-        int iRotRefY;
-        int iRotRefZ;
+        int MoveRefX;
+        int MoveRefY;
+        int MoveRefZ;
+        int RotRefX;
+        int RotRefY;
+        int RotRefZ;
     };
 
     struct SWeaponSelection
     {
-        EntityClass *pEntityCls;
+        EntityClass *EntityCls;
         int WeaponClsId;
         int WeaponClsId2;
     };
 
     struct SEntityMotion
     {
-        Vector3 vRotChange;
-        Vector3 vPosChange;
+        Vector3 RotChange;
+        Vector3 PosChange;
         int field_18;
         float field_1C;
         float field_20;
@@ -1101,7 +1101,7 @@ namespace rf
 
     struct EntityWeaponInfo
     {
-        EntityObj *pEntity;
+        EntityObj *Entity;
         int WeaponClsId;
         int WeaponClsId2;
         int ClipAmmo[32];
@@ -1196,10 +1196,10 @@ namespace rf
     struct EntityCameraInfo
     {
         int field_860;
-        Vector3 vRotYaw;
-        Vector3 vRotYawDelta;
-        Vector3 vRotPitch;
-        Vector3 vRotPitchDelta;
+        Vector3 RotYaw;
+        Vector3 RotYawDelta;
+        Vector3 RotPitch;
+        Vector3 RotPitchDelta;
         Vector3 field_894;
         Vector3 field_8A0;
         int field_8AC;
@@ -1212,14 +1212,14 @@ namespace rf
     struct EntityObj
     {
         Object _Super;
-        EntityObj *pNext;
-        EntityObj *pPrev;
-        EntityClass *pClass;
+        EntityObj *Next;
+        EntityObj *Prev;
+        EntityClass *Class;
         int ClassId;
-        EntityClass *pClass2;
+        EntityClass *Class2;
         EntityWeaponInfo WeaponInfo;
-        Vector3 vViewPos;
-        Matrix3 matViewOrient;
+        Vector3 ViewPos;
+        Matrix3 ViewOrient;
         int UnkAmbientSound;
         int field_808;
         int MoveSnd;
@@ -1236,7 +1236,7 @@ namespace rf
         int field_834[5];
         AnimMesh *field_848;
         AnimMesh *field_84C;
-        int pNanoShield;
+        int NanoShield;
         int Snd854;
         MoveModeTbl *MovementMode;
         Matrix3 *field_85C;
@@ -1295,9 +1295,9 @@ namespace rf
         int field_1424;
         int field_1428;
         int field_142C;
-        Player *pLocalPlayer;
-        Vector3 vPitchMin;
-        Vector3 vPitchMax;
+        Player *LocalPlayer;
+        Vector3 PitchMin;
+        Vector3 PitchMax;
         int hKillerEntity;
         int RiotShieldClutterHandle;
         int field_1454;
@@ -1327,9 +1327,9 @@ namespace rf
     {
         String strName;
         String strAnim;
-        int iAnim;
+        int Anim;
         int SoundId;
-        int pSound;
+        int Sound;
     };
 
     struct WeaponClass
@@ -1346,7 +1346,7 @@ namespace rf
         int ThirdPersonGrip1MeshProp;
         int dw3rdPersonMuzzleFlashGlare;
         String str1stPersonMesh;
-        int *pMesh;
+        int *Mesh;
         Vector3 v1stPersonOffset;
         Vector3 v1stPersonOffsetSS;
         int p1stPersonMuzzleFlashBitmap;
@@ -1455,7 +1455,7 @@ namespace rf
         float fPiercingPower;
         float RicochetAngle;
         int RicochetBitmap;
-        Vector3 vRicochetSize;
+        Vector3 RicochetSize;
         float fThrustLifetime;
         int cStates;
         int cActions;
@@ -1470,11 +1470,11 @@ namespace rf
         String ImpactVclipNames[3];
         float ImpactVclipsRadiusList[3];
         int DecalTexture;
-        Vector3 vDecalSize;
+        Vector3 DecalSize;
         int GlassDecalTexture;
-        Vector3 vGlassDecalSize;
+        Vector3 GlassDecalSize;
         int FpgunShellEjectPropId;
-        Vector3 vShellsEjectedBaseDir;
+        Vector3 ShellsEjectedBaseDir;
         float fShellEjectVelocity;
         String strShellsEjectedV3d;
         int ShellsEjectedCustomSoundSet;
@@ -1511,7 +1511,7 @@ namespace rf
     };
     static_assert(sizeof(WeaponClass) == 0x550, "invalid size");
 
-    static const auto g_pWeaponClasses = (WeaponClass*)0x0085CD08;
+    static const auto g_WeaponClasses = (WeaponClass*)0x0085CD08;
     static auto &g_RiotStickClsId = *(int32_t*)0x00872468;
     static auto &g_RemoteChargeClsId = *(int32_t*)0x0087210C;
 
@@ -1525,9 +1525,9 @@ namespace rf
     static auto &g_cMsgHandlers = *(uint32_t*)0x01B0D760;
 
     static auto &g_hWnd = *(HWND*)0x01B0D748;
-    static auto &g_bIsActive = *(uint8_t*)0x01B0D750;
-    static auto &g_bClose = *(uint8_t*)0x01B0D758;
-    static auto &g_bMouseInitialized = *(uint8_t*)0x01885461;
+    static auto &g_IsActive = *(uint8_t*)0x01B0D750;
+    static auto &g_Close = *(uint8_t*)0x01B0D758;
+    static auto &g_MouseInitialized = *(uint8_t*)0x01885461;
     static auto &g_cRedrawServer = *(uint32_t*)0x01775698;
 
     /* Network Game */
@@ -1546,7 +1546,7 @@ namespace rf
     static const auto CtfGetRedFlagPlayer = (Player*(*)())0x00474E60;
     static const auto CtfGetBlueFlagPlayer = (Player*(*)())0x00474E70;
 
-    typedef void(*KickPlayer_Type)(Player *pPlayer);
+    typedef void(*KickPlayer_Type)(Player *Player);
     static const auto KickPlayer = (KickPlayer_Type)0x0047BF00;
 
     typedef void(*BanIp_Type)(const NwAddr& addr);
@@ -1556,9 +1556,9 @@ namespace rf
 
     static auto &g_ServAddr = *(NwAddr*)0x0064EC5C;
     static auto &g_strServName = *(String*)0x0064EC28;
-    static auto &g_bNetworkGame = *(uint8_t*)0x0064ECB9;
-    static auto &g_bLocalNetworkGame = *(uint8_t*)0x0064ECBA;
-    static auto &g_bDedicatedServer = *(uint32_t*)0x01B0D75C;
+    static auto &g_IsNetworkGame = *(uint8_t*)0x0064ECB9;
+    static auto &g_IsLocalNetworkGame = *(uint8_t*)0x0064ECBA;
+    static auto &g_IsDedicatedServer = *(uint32_t*)0x01B0D75C;
     static auto &g_GameOptions = *(uint32_t*)0x0064EC40;
 
     /* Input */
@@ -1612,15 +1612,15 @@ namespace rf
 
     struct RflLightmap
     {
-        uint8_t *pUnk;
+        uint8_t *Unk;
         int w;
         int h;
-        uint8_t *pBuf;
+        uint8_t *Buf;
         int BmHandle;
         int unk2;
     };
 
-    static const auto g_pszRootPath = (char*)0x018060E8;
+    static const auto g_RootPath = (char*)0x018060E8;
     static auto &g_fFps = *(float*)0x005A4018;
     static auto &g_fFramerate = *(float*)0x005A4014;
     static auto &g_fMinFramerate = *(float*)0x005A4024;
@@ -1632,16 +1632,16 @@ namespace rf
     static auto &g_LargeFontId = *(int*)0x0063C05C;
     static auto &g_MediumFontId = *(int*)0x0063C060;
     static auto &g_SmallFontId = *(int*)0x0063C068;
-    static auto &g_bDirectInputDisabled = *(bool*)0x005A4F88;
+    static auto &g_DirectInputDisabled = *(bool*)0x005A4F88;
     static auto &g_strDefaultPlayerWeapon = *(String*)0x007C7600;
     static auto &g_active_cutscene = *reinterpret_cast<void**>(0x00645320);
 
     static const auto RfBeep = (void(*)(unsigned u1, unsigned u2, unsigned u3, float fVolume))0x00505560;
-    static const auto GetFileExt = (char *(*)(const char *pszPath))0x005143F0;
+    static const auto GetFileExt = (char *(*)(const char *Path))0x005143F0;
     static const auto SplitScreenStart = (void(*)())0x00480D30;
     static const auto SetNextLevelFilename = (void(*)(String::Pod strFilename, String::Pod strSecond))0x0045E2E0;
-    static const auto DemoLoadLevel = (void(*)(const char *pszLevelFileName))0x004CC270;
-    static const auto SetCursorVisible = (void(*)(bool bVisible))0x0051E680;
+    static const auto DemoLoadLevel = (void(*)(const char *LevelFileName))0x004CC270;
+    static const auto SetCursorVisible = (void(*)(bool Visible))0x0051E680;
     static const auto CutsceneIsActive = reinterpret_cast<bool(*)()>(0x0045BE80);
     static const auto Timer__GetTimeLeftMs = reinterpret_cast<int (__thiscall*)(void* timer)>(0x004FA420);
 
@@ -1669,7 +1669,7 @@ namespace rf
 
     /* RF stdlib functions are not compatible with GCC */
 
-    typedef void(*Free_Type)(void *pMem);
+    typedef void(*Free_Type)(void *Mem);
     static const auto Free = (Free_Type)0x00573C71;
 
     typedef void *(*Malloc_Type)(uint32_t cbSize);

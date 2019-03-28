@@ -7,7 +7,7 @@
 
 void KillInitPlayer(rf::Player* player)
 {
-    auto stats = reinterpret_cast<PlayerStatsNew*>(player->pStats);
+    auto stats = reinterpret_cast<PlayerStatsNew*>(player->Stats);
     stats->num_kills = 0;
     stats->num_deaths = 0;
 }
@@ -15,12 +15,12 @@ void KillInitPlayer(rf::Player* player)
 FunHook2<void()> MpResetNetGame_Hook{
     0x0046E450,
     []() {
-        rf::Player* player = rf::g_pPlayersList;
+        rf::Player* player = rf::g_PlayersList;
         while (player) {
             KillInitPlayer(player);
-            player = player->pNext;
+            player = player->Next;
 
-            if (player == rf::g_pPlayersList)
+            if (player == rf::g_PlayersList)
                 break;
         }
         MpResetNetGame_Hook.CallTarget();
@@ -45,7 +45,7 @@ void OnPlayerKill(rf::Player *killed_player, rf::Player *killer_player)
         mui_msg = NullToEmpty(rf::strings::was_killed_mysteriously);
         msg = rf::String::Format("%s%s", killed_player->strName.CStr(), mui_msg);
     }
-    else if (killed_player == rf::g_pLocalPlayer) {
+    else if (killed_player == rf::g_LocalPlayer) {
         color_id = rf::ChatMsgColor::white_white;
         if (killer_player == killed_player) {
             mui_msg = NullToEmpty(rf::strings::you_killed_yourself);
@@ -61,7 +61,7 @@ void OnPlayerKill(rf::Player *killed_player, rf::Player *killer_player)
             const char* weapon_name = nullptr;
             int killer_weapon_cls_id = killer_entity ? killer_entity->WeaponInfo.WeaponClsId : -1;
             if (killer_weapon_cls_id >= 0 && killer_weapon_cls_id < 64) {
-                auto &weapon_cls = rf::g_pWeaponClasses[killer_weapon_cls_id];
+                auto &weapon_cls = rf::g_WeaponClasses[killer_weapon_cls_id];
                 weapon_name = weapon_cls.strDisplayName.CStr();
             }
 
@@ -72,7 +72,7 @@ void OnPlayerKill(rf::Player *killed_player, rf::Player *killer_player)
                 msg = rf::String::Format("%s%s!", mui_msg, killer_name);
         }
     }
-    else if (killer_player == rf::g_pLocalPlayer) {
+    else if (killer_player == rf::g_LocalPlayer) {
         color_id = rf::ChatMsgColor::white_white;
         mui_msg = NullToEmpty(rf::strings::you_killed);
         msg = rf::String::Format("%s%s!", mui_msg, killed_player->strName.CStr());
@@ -95,11 +95,11 @@ void OnPlayerKill(rf::Player *killed_player, rf::Player *killer_player)
     rf::String prefix;
     rf::ChatPrint(msg, color_id, prefix);
 
-    auto killed_stats = reinterpret_cast<PlayerStatsNew*>(killed_player->pStats);
+    auto killed_stats = reinterpret_cast<PlayerStatsNew*>(killed_player->Stats);
     ++killed_stats->num_deaths;
 
     if (killer_player) {
-        auto killer_stats = reinterpret_cast<PlayerStatsNew*>(killer_player->pStats);
+        auto killer_stats = reinterpret_cast<PlayerStatsNew*>(killer_player->Stats);
         if (killer_player != killed_player) {
             ++killer_stats->score;
             ++killer_stats->num_kills;

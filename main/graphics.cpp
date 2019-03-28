@@ -10,7 +10,7 @@
 
 namespace rf {
 
-static auto &g_pDirect3D = *(IDirect3D8**)0x01CFCBE0;
+static auto &g_Direct3D = *(IDirect3D8**)0x01CFCBE0;
 static auto &g_GrPP = *(D3DPRESENT_PARAMETERS*)0x01CFCA18;
 static auto &g_AdapterIdx = *(uint32_t*)0x01CFCC34;
 static auto &g_GrScaleVec = *(Vector3*)0x01818B48;
@@ -18,7 +18,7 @@ static auto &g_GrViewMatrix = *(Matrix3*)0x018186C8;
 static auto &g_GrDeviceCaps = *(D3DCAPS8*)0x01CFCAC8;
 static auto &g_GrDefaultWFar = *(float*)0x00596140;
 
-static const auto GrSetTextureMipFilter = (void(*)(int bLinear))0x0050E830;
+static const auto GrSetTextureMipFilter = (void(*)(int Linear))0x0050E830;
 }
 
 
@@ -118,12 +118,12 @@ ASM_FUNC(GrCreateD3DDeviceError_00545BEF,
     ASM_I  add esp, 4
 )
 
-extern "C" void GrClearZBuffer_SetRect(D3DRECT *pClearRect)
+extern "C" void GrClearZBuffer_SetRect(D3DRECT *ClearRect)
 {
-    pClearRect->x1 = rf::g_GrScreen.OffsetX + rf::g_GrScreen.ClipLeft;
-    pClearRect->y1 = rf::g_GrScreen.OffsetY + rf::g_GrScreen.ClipTop;
-    pClearRect->x2 = rf::g_GrScreen.OffsetX + rf::g_GrScreen.ClipRight + 1;
-    pClearRect->y2 = rf::g_GrScreen.OffsetY + rf::g_GrScreen.ClipBottom + 1;
+    ClearRect->x1 = rf::g_GrScreen.OffsetX + rf::g_GrScreen.ClipLeft;
+    ClearRect->y1 = rf::g_GrScreen.OffsetY + rf::g_GrScreen.ClipTop;
+    ClearRect->x2 = rf::g_GrScreen.OffsetX + rf::g_GrScreen.ClipRight + 1;
+    ClearRect->y2 = rf::g_GrScreen.OffsetY + rf::g_GrScreen.ClipBottom + 1;
 }
 
 ASM_FUNC(GrClearZBuffer_005509C4,
@@ -144,13 +144,13 @@ static void SetupPP(void)
 
     // Note: in MSAA mode we don't lock back buffer
 #if !D3D_SWAP_DISCARD
-    rf::g_pGrPP.Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
+    rf::g_GrPP.Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
 #endif
 
 #if MULTISAMPLING_SUPPORT
     if (g_game_config.msaa && Format > 0) {
         // Make sure selected MSAA mode is available
-        HRESULT hr = rf::g_pDirect3D->CheckDeviceMultiSampleType(rf::g_AdapterIdx, D3DDEVTYPE_HAL, Format,
+        HRESULT hr = rf::g_Direct3D->CheckDeviceMultiSampleType(rf::g_AdapterIdx, D3DDEVTYPE_HAL, Format,
             g_game_config.wndMode != GameConfig::FULLSCREEN, (D3DMULTISAMPLE_TYPE)g_game_config.msaa);
         if (SUCCEEDED(hr)) {
             INFO("Enabling Anti-Aliasing (%ux MSAA)...", g_game_config.msaa);
@@ -170,20 +170,20 @@ static void SetupPP(void)
 
 CallHook2<void(int, rf::GrVertex**, int, int)> GrDrawRect_GrDrawPoly_Hook{
     0x0050DD69,
-    [](int Num, rf::GrVertex **ppVertices, int Flags, int iMat) {
+    [](int Num, rf::GrVertex **ppVertices, int Flags, int Mat) {
         for (int i = 0; i < Num; ++i) {
-            ppVertices[i]->vScreenPos.x -= 0.5f;
-            ppVertices[i]->vScreenPos.y -= 0.5f;
+            ppVertices[i]->ScreenPos.x -= 0.5f;
+            ppVertices[i]->ScreenPos.y -= 0.5f;
         }
-        GrDrawRect_GrDrawPoly_Hook.CallTarget(Num, ppVertices, Flags, iMat);
+        GrDrawRect_GrDrawPoly_Hook.CallTarget(Num, ppVertices, Flags, Mat);
     }
 };
 
 DWORD SetupMaxAnisotropy()
 {
     DWORD AnisotropyLevel = std::min(rf::g_GrDeviceCaps.MaxAnisotropy, 16ul);
-    rf::g_pGrDevice->SetTextureStageState(0, D3DTSS_MAXANISOTROPY, AnisotropyLevel);
-    rf::g_pGrDevice->SetTextureStageState(1, D3DTSS_MAXANISOTROPY, AnisotropyLevel);
+    rf::g_GrDevice->SetTextureStageState(0, D3DTSS_MAXANISOTROPY, AnisotropyLevel);
+    rf::g_GrDevice->SetTextureStageState(1, D3DTSS_MAXANISOTROPY, AnisotropyLevel);
     return AnisotropyLevel;
 }
 
@@ -195,14 +195,14 @@ CallHook2<void()> GrInitBuffers_AfterReset_Hook{
         // Apply state change after reset
         // Note: we dont have to set min/mag filtering because its set when selecting material
 
-        rf::g_pGrDevice->SetRenderState(D3DRS_CULLMODE, 1);
-        rf::g_pGrDevice->SetRenderState(D3DRS_SHADEMODE, 2);
-        rf::g_pGrDevice->SetRenderState(D3DRS_SPECULARENABLE, 0);
-        rf::g_pGrDevice->SetRenderState(D3DRS_AMBIENT, 0xFF545454);
-        rf::g_pGrDevice->SetRenderState(D3DRS_CLIPPING, 0);
+        rf::g_GrDevice->SetRenderState(D3DRS_CULLMODE, 1);
+        rf::g_GrDevice->SetRenderState(D3DRS_SHADEMODE, 2);
+        rf::g_GrDevice->SetRenderState(D3DRS_SPECULARENABLE, 0);
+        rf::g_GrDevice->SetRenderState(D3DRS_AMBIENT, 0xFF545454);
+        rf::g_GrDevice->SetRenderState(D3DRS_CLIPPING, 0);
 
-        if (rf::g_pLocalPlayer)
-            rf::GrSetTextureMipFilter(rf::g_pLocalPlayer->Config.FilteringLevel == 0);
+        if (rf::g_LocalPlayer)
+            rf::GrSetTextureMipFilter(rf::g_LocalPlayer->Config.FilteringLevel == 0);
 
         if (rf::g_GrDeviceCaps.MaxAnisotropy > 0 && g_game_config.anisotropicFiltering)
             SetupMaxAnisotropy();
@@ -324,7 +324,7 @@ void GraphicsAfterGameInit()
 {
 #if ANISOTROPIC_FILTERING
     // Anisotropic texture filtering
-    if (rf::g_GrDeviceCaps.MaxAnisotropy > 0 && g_game_config.anisotropicFiltering && !rf::g_bDedicatedServer) {
+    if (rf::g_GrDeviceCaps.MaxAnisotropy > 0 && g_game_config.anisotropicFiltering && !rf::g_IsDedicatedServer) {
         SetTextureMinMagFilterInCode(D3DTEXF_ANISOTROPIC);
         DWORD AnisotropyLevel = SetupMaxAnisotropy();
         INFO("Anisotropic Filtering enabled (level: %d)", AnisotropyLevel);
@@ -343,9 +343,9 @@ void GraphicsAfterGameInit()
 void GraphicsDrawFpsCounter()
 {
     if (g_game_config.fpsCounter) {
-        char szBuf[32];
-        sprintf(szBuf, "FPS: %.1f", rf::g_fFps);
+        char Buf[32];
+        sprintf(Buf, "FPS: %.1f", rf::g_fFps);
         rf::GrSetColor(0, 255, 0, 255);
-        rf::GrDrawAlignedText(rf::GR_ALIGN_RIGHT, rf::GrGetMaxWidth() - 10, 60, szBuf, -1, rf::g_GrTextMaterial);
+        rf::GrDrawAlignedText(rf::GR_ALIGN_RIGHT, rf::GrGetMaxWidth() - 10, 60, Buf, -1, rf::g_GrTextMaterial);
     }
 }

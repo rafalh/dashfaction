@@ -12,8 +12,8 @@ namespace rf
 
 void CommandsInit();
 void CommandsAfterGameInit();
-void CommandRegister(rf::DcCommand *pCmd);
-rf::Player *FindBestMatchingPlayer(const char *pszName);
+void CommandRegister(rf::DcCommand *Cmd);
+rf::Player *FindBestMatchingPlayer(const char *Name);
 void DebugRender3d();
 void DebugRender2d();
 
@@ -44,7 +44,7 @@ inline std::optional<int> DcReadArg()
 {
     if (!ReadArgInternal(rf::DC_ARG_INT))
         return {};
-    return std::optional{rf::g_iDcArg};
+    return std::optional{rf::g_DcIntArg};
 }
 
 template<>
@@ -52,7 +52,7 @@ inline std::optional<float> DcReadArg()
 {
     if (!ReadArgInternal(rf::DC_ARG_FLOAT))
         return {};
-    return std::optional{rf::g_fDcArg};
+    return std::optional{rf::g_DcFloatArg};
 }
 
 template<>
@@ -69,7 +69,7 @@ inline std::optional<std::string> DcReadArg()
 {
     if (!ReadArgInternal(rf::DC_ARG_STR))
         return {};
-    return std::optional{rf::g_pszDcArg};
+    return std::optional{rf::g_DcStrArg};
 }
 
 class BaseCommand : public rf::DcCommand
@@ -77,8 +77,8 @@ class BaseCommand : public rf::DcCommand
 protected:
     BaseCommand(const char *name, const char *description = nullptr)
     {
-        pszCmd = name;
-        pszDescr = description;
+        Cmd = name;
+        Descr = description;
         pfnHandler = reinterpret_cast<void (*)()>(StaticHandler);
     }
 
@@ -116,9 +116,9 @@ public:
 private:
     void Handler() override
     {
-        if (rf::g_bDcRun)
+        if (rf::g_DcRun)
             Run();
-        else if (rf::g_bDcHelp)
+        else if (rf::g_DcHelp)
             Help();
     }
 

@@ -69,8 +69,8 @@ int GetTempFileNameInTempDir(const char *Prefix, char Result[MAX_PATH])
     if (dwRetVal == 0 || dwRetVal > _countof(TempDir))
         return -1;
 
-    UINT uRetVal = GetTempFileNameA(TempDir, Prefix, 0, Result);
-    if (uRetVal == 0)
+    UINT RetVal = GetTempFileNameA(TempDir, Prefix, 0, Result);
+    if (RetVal == 0)
         return -1;
 
     return 0;
@@ -95,7 +95,7 @@ int main(int argc, const char *argv[]) try
     if (argc < 5)
         return -1;
 
-    EXCEPTION_POINTERS *pExceptionPtrs = (EXCEPTION_POINTERS*)strtoull(argv[1], nullptr, 0);
+    EXCEPTION_POINTERS *ExceptionPtrs = (EXCEPTION_POINTERS*)strtoull(argv[1], nullptr, 0);
     HANDLE hProcess = (HANDLE)strtoull(argv[2], nullptr, 0);
     DWORD dwThreadId = (DWORD)strtoull(argv[3], nullptr, 0);
     HANDLE hEvent = (HANDLE)strtoull(argv[4], nullptr, 0);
@@ -109,7 +109,7 @@ int main(int argc, const char *argv[]) try
     dumpHelper.addKnownModule(L"DashFaction");
     dumpHelper.addKnownModule(L"RF");
     dumpHelper.setInfoLevel(CRASHHANDLER_DMP_LEVEL);
-    dumpHelper.writeDump(CrashDumpFilename, pExceptionPtrs, hProcess, dwThreadId);
+    dumpHelper.writeDump(CrashDumpFilename, ExceptionPtrs, hProcess, dwThreadId);
 
     SetEvent(hEvent);
 

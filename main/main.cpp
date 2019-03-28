@@ -49,12 +49,12 @@ static void ProcessWaitingMessages()
 
 void FindPlayer(const StringMatcher& query, std::function<void(rf::Player*)> consumer)
 {
-    rf::Player* player = rf::g_pPlayersList;
+    rf::Player* player = rf::g_PlayersList;
     while (player) {
         if (query(player->strName))
             consumer(player);
-        player = player->pNext;
-        if (player == rf::g_pPlayersList)
+        player = player->Next;
+        if (player == rf::g_PlayersList)
             break;
     }
 }
@@ -90,7 +90,7 @@ CallHook2<void()> InitGame_Hook{
         GraphicsAfterGameInit();
 
 #if DIRECTINPUT_SUPPORT
-        rf::g_bDirectInputDisabled = !g_game_config.directInput;
+        rf::g_DirectInputDisabled = !g_game_config.directInput;
 #endif
 
         /* Allow modded strings.tbl in ui.vpp */

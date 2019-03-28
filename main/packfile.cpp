@@ -17,61 +17,61 @@ struct PackfileEntry;
 
 struct Packfile
 {
-    char szName[32];
-    char szPath[128];
+    char Name[32];
+    char Path[128];
     uint32_t field_A0;
     uint32_t cFiles;
-    PackfileEntry *pFileList;
+    PackfileEntry *FileList;
     uint32_t cbSize;
 };
 
 struct PackfileEntry
 {
     uint32_t dwNameChecksum;
-    const char *pszFileName;
+    const char *FileName;
     uint32_t OffsetInBlocks;
     uint32_t cbFileSize;
-    Packfile *pArchive;
-    FILE *pRawFile;
+    Packfile *Archive;
+    FILE *RawFile;
 };
 
 struct PackfileLookupTable
 {
     uint32_t dwNameChecksum;
-    PackfileEntry *pArchiveEntry;
+    PackfileEntry *ArchiveEntry;
 };
 
 static auto &g_cArchives = *(uint32_t*)0x01BDB214;
 static auto &g_Archives = *(Packfile*)0x01BA7AC8;
 #define VFS_LOOKUP_TABLE_SIZE 20713
 static auto &g_VfsLookupTable = *(PackfileLookupTable*)0x01BB2AC8;
-static auto &g_bVfsIgnoreTblFiles = *(uint8_t*)0x01BDB21C;
+static auto &g_VfsIgnoreTblFiles = *(uint8_t*)0x01BDB21C;
 
-typedef Packfile *(*PackfileFindArchive_Type)(const char *pszFilename);
+typedef Packfile *(*PackfileFindArchive_Type)(const char *Filename);
 static const auto PackfileFindArchive = (PackfileFindArchive_Type)0x0052C1D0;
 
-typedef uint32_t(*PackfileCalcFileNameChecksum_Type)(const char *pszFileName);
+typedef uint32_t(*PackfileCalcFileNameChecksum_Type)(const char *FileName);
 static const auto PackfileCalcFileNameChecksum = (PackfileCalcFileNameChecksum_Type)0x0052BE70;
 
-typedef uint32_t(*PackfileAddToLookupTable_Type)(PackfileEntry *pPackfileEntry);
+typedef uint32_t(*PackfileAddToLookupTable_Type)(PackfileEntry *PackfileEntry);
 static const auto PackfileAddToLookupTable = (PackfileAddToLookupTable_Type)0x0052BCA0;
 
-typedef uint32_t(*PackfileProcessHeader_Type)(Packfile *pPackfile, const void *pHeader);
+typedef uint32_t(*PackfileProcessHeader_Type)(Packfile *Packfile, const void *Header);
 static const auto PackfileProcessHeader = (PackfileProcessHeader_Type)0x0052BD10;
 
-typedef uint32_t(*PackfileAddEntries_Type)(Packfile *pPackfile, const void *pBuf, unsigned cFilesInBlock, unsigned *pcAddedEntries);
+typedef uint32_t(*PackfileAddEntries_Type)(Packfile *Packfile, const void *Buf, unsigned cFilesInBlock, unsigned *pcAddedEntries);
 static const auto PackfileAddEntries = (PackfileAddEntries_Type)0x0052BD40;
 
-typedef uint32_t(*PackfileSetupFileOffsets_Type)(Packfile *pPackfile, unsigned DataOffsetInBlocks);
+typedef uint32_t(*PackfileSetupFileOffsets_Type)(Packfile *Packfile, unsigned DataOffsetInBlocks);
 static const auto PackfileSetupFileOffsets = (PackfileSetupFileOffsets_Type)0x0052BEB0;
 
-static const auto FileGetChecksum = (unsigned(*)(const char *pszFilename))0x00436630;
+static const auto FileGetChecksum = (unsigned(*)(const char *Filename))0x00436630;
 }
 
 struct PackfileLookupTableNew
 {
-    PackfileLookupTableNew *pNext;
-    rf::PackfileEntry *pPackfileEntry;
+    PackfileLookupTableNew *Next;
+    rf::PackfileEntry *PackfileEntry;
 };
 
 #if CHECK_PACKFILE_CHECKSUM
@@ -91,12 +91,12 @@ const std::map<std::string, unsigned> GameFileChecksums = {
 
 #endif // CHECK_PACKFILE_CHECKSUM
 
-static const auto g_pVfsLookupTableNew = (PackfileLookupTableNew*)0x01BB2AC8; // g_pVfsLookupTable
+static const auto g_VfsLookupTableNew = (PackfileLookupTableNew*)0x01BB2AC8; // g_VfsLookupTable
 static const auto LOOKUP_TABLE_SIZE = 20713;
 
 static unsigned g_cPackfiles = 0, g_cFilesInVfs = 0, g_cNameCollisions = 0;
-static rf::Packfile **g_pPackfiles = nullptr;
-static bool g_bModdedGame = false;
+static rf::Packfile **g_Packfiles = nullptr;
+static bool g_ModdedGame = false;
 
 #ifdef MOD_FILE_WHITELIST
 
@@ -120,8 +120,8 @@ static bool IsModFileInWhitelist(const char *Filename)
 
 static unsigned HashFile(const char *Filename)
 {
-    FILE *pFile = fopen(Filename, "rb");
-    if (!pFile) return 0;
+    FILE *File = fopen(Filename, "rb");
+    if (!File) return 0;
 
     XXH32_state_t *state = XXH32_createState();
     XXH32_reset(state, 0);
@@ -129,11 +129,11 @@ static unsigned HashFile(const char *Filename)
     char Buffer[4096];
     while (true)
     {
-        size_t len = fread(Buffer, 1, sizeof(Buffer), pFile);
+        size_t len = fread(Buffer, 1, sizeof(Buffer), File);
         if (!len) break;
         XXH32_update(state, Buffer, len);
     }
-    fclose(pFile);
+    fclose(File);
     XXH32_hash_t hash = XXH32_digest(state);
     XXH32_freeState(state);
     return hash;
@@ -142,14 +142,14 @@ static unsigned HashFile(const char *Filename)
 
 static GameLang DetectInstalledGameLang()
 {
-    char szFullPath[MAX_PATH];
+    char FullPath[MAX_PATH];
     const char *LangCodes[] = { "en", "gr", "fr" };
     for (unsigned i = 0; i < COUNTOF(LangCodes); ++i)
     {
-        sprintf(szFullPath, "%smaps_%s.vpp", rf::g_pszRootPath, LangCodes[i]);
-        BOOL bExists = PathFileExistsA(szFullPath);
-        INFO("Checking file %s: %s", szFullPath, bExists ? "found" : "not found");
-        if (bExists)
+        sprintf(FullPath, "%smaps_%s.vpp", rf::g_RootPath, LangCodes[i]);
+        BOOL Exists = PathFileExistsA(FullPath);
+        INFO("Checking file %s: %s", FullPath, Exists ? "found" : "not found");
+        if (Exists)
         {
             INFO("Detected game language: %s", LangCodes[i]);
             return (GameLang)i;
@@ -173,132 +173,132 @@ GameLang GetInstalledGameLang()
 
 bool IsModdedGame()
 {
-    return g_bModdedGame;
+    return g_ModdedGame;
 }
 
-static int PackfileLoad_New(const char *pszFilename, const char *pszDir)
+static int PackfileLoad_New(const char *Filename, const char *Dir)
 {
-    char szFullPath[256], Buf[0x800];
-    int bRet = 0;
+    char FullPath[256], Buf[0x800];
+    int Ret = 0;
     unsigned cFilesInBlock, cAdded, OffsetInBlocks;
 
-    VFS_DBGPRINT("Load packfile %s %s", pszDir, pszFilename);
+    VFS_DBGPRINT("Load packfile %s %s", Dir, Filename);
 
-    if (pszDir && pszDir[0] && pszDir[1] == ':')
-        sprintf(szFullPath, "%s%s", pszDir, pszFilename); // absolute path
+    if (Dir && Dir[0] && Dir[1] == ':')
+        sprintf(FullPath, "%s%s", Dir, Filename); // absolute path
     else
-        sprintf(szFullPath, "%s%s%s", rf::g_pszRootPath, pszDir ? pszDir : "", pszFilename);
+        sprintf(FullPath, "%s%s%s", rf::g_RootPath, Dir ? Dir : "", Filename);
 
-    if (!pszFilename || strlen(pszFilename) > 0x1F || strlen(szFullPath) > 0x7F)
+    if (!Filename || strlen(Filename) > 0x1F || strlen(FullPath) > 0x7F)
     {
-        ERR("Packfile name or path too long: %s", szFullPath);
+        ERR("Packfile name or path too long: %s", FullPath);
         return 0;
     }
 
     for (unsigned i = 0; i < g_cPackfiles; ++i)
-        if (!stricmp(g_pPackfiles[i]->szPath, szFullPath))
+        if (!stricmp(g_Packfiles[i]->Path, FullPath))
             return 1;
 
 #if CHECK_PACKFILE_CHECKSUM
-    if (!pszDir)
+    if (!Dir)
     {
-        auto it = GameFileChecksums.find(pszFilename);
+        auto it = GameFileChecksums.find(Filename);
         if (it != GameFileChecksums.end())
         {
-            unsigned Checksum = HashFile(szFullPath);
+            unsigned Checksum = HashFile(FullPath);
             if (Checksum != it->second)
             {
-                INFO("Packfile %s has invalid checksum 0x%X", pszFilename, Checksum);
-                g_bModdedGame = true;
+                INFO("Packfile %s has invalid checksum 0x%X", Filename, Checksum);
+                g_ModdedGame = true;
             }
         }
     }
 #endif // CHECK_PACKFILE_CHECKSUM
 
-    FILE *pFile = fopen(szFullPath, "rb");
-    if (!pFile)
+    FILE *File = fopen(FullPath, "rb");
+    if (!File)
     {
-        ERR("Failed to open packfile %s", szFullPath);
+        ERR("Failed to open packfile %s", FullPath);
         return 0;
     }
 
     if (g_cPackfiles % 64 == 0)
     {
-        g_pPackfiles = (rf::Packfile**)realloc(g_pPackfiles, (g_cPackfiles + 64) * sizeof(rf::Packfile*));
-        memset(&g_pPackfiles[g_cPackfiles], 0, 64 * sizeof(rf::Packfile*));
+        g_Packfiles = (rf::Packfile**)realloc(g_Packfiles, (g_cPackfiles + 64) * sizeof(rf::Packfile*));
+        memset(&g_Packfiles[g_cPackfiles], 0, 64 * sizeof(rf::Packfile*));
     }
 
-    rf::Packfile *pPackfile = (rf::Packfile*)malloc(sizeof(*pPackfile));
-    if (!pPackfile)
+    rf::Packfile *Packfile = (rf::Packfile*)malloc(sizeof(*Packfile));
+    if (!Packfile)
     {
         ERR("malloc failed");
         return 0;
     }
 
-    strncpy(pPackfile->szName, pszFilename, sizeof(pPackfile->szName) - 1);
-    pPackfile->szName[sizeof(pPackfile->szName) - 1] = '\0';
-    strncpy(pPackfile->szPath, szFullPath, sizeof(pPackfile->szPath) - 1);
-    pPackfile->szPath[sizeof(pPackfile->szPath) - 1] = '\0';
-    pPackfile->field_A0 = 0;
-    pPackfile->cFiles = 0;
-    pPackfile->pFileList = NULL;
+    strncpy(Packfile->Name, Filename, sizeof(Packfile->Name) - 1);
+    Packfile->Name[sizeof(Packfile->Name) - 1] = '\0';
+    strncpy(Packfile->Path, FullPath, sizeof(Packfile->Path) - 1);
+    Packfile->Path[sizeof(Packfile->Path) - 1] = '\0';
+    Packfile->field_A0 = 0;
+    Packfile->cFiles = 0;
+    Packfile->FileList = NULL;
 
     // Note: VfsProcessPackfileHeader returns number of files in packfile - result 0 is not always a true error
-    if (fread(Buf, sizeof(Buf), 1, pFile) == 1 && rf::PackfileProcessHeader(pPackfile, Buf))
+    if (fread(Buf, sizeof(Buf), 1, File) == 1 && rf::PackfileProcessHeader(Packfile, Buf))
     {
-        pPackfile->pFileList = (rf::PackfileEntry*)malloc(pPackfile->cFiles * sizeof(rf::PackfileEntry));
-        memset(pPackfile->pFileList, 0, pPackfile->cFiles * sizeof(rf::PackfileEntry));
+        Packfile->FileList = (rf::PackfileEntry*)malloc(Packfile->cFiles * sizeof(rf::PackfileEntry));
+        memset(Packfile->FileList, 0, Packfile->cFiles * sizeof(rf::PackfileEntry));
         cAdded = 0;
         OffsetInBlocks = 1;
-        bRet = 1;
+        Ret = 1;
 
-        for (unsigned i = 0; i < pPackfile->cFiles; i += 32)
+        for (unsigned i = 0; i < Packfile->cFiles; i += 32)
         {
-            if (fread(Buf, sizeof(Buf), 1, pFile) != 1)
+            if (fread(Buf, sizeof(Buf), 1, File) != 1)
             {
-                bRet = 0;
-                ERR("Failed to fread vpp %s", szFullPath);
+                Ret = 0;
+                ERR("Failed to fread vpp %s", FullPath);
                 break;
             }
 
-            cFilesInBlock = std::min(pPackfile->cFiles - i, 32u);
-            rf::PackfileAddEntries(pPackfile, Buf, cFilesInBlock, &cAdded);
+            cFilesInBlock = std::min(Packfile->cFiles - i, 32u);
+            rf::PackfileAddEntries(Packfile, Buf, cFilesInBlock, &cAdded);
             ++OffsetInBlocks;
         }
-    } else ERR("Failed to fread vpp 2 %s", szFullPath);
+    } else ERR("Failed to fread vpp 2 %s", FullPath);
 
-    if (bRet)
-        rf::PackfileSetupFileOffsets(pPackfile, OffsetInBlocks);
+    if (Ret)
+        rf::PackfileSetupFileOffsets(Packfile, OffsetInBlocks);
 
-    fclose(pFile);
+    fclose(File);
 
-    if (bRet)
+    if (Ret)
     {
-        g_pPackfiles[g_cPackfiles] = pPackfile;
+        g_Packfiles[g_cPackfiles] = Packfile;
         ++g_cPackfiles;
     }
     else
     {
-        free(pPackfile->pFileList);
-        free(pPackfile);
+        free(Packfile->FileList);
+        free(Packfile);
     }
 
-    return bRet;
+    return Ret;
 }
 
-static rf::Packfile *PackfileFindArchive_New(const char *pszFilename)
+static rf::Packfile *PackfileFindArchive_New(const char *Filename)
 {
     for (unsigned i = 0; i < g_cPackfiles; ++i)
     {
-        if (!stricmp(g_pPackfiles[i]->szName, pszFilename))
-            return g_pPackfiles[i];
+        if (!stricmp(g_Packfiles[i]->Name, Filename))
+            return g_Packfiles[i];
     }
 
-    ERR("Packfile %s not found", pszFilename);
+    ERR("Packfile %s not found", Filename);
     return NULL;
 }
 
-static int PackfileBuildEntriesList_New(const char *pszExtList, char **ppFilenames, unsigned *pcFiles, const char *pszPackfileName)
+static int PackfileBuildEntriesList_New(const char *ExtList, char **ppFilenames, unsigned *pcFiles, const char *PackfileName)
 {
     unsigned cbBuf = 1;
 
@@ -308,14 +308,14 @@ static int PackfileBuildEntriesList_New(const char *pszExtList, char **ppFilenam
 
     for (unsigned i = 0; i < g_cPackfiles; ++i)
     {
-        rf::Packfile *pPackfile = g_pPackfiles[i];
-        if (!pszPackfileName || !stricmp(pszPackfileName, pPackfile->szName))
+        rf::Packfile *Packfile = g_Packfiles[i];
+        if (!PackfileName || !stricmp(PackfileName, Packfile->Name))
         {
-            for (unsigned j = 0; j < pPackfile->cFiles; ++j)
+            for (unsigned j = 0; j < Packfile->cFiles; ++j)
             {
-                const char *pszExt = rf::GetFileExt(pPackfile->pFileList[j].pszFileName);
-                if (pszExt[0] && strstr(pszExtList, pszExt + 1))
-                    cbBuf += strlen(pPackfile->pFileList[j].pszFileName) + 1;
+                const char *Ext = rf::GetFileExt(Packfile->FileList[j].FileName);
+                if (Ext[0] && strstr(ExtList, Ext + 1))
+                    cbBuf += strlen(Packfile->FileList[j].FileName) + 1;
             }
         }
     }
@@ -326,16 +326,16 @@ static int PackfileBuildEntriesList_New(const char *pszExtList, char **ppFilenam
     char *BufPtr = *ppFilenames;
     for (unsigned i = 0; i < g_cPackfiles; ++i)
     {
-        rf::Packfile *pPackfile = g_pPackfiles[i];
-        if (!pszPackfileName || !stricmp(pszPackfileName, pPackfile->szName))
+        rf::Packfile *Packfile = g_Packfiles[i];
+        if (!PackfileName || !stricmp(PackfileName, Packfile->Name))
         {
-            for (unsigned j = 0; j < pPackfile->cFiles; ++j)
+            for (unsigned j = 0; j < Packfile->cFiles; ++j)
             {
-                const char *pszExt = rf::GetFileExt(pPackfile->pFileList[j].pszFileName);
-                if (pszExt[0] && strstr(pszExtList, pszExt + 1))
+                const char *Ext = rf::GetFileExt(Packfile->FileList[j].FileName);
+                if (Ext[0] && strstr(ExtList, Ext + 1))
                 {
-                    strcpy(BufPtr, pPackfile->pFileList[j].pszFileName);
-                    BufPtr += strlen(pPackfile->pFileList[j].pszFileName) + 1;
+                    strcpy(BufPtr, Packfile->FileList[j].FileName);
+                    BufPtr += strlen(Packfile->FileList[j].FileName) + 1;
                     ++(*pcFiles);
                 }
             }
@@ -348,145 +348,145 @@ static int PackfileBuildEntriesList_New(const char *pszExtList, char **ppFilenam
     return 1;
 }
 
-static int PackfileAddEntries_New(rf::Packfile *pPackfile, const void *pBlock, unsigned cFilesInBlock, unsigned *pcAddedFiles)
+static int PackfileAddEntries_New(rf::Packfile *Packfile, const void *Block, unsigned cFilesInBlock, unsigned *pcAddedFiles)
 {
-    const uint8_t *pData = (const uint8_t*)pBlock;
+    const uint8_t *Data = (const uint8_t*)Block;
 
     for (unsigned i = 0; i < cFilesInBlock; ++i)
     {
-        rf::PackfileEntry *pEntry = &pPackfile->pFileList[*pcAddedFiles];
-        if (rf::g_bVfsIgnoreTblFiles && !stricmp(rf::GetFileExt((char*)pData), ".tbl"))
-            pEntry->pszFileName = "DEADBEEF";
+        rf::PackfileEntry *Entry = &Packfile->FileList[*pcAddedFiles];
+        if (rf::g_VfsIgnoreTblFiles && !stricmp(rf::GetFileExt((char*)Data), ".tbl"))
+            Entry->FileName = "DEADBEEF";
         else
         {
             // FIXME: free?
-            char *pFileNameBuf = (char*)malloc(strlen((char*)pData) + 10);
-            memset(pFileNameBuf, 0, strlen((char*)pData) + 10);
-            strcpy(pFileNameBuf, (char*)pData);
-            pEntry->pszFileName = pFileNameBuf;
+            char *FileNameBuf = (char*)malloc(strlen((char*)Data) + 10);
+            memset(FileNameBuf, 0, strlen((char*)Data) + 10);
+            strcpy(FileNameBuf, (char*)Data);
+            Entry->FileName = FileNameBuf;
         }
-        pEntry->dwNameChecksum = rf::PackfileCalcFileNameChecksum(pEntry->pszFileName);
-        pEntry->cbFileSize = *((uint32_t*)(pData + 60));
-        pEntry->pArchive = pPackfile;
-        pEntry->pRawFile = NULL;
+        Entry->dwNameChecksum = rf::PackfileCalcFileNameChecksum(Entry->FileName);
+        Entry->cbFileSize = *((uint32_t*)(Data + 60));
+        Entry->Archive = Packfile;
+        Entry->RawFile = NULL;
 
-        pData += 64;
+        Data += 64;
         ++(*pcAddedFiles);
 
-        rf::PackfileAddToLookupTable(pEntry);
+        rf::PackfileAddToLookupTable(Entry);
         ++g_cFilesInVfs;
     }
     return 1;
 }
 
-static void PackfileAddToLookupTable_New(rf::PackfileEntry *pEntry)
+static void PackfileAddToLookupTable_New(rf::PackfileEntry *Entry)
 {
-    PackfileLookupTableNew *pLookupTableItem = &g_pVfsLookupTableNew[pEntry->dwNameChecksum % LOOKUP_TABLE_SIZE];
+    PackfileLookupTableNew *LookupTableItem = &g_VfsLookupTableNew[Entry->dwNameChecksum % LOOKUP_TABLE_SIZE];
 
     while (true)
     {
-        if (!pLookupTableItem->pPackfileEntry)
+        if (!LookupTableItem->PackfileEntry)
         {
 #if DEBUG_VFS && defined(DEBUG_VFS_FILENAME1) && defined(DEBUG_VFS_FILENAME2)
-            if (!stricmp(pEntry->pszFileName, DEBUG_VFS_FILENAME1) || !stricmp(pEntry->pszFileName, DEBUG_VFS_FILENAME2))
-                VFS_DBGPRINT("Add 1: %s (%x)", pEntry->pszFileName, pEntry->dwNameChecksum);
+            if (!stricmp(Entry->FileName, DEBUG_VFS_FILENAME1) || !stricmp(Entry->FileName, DEBUG_VFS_FILENAME2))
+                VFS_DBGPRINT("Add 1: %s (%x)", Entry->FileName, Entry->dwNameChecksum);
 #endif
             break;
         }
 
-        if (!stricmp(pLookupTableItem->pPackfileEntry->pszFileName, pEntry->pszFileName))
+        if (!stricmp(LookupTableItem->PackfileEntry->FileName, Entry->FileName))
         {
             // file with the same name already exist
 #if DEBUG_VFS && defined(DEBUG_VFS_FILENAME1) && defined(DEBUG_VFS_FILENAME2)
-            if (!stricmp(pEntry->pszFileName, DEBUG_VFS_FILENAME1) || !stricmp(pEntry->pszFileName, DEBUG_VFS_FILENAME2))
-                VFS_DBGPRINT("Add 2: %s (%x)", pEntry->pszFileName, pEntry->dwNameChecksum);
+            if (!stricmp(Entry->FileName, DEBUG_VFS_FILENAME1) || !stricmp(Entry->FileName, DEBUG_VFS_FILENAME2))
+                VFS_DBGPRINT("Add 2: %s (%x)", Entry->FileName, Entry->dwNameChecksum);
 #endif
 
-            const char *pszOldArchive = pLookupTableItem->pPackfileEntry->pArchive->szName;
-            const char *pszNewArchive = pEntry->pArchive->szName;
+            const char *OldArchive = LookupTableItem->PackfileEntry->Archive->Name;
+            const char *NewArchive = Entry->Archive->Name;
 
-            if (rf::g_bVfsIgnoreTblFiles) // this is set to true for user_maps
+            if (rf::g_VfsIgnoreTblFiles) // this is set to true for user_maps
             {
-                bool bWhitelisted = false;
+                bool Whitelisted = false;
 #ifdef MOD_FILE_WHITELIST
-                bWhitelisted = IsModFileInWhitelist(pEntry->pszFileName);
+                Whitelisted = IsModFileInWhitelist(Entry->FileName);
 #endif
-                if (!g_game_config.allowOverwriteGameFiles && !bWhitelisted)
+                if (!g_game_config.allowOverwriteGameFiles && !Whitelisted)
                 {
                     TRACE("Denied overwriting game file %s (old packfile %s, new packfile %s)",
-                        pEntry->pszFileName, pszOldArchive, pszNewArchive);
+                        Entry->FileName, OldArchive, NewArchive);
                     return;
                 }
                 else
                 {
                     TRACE("Allowed overwriting game file %s (old packfile %s, new packfile %s)",
-                        pEntry->pszFileName, pszOldArchive, pszNewArchive);
-                    if (!bWhitelisted)
-                        g_bModdedGame = true;
+                        Entry->FileName, OldArchive, NewArchive);
+                    if (!Whitelisted)
+                        g_ModdedGame = true;
                 }
             }
             else
             {
                 TRACE("Overwriting packfile item %s (old packfile %s, new packfile %s)",
-                    pEntry->pszFileName, pszOldArchive, pszNewArchive);
+                    Entry->FileName, OldArchive, NewArchive);
             }
             break;
         }
 
-        if (!pLookupTableItem->pNext)
+        if (!LookupTableItem->Next)
         {
 #if DEBUG_VFS && defined(DEBUG_VFS_FILENAME1) && defined(DEBUG_VFS_FILENAME2)
-            if (!stricmp(pEntry->pszFileName, DEBUG_VFS_FILENAME1) || !stricmp(pEntry->pszFileName, DEBUG_VFS_FILENAME2))
-                VFS_DBGPRINT("Add 3: %s (%x)", pEntry->pszFileName, pEntry->dwNameChecksum);
+            if (!stricmp(Entry->FileName, DEBUG_VFS_FILENAME1) || !stricmp(Entry->FileName, DEBUG_VFS_FILENAME2))
+                VFS_DBGPRINT("Add 3: %s (%x)", Entry->FileName, Entry->dwNameChecksum);
 #endif
 
-            pLookupTableItem->pNext = (PackfileLookupTableNew*)malloc(sizeof(PackfileLookupTableNew));
-            pLookupTableItem = pLookupTableItem->pNext;
-            pLookupTableItem->pNext = NULL;
+            LookupTableItem->Next = (PackfileLookupTableNew*)malloc(sizeof(PackfileLookupTableNew));
+            LookupTableItem = LookupTableItem->Next;
+            LookupTableItem->Next = NULL;
             break;
         }
 
-        pLookupTableItem = pLookupTableItem->pNext;
+        LookupTableItem = LookupTableItem->Next;
         ++g_cNameCollisions;
     }
 
-    pLookupTableItem->pPackfileEntry = pEntry;
+    LookupTableItem->PackfileEntry = Entry;
 }
 
-static rf::PackfileEntry *PackfileFindFileInternal_New(const char *pszFilename)
+static rf::PackfileEntry *PackfileFindFileInternal_New(const char *Filename)
 {
-    unsigned Checksum = rf::PackfileCalcFileNameChecksum(pszFilename);
-    PackfileLookupTableNew *pLookupTableItem = &g_pVfsLookupTableNew[Checksum % LOOKUP_TABLE_SIZE];
+    unsigned Checksum = rf::PackfileCalcFileNameChecksum(Filename);
+    PackfileLookupTableNew *LookupTableItem = &g_VfsLookupTableNew[Checksum % LOOKUP_TABLE_SIZE];
     do
     {
-        if (pLookupTableItem->pPackfileEntry &&
-           pLookupTableItem->pPackfileEntry->dwNameChecksum == Checksum &&
-           !stricmp(pLookupTableItem->pPackfileEntry->pszFileName, pszFilename))
+        if (LookupTableItem->PackfileEntry &&
+           LookupTableItem->PackfileEntry->dwNameChecksum == Checksum &&
+           !stricmp(LookupTableItem->PackfileEntry->FileName, Filename))
         {
 #if DEBUG_VFS && defined(DEBUG_VFS_FILENAME1) && defined(DEBUG_VFS_FILENAME2)
-            if (strstr(pszFilename, DEBUG_VFS_FILENAME1) || strstr(pszFilename, DEBUG_VFS_FILENAME2))
-                VFS_DBGPRINT("Found: %s (%x)", pszFilename, Checksum);
+            if (strstr(Filename, DEBUG_VFS_FILENAME1) || strstr(Filename, DEBUG_VFS_FILENAME2))
+                VFS_DBGPRINT("Found: %s (%x)", Filename, Checksum);
 #endif
-            return pLookupTableItem->pPackfileEntry;
+            return LookupTableItem->PackfileEntry;
         }
 
-        pLookupTableItem = pLookupTableItem->pNext;
+        LookupTableItem = LookupTableItem->Next;
     }
-    while(pLookupTableItem);
+    while(LookupTableItem);
 
-    VFS_DBGPRINT("Cannot find: %s (%x)", pszFilename, Checksum);
+    VFS_DBGPRINT("Cannot find: %s (%x)", Filename, Checksum);
 
-    /*pLookupTableItem = &g_pVfsLookupTableNew[Checksum % LOOKUP_TABLE_SIZE];
+    /*LookupTableItem = &g_VfsLookupTableNew[Checksum % LOOKUP_TABLE_SIZE];
     do
     {
-        if(pLookupTableItem->pPackfileEntry)
+        if(LookupTableItem->PackfileEntry)
         {
-            MessageBox(0, pLookupTableItem->pPackfileEntry->pszFileName, "List", 0);
+            MessageBox(0, LookupTableItem->PackfileEntry->FileName, "List", 0);
         }
 
-        pLookupTableItem = pLookupTableItem->pNext;
+        LookupTableItem = LookupTableItem->Next;
     }
-    while(pLookupTableItem);*/
+    while(LookupTableItem);*/
 
     return NULL;
 }
@@ -494,25 +494,25 @@ static rf::PackfileEntry *PackfileFindFileInternal_New(const char *pszFilename)
 static void LoadDashFactionVpp()
 {
     // Load DashFaction specific packfile
-    char szBuf[MAX_PATH];
-    GetModuleFileNameA(g_hmodule, szBuf, sizeof(szBuf));
-    char *Ptr = strrchr(szBuf, '\\');
+    char Buf[MAX_PATH];
+    GetModuleFileNameA(g_hmodule, Buf, sizeof(Buf));
+    char *Ptr = strrchr(Buf, '\\');
     strcpy(Ptr + 1, "dashfaction.vpp");
-    if (PathFileExistsA(szBuf))
+    if (PathFileExistsA(Buf))
         *(Ptr + 1) = '\0';
     else
     {
         // try to remove 2 path components (bin/(debug|release))
         *Ptr = 0;
-        Ptr = strrchr(szBuf, '\\');
+        Ptr = strrchr(Buf, '\\');
         if (Ptr)
             *Ptr = 0;
-        Ptr = strrchr(szBuf, '\\');
+        Ptr = strrchr(Buf, '\\');
         if (Ptr)
             *(Ptr + 1) = '\0';
     }
-    INFO("Loading dashfaction.vpp from directory: %s", szBuf);
-    if (!rf::PackfileLoad("dashfaction.vpp", szBuf))
+    INFO("Loading dashfaction.vpp from directory: %s", Buf);
+    if (!rf::PackfileLoad("dashfaction.vpp", Buf))
         ERR("Failed to load dashfaction.vpp");
 }
 
@@ -520,7 +520,7 @@ static void PackfileInit_New()
 {
     unsigned StartTicks = GetTickCount();
 
-    memset(g_pVfsLookupTableNew, 0, sizeof(PackfileLookupTableNew) * VFS_LOOKUP_TABLE_SIZE);
+    memset(g_VfsLookupTableNew, 0, sizeof(PackfileLookupTableNew) * VFS_LOOKUP_TABLE_SIZE);
 
     if (GetInstalledGameLang() == LANG_GR)
     {
@@ -561,7 +561,7 @@ static void PackfileInit_New()
     rf::PackfileLoad("ui.vpp", nullptr);
     LoadDashFactionVpp();
     rf::PackfileLoad("tables.vpp", nullptr);
-    *((int*)0x01BDB218) = 1; // bPackfilesLoaded
+    *((int*)0x01BDB218) = 1; // PackfilesLoaded
     *((uint32_t*)0x01BDB210) = 10000; // cFilesInVfs
     *((uint32_t*)0x01BDB214) = 100; // cPackfiles
 
@@ -581,16 +581,16 @@ static void PackfileInit_New()
     INFO("Packfiles initialization took %dms", GetTickCount() - StartTicks);
     INFO("Packfile name collisions: %d", g_cNameCollisions);
 
-    if (g_bModdedGame)
+    if (g_ModdedGame)
         INFO("Modded game detected!");
 }
 
 static void PackfileCleanup_New()
 {
     for (unsigned i = 0; i < g_cPackfiles; ++i)
-        free(g_pPackfiles[i]);
-    free(g_pPackfiles);
-    g_pPackfiles = nullptr;
+        free(g_Packfiles[i]);
+    free(g_Packfiles);
+    g_Packfiles = nullptr;
     g_cPackfiles = 0;
 }
 
@@ -616,15 +616,15 @@ void VfsApplyHooks()
     //WriteMemPtr(0x0052BC67, "tables.vpp");
 }
 
-void ForceFileFromPackfile(const char *pszName, const char *pszPackfile)
+void ForceFileFromPackfile(const char *Name, const char *PackfileName)
 {
-    rf::Packfile *pPackfile = rf::PackfileFindArchive(pszPackfile);
-    if (pPackfile)
+    rf::Packfile *Packfile = rf::PackfileFindArchive(PackfileName);
+    if (Packfile)
     {
-        for (unsigned i = 0; i < pPackfile->cFiles; ++i)
+        for (unsigned i = 0; i < Packfile->cFiles; ++i)
         {
-            if (!stricmp(pPackfile->pFileList[i].pszFileName, pszName))
-                rf::PackfileAddToLookupTable(&pPackfile->pFileList[i]);
+            if (!stricmp(Packfile->FileList[i].FileName, Name))
+                rf::PackfileAddToLookupTable(&Packfile->FileList[i]);
         }
     }
 }
@@ -633,16 +633,16 @@ void PackfileFindMatchingFiles(const StringMatcher &Query, std::function<void(co
 {
     for (int i = 0; i < LOOKUP_TABLE_SIZE; ++i)
     {
-        PackfileLookupTableNew *pLookupTableItem = &g_pVfsLookupTableNew[i];
-        if (!pLookupTableItem->pPackfileEntry)
+        PackfileLookupTableNew *LookupTableItem = &g_VfsLookupTableNew[i];
+        if (!LookupTableItem->PackfileEntry)
             continue;
 
         do
         {
-            const char *pszFilename = pLookupTableItem->pPackfileEntry->pszFileName;
-            if (Query(pszFilename))
-                ResultConsumer(pLookupTableItem->pPackfileEntry->pszFileName);
-            pLookupTableItem = pLookupTableItem->pNext;
-        } while (pLookupTableItem);
+            const char *Filename = LookupTableItem->PackfileEntry->FileName;
+            if (Query(Filename))
+                ResultConsumer(LookupTableItem->PackfileEntry->FileName);
+            LookupTableItem = LookupTableItem->Next;
+        } while (LookupTableItem);
     }
 }

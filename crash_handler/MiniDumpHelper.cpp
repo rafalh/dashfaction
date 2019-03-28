@@ -3,68 +3,68 @@
 #define CRASHHANDLER_ERR(msg) MessageBox(NULL, TEXT(msg), 0, MB_ICONERROR | MB_OK | MB_SETFOREGROUND | MB_TASKMODAL)
 
 //
-// This function determines whether we need data sections of the given module 
+// This function determines whether we need data sections of the given module
 //
-bool MiniDumpHelper::IsDataSectionNeeded(const WCHAR* pModuleName)
+bool MiniDumpHelper::IsDataSectionNeeded(const WCHAR* ModuleName)
 {
-    // Extract the module name 
-    WCHAR szFileName[_MAX_FNAME] = L"";
-    _wsplitpath(pModuleName, NULL, NULL, szFileName, NULL);
+    // Extract the module name
+    WCHAR FileName[_MAX_FNAME] = L"";
+    _wsplitpath(ModuleName, NULL, NULL, FileName, NULL);
 
-    // Compare the name with the list of known names and decide 
+    // Compare the name with the list of known names and decide
     for (auto name : m_knownModules)
     {
-        if (wcsicmp(szFileName, name.c_str()) == 0)
+        if (wcsicmp(FileName, name.c_str()) == 0)
         {
             return true;
         }
     }
 
-    // Complete 
+    // Complete
     return false;
 }
 
 BOOL CALLBACK MiniDumpHelper::MiniDumpCallback(
-    PVOID                            pParam,
-    const PMINIDUMP_CALLBACK_INPUT   pInput,
-    PMINIDUMP_CALLBACK_OUTPUT        pOutput
+    PVOID                            Param,
+    const PMINIDUMP_CALLBACK_INPUT   Input,
+    PMINIDUMP_CALLBACK_OUTPUT        Output
 )
 {
-    MiniDumpHelper *pThis = (MiniDumpHelper*)pParam;
+    MiniDumpHelper *This = (MiniDumpHelper*)Param;
 
     BOOL bRet = FALSE;
 
     // Check parameters
-    if (pInput == 0 || pOutput == 0)
+    if (Input == 0 || Output == 0)
         return FALSE;
 
     // Process the callbacks
-    switch (pInput->CallbackType)
+    switch (Input->CallbackType)
     {
     case IncludeModuleCallback:
     {
-        // Include the module into the dump 
+        // Include the module into the dump
         bRet = TRUE;
     }
     break;
 
     case IncludeThreadCallback:
     {
-        // Include the thread into the dump 
+        // Include the thread into the dump
         bRet = TRUE;
     }
     break;
 
     case ModuleCallback:
     {
-        // Are data sections available for this module ? 
-        if (pOutput->ModuleWriteFlags & ModuleWriteDataSeg)
+        // Are data sections available for this module ?
+        if (Output->ModuleWriteFlags & ModuleWriteDataSeg)
         {
-            // Yes, they are, but do we need them? 
-            if (!pThis->IsDataSectionNeeded(pInput->Module.FullPath))
+            // Yes, they are, but do we need them?
+            if (!This->IsDataSectionNeeded(Input->Module.FullPath))
             {
-                //wprintf(L"Excluding module data sections: %s \n", pInput->Module.FullPath);
-                pOutput->ModuleWriteFlags &= (~ModuleWriteDataSeg);
+                //wprintf(L"Excluding module data sections: %s \n", Input->Module.FullPath);
+                Output->ModuleWriteFlags &= (~ModuleWriteDataSeg);
             }
         }
 
@@ -74,21 +74,21 @@ BOOL CALLBACK MiniDumpHelper::MiniDumpCallback(
 
     case ThreadCallback:
     {
-        // Include all thread information into the minidump 
+        // Include all thread information into the minidump
         bRet = TRUE;
     }
     break;
 
     case ThreadExCallback:
     {
-        // Include this information 
+        // Include this information
         bRet = TRUE;
     }
     break;
 
     case MemoryCallback:
     {
-        // We do not include any information here -> return FALSE 
+        // We do not include any information here -> return FALSE
         bRet = FALSE;
     }
     break;
@@ -100,7 +100,7 @@ BOOL CALLBACK MiniDumpHelper::MiniDumpCallback(
     return bRet;
 }
 
-bool MiniDumpHelper::writeDump(const char *Path, PEXCEPTION_POINTERS pExceptionPointers, HANDLE hProcess, DWORD dwThreadId)
+bool MiniDumpHelper::writeDump(const char *Path, PEXCEPTION_POINTERS ExceptionPointers, HANDLE hProcess, DWORD dwThreadId)
 {
     if (!m_pMiniDumpWriteDump)
         return false;
@@ -125,17 +125,17 @@ bool MiniDumpHelper::writeDump(const char *Path, PEXCEPTION_POINTERS pExceptionP
 
     static MINIDUMP_EXCEPTION_INFORMATION ExceptionInfo;
     ExceptionInfo.ThreadId = dwThreadId;
-    ExceptionInfo.ExceptionPointers = pExceptionPointers;
+    ExceptionInfo.ExceptionPointers = ExceptionPointers;
     ExceptionInfo.ClientPointers = TRUE;
 
     static MINIDUMP_TYPE DumpType = MiniDumpNormal;
-    static MINIDUMP_CALLBACK_INFORMATION *pCallbackInfo = NULL;
+    static MINIDUMP_CALLBACK_INFORMATION *CallbackInfoPtr = NULL;
 
     // See http://www.debuginfo.com/articles/effminidumps2.html
     if (m_infoLevel == 0)
     {
         DumpType = MiniDumpWithIndirectlyReferencedMemory;
-        pCallbackInfo = NULL;
+        CallbackInfoPtr = NULL;
     }
     else if (m_infoLevel == 1) // medium information
     {
@@ -151,7 +151,7 @@ bool MiniDumpHelper::writeDump(const char *Path, PEXCEPTION_POINTERS pExceptionP
         static MINIDUMP_CALLBACK_INFORMATION CallbackInfo;
         CallbackInfo.CallbackRoutine = (MINIDUMP_CALLBACK_ROUTINE)MiniDumpCallback;
         CallbackInfo.CallbackParam = this;
-        pCallbackInfo = &CallbackInfo;
+        CallbackInfoPtr = &CallbackInfo;
     }
     else if (m_infoLevel == 2) // Maximal information
     {
@@ -161,10 +161,10 @@ bool MiniDumpHelper::writeDump(const char *Path, PEXCEPTION_POINTERS pExceptionP
             MiniDumpWithThreadInfo |
             MiniDumpWithUnloadedModules |
             MiniDumpWithIndirectlyReferencedMemory);
-        pCallbackInfo = NULL;
+        CallbackInfoPtr = NULL;
     }
 
-    BOOL Result = m_pMiniDumpWriteDump(hProcess, GetProcessId(hProcess), hFile, DumpType, &ExceptionInfo, NULL, pCallbackInfo);
+    BOOL Result = m_pMiniDumpWriteDump(hProcess, GetProcessId(hProcess), hFile, DumpType, &ExceptionInfo, NULL, CallbackInfoPtr);
     if (!Result)
         CRASHHANDLER_ERR("MiniDumpWriteDump failed");
 

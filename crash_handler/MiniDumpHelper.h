@@ -26,7 +26,7 @@ private:
 public:
     MiniDumpHelper();
     ~MiniDumpHelper();
-    bool writeDump(const char *Path, PEXCEPTION_POINTERS pExceptionPointers, HANDLE hProcess, DWORD dwThreadId);
+    bool writeDump(const char *Path, PEXCEPTION_POINTERS ExceptionPointers, HANDLE hProcess, DWORD dwThreadId);
 
     // 0 - minimal, 2 - maximal
     void setInfoLevel(int infoLevel)
@@ -40,6 +40,6 @@ public:
     }
 
 private:
-    bool IsDataSectionNeeded(const WCHAR* pModuleName);
-    static BOOL CALLBACK MiniDumpCallback(PVOID pParam, const PMINIDUMP_CALLBACK_INPUT pInput, PMINIDUMP_CALLBACK_OUTPUT pOutput);
+    bool IsDataSectionNeeded(const WCHAR* ModuleName);
+    static BOOL CALLBACK MiniDumpCallback(PVOID Param, const PMINIDUMP_CALLBACK_INPUT Input, PMINIDUMP_CALLBACK_OUTPUT Output);
 };

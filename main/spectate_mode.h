@@ -2,9 +2,9 @@
 
 #include "rf.h"
 
-void SpectateModeSetTargetPlayer(rf::Player *pPlayer);
+void SpectateModeSetTargetPlayer(rf::Player *Player);
 void SpectateModeInit();
 void SpectateModeAfterFullGameInit();
 void SpectateModeDrawUI();
-void SpectateModeOnDestroyPlayer(rf::Player *pPlayer);
+void SpectateModeOnDestroyPlayer(rf::Player *Player);
 bool SpectateModeIsActive();

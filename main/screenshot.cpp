@@ -24,7 +24,7 @@ CallHook2<rf::BmPixelFormat(int, int, int, int, byte*)> GrD3DReadBackBuffer_Hook
 
         rf::GrFlushBuffers();
 
-        hr = rf::g_pGrDevice->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &back_buffer);
+        hr = rf::g_GrDevice->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &back_buffer);
         if (FAILED(hr)) {
             ERR("IDirect3DDevice8::GetBackBuffer failed 0x%x", hr);
             return rf::BMPF_INVALID;
@@ -40,20 +40,20 @@ CallHook2<rf::BmPixelFormat(int, int, int, int, byte*)> GrD3DReadBackBuffer_Hook
 
 #if 1
         if (SUCCEEDED(hr)) {
-            hr = rf::g_pGrDevice->CreateRenderTarget(desc.Width, desc.Height, desc.Format, D3DMULTISAMPLE_NONE, TRUE, &tmp_surface);
-            //hr = rf::g_pGrDevice->CreateImageSurface(desc.Width, desc.Height, desc.Format, &tmp_surface);
-            //hr = rf::g_pGrDevice->CreateTexture(desc.Width, desc.Height, 1, 0, desc.Format, D3DPOOL_MANAGED, &pTmpTexture);
+            hr = rf::g_GrDevice->CreateRenderTarget(desc.Width, desc.Height, desc.Format, D3DMULTISAMPLE_NONE, TRUE, &tmp_surface);
+            //hr = rf::g_GrDevice->CreateImageSurface(desc.Width, desc.Height, desc.Format, &tmp_surface);
+            //hr = rf::g_GrDevice->CreateTexture(desc.Width, desc.Height, 1, 0, desc.Format, D3DPOOL_MANAGED, &TmpTexture);
             if (FAILED(hr))
                 ERR("IDirect3DDevice8::CreateRenderTarget failed 0x%x", hr);
         }
 
         if (SUCCEEDED(hr)) {
             RECT src_rect;
-            POINT dst_pt{ x, y };
+            POINT dst_pt{x, y};
             SetRect(&src_rect, x, y, x + width - 1, y + height - 1);
 
             if (width > 0 && height > 0) {
-                hr = rf::g_pGrDevice->CopyRects(back_buffer, &src_rect, 1, tmp_surface, &dst_pt);
+                hr = rf::g_GrDevice->CopyRects(back_buffer, &src_rect, 1, tmp_surface, &dst_pt);
                 if (FAILED(hr))
                     ERR("IDirect3DDevice8::CopyRects failed 0x%x", hr);
             }
@@ -122,7 +122,7 @@ void ScreenshotAfterGameInit()
     }
 
     char full_path[MAX_PATH];
-    sprintf(full_path, "%s\\%s", rf::g_pszRootPath, g_screenshot_dir_name);
+    sprintf(full_path, "%s\\%s", rf::g_RootPath, g_screenshot_dir_name);
     if (CreateDirectoryA(full_path, NULL))
         INFO("Created screenshots directory");
     else if (GetLastError() != ERROR_ALREADY_EXISTS)

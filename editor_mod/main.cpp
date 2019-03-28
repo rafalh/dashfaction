@@ -7,53 +7,53 @@
 
 #define LAUNCHER_FILENAME "DashFactionLauncher.exe"
 
-HMODULE g_hModule;
-HWND g_hEditorWnd;
-WNDPROC g_pEditorWndProc_Orig;
+HMODULE g_Module;
+HWND g_EditorWnd;
+WNDPROC g_EditorWndProc_Orig;
 
-static const auto g_pEditorApp = (void*)0x006F9DA0;
+static const auto g_EditorApp = (void*)0x006F9DA0;
 
-void OpenLevel(const char *pszPath)
+void OpenLevel(const char *Path)
 {
-    void *pDocManager = *(void**)(((BYTE*)g_pEditorApp) + 0x80);
-    void *pDocManager_Vtbl = *(void**)pDocManager;
-    typedef int(__thiscall *CDocManager_OpenDocumentFile_Ptr)(void *This, LPCSTR lpString2);
-    CDocManager_OpenDocumentFile_Ptr pDocManager_OpenDocumentFile = (CDocManager_OpenDocumentFile_Ptr)*(((void**)pDocManager_Vtbl) + 7);
-    pDocManager_OpenDocumentFile(pDocManager, pszPath);
+    void *DocManager = *(void**)(((BYTE*)g_EditorApp) + 0x80);
+    void *DocManager_Vtbl = *(void**)DocManager;
+    typedef int(__thiscall *CDocManager_OpenDocumentFile_Ptr)(void *This, LPCSTR String2);
+    CDocManager_OpenDocumentFile_Ptr pDocManager_OpenDocumentFile = (CDocManager_OpenDocumentFile_Ptr)*(((void**)DocManager_Vtbl) + 7);
+    pDocManager_OpenDocumentFile(DocManager, Path);
 }
 
 LRESULT CALLBACK EditorWndProc_New(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     if (uMsg == WM_DROPFILES)
     {
-        HDROP hDropInfo = (HDROP)wParam;
-        char sItem[MAX_PATH];
+        HDROP Drop = (HDROP)wParam;
+        char FileName[MAX_PATH];
         // Handle only first droped file
-        if (DragQueryFile(hDropInfo, 0, sItem, sizeof(sItem)))
-            OpenLevel(sItem);
-        DragFinish(hDropInfo);
+        if (DragQueryFile(Drop, 0, FileName, sizeof(FileName)))
+            OpenLevel(FileName);
+        DragFinish(Drop);
     }
     // Call original procedure
-    return g_pEditorWndProc_Orig(hwnd, uMsg, wParam, lParam);
+    return g_EditorWndProc_Orig(hwnd, uMsg, wParam, lParam);
 }
 
 BOOL CEditorApp__InitInstance_AfterHook()
 {
-    g_hEditorWnd = GetActiveWindow();
-    g_pEditorWndProc_Orig = (WNDPROC)GetWindowLongPtr(g_hEditorWnd, GWLP_WNDPROC);
-    SetWindowLongPtr(g_hEditorWnd, GWLP_WNDPROC, (LONG)EditorWndProc_New);
-    DWORD ExStyle = GetWindowLongPtr(g_hEditorWnd, GWL_EXSTYLE);
-    SetWindowLongPtr(g_hEditorWnd, GWL_EXSTYLE, ExStyle | WS_EX_ACCEPTFILES);
+    g_EditorWnd = GetActiveWindow();
+    g_EditorWndProc_Orig = (WNDPROC)GetWindowLongPtr(g_EditorWnd, GWLP_WNDPROC);
+    SetWindowLongPtr(g_EditorWnd, GWLP_WNDPROC, (LONG)EditorWndProc_New);
+    DWORD ExStyle = GetWindowLongPtr(g_EditorWnd, GWL_EXSTYLE);
+    SetWindowLongPtr(g_EditorWnd, GWL_EXSTYLE, ExStyle | WS_EX_ACCEPTFILES);
     return TRUE;
 }
 
-extern "C" DWORD DLL_EXPORT Init(void *pUnused)
+extern "C" DWORD DLL_EXPORT Init(void *Unused)
 {
-    (void)pUnused; // unused parameter
+    (void)Unused; // unused parameter
 
     // Prepare command
     static char CmdBuf[512];
-    GetModuleFileNameA(g_hModule, CmdBuf, sizeof(CmdBuf));
+    GetModuleFileNameA(g_Module, CmdBuf, sizeof(CmdBuf));
     char *Ptr = strrchr(CmdBuf, '\\');
     strcpy(Ptr, "\\" LAUNCHER_FILENAME " -level \"");
 
@@ -73,12 +73,12 @@ extern "C" DWORD DLL_EXPORT Init(void *pUnused)
     return 1; // success
 }
 
-BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD fdwReason, LPVOID lpvReserved)
+BOOL WINAPI DllMain(HINSTANCE Instance, DWORD Reason, LPVOID Reserved)
 {
-    (void)fdwReason; // unused parameter
-    (void)lpvReserved; // unused parameter
+    (void)Reason; // unused parameter
+    (void)Reserved; // unused parameter
 
-    g_hModule = (HMODULE)hInstance;
-    DisableThreadLibraryCalls(hInstance);
+    g_Module = (HMODULE)Instance;
+    DisableThreadLibraryCalls(Instance);
     return TRUE;
 }

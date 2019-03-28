@@ -5,7 +5,7 @@
 static WCHAR g_ModulePath[MAX_PATH];
 static LPTOP_LEVEL_EXCEPTION_FILTER g_OldExceptionFilter;
 
-static LONG WINAPI CrashHandlerExceptionFilter(PEXCEPTION_POINTERS pExceptionInfo)
+static LONG WINAPI CrashHandlerExceptionFilter(PEXCEPTION_POINTERS ExceptionInfo)
 {
     static HANDLE hProcess = NULL, hEvent = NULL;
     static STARTUPINFOW StartupInfo;
@@ -13,9 +13,9 @@ static LONG WINAPI CrashHandlerExceptionFilter(PEXCEPTION_POINTERS pExceptionInf
     static WCHAR CmdLine[256];
 
     ERR("Unhandled exception: ExceptionAddress=0x%X ExceptionCode=0x%X",
-        pExceptionInfo->ExceptionRecord->ExceptionAddress, pExceptionInfo->ExceptionRecord->ExceptionCode);
-    for (unsigned i = 0; i < pExceptionInfo->ExceptionRecord->NumberParameters; ++i)
-        ERR("ExceptionInformation[%d]=0x%X", i, pExceptionInfo->ExceptionRecord->ExceptionInformation[i]);
+        ExceptionInfo->ExceptionRecord->ExceptionAddress, ExceptionInfo->ExceptionRecord->ExceptionCode);
+    for (unsigned i = 0; i < ExceptionInfo->ExceptionRecord->NumberParameters; ++i)
+        ERR("ExceptionInformation[%d]=0x%X", i, ExceptionInfo->ExceptionRecord->ExceptionInformation[i]);
 
     do
     {
@@ -29,7 +29,7 @@ static LONG WINAPI CrashHandlerExceptionFilter(PEXCEPTION_POINTERS pExceptionInf
 
         memset(&StartupInfo, 0, sizeof(StartupInfo));
         StartupInfo.cb = sizeof(StartupInfo);
-        swprintf(CmdLine, ARRAYSIZE(CmdLine), L"%ls\\CrashHandler.exe 0x%p 0x%p %lu 0x%p", g_ModulePath, pExceptionInfo, hProcess, GetCurrentThreadId(), hEvent);
+        swprintf(CmdLine, ARRAYSIZE(CmdLine), L"%ls\\CrashHandler.exe 0x%p 0x%p %lu 0x%p", g_ModulePath, ExceptionInfo, hProcess, GetCurrentThreadId(), hEvent);
         if (!CreateProcessW(NULL, CmdLine, NULL, NULL, TRUE, 0, NULL, NULL, &StartupInfo, &ProcInfo))
         {
             ERR("Failed to start CrashHandler process - CreateProcessW failed with error %ls", CmdLine);
@@ -46,7 +46,7 @@ static LONG WINAPI CrashHandlerExceptionFilter(PEXCEPTION_POINTERS pExceptionInf
     if (hEvent)
         CloseHandle(hEvent);
 
-    return g_OldExceptionFilter ? g_OldExceptionFilter(pExceptionInfo) : EXCEPTION_EXECUTE_HANDLER;
+    return g_OldExceptionFilter ? g_OldExceptionFilter(ExceptionInfo) : EXCEPTION_EXECUTE_HANDLER;
 }
 
 void CrashHandlerInit(HMODULE hModule)

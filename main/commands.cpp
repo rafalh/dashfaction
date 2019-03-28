@@ -46,31 +46,31 @@ bool g_DbgGeometryRenderingStats = false;
 bool g_DbgStaticLights = false;
 bool g_volumetric_lights = true;
 
-rf::Player *FindBestMatchingPlayer(const char *pszName)
+rf::Player *FindBestMatchingPlayer(const char *Name)
 {
-    rf::Player *pFoundPlayer;
+    rf::Player *FoundPlayer;
     int NumFound = 0;
-    FindPlayer(StringMatcher().Exact(pszName), [&](rf::Player *pPlayer)
+    FindPlayer(StringMatcher().Exact(Name), [&](rf::Player *Player)
     {
-        pFoundPlayer = pPlayer;
+        FoundPlayer = Player;
         ++NumFound;
     });
     if (NumFound == 1)
-        return pFoundPlayer;
+        return FoundPlayer;
 
     NumFound = 0;
-    FindPlayer(StringMatcher().Infix(pszName), [&](rf::Player *pPlayer)
+    FindPlayer(StringMatcher().Infix(Name), [&](rf::Player *Player)
     {
-        pFoundPlayer = pPlayer;
+        FoundPlayer = Player;
         ++NumFound;
     });
 
     if (NumFound == 1)
-        return pFoundPlayer;
+        return FoundPlayer;
     else if (NumFound > 1)
-        rf::DcPrintf("Found %d players matching '%s'!", NumFound,  pszName);
+        rf::DcPrintf("Found %d players matching '%s'!", NumFound,  Name);
     else
-        rf::DcPrintf("Cannot find player matching '%s'", pszName);
+        rf::DcPrintf("Cannot find player matching '%s'", Name);
     return nullptr;
 }
 
@@ -79,7 +79,7 @@ rf::Player *FindBestMatchingPlayer(const char *pszName)
 DcCommand2 SplitScreenCmd{
     "splitscreen",
     []() {
-        if (rf::g_bNetworkGame)
+        if (rf::g_IsNetworkGame)
             SplitScreenStart(); /* FIXME: set player 2 controls */
         else
             rf::DcPrintf("Works only in multiplayer game!");
@@ -115,7 +115,7 @@ DcCommand2 DebugCmd{
     [](std::optional<std::string> TypeOpt) {
 
 #ifdef NDEBUG
-        if (rf::g_bNetworkGame) {
+        if (rf::g_IsNetworkGame) {
             rf::DcPrintf("This command is disabled in multiplayer!", nullptr);
             return;
         }
@@ -144,23 +144,23 @@ DcCommand2 DebugCmd{
             return OldFlagValue != FlagRef;
         };
 
-        auto &bDbgThruster               = AddrAsRef<bool>(0x0062F3AA);
-        auto &bDbgLights                 = AddrAsRef<bool>(0x0062FE19);
-        auto &bDbgPushAndClimbingRegions = AddrAsRef<bool>(0x0062FE1A);
-        auto &bDbgGeoRegions             = AddrAsRef<bool>(0x0062FE1B);
-        auto &bDbgGlass                  = AddrAsRef<bool>(0x0062FE1C);
-        auto &bDbgMovers                 = AddrAsRef<bool>(0x0062FE1D);
-        auto &bDbgEntityBurn             = AddrAsRef<bool>(0x0062FE1E);
-        auto &bDbgMovementMode           = AddrAsRef<bool>(0x0062FE1F);
-        auto &bDbgPerfomance             = AddrAsRef<bool>(0x0062FE20);
-        auto &bDbgPerfBar                = AddrAsRef<bool>(0x0062FE21);
-        auto &bDbgWaypoints              = AddrAsRef<bool>(0x0064E39C);
-        auto &bDbgNetwork                = AddrAsRef<bool>(0x006FED24);
-        auto &bDbgParticleStats          = AddrAsRef<bool>(0x007B2758);
-        auto &bDbgWeapon                 = AddrAsRef<bool>(0x007CAB59);
-        auto &bDbgEvents                 = AddrAsRef<bool>(0x00856500);
-        auto &bDbgTriggers               = AddrAsRef<bool>(0x0085683C);
-        auto &bDbgObjRendering           = AddrAsRef<bool>(0x009BB5AC);
+        auto &DgThruster               = AddrAsRef<bool>(0x0062F3AA);
+        auto &DgLights                 = AddrAsRef<bool>(0x0062FE19);
+        auto &DgPushAndClimbingRegions = AddrAsRef<bool>(0x0062FE1A);
+        auto &DgGeoRegions             = AddrAsRef<bool>(0x0062FE1B);
+        auto &DgGlass                  = AddrAsRef<bool>(0x0062FE1C);
+        auto &DgMovers                 = AddrAsRef<bool>(0x0062FE1D);
+        auto &DgEntityBurn             = AddrAsRef<bool>(0x0062FE1E);
+        auto &DgMovementMode           = AddrAsRef<bool>(0x0062FE1F);
+        auto &DgPerfomance             = AddrAsRef<bool>(0x0062FE20);
+        auto &DgPerfBar                = AddrAsRef<bool>(0x0062FE21);
+        auto &DgWaypoints              = AddrAsRef<bool>(0x0064E39C);
+        auto &DgNetwork                = AddrAsRef<bool>(0x006FED24);
+        auto &DgParticleStats          = AddrAsRef<bool>(0x007B2758);
+        auto &DgWeapon                 = AddrAsRef<bool>(0x007CAB59);
+        auto &DgEvents                 = AddrAsRef<bool>(0x00856500);
+        auto &DgTriggers               = AddrAsRef<bool>(0x0085683C);
+        auto &DgObjRendering           = AddrAsRef<bool>(0x009BB5AC);
         // Geometry rendering flags
         auto &RenderEverythingSeeThrough     = AddrAsRef<bool>(0x009BB594);
         auto &RenderRoomsInDifferentColors   = AddrAsRef<bool>(0x009BB598);
@@ -168,27 +168,27 @@ DcCommand2 DebugCmd{
         auto &RenderLightmapsOnly            = AddrAsRef<bool>(0x009BB5A4);
         auto &RenderNoLightmaps              = AddrAsRef<bool>(0x009BB5A8);
 
-        HandleFlag(bDbgThruster, "thruster");
+        HandleFlag(DgThruster, "thruster");
         // debug string at the left-top corner
-        HandleFlag(bDbgLights, "light");
+        HandleFlag(DgLights, "light");
         HandleFlag(g_DbgStaticLights, "light2");
-        HandleFlag(bDbgPushAndClimbingRegions, "push_climb_reg");
-        HandleFlag(bDbgGeoRegions, "geo_reg");
-        HandleFlag(bDbgGlass, "glass");
-        HandleFlag(bDbgMovers, "mover");
-        HandleFlag(bDbgEntityBurn, "ignite");
-        HandleFlag(bDbgMovementMode, "movemode");
-        HandleFlag(bDbgPerfomance, "perf");
-        HandleFlag(bDbgPerfBar, "perfbar");
-        HandleFlag(bDbgWaypoints, "waypoint");
+        HandleFlag(DgPushAndClimbingRegions, "push_climb_reg");
+        HandleFlag(DgGeoRegions, "geo_reg");
+        HandleFlag(DgGlass, "glass");
+        HandleFlag(DgMovers, "mover");
+        HandleFlag(DgEntityBurn, "ignite");
+        HandleFlag(DgMovementMode, "movemode");
+        HandleFlag(DgPerfomance, "perf");
+        HandleFlag(DgPerfBar, "perfbar");
+        HandleFlag(DgWaypoints, "waypoint");
         // network meter in left-top corner
-        HandleFlag(bDbgNetwork, "network");
-        HandleFlag(bDbgParticleStats, "particlestats");
+        HandleFlag(DgNetwork, "network");
+        HandleFlag(DgParticleStats, "particlestats");
         // debug strings at the left side of the screen
-        HandleFlag(bDbgWeapon, "weapon");
-        HandleFlag(bDbgEvents, "event");
-        HandleFlag(bDbgTriggers, "trigger");
-        HandleFlag(bDbgObjRendering, "objrender");
+        HandleFlag(DgWeapon, "weapon");
+        HandleFlag(DgEvents, "event");
+        HandleFlag(DgTriggers, "trigger");
+        HandleFlag(DgObjRendering, "objrender");
         HandleFlag(g_DbgGeometryRenderingStats, "roomstats");
         // geometry rendering
         bool GeomRenderingChanged = false;
@@ -237,17 +237,17 @@ void DebugRender2d()
 DcCommand2 SpectateCmd {
     "spectate",
     [](std::optional<std::string> PlayerName) {
-        if (rf::g_bNetworkGame) {
-            rf::Player *pPlayer;
+        if (rf::g_IsNetworkGame) {
+            rf::Player *Player;
             if (PlayerName && PlayerName.value() == "false")
-                pPlayer = nullptr;
+                Player = nullptr;
             else if (PlayerName)
-                pPlayer = FindBestMatchingPlayer(PlayerName.value().c_str());
+                Player = FindBestMatchingPlayer(PlayerName.value().c_str());
             else
-                pPlayer = nullptr;
+                Player = nullptr;
 
-            if (pPlayer)
-                SpectateModeSetTargetPlayer(pPlayer);
+            if (Player)
+                SpectateModeSetTargetPlayer(Player);
         } else
             rf::DcPrint("Works only in multiplayer game!", NULL);
     },
@@ -268,9 +268,9 @@ DcCommand2 AntiAliasingCmd{
         else
         {
             DWORD Enabled = 0;
-            rf::g_pGrDevice->GetRenderState(D3DRS_MULTISAMPLEANTIALIAS, &Enabled);
+            rf::g_GrDevice->GetRenderState(D3DRS_MULTISAMPLEANTIALIAS, &Enabled);
             Enabled = !Enabled;
-            rf::g_pGrDevice->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, Enabled);
+            rf::g_GrDevice->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, Enabled);
             rf::DcPrintf("Anti-aliasing is %s", Enabled ? "enabled" : "disabled");
         }
     },
@@ -282,8 +282,8 @@ DcCommand2 AntiAliasingCmd{
 DcCommand2 InputModeCmd{
     "inputmode",
     []() {
-        rf::g_bDirectInputDisabled = !rf::g_bDirectInputDisabled;
-        if (rf::g_bDirectInputDisabled)
+        rf::g_DirectInputDisabled = !rf::g_DirectInputDisabled;
+        if (rf::g_DirectInputDisabled)
             rf::DcPrintf("DirectInput is disabled");
         else
             rf::DcPrintf("DirectInput is enabled");
@@ -294,11 +294,11 @@ DcCommand2 InputModeCmd{
 
 #if CAMERA_1_3_COMMANDS
 
-static int CanPlayerFireHook(rf::Player *pPlayer)
+static int CanPlayerFireHook(rf::Player *Player)
 {
-    if (!(pPlayer->Flags & 0x10))
+    if (!(Player->Flags & 0x10))
         return 0;
-    if (rf::g_bNetworkGame && (pPlayer->pCamera->Type == rf::CAM_FREELOOK || pPlayer->pCamera->pPlayer != pPlayer))
+    if (rf::g_IsNetworkGame && (Player->Camera->Type == rf::CAM_FREELOOK || Player->Camera->Player != Player))
         return 0;
     return 1;
 }
@@ -311,9 +311,9 @@ DcCommand2 MouseSensitivityCmd{
         if (Value) {
             float fValue = Value.value();
             fValue = clamp(fValue, 0.0f, 1.0f);
-            rf::g_pLocalPlayer->Config.Controls.fMouseSensitivity = fValue;
+            rf::g_LocalPlayer->Config.Controls.fMouseSensitivity = fValue;
         }
-        rf::DcPrintf("Mouse sensitivity: %.2f", rf::g_pLocalPlayer->Config.Controls.fMouseSensitivity);
+        rf::DcPrintf("Mouse sensitivity: %.2f", rf::g_LocalPlayer->Config.Controls.fMouseSensitivity);
     },
     "Sets mouse sensitivity",
     "ms <value>"
@@ -355,17 +355,17 @@ DcCommand2 LevelSoundsCmd{
 DcCommand2 PlayerCountCmd{
     "playercount",
     []() {
-        if (!rf::g_bNetworkGame)
+        if (!rf::g_IsNetworkGame)
             return;
 
         int PlayerCount = 0;
-        rf::Player *pPlayer = rf::g_pPlayersList;
-        while (pPlayer)
+        rf::Player *Player = rf::g_PlayersList;
+        while (Player)
         {
-            if (pPlayer != rf::g_pPlayersList)
+            if (Player != rf::g_PlayersList)
                 ++PlayerCount;
-            pPlayer = pPlayer->pNext;
-            if (pPlayer == rf::g_pPlayersList)
+            Player = Player->Next;
+            if (Player == rf::g_PlayersList)
                 break;
         }
         rf::DcPrintf("Player count: %d\n", PlayerCount);
@@ -376,9 +376,9 @@ DcCommand2 PlayerCountCmd{
 DcCommand2 FindLevelCmd{
     "findlevel",
     [](std::string Pattern) {
-        PackfileFindMatchingFiles(StringMatcher().Infix(Pattern).Suffix(".rfl"), [](const char *pszName)
+        PackfileFindMatchingFiles(StringMatcher().Infix(Pattern).Suffix(".rfl"), [](const char *Name)
         {
-            rf::DcPrintf("%s\n", pszName);
+            rf::DcPrintf("%s\n", Name);
         });
     },
     "Find a level by a filename fragment",
@@ -396,33 +396,33 @@ DcCommandAlias MapCmd{
     LevelCmd,
 };
 
-void DcShowCmdHelp(rf::DcCommand *pCmd)
+void DcShowCmdHelp(rf::DcCommand *Cmd)
 {
-    rf::g_bDcRun = 0;
-    rf::g_bDcHelp = 1;
-    rf::g_bDcStatus = 0;
-    pCmd->pfnHandler();
+    rf::g_DcRun = 0;
+    rf::g_DcHelp = 1;
+    rf::g_DcStatus = 0;
+    Cmd->pfnHandler();
 }
 
 int DcAutoCompleteGetComponent(int Offset, std::string &Result)
 {
-    const char *pszBegin = rf::g_szDcCmdLine + Offset, *pszEnd = nullptr, *pszNext;
-    if (pszBegin[0] == '"')
+    const char *Begin = rf::g_szDcCmdLine + Offset, *End = nullptr, *Next;
+    if (Begin[0] == '"')
     {
-        ++pszBegin;
-        pszEnd = strchr(pszBegin, '"');
-        pszNext = pszEnd ? strchr(pszEnd, ' ') : nullptr;
+        ++Begin;
+        End = strchr(Begin, '"');
+        Next = End ? strchr(End, ' ') : nullptr;
     }
     else
-        pszEnd = pszNext = strchr(pszBegin, ' ');
+        End = Next = strchr(Begin, ' ');
 
-    if (!pszEnd)
-        pszEnd = rf::g_szDcCmdLine + rf::g_cchDcCmdLineLen;
+    if (!End)
+        End = rf::g_szDcCmdLine + rf::g_cchDcCmdLineLen;
 
-    size_t Len = pszEnd - pszBegin;
-    Result.assign(pszBegin, Len);
+    size_t Len = End - Begin;
+    Result.assign(Begin, Len);
 
-    return pszNext ? pszNext + 1 - rf::g_szDcCmdLine : -1;
+    return Next ? Next + 1 - rf::g_szDcCmdLine : -1;
 }
 
 void DcAutoCompletePutComponent(int Offset, const std::string &Component, bool Finished)
@@ -470,13 +470,13 @@ void DcAutoCompleteLevel(int Offset)
     bool First = true;
     std::string CommonPrefix;
     std::vector<std::string> Matches;
-    PackfileFindMatchingFiles(StringMatcher().Prefix(LevelName).Suffix(".rfl"), [&](const char *pszName)
+    PackfileFindMatchingFiles(StringMatcher().Prefix(LevelName).Suffix(".rfl"), [&](const char *Name)
     {
-        auto pszExt = strrchr(pszName, '.');
-        auto NameLen = pszExt ? pszExt - pszName : strlen(pszName);
-        std::string Name(pszName, NameLen);
-        Matches.push_back(Name);
-        DcAutoCompleteUpdateCommonPrefix(CommonPrefix, Name, First);
+        auto Ext = strrchr(Name, '.');
+        auto NameLen = Ext ? Ext - Name : strlen(Name);
+        std::string NameWithoutExt(Name, NameLen);
+        Matches.push_back(NameWithoutExt);
+        DcAutoCompleteUpdateCommonPrefix(CommonPrefix, NameWithoutExt, First);
     });
 
     if (Matches.size() == 1)
@@ -498,18 +498,18 @@ void DcAutoCompletePlayer(int Offset)
     bool First = true;
     std::string CommonPrefix;
     std::vector<rf::Player*> MatchingPlayers;
-    FindPlayer(StringMatcher().Prefix(PlayerName), [&](rf::Player *pPlayer)
+    FindPlayer(StringMatcher().Prefix(PlayerName), [&](rf::Player *Player)
     {
-        MatchingPlayers.push_back(pPlayer);
-        DcAutoCompleteUpdateCommonPrefix(CommonPrefix, pPlayer->strName.CStr(), First);
+        MatchingPlayers.push_back(Player);
+        DcAutoCompleteUpdateCommonPrefix(CommonPrefix, Player->strName.CStr(), First);
     });
 
     if (MatchingPlayers.size() == 1)
         DcAutoCompletePutComponent(Offset, MatchingPlayers[0]->strName.CStr(), true);
     else
     {
-        DcAutoCompletePrintSuggestions(MatchingPlayers, [](rf::Player *pPlayer) {
-            return pPlayer->strName.CStr();
+        DcAutoCompletePrintSuggestions(MatchingPlayers, [](rf::Player *Player) {
+            return Player->strName.CStr();
         });
         DcAutoCompletePutComponent(Offset, CommonPrefix, false);
     }
@@ -517,9 +517,9 @@ void DcAutoCompletePlayer(int Offset)
 
 void DcAutoCompleteCommand(int Offset)
 {
-    std::string Cmd;
-    int NextOffset = DcAutoCompleteGetComponent(Offset, Cmd);
-    if (Cmd.size() < 2)
+    std::string CmdName;
+    int NextOffset = DcAutoCompleteGetComponent(Offset, CmdName);
+    if (CmdName.size() < 2)
         return;
 
     bool First = true;
@@ -528,11 +528,11 @@ void DcAutoCompleteCommand(int Offset)
     std::vector<rf::DcCommand*> MatchingCmds;
     for (unsigned i = 0; i < rf::g_DcNumCommands; ++i)
     {
-        rf::DcCommand *pCmd = g_CommandsBuffer[i];
-        if (!strnicmp(pCmd->pszCmd, Cmd.c_str(), Cmd.size()) && (NextOffset == -1 || !pCmd->pszCmd[Cmd.size()]))
+        rf::DcCommand *Cmd = g_CommandsBuffer[i];
+        if (!strnicmp(Cmd->Cmd, CmdName.c_str(), CmdName.size()) && (NextOffset == -1 || !Cmd->Cmd[CmdName.size()]))
         {
-            MatchingCmds.push_back(pCmd);
-            DcAutoCompleteUpdateCommonPrefix(CommonPrefix, pCmd->pszCmd, First);
+            MatchingCmds.push_back(Cmd);
+            DcAutoCompleteUpdateCommonPrefix(CommonPrefix, Cmd->Cmd, First);
         }
     }
 
@@ -540,23 +540,23 @@ void DcAutoCompleteCommand(int Offset)
     {
         if (MatchingCmds.size() != 1)
             return;
-        if (!stricmp(Cmd.c_str(), "level") || !stricmp(Cmd.c_str(), "levelsp"))
+        if (!stricmp(CmdName.c_str(), "level") || !stricmp(CmdName.c_str(), "levelsp"))
             DcAutoCompleteLevel(NextOffset);
-        else if (!stricmp(Cmd.c_str(), "kick") || !stricmp(Cmd.c_str(), "ban"))
+        else if (!stricmp(CmdName.c_str(), "kick") || !stricmp(CmdName.c_str(), "ban"))
             DcAutoCompletePlayer(NextOffset);
-        else if (!stricmp(Cmd.c_str(), "rcon"))
+        else if (!stricmp(CmdName.c_str(), "rcon"))
             DcAutoCompleteCommand(NextOffset);
         else
             DcShowCmdHelp(MatchingCmds[0]);
     }
     else if (MatchingCmds.size() > 1)
     {
-        for (auto *pCmd : MatchingCmds)
-            rf::DcPrintf("%s - %s", pCmd->pszCmd, pCmd->pszDescr);
+        for (auto *Cmd : MatchingCmds)
+            rf::DcPrintf("%s - %s", Cmd->Cmd, Cmd->Descr);
         DcAutoCompletePutComponent(Offset, CommonPrefix, false);
     }
     else if (MatchingCmds.size() == 1)
-        DcAutoCompletePutComponent(Offset, MatchingCmds[0]->pszCmd, true);
+        DcAutoCompletePutComponent(Offset, MatchingCmds[0]->Cmd, true);
 }
 
 FunHook2<void()> DcAutoCompleteInput_Hook{
@@ -609,10 +609,10 @@ void CommandsInit()
     AsmWritter(0x00434FEC, 0x00434FF2).nop();
 }
 
-void CommandRegister(rf::DcCommand *pCmd)
+void CommandRegister(rf::DcCommand *Cmd)
 {
     if (rf::g_DcNumCommands < CMD_LIMIT)
-        g_CommandsBuffer[rf::g_DcNumCommands++] = pCmd;
+        g_CommandsBuffer[rf::g_DcNumCommands++] = Cmd;
     else
         ASSERT(false);
 }

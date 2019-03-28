@@ -9,8 +9,8 @@ enum GameLang {
     LANG_FR = 2,
 };
 
-void VfsApplyHooks(void);
-void ForceFileFromPackfile(const char *pszName, const char *pszPackfile);
+void VfsApplyHooks();
+void ForceFileFromPackfile(const char *Name, const char *PackfileName);
 GameLang GetInstalledGameLang();
 bool IsModdedGame();
 void PackfileFindMatchingFiles(const StringMatcher &Query, std::function<void(const char *)> ResultConsumer);

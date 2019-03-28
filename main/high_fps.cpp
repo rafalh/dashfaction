@@ -193,9 +193,9 @@ DcCommand2 detect_ftol_issues_cmd{
 void STDCALL EntityWaterDecelerateFix(rf::EntityObj* entity)
 {
     float vel_factor = 1.0f - (rf::g_fFramerate * 4.5f);
-    entity->_Super.PhysInfo.vVel.x *= vel_factor;
-    entity->_Super.PhysInfo.vVel.y *= vel_factor;
-    entity->_Super.PhysInfo.vVel.z *= vel_factor;
+    entity->_Super.PhysInfo.Vel.x *= vel_factor;
+    entity->_Super.PhysInfo.Vel.y *= vel_factor;
+    entity->_Super.PhysInfo.Vel.z *= vel_factor;
 }
 
 extern "C" void WaterAnimateWaves_UpdatePos(rf::Vector3* result)
