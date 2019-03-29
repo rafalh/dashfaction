@@ -494,15 +494,27 @@ constexpr uint8_t TRIGGER_CLIENT_SIDE = 0x2;
 constexpr uint8_t TRIGGER_SOLO        = 0x4;
 constexpr uint8_t TRIGGER_TELEPORT    = 0x8;
 
-void SendTriggerActivatePacket(rf::Player *player, rf::TriggerObj *trigger, int32_t h_entity)
+rf::Player *g_trigger_solo_player = nullptr;
+
+void SendTriggerActivatePacket(rf::Player *player, int trigger_uid, int32_t entity_handle)
 {
     rfTriggerActivate packet;
     packet.type = RF_TRIGGER_ACTIVATE;
     packet.size = sizeof(packet) - sizeof(rfPacketHeader);
-    packet.uid = trigger->_Super.Uid;
-    packet.entity_handle = h_entity;
+    packet.uid = trigger_uid;
+    packet.entity_handle = entity_handle;
     rf::NwSendReliablePacket(player, reinterpret_cast<uint8_t*>(&packet), sizeof(packet), 0);
 }
+
+FunHook2<void(int, int)> SendTriggerActivatePacketToAllPlayers_Hook{
+    0x00483190,
+    [](int trigger_uid, int entity_handle) {
+        if (g_trigger_solo_player)
+            SendTriggerActivatePacket(g_trigger_solo_player, trigger_uid, entity_handle);
+        else
+            SendTriggerActivatePacketToAllPlayers_Hook.CallTarget(trigger_uid, entity_handle);
+    },
+};
 
 FunHook2<void(rf::TriggerObj*, int32_t, bool)> TriggerActivate_Hook{
     0x004C0220,
@@ -520,13 +532,19 @@ FunHook2<void(rf::TriggerObj*, int32_t, bool)> TriggerActivate_Hook{
         bool is_solo_trigger = (ext_flags & (TRIGGER_SOLO | TRIGGER_TELEPORT)) != 0;
         if (rf::g_IsNetworkGame && rf::g_IsLocalNetworkGame && is_solo_trigger && player) {
             //rf::DcPrintf("Solo/Teleport trigger activated %s", trigger_name);
-            SendTriggerActivatePacket(player, trigger, h_entity);
-            return;
+            if (player != rf::g_LocalPlayer) {
+                SendTriggerActivatePacket(player, trigger->_Super.Uid, h_entity);
+                return;
+            }
+            else {
+                g_trigger_solo_player = player;
+            }
         }
 
         // Normal activation
         //rf::DcPrintf("trigger normal activation %s %d", trigger_name, ext_flags);
         TriggerActivate_Hook.CallTarget(trigger, h_entity, skip_movers);
+        g_trigger_solo_player = nullptr;
     }
 };
 
@@ -972,6 +990,7 @@ void MiscInit()
 
     // Solo/Teleport triggers handling + filtering by team ID
     TriggerActivate_Hook.Install();
+    SendTriggerActivatePacketToAllPlayers_Hook.Install();
 
     // Client-side trigger flag handling
     AsmWritter(0x004BFCCD, 0x004BFCD4).jmp(TriggerCheckActivation_Patch_004BFCCD);
