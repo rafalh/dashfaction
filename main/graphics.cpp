@@ -4,8 +4,8 @@
 #include "rf.h"
 #include "main.h"
 #include "gr_color.h"
-#include "inline_asm.h"
 #include <CallHook2.h>
+#include <RegsPatch.h>
 #include <ShortTypes.h>
 
 namespace rf {
@@ -55,85 +55,65 @@ static void SetTextureMinMagFilterInCode(D3DTEXTUREFILTERTYPE filter_type)
         WriteMem<u8>(addresses[i] + 1, (uint8_t)filter_type);
 }
 
-extern "C" void GrSetViewMatrix_FovFix(float f_fov_scale, float f_w_far_factor)
-{
-    constexpr float f_ref_aspect_ratio = 4.0f / 3.0f;
-    constexpr float f_max_wide_aspect_ratio = 21.0f / 9.0f; // biggest aspect ratio currently in market
+RegsPatch GrSetViewMatrix_widescreen_fix{
+    0x005473AD,
+    [](auto &regs) {
+        (void)regs; // unused parameter
 
-    // g_GrScreen.fAspect == ScrW / ScrH * 0.75 (1.0 for 4:3 monitors, 1.2 for 16:10) - looks like Pixel Aspect Ratio
-    // We use here MaxWidth and MaxHeight to calculate proper FOV for windowed mode
+        constexpr float ref_aspect_ratio = 4.0f / 3.0f;
+        constexpr float max_wide_aspect_ratio = 21.0f / 9.0f; // biggest aspect ratio currently in market
 
-    float f_viewport_aspect_ratio = (float)rf::g_GrScreen.ViewportWidth / (float)rf::g_GrScreen.ViewportHeight;
-    float f_aspect_ratio = (float)rf::g_GrScreen.MaxWidth / (float)rf::g_GrScreen.MaxHeight;
-    float f_scale_x = 1.0f;
-    float f_scale_y = f_ref_aspect_ratio * f_viewport_aspect_ratio / f_aspect_ratio; // this is how RF does it and is needed for working scanner
+        // g_GrScreen.fAspect == ScrW / ScrH * 0.75 (1.0 for 4:3 monitors, 1.2 for 16:10) - looks like Pixel Aspect Ratio
+        // We use here MaxWidth and MaxHeight to calculate proper FOV for windowed mode
 
-    if (f_aspect_ratio <= f_max_wide_aspect_ratio) // never make X scale too high in windowed mode
-        f_scale_x *= f_ref_aspect_ratio / f_aspect_ratio;
-    else
-    {
-        f_scale_x *= f_ref_aspect_ratio / f_max_wide_aspect_ratio;
-        f_scale_y *= f_aspect_ratio / f_max_wide_aspect_ratio;
+        float viewport_aspect_ratio = (float)rf::g_GrScreen.ViewportWidth / (float)rf::g_GrScreen.ViewportHeight;
+        float aspect_ratio = (float)rf::g_GrScreen.MaxWidth / (float)rf::g_GrScreen.MaxHeight;
+        float scale_x = 1.0f;
+        float scale_y = ref_aspect_ratio * viewport_aspect_ratio / aspect_ratio; // this is how RF does it and is needed for working scanner
+
+        if (aspect_ratio <= max_wide_aspect_ratio) // never make X scale too high in windowed mode
+            scale_x *= ref_aspect_ratio / aspect_ratio;
+        else
+        {
+            scale_x *= ref_aspect_ratio / max_wide_aspect_ratio;
+            scale_y *= aspect_ratio / max_wide_aspect_ratio;
+        }
+
+        rf::g_GrScaleVec.x *= scale_x; // Note: original division by aspect ratio is noped
+        rf::g_GrScaleVec.y *= scale_y;
+
+        g_GrClippedGeomOffsetX = rf::g_GrScreen.OffsetX - 0.5f;
+        g_GrClippedGeomOffsetY = rf::g_GrScreen.OffsetY - 0.5f;
+        static auto &gr_viewport_center_x = *(float*)0x01818B54;
+        static auto &gr_viewport_center_y = *(float*)0x01818B5C;
+        gr_viewport_center_x -= 0.5f; // viewport center x
+        gr_viewport_center_y -= 0.5f; // viewport center y
+    },
+};
+
+RegsPatch GrCreateD3DDevice_error_patch{
+    0x00545CBD,
+    [](auto &regs) {
+        auto hr = static_cast<HRESULT>(regs.eax);
+        ERR("D3D CreateDevice failed (hr 0x%X - %s)", hr, getDxErrorStr(hr));
+
+        char buf[1024];
+        sprintf(buf, "Failed to create Direct3D device object - error 0x%lX (%s).\n"
+            "A critical error has occurred and the program cannot continue.\n"
+            "Press OK to exit the program", hr, getDxErrorStr(hr));
+        MessageBoxA(nullptr, buf, "Error!", MB_OK | MB_ICONERROR | MB_SETFOREGROUND | MB_TASKMODAL);
+        ExitProcess(-1);
     }
+};
 
-    rf::g_GrScaleVec.x = f_w_far_factor / f_fov_scale * f_scale_x;
-    rf::g_GrScaleVec.y = f_w_far_factor / f_fov_scale * f_scale_y;
-    rf::g_GrScaleVec.z = f_w_far_factor;
-
-    g_GrClippedGeomOffsetX = rf::g_GrScreen.OffsetX - 0.5f;
-    g_GrClippedGeomOffsetY = rf::g_GrScreen.OffsetY - 0.5f;
-    static auto &gr_viewport_center_x = *(float*)0x01818B54;
-    static auto &gr_viewport_center_y = *(float*)0x01818B5C;
-    gr_viewport_center_x -= 0.5f; // viewport center x
-    gr_viewport_center_y -= 0.5f; // viewport center y
-}
-
-ASM_FUNC(GrSetViewMatrix_00547344,
-    ASM_I  mov eax, [esp + 0x10 + 0x14]
-    ASM_I  sub esp, 8
-    ASM_I  fstp dword ptr [esp + 4]
-    ASM_I  mov [esp + 0], eax
-    ASM_I  call ASM_SYM(GrSetViewMatrix_FovFix)
-    ASM_I  fld dword ptr [esp + 4]
-    ASM_I  add esp, 8
-    ASM_I  mov eax, 0x00547366
-    ASM_I  jmp eax
-)
-
-extern "C" void DisplayD3DDeviceError(HRESULT hr)
-{
-    ERR("D3D CreateDevice failed (hr 0x%X - %s)", hr, getDxErrorStr(hr));
-
-    char buf[1024];
-    sprintf(buf, "Failed to create Direct3D device object - error 0x%lX (%s).\n"
-        "A critical error has occurred and the program cannot continue.\n"
-        "Press OK to exit the program", hr, getDxErrorStr(hr));
-    MessageBoxA(nullptr, buf, "Error!", MB_OK | MB_ICONERROR | MB_SETFOREGROUND | MB_TASKMODAL);
-    ExitProcess(-1);
-}
-
-ASM_FUNC(GrCreateD3DDeviceError_00545BEF,
-    ASM_I  push eax
-    ASM_I  call ASM_SYM(DisplayD3DDeviceError)
-    ASM_I  add esp, 4
-)
-
-extern "C" void GrClearZBuffer_SetRect(D3DRECT *clear_rect)
-{
-    clear_rect->x1 = rf::g_GrScreen.OffsetX + rf::g_GrScreen.ClipLeft;
-    clear_rect->y1 = rf::g_GrScreen.OffsetY + rf::g_GrScreen.ClipTop;
-    clear_rect->x2 = rf::g_GrScreen.OffsetX + rf::g_GrScreen.ClipRight + 1;
-    clear_rect->y2 = rf::g_GrScreen.OffsetY + rf::g_GrScreen.ClipBottom + 1;
-}
-
-ASM_FUNC(GrClearZBuffer_005509C4,
-    ASM_I  lea eax, [esp + 0x14 - 0x10] // Rect
-    ASM_I  push eax
-    ASM_I  call ASM_SYM(GrClearZBuffer_SetRect)
-    ASM_I  add esp, 4
-    ASM_I  mov eax, 0x005509F0
-    ASM_I  jmp eax
-)
+RegsPatch GrClearZBuffer_fix_rect{
+    0x00550A19,
+    [](auto &regs) {
+        auto &rect = *reinterpret_cast<D3DRECT*>(regs.edx);
+        rect.x2++;
+        rect.y2++;
+    }
+};
 
 static void SetupPP(void)
 {
@@ -247,7 +227,8 @@ void GraphicsInit()
 
 #if WIDESCREEN_FIX
     // Fix FOV for widescreen
-    AsmWritter(0x00547344).jmp(GrSetViewMatrix_00547344);
+    AsmWritter(0x00547354, 0x00547358).nop();
+    GrSetViewMatrix_widescreen_fix.Install();
     WriteMem<float>(0x0058A29C, 0.0003f); // factor related to near plane, default is 0.000588f
 #endif
 
@@ -258,7 +239,7 @@ void GraphicsInit()
     }
 
     // Better error message in case of device creation error
-    AsmWritter(0x00545BEF).jmp(GrCreateD3DDeviceError_00545BEF);
+    GrCreateD3DDevice_error_patch.Install();
 
     // Optimization - remove unused back buffer locking/unlocking in GrSwapBuffers
     AsmWritter(0x0054504A).jmp(0x0054508B);
@@ -269,7 +250,7 @@ void GraphicsInit()
     WriteMem<u8>(0x00431F6B, ASM_SHORT_JMP_REL);
     WriteMem<u8>(0x004328CF, ASM_SHORT_JMP_REL);
     AsmWritter(0x0043298F).jmp(0x004329DC);
-    AsmWritter(0x005509C4).jmp(GrClearZBuffer_005509C4);
+    GrClearZBuffer_fix_rect.Install();
 
     // Left and top viewport edge fix for MSAA (RF does similar thing in GrDrawTextureD3D)
     WriteMem<u8>(0x005478C6, ASM_FADD);

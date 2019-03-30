@@ -9,9 +9,9 @@
 #include "main.h"
 #include "misc.h"
 #include "packfile.h"
-#include "inline_asm.h"
 #include <FunHook2.h>
 #include <CallHook2.h>
+#include <RegsPatch.h>
 
 namespace rf {
 
@@ -566,12 +566,12 @@ FunHook2<void()> DcAutoCompleteInput_Hook{
     }
 };
 
-ASM_FUNC(DcRunCmd_CallHandlerPatch,
-    ASM_I  mov   ecx, ASM_SYM(g_CommandsBuffer)[edi*4]
-    ASM_I  call  dword ptr [ecx+8]
-    ASM_I  push  0x00509DBE
-    ASM_I  ret
-)
+RegsPatch DcRunCmd_CallHandlerPatch{
+    0x00509DBB,
+    [](auto &regs) {
+        regs.ecx = regs.eax;
+    }
+};
 
 void CommandsInit()
 {
@@ -597,7 +597,7 @@ void CommandsInit()
     WriteMemPtr(0x0050A648 + 4, g_CommandsBuffer);
     WriteMemPtr(0x0050A6A0 + 3, g_CommandsBuffer);
 
-    AsmWritter(0x00509DB4).jmp(DcRunCmd_CallHandlerPatch);
+    DcRunCmd_CallHandlerPatch.Install();
 
     // Better console autocomplete
     DcAutoCompleteInput_Hook.Install();

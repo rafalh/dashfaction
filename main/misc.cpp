@@ -4,7 +4,6 @@
 #include "version.h"
 #include "utils.h"
 #include "main.h"
-#include "inline_asm.h"
 #include "commands.h"
 #include <ShortTypes.h>
 #include <CallHook2.h>
@@ -70,24 +69,15 @@ FunHook2<int()> MenuUpdate_Hook{
         return menu_id;
     }};
 
-ASM_FUNC(CrashFix_0055CE48,
-// ecx - num, esi - source, ebx - dest
-    ASM_I  shl   edi, 5
-    ASM_I  lea   edx, [esp + 0x38 - 0x28]
-    ASM_I  mov   eax, [eax + edi]
-    ASM_I  test  eax, eax // check if D3DTexture is NULL
-    ASM_I  jz    ASM_LABEL(CrashFix_0055CE48_label1)
-    ASM_I  push  0
-    ASM_I  push  0
-    ASM_I  push  edx
-    ASM_I  push  0
-    ASM_I  push  eax
-    ASM_I  mov   ecx, 0x0055CE59
-    ASM_I  jmp   ecx
-    ASM_I  ASM_LABEL(CrashFix_0055CE48_label1) :
-    ASM_I  mov   ecx, 0x0055CF23 // fail gr_lock
-    ASM_I  jmp   ecx
-)
+RegsPatch gr_direct3d_lock_crash_fix{
+    0x0055CE55,
+    [](auto &regs) {
+        if (regs.eax == 0) {
+            regs.esp += 8;
+            regs.eip = 0x0055CF23;
+        }
+    }
+};
 
 CallHook2<void()> MenuMainProcessMouse_Hook{
     0x004437B9,
@@ -548,32 +538,18 @@ FunHook2<void(rf::TriggerObj*, int32_t, bool)> TriggerActivate_Hook{
     }
 };
 
-extern "C" bool IsClientSideTrigger(rf::TriggerObj *trigger)
-{
-    auto trigger_name = trigger->_Super.strName.CStr();
-    uint8_t ext_flags = trigger_name[0] == '\xAB' ? trigger_name[1] : 0;
-    return (ext_flags & TRIGGER_CLIENT_SIDE) != 0;
-}
+RegsPatch TriggerCheckActivation_Patch{
+    0x004BFC7D,
+    [](auto &regs) {
+        auto trigger = reinterpret_cast<rf::TriggerObj*>(regs.eax);
+        auto trigger_name = trigger->_Super.strName.CStr();
+        uint8_t ext_flags = trigger_name[0] == '\xAB' ? trigger_name[1] : 0;
+        bool is_client_side = (ext_flags & TRIGGER_CLIENT_SIDE) != 0;
+        if (is_client_side)
+            regs.eip = 0x004BFCDB;
+    }
+};
 
-ASM_FUNC(TriggerCheckActivation_Patch_004BFCCD,
-    ASM_I  cmp  ebp, eax
-    ASM_I  jz   ASM_LABEL(TriggerCheckActivation_Patch_Activate)
-    ASM_I  push [esp+0x1C+0x4] // Trigger
-    ASM_I  call ASM_SYM(IsClientSideTrigger)
-    ASM_I  add  esp, 4
-    ASM_I  test eax, eax
-    ASM_I  jnz  ASM_LABEL(TriggerCheckActivation_Patch_Activate)
-
-    ASM_I  pop  edi
-    ASM_I  pop  esi
-    ASM_I  pop  ebp
-    ASM_I  push 0x004BFCD4
-    ASM_I  ret
-
-    ASM_I  ASM_LABEL(TriggerCheckActivation_Patch_Activate) :
-    ASM_I  push 0x004BFCDB
-    ASM_I  ret
-)
 
 RegsPatch RflLoadInternal_CheckRestoreStatus_Patch{
     0x00461195,
@@ -883,7 +859,7 @@ void MiscInit()
     WriteMem<u32>(0x0056A28C + 1, 0);
 
     // Crash-fix in case texture has not been created (this happens if GrReadBackbuffer fails)
-    AsmWritter(0x0055CE47).jmp(CrashFix_0055CE48);
+    gr_direct3d_lock_crash_fix.Install();
 
     // Dont overwrite player name and prefered weapons when loading saved game
     AsmWritter(0x004B4D99, 0x004B4DA5).nop();
@@ -994,7 +970,7 @@ void MiscInit()
     SendTriggerActivatePacketToAllPlayers_Hook.Install();
 
     // Client-side trigger flag handling
-    AsmWritter(0x004BFCCD, 0x004BFCD4).jmp(TriggerCheckActivation_Patch_004BFCCD);
+    TriggerCheckActivation_Patch.Install();
 
     // Fix crash when loading savegame with missing player entity data
     AsmWritter(0x004B4B47).jmp(0x004B4B7B);
