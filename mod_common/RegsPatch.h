@@ -47,8 +47,7 @@ public:
 
     void Install()
     {
-        void *wrapper = new char[256];
-        UnprotectMem(wrapper, 256);
+        void *wrapper = AllocMemForCode(256);
 
         m_subhook.Install(reinterpret_cast<void*>(m_addr), wrapper);
         void *trampoline = m_subhook.GetTrampoline();

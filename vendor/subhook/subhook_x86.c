@@ -421,7 +421,7 @@ SUBHOOK_EXPORT subhook_t SUBHOOK_API subhook_new(void *src,
 
   memcpy(hook->code, hook->src, hook->jmp_size);
 
-  if ((hook->trampoline = calloc(1, hook->trampoline_size)) == NULL) {
+  if ((hook->trampoline = subhook_alloc_trampoline(hook->trampoline_size)) == NULL) {
     free(hook->code);
     free(hook);
     return NULL;
@@ -430,7 +430,7 @@ SUBHOOK_EXPORT subhook_t SUBHOOK_API subhook_new(void *src,
   if (subhook_unprotect(hook->src, hook->jmp_size) == NULL
     || subhook_unprotect(hook->trampoline, hook->trampoline_size) == NULL)
   {
-    free(hook->trampoline);
+    subhook_free_trampoline(hook->trampoline);
     free(hook->code);
     free(hook);
     return NULL;
@@ -444,7 +444,7 @@ SUBHOOK_EXPORT subhook_t SUBHOOK_API subhook_new(void *src,
     hook->options);
 
   if (hook->trampoline_len == 0) {
-    free(hook->trampoline);
+    subhook_free_trampoline(hook->trampoline);
     hook->trampoline = NULL;
   }
 
@@ -452,7 +452,7 @@ SUBHOOK_EXPORT subhook_t SUBHOOK_API subhook_new(void *src,
 }
 
 SUBHOOK_EXPORT void SUBHOOK_API subhook_free(subhook_t hook) {
-  free(hook->trampoline);
+  subhook_free_trampoline(hook->trampoline);
   free(hook->code);
   free(hook);
 }

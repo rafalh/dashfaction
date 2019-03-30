@@ -39,3 +39,13 @@ void *subhook_unprotect(void *address, size_t size) {
 
   return address;
 }
+
+void *subhook_alloc_trampoline(size_t size)
+{
+  return calloc(1, size);
+}
+
+void subhook_free_trampoline(void *ptr)
+{
+  return free(ptr);
+}

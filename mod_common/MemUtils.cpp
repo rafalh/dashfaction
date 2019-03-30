@@ -15,3 +15,9 @@ void UnprotectMem(void *Ptr, unsigned Len)
     DWORD dwOldProtect;
     VirtualProtect(Ptr, Len, PAGE_EXECUTE_READWRITE, &dwOldProtect);
 }
+
+void *AllocMemForCode(unsigned num_bytes)
+{
+    static auto heap = HeapCreate(HEAP_CREATE_ENABLE_EXECUTE, 0, 0);
+    return HeapAlloc(heap, 0, num_bytes);
+}

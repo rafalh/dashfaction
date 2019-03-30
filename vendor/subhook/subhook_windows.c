@@ -35,3 +35,21 @@ void *subhook_unprotect(void *address, size_t size) {
 
   return address;
 }
+
+static HANDLE get_code_heap()
+{
+  static HANDLE heap = NULL;
+  if (!heap)
+    heap = HeapCreate(HEAP_CREATE_ENABLE_EXECUTE, 0, 0);
+  return heap;
+}
+
+void *subhook_alloc_trampoline(size_t size)
+{
+  return HeapAlloc(get_code_heap(), 0, size);
+}
+
+void subhook_free_trampoline(void *address)
+{
+  HeapFree(get_code_heap(), 0, address);
+}

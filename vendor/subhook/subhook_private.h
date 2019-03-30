@@ -41,5 +41,7 @@ struct subhook_struct {
 };
 
 void *subhook_unprotect(void *address, size_t size);
+void *subhook_alloc_trampoline(size_t size);
+void subhook_free_trampoline(void *address);
 
 #endif /* SUBHOOK_PRIVATE_H */
