@@ -561,6 +561,7 @@ ASM_FUNC(TriggerCheckActivation_Patch_004BFCCD,
     ASM_I  push [esp+0x1C+0x4] // Trigger
     ASM_I  call ASM_SYM(IsClientSideTrigger)
     ASM_I  add  esp, 4
+    ASM_I  test eax, eax
     ASM_I  jnz  ASM_LABEL(TriggerCheckActivation_Patch_Activate)
 
     ASM_I  pop  edi
