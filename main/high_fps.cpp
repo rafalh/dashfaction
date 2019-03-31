@@ -89,7 +89,7 @@ public:
     }
 };
 
-std::array<FtolAccuracyFix, 5> g_ftol_accuracy_fixes{
+std::array g_ftol_accuracy_fixes{
     FtolAccuracyFix{0x00416426}, // hit screen
     FtolAccuracyFix{0x004D5214, asm_regs::esi}, // decal fade out
     FtolAccuracyFix{0x005096A7}, // timer
@@ -198,27 +198,15 @@ void STDCALL EntityWaterDecelerateFix(rf::EntityObj* entity)
     entity->_Super.PhysInfo.Vel.z *= vel_factor;
 }
 
-extern "C" void WaterAnimateWaves_UpdatePos(rf::Vector3* result)
-{
-    constexpr float flt_5_a3_b_f4 = 12.8f;
-    constexpr float flt_5_a3_c00 = 3.878788f;
-    constexpr float flt_5_a3_c0_c = 4.2666669f;
-    result->x += flt_5_a3_b_f4 * (rf::g_fFramerate) / reference_framerate;
-    result->y += flt_5_a3_c0_c * (rf::g_fFramerate) / reference_framerate;
-    result->z += flt_5_a3_c00 * (rf::g_fFramerate) / reference_framerate;
-}
-
-ASM_FUNC(WaterAnimateWaves_004E68A0,
-    ASM_I  mov eax, esi
-    ASM_I  add eax, 0x2C
-    ASM_I  push eax
-    ASM_I  call ASM_SYM(WaterAnimateWaves_UpdatePos)
-    ASM_I  add esp, 4
-    ASM_I  mov ecx, [esi + 0x24]
-    ASM_I  lea eax, [esp + 0x6C - 0x20] // var_20
-    ASM_I  mov eax, 0x004E68D1
-    ASM_I  jmp eax
-)
+RegsPatch WaterAnimateWaves_speed_fix{
+    0x004E68A0,
+    [](auto &regs) {
+        rf::Vector3 &result = *reinterpret_cast<rf::Vector3*>(regs.esi + 0x2C);
+        result.x += 12.8f * (rf::g_fFramerate) / reference_framerate;
+        result.y += 4.2666669f * (rf::g_fFramerate) / reference_framerate;
+        result.z += 3.878788f * (rf::g_fFramerate) / reference_framerate;
+    }
+};
 
 FunHook2<int(rf::String&, rf::String&, char*)> RflLoad_Hook{
     0x0045C540,
@@ -258,15 +246,6 @@ RegsPatch CutsceneShotSyncFix{
     }
 };
 
-DcCommand2 test_mouse{
-    "testmouse",
-    []() {
-        POINT pt;
-        GetCursorPos(&pt);
-        SetCursorPos(pt.x + 200, pt.y + 100);
-    }
-};
-
 void HighFpsInit()
 {
     // Fix animations broken on high FPS because of ignored ftol remainder
@@ -284,13 +263,15 @@ void HighFpsInit()
 
     // Fix water deceleration on high FPS
     AsmWritter(0x0049D816).nop(5);
-    AsmWritter(0x0049D82A).nop(5);
-    AsmWritter(0x0049D82A + 5).push(asm_regs::esi);
-    AsmWritter(0x0049D830).call(EntityWaterDecelerateFix);
+    AsmWritter(0x0049D82A, 0x0049D835)
+        .nop(5)
+        .push(asm_regs::esi)
+        .call(EntityWaterDecelerateFix);
 
     // Fix water waves animation on high FPS
-    AsmWritter(0x004E68A0).nop(9);
-    AsmWritter(0x004E68B6).jmp(WaterAnimateWaves_004E68A0);
+    AsmWritter(0x004E68A0, 0x004E68A9).nop();
+    AsmWritter(0x004E68B6, 0x004E68D1).nop();
+    WaterAnimateWaves_speed_fix.Install();
 
     // Fix incorrect frame time calculation
     AsmWritter(0x00509595).nop(2);
@@ -310,8 +291,6 @@ void HighFpsInit()
 
     // Fix cutscene shot timer sync on high fps
     CutsceneShotSyncFix.Install();
-
-    test_mouse.Register();
 }
 
 void HighFpsUpdate()
