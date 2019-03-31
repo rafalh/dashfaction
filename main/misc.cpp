@@ -164,7 +164,7 @@ CallHook2<void()> MenuMainRender_Hook{
 
 void SetPlaySoundEventsVolumeScale(float volume_scale)
 {
-    volume_scale = clamp(volume_scale, 0.0f, 1.0f);
+    volume_scale = std::clamp(volume_scale, 0.0f, 1.0f);
     uintptr_t offsets[] = {
         // Play Sound event
         0x004BA4D8, 0x004BA515, 0x004BA71C, 0x004BA759, 0x004BA609, 0x004BA5F2, 0x004BA63F,

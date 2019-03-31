@@ -15,16 +15,9 @@ std::string getCpuBrand();
 
 #define COUNTOF(a) (sizeof(a)/sizeof((a)[0]))
 
-#define NAKED __declspec(naked)
 #define STDCALL __stdcall
 
 #define ASSERT(x) assert(x)
-
-template<typename T>
-T clamp(T val, T min, T max)
-{
-    return std::min(std::max(val, min), max);
-}
 
 struct StringMatcher
 {

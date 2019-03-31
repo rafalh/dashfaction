@@ -427,7 +427,7 @@ FunHook2<NwPacketHandler_Type> ProcessTeamChangePacket_Hook{
             if (!src_player)
                 return; // shouldnt happen (protected in rf::NwProcessGamePackets)
             data[0] = src_player->NwData->PlayerId; // fix player ID
-            data[1] = clamp((int)data[1], 0, 1); // team validation (fixes "green team")
+            data[1] = std::clamp((int)data[1], 0, 1); // team validation (fixes "green team")
         }
         ProcessTeamChangePacket_Hook.CallTarget(data, addr);
     }

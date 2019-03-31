@@ -95,7 +95,7 @@ DcCommand2 MaxFpsCmd{
 
         if (limit_opt) {
 #ifdef NDEBUG
-            float newLimit = std::min(std::max(LimitOpt.value(), (float)MIN_FPS_LIMIT), (float)MAX_FPS_LIMIT);
+            float newLimit = std::clamp(LimitOpt.value(), (float)MIN_FPS_LIMIT, (float)MAX_FPS_LIMIT);
 #else
             float new_limit = limit_opt.value();
 #endif
@@ -310,7 +310,7 @@ DcCommand2 MouseSensitivityCmd{
     [](std::optional<float> value) {
         if (value) {
             float f_value = value.value();
-            f_value = clamp(f_value, 0.0f, 1.0f);
+            f_value = std::clamp(f_value, 0.0f, 1.0f);
             rf::g_LocalPlayer->Config.Controls.fMouseSensitivity = f_value;
         }
         rf::DcPrintf("Mouse sensitivity: %.2f", rf::g_LocalPlayer->Config.Controls.fMouseSensitivity);
@@ -340,7 +340,7 @@ DcCommand2 LevelSoundsCmd{
     "levelsounds",
     [](std::optional<float> volume) {
         if (volume) {
-            float f_vol_scale = clamp(volume.value(), 0.0f, 1.0f);
+            float f_vol_scale = std::clamp(volume.value(), 0.0f, 1.0f);
             SetPlaySoundEventsVolumeScale(f_vol_scale);
 
             g_game_config.levelSoundVolume = f_vol_scale;

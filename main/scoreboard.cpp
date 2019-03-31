@@ -7,6 +7,7 @@
 #include "spectate_mode.h"
 #include "main.h"
 #include <FunHook2.h>
+#include <algorithm>
 
 namespace rf {
     static const auto DrawScoreboard = (void(*)(bool draw))0x00470860;
@@ -75,8 +76,8 @@ void DrawScoreboardInternal_New(bool draw)
         f_progress_w = f_anim_progress * 2.0f;
         f_progress_h = (f_anim_progress - 0.5f) * 2.0f;
 
-        f_progress_w = std::min(std::max(f_progress_w, 0.1f), 1.0f);
-        f_progress_h = std::min(std::max(f_progress_h, 0.1f), 1.0f);
+        f_progress_w = std::clamp(f_progress_w, 0.1f, 1.0f);
+        f_progress_h = std::clamp(f_progress_h, 0.1f, 1.0f);
     }
 
     // Draw background
