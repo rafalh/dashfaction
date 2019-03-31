@@ -2,7 +2,7 @@
 #include "network.h"
 #include "rf.h"
 #include "utils.h"
-#include "inline_asm.h"
+#include <cstddef>
 #include <ShortTypes.h>
 #include <FunHook2.h>
 #include <CallHook2.h>
@@ -46,235 +46,175 @@ extern "C" void SafeStrCpy(char* dest, const char* src, size_t dest_size)
 #endif
 }
 
-ASM_FUNC(ProcessGameInfoPacket_Security_0047B2D3,
-// ecx - num, esi - source, ebx - dest
-    ASM_I  pushad
-    ASM_I  push 256
-    ASM_I  push esi
-    ASM_I  push ebx
-    ASM_I  call ASM_SYM(SafeStrCpy)
-    ASM_I  add esp, 12
-    ASM_I  popad
-    ASM_I  xor eax, eax
-    ASM_I  mov ecx, 0x0047B2E3
-    ASM_I  jmp ecx
-)
+
+
+
+class BaseRegsPatch
+{
+private:
+    uintptr_t m_addr;
+    //void (*m_fun_ptr)(X86Regs& regs);
+    void *m_fun_ptr;
+    void *m_this_ptr;
+    subhook::Hook m_subhook;
+
+public:
+    BaseRegsPatch(uintptr_t addr, void *fun_ptr, void *this_ptr) :
+        m_addr(addr), m_fun_ptr(fun_ptr), m_this_ptr(this_ptr)
+    {}
+
+    virtual ~BaseRegsPatch() {};
+
+    void Install()
+    {
+        void *wrapper = AllocMemForCode(256);
+
+        m_subhook.Install(reinterpret_cast<void*>(m_addr), wrapper);
+        void *trampoline = m_subhook.GetTrampoline();
+        if (!trampoline)
+            WARN("trampoline is null for 0x%p", m_addr);
+
+        AsmWritter(reinterpret_cast<uintptr_t>(wrapper))
+            .push(reinterpret_cast<int32_t>(trampoline))            // Push default EIP = trampoline
+            .push(asm_regs::esp)                                     // push esp before PUSHA so it can be popped manually after POPA
+            .pusha()                                                // push general registers
+            .pushf()                                                // push EFLAGS
+            .add({true, {asm_regs::esp}, offsetof(X86Regs, esp)}, 4) // restore esp value from before pushing the return address
+            .push(asm_regs::esp)                                     // push address of X86Regs struct (handler param)
+            .mov(asm_regs::ecx, reinterpret_cast<uint32_t>(m_this_ptr)) // save this pointer in ECX (thiscall)
+            .call(m_fun_ptr)                                     // call handler (thiscall - calee cleans the stack)
+            .add({true, {asm_regs::esp}, offsetof(X86Regs, esp)}, -4) // make esp value return address aware (again)
+            .mov(asm_regs::eax, {true, {asm_regs::esp}, offsetof(X86Regs, eip)}) // read EIP from X86Regs
+            .mov(asm_regs::ecx, {true, {asm_regs::esp}, offsetof(X86Regs, esp)}) // read esp from X86Regs
+            .mov({true, {asm_regs::ecx}, 0}, asm_regs::eax)           // copy EIP to new address of the stack pointer
+            .popf()                                                 // pop EFLAGS
+            .popa()                                                 // pop general registers. Note: POPA discards esp value
+            .pop(asm_regs::esp)                                      // pop esp manually
+            .ret();                                                 // return to address read from EIP field in X86Regs
+    }
+
+    void SetAddr(uintptr_t addr)
+    {
+        m_addr = addr;
+    }
+};
+
+template<typename T>
+class RegsPatchNew : public BaseRegsPatch
+{
+    T m_functor;
+
+public:
+    RegsPatchNew(uintptr_t addr, T handler) :
+        BaseRegsPatch(addr, reinterpret_cast<void*>(&wrapper), this), m_functor(handler)
+    {
+        static_assert(sizeof(&wrapper) == 4);
+    }
+
+    static void __thiscall wrapper(RegsPatchNew &self, X86Regs &regs)
+    {
+        self.m_functor(regs);
+    }
+};
+
+#include <functional>
+class BufferOverflowPatch
+{
+private:
+    RegsPatchNew<std::function<void(X86Regs&)>> m_movsb_patch;
+    uintptr_t m_shr_ecx_2_addr;
+    uintptr_t m_and_ecx_3_addr;
+    int32_t m_buffer_size;
+    int32_t m_ret_addr;
+
+public:
+    BufferOverflowPatch(uintptr_t shr_ecx_2_addr, uintptr_t and_ecx_3_addr, int32_t buffer_size) :
+        m_movsb_patch(and_ecx_3_addr, std::bind(&BufferOverflowPatch::movsb_handler, this, std::placeholders::_1)),
+        m_shr_ecx_2_addr(shr_ecx_2_addr), m_and_ecx_3_addr(and_ecx_3_addr),
+        m_buffer_size(buffer_size)
+    {
+        //assert(buffer_size % 4 == 0);
+    }
+
+    void Install()
+    {
+        //printf("%x\n", m_shr_2_addr);
+        const std::byte *shr_ecx_2_ptr = reinterpret_cast<std::byte*>(m_shr_ecx_2_addr);
+        const std::byte *and_ecx_3_ptr = reinterpret_cast<std::byte*>(m_and_ecx_3_addr);
+        assert(std::memcmp(shr_ecx_2_ptr, "\xC1\xE9\x02", 3) == 0); // shr ecx, 2
+        assert(std::memcmp(and_ecx_3_ptr, "\x83\xE1\x03", 3) == 0); // and ecx, 3
+
+        if (std::memcmp(shr_ecx_2_ptr + 3, "\xF3\xA5", 2) == 0) { // rep movsd
+            m_movsb_patch.SetAddr(m_shr_ecx_2_addr);
+            m_ret_addr = m_shr_ecx_2_addr + 5;
+            AsmWritter(m_and_ecx_3_addr, m_and_ecx_3_addr + 3).xor_(asm_regs::ecx, asm_regs::ecx);
+        } else if (std::memcmp(and_ecx_3_ptr + 3, "\xF3\xA4", 2) == 0) { // rep movsb {
+            AsmWritter(m_shr_ecx_2_addr, m_shr_ecx_2_addr + 3).xor_(asm_regs::ecx, asm_regs::ecx);
+            m_movsb_patch.SetAddr(m_and_ecx_3_addr);
+            m_ret_addr = m_and_ecx_3_addr + 5;
+        } else {
+            assert(false);
+        }
+
+        m_movsb_patch.Install();
+    }
+
+private:
+    void movsb_handler(X86Regs &regs)
+    {
+        auto dst_ptr = reinterpret_cast<char*>(regs.edi);
+        auto src_ptr = reinterpret_cast<char*>(regs.esi);
+        auto num_bytes = regs.ecx;
+        num_bytes = std::min(num_bytes, m_buffer_size - 1);
+        std::memcpy(dst_ptr, src_ptr, num_bytes);
+        dst_ptr[num_bytes] = '\0';
+        regs.eip = m_ret_addr;
+    }
+};
+
+// Note: player name is limited to 32 because some functions assume it is short (see 0x0046EBA5 for example)
+// Note: server browser internal functions use strings safely (see 0x0044DDCA for example)
+// Note: level filename was limited to 64 because of VPP format limits
+std::array g_buffer_overflow_patches{
+    BufferOverflowPatch{0x0047B2D3, 0x0047B2DE, 256}, // ProcessGameInfoPacket (server name)
+    BufferOverflowPatch{0x0047B334, 0x0047B33D, 256}, // ProcessGameInfoPacket (level name)
+    BufferOverflowPatch{0x0047B38E, 0x0047B397, 256}, // ProcessGameInfoPacket (mod name)
+
+    BufferOverflowPatch{0x0047ACF6, 0x0047AD03, 32},  // ProcessJoinReqPacket (player name)
+    BufferOverflowPatch{0x0047AD4E, 0x0047AD55, 256}, // ProcessJoinReqPacket (password)
+
+    BufferOverflowPatch{0x0047A8AE, 0x0047A8B5, 64},  // ProcessJoinAcceptPacket (level filename)
+
+    BufferOverflowPatch{0x0047A5F4, 0x0047A5FF, 32},  // ProcessNewPlayerPacket (player name)
+
+    BufferOverflowPatch{0x00481EE6, 0x00481EEF, 32},  // ProcessPlayersPacket (player name)
+
+    BufferOverflowPatch{0x00481BEC, 0x00481BF8, 64},  // ProcessStateInfoReqPacket (level filename)
+
+    BufferOverflowPatch{0x004448B0, 0x004448B7, 256}, // ProcessChatLinePacket (message)
+
+    BufferOverflowPatch{0x0046EB24, 0x0046EB2B, 32},  // ProcessNameChangePacket (player name)
+
+    BufferOverflowPatch{0x0047C1C3, 0x0047C1CA, 64},  // ProcessLeaveLimboPacket (level filename)
+
+    BufferOverflowPatch{0x0047EE6E, 0x0047EE77, 256}, // ProcessObjKillPacket (item name)
+    BufferOverflowPatch{0x0047EF9C, 0x0047EFA5, 256}, // ProcessObjKillPacket (item name)
+
+    BufferOverflowPatch{0x00475474, 0x0047547D, 256}, // ProcessEntityCreatePacket (entity name)
+
+    BufferOverflowPatch{0x00479FAA, 0x00479FB3, 256}, // ProcessItemCreatePacket (item name)
+
+    BufferOverflowPatch{0x0046C590, 0x0046C59B, 256}, // ProcessRconReqPacket (password)
+
+    BufferOverflowPatch{0x0046C751, 0x0046C75A, 512}, // ProcessRconPacket (command)
+};
 
 RegsPatch ProcessGameInfoPacket_GameTypeBounds_Patch{
     0x0047B30B,
     [](X86Regs& regs) {
-        regs.ecx = std::max(regs.ecx, 0);
-        regs.ecx = std::min(regs.ecx, 2);
+        regs.ecx = std::clamp(regs.ecx, 0, 2);
     }
 };
-
-ASM_FUNC(ProcessGameInfoPacket_Security_0047B334,
-// ecx - num, esi -source, edi - dest
-    ASM_I  push edx
-    ASM_I  push 256
-    ASM_I  push esi
-    ASM_I  push edi
-    ASM_I  call ASM_SYM(SafeStrCpy)
-    ASM_I  add esp, 12
-    ASM_I  pop edx
-    ASM_I  xor eax, eax
-    ASM_I  mov ecx, 0x0047B342
-    ASM_I  jmp ecx
-)
-
-ASM_FUNC(ProcessGameInfoPacket_Security_0047B38E,
-// ecx - num, esi -source, edi - dest
-    ASM_I  pushad
-    ASM_I  push 256
-    ASM_I  push esi
-    ASM_I  push edi
-    ASM_I  call ASM_SYM(SafeStrCpy)
-    ASM_I  add esp, 12
-    ASM_I  popad
-    ASM_I  xor eax, eax
-    ASM_I  mov ecx, 0x0047B39C
-    ASM_I  jmp ecx
-)
-
-ASM_FUNC(ProcessJoinReqPacket_Security_0047AD4E,
-// ecx - num, esi -source, edi - dest
-    ASM_I  pushad
-    ASM_I  push 256
-    ASM_I  push esi
-    ASM_I  push edi
-    ASM_I  call ASM_SYM(SafeStrCpy)
-    ASM_I  add esp, 12
-    ASM_I  popad
-    ASM_I  mov ecx, 0x0047AD5A
-    ASM_I  jmp ecx
-)
-
-ASM_FUNC(ProcessJoinAcceptPacket_Security_0047A8AE,
-// ecx - num, esi -source, edi - dest
-    ASM_I  pushad
-    ASM_I  push 256
-    ASM_I  push esi
-    ASM_I  push edi
-    ASM_I  call ASM_SYM(SafeStrCpy)
-    ASM_I  add esp, 12
-    ASM_I  popad
-    ASM_I  mov ecx, 0x0047A8BA
-    ASM_I  jmp ecx
-)
-
-ASM_FUNC(ProcessNewPlayerPacket_Security_0047A5F4,
-// ecx - num, esi -source, edi - dest
-    ASM_I  pushad
-    ASM_I  push 256
-    ASM_I  push esi
-    ASM_I  push edi
-    ASM_I  call ASM_SYM(SafeStrCpy)
-    ASM_I  add esp, 12
-    ASM_I  popad
-    ASM_I  mov byte ptr[esp + 0x12C - 0x118], bl
-    ASM_I  mov ecx, 0x0047A604
-    ASM_I  jmp ecx
-)
-
-ASM_FUNC(ProcessPlayersPacket_Security_00481EE6,
-// ecx - num, esi -source, edi - dest
-    ASM_I  pushad
-    ASM_I  push 256
-    ASM_I  push esi
-    ASM_I  push edi
-    ASM_I  call ASM_SYM(SafeStrCpy)
-    ASM_I  add esp, 12
-    ASM_I  popad
-    ASM_I  xor eax, eax
-    ASM_I  mov ecx, 0x00481EF4
-    ASM_I  jmp ecx
-)
-
-ASM_FUNC(ProcessStateInfoReqPacket_Security_00481BEC,
-// ecx - num, esi -source, edi - dest
-    ASM_I  pushad
-    ASM_I  push 256
-    ASM_I  push esi
-    ASM_I  push edi
-    ASM_I  call ASM_SYM(SafeStrCpy)
-    ASM_I  add esp, 12
-    ASM_I  popad
-    ASM_I  mov ecx, 0x0064EC40
-    ASM_I  mov al, [0x0064EC40] // g_GameOptions
-    ASM_I  mov ecx, 0x00481BFD
-    ASM_I  jmp ecx
-)
-
-ASM_FUNC(ProcessChatLinePacket_Security_004448B0,
-// ecx - num, esi -source, edi - dest
-    ASM_I  pushad
-    ASM_I  push 256
-    ASM_I  push esi
-    ASM_I  push edi
-    ASM_I  call ASM_SYM(SafeStrCpy)
-    ASM_I  add esp, 12
-    ASM_I  popad
-    ASM_I  cmp bl, 0x0FF
-    ASM_I  mov ecx, 0x004448BF
-    ASM_I  jmp ecx
-)
-
-ASM_FUNC(ProcessNameChangePacket_Security_0046EB24,
-// ecx - num, esi -source, edi - dest
-    ASM_I  pushad
-    ASM_I  push 256
-    ASM_I  push esi
-    ASM_I  push edi
-    ASM_I  call ASM_SYM(SafeStrCpy)
-    ASM_I  add esp, 12
-    ASM_I  popad
-    ASM_I  mov ecx, 0x0046EB30
-    ASM_I  jmp ecx
-)
-
-ASM_FUNC(ProcessLeaveLimboPacket_Security_0047C1C3,
-// ecx - num, esi -source, edi - dest
-    ASM_I  pushad
-    ASM_I  push 256
-    ASM_I  push esi
-    ASM_I  push edi
-    ASM_I  call ASM_SYM(SafeStrCpy)
-    ASM_I  add esp, 12
-    ASM_I  popad
-    ASM_I  mov ecx, 0x0047C1CF
-    ASM_I  jmp ecx
-)
-
-ASM_FUNC(ProcessObjKillPacket_Security_0047EE6E,
-// ecx - num, esi -source, edi - dest
-    ASM_I  pushad
-    ASM_I  push 256
-    ASM_I  push esi
-    ASM_I  push edi
-    ASM_I  call ASM_SYM(SafeStrCpy)
-    ASM_I  add esp, 12
-    ASM_I  popad
-    ASM_I  xor eax, eax
-    ASM_I  push 0
-    ASM_I  mov ecx, 0x0047EE7E
-    ASM_I  jmp ecx
-)
-
-ASM_FUNC(ProcessEntityCreatePacket_Security_00475474,
-// ecx - num, esi -source, edi - dest
-    ASM_I  pushad
-    ASM_I  push 256
-    ASM_I  push esi
-    ASM_I  push edi
-    ASM_I  call ASM_SYM(SafeStrCpy)
-    ASM_I  add esp, 12
-    ASM_I  popad
-    ASM_I  xor eax, eax
-    ASM_I  mov ecx, 0x00475482
-    ASM_I  jmp ecx
-)
-
-ASM_FUNC(ProcessItemCreatePacket_Security_00479FAA,
-// ecx - num, esi -source, edi - dest
-    ASM_I  pushad
-    ASM_I  push 256
-    ASM_I  push esi
-    ASM_I  push edi
-    ASM_I  call ASM_SYM(SafeStrCpy)
-    ASM_I  add esp, 12
-    ASM_I  popad
-    ASM_I  xor eax, eax
-    ASM_I  mov ecx, 0x00479FB8
-    ASM_I  jmp ecx
-)
-
-ASM_FUNC(ProcessRconReqPacket_Security_0046C590,
-// ecx - num, esi -source, edi - dest
-    ASM_I  pushad
-    ASM_I  push 256
-    ASM_I  push esi
-    ASM_I  push edi
-    ASM_I  call ASM_SYM(SafeStrCpy)
-    ASM_I  add esp, 12
-    ASM_I  popad
-    ASM_I  lea eax, [esp + 0x110 - 0x100]
-    ASM_I  mov ecx, 0x0046C5A0
-    ASM_I  jmp ecx
-)
-
-ASM_FUNC(ProcessRconPacket_Security_0046C751,
-// ecx - num, esi -source, edi - dest
-    ASM_I  pushad
-    ASM_I  push 512
-    ASM_I  push esi
-    ASM_I  push edi
-    ASM_I  call ASM_SYM(SafeStrCpy)
-    ASM_I  add esp, 12
-    ASM_I  popad
-    ASM_I  xor eax, eax
-    ASM_I  mov ecx, 0x0046C75F
-    ASM_I  jmp ecx
-)
 
 FunHook2<NwPacketHandler_Type> ProcessGameInfoReqPacket_Hook{
     0x0047B480,
@@ -830,8 +770,7 @@ FunHook2<void(int32_t, int32_t)> MultiSetObjHandleMapping_Hook{
 RegsPatch ProcessBooleanPacket_ValidateMeshId_Patch{
     0x004765A3,
     [](auto& regs) {
-        regs.ecx = std::max(regs.ecx, 0);
-        regs.ecx = std::min(regs.ecx, 3);
+        regs.ecx = std::clamp(regs.ecx, 0, 3);
     }
 };
 
@@ -850,8 +789,7 @@ RegsPatch ProcessBooleanPacket_ValidateRoomId_Patch{
 RegsPatch ProcessPregameBooleanPacket_ValidateMeshId_Patch{
     0x0047672F,
     [](auto &regs) {
-        regs.ecx = std::max(regs.ecx, 0);
-        regs.ecx = std::min(regs.ecx, 3);
+        regs.ecx = std::clamp(regs.ecx, 0, 3);
     }
 };
 
@@ -905,25 +843,10 @@ void NetworkInit()
     /* Change default Server List sort to players count */
     WriteMem<u32>(0x00599D20, 4);
 
-    /* Buffer Overflow fixes */
-    AsmWritter(0x0047B2D3).jmp(ProcessGameInfoPacket_Security_0047B2D3);
-    AsmWritter(0x0047B334).jmp(ProcessGameInfoPacket_Security_0047B334);
-#ifndef TEST_BUFFER_OVERFLOW_FIXES
-    AsmWritter(0x0047B38E).jmp(ProcessGameInfoPacket_Security_0047B38E);
-#endif
-    AsmWritter(0x0047AD4E).jmp(ProcessJoinReqPacket_Security_0047AD4E);
-    AsmWritter(0x0047A8AE).jmp(ProcessJoinAcceptPacket_Security_0047A8AE);
-    AsmWritter(0x0047A5F4).jmp(ProcessNewPlayerPacket_Security_0047A5F4);
-    AsmWritter(0x00481EE6).jmp(ProcessPlayersPacket_Security_00481EE6);
-    AsmWritter(0x00481BEC).jmp(ProcessStateInfoReqPacket_Security_00481BEC);
-    AsmWritter(0x004448B0).jmp(ProcessChatLinePacket_Security_004448B0);
-    AsmWritter(0x0046EB24).jmp(ProcessNameChangePacket_Security_0046EB24);
-    AsmWritter(0x0047C1C3).jmp(ProcessLeaveLimboPacket_Security_0047C1C3);
-    AsmWritter(0x0047EE6E).jmp(ProcessObjKillPacket_Security_0047EE6E);
-    AsmWritter(0x00475474).jmp(ProcessEntityCreatePacket_Security_00475474);
-    AsmWritter(0x00479FAA).jmp(ProcessItemCreatePacket_Security_00479FAA);
-    AsmWritter(0x0046C590).jmp(ProcessRconReqPacket_Security_0046C590);
-    AsmWritter(0x0046C751).jmp(ProcessRconPacket_Security_0046C751);
+    // Buffer Overflow fixes
+    for (auto &patch : g_buffer_overflow_patches) {
+        patch.Install();
+    }
 
     // Hook all packet handlers
     ProcessGameInfoReqPacket_Hook.Install();

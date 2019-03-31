@@ -139,8 +139,11 @@ static size_t subhook_disasm(void *src, int32_t *reloc_op_offset) {
     /* MOV EAX,moffs32   */ {0xA1, 0, IMM32},
     /* MOV moffs8,AL     */ {0xA2, 0, IMM32}, // address is 32-byte long
     /* MOV moffs32,EAX   */ {0xA3, 0, IMM32},
+    /* MOVSB             */ {0xA4, 0, 0}, // added
+    /* MOVSD             */ {0xA5, 0, 0}, // added
     /* MOV r8, imm8      */ {0xB0, 0, PLUS_R | IMM8},
     /* MOV r32, imm32    */ {0xB8, 0, PLUS_R | IMM32},
+    /* XXX r/m32, imm8   */ {0xC1, 0, MODRM | IMM8}, // added
     /* MOV r/m8, imm8    */ {0xC6, 0, MODRM | REG_OPCODE | IMM8},
     /* MOV r/m32, imm32  */ {0xC7, 0, MODRM | REG_OPCODE | IMM32},
     /* POP r/m32         */ {0x8F, 0, MODRM | REG_OPCODE},
