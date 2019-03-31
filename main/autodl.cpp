@@ -1,14 +1,15 @@
 #include <BuildConfig.h>
 #include <ShortTypes.h>
 #include <AsmWritter.h>
-#include <windows.h>
-#include <wininet.h>
+#include <windef.h>
 #include <unrar/dll.hpp>
 #include <unzip.h>
+#include <stdexcept>
 #include "autodl.h"
 #include "rf.h"
 #include "rfproto.h"
 #include "utils.h"
+#include "http.h"
 
 #ifdef LEVELS_AUTODOWNLOADER
 
@@ -163,67 +164,39 @@ bool UnrarVpp(const char *path)
     return ret;
 }
 
-static bool FetchLevelFile(const char *tmp_file_name)
+static bool FetchLevelFile(const char *tmp_file_name) try
 {
-    HINTERNET internet_handle = NULL, connect_handle = NULL, request_handle = NULL;
-    char buf[4096];
-    LPCTSTR accept_types[] = {TEXT("*/*"), NULL};
-    DWORD dw_status = 0, dw_size = sizeof(DWORD), dw_bytes_read;
-    FILE *tmp_file;
-    bool success = false;
+    HttpConnection conn{AUTODL_HOST, 80, AUTODL_AGENT_NAME};
 
-    internet_handle = InternetOpen(AUTODL_AGENT_NAME, 0, NULL, NULL, 0);
-    if (!internet_handle)
-        goto cleanup;
+    char path[64];
+    sprintf(path, "downloadmap.php?ticketid=%u", g_LevelTicketId);
+    HttpRequest req = conn.request(path);
 
-    connect_handle = InternetConnect(internet_handle, AUTODL_HOST, INTERNET_DEFAULT_HTTP_PORT, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
-    if (!connect_handle) {
-        ERR("InternetConnect failed");
-        goto cleanup;
-    }
-
-    sprintf(buf, "downloadmap.php?ticketid=%u", g_LevelTicketId);
-    request_handle = HttpOpenRequest(connect_handle, NULL, buf, NULL, NULL, accept_types, INTERNET_FLAG_RELOAD, 0);
-    if (!request_handle) {
-        ERR("HttpOpenRequest failed");
-        goto cleanup;
-    }
-
-    if (!HttpSendRequest(request_handle, NULL, 0, NULL, 0)) {
-        ERR("HttpSendRequest failed");
-        goto cleanup;
-    }
-
-    if (HttpQueryInfo(request_handle, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &dw_status, &dw_size, NULL) && (dw_status / 100) != 2) {
-        ERR("HttpQueryInfo failed or status code (%lu) is wrong", dw_status);
-        goto cleanup;
-    }
-
-    tmp_file = fopen(tmp_file_name, "wb");
+    FILE *tmp_file = fopen(tmp_file_name, "wb");
     if (!tmp_file) {
         ERR("fopen failed: %s", tmp_file_name);
-        goto cleanup;
+        return false;
     }
 
-    while (InternetReadFile(request_handle, buf, sizeof(buf), &dw_bytes_read) && dw_bytes_read > 0) {
-        g_cbDownloadProgress += dw_bytes_read;
-        fwrite(buf, 1, dw_bytes_read, tmp_file);
+    char buf[4096];
+    while (true) {
+        auto num_bytes_read = req.read(buf, sizeof(buf));
+        if (num_bytes_read <= 0)
+            break;
+        g_cbDownloadProgress += num_bytes_read;
+        fwrite(buf, 1, num_bytes_read, tmp_file);
     }
 
     g_cbLevelSize = g_cbDownloadProgress;
 
     fclose(tmp_file);
-    success = true;
 
-cleanup:
-    if (request_handle)
-        InternetCloseHandle(request_handle);
-    if (connect_handle)
-        InternetCloseHandle(connect_handle);
-    if (internet_handle)
-        InternetCloseHandle(internet_handle);
-
-    return success;
+    return true;
+}
+catch(std::exception &e)
+{
+    ERR("%s", e.what());
+    return false;
 }
 
 static DWORD WINAPI DownloadLevelThread(PVOID param)
@@ -280,61 +253,24 @@ static void DownloadLevel()
         ERR("CreateThread failed");
 }
 
-static bool FetchLevelInfo(const char *file_name, char *out_buf, size_t out_buf_size)
+static bool FetchLevelInfo(const char *file_name, char *out_buf, size_t out_buf_size) try
 {
-    HINTERNET internet_handle = NULL, connect_handle = NULL, request_handle = NULL;
-    char buf[256];
-    static LPCSTR accept_types[] = {"*/*", NULL};
-    static char headers[] = "Content-Type: application/x-www-form-urlencoded";
-    DWORD dw_bytes_read, dw_status = 0, dw_size = sizeof(DWORD);
-    bool ret = false;
+    HttpConnection conn{AUTODL_HOST, 80, AUTODL_AGENT_NAME};
 
-    internet_handle = InternetOpen(AUTODL_AGENT_NAME, 0, NULL, NULL, 0);
-    if (!internet_handle) {
-        ERR("InternetOpen failed");
-        goto cleanup;
-    }
+    std::string body = std::string("rflName=") + file_name;
+    HttpRequest req = conn.request("findmap.php", "POST", body);
 
-    connect_handle = InternetConnect(internet_handle, AUTODL_HOST, INTERNET_DEFAULT_HTTP_PORT, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
-    if (!connect_handle) {
-        ERR("InternetConnect failed");
-        goto cleanup;
-    }
+    size_t num_bytes_read = req.read(out_buf, out_buf_size - 1);
+    if (num_bytes_read == 0)
+        return false;
 
-    request_handle = HttpOpenRequest(connect_handle, "POST", "findmap.php", NULL, NULL, accept_types, INTERNET_FLAG_RELOAD, 0);
-    if (!request_handle) {
-        ERR("HttpOpenRequest failed");
-        goto cleanup;
-    }
-
-    dw_size = sprintf(buf, "rflName=%s", file_name);
-    if (!HttpSendRequest(request_handle, headers, sizeof(headers) - 1, buf, dw_size)) {
-        ERR("HttpSendRequest failed");
-        goto cleanup;
-    }
-
-    if (HttpQueryInfo(request_handle, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &dw_status, &dw_size, NULL) && (dw_status / 100) != 2) {
-        ERR("HttpQueryInfo failed or status code (%lu) is wrong", dw_status);
-        goto cleanup;
-    }
-
-    if (!InternetReadFile(request_handle, out_buf, out_buf_size - 1, &dw_bytes_read)) {
-        ERR("InternetReadFile failed", NULL);
-        goto cleanup;
-    }
-
-    out_buf[dw_bytes_read] = '\0';
-    ret = true;
-
-cleanup:
-    if (request_handle)
-        InternetCloseHandle(request_handle);
-    if (connect_handle)
-        InternetCloseHandle(connect_handle);
-    if (internet_handle)
-        InternetCloseHandle(internet_handle);
-
-    return ret;
+    out_buf[num_bytes_read] = '\0';
+    return true;
+}
+catch(std::exception &e)
+{
+    ERR("%s", e.what());
+    return false;
 }
 
 static bool DisplayDownloadDialog(char *buf)
