@@ -123,6 +123,156 @@ std::array g_buffer_overflow_patches{
     BufferOverflowPatch{0x0046C751, 0x0046C75A, 512}, // ProcessRconPacket (command)
 };
 
+enum packet_type : uint8_t {
+    game_info_request      = 0x00,
+    game_info              = 0x01,
+    join_request           = 0x02,
+    join_accept            = 0x03,
+    join_deny              = 0x04,
+    new_player             = 0x05,
+    players                = 0x06,
+    left_game              = 0x07,
+    end_game               = 0x08,
+    state_info_request     = 0x09,
+    state_info_done        = 0x0A,
+    client_in_game         = 0x0B,
+    chat_line              = 0x0C,
+    name_change            = 0x0D,
+    respawn_request        = 0x0E,
+    trigger_activate       = 0x0F,
+    use_key_pressed        = 0x10,
+    pregame_boolean        = 0x11,
+    pregame_glass          = 0x12,
+    pregame_remote_charge  = 0x13,
+    suicide                = 0x14,
+    enter_limbo            = 0x15, // level end
+    leave_limbo            = 0x16, // level change
+    team_change            = 0x17,
+    ping                   = 0x18,
+    pong                   = 0x19,
+    netgame_update         = 0x1A, // stats
+    rate_change            = 0x1B,
+    select_weapon_request  = 0x1C,
+    clutter_udate          = 0x1D,
+    clutter_kill           = 0x1E,
+    ctf_flag_pick_up       = 0x1F,
+    ctf_flag_capture       = 0x20,
+    ctf_flag_update        = 0x21,
+    ctf_flag_return        = 0x22,
+    ctf_flag_drop          = 0x23,
+    remote_charge_kill     = 0x24,
+    item_update            = 0x25,
+    obj_update             = 0x26,
+    obj_kill               = 0x27,
+    item_apply             = 0x28,
+    boolean_               = 0x29,
+    mover_update           = 0x2A, // unused
+    respawn                = 0x2B,
+    entity_create          = 0x2C,
+    item_create            = 0x2D,
+    reload                 = 0x2E,
+    reload_request         = 0x2F,
+    weapon_fire            = 0x30,
+    fall_damage            = 0x31,
+    rcon_request           = 0x32,
+    rcon                   = 0x33,
+    sound                  = 0x34,
+    team_score             = 0x35,
+    glass_kill             = 0x36,
+};
+
+// client -> server
+std::array g_server_side_packet_whitelist{
+    game_info_request,
+    join_request,
+    left_game,
+    state_info_request,
+    client_in_game,
+    chat_line,
+    name_change,
+    respawn_request,
+    use_key_pressed,
+    suicide,
+    team_change,
+    pong,
+    rate_change,
+    select_weapon_request,
+    obj_update,
+    reload_request,
+    weapon_fire,
+    fall_damage,
+    rcon_request,
+    rcon,
+};
+
+// server -> client
+std::array g_client_side_packet_whitelist{
+    game_info,
+    join_accept,
+    join_deny,
+    new_player,
+    players,
+    left_game,
+    end_game,
+    state_info_done,
+    chat_line,
+    name_change,
+    trigger_activate,
+    pregame_boolean,
+    pregame_glass,
+    pregame_remote_charge,
+    enter_limbo,
+    leave_limbo,
+    team_change,
+    ping,
+    netgame_update,
+    rate_change,
+    clutter_udate,
+    clutter_kill,
+    ctf_flag_pick_up,
+    ctf_flag_capture,
+    ctf_flag_update,
+    ctf_flag_return,
+    ctf_flag_drop,
+    remote_charge_kill,
+    item_update,
+    obj_update,
+    obj_kill,
+    item_apply,
+    boolean_,
+    respawn,
+    entity_create,
+    item_create,
+    reload,
+    weapon_fire,
+    sound,
+    team_score,
+    glass_kill,
+};
+
+RegsPatch ProcessGamePacket_whitelist_filter{
+    0x0047918D,
+    [](auto &regs) {
+        bool allowed = false;
+        int packet_type = regs.esi;
+        if (rf::g_IsLocalNetworkGame) {
+            auto &whitelist = g_server_side_packet_whitelist;
+            allowed = std::find(whitelist.begin(), whitelist.end(), packet_type) != whitelist.end();
+        }
+        else {
+            auto &whitelist = g_client_side_packet_whitelist;
+            allowed = std::find(whitelist.begin(), whitelist.end(), packet_type) != whitelist.end();
+        }
+        if (!allowed) {
+            WARN("Ignoring packet 0x%X", packet_type);
+            regs.eip = 0x00479194;
+        }
+        else {
+            TRACE("Processing packet 0x%X", packet_type);
+        }
+    }
+};
+
 RegsPatch ProcessGameInfoPacket_GameTypeBounds_Patch{
     0x0047B30B,
     [](X86Regs& regs) {
@@ -130,61 +280,20 @@ RegsPatch ProcessGameInfoPacket_GameTypeBounds_Patch{
     }
 };
 
-FunHook2<NwPacketHandler_Type> ProcessGameInfoReqPacket_Hook{
-    0x0047B480,
-    [](char* data, const rf::NwAddr& addr) {
-        if (rf::g_IsLocalNetworkGame) // server-side
-            ProcessGameInfoReqPacket_Hook.CallTarget(data, addr);
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessGameInfoPacket_Hook{
-    0x0047B2A0,
-    [](char* data, const rf::NwAddr& addr) {
-        if (!rf::g_IsLocalNetworkGame) // client-side
-            ProcessGameInfoPacket_Hook.CallTarget(data, addr);
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessJoinReqPacket_Hook{
-    0x0047AC60,
-    [](char* data, const rf::NwAddr& addr) {
-        if (rf::g_IsLocalNetworkGame) // server-side
-            ProcessJoinReqPacket_Hook.CallTarget(data, addr);
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessJoinAcceptPacket_Hook{
-    0x0047A840,
-    [](char* data, const rf::NwAddr& addr) {
-        if (!rf::g_IsLocalNetworkGame) // client-side
-            ProcessJoinAcceptPacket_Hook.CallTarget(data, addr);
-    }
-};
-
 FunHook2<NwPacketHandler_Type> ProcessJoinDenyPacket_Hook{
     0x0047A400,
     [](char* data, const rf::NwAddr& addr) {
-        if (!rf::g_IsLocalNetworkGame && rf::MpIsConnectingToServer(addr)) // client-side
+        if (rf::MpIsConnectingToServer(addr)) // client-side
             ProcessJoinDenyPacket_Hook.CallTarget(data, addr);
     }
 };
+
 FunHook2<NwPacketHandler_Type> ProcessNewPlayerPacket_Hook{
     0x0047A580,
     [](char* data, const rf::NwAddr& addr) {
-        if (!rf::g_IsLocalNetworkGame) { // client-side
-            if (GetForegroundWindow() != rf::g_hWnd)
-                Beep(750, 300);
-            ProcessNewPlayerPacket_Hook.CallTarget(data, addr);
-        }
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessPlayersPacket_Hook{
-    0x00481E60,
-    [](char* data, const rf::NwAddr& addr) {
-        if (!rf::g_IsLocalNetworkGame) // client-side
-            ProcessPlayersPacket_Hook.CallTarget(data, addr);
+        if (GetForegroundWindow() != rf::g_hWnd)
+            Beep(750, 300);
+        ProcessNewPlayerPacket_Hook.CallTarget(data, addr);
     }
 };
 
@@ -197,38 +306,6 @@ FunHook2<NwPacketHandler_Type> ProcessLeftGamePacket_Hook{
             data[0] = src_player->NwData->PlayerId; // fix player ID
         }
         ProcessLeftGamePacket_Hook.CallTarget(data, addr);
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessEndGamePacket_Hook{
-    0x0047BAB0,
-    [](char* data, const rf::NwAddr& addr) {
-        if (!rf::g_IsLocalNetworkGame) // client-side
-            ProcessEndGamePacket_Hook.CallTarget(data, addr);
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessStateInfoReqPacket_Hook{
-    0x00481BB0,
-    [](char* data, const rf::NwAddr& addr) {
-        if (rf::g_IsLocalNetworkGame) // server-side
-            ProcessStateInfoReqPacket_Hook.CallTarget(data, addr);
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessStateInfoDonePacket_Hook{
-    0x00481AF0,
-    [](char* data, const rf::NwAddr& addr) {
-        if (!rf::g_IsLocalNetworkGame) // client-side
-            ProcessStateInfoDonePacket_Hook.CallTarget(data, addr);
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessClientInGamePacket_Hook{
-    0x004820D0,
-    [](char* data, const rf::NwAddr& addr) {
-        if (rf::g_IsLocalNetworkGame) // server-side
-            ProcessClientInGamePacket_Hook.CallTarget(data, addr);
     }
 };
 
@@ -260,78 +337,6 @@ FunHook2<NwPacketHandler_Type> ProcessNameChangePacket_Hook{
     }
 };
 
-FunHook2<NwPacketHandler_Type> ProcessRespawnReqPacket_Hook{
-    0x00480A20,
-    [](char* data, const rf::NwAddr& addr) {
-        if (rf::g_IsLocalNetworkGame) // server-side
-            ProcessRespawnReqPacket_Hook.CallTarget(data, addr);
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessTriggerActivatePacket_Hook{
-    0x004831D0,
-    [](char* data, const rf::NwAddr& addr) {
-        if (!rf::g_IsLocalNetworkGame) // client-side
-            ProcessTriggerActivatePacket_Hook.CallTarget(data, addr);
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessUseKeyPressedPacket_Hook{
-    0x00483260,
-    [](char* data, const rf::NwAddr& addr) {
-        if (rf::g_IsLocalNetworkGame) // server-side
-            ProcessUseKeyPressedPacket_Hook.CallTarget(data, addr);
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessPregameBooleanPacket_Hook{
-    0x004766B0,
-    [](char* data, const rf::NwAddr& addr) {
-        if (!rf::g_IsLocalNetworkGame) // client-side
-            ProcessPregameBooleanPacket_Hook.CallTarget(data, addr);
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessPregameGlassPacket_Hook{
-    0x004767B0,
-    [](char* data, const rf::NwAddr& addr) {
-        if (!rf::g_IsLocalNetworkGame) // client-side
-            ProcessPregameGlassPacket_Hook.CallTarget(data, addr);
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessPregameRemoteChargePacket_Hook{
-    0x0047F9E0,
-    [](char* data, const rf::NwAddr& addr) {
-        if (!rf::g_IsLocalNetworkGame) // client-side
-            ProcessPregameRemoteChargePacket_Hook.CallTarget(data, addr);
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessSuicidePacket_Hook{
-    0x00475760,
-    [](char* data, const rf::NwAddr& addr) {
-        if (rf::g_IsLocalNetworkGame) // server-side
-            ProcessSuicidePacket_Hook.CallTarget(data, addr);
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessEnterLimboPacket_Hook{
-    0x0047C060,
-    [](char* data, const rf::NwAddr& addr) {
-        if (!rf::g_IsLocalNetworkGame) // client-side
-            ProcessEnterLimboPacket_Hook.CallTarget(data, addr);
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessLeaveLimboPacket_Hook{
-    0x0047C160,
-    [](char* data, const rf::NwAddr& addr) {
-        if (!rf::g_IsLocalNetworkGame) // client-side
-            ProcessLeaveLimboPacket_Hook.CallTarget(data, addr);
-    }
-};
-
 FunHook2<NwPacketHandler_Type> ProcessTeamChangePacket_Hook{
     0x004825B0,
     [](char* data, const rf::NwAddr& addr) {
@@ -344,30 +349,6 @@ FunHook2<NwPacketHandler_Type> ProcessTeamChangePacket_Hook{
             data[1] = std::clamp((int)data[1], 0, 1); // team validation (fixes "green team")
         }
         ProcessTeamChangePacket_Hook.CallTarget(data, addr);
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessPingPacket_Hook{
-    0x00484CE0,
-    [](char* data, const rf::NwAddr& addr) {
-        if (!rf::g_IsLocalNetworkGame) // client-side
-            ProcessPingPacket_Hook.CallTarget(data, addr);
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessPongPacket_Hook{
-    0x00484D50,
-    [](char* data, const rf::NwAddr& addr) {
-        if (rf::g_IsLocalNetworkGame) // server-side
-            ProcessPongPacket_Hook.CallTarget(data, addr);
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessNetgameUpdatePacket_Hook{
-    0x00484F40,
-    [](char* data, const rf::NwAddr& addr) {
-        if (!rf::g_IsLocalNetworkGame) // client-side
-            ProcessNetgameUpdatePacket_Hook.CallTarget(data, addr);
     }
 };
 
@@ -385,156 +366,26 @@ FunHook2<NwPacketHandler_Type> ProcessRateChangePacket_Hook{
     }
 };
 
-FunHook2<NwPacketHandler_Type> ProcessSelectWeaponReqPacket_Hook{
-    0x00485920,
-    [](char* data, const rf::NwAddr& addr) {
-        if (rf::g_IsLocalNetworkGame) // server-side
-            ProcessSelectWeaponReqPacket_Hook.CallTarget(data, addr);
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessClutterUpdatePacket_Hook{
-    0x0047F1A0,
-    [](char* data, const rf::NwAddr& addr) {
-        if (!rf::g_IsLocalNetworkGame) // client-side
-            ProcessClutterUpdatePacket_Hook.CallTarget(data, addr);
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessClutterKillPacket_Hook{
-    0x0047F380,
-    [](char* data, const rf::NwAddr& addr) {
-        if (!rf::g_IsLocalNetworkGame) // client-side
-            ProcessClutterKillPacket_Hook.CallTarget(data, addr);
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessCtfFlagPickedUpPacket_Hook{
-    0x00474040,
-    [](char* data, const rf::NwAddr& addr) {
-        if (!rf::g_IsLocalNetworkGame) // client-side
-            ProcessCtfFlagPickedUpPacket_Hook.CallTarget(data, addr);
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessCtfFlagCapturedPacket_Hook{
-    0x004742E0,
-    [](char* data, const rf::NwAddr& addr) {
-        if (!rf::g_IsLocalNetworkGame) // client-side
-            ProcessCtfFlagCapturedPacket_Hook.CallTarget(data, addr);
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessCtfFlagUpdatePacket_Hook{
-    0x00474810,
-    [](char* data, const rf::NwAddr& addr) {
-        if (!rf::g_IsLocalNetworkGame) // client-side
-            ProcessCtfFlagUpdatePacket_Hook.CallTarget(data, addr);
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessCtfFlagReturnedPacket_Hook{
-    0x00474420,
-    [](char* data, const rf::NwAddr& addr) {
-        if (!rf::g_IsLocalNetworkGame) // client-side
-            ProcessCtfFlagReturnedPacket_Hook.CallTarget(data, addr);
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessCtfFlagDroppedPacket_Hook{
-    0x00474D70,
-    [](char* data, const rf::NwAddr& addr) {
-        if (!rf::g_IsLocalNetworkGame) // client-side
-            ProcessCtfFlagDroppedPacket_Hook.CallTarget(data, addr);
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessRemoteChargeKillPacket_Hook{
-    0x00485BC0,
-    [](char* data, const rf::NwAddr& addr) {
-        if (!rf::g_IsLocalNetworkGame) // client-side
-            ProcessRemoteChargeKillPacket_Hook.CallTarget(data, addr);
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessItemUpdatePacket_Hook{
-    0x0047A220,
-    [](char* data, const rf::NwAddr& addr) {
-        if (!rf::g_IsLocalNetworkGame) // client-side
-            ProcessItemUpdatePacket_Hook.CallTarget(data, addr);
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessObjUpdatePacket_Hook{
-    0x0047DF90,
-    [](char* data, const rf::NwAddr& addr) {
-        // server-side and client-side
-        ProcessObjUpdatePacket_Hook.CallTarget(data, addr);
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessObjKillPacket_Hook{
-    0x0047EDE0,
-    [](char* data, const rf::NwAddr& addr) {
-        if (!rf::g_IsLocalNetworkGame) // client-side
-            ProcessObjKillPacket_Hook.CallTarget(data, addr);
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessItemApplyPacket_Hook{
-    0x004798D0,
-    [](char* data, const rf::NwAddr& addr) {
-        if (!rf::g_IsLocalNetworkGame) // client-side
-            ProcessItemApplyPacket_Hook.CallTarget(data, addr);
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessBooleanPacket_Hook{
-    0x00476590,
-    [](char* data, const rf::NwAddr& addr) {
-        if (!rf::g_IsLocalNetworkGame) // client-side
-            ProcessBooleanPacket_Hook.CallTarget(data, addr);
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessRespawnPacket_Hook{
-    0x004799E0,
-    [](char* data, const rf::NwAddr& addr) {
-        if (!rf::g_IsLocalNetworkGame) // client-side
-            ProcessRespawnPacket_Hook.CallTarget(data, addr);
-    }
-};
-
 FunHook2<NwPacketHandler_Type> ProcessEntityCreatePacket_Hook{
     0x00475420,
     [](char* data, const rf::NwAddr& addr) {
-        if (!rf::g_IsLocalNetworkGame) { // client-side
-            // Update Default Player Weapon if server has it overriden
-            size_t name_size = strlen(data) + 1;
-            uint8_t player_id = data[name_size + 58];
-            if (player_id == rf::g_LocalPlayer->NwData->PlayerId) {
-                int32_t weapon_cls_id = *(int32_t*)(data + name_size + 63);
-                rf::g_strDefaultPlayerWeapon = rf::g_WeaponClasses[weapon_cls_id].strName;
+        // Update Default Player Weapon if server has it overriden
+        size_t name_size = strlen(data) + 1;
+        uint8_t player_id = data[name_size + 58];
+        if (player_id == rf::g_LocalPlayer->NwData->PlayerId) {
+            int32_t weapon_cls_id = *(int32_t*)(data + name_size + 63);
+            rf::g_strDefaultPlayerWeapon = rf::g_WeaponClasses[weapon_cls_id].strName;
 
 #if 0 // disabled because it sometimes helpful feature to switch to last used weapon
-    // Reset next weapon variable so entity wont switch after pickup
-            if (!g_LocalPlayer->Config.AutoswitchWeapons)
-                MultiSetNextWeapon(weapon_cls_id);
+        // Reset next weapon variable so entity wont switch after pickup
+        if (!g_LocalPlayer->Config.AutoswitchWeapons)
+            MultiSetNextWeapon(weapon_cls_id);
 #endif
 
-                TRACE("spawn weapon %d", weapon_cls_id);
-            }
-
-            ProcessEntityCreatePacket_Hook.CallTarget(data, addr);
+            TRACE("spawn weapon %d", weapon_cls_id);
         }
-    }
-};
 
-FunHook2<NwPacketHandler_Type> ProcessItemCreatePacket_Hook{
-    0x00479F70,
-    [](char* data, const rf::NwAddr& addr) {
-        if (!rf::g_IsLocalNetworkGame) // client-side
-            ProcessItemCreatePacket_Hook.CallTarget(data, addr);
+        ProcessEntityCreatePacket_Hook.CallTarget(data, addr);
     }
 };
 
@@ -555,70 +406,6 @@ FunHook2<NwPacketHandler_Type> ProcessReloadPacket_Hook{
             // Call original handler
             ProcessReloadPacket_Hook.CallTarget(data, addr);
         }
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessReloadReqPacket_Hook{
-    0x00485A60,
-    [](char* data, const rf::NwAddr& addr) {
-        if (rf::g_IsLocalNetworkGame) // server-side
-            ProcessReloadReqPacket_Hook.CallTarget(data, addr);
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessWeaponFirePacket_Hook{
-    0x0047D6C0,
-    [](char* data, const rf::NwAddr& addr) {
-        // server-side and client-side
-        ProcessWeaponFirePacket_Hook.CallTarget(data, addr);
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessFallDamagePacket_Hook{
-    0x00476370,
-    [](char* data, const rf::NwAddr& addr) {
-        if (rf::g_IsLocalNetworkGame) // server-side
-            ProcessFallDamagePacket_Hook.CallTarget(data, addr);
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessRconReqPacket_Hook{
-    0x0046C520,
-    [](char* data, const rf::NwAddr& addr) {
-        if (rf::g_IsLocalNetworkGame) // server-side
-            ProcessRconReqPacket_Hook.CallTarget(data, addr);
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessRconPacket_Hook{
-    0x0046C6E0,
-    [](char* data, const rf::NwAddr& addr) {
-        if (rf::g_IsLocalNetworkGame) // server-side
-            ProcessRconPacket_Hook.CallTarget(data, addr);
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessSoundPacket_Hook{
-    0x00471FF0,
-    [](char* data, const rf::NwAddr& addr) {
-        if (!rf::g_IsLocalNetworkGame) // client-side
-            ProcessSoundPacket_Hook.CallTarget(data, addr);
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessTeamScorePacket_Hook{
-    0x00472210,
-    [](char* data, const rf::NwAddr& addr) {
-        if (!rf::g_IsLocalNetworkGame) // client-side
-            ProcessTeamScorePacket_Hook.CallTarget(data, addr);
-    }
-};
-
-FunHook2<NwPacketHandler_Type> ProcessGlassKillPacket_Hook{
-    0x00472350,
-    [](char* data, const rf::NwAddr& addr) {
-        if (!rf::g_IsLocalNetworkGame) // client-side
-            ProcessGlassKillPacket_Hook.CallTarget(data, addr);
     }
 };
 
@@ -762,61 +549,19 @@ void NetworkInit()
         patch.Install();
     }
 
-    // Hook all packet handlers
-    ProcessGameInfoReqPacket_Hook.Install();
-    ProcessGameInfoPacket_Hook.Install();
-    ProcessJoinReqPacket_Hook.Install();
-    ProcessJoinAcceptPacket_Hook.Install();
+    //  Filter packets based on the side (client-side vs server-side)
+    ProcessGamePacket_whitelist_filter.Install();
+
+    // Hook packet handlers
     ProcessJoinDenyPacket_Hook.Install();
     ProcessNewPlayerPacket_Hook.Install();
-    ProcessPlayersPacket_Hook.Install();
     ProcessLeftGamePacket_Hook.Install();
-    ProcessEndGamePacket_Hook.Install();
-    ProcessStateInfoReqPacket_Hook.Install();
-    ProcessStateInfoDonePacket_Hook.Install();
-    ProcessClientInGamePacket_Hook.Install();
     ProcessChatLinePacket_Hook.Install();
     ProcessNameChangePacket_Hook.Install();
-    ProcessRespawnReqPacket_Hook.Install();
-    ProcessTriggerActivatePacket_Hook.Install();
-    ProcessUseKeyPressedPacket_Hook.Install();
-    ProcessPregameBooleanPacket_Hook.Install();
-    ProcessPregameGlassPacket_Hook.Install();
-    ProcessPregameRemoteChargePacket_Hook.Install();
-    ProcessSuicidePacket_Hook.Install();
-    ProcessEnterLimboPacket_Hook.Install(); // not needed
-    ProcessLeaveLimboPacket_Hook.Install();
     ProcessTeamChangePacket_Hook.Install();
-    ProcessPingPacket_Hook.Install();
-    ProcessPongPacket_Hook.Install();
-    ProcessNetgameUpdatePacket_Hook.Install();
     ProcessRateChangePacket_Hook.Install();
-    ProcessSelectWeaponReqPacket_Hook.Install();
-    ProcessClutterUpdatePacket_Hook.Install();
-    ProcessClutterKillPacket_Hook.Install();
-    ProcessCtfFlagPickedUpPacket_Hook.Install(); // not needed
-    ProcessCtfFlagCapturedPacket_Hook.Install(); // not needed
-    ProcessCtfFlagUpdatePacket_Hook.Install(); // not needed
-    ProcessCtfFlagReturnedPacket_Hook.Install(); // not needed
-    ProcessCtfFlagDroppedPacket_Hook.Install(); // not needed
-    ProcessRemoteChargeKillPacket_Hook.Install();
-    ProcessItemUpdatePacket_Hook.Install();
-    ProcessObjUpdatePacket_Hook.Install();
-    ProcessObjKillPacket_Hook.Install();
-    ProcessItemApplyPacket_Hook.Install();
-    ProcessBooleanPacket_Hook.Install();
-    ProcessRespawnPacket_Hook.Install();
     ProcessEntityCreatePacket_Hook.Install();
-    ProcessItemCreatePacket_Hook.Install();
     ProcessReloadPacket_Hook.Install();
-    ProcessReloadReqPacket_Hook.Install();
-    ProcessWeaponFirePacket_Hook.Install();
-    ProcessFallDamagePacket_Hook.Install();
-    ProcessRconReqPacket_Hook.Install(); // not needed
-    ProcessRconPacket_Hook.Install(); // not needed
-    ProcessSoundPacket_Hook.Install();
-    ProcessTeamScorePacket_Hook.Install();
-    ProcessGlassKillPacket_Hook.Install();
 
     // Fix ObjUpdate packet handling
     AsmWritter(0x0047E058, 0x0047E06A)
