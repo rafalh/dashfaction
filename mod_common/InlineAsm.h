@@ -17,7 +17,7 @@
 
 #else // __GNUC__
 
-#define ASM_FUNC(name, ...) NAKED void name(void) { __asm { \
+#define ASM_FUNC(name, ...) __declspec(naked) void name(void) { __asm { \
     __asm __VA_ARGS__ \
     } }
 #define ASM_I __asm

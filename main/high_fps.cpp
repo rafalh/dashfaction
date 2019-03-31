@@ -2,10 +2,10 @@
 #include "high_fps.h"
 #include "utils.h"
 #include "rf.h"
-#include "inline_asm.h"
 #include "commands.h"
 #include <FunHook2.h>
 #include <RegsPatch.h>
+#include <InlineAsm.h>
 #include <ShortTypes.h>
 #include <unordered_map>
 #include <unordered_set>
