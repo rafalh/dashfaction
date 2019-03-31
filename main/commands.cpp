@@ -44,7 +44,6 @@ constexpr int CMD_LIMIT = 127;
 rf::DcCommand *g_CommandsBuffer[CMD_LIMIT];
 bool g_DbgGeometryRenderingStats = false;
 bool g_DbgStaticLights = false;
-bool g_volumetric_lights = true;
 
 rf::Player *FindBestMatchingPlayer(const char *name)
 {
@@ -322,7 +321,7 @@ DcCommand2 MouseSensitivityCmd{
 CallHook2<void()> CoronaRenderAll_Hook{
     0x0043233E,
     []() {
-        if (g_volumetric_lights)
+        if (g_game_config.glares)
             CoronaRenderAll_Hook.CallTarget();
     }
 };
@@ -330,8 +329,9 @@ CallHook2<void()> CoronaRenderAll_Hook{
 DcCommand2 VolumeLightsCmd{
     "vli",
     []() {
-        g_volumetric_lights = !g_volumetric_lights;
-        rf::DcPrintf("Volumetric lightining is %s.", g_volumetric_lights ? "disabled" : "enabled");
+        g_game_config.glares = !g_game_config.glares;
+        g_game_config.save();
+        rf::DcPrintf("Volumetric lightining is %s.", g_game_config.glares ? "disabled" : "enabled");
     },
     "Toggles volumetric lightining"
 };

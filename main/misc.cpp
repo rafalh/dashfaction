@@ -17,6 +17,7 @@ static const auto EntityIsReloading = (bool(*)(EntityObj *entity))0x00425250;
 
 static auto& g_MenuVersionLabel = *(UiPanel*)0x0063C088;
 static auto& g_sound_enabled = AddrAsRef<bool>(0x017543D8);
+static auto& g_hide_enemy_bullets = AddrAsRef<bool>(0x005A24D0);
 
 }
 
@@ -29,7 +30,6 @@ static const char g_VersionInMenu[] = PRODUCT_NAME_VERSION;
 int g_VersionClickCounter = 0;
 int g_EggAnimStart;
 bool g_Win32Console = false;
-bool g_linear_pitch = false;
 
 using UiLabel_Create2_Type = void __fastcall(rf::UiPanel*, void*, rf::UiPanel*, int, int, int, int, const char*, int);
 extern CallHook2<UiLabel_Create2_Type> UiLabel_Create2_VersionLabel_Hook;
@@ -777,7 +777,7 @@ void LinearPitchTest()
 RegsPatch LinearPitchPatch{
     0x0049DEC9,
     [](X86Regs& regs) {
-        if (!g_linear_pitch)
+        if (!g_game_config.linearPitch)
             return;
         // Non-linear pitch value and delta from RF
         float& current_yaw = *reinterpret_cast<float*>(regs.esi + 0x868);
@@ -812,9 +812,22 @@ DcCommand2 linear_pitch_cmd{
         LinearPitchTest();
 #endif
 
-        g_linear_pitch = !g_linear_pitch;
-        rf::DcPrintf("Linear pitch is %s", g_linear_pitch ? "enabled" : "disabled");
-    }
+        g_game_config.linearPitch = !g_game_config.linearPitch;
+        g_game_config.save();
+        rf::DcPrintf("Linear pitch is %s", g_game_config.linearPitch ? "enabled" : "disabled");
+    },
+    "Toggles linear pitch angle",
+};
+
+DcCommand2 show_enemy_bullets_cmd{
+    "show_enemy_bullets",
+    []() {
+        g_game_config.showEnemyBullets = !g_game_config.showEnemyBullets;
+        g_game_config.save();
+        rf::g_hide_enemy_bullets = !g_game_config.showEnemyBullets;
+        rf::DcPrintf("Enemy bullets are %s", g_game_config.showEnemyBullets ? "enabled" : "disabled");
+    },
+    "Toggles enemy bullets visibility",
 };
 
 void MiscInit()
@@ -919,9 +932,9 @@ void MiscInit()
     AsmWritter(0x00478E00, 0x00478E14).mov(asm_regs::eax, 0x30); // chat input border
     AsmWritter(0x00478E91, 0x00478E9E).mov(asm_regs::ebx, 0x40); // chat input background
 
-    // Show enemy bullets (FIXME: add config)
-    if (g_game_config.showEnemyBullets)
-        WriteMem<u8>(0x0042669C, ASM_SHORT_JMP_REL);
+    // Show enemy bullets
+    rf::g_hide_enemy_bullets = !g_game_config.showEnemyBullets;
+    show_enemy_bullets_cmd.Register();
 
     // Swap Assault Rifle fire controls
     PlayerLocalFireControl_Hook.Install();

@@ -43,6 +43,9 @@ bool GameConfig::load()
     dashFactionKey.readValue("Allow Overwriting Game Files", &allowOverwriteGameFiles);
     dashFactionKey.readValue("Version", &dashFactionVersion);
     dashFactionKey.readValue("Swap Assault Rifle Controls", &swapAssaultRifleControls);
+    dashFactionKey.readValue("Glares", &glares);
+    dashFactionKey.readValue("Linear Pitch", &linearPitch);
+    dashFactionKey.readValue("Show Enemy Bullets", &showEnemyBullets);
 
 #ifdef NDEBUG
     if (maxFps > MAX_FPS_LIMIT)
@@ -87,6 +90,9 @@ void GameConfig::save()
     dashFactionKey.writeValue("Allow Overwriting Game Files", allowOverwriteGameFiles);
     dashFactionKey.writeValue("Version", dashFactionVersion);
     dashFactionKey.writeValue("Swap Assault Rifle Controls", swapAssaultRifleControls);
+    dashFactionKey.writeValue("Glares", &glares);
+    dashFactionKey.writeValue("Linear Pitch", linearPitch);
+    dashFactionKey.writeValue("Show Enemy Bullets", showEnemyBullets);
 }
 
 bool GameConfig::detectGamePath()
@@ -107,7 +113,7 @@ bool GameConfig::detectGamePath()
     {
         // ignore
     }
-    
+
     // Steam
     try
     {
@@ -131,6 +137,6 @@ bool GameConfig::detectGamePath()
         gameExecutablePath = fullPath;
         return true;
     }
-    
+
     return false;
 }
