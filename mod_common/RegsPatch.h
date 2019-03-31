@@ -73,3 +73,69 @@ public:
             .ret();                                                 // return to address read from EIP field in X86Regs
     }
 };
+
+
+class BaseRegsPatch2
+{
+private:
+    uintptr_t m_addr;
+    void *m_fun_ptr;
+    void *m_this_ptr;
+    subhook::Hook m_subhook;
+
+public:
+    BaseRegsPatch2(uintptr_t addr, void *fun_ptr, void *this_ptr) :
+        m_addr(addr), m_fun_ptr(fun_ptr), m_this_ptr(this_ptr)
+    {}
+
+    virtual ~BaseRegsPatch2() {};
+
+    void Install()
+    {
+        void *wrapper = AllocMemForCode(256);
+
+        m_subhook.Install(reinterpret_cast<void*>(m_addr), wrapper);
+        void *trampoline = m_subhook.GetTrampoline();
+        if (!trampoline)
+            WARN("trampoline is null for 0x%p", m_addr);
+
+        AsmWritter(reinterpret_cast<uintptr_t>(wrapper))
+            .push(reinterpret_cast<int32_t>(trampoline))            // Push default EIP = trampoline
+            .push(asm_regs::esp)                                     // push esp before PUSHA so it can be popped manually after POPA
+            .pusha()                                                // push general registers
+            .pushf()                                                // push EFLAGS
+            .add({true, {asm_regs::esp}, offsetof(X86Regs, esp)}, 4) // restore esp value from before pushing the return address
+            .push(asm_regs::esp)                                     // push address of X86Regs struct (handler param)
+            .mov(asm_regs::ecx, reinterpret_cast<uint32_t>(m_this_ptr)) // save this pointer in ECX (thiscall)
+            .call(m_fun_ptr)                                     // call handler (thiscall - calee cleans the stack)
+            .add({true, {asm_regs::esp}, offsetof(X86Regs, esp)}, -4) // make esp value return address aware (again)
+            .mov(asm_regs::eax, {true, {asm_regs::esp}, offsetof(X86Regs, eip)}) // read EIP from X86Regs
+            .mov(asm_regs::ecx, {true, {asm_regs::esp}, offsetof(X86Regs, esp)}) // read esp from X86Regs
+            .mov({true, {asm_regs::ecx}, 0}, asm_regs::eax)           // copy EIP to new address of the stack pointer
+            .popf()                                                 // pop EFLAGS
+            .popa()                                                 // pop general registers. Note: POPA discards esp value
+            .pop(asm_regs::esp)                                      // pop esp manually
+            .ret();                                                 // return to address read from EIP field in X86Regs
+    }
+
+    void SetAddr(uintptr_t addr)
+    {
+        m_addr = addr;
+    }
+};
+
+template<typename T>
+class RegsPatch2 : public BaseRegsPatch2
+{
+    T m_functor;
+
+public:
+    RegsPatch2(uintptr_t addr, T handler) :
+        BaseRegsPatch2(addr, reinterpret_cast<void*>(&wrapper), this), m_functor(handler)
+    {}
+
+    static void __thiscall wrapper(RegsPatch2 &self, X86Regs &regs)
+    {
+        self.m_functor(regs);
+    }
+};

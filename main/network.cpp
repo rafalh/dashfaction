@@ -7,6 +7,7 @@
 #include <FunHook2.h>
 #include <CallHook2.h>
 #include <RegsPatch.h>
+#include <functional>
 
 #if MASK_AS_PF
  #include "pf.h"
@@ -23,8 +24,6 @@ static const auto NwProcessGamePackets = (NwProcessGamePackets_Type)0x004790D0;
 
 typedef void NwPacketHandler_Type(char* data, const rf::NwAddr& addr);
 
-//#define TEST_BUFFER_OVERFLOW_FIXES
-
 CallHook2<void(const char*, int, const rf::NwAddr&, rf::Player*)> ProcessUnreliableGamePackets_Hook{
     0x00479244,
     [](const char* data, int data_len, const rf::NwAddr& addr, rf::Player* player) {
@@ -36,92 +35,10 @@ CallHook2<void(const char*, int, const rf::NwAddr&, rf::Player*)> ProcessUnrelia
     }
 };
 
-extern "C" void SafeStrCpy(char* dest, const char* src, size_t dest_size)
-{
-#ifdef TEST_BUFFER_OVERFLOW_FIXES
-    strcpy(dest, "test");
-#else
-    strncpy(dest, src, dest_size);
-    dest[dest_size - 1] = 0;
-#endif
-}
-
-
-
-
-class BaseRegsPatch
-{
-private:
-    uintptr_t m_addr;
-    //void (*m_fun_ptr)(X86Regs& regs);
-    void *m_fun_ptr;
-    void *m_this_ptr;
-    subhook::Hook m_subhook;
-
-public:
-    BaseRegsPatch(uintptr_t addr, void *fun_ptr, void *this_ptr) :
-        m_addr(addr), m_fun_ptr(fun_ptr), m_this_ptr(this_ptr)
-    {}
-
-    virtual ~BaseRegsPatch() {};
-
-    void Install()
-    {
-        void *wrapper = AllocMemForCode(256);
-
-        m_subhook.Install(reinterpret_cast<void*>(m_addr), wrapper);
-        void *trampoline = m_subhook.GetTrampoline();
-        if (!trampoline)
-            WARN("trampoline is null for 0x%p", m_addr);
-
-        AsmWritter(reinterpret_cast<uintptr_t>(wrapper))
-            .push(reinterpret_cast<int32_t>(trampoline))            // Push default EIP = trampoline
-            .push(asm_regs::esp)                                     // push esp before PUSHA so it can be popped manually after POPA
-            .pusha()                                                // push general registers
-            .pushf()                                                // push EFLAGS
-            .add({true, {asm_regs::esp}, offsetof(X86Regs, esp)}, 4) // restore esp value from before pushing the return address
-            .push(asm_regs::esp)                                     // push address of X86Regs struct (handler param)
-            .mov(asm_regs::ecx, reinterpret_cast<uint32_t>(m_this_ptr)) // save this pointer in ECX (thiscall)
-            .call(m_fun_ptr)                                     // call handler (thiscall - calee cleans the stack)
-            .add({true, {asm_regs::esp}, offsetof(X86Regs, esp)}, -4) // make esp value return address aware (again)
-            .mov(asm_regs::eax, {true, {asm_regs::esp}, offsetof(X86Regs, eip)}) // read EIP from X86Regs
-            .mov(asm_regs::ecx, {true, {asm_regs::esp}, offsetof(X86Regs, esp)}) // read esp from X86Regs
-            .mov({true, {asm_regs::ecx}, 0}, asm_regs::eax)           // copy EIP to new address of the stack pointer
-            .popf()                                                 // pop EFLAGS
-            .popa()                                                 // pop general registers. Note: POPA discards esp value
-            .pop(asm_regs::esp)                                      // pop esp manually
-            .ret();                                                 // return to address read from EIP field in X86Regs
-    }
-
-    void SetAddr(uintptr_t addr)
-    {
-        m_addr = addr;
-    }
-};
-
-template<typename T>
-class RegsPatchNew : public BaseRegsPatch
-{
-    T m_functor;
-
-public:
-    RegsPatchNew(uintptr_t addr, T handler) :
-        BaseRegsPatch(addr, reinterpret_cast<void*>(&wrapper), this), m_functor(handler)
-    {
-        static_assert(sizeof(&wrapper) == 4);
-    }
-
-    static void __thiscall wrapper(RegsPatchNew &self, X86Regs &regs)
-    {
-        self.m_functor(regs);
-    }
-};
-
-#include <functional>
 class BufferOverflowPatch
 {
 private:
-    RegsPatchNew<std::function<void(X86Regs&)>> m_movsb_patch;
+    RegsPatch2<std::function<void(X86Regs&)>> m_movsb_patch;
     uintptr_t m_shr_ecx_2_addr;
     uintptr_t m_and_ecx_3_addr;
     int32_t m_buffer_size;
@@ -132,13 +49,10 @@ public:
         m_movsb_patch(and_ecx_3_addr, std::bind(&BufferOverflowPatch::movsb_handler, this, std::placeholders::_1)),
         m_shr_ecx_2_addr(shr_ecx_2_addr), m_and_ecx_3_addr(and_ecx_3_addr),
         m_buffer_size(buffer_size)
-    {
-        //assert(buffer_size % 4 == 0);
-    }
+    {}
 
     void Install()
     {
-        //printf("%x\n", m_shr_2_addr);
         const std::byte *shr_ecx_2_ptr = reinterpret_cast<std::byte*>(m_shr_ecx_2_addr);
         const std::byte *and_ecx_3_ptr = reinterpret_cast<std::byte*>(m_and_ecx_3_addr);
         assert(std::memcmp(shr_ecx_2_ptr, "\xC1\xE9\x02", 3) == 0); // shr ecx, 2
