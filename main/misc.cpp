@@ -675,11 +675,18 @@ auto GameSeqPushState = AddrAsRef<int(int state, bool update_parent_state, bool 
 
 bool g_jump_to_multi_server_list = false;
 
+void SetJumpToMultiServerList(bool jump)
+{
+    g_jump_to_multi_server_list = jump;
+}
+
 FunHook2<void(int, int)> GameEnterState_Hook{
     0x004B1AC0,
     [](int state, int old_state) {
         GameEnterState_Hook.CallTarget(state, old_state);
-        if (state == rf::GS_MAIN_MENU && old_state == rf::GS_EXIT_GAME && g_jump_to_multi_server_list) {
+        TRACE("state %d old_state %d g_jump_to_multi_server_list %d", state, old_state, g_jump_to_multi_server_list);
+        if (state == rf::GS_MAIN_MENU && (old_state == rf::GS_EXIT_GAME || old_state == rf::GS_LOADING_LEVEL)
+        && g_jump_to_multi_server_list) {
             rf::g_sound_enabled = false;
             GameSeqPushState(rf::GS_MP_MENU, false, false);
         }

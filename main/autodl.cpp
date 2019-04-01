@@ -1,11 +1,12 @@
 #include <BuildConfig.h>
-#include <ShortTypes.h>
-#include <AsmWritter.h>
+#include <RegsPatch.h>
 #include <windef.h>
 #include <unrar/dll.hpp>
 #include <unzip.h>
 #include <stdexcept>
+#include <thread>
 #include "autodl.h"
+#include "misc.h"
 #include "rf.h"
 #include "rfproto.h"
 #include "utils.h"
@@ -16,54 +17,62 @@
 #define AUTODL_AGENT_NAME "hoverlees"
 #define AUTODL_HOST "pfapi.factionfiles.com"
 
-namespace rf {
-static const auto GetJoinFailedReasonStr = AddrAsRef<const char *(unsigned reason)>(0x0047BE60);
+struct LevelInfo
+{
+    std::string name;
+    std::string author;
+    std::string description;
+    unsigned size_in_bytes;
+    int ticket_id;
+};
+
+static LevelInfo g_level_info;
+static volatile unsigned g_level_bytes_downloaded;
+static volatile bool g_download_in_progress = false;
+static std::vector<std::string> g_packfiles_to_load;
+
+static bool IsVppFilename(const char *filename)
+{
+    const char *ext = strrchr(filename, '.');
+    return ext && !stricmp(ext, ".vpp");
 }
 
-static unsigned g_LevelTicketId;
-static unsigned g_cbLevelSize, g_cbDownloadProgress;
-static bool g_DownloadActive = false;
-
-bool UnzipVpp(const char *path)
+static bool UnzipVpp(const char *path)
 {
-    bool ret = false;
-    int code;
-
     unzFile archive = unzOpen(path);
     if (!archive) {
 #ifdef DEBUG
         ERR("unzOpen failed: %s", path);
 #endif
-        // maybe RAR file
-        goto cleanup;
+        return false;
     }
 
+    bool ret = true;
     unz_global_info global_info;
-    code = unzGetGlobalInfo(archive, &global_info);
+    int code = unzGetGlobalInfo(archive, &global_info);
     if (code != UNZ_OK) {
         ERR("unzGetGlobalInfo failed - error %d, path %s", code, path);
-        goto cleanup;
+        std::memset(&global_info, 0, sizeof(global_info));
+        ret = false;
     }
 
     char buf[4096], file_name[MAX_PATH];
     unz_file_info file_info;
-    for (int i = 0; i < (int)global_info.number_entry; i++) {
-        code = unzGetCurrentFileInfo(archive, &file_info, file_name, sizeof(file_name), NULL, 0, NULL, 0);
+    for (unsigned long i = 0; i < global_info.number_entry; i++) {
+        code = unzGetCurrentFileInfo(archive, &file_info, file_name, sizeof(file_name), nullptr, 0, nullptr, 0);
         if (code != UNZ_OK) {
             ERR("unzGetCurrentFileInfo failed - error %d, path %s", code, path);
             break;
         }
 
-        const char *ext = strrchr(file_name, '.');
-        if (ext && !stricmp(ext, ".vpp"))
-        {
+        if (IsVppFilename(file_name)) {
 #ifdef DEBUG
             TRACE("Unpacking %s", file_name);
 #endif
             sprintf(buf, "%suser_maps\\multi\\%s", rf::g_RootPath, file_name);
-            FILE *file = fopen(buf, "wb"); /* FIXME: overwrite file? */
+            std::ofstream file(buf, std::ios_base::out | std::ios_base::binary);
             if (!file) {
-                ERR("fopen failed - %s", buf);
+                ERR("Cannot open file: %s", buf);
                 break;
             }
 
@@ -74,21 +83,20 @@ bool UnzipVpp(const char *path)
             }
 
             while ((code = unzReadCurrentFile(archive, buf, sizeof(buf))) > 0)
-                fwrite(buf, 1, code, file);
+                file.write(buf, code);
 
             if (code < 0) {
                 ERR("unzReadCurrentFile failed - error %d, path %s", code, path);
                 break;
             }
 
-            fclose(file);
+            file.close();
             unzCloseCurrentFile(archive);
 
-            if (!rf::PackfileLoad(file_name, "user_maps\\multi\\"))
-                ERR("RfLoadVpp failed - %s", file_name);
+            g_packfiles_to_load.push_back(file_name);
         }
 
-        if (i + 1 < (int)global_info.number_entry) {
+        if (i + 1 < global_info.number_entry) {
             code = unzGoToNextFile(archive);
             if (code != UNZ_OK) {
                 ERR("unzGoToNextFile failed - error %d, path %s", code, path);
@@ -97,25 +105,21 @@ bool UnzipVpp(const char *path)
         }
     }
 
-    ret = true;
-
-cleanup:
-    if (archive)
-        unzClose(archive);
+    unzClose(archive);
     return ret;
 }
 
-bool UnrarVpp(const char *path)
+static bool UnrarVpp(const char *path)
 {
     char cmt_buf[16384], buf[256];
 
-    struct RAROpenArchiveDataEx open_archive_data;
+    RAROpenArchiveDataEx open_archive_data;
     memset(&open_archive_data, 0, sizeof(open_archive_data));
     open_archive_data.ArcName = (char*)path;
     open_archive_data.CmtBuf = cmt_buf;
     open_archive_data.CmtBufSize = sizeof(cmt_buf);
     open_archive_data.OpenMode = RAR_OM_EXTRACT;
-    open_archive_data.Callback = NULL;
+    open_archive_data.Callback = nullptr;
     HANDLE archive_handle = RAROpenArchiveEx(&open_archive_data);
 
     if (!archive_handle || open_archive_data.OpenResult != 0) {
@@ -125,7 +129,7 @@ bool UnrarVpp(const char *path)
 
     bool ret = true;
     struct RARHeaderData header_data;
-    header_data.CmtBuf = NULL;
+    header_data.CmtBuf = nullptr;
     memset(&open_archive_data.Reserved, 0, sizeof(open_archive_data.Reserved));
 
     while (true) {
@@ -138,19 +142,17 @@ bool UnrarVpp(const char *path)
             break;
         }
 
-        const char *ext = strrchr(header_data.FileName, '.');
-        if (ext && !stricmp(ext, ".vpp")) {
+        if (IsVppFilename(header_data.FileName)) {
             TRACE("Unpacking %s", header_data.FileName);
             sprintf(buf, "%suser_maps\\multi", rf::g_RootPath);
-            code = RARProcessFile(archive_handle, RAR_EXTRACT, buf, NULL);
+            code = RARProcessFile(archive_handle, RAR_EXTRACT, buf, nullptr);
             if (code == 0) {
-                if (!rf::PackfileLoad(header_data.FileName, "user_maps\\multi\\"))
-                    ERR("RfLoadVpp failed - %s", header_data.FileName);
+                g_packfiles_to_load.push_back(header_data.FileName);
             }
         }
         else {
             TRACE("Skipping %s", header_data.FileName);
-            code = RARProcessFile(archive_handle, RAR_SKIP, NULL, NULL);
+            code = RARProcessFile(archive_handle, RAR_SKIP, nullptr, nullptr);
         }
 
         if (code != 0) {
@@ -159,22 +161,21 @@ bool UnrarVpp(const char *path)
         }
     }
 
-    if (archive_handle)
-        RARCloseArchive(archive_handle);
+    RARCloseArchive(archive_handle);
     return ret;
 }
 
-static bool FetchLevelFile(const char *tmp_file_name) try
+static bool FetchLevelFile(const char *tmp_filename, int ticket_id) try
 {
     HttpConnection conn{AUTODL_HOST, 80, AUTODL_AGENT_NAME};
 
     char path[64];
-    sprintf(path, "downloadmap.php?ticketid=%u", g_LevelTicketId);
-    HttpRequest req = conn.request(path);
+    sprintf(path, "downloadmap.php?ticketid=%u", ticket_id);
+    HttpRequest req = conn.get(path);
 
-    FILE *tmp_file = fopen(tmp_file_name, "wb");
+    std::ofstream tmp_file(tmp_filename, std::ios_base::out | std::ios_base::binary);
     if (!tmp_file) {
-        ERR("fopen failed: %s", tmp_file_name);
+        ERR("Cannot open file: %s", tmp_filename);
         return false;
     }
 
@@ -183,13 +184,9 @@ static bool FetchLevelFile(const char *tmp_file_name) try
         auto num_bytes_read = req.read(buf, sizeof(buf));
         if (num_bytes_read <= 0)
             break;
-        g_cbDownloadProgress += num_bytes_read;
-        fwrite(buf, 1, num_bytes_read, tmp_file);
+        g_level_bytes_downloaded += num_bytes_read;
+        tmp_file.write(buf, num_bytes_read);
     }
-
-    g_cbLevelSize = g_cbDownloadProgress;
-
-    fclose(tmp_file);
 
     return true;
 }
@@ -199,187 +196,192 @@ catch(std::exception &e)
     return false;
 }
 
-static DWORD WINAPI DownloadLevelThread(PVOID param)
+static std::optional<std::string> GetTempFileNameInTempDir(const char *prefix)
 {
-    char temp_dir[MAX_PATH], temp_file_name[MAX_PATH] = "";
+    char temp_dir[MAX_PATH];
+    DWORD ret_val = GetTempPathA(_countof(temp_dir), temp_dir);
+    if (ret_val == 0 || ret_val > _countof(temp_dir))
+        return {};
+
+    char result[MAX_PATH];
+    ret_val = GetTempFileNameA(temp_dir, prefix, 0, result);
+    if (ret_val == 0)
+        return {};
+
+    return {result};
+}
+
+static void DownloadLevelThread()
+{
+    auto temp_filename_opt = GetTempFileNameInTempDir("DF_Level_");
+    if (!temp_filename_opt) {
+        ERR("Failed to generate a temp filename");
+        return;
+    }
+
+    auto temp_filename = temp_filename_opt.value().c_str();
+
     bool success = false;
-
-    (void)param; // unused parameter
-
-    DWORD dw_ret_val;
-    dw_ret_val = GetTempPathA(_countof(temp_dir), temp_dir);
-    if (dw_ret_val == 0 || dw_ret_val > _countof(temp_dir)) {
-        ERR("GetTempPath failed");
-        goto cleanup;
+    if (FetchLevelFile(temp_filename, g_level_info.ticket_id)) {
+        if (!UnzipVpp(temp_filename) && !UnrarVpp(temp_filename))
+            ERR("UnzipVpp and UnrarVpp failed");
+        else
+            success = true;
     }
 
-    UINT ret_val;
-    ret_val = GetTempFileNameA(temp_dir, "DF_Level", 0, temp_file_name);
-    if (ret_val == 0) {
-        ERR("GetTempFileName failed");
-        goto cleanup;
-    }
+    remove(temp_filename);
 
-    if (!FetchLevelFile(temp_file_name))
-        goto cleanup;
-
-    if (!UnzipVpp(temp_file_name) && !UnrarVpp(temp_file_name))
-        ERR("UnzipVpp and UnrarVpp failed");
-    else
-        success = true;
-
-cleanup:
-    if (temp_file_name[0])
-        remove(temp_file_name);
-
-    g_DownloadActive = false;
     if (!success)
         rf::UiMsgBox("Error!", "Failed to download level file! More information can be found in console.", nullptr, false);
 
-    return 0;
+    g_download_in_progress = false;
 }
 
-static void DownloadLevel()
+static void StartLevelDownload()
 {
-    HANDLE thread_handle;
-
-    g_cbDownloadProgress = 0;
-    thread_handle = CreateThread(NULL, 0, DownloadLevelThread, NULL, 0, NULL);
-    if (thread_handle) {
-        CloseHandle(thread_handle);
-        g_DownloadActive = true;
+    if (g_download_in_progress) {
+        ERR("Level download already in progress!");
+        return;
     }
-    else
-        ERR("CreateThread failed");
+
+    g_level_bytes_downloaded = 0;
+    g_download_in_progress = true;
+
+    std::thread download_thread(DownloadLevelThread);
+    download_thread.detach();
 }
 
-static bool FetchLevelInfo(const char *file_name, char *out_buf, size_t out_buf_size) try
+static std::optional<LevelInfo> ParseLevelInfo(char *buf)
+{
+    std::stringstream ss(buf);
+    ss.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+
+    std::string temp;
+    std::getline(ss, temp);
+    if (temp != "found")
+        return {};
+
+    LevelInfo info;
+    std::getline(ss, info.name);
+    std::getline(ss, info.author);
+    std::getline(ss, info.description);
+
+    std::getline(ss, temp);
+    info.size_in_bytes = std::stof(temp) * 1024u * 1024u;
+    if (!info.size_in_bytes)
+        return {};
+
+    std::getline(ss, temp);
+    info.ticket_id = std::stoi(temp);
+    if (info.ticket_id <= 0)
+        return {};
+
+    return {info};
+}
+
+static std::optional<LevelInfo> FetchLevelInfo(const char *file_name) try
 {
     HttpConnection conn{AUTODL_HOST, 80, AUTODL_AGENT_NAME};
 
+    TRACE("Fetching level info: %s", file_name);
     std::string body = std::string("rflName=") + file_name;
-    HttpRequest req = conn.request("findmap.php", "POST", body);
+    HttpRequest req = conn.post("findmap.php", body);
 
-    size_t num_bytes_read = req.read(out_buf, out_buf_size - 1);
+    char buf[1024];
+
+    size_t num_bytes_read = req.read(buf, sizeof(buf) - 1);
     if (num_bytes_read == 0)
-        return false;
+        return {};
 
-    out_buf[num_bytes_read] = '\0';
-    return true;
+    buf[num_bytes_read] = '\0';
+    TRACE("FactionFiles response: %s", buf);
+
+    return ParseLevelInfo(buf);
 }
 catch(std::exception &e)
 {
-    ERR("%s", e.what());
-    return false;
+    ERR("Failed to fetch level info: %s", e.what());
+    return {};
 }
 
-static bool DisplayDownloadDialog(char *buf)
+static void DisplayDownloadDialog(LevelInfo &level_info)
 {
-    char msg_buf[256], *name, *author, *descr, *size, *ticket_id, *end;
-    const char *ppsz_btn_titles[] = {"Cancel", "Download"};
-    void *ppfn_callbacks[] = {NULL, (void*)DownloadLevel};
+    TRACE("Download ticket id: %u", level_info.ticket_id);
+    g_level_info = level_info;
 
-    name = strchr(buf, '\n');
-    if (!name)
+    char msg[1024];
+    sprintf(msg, "You don't have needed level: %s (Author: %s, Size: %.2f MB)\nDo you want to download it now?",
+        level_info.name.c_str(), level_info.author.c_str(), level_info.size_in_bytes / 1024.f / 1024.f);
+    const char *btn_titles[] = {"Cancel", "Download"};
+    void *callbacks[] = {nullptr, (void*)StartLevelDownload};
+    rf::UiCreateDialog("Download level", msg, 2, btn_titles, callbacks, 0, 0);
+}
+
+bool TryToDownloadLevel(const char *filename)
+{
+    if (g_download_in_progress) {
+        rf::UiMsgBox("Error!", "You can download only one level at once!", nullptr, false);
         return false;
-    *(name++) = 0; // terminate first line with 0
-    if (strcmp(buf, "found") != 0)
+    }
+
+    auto level_info_opt = FetchLevelInfo(filename);
+    if (!level_info_opt) {
+        ERR("Level has not found in FactionFiles database!");
         return false;
+    }
 
-    author = strchr(name, '\n');
-    if (!author) // terminate name with 0
-        return false;
-    *(author++) = 0;
-
-    descr = strchr(author, '\n');
-    if (!descr)
-        return false;
-    *(descr++) = 0; // terminate author with 0
-
-    size = strchr(descr, '\n');
-    if (!size)
-        return false;
-    *(size++) = 0; // terminate description with 0
-
-    ticket_id = strchr(size, '\n');
-    if (!ticket_id)
-        return false;
-    *(ticket_id++) = 0; // terminate size with 0
-
-    end = strchr(ticket_id, '\n');
-    if (end)
-        *end = 0; // terminate ticket id with 0
-
-    g_LevelTicketId = strtoul(ticket_id, NULL, 0);
-    g_cbLevelSize = (unsigned)(atof(size) * 1024 * 1024);
-    if (!g_LevelTicketId || !g_cbLevelSize)
-        return false;
-
-    TRACE("Download ticket id: %u", g_LevelTicketId);
-
-    sprintf(msg_buf, "You don't have needed level: %s (Author: %s, Size: %s MB)\nDo you want to download it now?", name, author, size);
-    rf::UiCreateDialog("Download level", msg_buf, 2, ppsz_btn_titles, ppfn_callbacks, 0, 0);
+    DisplayDownloadDialog(level_info_opt.value());
     return true;
 }
 
-bool TryToDownloadLevel(const char *file_name)
-{
-    char buf[256];
-
-    if (g_DownloadActive) {
-        rf::UiMsgBox("Error!", "You can download only one level at once!", NULL, FALSE);
-        return false;
-    }
-
-    if (!FetchLevelInfo(file_name, buf, sizeof(buf))) {
-        ERR("Failed to fetch level information");
-        return false;
-    }
-
-    TRACE("Levels server response: %s", buf);
-    if (!DisplayDownloadDialog(buf)) {
-        ERR("Failed to parse level information or level not found");
-        return false;
-    }
-
-    return true;
-}
-
-void OnJoinFailed(unsigned reason_id)
-{
-    if (reason_id == RF_LR_NO_LEVEL_FILE) {
-        char *level_file_name = *((char**)0x646078);
-
-        if(TryToDownloadLevel(level_file_name))
+RegsPatch g_join_failed_injection{
+    0x0047C4EC,
+    [](auto &regs) {
+        int leave_reason = regs.esi;
+        if (leave_reason != RF_LR_NO_LEVEL_FILE) {
             return;
-    }
+        }
 
-    const char *reason_str = rf::GetJoinFailedReasonStr(reason_id);
-    rf::UiMsgBox(rf::strings::exiting_game, reason_str, NULL, 0);
-}
+        auto &level_filename = AddrAsRef<rf::String>(0x00646074);
+        if (!TryToDownloadLevel(level_filename)) {
+            return;
+        }
+
+        SetJumpToMultiServerList(true);
+
+        regs.eip = 0x0047C502;
+        regs.esp -= 0x14;
+    }
+};
 
 void InitAutodownloader()
 {
-    AsmWritter(0x0047C4ED).call(OnJoinFailed);
-    AsmWritter(0x0047C4FD).nop(5);
+    g_join_failed_injection.Install();
 }
 
 void RenderDownloadProgress()
 {
-    char buf[256];
-    unsigned x, y, cx_progress, cy_font;
-    const unsigned cx = 400, cy = 28;
-
-    if (!g_DownloadActive)
+    if (!g_download_in_progress) {
+        // Load packages in main thread
+        if (!g_packfiles_to_load.empty()) {
+            // Load one packfile per frame
+            auto &filename = g_packfiles_to_load.front();
+            if (!rf::PackfileLoad(filename.c_str(), "user_maps\\multi\\"))
+                ERR("PackfileLoad failed - %s", filename.c_str());
+            g_packfiles_to_load.erase(g_packfiles_to_load.begin());
+        }
         return;
+    }
 
-    cx_progress = (unsigned)((float)cx * (float)g_cbDownloadProgress / (float)g_cbLevelSize);
+    constexpr int cx = 400, cy = 28;
+    float progress =  static_cast<float>(g_level_bytes_downloaded) / static_cast<float>(g_level_info.size_in_bytes);
+    int cx_progress = static_cast<int>(static_cast<float>(cx) * progress);
     if (cx_progress > cx)
         cx_progress = cx;
 
-    x = (rf::GrGetMaxWidth() - cx) / 2;
-    y = rf::GrGetMaxHeight() - 50;
-    cy_font = rf::GrGetFontHeight(-1);
+    int x = (rf::GrGetMaxWidth() - cx) / 2;
+    int y = rf::GrGetMaxHeight() - 50;
+    int cy_font = rf::GrGetFontHeight(-1);
 
     if (cx_progress > 0) {
         rf::GrSetColor(0x80, 0x80, 0, 0x80);
@@ -391,8 +393,11 @@ void RenderDownloadProgress()
         rf::GrDrawRect(x + cx_progress, y, cx - cx_progress, cy, rf::g_GrRectMaterial);
     }
 
+    char buf[256];
     rf::GrSetColor(0, 0xFF, 0, 0x80);
-    std::sprintf(buf, "Downloading: %.2f MB / %.2f MB", g_cbDownloadProgress/1024.0f/1024.0f, g_cbLevelSize/1024.0f/1024.0f);
+    std::sprintf(buf, "Downloading: %.2f MB / %.2f MB",
+        g_level_bytes_downloaded / 1024.0f / 1024.0f,
+        g_level_info.size_in_bytes / 1024.0f / 1024.0f);
     rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, x + cx/2, y + cy/2 - cy_font/2, buf, -1, rf::g_GrTextMaterial);
 }
 
