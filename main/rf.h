@@ -491,6 +491,16 @@ namespace rf
         uint32_t IpAddr;
         uint16_t Port;
         uint16_t _unused;
+
+        bool operator==(const NwAddr &other) const
+        {
+            return IpAddr == other.IpAddr && Port == other.Port;
+        }
+
+        bool operator!=(const NwAddr &other) const
+        {
+            return !(*this == other);
+        }
     };
 
     struct NwStats

@@ -514,6 +514,17 @@ RegsPatch ProcessGlassKillPacket_CheckRoomExists_Patch{
     }
 };
 
+CallHook2<int(void*, int, int, rf::NwAddr&, int)> nw_get_packet_tracker_hook{
+    0x00482ED4,
+    [](void *data, int a2, int a3, rf::NwAddr &addr, int super_type) {
+        int res = nw_get_packet_tracker_hook.CallTarget(data, a2, a3, addr, super_type);
+        auto &tracker_addr = AddrAsRef<rf::NwAddr>(0x006FC550);
+        if (res != -1 && addr != tracker_addr)
+            res = -1;
+        return res;
+    }
+};
+
 void NetworkInit()
 {
     /* ProcessGamePackets hook (not reliable only) */
@@ -608,4 +619,7 @@ void NetworkInit()
 
     // Fix crash if room does not exist in GlassKill packet
     ProcessGlassKillPacket_CheckRoomExists_Patch.Install();
+
+    // Make sure tracker packets come from configured tracker
+    nw_get_packet_tracker_hook.Install();
 }
