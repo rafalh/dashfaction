@@ -240,6 +240,8 @@ std::array g_client_side_packet_whitelist{
     obj_kill,
     item_apply,
     boolean_,
+    // Note: mover_update packet is sent by PF server. Handler is empty so it is safe to enable it.
+    mover_update,
     respawn,
     entity_create,
     item_create,
