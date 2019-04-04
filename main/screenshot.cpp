@@ -121,9 +121,8 @@ void ScreenshotAfterGameInit()
         AsmWritter(0x0055A0DF, 0x0055A0E6).mov(asm_regs::eax, (int32_t)g_screenshot_scanlines_buf.get());
     }
 
-    char full_path[MAX_PATH];
-    sprintf(full_path, "%s\\%s", rf::g_RootPath, g_screenshot_dir_name);
-    if (CreateDirectoryA(full_path, NULL))
+    auto full_path = StringFormat("%s\\%s", rf::g_RootPath, g_screenshot_dir_name);
+    if (CreateDirectoryA(full_path.c_str(), nullptr))
         INFO("Created screenshots directory");
     else if (GetLastError() != ERROR_ALREADY_EXISTS)
         ERR("Failed to create screenshots directory %lu", GetLastError());

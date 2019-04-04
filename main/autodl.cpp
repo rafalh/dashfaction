@@ -69,10 +69,10 @@ static bool UnzipVpp(const char *path)
 #ifdef DEBUG
             TRACE("Unpacking %s", file_name);
 #endif
-            sprintf(buf, "%suser_maps\\multi\\%s", rf::g_RootPath, file_name);
-            std::ofstream file(buf, std::ios_base::out | std::ios_base::binary);
+            auto output_path = StringFormat("%suser_maps\\multi\\%s", rf::g_RootPath, file_name);
+            std::ofstream file(output_path, std::ios_base::out | std::ios_base::binary);
             if (!file) {
-                ERR("Cannot open file: %s", buf);
+                ERR("Cannot open file: %s", output_path.c_str());
                 break;
             }
 
@@ -111,7 +111,7 @@ static bool UnzipVpp(const char *path)
 
 static bool UnrarVpp(const char *path)
 {
-    char cmt_buf[16384], buf[256];
+    char cmt_buf[16384];
 
     RAROpenArchiveDataEx open_archive_data;
     memset(&open_archive_data, 0, sizeof(open_archive_data));
@@ -144,8 +144,8 @@ static bool UnrarVpp(const char *path)
 
         if (IsVppFilename(header_data.FileName)) {
             TRACE("Unpacking %s", header_data.FileName);
-            sprintf(buf, "%suser_maps\\multi", rf::g_RootPath);
-            code = RARProcessFile(archive_handle, RAR_EXTRACT, buf, nullptr);
+            auto output_dir = StringFormat("%suser_maps\\multi", rf::g_RootPath);
+            code = RARProcessFile(archive_handle, RAR_EXTRACT, const_cast<char*>(output_dir.c_str()), nullptr);
             if (code == 0) {
                 g_packfiles_to_load.push_back(header_data.FileName);
             }
@@ -169,9 +169,8 @@ static bool FetchLevelFile(const char *tmp_filename, int ticket_id) try
 {
     HttpConnection conn{AUTODL_HOST, 80, AUTODL_AGENT_NAME};
 
-    char path[64];
-    sprintf(path, "downloadmap.php?ticketid=%u", ticket_id);
-    HttpRequest req = conn.get(path);
+    auto path = StringFormat("downloadmap.php?ticketid=%u", ticket_id);
+    HttpRequest req = conn.get(path.c_str());
 
     std::ofstream tmp_file(tmp_filename, std::ios_base::out | std::ios_base::binary);
     if (!tmp_file) {
@@ -309,12 +308,11 @@ static void DisplayDownloadDialog(LevelInfo &level_info)
     TRACE("Download ticket id: %u", level_info.ticket_id);
     g_level_info = level_info;
 
-    char msg[1024];
-    sprintf(msg, "You don't have needed level: %s (Author: %s, Size: %.2f MB)\nDo you want to download it now?",
+    auto msg = StringFormat("You don't have needed level: %s (Author: %s, Size: %.2f MB)\nDo you want to download it now?",
         level_info.name.c_str(), level_info.author.c_str(), level_info.size_in_bytes / 1024.f / 1024.f);
     const char *btn_titles[] = {"Cancel", "Download"};
     void *callbacks[] = {nullptr, (void*)StartLevelDownload};
-    rf::UiCreateDialog("Download level", msg, 2, btn_titles, callbacks, 0, 0);
+    rf::UiCreateDialog("Download level", msg.c_str(), 2, btn_titles, callbacks, 0, 0);
 }
 
 bool TryToDownloadLevel(const char *filename)
@@ -393,12 +391,11 @@ void RenderDownloadProgress()
         rf::GrDrawRect(x + cx_progress, y, cx - cx_progress, cy, rf::g_GrRectMaterial);
     }
 
-    char buf[256];
     rf::GrSetColor(0, 0xFF, 0, 0x80);
-    std::sprintf(buf, "Downloading: %.2f MB / %.2f MB",
+    auto text = StringFormat("Downloading: %.2f MB / %.2f MB",
         g_level_bytes_downloaded / 1024.0f / 1024.0f,
         g_level_info.size_in_bytes / 1024.0f / 1024.0f);
-    rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, x + cx/2, y + cy/2 - cy_font/2, buf, -1, rf::g_GrTextMaterial);
+    rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, x + cx/2, y + cy/2 - cy_font/2, text.c_str(), -1, rf::g_GrTextMaterial);
 }
 
 #endif /* LEVELS_AUTODOWNLOADER */

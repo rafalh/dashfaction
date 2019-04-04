@@ -141,13 +141,12 @@ static unsigned HashFile(const char *Filename)
 
 static GameLang DetectInstalledGameLang()
 {
-    char full_path[MAX_PATH];
     std::array lang_codes{"en", "gr", "fr"};
 
     for (unsigned i = 0; i < lang_codes.size(); ++i)
     {
-        sprintf(full_path, "%smaps_%s.vpp", rf::g_RootPath, lang_codes[i]);
-        BOOL exists = PathFileExistsA(full_path);
+        auto full_path = StringFormat("%smaps_%s.vpp", rf::g_RootPath, lang_codes[i]);
+        BOOL exists = PathFileExistsA(full_path.c_str());
         INFO("Checking file %s: %s", full_path, exists ? "found" : "not found");
         if (exists)
         {
@@ -180,20 +179,20 @@ static int PackfileLoad_New(const char *filename, const char *dir)
 {
     VFS_DBGPRINT("Load packfile %s %s", dir, filename);
 
-    char full_path[256];
+    std::string full_path;
     if (dir && dir[0] && dir[1] == ':')
-        sprintf(full_path, "%s%s", dir, filename); // absolute path
+        full_path = StringFormat("%s%s", dir, filename); // absolute path
     else
-        sprintf(full_path, "%s%s%s", rf::g_RootPath, dir ? dir : "", filename);
+        full_path = StringFormat("%s%s%s", rf::g_RootPath, dir ? dir : "", filename);
 
-    if (!filename || strlen(filename) > 0x1F || strlen(full_path) > 0x7F)
+    if (!filename || strlen(filename) > 0x1F || full_path.size() > 0x7F)
     {
-        ERR("Packfile name or path too long: %s", full_path);
+        ERR("Packfile name or path too long: %s", full_path.c_str());
         return 0;
     }
 
     for (rf::Packfile *packfile : g_Packfiles)
-        if (!stricmp(packfile->Path, full_path))
+        if (!stricmp(packfile->Path, full_path.c_str()))
             return 1;
 
 #if CHECK_PACKFILE_CHECKSUM
@@ -212,7 +211,7 @@ static int PackfileLoad_New(const char *filename, const char *dir)
     }
 #endif // CHECK_PACKFILE_CHECKSUM
 
-    FILE *file = fopen(full_path, "rb");
+    FILE *file = fopen(full_path.c_str(), "rb");
     if (!file)
     {
         ERR("Failed to open packfile %s", full_path);
@@ -222,7 +221,7 @@ static int PackfileLoad_New(const char *filename, const char *dir)
     rf::Packfile *packfile = new rf::Packfile;
     strncpy(packfile->Name, filename, sizeof(packfile->Name) - 1);
     packfile->Name[sizeof(packfile->Name) - 1] = '\0';
-    strncpy(packfile->Path, full_path, sizeof(packfile->Path) - 1);
+    strncpy(packfile->Path, full_path.c_str(), sizeof(packfile->Path) - 1);
     packfile->Path[sizeof(packfile->Path) - 1] = '\0';
     packfile->field_A0 = 0;
     packfile->NumFiles = 0;

@@ -429,11 +429,11 @@ void DcAutoCompletePutComponent(int offset, const std::string &component, bool f
 {
     bool quote = component.find(' ') != std::string::npos;
     if (quote)
-        rf::g_DcCmdLineLen = offset + sprintf(rf::g_DcCmdLine + offset, "\"%s\"", component.c_str());
+        rf::g_DcCmdLineLen = offset + snprintf(rf::g_DcCmdLine + offset, 256 - offset, "\"%s\"", component.c_str());
     else
-        rf::g_DcCmdLineLen = offset + sprintf(rf::g_DcCmdLine + offset, "%s", component.c_str());
+        rf::g_DcCmdLineLen = offset + snprintf(rf::g_DcCmdLine + offset, 256 - offset, "%s", component.c_str());
     if (finished)
-        rf::g_DcCmdLineLen += sprintf(rf::g_DcCmdLine + rf::g_DcCmdLineLen, " ");
+        rf::g_DcCmdLineLen += snprintf(rf::g_DcCmdLine + rf::g_DcCmdLineLen, 256 - rf::g_DcCmdLineLen, " ");
 }
 
 template<typename T, typename F>

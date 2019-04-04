@@ -36,7 +36,6 @@ void DrawScoreboardInternal_New(bool draw)
         return;
 
     unsigned c_left_col = 0, c_right_col = 0;
-    char buf[512];
     unsigned game_type = rf::GetGameType();
 
     // Sort players by score
@@ -153,11 +152,13 @@ void DrawScoreboardInternal_New(bool draw)
     if (game_type != RF_DM)
     {
         rf::GrSetColor(0xD0, 0x20, 0x20, 0xFF);
-        sprintf(buf, "%u", red_score);
-        rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, x + cx * 1 / 6, y, buf, rf::g_BigFontId, rf::g_GrTextMaterial);
+        auto red_score_str = std::to_string(red_score);
+        rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, x + cx * 1 / 6, y, red_score_str.c_str(), rf::g_BigFontId,
+            rf::g_GrTextMaterial);
         rf::GrSetColor(0x20, 0x20, 0xD0, 0xFF);
-        sprintf(buf, "%u", blue_score);
-        rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, x + cx * 5 / 6, y, buf, rf::g_BigFontId, rf::g_GrTextMaterial);
+        auto blue_score_str = std::to_string(blue_score);
+        rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, x + cx * 5 / 6, y, blue_score_str.c_str(), rf::g_BigFontId,
+            rf::g_GrTextMaterial);
         y += 60;
     }
 
@@ -237,22 +238,22 @@ void DrawScoreboardInternal_New(bool draw)
         rf::GrDrawText(offsets.Name, row_y, player_name_stripped, -1, rf::g_GrTextMaterial);
 
         auto stats = (PlayerStatsNew*)player->Stats;
-        sprintf(buf, "%hd", stats->score);
-        rf::GrDrawText(offsets.Score, row_y, buf, -1, rf::g_GrTextMaterial);
+        auto score_str = std::to_string(stats->score);
+        rf::GrDrawText(offsets.Score, row_y, score_str.c_str(), -1, rf::g_GrTextMaterial);
 
-        sprintf(buf, "%hd/%hd", stats->num_kills, stats->num_deaths);
-        rf::GrDrawText(offsets.KillsDeaths, row_y, buf, -1, rf::g_GrTextMaterial);
+        auto kills_deaths_str = StringFormat("%hd/%hd", stats->num_kills, stats->num_deaths);
+        rf::GrDrawText(offsets.KillsDeaths, row_y, kills_deaths_str.c_str(), -1, rf::g_GrTextMaterial);
 
         if (game_type == RF_CTF)
         {
-            sprintf(buf, "%hu", stats->caps);
-            rf::GrDrawText(offsets.CtfFlags, row_y, buf, -1, rf::g_GrTextMaterial);
+            auto caps_str = std::to_string(stats->caps);
+            rf::GrDrawText(offsets.CtfFlags, row_y, caps_str.c_str(), -1, rf::g_GrTextMaterial);
         }
 
         if (player->NwData)
         {
-            sprintf(buf, "%hu", player->NwData->dwPing);
-            rf::GrDrawText(offsets.Ping, row_y, buf, -1, rf::g_GrTextMaterial);
+            auto ping_str = std::to_string(player->NwData->dwPing);
+            rf::GrDrawText(offsets.Ping, row_y, ping_str.c_str(), -1, rf::g_GrTextMaterial);
         }
     }
 }

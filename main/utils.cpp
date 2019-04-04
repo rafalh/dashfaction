@@ -72,9 +72,7 @@ std::string getOsVersion()
     if (!GetVersionEx(&ver_info))
         THROW_EXCEPTION("GetVersionEx failed");
 
-    char buf[64];
-    sprintf(buf, "%lu.%lu.%lu", ver_info.dwMajorVersion, ver_info.dwMinorVersion, ver_info.dwBuildNumber);
-    return buf;
+    return StringFormat("%lu.%lu.%lu", ver_info.dwMajorVersion, ver_info.dwMinorVersion, ver_info.dwBuildNumber);
 }
 
 std::string getRealOsVersion()
@@ -88,24 +86,23 @@ std::string getRealOsVersion()
         THROW_EXCEPTION("GetSystemDirectory failed");
 
     strcpy(path + count, "\\kernel32.dll");
-    DWORD ver_size = GetFileVersionInfoSize(path, NULL);
+    DWORD ver_size = GetFileVersionInfoSize(path, nullptr);
     if (ver_size == 0)
         THROW_EXCEPTION("GetFileVersionInfoSize failed");
-    BYTE *ver = new BYTE[ver_size];
-    if (!GetFileVersionInfo(path, 0, ver_size, ver))
+
+    auto ver = std::make_unique<BYTE[]>(ver_size);
+    if (!GetFileVersionInfo(path, 0, ver_size, ver.get()))
         THROW_EXCEPTION("GetFileVersionInfo failed");
 
     void *block;
     UINT block_size;
-    BOOL ret = VerQueryValueA(ver, "\\", &block, &block_size);
+    BOOL ret = VerQueryValueA(ver.get(), "\\", &block, &block_size);
     if (!ret || block_size < sizeof(VS_FIXEDFILEINFO))
         THROW_EXCEPTION("VerQueryValueA returned unknown block");
     VS_FIXEDFILEINFO *file_info = (VS_FIXEDFILEINFO *)block;
 
-    char buf[64];
-    sprintf(buf, "%d.%d.%d", HIWORD(file_info->dwProductVersionMS), LOWORD(file_info->dwProductVersionMS), HIWORD(file_info->dwProductVersionLS));
-    delete[] ver;
-    return buf;
+    return StringFormat("%d.%d.%d", HIWORD(file_info->dwProductVersionMS), LOWORD(file_info->dwProductVersionMS),
+        HIWORD(file_info->dwProductVersionLS));
 }
 
 bool IsUserAdmin()

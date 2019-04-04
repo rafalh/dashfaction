@@ -98,11 +98,10 @@ RegsPatch GrCreateD3DDevice_error_patch{
         auto hr = static_cast<HRESULT>(regs.eax);
         ERR("D3D CreateDevice failed (hr 0x%X - %s)", hr, getDxErrorStr(hr));
 
-        char buf[1024];
-        sprintf(buf, "Failed to create Direct3D device object - error 0x%lX (%s).\n"
+        auto text = StringFormat("Failed to create Direct3D device object - error 0x%lX (%s).\n"
             "A critical error has occurred and the program cannot continue.\n"
             "Press OK to exit the program", hr, getDxErrorStr(hr));
-        MessageBoxA(nullptr, buf, "Error!", MB_OK | MB_ICONERROR | MB_SETFOREGROUND | MB_TASKMODAL);
+        MessageBoxA(nullptr, text.c_str(), "Error!", MB_OK | MB_ICONERROR | MB_SETFOREGROUND | MB_TASKMODAL);
         ExitProcess(-1);
     }
 };
@@ -358,9 +357,8 @@ void GraphicsAfterGameInit()
 void GraphicsDrawFpsCounter()
 {
     if (g_game_config.fpsCounter) {
-        char buf[32];
-        sprintf(buf, "FPS: %.1f", rf::g_fFps);
+        auto text = StringFormat("FPS: %.1f", rf::g_fFps);
         rf::GrSetColor(0, 255, 0, 255);
-        rf::GrDrawAlignedText(rf::GR_ALIGN_RIGHT, rf::GrGetMaxWidth() - 10, 60, buf, -1, rf::g_GrTextMaterial);
+        rf::GrDrawAlignedText(rf::GR_ALIGN_RIGHT, rf::GrGetMaxWidth() - 10, 60, text.c_str(), -1, rf::g_GrTextMaterial);
     }
 }
