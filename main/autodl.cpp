@@ -198,8 +198,8 @@ catch(std::exception &e)
 static std::optional<std::string> GetTempFileNameInTempDir(const char *prefix)
 {
     char temp_dir[MAX_PATH];
-    DWORD ret_val = GetTempPathA(_countof(temp_dir), temp_dir);
-    if (ret_val == 0 || ret_val > _countof(temp_dir))
+    DWORD ret_val = GetTempPathA(std::size(temp_dir), temp_dir);
+    if (ret_val == 0 || ret_val > std::size(temp_dir))
         return {};
 
     char result[MAX_PATH];

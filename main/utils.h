@@ -13,8 +13,6 @@ const char *GetProcessElevationType();
 std::string getCpuId();
 std::string getCpuBrand();
 
-#define COUNTOF(a) (sizeof(a)/sizeof((a)[0]))
-
 #define STDCALL __stdcall
 
 #define ASSERT(x) assert(x)

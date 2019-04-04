@@ -105,7 +105,7 @@ const char *ModFileWhitelist[] = {
 
 static bool IsModFileInWhitelist(const char *Filename)
 {
-    for (unsigned i = 0; i < COUNTOF(ModFileWhitelist); ++i)
+    for (unsigned i = 0; i < std::size(ModFileWhitelist); ++i)
         if (!stricmp(ModFileWhitelist[i], Filename))
             return true;
     return false;

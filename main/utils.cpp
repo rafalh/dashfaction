@@ -81,7 +81,7 @@ std::string getRealOsVersion()
     // also GetVersionEx returns compatiblity version
 
     char path[MAX_PATH];
-    int count = GetSystemDirectory(path, COUNTOF(path));
+    int count = GetSystemDirectory(path, std::size(path));
     if (!count)
         THROW_EXCEPTION("GetSystemDirectory failed");
 

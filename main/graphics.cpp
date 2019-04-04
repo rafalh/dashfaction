@@ -52,7 +52,7 @@ static void SetTextureMinMagFilterInCode(D3DTEXTUREFILTERTYPE filter_type)
         0x005501A2, 0x005501B6,
     };
     unsigned i;
-    for (i = 0; i < _countof(addresses); ++i)
+    for (i = 0; i < std::size(addresses); ++i)
         WriteMem<u8>(addresses[i] + 1, (uint8_t)filter_type);
 }
 

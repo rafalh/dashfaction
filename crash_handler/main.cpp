@@ -65,8 +65,8 @@ void SendArchive()
 int GetTempFileNameInTempDir(const char *Prefix, char Result[MAX_PATH])
 {
     char TempDir[MAX_PATH];
-    DWORD dwRetVal = GetTempPathA(_countof(TempDir), TempDir);
-    if (dwRetVal == 0 || dwRetVal > _countof(TempDir))
+    DWORD dwRetVal = GetTempPathA(std::size(TempDir), TempDir);
+    if (dwRetVal == 0 || dwRetVal > std::size(TempDir))
         return -1;
 
     UINT RetVal = GetTempFileNameA(TempDir, Prefix, 0, Result);

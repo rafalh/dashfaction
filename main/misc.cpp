@@ -88,7 +88,7 @@ CallHook2<void()> MenuMainProcessMouse_Hook{
             int x, y, z;
             rf::MouseGetPos(x, y, z);
             rf::UiPanel *panels_to_check[1] = { &rf::g_MenuVersionLabel };
-            int matched = rf::UiGetElementFromPos(x, y, panels_to_check, _countof(panels_to_check));
+            int matched = rf::UiGetElementFromPos(x, y, panels_to_check, std::size(panels_to_check));
             if (matched == 0)
             {
                 TRACE("Version clicked");
@@ -169,7 +169,7 @@ void SetPlaySoundEventsVolumeScale(float volume_scale)
         // Play Sound event
         0x004BA4D8, 0x004BA515, 0x004BA71C, 0x004BA759, 0x004BA609, 0x004BA5F2, 0x004BA63F,
     };
-    for (unsigned i = 0; i < COUNTOF(offsets); ++i)
+    for (unsigned i = 0; i < std::size(offsets); ++i)
         WriteMem<float>(offsets[i] + 1, volume_scale);
 }
 
@@ -363,10 +363,10 @@ FunHook2<void()> DcDrawServerConsole_Hook{
     []() {
         static char PrevCmdLine[1024];
         HANDLE Output_handle = GetStdHandle(STD_OUTPUT_HANDLE);
-        if (strncmp(g_DcCmdLine, PrevCmdLine, _countof(PrevCmdLine)) != 0) {
+        if (strncmp(g_DcCmdLine, PrevCmdLine, std::size(PrevCmdLine)) != 0) {
             ResetConsoleCursorColumn(true);
             PrintCmdInputLine();
-            strncpy(PrevCmdLine, g_DcCmdLine, _countof(PrevCmdLine));
+            strncpy(PrevCmdLine, g_DcCmdLine, std::size(PrevCmdLine));
         }
     }
 };
