@@ -33,6 +33,7 @@ Version 1.2.2 (not released yet)
 - allow 'level' command outside of multiplayer game and remove now redundant 'levelsp' command
 - add 'show_enemy_bullets' command for toggling enemy bullets visibility (configuration is persisted) - it was forced on before
 - add persisting of volumetric lights (glares) configuration changed by 'vli' command
+- add 'fullscreen' and 'windowed' commands
 - fix multiple security vulnerabilities
 - stability improvements
 

@@ -4,6 +4,7 @@
 #include "rf.h"
 #include "main.h"
 #include "gr_color.h"
+#include "commands.h"
 #include <CallHook2.h>
 #include <RegsPatch.h>
 #include <ShortTypes.h>
@@ -115,7 +116,7 @@ RegsPatch GrClearZBuffer_fix_rect{
     }
 };
 
-static void SetupPP(void)
+static void SetupPP()
 {
     memset(&rf::g_GrPP, 0, sizeof(rf::g_GrPP));
 
@@ -186,6 +187,34 @@ CallHook2<void()> GrInitBuffers_AfterReset_Hook{
 
         if (rf::g_GrDeviceCaps.MaxAnisotropy > 0 && g_game_config.anisotropicFiltering)
             SetupMaxAnisotropy();
+    }
+};
+
+bool g_reset_device_req = false;
+
+RegsPatch switch_d3d_mode_patch{
+    0x0054500D,
+    [](auto &regs) {
+        if (g_reset_device_req) {
+            g_reset_device_req = false;
+            regs.eip = 0x00545017;
+        }
+    }
+};
+
+DcCommand2 fullscreen_cmd{
+    "fullscreen",
+    []() {
+        rf::g_GrPP.Windowed = false;
+        g_reset_device_req = true;
+    }
+};
+
+DcCommand2 windowed_cmd{
+    "windowed",
+    []() {
+        rf::g_GrPP.Windowed = true;
+        g_reset_device_req = true;
     }
 };
 
@@ -299,6 +328,11 @@ void GraphicsInit()
 
     // Fix decal fade out
     WriteMem<u8>(0x00560994 + 1, 3);
+
+    // fullscreen/windowed commands
+    switch_d3d_mode_patch.Install();
+    fullscreen_cmd.Register();
+    windowed_cmd.Register();
 }
 
 void GraphicsAfterGameInit()
