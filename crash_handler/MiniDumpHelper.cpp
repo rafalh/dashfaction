@@ -12,10 +12,8 @@ bool MiniDumpHelper::IsDataSectionNeeded(const WCHAR* ModuleName)
     _wsplitpath(ModuleName, NULL, NULL, FileName, NULL);
 
     // Compare the name with the list of known names and decide
-    for (auto name : m_knownModules)
-    {
-        if (wcsicmp(FileName, name.c_str()) == 0)
-        {
+    for (auto name : m_knownModules) {
+        if (wcsicmp(FileName, name.c_str()) == 0) {
             return true;
         }
     }
@@ -24,13 +22,10 @@ bool MiniDumpHelper::IsDataSectionNeeded(const WCHAR* ModuleName)
     return false;
 }
 
-BOOL CALLBACK MiniDumpHelper::MiniDumpCallback(
-    PVOID                            Param,
-    const PMINIDUMP_CALLBACK_INPUT   Input,
-    PMINIDUMP_CALLBACK_OUTPUT        Output
-)
+BOOL CALLBACK MiniDumpHelper::MiniDumpCallback(PVOID Param, const PMINIDUMP_CALLBACK_INPUT Input,
+                                               PMINIDUMP_CALLBACK_OUTPUT Output)
 {
-    MiniDumpHelper *This = (MiniDumpHelper*)Param;
+    MiniDumpHelper* This = (MiniDumpHelper*)Param;
 
     BOOL bRet = FALSE;
 
@@ -39,59 +34,44 @@ BOOL CALLBACK MiniDumpHelper::MiniDumpCallback(
         return FALSE;
 
     // Process the callbacks
-    switch (Input->CallbackType)
-    {
-    case IncludeModuleCallback:
-    {
+    switch (Input->CallbackType) {
+    case IncludeModuleCallback: {
         // Include the module into the dump
         bRet = TRUE;
-    }
-    break;
+    } break;
 
-    case IncludeThreadCallback:
-    {
+    case IncludeThreadCallback: {
         // Include the thread into the dump
         bRet = TRUE;
-    }
-    break;
+    } break;
 
-    case ModuleCallback:
-    {
+    case ModuleCallback: {
         // Are data sections available for this module ?
-        if (Output->ModuleWriteFlags & ModuleWriteDataSeg)
-        {
+        if (Output->ModuleWriteFlags & ModuleWriteDataSeg) {
             // Yes, they are, but do we need them?
-            if (!This->IsDataSectionNeeded(Input->Module.FullPath))
-            {
-                //wprintf(L"Excluding module data sections: %s \n", Input->Module.FullPath);
+            if (!This->IsDataSectionNeeded(Input->Module.FullPath)) {
+                // wprintf(L"Excluding module data sections: %s \n", Input->Module.FullPath);
                 Output->ModuleWriteFlags &= (~ModuleWriteDataSeg);
             }
         }
 
         bRet = TRUE;
-    }
-    break;
+    } break;
 
-    case ThreadCallback:
-    {
+    case ThreadCallback: {
         // Include all thread information into the minidump
         bRet = TRUE;
-    }
-    break;
+    } break;
 
-    case ThreadExCallback:
-    {
+    case ThreadExCallback: {
         // Include this information
         bRet = TRUE;
-    }
-    break;
+    } break;
 
-    case MemoryCallback:
-    {
+    case MemoryCallback: {
         // We do not include any information here -> return FALSE
         bRet = FALSE;
-    }
-    break;
+    } break;
 
     case CancelCallback:
         break;
@@ -100,23 +80,17 @@ BOOL CALLBACK MiniDumpHelper::MiniDumpCallback(
     return bRet;
 }
 
-bool MiniDumpHelper::writeDump(const char *Path, PEXCEPTION_POINTERS ExceptionPointers, HANDLE hProcess, DWORD dwThreadId)
+bool MiniDumpHelper::writeDump(const char* Path, PEXCEPTION_POINTERS ExceptionPointers, HANDLE hProcess,
+                               DWORD dwThreadId)
 {
     if (!m_pMiniDumpWriteDump)
         return false;
 
     static HANDLE hFile = NULL;
-    hFile = CreateFileA(
-        Path,
-        GENERIC_READ | GENERIC_WRITE,
-        FILE_SHARE_READ,
-        NULL,
-        CREATE_ALWAYS,
-        FILE_ATTRIBUTE_NORMAL,
-        NULL);
+    hFile = CreateFileA(Path, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,
+                        NULL);
 
-    if (INVALID_HANDLE_VALUE == hFile)
-    {
+    if (INVALID_HANDLE_VALUE == hFile) {
         char Buf[256];
         sprintf(Buf, "Error %lu! CreateFile failed when writing a Minidump.", GetLastError());
         CRASHHANDLER_ERR(Buf);
@@ -129,24 +103,18 @@ bool MiniDumpHelper::writeDump(const char *Path, PEXCEPTION_POINTERS ExceptionPo
     ExceptionInfo.ClientPointers = TRUE;
 
     static MINIDUMP_TYPE DumpType = MiniDumpNormal;
-    static MINIDUMP_CALLBACK_INFORMATION *CallbackInfoPtr = NULL;
+    static MINIDUMP_CALLBACK_INFORMATION* CallbackInfoPtr = NULL;
 
     // See http://www.debuginfo.com/articles/effminidumps2.html
-    if (m_infoLevel == 0)
-    {
+    if (m_infoLevel == 0) {
         DumpType = MiniDumpWithIndirectlyReferencedMemory;
         CallbackInfoPtr = NULL;
     }
     else if (m_infoLevel == 1) // medium information
     {
-        DumpType = (MINIDUMP_TYPE)(
-            MiniDumpWithPrivateReadWriteMemory |
-            MiniDumpIgnoreInaccessibleMemory |
-            MiniDumpWithDataSegs |
-            MiniDumpWithHandleData |
-            MiniDumpWithFullMemoryInfo |
-            MiniDumpWithThreadInfo |
-            MiniDumpWithUnloadedModules);
+        DumpType = (MINIDUMP_TYPE)(MiniDumpWithPrivateReadWriteMemory | MiniDumpIgnoreInaccessibleMemory |
+                                   MiniDumpWithDataSegs | MiniDumpWithHandleData | MiniDumpWithFullMemoryInfo |
+                                   MiniDumpWithThreadInfo | MiniDumpWithUnloadedModules);
 
         static MINIDUMP_CALLBACK_INFORMATION CallbackInfo;
         CallbackInfo.CallbackRoutine = (MINIDUMP_CALLBACK_ROUTINE)MiniDumpCallback;
@@ -155,16 +123,14 @@ bool MiniDumpHelper::writeDump(const char *Path, PEXCEPTION_POINTERS ExceptionPo
     }
     else if (m_infoLevel == 2) // Maximal information
     {
-        DumpType = (MINIDUMP_TYPE)(MiniDumpWithFullMemory |
-            MiniDumpWithFullMemoryInfo |
-            MiniDumpWithHandleData |
-            MiniDumpWithThreadInfo |
-            MiniDumpWithUnloadedModules |
-            MiniDumpWithIndirectlyReferencedMemory);
+        DumpType = (MINIDUMP_TYPE)(MiniDumpWithFullMemory | MiniDumpWithFullMemoryInfo | MiniDumpWithHandleData |
+                                   MiniDumpWithThreadInfo | MiniDumpWithUnloadedModules |
+                                   MiniDumpWithIndirectlyReferencedMemory);
         CallbackInfoPtr = NULL;
     }
 
-    BOOL Result = m_pMiniDumpWriteDump(hProcess, GetProcessId(hProcess), hFile, DumpType, &ExceptionInfo, NULL, CallbackInfoPtr);
+    BOOL Result =
+        m_pMiniDumpWriteDump(hProcess, GetProcessId(hProcess), hFile, DumpType, &ExceptionInfo, NULL, CallbackInfoPtr);
     if (!Result)
         CRASHHANDLER_ERR("MiniDumpWriteDump failed");
 

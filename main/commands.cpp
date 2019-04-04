@@ -1,19 +1,19 @@
-#include "stdafx.h"
 #include "commands.h"
-#include "rf.h"
-#include "utils.h"
-#include "lazyban.h"
-#include "main.h"
 #include "BuildConfig.h"
-#include "spectate_mode.h"
+#include "lazyban.h"
 #include "main.h"
 #include "misc.h"
 #include "packfile.h"
-#include <FunHook2.h>
+#include "rf.h"
+#include "spectate_mode.h"
+#include "stdafx.h"
+#include "utils.h"
 #include <CallHook2.h>
+#include <FunHook2.h>
 #include <RegsPatch.h>
 
-namespace rf {
+namespace rf
+{
 
 // Server configuration commands
 static const auto DcfKillLimit = (DcCmdHandler)0x0046CBC0;
@@ -36,21 +36,20 @@ static const auto DcfSystemInfo = (DcCmdHandler)0x00525A60;
 static const auto DcfTrilinearFiltering = (DcCmdHandler)0x0054F050;
 static const auto DcfDetailTextures = (DcCmdHandler)0x0054F0B0;
 
-}
+} // namespace rf
 
 // Note: limit should fit in int8_t
 constexpr int CMD_LIMIT = 127;
 
-rf::DcCommand *g_CommandsBuffer[CMD_LIMIT];
+rf::DcCommand* g_CommandsBuffer[CMD_LIMIT];
 bool g_DbgGeometryRenderingStats = false;
 bool g_DbgStaticLights = false;
 
-rf::Player *FindBestMatchingPlayer(const char *name)
+rf::Player* FindBestMatchingPlayer(const char* name)
 {
-    rf::Player *found_player;
+    rf::Player* found_player;
     int num_found = 0;
-    FindPlayer(StringMatcher().Exact(name), [&](rf::Player *player)
-    {
+    FindPlayer(StringMatcher().Exact(name), [&](rf::Player* player) {
         found_player = player;
         ++num_found;
     });
@@ -58,8 +57,7 @@ rf::Player *FindBestMatchingPlayer(const char *name)
         return found_player;
 
     num_found = 0;
-    FindPlayer(StringMatcher().Infix(name), [&](rf::Player *player)
-    {
+    FindPlayer(StringMatcher().Infix(name), [&](rf::Player* player) {
         found_player = player;
         ++num_found;
     });
@@ -67,7 +65,7 @@ rf::Player *FindBestMatchingPlayer(const char *name)
     if (num_found == 1)
         return found_player;
     else if (num_found > 1)
-        rf::DcPrintf("Found %d players matching '%s'!", num_found,  name);
+        rf::DcPrintf("Found %d players matching '%s'!", num_found, name);
     else
         rf::DcPrintf("Cannot find player matching '%s'", name);
     return nullptr;
@@ -91,7 +89,6 @@ DcCommand2 SplitScreenCmd{
 DcCommand2 MaxFpsCmd{
     "maxfps",
     [](std::optional<float> limit_opt) {
-
         if (limit_opt) {
 #ifdef NDEBUG
             float newLimit = std::clamp(LimitOpt.value(), (float)MIN_FPS_LIMIT, (float)MAX_FPS_LIMIT);
@@ -130,7 +127,7 @@ DcCommand2 DebugCmd{
             rf::DcPrintf("All debug flags are %s", all_flags ? "enabled" : "disabled");
         }
 
-        auto handle_flag = [&](bool &flag_ref, const char *flag_name) {
+        auto handle_flag = [&](bool& flag_ref, const char* flag_name) {
             bool old_flag_value = flag_ref;
             if (type == flag_name) {
                 flag_ref = !flag_ref;
@@ -143,29 +140,31 @@ DcCommand2 DebugCmd{
             return old_flag_value != flag_ref;
         };
 
-        auto &dg_thruster               = AddrAsRef<bool>(0x0062F3AA);
-        auto &dg_lights                 = AddrAsRef<bool>(0x0062FE19);
+        // clang-format off
+        auto &dg_thruster                  = AddrAsRef<bool>(0x0062F3AA);
+        auto &dg_lights                    = AddrAsRef<bool>(0x0062FE19);
         auto &dg_push_and_climbing_regions = AddrAsRef<bool>(0x0062FE1A);
-        auto &dg_geo_regions             = AddrAsRef<bool>(0x0062FE1B);
-        auto &dg_glass                  = AddrAsRef<bool>(0x0062FE1C);
-        auto &dg_movers                 = AddrAsRef<bool>(0x0062FE1D);
-        auto &dg_entity_burn             = AddrAsRef<bool>(0x0062FE1E);
-        auto &dg_movement_mode           = AddrAsRef<bool>(0x0062FE1F);
-        auto &dg_perfomance             = AddrAsRef<bool>(0x0062FE20);
-        auto &dg_perf_bar                = AddrAsRef<bool>(0x0062FE21);
-        auto &dg_waypoints              = AddrAsRef<bool>(0x0064E39C);
-        auto &dg_network                = AddrAsRef<bool>(0x006FED24);
-        auto &dg_particle_stats          = AddrAsRef<bool>(0x007B2758);
-        auto &dg_weapon                 = AddrAsRef<bool>(0x007CAB59);
-        auto &dg_events                 = AddrAsRef<bool>(0x00856500);
-        auto &dg_triggers               = AddrAsRef<bool>(0x0085683C);
-        auto &dg_obj_rendering           = AddrAsRef<bool>(0x009BB5AC);
+        auto &dg_geo_regions               = AddrAsRef<bool>(0x0062FE1B);
+        auto &dg_glass                     = AddrAsRef<bool>(0x0062FE1C);
+        auto &dg_movers                    = AddrAsRef<bool>(0x0062FE1D);
+        auto &dg_entity_burn               = AddrAsRef<bool>(0x0062FE1E);
+        auto &dg_movement_mode             = AddrAsRef<bool>(0x0062FE1F);
+        auto &dg_perfomance                = AddrAsRef<bool>(0x0062FE20);
+        auto &dg_perf_bar                  = AddrAsRef<bool>(0x0062FE21);
+        auto &dg_waypoints                 = AddrAsRef<bool>(0x0064E39C);
+        auto &dg_network                   = AddrAsRef<bool>(0x006FED24);
+        auto &dg_particle_stats            = AddrAsRef<bool>(0x007B2758);
+        auto &dg_weapon                    = AddrAsRef<bool>(0x007CAB59);
+        auto &dg_events                    = AddrAsRef<bool>(0x00856500);
+        auto &dg_triggers                  = AddrAsRef<bool>(0x0085683C);
+        auto &dg_obj_rendering             = AddrAsRef<bool>(0x009BB5AC);
         // Geometry rendering flags
-        auto &render_everything_see_through     = AddrAsRef<bool>(0x009BB594);
-        auto &render_rooms_in_different_colors   = AddrAsRef<bool>(0x009BB598);
-        auto &render_non_see_through_portal_faces = AddrAsRef<bool>(0x009BB59C);
-        auto &render_lightmaps_only            = AddrAsRef<bool>(0x009BB5A4);
-        auto &render_no_lightmaps              = AddrAsRef<bool>(0x009BB5A8);
+        auto& render_everything_see_through       = AddrAsRef<bool>(0x009BB594);
+        auto& render_rooms_in_different_colors    = AddrAsRef<bool>(0x009BB598);
+        auto& render_non_see_through_portal_faces = AddrAsRef<bool>(0x009BB59C);
+        auto& render_lightmaps_only               = AddrAsRef<bool>(0x009BB5A4);
+        auto& render_no_lightmaps                 = AddrAsRef<bool>(0x009BB5A8);
+        // clang-format on
 
         handle_flag(dg_thruster, "thruster");
         // debug string at the left-top corner
@@ -199,7 +198,7 @@ DcCommand2 DebugCmd{
 
         // Clear geometry cache (needed for geometry rendering flags)
         if (geom_rendering_changed) {
-            auto geom_cache_clear = (void(*)())0x004F0B90;
+            auto geom_cache_clear = (void (*)())0x004F0B90;
             geom_cache_clear();
         }
 
@@ -207,15 +206,15 @@ DcCommand2 DebugCmd{
             rf::DcPrintf("Invalid debug flag: %s", type.c_str());
     },
     nullptr,
-    "debug [thruster | light | light2 | push_climb_reg | geo_reg | glass | mover | ignite | movemode | perf | perfbar | "
-    "waypoint | network | particlestats | weapon | event | trigger | objrender | roomstats | "
-    "trans | room | portal | lightmap | nolightmap]",
+    "debug [thruster | light | light2 | push_climb_reg | geo_reg | glass | mover | ignite | movemode | perf | "
+    "perfbar | waypoint | network | particlestats | weapon | event | trigger | objrender | roomstats | trans | "
+    "room | portal | lightmap | nolightmap]",
 };
 
 void DebugRender3d()
 {
-    const auto dbg_waypoints       = (void(*)()) 0x00468F00;
-    const auto dbg_internal_lights  = (void(*)()) 0x004DB830;
+    const auto dbg_waypoints = (void (*)())0x00468F00;
+    const auto dbg_internal_lights = (void (*)())0x004DB830;
 
     dbg_waypoints();
     if (g_DbgStaticLights)
@@ -224,8 +223,8 @@ void DebugRender3d()
 
 void DebugRender2d()
 {
-    const auto dbg_rendering_stats  = (void(*)()) 0x004D36B0;
-    const auto dbg_particle_stats   = (void(*)()) 0x004964E0;
+    const auto dbg_rendering_stats = (void (*)())0x004D36B0;
+    const auto dbg_particle_stats = (void (*)())0x004964E0;
     if (g_DbgGeometryRenderingStats)
         dbg_rendering_stats();
     dbg_particle_stats();
@@ -233,11 +232,11 @@ void DebugRender2d()
 
 #if SPECTATE_MODE_ENABLE
 
-DcCommand2 SpectateCmd {
+DcCommand2 SpectateCmd{
     "spectate",
     [](std::optional<std::string> player_name) {
         if (rf::g_IsNetworkGame) {
-            rf::Player *player;
+            rf::Player* player;
             if (player_name && player_name.value() == "false")
                 player = nullptr;
             else if (player_name)
@@ -247,11 +246,11 @@ DcCommand2 SpectateCmd {
 
             if (player)
                 SpectateModeSetTargetPlayer(player);
-        } else
+        }
+        else
             rf::DcPrint("Works only in multiplayer game!", NULL);
     },
-    "Starts spectating mode",
-    "spectate <player_name/false>"
+    "Starts spectating mode", "spectate <player_name/false>"
     // rf::DcPrintf("     spectate <%s>", rf::strings::player_name);
     // rf::DcPrintf("     spectate false");
 };
@@ -264,8 +263,7 @@ DcCommand2 AntiAliasingCmd{
     []() {
         if (!g_game_config.msaa)
             rf::DcPrintf("Anti-aliasing is not supported");
-        else
-        {
+        else {
             DWORD enabled = 0;
             rf::g_GrDevice->GetRenderState(D3DRS_MULTISAMPLEANTIALIAS, &enabled);
             enabled = !enabled;
@@ -293,7 +291,7 @@ DcCommand2 InputModeCmd{
 
 #if CAMERA_1_3_COMMANDS
 
-static int CanPlayerFireHook(rf::Player *player)
+static int CanPlayerFireHook(rf::Player* player)
 {
     if (!(player->Flags & 0x10))
         return 0;
@@ -359,9 +357,8 @@ DcCommand2 PlayerCountCmd{
             return;
 
         int player_count = 0;
-        rf::Player *player = rf::g_PlayersList;
-        while (player)
-        {
+        rf::Player* player = rf::g_PlayersList;
+        while (player) {
             if (player != rf::g_PlayersList)
                 ++player_count;
             player = player->Next;
@@ -376,8 +373,8 @@ DcCommand2 PlayerCountCmd{
 DcCommand2 FindLevelCmd{
     "findlevel",
     [](std::string pattern) {
-        PackfileFindMatchingFiles(StringMatcher().Infix(pattern).Suffix(".rfl"), [](const char *name)
-        {
+        PackfileFindMatchingFiles(StringMatcher().Infix(pattern).Suffix(".rfl"), [](const char* name) {
+            // Print all matching filenames
             rf::DcPrintf("%s\n", name);
         });
     },
@@ -390,13 +387,13 @@ DcCommandAlias FindMapCmd{
     FindLevelCmd,
 };
 
-auto &LevelCmd = AddrAsRef<rf::DcCommand>(0x00637078);
+auto& LevelCmd = AddrAsRef<rf::DcCommand>(0x00637078);
 DcCommandAlias MapCmd{
     "map",
     LevelCmd,
 };
 
-void DcShowCmdHelp(rf::DcCommand *cmd)
+void DcShowCmdHelp(rf::DcCommand* cmd)
 {
     rf::g_DcRun = 0;
     rf::g_DcHelp = 1;
@@ -404,11 +401,10 @@ void DcShowCmdHelp(rf::DcCommand *cmd)
     cmd->pfnHandler();
 }
 
-int DcAutoCompleteGetComponent(int offset, std::string &result)
+int DcAutoCompleteGetComponent(int offset, std::string& result)
 {
     const char *begin = rf::g_DcCmdLine + offset, *end = nullptr, *next;
-    if (begin[0] == '"')
-    {
+    if (begin[0] == '"') {
         ++begin;
         end = strchr(begin, '"');
         next = end ? strchr(end, ' ') : nullptr;
@@ -425,43 +421,45 @@ int DcAutoCompleteGetComponent(int offset, std::string &result)
     return next ? next + 1 - rf::g_DcCmdLine : -1;
 }
 
-void DcAutoCompletePutComponent(int offset, const std::string &component, bool finished)
+void DcAutoCompletePutComponent(int offset, const std::string& component, bool finished)
 {
     bool quote = component.find(' ') != std::string::npos;
+    int max_len = std::size(rf::g_DcCmdLine);
+    int len;
     if (quote) {
-        rf::g_DcCmdLineLen = offset + snprintf(rf::g_DcCmdLine + offset, std::size(rf::g_DcCmdLine) - offset,
-            "\"%s\"", component.c_str());
+        len = snprintf(rf::g_DcCmdLine + offset, max_len - offset, "\"%s\"", component.c_str());
     }
     else {
-        rf::g_DcCmdLineLen = offset + snprintf(rf::g_DcCmdLine + offset, std::size(rf::g_DcCmdLine) - offset,
-            "%s", component.c_str());
+        len = snprintf(rf::g_DcCmdLine + offset, max_len - offset, "%s", component.c_str());
     }
+    rf::g_DcCmdLineLen = offset + len;
     if (finished)
-        rf::g_DcCmdLineLen += snprintf(rf::g_DcCmdLine + rf::g_DcCmdLineLen, std::size(rf::g_DcCmdLine) - rf::g_DcCmdLineLen, " ");
+        rf::g_DcCmdLineLen += snprintf(rf::g_DcCmdLine + rf::g_DcCmdLineLen, max_len - rf::g_DcCmdLineLen, " ");
 }
 
 template<typename T, typename F>
-void DcAutoCompletePrintSuggestions(T &suggestions, F mapping_fun)
+void DcAutoCompletePrintSuggestions(T& suggestions, F mapping_fun)
 {
-    for (auto item : suggestions)
+    for (auto item : suggestions) {
         rf::DcPrintf("%s\n", mapping_fun(item));
+    }
 }
 
-void DcAutoCompleteUpdateCommonPrefix(std::string &common_prefix, const std::string &value, bool &first, bool case_sensitive = false)
+void DcAutoCompleteUpdateCommonPrefix(std::string& common_prefix, const std::string& value, bool& first,
+                                      bool case_sensitive = false)
 {
-    if (first)
-    {
+    if (first) {
         first = false;
         common_prefix = value;
     }
     if (common_prefix.size() > value.size())
         common_prefix.resize(value.size());
-    for (size_t i = 0; i < common_prefix.size(); ++i)
-        if ((case_sensitive && common_prefix[i] != value[i]) || tolower(common_prefix[i]) != tolower(value[i]))
-        {
+    for (size_t i = 0; i < common_prefix.size(); ++i) {
+        if ((case_sensitive && common_prefix[i] != value[i]) || tolower(common_prefix[i]) != tolower(value[i])) {
             common_prefix.resize(i);
             break;
         }
+    }
 }
 
 void DcAutoCompleteLevel(int offset)
@@ -474,8 +472,7 @@ void DcAutoCompleteLevel(int offset)
     bool first = true;
     std::string common_prefix;
     std::vector<std::string> matches;
-    PackfileFindMatchingFiles(StringMatcher().Prefix(level_name).Suffix(".rfl"), [&](const char *name)
-    {
+    PackfileFindMatchingFiles(StringMatcher().Prefix(level_name).Suffix(".rfl"), [&](const char* name) {
         auto ext = strrchr(name, '.');
         auto name_len = ext ? ext - name : strlen(name);
         std::string name_without_ext(name, name_len);
@@ -485,9 +482,8 @@ void DcAutoCompleteLevel(int offset)
 
     if (matches.size() == 1)
         DcAutoCompletePutComponent(offset, matches[0], true);
-    else
-    {
-        DcAutoCompletePrintSuggestions(matches, [](std::string &name) { return name.c_str(); });
+    else {
+        DcAutoCompletePrintSuggestions(matches, [](std::string& name) { return name.c_str(); });
         DcAutoCompletePutComponent(offset, common_prefix, false);
     }
 }
@@ -502,17 +498,16 @@ void DcAutoCompletePlayer(int offset)
     bool first = true;
     std::string common_prefix;
     std::vector<rf::Player*> matching_players;
-    FindPlayer(StringMatcher().Prefix(player_name), [&](rf::Player *player)
-    {
+    FindPlayer(StringMatcher().Prefix(player_name), [&](rf::Player* player) {
         matching_players.push_back(player);
         DcAutoCompleteUpdateCommonPrefix(common_prefix, player->strName.CStr(), first);
     });
 
     if (matching_players.size() == 1)
         DcAutoCompletePutComponent(offset, matching_players[0]->strName.CStr(), true);
-    else
-    {
-        DcAutoCompletePrintSuggestions(matching_players, [](rf::Player *player) {
+    else {
+        DcAutoCompletePrintSuggestions(matching_players, [](rf::Player* player) {
+            // Print player names
             return player->strName.CStr();
         });
         DcAutoCompletePutComponent(offset, common_prefix, false);
@@ -530,18 +525,16 @@ void DcAutoCompleteCommand(int offset)
     std::string common_prefix;
 
     std::vector<rf::DcCommand*> matching_cmds;
-    for (unsigned i = 0; i < rf::g_DcNumCommands; ++i)
-    {
-        rf::DcCommand *cmd = g_CommandsBuffer[i];
-        if (!strnicmp(cmd->Cmd, cmd_name.c_str(), cmd_name.size()) && (next_offset == -1 || !cmd->Cmd[cmd_name.size()]))
-        {
+    for (unsigned i = 0; i < rf::g_DcNumCommands; ++i) {
+        rf::DcCommand* cmd = g_CommandsBuffer[i];
+        if (!strnicmp(cmd->Cmd, cmd_name.c_str(), cmd_name.size()) &&
+            (next_offset == -1 || !cmd->Cmd[cmd_name.size()])) {
             matching_cmds.push_back(cmd);
             DcAutoCompleteUpdateCommonPrefix(common_prefix, cmd->Cmd, first);
         }
     }
 
-    if (next_offset != -1)
-    {
+    if (next_offset != -1) {
         if (matching_cmds.size() != 1)
             return;
         if (!stricmp(cmd_name.c_str(), "level") || !stricmp(cmd_name.c_str(), "levelsp"))
@@ -553,10 +546,8 @@ void DcAutoCompleteCommand(int offset)
         else
             DcShowCmdHelp(matching_cmds[0]);
     }
-    else if (matching_cmds.size() > 1)
-    {
-        for (auto *cmd : matching_cmds)
-            rf::DcPrintf("%s - %s", cmd->Cmd, cmd->Descr);
+    else if (matching_cmds.size() > 1) {
+        for (auto* cmd : matching_cmds) rf::DcPrintf("%s - %s", cmd->Cmd, cmd->Descr);
         DcAutoCompletePutComponent(offset, common_prefix, false);
     }
     else if (matching_cmds.size() == 1)
@@ -565,16 +556,15 @@ void DcAutoCompleteCommand(int offset)
 
 FunHook2<void()> DcAutoCompleteInput_Hook{
     0x0050A620,
-    []() {
-        DcAutoCompleteCommand(0);
-    },
+    []() { DcAutoCompleteCommand(0); },
 };
 
 RegsPatch DcRunCmd_CallHandlerPatch{
     0x00509DBB,
-    [](auto &regs) {
+    [](auto& regs) {
+        // Make sure command pointer is in ecx register to support thiscall handlers
         regs.ecx = regs.eax;
-    }
+    },
 };
 
 void CommandsInit()
@@ -613,7 +603,7 @@ void CommandsInit()
     AsmWritter(0x00434FEC, 0x00434FF2).nop();
 }
 
-void CommandRegister(rf::DcCommand *cmd)
+void CommandRegister(rf::DcCommand* cmd)
 {
     if (rf::g_DcNumCommands < CMD_LIMIT)
         g_CommandsBuffer[rf::g_DcNumCommands++] = cmd;
@@ -631,7 +621,7 @@ void CommandsAfterGameInit()
 
     DC_REGISTER_CMD(sound, "Toggle sound", rf::DcfSound);
     DC_REGISTER_CMD(difficulty, "Set game difficulty", rf::DcfDifficulty);
-    //DC_REGISTER_CMD(ms, "Set mouse sensitivity", rf::DcfMouseSensitivity);
+    // DC_REGISTER_CMD(ms, "Set mouse sensitivity", rf::DcfMouseSensitivity);
     DC_REGISTER_CMD(level_info, "Show level info", rf::DcfLevelInfo);
     DC_REGISTER_CMD(verify_level, "Verify level", rf::DcfVerifyLevel);
     DC_REGISTER_CMD(player_names, "Toggle player names on HUD", rf::DcfPlayerNames);

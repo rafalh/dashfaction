@@ -8,7 +8,7 @@ private:
     zipFile m_zf;
 
 public:
-    ZipHelper(const char *path)
+    ZipHelper(const char* path)
     {
         m_zf = zipOpen(path, 0);
     }
@@ -18,7 +18,7 @@ public:
         zipClose(m_zf, NULL);
     }
 
-    bool addFile(const char *path, const char *nameinZip)
+    bool addFile(const char* path, const char* nameinZip)
     {
         zip_fileinfo zfi;
         memset(&zfi, 0, sizeof(zfi));
@@ -28,12 +28,10 @@ public:
         if (err != ZIP_OK)
             return false;
 
-        FILE *srcFile = fopen(path, "rb");
-        if (srcFile)
-        {
+        FILE* srcFile = fopen(path, "rb");
+        if (srcFile) {
             char buf[2048];
-            while (!feof(srcFile))
-            {
+            while (!feof(srcFile)) {
                 size_t num = fread(buf, 1, sizeof(buf), srcFile);
                 err = zipWriteInFileInZip(m_zf, buf, num);
                 if (err != ZIP_OK)
@@ -49,7 +47,7 @@ public:
 private:
     // getFileTime function based on minizip source
 #ifdef WIN32
-    uLong getFileTime(const char *filename, tm_zip *tmzip, uLong *dt)
+    uLong getFileTime(const char* filename, tm_zip* tmzip, uLong* dt)
     {
         int ret = 0;
         FILETIME ftLocal;
@@ -59,8 +57,7 @@ private:
         (void)tmzip; // unused parameter (dt is filled instead)
 
         hFind = FindFirstFileA(filename, &ff32);
-        if (hFind != INVALID_HANDLE_VALUE)
-        {
+        if (hFind != INVALID_HANDLE_VALUE) {
             FileTimeToLocalFileTime(&(ff32.ftLastWriteTime), &ftLocal);
             FileTimeToDosDateTime(&ftLocal, ((LPWORD)dt) + 1, ((LPWORD)dt) + 0);
             FindClose(hFind);
@@ -68,18 +65,17 @@ private:
         }
         return ret;
     }
-#else // WIN32
-    uLong getFileTime(const char *filename, tm_zip *tmzip, uLong *dt)
+#else  // WIN32
+    uLong getFileTime(const char* filename, tm_zip* tmzip, uLong* dt)
     {
         int ret = 0;
-        struct stat s;        /* results of stat() */
+        struct stat s; /* results of stat() */
         struct tm* filedate;
         time_t tm_t = 0;
 
         (void)dt; // unused parameter (tmzip is filled instead)
 
-        if (stat(filename, &s) == 0)
-        {
+        if (stat(filename, &s) == 0) {
             tm_t = s.st_mtime;
             ret = 1;
         }

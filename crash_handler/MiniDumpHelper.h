@@ -1,16 +1,16 @@
 #pragma once
 
-#include <windows.h>
-#include <vector>
 #include <string>
+#include <vector>
+#include <windows.h>
 
 #ifdef _MSC_VER
-  #pragma warning (push)
-  #pragma warning (disable:4091)
+#pragma warning(push)
+#pragma warning(disable : 4091)
 #endif
 #include <dbghelp.h>
 #ifdef _MSC_VER
-  #pragma warning (pop)
+#pragma warning(pop)
 #endif
 
 typedef decltype(&MiniDumpWriteDump) MiniDumpWriteDump_Type;
@@ -26,7 +26,7 @@ private:
 public:
     MiniDumpHelper();
     ~MiniDumpHelper();
-    bool writeDump(const char *Path, PEXCEPTION_POINTERS ExceptionPointers, HANDLE hProcess, DWORD dwThreadId);
+    bool writeDump(const char* Path, PEXCEPTION_POINTERS ExceptionPointers, HANDLE hProcess, DWORD dwThreadId);
 
     // 0 - minimal, 2 - maximal
     void setInfoLevel(int infoLevel)
@@ -34,12 +34,13 @@ public:
         m_infoLevel = infoLevel;
     }
 
-    void addKnownModule(const wchar_t *name)
+    void addKnownModule(const wchar_t* name)
     {
         m_knownModules.push_back(name);
     }
 
 private:
     bool IsDataSectionNeeded(const WCHAR* ModuleName);
-    static BOOL CALLBACK MiniDumpCallback(PVOID Param, const PMINIDUMP_CALLBACK_INPUT Input, PMINIDUMP_CALLBACK_OUTPUT Output);
+    static BOOL CALLBACK MiniDumpCallback(PVOID Param, const PMINIDUMP_CALLBACK_INPUT Input,
+                                          PMINIDUMP_CALLBACK_OUTPUT Output);
 };

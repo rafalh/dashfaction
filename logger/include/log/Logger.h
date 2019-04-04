@@ -1,9 +1,9 @@
 #pragma once
 
-#include <string>
 #include <log/LogStream.h>
-#include <log/NullStream.h>
 #include <log/LoggerConfig.h>
+#include <log/NullStream.h>
+#include <string>
 
 #ifndef LOGGER_NO_FORMAT
 #include <stdarg.h>
@@ -18,6 +18,7 @@
 
 #define LOGGER_DISCARD_TRACE
 
+// clang-format off
 #define LOGGER_DEFINE_LEVEL_METHODS(methodName, levelConstant) \
     LogStream methodName() { return get(levelConstant); } \
     void methodName(const char *fmt, ...) \
@@ -30,52 +31,55 @@
 #define LOGGER_DEFINE_LEVEL_METHODS_EMPTY(methodName, levelConstant) \
     NullStream methodName() { return NullStream(); } \
     void methodName(const char *fmt, ...) { (void)fmt; }
+// clang-format on
 
 namespace logging
 {
-    class Logger
+class Logger
+{
+public:
+    Logger(const std::string& name = std::string()) :
+        name(name), conf(LoggerConfig::root())
+    {}
+
+    Logger(const std::string& name, LoggerConfig& conf) :
+        name(name), conf(conf)
+    {}
+
+    static Logger& root()
     {
-    public:
-        Logger(const std::string &name = std::string()) :
-            name(name), conf(LoggerConfig::root()) {}
+        static Logger rootLogger(LoggerConfig::root().getRootName());
+        return rootLogger;
+    }
 
-        Logger(const std::string &name, LoggerConfig &conf) :
-            name(name), conf(conf) {}
+    LogStream get(LogLevel lvl)
+    {
+        return LogStream(lvl, name, conf);
+    }
 
-        static Logger &root()
-        {
-            static Logger rootLogger(LoggerConfig::root().getRootName());
-            return rootLogger;
-        }
+    void vprintf(LogLevel lvl, const char* fmt, va_list args)
+    {
+        conf.outputFormatted(lvl, name, fmt, args);
+    }
 
-        LogStream get(LogLevel lvl)
-        {
-            return LogStream(lvl, name, conf);
-        }
-
-        void vprintf(LogLevel lvl, const char *fmt, va_list args)
-        {
-            conf.outputFormatted(lvl, name, fmt, args);
-        }
-
-        LOGGER_DEFINE_LEVEL_METHODS(err, LOG_LVL_ERROR);
-        LOGGER_DEFINE_LEVEL_METHODS(warn, LOG_LVL_WARNING);
-        LOGGER_DEFINE_LEVEL_METHODS(info, LOG_LVL_INFO);
+    LOGGER_DEFINE_LEVEL_METHODS(err, LOG_LVL_ERROR);
+    LOGGER_DEFINE_LEVEL_METHODS(warn, LOG_LVL_WARNING);
+    LOGGER_DEFINE_LEVEL_METHODS(info, LOG_LVL_INFO);
 
 #ifndef LOGGER_DISCARD_TRACE
-        LOGGER_DEFINE_LEVEL_METHODS(trace, LOG_LVL_TRACE);
+    LOGGER_DEFINE_LEVEL_METHODS(trace, LOG_LVL_TRACE);
 #else
-        LOGGER_DEFINE_LEVEL_METHODS_EMPTY(trace, LOG_LVL_TRACE);
+    LOGGER_DEFINE_LEVEL_METHODS_EMPTY(trace, LOG_LVL_TRACE);
 #endif
 
-    private:
-        std::string name;
-        LoggerConfig &conf;
+private:
+    std::string name;
+    LoggerConfig& conf;
 
-        // no assignment operator
-        Logger& operator=(const Logger&) = delete;
-    };
-}
+    // no assignment operator
+    Logger& operator=(const Logger&) = delete;
+};
+} // namespace logging
 
 #undef LOGGER_DEFINE_LEVEL_METHODS
 #undef LOGGER_DEFINE_LEVEL_METHODS_EMPTY

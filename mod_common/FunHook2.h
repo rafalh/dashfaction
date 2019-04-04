@@ -1,11 +1,12 @@
 #pragma once
 
+#include "Traits.h"
 #include <cstdint>
 #include <log/Logger.h>
 #include <subhook.h>
-#include "Traits.h"
 
-class FunHook2Impl {
+class FunHook2Impl
+{
 protected:
     void* m_target_fun_ptr;
     void* m_hook_fun_ptr;
@@ -26,17 +27,19 @@ public:
     }
 };
 
-template <class T>
+template<class T>
 class FunHook2;
 
-template <class R, class... A>
-class FunHook2<R __cdecl(A...)> : public FunHook2Impl {
+template<class R, class... A>
+class FunHook2<R __cdecl(A...)> : public FunHook2Impl
+{
 private:
     typedef R __cdecl FunType(A...);
 
 public:
-    FunHook2(uintptr_t target_fun_addr, FunType* hook_fun_ptr)
-        : FunHook2Impl(target_fun_addr, reinterpret_cast<void*>(hook_fun_ptr)) {}
+    FunHook2(uintptr_t target_fun_addr, FunType* hook_fun_ptr) :
+        FunHook2Impl(target_fun_addr, reinterpret_cast<void*>(hook_fun_ptr))
+    {}
 
     R CallTarget(A... a)
     {
@@ -45,14 +48,16 @@ public:
     }
 };
 
-template <class R, class... A>
-class FunHook2<R __fastcall(A...)> : public FunHook2Impl {
+template<class R, class... A>
+class FunHook2<R __fastcall(A...)> : public FunHook2Impl
+{
 private:
     typedef R __fastcall FunType(A...);
 
 public:
-    FunHook2(uintptr_t target_fun_addr, FunType* hook_fun_ptr)
-        : FunHook2Impl(target_fun_addr, reinterpret_cast<void*>(hook_fun_ptr)) {}
+    FunHook2(uintptr_t target_fun_addr, FunType* hook_fun_ptr) :
+        FunHook2Impl(target_fun_addr, reinterpret_cast<void*>(hook_fun_ptr))
+    {}
 
     R CallTarget(A... a)
     {
@@ -63,6 +68,6 @@ public:
 
 #ifdef __cpp_deduction_guides
 // deduction guide for lambda functions
-template <class T>
+template<class T>
 FunHook2(uintptr_t addr, T)->FunHook2<typename function_traits<T>::f_type>;
 #endif

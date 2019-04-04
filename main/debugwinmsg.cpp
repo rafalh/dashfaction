@@ -8,7 +8,7 @@ typedef struct
     UINT    nMsg;
     LPCSTR  lpszMsg;
 } WIN_MSG_NAME_MAPPING;
-#define DEFINE_MESSAGE(wm){ wm, #wm }
+#define DEFINE_MESSAGE(wm) { wm, #wm }
 static const WIN_MSG_NAME_MAPPING allMessages[] =
 {
     DEFINE_MESSAGE(WM_CREATE),

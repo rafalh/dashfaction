@@ -1,37 +1,37 @@
-#include "stdafx.h"
 #include "utils.h"
-#include "rf.h"
 #include "Exception.h"
+#include "rf.h"
+#include "stdafx.h"
 #include <iomanip>
 #include <map>
 
 #ifdef __GNUC__
-  #ifndef __cpuid
-    #include <cpuid.h>
-  #endif
+#ifndef __cpuid
+#include <cpuid.h>
+#endif
 #else
-  #include <intrin.h>
+#include <intrin.h>
 #endif
 
-const char *stristr(const char *haystack, const char *needle)
+const char* stristr(const char* haystack, const char* needle)
 {
     unsigned i, j;
 
-    for (i = 0; haystack[i]; ++i)
-    {
+    for (i = 0; haystack[i]; ++i) {
         for (j = 0; needle[j]; ++j)
             if (tolower(haystack[i + j]) != tolower(needle[j]))
                 break;
 
         if (!needle[j])
-            return (char*)(haystack+i);
+            return (char*)(haystack + i);
     }
     return NULL;
 }
 
-#define DEFINE_HRESULT_ERROR(hr) { hr, #hr },
+#define DEFINE_HRESULT_ERROR(hr) {hr, #hr},
 
-const static std::map<HRESULT, const char*> DX_ERRORS = {
+// clang-format off
+ const static std::map<HRESULT, const char*> DX_ERRORS = {
     DEFINE_HRESULT_ERROR(D3D_OK)
     DEFINE_HRESULT_ERROR(D3DERR_WRONGTEXTUREFORMAT)
     DEFINE_HRESULT_ERROR(D3DERR_UNSUPPORTEDCOLOROPERATION)
@@ -56,8 +56,9 @@ const static std::map<HRESULT, const char*> DX_ERRORS = {
     DEFINE_HRESULT_ERROR(D3DERR_INVALIDCALL)
     DEFINE_HRESULT_ERROR(D3DERR_DRIVERINVALIDCALL)
 };
+// clang-format on
 
-const char *getDxErrorStr(HRESULT hr)
+const char* getDxErrorStr(HRESULT hr)
 {
     auto it = DX_ERRORS.find(hr);
     if (it != DX_ERRORS.end())
@@ -94,37 +95,32 @@ std::string getRealOsVersion()
     if (!GetFileVersionInfo(path, 0, ver_size, ver.get()))
         THROW_EXCEPTION("GetFileVersionInfo failed");
 
-    void *block;
+    void* block;
     UINT block_size;
     BOOL ret = VerQueryValueA(ver.get(), "\\", &block, &block_size);
     if (!ret || block_size < sizeof(VS_FIXEDFILEINFO))
         THROW_EXCEPTION("VerQueryValueA returned unknown block");
-    VS_FIXEDFILEINFO *file_info = (VS_FIXEDFILEINFO *)block;
+    VS_FIXEDFILEINFO* file_info = (VS_FIXEDFILEINFO*)block;
 
-    return StringFormat("%d.%d.%d", HIWORD(file_info->dwProductVersionMS), LOWORD(file_info->dwProductVersionMS),
-        HIWORD(file_info->dwProductVersionLS));
+    return StringFormat("%d.%d.%d",                            //
+                        HIWORD(file_info->dwProductVersionMS), //
+                        LOWORD(file_info->dwProductVersionMS), //
+                        HIWORD(file_info->dwProductVersionLS));
 }
 
 bool IsUserAdmin()
 {
     SID_IDENTIFIER_AUTHORITY nt_authority = SECURITY_NT_AUTHORITY;
     PSID administrators_group;
-    BOOL ret = AllocateAndInitializeSid(
-        &nt_authority,
-        2,
-        SECURITY_BUILTIN_DOMAIN_RID,
-        DOMAIN_ALIAS_RID_ADMINS,
-        0, 0, 0, 0, 0, 0,
-        &administrators_group);
-    if (!ret)
-    {
+    BOOL ret = AllocateAndInitializeSid(&nt_authority, 2, SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0,
+                                        0, 0, 0, &administrators_group);
+    if (!ret) {
         ERR("AllocateAndInitializeSid failed");
         return false;
     }
 
     BOOL is_member;
-    if (!CheckTokenMembership(NULL, administrators_group, &is_member))
-    {
+    if (!CheckTokenMembership(NULL, administrators_group, &is_member)) {
         ERR("CheckTokenMembership failed");
         is_member = false;
     }
@@ -133,14 +129,13 @@ bool IsUserAdmin()
     return is_member != 0;
 }
 
-const char *GetProcessElevationType()
+const char* GetProcessElevationType()
 {
     HANDLE token_handle;
     TOKEN_ELEVATION_TYPE elevation_type;
     DWORD dw_size;
 
-    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token_handle))
-    {
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token_handle)) {
         ERR("OpenProcessToken failed");
         return "unknown";
     }
@@ -149,8 +144,7 @@ const char *GetProcessElevationType()
 
     CloseHandle(token_handle);
 
-    switch (elevation_type)
-    {
+    switch (elevation_type) {
     case TokenElevationTypeDefault:
         return "default";
     case TokenElevationTypeFull:
@@ -164,20 +158,21 @@ const char *GetProcessElevationType()
 
 std::string getCpuId()
 {
-    int cpu_info[4] = { 0 };
+    int cpu_info[4] = {0};
     std::stringstream ss;
 #ifndef __GNUC__
     __cpuid(cpuInfo, 1);
 #else
     __cpuid(1, cpu_info[0], cpu_info[1], cpu_info[2], cpu_info[3]);
 #endif
-    ss << std::hex << std::uppercase << std::setfill('0') << std::setw(8) << cpu_info[0] << ' ' << cpu_info[1] << ' ' << cpu_info[2] << ' ' << cpu_info[3];
+    ss << std::hex << std::uppercase << std::setfill('0') << std::setw(8) << cpu_info[0] << ' ' << cpu_info[1] << ' '
+       << cpu_info[2] << ' ' << cpu_info[3];
     return ss.str();
 }
 
 std::string getCpuBrand()
 {
-    int cpu_info[4] = { 0 };
+    int cpu_info[4] = {0};
     char brand_str[0x40] = "";
     // Get the information associated with each extended ID.
 #ifndef __GNUC__
@@ -186,12 +181,11 @@ std::string getCpuBrand()
     __cpuid(0x80000000, cpu_info[0], cpu_info[1], cpu_info[2], cpu_info[3]);
 #endif
     unsigned max_ext_id = cpu_info[0];
-    for (unsigned i = 0x80000000; i <= max_ext_id; ++i)
-    {
+    for (unsigned i = 0x80000000; i <= max_ext_id; ++i) {
 #ifndef __GNUC__
-    __cpuid(cpuInfo, i);
+        __cpuid(cpuInfo, i);
 #else
-    __cpuid(i, cpu_info[0], cpu_info[1], cpu_info[2], cpu_info[3]);
+        __cpuid(i, cpu_info[0], cpu_info[1], cpu_info[2], cpu_info[3]);
 #endif
         // Interpret CPU brand string
         if (i == 0x80000002)
@@ -202,6 +196,6 @@ std::string getCpuBrand()
             memcpy(brand_str + 32, cpu_info, sizeof(cpu_info));
     }
 
-    //string includes manufacturer, model and clockspeed
+    // string includes manufacturer, model and clockspeed
     return brand_str;
 }

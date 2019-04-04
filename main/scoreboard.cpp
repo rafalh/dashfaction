@@ -1,16 +1,17 @@
-#include "stdafx.h"
 #include "scoreboard.h"
-#include "utils.h"
+#include "kill.h"
+#include "main.h"
 #include "rf.h"
 #include "rfproto.h"
-#include "kill.h"
 #include "spectate_mode.h"
-#include "main.h"
+#include "stdafx.h"
+#include "utils.h"
 #include <FunHook2.h>
 #include <algorithm>
 
-namespace rf {
-    static const auto DrawScoreboard = (void(*)(bool draw))0x00470860;
+namespace rf
+{
+static const auto DrawScoreboard = (void (*)(bool draw))0x00470860;
 }
 
 constexpr float ENTER_ANIM_MS = 100.0f;
@@ -24,9 +25,10 @@ static unsigned g_AnimTicks = 0;
 static bool g_EnterAnim = false;
 static bool g_LeaveAnim = false;
 
-static int ScoreboardSortFunc(const void *ptr1, const void *ptr2)
+static int ScoreboardSortFunc(const void* ptr1, const void* ptr2)
 {
-    rf::Player *player1 = *((rf::Player**)ptr1), *player2 = *((rf::Player**)ptr2);
+    rf::Player* player1 = *((rf::Player**)ptr1);
+    rf::Player* player2 = *((rf::Player**)ptr2);
     return player2->Stats->score - player1->Stats->score;
 }
 
@@ -39,11 +41,10 @@ void DrawScoreboardInternal_New(bool draw)
     unsigned game_type = rf::GetGameType();
 
     // Sort players by score
-    rf::Player *players[32];
-    rf::Player *player = rf::g_PlayersList;
+    rf::Player* players[32];
+    rf::Player* player = rf::g_PlayersList;
     unsigned c_players = 0;
-    while (c_players < 32)
-    {
+    while (c_players < 32) {
         players[c_players++] = player;
         if (game_type == RF_DM || !player->BlueTeam)
             ++c_left_col;
@@ -58,16 +59,14 @@ void DrawScoreboardInternal_New(bool draw)
 
     // Animation
     float f_anim_progress = 1.0f, f_progress_w = 1.0f, f_progress_h = 1.0f;
-    if (g_game_config.scoreboardAnim)
-    {
+    if (g_game_config.scoreboardAnim) {
         unsigned anim_delta = GetTickCount() - g_AnimTicks;
         if (g_EnterAnim)
             f_anim_progress = anim_delta / ENTER_ANIM_MS;
         else if (g_LeaveAnim)
             f_anim_progress = (LEAVE_ANIM_MS - anim_delta) / LEAVE_ANIM_MS;
 
-        if (g_LeaveAnim && f_anim_progress <= 0.0f)
-        {
+        if (g_LeaveAnim && f_anim_progress <= 0.0f) {
             g_ScoreboardVisible = false;
             return;
         }
@@ -82,7 +81,8 @@ void DrawScoreboardInternal_New(bool draw)
     // Draw background
     constexpr int row_h = 15;
     unsigned cx = std::min((game_type == RF_DM) ? 450u : 700u, rf::GrGetViewportWidth());
-    unsigned cy = ((game_type == RF_DM) ? 130 : 190) + std::max(c_left_col, c_right_col) * row_h; // DM doesnt show team scores
+    unsigned cy =
+        ((game_type == RF_DM) ? 130 : 190) + std::max(c_left_col, c_right_col) * row_h; // DM doesnt show team scores
     cx = (unsigned)(f_progress_w * cx);
     cy = (unsigned)(f_progress_h * cy);
     unsigned x = (rf::GrGetViewportWidth() - cx) / 2;
@@ -102,7 +102,7 @@ void DrawScoreboardInternal_New(bool draw)
     y += 30;
 
     // Draw Game Type name
-    const char *game_type_name;
+    const char* game_type_name;
     if (game_type == RF_DM)
         game_type_name = rf::strings::array[974];
     else if (game_type == RF_CTF)
@@ -115,10 +115,9 @@ void DrawScoreboardInternal_New(bool draw)
     // Draw level
     rf::GrSetColor(0xB0, 0xB0, 0xB0, 0xFF);
     auto level_info = rf::String::Format("%s (%s) by %s", rf::g_strLevelName.CStr(), rf::g_strLevelFilename.CStr(),
-        rf::g_strLevelAuthor.CStr());
+                                         rf::g_strLevelAuthor.CStr());
     rf::String level_info_stripped;
     rf::GrFitText(&level_info_stripped, level_info, cx - 20); // Note: this destroys input string
-    //level_info.Forget();
     rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, x_center, y, level_info_stripped, -1, rf::g_GrTextMaterial);
     y += 15;
 
@@ -128,14 +127,12 @@ void DrawScoreboardInternal_New(bool draw)
     auto server_info = rf::String::Format("%s (%s)", rf::g_strServName.CStr(), ip_addr_buf);
     rf::String server_info_stripped;
     rf::GrFitText(&server_info_stripped, server_info, cx - 20); // Note: this destroys input string
-    //server_info.Forget();
     rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, x_center, y, server_info_stripped, -1, rf::g_GrTextMaterial);
     y += 20;
 
     // Draw team scores
     unsigned red_score = 0, blue_score = 0;
-    if (game_type == RF_CTF)
-    {
+    if (game_type == RF_CTF) {
         static int hud_flag_red_bm = rf::BmLoad("hud_flag_red.tga", -1, true);
         static int hud_flag_blue_bm = rf::BmLoad("hud_flag_blue.tga", -1, true);
         rf::GrDrawImage(hud_flag_red_bm, x + cx * 2 / 6, y, rf::g_GrImageMaterial);
@@ -143,22 +140,20 @@ void DrawScoreboardInternal_New(bool draw)
         red_score = rf::CtfGetRedScore();
         blue_score = rf::CtfGetBlueScore();
     }
-    else if (game_type == RF_TEAMDM)
-    {
+    else if (game_type == RF_TEAMDM) {
         red_score = rf::TdmGetRedScore();
         blue_score = rf::TdmGetBlueScore();
     }
 
-    if (game_type != RF_DM)
-    {
+    if (game_type != RF_DM) {
         rf::GrSetColor(0xD0, 0x20, 0x20, 0xFF);
         auto red_score_str = std::to_string(red_score);
         rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, x + cx * 1 / 6, y, red_score_str.c_str(), rf::g_BigFontId,
-            rf::g_GrTextMaterial);
+                              rf::g_GrTextMaterial);
         rf::GrSetColor(0x20, 0x20, 0xD0, 0xFF);
         auto blue_score_str = std::to_string(blue_score);
         rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, x + cx * 5 / 6, y, blue_score_str.c_str(), rf::g_BigFontId,
-            rf::g_GrTextMaterial);
+                              rf::g_GrTextMaterial);
         y += 60;
     }
 
@@ -171,8 +166,7 @@ void DrawScoreboardInternal_New(bool draw)
     unsigned num_sect = (game_type == RF_DM ? 1 : 2);
     unsigned cx_name_max = cx / num_sect - 25 - 50 * (game_type == RF_CTF ? 3 : 2) - 70;
     rf::GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
-    for (unsigned i = 0; i < num_sect; ++i)
-    {
+    for (unsigned i = 0; i < num_sect; ++i) {
         int x_col = x + i * (cx / 2) + 13;
         col_offsets[i].StatusBm = x_col;
         x_col += 12;
@@ -189,8 +183,7 @@ void DrawScoreboardInternal_New(bool draw)
         rf::GrDrawText(x_col, y, "K/D", -1, rf::g_GrTextMaterial);
         x_col += 70;
 
-        if (game_type == RF_CTF)
-        {
+        if (game_type == RF_CTF) {
             col_offsets[i].CtfFlags = x_col;
             rf::GrDrawText(x_col, y, rf::strings::caps, -1, rf::g_GrTextMaterial);
             x_col += 50;
@@ -201,17 +194,16 @@ void DrawScoreboardInternal_New(bool draw)
     }
     y += 20;
 
-    rf::Player *red_flag_player = rf::CtfGetRedFlagPlayer();
-    rf::Player *blue_flag_player = rf::CtfGetBlueFlagPlayer();
+    rf::Player* red_flag_player = rf::CtfGetRedFlagPlayer();
+    rf::Player* blue_flag_player = rf::CtfGetBlueFlagPlayer();
 
     // Finally draw the list
-    int sect_counter[2] = { 0, 0 };
-    for (unsigned i = 0; i < c_players; ++i)
-    {
+    int sect_counter[2] = {0, 0};
+    for (unsigned i = 0; i < c_players; ++i) {
         player = players[i];
 
         unsigned sect_idx = game_type == RF_DM || !player->BlueTeam ? 0 : 1;
-        auto &offsets = col_offsets[sect_idx];
+        auto& offsets = col_offsets[sect_idx];
         int row_y = y + sect_counter[sect_idx] * row_h;
         ++sect_counter[sect_idx];
 
@@ -224,7 +216,7 @@ void DrawScoreboardInternal_New(bool draw)
         static int red_bm = rf::BmLoad("DF_red.tga", -1, true);
         static int hud_micro_flag_red_bm = rf::BmLoad("hud_microflag_red.tga", -1, true);
         static int hud_micro_flag_blue_bm = rf::BmLoad("hud_microflag_blue.tga", -1, true);
-        rf::EntityObj *entity = rf::EntityGetFromHandle(player->Entity_handle);
+        rf::EntityObj* entity = rf::EntityGetFromHandle(player->Entity_handle);
         int status_bm = entity ? green_bm : red_bm;
         if (player == red_flag_player)
             status_bm = hud_micro_flag_red_bm;
@@ -234,7 +226,7 @@ void DrawScoreboardInternal_New(bool draw)
 
         rf::String player_name_stripped;
         rf::GrFitText(&player_name_stripped, player->strName, cx_name_max - 10); // Note: this destroys strName
-        //player_name.Forget();
+        // player_name.Forget();
         rf::GrDrawText(offsets.Name, row_y, player_name_stripped, -1, rf::g_GrTextMaterial);
 
         auto stats = (PlayerStatsNew*)player->Stats;
@@ -244,14 +236,12 @@ void DrawScoreboardInternal_New(bool draw)
         auto kills_deaths_str = StringFormat("%hd/%hd", stats->num_kills, stats->num_deaths);
         rf::GrDrawText(offsets.KillsDeaths, row_y, kills_deaths_str.c_str(), -1, rf::g_GrTextMaterial);
 
-        if (game_type == RF_CTF)
-        {
+        if (game_type == RF_CTF) {
             auto caps_str = std::to_string(stats->caps);
             rf::GrDrawText(offsets.CtfFlags, row_y, caps_str.c_str(), -1, rf::g_GrTextMaterial);
         }
 
-        if (player->NwData)
-        {
+        if (player->NwData) {
             auto ping_str = std::to_string(player->NwData->dwPing);
             rf::GrDrawText(offsets.Ping, row_y, ping_str.c_str(), -1, rf::g_GrTextMaterial);
         }
@@ -265,21 +255,19 @@ void HudRender_00437BC0()
     if (!rf::g_IsNetworkGame || !rf::g_LocalPlayer)
         return;
 
-    bool show_scoreboard = (rf::IsEntityCtrlActive(&rf::g_LocalPlayer->Config.Controls, rf::GC_MP_STATS, 0) ||
-        (!SpectateModeIsActive() && (rf::IsPlayerEntityInvalid(rf::g_LocalPlayer) || rf::IsPlayerDying(rf::g_LocalPlayer))) ||
-        rf::GameSeqGetState() == rf::GS_MP_LIMBO);
+    bool scoreboard_control_active = rf::IsEntityCtrlActive(&rf::g_LocalPlayer->Config.Controls, rf::GC_MP_STATS, 0);
+    bool is_player_dead = rf::IsPlayerEntityInvalid(rf::g_LocalPlayer) || rf::IsPlayerDying(rf::g_LocalPlayer);
+    bool limbo = rf::GameSeqGetState() == rf::GS_MP_LIMBO;
+    bool show_scoreboard = scoreboard_control_active || (!SpectateModeIsActive() && is_player_dead) || limbo;
 
-    if (g_game_config.scoreboardAnim)
-    {
-        if (!g_ScoreboardVisible && show_scoreboard)
-        {
+    if (g_game_config.scoreboardAnim) {
+        if (!g_ScoreboardVisible && show_scoreboard) {
             g_EnterAnim = true;
             g_LeaveAnim = false;
             g_AnimTicks = GetTickCount();
             g_ScoreboardVisible = true;
         }
-        if (g_ScoreboardVisible && !show_scoreboard && !g_LeaveAnim)
-        {
+        if (g_ScoreboardVisible && !show_scoreboard && !g_LeaveAnim) {
             g_EnterAnim = false;
             g_LeaveAnim = true;
             g_AnimTicks = GetTickCount();
@@ -296,11 +284,8 @@ void InitScoreboard(void)
 {
     DrawScoreboardInternal_Hook.Install();
 
-    AsmWritter(0x00437BC0)
-        .call(HudRender_00437BC0)
-        .jmp(0x00437C24);
-    AsmWritter(0x00437D40)
-        .jmp(0x00437D5C);
+    AsmWritter(0x00437BC0).call(HudRender_00437BC0).jmp(0x00437C24);
+    AsmWritter(0x00437D40).jmp(0x00437D5C);
 }
 
 void SetScoreboardHidden(bool hidden)

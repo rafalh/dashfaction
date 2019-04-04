@@ -1,9 +1,11 @@
 #pragma once
 
+#include "rf.h"
+#include <log/Logger.h>
+
 inline int GetPixelFormatSize(rf::BmPixelFormat pixel_fmt)
 {
-    switch (pixel_fmt)
-    {
+    switch (pixel_fmt) {
     case rf::BMPF_MONO8:
         return 1;
     case rf::BMPF_565:
@@ -22,8 +24,7 @@ inline int GetPixelFormatSize(rf::BmPixelFormat pixel_fmt)
 
 inline D3DFORMAT GetD3DFormatFromPixelFormat(rf::BmPixelFormat pixel_fmt)
 {
-    switch (pixel_fmt)
-    {
+    switch (pixel_fmt) {
     case rf::BMPF_8888:
         return D3DFMT_A8R8G8B8;
     case rf::BMPF_888:
@@ -42,8 +43,7 @@ inline D3DFORMAT GetD3DFormatFromPixelFormat(rf::BmPixelFormat pixel_fmt)
 
 inline rf::BmPixelFormat GetPixelFormatFromD3DFormat(D3DFORMAT d3d_fmt)
 {
-    switch (d3d_fmt)
-    {
+    switch (d3d_fmt) {
     case D3DFMT_R5G6B5:
         return rf::BMPF_565;
     case D3DFMT_X1R5G5B5:

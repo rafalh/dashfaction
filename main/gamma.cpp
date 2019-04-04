@@ -1,20 +1,21 @@
-#include "stdafx.h"
 #include "gamma.h"
 #include "rf.h"
+#include "stdafx.h"
 #include "utils.h"
 
 #ifndef D3DSGR_NO_CALIBRATION
-  #define D3DSGR_NO_CALIBRATION 0x0
+#define D3DSGR_NO_CALIBRATION 0x0
 #endif
 
 static D3DGAMMARAMP g_gamma_ramp;
 static bool g_gamma_ramp_initialized = false;
 
-namespace rf {
-static auto &gr_gamma_ramp = *(uint32_t(*)[256])0x017C7C68;
+namespace rf
+{
+static auto& gr_gamma_ramp = *(uint32_t(*)[256])0x017C7C68;
 }
 
-static void SetGammaRamp(D3DGAMMARAMP *gamma_ramp)
+static void SetGammaRamp(D3DGAMMARAMP* gamma_ramp)
 {
 #if 0 // Note: D3D Gamma Ramp doesn't work in windowed mode
     if (g_GrDevice)
@@ -25,7 +26,8 @@ static void SetGammaRamp(D3DGAMMARAMP *gamma_ramp)
         if (!SetDeviceGammaRamp(hdc, gamma_ramp))
             ERR("SetDeviceGammaRamp failed %lu", GetLastError());
         ReleaseDC(rf::g_hWnd, hdc);
-    } else
+    }
+    else
         ERR("GetDC failed");
 #endif
 }
@@ -50,8 +52,7 @@ void ResetGammaRamp()
     if (!g_gamma_ramp_initialized)
         return;
 
-    for (unsigned i = 0; i < 256; ++i)
-        gamma_ramp.red[i] = gamma_ramp.green[i] = gamma_ramp.blue[i] = i << 8;
+    for (unsigned i = 0; i < 256; ++i) gamma_ramp.red[i] = gamma_ramp.green[i] = gamma_ramp.blue[i] = i << 8;
 
     SetGammaRamp(&gamma_ramp);
 }

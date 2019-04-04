@@ -1,16 +1,14 @@
-#include <log/BaseAppender.h>
 #include <ctime>
+#include <log/BaseAppender.h>
 #include <sstream>
 
-static const char *LEVEL_PREFIX[] = {
-    "FATAL: ", "ERROR: ", "WARNING: ", "INFO: ", "TRACE: "
-};
+static const char* LEVEL_PREFIX[] = {"FATAL: ", "ERROR: ", "WARNING: ", "INFO: ", "TRACE: "};
 
 using namespace logging;
 
-void BaseAppender::append(LogLevel lvl, const std::string &loggerName, const std::string &str)
+void BaseAppender::append(LogLevel lvl, const std::string& loggerName, const std::string& str)
 {
-    const char *lvlStr = LEVEL_PREFIX[static_cast<int>(lvl)];
+    const char* lvlStr = LEVEL_PREFIX[static_cast<int>(lvl)];
 
     std::ostringstream buf;
     std::lock_guard<std::mutex> lock(mutex);

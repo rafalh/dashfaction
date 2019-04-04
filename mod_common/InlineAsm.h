@@ -1,5 +1,7 @@
 #pragma once
 
+// clang-format off
+
 #ifdef __GNUC__
 
 #define _ASM_STR_INTERNAL(...) #__VA_ARGS__

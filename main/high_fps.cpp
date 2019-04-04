@@ -1,15 +1,15 @@
-#include "stdafx.h"
 #include "high_fps.h"
-#include "utils.h"
-#include "rf.h"
 #include "commands.h"
+#include "rf.h"
+#include "stdafx.h"
+#include "utils.h"
 #include <FunHook2.h>
-#include <RegsPatch.h>
 #include <InlineAsm.h>
+#include <RegsPatch.h>
 #include <ShortTypes.h>
+#include <array>
 #include <unordered_map>
 #include <unordered_set>
-#include <array>
 
 constexpr auto reference_fps = 30.0f;
 constexpr auto reference_framerate = 1.0f / reference_fps;
@@ -18,9 +18,11 @@ constexpr auto screen_shake_fps = 150.0f;
 static float g_jump_threshold = 0.05f;
 static float g_camera_shake_factor = 0.6f;
 
-class FtolAccuracyFix {
+class FtolAccuracyFix
+{
 
-    struct StateData {
+    struct StateData
+    {
         double remainder = 0.0;
         double last_val = 0.0;
         int num_calls_in_frame = 0;
@@ -33,9 +35,10 @@ class FtolAccuracyFix {
 
 public:
     FtolAccuracyFix(uintptr_t ftol_call_addr, std::optional<AsmRegMem> key_loc = {}) :
-        m_ftol_call_addr(ftol_call_addr), m_key_loc_opt(key_loc) {}
+        m_ftol_call_addr(ftol_call_addr), m_key_loc_opt(key_loc)
+    {}
 
-    static long __fastcall ftol(FtolAccuracyFix *self, void *edx, double value, void *key)
+    static long __fastcall ftol(FtolAccuracyFix* self, void* edx, double value, void* key)
     {
         (void)edx; // usused parameter
 
@@ -71,7 +74,7 @@ public:
 
     void Install()
     {
-        char *code_buf = new char[512];
+        char* code_buf = new char[512];
         UnprotectMem(code_buf, 512);
 
         using namespace asm_regs;
@@ -84,16 +87,15 @@ public:
             .call(reinterpret_cast<void*>(&ftol))
             .ret();
 
-        AsmWritter(m_ftol_call_addr)
-            .call(code_buf);
+        AsmWritter(m_ftol_call_addr).call(code_buf);
     }
 };
 
 std::array g_ftol_accuracy_fixes{
-    FtolAccuracyFix{0x00416426}, // hit screen
+    FtolAccuracyFix{0x00416426},                // hit screen
     FtolAccuracyFix{0x004D5214, asm_regs::esi}, // decal fade out
-    FtolAccuracyFix{0x005096A7}, // timer
-    FtolAccuracyFix{0x0050ABFB}, // console open/close
+    FtolAccuracyFix{0x005096A7},                // timer
+    FtolAccuracyFix{0x0050ABFB},                // console open/close
     FtolAccuracyFix{0x0051BAD7, asm_regs::esi}, // anim mesh
 };
 
@@ -120,6 +122,7 @@ extern "C" long ftol2(double value, uintptr_t ret_addr)
     return result;
 }
 
+// clang-format off
 ASM_FUNC(ftol_Wrapper,
     ASM_I  mov ecx, [esp]
     ASM_I  sub esp, 12
@@ -129,6 +132,7 @@ ASM_FUNC(ftol_Wrapper,
     ASM_I  add esp, 12
     ASM_I  ret
 )
+// clang-format on
 
 void FtolIssuesDetectionStart()
 {
@@ -155,8 +159,8 @@ void FtolIssuesDetectionDoFrame()
             if (is_fps_dependent && is_significant) {
                 bool is_new = g_ftol_issues.insert(p.first).second;
                 if (is_new)
-                    rf::DcPrintf("ftol issue detected: address %p ratio %.2f estimated value %.4f",
-                        p.first - 5, ratio, avg_high_fps);
+                    rf::DcPrintf("ftol issue detected: address %p ratio %.2f estimated value %.4f", p.first - 5, ratio,
+                                 avg_high_fps);
             }
         }
 
@@ -200,12 +204,12 @@ void STDCALL EntityWaterDecelerateFix(rf::EntityObj* entity)
 
 RegsPatch WaterAnimateWaves_speed_fix{
     0x004E68A0,
-    [](auto &regs) {
-        rf::Vector3 &result = *reinterpret_cast<rf::Vector3*>(regs.esi + 0x2C);
+    [](auto& regs) {
+        rf::Vector3& result = *reinterpret_cast<rf::Vector3*>(regs.esi + 0x2C);
         result.x += 12.8f * (rf::g_fFramerate) / reference_framerate;
         result.y += 4.2666669f * (rf::g_fFramerate) / reference_framerate;
         result.z += 3.878788f * (rf::g_fFramerate) / reference_framerate;
-    }
+    },
 };
 
 FunHook2<int(rf::String&, rf::String&, char*)> RflLoad_Hook{
@@ -214,7 +218,7 @@ FunHook2<int(rf::String&, rf::String&, char*)> RflLoad_Hook{
         int ret = RflLoad_Hook.CallTarget(level_filename, a2, error_desc);
         if (ret == 0 && std::strstr(level_filename, "L5S3")) {
             // Fix submarine exploding - change delay of two events to make submarine physics enabled later
-            //INFO("Fixing Submarine exploding bug...");
+            // INFO("Fixing Submarine exploding bug...");
             rf::Object* obj = rf::ObjGetFromUid(4679);
             if (obj && obj->Type == rf::OT_EVENT) {
                 rf::EventObj* event = reinterpret_cast<rf::EventObj*>(reinterpret_cast<uintptr_t>(obj) - 4);
@@ -233,10 +237,9 @@ FunHook2<int(rf::String&, rf::String&, char*)> RflLoad_Hook{
 RegsPatch CutsceneShotSyncFix{
     0x0045B43B,
     [](X86Regs& regs) {
-        auto &current_shot_idx = StructFieldRef<int>(rf::g_active_cutscene, 0x808);
-        void *current_shot_timer = reinterpret_cast<char*>(rf::g_active_cutscene) + 0x810;
-        if (current_shot_idx > 1)
-        {
+        auto& current_shot_idx = StructFieldRef<int>(rf::g_active_cutscene, 0x808);
+        void* current_shot_timer = reinterpret_cast<char*>(rf::g_active_cutscene) + 0x810;
+        if (current_shot_idx > 1) {
             // decrease time for next shot using current shot timer value
             int shot_time_left_ms = rf::Timer__GetTimeLeftMs(current_shot_timer);
             if (shot_time_left_ms > 0 || shot_time_left_ms < -100)
@@ -263,10 +266,7 @@ void HighFpsInit()
 
     // Fix water deceleration on high FPS
     AsmWritter(0x0049D816).nop(5);
-    AsmWritter(0x0049D82A, 0x0049D835)
-        .nop(5)
-        .push(asm_regs::esi)
-        .call(EntityWaterDecelerateFix);
+    AsmWritter(0x0049D82A, 0x0049D835).nop(5).push(asm_regs::esi).call(EntityWaterDecelerateFix);
 
     // Fix water waves animation on high FPS
     AsmWritter(0x004E68A0, 0x004E68A9).nop();

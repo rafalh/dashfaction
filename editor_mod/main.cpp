@@ -1,8 +1,8 @@
-#include "version.h"
 #include "exports.h"
-#include <MemUtils.h>
+#include "version.h"
 #include <AsmOpcodes.h>
 #include <AsmWritter.h>
+#include <MemUtils.h>
 #include <cstdio>
 
 #define LAUNCHER_FILENAME "DashFactionLauncher.exe"
@@ -13,19 +13,19 @@ WNDPROC g_EditorWndProc_Orig;
 
 static const auto g_EditorApp = (void*)0x006F9DA0;
 
-void OpenLevel(const char *Path)
+void OpenLevel(const char* Path)
 {
-    void *DocManager = *(void**)(((BYTE*)g_EditorApp) + 0x80);
-    void *DocManager_Vtbl = *(void**)DocManager;
-    typedef int(__thiscall *CDocManager_OpenDocumentFile_Ptr)(void *This, LPCSTR String2);
-    CDocManager_OpenDocumentFile_Ptr pDocManager_OpenDocumentFile = (CDocManager_OpenDocumentFile_Ptr)*(((void**)DocManager_Vtbl) + 7);
+    void* DocManager = *(void**)(((BYTE*)g_EditorApp) + 0x80);
+    void* DocManager_Vtbl = *(void**)DocManager;
+    typedef int(__thiscall * CDocManager_OpenDocumentFile_Ptr)(void* This, LPCSTR String2);
+    CDocManager_OpenDocumentFile_Ptr pDocManager_OpenDocumentFile =
+        (CDocManager_OpenDocumentFile_Ptr) * (((void**)DocManager_Vtbl) + 7);
     pDocManager_OpenDocumentFile(DocManager, Path);
 }
 
 LRESULT CALLBACK EditorWndProc_New(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    if (uMsg == WM_DROPFILES)
-    {
+    if (uMsg == WM_DROPFILES) {
         HDROP Drop = (HDROP)wParam;
         char FileName[MAX_PATH];
         // Handle only first droped file
@@ -47,14 +47,14 @@ BOOL CEditorApp__InitInstance_AfterHook()
     return TRUE;
 }
 
-extern "C" DWORD DLL_EXPORT Init(void *Unused)
+extern "C" DWORD DLL_EXPORT Init(void* Unused)
 {
     (void)Unused; // unused parameter
 
     // Prepare command
     static char CmdBuf[512];
     GetModuleFileNameA(g_Module, CmdBuf, sizeof(CmdBuf));
-    char *Ptr = strrchr(CmdBuf, '\\');
+    char* Ptr = strrchr(CmdBuf, '\\');
     strcpy(Ptr, "\\" LAUNCHER_FILENAME " -level \"");
 
     // Change command for starting level test
@@ -75,7 +75,7 @@ extern "C" DWORD DLL_EXPORT Init(void *Unused)
 
 BOOL WINAPI DllMain(HINSTANCE Instance, DWORD Reason, LPVOID Reserved)
 {
-    (void)Reason; // unused parameter
+    (void)Reason;   // unused parameter
     (void)Reserved; // unused parameter
 
     g_Module = (HMODULE)Instance;

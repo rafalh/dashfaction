@@ -1,10 +1,10 @@
-#include "stdafx.h"
-#include "rf.h"
+#include "gr_color.h"
 #include "AsmWritter.h"
 #include "main.h"
-#include "gr_color.h"
-#include <ShortTypes.h>
+#include "rf.h"
+#include "stdafx.h"
 #include <FunHook2.h>
+#include <ShortTypes.h>
 
 inline void ConvertPixel_RGB8_To_RGBA8(uint8_t*& dst_ptr, const uint8_t*& src_ptr)
 {
@@ -51,7 +51,8 @@ inline void ConvertPixel_RGB565_To_RGBA8(uint8_t*& dst_ptr, const uint8_t*& src_
     *(dst_ptr++) = 255;
 }
 
-bool ConvertPixelFormat(uint8_t*& dst_ptr, rf::BmPixelFormat dst_fmt, const uint8_t*& src_ptr, rf::BmPixelFormat src_fmt)
+bool ConvertPixelFormat(uint8_t*& dst_ptr, rf::BmPixelFormat dst_fmt, const uint8_t*& src_ptr,
+                        rf::BmPixelFormat src_fmt)
 {
     if (dst_fmt == src_fmt) {
         int pixel_size = GetPixelFormatSize(src_fmt);
@@ -83,8 +84,9 @@ bool ConvertPixelFormat(uint8_t*& dst_ptr, rf::BmPixelFormat dst_fmt, const uint
     }
 }
 
-bool ConvertBitmapFormat(uint8_t* dst_bits_ptr, rf::BmPixelFormat dst_fmt, const uint8_t* src_bits_ptr, rf::BmPixelFormat src_fmt,
-    int width, int height, int dst_pitch, int src_pitch, bool swap_bytes = false)
+bool ConvertBitmapFormat(uint8_t* dst_bits_ptr, rf::BmPixelFormat dst_fmt, const uint8_t* src_bits_ptr,
+                         rf::BmPixelFormat src_fmt, int width, int height, int dst_pitch, int src_pitch,
+                         bool swap_bytes = false)
 {
     if (dst_fmt == src_fmt) {
         for (int y = 0; y < height; ++y) {
@@ -115,8 +117,7 @@ bool ConvertBitmapFormat(uint8_t* dst_bits_ptr, rf::BmPixelFormat dst_fmt, const
         for (int y = 0; y < height; ++y) {
             uint8_t* dst_ptr = dst_bits_ptr;
             const uint8_t* src_ptr = src_bits_ptr;
-            for (int x = 0; x < width; ++x)
-                ConvertPixel_RGBA4_To_RGBA8(dst_ptr, src_ptr);
+            for (int x = 0; x < width; ++x) ConvertPixel_RGBA4_To_RGBA8(dst_ptr, src_ptr);
             dst_bits_ptr += dst_pitch;
             src_bits_ptr += src_pitch;
         }
@@ -125,8 +126,7 @@ bool ConvertBitmapFormat(uint8_t* dst_bits_ptr, rf::BmPixelFormat dst_fmt, const
         for (int y = 0; y < height; ++y) {
             uint8_t* dst_ptr = dst_bits_ptr;
             const uint8_t* src_ptr = src_bits_ptr;
-            for (int x = 0; x < width; ++x)
-                ConvertPixel_ARGB1555_To_RGBA8(dst_ptr, src_ptr);
+            for (int x = 0; x < width; ++x) ConvertPixel_ARGB1555_To_RGBA8(dst_ptr, src_ptr);
             dst_bits_ptr += dst_pitch;
             src_bits_ptr += src_pitch;
         }
@@ -135,8 +135,7 @@ bool ConvertBitmapFormat(uint8_t* dst_bits_ptr, rf::BmPixelFormat dst_fmt, const
         for (int y = 0; y < height; ++y) {
             uint8_t* dst_ptr = dst_bits_ptr;
             const uint8_t* src_ptr = src_bits_ptr;
-            for (int x = 0; x < width; ++x)
-                ConvertPixel_RGB565_To_RGBA8(dst_ptr, src_ptr);
+            for (int x = 0; x < width; ++x) ConvertPixel_RGB565_To_RGBA8(dst_ptr, src_ptr);
             dst_bits_ptr += dst_pitch;
             src_bits_ptr += src_pitch;
         }
@@ -147,29 +146,32 @@ bool ConvertBitmapFormat(uint8_t* dst_bits_ptr, rf::BmPixelFormat dst_fmt, const
     }
 }
 
-FunHook2<int(int, const uint8_t*, const uint8_t*, int, int, rf::BmPixelFormat, void*, int, int, IDirect3DTexture8*)> GrD3DSetTextureData_Hook{
-    0x0055BA10,
-    [](int level, const uint8_t* src_bits_ptr, const uint8_t* palette, int bm_w, int bm_h, rf::BmPixelFormat pixel_fmt, void* a7, int tex_w, int tex_h, IDirect3DTexture8* texture) {
-        D3DLOCKED_RECT locked_rect;
-        HRESULT hr = texture->LockRect(level, &locked_rect, 0, 0);
-        if (FAILED(hr)) {
-            ERR("LockRect failed");
-            return -1;
-        }
-        D3DSURFACE_DESC desc;
-        texture->GetLevelDesc(level, &desc);
-        auto tex_pixel_fmt = GetPixelFormatFromD3DFormat(desc.Format);
-        bool success = ConvertBitmapFormat((uint8_t*)locked_rect.pBits, tex_pixel_fmt, src_bits_ptr, pixel_fmt,
-            bm_w, bm_h, locked_rect.Pitch, GetPixelFormatSize(pixel_fmt) * bm_w);
-        texture->UnlockRect(level);
+FunHook2<int(int, const uint8_t*, const uint8_t*, int, int, rf::BmPixelFormat, void*, int, int, IDirect3DTexture8*)>
+    GrD3DSetTextureData_Hook{
+        0x0055BA10,
+        [](int level, const uint8_t* src_bits_ptr, const uint8_t* palette, int bm_w, int bm_h,
+           rf::BmPixelFormat pixel_fmt, void* a7, int tex_w, int tex_h, IDirect3DTexture8* texture) {
+            D3DLOCKED_RECT locked_rect;
+            HRESULT hr = texture->LockRect(level, &locked_rect, 0, 0);
+            if (FAILED(hr)) {
+                ERR("LockRect failed");
+                return -1;
+            }
+            D3DSURFACE_DESC desc;
+            texture->GetLevelDesc(level, &desc);
+            auto tex_pixel_fmt = GetPixelFormatFromD3DFormat(desc.Format);
+            bool success = ConvertBitmapFormat((uint8_t*)locked_rect.pBits, tex_pixel_fmt, src_bits_ptr, pixel_fmt,
+                                               bm_w, bm_h, locked_rect.Pitch, GetPixelFormatSize(pixel_fmt) * bm_w);
+            texture->UnlockRect(level);
 
-        if (success)
-            return 0;
+            if (success)
+                return 0;
 
-        WARN("Color conversion failed (format %d -> %d)", pixel_fmt, tex_pixel_fmt);
-        return GrD3DSetTextureData_Hook.CallTarget(level, src_bits_ptr, palette, bm_w, bm_h, pixel_fmt, a7, tex_w, tex_h, texture);
-    },
-};
+            WARN("Color conversion failed (format %d -> %d)", pixel_fmt, tex_pixel_fmt);
+            return GrD3DSetTextureData_Hook.CallTarget(level, src_bits_ptr, palette, bm_w, bm_h, pixel_fmt, a7, tex_w,
+                                                       tex_h, texture);
+        },
+    };
 
 void RflLoadLightmaps_004ED3F6(rf::RflLightmap* lightmap)
 {
@@ -183,8 +185,8 @@ void RflLoadLightmaps_004ED3F6(rf::RflLightmap* lightmap)
         lightmap->Buf[i] = std::max(lightmap->Buf[i], (uint8_t)(4 << 3)); // 32
 #endif
 
-    bool success = ConvertBitmapFormat(lock_data.Bits, lock_data.PixelFormat,
-        lightmap->Buf, rf::BMPF_888, lightmap->w, lightmap->h, lock_data.Pitch, 3 * lightmap->w, true);
+    bool success = ConvertBitmapFormat(lock_data.Bits, lock_data.PixelFormat, lightmap->Buf, rf::BMPF_888, lightmap->w,
+                                       lightmap->h, lock_data.Pitch, 3 * lightmap->w, true);
     if (!success)
         ERR("ConvertBitmapFormat failed for lightmap");
 
@@ -204,8 +206,8 @@ void GeoModGenerateTexture_004F2F23(uintptr_t v3)
         uint8_t* src_data = *(uint8_t**)(v75 + 12) + 3 * (offset_x + offset_y * src_width);
         uint8_t* dst_data = &lock_data.Bits[dst_pixel_size * offset_x + offset_y * lock_data.Pitch];
         int height = *(int*)(v3 + 28);
-        bool success = ConvertBitmapFormat(dst_data, lock_data.PixelFormat, src_data, rf::BMPF_888,
-            src_width, height, lock_data.Pitch, 3 * src_width);
+        bool success = ConvertBitmapFormat(dst_data, lock_data.PixelFormat, src_data, rf::BMPF_888, src_width, height,
+                                           lock_data.Pitch, 3 * src_width);
         if (!success)
             ERR("ConvertBitmapFormat failed for geomod (fmt %d)", lock_data.PixelFormat);
         rf::GrUnlock(&lock_data);
@@ -228,8 +230,8 @@ int GeoModGenerateLightmap_004E487B(uintptr_t v6)
         int height = *(int*)(v6 + 28);
         int dst_pixel_size = GetPixelFormatSize(lock_data.PixelFormat);
         uint8_t* dst_row_ptr = &lock_data.Bits[dst_pixel_size * offset_x + offset_y * lock_data.Pitch];
-        bool success = ConvertBitmapFormat(dst_row_ptr, lock_data.PixelFormat, src_data, rf::BMPF_888,
-            src_width, height, lock_data.Pitch, 3 * src_width);
+        bool success = ConvertBitmapFormat(dst_row_ptr, lock_data.PixelFormat, src_data, rf::BMPF_888, src_width,
+                                           height, lock_data.Pitch, 3 * src_width);
         if (!success)
             ERR("ConvertBitmapFormat failed for geomod2 (fmt %d)", lock_data.PixelFormat);
         rf::GrUnlock(&lock_data);
@@ -257,9 +259,9 @@ void WaterGenerateTexture_004E68D1(uintptr_t v1)
         }
     }
 
-    static auto &byte_1370f90 = *(uint8_t(*)[256])0x1370F90;
-    static auto &byte_1371b14 = *(uint8_t(*)[256])0x1371B14;
-    static auto &byte_1371090 = *(uint8_t(*)[512])0x1371090;
+    static auto& byte_1370f90 = *(uint8_t(*)[256])0x1370F90;
+    static auto& byte_1371b14 = *(uint8_t(*)[256])0x1371B14;
+    static auto& byte_1371090 = *(uint8_t(*)[512])0x1371090;
 
     uint8_t* dst_row_ptr = dst_lock_data.Bits;
     int src_pixel_size = GetPixelFormatSize(src_lock_data.PixelFormat);
@@ -270,7 +272,8 @@ void WaterGenerateTexture_004E68D1(uintptr_t v1)
         uint8_t* v32 = &byte_1371090[-v30];
         uint8_t* dst_ptr = dst_row_ptr;
         for (int x = 0; x < dst_lock_data.Width; ++x) {
-            int src_offset = (v30 & (dst_lock_data.Width - 1)) + (((dst_lock_data.Height - 1) & (v38 + v32[v30])) << v41);
+            int src_offset =
+                (v30 & (dst_lock_data.Width - 1)) + (((dst_lock_data.Height - 1) & (v38 + v32[v30])) << v41);
             const uint8_t* src_ptr = src_lock_data.Bits + src_offset * src_pixel_size;
             ConvertPixelFormat(dst_ptr, dst_lock_data.PixelFormat, src_ptr, src_lock_data.PixelFormat);
             ++v30;
@@ -299,7 +302,7 @@ FunHook2<unsigned()> BinkInitDeviceInfo_Hook{
         unsigned bink_flags = BinkInitDeviceInfo_Hook.CallTarget();
 
         if (g_game_config.trueColorTextures && g_game_config.resBpp == 32) {
-            static auto &bink_bm_pixel_fmt = AddrAsRef<uint32_t>(0x018871C0);
+            static auto& bink_bm_pixel_fmt = AddrAsRef<uint32_t>(0x018871C0);
             bink_bm_pixel_fmt = rf::BMPF_888;
             bink_flags = 3;
         }
@@ -324,29 +327,13 @@ void GrColorInit()
 
         // lightmaps
         using namespace asm_regs;
-        AsmWritter(0x004ED3E9)
-            .push(ebx)
-            .call(RflLoadLightmaps_004ED3F6)
-            .add(esp, 4)
-            .jmp(0x004ED4FA);
+        AsmWritter(0x004ED3E9).push(ebx).call(RflLoadLightmaps_004ED3F6).add(esp, 4).jmp(0x004ED4FA);
         // geomod
-        AsmWritter(0x004F2F23)
-            .push(esi)
-            .call(GeoModGenerateTexture_004F2F23)
-            .add(esp, 4)
-            .jmp(0x004F3023);
-        AsmWritter(0x004E487B)
-            .push(esi)
-            .call(GeoModGenerateLightmap_004E487B)
-            .add(esp, 4)
-            .jmp(0x004E4993);
+        AsmWritter(0x004F2F23).push(esi).call(GeoModGenerateTexture_004F2F23).add(esp, 4).jmp(0x004F3023);
+        AsmWritter(0x004E487B).push(esi).call(GeoModGenerateLightmap_004E487B).add(esp, 4).jmp(0x004E4993);
         // water
         AsmWritter(0x004E68B0, 0x004E68B6).nop();
-        AsmWritter(0x004E68D1)
-            .push(esi)
-            .call(WaterGenerateTexture_004E68D1)
-            .add(esp, 4)
-            .jmp(0x004E6B68);
+        AsmWritter(0x004E68D1).push(esi).call(WaterGenerateTexture_004E68D1).add(esp, 4).jmp(0x004E6B68);
         // ambient color
         AsmWritter(0x004E5CE3)
             .lea(edx, AsmMem(esp + (0x34 - 0x28)))
@@ -359,7 +346,7 @@ void GrColorInit()
             .jmp(0x004E5D57);
         // sub_412410 (what is it?)
         WriteMem<u8>(0x00412430 + 3, 0x34 - 0x20 + 0x18); // pitch instead of width
-        AsmWritter(0x0041243D).nop(2); // dont multiply by 2
+        AsmWritter(0x0041243D).nop(2);                    // dont multiply by 2
 
 #ifdef DEBUG
         // FIXME: is it used?

@@ -1,17 +1,20 @@
-#include <windows.h>
-#include "version.h"
-#include "ZipHelper.h"
-#include "MiniDumpHelper.h"
-#include "HttpRequest.h"
 #include "Exception.h"
+#include "HttpRequest.h"
+#include "MiniDumpHelper.h"
+#include "ZipHelper.h"
+#include "version.h"
+#include <windows.h>
 
 // Config
 #define CRASHHANDLER_LOG_PATH "logs/DashFaction.log"
 #define CRASHHANDLER_DMP_FILENAME "logs/DashFaction.dmp"
 #define CRASHHANDLER_TARGET_DIR "logs"
 #define CRASHHANDLER_TARGET_NAME "DashFaction-crash.zip"
-//#define CRASHHANDLER_MSG "Game has crashed!\nTo help resolve the problem please send " CRASHHANDLER_TARGET_NAME " file from logs subdirectory in RedFaction directory to " PRODUCT_NAME " author."
-#define CRASHHANDLER_MSG "Game has crashed!\nReport has been generated in " CRASHHANDLER_TARGET_DIR "\\" CRASHHANDLER_TARGET_NAME ".\nDo you want to send it to " PRODUCT_NAME " author to help resolve the problem?"
+//#define CRASHHANDLER_MSG "Game has crashed!\nTo help resolve the problem please send " CRASHHANDLER_TARGET_NAME " file
+//from logs subdirectory in RedFaction directory to " PRODUCT_NAME " author."
+#define CRASHHANDLER_MSG                                                                                     \
+    "Game has crashed!\nReport has been generated in " CRASHHANDLER_TARGET_DIR "\\" CRASHHANDLER_TARGET_NAME \
+    ".\nDo you want to send it to " PRODUCT_NAME " author to help resolve the problem?"
 // Information Level: 0 smallest - 2 - biggest
 #ifdef NDEBUG
 #define CRASHHANDLER_DMP_LEVEL 0
@@ -24,7 +27,7 @@
 #define CRASHHANDLER_WEBSVC_PATH "/api/rf/dashfaction/crashreport.php"
 #define CRASHHANDLER_WEBSVC_AGENT "DashFaction"
 
-bool PrepareArchive(const char *CrashDumpFilename)
+bool PrepareArchive(const char* CrashDumpFilename)
 {
     CreateDirectoryA(CRASHHANDLER_TARGET_DIR, NULL);
     ZipHelper zip(CRASHHANDLER_TARGET_DIR "/" CRASHHANDLER_TARGET_NAME);
@@ -41,7 +44,7 @@ void SendArchive()
     info.path = CRASHHANDLER_WEBSVC_PATH;
     info.agent = CRASHHANDLER_WEBSVC_AGENT;
 
-    FILE *file = fopen(CRASHHANDLER_TARGET_DIR "/" CRASHHANDLER_TARGET_NAME, "rb");
+    FILE* file = fopen(CRASHHANDLER_TARGET_DIR "/" CRASHHANDLER_TARGET_NAME, "rb");
     if (!file)
         THROW_EXCEPTION("cannot open " CRASHHANDLER_TARGET_NAME);
 
@@ -53,8 +56,7 @@ void SendArchive()
     req.addHeaders("Content-Type: application/octet-stream\r\n");
     req.begin(size);
     char buf[2048];
-    while (!feof(file))
-    {
+    while (!feof(file)) {
         size_t num = fread(buf, 1, sizeof(buf), file);
         req.write(buf, num);
     }
@@ -62,7 +64,7 @@ void SendArchive()
     req.end();
 }
 
-int GetTempFileNameInTempDir(const char *Prefix, char Result[MAX_PATH])
+int GetTempFileNameInTempDir(const char* Prefix, char Result[MAX_PATH])
 {
     char TempDir[MAX_PATH];
     DWORD dwRetVal = GetTempPathA(std::size(TempDir), TempDir);
@@ -77,8 +79,7 @@ int GetTempFileNameInTempDir(const char *Prefix, char Result[MAX_PATH])
 }
 
 #if 1
-int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) try
-{
+int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) try {
     // Unused parameters
     (void)hInstance;
     (void)hPrevInstance;
@@ -88,14 +89,13 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     auto argc = __argc;
     auto argv = __argv;
 #else
-int main(int argc, const char *argv[]) try
-{
+int main(int argc, const char* argv[]) try {
 #endif
 
     if (argc < 5)
         return -1;
 
-    EXCEPTION_POINTERS *ExceptionPtrs = (EXCEPTION_POINTERS*)strtoull(argv[1], nullptr, 0);
+    EXCEPTION_POINTERS* ExceptionPtrs = (EXCEPTION_POINTERS*)strtoull(argv[1], nullptr, 0);
     HANDLE hProcess = (HANDLE)strtoull(argv[2], nullptr, 0);
     DWORD dwThreadId = (DWORD)strtoull(argv[3], nullptr, 0);
     HANDLE hEvent = (HANDLE)strtoull(argv[4], nullptr, 0);
@@ -121,23 +121,22 @@ int main(int argc, const char *argv[]) try
 
     if (GetSystemMetrics(SM_CMONITORS) == 0)
         printf("%s\n", CRASHHANDLER_MSG);
-    else
-    {
+    else {
 #if CRASHHANDLER_WEBSVC_ENABLED
-        if (MessageBox(NULL, TEXT(CRASHHANDLER_MSG), NULL, MB_ICONERROR | MB_YESNO | MB_SETFOREGROUND | MB_TASKMODAL) == IDYES)
-        {
+        if (MessageBox(NULL, TEXT(CRASHHANDLER_MSG), NULL, MB_ICONERROR | MB_YESNO | MB_SETFOREGROUND | MB_TASKMODAL) ==
+            IDYES) {
             SendArchive();
-            MessageBox(NULL, TEXT("Crash report has been sent. Thank you!"), NULL, MB_ICONINFORMATION | MB_OK | MB_SETFOREGROUND | MB_TASKMODAL);
+            MessageBox(NULL, TEXT("Crash report has been sent. Thank you!"), NULL,
+                       MB_ICONINFORMATION | MB_OK | MB_SETFOREGROUND | MB_TASKMODAL);
         }
-#else // CRASHHANDLER_WEBSVC_ENABLED
+#else  // CRASHHANDLER_WEBSVC_ENABLED
         MessageBox(NULL, TEXT(CRASHHANDLER_MSG), NULL, MB_ICONERROR | MB_OK | MB_SETFOREGROUND | MB_TASKMODAL);
 #endif // CRASHHANDLER_WEBSVC_ENABLED
     }
 
     return 0;
 }
-catch (std::exception &e)
-{
+catch (std::exception& e) {
     MessageBoxA(NULL, e.what(), NULL, MB_ICONERROR | MB_OK | MB_SETFOREGROUND | MB_TASKMODAL);
     return -1;
 }

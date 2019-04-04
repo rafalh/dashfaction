@@ -1,20 +1,22 @@
-#include "stdafx.h"
 #include "lazyban.h"
-#include "utils.h"
-#include "rf.h"
 #include "commands.h"
+#include "rf.h"
+#include "stdafx.h"
+#include "utils.h"
 
-namespace rf {
-struct BanlistEntry {
+namespace rf
+{
+struct BanlistEntry
+{
     char ip_addr[24];
     BanlistEntry* next;
     BanlistEntry* prev;
 };
 
-static auto &banlist_first_entry = *(BanlistEntry**)0x0064EC20;
-static auto &banlist_last_entry = *(BanlistEntry**)0x0064EC24;
-static auto &banlist_null_entry = *(BanlistEntry*)0x0064EC08;
-}
+static auto& banlist_first_entry = *(BanlistEntry**)0x0064EC20;
+static auto& banlist_last_entry = *(BanlistEntry**)0x0064EC24;
+static auto& banlist_null_entry = *(BanlistEntry*)0x0064EC08;
+} // namespace rf
 
 void BanCmdHandlerHook()
 {
@@ -28,7 +30,8 @@ void BanCmdHandlerHook()
                     rf::DcPrintf(rf::strings::array[959], player->strName.CStr());
                     rf::BanIp(player->NwData->Addr);
                     rf::KickPlayer(player);
-                } else
+                }
+                else
                     rf::DcPrintf("You cannot ban yourself!");
             }
         }
@@ -51,7 +54,8 @@ void KickCmdHandlerHook()
                 if (player != rf::g_LocalPlayer) {
                     rf::DcPrintf(rf::strings::kicking_player, player->strName.CStr());
                     rf::KickPlayer(player);
-                } else
+                }
+                else
                     rf::DcPrintf("You cannot kick yourself!");
             }
         }
@@ -78,7 +82,6 @@ DcCommand2 unban_last_cmd{
     },
     "Unbans last banned player",
 };
-
 
 void InitLazyban()
 {

@@ -2,10 +2,15 @@
 
 namespace logging
 {
-    class NullStream {};
 
-    template <typename T> NullStream &operator<<(NullStream &s, const T &)
-    {
-        return s;
-    }
+class NullStream
+{
+};
+
+template<typename T>
+NullStream& operator<<(NullStream& s, const T&)
+{
+    return s;
 }
+
+} // namespace logging

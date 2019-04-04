@@ -1,24 +1,27 @@
 #pragma once
 
 #include "rf.h"
-#include <functional>
 #include <Traits.h>
+#include <functional>
 
 namespace rf
 {
-    struct DcCommand;
-    struct Player;
-}
+struct DcCommand;
+struct Player;
+} // namespace rf
 
 void CommandsInit();
 void CommandsAfterGameInit();
-void CommandRegister(rf::DcCommand *cmd);
-rf::Player *FindBestMatchingPlayer(const char *name);
+void CommandRegister(rf::DcCommand* cmd);
+rf::Player* FindBestMatchingPlayer(const char* name);
 void DebugRender3d();
 void DebugRender2d();
 
-class DcInvalidArgTypeError : public std::exception {};
-class DcRequiredArgMissingError : public std::exception {};
+class DcInvalidArgTypeError : public std::exception
+{};
+
+class DcRequiredArgMissingError : public std::exception
+{};
 
 inline bool ReadArgInternal(int type_flag, bool preserve_case = false)
 {
@@ -75,16 +78,16 @@ inline std::optional<std::string> DcReadArg()
 class BaseCommand : public rf::DcCommand
 {
 protected:
-    BaseCommand(const char *name, const char *description = nullptr)
+    BaseCommand(const char* name, const char* description = nullptr)
     {
         Cmd = name;
         Descr = description;
         pfnHandler = reinterpret_cast<void (*)()>(StaticHandler);
     }
 
-    static void __fastcall StaticHandler(rf::DcCommand *cmd)
+    static void __fastcall StaticHandler(rf::DcCommand* cmd)
     {
-        BaseCommand *cmd2 = static_cast<BaseCommand*>(cmd);
+        BaseCommand* cmd2 = static_cast<BaseCommand*>(cmd);
         cmd2->Handler();
     }
 
@@ -105,12 +108,13 @@ class DcCommand2<void(Args...)> : public BaseCommand
 {
 private:
     std::function<void(Args...)> m_handler_fun;
-    const char *m_usage_text;
+    const char* m_usage_text;
 
 public:
-    DcCommand2(const char *name, void(*handler_fun)(Args...),
-        const char *description = nullptr, const char *usage_text = nullptr) :
-        BaseCommand(name, description), m_handler_fun(handler_fun), m_usage_text(usage_text)
+    DcCommand2(const char* name, void (*handler_fun)(Args...), const char* description = nullptr,
+               const char* usage_text = nullptr) :
+        BaseCommand(name, description),
+        m_handler_fun(handler_fun), m_usage_text(usage_text)
     {}
 
 private:
@@ -146,31 +150,28 @@ private:
 
 #ifdef __cpp_deduction_guides
 // deduction guide for lambda functions
-template <class T>
-DcCommand2(const char *, T)
-    -> DcCommand2<typename function_traits<T>::f_type>;
-template <class T>
-DcCommand2(const char *, T, const char *)
-    -> DcCommand2<typename function_traits<T>::f_type>;
-template <class T>
-DcCommand2(const char *, T, const char *, const char *)
-    -> DcCommand2<typename function_traits<T>::f_type>;
+template<class T>
+DcCommand2(const char*, T)->DcCommand2<typename function_traits<T>::f_type>;
+template<class T>
+DcCommand2(const char*, T, const char*)->DcCommand2<typename function_traits<T>::f_type>;
+template<class T>
+DcCommand2(const char*, T, const char*, const char*)->DcCommand2<typename function_traits<T>::f_type>;
 #endif
 
 class DcCommandAlias : public BaseCommand
 {
 private:
-    rf::DcCommand &m_target_cmd;
+    rf::DcCommand& m_target_cmd;
 
 public:
-    DcCommandAlias(const char *name, rf::DcCommand &target_cmd) :
+    DcCommandAlias(const char* name, rf::DcCommand& target_cmd) :
         BaseCommand(name), m_target_cmd(target_cmd)
     {}
 
 private:
     void Handler() override
     {
-        auto handler_fun = reinterpret_cast<void __fastcall(*)(rf::DcCommand*)>(m_target_cmd.pfnHandler);
+        auto handler_fun = reinterpret_cast<void __fastcall (*)(rf::DcCommand*)>(m_target_cmd.pfnHandler);
         handler_fun(&m_target_cmd);
     }
 };

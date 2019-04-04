@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string>
+#include <d3d8.h>
+
 #define DEFAULT_RF_TRACKER "rfgt.factionfiles.com"
 #define DEFAULT_EXECUTABLE_PATH "C:\\games\\RedFaction\\rf.exe"
 #define MIN_FPS_LIMIT 10u
@@ -15,7 +18,13 @@ struct GameConfig
     unsigned resBpp = 32;
     unsigned resBackbufferFormat = D3DFMT_X8R8G8B8;
     unsigned selectedVideoCard = 0;
-    enum WndMode { FULLSCREEN, WINDOWED, STRETCHED } wndMode = FULLSCREEN;
+    enum WndMode
+    {
+        FULLSCREEN,
+        WINDOWED,
+        STRETCHED
+    };
+    WndMode wndMode = FULLSCREEN;
     bool vsync = true;
     bool fastAnims = false;
     bool disableLodModels = true;

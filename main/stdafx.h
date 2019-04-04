@@ -2,8 +2,8 @@
 
 #include <windef.h>
 
-#include <MemUtils.h>
 #include <AsmOpcodes.h>
 #include <AsmWritter.h>
+#include <MemUtils.h>
 
 #include "BuildConfig.h"

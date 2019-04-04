@@ -1,4 +1,4 @@
 #pragma once
 
-void InitScoreboard(void);
+void InitScoreboard();
 void SetScoreboardHidden(bool hidden);

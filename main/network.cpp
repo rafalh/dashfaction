@@ -1,26 +1,27 @@
-#include "stdafx.h"
 #include "network.h"
 #include "rf.h"
+#include "stdafx.h"
 #include "utils.h"
-#include <cstddef>
-#include <ShortTypes.h>
-#include <FunHook2.h>
 #include <CallHook2.h>
+#include <FunHook2.h>
 #include <RegsPatch.h>
+#include <ShortTypes.h>
+#include <cstddef>
 #include <functional>
 
 #if MASK_AS_PF
- #include "pf.h"
+#include "pf.h"
 #endif
 
-namespace rf {
+namespace rf
+{
 static const auto MpIsConnectingToServer = AddrAsRef<uint8_t(const rf::NwAddr& addr)>(0x0044AD80);
 static auto& RflStaticGeometry = AddrAsRef<void*>(0x006460E8);
 static auto& SimultaneousPing = AddrAsRef<uint32_t>(0x00599CD8);
 
-typedef void(*NwProcessGamePackets_Type)(const char *data, int num_bytes, const NwAddr &addr, Player *player);
+typedef void (*NwProcessGamePackets_Type)(const char* data, int num_bytes, const NwAddr& addr, Player* player);
 static const auto NwProcessGamePackets = (NwProcessGamePackets_Type)0x004790D0;
-}
+} // namespace rf
 
 typedef void NwPacketHandler_Type(char* data, const rf::NwAddr& addr);
 
@@ -29,9 +30,9 @@ CallHook2<void(const char*, int, const rf::NwAddr&, rf::Player*)> ProcessUnrelia
     [](const char* data, int data_len, const rf::NwAddr& addr, rf::Player* player) {
         rf::NwProcessGamePackets(data, data_len, addr, player);
 
-    #if MASK_AS_PF
+#if MASK_AS_PF
         ProcessPfPacket(data, data_len, &addr, player);
-    #endif
+#endif
     },
 };
 
@@ -47,14 +48,13 @@ private:
 public:
     BufferOverflowPatch(uintptr_t shr_ecx_2_addr, uintptr_t and_ecx_3_addr, int32_t buffer_size) :
         m_movsb_patch(and_ecx_3_addr, std::bind(&BufferOverflowPatch::movsb_handler, this, std::placeholders::_1)),
-        m_shr_ecx_2_addr(shr_ecx_2_addr), m_and_ecx_3_addr(and_ecx_3_addr),
-        m_buffer_size(buffer_size)
+        m_shr_ecx_2_addr(shr_ecx_2_addr), m_and_ecx_3_addr(and_ecx_3_addr), m_buffer_size(buffer_size)
     {}
 
     void Install()
     {
-        const std::byte *shr_ecx_2_ptr = reinterpret_cast<std::byte*>(m_shr_ecx_2_addr);
-        const std::byte *and_ecx_3_ptr = reinterpret_cast<std::byte*>(m_and_ecx_3_addr);
+        const std::byte* shr_ecx_2_ptr = reinterpret_cast<std::byte*>(m_shr_ecx_2_addr);
+        const std::byte* and_ecx_3_ptr = reinterpret_cast<std::byte*>(m_and_ecx_3_addr);
         assert(std::memcmp(shr_ecx_2_ptr, "\xC1\xE9\x02", 3) == 0); // shr ecx, 2
         assert(std::memcmp(and_ecx_3_ptr, "\x83\xE1\x03", 3) == 0); // and ecx, 3
 
@@ -62,11 +62,13 @@ public:
             m_movsb_patch.SetAddr(m_shr_ecx_2_addr);
             m_ret_addr = m_shr_ecx_2_addr + 5;
             AsmWritter(m_and_ecx_3_addr, m_and_ecx_3_addr + 3).xor_(asm_regs::ecx, asm_regs::ecx);
-        } else if (std::memcmp(and_ecx_3_ptr + 3, "\xF3\xA4", 2) == 0) { // rep movsb {
+        }
+        else if (std::memcmp(and_ecx_3_ptr + 3, "\xF3\xA4", 2) == 0) { // rep movsb
             AsmWritter(m_shr_ecx_2_addr, m_shr_ecx_2_addr + 3).xor_(asm_regs::ecx, asm_regs::ecx);
             m_movsb_patch.SetAddr(m_and_ecx_3_addr);
             m_ret_addr = m_and_ecx_3_addr + 5;
-        } else {
+        }
+        else {
             assert(false);
         }
 
@@ -74,7 +76,7 @@ public:
     }
 
 private:
-    void movsb_handler(X86Regs &regs)
+    void movsb_handler(X86Regs& regs)
     {
         auto dst_ptr = reinterpret_cast<char*>(regs.edi);
         auto src_ptr = reinterpret_cast<char*>(regs.esi);
@@ -93,36 +95,24 @@ std::array g_buffer_overflow_patches{
     BufferOverflowPatch{0x0047B2D3, 0x0047B2DE, 256}, // ProcessGameInfoPacket (server name)
     BufferOverflowPatch{0x0047B334, 0x0047B33D, 256}, // ProcessGameInfoPacket (level name)
     BufferOverflowPatch{0x0047B38E, 0x0047B397, 256}, // ProcessGameInfoPacket (mod name)
-
     BufferOverflowPatch{0x0047ACF6, 0x0047AD03, 32},  // ProcessJoinReqPacket (player name)
     BufferOverflowPatch{0x0047AD4E, 0x0047AD55, 256}, // ProcessJoinReqPacket (password)
-
     BufferOverflowPatch{0x0047A8AE, 0x0047A8B5, 64},  // ProcessJoinAcceptPacket (level filename)
-
     BufferOverflowPatch{0x0047A5F4, 0x0047A5FF, 32},  // ProcessNewPlayerPacket (player name)
-
     BufferOverflowPatch{0x00481EE6, 0x00481EEF, 32},  // ProcessPlayersPacket (player name)
-
     BufferOverflowPatch{0x00481BEC, 0x00481BF8, 64},  // ProcessStateInfoReqPacket (level filename)
-
     BufferOverflowPatch{0x004448B0, 0x004448B7, 256}, // ProcessChatLinePacket (message)
-
     BufferOverflowPatch{0x0046EB24, 0x0046EB2B, 32},  // ProcessNameChangePacket (player name)
-
     BufferOverflowPatch{0x0047C1C3, 0x0047C1CA, 64},  // ProcessLeaveLimboPacket (level filename)
-
     BufferOverflowPatch{0x0047EE6E, 0x0047EE77, 256}, // ProcessObjKillPacket (item name)
     BufferOverflowPatch{0x0047EF9C, 0x0047EFA5, 256}, // ProcessObjKillPacket (item name)
-
     BufferOverflowPatch{0x00475474, 0x0047547D, 256}, // ProcessEntityCreatePacket (entity name)
-
     BufferOverflowPatch{0x00479FAA, 0x00479FB3, 256}, // ProcessItemCreatePacket (item name)
-
     BufferOverflowPatch{0x0046C590, 0x0046C59B, 256}, // ProcessRconReqPacket (password)
-
     BufferOverflowPatch{0x0046C751, 0x0046C75A, 512}, // ProcessRconPacket (command)
 };
 
+// clang-format off
 enum packet_type : uint8_t {
     game_info_request      = 0x00,
     game_info              = 0x01,
@@ -251,18 +241,19 @@ std::array g_client_side_packet_whitelist{
     team_score,
     glass_kill,
 };
+// clang-format on
 
 RegsPatch ProcessGamePacket_whitelist_filter{
     0x0047918D,
-    [](auto &regs) {
+    [](auto& regs) {
         bool allowed = false;
         int packet_type = regs.esi;
         if (rf::g_IsLocalNetworkGame) {
-            auto &whitelist = g_server_side_packet_whitelist;
+            auto& whitelist = g_server_side_packet_whitelist;
             allowed = std::find(whitelist.begin(), whitelist.end(), packet_type) != whitelist.end();
         }
         else {
-            auto &whitelist = g_client_side_packet_whitelist;
+            auto& whitelist = g_client_side_packet_whitelist;
             allowed = std::find(whitelist.begin(), whitelist.end(), packet_type) != whitelist.end();
         }
         if (!allowed) {
@@ -277,9 +268,7 @@ RegsPatch ProcessGamePacket_whitelist_filter{
 
 RegsPatch ProcessGameInfoPacket_GameTypeBounds_Patch{
     0x0047B30B,
-    [](X86Regs& regs) {
-        regs.ecx = std::clamp(regs.ecx, 0, 2);
-    },
+    [](X86Regs& regs) { regs.ecx = std::clamp(regs.ecx, 0, 2); },
 };
 
 FunHook2<NwPacketHandler_Type> ProcessJoinDenyPacket_Hook{
@@ -316,9 +305,10 @@ FunHook2<NwPacketHandler_Type> ProcessChatLinePacket_Hook{
     [](char* data, const rf::NwAddr& addr) {
         // server-side and client-side
         if (rf::g_IsLocalNetworkGame) {
-            rf::Player *src_player = rf::NwGetPlayerFromAddr(addr);
+            rf::Player* src_player = rf::NwGetPlayerFromAddr(addr);
             if (!src_player)
                 return; // shouldnt happen (protected in rf::NwProcessGamePackets)
+
             data[0] = src_player->NwData->PlayerId; // fix player ID
         }
         ProcessChatLinePacket_Hook.CallTarget(data, addr);
@@ -332,7 +322,7 @@ FunHook2<NwPacketHandler_Type> ProcessNameChangePacket_Hook{
         if (rf::g_IsLocalNetworkGame) {
             rf::Player* src_player = rf::NwGetPlayerFromAddr(addr);
             if (!src_player)
-                return; // shouldnt happen (protected in rf::NwProcessGamePackets)
+                return;                             // shouldnt happen (protected in rf::NwProcessGamePackets)
             data[0] = src_player->NwData->PlayerId; // fix player ID
         }
         ProcessNameChangePacket_Hook.CallTarget(data, addr);
@@ -344,10 +334,11 @@ FunHook2<NwPacketHandler_Type> ProcessTeamChangePacket_Hook{
     [](char* data, const rf::NwAddr& addr) {
         // server-side and client-side
         if (rf::g_IsLocalNetworkGame) {
-            rf::Player *src_player = rf::NwGetPlayerFromAddr(addr);
+            rf::Player* src_player = rf::NwGetPlayerFromAddr(addr);
             if (!src_player)
                 return; // shouldnt happen (protected in rf::NwProcessGamePackets)
-            data[0] = src_player->NwData->PlayerId; // fix player ID
+
+            data[0] = src_player->NwData->PlayerId;   // fix player ID
             data[1] = std::clamp((int)data[1], 0, 1); // team validation (fixes "green team")
         }
         ProcessTeamChangePacket_Hook.CallTarget(data, addr);
@@ -359,9 +350,9 @@ FunHook2<NwPacketHandler_Type> ProcessRateChangePacket_Hook{
     [](char* data, const rf::NwAddr& addr) {
         // server-side and client-side?
         if (rf::g_IsLocalNetworkGame) {
-            rf::Player *src_player = rf::NwGetPlayerFromAddr(addr);
+            rf::Player* src_player = rf::NwGetPlayerFromAddr(addr);
             if (!src_player)
-                return; // shouldnt happen (protected in rf::NwProcessGamePackets)
+                return;                             // shouldnt happen (protected in rf::NwProcessGamePackets)
             data[0] = src_player->NwData->PlayerId; // fix player ID
         }
         ProcessRateChangePacket_Hook.CallTarget(data, addr);
@@ -379,7 +370,7 @@ FunHook2<NwPacketHandler_Type> ProcessEntityCreatePacket_Hook{
             rf::g_strDefaultPlayerWeapon = rf::g_WeaponClasses[weapon_cls_id].strName;
 
 #if 0 // disabled because it sometimes helpful feature to switch to last used weapon
-        // Reset next weapon variable so entity wont switch after pickup
+      // Reset next weapon variable so entity wont switch after pickup
         if (!g_LocalPlayer->Config.AutoswitchWeapons)
             MultiSetNextWeapon(weapon_cls_id);
 #endif
@@ -411,12 +402,13 @@ FunHook2<NwPacketHandler_Type> ProcessReloadPacket_Hook{
     },
 };
 
-rf::EntityObj* SecureObjUpdatePacket(rf::EntityObj *entity, uint8_t flags, rf::Player *src_player)
+rf::EntityObj* SecureObjUpdatePacket(rf::EntityObj* entity, uint8_t flags, rf::Player* src_player)
 {
     if (rf::g_IsLocalNetworkGame) {
         // server-side
         if (entity && entity->_Super.Handle != src_player->Entity_handle) {
-            TRACE("Invalid ObjUpdate entity %x %x %s", entity->_Super.Handle, src_player->Entity_handle, src_player->strName.CStr());
+            TRACE("Invalid ObjUpdate entity %x %x %s", entity->_Super.Handle, src_player->Entity_handle,
+                  src_player->strName.CStr());
             return nullptr;
         }
 
@@ -472,14 +464,12 @@ FunHook2<void(int32_t, int32_t)> MultiSetObjHandleMapping_Hook{
 
 RegsPatch ProcessBooleanPacket_ValidateMeshId_Patch{
     0x004765A3,
-    [](auto& regs) {
-        regs.ecx = std::clamp(regs.ecx, 0, 3);
-    },
+    [](auto& regs) { regs.ecx = std::clamp(regs.ecx, 0, 3); },
 };
 
 RegsPatch ProcessBooleanPacket_ValidateRoomId_Patch{
     0x0047661C,
-    [](auto &regs) {
+    [](auto& regs) {
         int num_rooms = StructFieldRef<int>(rf::RflStaticGeometry, 0x90);
         if (regs.edx < 0 || regs.edx >= num_rooms) {
             WARN("Invalid room in Boolean packet - skipping");
@@ -491,14 +481,15 @@ RegsPatch ProcessBooleanPacket_ValidateRoomId_Patch{
 
 RegsPatch ProcessPregameBooleanPacket_ValidateMeshId_Patch{
     0x0047672F,
-    [](auto &regs) {
+    [](auto& regs) {
+        // only meshes 0 - 3 are supported
         regs.ecx = std::clamp(regs.ecx, 0, 3);
-    }
+    },
 };
 
 RegsPatch ProcessPregameBooleanPacket_ValidateRoomId_Patch{
     0x00476752,
-    [](auto &regs) {
+    [](auto& regs) {
         int num_rooms = StructFieldRef<int>(rf::RflStaticGeometry, 0x90);
         if (regs.edx < 0 || regs.edx >= num_rooms) {
             WARN("Invalid room in PregameBoolean packet - skipping");
@@ -510,22 +501,20 @@ RegsPatch ProcessPregameBooleanPacket_ValidateRoomId_Patch{
 
 RegsPatch ProcessGlassKillPacket_CheckRoomExists_Patch{
     0x004723B3,
-    [](auto &regs) {
+    [](auto& regs) {
         if (!regs.eax)
             regs.eip = 0x004723EC;
     },
 };
 
 CallHook2<int(void*, int, int, rf::NwAddr&, int)> nw_get_packet_tracker_hook{
-    0x00482ED4,
-    [](void *data, int a2, int a3, rf::NwAddr &addr, int super_type) {
+    0x00482ED4, [](void* data, int a2, int a3, rf::NwAddr& addr, int super_type) {
         int res = nw_get_packet_tracker_hook.CallTarget(data, a2, a3, addr, super_type);
-        auto &tracker_addr = AddrAsRef<rf::NwAddr>(0x006FC550);
+        auto& tracker_addr = AddrAsRef<rf::NwAddr>(0x006FC550);
         if (res != -1 && addr != tracker_addr)
             res = -1;
         return res;
-    }
-};
+    }};
 
 void NetworkInit()
 {
@@ -558,7 +547,7 @@ void NetworkInit()
     WriteMem<u32>(0x00599D20, 4);
 
     // Buffer Overflow fixes
-    for (auto &patch : g_buffer_overflow_patches) {
+    for (auto& patch : g_buffer_overflow_patches) {
         patch.Install();
     }
 

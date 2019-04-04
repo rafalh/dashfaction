@@ -1,9 +1,9 @@
-#include "stdafx.h"
 #include "kill.h"
 #include "rf.h"
+#include "stdafx.h"
 #include "utils.h"
-#include <ShortTypes.h>
 #include <FunHook2.h>
+#include <ShortTypes.h>
 
 void KillInitPlayer(rf::Player* player)
 {
@@ -27,15 +27,15 @@ FunHook2<void()> MpResetNetGame_Hook{
     },
 };
 
-static const char *NullToEmpty(const char* str)
+static const char* NullToEmpty(const char* str)
 {
     return str ? str : "";
 }
 
-void OnPlayerKill(rf::Player *killed_player, rf::Player *killer_player)
+void OnPlayerKill(rf::Player* killed_player, rf::Player* killer_player)
 {
     rf::String msg;
-    const char *mui_msg;
+    const char* mui_msg;
     rf::ChatMsgColor color_id;
 
     rf::EntityObj* killer_entity = killer_player ? rf::EntityGetFromHandle(killer_player->Entity_handle) : nullptr;
@@ -61,7 +61,7 @@ void OnPlayerKill(rf::Player *killed_player, rf::Player *killer_player)
             const char* weapon_name = nullptr;
             int killer_weapon_cls_id = killer_entity ? killer_entity->WeaponInfo.WeaponClsId : -1;
             if (killer_weapon_cls_id >= 0 && killer_weapon_cls_id < 64) {
-                auto &weapon_cls = rf::g_WeaponClasses[killer_weapon_cls_id];
+                auto& weapon_cls = rf::g_WeaponClasses[killer_weapon_cls_id];
                 weapon_name = weapon_cls.strDisplayName.CStr();
             }
 

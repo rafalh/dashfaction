@@ -1,20 +1,22 @@
 #pragma once
 
-#include <cstdint>
-#include <MemUtils.h>
-#include <AsmOpcodes.h>
-#include <log/Logger.h>
 #include "ShortTypes.h"
 #include "Traits.h"
+#include <AsmOpcodes.h>
+#include <MemUtils.h>
+#include <cstdint>
+#include <log/Logger.h>
 
-class CallHook2Impl {
+class CallHook2Impl
+{
 protected:
     uintptr_t m_call_op_addr;
-    void *m_target_fun_ptr;
-    void *m_hook_fun_ptr;
+    void* m_target_fun_ptr;
+    void* m_hook_fun_ptr;
 
-    CallHook2Impl(uintptr_t call_op_addr, void *hook_fun_ptr) :
-        m_call_op_addr{call_op_addr}, m_hook_fun_ptr{hook_fun_ptr} {}
+    CallHook2Impl(uintptr_t call_op_addr, void* hook_fun_ptr) :
+        m_call_op_addr{call_op_addr}, m_hook_fun_ptr{hook_fun_ptr}
+    {}
 
 public:
     void Install()
@@ -33,17 +35,19 @@ public:
     }
 };
 
-template <class T>
+template<class T>
 class CallHook2;
 
-template <class R, class... A>
-class CallHook2<R __cdecl(A...)> : public CallHook2Impl {
+template<class R, class... A>
+class CallHook2<R __cdecl(A...)> : public CallHook2Impl
+{
 private:
     typedef R __cdecl FunType(A...);
 
 public:
-    CallHook2(uintptr_t call_op_addr, FunType *hook_fun_ptr)
-        : CallHook2Impl(call_op_addr, reinterpret_cast<void*>(hook_fun_ptr)) {}
+    CallHook2(uintptr_t call_op_addr, FunType* hook_fun_ptr) :
+        CallHook2Impl(call_op_addr, reinterpret_cast<void*>(hook_fun_ptr))
+    {}
 
     R CallTarget(A... a) const
     {
@@ -52,14 +56,16 @@ public:
     }
 };
 
-template <class R, class... A>
-class CallHook2<R __fastcall(A...)> : public CallHook2Impl {
+template<class R, class... A>
+class CallHook2<R __fastcall(A...)> : public CallHook2Impl
+{
 private:
     typedef R __fastcall FunType(A...);
 
 public:
-    CallHook2(uintptr_t call_op_addr, FunType *hook_fun_ptr)
-        : CallHook2Impl(call_op_addr, reinterpret_cast<void*>(hook_fun_ptr)) {}
+    CallHook2(uintptr_t call_op_addr, FunType* hook_fun_ptr) :
+        CallHook2Impl(call_op_addr, reinterpret_cast<void*>(hook_fun_ptr))
+    {}
 
     R CallTarget(A... a) const
     {
@@ -70,6 +76,6 @@ public:
 
 #ifdef __cpp_deduction_guides
 // deduction guide for lambda functions
-template <class T>
-CallHook2(uintptr_t addr, T) -> CallHook2<typename function_traits<T>::f_type>;
+template<class T>
+CallHook2(uintptr_t addr, T)->CallHook2<typename function_traits<T>::f_type>;
 #endif

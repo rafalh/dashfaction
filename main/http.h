@@ -1,8 +1,9 @@
 #pragma once
 
+#include <stdexcept>
 #include <windows.h>
 #include <wininet.h>
-#include <stdexcept>
+#include <log/Logger.h>
 
 class HttpRequest
 {
@@ -12,11 +13,11 @@ private:
 public:
     HttpRequest(const HttpRequest&) = delete;
 
-    HttpRequest(HINTERNET connection_handle, const char *path, const char *method = "GET", const std::string &body = "")
+    HttpRequest(HINTERNET connection_handle, const char* path, const char* method = "GET", const std::string& body = "")
     {
         static LPCSTR accept_types[] = {"*/*", nullptr};
-        m_request = HttpOpenRequest(connection_handle,
-            method, path, nullptr, nullptr, accept_types, INTERNET_FLAG_RELOAD, 0);
+        m_request =
+            HttpOpenRequest(connection_handle, method, path, nullptr, nullptr, accept_types, INTERNET_FLAG_RELOAD, 0);
         if (!m_request) {
             throw std::runtime_error("HttpOpenRequest failed");
         }
@@ -33,7 +34,8 @@ public:
 
         DWORD dw_size = sizeof(DWORD);
         DWORD status_code;
-        if (!HttpQueryInfo(m_request, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &status_code, &dw_size, nullptr)) {
+        if (!HttpQueryInfo(m_request, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &status_code, &dw_size,
+                           nullptr)) {
             throw std::runtime_error("HttpQueryInfo failed");
         }
 
@@ -49,7 +51,7 @@ public:
             InternetCloseHandle(m_request);
     }
 
-    size_t read(void *buf, size_t buf_size)
+    size_t read(void* buf, size_t buf_size)
     {
         DWORD bytes_read;
         if (!InternetReadFile(m_request, buf, buf_size, &bytes_read)) {
@@ -69,7 +71,7 @@ private:
 public:
     HttpConnection(const HttpConnection&) = delete;
 
-    HttpConnection(const char *host, int port = INTERNET_DEFAULT_HTTP_PORT, const char *agent_name = nullptr)
+    HttpConnection(const char* host, int port = INTERNET_DEFAULT_HTTP_PORT, const char* agent_name = nullptr)
     {
         m_internet = InternetOpen(agent_name, 0, nullptr, nullptr, 0);
         if (!m_internet) {
@@ -95,17 +97,17 @@ public:
         return m_connection;
     }
 
-    HttpRequest request(const char *path, const char *method = "GET", const std::string &body = "")
+    HttpRequest request(const char* path, const char* method = "GET", const std::string& body = "")
     {
         return HttpRequest{m_connection, path, method, body};
     }
 
-    HttpRequest get(const char *path)
+    HttpRequest get(const char* path)
     {
         return HttpRequest{m_connection, path};
     }
 
-    HttpRequest post(const char *path, const std::string &body)
+    HttpRequest post(const char* path, const std::string& body)
     {
         return HttpRequest{m_connection, path, "POST", body};
     }

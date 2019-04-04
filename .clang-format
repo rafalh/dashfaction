@@ -1,6 +1,8 @@
 # Tested with clang-format 6.0.1
 AccessModifierOffset: -4
+AlignEscapedNewlines: Left
 AllowShortLoopsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: Empty
 AlwaysBreakTemplateDeclarations: true
 BraceWrapping:
   AfterClass:            true
@@ -14,6 +16,7 @@ BraceWrapping:
   BeforeElse:            true
   IndentBraces:          false
   SplitEmptyFunction:    false
+  SplitEmptyRecord:      false
 BreakBeforeBraces: Custom
 BreakConstructorInitializers: AfterColon
 ColumnLimit: 120

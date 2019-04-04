@@ -1,10 +1,10 @@
-#include "stdafx.h"
 #include "screenshot.h"
-#include "utils.h"
-#include "rf.h"
 #include "BuildConfig.h"
-#include "main.h"
 #include "gr_color.h"
+#include "main.h"
+#include "rf.h"
+#include "stdafx.h"
+#include "utils.h"
 #include <CallHook2.h>
 
 const char g_screenshot_dir_name[] = "screenshots";
@@ -40,9 +40,11 @@ CallHook2<rf::BmPixelFormat(int, int, int, int, byte*)> GrD3DReadBackBuffer_Hook
 
 #if 1
         if (SUCCEEDED(hr)) {
-            hr = rf::g_GrDevice->CreateRenderTarget(desc.Width, desc.Height, desc.Format, D3DMULTISAMPLE_NONE, TRUE, &tmp_surface);
-            //hr = rf::g_GrDevice->CreateImageSurface(desc.Width, desc.Height, desc.Format, &tmp_surface);
-            //hr = rf::g_GrDevice->CreateTexture(desc.Width, desc.Height, 1, 0, desc.Format, D3DPOOL_MANAGED, &TmpTexture);
+            hr = rf::g_GrDevice->CreateRenderTarget(desc.Width, desc.Height, desc.Format, D3DMULTISAMPLE_NONE, TRUE,
+                                                    &tmp_surface);
+            // hr = rf::g_GrDevice->CreateImageSurface(desc.Width, desc.Height, desc.Format, &tmp_surface);
+            // hr = rf::g_GrDevice->CreateTexture(desc.Width, desc.Height, 1, 0, desc.Format, D3DPOOL_MANAGED,
+            // &TmpTexture);
             if (FAILED(hr))
                 ERR("IDirect3DDevice8::CreateRenderTarget failed 0x%x", hr);
         }

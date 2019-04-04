@@ -1,16 +1,16 @@
-#include <BuildConfig.h>
-#include <RegsPatch.h>
-#include <windef.h>
-#include <unrar/dll.hpp>
-#include <unzip.h>
-#include <stdexcept>
-#include <thread>
 #include "autodl.h"
+#include "http.h"
 #include "misc.h"
 #include "rf.h"
 #include "rfproto.h"
 #include "utils.h"
-#include "http.h"
+#include <BuildConfig.h>
+#include <RegsPatch.h>
+#include <stdexcept>
+#include <thread>
+#include <unrar/dll.hpp>
+#include <unzip.h>
+#include <windef.h>
 
 #ifdef LEVELS_AUTODOWNLOADER
 
@@ -31,13 +31,13 @@ static volatile unsigned g_level_bytes_downloaded;
 static volatile bool g_download_in_progress = false;
 static std::vector<std::string> g_packfiles_to_load;
 
-static bool IsVppFilename(const char *filename)
+static bool IsVppFilename(const char* filename)
 {
-    const char *ext = strrchr(filename, '.');
+    const char* ext = strrchr(filename, '.');
     return ext && !stricmp(ext, ".vpp");
 }
 
-static bool UnzipVpp(const char *path)
+static bool UnzipVpp(const char* path)
 {
     unzFile archive = unzOpen(path);
     if (!archive) {
@@ -82,8 +82,7 @@ static bool UnzipVpp(const char *path)
                 break;
             }
 
-            while ((code = unzReadCurrentFile(archive, buf, sizeof(buf))) > 0)
-                file.write(buf, code);
+            while ((code = unzReadCurrentFile(archive, buf, sizeof(buf))) > 0) file.write(buf, code);
 
             if (code < 0) {
                 ERR("unzReadCurrentFile failed - error %d, path %s", code, path);
@@ -109,7 +108,7 @@ static bool UnzipVpp(const char *path)
     return ret;
 }
 
-static bool UnrarVpp(const char *path)
+static bool UnrarVpp(const char* path)
 {
     char cmt_buf[16384];
 
@@ -165,8 +164,7 @@ static bool UnrarVpp(const char *path)
     return ret;
 }
 
-static bool FetchLevelFile(const char *tmp_filename, int ticket_id) try
-{
+static bool FetchLevelFile(const char* tmp_filename, int ticket_id) try {
     HttpConnection conn{AUTODL_HOST, 80, AUTODL_AGENT_NAME};
 
     auto path = StringFormat("downloadmap.php?ticketid=%u", ticket_id);
@@ -189,13 +187,12 @@ static bool FetchLevelFile(const char *tmp_filename, int ticket_id) try
 
     return true;
 }
-catch(std::exception &e)
-{
+catch (std::exception& e) {
     ERR("%s", e.what());
     return false;
 }
 
-static std::optional<std::string> GetTempFileNameInTempDir(const char *prefix)
+static std::optional<std::string> GetTempFileNameInTempDir(const char* prefix)
 {
     char temp_dir[MAX_PATH];
     DWORD ret_val = GetTempPathA(std::size(temp_dir), temp_dir);
@@ -231,7 +228,8 @@ static void DownloadLevelThread()
     remove(temp_filename);
 
     if (!success)
-        rf::UiMsgBox("Error!", "Failed to download level file! More information can be found in console.", nullptr, false);
+        rf::UiMsgBox("Error!", "Failed to download level file! More information can be found in console.", nullptr,
+                     false);
 
     g_download_in_progress = false;
 }
@@ -250,7 +248,7 @@ static void StartLevelDownload()
     download_thread.detach();
 }
 
-static std::optional<LevelInfo> ParseLevelInfo(char *buf)
+static std::optional<LevelInfo> ParseLevelInfo(char* buf)
 {
     std::stringstream ss(buf);
     ss.exceptions(std::ifstream::failbit | std::ifstream::badbit);
@@ -278,8 +276,7 @@ static std::optional<LevelInfo> ParseLevelInfo(char *buf)
     return {info};
 }
 
-static std::optional<LevelInfo> FetchLevelInfo(const char *file_name) try
-{
+static std::optional<LevelInfo> FetchLevelInfo(const char* file_name) try {
     HttpConnection conn{AUTODL_HOST, 80, AUTODL_AGENT_NAME};
 
     TRACE("Fetching level info: %s", file_name);
@@ -297,25 +294,25 @@ static std::optional<LevelInfo> FetchLevelInfo(const char *file_name) try
 
     return ParseLevelInfo(buf);
 }
-catch(std::exception &e)
-{
+catch (std::exception& e) {
     ERR("Failed to fetch level info: %s", e.what());
     return {};
 }
 
-static void DisplayDownloadDialog(LevelInfo &level_info)
+static void DisplayDownloadDialog(LevelInfo& level_info)
 {
     TRACE("Download ticket id: %u", level_info.ticket_id);
     g_level_info = level_info;
 
-    auto msg = StringFormat("You don't have needed level: %s (Author: %s, Size: %.2f MB)\nDo you want to download it now?",
-        level_info.name.c_str(), level_info.author.c_str(), level_info.size_in_bytes / 1024.f / 1024.f);
-    const char *btn_titles[] = {"Cancel", "Download"};
-    void *callbacks[] = {nullptr, (void*)StartLevelDownload};
+    auto msg =
+        StringFormat("You don't have needed level: %s (Author: %s, Size: %.2f MB)\nDo you want to download it now?",
+                     level_info.name.c_str(), level_info.author.c_str(), level_info.size_in_bytes / 1024.f / 1024.f);
+    const char* btn_titles[] = {"Cancel", "Download"};
+    void* callbacks[] = {nullptr, (void*)StartLevelDownload};
     rf::UiCreateDialog("Download level", msg.c_str(), 2, btn_titles, callbacks, 0, 0);
 }
 
-bool TryToDownloadLevel(const char *filename)
+bool TryToDownloadLevel(const char* filename)
 {
     if (g_download_in_progress) {
         rf::UiMsgBox("Error!", "You can download only one level at once!", nullptr, false);
@@ -334,13 +331,13 @@ bool TryToDownloadLevel(const char *filename)
 
 RegsPatch g_join_failed_injection{
     0x0047C4EC,
-    [](auto &regs) {
+    [](auto& regs) {
         int leave_reason = regs.esi;
         if (leave_reason != RF_LR_NO_LEVEL_FILE) {
             return;
         }
 
-        auto &level_filename = AddrAsRef<rf::String>(0x00646074);
+        auto& level_filename = AddrAsRef<rf::String>(0x00646074);
         if (!TryToDownloadLevel(level_filename)) {
             return;
         }
@@ -349,7 +346,7 @@ RegsPatch g_join_failed_injection{
 
         regs.eip = 0x0047C502;
         regs.esp -= 0x14;
-    }
+    },
 };
 
 void InitAutodownloader()
@@ -363,7 +360,7 @@ void RenderDownloadProgress()
         // Load packages in main thread
         if (!g_packfiles_to_load.empty()) {
             // Load one packfile per frame
-            auto &filename = g_packfiles_to_load.front();
+            auto& filename = g_packfiles_to_load.front();
             if (!rf::PackfileLoad(filename.c_str(), "user_maps\\multi\\"))
                 ERR("PackfileLoad failed - %s", filename.c_str());
             g_packfiles_to_load.erase(g_packfiles_to_load.begin());
@@ -372,7 +369,7 @@ void RenderDownloadProgress()
     }
 
     constexpr int cx = 400, cy = 28;
-    float progress =  static_cast<float>(g_level_bytes_downloaded) / static_cast<float>(g_level_info.size_in_bytes);
+    float progress = static_cast<float>(g_level_bytes_downloaded) / static_cast<float>(g_level_info.size_in_bytes);
     int cx_progress = static_cast<int>(static_cast<float>(cx) * progress);
     if (cx_progress > cx)
         cx_progress = cx;
@@ -392,10 +389,10 @@ void RenderDownloadProgress()
     }
 
     rf::GrSetColor(0, 0xFF, 0, 0x80);
-    auto text = StringFormat("Downloading: %.2f MB / %.2f MB",
-        g_level_bytes_downloaded / 1024.0f / 1024.0f,
-        g_level_info.size_in_bytes / 1024.0f / 1024.0f);
-    rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, x + cx/2, y + cy/2 - cy_font/2, text.c_str(), -1, rf::g_GrTextMaterial);
+    auto text = StringFormat("Downloading: %.2f MB / %.2f MB", g_level_bytes_downloaded / 1024.0f / 1024.0f,
+                             g_level_info.size_in_bytes / 1024.0f / 1024.0f);
+    rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, x + cx / 2, y + cy / 2 - cy_font / 2, text.c_str(), -1,
+                          rf::g_GrTextMaterial);
 }
 
 #endif /* LEVELS_AUTODOWNLOADER */

@@ -1,6 +1,6 @@
-#include "stdafx.h"
 #include "wndproc.h"
 #include "rf.h"
+#include "stdafx.h"
 #include "utils.h"
 
 const char* GetWndMsgName(UINT msg);
@@ -12,10 +12,11 @@ static bool IsMouseEnabled()
 
 LRESULT WINAPI WndProc(HWND wnd_handle, UINT msg, WPARAM w_param, LPARAM l_param)
 {
-    //TRACE("%08x: msg %s %x %x", GetTickCount(), GetWndMsgName(msg), w_param, l_param);
+    // TRACE("%08x: msg %s %x %x", GetTickCount(), GetWndMsgName(msg), w_param, l_param);
 
-    for (unsigned i = 0; i < rf::g_cMsgHandlers; ++i)
+    for (unsigned i = 0; i < rf::g_cMsgHandlers; ++i) {
         rf::g_MsgHandlers[i](msg, w_param, l_param);
+    }
 
     switch (msg) {
     case WM_ACTIVATE:
@@ -23,10 +24,13 @@ LRESULT WINAPI WndProc(HWND wnd_handle, UINT msg, WPARAM w_param, LPARAM l_param
             // Show cursor if window is not active
             if (w_param) {
                 ShowCursor(FALSE);
-                while (ShowCursor(FALSE) >= 0);
-            } else {
+                while (ShowCursor(FALSE) >= 0)
+                    ;
+            }
+            else {
                 ShowCursor(TRUE);
-                while (ShowCursor(TRUE) < 0);
+                while (ShowCursor(TRUE) < 0)
+                    ;
             }
         }
 

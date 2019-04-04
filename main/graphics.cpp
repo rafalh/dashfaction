@@ -1,33 +1,34 @@
-#include "stdafx.h"
 #include "graphics.h"
-#include "utils.h"
-#include "rf.h"
-#include "main.h"
-#include "gr_color.h"
 #include "commands.h"
+#include "gr_color.h"
+#include "main.h"
+#include "rf.h"
+#include "stdafx.h"
+#include "utils.h"
 #include <CallHook2.h>
 #include <RegsPatch.h>
 #include <ShortTypes.h>
 
-namespace rf {
+namespace rf
+{
 
-static auto &g_Direct3D = *(IDirect3D8**)0x01CFCBE0;
-static auto &g_GrPP = *(D3DPRESENT_PARAMETERS*)0x01CFCA18;
-static auto &g_AdapterIdx = *(uint32_t*)0x01CFCC34;
-static auto &g_GrScaleVec = *(Vector3*)0x01818B48;
-static auto &g_GrViewMatrix = *(Matrix3*)0x018186C8;
-static auto &g_GrDeviceCaps = *(D3DCAPS8*)0x01CFCAC8;
-static auto &g_GrDefaultWFar = *(float*)0x00596140;
+static auto& g_Direct3D = *(IDirect3D8**)0x01CFCBE0;
+static auto& g_GrPP = *(D3DPRESENT_PARAMETERS*)0x01CFCA18;
+static auto& g_AdapterIdx = *(uint32_t*)0x01CFCC34;
+static auto& g_GrScaleVec = *(Vector3*)0x01818B48;
+static auto& g_GrViewMatrix = *(Matrix3*)0x018186C8;
+static auto& g_GrDeviceCaps = *(D3DCAPS8*)0x01CFCAC8;
+static auto& g_GrDefaultWFar = *(float*)0x00596140;
 
-static const auto GrSetTextureMipFilter = (void(*)(int linear))0x0050E830;
-}
-
+static const auto GrSetTextureMipFilter = (void (*)(int linear))0x0050E830;
+} // namespace rf
 
 static float g_GrClippedGeomOffsetX = -0.5;
 static float g_GrClippedGeomOffsetY = -0.5;
 
 static void SetTextureMinMagFilterInCode(D3DTEXTUREFILTERTYPE filter_type)
 {
+    // clang-format off
     uintptr_t addresses[] = {
         // GrInitD3D
         0x00546283, 0x00546295,
@@ -51,31 +52,31 @@ static void SetTextureMinMagFilterInCode(D3DTEXTUREFILTERTYPE filter_type)
         0x005500C6, 0x005500DA,
         0x005501A2, 0x005501B6,
     };
+    // clang-format on
     unsigned i;
-    for (i = 0; i < std::size(addresses); ++i)
-        WriteMem<u8>(addresses[i] + 1, (uint8_t)filter_type);
+    for (i = 0; i < std::size(addresses); ++i) WriteMem<u8>(addresses[i] + 1, (uint8_t)filter_type);
 }
 
 RegsPatch GrSetViewMatrix_widescreen_fix{
     0x005473AD,
-    [](auto &regs) {
+    [](auto& regs) {
         (void)regs; // unused parameter
 
         constexpr float ref_aspect_ratio = 4.0f / 3.0f;
         constexpr float max_wide_aspect_ratio = 21.0f / 9.0f; // biggest aspect ratio currently in market
 
-        // g_GrScreen.fAspect == ScrW / ScrH * 0.75 (1.0 for 4:3 monitors, 1.2 for 16:10) - looks like Pixel Aspect Ratio
-        // We use here MaxWidth and MaxHeight to calculate proper FOV for windowed mode
+        // g_GrScreen.fAspect == ScrW / ScrH * 0.75 (1.0 for 4:3 monitors, 1.2 for 16:10) - looks like Pixel Aspect
+        // Ratio We use here MaxWidth and MaxHeight to calculate proper FOV for windowed mode
 
         float viewport_aspect_ratio = (float)rf::g_GrScreen.ViewportWidth / (float)rf::g_GrScreen.ViewportHeight;
         float aspect_ratio = (float)rf::g_GrScreen.MaxWidth / (float)rf::g_GrScreen.MaxHeight;
         float scale_x = 1.0f;
-        float scale_y = ref_aspect_ratio * viewport_aspect_ratio / aspect_ratio; // this is how RF does it and is needed for working scanner
+        // this is how RF does compute scale_y and it is needed for working scanner
+        float scale_y = ref_aspect_ratio * viewport_aspect_ratio / aspect_ratio;
 
         if (aspect_ratio <= max_wide_aspect_ratio) // never make X scale too high in windowed mode
             scale_x *= ref_aspect_ratio / aspect_ratio;
-        else
-        {
+        else {
             scale_x *= ref_aspect_ratio / max_wide_aspect_ratio;
             scale_y *= aspect_ratio / max_wide_aspect_ratio;
         }
@@ -85,41 +86,37 @@ RegsPatch GrSetViewMatrix_widescreen_fix{
 
         g_GrClippedGeomOffsetX = rf::g_GrScreen.OffsetX - 0.5f;
         g_GrClippedGeomOffsetY = rf::g_GrScreen.OffsetY - 0.5f;
-        static auto &gr_viewport_center_x = *(float*)0x01818B54;
-        static auto &gr_viewport_center_y = *(float*)0x01818B5C;
+        static auto& gr_viewport_center_x = *(float*)0x01818B54;
+        static auto& gr_viewport_center_y = *(float*)0x01818B5C;
         gr_viewport_center_x -= 0.5f; // viewport center x
         gr_viewport_center_y -= 0.5f; // viewport center y
     },
 };
 
 RegsPatch GrCreateD3DDevice_error_patch{
-    0x00545CBD,
-    [](auto &regs) {
+    0x00545CBD, [](auto& regs) {
         auto hr = static_cast<HRESULT>(regs.eax);
         ERR("D3D CreateDevice failed (hr 0x%X - %s)", hr, getDxErrorStr(hr));
 
         auto text = StringFormat("Failed to create Direct3D device object - error 0x%lX (%s).\n"
-            "A critical error has occurred and the program cannot continue.\n"
-            "Press OK to exit the program", hr, getDxErrorStr(hr));
+                                 "A critical error has occurred and the program cannot continue.\n"
+                                 "Press OK to exit the program",
+                                 hr, getDxErrorStr(hr));
         MessageBoxA(nullptr, text.c_str(), "Error!", MB_OK | MB_ICONERROR | MB_SETFOREGROUND | MB_TASKMODAL);
         ExitProcess(-1);
-    }
-};
+    }};
 
-RegsPatch GrClearZBuffer_fix_rect{
-    0x00550A19,
-    [](auto &regs) {
-        auto &rect = *reinterpret_cast<D3DRECT*>(regs.edx);
-        rect.x2++;
-        rect.y2++;
-    }
-};
+RegsPatch GrClearZBuffer_fix_rect{0x00550A19, [](auto& regs) {
+                                      auto& rect = *reinterpret_cast<D3DRECT*>(regs.edx);
+                                      rect.x2++;
+                                      rect.y2++;
+                                  }};
 
 static void SetupPP()
 {
     memset(&rf::g_GrPP, 0, sizeof(rf::g_GrPP));
 
-    static auto &format = *(D3DFORMAT*)0x005A135C;
+    static auto& format = *(D3DFORMAT*)0x005A135C;
     INFO("D3D Format: %ld", format);
 
     // Note: in MSAA mode we don't lock back buffer
@@ -131,7 +128,8 @@ static void SetupPP()
     if (g_game_config.msaa && format > 0) {
         // Make sure selected MSAA mode is available
         HRESULT hr = rf::g_Direct3D->CheckDeviceMultiSampleType(rf::g_AdapterIdx, D3DDEVTYPE_HAL, format,
-            g_game_config.wndMode != GameConfig::FULLSCREEN, (D3DMULTISAMPLE_TYPE)g_game_config.msaa);
+                                                                g_game_config.wndMode != GameConfig::FULLSCREEN,
+                                                                (D3DMULTISAMPLE_TYPE)g_game_config.msaa);
         if (SUCCEEDED(hr)) {
             INFO("Enabling Anti-Aliasing (%ux MSAA)...", g_game_config.msaa);
             rf::g_GrPP.MultiSampleType = (D3DMULTISAMPLE_TYPE)g_game_config.msaa;
@@ -145,12 +143,13 @@ static void SetupPP()
 
     // Make sure stretched window is always full screen
     if (g_game_config.wndMode == GameConfig::STRETCHED)
-        SetWindowPos(rf::g_hWnd, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), SWP_NOZORDER);
+        SetWindowPos(rf::g_hWnd, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN),
+                     SWP_NOZORDER);
 }
 
 CallHook2<void(int, rf::GrVertex**, int, int)> GrDrawRect_GrDrawPoly_Hook{
     0x0050DD69,
-    [](int num, rf::GrVertex **pp_vertices, int flags, int mat) {
+    [](int num, rf::GrVertex** pp_vertices, int flags, int mat) {
         for (int i = 0; i < num; ++i) {
             pp_vertices[i]->ScreenPos.x -= 0.5f;
             pp_vertices[i]->ScreenPos.y -= 0.5f;
@@ -193,7 +192,7 @@ bool g_reset_device_req = false;
 
 RegsPatch switch_d3d_mode_patch{
     0x0054500D,
-    [](auto &regs) {
+    [](auto& regs) {
         if (g_reset_device_req) {
             g_reset_device_req = false;
             regs.eip = 0x00545017;
@@ -234,7 +233,7 @@ void GraphicsInit()
     }
 #endif
 
-    //WriteMem<u8>(0x00524C98, ASM_SHORT_JMP_REL); // disable window hooks
+    // WriteMem<u8>(0x00524C98, ASM_SHORT_JMP_REL); // disable window hooks
 
 #if D3D_SWAP_DISCARD
     // Use Discard Swap Mode
@@ -262,7 +261,7 @@ void GraphicsInit()
 
     // Don't use LOD models
     if (g_game_config.disableLodModels) {
-        //WriteMem<u8>(0x00421A40, ASM_SHORT_JMP_REL);
+        // WriteMem<u8>(0x00421A40, ASM_SHORT_JMP_REL);
         WriteMem<u8>(0x0052FACC, ASM_SHORT_JMP_REL);
     }
 
@@ -290,7 +289,7 @@ void GraphicsInit()
 
     if (g_game_config.highScannerRes) {
         // Improved Railgun Scanner resolution
-        constexpr int8_t scanner_resolution = 120; // default is 64, max is 127 (signed byte)
+        constexpr int8_t scanner_resolution = 120;        // default is 64, max is 127 (signed byte)
         WriteMem<u8>(0x004325E6 + 1, scanner_resolution); // RenderInGame
         WriteMem<u8>(0x004325E8 + 1, scanner_resolution);
         WriteMem<u8>(0x004A34BB + 1, scanner_resolution); // PlayerCreate

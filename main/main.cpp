@@ -1,33 +1,33 @@
-#include "stdafx.h"
-#include "exports.h"
-#include "crashhandler.h"
+#include "GameConfig.h"
 #include "autodl.h"
-#include "utils.h"
+#include "commands.h"
+#include "crashhandler.h"
+#include "exports.h"
+#include "gamma.h"
+#include "graphics.h"
+#include "high_fps.h"
+#include "hud.h"
+#include "kill.h"
+#include "lazyban.h"
+#include "misc.h"
+#include "network.h"
+#include "packfile.h"
 #include "rf.h"
 #include "scoreboard.h"
-#include "hud.h"
-#include "packfile.h"
-#include "lazyban.h"
-#include "gamma.h"
-#include "kill.h"
 #include "screenshot.h"
-#include "commands.h"
 #include "spectate_mode.h"
+#include "stdafx.h"
+#include "utils.h"
 #include "wndproc.h"
-#include "graphics.h"
-#include "network.h"
-#include "high_fps.h"
-#include "misc.h"
-#include "GameConfig.h"
 #include <CallHook2.h>
 #include <FunHook2.h>
 
-#include <log/FileAppender.h>
 #include <log/ConsoleAppender.h>
+#include <log/FileAppender.h>
 #include <log/Win32Appender.h>
 
 #ifdef HAS_EXPERIMENTAL
-    #include "experimental.h"
+#include "experimental.h"
 #endif
 
 GameConfig g_game_config;
@@ -43,7 +43,7 @@ static void ProcessWaitingMessages()
             break;
         TranslateMessage(&msg);
         DispatchMessage(&msg);
-        //INFO("msg %u\n", msg.message);
+        // INFO("msg %u\n", msg.message);
     }
 }
 
@@ -183,7 +183,7 @@ CallHook2<void()> AfterFullGameInit_Hook{
 #ifndef NDEBUG
 class RfConsoleLogAppender : public logging::BaseAppender
 {
-    virtual void append(logging::LogLevel lvl, const std::string &str) override
+    virtual void append(logging::LogLevel lvl, const std::string& str) override
     {
         (void)lvl; // unused parameter
         rf::DcPrint(str.c_str(), nullptr);
@@ -194,7 +194,8 @@ class RfConsoleLogAppender : public logging::BaseAppender
 void InitLogging()
 {
     CreateDirectoryA("logs", NULL);
-    logging::LoggerConfig::root().addAppender(std::move(std::make_unique<logging::FileAppender>("logs/DashFaction.log", false)));
+    logging::LoggerConfig::root().addAppender(
+        std::move(std::make_unique<logging::FileAppender>("logs/DashFaction.log", false)));
     logging::LoggerConfig::root().addAppender(std::move(std::make_unique<logging::ConsoleAppender>()));
     logging::LoggerConfig::root().addAppender(std::move(std::make_unique<logging::Win32Appender>()));
 #ifndef NDEBUG
@@ -204,16 +205,14 @@ void InitLogging()
 
 void LogSystemInfo()
 {
-    try
-    {
+    try {
         logging::Logger::root().info() << "Real system version: " << getRealOsVersion();
         logging::Logger::root().info() << "Emulated system version: " << getOsVersion();
         INFO("Running as %s (elevation type: %s)", IsUserAdmin() ? "admin" : "user", GetProcessElevationType());
         logging::Logger::root().info() << "CPU Brand: " << getCpuBrand();
         logging::Logger::root().info() << "CPU ID: " << getCpuId();
     }
-    catch (std::exception &e)
-    {
+    catch (std::exception& e) {
         ERR("Failed to read system info: %s", e.what());
     }
 }
@@ -241,13 +240,11 @@ extern "C" DWORD DLL_EXPORT Init(void* unused)
     LogSystemInfo();
 
     // Load config
-    try
-    {
+    try {
         if (!g_game_config.load())
             ERR("Configuration has not been found in registry!");
     }
-    catch (std::exception &e)
-    {
+    catch (std::exception& e) {
         ERR("Failed to load configuration: %s", e.what());
     }
 
@@ -259,7 +256,7 @@ extern "C" DWORD DLL_EXPORT Init(void* unused)
 
     /* Process messages in the same thread as DX processing (alternative: D3DCREATE_MULTITHREADED) */
     AsmWritter(0x00524C48, 0x00524C83).nop(); // disable msg loop thread
-    AsmWritter(0x00524C48).call(0x00524E40); // CreateMainWindow
+    AsmWritter(0x00524C48).call(0x00524E40);  // CreateMainWindow
     KeyGetFromFifo_Hook.Install();
 
     /* General game hooks */
@@ -303,7 +300,7 @@ extern "C" DWORD DLL_EXPORT Init(void* unused)
 
 BOOL WINAPI DllMain(HINSTANCE instance_handle, DWORD fdw_reason, LPVOID lpv_reserved)
 {
-    (void)fdw_reason; // unused parameter
+    (void)fdw_reason;   // unused parameter
     (void)lpv_reserved; // unused parameter
     g_hmodule = instance_handle;
     DisableThreadLibraryCalls(instance_handle);
