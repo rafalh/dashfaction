@@ -7,11 +7,11 @@
 
 namespace rf {
 constexpr int num_hud_points = 48;
-static const auto hud_points_640 = reinterpret_cast<POINT*>(0x00637868);
-static const auto hud_points_800 = reinterpret_cast<POINT*>(0x006373D0);
-static const auto hud_points_1024 = reinterpret_cast<POINT*>(0x00637230);
-static const auto hud_points_1280 = reinterpret_cast<POINT*>(0x00637560);
-static const auto hud_points = reinterpret_cast<POINT*>(0x006376E8);
+static auto &hud_points_640 = *reinterpret_cast<POINT(*)[num_hud_points]>(0x00637868);
+static auto &hud_points_800 = *reinterpret_cast<POINT(*)[num_hud_points]>(0x006373D0);
+static auto &hud_points_1024 = *reinterpret_cast<POINT(*)[num_hud_points]>(0x00637230);
+static auto &hud_points_1280 = *reinterpret_cast<POINT(*)[num_hud_points]>(0x00637560);
+static auto &hud_points = *reinterpret_cast<POINT(*)[num_hud_points]>(0x006376E8);
 }
 
 DcCommand2 hud_cmd{

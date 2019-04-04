@@ -257,16 +257,16 @@ void WaterGenerateTexture_004E68D1(uintptr_t v1)
         }
     }
 
-    static const auto byte_1370_f90 = (uint8_t*)0x1370F90;
-    static const auto byte_1371_b14 = (uint8_t*)0x1371B14;
-    static const auto byte_1371090 = (uint8_t*)0x1371090;
+    static auto &byte_1370f90 = *(uint8_t(*)[256])0x1370F90;
+    static auto &byte_1371b14 = *(uint8_t(*)[256])0x1371B14;
+    static auto &byte_1371090 = *(uint8_t(*)[512])0x1371090;
 
     uint8_t* dst_row_ptr = dst_lock_data.Bits;
     int src_pixel_size = GetPixelFormatSize(src_lock_data.PixelFormat);
 
     for (int y = 0; y < dst_lock_data.Height; ++y) {
-        int v30 = byte_1370_f90[y];
-        int v38 = byte_1371_b14[y];
+        int v30 = byte_1370f90[y];
+        int v38 = byte_1371b14[y];
         uint8_t* v32 = &byte_1371090[-v30];
         uint8_t* dst_ptr = dst_row_ptr;
         for (int x = 0; x < dst_lock_data.Width; ++x) {

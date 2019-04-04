@@ -42,8 +42,6 @@ struct PackfileLookupTable
     PackfileEntry *ArchiveEntry;
 };
 
-#define VFS_LOOKUP_TABLE_SIZE 20713
-
 static auto &g_VfsIgnoreTblFiles = AddrAsRef<bool>(0x01BDB21C);
 
 typedef Packfile *(*PackfileFindArchive_Type)(const char *filename);
@@ -90,8 +88,8 @@ const std::map<std::string, unsigned> GameFileChecksums = {
 
 #endif // CHECK_PACKFILE_CHECKSUM
 
-static const auto g_VfsLookupTableNew = reinterpret_cast<PackfileLookupTableNew*>(0x01BB2AC8); // g_VfsLookupTable
 static constexpr auto LOOKUP_TABLE_SIZE = 20713;
+static auto &g_VfsLookupTableNew = *reinterpret_cast<PackfileLookupTableNew(*)[LOOKUP_TABLE_SIZE]>(0x01BB2AC8);
 
 static unsigned g_NumFilesInVfs = 0, g_NumNameCollisions = 0;
 static std::vector<rf::Packfile*> g_Packfiles;
@@ -495,7 +493,7 @@ static void PackfileInit_New()
 {
     unsigned start_ticks = GetTickCount();
 
-    memset(g_VfsLookupTableNew, 0, sizeof(PackfileLookupTableNew) * VFS_LOOKUP_TABLE_SIZE);
+    memset(g_VfsLookupTableNew, 0, sizeof(PackfileLookupTableNew) * LOOKUP_TABLE_SIZE);
 
     if (GetInstalledGameLang() == LANG_GR)
     {

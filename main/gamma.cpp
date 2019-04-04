@@ -11,7 +11,7 @@ static D3DGAMMARAMP g_gamma_ramp;
 static bool g_gamma_ramp_initialized = false;
 
 namespace rf {
-static const auto gr_gamma_ramp = (uint32_t*)0x017C7C68;
+static auto &gr_gamma_ramp = *(uint32_t(*)[256])0x017C7C68;
 }
 
 static void SetGammaRamp(D3DGAMMARAMP *gamma_ramp)

@@ -296,10 +296,10 @@ namespace rf
     static auto &g_DcHelp = *(uint32_t*)0x01775224;
     static auto &g_DcStatus = *(uint32_t*)0x01774D00;
     static auto &g_DcArgType = *(uint32_t*)0x01774D04;
-    static const auto g_DcStrArg = (char*)0x0175462C;
+    static auto &g_DcStrArg = *(char(*)[256])0x0175462C;
     static auto &g_DcIntArg = *(int*)0x01775220;
     static auto &g_DcFloatArg = *(float*)0x01754628;
-    static const auto g_DcCmdLine = (char*)0x01775330;
+    static auto &g_DcCmdLine = *(char(*)[256])0x01775330;
     static auto &g_DcCmdLineLen = *(uint32_t*)0x0177568C;
 
     #define DC_REGISTER_CMD(name, help, handler) \
@@ -1521,7 +1521,7 @@ namespace rf
     };
     static_assert(sizeof(WeaponClass) == 0x550, "invalid size");
 
-    static const auto g_WeaponClasses = (WeaponClass*)0x0085CD08;
+    static auto &g_WeaponClasses = *(WeaponClass(*)[64])0x0085CD08;
     static auto &g_RiotStickClsId = *(int32_t*)0x00872468;
     static auto &g_RemoteChargeClsId = *(int32_t*)0x0087210C;
 
@@ -1531,7 +1531,7 @@ namespace rf
     typedef unsigned(*PFN_ADD_MSG_HANDLER)(PFN_MESSAGE_HANDLER);
     static const auto AddMsgHandler = (PFN_ADD_MSG_HANDLER)0x00524AE0;
 
-    static const auto g_MsgHandlers = (PFN_MESSAGE_HANDLER*)0x01B0D5A0;
+    static auto &g_MsgHandlers = *(PFN_MESSAGE_HANDLER(*)[32])0x01B0D5A0;
     static auto &g_cMsgHandlers = *(uint32_t*)0x01B0D760;
 
     static auto &g_hWnd = *(HWND*)0x01B0D748;
@@ -1630,7 +1630,7 @@ namespace rf
         int unk2;
     };
 
-    static const auto g_RootPath = (char*)0x018060E8;
+    static auto &g_RootPath = *(char(*)[256])0x018060E8;
     static auto &g_fFps = *(float*)0x005A4018;
     static auto &g_fFramerate = *(float*)0x005A4014;
     static auto &g_fMinFramerate = *(float*)0x005A4024;
@@ -1657,7 +1657,7 @@ namespace rf
 
     /* Strings Table */
     namespace strings {
-        static const auto array = (char**)0x007CBBF0;
+        static const auto &array = *(char*(*)[1000])0x007CBBF0;
         static const auto &player = array[675];
         static const auto &frags = array[676];
         static const auto &ping = array[677];
