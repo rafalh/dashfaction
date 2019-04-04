@@ -2,13 +2,14 @@
 
 #define DEFAULT_RF_TRACKER "rfgt.factionfiles.com"
 #define DEFAULT_EXECUTABLE_PATH "C:\\games\\RedFaction\\rf.exe"
-#define MIN_FPS_LIMIT 10
-#define MAX_FPS_LIMIT 240
+#define MIN_FPS_LIMIT 10u
+#define MAX_FPS_LIMIT 240u
 
 struct GameConfig
 {
     std::string gameExecutablePath = DEFAULT_EXECUTABLE_PATH;
 
+    // Graphics
     unsigned resWidth = 1024;
     unsigned resHeight = 768;
     unsigned resBpp = 32;
@@ -25,21 +26,26 @@ struct GameConfig
     bool fpsCounter = true;
     bool highScannerRes = true;
     bool trueColorTextures = true;
-    bool glares = true;
-    bool showEnemyBullets = true;
-    bool linearPitch = false;
 
+    // Multiplayer
     std::string tracker = DEFAULT_RF_TRACKER;
     unsigned updateRate = 2600;
     unsigned forcePort = 0;
+
+    // Misc
     bool directInput = false;
     bool eaxSound = true;
     bool fastStart = true;
     bool allowOverwriteGameFiles = false;
     bool scoreboardAnim = false;
+
+    // Advanced
     float levelSoundVolume = 1.0f;
     std::string dashFactionVersion;
     bool swapAssaultRifleControls = false;
+    bool glares = true;
+    bool showEnemyBullets = true;
+    bool linearPitch = false;
 
     bool load();
     void save();

@@ -2,6 +2,7 @@
 #include "GameConfig.h"
 #include "RegKey.h"
 #include <shlwapi.h>
+#include <algorithm>
 
 const char RF_KEY_NAME[] = "SOFTWARE\\Volition\\Red Faction";
 const char DF_SUBKEY_NAME[] = "Dash Faction";
@@ -48,10 +49,7 @@ bool GameConfig::load()
     dashFactionKey.readValue("Show Enemy Bullets", &showEnemyBullets);
 
 #ifdef NDEBUG
-    if (maxFps > MAX_FPS_LIMIT)
-        maxFps = MAX_FPS_LIMIT;
-    else if (maxFps < MIN_FPS_LIMIT)
-        maxFps = MIN_FPS_LIMIT;
+    maxFps = std::clamp(maxFps, MIN_FPS_LIMIT, MAX_FPS_LIMIT);
 #endif
 
     return regKey.isOpen();
