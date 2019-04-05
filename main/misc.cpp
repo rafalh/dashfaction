@@ -670,7 +670,9 @@ FunHook<void()> DoQuickSave_Hook{
 
 auto& MultiIsConnected = AddrAsRef<bool()>(0x0044AD70);
 auto& GameSeqPushState = AddrAsRef<int(int state, bool update_parent_state, bool parent_dlg_open)>(0x00434410);
+auto& GameSeqProcessDeferredChange = AddrAsRef<int()>(0x00434310);
 
+bool g_in_mp_game = false;
 bool g_jump_to_multi_server_list = false;
 
 void SetJumpToMultiServerList(bool jump)
@@ -683,16 +685,38 @@ FunHook<void(int, int)> GameEnterState_Hook{
     [](int state, int old_state) {
         GameEnterState_Hook.CallTarget(state, old_state);
         TRACE("state %d old_state %d g_jump_to_multi_server_list %d", state, old_state, g_jump_to_multi_server_list);
-        if (state == rf::GS_MAIN_MENU && (old_state == rf::GS_EXIT_GAME || old_state == rf::GS_LOADING_LEVEL) &&
-            g_jump_to_multi_server_list) {
+
+        bool exiting_game = state == rf::GS_MAIN_MENU &&
+            (old_state == rf::GS_EXIT_GAME || old_state == rf::GS_LOADING_LEVEL);
+        if (exiting_game && g_in_mp_game) {
+            g_in_mp_game = false;
+            g_jump_to_multi_server_list = true;
+        }
+
+        if (state == rf::GS_MAIN_MENU && g_jump_to_multi_server_list) {
             rf::g_sound_enabled = false;
             GameSeqPushState(rf::GS_MP_MENU, false, false);
+            old_state = state;
+            state = GameSeqProcessDeferredChange();
+            GameEnterState_Hook.CallTarget(state, old_state);
         }
         if (state == rf::GS_MP_MENU && g_jump_to_multi_server_list) {
             GameSeqPushState(rf::GS_MP_SERVER_LIST_MENU, false, false);
+            old_state = state;
+            state = GameSeqProcessDeferredChange();
+            GameEnterState_Hook.CallTarget(state, old_state);
             g_jump_to_multi_server_list = false;
             rf::g_sound_enabled = true;
         }
+    },
+};
+
+FunHook<bool(int)> IsGameStateUiHidden_Hook{
+    0x004B1DD0,
+    [](int state) {
+        if (g_jump_to_multi_server_list)
+            return true;
+        return IsGameStateUiHidden_Hook.CallTarget(state);
     },
 };
 
@@ -700,7 +724,7 @@ FunHook<void()> MultiAfterPlayersPackets_Hook{
     0x00482080,
     []() {
         MultiAfterPlayersPackets_Hook.CallTarget();
-        g_jump_to_multi_server_list = true;
+        g_in_mp_game = true;
     },
 };
 
@@ -1006,6 +1030,7 @@ void MiscInit()
 
     // Open server list menu instead of main menu when leaving multiplayer game
     GameEnterState_Hook.Install();
+    IsGameStateUiHidden_Hook.Install();
     MultiAfterPlayersPackets_Hook.Install();
 
     // Fix glares/coronas being visible through characters
