@@ -3,7 +3,7 @@
 #include "main.h"
 #include "rf.h"
 #include "stdafx.h"
-#include <FunHook2.h>
+#include <FunHook.h>
 #include <ShortTypes.h>
 
 inline void ConvertPixel_RGB8_To_RGBA8(uint8_t*& dst_ptr, const uint8_t*& src_ptr)
@@ -146,7 +146,7 @@ bool ConvertBitmapFormat(uint8_t* dst_bits_ptr, rf::BmPixelFormat dst_fmt, const
     }
 }
 
-FunHook2<int(int, const uint8_t*, const uint8_t*, int, int, rf::BmPixelFormat, void*, int, int, IDirect3DTexture8*)>
+FunHook<int(int, const uint8_t*, const uint8_t*, int, int, rf::BmPixelFormat, void*, int, int, IDirect3DTexture8*)>
     GrD3DSetTextureData_Hook{
         0x0055BA10,
         [](int level, const uint8_t* src_bits_ptr, const uint8_t* palette, int bm_w, int bm_h,
@@ -296,7 +296,7 @@ void GetAmbientColorFromLightmaps_004E5CE3(unsigned bm_handle, int x, int y, uns
     }
 }
 
-FunHook2<unsigned()> BinkInitDeviceInfo_Hook{
+FunHook<unsigned()> BinkInitDeviceInfo_Hook{
     0x005210C0,
     []() {
         unsigned bink_flags = BinkInitDeviceInfo_Hook.CallTarget();

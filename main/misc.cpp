@@ -5,8 +5,8 @@
 #include "stdafx.h"
 #include "utils.h"
 #include "version.h"
-#include <CallHook2.h>
-#include <FunHook2.h>
+#include <CallHook.h>
+#include <FunHook.h>
 #include <RegsPatch.h>
 #include <ShortTypes.h>
 #include <rfproto.h>
@@ -33,7 +33,7 @@ int g_EggAnimStart;
 bool g_Win32Console = false;
 
 using UiLabel_Create2_Type = void __fastcall(rf::UiPanel*, void*, rf::UiPanel*, int, int, int, int, const char*, int);
-extern CallHook2<UiLabel_Create2_Type> UiLabel_Create2_VersionLabel_Hook;
+extern CallHook<UiLabel_Create2_Type> UiLabel_Create2_VersionLabel_Hook;
 void __fastcall UiLabel_Create2_VersionLabel(rf::UiPanel* self, void* edx, rf::UiPanel* parent, int x, int y, int w,
                                              int h, const char* text, int font_id)
 {
@@ -42,9 +42,9 @@ void __fastcall UiLabel_Create2_VersionLabel(rf::UiPanel* self, void* edx, rf::U
     h = g_VersionLabelHeight;
     UiLabel_Create2_VersionLabel_Hook.CallTarget(self, edx, parent, x, y, w, h, text, font_id);
 }
-CallHook2<UiLabel_Create2_Type> UiLabel_Create2_VersionLabel_Hook{0x0044344D, UiLabel_Create2_VersionLabel};
+CallHook<UiLabel_Create2_Type> UiLabel_Create2_VersionLabel_Hook{0x0044344D, UiLabel_Create2_VersionLabel};
 
-FunHook2<void(const char**, const char**)> GetVersionStr_Hook{
+FunHook<void(const char**, const char**)> GetVersionStr_Hook{
     0x004B33F0,
     [](const char** version, const char** a2) {
         if (version)
@@ -59,7 +59,7 @@ FunHook2<void(const char**, const char**)> GetVersionStr_Hook{
     },
 };
 
-FunHook2<int()> MenuUpdate_Hook{
+FunHook<int()> MenuUpdate_Hook{
     0x00434230, []() {
         int menu_id = MenuUpdate_Hook.CallTarget();
         if (menu_id == rf::GS_MP_LIMBO) // hide cursor when changing level - hackfixed in RF by chaning rendering logic
@@ -79,7 +79,7 @@ RegsPatch gr_direct3d_lock_crash_fix{
     },
 };
 
-CallHook2<void()> MenuMainProcessMouse_Hook{
+CallHook<void()> MenuMainProcessMouse_Hook{
     0x004437B9,
     []() {
         MenuMainProcessMouse_Hook.CallTarget();
@@ -131,7 +131,7 @@ int LoadEasterEggImage()
     return hbm;
 }
 
-CallHook2<void()> MenuMainRender_Hook{
+CallHook<void()> MenuMainRender_Hook{
     0x00443802,
     []() {
         MenuMainRender_Hook.CallTarget();
@@ -170,7 +170,7 @@ void SetPlaySoundEventsVolumeScale(float volume_scale)
     for (unsigned i = 0; i < std::size(offsets); ++i) WriteMem<float>(offsets[i] + 1, volume_scale);
 }
 
-CallHook2<void(int, rf::Vector3*, float*, float*, float)> SndConvertVolume3D_AmbientSound_Hook{
+CallHook<void(int, rf::Vector3*, float*, float*, float)> SndConvertVolume3D_AmbientSound_Hook{
     0x00505F93,
     [](int game_snd_id, rf::Vector3* sound_pos, float* pan_out, float* volume_out, float volume_in) {
         SndConvertVolume3D_AmbientSound_Hook.CallTarget(game_snd_id, sound_pos, pan_out, volume_out, volume_in);
@@ -178,7 +178,7 @@ CallHook2<void(int, rf::Vector3*, float*, float*, float)> SndConvertVolume3D_Amb
     },
 };
 
-FunHook2<void()> MouseUpdateDirectInput_Hook{
+FunHook<void()> MouseUpdateDirectInput_Hook{
     0x0051DEB0,
     []() {
         MouseUpdateDirectInput_Hook.CallTarget();
@@ -197,7 +197,7 @@ bool IsHoldingAssaultRifle()
     return entity && entity->WeaponInfo.WeaponClsId == assault_rifle_cls_id;
 }
 
-FunHook2<void(rf::Player*, bool, bool)> PlayerLocalFireControl_Hook{
+FunHook<void(rf::Player*, bool, bool)> PlayerLocalFireControl_Hook{
     0x004A4E80,
     [](rf::Player* player, bool secondary, bool was_pressed) {
         if (g_game_config.swapAssaultRifleControls && IsHoldingAssaultRifle())
@@ -206,7 +206,7 @@ FunHook2<void(rf::Player*, bool, bool)> PlayerLocalFireControl_Hook{
     },
 };
 
-extern CallHook2<char(rf::ControlConfig*, rf::GameCtrl, bool*)> IsEntityCtrlActive_Hook1;
+extern CallHook<char(rf::ControlConfig*, rf::GameCtrl, bool*)> IsEntityCtrlActive_Hook1;
 char IsEntityCtrlActive_New(rf::ControlConfig* control_config, rf::GameCtrl game_ctrl, bool* was_pressed)
 {
     if (g_game_config.swapAssaultRifleControls && IsHoldingAssaultRifle()) {
@@ -217,8 +217,8 @@ char IsEntityCtrlActive_New(rf::ControlConfig* control_config, rf::GameCtrl game
     }
     return IsEntityCtrlActive_Hook1.CallTarget(control_config, game_ctrl, was_pressed);
 }
-CallHook2<char(rf::ControlConfig*, rf::GameCtrl, bool*)> IsEntityCtrlActive_Hook1{0x00430E65, IsEntityCtrlActive_New};
-CallHook2<char(rf::ControlConfig*, rf::GameCtrl, bool*)> IsEntityCtrlActive_Hook2{0x00430EF7, IsEntityCtrlActive_New};
+CallHook<char(rf::ControlConfig*, rf::GameCtrl, bool*)> IsEntityCtrlActive_Hook1{0x00430E65, IsEntityCtrlActive_New};
+CallHook<char(rf::ControlConfig*, rf::GameCtrl, bool*)> IsEntityCtrlActive_Hook2{0x00430EF7, IsEntityCtrlActive_New};
 
 void DcfSwapAssaultRifleControls()
 {
@@ -277,7 +277,7 @@ void InputThreadProc()
     }
 }
 
-CallHook2<void()> OsInitWindow_Server_Hook{
+CallHook<void()> OsInitWindow_Server_Hook{
     0x004B27C5,
     []() {
         AllocConsole();
@@ -288,7 +288,7 @@ CallHook2<void()> OsInitWindow_Server_Hook{
     },
 };
 
-FunHook2<void(const char*, const int*)> DcPrint_Hook{
+FunHook<void(const char*, const int*)> DcPrint_Hook{
     reinterpret_cast<uintptr_t>(DcPrint),
     [](const char* Text, const int* Color) {
         HANDLE Output_handle = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -348,7 +348,7 @@ FunHook2<void(const char*, const int*)> DcPrint_Hook{
     },
 };
 
-CallHook2<void()> DcPutChar_NewLine_Hook{
+CallHook<void()> DcPutChar_NewLine_Hook{
     0x0050A081,
     [] {
         HANDLE Output_handle = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -356,7 +356,7 @@ CallHook2<void()> DcPutChar_NewLine_Hook{
     },
 };
 
-FunHook2<void()> DcDrawServerConsole_Hook{
+FunHook<void()> DcDrawServerConsole_Hook{
     0x0050A770,
     []() {
         static char PrevCmdLine[1024];
@@ -369,7 +369,7 @@ FunHook2<void()> DcDrawServerConsole_Hook{
     },
 };
 
-FunHook2<int()> KeyGetFromQueue_Hook{
+FunHook<int()> KeyGetFromQueue_Hook{
     0x0051F000,
     []() {
         if (!rf::g_IsDedicatedServer)
@@ -407,7 +407,7 @@ bool EntityIsReloading_SwitchWeapon_New(rf::EntityObj* entity)
     return false;
 }
 
-FunHook2<int(void*, void*)> GeomCachePrepareRoom_Hook{
+FunHook<int(void*, void*)> GeomCachePrepareRoom_Hook{
     0x004F0C00,
     [](void* geom, void* room) {
         int ret = GeomCachePrepareRoom_Hook.CallTarget(geom, room);
@@ -443,7 +443,7 @@ struct ServerListEntry
 };
 static_assert(sizeof(ServerListEntry) == 0x6C, "invalid size");
 
-FunHook2<int(const int&, const int&)> ServerListCmpFunc_Hook{
+FunHook<int(const int&, const int&)> ServerListCmpFunc_Hook{
     0x0044A6D0,
     [](const int& index1, const int& index2) {
         auto server_list = AddrAsRef<ServerListEntry*>(0x0063F62C);
@@ -458,7 +458,7 @@ FunHook2<int(const int&, const int&)> ServerListCmpFunc_Hook{
 
 constexpr int CHAT_MSG_MAX_LEN = 224;
 
-FunHook2<void(uint16_t)> ChatSayAddChar_Hook{
+FunHook<void(uint16_t)> ChatSayAddChar_Hook{
     0x00444740,
     [](uint16_t key) {
         if (key)
@@ -466,7 +466,7 @@ FunHook2<void(uint16_t)> ChatSayAddChar_Hook{
     },
 };
 
-FunHook2<void(const char*, bool)> ChatSayAccept_Hook{
+FunHook<void(const char*, bool)> ChatSayAccept_Hook{
     0x00444440,
     [](const char* msg, bool is_team_msg) {
         std::string msg_str{msg};
@@ -492,7 +492,7 @@ void SendTriggerActivatePacket(rf::Player* player, int trigger_uid, int32_t enti
     rf::NwSendReliablePacket(player, reinterpret_cast<uint8_t*>(&packet), sizeof(packet), 0);
 }
 
-FunHook2<void(int, int)> SendTriggerActivatePacketToAllPlayers_Hook{
+FunHook<void(int, int)> SendTriggerActivatePacketToAllPlayers_Hook{
     0x00483190,
     [](int trigger_uid, int entity_handle) {
         if (g_trigger_solo_player)
@@ -502,7 +502,7 @@ FunHook2<void(int, int)> SendTriggerActivatePacketToAllPlayers_Hook{
     },
 };
 
-FunHook2<void(rf::TriggerObj*, int32_t, bool)> TriggerActivate_Hook{
+FunHook<void(rf::TriggerObj*, int32_t, bool)> TriggerActivate_Hook{
     0x004C0220,
     [](rf::TriggerObj* trigger, int32_t h_entity, bool skip_movers) {
         // Check team
@@ -568,7 +568,7 @@ RegsPatch RflLoadInternal_CheckRestoreStatus_Patch{
 
 static int g_cutscene_bg_sound_sig = -1;
 
-FunHook2<void(bool)> MenuInGameUpdateCutscene_Hook{
+FunHook<void(bool)> MenuInGameUpdateCutscene_Hook{
     0x0045B5E0,
     [](bool dlg_open) {
         bool skip_cutscene = false;
@@ -625,7 +625,7 @@ FunHook2<void(bool)> MenuInGameUpdateCutscene_Hook{
     },
 };
 
-CallHook2<int()> PlayHardcodedBackgroundMusicForCutscene_Hook{
+CallHook<int()> PlayHardcodedBackgroundMusicForCutscene_Hook{
     0x0045BB85,
     []() {
         g_cutscene_bg_sound_sig = PlayHardcodedBackgroundMusicForCutscene_Hook.CallTarget();
@@ -660,7 +660,7 @@ RegsPatch CoronaEntityCollisionTestFix{
 
 auto CanSave = AddrAsRef<bool()>(0x004B61A0);
 
-FunHook2<void()> DoQuickSave_Hook{
+FunHook<void()> DoQuickSave_Hook{
     0x004B5E20,
     []() {
         if (CanSave())
@@ -678,7 +678,7 @@ void SetJumpToMultiServerList(bool jump)
     g_jump_to_multi_server_list = jump;
 }
 
-FunHook2<void(int, int)> GameEnterState_Hook{
+FunHook<void(int, int)> GameEnterState_Hook{
     0x004B1AC0,
     [](int state, int old_state) {
         GameEnterState_Hook.CallTarget(state, old_state);
@@ -696,7 +696,7 @@ FunHook2<void(int, int)> GameEnterState_Hook{
     },
 };
 
-FunHook2<void()> MultiAfterPlayersPackets_Hook{
+FunHook<void()> MultiAfterPlayersPackets_Hook{
     0x00482080,
     []() {
         MultiAfterPlayersPackets_Hook.CallTarget();

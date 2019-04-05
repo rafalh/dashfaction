@@ -2,8 +2,8 @@
 #include "rf.h"
 #include "stdafx.h"
 #include "utils.h"
-#include <CallHook2.h>
-#include <FunHook2.h>
+#include <CallHook.h>
+#include <FunHook.h>
 #include <RegsPatch.h>
 #include <ShortTypes.h>
 #include <cstddef>
@@ -25,7 +25,7 @@ static auto& NwProcessGamePackets = AddrAsRef<NwProcessGamePackets_Type>(0x00479
 
 typedef void NwPacketHandler_Type(char* data, const rf::NwAddr& addr);
 
-CallHook2<void(const char*, int, const rf::NwAddr&, rf::Player*)> ProcessUnreliableGamePackets_Hook{
+CallHook<void(const char*, int, const rf::NwAddr&, rf::Player*)> ProcessUnreliableGamePackets_Hook{
     0x00479244,
     [](const char* data, int data_len, const rf::NwAddr& addr, rf::Player* player) {
         rf::NwProcessGamePackets(data, data_len, addr, player);
@@ -271,7 +271,7 @@ RegsPatch ProcessGameInfoPacket_GameTypeBounds_Patch{
     [](X86Regs& regs) { regs.ecx = std::clamp(regs.ecx, 0, 2); },
 };
 
-FunHook2<NwPacketHandler_Type> ProcessJoinDenyPacket_Hook{
+FunHook<NwPacketHandler_Type> ProcessJoinDenyPacket_Hook{
     0x0047A400,
     [](char* data, const rf::NwAddr& addr) {
         if (rf::MpIsConnectingToServer(addr)) // client-side
@@ -279,7 +279,7 @@ FunHook2<NwPacketHandler_Type> ProcessJoinDenyPacket_Hook{
     },
 };
 
-FunHook2<NwPacketHandler_Type> ProcessNewPlayerPacket_Hook{
+FunHook<NwPacketHandler_Type> ProcessNewPlayerPacket_Hook{
     0x0047A580,
     [](char* data, const rf::NwAddr& addr) {
         if (GetForegroundWindow() != rf::g_hWnd)
@@ -288,7 +288,7 @@ FunHook2<NwPacketHandler_Type> ProcessNewPlayerPacket_Hook{
     },
 };
 
-FunHook2<NwPacketHandler_Type> ProcessLeftGamePacket_Hook{
+FunHook<NwPacketHandler_Type> ProcessLeftGamePacket_Hook{
     0x0047BBC0,
     [](char* data, const rf::NwAddr& addr) {
         // server-side and client-side
@@ -300,7 +300,7 @@ FunHook2<NwPacketHandler_Type> ProcessLeftGamePacket_Hook{
     },
 };
 
-FunHook2<NwPacketHandler_Type> ProcessChatLinePacket_Hook{
+FunHook<NwPacketHandler_Type> ProcessChatLinePacket_Hook{
     0x00444860,
     [](char* data, const rf::NwAddr& addr) {
         // server-side and client-side
@@ -315,7 +315,7 @@ FunHook2<NwPacketHandler_Type> ProcessChatLinePacket_Hook{
     },
 };
 
-FunHook2<NwPacketHandler_Type> ProcessNameChangePacket_Hook{
+FunHook<NwPacketHandler_Type> ProcessNameChangePacket_Hook{
     0x0046EAE0,
     [](char* data, const rf::NwAddr& addr) {
         // server-side and client-side
@@ -329,7 +329,7 @@ FunHook2<NwPacketHandler_Type> ProcessNameChangePacket_Hook{
     },
 };
 
-FunHook2<NwPacketHandler_Type> ProcessTeamChangePacket_Hook{
+FunHook<NwPacketHandler_Type> ProcessTeamChangePacket_Hook{
     0x004825B0,
     [](char* data, const rf::NwAddr& addr) {
         // server-side and client-side
@@ -345,7 +345,7 @@ FunHook2<NwPacketHandler_Type> ProcessTeamChangePacket_Hook{
     },
 };
 
-FunHook2<NwPacketHandler_Type> ProcessRateChangePacket_Hook{
+FunHook<NwPacketHandler_Type> ProcessRateChangePacket_Hook{
     0x004807B0,
     [](char* data, const rf::NwAddr& addr) {
         // server-side and client-side?
@@ -359,7 +359,7 @@ FunHook2<NwPacketHandler_Type> ProcessRateChangePacket_Hook{
     },
 };
 
-FunHook2<NwPacketHandler_Type> ProcessEntityCreatePacket_Hook{
+FunHook<NwPacketHandler_Type> ProcessEntityCreatePacket_Hook{
     0x00475420,
     [](char* data, const rf::NwAddr& addr) {
         // Update Default Player Weapon if server has it overriden
@@ -382,7 +382,7 @@ FunHook2<NwPacketHandler_Type> ProcessEntityCreatePacket_Hook{
     },
 };
 
-FunHook2<NwPacketHandler_Type> ProcessReloadPacket_Hook{
+FunHook<NwPacketHandler_Type> ProcessReloadPacket_Hook{
     0x00485AB0,
     [](char* data, const rf::NwAddr& addr) {
         if (!rf::g_IsLocalNetworkGame) { // client-side
@@ -420,7 +420,7 @@ rf::EntityObj* SecureObjUpdatePacket(rf::EntityObj* entity, uint8_t flags, rf::P
     return entity;
 }
 
-FunHook2<uint8_t()> MultiAllocPlayerId_Hook{
+FunHook<uint8_t()> MultiAllocPlayerId_Hook{
     0x0046EF00,
     []() {
         uint8_t player_id = MultiAllocPlayerId_Hook.CallTarget();
@@ -432,7 +432,7 @@ FunHook2<uint8_t()> MultiAllocPlayerId_Hook{
 
 constexpr int MULTI_HANDLE_MAPPING_ARRAY_SIZE = 1024;
 
-FunHook2<rf::Object*(int32_t)> MultiGetObjFromRemoteHandle_Hook{
+FunHook<rf::Object*(int32_t)> MultiGetObjFromRemoteHandle_Hook{
     0x00484B00,
     [](int32_t remote_handle) {
         int index = static_cast<uint16_t>(remote_handle);
@@ -442,7 +442,7 @@ FunHook2<rf::Object*(int32_t)> MultiGetObjFromRemoteHandle_Hook{
     },
 };
 
-FunHook2<int32_t(int32_t)> MultiGetLocalHandleFromRemoteHandle_Hook{
+FunHook<int32_t(int32_t)> MultiGetLocalHandleFromRemoteHandle_Hook{
     0x00484B30,
     [](int32_t remote_handle) {
         int index = static_cast<uint16_t>(remote_handle);
@@ -452,7 +452,7 @@ FunHook2<int32_t(int32_t)> MultiGetLocalHandleFromRemoteHandle_Hook{
     },
 };
 
-FunHook2<void(int32_t, int32_t)> MultiSetObjHandleMapping_Hook{
+FunHook<void(int32_t, int32_t)> MultiSetObjHandleMapping_Hook{
     0x00484B70,
     [](int32_t remote_handle, int32_t local_handle) {
         int index = static_cast<uint16_t>(remote_handle);
@@ -507,7 +507,7 @@ RegsPatch ProcessGlassKillPacket_CheckRoomExists_Patch{
     },
 };
 
-CallHook2<int(void*, int, int, rf::NwAddr&, int)> nw_get_packet_tracker_hook{
+CallHook<int(void*, int, int, rf::NwAddr&, int)> nw_get_packet_tracker_hook{
     0x00482ED4, [](void* data, int a2, int a3, rf::NwAddr& addr, int super_type) {
         int res = nw_get_packet_tracker_hook.CallTarget(data, a2, a3, addr, super_type);
         auto& tracker_addr = AddrAsRef<rf::NwAddr>(0x006FC550);

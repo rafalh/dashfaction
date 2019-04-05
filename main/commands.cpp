@@ -8,8 +8,8 @@
 #include "spectate_mode.h"
 #include "stdafx.h"
 #include "utils.h"
-#include <CallHook2.h>
-#include <FunHook2.h>
+#include <CallHook.h>
+#include <FunHook.h>
 #include <RegsPatch.h>
 
 namespace rf
@@ -316,7 +316,7 @@ DcCommand2 MouseSensitivityCmd{
     "ms <value>",
 };
 
-CallHook2<void()> CoronaRenderAll_Hook{
+CallHook<void()> CoronaRenderAll_Hook{
     0x0043233E,
     []() {
         if (g_game_config.glares)
@@ -554,7 +554,7 @@ void DcAutoCompleteCommand(int offset)
         DcAutoCompletePutComponent(offset, matching_cmds[0]->Cmd, true);
 }
 
-FunHook2<void()> DcAutoCompleteInput_Hook{
+FunHook<void()> DcAutoCompleteInput_Hook{
     0x0050A620,
     []() { DcAutoCompleteCommand(0); },
 };

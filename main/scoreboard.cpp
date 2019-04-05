@@ -6,7 +6,7 @@
 #include "spectate_mode.h"
 #include "stdafx.h"
 #include "utils.h"
-#include <FunHook2.h>
+#include <FunHook.h>
 #include <algorithm>
 
 namespace rf
@@ -242,7 +242,7 @@ void DrawScoreboardInternal_New(bool draw)
     }
 }
 
-FunHook2<void(bool)> DrawScoreboardInternal_Hook{0x00470880, DrawScoreboardInternal_New};
+FunHook<void(bool)> DrawScoreboardInternal_Hook{0x00470880, DrawScoreboardInternal_New};
 
 void HudRender_00437BC0()
 {

@@ -19,8 +19,8 @@
 #include "stdafx.h"
 #include "utils.h"
 #include "wndproc.h"
-#include <CallHook2.h>
-#include <FunHook2.h>
+#include <CallHook.h>
+#include <FunHook.h>
 
 #include <log/ConsoleAppender.h>
 #include <log/FileAppender.h>
@@ -59,7 +59,7 @@ void FindPlayer(const StringMatcher& query, std::function<void(rf::Player*)> con
     }
 }
 
-CallHook2<void(bool)> DcUpdate_Hook{
+CallHook<void(bool)> DcUpdate_Hook{
     0x004B2DD3,
     [](bool is_server) {
         // Draw on top (after scene)
@@ -79,7 +79,7 @@ CallHook2<void(bool)> DcUpdate_Hook{
     },
 };
 
-CallHook2<void()> InitGame_Hook{
+CallHook<void()> InitGame_Hook{
     0x004B27CD,
     []() {
         DWORD start_ticks = GetTickCount();
@@ -103,7 +103,7 @@ CallHook2<void()> InitGame_Hook{
     },
 };
 
-CallHook2<void()> CleanupGame_Hook{
+CallHook<void()> CleanupGame_Hook{
     0x004B2821,
     []() {
         ResetGammaRamp();
@@ -113,7 +113,7 @@ CallHook2<void()> CleanupGame_Hook{
     },
 };
 
-CallHook2<bool()> RunGame_Hook{
+CallHook<bool()> RunGame_Hook{
     0x004B2818,
     []() {
         ProcessWaitingMessages();
@@ -123,7 +123,7 @@ CallHook2<bool()> RunGame_Hook{
     },
 };
 
-CallHook2<void()> RenderInGame_Hook{
+CallHook<void()> RenderInGame_Hook{
     0x00432375,
     []() {
 #if !defined(NDEBUG) && defined(HAS_EXPERIMENTAL)
@@ -133,7 +133,7 @@ CallHook2<void()> RenderInGame_Hook{
     },
 };
 
-FunHook2<int()> KeyGetFromFifo_Hook{
+FunHook<int()> KeyGetFromFifo_Hook{
     0x0051F000,
     []() {
         // Process messages here because when watching videos main loop is not running
@@ -142,7 +142,7 @@ FunHook2<int()> KeyGetFromFifo_Hook{
     },
 };
 
-FunHook2<void(rf::Player*)> RenderHitScreen_Hook{
+FunHook<void(rf::Player*)> RenderHitScreen_Hook{
     0x004163C0,
     [](rf::Player* player) {
         RenderHitScreen_Hook.CallTarget(player);
@@ -153,7 +153,7 @@ FunHook2<void(rf::Player*)> RenderHitScreen_Hook{
     },
 };
 
-FunHook2<rf::Player*(bool)> PlayerCreate_Hook{
+FunHook<rf::Player*(bool)> PlayerCreate_Hook{
     0x004A3310,
     [](bool is_local) {
         rf::Player* player = PlayerCreate_Hook.CallTarget(is_local);
@@ -162,7 +162,7 @@ FunHook2<rf::Player*(bool)> PlayerCreate_Hook{
     },
 };
 
-FunHook2<void(rf::Player*)> PlayerDestroy_Hook{
+FunHook<void(rf::Player*)> PlayerDestroy_Hook{
     0x004A35C0,
     [](rf::Player* player) {
         SpectateModeOnDestroyPlayer(player);
@@ -170,7 +170,7 @@ FunHook2<void(rf::Player*)> PlayerDestroy_Hook{
     },
 };
 
-CallHook2<void()> AfterFullGameInit_Hook{
+CallHook<void()> AfterFullGameInit_Hook{
     0x004B2693,
     []() {
         SpectateModeAfterFullGameInit();

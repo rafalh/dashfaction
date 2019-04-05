@@ -5,14 +5,14 @@
 #include "rf.h"
 #include "stdafx.h"
 #include "utils.h"
-#include <CallHook2.h>
+#include <CallHook.h>
 
 const char g_screenshot_dir_name[] = "screenshots";
 
 static std::unique_ptr<byte* []> g_screenshot_scanlines_buf;
 static int g_screenshot_dir_id;
 
-CallHook2<rf::BmPixelFormat(int, int, int, int, byte*)> GrD3DReadBackBuffer_Hook{
+CallHook<rf::BmPixelFormat(int, int, int, int, byte*)> GrD3DReadBackBuffer_Hook{
     0x0050E015,
     [](int x, int y, int width, int height, byte* buffer) {
         HRESULT hr;

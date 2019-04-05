@@ -2,7 +2,7 @@
 #include "rf.h"
 #include "stdafx.h"
 #include "utils.h"
-#include <FunHook2.h>
+#include <FunHook.h>
 #include <ShortTypes.h>
 
 void KillInitPlayer(rf::Player* player)
@@ -12,7 +12,7 @@ void KillInitPlayer(rf::Player* player)
     stats->num_deaths = 0;
 }
 
-FunHook2<void()> MpResetNetGame_Hook{
+FunHook<void()> MpResetNetGame_Hook{
     0x0046E450,
     []() {
         rf::Player* player = rf::g_PlayersList;

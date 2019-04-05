@@ -5,14 +5,14 @@
 #include <log/Logger.h>
 #include <subhook.h>
 
-class FunHook2Impl
+class FunHookImpl
 {
 protected:
     void* m_target_fun_ptr;
     void* m_hook_fun_ptr;
     subhook::Hook m_subhook;
 
-    FunHook2Impl(uintptr_t target_fun_addr, void* hook_fun_ptr)
+    FunHookImpl(uintptr_t target_fun_addr, void* hook_fun_ptr)
     {
         m_target_fun_ptr = reinterpret_cast<void*>(target_fun_addr);
         m_hook_fun_ptr = hook_fun_ptr;
@@ -28,17 +28,17 @@ public:
 };
 
 template<class T>
-class FunHook2;
+class FunHook;
 
 template<class R, class... A>
-class FunHook2<R __cdecl(A...)> : public FunHook2Impl
+class FunHook<R __cdecl(A...)> : public FunHookImpl
 {
 private:
     typedef R __cdecl FunType(A...);
 
 public:
-    FunHook2(uintptr_t target_fun_addr, FunType* hook_fun_ptr) :
-        FunHook2Impl(target_fun_addr, reinterpret_cast<void*>(hook_fun_ptr))
+    FunHook(uintptr_t target_fun_addr, FunType* hook_fun_ptr) :
+        FunHookImpl(target_fun_addr, reinterpret_cast<void*>(hook_fun_ptr))
     {}
 
     R CallTarget(A... a)
@@ -49,14 +49,14 @@ public:
 };
 
 template<class R, class... A>
-class FunHook2<R __fastcall(A...)> : public FunHook2Impl
+class FunHook<R __fastcall(A...)> : public FunHookImpl
 {
 private:
     typedef R __fastcall FunType(A...);
 
 public:
-    FunHook2(uintptr_t target_fun_addr, FunType* hook_fun_ptr) :
-        FunHook2Impl(target_fun_addr, reinterpret_cast<void*>(hook_fun_ptr))
+    FunHook(uintptr_t target_fun_addr, FunType* hook_fun_ptr) :
+        FunHookImpl(target_fun_addr, reinterpret_cast<void*>(hook_fun_ptr))
     {}
 
     R CallTarget(A... a)
@@ -69,5 +69,5 @@ public:
 #ifdef __cpp_deduction_guides
 // deduction guide for lambda functions
 template<class T>
-FunHook2(uintptr_t addr, T)->FunHook2<typename function_traits<T>::f_type>;
+FunHook(uintptr_t addr, T)->FunHook<typename function_traits<T>::f_type>;
 #endif

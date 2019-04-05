@@ -5,8 +5,8 @@
 #include "scoreboard.h"
 #include "stdafx.h"
 #include "utils.h"
-#include <CallHook2.h>
-#include <FunHook2.h>
+#include <CallHook.h>
+#include <FunHook.h>
 #include <shlwapi.h>
 #include <windef.h>
 
@@ -121,7 +121,7 @@ static void SpectateNextPlayer(bool dir, bool try_alive_players_first = false)
         SpectateNextPlayer(dir, false);
 }
 
-FunHook2<void(rf::Player*, rf::GameCtrl, bool)> HandleCtrlInGame_Hook{
+FunHook<void(rf::Player*, rf::GameCtrl, bool)> HandleCtrlInGame_Hook{
     0x004A6210,
     [](rf::Player* player, rf::GameCtrl key_id, bool was_pressed) {
         if (g_SpectateModeEnabled) {
@@ -161,9 +161,9 @@ bool IsPlayerEntityInvalid_New(rf::Player* player)
         return rf::IsPlayerEntityInvalid(player);
 }
 
-CallHook2<bool(rf::Player*)> IsPlayerEntityInvalid_RedBars_Hook{0x00432A52, IsPlayerEntityInvalid_New};
-CallHook2<bool(rf::Player*)> IsPlayerEntityInvalid_Scoreboard_Hook{0x00437BEE, IsPlayerEntityInvalid_New};
-CallHook2<bool(rf::Player*)> IsPlayerEntityInvalid_Scoreboard2_Hook{0x00437C25, IsPlayerEntityInvalid_New};
+CallHook<bool(rf::Player*)> IsPlayerEntityInvalid_RedBars_Hook{0x00432A52, IsPlayerEntityInvalid_New};
+CallHook<bool(rf::Player*)> IsPlayerEntityInvalid_Scoreboard_Hook{0x00437BEE, IsPlayerEntityInvalid_New};
+CallHook<bool(rf::Player*)> IsPlayerEntityInvalid_Scoreboard2_Hook{0x00437C25, IsPlayerEntityInvalid_New};
 
 static bool IsPlayerDying_New(rf::Player* player)
 {
@@ -173,9 +173,9 @@ static bool IsPlayerDying_New(rf::Player* player)
         return rf::IsPlayerDying(player);
 }
 
-CallHook2 IsPlayerDying_RedBars_Hook{0x00432A5F, IsPlayerDying_New};
-CallHook2 IsPlayerDying_Scoreboard_Hook{0x00437C01, IsPlayerDying_New};
-CallHook2 IsPlayerDying_Scoreboard2_Hook{0x00437C36, IsPlayerDying_New};
+CallHook IsPlayerDying_RedBars_Hook{0x00432A5F, IsPlayerDying_New};
+CallHook IsPlayerDying_Scoreboard_Hook{0x00437C01, IsPlayerDying_New};
+CallHook IsPlayerDying_Scoreboard2_Hook{0x00437C36, IsPlayerDying_New};
 
 void SpectateModeOnDestroyPlayer(rf::Player* player)
 {
@@ -185,7 +185,7 @@ void SpectateModeOnDestroyPlayer(rf::Player* player)
         SpectateModeSetTargetPlayer(nullptr);
 }
 
-FunHook2<void(rf::Player*)> RenderReticle_Hook{
+FunHook<void(rf::Player*)> RenderReticle_Hook{
     0x0043A2C0,
     [](rf::Player* player) {
         if (rf::GameSeqGetState() == rf::GS_MP_LIMBO)
@@ -197,7 +197,7 @@ FunHook2<void(rf::Player*)> RenderReticle_Hook{
     },
 };
 
-FunHook2<rf::EntityObj*(rf::Player*, int, const rf::Vector3*, const rf::Matrix3*, int)> PlayerCreateEntity_Hook{
+FunHook<rf::EntityObj*(rf::Player*, int, const rf::Vector3*, const rf::Matrix3*, int)> PlayerCreateEntity_Hook{
     0x004A4130,
     [](rf::Player* player, int cls_id, const rf::Vector3* pos, const rf::Matrix3* orient, int mp_character) {
         // hide target player from camera after respawn
@@ -209,7 +209,7 @@ FunHook2<rf::EntityObj*(rf::Player*, int, const rf::Vector3*, const rf::Matrix3*
     },
 };
 
-CallHook2<void()> GrResetClip_RenderScannerViewForLocalPlayers_Hook{
+CallHook<void()> GrResetClip_RenderScannerViewForLocalPlayers_Hook{
     0x00431890,
     []() {
         if (g_SpectateModeEnabled)
@@ -250,7 +250,7 @@ static void PlayerFpgunRender_New(rf::Player* player)
         rf::PlayerFpgunRender(player);
 }
 
-FunHook2<void(rf::Player*)> PlayerFpgunUpdateState_Hook{
+FunHook<void(rf::Player*)> PlayerFpgunUpdateState_Hook{
     0x004AA3A0,
     [](rf::Player* player) {
         PlayerFpgunUpdateState_Hook.CallTarget(player);

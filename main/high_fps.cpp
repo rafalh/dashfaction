@@ -3,7 +3,7 @@
 #include "rf.h"
 #include "stdafx.h"
 #include "utils.h"
-#include <FunHook2.h>
+#include <FunHook.h>
 #include <InlineAsm.h>
 #include <RegsPatch.h>
 #include <ShortTypes.h>
@@ -212,7 +212,7 @@ RegsPatch WaterAnimateWaves_speed_fix{
     },
 };
 
-FunHook2<int(rf::String&, rf::String&, char*)> RflLoad_Hook{
+FunHook<int(rf::String&, rf::String&, char*)> RflLoad_Hook{
     0x0045C540,
     [](rf::String& level_filename, rf::String& a2, char* error_desc) {
         int ret = RflLoad_Hook.CallTarget(level_filename, a2, error_desc);

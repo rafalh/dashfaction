@@ -5,7 +5,7 @@
 #include "rf.h"
 #include "stdafx.h"
 #include "utils.h"
-#include <CallHook2.h>
+#include <CallHook.h>
 #include <RegsPatch.h>
 #include <ShortTypes.h>
 
@@ -147,7 +147,7 @@ static void SetupPP()
                      SWP_NOZORDER);
 }
 
-CallHook2<void(int, rf::GrVertex**, int, int)> GrDrawRect_GrDrawPoly_Hook{
+CallHook<void(int, rf::GrVertex**, int, int)> GrDrawRect_GrDrawPoly_Hook{
     0x0050DD69,
     [](int num, rf::GrVertex** pp_vertices, int flags, int mat) {
         for (int i = 0; i < num; ++i) {
@@ -166,7 +166,7 @@ DWORD SetupMaxAnisotropy()
     return anisotropy_level;
 }
 
-CallHook2<void()> GrInitBuffers_AfterReset_Hook{
+CallHook<void()> GrInitBuffers_AfterReset_Hook{
     0x00545045,
     []() {
         GrInitBuffers_AfterReset_Hook.CallTarget();
