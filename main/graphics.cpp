@@ -12,15 +12,15 @@
 namespace rf
 {
 
-static auto& g_Direct3D = *(IDirect3D8**)0x01CFCBE0;
-static auto& g_GrPP = *(D3DPRESENT_PARAMETERS*)0x01CFCA18;
-static auto& g_AdapterIdx = *(uint32_t*)0x01CFCC34;
-static auto& g_GrScaleVec = *(Vector3*)0x01818B48;
-static auto& g_GrViewMatrix = *(Matrix3*)0x018186C8;
-static auto& g_GrDeviceCaps = *(D3DCAPS8*)0x01CFCAC8;
-static auto& g_GrDefaultWFar = *(float*)0x00596140;
+static auto& g_Direct3D = AddrAsRef<IDirect3D8*>(0x01CFCBE0);
+static auto& g_GrPP = AddrAsRef<D3DPRESENT_PARAMETERS>(0x01CFCA18);
+static auto& g_AdapterIdx = AddrAsRef<uint32_t>(0x01CFCC34);
+static auto& g_GrScaleVec = AddrAsRef<Vector3>(0x01818B48);
+static auto& g_GrViewMatrix = AddrAsRef<Matrix3>(0x018186C8);
+static auto& g_GrDeviceCaps = AddrAsRef<D3DCAPS8>(0x01CFCAC8);
+static auto& g_GrDefaultWFar = AddrAsRef<float>(0x00596140);
 
-static const auto GrSetTextureMipFilter = (void (*)(int linear))0x0050E830;
+static auto& GrSetTextureMipFilter = AddrAsRef<void(int linear)>(0x0050E830);
 } // namespace rf
 
 static float g_GrClippedGeomOffsetX = -0.5;
@@ -68,8 +68,8 @@ RegsPatch GrSetViewMatrix_widescreen_fix{
         // g_GrScreen.fAspect == ScrW / ScrH * 0.75 (1.0 for 4:3 monitors, 1.2 for 16:10) - looks like Pixel Aspect
         // Ratio We use here MaxWidth and MaxHeight to calculate proper FOV for windowed mode
 
-        float viewport_aspect_ratio = (float)rf::g_GrScreen.ViewportWidth / (float)rf::g_GrScreen.ViewportHeight;
-        float aspect_ratio = (float)rf::g_GrScreen.MaxWidth / (float)rf::g_GrScreen.MaxHeight;
+        float viewport_aspect_ratio = static_cast<float>(rf::g_GrScreen.ViewportWidth) / rf::g_GrScreen.ViewportHeight;
+        float aspect_ratio = static_cast<float>(rf::g_GrScreen.MaxWidth) / rf::g_GrScreen.MaxHeight;
         float scale_x = 1.0f;
         // this is how RF does compute scale_y and it is needed for working scanner
         float scale_y = ref_aspect_ratio * viewport_aspect_ratio / aspect_ratio;

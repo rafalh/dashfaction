@@ -16,25 +16,25 @@ namespace rf
 {
 
 // Server configuration commands
-static const auto DcfKillLimit = (DcCmdHandler)0x0046CBC0;
-static const auto DcfTimeLimit = (DcCmdHandler)0x0046CC10;
-static const auto DcfGeomodLimit = (DcCmdHandler)0x0046CC70;
-static const auto DcfCaptureLimit = (DcCmdHandler)0x0046CCC0;
+static const auto DcfKillLimit = reinterpret_cast<DcCmdHandler>(0x0046CBC0);
+static const auto DcfTimeLimit = reinterpret_cast<DcCmdHandler>(0x0046CC10);
+static const auto DcfGeomodLimit = reinterpret_cast<DcCmdHandler>(0x0046CC70);
+static const auto DcfCaptureLimit = reinterpret_cast<DcCmdHandler>(0x0046CCC0);
 
 // Misc commands
-static const auto DcfSound = (DcCmdHandler)0x00434590;
-static const auto DcfDifficulty = (DcCmdHandler)0x00434EB0;
-static const auto DcfMouseSensitivity = (DcCmdHandler)0x0043CE90;
-static const auto DcfLevelInfo = (DcCmdHandler)0x0045C210;
-static const auto DcfVerifyLevel = (DcCmdHandler)0x0045E1F0;
-static const auto DcfPlayerNames = (DcCmdHandler)0x0046CB80;
-static const auto DcfClientsCount = (DcCmdHandler)0x0046CD10;
-static const auto DcfKickAll = (DcCmdHandler)0x0047B9E0;
-static const auto DcfTimedemo = (DcCmdHandler)0x004CC1B0;
-static const auto DcfFramerateTest = (DcCmdHandler)0x004CC360;
-static const auto DcfSystemInfo = (DcCmdHandler)0x00525A60;
-static const auto DcfTrilinearFiltering = (DcCmdHandler)0x0054F050;
-static const auto DcfDetailTextures = (DcCmdHandler)0x0054F0B0;
+static const auto DcfSound = reinterpret_cast<DcCmdHandler>(0x00434590);
+static const auto DcfDifficulty = reinterpret_cast<DcCmdHandler>(0x00434EB0);
+static const auto DcfMouseSensitivity = reinterpret_cast<DcCmdHandler>(0x0043CE90);
+static const auto DcfLevelInfo = reinterpret_cast<DcCmdHandler>(0x0045C210);
+static const auto DcfVerifyLevel = reinterpret_cast<DcCmdHandler>(0x0045E1F0);
+static const auto DcfPlayerNames = reinterpret_cast<DcCmdHandler>(0x0046CB80);
+static const auto DcfClientsCount = reinterpret_cast<DcCmdHandler>(0x0046CD10);
+static const auto DcfKickAll = reinterpret_cast<DcCmdHandler>(0x0047B9E0);
+static const auto DcfTimedemo = reinterpret_cast<DcCmdHandler>(0x004CC1B0);
+static const auto DcfFramerateTest = reinterpret_cast<DcCmdHandler>(0x004CC360);
+static const auto DcfSystemInfo = reinterpret_cast<DcCmdHandler>(0x00525A60);
+static const auto DcfTrilinearFiltering = reinterpret_cast<DcCmdHandler>(0x0054F050);
+static const auto DcfDetailTextures = reinterpret_cast<DcCmdHandler>(0x0054F0B0);
 
 } // namespace rf
 
@@ -88,14 +88,14 @@ DcCommand2 SplitScreenCmd{
 
 DcCommand2 MaxFpsCmd{
     "maxfps",
-    [](std::optional<float> limit_opt) {
+    [](std::optional<int> limit_opt) {
         if (limit_opt) {
 #ifdef NDEBUG
-            float newLimit = std::clamp(LimitOpt.value(), (float)MIN_FPS_LIMIT, (float)MAX_FPS_LIMIT);
+            int newLimit = std::clamp(LimitOpt.value(), MIN_FPS_LIMIT, MAX_FPS_LIMIT);
 #else
-            float new_limit = limit_opt.value();
+            int new_limit = limit_opt.value();
 #endif
-            g_game_config.maxFps = (unsigned)new_limit;
+            g_game_config.maxFps = new_limit;
             g_game_config.save();
             rf::g_fMinFramerate = 1.0f / new_limit;
         }

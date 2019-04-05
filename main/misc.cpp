@@ -1,25 +1,26 @@
-#include "stdafx.h"
 #include "misc.h"
-#include "rf.h"
-#include "version.h"
-#include "utils.h"
-#include "main.h"
 #include "commands.h"
-#include <ShortTypes.h>
+#include "main.h"
+#include "rf.h"
+#include "stdafx.h"
+#include "utils.h"
+#include "version.h"
 #include <CallHook2.h>
 #include <FunHook2.h>
 #include <RegsPatch.h>
+#include <ShortTypes.h>
 #include <rfproto.h>
 
-namespace rf {
+namespace rf
+{
 
-static const auto EntityIsReloading = (bool(*)(EntityObj *entity))0x00425250;
+static auto& EntityIsReloading = AddrAsRef<bool(EntityObj* entity)>(0x00425250);
 
-static auto& g_MenuVersionLabel = *(UiPanel*)0x0063C088;
+static auto& g_MenuVersionLabel = AddrAsRef<UiPanel>(0x0063C088);
 static auto& g_sound_enabled = AddrAsRef<bool>(0x017543D8);
 static auto& g_hide_enemy_bullets = AddrAsRef<bool>(0x005A24D0);
 
-}
+} // namespace rf
 
 constexpr int EGG_ANIM_ENTER_TIME = 2000;
 constexpr int EGG_ANIM_LEAVE_TIME = 2000;
@@ -33,15 +34,15 @@ bool g_Win32Console = false;
 
 using UiLabel_Create2_Type = void __fastcall(rf::UiPanel*, void*, rf::UiPanel*, int, int, int, int, const char*, int);
 extern CallHook2<UiLabel_Create2_Type> UiLabel_Create2_VersionLabel_Hook;
-void __fastcall UiLabel_Create2_VersionLabel(rf::UiPanel *self, void *edx, rf::UiPanel *parent, int x, int y, int w, int h,
-    const char *text, int font_id)
+void __fastcall UiLabel_Create2_VersionLabel(rf::UiPanel* self, void* edx, rf::UiPanel* parent, int x, int y, int w,
+                                             int h, const char* text, int font_id)
 {
     x = g_VersionLabelX;
     w = g_VersionLabelWidth;
     h = g_VersionLabelHeight;
     UiLabel_Create2_VersionLabel_Hook.CallTarget(self, edx, parent, x, y, w, h, text, font_id);
 }
-CallHook2<UiLabel_Create2_Type> UiLabel_Create2_VersionLabel_Hook{ 0x0044344D, UiLabel_Create2_VersionLabel };
+CallHook2<UiLabel_Create2_Type> UiLabel_Create2_VersionLabel_Hook{0x0044344D, UiLabel_Create2_VersionLabel};
 
 FunHook2<void(const char**, const char**)> GetVersionStr_Hook{
     0x004B33F0,
@@ -59,8 +60,7 @@ FunHook2<void(const char**, const char**)> GetVersionStr_Hook{
 };
 
 FunHook2<int()> MenuUpdate_Hook{
-    0x00434230,
-    []() {
+    0x00434230, []() {
         int menu_id = MenuUpdate_Hook.CallTarget();
         if (menu_id == rf::GS_MP_LIMBO) // hide cursor when changing level - hackfixed in RF by chaning rendering logic
             rf::SetCursorVisible(false);
@@ -71,26 +71,24 @@ FunHook2<int()> MenuUpdate_Hook{
 
 RegsPatch gr_direct3d_lock_crash_fix{
     0x0055CE55,
-    [](auto &regs) {
+    [](auto& regs) {
         if (regs.eax == 0) {
             regs.esp += 8;
             regs.eip = 0x0055CF23;
         }
-    }
+    },
 };
 
 CallHook2<void()> MenuMainProcessMouse_Hook{
     0x004437B9,
     []() {
         MenuMainProcessMouse_Hook.CallTarget();
-        if (rf::MouseWasButtonPressed(0))
-        {
+        if (rf::MouseWasButtonPressed(0)) {
             int x, y, z;
             rf::MouseGetPos(x, y, z);
-            rf::UiPanel *panels_to_check[1] = { &rf::g_MenuVersionLabel };
+            rf::UiPanel* panels_to_check[1] = {&rf::g_MenuVersionLabel};
             int matched = rf::UiGetElementFromPos(x, y, panels_to_check, std::size(panels_to_check));
-            if (matched == 0)
-            {
+            if (matched == 0) {
                 TRACE("Version clicked");
                 ++g_VersionClickCounter;
                 if (g_VersionClickCounter == 3)
@@ -103,20 +101,17 @@ CallHook2<void()> MenuMainProcessMouse_Hook{
 int LoadEasterEggImage()
 {
     HRSRC h_res = FindResourceA(g_hmodule, MAKEINTRESOURCEA(100), RT_RCDATA);
-    if (!h_res)
-    {
+    if (!h_res) {
         ERR("FindResourceA failed");
         return -1;
     }
     HGLOBAL h_res_data = LoadResource(g_hmodule, h_res);
-    if (!h_res_data)
-    {
+    if (!h_res_data) {
         ERR("LoadResource failed");
         return -1;
     }
-    void *res_data = LockResource(h_res_data);
-    if (!res_data)
-    {
+    void* res_data = LockResource(h_res_data);
+    if (!res_data) {
         ERR("LockResource failed");
         return -1;
     }
@@ -130,7 +125,7 @@ int LoadEasterEggImage()
         return -1;
 
     rf::BmConvertFormat(lock_data.Bits, (rf::BmPixelFormat)lock_data.PixelFormat, res_data, rf::BMPF_8888,
-        easter_egg_size * easter_egg_size);
+                        easter_egg_size * easter_egg_size);
     rf::GrUnlock(&lock_data);
 
     return hbm;
@@ -149,11 +144,14 @@ CallHook2<void()> MenuMainRender_Hook{
             int anim_delta_time = GetTickCount() - g_EggAnimStart;
             int pos_x = (rf::GrGetMaxWidth() - w) / 2;
             int pos_y = rf::GrGetMaxHeight() - h;
-            if (anim_delta_time < EGG_ANIM_ENTER_TIME)
-                pos_y += h - (int)(sinf(anim_delta_time / (float)EGG_ANIM_ENTER_TIME * (float)M_PI / 2.0f) * h);
+            if (anim_delta_time < EGG_ANIM_ENTER_TIME) {
+                float enter_progress = anim_delta_time / static_cast<float>(EGG_ANIM_ENTER_TIME);
+                pos_y += h - static_cast<int>(sinf(enter_progress * static_cast<float>(M_PI) / 2.0f) * h);
+            }
             else if (anim_delta_time > EGG_ANIM_ENTER_TIME + EGG_ANIM_IDLE_TIME) {
                 int leave_delta = anim_delta_time - (EGG_ANIM_ENTER_TIME + EGG_ANIM_IDLE_TIME);
-                pos_y += (int)((1.0f - cosf(leave_delta / (float)EGG_ANIM_LEAVE_TIME * (float)M_PI / 2.0f)) * h);
+                float leave_progress = leave_delta / static_cast<float>(EGG_ANIM_LEAVE_TIME);
+                pos_y += static_cast<int>((1.0f - cosf(leave_progress * static_cast<float>(M_PI) / 2.0f)) * h);
                 if (leave_delta > EGG_ANIM_LEAVE_TIME)
                     g_VersionClickCounter = 0;
             }
@@ -169,8 +167,7 @@ void SetPlaySoundEventsVolumeScale(float volume_scale)
         // Play Sound event
         0x004BA4D8, 0x004BA515, 0x004BA71C, 0x004BA759, 0x004BA609, 0x004BA5F2, 0x004BA63F,
     };
-    for (unsigned i = 0; i < std::size(offsets); ++i)
-        WriteMem<float>(offsets[i] + 1, volume_scale);
+    for (unsigned i = 0; i < std::size(offsets); ++i) WriteMem<float>(offsets[i] + 1, volume_scale);
 }
 
 CallHook2<void(int, rf::Vector3*, float*, float*, float)> SndConvertVolume3D_AmbientSound_Hook{
@@ -187,7 +184,7 @@ FunHook2<void()> MouseUpdateDirectInput_Hook{
         MouseUpdateDirectInput_Hook.CallTarget();
 
         // center cursor
-        POINT pt{ rf::GrGetMaxWidth() / 2, rf::GrGetMaxHeight() / 2 };
+        POINT pt{rf::GrGetMaxWidth() / 2, rf::GrGetMaxHeight() / 2};
         ClientToScreen(rf::g_hWnd, &pt);
         SetCursorPos(pt.x, pt.y);
     },
@@ -195,8 +192,8 @@ FunHook2<void()> MouseUpdateDirectInput_Hook{
 
 bool IsHoldingAssaultRifle()
 {
-    static auto &assault_rifle_cls_id = AddrAsRef<int>(0x00872470);
-    rf::EntityObj *entity = rf::EntityGetFromHandle(rf::g_LocalPlayer->Entity_handle);
+    static auto& assault_rifle_cls_id = AddrAsRef<int>(0x00872470);
+    rf::EntityObj* entity = rf::EntityGetFromHandle(rf::g_LocalPlayer->Entity_handle);
     return entity && entity->WeaponInfo.WeaponClsId == assault_rifle_cls_id;
 }
 
@@ -220,21 +217,22 @@ char IsEntityCtrlActive_New(rf::ControlConfig* control_config, rf::GameCtrl game
     }
     return IsEntityCtrlActive_Hook1.CallTarget(control_config, game_ctrl, was_pressed);
 }
-CallHook2<char(rf::ControlConfig*, rf::GameCtrl, bool*)> IsEntityCtrlActive_Hook1{ 0x00430E65, IsEntityCtrlActive_New };
-CallHook2<char(rf::ControlConfig*, rf::GameCtrl, bool*)> IsEntityCtrlActive_Hook2{ 0x00430EF7, IsEntityCtrlActive_New };
+CallHook2<char(rf::ControlConfig*, rf::GameCtrl, bool*)> IsEntityCtrlActive_Hook1{0x00430E65, IsEntityCtrlActive_New};
+CallHook2<char(rf::ControlConfig*, rf::GameCtrl, bool*)> IsEntityCtrlActive_Hook2{0x00430EF7, IsEntityCtrlActive_New};
 
 void DcfSwapAssaultRifleControls()
 {
     if (rf::g_DcRun) {
         g_game_config.swapAssaultRifleControls = !g_game_config.swapAssaultRifleControls;
         g_game_config.save();
-        rf::DcPrintf("Swap assault rifle controls: %s", g_game_config.swapAssaultRifleControls ? "enabled" : "disabled");
+        rf::DcPrintf("Swap assault rifle controls: %s",
+                     g_game_config.swapAssaultRifleControls ? "enabled" : "disabled");
     }
 }
 
 #if SERVER_WIN32_CONSOLE
 
-static const auto KeyProcessEvent = (void(*)(int ScanCode, int KeyDown, int DeltaT))0x0051E6C0;
+static auto& KeyProcessEvent = AddrAsRef<void(int ScanCode, int KeyDown, int DeltaT)>(0x0051E6C0);
 
 void ResetConsoleCursorColumn(bool clear)
 {
@@ -247,8 +245,7 @@ void ResetConsoleCursorColumn(bool clear)
     NewPos.X = 0;
     SetConsoleCursorPosition(Output_handle, NewPos);
     if (clear) {
-        for (int i = 0; i < ScrBufInfo.dwCursorPosition.X; ++i)
-            WriteConsoleA(Output_handle, " ", 1, NULL, NULL);
+        for (int i = 0; i < ScrBufInfo.dwCursorPosition.X; ++i) WriteConsoleA(Output_handle, " ", 1, NULL, NULL);
         SetConsoleCursorPosition(Output_handle, NewPos);
     }
 }
@@ -259,14 +256,14 @@ void PrintCmdInputLine()
     CONSOLE_SCREEN_BUFFER_INFO ScrBufInfo;
     GetConsoleScreenBufferInfo(Output_handle, &ScrBufInfo);
     WriteConsoleA(Output_handle, "] ", 2, NULL, NULL);
-    unsigned Offset = std::max(0, (int)g_DcCmdLineLen - ScrBufInfo.dwSize.X + 3);
+    unsigned Offset = std::max(0, static_cast<int>(g_DcCmdLineLen) - ScrBufInfo.dwSize.X + 3);
     WriteConsoleA(Output_handle, g_DcCmdLine + Offset, g_DcCmdLineLen - Offset, NULL, NULL);
 }
 
 BOOL WINAPI ConsoleCtrlHandler(DWORD fdwCtrlType)
 {
     INFO("Quiting after Console CTRL");
-    static auto &Close = *(int32_t*)0x01B0D758;
+    static auto& Close = AddrAsRef<int32_t>(0x01B0D758);
     Close = 1;
     return TRUE;
 }
@@ -280,13 +277,14 @@ void InputThreadProc()
     }
 }
 
-CallHook2<void()> OsInitWindow_Server_Hook{ 0x004B27C5,
+CallHook2<void()> OsInitWindow_Server_Hook{
+    0x004B27C5,
     []() {
         AllocConsole();
         SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE);
 
-        //std::thread InputThread(InputThreadProc);
-        //InputThread.detach();
+        // std::thread InputThread(InputThreadProc);
+        // InputThread.detach();
     },
 };
 
@@ -302,18 +300,18 @@ FunHook2<void(const char*, const int*)> DcPrint_Hook{
 
         ResetConsoleCursorColumn(true);
 
-        const char *Ptr = Text;
+        const char* Ptr = Text;
         while (*Ptr) {
             std::string Color;
             if (Ptr[0] == '[' && Ptr[1] == '$') {
-                const char *ColorEndPtr = strchr(Ptr + 2, ']');
+                const char* ColorEndPtr = strchr(Ptr + 2, ']');
                 if (ColorEndPtr) {
                     Color.assign(Ptr + 2, ColorEndPtr - Ptr - 2);
                     Ptr = ColorEndPtr + 1;
                 }
             }
 
-            const char *EndPtr = strstr(Ptr, "[$");
+            const char* EndPtr = strstr(Ptr, "[$");
             if (!EndPtr)
                 EndPtr = Ptr + strlen(Ptr);
 
@@ -346,7 +344,7 @@ FunHook2<void(const char*, const int*)> DcPrint_Hook{
         if (CurrentAttr != GrayAttr)
             SetConsoleTextAttribute(Output_handle, GrayAttr);
 
-        //PrintCmdInputLine();
+        // PrintCmdInputLine();
     },
 };
 
@@ -395,7 +393,7 @@ FunHook2<int()> KeyGetFromQueue_Hook{
 
 #endif // SERVER_WIN32_CONSOLE
 
-bool EntityIsReloading_SwitchWeapon_New(rf::EntityObj *entity)
+bool EntityIsReloading_SwitchWeapon_New(rf::EntityObj* entity)
 {
     if (rf::EntityIsReloading(entity))
         return true;
@@ -415,11 +413,9 @@ FunHook2<int(void*, void*)> GeomCachePrepareRoom_Hook{
         int ret = GeomCachePrepareRoom_Hook.CallTarget(geom, room);
         char** pp_room_geom = (char**)((char*)room + 4);
         char* room_geom = *pp_room_geom;
-        if (ret == 0 && room_geom)
-        {
-            uint32_t *room_vert_num = (uint32_t*)(room_geom + 4);
-            if (*room_vert_num > 8000)
-            {
+        if (ret == 0 && room_geom) {
+            uint32_t* room_vert_num = (uint32_t*)(room_geom + 4);
+            if (*room_vert_num > 8000) {
                 static int once = 0;
                 if (!(once++))
                     WARN("Not rendering room with %u vertices!", *room_vert_num);
@@ -447,7 +443,7 @@ struct ServerListEntry
 };
 static_assert(sizeof(ServerListEntry) == 0x6C, "invalid size");
 
-FunHook2<int (const int&, const int&)> ServerListCmpFunc_Hook{
+FunHook2<int(const int&, const int&)> ServerListCmpFunc_Hook{
     0x0044A6D0,
     [](const int& index1, const int& index2) {
         auto server_list = AddrAsRef<ServerListEntry*>(0x0063F62C);
@@ -481,12 +477,12 @@ FunHook2<void(const char*, bool)> ChatSayAccept_Hook{
 };
 
 constexpr uint8_t TRIGGER_CLIENT_SIDE = 0x2;
-constexpr uint8_t TRIGGER_SOLO        = 0x4;
-constexpr uint8_t TRIGGER_TELEPORT    = 0x8;
+constexpr uint8_t TRIGGER_SOLO = 0x4;
+constexpr uint8_t TRIGGER_TELEPORT = 0x8;
 
-rf::Player *g_trigger_solo_player = nullptr;
+rf::Player* g_trigger_solo_player = nullptr;
 
-void SendTriggerActivatePacket(rf::Player *player, int trigger_uid, int32_t entity_handle)
+void SendTriggerActivatePacket(rf::Player* player, int trigger_uid, int32_t entity_handle)
 {
     rfTriggerActivate packet;
     packet.type = RF_TRIGGER_ACTIVATE;
@@ -508,12 +504,13 @@ FunHook2<void(int, int)> SendTriggerActivatePacketToAllPlayers_Hook{
 
 FunHook2<void(rf::TriggerObj*, int32_t, bool)> TriggerActivate_Hook{
     0x004C0220,
-    [](rf::TriggerObj *trigger, int32_t h_entity, bool skip_movers) {
+    [](rf::TriggerObj* trigger, int32_t h_entity, bool skip_movers) {
         // Check team
         auto player = rf::GetPlayerFromEntityHandle(h_entity);
         auto trigger_name = trigger->_Super.strName.CStr();
         if (player && trigger->Team != -1 && trigger->Team != player->BlueTeam) {
-            //rf::DcPrintf("Trigger team does not match: %d vs %d (%s)", trigger->Team, Player->BlueTeam, trigger_name);
+            // rf::DcPrintf("Trigger team does not match: %d vs %d (%s)", trigger->Team, Player->BlueTeam,
+            // trigger_name);
             return;
         }
 
@@ -521,7 +518,7 @@ FunHook2<void(rf::TriggerObj*, int32_t, bool)> TriggerActivate_Hook{
         uint8_t ext_flags = trigger_name[0] == '\xAB' ? trigger_name[1] : 0;
         bool is_solo_trigger = (ext_flags & (TRIGGER_SOLO | TRIGGER_TELEPORT)) != 0;
         if (rf::g_IsNetworkGame && rf::g_IsLocalNetworkGame && is_solo_trigger && player) {
-            //rf::DcPrintf("Solo/Teleport trigger activated %s", trigger_name);
+            // rf::DcPrintf("Solo/Teleport trigger activated %s", trigger_name);
             if (player != rf::g_LocalPlayer) {
                 SendTriggerActivatePacket(player, trigger->_Super.Uid, h_entity);
                 return;
@@ -532,7 +529,7 @@ FunHook2<void(rf::TriggerObj*, int32_t, bool)> TriggerActivate_Hook{
         }
 
         // Normal activation
-        //rf::DcPrintf("trigger normal activation %s %d", trigger_name, ext_flags);
+        // rf::DcPrintf("trigger normal activation %s %d", trigger_name, ext_flags);
         TriggerActivate_Hook.CallTarget(trigger, h_entity, skip_movers);
         g_trigger_solo_player = nullptr;
     },
@@ -540,28 +537,29 @@ FunHook2<void(rf::TriggerObj*, int32_t, bool)> TriggerActivate_Hook{
 
 RegsPatch TriggerCheckActivation_Patch{
     0x004BFC7D,
-    [](auto &regs) {
+    [](auto& regs) {
         auto trigger = reinterpret_cast<rf::TriggerObj*>(regs.eax);
         auto trigger_name = trigger->_Super.strName.CStr();
         uint8_t ext_flags = trigger_name[0] == '\xAB' ? trigger_name[1] : 0;
         bool is_client_side = (ext_flags & TRIGGER_CLIENT_SIDE) != 0;
         if (is_client_side)
             regs.eip = 0x004BFCDB;
-    }
+    },
 };
-
 
 RegsPatch RflLoadInternal_CheckRestoreStatus_Patch{
     0x00461195,
     [](X86Regs& regs) {
         // check if SaveRestoreLoadAll is successful
-        if (regs.eax) return;
+        if (regs.eax)
+            return;
         // check if this is auto-load when changing level
-        const char *save_filename = reinterpret_cast<const char*>(regs.edi);
-        if (!strcmp(save_filename, "auto.svl")) return;
+        const char* save_filename = reinterpret_cast<const char*>(regs.edi);
+        if (!strcmp(save_filename, "auto.svl"))
+            return;
         // manual load failed
         ERR("Restoring game state failed");
-        char *error_info = *reinterpret_cast<char**>(regs.esp + 0x2B0 + 0xC);
+        char* error_info = *reinterpret_cast<char**>(regs.esp + 0x2B0 + 0xC);
         strcpy(error_info, "Save file is corrupted");
         // return to RflLoadInternal failure path
         regs.eip = 0x004608CC;
@@ -581,20 +579,20 @@ FunHook2<void(bool)> MenuInGameUpdateCutscene_Hook{
 
             rf::GrSetColor(255, 255, 255, 255);
             rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, rf::GrGetMaxWidth() / 2, rf::GrGetMaxHeight() - 30,
-                "Press JUMP key to skip the cutscene", -1, rf::g_GrTextMaterial);
+                                  "Press JUMP key to skip the cutscene", -1, rf::g_GrTextMaterial);
         }
         else {
-            auto timer_add_delta_time = AddrAsRef<int(int delta_ms)>(0x004FA2D0);
-            auto snd_stop = AddrAsRef<char(int sig)>(0x005442B0);
-            auto destroy_all_paused_sounds = AddrAsRef<void()>(0x005059F0);
-            auto set_all_playing_sounds_paused = AddrAsRef<void(bool paused)>(0x00505C70);
+            auto& timer_add_delta_time = AddrAsRef<int(int delta_ms)>(0x004FA2D0);
+            auto& snd_stop = AddrAsRef<char(int sig)>(0x005442B0);
+            auto& destroy_all_paused_sounds = AddrAsRef<void()>(0x005059F0);
+            auto& set_all_playing_sounds_paused = AddrAsRef<void(bool paused)>(0x00505C70);
 
-            auto &timer_base = AddrAsRef<int64_t>(0x01751BF8);
-            auto &timer_freq = AddrAsRef<int32_t>(0x01751C04);
-            auto &frame_time = AddrAsRef<float>(0x005A4014);
-            auto &current_shot_idx = StructFieldRef<int>(rf::g_active_cutscene, 0x808);
-            void *current_shot_timer = reinterpret_cast<char*>(rf::g_active_cutscene) + 0x810;
-            auto &num_shots = StructFieldRef<int>(rf::g_active_cutscene, 4);
+            auto& timer_base = AddrAsRef<int64_t>(0x01751BF8);
+            auto& timer_freq = AddrAsRef<int32_t>(0x01751C04);
+            auto& frame_time = AddrAsRef<float>(0x005A4014);
+            auto& current_shot_idx = StructFieldRef<int>(rf::g_active_cutscene, 0x808);
+            void* current_shot_timer = reinterpret_cast<char*>(rf::g_active_cutscene) + 0x810;
+            auto& num_shots = StructFieldRef<int>(rf::g_active_cutscene, 4);
 
             if (g_cutscene_bg_sound_sig != -1) {
                 snd_stop(g_cutscene_bg_sound_sig);
@@ -608,8 +606,7 @@ FunHook2<void(bool)> MenuInGameUpdateCutscene_Hook{
             while (rf::CutsceneIsActive()) {
                 int shot_time_left_ms = rf::Timer__GetTimeLeftMs(current_shot_timer);
 
-                if (current_shot_idx == num_shots - 1)
-                {
+                if (current_shot_idx == num_shots - 1) {
                     // run last half second with a speed of 10 FPS so all events get properly processed before
                     // going back to normal gameplay
                     if (shot_time_left_ms > 500)
@@ -640,8 +637,9 @@ RegsPatch CoronaEntityCollisionTestFix{
     0x004152F1,
     [](X86Regs& regs) {
         auto get_entity_root_bone_pos = AddrAsRef<void(rf::EntityObj*, rf::Vector3&)>(0x48AC70);
-        using IntersectLineWithAabbType = bool(rf::Vector3 *aabb1, rf::Vector3 *aabb2, rf::Vector3 *pos1, rf::Vector3 *pos2, rf::Vector3 *out_pos);
-        auto intersect_line_with_aabb = reinterpret_cast<IntersectLineWithAabbType*>(0x00508B70);
+        using IntersectLineWithAabbType = bool(rf::Vector3 * aabb1, rf::Vector3 * aabb2, rf::Vector3 * pos1,
+                                               rf::Vector3 * pos2, rf::Vector3 * out_pos);
+        auto& intersect_line_with_aabb = AddrAsRef<IntersectLineWithAabbType>(0x00508B70);
 
         rf::EntityObj* entity = reinterpret_cast<rf::EntityObj*>(regs.esi);
         if (!rf::CutsceneIsActive()) {
@@ -670,8 +668,8 @@ FunHook2<void()> DoQuickSave_Hook{
     },
 };
 
-auto MultiIsConnected = AddrAsRef<bool()>(0x0044AD70);
-auto GameSeqPushState = AddrAsRef<int(int state, bool update_parent_state, bool parent_dlg_open)>(0x00434410);
+auto& MultiIsConnected = AddrAsRef<bool()>(0x0044AD70);
+auto& GameSeqPushState = AddrAsRef<int(int state, bool update_parent_state, bool parent_dlg_open)>(0x00434410);
 
 bool g_jump_to_multi_server_list = false;
 
@@ -685,8 +683,8 @@ FunHook2<void(int, int)> GameEnterState_Hook{
     [](int state, int old_state) {
         GameEnterState_Hook.CallTarget(state, old_state);
         TRACE("state %d old_state %d g_jump_to_multi_server_list %d", state, old_state, g_jump_to_multi_server_list);
-        if (state == rf::GS_MAIN_MENU && (old_state == rf::GS_EXIT_GAME || old_state == rf::GS_LOADING_LEVEL)
-        && g_jump_to_multi_server_list) {
+        if (state == rf::GS_MAIN_MENU && (old_state == rf::GS_EXIT_GAME || old_state == rf::GS_LOADING_LEVEL) &&
+            g_jump_to_multi_server_list) {
             rf::g_sound_enabled = false;
             GameSeqPushState(rf::GS_MP_MENU, false, false);
         }
@@ -721,7 +719,7 @@ rf::Vector3 ForwardVectorFromNonLinearYawPitch(float yaw, float pitch)
     return fvec;
 }
 
-float LinearPitchFromForwardVector(const rf::Vector3 &fvec)
+float LinearPitchFromForwardVector(const rf::Vector3& fvec)
 {
     return std::asin(fvec.y);
 }
@@ -807,7 +805,8 @@ RegsPatch LinearPitchPatch{
         float new_pitch_non_lin = NonLinearPitchFromForwardVector(fvec_new);
         // Update non-linear pitch delta
         float new_pitch_delta = new_pitch_non_lin - current_pitch_non_lin;
-        TRACE("non-lin %f lin %f delta %f new %f", current_pitch_non_lin, current_pitch_lin, pitch_delta, new_pitch_delta);
+        TRACE("non-lin %f lin %f delta %f new %f", current_pitch_non_lin, current_pitch_lin, pitch_delta,
+              new_pitch_delta);
         pitch_delta = new_pitch_delta;
     },
 };
@@ -852,9 +851,9 @@ void MiscInit()
 
     // Console background color
     WriteMem<u32>(0x005098D1, CONSOLE_BG_A); // Alpha
-    WriteMem<u8>(0x005098D6, CONSOLE_BG_B); // Blue
-    WriteMem<u8>(0x005098D8, CONSOLE_BG_G); // Green
-    WriteMem<u8>(0x005098DA, CONSOLE_BG_R); // Red
+    WriteMem<u8>(0x005098D6, CONSOLE_BG_B);  // Blue
+    WriteMem<u8>(0x005098D8, CONSOLE_BG_G);  // Green
+    WriteMem<u8>(0x005098DA, CONSOLE_BG_R);  // Red
 
 #ifdef NO_CD_FIX
     // No-CD fix
@@ -960,7 +959,7 @@ void MiscInit()
 
     // Use spawnpoint team property in TeamDM game (PF compatible)
     WriteMem<u8>(0x00470395 + 4, 0); // change cmp argument: CTF -> DM
-    WriteMem<u8>(0x0047039A, 0x74); // invert jump condition: jnz -> jz
+    WriteMem<u8>(0x0047039A, 0x74);  // invert jump condition: jnz -> jz
 
     // Put not responding servers at the bottom of server list
     ServerListCmpFunc_Hook.Install();
@@ -1030,7 +1029,7 @@ void MiscInit()
     g_Win32Console = stristr(GetCommandLineA(), "-win32-console") != nullptr;
     if (g_Win32Console) {
         OsInitWindow_Server_Hook.Install();
-        //AsmWritter(0x0050A770).ret(); // null DcDrawServerConsole
+        // AsmWritter(0x0050A770).ret(); // null DcDrawServerConsole
         DcPrint_Hook.Install();
         DcDrawServerConsole_Hook.Install();
         KeyGetFromQueue_Hook.Install();

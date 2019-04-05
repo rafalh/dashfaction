@@ -45,26 +45,15 @@ struct PackfileLookupTable
 
 static auto& g_VfsIgnoreTblFiles = AddrAsRef<bool>(0x01BDB21C);
 
-typedef Packfile* (*PackfileFindArchive_Type)(const char* filename);
-static const auto PackfileFindArchive = reinterpret_cast<PackfileFindArchive_Type>(0x0052C1D0);
-
-typedef uint32_t (*PackfileCalcFileNameChecksum_Type)(const char* file_name);
-static const auto PackfileCalcFileNameChecksum = reinterpret_cast<PackfileCalcFileNameChecksum_Type>(0x0052BE70);
-
-typedef uint32_t (*PackfileAddToLookupTable_Type)(PackfileEntry* packfile_entry);
-static const auto PackfileAddToLookupTable = reinterpret_cast<PackfileAddToLookupTable_Type>(0x0052BCA0);
-
-typedef uint32_t (*PackfileProcessHeader_Type)(Packfile* packfile, const void* header);
-static const auto PackfileProcessHeader = reinterpret_cast<PackfileProcessHeader_Type>(0x0052BD10);
-
-typedef uint32_t (*PackfileAddEntries_Type)(Packfile* packfile, const void* buf, unsigned c_files_in_block,
-                                            unsigned* pc_added_entries);
-static const auto PackfileAddEntries = reinterpret_cast<PackfileAddEntries_Type>(0x0052BD40);
-
-typedef uint32_t (*PackfileSetupFileOffsets_Type)(Packfile* packfile, unsigned data_offset_in_blocks);
-static const auto PackfileSetupFileOffsets = reinterpret_cast<PackfileSetupFileOffsets_Type>(0x0052BEB0);
-
-static const auto FileGetChecksum = AddrAsRef<unsigned(const char* filename)>(0x00436630);
+static auto& PackfileFindArchive = AddrAsRef<Packfile*(const char* filename)>(0x0052C1D0);
+static auto& PackfileCalcFileNameChecksum = AddrAsRef<uint32_t(const char* file_name)>(0x0052BE70);
+static auto& PackfileAddToLookupTable = AddrAsRef<uint32_t(PackfileEntry* packfile_entry)>(0x0052BCA0);
+static auto& PackfileProcessHeader = AddrAsRef<uint32_t(Packfile* packfile, const void* header)>(0x0052BD10);
+typedef uint32_t PackfileAddEntries_Type(Packfile* packfile, const void* buf, unsigned num_files_in_block,
+                                         unsigned* num_added);
+static auto& PackfileAddEntries = AddrAsRef<PackfileAddEntries_Type>(0x0052BD40);
+static auto& PackfileSetupFileOffsets =
+    AddrAsRef<uint32_t(Packfile* packfile, unsigned data_offset_in_blocks)>(0x0052BEB0);
 } // namespace rf
 
 struct PackfileLookupTableNew
@@ -86,7 +75,7 @@ const std::map<std::string, unsigned> GameFileChecksums = {
 #endif // CHECK_PACKFILE_CHECKSUM
 
 static constexpr auto LOOKUP_TABLE_SIZE = 20713;
-static auto& g_VfsLookupTableNew = *reinterpret_cast<PackfileLookupTableNew (*)[LOOKUP_TABLE_SIZE]>(0x01BB2AC8);
+static auto& g_VfsLookupTableNew = AddrAsRef<PackfileLookupTableNew[LOOKUP_TABLE_SIZE]>(0x01BB2AC8);
 
 static unsigned g_NumFilesInVfs = 0, g_NumNameCollisions = 0;
 static std::vector<rf::Packfile*> g_Packfiles;
@@ -145,7 +134,7 @@ static GameLang DetectInstalledGameLang()
         INFO("Checking file %s: %s", full_path.c_str(), exists ? "found" : "not found");
         if (exists) {
             INFO("Detected game language: %s", lang_codes[i]);
-            return (GameLang)i;
+            return static_cast<GameLang>(i);
         }
     }
     WARN("Cannot detect game language");
@@ -497,14 +486,14 @@ static void PackfileInit_New()
     rf::PackfileLoad("ui.vpp", nullptr);
     LoadDashFactionVpp();
     rf::PackfileLoad("tables.vpp", nullptr);
-    *((int*)0x01BDB218) = 1;          // PackfilesLoaded
-    *((uint32_t*)0x01BDB210) = 10000; // cFilesInVfs
-    *((uint32_t*)0x01BDB214) = 100;   // cPackfiles
+    AddrAsRef<int>(0x01BDB218) = 1;          // PackfilesLoaded
+    AddrAsRef<uint32_t>(0x01BDB210) = 10000; // cFilesInVfs
+    AddrAsRef<uint32_t>(0x01BDB214) = 100;   // cPackfiles
 
     // Note: language changes in binary are done here to make sure RootPath is already initialized
 
     // Switch UI language - can be anything even if this is US edition
-    WriteMem<u8>(0x004B27D2 + 1, (uint8_t)GetInstalledGameLang());
+    WriteMem<u8>(0x004B27D2 + 1, static_cast<uint8_t>(GetInstalledGameLang()));
 
     // Switch localized tables names
     if (GetInstalledGameLang() != LANG_EN) {

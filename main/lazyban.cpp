@@ -13,9 +13,9 @@ struct BanlistEntry
     BanlistEntry* prev;
 };
 
-static auto& banlist_first_entry = *(BanlistEntry**)0x0064EC20;
-static auto& banlist_last_entry = *(BanlistEntry**)0x0064EC24;
-static auto& banlist_null_entry = *(BanlistEntry*)0x0064EC08;
+static auto& banlist_first_entry = AddrAsRef<BanlistEntry*>(0x0064EC20);
+static auto& banlist_last_entry = AddrAsRef<BanlistEntry*>(0x0064EC24);
+static auto& banlist_null_entry = AddrAsRef<BanlistEntry>(0x0064EC08);
 } // namespace rf
 
 void BanCmdHandlerHook()

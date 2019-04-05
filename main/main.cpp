@@ -250,9 +250,9 @@ extern "C" DWORD DLL_EXPORT Init(void* unused)
 
     // Log information from config
     INFO("Resolution: %dx%dx%d", g_game_config.resWidth, g_game_config.resHeight, g_game_config.resBpp);
-    INFO("Window Mode: %d", (int)g_game_config.wndMode);
-    INFO("Max FPS: %d", (int)g_game_config.maxFps);
-    INFO("Allow Overwriting Game Files: %d", (int)g_game_config.allowOverwriteGameFiles);
+    INFO("Window Mode: %d", static_cast<int>(g_game_config.wndMode));
+    INFO("Max FPS: %u", g_game_config.maxFps);
+    INFO("Allow Overwriting Game Files: %d", static_cast<int>(g_game_config.allowOverwriteGameFiles));
 
     /* Process messages in the same thread as DX processing (alternative: D3DCREATE_MULTITHREADED) */
     AsmWritter(0x00524C48, 0x00524C83).nop(); // disable msg loop thread

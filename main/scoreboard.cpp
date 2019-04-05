@@ -11,7 +11,7 @@
 
 namespace rf
 {
-static const auto DrawScoreboard = (void (*)(bool draw))0x00470860;
+static auto& DrawScoreboard = AddrAsRef<void(bool draw)>(0x00470860);
 }
 
 constexpr float ENTER_ANIM_MS = 100.0f;
@@ -24,13 +24,6 @@ static bool g_ScoreboardVisible = false;
 static unsigned g_AnimTicks = 0;
 static bool g_EnterAnim = false;
 static bool g_LeaveAnim = false;
-
-static int ScoreboardSortFunc(const void* ptr1, const void* ptr2)
-{
-    rf::Player* player1 = *((rf::Player**)ptr1);
-    rf::Player* player2 = *((rf::Player**)ptr2);
-    return player2->Stats->score - player1->Stats->score;
-}
 
 void DrawScoreboardInternal_New(bool draw)
 {
@@ -55,7 +48,8 @@ void DrawScoreboardInternal_New(bool draw)
         if (!player || player == rf::g_PlayersList)
             break;
     }
-    qsort(players, c_players, sizeof(rf::Player*), ScoreboardSortFunc);
+    std::sort(players, players + c_players,
+              [](auto player1, auto player2) { return player2->Stats->score - player1->Stats->score; });
 
     // Animation
     float f_anim_progress = 1.0f, f_progress_w = 1.0f, f_progress_h = 1.0f;
@@ -81,10 +75,10 @@ void DrawScoreboardInternal_New(bool draw)
     // Draw background
     constexpr int row_h = 15;
     unsigned cx = std::min((game_type == RF_DM) ? 450u : 700u, rf::GrGetViewportWidth());
-    unsigned cy =
-        ((game_type == RF_DM) ? 130 : 190) + std::max(c_left_col, c_right_col) * row_h; // DM doesnt show team scores
-    cx = (unsigned)(f_progress_w * cx);
-    cy = (unsigned)(f_progress_h * cy);
+    unsigned num_rows = std::max(c_left_col, c_right_col);
+    unsigned cy = ((game_type == RF_DM) ? 130 : 190) + num_rows * row_h; // DM doesnt show team scores
+    cx = static_cast<unsigned>(f_progress_w * cx);
+    cy = static_cast<unsigned>(f_progress_h * cy);
     unsigned x = (rf::GrGetViewportWidth() - cx) / 2;
     unsigned y = (rf::GrGetViewportHeight() - cy) / 2;
     unsigned x_center = x + cx / 2;
@@ -280,7 +274,7 @@ void HudRender_00437BC0()
         rf::DrawScoreboard(true);
 }
 
-void InitScoreboard(void)
+void InitScoreboard()
 {
     DrawScoreboardInternal_Hook.Install();
 

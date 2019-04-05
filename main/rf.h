@@ -10,6 +10,8 @@
 typedef BOOL WINBOOL;
 #include <d3d8.h>
 
+#include <MemUtils.h>
+
 #ifndef __GNUC__
 #define ALIGN(n) __declspec(align(n))
 #else
@@ -137,8 +139,8 @@ namespace rf
 
     /* String */
 
-    static const auto StringAlloc = (char*(*)(unsigned size))0x004FF300;
-    static const auto StringFree = (void(*)(void* ptr))0x004FF3A0;
+    static auto& StringAlloc = AddrAsRef<char*(unsigned size)>(0x004FF300);
+    static auto& StringFree = AddrAsRef<void(char* ptr)>(0x004FF3A0);
 
     class String
     {
@@ -157,13 +159,13 @@ namespace rf
     public:
         String()
         {
-            const auto fun_ptr = (String&(__thiscall *)(String& self))0x004FF3B0;
+            auto& fun_ptr = AddrAsRef<String& __thiscall(String& self)>(0x004FF3B0);
             fun_ptr(*this);
         }
 
         String(const char* c_str)
         {
-            const auto fun_ptr = (String&(__thiscall *)(String& self, const char* c_str))0x004FF3D0;
+            auto& fun_ptr = AddrAsRef<String& __thiscall(String& self, const char* c_str)>(0x004FF3D0);
             fun_ptr(*this, c_str);
         }
 
@@ -175,7 +177,7 @@ namespace rf
 
         ~String()
         {
-            const auto fun_ptr = (void(__thiscall *)(String& self))0x004FF470;
+            auto& fun_ptr = AddrAsRef<void __thiscall(String& self)>(0x004FF470);
             fun_ptr(*this);
         }
 
@@ -187,7 +189,7 @@ namespace rf
         operator Pod() const
         {
             // Make a copy
-            const auto fun_ptr = (Pod&(__thiscall *)(Pod& self, const Pod& str))0x004FF410;
+            auto& fun_ptr = AddrAsRef<Pod& __thiscall(Pod& self, const Pod& str)>(0x004FF410);
             Pod pod_copy;
             fun_ptr(pod_copy, m_pod);
             return pod_copy;
@@ -195,20 +197,20 @@ namespace rf
 
         String& operator=(const String& other)
         {
-            const auto fun_ptr = (String&(__thiscall *)(String& self, const String& str))0x004FFA20;
+            auto& fun_ptr = AddrAsRef<String& __thiscall(String& self, const String& str)>(0x004FFA20);
             fun_ptr(*this, other);
             return *this;
         }
 
         const char *CStr() const
         {
-            const auto fun_ptr = (const char*(__thiscall *)(const String& self))0x004FF480;
+            auto& fun_ptr = AddrAsRef<const char* __thiscall(const String& self)>(0x004FF480);
             return fun_ptr(*this);
         }
 
         int Size() const
         {
-            const auto fun_ptr = (int(__thiscall *)(const String& self))0x004FF490;
+            auto& fun_ptr = AddrAsRef<int __thiscall(const String& self)>(0x004FF490);
             return fun_ptr(*this);
         }
 
@@ -266,7 +268,8 @@ namespace rf
         const char *Descr;
         void(*pfnHandler)();
 
-        inline static const auto Init = (void(__thiscall *)(rf::DcCommand *self, const char *cmd, const char *descr, DcCmdHandler pfn_handler))0x00509A70;
+        inline static auto& Init =
+            AddrAsRef<void __thiscall(rf::DcCommand *self, const char *cmd, const char *descr, DcCmdHandler pfn_handler)>(0x00509A70);
     };
 
     enum DcArgType
@@ -284,23 +287,23 @@ namespace rf
         DC_ARG_ANY = 0xFFFFFFFF,
     };
 
-    static const auto DcPrint = (void(*)(const char *text, const int *color))0x00509EC0;
-    static const auto DcPrintf = (void(*)(const char *format, ...))0x0050B9F0;
-    static const auto DcGetArg = (void(*)(int type, bool preserve_case))0x0050AED0;
-    static const auto DcRunCmd = (int(*)(const char *cmd))0x00509B00;
+    static auto& DcPrint = AddrAsRef<void(const char *text, const int *color)>(0x00509EC0);
+    static auto& DcPrintf = AddrAsRef<void(const char *format, ...)>(0x0050B9F0);
+    static auto& DcGetArg = AddrAsRef<void(int type, bool preserve_case)>(0x0050AED0);
+    static auto& DcRunCmd = AddrAsRef<int(const char *cmd)>(0x00509B00);
 
-    //static const auto g_ppDcCommands = (DcCommand**)0x01775530;
-    static auto &g_DcNumCommands = *(uint32_t*)0x0177567C;
+    //static auto& g_DcCommands = AddrAsRef<DcCommand*[30]>(0x01775530);
+    static auto& g_DcNumCommands = AddrAsRef<uint32_t>(0x0177567C);
 
-    static auto &g_DcRun = *(uint32_t*)0x01775110;
-    static auto &g_DcHelp = *(uint32_t*)0x01775224;
-    static auto &g_DcStatus = *(uint32_t*)0x01774D00;
-    static auto &g_DcArgType = *(uint32_t*)0x01774D04;
-    static auto &g_DcStrArg = *(char(*)[256])0x0175462C;
-    static auto &g_DcIntArg = *(int*)0x01775220;
-    static auto &g_DcFloatArg = *(float*)0x01754628;
-    static auto &g_DcCmdLine = *(char(*)[256])0x01775330;
-    static auto &g_DcCmdLineLen = *(uint32_t*)0x0177568C;
+    static auto& g_DcRun = AddrAsRef<uint32_t>(0x01775110);
+    static auto& g_DcHelp = AddrAsRef<uint32_t>(0x01775224);
+    static auto& g_DcStatus = AddrAsRef<uint32_t>(0x01774D00);
+    static auto& g_DcArgType = AddrAsRef<uint32_t>(0x01774D04);
+    static auto& g_DcStrArg = AddrAsRef<char[256]>(0x0175462C);
+    static auto& g_DcIntArg = AddrAsRef<int>(0x01775220);
+    static auto& g_DcFloatArg = AddrAsRef<float>(0x01754628);
+    static auto& g_DcCmdLine = AddrAsRef<char[256]>(0x01775330);
+    static auto& g_DcCmdLineLen = AddrAsRef<uint32_t>(0x0177568C);
 
     #define DC_REGISTER_CMD(name, help, handler) \
         do { \
@@ -323,13 +326,13 @@ namespace rf
         BMPF_UNK_8_16B = 0x8,
     };
 
-    static const auto BmLoad = (int(*)(const char *filename, int a2, bool a3))0x0050F6A0;
-    static const auto BmCreateUserBmap = (int(*)(BmPixelFormat pixel_format, int width, int height))0x005119C0;
-    static const auto BmConvertFormat = (void(*)(void *dst_bits, BmPixelFormat dst_pixel_fmt, const void *src_bits, BmPixelFormat src_pixel_fmt, int num_pixels))0x0055DD20;
-    static const auto BmGetBitmapSize = (void(*)(int bm_handle, int *width, int *height))0x00510630;
-    static const auto BmGetFilename = (const char*(*)(int bm_handle))0x00511710;
-    static const auto BmLock = (BmPixelFormat(*)(int bm_handle, uint8_t **pp_data, uint8_t **pp_palette))0x00510780;
-    static const auto BmUnlock = (void(*)(int bm_handle))0x00511700;
+    static auto& BmLoad = AddrAsRef<int(const char *filename, int a2, bool a3)>(0x0050F6A0);
+    static auto& BmCreateUserBmap = AddrAsRef<int(BmPixelFormat pixel_format, int width, int height)>(0x005119C0);
+    static auto& BmConvertFormat = AddrAsRef<void(void *dst_bits, BmPixelFormat dst_pixel_fmt, const void *src_bits, BmPixelFormat src_pixel_fmt, int num_pixels)>(0x0055DD20);
+    static auto& BmGetBitmapSize = AddrAsRef<void(int bm_handle, int *width, int *height)>(0x00510630);
+    static auto& BmGetFilename = AddrAsRef<const char*(int bm_handle)>(0x00511710);
+    static auto& BmLock = AddrAsRef<BmPixelFormat(int bm_handle, uint8_t **pp_data, uint8_t **pp_palette)>(0x00510780);
+    static auto& BmUnlock = AddrAsRef<void(int bm_handle)>(0x00511700);
 
     /* Graphics */
 
@@ -405,40 +408,40 @@ namespace rf
         GR_ALIGN_RIGHT = 2,
     };
 
-    static auto &g_GrDevice = *(IDirect3DDevice8**)0x01CFCBE4;
-    static auto &g_GrScreen = *(GrScreen*)0x017C7BC0;
+    static auto& g_GrDevice = AddrAsRef<IDirect3DDevice8*>(0x01CFCBE4);
+    static auto& g_GrScreen = AddrAsRef<GrScreen>(0x017C7BC0);
 
-    static auto &g_GrLineMaterial = *(uint32_t*)0x01775B00;
-    static auto &g_GrRectMaterial = *(uint32_t*)0x17756C0;
-    static auto &g_GrTextMaterial = *(uint32_t*)0x17C7C5C;
-    static auto &g_GrBitmapMaterial = *(uint32_t*)0x017756BC;
-    static auto &g_GrImageMaterial = *(uint32_t*)0x017756DC;
+    static auto& g_GrLineMaterial = AddrAsRef<uint32_t>(0x01775B00);
+    static auto& g_GrRectMaterial = AddrAsRef<uint32_t>(0x17756C0);
+    static auto& g_GrTextMaterial = AddrAsRef<uint32_t>(0x17C7C5C);
+    static auto& g_GrBitmapMaterial = AddrAsRef<uint32_t>(0x017756BC);
+    static auto& g_GrImageMaterial = AddrAsRef<uint32_t>(0x017756DC);
 
-    static const auto GrGetMaxWidth = (int(*)())0x0050C640;
-    static const auto GrGetMaxHeight = (int(*)())0x0050C650;
-    static const auto GrGetViewportWidth = (unsigned(*)())0x0050CDB0;
-    static const auto GrGetViewportHeight = (unsigned(*)())0x0050CDC0;
-    static const auto GrSetColor = (void(*)(unsigned r, unsigned g, unsigned b, unsigned a))0x0050CF80;
-    static const auto GrSetColorPtr = (void(*)(uint32_t *color))0x0050D000;
-    static const auto GrReadBackBuffer = (int(*)(int x, int y, int width, int height, void *buffer))0x0050DFF0;
-    static const auto GrFlushBuffers = (void(*)())0x00559D90;
+    static auto& GrGetMaxWidth = AddrAsRef<int()>(0x0050C640);
+    static auto& GrGetMaxHeight = AddrAsRef<int()>(0x0050C650);
+    static auto& GrGetViewportWidth = AddrAsRef<unsigned()>(0x0050CDB0);
+    static auto& GrGetViewportHeight = AddrAsRef<unsigned()>(0x0050CDC0);
+    static auto& GrSetColor = AddrAsRef<void(unsigned r, unsigned g, unsigned b, unsigned a)>(0x0050CF80);
+    static auto& GrSetColorPtr = AddrAsRef<void(uint32_t *color)>(0x0050D000);
+    static auto& GrReadBackBuffer = AddrAsRef<int(int x, int y, int width, int height, void *buffer)>(0x0050DFF0);
+    static auto& GrFlushBuffers = AddrAsRef<void()>(0x00559D90);
 
-    static const auto GrDrawRect = (void(*)(unsigned x, unsigned y, unsigned cx, unsigned cy, unsigned material))0x0050DBE0;
-    static const auto GrDrawImage = (void(*)(int bm_handle, int x, int y, int material))0x0050D2A0;
-    static const auto GrDrawBitmapStretched = (void(*)(int bm_handle, int dst_x, int dst_y, int dst_w, int dst_h, int src_x, int src_y, int src_w, int src_h, float a10, float a11, int material))0x0050D250;
-    static const auto GrDrawText = (void(*)(unsigned x, unsigned y, const char *text, int font, unsigned material))0x0051FEB0;
-    static const auto GrDrawAlignedText = (void(*)(GrTextAlignment align, unsigned x, unsigned y, const char *text, int font, unsigned material))0x0051FE50;
+    static auto& GrDrawRect = AddrAsRef<void(unsigned x, unsigned y, unsigned cx, unsigned cy, unsigned material)>(0x0050DBE0);
+    static auto& GrDrawImage = AddrAsRef<void(int bm_handle, int x, int y, int material)>(0x0050D2A0);
+    static auto& GrDrawBitmapStretched = AddrAsRef<void(int bm_handle, int dst_x, int dst_y, int dst_w, int dst_h, int src_x, int src_y, int src_w, int src_h, float a10, float a11, int material)>(0x0050D250);
+    static auto& GrDrawText = AddrAsRef<void(unsigned x, unsigned y, const char *text, int font, unsigned material)>(0x0051FEB0);
+    static auto& GrDrawAlignedText = AddrAsRef<void(GrTextAlignment align, unsigned x, unsigned y, const char *text, int font, unsigned material)>(0x0051FE50);
 
-    static const auto GrRenderLine = (char(*)(const Vector3 *world_pos1, const Vector3 *world_pos2, int material))0x00515960;
-    static const auto GrRenderSphere = (char(*)(const Vector3 *pv_pos, float f_radius, int material))0x00515CD0;
+    static auto& GrRenderLine = AddrAsRef<char(const Vector3 *world_pos1, const Vector3 *world_pos2, int material)>(0x00515960);
+    static auto& GrRenderSphere = AddrAsRef<char(const Vector3 *pv_pos, float f_radius, int material)>(0x00515CD0);
 
-    static const auto GrFitText = (String* (*)(String* pstr_dest, String::Pod str, int cx_max))0x00471EC0;
-    static const auto GrLoadFont = (int(*)(const char *file_name, int a2))0x0051F6E0;
-    static const auto GrGetFontHeight = (unsigned(*)(int font_id))0x0051F4D0;
-    static const auto GrGetTextWidth = (void(*)(int *out_width, int *out_height, const char *text, int text_len, int font_id))0x0051F530;
+    static auto& GrFitText = AddrAsRef<String* (String* pstr_dest, String::Pod str, int cx_max)>(0x00471EC0);
+    static auto& GrLoadFont = AddrAsRef<int(const char *file_name, int a2)>(0x0051F6E0);
+    static auto& GrGetFontHeight = AddrAsRef<unsigned(int font_id)>(0x0051F4D0);
+    static auto& GrGetTextWidth = AddrAsRef<void(int *out_width, int *out_height, const char *text, int text_len, int font_id)>(0x0051F530);
 
-    static const auto GrLock = (char(*)(int bm_handle, int section_idx, GrLockData *data, int a4))0x0050E2E0;
-    static const auto GrUnlock = (void(*)(GrLockData *data))0x0050E310;
+    static auto& GrLock = AddrAsRef<char(int bm_handle, int section_idx, GrLockData *data, int a4)>(0x0050E2E0);
+    static auto& GrUnlock = AddrAsRef<void(GrLockData *data)>(0x0050E310);
 
     /* User Interface (UI) */
 
@@ -458,9 +461,9 @@ namespace rf
         int BgTexture;
     };
 
-    static const auto UiMsgBox = (void(*)(const char *title, const char *text, void(*pfn_callback)(void), bool input))0x004560B0;
-    static const auto UiCreateDialog = (void(*)(const char *title, const char *text, unsigned c_buttons, const char **ppsz_btn_titles, void **ppfn_callbacks, unsigned unknown1, unsigned unknown2))0x004562A0;
-    static const auto UiGetElementFromPos = (int(*)(int x, int y, UiPanel **pp_gui_list, signed int c_gui_list))0x00442ED0;
+    static auto& UiMsgBox = AddrAsRef<void(const char *title, const char *text, void(*pfn_callback)(void), bool input)>(0x004560B0);
+    static auto& UiCreateDialog = AddrAsRef<void(const char *title, const char *text, unsigned c_buttons, const char **ppsz_btn_titles, void **ppfn_callbacks, unsigned unknown1, unsigned unknown2)>(0x004562A0);
+    static auto& UiGetElementFromPos = AddrAsRef<int(int x, int y, UiPanel **pp_gui_list, signed int c_gui_list)>(0x00442ED0);
 
     /* Chat */
 
@@ -474,15 +477,12 @@ namespace rf
         default_ = 5,
     };
 
-    typedef void(*ChatPrint_Type)(String::Pod str_text, ChatMsgColor color, String::Pod prefix);
-    static const auto ChatPrint = (ChatPrint_Type)0x004785A0;
+    static auto& ChatPrint = AddrAsRef<void(String::Pod str_text, ChatMsgColor color, String::Pod prefix)>(0x004785A0);
 
     /* File System */
 
-    typedef int(*PackfileLoad_Type)(const char *file_name, const char *dir);
-    static const auto PackfileLoad = (PackfileLoad_Type)0x0052C070;
-
-    static const auto FsAddDirectoryEx = (int(*)(const char *dir, const char *ext_list, bool unknown))0x00514070;
+    static auto& PackfileLoad = AddrAsRef<int(const char *file_name, const char *dir)>(0x0052C070);
+    static auto& FsAddDirectoryEx = AddrAsRef<int(const char *dir, const char *ext_list, bool unknown)>(0x00514070);
 
     /* Network */
 
@@ -551,16 +551,13 @@ namespace rf
     };
     static_assert(sizeof(CPlayerNetData) == 0x9C8, "invalid size");
 
-    typedef void(*NwSendNotReliablePacket_Type)(const void *addr, const void *packet, unsigned cb_packet);
-    static const auto NwSendNotReliablePacket = (NwSendNotReliablePacket_Type)0x0052A080;
-
-    static const auto NwSendReliablePacket = (void(*)(Player *player, const uint8_t *data, unsigned int num_bytes, int a4))0x00479480;
-
-    typedef void(*NwAddrToStr_Type)(char *dest, int cb_dest, NwAddr& addr);
-    static const auto NwAddrToStr = (NwAddrToStr_Type)0x00529FE0;
-
-    static const auto NwGetPlayerFromAddr = (Player *(*)(const NwAddr& addr))0x00484850;
-    static const auto NwCompareAddr = (int(*)(const NwAddr &addr1, const NwAddr &addr2, bool check_port))0x0052A930;
+    static auto& NwSendNotReliablePacket =
+        AddrAsRef<void(const void *addr, const void *packet, unsigned cb_packet)>(0x0052A080);
+    static auto& NwSendReliablePacket =
+        AddrAsRef<void(Player *player, const uint8_t *data, unsigned int num_bytes, int a4)>(0x00479480);
+    static auto& NwAddrToStr = AddrAsRef<void(char *dest, int cb_dest, NwAddr& addr)>(0x00529FE0);
+    static auto& NwGetPlayerFromAddr = AddrAsRef<Player*(const NwAddr& addr)>(0x00484850);
+    static auto& NwCompareAddr = AddrAsRef<int(const NwAddr &addr1, const NwAddr &addr2, bool check_port)>(0x0052A930);
 
     /* Camera */
 
@@ -583,8 +580,8 @@ namespace rf
         CameraType Type;
     };
 
-    static const auto CameraSetFirstPerson = (void(*)(Camera *camera))0x0040DDF0;
-    static const auto CameraSetFreelook = (void(*)(Camera *camera))0x0040DCF0;
+    static auto& CameraSetFirstPerson = AddrAsRef<void(Camera *camera)>(0x0040DDF0);
+    static auto& CameraSetFreelook = AddrAsRef<void(Camera *camera)>(0x0040DCF0);
 
     /* Config */
 
@@ -828,18 +825,15 @@ namespace rf
     };
     static_assert(sizeof(Player) == 0x1204, "invalid size");
 
-    static auto &g_PlayersList = *(Player**)0x007C75CC;
-    static auto &g_LocalPlayer = *(Player**)0x007C75D4;
+    static auto& g_PlayersList = AddrAsRef<Player*>(0x007C75CC);
+    static auto& g_LocalPlayer = AddrAsRef<Player*>(0x007C75D4);
 
-    static const auto KillLocalPlayer = (void(*)())0x004757A0;
-    static const auto IsEntityCtrlActive = (char(*)(ControlConfig *ctrl_conf, GameCtrl ctrl_id, bool *was_pressed))0x0043D4F0;
-    static const auto GetPlayerFromEntityHandle = (Player*(*)(int32_t entity_handle))0x004A3740;
-
-    typedef bool(*IsPlayerEntityInvalid_Type)(Player *player);
-    static const auto IsPlayerEntityInvalid = (IsPlayerEntityInvalid_Type)0x004A4920;
-
-    typedef bool(*IsPlayerDying_Type)(Player *player);
-    static const auto IsPlayerDying = (IsPlayerDying_Type)0x004A4940;
+    static auto& KillLocalPlayer = AddrAsRef<void()>(0x004757A0);
+    static auto& IsEntityCtrlActive =
+        AddrAsRef<char(ControlConfig *ctrl_conf, GameCtrl ctrl_id, bool *was_pressed)>(0x0043D4F0);
+    static auto& GetPlayerFromEntityHandle = AddrAsRef<Player*(int32_t entity_handle)>(0x004A3740);
+    static auto& IsPlayerEntityInvalid = AddrAsRef<bool(Player *player)>(0x004A4920);
+    static auto& IsPlayerDying = AddrAsRef<bool(Player *player)>(0x004A4940);
 
     /* Object */
 
@@ -1023,9 +1017,9 @@ namespace rf
     };
     static_assert(sizeof(TriggerObj) == 0x30C, "invalid size");
 
-    static auto &g_ItemObjList = *(ItemObj*)0x00642DD8;
+    static auto& g_ItemObjList = AddrAsRef<ItemObj>(0x00642DD8);
 
-    static const auto ObjGetFromUid = (Object *(*)(int uid))0x0048A4A0;
+    static auto& ObjGetFromUid = AddrAsRef<Object *(int uid)>(0x0048A4A0);
 
     /* Entity */
 
@@ -1328,8 +1322,7 @@ namespace rf
     };
     static_assert(sizeof(EntityObj) == 0x1494, "invalid size");
 
-    typedef EntityObj *(*EntityGetFromHandle_Type)(uint32_t entity_handle);
-    static const auto EntityGetFromHandle = (EntityGetFromHandle_Type)0x00426FC0;
+    static auto& EntityGetFromHandle = AddrAsRef<EntityObj*(uint32_t handle)>(0x00426FC0);
 
     /* Weapons */
 
@@ -1521,59 +1514,48 @@ namespace rf
     };
     static_assert(sizeof(WeaponClass) == 0x550, "invalid size");
 
-    static auto &g_WeaponClasses = *(WeaponClass(*)[64])0x0085CD08;
-    static auto &g_RiotStickClsId = *(int32_t*)0x00872468;
-    static auto &g_RemoteChargeClsId = *(int32_t*)0x0087210C;
+    static auto& g_WeaponClasses = AddrAsRef<WeaponClass[64]>(0x0085CD08);
+    static auto& g_RiotStickClsId = AddrAsRef<int32_t>(0x00872468);
+    static auto& g_RemoteChargeClsId = AddrAsRef<int32_t>(0x0087210C);
 
     /* Window */
 
-    typedef void(*PFN_MESSAGE_HANDLER)(UINT, WPARAM, LPARAM);
-    typedef unsigned(*PFN_ADD_MSG_HANDLER)(PFN_MESSAGE_HANDLER);
-    static const auto AddMsgHandler = (PFN_ADD_MSG_HANDLER)0x00524AE0;
+    typedef void(*MsgHandlerPtr)(UINT, WPARAM, LPARAM);
+    static auto &AddMsgHandler = AddrAsRef<unsigned(MsgHandlerPtr)>(0x00524AE0);
 
-    static auto &g_MsgHandlers = *(PFN_MESSAGE_HANDLER(*)[32])0x01B0D5A0;
-    static auto &g_cMsgHandlers = *(uint32_t*)0x01B0D760;
+    static auto& g_MsgHandlers = AddrAsRef<MsgHandlerPtr[32]>(0x01B0D5A0);
+    static auto& g_cMsgHandlers = AddrAsRef<uint32_t>(0x01B0D760);
 
-    static auto &g_hWnd = *(HWND*)0x01B0D748;
-    static auto &g_IsActive = *(uint8_t*)0x01B0D750;
-    static auto &g_Close = *(uint8_t*)0x01B0D758;
-    static auto &g_MouseInitialized = *(uint8_t*)0x01885461;
-    static auto &g_cRedrawServer = *(uint32_t*)0x01775698;
+    static auto& g_hWnd = AddrAsRef<HWND>(0x01B0D748);
+    static auto& g_IsActive = AddrAsRef<uint8_t>(0x01B0D750);
+    static auto& g_Close = AddrAsRef<uint8_t>(0x01B0D758);
+    static auto& g_MouseInitialized = AddrAsRef<uint8_t>(0x01885461);
+    static auto& g_cRedrawServer = AddrAsRef<uint32_t>(0x01775698);
 
     /* Network Game */
 
-    typedef unsigned(*GetGameType_Type)();
-    static const auto GetGameType = (GetGameType_Type)0x00470770;
+    static auto& GetGameType = AddrAsRef<unsigned()>(0x00470770);
+    static auto& GetPlayersCount = AddrAsRef<unsigned()>(0x00484830);
+    static auto& CtfGetRedScore = AddrAsRef<uint8_t()>(0x00475020);
+    static auto& CtfGetBlueScore = AddrAsRef<uint8_t()>(0x00475030);
+    static auto& TdmGetRedScore = AddrAsRef<uint8_t()>(0x004828F0);
+    static auto& TdmGetBlueScore = AddrAsRef<uint8_t()>(0x00482900);
+    static auto& CtfGetRedFlagPlayer = AddrAsRef<Player*()>(0x00474E60);
+    static auto& CtfGetBlueFlagPlayer = AddrAsRef<Player*()>(0x00474E70);
+    static auto& KickPlayer = AddrAsRef<void(Player *player)>(0x0047BF00);
+    static auto& BanIp = AddrAsRef<void(const NwAddr& addr)>(0x0046D0F0);
+    static auto& MultiSetNextWeapon = AddrAsRef<void(int weapon_cls_id)>(0x0047FCA0);
 
-    typedef unsigned(*GetPlayersCount_Type)();
-    static const auto GetPlayersCount = (GetPlayersCount_Type)0x00484830;
-
-    typedef uint8_t(*GetTeamScore_Type)();
-    static const auto CtfGetRedScore = (GetTeamScore_Type)0x00475020;
-    static const auto CtfGetBlueScore = (GetTeamScore_Type)0x00475030;
-    static const auto TdmGetRedScore = (GetTeamScore_Type)0x004828F0;
-    static const auto TdmGetBlueScore = (GetTeamScore_Type)0x00482900;
-    static const auto CtfGetRedFlagPlayer = (Player*(*)())0x00474E60;
-    static const auto CtfGetBlueFlagPlayer = (Player*(*)())0x00474E70;
-
-    typedef void(*KickPlayer_Type)(Player *player);
-    static const auto KickPlayer = (KickPlayer_Type)0x0047BF00;
-
-    typedef void(*BanIp_Type)(const NwAddr& addr);
-    static const auto BanIp = (BanIp_Type)0x0046D0F0;
-
-    static const auto MultiSetNextWeapon = (void(*)(int weapon_cls_id))0x0047FCA0;
-
-    static auto &g_ServAddr = *(NwAddr*)0x0064EC5C;
-    static auto &g_strServName = *(String*)0x0064EC28;
-    static auto &g_IsNetworkGame = *(uint8_t*)0x0064ECB9;
-    static auto &g_IsLocalNetworkGame = *(uint8_t*)0x0064ECBA;
-    static auto &g_IsDedicatedServer = *(uint32_t*)0x01B0D75C;
-    static auto &g_GameOptions = *(uint32_t*)0x0064EC40;
+    static auto& g_ServAddr = AddrAsRef<NwAddr>(0x0064EC5C);
+    static auto& g_strServName = AddrAsRef<String>(0x0064EC28);
+    static auto& g_IsNetworkGame = AddrAsRef<uint8_t>(0x0064ECB9);
+    static auto& g_IsLocalNetworkGame = AddrAsRef<uint8_t>(0x0064ECBA);
+    static auto& g_IsDedicatedServer = AddrAsRef<uint32_t>(0x01B0D75C);
+    static auto& g_GameOptions = AddrAsRef<uint32_t>(0x0064EC40);
 
     /* Input */
-    static const auto MouseGetPos = (int(*)(int &x, int &y, int &z))0x0051E450;
-    static const auto MouseWasButtonPressed = (int(*)(int btn_idx))0x0051E5D0;
+    static auto& MouseGetPos = AddrAsRef<int(int &x, int &y, int &z)>(0x0051E450);
+    static auto& MouseWasButtonPressed = AddrAsRef<int(int btn_idx)>(0x0051E5D0);
 
     /* Game Sequence */
 
@@ -1615,8 +1597,8 @@ namespace rf
         GS_MP_LIMBO = 0x22,
     };
 
-    static const auto GameSeqSetState = (int(*)(int state, bool force))0x00434190;
-    static const auto GameSeqGetState = (GameSeqState(*)())0x00434200;
+    static auto& GameSeqSetState = AddrAsRef<int(int state, bool force)>(0x00434190);
+    static auto& GameSeqGetState = AddrAsRef<GameSeqState()>(0x00434200);
 
     /* Other */
 
@@ -1630,34 +1612,34 @@ namespace rf
         int unk2;
     };
 
-    static auto &g_RootPath = *(char(*)[256])0x018060E8;
-    static auto &g_fFps = *(float*)0x005A4018;
-    static auto &g_fFramerate = *(float*)0x005A4014;
-    static auto &g_fMinFramerate = *(float*)0x005A4024;
-    static auto &g_strLevelName = *(String*)0x00645FDC;
-    static auto &g_strLevelFilename = *(String*)0x00645FE4;
-    static auto &g_strLevelAuthor = *(String*)0x00645FEC;
-    static auto &g_strLevelDate = *(String*)0x00645FF4;
-    static auto &g_BigFontId = *(int*)0x006C74C0;
-    static auto &g_LargeFontId = *(int*)0x0063C05C;
-    static auto &g_MediumFontId = *(int*)0x0063C060;
-    static auto &g_SmallFontId = *(int*)0x0063C068;
-    static auto &g_DirectInputDisabled = *(bool*)0x005A4F88;
-    static auto &g_strDefaultPlayerWeapon = *(String*)0x007C7600;
-    static auto &g_active_cutscene = *reinterpret_cast<void**>(0x00645320);
+    static auto& g_RootPath = AddrAsRef<char[256]>(0x018060E8);
+    static auto& g_fFps = AddrAsRef<float>(0x005A4018);
+    static auto& g_fFramerate = AddrAsRef<float>(0x005A4014);
+    static auto& g_fMinFramerate = AddrAsRef<float>(0x005A4024);
+    static auto& g_strLevelName = AddrAsRef<String>(0x00645FDC);
+    static auto& g_strLevelFilename = AddrAsRef<String>(0x00645FE4);
+    static auto& g_strLevelAuthor = AddrAsRef<String>(0x00645FEC);
+    static auto& g_strLevelDate = AddrAsRef<String>(0x00645FF4);
+    static auto& g_BigFontId = AddrAsRef<int>(0x006C74C0);
+    static auto& g_LargeFontId = AddrAsRef<int>(0x0063C05C);
+    static auto& g_MediumFontId = AddrAsRef<int>(0x0063C060);
+    static auto& g_SmallFontId = AddrAsRef<int>(0x0063C068);
+    static auto& g_DirectInputDisabled = AddrAsRef<bool>(0x005A4F88);
+    static auto& g_strDefaultPlayerWeapon = AddrAsRef<String>(0x007C7600);
+    static auto& g_active_cutscene = AddrAsRef<void*>(0x00645320);
 
-    static const auto RfBeep = (void(*)(unsigned u1, unsigned u2, unsigned u3, float f_volume))0x00505560;
-    static const auto GetFileExt = (char *(*)(const char *path))0x005143F0;
-    static const auto SplitScreenStart = (void(*)())0x00480D30;
-    static const auto SetNextLevelFilename = (void(*)(String::Pod str_filename, String::Pod str_second))0x0045E2E0;
-    static const auto DemoLoadLevel = (void(*)(const char *level_file_name))0x004CC270;
-    static const auto SetCursorVisible = (void(*)(bool visible))0x0051E680;
-    static const auto CutsceneIsActive = reinterpret_cast<bool(*)()>(0x0045BE80);
-    static const auto Timer__GetTimeLeftMs = reinterpret_cast<int (__thiscall*)(void* timer)>(0x004FA420);
+    static auto& RfBeep = AddrAsRef<void(unsigned u1, unsigned u2, unsigned u3, float f_volume)>(0x00505560);
+    static auto& GetFileExt = AddrAsRef<char *(const char *path)>(0x005143F0);
+    static auto& SplitScreenStart = AddrAsRef<void()>(0x00480D30);
+    static auto& SetNextLevelFilename = AddrAsRef<void(String::Pod str_filename, String::Pod str_second)>(0x0045E2E0);
+    static auto& DemoLoadLevel = AddrAsRef<void(const char *level_file_name)>(0x004CC270);
+    static auto& SetCursorVisible = AddrAsRef<void(bool visible)>(0x0051E680);
+    static auto& CutsceneIsActive = AddrAsRef<bool()>(0x0045BE80);
+    static auto& Timer__GetTimeLeftMs = AddrAsRef<int __thiscall(void* timer)>(0x004FA420);
 
     /* Strings Table */
     namespace strings {
-        static const auto &array = *(char*(*)[1000])0x007CBBF0;
+        static const auto &array = AddrAsRef<char*[1000]>(0x007CBBF0);
         static const auto &player = array[675];
         static const auto &frags = array[676];
         static const auto &ping = array[677];
@@ -1679,11 +1661,8 @@ namespace rf
 
     /* RF stdlib functions are not compatible with GCC */
 
-    typedef void(*Free_Type)(void *mem);
-    static const auto Free = (Free_Type)0x00573C71;
-
-    typedef void *(*Malloc_Type)(uint32_t cb_size);
-    static const auto Malloc = (Malloc_Type)0x00573B37;
+    static auto& Free = AddrAsRef<void(void *mem)>(0x00573C71);
+    static auto& Malloc = AddrAsRef<void*(uint32_t cb_size)>(0x00573B37);
 }
 
 #pragma pack(pop)

@@ -19,8 +19,8 @@ static const auto MpIsConnectingToServer = AddrAsRef<uint8_t(const rf::NwAddr& a
 static auto& RflStaticGeometry = AddrAsRef<void*>(0x006460E8);
 static auto& SimultaneousPing = AddrAsRef<uint32_t>(0x00599CD8);
 
-typedef void (*NwProcessGamePackets_Type)(const char* data, int num_bytes, const NwAddr& addr, Player* player);
-static const auto NwProcessGamePackets = (NwProcessGamePackets_Type)0x004790D0;
+typedef void NwProcessGamePackets_Type(const char* data, int num_bytes, const NwAddr& addr, Player* player);
+static auto& NwProcessGamePackets = AddrAsRef<NwProcessGamePackets_Type>(0x004790D0);
 } // namespace rf
 
 typedef void NwPacketHandler_Type(char* data, const rf::NwAddr& addr);
@@ -339,7 +339,7 @@ FunHook2<NwPacketHandler_Type> ProcessTeamChangePacket_Hook{
                 return; // shouldnt happen (protected in rf::NwProcessGamePackets)
 
             data[0] = src_player->NwData->PlayerId;   // fix player ID
-            data[1] = std::clamp((int)data[1], 0, 1); // team validation (fixes "green team")
+            data[1] = std::clamp(data[1], '\0', '\1'); // team validation (fixes "green team")
         }
         ProcessTeamChangePacket_Hook.CallTarget(data, addr);
     },
