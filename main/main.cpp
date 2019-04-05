@@ -39,7 +39,7 @@ static void ProcessWaitingMessages()
     MSG msg;
     constexpr int limit = 4;
     for (int i = 0; i < limit; ++i) {
-        if (!PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+        if (!PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
             break;
         TranslateMessage(&msg);
         DispatchMessage(&msg);
@@ -193,7 +193,7 @@ class RfConsoleLogAppender : public logging::BaseAppender
 
 void InitLogging()
 {
-    CreateDirectoryA("logs", NULL);
+    CreateDirectoryA("logs", nullptr);
     logging::LoggerConfig::root().addAppender(
         std::move(std::make_unique<logging::FileAppender>("logs/DashFaction.log", false)));
     logging::LoggerConfig::root().addAppender(std::move(std::make_unique<logging::ConsoleAppender>()));

@@ -245,7 +245,7 @@ void ResetConsoleCursorColumn(bool clear)
     NewPos.X = 0;
     SetConsoleCursorPosition(Output_handle, NewPos);
     if (clear) {
-        for (int i = 0; i < ScrBufInfo.dwCursorPosition.X; ++i) WriteConsoleA(Output_handle, " ", 1, NULL, NULL);
+        for (int i = 0; i < ScrBufInfo.dwCursorPosition.X; ++i) WriteConsoleA(Output_handle, " ", 1, nullptr, nullptr);
         SetConsoleCursorPosition(Output_handle, NewPos);
     }
 }
@@ -255,9 +255,9 @@ void PrintCmdInputLine()
     HANDLE Output_handle = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_SCREEN_BUFFER_INFO ScrBufInfo;
     GetConsoleScreenBufferInfo(Output_handle, &ScrBufInfo);
-    WriteConsoleA(Output_handle, "] ", 2, NULL, NULL);
+    WriteConsoleA(Output_handle, "] ", 2, nullptr, nullptr);
     unsigned Offset = std::max(0, static_cast<int>(g_DcCmdLineLen) - ScrBufInfo.dwSize.X + 3);
-    WriteConsoleA(Output_handle, g_DcCmdLine + Offset, g_DcCmdLineLen - Offset, NULL, NULL);
+    WriteConsoleA(Output_handle, g_DcCmdLine + Offset, g_DcCmdLineLen - Offset, nullptr, nullptr);
 }
 
 BOOL WINAPI ConsoleCtrlHandler(DWORD fdwCtrlType)
@@ -334,12 +334,12 @@ FunHook<void(const char*, const int*)> DcPrint_Hook{
             }
 
             DWORD NumChars = EndPtr - Ptr;
-            WriteFile(Output_handle, Ptr, NumChars, NULL, NULL);
+            WriteFile(Output_handle, Ptr, NumChars, nullptr, nullptr);
             Ptr = EndPtr;
         }
 
         if (Ptr > Text && Ptr[-1] != '\n')
-            WriteFile(Output_handle, "\n", 1, NULL, NULL);
+            WriteFile(Output_handle, "\n", 1, nullptr, nullptr);
 
         if (CurrentAttr != GrayAttr)
             SetConsoleTextAttribute(Output_handle, GrayAttr);
@@ -352,7 +352,7 @@ CallHook<void()> DcPutChar_NewLine_Hook{
     0x0050A081,
     [] {
         HANDLE Output_handle = GetStdHandle(STD_OUTPUT_HANDLE);
-        WriteConsoleA(Output_handle, "\r\n", 2, NULL, NULL);
+        WriteConsoleA(Output_handle, "\r\n", 2, nullptr, nullptr);
     },
 };
 
@@ -419,7 +419,7 @@ FunHook<int(void*, void*)> GeomCachePrepareRoom_Hook{
                 static int once = 0;
                 if (!(once++))
                     WARN("Not rendering room with %u vertices!", *room_vert_num);
-                *pp_room_geom = NULL;
+                *pp_room_geom = nullptr;
                 return -1;
             }
         }

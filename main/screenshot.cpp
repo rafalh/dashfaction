@@ -68,7 +68,7 @@ CallHook<rf::BmPixelFormat(int, int, int, int, byte*)> GrD3DReadBackBuffer_Hook{
         if (SUCCEEDED(hr)) {
             // Note: locking fragment of Render Target fails
             D3DLOCKED_RECT locked_rect;
-            hr = tmp_surface->LockRect(&locked_rect, NULL, D3DLOCK_READONLY | D3DLOCK_NO_DIRTY_UPDATE);
+            hr = tmp_surface->LockRect(&locked_rect, nullptr, D3DLOCK_READONLY | D3DLOCK_NO_DIRTY_UPDATE);
             if (FAILED(hr))
                 ERR("IDirect3DSurface8::LockRect failed 0x%x (%s)", hr, getDxErrorStr(hr));
             else {

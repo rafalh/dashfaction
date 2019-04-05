@@ -8,7 +8,7 @@ static LPTOP_LEVEL_EXCEPTION_FILTER g_OldExceptionFilter;
 
 static LONG WINAPI CrashHandlerExceptionFilter(PEXCEPTION_POINTERS exception_ptrs)
 {
-    static HANDLE process_handle = NULL, event_handle = NULL;
+    static HANDLE process_handle = nullptr, event_handle = nullptr;
     static STARTUPINFOW startup_info;
     static PROCESS_INFORMATION proc_info;
     static WCHAR cmd_line[256];
@@ -23,8 +23,8 @@ static LONG WINAPI CrashHandlerExceptionFilter(PEXCEPTION_POINTERS exception_ptr
                              DUPLICATE_SAME_ACCESS))
             break;
 
-        static SECURITY_ATTRIBUTES sec_attribs = {sizeof(sec_attribs), NULL, TRUE};
-        event_handle = CreateEventW(&sec_attribs, FALSE, FALSE, NULL);
+        static SECURITY_ATTRIBUTES sec_attribs = {sizeof(sec_attribs), nullptr, TRUE};
+        event_handle = CreateEventW(&sec_attribs, FALSE, FALSE, nullptr);
         if (!event_handle)
             break;
 
@@ -32,7 +32,7 @@ static LONG WINAPI CrashHandlerExceptionFilter(PEXCEPTION_POINTERS exception_ptr
         startup_info.cb = sizeof(startup_info);
         swprintf(cmd_line, ARRAYSIZE(cmd_line), L"%ls\\CrashHandler.exe 0x%p 0x%p %lu 0x%p", g_ModulePath,
                  exception_ptrs, process_handle, GetCurrentThreadId(), event_handle);
-        if (!CreateProcessW(NULL, cmd_line, NULL, NULL, TRUE, 0, NULL, NULL, &startup_info, &proc_info)) {
+        if (!CreateProcessW(nullptr, cmd_line, nullptr, nullptr, TRUE, 0, nullptr, nullptr, &startup_info, &proc_info)) {
             ERR("Failed to start CrashHandler process - CreateProcessW failed with error %ls", cmd_line);
             break;
         }

@@ -30,7 +30,7 @@ static const auto PlayerFpgunHasState = (bool (*)(Player* player, int state))0x0
 } // namespace rf
 
 static rf::Player* g_SpectateModeTarget;
-static rf::Camera* g_OldTargetCamera = NULL;
+static rf::Camera* g_OldTargetCamera = nullptr;
 static bool g_SpectateModeEnabled = false;
 static int g_LargeFont = -1, g_MediumFont = -1, g_SmallFont = -1;
 
@@ -68,13 +68,13 @@ void SpectateModeSetTargetPlayer(rf::Player* player)
     // fix old target
     if (g_SpectateModeTarget && g_SpectateModeTarget != rf::g_LocalPlayer) {
         g_SpectateModeTarget->Camera = g_OldTargetCamera;
-        g_OldTargetCamera = NULL;
+        g_OldTargetCamera = nullptr;
 
 #if SPECTATE_MODE_SHOW_WEAPON
         g_SpectateModeTarget->Flags &= ~(1 << 4);
         rf::EntityObj* entity = rf::EntityGetFromHandle(g_SpectateModeTarget->Entity_handle);
         if (entity)
-            entity->LocalPlayer = NULL;
+            entity->LocalPlayer = nullptr;
 #endif // SPECTATE_MODE_SHOW_WEAPON
     }
 

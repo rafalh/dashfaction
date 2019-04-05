@@ -194,17 +194,15 @@ static const WIN_MSG_NAME_MAPPING allMessages[] =
     DEFINE_MESSAGE(WM_DEVICECHANGE),
     DEFINE_MESSAGE(WM_PRINT),
     DEFINE_MESSAGE(WM_PRINTCLIENT),
-    { 0, NULL, }    // end of message list
+    { 0, nullptr, }    // end of message list
 };
 
 const char *GetWndMsgName(UINT msg)
 {
     const WIN_MSG_NAME_MAPPING* map_msg = allMessages;
-    for (/*null*/; map_msg->lpszMsg != NULL; map_msg++)
-    {
-        if (map_msg->nMsg == msg)
-        {
-            return (char *)map_msg->lpszMsg;
+    for (/*null*/; map_msg->lpszMsg; map_msg++) {
+        if (map_msg->nMsg == msg) {
+            return map_msg->lpszMsg;
         }
     }
     return "";

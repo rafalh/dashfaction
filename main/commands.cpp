@@ -248,7 +248,7 @@ DcCommand2 SpectateCmd{
                 SpectateModeSetTargetPlayer(player);
         }
         else
-            rf::DcPrint("Works only in multiplayer game!", NULL);
+            rf::DcPrint("Works only in multiplayer game!", nullptr);
     },
     "Starts spectating mode", "spectate <player_name/false>"
     // rf::DcPrintf("     spectate <%s>", rf::strings::player_name);

@@ -25,7 +25,7 @@ const char* stristr(const char* haystack, const char* needle)
         if (!needle[j])
             return (char*)(haystack + i);
     }
-    return NULL;
+    return nullptr;
 }
 
 #define DEFINE_HRESULT_ERROR(hr) {hr, #hr},
@@ -120,7 +120,7 @@ bool IsUserAdmin()
     }
 
     BOOL is_member;
-    if (!CheckTokenMembership(NULL, administrators_group, &is_member)) {
+    if (!CheckTokenMembership(nullptr, administrators_group, &is_member)) {
         ERR("CheckTokenMembership failed");
         is_member = false;
     }
