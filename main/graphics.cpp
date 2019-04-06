@@ -6,6 +6,7 @@
 #include "stdafx.h"
 #include "utils.h"
 #include <CallHook.h>
+#include <FunHook.h>
 #include <RegsPatch.h>
 #include <ShortTypes.h>
 
@@ -216,6 +217,87 @@ DcCommand2 windowed_cmd{
     },
 };
 
+// frame profiling
+#ifdef DEBUG
+
+static bool g_profile_frame_req = false;
+static bool g_profile_frame = false;
+static int g_num_draw_calls = 0;
+
+RegsPatch GrD3DSetMaterialFlags_profile_patch{
+    0x0054F19C,
+    [](auto& regs) {
+        if (g_profile_frame) {
+            unsigned state_flags = AddrAsRef<unsigned>(regs.esp + 0x10 + 0x4);
+            const char *desc = "";
+            if (state_flags == rf::g_GrTextMaterial)
+                desc = " (text)";
+            else if (state_flags == rf::g_GrRectMaterial)
+                desc = " (rect)";
+            else if (state_flags == rf::g_GrLineMaterial)
+                desc = " (line)";
+            else if (state_flags == rf::g_GrBitmapMaterial)
+                desc = " (bitmap)";
+            INFO("GrD3DSetMaterialFlags 0x%X%s", state_flags, desc);
+        }
+    },
+};
+
+RegsPatch GrD3DSetTexture_profile_patch{
+    0x0055CB6A,
+    [](auto& regs) {
+        if (g_profile_frame) {
+            unsigned bm_handle = regs.edi;
+            INFO("GrD3DSetTexture 0x%X %s", bm_handle, rf::BmGetFilename(bm_handle));
+        }
+    },
+};
+
+RegsPatch D3D_DrawIndexedPrimitive_profile_patch{
+    0,
+    [](auto& regs) {
+        (void)regs; // unused parameter
+        if (g_profile_frame) {
+            INFO("DrawIndexedPrimitive");
+            ++g_num_draw_calls;
+        }
+    },
+};
+
+FunHook<void()> GrSwapBuffers_profile_patch{
+    0x0050CE20,
+    []() {
+        GrSwapBuffers_profile_patch.CallTarget();
+
+        if (g_profile_frame) {
+            INFO("Total draw calls: %d", g_num_draw_calls);
+        }
+        g_profile_frame = g_profile_frame_req;
+        g_profile_frame_req = false;
+        g_num_draw_calls = 0;
+    },
+};
+
+DcCommand2 profile_frame_cmd{
+    "profile_frame",
+    []() {
+        g_profile_frame_req = true;
+
+        static bool patches_installed = false;
+        if (!patches_installed) {
+            GrD3DSetMaterialFlags_profile_patch.Install();
+            GrD3DSetTexture_profile_patch.Install();
+            GrSwapBuffers_profile_patch.Install();
+            auto d3d_dev_vtbl = *reinterpret_cast<uintptr_t**>(rf::g_GrDevice);
+            D3D_DrawIndexedPrimitive_profile_patch.SetAddr(d3d_dev_vtbl[0x47]); // DrawIndexedPrimitive
+            D3D_DrawIndexedPrimitive_profile_patch.Install();
+            patches_installed = true;
+        }
+    },
+};
+
+#endif // DEBUG
+
 void GraphicsInit()
 {
     // Fix for "At least 8 MB of available video memory"
@@ -331,6 +413,11 @@ void GraphicsInit()
     switch_d3d_mode_patch.Install();
     fullscreen_cmd.Register();
     windowed_cmd.Register();
+
+    // Do not flush drawing buffers during GrSetColor call
+    WriteMem<u8>(0x0050CFEB, ASM_SHORT_JMP_REL);
+
+    profile_frame_cmd.Register();
 }
 
 void GraphicsAfterGameInit()

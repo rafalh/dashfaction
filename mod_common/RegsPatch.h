@@ -72,6 +72,11 @@ public:
             .pop(asm_regs::esp)                             // pop esp manually
             .ret();                                         // return to address read from EIP field in X86Regs
     }
+
+    void SetAddr(uintptr_t addr)
+    {
+        m_addr = addr;
+    }
 };
 
 class BaseRegsPatch2

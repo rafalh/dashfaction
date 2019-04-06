@@ -25,6 +25,11 @@ public:
         if (!m_subhook.GetTrampoline())
             ERR("trampoline is null for 0x%p", m_target_fun_ptr);
     }
+
+    void SetAddr(uintptr_t target_fun_addr)
+    {
+        m_target_fun_ptr = reinterpret_cast<void*>(target_fun_addr);
+    }
 };
 
 template<class T>
