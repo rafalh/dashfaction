@@ -248,7 +248,8 @@ RegsPatch GrD3DSetTexture_profile_patch{
     [](auto& regs) {
         if (g_profile_frame) {
             unsigned bm_handle = regs.edi;
-            INFO("GrD3DSetTexture 0x%X %s", bm_handle, rf::BmGetFilename(bm_handle));
+            int stage_id = (regs.ebx - 0x01E65308) / 0x18;
+            INFO("GrD3DSetTexture %d 0x%X %s", stage_id, bm_handle, rf::BmGetFilename(bm_handle));
         }
     },
 };
@@ -256,9 +257,14 @@ RegsPatch GrD3DSetTexture_profile_patch{
 RegsPatch D3D_DrawIndexedPrimitive_profile_patch{
     0,
     [](auto& regs) {
-        (void)regs; // unused parameter
         if (g_profile_frame) {
-            INFO("DrawIndexedPrimitive");
+            // Note: this is passed by stack because d3d uses stdcall
+            auto prim_type = AddrAsRef<int>(regs.esp + 8);
+            auto min_index = AddrAsRef<unsigned>(regs.esp + 12);
+            auto num_vertices = AddrAsRef<unsigned>(regs.esp + 16);
+            auto start_index = AddrAsRef<unsigned>(regs.esp + 20);
+            auto prim_count = AddrAsRef<unsigned>(regs.esp + 24);
+            INFO("DrawIndexedPrimitive %d %d %u %u %u", prim_type, min_index, num_vertices, start_index, prim_count);
             ++g_num_draw_calls;
         }
     },
@@ -289,7 +295,7 @@ DcCommand2 profile_frame_cmd{
             GrD3DSetTexture_profile_patch.Install();
             GrSwapBuffers_profile_patch.Install();
             auto d3d_dev_vtbl = *reinterpret_cast<uintptr_t**>(rf::g_GrDevice);
-            D3D_DrawIndexedPrimitive_profile_patch.SetAddr(d3d_dev_vtbl[0x47]); // DrawIndexedPrimitive
+            D3D_DrawIndexedPrimitive_profile_patch.SetAddr(d3d_dev_vtbl[0x11C / 4]); // DrawIndexedPrimitive
             D3D_DrawIndexedPrimitive_profile_patch.Install();
             patches_installed = true;
         }
@@ -417,7 +423,9 @@ void GraphicsInit()
     // Do not flush drawing buffers during GrSetColor call
     WriteMem<u8>(0x0050CFEB, ASM_SHORT_JMP_REL);
 
+#ifdef DEBUG
     profile_frame_cmd.Register();
+#endif
 }
 
 void GraphicsAfterGameInit()
