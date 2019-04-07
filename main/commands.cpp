@@ -91,7 +91,7 @@ DcCommand2 MaxFpsCmd{
     [](std::optional<int> limit_opt) {
         if (limit_opt) {
 #ifdef NDEBUG
-            int newLimit = std::clamp(LimitOpt.value(), MIN_FPS_LIMIT, MAX_FPS_LIMIT);
+            int new_limit = std::clamp<int>(limit_opt.value(), MIN_FPS_LIMIT, MAX_FPS_LIMIT);
 #else
             int new_limit = limit_opt.value();
 #endif
