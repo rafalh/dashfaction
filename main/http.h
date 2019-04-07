@@ -5,14 +5,53 @@
 #include <wininet.h>
 #include <log/Logger.h>
 
+class InternetHandle
+{
+private:
+    HINTERNET m_handle;
+
+public:
+    InternetHandle() :
+        m_handle(nullptr)
+    {}
+
+    ~InternetHandle()
+    {
+        if (m_handle)
+            InternetCloseHandle(m_handle);
+    }
+
+    InternetHandle(const InternetHandle&) = delete; // copy constructor
+    InternetHandle& operator=(const InternetHandle&) = delete;
+
+    InternetHandle(InternetHandle&& other) noexcept : // move constructor
+        m_handle(std::exchange(other.m_handle, nullptr))
+    {}
+
+    InternetHandle& operator=(InternetHandle&& other) noexcept // move assignment
+    {
+        std::swap(m_handle, other.m_handle);
+        return *this;
+    }
+
+    InternetHandle &operator=(HINTERNET handle)
+    {
+        m_handle = handle;
+        return *this;
+    }
+
+    operator HINTERNET() const
+    {
+        return m_handle;
+    }
+};
+
 class HttpRequest
 {
 private:
-    HINTERNET m_request = nullptr;
+    InternetHandle m_request;
 
 public:
-    HttpRequest(const HttpRequest&) = delete;
-
     HttpRequest(HINTERNET connection_handle, const char* path, const char* method = "GET", const std::string& body = "")
     {
         static LPCSTR accept_types[] = {"*/*", nullptr};
@@ -46,13 +85,6 @@ public:
         }
     }
 
-    ~HttpRequest()
-    {
-        TRACE("Closing HTTP request");
-        if (m_request)
-            InternetCloseHandle(m_request);
-    }
-
     size_t read(void* buf, size_t buf_size)
     {
         DWORD bytes_read;
@@ -67,12 +99,10 @@ public:
 class HttpConnection
 {
 private:
-    HINTERNET m_internet = nullptr;
-    HINTERNET m_connection = nullptr;
+    InternetHandle m_internet;
+    InternetHandle m_connection;
 
 public:
-    HttpConnection(const HttpConnection&) = delete;
-
     HttpConnection(const char* host, int port = INTERNET_DEFAULT_HTTP_PORT, const char* agent_name = nullptr)
     {
         m_internet = InternetOpen(agent_name, 0, nullptr, nullptr, 0);
@@ -91,20 +121,6 @@ public:
         }
     }
 
-    ~HttpConnection()
-    {
-        TRACE("Closing HTTP connection");
-        if (m_connection)
-            InternetCloseHandle(m_connection);
-        if (m_internet)
-            InternetCloseHandle(m_internet);
-    }
-
-    HINTERNET get_connection_handle() const
-    {
-        return m_connection;
-    }
-
     HttpRequest request(const char* path, const char* method = "GET", const std::string& body = "")
     {
         return HttpRequest{m_connection, path, method, body};
@@ -112,11 +128,11 @@ public:
 
     HttpRequest get(const char* path)
     {
-        return HttpRequest{m_connection, path};
+        return request(path, "GET");
     }
 
     HttpRequest post(const char* path, const std::string& body)
     {
-        return HttpRequest{m_connection, path, "POST", body};
+        return request(path, "POST", body);
     }
 };
