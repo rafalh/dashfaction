@@ -6,12 +6,46 @@
 #include "stdafx.h"
 #include "utils.h"
 #include <CallHook.h>
+#include <FunHook.h>
 
 const char g_screenshot_dir_name[] = "screenshots";
 
 static std::unique_ptr<byte* []> g_screenshot_scanlines_buf;
 static int g_screenshot_dir_id;
 
+namespace rf
+{
+
+struct GrTextureSlot
+{
+  IDirect3DTexture8* d3d_texture;
+  int num_bytes_used_by_texture;
+  float scale_unk_x;
+  float scale_unk_y;
+  int x;
+  int y;
+  int width;
+  int height;
+};
+static_assert(sizeof(GrTextureSlot) == 0x20);
+
+struct GrTexture
+{
+  int field_0;
+  uint16_t num_sections;
+  uint16_t field_6;
+  uint16_t lock_count;
+  uint8_t ref_count;
+  char field_B;
+  GrTextureSlot *sections;
+};
+static_assert(sizeof(GrTexture) == 0x10);
+
+static auto& GrGetBitmapTexture = AddrAsRef<IDirect3DTexture8*(int bm_handle)>(0x0055D1E0);
+
+} // namespace rf
+
+#if !D3D_LOCKABLE_BACKBUFFER
 CallHook<rf::BmPixelFormat(int, int, int, int, byte*)> GrD3DReadBackBuffer_Hook{
     0x0050E015,
     [](int x, int y, int width, int height, byte* buffer) {
@@ -98,14 +132,99 @@ CallHook<rf::BmPixelFormat(int, int, int, int, byte*)> GrD3DReadBackBuffer_Hook{
         return pixel_fmt;
     },
 };
+#endif // D3D_LOCKABLE_BACKBUFFER
+
+bool GrCaptureBackBufferFast(int x, int y, int width, int height, int bm_handle)
+{
+    rf::GrFlushBuffers();
+
+    auto d3d_tex = rf::GrGetBitmapTexture(bm_handle);
+    if (!d3d_tex) {
+        WARN("Bitmap without D3D texture provided in GrCaptureBackBuffer");
+        return false;
+    }
+
+    IDirect3DSurface8 *back_buffer;
+    HRESULT hr = rf::g_GrDevice->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &back_buffer);
+    if (FAILED(hr)) {
+        ERR("IDirect3DDevice8::GetBackBuffer failed 0x%x", hr);
+        return false;
+    }
+
+    IDirect3DSurface8 *tex_surface;
+    hr = d3d_tex->GetSurfaceLevel(0, &tex_surface);
+    if (FAILED(hr)) {
+        ERR("IDirect3DTexture8::GetSurfaceLevel failed 0x%X", hr);
+    }
+
+    D3DSURFACE_DESC back_buffer_desc;
+    if (SUCCEEDED(hr)) {
+        hr = back_buffer->GetDesc(&back_buffer_desc);
+        if (FAILED(hr)) {
+            ERR("IDirect3DSurface8::GetDesc failed 0x%X", hr);
+        }
+    }
+
+    D3DSURFACE_DESC tex_desc;
+    if (SUCCEEDED(hr)) {
+        hr = tex_surface->GetDesc(&tex_desc);
+        if (FAILED(hr)) {
+            ERR("IDirect3DSurface8::GetDesc failed 0x%X", hr);
+        }
+    }
+
+    if (SUCCEEDED(hr) && tex_desc.Format != back_buffer_desc.Format) {
+        static bool diff_format_warned = false;
+        if (!diff_format_warned) {
+            WARN("back buffer and texture has different D3D format in GrCaptureBackBuffer: %d vs %d",
+                back_buffer_desc.Format, tex_desc.Format);
+            diff_format_warned = true;
+        }
+        hr = E_FAIL;
+    }
+
+    if (SUCCEEDED(hr)) {
+        RECT src_rect;
+        POINT dst_pt{x, y};
+        SetRect(&src_rect, x, y, x + width - 1, y + height - 1);
+
+        if (width > 0 && height > 0) {
+            hr = rf::g_GrDevice->CopyRects(back_buffer, &src_rect, 1, tex_surface, &dst_pt);
+            if (FAILED(hr))
+                ERR("IDirect3DDevice8::CopyRects failed 0x%x", hr);
+        }
+    }
+
+    if (tex_surface)
+        tex_surface->Release();
+    if (back_buffer)
+        back_buffer->Release();
+
+    return SUCCEEDED(hr);
+}
+
+FunHook<void(int, int, int, int, int)> GrCaptureBackBuffer_hook{
+    0x0050E4F0,
+    [](int x, int y, int width, int height, int bm_handle) {
+        if (!GrCaptureBackBufferFast(x, y, width, height, bm_handle)) {
+            GrCaptureBackBuffer_hook.CallTarget(x, y, width, height, bm_handle);
+        }
+    },
+};
 
 void InitScreenshot()
 {
-#if D3D_SWAP_DISCARD
+#if !D3D_LOCKABLE_BACKBUFFER
     /* Override default because IDirect3DSurface8::LockRect fails on multisampled back-buffer */
     GrD3DReadBackBuffer_Hook.Install();
 #endif
 
+    // Use fast GrCaptureBackBuffer implementation which copies backbuffer to texture without copying from VRAM to RAM
+    GrCaptureBackBuffer_hook.Install();
+    // Use format 888 instead of 8888 for scanner bitmap (needed by railgun and rocket launcher)
+    WriteMem<uint8_t>(0x004A34BF + 1, rf::BMPF_888);
+
+    // Override screenshot directory
     WriteMemPtr(0x004367CA + 2, &g_screenshot_dir_id);
 }
 

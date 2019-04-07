@@ -120,11 +120,6 @@ static void SetupPP()
     static auto& format = *(D3DFORMAT*)0x005A135C;
     INFO("D3D Format: %ld", format);
 
-    // Note: in MSAA mode we don't lock back buffer
-#if !D3D_SWAP_DISCARD
-    rf::g_GrPP.Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
-#endif
-
 #if MULTISAMPLING_SUPPORT
     if (g_game_config.msaa && format > 0) {
         // Make sure selected MSAA mode is available
@@ -140,6 +135,12 @@ static void SetupPP()
             g_game_config.msaa = D3DMULTISAMPLE_NONE;
         }
     }
+#endif
+
+#if D3D_LOCKABLE_BACKBUFFER
+    // Note: if MSAA is used backbuffer cannot be lockable
+    if (g_game_config.msaa == D3DMULTISAMPLE_NONE)
+        rf::g_GrPP.Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
 #endif
 
     // Make sure stretched window is always full screen
@@ -426,6 +427,9 @@ void GraphicsInit()
 #ifdef DEBUG
     profile_frame_cmd.Register();
 #endif
+
+    // Render rocket launcher scanner image every frame
+    //AddrAsRef<bool>(0x5A1020) = 0;
 }
 
 void GraphicsAfterGameInit()

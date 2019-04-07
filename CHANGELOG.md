@@ -34,7 +34,8 @@ Version 1.2.2 (not released yet)
 - add 'show_enemy_bullets' command for toggling enemy bullets visibility (configuration is persisted) - it was forced on before
 - add persisting of volumetric lights (glares) configuration changed by 'vli' command
 - add 'fullscreen' and 'windowed' commands
-- optimize rendering by reducing number of draw-calls (mostly influences particles and text rendering)
+- optimize particles and HUD rendering by reducing number of draw-calls
+- optimize rendering of railgun and rocket launcher scanners by using different back buffer capture technique
 - fix multiple security vulnerabilities
 - stability improvements
 

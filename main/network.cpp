@@ -268,7 +268,10 @@ RegsPatch ProcessGamePacket_whitelist_filter{
 
 RegsPatch ProcessGameInfoPacket_GameTypeBounds_Patch{
     0x0047B30B,
-    [](X86Regs& regs) { regs.ecx = std::clamp(regs.ecx, 0, 2); },
+    [](X86Regs& regs) {
+        // Valid game types are between 0 and 2
+        regs.ecx = std::clamp(regs.ecx, 0, 2);
+    },
 };
 
 FunHook<NwPacketHandler_Type> ProcessJoinDenyPacket_Hook{

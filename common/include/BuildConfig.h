@@ -27,6 +27,7 @@
 #define WIDESCREEN_FIX 1
 #define CHECK_PACKFILE_CHECKSUM 0 // slow (1 second on SSD on first load after boot)
 #define D3D_SWAP_DISCARD 1 // needed for MSAA
+#define D3D_LOCKABLE_BACKBUFFER 0
 #define SERVER_WIN32_CONSOLE 0
 
 #define CONSOLE_BG_R 0x00
