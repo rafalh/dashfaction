@@ -283,8 +283,7 @@ static std::optional<LevelInfo> FetchLevelInfo(const char* file_name) try {
     std::string body = std::string("rflName=") + file_name;
     HttpRequest req = conn.post("findmap.php", body);
 
-    char buf[1024];
-
+    char buf[256];
     size_t num_bytes_read = req.read(buf, sizeof(buf) - 1);
     if (num_bytes_read == 0)
         return {};
@@ -315,16 +314,19 @@ static void DisplayDownloadDialog(LevelInfo& level_info)
 bool TryToDownloadLevel(const char* filename)
 {
     if (g_download_in_progress) {
+        TRACE("Level download already in progress!");
         rf::UiMsgBox("Error!", "You can download only one level at once!", nullptr, false);
         return false;
     }
 
+    TRACE("Fetching level info");
     auto level_info_opt = FetchLevelInfo(filename);
     if (!level_info_opt) {
         ERR("Level has not found in FactionFiles database!");
         return false;
     }
 
+    TRACE("Displaying download dialog");
     DisplayDownloadDialog(level_info_opt.value());
     return true;
 }
@@ -338,6 +340,7 @@ RegsPatch g_join_failed_injection{
         }
 
         auto& level_filename = AddrAsRef<rf::String>(0x00646074);
+        TRACE("Preparing level download %s", level_filename.CStr());
         if (!TryToDownloadLevel(level_filename)) {
             return;
         }

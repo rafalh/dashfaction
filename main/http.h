@@ -16,8 +16,9 @@ public:
     HttpRequest(HINTERNET connection_handle, const char* path, const char* method = "GET", const std::string& body = "")
     {
         static LPCSTR accept_types[] = {"*/*", nullptr};
+        // Wine hangs in HttpReadFile when handling second Keep-Alive request so HTTP/1.0 is forced
         m_request =
-            HttpOpenRequest(connection_handle, method, path, nullptr, nullptr, accept_types, INTERNET_FLAG_RELOAD, 0);
+            HttpOpenRequest(connection_handle, method, path, "HTTP/1.0", nullptr, accept_types, INTERNET_FLAG_RELOAD, 0);
         if (!m_request) {
             throw std::runtime_error("HttpOpenRequest failed");
         }
@@ -47,6 +48,7 @@ public:
 
     ~HttpRequest()
     {
+        TRACE("Closing HTTP request");
         if (m_request)
             InternetCloseHandle(m_request);
     }
@@ -54,8 +56,8 @@ public:
     size_t read(void* buf, size_t buf_size)
     {
         DWORD bytes_read;
+        TRACE("Reading HTTP response");
         if (!InternetReadFile(m_request, buf, buf_size, &bytes_read)) {
-            ERR("InternetReadFile failed");
             return 0;
         }
         return bytes_read;
@@ -78,6 +80,11 @@ public:
             throw std::runtime_error("InternetOpen failed");
         }
 
+        DWORD timeout = 5 * 1000; // 2 seconds
+        InternetSetOption(m_internet, INTERNET_OPTION_CONNECT_TIMEOUT, &timeout, sizeof(timeout));
+        InternetSetOption(m_internet, INTERNET_OPTION_SEND_TIMEOUT, &timeout, sizeof(timeout));
+        InternetSetOption(m_internet, INTERNET_OPTION_RECEIVE_TIMEOUT, &timeout, sizeof(timeout));
+
         m_connection = InternetConnect(m_internet, host, port, nullptr, nullptr, INTERNET_SERVICE_HTTP, 0, 0);
         if (!m_connection) {
             throw std::runtime_error("InternetConnect failed");
@@ -86,6 +93,7 @@ public:
 
     ~HttpConnection()
     {
+        TRACE("Closing HTTP connection");
         if (m_connection)
             InternetCloseHandle(m_connection);
         if (m_internet)
