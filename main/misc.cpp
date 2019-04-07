@@ -20,6 +20,11 @@ static auto& g_MenuVersionLabel = AddrAsRef<UiPanel>(0x0063C088);
 static auto& g_sound_enabled = AddrAsRef<bool>(0x017543D8);
 static auto& g_hide_enemy_bullets = AddrAsRef<bool>(0x005A24D0);
 
+static auto& CanSave = AddrAsRef<bool()>(0x004B61A0);
+
+static auto& GameSeqPushState = AddrAsRef<int(int state, bool update_parent_state, bool parent_dlg_open)>(0x00434410);
+static auto& GameSeqProcessDeferredChange = AddrAsRef<int()>(0x00434310);
+
 } // namespace rf
 
 constexpr int EGG_ANIM_ENTER_TIME = 2000;
@@ -658,19 +663,13 @@ RegsPatch CoronaEntityCollisionTestFix{
     },
 };
 
-auto CanSave = AddrAsRef<bool()>(0x004B61A0);
-
 FunHook<void()> DoQuickSave_Hook{
     0x004B5E20,
     []() {
-        if (CanSave())
+        if (rf::CanSave())
             DoQuickSave_Hook.CallTarget();
     },
 };
-
-auto& MultiIsConnected = AddrAsRef<bool()>(0x0044AD70);
-auto& GameSeqPushState = AddrAsRef<int(int state, bool update_parent_state, bool parent_dlg_open)>(0x00434410);
-auto& GameSeqProcessDeferredChange = AddrAsRef<int()>(0x00434310);
 
 bool g_in_mp_game = false;
 bool g_jump_to_multi_server_list = false;
@@ -694,17 +693,20 @@ FunHook<void(int, int)> GameEnterState_Hook{
         }
 
         if (state == rf::GS_MAIN_MENU && g_jump_to_multi_server_list) {
+            TRACE("jump to mp menu!");
             rf::g_sound_enabled = false;
-            GameSeqPushState(rf::GS_MP_MENU, false, false);
+            CallAddr(0x00443C20); // OpenMultiMenu
             old_state = state;
-            state = GameSeqProcessDeferredChange();
+            state = rf::GameSeqProcessDeferredChange();
             GameEnterState_Hook.CallTarget(state, old_state);
         }
         if (state == rf::GS_MP_MENU && g_jump_to_multi_server_list) {
-            GameSeqPushState(rf::GS_MP_SERVER_LIST_MENU, false, false);
+            CallAddr(0x00448B70); // OnMpJoinGameBtnClick
             old_state = state;
-            state = GameSeqProcessDeferredChange();
+            state = rf::GameSeqProcessDeferredChange();
             GameEnterState_Hook.CallTarget(state, old_state);
+        }
+        if (state == rf::GS_MP_SERVER_LIST_MENU && g_jump_to_multi_server_list) {
             g_jump_to_multi_server_list = false;
             rf::g_sound_enabled = true;
         }

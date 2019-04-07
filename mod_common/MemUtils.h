@@ -51,3 +51,9 @@ T& StructFieldRef(void* StructPtr, size_t Offset)
     auto Addr = reinterpret_cast<uintptr_t>(StructPtr) + Offset;
     return *reinterpret_cast<T*>(Addr);
 }
+
+template<typename... A>
+void *CallAddr(uintptr_t addr, A... args)
+{
+    return AddrAsRef<void*(A...)>(addr)(args...);
+}
