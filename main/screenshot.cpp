@@ -104,8 +104,13 @@ CallHook<rf::BmPixelFormat(int, int, int, int, std::byte*)> GrD3DReadBackBuffer_
             return rf::BMPF_INVALID;
         }
 
-
         rf::BmPixelFormat pixel_fmt = GetPixelFormatFromD3DFormat(desc.Format);
+        // Remove alpha
+        if (pixel_fmt == rf::BMPF_8888)
+            pixel_fmt = rf::BMPF_888;
+        if (pixel_fmt == rf::BMPF_1555)
+            pixel_fmt = rf::BMPF_565;
+
         int bytes_per_pixel = GetPixelFormatSize(pixel_fmt);
         std::byte* src_ptr =
             reinterpret_cast<std::byte*>(locked_rect.pBits) + y * locked_rect.Pitch + x * bytes_per_pixel;
