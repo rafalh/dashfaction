@@ -456,12 +456,12 @@ namespace rf
         int w;
         int h;
         int Id;
-        void(*OnClick)(void);
+        void(*OnClick)();
         int field_24;
         int BgTexture;
     };
 
-    static auto& UiMsgBox = AddrAsRef<void(const char *title, const char *text, void(*pfn_callback)(void), bool input)>(0x004560B0);
+    static auto& UiMsgBox = AddrAsRef<void(const char *title, const char *text, void(*pfn_callback)(), bool input)>(0x004560B0);
     static auto& UiCreateDialog = AddrAsRef<void(const char *title, const char *text, unsigned c_buttons, const char **ppsz_btn_titles, void **ppfn_callbacks, unsigned unknown1, unsigned unknown2)>(0x004562A0);
     static auto& UiGetElementFromPos = AddrAsRef<int(int x, int y, UiPanel **pp_gui_list, signed int c_gui_list)>(0x00442ED0);
 

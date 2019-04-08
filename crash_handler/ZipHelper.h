@@ -47,14 +47,12 @@ public:
 private:
     // getFileTime function based on minizip source
 #ifdef WIN32
-    uLong getFileTime(const char* filename, tm_zip* tmzip, uLong* dt)
+    uLong getFileTime(const char* filename, [[maybe_unused]] tm_zip* tmzip, uLong* dt)
     {
         int ret = 0;
         FILETIME ftLocal;
         HANDLE hFind;
         WIN32_FIND_DATAA ff32;
-
-        (void)tmzip; // unused parameter (dt is filled instead)
 
         hFind = FindFirstFileA(filename, &ff32);
         if (hFind != INVALID_HANDLE_VALUE) {
@@ -66,14 +64,12 @@ private:
         return ret;
     }
 #else  // WIN32
-    uLong getFileTime(const char* filename, tm_zip* tmzip, uLong* dt)
+    uLong getFileTime(const char* filename, tm_zip* tmzip, [[maybe_unused]] uLong* dt)
     {
         int ret = 0;
         struct stat s; /* results of stat() */
         struct tm* filedate;
         time_t tm_t = 0;
-
-        (void)dt; // unused parameter (tmzip is filled instead)
 
         if (stat(filename, &s) == 0) {
             tm_t = s.st_mtime;

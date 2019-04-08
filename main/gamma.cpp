@@ -57,10 +57,8 @@ void ResetGammaRamp()
     SetGammaRamp(&gamma_ramp);
 }
 
-static void GammaMsgHandler(UINT msg, WPARAM w_param, LPARAM l_param)
+static void GammaMsgHandler(UINT msg, WPARAM w_param, [[maybe_unused]] LPARAM l_param)
 {
-    (void)l_param; // unused parameter
-
     switch (msg) {
     case WM_ACTIVATE:
     case WM_ACTIVATEAPP:

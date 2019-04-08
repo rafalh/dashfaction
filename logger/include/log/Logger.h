@@ -30,7 +30,7 @@
     }
 #define LOGGER_DEFINE_LEVEL_METHODS_EMPTY(methodName, levelConstant) \
     NullStream methodName() { return NullStream(); } \
-    void methodName(const char *fmt, ...) { (void)fmt; }
+    void methodName([[maybe_unused]] const char *fmt, ...) {}
 // clang-format on
 
 namespace logging

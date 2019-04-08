@@ -5,7 +5,7 @@
 #ifdef __GNUC__
 
 #define _ASM_STR_INTERNAL(...) #__VA_ARGS__
-#define ASM_FUNC(name, ...) extern "C" int name(void); \
+#define ASM_FUNC(name, ...) extern "C" int name(); \
     __asm__ ( \
     ".text\r\n" \
     "_" #name ":\r\n" \
@@ -19,7 +19,7 @@
 
 #else // __GNUC__
 
-#define ASM_FUNC(name, ...) __declspec(naked) void name(void) { __asm { \
+#define ASM_FUNC(name, ...) __declspec(naked) void name() { __asm { \
     __asm __VA_ARGS__ \
     } }
 #define ASM_I __asm

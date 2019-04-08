@@ -38,10 +38,8 @@ public:
         m_ftol_call_addr(ftol_call_addr), m_key_loc_opt(key_loc)
     {}
 
-    static long __fastcall ftol(FtolAccuracyFix* self, void* edx, double value, void* key)
+    static long __fastcall ftol(FtolAccuracyFix* self, [[maybe_unused]] void* edx, double value, void* key)
     {
-        (void)edx; // usused parameter
-
         auto& state = self->m_state_map[key];
 
         if (state.num_calls_in_frame > 0 && state.last_val != value)

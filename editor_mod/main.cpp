@@ -47,10 +47,8 @@ BOOL CEditorApp__InitInstance_AfterHook()
     return TRUE;
 }
 
-extern "C" DWORD DLL_EXPORT Init(void* Unused)
+extern "C" DWORD DLL_EXPORT Init([[maybe_unused]] void* Unused)
 {
-    (void)Unused; // unused parameter
-
     // Prepare command
     static char CmdBuf[512];
     GetModuleFileNameA(g_Module, CmdBuf, sizeof(CmdBuf));
@@ -73,11 +71,8 @@ extern "C" DWORD DLL_EXPORT Init(void* Unused)
     return 1; // success
 }
 
-BOOL WINAPI DllMain(HINSTANCE Instance, DWORD Reason, LPVOID Reserved)
+BOOL WINAPI DllMain(HINSTANCE Instance, [[maybe_unused]] DWORD Reason, [[maybe_unused]] LPVOID Reserved)
 {
-    (void)Reason;   // unused parameter
-    (void)Reserved; // unused parameter
-
     g_Module = (HMODULE)Instance;
     DisableThreadLibraryCalls(Instance);
     return TRUE;

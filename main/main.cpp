@@ -183,9 +183,8 @@ CallHook<void()> AfterFullGameInit_Hook{
 #ifndef NDEBUG
 class RfConsoleLogAppender : public logging::BaseAppender
 {
-    virtual void append(logging::LogLevel lvl, const std::string& str) override
+    virtual void append([[maybe_unused]] logging::LogLevel lvl, const std::string& str) override
     {
-        (void)lvl; // unused parameter
         rf::DcPrint(str.c_str(), nullptr);
     }
 };
@@ -222,11 +221,9 @@ extern "C" void subhook_unk_opcode_handler(uint8_t* opcode)
     ERR("SubHook unknown opcode 0x%X at 0x%p", *opcode, opcode);
 }
 
-extern "C" DWORD DLL_EXPORT Init(void* unused)
+extern "C" DWORD DLL_EXPORT Init([[maybe_unused]] void* unused)
 {
     DWORD start_ticks = GetTickCount();
-
-    (void)unused; // unused parameter
 
     // Init logging and crash dump support first
     InitLogging();
@@ -298,10 +295,8 @@ extern "C" DWORD DLL_EXPORT Init(void* unused)
     return 1; /* success */
 }
 
-BOOL WINAPI DllMain(HINSTANCE instance_handle, DWORD fdw_reason, LPVOID lpv_reserved)
+BOOL WINAPI DllMain(HINSTANCE instance_handle, [[maybe_unused]] DWORD fdw_reason, [[maybe_unused]] LPVOID lpv_reserved)
 {
-    (void)fdw_reason;   // unused parameter
-    (void)lpv_reserved; // unused parameter
     g_hmodule = instance_handle;
     DisableThreadLibraryCalls(instance_handle);
     return TRUE;
