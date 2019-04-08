@@ -223,7 +223,7 @@ void DrawScoreboardInternal_New(bool draw)
         // player_name.Forget();
         rf::GrDrawText(offsets.Name, row_y, player_name_stripped, -1, rf::g_GrTextMaterial);
 
-        auto stats = (PlayerStatsNew*)player->Stats;
+        auto stats = static_cast<PlayerStatsNew*>(player->Stats);
         auto score_str = std::to_string(stats->score);
         rf::GrDrawText(offsets.Score, row_y, score_str.c_str(), -1, rf::g_GrTextMaterial);
 

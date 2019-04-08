@@ -275,7 +275,7 @@ static int PackfileBuildEntriesList_New(const char* ext_list, char*& filenames, 
         }
     }
 
-    filenames = (char*)rf::Malloc(num_bytes);
+    filenames = static_cast<char*>(rf::Malloc(num_bytes));
     if (!filenames)
         return 0;
     char* buf_ptr = filenames;
@@ -305,7 +305,7 @@ static int PackfileAddEntries_New(rf::Packfile* packfile, const void* block, uns
     for (unsigned i = 0; i < num_files; ++i) {
         auto file_name = reinterpret_cast<const char*>(data);
         rf::PackfileEntry& entry = packfile->FileList[num_added_files];
-        if (rf::g_VfsIgnoreTblFiles && !stricmp(rf::GetFileExt((char*)data), ".tbl"))
+        if (rf::g_VfsIgnoreTblFiles && !stricmp(rf::GetFileExt(file_name), ".tbl"))
             entry.FileName = "DEADBEEF";
         else {
             // FIXME: free?

@@ -5,6 +5,7 @@
 #include "stdafx.h"
 #include "utils.h"
 #include "version.h"
+#include <cstddef>
 #include <CallHook.h>
 #include <FunHook.h>
 #include <RegsPatch.h>
@@ -416,14 +417,14 @@ FunHook<int(void*, void*)> GeomCachePrepareRoom_Hook{
     0x004F0C00,
     [](void* geom, void* room) {
         int ret = GeomCachePrepareRoom_Hook.CallTarget(geom, room);
-        char** pp_room_geom = (char**)((char*)room + 4);
-        char* room_geom = *pp_room_geom;
+        std::byte** pp_room_geom = (std::byte**)(static_cast<std::byte*>(room) + 4);
+        std::byte* room_geom = *pp_room_geom;
         if (ret == 0 && room_geom) {
-            uint32_t* room_vert_num = (uint32_t*)(room_geom + 4);
-            if (*room_vert_num > 8000) {
+            uint32_t room_vert_num = *reinterpret_cast<uint32_t*>(room_geom + 4);
+            if (room_vert_num > 8000) {
                 static int once = 0;
                 if (!(once++))
-                    WARN("Not rendering room with %u vertices!", *room_vert_num);
+                    WARN("Not rendering room with %u vertices!", room_vert_num);
                 *pp_room_geom = nullptr;
                 return -1;
             }

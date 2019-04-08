@@ -369,7 +369,7 @@ FunHook<NwPacketHandler_Type> ProcessEntityCreatePacket_Hook{
         size_t name_size = strlen(data) + 1;
         uint8_t player_id = data[name_size + 58];
         if (player_id == rf::g_LocalPlayer->NwData->PlayerId) {
-            int32_t weapon_cls_id = *(int32_t*)(data + name_size + 63);
+            int32_t weapon_cls_id = *reinterpret_cast<int32_t*>(data + name_size + 63);
             rf::g_strDefaultPlayerWeapon = rf::g_WeaponClasses[weapon_cls_id].strName;
 
 #if 0 // disabled because it sometimes helpful feature to switch to last used weapon
@@ -390,9 +390,9 @@ FunHook<NwPacketHandler_Type> ProcessReloadPacket_Hook{
     [](char* data, const rf::NwAddr& addr) {
         if (!rf::g_IsLocalNetworkGame) { // client-side
             // Update ClipSize and MaxAmmo if received values are greater than values from local weapons.tbl
-            int weapon_cls_id = *((int32_t*)data + 1);
-            int clip_ammo = *((int32_t*)data + 2);
-            int ammo = *((int32_t*)data + 3);
+            int weapon_cls_id = *reinterpret_cast<int32_t*>(data + 4);
+            int clip_ammo = *reinterpret_cast<int32_t*>(data + 8);
+            int ammo = *reinterpret_cast<int32_t*>(data + 12);
             if (rf::g_WeaponClasses[weapon_cls_id].ClipSize < ammo)
                 rf::g_WeaponClasses[weapon_cls_id].ClipSize = ammo;
             if (rf::g_WeaponClasses[weapon_cls_id].cMaxAmmo < clip_ammo)

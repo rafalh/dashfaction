@@ -85,8 +85,8 @@ RegsPatch GrSetViewMatrix_widescreen_fix{
 
         g_GrClippedGeomOffsetX = rf::g_GrScreen.OffsetX - 0.5f;
         g_GrClippedGeomOffsetY = rf::g_GrScreen.OffsetY - 0.5f;
-        static auto& gr_viewport_center_x = *(float*)0x01818B54;
-        static auto& gr_viewport_center_y = *(float*)0x01818B5C;
+        auto& gr_viewport_center_x = AddrAsRef<float>(0x01818B54);
+        auto& gr_viewport_center_y = AddrAsRef<float>(0x01818B5C);
         gr_viewport_center_x -= 0.5f; // viewport center x
         gr_viewport_center_y -= 0.5f; // viewport center y
     },
@@ -115,7 +115,7 @@ static void SetupPP()
 {
     memset(&rf::g_GrPP, 0, sizeof(rf::g_GrPP));
 
-    static auto& format = *(D3DFORMAT*)0x005A135C;
+    auto& format = AddrAsRef<D3DFORMAT>(0x005A135C);
     INFO("D3D Format: %ld", format);
 
 #if MULTISAMPLING_SUPPORT

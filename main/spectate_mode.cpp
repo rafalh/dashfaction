@@ -15,17 +15,17 @@
 namespace rf
 {
 
-static const auto IsEntityLoopFire = (bool (*)(int entity_handle, signed int weapon_cls_id))0x0041A830;
-static const auto EntityIsSwimming = (bool (*)(EntityObj* entity))0x0042A0A0;
-static const auto EntityIsFalling = (bool (*)(EntityObj* entit))0x0042A020;
+static auto& IsEntityLoopFire = AddrAsRef<bool(int entity_handle, signed int weapon_cls_id)>(0x0041A830);
+static auto& EntityIsSwimming = AddrAsRef<bool(EntityObj* entity)>(0x0042A0A0);
+static auto& EntityIsFalling = AddrAsRef<bool(EntityObj* entit)>(0x0042A020);
 
-static const auto PlayerFpgunRender = (void (*)(Player*))0x004A2B30;
-static const auto PlayerFpgunUpdate = (void (*)(Player*))0x004A2700;
-static const auto PlayerFpgunSetupMesh = (void (*)(Player*, int weapon_cls_id))0x004AA230;
-static const auto PlayerFpgunUpdateMesh = (void (*)(Player*))0x004AA6D0;
-static const auto PlayerRenderRocketLauncherScannerView = (void (*)(Player* player))0x004AEEF0;
-static const auto PlayerFpgunSetState = (void (*)(Player* player, int state))0x004AA560;
-static const auto PlayerFpgunHasState = (bool (*)(Player* player, int state))0x004A9520;
+static auto& PlayerFpgunRender = AddrAsRef<void(Player*)>(0x004A2B30);
+static auto& PlayerFpgunUpdate = AddrAsRef<void(Player*)>(0x004A2700);
+static auto& PlayerFpgunSetupMesh = AddrAsRef<void(Player*, int weapon_cls_id)>(0x004AA230);
+static auto& PlayerFpgunUpdateMesh = AddrAsRef<void(Player*)>(0x004AA6D0);
+static auto& PlayerRenderRocketLauncherScannerView = AddrAsRef<void(Player* player)>(0x004AEEF0);
+static auto& PlayerFpgunSetState = AddrAsRef<void(Player* player, int state)>(0x004AA560);
+static auto& PlayerFpgunHasState = AddrAsRef<bool(Player* player, int state)>(0x004A9520);
 
 } // namespace rf
 

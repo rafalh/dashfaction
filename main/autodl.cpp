@@ -114,7 +114,7 @@ static bool UnrarVpp(const char* path)
 
     RAROpenArchiveDataEx open_archive_data;
     memset(&open_archive_data, 0, sizeof(open_archive_data));
-    open_archive_data.ArcName = (char*)path;
+    open_archive_data.ArcName = const_cast<char*>(path);
     open_archive_data.CmtBuf = cmt_buf;
     open_archive_data.CmtBufSize = sizeof(cmt_buf);
     open_archive_data.OpenMode = RAR_OM_EXTRACT;
@@ -307,7 +307,7 @@ static void DisplayDownloadDialog(LevelInfo& level_info)
         StringFormat("You don't have needed level: %s (Author: %s, Size: %.2f MB)\nDo you want to download it now?",
                      level_info.name.c_str(), level_info.author.c_str(), level_info.size_in_bytes / 1024.f / 1024.f);
     const char* btn_titles[] = {"Cancel", "Download"};
-    void* callbacks[] = {nullptr, (void*)StartLevelDownload};
+    rf::UiDialogCallbackPtr callbacks[] = {nullptr, StartLevelDownload};
     rf::UiCreateDialog("Download level", msg.c_str(), 2, btn_titles, callbacks, 0, 0);
 }
 

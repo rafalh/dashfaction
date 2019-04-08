@@ -462,7 +462,10 @@ namespace rf
     };
 
     static auto& UiMsgBox = AddrAsRef<void(const char *title, const char *text, void(*pfn_callback)(), bool input)>(0x004560B0);
-    static auto& UiCreateDialog = AddrAsRef<void(const char *title, const char *text, unsigned c_buttons, const char **ppsz_btn_titles, void **ppfn_callbacks, unsigned unknown1, unsigned unknown2)>(0x004562A0);
+    using UiDialogCallbackPtr = void (*)();
+    static auto& UiCreateDialog =
+        AddrAsRef<void(const char *title, const char *text, unsigned c_buttons, const char **ppsz_btn_titles,
+                       UiDialogCallbackPtr *ppfn_callbacks, unsigned unknown1, unsigned unknown2)>(0x004562A0);
     static auto& UiGetElementFromPos = AddrAsRef<int(int x, int y, UiPanel **pp_gui_list, signed int c_gui_list)>(0x00442ED0);
 
     /* Chat */

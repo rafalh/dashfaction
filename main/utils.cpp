@@ -23,7 +23,7 @@ const char* stristr(const char* haystack, const char* needle)
                 break;
 
         if (!needle[j])
-            return (char*)(haystack + i);
+            return haystack + i;
     }
     return nullptr;
 }
@@ -100,7 +100,7 @@ std::string getRealOsVersion()
     BOOL ret = VerQueryValueA(ver.get(), "\\", &block, &block_size);
     if (!ret || block_size < sizeof(VS_FIXEDFILEINFO))
         THROW_EXCEPTION("VerQueryValueA returned unknown block");
-    VS_FIXEDFILEINFO* file_info = (VS_FIXEDFILEINFO*)block;
+    VS_FIXEDFILEINFO* file_info = reinterpret_cast<VS_FIXEDFILEINFO*>(block);
 
     return StringFormat("%d.%d.%d",                            //
                         HIWORD(file_info->dwProductVersionMS), //

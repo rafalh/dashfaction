@@ -33,7 +33,7 @@ inline void ConvertPixel_RGBA4_To_RGBA8(uint8_t*& dst_ptr, const uint8_t*& src_p
 
 inline void ConvertPixel_ARGB1555_To_RGBA8(uint8_t*& dst_ptr, const uint8_t*& src_ptr)
 {
-    uint16_t src_word = *(uint16_t*)src_ptr;
+    uint16_t src_word = *reinterpret_cast<const uint16_t*>(src_ptr);
     src_ptr += 2;
     *(dst_ptr++) = ((src_word & (0x1F << 0)) >> 0) * 255 / 31;
     *(dst_ptr++) = ((src_word & (0x1F << 5)) >> 5) * 255 / 31;
@@ -43,7 +43,7 @@ inline void ConvertPixel_ARGB1555_To_RGBA8(uint8_t*& dst_ptr, const uint8_t*& sr
 
 inline void ConvertPixel_RGB565_To_RGBA8(uint8_t*& dst_ptr, const uint8_t*& src_ptr)
 {
-    uint16_t src_word = *(uint16_t*)src_ptr;
+    uint16_t src_word = *reinterpret_cast<const uint16_t*>(src_ptr);
     src_ptr += 2;
     *(dst_ptr++) = ((src_word & (0x1F << 0)) >> 0) * 255 / 31;
     *(dst_ptr++) = ((src_word & (0x3F << 5)) >> 5) * 255 / 63;
@@ -160,8 +160,9 @@ FunHook<int(int, const uint8_t*, const uint8_t*, int, int, rf::BmPixelFormat, vo
             D3DSURFACE_DESC desc;
             texture->GetLevelDesc(level, &desc);
             auto tex_pixel_fmt = GetPixelFormatFromD3DFormat(desc.Format);
-            bool success = ConvertBitmapFormat((uint8_t*)locked_rect.pBits, tex_pixel_fmt, src_bits_ptr, pixel_fmt,
-                                               bm_w, bm_h, locked_rect.Pitch, GetPixelFormatSize(pixel_fmt) * bm_w);
+            bool success = ConvertBitmapFormat(reinterpret_cast<uint8_t*>(locked_rect.pBits), tex_pixel_fmt,
+                                               src_bits_ptr, pixel_fmt, bm_w, bm_h, locked_rect.Pitch,
+                                               GetPixelFormatSize(pixel_fmt) * bm_w);
             texture->UnlockRect(level);
 
             if (success)
@@ -195,17 +196,17 @@ void RflLoadLightmaps_004ED3F6(rf::RflLightmap* lightmap)
 
 void GeoModGenerateTexture_004F2F23(uintptr_t v3)
 {
-    uintptr_t v75 = *(uintptr_t*)(v3 + 12);
-    unsigned hbm = *(unsigned*)(v75 + 16);
+    uintptr_t v75 = *reinterpret_cast<uintptr_t*>(v3 + 12);
+    unsigned hbm = *reinterpret_cast<unsigned*>(v75 + 16);
     rf::GrLockData lock_data;
     if (rf::GrLock(hbm, 0, &lock_data, 1)) {
-        int offset_y = *(int*)(v3 + 20);
-        int offset_x = *(int*)(v3 + 16);
-        int src_width = *(int*)(v75 + 4);
+        int offset_y = *reinterpret_cast<int*>(v3 + 20);
+        int offset_x = *reinterpret_cast<int*>(v3 + 16);
+        int src_width = *reinterpret_cast<int*>(v75 + 4);
         int dst_pixel_size = GetPixelFormatSize(lock_data.PixelFormat);
-        uint8_t* src_data = *(uint8_t**)(v75 + 12) + 3 * (offset_x + offset_y * src_width);
+        uint8_t* src_data = *reinterpret_cast<uint8_t**>(v75 + 12) + 3 * (offset_x + offset_y * src_width);
         uint8_t* dst_data = &lock_data.Bits[dst_pixel_size * offset_x + offset_y * lock_data.Pitch];
-        int height = *(int*)(v3 + 28);
+        int height = *reinterpret_cast<int*>(v3 + 28);
         bool success = ConvertBitmapFormat(dst_data, lock_data.PixelFormat, src_data, rf::BMPF_888, src_width, height,
                                            lock_data.Pitch, 3 * src_width);
         if (!success)
@@ -216,18 +217,18 @@ void GeoModGenerateTexture_004F2F23(uintptr_t v3)
 
 int GeoModGenerateLightmap_004E487B(uintptr_t v6)
 {
-    uintptr_t v48 = *(uintptr_t*)(v6 + 12);
+    uintptr_t v48 = *reinterpret_cast<uintptr_t*>(v6 + 12);
     rf::GrLockData lock_data;
-    unsigned hbm = *(unsigned*)(v48 + 16);
+    unsigned hbm = *reinterpret_cast<unsigned*>(v48 + 16);
     int ret = rf::GrLock(hbm, 0, &lock_data, 1);
     if (ret) {
-        int offset_y = *(int*)(v6 + 20);
-        int src_width = *(int*)(v48 + 4);
-        int offset_x = *(int*)(v6 + 16);
-        uint8_t* src_data_begin = *(uint8_t**)(v48 + 12);
-        int src_offset = 3 * (offset_x + src_width * *(int*)(v6 + 20)); // src offset
+        int offset_y = *reinterpret_cast<int*>(v6 + 20);
+        int src_width = *reinterpret_cast<int*>(v48 + 4);
+        int offset_x = *reinterpret_cast<int*>(v6 + 16);
+        uint8_t* src_data_begin = *reinterpret_cast<uint8_t**>(v48 + 12);
+        int src_offset = 3 * (offset_x + src_width * *reinterpret_cast<int*>(v6 + 20)); // src offset
         uint8_t* src_data = src_offset + src_data_begin;
-        int height = *(int*)(v6 + 28);
+        int height = *reinterpret_cast<int*>(v6 + 28);
         int dst_pixel_size = GetPixelFormatSize(lock_data.PixelFormat);
         uint8_t* dst_row_ptr = &lock_data.Bits[dst_pixel_size * offset_x + offset_y * lock_data.Pitch];
         bool success = ConvertBitmapFormat(dst_row_ptr, lock_data.PixelFormat, src_data, rf::BMPF_888, src_width,
@@ -241,11 +242,11 @@ int GeoModGenerateLightmap_004E487B(uintptr_t v6)
 
 void WaterGenerateTexture_004E68D1(uintptr_t v1)
 {
-    unsigned v8 = *(unsigned*)(v1 + 36);
+    unsigned v8 = *reinterpret_cast<unsigned*>(v1 + 36);
     rf::GrLockData src_lock_data, dst_lock_data;
     rf::GrLock(v8, 0, &src_lock_data, 0);
-    rf::GrLock(*(unsigned*)(v1 + 24), 0, &dst_lock_data, 2);
-    int v9 = *(unsigned*)(v1 + 16);
+    rf::GrLock(*reinterpret_cast<unsigned*>(v1 + 24), 0, &dst_lock_data, 2);
+    int v9 = *reinterpret_cast<unsigned*>(v1 + 16);
     int8_t v10 = 0;
     int8_t v41 = 0;
     if (v9 > 0) {
@@ -259,9 +260,9 @@ void WaterGenerateTexture_004E68D1(uintptr_t v1)
         }
     }
 
-    static auto& byte_1370f90 = *(uint8_t(*)[256])0x1370F90;
-    static auto& byte_1371b14 = *(uint8_t(*)[256])0x1371B14;
-    static auto& byte_1371090 = *(uint8_t(*)[512])0x1371090;
+    auto& byte_1370f90 = AddrAsRef<uint8_t[256]>(0x1370F90);
+    auto& byte_1371b14 = AddrAsRef<uint8_t[256]>(0x1371B14);
+    auto& byte_1371090 = AddrAsRef<uint8_t[512]>(0x1371090);
 
     uint8_t* dst_row_ptr = dst_lock_data.Bits;
     int src_pixel_size = GetPixelFormatSize(src_lock_data.PixelFormat);
@@ -290,7 +291,7 @@ void GetAmbientColorFromLightmaps_004E5CE3(unsigned bm_handle, int x, int y, uns
     rf::GrLockData lock_data;
     if (rf::GrLock(bm_handle, 0, &lock_data, 0)) {
         const uint8_t* src_ptr = lock_data.Bits + y * lock_data.Pitch + x * GetPixelFormatSize(lock_data.PixelFormat);
-        uint8_t* dst_ptr = (uint8_t*)&color;
+        uint8_t* dst_ptr = reinterpret_cast<uint8_t*>(&color);
         ConvertPixelFormat(dst_ptr, rf::BMPF_8888, src_ptr, lock_data.PixelFormat);
         rf::GrUnlock(&lock_data);
     }
