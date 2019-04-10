@@ -178,6 +178,11 @@ void FtolIssuesDetectionDoFrame()
 DcCommand2 detect_ftol_issues_cmd{
     "detect_ftol_issues",
     [](std::optional<float> fps_opt) {
+        static bool patched = false;
+        if (!patched) {
+            AsmWritter(0x00573528).jmp(ftol_Wrapper);
+            patched = true;
+        }
         if (!g_ftol_issue_detection) {
             g_ftol_issue_detection_fps = fps_opt.value_or(240);
             FtolIssuesDetectionStart();
@@ -255,7 +260,6 @@ void HighFpsInit()
     }
 
 #ifdef DEBUG
-    AsmWritter(0x00573528).jmp(ftol_Wrapper);
     detect_ftol_issues_cmd.Register();
 #endif
 
