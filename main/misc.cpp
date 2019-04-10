@@ -26,6 +26,8 @@ static auto& CanSave = AddrAsRef<bool()>(0x004B61A0);
 static auto& GameSeqPushState = AddrAsRef<int(int state, bool update_parent_state, bool parent_dlg_open)>(0x00434410);
 static auto& GameSeqProcessDeferredChange = AddrAsRef<int()>(0x00434310);
 
+static auto& GrIsSphereOutsideView = AddrAsRef<bool(rf::Vector3& pos, float radius)>(0x005186A0);
+
 } // namespace rf
 
 constexpr int EGG_ANIM_ENTER_TIME = 2000;
@@ -664,6 +666,19 @@ RegsPatch CoronaEntityCollisionTestFix{
     },
 };
 
+FunHook<void(rf::Object*, int)> GlareRenderCorona_hook{
+    0x00414860,
+    [](rf::Object *glare, int player_idx) {
+        // check if corona is in view using dynamic radius dedicated for this effect
+        // Note: object radius matches volumetric effect size and can be very large so this check helps
+        // to speed up rendering
+        auto& current_radius = StructFieldRef<float[2]>(glare, 0x2A4);
+        if (!rf::GrIsSphereOutsideView(glare->Pos, current_radius[player_idx])) {
+            GlareRenderCorona_hook.CallTarget(glare, player_idx);
+        }
+    },
+};
+
 FunHook<void()> DoQuickSave_Hook{
     0x004B5E20,
     []() {
@@ -1038,6 +1053,9 @@ void MiscInit()
 
     // Fix glares/coronas being visible through characters
     CoronaEntityCollisionTestFix.Install();
+
+    // Corona rendering optimization
+    GlareRenderCorona_hook.Install();
 
     // Linear vertical rotation (pitch)
     LinearPitchPatch.Install();

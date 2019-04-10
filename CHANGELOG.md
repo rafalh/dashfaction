@@ -36,6 +36,7 @@ Version 1.2.2 (not released yet)
 - add 'fullscreen' and 'windowed' commands
 - optimize particles and HUD rendering by reducing number of draw-calls
 - optimize rendering of railgun and rocket launcher scanners by using different back buffer capture technique
+- optimize glare rendering
 - use hardware vertex processing (optimization)
 - fix multiple security vulnerabilities
 - stability improvements
