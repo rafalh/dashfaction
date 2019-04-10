@@ -329,7 +329,7 @@ DcCommand2 VolumeLightsCmd{
     []() {
         g_game_config.glares = !g_game_config.glares;
         g_game_config.save();
-        rf::DcPrintf("Volumetric lightining is %s.", g_game_config.glares ? "disabled" : "enabled");
+        rf::DcPrintf("Volumetric lightining is %s.", g_game_config.glares ? "enabled" : "disabled");
     },
     "Toggles volumetric lightining",
 };
