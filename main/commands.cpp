@@ -398,7 +398,8 @@ void DcShowCmdHelp(rf::DcCommand* cmd)
     rf::g_DcRun = 0;
     rf::g_DcHelp = 1;
     rf::g_DcStatus = 0;
-    cmd->pfnHandler();
+    auto handler = reinterpret_cast<void(__fastcall*)(rf::DcCommand*)>(cmd->pfnHandler);
+    handler(cmd);
 }
 
 int DcAutoCompleteGetComponent(int offset, std::string& result)
@@ -482,7 +483,7 @@ void DcAutoCompleteLevel(int offset)
 
     if (matches.size() == 1)
         DcAutoCompletePutComponent(offset, matches[0], true);
-    else {
+    else if (!matches.empty()) {
         DcAutoCompletePrintSuggestions(matches, [](std::string& name) { return name.c_str(); });
         DcAutoCompletePutComponent(offset, common_prefix, false);
     }
@@ -505,7 +506,7 @@ void DcAutoCompletePlayer(int offset)
 
     if (matching_players.size() == 1)
         DcAutoCompletePutComponent(offset, matching_players[0]->strName.CStr(), true);
-    else {
+    else if (!matching_players.empty()) {
         DcAutoCompletePrintSuggestions(matching_players, [](rf::Player* player) {
             // Print player names
             return player->strName.CStr();
@@ -547,7 +548,12 @@ void DcAutoCompleteCommand(int offset)
             DcShowCmdHelp(matching_cmds[0]);
     }
     else if (matching_cmds.size() > 1) {
-        for (auto* cmd : matching_cmds) rf::DcPrintf("%s - %s", cmd->Cmd, cmd->Descr);
+        for (auto* cmd : matching_cmds) {
+            if (cmd->Descr)
+                rf::DcPrintf("%s - %s", cmd->Cmd);
+            else
+                rf::DcPrintf("%s", cmd->Cmd);
+        }
         DcAutoCompletePutComponent(offset, common_prefix, false);
     }
     else if (matching_cmds.size() == 1)
