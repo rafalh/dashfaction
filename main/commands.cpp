@@ -316,11 +316,11 @@ DcCommand2 MouseSensitivityCmd{
     "ms <value>",
 };
 
-CallHook<void()> CoronaRenderAll_Hook{
+CallHook<void(bool)> GlareRenderAllCorona_Hook{
     0x0043233E,
-    []() {
+    [](bool reflections) {
         if (g_game_config.glares)
-            CoronaRenderAll_Hook.CallTarget();
+            GlareRenderAllCorona_Hook.CallTarget(reflections);
     },
 };
 
@@ -603,7 +603,7 @@ void CommandsInit()
     DcAutoCompleteInput_Hook.Install();
 
     // vli command support
-    CoronaRenderAll_Hook.Install();
+    GlareRenderAllCorona_Hook.Install();
 
     // Allow 'level' command outside of multiplayer game
     AsmWritter(0x00434FEC, 0x00434FF2).nop();
