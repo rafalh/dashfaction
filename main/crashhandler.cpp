@@ -61,7 +61,7 @@ void CrashHandlerInit(HMODULE module_handle)
     g_OldExceptionFilter = SetUnhandledExceptionFilter(CrashHandlerExceptionFilter);
 }
 
-void CrashHandlerCleanup(void)
+void CrashHandlerCleanup()
 {
     SetUnhandledExceptionFilter(g_OldExceptionFilter);
 }

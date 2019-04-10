@@ -59,9 +59,9 @@ void SpectateModeSetTargetPlayer(rf::Player* player)
         return;
 
     if (rf::g_GameOptions & RF_GO_FORCE_RESPAWN) {
-        // rf::String msg{ "You cannot use Spectate Mode because Force Respawn option is enabled on this server!" };
-        // rf::String prefix;
-        // rf::ChatPrint(msg, 4, prefix);
+        rf::String msg{"You cannot use Spectate Mode because Force Respawn option is enabled on this server!"};
+        rf::String prefix;
+        rf::ChatPrint(msg, rf::ChatMsgColor::white_white, prefix);
         return;
     }
 
@@ -292,7 +292,8 @@ void SpectateModeInit()
     // Note: HUD rendering doesn't make sense because life and armor isn't synced
 
 #if SPECTATE_MODE_SHOW_WEAPON
-    WriteMem<i32>(0x0043285D + 1, (uintptr_t)PlayerFpgunRender_New - (0x0043285D + 0x5));
+
+    AsmWritter(0x0043285D).call(PlayerFpgunRender_New);
     AsmWritter(0x004AB1B8).nop(6); // PlayerFpgunRenderInternal
     AsmWritter(0x004AA23E).nop(6); // PlayerFpgunSetupMesh
     AsmWritter(0x004AE0DF).nop(2); // PlayerFpgunLoadMesh
@@ -360,10 +361,9 @@ void SpectateModeDrawUI()
     rf::GrSetColor(0, 0, 0x00, 0x60);
     rf::GrDrawRect(x, y, cx, cy, rf::g_GrRectMaterial);
 
-    char buf[256];
     rf::GrSetColor(0xFF, 0xFF, 0, 0x80);
-    snprintf(buf, sizeof(buf), "Spectating: %s", g_SpectateModeTarget->strName.CStr());
-    rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, x + cx / 2, y + cy / 2 - cy_font / 2 - 5, buf, g_LargeFont,
+    auto str = StringFormat("Spectating: %s", g_SpectateModeTarget->strName.CStr());
+    rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, x + cx / 2, y + cy / 2 - cy_font / 2 - 5, str.c_str(), g_LargeFont,
                           rf::g_GrTextMaterial);
 
     rf::EntityObj* entity = rf::EntityGetFromHandle(g_SpectateModeTarget->Entity_handle);
