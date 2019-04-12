@@ -20,7 +20,6 @@ static float g_camera_shake_factor = 0.6f;
 
 class FtolAccuracyFix
 {
-
     struct StateData
     {
         double remainder = 0.0;
@@ -89,12 +88,12 @@ public:
     }
 };
 
-std::array g_ftol_accuracy_fixes{
-    FtolAccuracyFix{0x00416426},                // hit screen
-    FtolAccuracyFix{0x004D5214, asm_regs::esi}, // decal fade out
-    FtolAccuracyFix{0x005096A7},                // timer
-    FtolAccuracyFix{0x0050ABFB},                // console open/close
-    FtolAccuracyFix{0x0051BAD7, asm_regs::esi}, // anim mesh
+FtolAccuracyFix g_ftol_accuracy_fixes[]{
+    {0x00416426},                // hit screen
+    {0x004D5214, asm_regs::esi}, // decal fade out
+    {0x005096A7},                // timer
+    {0x0050ABFB},                // console open/close
+    {0x0051BAD7, asm_regs::esi}, // anim mesh
 };
 
 #ifdef DEBUG
@@ -115,8 +114,11 @@ std::unordered_set<uintptr_t> g_ftol_issues;
 extern "C" long ftol2(double value, uintptr_t ret_addr)
 {
     long result = static_cast<long>(value);
-    g_ftol_debug_info_map[ret_addr].val_sum += value;
-    g_ftol_debug_info_map[ret_addr].num_calls++;
+    if (g_ftol_issue_detection) {
+        FtolDebugInfo& info = g_ftol_debug_info_map[ret_addr];
+        info.val_sum += value;
+        info.num_calls++;
+    }
     return result;
 }
 
@@ -222,15 +224,13 @@ FunHook<int(rf::String&, rf::String&, char*)> RflLoad_Hook{
         if (ret == 0 && std::strstr(level_filename, "L5S3")) {
             // Fix submarine exploding - change delay of two events to make submarine physics enabled later
             // INFO("Fixing Submarine exploding bug...");
-            rf::Object* obj = rf::ObjGetFromUid(4679);
-            if (obj && obj->Type == rf::OT_EVENT) {
-                rf::EventObj* event = reinterpret_cast<rf::EventObj*>(reinterpret_cast<uintptr_t>(obj) - 4);
-                event->fDelay += 1.5f;
-            }
-            obj = rf::ObjGetFromUid(4680);
-            if (obj && obj->Type == rf::OT_EVENT) {
-                rf::EventObj* event = reinterpret_cast<rf::EventObj*>(reinterpret_cast<uintptr_t>(obj) - 4);
-                event->fDelay += 1.5f;
+            int uids[] = {4679, 4680};
+            for (int uid : uids) {
+                rf::Object* obj = rf::ObjGetFromUid(uid);
+                if (obj && obj->Type == rf::OT_EVENT) {
+                    rf::EventObj* event = reinterpret_cast<rf::EventObj*>(reinterpret_cast<uintptr_t>(obj) - 4);
+                    event->fDelay += 1.5f;
+                }
             }
         }
         return ret;

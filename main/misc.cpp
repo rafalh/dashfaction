@@ -68,14 +68,16 @@ FunHook<void(const char**, const char**)> GetVersionStr_Hook{
 };
 
 FunHook<int()> MenuUpdate_Hook{
-    0x00434230, []() {
+    0x00434230,
+    []() {
         int menu_id = MenuUpdate_Hook.CallTarget();
         if (menu_id == rf::GS_MP_LIMBO) // hide cursor when changing level - hackfixed in RF by chaning rendering logic
             rf::SetCursorVisible(false);
         else if (menu_id == rf::GS_MAIN_MENU)
             rf::SetCursorVisible(true);
         return menu_id;
-    }};
+    },
+};
 
 RegsPatch gr_direct3d_lock_crash_fix{
     0x0055CE55,
@@ -175,7 +177,9 @@ void SetPlaySoundEventsVolumeScale(float volume_scale)
         // Play Sound event
         0x004BA4D8, 0x004BA515, 0x004BA71C, 0x004BA759, 0x004BA609, 0x004BA5F2, 0x004BA63F,
     };
-    for (unsigned i = 0; i < std::size(offsets); ++i) WriteMem<float>(offsets[i] + 1, volume_scale);
+    for (auto offset : offsets) {
+        WriteMem<float>(offset + 1, volume_scale);
+    }
 }
 
 CallHook<void(int, rf::Vector3*, float*, float*, float)> SndConvertVolume3D_AmbientSound_Hook{

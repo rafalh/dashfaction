@@ -54,8 +54,9 @@ static void SetTextureMinMagFilterInCode(D3DTEXTUREFILTERTYPE filter_type)
         0x005501A2, 0x005501B6,
     };
     // clang-format on
-    unsigned i;
-    for (i = 0; i < std::size(addresses); ++i) WriteMem<u8>(addresses[i] + 1, (uint8_t)filter_type);
+    for (auto address : addresses) {
+        WriteMem<u8>(address + 1, filter_type);
+    }
 }
 
 RegsPatch GrSetViewMatrix_widescreen_fix{
@@ -93,7 +94,8 @@ RegsPatch GrSetViewMatrix_widescreen_fix{
 };
 
 RegsPatch GrCreateD3DDevice_error_patch{
-    0x00545CBD, [](auto& regs) {
+    0x00545CBD,
+    [](auto& regs) {
         auto hr = static_cast<HRESULT>(regs.eax);
         ERR("D3D CreateDevice failed (hr 0x%X - %s)", hr, getDxErrorStr(hr));
 
@@ -103,7 +105,8 @@ RegsPatch GrCreateD3DDevice_error_patch{
                                  hr, getDxErrorStr(hr));
         MessageBoxA(nullptr, text.c_str(), "Error!", MB_OK | MB_ICONERROR | MB_SETFOREGROUND | MB_TASKMODAL);
         ExitProcess(-1);
-    }};
+    },
+};
 
 RegsPatch GrClearZBuffer_fix_rect{0x00550A19, [](auto& regs) {
                                       auto& rect = *reinterpret_cast<D3DRECT*>(regs.edx);
