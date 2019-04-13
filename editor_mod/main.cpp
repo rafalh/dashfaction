@@ -68,6 +68,9 @@ extern "C" DWORD DLL_EXPORT Init([[maybe_unused]] void* Unused)
     // InitInstance hook
     AsmWritter(0x00482C84).call(CEditorApp__InitInstance_AfterHook);
 
+    // Avoid flushing D3D buffers in GrSetColor
+    AsmWritter(0x004B976D).nop(5);
+
     return 1; // success
 }
 
