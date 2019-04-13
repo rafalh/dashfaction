@@ -193,12 +193,12 @@ class RfConsoleLogAppender : public logging::BaseAppender
 void InitLogging()
 {
     CreateDirectoryA("logs", nullptr);
-    logging::LoggerConfig::root().addAppender(
-        std::move(std::make_unique<logging::FileAppender>("logs/DashFaction.log", false)));
-    logging::LoggerConfig::root().addAppender(std::move(std::make_unique<logging::ConsoleAppender>()));
-    logging::LoggerConfig::root().addAppender(std::move(std::make_unique<logging::Win32Appender>()));
+    auto& logger_config = logging::LoggerConfig::root();
+    logger_config.addAppender(std::make_unique<logging::FileAppender>("logs/DashFaction.log", false));
+    logger_config.addAppender(std::make_unique<logging::ConsoleAppender>());
+    logger_config.addAppender(std::make_unique<logging::Win32Appender>());
 #ifndef NDEBUG
-    logging::LoggerConfig::root().addAppender(std::move(std::make_unique<RfConsoleLogAppender>()));
+    logger_config.addAppender(std::make_unique<RfConsoleLogAppender>());
 #endif
 }
 
