@@ -1,5 +1,6 @@
 #include "exports.h"
 #include "version.h"
+#include "GameConfig.h"
 #include <AsmOpcodes.h>
 #include <AsmWritter.h>
 #include <MemUtils.h>
@@ -68,8 +69,18 @@ extern "C" DWORD DLL_EXPORT Init([[maybe_unused]] void* Unused)
     // InitInstance hook
     AsmWritter(0x00482C84).call(CEditorApp__InitInstance_AfterHook);
 
+#if D3D_HW_VERTEX_PROCESSING
+    // Use hardware vertex processing instead of software processing
+    WriteMem<u8>(0x004EC73E + 1, D3DCREATE_HARDWARE_VERTEXPROCESSING);
+    WriteMem<u32>(0x004EBC3D + 1, D3DUSAGE_DYNAMIC|D3DUSAGE_DONOTCLIP|D3DUSAGE_WRITEONLY);
+    WriteMem<u32>(0x004EBC77 + 1, D3DUSAGE_DYNAMIC|D3DUSAGE_DONOTCLIP|D3DUSAGE_WRITEONLY);
+#endif
+
     // Avoid flushing D3D buffers in GrSetColor
     AsmWritter(0x004B976D).nop(5);
+
+    // Optimization - remove unused back buffer locking/unlocking in GrSwapBuffers
+    AsmWritter(0x004EBBAA).jmp(0x004EBBEB);
 
     return 1; // success
 }

@@ -326,6 +326,7 @@ void GraphicsInit()
     // WriteMem<u8>(0x00524C98, ASM_SHORT_JMP_REL); // disable window hooks
 
 #if D3D_HW_VERTEX_PROCESSING
+    // Use hardware vertex processing instead of software processing
     WriteMem<u8>(0x00545BDE + 1, D3DCREATE_HARDWARE_VERTEXPROCESSING);
     WriteMem<u32>(0x005450DD + 1, D3DUSAGE_DYNAMIC|D3DUSAGE_DONOTCLIP|D3DUSAGE_WRITEONLY);
     WriteMem<u32>(0x00545117 + 1, D3DUSAGE_DYNAMIC|D3DUSAGE_DONOTCLIP|D3DUSAGE_WRITEONLY);
