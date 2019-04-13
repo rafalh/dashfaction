@@ -4,8 +4,11 @@
 #include <AsmOpcodes.h>
 #include <AsmWritter.h>
 #include <MemUtils.h>
+#include <CallHook.h>
 #include <cstdio>
 #include <cstddef>
+#include <d3d8.h>
+
 #include <log/ConsoleAppender.h>
 #include <log/FileAppender.h>
 #include <log/Win32Appender.h>
@@ -43,13 +46,30 @@ LRESULT CALLBACK EditorWndProc_New(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 
 BOOL CEditorApp__InitInstance_AfterHook()
 {
-    g_EditorWnd = GetActiveWindow();
-    g_EditorWndProc_Orig = (WNDPROC)GetWindowLongPtr(g_EditorWnd, GWLP_WNDPROC);
+    std::byte* unk = *reinterpret_cast<std::byte**>(g_EditorApp + 0x1C);
+    g_EditorWnd = *reinterpret_cast<HWND*>(unk + 28);
+
+    g_EditorWndProc_Orig = reinterpret_cast<WNDPROC>(GetWindowLongPtr(g_EditorWnd, GWLP_WNDPROC));
     SetWindowLongPtr(g_EditorWnd, GWLP_WNDPROC, (LONG)EditorWndProc_New);
     DWORD ExStyle = GetWindowLongPtr(g_EditorWnd, GWL_EXSTYLE);
     SetWindowLongPtr(g_EditorWnd, GWL_EXSTYLE, ExStyle | WS_EX_ACCEPTFILES);
     return TRUE;
 }
+
+CallHook<void()> frametime_update_hook{
+    0x00483047,
+    []() {
+        if (!IsWindowVisible(g_EditorWnd)) {
+            // when minimized 1 FPS
+            Sleep(1000);
+        }
+        else if (GetForegroundWindow() != g_EditorWnd) {
+            // when in background 4 FPS
+            Sleep(250);
+        }
+        frametime_update_hook.CallTarget();
+    },
+};
 
 void InitLogging()
 {
@@ -96,6 +116,8 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* Unused)
 
     // Optimization - remove unused back buffer locking/unlocking in GrSwapBuffers
     AsmWritter(0x004EBBAA).jmp(0x004EBBEB);
+
+    frametime_update_hook.Install();
 
     return 1; // success
 }
