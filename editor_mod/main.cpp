@@ -5,6 +5,7 @@
 #include <AsmWritter.h>
 #include <MemUtils.h>
 #include <CallHook.h>
+#include <RegsPatch.h>
 #include <cstdio>
 #include <cstddef>
 #include <d3d8.h>
@@ -71,6 +72,113 @@ CallHook<void()> frametime_update_hook{
     },
 };
 
+RegsPatch gr_d3d_draw_line_3d_patch_1{
+    0x004E133E,
+    [](auto& regs) {
+        auto& gr_d3d_buffers_locked = AddrAsRef<bool>(0x0183930D);
+        auto& gr_d3d_primitive_type = AddrAsRef<int>(0x0175A2C8);
+        auto& gr_max_hw_vertex = AddrAsRef<int>(0x01621FA8);
+        auto& gr_max_hw_index = AddrAsRef<int>(0x01621FAC);
+        auto& gr_current_num_indices = AddrAsRef<int>(0x01839314);
+        bool flush_needed = !gr_d3d_buffers_locked
+                         || gr_d3d_primitive_type != D3DPT_LINELIST
+                         || gr_max_hw_vertex + 2 > 6000
+                         || gr_max_hw_index + gr_current_num_indices + 2 > 10000;
+        if (!flush_needed) {
+            TRACE("Skipping gr_d3d_prepare_buffers");
+            regs.eip = 0x004E1343;
+        }
+        else {
+            TRACE("Line drawing requires gr_d3d_prepare_buffers %d %d %d %d",
+                 gr_d3d_buffers_locked, gr_d3d_primitive_type, gr_max_hw_vertex, gr_max_hw_index + gr_current_num_indices);
+        }
+    },
+};
+
+CallHook<void()> gr_d3d_draw_line_3d_patch_2{
+    0x004E1528,
+    []() {
+        auto& gr_current_num_vertices = AddrAsRef<int>(0x01839310);
+        gr_current_num_vertices += 2;
+    },
+};
+
+RegsPatch gr_d3d_draw_line_2d_patch_1{
+    0x004E10BD,
+    [](auto& regs) {
+        auto& gr_d3d_buffers_locked = AddrAsRef<bool>(0x0183930D);
+        auto& gr_d3d_primitive_type = AddrAsRef<int>(0x0175A2C8);
+        auto& gr_max_hw_vertex = AddrAsRef<int>(0x01621FA8);
+        auto& gr_max_hw_index = AddrAsRef<int>(0x01621FAC);
+        auto& gr_current_num_indices = AddrAsRef<int>(0x01839314);
+        bool flush_needed = !gr_d3d_buffers_locked
+                         || gr_d3d_primitive_type != D3DPT_LINELIST
+                         || gr_max_hw_vertex + 2 > 6000
+                         || gr_max_hw_index + gr_current_num_indices + 2 > 10000;
+        if (!flush_needed) {
+            TRACE("Skipping gr_d3d_prepare_buffers");
+            regs.eip = 0x004E10C2;
+        }
+        else {
+            TRACE("Line drawing requires gr_d3d_prepare_buffers %d %d %d %d",
+                 gr_d3d_buffers_locked, gr_d3d_primitive_type, gr_max_hw_vertex, gr_max_hw_index + gr_current_num_indices);
+        }
+    },
+};
+
+CallHook<void()> gr_d3d_draw_line_2d_patch_2{
+    0x004E11F2,
+    []() {
+        auto& gr_current_num_vertices = AddrAsRef<int>(0x01839310);
+        gr_current_num_vertices += 2;
+    },
+};
+
+RegsPatch gr_d3d_draw_poly_patch{
+    0x004E1573,
+    [](auto& regs) {
+        auto& gr_d3d_primitive_type = AddrAsRef<int>(0x0175A2C8);
+        if (gr_d3d_primitive_type != D3DPT_TRIANGLELIST)
+            regs.eip = 0x004E1598;
+    },
+};
+
+RegsPatch gr_d3d_draw_texture_patch_1{
+    0x004E090E,
+    [](auto& regs) {
+        auto& gr_d3d_primitive_type = AddrAsRef<int>(0x0175A2C8);
+        if (gr_d3d_primitive_type != D3DPT_TRIANGLELIST)
+            regs.eip = 0x004E092C;
+    },
+};
+
+RegsPatch gr_d3d_draw_texture_patch_2{
+    0x004E0C97,
+    [](auto& regs) {
+        auto& gr_d3d_primitive_type = AddrAsRef<int>(0x0175A2C8);
+        if (gr_d3d_primitive_type != D3DPT_TRIANGLELIST)
+            regs.eip = 0x004E0CBB;
+    },
+};
+
+RegsPatch gr_d3d_draw_geometry_face_patch_1{
+    0x004E18F1,
+    [](auto& regs) {
+        auto& gr_d3d_primitive_type = AddrAsRef<int>(0x0175A2C8);
+        if (gr_d3d_primitive_type != D3DPT_TRIANGLELIST)
+            regs.eip = 0x004E1916;
+    },
+};
+
+RegsPatch gr_d3d_draw_geometry_face_patch_2{
+    0x004E1B2D,
+    [](auto& regs) {
+        auto& gr_d3d_primitive_type = AddrAsRef<int>(0x0175A2C8);
+        if (gr_d3d_primitive_type != D3DPT_TRIANGLELIST)
+            regs.eip = 0x004E1B53;
+    },
+};
+
 void InitLogging()
 {
     CreateDirectoryA("logs", nullptr);
@@ -117,9 +225,27 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* Unused)
     // Optimization - remove unused back buffer locking/unlocking in GrSwapBuffers
     AsmWritter(0x004EBBAA).jmp(0x004EBBEB);
 
+    // Add Sleep if window is inactive
     frametime_update_hook.Install();
 
+    // Reduce number of draw-calls for line rendering
+    AsmWritter(0x004E1335).nop(5);
+    gr_d3d_draw_line_3d_patch_1.Install();
+    gr_d3d_draw_line_3d_patch_2.Install();
+    AsmWritter(0x004E10B4).nop(5);
+    gr_d3d_draw_line_2d_patch_1.Install();
+    gr_d3d_draw_line_2d_patch_2.Install();
+    gr_d3d_draw_poly_patch.Install();
+    gr_d3d_draw_texture_patch_1.Install();
+    gr_d3d_draw_texture_patch_2.Install();
+    gr_d3d_draw_geometry_face_patch_1.Install();
+    gr_d3d_draw_geometry_face_patch_2.Install();
     return 1; // success
+}
+
+extern "C" void subhook_unk_opcode_handler(uint8_t* opcode)
+{
+    ERR("SubHook unknown opcode 0x%X at 0x%p", *opcode, opcode);
 }
 
 BOOL WINAPI DllMain(HINSTANCE Instance, [[maybe_unused]] DWORD Reason, [[maybe_unused]] LPVOID Reserved)

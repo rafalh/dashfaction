@@ -21,6 +21,7 @@ set_property(TARGET DashEditor PROPERTY PREFIX "")
 target_link_libraries(DashEditor
     ModCommon
     Logger
+    subhook
     shlwapi
 )
 

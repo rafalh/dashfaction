@@ -38,6 +38,7 @@ Version 1.2.2 (not released yet)
 - optimize rendering of railgun and rocket launcher scanners by using different back buffer capture technique
 - optimize glare rendering
 - use hardware vertex processing in game and level editor (optimization)
+- reduce number of draw-calls when rendering lines in level editor (optimization)
 - fix multiple security vulnerabilities
 - stability improvements
 
