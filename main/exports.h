@@ -6,17 +6,18 @@
  *  in your project.
  */
 
+// Note: DLL_EXPORT macro is used by pthread.h header in MinGW...
 #ifdef BUILD_DLL
-#define DLL_EXPORT __declspec(dllexport)
+#define DF_DLL_EXPORT __declspec(dllexport)
 #else
-#define DLL_EXPORT __declspec(dllimport)
+#define DF_DLL_EXPORT __declspec(dllimport)
 #endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-DWORD DLL_EXPORT Init(void* unused);
+DWORD DF_DLL_EXPORT Init(void* unused);
 
 #ifdef __cplusplus
 }

@@ -221,7 +221,7 @@ extern "C" void subhook_unk_opcode_handler(uint8_t* opcode)
     ERR("SubHook unknown opcode 0x%X at 0x%p", *opcode, opcode);
 }
 
-extern "C" DWORD DLL_EXPORT Init([[maybe_unused]] void* unused)
+extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
 {
     DWORD start_ticks = GetTickCount();
 

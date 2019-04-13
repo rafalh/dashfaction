@@ -48,7 +48,7 @@ BOOL CEditorApp__InitInstance_AfterHook()
     return TRUE;
 }
 
-extern "C" DWORD DLL_EXPORT Init([[maybe_unused]] void* Unused)
+extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* Unused)
 {
     // Prepare command
     static char CmdBuf[512];
