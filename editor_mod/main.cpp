@@ -5,6 +5,7 @@
 #include <AsmWritter.h>
 #include <MemUtils.h>
 #include <cstdio>
+#include <cstddef>
 
 #define LAUNCHER_FILENAME "DashFactionLauncher.exe"
 
@@ -12,15 +13,14 @@ HMODULE g_Module;
 HWND g_EditorWnd;
 WNDPROC g_EditorWndProc_Orig;
 
-static const auto g_EditorApp = (void*)0x006F9DA0;
+static const auto g_EditorApp = reinterpret_cast<std::byte*>(0x006F9DA0);
 
 void OpenLevel(const char* Path)
 {
-    void* DocManager = *(void**)(((BYTE*)g_EditorApp) + 0x80);
-    void* DocManager_Vtbl = *(void**)DocManager;
+    void* DocManager = *reinterpret_cast<void**>(g_EditorApp + 0x80);
+    void** DocManager_Vtbl = *reinterpret_cast<void***>(DocManager);
     typedef int(__thiscall * CDocManager_OpenDocumentFile_Ptr)(void* This, LPCSTR String2);
-    CDocManager_OpenDocumentFile_Ptr pDocManager_OpenDocumentFile =
-        (CDocManager_OpenDocumentFile_Ptr) * (((void**)DocManager_Vtbl) + 7);
+    auto pDocManager_OpenDocumentFile = reinterpret_cast<CDocManager_OpenDocumentFile_Ptr>(DocManager_Vtbl[7]);
     pDocManager_OpenDocumentFile(DocManager, Path);
 }
 
