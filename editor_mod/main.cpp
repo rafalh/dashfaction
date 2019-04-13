@@ -1,11 +1,14 @@
 #include "exports.h"
 #include "version.h"
-#include "GameConfig.h"
+#include "BuildConfig.h"
 #include <AsmOpcodes.h>
 #include <AsmWritter.h>
 #include <MemUtils.h>
 #include <cstdio>
 #include <cstddef>
+#include <log/ConsoleAppender.h>
+#include <log/FileAppender.h>
+#include <log/Win32Appender.h>
 
 #define LAUNCHER_FILENAME "DashFactionLauncher.exe"
 
@@ -48,8 +51,20 @@ BOOL CEditorApp__InitInstance_AfterHook()
     return TRUE;
 }
 
+void InitLogging()
+{
+    CreateDirectoryA("logs", nullptr);
+    auto& logger_config = logging::LoggerConfig::root();
+    logger_config.addAppender(std::make_unique<logging::FileAppender>("logs/DashEditor.log", false));
+    logger_config.addAppender(std::make_unique<logging::ConsoleAppender>());
+    logger_config.addAppender(std::make_unique<logging::Win32Appender>());
+}
+
 extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* Unused)
 {
+    InitLogging();
+    INFO("DashFaction Editor log started.");
+
     // Prepare command
     static char CmdBuf[512];
     GetModuleFileNameA(g_Module, CmdBuf, sizeof(CmdBuf));
