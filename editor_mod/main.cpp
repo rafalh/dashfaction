@@ -240,6 +240,9 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* Unused)
     gr_d3d_draw_texture_patch_2.Install();
     gr_d3d_draw_geometry_face_patch_1.Install();
     gr_d3d_draw_geometry_face_patch_2.Install();
+
+    // Increase memory size of log view buffer (500 lines * 64 characters)
+    WriteMem<int32_t>(0x0044489C + 1, 32000);
     return 1; // success
 }
 
