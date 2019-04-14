@@ -51,8 +51,8 @@ public:
 
     R CallTarget(A... a) const
     {
-        auto TargetFun = reinterpret_cast<FunType*>(m_target_fun_ptr);
-        return TargetFun(a...);
+        auto target_fun = reinterpret_cast<FunType*>(m_target_fun_ptr);
+        return target_fun(a...);
     }
 };
 
@@ -69,8 +69,8 @@ public:
 
     R CallTarget(A... a) const
     {
-        auto TargetFun = reinterpret_cast<FunType*>(m_target_fun_ptr);
-        return TargetFun(a...);
+        auto target_fun = reinterpret_cast<FunType*>(m_target_fun_ptr);
+        return target_fun(a...);
     }
 };
 

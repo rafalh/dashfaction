@@ -39,7 +39,9 @@ Version 1.2.2 (not released yet)
 - optimize glare rendering
 - use hardware vertex processing in game and level editor (optimization)
 - reduce number of draw-calls when rendering lines in level editor (optimization)
-- fix "Buffer overrun" message being displed in RED when too many objects were selected
+- fix "Buffer overrun" message being displed in RED (level editor) when too many objects were selected
+- optimize displaying selected objects in log view in RED (level editor)
+
 - fix multiple security vulnerabilities
 - stability improvements
 

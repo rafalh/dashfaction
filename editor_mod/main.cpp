@@ -5,6 +5,7 @@
 #include <AsmWritter.h>
 #include <MemUtils.h>
 #include <CallHook.h>
+#include <FunHook.h>
 #include <RegsPatch.h>
 #include <cstdio>
 #include <cstddef>
@@ -179,6 +180,49 @@ RegsPatch gr_d3d_draw_geometry_face_patch_2{
     },
 };
 
+bool g_skip_wnd_set_text = false;
+
+static auto& g_log_view = AddrAsRef<std::byte*>(0x006F9E68);
+static auto& log_wnd_append = AddrAsRef<int(void* self, const char* format, ...)>(0x00444980);
+
+using wnd_set_text_type = int __fastcall(void*, void*, const char*);
+extern CallHook<wnd_set_text_type> log_append_wnd_set_text_hook;
+int __fastcall log_append_wnd_set_text_new(void* self, void* edx, const char* str)
+{
+    if (g_skip_wnd_set_text)
+        return strlen(str);
+    else
+        return log_append_wnd_set_text_hook.CallTarget(self, edx, str);
+}
+CallHook<wnd_set_text_type> log_append_wnd_set_text_hook{0x004449C6, log_append_wnd_set_text_new};
+
+using group_mode_handle_selection_type = void __fastcall(void* self);
+extern FunHook<group_mode_handle_selection_type> group_mode_handle_selection_hook;
+void __fastcall group_mode_handle_selection_new(void* self)
+{
+    g_skip_wnd_set_text = true;
+    group_mode_handle_selection_hook.CallTarget(self);
+    g_skip_wnd_set_text = false;
+    // TODO: print
+    auto log_view = *reinterpret_cast<void**>(g_log_view + 692);
+    log_wnd_append(log_view, "");
+}
+FunHook<group_mode_handle_selection_type> group_mode_handle_selection_hook{0x00423460, group_mode_handle_selection_new};
+
+using brush_mode_handle_selection_type = void __fastcall(void* self);
+extern FunHook<brush_mode_handle_selection_type> brush_mode_handle_selection_hook;
+void __fastcall brush_mode_handle_selection_new(void* self)
+{
+    g_skip_wnd_set_text = true;
+    brush_mode_handle_selection_hook.CallTarget(self);
+    g_skip_wnd_set_text = false;
+    // TODO: print
+    auto log_view = *reinterpret_cast<void**>(g_log_view + 692);
+    log_wnd_append(log_view, "");
+
+}
+FunHook<brush_mode_handle_selection_type> brush_mode_handle_selection_hook{0x0043F430, brush_mode_handle_selection_new};
+
 void InitLogging()
 {
     CreateDirectoryA("logs", nullptr);
@@ -240,6 +284,11 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* Unused)
 
     // Increase memory size of log view buffer (500 lines * 64 characters)
     WriteMem<int32_t>(0x0044489C + 1, 32000);
+
+    // Optimize object selection logging
+    log_append_wnd_set_text_hook.Install();
+    brush_mode_handle_selection_hook.Install();
+    group_mode_handle_selection_hook.Install();
     return 1; // success
 }
 
