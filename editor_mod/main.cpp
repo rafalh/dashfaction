@@ -222,9 +222,6 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* Unused)
     // Avoid flushing D3D buffers in GrSetColor
     AsmWritter(0x004B976D).nop(5);
 
-    // Optimization - remove unused back buffer locking/unlocking in GrSwapBuffers
-    AsmWritter(0x004EBBAA).jmp(0x004EBBEB);
-
     // Add Sleep if window is inactive
     frametime_update_hook.Install();
 
