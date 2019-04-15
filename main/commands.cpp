@@ -550,7 +550,7 @@ void DcAutoCompleteCommand(int offset)
     else if (matching_cmds.size() > 1) {
         for (auto* cmd : matching_cmds) {
             if (cmd->Descr)
-                rf::DcPrintf("%s - %s", cmd->Cmd);
+                rf::DcPrintf("%s - %s", cmd->Cmd, cmd->Descr);
             else
                 rf::DcPrintf("%s", cmd->Cmd);
         }
@@ -562,7 +562,10 @@ void DcAutoCompleteCommand(int offset)
 
 FunHook<void()> DcAutoCompleteInput_Hook{
     0x0050A620,
-    []() { DcAutoCompleteCommand(0); },
+    []() {
+        // autocomplete on offset 0
+        DcAutoCompleteCommand(0);
+    },
 };
 
 RegsPatch DcRunCmd_CallHandlerPatch{
