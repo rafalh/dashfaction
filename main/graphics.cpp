@@ -97,7 +97,7 @@ RegsPatch GrCreateD3DDevice_error_patch{
     0x00545CBD,
     [](auto& regs) {
         auto hr = static_cast<HRESULT>(regs.eax);
-        ERR("D3D CreateDevice failed (hr 0x%X - %s)", hr, getDxErrorStr(hr));
+        ERR("D3D CreateDevice failed (hr 0x%lX - %s)", hr, getDxErrorStr(hr));
 
         auto text = StringFormat("Failed to create Direct3D device object - error 0x%lX (%s).\n"
                                  "A critical error has occurred and the program cannot continue.\n"
@@ -119,7 +119,7 @@ static void SetupPP()
     memset(&rf::g_GrPP, 0, sizeof(rf::g_GrPP));
 
     auto& format = AddrAsRef<D3DFORMAT>(0x005A135C);
-    INFO("D3D Format: %ld", format);
+    INFO("D3D Format: %u", format);
 
 #if MULTISAMPLING_SUPPORT
     if (g_game_config.msaa && format > 0) {
@@ -132,7 +132,7 @@ static void SetupPP()
             rf::g_GrPP.MultiSampleType = (D3DMULTISAMPLE_TYPE)g_game_config.msaa;
         }
         else {
-            WARN("MSAA not supported (0x%x)...", hr);
+            WARN("MSAA not supported (0x%lx)...", hr);
             g_game_config.msaa = D3DMULTISAMPLE_NONE;
         }
     }
@@ -447,7 +447,7 @@ void GraphicsAfterGameInit()
     if (rf::g_GrDeviceCaps.MaxAnisotropy > 0 && g_game_config.anisotropicFiltering && !rf::g_IsDedicatedServer) {
         SetTextureMinMagFilterInCode(D3DTEXF_ANISOTROPIC);
         DWORD anisotropy_level = SetupMaxAnisotropy();
-        INFO("Anisotropic Filtering enabled (level: %d)", anisotropy_level);
+        INFO("Anisotropic Filtering enabled (level: %lu)", anisotropy_level);
     }
 #endif
 

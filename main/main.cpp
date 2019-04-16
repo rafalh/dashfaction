@@ -99,7 +99,7 @@ CallHook<void()> InitGame_Hook{
         CommandsAfterGameInit();
         ScreenshotAfterGameInit();
 
-        INFO("Game initialized (%u ms).", GetTickCount() - start_ticks);
+        INFO("Game initialized (%lu ms).", GetTickCount() - start_ticks);
     },
 };
 
@@ -290,7 +290,7 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     ExperimentalInit();
 #endif
 
-    INFO("Installing hooks took %u ms", GetTickCount() - start_ticks);
+    INFO("Installing hooks took %lu ms", GetTickCount() - start_ticks);
 
     return 1; /* success */
 }

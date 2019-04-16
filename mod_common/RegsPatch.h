@@ -52,7 +52,7 @@ public:
         m_subhook.Install(reinterpret_cast<void*>(m_addr), wrapper);
         void* trampoline = m_subhook.GetTrampoline();
         if (!trampoline)
-            WARN("trampoline is null for 0x%p", m_addr);
+            WARN("trampoline is null for 0x%X", m_addr);
 
         AsmWritter(reinterpret_cast<uintptr_t>(wrapper))
             .push(reinterpret_cast<int32_t>(trampoline)) // Push default EIP = trampoline
@@ -101,7 +101,7 @@ public:
         m_subhook.Install(reinterpret_cast<void*>(m_addr), wrapper);
         void* trampoline = m_subhook.GetTrampoline();
         if (!trampoline)
-            WARN("trampoline is null for 0x%p", m_addr);
+            WARN("trampoline is null for 0x%X", m_addr);
 
         AsmWritter(reinterpret_cast<uintptr_t>(wrapper))
             .push(reinterpret_cast<int32_t>(trampoline)) // Push default EIP = trampoline

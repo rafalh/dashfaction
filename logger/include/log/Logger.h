@@ -18,10 +18,16 @@
 
 #define LOGGER_DISCARD_TRACE
 
+#ifdef __GNUC__
+#define LOGGER_FORMAT_ATTRIBUTE __attribute__ ((format (printf, 2, 3)))
+#else
+#define LOGGER_FORMAT_ATTRIBUTE
+#endif
+
 // clang-format off
 #define LOGGER_DEFINE_LEVEL_METHODS(methodName, levelConstant) \
     LogStream methodName() { return get(levelConstant); } \
-    void methodName(const char *fmt, ...) \
+    LOGGER_FORMAT_ATTRIBUTE void methodName(const char *fmt, ...) \
     { \
         va_list args; \
         va_start(args, fmt); \
@@ -30,7 +36,7 @@
     }
 #define LOGGER_DEFINE_LEVEL_METHODS_EMPTY(methodName, levelConstant) \
     NullStream methodName() { return NullStream(); } \
-    void methodName([[maybe_unused]] const char *fmt, ...) {}
+    LOGGER_FORMAT_ATTRIBUTE void methodName([[maybe_unused]] const char *fmt, ...) {}
 // clang-format on
 
 namespace logging

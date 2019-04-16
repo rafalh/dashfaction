@@ -13,10 +13,10 @@ static LONG WINAPI CrashHandlerExceptionFilter(PEXCEPTION_POINTERS exception_ptr
     static PROCESS_INFORMATION proc_info;
     static WCHAR cmd_line[256];
 
-    ERR("Unhandled exception: ExceptionAddress=0x%X ExceptionCode=0x%X",
+    ERR("Unhandled exception: ExceptionAddress=0x%p ExceptionCode=0x%lX",
         exception_ptrs->ExceptionRecord->ExceptionAddress, exception_ptrs->ExceptionRecord->ExceptionCode);
     for (unsigned i = 0; i < exception_ptrs->ExceptionRecord->NumberParameters; ++i)
-        ERR("ExceptionInformation[%d]=0x%X", i, exception_ptrs->ExceptionRecord->ExceptionInformation[i]);
+        ERR("ExceptionInformation[%d]=0x%lX", i, exception_ptrs->ExceptionRecord->ExceptionInformation[i]);
 
     do {
         if (!DuplicateHandle(GetCurrentProcess(), GetCurrentProcess(), GetCurrentProcess(), &process_handle, 0, TRUE,

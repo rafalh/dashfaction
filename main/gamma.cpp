@@ -62,7 +62,7 @@ static void GammaMsgHandler(UINT msg, WPARAM w_param, [[maybe_unused]] LPARAM l_
     switch (msg) {
     case WM_ACTIVATE:
     case WM_ACTIVATEAPP:
-        TRACE("WM_ACTIVATE %lx", w_param);
+        TRACE("WM_ACTIVATE %x", w_param);
         if (g_gamma_ramp_initialized) {
             if (w_param)
                 SetGammaRamp(&g_gamma_ramp);

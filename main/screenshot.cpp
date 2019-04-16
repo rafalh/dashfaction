@@ -58,14 +58,14 @@ CallHook<rf::BmPixelFormat(int, int, int, int, std::byte*)> GrD3DReadBackBuffer_
         ComPtr<IDirect3DSurface8> back_buffer;
         HRESULT hr = rf::g_GrDevice->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &back_buffer);
         if (FAILED(hr)) {
-            ERR("IDirect3DDevice8::GetBackBuffer failed 0x%x", hr);
+            ERR("IDirect3DDevice8::GetBackBuffer failed 0x%lX", hr);
             return rf::BMPF_INVALID;
         }
 
         D3DSURFACE_DESC desc;
         hr = back_buffer->GetDesc(&desc);
         if (FAILED(hr)) {
-            ERR("IDirect3DSurface8::GetDesc failed 0x%x", hr);
+            ERR("IDirect3DSurface8::GetDesc failed 0x%lX", hr);
             return rf::BMPF_INVALID;
         }
 
@@ -77,7 +77,7 @@ CallHook<rf::BmPixelFormat(int, int, int, int, std::byte*)> GrD3DReadBackBuffer_
         // hr = rf::g_GrDevice->CreateTexture(desc.Width, desc.Height, 1, 0, desc.Format, D3DPOOL_MANAGED,
         // &TmpTexture);
         if (FAILED(hr)) {
-            ERR("IDirect3DDevice8::CreateRenderTarget failed 0x%x", hr);
+            ERR("IDirect3DDevice8::CreateRenderTarget failed 0x%lX", hr);
             return rf::BMPF_INVALID;
         }
 
@@ -88,7 +88,7 @@ CallHook<rf::BmPixelFormat(int, int, int, int, std::byte*)> GrD3DReadBackBuffer_
         if (width > 0 && height > 0) {
             hr = rf::g_GrDevice->CopyRects(back_buffer, &src_rect, 1, tmp_surface, &dst_pt);
             if (FAILED(hr)) {
-                ERR("IDirect3DDevice8::CopyRects failed 0x%x", hr);
+                ERR("IDirect3DDevice8::CopyRects failed 0x%lX", hr);
                 return rf::BMPF_INVALID;
             }
         }
@@ -100,7 +100,7 @@ CallHook<rf::BmPixelFormat(int, int, int, int, std::byte*)> GrD3DReadBackBuffer_
         D3DLOCKED_RECT locked_rect;
         hr = tmp_surface->LockRect(&locked_rect, nullptr, D3DLOCK_READONLY | D3DLOCK_NO_DIRTY_UPDATE);
         if (FAILED(hr)) {
-            ERR("IDirect3DSurface8::LockRect failed 0x%x (%s)", hr, getDxErrorStr(hr));
+            ERR("IDirect3DSurface8::LockRect failed 0x%lX (%s)", hr, getDxErrorStr(hr));
             return rf::BMPF_INVALID;
         }
 
@@ -144,28 +144,28 @@ bool GrCaptureBackBufferFast(int x, int y, int width, int height, int bm_handle)
     ComPtr<IDirect3DSurface8> back_buffer;
     HRESULT hr = rf::g_GrDevice->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &back_buffer);
     if (FAILED(hr)) {
-        ERR("IDirect3DDevice8::GetBackBuffer failed 0x%x", hr);
+        ERR("IDirect3DDevice8::GetBackBuffer failed 0x%lX", hr);
         return false;
     }
 
     ComPtr<IDirect3DSurface8> tex_surface;
     hr = d3d_tex->GetSurfaceLevel(0, &tex_surface);
     if (FAILED(hr)) {
-        ERR("IDirect3DTexture8::GetSurfaceLevel failed 0x%X", hr);
+        ERR("IDirect3DTexture8::GetSurfaceLevel failed 0x%lX", hr);
         return false;
     }
 
     D3DSURFACE_DESC back_buffer_desc;
     hr = back_buffer->GetDesc(&back_buffer_desc);
     if (FAILED(hr)) {
-        ERR("IDirect3DSurface8::GetDesc failed 0x%X", hr);
+        ERR("IDirect3DSurface8::GetDesc failed 0x%lX", hr);
         return false;
     }
 
     D3DSURFACE_DESC tex_desc;
     hr = tex_surface->GetDesc(&tex_desc);
     if (FAILED(hr)) {
-        ERR("IDirect3DSurface8::GetDesc failed 0x%X", hr);
+        ERR("IDirect3DSurface8::GetDesc failed 0x%lX", hr);
         return false;
     }
 
@@ -185,7 +185,7 @@ bool GrCaptureBackBufferFast(int x, int y, int width, int height, int bm_handle)
         SetRect(&src_rect, x, y, x + width - 1, y + height - 1);
         hr = rf::g_GrDevice->CopyRects(back_buffer, &src_rect, 1, tex_surface, &dst_pt);
         if (FAILED(hr)) {
-            ERR("IDirect3DDevice8::CopyRects failed 0x%x", hr);
+            ERR("IDirect3DDevice8::CopyRects failed 0x%lX", hr);
             return false;
         }
     }

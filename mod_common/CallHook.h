@@ -23,7 +23,7 @@ public:
     {
         uint8_t Opcode = *reinterpret_cast<uint8_t*>(m_call_op_addr);
         if (Opcode != ASM_LONG_CALL_REL) {
-            ERR("not a call at 0x%p", m_call_op_addr);
+            ERR("not a call at 0x%X", m_call_op_addr);
             return;
         }
 

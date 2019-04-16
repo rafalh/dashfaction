@@ -42,7 +42,7 @@ public:
         auto& state = self->m_state_map[key];
 
         if (state.num_calls_in_frame > 0 && state.last_val != value)
-            TRACE("Different ftol argument during a single frame in address %p", self->m_ftol_call_addr);
+            TRACE("Different ftol argument during a single frame in address 0x%X", self->m_ftol_call_addr);
 
         value += state.remainder;
         long result = static_cast<long>(value);

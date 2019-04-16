@@ -191,7 +191,7 @@ static int PackfileLoad_New(const char* filename, const char* dir)
 
     FILE* file = fopen(full_path.c_str(), "rb");
     if (!file) {
-        ERR("Failed to open packfile %s", full_path);
+        ERR("Failed to open packfile %s", full_path.c_str());
         return 0;
     }
 
@@ -217,7 +217,7 @@ static int PackfileLoad_New(const char* filename, const char* dir)
         for (unsigned i = 0; i < packfile->NumFiles; i += 32) {
             if (fread(buf, sizeof(buf), 1, file) != 1) {
                 ret = 0;
-                ERR("Failed to fread vpp %s", full_path);
+                ERR("Failed to fread vpp %s", full_path.c_str());
                 break;
             }
 
@@ -227,7 +227,7 @@ static int PackfileLoad_New(const char* filename, const char* dir)
         }
     }
     else
-        ERR("Failed to fread vpp 2 %s", full_path);
+        ERR("Failed to fread vpp 2 %s", full_path.c_str());
 
     if (ret)
         rf::PackfileSetupFileOffsets(packfile, offset_in_blocks);
@@ -502,7 +502,7 @@ static void PackfileInit_New()
         WriteMemPtr(0x004B082B + 1, "localized_strings.tbl");
     }
 
-    INFO("Packfiles initialization took %dms", GetTickCount() - start_ticks);
+    INFO("Packfiles initialization took %lums", GetTickCount() - start_ticks);
     INFO("Packfile name collisions: %d", g_NumNameCollisions);
 
     if (g_ModdedGame)
