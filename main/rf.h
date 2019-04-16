@@ -266,10 +266,10 @@ namespace rf
     {
         const char *Cmd;
         const char *Descr;
-        void(*pfnHandler)();
+        void(*Func)();
 
         inline static auto& Init =
-            AddrAsRef<void __thiscall(rf::DcCommand *self, const char *cmd, const char *descr, DcCmdHandler pfn_handler)>(0x00509A70);
+            AddrAsRef<void __thiscall(rf::DcCommand *self, const char *cmd, const char *descr, DcCmdHandler handler)>(0x00509A70);
     };
 
     enum DcArgType
@@ -344,7 +344,7 @@ namespace rf
         int Mode;
         int WindowMode;
         int field_14;
-        float fAspect;
+        float Aspect;
         int field_1C;
         int BitsPerPixel;
         int BytesBerPixel;
@@ -378,7 +378,7 @@ namespace rf
 
     struct GrVertex
     {
-        Vector3 v3dPos;
+        Vector3 Pos3D;
         Vector3 ScreenPos;
         int ClipFlags;
         float u0;
@@ -447,7 +447,7 @@ namespace rf
 
     struct UiPanel
     {
-        void(__cdecl **field_0)();
+        void(**field_0)();
         UiPanel *Parent;
         char field_8;
         char field_9;
@@ -461,12 +461,12 @@ namespace rf
         int BgTexture;
     };
 
-    static auto& UiMsgBox = AddrAsRef<void(const char *title, const char *text, void(*pfn_callback)(), bool input)>(0x004560B0);
+    static auto& UiMsgBox = AddrAsRef<void(const char *title, const char *text, void(*callback)(), bool input)>(0x004560B0);
     using UiDialogCallbackPtr = void (*)();
     static auto& UiCreateDialog =
-        AddrAsRef<void(const char *title, const char *text, unsigned c_buttons, const char **ppsz_btn_titles,
-                       UiDialogCallbackPtr *ppfn_callbacks, unsigned unknown1, unsigned unknown2)>(0x004562A0);
-    static auto& UiGetElementFromPos = AddrAsRef<int(int x, int y, UiPanel **pp_gui_list, signed int c_gui_list)>(0x00442ED0);
+        AddrAsRef<void(const char *title, const char *text, unsigned num_buttons, const char **ppsz_btn_titles,
+                       UiDialogCallbackPtr *callbacks, unsigned unknown1, unsigned unknown2)>(0x004562A0);
+    static auto& UiGetElementFromPos = AddrAsRef<int(int x, int y, UiPanel **ui_widgets, signed int num_ui_widgets)>(0x00442ED0);
 
     /* Chat */
 
@@ -532,7 +532,7 @@ namespace rf
         int field_58C;
     };
 
-    struct CPlayerNetData
+    struct PlayerNetData
     {
         NwAddr Addr;
         NwPlayerFlags Flags;
@@ -542,7 +542,7 @@ namespace rf
         uint8_t _unused[3];
         int field_18;
         NwStats Stats;
-        int dwPing;
+        int Ping;
         float field_5B0;
         char PacketBuf[512];
         int cbPacketBuf;
@@ -552,7 +552,7 @@ namespace rf
         int field_9C0;
         Timer field_9C4;
     };
-    static_assert(sizeof(CPlayerNetData) == 0x9C8, "invalid size");
+    static_assert(sizeof(PlayerNetData) == 0x9C8, "invalid size");
 
     static auto& NwSendNotReliablePacket =
         AddrAsRef<void(const void *addr, const void *packet, unsigned cb_packet)>(0x0052A080);
@@ -594,7 +594,7 @@ namespace rf
         int16_t DefaultMouseBtnId;
         int16_t field_6;
         int field_8;
-        String strName;
+        String Name;
         int16_t ScanCodes[2];
         int16_t MouseBtnId;
         int16_t field_1A;
@@ -602,7 +602,7 @@ namespace rf
 
     struct ControlConfig
     {
-        float fMouseSensitivity;
+        float MouseSensitivity;
         int MouseLook;
         int field_EC;
         ControlConfigItem Keys[128];
@@ -713,7 +713,7 @@ namespace rf
         char field_F95;
         char field_F96;
         char field_F97;
-        float fScopeZoom;
+        float ScopeZoom;
         char field_F9C;
         char field_1D;
         char field_1E;
@@ -760,7 +760,7 @@ namespace rf
     {
         Player *Next;
         Player *Prev;
-        String strName;
+        String Name;
         PlayerFlags Flags;
         int Entity_handle;
         int EntityClsId;
@@ -791,7 +791,7 @@ namespace rf
         int yViewport;
         int cxViewport;
         int cyViewport;
-        float fFov;
+        float Fov;
         int ViewMode;
         int field_E0;
         PlayerConfig Config;
@@ -824,11 +824,11 @@ namespace rf
         float field_11F4;
         int field_11F8;
         int field_11FC;
-        CPlayerNetData *NwData;
+        PlayerNetData *NwData;
     };
     static_assert(sizeof(Player) == 0x1204, "invalid size");
 
-    static auto& g_PlayersList = AddrAsRef<Player*>(0x007C75CC);
+    static auto& g_PlayerList = AddrAsRef<Player*>(0x007C75CC);
     static auto& g_LocalPlayer = AddrAsRef<Player*>(0x007C75D4);
 
     static auto& KillLocalPlayer = AddrAsRef<void()>(0x004757A0);
@@ -861,7 +861,7 @@ namespace rf
         float field_8C;
         int field_90;
         int field_94;
-        float fMass;
+        float Mass;
         Matrix3 field_9C;
         Matrix3 field_C0;
         Vector3 Pos;
@@ -886,11 +886,11 @@ namespace rf
 
     struct PhysicsInfo
     {
-        float fElasticity;
+        float Elasticity;
         float field_8C;
-        float fFriction;
+        float Friction;
         int field_94;
-        float fMass;
+        float Mass;
         Matrix3 field_9C;
         Matrix3 field_C0;
         Vector3 Pos;
@@ -919,18 +919,18 @@ namespace rf
         Vector3 LastPosInRoom;
         Object *NextObj;
         Object *PrevObj;
-        String strName;
+        String Name;
         int Uid;
         ObjectType Type;
         int Team;
         int Handle;
         int OwnerEntityUnk_handle;
-        float fLife;
-        float fArmor;
+        float Life;
+        float Armor;
         Vector3 Pos;
         Matrix3 Orient;
         Vector3 LastPos;
-        float fRadius;
+        float Radius;
         ObjectFlags Flags;
         AnimMesh *AnimMesh;
         int field_84;
@@ -959,7 +959,7 @@ namespace rf
         int Vtbl;
         Object _Super;
         int EventType;
-        float fDelay;
+        float Delay;
         int field_298;
         int LinkList;
         int field_2A0;
@@ -995,7 +995,7 @@ namespace rf
         int ResetsAfterMs;
         int ResetsCounter;
         int ResetsTimes;
-        float fLastActivationTime;
+        float LastActivationTime;
         int KeyItemClsId;
         int Flags;
         String field_2B4;
@@ -1011,7 +1011,7 @@ namespace rf
         char _padding[3];
         float ButtonActiveTimeSeconds;
         Timer field_2F4;
-        float fInsideTimeSeconds;
+        float InsideTimeSeconds;
         Timer InsideTimer;
         int AttachedToUid;
         int UseClutterUid;
@@ -1145,7 +1145,7 @@ namespace rf
         int field_28C;
         int field_290;
         Timer Timer_294;
-        float fCreateTime;
+        float CreateTime;
         char field_29C;
         char field_29D;
         int16_t field_29E;
@@ -1165,7 +1165,7 @@ namespace rf
         SEntityMotion MotionChange;
         Timer field_48C;
         Vector3 field_490;
-        float fLastDmgTime;
+        float LastDmgTime;
         int field_4A0;
         Timer field_4A4;
         int field_4A8[3];
@@ -1192,7 +1192,7 @@ namespace rf
         float LastMoveTime;
         float LastFireLevelTime;
         int field_51C_;
-        float fMovementRadius;
+        float MovementRadius;
         float field_524_;
         int field_528;
         int field_52C;
@@ -1294,7 +1294,7 @@ namespace rf
         Timer Timer13FC;
         int SpeakerSound;
         int field_1404;
-        float fUnkCountDownTime1408;
+        float UnkCountDownTime1408;
         Timer UnkTimer140C;
         AnimMesh *field_1410;
         Timer SplashInCounter;
@@ -1310,7 +1310,7 @@ namespace rf
         int field_1454;
         Timer field_1458;
         int UnkClutterHandles[2];
-        float fTime;
+        float Time;
         int field_1468;
         int UnkEntity_handle;
         int field_1470;
@@ -1331,89 +1331,89 @@ namespace rf
 
     struct WeaponStateAction
     {
-        String strName;
-        String strAnim;
-        int Anim;
+        String Name;
+        String AnimName;
+        int AnimId;
         int SoundId;
-        int Sound;
+        int SoundHandle;
     };
 
     struct WeaponClass
     {
-        String strName;
-        String strDisplayName;
-        String strV3dFilename;
-        int dwV3dType;
-        String strEmbeddedV3dFilename;
+        String Name;
+        String DisplayName;
+        String V3dFilename;
+        int V3dType;
+        String EmbeddedV3dFilename;
         int AmmoType;
-        String str3rdPersonV3d;
-        AnimMesh *p3rdPersonMeshNotSure;
+        String ThirdPersonV3d;
+        AnimMesh *ThirdPersonMeshNotSure;
         int Muzzle1PropId;
         int ThirdPersonGrip1MeshProp;
-        int dw3rdPersonMuzzleFlashGlare;
-        String str1stPersonMesh;
-        int *Mesh;
-        Vector3 v1stPersonOffset;
-        Vector3 v1stPersonOffsetSS;
-        int p1stPersonMuzzleFlashBitmap;
-        float f1stPersonMuzzleFlashRadius;
-        int p1stPersonAltMuzzleFlashBitmap;
-        float f1stPersonAltMuzzleFlashRadius;
-        float f1stPersonFov;
-        float g_fSplitscreenFov;
-        int cProjectiles;
+        int ThirdPersonMuzzleFlashGlare;
+        String FirstPersonMesh;
+        void *Mesh;
+        Vector3 FirstPersonOffset;
+        Vector3 FirstPersonOffsetSS;
+        int FirstPersonMuzzleFlashBitmap;
+        float FirstPersonMuzzleFlashRadius;
+        int FirstPersonAltMuzzleFlashBitmap;
+        float FirstPersonAltMuzzleFlashRadius;
+        float FirstPersonFov;
+        float SplitscreenFov;
+        int NumProjectiles;
         int ClipSizeSP;
         int ClipSizeMP;
         int ClipSize;
-        float fClipReloadTime;
-        float fClipDrainTime;
+        float ClipReloadTime;
+        float ClipDrainTime;
         int Bitmap;
         int TrailEmitter;
-        float fHeadRadius;
-        float fTailRadius;
-        float fHeadLen;
+        float HeadRadius;
+        float TailRadius;
+        float HeadLen;
         int IsSecondary;
-        float fCollisionRadius;
-        int fLifetime;
-        float fLifetimeSP;
-        float fLifetimeMulti;
-        float fMass;
-        float fVelocity;
-        float fVelocityMulti;
-        float fVelocitySP;
-        float fLifetimeMulVel;
-        float fFireWait;
-        float fAltFireWait;
-        float fSpreadDegreesSP;
-        float fSpreadDegreesMulti;
-        int fSpreadDegrees;
-        float fAltSpreadDegreesSP;
-        float fAltSpreadDegreesMulti;
-        int fAltSpreadDegrees;
-        float fAiSpreadDegreesSP;
-        float fAiSpreadDegreesMulti;
-        int fAiSpreadDegrees;
-        float fAiAltSpreadDegreesSP;
-        float fAiAltSpreadDegreesMulti;
-        int fAiAltSpreadDegrees;
-        float fDamage;
-        float fDamageMulti;
-        float fAltDamage;
-        float fAltDamageMulti;
-        float fAIDmgScaleSP;
-        float fAIDmgScaleMP;
-        int fAIDmgScale;
+        float CollisionRadius;
+        int Lifetime;
+        float LifetimeSP;
+        float LifetimeMulti;
+        float Mass;
+        float Velocity;
+        float VelocityMulti;
+        float VelocitySP;
+        float LifetimeMulVel;
+        float FireWait;
+        float AltFireWait;
+        float SpreadDegreesSP;
+        float SpreadDegreesMulti;
+        int SpreadDegrees;
+        float AltSpreadDegreesSP;
+        float AltSpreadDegreesMulti;
+        int AltSpreadDegrees;
+        float AiSpreadDegreesSP;
+        float AiSpreadDegreesMulti;
+        int AiSpreadDegrees;
+        float AiAltSpreadDegreesSP;
+        float AiAltSpreadDegreesMulti;
+        int AiAltSpreadDegrees;
+        float Damage;
+        float DamageMulti;
+        float AltDamage;
+        float AltDamageMulti;
+        float AIDmgScaleSP;
+        float AIDmgScaleMP;
+        int AIDmgScale;
         int field_124;
         int field_128;
         int field_12C;
-        float fTurnTime;
-        float fViewCone;
-        float fScanningRange;
-        float fWakeupTime;
-        float fDrillTime;
-        float fDrillRange;
-        float fDrillCharge;
-        float fCraterRadius;
+        float TurnTime;
+        float ViewCone;
+        float ScanningRange;
+        float WakeupTime;
+        float DrillTime;
+        float DrillRange;
+        float DrillCharge;
+        float CraterRadius;
         float ImpactDelay[2];
         float AltImpactDelay[2];
         int Launch;
@@ -1427,11 +1427,11 @@ namespace rf
         int NearMissUnderwaterSnd;
         int GeomodSound;
         int StartSound;
-        float fStartDelay;
+        float StartDelay;
         int StopSound;
-        float fDamageRadius;
-        float fDamageRadiusSP;
-        float fDamageRadiusMulti;
+        float DamageRadius;
+        float DamageRadiusSP;
+        float DamageRadiusMulti;
         float Glow;
         float field_218;
         int Glow2;
@@ -1449,27 +1449,27 @@ namespace rf
         int HudZoomedReticleTexture;
         int HudLockedReticleTexture;
         int ZoomSound;
-        int cMaxAmmoSP;
-        int cMaxAmmoMP;
-        int cMaxAmmo;
+        int MaxAmmoSP;
+        int MaxAmmoMP;
+        int MaxAmmo;
         int Flags;
         int Flags2;
         int field_26C;
         int field_270;
         int TracerFrequency;
         int field_278;
-        float fPiercingPower;
+        float PiercingPower;
         float RicochetAngle;
         int RicochetBitmap;
         Vector3 RicochetSize;
-        float fThrustLifetime;
-        int cStates;
-        int cActions;
+        float ThrustLifetime;
+        int NumStates;
+        int NumActions;
         WeaponStateAction States[3];
         WeaponStateAction Actions[7];
         int field_3B8[35];
         int BurstCount;
-        float fBurstDelay;
+        float BurstDelay;
         int BurstLaunchSound;
         int ImpactVclipsCount;
         int ImpactVclips[3];
@@ -1481,39 +1481,39 @@ namespace rf
         Vector3 GlassDecalSize;
         int FpgunShellEjectPropId;
         Vector3 ShellsEjectedBaseDir;
-        float fShellEjectVelocity;
-        String strShellsEjectedV3d;
+        float ShellEjectVelocity;
+        String ShellsEjectedV3d;
         int ShellsEjectedCustomSoundSet;
-        float fPrimaryPauseTimeBeforeEject;
+        float PrimaryPauseTimeBeforeEject;
         int FpgunClipEjectPropId;
-        String strClipsEjectedV3d;
-        float fClipsEjectedDropPauseTime;
+        String ClipsEjectedV3d;
+        float ClipsEjectedDropPauseTime;
         int ClipsEjectedCustomSoundSet;
-        float fReloadZeroDrain;
-        float fCameraShakeDist;
-        float fCameraShakeTime;
-        String strSilencerV3d;
+        float ReloadZeroDrain;
+        float CameraShakeDist;
+        float CameraShakeTime;
+        String SilencerV3d;
         int field_4F0_always0;
         int FpgunSilencerPropId;
-        String strSparkVfx;
+        String SparkVfx;
         int field_500_always0;
         int FpgunThrusterPropId;
         int field_508;
-        float fAIAttackRange1;
-        float fAIAttackRange2;
+        float AIAttackRange1;
+        float AIAttackRange2;
         float field_514;
         int FpgunWeaponPropId;
         int field_51C_always1neg;
         int WeaponType;
-        String strWeaponIcon;
+        String WeaponIcon;
         int DamageType;
         int CyclePos;
         int PrefPos;
-        float fFineAimRegSize;
-        float fFineAimRegSizeSS;
-        String strTracerEffect;
+        float FineAimRegSize;
+        float FineAimRegSizeSS;
+        String TracerEffect;
         int field_548_always0;
-        float fMultiBBoxSizeFactor;
+        float MultiBBoxSizeFactor;
     };
     static_assert(sizeof(WeaponClass) == 0x550, "invalid size");
 
@@ -1527,13 +1527,13 @@ namespace rf
     static auto &AddMsgHandler = AddrAsRef<unsigned(MsgHandlerPtr)>(0x00524AE0);
 
     static auto& g_MsgHandlers = AddrAsRef<MsgHandlerPtr[32]>(0x01B0D5A0);
-    static auto& g_cMsgHandlers = AddrAsRef<uint32_t>(0x01B0D760);
+    static auto& g_NumMsgHandlers = AddrAsRef<uint32_t>(0x01B0D760);
 
-    static auto& g_hWnd = AddrAsRef<HWND>(0x01B0D748);
+    static auto& g_MainWnd = AddrAsRef<HWND>(0x01B0D748);
     static auto& g_IsActive = AddrAsRef<uint8_t>(0x01B0D750);
     static auto& g_Close = AddrAsRef<uint8_t>(0x01B0D758);
     static auto& g_MouseInitialized = AddrAsRef<uint8_t>(0x01885461);
-    static auto& g_cRedrawServer = AddrAsRef<uint32_t>(0x01775698);
+    static auto& g_NumRedrawServer = AddrAsRef<uint32_t>(0x01775698);
 
     /* Network Game */
 
@@ -1550,7 +1550,7 @@ namespace rf
     static auto& MultiSetNextWeapon = AddrAsRef<void(int weapon_cls_id)>(0x0047FCA0);
 
     static auto& g_ServAddr = AddrAsRef<NwAddr>(0x0064EC5C);
-    static auto& g_strServName = AddrAsRef<String>(0x0064EC28);
+    static auto& g_ServName = AddrAsRef<String>(0x0064EC28);
     static auto& g_IsNetworkGame = AddrAsRef<uint8_t>(0x0064ECB9);
     static auto& g_IsLocalNetworkGame = AddrAsRef<uint8_t>(0x0064ECBA);
     static auto& g_IsDedicatedServer = AddrAsRef<uint32_t>(0x01B0D75C);
@@ -1616,19 +1616,19 @@ namespace rf
     };
 
     static auto& g_RootPath = AddrAsRef<char[256]>(0x018060E8);
-    static auto& g_fFps = AddrAsRef<float>(0x005A4018);
-    static auto& g_fFramerate = AddrAsRef<float>(0x005A4014);
-    static auto& g_fMinFramerate = AddrAsRef<float>(0x005A4024);
-    static auto& g_strLevelName = AddrAsRef<String>(0x00645FDC);
-    static auto& g_strLevelFilename = AddrAsRef<String>(0x00645FE4);
-    static auto& g_strLevelAuthor = AddrAsRef<String>(0x00645FEC);
-    static auto& g_strLevelDate = AddrAsRef<String>(0x00645FF4);
+    static auto& g_Fps = AddrAsRef<float>(0x005A4018);
+    static auto& g_Framerate = AddrAsRef<float>(0x005A4014);
+    static auto& g_MinFramerate = AddrAsRef<float>(0x005A4024);
+    static auto& g_LevelName = AddrAsRef<String>(0x00645FDC);
+    static auto& g_LevelFilename = AddrAsRef<String>(0x00645FE4);
+    static auto& g_LevelAuthor = AddrAsRef<String>(0x00645FEC);
+    static auto& g_LevelDate = AddrAsRef<String>(0x00645FF4);
     static auto& g_BigFontId = AddrAsRef<int>(0x006C74C0);
     static auto& g_LargeFontId = AddrAsRef<int>(0x0063C05C);
     static auto& g_MediumFontId = AddrAsRef<int>(0x0063C060);
     static auto& g_SmallFontId = AddrAsRef<int>(0x0063C068);
     static auto& g_DirectInputDisabled = AddrAsRef<bool>(0x005A4F88);
-    static auto& g_strDefaultPlayerWeapon = AddrAsRef<String>(0x007C7600);
+    static auto& g_DefaultPlayerWeapon = AddrAsRef<String>(0x007C7600);
     static auto& g_active_cutscene = AddrAsRef<void*>(0x00645320);
 
     static auto& RfBeep = AddrAsRef<void(unsigned u1, unsigned u2, unsigned u3, float f_volume)>(0x00505560);

@@ -49,12 +49,12 @@ static void ProcessWaitingMessages()
 
 void FindPlayer(const StringMatcher& query, std::function<void(rf::Player*)> consumer)
 {
-    rf::Player* player = rf::g_PlayersList;
+    rf::Player* player = rf::g_PlayerList;
     while (player) {
-        if (query(player->strName))
+        if (query(player->Name))
             consumer(player);
         player = player->Next;
-        if (player == rf::g_PlayersList)
+        if (player == rf::g_PlayerList)
             break;
     }
 }

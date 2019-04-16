@@ -197,7 +197,7 @@ FunHook<void()> MouseUpdateDirectInput_Hook{
 
         // center cursor
         POINT pt{rf::GrGetMaxWidth() / 2, rf::GrGetMaxHeight() / 2};
-        ClientToScreen(rf::g_hWnd, &pt);
+        ClientToScreen(rf::g_MainWnd, &pt);
         SetCursorPos(pt.x, pt.y);
     },
 };
@@ -519,7 +519,7 @@ FunHook<void(rf::TriggerObj*, int32_t, bool)> TriggerActivate_Hook{
     [](rf::TriggerObj* trigger, int32_t h_entity, bool skip_movers) {
         // Check team
         auto player = rf::GetPlayerFromEntityHandle(h_entity);
-        auto trigger_name = trigger->_Super.strName.CStr();
+        auto trigger_name = trigger->_Super.Name.CStr();
         if (player && trigger->Team != -1 && trigger->Team != player->BlueTeam) {
             // rf::DcPrintf("Trigger team does not match: %d vs %d (%s)", trigger->Team, Player->BlueTeam,
             // trigger_name);
@@ -551,7 +551,7 @@ RegsPatch TriggerCheckActivation_Patch{
     0x004BFC7D,
     [](auto& regs) {
         auto trigger = reinterpret_cast<rf::TriggerObj*>(regs.eax);
-        auto trigger_name = trigger->_Super.strName.CStr();
+        auto trigger_name = trigger->_Super.Name.CStr();
         uint8_t ext_flags = trigger_name[0] == '\xAB' ? trigger_name[1] : 0;
         bool is_client_side = (ext_flags & TRIGGER_CLIENT_SIDE) != 0;
         if (is_client_side)

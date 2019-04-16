@@ -164,14 +164,14 @@ void FtolIssuesDetectionDoFrame()
             }
         }
 
-        rf::g_fMinFramerate = 1.0f / 30.0f;
+        rf::g_MinFramerate = 1.0f / 30.0f;
         g_ftol_debug_info_map.clear();
         g_ftol_debug_info_map_old.clear();
     }
     else if (g_num_frames == 5) {
         g_ftol_debug_info_map_old = std::move(g_ftol_debug_info_map);
         g_ftol_debug_info_map.clear();
-        rf::g_fMinFramerate = 1.0f / 60.0f;
+        rf::g_MinFramerate = 1.0f / 60.0f;
     }
 
     g_num_frames = (g_num_frames + 1) % 10;
@@ -201,7 +201,7 @@ DcCommand2 detect_ftol_issues_cmd{
 
 void STDCALL EntityWaterDecelerateFix(rf::EntityObj* entity)
 {
-    float vel_factor = 1.0f - (rf::g_fFramerate * 4.5f);
+    float vel_factor = 1.0f - (rf::g_Framerate * 4.5f);
     entity->_Super.PhysInfo.Vel.x *= vel_factor;
     entity->_Super.PhysInfo.Vel.y *= vel_factor;
     entity->_Super.PhysInfo.Vel.z *= vel_factor;
@@ -211,9 +211,9 @@ RegsPatch WaterAnimateWaves_speed_fix{
     0x004E68A0,
     [](auto& regs) {
         rf::Vector3& result = *reinterpret_cast<rf::Vector3*>(regs.esi + 0x2C);
-        result.x += 12.8f * (rf::g_fFramerate) / reference_framerate;
-        result.y += 4.2666669f * (rf::g_fFramerate) / reference_framerate;
-        result.z += 3.878788f * (rf::g_fFramerate) / reference_framerate;
+        result.x += 12.8f * (rf::g_Framerate) / reference_framerate;
+        result.y += 4.2666669f * (rf::g_Framerate) / reference_framerate;
+        result.z += 3.878788f * (rf::g_Framerate) / reference_framerate;
     },
 };
 
@@ -229,7 +229,7 @@ FunHook<int(rf::String&, rf::String&, char*)> RflLoad_Hook{
                 rf::Object* obj = rf::ObjGetFromUid(uid);
                 if (obj && obj->Type == rf::OT_EVENT) {
                     rf::EventObj* event = reinterpret_cast<rf::EventObj*>(reinterpret_cast<uintptr_t>(obj) - 4);
-                    event->fDelay += 1.5f;
+                    event->Delay += 1.5f;
                 }
             }
         }
@@ -297,7 +297,7 @@ void HighFpsInit()
 
 void HighFpsUpdate()
 {
-    float frame_time = rf::g_fFramerate;
+    float frame_time = rf::g_Framerate;
     if (frame_time > 0.0001f) {
         // Make jump fix framerate dependent to fix bouncing on small FPS
         g_jump_threshold = 0.025f + 0.075f * frame_time / (1 / 60.0f);

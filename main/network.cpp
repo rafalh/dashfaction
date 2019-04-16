@@ -285,7 +285,7 @@ FunHook<NwPacketHandler_Type> ProcessJoinDenyPacket_Hook{
 FunHook<NwPacketHandler_Type> ProcessNewPlayerPacket_Hook{
     0x0047A580,
     [](char* data, const rf::NwAddr& addr) {
-        if (GetForegroundWindow() != rf::g_hWnd)
+        if (GetForegroundWindow() != rf::g_MainWnd)
             Beep(750, 300);
         ProcessNewPlayerPacket_Hook.CallTarget(data, addr);
     },
@@ -370,7 +370,7 @@ FunHook<NwPacketHandler_Type> ProcessEntityCreatePacket_Hook{
         uint8_t player_id = data[name_size + 58];
         if (player_id == rf::g_LocalPlayer->NwData->PlayerId) {
             int32_t weapon_cls_id = *reinterpret_cast<int32_t*>(data + name_size + 63);
-            rf::g_strDefaultPlayerWeapon = rf::g_WeaponClasses[weapon_cls_id].strName;
+            rf::g_DefaultPlayerWeapon = rf::g_WeaponClasses[weapon_cls_id].Name;
 
 #if 0 // disabled because it sometimes helpful feature to switch to last used weapon
       // Reset next weapon variable so entity wont switch after pickup
@@ -395,8 +395,8 @@ FunHook<NwPacketHandler_Type> ProcessReloadPacket_Hook{
             int ammo = *reinterpret_cast<int32_t*>(data + 12);
             if (rf::g_WeaponClasses[weapon_cls_id].ClipSize < ammo)
                 rf::g_WeaponClasses[weapon_cls_id].ClipSize = ammo;
-            if (rf::g_WeaponClasses[weapon_cls_id].cMaxAmmo < clip_ammo)
-                rf::g_WeaponClasses[weapon_cls_id].cMaxAmmo = clip_ammo;
+            if (rf::g_WeaponClasses[weapon_cls_id].MaxAmmo < clip_ammo)
+                rf::g_WeaponClasses[weapon_cls_id].MaxAmmo = clip_ammo;
             TRACE("ProcessReloadPacket WeaponClsId %d ClipAmmo %d Ammo %d", weapon_cls_id, clip_ammo, ammo);
 
             // Call original handler
@@ -411,7 +411,7 @@ rf::EntityObj* SecureObjUpdatePacket(rf::EntityObj* entity, uint8_t flags, rf::P
         // server-side
         if (entity && entity->_Super.Handle != src_player->Entity_handle) {
             TRACE("Invalid ObjUpdate entity %x %x %s", entity->_Super.Handle, src_player->Entity_handle,
-                  src_player->strName.CStr());
+                  src_player->Name.CStr());
             return nullptr;
         }
 

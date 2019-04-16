@@ -82,7 +82,7 @@ protected:
     {
         Cmd = name;
         Descr = description;
-        pfnHandler = reinterpret_cast<void (*)()>(StaticHandler);
+        Func = reinterpret_cast<void (*)()>(StaticHandler);
     }
 
     static void __fastcall StaticHandler(rf::DcCommand* cmd)
@@ -171,7 +171,7 @@ public:
 private:
     void Handler() override
     {
-        auto handler_fun = reinterpret_cast<void __fastcall (*)(rf::DcCommand*)>(m_target_cmd.pfnHandler);
+        auto handler_fun = reinterpret_cast<void __fastcall (*)(rf::DcCommand*)>(m_target_cmd.Func);
         handler_fun(&m_target_cmd);
     }
 };

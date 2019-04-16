@@ -239,9 +239,9 @@ static void PlayerFpgunRender_New(rf::Player* player)
         }
 
         if (g_SpectateModeTarget->WeaponInfo.InScopeView)
-            g_SpectateModeTarget->WeaponInfo.fScopeZoom = 2.0f;
+            g_SpectateModeTarget->WeaponInfo.ScopeZoom = 2.0f;
         rf::g_LocalPlayer->WeaponInfo.InScopeView = g_SpectateModeTarget->WeaponInfo.InScopeView;
-        rf::g_LocalPlayer->WeaponInfo.fScopeZoom = g_SpectateModeTarget->WeaponInfo.fScopeZoom;
+        rf::g_LocalPlayer->WeaponInfo.ScopeZoom = g_SpectateModeTarget->WeaponInfo.ScopeZoom;
 
         rf::PlayerFpgunUpdateMesh(g_SpectateModeTarget);
         rf::PlayerFpgunRender(g_SpectateModeTarget);
@@ -362,7 +362,7 @@ void SpectateModeDrawUI()
     rf::GrDrawRect(x, y, cx, cy, rf::g_GrRectMaterial);
 
     rf::GrSetColor(0xFF, 0xFF, 0, 0x80);
-    auto str = StringFormat("Spectating: %s", g_SpectateModeTarget->strName.CStr());
+    auto str = StringFormat("Spectating: %s", g_SpectateModeTarget->Name.CStr());
     rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, x + cx / 2, y + cy / 2 - cy_font / 2 - 5, str.c_str(), g_LargeFont,
                           rf::g_GrTextMaterial);
 

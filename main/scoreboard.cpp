@@ -35,7 +35,7 @@ void DrawScoreboardInternal_New(bool draw)
 
     // Sort players by score
     rf::Player* players[32];
-    rf::Player* player = rf::g_PlayersList;
+    rf::Player* player = rf::g_PlayerList;
     unsigned c_players = 0;
     while (c_players < 32) {
         players[c_players++] = player;
@@ -45,7 +45,7 @@ void DrawScoreboardInternal_New(bool draw)
             ++c_right_col;
 
         player = player->Next;
-        if (!player || player == rf::g_PlayersList)
+        if (!player || player == rf::g_PlayerList)
             break;
     }
     std::sort(players, players + c_players,
@@ -108,8 +108,8 @@ void DrawScoreboardInternal_New(bool draw)
 
     // Draw level
     rf::GrSetColor(0xB0, 0xB0, 0xB0, 0xFF);
-    auto level_info = rf::String::Format("%s (%s) by %s", rf::g_strLevelName.CStr(), rf::g_strLevelFilename.CStr(),
-                                         rf::g_strLevelAuthor.CStr());
+    auto level_info = rf::String::Format("%s (%s) by %s", rf::g_LevelName.CStr(), rf::g_LevelFilename.CStr(),
+                                         rf::g_LevelAuthor.CStr());
     rf::String level_info_stripped;
     rf::GrFitText(&level_info_stripped, level_info, cx - 20); // Note: this destroys input string
     rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, x_center, y, level_info_stripped, -1, rf::g_GrTextMaterial);
@@ -118,7 +118,7 @@ void DrawScoreboardInternal_New(bool draw)
     // Draw server info
     char ip_addr_buf[64];
     rf::NwAddrToStr(ip_addr_buf, sizeof(ip_addr_buf), rf::g_ServAddr);
-    auto server_info = rf::String::Format("%s (%s)", rf::g_strServName.CStr(), ip_addr_buf);
+    auto server_info = rf::String::Format("%s (%s)", rf::g_ServName.CStr(), ip_addr_buf);
     rf::String server_info_stripped;
     rf::GrFitText(&server_info_stripped, server_info, cx - 20); // Note: this destroys input string
     rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, x_center, y, server_info_stripped, -1, rf::g_GrTextMaterial);
@@ -201,7 +201,7 @@ void DrawScoreboardInternal_New(bool draw)
         int row_y = y + sect_counter[sect_idx] * row_h;
         ++sect_counter[sect_idx];
 
-        if (player == rf::g_PlayersList) // local player
+        if (player == rf::g_PlayerList) // local player
             rf::GrSetColor(0xFF, 0xFF, 0x80, 0xFF);
         else
             rf::GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
@@ -219,7 +219,7 @@ void DrawScoreboardInternal_New(bool draw)
         rf::GrDrawImage(status_bm, offsets.StatusBm, row_y + 2, rf::g_GrImageMaterial);
 
         rf::String player_name_stripped;
-        rf::GrFitText(&player_name_stripped, player->strName, cx_name_max - 10); // Note: this destroys strName
+        rf::GrFitText(&player_name_stripped, player->Name, cx_name_max - 10); // Note: this destroys Name
         // player_name.Forget();
         rf::GrDrawText(offsets.Name, row_y, player_name_stripped, -1, rf::g_GrTextMaterial);
 
@@ -236,7 +236,7 @@ void DrawScoreboardInternal_New(bool draw)
         }
 
         if (player->NwData) {
-            auto ping_str = std::to_string(player->NwData->dwPing);
+            auto ping_str = std::to_string(player->NwData->Ping);
             rf::GrDrawText(offsets.Ping, row_y, ping_str.c_str(), -1, rf::g_GrTextMaterial);
         }
     }

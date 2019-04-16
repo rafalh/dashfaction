@@ -65,7 +65,7 @@ RegsPatch GrSetViewMatrix_widescreen_fix{
         constexpr float ref_aspect_ratio = 4.0f / 3.0f;
         constexpr float max_wide_aspect_ratio = 21.0f / 9.0f; // biggest aspect ratio currently in market
 
-        // g_GrScreen.fAspect == ScrW / ScrH * 0.75 (1.0 for 4:3 monitors, 1.2 for 16:10) - looks like Pixel Aspect
+        // g_GrScreen.Aspect == ScrW / ScrH * 0.75 (1.0 for 4:3 monitors, 1.2 for 16:10) - looks like Pixel Aspect
         // Ratio We use here MaxWidth and MaxHeight to calculate proper FOV for windowed mode
 
         float viewport_aspect_ratio = static_cast<float>(rf::g_GrScreen.ViewportWidth) / rf::g_GrScreen.ViewportHeight;
@@ -146,7 +146,7 @@ static void SetupPP()
 
     // Make sure stretched window is always full screen
     if (g_game_config.wndMode == GameConfig::STRETCHED)
-        SetWindowPos(rf::g_hWnd, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN),
+        SetWindowPos(rf::g_MainWnd, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN),
                      SWP_NOZORDER);
 }
 
@@ -463,7 +463,7 @@ void GraphicsAfterGameInit()
 void GraphicsDrawFpsCounter()
 {
     if (g_game_config.fpsCounter) {
-        auto text = StringFormat("FPS: %.1f", rf::g_fFps);
+        auto text = StringFormat("FPS: %.1f", rf::g_Fps);
         rf::GrSetColor(0, 255, 0, 255);
         rf::GrDrawAlignedText(rf::GR_ALIGN_RIGHT, rf::GrGetMaxWidth() - 10, 60, text.c_str(), -1, rf::g_GrTextMaterial);
     }

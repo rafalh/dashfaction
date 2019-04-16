@@ -21,11 +21,11 @@ static void SetGammaRamp(D3DGAMMARAMP* gamma_ramp)
     if (g_GrDevice)
         g_GrDevice->SetGammaRamp(D3DSGR_NO_CALIBRATION, gamma_ramp);
 #else
-    HDC hdc = GetDC(rf::g_hWnd);
+    HDC hdc = GetDC(rf::g_MainWnd);
     if (hdc) {
         if (!SetDeviceGammaRamp(hdc, gamma_ramp))
             ERR("SetDeviceGammaRamp failed %lu", GetLastError());
-        ReleaseDC(rf::g_hWnd, hdc);
+        ReleaseDC(rf::g_MainWnd, hdc);
     }
     else
         ERR("GetDC failed");

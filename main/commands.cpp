@@ -97,10 +97,10 @@ DcCommand2 MaxFpsCmd{
 #endif
             g_game_config.maxFps = new_limit;
             g_game_config.save();
-            rf::g_fMinFramerate = 1.0f / new_limit;
+            rf::g_MinFramerate = 1.0f / new_limit;
         }
         else
-            rf::DcPrintf("Maximal FPS: %.1f", 1.0f / rf::g_fMinFramerate);
+            rf::DcPrintf("Maximal FPS: %.1f", 1.0f / rf::g_MinFramerate);
     },
     "Sets maximal FPS",
     "maxfps <limit>",
@@ -308,9 +308,9 @@ DcCommand2 MouseSensitivityCmd{
         if (value) {
             float f_value = value.value();
             f_value = std::clamp(f_value, 0.0f, 1.0f);
-            rf::g_LocalPlayer->Config.Controls.fMouseSensitivity = f_value;
+            rf::g_LocalPlayer->Config.Controls.MouseSensitivity = f_value;
         }
-        rf::DcPrintf("Mouse sensitivity: %.2f", rf::g_LocalPlayer->Config.Controls.fMouseSensitivity);
+        rf::DcPrintf("Mouse sensitivity: %.2f", rf::g_LocalPlayer->Config.Controls.MouseSensitivity);
     },
     "Sets mouse sensitivity",
     "ms <value>",
@@ -357,12 +357,12 @@ DcCommand2 PlayerCountCmd{
             return;
 
         int player_count = 0;
-        rf::Player* player = rf::g_PlayersList;
+        rf::Player* player = rf::g_PlayerList;
         while (player) {
-            if (player != rf::g_PlayersList)
+            if (player != rf::g_PlayerList)
                 ++player_count;
             player = player->Next;
-            if (player == rf::g_PlayersList)
+            if (player == rf::g_PlayerList)
                 break;
         }
         rf::DcPrintf("Player count: %d\n", player_count);
@@ -398,7 +398,7 @@ void DcShowCmdHelp(rf::DcCommand* cmd)
     rf::g_DcRun = 0;
     rf::g_DcHelp = 1;
     rf::g_DcStatus = 0;
-    auto handler = reinterpret_cast<void(__fastcall*)(rf::DcCommand*)>(cmd->pfnHandler);
+    auto handler = reinterpret_cast<void(__fastcall*)(rf::DcCommand*)>(cmd->Func);
     handler(cmd);
 }
 
@@ -501,15 +501,15 @@ void DcAutoCompletePlayer(int offset)
     std::vector<rf::Player*> matching_players;
     FindPlayer(StringMatcher().Prefix(player_name), [&](rf::Player* player) {
         matching_players.push_back(player);
-        DcAutoCompleteUpdateCommonPrefix(common_prefix, player->strName.CStr(), first);
+        DcAutoCompleteUpdateCommonPrefix(common_prefix, player->Name.CStr(), first);
     });
 
     if (matching_players.size() == 1)
-        DcAutoCompletePutComponent(offset, matching_players[0]->strName.CStr(), true);
+        DcAutoCompletePutComponent(offset, matching_players[0]->Name.CStr(), true);
     else if (!matching_players.empty()) {
         DcAutoCompletePrintSuggestions(matching_players, [](rf::Player* player) {
             // Print player names
-            return player->strName.CStr();
+            return player->Name.CStr();
         });
         DcAutoCompletePutComponent(offset, common_prefix, false);
     }

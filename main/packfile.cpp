@@ -487,8 +487,8 @@ static void PackfileInit_New()
     LoadDashFactionVpp();
     rf::PackfileLoad("tables.vpp", nullptr);
     AddrAsRef<int>(0x01BDB218) = 1;          // PackfilesLoaded
-    AddrAsRef<uint32_t>(0x01BDB210) = 10000; // cFilesInVfs
-    AddrAsRef<uint32_t>(0x01BDB214) = 100;   // cPackfiles
+    AddrAsRef<uint32_t>(0x01BDB210) = 10000; // NumFilesInVfs
+    AddrAsRef<uint32_t>(0x01BDB214) = 100;   // NumPackfiles
 
     // Note: language changes in binary are done here to make sure RootPath is already initialized
 
