@@ -783,6 +783,7 @@ rf::Vector3 ForwardVectorFromLinearYawPitch(float yaw, float pitch)
 float NonLinearPitchFromForwardVector(rf::Vector3 fvec)
 {
     float yaw = std::atan2(fvec.x, fvec.z);
+    assert(!std::isnan(yaw));
     float fvec_y_2 = fvec.y * fvec.y;
     float y_sin = std::sin(yaw);
     float y_cos = std::cos(yaw);
@@ -797,7 +798,10 @@ float NonLinearPitchFromForwardVector(rf::Vector3 fvec)
     float b = 2.f * p_sgn * y_sin_2 + 2.f * p_sgn * y_cos_2;
     float c = -y_sin_2 - y_cos_2;
     float delta = b * b - 4.f * a * c;
-    float delta_sqrt = std::sqrt(delta);
+    // Note: delta is sometimes slightly below 0 - most probably because of precision error
+    // To avoid NaN value delta is changed to 0 in that case
+    float delta_sqrt = std::sqrt(std::max(delta, 0.0f));
+    assert(!std::isnan(delta_sqrt));
 
     if (a == 0.0f) {
         return 0.0f;
@@ -806,10 +810,13 @@ float NonLinearPitchFromForwardVector(rf::Vector3 fvec)
     float p_sin_1 = (-b - delta_sqrt) / (2.f * a);
     float p_sin_2 = (-b + delta_sqrt) / (2.f * a);
 
+    float result;
     if (std::abs(p_sin_1) < std::abs(p_sin_2))
-        return std::asin(p_sin_1);
+        result = std::asin(p_sin_1);
     else
-        return std::asin(p_sin_2);
+        result = std::asin(p_sin_2);
+    assert(!std::isnan(result));
+    return result;
 }
 
 #ifdef DEBUG
