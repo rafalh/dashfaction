@@ -293,9 +293,9 @@ DcCommand2 InputModeCmd{
 
 static int CanPlayerFireHook(rf::Player* player)
 {
-    if (!(player->Flags & 0x10))
+    if (!(player->flags & 0x10))
         return 0;
-    if (rf::g_IsNetworkGame && (player->Camera->Type == rf::CAM_FREELOOK || player->Camera->Player != player))
+    if (rf::g_IsNetworkGame && (player->camera->type == rf::CAM_FREELOOK || player->camera->player != player))
         return 0;
     return 1;
 }
@@ -308,9 +308,9 @@ DcCommand2 MouseSensitivityCmd{
         if (value_opt) {
             float value = value_opt.value();
             value = std::clamp(value, 0.0f, 1.0f);
-            rf::g_LocalPlayer->Config.Controls.MouseSensitivity = value;
+            rf::g_LocalPlayer->config.controls.mouse_sensitivity = value;
         }
-        rf::DcPrintf("Mouse sensitivity: %.2f", rf::g_LocalPlayer->Config.Controls.MouseSensitivity);
+        rf::DcPrintf("Mouse sensitivity: %.2f", rf::g_LocalPlayer->config.controls.mouse_sensitivity);
     },
     "Sets mouse sensitivity",
     "ms <value>",
@@ -361,7 +361,7 @@ DcCommand2 PlayerCountCmd{
         while (player) {
             if (player != rf::g_PlayerList)
                 ++player_count;
-            player = player->Next;
+            player = player->next;
             if (player == rf::g_PlayerList)
                 break;
         }
@@ -398,7 +398,7 @@ void DcShowCmdHelp(rf::DcCommand* cmd)
     rf::g_DcRun = 0;
     rf::g_DcHelp = 1;
     rf::g_DcStatus = 0;
-    auto handler = reinterpret_cast<void(__fastcall*)(rf::DcCommand*)>(cmd->Func);
+    auto handler = reinterpret_cast<void(__fastcall*)(rf::DcCommand*)>(cmd->func);
     handler(cmd);
 }
 
@@ -501,15 +501,15 @@ void DcAutoCompletePlayer(int offset)
     std::vector<rf::Player*> matching_players;
     FindPlayer(StringMatcher().Prefix(player_name), [&](rf::Player* player) {
         matching_players.push_back(player);
-        DcAutoCompleteUpdateCommonPrefix(common_prefix, player->Name.CStr(), first);
+        DcAutoCompleteUpdateCommonPrefix(common_prefix, player->name.CStr(), first);
     });
 
     if (matching_players.size() == 1)
-        DcAutoCompletePutComponent(offset, matching_players[0]->Name.CStr(), true);
+        DcAutoCompletePutComponent(offset, matching_players[0]->name.CStr(), true);
     else if (!matching_players.empty()) {
         DcAutoCompletePrintSuggestions(matching_players, [](rf::Player* player) {
             // Print player names
-            return player->Name.CStr();
+            return player->name.CStr();
         });
         DcAutoCompletePutComponent(offset, common_prefix, false);
     }
@@ -528,10 +528,10 @@ void DcAutoCompleteCommand(int offset)
     std::vector<rf::DcCommand*> matching_cmds;
     for (unsigned i = 0; i < rf::g_DcNumCommands; ++i) {
         rf::DcCommand* cmd = g_CommandsBuffer[i];
-        if (!strnicmp(cmd->Cmd, cmd_name.c_str(), cmd_name.size()) &&
-            (next_offset == -1 || !cmd->Cmd[cmd_name.size()])) {
+        if (!strnicmp(cmd->cmd_name, cmd_name.c_str(), cmd_name.size()) &&
+            (next_offset == -1 || !cmd->cmd_name[cmd_name.size()])) {
             matching_cmds.push_back(cmd);
-            DcAutoCompleteUpdateCommonPrefix(common_prefix, cmd->Cmd, first);
+            DcAutoCompleteUpdateCommonPrefix(common_prefix, cmd->cmd_name, first);
         }
     }
 
@@ -549,15 +549,15 @@ void DcAutoCompleteCommand(int offset)
     }
     else if (matching_cmds.size() > 1) {
         for (auto* cmd : matching_cmds) {
-            if (cmd->Descr)
-                rf::DcPrintf("%s - %s", cmd->Cmd, cmd->Descr);
+            if (cmd->descr)
+                rf::DcPrintf("%s - %s", cmd->cmd_name, cmd->descr);
             else
-                rf::DcPrintf("%s", cmd->Cmd);
+                rf::DcPrintf("%s", cmd->cmd_name);
         }
         DcAutoCompletePutComponent(offset, common_prefix, false);
     }
     else if (matching_cmds.size() == 1)
-        DcAutoCompletePutComponent(offset, matching_cmds[0]->Cmd, true);
+        DcAutoCompletePutComponent(offset, matching_cmds[0]->cmd_name, true);
 }
 
 FunHook<void()> DcAutoCompleteInput_Hook{

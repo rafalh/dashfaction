@@ -80,9 +80,9 @@ class BaseCommand : public rf::DcCommand
 protected:
     BaseCommand(const char* name, const char* description = nullptr)
     {
-        Cmd = name;
-        Descr = description;
-        Func = reinterpret_cast<void (*)()>(StaticHandler);
+        this->cmd_name = name;
+        this->descr = description;
+        this->func = reinterpret_cast<void (*)()>(StaticHandler);
     }
 
     static void __fastcall StaticHandler(rf::DcCommand* cmd)
@@ -131,10 +131,10 @@ private:
         try {
             m_handler_fun(DcReadArg<Args>()...);
         }
-        catch (DcInvalidArgTypeError e) {
+        catch (const DcInvalidArgTypeError& e) {
             rf::DcPrint("Invalid arg type!", nullptr);
         }
-        catch (DcRequiredArgMissingError e) {
+        catch (const DcRequiredArgMissingError& e) {
             rf::DcPrint("Required arg is missing!", nullptr);
         }
     }
@@ -171,7 +171,7 @@ public:
 private:
     void Handler() override
     {
-        auto handler_fun = reinterpret_cast<void __fastcall (*)(rf::DcCommand*)>(m_target_cmd.Func);
+        auto handler_fun = reinterpret_cast<void __fastcall (*)(rf::DcCommand*)>(m_target_cmd.func);
         handler_fun(&m_target_cmd);
     }
 };

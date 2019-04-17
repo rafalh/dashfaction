@@ -51,9 +51,9 @@ void FindPlayer(const StringMatcher& query, std::function<void(rf::Player*)> con
 {
     rf::Player* player = rf::g_PlayerList;
     while (player) {
-        if (query(player->Name))
+        if (query(player->name))
             consumer(player);
-        player = player->Next;
+        player = player->next;
         if (player == rf::g_PlayerList)
             break;
     }

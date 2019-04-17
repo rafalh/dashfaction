@@ -25,60 +25,62 @@ std::string getCpuBrand();
 
 struct StringMatcher
 {
-    std::string m_Exact, m_Prefix, m_Infix, m_Suffix;
-    bool m_CaseSensitive;
+private:
+    std::string m_exact, m_prefix, m_infix, m_suffix;
+    bool m_case_sensitive;
 
-    StringMatcher(bool case_sensitive = false) : m_CaseSensitive(case_sensitive) {}
+public:
+    StringMatcher(bool case_sensitive = false) : m_case_sensitive(case_sensitive) {}
 
     StringMatcher& Exact(const std::string& exact)
     {
-        this->m_Exact = exact;
+        this->m_exact = exact;
         return *this;
     }
 
     StringMatcher& Prefix(const std::string& prefix)
     {
-        this->m_Prefix = prefix;
+        this->m_prefix = prefix;
         return *this;
     }
 
     StringMatcher& Infix(const std::string& infix)
     {
-        this->m_Infix = infix;
+        this->m_infix = infix;
         return *this;
     }
 
     StringMatcher& Suffix(const std::string& suffix)
     {
-        this->m_Suffix = suffix;
+        this->m_suffix = suffix;
         return *this;
     }
 
     bool operator()(const char* input) const
     {
         size_t input_len = strlen(input);
-        if (m_CaseSensitive) {
-            if (!m_Exact.empty() && strcmp(input, m_Exact.c_str()) != 0)
+        if (m_case_sensitive) {
+            if (!m_exact.empty() && strcmp(input, m_exact.c_str()) != 0)
                 return false;
-            if (!m_Prefix.empty() &&
-                (input_len < m_Prefix.size() || strncmp(input, m_Prefix.c_str(), m_Prefix.size()) != 0))
+            if (!m_prefix.empty() &&
+                (input_len < m_prefix.size() || strncmp(input, m_prefix.c_str(), m_prefix.size()) != 0))
                 return false;
-            if (!m_Infix.empty() && (input_len < m_Infix.size() || !strstr(input, m_Infix.c_str())))
+            if (!m_infix.empty() && (input_len < m_infix.size() || !strstr(input, m_infix.c_str())))
                 return false;
-            if (!m_Suffix.empty() && (input_len < m_Suffix.size() || strncmp(input + input_len - m_Suffix.size(),
-                                                                             m_Suffix.c_str(), m_Suffix.size()) != 0))
+            if (!m_suffix.empty() && (input_len < m_suffix.size() || strncmp(input + input_len - m_suffix.size(),
+                                                                             m_suffix.c_str(), m_suffix.size()) != 0))
                 return false;
         }
         else {
-            if (!m_Exact.empty() && stricmp(input, m_Exact.c_str()) != 0)
+            if (!m_exact.empty() && stricmp(input, m_exact.c_str()) != 0)
                 return false;
-            if (!m_Prefix.empty() &&
-                (input_len < m_Prefix.size() || strnicmp(input, m_Prefix.c_str(), m_Prefix.size()) != 0))
+            if (!m_prefix.empty() &&
+                (input_len < m_prefix.size() || strnicmp(input, m_prefix.c_str(), m_prefix.size()) != 0))
                 return false;
-            if (!m_Infix.empty() && (input_len < m_Infix.size() || !stristr(input, m_Infix.c_str())))
+            if (!m_infix.empty() && (input_len < m_infix.size() || !stristr(input, m_infix.c_str())))
                 return false;
-            if (!m_Suffix.empty() && (input_len < m_Suffix.size() || strnicmp(input + input_len - m_Suffix.size(),
-                                                                              m_Suffix.c_str(), m_Suffix.size()) != 0))
+            if (!m_suffix.empty() && (input_len < m_suffix.size() || strnicmp(input + input_len - m_suffix.size(),
+                                                                              m_suffix.c_str(), m_suffix.size()) != 0))
                 return false;
         }
         return true;

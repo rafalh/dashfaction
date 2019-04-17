@@ -38,7 +38,7 @@ struct GrTexture
   uint16_t field_6;
   uint16_t lock_count;
   uint8_t ref_count;
-  char field_B;
+  char field_b;
   GrTextureSlot *sections;
 };
 static_assert(sizeof(GrTexture) == 0x10);
@@ -226,8 +226,8 @@ void CleanupScreenshot()
 void ScreenshotAfterGameInit()
 {
     /* Fix for screenshots creation when height > 1024 */
-    if (rf::g_GrScreen.MaxHeight > 1024) {
-        g_screenshot_scanlines_buf = std::make_unique<byte* []>(rf::g_GrScreen.MaxHeight);
+    if (rf::g_GrScreen.max_height > 1024) {
+        g_screenshot_scanlines_buf = std::make_unique<byte* []>(rf::g_GrScreen.max_height);
         AsmWritter(0x0055A066, 0x0055A06D)
             .mov(asm_regs::ecx, reinterpret_cast<int32_t>(&g_screenshot_scanlines_buf[0]));
         AsmWritter(0x0055A0DF, 0x0055A0E6)

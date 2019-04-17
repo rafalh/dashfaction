@@ -297,7 +297,7 @@ FunHook<NwPacketHandler_Type> ProcessLeftGamePacket_Hook{
         // server-side and client-side
         if (rf::g_IsLocalNetworkGame) {
             rf::Player* src_player = rf::NwGetPlayerFromAddr(addr);
-            data[0] = src_player->NwData->PlayerId; // fix player ID
+            data[0] = src_player->nw_data->player_id; // fix player ID
         }
         ProcessLeftGamePacket_Hook.CallTarget(data, addr);
     },
@@ -312,7 +312,7 @@ FunHook<NwPacketHandler_Type> ProcessChatLinePacket_Hook{
             if (!src_player)
                 return; // shouldnt happen (protected in rf::NwProcessGamePackets)
 
-            data[0] = src_player->NwData->PlayerId; // fix player ID
+            data[0] = src_player->nw_data->player_id; // fix player ID
         }
         ProcessChatLinePacket_Hook.CallTarget(data, addr);
     },
@@ -326,7 +326,7 @@ FunHook<NwPacketHandler_Type> ProcessNameChangePacket_Hook{
             rf::Player* src_player = rf::NwGetPlayerFromAddr(addr);
             if (!src_player)
                 return;                             // shouldnt happen (protected in rf::NwProcessGamePackets)
-            data[0] = src_player->NwData->PlayerId; // fix player ID
+            data[0] = src_player->nw_data->player_id; // fix player ID
         }
         ProcessNameChangePacket_Hook.CallTarget(data, addr);
     },
@@ -341,7 +341,7 @@ FunHook<NwPacketHandler_Type> ProcessTeamChangePacket_Hook{
             if (!src_player)
                 return; // shouldnt happen (protected in rf::NwProcessGamePackets)
 
-            data[0] = src_player->NwData->PlayerId;   // fix player ID
+            data[0] = src_player->nw_data->player_id;   // fix player ID
             data[1] = std::clamp(data[1], '\0', '\1'); // team validation (fixes "green team")
         }
         ProcessTeamChangePacket_Hook.CallTarget(data, addr);
@@ -356,7 +356,7 @@ FunHook<NwPacketHandler_Type> ProcessRateChangePacket_Hook{
             rf::Player* src_player = rf::NwGetPlayerFromAddr(addr);
             if (!src_player)
                 return;                             // shouldnt happen (protected in rf::NwProcessGamePackets)
-            data[0] = src_player->NwData->PlayerId; // fix player ID
+            data[0] = src_player->nw_data->player_id; // fix player ID
         }
         ProcessRateChangePacket_Hook.CallTarget(data, addr);
     },
@@ -368,13 +368,13 @@ FunHook<NwPacketHandler_Type> ProcessEntityCreatePacket_Hook{
         // Update Default Player Weapon if server has it overriden
         size_t name_size = strlen(data) + 1;
         uint8_t player_id = data[name_size + 58];
-        if (player_id == rf::g_LocalPlayer->NwData->PlayerId) {
+        if (player_id == rf::g_LocalPlayer->nw_data->player_id) {
             int32_t weapon_cls_id = *reinterpret_cast<int32_t*>(data + name_size + 63);
-            rf::g_DefaultPlayerWeapon = rf::g_WeaponClasses[weapon_cls_id].Name;
+            rf::g_DefaultPlayerWeapon = rf::g_WeaponClasses[weapon_cls_id].name;
 
 #if 0 // disabled because it sometimes helpful feature to switch to last used weapon
       // Reset next weapon variable so entity wont switch after pickup
-        if (!g_LocalPlayer->Config.AutoswitchWeapons)
+        if (!g_LocalPlayer->config.AutoswitchWeapons)
             MultiSetNextWeapon(weapon_cls_id);
 #endif
 
@@ -393,10 +393,10 @@ FunHook<NwPacketHandler_Type> ProcessReloadPacket_Hook{
             int weapon_cls_id = *reinterpret_cast<int32_t*>(data + 4);
             int clip_ammo = *reinterpret_cast<int32_t*>(data + 8);
             int ammo = *reinterpret_cast<int32_t*>(data + 12);
-            if (rf::g_WeaponClasses[weapon_cls_id].ClipSize < ammo)
-                rf::g_WeaponClasses[weapon_cls_id].ClipSize = ammo;
-            if (rf::g_WeaponClasses[weapon_cls_id].MaxAmmo < clip_ammo)
-                rf::g_WeaponClasses[weapon_cls_id].MaxAmmo = clip_ammo;
+            if (rf::g_WeaponClasses[weapon_cls_id].clip_size < ammo)
+                rf::g_WeaponClasses[weapon_cls_id].clip_size = ammo;
+            if (rf::g_WeaponClasses[weapon_cls_id].max_ammo < clip_ammo)
+                rf::g_WeaponClasses[weapon_cls_id].max_ammo = clip_ammo;
             TRACE("ProcessReloadPacket WeaponClsId %d ClipAmmo %d Ammo %d", weapon_cls_id, clip_ammo, ammo);
 
             // Call original handler
@@ -409,9 +409,9 @@ rf::EntityObj* SecureObjUpdatePacket(rf::EntityObj* entity, uint8_t flags, rf::P
 {
     if (rf::g_IsLocalNetworkGame) {
         // server-side
-        if (entity && entity->_Super.Handle != src_player->Entity_handle) {
-            TRACE("Invalid ObjUpdate entity %x %x %s", entity->_Super.Handle, src_player->Entity_handle,
-                  src_player->Name.CStr());
+        if (entity && entity->_super.handle != src_player->entity_handle) {
+            TRACE("Invalid ObjUpdate entity %x %x %s", entity->_super.handle, src_player->entity_handle,
+                  src_player->name.CStr());
             return nullptr;
         }
 

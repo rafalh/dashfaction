@@ -177,17 +177,17 @@ FunHook<int(int, const uint8_t*, const uint8_t*, int, int, rf::BmPixelFormat, vo
 void RflLoadLightmaps_004ED3F6(rf::RflLightmap* lightmap)
 {
     rf::GrLockData lock_data;
-    int ret = rf::GrLock(lightmap->BmHandle, 0, &lock_data, 2);
+    int ret = rf::GrLock(lightmap->bm_handle, 0, &lock_data, 2);
     if (!ret)
         return;
 
 #if 1 // cap minimal color channel value as RF does
     for (int i = 0; i < lightmap->w * lightmap->h * 3; ++i)
-        lightmap->Buf[i] = std::max(lightmap->Buf[i], (uint8_t)(4 << 3)); // 32
+        lightmap->buf[i] = std::max(lightmap->buf[i], (uint8_t)(4 << 3)); // 32
 #endif
 
-    bool success = ConvertBitmapFormat(lock_data.Bits, lock_data.PixelFormat, lightmap->Buf, rf::BMPF_888, lightmap->w,
-                                       lightmap->h, lock_data.Pitch, 3 * lightmap->w, true);
+    bool success = ConvertBitmapFormat(lock_data.bits, lock_data.pixel_format, lightmap->buf, rf::BMPF_888, lightmap->w,
+                                       lightmap->h, lock_data.pitch, 3 * lightmap->w, true);
     if (!success)
         ERR("ConvertBitmapFormat failed for lightmap");
 
@@ -203,14 +203,14 @@ void GeoModGenerateTexture_004F2F23(uintptr_t v3)
         int offset_y = *reinterpret_cast<int*>(v3 + 20);
         int offset_x = *reinterpret_cast<int*>(v3 + 16);
         int src_width = *reinterpret_cast<int*>(v75 + 4);
-        int dst_pixel_size = GetPixelFormatSize(lock_data.PixelFormat);
+        int dst_pixel_size = GetPixelFormatSize(lock_data.pixel_format);
         uint8_t* src_data = *reinterpret_cast<uint8_t**>(v75 + 12) + 3 * (offset_x + offset_y * src_width);
-        uint8_t* dst_data = &lock_data.Bits[dst_pixel_size * offset_x + offset_y * lock_data.Pitch];
+        uint8_t* dst_data = &lock_data.bits[dst_pixel_size * offset_x + offset_y * lock_data.pitch];
         int height = *reinterpret_cast<int*>(v3 + 28);
-        bool success = ConvertBitmapFormat(dst_data, lock_data.PixelFormat, src_data, rf::BMPF_888, src_width, height,
-                                           lock_data.Pitch, 3 * src_width);
+        bool success = ConvertBitmapFormat(dst_data, lock_data.pixel_format, src_data, rf::BMPF_888, src_width, height,
+                                           lock_data.pitch, 3 * src_width);
         if (!success)
-            ERR("ConvertBitmapFormat failed for geomod (fmt %d)", lock_data.PixelFormat);
+            ERR("ConvertBitmapFormat failed for geomod (fmt %d)", lock_data.pixel_format);
         rf::GrUnlock(&lock_data);
     }
 }
@@ -229,12 +229,12 @@ int GeoModGenerateLightmap_004E487B(uintptr_t v6)
         int src_offset = 3 * (offset_x + src_width * *reinterpret_cast<int*>(v6 + 20)); // src offset
         uint8_t* src_data = src_offset + src_data_begin;
         int height = *reinterpret_cast<int*>(v6 + 28);
-        int dst_pixel_size = GetPixelFormatSize(lock_data.PixelFormat);
-        uint8_t* dst_row_ptr = &lock_data.Bits[dst_pixel_size * offset_x + offset_y * lock_data.Pitch];
-        bool success = ConvertBitmapFormat(dst_row_ptr, lock_data.PixelFormat, src_data, rf::BMPF_888, src_width,
-                                           height, lock_data.Pitch, 3 * src_width);
+        int dst_pixel_size = GetPixelFormatSize(lock_data.pixel_format);
+        uint8_t* dst_row_ptr = &lock_data.bits[dst_pixel_size * offset_x + offset_y * lock_data.pitch];
+        bool success = ConvertBitmapFormat(dst_row_ptr, lock_data.pixel_format, src_data, rf::BMPF_888, src_width,
+                                           height, lock_data.pitch, 3 * src_width);
         if (!success)
-            ERR("ConvertBitmapFormat failed for geomod2 (fmt %d)", lock_data.PixelFormat);
+            ERR("ConvertBitmapFormat failed for geomod2 (fmt %d)", lock_data.pixel_format);
         rf::GrUnlock(&lock_data);
     }
     return ret;
@@ -264,22 +264,22 @@ void WaterGenerateTexture_004E68D1(uintptr_t v1)
     auto& byte_1371b14 = AddrAsRef<uint8_t[256]>(0x1371B14);
     auto& byte_1371090 = AddrAsRef<uint8_t[512]>(0x1371090);
 
-    uint8_t* dst_row_ptr = dst_lock_data.Bits;
-    int src_pixel_size = GetPixelFormatSize(src_lock_data.PixelFormat);
+    uint8_t* dst_row_ptr = dst_lock_data.bits;
+    int src_pixel_size = GetPixelFormatSize(src_lock_data.pixel_format);
 
-    for (int y = 0; y < dst_lock_data.Height; ++y) {
+    for (int y = 0; y < dst_lock_data.height; ++y) {
         int v30 = byte_1370f90[y];
         int v38 = byte_1371b14[y];
         uint8_t* v32 = &byte_1371090[-v30];
         uint8_t* dst_ptr = dst_row_ptr;
-        for (int x = 0; x < dst_lock_data.Width; ++x) {
+        for (int x = 0; x < dst_lock_data.width; ++x) {
             int src_offset =
-                (v30 & (dst_lock_data.Width - 1)) + (((dst_lock_data.Height - 1) & (v38 + v32[v30])) << v41);
-            const uint8_t* src_ptr = src_lock_data.Bits + src_offset * src_pixel_size;
-            ConvertPixelFormat(dst_ptr, dst_lock_data.PixelFormat, src_ptr, src_lock_data.PixelFormat);
+                (v30 & (dst_lock_data.width - 1)) + (((dst_lock_data.height - 1) & (v38 + v32[v30])) << v41);
+            const uint8_t* src_ptr = src_lock_data.bits + src_offset * src_pixel_size;
+            ConvertPixelFormat(dst_ptr, dst_lock_data.pixel_format, src_ptr, src_lock_data.pixel_format);
             ++v30;
         }
-        dst_row_ptr += dst_lock_data.Pitch;
+        dst_row_ptr += dst_lock_data.pitch;
     }
 
     rf::GrUnlock(&src_lock_data);
@@ -290,9 +290,9 @@ void GetAmbientColorFromLightmaps_004E5CE3(unsigned bm_handle, int x, int y, uns
 {
     rf::GrLockData lock_data;
     if (rf::GrLock(bm_handle, 0, &lock_data, 0)) {
-        const uint8_t* src_ptr = lock_data.Bits + y * lock_data.Pitch + x * GetPixelFormatSize(lock_data.PixelFormat);
+        const uint8_t* src_ptr = lock_data.bits + y * lock_data.pitch + x * GetPixelFormatSize(lock_data.pixel_format);
         uint8_t* dst_ptr = reinterpret_cast<uint8_t*>(&color);
-        ConvertPixelFormat(dst_ptr, rf::BMPF_8888, src_ptr, lock_data.PixelFormat);
+        ConvertPixelFormat(dst_ptr, rf::BMPF_8888, src_ptr, lock_data.pixel_format);
         rf::GrUnlock(&lock_data);
     }
 }

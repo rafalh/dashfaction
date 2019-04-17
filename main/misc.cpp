@@ -134,7 +134,7 @@ int LoadEasterEggImage()
     if (!rf::GrLock(hbm, 0, &lock_data, 1))
         return -1;
 
-    rf::BmConvertFormat(lock_data.Bits, (rf::BmPixelFormat)lock_data.PixelFormat, res_data, rf::BMPF_8888,
+    rf::BmConvertFormat(lock_data.bits, (rf::BmPixelFormat)lock_data.pixel_format, res_data, rf::BMPF_8888,
                         easter_egg_size * easter_egg_size);
     rf::GrUnlock(&lock_data);
 
@@ -205,8 +205,8 @@ FunHook<void()> MouseUpdateDirectInput_Hook{
 bool IsHoldingAssaultRifle()
 {
     static auto& assault_rifle_cls_id = AddrAsRef<int>(0x00872470);
-    rf::EntityObj* entity = rf::EntityGetFromHandle(rf::g_LocalPlayer->Entity_handle);
-    return entity && entity->WeaponInfo.WeaponClsId == assault_rifle_cls_id;
+    rf::EntityObj* entity = rf::EntityGetFromHandle(rf::g_LocalPlayer->entity_handle);
+    return entity && entity->weapon_info.weapon_cls_id == assault_rifle_cls_id;
 }
 
 FunHook<void(rf::Player*, bool, bool)> PlayerLocalFireControl_Hook{
@@ -248,44 +248,44 @@ static auto& KeyProcessEvent = AddrAsRef<void(int ScanCode, int KeyDown, int Del
 
 void ResetConsoleCursorColumn(bool clear)
 {
-    HANDLE Output_handle = GetStdHandle(STD_OUTPUT_HANDLE);
-    CONSOLE_SCREEN_BUFFER_INFO ScrBufInfo;
-    GetConsoleScreenBufferInfo(Output_handle, &ScrBufInfo);
-    if (ScrBufInfo.dwCursorPosition.X == 0)
+    HANDLE output_handle = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_SCREEN_BUFFER_INFO scr_buf_info;
+    GetConsoleScreenBufferInfo(output_handle, &scr_buf_info);
+    if (scr_buf_info.dwCursorPosition.X == 0)
         return;
-    COORD NewPos = ScrBufInfo.dwCursorPosition;
+    COORD NewPos = scr_buf_info.dwCursorPosition;
     NewPos.X = 0;
-    SetConsoleCursorPosition(Output_handle, NewPos);
+    SetConsoleCursorPosition(output_handle, NewPos);
     if (clear) {
-        for (int i = 0; i < ScrBufInfo.dwCursorPosition.X; ++i) WriteConsoleA(Output_handle, " ", 1, nullptr, nullptr);
-        SetConsoleCursorPosition(Output_handle, NewPos);
+        for (int i = 0; i < scr_buf_info.dwCursorPosition.X; ++i) WriteConsoleA(output_handle, " ", 1, nullptr, nullptr);
+        SetConsoleCursorPosition(output_handle, NewPos);
     }
 }
 
 void PrintCmdInputLine()
 {
-    HANDLE Output_handle = GetStdHandle(STD_OUTPUT_HANDLE);
-    CONSOLE_SCREEN_BUFFER_INFO ScrBufInfo;
-    GetConsoleScreenBufferInfo(Output_handle, &ScrBufInfo);
-    WriteConsoleA(Output_handle, "] ", 2, nullptr, nullptr);
-    unsigned Offset = std::max(0, static_cast<int>(g_DcCmdLineLen) - ScrBufInfo.dwSize.X + 3);
-    WriteConsoleA(Output_handle, g_DcCmdLine + Offset, g_DcCmdLineLen - Offset, nullptr, nullptr);
+    HANDLE output_handle = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_SCREEN_BUFFER_INFO scr_buf_info;
+    GetConsoleScreenBufferInfo(output_handle, &scr_buf_info);
+    WriteConsoleA(output_handle, "] ", 2, nullptr, nullptr);
+    unsigned Offset = std::max(0, static_cast<int>(rf::g_DcCmdLineLen) - scr_buf_info.dwSize.X + 3);
+    WriteConsoleA(output_handle, rf::g_DcCmdLine + Offset, rf::g_DcCmdLineLen - Offset, nullptr, nullptr);
 }
 
-BOOL WINAPI ConsoleCtrlHandler(DWORD fdwCtrlType)
+BOOL WINAPI ConsoleCtrlHandler([[maybe_unused]] DWORD ctrl_type)
 {
     INFO("Quiting after Console CTRL");
-    static auto& Close = AddrAsRef<int32_t>(0x01B0D758);
-    Close = 1;
+    static auto& close = AddrAsRef<int32_t>(0x01B0D758);
+    close = 1;
     return TRUE;
 }
 
 void InputThreadProc()
 {
     while (true) {
-        INPUT_RECORD InputRecord;
-        DWORD NumRead = 0;
-        ReadConsoleInput(GetStdHandle(STD_INPUT_HANDLE), &InputRecord, 1, &NumRead);
+        INPUT_RECORD input_record;
+        DWORD num_read = 0;
+        ReadConsoleInput(GetStdHandle(STD_INPUT_HANDLE), &input_record, 1, &num_read);
     }
 }
 
@@ -301,60 +301,60 @@ CallHook<void()> OsInitWindow_Server_Hook{
 };
 
 FunHook<void(const char*, const int*)> DcPrint_Hook{
-    reinterpret_cast<uintptr_t>(DcPrint),
-    [](const char* Text, const int* Color) {
-        HANDLE Output_handle = GetStdHandle(STD_OUTPUT_HANDLE);
-        constexpr WORD RedAttr = FOREGROUND_RED | FOREGROUND_INTENSITY;
-        constexpr WORD BlueAttr = FOREGROUND_BLUE | FOREGROUND_INTENSITY;
-        constexpr WORD WhiteAttr = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY;
-        constexpr WORD GrayAttr = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
-        WORD CurrentAttr = 0;
+    reinterpret_cast<uintptr_t>(rf::DcPrint),
+    [](const char* text, [[maybe_unused]] const int* color) {
+        HANDLE output_handle = GetStdHandle(STD_OUTPUT_HANDLE);
+        constexpr WORD red_attr = FOREGROUND_RED | FOREGROUND_INTENSITY;
+        constexpr WORD blue_attr = FOREGROUND_BLUE | FOREGROUND_INTENSITY;
+        constexpr WORD white_attr = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY;
+        constexpr WORD gray_attr = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
+        WORD current_attr = 0;
 
         ResetConsoleCursorColumn(true);
 
-        const char* Ptr = Text;
-        while (*Ptr) {
-            std::string Color;
-            if (Ptr[0] == '[' && Ptr[1] == '$') {
-                const char* ColorEndPtr = strchr(Ptr + 2, ']');
-                if (ColorEndPtr) {
-                    Color.assign(Ptr + 2, ColorEndPtr - Ptr - 2);
-                    Ptr = ColorEndPtr + 1;
+        const char* ptr = text;
+        while (*ptr) {
+            std::string color;
+            if (ptr[0] == '[' && ptr[1] == '$') {
+                const char* color_end_ptr = strchr(ptr + 2, ']');
+                if (color_end_ptr) {
+                    color.assign(ptr + 2, color_end_ptr - ptr - 2);
+                    ptr = color_end_ptr + 1;
                 }
             }
 
-            const char* EndPtr = strstr(Ptr, "[$");
-            if (!EndPtr)
-                EndPtr = Ptr + strlen(Ptr);
+            const char* end_ptr = strstr(ptr, "[$");
+            if (!end_ptr)
+                end_ptr = ptr + strlen(ptr);
 
-            WORD Attr;
-            if (Color == "Red")
-                Attr = RedAttr;
-            else if (Color == "Blue")
-                Attr = BlueAttr;
-            else if (Color == "White")
-                Attr = WhiteAttr;
+            WORD attr;
+            if (color == "Red")
+                attr = red_attr;
+            else if (color == "Blue")
+                attr = blue_attr;
+            else if (color == "White")
+                attr = white_attr;
             else {
-                if (!Color.empty())
-                    ERR("unknown color %s", Color.c_str());
-                Attr = GrayAttr;
+                if (!color.empty())
+                    ERR("unknown color %s", color.c_str());
+                attr = gray_attr;
             }
 
-            if (CurrentAttr != Attr) {
-                CurrentAttr = Attr;
-                SetConsoleTextAttribute(Output_handle, Attr);
+            if (current_attr != attr) {
+                current_attr = attr;
+                SetConsoleTextAttribute(output_handle, attr);
             }
 
-            DWORD NumChars = EndPtr - Ptr;
-            WriteFile(Output_handle, Ptr, NumChars, nullptr, nullptr);
-            Ptr = EndPtr;
+            DWORD num_chars = end_ptr - ptr;
+            WriteFile(output_handle, ptr, num_chars, nullptr, nullptr);
+            ptr = end_ptr;
         }
 
-        if (Ptr > Text && Ptr[-1] != '\n')
-            WriteFile(Output_handle, "\n", 1, nullptr, nullptr);
+        if (ptr > text && ptr[-1] != '\n')
+            WriteFile(output_handle, "\n", 1, nullptr, nullptr);
 
-        if (CurrentAttr != GrayAttr)
-            SetConsoleTextAttribute(Output_handle, GrayAttr);
+        if (current_attr != gray_attr)
+            SetConsoleTextAttribute(output_handle, gray_attr);
 
         // PrintCmdInputLine();
     },
@@ -363,20 +363,19 @@ FunHook<void(const char*, const int*)> DcPrint_Hook{
 CallHook<void()> DcPutChar_NewLine_Hook{
     0x0050A081,
     [] {
-        HANDLE Output_handle = GetStdHandle(STD_OUTPUT_HANDLE);
-        WriteConsoleA(Output_handle, "\r\n", 2, nullptr, nullptr);
+        HANDLE output_handle = GetStdHandle(STD_OUTPUT_HANDLE);
+        WriteConsoleA(output_handle, "\r\n", 2, nullptr, nullptr);
     },
 };
 
 FunHook<void()> DcDrawServerConsole_Hook{
     0x0050A770,
     []() {
-        static char PrevCmdLine[1024];
-        HANDLE Output_handle = GetStdHandle(STD_OUTPUT_HANDLE);
-        if (strncmp(g_DcCmdLine, PrevCmdLine, std::size(PrevCmdLine)) != 0) {
+        static char prev_cmd_line[256];
+        if (strncmp(rf::g_DcCmdLine, prev_cmd_line, std::size(prev_cmd_line)) != 0) {
             ResetConsoleCursorColumn(true);
             PrintCmdInputLine();
-            strncpy(PrevCmdLine, g_DcCmdLine, std::size(PrevCmdLine));
+            strncpy(prev_cmd_line, rf::g_DcCmdLine, std::size(prev_cmd_line));
         }
     },
 };
@@ -387,16 +386,16 @@ FunHook<int()> KeyGetFromQueue_Hook{
         if (!rf::g_IsDedicatedServer)
             return KeyGetFromQueue_Hook.CallTarget();
 
-        HANDLE Input_handle = GetStdHandle(STD_INPUT_HANDLE);
-        INPUT_RECORD InputRecord;
-        DWORD NumRead = 0;
+        HANDLE input_handle = GetStdHandle(STD_INPUT_HANDLE);
+        INPUT_RECORD input_record;
+        DWORD num_read = 0;
         while (false) {
-            if (!PeekConsoleInput(Input_handle, &InputRecord, 1, &NumRead) || NumRead == 0)
+            if (!PeekConsoleInput(input_handle, &input_record, 1, &num_read) || num_read == 0)
                 break;
-            if (!ReadConsoleInput(Input_handle, &InputRecord, 1, &NumRead) || NumRead == 0)
+            if (!ReadConsoleInput(input_handle, &input_record, 1, &num_read) || num_read == 0)
                 break;
-            if (InputRecord.EventType == KEY_EVENT)
-                KeyProcessEvent(InputRecord.Event.KeyEvent.wVirtualScanCode, InputRecord.Event.KeyEvent.KeyDown, 0);
+            if (input_record.EventType == KEY_EVENT)
+                KeyProcessEvent(input_record.Event.KeyEvent.wVirtualScanCode, input_record.Event.KeyEvent.bKeyDown, 0);
         }
 
         return KeyGetFromQueue_Hook.CallTarget();
@@ -410,10 +409,10 @@ bool EntityIsReloading_SwitchWeapon_New(rf::EntityObj* entity)
     if (rf::EntityIsReloading(entity))
         return true;
 
-    int weapon_cls_id = entity->WeaponInfo.WeaponClsId;
+    int weapon_cls_id = entity->weapon_info.weapon_cls_id;
     if (weapon_cls_id >= 0) {
         rf::WeaponClass* weapon_cls = &rf::g_WeaponClasses[weapon_cls_id];
-        if (entity->WeaponInfo.WeaponsAmmo[weapon_cls_id] == 0 && entity->WeaponInfo.ClipAmmo[weapon_cls->AmmoType] > 0)
+        if (entity->weapon_info.weapons_ammo[weapon_cls_id] == 0 && entity->weapon_info.clip_ammo[weapon_cls->ammo_type] > 0)
             return true;
     }
     return false;
@@ -451,7 +450,7 @@ struct ServerListEntry
     int16_t ping;
     int field_60;
     char field_64;
-    int Flags;
+    int flags;
 };
 static_assert(sizeof(ServerListEntry) == 0x6C, "invalid size");
 
@@ -519,9 +518,9 @@ FunHook<void(rf::TriggerObj*, int32_t, bool)> TriggerActivate_Hook{
     [](rf::TriggerObj* trigger, int32_t h_entity, bool skip_movers) {
         // Check team
         auto player = rf::GetPlayerFromEntityHandle(h_entity);
-        auto trigger_name = trigger->_Super.Name.CStr();
-        if (player && trigger->Team != -1 && trigger->Team != player->BlueTeam) {
-            // rf::DcPrintf("Trigger team does not match: %d vs %d (%s)", trigger->Team, Player->BlueTeam,
+        auto trigger_name = trigger->_super.name.CStr();
+        if (player && trigger->team != -1 && trigger->team != player->blue_team) {
+            // rf::DcPrintf("Trigger team does not match: %d vs %d (%s)", trigger->team, Player->blue_team,
             // trigger_name);
             return;
         }
@@ -532,7 +531,7 @@ FunHook<void(rf::TriggerObj*, int32_t, bool)> TriggerActivate_Hook{
         if (rf::g_IsNetworkGame && rf::g_IsLocalNetworkGame && is_solo_trigger && player) {
             // rf::DcPrintf("Solo/Teleport trigger activated %s", trigger_name);
             if (player != rf::g_LocalPlayer) {
-                SendTriggerActivatePacket(player, trigger->_Super.Uid, h_entity);
+                SendTriggerActivatePacket(player, trigger->_super.uid, h_entity);
                 return;
             }
             else {
@@ -551,7 +550,7 @@ RegsPatch TriggerCheckActivation_Patch{
     0x004BFC7D,
     [](auto& regs) {
         auto trigger = reinterpret_cast<rf::TriggerObj*>(regs.eax);
-        auto trigger_name = trigger->_Super.Name.CStr();
+        auto trigger_name = trigger->_super.name.CStr();
         uint8_t ext_flags = trigger_name[0] == '\xAB' ? trigger_name[1] : 0;
         bool is_client_side = (ext_flags & TRIGGER_CLIENT_SIDE) != 0;
         if (is_client_side)
@@ -584,7 +583,7 @@ FunHook<void(bool)> MenuInGameUpdateCutscene_Hook{
     0x0045B5E0,
     [](bool dlg_open) {
         bool skip_cutscene = false;
-        rf::IsEntityCtrlActive(&rf::g_LocalPlayer->Config.Controls, rf::GC_JUMP, &skip_cutscene);
+        rf::IsEntityCtrlActive(&rf::g_LocalPlayer->config.controls, rf::GC_JUMP, &skip_cutscene);
 
         if (!skip_cutscene) {
             MenuInGameUpdateCutscene_Hook.CallTarget(dlg_open);
@@ -660,8 +659,8 @@ RegsPatch CoronaEntityCollisionTestFix{
 
         rf::Vector3 root_bone_pos;
         get_entity_root_bone_pos(entity, root_bone_pos);
-        rf::Vector3 aabb_min = root_bone_pos - entity->_Super.PhysInfo.Radius;
-        rf::Vector3 aabb_max = root_bone_pos + entity->_Super.PhysInfo.Radius;
+        rf::Vector3 aabb_min = root_bone_pos - entity->_super.phys_info.radius;
+        rf::Vector3 aabb_max = root_bone_pos + entity->_super.phys_info.radius;
         auto corona_pos = reinterpret_cast<rf::Vector3*>(regs.edi);
         auto eye_pos = reinterpret_cast<rf::Vector3*>(regs.ebx);
         auto tmp_vec = reinterpret_cast<rf::Vector3*>(regs.ecx);
@@ -677,7 +676,7 @@ FunHook<void(rf::Object*, int)> GlareRenderCorona_hook{
         // Note: object radius matches volumetric effect size and can be very large so this check helps
         // to speed up rendering
         auto& current_radius = StructFieldRef<float[2]>(glare, 0x2A4);
-        if (!rf::GrIsSphereOutsideView(glare->Pos, current_radius[player_idx])) {
+        if (!rf::GrIsSphereOutsideView(glare->pos, current_radius[player_idx])) {
             GlareRenderCorona_hook.CallTarget(glare, player_idx);
         }
     },

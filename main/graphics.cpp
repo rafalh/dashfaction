@@ -68,8 +68,8 @@ RegsPatch GrSetViewMatrix_widescreen_fix{
         // g_GrScreen.Aspect == ScrW / ScrH * 0.75 (1.0 for 4:3 monitors, 1.2 for 16:10) - looks like Pixel Aspect
         // Ratio We use here MaxWidth and MaxHeight to calculate proper FOV for windowed mode
 
-        float viewport_aspect_ratio = static_cast<float>(rf::g_GrScreen.ViewportWidth) / rf::g_GrScreen.ViewportHeight;
-        float aspect_ratio = static_cast<float>(rf::g_GrScreen.MaxWidth) / rf::g_GrScreen.MaxHeight;
+        float viewport_aspect_ratio = static_cast<float>(rf::g_GrScreen.viewport_width) / rf::g_GrScreen.viewport_height;
+        float aspect_ratio = static_cast<float>(rf::g_GrScreen.max_width) / rf::g_GrScreen.max_height;
         float scale_x = 1.0f;
         // this is how RF does compute scale_y and it is needed for working scanner
         float scale_y = ref_aspect_ratio * viewport_aspect_ratio / aspect_ratio;
@@ -84,8 +84,8 @@ RegsPatch GrSetViewMatrix_widescreen_fix{
         rf::g_GrScaleVec.x *= scale_x; // Note: original division by aspect ratio is noped
         rf::g_GrScaleVec.y *= scale_y;
 
-        g_GrClippedGeomOffsetX = rf::g_GrScreen.OffsetX - 0.5f;
-        g_GrClippedGeomOffsetY = rf::g_GrScreen.OffsetY - 0.5f;
+        g_GrClippedGeomOffsetX = rf::g_GrScreen.offset_x - 0.5f;
+        g_GrClippedGeomOffsetY = rf::g_GrScreen.offset_y - 0.5f;
         auto& gr_viewport_center_x = AddrAsRef<float>(0x01818B54);
         auto& gr_viewport_center_y = AddrAsRef<float>(0x01818B5C);
         gr_viewport_center_x -= 0.5f; // viewport center x
@@ -141,7 +141,7 @@ static void SetupPP()
 #if D3D_LOCKABLE_BACKBUFFER
     // Note: if MSAA is used backbuffer cannot be lockable
     if (g_game_config.msaa == D3DMULTISAMPLE_NONE)
-        rf::g_GrPP.Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
+        rf::g_GrPP.flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
 #endif
 
     // Make sure stretched window is always full screen
@@ -154,8 +154,8 @@ CallHook<void(int, rf::GrVertex**, int, int)> GrDrawRect_GrDrawPoly_Hook{
     0x0050DD69,
     [](int num, rf::GrVertex** pp_vertices, int flags, int mat) {
         for (int i = 0; i < num; ++i) {
-            pp_vertices[i]->ScreenPos.x -= 0.5f;
-            pp_vertices[i]->ScreenPos.y -= 0.5f;
+            pp_vertices[i]->screen_pos.x -= 0.5f;
+            pp_vertices[i]->screen_pos.y -= 0.5f;
         }
         GrDrawRect_GrDrawPoly_Hook.CallTarget(num, pp_vertices, flags, mat);
     },
@@ -184,7 +184,7 @@ CallHook<void()> GrInitBuffers_AfterReset_Hook{
         rf::g_GrDevice->SetRenderState(D3DRS_CLIPPING, 0);
 
         if (rf::g_LocalPlayer)
-            rf::GrSetTextureMipFilter(rf::g_LocalPlayer->Config.FilteringLevel == 0);
+            rf::GrSetTextureMipFilter(rf::g_LocalPlayer->config.filtering_level == 0);
 
         if (rf::g_GrDeviceCaps.MaxAnisotropy > 0 && g_game_config.anisotropicFiltering)
             SetupMaxAnisotropy();
@@ -341,7 +341,7 @@ void GraphicsInit()
     // Replace memset call to SetupPP
     AsmWritter(0x00545AA7, 0x00545AB5).nop();
     AsmWritter(0x00545AA7).call(SetupPP);
-    AsmWritter(0x00545BA5).nop(6); // dont set PP.Flags
+    AsmWritter(0x00545BA5).nop(6); // dont set PP.flags
 
     // nVidia issue fix (make sure D3Dsc is enabled)
     WriteMem<u8>(0x00546154, 1);

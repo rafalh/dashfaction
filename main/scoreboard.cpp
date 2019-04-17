@@ -39,17 +39,17 @@ void DrawScoreboardInternal_New(bool draw)
     unsigned c_players = 0;
     while (c_players < 32) {
         players[c_players++] = player;
-        if (game_type == RF_DM || !player->BlueTeam)
+        if (game_type == RF_DM || !player->blue_team)
             ++c_left_col;
         else
             ++c_right_col;
 
-        player = player->Next;
+        player = player->next;
         if (!player || player == rf::g_PlayerList)
             break;
     }
     std::sort(players, players + c_players,
-              [](auto player1, auto player2) { return player2->Stats->score - player1->Stats->score; });
+              [](auto player1, auto player2) { return player2->stats->score - player1->stats->score; });
 
     // Animation
     float anim_progress = 1.0f, progress_w = 1.0f, progress_h = 1.0f;
@@ -153,7 +153,7 @@ void DrawScoreboardInternal_New(bool draw)
 
     struct
     {
-        int StatusBm, Name, Score, KillsDeaths, CtfFlags, Ping;
+        int status_bm, name, score, kills_deaths, ctf_flags, ping;
     } col_offsets[2];
 
     // Draw headers
@@ -162,28 +162,28 @@ void DrawScoreboardInternal_New(bool draw)
     rf::GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
     for (unsigned i = 0; i < num_sect; ++i) {
         int x_col = x + i * (cx / 2) + 13;
-        col_offsets[i].StatusBm = x_col;
+        col_offsets[i].status_bm = x_col;
         x_col += 12;
 
-        col_offsets[i].Name = x_col;
+        col_offsets[i].name = x_col;
         rf::GrDrawText(x_col, y, rf::strings::player, -1, rf::g_GrTextMaterial);
         x_col += cx_name_max;
 
-        col_offsets[i].Score = x_col;
+        col_offsets[i].score = x_col;
         rf::GrDrawText(x_col, y, rf::strings::score, -1, rf::g_GrTextMaterial); // Note: RF uses "Frags"
         x_col += 50;
 
-        col_offsets[i].KillsDeaths = x_col;
+        col_offsets[i].kills_deaths = x_col;
         rf::GrDrawText(x_col, y, "K/D", -1, rf::g_GrTextMaterial);
         x_col += 70;
 
         if (game_type == RF_CTF) {
-            col_offsets[i].CtfFlags = x_col;
+            col_offsets[i].ctf_flags = x_col;
             rf::GrDrawText(x_col, y, rf::strings::caps, -1, rf::g_GrTextMaterial);
             x_col += 50;
         }
 
-        col_offsets[i].Ping = x_col;
+        col_offsets[i].ping = x_col;
         rf::GrDrawText(x_col, y, rf::strings::ping, -1, rf::g_GrTextMaterial);
     }
     y += 20;
@@ -196,7 +196,7 @@ void DrawScoreboardInternal_New(bool draw)
     for (unsigned i = 0; i < c_players; ++i) {
         player = players[i];
 
-        unsigned sect_idx = game_type == RF_DM || !player->BlueTeam ? 0 : 1;
+        unsigned sect_idx = game_type == RF_DM || !player->blue_team ? 0 : 1;
         auto& offsets = col_offsets[sect_idx];
         int row_y = y + sect_counter[sect_idx] * row_h;
         ++sect_counter[sect_idx];
@@ -210,34 +210,34 @@ void DrawScoreboardInternal_New(bool draw)
         static int red_bm = rf::BmLoad("DF_red.tga", -1, true);
         static int hud_micro_flag_red_bm = rf::BmLoad("hud_microflag_red.tga", -1, true);
         static int hud_micro_flag_blue_bm = rf::BmLoad("hud_microflag_blue.tga", -1, true);
-        rf::EntityObj* entity = rf::EntityGetFromHandle(player->Entity_handle);
+        rf::EntityObj* entity = rf::EntityGetFromHandle(player->entity_handle);
         int status_bm = entity ? green_bm : red_bm;
         if (player == red_flag_player)
             status_bm = hud_micro_flag_red_bm;
         else if (player == blue_flag_player)
             status_bm = hud_micro_flag_blue_bm;
-        rf::GrDrawImage(status_bm, offsets.StatusBm, row_y + 2, rf::g_GrImageMaterial);
+        rf::GrDrawImage(status_bm, offsets.status_bm, row_y + 2, rf::g_GrImageMaterial);
 
         rf::String player_name_stripped;
-        rf::GrFitText(&player_name_stripped, player->Name, cx_name_max - 10); // Note: this destroys Name
+        rf::GrFitText(&player_name_stripped, player->name, cx_name_max - 10); // Note: this destroys Name
         // player_name.Forget();
-        rf::GrDrawText(offsets.Name, row_y, player_name_stripped, -1, rf::g_GrTextMaterial);
+        rf::GrDrawText(offsets.name, row_y, player_name_stripped, -1, rf::g_GrTextMaterial);
 
-        auto stats = static_cast<PlayerStatsNew*>(player->Stats);
+        auto stats = static_cast<PlayerStatsNew*>(player->stats);
         auto score_str = std::to_string(stats->score);
-        rf::GrDrawText(offsets.Score, row_y, score_str.c_str(), -1, rf::g_GrTextMaterial);
+        rf::GrDrawText(offsets.score, row_y, score_str.c_str(), -1, rf::g_GrTextMaterial);
 
         auto kills_deaths_str = StringFormat("%hd/%hd", stats->num_kills, stats->num_deaths);
-        rf::GrDrawText(offsets.KillsDeaths, row_y, kills_deaths_str.c_str(), -1, rf::g_GrTextMaterial);
+        rf::GrDrawText(offsets.kills_deaths, row_y, kills_deaths_str.c_str(), -1, rf::g_GrTextMaterial);
 
         if (game_type == RF_CTF) {
             auto caps_str = std::to_string(stats->caps);
-            rf::GrDrawText(offsets.CtfFlags, row_y, caps_str.c_str(), -1, rf::g_GrTextMaterial);
+            rf::GrDrawText(offsets.ctf_flags, row_y, caps_str.c_str(), -1, rf::g_GrTextMaterial);
         }
 
-        if (player->NwData) {
-            auto ping_str = std::to_string(player->NwData->Ping);
-            rf::GrDrawText(offsets.Ping, row_y, ping_str.c_str(), -1, rf::g_GrTextMaterial);
+        if (player->nw_data) {
+            auto ping_str = std::to_string(player->nw_data->ping);
+            rf::GrDrawText(offsets.ping, row_y, ping_str.c_str(), -1, rf::g_GrTextMaterial);
         }
     }
 }
@@ -249,7 +249,7 @@ void HudRender_00437BC0()
     if (!rf::g_IsNetworkGame || !rf::g_LocalPlayer)
         return;
 
-    bool scoreboard_control_active = rf::IsEntityCtrlActive(&rf::g_LocalPlayer->Config.Controls, rf::GC_MP_STATS, 0);
+    bool scoreboard_control_active = rf::IsEntityCtrlActive(&rf::g_LocalPlayer->config.controls, rf::GC_MP_STATS, 0);
     bool is_player_dead = rf::IsPlayerEntityInvalid(rf::g_LocalPlayer) || rf::IsPlayerDying(rf::g_LocalPlayer);
     bool limbo = rf::GameSeqGetState() == rf::GS_MP_LIMBO;
     bool show_scoreboard = scoreboard_control_active || (!SpectateModeIsActive() && is_player_dead) || limbo;

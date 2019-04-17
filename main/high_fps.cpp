@@ -202,9 +202,9 @@ DcCommand2 detect_ftol_issues_cmd{
 void STDCALL EntityWaterDecelerateFix(rf::EntityObj* entity)
 {
     float vel_factor = 1.0f - (rf::g_Framerate * 4.5f);
-    entity->_Super.PhysInfo.Vel.x *= vel_factor;
-    entity->_Super.PhysInfo.Vel.y *= vel_factor;
-    entity->_Super.PhysInfo.Vel.z *= vel_factor;
+    entity->_super.phys_info.vel.x *= vel_factor;
+    entity->_super.phys_info.vel.y *= vel_factor;
+    entity->_super.phys_info.vel.z *= vel_factor;
 }
 
 RegsPatch WaterAnimateWaves_speed_fix{
@@ -227,9 +227,9 @@ FunHook<int(rf::String&, rf::String&, char*)> RflLoad_Hook{
             int uids[] = {4679, 4680};
             for (int uid : uids) {
                 rf::Object* obj = rf::ObjGetFromUid(uid);
-                if (obj && obj->Type == rf::OT_EVENT) {
+                if (obj && obj->type == rf::OT_EVENT) {
                     rf::EventObj* event = reinterpret_cast<rf::EventObj*>(reinterpret_cast<uintptr_t>(obj) - 4);
-                    event->Delay += 1.5f;
+                    event->delay += 1.5f;
                 }
             }
         }

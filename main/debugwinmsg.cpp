@@ -3,13 +3,13 @@
 
 #ifdef DEBUG
 
-typedef struct
+struct WinMsgNameMapping
 {
-    UINT    nMsg;
-    LPCSTR  lpszMsg;
-} WIN_MSG_NAME_MAPPING;
+    UINT    msg_id;
+    LPCSTR  msg_name;
+};
 #define DEFINE_MESSAGE(wm) { wm, #wm }
-static const WIN_MSG_NAME_MAPPING allMessages[] =
+static const WinMsgNameMapping g_all_messages[] =
 {
     DEFINE_MESSAGE(WM_CREATE),
     DEFINE_MESSAGE(WM_DESTROY),
@@ -199,10 +199,9 @@ static const WIN_MSG_NAME_MAPPING allMessages[] =
 
 const char *GetWndMsgName(UINT msg)
 {
-    const WIN_MSG_NAME_MAPPING* map_msg = allMessages;
-    for (/*null*/; map_msg->lpszMsg; map_msg++) {
-        if (map_msg->nMsg == msg) {
-            return map_msg->lpszMsg;
+    for (auto& mapping : g_all_messages) {
+        if (mapping.msg_id == msg) {
+            return mapping.msg_name;
         }
     }
     return "";
