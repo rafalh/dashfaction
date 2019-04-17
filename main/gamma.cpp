@@ -18,14 +18,14 @@ static auto& gr_gamma_ramp = AddrAsRef<uint32_t[256]>(0x017C7C68);
 static void SetGammaRamp(D3DGAMMARAMP* gamma_ramp)
 {
 #if 0 // Note: D3D Gamma Ramp doesn't work in windowed mode
-    if (g_GrDevice)
-        g_GrDevice->SetGammaRamp(D3DSGR_NO_CALIBRATION, gamma_ramp);
+    if (g_gr_d3d_device)
+        g_gr_d3d_device->SetGammaRamp(D3DSGR_NO_CALIBRATION, gamma_ramp);
 #else
-    HDC hdc = GetDC(rf::g_MainWnd);
+    HDC hdc = GetDC(rf::main_wnd);
     if (hdc) {
         if (!SetDeviceGammaRamp(hdc, gamma_ramp))
             ERR("SetDeviceGammaRamp failed %lu", GetLastError());
-        ReleaseDC(rf::g_MainWnd, hdc);
+        ReleaseDC(rf::main_wnd, hdc);
     }
     else
         ERR("GetDC failed");
@@ -52,7 +52,9 @@ void ResetGammaRamp()
     if (!g_gamma_ramp_initialized)
         return;
 
-    for (unsigned i = 0; i < 256; ++i) gamma_ramp.red[i] = gamma_ramp.green[i] = gamma_ramp.blue[i] = i << 8;
+    for (unsigned i = 0; i < 256; ++i) {
+        gamma_ramp.red[i] = gamma_ramp.green[i] = gamma_ramp.blue[i] = i << 8;
+    }
 
     SetGammaRamp(&gamma_ramp);
 }

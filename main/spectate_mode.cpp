@@ -29,22 +29,21 @@ static auto& PlayerFpgunHasState = AddrAsRef<bool(Player* player, int state)>(0x
 
 } // namespace rf
 
-static rf::Player* g_SpectateModeTarget;
-static rf::Camera* g_OldTargetCamera = nullptr;
-static bool g_SpectateModeEnabled = false;
-static int g_LargeFont = -1, g_MediumFont = -1, g_SmallFont = -1;
+static rf::Player* g_spectate_mode_target;
+static rf::Camera* g_old_target_camera = nullptr;
+static bool g_spectate_mode_enabled = false;
 
 static void SetCameraTarget(rf::Player* player)
 {
     // Based on function SetCamera1View
-    if (!rf::g_LocalPlayer || !rf::g_LocalPlayer->camera || !player)
+    if (!rf::local_player || !rf::local_player->camera || !player)
         return;
 
-    rf::Camera* camera = rf::g_LocalPlayer->camera;
+    rf::Camera* camera = rf::local_player->camera;
     camera->type = rf::CAM_FIRST_PERSON;
     camera->player = player;
 
-    g_OldTargetCamera = player->camera;
+    g_old_target_camera = player->camera;
     player->camera = camera; // fix crash 0040D744
 
     rf::CameraSetFirstPerson(camera);
@@ -53,12 +52,12 @@ static void SetCameraTarget(rf::Player* player)
 void SpectateModeSetTargetPlayer(rf::Player* player)
 {
     if (!player)
-        player = rf::g_LocalPlayer;
+        player = rf::local_player;
 
-    if (!rf::g_LocalPlayer || !rf::g_LocalPlayer->camera || !g_SpectateModeTarget || g_SpectateModeTarget == player)
+    if (!rf::local_player || !rf::local_player->camera || !g_spectate_mode_target || g_spectate_mode_target == player)
         return;
 
-    if (rf::g_GameOptions & RF_GO_FORCE_RESPAWN) {
+    if (rf::game_options & RF_GO_FORCE_RESPAWN) {
         rf::String msg{"You cannot use Spectate Mode because Force Respawn option is enabled on this server!"};
         rf::String prefix;
         rf::ChatPrint(msg, rf::ChatMsgColor::white_white, prefix);
@@ -66,20 +65,20 @@ void SpectateModeSetTargetPlayer(rf::Player* player)
     }
 
     // fix old target
-    if (g_SpectateModeTarget && g_SpectateModeTarget != rf::g_LocalPlayer) {
-        g_SpectateModeTarget->camera = g_OldTargetCamera;
-        g_OldTargetCamera = nullptr;
+    if (g_spectate_mode_target && g_spectate_mode_target != rf::local_player) {
+        g_spectate_mode_target->camera = g_old_target_camera;
+        g_old_target_camera = nullptr;
 
 #if SPECTATE_MODE_SHOW_WEAPON
-        g_SpectateModeTarget->flags &= ~(1 << 4);
-        rf::EntityObj* entity = rf::EntityGetFromHandle(g_SpectateModeTarget->entity_handle);
+        g_spectate_mode_target->flags &= ~(1 << 4);
+        rf::EntityObj* entity = rf::EntityGetFromHandle(g_spectate_mode_target->entity_handle);
         if (entity)
             entity->local_player = nullptr;
 #endif // SPECTATE_MODE_SHOW_WEAPON
     }
 
-    g_SpectateModeEnabled = (player != rf::g_LocalPlayer);
-    g_SpectateModeTarget = player;
+    g_spectate_mode_enabled = (player != rf::local_player);
+    g_spectate_mode_target = player;
 
     rf::KillLocalPlayer();
     SetCameraTarget(player);
@@ -101,17 +100,17 @@ void SpectateModeSetTargetPlayer(rf::Player* player)
 static void SpectateNextPlayer(bool dir, bool try_alive_players_first = false)
 {
     rf::Player* new_target;
-    if (g_SpectateModeEnabled)
-        new_target = g_SpectateModeTarget;
+    if (g_spectate_mode_enabled)
+        new_target = g_spectate_mode_target;
     else
-        new_target = rf::g_LocalPlayer;
+        new_target = rf::local_player;
     while (true) {
         new_target = dir ? new_target->next : new_target->prev;
-        if (!new_target || new_target == g_SpectateModeTarget)
+        if (!new_target || new_target == g_spectate_mode_target)
             break; // nothing found
         if (try_alive_players_first && rf::IsPlayerEntityInvalid(new_target))
             continue;
-        if (new_target != rf::g_LocalPlayer) {
+        if (new_target != rf::local_player) {
             SpectateModeSetTargetPlayer(new_target);
             return;
         }
@@ -121,10 +120,10 @@ static void SpectateNextPlayer(bool dir, bool try_alive_players_first = false)
         SpectateNextPlayer(dir, false);
 }
 
-FunHook<void(rf::Player*, rf::GameCtrl, bool)> HandleCtrlInGame_Hook{
+FunHook<void(rf::Player*, rf::GameCtrl, bool)> HandleCtrlInGame_hook{
     0x004A6210,
     [](rf::Player* player, rf::GameCtrl key_id, bool was_pressed) {
-        if (g_SpectateModeEnabled) {
+        if (g_spectate_mode_enabled) {
             if (key_id == rf::GC_PRIMARY_ATTACK || key_id == rf::GC_SLIDE_RIGHT) {
                 if (was_pressed)
                     SpectateNextPlayer(true);
@@ -141,80 +140,80 @@ FunHook<void(rf::Player*, rf::GameCtrl, bool)> HandleCtrlInGame_Hook{
                 return;
             }
         }
-        else if (!g_SpectateModeEnabled) {
-            if (key_id == rf::GC_JUMP && was_pressed && rf::IsPlayerEntityInvalid(rf::g_LocalPlayer)) {
-                SpectateModeSetTargetPlayer(rf::g_LocalPlayer);
+        else if (!g_spectate_mode_enabled) {
+            if (key_id == rf::GC_JUMP && was_pressed && rf::IsPlayerEntityInvalid(rf::local_player)) {
+                SpectateModeSetTargetPlayer(rf::local_player);
                 SpectateNextPlayer(true, true);
                 return;
             }
         }
 
-        HandleCtrlInGame_Hook.CallTarget(player, key_id, was_pressed);
+        HandleCtrlInGame_hook.CallTarget(player, key_id, was_pressed);
     },
 };
 
 bool IsPlayerEntityInvalid_New(rf::Player* player)
 {
-    if (g_SpectateModeEnabled)
+    if (g_spectate_mode_enabled)
         return false;
     else
         return rf::IsPlayerEntityInvalid(player);
 }
 
-CallHook<bool(rf::Player*)> IsPlayerEntityInvalid_RedBars_Hook{0x00432A52, IsPlayerEntityInvalid_New};
-CallHook<bool(rf::Player*)> IsPlayerEntityInvalid_Scoreboard_Hook{0x00437BEE, IsPlayerEntityInvalid_New};
-CallHook<bool(rf::Player*)> IsPlayerEntityInvalid_Scoreboard2_Hook{0x00437C25, IsPlayerEntityInvalid_New};
+CallHook<bool(rf::Player*)> IsPlayerEntityInvalid_RedBars_hook{0x00432A52, IsPlayerEntityInvalid_New};
+CallHook<bool(rf::Player*)> IsPlayerEntityInvalid_Scoreboard_hook{0x00437BEE, IsPlayerEntityInvalid_New};
+CallHook<bool(rf::Player*)> IsPlayerEntityInvalid_Scoreboard2_hook{0x00437C25, IsPlayerEntityInvalid_New};
 
 static bool IsPlayerDying_New(rf::Player* player)
 {
-    if (g_SpectateModeEnabled)
+    if (g_spectate_mode_enabled)
         return false;
     else
         return rf::IsPlayerDying(player);
 }
 
-CallHook IsPlayerDying_RedBars_Hook{0x00432A5F, IsPlayerDying_New};
-CallHook IsPlayerDying_Scoreboard_Hook{0x00437C01, IsPlayerDying_New};
-CallHook IsPlayerDying_Scoreboard2_Hook{0x00437C36, IsPlayerDying_New};
+CallHook IsPlayerDying_RedBars_hook{0x00432A5F, IsPlayerDying_New};
+CallHook IsPlayerDying_Scoreboard_hook{0x00437C01, IsPlayerDying_New};
+CallHook IsPlayerDying_Scoreboard2_hook{0x00437C36, IsPlayerDying_New};
 
 void SpectateModeOnDestroyPlayer(rf::Player* player)
 {
-    if (g_SpectateModeTarget == player)
+    if (g_spectate_mode_target == player)
         SpectateNextPlayer(true);
-    if (g_SpectateModeTarget == player)
+    if (g_spectate_mode_target == player)
         SpectateModeSetTargetPlayer(nullptr);
 }
 
-FunHook<void(rf::Player*)> RenderReticle_Hook{
+FunHook<void(rf::Player*)> RenderReticle_hook{
     0x0043A2C0,
     [](rf::Player* player) {
         if (rf::GameSeqGetState() == rf::GS_MP_LIMBO)
             return;
-        if (g_SpectateModeEnabled)
-            RenderReticle_Hook.CallTarget(g_SpectateModeTarget);
+        if (g_spectate_mode_enabled)
+            RenderReticle_hook.CallTarget(g_spectate_mode_target);
         else
-            RenderReticle_Hook.CallTarget(player);
+            RenderReticle_hook.CallTarget(player);
     },
 };
 
-FunHook<rf::EntityObj*(rf::Player*, int, const rf::Vector3*, const rf::Matrix3*, int)> PlayerCreateEntity_Hook{
+FunHook<rf::EntityObj*(rf::Player*, int, const rf::Vector3*, const rf::Matrix3*, int)> PlayerCreateEntity_hook{
     0x004A4130,
     [](rf::Player* player, int cls_id, const rf::Vector3* pos, const rf::Matrix3* orient, int mp_character) {
         // hide target player from camera after respawn
-        rf::EntityObj* entity = PlayerCreateEntity_Hook.CallTarget(player, cls_id, pos, orient, mp_character);
-        if (entity && player == g_SpectateModeTarget)
+        rf::EntityObj* entity = PlayerCreateEntity_hook.CallTarget(player, cls_id, pos, orient, mp_character);
+        if (entity && player == g_spectate_mode_target)
             entity->local_player = player;
 
         return entity;
     },
 };
 
-CallHook<void()> GrResetClip_RenderScannerViewForLocalPlayers_Hook{
+CallHook<void()> GrResetClip_RenderScannerViewForLocalPlayers_hook{
     0x00431890,
     []() {
-        if (g_SpectateModeEnabled)
-            rf::PlayerRenderRocketLauncherScannerView(g_SpectateModeTarget);
-        GrResetClip_RenderScannerViewForLocalPlayers_Hook.CallTarget();
+        if (g_spectate_mode_enabled)
+            rf::PlayerRenderRocketLauncherScannerView(g_spectate_mode_target);
+        GrResetClip_RenderScannerViewForLocalPlayers_hook.CallTarget();
     },
 };
 
@@ -222,14 +221,14 @@ CallHook<void()> GrResetClip_RenderScannerViewForLocalPlayers_Hook{
 
 static void PlayerFpgunRender_New(rf::Player* player)
 {
-    if (g_SpectateModeEnabled) {
-        rf::EntityObj* entity = rf::EntityGetFromHandle(g_SpectateModeTarget->entity_handle);
+    if (g_spectate_mode_enabled) {
+        rf::EntityObj* entity = rf::EntityGetFromHandle(g_spectate_mode_target->entity_handle);
 
         // HACKFIX: RF uses function PlayerSetRemoteChargeVisible for local player only
-        g_SpectateModeTarget->weapon_info.remote_charge_visible =
-            (entity && entity->weapon_info.weapon_cls_id == rf::g_RemoteChargeClsId);
+        g_spectate_mode_target->weapon_info.remote_charge_visible =
+            (entity && entity->weapon_info.weapon_cls_id == rf::remote_charge_cls_id);
 
-        if (g_SpectateModeTarget != rf::g_LocalPlayer && entity) {
+        if (g_spectate_mode_target != rf::local_player && entity) {
             static rf::Vector3 old_vel;
             rf::Vector3 vel_diff = entity->_super.phys_info.vel - old_vel;
             old_vel = entity->_super.phys_info.vel;
@@ -238,23 +237,23 @@ static void PlayerFpgunRender_New(rf::Player* player)
                 entity->entity_flags |= 2; // jump
         }
 
-        if (g_SpectateModeTarget->weapon_info.in_scope_view)
-            g_SpectateModeTarget->weapon_info.scope_zoom = 2.0f;
-        rf::g_LocalPlayer->weapon_info.in_scope_view = g_SpectateModeTarget->weapon_info.in_scope_view;
-        rf::g_LocalPlayer->weapon_info.scope_zoom = g_SpectateModeTarget->weapon_info.scope_zoom;
+        if (g_spectate_mode_target->weapon_info.in_scope_view)
+            g_spectate_mode_target->weapon_info.scope_zoom = 2.0f;
+        rf::local_player->weapon_info.in_scope_view = g_spectate_mode_target->weapon_info.in_scope_view;
+        rf::local_player->weapon_info.scope_zoom = g_spectate_mode_target->weapon_info.scope_zoom;
 
-        rf::PlayerFpgunUpdateMesh(g_SpectateModeTarget);
-        rf::PlayerFpgunRender(g_SpectateModeTarget);
+        rf::PlayerFpgunUpdateMesh(g_spectate_mode_target);
+        rf::PlayerFpgunRender(g_spectate_mode_target);
     }
     else
         rf::PlayerFpgunRender(player);
 }
 
-FunHook<void(rf::Player*)> PlayerFpgunUpdateState_Hook{
+FunHook<void(rf::Player*)> PlayerFpgunUpdateState_hook{
     0x004AA3A0,
     [](rf::Player* player) {
-        PlayerFpgunUpdateState_Hook.CallTarget(player);
-        if (player != rf::g_LocalPlayer) {
+        PlayerFpgunUpdateState_hook.CallTarget(player);
+        if (player != rf::local_player) {
             rf::EntityObj* entity = rf::EntityGetFromHandle(player->entity_handle);
             if (entity) {
                 float horz_speed_pow2 = entity->_super.phys_info.vel.x * entity->_super.phys_info.vel.x +
@@ -277,17 +276,17 @@ FunHook<void(rf::Player*)> PlayerFpgunUpdateState_Hook{
 
 void SpectateModeInit()
 {
-    IsPlayerDying_RedBars_Hook.Install();
-    IsPlayerDying_Scoreboard_Hook.Install();
-    IsPlayerDying_Scoreboard2_Hook.Install();
+    IsPlayerDying_RedBars_hook.Install();
+    IsPlayerDying_Scoreboard_hook.Install();
+    IsPlayerDying_Scoreboard2_hook.Install();
 
-    IsPlayerEntityInvalid_RedBars_Hook.Install();
-    IsPlayerEntityInvalid_Scoreboard_Hook.Install();
-    IsPlayerEntityInvalid_Scoreboard2_Hook.Install();
+    IsPlayerEntityInvalid_RedBars_hook.Install();
+    IsPlayerEntityInvalid_Scoreboard_hook.Install();
+    IsPlayerEntityInvalid_Scoreboard2_hook.Install();
 
-    HandleCtrlInGame_Hook.Install();
-    RenderReticle_Hook.Install();
-    PlayerCreateEntity_Hook.Install();
+    HandleCtrlInGame_hook.Install();
+    RenderReticle_hook.Install();
+    PlayerCreateEntity_hook.Install();
 
     // Note: HUD rendering doesn't make sense because life and armor isn't synced
 
@@ -305,38 +304,41 @@ void SpectateModeInit()
     AsmWritter(0x004AE384).nop(6);               // PlayerFpgunPrepareWeapon
     WriteMem<u8>(0x004ACE2C, ASM_SHORT_JMP_REL); // GetZoomValue
 
-    WriteMemPtr(0x0048857E + 2, &g_SpectateModeTarget); // RenderObjects
-    WriteMemPtr(0x00488598 + 1, &g_SpectateModeTarget); // RenderObjects
-    WriteMemPtr(0x00421889 + 2, &g_SpectateModeTarget); // EntityRender
-    WriteMemPtr(0x004218A2 + 2, &g_SpectateModeTarget); // EntityRender
+    WriteMemPtr(0x0048857E + 2, &g_spectate_mode_target); // RenderObjects
+    WriteMemPtr(0x00488598 + 1, &g_spectate_mode_target); // RenderObjects
+    WriteMemPtr(0x00421889 + 2, &g_spectate_mode_target); // EntityRender
+    WriteMemPtr(0x004218A2 + 2, &g_spectate_mode_target); // EntityRender
 
-    GrResetClip_RenderScannerViewForLocalPlayers_Hook.Install();
-    PlayerFpgunUpdateState_Hook.Install();
+    GrResetClip_RenderScannerViewForLocalPlayers_hook.Install();
+    PlayerFpgunUpdateState_hook.Install();
 #endif // SPECTATE_MODE_SHOW_WEAPON
 }
 
 void SpectateModeAfterFullGameInit()
 {
-    g_SpectateModeTarget = rf::g_LocalPlayer;
+    g_spectate_mode_target = rf::local_player;
 }
 
 void SpectateModeDrawUI()
 {
-    if (!g_SpectateModeEnabled) {
-        if (rf::IsPlayerEntityInvalid(rf::g_LocalPlayer)) {
+    if (!g_spectate_mode_enabled) {
+        if (rf::IsPlayerEntityInvalid(rf::local_player)) {
             rf::GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
             rf::GrDrawAlignedText(rf::GR_ALIGN_LEFT, 20, 200, "Press JUMP key to enter Spectate Mode", -1,
-                                  rf::g_GrTextMaterial);
+                                  rf::gr_text_material);
         }
         return;
     }
 
-    if (g_LargeFont == -1)
-        g_LargeFont = rf::GrLoadFont("rfpc-large.vf", -1);
-    if (g_MediumFont == -1)
-        g_MediumFont = rf::GrLoadFont("rfpc-medium.vf", -1);
-    if (g_SmallFont == -1)
-        g_SmallFont = rf::GrLoadFont("rfpc-small.vf", -1);
+    static int large_font = -1;
+    if (large_font == -1)
+        large_font = rf::GrLoadFont("rfpc-large.vf", -1);
+    static int medium_font = -1;
+    if (medium_font == -1)
+        medium_font = rf::GrLoadFont("rfpc-medium.vf", -1);
+    static int small_font = -1;
+    if (small_font == -1)
+        small_font = rf::GrLoadFont("rfpc-small.vf", -1);
 
     const unsigned cx = 500, cy = 50;
     unsigned cx_scr = rf::GrGetMaxWidth(), cy_src = rf::GrGetMaxHeight();
@@ -345,47 +347,47 @@ void SpectateModeDrawUI()
     unsigned cy_font = rf::GrGetFontHeight(-1);
 
     rf::GrSetColor(0, 0, 0, 0x80);
-    rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, cx_scr / 2 + 2, 150 + 2, "SPECTATE MODE", g_LargeFont,
-                          rf::g_GrTextMaterial);
+    rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, cx_scr / 2 + 2, 150 + 2, "SPECTATE MODE", large_font,
+                          rf::gr_text_material);
     rf::GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
-    rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, cx_scr / 2, 150, "SPECTATE MODE", g_LargeFont, rf::g_GrTextMaterial);
+    rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, cx_scr / 2, 150, "SPECTATE MODE", large_font, rf::gr_text_material);
 
     rf::GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
-    rf::GrDrawAlignedText(rf::GR_ALIGN_LEFT, 20, 200, "Press JUMP key to exit Spectate Mode", g_MediumFont,
-                          rf::g_GrTextMaterial);
+    rf::GrDrawAlignedText(rf::GR_ALIGN_LEFT, 20, 200, "Press JUMP key to exit Spectate Mode", medium_font,
+                          rf::gr_text_material);
     rf::GrDrawAlignedText(rf::GR_ALIGN_LEFT, 20, 215, "Press PRIMARY ATTACK key to switch to the next player",
-                          g_MediumFont, rf::g_GrTextMaterial);
+                          medium_font, rf::gr_text_material);
     rf::GrDrawAlignedText(rf::GR_ALIGN_LEFT, 20, 230, "Press SECONDARY ATTACK key to switch to the previous player",
-                          g_MediumFont, rf::g_GrTextMaterial);
+                          medium_font, rf::gr_text_material);
 
     rf::GrSetColor(0, 0, 0x00, 0x60);
-    rf::GrDrawRect(x, y, cx, cy, rf::g_GrRectMaterial);
+    rf::GrDrawRect(x, y, cx, cy, rf::gr_rect_material);
 
     rf::GrSetColor(0xFF, 0xFF, 0, 0x80);
-    auto str = StringFormat("Spectating: %s", g_SpectateModeTarget->name.CStr());
-    rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, x + cx / 2, y + cy / 2 - cy_font / 2 - 5, str.c_str(), g_LargeFont,
-                          rf::g_GrTextMaterial);
+    auto str = StringFormat("Spectating: %s", g_spectate_mode_target->name.CStr());
+    rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, x + cx / 2, y + cy / 2 - cy_font / 2 - 5, str.c_str(), large_font,
+                          rf::gr_text_material);
 
-    rf::EntityObj* entity = rf::EntityGetFromHandle(g_SpectateModeTarget->entity_handle);
+    rf::EntityObj* entity = rf::EntityGetFromHandle(g_spectate_mode_target->entity_handle);
     if (!entity) {
         rf::GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
         static int blood_bm = rf::BmLoad("bloodsmear07_A.tga", -1, true);
         int blood_w, blood_h;
         rf::BmGetBitmapSize(blood_bm, &blood_w, &blood_h);
         rf::GrDrawBitmapStretched(blood_bm, (cx_scr - blood_w * 2) / 2, (cy_src - blood_h * 2) / 2, blood_w * 2,
-                                  blood_h * 2, 0, 0, blood_w, blood_h, 0.0f, 0.0f, rf::g_GrBitmapMaterial);
+                                  blood_h * 2, 0, 0, blood_w, blood_h, 0.0f, 0.0f, rf::gr_bitmap_material);
 
         rf::GrSetColor(0, 0, 0, 0x80);
-        rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, cx_scr / 2 + 2, cy_src / 2 + 2, "DEAD", g_LargeFont,
-                              rf::g_GrTextMaterial);
+        rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, cx_scr / 2 + 2, cy_src / 2 + 2, "DEAD", large_font,
+                              rf::gr_text_material);
         rf::GrSetColor(0xF0, 0x20, 0x10, 0xC0);
-        rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, cx_scr / 2, cy_src / 2, "DEAD", g_LargeFont, rf::g_GrTextMaterial);
+        rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, cx_scr / 2, cy_src / 2, "DEAD", large_font, rf::gr_text_material);
     }
 }
 
 bool SpectateModeIsActive()
 {
-    return g_SpectateModeEnabled;
+    return g_spectate_mode_enabled;
 }
 
 #endif // SPECTATE_MODE_ENABLE

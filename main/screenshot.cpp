@@ -17,29 +17,28 @@ static int g_screenshot_dir_id;
 
 namespace rf
 {
-
 struct GrTextureSlot
 {
-  IDirect3DTexture8* d3d_texture;
-  int num_bytes_used_by_texture;
-  float scale_unk_x;
-  float scale_unk_y;
-  int x;
-  int y;
-  int width;
-  int height;
+    IDirect3DTexture8* d3d_texture;
+    int num_bytes_used_by_texture;
+    float scale_unk_x;
+    float scale_unk_y;
+    int x;
+    int y;
+    int width;
+    int height;
 };
 static_assert(sizeof(GrTextureSlot) == 0x20);
 
 struct GrTexture
 {
-  int field_0;
-  uint16_t num_sections;
-  uint16_t field_6;
-  uint16_t lock_count;
-  uint8_t ref_count;
-  char field_b;
-  GrTextureSlot *sections;
+    int field_0;
+    uint16_t num_sections;
+    uint16_t field_6;
+    uint16_t lock_count;
+    uint8_t ref_count;
+    char field_b;
+    GrTextureSlot *sections;
 };
 static_assert(sizeof(GrTexture) == 0x10);
 
@@ -48,7 +47,7 @@ static auto& GrGetBitmapTexture = AddrAsRef<IDirect3DTexture8*(int bm_handle)>(0
 } // namespace rf
 
 #if !D3D_LOCKABLE_BACKBUFFER
-CallHook<rf::BmPixelFormat(int, int, int, int, std::byte*)> GrD3DReadBackBuffer_Hook{
+CallHook<rf::BmPixelFormat(int, int, int, int, std::byte*)> GrD3DReadBackBuffer_hook{
     0x0050E015,
     [](int x, int y, int width, int height, std::byte* buffer) {
         // Note: function is sometimes called with all parameters set to 0 to get backbuffer format
@@ -56,7 +55,7 @@ CallHook<rf::BmPixelFormat(int, int, int, int, std::byte*)> GrD3DReadBackBuffer_
         rf::GrFlushBuffers();
 
         ComPtr<IDirect3DSurface8> back_buffer;
-        HRESULT hr = rf::g_GrDevice->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &back_buffer);
+        HRESULT hr = rf::gr_d3d_device->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &back_buffer);
         if (FAILED(hr)) {
             ERR("IDirect3DDevice8::GetBackBuffer failed 0x%lX", hr);
             return rf::BMPF_INVALID;
@@ -71,10 +70,10 @@ CallHook<rf::BmPixelFormat(int, int, int, int, std::byte*)> GrD3DReadBackBuffer_
 
         ComPtr<IDirect3DSurface8> tmp_surface;
 #if 1
-        hr = rf::g_GrDevice->CreateRenderTarget(desc.Width, desc.Height, desc.Format, D3DMULTISAMPLE_NONE, TRUE,
+        hr = rf::gr_d3d_device->CreateRenderTarget(desc.Width, desc.Height, desc.Format, D3DMULTISAMPLE_NONE, TRUE,
                                                 &tmp_surface);
-        // hr = rf::g_GrDevice->CreateImageSurface(desc.Width, desc.Height, desc.Format, &tmp_surface);
-        // hr = rf::g_GrDevice->CreateTexture(desc.Width, desc.Height, 1, 0, desc.Format, D3DPOOL_MANAGED,
+        // hr = rf::gr_d3d_device->CreateImageSurface(desc.Width, desc.Height, desc.Format, &tmp_surface);
+        // hr = rf::gr_d3d_device->CreateTexture(desc.Width, desc.Height, 1, 0, desc.Format, D3DPOOL_MANAGED,
         // &TmpTexture);
         if (FAILED(hr)) {
             ERR("IDirect3DDevice8::CreateRenderTarget failed 0x%lX", hr);
@@ -86,7 +85,7 @@ CallHook<rf::BmPixelFormat(int, int, int, int, std::byte*)> GrD3DReadBackBuffer_
         SetRect(&src_rect, x, y, x + width - 1, y + height - 1);
 
         if (width > 0 && height > 0) {
-            hr = rf::g_GrDevice->CopyRects(back_buffer, &src_rect, 1, tmp_surface, &dst_pt);
+            hr = rf::gr_d3d_device->CopyRects(back_buffer, &src_rect, 1, tmp_surface, &dst_pt);
             if (FAILED(hr)) {
                 ERR("IDirect3DDevice8::CopyRects failed 0x%lX", hr);
                 return rf::BMPF_INVALID;
@@ -142,7 +141,7 @@ bool GrCaptureBackBufferFast(int x, int y, int width, int height, int bm_handle)
     }
 
     ComPtr<IDirect3DSurface8> back_buffer;
-    HRESULT hr = rf::g_GrDevice->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &back_buffer);
+    HRESULT hr = rf::gr_d3d_device->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &back_buffer);
     if (FAILED(hr)) {
         ERR("IDirect3DDevice8::GetBackBuffer failed 0x%lX", hr);
         return false;
@@ -183,7 +182,7 @@ bool GrCaptureBackBufferFast(int x, int y, int width, int height, int bm_handle)
         RECT src_rect;
         POINT dst_pt{x, y};
         SetRect(&src_rect, x, y, x + width - 1, y + height - 1);
-        hr = rf::g_GrDevice->CopyRects(back_buffer, &src_rect, 1, tex_surface, &dst_pt);
+        hr = rf::gr_d3d_device->CopyRects(back_buffer, &src_rect, 1, tex_surface, &dst_pt);
         if (FAILED(hr)) {
             ERR("IDirect3DDevice8::CopyRects failed 0x%lX", hr);
             return false;
@@ -206,7 +205,7 @@ void InitScreenshot()
 {
 #if !D3D_LOCKABLE_BACKBUFFER
     /* Override default because IDirect3DSurface8::LockRect fails on multisampled back-buffer */
-    GrD3DReadBackBuffer_Hook.Install();
+    GrD3DReadBackBuffer_hook.Install();
 #endif
 
     // Use fast GrCaptureBackBuffer implementation which copies backbuffer to texture without copying from VRAM to RAM
@@ -226,15 +225,15 @@ void CleanupScreenshot()
 void ScreenshotAfterGameInit()
 {
     /* Fix for screenshots creation when height > 1024 */
-    if (rf::g_GrScreen.max_height > 1024) {
-        g_screenshot_scanlines_buf = std::make_unique<byte* []>(rf::g_GrScreen.max_height);
+    if (rf::gr_screen.max_height > 1024) {
+        g_screenshot_scanlines_buf = std::make_unique<byte* []>(rf::gr_screen.max_height);
         AsmWritter(0x0055A066, 0x0055A06D)
             .mov(asm_regs::ecx, reinterpret_cast<int32_t>(&g_screenshot_scanlines_buf[0]));
         AsmWritter(0x0055A0DF, 0x0055A0E6)
             .mov(asm_regs::eax, reinterpret_cast<int32_t>(g_screenshot_scanlines_buf.get()));
     }
 
-    auto full_path = StringFormat("%s\\%s", rf::g_RootPath, g_screenshot_dir_name);
+    auto full_path = StringFormat("%s\\%s", rf::root_path, g_screenshot_dir_name);
     if (CreateDirectoryA(full_path.c_str(), nullptr))
         INFO("Created screenshots directory");
     else if (GetLastError() != ERROR_ALREADY_EXISTS)

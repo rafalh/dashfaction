@@ -309,18 +309,18 @@ namespace rf
         DcPrint(buf.get(), nullptr);
     }
 
-    //static auto& g_DcCommands = AddrAsRef<DcCommand*[30]>(0x01775530);
-    static auto& g_DcNumCommands = AddrAsRef<uint32_t>(0x0177567C);
+    //static auto& DcCommands = AddrAsRef<DcCommand*[30]>(0x01775530);
+    static auto& dc_num_commands = AddrAsRef<uint32_t>(0x0177567C);
 
-    static auto& g_DcRun = AddrAsRef<uint32_t>(0x01775110);
-    static auto& g_DcHelp = AddrAsRef<uint32_t>(0x01775224);
-    static auto& g_DcStatus = AddrAsRef<uint32_t>(0x01774D00);
-    static auto& g_DcArgType = AddrAsRef<uint32_t>(0x01774D04);
-    static auto& g_DcStrArg = AddrAsRef<char[256]>(0x0175462C);
-    static auto& g_DcIntArg = AddrAsRef<int>(0x01775220);
-    static auto& g_DcFloatArg = AddrAsRef<float>(0x01754628);
-    static auto& g_DcCmdLine = AddrAsRef<char[256]>(0x01775330);
-    static auto& g_DcCmdLineLen = AddrAsRef<uint32_t>(0x0177568C);
+    static auto& dc_run = AddrAsRef<uint32_t>(0x01775110);
+    static auto& dc_help = AddrAsRef<uint32_t>(0x01775224);
+    static auto& dc_status = AddrAsRef<uint32_t>(0x01774D00);
+    static auto& dc_arg_type = AddrAsRef<uint32_t>(0x01774D04);
+    static auto& dc_str_arg = AddrAsRef<char[256]>(0x0175462C);
+    static auto& dc_int_arg = AddrAsRef<int>(0x01775220);
+    static auto& dc_float_arg = AddrAsRef<float>(0x01754628);
+    static auto& dc_cmd_line = AddrAsRef<char[256]>(0x01775330);
+    static auto& dc_cmd_line_len = AddrAsRef<uint32_t>(0x0177568C);
 
     #define DC_REGISTER_CMD(name, help, handler) \
         do { \
@@ -423,14 +423,14 @@ namespace rf
         GR_ALIGN_RIGHT = 2,
     };
 
-    static auto& g_GrDevice = AddrAsRef<IDirect3DDevice8*>(0x01CFCBE4);
-    static auto& g_GrScreen = AddrAsRef<GrScreen>(0x017C7BC0);
+    static auto& gr_d3d_device = AddrAsRef<IDirect3DDevice8*>(0x01CFCBE4);
+    static auto& gr_screen = AddrAsRef<GrScreen>(0x017C7BC0);
 
-    static auto& g_GrLineMaterial = AddrAsRef<uint32_t>(0x01775B00);
-    static auto& g_GrRectMaterial = AddrAsRef<uint32_t>(0x17756C0);
-    static auto& g_GrTextMaterial = AddrAsRef<uint32_t>(0x17C7C5C);
-    static auto& g_GrBitmapMaterial = AddrAsRef<uint32_t>(0x017756BC);
-    static auto& g_GrImageMaterial = AddrAsRef<uint32_t>(0x017756DC);
+    static auto& gr_line_material = AddrAsRef<uint32_t>(0x01775B00);
+    static auto& gr_rect_material = AddrAsRef<uint32_t>(0x17756C0);
+    static auto& gr_text_material = AddrAsRef<uint32_t>(0x17C7C5C);
+    static auto& gr_bitmap_material = AddrAsRef<uint32_t>(0x017756BC);
+    static auto& gr_image_material = AddrAsRef<uint32_t>(0x017756DC);
 
     static auto& GrGetMaxWidth = AddrAsRef<int()>(0x0050C640);
     static auto& GrGetMaxHeight = AddrAsRef<int()>(0x0050C650);
@@ -838,8 +838,8 @@ namespace rf
     };
     static_assert(sizeof(Player) == 0x1204, "invalid size");
 
-    static auto& g_PlayerList = AddrAsRef<Player*>(0x007C75CC);
-    static auto& g_LocalPlayer = AddrAsRef<Player*>(0x007C75D4);
+    static auto& player_list = AddrAsRef<Player*>(0x007C75CC);
+    static auto& local_player = AddrAsRef<Player*>(0x007C75D4);
 
     static auto& KillLocalPlayer = AddrAsRef<void()>(0x004757A0);
     static auto& IsEntityCtrlActive =
@@ -1029,8 +1029,6 @@ namespace rf
         char padding2[3];
     };
     static_assert(sizeof(TriggerObj) == 0x30C, "invalid size");
-
-    static auto& g_ItemObjList = AddrAsRef<ItemObj>(0x00642DD8);
 
     static auto& ObjGetFromUid = AddrAsRef<Object *(int uid)>(0x0048A4A0);
 
@@ -1527,23 +1525,23 @@ namespace rf
     };
     static_assert(sizeof(WeaponClass) == 0x550, "invalid size");
 
-    static auto& g_WeaponClasses = AddrAsRef<WeaponClass[64]>(0x0085CD08);
-    static auto& g_RiotStickClsId = AddrAsRef<int32_t>(0x00872468);
-    static auto& g_RemoteChargeClsId = AddrAsRef<int32_t>(0x0087210C);
+    static auto& weapon_classes = AddrAsRef<WeaponClass[64]>(0x0085CD08);
+    static auto& riot_stick_cls_id = AddrAsRef<int32_t>(0x00872468);
+    static auto& remote_charge_cls_id = AddrAsRef<int32_t>(0x0087210C);
 
     /* Window */
 
     typedef void(*MsgHandlerPtr)(UINT, WPARAM, LPARAM);
     static auto &AddMsgHandler = AddrAsRef<unsigned(MsgHandlerPtr)>(0x00524AE0);
 
-    static auto& g_MsgHandlers = AddrAsRef<MsgHandlerPtr[32]>(0x01B0D5A0);
-    static auto& g_NumMsgHandlers = AddrAsRef<uint32_t>(0x01B0D760);
+    static auto& msg_handlers = AddrAsRef<MsgHandlerPtr[32]>(0x01B0D5A0);
+    static auto& num_msg_handlers = AddrAsRef<uint32_t>(0x01B0D760);
 
-    static auto& g_MainWnd = AddrAsRef<HWND>(0x01B0D748);
-    static auto& g_IsActive = AddrAsRef<uint8_t>(0x01B0D750);
-    static auto& g_Close = AddrAsRef<uint8_t>(0x01B0D758);
-    static auto& g_MouseInitialized = AddrAsRef<uint8_t>(0x01885461);
-    static auto& g_NumRedrawServer = AddrAsRef<uint32_t>(0x01775698);
+    static auto& main_wnd = AddrAsRef<HWND>(0x01B0D748);
+    static auto& is_main_wnd_active = AddrAsRef<uint8_t>(0x01B0D750);
+    static auto& close_app_req = AddrAsRef<uint8_t>(0x01B0D758);
+    static auto& mouse_initialized = AddrAsRef<uint8_t>(0x01885461);
+    static auto& num_redraw_server = AddrAsRef<uint32_t>(0x01775698);
 
     /* Network Game */
 
@@ -1559,12 +1557,12 @@ namespace rf
     static auto& BanIp = AddrAsRef<void(const NwAddr& addr)>(0x0046D0F0);
     static auto& MultiSetNextWeapon = AddrAsRef<void(int weapon_cls_id)>(0x0047FCA0);
 
-    static auto& g_ServAddr = AddrAsRef<NwAddr>(0x0064EC5C);
-    static auto& g_ServName = AddrAsRef<String>(0x0064EC28);
-    static auto& g_IsNetworkGame = AddrAsRef<uint8_t>(0x0064ECB9);
-    static auto& g_IsLocalNetworkGame = AddrAsRef<uint8_t>(0x0064ECBA);
-    static auto& g_IsDedicatedServer = AddrAsRef<uint32_t>(0x01B0D75C);
-    static auto& g_GameOptions = AddrAsRef<uint32_t>(0x0064EC40);
+    static auto& serv_addr = AddrAsRef<NwAddr>(0x0064EC5C);
+    static auto& serv_name = AddrAsRef<String>(0x0064EC28);
+    static auto& is_net_game = AddrAsRef<uint8_t>(0x0064ECB9);
+    static auto& is_local_net_game = AddrAsRef<uint8_t>(0x0064ECBA);
+    static auto& is_dedicated_server = AddrAsRef<uint32_t>(0x01B0D75C);
+    static auto& game_options = AddrAsRef<uint32_t>(0x0064EC40);
 
     /* Input */
     static auto& MouseGetPos = AddrAsRef<int(int &x, int &y, int &z)>(0x0051E450);
@@ -1625,21 +1623,20 @@ namespace rf
         int unk2;
     };
 
-    static auto& g_RootPath = AddrAsRef<char[256]>(0x018060E8);
-    static auto& g_Fps = AddrAsRef<float>(0x005A4018);
-    static auto& g_Framerate = AddrAsRef<float>(0x005A4014);
-    static auto& g_MinFramerate = AddrAsRef<float>(0x005A4024);
-    static auto& g_LevelName = AddrAsRef<String>(0x00645FDC);
-    static auto& g_LevelFilename = AddrAsRef<String>(0x00645FE4);
-    static auto& g_LevelAuthor = AddrAsRef<String>(0x00645FEC);
-    static auto& g_LevelDate = AddrAsRef<String>(0x00645FF4);
-    static auto& g_BigFontId = AddrAsRef<int>(0x006C74C0);
-    static auto& g_LargeFontId = AddrAsRef<int>(0x0063C05C);
-    static auto& g_MediumFontId = AddrAsRef<int>(0x0063C060);
-    static auto& g_SmallFontId = AddrAsRef<int>(0x0063C068);
-    static auto& g_DirectInputDisabled = AddrAsRef<bool>(0x005A4F88);
-    static auto& g_DefaultPlayerWeapon = AddrAsRef<String>(0x007C7600);
-    static auto& g_active_cutscene = AddrAsRef<void*>(0x00645320);
+    static auto& root_path = AddrAsRef<char[256]>(0x018060E8);
+    static auto& current_fps = AddrAsRef<float>(0x005A4018);
+    static auto& frametime = AddrAsRef<float>(0x005A4014);
+    static auto& min_framerate = AddrAsRef<float>(0x005A4024);
+    static auto& level_name = AddrAsRef<String>(0x00645FDC);
+    static auto& level_filename = AddrAsRef<String>(0x00645FE4);
+    static auto& level_author = AddrAsRef<String>(0x00645FEC);
+    static auto& big_font_id = AddrAsRef<int>(0x006C74C0);
+    static auto& large_font_id = AddrAsRef<int>(0x0063C05C);
+    static auto& medium_font_id = AddrAsRef<int>(0x0063C060);
+    static auto& small_font_id = AddrAsRef<int>(0x0063C068);
+    static auto& direct_input_disabled = AddrAsRef<bool>(0x005A4F88);
+    static auto& default_player_weapon = AddrAsRef<String>(0x007C7600);
+    static auto& active_cutscene = AddrAsRef<void*>(0x00645320);
 
     static auto& RfBeep = AddrAsRef<void(unsigned u1, unsigned u2, unsigned u3, float volume)>(0x00505560);
     static auto& GetFileExt = AddrAsRef<char *(const char *path)>(0x005143F0);

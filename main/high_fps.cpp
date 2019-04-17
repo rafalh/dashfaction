@@ -164,14 +164,14 @@ void FtolIssuesDetectionDoFrame()
             }
         }
 
-        rf::g_MinFramerate = 1.0f / 30.0f;
+        rf::min_framerate = 1.0f / 30.0f;
         g_ftol_debug_info_map.clear();
         g_ftol_debug_info_map_old.clear();
     }
     else if (g_num_frames == 5) {
         g_ftol_debug_info_map_old = std::move(g_ftol_debug_info_map);
         g_ftol_debug_info_map.clear();
-        rf::g_MinFramerate = 1.0f / 60.0f;
+        rf::min_framerate = 1.0f / 60.0f;
     }
 
     g_num_frames = (g_num_frames + 1) % 10;
@@ -201,7 +201,7 @@ DcCommand2 detect_ftol_issues_cmd{
 
 void STDCALL EntityWaterDecelerateFix(rf::EntityObj* entity)
 {
-    float vel_factor = 1.0f - (rf::g_Framerate * 4.5f);
+    float vel_factor = 1.0f - (rf::frametime * 4.5f);
     entity->_super.phys_info.vel.x *= vel_factor;
     entity->_super.phys_info.vel.y *= vel_factor;
     entity->_super.phys_info.vel.z *= vel_factor;
@@ -211,16 +211,16 @@ RegsPatch WaterAnimateWaves_speed_fix{
     0x004E68A0,
     [](auto& regs) {
         rf::Vector3& result = *reinterpret_cast<rf::Vector3*>(regs.esi + 0x2C);
-        result.x += 12.8f * (rf::g_Framerate) / reference_framerate;
-        result.y += 4.2666669f * (rf::g_Framerate) / reference_framerate;
-        result.z += 3.878788f * (rf::g_Framerate) / reference_framerate;
+        result.x += 12.8f * (rf::frametime) / reference_framerate;
+        result.y += 4.2666669f * (rf::frametime) / reference_framerate;
+        result.z += 3.878788f * (rf::frametime) / reference_framerate;
     },
 };
 
-FunHook<int(rf::String&, rf::String&, char*)> RflLoad_Hook{
+FunHook<int(rf::String&, rf::String&, char*)> RflLoad_hook{
     0x0045C540,
     [](rf::String& level_filename, rf::String& a2, char* error_desc) {
-        int ret = RflLoad_Hook.CallTarget(level_filename, a2, error_desc);
+        int ret = RflLoad_hook.CallTarget(level_filename, a2, error_desc);
         if (ret == 0 && std::strstr(level_filename, "L5S3")) {
             // Fix submarine exploding - change delay of two events to make submarine physics enabled later
             // INFO("Fixing Submarine exploding bug...");
@@ -237,11 +237,11 @@ FunHook<int(rf::String&, rf::String&, char*)> RflLoad_Hook{
     },
 };
 
-RegsPatch CutsceneShotSyncFix{
+RegsPatch cutscene_shot_sync_fix{
     0x0045B43B,
     [](X86Regs& regs) {
-        auto& current_shot_idx = StructFieldRef<int>(rf::g_active_cutscene, 0x808);
-        void* current_shot_timer = reinterpret_cast<char*>(rf::g_active_cutscene) + 0x810;
+        auto& current_shot_idx = StructFieldRef<int>(rf::active_cutscene, 0x808);
+        void* current_shot_timer = reinterpret_cast<char*>(rf::active_cutscene) + 0x810;
         if (current_shot_idx > 1) {
             // decrease time for next shot using current shot timer value
             int shot_time_left_ms = rf::Timer__GetTimeLeftMs(current_shot_timer);
@@ -280,7 +280,7 @@ void HighFpsInit()
     WriteMem<u8>(0x00509532, ASM_SHORT_JMP_REL);
 
     // Fix submarine exploding on high FPS
-    RflLoad_Hook.Install();
+    RflLoad_hook.Install();
 
     // Fix screen shake caused by some weapons (eg. Assault Rifle)
     WriteMemPtr(0x0040DBCC + 2, &g_camera_shake_factor);
@@ -292,12 +292,12 @@ void HighFpsInit()
     WriteMemPtr(0x0045B42A + 2, &zero);
 
     // Fix cutscene shot timer sync on high fps
-    CutsceneShotSyncFix.Install();
+    cutscene_shot_sync_fix.Install();
 }
 
 void HighFpsUpdate()
 {
-    float frame_time = rf::g_Framerate;
+    float frame_time = rf::frametime;
     if (frame_time > 0.0001f) {
         // Make jump fix framerate dependent to fix bouncing on small FPS
         g_jump_threshold = 0.025f + 0.075f * frame_time / (1 / 60.0f);

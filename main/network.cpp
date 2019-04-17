@@ -16,8 +16,9 @@
 namespace rf
 {
 static const auto MpIsConnectingToServer = AddrAsRef<uint8_t(const rf::NwAddr& addr)>(0x0044AD80);
-static auto& RflStaticGeometry = AddrAsRef<void*>(0x006460E8);
-static auto& SimultaneousPing = AddrAsRef<uint32_t>(0x00599CD8);
+
+static auto& rfl_static_geometry = AddrAsRef<void*>(0x006460E8);
+static auto& simultaneous_ping = AddrAsRef<uint32_t>(0x00599CD8);
 
 typedef void NwProcessGamePackets_Type(const char* data, int num_bytes, const NwAddr& addr, Player* player);
 static auto& NwProcessGamePackets = AddrAsRef<NwProcessGamePackets_Type>(0x004790D0);
@@ -25,7 +26,7 @@ static auto& NwProcessGamePackets = AddrAsRef<NwProcessGamePackets_Type>(0x00479
 
 typedef void NwPacketHandler_Type(char* data, const rf::NwAddr& addr);
 
-CallHook<void(const char*, int, const rf::NwAddr&, rf::Player*)> ProcessUnreliableGamePackets_Hook{
+CallHook<void(const char*, int, const rf::NwAddr&, rf::Player*)> ProcessUnreliableGamePackets_hook{
     0x00479244,
     [](const char* data, int data_len, const rf::NwAddr& addr, rf::Player* player) {
         rf::NwProcessGamePackets(data, data_len, addr, player);
@@ -248,7 +249,7 @@ RegsPatch ProcessGamePacket_whitelist_filter{
     [](auto& regs) {
         bool allowed = false;
         int packet_type = regs.esi;
-        if (rf::g_IsLocalNetworkGame) {
+        if (rf::is_local_net_game) {
             auto& whitelist = g_server_side_packet_whitelist;
             allowed = std::find(whitelist.begin(), whitelist.end(), packet_type) != whitelist.end();
         }
@@ -266,7 +267,7 @@ RegsPatch ProcessGamePacket_whitelist_filter{
     },
 };
 
-RegsPatch ProcessGameInfoPacket_GameTypeBounds_Patch{
+RegsPatch ProcessGameInfoPacket_GameTypeBounds_patch{
     0x0047B30B,
     [](X86Regs& regs) {
         // Valid game types are between 0 and 2
@@ -274,69 +275,69 @@ RegsPatch ProcessGameInfoPacket_GameTypeBounds_Patch{
     },
 };
 
-FunHook<NwPacketHandler_Type> ProcessJoinDenyPacket_Hook{
+FunHook<NwPacketHandler_Type> ProcessJoinDenyPacket_hook{
     0x0047A400,
     [](char* data, const rf::NwAddr& addr) {
         if (rf::MpIsConnectingToServer(addr)) // client-side
-            ProcessJoinDenyPacket_Hook.CallTarget(data, addr);
+            ProcessJoinDenyPacket_hook.CallTarget(data, addr);
     },
 };
 
-FunHook<NwPacketHandler_Type> ProcessNewPlayerPacket_Hook{
+FunHook<NwPacketHandler_Type> ProcessNewPlayerPacket_hook{
     0x0047A580,
     [](char* data, const rf::NwAddr& addr) {
-        if (GetForegroundWindow() != rf::g_MainWnd)
+        if (GetForegroundWindow() != rf::main_wnd)
             Beep(750, 300);
-        ProcessNewPlayerPacket_Hook.CallTarget(data, addr);
+        ProcessNewPlayerPacket_hook.CallTarget(data, addr);
     },
 };
 
-FunHook<NwPacketHandler_Type> ProcessLeftGamePacket_Hook{
+FunHook<NwPacketHandler_Type> ProcessLeftGamePacket_hook{
     0x0047BBC0,
     [](char* data, const rf::NwAddr& addr) {
         // server-side and client-side
-        if (rf::g_IsLocalNetworkGame) {
+        if (rf::is_local_net_game) {
             rf::Player* src_player = rf::NwGetPlayerFromAddr(addr);
             data[0] = src_player->nw_data->player_id; // fix player ID
         }
-        ProcessLeftGamePacket_Hook.CallTarget(data, addr);
+        ProcessLeftGamePacket_hook.CallTarget(data, addr);
     },
 };
 
-FunHook<NwPacketHandler_Type> ProcessChatLinePacket_Hook{
+FunHook<NwPacketHandler_Type> ProcessChatLinePacket_hook{
     0x00444860,
     [](char* data, const rf::NwAddr& addr) {
         // server-side and client-side
-        if (rf::g_IsLocalNetworkGame) {
+        if (rf::is_local_net_game) {
             rf::Player* src_player = rf::NwGetPlayerFromAddr(addr);
             if (!src_player)
                 return; // shouldnt happen (protected in rf::NwProcessGamePackets)
 
             data[0] = src_player->nw_data->player_id; // fix player ID
         }
-        ProcessChatLinePacket_Hook.CallTarget(data, addr);
+        ProcessChatLinePacket_hook.CallTarget(data, addr);
     },
 };
 
-FunHook<NwPacketHandler_Type> ProcessNameChangePacket_Hook{
+FunHook<NwPacketHandler_Type> ProcessNameChangePacket_hook{
     0x0046EAE0,
     [](char* data, const rf::NwAddr& addr) {
         // server-side and client-side
-        if (rf::g_IsLocalNetworkGame) {
+        if (rf::is_local_net_game) {
             rf::Player* src_player = rf::NwGetPlayerFromAddr(addr);
             if (!src_player)
                 return;                             // shouldnt happen (protected in rf::NwProcessGamePackets)
             data[0] = src_player->nw_data->player_id; // fix player ID
         }
-        ProcessNameChangePacket_Hook.CallTarget(data, addr);
+        ProcessNameChangePacket_hook.CallTarget(data, addr);
     },
 };
 
-FunHook<NwPacketHandler_Type> ProcessTeamChangePacket_Hook{
+FunHook<NwPacketHandler_Type> ProcessTeamChangePacket_hook{
     0x004825B0,
     [](char* data, const rf::NwAddr& addr) {
         // server-side and client-side
-        if (rf::g_IsLocalNetworkGame) {
+        if (rf::is_local_net_game) {
             rf::Player* src_player = rf::NwGetPlayerFromAddr(addr);
             if (!src_player)
                 return; // shouldnt happen (protected in rf::NwProcessGamePackets)
@@ -344,70 +345,70 @@ FunHook<NwPacketHandler_Type> ProcessTeamChangePacket_Hook{
             data[0] = src_player->nw_data->player_id;   // fix player ID
             data[1] = std::clamp(data[1], '\0', '\1'); // team validation (fixes "green team")
         }
-        ProcessTeamChangePacket_Hook.CallTarget(data, addr);
+        ProcessTeamChangePacket_hook.CallTarget(data, addr);
     },
 };
 
-FunHook<NwPacketHandler_Type> ProcessRateChangePacket_Hook{
+FunHook<NwPacketHandler_Type> ProcessRateChangePacket_hook{
     0x004807B0,
     [](char* data, const rf::NwAddr& addr) {
         // server-side and client-side?
-        if (rf::g_IsLocalNetworkGame) {
+        if (rf::is_local_net_game) {
             rf::Player* src_player = rf::NwGetPlayerFromAddr(addr);
             if (!src_player)
                 return;                             // shouldnt happen (protected in rf::NwProcessGamePackets)
             data[0] = src_player->nw_data->player_id; // fix player ID
         }
-        ProcessRateChangePacket_Hook.CallTarget(data, addr);
+        ProcessRateChangePacket_hook.CallTarget(data, addr);
     },
 };
 
-FunHook<NwPacketHandler_Type> ProcessEntityCreatePacket_Hook{
+FunHook<NwPacketHandler_Type> ProcessEntityCreatePacket_hook{
     0x00475420,
     [](char* data, const rf::NwAddr& addr) {
         // Update Default Player Weapon if server has it overriden
         size_t name_size = strlen(data) + 1;
         uint8_t player_id = data[name_size + 58];
-        if (player_id == rf::g_LocalPlayer->nw_data->player_id) {
+        if (player_id == rf::local_player->nw_data->player_id) {
             int32_t weapon_cls_id = *reinterpret_cast<int32_t*>(data + name_size + 63);
-            rf::g_DefaultPlayerWeapon = rf::g_WeaponClasses[weapon_cls_id].name;
+            rf::default_player_weapon = rf::weapon_classes[weapon_cls_id].name;
 
 #if 0 // disabled because it sometimes helpful feature to switch to last used weapon
       // Reset next weapon variable so entity wont switch after pickup
-        if (!g_LocalPlayer->config.AutoswitchWeapons)
+        if (!g_local_player->config.AutoswitchWeapons)
             MultiSetNextWeapon(weapon_cls_id);
 #endif
 
             TRACE("spawn weapon %d", weapon_cls_id);
         }
 
-        ProcessEntityCreatePacket_Hook.CallTarget(data, addr);
+        ProcessEntityCreatePacket_hook.CallTarget(data, addr);
     },
 };
 
-FunHook<NwPacketHandler_Type> ProcessReloadPacket_Hook{
+FunHook<NwPacketHandler_Type> ProcessReloadPacket_hook{
     0x00485AB0,
     [](char* data, const rf::NwAddr& addr) {
-        if (!rf::g_IsLocalNetworkGame) { // client-side
+        if (!rf::is_local_net_game) { // client-side
             // Update ClipSize and MaxAmmo if received values are greater than values from local weapons.tbl
             int weapon_cls_id = *reinterpret_cast<int32_t*>(data + 4);
             int clip_ammo = *reinterpret_cast<int32_t*>(data + 8);
             int ammo = *reinterpret_cast<int32_t*>(data + 12);
-            if (rf::g_WeaponClasses[weapon_cls_id].clip_size < ammo)
-                rf::g_WeaponClasses[weapon_cls_id].clip_size = ammo;
-            if (rf::g_WeaponClasses[weapon_cls_id].max_ammo < clip_ammo)
-                rf::g_WeaponClasses[weapon_cls_id].max_ammo = clip_ammo;
+            if (rf::weapon_classes[weapon_cls_id].clip_size < ammo)
+                rf::weapon_classes[weapon_cls_id].clip_size = ammo;
+            if (rf::weapon_classes[weapon_cls_id].max_ammo < clip_ammo)
+                rf::weapon_classes[weapon_cls_id].max_ammo = clip_ammo;
             TRACE("ProcessReloadPacket WeaponClsId %d ClipAmmo %d Ammo %d", weapon_cls_id, clip_ammo, ammo);
 
             // Call original handler
-            ProcessReloadPacket_Hook.CallTarget(data, addr);
+            ProcessReloadPacket_hook.CallTarget(data, addr);
         }
     },
 };
 
 rf::EntityObj* SecureObjUpdatePacket(rf::EntityObj* entity, uint8_t flags, rf::Player* src_player)
 {
-    if (rf::g_IsLocalNetworkGame) {
+    if (rf::is_local_net_game) {
         // server-side
         if (entity && entity->_super.handle != src_player->entity_handle) {
             TRACE("Invalid ObjUpdate entity %x %x %s", entity->_super.handle, src_player->entity_handle,
@@ -423,57 +424,57 @@ rf::EntityObj* SecureObjUpdatePacket(rf::EntityObj* entity, uint8_t flags, rf::P
     return entity;
 }
 
-FunHook<uint8_t()> MultiAllocPlayerId_Hook{
+FunHook<uint8_t()> MultiAllocPlayerId_hook{
     0x0046EF00,
     []() {
-        uint8_t player_id = MultiAllocPlayerId_Hook.CallTarget();
+        uint8_t player_id = MultiAllocPlayerId_hook.CallTarget();
         if (player_id == 0xFF)
-            player_id = MultiAllocPlayerId_Hook.CallTarget();
+            player_id = MultiAllocPlayerId_hook.CallTarget();
         return player_id;
     },
 };
 
 constexpr int MULTI_HANDLE_MAPPING_ARRAY_SIZE = 1024;
 
-FunHook<rf::Object*(int32_t)> MultiGetObjFromRemoteHandle_Hook{
+FunHook<rf::Object*(int32_t)> MultiGetObjFromRemoteHandle_hook{
     0x00484B00,
     [](int32_t remote_handle) {
         int index = static_cast<uint16_t>(remote_handle);
         if (index >= MULTI_HANDLE_MAPPING_ARRAY_SIZE)
             return static_cast<rf::Object*>(nullptr);
-        return MultiGetObjFromRemoteHandle_Hook.CallTarget(remote_handle);
+        return MultiGetObjFromRemoteHandle_hook.CallTarget(remote_handle);
     },
 };
 
-FunHook<int32_t(int32_t)> MultiGetLocalHandleFromRemoteHandle_Hook{
+FunHook<int32_t(int32_t)> MultiGetLocalHandleFromRemoteHandle_hook{
     0x00484B30,
     [](int32_t remote_handle) {
         int index = static_cast<uint16_t>(remote_handle);
         if (index >= MULTI_HANDLE_MAPPING_ARRAY_SIZE)
             return -1;
-        return MultiGetLocalHandleFromRemoteHandle_Hook.CallTarget(remote_handle);
+        return MultiGetLocalHandleFromRemoteHandle_hook.CallTarget(remote_handle);
     },
 };
 
-FunHook<void(int32_t, int32_t)> MultiSetObjHandleMapping_Hook{
+FunHook<void(int32_t, int32_t)> MultiSetObjHandleMapping_hook{
     0x00484B70,
     [](int32_t remote_handle, int32_t local_handle) {
         int index = static_cast<uint16_t>(remote_handle);
         if (index >= MULTI_HANDLE_MAPPING_ARRAY_SIZE)
             return;
-        MultiSetObjHandleMapping_Hook.CallTarget(remote_handle, local_handle);
+        MultiSetObjHandleMapping_hook.CallTarget(remote_handle, local_handle);
     },
 };
 
-RegsPatch ProcessBooleanPacket_ValidateMeshId_Patch{
+RegsPatch ProcessBooleanPacket_ValidateMeshId_patch{
     0x004765A3,
     [](auto& regs) { regs.ecx = std::clamp(regs.ecx, 0, 3); },
 };
 
-RegsPatch ProcessBooleanPacket_ValidateRoomId_Patch{
+RegsPatch ProcessBooleanPacket_ValidateRoomId_patch{
     0x0047661C,
     [](auto& regs) {
-        int num_rooms = StructFieldRef<int>(rf::RflStaticGeometry, 0x90);
+        int num_rooms = StructFieldRef<int>(rf::rfl_static_geometry, 0x90);
         if (regs.edx < 0 || regs.edx >= num_rooms) {
             WARN("Invalid room in Boolean packet - skipping");
             regs.esp += 0x64;
@@ -482,7 +483,7 @@ RegsPatch ProcessBooleanPacket_ValidateRoomId_Patch{
     },
 };
 
-RegsPatch ProcessPregameBooleanPacket_ValidateMeshId_Patch{
+RegsPatch ProcessPregameBooleanPacket_ValidateMeshId_patch{
     0x0047672F,
     [](auto& regs) {
         // only meshes 0 - 3 are supported
@@ -490,10 +491,10 @@ RegsPatch ProcessPregameBooleanPacket_ValidateMeshId_Patch{
     },
 };
 
-RegsPatch ProcessPregameBooleanPacket_ValidateRoomId_Patch{
+RegsPatch ProcessPregameBooleanPacket_ValidateRoomId_patch{
     0x00476752,
     [](auto& regs) {
-        int num_rooms = StructFieldRef<int>(rf::RflStaticGeometry, 0x90);
+        int num_rooms = StructFieldRef<int>(rf::rfl_static_geometry, 0x90);
         if (regs.edx < 0 || regs.edx >= num_rooms) {
             WARN("Invalid room in PregameBoolean packet - skipping");
             regs.esp += 0x68;
@@ -502,7 +503,7 @@ RegsPatch ProcessPregameBooleanPacket_ValidateRoomId_Patch{
     },
 };
 
-RegsPatch ProcessGlassKillPacket_CheckRoomExists_Patch{
+RegsPatch ProcessGlassKillPacket_CheckRoomExists_patch{
     0x004723B3,
     [](auto& regs) {
         if (!regs.eax)
@@ -522,10 +523,10 @@ CallHook<int(void*, int, int, rf::NwAddr&, int)> nw_get_packet_tracker_hook{
 void NetworkInit()
 {
     /* ProcessGamePackets hook (not reliable only) */
-    ProcessUnreliableGamePackets_Hook.Install();
+    ProcessUnreliableGamePackets_hook.Install();
 
-    /* Improve SimultaneousPing */
-    rf::SimultaneousPing = 32;
+    /* Improve simultaneous ping */
+    rf::simultaneous_ping = 32;
 
     /* Change server info timeout to 2s */
     WriteMem<u32>(0x0044D357 + 2, 2000);
@@ -558,15 +559,15 @@ void NetworkInit()
     ProcessGamePacket_whitelist_filter.Install();
 
     // Hook packet handlers
-    ProcessJoinDenyPacket_Hook.Install();
-    ProcessNewPlayerPacket_Hook.Install();
-    ProcessLeftGamePacket_Hook.Install();
-    ProcessChatLinePacket_Hook.Install();
-    ProcessNameChangePacket_Hook.Install();
-    ProcessTeamChangePacket_Hook.Install();
-    ProcessRateChangePacket_Hook.Install();
-    ProcessEntityCreatePacket_Hook.Install();
-    ProcessReloadPacket_Hook.Install();
+    ProcessJoinDenyPacket_hook.Install();
+    ProcessNewPlayerPacket_hook.Install();
+    ProcessLeftGamePacket_hook.Install();
+    ProcessChatLinePacket_hook.Install();
+    ProcessNameChangePacket_hook.Install();
+    ProcessTeamChangePacket_hook.Install();
+    ProcessRateChangePacket_hook.Install();
+    ProcessEntityCreatePacket_hook.Install();
+    ProcessReloadPacket_hook.Install();
 
     // Fix ObjUpdate packet handling
     AsmWritter(0x0047E058, 0x0047E06A)
@@ -589,30 +590,30 @@ void NetworkInit()
     AsmWritter(0x0047A4A6, 0x0047A4AA).xor_(asm_regs::ecx, asm_regs::ecx);
 
     // Fix "Orion bug" - default 'miner1' entity spawning client-side periodically
-    MultiAllocPlayerId_Hook.Install();
+    MultiAllocPlayerId_hook.Install();
 
     // Fix buffer-overflows in multi handle mapping
-    MultiGetObjFromRemoteHandle_Hook.Install();
-    MultiGetLocalHandleFromRemoteHandle_Hook.Install();
-    MultiSetObjHandleMapping_Hook.Install();
+    MultiGetObjFromRemoteHandle_hook.Install();
+    MultiGetLocalHandleFromRemoteHandle_hook.Install();
+    MultiSetObjHandleMapping_hook.Install();
 
     // Fix GameType out of bounds vulnerability in GameInfo packet
-    ProcessGameInfoPacket_GameTypeBounds_Patch.Install();
+    ProcessGameInfoPacket_GameTypeBounds_patch.Install();
 
     // Fix MeshId out of bounds vulnerability in Boolean packet
-    ProcessBooleanPacket_ValidateMeshId_Patch.Install();
+    ProcessBooleanPacket_ValidateMeshId_patch.Install();
 
     // Fix RoomId out of bounds vulnerability in Boolean packet
-    ProcessBooleanPacket_ValidateRoomId_Patch.Install();
+    ProcessBooleanPacket_ValidateRoomId_patch.Install();
 
     // Fix MeshId out of bounds vulnerability in PregameBoolean packet
-    ProcessPregameBooleanPacket_ValidateMeshId_Patch.Install();
+    ProcessPregameBooleanPacket_ValidateMeshId_patch.Install();
 
     // Fix RoomId out of bounds vulnerability in PregameBoolean packet
-    ProcessPregameBooleanPacket_ValidateRoomId_Patch.Install();
+    ProcessPregameBooleanPacket_ValidateRoomId_patch.Install();
 
     // Fix crash if room does not exist in GlassKill packet
-    ProcessGlassKillPacket_CheckRoomExists_Patch.Install();
+    ProcessGlassKillPacket_CheckRoomExists_patch.Install();
 
     // Make sure tracker packets come from configured tracker
     nw_get_packet_tracker_hook.Install();

@@ -49,22 +49,22 @@ static void ProcessWaitingMessages()
 
 void FindPlayer(const StringMatcher& query, std::function<void(rf::Player*)> consumer)
 {
-    rf::Player* player = rf::g_PlayerList;
+    rf::Player* player = rf::player_list;
     while (player) {
         if (query(player->name))
             consumer(player);
         player = player->next;
-        if (player == rf::g_PlayerList)
+        if (player == rf::player_list)
             break;
     }
 }
 
-CallHook<void(bool)> DcUpdate_Hook{
+CallHook<void(bool)> DcUpdate_hook{
     0x004B2DD3,
     [](bool is_server) {
         // Draw on top (after scene)
 
-        DcUpdate_Hook.CallTarget(is_server);
+        DcUpdate_hook.CallTarget(is_server);
 
         GraphicsDrawFpsCounter();
 
@@ -79,18 +79,18 @@ CallHook<void(bool)> DcUpdate_Hook{
     },
 };
 
-CallHook<void()> InitGame_Hook{
+CallHook<void()> InitGame_hook{
     0x004B27CD,
     []() {
         DWORD start_ticks = GetTickCount();
         INFO("Initializing game...");
 
-        InitGame_Hook.CallTarget();
+        InitGame_hook.CallTarget();
 
         GraphicsAfterGameInit();
 
 #if DIRECTINPUT_SUPPORT
-        rf::g_DirectInputDisabled = !g_game_config.directInput;
+        rf::direct_input_disabled = !g_game_config.directInput;
 #endif
 
         /* Allow modded strings.tbl in ui.vpp */
@@ -103,27 +103,27 @@ CallHook<void()> InitGame_Hook{
     },
 };
 
-CallHook<void()> CleanupGame_Hook{
+CallHook<void()> CleanupGame_hook{
     0x004B2821,
     []() {
         ResetGammaRamp();
         CleanupScreenshot();
         MiscCleanup();
-        CleanupGame_Hook.CallTarget();
+        CleanupGame_hook.CallTarget();
     },
 };
 
-CallHook<bool()> RunGame_Hook{
+CallHook<bool()> RunGame_hook{
     0x004B2818,
     []() {
         ProcessWaitingMessages();
         HighFpsUpdate();
 
-        return RunGame_Hook.CallTarget();
+        return RunGame_hook.CallTarget();
     },
 };
 
-CallHook<void()> RenderInGame_Hook{
+CallHook<void()> RenderInGame_hook{
     0x00432375,
     []() {
 #if !defined(NDEBUG) && defined(HAS_EXPERIMENTAL)
@@ -133,19 +133,19 @@ CallHook<void()> RenderInGame_Hook{
     },
 };
 
-FunHook<int()> KeyGetFromFifo_Hook{
+FunHook<int()> KeyGetFromFifo_hook{
     0x0051F000,
     []() {
         // Process messages here because when watching videos main loop is not running
         ProcessWaitingMessages();
-        return KeyGetFromFifo_Hook.CallTarget();
+        return KeyGetFromFifo_hook.CallTarget();
     },
 };
 
-FunHook<void(rf::Player*)> RenderHitScreen_Hook{
+FunHook<void(rf::Player*)> RenderHitScreen_hook{
     0x004163C0,
     [](rf::Player* player) {
-        RenderHitScreen_Hook.CallTarget(player);
+        RenderHitScreen_hook.CallTarget(player);
 
 #if SPECTATE_MODE_ENABLE
         SpectateModeDrawUI();
@@ -153,24 +153,24 @@ FunHook<void(rf::Player*)> RenderHitScreen_Hook{
     },
 };
 
-FunHook<rf::Player*(bool)> PlayerCreate_Hook{
+FunHook<rf::Player*(bool)> PlayerCreate_hook{
     0x004A3310,
     [](bool is_local) {
-        rf::Player* player = PlayerCreate_Hook.CallTarget(is_local);
+        rf::Player* player = PlayerCreate_hook.CallTarget(is_local);
         KillInitPlayer(player);
         return player;
     },
 };
 
-FunHook<void(rf::Player*)> PlayerDestroy_Hook{
+FunHook<void(rf::Player*)> PlayerDestroy_hook{
     0x004A35C0,
     [](rf::Player* player) {
         SpectateModeOnDestroyPlayer(player);
-        PlayerDestroy_Hook.CallTarget(player);
+        PlayerDestroy_hook.CallTarget(player);
     },
 };
 
-CallHook<void()> AfterFullGameInit_Hook{
+CallHook<void()> AfterFullGameInit_hook{
     0x004B2693,
     []() {
         SpectateModeAfterFullGameInit();
@@ -254,19 +254,19 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     /* Process messages in the same thread as DX processing (alternative: D3DCREATE_MULTITHREADED) */
     AsmWritter(0x00524C48, 0x00524C83).nop(); // disable msg loop thread
     AsmWritter(0x00524C48).call(0x00524E40);  // CreateMainWindow
-    KeyGetFromFifo_Hook.Install();
+    KeyGetFromFifo_hook.Install();
 
     /* General game hooks */
-    InitGame_Hook.Install();
-    CleanupGame_Hook.Install();
-    RunGame_Hook.Install();
-    RenderInGame_Hook.Install();
-    AfterFullGameInit_Hook.Install();
-    DcUpdate_Hook.Install();
+    InitGame_hook.Install();
+    CleanupGame_hook.Install();
+    RunGame_hook.Install();
+    RenderInGame_hook.Install();
+    AfterFullGameInit_hook.Install();
+    DcUpdate_hook.Install();
 
-    RenderHitScreen_Hook.Install();
-    PlayerCreate_Hook.Install();
-    PlayerDestroy_Hook.Install();
+    RenderHitScreen_hook.Install();
+    PlayerCreate_hook.Install();
+    PlayerDestroy_hook.Install();
 
     /* Init modules */
     CommandsInit();

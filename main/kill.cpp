@@ -12,18 +12,18 @@ void KillInitPlayer(rf::Player* player)
     stats->num_deaths = 0;
 }
 
-FunHook<void()> MpResetNetGame_Hook{
+FunHook<void()> MpResetNetGame_hook{
     0x0046E450,
     []() {
-        rf::Player* player = rf::g_PlayerList;
+        rf::Player* player = rf::player_list;
         while (player) {
             KillInitPlayer(player);
             player = player->next;
 
-            if (player == rf::g_PlayerList)
+            if (player == rf::player_list)
                 break;
         }
-        MpResetNetGame_Hook.CallTarget();
+        MpResetNetGame_hook.CallTarget();
     },
 };
 
@@ -45,13 +45,13 @@ void OnPlayerKill(rf::Player* killed_player, rf::Player* killer_player)
         mui_msg = NullToEmpty(rf::strings::was_killed_mysteriously);
         msg = rf::String::Format("%s%s", killed_player->name.CStr(), mui_msg);
     }
-    else if (killed_player == rf::g_LocalPlayer) {
+    else if (killed_player == rf::local_player) {
         color_id = rf::ChatMsgColor::white_white;
         if (killer_player == killed_player) {
             mui_msg = NullToEmpty(rf::strings::you_killed_yourself);
             msg = rf::String::Format("%s", mui_msg);
         }
-        else if (killer_entity && killer_entity->weapon_info.weapon_cls_id == rf::g_RiotStickClsId) {
+        else if (killer_entity && killer_entity->weapon_info.weapon_cls_id == rf::riot_stick_cls_id) {
             mui_msg = NullToEmpty(rf::strings::you_just_got_beat_down_by);
             msg = rf::String::Format("%s%s!", mui_msg, killer_player->name.CStr());
         }
@@ -61,7 +61,7 @@ void OnPlayerKill(rf::Player* killed_player, rf::Player* killer_player)
             const char* weapon_name = nullptr;
             int killer_weapon_cls_id = killer_entity ? killer_entity->weapon_info.weapon_cls_id : -1;
             if (killer_weapon_cls_id >= 0 && killer_weapon_cls_id < 64) {
-                auto& weapon_cls = rf::g_WeaponClasses[killer_weapon_cls_id];
+                auto& weapon_cls = rf::weapon_classes[killer_weapon_cls_id];
                 weapon_name = weapon_cls.display_name.CStr();
             }
 
@@ -72,7 +72,7 @@ void OnPlayerKill(rf::Player* killed_player, rf::Player* killer_player)
                 msg = rf::String::Format("%s%s!", mui_msg, killer_name);
         }
     }
-    else if (killer_player == rf::g_LocalPlayer) {
+    else if (killer_player == rf::local_player) {
         color_id = rf::ChatMsgColor::white_white;
         mui_msg = NullToEmpty(rf::strings::you_killed);
         msg = rf::String::Format("%s%s!", mui_msg, killed_player->name.CStr());
@@ -84,7 +84,7 @@ void OnPlayerKill(rf::Player* killed_player, rf::Player* killer_player)
             msg = rf::String::Format("%s%s", killed_player->name.CStr(), mui_msg);
         }
         else {
-            if (killer_entity && killer_entity->weapon_info.weapon_cls_id == rf::g_RiotStickClsId)
+            if (killer_entity && killer_entity->weapon_info.weapon_cls_id == rf::riot_stick_cls_id)
                 mui_msg = NullToEmpty(rf::strings::got_beat_down_by);
             else
                 mui_msg = NullToEmpty(rf::strings::was_killed_by);
@@ -121,5 +121,5 @@ void InitKill()
 
     // Change player stats structure
     WriteMem<i8>(0x004A33B5 + 1, sizeof(PlayerStatsNew));
-    MpResetNetGame_Hook.Install();
+    MpResetNetGame_hook.Install();
 }

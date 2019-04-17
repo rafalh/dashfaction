@@ -26,9 +26,9 @@ class DcRequiredArgMissingError : public std::exception
 inline bool ReadArgInternal(int type_flag, bool preserve_case = false)
 {
     rf::DcGetArg(rf::DC_ARG_ANY, preserve_case);
-    if (rf::g_DcArgType & type_flag)
+    if (rf::dc_arg_type & type_flag)
         return true;
-    if (!(rf::g_DcArgType & rf::DC_ARG_NONE))
+    if (!(rf::dc_arg_type & rf::DC_ARG_NONE))
         throw DcInvalidArgTypeError();
     return false;
 }
@@ -47,7 +47,7 @@ inline std::optional<int> DcReadArg()
 {
     if (!ReadArgInternal(rf::DC_ARG_INT))
         return {};
-    return std::optional{rf::g_DcIntArg};
+    return std::optional{rf::dc_int_arg};
 }
 
 template<>
@@ -55,7 +55,7 @@ inline std::optional<float> DcReadArg()
 {
     if (!ReadArgInternal(rf::DC_ARG_FLOAT))
         return {};
-    return std::optional{rf::g_DcFloatArg};
+    return std::optional{rf::dc_float_arg};
 }
 
 template<>
@@ -63,7 +63,7 @@ inline std::optional<bool> DcReadArg()
 {
     if (!ReadArgInternal(rf::DC_ARG_TRUE | rf::DC_ARG_FALSE))
         return {};
-    bool value = (rf::g_DcArgType & rf::DC_ARG_TRUE) == rf::DC_ARG_TRUE;
+    bool value = (rf::dc_arg_type & rf::DC_ARG_TRUE) == rf::DC_ARG_TRUE;
     return std::optional{value};
 }
 
@@ -72,7 +72,7 @@ inline std::optional<std::string> DcReadArg()
 {
     if (!ReadArgInternal(rf::DC_ARG_STR))
         return {};
-    return std::optional{rf::g_DcStrArg};
+    return std::optional{rf::dc_str_arg};
 }
 
 class BaseCommand : public rf::DcCommand
@@ -120,9 +120,9 @@ public:
 private:
     void Handler() override
     {
-        if (rf::g_DcRun)
+        if (rf::dc_run)
             Run();
-        else if (rf::g_DcHelp)
+        else if (rf::dc_help)
             Help();
     }
 

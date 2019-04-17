@@ -43,7 +43,7 @@ struct PackfileLookupTable
     PackfileEntry* archive_entry;
 };
 
-static auto& g_VfsIgnoreTblFiles = AddrAsRef<bool>(0x01BDB21C);
+static auto& packfile_ignore_tbl_files = AddrAsRef<bool>(0x01BDB21C);
 
 static auto& PackfileFindArchive = AddrAsRef<Packfile*(const char* filename)>(0x0052C1D0);
 static auto& PackfileCalcFileNameChecksum = AddrAsRef<uint32_t(const char* file_name)>(0x0052BE70);
@@ -75,11 +75,11 @@ const std::map<std::string, unsigned> GameFileChecksums = {
 #endif // CHECK_PACKFILE_CHECKSUM
 
 static constexpr auto LOOKUP_TABLE_SIZE = 20713;
-static auto& g_VfsLookupTableNew = AddrAsRef<PackfileLookupTableNew[LOOKUP_TABLE_SIZE]>(0x01BB2AC8);
+static auto& g_packfile_lookup_table = AddrAsRef<PackfileLookupTableNew[LOOKUP_TABLE_SIZE]>(0x01BB2AC8);
 
-static unsigned g_NumFilesInVfs = 0, g_NumNameCollisions = 0;
-static std::vector<rf::Packfile*> g_Packfiles;
-static bool g_ModdedGame = false;
+static unsigned g_num_files_in_packfiles = 0, g_NumNameCollisions = 0;
+static std::vector<rf::Packfile*> g_packfiles;
+static bool g_is_modded_game = false;
 
 #ifdef MOD_FILE_WHITELIST
 
@@ -129,7 +129,7 @@ static GameLang DetectInstalledGameLang()
     std::array lang_codes{"en", "gr", "fr"};
 
     for (unsigned i = 0; i < lang_codes.size(); ++i) {
-        auto full_path = StringFormat("%smaps_%s.vpp", rf::g_RootPath, lang_codes[i]);
+        auto full_path = StringFormat("%smaps_%s.vpp", rf::root_path, lang_codes[i]);
         BOOL exists = PathFileExistsA(full_path.c_str());
         INFO("Checking file %s: %s", full_path.c_str(), exists ? "found" : "not found");
         if (exists) {
@@ -154,7 +154,7 @@ GameLang GetInstalledGameLang()
 
 bool IsModdedGame()
 {
-    return g_ModdedGame;
+    return g_is_modded_game;
 }
 
 static int PackfileLoad_New(const char* filename, const char* dir)
@@ -165,14 +165,14 @@ static int PackfileLoad_New(const char* filename, const char* dir)
     if (dir && dir[0] && dir[1] == ':')
         full_path = StringFormat("%s%s", dir, filename); // absolute path
     else
-        full_path = StringFormat("%s%s%s", rf::g_RootPath, dir ? dir : "", filename);
+        full_path = StringFormat("%s%s%s", rf::root_path, dir ? dir : "", filename);
 
     if (!filename || strlen(filename) > 0x1F || full_path.size() > 0x7F) {
         ERR("Packfile name or path too long: %s", full_path.c_str());
         return 0;
     }
 
-    for (rf::Packfile* packfile : g_Packfiles)
+    for (rf::Packfile* packfile : g_packfiles)
         if (!stricmp(packfile->path, full_path.c_str()))
             return 1;
 
@@ -183,7 +183,7 @@ static int PackfileLoad_New(const char* filename, const char* dir)
             unsigned Checksum = HashFile(FullPath);
             if (Checksum != it->second) {
                 INFO("Packfile %s has invalid checksum 0x%X", Filename, Checksum);
-                g_ModdedGame = true;
+                g_is_modded_game = true;
             }
         }
     }
@@ -235,7 +235,7 @@ static int PackfileLoad_New(const char* filename, const char* dir)
     fclose(file);
 
     if (ret) {
-        g_Packfiles.push_back(packfile);
+        g_packfiles.push_back(packfile);
     }
     else {
         delete[] packfile->file_list;
@@ -247,7 +247,7 @@ static int PackfileLoad_New(const char* filename, const char* dir)
 
 static rf::Packfile* PackfileFindArchive_New(const char* filename)
 {
-    for (auto packfile : g_Packfiles) {
+    for (auto packfile : g_packfiles) {
         if (!stricmp(packfile->name, filename))
             return packfile;
     }
@@ -265,7 +265,7 @@ static int PackfileBuildEntriesList_New(const char* ext_list, char*& filenames, 
     num_files = 0;
     filenames = 0;
 
-    for (rf::Packfile* packfile : g_Packfiles) {
+    for (rf::Packfile* packfile : g_packfiles) {
         if (!packfile_name || !stricmp(packfile_name, packfile->name)) {
             for (unsigned j = 0; j < packfile->num_files; ++j) {
                 const char* ext = rf::GetFileExt(packfile->file_list[j].file_name);
@@ -279,7 +279,7 @@ static int PackfileBuildEntriesList_New(const char* ext_list, char*& filenames, 
     if (!filenames)
         return 0;
     char* buf_ptr = filenames;
-    for (rf::Packfile* packfile : g_Packfiles) {
+    for (rf::Packfile* packfile : g_packfiles) {
         if (!packfile_name || !stricmp(packfile_name, packfile->name)) {
             for (unsigned j = 0; j < packfile->num_files; ++j) {
                 const char* ext = rf::GetFileExt(packfile->file_list[j].file_name);
@@ -305,7 +305,7 @@ static int PackfileAddEntries_New(rf::Packfile* packfile, const void* block, uns
     for (unsigned i = 0; i < num_files; ++i) {
         auto file_name = reinterpret_cast<const char*>(data);
         rf::PackfileEntry& entry = packfile->file_list[num_added_files];
-        if (rf::g_VfsIgnoreTblFiles && !stricmp(rf::GetFileExt(file_name), ".tbl"))
+        if (rf::packfile_ignore_tbl_files && !stricmp(rf::GetFileExt(file_name), ".tbl"))
             entry.file_name = "DEADBEEF";
         else {
             // FIXME: free?
@@ -323,14 +323,14 @@ static int PackfileAddEntries_New(rf::Packfile* packfile, const void* block, uns
         ++num_added_files;
 
         rf::PackfileAddToLookupTable(&entry);
-        ++g_NumFilesInVfs;
+        ++g_num_files_in_packfiles;
     }
     return 1;
 }
 
 static void PackfileAddToLookupTable_New(rf::PackfileEntry* entry)
 {
-    PackfileLookupTableNew* lookup_table_item = &g_VfsLookupTableNew[entry->name_checksum % LOOKUP_TABLE_SIZE];
+    PackfileLookupTableNew* lookup_table_item = &g_packfile_lookup_table[entry->name_checksum % LOOKUP_TABLE_SIZE];
 
     while (true) {
         if (!lookup_table_item->packfile_entry) {
@@ -351,7 +351,7 @@ static void PackfileAddToLookupTable_New(rf::PackfileEntry* entry)
             const char* old_archive = lookup_table_item->packfile_entry->archive->name;
             const char* new_archive = entry->archive->name;
 
-            if (rf::g_VfsIgnoreTblFiles) // this is set to true for user_maps
+            if (rf::packfile_ignore_tbl_files) // this is set to true for user_maps
             {
                 bool whitelisted = false;
 #ifdef MOD_FILE_WHITELIST
@@ -366,7 +366,7 @@ static void PackfileAddToLookupTable_New(rf::PackfileEntry* entry)
                     TRACE("Allowed overwriting game file %s (old packfile %s, new packfile %s)", entry->file_name,
                           old_archive, new_archive);
                     if (!whitelisted)
-                        g_ModdedGame = true;
+                        g_is_modded_game = true;
                 }
             }
             else {
@@ -398,7 +398,7 @@ static void PackfileAddToLookupTable_New(rf::PackfileEntry* entry)
 static rf::PackfileEntry* PackfileFindFileInternal_New(const char* filename)
 {
     unsigned checksum = rf::PackfileCalcFileNameChecksum(filename);
-    PackfileLookupTableNew* lookup_table_item = &g_VfsLookupTableNew[checksum % LOOKUP_TABLE_SIZE];
+    PackfileLookupTableNew* lookup_table_item = &g_packfile_lookup_table[checksum % LOOKUP_TABLE_SIZE];
     do {
         if (lookup_table_item->packfile_entry && lookup_table_item->packfile_entry->name_checksum == checksum &&
             !stricmp(lookup_table_item->packfile_entry->file_name, filename)) {
@@ -448,7 +448,7 @@ static void PackfileInit_New()
 {
     unsigned start_ticks = GetTickCount();
 
-    memset(g_VfsLookupTableNew, 0, sizeof(PackfileLookupTableNew) * LOOKUP_TABLE_SIZE);
+    memset(g_packfile_lookup_table, 0, sizeof(PackfileLookupTableNew) * LOOKUP_TABLE_SIZE);
 
     if (GetInstalledGameLang() == LANG_GR) {
         rf::PackfileLoad("audiog.vpp", nullptr);
@@ -505,17 +505,17 @@ static void PackfileInit_New()
     INFO("Packfiles initialization took %lums", GetTickCount() - start_ticks);
     INFO("Packfile name collisions: %d", g_NumNameCollisions);
 
-    if (g_ModdedGame)
+    if (g_is_modded_game)
         INFO("Modded game detected!");
 }
 
 static void PackfileCleanup_New()
 {
-    for (rf::Packfile* packfile : g_Packfiles) {
+    for (rf::Packfile* packfile : g_packfiles) {
         delete[] packfile->file_list;
         delete packfile;
     }
-    g_Packfiles.clear();
+    g_packfiles.clear();
 }
 
 void VfsApplyHooks()
@@ -550,7 +550,7 @@ void ForceFileFromPackfile(const char* name, const char* packfile_name)
 void PackfileFindMatchingFiles(const StringMatcher& query, std::function<void(const char*)> result_consumer)
 {
     for (int i = 0; i < LOOKUP_TABLE_SIZE; ++i) {
-        PackfileLookupTableNew* lookup_table_item = &g_VfsLookupTableNew[i];
+        PackfileLookupTableNew* lookup_table_item = &g_packfile_lookup_table[i];
         if (!lookup_table_item->packfile_entry)
             continue;
 

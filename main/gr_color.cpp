@@ -147,7 +147,7 @@ bool ConvertBitmapFormat(uint8_t* dst_bits_ptr, rf::BmPixelFormat dst_fmt, const
 }
 
 FunHook<int(int, const uint8_t*, const uint8_t*, int, int, rf::BmPixelFormat, void*, int, int, IDirect3DTexture8*)>
-    GrD3DSetTextureData_Hook{
+    GrD3DSetTextureData_hook{
         0x0055BA10,
         [](int level, const uint8_t* src_bits_ptr, const uint8_t* palette, int bm_w, int bm_h,
            rf::BmPixelFormat pixel_fmt, void* a7, int tex_w, int tex_h, IDirect3DTexture8* texture) {
@@ -169,7 +169,7 @@ FunHook<int(int, const uint8_t*, const uint8_t*, int, int, rf::BmPixelFormat, vo
                 return 0;
 
             WARN("Color conversion failed (format %d -> %d)", pixel_fmt, tex_pixel_fmt);
-            return GrD3DSetTextureData_Hook.CallTarget(level, src_bits_ptr, palette, bm_w, bm_h, pixel_fmt, a7, tex_w,
+            return GrD3DSetTextureData_hook.CallTarget(level, src_bits_ptr, palette, bm_w, bm_h, pixel_fmt, a7, tex_w,
                                                        tex_h, texture);
         },
     };
@@ -297,10 +297,10 @@ void GetAmbientColorFromLightmaps_004E5CE3(unsigned bm_handle, int x, int y, uns
     }
 }
 
-FunHook<unsigned()> BinkInitDeviceInfo_Hook{
+FunHook<unsigned()> BinkInitDeviceInfo_hook{
     0x005210C0,
     []() {
-        unsigned bink_flags = BinkInitDeviceInfo_Hook.CallTarget();
+        unsigned bink_flags = BinkInitDeviceInfo_hook.CallTarget();
 
         if (g_game_config.trueColorTextures && g_game_config.resBpp == 32) {
             static auto& bink_bm_pixel_fmt = AddrAsRef<uint32_t>(0x018871C0);
@@ -323,8 +323,8 @@ void GrColorInit()
         WriteMem<u32>(0x005A7E08, D3DFMT_A8R8G8B8); // old: D3DFMT_A4R4G4B4
         WriteMem<u32>(0x005A7E0C, D3DFMT_A4R4G4B4); // old: D3DFMT_A8R3G3B2
 
-        GrD3DSetTextureData_Hook.Install();
-        BinkInitDeviceInfo_Hook.Install();
+        GrD3DSetTextureData_hook.Install();
+        BinkInitDeviceInfo_hook.Install();
 
         // lightmaps
         using namespace asm_regs;

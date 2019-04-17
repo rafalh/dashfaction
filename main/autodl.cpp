@@ -69,7 +69,7 @@ static bool UnzipVpp(const char* path)
 #ifdef DEBUG
             TRACE("Unpacking %s", file_name);
 #endif
-            auto output_path = StringFormat("%suser_maps\\multi\\%s", rf::g_RootPath, file_name);
+            auto output_path = StringFormat("%suser_maps\\multi\\%s", rf::root_path, file_name);
             std::ofstream file(output_path, std::ios_base::out | std::ios_base::binary);
             if (!file) {
                 ERR("Cannot open file: %s", output_path.c_str());
@@ -143,7 +143,7 @@ static bool UnrarVpp(const char* path)
 
         if (IsVppFilename(header_data.FileName)) {
             TRACE("Unpacking %s", header_data.FileName);
-            auto output_dir = StringFormat("%suser_maps\\multi", rf::g_RootPath);
+            auto output_dir = StringFormat("%suser_maps\\multi", rf::root_path);
             code = RARProcessFile(archive_handle, RAR_EXTRACT, const_cast<char*>(output_dir.c_str()), nullptr);
             if (code == 0) {
                 g_packfiles_to_load.push_back(header_data.FileName);
@@ -383,19 +383,19 @@ void RenderDownloadProgress()
 
     if (cx_progress > 0) {
         rf::GrSetColor(0x80, 0x80, 0, 0x80);
-        rf::GrDrawRect(x, y, cx_progress, cy, rf::g_GrRectMaterial);
+        rf::GrDrawRect(x, y, cx_progress, cy, rf::gr_rect_material);
     }
 
     if (cx > cx_progress) {
         rf::GrSetColor(0, 0, 0x60, 0x80);
-        rf::GrDrawRect(x + cx_progress, y, cx - cx_progress, cy, rf::g_GrRectMaterial);
+        rf::GrDrawRect(x + cx_progress, y, cx - cx_progress, cy, rf::gr_rect_material);
     }
 
     rf::GrSetColor(0, 0xFF, 0, 0x80);
     auto text = StringFormat("Downloading: %.2f MB / %.2f MB", g_level_bytes_downloaded / 1024.0f / 1024.0f,
                              g_level_info.size_in_bytes / 1024.0f / 1024.0f);
     rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, x + cx / 2, y + cy / 2 - cy_font / 2, text.c_str(), -1,
-                          rf::g_GrTextMaterial);
+                          rf::gr_text_material);
 }
 
 #endif /* LEVELS_AUTODOWNLOADER */
