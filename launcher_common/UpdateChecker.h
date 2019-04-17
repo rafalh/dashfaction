@@ -1,14 +1,13 @@
 #pragma once
 
 #include <functional>
-#include <windef.h>
 #include <thread>
+#include <windef.h>
 
 class UpdateChecker
 {
 public:
-    UpdateChecker(HWND hwnd = nullptr) :
-        m_hwnd(hwnd) {}
+    UpdateChecker(HWND hwnd = nullptr) : m_hwnd(hwnd) {}
 
     bool check();
     void checkAsync(std::function<void()> callback);
@@ -19,12 +18,12 @@ public:
         return !m_message.empty();
     }
 
-    const std::string &getMessage() const
+    const std::string& getMessage() const
     {
         return m_message;
     }
 
-    const std::string &getUrl() const
+    const std::string& getUrl() const
     {
         return m_url;
     }
@@ -34,7 +33,7 @@ public:
         return !m_error.empty();
     }
 
-    const std::string &getError() const
+    const std::string& getError() const
     {
         return m_error;
     }
