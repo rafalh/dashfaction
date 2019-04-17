@@ -1,7 +1,6 @@
-#include "stdafx.h"
-#include <Windows.h>
+#include <windows.h>
 #include <stdexcept>
-#include <Psapi.h>
+#include <psapi.h>
 #include <string>
 #include "Process.h"
 
@@ -32,22 +31,22 @@ void *Process::ExecFunInternal(const char *ModuleName, const char *FunName, void
     HMODULE hMod = FindModule(ModuleName);
     if (!hMod)
         throw std::runtime_error(std::string("Module not found: ") + ModuleName);
-    
+
     void *pProc = RemoteGetProcAddress(hMod, FunName);
     if (!pProc)
         throw std::runtime_error(std::string("Function not found: ") + FunName);
-    
+
     HANDLE hThread = CreateRemoteThread(m_hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)pProc, Arg, 0, NULL);
     if (!hThread)
         throw std::runtime_error(std::string("CreateRemoteThread failed: error ") + std::to_string(GetLastError()));
-    
+
     if (WaitForSingleObject(hThread, Timeout) != WAIT_OBJECT_0)
         throw std::runtime_error(std::string("Timed out when running remote function: ") + FunName);
-    
+
     DWORD dwExitCode;
     if (!GetExitCodeThread(hThread, &dwExitCode))
         throw std::runtime_error(std::string("GetExitCodeThread failed: error ") + std::to_string(GetLastError()));
-    
+
     CloseHandle(hThread);
     return reinterpret_cast<void*>(dwExitCode);
 }
@@ -74,27 +73,27 @@ HMODULE Process::FindModule(const char *ModuleName)
 	DWORD cBytes;
     if (!EnumProcessModules(m_hProcess, nullptr, 0, &cBytes))
         throw std::runtime_error(std::string("EnumProcessModules failed: error1 ") + std::to_string(GetLastError()));
-	
+
     HMODULE *hModules = (HMODULE*)malloc(cBytes);
     if (!EnumProcessModules(m_hProcess, hModules, cBytes, &cBytes))
 	{
 		free(hModules);
 		 throw std::runtime_error(std::string("EnumProcessModules failed: error2 ") + std::to_string(GetLastError()));
 	}
-    
+
 	char buf[MAX_PATH];
 	int cModules = cBytes / sizeof(HMODULE), i;
     for (i = 0; i < cModules; ++i)
         if (GetModuleBaseName(m_hProcess, hModules[i], buf, MAX_PATH) && !_stricmp(ModuleName, buf))
             break;
-    
+
 	HMODULE hRet = nullptr;
 	if (i >= cModules)
 		SetLastError(ERROR_MOD_NOT_FOUND);
 	else
 		hRet = hModules[i];
     free(hModules);
-    
+
     return hRet;
 }
 
@@ -108,42 +107,42 @@ void *Process::RemoteGetProcAddress(HMODULE hModule, const char *lpProcName)
 {
     if (!hModule)
 		 throw std::invalid_argument("hModule cannot be null");
-	
+
 	IMAGE_DOS_HEADER idh;
     if (!ReadProcessMemory(m_hProcess, hModule, &idh, sizeof(idh), nullptr))
 		 throw std::runtime_error(std::string("ReadProcessMemory failed: error ") + std::to_string(GetLastError()));
-    
+
     if (idh.e_magic != IMAGE_DOS_SIGNATURE)
 	{
 		SetLastError(ERROR_BAD_EXE_FORMAT);
 		throw std::runtime_error("Invalid DOS header signature");
 	}
-	
+
 	IMAGE_NT_HEADERS inth;
     if (!ReadProcessMemory(m_hProcess, PtrFromRva(hModule, idh.e_lfanew), &inth, sizeof(inth), nullptr))
 		throw std::runtime_error(std::string("ReadProcessMemory failed: error ") + std::to_string(GetLastError()));
-    
+
     if (inth.Signature != IMAGE_NT_SIGNATURE)
 	{
 		SetLastError(ERROR_BAD_EXE_FORMAT);
 		throw std::runtime_error("Invalid NT header signature");
 	}
-	
+
     PIMAGE_EXPORT_DIRECTORY pIed = (PIMAGE_EXPORT_DIRECTORY)malloc(inth.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].Size);
     if (!pIed)
     	throw std::bad_alloc();
-    
+
     if (!ReadProcessMemory(m_hProcess, PtrFromRva(hModule, inth.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress), pIed, inth.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].Size, NULL))
 	{
 		free(pIed);
 		throw std::runtime_error(std::string("ReadProcessMemory failed: error ") + std::to_string(GetLastError()));
 	}
-	
+
     PVOID base = (PIMAGE_EXPORT_DIRECTORY*)(((PBYTE)pIed)-(inth.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress));
     DWORD *lpNames = (DWORD*)PtrFromRva(base, pIed->AddressOfNames);
     unsigned short *lpOrdinals = (unsigned short*)PtrFromRva(base, pIed->AddressOfNameOrdinals);
     DWORD *lpAddresses = (DWORD*)PtrFromRva(base, pIed->AddressOfFunctions);
-    
+
     // Iterate over import descriptors/DLLs.
     for (unsigned i = 0; i < (pIed->NumberOfNames); ++i)
     {
@@ -154,7 +153,7 @@ void *Process::RemoteGetProcAddress(HMODULE hModule, const char *lpProcName)
             return base;
         }
     }
-    
+
     free(pIed);
     SetLastError(ERROR_MOD_NOT_FOUND);
     return nullptr;

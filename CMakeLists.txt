@@ -67,6 +67,7 @@ endif()
 
 add_subdirectory(vendor)
 add_subdirectory(launcher-old)
+add_subdirectory(launcher_common)
 if(CMAKE_HOST_WIN32)
     add_subdirectory(launcher)
 endif()

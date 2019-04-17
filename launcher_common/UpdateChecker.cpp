@@ -1,7 +1,8 @@
-#include "stdafx.h"
+#include <windows.h>
+#include <wininet.h>
 #include "UpdateChecker.h"
 #include "version.h"
-#include "exception.h"
+#include "Exception.h"
 
 #define THROW_EXCEPTION_WITH_WIN32_ERROR() THROW_EXCEPTION("win32 error %lu", GetLastError())
 
@@ -100,7 +101,7 @@ void UpdateChecker::threadProc()
     {
         m_error = e.what();
     }
-    
+
     if (!m_abort)
         m_callback();
 }

@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include <windows.h>
 #include "ModdedAppLauncher.h"
 #include "GameConfig.h"
 #include "crc32.h"
@@ -6,6 +6,12 @@
 #define DLL_FILENAME "DashFaction.dll"
 
 #include "Exception.h"
+
+// Needed by MinGW
+#ifndef ERROR_ELEVATION_REQUIRED
+#  define ERROR_ELEVATION_REQUIRED 740
+#endif
+
 
 #define THROW_EXCEPTION_WITH_WIN32_ERROR() THROW_EXCEPTION("win32 error %lu", GetLastError())
 #define INIT_TIMEOUT 10000

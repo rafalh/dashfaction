@@ -112,7 +112,7 @@ DcCommand2 debug_cmd{
 
 #ifdef NDEBUG
         if (rf::is_net_game) {
-            rf::DcPrintf("This command is disabled in multiplayer!", nullptr);
+            rf::DcPrintf("This command is disabled in multiplayer!");
             return;
         }
 #endif

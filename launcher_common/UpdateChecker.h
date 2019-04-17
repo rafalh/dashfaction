@@ -1,9 +1,13 @@
 #pragma once
 
+#include <functional>
+#include <windef.h>
+#include <thread>
+
 class UpdateChecker
 {
 public:
-    UpdateChecker(HWND hwnd) :
+    UpdateChecker(HWND hwnd = nullptr) :
         m_hwnd(hwnd) {}
 
     bool check();

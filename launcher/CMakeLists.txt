@@ -1,5 +1,6 @@
 include_directories(
     ${CMAKE_SOURCE_DIR}/common/include
+    ${CMAKE_SOURCE_DIR}/launcher_common
     ${CMAKE_SOURCE_DIR}/vendor/d3d8
 )
 
@@ -9,7 +10,11 @@ endif()
 
 file(GLOB SRCS *.cpp *.h *.rc res/*.manifest)
 add_executable(DashFactionLauncher WIN32 ${SRCS})
-target_link_libraries(DashFactionLauncher shlwapi wininet psapi Common)
+
+target_link_libraries(DashFactionLauncher
+    LauncherCommon
+    Common
+)
 
 if(MSVC)
     # generate PDB files

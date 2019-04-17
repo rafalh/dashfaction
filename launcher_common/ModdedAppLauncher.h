@@ -1,19 +1,20 @@
 #pragma once
 
+#include <stdexcept>
 #include "GameConfig.h"
 
-class PrivilegeElevationRequiredException : public std::exception
+class PrivilegeElevationRequiredException : public std::runtime_error
 {
 public:
     PrivilegeElevationRequiredException() :
-        std::exception("privilage elevation required") {}
+        std::runtime_error("privilage elevation required") {}
 };
 
-class IntegrityCheckFailedException : public std::exception
+class IntegrityCheckFailedException : public std::runtime_error
 {
 public:
     IntegrityCheckFailedException(uint32_t crc) :
-        std::exception("integrity check failed"), m_crc(crc) {}
+        std::runtime_error("integrity check failed"), m_crc(crc) {}
 
     uint32_t getCrc32()
     {
@@ -45,7 +46,7 @@ class GameLauncher : public ModdedAppLauncher
 {
 public:
     GameLauncher();
-    virtual std::string getAppPath();
+    std::string getAppPath() override;
 
 private:
     GameConfig m_conf;
@@ -55,7 +56,7 @@ class EditorLauncher : public ModdedAppLauncher
 {
 public:
     EditorLauncher();
-    virtual std::string getAppPath();
+    std::string getAppPath() override;
 
 private:
     GameConfig m_conf;
