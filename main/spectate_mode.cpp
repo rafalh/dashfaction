@@ -257,14 +257,14 @@ FunHook<void(rf::Player*)> PlayerFpgunUpdateState_Hook{
         if (player != rf::g_LocalPlayer) {
             rf::EntityObj* entity = rf::EntityGetFromHandle(player->Entity_handle);
             if (entity) {
-                float f_horz_speed_pow2 = entity->_Super.PhysInfo.Vel.x * entity->_Super.PhysInfo.Vel.x +
+                float horz_speed_pow2 = entity->_Super.PhysInfo.Vel.x * entity->_Super.PhysInfo.Vel.x +
                                           entity->_Super.PhysInfo.Vel.z * entity->_Super.PhysInfo.Vel.z;
                 int state = 0;
                 if (rf::IsEntityLoopFire(entity->_Super.Handle, entity->WeaponInfo.WeaponClsId))
                     state = 2;
                 else if (rf::EntityIsSwimming(entity) || rf::EntityIsFalling(entity))
                     state = 0;
-                else if (f_horz_speed_pow2 > 0.2f)
+                else if (horz_speed_pow2 > 0.2f)
                     state = 1;
                 if (!rf::PlayerFpgunHasState(player, state))
                     rf::PlayerFpgunSetState(player, state);

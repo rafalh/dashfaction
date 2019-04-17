@@ -348,8 +348,6 @@ namespace rf
     static auto& BmConvertFormat = AddrAsRef<void(void *dst_bits, BmPixelFormat dst_pixel_fmt, const void *src_bits, BmPixelFormat src_pixel_fmt, int num_pixels)>(0x0055DD20);
     static auto& BmGetBitmapSize = AddrAsRef<void(int bm_handle, int *width, int *height)>(0x00510630);
     static auto& BmGetFilename = AddrAsRef<const char*(int bm_handle)>(0x00511710);
-    static auto& BmLock = AddrAsRef<BmPixelFormat(int bm_handle, uint8_t **pp_data, uint8_t **pp_palette)>(0x00510780);
-    static auto& BmUnlock = AddrAsRef<void(int bm_handle)>(0x00511700);
 
     /* Graphics */
 
@@ -439,7 +437,6 @@ namespace rf
     static auto& GrGetViewportWidth = AddrAsRef<unsigned()>(0x0050CDB0);
     static auto& GrGetViewportHeight = AddrAsRef<unsigned()>(0x0050CDC0);
     static auto& GrSetColor = AddrAsRef<void(unsigned r, unsigned g, unsigned b, unsigned a)>(0x0050CF80);
-    static auto& GrSetColorPtr = AddrAsRef<void(uint32_t *color)>(0x0050D000);
     static auto& GrReadBackBuffer = AddrAsRef<int(int x, int y, int width, int height, void *buffer)>(0x0050DFF0);
     static auto& GrFlushBuffers = AddrAsRef<void()>(0x00559D90);
 
@@ -449,10 +446,7 @@ namespace rf
     static auto& GrDrawText = AddrAsRef<void(unsigned x, unsigned y, const char *text, int font, unsigned material)>(0x0051FEB0);
     static auto& GrDrawAlignedText = AddrAsRef<void(GrTextAlignment align, unsigned x, unsigned y, const char *text, int font, unsigned material)>(0x0051FE50);
 
-    static auto& GrRenderLine = AddrAsRef<char(const Vector3 *world_pos1, const Vector3 *world_pos2, int material)>(0x00515960);
-    static auto& GrRenderSphere = AddrAsRef<char(const Vector3 *pv_pos, float f_radius, int material)>(0x00515CD0);
-
-    static auto& GrFitText = AddrAsRef<String* (String* pstr_dest, String::Pod str, int cx_max)>(0x00471EC0);
+    static auto& GrFitText = AddrAsRef<String* (String* result, String::Pod str, int cx_max)>(0x00471EC0);
     static auto& GrLoadFont = AddrAsRef<int(const char *file_name, int a2)>(0x0051F6E0);
     static auto& GrGetFontHeight = AddrAsRef<unsigned(int font_id)>(0x0051F4D0);
     static auto& GrGetTextWidth = AddrAsRef<void(int *out_width, int *out_height, const char *text, int text_len, int font_id)>(0x0051F530);
@@ -462,28 +456,27 @@ namespace rf
 
     /* User Interface (UI) */
 
-    struct UiPanel
+    struct UiGadget
     {
-        void(**field_0)();
-        UiPanel *Parent;
-        char field_8;
-        char field_9;
+        void **vtbl;
+        UiGadget *Parent;
+        bool highlighted;
+        bool enabled;
         int x;
         int y;
         int w;
         int h;
-        int Id;
+        int Key;
         void(*OnClick)();
-        int field_24;
-        int BgTexture;
+        void(*OnMouseBtnDown)();
     };
 
     static auto& UiMsgBox = AddrAsRef<void(const char *title, const char *text, void(*callback)(), bool input)>(0x004560B0);
     using UiDialogCallbackPtr = void (*)();
     static auto& UiCreateDialog =
-        AddrAsRef<void(const char *title, const char *text, unsigned num_buttons, const char **ppsz_btn_titles,
-                       UiDialogCallbackPtr *callbacks, unsigned unknown1, unsigned unknown2)>(0x004562A0);
-    static auto& UiGetElementFromPos = AddrAsRef<int(int x, int y, UiPanel **ui_widgets, signed int num_ui_widgets)>(0x00442ED0);
+        AddrAsRef<void(const char *title, const char *text, unsigned num_buttons, const char *ppsz_btn_titles[],
+                       UiDialogCallbackPtr callbacks[], unsigned unknown1, unsigned unknown2)>(0x004562A0);
+    static auto& UiGetGadgetFromPos = AddrAsRef<int(int x, int y, UiGadget * const gadgets[], int num_gadgets)>(0x00442ED0);
 
     /* Chat */
 
@@ -497,7 +490,7 @@ namespace rf
         default_ = 5,
     };
 
-    static auto& ChatPrint = AddrAsRef<void(String::Pod str_text, ChatMsgColor color, String::Pod prefix)>(0x004785A0);
+    static auto& ChatPrint = AddrAsRef<void(String::Pod text, ChatMsgColor color, String::Pod prefix)>(0x004785A0);
 
     /* File System */
 
@@ -572,10 +565,10 @@ namespace rf
     static_assert(sizeof(PlayerNetData) == 0x9C8, "invalid size");
 
     static auto& NwSendNotReliablePacket =
-        AddrAsRef<void(const void *addr, const void *packet, unsigned cb_packet)>(0x0052A080);
+        AddrAsRef<void(const NwAddr &addr, const void *packet, unsigned cb_packet)>(0x0052A080);
     static auto& NwSendReliablePacket =
         AddrAsRef<void(Player *player, const uint8_t *data, unsigned int num_bytes, int a4)>(0x00479480);
-    static auto& NwAddrToStr = AddrAsRef<void(char *dest, int cb_dest, NwAddr& addr)>(0x00529FE0);
+    static auto& NwAddrToStr = AddrAsRef<void(char *dest, int cb_dest, const NwAddr& addr)>(0x00529FE0);
     static auto& NwGetPlayerFromAddr = AddrAsRef<Player*(const NwAddr& addr)>(0x00484850);
     static auto& NwCompareAddr = AddrAsRef<int(const NwAddr &addr1, const NwAddr &addr2, bool check_port)>(0x0052A930);
 
@@ -1648,11 +1641,11 @@ namespace rf
     static auto& g_DefaultPlayerWeapon = AddrAsRef<String>(0x007C7600);
     static auto& g_active_cutscene = AddrAsRef<void*>(0x00645320);
 
-    static auto& RfBeep = AddrAsRef<void(unsigned u1, unsigned u2, unsigned u3, float f_volume)>(0x00505560);
+    static auto& RfBeep = AddrAsRef<void(unsigned u1, unsigned u2, unsigned u3, float volume)>(0x00505560);
     static auto& GetFileExt = AddrAsRef<char *(const char *path)>(0x005143F0);
     static auto& SplitScreenStart = AddrAsRef<void()>(0x00480D30);
-    static auto& SetNextLevelFilename = AddrAsRef<void(String::Pod str_filename, String::Pod str_second)>(0x0045E2E0);
-    static auto& DemoLoadLevel = AddrAsRef<void(const char *level_file_name)>(0x004CC270);
+    static auto& SetNextLevelFilename = AddrAsRef<void(String::Pod level_filename, String::Pod save_filename)>(0x0045E2E0);
+    static auto& DemoLoadLevel = AddrAsRef<void(const char *level_filename)>(0x004CC270);
     static auto& SetCursorVisible = AddrAsRef<void(bool visible)>(0x0051E680);
     static auto& CutsceneIsActive = AddrAsRef<bool()>(0x0045BE80);
     static auto& Timer__GetTimeLeftMs = AddrAsRef<int __thiscall(void* timer)>(0x004FA420);

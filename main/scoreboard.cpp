@@ -52,24 +52,24 @@ void DrawScoreboardInternal_New(bool draw)
               [](auto player1, auto player2) { return player2->Stats->score - player1->Stats->score; });
 
     // Animation
-    float f_anim_progress = 1.0f, f_progress_w = 1.0f, f_progress_h = 1.0f;
+    float anim_progress = 1.0f, progress_w = 1.0f, progress_h = 1.0f;
     if (g_game_config.scoreboardAnim) {
         unsigned anim_delta = GetTickCount() - g_AnimTicks;
         if (g_EnterAnim)
-            f_anim_progress = anim_delta / ENTER_ANIM_MS;
+            anim_progress = anim_delta / ENTER_ANIM_MS;
         else if (g_LeaveAnim)
-            f_anim_progress = (LEAVE_ANIM_MS - anim_delta) / LEAVE_ANIM_MS;
+            anim_progress = (LEAVE_ANIM_MS - anim_delta) / LEAVE_ANIM_MS;
 
-        if (g_LeaveAnim && f_anim_progress <= 0.0f) {
+        if (g_LeaveAnim && anim_progress <= 0.0f) {
             g_ScoreboardVisible = false;
             return;
         }
 
-        f_progress_w = f_anim_progress * 2.0f;
-        f_progress_h = (f_anim_progress - 0.5f) * 2.0f;
+        progress_w = anim_progress * 2.0f;
+        progress_h = (anim_progress - 0.5f) * 2.0f;
 
-        f_progress_w = std::clamp(f_progress_w, 0.1f, 1.0f);
-        f_progress_h = std::clamp(f_progress_h, 0.1f, 1.0f);
+        progress_w = std::clamp(progress_w, 0.1f, 1.0f);
+        progress_h = std::clamp(progress_h, 0.1f, 1.0f);
     }
 
     // Draw background
@@ -77,8 +77,8 @@ void DrawScoreboardInternal_New(bool draw)
     unsigned cx = std::min((game_type == RF_DM) ? 450u : 700u, rf::GrGetViewportWidth());
     unsigned num_rows = std::max(c_left_col, c_right_col);
     unsigned cy = ((game_type == RF_DM) ? 130 : 190) + num_rows * row_h; // DM doesnt show team scores
-    cx = static_cast<unsigned>(f_progress_w * cx);
-    cy = static_cast<unsigned>(f_progress_h * cy);
+    cx = static_cast<unsigned>(progress_w * cx);
+    cy = static_cast<unsigned>(progress_h * cy);
     unsigned x = (rf::GrGetViewportWidth() - cx) / 2;
     unsigned y = (rf::GrGetViewportHeight() - cy) / 2;
     unsigned x_center = x + cx / 2;
@@ -86,7 +86,7 @@ void DrawScoreboardInternal_New(bool draw)
     rf::GrDrawRect(x, y, cx, cy, rf::g_GrRectMaterial);
     y += 10;
 
-    if (f_progress_h < 1.0f || f_progress_w < 1.0f)
+    if (progress_h < 1.0f || progress_w < 1.0f)
         return;
 
     // Draw RF logo

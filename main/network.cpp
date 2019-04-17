@@ -31,7 +31,7 @@ CallHook<void(const char*, int, const rf::NwAddr&, rf::Player*)> ProcessUnreliab
         rf::NwProcessGamePackets(data, data_len, addr, player);
 
 #if MASK_AS_PF
-        ProcessPfPacket(data, data_len, &addr, player);
+        ProcessPfPacket(data, data_len, addr, player);
 #endif
     },
 };

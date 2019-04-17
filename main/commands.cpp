@@ -213,8 +213,8 @@ DcCommand2 DebugCmd{
 
 void DebugRender3d()
 {
-    const auto dbg_waypoints = (void (*)())0x00468F00;
-    const auto dbg_internal_lights = (void (*)())0x004DB830;
+    const auto dbg_waypoints = AddrAsRef<void()>(0x00468F00);
+    const auto dbg_internal_lights = AddrAsRef<void()>(0x004DB830);
 
     dbg_waypoints();
     if (g_DbgStaticLights)
@@ -223,8 +223,8 @@ void DebugRender3d()
 
 void DebugRender2d()
 {
-    const auto dbg_rendering_stats = (void (*)())0x004D36B0;
-    const auto dbg_particle_stats = (void (*)())0x004964E0;
+    const auto dbg_rendering_stats = AddrAsRef<void()>(0x004D36B0);
+    const auto dbg_particle_stats = AddrAsRef<void()>(0x004964E0);
     if (g_DbgGeometryRenderingStats)
         dbg_rendering_stats();
     dbg_particle_stats();
@@ -304,11 +304,11 @@ static int CanPlayerFireHook(rf::Player* player)
 
 DcCommand2 MouseSensitivityCmd{
     "ms",
-    [](std::optional<float> value) {
-        if (value) {
-            float f_value = value.value();
-            f_value = std::clamp(f_value, 0.0f, 1.0f);
-            rf::g_LocalPlayer->Config.Controls.MouseSensitivity = f_value;
+    [](std::optional<float> value_opt) {
+        if (value_opt) {
+            float value = value_opt.value();
+            value = std::clamp(value, 0.0f, 1.0f);
+            rf::g_LocalPlayer->Config.Controls.MouseSensitivity = value;
         }
         rf::DcPrintf("Mouse sensitivity: %.2f", rf::g_LocalPlayer->Config.Controls.MouseSensitivity);
     },
@@ -338,10 +338,10 @@ DcCommand2 LevelSoundsCmd{
     "levelsounds",
     [](std::optional<float> volume) {
         if (volume) {
-            float f_vol_scale = std::clamp(volume.value(), 0.0f, 1.0f);
-            SetPlaySoundEventsVolumeScale(f_vol_scale);
+            float vol_scale = std::clamp(volume.value(), 0.0f, 1.0f);
+            SetPlaySoundEventsVolumeScale(vol_scale);
 
-            g_game_config.levelSoundVolume = f_vol_scale;
+            g_game_config.levelSoundVolume = vol_scale;
             g_game_config.save();
         }
         rf::DcPrintf("Level sound volume: %.1f", g_game_config.levelSoundVolume);

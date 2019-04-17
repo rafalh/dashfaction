@@ -17,7 +17,7 @@ namespace rf
 
 static auto& EntityIsReloading = AddrAsRef<bool(EntityObj* entity)>(0x00425250);
 
-static auto& g_MenuVersionLabel = AddrAsRef<UiPanel>(0x0063C088);
+static auto& g_MenuVersionLabel = AddrAsRef<UiGadget>(0x0063C088);
 static auto& g_sound_enabled = AddrAsRef<bool>(0x017543D8);
 static auto& g_hide_enemy_bullets = AddrAsRef<bool>(0x005A24D0);
 
@@ -40,9 +40,9 @@ int g_VersionClickCounter = 0;
 int g_EggAnimStart;
 bool g_Win32Console = false;
 
-using UiLabel_Create2_Type = void __fastcall(rf::UiPanel*, void*, rf::UiPanel*, int, int, int, int, const char*, int);
+using UiLabel_Create2_Type = void __fastcall(rf::UiGadget*, void*, rf::UiGadget*, int, int, int, int, const char*, int);
 extern CallHook<UiLabel_Create2_Type> UiLabel_Create2_VersionLabel_Hook;
-void __fastcall UiLabel_Create2_VersionLabel(rf::UiPanel* self, void* edx, rf::UiPanel* parent, int x, int y, int w,
+void __fastcall UiLabel_Create2_VersionLabel(rf::UiGadget* self, void* edx, rf::UiGadget* parent, int x, int y, int w,
                                              int h, const char* text, int font_id)
 {
     x = g_VersionLabelX;
@@ -96,8 +96,8 @@ CallHook<void()> MenuMainProcessMouse_Hook{
         if (rf::MouseWasButtonPressed(0)) {
             int x, y, z;
             rf::MouseGetPos(x, y, z);
-            rf::UiPanel* panels_to_check[1] = {&rf::g_MenuVersionLabel};
-            int matched = rf::UiGetElementFromPos(x, y, panels_to_check, std::size(panels_to_check));
+            rf::UiGadget* gadgets_to_check[1] = {&rf::g_MenuVersionLabel};
+            int matched = rf::UiGetGadgetFromPos(x, y, gadgets_to_check, std::size(gadgets_to_check));
             if (matched == 0) {
                 TRACE("Version clicked");
                 ++g_VersionClickCounter;
