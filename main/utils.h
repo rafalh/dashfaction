@@ -17,6 +17,12 @@ std::string getCpuBrand();
 
 #define ASSERT(x) assert(x)
 
+#ifdef __GNUC__
+#define PRINTF_FMT_ATTRIBUTE(fmt_idx, va_idx) __attribute__ ((format (printf, fmt_idx, va_idx)))
+#else
+#define PRINTF_FMT_ATTRIBUTE
+#endif
+
 struct StringMatcher
 {
     std::string m_Exact, m_Prefix, m_Infix, m_Suffix;
@@ -79,11 +85,16 @@ struct StringMatcher
     }
 };
 
-template<typename... Args>
-std::string StringFormat(const char* format, Args... args)
+PRINTF_FMT_ATTRIBUTE(1, 2)
+inline std::string StringFormat(const char* format, ...)
 {
-    size_t size = snprintf(nullptr, 0, format, args...) + 1; // Extra space for '\0'
+    va_list args;
+    va_start(args, format);
+    int size = vsnprintf(nullptr, 0, format, args) + 1;// Extra space for '\0'
+    va_end(args);
     std::unique_ptr<char[]> buf(new char[size]);
-    snprintf(buf.get(), size, format, args...);
+    va_start(args, format);
+    vsnprintf(buf.get(), size, format, args);
+    va_end(args);
     return std::string(buf.get(), buf.get() + size - 1); // We don't want the '\0' inside
 }

@@ -159,8 +159,8 @@ void FtolIssuesDetectionDoFrame()
             if (is_fps_dependent && is_significant) {
                 bool is_new = g_ftol_issues.insert(p.first).second;
                 if (is_new)
-                    rf::DcPrintf("ftol issue detected: address %p ratio %.2f estimated value %.4f", p.first - 5, ratio,
-                                 avg_high_fps);
+                    rf::DcPrintf("ftol issue detected: address %08X ratio %.2f estimated value %.4f", p.first - 5,
+                                 ratio, avg_high_fps);
             }
         }
 

@@ -11,6 +11,7 @@ typedef BOOL WINBOOL;
 #include <d3d8.h>
 
 #include <MemUtils.h>
+#include "utils.h"
 
 #ifndef __GNUC__
 #define ALIGN(n) __declspec(align(n))
@@ -214,17 +215,18 @@ namespace rf
             return fun_ptr(*this);
         }
 
-        static String Format(const char* fmt, ...)
+        PRINTF_FMT_ATTRIBUTE(1, 2)
+        static inline String Format(const char* format, ...)
         {
             String str;
             va_list args;
-            va_start(args, fmt);
-            int n = vsnprintf(nullptr, 0, fmt, args);
+            va_start(args, format);
+            int size = vsnprintf(nullptr, 0, format, args) + 1;
             va_end(args);
-            va_start(args, fmt);
-            str.m_pod.buf_size = n + 1;
+            str.m_pod.buf_size = size;
             str.m_pod.buf = StringAlloc(str.m_pod.buf_size);
-            vsnprintf(str.m_pod.buf, n + 1, fmt, args);
+            va_start(args, format);
+            vsnprintf(str.m_pod.buf, size, format, args);
             va_end(args);
             return str;
         }
@@ -288,9 +290,24 @@ namespace rf
     };
 
     static auto& DcPrint = AddrAsRef<void(const char *text, const int *color)>(0x00509EC0);
-    static auto& DcPrintf = AddrAsRef<void(const char *format, ...)>(0x0050B9F0);
     static auto& DcGetArg = AddrAsRef<void(int type, bool preserve_case)>(0x0050AED0);
     static auto& DcRunCmd = AddrAsRef<int(const char *cmd)>(0x00509B00);
+
+    // Note: DcPrintf is reimplemented to allow static validation of format string
+    PRINTF_FMT_ATTRIBUTE(1, 2)
+    inline void DcPrintf(const char* format, ...)
+    {
+        String str;
+        va_list args;
+        va_start(args, format);
+        int size = vsnprintf(nullptr, 0, format, args) + 1;
+        va_end(args);
+        std::unique_ptr<char[]> buf(new char[size]);
+        va_start(args, format);
+        vsnprintf(buf.get(), size, format, args);
+        va_end(args);
+        DcPrint(buf.get(), nullptr);
+    }
 
     //static auto& g_DcCommands = AddrAsRef<DcCommand*[30]>(0x01775530);
     static auto& g_DcNumCommands = AddrAsRef<uint32_t>(0x0177567C);
