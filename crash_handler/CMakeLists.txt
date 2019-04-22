@@ -10,5 +10,12 @@ endif()
 
 file(GLOB SRCS *.cpp *.h)
 add_executable(CrashHandler WIN32 ${SRCS})
-target_link_libraries(CrashHandler psapi zip zlib wininet)
 set_property(TARGET CrashHandler PROPERTY CXX_STANDARD 17)
+
+target_link_libraries(CrashHandler
+    Common
+    psapi
+    zip
+    zlib
+    wininet
+)

@@ -1,8 +1,8 @@
 #include "Exception.h"
-#include "HttpRequest.h"
 #include "MiniDumpHelper.h"
 #include "ZipHelper.h"
-#include "version.h"
+#include <version.h>
+#include <HttpRequest.h>
 #include <windows.h>
 
 // Config
@@ -23,8 +23,7 @@
 #endif
 
 #define CRASHHANDLER_WEBSVC_ENABLED 1
-#define CRASHHANDLER_WEBSVC_HOST "ravin.tk"
-#define CRASHHANDLER_WEBSVC_PATH "/api/rf/dashfaction/crashreport.php"
+#define CRASHHANDLER_WEBSVC_URL "https://ravin.tk/api/rf/dashfaction/crashreport.php"
 #define CRASHHANDLER_WEBSVC_AGENT "DashFaction"
 
 bool PrepareArchive(const char* CrashDumpFilename)
@@ -38,12 +37,6 @@ bool PrepareArchive(const char* CrashDumpFilename)
 
 void SendArchive()
 {
-    HttpRequestInfo info;
-    info.method = "POST";
-    info.host = CRASHHANDLER_WEBSVC_HOST;
-    info.path = CRASHHANDLER_WEBSVC_PATH;
-    info.agent = CRASHHANDLER_WEBSVC_AGENT;
-
     FILE* file = fopen(CRASHHANDLER_TARGET_DIR "/" CRASHHANDLER_TARGET_NAME, "rb");
     if (!file)
         THROW_EXCEPTION("cannot open " CRASHHANDLER_TARGET_NAME);
@@ -52,16 +45,17 @@ void SendArchive()
     size_t size = ftell(file);
     fseek(file, 0, SEEK_SET);
 
-    HttpRequest req(info);
-    req.addHeaders("Content-Type: application/octet-stream\r\n");
-    req.begin(size);
+    HttpSession session{CRASHHANDLER_WEBSVC_AGENT};
+    HttpRequest req(CRASHHANDLER_WEBSVC_URL, "POST", session);
+    req.set_content_type("application/octet-stream");
+    req.begin_body(size);
     char buf[2048];
     while (!feof(file)) {
         size_t num = fread(buf, 1, sizeof(buf), file);
         req.write(buf, num);
     }
     fclose(file);
-    req.end();
+    req.send();
 }
 
 int GetTempFileNameInTempDir(const char* Prefix, char Result[MAX_PATH])
@@ -131,7 +125,7 @@ int main(int argc, const char* argv[]) try {
 
     return 0;
 }
-catch (std::exception& e) {
+catch (const std::exception& e) {
     MessageBoxA(NULL, e.what(), NULL, MB_ICONERROR | MB_OK | MB_SETFOREGROUND | MB_TASKMODAL);
     return -1;
 }

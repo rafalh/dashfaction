@@ -43,7 +43,8 @@ private:
 
     std::thread m_thread;
     HWND m_hwnd;
-    bool m_abort = false, m_newVersion = false;
+    bool m_abort = false;
+    bool m_newVersion = false;
     std::string m_message;
     std::string m_url;
     std::string m_error;

@@ -1,5 +1,5 @@
 #include "autodl.h"
-#include "http.h"
+#include "HttpRequest.h"
 #include "misc.h"
 #include "rf.h"
 #include "rfproto.h"
@@ -15,7 +15,7 @@
 #ifdef LEVELS_AUTODOWNLOADER
 
 #define AUTODL_AGENT_NAME "hoverlees"
-#define AUTODL_HOST "pfapi.factionfiles.com"
+#define AUTODL_BASE_URL "http://pfapi.factionfiles.com"
 
 struct LevelInfo
 {
@@ -165,10 +165,10 @@ static bool UnrarVpp(const char* path)
 }
 
 static bool FetchLevelFile(const char* tmp_filename, int ticket_id) try {
-    HttpConnection conn{AUTODL_HOST, 80, AUTODL_AGENT_NAME};
-
-    auto path = StringFormat("downloadmap.php?ticketid=%u", ticket_id);
-    HttpRequest req = conn.get(path.c_str());
+    HttpSession session{AUTODL_AGENT_NAME};
+    auto url = StringFormat("%s/downloadmap.php?ticketid=%u", AUTODL_BASE_URL, ticket_id);
+    HttpRequest req{url, "GET", session};
+    req.send();
 
     std::ofstream tmp_file(tmp_filename, std::ios_base::out | std::ios_base::binary);
     if (!tmp_file) {
@@ -277,11 +277,17 @@ static std::optional<LevelInfo> ParseLevelInfo(char* buf)
 }
 
 static std::optional<LevelInfo> FetchLevelInfo(const char* file_name) try {
-    HttpConnection conn{AUTODL_HOST, 80, AUTODL_AGENT_NAME};
+    HttpSession session{AUTODL_AGENT_NAME};
+    session.set_connect_timeout(2000);
+    session.set_receive_timeout(3000);
+    auto url = AUTODL_BASE_URL "/findmap.php";
 
     TRACE("Fetching level info: %s", file_name);
+    HttpRequest req{url, "POST", session};
     std::string body = std::string("rflName=") + file_name;
-    HttpRequest req = conn.post("findmap.php", body);
+
+    req.set_content_type("application/x-www-form-urlencoded");
+    req.send(body);
 
     char buf[256];
     size_t num_bytes_read = req.read(buf, sizeof(buf) - 1);
