@@ -1,9 +1,10 @@
-#include "Exception.h"
 #include "MiniDumpHelper.h"
 #include "ZipHelper.h"
+#include <Exception.h>
 #include <version.h>
 #include <HttpRequest.h>
 #include <windows.h>
+#include <fstream>
 
 // Config
 #define CRASHHANDLER_LOG_PATH "logs/DashFaction.log"
@@ -37,24 +38,24 @@ bool PrepareArchive(const char* CrashDumpFilename)
 
 void SendArchive()
 {
-    FILE* file = fopen(CRASHHANDLER_TARGET_DIR "/" CRASHHANDLER_TARGET_NAME, "rb");
+    auto file_path = CRASHHANDLER_TARGET_DIR "/" CRASHHANDLER_TARGET_NAME;
+    std::ifstream file(file_path, std::ios_base::in | std::ios_base::binary);
     if (!file)
         THROW_EXCEPTION("cannot open " CRASHHANDLER_TARGET_NAME);
 
-    fseek(file, 0, SEEK_END);
-    size_t size = ftell(file);
-    fseek(file, 0, SEEK_SET);
+    file.seekg(0, std::ios_base::end);
+    size_t size = file.tellg();
+    file.seekg(0, std::ios_base::beg);
 
     HttpSession session{CRASHHANDLER_WEBSVC_AGENT};
     HttpRequest req(CRASHHANDLER_WEBSVC_URL, "POST", session);
     req.set_content_type("application/octet-stream");
     req.begin_body(size);
     char buf[2048];
-    while (!feof(file)) {
-        size_t num = fread(buf, 1, sizeof(buf), file);
+    while (!file.eof()) {
+        size_t num = file.readsome(buf, sizeof(buf));
         req.write(buf, num);
     }
-    fclose(file);
     req.send();
 }
 
