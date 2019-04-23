@@ -48,8 +48,9 @@ void DrawScoreboardInternal_New(bool draw)
         if (!player || player == rf::player_list)
             break;
     }
-    std::sort(players, players + c_players,
-              [](auto player1, auto player2) { return player2->stats->score - player1->stats->score; });
+    std::sort(players, players + c_players, [](auto player1, auto player2) {
+        return player1->stats->score > player2->stats->score;
+    });
 
     // Animation
     float anim_progress = 1.0f, progress_w = 1.0f, progress_h = 1.0f;
