@@ -51,9 +51,10 @@ void SendArchive()
     HttpRequest req(CRASHHANDLER_WEBSVC_URL, "POST", session);
     req.set_content_type("application/octet-stream");
     req.begin_body(size);
-    char buf[2048];
+    char buf[4096];
     while (!file.eof()) {
-        size_t num = file.readsome(buf, sizeof(buf));
+        file.read(buf, sizeof(buf));
+        size_t num = file.gcount();
         req.write(buf, num);
     }
     req.send();

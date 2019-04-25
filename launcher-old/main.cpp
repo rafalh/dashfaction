@@ -15,7 +15,7 @@ bool LaunchGame(HWND hwnd)
                     "Privilege elevation is required. Please change RF.exe file properties and disable all "
                     "compatibility settings (Run as administrator, Compatibility mode for Windows XX, etc.) or run "
                     "Dash Faction launcher as administrator.",
-                    NULL, MB_OK | MB_ICONERROR);
+                    nullptr, MB_OK | MB_ICONERROR);
         return false;
     }
     catch (const IntegrityCheckFailedException& e) {
@@ -31,7 +31,7 @@ bool LaunchGame(HWND hwnd)
                << "replace your RF.exe file with original 1.20 NA RF.exe available on FactionFiles.com.\n"
                << "Click OK to open download page.";
             std::string str = ss.str();
-            if (MessageBoxA(hwnd, str.c_str(), NULL, MB_OKCANCEL | MB_ICONERROR) == IDOK)
+            if (MessageBoxA(hwnd, str.c_str(), nullptr, MB_OKCANCEL | MB_ICONERROR) == IDOK)
                 ShellExecuteA(hwnd, "open", "https://www.factionfiles.com/ff.php?action=file&id=517545", NULL, NULL,
                               SW_SHOW);
         }
@@ -55,13 +55,13 @@ static bool CheckForUpdate()
         return false;
     }
 
-    const char* msg_str = update_checker.getMessage().c_str();
-    printf("%s\n", msg_str);
-    int result = MessageBox(nullptr, msg_str, "DashFaction update is available!", MB_OKCANCEL | MB_ICONEXCLAMATION);
+    const std::string& msg = update_checker.getMessage();
+    printf("%s\n", msg.c_str());
+    int result = MessageBox(nullptr, msg.c_str(), "DashFaction update is available!", MB_OKCANCEL | MB_ICONEXCLAMATION);
     if (result == IDOK) {
-        const char* url = update_checker.getUrl().c_str();
-        printf("url %s\n", url);
-        ShellExecute(nullptr, "open", url, nullptr, nullptr, SW_SHOW);
+        const std::string& url = update_checker.getUrl();
+        printf("url %s\n", url.c_str());
+        ShellExecute(nullptr, "open", url.c_str(), nullptr, nullptr, SW_SHOW);
         return true;
     }
 

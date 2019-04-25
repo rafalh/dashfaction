@@ -2,6 +2,7 @@
 #include <Exception.h>
 #include <version.h>
 #include <HttpRequest.h>
+#include <cstring>
 
 #define THROW_EXCEPTION_WITH_WIN32_ERROR() THROW_EXCEPTION("win32 error %lu", GetLastError())
 
@@ -39,21 +40,21 @@ bool UpdateChecker::check()
         return false;
 
     if (!buf[0])
-        m_newVersion = false;
+        m_new_version = false;
     else {
         // printf("%s\n", buf);x
         char* url = buf;
-        char* msg_text = strchr(buf, '\n');
+        char* msg_text = std::strchr(buf, '\n');
         if (msg_text) {
             *msg_text = 0;
             ++msg_text;
         }
-        m_newVersion = true;
+        m_new_version = true;
         m_url = url;
         m_message = msg_text;
     }
 
-    return m_newVersion;
+    return m_new_version;
 }
 
 void UpdateChecker::threadProc()

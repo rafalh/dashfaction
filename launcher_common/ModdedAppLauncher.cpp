@@ -17,26 +17,28 @@
 #define RF_120_NA_CRC32 0xA7BF79E4
 #define RED_120_NA_CRC32 0xBAF6C754
 
-void ModdedAppLauncher::injectDLL(HANDLE process, const TCHAR* dll_path)
+void ModdedAppLauncher::injectDLL(HANDLE process, const char* dll_path)
 {
     // Note: code from CobraMods cannot be used here because it uses EnumProcessModules API but it doesnt work on
     // suspended process
 
     unsigned dll_path_size = strlen(dll_path) + 1;
 
+    // Note: kernel32.dll base address is the same for all processes during a single session
+    // See: http://www.nynaeve.net/?p=198
     FARPROC load_library_ptr = GetProcAddress(GetModuleHandle("kernel32.dll"), "LoadLibraryA");
     if (!load_library_ptr)
         THROW_EXCEPTION_WITH_WIN32_ERROR();
 
-    PVOID remote_buf = VirtualAllocEx(process, NULL, dll_path_size, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+    PVOID remote_buf = VirtualAllocEx(process, nullptr, dll_path_size, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
     if (!remote_buf)
         THROW_EXCEPTION_WITH_WIN32_ERROR();
 
     /* For some reason WriteProcessMemory returns 0, but memory is written */
-    WriteProcessMemory(process, remote_buf, dll_path, dll_path_size, NULL);
+    WriteProcessMemory(process, remote_buf, dll_path, dll_path_size, nullptr);
 
     printf("Loading %s\n", dll_path);
-    HANDLE thread = CreateRemoteThread(process, NULL, 0, (LPTHREAD_START_ROUTINE)load_library_ptr, remote_buf, 0, NULL);
+    HANDLE thread = CreateRemoteThread(process, nullptr, 0, (LPTHREAD_START_ROUTINE)load_library_ptr, remote_buf, 0, nullptr);
     if (!thread)
         THROW_EXCEPTION_WITH_WIN32_ERROR();
 
@@ -68,7 +70,7 @@ void ModdedAppLauncher::injectDLL(HANDLE process, const TCHAR* dll_path)
 
     LPTHREAD_START_ROUTINE init_proc_remote_ptr = reinterpret_cast<LPTHREAD_START_ROUTINE>(
         reinterpret_cast<DWORD_PTR>(init_proc_local_ptr) - reinterpret_cast<DWORD_PTR>(local_lib) + remote_lib);
-    thread = CreateRemoteThread(process, nullptr, 0, init_proc_remote_ptr, nullptr, 0, NULL);
+    thread = CreateRemoteThread(process, nullptr, 0, init_proc_remote_ptr, nullptr, 0, nullptr);
     if (!thread)
         THROW_EXCEPTION_WITH_WIN32_ERROR();
 
@@ -94,35 +96,33 @@ void ModdedAppLauncher::injectDLL(HANDLE process, const TCHAR* dll_path)
 std::string ModdedAppLauncher::getModDllPath()
 {
     char buf[MAX_PATH];
-    if (!GetModuleFileNameA(0, buf, sizeof(buf)))
+    if (!GetModuleFileNameA(nullptr, buf, std::size(buf)))
         THROW_EXCEPTION_WITH_WIN32_ERROR();
     char* ptr = strrchr(buf, '\\');
     if (!ptr)
         THROW_EXCEPTION("Invalid path");
-    sprintf(ptr, "\\%s", m_modDllName.c_str());
-    return buf;
+    ptr[1] = '\0';
+    return buf + m_modDllName;
 }
 
 void ModdedAppLauncher::launch()
 {
-    std::string appPath = getAppPath();
-    uint32_t checksum = GetFileCRC32(appPath.c_str());
+    std::string app_path = getAppPath();
+    uint32_t checksum = GetFileCRC32(app_path.c_str());
 
     // Error reporting for headless env
     if (checksum == 0)
-        printf("Invalid App Path %s\n", appPath.c_str());
+        printf("Invalid App Path %s\n", app_path.c_str());
     else if (checksum != m_expectedCrc)
         printf("Invalid App Checksum %lx, expected %lx\n", checksum, m_expectedCrc);
 
     if (checksum != m_expectedCrc)
         throw IntegrityCheckFailedException(checksum);
 
-    size_t pos = appPath.find_last_of("\\/");
-    std::string workDir = appPath.substr(0, pos);
+    size_t pos = app_path.find_last_of("\\/");
+    std::string work_dir = app_path.substr(0, pos);
 
     STARTUPINFO si;
-    PROCESS_INFORMATION pi;
-
     ZeroMemory(&si, sizeof(si));
     si.cb = sizeof(si);
 
@@ -134,8 +134,9 @@ void ModdedAppLauncher::launch()
         si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
     }
 
-    BOOL result = CreateProcessA(appPath.c_str(), GetCommandLine(), NULL, NULL, FALSE, CREATE_SUSPENDED, NULL,
-                                 workDir.c_str(), &si, &pi);
+    PROCESS_INFORMATION pi;
+    BOOL result = CreateProcessA(app_path.c_str(), GetCommandLine(), nullptr, nullptr, FALSE, CREATE_SUSPENDED,
+                                 nullptr, work_dir.c_str(), &si, &pi);
     if (!result) {
         if (GetLastError() == ERROR_ELEVATION_REQUIRED)
             throw PrivilegeElevationRequiredException();
@@ -143,8 +144,8 @@ void ModdedAppLauncher::launch()
         THROW_EXCEPTION_WITH_WIN32_ERROR();
     }
 
-    std::string modPath = getModDllPath();
-    injectDLL(pi.hProcess, modPath.c_str());
+    std::string mod_path = getModDllPath();
+    injectDLL(pi.hProcess, mod_path.c_str());
 
     ResumeThread(pi.hThread);
 

@@ -33,7 +33,7 @@ public:
 
 protected:
     std::string getModDllPath();
-    void injectDLL(HANDLE hProcess, const TCHAR* pszPath);
+    void injectDLL(HANDLE hProcess, const char* pszPath);
     virtual std::string getAppPath() = 0;
 
     std::string m_modDllName;
