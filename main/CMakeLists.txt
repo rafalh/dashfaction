@@ -40,7 +40,7 @@ endif()
 set(CMAKE_CXX_USE_RESPONSE_FILE_FOR_INCLUDES 0)
 set(CMAKE_C_USE_RESPONSE_FILE_FOR_INCLUDES 0)
 
-file(GLOB SRCS *.cpp *.h *.res)
+file(GLOB SRCS *.cpp *.h *.rc)
 add_library(DashFaction SHARED ${SRCS})
 set_property(TARGET DashFaction PROPERTY CXX_STANDARD 17)
 set_property(TARGET DashFaction PROPERTY PREFIX "")
