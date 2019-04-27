@@ -92,6 +92,17 @@ public:
         return {std::move(thread_handle)};
     }
 
+    void terminate(DWORD exit_code)
+    {
+        if (!TerminateProcess(m_handle, exit_code))
+            THROW_WIN32_ERROR();
+    }
+
+    operator bool() const
+    {
+        return m_handle != nullptr;
+    }
+
     const Win32Handle& get_handle() const
     {
         return m_handle;

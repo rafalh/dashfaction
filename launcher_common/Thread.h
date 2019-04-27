@@ -50,6 +50,11 @@ public:
         return exit_code;
     }
 
+    operator bool() const
+    {
+        return m_handle != nullptr;
+    }
+
     const Win32Handle& get_handle() const
     {
         return m_handle;

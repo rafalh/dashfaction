@@ -5,15 +5,33 @@
 #include "Thread.h"
 #include "DllInjector.h"
 
+class ProcessTerminatedError : public std::runtime_error
+{
+public:
+    ProcessTerminatedError() : std::runtime_error("process has terminated") {}
+};
+
 class InjectingProcessLauncher
 {
 private:
     Process m_process;
     Thread m_thread;
+    bool m_resumed = false;
 
 public:
     InjectingProcessLauncher(const char* executable, const char* work_dir, const char* command_line,
                              STARTUPINFO& startup_info, int timeout);
+
+    ~InjectingProcessLauncher()
+    {
+        try {
+            if (!m_resumed && m_process)
+                m_process.terminate(1);
+        }
+        catch (const std::exception& e) {
+            std::fprintf(stderr, "%s\n", e.what());
+        }
+    }
 
     void inject_dll(const char* dll_filename, const char* init_fun_name, int timeout)
     {
@@ -24,6 +42,7 @@ public:
     void resume_main_thread()
     {
         m_thread.resume();
+        m_resumed = true;
     }
 
     void wait(int timeout)

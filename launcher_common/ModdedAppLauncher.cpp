@@ -95,6 +95,12 @@ void ModdedAppLauncher::launch()
             throw PrivilegeElevationRequiredException();
         throw;
     }
+    catch (const ProcessTerminatedError& e)
+    {
+        throw LauncherError(
+            "Game process has terminated before injection!\n"
+            "Check your Red Faction installation.");
+    }
 }
 
 GameLauncher::GameLauncher() : ModdedAppLauncher("DashFaction.dll", RF_120_NA_CRC32)

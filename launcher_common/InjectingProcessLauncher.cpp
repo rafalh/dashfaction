@@ -43,7 +43,7 @@ void InjectingProcessLauncher::wait_for_process_initialization(uintptr_t entry_p
         }
         catch (const Win32Error& e) {
             if (m_thread.get_exit_code() != STILL_ACTIVE)
-                throw std::runtime_error("process terminated before injection");
+                throw ProcessTerminatedError();
             throw;
         }
 
