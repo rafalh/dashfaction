@@ -73,7 +73,7 @@ rf::Player* FindBestMatchingPlayer(const char* name)
 
 #if SPLITSCREEN_ENABLE
 
-DcCommand2 SplitScreenCmd{
+DcCommand2 splitscreen_cmd{
     "splitscreen",
     []() {
         if (rf::is_net_game)
@@ -230,9 +230,7 @@ void DebugRender2d()
     dbg_particle_stats();
 }
 
-#if SPECTATE_MODE_ENABLE
-
-DcCommand2 SpectateCmd{
+DcCommand2 spectate_cmd{
     "spectate",
     [](std::optional<std::string> player_name) {
         if (rf::is_net_game) {
@@ -255,10 +253,7 @@ DcCommand2 SpectateCmd{
     // rf::DcPrintf("     spectate false");
 };
 
-#endif // SPECTATE_MODE_ENABLE
-
-#if MULTISAMPLING_SUPPORT
-DcCommand2 AntiAliasingCmd{
+DcCommand2 antialiasing_cmd{
     "antialiasing",
     []() {
         if (!g_game_config.msaa)
@@ -273,21 +268,20 @@ DcCommand2 AntiAliasingCmd{
     },
     "Toggles anti-aliasing",
 };
-#endif // MULTISAMPLING_SUPPORT
 
-#if DIRECTINPUT_SUPPORT
 DcCommand2 input_mode_cmd{
     "inputmode",
     []() {
-        rf::direct_input_disabled = !rf::direct_input_disabled;
-        if (rf::direct_input_disabled)
+        g_game_config.directInput = !g_game_config.directInput;
+        rf::direct_input_disabled = !g_game_config.directInput;
+        g_game_config.save();
+        if (g_game_config.directInput)
             rf::DcPrintf("DirectInput is disabled");
         else
             rf::DcPrintf("DirectInput is enabled");
     },
     "Toggles input mode",
 };
-#endif // DIRECTINPUT_SUPPORT
 
 #if CAMERA_1_3_COMMANDS
 
@@ -650,18 +644,12 @@ void CommandsAfterGameInit()
     find_level_cmd.Register();
     find_map_cmd.Register();
     map_cmd.Register();
-
-#if SPECTATE_MODE_ENABLE
-    SpectateCmd.Register();
-#endif
-#if SPLITSCREEN_ENABLE
-    SplitScreenCmd.Register();
-#endif
-#if DIRECTINPUT_SUPPORT
+    spectate_cmd.Register();
     input_mode_cmd.Register();
-#endif
-#if MULTISAMPLING_SUPPORT
-    AntiAliasingCmd.Register();
-#endif
+    antialiasing_cmd.Register();
     debug_cmd.Register();
+
+#if SPLITSCREEN_ENABLE
+    splitscreen_cmd.Register();
+#endif
 }

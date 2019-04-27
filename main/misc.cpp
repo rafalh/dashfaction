@@ -912,13 +912,11 @@ void MiscInit()
     WriteMem<u8>(0x004B31B6, ASM_SHORT_JMP_REL);
 #endif // NO_CD_FIX
 
-#ifdef NO_INTRO
     // Disable thqlogo.bik
     if (g_game_config.fastStart) {
         WriteMem<u8>(0x004B208A, ASM_SHORT_JMP_REL);
         WriteMem<u8>(0x004B24FD, ASM_SHORT_JMP_REL);
     }
-#endif // NO_INTRO
 
     // Sound loop fix
     WriteMem<u8>(0x00505D08, 0x00505D5B - (0x00505D07 + 0x2));
@@ -939,10 +937,6 @@ void MiscInit()
     // Dont filter levels for DM and TeamDM
     WriteMem<u8>(0x005995B0, 0);
     WriteMem<u8>(0x005995B8, 0);
-
-#if DIRECTINPUT_SUPPORT
-    rf::direct_input_disabled = 0;
-#endif
 
 #if 1
     // Buffer overflows in RflReadStaticGeometry

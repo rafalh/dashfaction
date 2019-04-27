@@ -10,8 +10,6 @@
 #include <shlwapi.h>
 #include <windef.h>
 
-#if SPECTATE_MODE_ENABLE
-
 namespace rf
 {
 
@@ -389,5 +387,3 @@ bool SpectateModeIsActive()
 {
     return g_spectate_mode_enabled;
 }
-
-#endif // SPECTATE_MODE_ENABLE

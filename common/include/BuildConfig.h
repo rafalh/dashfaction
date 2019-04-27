@@ -7,8 +7,6 @@
 #endif
 
 #define NO_CD_FIX 1
-#define NO_INTRO 1
-#define LEVELS_AUTODOWNLOADER 1
 
 #ifdef DEBUG
 #define CAMERA_1_3_COMMANDS 1
@@ -16,14 +14,8 @@
 #define CAMERA_1_3_COMMANDS 0
 #endif
 
-#define SPECTATE_MODE_ENABLE 1
 #define SPECTATE_MODE_SHOW_WEAPON 1
 #define SPLITSCREEN_ENABLE 0
-#define WINDOWED_MODE_SUPPORT 1
-#define MULTISAMPLING_SUPPORT 1
-#define ANISOTROPIC_FILTERING 1
-#define DIRECTINPUT_SUPPORT 1
-#define DIRECTINPUT_ENABLED 0
 #define WIDESCREEN_FIX 1
 #define CHECK_PACKFILE_CHECKSUM 0 // slow (1 second on SSD on first load after boot)
 #define D3D_SWAP_DISCARD 1 // needed for MSAA

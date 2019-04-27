@@ -12,8 +12,6 @@
 #include <unzip.h>
 #include <windef.h>
 
-#ifdef LEVELS_AUTODOWNLOADER
-
 #define AUTODL_AGENT_NAME "hoverlees"
 #define AUTODL_BASE_URL "http://pfapi.factionfiles.com"
 
@@ -403,5 +401,3 @@ void RenderDownloadProgress()
     rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, x + cx / 2, y + cy / 2 - cy_font / 2, text.c_str(), -1,
                           rf::gr_text_material);
 }
-
-#endif /* LEVELS_AUTODOWNLOADER */

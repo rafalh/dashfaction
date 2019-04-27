@@ -121,7 +121,6 @@ static void SetupPP()
     auto& format = AddrAsRef<D3DFORMAT>(0x005A135C);
     INFO("D3D Format: %u", format);
 
-#if MULTISAMPLING_SUPPORT
     if (g_game_config.msaa && format > 0) {
         // Make sure selected MSAA mode is available
         HRESULT hr = rf::gr_d3d->CheckDeviceMultiSampleType(rf::gr_adapter_idx, D3DDEVTYPE_HAL, format,
@@ -136,7 +135,6 @@ static void SetupPP()
             g_game_config.msaa = D3DMULTISAMPLE_NONE;
         }
     }
-#endif
 
 #if D3D_LOCKABLE_BACKBUFFER
     // Note: if MSAA is used backbuffer cannot be lockable
@@ -311,7 +309,6 @@ void GraphicsInit()
     // Fix for "At least 8 MB of available video memory"
     WriteMem<u8>(0x005460CD, ASM_JAE_SHORT);
 
-#if WINDOWED_MODE_SUPPORT
     if (g_game_config.wndMode != GameConfig::FULLSCREEN) {
         /* Enable windowed mode */
         WriteMem<u32>(0x004B29A5 + 6, 0xC8);
@@ -321,7 +318,6 @@ void GraphicsInit()
             WriteMem<u32>(0x0050C4E3 + 1, wnd_style);
         }
     }
-#endif
 
     // WriteMem<u8>(0x00524C98, ASM_SHORT_JMP_REL); // disable window hooks
 
@@ -442,14 +438,12 @@ void GraphicsInit()
 
 void GraphicsAfterGameInit()
 {
-#if ANISOTROPIC_FILTERING
     // Anisotropic texture filtering
     if (rf::gr_d3d_device_caps.MaxAnisotropy > 0 && g_game_config.anisotropicFiltering && !rf::is_dedicated_server) {
         SetTextureMinMagFilterInCode(D3DTEXF_ANISOTROPIC);
         DWORD anisotropy_level = SetupMaxAnisotropy();
         INFO("Anisotropic Filtering enabled (level: %lu)", anisotropy_level);
     }
-#endif
 
     // Change font for Time Left text
     static int time_left_font = rf::GrLoadFont("rfpc-large.vf", -1);

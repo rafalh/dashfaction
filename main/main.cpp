@@ -68,9 +68,7 @@ CallHook<void(bool)> DcUpdate_hook{
 
         GraphicsDrawFpsCounter();
 
-#ifdef LEVELS_AUTODOWNLOADER
         RenderDownloadProgress();
-#endif
 
 #if !defined(NDEBUG) && defined(HAS_EXPERIMENTAL)
         ExperimentalRender();
@@ -89,9 +87,7 @@ CallHook<void()> InitGame_hook{
 
         GraphicsAfterGameInit();
 
-#if DIRECTINPUT_SUPPORT
         rf::direct_input_disabled = !g_game_config.directInput;
-#endif
 
         /* Allow modded strings.tbl in ui.vpp */
         ForceFileFromPackfile("strings.tbl", "ui.vpp");
@@ -146,10 +142,7 @@ FunHook<void(rf::Player*)> RenderHitScreen_hook{
     0x004163C0,
     [](rf::Player* player) {
         RenderHitScreen_hook.CallTarget(player);
-
-#if SPECTATE_MODE_ENABLE
         SpectateModeDrawUI();
-#endif
     },
 };
 
@@ -276,9 +269,7 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     InitWndProc();
     InitScreenshot();
     InitHud();
-#ifdef LEVELS_AUTODOWNLOADER
     InitAutodownloader();
-#endif
     InitScoreboard();
     InitLazyban();
     InitKill();
