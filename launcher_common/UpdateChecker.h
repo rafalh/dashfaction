@@ -10,36 +10,36 @@ public:
     UpdateChecker(HWND hwnd = nullptr) : m_hwnd(hwnd) {}
 
     bool check();
-    void checkAsync(std::function<void()> callback);
+    void check_async(std::function<void()> callback);
     void abort();
 
-    bool isNewVersionAvailable() const
+    bool is_new_version_available() const
     {
         return !m_message.empty();
     }
 
-    const std::string& getMessage() const
+    const std::string& get_message() const
     {
         return m_message;
     }
 
-    const std::string& getUrl() const
+    const std::string& get_url() const
     {
         return m_url;
     }
 
-    bool hasError() const
+    bool has_error() const
     {
         return !m_error.empty();
     }
 
-    const std::string& getError() const
+    const std::string& get_error() const
     {
         return m_error;
     }
 
 private:
-    void threadProc();
+    void thread_proc();
 
     std::thread m_thread;
     HWND m_hwnd;

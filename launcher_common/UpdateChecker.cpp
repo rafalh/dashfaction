@@ -8,11 +8,11 @@
 
 #define UPDATE_CHECK_ENDPOINT_URL "https://ravin.tk/api/rf/dashfaction/checkupdate.php"
 
-void UpdateChecker::checkAsync(std::function<void()> callback)
+void UpdateChecker::check_async(std::function<void()> callback)
 {
     m_abort = false;
     m_callback = callback;
-    std::thread th(&UpdateChecker::threadProc, this);
+    std::thread th(&UpdateChecker::thread_proc, this);
     m_thread = std::move(th);
 }
 
@@ -57,7 +57,7 @@ bool UpdateChecker::check()
     return m_new_version;
 }
 
-void UpdateChecker::threadProc()
+void UpdateChecker::thread_proc()
 {
     try {
         check();

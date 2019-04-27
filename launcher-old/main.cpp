@@ -56,11 +56,11 @@ static bool CheckForUpdate()
         return false;
     }
 
-    const std::string& msg = update_checker.getMessage();
+    const std::string& msg = update_checker.get_message();
     std::printf("%s\n", msg.c_str());
     int result = MessageBox(nullptr, msg.c_str(), "DashFaction update is available!", MB_OKCANCEL | MB_ICONEXCLAMATION);
     if (result == IDOK) {
-        const std::string& url = update_checker.getUrl();
+        const std::string& url = update_checker.get_url();
         std::printf("url %s\n", url.c_str());
         ShellExecute(nullptr, "open", url.c_str(), nullptr, nullptr, SW_SHOW);
         return true;

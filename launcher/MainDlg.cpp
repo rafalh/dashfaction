@@ -64,7 +64,7 @@ BOOL MainDlg::OnInitDialog()
 
 #ifdef NDEBUG
     m_pUpdateChecker = new UpdateChecker(m_hWnd);
-    m_pUpdateChecker->checkAsync([=]() {
+    m_pUpdateChecker->check_async([=]() {
         PostMessageA(WM_UPDATE_CHECK, 0, 0);
     });
 #else
@@ -125,23 +125,23 @@ LRESULT MainDlg::OnUpdateCheck(WPARAM wParam, LPARAM lParam)
 
     CStatic *updateStatus = (CStatic*)GetDlgItem(IDC_UPDATE_STATUS);
 
-    if (m_pUpdateChecker->hasError())
+    if (m_pUpdateChecker->has_error())
     {
         updateStatus->SetWindowTextA("Failed to check for update");
-        m_ToolTip.AddTool(updateStatus, m_pUpdateChecker->getError().c_str());
+        m_ToolTip.AddTool(updateStatus, m_pUpdateChecker->get_error().c_str());
         return 0;
     }
 
-    if (!m_pUpdateChecker->isNewVersionAvailable())
+    if (!m_pUpdateChecker->is_new_version_available())
         updateStatus->SetWindowTextA("No update is available.");
     else
     {
         updateStatus->SetWindowTextA("New version available!");
-        int iResult = MessageBoxA(m_pUpdateChecker->getMessage().c_str(), 
+        int iResult = MessageBoxA(m_pUpdateChecker->get_message().c_str(),
             "Dash Faction update is available!", MB_OKCANCEL | MB_ICONEXCLAMATION);
         if (iResult == IDOK)
         {
-            ShellExecuteA(m_hWnd, "open", m_pUpdateChecker->getUrl().c_str(), NULL, NULL, SW_SHOW);
+            ShellExecuteA(m_hWnd, "open", m_pUpdateChecker->get_url().c_str(), NULL, NULL, SW_SHOW);
             EndDialog(0);
         }
     }

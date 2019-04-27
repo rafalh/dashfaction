@@ -39,7 +39,7 @@ public:
             RegCloseKey(m_key);
     }
 
-    bool readValue(const char* name, unsigned* value)
+    bool read_value(const char* name, unsigned* value)
     {
         if (!m_open)
             return false;
@@ -53,7 +53,7 @@ public:
         return true;
     }
 
-    bool readValue(const char* name, std::string* value)
+    bool read_value(const char* name, std::string* value)
     {
         if (!m_open)
             return false;
@@ -76,16 +76,16 @@ public:
         return true;
     }
 
-    bool readValue(const char* name, bool* value)
+    bool read_value(const char* name, bool* value)
     {
         unsigned temp;
-        bool result = readValue(name, &temp);
+        bool result = read_value(name, &temp);
         if (result)
             *value = (temp != 0);
         return result;
     }
 
-    void writeValue(const char* name, unsigned value)
+    void write_value(const char* name, unsigned value)
     {
         DWORD temp = value;
         LONG error = RegSetValueExA(m_key, name, 0, REG_DWORD, (BYTE*)&temp, sizeof(temp));
@@ -93,19 +93,19 @@ public:
             THROW_EXCEPTION("RegSetValueExA failed: win32 error %lu", error);
     }
 
-    void writeValue(const char* name, const std::string& value)
+    void write_value(const char* name, const std::string& value)
     {
         LONG error = RegSetValueExA(m_key, name, 0, REG_SZ, (BYTE*)value.c_str(), value.size() + 1);
         if (error != ERROR_SUCCESS)
             THROW_EXCEPTION("RegSetValueExA failed: win32 error %lu", error);
     }
 
-    void writeValue(const char* name, bool value)
+    void write_value(const char* name, bool value)
     {
-        writeValue(name, value ? 1u : 0u);
+        write_value(name, value ? 1u : 0u);
     }
 
-    bool isOpen() const
+    bool is_open() const
     {
         return m_open;
     }
