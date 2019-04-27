@@ -51,7 +51,7 @@ void ModdedAppLauncher::launch()
         if (checksum == 0)
             std::fprintf(stderr, "Invalid App Path %s\n", app_path.c_str());
         else
-            std::fprintf(stderr, "Invalid App Checksum %lx, expected %lx\n", checksum, m_expected_crc32);
+            std::fprintf(stderr, "Invalid App Checksum %x, expected %x\n", checksum, m_expected_crc32);
         throw IntegrityCheckFailedException(checksum);
     }
 

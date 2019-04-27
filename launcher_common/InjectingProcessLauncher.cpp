@@ -24,9 +24,9 @@ static uintptr_t get_pe_file_entrypoint(const char* filename)
 void InjectingProcessLauncher::wait_for_process_initialization(uintptr_t entry_point, int timeout)
 {
     // Change process entry point into an infinite loop (one opcode: jmp -2)
+    // Based on: https://opcode0x90.wordpress.com/2011/01/15/injecting-dll-into-process-on-load/
     char buf[2];
     void* entry_point_ptr = reinterpret_cast<void*>(entry_point);
-    DWORD old_protect;
     ProcessMemoryProtection protect{m_process, entry_point_ptr, 2, PAGE_EXECUTE_READWRITE};
     m_process.read_mem(buf, entry_point_ptr, 2);
     m_process.write_mem(entry_point_ptr, "\xEB\xFE", 2);

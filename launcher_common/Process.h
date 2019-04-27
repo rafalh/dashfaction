@@ -34,6 +34,7 @@ public:
     {
         std::swap(m_ptr, other.m_ptr);
         std::swap(m_process, other.m_process);
+        return *this;
     }
 
     operator void*() const
@@ -130,4 +131,7 @@ public:
         if (!VirtualProtectEx(m_process_handle, m_ptr, m_size, m_old_protect, &m_old_protect))
             std::fprintf(stderr, "VirtualProtectEx failed to unprotect memory: %ld\n", GetLastError());
     }
+
+    ProcessMemoryProtection(const ProcessMemoryProtection&) = delete; // copy constructor
+    ProcessMemoryProtection& operator=(const ProcessMemoryProtection&) = delete; // assignment operator
 };
