@@ -36,6 +36,8 @@ public:
 
     InternetHandle &operator=(HINTERNET handle)
     {
+        if (m_handle)
+            InternetCloseHandle(m_handle);
         m_handle = handle;
         return *this;
     }

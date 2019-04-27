@@ -25,10 +25,11 @@ bool LaunchGame(HWND hwnd)
         }
         else {
             std::stringstream ss;
-            ss << "Unsupported game executable has been detected (CRC32 = 0x" << std::hex << e.getCrc32() << "). "
+            ss << "Unsupported game executable has been detected (CRC32 = 0x" << std::hex << e.getCrc32() << ").\n"
                << "Dash Faction supports only unmodified Red Faction 1.20 NA executable.\n"
                << "If your game has not been updated to 1.20 please do it first. If the error still shows up "
-               << "replace your RF.exe file with original 1.20 NA RF.exe available on FactionFiles.com.\n"
+               << "replace your RF.exe file with original 1.20 NA RF.exe available on FactionFiles.com (you MUST "
+               << "unpack it inside the game root directory).\n"
                << "Click OK to open download page.";
             std::string str = ss.str();
             if (MessageBoxA(hwnd, str.c_str(), nullptr, MB_OKCANCEL | MB_ICONERROR) == IDOK)
@@ -51,16 +52,16 @@ static bool CheckForUpdate()
     UpdateChecker update_checker;
 
     if (!update_checker.check()) {
-        printf("No new version is available.\n");
+        std::printf("No new version is available.\n");
         return false;
     }
 
     const std::string& msg = update_checker.getMessage();
-    printf("%s\n", msg.c_str());
+    std::printf("%s\n", msg.c_str());
     int result = MessageBox(nullptr, msg.c_str(), "DashFaction update is available!", MB_OKCANCEL | MB_ICONEXCLAMATION);
     if (result == IDOK) {
         const std::string& url = update_checker.getUrl();
-        printf("url %s\n", url.c_str());
+        std::printf("url %s\n", url.c_str());
         ShellExecute(nullptr, "open", url.c_str(), nullptr, nullptr, SW_SHOW);
         return true;
     }
@@ -71,25 +72,28 @@ static bool CheckForUpdate()
 #endif // DEBUG
 
 int main() try {
-    printf("Starting " PRODUCT_NAME_VERSION "!\n");
+    std::printf("Starting " PRODUCT_NAME_VERSION "!\n");
 
 #ifndef DEBUG
-    printf("Checking for update...\n");
+    std::printf("Checking for update...\n");
     try {
         if (CheckForUpdate())
             return 0;
     }
     catch (const std::exception& e) {
-        fprintf(stderr, "Failed to check for update: %s\n", e.what());
+        std::fprintf(stderr, "Failed to check for update: %s\n", e.what());
     }
 #endif
 
     printf("Starting game process...\n");
     if (!LaunchGame(nullptr))
+    {
+        std::fprintf(stderr, "Failed to launch!\n");
         return -1;
+    }
 
     return 0;
 }
 catch (const std::exception& e) {
-    fprintf(stderr, "Fatal error: %s\n", e.what());
+    std::fprintf(stderr, "Fatal error: %s\n", e.what());
 }
