@@ -243,6 +243,16 @@ DcCommand2 swap_assault_rifle_controls_cmd{
     "Swap Assault Rifle controls",
 };
 
+RegsPatch CriticalError_hide_main_wnd_patch{
+    0x0050BA90,
+    []([[maybe_unused]] auto& regs) {
+        if (rf::gr_d3d_device)
+            rf::gr_d3d_device->Release();
+        if (rf::main_wnd)
+            ShowWindow(rf::main_wnd, SW_HIDE);
+    },
+};
+
 #if SERVER_WIN32_CONSOLE
 
 static auto& KeyProcessEvent = AddrAsRef<void(int ScanCode, int KeyDown, int DeltaT)>(0x0051E6C0);
@@ -1068,6 +1078,9 @@ void MiscInit()
     // Linear vertical rotation (pitch)
     LinearPitchPatch.Install();
     linear_pitch_cmd.Register();
+
+    // Hide main window when displaying critical error message box
+    CriticalError_hide_main_wnd_patch.Install();
 
     // Allow undefined mp_character in PlayerCreateEntity
     // Fixes Go_Undercover event not changing player 3rd person character
