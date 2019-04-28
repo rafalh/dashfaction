@@ -623,6 +623,59 @@ void CommandsAfterGameInit()
     RegisterBuiltInCommand("trilinear_filtering", "Toggle trilinear filtering", 0x0054F050);
     RegisterBuiltInCommand("detail_textures", "Toggle detail textures", 0x0054F0B0);
 
+#ifdef DEBUG
+    RegisterBuiltInCommand("drop_fixed_cam", "Drop a fixed camera", 0x0040D220);
+    RegisterBuiltInCommand("orbit_cam", "Orbit camera around current target", 0x0040D2A0);
+    RegisterBuiltInCommand("drop_clutter", "Drop any clutter", 0x0040F0A0);
+    RegisterBuiltInCommand("glares_toggle", "toggle glares", 0x00414830);
+    RegisterBuiltInCommand("set_vehicle_bounce", "set the elasticity of vehicle collisions", 0x004184B0);
+    RegisterBuiltInCommand("set_mass", "set the mass of the targeted object", 0x004184F0);
+    RegisterBuiltInCommand("set_skin", "Set the skin of the current player target", 0x00418610);
+    RegisterBuiltInCommand("set_life", "Set the life of the player's current target", 0x00418680);
+    RegisterBuiltInCommand("set_armor", "Set the armor of the player's current target", 0x004186E0);
+    RegisterBuiltInCommand("drop_entity", "Drop any entity", 0x00418740);
+    RegisterBuiltInCommand("set_weapon", "set the current weapon for the targeted entity", 0x00418AA0);
+    RegisterBuiltInCommand("jump_height", "set the height the player can jump", 0x00418B80);
+    RegisterBuiltInCommand("fall_factor", nullptr, 0x004282F0);
+    RegisterBuiltInCommand("toggle_crouch", nullptr, 0x00430C50);
+    RegisterBuiltInCommand("player_step", nullptr, 0x00433DB0);
+    RegisterBuiltInCommand("difficulty", nullptr, 0x00434EB0);
+    RegisterBuiltInCommand("mouse_cursor", "Sets the mouse cursor", 0x00435210);
+    RegisterBuiltInCommand("fogme", "Fog everything", 0x004352E0);
+    RegisterBuiltInCommand("mouse_look", nullptr, 0x0043CF30);
+    RegisterBuiltInCommand("drop_item", "Drop any item", 0x00458530);
+    RegisterBuiltInCommand("set_georegion_hardness", "Set default hardness for geomods", 0x004663E0);
+    RegisterBuiltInCommand("make_myself", nullptr, 0x00475040);
+    RegisterBuiltInCommand("splitscreen", nullptr, 0x00480AA0);
+    RegisterBuiltInCommand("splitscreen_swap", "Swap splitscreen players", 0x00480AB0);
+    RegisterBuiltInCommand("splitscreen_bot_test", "Start a splitscreen game in mk_circuits3.rfl", 0x00480AE0);
+    RegisterBuiltInCommand("max_plankton", "set the max number of plankton bits", 0x00497FC0);
+    RegisterBuiltInCommand("pcollide", "Toggle if player collides with the world", 0x004A0F60);
+    RegisterBuiltInCommand("teleport", "Teleport to an x,y,z", 0x004A0FC0);
+    RegisterBuiltInCommand("body", "Set player entity type", 0x004A11C0);
+    RegisterBuiltInCommand("invulnerable", "Make self invulnerable", 0x004A12A0);
+    RegisterBuiltInCommand("freelook", "Toggle between freelook and first person", 0x004A1340);
+    RegisterBuiltInCommand("hide_target", "Hide current target, unhide if already hidden", 0x004A13D0);
+    RegisterBuiltInCommand("set_primary", "Set default player primary weapon", 0x004A1430);
+    RegisterBuiltInCommand("set_secondary", "Set default player secondary weapon", 0x004A14B0);
+    RegisterBuiltInCommand("set_view", "Set camera view from entity with specified UID", 0x004A1540);
+    RegisterBuiltInCommand("set_ammo", nullptr, 0x004A15C0);
+    RegisterBuiltInCommand("endgame", "force endgame", 0x004A1640);
+    RegisterBuiltInCommand("irc", "Set the color range of the infrared characters", 0x004AECE0);
+    RegisterBuiltInCommand("irc_close", "Set the close color of the infrared characters", 0x004AEDB0);
+    RegisterBuiltInCommand("irc_far", "Set the far color of the infrared characters", 0x004AEE20);
+    //RegisterBuiltInCommand("pools", nullptr, 0x004B1050);
+    RegisterBuiltInCommand("savegame", "Save the current game", 0x004B3410);
+    RegisterBuiltInCommand("loadgame", "Load a game", 0x004B34C0);
+    RegisterBuiltInCommand("show_obj_times", "Set the number of portal objects to show times for", 0x004D3250);
+    // Some commands does not use dc_exec variables and were not added e.g. 004D3290
+    RegisterBuiltInCommand("save_commands", "Print out console commands to the text file console.txt", 0x00509920);
+    RegisterBuiltInCommand("script", "Runs a console script file (.vcs)", 0x0050B7D0);
+    RegisterBuiltInCommand("screen_res", nullptr, 0x0050E400);
+    RegisterBuiltInCommand("wfar", nullptr, 0x005183D0);
+    RegisterBuiltInCommand("play_bik", nullptr, 0x00520A70);
+#endif // DEBUG
+
     // Custom Dash Faction commands
     max_fps_cmd.Register();
     ms_cmd.Register();
