@@ -103,6 +103,7 @@ RegsPatch GrCreateD3DDevice_error_patch{
                                  "A critical error has occurred and the program cannot continue.\n"
                                  "Press OK to exit the program",
                                  hr, getDxErrorStr(hr));
+        ShowWindow(rf::main_wnd, SW_HIDE);
         MessageBoxA(nullptr, text.c_str(), "Error!", MB_OK | MB_ICONERROR | MB_SETFOREGROUND | MB_TASKMODAL);
         ExitProcess(-1);
     },
@@ -139,7 +140,7 @@ static void SetupPP()
 #if D3D_LOCKABLE_BACKBUFFER
     // Note: if MSAA is used backbuffer cannot be lockable
     if (g_game_config.msaa == D3DMULTISAMPLE_NONE)
-        rf::gr_d3d_pp.flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
+        rf::gr_d3d_pp.Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
 #endif
 
     // Make sure stretched window is always full screen
