@@ -1,6 +1,5 @@
 //#define WINBOOL BOOL
 
-#include "stdafx.h"
 #include "VideoDeviceInfoProvider.h"
 #include "exception.h"
 //#include <d3d8.h>

@@ -2,7 +2,7 @@
 
 #include <functional>
 #include <thread>
-#include <windef.h>
+#include <windows.h>
 
 class UpdateChecker
 {

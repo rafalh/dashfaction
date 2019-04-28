@@ -6,3 +6,4 @@ endif()
 
 file(GLOB SRCS src/*.cpp include/*.h)
 add_library(Logger STATIC ${SRCS})
+set_property(TARGET Logger PROPERTY CXX_STANDARD 17)

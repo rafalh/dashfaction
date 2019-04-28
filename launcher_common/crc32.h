@@ -15,9 +15,9 @@ inline uint32_t file_crc32(const char *path)
     uint32_t hash = 0;
     while (file) {
         file.read(buf, sizeof(buf));
-        size_t len = file.gcount();
+        std::streamsize len = file.gcount();
         if (!len) break;
-        hash = crc32(hash, buf, len);
+        hash = crc32(hash, buf, static_cast<size_t>(len));
     }
     return hash;
 }

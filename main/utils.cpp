@@ -161,7 +161,7 @@ std::string getCpuId()
     int cpu_info[4] = {0};
     std::stringstream ss;
 #ifndef __GNUC__
-    __cpuid(cpuInfo, 1);
+    __cpuid(cpu_info, 1);
 #else
     __cpuid(1, cpu_info[0], cpu_info[1], cpu_info[2], cpu_info[3]);
 #endif
@@ -176,14 +176,14 @@ std::string getCpuBrand()
     char brand_str[0x40] = "";
     // Get the information associated with each extended ID.
 #ifndef __GNUC__
-    __cpuid(cpuInfo, 0x80000000);
+    __cpuid(cpu_info, 0x80000000);
 #else
     __cpuid(0x80000000, cpu_info[0], cpu_info[1], cpu_info[2], cpu_info[3]);
 #endif
     unsigned max_ext_id = cpu_info[0];
     for (unsigned i = 0x80000000; i <= max_ext_id; ++i) {
 #ifndef __GNUC__
-        __cpuid(cpuInfo, i);
+        __cpuid(cpu_info, i);
 #else
         __cpuid(i, cpu_info[0], cpu_info[1], cpu_info[2], cpu_info[3]);
 #endif

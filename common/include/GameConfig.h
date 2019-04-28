@@ -1,7 +1,12 @@
 #pragma once
 
 #include <string>
+#include <windows.h>
+
+// Only include D3D header if one has not been included before (fix for afx.h including d3d9 and DF using d3d8)
+#ifndef DIRECT3D_VERSION
 #include <d3d8.h>
+#endif
 
 #define DEFAULT_RF_TRACKER "rfgt.factionfiles.com"
 #define DEFAULT_EXECUTABLE_PATH "C:\\games\\RedFaction\\rf.exe"

@@ -9,6 +9,7 @@
 #include <FunHook.h>
 #include <RegsPatch.h>
 #include <ShortTypes.h>
+#include <algorithm>
 
 namespace rf
 {
@@ -125,8 +126,8 @@ static void SetupPP()
     if (g_game_config.msaa && format > 0) {
         // Make sure selected MSAA mode is available
         HRESULT hr = rf::gr_d3d->CheckDeviceMultiSampleType(rf::gr_adapter_idx, D3DDEVTYPE_HAL, format,
-                                                                g_game_config.wndMode != GameConfig::FULLSCREEN,
-                                                                (D3DMULTISAMPLE_TYPE)g_game_config.msaa);
+                                                            g_game_config.wndMode != GameConfig::FULLSCREEN,
+                                                            (D3DMULTISAMPLE_TYPE)g_game_config.msaa);
         if (SUCCEEDED(hr)) {
             INFO("Enabling Anti-Aliasing (%ux MSAA)...", g_game_config.msaa);
             rf::gr_d3d_pp.MultiSampleType = (D3DMULTISAMPLE_TYPE)g_game_config.msaa;
@@ -230,7 +231,7 @@ RegsPatch GrD3DSetMaterialFlags_profile_patch{
     [](auto& regs) {
         if (g_profile_frame) {
             unsigned state_flags = AddrAsRef<unsigned>(regs.esp + 0x10 + 0x4);
-            const char *desc = "";
+            const char* desc = "";
             if (state_flags == rf::gr_text_material)
                 desc = " (text)";
             else if (state_flags == rf::gr_rect_material)
@@ -325,8 +326,8 @@ void GraphicsInit()
 #if D3D_HW_VERTEX_PROCESSING
     // Use hardware vertex processing instead of software processing
     WriteMem<u8>(0x00545BDE + 1, D3DCREATE_HARDWARE_VERTEXPROCESSING);
-    WriteMem<u32>(0x005450DD + 1, D3DUSAGE_DYNAMIC|D3DUSAGE_DONOTCLIP|D3DUSAGE_WRITEONLY);
-    WriteMem<u32>(0x00545117 + 1, D3DUSAGE_DYNAMIC|D3DUSAGE_DONOTCLIP|D3DUSAGE_WRITEONLY);
+    WriteMem<u32>(0x005450DD + 1, D3DUSAGE_DYNAMIC | D3DUSAGE_DONOTCLIP | D3DUSAGE_WRITEONLY);
+    WriteMem<u32>(0x00545117 + 1, D3DUSAGE_DYNAMIC | D3DUSAGE_DONOTCLIP | D3DUSAGE_WRITEONLY);
 #endif
 
 #if D3D_SWAP_DISCARD
@@ -434,7 +435,7 @@ void GraphicsInit()
 #endif
 
     // Render rocket launcher scanner image every frame
-    //AddrAsRef<bool>(0x5A1020) = 0;
+    // AddrAsRef<bool>(0x5A1020) = 0;
 }
 
 void GraphicsAfterGameInit()

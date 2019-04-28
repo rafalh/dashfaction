@@ -1,6 +1,13 @@
 #pragma once
 
+#include <set>
+
+// Only include D3D header if one has not been included before (fix for afx.h including d3d9 and DF using d3d8)
+#ifndef DIRECT3D_VERSION
 #include <d3d9.h>
+#endif
+
+struct IDirect3D9;
 
 class VideoDeviceInfoProvider
 {
@@ -8,9 +15,9 @@ public:
     struct Resolution
     {
         unsigned width, height;
-        bool operator<(const Resolution &other) const
+        bool operator<(const Resolution& other) const
         {
-            return width*height < other.width*other.height;
+            return width * height < other.width * other.height;
         }
     };
 
@@ -21,8 +28,8 @@ public:
     bool hasAnisotropySupport();
 
 private:
-    IDirect3D9 *m_d3d;
+    IDirect3D9* m_d3d;
     HMODULE m_lib;
 
-    void populateResolutionsForFormat(std::set<Resolution> &resolutions, D3DFORMAT format);
+    void populateResolutionsForFormat(std::set<Resolution>& resolutions, D3DFORMAT format);
 };

@@ -5,7 +5,7 @@
 #include <cmath>
 #include <cstdarg>
 
-#include <windef.h>
+#include <windows.h>
 
 typedef BOOL WINBOOL;
 #include <d3d8.h>
@@ -160,13 +160,13 @@ namespace rf
     public:
         String()
         {
-            auto& fun_ptr = AddrAsRef<String& __thiscall(String& self)>(0x004FF3B0);
+            auto fun_ptr = reinterpret_cast<String& (__thiscall*)(String& self)>(0x004FF3B0);
             fun_ptr(*this);
         }
 
         String(const char* c_str)
         {
-            auto& fun_ptr = AddrAsRef<String& __thiscall(String& self, const char* c_str)>(0x004FF3D0);
+            auto fun_ptr = reinterpret_cast<String&(__thiscall*)(String & self, const char* c_str)>(0x004FF3D0);
             fun_ptr(*this, c_str);
         }
 
@@ -178,7 +178,7 @@ namespace rf
 
         ~String()
         {
-            auto& fun_ptr = AddrAsRef<void __thiscall(String& self)>(0x004FF470);
+            auto fun_ptr = reinterpret_cast<void(__thiscall*)(String & self)>(0x004FF470);
             fun_ptr(*this);
         }
 
@@ -190,7 +190,7 @@ namespace rf
         operator Pod() const
         {
             // Make a copy
-            auto& fun_ptr = AddrAsRef<Pod& __thiscall(Pod& self, const Pod& str)>(0x004FF410);
+            auto fun_ptr = reinterpret_cast<Pod&(__thiscall*)(Pod & self, const Pod& str)>(0x004FF410);
             Pod pod_copy;
             fun_ptr(pod_copy, m_pod);
             return pod_copy;
@@ -198,20 +198,20 @@ namespace rf
 
         String& operator=(const String& other)
         {
-            auto& fun_ptr = AddrAsRef<String& __thiscall(String& self, const String& str)>(0x004FFA20);
+            auto fun_ptr = reinterpret_cast<String&(__thiscall*)(String & self, const String& str)>(0x004FFA20);
             fun_ptr(*this, other);
             return *this;
         }
 
         const char *CStr() const
         {
-            auto& fun_ptr = AddrAsRef<const char* __thiscall(const String& self)>(0x004FF480);
+            auto fun_ptr = reinterpret_cast<const char*(__thiscall*)(const String& self)>(0x004FF480);
             return fun_ptr(*this);
         }
 
         int Size() const
         {
-            auto& fun_ptr = AddrAsRef<int __thiscall(const String& self)>(0x004FF490);
+            auto fun_ptr = reinterpret_cast<int(__thiscall*)(const String& self)>(0x004FF490);
             return fun_ptr(*this);
         }
 
@@ -270,8 +270,9 @@ namespace rf
         const char *descr;
         void(*func)();
 
-        inline static auto& Init =
-            AddrAsRef<void __thiscall(rf::DcCommand *self, const char *cmd, const char *descr, DcCmdHandler handler)>(0x00509A70);
+        inline static auto Init =
+            reinterpret_cast<void(__thiscall*)(rf::DcCommand* self, const char* cmd, const char* descr, DcCmdHandler handler)>(
+                0x00509A70);
     };
 
     enum DcArgType
@@ -1639,7 +1640,7 @@ namespace rf
     static auto& DemoLoadLevel = AddrAsRef<void(const char *level_filename)>(0x004CC270);
     static auto& SetCursorVisible = AddrAsRef<void(bool visible)>(0x0051E680);
     static auto& CutsceneIsActive = AddrAsRef<bool()>(0x0045BE80);
-    static auto& Timer__GetTimeLeftMs = AddrAsRef<int __thiscall(void* timer)>(0x004FA420);
+    static auto Timer__GetTimeLeftMs = *reinterpret_cast<int(__thiscall*)(void* timer)>(0x004FA420);
 
     /* Strings Table */
     namespace strings {

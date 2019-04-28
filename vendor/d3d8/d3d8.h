@@ -20,6 +20,14 @@
 #ifndef __WINE_D3D8_H
 #define __WINE_D3D8_H
 
+// Fixes for MS headers
+#ifndef WINBOOL
+#define WINBOOL BOOL
+#endif
+#ifndef __MSABI_LONG
+#define __MSABI_LONG(x) (x)
+#endif
+
 #ifndef DIRECT3D_VERSION
 #define DIRECT3D_VERSION  0x0800
 #endif
@@ -27,10 +35,10 @@
 #include <stdlib.h>
 
 #define COM_NO_WINDOWS_H
-#include <objbase.h>
-#include <windows.h>
 #include <d3d8types.h>
 #include <d3d8caps.h>
+#include <objbase.h>
+#include <windows.h>
 
 /*****************************************************************************
  * Behavior Flags for IDirect3D8::CreateDevice

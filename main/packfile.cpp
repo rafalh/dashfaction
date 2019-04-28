@@ -5,6 +5,7 @@
 #include "utils.h"
 #include "xxhash.h"
 #include <ShortTypes.h>
+#include <array>
 #include <shlwapi.h>
 
 #define DEBUG_VFS 0

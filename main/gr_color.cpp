@@ -5,6 +5,7 @@
 #include "stdafx.h"
 #include <FunHook.h>
 #include <ShortTypes.h>
+#include <algorithm>
 
 inline void ConvertPixel_RGB8_To_RGBA8(uint8_t*& dst_ptr, const uint8_t*& src_ptr)
 {

@@ -41,7 +41,7 @@ void InjectingProcessLauncher::wait_for_process_initialization(uintptr_t entry_p
         try {
             m_thread.get_context(&context);
         }
-        catch (const Win32Error& e) {
+        catch (const Win32Error&) {
             if (m_thread.get_exit_code() != STILL_ACTIVE)
                 throw ProcessTerminatedError();
             throw;

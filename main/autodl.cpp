@@ -10,7 +10,7 @@
 #include <thread>
 #include <unrar/dll.hpp>
 #include <unzip.h>
-#include <windef.h>
+#include <windows.h>
 
 #define AUTODL_AGENT_NAME "hoverlees"
 #define AUTODL_BASE_URL "http://pfapi.factionfiles.com"
@@ -262,7 +262,7 @@ static std::optional<LevelInfo> ParseLevelInfo(char* buf)
     std::getline(ss, info.description);
 
     std::getline(ss, temp);
-    info.size_in_bytes = std::stof(temp) * 1024u * 1024u;
+    info.size_in_bytes = static_cast<unsigned>(std::stof(temp) * 1024u * 1024u);
     if (!info.size_in_bytes)
         return {};
 

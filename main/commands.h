@@ -3,6 +3,7 @@
 #include "rf.h"
 #include <Traits.h>
 #include <functional>
+#include <optional>
 
 namespace rf
 {
@@ -131,14 +132,14 @@ private:
         try {
             m_handler_fun(DcReadArg<Args>()...);
         }
-        catch (const DcInvalidArgTypeError& e) {
+        catch (const DcInvalidArgTypeError&) {
             rf::DcPrint("Invalid arg type!", nullptr);
         }
-        catch (const DcRequiredArgMissingError& e) {
+        catch (const DcRequiredArgMissingError&) {
             rf::DcPrint("Required arg is missing!", nullptr);
         }
     }
-
+    
     void Help()
     {
         if (m_usage_text) {
@@ -164,14 +165,12 @@ private:
     rf::DcCommand& m_target_cmd;
 
 public:
-    DcCommandAlias(const char* name, rf::DcCommand& target_cmd) :
-        BaseCommand(name), m_target_cmd(target_cmd)
-    {}
+    DcCommandAlias(const char* name, rf::DcCommand& target_cmd) : BaseCommand(name), m_target_cmd(target_cmd) {}
 
 private:
     void Handler() override
     {
-        auto handler_fun = reinterpret_cast<void __fastcall (*)(rf::DcCommand*)>(m_target_cmd.func);
+        auto handler_fun = reinterpret_cast<void(__fastcall *)(rf::DcCommand*)>(m_target_cmd.func);
         handler_fun(&m_target_cmd);
     }
 };

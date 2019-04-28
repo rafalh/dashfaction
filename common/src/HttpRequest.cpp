@@ -3,6 +3,7 @@
 #include <sstream>
 #include <cassert>
 #include <cstring>
+#include <string_view>
 
 #define THROW_EXCEPTION_WITH_WIN32_ERROR() THROW_EXCEPTION("win32 error %lu", GetLastError())
 

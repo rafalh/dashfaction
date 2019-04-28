@@ -2,7 +2,7 @@
 #include "crc32.h"
 #include "Win32Handle.h"
 #include "Win32Error.h"
-#include "Process.h"
+#include "Process_.h"
 #include "Thread.h"
 #include "DllInjector.h"
 #include "InjectingProcessLauncher.h"
@@ -95,7 +95,7 @@ void ModdedAppLauncher::launch()
             throw PrivilegeElevationRequiredException();
         throw;
     }
-    catch (const ProcessTerminatedError& e)
+    catch (const ProcessTerminatedError&)
     {
         throw LauncherError(
             "Game process has terminated before injection!\n"

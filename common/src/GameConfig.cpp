@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "GameConfig.h"
 #include "RegKey.h"
 #include <shlwapi.h>

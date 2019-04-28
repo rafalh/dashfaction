@@ -6,6 +6,7 @@
 #include "utils.h"
 #include "version.h"
 #include <cstddef>
+#include <algorithm>
 #include <CallHook.h>
 #include <FunHook.h>
 #include <RegsPatch.h>

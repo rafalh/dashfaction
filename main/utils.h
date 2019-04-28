@@ -1,7 +1,7 @@
 #pragma once
 
 #include <log/Logger.h>
-#include <windef.h>
+#include <windows.h>
 
 const char* stristr(const char* haystack, const char* needle);
 
@@ -20,7 +20,7 @@ std::string getCpuBrand();
 #ifdef __GNUC__
 #define PRINTF_FMT_ATTRIBUTE(fmt_idx, va_idx) __attribute__ ((format (printf, fmt_idx, va_idx)))
 #else
-#define PRINTF_FMT_ATTRIBUTE
+#define PRINTF_FMT_ATTRIBUTE(fmt_idx, va_idx)
 #endif
 
 struct StringMatcher

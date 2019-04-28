@@ -8,7 +8,7 @@
 #include <CallHook.h>
 #include <FunHook.h>
 #include <shlwapi.h>
-#include <windef.h>
+#include <windows.h>
 
 namespace rf
 {

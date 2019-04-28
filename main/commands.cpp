@@ -8,6 +8,7 @@
 #include "spectate_mode.h"
 #include "stdafx.h"
 #include "utils.h"
+#include <algorithm>
 #include <CallHook.h>
 #include <FunHook.h>
 #include <RegsPatch.h>
@@ -664,7 +665,7 @@ void CommandsAfterGameInit()
     RegisterBuiltInCommand("irc", "Set the color range of the infrared characters", 0x004AECE0);
     RegisterBuiltInCommand("irc_close", "Set the close color of the infrared characters", 0x004AEDB0);
     RegisterBuiltInCommand("irc_far", "Set the far color of the infrared characters", 0x004AEE20);
-    //RegisterBuiltInCommand("pools", nullptr, 0x004B1050);
+    // RegisterBuiltInCommand("pools", nullptr, 0x004B1050);
     RegisterBuiltInCommand("savegame", "Save the current game", 0x004B3410);
     RegisterBuiltInCommand("loadgame", "Load a game", 0x004B34C0);
     RegisterBuiltInCommand("show_obj_times", "Set the number of portal objects to show times for", 0x004D3250);

@@ -6,6 +6,8 @@
 #include <FunHook.h>
 #include <RegsPatch.h>
 #include <ShortTypes.h>
+#include <array>
+#include <algorithm>
 #include <cstddef>
 #include <functional>
 
@@ -326,7 +328,7 @@ FunHook<NwPacketHandler_Type> ProcessNameChangePacket_hook{
         if (rf::is_local_net_game) {
             rf::Player* src_player = rf::NwGetPlayerFromAddr(addr);
             if (!src_player)
-                return;                             // shouldnt happen (protected in rf::NwProcessGamePackets)
+                return;                               // shouldnt happen (protected in rf::NwProcessGamePackets)
             data[0] = src_player->nw_data->player_id; // fix player ID
         }
         ProcessNameChangePacket_hook.CallTarget(data, addr);
@@ -342,7 +344,7 @@ FunHook<NwPacketHandler_Type> ProcessTeamChangePacket_hook{
             if (!src_player)
                 return; // shouldnt happen (protected in rf::NwProcessGamePackets)
 
-            data[0] = src_player->nw_data->player_id;   // fix player ID
+            data[0] = src_player->nw_data->player_id;  // fix player ID
             data[1] = std::clamp(data[1], '\0', '\1'); // team validation (fixes "green team")
         }
         ProcessTeamChangePacket_hook.CallTarget(data, addr);
@@ -356,7 +358,7 @@ FunHook<NwPacketHandler_Type> ProcessRateChangePacket_hook{
         if (rf::is_local_net_game) {
             rf::Player* src_player = rf::NwGetPlayerFromAddr(addr);
             if (!src_player)
-                return;                             // shouldnt happen (protected in rf::NwProcessGamePackets)
+                return;                               // shouldnt happen (protected in rf::NwProcessGamePackets)
             data[0] = src_player->nw_data->player_id; // fix player ID
         }
         ProcessRateChangePacket_hook.CallTarget(data, addr);

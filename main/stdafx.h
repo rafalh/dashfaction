@@ -1,6 +1,6 @@
 #pragma once
 
-#include <windef.h>
+#include <windows.h>
 
 #include <AsmOpcodes.h>
 #include <AsmWritter.h>
