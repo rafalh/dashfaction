@@ -138,7 +138,7 @@ FunHook<void(rf::Player*, rf::GameCtrl, bool)> HandleCtrlInGame_hook{
                 return;
             }
         }
-        else if (!g_spectate_mode_enabled) {
+        else if (!g_spectate_mode_enabled && rf::is_net_game) {
             if (key_id == rf::GC_JUMP && was_pressed && rf::IsPlayerEntityInvalid(rf::local_player)) {
                 SpectateModeSetTargetPlayer(rf::local_player);
                 SpectateNextPlayer(true, true);

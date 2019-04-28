@@ -142,7 +142,9 @@ FunHook<void(rf::Player*)> RenderHitScreen_hook{
     0x004163C0,
     [](rf::Player* player) {
         RenderHitScreen_hook.CallTarget(player);
-        SpectateModeDrawUI();
+
+        if (rf::is_net_game)
+            SpectateModeDrawUI();
     },
 };
 
