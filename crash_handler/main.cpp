@@ -44,7 +44,7 @@ void SendArchive()
         THROW_EXCEPTION("cannot open " CRASHHANDLER_TARGET_NAME);
 
     file.seekg(0, std::ios_base::end);
-    size_t size = file.tellg();
+    size_t size = static_cast<size_t>(file.tellg());
     file.seekg(0, std::ios_base::beg);
 
     HttpSession session{CRASHHANDLER_WEBSVC_AGENT};
@@ -54,7 +54,7 @@ void SendArchive()
     char buf[4096];
     while (!file.eof()) {
         file.read(buf, sizeof(buf));
-        size_t num = file.gcount();
+        size_t num = static_cast<size_t>(file.gcount());
         req.write(buf, num);
     }
     req.send();
