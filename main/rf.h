@@ -270,7 +270,7 @@ namespace rf
         const char *descr;
         void(*func)();
 
-        inline static auto Init =
+        inline static const auto Init =
             reinterpret_cast<void(__thiscall*)(rf::DcCommand* self, const char* cmd, const char* descr, DcCmdHandler handler)>(
                 0x00509A70);
     };
@@ -1640,7 +1640,7 @@ namespace rf
     static auto& DemoLoadLevel = AddrAsRef<void(const char *level_filename)>(0x004CC270);
     static auto& SetCursorVisible = AddrAsRef<void(bool visible)>(0x0051E680);
     static auto& CutsceneIsActive = AddrAsRef<bool()>(0x0045BE80);
-    static auto Timer__GetTimeLeftMs = *reinterpret_cast<int(__thiscall*)(void* timer)>(0x004FA420);
+    static const auto Timer__GetTimeLeftMs = reinterpret_cast<int(__thiscall*)(void* timer)>(0x004FA420);
 
     /* Strings Table */
     namespace strings {

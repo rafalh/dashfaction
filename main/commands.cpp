@@ -583,7 +583,7 @@ void CommandsInit()
 void CommandRegister(rf::DcCommand* cmd)
 {
     if (rf::dc_num_commands < CMD_LIMIT)
-        g_commands_buffer[rf::dc_num_commands++] = cmd;
+        rf::DcCommand::Init(cmd, cmd->cmd_name, cmd->descr, cmd->func);
     else
         ASSERT(false);
 }
@@ -592,11 +592,8 @@ static void RegisterBuiltInCommand(const char* name, const char* description, ui
 {
     static std::vector<std::unique_ptr<rf::DcCommand>> builtin_commands;
     auto cmd = std::make_unique<rf::DcCommand>();
-    cmd->cmd_name = name;
-    cmd->descr = description;
-    cmd->func = reinterpret_cast<rf::DcCmdHandler>(addr);
+    rf::DcCommand::Init(cmd.get(), name, description, reinterpret_cast<rf::DcCmdHandler>(addr));
     builtin_commands.push_back(std::move(cmd));
-    CommandRegister(builtin_commands.back().get());
 }
 
 void CommandsAfterGameInit()
