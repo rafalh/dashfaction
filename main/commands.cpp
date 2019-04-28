@@ -276,9 +276,9 @@ DcCommand2 input_mode_cmd{
         rf::direct_input_disabled = !g_game_config.directInput;
         g_game_config.save();
         if (g_game_config.directInput)
-            rf::DcPrintf("DirectInput is disabled");
-        else
             rf::DcPrintf("DirectInput is enabled");
+        else
+            rf::DcPrintf("DirectInput is disabled");
     },
     "Toggles input mode",
 };

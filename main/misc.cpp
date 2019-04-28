@@ -938,6 +938,9 @@ void MiscInit()
     WriteMem<u8>(0x005995B0, 0);
     WriteMem<u8>(0x005995B8, 0);
 
+    // Make sure DirectInput is initialized
+    rf::direct_input_disabled = 0;
+
 #if 1
     // Buffer overflows in RflReadStaticGeometry
     // Note: Buffer size is 1024 but opcode allows only 1 byte size
