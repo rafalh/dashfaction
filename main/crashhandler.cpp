@@ -50,6 +50,19 @@ static LONG WINAPI CrashHandlerExceptionFilter(PEXCEPTION_POINTERS exception_ptr
     return g_OldExceptionFilter ? g_OldExceptionFilter(exception_ptrs) : EXCEPTION_EXECUTE_HANDLER;
 }
 
+static void InvalidParameterHandler(const wchar_t* expression, const wchar_t* function, const wchar_t* file,
+                             unsigned line, [[maybe_unused]] uintptr_t reserved)
+{
+    ERR("Invalid parameter detected in function %ls. File: %ls Line: %d", function, file, line);
+    ERR("Expression: %ls", expression);
+    abort();
+}
+
+static void SignalHandler(int signal_number)
+{
+    ERR("Abort signal (%d) received!", signal_number);
+}
+
 void CrashHandlerInit(HMODULE module_handle)
 {
     GetModuleFileNameW(module_handle, g_ModulePath, ARRAYSIZE(g_ModulePath));
@@ -59,6 +72,10 @@ void CrashHandlerInit(HMODULE module_handle)
         *filename = L'\0';
 
     g_OldExceptionFilter = SetUnhandledExceptionFilter(CrashHandlerExceptionFilter);
+
+    _set_invalid_parameter_handler(InvalidParameterHandler);
+
+    signal(SIGABRT, &SignalHandler);
 }
 
 void CrashHandlerCleanup()
