@@ -232,15 +232,16 @@ char IsEntityCtrlActive_New(rf::ControlConfig* control_config, rf::GameCtrl game
 CallHook<char(rf::ControlConfig*, rf::GameCtrl, bool*)> IsEntityCtrlActive_hook1{0x00430E65, IsEntityCtrlActive_New};
 CallHook<char(rf::ControlConfig*, rf::GameCtrl, bool*)> IsEntityCtrlActive_hook2{0x00430EF7, IsEntityCtrlActive_New};
 
-void DcfSwapAssaultRifleControls()
-{
-    if (rf::dc_run) {
+DcCommand2 swap_assault_rifle_controls_cmd{
+    "swap_assault_rifle_controls",
+    []() {
         g_game_config.swapAssaultRifleControls = !g_game_config.swapAssaultRifleControls;
         g_game_config.save();
         rf::DcPrintf("Swap assault rifle controls: %s",
                      g_game_config.swapAssaultRifleControls ? "enabled" : "disabled");
-    }
-}
+    },
+    "Swap Assault Rifle controls",
+};
 
 #if SERVER_WIN32_CONSOLE
 
@@ -995,7 +996,7 @@ void MiscInit()
     PlayerLocalFireControl_hook.Install();
     IsEntityCtrlActive_hook1.Install();
     IsEntityCtrlActive_hook2.Install();
-    DC_REGISTER_CMD(swap_assault_rifle_controls, "Swap Assault Rifle controls", DcfSwapAssaultRifleControls);
+    swap_assault_rifle_controls_cmd.Register();
 
     // Fix crash in shadows rendering
     WriteMem<u8>(0x0054A3C0 + 2, 16);

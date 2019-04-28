@@ -12,32 +12,6 @@
 #include <FunHook.h>
 #include <RegsPatch.h>
 
-namespace rf
-{
-
-// Server configuration commands
-static const auto DcfKillLimit = reinterpret_cast<DcCmdHandler>(0x0046CBC0);
-static const auto DcfTimeLimit = reinterpret_cast<DcCmdHandler>(0x0046CC10);
-static const auto DcfGeomodLimit = reinterpret_cast<DcCmdHandler>(0x0046CC70);
-static const auto DcfCaptureLimit = reinterpret_cast<DcCmdHandler>(0x0046CCC0);
-
-// Misc commands
-static const auto DcfSound = reinterpret_cast<DcCmdHandler>(0x00434590);
-static const auto DcfDifficulty = reinterpret_cast<DcCmdHandler>(0x00434EB0);
-static const auto DcfMouseSensitivity = reinterpret_cast<DcCmdHandler>(0x0043CE90);
-static const auto DcfLevelInfo = reinterpret_cast<DcCmdHandler>(0x0045C210);
-static const auto DcfVerifyLevel = reinterpret_cast<DcCmdHandler>(0x0045E1F0);
-static const auto DcfPlayerNames = reinterpret_cast<DcCmdHandler>(0x0046CB80);
-static const auto DcfClientsCount = reinterpret_cast<DcCmdHandler>(0x0046CD10);
-static const auto DcfKickAll = reinterpret_cast<DcCmdHandler>(0x0047B9E0);
-static const auto DcfTimedemo = reinterpret_cast<DcCmdHandler>(0x004CC1B0);
-static const auto DcfFramerateTest = reinterpret_cast<DcCmdHandler>(0x004CC360);
-static const auto DcfSystemInfo = reinterpret_cast<DcCmdHandler>(0x00525A60);
-static const auto DcfTrilinearFiltering = reinterpret_cast<DcCmdHandler>(0x0054F050);
-static const auto DcfDetailTextures = reinterpret_cast<DcCmdHandler>(0x0054F0B0);
-
-} // namespace rf
-
 // Note: limit should fit in int8_t
 constexpr int CMD_LIMIT = 127;
 
@@ -248,9 +222,8 @@ DcCommand2 spectate_cmd{
         else
             rf::DcPrint("Works only in multiplayer game!", nullptr);
     },
-    "Starts spectating mode", "spectate <player_name/false>"
-    // rf::DcPrintf("     spectate <%s>", rf::strings::player_name);
-    // rf::DcPrintf("     spectate false");
+    "Starts spectating mode",
+    "spectate <player_name/false>",
 };
 
 DcCommand2 antialiasing_cmd{
@@ -614,28 +587,43 @@ void CommandRegister(rf::DcCommand* cmd)
         ASSERT(false);
 }
 
+static void RegisterBuiltInCommand(const char* name, const char* description, uintptr_t addr)
+{
+    static std::vector<std::unique_ptr<rf::DcCommand>> builtin_commands;
+    auto cmd = std::make_unique<rf::DcCommand>();
+    cmd->cmd_name = name;
+    cmd->descr = description;
+    cmd->func = reinterpret_cast<rf::DcCmdHandler>(addr);
+    builtin_commands.push_back(std::move(cmd));
+    CommandRegister(builtin_commands.back().get());
+}
+
 void CommandsAfterGameInit()
 {
-    // Register some unused builtin commands
-    DC_REGISTER_CMD(kill_limit, "Sets kill limit", rf::DcfKillLimit);
-    DC_REGISTER_CMD(time_limit, "Sets time limit", rf::DcfTimeLimit);
-    DC_REGISTER_CMD(geomod_limit, "Sets geomod limit", rf::DcfGeomodLimit);
-    DC_REGISTER_CMD(capture_limit, "Sets capture limit", rf::DcfCaptureLimit);
+    // Register RF builtin commands disabled in PC build
 
-    DC_REGISTER_CMD(sound, "Toggle sound", rf::DcfSound);
-    DC_REGISTER_CMD(difficulty, "Set game difficulty", rf::DcfDifficulty);
-    // DC_REGISTER_CMD(ms, "Set mouse sensitivity", rf::DcfMouseSensitivity);
-    DC_REGISTER_CMD(level_info, "Show level info", rf::DcfLevelInfo);
-    DC_REGISTER_CMD(verify_level, "Verify level", rf::DcfVerifyLevel);
-    DC_REGISTER_CMD(player_names, "Toggle player names on HUD", rf::DcfPlayerNames);
-    DC_REGISTER_CMD(clients_count, "Show number of connected clients", rf::DcfClientsCount);
-    DC_REGISTER_CMD(kick_all, "Kick all clients", rf::DcfKickAll);
-    DC_REGISTER_CMD(timedemo, "Start timedemo", rf::DcfTimedemo);
-    DC_REGISTER_CMD(frameratetest, "Start frame rate test", rf::DcfFramerateTest);
-    DC_REGISTER_CMD(system_info, "Show system information", rf::DcfSystemInfo);
-    DC_REGISTER_CMD(trilinear_filtering, "Toggle trilinear filtering", rf::DcfTrilinearFiltering);
-    DC_REGISTER_CMD(detail_textures, "Toggle detail textures", rf::DcfDetailTextures);
+    // Server configuration commands
+    RegisterBuiltInCommand("kill_limit", "Sets kill limit", 0x0046CBC0);
+    RegisterBuiltInCommand("time_limit", "Sets time limit", 0x0046CC10);
+    RegisterBuiltInCommand("geomod_limit", "Sets geomod limit", 0x0046CC70);
+    RegisterBuiltInCommand("capture_limit", "Sets capture limit", 0x0046CCC0);
 
+    // Misc commands
+    RegisterBuiltInCommand("sound", "Toggle sound", 0x00434590);
+    RegisterBuiltInCommand("difficulty", "Set game difficulty", 0x00434EB0);
+    // RegisterBuiltInCommand("ms", "Set mouse sensitivity", 0x0043CE90);
+    RegisterBuiltInCommand("level_info", "Show level info", 0x0045C210);
+    RegisterBuiltInCommand("verify_level", "Verify level", 0x0045E1F0);
+    RegisterBuiltInCommand("player_names", "Toggle player names on HUD", 0x0046CB80);
+    RegisterBuiltInCommand("clients_count", "Show number of connected clients", 0x0046CD10);
+    RegisterBuiltInCommand("kick_all", "Kick all clients", 0x0047B9E0);
+    RegisterBuiltInCommand("timedemo", "Start timedemo", 0x004CC1B0);
+    RegisterBuiltInCommand("frameratetest", "Start frame rate test", 0x004CC360);
+    RegisterBuiltInCommand("system_info", "Show system information", 0x00525A60);
+    RegisterBuiltInCommand("trilinear_filtering", "Toggle trilinear filtering", 0x0054F050);
+    RegisterBuiltInCommand("detail_textures", "Toggle detail textures", 0x0054F0B0);
+
+    // Custom Dash Faction commands
     max_fps_cmd.Register();
     ms_cmd.Register();
     vli_cmd.Register();

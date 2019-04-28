@@ -322,12 +322,6 @@ namespace rf
     static auto& dc_cmd_line = AddrAsRef<char[256]>(0x01775330);
     static auto& dc_cmd_line_len = AddrAsRef<uint32_t>(0x0177568C);
 
-    #define DC_REGISTER_CMD(name, help, handler) \
-        do { \
-            static rf::DcCommand Dc_##name; \
-            rf::DcCommand::Init(&Dc_##name, #name, help, handler); \
-        } while (false)
-
     /* Bmpman */
 
     enum BmPixelFormat
