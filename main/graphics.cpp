@@ -14,8 +14,6 @@
 namespace rf
 {
 
-static auto& gr_d3d = AddrAsRef<IDirect3D8*>(0x01CFCBE0);
-static auto& gr_d3d_pp = AddrAsRef<D3DPRESENT_PARAMETERS>(0x01CFCA18);
 static auto& gr_adapter_idx = AddrAsRef<uint32_t>(0x01CFCC34);
 static auto& gr_scale_vec = AddrAsRef<Vector3>(0x01818B48);
 static auto& gr_view_matrix = AddrAsRef<Matrix3>(0x018186C8);

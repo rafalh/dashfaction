@@ -418,7 +418,9 @@ namespace rf
         GR_ALIGN_RIGHT = 2,
     };
 
+    static auto& gr_d3d = AddrAsRef<IDirect3D8*>(0x01CFCBE0);
     static auto& gr_d3d_device = AddrAsRef<IDirect3DDevice8*>(0x01CFCBE4);
+    static auto& gr_d3d_pp = AddrAsRef<D3DPRESENT_PARAMETERS>(0x01CFCA18);
     static auto& gr_screen = AddrAsRef<GrScreen>(0x017C7BC0);
 
     static auto& gr_line_material = AddrAsRef<uint32_t>(0x01775B00);

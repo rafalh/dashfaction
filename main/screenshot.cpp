@@ -8,12 +8,14 @@
 #include <cstddef>
 #include <CallHook.h>
 #include <FunHook.h>
+#include <RegsPatch.h>
 #include <ComPtr.h>
 
 const char g_screenshot_dir_name[] = "screenshots";
 
 static std::unique_ptr<byte* []> g_screenshot_scanlines_buf;
 static int g_screenshot_dir_id;
+static bool g_force_texture_in_backbuffer_format = false;
 
 namespace rf
 {
@@ -104,12 +106,6 @@ CallHook<rf::BmPixelFormat(int, int, int, int, std::byte*)> GrD3DReadBackBuffer_
         }
 
         rf::BmPixelFormat pixel_fmt = GetPixelFormatFromD3DFormat(desc.Format);
-        // Remove alpha
-        if (pixel_fmt == rf::BMPF_8888)
-            pixel_fmt = rf::BMPF_888;
-        if (pixel_fmt == rf::BMPF_1555)
-            pixel_fmt = rf::BMPF_565;
-
         int bytes_per_pixel = GetPixelFormatSize(pixel_fmt);
         std::byte* src_ptr =
             reinterpret_cast<std::byte*>(locked_rect.pBits) + y * locked_rect.Pitch + x * bytes_per_pixel;
@@ -134,7 +130,9 @@ bool GrCaptureBackBufferFast(int x, int y, int width, int height, int bm_handle)
     rf::GrFlushBuffers();
 
     // Note: Release call on D3D texture is not needed (no additional ref is added)
+    g_force_texture_in_backbuffer_format = true;
     auto d3d_tex = rf::GrGetBitmapTexture(bm_handle);
+    g_force_texture_in_backbuffer_format = false;
     if (!d3d_tex) {
         WARN("Bitmap without D3D texture provided in GrCaptureBackBuffer");
         return false;
@@ -201,6 +199,26 @@ FunHook<void(int, int, int, int, int)> GrCaptureBackBuffer_hook{
     },
 };
 
+RegsPatch GrD3DCreateVramTexture_patch{
+    0x0055B9CA,
+    [](auto& regs) {
+        if (g_force_texture_in_backbuffer_format) {
+            TRACE("Forcing texture in backbuffer format");
+            regs.eax = rf::gr_d3d_pp.BackBufferFormat;
+        }
+    },
+};
+
+RegsPatch MonitorInit_bitmap_format_fix{
+    0x0041254C,
+    [](auto& regs) {
+        g_force_texture_in_backbuffer_format = true;
+        rf::GrGetBitmapTexture(regs.eax);
+        g_force_texture_in_backbuffer_format = false;
+    },
+};
+
+
 void InitScreenshot()
 {
 #if !D3D_LOCKABLE_BACKBUFFER
@@ -210,8 +228,9 @@ void InitScreenshot()
 
     // Use fast GrCaptureBackBuffer implementation which copies backbuffer to texture without copying from VRAM to RAM
     GrCaptureBackBuffer_hook.Install();
-    // Use format 888 instead of 8888 for scanner bitmap (needed by railgun and rocket launcher)
-    WriteMem<uint8_t>(0x004A34BF + 1, rf::BMPF_888);
+    // Make sure bitmaps used together with GrCaptureBackBuffer have the same format as backbuffer
+    GrD3DCreateVramTexture_patch.Install();
+    MonitorInit_bitmap_format_fix.Install();
 
     // Override screenshot directory
     WriteMemPtr(0x004367CA + 2, &g_screenshot_dir_id);
