@@ -12,30 +12,32 @@ class MainDlg : public CDialogEx
 {
 // Construction
 public:
-	MainDlg(CWnd* pParent = NULL);	// standard constructor
+    MainDlg(CWnd* pParent = NULL);	// standard constructor
 
 // Dialog Data
 #ifdef AFX_DESIGN_TIME
-	enum { IDD = IDD_MAIN };
+    enum { IDD = IDD_MAIN };
 #endif
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
     void RefreshModSelector();
+    CString GetSelectedMod();
+    void AfterLaunch();
 
 // Implementation
 protected:
-	HICON m_hIcon;
+    HICON m_hIcon;
     UpdateChecker *m_pUpdateChecker;
     CToolTipCtrl m_ToolTip;
 
 	// Generated message map functions
-	virtual BOOL OnInitDialog();
+    virtual BOOL OnInitDialog();
     BOOL PreTranslateMessage(MSG* pMsg);
-	afx_msg void OnPaint();
+    afx_msg void OnPaint();
     afx_msg HCURSOR OnQueryDragIcon();
     afx_msg LRESULT OnUpdateCheck(WPARAM wParam, LPARAM lParam);
-	DECLARE_MESSAGE_MAP()
+    DECLARE_MESSAGE_MAP()
 public:
     afx_msg void OnBnClickedOptionsBtn();
     afx_msg void OnBnClickedOk();

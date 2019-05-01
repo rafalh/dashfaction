@@ -136,6 +136,7 @@ BOOL OptionsDlg::OnInitDialog()
     else
         CheckDlgButton(IDC_LEVEL_SOUNDS_CHECK, m_conf.levelSoundVolume == 0.0f ? BST_UNCHECKED : BST_INDETERMINATE);
     CheckDlgButton(IDC_ALLOW_OVERWRITE_GAME_CHECK, m_conf.allowOverwriteGameFiles ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(IDC_KEEP_LAUNCHER_OPEN_CHECK, m_conf.keepLauncherOpen ? BST_CHECKED : BST_UNCHECKED);
 
     InitToolTip();
 
@@ -164,6 +165,7 @@ void OptionsDlg::InitToolTip()
     m_toolTip->AddTool(GetDlgItem(IDC_SCOREBOARD_ANIM_CHECK), "Scoreboard open/close animations");
     m_toolTip->AddTool(GetDlgItem(IDC_LEVEL_SOUNDS_CHECK), "Enable/disable Play Sound and Ambient Sound objects in level. You can also specify volume multiplier by using levelsounds command in game.");
     m_toolTip->AddTool(GetDlgItem(IDC_ALLOW_OVERWRITE_GAME_CHECK), "Enable this if you want to modify game content by putting mods into user_maps folder. Can have side effect of level packfiles modyfing common textures/sounds.");
+    m_toolTip->AddTool(GetDlgItem(IDC_KEEP_LAUNCHER_OPEN_CHECK), "Keep launcher window open after game or editor launch");
 
     m_toolTip->Activate(TRUE);
 }
@@ -245,6 +247,7 @@ void OptionsDlg::OnBnClickedOk()
     if (IsDlgButtonChecked(IDC_LEVEL_SOUNDS_CHECK) != BST_INDETERMINATE)
         m_conf.levelSoundVolume = (IsDlgButtonChecked(IDC_LEVEL_SOUNDS_CHECK) == BST_CHECKED ? 1.0f : 0.0f);
     m_conf.allowOverwriteGameFiles = (IsDlgButtonChecked(IDC_ALLOW_OVERWRITE_GAME_CHECK) == BST_CHECKED);
+    m_conf.keepLauncherOpen = (IsDlgButtonChecked(IDC_KEEP_LAUNCHER_OPEN_CHECK) == BST_CHECKED);
 
     try
     {

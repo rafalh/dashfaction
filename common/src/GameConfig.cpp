@@ -46,6 +46,7 @@ bool GameConfig::load()
     dash_faction_key.read_value("Glares", &glares);
     dash_faction_key.read_value("Linear Pitch", &linearPitch);
     dash_faction_key.read_value("Show Enemy Bullets", &showEnemyBullets);
+    dash_faction_key.read_value("Keep Launcher Open", &keepLauncherOpen);
 
 #ifdef NDEBUG
     maxFps = std::clamp(maxFps, MIN_FPS_LIMIT, MAX_FPS_LIMIT);
@@ -90,6 +91,7 @@ void GameConfig::save()
     dash_faction_key.write_value("Glares", &glares);
     dash_faction_key.write_value("Linear Pitch", linearPitch);
     dash_faction_key.write_value("Show Enemy Bullets", showEnemyBullets);
+    dash_faction_key.write_value("Keep Launcher Open", keepLauncherOpen);
 }
 
 bool GameConfig::detectGamePath()

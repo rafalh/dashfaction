@@ -4,14 +4,14 @@
 
 #include "stdafx.h"
 
-#include "MainDlg.h"
 #include "GameConfig.h"
 #include "LauncherApp.h"
+#include "MainDlg.h"
+#include "ModdedAppLauncher.h"
 #include "OptionsDlg.h"
 #include "UpdateChecker.h"
 #include "afxdialogex.h"
 #include "version.h"
-#include "ModdedAppLauncher.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -194,12 +194,9 @@ void MainDlg::OnBnClickedOk()
     if (m_pUpdateChecker)
         m_pUpdateChecker->abort();
 
-    CComboBox* mod_selector = (CComboBox*)GetDlgItem(IDC_MOD_COMBO);
-    CStringA selected_mod;
-    mod_selector->GetWindowTextA(selected_mod);
-
+    CStringA selected_mod = GetSelectedMod();
     if (static_cast<LauncherApp*>(AfxGetApp())->LaunchGame(m_hWnd, selected_mod))
-        CDialogEx::OnOK();
+        AfterLaunch();
 }
 
 void MainDlg::OnBnClickedEditorBtn()
@@ -207,15 +204,34 @@ void MainDlg::OnBnClickedEditorBtn()
     if (m_pUpdateChecker)
         m_pUpdateChecker->abort();
 
-    CComboBox* mod_selector = (CComboBox*)GetDlgItem(IDC_MOD_COMBO);
-    CStringA selected_mod;
-    mod_selector->GetWindowTextA(selected_mod);
-
+    CStringA selected_mod = GetSelectedMod();
     if (static_cast<LauncherApp*>(AfxGetApp())->LaunchEditor(m_hWnd, selected_mod))
-        EndDialog(0);
+        AfterLaunch();
 }
 
 void MainDlg::OnBnClickedSupportBtn()
 {
     ShellExecuteA(m_hWnd, "open", "https://discord.gg/bC2WzvJ", NULL, NULL, SW_SHOW);
+}
+
+CString MainDlg::GetSelectedMod()
+{
+    CComboBox* mod_selector = (CComboBox*)GetDlgItem(IDC_MOD_COMBO);
+    CStringA selected_mod;
+    mod_selector->GetWindowTextA(selected_mod);
+    return selected_mod;
+}
+
+void MainDlg::AfterLaunch()
+{
+    GameConfig config;
+    try {
+        config.load();
+    }
+    catch (...) {
+        // ignore
+    }
+
+    if (!config.keepLauncherOpen)
+        CDialogEx::OnOK();
 }

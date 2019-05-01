@@ -52,6 +52,7 @@ struct GameConfig
     bool fastStart = true;
     bool allowOverwriteGameFiles = false;
     bool scoreboardAnim = false;
+    bool keepLauncherOpen = false;
 
     // Advanced
     float levelSoundVolume = 1.0f;
