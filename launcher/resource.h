@@ -41,6 +41,7 @@
 #define IDC_LEVEL_SOUNDS_CHECK          1031
 #define IDC_MOD_COMBO                   1032
 #define IDC_KEEP_LAUNCHER_OPEN_CHECK    1033
+#define IDC_HIGH_MON_RES_CHECK          1034
 
 // Next default values for new objects
 // 
@@ -48,7 +49,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        104
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1034
+#define _APS_NEXT_CONTROL_VALUE         1035
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

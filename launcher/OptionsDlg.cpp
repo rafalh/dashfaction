@@ -119,6 +119,7 @@ BOOL OptionsDlg::OnInitDialog()
     CheckDlgButton(IDC_DISABLE_LOD_CHECK, m_conf.disableLodModels ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_FPS_COUNTER_CHECK, m_conf.fpsCounter ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_HIGH_SCANNER_RES_CHECK, m_conf.highScannerRes ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(IDC_HIGH_MON_RES_CHECK, m_conf.highMonitorRes ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_TRUE_COLOR_TEXTURES_CHECK, m_conf.trueColorTextures ? BST_CHECKED : BST_UNCHECKED);
 
     SetDlgItemTextA(IDC_TRACKER_EDIT, m_conf.tracker.c_str());
@@ -157,6 +158,7 @@ void OptionsDlg::InitToolTip()
     m_toolTip->AddTool(GetDlgItem(IDC_ANISOTROPIC_CHECK), "Improve far textures quality");
     m_toolTip->AddTool(GetDlgItem(IDC_FPS_COUNTER_CHECK), "Enable FPS counter in right-top corner of the screen");
     m_toolTip->AddTool(GetDlgItem(IDC_HIGH_SCANNER_RES_CHECK), "Increase scanner resolution (used by Rail Gun, Rocket Launcher and Fusion Launcher)");
+    m_toolTip->AddTool(GetDlgItem(IDC_HIGH_SCANNER_RES_CHECK), "Increase monitors and mirrors resolution");
     m_toolTip->AddTool(GetDlgItem(IDC_TRUE_COLOR_TEXTURES_CHECK), "Increase texture color depth - especially visible for lightmaps and shadows");
     m_toolTip->AddTool(GetDlgItem(IDC_TRACKER_EDIT), "Hostname of tracker used to find avaliable Multiplayer servers");
     m_toolTip->AddTool(GetDlgItem(IDC_FAST_START_CHECK), "Skip game intro videos and go straight to Main Menu");
@@ -234,6 +236,7 @@ void OptionsDlg::OnBnClickedOk()
     m_conf.disableLodModels = (IsDlgButtonChecked(IDC_DISABLE_LOD_CHECK) == BST_CHECKED);
     m_conf.fpsCounter = (IsDlgButtonChecked(IDC_FPS_COUNTER_CHECK) == BST_CHECKED);
     m_conf.highScannerRes = (IsDlgButtonChecked(IDC_HIGH_SCANNER_RES_CHECK) == BST_CHECKED);
+    m_conf.highMonitorRes = (IsDlgButtonChecked(IDC_HIGH_MON_RES_CHECK) == BST_CHECKED);
     m_conf.trueColorTextures = (IsDlgButtonChecked(IDC_TRUE_COLOR_TEXTURES_CHECK) == BST_CHECKED);
 
     GetDlgItemTextA(IDC_TRACKER_EDIT, str);

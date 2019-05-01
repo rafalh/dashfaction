@@ -33,6 +33,7 @@ bool GameConfig::load()
     dash_faction_key.read_value("FPS Counter", &fpsCounter);
     dash_faction_key.read_value("Max FPS", &maxFps);
     dash_faction_key.read_value("High Scanner Resolution", &highScannerRes);
+    dash_faction_key.read_value("High Monitor Resolution", &highMonitorRes);
     dash_faction_key.read_value("True Color Textures", &trueColorTextures);
     if (!dash_faction_key.read_value("Executable Path", &gameExecutablePath))
         detectGamePath();
@@ -79,6 +80,7 @@ void GameConfig::save()
     dash_faction_key.write_value("FPS Counter", fpsCounter);
     dash_faction_key.write_value("Max FPS", maxFps);
     dash_faction_key.write_value("High Scanner Resolution", highScannerRes);
+    dash_faction_key.write_value("High Monitor Resolution", highMonitorRes);
     dash_faction_key.write_value("True Color Textures", trueColorTextures);
     dash_faction_key.write_value("Executable Path", gameExecutablePath);
     dash_faction_key.write_value("Direct Input", directInput);

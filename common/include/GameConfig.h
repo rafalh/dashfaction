@@ -39,6 +39,7 @@ struct GameConfig
     unsigned maxFps = 60;
     bool fpsCounter = true;
     bool highScannerRes = true;
+    bool highMonitorRes = true;
     bool trueColorTextures = true;
 
     // Multiplayer
