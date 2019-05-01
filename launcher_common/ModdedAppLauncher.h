@@ -37,7 +37,7 @@ public:
     ModdedAppLauncher(const char* mod_dll_name, uint32_t expected_crc32) :
         m_mod_dll_name(mod_dll_name), m_expected_crc32(expected_crc32)
     {}
-    void launch();
+    void launch(const char* mod_name = nullptr);
 
 protected:
     std::string get_mod_dll_path();
@@ -66,3 +66,12 @@ public:
 private:
     GameConfig m_conf;
 };
+
+
+inline std::string get_dir_from_path(const std::string& path)
+{
+    size_t pos = path.find_last_of("\\/");
+    if (pos == std::string::npos)
+        return ".";
+    return path.substr(0, pos);
+}

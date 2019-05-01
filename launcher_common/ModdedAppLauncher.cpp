@@ -20,14 +20,6 @@
 #define RF_120_NA_CRC32 0xA7BF79E4
 #define RED_120_NA_CRC32 0xBAF6C754
 
-static std::string get_dir_from_path(const std::string& path)
-{
-    size_t pos = path.find_last_of("\\/");
-    if (pos == std::string::npos)
-        return ".";
-    return path.substr(0, pos);
-}
-
 std::string ModdedAppLauncher::get_mod_dll_path()
 {
     char buf[MAX_PATH];
@@ -41,7 +33,7 @@ std::string ModdedAppLauncher::get_mod_dll_path()
     return dir + "\\" + m_mod_dll_name;
 }
 
-void ModdedAppLauncher::launch()
+void ModdedAppLauncher::launch(const char* mod_name)
 {
     std::string app_path = get_app_path();
     uint32_t checksum = file_crc32(app_path.c_str());
@@ -77,8 +69,14 @@ void ModdedAppLauncher::launch()
         si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
     }
 
+    std::string cmd_line = GetCommandLineA();
+    if (mod_name && mod_name[0]) {
+        cmd_line += " -mod ";
+        cmd_line += mod_name;
+    }
+
     try {
-        InjectingProcessLauncher proc_launcher{app_path.c_str(), work_dir.c_str(), GetCommandLineA(), si, INIT_TIMEOUT};
+        InjectingProcessLauncher proc_launcher{app_path.c_str(), work_dir.c_str(), cmd_line.c_str(), si, INIT_TIMEOUT};
 
         std::string mod_path = get_mod_dll_path();
         proc_launcher.inject_dll(mod_path.c_str(), "Init", INIT_TIMEOUT);

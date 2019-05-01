@@ -135,12 +135,12 @@ void LauncherApp::MigrateConfig()
     }
 }
 
-bool LauncherApp::LaunchGame(HWND hwnd)
+bool LauncherApp::LaunchGame(HWND hwnd, const char* mod_name)
 {
     GameLauncher launcher;
     try
     {
-        launcher.launch();
+        launcher.launch(mod_name);
         return true;
     }
     catch (PrivilegeElevationRequiredException&)
@@ -181,12 +181,12 @@ bool LauncherApp::LaunchGame(HWND hwnd)
     return true;
 }
 
-bool LauncherApp::LaunchEditor(HWND hwnd)
+bool LauncherApp::LaunchEditor(HWND hwnd, const char* mod_name)
 {
     EditorLauncher launcher;
     try
     {
-        launcher.launch();
+        launcher.launch(mod_name);
         return true;
     }
     catch (std::exception &e)

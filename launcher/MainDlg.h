@@ -21,6 +21,7 @@ public:
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
+    void RefreshModSelector();
 
 // Implementation
 protected:

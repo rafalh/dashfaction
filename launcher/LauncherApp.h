@@ -25,8 +25,8 @@ public:
     virtual BOOL InitInstance();
 
 // Implementation
-    bool LaunchGame(HWND hwnd);
-    bool LaunchEditor(HWND hwnd);
+    bool LaunchGame(HWND hwnd, const char* mod_name = nullptr);
+    bool LaunchEditor(HWND hwnd, const char* mod_name = nullptr);
 
 	DECLARE_MESSAGE_MAP()
 
