@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include <log/Logger.h>
 #include <windows.h>
+#include <signal.h>
 
 static WCHAR g_ModulePath[MAX_PATH];
 static LPTOP_LEVEL_EXCEPTION_FILTER g_OldExceptionFilter;
