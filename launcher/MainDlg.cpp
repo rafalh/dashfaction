@@ -80,7 +80,7 @@ void MainDlg::RefreshModSelector()
     CComboBox* mod_selector = (CComboBox*)GetDlgItem(IDC_MOD_COMBO);
     CString selected_mod;
     mod_selector->GetWindowTextA(selected_mod);
-    mod_selector->Clear();
+    mod_selector->ResetContent();
     mod_selector->AddString("");
 
     GameConfig game_config;
