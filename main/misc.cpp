@@ -900,6 +900,18 @@ DcCommand2 show_enemy_bullets_cmd{
     "Toggles enemy bullets visibility",
 };
 
+FunHook<char(int, int, int, int, char)> ClutterInitMonitor_hook{
+    0x00412470,
+    [](int clutter_handle, int always_minus_1, int w, int h, char always_1) {
+        if (g_game_config.highMonitorRes) {
+            constexpr int factor = 2;
+            w *= factor;
+            h *= factor;
+        }
+        return ClutterInitMonitor_hook.CallTarget(clutter_handle, always_minus_1, w, h, always_1);
+    },
+};
+
 void MiscInit()
 {
     // Console init string
@@ -1086,6 +1098,9 @@ void MiscInit()
     // Allow undefined mp_character in PlayerCreateEntity
     // Fixes Go_Undercover event not changing player 3rd person character
     AsmWritter(0x004A414F, 0x004A4153).nop();
+
+    // High monitors/mirrors resolution
+    ClutterInitMonitor_hook.Install();
 
 #if 0
     // Fix weapon switch glitch when reloading (should be used on Match Mode)

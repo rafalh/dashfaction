@@ -41,6 +41,9 @@ Version 1.2.2 (not released yet)
 - reduce number of draw-calls when rendering lines in level editor (optimization)
 - fix "Buffer overrun" message being displed in RED (level editor) when too many objects were selected
 - optimize displaying selected objects in log view in RED (level editor)
+- add mod selector in launcher
+- add "Keep launcher open" option
+- increase resolution of monitors and mirrors
 - fix multiple security vulnerabilities
 - stability improvements
 
