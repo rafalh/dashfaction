@@ -39,4 +39,5 @@ public:
     afx_msg void OnBnClickedOptionsBtn();
     afx_msg void OnBnClickedOk();
     afx_msg void OnBnClickedEditorBtn();
+    afx_msg void OnBnClickedSupportBtn();
 };

@@ -38,7 +38,8 @@ BEGIN_MESSAGE_MAP(MainDlg, CDialogEx)
     ON_BN_CLICKED(IDC_OPTIONS_BTN, &MainDlg::OnBnClickedOptionsBtn)
     ON_BN_CLICKED(IDOK, &MainDlg::OnBnClickedOk)
     ON_BN_CLICKED(IDC_EDITOR_BTN, &MainDlg::OnBnClickedEditorBtn)
-END_MESSAGE_MAP()
+    ON_BN_CLICKED(IDC_SUPPORT_BTN, &MainDlg::OnBnClickedSupportBtn)
+    END_MESSAGE_MAP()
 
 
 // MainDlg message handlers
@@ -178,4 +179,9 @@ void MainDlg::OnBnClickedEditorBtn()
 
     if (static_cast<LauncherApp*>(AfxGetApp())->LaunchEditor(m_hWnd))
         EndDialog(0);
+}
+
+void MainDlg::OnBnClickedSupportBtn()
+{
+    ShellExecuteA(m_hWnd, "open", "https://discord.gg/bC2WzvJ", NULL, NULL, SW_SHOW);
 }
