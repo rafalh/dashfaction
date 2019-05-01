@@ -3,28 +3,27 @@ Dash Faction
 
 About
 -----
-Dash Faction is Red Faction modification designed to fix multiple game bugs, improve compatibility with modern
-hardware and software, extend functionality and improve graphics quality.
-Works fine with Windows 10 after the Anniversary Update in contrast to other highly popular modification
-named Pure Faction (version 3.0d).
+Dash Faction is Red Faction game modification designed to fix original game bugs, improve compatibility with modern
+hardware and software, extend functionalitya and improve graphics quality and engine performance.
 
 Features:
 - Levels Auto-Downloader (uses factionfiles.com just like Pure Faction)
 - Spectate Mode
-- wide-screen fixes
+- wide-screen support
 - windowed and stretched display mode
-- better graphics quality (anti-aliasing, true-color textures, anisotropic filtering, higher scanner view resolution, disabled LOD models)
+- better graphics quality (anti-aliasing, true-color textures, anisotropic filtering, higher scanner view resolution, disabled LOD models and more)
 - improved security (enabled Data Execution Prevention, multiple Buffer Overflows fixes)
 - removed limit of packfiles
 - improved Scoreboard with Kills/Deaths column
 - information about killer's weapon in chat
 - option to disable level ambient sounds
 - ui.vpp cheats prevention
-- multiple fixes for high FPS (limited to 150 for now)
+- multiple fixes for high FPS (it is currently limited to 240)
 - country-specific edition support (properly handles game directory structure for German and French edition)
-- other stability fixes
+- improved game performance
+- other usability and stability fixes
 
-New commands:
+Useful commands:
 - maxfps <limit> - sets maximal FPS
 - hud - shows and hides HUD
 - unban_last - unbans last banned player
@@ -45,16 +44,24 @@ Application should work on Windows XP SP3 and newer (tested mostly on Windows 10
 
 Usage
 -----
-1. Install Visual C++ Redistributable for Visual Studio 2017 (x86) from:
-https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads (select *vc_redist.x86.exe* in *Visual Studio 2017* section).
+1. Unpack Dash Faction files to any folder (there is no requirement to put it in Red Faction folder).
 
-2. Unpack Dash Faction files to any folder (there is no requirement to put it in Red Faction folder).
+2. Run DashFactionLauncher.exe.
 
-3. Run DashFactionLauncher.exe.
+3. On first run select Options and check if everything is OK (especially make sure game executable path is valid).
 
-4. On first run select Options and check if everything is OK (especially make sure game executable path is valid).
+4. Close settings and click "Launch Game" to start modded Red Faction game.
 
-5. Close settings and click "Launch Game" to start modded Red Faction game.
+Advanced usage
+--------------
+You can provide additional command line arguments to `DashFactionLauncher.exe` application. They are always forwarded
+to Red Faction process. For example to start a dedicated server with Dash Faction support use `-dedicated` argument
+just like in the original game.
+
+Following arguments are handled inside the launcher itself:
+
+* `-game` - launch game immediately without displaying the launcher window
+* `-editor` - launch mod immediately without displaying the launcher window
 
 Problems
 --------
@@ -64,13 +71,18 @@ and Dash Faction is certainly not very popular :)
 I had some problems with Avast silently removing launcher exe and had to add Dash Faction to exclusions of
 Behaviour Shield.
 
-If game crashes try to disable features in Options window - especially try disabling MSAA.
+During video capture in OBS please disable MSAA in Options - it does not perform well together.
+
+In case of problems you can ask for help on Faction Files Discord server (click Discord Support Channel button in
+launcher main window).
 
 License
 -------
-Most of Dash Faction source code is licensed under Mozilla Public License 2.0. It is available in the GitHub repository. See LICENSE.txt.
+Most of Dash Faction source code is licensed under Mozilla Public License 2.0. It is available in the GitHub repository.
+See LICENSE.txt.
 
 Only Pure Faction support code is not open sourced because it would make PF anti-cheat features basically useless.
-It consists of *pf.cpp* and *pf.h* files in main module. It is going to be linked statically during a release process of Dash Faction by owner of this project.
+It consists of *pf.cpp* and *pf.h* files in main module. It is going to be linked statically during a release process
+of Dash Faction by owner of this project.
 
 Dash Faction uses some open source libraries. Their licenses can be found in *licenses* directory.
