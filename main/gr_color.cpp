@@ -4,6 +4,7 @@
 #include "rf.h"
 #include "stdafx.h"
 #include <FunHook.h>
+#include <RegsPatch.h>
 #include <ShortTypes.h>
 #include <algorithm>
 
@@ -313,6 +314,30 @@ FunHook<unsigned()> BinkInitDeviceInfo_hook{
     },
 };
 
+RegsPatch MonitorRenderNoise_patch{
+    0x004123AD,
+    [](auto& regs) {
+        // Note: default noise generation algohritm is not used because it's not uniform enough in high resolution
+        static int noise_buf;
+        if (regs.edx % 15 == 0)
+            noise_buf = std::rand();
+        white = noise_buf & 1;
+        noise_buf >>= 1;
+
+        auto& lock = *reinterpret_cast<rf::GrLockData*>(regs.esp + 0x2C - 0x20);
+        if (GetPixelFormatSize(lock.pixel_format) == 4) {
+            *reinterpret_cast<int32_t*>(regs.esi) = white ? 0 : -1;
+            regs.esi += 4;
+        }
+        else {
+            *reinterpret_cast<int16_t*>(regs.esi) = white ? 0 : -1;
+            regs.esi += 2;
+        }
+        ++regs.edx;
+        regs.eip = 0x004123DA;
+    },
+};
+
 void GrColorInit()
 {
     // True Color textures
@@ -346,14 +371,10 @@ void GrColorInit()
             .call(GetAmbientColorFromLightmaps_004E5CE3)
             .add(esp, 16)
             .jmp(0x004E5D57);
-        // sub_412410 (what is it?)
+        // monitor noise
+        MonitorRenderNoise_patch.Install();
+        // monitor off state
         WriteMem<u8>(0x00412430 + 3, 0x34 - 0x20 + 0x18); // pitch instead of width
         AsmWritter(0x0041243D).nop(2);                    // dont multiply by 2
-
-#ifdef DEBUG
-        // FIXME: is it used?
-        WriteMem<u8>(0x00412410, 0xC3);
-        WriteMem<u8>(0x00412370, 0xC3);
-#endif
     }
 }
