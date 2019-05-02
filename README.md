@@ -50,7 +50,7 @@ Usage
 
 3. On first run select Options and check if everything is OK (especially make sure game executable path is valid).
 
-4. Close settings and click "Launch Game" to start modded Red Faction game.
+4. Close settings and click "Launch Game" to start Dash Faction.
 
 Advanced usage
 --------------
