@@ -4,11 +4,10 @@ include_directories(
 	${CMAKE_SOURCE_DIR}/vendor/zlib/contrib/minizip
 	${CMAKE_SOURCE_DIR}/vendor/unrar
 	${CMAKE_SOURCE_DIR}/vendor/d3d8
-	${CMAKE_SOURCE_DIR}/vendor/subhook
 	${CMAKE_SOURCE_DIR}/vendor/xxhash
 )
 
-add_definitions(-DNOMINMAX -DBUILD_DLL -DSUBHOOK_STATIC)
+add_definitions(-DNOMINMAX -DBUILD_DLL)
 
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/pf.cpp")
     add_definitions(-DHAS_PF)
@@ -40,7 +39,6 @@ target_link_libraries(DashFaction
     unzip
     zlib
     PatchCommon
-    subhook
     Logger
     Common
     xxhash

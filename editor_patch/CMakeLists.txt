@@ -1,7 +1,7 @@
 include_directories(
     ${CMAKE_SOURCE_DIR}/vendor/d3d8
 )
-add_definitions(-DNOMINMAX -DBUILD_DLL -DSUBHOOK_STATIC)
+add_definitions(-DNOMINMAX -DBUILD_DLL)
 
 if(NOT MSVC)
     add_compile_options(-Wall -Wextra)
@@ -22,7 +22,6 @@ target_link_libraries(DashEditor
     PatchCommon
     Common
     Logger
-    subhook
     shlwapi
 )
 
