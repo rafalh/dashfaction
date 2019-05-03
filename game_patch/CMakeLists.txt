@@ -1,7 +1,4 @@
 include_directories(
-    ${CMAKE_SOURCE_DIR}/common/include
-	${CMAKE_SOURCE_DIR}/logger/include
-    ${CMAKE_SOURCE_DIR}/patch_common/include
 	${CMAKE_SOURCE_DIR}/vendor
 	${CMAKE_SOURCE_DIR}/vendor/zlib
 	${CMAKE_SOURCE_DIR}/vendor/zlib/contrib/minizip

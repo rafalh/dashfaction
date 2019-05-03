@@ -1,5 +1,4 @@
 include_directories(
-    ${CMAKE_SOURCE_DIR}/common/include
 	${CMAKE_SOURCE_DIR}/vendor/zlib
 	${CMAKE_SOURCE_DIR}/vendor/zlib/contrib/minizip
 )
