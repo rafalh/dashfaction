@@ -4,12 +4,8 @@
 #include <cstdio>
 #include <cmath>
 #include <cstdarg>
-
 #include <windows.h>
-
-typedef BOOL WINBOOL;
 #include <d3d8.h>
-
 #include <patch_common/MemUtils.h>
 #include "utils.h"
 

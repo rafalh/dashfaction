@@ -20,11 +20,9 @@
 #ifndef __WINE_D3D8_H
 #define __WINE_D3D8_H
 
-// Fixes for MS headers
-#ifndef WINBOOL
+// Note: this header comes from MinGW and to make it compatible with MSVC those defines are necessary
+#ifdef _MSC_VER
 #define WINBOOL BOOL
-#endif
-#ifndef __MSABI_LONG
 #define __MSABI_LONG(x) (x)
 #endif
 

@@ -1,5 +1,3 @@
-//#define WINBOOL BOOL
-
 #include "VideoDeviceInfoProvider.h"
 #include <common/Exception.h>
 #include <common/Win32Error.h>
