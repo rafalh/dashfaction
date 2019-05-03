@@ -1,7 +1,7 @@
 #pragma once
 
 #include <windows.h>
-#include "Process_.h"
+#include "Process.h"
 #include "Thread.h"
 #include "DllInjector.h"
 
