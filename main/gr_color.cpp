@@ -321,7 +321,7 @@ RegsPatch MonitorRenderNoise_patch{
         static int noise_buf;
         if (regs.edx % 15 == 0)
             noise_buf = std::rand();
-        white = noise_buf & 1;
+        bool white = noise_buf & 1;
         noise_buf >>= 1;
 
         auto& lock = *reinterpret_cast<rf::GrLockData*>(regs.esp + 0x2C - 0x20);
