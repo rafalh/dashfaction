@@ -18,29 +18,29 @@ typedef decltype(&MiniDumpWriteDump) MiniDumpWriteDump_Type;
 class MiniDumpHelper
 {
 private:
-    HMODULE m_hDbgHelpLib = NULL;
-    MiniDumpWriteDump_Type m_pMiniDumpWriteDump = NULL;
-    std::vector<std::wstring> m_knownModules;
-    int m_infoLevel = 0;
+    HMODULE m_dbghelp_lib = nullptr;
+    MiniDumpWriteDump_Type m_MiniDumpWriteDump = nullptr;
+    std::vector<std::wstring> m_known_modules;
+    int m_info_level = 0;
 
 public:
     MiniDumpHelper();
     ~MiniDumpHelper();
-    bool writeDump(const char* Path, PEXCEPTION_POINTERS ExceptionPointers, HANDLE hProcess, DWORD dwThreadId);
+    bool write_dump(const char* path, PEXCEPTION_POINTERS exception_pointers, HANDLE process, DWORD thread_id);
 
     // 0 - minimal, 2 - maximal
-    void setInfoLevel(int infoLevel)
+    void set_info_level(int info_level)
     {
-        m_infoLevel = infoLevel;
+        m_info_level = info_level;
     }
 
-    void addKnownModule(const wchar_t* name)
+    void add_known_module(const wchar_t* name)
     {
-        m_knownModules.push_back(name);
+        m_known_modules.push_back(name);
     }
 
 private:
-    bool IsDataSectionNeeded(const WCHAR* ModuleName);
-    static BOOL CALLBACK MiniDumpCallback(PVOID Param, const PMINIDUMP_CALLBACK_INPUT Input,
-                                          PMINIDUMP_CALLBACK_OUTPUT Output);
+    bool is_data_section_needed(const WCHAR* module_name);
+    static BOOL CALLBACK mini_dump_callback(PVOID param, const PMINIDUMP_CALLBACK_INPUT input,
+                                            PMINIDUMP_CALLBACK_OUTPUT output);
 };

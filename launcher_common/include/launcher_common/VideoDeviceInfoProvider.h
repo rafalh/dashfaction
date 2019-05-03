@@ -24,13 +24,11 @@ public:
 
     VideoDeviceInfoProvider();
     ~VideoDeviceInfoProvider();
-    std::set<Resolution> getResolutions(D3DFORMAT format);
-    std::set<D3DMULTISAMPLE_TYPE> getMultiSampleTypes(D3DFORMAT format, BOOL windowed);
-    bool hasAnisotropySupport();
+    std::set<Resolution> get_resolutions(D3DFORMAT format);
+    std::set<D3DMULTISAMPLE_TYPE> get_multisample_types(D3DFORMAT format, BOOL windowed);
+    bool has_anisotropy_support();
 
 private:
     IDirect3D8* m_d3d;
     HMODULE m_lib;
-
-    void populateResolutionsForFormat(std::set<Resolution>& resolutions, D3DFORMAT format);
 };

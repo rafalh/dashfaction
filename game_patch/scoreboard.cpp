@@ -54,7 +54,7 @@ void DrawScoreboardInternal_New(bool draw)
 
     // Animation
     float anim_progress = 1.0f, progress_w = 1.0f, progress_h = 1.0f;
-    if (g_game_config.scoreboardAnim) {
+    if (g_game_config.scoreboard_anim) {
         unsigned anim_delta = GetTickCount() - g_anim_ticks;
         if (g_enter_anim)
             anim_progress = anim_delta / ENTER_ANIM_MS;
@@ -255,7 +255,7 @@ void HudRender_00437BC0()
     bool limbo = rf::GameSeqGetState() == rf::GS_MP_LIMBO;
     bool show_scoreboard = scoreboard_control_active || (!SpectateModeIsActive() && is_player_dead) || limbo;
 
-    if (g_game_config.scoreboardAnim) {
+    if (g_game_config.scoreboard_anim) {
         if (!g_scoreboard_visible && show_scoreboard) {
             g_enter_anim = true;
             g_leave_anim = false;

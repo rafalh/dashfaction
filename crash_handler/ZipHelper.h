@@ -18,11 +18,11 @@ public:
         zipClose(m_zf, NULL);
     }
 
-    bool addFile(const char* path, const char* nameinZip)
+    bool add_file(const char* path, const char* nameinZip)
     {
         zip_fileinfo zfi;
         memset(&zfi, 0, sizeof(zfi));
-        getFileTime(path, &zfi.tmz_date, &zfi.dosDate);
+        get_file_time(path, &zfi.tmz_date, &zfi.dosDate);
 
         int err = zipOpenNewFileInZip(m_zf, nameinZip, &zfi, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_DEFAULT_COMPRESSION);
         if (err != ZIP_OK)
@@ -47,7 +47,7 @@ public:
 private:
     // getFileTime function based on minizip source
 #ifdef WIN32
-    uLong getFileTime(const char* filename, [[maybe_unused]] tm_zip* tmzip, uLong* dt)
+    uLong get_file_time(const char* filename, [[maybe_unused]] tm_zip* tmzip, uLong* dt)
     {
         int ret = 0;
         FILETIME ftLocal;
@@ -64,7 +64,7 @@ private:
         return ret;
     }
 #else  // WIN32
-    uLong getFileTime(const char* filename, tm_zip* tmzip, [[maybe_unused]] uLong* dt)
+    uLong get_file_time(const char* filename, tm_zip* tmzip, [[maybe_unused]] uLong* dt)
     {
         int ret = 0;
         struct stat s; /* results of stat() */

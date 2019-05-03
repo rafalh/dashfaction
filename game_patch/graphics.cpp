@@ -108,11 +108,14 @@ CodeInjection GrCreateD3DDevice_error_patch{
     },
 };
 
-CodeInjection GrClearZBuffer_fix_rect{0x00550A19, [](auto& regs) {
-                                      auto& rect = *reinterpret_cast<D3DRECT*>(regs.edx);
-                                      rect.x2++;
-                                      rect.y2++;
-                                  }};
+CodeInjection GrClearZBuffer_fix_rect{
+    0x00550A19,
+    [](auto& regs) {
+        auto& rect = *reinterpret_cast<D3DRECT*>(regs.edx);
+        rect.x2++;
+        rect.y2++;
+    },
+};
 
 static void SetupPP()
 {
@@ -124,7 +127,7 @@ static void SetupPP()
     if (g_game_config.msaa && format > 0) {
         // Make sure selected MSAA mode is available
         HRESULT hr = rf::gr_d3d->CheckDeviceMultiSampleType(rf::gr_adapter_idx, D3DDEVTYPE_HAL, format,
-                                                            g_game_config.wndMode != GameConfig::FULLSCREEN,
+                                                            g_game_config.wnd_mode != GameConfig::FULLSCREEN,
                                                             (D3DMULTISAMPLE_TYPE)g_game_config.msaa);
         if (SUCCEEDED(hr)) {
             INFO("Enabling Anti-Aliasing (%ux MSAA)...", g_game_config.msaa);
@@ -143,7 +146,7 @@ static void SetupPP()
 #endif
 
     // Make sure stretched window is always full screen
-    if (g_game_config.wndMode == GameConfig::STRETCHED)
+    if (g_game_config.wnd_mode == GameConfig::STRETCHED)
         SetWindowPos(rf::main_wnd, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN),
                      SWP_NOZORDER);
 }
@@ -184,7 +187,7 @@ CallHook<void()> GrInitBuffers_AfterReset_hook{
         if (rf::local_player)
             rf::GrSetTextureMipFilter(rf::local_player->config.filtering_level == 0);
 
-        if (rf::gr_d3d_device_caps.MaxAnisotropy > 0 && g_game_config.anisotropicFiltering)
+        if (rf::gr_d3d_device_caps.MaxAnisotropy > 0 && g_game_config.anisotropic_filtering)
             SetupMaxAnisotropy();
     },
 };
@@ -325,10 +328,10 @@ void GraphicsInit()
     // Fix for "At least 8 MB of available video memory"
     WriteMem<u8>(0x005460CD, ASM_JAE_SHORT);
 
-    if (g_game_config.wndMode != GameConfig::FULLSCREEN) {
+    if (g_game_config.wnd_mode != GameConfig::FULLSCREEN) {
         /* Enable windowed mode */
         WriteMem<u32>(0x004B29A5 + 6, 0xC8);
-        if (g_game_config.wndMode == GameConfig::STRETCHED) {
+        if (g_game_config.wnd_mode == GameConfig::STRETCHED) {
             uint32_t wnd_style = WS_POPUP | WS_SYSMENU;
             WriteMem<u32>(0x0050C474 + 1, wnd_style);
             WriteMem<u32>(0x0050C4E3 + 1, wnd_style);
@@ -369,7 +372,7 @@ void GraphicsInit()
 #endif
 
     // Don't use LOD models
-    if (g_game_config.disableLodModels) {
+    if (g_game_config.disable_lod_models) {
         // WriteMem<u8>(0x00421A40, ASM_SHORT_JMP_REL);
         WriteMem<u8>(0x0052FACC, ASM_SHORT_JMP_REL);
     }
@@ -396,7 +399,7 @@ void GraphicsInit()
     GrDrawRect_GrDrawPoly_hook.Install();
 #endif
 
-    if (g_game_config.highScannerRes) {
+    if (g_game_config.high_scanner_res) {
         // Improved Railgun Scanner resolution
         constexpr int8_t scanner_resolution = 120;        // default is 64, max is 127 (signed byte)
         WriteMem<u8>(0x004325E6 + 1, scanner_resolution); // RenderInGame
@@ -457,7 +460,7 @@ void GraphicsInit()
 void GraphicsAfterGameInit()
 {
     // Anisotropic texture filtering
-    if (rf::gr_d3d_device_caps.MaxAnisotropy > 0 && g_game_config.anisotropicFiltering && !rf::is_dedicated_server) {
+    if (rf::gr_d3d_device_caps.MaxAnisotropy > 0 && g_game_config.anisotropic_filtering && !rf::is_dedicated_server) {
         SetTextureMinMagFilterInCode(D3DTEXF_ANISOTROPIC);
         DWORD anisotropy_level = SetupMaxAnisotropy();
         INFO("Anisotropic Filtering enabled (level: %lu)", anisotropy_level);
@@ -474,7 +477,7 @@ void GraphicsAfterGameInit()
 
 void GraphicsDrawFpsCounter()
 {
-    if (g_game_config.fpsCounter) {
+    if (g_game_config.fps_counter) {
         auto text = StringFormat("FPS: %.1f", rf::current_fps);
         rf::GrSetColor(0, 255, 0, 255);
         rf::GrDrawAlignedText(rf::GR_ALIGN_RIGHT, rf::GrGetMaxWidth() - 10, 60, text.c_str(), -1, rf::gr_text_material);

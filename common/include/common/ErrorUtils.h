@@ -2,7 +2,7 @@
 
 #include <windows.h>
 
-inline std::string GetWin32ErrorDescription(DWORD error)
+inline std::string get_win32_error_description(DWORD error)
 {
     if (error == 0)
         return "";

@@ -9,8 +9,8 @@ struct TypeIdentity
     using type = T;
 };
 
-void WriteMem(unsigned Addr, const void* pValue, unsigned cbValue);
-void UnprotectMem(void* Ptr, unsigned Len);
+void WriteMem(unsigned addr, const void* data, unsigned size);
+void UnprotectMem(void* ptr, unsigned len);
 void* AllocMemForCode(unsigned num_bytes);
 
 template<typename T>
@@ -19,37 +19,37 @@ void WriteMem(uintptr_t addr, typename TypeIdentity<T>::type value)
     WriteMem(addr, &value, sizeof(value));
 }
 
-inline void WriteMem(unsigned Addr, const void* pValue, unsigned cbValue, unsigned cRepeat)
+inline void WriteMem(unsigned addr, const void* data, unsigned size, unsigned num_repeat)
 {
-    while (cRepeat > 0) {
-        WriteMem(Addr, pValue, cbValue);
-        Addr += cbValue;
-        --cRepeat;
+    while (num_repeat > 0) {
+        WriteMem(addr, data, size);
+        addr += size;
+        --num_repeat;
     }
 }
 
 template<typename T>
-inline void WriteMemPtr(unsigned Addr, T* Value)
+inline void WriteMemPtr(unsigned addr, T* value)
 {
-    WriteMem(Addr, &Value, sizeof(Value));
+    WriteMem(addr, &value, sizeof(value));
 }
 
-inline void WriteMemStr(unsigned Addr, const char* pStr)
+inline void WriteMemStr(unsigned addr, const char* str)
 {
-    WriteMem(Addr, pStr, strlen(pStr) + 1);
-}
-
-template<typename T>
-constexpr T& AddrAsRef(uintptr_t Addr)
-{
-    return *(T*)Addr;
+    WriteMem(addr, str, std::strlen(str) + 1);
 }
 
 template<typename T>
-T& StructFieldRef(void* StructPtr, size_t Offset)
+constexpr T& AddrAsRef(uintptr_t addr)
 {
-    auto Addr = reinterpret_cast<uintptr_t>(StructPtr) + Offset;
-    return *reinterpret_cast<T*>(Addr);
+    return *reinterpret_cast<T*>(addr);
+}
+
+template<typename T>
+T& StructFieldRef(void* struct_ptr, size_t offset)
+{
+    auto addr = reinterpret_cast<uintptr_t>(struct_ptr) + offset;
+    return *reinterpret_cast<T*>(addr);
 }
 
 template<typename... A>

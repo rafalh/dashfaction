@@ -87,7 +87,7 @@ CallHook<void()> InitGame_hook{
 
         GraphicsAfterGameInit();
 
-        rf::direct_input_disabled = !g_game_config.directInput;
+        rf::direct_input_disabled = !g_game_config.direct_input;
 
         /* Allow modded strings.tbl in ui.vpp */
         ForceFileFromPackfile("strings.tbl", "ui.vpp");
@@ -241,10 +241,10 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     }
 
     // Log information from config
-    INFO("Resolution: %dx%dx%d", g_game_config.resWidth, g_game_config.resHeight, g_game_config.resBpp);
-    INFO("Window Mode: %d", static_cast<int>(g_game_config.wndMode));
-    INFO("Max FPS: %u", g_game_config.maxFps);
-    INFO("Allow Overwriting Game Files: %d", static_cast<int>(g_game_config.allowOverwriteGameFiles));
+    INFO("Resolution: %dx%dx%d", g_game_config.res_width, g_game_config.res_height, g_game_config.res_bpp);
+    INFO("Window Mode: %d", static_cast<int>(g_game_config.wnd_mode));
+    INFO("Max FPS: %u", g_game_config.max_fps);
+    INFO("Allow Overwriting Game Files: %d", static_cast<int>(g_game_config.allow_overwrite_game_files));
 
     /* Process messages in the same thread as DX processing (alternative: D3DCREATE_MULTITHREADED) */
     AsmWritter(0x00524C48, 0x00524C83).nop(); // disable msg loop thread

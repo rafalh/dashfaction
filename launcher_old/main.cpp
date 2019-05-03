@@ -3,7 +3,7 @@
 #include <sstream>
 #include <common/version.h>
 
-bool LaunchGame(HWND hwnd)
+bool launch_game(HWND hwnd)
 {
     GameLauncher launcher;
     try {
@@ -47,7 +47,7 @@ bool LaunchGame(HWND hwnd)
 
 #ifndef DEBUG
 
-static bool CheckForUpdate()
+static bool check_for_update()
 {
     UpdateChecker update_checker;
 
@@ -77,7 +77,7 @@ int main() try {
 #ifndef DEBUG
     std::printf("Checking for update...\n");
     try {
-        if (CheckForUpdate())
+        if (check_for_update())
             return 0;
     }
     catch (const std::exception& e) {
@@ -86,7 +86,7 @@ int main() try {
 #endif
 
     printf("Starting game process...\n");
-    if (!LaunchGame(nullptr))
+    if (!launch_game(nullptr))
     {
         std::fprintf(stderr, "Failed to launch!\n");
         return -1;

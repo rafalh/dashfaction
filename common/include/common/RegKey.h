@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 #include <windows.h>
+#include <memory>
 #include <common/Win32Error.h>
 
 class RegKey
@@ -10,16 +11,16 @@ public:
     RegKey(RegKey const&) = delete;
     RegKey& operator=(RegKey const&) = delete;
 
-    RegKey(HKEY parentKey, const char* subKey, REGSAM accessRights, bool create = false)
+    RegKey(HKEY parent_key, const char* sub_key, REGSAM access_rights, bool create = false)
     {
-        if (!parentKey)
+        if (!parent_key)
             return; // empty parent
 
         LONG error;
         if (create)
-            error = RegCreateKeyExA(parentKey, subKey, 0, NULL, 0, accessRights, NULL, &m_key, NULL);
+            error = RegCreateKeyExA(parent_key, sub_key, 0, nullptr, 0, access_rights, nullptr, &m_key, nullptr);
         else {
-            error = RegOpenKeyExA(parentKey, subKey, 0, accessRights, &m_key);
+            error = RegOpenKeyExA(parent_key, sub_key, 0, access_rights, &m_key);
             if (error == ERROR_FILE_NOT_FOUND)
                 return; // dont throw exception in this case
         }
@@ -29,8 +30,8 @@ public:
         m_open = true;
     }
 
-    RegKey(const RegKey& parentKey, const char* subKey, REGSAM accessRights, bool create = false) :
-        RegKey(parentKey.m_key, subKey, accessRights, create)
+    RegKey(const RegKey& parent_key, const char* sub_key, REGSAM access_rights, bool create = false) :
+        RegKey(parent_key.m_key, sub_key, access_rights, create)
     {}
 
     ~RegKey()
@@ -43,13 +44,13 @@ public:
     {
         if (!m_open)
             return false;
-        DWORD tempValue, type, cb = sizeof(tempValue);
-        LONG error = RegQueryValueEx(m_key, name, NULL, &type, (LPBYTE)&tempValue, &cb);
+        DWORD temp_value, type, cb = sizeof(temp_value);
+        LONG error = RegQueryValueEx(m_key, name, nullptr, &type, reinterpret_cast<BYTE*>(&temp_value), &cb);
         if (error != ERROR_SUCCESS)
             return false;
         if (type != REG_DWORD)
             return false;
-        *value = tempValue;
+        *value = temp_value;
         return true;
     }
 
@@ -58,21 +59,19 @@ public:
         if (!m_open)
             return false;
         DWORD type, cb = 0;
-        LONG error = RegQueryValueEx(m_key, name, NULL, &type, NULL, &cb);
+        LONG error = RegQueryValueEx(m_key, name, nullptr, &type, nullptr, &cb);
         if (error != ERROR_SUCCESS)
             return false;
         if (type != REG_SZ && type != REG_EXPAND_SZ)
             return false;
 
-        char* buf = new char[cb + 1];
-        error = RegQueryValueEx(m_key, name, NULL, &type, (LPBYTE)buf, &cb);
+        auto buf = std::make_unique<char[]>(cb + 1);
+        error = RegQueryValueEx(m_key, name, nullptr, &type, reinterpret_cast<BYTE*>(buf.get()), &cb);
         if (error != ERROR_SUCCESS) {
-            delete[] buf;
             return false;
         }
         buf[cb] = '\0';
-        value->assign(buf);
-        delete[] buf;
+        value->assign(buf.get());
         return true;
     }
 
@@ -88,14 +87,14 @@ public:
     void write_value(const char* name, unsigned value)
     {
         DWORD temp = value;
-        LONG error = RegSetValueExA(m_key, name, 0, REG_DWORD, (BYTE*)&temp, sizeof(temp));
+        LONG error = RegSetValueExA(m_key, name, 0, REG_DWORD, reinterpret_cast<const BYTE*>(&temp), sizeof(temp));
         if (error != ERROR_SUCCESS)
             throw Win32Error(error, "RegSetValueExA failed");
     }
 
     void write_value(const char* name, const std::string& value)
     {
-        LONG error = RegSetValueExA(m_key, name, 0, REG_SZ, (BYTE*)value.c_str(), value.size() + 1);
+        LONG error = RegSetValueExA(m_key, name, 0, REG_SZ, reinterpret_cast<const BYTE*>(value.c_str()), value.size() + 1);
         if (error != ERROR_SUCCESS)
             throw Win32Error(error, "RegSetValueExA failed");
     }

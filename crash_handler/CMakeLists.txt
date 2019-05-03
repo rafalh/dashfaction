@@ -18,5 +18,4 @@ target_link_libraries(CrashHandler
     psapi
     zip
     zlib
-    wininet
 )

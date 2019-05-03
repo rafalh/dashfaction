@@ -53,7 +53,7 @@ VideoDeviceInfoProvider::~VideoDeviceInfoProvider()
     FreeLibrary(m_lib);
 }
 
-std::set<VideoDeviceInfoProvider::Resolution> VideoDeviceInfoProvider::getResolutions([[maybe_unused]] D3DFORMAT format)
+std::set<VideoDeviceInfoProvider::Resolution> VideoDeviceInfoProvider::get_resolutions([[maybe_unused]] D3DFORMAT format)
 {
     std::set<VideoDeviceInfoProvider::Resolution> result;
     unsigned mode_idx = 0;
@@ -80,7 +80,7 @@ std::set<VideoDeviceInfoProvider::Resolution> VideoDeviceInfoProvider::getResolu
     return result;
 }
 
-std::set<D3DMULTISAMPLE_TYPE> VideoDeviceInfoProvider::getMultiSampleTypes(D3DFORMAT format, BOOL windowed)
+std::set<D3DMULTISAMPLE_TYPE> VideoDeviceInfoProvider::get_multisample_types(D3DFORMAT format, BOOL windowed)
 {
     std::set<D3DMULTISAMPLE_TYPE> result;
     for (unsigned i = 2; i < 16; ++i)
@@ -98,7 +98,7 @@ std::set<D3DMULTISAMPLE_TYPE> VideoDeviceInfoProvider::getMultiSampleTypes(D3DFO
     return result;
 }
 
-bool VideoDeviceInfoProvider::hasAnisotropySupport()
+bool VideoDeviceInfoProvider::has_anisotropy_support()
 {
 #ifdef USE_D3D9
     D3DCAPS9 caps;

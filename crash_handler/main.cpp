@@ -27,12 +27,12 @@
 #define CRASHHANDLER_WEBSVC_URL "https://ravin.tk/api/rf/dashfaction/crashreport.php"
 #define CRASHHANDLER_WEBSVC_AGENT "DashFaction"
 
-bool PrepareArchive(const char* CrashDumpFilename)
+bool PrepareArchive(const char* crash_dump_filename)
 {
     CreateDirectoryA(CRASHHANDLER_TARGET_DIR, NULL);
     ZipHelper zip(CRASHHANDLER_TARGET_DIR "/" CRASHHANDLER_TARGET_NAME);
-    zip.addFile(CrashDumpFilename, "CrashDump.dmp");
-    zip.addFile(CRASHHANDLER_LOG_PATH, "AppLog.log");
+    zip.add_file(crash_dump_filename, "CrashDump.dmp");
+    zip.add_file(CRASHHANDLER_LOG_PATH, "AppLog.log");
     return true;
 }
 
@@ -48,7 +48,7 @@ void SendArchive()
     file.seekg(0, std::ios_base::beg);
 
     HttpSession session{CRASHHANDLER_WEBSVC_AGENT};
-    HttpRequest req(CRASHHANDLER_WEBSVC_URL, "POST", session);
+    HttpRequest req{CRASHHANDLER_WEBSVC_URL, "POST", session};
     req.set_content_type("application/octet-stream");
     req.begin_body(size);
     char buf[4096];
@@ -60,23 +60,23 @@ void SendArchive()
     req.send();
 }
 
-int GetTempFileNameInTempDir(const char* Prefix, char Result[MAX_PATH])
+int GetTempFileNameInTempDir(const char* prefix, char result[MAX_PATH])
 {
-    char TempDir[MAX_PATH];
-    DWORD dwRetVal = GetTempPathA(std::size(TempDir), TempDir);
-    if (dwRetVal == 0 || dwRetVal > std::size(TempDir))
+    char temp_dir[MAX_PATH];
+    DWORD ret_val_dw = GetTempPathA(std::size(temp_dir), temp_dir);
+    if (ret_val_dw == 0 || ret_val_dw > std::size(temp_dir))
         return -1;
 
-    UINT RetVal = GetTempFileNameA(TempDir, Prefix, 0, Result);
-    if (RetVal == 0)
+    UINT ret_val = GetTempFileNameA(temp_dir, prefix, 0, result);
+    if (ret_val == 0)
         return -1;
 
     return 0;
 }
 
 #if 1
-int CALLBACK WinMain([[maybe_unused]] HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstance,
-                     [[maybe_unused]] LPSTR lpCmdLine, [[maybe_unused]] int nCmdShow) try {
+int CALLBACK WinMain([[maybe_unused]] HINSTANCE instance, [[maybe_unused]] HINSTANCE prev_instance,
+                     [[maybe_unused]] LPSTR cmd_line, [[maybe_unused]] int cmd_show) try {
     auto argc = __argc;
     auto argv = __argv;
 #else
@@ -86,48 +86,48 @@ int main(int argc, const char* argv[]) try {
     if (argc < 5)
         return -1;
 
-    EXCEPTION_POINTERS* ExceptionPtrs = (EXCEPTION_POINTERS*)strtoull(argv[1], nullptr, 0);
-    HANDLE hProcess = (HANDLE)strtoull(argv[2], nullptr, 0);
-    DWORD dwThreadId = (DWORD)strtoull(argv[3], nullptr, 0);
-    HANDLE hEvent = (HANDLE)strtoull(argv[4], nullptr, 0);
+    EXCEPTION_POINTERS* exception_ptrs = reinterpret_cast<EXCEPTION_POINTERS*>(std::strtoull(argv[1], nullptr, 0));
+    HANDLE process_handle = reinterpret_cast<HANDLE>(std::strtoull(argv[2], nullptr, 0));
+    DWORD thread_id = static_cast<DWORD>(std::strtoull(argv[3], nullptr, 0));
+    HANDLE event = reinterpret_cast<HANDLE>(std::strtoull(argv[4], nullptr, 0));
 
-    char CrashDumpFilename[MAX_PATH];
-    if (GetTempFileNameInTempDir("DF_Dump", CrashDumpFilename) != 0)
+    char crash_dump_filename[MAX_PATH];
+    if (GetTempFileNameInTempDir("DF_Dump", crash_dump_filename) != 0)
         return -1;
 
-    MiniDumpHelper dumpHelper;
-    dumpHelper.addKnownModule(L"ntdll");
-    dumpHelper.addKnownModule(L"DashFaction");
-    dumpHelper.addKnownModule(L"RF");
-    dumpHelper.setInfoLevel(CRASHHANDLER_DMP_LEVEL);
-    dumpHelper.writeDump(CrashDumpFilename, ExceptionPtrs, hProcess, dwThreadId);
+    MiniDumpHelper dump_helper;
+    dump_helper.add_known_module(L"ntdll");
+    dump_helper.add_known_module(L"DashFaction");
+    dump_helper.add_known_module(L"RF");
+    dump_helper.set_info_level(CRASHHANDLER_DMP_LEVEL);
+    dump_helper.write_dump(crash_dump_filename, exception_ptrs, process_handle, thread_id);
 
-    SetEvent(hEvent);
+    SetEvent(event);
 
-    CloseHandle(hProcess);
-    CloseHandle(hEvent);
+    CloseHandle(process_handle);
+    CloseHandle(event);
 
-    PrepareArchive(CrashDumpFilename);
-    DeleteFileA(CrashDumpFilename);
+    PrepareArchive(crash_dump_filename);
+    DeleteFileA(crash_dump_filename);
 
     if (GetSystemMetrics(SM_CMONITORS) == 0)
         printf("%s\n", CRASHHANDLER_MSG);
     else {
 #if CRASHHANDLER_WEBSVC_ENABLED
-        if (MessageBox(NULL, TEXT(CRASHHANDLER_MSG), NULL, MB_ICONERROR | MB_YESNO | MB_SETFOREGROUND | MB_TASKMODAL) ==
+        if (MessageBox(nullptr, TEXT(CRASHHANDLER_MSG), nullptr, MB_ICONERROR | MB_YESNO | MB_SETFOREGROUND | MB_TASKMODAL) ==
             IDYES) {
             SendArchive();
-            MessageBox(NULL, TEXT("Crash report has been sent. Thank you!"), NULL,
+            MessageBox(nullptr, TEXT("Crash report has been sent. Thank you!"), nullptr,
                        MB_ICONINFORMATION | MB_OK | MB_SETFOREGROUND | MB_TASKMODAL);
         }
 #else  // CRASHHANDLER_WEBSVC_ENABLED
-        MessageBox(NULL, TEXT(CRASHHANDLER_MSG), NULL, MB_ICONERROR | MB_OK | MB_SETFOREGROUND | MB_TASKMODAL);
+        MessageBox(nullptr, TEXT(CRASHHANDLER_MSG), nullptr, MB_ICONERROR | MB_OK | MB_SETFOREGROUND | MB_TASKMODAL);
 #endif // CRASHHANDLER_WEBSVC_ENABLED
     }
 
     return 0;
 }
 catch (const std::exception& e) {
-    MessageBoxA(NULL, e.what(), NULL, MB_ICONERROR | MB_OK | MB_SETFOREGROUND | MB_TASKMODAL);
+    MessageBoxA(nullptr, e.what(), nullptr, MB_ICONERROR | MB_OK | MB_SETFOREGROUND | MB_TASKMODAL);
     return -1;
 }

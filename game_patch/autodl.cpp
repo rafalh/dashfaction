@@ -1,9 +1,9 @@
 #include "autodl.h"
-#include <common/HttpRequest.h>
 #include "misc.h"
 #include "rf.h"
-#include <common/rfproto.h>
 #include "utils.h"
+#include <common/HttpRequest.h>
+#include <common/rfproto.h>
 #include <common/BuildConfig.h>
 #include <patch_common/CodeInjection.h>
 #include <stdexcept>

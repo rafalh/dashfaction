@@ -111,7 +111,7 @@ GameLauncher::GameLauncher() : PatchedAppLauncher("DashFaction.dll", RF_120_NA_C
 
 std::string GameLauncher::get_app_path()
 {
-    return m_conf.gameExecutablePath;
+    return m_conf.game_executable_path;
 }
 
 EditorLauncher::EditorLauncher() : PatchedAppLauncher("DashEditor.dll", RED_120_NA_CRC32)
@@ -124,6 +124,6 @@ EditorLauncher::EditorLauncher() : PatchedAppLauncher("DashEditor.dll", RED_120_
 
 std::string EditorLauncher::get_app_path()
 {
-    std::string workDir = get_dir_from_path(m_conf.gameExecutablePath);
+    std::string workDir = get_dir_from_path(m_conf.game_executable_path);
     return workDir + "\\RED.exe";
 }

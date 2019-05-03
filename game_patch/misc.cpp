@@ -189,7 +189,7 @@ CallHook<void(int, rf::Vector3*, float*, float*, float)> SndConvertVolume3D_Ambi
     0x00505F93,
     [](int game_snd_id, rf::Vector3* sound_pos, float* pan_out, float* volume_out, float volume_in) {
         SndConvertVolume3D_AmbientSound_hook.CallTarget(game_snd_id, sound_pos, pan_out, volume_out, volume_in);
-        *volume_out *= g_game_config.levelSoundVolume;
+        *volume_out *= g_game_config.level_sound_volume;
     },
 };
 
@@ -215,7 +215,7 @@ bool IsHoldingAssaultRifle()
 FunHook<void(rf::Player*, bool, bool)> PlayerLocalFireControl_hook{
     0x004A4E80,
     [](rf::Player* player, bool secondary, bool was_pressed) {
-        if (g_game_config.swapAssaultRifleControls && IsHoldingAssaultRifle())
+        if (g_game_config.swap_assault_rifle_controls && IsHoldingAssaultRifle())
             secondary = !secondary;
         PlayerLocalFireControl_hook.CallTarget(player, secondary, was_pressed);
     },
@@ -224,7 +224,7 @@ FunHook<void(rf::Player*, bool, bool)> PlayerLocalFireControl_hook{
 extern CallHook<char(rf::ControlConfig*, rf::GameCtrl, bool*)> IsEntityCtrlActive_hook1;
 char IsEntityCtrlActive_New(rf::ControlConfig* control_config, rf::GameCtrl game_ctrl, bool* was_pressed)
 {
-    if (g_game_config.swapAssaultRifleControls && IsHoldingAssaultRifle()) {
+    if (g_game_config.swap_assault_rifle_controls && IsHoldingAssaultRifle()) {
         if (game_ctrl == rf::GC_PRIMARY_ATTACK)
             game_ctrl = rf::GC_SECONDARY_ATTACK;
         else if (game_ctrl == rf::GC_SECONDARY_ATTACK)
@@ -238,10 +238,10 @@ CallHook<char(rf::ControlConfig*, rf::GameCtrl, bool*)> IsEntityCtrlActive_hook2
 DcCommand2 swap_assault_rifle_controls_cmd{
     "swap_assault_rifle_controls",
     []() {
-        g_game_config.swapAssaultRifleControls = !g_game_config.swapAssaultRifleControls;
+        g_game_config.swap_assault_rifle_controls = !g_game_config.swap_assault_rifle_controls;
         g_game_config.save();
         rf::DcPrintf("Swap assault rifle controls: %s",
-                     g_game_config.swapAssaultRifleControls ? "enabled" : "disabled");
+                     g_game_config.swap_assault_rifle_controls ? "enabled" : "disabled");
     },
     "Swap Assault Rifle controls",
 };
@@ -848,7 +848,7 @@ void LinearPitchTest()
 CodeInjection LinearPitchPatch{
     0x0049DEC9,
     [](X86Regs& regs) {
-        if (!g_game_config.linearPitch)
+        if (!g_game_config.linear_pitch)
             return;
         // Non-linear pitch value and delta from RF
         float& current_yaw = *reinterpret_cast<float*>(regs.esi + 0x868);
@@ -884,9 +884,9 @@ DcCommand2 linear_pitch_cmd{
         LinearPitchTest();
 #endif
 
-        g_game_config.linearPitch = !g_game_config.linearPitch;
+        g_game_config.linear_pitch = !g_game_config.linear_pitch;
         g_game_config.save();
-        rf::DcPrintf("Linear pitch is %s", g_game_config.linearPitch ? "enabled" : "disabled");
+        rf::DcPrintf("Linear pitch is %s", g_game_config.linear_pitch ? "enabled" : "disabled");
     },
     "Toggles linear pitch angle",
 };
@@ -894,10 +894,10 @@ DcCommand2 linear_pitch_cmd{
 DcCommand2 show_enemy_bullets_cmd{
     "show_enemy_bullets",
     []() {
-        g_game_config.showEnemyBullets = !g_game_config.showEnemyBullets;
+        g_game_config.show_enemy_bullets = !g_game_config.show_enemy_bullets;
         g_game_config.save();
-        rf::hide_enemy_bullets = !g_game_config.showEnemyBullets;
-        rf::DcPrintf("Enemy bullets are %s", g_game_config.showEnemyBullets ? "enabled" : "disabled");
+        rf::hide_enemy_bullets = !g_game_config.show_enemy_bullets;
+        rf::DcPrintf("Enemy bullets are %s", g_game_config.show_enemy_bullets ? "enabled" : "disabled");
     },
     "Toggles enemy bullets visibility",
 };
@@ -905,7 +905,7 @@ DcCommand2 show_enemy_bullets_cmd{
 FunHook<char(int, int, int, int, char)> ClutterInitMonitor_hook{
     0x00412470,
     [](int clutter_handle, int always_minus_1, int w, int h, char always_1) {
-        if (g_game_config.highMonitorRes) {
+        if (g_game_config.high_monitor_res) {
             constexpr int factor = 2;
             w *= factor;
             h *= factor;
@@ -939,7 +939,7 @@ void MiscInit()
 #endif // NO_CD_FIX
 
     // Disable thqlogo.bik
-    if (g_game_config.fastStart) {
+    if (g_game_config.fast_start) {
         WriteMem<u8>(0x004B208A, ASM_SHORT_JMP_REL);
         WriteMem<u8>(0x004B24FD, ASM_SHORT_JMP_REL);
     }
@@ -948,7 +948,7 @@ void MiscInit()
     WriteMem<u8>(0x00505D08, 0x00505D5B - (0x00505D07 + 0x2));
 
     // Set initial FPS limit
-    WriteMem<float>(0x005094CA, 1.0f / g_game_config.maxFps);
+    WriteMem<float>(0x005094CA, 1.0f / g_game_config.max_fps);
 
     // Crash-fix... (probably argument for function is invalid); Page Heap is needed
     WriteMem<u32>(0x0056A28C + 1, 0);
@@ -1001,7 +1001,7 @@ void MiscInit()
     WriteMem<u8>(0x004B14B4 + 1, kbd_layout);
 
     // Level sounds
-    SetPlaySoundEventsVolumeScale(g_game_config.levelSoundVolume);
+    SetPlaySoundEventsVolumeScale(g_game_config.level_sound_volume);
     SndConvertVolume3D_AmbientSound_hook.Install();
 
     // hook MouseUpdateDirectInput
@@ -1014,7 +1014,7 @@ void MiscInit()
     AsmWritter(0x00478E91, 0x00478E9E).mov(asm_regs::ebx, 0x40); // chat input background
 
     // Show enemy bullets
-    rf::hide_enemy_bullets = !g_game_config.showEnemyBullets;
+    rf::hide_enemy_bullets = !g_game_config.show_enemy_bullets;
     show_enemy_bullets_cmd.Register();
 
     // Swap Assault Rifle fire controls

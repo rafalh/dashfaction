@@ -8,62 +8,62 @@
 #include <d3d8.h>
 #endif
 
-#define DEFAULT_RF_TRACKER "rfgt.factionfiles.com"
-#define DEFAULT_EXECUTABLE_PATH "C:\\games\\RedFaction\\rf.exe"
-#define MIN_FPS_LIMIT 10u
-#define MAX_FPS_LIMIT 240u
+inline const char DEFAULT_RF_TRACKER[] = "rfgt.factionfiles.com";
+inline const char DEFAULT_EXECUTABLE_PATH[] = "C:\\games\\RedFaction\\rf.exe";
+constexpr unsigned MIN_FPS_LIMIT = 10u;
+constexpr unsigned MAX_FPS_LIMIT = 240u;
 
 struct GameConfig
 {
-    std::string gameExecutablePath = DEFAULT_EXECUTABLE_PATH;
+    std::string game_executable_path = DEFAULT_EXECUTABLE_PATH;
 
     // Graphics
-    unsigned resWidth = 1024;
-    unsigned resHeight = 768;
-    unsigned resBpp = 32;
-    unsigned resBackbufferFormat = D3DFMT_X8R8G8B8;
-    unsigned selectedVideoCard = 0;
+    unsigned res_width = 1024;
+    unsigned res_height = 768;
+    unsigned res_bpp = 32;
+    unsigned res_backbuffer_format = D3DFMT_X8R8G8B8;
+    unsigned selected_video_card = 0;
     enum WndMode
     {
         FULLSCREEN,
         WINDOWED,
         STRETCHED
     };
-    WndMode wndMode = FULLSCREEN;
+    WndMode wnd_mode = FULLSCREEN;
     bool vsync = true;
-    bool fastAnims = false;
-    bool disableLodModels = true;
-    bool anisotropicFiltering = true;
+    bool fast_anims = false;
+    bool disable_lod_models = true;
+    bool anisotropic_filtering = true;
     unsigned msaa = 0;
-    unsigned geometryCacheSize = 32;
-    unsigned maxFps = 60;
-    bool fpsCounter = true;
-    bool highScannerRes = true;
-    bool highMonitorRes = true;
-    bool trueColorTextures = true;
+    unsigned geometry_cache_size = 32;
+    unsigned max_fps = 60;
+    bool fps_counter = true;
+    bool high_scanner_res = true;
+    bool high_monitor_res = true;
+    bool true_color_textures = true;
 
     // Multiplayer
     std::string tracker = DEFAULT_RF_TRACKER;
-    unsigned updateRate = 2600;
-    unsigned forcePort = 0;
+    unsigned update_rate = 2600;
+    unsigned force_port = 0;
 
     // Misc
-    bool directInput = false;
-    bool eaxSound = true;
-    bool fastStart = true;
-    bool allowOverwriteGameFiles = false;
-    bool scoreboardAnim = false;
-    bool keepLauncherOpen = false;
+    bool direct_input = false;
+    bool eax_sound = true;
+    bool fast_start = true;
+    bool allow_overwrite_game_files = false;
+    bool scoreboard_anim = false;
+    bool keep_launcher_open = false;
 
     // Advanced
-    float levelSoundVolume = 1.0f;
-    std::string dashFactionVersion;
-    bool swapAssaultRifleControls = false;
+    float level_sound_volume = 1.0f;
+    std::string dash_faction_version;
+    bool swap_assault_rifle_controls = false;
     bool glares = true;
-    bool showEnemyBullets = true;
-    bool linearPitch = false;
+    bool show_enemy_bullets = true;
+    bool linear_pitch = false;
 
     bool load();
     void save();
-    bool detectGamePath();
+    bool detect_game_path();
 };

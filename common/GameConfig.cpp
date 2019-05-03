@@ -10,47 +10,47 @@ bool GameConfig::load()
 {
     RegKey reg_key(HKEY_CURRENT_USER, rf_key_name, KEY_READ);
 
-    reg_key.read_value("Resolution Width", &resWidth);
-    reg_key.read_value("Resolution Height", &resHeight);
-    reg_key.read_value("Resolution Bit Depth", &resBpp);
-    reg_key.read_value("Resolution Backbuffer Format", &resBackbufferFormat);
-    reg_key.read_value("Selected Video Card", &selectedVideoCard);
+    reg_key.read_value("Resolution Width", &res_width);
+    reg_key.read_value("Resolution Height", &res_height);
+    reg_key.read_value("Resolution Bit Depth", &res_bpp);
+    reg_key.read_value("Resolution Backbuffer Format", &res_backbuffer_format);
+    reg_key.read_value("Selected Video Card", &selected_video_card);
     reg_key.read_value("Vsync", &vsync);
-    reg_key.read_value("Fast Animations", &fastAnims);
-    reg_key.read_value("Geometry Cache Size", &geometryCacheSize);
+    reg_key.read_value("Fast Animations", &fast_anims);
+    reg_key.read_value("Geometry Cache Size", &geometry_cache_size);
     reg_key.read_value("GameTracker", &tracker);
-    reg_key.read_value("EAX", &eaxSound);
-    reg_key.read_value("UpdateRate", &updateRate);
-    reg_key.read_value("ForcePort", &forcePort);
+    reg_key.read_value("EAX", &eax_sound);
+    reg_key.read_value("UpdateRate", &update_rate);
+    reg_key.read_value("ForcePort", &force_port);
 
     RegKey dash_faction_key(reg_key, df_subkey_name, KEY_READ);
     unsigned temp;
     if (dash_faction_key.read_value("Window Mode", &temp))
-        wndMode = (WndMode)temp;
-    dash_faction_key.read_value("Disable LOD Models", &disableLodModels);
-    dash_faction_key.read_value("Anisotropic Filtering", &anisotropicFiltering);
+        wnd_mode = (WndMode)temp;
+    dash_faction_key.read_value("Disable LOD Models", &disable_lod_models);
+    dash_faction_key.read_value("Anisotropic Filtering", &anisotropic_filtering);
     dash_faction_key.read_value("MSAA", &msaa);
-    dash_faction_key.read_value("FPS Counter", &fpsCounter);
-    dash_faction_key.read_value("Max FPS", &maxFps);
-    dash_faction_key.read_value("High Scanner Resolution", &highScannerRes);
-    dash_faction_key.read_value("High Monitor Resolution", &highMonitorRes);
-    dash_faction_key.read_value("True Color Textures", &trueColorTextures);
-    if (!dash_faction_key.read_value("Executable Path", &gameExecutablePath))
-        detectGamePath();
-    dash_faction_key.read_value("Direct Input", &directInput);
-    dash_faction_key.read_value("Fast Start", &fastStart);
-    dash_faction_key.read_value("Scoreboard Animations", &scoreboardAnim);
-    dash_faction_key.read_value("Level Sound Volume", reinterpret_cast<unsigned*>(&levelSoundVolume));
-    dash_faction_key.read_value("Allow Overwriting Game Files", &allowOverwriteGameFiles);
-    dash_faction_key.read_value("Version", &dashFactionVersion);
-    dash_faction_key.read_value("Swap Assault Rifle Controls", &swapAssaultRifleControls);
+    dash_faction_key.read_value("FPS Counter", &fps_counter);
+    dash_faction_key.read_value("Max FPS", &max_fps);
+    dash_faction_key.read_value("High Scanner Resolution", &high_scanner_res);
+    dash_faction_key.read_value("High Monitor Resolution", &high_monitor_res);
+    dash_faction_key.read_value("True Color Textures", &true_color_textures);
+    if (!dash_faction_key.read_value("Executable Path", &game_executable_path))
+        detect_game_path();
+    dash_faction_key.read_value("Direct Input", &direct_input);
+    dash_faction_key.read_value("Fast Start", &fast_start);
+    dash_faction_key.read_value("Scoreboard Animations", &scoreboard_anim);
+    dash_faction_key.read_value("Level Sound Volume", reinterpret_cast<unsigned*>(&level_sound_volume));
+    dash_faction_key.read_value("Allow Overwriting Game Files", &allow_overwrite_game_files);
+    dash_faction_key.read_value("Version", &dash_faction_version);
+    dash_faction_key.read_value("Swap Assault Rifle Controls", &swap_assault_rifle_controls);
     dash_faction_key.read_value("Glares", &glares);
-    dash_faction_key.read_value("Linear Pitch", &linearPitch);
-    dash_faction_key.read_value("Show Enemy Bullets", &showEnemyBullets);
-    dash_faction_key.read_value("Keep Launcher Open", &keepLauncherOpen);
+    dash_faction_key.read_value("Linear Pitch", &linear_pitch);
+    dash_faction_key.read_value("Show Enemy Bullets", &show_enemy_bullets);
+    dash_faction_key.read_value("Keep Launcher Open", &keep_launcher_open);
 
 #ifdef NDEBUG
-    maxFps = std::clamp(maxFps, MIN_FPS_LIMIT, MAX_FPS_LIMIT);
+    max_fps = std::clamp(max_fps, MIN_FPS_LIMIT, MAX_FPS_LIMIT);
 #endif
 
     return reg_key.is_open();
@@ -59,44 +59,44 @@ bool GameConfig::load()
 void GameConfig::save()
 {
     RegKey reg_key(HKEY_CURRENT_USER, rf_key_name, KEY_WRITE, true);
-    reg_key.write_value("Resolution Width", resWidth);
-    reg_key.write_value("Resolution Height", resHeight);
-    reg_key.write_value("Resolution Bit Depth", resBpp);
-    reg_key.write_value("Resolution Backbuffer Format", resBackbufferFormat);
-    reg_key.write_value("Selected Video Card", selectedVideoCard);
+    reg_key.write_value("Resolution Width", res_width);
+    reg_key.write_value("Resolution Height", res_height);
+    reg_key.write_value("Resolution Bit Depth", res_bpp);
+    reg_key.write_value("Resolution Backbuffer Format", res_backbuffer_format);
+    reg_key.write_value("Selected Video Card", selected_video_card);
     reg_key.write_value("Vsync", vsync);
-    reg_key.write_value("Fast Animations", fastAnims);
-    reg_key.write_value("Geometry Cache Size", geometryCacheSize);
+    reg_key.write_value("Fast Animations", fast_anims);
+    reg_key.write_value("Geometry Cache Size", geometry_cache_size);
     reg_key.write_value("GameTracker", tracker);
-    reg_key.write_value("UpdateRate", updateRate);
-    reg_key.write_value("EAX", eaxSound);
-    reg_key.write_value("ForcePort", forcePort);
+    reg_key.write_value("UpdateRate", update_rate);
+    reg_key.write_value("EAX", eax_sound);
+    reg_key.write_value("ForcePort", force_port);
 
     RegKey dash_faction_key(reg_key, df_subkey_name, KEY_WRITE, true);
-    dash_faction_key.write_value("Window Mode", (unsigned)wndMode);
-    dash_faction_key.write_value("Disable LOD Models", disableLodModels);
-    dash_faction_key.write_value("Anisotropic Filtering", anisotropicFiltering);
+    dash_faction_key.write_value("Window Mode", (unsigned)wnd_mode);
+    dash_faction_key.write_value("Disable LOD Models", disable_lod_models);
+    dash_faction_key.write_value("Anisotropic Filtering", anisotropic_filtering);
     dash_faction_key.write_value("MSAA", msaa);
-    dash_faction_key.write_value("FPS Counter", fpsCounter);
-    dash_faction_key.write_value("Max FPS", maxFps);
-    dash_faction_key.write_value("High Scanner Resolution", highScannerRes);
-    dash_faction_key.write_value("High Monitor Resolution", highMonitorRes);
-    dash_faction_key.write_value("True Color Textures", trueColorTextures);
-    dash_faction_key.write_value("Executable Path", gameExecutablePath);
-    dash_faction_key.write_value("Direct Input", directInput);
-    dash_faction_key.write_value("Fast Start", fastStart);
-    dash_faction_key.write_value("Scoreboard Animations", scoreboardAnim);
-    dash_faction_key.write_value("Level Sound Volume", *reinterpret_cast<unsigned*>(&levelSoundVolume));
-    dash_faction_key.write_value("Allow Overwriting Game Files", allowOverwriteGameFiles);
-    dash_faction_key.write_value("Version", dashFactionVersion);
-    dash_faction_key.write_value("Swap Assault Rifle Controls", swapAssaultRifleControls);
+    dash_faction_key.write_value("FPS Counter", fps_counter);
+    dash_faction_key.write_value("Max FPS", max_fps);
+    dash_faction_key.write_value("High Scanner Resolution", high_scanner_res);
+    dash_faction_key.write_value("High Monitor Resolution", high_monitor_res);
+    dash_faction_key.write_value("True Color Textures", true_color_textures);
+    dash_faction_key.write_value("Executable Path", game_executable_path);
+    dash_faction_key.write_value("Direct Input", direct_input);
+    dash_faction_key.write_value("Fast Start", fast_start);
+    dash_faction_key.write_value("Scoreboard Animations", scoreboard_anim);
+    dash_faction_key.write_value("Level Sound Volume", *reinterpret_cast<unsigned*>(&level_sound_volume));
+    dash_faction_key.write_value("Allow Overwriting Game Files", allow_overwrite_game_files);
+    dash_faction_key.write_value("Version", dash_faction_version);
+    dash_faction_key.write_value("Swap Assault Rifle Controls", swap_assault_rifle_controls);
     dash_faction_key.write_value("Glares", &glares);
-    dash_faction_key.write_value("Linear Pitch", linearPitch);
-    dash_faction_key.write_value("Show Enemy Bullets", showEnemyBullets);
-    dash_faction_key.write_value("Keep Launcher Open", keepLauncherOpen);
+    dash_faction_key.write_value("Linear Pitch", linear_pitch);
+    dash_faction_key.write_value("Show Enemy Bullets", show_enemy_bullets);
+    dash_faction_key.write_value("Keep Launcher Open", keep_launcher_open);
 }
 
-bool GameConfig::detectGamePath()
+bool GameConfig::detect_game_path()
 {
     std::string install_path;
 
@@ -106,7 +106,7 @@ bool GameConfig::detectGamePath()
         RegKey reg_key(HKEY_LOCAL_MACHINE, rf_key_name, KEY_READ);
         if (reg_key.read_value("InstallPath", &install_path))
         {
-            gameExecutablePath = install_path + "\\RF.exe";
+            game_executable_path = install_path + "\\RF.exe";
             return true;
         }
     }
@@ -121,7 +121,7 @@ bool GameConfig::detectGamePath()
         RegKey reg_key(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Steam App 20530", KEY_READ);
         if (reg_key.read_value("InstallLocation", &install_path))
         {
-            gameExecutablePath = install_path + "\\RF.exe";
+            game_executable_path = install_path + "\\RF.exe";
             return true;
         }
     }
@@ -135,7 +135,7 @@ bool GameConfig::detectGamePath()
     std::string full_path = std::string(current_dir) + "\\RF.exe";
     if (PathFileExistsA(full_path.c_str()))
     {
-        gameExecutablePath = full_path;
+        game_executable_path = full_path;
         return true;
     }
 

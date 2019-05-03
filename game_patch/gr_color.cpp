@@ -1,8 +1,8 @@
 #include "gr_color.h"
-#include <patch_common/AsmWritter.h>
 #include "main.h"
 #include "rf.h"
 #include "stdafx.h"
+#include <patch_common/AsmWritter.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
 #include <patch_common/ShortTypes.h>
@@ -304,7 +304,7 @@ FunHook<unsigned()> BinkInitDeviceInfo_hook{
     []() {
         unsigned bink_flags = BinkInitDeviceInfo_hook.CallTarget();
 
-        if (g_game_config.trueColorTextures && g_game_config.resBpp == 32) {
+        if (g_game_config.true_color_textures && g_game_config.res_bpp == 32) {
             static auto& bink_bm_pixel_fmt = AddrAsRef<uint32_t>(0x018871C0);
             bink_bm_pixel_fmt = rf::BMPF_888;
             bink_flags = 3;
@@ -341,7 +341,7 @@ CodeInjection MonitorRenderNoise_patch{
 void GrColorInit()
 {
     // True Color textures
-    if (g_game_config.resBpp == 32 && g_game_config.trueColorTextures) {
+    if (g_game_config.res_bpp == 32 && g_game_config.true_color_textures) {
         // Available texture formats (tested for compatibility)
         WriteMem<u32>(0x005A7DFC, D3DFMT_X8R8G8B8); // old: D3DFMT_R5G6B5
         WriteMem<u32>(0x005A7E00, D3DFMT_A8R8G8B8); // old: D3DFMT_X1R5G5B5

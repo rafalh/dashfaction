@@ -1,5 +1,5 @@
-#include "commands.h"
 #include <common/BuildConfig.h>
+#include "commands.h"
 #include "lazyban.h"
 #include "main.h"
 #include "misc.h"
@@ -55,7 +55,7 @@ DcCommand2 max_fps_cmd{
 #else
             int new_limit = limit_opt.value();
 #endif
-            g_game_config.maxFps = new_limit;
+            g_game_config.max_fps = new_limit;
             g_game_config.save();
             rf::min_framerate = 1.0f / new_limit;
         }
@@ -193,10 +193,10 @@ void DebugRender2d()
 DcCommand2 input_mode_cmd{
     "inputmode",
     []() {
-        g_game_config.directInput = !g_game_config.directInput;
-        rf::direct_input_disabled = !g_game_config.directInput;
+        g_game_config.direct_input = !g_game_config.direct_input;
+        rf::direct_input_disabled = !g_game_config.direct_input;
         g_game_config.save();
-        if (g_game_config.directInput)
+        if (g_game_config.direct_input)
             rf::DcPrintf("DirectInput is enabled");
         else
             rf::DcPrintf("DirectInput is disabled");
@@ -256,10 +256,10 @@ DcCommand2 level_sounds_cmd{
             float vol_scale = std::clamp(volume.value(), 0.0f, 1.0f);
             SetPlaySoundEventsVolumeScale(vol_scale);
 
-            g_game_config.levelSoundVolume = vol_scale;
+            g_game_config.level_sound_volume = vol_scale;
             g_game_config.save();
         }
-        rf::DcPrintf("Level sound volume: %.1f", g_game_config.levelSoundVolume);
+        rf::DcPrintf("Level sound volume: %.1f", g_game_config.level_sound_volume);
     },
     "Sets level sounds volume scale",
     "levelsounds <volume>",

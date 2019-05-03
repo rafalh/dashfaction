@@ -1,19 +1,19 @@
 #include <patch_common/MemUtils.h>
 #include <windows.h>
 
-void WriteMem(unsigned Addr, const void* pValue, unsigned cbValue)
+void WriteMem(unsigned addr, const void* data, unsigned size)
 {
-    DWORD dwOldProtect;
+    DWORD old_protect;
 
-    VirtualProtect((void*)Addr, cbValue, PAGE_EXECUTE_READWRITE, &dwOldProtect);
-    memcpy((void*)Addr, pValue, cbValue);
-    VirtualProtect((void*)Addr, cbValue, dwOldProtect, NULL);
+    VirtualProtect(reinterpret_cast<void*>(addr), size, PAGE_EXECUTE_READWRITE, &old_protect);
+    std::memcpy(reinterpret_cast<void*>(addr), data, size);
+    VirtualProtect(reinterpret_cast<void*>(addr), size, old_protect, NULL);
 }
 
-void UnprotectMem(void* Ptr, unsigned Len)
+void UnprotectMem(void* ptr, unsigned len)
 {
-    DWORD dwOldProtect;
-    VirtualProtect(Ptr, Len, PAGE_EXECUTE_READWRITE, &dwOldProtect);
+    DWORD old_protect;
+    VirtualProtect(ptr, len, PAGE_EXECUTE_READWRITE, &old_protect);
 }
 
 void* AllocMemForCode(unsigned num_bytes)

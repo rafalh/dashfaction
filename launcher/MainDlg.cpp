@@ -90,7 +90,7 @@ void MainDlg::RefreshModSelector()
     catch (...) {
         return;
     }
-    std::string game_dir = get_dir_from_path(game_config.gameExecutablePath);
+    std::string game_dir = get_dir_from_path(game_config.game_executable_path);
     std::string mods_dir = game_dir + "\\mods\\*";
     WIN32_FIND_DATA fi;
     HANDLE hfind = FindFirstFileExA(mods_dir.c_str(), FindExInfoBasic, &fi, FindExSearchLimitToDirectories, NULL, 0);

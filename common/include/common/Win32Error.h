@@ -18,7 +18,7 @@ public:
         if (!m_what.empty())
             m_what += ": ";
         m_what += "win32 error " + std::to_string(m_error);
-        auto error_desc = GetWin32ErrorDescription(m_error);
+        auto error_desc = get_win32_error_description(m_error);
         m_what += "\n" + error_desc;
     }
 

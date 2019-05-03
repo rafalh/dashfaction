@@ -358,7 +358,7 @@ static void PackfileAddToLookupTable_New(rf::PackfileEntry* entry)
 #ifdef MOD_FILE_WHITELIST
                 Whitelisted = IsModFileInWhitelist(Entry->file_name);
 #endif
-                if (!g_game_config.allowOverwriteGameFiles && !whitelisted) {
+                if (!g_game_config.allow_overwrite_game_files && !whitelisted) {
                     TRACE("Denied overwriting game file %s (old packfile %s, new packfile %s)", entry->file_name,
                           old_archive, new_archive);
                     return;

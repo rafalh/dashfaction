@@ -5,9 +5,9 @@
 #include "stdafx.h"
 #include "LauncherApp.h"
 #include "MainDlg.h"
+#include "LauncherCommandLineInfo.h"
 #include <common/GameConfig.h>
 #include <common/version.h>
-#include "LauncherCommandLineInfo.h"
 #include <launcher_common/PatchedAppLauncher.h>
 
 #ifdef _DEBUG
@@ -121,11 +121,11 @@ void LauncherApp::MigrateConfig()
     try
     {
         GameConfig config;
-        if (config.load() && config.dashFactionVersion != VERSION_STR)
+        if (config.load() && config.dash_faction_version != VERSION_STR)
         {
-            if (config.tracker == "rf.thqmultiplay.net" && config.dashFactionVersion.empty()) // < 1.1.0
+            if (config.tracker == "rf.thqmultiplay.net" && config.dash_faction_version.empty()) // < 1.1.0
                 config.tracker = DEFAULT_RF_TRACKER;
-            config.dashFactionVersion = VERSION_STR;
+            config.dash_faction_version = VERSION_STR;
             config.save();
         }
     }
