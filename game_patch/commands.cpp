@@ -466,14 +466,16 @@ void DcAutoCompleteCommand(int offset)
     }
 
     if (next_offset != -1) {
-        if (matching_cmds.size() != 1)
-            return;
-        if (!stricmp(cmd_name.c_str(), "level") || !stricmp(cmd_name.c_str(), "levelsp"))
+        if (!stricmp(cmd_name.c_str(), "level"))
             DcAutoCompleteLevel(next_offset);
         else if (!stricmp(cmd_name.c_str(), "kick") || !stricmp(cmd_name.c_str(), "ban"))
             DcAutoCompletePlayer(next_offset);
         else if (!stricmp(cmd_name.c_str(), "rcon"))
             DcAutoCompleteCommand(next_offset);
+        else if (!stricmp(cmd_name.c_str(), "help"))
+            DcAutoCompleteCommand(next_offset);
+        else if (matching_cmds.size() != 1)
+            return;
         else
             DcShowCmdHelp(matching_cmds[0]);
     }
