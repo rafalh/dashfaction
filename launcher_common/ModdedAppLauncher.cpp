@@ -6,8 +6,8 @@
 #include "Thread.h"
 #include "DllInjector.h"
 #include "InjectingProcessLauncher.h"
-#include <GameConfig.h>
-#include <Exception.h>
+#include <common/GameConfig.h>
+#include <common/Exception.h>
 #include <windows.h>
 #include <shlwapi.h>
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Traits.h"
+#include <patch_common/Traits.h>
 #include <cstdint>
 #include <log/Logger.h>
 #include <subhook.h>

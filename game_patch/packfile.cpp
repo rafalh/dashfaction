@@ -4,7 +4,7 @@
 #include "stdafx.h"
 #include "utils.h"
 #include "xxhash.h"
-#include <ShortTypes.h>
+#include <patch_common/ShortTypes.h>
 #include <array>
 #include <shlwapi.h>
 

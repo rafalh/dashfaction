@@ -10,7 +10,7 @@
 typedef BOOL WINBOOL;
 #include <d3d8.h>
 
-#include <MemUtils.h>
+#include <patch_common/MemUtils.h>
 #include "utils.h"
 
 #ifndef __GNUC__

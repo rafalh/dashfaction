@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GameConfig.h"
+#include <common/GameConfig.h>
 #include <stdexcept>
 
 class PrivilegeElevationRequiredException : public std::runtime_error

@@ -1,12 +1,12 @@
 #include "spectate_mode.h"
-#include "BuildConfig.h"
+#include <common/BuildConfig.h>
 #include "rf.h"
-#include "rfproto.h"
+#include <common/rfproto.h>
 #include "scoreboard.h"
 #include "stdafx.h"
 #include "utils.h"
-#include <CallHook.h>
-#include <FunHook.h>
+#include <patch_common/CallHook.h>
+#include <patch_common/FunHook.h>
 #include <shlwapi.h>
 #include <windows.h>
 

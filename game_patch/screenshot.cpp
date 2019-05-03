@@ -1,15 +1,15 @@
 #include "screenshot.h"
-#include "BuildConfig.h"
+#include <common/BuildConfig.h>
 #include "gr_color.h"
 #include "main.h"
 #include "rf.h"
 #include "stdafx.h"
 #include "utils.h"
 #include <cstddef>
-#include <CallHook.h>
-#include <FunHook.h>
-#include <RegsPatch.h>
-#include <ComPtr.h>
+#include <patch_common/CallHook.h>
+#include <patch_common/FunHook.h>
+#include <patch_common/RegsPatch.h>
+#include <patch_common/ComPtr.h>
 
 const char g_screenshot_dir_name[] = "screenshots";
 

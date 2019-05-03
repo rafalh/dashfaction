@@ -2,8 +2,8 @@
 #include "rf.h"
 #include "stdafx.h"
 #include "utils.h"
-#include <FunHook.h>
-#include <ShortTypes.h>
+#include <patch_common/FunHook.h>
+#include <patch_common/ShortTypes.h>
 
 void KillInitPlayer(rf::Player* player)
 {

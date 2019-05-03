@@ -1,5 +1,5 @@
 include_directories(
-    .
+    include
     ${CMAKE_SOURCE_DIR}/vendor/subhook
     ${CMAKE_SOURCE_DIR}/logger/include
 )

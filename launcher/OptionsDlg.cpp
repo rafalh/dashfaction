@@ -5,7 +5,7 @@
 #include "LauncherApp.h"
 #include "OptionsDlg.h"
 #include "afxdialogex.h"
-#include "GameConfig.h"
+#include <common/GameConfig.h>
 
 
 // OptionsDlg dialog
@@ -15,7 +15,7 @@ IMPLEMENT_DYNAMIC(OptionsDlg, CDialogEx)
 OptionsDlg::OptionsDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(IDD_OPTIONS, pParent), m_toolTip(nullptr)
 {
-    
+
 }
 
 OptionsDlg::~OptionsDlg()
@@ -215,7 +215,7 @@ void OptionsDlg::OnBnClickedOk()
         m_conf.resWidth = atoi(widthStr);
         m_conf.resHeight = atoi(heightStr);
     }
-    
+
     m_conf.resBpp = IsDlgButtonChecked(IDC_16BIT_RADIO) == BST_CHECKED ? 16 : 32;
     m_conf.resBackbufferFormat = m_conf.resBpp == 16 ? D3DFMT_R5G6B5 : D3DFMT_X8R8G8B8;
 

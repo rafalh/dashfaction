@@ -2,11 +2,11 @@
 #include "kill.h"
 #include "main.h"
 #include "rf.h"
-#include "rfproto.h"
+#include <common/rfproto.h>
 #include "spectate_mode.h"
 #include "stdafx.h"
 #include "utils.h"
-#include <FunHook.h>
+#include <patch_common/FunHook.h>
 #include <algorithm>
 
 namespace rf

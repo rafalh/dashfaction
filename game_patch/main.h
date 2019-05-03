@@ -1,7 +1,7 @@
 #pragma once
 
 #include "rf.h"
-#include "GameConfig.h"
+#include <common/GameConfig.h>
 #include "utils.h"
 
 void FindPlayer(const StringMatcher& query, std::function<void(rf::Player*)> consumer);

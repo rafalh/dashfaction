@@ -1,8 +1,8 @@
 #pragma once
 
-#include "AsmOpcodes.h"
-#include "MemUtils.h"
-#include "ShortTypes.h"
+#include <patch_common/AsmOpcodes.h>
+#include <patch_common/MemUtils.h>
+#include <patch_common/ShortTypes.h>
 #include <cassert>
 #include <optional>
 

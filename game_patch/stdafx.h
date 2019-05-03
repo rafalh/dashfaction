@@ -2,8 +2,8 @@
 
 #include <windows.h>
 
-#include <AsmOpcodes.h>
-#include <AsmWritter.h>
-#include <MemUtils.h>
+#include <patch_common/AsmOpcodes.h>
+#include <patch_common/AsmWritter.h>
+#include <patch_common/MemUtils.h>
 
-#include "BuildConfig.h"
+#include <common/BuildConfig.h>

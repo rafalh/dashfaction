@@ -3,10 +3,10 @@
 #include "rf.h"
 #include "stdafx.h"
 #include "utils.h"
-#include <FunHook.h>
-#include <InlineAsm.h>
-#include <RegsPatch.h>
-#include <ShortTypes.h>
+#include <patch_common/FunHook.h>
+#include <patch_common/InlineAsm.h>
+#include <patch_common/RegsPatch.h>
+#include <patch_common/ShortTypes.h>
 #include <array>
 #include <unordered_map>
 #include <unordered_set>

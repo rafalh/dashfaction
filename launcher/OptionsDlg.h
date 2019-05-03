@@ -1,7 +1,7 @@
 #pragma once
 
 #include "VideoDeviceInfoProvider.h"
-#include "GameConfig.h"
+#include <common/GameConfig.h>
 
 // OptionsDlg dialog
 

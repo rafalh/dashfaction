@@ -1,4 +1,4 @@
-#include "HttpRequest.h"
+#include <common/HttpRequest.h>
 #include "Exception.h"
 #include <sstream>
 #include <cassert>

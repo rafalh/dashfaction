@@ -1,11 +1,11 @@
 #include "autodl.h"
-#include "HttpRequest.h"
+#include <common/HttpRequest.h>
 #include "misc.h"
 #include "rf.h"
-#include "rfproto.h"
+#include <common/rfproto.h>
 #include "utils.h"
-#include <BuildConfig.h>
-#include <RegsPatch.h>
+#include <common/BuildConfig.h>
+#include <patch_common/RegsPatch.h>
 #include <stdexcept>
 #include <thread>
 #include <unrar/dll.hpp>

@@ -5,10 +5,10 @@
 #include "stdafx.h"
 #include "LauncherApp.h"
 #include "MainDlg.h"
-#include "ModdedAppLauncher.h"
-#include "GameConfig.h"
-#include "version.h"
+#include <common/GameConfig.h>
+#include <common/version.h>
 #include "LauncherCommandLineInfo.h"
+#include <launcher_common/ModdedAppLauncher.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -66,7 +66,7 @@ BOOL LauncherApp::InitInstance()
     // Command line parsing
     LauncherCommandLineInfo CmdLineInfo;
     ParseCommandLine(CmdLineInfo);
-    
+
     if (CmdLineInfo.HasHelpFlag())
     {
         // Note: we can't use stdio console API in win32 application

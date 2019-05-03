@@ -1,8 +1,8 @@
 #include "MiniDumpHelper.h"
 #include "ZipHelper.h"
-#include <Exception.h>
-#include <version.h>
-#include <HttpRequest.h>
+#include <common/Exception.h>
+#include <common/version.h>
+#include <common/HttpRequest.h>
 #include <windows.h>
 #include <fstream>
 

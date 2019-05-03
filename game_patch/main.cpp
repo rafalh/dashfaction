@@ -1,4 +1,4 @@
-#include "GameConfig.h"
+#include <common/GameConfig.h>
 #include "autodl.h"
 #include "commands.h"
 #include "crashhandler.h"
@@ -19,8 +19,8 @@
 #include "stdafx.h"
 #include "utils.h"
 #include "wndproc.h"
-#include <CallHook.h>
-#include <FunHook.h>
+#include <patch_common/CallHook.h>
+#include <patch_common/FunHook.h>
 
 #include <log/ConsoleAppender.h>
 #include <log/FileAppender.h>

@@ -1,7 +1,7 @@
 #ifndef _PFPROTO_H
 #define _PFPROTO_H
 
-#include "rfproto.h"
+#include <common/rfproto.h>
 
 #pragma pack(push, 1)
 
@@ -27,7 +27,7 @@ typedef struct _pfClientInfo
     uint8_t type; /* PF_CLIENT_INFO */
     uint16_t size; /* 0xD (broken) */
     uint16_t unknown; /* 02 02 (const) */
-    uint32_t data; /* (x + 0x4921511) ^ key, eg. 0x85A7B7B1, 0xB8039EC3, x = 0x3104D9C7, 0x16B0FEED */ 
+    uint32_t data; /* (x + 0x4921511) ^ key, eg. 0x85A7B7B1, 0xB8039EC3, x = 0x3104D9C7, 0x16B0FEED */
     uint32_t key; /* g_PerformanceCount2 , eg. 0x9EE4A44F, 0x8D95701B */
 } pfClientInfo;
 

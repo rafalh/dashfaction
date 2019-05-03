@@ -1,7 +1,7 @@
 #pragma once
 
 #include "rf.h"
-#include <Traits.h>
+#include <patch_common/Traits.h>
 #include <functional>
 #include <optional>
 
@@ -139,7 +139,7 @@ private:
             rf::DcPrint("Required arg is missing!", nullptr);
         }
     }
-    
+
     void Help()
     {
         if (m_usage_text) {

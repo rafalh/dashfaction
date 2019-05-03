@@ -1,9 +1,9 @@
 #pragma once
 
-#include "ShortTypes.h"
-#include "Traits.h"
-#include <AsmOpcodes.h>
-#include <MemUtils.h>
+#include <patch_common/ShortTypes.h>
+#include <patch_common/Traits.h>
+#include <patch_common/AsmOpcodes.h>
+#include <patch_common/MemUtils.h>
 #include <cstdint>
 #include <log/Logger.h>
 

@@ -1,7 +1,7 @@
-#include <ModdedAppLauncher.h>
-#include <UpdateChecker.h>
+#include <launcher_common/ModdedAppLauncher.h>
+#include <launcher_common/UpdateChecker.h>
 #include <sstream>
-#include <version.h>
+#include <common/version.h>
 
 bool LaunchGame(HWND hwnd)
 {

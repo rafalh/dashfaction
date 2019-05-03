@@ -4,14 +4,14 @@
 #include "rf.h"
 #include "stdafx.h"
 #include "utils.h"
-#include "version.h"
+#include <common/version.h>
 #include <cstddef>
 #include <algorithm>
-#include <CallHook.h>
-#include <FunHook.h>
-#include <RegsPatch.h>
-#include <ShortTypes.h>
-#include <rfproto.h>
+#include <patch_common/CallHook.h>
+#include <patch_common/FunHook.h>
+#include <patch_common/RegsPatch.h>
+#include <patch_common/ShortTypes.h>
+#include <common/rfproto.h>
 
 namespace rf
 {

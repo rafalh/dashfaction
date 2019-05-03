@@ -1,8 +1,8 @@
 #pragma once
 
 #include <stdexcept>
-#include <Exception.h>
-#include <ErrorUtils.h>
+#include <common/Exception.h>
+#include <common/ErrorUtils.h>
 
 class Win32Error : public std::exception
 {

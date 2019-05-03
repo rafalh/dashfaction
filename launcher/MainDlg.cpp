@@ -4,14 +4,14 @@
 
 #include "stdafx.h"
 
-#include "GameConfig.h"
+#include <common/GameConfig.h>
 #include "LauncherApp.h"
 #include "MainDlg.h"
-#include "ModdedAppLauncher.h"
 #include "OptionsDlg.h"
-#include "UpdateChecker.h"
 #include "afxdialogex.h"
-#include "version.h"
+#include <common/version.h>
+#include <launcher_common/ModdedAppLauncher.h>
+#include <launcher_common/UpdateChecker.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

@@ -2,10 +2,10 @@
 #include "rf.h"
 #include "stdafx.h"
 #include "utils.h"
-#include <CallHook.h>
-#include <FunHook.h>
-#include <RegsPatch.h>
-#include <ShortTypes.h>
+#include <patch_common/CallHook.h>
+#include <patch_common/FunHook.h>
+#include <patch_common/RegsPatch.h>
+#include <patch_common/ShortTypes.h>
 #include <array>
 #include <algorithm>
 #include <cstddef>

@@ -1,4 +1,4 @@
-#include <MemUtils.h>
+#include <patch_common/MemUtils.h>
 #include <windows.h>
 
 void WriteMem(unsigned Addr, const void* pValue, unsigned cbValue)

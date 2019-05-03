@@ -1,7 +1,7 @@
 #include "UpdateChecker.h"
-#include <Exception.h>
-#include <version.h>
-#include <HttpRequest.h>
+#include <common/Exception.h>
+#include <common/version.h>
+#include <common/HttpRequest.h>
 #include <cstring>
 
 #define THROW_EXCEPTION_WITH_WIN32_ERROR() THROW_EXCEPTION("win32 error %lu", GetLastError())

@@ -1,5 +1,5 @@
 #include "commands.h"
-#include "BuildConfig.h"
+#include <common/BuildConfig.h>
 #include "lazyban.h"
 #include "main.h"
 #include "misc.h"
@@ -9,9 +9,9 @@
 #include "stdafx.h"
 #include "utils.h"
 #include <algorithm>
-#include <CallHook.h>
-#include <FunHook.h>
-#include <RegsPatch.h>
+#include <patch_common/CallHook.h>
+#include <patch_common/FunHook.h>
+#include <patch_common/RegsPatch.h>
 
 // Note: limit should fit in int8_t
 constexpr int CMD_LIMIT = 127;
