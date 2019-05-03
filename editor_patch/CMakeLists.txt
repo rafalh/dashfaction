@@ -1,7 +1,7 @@
 include_directories(
     ${CMAKE_SOURCE_DIR}/common/include
     ${CMAKE_SOURCE_DIR}/logger/include
-    ${CMAKE_SOURCE_DIR}/mod_common
+    ${CMAKE_SOURCE_DIR}/patch_common
     ${CMAKE_SOURCE_DIR}/vendor/d3d8
 )
 add_definitions(-DNOMINMAX -DBUILD_DLL -DSUBHOOK_STATIC)
@@ -19,7 +19,7 @@ set_property(TARGET DashEditor PROPERTY CXX_STANDARD 17)
 set_property(TARGET DashEditor PROPERTY PREFIX "")
 
 target_link_libraries(DashEditor
-    ModCommon
+    PatchCommon
     Logger
     subhook
     shlwapi

@@ -1,7 +1,6 @@
 include_directories(
     ${CMAKE_SOURCE_DIR}/common/include
-    ${CMAKE_SOURCE_DIR}/mod_common
-    ${CMAKE_SOURCE_DIR}/mod_common
+    ${CMAKE_SOURCE_DIR}/patch_common
 	${CMAKE_SOURCE_DIR}/logger/include
 	${CMAKE_SOURCE_DIR}/common/include
 	${CMAKE_SOURCE_DIR}/vendor
@@ -55,7 +54,7 @@ target_link_libraries(DashFaction
     unrar
     unzip
     zlib
-    ModCommon
+    PatchCommon
     subhook
     Logger
     Common
