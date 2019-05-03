@@ -15,7 +15,6 @@
 #endif
 
 #define SPECTATE_MODE_SHOW_WEAPON 1
-#define SPLITSCREEN_ENABLE 0
 #define WIDESCREEN_FIX 1
 #define CHECK_PACKFILE_CHECKSUM 0 // slow (1 second on SSD on first load after boot)
 #define D3D_SWAP_DISCARD 1 // needed for MSAA

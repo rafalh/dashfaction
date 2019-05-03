@@ -1637,7 +1637,6 @@ namespace rf
 
     static auto& RfBeep = AddrAsRef<void(unsigned u1, unsigned u2, unsigned u3, float volume)>(0x00505560);
     static auto& GetFileExt = AddrAsRef<char *(const char *path)>(0x005143F0);
-    static auto& SplitScreenStart = AddrAsRef<void()>(0x00480D30);
     static auto& SetNextLevelFilename = AddrAsRef<void(String::Pod level_filename, String::Pod save_filename)>(0x0045E2E0);
     static auto& DemoLoadLevel = AddrAsRef<void(const char *level_filename)>(0x004CC270);
     static auto& SetCursorVisible = AddrAsRef<void(bool visible)>(0x0051E680);

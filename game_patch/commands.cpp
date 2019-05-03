@@ -46,21 +46,6 @@ rf::Player* FindBestMatchingPlayer(const char* name)
     return nullptr;
 }
 
-#if SPLITSCREEN_ENABLE
-
-DcCommand2 splitscreen_cmd{
-    "splitscreen",
-    []() {
-        if (rf::is_net_game)
-            SplitScreenStart(); /* FIXME: set player 2 controls */
-        else
-            rf::DcPrintf("Works only in multiplayer game!");
-    },
-    "Starts split screen mode",
-};
-
-#endif // SPLITSCREEN_ENABLE
-
 DcCommand2 max_fps_cmd{
     "maxfps",
     [](std::optional<int> limit_opt) {
@@ -649,8 +634,4 @@ void CommandsAfterGameInit()
     map_cmd.Register();
     input_mode_cmd.Register();
     debug_cmd.Register();
-
-#if SPLITSCREEN_ENABLE
-    splitscreen_cmd.Register();
-#endif
 }
