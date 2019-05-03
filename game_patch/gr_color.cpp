@@ -363,7 +363,7 @@ void GrColorInit()
         AsmWritter(0x004E68D1).push(esi).call(WaterGenerateTexture_004E68D1).add(esp, 4).jmp(0x004E6B68);
         // ambient color
         AsmWritter(0x004E5CE3)
-            .lea(edx, AsmMem(esp + (0x34 - 0x28)))
+            .lea(edx, *(esp + 0x34 - 0x28))
             .push(edx)
             .push(ebx)
             .push(edi)

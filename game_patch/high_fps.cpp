@@ -79,8 +79,8 @@ public:
             .mov(ecx, reinterpret_cast<int32_t>(this)) // thiscall
             .sub(esp, 12)
             .mov(eax, m_key_loc_opt.value_or(ecx))
-            .mov(AsmMem(esp + 8), eax)
-            .fstp<double>(AsmMem(esp + 0))
+            .mov(*(esp + 8), eax)
+            .fstp<double>(*(esp + 0))
             .call(reinterpret_cast<void*>(&ftol))
             .ret();
 

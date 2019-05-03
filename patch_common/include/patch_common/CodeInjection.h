@@ -56,23 +56,24 @@ public:
         if (!trampoline)
             WARN("trampoline is null for 0x%X", m_addr);
 
+        using namespace asm_regs;
         AsmWritter asm_writter{reinterpret_cast<uintptr_t>(wrapper)};
         asm_writter
             .push(reinterpret_cast<int32_t>(trampoline)) // Push default EIP = trampoline
-            .push(asm_regs::esp) // push esp before PUSHA so it can be popped manually after POPA
-            .pusha()             // push general registers
-            .pushf()             // push EFLAGS
-            .add({true, {asm_regs::esp}, offsetof(X86Regs, esp)}, 4); // restore esp from before pushing the return address
-        EmitHandlerCall(asm_writter);         // call handler
+            .push(esp)                                 // push ESP before PUSHA so it can be popped manually after POPA
+            .pusha()                                   // push general registers
+            .pushf()                                   // push EFLAGS
+            .add(*(esp + offsetof(X86Regs, esp)), 4);  // restore esp from before pushing the return address
+        EmitHandlerCall(asm_writter);                  // call handler
         asm_writter
-            .add({true, {asm_regs::esp}, offsetof(X86Regs, esp)}, -4) // make esp value return address aware (again)
-            .mov(asm_regs::eax, {true, {asm_regs::esp}, offsetof(X86Regs, eip)}) // read EIP from X86Regs
-            .mov(asm_regs::ecx, {true, {asm_regs::esp}, offsetof(X86Regs, esp)}) // read esp from X86Regs
-            .mov({true, {asm_regs::ecx}, 0}, asm_regs::eax) // copy EIP to new address of the stack pointer
-            .popf()                                         // pop EFLAGS
-            .popa()                                         // pop general registers. Note: POPA discards esp value
-            .pop(asm_regs::esp)                             // pop esp manually
-            .ret();                                         // return to address read from EIP field in X86Regs
+            .add(*(esp + offsetof(X86Regs, esp)), -4)  // make esp value return address aware (again)
+            .mov(eax, *(esp + offsetof(X86Regs, eip))) // read EIP from X86Regs
+            .mov(ecx, *(esp + offsetof(X86Regs, esp))) // read esp from X86Regs
+            .mov(*ecx, eax)                            // copy EIP to new address of the stack pointer
+            .popf()                                    // pop EFLAGS
+            .popa()                                    // pop general registers. Note: POPA discards esp value
+            .pop(esp)                                  // pop esp manually
+            .ret();                                    // return to address read from EIP field in X86Regs
     }
 
     void SetAddr(uintptr_t addr)
@@ -96,10 +97,11 @@ public:
 protected:
     void EmitHandlerCall(AsmWritter& asm_writter) override
     {
+        using namespace asm_regs;
         asm_writter
-            .push(asm_regs::esp)               // push address of X86Regs struct (handler param)
-            .call(m_fun_ptr)                   // call handler (cdecl)
-            .add({false, {asm_regs::esp}}, 4); // free handler param
+            .push(esp)        // push address of X86Regs struct (handler param)
+            .call(m_fun_ptr)  // call handler (cdecl)
+            .add(esp, 4);     // free handler param
     }
 };
 
@@ -122,9 +124,10 @@ private:
 protected:
     void EmitHandlerCall(AsmWritter& asm_writter) override
     {
+        using namespace asm_regs;
         asm_writter
-            .push(asm_regs::esp)                                  // push address of X86Regs struct (handler param)
-            .mov(asm_regs::ecx, reinterpret_cast<uint32_t>(this)) // save this pointer in ECX (thiscall)
-            .call(reinterpret_cast<void*>(&wrapper));             // call handler (thiscall - calee cleans the stack)
+            .push(esp)                                   // push address of X86Regs struct (handler param)
+            .mov(ecx, reinterpret_cast<uint32_t>(this))  // save this pointer in ECX (thiscall)
+            .call(reinterpret_cast<void*>(&wrapper));    // call handler (thiscall - calee cleans the stack)
     }
 };

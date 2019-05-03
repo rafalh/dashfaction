@@ -34,6 +34,16 @@ struct AsmReg32 : public AsmReg
     }
 };
 
+inline std::pair<AsmReg32, int> operator+(std::pair<AsmReg32, int> p, int n)
+{
+    return {p.first, p.second + n};
+}
+
+inline std::pair<AsmReg32, int> operator-(std::pair<AsmReg32, int> p, int n)
+{
+    return {p.first, p.second - n};
+}
+
 struct AsmReg16 : public AsmReg
 {
     constexpr AsmReg16(int num) :
@@ -45,24 +55,6 @@ struct AsmReg8 : public AsmReg
 {
     constexpr AsmReg8(int num) :
         AsmReg(num, 1)
-    {}
-};
-
-struct AsmMem
-{
-    std::optional<AsmReg32> regOpt;
-    int32_t displacement;
-
-    AsmMem(AsmReg32 reg, int32_t displacement = 0) :
-        regOpt(reg), displacement(displacement)
-    {}
-
-    AsmMem(int32_t displacement) :
-        displacement(displacement)
-    {}
-
-    AsmMem(std::pair<AsmReg32, int> pair) :
-        regOpt(pair.first), displacement(pair.second)
     {}
 };
 
@@ -80,10 +72,20 @@ struct AsmRegMem
         memory(false), regOpt({reg}), displacement(0)
     {}
 
-    AsmRegMem(AsmMem mem) :
-        memory(true), regOpt(mem.regOpt), displacement(mem.displacement)
+    AsmRegMem(int32_t displacement) :
+        memory(true), displacement(displacement)
     {}
 };
+
+inline AsmRegMem operator*(AsmReg32 reg)
+{
+    return {true, {reg}, 0};
+}
+
+inline AsmRegMem operator*(std::pair<AsmReg32, int> p)
+{
+    return {true, {p.first}, p.second};
+}
 
 namespace asm_regs
 {
