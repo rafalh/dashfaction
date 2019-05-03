@@ -205,44 +205,6 @@ void DebugRender2d()
     dbg_particle_stats();
 }
 
-DcCommand2 spectate_cmd{
-    "spectate",
-    [](std::optional<std::string> player_name) {
-        if (rf::is_net_game) {
-            rf::Player* player;
-            if (player_name && player_name.value() == "false")
-                player = nullptr;
-            else if (player_name)
-                player = FindBestMatchingPlayer(player_name.value().c_str());
-            else
-                player = nullptr;
-
-            if (player)
-                SpectateModeSetTargetPlayer(player);
-        }
-        else
-            rf::DcPrint("Works only in multiplayer game!", nullptr);
-    },
-    "Starts spectating mode",
-    "spectate <player_name/false>",
-};
-
-DcCommand2 antialiasing_cmd{
-    "antialiasing",
-    []() {
-        if (!g_game_config.msaa)
-            rf::DcPrintf("Anti-aliasing is not supported");
-        else {
-            DWORD enabled = 0;
-            rf::gr_d3d_device->GetRenderState(D3DRS_MULTISAMPLEANTIALIAS, &enabled);
-            enabled = !enabled;
-            rf::gr_d3d_device->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, enabled);
-            rf::DcPrintf("Anti-aliasing is %s", enabled ? "enabled" : "disabled");
-        }
-    },
-    "Toggles anti-aliasing",
-};
-
 DcCommand2 input_mode_cmd{
     "inputmode",
     []() {
@@ -683,9 +645,7 @@ void CommandsAfterGameInit()
     find_level_cmd.Register();
     find_map_cmd.Register();
     map_cmd.Register();
-    spectate_cmd.Register();
     input_mode_cmd.Register();
-    antialiasing_cmd.Register();
     debug_cmd.Register();
 
 #if SPLITSCREEN_ENABLE

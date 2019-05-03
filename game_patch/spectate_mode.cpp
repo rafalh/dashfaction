@@ -1,10 +1,11 @@
 #include "spectate_mode.h"
-#include <common/BuildConfig.h>
 #include "rf.h"
-#include <common/rfproto.h>
 #include "scoreboard.h"
 #include "stdafx.h"
 #include "utils.h"
+#include "commands.h"
+#include <common/BuildConfig.h>
+#include <common/rfproto.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
 #include <shlwapi.h>
@@ -215,6 +216,28 @@ CallHook<void()> GrResetClip_RenderScannerViewForLocalPlayers_hook{
     },
 };
 
+DcCommand2 spectate_cmd{
+    "spectate",
+    [](std::optional<std::string> player_name) {
+        if (rf::is_net_game) {
+            rf::Player* player;
+            if (player_name && player_name.value() == "false")
+                player = nullptr;
+            else if (player_name)
+                player = FindBestMatchingPlayer(player_name.value().c_str());
+            else
+                player = nullptr;
+
+            if (player)
+                SpectateModeSetTargetPlayer(player);
+        }
+        else
+            rf::DcPrint("Works only in multiplayer game!", nullptr);
+    },
+    "Starts spectating mode",
+    "spectate <player_name/false>",
+};
+
 #if SPECTATE_MODE_SHOW_WEAPON
 
 static void PlayerFpgunRender_New(rf::Player* player)
@@ -285,6 +308,8 @@ void SpectateModeInit()
     HandleCtrlInGame_hook.Install();
     RenderReticle_hook.Install();
     PlayerCreateEntity_hook.Install();
+
+    spectate_cmd.Register();
 
     // Note: HUD rendering doesn't make sense because life and armor isn't synced
 

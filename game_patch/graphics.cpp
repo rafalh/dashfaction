@@ -217,6 +217,22 @@ DcCommand2 windowed_cmd{
     },
 };
 
+DcCommand2 antialiasing_cmd{
+    "antialiasing",
+    []() {
+        if (!g_game_config.msaa)
+            rf::DcPrintf("Anti-aliasing is not supported");
+        else {
+            DWORD enabled = 0;
+            rf::gr_d3d_device->GetRenderState(D3DRS_MULTISAMPLEANTIALIAS, &enabled);
+            enabled = !enabled;
+            rf::gr_d3d_device->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, enabled);
+            rf::DcPrintf("Anti-aliasing is %s", enabled ? "enabled" : "disabled");
+        }
+    },
+    "Toggles anti-aliasing",
+};
+
 // frame profiling
 #ifdef DEBUG
 
@@ -424,6 +440,8 @@ void GraphicsInit()
     switch_d3d_mode_patch.Install();
     fullscreen_cmd.Register();
     windowed_cmd.Register();
+
+    antialiasing_cmd.Register();
 
     // Do not flush drawing buffers during GrSetColor call
     WriteMem<u8>(0x0050CFEB, ASM_SHORT_JMP_REL);
