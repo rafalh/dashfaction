@@ -31,6 +31,8 @@ static auto& GrIsSphereOutsideView = AddrAsRef<bool(rf::Vector3& pos, float radi
 
 } // namespace rf
 
+constexpr double PI = 3.14159265358979323846;
+
 constexpr int EGG_ANIM_ENTER_TIME = 2000;
 constexpr int EGG_ANIM_LEAVE_TIME = 2000;
 constexpr int EGG_ANIM_IDLE_TIME = 3000;
@@ -157,12 +159,12 @@ CallHook<void()> MenuMainRender_hook{
             int pos_y = rf::GrGetMaxHeight() - h;
             if (anim_delta_time < EGG_ANIM_ENTER_TIME) {
                 float enter_progress = anim_delta_time / static_cast<float>(EGG_ANIM_ENTER_TIME);
-                pos_y += h - static_cast<int>(sinf(enter_progress * static_cast<float>(M_PI) / 2.0f) * h);
+                pos_y += h - static_cast<int>(sinf(enter_progress * static_cast<float>(PI) / 2.0f) * h);
             }
             else if (anim_delta_time > EGG_ANIM_ENTER_TIME + EGG_ANIM_IDLE_TIME) {
                 int leave_delta = anim_delta_time - (EGG_ANIM_ENTER_TIME + EGG_ANIM_IDLE_TIME);
                 float leave_progress = leave_delta / static_cast<float>(EGG_ANIM_LEAVE_TIME);
-                pos_y += static_cast<int>((1.0f - cosf(leave_progress * static_cast<float>(M_PI) / 2.0f)) * h);
+                pos_y += static_cast<int>((1.0f - cosf(leave_progress * static_cast<float>(PI) / 2.0f)) * h);
                 if (leave_delta > EGG_ANIM_LEAVE_TIME)
                     g_version_click_counter = 0;
             }
