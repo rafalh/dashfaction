@@ -1,4 +1,4 @@
-#include "ModdedAppLauncher.h"
+#include "PatchedAppLauncher.h"
 #include "crc32.h"
 #include "Win32Handle.h"
 #include "Process.h"
@@ -20,7 +20,7 @@
 #define RF_120_NA_CRC32 0xA7BF79E4
 #define RED_120_NA_CRC32 0xBAF6C754
 
-std::string ModdedAppLauncher::get_mod_dll_path()
+std::string PatchedAppLauncher::get_patch_dll_path()
 {
     char buf[MAX_PATH];
     DWORD result = GetModuleFileNameA(nullptr, buf, std::size(buf));
@@ -30,10 +30,10 @@ std::string ModdedAppLauncher::get_mod_dll_path()
         THROW_EXCEPTION("insufficient buffer for module file name");
 
     std::string dir = get_dir_from_path(buf);
-    return dir + "\\" + m_mod_dll_name;
+    return dir + "\\" + m_patch_dll_name;
 }
 
-void ModdedAppLauncher::launch(const char* mod_name)
+void PatchedAppLauncher::launch(const char* mod_name)
 {
     std::string app_path = get_app_path();
     uint32_t checksum = file_crc32(app_path.c_str());
@@ -78,7 +78,7 @@ void ModdedAppLauncher::launch(const char* mod_name)
     try {
         InjectingProcessLauncher proc_launcher{app_path.c_str(), work_dir.c_str(), cmd_line.c_str(), si, INIT_TIMEOUT};
 
-        std::string mod_path = get_mod_dll_path();
+        std::string mod_path = get_patch_dll_path();
         proc_launcher.inject_dll(mod_path.c_str(), "Init", INIT_TIMEOUT);
 
         proc_launcher.resume_main_thread();
@@ -101,7 +101,7 @@ void ModdedAppLauncher::launch(const char* mod_name)
     }
 }
 
-GameLauncher::GameLauncher() : ModdedAppLauncher("DashFaction.dll", RF_120_NA_CRC32)
+GameLauncher::GameLauncher() : PatchedAppLauncher("DashFaction.dll", RF_120_NA_CRC32)
 {
     if (!m_conf.load()) {
         // Failed to load config - save defaults
@@ -114,7 +114,7 @@ std::string GameLauncher::get_app_path()
     return m_conf.gameExecutablePath;
 }
 
-EditorLauncher::EditorLauncher() : ModdedAppLauncher("DashEditor.dll", RED_120_NA_CRC32)
+EditorLauncher::EditorLauncher() : PatchedAppLauncher("DashEditor.dll", RED_120_NA_CRC32)
 {
     if (!m_conf.load()) {
         // Failed to load config - save defaults

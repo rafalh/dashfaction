@@ -7,9 +7,6 @@ if(NOT MSVC)
     add_compile_options(-Wall -Wextra)
 endif()
 
-set(CMAKE_CXX_USE_RESPONSE_FILE_FOR_INCLUDES 0)
-set(CMAKE_C_USE_RESPONSE_FILE_FOR_INCLUDES 0)
-
 file(GLOB SRCS *.cpp *.h)
 add_library(DashEditor SHARED ${SRCS})
 

@@ -8,7 +8,7 @@
 #include <common/GameConfig.h>
 #include <common/version.h>
 #include "LauncherCommandLineInfo.h"
-#include <launcher_common/ModdedAppLauncher.h>
+#include <launcher_common/PatchedAppLauncher.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

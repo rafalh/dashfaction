@@ -10,7 +10,7 @@
 #include "OptionsDlg.h"
 #include "afxdialogex.h"
 #include <common/version.h>
-#include <launcher_common/ModdedAppLauncher.h>
+#include <launcher_common/PatchedAppLauncher.h>
 #include <launcher_common/UpdateChecker.h>
 
 #ifdef _DEBUG

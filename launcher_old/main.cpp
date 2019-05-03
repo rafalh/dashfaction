@@ -1,4 +1,4 @@
-#include <launcher_common/ModdedAppLauncher.h>
+#include <launcher_common/PatchedAppLauncher.h>
 #include <launcher_common/UpdateChecker.h>
 #include <sstream>
 #include <common/version.h>

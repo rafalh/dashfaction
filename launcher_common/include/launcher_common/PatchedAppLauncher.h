@@ -29,25 +29,23 @@ public:
     LauncherError(const char* message) : std::runtime_error(message) {}
 };
 
-class Process;
-
-class ModdedAppLauncher
+class PatchedAppLauncher
 {
 public:
-    ModdedAppLauncher(const char* mod_dll_name, uint32_t expected_crc32) :
-        m_mod_dll_name(mod_dll_name), m_expected_crc32(expected_crc32)
+    PatchedAppLauncher(const char* patch_dll_name, uint32_t expected_crc32) :
+        m_patch_dll_name(patch_dll_name), m_expected_crc32(expected_crc32)
     {}
     void launch(const char* mod_name = nullptr);
 
 protected:
-    std::string get_mod_dll_path();
+    std::string get_patch_dll_path();
     virtual std::string get_app_path() = 0;
 
-    std::string m_mod_dll_name;
+    std::string m_patch_dll_name;
     uint32_t m_expected_crc32;
 };
 
-class GameLauncher : public ModdedAppLauncher
+class GameLauncher : public PatchedAppLauncher
 {
 public:
     GameLauncher();
@@ -57,7 +55,7 @@ private:
     GameConfig m_conf;
 };
 
-class EditorLauncher : public ModdedAppLauncher
+class EditorLauncher : public PatchedAppLauncher
 {
 public:
     EditorLauncher();
