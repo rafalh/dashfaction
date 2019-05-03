@@ -1,9 +1,10 @@
 #include "utils.h"
-#include <common/Exception.h>
 #include "rf.h"
 #include "stdafx.h"
 #include <iomanip>
 #include <map>
+#include <common/Exception.h>
+#include <common/Win32Error.h>
 
 #ifdef __GNUC__
 #ifndef __cpuid
@@ -71,7 +72,7 @@ std::string getOsVersion()
     OSVERSIONINFO ver_info;
     ver_info.dwOSVersionInfoSize = sizeof(ver_info);
     if (!GetVersionEx(&ver_info))
-        THROW_EXCEPTION("GetVersionEx failed");
+        THROW_WIN32_ERROR("GetVersionEx failed");
 
     return StringFormat("%lu.%lu.%lu", ver_info.dwMajorVersion, ver_info.dwMinorVersion, ver_info.dwBuildNumber);
 }
@@ -84,22 +85,22 @@ std::string getRealOsVersion()
     char path[MAX_PATH];
     int count = GetSystemDirectory(path, std::size(path));
     if (!count)
-        THROW_EXCEPTION("GetSystemDirectory failed");
+        THROW_WIN32_ERROR("GetSystemDirectory failed");
 
     strcpy(path + count, "\\kernel32.dll");
     DWORD ver_size = GetFileVersionInfoSize(path, nullptr);
     if (ver_size == 0)
-        THROW_EXCEPTION("GetFileVersionInfoSize failed");
+        THROW_WIN32_ERROR("GetFileVersionInfoSize failed");
 
     auto ver = std::make_unique<BYTE[]>(ver_size);
     if (!GetFileVersionInfo(path, 0, ver_size, ver.get()))
-        THROW_EXCEPTION("GetFileVersionInfo failed");
+        THROW_WIN32_ERROR("GetFileVersionInfo failed");
 
     void* block;
     UINT block_size;
     BOOL ret = VerQueryValueA(ver.get(), "\\", &block, &block_size);
     if (!ret || block_size < sizeof(VS_FIXEDFILEINFO))
-        THROW_EXCEPTION("VerQueryValueA returned unknown block");
+        THROW_WIN32_ERROR("VerQueryValueA returned unknown block");
     VS_FIXEDFILEINFO* file_info = reinterpret_cast<VS_FIXEDFILEINFO*>(block);
 
     return StringFormat("%d.%d.%d",                            //

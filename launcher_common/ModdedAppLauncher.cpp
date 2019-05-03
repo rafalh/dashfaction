@@ -1,13 +1,13 @@
 #include "ModdedAppLauncher.h"
 #include "crc32.h"
 #include "Win32Handle.h"
-#include "Win32Error.h"
 #include "Process.h"
 #include "Thread.h"
 #include "DllInjector.h"
 #include "InjectingProcessLauncher.h"
 #include <common/GameConfig.h>
 #include <common/Exception.h>
+#include <common/Win32Error.h>
 #include <windows.h>
 #include <shlwapi.h>
 

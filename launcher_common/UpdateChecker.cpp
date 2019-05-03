@@ -4,8 +4,6 @@
 #include <common/HttpRequest.h>
 #include <cstring>
 
-#define THROW_EXCEPTION_WITH_WIN32_ERROR() THROW_EXCEPTION("win32 error %lu", GetLastError())
-
 #define UPDATE_CHECK_ENDPOINT_URL "https://ravin.tk/api/rf/dashfaction/checkupdate.php"
 
 void UpdateChecker::check_async(std::function<void()> callback)

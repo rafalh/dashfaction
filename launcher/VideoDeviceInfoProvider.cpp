@@ -1,7 +1,8 @@
 //#define WINBOOL BOOL
 
 #include "VideoDeviceInfoProvider.h"
-#include "exception.h"
+#include <common/Exception.h>
+#include <common/Win32Error.h>
 //#include <d3d8.h>
 #include <d3d9.h>
 
@@ -13,11 +14,11 @@ VideoDeviceInfoProvider::VideoDeviceInfoProvider()
 #if 0
     m_lib = LoadLibraryA("d3d8.dll");
     if (!m_lib)
-        THROW_EXCEPTION("Failed to load d3d8.dll: win32 error %lu", GetLastError());
+        THROW_WIN32_ERROR("Failed to load d3d8.dll");
 
     PDIRECT3DCREATE pDirect3DCreate8 = (PDIRECT3DCREATE)GetProcAddress(m_lib, "Direct3DCreate8");
     if (!pDirect3DCreate8)
-        THROW_EXCEPTION("Failed to load get Direct3DCreate8 function address: win32 error %lu", GetLastError());
+        THROW_WIN32_ERROR("Failed to load get Direct3DCreate8 function address");
 
     m_d3d = pDirect3DCreate8(D3D_SDK_VERSION);
     if (!m_d3d)
@@ -29,11 +30,11 @@ VideoDeviceInfoProvider::VideoDeviceInfoProvider()
 #else
     m_lib = LoadLibraryA("d3d9.dll");
     if (!m_lib)
-        THROW_EXCEPTION("Failed to load d3d9.dll: win32 error %lu", GetLastError());
+        THROW_WIN32_ERROR("Failed to load d3d9.dll");
 
     PDIRECT3DCREATE9 pDirect3DCreate9 = (PDIRECT3DCREATE9)GetProcAddress(m_lib, "Direct3DCreate9");
     if (!pDirect3DCreate9)
-        THROW_EXCEPTION("Failed to load get Direct3DCreate9 function address: win32 error %lu", GetLastError());
+        THROW_WIN32_ERROR("Failed to load get Direct3DCreate9 function address");
 
     m_d3d = pDirect3DCreate9(D3D_SDK_VERSION);
     if (!m_d3d)
@@ -66,7 +67,7 @@ std::set<VideoDeviceInfoProvider::Resolution> VideoDeviceInfoProvider::getResolu
 
         result.insert(res);
     }
-    
+
     return result;
 }
 
@@ -75,7 +76,7 @@ std::set<D3DMULTISAMPLE_TYPE> VideoDeviceInfoProvider::getMultiSampleTypes(D3DFO
     std::set<D3DMULTISAMPLE_TYPE> result;
     for (unsigned i = 2; i < 16; ++i)
     {
-        HRESULT hr = m_d3d->CheckDeviceMultiSampleType(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, format, windowed, 
+        HRESULT hr = m_d3d->CheckDeviceMultiSampleType(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, format, windowed,
             (D3DMULTISAMPLE_TYPE) i, NULL);
         if (SUCCEEDED(hr))
             result.insert((D3DMULTISAMPLE_TYPE)i);

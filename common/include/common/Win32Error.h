@@ -16,10 +16,10 @@ public:
         m_what(msg)
     {
         if (!m_what.empty())
-            m_what += ", ";
+            m_what += ": ";
         m_what += "win32 error " + std::to_string(m_error);
         auto error_desc = GetWin32ErrorDescription(m_error);
-        m_what += ": " + error_desc;
+        m_what += "\n" + error_desc;
     }
 
     const char* what() const throw()
@@ -43,4 +43,4 @@ private:
 #define S__LINE__ S_(__LINE__)
 
 // Macro for throwing error together with location
-#define THROW_WIN32_ERROR() throw Win32Error(__FILE__ ":" S__LINE__)
+#define THROW_WIN32_ERROR(...) throw Win32Error(__FILE__ ":" S__LINE__ " " __VA_ARGS__)

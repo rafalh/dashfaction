@@ -1,8 +1,8 @@
 #pragma once
 
 #include <windows.h>
+#include <common/Win32Error.h>
 #include "Win32Handle.h"
-#include "Win32Error.h"
 
 class Thread
 {

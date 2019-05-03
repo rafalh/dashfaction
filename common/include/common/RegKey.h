@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Exception.h"
 #include <stdexcept>
 #include <windows.h>
+#include <common/Win32Error.h>
 
 class RegKey
 {
@@ -25,7 +25,7 @@ public:
         }
 
         if (error != ERROR_SUCCESS)
-            THROW_EXCEPTION("RegCreateKeyExA failed: win32 error %lu", error);
+            throw Win32Error(error, "RegCreateKeyExA failed");
         m_open = true;
     }
 
@@ -90,14 +90,14 @@ public:
         DWORD temp = value;
         LONG error = RegSetValueExA(m_key, name, 0, REG_DWORD, (BYTE*)&temp, sizeof(temp));
         if (error != ERROR_SUCCESS)
-            THROW_EXCEPTION("RegSetValueExA failed: win32 error %lu", error);
+            throw Win32Error(error, "RegSetValueExA failed");
     }
 
     void write_value(const char* name, const std::string& value)
     {
         LONG error = RegSetValueExA(m_key, name, 0, REG_SZ, (BYTE*)value.c_str(), value.size() + 1);
         if (error != ERROR_SUCCESS)
-            THROW_EXCEPTION("RegSetValueExA failed: win32 error %lu", error);
+            throw Win32Error(error, "RegSetValueExA failed");
     }
 
     void write_value(const char* name, bool value)
