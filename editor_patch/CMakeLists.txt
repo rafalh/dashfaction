@@ -15,7 +15,10 @@ set(CMAKE_C_USE_RESPONSE_FILE_FOR_INCLUDES 0)
 
 file(GLOB SRCS *.cpp *.h)
 add_library(DashEditor SHARED ${SRCS})
-set_property(TARGET DashEditor PROPERTY CXX_STANDARD 17)
+
+target_compile_features(DashEditor PUBLIC cxx_std_17)
+set_target_properties(DashEditor PROPERTIES CXX_EXTENSIONS NO)
+
 set_property(TARGET DashEditor PROPERTY PREFIX "")
 
 target_link_libraries(DashEditor

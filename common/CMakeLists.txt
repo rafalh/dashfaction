@@ -10,7 +10,9 @@ endif()
 
 file(GLOB SRCS *.cpp include/common/*.h)
 add_library(Common STATIC ${SRCS})
-set_property(TARGET Common PROPERTY CXX_STANDARD 17)
+
+target_compile_features(Common PUBLIC cxx_std_17)
+set_target_properties(Common PROPERTIES CXX_EXTENSIONS NO)
 
 target_link_libraries(Common
     shlwapi

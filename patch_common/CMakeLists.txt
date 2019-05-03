@@ -9,4 +9,7 @@ if(NOT MSVC)
 endif()
 
 file(GLOB SRCS *.cpp *.h)
+
 add_library(PatchCommon STATIC ${SRCS})
+target_compile_features(LauncherCommon PUBLIC cxx_std_17)
+set_target_properties(LauncherCommon PROPERTIES CXX_EXTENSIONS NO)

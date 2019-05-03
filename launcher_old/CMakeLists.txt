@@ -10,6 +10,5 @@ endif()
 
 file(GLOB SRCS *.cpp *.h *.rc)
 add_executable(DashFactionLauncher_OLD ${SRCS})
-set_property(TARGET DashFactionLauncher_OLD PROPERTY CXX_STANDARD 17)
 
 target_link_libraries(DashFactionLauncher_OLD LauncherCommon)

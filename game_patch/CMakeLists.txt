@@ -40,7 +40,10 @@ set(CMAKE_C_USE_RESPONSE_FILE_FOR_INCLUDES 0)
 
 file(GLOB SRCS *.cpp *.h *.rc)
 add_library(DashFaction SHARED ${SRCS})
-set_property(TARGET DashFaction PROPERTY CXX_STANDARD 17)
+
+target_compile_features(DashFaction PUBLIC cxx_std_17)
+set_target_properties(DashFaction PROPERTIES CXX_EXTENSIONS NO)
+
 set_property(TARGET DashFaction PROPERTY PREFIX "")
 #set_property(TARGET DashFaction PROPERTY CXX_CLANG_TIDY "${DO_CLANG_TIDY}")
 #cotire(DashFaction)

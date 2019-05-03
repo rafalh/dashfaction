@@ -10,7 +10,9 @@ endif()
 
 file(GLOB SRCS *.cpp *.h)
 add_executable(CrashHandler WIN32 ${SRCS})
-set_property(TARGET CrashHandler PROPERTY CXX_STANDARD 17)
+
+target_compile_features(CrashHandler PRIVATE cxx_std_17)
+set_target_properties(CrashHandler PROPERTIES CXX_EXTENSIONS NO)
 
 target_link_libraries(CrashHandler
     Common
