@@ -35,7 +35,7 @@ struct X86Regs
     uint32_t eip;
 };
 
-class RegsPatch
+class CodeInjection
 {
 private:
     uintptr_t m_addr;
@@ -43,7 +43,7 @@ private:
     subhook::Hook m_subhook;
 
 public:
-    RegsPatch(uintptr_t addr, void (*fun_ptr)(X86Regs& regs)) : m_addr(addr), m_fun_ptr(fun_ptr) {}
+    CodeInjection(uintptr_t addr, void (*fun_ptr)(X86Regs& regs)) : m_addr(addr), m_fun_ptr(fun_ptr) {}
 
     void Install()
     {
@@ -79,7 +79,7 @@ public:
     }
 };
 
-class BaseRegsPatch2
+class BaseCodeInjection2
 {
 private:
     uintptr_t m_addr;
@@ -88,11 +88,11 @@ private:
     subhook::Hook m_subhook;
 
 public:
-    BaseRegsPatch2(uintptr_t addr, void* fun_ptr, void* this_ptr) :
+    BaseCodeInjection2(uintptr_t addr, void* fun_ptr, void* this_ptr) :
         m_addr(addr), m_fun_ptr(fun_ptr), m_this_ptr(this_ptr)
     {}
 
-    virtual ~BaseRegsPatch2(){};
+    virtual ~BaseCodeInjection2(){};
 
     void Install()
     {
@@ -130,16 +130,16 @@ public:
 };
 
 template<typename T>
-class RegsPatch2 : public BaseRegsPatch2
+class CodeInjection2 : public BaseCodeInjection2
 {
     T m_functor;
 
 public:
-    RegsPatch2(uintptr_t addr, T handler) :
-        BaseRegsPatch2(addr, reinterpret_cast<void*>(&wrapper), this), m_functor(handler)
+    CodeInjection2(uintptr_t addr, T handler) :
+        BaseCodeInjection2(addr, reinterpret_cast<void*>(&wrapper), this), m_functor(handler)
     {}
 
-    static void __thiscall wrapper(RegsPatch2& self, X86Regs& regs)
+    static void __thiscall wrapper(CodeInjection2& self, X86Regs& regs)
     {
         self.m_functor(regs);
     }

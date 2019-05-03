@@ -8,7 +8,7 @@
 #include <cstddef>
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
-#include <patch_common/RegsPatch.h>
+#include <patch_common/CodeInjection.h>
 #include <patch_common/ComPtr.h>
 
 const char g_screenshot_dir_name[] = "screenshots";
@@ -199,7 +199,7 @@ FunHook<void(int, int, int, int, int)> GrCaptureBackBuffer_hook{
     },
 };
 
-RegsPatch GrD3DCreateVramTexture_patch{
+CodeInjection GrD3DCreateVramTexture_patch{
     0x0055B9CA,
     [](auto& regs) {
         if (g_force_texture_in_backbuffer_format) {
@@ -209,7 +209,7 @@ RegsPatch GrD3DCreateVramTexture_patch{
     },
 };
 
-RegsPatch MonitorInit_bitmap_format_fix{
+CodeInjection MonitorInit_bitmap_format_fix{
     0x0041254C,
     [](auto& regs) {
         g_force_texture_in_backbuffer_format = true;

@@ -7,7 +7,7 @@
 #include "utils.h"
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
-#include <patch_common/RegsPatch.h>
+#include <patch_common/CodeInjection.h>
 #include <patch_common/ShortTypes.h>
 #include <algorithm>
 
@@ -58,7 +58,7 @@ static void SetTextureMinMagFilterInCode(D3DTEXTUREFILTERTYPE filter_type)
     }
 }
 
-RegsPatch GrSetViewMatrix_widescreen_fix{
+CodeInjection GrSetViewMatrix_widescreen_fix{
     0x005473AD,
     []([[maybe_unused]] auto& regs) {
         constexpr float ref_aspect_ratio = 4.0f / 3.0f;
@@ -92,7 +92,7 @@ RegsPatch GrSetViewMatrix_widescreen_fix{
     },
 };
 
-RegsPatch GrCreateD3DDevice_error_patch{
+CodeInjection GrCreateD3DDevice_error_patch{
     0x00545CBD,
     [](auto& regs) {
         auto hr = static_cast<HRESULT>(regs.eax);
@@ -108,7 +108,7 @@ RegsPatch GrCreateD3DDevice_error_patch{
     },
 };
 
-RegsPatch GrClearZBuffer_fix_rect{0x00550A19, [](auto& regs) {
+CodeInjection GrClearZBuffer_fix_rect{0x00550A19, [](auto& regs) {
                                       auto& rect = *reinterpret_cast<D3DRECT*>(regs.edx);
                                       rect.x2++;
                                       rect.y2++;
@@ -191,7 +191,7 @@ CallHook<void()> GrInitBuffers_AfterReset_hook{
 
 bool g_reset_device_req = false;
 
-RegsPatch switch_d3d_mode_patch{
+CodeInjection switch_d3d_mode_patch{
     0x0054500D,
     [](auto& regs) {
         if (g_reset_device_req) {
@@ -224,7 +224,7 @@ static bool g_profile_frame_req = false;
 static bool g_profile_frame = false;
 static int g_num_draw_calls = 0;
 
-RegsPatch GrD3DSetMaterialFlags_profile_patch{
+CodeInjection GrD3DSetMaterialFlags_profile_patch{
     0x0054F19C,
     [](auto& regs) {
         if (g_profile_frame) {
@@ -243,7 +243,7 @@ RegsPatch GrD3DSetMaterialFlags_profile_patch{
     },
 };
 
-RegsPatch GrD3DSetTexture_profile_patch{
+CodeInjection GrD3DSetTexture_profile_patch{
     0x0055CB6A,
     [](auto& regs) {
         if (g_profile_frame) {
@@ -254,7 +254,7 @@ RegsPatch GrD3DSetTexture_profile_patch{
     },
 };
 
-RegsPatch D3D_DrawIndexedPrimitive_profile_patch{
+CodeInjection D3D_DrawIndexedPrimitive_profile_patch{
     0,
     [](auto& regs) {
         if (g_profile_frame) {

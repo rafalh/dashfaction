@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
-#include <patch_common/RegsPatch.h>
+#include <patch_common/CodeInjection.h>
 #include <patch_common/ShortTypes.h>
 #include <common/rfproto.h>
 
@@ -82,7 +82,7 @@ FunHook<int()> MenuUpdate_hook{
     },
 };
 
-RegsPatch gr_direct3d_lock_crash_fix{
+CodeInjection gr_direct3d_lock_crash_fix{
     0x0055CE55,
     [](auto& regs) {
         if (regs.eax == 0) {
@@ -246,7 +246,7 @@ DcCommand2 swap_assault_rifle_controls_cmd{
     "Swap Assault Rifle controls",
 };
 
-RegsPatch CriticalError_hide_main_wnd_patch{
+CodeInjection CriticalError_hide_main_wnd_patch{
     0x0050BA90,
     []([[maybe_unused]] auto& regs) {
         if (rf::gr_d3d_device)
@@ -560,7 +560,7 @@ FunHook<void(rf::TriggerObj*, int32_t, bool)> TriggerActivate_hook{
     },
 };
 
-RegsPatch TriggerCheckActivation_patch{
+CodeInjection TriggerCheckActivation_patch{
     0x004BFC7D,
     [](auto& regs) {
         auto trigger = reinterpret_cast<rf::TriggerObj*>(regs.eax);
@@ -572,7 +572,7 @@ RegsPatch TriggerCheckActivation_patch{
     },
 };
 
-RegsPatch RflLoadInternal_CheckRestoreStatus_patch{
+CodeInjection RflLoadInternal_CheckRestoreStatus_patch{
     0x00461195,
     [](X86Regs& regs) {
         // check if SaveRestoreLoadAll is successful
@@ -658,7 +658,7 @@ CallHook<int()> PlayHardcodedBackgroundMusicForCutscene_hook{
     },
 };
 
-RegsPatch CoronaEntityCollisionTestFix{
+CodeInjection CoronaEntityCollisionTestFix{
     0x004152F1,
     [](X86Regs& regs) {
         auto get_entity_root_bone_pos = AddrAsRef<void(rf::EntityObj*, rf::Vector3&)>(0x48AC70);
@@ -845,7 +845,7 @@ void LinearPitchTest()
 }
 #endif // DEBUG
 
-RegsPatch LinearPitchPatch{
+CodeInjection LinearPitchPatch{
     0x0049DEC9,
     [](X86Regs& regs) {
         if (!g_game_config.linearPitch)

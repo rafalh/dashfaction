@@ -4,7 +4,7 @@
 #include "utils.h"
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
-#include <patch_common/RegsPatch.h>
+#include <patch_common/CodeInjection.h>
 #include <patch_common/ShortTypes.h>
 #include <array>
 #include <algorithm>
@@ -42,7 +42,7 @@ CallHook<void(const char*, int, const rf::NwAddr&, rf::Player*)> ProcessUnreliab
 class BufferOverflowPatch
 {
 private:
-    RegsPatch2<std::function<void(X86Regs&)>> m_movsb_patch;
+    CodeInjection2<std::function<void(X86Regs&)>> m_movsb_patch;
     uintptr_t m_shr_ecx_2_addr;
     uintptr_t m_and_ecx_3_addr;
     int32_t m_buffer_size;
@@ -246,7 +246,7 @@ std::array g_client_side_packet_whitelist{
 };
 // clang-format on
 
-RegsPatch ProcessGamePacket_whitelist_filter{
+CodeInjection ProcessGamePacket_whitelist_filter{
     0x0047918D,
     [](auto& regs) {
         bool allowed = false;
@@ -269,7 +269,7 @@ RegsPatch ProcessGamePacket_whitelist_filter{
     },
 };
 
-RegsPatch ProcessGameInfoPacket_GameTypeBounds_patch{
+CodeInjection ProcessGameInfoPacket_GameTypeBounds_patch{
     0x0047B30B,
     [](X86Regs& regs) {
         // Valid game types are between 0 and 2
@@ -468,12 +468,12 @@ FunHook<void(int32_t, int32_t)> MultiSetObjHandleMapping_hook{
     },
 };
 
-RegsPatch ProcessBooleanPacket_ValidateMeshId_patch{
+CodeInjection ProcessBooleanPacket_ValidateMeshId_patch{
     0x004765A3,
     [](auto& regs) { regs.ecx = std::clamp(regs.ecx, 0, 3); },
 };
 
-RegsPatch ProcessBooleanPacket_ValidateRoomId_patch{
+CodeInjection ProcessBooleanPacket_ValidateRoomId_patch{
     0x0047661C,
     [](auto& regs) {
         int num_rooms = StructFieldRef<int>(rf::rfl_static_geometry, 0x90);
@@ -485,7 +485,7 @@ RegsPatch ProcessBooleanPacket_ValidateRoomId_patch{
     },
 };
 
-RegsPatch ProcessPregameBooleanPacket_ValidateMeshId_patch{
+CodeInjection ProcessPregameBooleanPacket_ValidateMeshId_patch{
     0x0047672F,
     [](auto& regs) {
         // only meshes 0 - 3 are supported
@@ -493,7 +493,7 @@ RegsPatch ProcessPregameBooleanPacket_ValidateMeshId_patch{
     },
 };
 
-RegsPatch ProcessPregameBooleanPacket_ValidateRoomId_patch{
+CodeInjection ProcessPregameBooleanPacket_ValidateRoomId_patch{
     0x00476752,
     [](auto& regs) {
         int num_rooms = StructFieldRef<int>(rf::rfl_static_geometry, 0x90);
@@ -505,7 +505,7 @@ RegsPatch ProcessPregameBooleanPacket_ValidateRoomId_patch{
     },
 };
 
-RegsPatch ProcessGlassKillPacket_CheckRoomExists_patch{
+CodeInjection ProcessGlassKillPacket_CheckRoomExists_patch{
     0x004723B3,
     [](auto& regs) {
         if (!regs.eax)

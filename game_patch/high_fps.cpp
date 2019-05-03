@@ -5,7 +5,7 @@
 #include "utils.h"
 #include <patch_common/FunHook.h>
 #include <patch_common/InlineAsm.h>
-#include <patch_common/RegsPatch.h>
+#include <patch_common/CodeInjection.h>
 #include <patch_common/ShortTypes.h>
 #include <array>
 #include <unordered_map>
@@ -207,7 +207,7 @@ void STDCALL EntityWaterDecelerateFix(rf::EntityObj* entity)
     entity->_super.phys_info.vel.z *= vel_factor;
 }
 
-RegsPatch WaterAnimateWaves_speed_fix{
+CodeInjection WaterAnimateWaves_speed_fix{
     0x004E68A0,
     [](auto& regs) {
         rf::Vector3& result = *reinterpret_cast<rf::Vector3*>(regs.esi + 0x2C);
@@ -237,7 +237,7 @@ FunHook<int(rf::String&, rf::String&, char*)> RflLoad_hook{
     },
 };
 
-RegsPatch cutscene_shot_sync_fix{
+CodeInjection cutscene_shot_sync_fix{
     0x0045B43B,
     [](X86Regs& regs) {
         auto& current_shot_idx = StructFieldRef<int>(rf::active_cutscene, 0x808);

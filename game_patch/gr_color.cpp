@@ -4,7 +4,7 @@
 #include "rf.h"
 #include "stdafx.h"
 #include <patch_common/FunHook.h>
-#include <patch_common/RegsPatch.h>
+#include <patch_common/CodeInjection.h>
 #include <patch_common/ShortTypes.h>
 #include <algorithm>
 
@@ -314,7 +314,7 @@ FunHook<unsigned()> BinkInitDeviceInfo_hook{
     },
 };
 
-RegsPatch MonitorRenderNoise_patch{
+CodeInjection MonitorRenderNoise_patch{
     0x004123AD,
     [](auto& regs) {
         // Note: default noise generation algohritm is not used because it's not uniform enough in high resolution

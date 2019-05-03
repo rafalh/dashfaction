@@ -5,7 +5,7 @@
 #include <common/rfproto.h>
 #include "utils.h"
 #include <common/BuildConfig.h>
-#include <patch_common/RegsPatch.h>
+#include <patch_common/CodeInjection.h>
 #include <stdexcept>
 #include <thread>
 #include <unrar/dll.hpp>
@@ -335,7 +335,7 @@ bool TryToDownloadLevel(const char* filename)
     return true;
 }
 
-RegsPatch g_join_failed_injection{
+CodeInjection g_join_failed_injection{
     0x0047C4EC,
     [](auto& regs) {
         int leave_reason = regs.esi;

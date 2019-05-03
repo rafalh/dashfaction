@@ -11,7 +11,7 @@
 #include <algorithm>
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
-#include <patch_common/RegsPatch.h>
+#include <patch_common/CodeInjection.h>
 
 // Note: limit should fit in int8_t
 constexpr int CMD_LIMIT = 127;
@@ -536,7 +536,7 @@ FunHook<void()> DcAutoCompleteInput_hook{
     },
 };
 
-RegsPatch DcRunCmd_CallHandlerPatch{
+CodeInjection DcRunCmd_CallHandlerPatch{
     0x00509DBB,
     [](auto& regs) {
         // Make sure command pointer is in ecx register to support thiscall handlers

@@ -6,7 +6,7 @@
 #include <patch_common/MemUtils.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
-#include <patch_common/RegsPatch.h>
+#include <patch_common/CodeInjection.h>
 #include <cstdio>
 #include <cstddef>
 #include <d3d8.h>
@@ -73,7 +73,7 @@ CallHook<void()> frametime_update_hook{
     },
 };
 
-RegsPatch gr_d3d_draw_line_3d_patch_1{
+CodeInjection gr_d3d_draw_line_3d_patch_1{
     0x004E133E,
     [](auto& regs) {
         auto& gr_d3d_buffers_locked = AddrAsRef<bool>(0x0183930D);
@@ -104,7 +104,7 @@ CallHook<void()> gr_d3d_draw_line_3d_patch_2{
     },
 };
 
-RegsPatch gr_d3d_draw_line_2d_patch_1{
+CodeInjection gr_d3d_draw_line_2d_patch_1{
     0x004E10BD,
     [](auto& regs) {
         auto& gr_d3d_buffers_locked = AddrAsRef<bool>(0x0183930D);
@@ -135,7 +135,7 @@ CallHook<void()> gr_d3d_draw_line_2d_patch_2{
     },
 };
 
-RegsPatch gr_d3d_draw_poly_patch{
+CodeInjection gr_d3d_draw_poly_patch{
     0x004E1573,
     [](auto& regs) {
         auto& gr_d3d_primitive_type = AddrAsRef<int>(0x0175A2C8);
@@ -144,7 +144,7 @@ RegsPatch gr_d3d_draw_poly_patch{
     },
 };
 
-RegsPatch gr_d3d_draw_texture_patch_1{
+CodeInjection gr_d3d_draw_texture_patch_1{
     0x004E090E,
     [](auto& regs) {
         auto& gr_d3d_primitive_type = AddrAsRef<int>(0x0175A2C8);
@@ -153,7 +153,7 @@ RegsPatch gr_d3d_draw_texture_patch_1{
     },
 };
 
-RegsPatch gr_d3d_draw_texture_patch_2{
+CodeInjection gr_d3d_draw_texture_patch_2{
     0x004E0C97,
     [](auto& regs) {
         auto& gr_d3d_primitive_type = AddrAsRef<int>(0x0175A2C8);
@@ -162,7 +162,7 @@ RegsPatch gr_d3d_draw_texture_patch_2{
     },
 };
 
-RegsPatch gr_d3d_draw_geometry_face_patch_1{
+CodeInjection gr_d3d_draw_geometry_face_patch_1{
     0x004E18F1,
     [](auto& regs) {
         auto& gr_d3d_primitive_type = AddrAsRef<int>(0x0175A2C8);
@@ -171,7 +171,7 @@ RegsPatch gr_d3d_draw_geometry_face_patch_1{
     },
 };
 
-RegsPatch gr_d3d_draw_geometry_face_patch_2{
+CodeInjection gr_d3d_draw_geometry_face_patch_2{
     0x004E1B2D,
     [](auto& regs) {
         auto& gr_d3d_primitive_type = AddrAsRef<int>(0x0175A2C8);
