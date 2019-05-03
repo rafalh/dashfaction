@@ -1,6 +1,6 @@
 #pragma once
 
-#include "VideoDeviceInfoProvider.h"
+#include <launcher_common/VideoDeviceInfoProvider.h>
 #include <common/GameConfig.h>
 
 // OptionsDlg dialog
