@@ -24,6 +24,7 @@ public:
 
     ComPtr& operator=(const ComPtr& other)
     {
+        release();
         m_ptr = other.m_ptr;
         if (m_ptr)
             m_ptr->AddRef();
@@ -50,5 +51,6 @@ public:
     {
         if (m_ptr)
             m_ptr->Release();
+        m_ptr = nullptr;
     }
 };

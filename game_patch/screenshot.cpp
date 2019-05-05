@@ -16,6 +16,8 @@ const char g_screenshot_dir_name[] = "screenshots";
 static std::unique_ptr<byte* []> g_screenshot_scanlines_buf;
 static int g_screenshot_dir_id;
 static bool g_force_texture_in_backbuffer_format = false;
+static ComPtr<IDirect3DSurface8> g_render_target;
+static ComPtr<IDirect3DSurface8> g_depth_stencil_surface;
 
 namespace rf
 {
@@ -73,14 +75,21 @@ CallHook<rf::BmPixelFormat(int, int, int, int, std::byte*)> GrD3DReadBackBuffer_
         ComPtr<IDirect3DSurface8> tmp_surface;
 #if 1
         hr = rf::gr_d3d_device->CreateRenderTarget(desc.Width, desc.Height, desc.Format, D3DMULTISAMPLE_NONE, TRUE,
-                                                &tmp_surface);
+                                                   &tmp_surface);
         // hr = rf::gr_d3d_device->CreateImageSurface(desc.Width, desc.Height, desc.Format, &tmp_surface);
-        // hr = rf::gr_d3d_device->CreateTexture(desc.Width, desc.Height, 1, 0, desc.Format, D3DPOOL_MANAGED,
-        // &TmpTexture);
+        /*ComPtr<IDirect3DTexture8> tmp_texture;
+        hr = rf::gr_d3d_device->CreateTexture(desc.Width, desc.Height, 1, 0, desc.Format, D3DPOOL_MANAGED,
+                                              &tmp_texture);*/
         if (FAILED(hr)) {
             ERR("IDirect3DDevice8::CreateRenderTarget failed 0x%lX", hr);
             return rf::BMPF_INVALID;
         }
+
+        /*hr = tmp_texture->GetSurfaceLevel(0, &tmp_surface);
+        if (FAILED(hr)) {
+            ERR("IDirect3DTexture8::GetSurfaceLevel failed 0x%lX", hr);
+            return rf::BMPF_INVALID;
+        }*/
 
         RECT src_rect;
         POINT dst_pt{x, y};
@@ -138,8 +147,8 @@ bool GrCaptureBackBufferFast(int x, int y, int width, int height, int bm_handle)
         return false;
     }
 
-    ComPtr<IDirect3DSurface8> back_buffer;
-    HRESULT hr = rf::gr_d3d_device->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &back_buffer);
+    ComPtr<IDirect3DSurface8> render_target;
+    HRESULT hr = rf::gr_d3d_device->GetRenderTarget(&render_target);
     if (FAILED(hr)) {
         ERR("IDirect3DDevice8::GetBackBuffer failed 0x%lX", hr);
         return false;
@@ -153,7 +162,7 @@ bool GrCaptureBackBufferFast(int x, int y, int width, int height, int bm_handle)
     }
 
     D3DSURFACE_DESC back_buffer_desc;
-    hr = back_buffer->GetDesc(&back_buffer_desc);
+    hr = render_target->GetDesc(&back_buffer_desc);
     if (FAILED(hr)) {
         ERR("IDirect3DSurface8::GetDesc failed 0x%lX", hr);
         return false;
@@ -180,7 +189,7 @@ bool GrCaptureBackBufferFast(int x, int y, int width, int height, int bm_handle)
         RECT src_rect;
         POINT dst_pt{x, y};
         SetRect(&src_rect, x, y, x + width - 1, y + height - 1);
-        hr = rf::gr_d3d_device->CopyRects(back_buffer, &src_rect, 1, tex_surface, &dst_pt);
+        hr = rf::gr_d3d_device->CopyRects(render_target, &src_rect, 1, tex_surface, &dst_pt);
         if (FAILED(hr)) {
             ERR("IDirect3DDevice8::CopyRects failed 0x%lX", hr);
             return false;
@@ -218,6 +227,75 @@ CodeInjection MonitorInit_bitmap_format_fix{
     },
 };
 
+CodeInjection d3d_device_lost_release_render_target_patch{
+    0x00545042,
+    [](auto& regs) {
+        TRACE("Releasing render target");
+        g_render_target.release();
+        g_depth_stencil_surface.release();
+    },
+};
+
+CodeInjection d3d_cleanup_release_render_target_patch{
+    0x0054527A,
+    [](auto& regs) {
+        g_render_target.release();
+        g_depth_stencil_surface.release();
+    },
+};
+
+FunHook<void()> GameRenderToDynamicTextures_msaa_fix{
+    0x00431820,
+    []() {
+        HRESULT hr;
+        if (!g_render_target) {
+            hr = rf::gr_d3d_device->CreateRenderTarget(
+                rf::gr_d3d_pp.BackBufferWidth, rf::gr_d3d_pp.BackBufferHeight, rf::gr_d3d_pp.BackBufferFormat,
+                D3DMULTISAMPLE_NONE, FALSE, &g_render_target);
+            if (FAILED(hr)) {
+                ERR("IDirect3DDevice8::CreateRenderTarget failed 0x%lX", hr);
+                return;
+            }
+        }
+
+        if (!g_depth_stencil_surface) {
+            hr = rf::gr_d3d_device->CreateDepthStencilSurface(
+                rf::gr_d3d_pp.BackBufferWidth, rf::gr_d3d_pp.BackBufferHeight, rf::gr_d3d_pp.AutoDepthStencilFormat,
+                D3DMULTISAMPLE_NONE, &g_depth_stencil_surface);
+            if (FAILED(hr)) {
+                ERR("IDirect3DDevice8::CreateDepthStencilSurface failed 0x%lX", hr);
+                return;
+            }
+        }
+
+        ComPtr<IDirect3DSurface8> orig_render_target;
+        hr = rf::gr_d3d_device->GetRenderTarget(&orig_render_target);
+        if (FAILED(hr)) {
+            ERR("IDirect3DDevice8::GetRenderTarget failed 0x%lX", hr);
+            return;
+        }
+
+        ComPtr<IDirect3DSurface8> orig_depth_stencil_surface;
+        hr = rf::gr_d3d_device->GetDepthStencilSurface(&orig_depth_stencil_surface);
+        if (FAILED(hr)) {
+            ERR("IDirect3DDevice8::GetDepthStencilSurface failed 0x%lX", hr);
+            return;
+        }
+        hr = rf::gr_d3d_device->SetRenderTarget(g_render_target, g_depth_stencil_surface);
+        if (FAILED(hr)) {
+            ERR("IDirect3DDevice8::SetRenderTarget failed 0x%lX", hr);
+            return;
+        }
+
+        GameRenderToDynamicTextures_msaa_fix.CallTarget();
+
+        hr = rf::gr_d3d_device->SetRenderTarget(orig_render_target, orig_depth_stencil_surface);
+        if (FAILED(hr)) {
+            ERR("IDirect3DDevice8::SetRenderTarget failed 0x%lX", hr);
+            return;
+        }
+    },
+};
 
 void InitScreenshot()
 {
@@ -228,6 +306,14 @@ void InitScreenshot()
 
     // Use fast GrCaptureBackBuffer implementation which copies backbuffer to texture without copying from VRAM to RAM
     GrCaptureBackBuffer_hook.Install();
+    if (g_game_config.msaa) {
+        // According to tests on Windows in MSAA mode it is better to render to render target instead of copying from
+        // multi-sampled back-buffer
+        GameRenderToDynamicTextures_msaa_fix.Install();
+        d3d_device_lost_release_render_target_patch.Install();
+        d3d_cleanup_release_render_target_patch.Install();
+    }
+
     // Make sure bitmaps used together with GrCaptureBackBuffer have the same format as backbuffer
     GrD3DCreateVramTexture_patch.Install();
     MonitorInit_bitmap_format_fix.Install();
