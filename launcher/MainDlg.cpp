@@ -232,6 +232,6 @@ void MainDlg::AfterLaunch()
         // ignore
     }
 
-    if (!config.keepLauncherOpen)
+    if (!config.keep_launcher_open)
         CDialogEx::OnOK();
 }
