@@ -159,7 +159,7 @@ void OptionsDlg::InitToolTip()
     m_toolTip->AddTool(GetDlgItem(IDC_ANISOTROPIC_CHECK), "Improve far textures quality");
     m_toolTip->AddTool(GetDlgItem(IDC_FPS_COUNTER_CHECK), "Enable FPS counter in right-top corner of the screen");
     m_toolTip->AddTool(GetDlgItem(IDC_HIGH_SCANNER_RES_CHECK), "Increase scanner resolution (used by Rail Gun, Rocket Launcher and Fusion Launcher)");
-    m_toolTip->AddTool(GetDlgItem(IDC_HIGH_SCANNER_RES_CHECK), "Increase monitors and mirrors resolution");
+    m_toolTip->AddTool(GetDlgItem(IDC_HIGH_MON_RES_CHECK), "Increase monitors and mirrors resolution");
     m_toolTip->AddTool(GetDlgItem(IDC_TRUE_COLOR_TEXTURES_CHECK), "Increase texture color depth - especially visible for lightmaps and shadows");
     m_toolTip->AddTool(GetDlgItem(IDC_TRACKER_EDIT), "Hostname of tracker used to find avaliable Multiplayer servers");
     m_toolTip->AddTool(GetDlgItem(IDC_FAST_START_CHECK), "Skip game intro videos and go straight to Main Menu");
