@@ -964,8 +964,8 @@ void MiscInit()
     WriteMem<u8>(0x005995B0, 0);
     WriteMem<u8>(0x005995B8, 0);
 
-    // Make sure DirectInput is initialized
-    rf::direct_input_disabled = 0;
+    // Initial DirectInput handling
+    rf::direct_input_disabled = !g_game_config.direct_input;
 
 #if 1
     // Buffer overflows in RflReadStaticGeometry

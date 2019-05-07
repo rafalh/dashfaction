@@ -87,8 +87,6 @@ CallHook<void()> InitGame_hook{
 
         GraphicsAfterGameInit();
 
-        rf::direct_input_disabled = !g_game_config.direct_input;
-
         /* Allow modded strings.tbl in ui.vpp */
         ForceFileFromPackfile("strings.tbl", "ui.vpp");
 

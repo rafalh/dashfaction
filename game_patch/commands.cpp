@@ -190,13 +190,29 @@ void DebugRender2d()
     dbg_particle_stats();
 }
 
+bool SetDirectInputEnabled(bool enabled)
+{
+    auto direct_input_initialized = AddrAsRef<bool>(0x01885460);
+    auto InitDirectInput = AddrAsRef<int()>(0x0051E070);
+    rf::direct_input_disabled = !enabled;
+    if (enabled && !direct_input_initialized) {
+        if (InitDirectInput() != 0) {
+            ERR("Failed to initialize DirectInput");
+            rf::direct_input_disabled = true;
+            return false;
+        }
+    }
+    return true;
+}
+
 DcCommand2 input_mode_cmd{
     "inputmode",
     []() {
         g_game_config.direct_input = !g_game_config.direct_input;
-        rf::direct_input_disabled = !g_game_config.direct_input;
         g_game_config.save();
-        if (g_game_config.direct_input)
+        if (!SetDirectInputEnabled(g_game_config.direct_input))
+            rf::DcPrintf("Failed to initialize DirectInput");
+        else if (g_game_config.direct_input)
             rf::DcPrintf("DirectInput is enabled");
         else
             rf::DcPrintf("DirectInput is disabled");
