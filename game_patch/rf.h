@@ -1638,6 +1638,7 @@ namespace rf
     static auto& SetCursorVisible = AddrAsRef<void(bool visible)>(0x0051E680);
     static auto& CutsceneIsActive = AddrAsRef<bool()>(0x0045BE80);
     static const auto Timer__GetTimeLeftMs = reinterpret_cast<int(__thiscall*)(void* timer)>(0x004FA420);
+    static auto& GeomClearCache = AddrAsRef<void()>(0x004F0B90);
 
     /* Strings Table */
     namespace strings {

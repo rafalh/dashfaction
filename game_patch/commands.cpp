@@ -66,9 +66,47 @@ DcCommand2 max_fps_cmd{
     "maxfps <limit>",
 };
 
+struct DebugFlagDesc
+{
+    bool& ref;
+    const char* name;
+    bool clear_geometry_cache = false;
+};
+
+DebugFlagDesc g_debug_flags[] = {
+    {AddrAsRef<bool>(0x0062F3AA), "thruster"},
+    // debug string at the left-top corner
+    {AddrAsRef<bool>(0x0062FE19), "light"},
+    {g_dbg_static_lights, "light2"},
+    {AddrAsRef<bool>(0x0062FE1A), "push_climb_reg"},
+    {AddrAsRef<bool>(0x0062FE1B), "geo_reg"},
+    {AddrAsRef<bool>(0x0062FE1C), "glass"},
+    {AddrAsRef<bool>(0x0062FE1D), "mover"},
+    {AddrAsRef<bool>(0x0062FE1E), "ignite"},
+    {AddrAsRef<bool>(0x0062FE1F), "movemode"},
+    {AddrAsRef<bool>(0x0062FE20), "perf"},
+    {AddrAsRef<bool>(0x0062FE21), "perfbar"},
+    {AddrAsRef<bool>(0x0064E39C), "waypoint"},
+    // network meter in left-top corner
+    {AddrAsRef<bool>(0x006FED24), "network"},
+    {AddrAsRef<bool>(0x007B2758), "particlestats"},
+    // debug strings at the left side of the screen
+    {AddrAsRef<bool>(0x007CAB59), "weapon"},
+    {AddrAsRef<bool>(0x00856500), "event"},
+    {AddrAsRef<bool>(0x0085683C), "trigger"},
+    {AddrAsRef<bool>(0x009BB5AC), "objrender"},
+    {g_dbg_geometry_rendering_stats, "roomstats"},
+    // geometry rendering
+    {AddrAsRef<bool>(0x009BB594), "trans", true},
+    {AddrAsRef<bool>(0x009BB598), "room", true},
+    {AddrAsRef<bool>(0x009BB59C), "portal", true},
+    {AddrAsRef<bool>(0x009BB5A4), "lightmap", true},
+    {AddrAsRef<bool>(0x009BB5A8), "nolightmap", true},
+};
+
 DcCommand2 debug_cmd{
     "debug",
-    [](std::optional<std::string> type_opt) {
+    [](std::string type) {
 
 #ifdef NDEBUG
         if (rf::is_net_game) {
@@ -77,98 +115,42 @@ DcCommand2 debug_cmd{
         }
 #endif
 
-        auto type = type_opt ? type_opt.value() : "";
-        bool handled = false;
-        static bool all_flags = false;
-
-        if (type.empty()) {
-            all_flags = !all_flags;
-            handled = true;
-            rf::DcPrintf("All debug flags are %s", all_flags ? "enabled" : "disabled");
+        for (auto& dbg_flag : g_debug_flags) {
+            if (type == dbg_flag.name) {
+                dbg_flag.ref = !dbg_flag.ref;
+                rf::DcPrintf("Debug flag '%s' is %s", dbg_flag.name, dbg_flag.ref ? "enabled" : "disabled");
+                if (dbg_flag.ref && dbg_flag.clear_geometry_cache) {
+                    rf::GeomClearCache();
+                }
+                return;
+            }
         }
 
-        auto handle_flag = [&](bool& flag_ref, const char* flag_name) {
-            bool old_flag_value = flag_ref;
-            if (type == flag_name) {
-                flag_ref = !flag_ref;
-                handled = true;
-                rf::DcPrintf("Debug flag '%s' is %s", flag_name, flag_ref ? "enabled" : "disabled");
-            }
-            else if (type.empty()) {
-                flag_ref = all_flags;
-            }
-            return old_flag_value != flag_ref;
-        };
-
-        // clang-format off
-        auto &dg_thruster                  = AddrAsRef<bool>(0x0062F3AA);
-        auto &dg_lights                    = AddrAsRef<bool>(0x0062FE19);
-        auto &dg_push_and_climbing_regions = AddrAsRef<bool>(0x0062FE1A);
-        auto &dg_geo_regions               = AddrAsRef<bool>(0x0062FE1B);
-        auto &dg_glass                     = AddrAsRef<bool>(0x0062FE1C);
-        auto &dg_movers                    = AddrAsRef<bool>(0x0062FE1D);
-        auto &dg_entity_burn               = AddrAsRef<bool>(0x0062FE1E);
-        auto &dg_movement_mode             = AddrAsRef<bool>(0x0062FE1F);
-        auto &dg_perfomance                = AddrAsRef<bool>(0x0062FE20);
-        auto &dg_perf_bar                  = AddrAsRef<bool>(0x0062FE21);
-        auto &dg_waypoints                 = AddrAsRef<bool>(0x0064E39C);
-        auto &dg_network                   = AddrAsRef<bool>(0x006FED24);
-        auto &dg_particle_stats            = AddrAsRef<bool>(0x007B2758);
-        auto &dg_weapon                    = AddrAsRef<bool>(0x007CAB59);
-        auto &dg_events                    = AddrAsRef<bool>(0x00856500);
-        auto &dg_triggers                  = AddrAsRef<bool>(0x0085683C);
-        auto &dg_obj_rendering             = AddrAsRef<bool>(0x009BB5AC);
-        // Geometry rendering flags
-        auto& render_everything_see_through       = AddrAsRef<bool>(0x009BB594);
-        auto& render_rooms_in_different_colors    = AddrAsRef<bool>(0x009BB598);
-        auto& render_non_see_through_portal_faces = AddrAsRef<bool>(0x009BB59C);
-        auto& render_lightmaps_only               = AddrAsRef<bool>(0x009BB5A4);
-        auto& render_no_lightmaps                 = AddrAsRef<bool>(0x009BB5A8);
-        // clang-format on
-
-        handle_flag(dg_thruster, "thruster");
-        // debug string at the left-top corner
-        handle_flag(dg_lights, "light");
-        handle_flag(g_dbg_static_lights, "light2");
-        handle_flag(dg_push_and_climbing_regions, "push_climb_reg");
-        handle_flag(dg_geo_regions, "geo_reg");
-        handle_flag(dg_glass, "glass");
-        handle_flag(dg_movers, "mover");
-        handle_flag(dg_entity_burn, "ignite");
-        handle_flag(dg_movement_mode, "movemode");
-        handle_flag(dg_perfomance, "perf");
-        handle_flag(dg_perf_bar, "perfbar");
-        handle_flag(dg_waypoints, "waypoint");
-        // network meter in left-top corner
-        handle_flag(dg_network, "network");
-        handle_flag(dg_particle_stats, "particlestats");
-        // debug strings at the left side of the screen
-        handle_flag(dg_weapon, "weapon");
-        handle_flag(dg_events, "event");
-        handle_flag(dg_triggers, "trigger");
-        handle_flag(dg_obj_rendering, "objrender");
-        handle_flag(g_dbg_geometry_rendering_stats, "roomstats");
-        // geometry rendering
-        bool geom_rendering_changed = false;
-        geom_rendering_changed |= handle_flag(render_everything_see_through, "trans");
-        geom_rendering_changed |= handle_flag(render_rooms_in_different_colors, "room");
-        geom_rendering_changed |= handle_flag(render_non_see_through_portal_faces, "portal");
-        geom_rendering_changed |= handle_flag(render_lightmaps_only, "lightmap");
-        geom_rendering_changed |= handle_flag(render_no_lightmaps, "nolightmap");
-
-        // Clear geometry cache (needed for geometry rendering flags)
-        if (geom_rendering_changed) {
-            auto geom_cache_clear = (void (*)())0x004F0B90;
-            geom_cache_clear();
-        }
-
-        if (!handled)
-            rf::DcPrintf("Invalid debug flag: %s", type.c_str());
+        rf::DcPrintf("Invalid debug flag: %s", type.c_str());
     },
     nullptr,
-    "debug [thruster | light | light2 | push_climb_reg | geo_reg | glass | mover | ignite | movemode | perf | "
-    "perfbar | waypoint | network | particlestats | weapon | event | trigger | objrender | roomstats | trans | "
+    "debug [thruster | light | light2 | push_climb_reg | geo_reg | glass | mover | ignite | movemode | perf |\n"
+    "perfbar | waypoint | network | particlestats | weapon | event | trigger | objrender | roomstats | trans |\n"
     "room | portal | lightmap | nolightmap]",
+};
+
+void DisableAllDebugFlags()
+{
+    bool clear_geom_cache = false;
+    for (auto& dbg_flag : g_debug_flags) {
+        if (dbg_flag.ref && dbg_flag.clear_geometry_cache)
+            clear_geom_cache = true;
+        dbg_flag.ref = false;
+    }
+    if (clear_geom_cache)
+        rf::GeomClearCache();
+}
+
+CodeInjection MpInit_disable_debug_flags_patch{
+    0x0046D5B0,
+    []([[maybe_unused]] auto& regs) {
+        DisableAllDebugFlags();
+    },
 };
 
 void DebugRender3d()
@@ -650,4 +632,6 @@ void CommandsAfterGameInit()
     map_cmd.Register();
     input_mode_cmd.Register();
     debug_cmd.Register();
+
+    MpInit_disable_debug_flags_patch.Install();
 }
