@@ -229,7 +229,7 @@ CodeInjection MonitorInit_bitmap_format_fix{
 
 CodeInjection d3d_device_lost_release_render_target_patch{
     0x00545042,
-    [](auto& regs) {
+    []([[maybe_unused]] auto& regs) {
         TRACE("Releasing render target");
         g_render_target.release();
         g_depth_stencil_surface.release();
@@ -238,7 +238,7 @@ CodeInjection d3d_device_lost_release_render_target_patch{
 
 CodeInjection d3d_cleanup_release_render_target_patch{
     0x0054527A,
-    [](auto& regs) {
+    []([[maybe_unused]] auto& regs) {
         g_render_target.release();
         g_depth_stencil_surface.release();
     },
