@@ -1,7 +1,7 @@
 DashFaction Changelog
 =====================
 
-Version 1.3.0 (not released yet)
+Version 1.3.0 (released 2018-05-07)
 -----------------------------------
 - enable mip-mapping for textures bigger than 256x256
 - change maximal FPS limit to 240
