@@ -10,10 +10,22 @@
 #endif
 
 #ifndef LOGGER_NO_ROOT_MACROS
+
 #define ERR(...) logging::Logger::root().err(__VA_ARGS__)
 #define WARN(...) logging::Logger::root().warn(__VA_ARGS__)
 #define INFO(...) logging::Logger::root().info(__VA_ARGS__)
 #define TRACE(...) logging::Logger::root().trace(__VA_ARGS__)
+
+#define LOG_ONCE(lvl, ...) do { \
+    static bool skip = false; \
+    if (!skip) \
+        logging::Logger::root().lvl(__VA_ARGS__); \
+    } while (false)
+#define ERR_ONCE(...) LOG_ONCE(ERR, __VA_ARGS__)
+#define WARN_ONCE(...) LOG_ONCE(WARN, __VA_ARGS__)
+#define INFO_ONCE(...) LOG_ONCE(INFO, __VA_ARGS__)
+#define TRACE_ONCE(...) LOG_ONCE(TRACE, __VA_ARGS__)
+
 #endif // LOGGER_NO_ROOT_MACROS
 
 #define LOGGER_DISCARD_TRACE
