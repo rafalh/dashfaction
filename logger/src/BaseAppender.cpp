@@ -2,30 +2,31 @@
 #include <log/BaseAppender.h>
 #include <sstream>
 
-static const char* LEVEL_PREFIX[] = {"FATAL: ", "ERROR: ", "WARNING: ", "INFO: ", "TRACE: "};
+
 
 using namespace logging;
 
-void BaseAppender::append(LogLevel lvl, const std::string& loggerName, const std::string& str)
+void BaseAppender::append(Level lvl, const std::string& logger_name, const std::string& str)
 {
-    const char* lvlStr = LEVEL_PREFIX[static_cast<int>(lvl)];
+    static const char* level_prefix[] = {"FATAL: ", "ERROR: ", "WARNING: ", "INFO: ", "TRACE: "};
+    const char* lvl_str = level_prefix[static_cast<int>(lvl)];
 
     std::ostringstream buf;
     std::lock_guard<std::mutex> lock(mutex);
 
-    time_t now;
-    time(&now);
-    struct tm nowInfo;
+    std::time_t now;
+    std::time(&now);
+    std::tm now_info;
 #ifdef _WIN32
-    localtime_s(&nowInfo, &now);
+    localtime_s(&now_info, &now);
 #else
-    localtime_r(&now, &nowInfo);
+    localtime_r(&now, &now_info);
 #endif
-    char timeBuf[32] = "";
-    strftime(timeBuf, sizeof(timeBuf), "%H:%M:%S", &nowInfo);
-    buf << "[" << timeBuf << "] " << lvlStr;
-    if (!loggerName.empty())
-        buf << loggerName << ' ';
+    char time_buf[32] = "";
+    std::strftime(time_buf, std::size(time_buf), "%H:%M:%S", &now_info);
+    buf << "[" << time_buf << "] " << lvl_str;
+    if (!logger_name.empty())
+        buf << logger_name << ' ';
     buf << str;
 
     append(lvl, buf.str());

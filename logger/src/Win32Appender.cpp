@@ -5,7 +5,7 @@
 
 using namespace logging;
 
-void Win32Appender::append([[maybe_unused]] LogLevel lvl, const std::string& str)
+void Win32Appender::append([[maybe_unused]] Level lvl, const std::string& str)
 {
     OutputDebugStringA(str.c_str());
 }

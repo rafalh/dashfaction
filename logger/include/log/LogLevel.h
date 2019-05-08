@@ -2,12 +2,12 @@
 
 namespace logging
 {
-enum LogLevel
+enum class Level
 {
-    LOG_LVL_FATAL = 0,
-    LOG_LVL_ERROR = 1,
-    LOG_LVL_WARNING = 2,
-    LOG_LVL_INFO = 3,
-    LOG_LVL_TRACE = 4,
+    fatal = 0,
+    error = 1,
+    warning = 2,
+    info = 3,
+    trace = 4,
 };
 }

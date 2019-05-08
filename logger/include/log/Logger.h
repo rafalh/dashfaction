@@ -6,7 +6,7 @@
 #include <string>
 
 #ifndef LOGGER_NO_FORMAT
-#include <stdarg.h>
+#include <cstdarg>
 #endif
 
 #ifndef LOGGER_NO_ROOT_MACROS
@@ -25,18 +25,18 @@
 #endif
 
 // clang-format off
-#define LOGGER_DEFINE_LEVEL_METHODS(methodName, levelConstant) \
-    LogStream methodName() { return get(levelConstant); } \
-    LOGGER_FORMAT_ATTRIBUTE void methodName(const char *fmt, ...) \
+#define LOGGER_DEFINE_LEVEL_METHODS(method_name, level_constant) \
+    LogStream method_name() { return get(level_constant); } \
+    LOGGER_FORMAT_ATTRIBUTE void method_name(const char *fmt, ...) \
     { \
         va_list args; \
         va_start(args, fmt); \
-        vprintf(levelConstant, fmt, args); \
+        vprintf(level_constant, fmt, args); \
         va_end(args); \
     }
-#define LOGGER_DEFINE_LEVEL_METHODS_EMPTY(methodName, levelConstant) \
-    NullStream methodName() { return NullStream(); } \
-    LOGGER_FORMAT_ATTRIBUTE void methodName([[maybe_unused]] const char *fmt, ...) {}
+#define LOGGER_DEFINE_LEVEL_METHODS_EMPTY(method_name, level_constant) \
+    NullStream method_name() { return NullStream(); } \
+    LOGGER_FORMAT_ATTRIBUTE void method_name([[maybe_unused]] const char *fmt, ...) {}
 // clang-format on
 
 namespace logging
@@ -54,28 +54,28 @@ public:
 
     static Logger& root()
     {
-        static Logger rootLogger(LoggerConfig::root().getRootName());
-        return rootLogger;
+        static Logger root_logger(LoggerConfig::root().get_root_name());
+        return root_logger;
     }
 
-    LogStream get(LogLevel lvl)
+    LogStream get(Level lvl)
     {
         return LogStream(lvl, name, conf);
     }
 
-    void vprintf(LogLevel lvl, const char* fmt, va_list args)
+    void vprintf(Level lvl, const char* fmt, va_list args)
     {
-        conf.outputFormatted(lvl, name, fmt, args);
+        conf.output_formatted(lvl, name, fmt, args);
     }
 
-    LOGGER_DEFINE_LEVEL_METHODS(err, LOG_LVL_ERROR);
-    LOGGER_DEFINE_LEVEL_METHODS(warn, LOG_LVL_WARNING);
-    LOGGER_DEFINE_LEVEL_METHODS(info, LOG_LVL_INFO);
+    LOGGER_DEFINE_LEVEL_METHODS(err, Level::error);
+    LOGGER_DEFINE_LEVEL_METHODS(warn, Level::warning);
+    LOGGER_DEFINE_LEVEL_METHODS(info, Level::info);
 
 #ifndef LOGGER_DISCARD_TRACE
-    LOGGER_DEFINE_LEVEL_METHODS(trace, LOG_LVL_TRACE);
+    LOGGER_DEFINE_LEVEL_METHODS(trace, Level::trace);
 #else
-    LOGGER_DEFINE_LEVEL_METHODS_EMPTY(trace, LOG_LVL_TRACE);
+    LOGGER_DEFINE_LEVEL_METHODS_EMPTY(trace, Level::trace);
 #endif
 
 private:

@@ -13,11 +13,11 @@ public:
         m_filename(filename), m_append(append), m_flush(flush)
     {}
 
-    virtual void append(LogLevel lvl, const std::string& str) override;
+    void append(Level lvl, const std::string& str) override;
 
 private:
     std::string m_filename;
-    std::ofstream m_fileStream;
+    std::ofstream m_file;
     bool m_append, m_flush;
 };
 

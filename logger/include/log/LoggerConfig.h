@@ -22,29 +22,29 @@ public:
         return conf;
     }
 
-    void addAppender(std::unique_ptr<Appender>&& appender)
+    void add_appender(std::unique_ptr<Appender>&& appender)
     {
         appenders.push_back(std::move(appender));
     }
 
-    void output(LogLevel lvl, const std::string& loggerName, const std::string& str);
-    void outputFormatted(LogLevel lvl, const std::string& loggerName, const char* fmt, va_list args);
+    void output(Level lvl, const std::string& logger_name, const std::string& str);
+    void output_formatted(Level lvl, const std::string& logger_name, const char* fmt, va_list args);
 
-    void setRootName(const std::string& name)
+    void set_root_name(const std::string& name)
     {
-        rootName = name;
+        root_name = name;
     }
 
-    const std::string& getRootName() const
+    const std::string& get_root_name() const
     {
-        return rootName;
+        return root_name;
     }
 
 private:
-    std::string outputFileName;
-    std::ofstream outputFile;
+    std::string output_file_name;
+    std::ofstream output_file;
     std::mutex mutex;
-    std::string rootName;
+    std::string root_name;
     std::vector<std::unique_ptr<Appender>> appenders;
     bool flush, append;
 };

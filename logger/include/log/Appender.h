@@ -9,7 +9,7 @@ namespace logging
 class Appender
 {
 public:
-    virtual void append(LogLevel lvl, const std::string& loggerName, const std::string& str) = 0;
+    virtual void append(Level lvl, const std::string& logger_name, const std::string& str) = 0;
     virtual ~Appender() {}
 };
 

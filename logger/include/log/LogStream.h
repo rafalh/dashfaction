@@ -10,13 +10,22 @@ namespace logging
 class LogStream
 {
 public:
-    LogStream(LogLevel lvl, const std::string& loggerName, LoggerConfig& loggerConfig) :
-        level(lvl), loggerName(loggerName), loggerConfig(loggerConfig)
+    LogStream(Level lvl, const std::string& logger_name, LoggerConfig& logger_config) :
+        level(lvl), logger_name(logger_name), logger_config(logger_config)
     {}
 
-    LogStream(const LogStream& e) :
-        level(e.level), loggerName(e.loggerName), loggerConfig(e.loggerConfig)
+    LogStream(LogStream&& e) :
+        level(e.level), logger_name(std::move(e.logger_name)), logger_config(e.logger_config)
     {}
+
+    LogStream(const LogStream&) = delete; // copy constructor
+    LogStream& operator=(const LogStream&) = delete; // assignment operator
+    LogStream& operator=(LogStream&& other) = delete; // move assignment
+
+    ~LogStream()
+    {
+        logger_config.output(level, logger_name, stream.str());
+    }
 
     template<typename T>
     LogStream& operator<<(const T& v)
@@ -25,15 +34,10 @@ public:
         return *this;
     }
 
-    ~LogStream()
-    {
-        loggerConfig.output(level, loggerName, stream.str());
-    }
-
 private:
-    LogLevel level;
-    const std::string& loggerName;
-    LoggerConfig& loggerConfig;
+    Level level;
+    const std::string& logger_name;
+    LoggerConfig& logger_config;
     std::ostringstream stream;
 };
 

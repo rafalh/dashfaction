@@ -8,17 +8,19 @@
 using namespace logging;
 
 LoggerConfig::LoggerConfig() :
-    outputFileName("app.log"), flush(false), append(false)
+    output_file_name("app.log"), flush(false), append(false)
 {}
 
-void LoggerConfig::outputFormatted(LogLevel lvl, const std::string& loggerName, const char* fmt, va_list args)
+void LoggerConfig::output_formatted(Level lvl, const std::string& logger_name, const char* fmt, va_list args)
 {
     char buf[256];
-    vsnprintf(buf, sizeof(buf), fmt, args);
-    output(lvl, loggerName, buf);
+    std::vsnprintf(buf, sizeof(buf), fmt, args);
+    output(lvl, logger_name, buf);
 }
 
-void LoggerConfig::output(LogLevel lvl, const std::string& loggerName, const std::string& str)
+void LoggerConfig::output(Level lvl, const std::string& logger_name, const std::string& str)
 {
-    for (std::unique_ptr<Appender>& appender : appenders) appender->append(lvl, loggerName, str);
+    for (std::unique_ptr<Appender>& appender : appenders) {
+        appender->append(lvl, logger_name, str);
+    }
 }

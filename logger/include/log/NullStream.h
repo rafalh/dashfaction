@@ -5,12 +5,12 @@ namespace logging
 
 class NullStream
 {
+public:
+    template<typename T>
+    NullStream& operator<<(const T&)
+    {
+        return *this;
+    }
 };
-
-template<typename T>
-NullStream& operator<<(NullStream& s, const T&)
-{
-    return s;
-}
 
 } // namespace logging

@@ -227,9 +227,9 @@ void InitLogging()
 {
     CreateDirectoryA("logs", nullptr);
     auto& logger_config = logging::LoggerConfig::root();
-    logger_config.addAppender(std::make_unique<logging::FileAppender>("logs/DashEditor.log", false));
-    logger_config.addAppender(std::make_unique<logging::ConsoleAppender>());
-    logger_config.addAppender(std::make_unique<logging::Win32Appender>());
+    logger_config.add_appender(std::make_unique<logging::FileAppender>("logs/DashEditor.log", false));
+    logger_config.add_appender(std::make_unique<logging::ConsoleAppender>());
+    logger_config.add_appender(std::make_unique<logging::Win32Appender>());
 }
 
 extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* Unused)

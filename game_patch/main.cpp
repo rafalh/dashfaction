@@ -176,7 +176,7 @@ CallHook<void()> AfterFullGameInit_hook{
 #ifndef NDEBUG
 class RfConsoleLogAppender : public logging::BaseAppender
 {
-    virtual void append([[maybe_unused]] logging::LogLevel lvl, const std::string& str) override
+    virtual void append([[maybe_unused]] logging::Level lvl, const std::string& str) override
     {
         rf::DcPrint(str.c_str(), nullptr);
     }
@@ -187,11 +187,11 @@ void InitLogging()
 {
     CreateDirectoryA("logs", nullptr);
     auto& logger_config = logging::LoggerConfig::root();
-    logger_config.addAppender(std::make_unique<logging::FileAppender>("logs/DashFaction.log", false));
-    logger_config.addAppender(std::make_unique<logging::ConsoleAppender>());
-    logger_config.addAppender(std::make_unique<logging::Win32Appender>());
+    logger_config.add_appender(std::make_unique<logging::FileAppender>("logs/DashFaction.log", false));
+    logger_config.add_appender(std::make_unique<logging::ConsoleAppender>());
+    logger_config.add_appender(std::make_unique<logging::Win32Appender>());
 #ifndef NDEBUG
-    logger_config.addAppender(std::make_unique<RfConsoleLogAppender>());
+    logger_config.add_appender(std::make_unique<RfConsoleLogAppender>());
 #endif
 }
 
