@@ -318,11 +318,6 @@ void InitScreenshot()
     WriteMemPtr(0x004367CA + 2, &g_screenshot_dir_id);
 }
 
-void CleanupScreenshot()
-{
-    g_screenshot_scanlines_buf.reset();
-}
-
 void ScreenshotAfterGameInit()
 {
     /* Fix for screenshots creation when height > 1024 */

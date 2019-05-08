@@ -101,7 +101,6 @@ CallHook<void()> CleanupGame_hook{
     0x004B2821,
     []() {
         ResetGammaRamp();
-        CleanupScreenshot();
         MiscCleanup();
         CleanupGame_hook.CallTarget();
     },
