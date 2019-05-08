@@ -4,15 +4,18 @@
 
 #pragma once
 
+#include <wxx_wincore.h>
+#include <wxx_dialog.h>
+#include <wxx_controls.h>
 
 class UpdateChecker;
 
 // MainDlg dialog
-class MainDlg : public CDialogEx
+class MainDlg : public CDialog
 {
 // Construction
 public:
-    MainDlg(CWnd* pParent = NULL);	// standard constructor
+    MainDlg();	// standard constructor
 
 // Dialog Data
 #ifdef AFX_DESIGN_TIME
@@ -20,27 +23,29 @@ public:
 #endif
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
     void RefreshModSelector();
     CString GetSelectedMod();
     void AfterLaunch();
+    void OnOK() override;
+    BOOL OnCommand(WPARAM wparam, LPARAM lparam) override;
 
 // Implementation
 protected:
     HICON m_hIcon;
     UpdateChecker *m_pUpdateChecker;
-    CToolTipCtrl m_ToolTip;
+    CToolTip m_ToolTip;
+    CStatic picture;
+    CComboBox mod_selector;
 
 	// Generated message map functions
-    virtual BOOL OnInitDialog();
-    BOOL PreTranslateMessage(MSG* pMsg);
-    afx_msg void OnPaint();
-    afx_msg HCURSOR OnQueryDragIcon();
-    afx_msg LRESULT OnUpdateCheck(WPARAM wParam, LPARAM lParam);
-    DECLARE_MESSAGE_MAP()
+    BOOL OnInitDialog() override;
+    INT_PTR DialogProc(UINT msg, WPARAM wparam, LPARAM lparam) override;
+    BOOL PreTranslateMessage(MSG& Msg) override;
+
+    LRESULT OnUpdateCheck(WPARAM wParam, LPARAM lParam);
 public:
-    afx_msg void OnBnClickedOptionsBtn();
-    afx_msg void OnBnClickedOk();
-    afx_msg void OnBnClickedEditorBtn();
-    afx_msg void OnBnClickedSupportBtn();
+    void OnBnClickedOptionsBtn();
+    void OnBnClickedOk();
+    void OnBnClickedEditorBtn();
+    void OnBnClickedSupportBtn();
 };

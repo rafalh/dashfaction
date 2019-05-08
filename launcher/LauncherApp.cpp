@@ -16,29 +16,16 @@
 #endif
 
 
-// LauncherApp
-
-BEGIN_MESSAGE_MAP(LauncherApp, CWinApp)
-	ON_COMMAND(ID_HELP, &CWinApp::OnHelp)
-END_MESSAGE_MAP()
-
-
 // LauncherApp construction
 
 LauncherApp::LauncherApp()
 {
 	// support Restart Manager
-	m_dwRestartManagerSupportFlags = AFX_RESTART_MANAGER_SUPPORT_RESTART;
+	//m_dwRestartManagerSupportFlags = AFX_RESTART_MANAGER_SUPPORT_RESTART;
 
 	// TODO: add construction code here,
 	// Place all significant initialization in InitInstance
 }
-
-
-// The one and only LauncherApp object
-
-LauncherApp theApp;
-
 
 // LauncherApp initialization
 
@@ -54,19 +41,19 @@ BOOL LauncherApp::InitInstance()
 	InitCtrls.dwICC = ICC_WIN95_CLASSES;
 	InitCommonControlsEx(&InitCtrls);
 
-	CWinApp::InitInstance();
+	//CWinApp::InitInstance();
 
 
 	// Create the shell manager, in case the dialog contains
 	// any shell tree view or shell list view controls.
-	CShellManager *pShellManager = new CShellManager;
+	//CShellManager *pShellManager = new CShellManager;
 
 	// Activate "Windows Native" visual manager for enabling themes in MFC controls
-	CMFCVisualManager::SetDefaultManager(RUNTIME_CLASS(CMFCVisualManagerWindows));
+	//CMFCVisualManager::SetDefaultManager(RUNTIME_CLASS(CMFCVisualManagerWindows));
 
     // Command line parsing
     LauncherCommandLineInfo CmdLineInfo;
-    ParseCommandLine(CmdLineInfo);
+    //ParseCommandLine(CmdLineInfo);
 
     if (CmdLineInfo.HasHelpFlag())
     {
@@ -99,18 +86,14 @@ BOOL LauncherApp::InitInstance()
 
     // Show main dialog
 	MainDlg dlg;
-	m_pMainWnd = &dlg;
+	// m_pMainWnd = &dlg;
 	INT_PTR nResponse = dlg.DoModal();
 
 	// Delete the shell manager created above.
-	if (pShellManager != NULL)
-	{
-		delete pShellManager;
-	}
-
-#ifndef _AFXDLL
-	ControlBarCleanUp();
-#endif
+	// if (pShellManager != NULL)
+	// {
+	// 	delete pShellManager;
+	// }
 
 	// Since the dialog has been closed, return FALSE so that we exit the
 	//  application, rather than start the application's message pump.

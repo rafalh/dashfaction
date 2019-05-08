@@ -4,10 +4,7 @@
 
 #pragma once
 
-#ifndef __AFXWIN_H__
-	#error "include 'stdafx.h' before including this file for PCH"
-#endif
-
+#include <wxx_wincore.h>
 #include "resource.h"		// main symbols
 
 
@@ -22,13 +19,11 @@ public:
 
 // Overrides
 public:
-    virtual BOOL InitInstance();
+    virtual BOOL InitInstance() override;
 
 // Implementation
     bool LaunchGame(HWND hwnd, const char* mod_name = nullptr);
     bool LaunchEditor(HWND hwnd, const char* mod_name = nullptr);
-
-	DECLARE_MESSAGE_MAP()
 
 private:
     void MigrateConfig();

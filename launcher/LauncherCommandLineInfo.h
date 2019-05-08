@@ -1,8 +1,8 @@
 #pragma once
 
-#include "afxwin.h"
+#include <wxx_wincore.h>
 
-class LauncherCommandLineInfo : public CCommandLineInfo
+class LauncherCommandLineInfo //: public CCommandLineInfo
 {
 public:
     virtual void ParseParam(const char* pszParam, BOOL bFlag, BOOL bLast)

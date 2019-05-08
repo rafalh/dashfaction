@@ -4,16 +4,16 @@
 #include "stdafx.h"
 #include "LauncherApp.h"
 #include "OptionsDlg.h"
-#include "afxdialogex.h"
 #include <common/GameConfig.h>
+#include <wxx_wincore.h>
+#include <wxx_dialog.h>
+#include <wxx_commondlg.h>
 
 
 // OptionsDlg dialog
 
-IMPLEMENT_DYNAMIC(OptionsDlg, CDialogEx)
-
-OptionsDlg::OptionsDlg(CWnd* pParent /*=NULL*/)
-	: CDialogEx(IDD_OPTIONS, pParent), m_toolTip(nullptr)
+OptionsDlg::OptionsDlg()
+	: CDialog(IDD_OPTIONS), m_toolTip(nullptr)
 {
 
 }
@@ -40,7 +40,7 @@ BOOL OptionsDlg::OnInitDialog()
 
     SetDlgItemTextA(IDC_EXE_PATH_EDIT, m_conf.game_executable_path.c_str());
 
-    CComboBox *resCombo = (CComboBox*)GetDlgItem(IDC_RESOLUTIONS_COMBO);
+    resCombo.AttachDlgItem(IDC_RESOLUTIONS_COMBO, *this);
     char buf[256];
 
     int selectedRes = -1;
@@ -50,7 +50,7 @@ BOOL OptionsDlg::OnInitDialog()
         for (const auto &res : resolutions)
         {
             sprintf(buf, "%dx%d", res.width, res.height);
-            int pos = resCombo->AddString(buf);
+            int pos = resCombo.AddString(buf);
             if (m_conf.res_width == res.width && m_conf.res_height == res.height)
                 selectedRes = pos;
         }
@@ -61,12 +61,12 @@ BOOL OptionsDlg::OnInitDialog()
         printf("Cannot get available screen resolutions: %s", e.what());
     }
     if (selectedRes != -1)
-        resCombo->SetCurSel(selectedRes);
+        resCombo.SetCurSel(selectedRes);
     else
     {
         char buf[32];
         sprintf(buf, "%dx%d", m_conf.res_width, m_conf.res_height);
-        resCombo->SetWindowTextA(buf);
+        resCombo.SetWindowTextA(buf);
     }
 
     CheckDlgButton(IDC_32BIT_RADIO, m_conf.res_bpp == 32 ? BST_CHECKED : BST_UNCHECKED);
@@ -76,11 +76,11 @@ BOOL OptionsDlg::OnInitDialog()
     CheckDlgButton(IDC_STRETCHED_RADIO, m_conf.wnd_mode == GameConfig::STRETCHED ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_VSYNC_CHECK, m_conf.vsync ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_FAST_ANIMS_CHECK, m_conf.fast_anims ? BST_CHECKED : BST_UNCHECKED);
-    SetDlgItemInt(IDC_RENDERING_CACHE_EDIT, m_conf.geometry_cache_size);
-    SetDlgItemInt(IDC_MAX_FPS_EDIT, m_conf.max_fps);
+    SetDlgItemInt(IDC_RENDERING_CACHE_EDIT, m_conf.geometry_cache_size, false);
+    SetDlgItemInt(IDC_MAX_FPS_EDIT, m_conf.max_fps, false);
 
-    CComboBox *msaaCombo = (CComboBox*)GetDlgItem(IDC_MSAA_COMBO);
-    msaaCombo->AddString("Disabled");
+    msaaCombo.AttachDlgItem(IDC_MSAA_COMBO, *this);
+    msaaCombo.AddString("Disabled");
     int selectedMsaa = 0;
     m_multiSampleTypes.push_back(0);
     try
@@ -90,7 +90,7 @@ BOOL OptionsDlg::OnInitDialog()
         {
             char buf[16];
             sprintf(buf, "MSAAx%u", msaa);
-            int idx = msaaCombo->AddString(buf);
+            int idx = msaaCombo.AddString(buf);
             if (m_conf.msaa == msaa)
                 selectedMsaa = idx;
             m_multiSampleTypes.push_back(msaa);
@@ -100,7 +100,7 @@ BOOL OptionsDlg::OnInitDialog()
     {
         printf("Cannot check available MSAA modes: %s", e.what());
     }
-    msaaCombo->SetCurSel(selectedMsaa);
+    msaaCombo.SetCurSel(selectedMsaa);
 
     bool anisotropySupported = false;
     try
@@ -114,7 +114,7 @@ BOOL OptionsDlg::OnInitDialog()
     if (anisotropySupported)
         CheckDlgButton(IDC_ANISOTROPIC_CHECK, m_conf.anisotropic_filtering ? BST_CHECKED : BST_UNCHECKED);
     else
-        GetDlgItem(IDC_ANISOTROPIC_CHECK)->EnableWindow(FALSE);
+        GetDlgItem(IDC_ANISOTROPIC_CHECK).EnableWindow(FALSE);
 
     CheckDlgButton(IDC_DISABLE_LOD_CHECK, m_conf.disable_lod_models ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_FPS_COUNTER_CHECK, m_conf.fps_counter ? BST_CHECKED : BST_UNCHECKED);
@@ -125,9 +125,9 @@ BOOL OptionsDlg::OnInitDialog()
     SetDlgItemTextA(IDC_TRACKER_EDIT, m_conf.tracker.c_str());
     CheckDlgButton(IDC_FORCE_PORT_CHECK, m_conf.force_port != 0);
     if (m_conf.force_port)
-        SetDlgItemInt(IDC_PORT_EDIT, m_conf.force_port);
+        SetDlgItemInt(IDC_PORT_EDIT, m_conf.force_port, false);
     else
-        GetDlgItem(IDC_PORT_EDIT)->EnableWindow(FALSE);
+        GetDlgItem(IDC_PORT_EDIT).EnableWindow(FALSE);
     CheckDlgButton(IDC_DIRECT_INPUT_CHECK, m_conf.direct_input ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_EAX_SOUND_CHECK, m_conf.eax_sound ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_FAST_START_CHECK, m_conf.fast_start ? BST_CHECKED : BST_UNCHECKED);
@@ -147,8 +147,8 @@ BOOL OptionsDlg::OnInitDialog()
 
 void OptionsDlg::InitToolTip()
 {
-    m_toolTip = new CToolTipCtrl();
-    m_toolTip->Create(this);
+    m_toolTip = new CToolTip();
+    m_toolTip->Create(*this);
 
     m_toolTip->AddTool(GetDlgItem(IDC_RESOLUTIONS_COMBO), "Please select resolution from provided dropdown list - custom resolution is supposed to work in Windowed/Stretched mode only");
     m_toolTip->AddTool(GetDlgItem(IDC_STRETCHED_RADIO), "Full Screen Windowed - reduced performance but faster to switch to other window");
@@ -174,39 +174,50 @@ void OptionsDlg::InitToolTip()
     m_toolTip->Activate(TRUE);
 }
 
-BOOL OptionsDlg::PreTranslateMessage(MSG* pMsg)
+BOOL OptionsDlg::PreTranslateMessage(MSG& Msg)
 {
     if (m_toolTip)
-        m_toolTip->RelayEvent(pMsg);
+        m_toolTip->RelayEvent(Msg);
 
-    return CDialogEx::PreTranslateMessage(pMsg);
+    return CDialog::PreTranslateMessage(Msg);
 }
 
-void OptionsDlg::DoDataExchange(CDataExchange* pDX)
+void OptionsDlg::OnOK()
 {
-    CDialogEx::DoDataExchange(pDX);
+    OnBnClickedOk();
 }
 
+BOOL OptionsDlg::OnCommand(WPARAM wparam, LPARAM lparam)
+{
+    UNREFERENCED_PARAMETER(lparam);
 
-BEGIN_MESSAGE_MAP(OptionsDlg, CDialogEx)
-    ON_BN_CLICKED(IDOK, &OptionsDlg::OnBnClickedOk)
-    ON_BN_CLICKED(IDC_EXE_BROWSE, &OptionsDlg::OnBnClickedExeBrowse)
-    ON_BN_CLICKED(IDC_RESET_TRACKER_BTN, &OptionsDlg::OnBnClickedResetTrackerBtn)
-    ON_BN_CLICKED(IDC_FORCE_PORT_CHECK, &OptionsDlg::OnForcePortClick)
-END_MESSAGE_MAP()
+    UINT id = LOWORD(wparam);
+    switch (id)
+    {
+    case IDC_EXE_BROWSE:
+        OnBnClickedExeBrowse();
+        return TRUE;
+    case IDC_RESET_TRACKER_BTN:
+        OnBnClickedResetTrackerBtn();
+        return TRUE;
+    case IDC_FORCE_PORT_CHECK:
+        OnForcePortClick();
+        return TRUE;
+    }
 
+    return FALSE;
+}
 
 // OptionsDlg message handlers
-
 
 void OptionsDlg::OnBnClickedOk()
 {
     CString str;
 
-    GetDlgItemTextA(IDC_EXE_PATH_EDIT, str);
+    str = GetDlgItemTextA(IDC_EXE_PATH_EDIT);
     m_conf.game_executable_path = str;
 
-    GetDlgItemTextA(IDC_RESOLUTIONS_COMBO, str);
+    str = GetDlgItemTextA(IDC_RESOLUTIONS_COMBO);
     char *ptr = (char*)(const char *)str;
     const char *widthStr = strtok(ptr, "x");
     const char *heightStr = strtok(nullptr, "x");
@@ -228,11 +239,10 @@ void OptionsDlg::OnBnClickedOk()
 
     m_conf.vsync = (IsDlgButtonChecked(IDC_VSYNC_CHECK) == BST_CHECKED);
     m_conf.fast_anims = (IsDlgButtonChecked(IDC_FAST_ANIMS_CHECK) == BST_CHECKED);
-    m_conf.geometry_cache_size = GetDlgItemInt(IDC_RENDERING_CACHE_EDIT);
-    m_conf.max_fps = GetDlgItemInt(IDC_MAX_FPS_EDIT);
+    m_conf.geometry_cache_size = GetDlgItemInt(IDC_RENDERING_CACHE_EDIT, false);
+    m_conf.max_fps = GetDlgItemInt(IDC_MAX_FPS_EDIT, false);
 
-    CComboBox *msaaCombo = (CComboBox*)GetDlgItem(IDC_MSAA_COMBO);
-    m_conf.msaa = m_multiSampleTypes[msaaCombo->GetCurSel()];
+    m_conf.msaa = m_multiSampleTypes[msaaCombo.GetCurSel()];
 
     m_conf.anisotropic_filtering = (IsDlgButtonChecked(IDC_ANISOTROPIC_CHECK) == BST_CHECKED);
     m_conf.disable_lod_models = (IsDlgButtonChecked(IDC_DISABLE_LOD_CHECK) == BST_CHECKED);
@@ -241,10 +251,10 @@ void OptionsDlg::OnBnClickedOk()
     m_conf.high_monitor_res = (IsDlgButtonChecked(IDC_HIGH_MON_RES_CHECK) == BST_CHECKED);
     m_conf.true_color_textures = (IsDlgButtonChecked(IDC_TRUE_COLOR_TEXTURES_CHECK) == BST_CHECKED);
 
-    GetDlgItemTextA(IDC_TRACKER_EDIT, str);
+    str = GetDlgItemTextA(IDC_TRACKER_EDIT);
     m_conf.tracker = str;
     bool force_port = IsDlgButtonChecked(IDC_FORCE_PORT_CHECK) == BST_CHECKED;
-    m_conf.force_port = force_port ? GetDlgItemInt(IDC_PORT_EDIT) : 0;
+    m_conf.force_port = force_port ? GetDlgItemInt(IDC_PORT_EDIT, false) : 0;
     m_conf.direct_input = (IsDlgButtonChecked(IDC_DIRECT_INPUT_CHECK) == BST_CHECKED);
     m_conf.eax_sound = (IsDlgButtonChecked(IDC_EAX_SOUND_CHECK) == BST_CHECKED);
     m_conf.fast_start = (IsDlgButtonChecked(IDC_FAST_START_CHECK) == BST_CHECKED);
@@ -264,19 +274,18 @@ void OptionsDlg::OnBnClickedOk()
         MessageBoxA(e.what(), NULL, MB_ICONERROR | MB_OK);
     }
 
-    CDialogEx::OnOK();
+    CDialog::OnOK();
 }
 
 
 void OptionsDlg::OnBnClickedExeBrowse()
 {
     LPCTSTR filter = "Executable Files (*.exe)|*.exe||";
-    CFileDialog dlg(TRUE, ".exe", "RF.exe", 0, filter, this);
-    OPENFILENAME &ofn = dlg.GetOFN();
-    ofn.lpstrTitle = "Select game executable (RF.exe)";
+    CFileDialog dlg(TRUE, ".exe", "RF.exe", OFN_HIDEREADONLY, filter);
+    dlg.SetTitle("Select game executable (RF.exe)");
 
-    if (dlg.DoModal() == IDOK)
-        SetDlgItemTextA(IDC_EXE_PATH_EDIT, dlg.GetPathName());
+    if (dlg.DoModal(*this) == IDOK)
+        SetDlgItemText(IDC_EXE_PATH_EDIT, dlg.GetPathName());
 }
 
 
@@ -288,5 +297,5 @@ void OptionsDlg::OnBnClickedResetTrackerBtn()
 void OptionsDlg::OnForcePortClick()
 {
     bool force_port = IsDlgButtonChecked(IDC_FORCE_PORT_CHECK) == BST_CHECKED;
-    GetDlgItem(IDC_PORT_EDIT)->EnableWindow(force_port);
+    GetDlgItem(IDC_PORT_EDIT).EnableWindow(force_port);
 }

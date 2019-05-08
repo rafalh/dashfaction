@@ -1,6 +1,7 @@
 // Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
+#include <windows.h>
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -10,8 +11,6 @@
 #ifndef APSTUDIO_INVOKED
 #include "targetver.h"
 #endif
-#include "afxres.h"
-#include "verrsrc.h"
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -20,8 +19,8 @@
 // Polish (Poland) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_PLK)
-LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
-#pragma code_page(1250)
+//LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+//#pragma code_page(1250)
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -72,7 +71,7 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDR_ICON                ICON                    "res\\DF.ico"
+IDR_ICON                ICON                    "res/DF.ico"
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -80,7 +79,7 @@ IDR_ICON                ICON                    "res\\DF.ico"
 // Bitmap
 //
 
-IDB_HEADER              BITMAP                  "res\\header.bmp"
+IDB_HEADER              BITMAP                  "res/header.bmp"
 
 #endif    // Polish (Poland) resources
 /////////////////////////////////////////////////////////////////////////////
@@ -90,13 +89,15 @@ IDB_HEADER              BITMAP                  "res\\header.bmp"
 // English resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-LANGUAGE LANG_ENGLISH, SUBLANG_NEUTRAL
-#pragma code_page(1252)
+// LANGUAGE LANG_ENGLISH, SUBLANG_NEUTRAL
+// #pragma code_page(1252)
 
 /////////////////////////////////////////////////////////////////////////////
 //
 // Dialog
 //
+
+#define IDC_STATIC -1
 
 IDD_MAIN DIALOGEX 0, 0, 213, 236
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
@@ -111,7 +112,7 @@ BEGIN
     PUSHBUTTON      "Discord Support Channel",IDC_SUPPORT_BTN,48,144,114,24
     PUSHBUTTON      "Exit",IDCANCEL,48,174,114,24
     LTEXT           "Mod:",IDC_STATIC,48,206,17,8
-    COMBOBOX        IDC_MOD_COMBO,67,204,95,30,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_MOD_COMBO,67,204,95,200,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     LTEXT           "Checking for update...",IDC_UPDATE_STATUS,6,222,114,8,SS_NOTIFY
     RTEXT           "Copyright (c) 2019 rafalh",IDC_STATIC,126,222,84,8
 END
@@ -126,12 +127,12 @@ BEGIN
     PUSHBUTTON      "Browse...",IDC_EXE_BROWSE,222,18,50,14
     GROUPBOX        "Graphics",IDC_STATIC,6,42,270,132
     LTEXT           "Resolution:",IDC_STATIC,12,54,37,8
-    COMBOBOX        IDC_RESOLUTIONS_COMBO,12,66,66,90,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_RESOLUTIONS_COMBO,12,66,66,200,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     LTEXT           "Color Depth:",IDC_STATIC,96,54,42,8
     CONTROL         "32 bits",IDC_32BIT_RADIO,"Button",BS_AUTORADIOBUTTON | WS_GROUP,96,66,37,10
     CONTROL         "16 bits",IDC_16BIT_RADIO,"Button",BS_AUTORADIOBUTTON,96,78,37,10
     LTEXT           "Anti-Aliasing:",IDC_STATIC,180,54,66,8
-    COMBOBOX        IDC_MSAA_COMBO,180,66,66,42,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_MSAA_COMBO,180,66,66,200,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     CONTROL         "Full Screen",IDC_FULL_SCREEN_RADIO,"Button",BS_AUTORADIOBUTTON | WS_GROUP,12,90,51,10
     CONTROL         "Windowed",IDC_WINDOWED_RADIO,"Button",BS_AUTORADIOBUTTON,12,102,49,10
     CONTROL         "Stretched",IDC_STRETCHED_RADIO,"Button",BS_AUTORADIOBUTTON,12,114,47,10
@@ -276,14 +277,14 @@ END
 #define _AFX_NO_TRACKER_RESOURCES
 #define _AFX_NO_PROPERTY_RESOURCES
 
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-LANGUAGE 9, 1
-#include "res\DashFactionLauncher.rc2"  // non-Microsoft Visual C++ edited resources
-#include "afxres.rc"      // Standard components
-#if !defined(_AFXDLL)
-#include "afxribbon.rc"   // MFC ribbon and control bar resources
-#endif
-#endif
+// #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+// LANGUAGE 9, 1
+// #include "res\DashFactionLauncher.rc2"  // non-Microsoft Visual C++ edited resources
+// #include "afxres.rc"      // Standard components
+// #if !defined(_AFXDLL)
+// #include "afxribbon.rc"   // MFC ribbon and control bar resources
+// #endif
+// #endif
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED

@@ -2,17 +2,18 @@
 
 #include <launcher_common/VideoDeviceInfoProvider.h>
 #include <common/GameConfig.h>
+#include <wxx_wincore.h>
+#include <wxx_dialog.h>
+#include <wxx_controls.h>
 
 // OptionsDlg dialog
 
-class OptionsDlg : public CDialogEx
+class OptionsDlg : public CDialog
 {
-	DECLARE_DYNAMIC(OptionsDlg)
-
 public:
-	OptionsDlg(CWnd* pParent = NULL);   // standard constructor
+	OptionsDlg();   // standard constructor
 	virtual ~OptionsDlg();
-    BOOL OnInitDialog();
+    BOOL OnInitDialog() override;
     void InitToolTip();
 
 // Dialog Data
@@ -21,19 +22,21 @@ public:
 #endif
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-    BOOL PreTranslateMessage(MSG* pMsg);
+    BOOL PreTranslateMessage(MSG& pMsg) override;
+    void OnOK() override;
+    BOOL OnCommand(WPARAM wparam, LPARAM lparam) override;
 
-	DECLARE_MESSAGE_MAP()
 public:
-    afx_msg void OnBnClickedOk();
-    afx_msg void OnBnClickedExeBrowse();
-    afx_msg void OnBnClickedResetTrackerBtn();
-    afx_msg void OnForcePortClick();
+    void OnBnClickedOk();
+    void OnBnClickedExeBrowse();
+    void OnBnClickedResetTrackerBtn();
+    void OnForcePortClick();
 
 private:
     VideoDeviceInfoProvider m_videoInfo;
     std::vector<unsigned> m_multiSampleTypes;
-    CToolTipCtrl *m_toolTip;
+    CToolTip *m_toolTip;
     GameConfig m_conf;
+    CComboBox resCombo;
+    CComboBox msaaCombo;
 };

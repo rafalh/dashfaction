@@ -8,11 +8,13 @@
 #include "LauncherApp.h"
 #include "MainDlg.h"
 #include "OptionsDlg.h"
-#include "afxdialogex.h"
 #include <common/version.h>
 #include <common/ErrorUtils.h>
 #include <launcher_common/PatchedAppLauncher.h>
 #include <launcher_common/UpdateChecker.h>
+#include <wxx_wincore.h>
+#include <wxx_dialog.h>
+#include <cstring>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -22,31 +24,16 @@
 
 #define WM_UPDATE_CHECK (WM_USER + 10)
 
-MainDlg::MainDlg(CWnd* pParent /*=NULL*/) : CDialogEx(IDD_MAIN, pParent)
+MainDlg::MainDlg() : CDialog(IDD_MAIN)
 {
-    m_hIcon = AfxGetApp()->LoadIcon(IDR_ICON);
+    m_hIcon = GetApp().LoadIcon(IDR_ICON);
 }
-
-void MainDlg::DoDataExchange(CDataExchange* pDX)
-{
-    CDialogEx::DoDataExchange(pDX);
-}
-
-BEGIN_MESSAGE_MAP(MainDlg, CDialogEx)
-ON_WM_PAINT()
-ON_WM_QUERYDRAGICON()
-ON_MESSAGE(WM_UPDATE_CHECK, OnUpdateCheck)
-ON_BN_CLICKED(IDC_OPTIONS_BTN, &MainDlg::OnBnClickedOptionsBtn)
-ON_BN_CLICKED(IDOK, &MainDlg::OnBnClickedOk)
-ON_BN_CLICKED(IDC_EDITOR_BTN, &MainDlg::OnBnClickedEditorBtn)
-ON_BN_CLICKED(IDC_SUPPORT_BTN, &MainDlg::OnBnClickedSupportBtn)
-END_MESSAGE_MAP()
 
 // MainDlg message handlers
 
 BOOL MainDlg::OnInitDialog()
 {
-    CDialogEx::OnInitDialog();
+    CDialog::OnInitDialog();
 
     SetWindowTextA(PRODUCT_NAME_VERSION);
 
@@ -56,18 +43,20 @@ BOOL MainDlg::OnInitDialog()
     SetIcon(m_hIcon, FALSE); // Set small icon
 
     // Set header bitmap
-    CStatic* picture = (CStatic*)GetDlgItem(IDC_HEADER_PIC);
-    HBITMAP hbm = (HBITMAP)::LoadImage(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_HEADER), IMAGE_BITMAP, 0, 0, 0);
-    picture->SetBitmap(hbm);
+    picture.AttachDlgItem(IDC_HEADER_PIC, *this);
+    HBITMAP hbm = (HBITMAP)GetApp().LoadImage(MAKEINTRESOURCE(IDB_HEADER), IMAGE_BITMAP, 0, 0, 0);
+    picture.SetBitmap(hbm);
+
+    mod_selector.AttachDlgItem(IDC_MOD_COMBO, *this);
 
     // Fill mod selector
     RefreshModSelector();
 
-    m_ToolTip.Create(this);
+    m_ToolTip.Create(*this);
     m_ToolTip.Activate(TRUE);
 
 #ifdef NDEBUG
-    m_pUpdateChecker = new UpdateChecker(m_hWnd);
+    m_pUpdateChecker = new UpdateChecker(*this);
     m_pUpdateChecker->check_async([=]() { PostMessageA(WM_UPDATE_CHECK, 0, 0); });
 #else
     m_pUpdateChecker = nullptr;
@@ -76,13 +65,45 @@ BOOL MainDlg::OnInitDialog()
     return TRUE; // return TRUE  unless you set the focus to a control
 }
 
+void MainDlg::OnOK()
+{
+    OnBnClickedOk();
+}
+
+BOOL MainDlg::OnCommand(WPARAM wparam, LPARAM lparam)
+{
+    UNREFERENCED_PARAMETER(lparam);
+
+    UINT id = LOWORD(wparam);
+    switch (id)
+    {
+    case IDC_OPTIONS_BTN:
+        OnBnClickedOptionsBtn();
+        return TRUE;
+    case IDC_EDITOR_BTN:
+        OnBnClickedEditorBtn();
+        return TRUE;
+    case IDC_SUPPORT_BTN:
+        OnBnClickedSupportBtn();
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+INT_PTR MainDlg::DialogProc(UINT msg, WPARAM wparam, LPARAM lparam)
+{
+    if (msg == WM_UPDATE_CHECK)
+        return OnUpdateCheck(wparam, lparam);
+    return CDialog::DialogProc(msg, wparam, lparam);
+}
+
 void MainDlg::RefreshModSelector()
 {
-    CComboBox* mod_selector = (CComboBox*)GetDlgItem(IDC_MOD_COMBO);
     CString selected_mod;
-    mod_selector->GetWindowTextA(selected_mod);
-    mod_selector->ResetContent();
-    mod_selector->AddString("");
+    selected_mod = mod_selector.GetWindowText();
+    mod_selector.ResetContent();
+    mod_selector.AddString("");
 
     GameConfig game_config;
     try {
@@ -94,60 +115,27 @@ void MainDlg::RefreshModSelector()
     std::string game_dir = get_dir_from_path(game_config.game_executable_path);
     std::string mods_dir = game_dir + "\\mods\\*";
     WIN32_FIND_DATA fi;
+
     HANDLE hfind = FindFirstFileExA(mods_dir.c_str(), FindExInfoBasic, &fi, FindExSearchLimitToDirectories, NULL, 0);
     if (hfind != INVALID_HANDLE_VALUE) {
         do {
             if (fi.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY && std::strcmp(fi.cFileName, ".") != 0 &&
                 std::strcmp(fi.cFileName, "..") != 0) {
-                mod_selector->AddString(fi.cFileName);
+                mod_selector.AddString(fi.cFileName);
             }
         } while (FindNextFileA(hfind, &fi));
         FindClose(hfind);
     }
 
-    mod_selector->SetWindowTextA(selected_mod);
+    mod_selector.SetWindowTextA(selected_mod);
 }
 
-BOOL MainDlg::PreTranslateMessage(MSG* pMsg)
+BOOL MainDlg::PreTranslateMessage(MSG& Msg)
 {
     if (m_ToolTip)
-        m_ToolTip.RelayEvent(pMsg);
+        m_ToolTip.RelayEvent(Msg);
 
-    return CDialogEx::PreTranslateMessage(pMsg);
-}
-
-// If you add a minimize button to your dialog, you will need the code below
-//  to draw the icon.  For MFC applications using the document/view model,
-//  this is automatically done for you by the framework.
-
-void MainDlg::OnPaint()
-{
-    if (IsIconic()) {
-        CPaintDC dc(this); // device context for painting
-
-        SendMessage(WM_ICONERASEBKGND, reinterpret_cast<WPARAM>(dc.GetSafeHdc()), 0);
-
-        // Center icon in client rectangle
-        int cxIcon = GetSystemMetrics(SM_CXICON);
-        int cyIcon = GetSystemMetrics(SM_CYICON);
-        CRect rect;
-        GetClientRect(&rect);
-        int x = (rect.Width() - cxIcon + 1) / 2;
-        int y = (rect.Height() - cyIcon + 1) / 2;
-
-        // Draw the icon
-        dc.DrawIcon(x, y, m_hIcon);
-    }
-    else {
-        CDialogEx::OnPaint();
-    }
-}
-
-// The system calls this function to obtain the cursor to display while the user drags
-//  the minimized window.
-HCURSOR MainDlg::OnQueryDragIcon()
-{
-    return static_cast<HCURSOR>(m_hIcon);
+    return CDialog::PreTranslateMessage(Msg);
 }
 
 LRESULT MainDlg::OnUpdateCheck(WPARAM wParam, LPARAM lParam)
@@ -155,22 +143,23 @@ LRESULT MainDlg::OnUpdateCheck(WPARAM wParam, LPARAM lParam)
     UNREFERENCED_PARAMETER(wParam);
     UNREFERENCED_PARAMETER(lParam);
 
-    CStatic* updateStatus = (CStatic*)GetDlgItem(IDC_UPDATE_STATUS);
+    CStatic updateStatus;
+    updateStatus.AttachDlgItem(IDC_UPDATE_STATUS, *this);
 
     if (m_pUpdateChecker->has_error()) {
-        updateStatus->SetWindowTextA("Failed to check for update");
+        updateStatus.SetWindowText("Failed to check for update");
         m_ToolTip.AddTool(updateStatus, m_pUpdateChecker->get_error().c_str());
         return 0;
     }
 
     if (!m_pUpdateChecker->is_new_version_available())
-        updateStatus->SetWindowTextA("No update is available.");
+        updateStatus.SetWindowText("No update is available.");
     else {
-        updateStatus->SetWindowTextA("New version available!");
+        updateStatus.SetWindowText("New version available!");
         int iResult = MessageBoxA(m_pUpdateChecker->get_message().c_str(), "Dash Faction update is available!",
                                   MB_OKCANCEL | MB_ICONEXCLAMATION);
         if (iResult == IDOK) {
-            ShellExecuteA(m_hWnd, "open", m_pUpdateChecker->get_url().c_str(), NULL, NULL, SW_SHOW);
+            ShellExecuteA(*this, "open", m_pUpdateChecker->get_url().c_str(), NULL, NULL, SW_SHOW);
             EndDialog(0);
         }
     }
@@ -182,7 +171,7 @@ void MainDlg::OnBnClickedOptionsBtn()
 {
     try {
         OptionsDlg dlg;
-        INT_PTR nResponse = dlg.DoModal();
+        INT_PTR nResponse = dlg.DoModal(*this);
         RefreshModSelector();
     }
     catch (std::exception& e) {
@@ -196,8 +185,9 @@ void MainDlg::OnBnClickedOk()
     if (m_pUpdateChecker)
         m_pUpdateChecker->abort();
 
-    CStringA selected_mod = GetSelectedMod();
-    if (static_cast<LauncherApp*>(AfxGetApp())->LaunchGame(m_hWnd, selected_mod))
+    CString selected_mod = GetSelectedMod();
+
+    if (static_cast<LauncherApp&>(GetApp()).LaunchGame(*this, selected_mod))
         AfterLaunch();
 }
 
@@ -207,20 +197,18 @@ void MainDlg::OnBnClickedEditorBtn()
         m_pUpdateChecker->abort();
 
     CStringA selected_mod = GetSelectedMod();
-    if (static_cast<LauncherApp*>(AfxGetApp())->LaunchEditor(m_hWnd, selected_mod))
+    if (static_cast<LauncherApp&>(GetApp()).LaunchEditor(*this, selected_mod))
         AfterLaunch();
 }
 
 void MainDlg::OnBnClickedSupportBtn()
 {
-    ShellExecuteA(m_hWnd, "open", "https://discord.gg/bC2WzvJ", NULL, NULL, SW_SHOW);
+    ShellExecuteA(*this, "open", "https://discord.gg/bC2WzvJ", NULL, NULL, SW_SHOW);
 }
 
 CString MainDlg::GetSelectedMod()
 {
-    CComboBox* mod_selector = (CComboBox*)GetDlgItem(IDC_MOD_COMBO);
-    CStringA selected_mod;
-    mod_selector->GetWindowTextA(selected_mod);
+    CString selected_mod = mod_selector.GetWindowText();
     return selected_mod;
 }
 
@@ -235,5 +223,5 @@ void MainDlg::AfterLaunch()
     }
 
     if (!config.keep_launcher_open)
-        CDialogEx::OnOK();
+        CDialog::OnOK();
 }
