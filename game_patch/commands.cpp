@@ -97,11 +97,11 @@ DebugFlagDesc g_debug_flags[] = {
     {AddrAsRef<bool>(0x009BB5AC), "objrender"},
     {g_dbg_geometry_rendering_stats, "roomstats"},
     // geometry rendering
-    {AddrAsRef<bool>(0x009BB594), "trans", true},
-    {AddrAsRef<bool>(0x009BB598), "room", true},
-    {AddrAsRef<bool>(0x009BB59C), "portal", true},
-    {AddrAsRef<bool>(0x009BB5A4), "lightmap", true},
-    {AddrAsRef<bool>(0x009BB5A8), "nolightmap", true},
+    {AddrAsRef<bool>(0x009BB594), "trans", true}, // transparent_faces
+    {AddrAsRef<bool>(0x009BB598), "room", true}, // show_rooms
+    {AddrAsRef<bool>(0x009BB59C), "portal", true}, // show_portals
+    {AddrAsRef<bool>(0x009BB5A4), "lightmap", true}, // show_lightmaps
+    {AddrAsRef<bool>(0x009BB5A8), "nolightmap", true}, // fullbright
 };
 
 DcCommand2 debug_cmd{
@@ -119,7 +119,7 @@ DcCommand2 debug_cmd{
             if (type == dbg_flag.name) {
                 dbg_flag.ref = !dbg_flag.ref;
                 rf::DcPrintf("Debug flag '%s' is %s", dbg_flag.name, dbg_flag.ref ? "enabled" : "disabled");
-                if (dbg_flag.ref && dbg_flag.clear_geometry_cache) {
+                if (dbg_flag.clear_geometry_cache) {
                     rf::GeomClearCache();
                 }
                 return;
