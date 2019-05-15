@@ -55,8 +55,6 @@ static auto& GrGetBitmapTexture = AddrAsRef<IDirect3DTexture8*(int bm_handle)>(0
 CallHook<rf::BmPixelFormat(int, int, int, int, std::byte*)> GrD3DReadBackBuffer_hook{
     0x0050E015,
     [](int x, int y, int width, int height, std::byte* buffer) {
-        // Note: function is sometimes called with all parameters set to 0 to get backbuffer format
-
         rf::GrFlushBuffers();
 
         ComPtr<IDirect3DSurface8> back_buffer;
@@ -71,6 +69,12 @@ CallHook<rf::BmPixelFormat(int, int, int, int, std::byte*)> GrD3DReadBackBuffer_
         if (FAILED(hr)) {
             ERR_ONCE("IDirect3DSurface8::GetDesc failed 0x%lX", hr);
             return rf::BMPF_INVALID;
+        }
+
+        // function is sometimes called with all parameters set to 0 to get backbuffer format
+        rf::BmPixelFormat pixel_fmt = GetPixelFormatFromD3DFormat(desc.Format);
+        if (width == 0 || height == 0) {
+            return pixel_fmt;
         }
 
         // According to Windows performance tests surface created with CreateImageSurface is faster than one from
@@ -88,12 +92,10 @@ CallHook<rf::BmPixelFormat(int, int, int, int, std::byte*)> GrD3DReadBackBuffer_
         POINT dst_pt{x, y};
         SetRect(&src_rect, x, y, x + width - 1, y + height - 1);
 
-        if (width > 0 && height > 0) {
-            hr = rf::gr_d3d_device->CopyRects(back_buffer, &src_rect, 1, g_capture_tmp_surface, &dst_pt);
-            if (FAILED(hr)) {
-                ERR_ONCE("IDirect3DDevice8::CopyRects failed 0x%lX", hr);
-                return rf::BMPF_INVALID;
-            }
+        hr = rf::gr_d3d_device->CopyRects(back_buffer, &src_rect, 1, g_capture_tmp_surface, &dst_pt);
+        if (FAILED(hr)) {
+            ERR_ONCE("IDirect3DDevice8::CopyRects failed 0x%lX", hr);
+            return rf::BMPF_INVALID;
         }
 
         // Note: locking fragment of Render Target fails
@@ -104,7 +106,6 @@ CallHook<rf::BmPixelFormat(int, int, int, int, std::byte*)> GrD3DReadBackBuffer_
             return rf::BMPF_INVALID;
         }
 
-        rf::BmPixelFormat pixel_fmt = GetPixelFormatFromD3DFormat(desc.Format);
         int bytes_per_pixel = GetPixelFormatSize(pixel_fmt);
         std::byte* src_ptr =
             reinterpret_cast<std::byte*>(locked_rect.pBits) + y * locked_rect.Pitch + x * bytes_per_pixel;
@@ -118,7 +119,6 @@ CallHook<rf::BmPixelFormat(int, int, int, int, std::byte*)> GrD3DReadBackBuffer_
         g_capture_tmp_surface->UnlockRect();
 
         TRACE("GrReadBackBufferHook (%d %d %d %d) returns %d", x, y, width, height, pixel_fmt);
-
         return pixel_fmt;
     },
 };
@@ -213,17 +213,17 @@ CodeInjection MonitorInit_bitmap_format_fix{
     },
 };
 
-CodeInjection d3d_device_lost_release_render_target_patch{
+CodeInjection d3d_device_lost_patch{
     0x00545042,
     []([[maybe_unused]] auto& regs) {
         TRACE("Releasing render target");
         g_render_target.release();
         g_depth_stencil_surface.release();
-        // Note: g_capture_tmp_surface is in D3DPOOL_DEFAULT so no need to release here
+        // Note: g_capture_tmp_surface is in D3DPOOL_SYSTEMMEM so no need to release here
     },
 };
 
-CodeInjection d3d_cleanup_release_render_target_patch{
+CodeInjection d3d_cleanup_patch{
     0x0054527A,
     []([[maybe_unused]] auto& regs) {
         g_render_target.release();
@@ -294,12 +294,12 @@ void InitScreenshot()
 
     // Use fast GrCaptureBackBuffer implementation which copies backbuffer to texture without copying from VRAM to RAM
     GrCaptureBackBuffer_hook.Install();
+    d3d_device_lost_patch.Install();
+    d3d_cleanup_patch.Install();
     if (g_game_config.msaa) {
         // According to tests on Windows in MSAA mode it is better to render to render target instead of copying from
         // multi-sampled back-buffer
         GameRenderToDynamicTextures_msaa_fix.Install();
-        d3d_device_lost_release_render_target_patch.Install();
-        d3d_cleanup_release_render_target_patch.Install();
     }
 
     // Make sure bitmaps used together with GrCaptureBackBuffer have the same format as backbuffer
