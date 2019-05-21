@@ -31,7 +31,7 @@ void DrawScoreboardInternal_New(bool draw)
         return;
 
     unsigned c_left_col = 0, c_right_col = 0;
-    unsigned game_type = rf::GetGameType();
+    int game_type = rf::MpGetGameMode();
 
     // Sort players by score
     rf::Player* players[32];

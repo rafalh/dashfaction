@@ -564,6 +564,7 @@ namespace rf
     static auto& NwAddrToStr = AddrAsRef<void(char *dest, int cb_dest, const NwAddr& addr)>(0x00529FE0);
     static auto& NwGetPlayerFromAddr = AddrAsRef<Player*(const NwAddr& addr)>(0x00484850);
     static auto& NwCompareAddr = AddrAsRef<int(const NwAddr &addr1, const NwAddr &addr2, bool check_port)>(0x0052A930);
+    static auto& GetPlayerById = AddrAsRef<Player*(uint8_t id)>(0x00484890);
 
     /* Camera */
 
@@ -1241,7 +1242,8 @@ namespace rf
         int field_828;
         int field_82c;
         Timer field_830;
-        int field_834[5];
+        int force_state_anim;
+        int field_834[4];
         AnimMesh *field_848;
         AnimMesh *field_84c;
         int nano_shield;
@@ -1270,8 +1272,8 @@ namespace rf
         int field_1380;
         int field_1384;
         int field_1388;
-        int field_138c;
-        int field_1390;
+        int current_state;
+        int next_state;
         float field_1394;
         float field_1398;
         Timer field_139c;
@@ -1538,7 +1540,13 @@ namespace rf
 
     /* Network Game */
 
-    static auto& GetGameType = AddrAsRef<unsigned()>(0x00470770);
+    enum MpGameMode {
+        GM_DM = 0,
+        GM_CTF = 1,
+        GM_TEAMDM = 2,
+    };
+
+    static auto& MpGetGameMode = AddrAsRef<MpGameMode()>(0x00470770);
     static auto& GetPlayersCount = AddrAsRef<unsigned()>(0x00484830);
     static auto& CtfGetRedScore = AddrAsRef<uint8_t()>(0x00475020);
     static auto& CtfGetBlueScore = AddrAsRef<uint8_t()>(0x00475030);
