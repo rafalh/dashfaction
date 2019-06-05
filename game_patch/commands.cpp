@@ -307,6 +307,23 @@ DcCommandAlias map_cmd{
     level_cmd,
 };
 
+DcCommand2 map_ext_cmd{
+    "map_ext",
+    [](std::optional<int> minutes_opt) {
+        if (!rf::is_local_net_game) {
+            rf::DcPrint("Command can be only executed on server", nullptr);
+            return;
+        }
+        auto& level_time = AddrAsRef<float>(0x006460F0);
+        int minutes = minutes_opt.value_or(5);
+        level_time -= minutes_opt.value_or(5) * 60.0f;
+        std::string msg = StringFormat("Round extended by %d minutes", minutes);
+        rf::ChatSay(msg.c_str(), false);
+    },
+    "Extend round time",
+    "map_ext [minutes]",
+};
+
 void DcShowCmdHelp(rf::DcCommand* cmd)
 {
     rf::dc_run = 0;
@@ -633,6 +650,7 @@ void CommandsAfterGameInit()
     map_cmd.Register();
     input_mode_cmd.Register();
     debug_cmd.Register();
+    map_ext_cmd.Register();
 
     MpInit_disable_debug_flags_patch.Install();
 }

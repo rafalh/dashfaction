@@ -54,6 +54,14 @@ void __fastcall UiLabel_Create2_VersionLabel(rf::UiGadget* self, void* edx, rf::
 }
 CallHook<UiLabel_Create2_Type> UiLabel_Create2_VersionLabel_hook{0x0044344D, UiLabel_Create2_VersionLabel};
 
+const char* g_rcon_cmd_whitelist[] = {
+    "kick",
+    "level",
+    "ban",
+    "ban_ip",
+    "map_ext",
+};
+
 FunHook<void(const char**, const char**)> GetVersionStr_hook{
     0x004B33F0,
     [](const char** version, const char** a2) {
@@ -1108,6 +1116,10 @@ void MiscInit()
     // Original code sets bitmap handle in all fonts to -1 on level unload. On next font usage the font bitmap is reloaded.
     // Note: font bitmaps are dynamic (USERBMAP) so they cannot be found by name unlike normal bitmaps.
     AsmWritter(0x0050E1A8).ret();
+
+    // Override rcon command whitelist
+    WriteMemPtr(0x0046C794 + 1, g_rcon_cmd_whitelist);
+    WriteMemPtr(0x0046C7D1 + 2, g_rcon_cmd_whitelist + std::size(g_rcon_cmd_whitelist));
 
 #if 0
     // Fix weapon switch glitch when reloading (should be used on Match Mode)

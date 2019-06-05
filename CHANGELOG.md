@@ -4,6 +4,7 @@ DashFaction Changelog
 Version 1.3.1
 -------------
 - rework high FPS jump fix - should fix free-fall animation bug and occasionally sticking to ground on FPS > 150
+- add 'map_ext' command for extending round time (server-side)
 - fix font texture leak (RF bug)
 - increase precision of output from 'ms' command
 - add 'show_invisible_faces' subcommand in 'debug' command

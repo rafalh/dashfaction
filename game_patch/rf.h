@@ -484,6 +484,7 @@ namespace rf
     };
 
     static auto& ChatPrint = AddrAsRef<void(String::Pod text, ChatMsgColor color, String::Pod prefix)>(0x004785A0);
+    static auto& ChatSay = AddrAsRef<void(const char *msg, bool is_team_msg)>(0x00444150);
 
     /* File System */
 
