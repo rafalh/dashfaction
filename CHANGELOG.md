@@ -4,6 +4,7 @@ DashFaction Changelog
 Version 1.3.1
 -------------
 - fix font texture leak (RF bug)
+- increase precision of output from 'ms' command
 
 Version 1.3.0 (released 2019-05-07)
 -----------------------------------

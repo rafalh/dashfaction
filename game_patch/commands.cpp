@@ -223,7 +223,7 @@ DcCommand2 ms_cmd{
             value = std::clamp(value, 0.0f, 1.0f);
             rf::local_player->config.controls.mouse_sensitivity = value;
         }
-        rf::DcPrintf("Mouse sensitivity: %.2f", rf::local_player->config.controls.mouse_sensitivity);
+        rf::DcPrintf("Mouse sensitivity: %.4f", rf::local_player->config.controls.mouse_sensitivity);
     },
     "Sets mouse sensitivity",
     "ms <value>",
