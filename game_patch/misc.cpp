@@ -1104,6 +1104,11 @@ void MiscInit()
     // High monitors/mirrors resolution
     ClutterInitMonitor_hook.Install();
 
+    // Fix font texture leak
+    // Original code sets bitmap handle in all fonts to -1 on level unload. On next font usage the font bitmap is reloaded.
+    // Note: font bitmaps are dynamic (USERBMAP) so they cannot be found by name unlike normal bitmaps.
+    AsmWritter(0x0050E1A8).ret();
+
 #if 0
     // Fix weapon switch glitch when reloading (should be used on Match Mode)
     AsmWritter(0x004A4B4B).call(EntityIsReloading_SwitchWeapon_New);
