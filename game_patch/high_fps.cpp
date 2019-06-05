@@ -15,7 +15,6 @@ constexpr auto reference_fps = 30.0f;
 constexpr auto reference_framerate = 1.0f / reference_fps;
 constexpr auto screen_shake_fps = 150.0f;
 
-static float g_jump_threshold = 0.05f;
 static float g_camera_shake_factor = 0.6f;
 
 class FtolAccuracyFix
@@ -199,6 +198,25 @@ DcCommand2 detect_ftol_issues_cmd{
 
 #endif // DEBUG
 
+CodeInjection entity_floor_collision_after_jump_fix{
+    0x004A0995,
+    [](auto& regs) {
+        rf::EntityObj* entity = reinterpret_cast<rf::EntityObj*>(regs.esi);
+        rf::Vector3& down_pos = *reinterpret_cast<rf::Vector3*>(regs.esp + 0x9C - 0x84);
+        static auto& EntityIsFalling = AddrAsRef<bool(rf::EntityObj*)>(0x0042A020);
+        static auto& gravity = AddrAsRef<float>(0x005A00DC);
+
+        bool is_falling = EntityIsFalling(entity);
+        if (is_falling) {
+            float vel_y = entity->_super.phys_info.vel.y - gravity * rf::frametime * 1.1f;
+            down_pos.y -= 0.05f - std::min(vel_y, 0.0f) * rf::frametime * 1.1f;
+            regs.eip = 0x004A09CB;
+        } else {
+            regs.eip = 0x004A09AE;
+        }
+    },
+};
+
 void STDCALL EntityWaterDecelerateFix(rf::EntityObj* entity)
 {
     float vel_factor = 1.0f - (rf::frametime * 4.5f);
@@ -264,7 +282,7 @@ void HighFpsInit()
 #endif
 
     // Fix jumping on high FPS
-    WriteMemPtr(0x004A09A6 + 2, &g_jump_threshold);
+    entity_floor_collision_after_jump_fix.Install();
 
     // Fix water deceleration on high FPS
     AsmWritter(0x0049D816).nop(5);
@@ -298,10 +316,7 @@ void HighFpsInit()
 void HighFpsUpdate()
 {
     float frame_time = rf::frametime;
-    if (frame_time > 0.0001f) {
-        // Make jump fix framerate dependent to fix bouncing on small FPS
-        g_jump_threshold = 0.025f + 0.075f * frame_time / (1 / 60.0f);
-
+    if (frame_time > 0.0001f) { // < 1000FPS
         // Fix screen shake caused by some weapons (eg. Assault Rifle)
         g_camera_shake_factor = std::pow(0.6f, frame_time / (1 / screen_shake_fps));
     }
