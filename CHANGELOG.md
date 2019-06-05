@@ -7,6 +7,9 @@ Version 1.3.1
 - fix font texture leak (RF bug)
 - increase precision of output from 'ms' command
 - add 'show_invisible_faces' subcommand in 'debug' command
+- fix 'debug' command not flushing geometry cache when disabling flags
+- make sure log file is not spammed by errors happening every frame
+- slightly optimize screenshot capturing
 
 Version 1.3.0 (released 2019-05-07)
 -----------------------------------
