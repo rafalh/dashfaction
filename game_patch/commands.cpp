@@ -102,6 +102,7 @@ DebugFlagDesc g_debug_flags[] = {
     {AddrAsRef<bool>(0x009BB59C), "portal", true}, // show_portals
     {AddrAsRef<bool>(0x009BB5A4), "lightmap", true}, // show_lightmaps
     {AddrAsRef<bool>(0x009BB5A8), "nolightmap", true}, // fullbright
+    {AddrAsRef<bool>(0x009BB5B0), "show_invisible_faces", true},
 };
 
 DcCommand2 debug_cmd{
@@ -131,7 +132,7 @@ DcCommand2 debug_cmd{
     nullptr,
     "debug [thruster | light | light2 | push_climb_reg | geo_reg | glass | mover | ignite | movemode | perf |\n"
     "perfbar | waypoint | network | particlestats | weapon | event | trigger | objrender | roomstats | trans |\n"
-    "room | portal | lightmap | nolightmap]",
+    "room | portal | lightmap | nolightmap | show_invisible_faces]",
 };
 
 void DisableAllDebugFlags()
