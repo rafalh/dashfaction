@@ -19,6 +19,7 @@
 #include "stdafx.h"
 #include "utils.h"
 #include "wndproc.h"
+#include "server/server.h"
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
 
@@ -102,6 +103,7 @@ CallHook<void()> CleanupGame_hook{
     []() {
         ResetGammaRamp();
         MiscCleanup();
+        ServerCleanup();
         CleanupGame_hook.CallTarget();
     },
 };
@@ -276,6 +278,7 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     SpectateModeInit();
     HighFpsInit();
     MiscInit();
+    ServerInit();
 #if !defined(NDEBUG) && defined(HAS_EXPERIMENTAL)
     ExperimentalInit();
 #endif

@@ -22,7 +22,11 @@ if(NOT MSVC)
 endif()
 
 file(GLOB SRCS *.cpp *.h *.rc)
-add_library(DashFaction SHARED ${SRCS})
+add_library(DashFaction SHARED
+    ${SRCS}
+    server/server.cpp
+    server/server.h
+)
 
 target_compile_features(DashFaction PUBLIC cxx_std_17)
 set_target_properties(DashFaction PROPERTIES CXX_EXTENSIONS NO)
