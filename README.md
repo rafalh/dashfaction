@@ -76,6 +76,21 @@ During video capture in OBS please disable MSAA in Options - it does not perform
 In case of problems you can ask for help on Faction Files Discord server (click Discord Support Channel button in
 launcher main window).
 
+Additional server configuration
+-------------------------------
+Dedicated server can be configured to support vote commands.
+Configuration is provided inside dedicated_server.txt file after the level list (`$Level` keys).
+Every vote type have the same options. All options are optional.
+
+Example votes configuration:
+
+    $DF Vote Kick:  true
+        +Min Voters: 3
+        +Min Percentage: 60
+    $DF Vote Level: true
+        +Min Percentage: 51
+    $DF Vote Extend: true
+
 License
 -------
 Most of Dash Faction source code is licensed under Mozilla Public License 2.0. It is available in the GitHub repository.
