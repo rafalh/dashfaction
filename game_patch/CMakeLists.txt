@@ -24,6 +24,14 @@ endif()
 file(GLOB SRCS *.cpp *.h *.rc)
 add_library(DashFaction SHARED
     ${SRCS}
+    graphics/graphics.cpp
+    graphics/graphics.h
+    graphics/gr_color.cpp
+    graphics/gr_color.h
+    graphics/gamma.cpp
+    graphics/gamma.h
+    graphics/capture.cpp
+    graphics/capture.h
     server/server.cpp
     server/server.h
     input/input.cpp

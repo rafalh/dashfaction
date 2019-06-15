@@ -1,7 +1,7 @@
 #include "gr_color.h"
-#include "main.h"
-#include "rf.h"
-#include "stdafx.h"
+#include "../main.h"
+#include "../rf.h"
+#include "../stdafx.h"
 #include <patch_common/AsmWritter.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>

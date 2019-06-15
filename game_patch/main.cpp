@@ -3,8 +3,9 @@
 #include "commands.h"
 #include "crashhandler.h"
 #include "exports.h"
-#include "gamma.h"
-#include "graphics.h"
+#include "graphics/gamma.h"
+#include "graphics/graphics.h"
+#include "graphics/capture.h"
 #include "high_fps.h"
 #include "hud.h"
 #include "kill.h"
@@ -14,7 +15,6 @@
 #include "packfile.h"
 #include "rf.h"
 #include "scoreboard.h"
-#include "screenshot.h"
 #include "spectate_mode.h"
 #include "stdafx.h"
 #include "utils.h"
@@ -93,7 +93,7 @@ CallHook<void()> InitGame_hook{
         ForceFileFromPackfile("strings.tbl", "ui.vpp");
 
         CommandsAfterGameInit();
-        ScreenshotAfterGameInit();
+        GraphicsCaptureAfterGameInit();
 
         INFO("Game initialized (%lu ms).", GetTickCount() - start_ticks);
     },
@@ -266,10 +266,10 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     /* Init modules */
     CommandsInit();
     GraphicsInit();
-    NetworkInit();
     InitGamma();
+    GraphicsCaptureInit();
+    NetworkInit();
     InitWndProc();
-    InitScreenshot();
     InitHud();
     InitAutodownloader();
     InitScoreboard();

@@ -1,7 +1,7 @@
 #include "gamma.h"
-#include "rf.h"
-#include "stdafx.h"
-#include "utils.h"
+#include "../rf.h"
+#include "../stdafx.h"
+#include "../utils.h"
 
 #ifndef D3DSGR_NO_CALIBRATION
 #define D3DSGR_NO_CALIBRATION 0x0

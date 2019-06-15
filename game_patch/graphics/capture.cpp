@@ -1,9 +1,9 @@
-#include "screenshot.h"
+#include "capture.h"
 #include "gr_color.h"
-#include "main.h"
-#include "rf.h"
-#include "stdafx.h"
-#include "utils.h"
+#include "../main.h"
+#include "../rf.h"
+#include "../stdafx.h"
+#include "../utils.h"
 #include <cstddef>
 #include <common/BuildConfig.h>
 #include <patch_common/CallHook.h>
@@ -285,7 +285,7 @@ FunHook<void()> GameRenderToDynamicTextures_msaa_fix{
     },
 };
 
-void InitScreenshot()
+void GraphicsCaptureInit()
 {
 #if !D3D_LOCKABLE_BACKBUFFER
     /* Override default because IDirect3DSurface8::LockRect fails on multisampled back-buffer */
@@ -310,7 +310,7 @@ void InitScreenshot()
     WriteMemPtr(0x004367CA + 2, &g_screenshot_dir_id);
 }
 
-void ScreenshotAfterGameInit()
+void GraphicsCaptureAfterGameInit()
 {
     /* Fix for screenshots creation when height > 1024 */
     if (rf::gr_screen.max_height > 1024) {
