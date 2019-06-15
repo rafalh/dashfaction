@@ -1,21 +1,16 @@
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
 #include <windows.h>
+#include <dinput.h>
 #include "../rf.h"
 #include "../commands.h"
 #include "../main.h"
 
-FunHook<void()> MouseUpdateDirectInput_hook{
-    0x0051DEB0,
-    []() {
-        MouseUpdateDirectInput_hook.CallTarget();
-
-        // center cursor
-        POINT pt{rf::GrGetMaxWidth() / 2, rf::GrGetMaxHeight() / 2};
-        ClientToScreen(rf::main_wnd, &pt);
-        SetCursorPos(pt.x, pt.y);
-    },
-};
+namespace rf
+{
+    auto& di_mouse = AddrAsRef<LPDIRECTINPUTDEVICE8A>(0x0188545C);
+    auto& keep_mouse_centered = AddrAsRef<bool>(0x01885471);
+}
 
 bool SetDirectInputEnabled(bool enabled)
 {
@@ -29,8 +24,82 @@ bool SetDirectInputEnabled(bool enabled)
             return false;
         }
     }
+    if (direct_input_initialized) {
+        if (rf::direct_input_disabled)
+            rf::di_mouse->Unacquire();
+        else
+            rf::di_mouse->Acquire();
+    }
+
     return true;
 }
+
+FunHook<void()> mouse_eval_deltas_di_hook{
+    0x0051DEB0,
+    []() {
+        mouse_eval_deltas_di_hook.CallTarget();
+
+        // center cursor if in game
+        if (rf::keep_mouse_centered) {
+            POINT pt{rf::GrGetMaxWidth() / 2, rf::GrGetMaxHeight() / 2};
+            ClientToScreen(rf::main_wnd, &pt);
+            SetCursorPos(pt.x, pt.y);
+        }
+    },
+};
+
+FunHook<void()> mouse_keep_centered_enable_hook{
+    0x0051E690,
+    []() {
+        if (!rf::keep_mouse_centered)
+            SetDirectInputEnabled(g_game_config.direct_input);
+        mouse_keep_centered_enable_hook.CallTarget();
+    },
+};
+
+FunHook<void()> mouse_keep_centered_disable_hook{
+    0x0051E6A0,
+    []() {
+        if (rf::keep_mouse_centered)
+            SetDirectInputEnabled(false);
+        mouse_keep_centered_disable_hook.CallTarget();
+    },
+};
+
+DcCommand2 input_mode_cmd{
+    "inputmode",
+    []() {
+        g_game_config.direct_input = !g_game_config.direct_input;
+        g_game_config.save();
+
+        if (g_game_config.direct_input) {
+            if (!SetDirectInputEnabled(g_game_config.direct_input)) {
+                rf::DcPrintf("Failed to initialize DirectInput");
+            }
+            else {
+                SetDirectInputEnabled(rf::keep_mouse_centered);
+                rf::DcPrintf("DirectInput is enabled");
+            }
+        }
+        else
+            rf::DcPrintf("DirectInput is disabled");
+    },
+    "Toggles input mode",
+};
+
+DcCommand2 ms_cmd{
+    "ms",
+    [](std::optional<float> value_opt) {
+        if (value_opt) {
+            float value = value_opt.value();
+            value = std::clamp(value, 0.0f, 1.0f);
+            rf::local_player->config.controls.mouse_sensitivity = value;
+        }
+        rf::DcPrintf("Mouse sensitivity: %.4f", rf::local_player->config.controls.mouse_sensitivity);
+    },
+    "Sets mouse sensitivity",
+    "ms <value>",
+};
 
 rf::Vector3 ForwardVectorFromNonLinearYawPitch(float yaw, float pitch)
 {
@@ -160,42 +229,18 @@ DcCommand2 linear_pitch_cmd{
     "Toggles linear pitch angle",
 };
 
-DcCommand2 input_mode_cmd{
-    "inputmode",
-    []() {
-        g_game_config.direct_input = !g_game_config.direct_input;
-        g_game_config.save();
-        if (!SetDirectInputEnabled(g_game_config.direct_input))
-            rf::DcPrintf("Failed to initialize DirectInput");
-        else if (g_game_config.direct_input)
-            rf::DcPrintf("DirectInput is enabled");
-        else
-            rf::DcPrintf("DirectInput is disabled");
-    },
-    "Toggles input mode",
-};
-
-DcCommand2 ms_cmd{
-    "ms",
-    [](std::optional<float> value_opt) {
-        if (value_opt) {
-            float value = value_opt.value();
-            value = std::clamp(value, 0.0f, 1.0f);
-            rf::local_player->config.controls.mouse_sensitivity = value;
-        }
-        rf::DcPrintf("Mouse sensitivity: %.4f", rf::local_player->config.controls.mouse_sensitivity);
-    },
-    "Sets mouse sensitivity",
-    "ms <value>",
-};
-
 void InputInit()
 {
-    // hook MouseUpdateDirectInput
-    MouseUpdateDirectInput_hook.Install();
+    // Add DirectInput mouse support
+    mouse_eval_deltas_di_hook.Install();
+    mouse_keep_centered_enable_hook.Install();
+    mouse_keep_centered_disable_hook.Install();
 
-    // Initial DirectInput handling
-    rf::direct_input_disabled = !g_game_config.direct_input;
+    // Do not limit the cursor to the game window if in menu (Win32 mouse)
+    AsmWritter(0x0051DD7C).jmp(0x0051DD8E);
+
+    // Use exclusive DirectInput mode so cursor cannot exit game window
+    //WriteMem<u8>(0x0051E14B + 1, 5); // DISCL_EXCLUSIVE|DISCL_FOREGROUND
 
     // Linear vertical rotation (pitch)
     LinearPitchPatch.Install();

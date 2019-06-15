@@ -11,6 +11,7 @@ Version 1.3.1
 - add 'show_invisible_faces' subcommand in 'debug' command
 - fix 'debug' command not flushing geometry cache when disabling flags
 - make sure log file is not spammed by errors happening every frame
+- allow cursor movement outside of game window when in menu
 - slightly optimize screenshot capturing
 
 Version 1.3.0 (released 2019-05-07)
