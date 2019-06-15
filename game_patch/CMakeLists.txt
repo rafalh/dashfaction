@@ -26,6 +26,8 @@ add_library(DashFaction SHARED
     ${SRCS}
     server/server.cpp
     server/server.h
+    input/input.cpp
+    input/input.h
 )
 
 target_compile_features(DashFaction PUBLIC cxx_std_17)

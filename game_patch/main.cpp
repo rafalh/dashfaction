@@ -20,6 +20,7 @@
 #include "utils.h"
 #include "wndproc.h"
 #include "server/server.h"
+#include "input/input.h"
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
 
@@ -279,6 +280,7 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     HighFpsInit();
     MiscInit();
     ServerInit();
+    InputInit();
 #if !defined(NDEBUG) && defined(HAS_EXPERIMENTAL)
     ExperimentalInit();
 #endif

@@ -173,36 +173,6 @@ void DebugRender2d()
     dbg_particle_stats();
 }
 
-bool SetDirectInputEnabled(bool enabled)
-{
-    auto direct_input_initialized = AddrAsRef<bool>(0x01885460);
-    auto InitDirectInput = AddrAsRef<int()>(0x0051E070);
-    rf::direct_input_disabled = !enabled;
-    if (enabled && !direct_input_initialized) {
-        if (InitDirectInput() != 0) {
-            ERR("Failed to initialize DirectInput");
-            rf::direct_input_disabled = true;
-            return false;
-        }
-    }
-    return true;
-}
-
-DcCommand2 input_mode_cmd{
-    "inputmode",
-    []() {
-        g_game_config.direct_input = !g_game_config.direct_input;
-        g_game_config.save();
-        if (!SetDirectInputEnabled(g_game_config.direct_input))
-            rf::DcPrintf("Failed to initialize DirectInput");
-        else if (g_game_config.direct_input)
-            rf::DcPrintf("DirectInput is enabled");
-        else
-            rf::DcPrintf("DirectInput is disabled");
-    },
-    "Toggles input mode",
-};
-
 #if CAMERA_1_3_COMMANDS
 
 static int CanPlayerFireHook(rf::Player* player)
@@ -215,20 +185,6 @@ static int CanPlayerFireHook(rf::Player* player)
 }
 
 #endif // if CAMERA_1_3_COMMANDS
-
-DcCommand2 ms_cmd{
-    "ms",
-    [](std::optional<float> value_opt) {
-        if (value_opt) {
-            float value = value_opt.value();
-            value = std::clamp(value, 0.0f, 1.0f);
-            rf::local_player->config.controls.mouse_sensitivity = value;
-        }
-        rf::DcPrintf("Mouse sensitivity: %.4f", rf::local_player->config.controls.mouse_sensitivity);
-    },
-    "Sets mouse sensitivity",
-    "ms <value>",
-};
 
 CallHook<void(bool)> GlareRenderAllCorona_hook{
     0x0043233E,
@@ -646,14 +602,13 @@ void CommandsAfterGameInit()
 
     // Custom Dash Faction commands
     max_fps_cmd.Register();
-    ms_cmd.Register();
+
     vli_cmd.Register();
     level_sounds_cmd.Register();
     player_count_cmd.Register();
     find_level_cmd.Register();
     find_map_cmd.Register();
     map_cmd.Register();
-    input_mode_cmd.Register();
     debug_cmd.Register();
     map_ext_cmd.Register();
 
