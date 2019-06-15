@@ -471,6 +471,41 @@ namespace rf
                        UiDialogCallbackPtr callbacks[], unsigned unknown1, unsigned unknown2)>(0x004562A0);
     static auto& UiGetGadgetFromPos = AddrAsRef<int(int x, int y, UiGadget * const gadgets[], int num_gadgets)>(0x00442ED0);
 
+    /* Parse */
+
+    struct StrParser
+    {
+        bool OptionalString(const char *str)
+        {
+            return reinterpret_cast<bool(__thiscall*)(StrParser*, const char*)>(0x005125C0)(this, str);
+        }
+
+        bool RequiredString(const char *str)
+        {
+            return reinterpret_cast<bool(__thiscall*)(StrParser*, const char*)>(0x005126A0)(this, str);
+        }
+
+        bool GetBool()
+        {
+            return reinterpret_cast<bool(__thiscall*)(StrParser*)>(0x005126F0)(this);
+        }
+
+        int GetInt()
+        {
+            return reinterpret_cast<int(__thiscall*)(StrParser*)>(0x00512750)(this);
+        }
+
+        unsigned GetUInt()
+        {
+            return reinterpret_cast<int(__thiscall*)(StrParser*)>(0x00512840)(this);
+        }
+
+        float GetFloat()
+        {
+            return reinterpret_cast<int(__thiscall*)(StrParser*)>(0x00512920)(this);
+        }
+    };
+
     /* Chat */
 
     enum class ChatMsgColor
@@ -562,6 +597,8 @@ namespace rf
         AddrAsRef<void(const NwAddr &addr, const void *packet, unsigned cb_packet)>(0x0052A080);
     static auto& NwSendReliablePacket =
         AddrAsRef<void(Player *player, const uint8_t *data, unsigned int num_bytes, int a4)>(0x00479480);
+    static auto& NwSendReliablePacketToAll =
+        AddrAsRef<void( const uint8_t *data, unsigned int num_bytes, int a4)>(0x004795A0);
     static auto& NwAddrToStr = AddrAsRef<void(char *dest, int cb_dest, const NwAddr& addr)>(0x00529FE0);
     static auto& NwGetPlayerFromAddr = AddrAsRef<Player*(const NwAddr& addr)>(0x00484850);
     static auto& NwCompareAddr = AddrAsRef<int(const NwAddr &addr1, const NwAddr &addr2, bool check_port)>(0x0052A930);
@@ -1648,6 +1685,7 @@ namespace rf
     static auto& CutsceneIsActive = AddrAsRef<bool()>(0x0045BE80);
     static const auto Timer__GetTimeLeftMs = reinterpret_cast<int(__thiscall*)(void* timer)>(0x004FA420);
     static auto& GeomClearCache = AddrAsRef<void()>(0x004F0B90);
+    static auto& FileGetChecksum = AddrAsRef<int(const char* filename)>(0x00436630);
 
     /* Strings Table */
     namespace strings {

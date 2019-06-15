@@ -307,6 +307,14 @@ DcCommandAlias map_cmd{
     level_cmd,
 };
 
+void ExtendRoundTime(int minutes)
+{
+    auto& level_time = AddrAsRef<float>(0x006460F0);
+    level_time -= minutes * 60.0f;
+    std::string msg = StringFormat("Round extended by %d minutes", minutes);
+    rf::ChatSay(msg.c_str(), false);
+}
+
 DcCommand2 map_ext_cmd{
     "map_ext",
     [](std::optional<int> minutes_opt) {
@@ -314,11 +322,8 @@ DcCommand2 map_ext_cmd{
             rf::DcPrint("Command can be only executed on server", nullptr);
             return;
         }
-        auto& level_time = AddrAsRef<float>(0x006460F0);
         int minutes = minutes_opt.value_or(5);
-        level_time -= minutes_opt.value_or(5) * 60.0f;
-        std::string msg = StringFormat("Round extended by %d minutes", minutes);
-        rf::ChatSay(msg.c_str(), false);
+        ExtendRoundTime(minutes);
     },
     "Extend round time",
     "map_ext [minutes]",

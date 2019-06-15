@@ -17,6 +17,7 @@ void CommandRegister(rf::DcCommand* cmd);
 rf::Player* FindBestMatchingPlayer(const char* name);
 void DebugRender3d();
 void DebugRender2d();
+void ExtendRoundTime(int minutes);
 
 class DcInvalidArgTypeError : public std::exception
 {};

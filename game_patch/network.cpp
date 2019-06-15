@@ -2,6 +2,7 @@
 #include "rf.h"
 #include "stdafx.h"
 #include "utils.h"
+#include "server/server.h"
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
@@ -10,6 +11,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <functional>
+#include <common/rfproto.h>
 
 #if MASK_AS_PF
 #include "pf.h"
@@ -314,6 +316,10 @@ FunHook<NwPacketHandler_Type> ProcessChatLinePacket_hook{
             rf::Player* src_player = rf::NwGetPlayerFromAddr(addr);
             if (!src_player)
                 return; // shouldnt happen (protected in rf::NwProcessGamePackets)
+
+            char* msg = data + 2;
+            if (CheckServerChatCommand(msg, src_player))
+                return;
 
             data[0] = src_player->nw_data->player_id; // fix player ID
         }
