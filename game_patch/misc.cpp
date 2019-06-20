@@ -611,6 +611,14 @@ FunHook<char(int, int, int, int, char)> ClutterInitMonitor_hook{
     },
 };
 
+CodeInjection GrLoadFontInternal_fix_texture_ref{
+    0x0051F429,
+    [](auto& regs) {
+        auto gr_tcache_add_ref = AddrAsRef<void(int bm_handle)>(0x0050E850);
+        gr_tcache_add_ref(regs.eax);
+    },
+};
+
 void MiscInit()
 {
     // Console init string
@@ -795,6 +803,7 @@ void MiscInit()
     // Original code sets bitmap handle in all fonts to -1 on level unload. On next font usage the font bitmap is reloaded.
     // Note: font bitmaps are dynamic (USERBMAP) so they cannot be found by name unlike normal bitmaps.
     AsmWritter(0x0050E1A8).ret();
+    GrLoadFontInternal_fix_texture_ref.Install();
 
 #if 0
     // Fix weapon switch glitch when reloading (should be used on Match Mode)
