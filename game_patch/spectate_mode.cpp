@@ -119,6 +119,37 @@ static void SpectateNextPlayer(bool dir, bool try_alive_players_first = false)
         SpectateNextPlayer(dir, false);
 }
 
+void SpectateModeEnterFreeLook()
+{
+    if (!rf::local_player || !rf::local_player->camera)
+        return;
+
+    rf::KillLocalPlayer();
+    rf::CameraSetFreelook(rf::local_player->camera);
+}
+
+bool SpectateModeIsFreeLook()
+{
+    if (!rf::local_player || !rf::local_player->camera)
+        return false;
+
+    auto camera_type = rf::local_player->camera->type;
+    return camera_type == rf::CAM_FREELOOK;
+}
+
+bool SpectateModeIsActive()
+{
+    return g_spectate_mode_enabled || SpectateModeIsFreeLook();
+}
+
+void SpectateModeLeave()
+{
+    if (g_spectate_mode_enabled)
+        SpectateModeSetTargetPlayer(nullptr);
+    else
+        SetCameraTarget(rf::local_player);
+}
+
 FunHook<void(rf::Player*, rf::GameCtrl, bool)> HandleCtrlInGame_hook{
     0x004A6210,
     [](rf::Player* player, rf::GameCtrl key_id, bool was_pressed) {
@@ -135,7 +166,15 @@ FunHook<void(rf::Player*, rf::GameCtrl, bool)> HandleCtrlInGame_hook{
             }
             else if (key_id == rf::GC_JUMP) {
                 if (was_pressed)
-                    SpectateModeSetTargetPlayer(nullptr);
+                    SpectateModeLeave();
+                return;
+            }
+        }
+        else if (SpectateModeIsFreeLook()) {
+            // don't allow respawn in freelook spectate
+            if (key_id == rf::GC_PRIMARY_ATTACK || key_id == rf::GC_SECONDARY_ATTACK) {
+                if (was_pressed)
+                    SpectateModeLeave();
                 return;
             }
         }
@@ -153,7 +192,7 @@ FunHook<void(rf::Player*, rf::GameCtrl, bool)> HandleCtrlInGame_hook{
 
 bool IsPlayerEntityInvalid_New(rf::Player* player)
 {
-    if (g_spectate_mode_enabled)
+    if (SpectateModeIsActive())
         return false;
     else
         return rf::IsPlayerEntityInvalid(player);
@@ -165,7 +204,7 @@ CallHook<bool(rf::Player*)> IsPlayerEntityInvalid_Scoreboard2_hook{0x00437C25, I
 
 static bool IsPlayerDying_New(rf::Player* player)
 {
-    if (g_spectate_mode_enabled)
+    if (SpectateModeIsActive())
         return false;
     else
         return rf::IsPlayerDying(player);
@@ -216,26 +255,50 @@ CallHook<void()> GrResetClip_RenderScannerViewForLocalPlayers_hook{
     },
 };
 
+FunHook<bool(rf::Player*)> CanPlayerFire_hook{
+    0x004A68D0,
+    [](rf::Player* player) {
+        if (SpectateModeIsActive()) {
+            return false;
+        }
+        return CanPlayerFire_hook.CallTarget(player);
+    }
+};
+
 DcCommand2 spectate_cmd{
     "spectate",
     [](std::optional<std::string> player_name) {
-        if (rf::is_net_game) {
-            rf::Player* player;
-            if (player_name && player_name.value() == "false")
-                player = nullptr;
-            else if (player_name)
-                player = FindBestMatchingPlayer(player_name.value().c_str());
-            else
-                player = nullptr;
-
-            if (player)
-                SpectateModeSetTargetPlayer(player);
+        if (!rf::is_net_game) {
+            rf::DcPrint("Spectate mode is only supported in multiplayer game!", nullptr);
+            return;
         }
-        else
-            rf::DcPrint("Works only in multiplayer game!", nullptr);
+
+        if (rf::game_options & RF_GO_FORCE_RESPAWN) {
+            rf::DcPrint("Spectate mode is disabled because of Force Respawn server option!", nullptr);
+            return;
+        }
+
+        if (player_name) {
+            // spectate player using 1st person view
+            rf::Player* player = FindBestMatchingPlayer(player_name.value().c_str());
+            if (!player) {
+                // player not found
+                return;
+            }
+            // player found - spectate
+            SpectateModeSetTargetPlayer(player);
+        }
+        else if (g_spectate_mode_enabled || SpectateModeIsFreeLook()) {
+            // leave spectate mode
+            SpectateModeLeave();
+        }
+        else {
+            // enter freelook spectate mode
+            SpectateModeEnterFreeLook();
+        }
     },
-    "Starts spectating mode",
-    "spectate <player_name/false>",
+    "Toggles spectate mode (first person or free-look depending on the argument)",
+    "spectate [<player_name>]",
 };
 
 #if SPECTATE_MODE_SHOW_WEAPON
@@ -308,6 +371,7 @@ void SpectateModeInit()
     HandleCtrlInGame_hook.Install();
     RenderReticle_hook.Install();
     PlayerCreateEntity_hook.Install();
+    CanPlayerFire_hook.Install();
 
     spectate_cmd.Register();
 
@@ -344,6 +408,10 @@ void SpectateModeAfterFullGameInit()
 
 void SpectateModeDrawUI()
 {
+    if (SpectateModeIsFreeLook()) {
+        return;
+    }
+
     if (!g_spectate_mode_enabled) {
         if (rf::IsPlayerEntityInvalid(rf::local_player)) {
             rf::GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
@@ -406,9 +474,4 @@ void SpectateModeDrawUI()
         rf::GrSetColor(0xF0, 0x20, 0x10, 0xC0);
         rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, cx_scr / 2, cy_src / 2, "DEAD", large_font, rf::gr_text_material);
     }
-}
-
-bool SpectateModeIsActive()
-{
-    return g_spectate_mode_enabled;
 }
