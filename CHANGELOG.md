@@ -13,6 +13,7 @@ Version 1.3.1
 - make sure log file is not spammed by errors happening every frame
 - allow cursor movement outside of game window when in menu
 - slightly optimize screenshot capturing
+- fix dedicated server crash when loading level with screens
 
 Version 1.3.0 (released 2019-05-07)
 -----------------------------------

@@ -382,6 +382,12 @@ namespace rf
         int field_8c;
     };
 
+    enum GrScreenMode
+    {
+        GR_NONE = 0,
+        GR_DIRECT3D = 102,
+    };
+
     struct GrVertex
     {
         Vector3 pos3_d;

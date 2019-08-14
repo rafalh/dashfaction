@@ -47,7 +47,7 @@ struct GrTexture
 };
 static_assert(sizeof(GrTexture) == 0x10);
 
-static auto& GrGetBitmapTexture = AddrAsRef<IDirect3DTexture8*(int bm_handle)>(0x0055D1E0);
+static auto& GrD3DGetBitmapTexture = AddrAsRef<IDirect3DTexture8*(int bm_handle)>(0x0055D1E0);
 
 } // namespace rf
 
@@ -124,13 +124,13 @@ CallHook<rf::BmPixelFormat(int, int, int, int, std::byte*)> GrD3DReadBackBuffer_
 };
 #endif // D3D_LOCKABLE_BACKBUFFER
 
-bool GrCaptureBackBufferFast(int x, int y, int width, int height, int bm_handle)
+bool GrD3DCaptureBackBufferFast(int x, int y, int width, int height, int bm_handle)
 {
     rf::GrFlushBuffers();
 
     // Note: Release call on D3D texture is not needed (no additional ref is added)
     g_force_texture_in_backbuffer_format = true;
-    auto d3d_tex = rf::GrGetBitmapTexture(bm_handle);
+    auto d3d_tex = rf::GrD3DGetBitmapTexture(bm_handle);
     g_force_texture_in_backbuffer_format = false;
     if (!d3d_tex) {
         WARN_ONCE("Bitmap without D3D texture provided in GrCaptureBackBuffer");
@@ -188,7 +188,7 @@ bool GrCaptureBackBufferFast(int x, int y, int width, int height, int bm_handle)
 FunHook<void(int, int, int, int, int)> GrCaptureBackBuffer_hook{
     0x0050E4F0,
     [](int x, int y, int width, int height, int bm_handle) {
-        if (!GrCaptureBackBufferFast(x, y, width, height, bm_handle)) {
+        if (rf::gr_screen.mode == rf::GR_DIRECT3D && !GrD3DCaptureBackBufferFast(x, y, width, height, bm_handle)) {
             GrCaptureBackBuffer_hook.CallTarget(x, y, width, height, bm_handle);
         }
     },
@@ -208,7 +208,9 @@ CodeInjection MonitorInit_bitmap_format_fix{
     0x0041254C,
     [](auto& regs) {
         g_force_texture_in_backbuffer_format = true;
-        rf::GrGetBitmapTexture(regs.eax);
+        // request D3D texture object to force its instantiation
+        if (rf::gr_screen.mode == rf::GR_DIRECT3D)
+            rf::GrD3DGetBitmapTexture(regs.eax);
         g_force_texture_in_backbuffer_format = false;
     },
 };
@@ -235,6 +237,11 @@ CodeInjection d3d_cleanup_patch{
 FunHook<void()> GameRenderToDynamicTextures_msaa_fix{
     0x00431820,
     []() {
+        if (rf::gr_screen.mode != rf::GR_DIRECT3D) {
+            // return fast in non D3D mode (e.g. dedicated server)
+            GameRenderToDynamicTextures_msaa_fix.CallTarget();
+        }
+
         HRESULT hr;
         if (!g_render_target) {
             hr = rf::gr_d3d_device->CreateRenderTarget(
