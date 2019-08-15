@@ -619,6 +619,15 @@ CodeInjection GrLoadFontInternal_fix_texture_ref{
     },
 };
 
+CodeInjection moving_group_rotate_in_place_keyframe_oob_crashfix{
+    0x0046A559,
+    [](auto& regs) {
+        float& unk_time = *reinterpret_cast<float*>(regs.esi + 0x308);
+        unk_time = 0;
+        regs.eip = 0x0046A89D;
+    }
+};
+
 void MiscInit()
 {
     // Console init string
@@ -804,6 +813,9 @@ void MiscInit()
     // Note: font bitmaps are dynamic (USERBMAP) so they cannot be found by name unlike normal bitmaps.
     AsmWritter(0x0050E1A8).ret();
     GrLoadFontInternal_fix_texture_ref.Install();
+
+    // Fix crash when skipping cutscene after robot kill in L7S4
+    moving_group_rotate_in_place_keyframe_oob_crashfix.Install();
 
 #if 0
     // Fix weapon switch glitch when reloading (should be used on Match Mode)
