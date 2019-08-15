@@ -173,19 +173,6 @@ void DebugRender2d()
     dbg_particle_stats();
 }
 
-#if CAMERA_1_3_COMMANDS
-
-static int CanPlayerFireHook(rf::Player* player)
-{
-    if (!(player->flags & 0x10))
-        return 0;
-    if (rf::is_net_game && (player->camera->type == rf::CAM_FREELOOK || player->camera->player != player))
-        return 0;
-    return 1;
-}
-
-#endif // if CAMERA_1_3_COMMANDS
-
 CallHook<void(bool)> GlareRenderAllCorona_hook{
     0x0043233E,
     [](bool reflections) {
@@ -472,14 +459,6 @@ CodeInjection DcRunCmd_CallHandlerPatch{
 
 void CommandsInit()
 {
-#if CAMERA_1_3_COMMANDS
-    /* Enable camera1-3 in multiplayer and hook CanPlayerFire to disable shooting in camera2 */
-    AsmWritter(0x00431280).nop(2);
-    AsmWritter(0x004312E0).nop(2);
-    AsmWritter(0x00431340).nop(2);
-    AsmWritter(0x004A68D0).jmp(CanPlayerFireHook);
-#endif // if CAMERA_1_3_COMMANDS
-
     // Change limit of commands
     ASSERT(rf::dc_num_commands == 0);
     WriteMemPtr(0x005099AC + 1, g_commands_buffer);

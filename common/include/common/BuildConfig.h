@@ -7,13 +7,6 @@
 #endif
 
 #define NO_CD_FIX 1
-
-#ifdef DEBUG
-#define CAMERA_1_3_COMMANDS 1
-#else
-#define CAMERA_1_3_COMMANDS 0
-#endif
-
 #define SPECTATE_MODE_SHOW_WEAPON 1
 #define WIDESCREEN_FIX 1
 #define CHECK_PACKFILE_CHECKSUM 0 // slow (1 second on SSD on first load after boot)
