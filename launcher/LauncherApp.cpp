@@ -149,7 +149,7 @@ bool LauncherApp::LaunchGame(HWND hwnd, const char* mod_name)
             "Privilege elevation is required. Please change RF.exe file properties and disable all "
             "compatibility settings (Run as administrator, Compatibility mode for Windows XX, etc.) or run "
             "Dash Faction launcher as administrator.",
-            NULL, MB_OK | MB_ICONERROR);
+            nullptr, MB_OK | MB_ICONERROR);
         return false;
     }
     catch (IntegrityCheckFailedException &e)
@@ -157,7 +157,7 @@ bool LauncherApp::LaunchGame(HWND hwnd, const char* mod_name)
         if (e.getCrc32() == 0)
         {
             Message(hwnd, "Game executable has not been found. Please set a proper path in Options.",
-                NULL, MB_OK | MB_ICONERROR);
+                nullptr, MB_OK | MB_ICONERROR);
         }
         else
         {
@@ -168,14 +168,15 @@ bool LauncherApp::LaunchGame(HWND hwnd, const char* mod_name)
                 << "replace your RF.exe file with original 1.20 NA RF.exe available on FactionFiles.com.\n"
                 << "Click OK to open download page.";
             std::string str = ss.str();
-            if (Message(hwnd, str.c_str(), NULL, MB_OKCANCEL | MB_ICONERROR) == IDOK)
+            if (Message(hwnd, str.c_str(), nullptr, MB_OKCANCEL | MB_ICONERROR) == IDOK)
                 ShellExecuteA(hwnd, "open", "https://www.factionfiles.com/ff.php?action=file&id=517545", NULL, NULL, SW_SHOW);
         }
         return false;
     }
     catch (std::exception &e)
     {
-        Message(hwnd, e.what(), nullptr, MB_ICONERROR | MB_OK);
+        std::string msg = generate_message_for_exception(e);
+        Message(hwnd, msg.c_str(), nullptr, MB_ICONERROR | MB_OK);
         return false;
     }
     return true;
@@ -191,7 +192,8 @@ bool LauncherApp::LaunchEditor(HWND hwnd, const char* mod_name)
     }
     catch (std::exception &e)
     {
-        Message(hwnd, e.what(), nullptr, MB_ICONERROR | MB_OK);
+        std::string msg = generate_message_for_exception(e);
+        Message(hwnd, msg.c_str(), nullptr, MB_ICONERROR | MB_OK);
         return false;
     }
 }

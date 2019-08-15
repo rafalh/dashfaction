@@ -185,7 +185,8 @@ void MainDlg::OnBnClickedOptionsBtn()
         RefreshModSelector();
     }
     catch (std::exception& e) {
-        MessageBoxA(e.what(), NULL, MB_ICONERROR | MB_OK);
+        std::string msg = generate_message_for_exception(e);
+        MessageBoxA(msg.c_str(), NULL, MB_ICONERROR | MB_OK);
     }
 }
 

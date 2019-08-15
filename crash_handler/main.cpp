@@ -5,6 +5,7 @@
 #include <common/HttpRequest.h>
 #include <windows.h>
 #include <fstream>
+#include <common/ErrorUtils.h>
 
 // Config
 #define CRASHHANDLER_LOG_PATH "logs/DashFaction.log"
@@ -36,7 +37,7 @@ bool PrepareArchive(const char* crash_dump_filename)
     return true;
 }
 
-void SendArchive()
+void SendArchive() try
 {
     auto file_path = CRASHHANDLER_TARGET_DIR "/" CRASHHANDLER_TARGET_NAME;
     std::ifstream file(file_path, std::ios_base::in | std::ios_base::binary);
@@ -58,6 +59,9 @@ void SendArchive()
         req.write(buf, num);
     }
     req.send();
+}
+catch (...) {
+    std::throw_with_nested(std::runtime_error("failed to send crashdump"));
 }
 
 int GetTempFileNameInTempDir(const char* prefix, char result[MAX_PATH])
@@ -128,6 +132,7 @@ int main(int argc, const char* argv[]) try {
     return 0;
 }
 catch (const std::exception& e) {
-    MessageBoxA(nullptr, e.what(), nullptr, MB_ICONERROR | MB_OK | MB_SETFOREGROUND | MB_TASKMODAL);
+    std::string msg = generate_message_for_exception(e);
+    MessageBoxA(nullptr, msg.c_str(), nullptr, MB_ICONERROR | MB_OK | MB_SETFOREGROUND | MB_TASKMODAL);
     return -1;
 }

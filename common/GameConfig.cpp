@@ -6,7 +6,7 @@
 const char rf_key_name[] = "SOFTWARE\\Volition\\Red Faction";
 const char df_subkey_name[] = "Dash Faction";
 
-bool GameConfig::load()
+bool GameConfig::load() try
 {
     RegKey reg_key(HKEY_CURRENT_USER, rf_key_name, KEY_READ);
 
@@ -55,8 +55,11 @@ bool GameConfig::load()
 
     return reg_key.is_open();
 }
+catch (...) {
+    std::throw_with_nested(std::runtime_error("failed to load config"));
+}
 
-void GameConfig::save()
+void GameConfig::save() try
 {
     RegKey reg_key(HKEY_CURRENT_USER, rf_key_name, KEY_WRITE, true);
     reg_key.write_value("Resolution Width", res_width);
@@ -94,6 +97,9 @@ void GameConfig::save()
     dash_faction_key.write_value("Linear Pitch", linear_pitch);
     dash_faction_key.write_value("Show Enemy Bullets", show_enemy_bullets);
     dash_faction_key.write_value("Keep Launcher Open", keep_launcher_open);
+}
+catch (...) {
+    std::throw_with_nested(std::runtime_error("failed to save config"));
 }
 
 bool GameConfig::detect_game_path()

@@ -2,6 +2,7 @@
 #include <launcher_common/UpdateChecker.h>
 #include <sstream>
 #include <common/version.h>
+#include <common/Win32Error.h>
 
 bool launch_game(HWND hwnd)
 {
@@ -95,5 +96,6 @@ int main() try {
     return 0;
 }
 catch (const std::exception& e) {
-    std::fprintf(stderr, "Fatal error: %s\n", e.what());
+    std::string msg = generate_message_for_exception(e);
+    std::fprintf(stderr, "Fatal error: %s\n", msg.c_str());
 }
