@@ -1,4 +1,5 @@
 #include "MiniDumpHelper.h"
+#include "TextDumpHelper.h"
 #include "ZipHelper.h"
 #include <common/Exception.h>
 #include <common/version.h>
@@ -28,11 +29,12 @@
 #define CRASHHANDLER_WEBSVC_URL "https://ravin.tk/api/rf/dashfaction/crashreport.php"
 #define CRASHHANDLER_WEBSVC_AGENT "DashFaction"
 
-bool PrepareArchive(const char* crash_dump_filename)
+bool PrepareArchive(const char* crash_dump_filename, const char* exc_info_filename)
 {
     CreateDirectoryA(CRASHHANDLER_TARGET_DIR, NULL);
     ZipHelper zip(CRASHHANDLER_TARGET_DIR "/" CRASHHANDLER_TARGET_NAME);
     zip.add_file(crash_dump_filename, "CrashDump.dmp");
+    zip.add_file(exc_info_filename, "exception.txt");
     zip.add_file(CRASHHANDLER_LOG_PATH, "AppLog.log");
     return true;
 }
@@ -99,6 +101,10 @@ int main(int argc, const char* argv[]) try {
     if (GetTempFileNameInTempDir("DF_Dump", crash_dump_filename) != 0)
         return -1;
 
+    char exc_info_filename[MAX_PATH];
+    if (GetTempFileNameInTempDir("DF_ExcInfo", exc_info_filename) != 0)
+        return -1;
+
     MiniDumpHelper dump_helper;
     dump_helper.add_known_module(L"ntdll");
     dump_helper.add_known_module(L"DashFaction");
@@ -106,13 +112,17 @@ int main(int argc, const char* argv[]) try {
     dump_helper.set_info_level(CRASHHANDLER_DMP_LEVEL);
     dump_helper.write_dump(crash_dump_filename, exception_ptrs, process_handle, thread_id);
 
+    TextDumpHelper text_dump_hlp;
+    text_dump_hlp.write_dump(exc_info_filename, exception_ptrs, process_handle);
+
     SetEvent(event);
 
     CloseHandle(process_handle);
     CloseHandle(event);
 
-    PrepareArchive(crash_dump_filename);
+    PrepareArchive(crash_dump_filename, exc_info_filename);
     DeleteFileA(crash_dump_filename);
+    DeleteFileA(exc_info_filename);
 
     if (GetSystemMetrics(SM_CMONITORS) == 0)
         printf("%s\n", CRASHHANDLER_MSG);
