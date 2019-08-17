@@ -21,6 +21,7 @@ struct ServerAdditionalConfig
     VoteConfig vote_kick;
     VoteConfig vote_level;
     VoteConfig vote_extend;
+    int spawn_protection_duration_ms = 1500;
 };
 
 bool g_win32_console = false;
@@ -286,6 +287,9 @@ CodeInjection dedicated_server_load_config_patch{
         ParseVoteConfig("Vote Kick", g_additional_server_config.vote_kick, parser);
         ParseVoteConfig("Vote Level", g_additional_server_config.vote_level, parser);
         ParseVoteConfig("Vote Extend", g_additional_server_config.vote_extend, parser);
+        if (parser.OptionalString("$DF Spawn Protection Duration:")) {
+            g_additional_server_config.spawn_protection_duration_ms = parser.GetUInt();
+        }
     },
 };
 
@@ -335,6 +339,13 @@ bool CheckServerChatCommand(const char* msg, rf::Player* sender)
 
     return true;
 }
+
+CodeInjection spawn_protection_duration_patch{
+    0x0048089A,
+    [](auto& regs) {
+        *reinterpret_cast<int*>(regs.esp) = g_additional_server_config.spawn_protection_duration_ms;
+    },
+};
 
 #if SERVER_WIN32_CONSOLE
 
@@ -506,6 +517,9 @@ void ServerInit()
 
     // Additional server config
     dedicated_server_load_config_patch.Install();
+
+    // Apply customized spawn protection duration
+    spawn_protection_duration_patch.Install();
 
 #if SERVER_WIN32_CONSOLE // win32 console
     g_win32_console = stristr(GetCommandLineA(), "-win32-console") != nullptr;

@@ -91,6 +91,11 @@ Example votes configuration:
         +Min Percentage: 51
     $DF Vote Extend: true
 
+Other options:
+
+    // Time duration in ms of player invulnerability after respawn
+    $DF Spawn Protection Duration: 1500
+
 License
 -------
 Most of Dash Faction source code is licensed under Mozilla Public License 2.0. It is available in the GitHub repository.
