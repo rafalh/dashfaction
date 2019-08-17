@@ -89,9 +89,6 @@ CallHook<void()> InitGame_hook{
 
         GraphicsAfterGameInit();
 
-        /* Allow modded strings.tbl in ui.vpp */
-        ForceFileFromPackfile("strings.tbl", "ui.vpp");
-
         CommandsAfterGameInit();
         GraphicsCaptureAfterGameInit();
 

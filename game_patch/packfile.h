@@ -11,7 +11,6 @@ enum GameLang
 };
 
 void VfsApplyHooks();
-void ForceFileFromPackfile(const char* name, const char* packfile_name);
 GameLang GetInstalledGameLang();
 bool IsModdedGame();
 void PackfileFindMatchingFiles(const StringMatcher& query, std::function<void(const char*)> result_consumer);

@@ -445,6 +445,17 @@ static void LoadDashFactionVpp()
         ERR("Failed to load dashfaction.vpp");
 }
 
+void ForceFileFromPackfile(const char* name, const char* packfile_name)
+{
+    rf::Packfile* packfile = rf::PackfileFindArchive(packfile_name);
+    if (packfile) {
+        for (unsigned i = 0; i < packfile->num_files; ++i) {
+            if (!stricmp(packfile->file_list[i].file_name, name))
+                rf::PackfileAddToLookupTable(&packfile->file_list[i]);
+        }
+    }
+}
+
 static void PackfileInit_New()
 {
     unsigned start_ticks = GetTickCount();
@@ -503,6 +514,9 @@ static void PackfileInit_New()
         WriteMemPtr(0x004B082B + 1, "localized_strings.tbl");
     }
 
+    // Allow modded strings.tbl in ui.vpp
+    ForceFileFromPackfile("strings.tbl", "ui.vpp");
+
     INFO("Packfiles initialization took %lums", GetTickCount() - start_ticks);
     INFO("Packfile name collisions: %d", g_NumNameCollisions);
 
@@ -535,17 +549,6 @@ void VfsApplyHooks()
     WriteMem<u8>(0x0052BF50, 0xFF); // VfsLoadPackfileInternal
     WriteMem<u8>(0x0052C440, 0xFF); // VfsFindPackfileEntry
 #endif
-}
-
-void ForceFileFromPackfile(const char* name, const char* packfile_name)
-{
-    rf::Packfile* packfile = rf::PackfileFindArchive(packfile_name);
-    if (packfile) {
-        for (unsigned i = 0; i < packfile->num_files; ++i) {
-            if (!stricmp(packfile->file_list[i].file_name, name))
-                rf::PackfileAddToLookupTable(&packfile->file_list[i]);
-        }
-    }
 }
 
 void PackfileFindMatchingFiles(const StringMatcher& query, std::function<void(const char*)> result_consumer)
