@@ -14,7 +14,7 @@
 #include <common/rfproto.h>
 
 #if MASK_AS_PF
-#include "pf.h"
+#include "purefaction/pf.h"
 #endif
 
 namespace rf
