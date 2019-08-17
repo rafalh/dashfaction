@@ -9,8 +9,15 @@ include_directories(
 
 add_definitions(-DNOMINMAX -DBUILD_DLL)
 
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/pf.cpp")
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/purefaction/pf_secret.cpp")
     add_definitions(-DHAS_PF)
+    set(PF_SRCS
+        purefaction/pf.cpp
+        purefaction/pf.h
+        purefaction/pf_packets.h
+        purefaction/pf_secret.cpp
+        purefaction/pf_secret.h
+    )
 endif()
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/experimental.cpp")
     add_definitions(-DHAS_EXPERIMENTAL)
@@ -36,6 +43,7 @@ add_library(DashFaction SHARED
     server/server.h
     input/input.cpp
     input/input.h
+    ${PF_SRCS}
 )
 
 target_compile_features(DashFaction PUBLIC cxx_std_17)
