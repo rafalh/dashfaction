@@ -286,7 +286,7 @@ namespace rf
         DC_ARG_ANY = 0xFFFFFFFF,
     };
 
-    static auto& DcPrint = AddrAsRef<void(const char *text, const int *color)>(0x00509EC0);
+    static auto& DcPrint = AddrAsRef<void(const char *text, const uint32_t *color)>(0x00509EC0);
     static auto& DcGetArg = AddrAsRef<void(int type, bool preserve_case)>(0x0050AED0);
     static auto& DcRunCmd = AddrAsRef<int(const char *cmd)>(0x00509B00);
 
@@ -956,7 +956,7 @@ namespace rf
         Vector3 aabb_max;
         PhysicsFlags flags;
         int flags_splash_1_ac;
-        float field_1b0;
+        float frame_time;
         WaterSplashUnk water_splash_unk;
     };
     static_assert(sizeof(PhysicsInfo) == 0x170, "invalid size");
@@ -1163,7 +1163,7 @@ namespace rf
         char field_1cc[64];
         DynamicArray field_20c;
         Timer fire_wait_timer;
-        Timer field_4bc;
+        Timer alt_fire_wait_in_veh_timer;
         Timer impact_delay_timer[2];
         int field_228;
         Timer timer_22c;
@@ -1183,10 +1183,10 @@ namespace rf
         int field_26c;
         int field_270;
         Timer unk_weapon_timer;
-        Timer field_518;
-        int field_51c;
-        int field_520;
-        int field_524;
+        Timer field_278;
+        int cooperation;
+        int ai_mode;
+        int field_284;
         int unk_time288;
         int field_28c;
         int field_290;
@@ -1198,7 +1198,11 @@ namespace rf
         Timer timer_2a0;
         Timer timer_2a4;
         Timer timer_2a8;
-        int field_2ac[5];
+        int field_2AC;
+        int field_2B0;
+        int submode;
+        int field_2B8;
+        int submode_change_time;
         int unk_obj_handle;
         Vector3 field_2c4;
         Timer field_2d0;
@@ -1232,7 +1236,7 @@ namespace rf
         Vector3 field_4ec;
         Timer timer_4f8;
         Timer timer_4fc;
-        Vector3 field_500;
+        Vector3 pos_delta;
         int field_50c;
         float last_rot_time;
         float last_move_time;
@@ -1295,8 +1299,8 @@ namespace rf
         MoveModeTbl *movement_mode;
         Matrix3 *field_85c;
         EntityCameraInfo camera_info;
-        float field_8c0;
-        int field_8c4;
+        float max_vel;
+        int max_vel_modifier_type;
         int field_8c8;
         DynamicArray interface_props;
         DynamicArray unk_anim_mesh_array8_d8;

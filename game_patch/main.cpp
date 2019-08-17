@@ -23,6 +23,7 @@
 #include "input/input.h"
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
+#include <patch_common/CodeInjection.h>
 
 #include <log/ConsoleAppender.h>
 #include <log/FileAppender.h>
@@ -93,6 +94,13 @@ CallHook<void()> InitGame_hook{
         GraphicsCaptureAfterGameInit();
 
         INFO("Game initialized (%lu ms).", GetTickCount() - start_ticks);
+    },
+};
+
+CodeInjection after_gs_init_hook{
+    0x004B26C6,
+    []([[ maybe_unused ]] auto& regs) {
+        INFO("Game fully initialized");
     },
 };
 
@@ -175,9 +183,43 @@ CallHook<void()> AfterFullGameInit_hook{
 #ifndef NDEBUG
 class RfConsoleLogAppender : public logging::BaseAppender
 {
+    const int m_error_color = 0xFF0000;
+    std::vector<std::pair<std::string, logging::Level>> m_startup_buf;
+
     virtual void append([[maybe_unused]] logging::Level lvl, const std::string& str) override
     {
-        rf::DcPrint(str.c_str(), nullptr);
+        auto& console_inited = AddrAsRef<bool>(0x01775680);
+        if (console_inited) {
+            for (auto& p : m_startup_buf) {
+                uint32_t color = color_from_level(p.second);
+                rf::DcPrint(p.first.c_str(), &color);
+            }
+            m_startup_buf.clear();
+
+            uint32_t color = color_from_level(lvl);
+            rf::DcPrint(str.c_str(), &color);
+        }
+        else {
+            m_startup_buf.push_back({str, lvl});
+        }
+    }
+
+    uint32_t color_from_level(logging::Level lvl) const
+    {
+        switch (lvl) {
+            case logging::Level::fatal:
+                return 0xFF0000FF;
+            case logging::Level::error:
+                return 0xFF0000FF;
+            case logging::Level::warning:
+                return 0xFF00FFFF;
+            case logging::Level::info:
+                return 0xFFAAAAAA;
+            case logging::Level::trace:
+                return 0xFF888888;
+            default:
+                return 0xFFFFFFFF;
+        }
     }
 };
 #endif // NDEBUG
@@ -255,6 +297,7 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     RenderInGame_hook.Install();
     AfterFullGameInit_hook.Install();
     DcUpdate_hook.Install();
+    after_gs_init_hook.Install();
 
     RenderHitScreen_hook.Install();
     PlayerCreate_hook.Install();
