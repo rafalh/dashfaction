@@ -628,6 +628,68 @@ CodeInjection moving_group_rotate_in_place_keyframe_oob_crashfix{
     }
 };
 
+CodeInjection parser_xstr_oob_fix{
+    0x0051212E,
+    [](auto& regs) {
+        if (regs.edi >= 1000) {
+            WARN("XSTR index is out of bounds: %d!", regs.edi);
+            regs.edi = -1;
+        }
+    }
+};
+
+CodeInjection ammo_tbl_buffer_overflow_fix{
+    0x004C218E,
+    [](auto& regs) {
+        if (AddrAsRef<u32>(0x0085C760) == 32) {
+            WARN("ammo.tbl limit of 32 definitions has been reached!");
+            regs.eip = 0x004C21B8;
+        }
+    },
+};
+
+CodeInjection clutter_tbl_buffer_overflow_fix{
+    0x0040F49E,
+    [](auto& regs) {
+        if (regs.ecx == 450) {
+            WARN("clutter.tbl limit of 450 definitions has been reached!");
+            regs.eip = 0x0040F4B0;
+        }
+    },
+};
+
+CodeInjection weapons_tbl_buffer_overflow_fix_1{
+    0x004C6855,
+    [](auto& regs) {
+        if (AddrAsRef<u32>(0x00872448) == 64) {
+            WARN("weapons.tbl limit of 64 definitions has been reached!");
+            regs.eip = 0x004C6881;
+        }
+    },
+};
+
+CodeInjection weapons_tbl_buffer_overflow_fix_2{
+    0x004C68AD,
+    [](auto& regs) {
+        if (AddrAsRef<u32>(0x00872448) == 64) {
+            WARN("weapons.tbl limit of 64 definitions has been reached!");
+            regs.eip = 0x004C68D9;
+        }
+    },
+};
+
+FunHook<void(const char*, int)> strings_tbl_buffer_overflow_fix{
+    0x004B0720,
+    [](const char* str, int id) {
+        if (id < 1000) {
+            strings_tbl_buffer_overflow_fix.CallTarget(str, id);
+        }
+        else {
+            WARN("strings.tbl index is out of bounds: %d", id);
+        }
+    },
+};
+
 void MiscInit()
 {
     // Console init string
@@ -816,6 +878,16 @@ void MiscInit()
 
     // Fix crash when skipping cutscene after robot kill in L7S4
     moving_group_rotate_in_place_keyframe_oob_crashfix.Install();
+
+    // Fix crash in LEGO_MP mod caused by XSTR(1000, "RL"); for some reason it does not crash in PF...
+    parser_xstr_oob_fix.Install();
+
+    // Fix crashes caused by too many records in tbl files
+    ammo_tbl_buffer_overflow_fix.Install();
+    clutter_tbl_buffer_overflow_fix.Install();
+    weapons_tbl_buffer_overflow_fix_1.Install();
+    weapons_tbl_buffer_overflow_fix_2.Install();
+    strings_tbl_buffer_overflow_fix.Install();
 
 #if 0
     // Fix weapon switch glitch when reloading (should be used on Match Mode)
