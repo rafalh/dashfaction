@@ -121,7 +121,7 @@ static void SpectateNextPlayer(bool dir, bool try_alive_players_first = false)
 
 void SpectateModeEnterFreeLook()
 {
-    if (!rf::local_player || !rf::local_player->camera)
+    if (!rf::local_player || !rf::local_player->camera || !rf::is_net_game)
         return;
 
     rf::KillLocalPlayer();
@@ -130,7 +130,7 @@ void SpectateModeEnterFreeLook()
 
 bool SpectateModeIsFreeLook()
 {
-    if (!rf::local_player || !rf::local_player->camera)
+    if (!rf::local_player || !rf::local_player->camera || !rf::is_net_game)
         return false;
 
     auto camera_type = rf::local_player->camera->type;
@@ -150,43 +150,54 @@ void SpectateModeLeave()
         SetCameraTarget(rf::local_player);
 }
 
+bool SpectateModeHandleCtrlInGame(rf::GameCtrl key_id, bool was_pressed)
+{
+    if (!rf::is_net_game) {
+        return false;
+    }
+
+    if (g_spectate_mode_enabled) {
+        if (key_id == rf::GC_PRIMARY_ATTACK || key_id == rf::GC_SLIDE_RIGHT) {
+            if (was_pressed)
+                SpectateNextPlayer(true);
+            return true; // dont allow spawn
+        }
+        else if (key_id == rf::GC_SECONDARY_ATTACK || key_id == rf::GC_SLIDE_LEFT) {
+            if (was_pressed)
+                SpectateNextPlayer(false);
+            return true;
+        }
+        else if (key_id == rf::GC_JUMP) {
+            if (was_pressed)
+                SpectateModeLeave();
+            return true;
+        }
+    }
+    else if (SpectateModeIsFreeLook()) {
+        // don't allow respawn in freelook spectate
+        if (key_id == rf::GC_PRIMARY_ATTACK || key_id == rf::GC_SECONDARY_ATTACK) {
+            if (was_pressed)
+                SpectateModeLeave();
+            return true;
+        }
+    }
+    else if (!g_spectate_mode_enabled) {
+        if (key_id == rf::GC_JUMP && was_pressed && rf::IsPlayerEntityInvalid(rf::local_player)) {
+            SpectateModeSetTargetPlayer(rf::local_player);
+            SpectateNextPlayer(true, true);
+            return true;
+        }
+    }
+
+    return false;
+}
+
 FunHook<void(rf::Player*, rf::GameCtrl, bool)> HandleCtrlInGame_hook{
     0x004A6210,
     [](rf::Player* player, rf::GameCtrl key_id, bool was_pressed) {
-        if (g_spectate_mode_enabled) {
-            if (key_id == rf::GC_PRIMARY_ATTACK || key_id == rf::GC_SLIDE_RIGHT) {
-                if (was_pressed)
-                    SpectateNextPlayer(true);
-                return; // dont allow spawn
-            }
-            else if (key_id == rf::GC_SECONDARY_ATTACK || key_id == rf::GC_SLIDE_LEFT) {
-                if (was_pressed)
-                    SpectateNextPlayer(false);
-                return;
-            }
-            else if (key_id == rf::GC_JUMP) {
-                if (was_pressed)
-                    SpectateModeLeave();
-                return;
-            }
+        if (!SpectateModeHandleCtrlInGame(key_id, was_pressed)) {
+            HandleCtrlInGame_hook.CallTarget(player, key_id, was_pressed);
         }
-        else if (SpectateModeIsFreeLook()) {
-            // don't allow respawn in freelook spectate
-            if (key_id == rf::GC_PRIMARY_ATTACK || key_id == rf::GC_SECONDARY_ATTACK) {
-                if (was_pressed)
-                    SpectateModeLeave();
-                return;
-            }
-        }
-        else if (!g_spectate_mode_enabled && rf::is_net_game) {
-            if (key_id == rf::GC_JUMP && was_pressed && rf::IsPlayerEntityInvalid(rf::local_player)) {
-                SpectateModeSetTargetPlayer(rf::local_player);
-                SpectateNextPlayer(true, true);
-                return;
-            }
-        }
-
-        HandleCtrlInGame_hook.CallTarget(player, key_id, was_pressed);
     },
 };
 
