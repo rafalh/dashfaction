@@ -40,7 +40,7 @@ static LONG WINAPI CrashHandlerExceptionFilter(PEXCEPTION_POINTERS exception_ptr
             break;
         }
 
-        WaitForSingleObject(event_handle, 2000);
+        WaitForSingleObject(event_handle, 5000);
         CloseHandle(proc_info.hProcess);
         CloseHandle(proc_info.hThread);
     } while (false);
