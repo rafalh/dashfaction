@@ -39,8 +39,10 @@ add_library(DashFaction SHARED
     graphics/gamma.h
     graphics/capture.cpp
     graphics/capture.h
-    server/server.cpp
     server/server.h
+    server/server.cpp
+    server/win32_server_console.cpp
+    server/votes.cpp
     input/input.cpp
     input/input.h
     ${PF_SRCS}
