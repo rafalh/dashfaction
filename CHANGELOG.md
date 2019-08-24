@@ -16,6 +16,7 @@ Version 1.3.1
 - fix dedicated server crash when loading level with screens
 - add free spectate support
 - fix submarine exploding bug if L5S3 level was loaded using 'level' command
+- fix killed glass restoration from a save file
 
 Version 1.3.0 (released 2019-05-07)
 -----------------------------------

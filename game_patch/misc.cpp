@@ -690,6 +690,14 @@ FunHook<void(const char*, int)> strings_tbl_buffer_overflow_fix{
     },
 };
 
+CodeInjection glass_kill_init_fix{
+    0x00435A90,
+    []([[ maybe_unused ]] auto& regs) {
+        auto GlassKillInit = AddrAsRef<void()>(0x00490F60);
+        GlassKillInit();
+    },
+};
+
 void MiscInit()
 {
     // Console init string
@@ -888,6 +896,10 @@ void MiscInit()
     weapons_tbl_buffer_overflow_fix_1.Install();
     weapons_tbl_buffer_overflow_fix_2.Install();
     strings_tbl_buffer_overflow_fix.Install();
+
+    // Fix killed glass restoration from a save file
+    AsmWritter(0x0043604A).nop(5);
+    glass_kill_init_fix.Install();
 
 #if 0
     // Fix weapon switch glitch when reloading (should be used on Match Mode)
