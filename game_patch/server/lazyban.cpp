@@ -1,8 +1,7 @@
-#include "lazyban.h"
-#include "commands.h"
-#include "rf.h"
-#include "stdafx.h"
-#include "utils.h"
+#include "server_internal.h"
+#include "../commands.h"
+#include "../rf.h"
+#include <patch_common/AsmWritter.h>
 
 namespace rf
 {

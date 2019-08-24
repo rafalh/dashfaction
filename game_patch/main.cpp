@@ -9,7 +9,6 @@
 #include "high_fps.h"
 #include "hud.h"
 #include "kill.h"
-#include "lazyban.h"
 #include "misc.h"
 #include "network.h"
 #include "packfile.h"
@@ -313,7 +312,6 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     InitHud();
     InitAutodownloader();
     InitScoreboard();
-    InitLazyban();
     InitKill();
     VfsApplyHooks(); /* Use new VFS without file count limit */
     SpectateModeInit();

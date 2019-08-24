@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string_view>
+#include "../rf.h"
+
 struct VoteConfig
 {
     bool enabled = false;
@@ -22,3 +25,4 @@ void SendChatLinePacket(const char* msg, rf::Player* target, rf::Player* sender 
 void InitWin32ServerConsole();
 void CleanupWin32ServerConsole();
 void HandleVoteCommand(std::string_view vote_name, std::string_view vote_arg, rf::Player* sender);
+void InitLazyban();

@@ -125,6 +125,8 @@ void ServerInit()
 #if SERVER_WIN32_CONSOLE // win32 console
     InitWin32ServerConsole();
 #endif
+
+    InitLazyban();
 }
 
 void ServerCleanup()

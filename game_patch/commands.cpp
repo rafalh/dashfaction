@@ -1,6 +1,5 @@
 #include <common/BuildConfig.h>
 #include "commands.h"
-#include "lazyban.h"
 #include "main.h"
 #include "misc.h"
 #include "packfile.h"
