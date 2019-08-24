@@ -1,4 +1,5 @@
 #include <common/GameConfig.h>
+#include "main.h"
 #include "autodl.h"
 #include "commands.h"
 #include "crashhandler.h"
@@ -34,6 +35,7 @@
 
 GameConfig g_game_config;
 HMODULE g_hmodule;
+std::unordered_map<rf::Player*, PlayerAdditionalData> g_player_additional_data_map;
 
 static void ProcessWaitingMessages()
 {
@@ -59,6 +61,11 @@ void FindPlayer(const StringMatcher& query, std::function<void(rf::Player*)> con
         if (player == rf::player_list)
             break;
     }
+}
+
+PlayerAdditionalData& GetPlayerAdditionalData(rf::Player* player)
+{
+    return g_player_additional_data_map[player];
 }
 
 CallHook<void(bool)> DcUpdate_hook{
@@ -166,6 +173,7 @@ FunHook<void(rf::Player*)> PlayerDestroy_hook{
     [](rf::Player* player) {
         SpectateModeOnDestroyPlayer(player);
         PlayerDestroy_hook.CallTarget(player);
+        g_player_additional_data_map.erase(player);
     },
 };
 

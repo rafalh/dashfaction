@@ -6,6 +6,7 @@
 #include "server.h"
 #include "server_internal.h"
 #include "../commands.h"
+#include "../main.h"
 
 const char* g_rcon_cmd_whitelist[] = {
     "kick",
@@ -110,6 +111,18 @@ CodeInjection spawn_protection_duration_patch{
     },
 };
 
+CodeInjection detect_browser_player_patch{
+    0x0047AFFB,
+    [](auto& regs) {
+        rf::Player* player = reinterpret_cast<rf::Player*>(regs.esi);
+        int conn_rate = regs.eax;
+        if (conn_rate == 1) {
+            auto& pdata = GetPlayerAdditionalData(player);
+            pdata.is_browser = true;
+        }
+    },
+};
+
 void ServerInit()
 {
     // Override rcon command whitelist
@@ -121,6 +134,9 @@ void ServerInit()
 
     // Apply customized spawn protection duration
     spawn_protection_duration_patch.Install();
+
+    // Detect if player joining to the server is a browser
+    detect_browser_player_patch.Install();
 
 #if SERVER_WIN32_CONSOLE // win32 console
     InitWin32ServerConsole();

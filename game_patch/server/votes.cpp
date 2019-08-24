@@ -2,6 +2,7 @@
 #include "../rf.h"
 #include "server_internal.h"
 #include "../commands.h"
+#include "../main.h"
 #include <map>
 #include <set>
 
@@ -122,11 +123,26 @@ public:
 
         active_vote = {std::move(vote)};
         vote_start_time = std::time(nullptr);
-        SendChatLinePacket("Send chat message \"/vote yes\" or \"/vote no\" to vote.", nullptr);
+
+        // prepare allowed player list
+        rf::Player* player = rf::player_list;
+        while (player) {
+            if (player != source && !GetPlayerAdditionalData(player).is_browser) {
+                remaining_players.insert(player);
+            }
+            player = player->next;
+            if (player == rf::player_list) {
+                break;
+            }
+        }
 
         ++num_votes_yes;
         players_who_voted.insert({source, true});
+
         CheckForEarlyVoteFinish();
+
+        if (active_vote)
+            SendChatLinePacket("Send chat message \"/vote yes\" or \"/vote no\" to vote.", nullptr);
 
         return true;
     }
@@ -173,6 +189,7 @@ public:
             remaining_players.erase(source);
             players_who_voted.insert({source, is_yes_vote});
             auto msg = StringFormat("Vote status: Yes - %d, No - %d, Remaining - %d", num_votes_yes, num_votes_no, remaining_players.size());
+            SendChatLinePacket(msg.c_str(), nullptr);
             CheckForEarlyVoteFinish();
         }
     }
@@ -215,6 +232,9 @@ VoteMgr g_vote_mgr;
 
 void HandleVoteCommand(std::string_view vote_name, std::string_view vote_arg, rf::Player* sender)
 {
+    if (GetPlayerAdditionalData(sender).is_browser) {
+        SendChatLinePacket("Browsers are not allowed to vote!", sender);
+    }
     if (vote_name == "kick")
         g_vote_mgr.StartVote(std::make_unique<VoteKick>(), vote_arg, sender);
     else if (vote_name == "level")
