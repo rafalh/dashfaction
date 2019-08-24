@@ -239,9 +239,10 @@ FunHook<int(rf::String&, rf::String&, char*)> RflLoad_hook{
     0x0045C540,
     [](rf::String& level_filename, rf::String& a2, char* error_desc) {
         int ret = RflLoad_hook.CallTarget(level_filename, a2, error_desc);
-        if (ret == 0 && std::strstr(level_filename, "L5S3")) {
+        //INFO("Loaded level: %s", level_filename.CStr());
+        if (ret == 0 && _stricmp(level_filename, "L5S3.rfl") == 0) {
             // Fix submarine exploding - change delay of two events to make submarine physics enabled later
-            // INFO("Fixing Submarine exploding bug...");
+            //INFO("Fixing Submarine exploding bug...");
             int uids[] = {4679, 4680};
             for (int uid : uids) {
                 rf::Object* obj = rf::ObjGetFromUid(uid);
