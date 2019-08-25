@@ -1,7 +1,9 @@
 #include <common/BuildConfig.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
+#include <patch_common/AsmWritter.h>
 #include <windows.h>
+#include <thread>
 #include "../rf.h"
 
 #if SERVER_WIN32_CONSOLE
@@ -21,7 +23,9 @@ void ResetConsoleCursorColumn(bool clear)
     NewPos.X = 0;
     SetConsoleCursorPosition(output_handle, NewPos);
     if (clear) {
-        for (int i = 0; i < scr_buf_info.dwCursorPosition.X; ++i) WriteConsoleA(output_handle, " ", 1, nullptr, nullptr);
+        for (int i = 0; i < scr_buf_info.dwCursorPosition.X; ++i) {
+            WriteConsoleA(output_handle, " ", 1, nullptr, nullptr);
+        }
         SetConsoleCursorPosition(output_handle, NewPos);
     }
 }
@@ -44,20 +48,23 @@ BOOL WINAPI ConsoleCtrlHandler([[maybe_unused]] DWORD ctrl_type)
     return TRUE;
 }
 
-void InputThreadProc()
-{
-    while (true) {
-        INPUT_RECORD input_record;
-        DWORD num_read = 0;
-        ReadConsoleInput(GetStdHandle(STD_INPUT_HANDLE), &input_record, 1, &num_read);
-    }
-}
+// void InputThreadProc()
+// {
+//     while (true) {
+//         INPUT_RECORD input_record;
+//         DWORD num_read = 0;
+//         ReadConsoleInput(GetStdHandle(STD_INPUT_HANDLE), &input_record, 1, &num_read);
+//     }
+// }
 
 CallHook<void()> OsInitWindow_Server_hook{
     0x004B27C5,
     []() {
         AllocConsole();
         SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE);
+        DWORD mode;
+        GetConsoleMode(GetStdHandle(STD_INPUT_HANDLE), &mode);
+        SetConsoleMode(GetStdHandle(STD_INPUT_HANDLE), mode & ~ ENABLE_ECHO_INPUT);
 
         // std::thread InputThread(InputThreadProc);
         // InputThread.detach();
@@ -120,7 +127,7 @@ FunHook<void(const char*, const int*)> DcPrint_hook{
         if (current_attr != gray_attr)
             SetConsoleTextAttribute(output_handle, gray_attr);
 
-        // PrintCmdInputLine();
+        PrintCmdInputLine();
     },
 };
 
@@ -129,6 +136,7 @@ CallHook<void()> DcPutChar_NewLine_hook{
     [] {
         HANDLE output_handle = GetStdHandle(STD_OUTPUT_HANDLE);
         WriteConsoleA(output_handle, "\r\n", 2, nullptr, nullptr);
+        PrintCmdInputLine();
     },
 };
 
@@ -153,13 +161,14 @@ FunHook<int()> KeyGetFromQueue_hook{
         HANDLE input_handle = GetStdHandle(STD_INPUT_HANDLE);
         INPUT_RECORD input_record;
         DWORD num_read = 0;
-        while (false) {
+        while (true) {
             if (!PeekConsoleInput(input_handle, &input_record, 1, &num_read) || num_read == 0)
                 break;
             if (!ReadConsoleInput(input_handle, &input_record, 1, &num_read) || num_read == 0)
                 break;
-            if (input_record.EventType == KEY_EVENT)
+            if (input_record.EventType == KEY_EVENT) {
                 KeyProcessEvent(input_record.Event.KeyEvent.wVirtualScanCode, input_record.Event.KeyEvent.bKeyDown, 0);
+            }
         }
 
         return KeyGetFromQueue_hook.CallTarget();
@@ -171,7 +180,6 @@ void InitWin32ServerConsole()
     g_win32_console = stristr(GetCommandLineA(), "-win32-console") != nullptr;
     if (g_win32_console) {
         OsInitWindow_Server_hook.Install();
-        // AsmWritter(0x0050A770).ret(); // null DcDrawServerConsole
         DcPrint_hook.Install();
         DcDrawServerConsole_hook.Install();
         KeyGetFromQueue_hook.Install();
