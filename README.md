@@ -98,6 +98,12 @@ Configuration example:
     $DF Vote Extend: true
     // Duration of player invulnerability after respawn in ms (default is the same as in stock RF - 1500)
     $DF Spawn Protection Duration: 1500
+    // Enable hit-sounds
+    $Hitsounds: true
+        // Sound used for hit notification
+        +Sound ID: 29
+        // max sound packets per second - keep it low to save bandwidth
+        +Rate Limit: 5
 
 License
 -------

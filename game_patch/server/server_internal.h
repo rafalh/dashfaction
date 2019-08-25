@@ -11,12 +11,20 @@ struct VoteConfig
     int time_limit_seconds = 60;
 };
 
+struct HitSoundsConfig
+{
+    bool enabled = true;
+    int sound_id = 29;
+    int rate_limit = 5;
+};
+
 struct ServerAdditionalConfig
 {
     VoteConfig vote_kick;
     VoteConfig vote_level;
     VoteConfig vote_extend;
     int spawn_protection_duration_ms = 1500;
+    HitSoundsConfig hit_sounds;
 };
 
 extern ServerAdditionalConfig g_additional_server_config;

@@ -7,6 +7,7 @@
 struct PlayerAdditionalData
 {
     bool is_browser = false;
+    int last_hitsound_sent_ms = 0;
 };
 
 void FindPlayer(const StringMatcher& query, std::function<void(rf::Player*)> consumer);

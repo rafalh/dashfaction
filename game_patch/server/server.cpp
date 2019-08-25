@@ -65,6 +65,16 @@ CodeInjection dedicated_server_load_config_patch{
         if (parser.OptionalString("$DF Spawn Protection Duration:")) {
             g_additional_server_config.spawn_protection_duration_ms = parser.GetUInt();
         }
+        if (parser.OptionalString("$Hitsounds:")) {
+            g_additional_server_config.hit_sounds.enabled = parser.GetBool();
+            if (parser.OptionalString("+Sound ID:")) {
+                g_additional_server_config.hit_sounds.sound_id = parser.GetUInt();
+            }
+            if (parser.OptionalString("+Rate Limit:")) {
+                g_additional_server_config.hit_sounds.rate_limit = parser.GetUInt();
+            }
+        }
+
     },
 };
 
@@ -128,6 +138,42 @@ CodeInjection detect_browser_player_patch{
     },
 };
 
+void SendHitSoundPacket(rf::Player* target)
+{
+    // rate limiting - max 5 per second
+    int now = rf::TimerGet(1000);
+    auto& pdata = GetPlayerAdditionalData(target);
+    if (now - pdata.last_hitsound_sent_ms < 1000 / g_additional_server_config.hit_sounds.rate_limit) {
+        return;
+    }
+    pdata.last_hitsound_sent_ms = now;
+
+    // Send sound packet
+    rfSound packet;
+    packet.type = RF_SOUND;
+    packet.size = sizeof(packet) - sizeof(rfPacketHeader);
+    packet.sound_id = g_additional_server_config.hit_sounds.sound_id;
+    // FIXME: it does not work on RF 1.21
+    memset(&packet.x, 0xFF, 12);
+    rf::NwSendNotReliablePacket(target->nw_data->addr, &packet, sizeof(packet));
+}
+
+FunHook<float(rf::EntityObj*, float, int, int, int)> EntityTakeDamage_hook{
+    0x0041A350,
+    [](rf::EntityObj* entity, float damage, int responsible_entity_handle, int dmg_type, int responsible_entity_uid) {
+        float dmg = EntityTakeDamage_hook.CallTarget(entity, damage, responsible_entity_handle, dmg_type, responsible_entity_uid);
+
+        if (g_additional_server_config.hit_sounds.enabled) {
+            auto responsible_player = rf::GetPlayerFromEntityHandle(responsible_entity_handle);
+            if (responsible_player) {
+                SendHitSoundPacket(responsible_player);
+            }
+        }
+
+        return dmg;
+    },
+};
+
 void ServerInit()
 {
     // Override rcon command whitelist
@@ -142,6 +188,9 @@ void ServerInit()
 
     // Detect if player joining to the server is a browser
     detect_browser_player_patch.Install();
+
+    // Hit sounds
+    EntityTakeDamage_hook.Install();
 
 #if SERVER_WIN32_CONSOLE // win32 console
     InitWin32ServerConsole();
