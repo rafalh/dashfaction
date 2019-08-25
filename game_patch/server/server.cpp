@@ -14,6 +14,9 @@ const char* g_rcon_cmd_whitelist[] = {
     "ban",
     "ban_ip",
     "map_ext",
+    "map_rest",
+    "map_next",
+    "map_prev",
 };
 
 ServerAdditionalConfig g_additional_server_config;
