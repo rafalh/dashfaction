@@ -4,39 +4,45 @@ Dash Faction
 About
 -----
 Dash Faction is Red Faction game modification designed to fix original game bugs, improve compatibility with modern
-hardware and software, extend functionalitya and improve graphics quality and engine performance.
+hardware and software, extend functionality and improve graphics quality and engine performance.
 
 Features:
-- Levels Auto-Downloader (uses factionfiles.com just like Pure Faction)
-- Spectate Mode
-- wide-screen support
-- windowed and stretched display mode
-- better graphics quality (anti-aliasing, true-color textures, anisotropic filtering, higher scanner view resolution, disabled LOD models and more)
-- improved security (enabled Data Execution Prevention, multiple Buffer Overflows fixes)
-- removed limit of packfiles
-- improved Scoreboard with Kills/Deaths column
-- information about killer's weapon in chat
-- option to disable level ambient sounds
-- ui.vpp cheats prevention
-- multiple fixes for high FPS (it is currently limited to 240), especially fix for well-known sub exploding bug
-- country-specific edition support (properly handles game directory structure for German and French edition)
-- improved game performance
-- other usability and stability fixes
+* levels auto-downloader (uses factionfiles.com just like Pure Faction)
+* spectate mode (first person or free camera)
+* wide-screen support
+* windowed and stretched display mode
+* better graphics quality (anti-aliasing, true-color textures, anisotropic filtering, higher scanner view resolution, disabled LOD models and more)
+* improved security (enabled Data Execution Prevention, multiple Buffer Overflows fixes)
+* removed limit of packfiles
+* improved Scoreboard with Kills/Deaths column
+* information about killer's weapon in chat
+* option to disable level ambient sounds
+* ui.vpp cheats prevention
+* multiple fixes for high FPS (it is currently limited to 240), especially fix for well-known sub exploding bug
+* country-specific edition support (properly handles game directory structure for German and French edition)
+* improved game performance
+* votes support for dedicated servers
+* hit-sounds support for dedicated servers
+* other usability and stability fixes
 
-Useful commands:
-- maxfps <limit> - sets maximal FPS
-- hud - shows and hides HUD
-- spectate <player> - starts Spectate Mode
-- inputmode - switched between default and DirectInput mouse handling
-- ms <value> - mouse sensitivity
-- vli - toggles volumetric lightining
+Client commands:
+* `maxfps value` - sets maximal FPS
+* `hud` - shows and hides HUD
+* `spectate [player]` - starts spectate mode (first person or free camera)
+* `inputmode` - switches between default and DirectInput mouse input handling
+* `ms value` - mouse sensitivity
+* `vli` - toggles volumetric lightining
 
 Server commands:
-- unban_last - unbans last banned player
-- map_ext - extend round
-- map_rest - restart current level
-- map_next - load next level
-- map_prev - load previous level
+* `unban_last` - unbans last banned player
+* `map_ext` - extend round
+* `map_rest` - restart current level
+* `map_next` - load next level
+* `map_prev` - load previous level
+* `kill_limit value` - sets kill limit
+* `time_limit value` - sets time limit
+* `geomod_limit value` - sets geomod limit
+* `capture_limit value` - sets capture limit
 
 Compatibility
 -------------
