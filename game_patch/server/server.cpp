@@ -98,6 +98,13 @@ std::pair<std::string_view, std::string_view> StripBySpace(std::string_view str)
         return {str.substr(0, space_pos), str.substr(space_pos + 1)};
 }
 
+void HandleNextMapCommand(rf::Player* source)
+{
+    int next_idx = (rf::level_rotation_idx + 1) % rf::server_level_list.Size();
+    auto msg = StringFormat("Next level: %s", rf::server_level_list.Get(next_idx).CStr());
+    SendChatLinePacket(msg.c_str(), source);
+}
+
 void HandleServerChatCommand(std::string_view server_command, rf::Player* sender)
 {
     auto [cmd_name, cmd_arg] = StripBySpace(server_command);
@@ -107,6 +114,9 @@ void HandleServerChatCommand(std::string_view server_command, rf::Player* sender
     else if (cmd_name == "vote") {
         auto [vote_name, vote_arg] = StripBySpace(cmd_arg);
         HandleVoteCommand(vote_name, vote_arg, sender);
+    }
+    else if (cmd_name == "nextmap" || cmd_name == "nextlevel") {
+        HandleNextMapCommand(sender);
     }
     else
         SendChatLinePacket("Unrecognized server command!", sender);
