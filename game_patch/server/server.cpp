@@ -214,6 +214,9 @@ void ServerInit()
     // Hit sounds
     EntityTakeDamage_hook.Install();
 
+    // Do not strip '%' characters from chat messages
+    WriteMem<u8>(0x004785FD, ASM_SHORT_JMP_REL);
+
 #if SERVER_WIN32_CONSOLE // win32 console
     InitWin32ServerConsole();
 #endif
