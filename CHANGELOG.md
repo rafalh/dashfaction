@@ -19,6 +19,7 @@ Version 1.3.1
 - fix killed glass restoration from a save file
 - add optional hit-sounds in dedicated server
 - add 'map_rest', 'map_next', 'map_prev' commands
+- add optional Win32 native console support in dedicated server mode
 
 Version 1.3.0 (released 2019-05-07)
 -----------------------------------

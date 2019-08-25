@@ -70,10 +70,11 @@ You can provide additional command line arguments to `DashFactionLauncher.exe` a
 to Red Faction process. For example to start a dedicated server with Dash Faction support use `-dedicated` argument
 just like in the original game.
 
-Following arguments are handled inside the launcher itself:
+Dash Faction specific arguments:
 
 * `-game` - launch game immediately without displaying the launcher window
 * `-editor` - launch mod immediately without displaying the launcher window
+* `-win32-console` - use native Win32 console in dedicated server mode
 
 Problems
 --------
