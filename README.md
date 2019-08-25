@@ -122,7 +122,7 @@ Configuration example:
         // Sound used for hit notification
         +Sound ID: 29
         // max sound packets per second - keep it low to save bandwidth
-        +Rate Limit: 5
+        +Rate Limit: 10
 
 License
 -------

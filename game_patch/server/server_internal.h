@@ -15,7 +15,7 @@ struct HitSoundsConfig
 {
     bool enabled = true;
     int sound_id = 29;
-    int rate_limit = 5;
+    int rate_limit = 10;
 };
 
 struct ServerAdditionalConfig
