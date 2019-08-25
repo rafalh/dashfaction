@@ -23,6 +23,9 @@ struct ServerAdditionalConfig
     VoteConfig vote_kick;
     VoteConfig vote_level;
     VoteConfig vote_extend;
+    VoteConfig vote_restart;
+    VoteConfig vote_next;
+    VoteConfig vote_previous;
     int spawn_protection_duration_ms = 1500;
     HitSoundsConfig hit_sounds;
 };
@@ -37,3 +40,6 @@ void ServerVoteDoFrame();
 void InitLazyban();
 void InitServerCommands();
 void ExtendRoundTime(int minutes);
+void RestartCurrentLevel();
+void LoadNextLevel();
+void LoadPrevLevel();

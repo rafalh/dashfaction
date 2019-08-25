@@ -26,11 +26,17 @@ Features:
 Useful commands:
 - maxfps <limit> - sets maximal FPS
 - hud - shows and hides HUD
-- unban_last - unbans last banned player
 - spectate <player> - starts Spectate Mode
 - inputmode - switched between default and DirectInput mouse handling
 - ms <value> - mouse sensitivity
 - vli - toggles volumetric lightining
+
+Server commands:
+- unban_last - unbans last banned player
+- map_ext - extend round
+- map_rest - restart current level
+- map_next - load next level
+- map_prev - load previous level
 
 Compatibility
 -------------
@@ -96,6 +102,12 @@ Configuration example:
     $DF Vote Level: true
     // Enable vote extend
     $DF Vote Extend: true
+    // Enable vote restart
+    $DF Vote Restart: true
+    // Enable vote next
+    $DF Vote Next: true
+    // Enable vote previous
+    $DF Vote Previous: true
     // Duration of player invulnerability after respawn in ms (default is the same as in stock RF - 1500)
     $DF Spawn Protection Duration: 1500
     // Enable hit-sounds

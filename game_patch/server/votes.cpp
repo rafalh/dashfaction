@@ -243,6 +243,63 @@ struct VoteLevel : public Vote
     }
 };
 
+struct VoteRestart : public Vote
+{
+    std::string GetTitle() override
+    {
+        return "RESTART LEVEL";
+    }
+
+    void OnAccepted() override
+    {
+        SendChatLinePacket("\xA6 Vote passed: restarting level", nullptr);
+        RestartCurrentLevel();
+    }
+
+    const VoteConfig& GetConfig() const override
+    {
+        return g_additional_server_config.vote_restart;
+    }
+};
+
+struct VoteNext : public Vote
+{
+    std::string GetTitle() override
+    {
+        return "LOAD NEXT LEVEL";
+    }
+
+    void OnAccepted() override
+    {
+        SendChatLinePacket("\xA6 Vote passed: loading next level", nullptr);
+        LoadNextLevel();
+    }
+
+    const VoteConfig& GetConfig() const override
+    {
+        return g_additional_server_config.vote_next;
+    }
+};
+
+struct VotePrevious : public Vote
+{
+    std::string GetTitle() override
+    {
+        return "LOAD PREV LEVEL";
+    }
+
+    void OnAccepted() override
+    {
+        SendChatLinePacket("\xA6 Vote passed: loading previous level", nullptr);
+        LoadPrevLevel();
+    }
+
+    const VoteConfig& GetConfig() const override
+    {
+        return g_additional_server_config.vote_previous;
+    }
+};
+
 class VoteMgr
 {
 private:
@@ -254,13 +311,15 @@ public:
         return active_vote;
     }
 
-    bool StartVote(std::unique_ptr<Vote>&& vote, std::string_view arg, rf::Player* source)
+    template<typename T>
+    bool StartVote(std::string_view arg, rf::Player* source)
     {
         if (active_vote) {
             SendChatLinePacket("Another vote is currently in progress!", source);
             return false;
         }
 
+        auto vote = std::make_unique<T>();
         if (!vote->Start(arg, source)) {
             return false;
         }
@@ -271,8 +330,9 @@ public:
 
     void OnPlayerLeave(rf::Player* player)
     {
-        if (!active_vote)
+        if (!active_vote) {
             return;
+        }
 
         if (!active_vote.value()->OnPlayerLeave(player)) {
             active_vote.reset();
@@ -309,11 +369,17 @@ void HandleVoteCommand(std::string_view vote_name, std::string_view vote_arg, rf
         SendChatLinePacket("Browsers are not allowed to vote!", sender);
     }
     if (vote_name == "kick")
-        g_vote_mgr.StartVote(std::make_unique<VoteKick>(), vote_arg, sender);
+        g_vote_mgr.StartVote<VoteKick>(vote_arg, sender);
     else if (vote_name == "level" || vote_name == "map")
-        g_vote_mgr.StartVote(std::make_unique<VoteLevel>(), vote_arg, sender);
+        g_vote_mgr.StartVote<VoteLevel>(vote_arg, sender);
     else if (vote_name == "extend" || vote_name == "ext")
-        g_vote_mgr.StartVote(std::make_unique<VoteExtend>(), vote_arg, sender);
+        g_vote_mgr.StartVote<VoteExtend>(vote_arg, sender);
+    else if (vote_name == "restart" || vote_name == "rest")
+        g_vote_mgr.StartVote<VoteRestart>(vote_arg, sender);
+    else if (vote_name == "next")
+        g_vote_mgr.StartVote<VoteNext>(vote_arg, sender);
+    else if (vote_name == "previous" || vote_name == "prev")
+        g_vote_mgr.StartVote<VotePrevious>(vote_arg, sender);
     else if (vote_name == "yes" || vote_name == "y")
         g_vote_mgr.AddPlayerVote(true, sender);
     else if (vote_name == "no" || vote_name == "n")

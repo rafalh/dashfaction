@@ -241,11 +241,24 @@ namespace rf
         int val;
     };
 
-    struct DynamicArray
+    template<typename T = char>
+    class DynamicArray
     {
+    private:
         int size;
-        int allocated_size;
-        void *data;
+        int capacity;
+        T *data;
+
+    public:
+        int Size()
+        {
+            return size;
+        }
+
+        T& Get(int index)
+        {
+            return data[index];
+        }
     };
 
     /* Stubs */
@@ -951,7 +964,7 @@ namespace rf
         Vector3 field_168;
         Vector3 rot_change_unk_delta;
         float radius;
-        DynamicArray field_184;
+        DynamicArray<> field_184;
         Vector3 aabb_min;
         Vector3 aabb_max;
         PhysicsFlags flags;
@@ -1051,7 +1064,7 @@ namespace rf
         int airlock_room_uid;
         int activated_by;
         Vector3 box_size;
-        DynamicArray links;
+        DynamicArray<> links;
         Timer activation_failed_timer;
         int activation_failed_entity_handle;
         Timer field_2e8;
@@ -1111,7 +1124,7 @@ namespace rf
         int field_1c;
         float field_20;
         int field_24;
-        DynamicArray field_28;
+        DynamicArray<> field_28;
         char field_34;
         char field_35;
         int16_t field_36;
@@ -1121,7 +1134,7 @@ namespace rf
         int field_44;
         Matrix3 field_48;
         int field_6c;
-        DynamicArray field_70;
+        DynamicArray<> field_70;
     };
 
     struct EntityWeapon2E8
@@ -1161,7 +1174,7 @@ namespace rf
         int weapons_ammo[64];
         char field_18c[64];
         char field_1cc[64];
-        DynamicArray field_20c;
+        DynamicArray<> field_20c;
         Timer fire_wait_timer;
         Timer alt_fire_wait_in_veh_timer;
         Timer impact_delay_timer[2];
@@ -1302,8 +1315,8 @@ namespace rf
         float max_vel;
         int max_vel_modifier_type;
         int field_8c8;
-        DynamicArray interface_props;
-        DynamicArray unk_anim_mesh_array8_d8;
+        DynamicArray<> interface_props;
+        DynamicArray<> unk_anim_mesh_array8_d8;
         int field_8e4[92];
         int unk_anims[180];
         int field_d24[129];
@@ -1349,7 +1362,7 @@ namespace rf
         Timer unk_timer140_c;
         AnimMesh *field_1410;
         Timer splash_in_counter;
-        DynamicArray field_1418;
+        DynamicArray<> field_1418;
         int field_1424;
         int field_1428;
         int field_142c;
@@ -1605,6 +1618,7 @@ namespace rf
     static auto& KickPlayer = AddrAsRef<void(Player *player)>(0x0047BF00);
     static auto& BanIp = AddrAsRef<void(const NwAddr& addr)>(0x0046D0F0);
     static auto& MultiSetNextWeapon = AddrAsRef<void(int weapon_cls_id)>(0x0047FCA0);
+    static auto& MultiChangeLevel = AddrAsRef<void(const char* filename)>(0x0047BF50);
 
     static auto& serv_addr = AddrAsRef<NwAddr>(0x0064EC5C);
     static auto& serv_name = AddrAsRef<String>(0x0064EC28);
@@ -1612,6 +1626,8 @@ namespace rf
     static auto& is_local_net_game = AddrAsRef<uint8_t>(0x0064ECBA);
     static auto& is_dedicated_server = AddrAsRef<uint32_t>(0x01B0D75C);
     static auto& game_options = AddrAsRef<uint32_t>(0x0064EC40);
+    static auto& level_rotation_idx = AddrAsRef<int>(0x0064EC64);
+    static auto& server_level_list = AddrAsRef<DynamicArray<String>>(0x0064EC68);
 
     /* Input */
     static auto& MouseGetPos = AddrAsRef<int(int &x, int &y, int &z)>(0x0051E450);

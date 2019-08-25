@@ -62,6 +62,9 @@ CodeInjection dedicated_server_load_config_patch{
         ParseVoteConfig("Vote Kick", g_additional_server_config.vote_kick, parser);
         ParseVoteConfig("Vote Level", g_additional_server_config.vote_level, parser);
         ParseVoteConfig("Vote Extend", g_additional_server_config.vote_extend, parser);
+        ParseVoteConfig("Vote Restart", g_additional_server_config.vote_restart, parser);
+        ParseVoteConfig("Vote Next", g_additional_server_config.vote_next, parser);
+        ParseVoteConfig("Vote Previous", g_additional_server_config.vote_previous, parser);
         if (parser.OptionalString("$DF Spawn Protection Duration:")) {
             g_additional_server_config.spawn_protection_duration_ms = parser.GetUInt();
         }
