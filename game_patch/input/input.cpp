@@ -51,7 +51,7 @@ FunHook<void()> mouse_eval_deltas_di_hook{
 FunHook<void()> mouse_keep_centered_enable_hook{
     0x0051E690,
     []() {
-        if (!rf::keep_mouse_centered)
+        if (!rf::keep_mouse_centered && !rf::is_dedicated_server)
             SetDirectInputEnabled(g_game_config.direct_input);
         mouse_keep_centered_enable_hook.CallTarget();
     },

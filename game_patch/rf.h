@@ -1634,7 +1634,7 @@ namespace rf
     static auto& serv_name = AddrAsRef<String>(0x0064EC28);
     static auto& is_net_game = AddrAsRef<uint8_t>(0x0064ECB9);
     static auto& is_local_net_game = AddrAsRef<uint8_t>(0x0064ECBA);
-    static auto& is_dedicated_server = AddrAsRef<uint32_t>(0x01B0D75C);
+    static auto& is_dedicated_server = AddrAsRef<uint32_t>(0x0064ECBB);
     static auto& game_options = AddrAsRef<uint32_t>(0x0064EC40);
     static auto& level_rotation_idx = AddrAsRef<int>(0x0064EC64);
     static auto& server_level_list = AddrAsRef<DynamicArray<String>>(0x0064EC68);
