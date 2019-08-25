@@ -2,6 +2,7 @@
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
 #include <patch_common/ShortTypes.h>
+#include <common/BuildConfig.h>
 #include <common/rfproto.h>
 #include "server.h"
 #include "server_internal.h"
@@ -84,7 +85,7 @@ CodeInjection dedicated_server_load_config_patch{
                 g_additional_server_config.hit_sounds.rate_limit = parser.GetUInt();
             }
         }
-        if (!parser.OptionalString("$Name:") && !parser.IsEof()) {
+        if (!parser.OptionalString("$Name:") && !parser.OptionalString("#End")) {
             parser.Error("end of server configuration");
         }
     },
