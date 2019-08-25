@@ -77,7 +77,9 @@ CodeInjection dedicated_server_load_config_patch{
                 g_additional_server_config.hit_sounds.rate_limit = parser.GetUInt();
             }
         }
-
+        if (!parser.OptionalString("$Name:") && !parser.IsEof()) {
+            parser.Error("end of server configuration");
+        }
     },
 };
 

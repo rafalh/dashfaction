@@ -523,6 +523,16 @@ namespace rf
         {
             return reinterpret_cast<int(__thiscall*)(StrParser*)>(0x00512920)(this);
         }
+
+        bool IsEof() const
+        {
+            return reinterpret_cast<bool(__thiscall*)(const StrParser*)>(0x00513780)(this);
+        }
+
+        void Error(const char* msg)
+        {
+            reinterpret_cast<void(__thiscall*)(StrParser*, const char*)>(0x00512370)(this, msg);
+        }
     };
 
     /* Chat */
