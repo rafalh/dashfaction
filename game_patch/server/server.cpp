@@ -28,10 +28,13 @@ void SendChatLinePacket(const char* msg, rf::Player* target, rf::Player* sender,
     packet.is_team_msg = is_team_msg;
     strncpy(packet.message, msg, 255);
     packet.message[255] = 0;
-    if (target == nullptr)
+    if (target == nullptr) {
         rf::NwSendReliablePacketToAll(buf, packet.size + 3, 0);
-    else
+        rf::DcPrintf("Server: %s", msg);
+    }
+    else {
         rf::NwSendReliablePacket(target, buf, packet.size + 3, 0);
+    }
 }
 
 void ParseVoteConfig(const char* vote_name, VoteConfig& config, rf::StrParser& parser)
