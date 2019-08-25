@@ -43,3 +43,4 @@ void ExtendRoundTime(int minutes);
 void RestartCurrentLevel();
 void LoadNextLevel();
 void LoadPrevLevel();
+void ServerVoteOnLimboStateEnter();

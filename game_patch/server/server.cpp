@@ -214,3 +214,8 @@ void ServerDoFrame()
 {
     ServerVoteDoFrame();
 }
+
+void ServerOnLimboStateEnter()
+{
+    ServerVoteOnLimboStateEnter();
+}

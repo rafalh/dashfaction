@@ -4,6 +4,7 @@
 #include "rf.h"
 #include "stdafx.h"
 #include "utils.h"
+#include "server/server.h"
 #include <common/version.h>
 #include <cstddef>
 #include <algorithm>
@@ -567,6 +568,10 @@ FunHook<void(int, int)> GameEnterState_hook{
         if (state == rf::GS_MP_SERVER_LIST_MENU && g_jump_to_multi_server_list) {
             g_jump_to_multi_server_list = false;
             rf::sound_enabled = true;
+        }
+
+        if (state == rf::GS_MP_LIMBO) {
+            ServerOnLimboStateEnter();
         }
     },
 };

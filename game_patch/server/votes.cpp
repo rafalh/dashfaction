@@ -60,6 +60,11 @@ public:
         return CheckForEarlyVoteFinish();
     }
 
+    virtual bool IsAllowedInLimboState()
+    {
+        return true;
+    }
+
     bool AddPlayerVote(bool is_yes_vote, rf::Player* source)
     {
         if (players_who_voted.count(source) == 1)
@@ -205,6 +210,11 @@ struct VoteExtend : public Vote
         ExtendRoundTime(5);
     }
 
+    bool IsAllowedInLimboState() override
+    {
+        return false;
+    }
+
     const VoteConfig& GetConfig() const override
     {
         return g_additional_server_config.vote_extend;
@@ -237,6 +247,11 @@ struct VoteLevel : public Vote
         MultiChangeLevel(m_level_name.c_str());
     }
 
+    bool IsAllowedInLimboState() override
+    {
+        return false;
+    }
+
     const VoteConfig& GetConfig() const override
     {
         return g_additional_server_config.vote_level;
@@ -254,6 +269,11 @@ struct VoteRestart : public Vote
     {
         SendChatLinePacket("\xA6 Vote passed: restarting level", nullptr);
         RestartCurrentLevel();
+    }
+
+    bool IsAllowedInLimboState() override
+    {
+        return false;
     }
 
     const VoteConfig& GetConfig() const override
@@ -275,6 +295,11 @@ struct VoteNext : public Vote
         LoadNextLevel();
     }
 
+    bool IsAllowedInLimboState() override
+    {
+        return false;
+    }
+
     const VoteConfig& GetConfig() const override
     {
         return g_additional_server_config.vote_next;
@@ -292,6 +317,11 @@ struct VotePrevious : public Vote
     {
         SendChatLinePacket("\xA6 Vote passed: loading previous level", nullptr);
         LoadPrevLevel();
+    }
+
+    bool IsAllowedInLimboState() override
+    {
+        return false;
     }
 
     const VoteConfig& GetConfig() const override
@@ -320,6 +350,12 @@ public:
         }
 
         auto vote = std::make_unique<T>();
+
+        if (!vote->IsAllowedInLimboState() && rf::GameSeqGetState() != rf::GS_IN_GAME) {
+            SendChatLinePacket("Vote cannot be started now!", source);
+            return false;
+        }
+
         if (!vote->Start(arg, source)) {
             return false;
         }
@@ -330,11 +366,15 @@ public:
 
     void OnPlayerLeave(rf::Player* player)
     {
-        if (!active_vote) {
-            return;
+        if (active_vote && !active_vote.value()->OnPlayerLeave(player)) {
+            active_vote.reset();
         }
+    }
 
-        if (!active_vote.value()->OnPlayerLeave(player)) {
+    void OnLimboStateEnter()
+    {
+        if (active_vote && !active_vote.value()->IsAllowedInLimboState()) {
+            SendChatLinePacket("\xA6 Vote canceled!", nullptr);
             active_vote.reset();
         }
     }
@@ -350,6 +390,7 @@ public:
             active_vote.reset();
         }
     }
+
     void DoFrame()
     {
         if (!active_vote)
@@ -391,4 +432,9 @@ void HandleVoteCommand(std::string_view vote_name, std::string_view vote_arg, rf
 void ServerVoteDoFrame()
 {
     g_vote_mgr.DoFrame();
+}
+
+void ServerVoteOnLimboStateEnter()
+{
+    g_vote_mgr.OnLimboStateEnter();
 }
