@@ -6,8 +6,8 @@
 struct VoteConfig
 {
     bool enabled = false;
-    int min_voters = 1;
-    int min_percentage = 50;
+    // int min_voters = 1;
+    // int min_percentage = 50;
     int time_limit_seconds = 60;
 };
 
@@ -25,4 +25,5 @@ void SendChatLinePacket(const char* msg, rf::Player* target, rf::Player* sender 
 void InitWin32ServerConsole();
 void CleanupWin32ServerConsole();
 void HandleVoteCommand(std::string_view vote_name, std::string_view vote_arg, rf::Player* sender);
+void ServerVoteDoFrame();
 void InitLazyban();

@@ -41,13 +41,13 @@ void ParseVoteConfig(const char* vote_name, VoteConfig& config, rf::StrParser& p
         config.enabled = parser.GetBool();
         rf::DcPrintf("DF %s: %s", vote_name, config.enabled ? "true" : "false");
 
-        if (parser.OptionalString("+Min Voters:")) {
-            config.min_voters = parser.GetUInt();
-        }
+        // if (parser.OptionalString("+Min Voters:")) {
+        //     config.min_voters = parser.GetUInt();
+        // }
 
-        if (parser.OptionalString("+Min Percentage:")) {
-            config.min_percentage = parser.GetUInt();
-        }
+        // if (parser.OptionalString("+Min Percentage:")) {
+        //     config.min_percentage = parser.GetUInt();
+        // }
 
         if (parser.OptionalString("+Time Limit:")) {
             config.time_limit_seconds = parser.GetUInt();
@@ -93,11 +93,16 @@ void HandleServerChatCommand(std::string_view server_command, rf::Player* sender
 
 bool CheckServerChatCommand(const char* msg, rf::Player* sender)
 {
-    const char server_prefix[] = "server ";
-    if (msg[0] == '/')
+    if (msg[0] == '/') {
         HandleServerChatCommand(msg + 1, sender);
-    else if (strncmp(server_prefix, msg, sizeof(server_prefix) - 1) == 0)
-        HandleServerChatCommand(msg + sizeof(server_prefix) - 1, sender);
+        return true;
+    }
+
+    auto [cmd, rest] = StripBySpace(msg);
+    if (cmd == "server")
+        HandleServerChatCommand(rest, sender);
+    else if (cmd == "vote")
+        HandleServerChatCommand(msg, sender);
     else
         return false;
 
@@ -150,4 +155,9 @@ void ServerCleanup()
 #if SERVER_WIN32_CONSOLE // win32 console
     CleanupWin32ServerConsole();
 #endif
+}
+
+void ServerDoFrame()
+{
+    ServerVoteDoFrame();
 }

@@ -78,22 +78,25 @@ launcher main window).
 
 Additional server configuration
 -------------------------------
-Dedicated server can be configured to support vote commands.
-Configuration is provided inside dedicated_server.txt file after the level list (`$Level` keys).
-Every vote type have the same options. All options are optional.
+Dedicated server specific settings are configured in `dedicated_server.txt` file.
+Dash Faction specific configuration must be after the level list (`$Level` keys) and must appear in the order provided
+in this description.
 
-Example votes configuration:
+Configuration example:
 
-    $DF Vote Kick:  true
-        +Min Voters: 3
-        +Min Percentage: 60
+    //
+    // Dash Faction specific configuration
+    //
+    // Enable vote kick
+    $DF Vote Kick: true
+        // Vote specific options (all vote types have the same options)
+        // Vote time limit in seconds (default: 60)
+        +Time Limit: 60
+    // Enable vote level
     $DF Vote Level: true
-        +Min Percentage: 51
+    // Enable vote extend
     $DF Vote Extend: true
-
-Other options:
-
-    // Time duration in ms of player invulnerability after respawn
+    // Duration of player invulnerability after respawn in ms (default is the same as in stock RF - 1500)
     $DF Spawn Protection Duration: 1500
 
 License

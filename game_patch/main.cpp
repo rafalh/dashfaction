@@ -125,6 +125,7 @@ CallHook<bool()> RunGame_hook{
     []() {
         ProcessWaitingMessages();
         HighFpsUpdate();
+        ServerDoFrame();
 
         return RunGame_hook.CallTarget();
     },
