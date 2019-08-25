@@ -35,3 +35,5 @@ void CleanupWin32ServerConsole();
 void HandleVoteCommand(std::string_view vote_name, std::string_view vote_arg, rf::Player* sender);
 void ServerVoteDoFrame();
 void InitLazyban();
+void InitServerCommands();
+void ExtendRoundTime(int minutes);

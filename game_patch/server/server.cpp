@@ -197,6 +197,7 @@ void ServerInit()
 #endif
 
     InitLazyban();
+    InitServerCommands();
 }
 
 void ServerCleanup()

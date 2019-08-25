@@ -44,6 +44,7 @@ add_library(DashFaction SHARED
     server/win32_server_console.cpp
     server/votes.cpp
     server/lazyban.cpp
+    server/commands.cpp
     input/input.cpp
     input/input.h
     ${PF_SRCS}
