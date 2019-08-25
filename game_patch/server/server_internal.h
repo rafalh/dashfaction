@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string_view>
+#include <string>
 #include "../rf.h"
 
 struct VoteConfig
@@ -31,6 +32,7 @@ struct ServerAdditionalConfig
 };
 
 extern ServerAdditionalConfig g_additional_server_config;
+extern std::string g_prev_level;
 
 void SendChatLinePacket(const char* msg, rf::Player* target, rf::Player* sender = nullptr, bool is_team_msg = false);
 void InitWin32ServerConsole();

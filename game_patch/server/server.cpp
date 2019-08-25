@@ -20,6 +20,7 @@ const char* g_rcon_cmd_whitelist[] = {
 };
 
 ServerAdditionalConfig g_additional_server_config;
+std::string g_prev_level;
 
 void SendChatLinePacket(const char* msg, rf::Player* target, rf::Player* sender, bool is_team_msg)
 {
@@ -235,5 +236,6 @@ void ServerDoFrame()
 
 void ServerOnLimboStateEnter()
 {
+    g_prev_level = rf::level_filename.CStr();
     ServerVoteOnLimboStateEnter();
 }

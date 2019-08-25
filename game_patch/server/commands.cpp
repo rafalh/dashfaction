@@ -1,11 +1,10 @@
 #include "../commands.h"
+#include "server_internal.h"
 
 void ExtendRoundTime(int minutes)
 {
     auto& level_time = AddrAsRef<float>(0x006460F0);
     level_time -= minutes * 60.0f;
-    std::string msg = StringFormat("\xA6 Round extended by %d minutes", minutes);
-    rf::ChatSay(msg.c_str(), false);
 }
 
 void RestartCurrentLevel()
@@ -16,7 +15,6 @@ void RestartCurrentLevel()
 void LoadNextLevel()
 {
     rf::MultiChangeLevel(nullptr);
-
 }
 
 void LoadPrevLevel()
@@ -25,7 +23,13 @@ void LoadPrevLevel()
     if (rf::level_rotation_idx < 0) {
         rf::level_rotation_idx = rf::server_level_list.Size() - 1;
     }
-    rf::MultiChangeLevel(rf::server_level_list.Get(rf::level_rotation_idx).CStr());
+    if (g_prev_level.empty()) {
+        // this is the first level running - use previous level from rotation
+        rf::MultiChangeLevel(rf::server_level_list.Get(rf::level_rotation_idx));
+    }
+    else {
+        rf::MultiChangeLevel(g_prev_level.c_str());
+    }
 }
 
 bool ValidateIsServer()
@@ -52,6 +56,8 @@ DcCommand2 map_ext_cmd{
         if (ValidateIsServer() && ValidateNotLimbo()) {
             int minutes = minutes_opt.value_or(5);
             ExtendRoundTime(minutes);
+            std::string msg = StringFormat("\xA6 Round extended by %d minutes", minutes);
+            rf::ChatSay(msg.c_str(), false);
         }
     },
     "Extend round time",
@@ -73,7 +79,7 @@ DcCommand2 map_next_cmd{
     "map_next",
     []() {
         if (ValidateIsServer() && ValidateNotLimbo()) {
-        rf::ChatSay("\xA6 Loading next level", false);
+            rf::ChatSay("\xA6 Loading next level", false);
             LoadNextLevel();
         }
     },
@@ -84,7 +90,7 @@ DcCommand2 map_prev_cmd{
     "map_prev",
     []() {
         if (ValidateIsServer() && ValidateNotLimbo()) {
-        rf::ChatSay("\xA6 Loading previous level", false);
+            rf::ChatSay("\xA6 Loading previous level", false);
             LoadPrevLevel();
         }
     },
