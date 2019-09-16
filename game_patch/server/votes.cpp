@@ -351,6 +351,11 @@ public:
 
         auto vote = std::make_unique<T>();
 
+        if (!vote->GetConfig().enabled) {
+            SendChatLinePacket("This vote type is disabled!", source);
+            return false;
+        }
+
         if (!vote->IsAllowedInLimboState() && rf::GameSeqGetState() != rf::GS_IN_GAME) {
             SendChatLinePacket("Vote cannot be started now!", source);
             return false;
