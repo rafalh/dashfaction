@@ -102,6 +102,25 @@ CodeInjection GrCreateD3DDevice_error_patch{
                                  "A critical error has occurred and the program cannot continue.\n"
                                  "Press OK to exit the program",
                                  hr, getDxErrorStr(hr));
+
+        INFO("D3D DevCaps: %lX", rf::gr_d3d_device_caps.DevCaps);
+
+        hr = rf::gr_d3d->CheckDeviceType(rf::gr_adapter_idx, D3DDEVTYPE_HAL, rf::gr_d3d_pp.BackBufferFormat,
+            rf::gr_d3d_pp.BackBufferFormat, rf::gr_d3d_pp.Windowed);
+        if (FAILED(hr)) {
+            ERR("CheckDeviceType for format %d failed: %lX", rf::gr_d3d_pp.BackBufferFormat, hr);
+        }
+
+        hr = rf::gr_d3d->CheckDeviceFormat(rf::gr_adapter_idx, D3DDEVTYPE_HAL, rf::gr_d3d_pp.BackBufferFormat,
+            D3DUSAGE_DEPTHSTENCIL, D3DRTYPE_SURFACE, rf::gr_d3d_pp.AutoDepthStencilFormat);
+        if (FAILED(hr)) {
+            ERR("CheckDeviceFormat for depth-stencil format %d failed: %lX", rf::gr_d3d_pp.AutoDepthStencilFormat, hr);
+        }
+
+        if (!(rf::gr_d3d_device_caps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT)) {
+            ERR("No T&L hardware support!");
+        }
+
         ShowWindow(rf::main_wnd, SW_HIDE);
         MessageBoxA(nullptr, text.c_str(), "Error!", MB_OK | MB_ICONERROR | MB_SETFOREGROUND | MB_TASKMODAL);
         ExitProcess(-1);
@@ -143,6 +162,19 @@ static void SetupPP()
     // Note: if MSAA is used backbuffer cannot be lockable
     if (g_game_config.msaa == D3DMULTISAMPLE_NONE)
         rf::gr_d3d_pp.Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
+#endif
+
+#if D3D_HW_VERTEX_PROCESSING
+    // Use hardware vertex processing instead of software processing
+    if (rf::gr_d3d_device_caps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT) {
+        INFO("Enabling T&L in hardware");
+        WriteMem<u8>(0x00545BDE + 1, D3DCREATE_HARDWARE_VERTEXPROCESSING);
+        WriteMem<u32>(0x005450DD + 1, D3DUSAGE_DYNAMIC | D3DUSAGE_DONOTCLIP | D3DUSAGE_WRITEONLY);
+        WriteMem<u32>(0x00545117 + 1, D3DUSAGE_DYNAMIC | D3DUSAGE_DONOTCLIP | D3DUSAGE_WRITEONLY);
+    }
+    else {
+        INFO("T&L in hardware not supported");
+    }
 #endif
 
     // Make sure stretched window is always full screen
@@ -339,13 +371,6 @@ void GraphicsInit()
     }
 
     // WriteMem<u8>(0x00524C98, ASM_SHORT_JMP_REL); // disable window hooks
-
-#if D3D_HW_VERTEX_PROCESSING
-    // Use hardware vertex processing instead of software processing
-    WriteMem<u8>(0x00545BDE + 1, D3DCREATE_HARDWARE_VERTEXPROCESSING);
-    WriteMem<u32>(0x005450DD + 1, D3DUSAGE_DYNAMIC | D3DUSAGE_DONOTCLIP | D3DUSAGE_WRITEONLY);
-    WriteMem<u32>(0x00545117 + 1, D3DUSAGE_DYNAMIC | D3DUSAGE_DONOTCLIP | D3DUSAGE_WRITEONLY);
-#endif
 
 #if D3D_SWAP_DISCARD
     // Use Discard Swap Mode
