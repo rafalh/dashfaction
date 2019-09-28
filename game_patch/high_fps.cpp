@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "utils.h"
 #include <patch_common/FunHook.h>
+#include <patch_common/CallHook.h>
 #include <patch_common/InlineAsm.h>
 #include <patch_common/CodeInjection.h>
 #include <patch_common/ShortTypes.h>
@@ -16,6 +17,7 @@ constexpr auto reference_framerate = 1.0f / reference_fps;
 constexpr auto screen_shake_fps = 150.0f;
 
 static float g_camera_shake_factor = 0.6f;
+static LARGE_INTEGER g_qpc_frequency;
 
 class FtolAccuracyFix
 {
@@ -256,6 +258,39 @@ FunHook<int(rf::String&, rf::String&, char*)> RflLoad_hook{
     },
 };
 
+FunHook<int(int)> timer_get_hook{
+    0x00504AB0,
+    [](int scale) {
+        static auto& timer_base = AddrAsRef<LARGE_INTEGER>(0x01751BF8);
+        static auto& timer_last_value = AddrAsRef<LARGE_INTEGER>(0x01751BD0);
+        // get QPC current value
+        LARGE_INTEGER current_qpc_value;
+        QueryPerformanceCounter(&current_qpc_value);
+        // make sure time never goes backward
+        if (current_qpc_value.QuadPart < timer_last_value.QuadPart) {
+            current_qpc_value = timer_last_value;
+        }
+        timer_last_value = current_qpc_value;
+        // Make sure we count from game start
+        current_qpc_value.QuadPart -= timer_base.QuadPart;
+        // Multiply with unit scale (eg. ms/us) before division
+        current_qpc_value.QuadPart *= scale;
+        // Divide by frequency using 64 bits and then cast to 32 bits
+        // Note: sign of result does not matter because it is used only for deltas
+        return static_cast<int>(current_qpc_value.QuadPart / g_qpc_frequency.QuadPart);
+    },
+};
+
+CallHook<void(int)> frametime_update_sleep_hook{
+    0x005095B4,
+    [](int ms) {
+        --ms;
+        if (ms > 0) {
+            frametime_update_sleep_hook.CallTarget(ms);
+        }
+    },
+};
+
 CodeInjection cutscene_shot_sync_fix{
     0x0045B43B,
     [](X86Regs& regs) {
@@ -294,9 +329,14 @@ void HighFpsInit()
     AsmWritter(0x004E68B6, 0x004E68D1).nop();
     WaterAnimateWaves_speed_fix.Install();
 
+    // Fix TimerGet handling of frequency greater than 2MHz (sign bit is set in 32 bit dword)
+    QueryPerformanceFrequency(&g_qpc_frequency);
+    timer_get_hook.Install();
+
     // Fix incorrect frame time calculation
     AsmWritter(0x00509595).nop(2);
     WriteMem<u8>(0x00509532, ASM_SHORT_JMP_REL);
+    frametime_update_sleep_hook.Install();
 
     // Fix submarine exploding on high FPS
     RflLoad_hook.Install();

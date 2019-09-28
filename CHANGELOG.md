@@ -21,6 +21,8 @@ Version 1.3.1
 - add 'map_rest', 'map_next', 'map_prev' commands
 - add optional Win32 native console support in dedicated server mode
 - remove stripping of '%' character in chat messages
+- fix very long startup on Windows XP in some hardware configurations
+- improve FPS limit accuracy
 
 Version 1.3.0 (released 2019-05-07)
 -----------------------------------

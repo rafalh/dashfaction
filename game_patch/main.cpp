@@ -95,7 +95,6 @@ CallHook<void()> InitGame_hook{
         InitGame_hook.CallTarget();
 
         GraphicsAfterGameInit();
-
         CommandsAfterGameInit();
         GraphicsCaptureAfterGameInit();
 
@@ -252,6 +251,9 @@ void LogSystemInfo()
         INFO("Running as %s (elevation type: %s)", IsUserAdmin() ? "admin" : "user", GetProcessElevationType());
         logging::Logger::root().info() << "CPU Brand: " << getCpuBrand();
         logging::Logger::root().info() << "CPU ID: " << getCpuId();
+        LARGE_INTEGER qpc_freq;
+        QueryPerformanceFrequency(&qpc_freq);
+        INFO("QPC Frequency: %08lX %08lX", static_cast<DWORD>(qpc_freq.HighPart), qpc_freq.LowPart);
     }
     catch (std::exception& e) {
         ERR("Failed to read system info: %s", e.what());
