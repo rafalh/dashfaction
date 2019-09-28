@@ -32,6 +32,7 @@ void DrawScoreboardInternal_New(bool draw)
 
     unsigned c_left_col = 0, c_right_col = 0;
     int game_type = rf::MpGetGameMode();
+    bool single_column = game_type == RF_DM;
 
     // Sort players by score
     rf::Player* players[32];
@@ -39,7 +40,7 @@ void DrawScoreboardInternal_New(bool draw)
     unsigned c_players = 0;
     while (c_players < 32) {
         players[c_players++] = player;
-        if (game_type == RF_DM || !player->blue_team)
+        if (single_column || !player->blue_team)
             ++c_left_col;
         else
             ++c_right_col;
@@ -75,9 +76,9 @@ void DrawScoreboardInternal_New(bool draw)
 
     // Draw background
     constexpr int row_h = 15;
-    unsigned cx = std::min((game_type == RF_DM) ? 450u : 700u, rf::GrGetViewportWidth());
+    unsigned cx = std::min(single_column ? 450u : 700u, rf::GrGetViewportWidth());
     unsigned num_rows = std::max(c_left_col, c_right_col);
-    unsigned cy = ((game_type == RF_DM) ? 130 : 190) + num_rows * row_h; // DM doesnt show team scores
+    unsigned cy = (single_column ? 130 : 190) + num_rows * row_h; // DM doesnt show team scores
     cx = static_cast<unsigned>(progress_w * cx);
     cy = static_cast<unsigned>(progress_h * cy);
     unsigned x = (rf::GrGetViewportWidth() - cx) / 2;
@@ -158,7 +159,7 @@ void DrawScoreboardInternal_New(bool draw)
     } col_offsets[2];
 
     // Draw headers
-    unsigned num_sect = (game_type == RF_DM ? 1 : 2);
+    unsigned num_sect = single_column ? 1 : 2;
     unsigned cx_name_max = cx / num_sect - 25 - 50 * (game_type == RF_CTF ? 3 : 2) - 70;
     rf::GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
     for (unsigned i = 0; i < num_sect; ++i) {
@@ -197,7 +198,7 @@ void DrawScoreboardInternal_New(bool draw)
     for (unsigned i = 0; i < c_players; ++i) {
         player = players[i];
 
-        unsigned sect_idx = game_type == RF_DM || !player->blue_team ? 0 : 1;
+        unsigned sect_idx = (single_column || !player->blue_team) ? 0 : 1;
         auto& offsets = col_offsets[sect_idx];
         int row_y = y + sect_counter[sect_idx] * row_h;
         ++sect_counter[sect_idx];
