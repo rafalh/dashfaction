@@ -69,6 +69,7 @@ target_link_libraries(DashFaction
     Common
     xxhash
     gdi32
+    winmm
 )
 
 if(MSVC)
