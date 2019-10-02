@@ -9,4 +9,4 @@ addons:
 script:
   - mkdir build
   - cd build && cmake .. -DCMAKE_TOOLCHAIN_FILE=../cmake/mingw-ubuntu.cmake -DCMAKE_BUILD_TYPE=Debug
-  - cmake --build build
+  - cmake --build .
