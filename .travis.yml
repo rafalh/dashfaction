@@ -5,8 +5,9 @@ addons:
   apt:
     packages:
     - mingw-w64
-    - cmake
+    - ninja
 script:
   - mkdir build
-  - cd build && cmake .. -DCMAKE_TOOLCHAIN_FILE=../cmake/mingw-ubuntu.cmake -DCMAKE_BUILD_TYPE=Debug
-  - cmake --build .
+  - cd build
+  - cmake .. -DCMAKE_TOOLCHAIN_FILE=../cmake/mingw-ubuntu.cmake -DCMAKE_BUILD_TYPE=Debug
+  - cmake --build . -- -j2
