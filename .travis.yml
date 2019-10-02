@@ -5,7 +5,7 @@ addons:
   apt:
     packages:
     - mingw-w64
-    - ninja
+    - ninja-build
 script:
   - mkdir build
   - cd build
