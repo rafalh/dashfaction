@@ -1,0 +1,13 @@
+language: cpp
+os: linux
+dist: bionic
+addons:
+  apt:
+    packages:
+    - mingw-w64
+    - cmake
+script:
+  - mkdir build
+  - cd build && cmake .. -DCMAKE_TOOLCHAIN_FILE=../cmake/mingw-ubuntu.cmake -DCMAKE_BUILD_TYPE=Debug
+  - cd build && ninja
+
