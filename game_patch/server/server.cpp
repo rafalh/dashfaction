@@ -63,31 +63,44 @@ void ParseVoteConfig(const char* vote_name, VoteConfig& config, rf::StrParser& p
     }
 }
 
+void LoadAdditionalServerConfig(rf::StrParser& parser)
+{
+    ParseVoteConfig("Vote Kick", g_additional_server_config.vote_kick, parser);
+    ParseVoteConfig("Vote Level", g_additional_server_config.vote_level, parser);
+    ParseVoteConfig("Vote Extend", g_additional_server_config.vote_extend, parser);
+    ParseVoteConfig("Vote Restart", g_additional_server_config.vote_restart, parser);
+    ParseVoteConfig("Vote Next", g_additional_server_config.vote_next, parser);
+    ParseVoteConfig("Vote Previous", g_additional_server_config.vote_previous, parser);
+    if (parser.OptionalString("$DF Spawn Protection Duration:")) {
+        g_additional_server_config.spawn_protection_duration_ms = parser.GetUInt();
+    }
+    if (parser.OptionalString("$Hitsounds:")) {
+        g_additional_server_config.hit_sounds.enabled = parser.GetBool();
+        if (parser.OptionalString("+Sound ID:")) {
+            g_additional_server_config.hit_sounds.sound_id = parser.GetUInt();
+        }
+        if (parser.OptionalString("+Rate Limit:")) {
+            g_additional_server_config.hit_sounds.rate_limit = parser.GetUInt();
+        }
+    }
+
+    while (parser.OptionalString("$DF Item Replacement:")) {
+        rf::String old_item, new_item;
+        parser.GetString(&old_item);
+        parser.GetString(&new_item);
+        g_additional_server_config.item_replacements.insert({old_item.CStr(), new_item.CStr()});
+    }
+
+    if (!parser.OptionalString("$Name:") && !parser.OptionalString("#End")) {
+        parser.Error("end of server configuration");
+    }
+}
+
 CodeInjection dedicated_server_load_config_patch{
     0x0046E216,
     [](auto& regs) {
         auto& parser = *reinterpret_cast<rf::StrParser*>(regs.esp - 4 + 0x4C0 - 0x470);
-        ParseVoteConfig("Vote Kick", g_additional_server_config.vote_kick, parser);
-        ParseVoteConfig("Vote Level", g_additional_server_config.vote_level, parser);
-        ParseVoteConfig("Vote Extend", g_additional_server_config.vote_extend, parser);
-        ParseVoteConfig("Vote Restart", g_additional_server_config.vote_restart, parser);
-        ParseVoteConfig("Vote Next", g_additional_server_config.vote_next, parser);
-        ParseVoteConfig("Vote Previous", g_additional_server_config.vote_previous, parser);
-        if (parser.OptionalString("$DF Spawn Protection Duration:")) {
-            g_additional_server_config.spawn_protection_duration_ms = parser.GetUInt();
-        }
-        if (parser.OptionalString("$Hitsounds:")) {
-            g_additional_server_config.hit_sounds.enabled = parser.GetBool();
-            if (parser.OptionalString("+Sound ID:")) {
-                g_additional_server_config.hit_sounds.sound_id = parser.GetUInt();
-            }
-            if (parser.OptionalString("+Rate Limit:")) {
-                g_additional_server_config.hit_sounds.rate_limit = parser.GetUInt();
-            }
-        }
-        if (!parser.OptionalString("$Name:") && !parser.OptionalString("#End")) {
-            parser.Error("end of server configuration");
-        }
+        LoadAdditionalServerConfig(parser);
     },
 };
 
@@ -197,6 +210,19 @@ FunHook<float(rf::EntityObj*, float, int, int, int)> EntityTakeDamage_hook{
     },
 };
 
+CallHook<int(const char*)> find_rfl_item_class_hook{
+    0x00465102,
+    [](const char* cls_name) {
+        if (rf::is_dedicated_server) {
+            // support item replacement mapping
+            auto it = g_additional_server_config.item_replacements.find(cls_name);
+            if (it != g_additional_server_config.item_replacements.end())
+                cls_name = it->second.c_str();
+        }
+        return find_rfl_item_class_hook.CallTarget(cls_name);
+    },
+};
+
 void ServerInit()
 {
     // Override rcon command whitelist
@@ -217,6 +243,9 @@ void ServerInit()
 
     // Do not strip '%' characters from chat messages
     WriteMem<u8>(0x004785FD, ASM_SHORT_JMP_REL);
+
+    // Item replacements
+    find_rfl_item_class_hook.Install();
 
 #if SERVER_WIN32_CONSOLE // win32 console
     InitWin32ServerConsole();

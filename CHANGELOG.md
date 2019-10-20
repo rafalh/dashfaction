@@ -24,6 +24,7 @@ Version 1.3.1
 - fix very long startup on Windows XP in some hardware configurations
 - make sure required registry values are always created on game launch
 - improve FPS limit accuracy
+- add item replacements support in dedicated_server.txt
 
 Version 1.3.0 (released 2019-05-07)
 -----------------------------------

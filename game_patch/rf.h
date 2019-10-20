@@ -524,6 +524,12 @@ namespace rf
             return reinterpret_cast<int(__thiscall*)(StrParser*)>(0x00512920)(this);
         }
 
+        int GetString(String *out_str, char first_char = '"', char last_char = '"')
+        {
+            return reinterpret_cast<int(__thiscall*)(StrParser*, String*, char, char)>(0x00512BB0)
+                (this, out_str, first_char, last_char);
+        }
+
         bool IsEof() const
         {
             return reinterpret_cast<bool(__thiscall*)(const StrParser*)>(0x00513780)(this);

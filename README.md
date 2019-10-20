@@ -123,6 +123,8 @@ Configuration example:
         +Sound ID: 29
         // max sound packets per second - keep it low to save bandwidth
         +Rate Limit: 10
+    // Replace all "Shotgun" items with "rail gun" items when loading RFLs
+    $DF Item Replacement: "Shotgun" "rail gun"
 
 License
 -------
