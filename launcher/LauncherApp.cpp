@@ -138,6 +138,45 @@ void LauncherApp::MigrateConfig()
 bool LauncherApp::LaunchGame(HWND hwnd, const char* mod_name)
 {
     GameLauncher launcher;
+
+    try
+    {
+        launcher.check_installation();
+    }
+    catch (InstallationCheckFailedException &e)
+    {
+        std::stringstream ss;
+        std::string download_url;
+
+        if (e.getCrc32() == 0)
+        {
+            ss << "Game directory validation has failed: " << e.getFilename() << " file is missing!\n"
+                << "Please make sure game executable specified in options is located inside a valid Red Faction installation "
+                << "root directory."
+        }
+        else
+        {
+            ss << "Game directory validation has failed: invalid " << e.getFilename() << " file has been detected "
+                << "(CRC32 = 0x" << std::hex << e.getCrc32() << ").";
+            if (e.getFilename() == std::string("tables.vpp"))
+            {
+                ss << "\nIt can prevent multiplayer functionality or entire game from working properly.\n"
+                    << "If your game has not been updated to 1.20 please do it first. If the error still shows up "
+                    << "replace your tables.vpp file with original 1.20 NA " << e.getFilename() << " available on FactionFiles.com.\n"
+                    << "Click OK to open download page. Click Cancel to skip this warning.";
+                download_url = "https://www.factionfiles.com/ff.php?action=file&id=517871";
+            }
+
+        }
+        std::string str = ss.str();
+        if (Message(hwnd, str.c_str(), nullptr, MB_OKCANCEL | MB_ICONWARNING) == IDOK)
+        {
+            if (!download_url.empty())
+                ShellExecuteA(hwnd, "open", download_url.c_str(), nullptr, nullptr, SW_SHOW);
+            return true;
+        }
+    }
+
     try
     {
         launcher.launch(mod_name);

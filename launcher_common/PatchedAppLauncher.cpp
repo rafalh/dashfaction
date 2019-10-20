@@ -101,6 +101,24 @@ void PatchedAppLauncher::launch(const char* mod_name)
     }
 }
 
+void PatchedAppLauncher::check_installation()
+{
+    std::string app_path = get_app_path();
+    std::string root_dir = get_dir_from_path(app_path);
+
+    auto tables_vpp_path = root_dir + "\\tables.vpp";
+    uint32_t checksum = file_crc32(tables_vpp_path.c_str());
+
+    // Error reporting for headless env
+    if (checksum != 0xF4A85BF) {
+        if (checksum == 0)
+            std::fprintf(stderr, "Cannot find tables.vpp path %s\n", tables_vpp_path.c_str());
+        else
+            std::fprintf(stderr, "Invalid tables.vpp checksum %x, expected %x\n", checksum, m_expected_crc32);
+        throw InstallationCheckFailedException("tables.vpp", checksum);
+    }
+}
+
 GameLauncher::GameLauncher() : PatchedAppLauncher("DashFaction.dll", RF_120_NA_CRC32)
 {
     if (!m_conf.load()) {

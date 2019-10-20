@@ -62,15 +62,22 @@ DWORD DllInjector::load_library_remote(const char* dll_path, int timeout)
 
 HMODULE DllInjector::inject_dll(const char* dll_filename, const char* init_fun_name, int timeout)
 {
-    // Load DLL in target process
-    DWORD remote_lib = load_library_remote(dll_filename, timeout);
-    // Find out Init function offset from DLL base address
-    intptr_t init_fun_offset = get_exported_fun_offset_from_module_base(dll_filename, init_fun_name);
-    // Calculate address of Init function in remote process
-    FARPROC init_fun_remote_ptr = reinterpret_cast<FARPROC>(remote_lib + init_fun_offset);
-    // Run Init function in remote process
-    DWORD exit_code = run_remote_fun(init_fun_remote_ptr, nullptr, timeout);
-    if (!exit_code)
-        THROW_EXCEPTION("Init function failed");
-    return reinterpret_cast<HMODULE>(remote_lib);
+    try {
+        // Find out Init function offset from DLL base address
+        // Note: this calls LoadLibrary in current process and in case of problems with DLL loading it
+        // will give a better error message than load_library_remote
+        intptr_t init_fun_offset = get_exported_fun_offset_from_module_base(dll_filename, init_fun_name);
+        // Load DLL in target process
+        DWORD remote_lib = load_library_remote(dll_filename, timeout);
+        // Calculate address of Init function in remote process
+        FARPROC init_fun_remote_ptr = reinterpret_cast<FARPROC>(remote_lib + init_fun_offset);
+        // Run Init function in remote process
+        DWORD exit_code = run_remote_fun(init_fun_remote_ptr, nullptr, timeout);
+        if (!exit_code)
+            THROW_EXCEPTION("Init function failed");
+        return reinterpret_cast<HMODULE>(remote_lib);
+    }
+    catch (...) {
+        std::throw_with_nested(std::runtime_error(std::string("failed to inject DLL: ") + dll_filename));
+    }
 }
