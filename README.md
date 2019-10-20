@@ -125,6 +125,8 @@ Configuration example:
         +Rate Limit: 10
     // Replace all "Shotgun" items with "rail gun" items when loading RFLs
     $DF Item Replacement: "Shotgun" "rail gun"
+    // Replace default player weapon
+    $DF Default Player Weapon: "rail_gun"
 
 License
 -------

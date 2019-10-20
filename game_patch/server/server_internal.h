@@ -31,6 +31,7 @@ struct ServerAdditionalConfig
     int spawn_protection_duration_ms = 1500;
     HitSoundsConfig hit_sounds;
     std::map<std::string, std::string> item_replacements;
+    std::string default_player_weapon;
 };
 
 extern ServerAdditionalConfig g_additional_server_config;

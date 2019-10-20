@@ -91,6 +91,12 @@ void LoadAdditionalServerConfig(rf::StrParser& parser)
         g_additional_server_config.item_replacements.insert({old_item.CStr(), new_item.CStr()});
     }
 
+    if (parser.OptionalString("$DF Default Player Weapon:")) {
+        rf::String default_weapon;
+        parser.GetString(&default_weapon);
+        g_additional_server_config.default_player_weapon = default_weapon.CStr();
+    }
+
     if (!parser.OptionalString("$Name:") && !parser.OptionalString("#End")) {
         parser.Error("end of server configuration");
     }
@@ -223,6 +229,16 @@ CallHook<int(const char*)> find_rfl_item_class_hook{
     },
 };
 
+CallHook<int(const char*)> find_default_weapon_for_entity_hook{
+    0x004A43DA,
+    [](const char* weapon_name) {
+        if (rf::is_dedicated_server) {
+            weapon_name = g_additional_server_config.default_player_weapon.c_str();
+        }
+        return find_default_weapon_for_entity_hook.CallTarget(weapon_name);
+    },
+};
+
 void ServerInit()
 {
     // Override rcon command whitelist
@@ -246,6 +262,9 @@ void ServerInit()
 
     // Item replacements
     find_rfl_item_class_hook.Install();
+
+    // Default player weapon replacement
+    find_default_weapon_for_entity_hook.Install();
 
 #if SERVER_WIN32_CONSOLE // win32 console
     InitWin32ServerConsole();

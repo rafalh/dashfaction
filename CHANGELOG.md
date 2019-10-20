@@ -25,6 +25,7 @@ Version 1.3.1
 - make sure required registry values are always created on game launch
 - improve FPS limit accuracy
 - add item replacements support in dedicated_server.txt
+- add default player weapon replacement support in dedicated_server.txt
 
 Version 1.3.0 (released 2019-05-07)
 -----------------------------------
