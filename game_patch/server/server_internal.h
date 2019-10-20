@@ -2,6 +2,7 @@
 
 #include <string_view>
 #include <string>
+#include <map>
 #include "../rf.h"
 
 struct VoteConfig
@@ -29,6 +30,7 @@ struct ServerAdditionalConfig
     VoteConfig vote_previous;
     int spawn_protection_duration_ms = 1500;
     HitSoundsConfig hit_sounds;
+    std::map<std::string, std::string> item_replacements;
 };
 
 extern ServerAdditionalConfig g_additional_server_config;
