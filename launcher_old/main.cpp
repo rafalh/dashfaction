@@ -40,7 +40,8 @@ bool launch_game(HWND hwnd)
         return false;
     }
     catch (const std::exception& e) {
-        MessageBoxA(hwnd, e.what(), nullptr, MB_ICONERROR | MB_OK);
+        auto msg = generate_message_for_exception(e);
+        MessageBoxA(hwnd, msg.c_str(), nullptr, MB_ICONERROR | MB_OK);
         return false;
     }
     return true;

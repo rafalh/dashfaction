@@ -23,6 +23,27 @@ private:
     uint32_t m_crc32;
 };
 
+class InstallationCheckFailedException : public std::runtime_error
+{
+public:
+    InstallationCheckFailedException(const char* filename, uint32_t crc32) :
+        std::runtime_error("installation check failed"), m_filename(filename), m_crc32(crc32) {}
+
+    const char* getFilename() const
+    {
+        return m_filename;
+    }
+
+    uint32_t getCrc32() const
+    {
+        return m_crc32;
+    }
+
+private:
+    const char* m_filename;
+    uint32_t m_crc32;
+};
+
 class LauncherError : public std::runtime_error
 {
 public:
@@ -35,6 +56,7 @@ public:
     PatchedAppLauncher(const char* patch_dll_name, uint32_t expected_crc32) :
         m_patch_dll_name(patch_dll_name), m_expected_crc32(expected_crc32)
     {}
+    void check_installation();
     void launch(const char* mod_name = nullptr);
 
 protected:
