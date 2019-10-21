@@ -95,6 +95,10 @@ void LoadAdditionalServerConfig(rf::StrParser& parser)
         rf::String default_weapon;
         parser.GetString(&default_weapon);
         g_additional_server_config.default_player_weapon = default_weapon.CStr();
+
+        if (parser.OptionalString("+Initial Ammo:")) {
+            g_additional_server_config.default_player_weapon_ammo = {parser.GetUInt()};
+        }
     }
 
     if (!parser.OptionalString("$Name:") && !parser.OptionalString("#End")) {
@@ -239,6 +243,16 @@ CallHook<int(const char*)> find_default_weapon_for_entity_hook{
     },
 };
 
+CallHook<void(rf::Player*, int, int)> give_default_weapon_ammo_hook{
+    0x004A4414,
+    [](rf::Player* player, int weapon_cls_id, int ammo) {
+        if (g_additional_server_config.default_player_weapon_ammo) {
+            ammo = g_additional_server_config.default_player_weapon_ammo.value();
+        }
+        give_default_weapon_ammo_hook.CallTarget(player, weapon_cls_id, ammo);
+    },
+};
+
 FunHook<bool (const char*, int)> MpIsLevelForGameMode_hook{
     0x00445050,
     [](const char *filename, int game_mode) {
@@ -247,6 +261,27 @@ FunHook<bool (const char*, int)> MpIsLevelForGameMode_hook{
         }
         else {
             return _strnicmp(filename, "ctf", 3) == 0 || _strnicmp(filename, "pctf", 4) == 0;
+        }
+    },
+};
+
+FunHook<void(rf::Player*)> spawn_player_sync_ammo_hook{
+    0x00480820,
+    [](rf::Player* player) {
+        spawn_player_sync_ammo_hook.CallTarget(player);
+        // if default player weapon has ammo override sync ammo using additional reload packet
+        if (g_additional_server_config.default_player_weapon_ammo && !rf::IsPlayerEntityInvalid(player)) {
+            rf::EntityObj* entity = rf::EntityGetFromHandle(player->entity_handle);
+            rfReload packet;
+            packet.type = RF_RELOAD;
+            packet.size = sizeof(packet) - sizeof(rfPacketHeader);
+            packet.entity_handle = entity->_super.handle;
+            int weapon_cls_id = entity->weapon_info.weapon_cls_id;
+            packet.weapon = weapon_cls_id;
+            packet.ammo = entity->weapon_info.weapons_ammo[weapon_cls_id];
+            int ammo_type = rf::weapon_classes[weapon_cls_id].ammo_type;
+            packet.clip_ammo = entity->weapon_info.clip_ammo[ammo_type];
+            rf::NwSendReliablePacket(player, reinterpret_cast<uint8_t*>(&packet), sizeof(packet), 0);
         }
     },
 };
@@ -275,8 +310,10 @@ void ServerInit()
     // Item replacements
     find_rfl_item_class_hook.Install();
 
-    // Default player weapon replacement
+    // Default player weapon class and ammo override
     find_default_weapon_for_entity_hook.Install();
+    give_default_weapon_ammo_hook.Install();
+    spawn_player_sync_ammo_hook.Install();
 
 #if SERVER_WIN32_CONSOLE // win32 console
     InitWin32ServerConsole();
