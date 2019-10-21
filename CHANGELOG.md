@@ -26,6 +26,7 @@ Version 1.3.1
 - improve FPS limit accuracy
 - add item replacements support in dedicated_server.txt
 - add default player weapon replacement support in dedicated_server.txt
+- add 'pctf' level name prefix support (server-side)
 
 Version 1.3.0 (released 2019-05-07)
 -----------------------------------

@@ -749,10 +749,6 @@ void MiscInit()
     AsmWritter(0x004B4D99, 0x004B4DA5).nop();
     AsmWritter(0x004B4E0A, 0x004B4E22).nop();
 
-    // Dont filter levels for DM and TeamDM
-    WriteMem<u8>(0x005995B0, 0);
-    WriteMem<u8>(0x005995B8, 0);
-
 #if 1
     // Buffer overflows in RflReadStaticGeometry
     // Note: Buffer size is 1024 but opcode allows only 1 byte size

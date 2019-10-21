@@ -239,6 +239,18 @@ CallHook<int(const char*)> find_default_weapon_for_entity_hook{
     },
 };
 
+FunHook<bool (const char*, int)> MpIsLevelForGameMode_hook{
+    0x00445050,
+    [](const char *filename, int game_mode) {
+        if (game_mode == RF_CTF) {
+            return _strnicmp(filename, "dm", 2) == 0 || _strnicmp(filename, "pdm", 3) == 0;
+        }
+        else {
+            return _strnicmp(filename, "ctf", 3) == 0 || _strnicmp(filename, "pctf", 4) == 0;
+        }
+    },
+};
+
 void ServerInit()
 {
     // Override rcon command whitelist
@@ -272,6 +284,13 @@ void ServerInit()
 
     InitLazyban();
     InitServerCommands();
+
+    // Remove level prefix restriction (dm/ctf) for 'level' command and dedicated_server.txt
+    AsmWritter(0x004350FE).nop(2);
+    AsmWritter(0x0046E179).nop(2);
+
+    // In Multi -> Create game fix level filtering so 'pdm' and 'pctf' is supported
+    MpIsLevelForGameMode_hook.Install();
 }
 
 void ServerCleanup()
