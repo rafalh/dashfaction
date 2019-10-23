@@ -27,6 +27,7 @@ Version 1.3.1
 - add item replacements support in dedicated_server.txt
 - add default player weapon class and ammo override support in dedicated_server.txt
 - add 'pctf' level name prefix support (server-side)
+- reset fpgun animation when player dies
 
 Version 1.3.0 (released 2019-05-07)
 -----------------------------------

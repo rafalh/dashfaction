@@ -109,6 +109,20 @@ void OnPlayerKill(rf::Player* killed_player, rf::Player* killer_player)
     }
 }
 
+FunHook<void(rf::EntityObj*)> EntityOnDeath_hook{
+    0x0041FDC0,
+    [](rf::EntityObj* entity) {
+        // Reset fpgun animation when player dies
+        if (entity->_super.handle == rf::local_player->entity_handle && rf::local_player->fpgun_mesh) {
+            auto AnimMeshResetAction = AddrAsRef<void(rf::AnimMesh*)>(0x00503400);
+            auto FpgunStopActionSound = AddrAsRef<void(rf::Player*)>(0x004A9490);
+            AnimMeshResetAction(rf::local_player->fpgun_mesh);
+            FpgunStopActionSound(rf::local_player);
+        }
+        EntityOnDeath_hook.CallTarget(entity);
+    },
+};
+
 void InitKill()
 {
     // Player kill handling
@@ -122,4 +136,7 @@ void InitKill()
     // Change player stats structure
     WriteMem<i8>(0x004A33B5 + 1, sizeof(PlayerStatsNew));
     MpResetNetGame_hook.Install();
+
+    // Reset fpgun animation when player dies
+    EntityOnDeath_hook.Install();
 }
