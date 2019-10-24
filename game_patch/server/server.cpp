@@ -97,7 +97,15 @@ void LoadAdditionalServerConfig(rf::StrParser& parser)
         g_additional_server_config.default_player_weapon = default_weapon.CStr();
 
         if (parser.OptionalString("+Initial Ammo:")) {
-            g_additional_server_config.default_player_weapon_ammo = {parser.GetUInt()};
+            auto ammo = parser.GetUInt();
+            g_additional_server_config.default_player_weapon_ammo = {ammo};
+
+            auto WeaponClsFind = AddrAsRef<int(const char*)>(0x004C81F0);
+            auto weapon_cls_id = WeaponClsFind(g_additional_server_config.default_player_weapon.c_str());
+            if (weapon_cls_id >= 0) {
+                auto& weapon_cls = rf::weapon_classes[weapon_cls_id];
+                weapon_cls.max_ammo_mp = std::max<int>(weapon_cls.max_ammo_mp, ammo);
+            }
         }
     }
 
