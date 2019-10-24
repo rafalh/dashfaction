@@ -257,10 +257,10 @@ FunHook<bool (const char*, int)> MpIsLevelForGameMode_hook{
     0x00445050,
     [](const char *filename, int game_mode) {
         if (game_mode == RF_CTF) {
-            return _strnicmp(filename, "dm", 2) == 0 || _strnicmp(filename, "pdm", 3) == 0;
+            return _strnicmp(filename, "ctf", 3) == 0 || _strnicmp(filename, "pctf", 4) == 0;
         }
         else {
-            return _strnicmp(filename, "ctf", 3) == 0 || _strnicmp(filename, "pctf", 4) == 0;
+            return _strnicmp(filename, "dm", 2) == 0 || _strnicmp(filename, "pdm", 3) == 0;
         }
     },
 };
