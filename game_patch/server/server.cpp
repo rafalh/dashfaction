@@ -236,7 +236,7 @@ CallHook<int(const char*)> find_rfl_item_class_hook{
 CallHook<int(const char*)> find_default_weapon_for_entity_hook{
     0x004A43DA,
     [](const char* weapon_name) {
-        if (rf::is_dedicated_server) {
+        if (rf::is_dedicated_server && !g_additional_server_config.default_player_weapon.empty()) {
             weapon_name = g_additional_server_config.default_player_weapon.c_str();
         }
         return find_default_weapon_for_entity_hook.CallTarget(weapon_name);
