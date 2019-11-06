@@ -8,6 +8,7 @@
 #include "LauncherCommandLineInfo.h"
 #include <common/GameConfig.h>
 #include <common/version.h>
+#include <common/ErrorUtils.h>
 #include <launcher_common/PatchedAppLauncher.h>
 
 #ifdef _DEBUG
@@ -152,7 +153,7 @@ bool LauncherApp::LaunchGame(HWND hwnd, const char* mod_name)
         {
             ss << "Game directory validation has failed: " << e.getFilename() << " file is missing!\n"
                 << "Please make sure game executable specified in options is located inside a valid Red Faction installation "
-                << "root directory."
+                << "root directory.";
         }
         else
         {
