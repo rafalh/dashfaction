@@ -702,6 +702,72 @@ CodeInjection glass_kill_init_fix{
         GlassKillInit();
     },
 };
+struct LevelSaveData
+{
+  char unk[0x18708];
+  uint8_t num_goal_create_events;
+  uint8_t num_alarm_siren_events;
+  uint8_t num_when_dead_events;
+  uint8_t num_cyclic_timer_events;
+  uint8_t num_make_invulnerable_events;
+  uint8_t num_other_events;
+  uint8_t num_emitters;
+  uint8_t num_decals;
+  uint8_t num_entities;
+  uint8_t num_items;
+  uint8_t num_clutter;
+  uint8_t num_triggers;
+  uint8_t num_keyframes;
+  uint8_t num_push_regions;
+  uint8_t num_persistent_goals;
+  uint8_t num_weapons;
+  uint8_t num_blood_smears;
+  uint8_t num_corpse;
+  uint8_t num_geomod_craters;
+  uint8_t num_killed_room_ids;
+  uint8_t num_dead_entities;
+  uint8_t num_deleted_events;
+  char field_1871F;
+};
+
+template<typename T>
+T validate_save_file_num(T value, T limit, const char* what)
+{
+    if (value > limit) {
+        WARN("Save file is corrupted: expected up to %d %s but got %d", limit, what, value);
+        return limit;
+    }
+    return value;
+}
+
+FunHook<void(LevelSaveData*)> SaveRestoreDeserializeAllObjects_hook{
+    0x004B4FB0,
+    [](LevelSaveData *data) {
+        data->num_goal_create_events = validate_save_file_num<uint8_t>(data->num_goal_create_events, 8, "goal_create events");
+        data->num_alarm_siren_events = validate_save_file_num<uint8_t>(data->num_alarm_siren_events, 8, "alarm_siren events");
+        data->num_when_dead_events = validate_save_file_num<uint8_t>(data->num_when_dead_events, 20, "when_dead events");
+        data->num_cyclic_timer_events = validate_save_file_num<uint8_t>(data->num_cyclic_timer_events, 12, "cyclic_timer events");
+        data->num_make_invulnerable_events = validate_save_file_num<uint8_t>(data->num_make_invulnerable_events, 8, "make_invulnerable events");
+        data->num_other_events = validate_save_file_num<uint8_t>(data->num_other_events, 32, "other events");
+        data->num_emitters = validate_save_file_num<uint8_t>(data->num_emitters, 16, "emitters");
+        data->num_decals = validate_save_file_num<uint8_t>(data->num_decals, 64, "decals");
+        data->num_entities = validate_save_file_num<uint8_t>(data->num_entities, 64, "entities");
+        data->num_items = validate_save_file_num<uint8_t>(data->num_items, 64, "items");
+        data->num_clutter = validate_save_file_num<uint16_t>(data->num_clutter, 512, "clutters");
+        data->num_triggers = validate_save_file_num<uint8_t>(data->num_triggers, 96, "triggers");
+        data->num_keyframes = validate_save_file_num<uint8_t>(data->num_keyframes, 128, "keyframes");
+        data->num_push_regions = validate_save_file_num<uint8_t>(data->num_push_regions, 32, "push regions");
+        data->num_persistent_goals = validate_save_file_num<uint8_t>(data->num_persistent_goals, 10, "persistent goals");
+        data->num_weapons = validate_save_file_num<uint8_t>(data->num_weapons, 8, "weapons");
+        data->num_blood_smears = validate_save_file_num<uint8_t>(data->num_blood_smears, 16, "blood smears");
+        data->num_corpse = validate_save_file_num<uint8_t>(data->num_corpse, 32, "corpses");
+        data->num_geomod_craters = validate_save_file_num<uint8_t>(data->num_geomod_craters, 128, "geomod craters");
+        data->num_killed_room_ids = validate_save_file_num<uint8_t>(data->num_killed_room_ids, 128, "killed rooms");
+        data->num_dead_entities = validate_save_file_num<uint8_t>(data->num_dead_entities, 64, "dead entities");
+        data->num_deleted_events = validate_save_file_num<uint8_t>(data->num_deleted_events, 32, "deleted events");
+        SaveRestoreDeserializeAllObjects_hook.CallTarget(data);
+    },
+};
 
 void MiscInit()
 {
@@ -907,6 +973,9 @@ void MiscInit()
     AsmWritter(0x004A4B4B).call(EntityIsReloading_SwitchWeapon_New);
     AsmWritter(0x004A4B77).call(EntityIsReloading_SwitchWeapon_New);
 #endif
+
+    // Fix crash caused by buffer overflows in level save/load code
+    SaveRestoreDeserializeAllObjects_hook.Install();
 }
 
 void MiscCleanup()
