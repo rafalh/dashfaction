@@ -7,10 +7,10 @@ int APIENTRY WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     try
     {
         // Start Win32++
-        LauncherApp theApp;
+        LauncherApp app;
 
         // Run the application
-        return theApp.Run();
+        return app.Run();
     }
 
     // catch all unhandled CException types

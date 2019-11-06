@@ -16,17 +16,15 @@ public:
     BOOL OnInitDialog() override;
     void InitToolTip();
 
-// Dialog Data
-#ifdef AFX_DESIGN_TIME
-	enum { IDD = IDD_OPTIONS };
-#endif
-
 protected:
-    BOOL PreTranslateMessage(MSG& pMsg) override;
+    BOOL PreTranslateMessage(MSG& msg) override;
     void OnOK() override;
     BOOL OnCommand(WPARAM wparam, LPARAM lparam) override;
 
-public:
+private:
+    void InitResolutionCombo();
+    void InitMsaaCombo();
+    void InitAnisotropyCheckbox();
     void OnBnClickedOk();
     void OnBnClickedExeBrowse();
     void OnBnClickedResetTrackerBtn();
@@ -37,6 +35,6 @@ private:
     std::vector<unsigned> m_multiSampleTypes;
     CToolTip *m_toolTip;
     GameConfig m_conf;
-    CComboBox resCombo;
-    CComboBox msaaCombo;
+    CComboBox m_resCombo;
+    CComboBox m_msaaCombo;
 };

@@ -14,9 +14,6 @@
 
 class LauncherApp : public CWinApp
 {
-public:
-	LauncherApp();
-
 // Overrides
 public:
     virtual BOOL InitInstance() override;
@@ -30,4 +27,8 @@ private:
     int Message(HWND hwnd, const char *pszText, const char *pszTitle, int Flags);
 };
 
-extern LauncherApp theApp;
+// returns a pointer to the CDialogDemoApp object
+inline LauncherApp& GetLauncherApp()
+{
+    return static_cast<LauncherApp&>(GetApp());
+}

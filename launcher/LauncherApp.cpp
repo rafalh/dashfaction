@@ -16,46 +16,19 @@
 #endif
 
 
-// LauncherApp construction
-
-LauncherApp::LauncherApp()
-{
-	// support Restart Manager
-	//m_dwRestartManagerSupportFlags = AFX_RESTART_MANAGER_SUPPORT_RESTART;
-
-	// TODO: add construction code here,
-	// Place all significant initialization in InitInstance
-}
-
 // LauncherApp initialization
-
 BOOL LauncherApp::InitInstance()
 {
 	// InitCommonControlsEx() is required on Windows XP if an application
 	// manifest specifies use of ComCtl32.dll version 6 or later to enable
 	// visual styles.  Otherwise, any window creation will fail.
-	INITCOMMONCONTROLSEX InitCtrls;
-	InitCtrls.dwSize = sizeof(InitCtrls);
-	// Set this to include all the common control classes you want to use
-	// in your application.
-	InitCtrls.dwICC = ICC_WIN95_CLASSES;
-	InitCommonControlsEx(&InitCtrls);
-
-	//CWinApp::InitInstance();
-
-
-	// Create the shell manager, in case the dialog contains
-	// any shell tree view or shell list view controls.
-	//CShellManager *pShellManager = new CShellManager;
-
-	// Activate "Windows Native" visual manager for enabling themes in MFC controls
-	//CMFCVisualManager::SetDefaultManager(RUNTIME_CLASS(CMFCVisualManagerWindows));
+    Win32xx::LoadCommonControls();
 
     // Command line parsing
-    LauncherCommandLineInfo CmdLineInfo;
-    //ParseCommandLine(CmdLineInfo);
+    LauncherCommandLineInfo cmd_line_info;
+    cmd_line_info.Parse();
 
-    if (CmdLineInfo.HasHelpFlag())
+    if (cmd_line_info.HasHelpFlag())
     {
         // Note: we can't use stdio console API in win32 application
         Message(NULL,
@@ -72,13 +45,13 @@ BOOL LauncherApp::InitInstance()
     MigrateConfig();
 
     // Launch game or editor based on command line flag
-    if (CmdLineInfo.HasGameFlag())
+    if (cmd_line_info.HasGameFlag())
     {
         LaunchGame(nullptr);
         return FALSE;
     }
 
-    if (CmdLineInfo.HasEditorFlag())
+    if (cmd_line_info.HasEditorFlag())
     {
         LaunchEditor(nullptr);
         return FALSE;
@@ -86,14 +59,7 @@ BOOL LauncherApp::InitInstance()
 
     // Show main dialog
 	MainDlg dlg;
-	// m_pMainWnd = &dlg;
-	INT_PTR nResponse = dlg.DoModal();
-
-	// Delete the shell manager created above.
-	// if (pShellManager != NULL)
-	// {
-	// 	delete pShellManager;
-	// }
+	dlg.DoModal();
 
 	// Since the dialog has been closed, return FALSE so that we exit the
 	//  application, rather than start the application's message pump.

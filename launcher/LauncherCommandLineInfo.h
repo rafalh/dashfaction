@@ -5,13 +5,23 @@
 class LauncherCommandLineInfo //: public CCommandLineInfo
 {
 public:
-    virtual void ParseParam(const char* pszParam, BOOL bFlag, BOOL bLast)
+    void Parse()
     {
-        if (bFlag && (!strcmp(pszParam, "game") || !strcmp(pszParam, "level") || !strcmp(pszParam, "dedicated")))
+        auto args = Win32xx::GetCommandLineArgs();
+        for (auto& arg : args) {
+            if (arg[0] == '-') {
+                ParseFlag(arg.c_str() + 1);
+            }
+        }
+    }
+
+    void ParseFlag(const char* flag_name)
+    {
+        if (!strcmp(flag_name, "game") || !strcmp(flag_name, "level") || !strcmp(flag_name, "dedicated"))
             m_game = true;
-        if (bFlag && !strcmp(pszParam, "editor"))
+        if (!strcmp(flag_name, "editor"))
             m_editor = true;
-        if (bFlag && (!strcmp(pszParam, "help") || !strcmp(pszParam, "h")))
+        if (!strcmp(flag_name, "help") || !strcmp(flag_name, "h"))
             m_help = true;
     }
 

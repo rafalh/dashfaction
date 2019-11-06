@@ -13,39 +13,33 @@ class UpdateChecker;
 // MainDlg dialog
 class MainDlg : public CDialog
 {
-// Construction
 public:
-    MainDlg();	// standard constructor
-
-// Dialog Data
-#ifdef AFX_DESIGN_TIME
-    enum { IDD = IDD_MAIN };
-#endif
+    // constructor
+    MainDlg();
 
 protected:
-    void RefreshModSelector();
-    CString GetSelectedMod();
-    void AfterLaunch();
+    BOOL OnInitDialog() override;
     void OnOK() override;
     BOOL OnCommand(WPARAM wparam, LPARAM lparam) override;
-
-// Implementation
-protected:
-    HICON m_hIcon;
-    UpdateChecker *m_pUpdateChecker;
-    CToolTip m_ToolTip;
-    CStatic picture;
-    CComboBox mod_selector;
-
-	// Generated message map functions
-    BOOL OnInitDialog() override;
     INT_PTR DialogProc(UINT msg, WPARAM wparam, LPARAM lparam) override;
     BOOL PreTranslateMessage(MSG& Msg) override;
 
+private:
     LRESULT OnUpdateCheck(WPARAM wParam, LPARAM lParam);
-public:
     void OnBnClickedOptionsBtn();
     void OnBnClickedOk();
     void OnBnClickedEditorBtn();
     void OnBnClickedSupportBtn();
+    void RefreshModSelector();
+    CString GetSelectedMod();
+    void AfterLaunch();
+
+protected:
+    // Controls
+    CStatic m_picture;
+    CStatic m_update_status;
+    CComboBox m_mod_selector;
+
+    UpdateChecker *m_pUpdateChecker;
+    CToolTip m_ToolTip;
 };
