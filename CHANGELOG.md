@@ -4,7 +4,8 @@ DashFaction Changelog
 Version 1.3.1
 -------------
 - vote system (server-side)
-- rework high FPS jump fix - should fix free-fall animation bug and occasionally sticking to ground on FPS > 150
+- rework fix for sticking to ground when jumping - now it is based on PF code (by Trotskie) - should fix free-fall
+animation bug in multi-player and occasionally sticking to ground in some levels
 - add 'map_ext' command for extending round time (server-side)
 - fix font texture leak (RF bug)
 - increase precision of output from 'ms' command

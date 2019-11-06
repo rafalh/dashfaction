@@ -200,21 +200,22 @@ DcCommand2 detect_ftol_issues_cmd{
 
 #endif // DEBUG
 
-CodeInjection entity_floor_collision_after_jump_fix{
-    0x004A0995,
-    [](auto& regs) {
-        rf::EntityObj* entity = reinterpret_cast<rf::EntityObj*>(regs.esi);
-        rf::Vector3& down_pos = *reinterpret_cast<rf::Vector3*>(regs.esp + 0x9C - 0x84);
-        static auto& EntityIsFalling = AddrAsRef<bool(rf::EntityObj*)>(0x0042A020);
-        static auto& gravity = AddrAsRef<float>(0x005A00DC);
+rf::Timer g_player_jump_timer;
 
-        bool is_falling = EntityIsFalling(entity);
-        if (is_falling) {
-            float vel_y = entity->_super.phys_info.vel.y - gravity * rf::frametime * 1.1f;
-            down_pos.y -= 0.05f - std::min(vel_y, 0.0f) * rf::frametime * 1.1f;
-            regs.eip = 0x004A09CB;
-        } else {
-            regs.eip = 0x004A09AE;
+CodeInjection stuck_to_ground_when_jumping_fix{
+    0x0042891E,
+    []([[ maybe_unused ]] auto& regs) {
+        // Skip land handling code for next 64 ms
+        g_player_jump_timer.Set(64);
+    },
+};
+
+CodeInjection stuck_to_ground_when_jumping_fix2{
+    0x00487F82,
+    [](auto& regs) {
+        if (g_player_jump_timer.IsSet() && !g_player_jump_timer.IsFinished()) {
+            // Jump to jump handling code that sets entity to falling movement mode
+            regs.eip = 0x00487F7B;
         }
     },
 };
@@ -317,8 +318,9 @@ void HighFpsInit()
     detect_ftol_issues_cmd.Register();
 #endif
 
-    // Fix jumping on high FPS
-    entity_floor_collision_after_jump_fix.Install();
+    // Fix player being stuck to ground when jumping, especially when FPS is greater than 200
+    stuck_to_ground_when_jumping_fix.Install();
+    stuck_to_ground_when_jumping_fix2.Install();
 
     // Fix water deceleration on high FPS
     AsmWritter(0x0049D816).nop(5);
