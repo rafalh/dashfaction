@@ -295,10 +295,10 @@ CodeInjection cutscene_shot_sync_fix{
     0x0045B43B,
     [](X86Regs& regs) {
         auto& current_shot_idx = StructFieldRef<int>(rf::active_cutscene, 0x808);
-        void* current_shot_timer = reinterpret_cast<char*>(rf::active_cutscene) + 0x810;
+        auto& current_shot_timer = StructFieldRef<rf::Timer>(rf::active_cutscene, 0x810);
         if (current_shot_idx > 1) {
             // decrease time for next shot using current shot timer value
-            int shot_time_left_ms = rf::Timer__GetTimeLeftMs(current_shot_timer);
+            int shot_time_left_ms = current_shot_timer.GetTimeLeftMs();
             if (shot_time_left_ms > 0 || shot_time_left_ms < -100)
                 WARN("invalid shot_time_left_ms %d", shot_time_left_ms);
             regs.eax += shot_time_left_ms;

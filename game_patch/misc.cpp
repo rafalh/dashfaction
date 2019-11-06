@@ -441,9 +441,9 @@ FunHook<void(bool)> MenuInGameUpdateCutscene_hook{
             auto& timer_base = AddrAsRef<int64_t>(0x01751BF8);
             auto& timer_freq = AddrAsRef<int32_t>(0x01751C04);
             auto& frame_time = AddrAsRef<float>(0x005A4014);
-            auto& current_shot_idx = StructFieldRef<int>(rf::active_cutscene, 0x808);
-            void* current_shot_timer = reinterpret_cast<char*>(rf::active_cutscene) + 0x810;
             auto& num_shots = StructFieldRef<int>(rf::active_cutscene, 4);
+            auto& current_shot_idx = StructFieldRef<int>(rf::active_cutscene, 0x808);
+            auto& current_shot_timer = StructFieldRef<rf::Timer>(rf::active_cutscene, 0x810);
 
             if (g_cutscene_bg_sound_sig != -1) {
                 snd_stop(g_cutscene_bg_sound_sig);
@@ -455,7 +455,7 @@ FunHook<void(bool)> MenuInGameUpdateCutscene_hook{
             rf::sound_enabled = false;
 
             while (rf::CutsceneIsActive()) {
-                int shot_time_left_ms = rf::Timer__GetTimeLeftMs(current_shot_timer);
+                int shot_time_left_ms = current_shot_timer.GetTimeLeftMs();
 
                 if (current_shot_idx == num_shots - 1) {
                     // run last half second with a speed of 10 FPS so all events get properly processed before

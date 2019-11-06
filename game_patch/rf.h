@@ -233,7 +233,30 @@ namespace rf
 
     struct Timer
     {
-        int end_time_ms;
+        int end_time_ms = -1;
+
+        bool IsFinished() const
+        {
+            auto fun_ptr = reinterpret_cast<bool(__thiscall*)(const Timer*)>(0x004FA3F0);
+            return fun_ptr(this);
+        }
+
+        void Set(int value_ms)
+        {
+            auto fun_ptr = reinterpret_cast<void(__thiscall*)(Timer*, int)>(0x004FA360);
+            fun_ptr(this, value_ms);
+        }
+
+        bool IsSet() const
+        {
+            return end_time_ms >= 0;
+        }
+
+        int GetTimeLeftMs() const
+        {
+            auto fun_ptr = reinterpret_cast<int(__thiscall*)(const Timer*)>(0x004FA420);
+            return fun_ptr(this);
+        }
     };
 
     struct Color
@@ -946,18 +969,18 @@ namespace rf
         Matrix3 yaw_rot;
     };
 
-    struct WaterSplashUnk
+    struct CollisionInfo
     {
-        Vector3 field_1b4;
-        Vector3 field_1c0;
-        float field_1cc;
-        int field_1d0;
-        float field_1d4;
-        Vector3 field_1d8;
-        int unk_entity_handle;
-        int field_1e8;
-        int water_splash_1_ec;
-        int field_3c;
+        Vector3 hit_point;
+        Vector3 normal;
+        float fraction;
+        int material_idx;
+        int field_20;
+        Vector3 obj_vel;
+        int obj_handle;
+        int texture;
+        int field_38;
+        void* face;
         int field_40;
     };
 
@@ -986,7 +1009,7 @@ namespace rf
         PhysicsFlags flags;
         int flags_splash_1_ac;
         float frame_time;
-        WaterSplashUnk water_splash_unk;
+        CollisionInfo floor_collision_info;
     };
     static_assert(sizeof(PhysicsInfo) == 0x170, "invalid size");
 
@@ -1725,7 +1748,6 @@ namespace rf
     static auto& DemoLoadLevel = AddrAsRef<void(const char *level_filename)>(0x004CC270);
     static auto& SetCursorVisible = AddrAsRef<void(bool visible)>(0x0051E680);
     static auto& CutsceneIsActive = AddrAsRef<bool()>(0x0045BE80);
-    static const auto Timer__GetTimeLeftMs = reinterpret_cast<int(__thiscall*)(void* timer)>(0x004FA420);
     static auto& TimerGet = AddrAsRef<int(int mult)>(0x00504AB0);
     static auto& GeomClearCache = AddrAsRef<void()>(0x004F0B90);
     static auto& FileGetChecksum = AddrAsRef<int(const char* filename)>(0x00436630);
