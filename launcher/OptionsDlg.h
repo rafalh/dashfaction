@@ -12,16 +12,14 @@ class OptionsDlg : public CDialog
 {
 public:
 	OptionsDlg();   // standard constructor
-	virtual ~OptionsDlg();
-    BOOL OnInitDialog() override;
-    void InitToolTip();
 
 protected:
-    BOOL PreTranslateMessage(MSG& msg) override;
+    BOOL OnInitDialog() override;
     void OnOK() override;
     BOOL OnCommand(WPARAM wparam, LPARAM lparam) override;
 
 private:
+    void InitToolTip();
     void InitResolutionCombo();
     void InitMsaaCombo();
     void InitAnisotropyCheckbox();
@@ -33,7 +31,7 @@ private:
 private:
     VideoDeviceInfoProvider m_videoInfo;
     std::vector<unsigned> m_multiSampleTypes;
-    CToolTip *m_toolTip;
+    CToolTip m_toolTip;
     GameConfig m_conf;
     CComboBox m_resCombo;
     CComboBox m_msaaCombo;

@@ -1,7 +1,3 @@
-
-// MainDlg.h : header file
-//
-
 #pragma once
 
 #include <wxx_wincore.h>
@@ -10,11 +6,10 @@
 
 class UpdateChecker;
 
-// MainDlg dialog
 class MainDlg : public CDialog
 {
 public:
-    // constructor
+    // Constructor
     MainDlg();
 
 protected:

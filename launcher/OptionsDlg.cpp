@@ -13,18 +13,8 @@
 // OptionsDlg dialog
 
 OptionsDlg::OptionsDlg()
-	: CDialog(IDD_OPTIONS), m_toolTip(nullptr)
+	: CDialog(IDD_OPTIONS)
 {
-
-}
-
-OptionsDlg::~OptionsDlg()
-{
-    if (m_toolTip)
-    {
-        delete m_toolTip;
-        m_toolTip = nullptr;
-    }
 }
 
 BOOL OptionsDlg::OnInitDialog()
@@ -162,44 +152,34 @@ void OptionsDlg::InitAnisotropyCheckbox()
 
 void OptionsDlg::InitToolTip()
 {
-    m_toolTip = new CToolTip();
-    m_toolTip->Create(*this);
+    m_toolTip.Create(*this);
 
-    m_toolTip->AddTool(GetDlgItem(IDC_RESOLUTIONS_COMBO), "Please select resolution from provided dropdown list - custom resolution is supposed to work in Windowed/Stretched mode only");
-    m_toolTip->AddTool(GetDlgItem(IDC_STRETCHED_RADIO), "Full Screen Windowed - reduced performance but faster to switch to other window");
-    m_toolTip->AddTool(GetDlgItem(IDC_VSYNC_CHECK), "Enable vertical synchronization (should limit FPS to monitor refresh rate - usually 60)");
-    m_toolTip->AddTool(GetDlgItem(IDC_MAX_FPS_EDIT), "FPS limit - maximal value is 240 - high FPS can trigger minor bugs in game");
-    m_toolTip->AddTool(GetDlgItem(IDC_FAST_ANIMS_CHECK), "Reduce animation smoothness for far models");
-    m_toolTip->AddTool(GetDlgItem(IDC_DISABLE_LOD_CHECK), "Improve details for far models");
-    m_toolTip->AddTool(GetDlgItem(IDC_ANISOTROPIC_CHECK), "Improve far textures quality");
-    m_toolTip->AddTool(GetDlgItem(IDC_FPS_COUNTER_CHECK), "Enable FPS counter in right-top corner of the screen");
-    m_toolTip->AddTool(GetDlgItem(IDC_HIGH_SCANNER_RES_CHECK), "Increase scanner resolution (used by Rail Gun, Rocket Launcher and Fusion Launcher)");
-    m_toolTip->AddTool(GetDlgItem(IDC_HIGH_MON_RES_CHECK), "Increase monitors and mirrors resolution");
-    m_toolTip->AddTool(GetDlgItem(IDC_TRUE_COLOR_TEXTURES_CHECK), "Increase texture color depth - especially visible for lightmaps and shadows");
-    m_toolTip->AddTool(GetDlgItem(IDC_TRACKER_EDIT), "Hostname of tracker used to find avaliable Multiplayer servers");
-    m_toolTip->AddTool(GetDlgItem(IDC_FAST_START_CHECK), "Skip game intro videos and go straight to Main Menu");
-    m_toolTip->AddTool(GetDlgItem(IDC_DIRECT_INPUT_CHECK), "Use DirectInput for mouse input handling");
-    m_toolTip->AddTool(GetDlgItem(IDC_FORCE_PORT_CHECK), "If not checked automatic port is used");
-    m_toolTip->AddTool(GetDlgItem(IDC_SCOREBOARD_ANIM_CHECK), "Scoreboard open/close animations");
-    m_toolTip->AddTool(GetDlgItem(IDC_LEVEL_SOUNDS_CHECK), "Enable/disable Play Sound and Ambient Sound objects in level. You can also specify volume multiplier by using levelsounds command in game.");
-    m_toolTip->AddTool(GetDlgItem(IDC_ALLOW_OVERWRITE_GAME_CHECK), "Enable this if you want to modify game content by putting mods into user_maps folder. Can have side effect of level packfiles modyfing common textures/sounds.");
-    m_toolTip->AddTool(GetDlgItem(IDC_KEEP_LAUNCHER_OPEN_CHECK), "Keep launcher window open after game or editor launch");
-    m_toolTip->AddTool(GetDlgItem(IDC_LINEAR_PITCH_CHECK), "Stop mouse movement from slowing down when looking up and down");
-
-    m_toolTip->Activate(TRUE);
-}
-
-BOOL OptionsDlg::PreTranslateMessage(MSG& Msg)
-{
-    if (m_toolTip)
-        m_toolTip->RelayEvent(Msg);
-
-    return CDialog::PreTranslateMessage(Msg);
+    m_toolTip.AddTool(GetDlgItem(IDC_RESOLUTIONS_COMBO), "Please select resolution from provided dropdown list - custom resolution is supposed to work in Windowed/Stretched mode only");
+    m_toolTip.AddTool(GetDlgItem(IDC_STRETCHED_RADIO), "Full Screen Windowed - reduced performance but faster to switch to other window");
+    m_toolTip.AddTool(GetDlgItem(IDC_VSYNC_CHECK), "Enable vertical synchronization (should limit FPS to monitor refresh rate - usually 60)");
+    m_toolTip.AddTool(GetDlgItem(IDC_MAX_FPS_EDIT), "FPS limit - maximal value is 240 - high FPS can trigger minor bugs in game");
+    m_toolTip.AddTool(GetDlgItem(IDC_FAST_ANIMS_CHECK), "Reduce animation smoothness for far models");
+    m_toolTip.AddTool(GetDlgItem(IDC_DISABLE_LOD_CHECK), "Improve details for far models");
+    m_toolTip.AddTool(GetDlgItem(IDC_ANISOTROPIC_CHECK), "Improve far textures quality");
+    m_toolTip.AddTool(GetDlgItem(IDC_FPS_COUNTER_CHECK), "Enable FPS counter in right-top corner of the screen");
+    m_toolTip.AddTool(GetDlgItem(IDC_HIGH_SCANNER_RES_CHECK), "Increase scanner resolution (used by Rail Gun, Rocket Launcher and Fusion Launcher)");
+    m_toolTip.AddTool(GetDlgItem(IDC_HIGH_MON_RES_CHECK), "Increase monitors and mirrors resolution");
+    m_toolTip.AddTool(GetDlgItem(IDC_TRUE_COLOR_TEXTURES_CHECK), "Increase texture color depth - especially visible for lightmaps and shadows");
+    m_toolTip.AddTool(GetDlgItem(IDC_TRACKER_EDIT), "Hostname of tracker used to find avaliable Multiplayer servers");
+    m_toolTip.AddTool(GetDlgItem(IDC_FAST_START_CHECK), "Skip game intro videos and go straight to Main Menu");
+    m_toolTip.AddTool(GetDlgItem(IDC_DIRECT_INPUT_CHECK), "Use DirectInput for mouse input handling");
+    m_toolTip.AddTool(GetDlgItem(IDC_FORCE_PORT_CHECK), "If not checked automatic port is used");
+    m_toolTip.AddTool(GetDlgItem(IDC_SCOREBOARD_ANIM_CHECK), "Scoreboard open/close animations");
+    m_toolTip.AddTool(GetDlgItem(IDC_LEVEL_SOUNDS_CHECK), "Enable/disable Play Sound and Ambient Sound objects in level. You can also specify volume multiplier by using levelsounds command in game.");
+    m_toolTip.AddTool(GetDlgItem(IDC_ALLOW_OVERWRITE_GAME_CHECK), "Enable this if you want to modify game content by putting mods into user_maps folder. Can have side effect of level packfiles modyfing common textures/sounds.");
+    m_toolTip.AddTool(GetDlgItem(IDC_KEEP_LAUNCHER_OPEN_CHECK), "Keep launcher window open after game or editor launch");
+    m_toolTip.AddTool(GetDlgItem(IDC_LINEAR_PITCH_CHECK), "Stop mouse movement from slowing down when looking up and down");
 }
 
 void OptionsDlg::OnOK()
 {
     OnBnClickedOk();
+    CDialog::OnOK();
 }
 
 BOOL OptionsDlg::OnCommand(WPARAM wparam, LPARAM lparam)
@@ -222,8 +202,6 @@ BOOL OptionsDlg::OnCommand(WPARAM wparam, LPARAM lparam)
 
     return FALSE;
 }
-
-// OptionsDlg message handlers
 
 void OptionsDlg::OnBnClickedOk()
 {
@@ -288,10 +266,7 @@ void OptionsDlg::OnBnClickedOk()
     {
         MessageBoxA(e.what(), NULL, MB_ICONERROR | MB_OK);
     }
-
-    CDialog::OnOK();
 }
-
 
 void OptionsDlg::OnBnClickedExeBrowse()
 {
@@ -302,7 +277,6 @@ void OptionsDlg::OnBnClickedExeBrowse()
     if (dlg.DoModal(*this) == IDOK)
         SetDlgItemText(IDC_EXE_PATH_EDIT, dlg.GetPathName());
 }
-
 
 void OptionsDlg::OnBnClickedResetTrackerBtn()
 {

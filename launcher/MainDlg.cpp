@@ -54,7 +54,6 @@ BOOL MainDlg::OnInitDialog()
     RefreshModSelector();
 
     m_ToolTip.Create(*this);
-    m_ToolTip.Activate(TRUE);
 
 #ifdef NDEBUG
     m_pUpdateChecker = new UpdateChecker(*this);
