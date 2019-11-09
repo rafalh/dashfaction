@@ -3,32 +3,34 @@ DashFaction Changelog
 
 Version 1.3.1
 -------------
-- vote system (server-side)
-- rework fix for sticking to ground when jumping - now it is based on PF code (by Trotskie) - should fix free-fall
-animation bug in multi-player and occasionally sticking to ground in some levels
+- add free spectate support
+- add vote system (server-side)
+- rework fix for sticking to the ground when jumping - now it is based on PF code (by Trotskie) - should fix free-fall
+animation bug in multi-player and occasionally sticking to the ground in some levels
 - add 'map_ext' command for extending round time (server-side)
-- fix font texture leak (RF bug)
 - increase precision of output from 'ms' command
 - add 'show_invisible_faces' subcommand in 'debug' command
-- fix 'debug' command not flushing geometry cache when disabling flags
 - make sure log file is not spammed by errors happening every frame
 - allow cursor movement outside of game window when in menu
 - slightly optimize screenshot capturing
-- fix dedicated server crash when loading level with screens
-- add free spectate support
-- fix submarine exploding bug if L5S3 level was loaded using 'level' command
-- fix killed glass restoration from a save file
 - add optional hit-sounds in dedicated server
 - add 'map_rest', 'map_next', 'map_prev' commands
 - add optional Win32 native console support in dedicated server mode
 - remove stripping of '%' character in chat messages
-- fix very long startup on Windows XP in some hardware configurations
 - make sure required registry values are always created on game launch
 - improve FPS limit accuracy
 - add item replacements support in dedicated_server.txt
 - add default player weapon class and ammo override support in dedicated_server.txt
 - add 'pctf' level name prefix support (server-side)
 - reset fpgun animation when player dies
+- sync kills/deaths statistics when joining to Pure Faction servers
+- reduce launcher size and allow building it on Linux after replacing MFC by Win32++ library
+- fix VRAM leak on level load caused by font textures (RF bug)
+- fix 'debug' command not flushing geometry cache when disabling flags
+- fix dedicated server crash when loading level with screens
+- fix submarine exploding bug if L5S3 level was loaded using 'level' command
+- fix killed glass restoration from a save file
+- fix very long startup on Windows XP in some hardware configurations
 - fix crash when saving/loading custom levels with a lot of objects
 
 Version 1.3.0 (released 2019-05-07)
