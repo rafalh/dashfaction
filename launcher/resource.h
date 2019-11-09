@@ -2,6 +2,7 @@
 // Microsoft Visual C++ generated include file.
 // Used by DashFactionLauncher.rc
 //
+#define IDC_STATIC -1
 #define IDC_SUPPORT_BTN                 3
 #define IDR_ICON                        100
 #define IDD_MAIN                        101
@@ -45,7 +46,7 @@
 #define IDC_LINEAR_PITCH_CHECK          1035
 
 // Next default values for new objects
-// 
+//
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        104
