@@ -75,7 +75,7 @@ void LoadAdditionalServerConfig(rf::StrParser& parser)
     if (parser.OptionalString("$DF Spawn Protection Duration:")) {
         g_additional_server_config.spawn_protection_duration_ms = parser.GetUInt();
     }
-    if (parser.OptionalString("$Hitsounds:")) {
+    if (parser.OptionalString("$DF Hitsounds:")) {
         g_additional_server_config.hit_sounds.enabled = parser.GetBool();
         if (parser.OptionalString("+Sound ID:")) {
             g_additional_server_config.hit_sounds.sound_id = parser.GetUInt();
