@@ -370,7 +370,8 @@ void GraphicsInit()
         }
     }
 
-    // WriteMem<u8>(0x00524C98, ASM_SHORT_JMP_REL); // disable window hooks
+    // Disable keyboard hooks (they were supposed to block alt-tab; they does not work in modern OSes anyway)
+    WriteMem<u8>(0x00524C98, ASM_SHORT_JMP_REL);
 
 #if D3D_SWAP_DISCARD
     // Use Discard Swap Mode
