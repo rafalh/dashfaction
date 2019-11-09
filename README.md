@@ -78,11 +78,11 @@ Dash Faction specific arguments:
 
 Problems
 --------
-If antivirus detects Dash Faction as a malicious program try to disable Reputation Services. It can help
-because some antiviruses flags new not popular files as danger just because they are not popular among users
-and Dash Faction is certainly not very popular :)
-I had some problems with Avast silently removing launcher exe and had to add Dash Faction to exclusions of
-Behaviour Shield.
+If your anti-virus software detects Dash Faction as a malicious program add it to a whitelist or try to disable
+reputation based heuristics in the anti-virus options. It can help because some anti-virus programs flags new
+not popular files as danger just because they are not popular among users.
+If you do not trust this Dash Faction author you can review its code and compile it yourself - keep in mind it is
+open-source software.
 
 During video capture in OBS please disable MSAA in Options - it does not perform well together.
 
@@ -92,8 +92,8 @@ launcher main window).
 Additional server configuration
 -------------------------------
 Dedicated server specific settings are configured in `dedicated_server.txt` file.
-Dash Faction specific configuration must be after the level list (`$Level` keys) and must appear in the order provided
-in this description.
+Dash Faction specific configuration must be placed below the level list (`$Level` keys) and must appear in the order
+provided in this description.
 
 Configuration example:
 
@@ -118,7 +118,7 @@ Configuration example:
     // Duration of player invulnerability after respawn in ms (default is the same as in stock RF - 1500)
     $DF Spawn Protection Duration: 1500
     // Enable hit-sounds
-    $Hitsounds: true
+    $DF Hitsounds: true
         // Sound used for hit notification
         +Sound ID: 29
         // max sound packets per second - keep it low to save bandwidth
