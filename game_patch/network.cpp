@@ -12,6 +12,7 @@
 #include <cstddef>
 #include <functional>
 #include <common/rfproto.h>
+#include <common/version.h>
 
 #if MASK_AS_PF
 #include "purefaction/pf.h"
@@ -530,6 +531,48 @@ CallHook<int(void*, int, int, rf::NwAddr&, int)> nw_get_packet_tracker_hook{
     },
 };
 
+constexpr uint32_t DASH_FACTION_SIGNATURE = 0xDA58FAC7;
+
+// Appended to game_info and join_req packets
+struct df_sign_packet_ext
+{
+    uint32_t df_signature; // DASH_FACTION_SIGNATURE
+    uint8_t version_major;
+    uint8_t version_minor;
+};
+
+std::pair<std::unique_ptr<std::byte[]>, size_t> ExtendPacketWithDashFactionSignature(std::byte* data, size_t len)
+{
+    df_sign_packet_ext ext;
+    ext.df_signature = DASH_FACTION_SIGNATURE;
+    ext.version_major = VERSION_MAJOR;
+    ext.version_minor = VERSION_MINOR;
+    auto new_data = std::make_unique<std::byte[]>(len + sizeof(ext));
+    std::copy(data, data + len, new_data.get());
+    std::copy(&ext, &ext + 1, reinterpret_cast<df_sign_packet_ext*>(new_data.get() + len));
+    auto& new_header = *reinterpret_cast<rfPacketHeader*>(new_data.get());
+    new_header.size += sizeof(ext);
+    return {std::move(new_data), len + sizeof(ext)};
+}
+
+CallHook<int(const rf::NwAddr*, std::byte*, size_t)> send_game_info_packet_hook{
+    0x0047B287,
+    [](const rf::NwAddr* addr, std::byte* data, size_t len) {
+        // Add Dash Faction signature to game_info packet
+        auto [new_data, new_len] = ExtendPacketWithDashFactionSignature(data, len);
+        return send_game_info_packet_hook.CallTarget(addr, new_data.get(), new_len);
+    },
+};
+
+CallHook<int(const rf::NwAddr*, std::byte*, size_t)> send_join_req_packet_hook{
+    0x0047ABFB,
+    [](const rf::NwAddr* addr, std::byte* data, size_t len) {
+        // Add Dash Faction signature to join_req packet
+        auto [new_data, new_len] = ExtendPacketWithDashFactionSignature(data, len);
+        return send_join_req_packet_hook.CallTarget(addr, new_data.get(), new_len);
+    },
+};
+
 void NetworkInit()
 {
     /* ProcessGamePackets hook (not reliable only) */
@@ -628,4 +671,8 @@ void NetworkInit()
 
     // Make sure tracker packets come from configured tracker
     nw_get_packet_tracker_hook.Install();
+
+    // Add Dash Faction signature to game_info and join_req packets
+    send_game_info_packet_hook.Install();
+    send_join_req_packet_hook.Install();
 }
