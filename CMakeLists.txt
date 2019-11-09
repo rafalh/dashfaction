@@ -16,8 +16,13 @@ if(MSVC)
     )
 endif()
 
-# needed for PROCESS_DEP_ENABLE on MinGW
-add_definitions(-D_WIN32_WINNT=0x0601)
+# Set target Windows version to XP SP3
+add_definitions(
+	-DWINVER=0x0501
+	# needed for PROCESS_DEP_ENABLE on MinGW
+	-D_WIN32_WINNT=0x0601
+	-D_WIN32_IE=0x0501
+)
 
 include_directories(include)
 
