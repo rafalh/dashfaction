@@ -16,7 +16,7 @@ private:
     int Message(HWND hwnd, const char *pszText, const char *pszTitle, int Flags);
 };
 
-inline LauncherApp& GetLauncherApp()
+inline LauncherApp* GetLauncherApp()
 {
-    return static_cast<LauncherApp&>(GetApp());
+    return static_cast<LauncherApp*>(GetApp());
 }

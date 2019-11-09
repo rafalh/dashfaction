@@ -46,7 +46,7 @@ BOOL MainDlg::OnInitDialog()
     AttachItem(IDC_UPDATE_STATUS, m_update_status);
 
     // Set header bitmap
-    HBITMAP hbm = (HBITMAP)GetApp().LoadImage(MAKEINTRESOURCE(IDB_HEADER), IMAGE_BITMAP, 0, 0, 0);
+    HBITMAP hbm = (HBITMAP)GetApp()->LoadImage(MAKEINTRESOURCE(IDB_HEADER), IMAGE_BITMAP, 0, 0, 0);
     m_picture.SetBitmap(hbm);
 
 
@@ -184,7 +184,7 @@ void MainDlg::OnBnClickedOk()
 
     CString selected_mod = GetSelectedMod();
 
-    if (GetLauncherApp().LaunchGame(*this, selected_mod))
+    if (GetLauncherApp()->LaunchGame(*this, selected_mod))
         AfterLaunch();
 }
 
@@ -194,7 +194,7 @@ void MainDlg::OnBnClickedEditorBtn()
         m_pUpdateChecker->abort();
 
     CStringA selected_mod = GetSelectedMod();
-    if (GetLauncherApp().LaunchEditor(*this, selected_mod))
+    if (GetLauncherApp()->LaunchEditor(*this, selected_mod))
         AfterLaunch();
 }
 
