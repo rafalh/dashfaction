@@ -1,5 +1,6 @@
 include_directories(
     ${CMAKE_SOURCE_DIR}/vendor/d3d8
+    ${CMAKE_SOURCE_DIR}/common/include
 )
 
 if(NOT MSVC)

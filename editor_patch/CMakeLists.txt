@@ -8,7 +8,7 @@ if(NOT MSVC)
 endif()
 
 file(GLOB SRCS *.cpp *.h)
-add_library(DashEditor SHARED ${SRCS})
+add_library(DashEditor SHARED ${SRCS} resources.rc)
 
 target_compile_features(DashEditor PUBLIC cxx_std_17)
 set_target_properties(DashEditor PROPERTIES CXX_EXTENSIONS NO)
