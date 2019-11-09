@@ -544,7 +544,7 @@ namespace rf
 
         float GetFloat()
         {
-            return reinterpret_cast<int(__thiscall*)(StrParser*)>(0x00512920)(this);
+            return reinterpret_cast<float(__thiscall*)(StrParser*)>(0x00512920)(this);
         }
 
         int GetString(String *out_str, char first_char = '"', char last_char = '"')

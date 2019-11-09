@@ -715,7 +715,7 @@ struct LevelSaveData
   uint8_t num_decals;
   uint8_t num_entities;
   uint8_t num_items;
-  uint8_t num_clutter;
+  uint16_t num_clutter;
   uint8_t num_triggers;
   uint8_t num_keyframes;
   uint8_t num_push_regions;
@@ -729,6 +729,7 @@ struct LevelSaveData
   uint8_t num_deleted_events;
   char field_1871F;
 };
+static_assert(sizeof(LevelSaveData) == 0x18720);
 
 template<typename T>
 T validate_save_file_num(T value, T limit, const char* what)

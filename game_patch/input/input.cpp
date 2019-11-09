@@ -2,6 +2,7 @@
 #include <patch_common/CodeInjection.h>
 #include <windows.h>
 #include <dinput.h>
+#include <algorithm>
 #include "../rf.h"
 #include "../commands.h"
 #include "../main.h"

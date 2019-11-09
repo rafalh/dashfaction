@@ -220,7 +220,7 @@ private:
             }
 
             if (insn_buf[0] == 0xE8) {
-                out << StringFormat("%08X\n", reinterpret_cast<unsigned>(potential_call_addr));
+                out << StringFormat("%08X\n", static_cast<unsigned>(potential_call_addr));
             }
         }
 

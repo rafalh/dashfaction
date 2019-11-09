@@ -4,6 +4,7 @@
 #include <patch_common/AsmWritter.h>
 #include <windows.h>
 #include <thread>
+#include <algorithm>
 #include "../rf.h"
 
 #if SERVER_WIN32_CONSOLE

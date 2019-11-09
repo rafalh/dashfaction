@@ -3,6 +3,7 @@
 #include <string_view>
 #include <string>
 #include <map>
+#include <optional>
 #include "../rf.h"
 
 struct VoteConfig

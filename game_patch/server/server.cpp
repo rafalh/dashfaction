@@ -4,6 +4,7 @@
 #include <patch_common/ShortTypes.h>
 #include <common/BuildConfig.h>
 #include <common/rfproto.h>
+#include <algorithm>
 #include "server.h"
 #include "server_internal.h"
 #include "../commands.h"
@@ -28,10 +29,10 @@ void SendChatLinePacket(const char* msg, rf::Player* target, rf::Player* sender,
     uint8_t buf[512];
     rfMessage& packet = *reinterpret_cast<rfMessage*>(buf);
     packet.type = RF_MESSAGE;
-    packet.size = strlen(msg) + 3;
+    packet.size = static_cast<uint16_t>(std::strlen(msg) + 3);
     packet.player_id = sender ? sender->nw_data->player_id : 0xFF;
     packet.is_team_msg = is_team_msg;
-    strncpy(packet.message, msg, 255);
+    std::strncpy(packet.message, msg, 255);
     packet.message[255] = 0;
     if (target == nullptr) {
         rf::NwSendReliablePacketToAll(buf, packet.size + 3, 0);

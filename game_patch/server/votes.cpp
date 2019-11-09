@@ -5,13 +5,14 @@
 #include "../main.h"
 #include <map>
 #include <set>
+#include <ctime>
 
 struct Vote
 {
 private:
     int num_votes_yes = 0;
     int num_votes_no = 0;
-    int start_time = 0;
+    std::time_t start_time = 0;
     bool reminder_sent = false;
     std::map<rf::Player*, bool> players_who_voted;
     std::set<rf::Player*> remaining_players;
@@ -88,7 +89,7 @@ public:
     bool DoFrame()
     {
         const auto& vote_config = GetConfig();
-        int passed_time_sec = std::time(nullptr) - start_time;
+        std::time_t passed_time_sec = std::time(nullptr) - start_time;
         if (passed_time_sec >= vote_config.time_limit_seconds) {
             SendChatLinePacket("\xA6 Vote timed out!", nullptr);
             return false;
