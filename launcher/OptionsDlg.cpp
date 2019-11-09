@@ -270,8 +270,9 @@ void OptionsDlg::OnBnClickedOk()
 
 void OptionsDlg::OnBnClickedExeBrowse()
 {
-    LPCTSTR filter = "Executable Files (*.exe)|*.exe||";
-    CFileDialog dlg(TRUE, ".exe", "RF.exe", OFN_HIDEREADONLY, filter);
+    LPCTSTR filter = "Executable Files (*.exe)|*.exe|All Files (*.*)|*.*||";
+    auto exe_path = GetDlgItemTextA(IDC_EXE_PATH_EDIT);
+    CFileDialog dlg(TRUE, ".exe", exe_path, OFN_HIDEREADONLY, filter);
     dlg.SetTitle("Select game executable (RF.exe)");
 
     if (dlg.DoModal(*this) == IDOK)

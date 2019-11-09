@@ -17,7 +17,6 @@ protected:
     void OnOK() override;
     BOOL OnCommand(WPARAM wparam, LPARAM lparam) override;
     INT_PTR DialogProc(UINT msg, WPARAM wparam, LPARAM lparam) override;
-    BOOL PreTranslateMessage(MSG& Msg) override;
 
 private:
     LRESULT OnUpdateCheck(WPARAM wParam, LPARAM lParam);

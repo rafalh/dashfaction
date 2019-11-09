@@ -54,6 +54,7 @@ BOOL MainDlg::OnInitDialog()
     RefreshModSelector();
 
     m_ToolTip.Create(*this);
+    m_ToolTip.AddTool(m_mod_selector, "Select a game mod (you can download them from FactionFiles.com)");
 
 #ifdef NDEBUG
     m_pUpdateChecker = new UpdateChecker(*this);
@@ -128,14 +129,6 @@ void MainDlg::RefreshModSelector()
     }
 
     m_mod_selector.SetWindowTextA(selected_mod);
-}
-
-BOOL MainDlg::PreTranslateMessage(MSG& Msg)
-{
-    if (m_ToolTip)
-        m_ToolTip.RelayEvent(Msg);
-
-    return CDialog::PreTranslateMessage(Msg);
 }
 
 LRESULT MainDlg::OnUpdateCheck(WPARAM wParam, LPARAM lParam)
