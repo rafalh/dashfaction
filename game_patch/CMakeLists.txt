@@ -15,6 +15,7 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/purefaction/pf_secret.cpp")
         purefaction/pf.cpp
         purefaction/pf.h
         purefaction/pf_packets.h
+        purefaction/pf_secret_packets.h
         purefaction/pf_secret.cpp
         purefaction/pf_secret.h
     )

@@ -135,8 +135,8 @@ License
 Most of Dash Faction source code is licensed under Mozilla Public License 2.0. It is available in the GitHub repository.
 See LICENSE.txt.
 
-Only Pure Faction support code is not open sourced because it would make PF anti-cheat features basically useless.
-It consists of *pf.cpp* and *pf.h* files in main module. It is going to be linked statically during a release process
-of Dash Faction by owner of this project.
+Only Pure Faction anti-cheat support code is not open source because it would make PF anti-cheat features basically useless.
+It consists of few files in *game_patch/purefaction* directory. It is going to be linked statically during a release process
+of Dash Faction by owner of the project.
 
 Dash Faction uses some open source libraries. Their licenses can be found in *licenses* directory.

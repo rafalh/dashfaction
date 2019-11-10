@@ -25,19 +25,19 @@ static const auto MpIsConnectingToServer = AddrAsRef<uint8_t(const rf::NwAddr& a
 static auto& rfl_static_geometry = AddrAsRef<void*>(0x006460E8);
 static auto& simultaneous_ping = AddrAsRef<uint32_t>(0x00599CD8);
 
-typedef void NwProcessGamePackets_Type(const char* data, int num_bytes, const NwAddr& addr, Player* player);
+typedef void NwProcessGamePackets_Type(const void* data, size_t len, const NwAddr& addr, Player* player);
 static auto& NwProcessGamePackets = AddrAsRef<NwProcessGamePackets_Type>(0x004790D0);
 } // namespace rf
 
 typedef void NwPacketHandler_Type(char* data, const rf::NwAddr& addr);
 
-CallHook<void(const char*, int, const rf::NwAddr&, rf::Player*)> ProcessUnreliableGamePackets_hook{
+CallHook<void(const void*, size_t, const rf::NwAddr&, rf::Player*)> ProcessUnreliableGamePackets_hook{
     0x00479244,
-    [](const char* data, int data_len, const rf::NwAddr& addr, rf::Player* player) {
-        rf::NwProcessGamePackets(data, data_len, addr, player);
+    [](const void* data, size_t len, const rf::NwAddr& addr, rf::Player* player) {
+        rf::NwProcessGamePackets(data, len, addr, player);
 
 #if MASK_AS_PF
-        ProcessPfPacket(data, data_len, addr, player);
+        ProcessPfPacket(data, len, addr, player);
 #endif
     },
 };

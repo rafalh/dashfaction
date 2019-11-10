@@ -26,7 +26,7 @@ ipch
 .vscode
 
 # Non-Open Source PF support code
-game_patch/purefaction
+game_patch/purefaction/*secret*
 
 # Experimental code
 game_patch/experimental.*
