@@ -129,6 +129,9 @@ Configuration example:
     $DF Default Player Weapon: "rail_gun"
         // Ammo given on respawn (by default 3 * clip size)
         +Initial Ammo: 1000
+    // If true and server is using a mod (-mod command line argument) then client is required to use the same mod
+    // Can be disabled to allow publicly available modded servers
+    $DF Require Client Mod: true
 
 License
 -------

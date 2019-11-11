@@ -110,6 +110,10 @@ void LoadAdditionalServerConfig(rf::StrParser& parser)
         }
     }
 
+    if (parser.OptionalString("$DF Require Client Mod:")) {
+        g_additional_server_config.require_client_mod = parser.GetBool();
+    }
+
     if (!parser.OptionalString("$Name:") && !parser.OptionalString("#End")) {
         parser.Error("end of server configuration");
     }
@@ -325,6 +329,18 @@ FunHook<void(int, ParticleCreateData&, void*, rf::Vector3*, int, void**, void*)>
     },
 };
 
+CallHook<void(char*)> get_mod_name_for_game_info_packet_patch{
+    0x0047B1E0,
+    [](char* mod_name) {
+        if (g_additional_server_config.require_client_mod) {
+            get_mod_name_for_game_info_packet_patch.CallTarget(mod_name);
+        }
+        else {
+            mod_name[0] = '\0';
+        }
+    },
+};
+
 void ServerInit()
 {
     // Override rcon command whitelist
@@ -370,6 +386,9 @@ void ServerInit()
 
     // Do not create not damaging particles on a dedicated server
     ParticleCreate_hook.Install();
+
+    // Allow disabling mod name announcement
+    get_mod_name_for_game_info_packet_patch.Install();
 }
 
 void ServerCleanup()

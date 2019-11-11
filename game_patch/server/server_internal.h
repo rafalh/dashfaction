@@ -34,6 +34,7 @@ struct ServerAdditionalConfig
     std::map<std::string, std::string> item_replacements;
     std::string default_player_weapon;
     std::optional<int> default_player_weapon_ammo;
+    bool require_client_mod = true;
 };
 
 extern ServerAdditionalConfig g_additional_server_config;
