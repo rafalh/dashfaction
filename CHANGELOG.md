@@ -25,6 +25,7 @@ animation bug in multi-player and occasionally sticking to the ground in some le
 - reset fpgun animation when player dies
 - sync kills/deaths statistics when joining to Pure Faction servers
 - reduce launcher size and allow building it on Linux after replacing MFC by Win32++ library
+- skip processing of non-damaging particles on a dedicated server (optimization)
 - fix VRAM leak on level load caused by font textures (RF bug)
 - fix 'debug' command not flushing geometry cache when disabling flags
 - fix dedicated server crash when loading level with screens

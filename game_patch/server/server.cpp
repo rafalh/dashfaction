@@ -295,6 +295,36 @@ FunHook<void(rf::Player*)> spawn_player_sync_ammo_hook{
     },
 };
 
+struct ParticleCreateData
+{
+    rf::Vector3 pos;
+    rf::Vector3 velocity;
+    float pradius;
+    float growth_rate;
+    float acceleration;
+    float gravity_scale;
+    float life_secs;
+    int bitmap;
+    int field_30;
+    rf::Color particle_clr;
+    rf::Color particle_clr_dest;
+    int particle_flags;
+    int particle_flags2;
+    int field_44;
+    int field_48;
+};
+static_assert(sizeof(ParticleCreateData) == 0x4C);
+
+FunHook<void(int, ParticleCreateData&, void*, rf::Vector3*, int, void**, void*)> ParticleCreate_hook{
+    0x00496840,
+    [](int pool_id, ParticleCreateData& create_data, void* room, rf::Vector3 *a4, int parent_obj, void** result, void* emitter) {
+        bool damages_flag = create_data.particle_flags2 & 1;
+        // Do not create not damaging particles on a dedicated server
+        if (damages_flag || !rf::is_dedicated_server)
+            ParticleCreate_hook.CallTarget(pool_id, create_data, room, a4, parent_obj, result, emitter);
+    },
+};
+
 void ServerInit()
 {
     // Override rcon command whitelist
@@ -337,6 +367,9 @@ void ServerInit()
 
     // In Multi -> Create game fix level filtering so 'pdm' and 'pctf' is supported
     MpIsLevelForGameMode_hook.Install();
+
+    // Do not create not damaging particles on a dedicated server
+    ParticleCreate_hook.Install();
 }
 
 void ServerCleanup()
