@@ -24,6 +24,7 @@
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
+#include <common/version.h>
 
 #include <log/ConsoleAppender.h>
 #include <log/FileAppender.h>
@@ -241,6 +242,7 @@ void InitLogging()
 #ifndef NDEBUG
     logger_config.add_appender(std::make_unique<RfConsoleLogAppender>());
 #endif
+    INFO("Dash Faction %s (%s %s)", VERSION_STR, __DATE__, __TIME__);
 }
 
 void LogSystemInfo()
