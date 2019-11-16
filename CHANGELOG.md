@@ -26,8 +26,7 @@ animation bug in multi-player and occasionally sticking to the ground in some le
 - sync kills/deaths statistics when joining to Pure Faction servers
 - reduce launcher size and allow building it on Linux after replacing MFC by Win32++ library
 - skip processing of non-damaging particles on a dedicated server (optimization)
-- delete projectiles when they reach bounding box of the level (fixes playing space levels with huge amount of people)
-- increase projectile limit from 50 to 100
+- delete projectiles when they reach bounding box of the level (should fix playing space levels with huge amount of people)
 - fix VRAM leak on level load caused by font textures (RF bug)
 - fix 'debug' command not flushing geometry cache when disabling flags
 - fix dedicated server crash when loading level with screens

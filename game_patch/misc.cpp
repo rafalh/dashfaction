@@ -775,7 +775,7 @@ FunHook<rf::Object*(int, int, int, void*, int, void*)> ObjCreate_hook{
     [](int type, int sub_type, int parent, void* create_info, int flags, void* room) {
         auto obj = ObjCreate_hook.CallTarget(type, sub_type, parent, create_info, flags, room);
         if (!obj) {
-            ERR("Failed to create object (type %d)", type);
+            WARN("Failed to create object (type %d)", type);
         }
         return obj;
     },
@@ -799,6 +799,19 @@ FunHook<void(rf::WeaponObj *weapon)> WeaponMoveOne_hook{
         }
     },
 };
+
+#ifdef BIG_WEAPON_POOL
+CallHook<void*(size_t)> weapon_pool_alloc_zero_dynamic_mem{
+    0x0048B5C6,
+    [](size_t size) {
+        auto result = weapon_pool_alloc_zero_dynamic_mem.CallTarget(size);
+        if (result) {
+            memset(result, 0, size);
+        }
+        return result;
+    },
+};
+#endif
 
 void MiscInit()
 {
@@ -1015,8 +1028,15 @@ void MiscInit()
     WeaponMoveOne_hook.Install();
 
     // Increase weapon (projectile) limit from 50 to 100
+    // Disabled by default to not cause any trouble because of total object limit (e.g. big limit would block respawning)
+#ifdef BIG_WEAPON_POOL
+    const i8 weapon_pool_size = 100;
     WriteMem<u8>(0x0048B5BB, ASM_SHORT_JMP_REL);
-    WriteMem<u8>(0x00487271 + 6, 100);
+    WriteMem<i8>(0x00487271 + 6, weapon_pool_size);
+    //WriteMem<u8>(0x0048B59B, ASM_SHORT_JMP_REL); // uncomment to always use dynamic allocation (it would cause a leak)
+    weapon_pool_alloc_zero_dynamic_mem.Install();
+#endif
+
 }
 
 void MiscCleanup()
