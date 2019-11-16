@@ -1121,6 +1121,7 @@ namespace rf
     static_assert(sizeof(TriggerObj) == 0x30C, "invalid size");
 
     static auto& ObjGetFromUid = AddrAsRef<Object *(int uid)>(0x0048A4A0);
+    static auto& ObjQueueDelete = AddrAsRef<void(Object* obj)>(0x0048AB40);
 
     /* Entity */
 
@@ -1620,6 +1621,32 @@ namespace rf
     };
     static_assert(sizeof(WeaponClass) == 0x550, "invalid size");
 
+    struct WeaponObj
+    {
+        struct Object _super;
+        struct WeaponObj *next;
+        struct WeaponObj *prev;
+        WeaponClass *weapon_cls;
+        int weapon_cls_id;
+        float lifetime;
+        int FlySound;
+        int glow_light;
+        int weapon_flags;
+        float field_2AC;
+        int field_2B0;
+        Vector3 field_2B4;
+        Matrix3 field_2C0;
+        int entity_friendliness;
+        int field_2E8;
+        Timer field_2EC;
+        float fPiercingPower;
+        float fThrustLifetime;
+        int weapon_flags2;
+        Vector3 last_hit_point;
+        Vector3 field_308;
+    };
+    static_assert(sizeof(WeaponObj) == 0x314, "invalid size");
+
     static auto& weapon_classes = AddrAsRef<WeaponClass[64]>(0x0085CD08);
     static auto& riot_stick_cls_id = AddrAsRef<int32_t>(0x00872468);
     static auto& remote_charge_cls_id = AddrAsRef<int32_t>(0x0087210C);
@@ -1741,6 +1768,7 @@ namespace rf
     static auto& direct_input_disabled = AddrAsRef<bool>(0x005A4F88);
     static auto& default_player_weapon = AddrAsRef<String>(0x007C7600);
     static auto& active_cutscene = AddrAsRef<void*>(0x00645320);
+    static auto& rfl_static_geometry = AddrAsRef<void*>(0x006460E8);
 
     static auto& RfBeep = AddrAsRef<void(unsigned u1, unsigned u2, unsigned u3, float volume)>(0x00505560);
     static auto& GetFileExt = AddrAsRef<char *(const char *path)>(0x005143F0);

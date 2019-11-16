@@ -22,7 +22,6 @@ namespace rf
 {
 static const auto MpIsConnectingToServer = AddrAsRef<uint8_t(const rf::NwAddr& addr)>(0x0044AD80);
 
-static auto& rfl_static_geometry = AddrAsRef<void*>(0x006460E8);
 static auto& simultaneous_ping = AddrAsRef<uint32_t>(0x00599CD8);
 
 typedef void NwProcessGamePackets_Type(const void* data, size_t len, const NwAddr& addr, Player* player);

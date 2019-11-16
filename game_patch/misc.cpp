@@ -770,6 +770,36 @@ FunHook<void(LevelSaveData*)> SaveRestoreDeserializeAllObjects_hook{
     },
 };
 
+FunHook<rf::Object*(int, int, int, void*, int, void*)> ObjCreate_hook{
+    0x00486DA0,
+    [](int type, int sub_type, int parent, void* create_info, int flags, void* room) {
+        auto obj = ObjCreate_hook.CallTarget(type, sub_type, parent, create_info, flags, room);
+        if (!obj) {
+            ERR("Failed to create object (type %d)", type);
+        }
+        return obj;
+    },
+};
+
+FunHook<void(rf::WeaponObj *weapon)> WeaponMoveOne_hook{
+    0x004C69A0,
+    [](rf::WeaponObj* weapon) {
+        WeaponMoveOne_hook.CallTarget(weapon);
+        auto& level_aabb_min = StructFieldRef<rf::Vector3>(rf::rfl_static_geometry, 0x48);
+        auto& level_aabb_max = StructFieldRef<rf::Vector3>(rf::rfl_static_geometry, 0x54);
+        float margin = weapon->_super.anim_mesh ? 275.0f : 10.0f;
+        bool has_gravity_flag = weapon->_super.phys_info.flags & 1;
+        bool check_y_axis = !(has_gravity_flag || weapon->weapon_cls->thrust_lifetime > 0.0f);
+        auto& pos = weapon->_super.pos;
+        if (pos.x < level_aabb_min.x - margin || pos.x > level_aabb_max.x + margin
+        || pos.z < level_aabb_min.z - margin || pos.z > level_aabb_max.z + margin
+        || (check_y_axis && (pos.y < level_aabb_min.y - margin || pos.y > level_aabb_max.y + margin))) {
+            // Weapon is outside the level - delete it
+            rf::ObjQueueDelete(&weapon->_super);
+        }
+    },
+};
+
 void MiscInit()
 {
     // Console init string
@@ -977,6 +1007,16 @@ void MiscInit()
 
     // Fix crash caused by buffer overflows in level save/load code
     SaveRestoreDeserializeAllObjects_hook.Install();
+
+    // Log error when object cannot be created
+    ObjCreate_hook.Install();
+
+    // Delete weapons (projectiles) that reach bounding box of the level
+    WeaponMoveOne_hook.Install();
+
+    // Increase weapon (projectile) limit from 50 to 100
+    WriteMem<u8>(0x0048B5BB, ASM_SHORT_JMP_REL);
+    WriteMem<u8>(0x00487271 + 6, 100);
 }
 
 void MiscCleanup()
