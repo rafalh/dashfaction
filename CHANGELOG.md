@@ -34,6 +34,7 @@ animation bug in multi-player and occasionally sticking to the ground in some le
 - fix killed glass restoration from a save file
 - fix very long startup on Windows XP in some hardware configurations
 - fix crash when saving/loading custom levels with a lot of objects
+- fix debris object pool (used for ejected shells) easly getting exhausted when local player is dead
 
 Version 1.3.0 (released 2019-05-07)
 -----------------------------------

@@ -1037,6 +1037,9 @@ void MiscInit()
     weapon_pool_alloc_zero_dynamic_mem.Install();
 #endif
 
+    // Use local_player variable for debris distance calculation instead of local_entity
+    // Fixed debris pool being exhausted when local player is dead
+    AsmWritter(0x0042A223, 0x0042A232).mov(asm_regs::ecx, &rf::local_player);
 }
 
 void MiscCleanup()
