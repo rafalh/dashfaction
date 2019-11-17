@@ -35,6 +35,7 @@ animation bug in multi-player and occasionally sticking to the ground in some le
 - fix very long startup on Windows XP in some hardware configurations
 - fix crash when saving/loading custom levels with a lot of objects
 - fix debris object pool (used for ejected shells) easly getting exhausted when local player is dead
+- fix loading images with color palette in 32-bit mode
 
 Version 1.3.0 (released 2019-05-07)
 -----------------------------------

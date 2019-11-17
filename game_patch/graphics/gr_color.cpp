@@ -53,8 +53,17 @@ inline void ConvertPixel_RGB565_To_RGBA8(uint8_t*& dst_ptr, const uint8_t*& src_
     *(dst_ptr++) = 255;
 }
 
+inline void ConvertPixel_MONO8_To_RGBA8(uint8_t*& dst_ptr, const uint8_t*& src_ptr, const uint8_t* palette)
+{
+    const auto& clr = &palette[3 * *(src_ptr++)];
+    *(dst_ptr++) = clr[0]; // B
+    *(dst_ptr++) = clr[1]; // G
+    *(dst_ptr++) = clr[2]; // R
+    *(dst_ptr++) = 255; // A
+}
+
 bool ConvertPixelFormat(uint8_t*& dst_ptr, rf::BmPixelFormat dst_fmt, const uint8_t*& src_ptr,
-                        rf::BmPixelFormat src_fmt)
+                        rf::BmPixelFormat src_fmt, const uint8_t* palette)
 {
     if (dst_fmt == src_fmt) {
         int pixel_size = GetPixelFormatSize(src_fmt);
@@ -80,6 +89,12 @@ bool ConvertPixelFormat(uint8_t*& dst_ptr, rf::BmPixelFormat dst_fmt, const uint
     case rf::BMPF_1555:
         ConvertPixel_ARGB1555_To_RGBA8(dst_ptr, src_ptr);
         return true;
+    case rf::BMPF_MONO8:
+        if (!palette) {
+            return false;
+        }
+        ConvertPixel_MONO8_To_RGBA8(dst_ptr, src_ptr, palette);
+        return true;
     default:
         ERR("unsupported src pixel format %d", src_fmt);
         return false;
@@ -88,7 +103,7 @@ bool ConvertPixelFormat(uint8_t*& dst_ptr, rf::BmPixelFormat dst_fmt, const uint
 
 bool ConvertBitmapFormat(uint8_t* dst_bits_ptr, rf::BmPixelFormat dst_fmt, const uint8_t* src_bits_ptr,
                          rf::BmPixelFormat src_fmt, int width, int height, int dst_pitch, int src_pitch,
-                         bool swap_bytes = false)
+                         const uint8_t* palette = nullptr, bool swap_bytes = false)
 {
     if (dst_fmt == src_fmt) {
         for (int y = 0; y < height; ++y) {
@@ -142,6 +157,18 @@ bool ConvertBitmapFormat(uint8_t* dst_bits_ptr, rf::BmPixelFormat dst_fmt, const
             src_bits_ptr += src_pitch;
         }
         return true;
+    case rf::BMPF_MONO8:
+        if (!palette) {
+            return false;
+        }
+        for (int y = 0; y < height; ++y) {
+            uint8_t* dst_ptr = dst_bits_ptr;
+            const uint8_t* src_ptr = src_bits_ptr;
+            for (int x = 0; x < width; ++x) ConvertPixel_MONO8_To_RGBA8(dst_ptr, src_ptr, palette);
+            dst_bits_ptr += dst_pitch;
+            src_bits_ptr += src_pitch;
+        }
+        return true;
     default:
         ERR("unsupported src format %d", src_fmt);
         return false;
@@ -164,7 +191,7 @@ FunHook<int(int, const uint8_t*, const uint8_t*, int, int, rf::BmPixelFormat, vo
             auto tex_pixel_fmt = GetPixelFormatFromD3DFormat(desc.Format);
             bool success = ConvertBitmapFormat(reinterpret_cast<uint8_t*>(locked_rect.pBits), tex_pixel_fmt,
                                                src_bits_ptr, pixel_fmt, bm_w, bm_h, locked_rect.Pitch,
-                                               GetPixelFormatSize(pixel_fmt) * bm_w);
+                                               GetPixelFormatSize(pixel_fmt) * bm_w, palette);
             texture->UnlockRect(level);
 
             if (success)
@@ -189,7 +216,7 @@ void RflLoadLightmaps_004ED3F6(rf::RflLightmap* lightmap)
 #endif
 
     bool success = ConvertBitmapFormat(lock_data.bits, lock_data.pixel_format, lightmap->buf, rf::BMPF_888, lightmap->w,
-                                       lightmap->h, lock_data.pitch, 3 * lightmap->w, true);
+                                       lightmap->h, lock_data.pitch, 3 * lightmap->w, nullptr, true);
     if (!success)
         ERR("ConvertBitmapFormat failed for lightmap");
 
@@ -278,7 +305,8 @@ void WaterGenerateTexture_004E68D1(uintptr_t v1)
             int src_offset =
                 (v30 & (dst_lock_data.width - 1)) + (((dst_lock_data.height - 1) & (v38 + v32[v30])) << v41);
             const uint8_t* src_ptr = src_lock_data.bits + src_offset * src_pixel_size;
-            ConvertPixelFormat(dst_ptr, dst_lock_data.pixel_format, src_ptr, src_lock_data.pixel_format);
+            // Note: GrLock never returns indexed bitmap
+            ConvertPixelFormat(dst_ptr, dst_lock_data.pixel_format, src_ptr, src_lock_data.pixel_format, nullptr);
             ++v30;
         }
         dst_row_ptr += dst_lock_data.pitch;
@@ -294,7 +322,8 @@ void GetAmbientColorFromLightmaps_004E5CE3(unsigned bm_handle, int x, int y, uns
     if (rf::GrLock(bm_handle, 0, &lock_data, 0)) {
         const uint8_t* src_ptr = lock_data.bits + y * lock_data.pitch + x * GetPixelFormatSize(lock_data.pixel_format);
         uint8_t* dst_ptr = reinterpret_cast<uint8_t*>(&color);
-        ConvertPixelFormat(dst_ptr, rf::BMPF_8888, src_ptr, lock_data.pixel_format);
+        // Note: GrLock never returns indexed bitmap
+        ConvertPixelFormat(dst_ptr, rf::BMPF_8888, src_ptr, lock_data.pixel_format, nullptr);
         rf::GrUnlock(&lock_data);
     }
 }
