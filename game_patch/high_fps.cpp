@@ -213,7 +213,8 @@ CodeInjection stuck_to_ground_when_jumping_fix{
 CodeInjection stuck_to_ground_when_jumping_fix2{
     0x00487F82,
     [](auto& regs) {
-        if (g_player_jump_timer.IsSet() && !g_player_jump_timer.IsFinished()) {
+        auto entity = reinterpret_cast<rf::EntityObj*>(regs.esi);
+        if (entity->local_player && g_player_jump_timer.IsSet() && !g_player_jump_timer.IsFinished()) {
             // Jump to jump handling code that sets entity to falling movement mode
             regs.eip = 0x00487F7B;
         }
