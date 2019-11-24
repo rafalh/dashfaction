@@ -1120,7 +1120,8 @@ namespace rf
     };
     static_assert(sizeof(TriggerObj) == 0x30C, "invalid size");
 
-    static auto& ObjGetFromUid = AddrAsRef<Object *(int uid)>(0x0048A4A0);
+    static auto& ObjGetFromUid = AddrAsRef<Object*(int uid)>(0x0048A4A0);
+    static auto& ObjGetFromHandle = AddrAsRef<Object*(int handle)>(0x0040A0E0);
     static auto& ObjQueueDelete = AddrAsRef<void(Object* obj)>(0x0048AB40);
 
     /* Entity */

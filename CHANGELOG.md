@@ -26,6 +26,7 @@ animation bug in multi-player and occasionally sticking to the ground in some le
 - sync kills/deaths statistics when joining to Pure Faction servers
 - reduce launcher size and allow building it on Linux after replacing MFC by Win32++ library
 - skip processing of non-damaging particles on a dedicated server (optimization)
+- improve particles simulation performance
 - delete projectiles when they reach bounding box of the level (should fix playing space levels with huge amount of people)
 - stop distant sounds when sound pool is full and a new sound is being started (should fix sounds sometimes stoping working when playing multiplayer with a lot of players)
 - fix VRAM leak on level load caused by font textures (RF bug)

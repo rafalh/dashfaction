@@ -1116,6 +1116,11 @@ void MiscInit()
     SndDsGetFreeChannel_hook.Install();
     PlaySound_no_free_slots_fix.Install();
     //WriteMem<u8>(0x005055AB, ASM_SHORT_JMP_REL); // never free level sounds, uncomment to test
+
+    // Skip broken code that was supposed to skip particle emulation when particle emitter is in non-rendered room
+    // RF code is broken here because level emitters have object handle set to 0 and other emitters are not added to
+    // the searched list
+    WriteMem<u8>(0x00495158, ASM_SHORT_JMP_REL);
 }
 
 void MiscCleanup()
