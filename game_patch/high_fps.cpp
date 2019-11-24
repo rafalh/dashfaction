@@ -205,12 +205,26 @@ rf::Timer g_player_jump_timer;
 CodeInjection stuck_to_ground_when_jumping_fix{
     0x0042891E,
     []([[ maybe_unused ]] auto& regs) {
-        // Skip land handling code for next 64 ms
-        g_player_jump_timer.Set(64);
+        auto entity = reinterpret_cast<rf::EntityObj*>(regs.esi);
+        if (entity->local_player) {
+            // Skip land handling code for next 64 ms (like in PF)
+            g_player_jump_timer.Set(64);
+        }
     },
 };
 
-CodeInjection stuck_to_ground_when_jumping_fix2{
+CodeInjection stuck_to_ground_when_using_jump_pad_fix{
+    0x00486B60,
+    []([[ maybe_unused ]] auto& regs) {
+        auto entity = reinterpret_cast<rf::EntityObj*>(regs.esi);
+        if (entity->local_player) {
+            // Skip land handling code for next 64 ms
+            g_player_jump_timer.Set(64);
+        }
+    },
+};
+
+CodeInjection stuck_to_ground_fix{
     0x00487F82,
     [](auto& regs) {
         auto entity = reinterpret_cast<rf::EntityObj*>(regs.esi);
@@ -220,6 +234,9 @@ CodeInjection stuck_to_ground_when_jumping_fix2{
         }
     },
 };
+
+
+
 
 void STDCALL EntityWaterDecelerateFix(rf::EntityObj* entity)
 {
@@ -321,7 +338,8 @@ void HighFpsInit()
 
     // Fix player being stuck to ground when jumping, especially when FPS is greater than 200
     stuck_to_ground_when_jumping_fix.Install();
-    stuck_to_ground_when_jumping_fix2.Install();
+    stuck_to_ground_when_using_jump_pad_fix.Install();
+    stuck_to_ground_fix.Install();
 
     // Fix water deceleration on high FPS
     AsmWritter(0x0049D816).nop(5);
