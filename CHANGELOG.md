@@ -29,6 +29,7 @@ animation bug in multi-player and occasionally sticking to the ground in some le
 - improve particles simulation performance
 - delete projectiles when they reach bounding box of the level (should fix playing space levels with huge amount of people)
 - stop distant sounds when sound pool is full and a new sound is being started (should fix sounds sometimes stoping working when playing multiplayer with a lot of players)
+- sort items and clutter by mesh to improve performance
 - fix VRAM leak on level load caused by font textures (RF bug)
 - fix occasionally getting stuck on jump pads on high FPS
 - fix 'debug' command not flushing geometry cache when disabling flags

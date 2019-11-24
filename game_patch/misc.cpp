@@ -884,6 +884,59 @@ CodeInjection PlaySound_no_free_slots_fix{
     },
 };
 
+auto AnimMeshGetName = AddrAsRef<const char*(rf::AnimMesh* anim_mesh)>(0x00503470);
+
+CodeInjection sort_items_patch{
+    0x004593AC,
+    [](auto& regs) {
+        auto& item_obj_list = AddrAsRef<rf::ItemObj>(0x00642DD8);
+        auto item = reinterpret_cast<rf::ItemObj*>(regs.esi);
+        auto mesh_name = AnimMeshGetName(item->_super.anim_mesh);
+        auto current = item_obj_list.next;
+        while (current != &item_obj_list && strcmp(mesh_name, AnimMeshGetName(current->_super.anim_mesh)) != 0) {
+            current = current->next;
+        }
+        item->next = current;
+        item->prev = current->prev;
+        item->next->prev = item;
+        item->prev->next = item;
+        // Set up needed registers
+        regs.ecx = regs.esp + 0xC0 - 0xB0; // create_info
+        regs.eip = 0x004593D1;
+    },
+};
+
+CodeInjection sort_clutter_patch{
+    0x004109D4,
+    [](auto& regs) {
+        static void* last_room = nullptr;
+        auto& clutter_obj_list = AddrAsRef<rf::ClutterObj>(0x005C9360);
+        auto clutter = reinterpret_cast<rf::ClutterObj*>(regs.esi);
+
+        if (clutter->_super.room != last_room) {
+            INFO("clutter room %p", clutter->_super.room);
+        }
+        INFO("clutter mesh %s", AnimMeshGetName(clutter->_super.anim_mesh));
+        last_room = clutter->_super.room;
+
+        auto mesh_name = AnimMeshGetName(clutter->_super.anim_mesh);
+        auto current = clutter_obj_list.next;
+        while (current != &clutter_obj_list && strcmp(mesh_name, AnimMeshGetName(current->_super.anim_mesh)) != 0) {
+            current = current->next;
+        }
+        clutter->next = current;
+        clutter->prev = current->prev;
+        clutter->next->prev = clutter;
+        clutter->prev->next = clutter;
+        // Set up needed registers
+        regs.eax = AddrAsRef<bool>(regs.esp + 0xD0 + 0x18); // killable
+        regs.ecx = AddrAsRef<i32>(0x005C9358) + 1; // num_clutter_objs
+        regs.eip = 0x00410A03;
+    },
+};
+
+
+
 void MiscInit()
 {
     // Console init string
@@ -1121,6 +1174,10 @@ void MiscInit()
     // RF code is broken here because level emitters have object handle set to 0 and other emitters are not added to
     // the searched list
     WriteMem<u8>(0x00495158, ASM_SHORT_JMP_REL);
+
+    // Sort objects by anim mesh name to improve rendering performance
+    sort_items_patch.Install();
+    sort_clutter_patch.Install();
 }
 
 void MiscCleanup()
