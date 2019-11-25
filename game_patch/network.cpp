@@ -374,23 +374,15 @@ FunHook<NwPacketHandler_Type> ProcessRateChangePacket_hook{
 FunHook<NwPacketHandler_Type> ProcessEntityCreatePacket_hook{
     0x00475420,
     [](char* data, const rf::NwAddr& addr) {
-        // Update Default Player Weapon if server has it overriden
+        // Temporary change default player weapon to the weapon type from the received packet
+        // Created entity always receives Default Player Weapon (from game.tbl) and if server has it overriden
+        // player weapons would be in inconsistent state with server without this change.
         size_t name_size = strlen(data) + 1;
-        uint8_t player_id = data[name_size + 58];
-        if (player_id == rf::local_player->nw_data->player_id) {
-            int32_t weapon_cls_id = *reinterpret_cast<int32_t*>(data + name_size + 63);
-            rf::default_player_weapon = rf::weapon_classes[weapon_cls_id].name;
-
-#if 0 // disabled because it sometimes helpful feature to switch to last used weapon
-      // Reset next weapon variable so entity wont switch after pickup
-        if (!g_local_player->config.AutoswitchWeapons)
-            MultiSetNextWeapon(weapon_cls_id);
-#endif
-
-            TRACE("spawn weapon %d", weapon_cls_id);
-        }
-
+        int32_t weapon_cls_id = *reinterpret_cast<int32_t*>(data + name_size + 63);
+        auto old_default_player_weapon = rf::default_player_weapon;
+        rf::default_player_weapon = rf::weapon_classes[weapon_cls_id].name;
         ProcessEntityCreatePacket_hook.CallTarget(data, addr);
+        rf::default_player_weapon = old_default_player_weapon;
     },
 };
 
