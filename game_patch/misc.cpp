@@ -909,16 +909,8 @@ CodeInjection sort_items_patch{
 CodeInjection sort_clutter_patch{
     0x004109D4,
     [](auto& regs) {
-        static void* last_room = nullptr;
         auto& clutter_obj_list = AddrAsRef<rf::ClutterObj>(0x005C9360);
         auto clutter = reinterpret_cast<rf::ClutterObj*>(regs.esi);
-
-        if (clutter->_super.room != last_room) {
-            INFO("clutter room %p", clutter->_super.room);
-        }
-        INFO("clutter mesh %s", AnimMeshGetName(clutter->_super.anim_mesh));
-        last_room = clutter->_super.room;
-
         auto mesh_name = AnimMeshGetName(clutter->_super.anim_mesh);
         auto current = clutter_obj_list.next;
         while (current != &clutter_obj_list && strcmp(mesh_name, AnimMeshGetName(current->_super.anim_mesh)) != 0) {
