@@ -248,10 +248,11 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* Unused)
     WriteMemPtr(0x00447CB9 + 1, CmdBuf);
 
     // Zero first argument for CreateProcess call
+    using namespace asm_regs;
     AsmWritter(0x00447B32, 0x00447B39).nop();
-    AsmWritter(0x00447B32).xor_(asm_regs::eax, asm_regs::eax);
+    AsmWritter(0x00447B32).xor_(eax, eax);
     AsmWritter(0x00448024, 0x0044802B).nop();
-    AsmWritter(0x00448024).xor_(asm_regs::eax, asm_regs::eax);
+    AsmWritter(0x00448024).xor_(eax, eax);
 
     // InitInstance hook
     AsmWritter(0x00482C84).call(CEditorApp__InitInstance_AfterHook);

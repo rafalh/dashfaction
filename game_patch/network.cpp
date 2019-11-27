@@ -63,13 +63,14 @@ public:
         assert(std::memcmp(shr_ecx_2_ptr, "\xC1\xE9\x02", 3) == 0); // shr ecx, 2
         assert(std::memcmp(and_ecx_3_ptr, "\x83\xE1\x03", 3) == 0); // and ecx, 3
 
+        using namespace asm_regs;
         if (std::memcmp(shr_ecx_2_ptr + 3, "\xF3\xA5", 2) == 0) { // rep movsd
             m_movsb_patch.SetAddr(m_shr_ecx_2_addr);
             m_ret_addr = m_shr_ecx_2_addr + 5;
-            AsmWritter(m_and_ecx_3_addr, m_and_ecx_3_addr + 3).xor_(asm_regs::ecx, asm_regs::ecx);
+            AsmWritter(m_and_ecx_3_addr, m_and_ecx_3_addr + 3).xor_(ecx, ecx);
         }
         else if (std::memcmp(and_ecx_3_ptr + 3, "\xF3\xA4", 2) == 0) { // rep movsb
-            AsmWritter(m_shr_ecx_2_addr, m_shr_ecx_2_addr + 3).xor_(asm_regs::ecx, asm_regs::ecx);
+            AsmWritter(m_shr_ecx_2_addr, m_shr_ecx_2_addr + 3).xor_(ecx, ecx);
             m_movsb_patch.SetAddr(m_and_ecx_3_addr);
             m_ret_addr = m_and_ecx_3_addr + 5;
         }
@@ -625,7 +626,7 @@ void NetworkInit()
         .mov(edi, eax);
 
     // Client-side green team fix
-    AsmWritter(0x0046CAD7, 0x0046CADA).cmp(al, (int8_t)0xFF);
+    AsmWritter(0x0046CAD7, 0x0046CADA).cmp(al, -1);
 
     // Hide IP addresses in Players packet
     AsmWritter(0x00481D31, 0x00481D33).xor_(eax, eax);

@@ -322,10 +322,11 @@ void GraphicsCaptureAfterGameInit()
     /* Fix for screenshots creation when height > 1024 */
     if (rf::gr_screen.max_height > 1024) {
         g_screenshot_scanlines_buf = std::make_unique<byte* []>(rf::gr_screen.max_height);
+        using namespace asm_regs;
         AsmWritter(0x0055A066, 0x0055A06D)
-            .mov(asm_regs::ecx, reinterpret_cast<int32_t>(&g_screenshot_scanlines_buf[0]));
+            .mov(ecx, &g_screenshot_scanlines_buf[0]);
         AsmWritter(0x0055A0DF, 0x0055A0E6)
-            .mov(asm_regs::eax, reinterpret_cast<int32_t>(g_screenshot_scanlines_buf.get()));
+            .mov(eax, g_screenshot_scanlines_buf.get());
     }
 
     auto full_path = StringFormat("%s\\%s", rf::root_path, g_screenshot_dir_name);

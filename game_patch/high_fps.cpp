@@ -76,13 +76,13 @@ public:
         UnprotectMem(code_buf, 512);
 
         using namespace asm_regs;
-        AsmWritter(reinterpret_cast<unsigned>(code_buf))
-            .mov(ecx, reinterpret_cast<int32_t>(this)) // thiscall
+        AsmWritter{code_buf}
+            .mov(ecx, this) // thiscall
             .sub(esp, 12)
             .mov(eax, m_key_loc_opt.value_or(ecx))
             .mov(*(esp + 8), eax)
             .fstp<double>(*(esp + 0))
-            .call(reinterpret_cast<void*>(&ftol))
+            .call(&ftol)
             .ret();
 
         AsmWritter(m_ftol_call_addr).call(code_buf);

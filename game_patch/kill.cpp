@@ -126,11 +126,12 @@ FunHook<void(rf::EntityObj*)> EntityOnDeath_hook{
 void InitKill()
 {
     // Player kill handling
+    using namespace asm_regs;
     AsmWritter(0x00420703)
-        .push(asm_regs::ebx)
-        .push(asm_regs::edi)
+        .push(ebx)
+        .push(edi)
         .call(OnPlayerKill)
-        .add(asm_regs::esp, 8)
+        .add(esp, 8)
         .jmp(0x00420B03);
 
     // Change player stats structure

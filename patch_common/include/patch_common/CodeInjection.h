@@ -57,9 +57,9 @@ public:
             WARN("trampoline is null for 0x%X", m_addr);
 
         using namespace asm_regs;
-        AsmWritter asm_writter{reinterpret_cast<uintptr_t>(m_code_buf.get())};
+        AsmWritter asm_writter{m_code_buf};
         asm_writter
-            .push(reinterpret_cast<int32_t>(trampoline)) // Push default EIP = trampoline
+            .push(trampoline)                          // Push default EIP = trampoline
             .push(esp)                                 // push ESP before PUSHA so it can be popped manually after POPA
             .pusha()                                   // push general registers
             .pushf()                                   // push EFLAGS
@@ -126,8 +126,8 @@ protected:
     {
         using namespace asm_regs;
         asm_writter
-            .push(esp)                                   // push address of X86Regs struct (handler param)
-            .mov(ecx, reinterpret_cast<uint32_t>(this))  // save this pointer in ECX (thiscall)
-            .call(reinterpret_cast<void*>(&wrapper));    // call handler (thiscall - calee cleans the stack)
+            .push(esp)        // push address of X86Regs struct (handler param)
+            .mov(ecx, this)   // save this pointer in ECX (thiscall)
+            .call(&wrapper);  // call handler (thiscall - calee cleans the stack)
     }
 };

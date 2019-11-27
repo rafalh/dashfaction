@@ -1013,10 +1013,11 @@ void MiscInit()
     SndConvertVolume3D_AmbientSound_hook.Install();
 
     // Chat color alpha
-    AsmWritter(0x00477490, 0x004774A4).mov(asm_regs::eax, 0x30); // chatbox border
-    AsmWritter(0x00477528, 0x00477535).mov(asm_regs::ebx, 0x40); // chatbox background
-    AsmWritter(0x00478E00, 0x00478E14).mov(asm_regs::eax, 0x30); // chat input border
-    AsmWritter(0x00478E91, 0x00478E9E).mov(asm_regs::ebx, 0x40); // chat input background
+    using namespace asm_regs;
+    AsmWritter(0x00477490, 0x004774A4).mov(eax, 0x30); // chatbox border
+    AsmWritter(0x00477528, 0x00477535).mov(ebx, 0x40); // chatbox background
+    AsmWritter(0x00478E00, 0x00478E14).mov(eax, 0x30); // chat input border
+    AsmWritter(0x00478E91, 0x00478E9E).mov(ebx, 0x40); // chat input background
 
     // Show enemy bullets
     rf::hide_enemy_bullets = !g_game_config.show_enemy_bullets;
@@ -1155,7 +1156,7 @@ void MiscInit()
 
     // Use local_player variable for debris distance calculation instead of local_entity
     // Fixed debris pool being exhausted when local player is dead
-    AsmWritter(0x0042A223, 0x0042A232).mov(asm_regs::ecx, &rf::local_player);
+    AsmWritter(0x0042A223, 0x0042A232).mov(asm_regs::ecx, {&rf::local_player});
 
     // Delete sounds with lowest volume when there is no free slot for a new sound
     SndDsGetFreeChannel_hook.Install();

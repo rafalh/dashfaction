@@ -24,7 +24,7 @@ public:
 
 struct AsmReg32 : public AsmReg
 {
-    constexpr AsmReg32(int num) :
+    explicit constexpr AsmReg32(int num) :
         AsmReg(num, 4)
     {}
 
@@ -46,14 +46,14 @@ inline std::pair<AsmReg32, int> operator-(std::pair<AsmReg32, int> p, int n)
 
 struct AsmReg16 : public AsmReg
 {
-    constexpr AsmReg16(int num) :
+    explicit constexpr AsmReg16(int num) :
         AsmReg(num, 2)
     {}
 };
 
 struct AsmReg8 : public AsmReg
 {
-    constexpr AsmReg8(int num) :
+    explicit constexpr AsmReg8(int num) :
         AsmReg(num, 1)
     {}
 };
@@ -94,44 +94,48 @@ inline AsmRegMem operator*(std::pair<AsmReg32, int> p)
 
 namespace asm_regs
 {
-enum GenPurpRegNum
+
+namespace asm_reg_num
 {
-    GPRN_AX,
-    GPRN_CX,
-    GPRN_DX,
-    GPRN_BX,
-    GPRN_SP,
-    GPRN_BP,
-    GPRN_SI,
-    GPRN_DI,
+
+enum
+{
+    AX,
+    CX,
+    DX,
+    BX,
+    SP,
+    BP,
+    SI,
+    DI,
 };
 
-constexpr AsmReg32 eax(GPRN_AX), ecx(GPRN_CX), edx(GPRN_DX), ebx(GPRN_BX);
-constexpr AsmReg32 esp(GPRN_SP), ebp(GPRN_BP), esi(GPRN_SI), edi(GPRN_DI);
-constexpr AsmReg16 ax(GPRN_AX), cx(GPRN_CX), dx(GPRN_DX), bx(GPRN_BX);
-constexpr AsmReg16 sp(GPRN_SP), bp(GPRN_BP), si(GPRN_SI), di(GPRN_DI);
-constexpr AsmReg8 al(GPRN_AX), cl(GPRN_CX), dl(GPRN_DX), bl(GPRN_BX);
-constexpr AsmReg8 ah(GPRN_SP), ch(GPRN_BP), dh(GPRN_SI), bh(GPRN_DI);
+}
+
+constexpr AsmReg32 eax(asm_reg_num::AX), ecx(asm_reg_num::CX), edx(asm_reg_num::DX), ebx(asm_reg_num::BX);
+constexpr AsmReg32 esp(asm_reg_num::SP), ebp(asm_reg_num::BP), esi(asm_reg_num::SI), edi(asm_reg_num::DI);
+constexpr AsmReg16 ax(asm_reg_num::AX), cx(asm_reg_num::CX), dx(asm_reg_num::DX), bx(asm_reg_num::BX);
+constexpr AsmReg16 sp(asm_reg_num::SP), bp(asm_reg_num::BP), si(asm_reg_num::SI), di(asm_reg_num::DI);
+constexpr AsmReg8 al(asm_reg_num::AX), cl(asm_reg_num::CX), dl(asm_reg_num::DX), bl(asm_reg_num::BX);
+constexpr AsmReg8 ah(asm_reg_num::SP), ch(asm_reg_num::BP), dh(asm_reg_num::SI), bh(asm_reg_num::DI);
 } // namespace asm_regs
 
 class AsmWritter
 {
-private:
-    enum AsmPrefix
-    {
-        PR_OPERAND_SIZE_OVERRIDE = 0x66,
-    };
-
 public:
-    static const unsigned UNK_END_ADDR = 0xFFFFFFFF;
+    static constexpr uintptr_t unk_end_addr = UINTPTR_MAX;
 
-    AsmWritter(unsigned begin_addr, unsigned end_addr = UNK_END_ADDR) :
+    AsmWritter(uintptr_t begin_addr, uintptr_t end_addr = unk_end_addr) :
         m_addr(begin_addr), m_end_addr(end_addr)
+    {}
+
+    AsmWritter(void* begin_ptr, void* end_ptr = reinterpret_cast<void*>(unk_end_addr)) :
+        m_addr(reinterpret_cast<uintptr_t>(begin_ptr)), m_end_addr(reinterpret_cast<uintptr_t>(end_ptr))
     {}
 
     ~AsmWritter()
     {
-        if (m_end_addr != UNK_END_ADDR) {
+        if (m_end_addr != unk_end_addr) {
             assert(m_addr <= m_end_addr);
             while (m_addr < m_end_addr) nop();
         }
@@ -162,7 +166,7 @@ public:
 
     AsmWritter& push(const AsmReg16& reg)
     {
-        write<u8>(PR_OPERAND_SIZE_OVERRIDE); // Prefix
+        write<u8>(operand_size_override_prefix); // Prefix
         write<u8>(0x50 | reg.reg_num);
         return *this;
     }
@@ -175,7 +179,7 @@ public:
 
     AsmWritter& pop(const AsmReg16& reg)
     {
-        write<u8>(PR_OPERAND_SIZE_OVERRIDE); // Prefix
+        write<u8>(operand_size_override_prefix); // Prefix
         write<u8>(0x58 | reg.reg_num);        // Opcode
         return *this;
     }
@@ -192,10 +196,25 @@ public:
         return *this;
     }
 
-    AsmWritter& push(int32_t Val)
+    AsmWritter& push(int32_t imm)
     {
+        if (abs(imm) < 128)
+            return push(static_cast<i8>(imm));
         write<u8>(0x68); // Opcode
-        write<i32>(Val);
+        write<i32>(static_cast<i32>(imm));
+        return *this;
+    }
+
+    template<typename T>
+    AsmWritter& push(const T* imm)
+    {
+        return push(reinterpret_cast<int32_t>(imm));
+    }
+
+    AsmWritter& push(int8_t imm)
+    {
+        write<u8>(0x6A); // Opcode
+        write<i8>(static_cast<i8>(imm));
         return *this;
     }
 
@@ -257,7 +276,7 @@ public:
 
     AsmWritter& mov(const AsmRegMem& dst_rm, const AsmReg16& src_reg)
     {
-        write<u8>(PR_OPERAND_SIZE_OVERRIDE); // Prefix
+        write<u8>(operand_size_override_prefix); // Prefix
         write<u8>(0x89);                     // Opcode
         write_mod_rm(dst_rm, src_reg);
         return *this;
@@ -360,9 +379,15 @@ public:
         return *this;
     }
 
+    template<typename T>
+    AsmWritter& mov(const AsmReg32& dst_reg, T* imm)
+    {
+        return mov(dst_reg, reinterpret_cast<int32_t>(imm));
+    }
+
     AsmWritter& mov(const AsmReg16& dst_reg, int16_t imm)
     {
-        write<u8>(PR_OPERAND_SIZE_OVERRIDE); // Prefix
+        write<u8>(operand_size_override_prefix); // Prefix
         write<u8>(0xB8 | dst_reg.reg_num);     // Opcode
         write<i16>(imm);
         return *this;
@@ -378,7 +403,9 @@ public:
     AsmWritter& fstp(const AsmRegMem& dst_rm);
 
 private:
-    unsigned m_addr, m_end_addr;
+    uintptr_t m_addr, m_end_addr;
+
+    static constexpr u8 operand_size_override_prefix = 0x66;
 
     void write_mod_rm(const AsmRegMem& rm, uint8_t reg_field)
     {
@@ -422,6 +449,13 @@ private:
     {
         WriteMem<T>(m_addr, value);
         m_addr += sizeof(value);
+    }
+
+    template<typename T>
+    static bool can_imm_fit_in_one_byte(T imm)
+    {
+        static_assert(sizeof(T) <= 4);
+        return abs(static_cast<int32_t>(imm)) < 128;
     }
 };
 
