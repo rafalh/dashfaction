@@ -1,6 +1,7 @@
 #pragma once
 
 #include <patch_common/AsmWritter.h>
+#include <patch_common/CodeBuffer.h>
 #include <cstdint>
 #include <log/Logger.h>
 #include <subhook.h>
@@ -42,22 +43,21 @@ class BaseCodeInjection
 private:
     uintptr_t m_addr;
     subhook::Hook m_subhook;
+    CodeBuffer m_code_buf;
 
 public:
-    BaseCodeInjection(uintptr_t addr) : m_addr(addr) {}
+    BaseCodeInjection(uintptr_t addr) : m_addr(addr), m_code_buf(256) {}
     virtual ~BaseCodeInjection() {}
 
     void Install()
     {
-        void* wrapper = AllocMemForCode(256);
-
-        m_subhook.Install(reinterpret_cast<void*>(m_addr), wrapper);
+        m_subhook.Install(reinterpret_cast<void*>(m_addr), m_code_buf);
         void* trampoline = m_subhook.GetTrampoline();
         if (!trampoline)
             WARN("trampoline is null for 0x%X", m_addr);
 
         using namespace asm_regs;
-        AsmWritter asm_writter{reinterpret_cast<uintptr_t>(wrapper)};
+        AsmWritter asm_writter{reinterpret_cast<uintptr_t>(m_code_buf.get())};
         asm_writter
             .push(reinterpret_cast<int32_t>(trampoline)) // Push default EIP = trampoline
             .push(esp)                                 // push ESP before PUSHA so it can be popped manually after POPA

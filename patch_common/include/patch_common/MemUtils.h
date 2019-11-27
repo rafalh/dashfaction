@@ -11,7 +11,6 @@ struct TypeIdentity
 
 void WriteMem(unsigned addr, const void* data, unsigned size);
 void UnprotectMem(void* ptr, unsigned len);
-void* AllocMemForCode(unsigned num_bytes);
 
 template<typename T>
 void WriteMem(uintptr_t addr, typename TypeIdentity<T>::type value)
