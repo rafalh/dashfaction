@@ -148,7 +148,7 @@ void DisableAllDebugFlags()
 
 CodeInjection MpInit_disable_debug_flags_patch{
     0x0046D5B0,
-    []([[maybe_unused]] auto& regs) {
+    []() {
         DisableAllDebugFlags();
     },
 };

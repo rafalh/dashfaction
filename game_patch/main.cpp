@@ -105,7 +105,7 @@ CallHook<void()> InitGame_hook{
 
 CodeInjection after_gs_init_hook{
     0x004B26C6,
-    []([[ maybe_unused ]] auto& regs) {
+    []() {
         INFO("Game fully initialized");
     },
 };

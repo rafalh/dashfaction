@@ -44,7 +44,7 @@ CallHook<void(const void*, size_t, const rf::NwAddr&, rf::Player*)> ProcessUnrel
 class BufferOverflowPatch
 {
 private:
-    CodeInjection2<std::function<void(X86Regs&)>> m_movsb_patch;
+    std::unique_ptr<BaseCodeInjection> m_movsb_patch;
     uintptr_t m_shr_ecx_2_addr;
     uintptr_t m_and_ecx_3_addr;
     int32_t m_buffer_size;
@@ -52,7 +52,7 @@ private:
 
 public:
     BufferOverflowPatch(uintptr_t shr_ecx_2_addr, uintptr_t and_ecx_3_addr, int32_t buffer_size) :
-        m_movsb_patch(and_ecx_3_addr, std::bind(&BufferOverflowPatch::movsb_handler, this, std::placeholders::_1)),
+        m_movsb_patch(new CodeInjection{and_ecx_3_addr, [this](auto& regs) { movsb_handler(regs); }}),
         m_shr_ecx_2_addr(shr_ecx_2_addr), m_and_ecx_3_addr(and_ecx_3_addr), m_buffer_size(buffer_size)
     {}
 
@@ -65,24 +65,24 @@ public:
 
         using namespace asm_regs;
         if (std::memcmp(shr_ecx_2_ptr + 3, "\xF3\xA5", 2) == 0) { // rep movsd
-            m_movsb_patch.SetAddr(m_shr_ecx_2_addr);
+            m_movsb_patch->SetAddr(m_shr_ecx_2_addr);
             m_ret_addr = m_shr_ecx_2_addr + 5;
             AsmWritter(m_and_ecx_3_addr, m_and_ecx_3_addr + 3).xor_(ecx, ecx);
         }
         else if (std::memcmp(and_ecx_3_ptr + 3, "\xF3\xA4", 2) == 0) { // rep movsb
             AsmWritter(m_shr_ecx_2_addr, m_shr_ecx_2_addr + 3).xor_(ecx, ecx);
-            m_movsb_patch.SetAddr(m_and_ecx_3_addr);
+            m_movsb_patch->SetAddr(m_and_ecx_3_addr);
             m_ret_addr = m_and_ecx_3_addr + 5;
         }
         else {
             assert(false);
         }
 
-        m_movsb_patch.Install();
+        m_movsb_patch->Install();
     }
 
 private:
-    void movsb_handler(X86Regs& regs)
+    void movsb_handler(BaseCodeInjection::Regs& regs)
     {
         auto dst_ptr = reinterpret_cast<char*>(regs.edi);
         auto src_ptr = reinterpret_cast<char*>(regs.esi);
@@ -274,7 +274,7 @@ CodeInjection ProcessGamePacket_whitelist_filter{
 
 CodeInjection ProcessGameInfoPacket_GameTypeBounds_patch{
     0x0047B30B,
-    [](X86Regs& regs) {
+    [](auto& regs) {
         // Valid game types are between 0 and 2
         regs.ecx = std::clamp(regs.ecx, 0, 2);
     },

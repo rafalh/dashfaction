@@ -186,7 +186,7 @@ void LinearPitchTest()
 
 CodeInjection LinearPitchPatch{
     0x0049DEC9,
-    [](X86Regs& regs) {
+    [](auto& regs) {
         if (!g_game_config.linear_pitch)
             return;
         // Non-linear pitch value and delta from RF

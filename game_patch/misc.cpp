@@ -236,7 +236,7 @@ DcCommand2 swap_assault_rifle_controls_cmd{
 
 CodeInjection CriticalError_hide_main_wnd_patch{
     0x0050BA90,
-    []([[maybe_unused]] auto& regs) {
+    []() {
         if (rf::gr_d3d_device)
             rf::gr_d3d_device->Release();
         if (rf::main_wnd)
@@ -400,7 +400,7 @@ CodeInjection TriggerCheckActivation_patch{
 
 CodeInjection RflLoadInternal_CheckRestoreStatus_patch{
     0x00461195,
-    [](X86Regs& regs) {
+    [](auto& regs) {
         // check if SaveRestoreLoadAll is successful
         if (regs.eax)
             return;
@@ -486,7 +486,7 @@ CallHook<int()> PlayHardcodedBackgroundMusicForCutscene_hook{
 
 CodeInjection CoronaEntityCollisionTestFix{
     0x004152F1,
-    [](X86Regs& regs) {
+    [](auto& regs) {
         auto get_entity_root_bone_pos = AddrAsRef<void(rf::EntityObj*, rf::Vector3&)>(0x48AC70);
         using IntersectLineWithAabbType = bool(rf::Vector3 * aabb1, rf::Vector3 * aabb2, rf::Vector3 * pos1,
                                                rf::Vector3 * pos2, rf::Vector3 * out_pos);
@@ -697,7 +697,7 @@ FunHook<void(const char*, int)> strings_tbl_buffer_overflow_fix{
 
 CodeInjection glass_kill_init_fix{
     0x00435A90,
-    []([[ maybe_unused ]] auto& regs) {
+    []() {
         auto GlassKillInit = AddrAsRef<void()>(0x00490F60);
         GlassKillInit();
     },

@@ -60,7 +60,7 @@ static void SetTextureMinMagFilterInCode(D3DTEXTUREFILTERTYPE filter_type)
 
 CodeInjection GrSetViewMatrix_widescreen_fix{
     0x005473AD,
-    []([[maybe_unused]] auto& regs) {
+    []() {
         constexpr float ref_aspect_ratio = 4.0f / 3.0f;
         constexpr float max_wide_aspect_ratio = 21.0f / 9.0f; // biggest aspect ratio currently in market
 

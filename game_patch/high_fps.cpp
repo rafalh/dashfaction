@@ -204,7 +204,7 @@ rf::Timer g_player_jump_timer;
 
 CodeInjection stuck_to_ground_when_jumping_fix{
     0x0042891E,
-    []([[ maybe_unused ]] auto& regs) {
+    [](auto& regs) {
         auto entity = reinterpret_cast<rf::EntityObj*>(regs.esi);
         if (entity->local_player) {
             // Skip land handling code for next 64 ms (like in PF)
@@ -215,7 +215,7 @@ CodeInjection stuck_to_ground_when_jumping_fix{
 
 CodeInjection stuck_to_ground_when_using_jump_pad_fix{
     0x00486B60,
-    []([[ maybe_unused ]] auto& regs) {
+    [](auto& regs) {
         auto entity = reinterpret_cast<rf::EntityObj*>(regs.esi);
         if (entity->local_player) {
             // Skip land handling code for next 64 ms
@@ -234,9 +234,6 @@ CodeInjection stuck_to_ground_fix{
         }
     },
 };
-
-
-
 
 void STDCALL EntityWaterDecelerateFix(rf::EntityObj* entity)
 {
@@ -312,7 +309,7 @@ CallHook<void(int)> frametime_update_sleep_hook{
 
 CodeInjection cutscene_shot_sync_fix{
     0x0045B43B,
-    [](X86Regs& regs) {
+    [](auto& regs) {
         auto& current_shot_idx = StructFieldRef<int>(rf::active_cutscene, 0x808);
         auto& current_shot_timer = StructFieldRef<rf::Timer>(rf::active_cutscene, 0x810);
         if (current_shot_idx > 1) {
