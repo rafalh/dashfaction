@@ -86,7 +86,7 @@ protected:
         this->func = reinterpret_cast<void (*)()>(StaticHandler);
     }
 
-    static void __fastcall StaticHandler(rf::DcCommand* cmd)
+    static void __thiscall StaticHandler(rf::DcCommand* cmd)
     {
         BaseCommand* cmd2 = static_cast<BaseCommand*>(cmd);
         cmd2->Handler();
@@ -170,7 +170,7 @@ public:
 private:
     void Handler() override
     {
-        auto handler_fun = reinterpret_cast<void(__fastcall *)(rf::DcCommand*)>(m_target_cmd.func);
+        auto handler_fun = reinterpret_cast<void(__thiscall *)(rf::DcCommand*)>(m_target_cmd.func);
         handler_fun(&m_target_cmd);
     }
 };

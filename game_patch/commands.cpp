@@ -254,7 +254,7 @@ void DcShowCmdHelp(rf::DcCommand* cmd)
     rf::dc_run = 0;
     rf::dc_help = 1;
     rf::dc_status = 0;
-    auto handler = reinterpret_cast<void(__fastcall*)(rf::DcCommand*)>(cmd->func);
+    auto handler = reinterpret_cast<void(__thiscall*)(rf::DcCommand*)>(cmd->func);
     handler(cmd);
 }
 

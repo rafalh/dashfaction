@@ -74,6 +74,24 @@ public:
     }
 };
 
+template<class R, class... A>
+class CallHook<R __thiscall(A...)> : public CallHookImpl
+{
+private:
+    typedef R __thiscall FunType(A...);
+
+public:
+    CallHook(uintptr_t call_op_addr, FunType* hook_fun_ptr) :
+        CallHookImpl(call_op_addr, reinterpret_cast<void*>(hook_fun_ptr))
+    {}
+
+    R CallTarget(A... a) const
+    {
+        auto target_fun = reinterpret_cast<FunType*>(m_target_fun_ptr);
+        return target_fun(a...);
+    }
+};
+
 #ifdef __cpp_deduction_guides
 // deduction guide for lambda functions
 template<class T>
