@@ -360,7 +360,7 @@ void ServerInit()
     EntityTakeDamage_hook.Install();
 
     // Do not strip '%' characters from chat messages
-    WriteMem<u8>(0x004785FD, ASM_SHORT_JMP_REL);
+    WriteMem<u8>(0x004785FD, asm_opcodes::jmp_rel_short);
 
     // Item replacements
     find_rfl_item_class_hook.Install();

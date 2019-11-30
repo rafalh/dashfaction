@@ -950,13 +950,13 @@ void MiscInit()
 
 #ifdef NO_CD_FIX
     // No-CD fix
-    WriteMem<u8>(0x004B31B6, ASM_SHORT_JMP_REL);
+    WriteMem<u8>(0x004B31B6, asm_opcodes::jmp_rel_short);
 #endif // NO_CD_FIX
 
     // Disable thqlogo.bik
     if (g_game_config.fast_start) {
-        WriteMem<u8>(0x004B208A, ASM_SHORT_JMP_REL);
-        WriteMem<u8>(0x004B24FD, ASM_SHORT_JMP_REL);
+        WriteMem<u8>(0x004B208A, asm_opcodes::jmp_rel_short);
+        WriteMem<u8>(0x004B24FD, asm_opcodes::jmp_rel_short);
     }
 
     // Sound loop fix
@@ -1148,9 +1148,9 @@ void MiscInit()
     // Disabled by default to not cause any trouble because of total object limit (e.g. big limit would block respawning)
 #ifdef BIG_WEAPON_POOL
     const i8 weapon_pool_size = 100;
-    WriteMem<u8>(0x0048B5BB, ASM_SHORT_JMP_REL);
+    WriteMem<u8>(0x0048B5BB, asm_opcodes::jmp_rel_short);
     WriteMem<i8>(0x00487271 + 6, weapon_pool_size);
-    //WriteMem<u8>(0x0048B59B, ASM_SHORT_JMP_REL); // uncomment to always use dynamic allocation (it would cause a leak)
+    //WriteMem<u8>(0x0048B59B, asm_opcodes::jmp_rel_short); // uncomment to always use dynamic allocation (it would cause a leak)
     weapon_pool_alloc_zero_dynamic_mem.Install();
 #endif
 
@@ -1161,12 +1161,12 @@ void MiscInit()
     // Delete sounds with lowest volume when there is no free slot for a new sound
     SndDsGetFreeChannel_hook.Install();
     PlaySound_no_free_slots_fix.Install();
-    //WriteMem<u8>(0x005055AB, ASM_SHORT_JMP_REL); // never free level sounds, uncomment to test
+    //WriteMem<u8>(0x005055AB, asm_opcodes::jmp_rel_short); // never free level sounds, uncomment to test
 
     // Skip broken code that was supposed to skip particle emulation when particle emitter is in non-rendered room
     // RF code is broken here because level emitters have object handle set to 0 and other emitters are not added to
     // the searched list
-    WriteMem<u8>(0x00495158, ASM_SHORT_JMP_REL);
+    WriteMem<u8>(0x00495158, asm_opcodes::jmp_rel_short);
 
     // Sort objects by anim mesh name to improve rendering performance
     sort_items_patch.Install();

@@ -358,7 +358,7 @@ DcCommand2 profile_frame_cmd{
 void GraphicsInit()
 {
     // Fix for "At least 8 MB of available video memory"
-    WriteMem<u8>(0x005460CD, ASM_JAE_SHORT);
+    WriteMem<u8>(0x005460CD, asm_opcodes::jae_rel_short);
 
     if (g_game_config.wnd_mode != GameConfig::FULLSCREEN) {
         /* Enable windowed mode */
@@ -371,7 +371,7 @@ void GraphicsInit()
     }
 
     // Disable keyboard hooks (they were supposed to block alt-tab; they does not work in modern OSes anyway)
-    WriteMem<u8>(0x00524C98, ASM_SHORT_JMP_REL);
+    WriteMem<u8>(0x00524C98, asm_opcodes::jmp_rel_short);
 
 #if D3D_SWAP_DISCARD
     // Use Discard Swap Mode
@@ -399,8 +399,8 @@ void GraphicsInit()
 
     // Don't use LOD models
     if (g_game_config.disable_lod_models) {
-        // WriteMem<u8>(0x00421A40, ASM_SHORT_JMP_REL);
-        WriteMem<u8>(0x0052FACC, ASM_SHORT_JMP_REL);
+        // WriteMem<u8>(0x00421A40, asm_opcodes::jmp_rel_short);
+        WriteMem<u8>(0x0052FACC, asm_opcodes::jmp_rel_short);
     }
 
     // Better error message in case of device creation error
@@ -411,15 +411,15 @@ void GraphicsInit()
 
 #if 1
     // Fix rendering of right and bottom edges of viewport
-    WriteMem<u8>(0x00431D9F, ASM_SHORT_JMP_REL);
-    WriteMem<u8>(0x00431F6B, ASM_SHORT_JMP_REL);
-    WriteMem<u8>(0x004328CF, ASM_SHORT_JMP_REL);
+    WriteMem<u8>(0x00431D9F, asm_opcodes::jmp_rel_short);
+    WriteMem<u8>(0x00431F6B, asm_opcodes::jmp_rel_short);
+    WriteMem<u8>(0x004328CF, asm_opcodes::jmp_rel_short);
     AsmWritter(0x0043298F).jmp(0x004329DC);
     GrClearZBuffer_fix_rect.Install();
 
     // Left and top viewport edge fix for MSAA (RF does similar thing in GrDrawTextureD3D)
-    WriteMem<u8>(0x005478C6, ASM_FADD);
-    WriteMem<u8>(0x005478D7, ASM_FADD);
+    WriteMem<u8>(0x005478C6, asm_opcodes::fadd);
+    WriteMem<u8>(0x005478D7, asm_opcodes::fadd);
     WriteMemPtr(0x005478C6 + 2, &g_gr_clipped_geom_offset_x);
     WriteMemPtr(0x005478D7 + 2, &g_gr_clipped_geom_offset_y);
     GrDrawRect_GrDrawPoly_hook.Install();
@@ -453,14 +453,14 @@ void GraphicsInit()
     }
 
     // Always transfer entire framebuffer to entire window in Present call
-    WriteMem<u8>(0x00544FE6, ASM_SHORT_JMP_REL);
+    WriteMem<u8>(0x00544FE6, asm_opcodes::jmp_rel_short);
 
     // Init True Color improvements
     GrColorInit();
 
     // Enable mip-mapping for textures bigger than 256x256
     AsmWritter(0x0050FEDA, 0x0050FEE9).nop();
-    WriteMem<u8>(0x0055B739, ASM_SHORT_JMP_REL);
+    WriteMem<u8>(0x0055B739, asm_opcodes::jmp_rel_short);
 
     // Fix decal fade out
     WriteMem<u8>(0x00560994 + 1, 3);
@@ -473,7 +473,7 @@ void GraphicsInit()
     antialiasing_cmd.Register();
 
     // Do not flush drawing buffers during GrSetColor call
-    WriteMem<u8>(0x0050CFEB, ASM_SHORT_JMP_REL);
+    WriteMem<u8>(0x0050CFEB, asm_opcodes::jmp_rel_short);
 
 #ifdef DEBUG
     profile_frame_cmd.Register();

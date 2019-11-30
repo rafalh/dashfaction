@@ -353,7 +353,7 @@ void HighFpsInit()
 
     // Fix incorrect frame time calculation
     AsmWritter(0x00509595).nop(2);
-    WriteMem<u8>(0x00509532, ASM_SHORT_JMP_REL);
+    WriteMem<u8>(0x00509532, asm_opcodes::jmp_rel_short);
     frametime_update_sleep_hook.Install();
 
     // Fix submarine exploding on high FPS

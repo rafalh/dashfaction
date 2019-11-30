@@ -590,7 +590,7 @@ void NetworkInit()
     AsmWritter(0x004A415F).nop(10);
 
     /* Show valid info for servers with incompatible version */
-    WriteMem<u8>(0x0047B3CB, ASM_SHORT_JMP_REL);
+    WriteMem<u8>(0x0047B3CB, asm_opcodes::jmp_rel_short);
 
     /* Change default Server List sort to players count */
     WriteMem<u32>(0x00599D20, 4);
