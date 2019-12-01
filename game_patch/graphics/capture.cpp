@@ -292,6 +292,23 @@ FunHook<void()> GameRenderToDynamicTextures_msaa_fix{
     },
 };
 
+CodeInjection screenshot_scanlines_array_overflow_fix1{
+    0x0055A066,
+    [](auto& regs) {
+        g_screenshot_scanlines_buf = std::make_unique<byte* []>(rf::gr_screen.max_height);
+        regs.ecx = reinterpret_cast<int32_t>(g_screenshot_scanlines_buf.get());
+        regs.eip = 0x0055A06D;
+    },
+};
+
+CodeInjection screenshot_scanlines_array_overflow_fix2{
+    0x0055A0DF,
+    [](auto& regs) {
+        regs.eax = reinterpret_cast<int32_t>(g_screenshot_scanlines_buf.get());
+        regs.eip = 0x0055A0E6;
+    },
+};
+
 void GraphicsCaptureInit()
 {
 #if !D3D_LOCKABLE_BACKBUFFER
@@ -315,24 +332,18 @@ void GraphicsCaptureInit()
 
     // Override screenshot directory
     WriteMemPtr(0x004367CA + 2, &g_screenshot_dir_id);
+
+    // Fix buffer overflow in screenshot to JPG conversion code
+    screenshot_scanlines_array_overflow_fix1.Install();
+    screenshot_scanlines_array_overflow_fix2.Install();
 }
 
 void GraphicsCaptureAfterGameInit()
 {
-    /* Fix for screenshots creation when height > 1024 */
-    if (rf::gr_screen.max_height > 1024) {
-        g_screenshot_scanlines_buf = std::make_unique<byte* []>(rf::gr_screen.max_height);
-        using namespace asm_regs;
-        AsmWritter(0x0055A066, 0x0055A06D)
-            .mov(ecx, &g_screenshot_scanlines_buf[0]);
-        AsmWritter(0x0055A0DF, 0x0055A0E6)
-            .mov(eax, g_screenshot_scanlines_buf.get());
-    }
-
     auto full_path = StringFormat("%s\\%s", rf::root_path, g_screenshot_dir_name);
     if (CreateDirectoryA(full_path.c_str(), nullptr))
         INFO("Created screenshots directory");
     else if (GetLastError() != ERROR_ALREADY_EXISTS)
         ERR("Failed to create screenshots directory %lu", GetLastError());
-    g_screenshot_dir_id = rf::FsAddDirectoryEx(g_screenshot_dir_name, "", 1);
+    g_screenshot_dir_id = rf::FsAddDirectoryEx(g_screenshot_dir_name, "", true);
 }

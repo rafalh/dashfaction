@@ -355,6 +355,26 @@ DcCommand2 profile_frame_cmd{
 
 #endif // DEBUG
 
+CodeInjection after_gr_init_hook{
+    0x0050C5CD,
+    []() {
+        // Anisotropic texture filtering
+        if (rf::gr_d3d_device_caps.MaxAnisotropy > 0 && g_game_config.anisotropic_filtering && !rf::is_dedicated_server) {
+            SetTextureMinMagFilterInCode(D3DTEXF_ANISOTROPIC);
+            DWORD anisotropy_level = SetupMaxAnisotropy();
+            INFO("Anisotropic Filtering enabled (level: %lu)", anisotropy_level);
+        }
+
+        // Change font for Time Left text
+        static int time_left_font = rf::GrLoadFont("rfpc-large.vf", -1);
+        if (time_left_font >= 0) {
+            WriteMem<i8>(0x00477157 + 1, time_left_font);
+            WriteMem<i8>(0x0047715F + 2, 21);
+            WriteMem<i32>(0x00477168 + 1, 154);
+        }
+    },
+};
+
 void GraphicsInit()
 {
     // Fix for "At least 8 MB of available video memory"
@@ -481,24 +501,8 @@ void GraphicsInit()
 
     // Render rocket launcher scanner image every frame
     // AddrAsRef<bool>(0x5A1020) = 0;
-}
 
-void GraphicsAfterGameInit()
-{
-    // Anisotropic texture filtering
-    if (rf::gr_d3d_device_caps.MaxAnisotropy > 0 && g_game_config.anisotropic_filtering && !rf::is_dedicated_server) {
-        SetTextureMinMagFilterInCode(D3DTEXF_ANISOTROPIC);
-        DWORD anisotropy_level = SetupMaxAnisotropy();
-        INFO("Anisotropic Filtering enabled (level: %lu)", anisotropy_level);
-    }
-
-    // Change font for Time Left text
-    static int time_left_font = rf::GrLoadFont("rfpc-large.vf", -1);
-    if (time_left_font >= 0) {
-        WriteMem<i8>(0x00477157 + 1, time_left_font);
-        WriteMem<i8>(0x0047715F + 2, 21);
-        WriteMem<i32>(0x00477168 + 1, 154);
-    }
+    after_gr_init_hook.Install();
 }
 
 void GraphicsDrawFpsCounter()

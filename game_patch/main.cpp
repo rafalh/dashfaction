@@ -66,69 +66,49 @@ PlayerAdditionalData& GetPlayerAdditionalData(rf::Player* player)
     return g_player_additional_data_map[player];
 }
 
-CallHook<void(bool)> DcUpdate_hook{
-    0x004B2DD3,
-    [](bool is_server) {
-        // Draw on top (after scene)
-
-        DcUpdate_hook.CallTarget(is_server);
-
-        GraphicsDrawFpsCounter();
-
-        RenderDownloadProgress();
-
-#if !defined(NDEBUG) && defined(HAS_EXPERIMENTAL)
-        ExperimentalRender();
-#endif
-        DebugRender2d();
-    },
-};
-
 CallHook<void()> InitGame_hook{
     0x004B27CD,
     []() {
-        DWORD start_ticks = GetTickCount();
+        auto start_ticks = GetTickCount();
         INFO("Initializing game...");
-
         InitGame_hook.CallTarget();
-
-        GraphicsAfterGameInit();
-        CommandsAfterGameInit();
-        GraphicsCaptureAfterGameInit();
-
         INFO("Game initialized (%lu ms).", GetTickCount() - start_ticks);
     },
 };
 
-CodeInjection after_gs_init_hook{
+CodeInjection after_full_game_init_hook{
     0x004B26C6,
     []() {
+        SpectateModeAfterFullGameInit();
+#if !defined(NDEBUG) && defined(HAS_EXPERIMENTAL)
+        ExperimentalInitAfterGame();
+#endif
+        GraphicsCaptureAfterGameInit();
+        CommandsAfterGameInit();
+
         INFO("Game fully initialized");
     },
 };
 
-CallHook<void()> CleanupGame_hook{
+CodeInjection cleanup_game_hook{
     0x004B2821,
     []() {
         ResetGammaRamp();
         MiscCleanup();
         ServerCleanup();
-        CleanupGame_hook.CallTarget();
     },
 };
 
-CallHook<bool()> RunGame_hook{
+CodeInjection before_frame_hook{
     0x004B2818,
     []() {
         ProcessWaitingMessages();
         HighFpsUpdate();
         ServerDoFrame();
-
-        return RunGame_hook.CallTarget();
     },
 };
 
-CallHook<void()> RenderInGame_hook{
+CodeInjection after_level_render_hook{
     0x00432375,
     []() {
 #if !defined(NDEBUG) && defined(HAS_EXPERIMENTAL)
@@ -138,22 +118,28 @@ CallHook<void()> RenderInGame_hook{
     },
 };
 
-FunHook<int()> KeyGetFromFifo_hook{
+CodeInjection after_frame_render_hook{
+    0x004B2E3F,
+    []() {
+        // Draw on top (after scene)
+
+        if (rf::is_net_game)
+            SpectateModeDrawUI();
+
+        GraphicsDrawFpsCounter();
+        RenderDownloadProgress();
+#if !defined(NDEBUG) && defined(HAS_EXPERIMENTAL)
+        ExperimentalRender();
+#endif
+        DebugRender2d();
+    },
+};
+
+CodeInjection KeyGetFromFifo_hook{
     0x0051F000,
     []() {
         // Process messages here because when watching videos main loop is not running
         ProcessWaitingMessages();
-        return KeyGetFromFifo_hook.CallTarget();
-    },
-};
-
-FunHook<void(rf::Player*)> RenderHitScreen_hook{
-    0x004163C0,
-    [](rf::Player* player) {
-        RenderHitScreen_hook.CallTarget(player);
-
-        if (rf::is_net_game)
-            SpectateModeDrawUI();
     },
 };
 
@@ -172,16 +158,6 @@ FunHook<void(rf::Player*)> PlayerDestroy_hook{
         SpectateModeOnDestroyPlayer(player);
         PlayerDestroy_hook.CallTarget(player);
         g_player_additional_data_map.erase(player);
-    },
-};
-
-CallHook<void()> AfterFullGameInit_hook{
-    0x004B2693,
-    []() {
-        SpectateModeAfterFullGameInit();
-#if !defined(NDEBUG) && defined(HAS_EXPERIMENTAL)
-        ExperimentalInitAfterGame();
-#endif
     },
 };
 
@@ -294,25 +270,22 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     INFO("Max FPS: %u", g_game_config.max_fps);
     INFO("Allow Overwriting Game Files: %d", static_cast<int>(g_game_config.allow_overwrite_game_files));
 
-    /* Process messages in the same thread as DX processing (alternative: D3DCREATE_MULTITHREADED) */
+    // Process messages in the same thread as DX processing (alternative: D3DCREATE_MULTITHREADED)
     AsmWritter(0x00524C48, 0x00524C83).nop(); // disable msg loop thread
     AsmWritter(0x00524C48).call(0x00524E40);  // CreateMainWindow
     KeyGetFromFifo_hook.Install();
 
-    /* General game hooks */
+    // General game hooks
     InitGame_hook.Install();
-    CleanupGame_hook.Install();
-    RunGame_hook.Install();
-    RenderInGame_hook.Install();
-    AfterFullGameInit_hook.Install();
-    DcUpdate_hook.Install();
-    after_gs_init_hook.Install();
-
-    RenderHitScreen_hook.Install();
+    after_full_game_init_hook.Install();
+    cleanup_game_hook.Install();
+    before_frame_hook.Install();
+    after_level_render_hook.Install();
+    after_frame_render_hook.Install();
     PlayerCreate_hook.Install();
     PlayerDestroy_hook.Install();
 
-    /* Init modules */
+    // Init modules
     CommandsInit();
     GraphicsInit();
     InitGamma();
@@ -323,7 +296,7 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     InitAutodownloader();
     InitScoreboard();
     InitKill();
-    VfsApplyHooks(); /* Use new VFS without file count limit */
+    PackfileApplyPatches();
     SpectateModeInit();
     HighFpsInit();
     MiscInit();
@@ -335,7 +308,7 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
 
     INFO("Installing hooks took %lu ms", GetTickCount() - start_ticks);
 
-    return 1; /* success */
+    return 1; // success
 }
 
 BOOL WINAPI DllMain(HINSTANCE instance_handle, [[maybe_unused]] DWORD fdw_reason, [[maybe_unused]] LPVOID lpv_reserved)

@@ -10,7 +10,7 @@ enum GameLang
     LANG_FR = 2,
 };
 
-void VfsApplyHooks();
+void PackfileApplyPatches();
 GameLang GetInstalledGameLang();
 bool IsModdedGame();
 void PackfileFindMatchingFiles(const StringMatcher& query, std::function<void(const char*)> result_consumer);

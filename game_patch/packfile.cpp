@@ -533,8 +533,10 @@ static void PackfileCleanup_New()
     g_packfiles.clear();
 }
 
-void VfsApplyHooks()
+void PackfileApplyPatches()
 {
+    // Packfile handling implemetation getting rid of all limits
+
     AsmWritter(0x0052BCA0).jmp(PackfileAddToLookupTable_New);
     AsmWritter(0x0052BD40).jmp(PackfileAddEntries_New);
     AsmWritter(0x0052C4D0).jmp(PackfileBuildEntriesList_New);

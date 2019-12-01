@@ -451,6 +451,9 @@ void CommandsInit()
     // vli command support
     GlareRenderAllCorona_hook.Install();
 
+    // Reset debug flags when entering multiplayer
+    MpInit_disable_debug_flags_patch.Install();
+
     // Allow 'level' command outside of multiplayer game
     AsmWritter(0x00434FEC, 0x00434FF2).nop();
 }
@@ -551,7 +554,6 @@ void CommandsAfterGameInit()
 
     // Custom Dash Faction commands
     max_fps_cmd.Register();
-
     vli_cmd.Register();
     level_sounds_cmd.Register();
     player_count_cmd.Register();
@@ -559,6 +561,4 @@ void CommandsAfterGameInit()
     find_map_cmd.Register();
     map_cmd.Register();
     debug_cmd.Register();
-
-    MpInit_disable_debug_flags_patch.Install();
 }
