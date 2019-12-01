@@ -11,6 +11,18 @@ public:
     RegKey(RegKey const&) = delete;
     RegKey& operator=(RegKey const&) = delete;
 
+    RegKey(RegKey&& other) noexcept :
+        m_key(std::exchange(other.m_key, nullptr)), m_open(std::exchange(other.m_open, false))
+    {
+    }
+
+    RegKey& operator=(RegKey&& other) noexcept
+    {
+        std::swap(m_key, other.m_key);
+        std::swap(m_open, other.m_open);
+        return *this;
+    }
+
     RegKey(HKEY parent_key, const char* sub_key, REGSAM access_rights, bool create = false)
     {
         if (!parent_key)
@@ -110,6 +122,6 @@ public:
     }
 
 private:
-    HKEY m_key = NULL;
+    HKEY m_key = nullptr;
     bool m_open = false;
 };
