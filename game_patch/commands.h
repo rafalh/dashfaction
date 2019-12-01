@@ -5,12 +5,6 @@
 #include <functional>
 #include <optional>
 
-namespace rf
-{
-struct DcCommand;
-struct Player;
-} // namespace rf
-
 void CommandsInit();
 void CommandsAfterGameInit();
 void CommandRegister(rf::DcCommand* cmd);
@@ -88,7 +82,8 @@ protected:
 
     static void __thiscall StaticHandler(rf::DcCommand* cmd)
     {
-        BaseCommand* cmd2 = static_cast<BaseCommand*>(cmd);
+        // Note: this cast actually changes the offset taking into account the vtbl existance
+        auto cmd2 = static_cast<BaseCommand*>(cmd);
         cmd2->Handler();
     }
 
@@ -101,21 +96,36 @@ public:
     }
 };
 
-template<typename... Args>
-class DcCommand2;
-
-template<typename... Args>
-class DcCommand2<void(Args...)> : public BaseCommand
+template<typename T>
+class DcCommand2 : public BaseCommand
 {
 private:
-    std::function<void(Args...)> m_handler_fun;
+    template<typename V>
+    class HandlerWrapper;
+
+    template<typename ReturnType, typename... Args>
+    class HandlerWrapper<ReturnType(Args...)>
+    {
+        T m_handler;
+
+    public:
+        HandlerWrapper(T handler) : m_handler(handler)
+        {}
+
+        void operator()()
+        {
+            m_handler(DcReadArg<Args>()...);
+        }
+    };
+
+    HandlerWrapper<typename function_traits<T>::f_type> m_handler_wrapper;
     const char* m_usage_text;
 
 public:
-    DcCommand2(const char* name, void (*handler_fun)(Args...), const char* description = nullptr,
+    DcCommand2(const char* name, T handler, const char* description = nullptr,
                const char* usage_text = nullptr) :
         BaseCommand(name, description),
-        m_handler_fun(handler_fun), m_usage_text(usage_text)
+        m_handler_wrapper(handler), m_usage_text(usage_text)
     {}
 
 private:
@@ -130,7 +140,7 @@ private:
     void Run()
     {
         try {
-            m_handler_fun(DcReadArg<Args>()...);
+            m_handler_wrapper();
         }
         catch (const DcInvalidArgTypeError&) {
             rf::DcPrint("Invalid arg type!", nullptr);
@@ -148,16 +158,6 @@ private:
         }
     }
 };
-
-#ifdef __cpp_deduction_guides
-// deduction guide for lambda functions
-template<class T>
-DcCommand2(const char*, T)->DcCommand2<typename function_traits<T>::f_type>;
-template<class T>
-DcCommand2(const char*, T, const char*)->DcCommand2<typename function_traits<T>::f_type>;
-template<class T>
-DcCommand2(const char*, T, const char*, const char*)->DcCommand2<typename function_traits<T>::f_type>;
-#endif
 
 class DcCommandAlias : public BaseCommand
 {
