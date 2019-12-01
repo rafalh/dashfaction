@@ -240,6 +240,8 @@ DcCommand2 fullscreen_cmd{
     "fullscreen",
     []() {
         rf::gr_d3d_pp.Windowed = false;
+        rf::gr_d3d_pp.FullScreen_PresentationInterval =
+            g_game_config.vsync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
         g_reset_device_req = true;
     },
 };
@@ -248,6 +250,7 @@ DcCommand2 windowed_cmd{
     "windowed",
     []() {
         rf::gr_d3d_pp.Windowed = true;
+        rf::gr_d3d_pp.FullScreen_PresentationInterval = 0;
         g_reset_device_req = true;
     },
 };
