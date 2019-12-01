@@ -31,14 +31,10 @@ public:
         start_time = std::time(nullptr);
 
         // prepare allowed player list
-        rf::Player* player = rf::player_list;
-        while (player) {
-            if (player != source && !GetPlayerAdditionalData(player).is_browser) {
-                remaining_players.insert(player);
-            }
-            player = player->next;
-            if (player == rf::player_list) {
-                break;
+        auto player_list = SinglyLinkedList{rf::player_list};
+        for (auto& player : player_list) {
+            if (&player != source && !GetPlayerAdditionalData(&player).is_browser) {
+                remaining_players.insert(&player);
             }
         }
 

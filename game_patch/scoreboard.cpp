@@ -36,18 +36,17 @@ void DrawScoreboardInternal_New(bool draw)
 
     // Sort players by score
     rf::Player* players[32];
-    rf::Player* player = rf::player_list;
     unsigned c_players = 0;
-    while (c_players < 32) {
-        players[c_players++] = player;
-        if (single_column || !player->blue_team)
+    auto player_list = SinglyLinkedList{rf::player_list};
+    for (auto& player : player_list) {
+        players[c_players++] = &player;
+        if (c_players == 32) {
+            break;
+        }
+        if (single_column || !player.blue_team)
             ++c_left_col;
         else
             ++c_right_col;
-
-        player = player->next;
-        if (!player || player == rf::player_list)
-            break;
     }
     std::sort(players, players + c_players, [](auto player1, auto player2) {
         return player1->stats->score > player2->stats->score;
@@ -196,7 +195,7 @@ void DrawScoreboardInternal_New(bool draw)
     // Finally draw the list
     int sect_counter[2] = {0, 0};
     for (unsigned i = 0; i < c_players; ++i) {
-        player = players[i];
+        rf::Player* player = players[i];
 
         unsigned sect_idx = (single_column || !player->blue_team) ? 0 : 1;
         auto& offsets = col_offsets[sect_idx];

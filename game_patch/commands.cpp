@@ -212,15 +212,8 @@ DcCommand2 player_count_cmd{
         if (!rf::is_net_game)
             return;
 
-        int player_count = 0;
-        rf::Player* player = rf::player_list;
-        while (player) {
-            if (player != rf::player_list)
-                ++player_count;
-            player = player->next;
-            if (player == rf::player_list)
-                break;
-        }
+        auto player_list = SinglyLinkedList{rf::player_list};
+        auto player_count = std::distance(player_list.begin(), player_list.end());
         rf::DcPrintf("Player count: %d\n", player_count);
     },
     "Get player count",

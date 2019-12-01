@@ -100,3 +100,77 @@ inline std::string StringFormat(const char* format, ...)
     va_end(args);
     return std::string(buf.get(), buf.get() + size - 1); // We don't want the '\0' inside
 }
+
+template<typename T>
+class SinglyLinkedList
+{
+    T*& m_list;
+
+public:
+    class Iterator
+    {
+        T* current;
+        T* first;
+
+    public:
+        typedef Iterator self_type;
+        typedef T value_type;
+        typedef T& reference;
+        typedef T* pointer;
+        typedef std::forward_iterator_tag iterator_category;
+        typedef int difference_type;
+
+        Iterator(pointer first) :
+            current(first), first(first)
+        {}
+
+        self_type operator++()
+        {
+            current = current->next;
+            if (current == first) {
+                current = nullptr;
+            }
+            return *this;
+        }
+
+        self_type operator++(int junk)
+        {
+            self_type copy = *this;
+            ++copy;
+            return copy;
+        }
+
+        bool operator==(const self_type& rhs) const
+        {
+            return current == rhs.current;
+        }
+
+        bool operator!=(const self_type& rhs) const
+        {
+            return !(*this == rhs);
+        }
+
+        reference operator*() const
+        {
+            return *current;
+        }
+
+        pointer operator->() const
+        {
+            return *current;
+        }
+    };
+
+    SinglyLinkedList(T*& list) : m_list(list)
+    {}
+
+    Iterator begin()
+    {
+        return Iterator(m_list);
+    }
+
+    Iterator end()
+    {
+        return Iterator(nullptr);
+    }
+};

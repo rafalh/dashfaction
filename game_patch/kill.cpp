@@ -15,13 +15,9 @@ void KillInitPlayer(rf::Player* player)
 FunHook<void()> MpResetNetGame_hook{
     0x0046E450,
     []() {
-        rf::Player* player = rf::player_list;
-        while (player) {
-            KillInitPlayer(player);
-            player = player->next;
-
-            if (player == rf::player_list)
-                break;
+        auto player_list = SinglyLinkedList{rf::player_list};
+        for (auto& player : player_list) {
+            KillInitPlayer(&player);
         }
         MpResetNetGame_hook.CallTarget();
     },

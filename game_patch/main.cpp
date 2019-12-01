@@ -54,13 +54,10 @@ static void ProcessWaitingMessages()
 
 void FindPlayer(const StringMatcher& query, std::function<void(rf::Player*)> consumer)
 {
-    rf::Player* player = rf::player_list;
-    while (player) {
-        if (query(player->name))
-            consumer(player);
-        player = player->next;
-        if (player == rf::player_list)
-            break;
+    auto player_list = SinglyLinkedList{rf::player_list};
+    for (auto& player : player_list) {
+        if (query(player.name))
+            consumer(&player);
     }
 }
 
