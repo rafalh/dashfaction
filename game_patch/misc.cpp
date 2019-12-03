@@ -419,18 +419,43 @@ CodeInjection RflLoadInternal_CheckRestoreStatus_patch{
 
 static int g_cutscene_bg_sound_sig = -1;
 
+rf::String GetGameCtrlBindName(int game_ctrl)
+{
+    auto GetKeyName = AddrAsRef<int(rf::String *out, int key)>(0x0043D930);
+    auto GetMouseButtonName = AddrAsRef<int(rf::String *out, int mouse_btn)>(0x0043D970);
+    auto ctrl_config = rf::local_player->config.controls.keys[game_ctrl];
+    rf::String name;
+    if (ctrl_config.scan_codes[0] >= 0) {
+        GetKeyName(&name, ctrl_config.scan_codes[0]);
+    }
+    else if (ctrl_config.mouse_btn_id >= 0) {
+        GetMouseButtonName(&name, ctrl_config.mouse_btn_id);
+    }
+    else {
+        return rf::String::Format("?");
+    }
+    return name;
+}
+
+void RenderSkipCutsceneHintText()
+{
+    auto bind_name = GetGameCtrlBindName(rf::GC_MP_STATS);
+    rf::GrSetColor(255, 255, 255, 255);
+    auto msg = rf::String::Format("Press Multiplayer Stats (%s) to skip the cutscene", bind_name.CStr());
+    auto x = rf::GrGetMaxWidth() / 2;
+    auto y = rf::GrGetMaxHeight() - 30;
+    rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, x, y, msg.CStr(), -1, rf::gr_text_material);
+}
+
 FunHook<void(bool)> MenuInGameUpdateCutscene_hook{
     0x0045B5E0,
     [](bool dlg_open) {
         bool skip_cutscene = false;
-        rf::IsEntityCtrlActive(&rf::local_player->config.controls, rf::GC_JUMP, &skip_cutscene);
+        rf::IsEntityCtrlActive(&rf::local_player->config.controls, rf::GC_MP_STATS, &skip_cutscene);
 
         if (!skip_cutscene) {
             MenuInGameUpdateCutscene_hook.CallTarget(dlg_open);
-
-            rf::GrSetColor(255, 255, 255, 255);
-            rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, rf::GrGetMaxWidth() / 2, rf::GrGetMaxHeight() - 30,
-                                  "Press JUMP key to skip the cutscene", -1, rf::gr_text_material);
+            RenderSkipCutsceneHintText();
         }
         else {
             auto& timer_add_delta_time = AddrAsRef<int(int delta_ms)>(0x004FA2D0);
