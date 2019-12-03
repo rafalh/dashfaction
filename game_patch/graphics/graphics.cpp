@@ -418,6 +418,49 @@ CodeInjection after_gr_init_hook{
     },
 };
 
+CodeInjection load_tga_alloc_fail_fix{
+    0x0051095D,
+    [](auto& regs) {
+        if (regs.eax == 0) {
+            regs.esp += 4;
+            auto num_bytes = *reinterpret_cast<size_t*>(regs.ebp + 0x30) * regs.esi;
+            WARN("Failed to allocate buffer for a bitmap: %d bytes!", num_bytes);
+            regs.eip = 0x00510944;
+        }
+    },
+};
+
+FunHook<int(int, void*)> gr_d3d_create_texture_hook{
+    0x0055CC00,
+    [](int bm_handle, void* tex) {
+        int result = gr_d3d_create_texture_hook.CallTarget(bm_handle, tex);
+        if (result != 1) {
+            WARN("Failed to load texture %s", rf::BmGetFilename(bm_handle));
+        }
+        return result;
+    },
+};
+
+FunHook<int(int, void*)> gr_d3d_create_vram_texture_with_mipmaps_hook{
+    0x0055B700,
+    [](int bm_handle, void* tex) {
+        int result = gr_d3d_create_vram_texture_with_mipmaps_hook.CallTarget(bm_handle, tex);
+        if (result != 1) {
+            auto BmUnlock = AddrAsRef<void(int)>(0x00511700);
+            BmUnlock(bm_handle);
+        }
+        return result;
+    },
+};
+
+CodeInjection gr_d3d_create_texture_fail_hook{
+    0x0055B9FD,
+    [](auto& regs) {
+        auto hr = static_cast<HRESULT>(regs.eax);
+        WARN("Failed to alloc texture - HRESULT 0x%lX %s", hr, getDxErrorStr(hr));
+    },
+};
+
 void GraphicsInit()
 {
     // Fix for "At least 8 MB of available video memory"
@@ -547,6 +590,14 @@ void GraphicsInit()
     // AddrAsRef<bool>(0x5A1020) = 0;
 
     after_gr_init_hook.Install();
+
+    // Fix crash when loading very big TGA files
+    load_tga_alloc_fail_fix.Install();
+
+    // Fix memory leak if texture cannot be created
+    gr_d3d_create_texture_hook.Install();
+    gr_d3d_create_vram_texture_with_mipmaps_hook.Install();
+    gr_d3d_create_texture_fail_hook.Install();
 }
 
 void GraphicsDrawFpsCounter()
