@@ -474,6 +474,7 @@ namespace rf
     static auto& GrSetColor = AddrAsRef<void(unsigned r, unsigned g, unsigned b, unsigned a)>(0x0050CF80);
     static auto& GrReadBackBuffer = AddrAsRef<int(int x, int y, int width, int height, void *buffer)>(0x0050DFF0);
     static auto& GrFlushBuffers = AddrAsRef<void()>(0x00559D90);
+    static auto& GrClear = AddrAsRef<void()>(0x0050CDF0);
 
     static auto& GrDrawRect = AddrAsRef<void(unsigned x, unsigned y, unsigned cx, unsigned cy, unsigned material)>(0x0050DBE0);
     static auto& GrDrawImage = AddrAsRef<void(int bm_handle, int x, int y, int material)>(0x0050D2A0);

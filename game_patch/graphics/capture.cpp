@@ -289,6 +289,12 @@ FunHook<void()> GameRenderToDynamicTextures_msaa_fix{
             ERR_ONCE("IDirect3DDevice8::SetRenderTarget failed 0x%lX", hr);
             return;
         }
+
+        // Fix cutscene cinema bars (black top/bottom bars)
+        if (rf::CutsceneIsActive()) {
+            rf::GrSetColor(0, 0, 0, 255);
+            rf::GrClear();
+        }
     },
 };
 
