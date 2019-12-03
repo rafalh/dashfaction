@@ -64,7 +64,7 @@ CodeInjection GrSetViewMatrix_widescreen_fix{
         constexpr float ref_aspect_ratio = 4.0f / 3.0f;
         constexpr float max_wide_aspect_ratio = 21.0f / 9.0f; // biggest aspect ratio currently in market
 
-        // g_gr_screen.Aspect == ScrW / ScrH * 0.75 (1.0 for 4:3 monitors, 1.2 for 16:10) - looks like Pixel Aspect
+        // g_gr_screen.aspect == ScrW / ScrH * 0.75 (1.0 for 4:3 monitors, 1.2 for 16:10) - looks like Pixel Aspect
         // Ratio We use here MaxWidth and MaxHeight to calculate proper FOV for windowed mode
 
         float viewport_aspect_ratio = static_cast<float>(rf::gr_screen.viewport_width) / rf::gr_screen.viewport_height;
@@ -103,8 +103,6 @@ CodeInjection GrCreateD3DDevice_error_patch{
                                  "Press OK to exit the program",
                                  hr, getDxErrorStr(hr));
 
-        INFO("D3D DevCaps: %lX", rf::gr_d3d_device_caps.DevCaps);
-
         hr = rf::gr_d3d->CheckDeviceType(rf::gr_adapter_idx, D3DDEVTYPE_HAL, rf::gr_d3d_pp.BackBufferFormat,
             rf::gr_d3d_pp.BackBufferFormat, rf::gr_d3d_pp.Windowed);
         if (FAILED(hr)) {
@@ -136,52 +134,94 @@ CodeInjection GrClearZBuffer_fix_rect{
     },
 };
 
-static void SetupPP()
-{
-    memset(&rf::gr_d3d_pp, 0, sizeof(rf::gr_d3d_pp));
+CodeInjection update_pp_hook{
+    0x00545BC7,
+    []() {
+        auto& format = AddrAsRef<D3DFORMAT>(0x005A135C);
+        INFO("D3D Format: %u", format);
 
-    auto& format = AddrAsRef<D3DFORMAT>(0x005A135C);
-    INFO("D3D Format: %u", format);
+        INFO("D3D DevCaps: %lX", rf::gr_d3d_device_caps.DevCaps);
+        INFO("Max texture size: %ldx%ld", rf::gr_d3d_device_caps.MaxTextureWidth, rf::gr_d3d_device_caps.MaxTextureHeight);
 
-    if (g_game_config.msaa && format > 0) {
-        // Make sure selected MSAA mode is available
-        HRESULT hr = rf::gr_d3d->CheckDeviceMultiSampleType(rf::gr_adapter_idx, D3DDEVTYPE_HAL, format,
-                                                            g_game_config.wnd_mode != GameConfig::FULLSCREEN,
-                                                            (D3DMULTISAMPLE_TYPE)g_game_config.msaa);
-        if (SUCCEEDED(hr)) {
-            INFO("Enabling Anti-Aliasing (%ux MSAA)...", g_game_config.msaa);
-            rf::gr_d3d_pp.MultiSampleType = (D3DMULTISAMPLE_TYPE)g_game_config.msaa;
+        if (g_game_config.msaa && format > 0) {
+            // Make sure selected MSAA mode is available
+            auto multi_sample_type = static_cast<D3DMULTISAMPLE_TYPE>(g_game_config.msaa);
+            HRESULT hr = rf::gr_d3d->CheckDeviceMultiSampleType(rf::gr_adapter_idx, D3DDEVTYPE_HAL, format,
+                                                                rf::gr_d3d_pp.Windowed, multi_sample_type);
+            if (SUCCEEDED(hr)) {
+                INFO("Enabling Anti-Aliasing (%ux MSAA)...", g_game_config.msaa);
+                rf::gr_d3d_pp.MultiSampleType = multi_sample_type;
+            }
+            else {
+                WARN("MSAA not supported (0x%lx)...", hr);
+                g_game_config.msaa = D3DMULTISAMPLE_NONE;
+            }
         }
-        else {
-            WARN("MSAA not supported (0x%lx)...", hr);
-            g_game_config.msaa = D3DMULTISAMPLE_NONE;
-        }
-    }
 
+        // remove D3DPRESENTFLAG_LOCKABLE_BACKBUFFER flag
+        rf::gr_d3d_pp.Flags = 0;
 #if D3D_LOCKABLE_BACKBUFFER
-    // Note: if MSAA is used backbuffer cannot be lockable
-    if (g_game_config.msaa == D3DMULTISAMPLE_NONE)
-        rf::gr_d3d_pp.Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
+        // Note: if MSAA is used backbuffer cannot be lockable
+        if (g_game_config.msaa == D3DMULTISAMPLE_NONE)
+            rf::gr_d3d_pp.Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
 #endif
+    },
+};
+
+CodeInjection setup_stretched_window_patch{
+    0x0050C464,
+    [](auto& regs) {
+        if (g_game_config.wnd_mode == GameConfig::STRETCHED) {
+            // Make sure stretched window is always full screen
+            auto cx = GetSystemMetrics(SM_CXSCREEN);
+            auto cy = GetSystemMetrics(SM_CYSCREEN);
+            SetWindowLongA(rf::main_wnd, GWL_STYLE, WS_POPUP | WS_SYSMENU);
+            SetWindowLongA(rf::main_wnd, GWL_EXSTYLE, 0);
+            SetWindowPos(rf::main_wnd, HWND_NOTOPMOST, 0, 0, cx, cy, SWP_SHOWWINDOW);
+            rf::gr_screen.aspect = static_cast<double>(cx) / static_cast<double>(cy) * 0.75;
+            regs.eip = 0x0050C551;
+        }
+    },
+};
 
 #if D3D_HW_VERTEX_PROCESSING
-    // Use hardware vertex processing instead of software processing
-    if (rf::gr_d3d_device_caps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT) {
-        INFO("Enabling T&L in hardware");
-        WriteMem<u8>(0x00545BDE + 1, D3DCREATE_HARDWARE_VERTEXPROCESSING);
-        WriteMem<u32>(0x005450DD + 1, D3DUSAGE_DYNAMIC | D3DUSAGE_DONOTCLIP | D3DUSAGE_WRITEONLY);
-        WriteMem<u32>(0x00545117 + 1, D3DUSAGE_DYNAMIC | D3DUSAGE_DONOTCLIP | D3DUSAGE_WRITEONLY);
-    }
-    else {
-        INFO("T&L in hardware not supported");
-    }
-#endif
 
-    // Make sure stretched window is always full screen
-    if (g_game_config.wnd_mode == GameConfig::STRETCHED)
-        SetWindowPos(rf::main_wnd, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN),
-                     SWP_NOZORDER);
-}
+CodeInjection d3d_behavior_flags_patch{
+    0x00545BE0,
+    [](auto& regs) {
+        auto& behavior_flags = *reinterpret_cast<u32*>(regs.esp);
+        // Use hardware vertex processing instead of software processing if supported
+        if (rf::gr_d3d_device_caps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT) {
+            INFO("Enabling T&L in hardware");
+            behavior_flags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
+        }
+        else {
+            INFO("T&L in hardware is not supported");
+        }
+    },
+};
+
+CodeInjection d3d_vertex_buffer_usage_patch{
+    0x005450E2,
+    [](auto& regs) {
+        auto& usage = *reinterpret_cast<u32*>(regs.esp);
+        if (rf::gr_d3d_device_caps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT) {
+            usage &= ~D3DUSAGE_SOFTWAREPROCESSING;
+        }
+    },
+};
+
+CodeInjection d3d_index_buffer_usage_patch{
+    0x0054511C,
+    [](auto& regs) {
+        auto& usage = *reinterpret_cast<u32*>(regs.esp);
+        if (rf::gr_d3d_device_caps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT) {
+            usage &= ~D3DUSAGE_SOFTWAREPROCESSING;
+        }
+    },
+};
+
+#endif // D3D_HW_VERTEX_PROCESSING
 
 CallHook<void(int, rf::GrVertex**, int, int)> GrDrawRect_GrDrawPoly_hook{
     0x0050DD69,
@@ -384,13 +424,9 @@ void GraphicsInit()
     WriteMem<u8>(0x005460CD, asm_opcodes::jae_rel_short);
 
     if (g_game_config.wnd_mode != GameConfig::FULLSCREEN) {
-        /* Enable windowed mode */
+        // Enable windowed mode
         WriteMem<u32>(0x004B29A5 + 6, 0xC8);
-        if (g_game_config.wnd_mode == GameConfig::STRETCHED) {
-            uint32_t wnd_style = WS_POPUP | WS_SYSMENU;
-            WriteMem<u32>(0x0050C474 + 1, wnd_style);
-            WriteMem<u32>(0x0050C4E3 + 1, wnd_style);
-        }
+        setup_stretched_window_patch.Install();
     }
 
     // Disable keyboard hooks (they were supposed to block alt-tab; they does not work in modern OSes anyway)
@@ -402,10 +438,15 @@ void GraphicsInit()
     WriteMem<u32>(0x00545AE3 + 6, D3DSWAPEFFECT_DISCARD); // windowed
 #endif
 
-    // Replace memset call to SetupPP
-    AsmWritter(0x00545AA7, 0x00545AB5).nop();
-    AsmWritter(0x00545AA7).call(SetupPP);
-    AsmWritter(0x00545BA5).nop(6); // dont set PP.flags
+    // Update D3D present paremeters and misc flags
+    update_pp_hook.Install();
+
+    // Use hardware vertex processing if supported
+#if D3D_HW_VERTEX_PROCESSING
+    d3d_behavior_flags_patch.Install();
+    d3d_vertex_buffer_usage_patch.Install();
+    d3d_index_buffer_usage_patch.Install();
+#endif
 
     // nVidia issue fix (make sure D3Dsc is enabled)
     WriteMem<u8>(0x00546154, 1);
