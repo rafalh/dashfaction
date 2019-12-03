@@ -1777,8 +1777,9 @@ namespace rf
         int h;
         uint8_t *buf;
         int bm_handle;
-        int unk2;
+        int lightmap_idx;
     };
+    static_assert(sizeof(RflLightmap) == 0x18);
 
     static auto& root_path = AddrAsRef<char[256]>(0x018060E8);
     static auto& current_fps = AddrAsRef<float>(0x005A4018);

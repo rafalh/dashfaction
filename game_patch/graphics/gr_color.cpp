@@ -175,158 +175,192 @@ bool ConvertBitmapFormat(uint8_t* dst_bits_ptr, rf::BmPixelFormat dst_fmt, const
     }
 }
 
-FunHook<int(int, const uint8_t*, const uint8_t*, int, int, rf::BmPixelFormat, void*, int, int, IDirect3DTexture8*)>
-    GrD3DSetTextureData_hook{
-        0x0055BA10,
-        [](int level, const uint8_t* src_bits_ptr, const uint8_t* palette, int bm_w, int bm_h,
-           rf::BmPixelFormat pixel_fmt, void* a7, int tex_w, int tex_h, IDirect3DTexture8* texture) {
-            D3DLOCKED_RECT locked_rect;
-            HRESULT hr = texture->LockRect(level, &locked_rect, 0, 0);
-            if (FAILED(hr)) {
-                ERR("LockRect failed");
-                return -1;
-            }
-            D3DSURFACE_DESC desc;
-            texture->GetLevelDesc(level, &desc);
-            auto tex_pixel_fmt = GetPixelFormatFromD3DFormat(desc.Format);
-            bool success = ConvertBitmapFormat(reinterpret_cast<uint8_t*>(locked_rect.pBits), tex_pixel_fmt,
-                                               src_bits_ptr, pixel_fmt, bm_w, bm_h, locked_rect.Pitch,
-                                               GetPixelFormatSize(pixel_fmt) * bm_w, palette);
-            texture->UnlockRect(level);
+using GrD3DSetTextureData_Type =
+    int(int, const uint8_t*, const uint8_t*, int, int, rf::BmPixelFormat, void*, int, int, IDirect3DTexture8*);
+FunHook<GrD3DSetTextureData_Type> GrD3DSetTextureData_hook{
+    0x0055BA10,
+    [](int level, const uint8_t* src_bits_ptr, const uint8_t* palette, int bm_w, int bm_h,
+        rf::BmPixelFormat pixel_fmt, void* a7, int tex_w, int tex_h, IDirect3DTexture8* texture) {
 
-            if (success)
-                return 0;
+        D3DLOCKED_RECT locked_rect;
+        HRESULT hr = texture->LockRect(level, &locked_rect, 0, 0);
+        if (FAILED(hr)) {
+            ERR("LockRect failed");
+            return -1;
+        }
+        D3DSURFACE_DESC desc;
+        texture->GetLevelDesc(level, &desc);
+        auto tex_pixel_fmt = GetPixelFormatFromD3DFormat(desc.Format);
+        bool success = ConvertBitmapFormat(reinterpret_cast<uint8_t*>(locked_rect.pBits), tex_pixel_fmt,
+                                            src_bits_ptr, pixel_fmt, bm_w, bm_h, locked_rect.Pitch,
+                                            GetPixelFormatSize(pixel_fmt) * bm_w, palette);
+        texture->UnlockRect(level);
 
-            WARN("Color conversion failed (format %d -> %d)", pixel_fmt, tex_pixel_fmt);
-            return GrD3DSetTextureData_hook.CallTarget(level, src_bits_ptr, palette, bm_w, bm_h, pixel_fmt, a7, tex_w,
-                                                       tex_h, texture);
-        },
-    };
+        if (success)
+            return 0;
 
-void RflLoadLightmaps_004ED3F6(rf::RflLightmap* lightmap)
-{
-    rf::GrLockData lock_data;
-    int ret = rf::GrLock(lightmap->bm_handle, 0, &lock_data, 2);
-    if (!ret)
-        return;
+        WARN("Color conversion failed (format %d -> %d)", pixel_fmt, tex_pixel_fmt);
+        return GrD3DSetTextureData_hook.CallTarget(level, src_bits_ptr, palette, bm_w, bm_h, pixel_fmt, a7, tex_w,
+                                                    tex_h, texture);
+    },
+};
 
-#if 1 // cap minimal color channel value as RF does
-    for (int i = 0; i < lightmap->w * lightmap->h * 3; ++i)
-        lightmap->buf[i] = std::max(lightmap->buf[i], (uint8_t)(4 << 3)); // 32
-#endif
+CodeInjection RflLoadLightmaps_color_conv_patch{
+    0x004ED3E9,
+    [](auto& regs) {
+        // Always skip original code
+        regs.eip = 0x004ED4FA;
 
-    bool success = ConvertBitmapFormat(lock_data.bits, lock_data.pixel_format, lightmap->buf, rf::BMPF_888, lightmap->w,
-                                       lightmap->h, lock_data.pitch, 3 * lightmap->w, nullptr, true);
-    if (!success)
-        ERR("ConvertBitmapFormat failed for lightmap");
+        auto lightmap = reinterpret_cast<rf::RflLightmap*>(regs.ebx);
 
-    rf::GrUnlock(&lock_data);
-}
+        rf::GrLockData lock_data;
+        if (!rf::GrLock(lightmap->bm_handle, 0, &lock_data, 2))
+            return;
 
-void GeoModGenerateTexture_004F2F23(uintptr_t v3)
-{
-    uintptr_t v75 = *reinterpret_cast<uintptr_t*>(v3 + 12);
-    unsigned hbm = *reinterpret_cast<unsigned*>(v75 + 16);
-    rf::GrLockData lock_data;
-    if (rf::GrLock(hbm, 0, &lock_data, 1)) {
-        int offset_y = *reinterpret_cast<int*>(v3 + 20);
-        int offset_x = *reinterpret_cast<int*>(v3 + 16);
-        int src_width = *reinterpret_cast<int*>(v75 + 4);
+    #if 1 // cap minimal color channel value as RF does
+        for (int i = 0; i < lightmap->w * lightmap->h * 3; ++i)
+            lightmap->buf[i] = std::max(lightmap->buf[i], (uint8_t)(4 << 3)); // 32
+    #endif
+
+        bool success = ConvertBitmapFormat(lock_data.bits, lock_data.pixel_format, lightmap->buf, rf::BMPF_888, lightmap->w,
+                                           lightmap->h, lock_data.pitch, 3 * lightmap->w, nullptr, true);
+        if (!success)
+            ERR("ConvertBitmapFormat failed for lightmap");
+
+        rf::GrUnlock(&lock_data);
+    },
+};
+
+CodeInjection GeoModGenerateTexture_color_conv_patch{
+    0x004F2F23,
+    [](auto& regs) {
+        // Always skip original code
+        regs.eip = 0x004F3023;
+
+        auto face_light_info = reinterpret_cast<void*>(regs.esi);
+        rf::RflLightmap& lightmap = *StructFieldRef<rf::RflLightmap*>(face_light_info, 12);
+        rf::GrLockData lock_data;
+        if (!rf::GrLock(lightmap.bm_handle, 0, &lock_data, 1)) {
+            return;
+        }
+
+        int offset_y = StructFieldRef<int>(face_light_info, 20);
+        int offset_x = StructFieldRef<int>(face_light_info, 16);
+        int src_width = lightmap.w;
         int dst_pixel_size = GetPixelFormatSize(lock_data.pixel_format);
-        uint8_t* src_data = *reinterpret_cast<uint8_t**>(v75 + 12) + 3 * (offset_x + offset_y * src_width);
+        uint8_t* src_data = lightmap.buf + 3 * (offset_x + offset_y * src_width);
         uint8_t* dst_data = &lock_data.bits[dst_pixel_size * offset_x + offset_y * lock_data.pitch];
-        int height = *reinterpret_cast<int*>(v3 + 28);
+        int height = StructFieldRef<int>(face_light_info, 28);
+        int src_pitch = 3 * src_width;
         bool success = ConvertBitmapFormat(dst_data, lock_data.pixel_format, src_data, rf::BMPF_888, src_width, height,
-                                           lock_data.pitch, 3 * src_width);
+                                           lock_data.pitch, src_pitch);
         if (!success)
             ERR("ConvertBitmapFormat failed for geomod (fmt %d)", lock_data.pixel_format);
         rf::GrUnlock(&lock_data);
-    }
-}
+    },
+};
 
-int GeoModGenerateLightmap_004E487B(uintptr_t v6)
-{
-    uintptr_t v48 = *reinterpret_cast<uintptr_t*>(v6 + 12);
-    rf::GrLockData lock_data;
-    unsigned hbm = *reinterpret_cast<unsigned*>(v48 + 16);
-    int ret = rf::GrLock(hbm, 0, &lock_data, 1);
-    if (ret) {
-        int offset_y = *reinterpret_cast<int*>(v6 + 20);
-        int src_width = *reinterpret_cast<int*>(v48 + 4);
-        int offset_x = *reinterpret_cast<int*>(v6 + 16);
-        uint8_t* src_data_begin = *reinterpret_cast<uint8_t**>(v48 + 12);
-        int src_offset = 3 * (offset_x + src_width * *reinterpret_cast<int*>(v6 + 20)); // src offset
+CodeInjection GeoModGenerateLightmap_color_conv_patch{
+    0x004E487B,
+    [](auto& regs) {
+        // Skip original code
+        regs.eip = 0x004E4993;
+
+        auto face_light_info = reinterpret_cast<void*>(regs.esi);
+        rf::RflLightmap& lightmap = *StructFieldRef<rf::RflLightmap*>(face_light_info, 12);
+        rf::GrLockData lock_data;
+        if (!rf::GrLock(lightmap.bm_handle, 0, &lock_data, 1)) {
+            return;
+        }
+
+        int offset_y = StructFieldRef<int>(face_light_info, 20);
+        int src_width = lightmap.w;
+        int offset_x = StructFieldRef<int>(face_light_info, 16);
+        uint8_t* src_data_begin = lightmap.buf;
+        int src_offset = 3 * (offset_x + src_width * StructFieldRef<int>(face_light_info, 20)); // src offset
         uint8_t* src_data = src_offset + src_data_begin;
-        int height = *reinterpret_cast<int*>(v6 + 28);
+        int height = StructFieldRef<int>(face_light_info, 28);
         int dst_pixel_size = GetPixelFormatSize(lock_data.pixel_format);
         uint8_t* dst_row_ptr = &lock_data.bits[dst_pixel_size * offset_x + offset_y * lock_data.pitch];
+        int src_pitch = 3 * src_width;
         bool success = ConvertBitmapFormat(dst_row_ptr, lock_data.pixel_format, src_data, rf::BMPF_888, src_width,
-                                           height, lock_data.pitch, 3 * src_width);
+                                           height, lock_data.pitch, src_pitch);
         if (!success)
             ERR("ConvertBitmapFormat failed for geomod2 (fmt %d)", lock_data.pixel_format);
         rf::GrUnlock(&lock_data);
-    }
-    return ret;
-}
+    },
+};
 
-void WaterGenerateTexture_004E68D1(uintptr_t v1)
-{
-    unsigned v8 = *reinterpret_cast<unsigned*>(v1 + 36);
-    rf::GrLockData src_lock_data, dst_lock_data;
-    rf::GrLock(v8, 0, &src_lock_data, 0);
-    rf::GrLock(*reinterpret_cast<unsigned*>(v1 + 24), 0, &dst_lock_data, 2);
-    int v9 = *reinterpret_cast<unsigned*>(v1 + 16);
-    int8_t v10 = 0;
-    int8_t v41 = 0;
-    if (v9 > 0) {
-        int v11 = 1;
-        if (!(v9 & 1)) {
-            do {
-                v11 *= 2;
-                ++v10;
-            } while (!(v9 & v11));
-            v41 = v10;
+CodeInjection WaterGenerateTexture_color_conv_patch{
+    0x004E68D1,
+    [](auto& regs) {
+        // Skip original code
+        regs.eip = 0x004E6B68;
+
+        uintptr_t waveform_info = static_cast<uintptr_t>(regs.esi);
+        int src_bm_handle = *reinterpret_cast<int*>(waveform_info + 36);
+        rf::GrLockData src_lock_data, dst_lock_data;
+        if (!rf::GrLock(src_bm_handle, 0, &src_lock_data, 0)) {
+            return;
         }
+        int dst_bm_handle = *reinterpret_cast<int*>(waveform_info + 24);
+        if (!rf::GrLock(dst_bm_handle, 0, &dst_lock_data, 2)) {
+            rf::GrUnlock(&src_lock_data);
+            return;
+        }
+
+        auto& byte_1370f90 = AddrAsRef<uint8_t[256]>(0x1370F90);
+        auto& byte_1371b14 = AddrAsRef<uint8_t[256]>(0x1371B14);
+        auto& byte_1371090 = AddrAsRef<uint8_t[512]>(0x1371090);
+
+        uint8_t* dst_row_ptr = dst_lock_data.bits;
+        int src_pixel_size = GetPixelFormatSize(src_lock_data.pixel_format);
+
+        for (int y = 0; y < dst_lock_data.height; ++y) {
+            int t1 = byte_1370f90[y];
+            int t2 = byte_1371b14[y];
+            uint8_t* off_arr = &byte_1371090[-t1];
+            uint8_t* dst_ptr = dst_row_ptr;
+            for (int x = 0; x < dst_lock_data.width; ++x) {
+                int src_x = t1;
+                int src_y = t2 + off_arr[t1];
+                int src_x_limited = src_x & (dst_lock_data.width - 1);
+                int src_y_limited = src_y & (dst_lock_data.height - 1);
+                const uint8_t* src_ptr = src_lock_data.bits + src_x_limited * src_pixel_size + src_y_limited * src_lock_data.pitch;
+                // Note: GrLock never returns indexed bitmap
+                ConvertPixelFormat(dst_ptr, dst_lock_data.pixel_format, src_ptr, src_lock_data.pixel_format, nullptr);
+                ++t1;
+            }
+            dst_row_ptr += dst_lock_data.pitch;
+        }
+
+        rf::GrUnlock(&src_lock_data);
+        rf::GrUnlock(&dst_lock_data);
     }
+};
 
-    auto& byte_1370f90 = AddrAsRef<uint8_t[256]>(0x1370F90);
-    auto& byte_1371b14 = AddrAsRef<uint8_t[256]>(0x1371B14);
-    auto& byte_1371090 = AddrAsRef<uint8_t[512]>(0x1371090);
+CodeInjection GetAmbientColorFromLightmaps_color_conv_patch{
+    0x004E5CE3,
+    [](auto& regs) {
+        // Skip original code
+        regs.eip = 0x004E5D57;
 
-    uint8_t* dst_row_ptr = dst_lock_data.bits;
-    int src_pixel_size = GetPixelFormatSize(src_lock_data.pixel_format);
+        int bm_handle = regs.eax;
+        int x = regs.edi;
+        int y = regs.ebx;
+        auto& color = *reinterpret_cast<uint32_t*>(regs.esp + 0x34 - 0x28);
 
-    for (int y = 0; y < dst_lock_data.height; ++y) {
-        int v30 = byte_1370f90[y];
-        int v38 = byte_1371b14[y];
-        uint8_t* v32 = &byte_1371090[-v30];
-        uint8_t* dst_ptr = dst_row_ptr;
-        for (int x = 0; x < dst_lock_data.width; ++x) {
-            int src_offset =
-                (v30 & (dst_lock_data.width - 1)) + (((dst_lock_data.height - 1) & (v38 + v32[v30])) << v41);
-            const uint8_t* src_ptr = src_lock_data.bits + src_offset * src_pixel_size;
+        rf::GrLockData lock_data;
+        if (rf::GrLock(bm_handle, 0, &lock_data, 0)) {
+            auto src_bytes_per_pixel = GetPixelFormatSize(lock_data.pixel_format);
+            const uint8_t* src_ptr = lock_data.bits + y * lock_data.pitch + x * src_bytes_per_pixel;
+            auto dst_ptr = reinterpret_cast<uint8_t*>(&color);
             // Note: GrLock never returns indexed bitmap
-            ConvertPixelFormat(dst_ptr, dst_lock_data.pixel_format, src_ptr, src_lock_data.pixel_format, nullptr);
-            ++v30;
+            ConvertPixelFormat(dst_ptr, rf::BMPF_8888, src_ptr, lock_data.pixel_format, nullptr);
+            rf::GrUnlock(&lock_data);
         }
-        dst_row_ptr += dst_lock_data.pitch;
-    }
-
-    rf::GrUnlock(&src_lock_data);
-    rf::GrUnlock(&dst_lock_data);
-}
-
-void GetAmbientColorFromLightmaps_004E5CE3(unsigned bm_handle, int x, int y, unsigned& color)
-{
-    rf::GrLockData lock_data;
-    if (rf::GrLock(bm_handle, 0, &lock_data, 0)) {
-        const uint8_t* src_ptr = lock_data.bits + y * lock_data.pitch + x * GetPixelFormatSize(lock_data.pixel_format);
-        uint8_t* dst_ptr = reinterpret_cast<uint8_t*>(&color);
-        // Note: GrLock never returns indexed bitmap
-        ConvertPixelFormat(dst_ptr, rf::BMPF_8888, src_ptr, lock_data.pixel_format, nullptr);
-        rf::GrUnlock(&lock_data);
-    }
-}
+    },
+};
 
 FunHook<unsigned()> BinkInitDeviceInfo_hook{
     0x005210C0,
@@ -367,6 +401,15 @@ CodeInjection MonitorRenderNoise_patch{
     },
 };
 
+CodeInjection MonitorRenderOffState_patch{
+    0x00412430,
+    [](auto& regs) {
+        auto& lock_data = *reinterpret_cast<rf::GrLockData*>(regs.esp + 0x34 - 0x20);
+        regs.ecx = lock_data.height * lock_data.pitch;
+        regs.eip = 0x0041243F;
+    },
+};
+
 void GrColorInit()
 {
     // True Color textures
@@ -382,44 +425,18 @@ void GrColorInit()
         BinkInitDeviceInfo_hook.Install();
 
         // lightmaps
-        using namespace asm_regs;
-        AsmWritter(0x004ED3E9)
-            .push(ebx)
-            .call(RflLoadLightmaps_004ED3F6)
-            .add(esp, 4)
-            .jmp(0x004ED4FA);
+        RflLoadLightmaps_color_conv_patch.Install();
         // geomod
-        AsmWritter(0x004F2F23)
-            .push(esi)
-            .call(GeoModGenerateTexture_004F2F23)
-            .add(esp, 4)
-            .jmp(0x004F3023);
-        AsmWritter(0x004E487B)
-            .push(esi)
-            .call(GeoModGenerateLightmap_004E487B)
-            .add(esp, 4)
-            .jmp(0x004E4993);
+        GeoModGenerateTexture_color_conv_patch.Install();
+        GeoModGenerateLightmap_color_conv_patch.Install();
         // water
         AsmWritter(0x004E68B0, 0x004E68B6).nop();
-        AsmWritter(0x004E68D1)
-            .push(esi)
-            .call(WaterGenerateTexture_004E68D1)
-            .add(esp, 4)
-            .jmp(0x004E6B68);
+        WaterGenerateTexture_color_conv_patch.Install();
         // ambient color
-        AsmWritter(0x004E5CE3)
-            .lea(edx, *(esp + 0x34 - 0x28))
-            .push(edx)
-            .push(ebx)
-            .push(edi)
-            .push(eax)
-            .call(GetAmbientColorFromLightmaps_004E5CE3)
-            .add(esp, 16)
-            .jmp(0x004E5D57);
+        GetAmbientColorFromLightmaps_color_conv_patch.Install();
         // monitor noise
         MonitorRenderNoise_patch.Install();
         // monitor off state
-        WriteMem<u8>(0x00412430 + 3, 0x34 - 0x20 + 0x18); // pitch instead of width
-        AsmWritter(0x0041243D).nop(2);                    // dont multiply by 2
+        MonitorRenderOffState_patch.Install();
     }
 }
