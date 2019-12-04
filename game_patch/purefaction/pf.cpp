@@ -79,7 +79,7 @@ void process_pf_players_request_packet([[ maybe_unused ]] const void* data, [[ m
     auto packet_buf = std::make_unique<std::byte[]>(sizeof(pf_players_packet) + players_str.size());
     auto& response = *reinterpret_cast<pf_players_packet*>(packet_buf.get());
     response.hdr.type = static_cast<u8>(pf_packet_type::players);
-    response.hdr.size = sizeof(pf_players_packet) + players_str.size() - sizeof(rf_packet_header);
+    response.hdr.size = static_cast<u16>(sizeof(pf_players_packet) + players_str.size() - sizeof(rf_packet_header));
     response.version = 1;
     response.show_ip = 0;
     std::copy(players_str.begin(), players_str.end(), reinterpret_cast<char*>(packet_buf.get() + sizeof(pf_players_packet)));

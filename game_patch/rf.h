@@ -1894,11 +1894,11 @@ namespace rf
 
     static auto ClearLevelSound = AddrAsRef<int(LevelSound* lvl_snd)>(0x00505680);
     static auto SndStop = AddrAsRef<char(int sig)>(0x005442B0);
-    static auto SndGetDuration = AddrAsRef<double(int game_snd_id)>(0x00544760);
+    static auto SndGetDuration = AddrAsRef<float(int game_snd_id)>(0x00544760);
     static auto SndDsCloseChannel = AddrAsRef<bool(int channel)>(0x00521930);
     static auto SndDsChannelIsPlaying = AddrAsRef<void*(int channel)>(0x005224D0);
     static auto SndDsIsChannelPaused = AddrAsRef<bool(int channel)>(0x00522500);
-    static auto SndDsEstimateDuration = AddrAsRef<double(int snd_buf_id)>(0x00523170);
+    static auto SndDsEstimateDuration = AddrAsRef<float(int snd_buf_id)>(0x00523170);
 
     /* RF stdlib functions are not compatible with GCC */
 

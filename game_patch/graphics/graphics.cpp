@@ -178,7 +178,7 @@ CodeInjection setup_stretched_window_patch{
             SetWindowLongA(rf::main_wnd, GWL_STYLE, WS_POPUP | WS_SYSMENU);
             SetWindowLongA(rf::main_wnd, GWL_EXSTYLE, 0);
             SetWindowPos(rf::main_wnd, HWND_NOTOPMOST, 0, 0, cx, cy, SWP_SHOWWINDOW);
-            rf::gr_screen.aspect = static_cast<double>(cx) / static_cast<double>(cy) * 0.75;
+            rf::gr_screen.aspect = static_cast<float>(cx) / static_cast<float>(cy) * 0.75f;
             regs.eip = 0x0050C551;
         }
     },
