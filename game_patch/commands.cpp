@@ -247,7 +247,8 @@ void DcShowCmdHelp(rf::DcCommand* cmd)
     rf::dc_run = 0;
     rf::dc_help = 1;
     rf::dc_status = 0;
-    auto handler = reinterpret_cast<void(__thiscall*)(rf::DcCommand*)>(cmd->func);
+    // Note: fastcall is used because MSVC does not allow free thiscall functions
+    auto handler = reinterpret_cast<void(__fastcall*)(rf::DcCommand*)>(cmd->func);
     handler(cmd);
 }
 

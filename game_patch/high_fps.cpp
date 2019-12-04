@@ -38,7 +38,8 @@ public:
         m_ftol_call_addr(ftol_call_addr), m_key_loc_opt(key_loc)
     {}
 
-    static long __thiscall ftol(FtolAccuracyFix* self, double value, void* key)
+    // Note: fastcall is used because MSVC does not allow free thiscall functions
+    static long __fastcall ftol(FtolAccuracyFix* self, [[maybe_unused]] void* edx, double value, void* key)
     {
         auto& state = self->m_state_map[key];
 

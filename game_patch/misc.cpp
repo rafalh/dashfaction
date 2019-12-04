@@ -42,15 +42,16 @@ int g_version_label_x, g_version_label_width, g_version_label_height;
 int g_version_click_counter = 0;
 int g_egg_anim_start;
 
-using UiLabel_Create2_Type = void __thiscall(rf::UiGadget*, rf::UiGadget*, int, int, int, int, const char*, int);
+// Note: fastcall is used because MSVC does not allow free thiscall functions
+using UiLabel_Create2_Type = void __fastcall(rf::UiGadget*, void*, rf::UiGadget*, int, int, int, int, const char*, int);
 extern CallHook<UiLabel_Create2_Type> UiLabel_Create2_VersionLabel_hook;
-void __thiscall UiLabel_Create2_VersionLabel(rf::UiGadget* self, rf::UiGadget* parent, int x, int y, int w,
+void __fastcall UiLabel_Create2_VersionLabel(rf::UiGadget* self, void* edx, rf::UiGadget* parent, int x, int y, int w,
                                              int h, const char* text, int font_id)
 {
     x = g_version_label_x;
     w = g_version_label_width;
     h = g_version_label_height;
-    UiLabel_Create2_VersionLabel_hook.CallTarget(self, parent, x, y, w, h, text, font_id);
+    UiLabel_Create2_VersionLabel_hook.CallTarget(self, edx, parent, x, y, w, h, text, font_id);
 }
 CallHook<UiLabel_Create2_Type> UiLabel_Create2_VersionLabel_hook{0x0044344D, UiLabel_Create2_VersionLabel};
 
