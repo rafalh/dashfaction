@@ -30,10 +30,10 @@ DcCommand2 hud_cmd{
 
         // HudRender2
         if (hud_hidden) {
-            AsmWritter(0x00476D70).ret();
+            AsmWriter(0x00476D70).ret();
         }
         else {
-            AsmWritter(0x00476D70).push(asm_regs::ecx);
+            AsmWriter(0x00476D70).push(asm_regs::ecx);
         }
 
         // Powerups textures
@@ -97,7 +97,7 @@ void HudSetupPositionsHook(int width)
 void InitHud()
 {
     // Fix HUD on not supported resolutions
-    AsmWritter(0x004377C0).jmp(HudSetupPositionsHook);
+    AsmWriter(0x004377C0).jmp(HudSetupPositionsHook);
 
     hud_cmd.Register();
 }

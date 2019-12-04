@@ -1,7 +1,7 @@
 #include <common/BuildConfig.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
-#include <patch_common/AsmWritter.h>
+#include <patch_common/AsmWriter.h>
 #include <windows.h>
 #include <thread>
 #include <algorithm>

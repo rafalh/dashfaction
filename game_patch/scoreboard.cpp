@@ -279,8 +279,8 @@ void InitScoreboard()
 {
     DrawScoreboardInternal_hook.Install();
 
-    AsmWritter(0x00437BC0).call(HudRender_00437BC0).jmp(0x00437C24);
-    AsmWritter(0x00437D40).jmp(0x00437D5C);
+    AsmWriter(0x00437BC0).call(HudRender_00437BC0).jmp(0x00437C24);
+    AsmWriter(0x00437D40).jmp(0x00437D5C);
 }
 
 void SetScoreboardHidden(bool hidden)

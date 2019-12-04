@@ -1,6 +1,6 @@
 #pragma once
 
-// Deprecated. Use AsmWritter.
+// Deprecated. Use AsmWriter.
 
 #include <cstdint>
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <patch_common/AsmWritter.h>
+#include <patch_common/AsmWriter.h>
 #include <patch_common/CodeBuffer.h>
 #include <cstdint>
 #include <log/Logger.h>
@@ -54,7 +54,7 @@ public:
         if (!trampoline)
             WARN("trampoline is null for 0x%X", m_addr);
 
-        AsmWritter asm_writter{m_code_buf};
+        AsmWriter asm_writter{m_code_buf};
         EmitCode(asm_writter, trampoline);
     }
 
@@ -64,7 +64,7 @@ public:
     }
 
 protected:
-    virtual void EmitCode(AsmWritter& asm_writter, void* trampoline) = 0;
+    virtual void EmitCode(AsmWriter& asm_writter, void* trampoline) = 0;
 };
 
 template<typename T, typename Enable = void>
@@ -89,7 +89,7 @@ private:
     }
 
 protected:
-    void EmitCode(AsmWritter& asm_writter, void* trampoline) override
+    void EmitCode(AsmWriter& asm_writter, void* trampoline) override
     {
         using namespace asm_regs;
         constexpr int esp_offset = offsetof(Regs, esp);
@@ -132,7 +132,7 @@ private:
     }
 
 protected:
-    void EmitCode(AsmWritter& asm_writter, void* trampoline) override
+    void EmitCode(AsmWriter& asm_writter, void* trampoline) override
     {
         using namespace asm_regs;
         asm_writter

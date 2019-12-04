@@ -1,7 +1,7 @@
 #include "server_internal.h"
 #include "../commands.h"
 #include "../rf.h"
-#include <patch_common/AsmWritter.h>
+#include <patch_common/AsmWriter.h>
 
 namespace rf
 {
@@ -84,8 +84,8 @@ DcCommand2 unban_last_cmd{
 
 void InitLazyban()
 {
-    AsmWritter(0x0047B6F0).jmp(BanCmdHandlerHook);
-    AsmWritter(0x0047B580).jmp(KickCmdHandlerHook);
+    AsmWriter(0x0047B6F0).jmp(BanCmdHandlerHook);
+    AsmWriter(0x0047B580).jmp(KickCmdHandlerHook);
 
     unban_last_cmd.Register();
 }

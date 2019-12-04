@@ -76,7 +76,7 @@ public:
         UnprotectMem(code_buf, 512);
 
         using namespace asm_regs;
-        AsmWritter{code_buf}
+        AsmWriter{code_buf}
             .mov(ecx, this) // thiscall
             .sub(esp, 12)
             .mov(eax, m_key_loc_opt.value_or(ecx))
@@ -85,7 +85,7 @@ public:
             .call(&ftol)
             .ret();
 
-        AsmWritter(m_ftol_call_addr).call(code_buf);
+        AsmWriter(m_ftol_call_addr).call(code_buf);
     }
 };
 
@@ -183,7 +183,7 @@ DcCommand2 detect_ftol_issues_cmd{
     [](std::optional<float> fps_opt) {
         static bool patched = false;
         if (!patched) {
-            AsmWritter(0x00573528).jmp(ftol_Wrapper);
+            AsmWriter(0x00573528).jmp(ftol_Wrapper);
             patched = true;
         }
         if (!g_ftol_issue_detection) {
@@ -339,12 +339,12 @@ void HighFpsInit()
     stuck_to_ground_fix.Install();
 
     // Fix water deceleration on high FPS
-    AsmWritter(0x0049D816).nop(5);
-    AsmWritter(0x0049D82A, 0x0049D835).nop(5).push(asm_regs::esi).call(EntityWaterDecelerateFix);
+    AsmWriter(0x0049D816).nop(5);
+    AsmWriter(0x0049D82A, 0x0049D835).nop(5).push(asm_regs::esi).call(EntityWaterDecelerateFix);
 
     // Fix water waves animation on high FPS
-    AsmWritter(0x004E68A0, 0x004E68A9).nop();
-    AsmWritter(0x004E68B6, 0x004E68D1).nop();
+    AsmWriter(0x004E68A0, 0x004E68A9).nop();
+    AsmWriter(0x004E68B6, 0x004E68D1).nop();
     WaterAnimateWaves_speed_fix.Install();
 
     // Fix TimerGet handling of frequency greater than 2MHz (sign bit is set in 32 bit dword)
@@ -352,7 +352,7 @@ void HighFpsInit()
     timer_get_hook.Install();
 
     // Fix incorrect frame time calculation
-    AsmWritter(0x00509595).nop(2);
+    AsmWriter(0x00509595).nop(2);
     WriteMem<u8>(0x00509532, asm_opcodes::jmp_rel_short);
     frametime_update_sleep_hook.Install();
 

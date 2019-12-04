@@ -2,7 +2,7 @@
 #include "../main.h"
 #include "../rf.h"
 #include "../stdafx.h"
-#include <patch_common/AsmWritter.h>
+#include <patch_common/AsmWriter.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
 #include <patch_common/ShortTypes.h>
@@ -430,7 +430,7 @@ void GrColorInit()
         GeoModGenerateTexture_color_conv_patch.Install();
         GeoModGenerateLightmap_color_conv_patch.Install();
         // water
-        AsmWritter(0x004E68B0, 0x004E68B6).nop();
+        AsmWriter(0x004E68B0, 0x004E68B6).nop();
         WaterGenerateTexture_color_conv_patch.Install();
         // ambient color
         GetAmbientColorFromLightmaps_color_conv_patch.Install();

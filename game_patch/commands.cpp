@@ -455,7 +455,7 @@ void CommandsInit()
     MpInit_disable_debug_flags_patch.Install();
 
     // Allow 'level' command outside of multiplayer game
-    AsmWritter(0x00434FEC, 0x00434FF2).nop();
+    AsmWriter(0x00434FEC, 0x00434FF2).nop();
 }
 
 void CommandRegister(rf::DcCommand* cmd)

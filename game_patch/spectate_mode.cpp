@@ -390,16 +390,16 @@ void SpectateModeInit()
 
 #if SPECTATE_MODE_SHOW_WEAPON
 
-    AsmWritter(0x0043285D).call(PlayerFpgunRender_New);
-    AsmWritter(0x004AB1B8).nop(6); // PlayerFpgunRenderInternal
-    AsmWritter(0x004AA23E).nop(6); // PlayerFpgunSetupMesh
-    AsmWritter(0x004AE0DF).nop(2); // PlayerFpgunLoadMesh
+    AsmWriter(0x0043285D).call(PlayerFpgunRender_New);
+    AsmWriter(0x004AB1B8).nop(6); // PlayerFpgunRenderInternal
+    AsmWriter(0x004AA23E).nop(6); // PlayerFpgunSetupMesh
+    AsmWriter(0x004AE0DF).nop(2); // PlayerFpgunLoadMesh
 
-    AsmWritter(0x004A938F).nop(6);               // PlayerFpgunSetAction
+    AsmWriter(0x004A938F).nop(6);               // PlayerFpgunSetAction
     WriteMem<u8>(0x004A952C, asm_opcodes::jmp_rel_short); // PlayerFpgunHasState
-    AsmWritter(0x004AA56D).nop(6);               // PlayerFpgunSetState
-    AsmWritter(0x004AA6E7).nop(6);               // PlayerFpgunUpdateMesh
-    AsmWritter(0x004AE384).nop(6);               // PlayerFpgunPrepareWeapon
+    AsmWriter(0x004AA56D).nop(6);               // PlayerFpgunSetState
+    AsmWriter(0x004AA6E7).nop(6);               // PlayerFpgunUpdateMesh
+    AsmWriter(0x004AE384).nop(6);               // PlayerFpgunPrepareWeapon
     WriteMem<u8>(0x004ACE2C, asm_opcodes::jmp_rel_short); // GetZoomValue
 
     WriteMemPtr(0x0048857E + 2, &g_spectate_mode_target); // RenderObjects

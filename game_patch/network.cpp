@@ -67,10 +67,10 @@ public:
         if (std::memcmp(shr_ecx_2_ptr + 3, "\xF3\xA5", 2) == 0) { // rep movsd
             m_movsb_patch->SetAddr(m_shr_ecx_2_addr);
             m_ret_addr = m_shr_ecx_2_addr + 5;
-            AsmWritter(m_and_ecx_3_addr, m_and_ecx_3_addr + 3).xor_(ecx, ecx);
+            AsmWriter(m_and_ecx_3_addr, m_and_ecx_3_addr + 3).xor_(ecx, ecx);
         }
         else if (std::memcmp(and_ecx_3_ptr + 3, "\xF3\xA4", 2) == 0) { // rep movsb
-            AsmWritter(m_shr_ecx_2_addr, m_shr_ecx_2_addr + 3).xor_(ecx, ecx);
+            AsmWriter(m_shr_ecx_2_addr, m_shr_ecx_2_addr + 3).xor_(ecx, ecx);
             m_movsb_patch->SetAddr(m_and_ecx_3_addr);
             m_ret_addr = m_and_ecx_3_addr + 5;
         }
@@ -580,14 +580,14 @@ void NetworkInit()
     WriteMem<u8>(0x0044D338 + 1, 20);
 
     /* Allow ports < 1023 (especially 0 - any port) */
-    AsmWritter(0x00528F24).nop(2);
+    AsmWriter(0x00528F24).nop(2);
 
     /* Default port: 0 */
     WriteMem<u16>(0x0059CDE4, 0);
     WriteMem<i32>(0x004B159D + 1, 0); // TODO: add setting in launcher
 
     /* Dont overwrite MpCharacter in Single Player */
-    AsmWritter(0x004A415F).nop(10);
+    AsmWriter(0x004A415F).nop(10);
 
     /* Show valid info for servers with incompatible version */
     WriteMem<u8>(0x0047B3CB, asm_opcodes::jmp_rel_short);
@@ -616,7 +616,7 @@ void NetworkInit()
 
     // Fix ObjUpdate packet handling
     using namespace asm_regs;
-    AsmWritter(0x0047E058, 0x0047E06A)
+    AsmWriter(0x0047E058, 0x0047E06A)
         .mov(eax, *(esp + 0x9C - 0x6C)) // Player
         .push(eax)
         .push(ebx)
@@ -626,14 +626,14 @@ void NetworkInit()
         .mov(edi, eax);
 
     // Client-side green team fix
-    AsmWritter(0x0046CAD7, 0x0046CADA).cmp(al, -1);
+    AsmWriter(0x0046CAD7, 0x0046CADA).cmp(al, -1);
 
     // Hide IP addresses in Players packet
-    AsmWritter(0x00481D31, 0x00481D33).xor_(eax, eax);
-    AsmWritter(0x00481D40, 0x00481D44).xor_(edx, edx);
+    AsmWriter(0x00481D31, 0x00481D33).xor_(eax, eax);
+    AsmWriter(0x00481D40, 0x00481D44).xor_(edx, edx);
     // Hide IP addresses in New Player packet
-    AsmWritter(0x0047A4A0, 0x0047A4A2).xor_(edx, edx);
-    AsmWritter(0x0047A4A6, 0x0047A4AA).xor_(ecx, ecx);
+    AsmWriter(0x0047A4A0, 0x0047A4A2).xor_(edx, edx);
+    AsmWriter(0x0047A4A6, 0x0047A4AA).xor_(ecx, ecx);
 
     // Fix "Orion bug" - default 'miner1' entity spawning client-side periodically
     MultiAllocPlayerId_hook.Install();

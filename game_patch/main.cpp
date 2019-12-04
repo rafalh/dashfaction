@@ -271,8 +271,8 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     INFO("Allow Overwriting Game Files: %d", static_cast<int>(g_game_config.allow_overwrite_game_files));
 
     // Process messages in the same thread as DX processing (alternative: D3DCREATE_MULTITHREADED)
-    AsmWritter(0x00524C48, 0x00524C83).nop(); // disable msg loop thread
-    AsmWritter(0x00524C48).call(0x00524E40);  // CreateMainWindow
+    AsmWriter(0x00524C48, 0x00524C83).nop(); // disable msg loop thread
+    AsmWriter(0x00524C48).call(0x00524E40);  // CreateMainWindow
     KeyGetFromFifo_hook.Install();
 
     // General game hooks

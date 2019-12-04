@@ -238,7 +238,7 @@ void InputInit()
     mouse_keep_centered_disable_hook.Install();
 
     // Do not limit the cursor to the game window if in menu (Win32 mouse)
-    AsmWritter(0x0051DD7C).jmp(0x0051DD8E);
+    AsmWriter(0x0051DD7C).jmp(0x0051DD8E);
 
     // Use exclusive DirectInput mode so cursor cannot exit game window
     //WriteMem<u8>(0x0051E14B + 1, 5); // DISCL_EXCLUSIVE|DISCL_FOREGROUND

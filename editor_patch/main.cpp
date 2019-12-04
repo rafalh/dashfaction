@@ -2,7 +2,7 @@
 #include <common/version.h>
 #include <common/BuildConfig.h>
 #include <patch_common/AsmOpcodes.h>
-#include <patch_common/AsmWritter.h>
+#include <patch_common/AsmWriter.h>
 #include <patch_common/MemUtils.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
@@ -249,13 +249,13 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* Unused)
 
     // Zero first argument for CreateProcess call
     using namespace asm_regs;
-    AsmWritter(0x00447B32, 0x00447B39).nop();
-    AsmWritter(0x00447B32).xor_(eax, eax);
-    AsmWritter(0x00448024, 0x0044802B).nop();
-    AsmWritter(0x00448024).xor_(eax, eax);
+    AsmWriter(0x00447B32, 0x00447B39).nop();
+    AsmWriter(0x00447B32).xor_(eax, eax);
+    AsmWriter(0x00448024, 0x0044802B).nop();
+    AsmWriter(0x00448024).xor_(eax, eax);
 
     // InitInstance hook
-    AsmWritter(0x00482C84).call(CEditorApp__InitInstance_AfterHook);
+    AsmWriter(0x00482C84).call(CEditorApp__InitInstance_AfterHook);
 
 #if D3D_HW_VERTEX_PROCESSING
     // Use hardware vertex processing instead of software processing
@@ -265,16 +265,16 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* Unused)
 #endif
 
     // Avoid flushing D3D buffers in GrSetColor
-    AsmWritter(0x004B976D).nop(5);
+    AsmWriter(0x004B976D).nop(5);
 
     // Add Sleep if window is inactive
     frametime_update_hook.Install();
 
     // Reduce number of draw-calls for line rendering
-    AsmWritter(0x004E1335).nop(5);
+    AsmWriter(0x004E1335).nop(5);
     gr_d3d_draw_line_3d_patch_1.Install();
     gr_d3d_draw_line_3d_patch_2.Install();
-    AsmWritter(0x004E10B4).nop(5);
+    AsmWriter(0x004E10B4).nop(5);
     gr_d3d_draw_line_2d_patch_1.Install();
     gr_d3d_draw_line_2d_patch_2.Install();
     gr_d3d_draw_poly_patch.Install();

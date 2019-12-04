@@ -997,8 +997,8 @@ void MiscInit()
     gr_direct3d_lock_crash_fix.Install();
 
     // Dont overwrite player name and prefered weapons when loading saved game
-    AsmWritter(0x004B4D99, 0x004B4DA5).nop();
-    AsmWritter(0x004B4E0A, 0x004B4E22).nop();
+    AsmWriter(0x004B4D99, 0x004B4DA5).nop();
+    AsmWriter(0x004B4E0A, 0x004B4E22).nop();
 
 #if 1
     // Buffer overflows in RflReadStaticGeometry
@@ -1016,9 +1016,9 @@ void MiscInit()
 #endif
 
     // Fix console rendering when changing level
-    AsmWritter(0x0047C490).ret();
-    AsmWritter(0x0047C4AA).ret();
-    AsmWritter(0x004B2E15).nop(2);
+    AsmWriter(0x0047C490).ret();
+    AsmWriter(0x0047C4AA).ret();
+    AsmWriter(0x004B2E15).nop(2);
     MenuUpdate_hook.Install();
 
     // Increase damage for kill command in Single Player
@@ -1039,10 +1039,10 @@ void MiscInit()
 
     // Chat color alpha
     using namespace asm_regs;
-    AsmWritter(0x00477490, 0x004774A4).mov(eax, 0x30); // chatbox border
-    AsmWritter(0x00477528, 0x00477535).mov(ebx, 0x40); // chatbox background
-    AsmWritter(0x00478E00, 0x00478E14).mov(eax, 0x30); // chat input border
-    AsmWritter(0x00478E91, 0x00478E9E).mov(ebx, 0x40); // chat input background
+    AsmWriter(0x00477490, 0x004774A4).mov(eax, 0x30); // chatbox border
+    AsmWriter(0x00477528, 0x00477535).mov(ebx, 0x40); // chatbox background
+    AsmWriter(0x00478E00, 0x00478E14).mov(eax, 0x30); // chat input border
+    AsmWriter(0x00478E91, 0x00478E9E).mov(ebx, 0x40); // chat input background
 
     // Show enemy bullets
     rf::hide_enemy_bullets = !g_game_config.show_enemy_bullets;
@@ -1061,7 +1061,7 @@ void MiscInit()
     GeomCachePrepareRoom_hook.Install();
 
     // Remove Sleep calls in TimerInit
-    AsmWritter(0x00504A67, 0x00504A82).nop();
+    AsmWriter(0x00504A67, 0x00504A82).nop();
 
     // Use spawnpoint team property in TeamDM game (PF compatible)
     WriteMem<u8>(0x00470395 + 4, 0); // change cmp argument: CTF -> DM
@@ -1072,11 +1072,11 @@ void MiscInit()
 
     // Disable broken optimization of segment vs geometry collision test
     // Fixes hitting objects if mover is in the line of the shot
-    AsmWritter(0x00499055).jmp(0x004990B4);
+    AsmWriter(0x00499055).jmp(0x004990B4);
 
     // Disable Flamethower debug sphere drawing (optimization)
     // It is not visible in game because other things are drawn over it
-    AsmWritter(0x0041AE47, 0x0041AE4C).nop();
+    AsmWriter(0x0041AE47, 0x0041AE4C).nop();
 
     // Fix game beeping every frame if chat input buffer is full
     ChatSayAddChar_hook.Install();
@@ -1098,7 +1098,7 @@ void MiscInit()
     TriggerCheckActivation_patch.Install();
 
     // Fix crash when loading savegame with missing player entity data
-    AsmWritter(0x004B4B47).jmp(0x004B4B7B);
+    AsmWriter(0x004B4B47).jmp(0x004B4B7B);
 
     // Add checking if restoring game state from save file failed during level loading
     RflLoadInternal_CheckRestoreStatus_patch.Install();
@@ -1126,7 +1126,7 @@ void MiscInit()
 
     // Allow undefined mp_character in PlayerCreateEntity
     // Fixes Go_Undercover event not changing player 3rd person character
-    AsmWritter(0x004A414F, 0x004A4153).nop();
+    AsmWriter(0x004A414F, 0x004A4153).nop();
 
     // High monitors/mirrors resolution
     ClutterInitMonitor_hook.Install();
@@ -1134,7 +1134,7 @@ void MiscInit()
     // Fix font texture leak
     // Original code sets bitmap handle in all fonts to -1 on level unload. On next font usage the font bitmap is reloaded.
     // Note: font bitmaps are dynamic (USERBMAP) so they cannot be found by name unlike normal bitmaps.
-    AsmWritter(0x0050E1A8).ret();
+    AsmWriter(0x0050E1A8).ret();
     GrLoadFontInternal_fix_texture_ref.Install();
 
     // Fix crash when skipping cutscene after robot kill in L7S4
@@ -1151,13 +1151,13 @@ void MiscInit()
     strings_tbl_buffer_overflow_fix.Install();
 
     // Fix killed glass restoration from a save file
-    AsmWritter(0x0043604A).nop(5);
+    AsmWriter(0x0043604A).nop(5);
     glass_kill_init_fix.Install();
 
 #if 0
     // Fix weapon switch glitch when reloading (should be used on Match Mode)
-    AsmWritter(0x004A4B4B).call(EntityIsReloading_SwitchWeapon_New);
-    AsmWritter(0x004A4B77).call(EntityIsReloading_SwitchWeapon_New);
+    AsmWriter(0x004A4B4B).call(EntityIsReloading_SwitchWeapon_New);
+    AsmWriter(0x004A4B77).call(EntityIsReloading_SwitchWeapon_New);
 #endif
 
     // Fix crash caused by buffer overflows in level save/load code
@@ -1181,7 +1181,7 @@ void MiscInit()
 
     // Use local_player variable for debris distance calculation instead of local_entity
     // Fixed debris pool being exhausted when local player is dead
-    AsmWritter(0x0042A223, 0x0042A232).mov(asm_regs::ecx, {&rf::local_player});
+    AsmWriter(0x0042A223, 0x0042A232).mov(asm_regs::ecx, {&rf::local_player});
 
     // Delete sounds with lowest volume when there is no free slot for a new sound
     SndDsGetFreeChannel_hook.Install();

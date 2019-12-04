@@ -123,7 +123,7 @@ void InitKill()
 {
     // Player kill handling
     using namespace asm_regs;
-    AsmWritter(0x00420703)
+    AsmWriter(0x00420703)
         .push(ebx)
         .push(edi)
         .call(OnPlayerKill)

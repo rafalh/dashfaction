@@ -499,7 +499,7 @@ void GraphicsInit()
 
 #if WIDESCREEN_FIX
     // Fix FOV for widescreen
-    AsmWritter(0x00547354, 0x00547358).nop();
+    AsmWriter(0x00547354, 0x00547358).nop();
     GrSetViewMatrix_widescreen_fix.Install();
     WriteMem<float>(0x0058A29C, 0.0003f); // factor related to near plane, default is 0.000588f
 #endif
@@ -514,14 +514,14 @@ void GraphicsInit()
     GrCreateD3DDevice_error_patch.Install();
 
     // Optimization - remove unused back buffer locking/unlocking in GrSwapBuffers
-    AsmWritter(0x0054504A).jmp(0x0054508B);
+    AsmWriter(0x0054504A).jmp(0x0054508B);
 
 #if 1
     // Fix rendering of right and bottom edges of viewport
     WriteMem<u8>(0x00431D9F, asm_opcodes::jmp_rel_short);
     WriteMem<u8>(0x00431F6B, asm_opcodes::jmp_rel_short);
     WriteMem<u8>(0x004328CF, asm_opcodes::jmp_rel_short);
-    AsmWritter(0x0043298F).jmp(0x004329DC);
+    AsmWriter(0x0043298F).jmp(0x004329DC);
     GrClearZBuffer_fix_rect.Install();
 
     // Left and top viewport edge fix for MSAA (RF does similar thing in GrDrawTextureD3D)
@@ -566,7 +566,7 @@ void GraphicsInit()
     GrColorInit();
 
     // Enable mip-mapping for textures bigger than 256x256
-    AsmWritter(0x0050FEDA, 0x0050FEE9).nop();
+    AsmWriter(0x0050FEDA, 0x0050FEE9).nop();
     WriteMem<u8>(0x0055B739, asm_opcodes::jmp_rel_short);
 
     // Fix decal fade out

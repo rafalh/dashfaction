@@ -537,14 +537,14 @@ void PackfileApplyPatches()
 {
     // Packfile handling implemetation getting rid of all limits
 
-    AsmWritter(0x0052BCA0).jmp(PackfileAddToLookupTable_New);
-    AsmWritter(0x0052BD40).jmp(PackfileAddEntries_New);
-    AsmWritter(0x0052C4D0).jmp(PackfileBuildEntriesList_New);
-    AsmWritter(0x0052C070).jmp(PackfileLoad_New);
-    AsmWritter(0x0052C1D0).jmp(PackfileFindArchive_New);
-    AsmWritter(0x0052C220).jmp(PackfileFindFileInternal_New);
-    AsmWritter(0x0052BB60).jmp(PackfileInit_New);
-    AsmWritter(0x0052BC80).jmp(PackfileCleanup_New);
+    AsmWriter(0x0052BCA0).jmp(PackfileAddToLookupTable_New);
+    AsmWriter(0x0052BD40).jmp(PackfileAddEntries_New);
+    AsmWriter(0x0052C4D0).jmp(PackfileBuildEntriesList_New);
+    AsmWriter(0x0052C070).jmp(PackfileLoad_New);
+    AsmWriter(0x0052C1D0).jmp(PackfileFindArchive_New);
+    AsmWriter(0x0052C220).jmp(PackfileFindFileInternal_New);
+    AsmWriter(0x0052BB60).jmp(PackfileInit_New);
+    AsmWriter(0x0052BC80).jmp(PackfileCleanup_New);
 
 #ifdef DEBUG
     WriteMem<u8>(0x0052BEF0, 0xFF); // VfsInitPackfileFilesList

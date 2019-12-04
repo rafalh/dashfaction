@@ -378,8 +378,8 @@ void ServerInit()
     InitServerCommands();
 
     // Remove level prefix restriction (dm/ctf) for 'level' command and dedicated_server.txt
-    AsmWritter(0x004350FE).nop(2);
-    AsmWritter(0x0046E179).nop(2);
+    AsmWriter(0x004350FE).nop(2);
+    AsmWriter(0x0046E179).nop(2);
 
     // In Multi -> Create game fix level filtering so 'pdm' and 'pctf' is supported
     MpIsLevelForGameMode_hook.Install();
