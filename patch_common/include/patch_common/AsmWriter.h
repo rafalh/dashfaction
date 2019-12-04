@@ -393,6 +393,13 @@ public:
         return *this;
     }
 
+    AsmWriter& ret(uint16_t imm)
+    {
+        write<u8>(0xC2);
+        write<u16>(imm);
+        return *this;
+    }
+
     AsmWriter& ret()
     {
         write<u8>(0xC3);
