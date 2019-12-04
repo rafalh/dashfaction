@@ -5,8 +5,12 @@
 #include "../kill.h"
 #include <cstddef>
 
-void process_player_announce_packet(const void* data, size_t len, [[ maybe_unused ]] const rf::NwAddr& addr)
+void process_pf_player_announce_packet(const void* data, size_t len, [[ maybe_unused ]] const rf::NwAddr& addr)
 {
+    // Client-side packet
+    if (rf::is_local_net_game)
+        return;
+
     if (len < sizeof(pf_player_announce_packet))
         return;
 
@@ -25,8 +29,12 @@ void process_player_announce_packet(const void* data, size_t len, [[ maybe_unuse
     }
 }
 
-void process_player_stats_packet(const void* data, size_t len, [[ maybe_unused ]] const rf::NwAddr& addr)
+void process_pf_player_stats_packet(const void* data, size_t len, [[ maybe_unused ]] const rf::NwAddr& addr)
 {
+    // Client-side packet
+    if (rf::is_local_net_game)
+        return;
+
     if (len < sizeof(pf_player_announce_packet))
         return;
 
@@ -56,7 +64,8 @@ void process_pf_players_request_packet([[ maybe_unused ]] const void* data, [[ m
 {
     TRACE("PF players_request packet");
 
-    if (!rf::is_dedicated_server) {
+    // Server-side packet
+    if (!rf::is_local_net_game) {
         return;
     }
 
@@ -97,11 +106,11 @@ void ProcessPfPacket(const void* data, size_t len, const rf::NwAddr& addr, [[may
             break;
 
         case pf_packet_type::announce_player:
-            process_player_announce_packet(data, len, addr);
+            process_pf_player_announce_packet(data, len, addr);
             break;
 
         case pf_packet_type::player_stats:
-            process_player_stats_packet(data, len, addr);
+            process_pf_player_stats_packet(data, len, addr);
             break;
 
         case pf_packet_type::players_request:
