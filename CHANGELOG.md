@@ -48,6 +48,7 @@ animation bug in multi-player and occasionally sticking to the ground in some le
 - fix cutscene cinema bars when MSAA is enabled (regression)
 - fix improper alpha sorting for Invulnerability Power-up items (RF bug)
 - fix non-working face scrolling before first geomod use in custom levels
+- fix flee animation on steep ground for AI controlled characters on high FPS
 
 Version 1.3.0 (released 2019-05-07)
 -----------------------------------
