@@ -388,14 +388,11 @@ CodeInjection MonitorRenderNoise_patch{
         noise_buf >>= 1;
 
         auto& lock = *reinterpret_cast<rf::GrLockData*>(regs.esp + 0x2C - 0x20);
-        if (GetPixelFormatSize(lock.pixel_format) == 4) {
-            *reinterpret_cast<int32_t*>(regs.esi) = white ? 0 : -1;
-            regs.esi += 4;
-        }
-        else {
-            *reinterpret_cast<int16_t*>(regs.esi) = white ? 0 : -1;
-            regs.esi += 2;
-        }
+        auto pixel_ptr = reinterpret_cast<char*>(regs.esi);
+        int bytes_per_pixel = GetPixelFormatSize(lock.pixel_format);
+
+        std::fill(pixel_ptr, pixel_ptr + bytes_per_pixel, white ? '\0' : '\xFF');
+        regs.esi += bytes_per_pixel;
         ++regs.edx;
         regs.eip = 0x004123DA;
     },
@@ -434,9 +431,10 @@ void GrColorInit()
         WaterGenerateTexture_color_conv_patch.Install();
         // ambient color
         GetAmbientColorFromLightmaps_color_conv_patch.Install();
-        // monitor noise
-        MonitorRenderNoise_patch.Install();
-        // monitor off state
-        MonitorRenderOffState_patch.Install();
     }
+
+    // monitor noise
+    MonitorRenderNoise_patch.Install();
+    // monitor off state
+    MonitorRenderOffState_patch.Install();
 }
