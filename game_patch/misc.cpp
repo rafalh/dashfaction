@@ -960,7 +960,20 @@ CodeInjection sort_clutter_patch{
     },
 };
 
-
+CodeInjection face_scroll_fix{
+    0x004EE1D6,
+    [](auto& regs) {
+        std::byte* geometry = reinterpret_cast<std::byte*>(regs.ebp);
+        std::byte* scroll_data_vec = geometry + 0x2F4;
+        int num = *reinterpret_cast<uint32_t*>(scroll_data_vec);
+        void **scroll_data = *reinterpret_cast<void***>(scroll_data_vec + 8);
+        auto RflFaceScroll_SetupFaces = reinterpret_cast<void __thiscall(*)(void* self, void* geometry)>(0x004E60C0);
+        return;
+        for (int i = 0; i < num; ++i) {
+            RflFaceScroll_SetupFaces(scroll_data[i], geometry);
+        }
+    },
+};
 
 void MiscInit()
 {
@@ -1204,6 +1217,9 @@ void MiscInit()
     // Sort objects by anim mesh name to improve rendering performance
     sort_items_patch.Install();
     sort_clutter_patch.Install();
+
+    // Fix face scroll in levels after version 0xB4
+    face_scroll_fix.Install();
 }
 
 void MiscCleanup()
