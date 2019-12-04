@@ -917,6 +917,14 @@ CodeInjection sort_items_patch{
         auto& item_obj_list = AddrAsRef<rf::ItemObj>(0x00642DD8);
         auto item = reinterpret_cast<rf::ItemObj*>(regs.esi);
         auto mesh_name = AnimMeshGetName(item->_super.anim_mesh);
+
+        // HACKFIX: enable alpha sorting for Invulnerability Powerup
+        // Note: material used for alpha-blending is flare_blue1.tga - it uses non-alpha texture
+        // so information about alpha-blending cannot be taken from material alone - it must be read from VFX
+        if (!strcmp(mesh_name, "powerup_invuln.vfx")) {
+            item->_super.flags |= 0x100000; // OF_HAS_ALPHA
+        }
+
         auto current = item_obj_list.next;
         while (current != &item_obj_list && strcmp(mesh_name, AnimMeshGetName(current->_super.anim_mesh)) != 0) {
             current = current->next;

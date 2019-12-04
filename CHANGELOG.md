@@ -46,6 +46,7 @@ animation bug in multi-player and occasionally sticking to the ground in some le
 - fix crash during texture load if it allocation in RAM fails
 - fix RAM leak if texture creation by D3D fails
 - fix cutscene cinema bars when MSAA is enabled (regression)
+- fix improper alpha sorting for Invulnerability Power-up items (RF bug)
 
 Version 1.3.0 (released 2019-05-07)
 -----------------------------------
