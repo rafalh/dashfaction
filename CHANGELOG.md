@@ -1,9 +1,9 @@
 DashFaction Changelog
 =====================
 
-Version 1.3.1
--------------
-- add free spectate support
+Version 1.4.0 (released 2019-12-04)
+-----------------------------------
+- add free camera spectate mode support
 - add vote system (server-side)
 - rework fix for sticking to the ground when jumping - now it is based on PF code (by Trotskie) - should fix free-fall
 animation bug in multi-player and occasionally sticking to the ground in some levels
