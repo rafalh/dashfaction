@@ -33,6 +33,7 @@ animation bug in multi-player and occasionally sticking to the ground in some le
 - change cutscene skip control to Multiplayer Stats to avoid unintended skipping
 - add control name in cutscene skip hint message
 - increase entity simulation max distance (fixes far entities not being animated even when moving)
+- add support for players_request PF packet (used by online server browser)
 - fix VRAM leak on level load caused by font textures (RF bug)
 - fix occasionally getting stuck on jump pads on high FPS
 - fix 'debug' command not flushing geometry cache when disabling flags

@@ -3,6 +3,7 @@
 #include "pf_packets.h"
 #include "pf_secret.h"
 #include "../kill.h"
+#include <cstddef>
 
 void process_player_announce_packet(const void* data, size_t len, [[ maybe_unused ]] const rf::NwAddr& addr)
 {
@@ -51,6 +52,32 @@ void process_player_stats_packet(const void* data, size_t len, [[ maybe_unused ]
     }
 }
 
+void process_pf_players_request_packet([[ maybe_unused ]] const void* data, [[ maybe_unused ]] size_t len, const rf::NwAddr& addr)
+{
+    TRACE("PF players_request packet");
+
+    if (!rf::is_dedicated_server) {
+        return;
+    }
+
+    std::stringstream ss;
+    auto player_list = SinglyLinkedList(rf::player_list);
+    for (auto player : player_list) {
+        ss.write(player.name.CStr(), player.name.Size() + 1);
+    }
+    auto players_str = ss.str();
+
+    auto packet_buf = std::make_unique<std::byte[]>(sizeof(pf_players_packet) + players_str.size());
+    auto& response = *reinterpret_cast<pf_players_packet*>(packet_buf.get());
+    response.hdr.type = static_cast<u8>(pf_packet_type::players);
+    response.hdr.size = sizeof(pf_players_packet) + players_str.size() - sizeof(rf_packet_header);
+    response.version = 1;
+    response.show_ip = 0;
+    std::copy(players_str.begin(), players_str.end(), reinterpret_cast<char*>(packet_buf.get() + sizeof(pf_players_packet)));
+
+    rf::NwSendNotReliablePacket(addr, &response, sizeof(response.hdr) + response.hdr.size);
+}
+
 void ProcessPfPacket(const void* data, size_t len, const rf::NwAddr& addr, [[maybe_unused]] const rf::Player* player)
 {
     if (len < sizeof(rf_packet_header))
@@ -75,6 +102,10 @@ void ProcessPfPacket(const void* data, size_t len, const rf::NwAddr& addr, [[may
 
         case pf_packet_type::player_stats:
             process_player_stats_packet(data, len, addr);
+            break;
+
+        case pf_packet_type::players_request:
+            process_pf_players_request_packet(data, len, addr);
             break;
 
         default:
