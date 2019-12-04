@@ -32,6 +32,7 @@ animation bug in multi-player and occasionally sticking to the ground in some le
 - sort items and clutter by mesh to improve performance
 - change cutscene skip control to Multiplayer Stats to avoid unintended skipping
 - add control name in cutscene skip hint message
+- increase entity simulation max distance (fixes far entities not being animated even when moving)
 - fix VRAM leak on level load caused by font textures (RF bug)
 - fix occasionally getting stuck on jump pads on high FPS
 - fix 'debug' command not flushing geometry cache when disabling flags

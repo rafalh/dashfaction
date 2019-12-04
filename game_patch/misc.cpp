@@ -1220,6 +1220,12 @@ void MiscInit()
 
     // Fix face scroll in levels after version 0xB4
     face_scroll_fix.Install();
+
+    // Increase entity simulation max distance
+    // TODO: create a config property for this
+    if (g_game_config.disable_lod_models) {
+        WriteMem<float>(0x00589548, 100.0f);
+    }
 }
 
 void MiscCleanup()
