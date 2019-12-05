@@ -915,9 +915,13 @@ auto AnimMeshGetName = AddrAsRef<const char*(rf::AnimMesh* anim_mesh)>(0x0050347
 CodeInjection sort_items_patch{
     0x004593AC,
     [](auto& regs) {
-        auto& item_obj_list = AddrAsRef<rf::ItemObj>(0x00642DD8);
         auto item = reinterpret_cast<rf::ItemObj*>(regs.esi);
-        auto mesh_name = AnimMeshGetName(item->_super.anim_mesh);
+        auto anim_mesh = item->_super.anim_mesh;
+        auto mesh_name = anim_mesh ? AnimMeshGetName(anim_mesh) : nullptr;
+        if (!mesh_name) {
+            // Sometimes on level change some objects can stay and have only anim_mesh destroyed
+            return;
+        }
 
         // HACKFIX: enable alpha sorting for Invulnerability Powerup
         // Note: material used for alpha-blending is flare_blue1.tga - it uses non-alpha texture
@@ -926,8 +930,14 @@ CodeInjection sort_items_patch{
             item->_super.flags |= 0x100000; // OF_HAS_ALPHA
         }
 
-        auto current = item_obj_list.next;
-        while (current != &item_obj_list && strcmp(mesh_name, AnimMeshGetName(current->_super.anim_mesh)) != 0) {
+        auto& item_obj_list = AddrAsRef<rf::ItemObj>(0x00642DD8);
+        rf::ItemObj* current = item_obj_list.next;
+        while (current != &item_obj_list) {
+            auto current_anim_mesh = current->_super.anim_mesh;
+            auto current_mesh_name = current_anim_mesh ? AnimMeshGetName(current_anim_mesh) : nullptr;
+            if (current_mesh_name && !strcmp(mesh_name, current_mesh_name)) {
+                break;
+            }
             current = current->next;
         }
         item->next = current;
@@ -943,11 +953,21 @@ CodeInjection sort_items_patch{
 CodeInjection sort_clutter_patch{
     0x004109D4,
     [](auto& regs) {
-        auto& clutter_obj_list = AddrAsRef<rf::ClutterObj>(0x005C9360);
         auto clutter = reinterpret_cast<rf::ClutterObj*>(regs.esi);
-        auto mesh_name = AnimMeshGetName(clutter->_super.anim_mesh);
+        auto anim_mesh = clutter->_super.anim_mesh;
+        auto mesh_name = anim_mesh ? AnimMeshGetName(anim_mesh) : nullptr;
+        if (!mesh_name) {
+            // Sometimes on level change some objects can stay and have only anim_mesh destroyed
+            return;
+        }
+        auto& clutter_obj_list = AddrAsRef<rf::ClutterObj>(0x005C9360);
         auto current = clutter_obj_list.next;
-        while (current != &clutter_obj_list && strcmp(mesh_name, AnimMeshGetName(current->_super.anim_mesh)) != 0) {
+        while (current != &clutter_obj_list) {
+            auto current_anim_mesh = current->_super.anim_mesh;
+            auto current_mesh_name = current_anim_mesh ? AnimMeshGetName(current_anim_mesh) : nullptr;
+            if (current_mesh_name && !strcmp(mesh_name, current_mesh_name)) {
+                break;
+            }
             current = current->next;
         }
         clutter->next = current;

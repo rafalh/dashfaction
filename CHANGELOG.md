@@ -1,6 +1,10 @@
 DashFaction Changelog
 =====================
 
+Version 1.4.1
+-------------
+- fix crash after exiting administration with Gryphon (regression)
+
 Version 1.4.0 (released 2019-12-04)
 -----------------------------------
 - add free camera spectate mode support
