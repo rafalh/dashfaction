@@ -419,6 +419,7 @@ CodeInjection RflLoadInternal_CheckRestoreStatus_patch{
 };
 
 static int g_cutscene_bg_sound_sig = -1;
+static constexpr rf::GameCtrl default_skip_cutscene_ctrl = rf::GC_MP_STATS;
 
 rf::String GetGameCtrlBindName(int game_ctrl)
 {
@@ -438,11 +439,12 @@ rf::String GetGameCtrlBindName(int game_ctrl)
     return name;
 }
 
-void RenderSkipCutsceneHintText()
+void RenderSkipCutsceneHintText(rf::GameCtrl ctrl)
 {
-    auto bind_name = GetGameCtrlBindName(rf::GC_MP_STATS);
+    auto bind_name = GetGameCtrlBindName(ctrl);
+    auto& ctrl_name = rf::local_player->config.controls.keys[ctrl].name;
     rf::GrSetColor(255, 255, 255, 255);
-    auto msg = rf::String::Format("Press Multiplayer Stats (%s) to skip the cutscene", bind_name.CStr());
+    auto msg = rf::String::Format("Press %s (%s) to skip the cutscene", ctrl_name.CStr(), bind_name.CStr());
     auto x = rf::GrGetMaxWidth() / 2;
     auto y = rf::GrGetMaxHeight() - 30;
     rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, x, y, msg.CStr(), -1, rf::gr_text_material);
@@ -452,11 +454,14 @@ FunHook<void(bool)> MenuInGameUpdateCutscene_hook{
     0x0045B5E0,
     [](bool dlg_open) {
         bool skip_cutscene = false;
-        rf::IsEntityCtrlActive(&rf::local_player->config.controls, rf::GC_MP_STATS, &skip_cutscene);
+        auto skip_cutscene_ctrl = g_game_config.skip_cutscene_ctrl != -1
+            ? static_cast<rf::GameCtrl>(g_game_config.skip_cutscene_ctrl)
+            : default_skip_cutscene_ctrl;
+        rf::IsEntityCtrlActive(&rf::local_player->config.controls, skip_cutscene_ctrl, &skip_cutscene);
 
         if (!skip_cutscene) {
             MenuInGameUpdateCutscene_hook.CallTarget(dlg_open);
-            RenderSkipCutsceneHintText();
+            RenderSkipCutsceneHintText(skip_cutscene_ctrl);
         }
         else {
             auto& timer_add_delta_time = AddrAsRef<int(int delta_ms)>(0x004FA2D0);
@@ -508,6 +513,29 @@ CallHook<int()> PlayHardcodedBackgroundMusicForCutscene_hook{
         g_cutscene_bg_sound_sig = PlayHardcodedBackgroundMusicForCutscene_hook.CallTarget();
         return g_cutscene_bg_sound_sig;
     },
+};
+
+DcCommand2 skip_cutscene_bind_cmd{
+    "skip_cutscene_bind",
+    [](std::string bind_name) {
+        if (bind_name == "default") {
+            g_game_config.skip_cutscene_ctrl = -1;
+        }
+        else {
+            auto ConfigFindControlByName = AddrAsRef<int(rf::PlayerConfig&, const char*)>(0x0043D9F0);
+            int ctrl = ConfigFindControlByName(rf::local_player->config, bind_name.c_str());
+            if (ctrl == -1) {
+                rf::DcPrintf("Cannot find control: %s", bind_name.c_str());
+            }
+            else {
+                g_game_config.skip_cutscene_ctrl = ctrl;
+                g_game_config.save();
+                rf::DcPrintf("Skip Cutscene bind changed to: %s", bind_name.c_str());
+            }
+        }
+    },
+    "Changes bind used to skip cutscenes",
+    "skip_cutscene_bind ctrl_name",
 };
 
 CodeInjection CoronaEntityCollisionTestFix{
@@ -1151,6 +1179,7 @@ void MiscInit()
     // Support skipping cutscenes
     MenuInGameUpdateCutscene_hook.Install();
     PlayHardcodedBackgroundMusicForCutscene_hook.Install();
+    skip_cutscene_bind_cmd.Register();
 
     // Open server list menu instead of main menu when leaving multiplayer game
     GameEnterState_hook.Install();

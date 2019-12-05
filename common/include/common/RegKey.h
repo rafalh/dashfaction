@@ -96,6 +96,24 @@ public:
         return result;
     }
 
+    bool read_value(const char* name, int* value)
+    {
+        unsigned temp;
+        bool result = read_value(name, &temp);
+        if (result)
+            *value = static_cast<int>(temp);
+        return result;
+    }
+
+    bool read_value(const char* name, float* value)
+    {
+        unsigned temp;
+        bool result = read_value(name, &temp);
+        if (result)
+            std::copy(reinterpret_cast<char*>(&temp), reinterpret_cast<char*>(&temp + 1), reinterpret_cast<char*>(value));
+        return result;
+    }
+
     void write_value(const char* name, unsigned value)
     {
         DWORD temp = value;
@@ -114,6 +132,18 @@ public:
     void write_value(const char* name, bool value)
     {
         write_value(name, value ? 1u : 0u);
+    }
+
+    void write_value(const char* name, int value)
+    {
+        write_value(name, static_cast<unsigned>(value));
+    }
+
+    void write_value(const char* name, float value)
+    {
+        unsigned temp;
+        std::copy(reinterpret_cast<char*>(&value), reinterpret_cast<char*>(&value + 1), reinterpret_cast<char*>(&temp));
+        write_value(name, temp);
     }
 
     bool is_open() const

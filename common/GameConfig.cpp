@@ -44,7 +44,7 @@ bool GameConfig::load() try
     result &= dash_faction_key.read_value("Direct Input", &direct_input);
     result &= dash_faction_key.read_value("Fast Start", &fast_start);
     result &= dash_faction_key.read_value("Scoreboard Animations", &scoreboard_anim);
-    result &= dash_faction_key.read_value("Level Sound Volume", reinterpret_cast<unsigned*>(&level_sound_volume));
+    result &= dash_faction_key.read_value("Level Sound Volume", &level_sound_volume);
     result &= dash_faction_key.read_value("Allow Overwriting Game Files", &allow_overwrite_game_files);
     result &= dash_faction_key.read_value("Version", &dash_faction_version);
     result &= dash_faction_key.read_value("Swap Assault Rifle Controls", &swap_assault_rifle_controls);
@@ -52,6 +52,7 @@ bool GameConfig::load() try
     result &= dash_faction_key.read_value("Linear Pitch", &linear_pitch);
     result &= dash_faction_key.read_value("Show Enemy Bullets", &show_enemy_bullets);
     result &= dash_faction_key.read_value("Keep Launcher Open", &keep_launcher_open);
+    result &= dash_faction_key.read_value("Skip Cutscene Control", &skip_cutscene_ctrl);
 
 #ifdef NDEBUG
     max_fps = std::clamp(max_fps, MIN_FPS_LIMIT, MAX_FPS_LIMIT);
@@ -93,7 +94,7 @@ void GameConfig::save() try
     dash_faction_key.write_value("Direct Input", direct_input);
     dash_faction_key.write_value("Fast Start", fast_start);
     dash_faction_key.write_value("Scoreboard Animations", scoreboard_anim);
-    dash_faction_key.write_value("Level Sound Volume", *reinterpret_cast<unsigned*>(&level_sound_volume));
+    dash_faction_key.write_value("Level Sound Volume", level_sound_volume);
     dash_faction_key.write_value("Allow Overwriting Game Files", allow_overwrite_game_files);
     dash_faction_key.write_value("Version", dash_faction_version);
     dash_faction_key.write_value("Swap Assault Rifle Controls", swap_assault_rifle_controls);
@@ -101,6 +102,7 @@ void GameConfig::save() try
     dash_faction_key.write_value("Linear Pitch", linear_pitch);
     dash_faction_key.write_value("Show Enemy Bullets", show_enemy_bullets);
     dash_faction_key.write_value("Keep Launcher Open", keep_launcher_open);
+    dash_faction_key.write_value("Skip Cutscene Control", skip_cutscene_ctrl);
 }
 catch (...) {
     std::throw_with_nested(std::runtime_error("failed to save config"));

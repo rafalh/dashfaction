@@ -3,6 +3,7 @@ DashFaction Changelog
 
 Version 1.4.1
 -------------
+- add 'skip_cutscene_bind' command allowing to change the control used for skipping cutscenes (by default Multiplayer Stats - TAB)
 - fix crash after exiting administration with Gryphon (regression)
 
 Version 1.4.0 (released 2019-12-04)
