@@ -1,6 +1,10 @@
 DashFaction Changelog
 =====================
 
+Version 1.4.2
+-------------
+- fix non-working face scrolling before first geomod use in custom levels
+
 Version 1.4.1 (released 2019-12-07)
 -----------------------------------
 - add 'skip_cutscene_bind' command allowing to change the control used for skipping cutscenes (by default Multiplayer Stats - TAB)
@@ -55,7 +59,6 @@ animation bug in multi-player and occasionally sticking to the ground in some le
 - fix RAM leak if texture creation by D3D fails
 - fix cutscene cinema bars when MSAA is enabled (regression)
 - fix improper alpha sorting for Invulnerability Power-up items (RF bug)
-- fix non-working face scrolling before first geomod use in custom levels
 - fix flee animation on steep ground for AI controlled characters on high FPS
 
 Version 1.3.0 (released 2019-05-07)

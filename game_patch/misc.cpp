@@ -1012,14 +1012,11 @@ CodeInjection sort_clutter_patch{
 CodeInjection face_scroll_fix{
     0x004EE1D6,
     [](auto& regs) {
-        std::byte* geometry = reinterpret_cast<std::byte*>(regs.ebp);
-        std::byte* scroll_data_vec = geometry + 0x2F4;
-        int num = *reinterpret_cast<uint32_t*>(scroll_data_vec);
-        void **scroll_data = *reinterpret_cast<void***>(scroll_data_vec + 8);
-        return;
+        auto geometry = reinterpret_cast<void*>(regs.ebp);
+        auto& scroll_data_vec = StructFieldRef<rf::DynamicArray<void*>>(geometry, 0x2F4);
         auto RflFaceScroll_SetupFaces = reinterpret_cast<void(__thiscall*)(void* self, void* geometry)>(0x004E60C0);
-        for (int i = 0; i < num; ++i) {
-            RflFaceScroll_SetupFaces(scroll_data[i], geometry);
+        for (int i = 0; i < scroll_data_vec.Size(); ++i) {
+            RflFaceScroll_SetupFaces(scroll_data_vec.Get(i), geometry);
         }
     },
 };
