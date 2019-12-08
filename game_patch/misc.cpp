@@ -1016,10 +1016,10 @@ CodeInjection face_scroll_fix{
         std::byte* scroll_data_vec = geometry + 0x2F4;
         int num = *reinterpret_cast<uint32_t*>(scroll_data_vec);
         void **scroll_data = *reinterpret_cast<void***>(scroll_data_vec + 8);
-        auto RflFaceScroll_SetupFaces = reinterpret_cast<void(__fastcall*)(void* self, void* edx, void* geometry)>(0x004E60C0);
         return;
+        auto RflFaceScroll_SetupFaces = reinterpret_cast<void(__thiscall*)(void* self, void* geometry)>(0x004E60C0);
         for (int i = 0; i < num; ++i) {
-            RflFaceScroll_SetupFaces(scroll_data[i], nullptr, geometry);
+            RflFaceScroll_SetupFaces(scroll_data[i], geometry);
         }
     },
 };

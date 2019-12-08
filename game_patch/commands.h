@@ -80,8 +80,7 @@ protected:
         this->func = reinterpret_cast<void (*)()>(StaticHandler);
     }
 
-    // Note: fastcall is used because MSVC does not allow free thiscall functions
-    static void __fastcall StaticHandler(rf::DcCommand* cmd)
+    static void __thiscall StaticHandler(rf::DcCommand* cmd)
     {
         // Note: this cast actually changes the offset taking into account the vtbl existance
         auto cmd2 = static_cast<BaseCommand*>(cmd);
@@ -171,7 +170,7 @@ public:
 private:
     void Handler() override
     {
-        auto handler_fun = reinterpret_cast<void(__fastcall *)(rf::DcCommand*)>(m_target_cmd.func);
+        auto handler_fun = reinterpret_cast<void(__thiscall *)(rf::DcCommand*)>(m_target_cmd.func);
         handler_fun(&m_target_cmd);
     }
 };
