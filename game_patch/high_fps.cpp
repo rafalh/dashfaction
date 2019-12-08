@@ -235,13 +235,17 @@ CodeInjection stuck_to_ground_fix{
     },
 };
 
-void STDCALL EntityWaterDecelerateFix(rf::EntityObj* entity)
-{
-    float vel_factor = 1.0f - (rf::frametime * 4.5f);
-    entity->_super.phys_info.vel.x *= vel_factor;
-    entity->_super.phys_info.vel.y *= vel_factor;
-    entity->_super.phys_info.vel.z *= vel_factor;
-}
+CodeInjection entity_water_decelerate_fix{
+    0x0049D82A,
+    [](auto& regs) {
+        auto entity = reinterpret_cast<rf::EntityObj*>(regs.esi);
+        float vel_factor = 1.0f - (rf::frametime * 4.5f);
+        entity->_super.phys_info.vel.x *= vel_factor;
+        entity->_super.phys_info.vel.y *= vel_factor;
+        entity->_super.phys_info.vel.z *= vel_factor;
+        regs.eip = 0x0049D835;
+    },
+};
 
 CodeInjection WaterAnimateWaves_speed_fix{
     0x004E68A0,
@@ -340,7 +344,7 @@ void HighFpsInit()
 
     // Fix water deceleration on high FPS
     AsmWriter(0x0049D816).nop(5);
-    AsmWriter(0x0049D82A, 0x0049D835).nop(5).push(asm_regs::esi).call(EntityWaterDecelerateFix);
+    entity_water_decelerate_fix.Install();
 
     // Fix water waves animation on high FPS
     AsmWriter(0x004E68A0, 0x004E68A9).nop();

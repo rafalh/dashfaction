@@ -21,7 +21,7 @@ void BanCmdHandlerHook()
 {
     if (rf::is_net_game && rf::is_local_net_game) {
         if (rf::dc_run) {
-            rf::DcGetArg(rf::DC_ARG_STR, 1);
+            rf::DcGetArg(rf::DC_ARG_STR, true);
             rf::Player* player = FindBestMatchingPlayer(rf::dc_str_arg);
 
             if (player) {

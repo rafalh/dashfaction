@@ -934,7 +934,7 @@ namespace rf
 
     static auto& KillLocalPlayer = AddrAsRef<void()>(0x004757A0);
     static auto& IsEntityCtrlActive =
-        AddrAsRef<char(ControlConfig *ctrl_conf, GameCtrl ctrl_id, bool *was_pressed)>(0x0043D4F0);
+        AddrAsRef<bool(ControlConfig *ctrl_conf, GameCtrl ctrl_id, bool *was_pressed)>(0x0043D4F0);
     static auto& GetPlayerFromEntityHandle = AddrAsRef<Player*(int32_t entity_handle)>(0x004A3740);
     static auto& IsPlayerEntityInvalid = AddrAsRef<bool(Player *player)>(0x004A4920);
     static auto& IsPlayerDying = AddrAsRef<bool(Player *player)>(0x004A4940);
@@ -951,9 +951,9 @@ namespace rf
         OT_TRIGGER = 0x5,
         OT_EVENT = 0x6,
         OT_CORPSE = 0x7,
-        OT_KEYFRAME = 0x8,
+        OT_MOVING_GROUP = 0x8,
         OT_MOVER = 0x9,
-        OT_CORONA_10 = 0xA,
+        OT_GLARE = 0xA,
     };
 
     struct PosRotUnk

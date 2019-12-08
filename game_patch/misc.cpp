@@ -38,7 +38,6 @@ constexpr int EGG_ANIM_ENTER_TIME = 2000;
 constexpr int EGG_ANIM_LEAVE_TIME = 2000;
 constexpr int EGG_ANIM_IDLE_TIME = 3000;
 
-int g_version_label_x, g_version_label_width, g_version_label_height;
 int g_version_click_counter = 0;
 int g_egg_anim_start;
 
@@ -48,9 +47,10 @@ extern CallHook<UiLabel_Create2_Type> UiLabel_Create2_VersionLabel_hook;
 void __fastcall UiLabel_Create2_VersionLabel(rf::UiGadget* self, void* edx, rf::UiGadget* parent, int x, int y, int w,
                                              int h, const char* text, int font_id)
 {
-    x = g_version_label_x;
-    w = g_version_label_width;
-    h = g_version_label_height;
+    rf::GrGetTextWidth(&w, &h, text, -1, rf::medium_font_id);
+    x = 430 - w;
+    w += 5;
+    h += 2;
     UiLabel_Create2_VersionLabel_hook.CallTarget(self, edx, parent, x, y, w, h, text, font_id);
 }
 CallHook<UiLabel_Create2_Type> UiLabel_Create2_VersionLabel_hook{0x0044344D, UiLabel_Create2_VersionLabel};
@@ -63,11 +63,6 @@ FunHook<void(const char**, const char**)> GetVersionStr_hook{
             *version = version_in_menu;
         if (a2)
             *a2 = "";
-        rf::GrGetTextWidth(&g_version_label_width, &g_version_label_height, version_in_menu, -1, rf::medium_font_id);
-
-        g_version_label_x = 430 - g_version_label_width;
-        g_version_label_width = g_version_label_width + 5;
-        g_version_label_height = g_version_label_height + 2;
     },
 };
 
@@ -75,7 +70,7 @@ FunHook<int()> MenuUpdate_hook{
     0x00434230,
     []() {
         int menu_id = MenuUpdate_hook.CallTarget();
-        if (menu_id == rf::GS_MP_LIMBO) // hide cursor when changing level - hackfixed in RF by chaning rendering logic
+        if (menu_id == rf::GS_MP_LIMBO) // hide cursor when changing level - hackfixed in RF by changing rendering logic
             rf::SetCursorVisible(false);
         else if (menu_id == rf::GS_MAIN_MENU)
             rf::SetCursorVisible(true);
@@ -210,8 +205,8 @@ FunHook<void(rf::Player*, bool, bool)> PlayerLocalFireControl_hook{
     },
 };
 
-extern CallHook<char(rf::ControlConfig*, rf::GameCtrl, bool*)> IsEntityCtrlActive_hook1;
-char IsEntityCtrlActive_New(rf::ControlConfig* control_config, rf::GameCtrl game_ctrl, bool* was_pressed)
+extern CallHook<bool(rf::ControlConfig*, rf::GameCtrl, bool*)> IsEntityCtrlActive_hook1;
+bool IsEntityCtrlActive_New(rf::ControlConfig* control_config, rf::GameCtrl game_ctrl, bool* was_pressed)
 {
     if (g_game_config.swap_assault_rifle_controls && IsHoldingAssaultRifle()) {
         if (game_ctrl == rf::GC_PRIMARY_ATTACK)
@@ -221,8 +216,8 @@ char IsEntityCtrlActive_New(rf::ControlConfig* control_config, rf::GameCtrl game
     }
     return IsEntityCtrlActive_hook1.CallTarget(control_config, game_ctrl, was_pressed);
 }
-CallHook<char(rf::ControlConfig*, rf::GameCtrl, bool*)> IsEntityCtrlActive_hook1{0x00430E65, IsEntityCtrlActive_New};
-CallHook<char(rf::ControlConfig*, rf::GameCtrl, bool*)> IsEntityCtrlActive_hook2{0x00430EF7, IsEntityCtrlActive_New};
+CallHook<bool(rf::ControlConfig*, rf::GameCtrl, bool*)> IsEntityCtrlActive_hook1{0x00430E65, IsEntityCtrlActive_New};
+CallHook<bool(rf::ControlConfig*, rf::GameCtrl, bool*)> IsEntityCtrlActive_hook2{0x00430EF7, IsEntityCtrlActive_New};
 
 DcCommand2 swap_assault_rifle_controls_cmd{
     "swap_assault_rifle_controls",
@@ -1052,7 +1047,7 @@ void MiscInit()
     }
 
     // Sound loop fix
-    WriteMem<u8>(0x00505D08, 0x00505D5B - (0x00505D07 + 0x2));
+    WriteMem<u8>(0x00505D07 + 1, 0x00505D5B - (0x00505D07 + 2));
 
     // Set initial FPS limit
     WriteMem<float>(0x005094CA, 1.0f / g_game_config.max_fps);
@@ -1132,7 +1127,7 @@ void MiscInit()
 
     // Use spawnpoint team property in TeamDM game (PF compatible)
     WriteMem<u8>(0x00470395 + 4, 0); // change cmp argument: CTF -> DM
-    WriteMem<u8>(0x0047039A, 0x74);  // invert jump condition: jnz -> jz
+    WriteMem<u8>(0x0047039A, asm_opcodes::jz_rel_short);  // invert jump condition: jnz -> jz
 
     // Put not responding servers at the bottom of server list
     ServerListCmpFunc_hook.Install();
