@@ -1016,6 +1016,24 @@ CodeInjection face_scroll_fix{
     },
 };
 
+CodeInjection quick_save_mem_leak_fix{
+    0x004B603F,
+    []() {
+        AddrAsRef<bool>(0x00856054) = true;
+    },
+};
+
+CallHook<void(int)> play_bik_file_vram_leak_fix{
+    0x00520C79,
+    [](int hbm) {
+        auto gr_tcache_add_ref = AddrAsRef<void(int hbm)>(0x0050E850);
+        auto gr_tcache_remove_ref = AddrAsRef<void(int hbm)>(0x0050E870);
+        gr_tcache_add_ref(hbm);
+        gr_tcache_remove_ref(hbm);
+        play_bik_file_vram_leak_fix.CallTarget(hbm);
+    },
+};
+
 void MiscInit()
 {
     // Console init string
@@ -1268,6 +1286,12 @@ void MiscInit()
     if (g_game_config.disable_lod_models) {
         WriteMem<float>(0x00589548, 100.0f);
     }
+
+    // Fix memory leak on quick save
+    quick_save_mem_leak_fix.Install();
+
+    // Fix PlayBikFile texture leak
+    play_bik_file_vram_leak_fix.Install();
 }
 
 void MiscCleanup()
