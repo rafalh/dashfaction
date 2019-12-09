@@ -114,6 +114,7 @@ void HttpRequest::begin_body(size_t total_body_size)
     inet_buffers.dwBufferTotal = total_body_size;
     if (!HttpSendRequestExA(m_req, &inet_buffers, nullptr, 0, 0))
         THROW_WIN32_ERROR();
+    m_in_body = true;
 }
 
 void HttpRequest::write(const void* data, size_t len)
