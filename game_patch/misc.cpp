@@ -862,73 +862,117 @@ CallHook<void*(size_t)> weapon_pool_alloc_zero_dynamic_mem{
 };
 #endif
 
-FunHook<int()> SndDsGetFreeChannel_hook{
-    0x00522470,
-    []() {
-        int chnl_id = SndDsGetFreeChannel_hook.CallTarget();
-        if (chnl_id >= 0) {
-            return chnl_id;
+int TryToFreeDsChannel(float volume)
+{
+    int num_music = 0;
+    int num_looping = 0;
+    int num_long = 0;
+    int chnl_id = -1;
+    for (size_t i = 0; i < std::size(rf::snd_channels); ++i) {
+        // Skip music and looping sounds
+        if (rf::snd_channels[i].flags & rf::SCHF_MUSIC) {
+            ++num_music;
+            continue;
         }
-        for (size_t i = 0; i < std::size(rf::snd_channels); ++i) {
-            // Skip music and looping sounds
-            if (rf::snd_channels[i].flags & (rf::SCHF_LOOPING|rf::SCHF_MUSIC)) {
-                continue;
-            }
-            // Skip long sounds
-            float duration = rf::SndDsEstimateDuration(rf::snd_channels[i].snd_ds_id);
-            if (duration > 10.0f) {
-                continue;
-            }
-            // Select channel with the lowest volume
-            if (chnl_id < 0 || rf::snd_channels[chnl_id].volume < rf::snd_channels[i].volume) {
-                chnl_id = static_cast<int>(i);
-            }
+        if (rf::snd_channels[i].flags & rf::SCHF_LOOPING) {
+            ++num_looping;
+            continue;
         }
-        // Free channel with the lowest volume and use it for new sound
-        if (chnl_id > 0) {
-            INFO("Freeing sound channel %d to make place for a new sound (volume %.4f)", chnl_id, rf::snd_channels[chnl_id].volume);
-            rf::SndDsCloseChannel(chnl_id);
+        // Skip long sounds
+        float duration = rf::SndDsEstimateDuration(rf::snd_channels[i].snd_ds_id);
+        if (duration > 10.0f) {
+            ++num_long;
+            continue;
         }
-        else {
-            WARN("Failed to allocate a sound channel");
+        // Select channel with the lowest volume
+        if (chnl_id < 0 || rf::snd_channels[chnl_id].volume < rf::snd_channels[i].volume) {
+            chnl_id = static_cast<int>(i);
         }
-        return chnl_id;
+    }
+    // Free channel with the lowest volume and use it for new sound
+    if (chnl_id > 0 && rf::snd_channels[chnl_id].volume <= volume) {
+        INFO("Freeing sound channel %d to make place for a new sound (volume %.4f duration %.1f)", chnl_id,
+            rf::snd_channels[chnl_id].volume, rf::SndDsEstimateDuration(rf::snd_channels[chnl_id].snd_ds_id));
+        rf::SndDsCloseChannel(chnl_id);
+    }
+    else {
+        WARN("Failed to allocate a sound channel: volume %.2f, num_music %d, num_looping %d, num_long %d", volume,
+            num_music, num_looping, num_long);
+    }
+    return chnl_id;
+}
+
+CodeInjection snd_ds_play_3d_no_free_slots_fix{
+    0x005222DF,
+    [](auto& regs) {
+        auto stack_frame = regs.esp + 0x14;
+        auto volume_arg = AddrAsRef<float>(stack_frame + 0x18);
+        if (regs.eax == -1) {
+            regs.eax = TryToFreeDsChannel(volume_arg);
+        }
+    },
+};
+
+CodeInjection snd_ds_play_no_free_slots_fix{
+    0x0052255C,
+    [](auto& regs) {
+        auto stack_frame = regs.esp + 0x10;
+        auto volume_arg = AddrAsRef<float>(stack_frame + 0x8);
+        if (regs.eax == -1) {
+            regs.eax = TryToFreeDsChannel(volume_arg);
+        }
     },
 };
 
 CodeInjection PlaySound_no_free_slots_fix{
     0x005055E3,
     [](auto& regs) {
+        auto stack_frame = regs.esp + 0x10;
+        auto type_arg = AddrAsRef<int>(stack_frame + 0x8);
+        auto vol_scale_arg = AddrAsRef<float>(stack_frame + 0x10);
+        auto& snd_vol_scale_per_type = AddrAsRef<float[4]>(0x01753C18);
         // Try to free a slot
-        int best = -1;
+        int num_looping = 0;
+        int num_long = 0;
+        int best_idx = -1;
+        float best_vol_scale = 0.0f;
         for (size_t i = 0; i < std::size(rf::level_sounds); ++i) {
+            auto& lvl_snd = rf::level_sounds[i];
             // Skip looping sounds
-            if (rf::game_sounds[rf::level_sounds[i].game_snd_id].is_looping) {
+            if (rf::game_sounds[lvl_snd.game_snd_id].is_looping) {
                 TRACE("Skipping sound %d because it is looping", i);
+                ++num_looping;
                 continue;
             }
             // Skip long sounds
-            float duration = rf::SndGetDuration(rf::level_sounds[i].game_snd_id);
+            float duration = rf::SndGetDuration(lvl_snd.game_snd_id);
             if (duration > 10.0f) {
                 TRACE("Skipping sound %d because of duration: %f", i, duration);
+                ++num_long;
                 continue;
             }
             // Find sound with the lowest volume
-            if (best == -1 || rf::level_sounds[i].vol_scale < rf::level_sounds[best].vol_scale) {
-                best = static_cast<int>(i);
+            float current_vol_scale = snd_vol_scale_per_type[lvl_snd.type] * lvl_snd.vol_scale;
+            if (best_idx == -1 || current_vol_scale < best_vol_scale) {
+                best_idx = static_cast<int>(i);
+                best_vol_scale = current_vol_scale;
             }
         }
-        if (best >= 0) {
+        float new_sound_vol_scale = snd_vol_scale_per_type[type_arg] * vol_scale_arg;
+        if (best_idx >= 0 && best_vol_scale <= new_sound_vol_scale) {
             // Free the selected slot and use it for a new sound
-            INFO("Freeing level sound %d to make place for a new sound (volume %.4f)", best, rf::level_sounds[best].vol_scale);
-            rf::SndStop(rf::level_sounds[best].sig);
-            rf::ClearLevelSound(&rf::level_sounds[best]);
-            regs.ebx = best;
-            regs.esi = reinterpret_cast<int32_t>(&rf::level_sounds[best]);
+            auto& best_lvl_snd = rf::level_sounds[best_idx];
+            INFO("Freeing level sound %d to make place for a new sound (volume %.4f duration %.1f)", best_idx,
+                best_vol_scale, rf::SndGetDuration(best_lvl_snd.game_snd_id));
+            rf::SndStop(best_lvl_snd.sig);
+            rf::ClearLevelSound(&best_lvl_snd);
+            regs.ebx = best_idx;
+            regs.esi = reinterpret_cast<int32_t>(&best_lvl_snd);
             regs.eip = 0x005055EB;
         }
         else {
-            WARN("Failed to allocate a level sound");
+            WARN("Failed to allocate a level sound: volume %.2f num_looping %d num_long %d ",
+                new_sound_vol_scale, num_looping, num_long);
         }
     },
 };
@@ -1275,7 +1319,8 @@ void MiscInit()
     AsmWriter(0x0042A223, 0x0042A232).mov(asm_regs::ecx, {&rf::local_player});
 
     // Delete sounds with lowest volume when there is no free slot for a new sound
-    SndDsGetFreeChannel_hook.Install();
+    snd_ds_play_3d_no_free_slots_fix.Install();
+    snd_ds_play_no_free_slots_fix.Install();
     PlaySound_no_free_slots_fix.Install();
     //WriteMem<u8>(0x005055AB, asm_opcodes::jmp_rel_short); // never free level sounds, uncomment to test
 

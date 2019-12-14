@@ -3,6 +3,7 @@ DashFaction Changelog
 
 Version 1.4.2
 -------------
+- improve sound handling when active sounds pool is full
 - fix non-working face scrolling before first geomod use in custom levels (RF bug)
 - fix memory and VRAM leak when quick saving (RF bug)
 - fix VRAM leak when playing Bink video (RF bug)
