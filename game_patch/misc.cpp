@@ -1034,6 +1034,16 @@ CallHook<void(int)> play_bik_file_vram_leak_fix{
     },
 };
 
+CallHook<int(void*)> AiNavClear_on_load_level_event_crash_fix{
+    0x004BBD99,
+    [](void* nav) {
+        // Clear NavPoint pointers before level load
+        StructFieldRef<void*>(nav, 0x114) = nullptr;
+        StructFieldRef<void*>(nav, 0x118) = nullptr;
+        return AiNavClear_on_load_level_event_crash_fix.CallTarget(nav);
+    },
+};
+
 void MiscInit()
 {
     // Console init string
@@ -1292,6 +1302,10 @@ void MiscInit()
 
     // Fix PlayBikFile texture leak
     play_bik_file_vram_leak_fix.Install();
+
+    // Fix crash after level change (Load_Level event) caused by NavPoint pointers in AiNav not being cleared for entities
+    // being taken from the previous level
+    AiNavClear_on_load_level_event_crash_fix.Install();
 }
 
 void MiscCleanup()

@@ -7,6 +7,7 @@ Version 1.4.2
 - fix memory and VRAM leak when quick saving (RF bug)
 - fix VRAM leak when playing Bink video (RF bug)
 - fix AI flee animation regression
+- fix crash caused by AI state not being properly updated during level load for entites that are taken from the previous level
 
 Version 1.4.1 (released 2019-12-07)
 -----------------------------------
