@@ -379,11 +379,18 @@ FunHook<NwPacketHandler_Type> ProcessEntityCreatePacket_hook{
         // Created entity always receives Default Player Weapon (from game.tbl) and if server has it overriden
         // player weapons would be in inconsistent state with server without this change.
         size_t name_size = strlen(data) + 1;
-        int32_t weapon_cls_id = *reinterpret_cast<int32_t*>(data + name_size + 63);
-        auto old_default_player_weapon = rf::default_player_weapon;
-        rf::default_player_weapon = rf::weapon_classes[weapon_cls_id].name;
-        ProcessEntityCreatePacket_hook.CallTarget(data, addr);
-        rf::default_player_weapon = old_default_player_weapon;
+        char player_id = data[name_size + 58];
+        // Check if this is not NPC
+        if (player_id != '\xFF') {
+            int32_t weapon_cls_id = *reinterpret_cast<int32_t*>(data + name_size + 63);
+            auto old_default_player_weapon = rf::default_player_weapon;
+            rf::default_player_weapon = rf::weapon_classes[weapon_cls_id].name;
+            ProcessEntityCreatePacket_hook.CallTarget(data, addr);
+            rf::default_player_weapon = old_default_player_weapon;
+        }
+        else {
+            ProcessEntityCreatePacket_hook.CallTarget(data, addr);
+        }
     },
 };
 
