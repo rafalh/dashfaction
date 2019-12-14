@@ -120,8 +120,14 @@ void HttpRequest::begin_body(size_t total_body_size)
 void HttpRequest::write(const void* data, size_t len)
 {
     DWORD written;
-    if (!InternetWriteFile(m_req, data, len, &written) || written != len)
-        THROW_WIN32_ERROR();
+    while (len > 0) {
+        if (!InternetWriteFile(m_req, data, len, &written))
+            THROW_WIN32_ERROR();
+        if (!written)
+            THROW_EXCEPTION("Unable to write %lu request body bytes", len);
+        data = reinterpret_cast<const char*>(data) + written;
+        len -= written;
+    }
 }
 
 void HttpRequest::send(std::string_view body)
