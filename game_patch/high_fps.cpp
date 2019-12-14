@@ -375,9 +375,10 @@ void HighFpsInit()
     // Fix cutscene shot timer sync on high fps
     cutscene_shot_sync_fix.Install();
 
-    // Fix flee AI mode on high FPS by avoiding a call to EntityOnLandInternal every frame
-    WriteMem<u8>(0x00404FC6, asm_opcodes::jmp_rel_short);
-    WriteMem<u8>(0x00405311, asm_opcodes::jmp_rel_short);
+    // Fix flee AI mode on high FPS by avoiding clearing velocity in Y axis in EntityMakeRun
+    //WriteMem<u8>(0x00404FC6, asm_opcodes::jmp_rel_short);
+    //WriteMem<u8>(0x00405311, asm_opcodes::jmp_rel_short);
+    AsmWriter(0x00428121, 0x0042812B).nop();
 }
 
 void HighFpsUpdate()
