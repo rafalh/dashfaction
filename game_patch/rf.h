@@ -1055,6 +1055,25 @@ namespace rf
     };
     static_assert(sizeof(Object) == 0x28C, "invalid size");
 
+    struct ObjCreateInfo
+    {
+        const char *v3d_filename;
+        int v3d_type;
+        int unk_mesh;
+        float field_C;
+        int material;
+        float mass;
+        Matrix3 unk_density_aware_mat;
+        Vector3 pos;
+        Matrix3 orient;
+        Vector3 velocity;
+        Vector3 field_78;
+        float radius;
+        DynamicArray<void*> col_spheres;
+        int physics_flags;
+    };
+    static_assert(sizeof(ObjCreateInfo) == 0x98, "invalid size");
+
     struct EventObj
     {
         int vtbl;
@@ -1468,6 +1487,9 @@ namespace rf
     static_assert(sizeof(EntityObj) == 0x1494, "invalid size");
 
     static auto& EntityGetFromHandle = AddrAsRef<EntityObj*(uint32_t handle)>(0x00426FC0);
+    static auto& EntityCreate =
+        AddrAsRef<EntityObj*(int cls_id, const char* name, int owner_handle, const Vector3& pos,
+        const Matrix3& orient, int create_flags, int mp_character)>(0x00422360);
 
     /* Weapons */
 

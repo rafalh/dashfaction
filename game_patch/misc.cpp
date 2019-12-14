@@ -1088,6 +1088,20 @@ CallHook<int(void*)> AiNavClear_on_load_level_event_crash_fix{
     },
 };
 
+CodeInjection corpse_deserialize_all_obj_create_patch{
+    0x004179E2,
+    [](auto& regs) {
+        auto save_data = regs.edi;
+        auto stack_frame = regs.esp + 0xD0;
+        auto create_info = AddrAsRef<rf::ObjCreateInfo>(stack_frame - 0xA4);
+        auto entity_cls_id = AddrAsRef<int>(save_data + 0x144);
+        // Create entity before creating the corpse to make sure entity action animations are fully loaded
+        // This is needed to make sure pose_action_anim points to a valid animation
+        auto entity = rf::EntityCreate(entity_cls_id, "", -1, create_info.pos, create_info.orient, 0, -1);
+        rf::ObjQueueDelete(&entity->_super);
+    },
+};
+
 void MiscInit()
 {
     // Console init string
@@ -1351,6 +1365,10 @@ void MiscInit()
     // Fix crash after level change (Load_Level event) caused by NavPoint pointers in AiNav not being cleared for entities
     // being taken from the previous level
     AiNavClear_on_load_level_event_crash_fix.Install();
+
+    // Fix crash caused by corpse pose pointing to not loaded entity action animation
+    // It only affects corpses there are taken from the previous level
+    corpse_deserialize_all_obj_create_patch.Install();
 }
 
 void MiscCleanup()
