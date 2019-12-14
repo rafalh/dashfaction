@@ -87,7 +87,7 @@ void SpectateModeSetTargetPlayer(rf::Player* player)
     rf::EntityObj* entity = rf::EntityGetFromHandle(player->entity_handle);
     if (entity) {
         // make sure weapon mesh is loaded now
-        rf::PlayerFpgunSetupMesh(player, entity->weapon_info.weapon_cls_id);
+        rf::PlayerFpgunSetupMesh(player, entity->ai_info.weapon_cls_id);
         TRACE("FpgunMesh %p", player->fpgun_mesh);
 
         // Hide target player from camera
@@ -321,7 +321,7 @@ static void PlayerFpgunRender_New(rf::Player* player)
 
         // HACKFIX: RF uses function PlayerSetRemoteChargeVisible for local player only
         g_spectate_mode_target->weapon_info.remote_charge_visible =
-            (entity && entity->weapon_info.weapon_cls_id == rf::remote_charge_cls_id);
+            (entity && entity->ai_info.weapon_cls_id == rf::remote_charge_cls_id);
 
         if (g_spectate_mode_target != rf::local_player && entity) {
             static rf::Vector3 old_vel;
@@ -354,7 +354,7 @@ FunHook<void(rf::Player*)> PlayerFpgunUpdateState_hook{
                 float horz_speed_pow2 = entity->_super.phys_info.vel.x * entity->_super.phys_info.vel.x +
                                           entity->_super.phys_info.vel.z * entity->_super.phys_info.vel.z;
                 int state = 0;
-                if (rf::IsEntityLoopFire(entity->_super.handle, entity->weapon_info.weapon_cls_id))
+                if (rf::IsEntityLoopFire(entity->_super.handle, entity->ai_info.weapon_cls_id))
                     state = 2;
                 else if (rf::EntityIsSwimming(entity) || rf::EntityIsFalling(entity))
                     state = 0;

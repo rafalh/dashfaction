@@ -1152,7 +1152,18 @@ namespace rf
 
     /* Entity */
 
-    typedef void EntityClass;
+    union EntityClass
+    {
+        struct
+        {
+            String::Pod name;
+        };
+        char padding[0x1514];
+    };
+    static_assert(sizeof(EntityClass) == 0x1514, "invalid size");
+
+    static auto& num_entity_classes = AddrAsRef<int>(0x0062F2D0);
+    static auto& entity_classes = AddrAsRef<EntityClass[75]>(0x005CC500);
 
     struct MoveModeTbl
     {
@@ -1232,7 +1243,7 @@ namespace rf
         Vector3 field_174;
     };
 
-    struct EntityWeaponInfo
+    struct AiInfo
     {
         EntityObj *entity;
         int weapon_cls_id;
@@ -1328,7 +1339,7 @@ namespace rf
         int field_52c;
         int flags;
     };
-    static_assert(sizeof(EntityWeaponInfo) == 0x534, "invalid size");
+    static_assert(sizeof(AiInfo) == 0x534, "invalid size");
 
     struct EntityCameraInfo
     {
@@ -1354,7 +1365,7 @@ namespace rf
         EntityClass *cls;
         int class_id;
         EntityClass *cls2;
-        EntityWeaponInfo weapon_info;
+        AiInfo ai_info;
         Vector3 view_pos;
         Matrix3 view_orient;
         int unk_ambient_sound;

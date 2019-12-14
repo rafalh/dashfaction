@@ -193,7 +193,7 @@ bool IsHoldingAssaultRifle()
 {
     static auto& assault_rifle_cls_id = AddrAsRef<int>(0x00872470);
     rf::EntityObj* entity = rf::EntityGetFromHandle(rf::local_player->entity_handle);
-    return entity && entity->weapon_info.weapon_cls_id == assault_rifle_cls_id;
+    return entity && entity->ai_info.weapon_cls_id == assault_rifle_cls_id;
 }
 
 FunHook<void(rf::Player*, bool, bool)> PlayerLocalFireControl_hook{
@@ -245,10 +245,10 @@ bool EntityIsReloading_SwitchWeapon_New(rf::EntityObj* entity)
     if (rf::EntityIsReloading(entity))
         return true;
 
-    int weapon_cls_id = entity->weapon_info.weapon_cls_id;
+    int weapon_cls_id = entity->ai_info.weapon_cls_id;
     if (weapon_cls_id >= 0) {
         rf::WeaponClass* weapon_cls = &rf::weapon_classes[weapon_cls_id];
-        if (entity->weapon_info.weapons_ammo[weapon_cls_id] == 0 && entity->weapon_info.clip_ammo[weapon_cls->ammo_type] > 0)
+        if (entity->ai_info.weapons_ammo[weapon_cls_id] == 0 && entity->ai_info.clip_ammo[weapon_cls->ammo_type] > 0)
             return true;
     }
     return false;

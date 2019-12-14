@@ -47,7 +47,7 @@ void OnPlayerKill(rf::Player* killed_player, rf::Player* killer_player)
             mui_msg = NullToEmpty(rf::strings::you_killed_yourself);
             msg = rf::String::Format("%s", mui_msg);
         }
-        else if (killer_entity && killer_entity->weapon_info.weapon_cls_id == rf::riot_stick_cls_id) {
+        else if (killer_entity && killer_entity->ai_info.weapon_cls_id == rf::riot_stick_cls_id) {
             mui_msg = NullToEmpty(rf::strings::you_just_got_beat_down_by);
             msg = rf::String::Format("%s%s!", mui_msg, killer_player->name.CStr());
         }
@@ -55,7 +55,7 @@ void OnPlayerKill(rf::Player* killed_player, rf::Player* killer_player)
             mui_msg = NullToEmpty(rf::strings::you_were_killed_by);
 
             const char* weapon_name = nullptr;
-            int killer_weapon_cls_id = killer_entity ? killer_entity->weapon_info.weapon_cls_id : -1;
+            int killer_weapon_cls_id = killer_entity ? killer_entity->ai_info.weapon_cls_id : -1;
             if (killer_weapon_cls_id >= 0 && killer_weapon_cls_id < 64) {
                 auto& weapon_cls = rf::weapon_classes[killer_weapon_cls_id];
                 weapon_name = weapon_cls.display_name.CStr();
@@ -80,7 +80,7 @@ void OnPlayerKill(rf::Player* killed_player, rf::Player* killer_player)
             msg = rf::String::Format("%s%s", killed_player->name.CStr(), mui_msg);
         }
         else {
-            if (killer_entity && killer_entity->weapon_info.weapon_cls_id == rf::riot_stick_cls_id)
+            if (killer_entity && killer_entity->ai_info.weapon_cls_id == rf::riot_stick_cls_id)
                 mui_msg = NullToEmpty(rf::strings::got_beat_down_by);
             else
                 mui_msg = NullToEmpty(rf::strings::was_killed_by);

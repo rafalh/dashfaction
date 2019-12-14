@@ -289,11 +289,11 @@ FunHook<void(rf::Player*)> spawn_player_sync_ammo_hook{
             packet.type = RF_RELOAD;
             packet.size = sizeof(packet) - sizeof(rfPacketHeader);
             packet.entity_handle = entity->_super.handle;
-            int weapon_cls_id = entity->weapon_info.weapon_cls_id;
+            int weapon_cls_id = entity->ai_info.weapon_cls_id;
             packet.weapon = weapon_cls_id;
-            packet.ammo = entity->weapon_info.weapons_ammo[weapon_cls_id];
+            packet.ammo = entity->ai_info.weapons_ammo[weapon_cls_id];
             int ammo_type = rf::weapon_classes[weapon_cls_id].ammo_type;
-            packet.clip_ammo = entity->weapon_info.clip_ammo[ammo_type];
+            packet.clip_ammo = entity->ai_info.clip_ammo[ammo_type];
             rf::NwSendReliablePacket(player, reinterpret_cast<uint8_t*>(&packet), sizeof(packet), 0);
         }
     },
