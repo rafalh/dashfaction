@@ -14,7 +14,7 @@ private:
     CodeBuffer m_code_buf;
 
 public:
-    #define X86_GP_REG_UNION(letter) \
+    #define X86_GP_REG_X_UNION(letter) \
     union                        \
     {                            \
         int32_t e##letter##x;    \
@@ -25,23 +25,31 @@ public:
             int8_t letter##h;    \
         };                       \
     }
+    #define X86_GP_REG_UNION(name) \
+    union                 \
+    {                     \
+        int32_t e##name;  \
+        int16_t name;     \
+        int8_t name##l;   \
+    }
     struct Regs
     {
         uint32_t eflags;
         // reversed PUSHA order of registers
-        int32_t edi;
-        int32_t esi;
-        int32_t ebp;
+        X86_GP_REG_UNION(di);
+        X86_GP_REG_UNION(si);
+        X86_GP_REG_UNION(bp);
         int32_t reserved; // unused esp
-        X86_GP_REG_UNION(b);
-        X86_GP_REG_UNION(d);
-        X86_GP_REG_UNION(c);
-        X86_GP_REG_UNION(a);
+        X86_GP_REG_X_UNION(b);
+        X86_GP_REG_X_UNION(d);
+        X86_GP_REG_X_UNION(c);
+        X86_GP_REG_X_UNION(a);
         // real esp
-        int32_t esp;
+        X86_GP_REG_UNION(sp);
         // return address
         uint32_t eip;
     };
+    #undef X86_GP_REG_X_UNION
     #undef X86_GP_REG_UNION
 
     BaseCodeInjection(uintptr_t addr) : m_addr(addr), m_code_buf(256) {}

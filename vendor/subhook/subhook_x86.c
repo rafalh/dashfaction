@@ -154,6 +154,7 @@ static size_t subhook_disasm(void *src, int32_t *reloc_op_offset) {
     /* PUSH imm32        */ {0x68, 0, IMM32},
     /* RET               */ {0xC3, 0, 0},
     /* RET imm16         */ {0xC2, 0, IMM16},
+    /* AND eAX, imm32    */ {0x25, 0, IMM32},
     /* SUB AL, imm8      */ {0x2C, 0, IMM8},
     /* SUB EAX, imm32    */ {0x2D, 0, IMM32},
     /* CMP r32, r/m32    */ {0x3B, 0, MODRM}, // added
