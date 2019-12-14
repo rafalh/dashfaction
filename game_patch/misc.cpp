@@ -1102,6 +1102,20 @@ CodeInjection corpse_deserialize_all_obj_create_patch{
     },
 };
 
+int DebugPrintHook(char* buf, const char *fmt, ...) {
+    va_list vl;
+    va_start(vl, fmt);
+    int ret = vsprintf(buf, fmt, vl);
+    va_end(vl);
+    ERR("%s", buf);
+    return ret;
+}
+
+CallHook<int(char*, const char*)> mvf_load_rfa_debug_print_patch{
+    0x0053AA73,
+    reinterpret_cast<int(*)(char*, const char*)>(DebugPrintHook),
+};
+
 void MiscInit()
 {
     // Console init string
@@ -1369,6 +1383,9 @@ void MiscInit()
     // Fix crash caused by corpse pose pointing to not loaded entity action animation
     // It only affects corpses there are taken from the previous level
     corpse_deserialize_all_obj_create_patch.Install();
+
+    // Log error when RFA cannot be loaded
+    mvf_load_rfa_debug_print_patch.Install();
 }
 
 void MiscCleanup()
