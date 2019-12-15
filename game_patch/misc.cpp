@@ -1386,6 +1386,9 @@ void MiscInit()
 
     // Log error when RFA cannot be loaded
     mvf_load_rfa_debug_print_patch.Install();
+
+    // Fix crash when executing camera2 command in main menu
+    AsmWriter(0x0040DCFC).nop(5);
 }
 
 void MiscCleanup()
