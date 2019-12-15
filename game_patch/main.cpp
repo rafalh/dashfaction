@@ -218,11 +218,25 @@ void InitLogging()
     INFO("Dash Faction %s (%s %s)", VERSION_STR, __DATE__, __TIME__);
 }
 
+std::optional<std::string> GetWineVersion()
+{
+    auto ntdll_handle = GetModuleHandleA("ntdll.dll");
+    auto wine_get_version = reinterpret_cast<const char*(*)()>(GetProcAddress(ntdll_handle, "wine_get_version"));
+    if (!wine_get_version)
+        return {};
+    auto ver = wine_get_version();
+    return {ver};
+}
+
 void LogSystemInfo()
 {
     try {
         logging::Logger::root().info() << "Real system version: " << getRealOsVersion();
         logging::Logger::root().info() << "Emulated system version: " << getOsVersion();
+        auto wine_ver = GetWineVersion();
+        if (wine_ver)
+            logging::Logger::root().info() << "Running on Wine: " << wine_ver.value();
+
         INFO("Running as %s (elevation type: %s)", IsUserAdmin() ? "admin" : "user", GetProcessElevationType());
         logging::Logger::root().info() << "CPU Brand: " << getCpuBrand();
         logging::Logger::root().info() << "CPU ID: " << getCpuId();
