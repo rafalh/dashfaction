@@ -161,6 +161,29 @@ FunHook<void(rf::Player*)> PlayerDestroy_hook{
     },
 };
 
+FunHook<int(rf::String&, rf::String&, char*)> RflLoad_hook{
+    0x0045C540,
+    [](rf::String& level_filename, rf::String& save_filename, char* error) {
+        INFO("Loading level: %s", level_filename.CStr());
+        if (save_filename.Size() > 0)
+            INFO("Restoring game from save file: %s", save_filename.CStr());
+        int ret = RflLoad_hook.CallTarget(level_filename, save_filename, error);
+        if (ret != 0)
+            WARN("Loading failed: %s", error);
+        else
+            HighFpsAfterLevelLoad(level_filename);
+        return ret;
+    },
+};
+
+FunHook<void(bool)> GameWideOnLevelStart_hook{
+    0x00435DF0,
+    [](bool is_auto_level_load) {
+        GameWideOnLevelStart_hook.CallTarget(is_auto_level_load);
+        INFO("Level loaded: %s%s", rf::level_filename.CStr(), is_auto_level_load ? " (caused by event)" : "");
+    },
+};
+
 #ifndef NDEBUG
 class RfConsoleLogAppender : public logging::BaseAppender
 {
@@ -298,6 +321,8 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     after_frame_render_hook.Install();
     PlayerCreate_hook.Install();
     PlayerDestroy_hook.Install();
+    RflLoad_hook.Install();
+    GameWideOnLevelStart_hook.Install();
 
     // Init modules
     CommandsInit();

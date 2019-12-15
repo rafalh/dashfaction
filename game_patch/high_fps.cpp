@@ -257,26 +257,21 @@ CodeInjection WaterAnimateWaves_speed_fix{
     },
 };
 
-FunHook<int(rf::String&, rf::String&, char*)> RflLoad_hook{
-    0x0045C540,
-    [](rf::String& level_filename, rf::String& a2, char* error_desc) {
-        int ret = RflLoad_hook.CallTarget(level_filename, a2, error_desc);
-        //INFO("Loaded level: %s", level_filename.CStr());
-        if (ret == 0 && _stricmp(level_filename, "L5S3.rfl") == 0) {
-            // Fix submarine exploding - change delay of two events to make submarine physics enabled later
-            //INFO("Fixing Submarine exploding bug...");
-            int uids[] = {4679, 4680};
-            for (int uid : uids) {
-                rf::Object* obj = rf::ObjGetFromUid(uid);
-                if (obj && obj->type == rf::OT_EVENT) {
-                    rf::EventObj* event = reinterpret_cast<rf::EventObj*>(reinterpret_cast<uintptr_t>(obj) - 4);
-                    event->delay += 1.5f;
-                }
+void HighFpsAfterLevelLoad(rf::String& level_filename)
+{
+    if (_stricmp(level_filename, "L5S3.rfl") == 0) {
+        // Fix submarine exploding - change delay of two events to make submarine physics enabled later
+        //INFO("Fixing Submarine exploding bug...");
+        int uids[] = {4679, 4680};
+        for (int uid : uids) {
+            rf::Object* obj = rf::ObjGetFromUid(uid);
+            if (obj && obj->type == rf::OT_EVENT) {
+                rf::EventObj* event = reinterpret_cast<rf::EventObj*>(reinterpret_cast<uintptr_t>(obj) - 4);
+                event->delay += 1.5f;
             }
         }
-        return ret;
-    },
-};
+    }
+}
 
 FunHook<int(int)> timer_get_hook{
     0x00504AB0,
@@ -359,9 +354,6 @@ void HighFpsInit()
     AsmWriter(0x00509595).nop(2);
     WriteMem<u8>(0x00509532, asm_opcodes::jmp_rel_short);
     frametime_update_sleep_hook.Install();
-
-    // Fix submarine exploding on high FPS
-    RflLoad_hook.Install();
 
     // Fix screen shake caused by some weapons (eg. Assault Rifle)
     WriteMemPtr(0x0040DBCC + 2, &g_camera_shake_factor);
