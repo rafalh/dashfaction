@@ -321,6 +321,14 @@ CodeInjection cutscene_shot_sync_fix{
     },
 };
 
+FunHook<void(rf::EntityObj&, rf::Vector3&)> EntityOnLand_hook{
+    0x00419830,
+    [](rf::EntityObj& entity, rf::Vector3& pos) {
+        EntityOnLand_hook.CallTarget(entity, pos);
+        entity._super.phys_info.vel.y = 0.0f;
+    },
+};
+
 void HighFpsInit()
 {
     // Fix animations broken on high FPS because of ignored ftol remainder
@@ -368,9 +376,8 @@ void HighFpsInit()
     cutscene_shot_sync_fix.Install();
 
     // Fix flee AI mode on high FPS by avoiding clearing velocity in Y axis in EntityMakeRun
-    //WriteMem<u8>(0x00404FC6, asm_opcodes::jmp_rel_short);
-    //WriteMem<u8>(0x00405311, asm_opcodes::jmp_rel_short);
     AsmWriter(0x00428121, 0x0042812B).nop();
+    EntityOnLand_hook.Install();
 }
 
 void HighFpsUpdate()
