@@ -1,3 +1,7 @@
+#include <windows.h>
+
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "manifest.xml"
+
 // VERSIONINFO
 #define VER_FILE_DESCRIPTION "Dash Faction crash handler"
 #define VER_ORIGINAL_FILENAME "CrashHandler.exe"

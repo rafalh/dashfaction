@@ -7,7 +7,14 @@ if(NOT MSVC)
     add_compile_options(-Wall -Wextra)
 endif()
 
-file(GLOB SRCS *.cpp *.h *.rc)
+set(SRCS
+    main.cpp
+    MiniDumpHelper.cpp
+    MiniDumpHelper.h
+    TextDumpHelper.h
+    ZipHelper.h
+    resources.rc
+)
 add_executable(CrashHandler WIN32 ${SRCS})
 
 target_compile_features(CrashHandler PRIVATE cxx_std_17)

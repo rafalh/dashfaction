@@ -3,7 +3,7 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/vendor/win32xx
 )
 
-file(GLOB SRCS *.cpp *.h *.rc res/*.manifest)
+file(GLOB SRCS *.cpp *.h *.rc)
 add_executable(DashFactionLauncher WIN32 ${SRCS})
 
 target_link_libraries(DashFactionLauncher LauncherCommon comctl32)
