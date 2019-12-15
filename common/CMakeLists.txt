@@ -8,6 +8,9 @@ if(NOT MSVC)
 endif()
 
 file(GLOB SRCS *.cpp include/common/*.h)
+
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRCS})
+
 add_library(Common STATIC ${SRCS})
 
 target_compile_features(Common PUBLIC cxx_std_17)

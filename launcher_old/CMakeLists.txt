@@ -8,6 +8,9 @@ if(NOT MSVC)
 endif()
 
 file(GLOB SRCS *.cpp *.h *.rc)
+
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRCS})
+
 add_executable(DashFactionLauncher_OLD ${SRCS})
 
 target_link_libraries(DashFactionLauncher_OLD LauncherCommon)

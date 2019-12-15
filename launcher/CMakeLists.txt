@@ -4,6 +4,9 @@ include_directories(
 )
 
 file(GLOB SRCS *.cpp *.h *.rc)
+
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRCS})
+
 add_executable(DashFactionLauncher WIN32 ${SRCS})
 
 target_link_libraries(DashFactionLauncher

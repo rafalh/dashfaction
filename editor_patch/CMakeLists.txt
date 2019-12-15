@@ -13,6 +13,7 @@ set(SRCS
     main.cpp
     resources.rc
 )
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRCS})
 add_library(DashEditor SHARED ${SRCS})
 
 target_compile_features(DashEditor PUBLIC cxx_std_17)

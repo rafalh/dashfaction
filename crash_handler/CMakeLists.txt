@@ -21,6 +21,9 @@ set(SRCS
     res/resources.rc
     res/resources2.rc
 )
+
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRCS})
+
 add_executable(CrashHandler WIN32 ${SRCS})
 
 target_compile_features(CrashHandler PRIVATE cxx_std_17)

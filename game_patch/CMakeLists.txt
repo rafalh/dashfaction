@@ -33,9 +33,8 @@ if(NOT MSVC)
     add_compile_options(-Wno-pmf-conversions)
 endif()
 
-file(GLOB SRCS misc/experimental*.cpp misc/experimental*.h)
-add_library(DashFaction SHARED
-    ${SRCS}
+file(GLOB EXPERIMENTAL_SRCS misc/experimental*.cpp misc/experimental*.h)
+set(SRCS
     main.cpp
     main.h
     rf/bmpman.h
@@ -119,9 +118,14 @@ add_library(DashFaction SHARED
     misc/weapon.cpp
     misc/main_menu.cpp
     misc/glare.cpp
-    ${PF_SRCS}
     res/resources.rc
+    ${PF_SRCS}
+    ${EXPERIMENTAL_SRCS}
 )
+
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRCS})
+
+add_library(DashFaction SHARED ${SRCS})
 
 target_compile_features(DashFaction PUBLIC cxx_std_17)
 set_target_properties(DashFaction PROPERTIES CXX_EXTENSIONS NO)
