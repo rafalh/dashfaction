@@ -3,6 +3,7 @@ DashFaction Changelog
 
 Version 1.4.2
 -------------
+- rewrite crash reporting system UI
 - improve sound handling when active sounds pool is full
 - log error when RFA cannot be loaded
 - fix sending crash reports

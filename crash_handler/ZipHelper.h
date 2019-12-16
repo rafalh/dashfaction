@@ -8,40 +8,72 @@ private:
     zipFile m_zf;
 
 public:
-    ZipHelper(const char* path)
+    ZipHelper(const char* path, bool create = true)
     {
-        m_zf = zipOpen(path, 0);
+        int append = create ? APPEND_STATUS_CREATE : APPEND_STATUS_ADDINZIP;
+        m_zf = zipOpen(path, append);
+        if (!m_zf)
+            throw std::runtime_error("zipOpen failed");
     }
 
-    ~ZipHelper()
+    ~ZipHelper() try
     {
-        zipClose(m_zf, NULL);
+        if (m_zf)
+            close();
+    }
+    catch(...)
+    {
+        // Destructor cannot throw
     }
 
-    bool add_file(const char* path, const char* nameinZip)
+    void add_file(const char* path, const char* name_in_zip)
     {
         zip_fileinfo zfi;
         memset(&zfi, 0, sizeof(zfi));
         get_file_time(path, &zfi.tmz_date, &zfi.dosDate);
 
-        int err = zipOpenNewFileInZip(m_zf, nameinZip, &zfi, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_DEFAULT_COMPRESSION);
+        int err = zipOpenNewFileInZip(m_zf, name_in_zip, &zfi, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_DEFAULT_COMPRESSION);
         if (err != ZIP_OK)
-            return false;
+            throw std::runtime_error("zipOpenNewFileInZip failed");
 
-        FILE* srcFile = fopen(path, "rb");
-        if (srcFile) {
-            char buf[2048];
-            while (!feof(srcFile)) {
-                size_t num = fread(buf, 1, sizeof(buf), srcFile);
-                err = zipWriteInFileInZip(m_zf, buf, num);
-                if (err != ZIP_OK)
-                    return false;
-            }
-            fclose(srcFile);
+        std::ifstream file(path, std::ios_base::in | std::ios_base::binary);
+        if (!file)
+            THROW_EXCEPTION("cannot open %s", path);
+
+        char buf[4096];
+        while (!file.eof()) {
+            file.read(buf, sizeof(buf));
+            size_t num = static_cast<size_t>(file.gcount());
+            err = zipWriteInFileInZip(m_zf, buf, num);
+            if (err != ZIP_OK)
+                throw std::runtime_error("zipWriteInFileInZip failed");
         }
 
         zipCloseFileInZip(m_zf);
-        return true;
+    }
+
+    void add_file(const char* name_in_zip, std::string_view content)
+    {
+        zip_fileinfo zfi;
+        memset(&zfi, 0, sizeof(zfi));
+
+        int err = zipOpenNewFileInZip(m_zf, name_in_zip, &zfi, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_DEFAULT_COMPRESSION);
+        if (err != ZIP_OK)
+            throw std::runtime_error("zipOpenNewFileInZip failed");
+
+        err = zipWriteInFileInZip(m_zf, content.data(), content.size());
+        if (err != ZIP_OK)
+            throw std::runtime_error("zipWriteInFileInZip failed");
+
+        zipCloseFileInZip(m_zf);
+    }
+
+    void close()
+    {
+        int err = zipClose(m_zf, NULL);
+        if (err != ZIP_OK)
+            throw std::runtime_error("zipClose failed");
+        m_zf = nullptr;
     }
 
 private:
