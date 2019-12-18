@@ -1,3 +1,6 @@
+// RF uses DirectInput 8
+#define DIRECTINPUT_VERSION	0x0800
+
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
 #include <windows.h>
