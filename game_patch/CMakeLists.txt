@@ -25,7 +25,7 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/experimental.cpp")
 endif()
 
 if(NOT MSVC)
-    add_compile_options(-Wall -Wextra)
+    add_compile_options(-Wall -Wextra -Wundef)
     add_compile_options(-Wno-pmf-conversions)
 endif()
 

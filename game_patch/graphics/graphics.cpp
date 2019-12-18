@@ -461,10 +461,51 @@ CodeInjection gr_d3d_create_texture_fail_hook{
     },
 };
 
+CodeInjection GrLoadFontInternal_fix_texture_ref{
+    0x0051F429,
+    [](auto& regs) {
+        auto gr_tcache_add_ref = AddrAsRef<void(int bm_handle)>(0x0050E850);
+        gr_tcache_add_ref(regs.eax);
+    },
+};
+
+DcCommand2 max_fps_cmd{
+    "maxfps",
+    [](std::optional<int> limit_opt) {
+        if (limit_opt) {
+#ifdef NDEBUG
+            int new_limit = std::clamp<int>(limit_opt.value(), MIN_FPS_LIMIT, MAX_FPS_LIMIT);
+#else
+            int new_limit = limit_opt.value();
+#endif
+            g_game_config.max_fps = new_limit;
+            g_game_config.save();
+            rf::min_framerate = 1.0f / new_limit;
+        }
+        else
+            rf::DcPrintf("Maximal FPS: %.1f", 1.0f / rf::min_framerate);
+    },
+    "Sets maximal FPS",
+    "maxfps <limit>",
+};
+
+CodeInjection gr_direct3d_lock_crash_fix{
+    0x0055CE55,
+    [](auto& regs) {
+        if (regs.eax == 0) {
+            regs.esp += 8;
+            regs.eip = 0x0055CF23;
+        }
+    },
+};
+
 void GraphicsInit()
 {
     // Fix for "At least 8 MB of available video memory"
     WriteMem<u8>(0x005460CD, asm_opcodes::jae_rel_short);
+
+    // Set initial FPS limit
+    WriteMem<float>(0x005094CA, 1.0f / g_game_config.max_fps);
 
     if (g_game_config.wnd_mode != GameConfig::FULLSCREEN) {
         // Enable windowed mode
@@ -598,6 +639,18 @@ void GraphicsInit()
     gr_d3d_create_texture_hook.Install();
     gr_d3d_create_vram_texture_with_mipmaps_hook.Install();
     gr_d3d_create_texture_fail_hook.Install();
+
+    // Fix font texture leak
+    // Original code sets bitmap handle in all fonts to -1 on level unload. On next font usage the font bitmap is reloaded.
+    // Note: font bitmaps are dynamic (USERBMAP) so they cannot be found by name unlike normal bitmaps.
+    AsmWriter(0x0050E1A8).ret();
+    GrLoadFontInternal_fix_texture_ref.Install();
+
+    // maxfps command
+    max_fps_cmd.Register();
+
+    // Crash-fix in case texture has not been created (this happens if GrReadBackbuffer fails)
+    gr_direct3d_lock_crash_fix.Install();
 }
 
 void GraphicsDrawFpsCounter()

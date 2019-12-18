@@ -29,4 +29,4 @@ ipch
 game_patch/purefaction/*secret*
 
 # Experimental code
-game_patch/misc/experimental.*
+game_patch/misc/experimental*

@@ -235,6 +235,15 @@ DcCommand2 linear_pitch_cmd{
 
 void InputInit()
 {
+    // Fix keyboard layout
+    uint8_t kbd_layout = 0;
+    if (MapVirtualKeyA(0x10, MAPVK_VSC_TO_VK) == 'A')
+        kbd_layout = 2; // AZERTY
+    else if (MapVirtualKeyA(0x15, MAPVK_VSC_TO_VK) == 'Z')
+        kbd_layout = 3; // QWERTZ
+    INFO("Keyboard layout: %u", kbd_layout);
+    WriteMem<u8>(0x004B14B4 + 1, kbd_layout);
+
     // Add DirectInput mouse support
     mouse_eval_deltas_di_hook.Install();
     mouse_keep_centered_enable_hook.Install();

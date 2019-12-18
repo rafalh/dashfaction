@@ -8,26 +8,6 @@
 #include <patch_common/CallHook.h>
 #include <patch_common/AsmWriter.h>
 
-DcCommand2 max_fps_cmd{
-    "maxfps",
-    [](std::optional<int> limit_opt) {
-        if (limit_opt) {
-#ifdef NDEBUG
-            int new_limit = std::clamp<int>(limit_opt.value(), MIN_FPS_LIMIT, MAX_FPS_LIMIT);
-#else
-            int new_limit = limit_opt.value();
-#endif
-            g_game_config.max_fps = new_limit;
-            g_game_config.save();
-            rf::min_framerate = 1.0f / new_limit;
-        }
-        else
-            rf::DcPrintf("Maximal FPS: %.1f", 1.0f / rf::min_framerate);
-    },
-    "Sets maximal FPS",
-    "maxfps <limit>",
-};
-
 CallHook<void(bool)> GlareRenderAllCorona_hook{
     0x0043233E,
     [](bool reflections) {
@@ -178,7 +158,6 @@ void ConsoleCommandsInit()
 #endif // DEBUG
 
     // Custom Dash Faction commands
-    max_fps_cmd.Register();
     vli_cmd.Register();
     player_count_cmd.Register();
     find_level_cmd.Register();

@@ -95,7 +95,6 @@ CodeInjection cleanup_game_hook{
     0x004B2821,
     []() {
         ResetGammaRamp();
-        MiscCleanup();
         ServerCleanup();
     },
 };

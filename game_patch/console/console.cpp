@@ -2,7 +2,9 @@
 #include "../main.h"
 #include "../rf.h"
 #include <common/BuildConfig.h>
+#include <common/version.h>
 #include <patch_common/CodeInjection.h>
+#include <patch_common/FunHook.h>
 #include <algorithm>
 
 rf::DcCommand* g_commands_buffer[CMD_LIMIT];
@@ -33,6 +35,18 @@ rf::Player* FindBestMatchingPlayer(const char* name)
     return nullptr;
 }
 
+FunHook<int()> MenuUpdate_hook{
+    0x00434230,
+    []() {
+        int menu_id = MenuUpdate_hook.CallTarget();
+        if (menu_id == rf::GS_MP_LIMBO) // hide cursor when changing level - hackfixed in RF by changing rendering logic
+            rf::SetCursorVisible(false);
+        else if (menu_id == rf::GS_MAIN_MENU)
+            rf::SetCursorVisible(true);
+        return menu_id;
+    },
+};
+
 CodeInjection DcRunCmd_CallHandlerPatch{
     0x00509DBB,
     [](auto& regs) {
@@ -55,6 +69,21 @@ void ConsoleCommandsInit();
 
 void ConsoleApplyPatches()
 {
+    // Console init string
+    WriteMemPtr(0x004B2534, "-- " PRODUCT_NAME " Initializing --\n");
+
+    // Console background color
+    WriteMem<u32>(0x005098D1, CONSOLE_BG_A); // Alpha
+    WriteMem<u8>(0x005098D6, CONSOLE_BG_B);  // Blue
+    WriteMem<u8>(0x005098D8, CONSOLE_BG_G);  // Green
+    WriteMem<u8>(0x005098DA, CONSOLE_BG_R);  // Red
+
+    // Fix console rendering when changing level
+    AsmWriter(0x0047C490).ret();
+    AsmWriter(0x0047C4AA).ret();
+    AsmWriter(0x004B2E15).nop(2);
+    MenuUpdate_hook.Install();
+
     // Change limit of commands
     ASSERT(rf::dc_num_commands == 0);
     WriteMemPtr(0x005099AC + 1, g_commands_buffer);

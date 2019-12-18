@@ -7,13 +7,13 @@
 #include "../server/server.h"
 #include <common/version.h>
 #include <common/BuildConfig.h>
-#include <cstddef>
-#include <algorithm>
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
 #include <patch_common/ShortTypes.h>
 #include <common/rfproto.h>
+#include <cstddef>
+#include <algorithm>
 
 namespace rf
 {
@@ -47,46 +47,14 @@ extern CallHook<UiLabel_Create2_Type> UiLabel_Create2_VersionLabel_hook;
 void __fastcall UiLabel_Create2_VersionLabel(rf::UiGadget* self, void* edx, rf::UiGadget* parent, int x, int y, int w,
                                              int h, const char* text, int font_id)
 {
-    rf::GrGetTextWidth(&w, &h, text, -1, rf::medium_font_id);
+    text = PRODUCT_NAME_VERSION;
+    rf::GrGetTextWidth(&w, &h, text, -1, font_id);
     x = 430 - w;
     w += 5;
     h += 2;
     UiLabel_Create2_VersionLabel_hook.CallTarget(self, edx, parent, x, y, w, h, text, font_id);
 }
 CallHook<UiLabel_Create2_Type> UiLabel_Create2_VersionLabel_hook{0x0044344D, UiLabel_Create2_VersionLabel};
-
-FunHook<void(const char**, const char**)> GetVersionStr_hook{
-    0x004B33F0,
-    [](const char** version, const char** a2) {
-        static const char version_in_menu[] = PRODUCT_NAME_VERSION;
-        if (version)
-            *version = version_in_menu;
-        if (a2)
-            *a2 = "";
-    },
-};
-
-FunHook<int()> MenuUpdate_hook{
-    0x00434230,
-    []() {
-        int menu_id = MenuUpdate_hook.CallTarget();
-        if (menu_id == rf::GS_MP_LIMBO) // hide cursor when changing level - hackfixed in RF by changing rendering logic
-            rf::SetCursorVisible(false);
-        else if (menu_id == rf::GS_MAIN_MENU)
-            rf::SetCursorVisible(true);
-        return menu_id;
-    },
-};
-
-CodeInjection gr_direct3d_lock_crash_fix{
-    0x0055CE55,
-    [](auto& regs) {
-        if (regs.eax == 0) {
-            regs.esp += 8;
-            regs.eip = 0x0055CF23;
-        }
-    },
-};
 
 CallHook<void()> MenuMainProcessMouse_hook{
     0x004437B9,
@@ -133,7 +101,7 @@ int LoadEasterEggImage()
     if (!rf::GrLock(hbm, 0, &lock_data, 1))
         return -1;
 
-    rf::BmConvertFormat(lock_data.bits, (rf::BmPixelFormat)lock_data.pixel_format, res_data, rf::BMPF_8888,
+    rf::BmConvertFormat(lock_data.bits, lock_data.pixel_format, res_data, rf::BMPF_8888,
                         easter_egg_size * easter_egg_size);
     rf::GrUnlock(&lock_data);
 
@@ -626,14 +594,6 @@ FunHook<char(int, int, int, int, char)> ClutterInitMonitor_hook{
     },
 };
 
-CodeInjection GrLoadFontInternal_fix_texture_ref{
-    0x0051F429,
-    [](auto& regs) {
-        auto gr_tcache_add_ref = AddrAsRef<void(int bm_handle)>(0x0050E850);
-        gr_tcache_add_ref(regs.eax);
-    },
-};
-
 CodeInjection moving_group_rotate_in_place_keyframe_oob_crashfix{
     0x0046A559,
     [](auto& regs) {
@@ -964,24 +924,14 @@ CallHook<int(char*, const char*)> mvf_load_rfa_debug_print_patch{
 
 void MiscInit()
 {
-    // Console init string
-    WriteMemPtr(0x004B2534, "-- " PRODUCT_NAME " Initializing --\n");
-
     // Version in Main Menu
     UiLabel_Create2_VersionLabel_hook.Install();
-    GetVersionStr_hook.Install();
 
     // Window title (client and server)
     WriteMemPtr(0x004B2790, PRODUCT_NAME);
     WriteMemPtr(0x004B27A4, PRODUCT_NAME);
 
-    // Console background color
-    WriteMem<u32>(0x005098D1, CONSOLE_BG_A); // Alpha
-    WriteMem<u8>(0x005098D6, CONSOLE_BG_B);  // Blue
-    WriteMem<u8>(0x005098D8, CONSOLE_BG_G);  // Green
-    WriteMem<u8>(0x005098DA, CONSOLE_BG_R);  // Red
-
-#ifdef NO_CD_FIX
+#if NO_CD_FIX
     // No-CD fix
     WriteMem<u8>(0x004B31B6, asm_opcodes::jmp_rel_short);
 #endif // NO_CD_FIX
@@ -992,14 +942,8 @@ void MiscInit()
         WriteMem<u8>(0x004B24FD, asm_opcodes::jmp_rel_short);
     }
 
-    // Set initial FPS limit
-    WriteMem<float>(0x005094CA, 1.0f / g_game_config.max_fps);
-
     // Crash-fix... (probably argument for function is invalid); Page Heap is needed
     WriteMem<u32>(0x0056A28C + 1, 0);
-
-    // Crash-fix in case texture has not been created (this happens if GrReadBackbuffer fails)
-    gr_direct3d_lock_crash_fix.Install();
 
     // Dont overwrite player name and prefered weapons when loading saved game
     AsmWriter(0x004B4D99, 0x004B4DA5).nop();
@@ -1020,23 +964,8 @@ void MiscInit()
     MenuMainRender_hook.Install();
 #endif
 
-    // Fix console rendering when changing level
-    AsmWriter(0x0047C490).ret();
-    AsmWriter(0x0047C4AA).ret();
-    AsmWriter(0x004B2E15).nop(2);
-    MenuUpdate_hook.Install();
-
     // Increase damage for kill command in Single Player
     WriteMem<float>(0x004A4DF5 + 1, 100000.0f);
-
-    // Fix keyboard layout
-    uint8_t kbd_layout = 0;
-    if (MapVirtualKeyA(0x10, MAPVK_VSC_TO_VK) == 'A')
-        kbd_layout = 2; // AZERTY
-    else if (MapVirtualKeyA(0x15, MAPVK_VSC_TO_VK) == 'Z')
-        kbd_layout = 3; // QWERTZ
-    INFO("Keyboard layout: %u", kbd_layout);
-    WriteMem<u8>(0x004B14B4 + 1, kbd_layout);
 
     // Chat color alpha
     using namespace asm_regs;
@@ -1044,6 +973,15 @@ void MiscInit()
     AsmWriter(0x00477528, 0x00477535).mov(ebx, 0x40); // chatbox background
     AsmWriter(0x00478E00, 0x00478E14).mov(eax, 0x30); // chat input border
     AsmWriter(0x00478E91, 0x00478E9E).mov(ebx, 0x40); // chat input background
+
+    // Fix game beeping every frame if chat input buffer is full
+    ChatSayAddChar_hook.Install();
+
+    // Change chat input limit to 224 (RF can support 255 safely but PF kicks if message is longer than 224)
+    WriteMem<i32>(0x0044474A + 1, CHAT_MSG_MAX_LEN);
+
+    // Add chat message limit for say/teamsay commands
+    ChatSayAccept_hook.Install();
 
     // Show enemy bullets
     rf::hide_enemy_bullets = !g_game_config.show_enemy_bullets;
@@ -1078,15 +1016,6 @@ void MiscInit()
     // Disable Flamethower debug sphere drawing (optimization)
     // It is not visible in game because other things are drawn over it
     AsmWriter(0x0041AE47, 0x0041AE4C).nop();
-
-    // Fix game beeping every frame if chat input buffer is full
-    ChatSayAddChar_hook.Install();
-
-    // Change chat input limit to 224 (RF can support 255 safely but PF kicks if message is longer than 224)
-    WriteMem<i32>(0x0044474A + 1, CHAT_MSG_MAX_LEN);
-
-    // Add chat message limit for say/teamsay commands
-    ChatSayAccept_hook.Install();
 
     // Preserve password case when processing rcon_request command
     WriteMem<i8>(0x0046C85A + 1, 1);
@@ -1131,12 +1060,6 @@ void MiscInit()
 
     // High monitors/mirrors resolution
     ClutterInitMonitor_hook.Install();
-
-    // Fix font texture leak
-    // Original code sets bitmap handle in all fonts to -1 on level unload. On next font usage the font bitmap is reloaded.
-    // Note: font bitmaps are dynamic (USERBMAP) so they cannot be found by name unlike normal bitmaps.
-    AsmWriter(0x0050E1A8).ret();
-    GrLoadFontInternal_fix_texture_ref.Install();
 
     // Fix crash when skipping cutscene after robot kill in L7S4
     moving_group_rotate_in_place_keyframe_oob_crashfix.Install();
@@ -1221,8 +1144,4 @@ void MiscInit()
 
     // Fix crash when executing camera2 command in main menu
     AsmWriter(0x0040DCFC).nop(5);
-}
-
-void MiscCleanup()
-{
 }

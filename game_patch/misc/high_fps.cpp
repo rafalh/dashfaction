@@ -386,7 +386,7 @@ void HighFpsUpdate()
         g_camera_shake_factor = std::pow(0.6f, frame_time / (1 / screen_shake_fps));
     }
 
-#if DEBUG
+#ifdef DEBUG
     FtolIssuesDetectionDoFrame();
 #endif
 

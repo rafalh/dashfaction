@@ -1,6 +1,7 @@
 #include "network.h"
 #include "../rf.h"
 #include "../server/server.h"
+#include <common/BuildConfig.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
@@ -13,7 +14,7 @@
 #include <common/version.h>
 
 #if MASK_AS_PF
-#include "purefaction/pf.h"
+#include "../purefaction/pf.h"
 #endif
 
 namespace rf
