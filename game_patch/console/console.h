@@ -1,16 +1,15 @@
 #pragma once
+#pragma once
 
-#include "rf.h"
+#include "../rf.h"
 #include <patch_common/Traits.h>
 #include <functional>
 #include <optional>
 
-void CommandsInit();
-void CommandsAfterGameInit();
-void CommandRegister(rf::DcCommand* cmd);
+void ConsoleInit();
+void ConsoleApplyPatches();
+void ConsoleRegisterCommand(rf::DcCommand* cmd);
 rf::Player* FindBestMatchingPlayer(const char* name);
-void DebugRender3d();
-void DebugRender2d();
 
 class DcInvalidArgTypeError : public std::exception
 {};
@@ -92,7 +91,7 @@ protected:
 public:
     void Register()
     {
-        CommandRegister(this);
+        ConsoleRegisterCommand(this);
     }
 };
 
@@ -174,3 +173,8 @@ private:
         handler_fun(&m_target_cmd);
     }
 };
+
+// Note: limit should fit in int8_t
+constexpr int CMD_LIMIT = 127;
+
+extern rf::DcCommand* g_commands_buffer[CMD_LIMIT];

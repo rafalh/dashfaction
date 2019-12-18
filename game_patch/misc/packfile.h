@@ -1,7 +1,6 @@
 #pragma once
 
-#include "rf.h"
-#include "utils.h"
+#include "../rf.h"
 
 enum GameLang
 {

@@ -1,7 +1,7 @@
 #include <string_view>
 #include "../rf.h"
 #include "server_internal.h"
-#include "../commands.h"
+#include "../console/console.h"
 #include "../main.h"
 #include <map>
 #include <set>

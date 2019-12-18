@@ -4,7 +4,7 @@
 #include <dinput.h>
 #include <algorithm>
 #include "../rf.h"
-#include "../commands.h"
+#include "../console/console.h"
 #include "../main.h"
 
 namespace rf

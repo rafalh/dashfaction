@@ -1,6 +1,6 @@
 #pragma once
 
-#include "rf.h"
+#include "../rf.h"
 
 struct PlayerStatsNew : rf::PlayerStats
 {

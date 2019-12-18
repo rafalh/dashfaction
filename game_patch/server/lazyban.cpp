@@ -1,5 +1,5 @@
 #include "server_internal.h"
-#include "../commands.h"
+#include "../console/console.h"
 #include "../rf.h"
 #include <patch_common/AsmWriter.h>
 

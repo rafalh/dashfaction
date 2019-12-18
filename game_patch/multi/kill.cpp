@@ -1,9 +1,8 @@
 #include "kill.h"
-#include "rf.h"
-#include "stdafx.h"
-#include "utils.h"
+#include "../rf.h"
 #include <patch_common/FunHook.h>
 #include <patch_common/ShortTypes.h>
+#include <patch_common/AsmWriter.h>
 
 void KillInitPlayer(rf::Player* player)
 {

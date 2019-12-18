@@ -1,13 +1,11 @@
 #include "spectate_mode.h"
-#include "rf.h"
 #include "scoreboard.h"
-#include "stdafx.h"
-#include "utils.h"
-#include "commands.h"
+#include "../console/console.h"
 #include <common/BuildConfig.h>
 #include <common/rfproto.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
+#include <patch_common/AsmWriter.h>
 #include <shlwapi.h>
 #include <windows.h>
 

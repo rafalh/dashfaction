@@ -1,7 +1,7 @@
 #include "wndproc.h"
-#include "rf.h"
-#include "stdafx.h"
-#include "utils.h"
+#include "../rf.h"
+#include <windows.h>
+#include <patch_common/AsmWriter.h>
 
 const char* GetWndMsgName(UINT msg);
 

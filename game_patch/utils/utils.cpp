@@ -1,6 +1,5 @@
 #include "utils.h"
-#include "rf.h"
-#include "stdafx.h"
+#include "../rf.h"
 #include <iomanip>
 #include <map>
 #include <common/Exception.h>

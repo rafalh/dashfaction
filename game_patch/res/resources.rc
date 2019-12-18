@@ -1,4 +1,4 @@
-100  RCDATA  "res/easter_egg.bin"
+100  RCDATA  "easter_egg.bin"
 
 // VERSIONINFO
 #define VER_FILE_DESCRIPTION "Dash Faction game patch"

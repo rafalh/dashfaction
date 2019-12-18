@@ -1,4 +1,4 @@
-#include "../commands.h"
+#include "../console/console.h"
 #include "server_internal.h"
 
 void ExtendRoundTime(int minutes)

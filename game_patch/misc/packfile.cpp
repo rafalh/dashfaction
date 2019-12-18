@@ -1,10 +1,10 @@
 #include "packfile.h"
-#include "main.h"
-#include "rf.h"
-#include "stdafx.h"
-#include "utils.h"
-#include "xxhash.h"
+#include "../main.h"
+#include "../rf.h"
+#include <xxhash.h>
+#include <common/BuildConfig.h>
 #include <patch_common/ShortTypes.h>
+#include <patch_common/AsmWriter.h>
 #include <array>
 #include <shlwapi.h>
 

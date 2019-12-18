@@ -7,7 +7,7 @@
 #include <algorithm>
 #include "server.h"
 #include "server_internal.h"
-#include "../commands.h"
+#include "../console/console.h"
 #include "../main.h"
 
 const char* g_rcon_cmd_whitelist[] = {

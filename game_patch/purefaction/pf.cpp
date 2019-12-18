@@ -2,7 +2,7 @@
 #include "pf.h"
 #include "pf_packets.h"
 #include "pf_secret.h"
-#include "../kill.h"
+#include "../multi/kill.h"
 #include <cstddef>
 
 void process_pf_player_announce_packet(const void* data, size_t len, [[ maybe_unused ]] const rf::NwAddr& addr)

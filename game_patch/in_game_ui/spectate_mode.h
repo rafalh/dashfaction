@@ -1,6 +1,6 @@
 #pragma once
 
-#include "rf.h"
+#include "../rf.h"
 
 void SpectateModeSetTargetPlayer(rf::Player* player);
 void SpectateModeInit();

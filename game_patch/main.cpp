@@ -1,24 +1,25 @@
 #include <common/GameConfig.h>
 #include "main.h"
-#include "autodl.h"
-#include "commands.h"
-#include "crashhandler.h"
+#include "rf.h"
+#include "stdafx.h"
+#include "level_autodl/autodl.h"
+#include "console/console.h"
+#include "debug/crashhandler.h"
+#include "debug/debug_cmd.h"
 #include "exports.h"
 #include "graphics/gamma.h"
 #include "graphics/graphics.h"
 #include "graphics/capture.h"
-#include "high_fps.h"
-#include "hud.h"
-#include "kill.h"
-#include "misc.h"
-#include "network.h"
-#include "packfile.h"
-#include "rf.h"
-#include "scoreboard.h"
-#include "spectate_mode.h"
-#include "stdafx.h"
-#include "utils.h"
-#include "wndproc.h"
+#include "in_game_ui/hud.h"
+#include "in_game_ui/scoreboard.h"
+#include "in_game_ui/spectate_mode.h"
+#include "multi/kill.h"
+#include "multi/network.h"
+#include "misc/misc.h"
+#include "misc/packfile.h"
+#include "misc/wndproc.h"
+#include "misc/high_fps.h"
+#include "utils/utils.h"
 #include "server/server.h"
 #include "input/input.h"
 #include <patch_common/CallHook.h>
@@ -84,7 +85,7 @@ CodeInjection after_full_game_init_hook{
         ExperimentalInitAfterGame();
 #endif
         GraphicsCaptureAfterGameInit();
-        CommandsAfterGameInit();
+        ConsoleInit();
 
         INFO("Game fully initialized");
     },
@@ -325,7 +326,7 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     GameWideOnLevelStart_hook.Install();
 
     // Init modules
-    CommandsInit();
+    ConsoleApplyPatches();
     GraphicsInit();
     InitGamma();
     GraphicsCaptureInit();
@@ -344,6 +345,8 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
 #if !defined(NDEBUG) && defined(HAS_EXPERIMENTAL)
     ExperimentalInit();
 #endif
+    DebugCmdApplyPatches();
+    DebugCmdInit();
 
     INFO("Installing hooks took %lu ms", GetTickCount() - start_ticks);
 

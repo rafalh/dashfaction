@@ -1,13 +1,13 @@
 #pragma once
 
 #include <cstdint>
-#include <cstdio>
 #include <cmath>
 #include <cstdarg>
 #include <windows.h>
 #include <d3d8.h>
 #include <patch_common/MemUtils.h>
-#include "utils.h"
+#include "utils/utils.h"
+
 
 #ifndef __GNUC__
 #define ALIGN(n) __declspec(align(n))

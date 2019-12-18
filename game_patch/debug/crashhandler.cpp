@@ -1,8 +1,8 @@
 #include "crashhandler.h"
-#include "stdafx.h"
 #include <log/Logger.h>
 #include <windows.h>
 #include <signal.h>
+#include <cstring>
 
 static WCHAR g_module_path[MAX_PATH];
 static LPTOP_LEVEL_EXCEPTION_FILTER g_old_exception_filter;

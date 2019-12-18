@@ -1,12 +1,11 @@
 #include "scoreboard.h"
-#include "kill.h"
-#include "main.h"
-#include "rf.h"
+#include "../multi/kill.h"
+#include "../rf.h"
+#include "../main.h"
 #include <common/rfproto.h>
 #include "spectate_mode.h"
-#include "stdafx.h"
-#include "utils.h"
 #include <patch_common/FunHook.h>
+#include <patch_common/AsmWriter.h>
 #include <algorithm>
 
 namespace rf

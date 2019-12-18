@@ -1,14 +1,14 @@
 #include "graphics.h"
 #include "gr_color.h"
-#include "../commands.h"
+#include "../console/console.h"
 #include "../main.h"
 #include "../rf.h"
-#include "../stdafx.h"
-#include "../utils.h"
+#include <common/BuildConfig.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
 #include <patch_common/ShortTypes.h>
+#include <patch_common/AsmWriter.h>
 #include <algorithm>
 
 namespace rf

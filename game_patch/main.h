@@ -2,7 +2,7 @@
 
 #include "rf.h"
 #include <common/GameConfig.h>
-#include "utils.h"
+#include "utils/utils.h"
 
 struct PlayerAdditionalData
 {

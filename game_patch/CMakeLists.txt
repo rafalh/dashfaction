@@ -29,9 +29,13 @@ if(NOT MSVC)
     add_compile_options(-Wno-pmf-conversions)
 endif()
 
-file(GLOB SRCS *.cpp *.h *.rc)
+file(GLOB SRCS misc/experimental*.cpp misc/experimental*.h)
 add_library(DashFaction SHARED
     ${SRCS}
+    main.cpp
+    main.h
+    rf.h
+    stdafx.h
     graphics/graphics.cpp
     graphics/graphics.h
     graphics/gr_color.cpp
@@ -48,7 +52,40 @@ add_library(DashFaction SHARED
     server/commands.cpp
     input/input.cpp
     input/input.h
+    in_game_ui/hud.cpp
+    in_game_ui/hud.h
+    in_game_ui/scoreboard.cpp
+    in_game_ui/scoreboard.h
+    in_game_ui/spectate_mode.cpp
+    in_game_ui/spectate_mode.h
+    debug/crashhandler.cpp
+    debug/crashhandler.h
+    debug/debugwinmsg.cpp
+    debug/debug_cmd.cpp
+    level_autodl/autodl.cpp
+    level_autodl/autodl.h
+    multi/kill.cpp
+    multi/kill.h
+    multi/network.cpp
+    multi/network.h
+    utils/utils.cpp
+    utils/utils.h
+    console/console.cpp
+    console/console.h
+    console/commands.cpp
+    console/autocomplete.cpp
+    misc/high_fps.cpp
+    misc/high_fps.h
+    misc/misc.cpp
+    misc/misc.h
+    misc/packfile.cpp
+    misc/packfile.h
+    misc/wndproc.cpp
+    misc/wndproc.h
+    misc/sound.cpp
+    misc/sound.h
     ${PF_SRCS}
+    res/resources.rc
 )
 
 target_compile_features(DashFaction PUBLIC cxx_std_17)
