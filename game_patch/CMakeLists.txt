@@ -20,7 +20,7 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/purefaction/pf_secret.cpp")
         purefaction/pf_secret.h
     )
 endif()
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/experimental.cpp")
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/misc/experimental.cpp")
     add_definitions(-DHAS_EXPERIMENTAL)
 endif()
 

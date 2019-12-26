@@ -32,7 +32,7 @@
 #include <log/Win32Appender.h>
 
 #ifdef HAS_EXPERIMENTAL
-#include "experimental.h"
+#include "misc/experimental.h"
 #endif
 
 GameConfig g_game_config;
