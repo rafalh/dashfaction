@@ -922,6 +922,15 @@ CallHook<int(char*, const char*)> mvf_load_rfa_debug_print_patch{
     reinterpret_cast<int(*)(char*, const char*)>(DebugPrintHook),
 };
 
+CodeInjection rfl_load_items_crash_fix{
+    0x0046519F,
+    [](auto& regs) {
+        if (!regs.eax) {
+            regs.eip = 0x004651C6;
+        }
+    },
+};
+
 void MiscInit()
 {
     // Version in Main Menu
@@ -1144,4 +1153,7 @@ void MiscInit()
 
     // Fix crash when executing camera2 command in main menu
     AsmWriter(0x0040DCFC).nop(5);
+
+    // Fix ItemCreate null result handling in RFL loading (affects multiplayer only)
+    rfl_load_items_crash_fix.Install();
 }
