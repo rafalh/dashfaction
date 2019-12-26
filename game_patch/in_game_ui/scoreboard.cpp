@@ -42,7 +42,7 @@ void DrawScoreboardInternal_New(bool draw)
         if (c_players == 32) {
             break;
         }
-        if (single_column || !player.blue_team)
+        if (single_column || player.team == rf::TEAM_RED)
             ++c_left_col;
         else
             ++c_right_col;
@@ -196,7 +196,7 @@ void DrawScoreboardInternal_New(bool draw)
     for (unsigned i = 0; i < c_players; ++i) {
         rf::Player* player = players[i];
 
-        unsigned sect_idx = (single_column || !player->blue_team) ? 0 : 1;
+        unsigned sect_idx = (single_column || player->team == rf::TEAM_RED) ? 0 : 1;
         auto& offsets = col_offsets[sect_idx];
         int row_y = y + sect_counter[sect_idx] * row_h;
         ++sect_counter[sect_idx];

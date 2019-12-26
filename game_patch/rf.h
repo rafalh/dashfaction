@@ -15,8 +15,6 @@
 #define ALIGN(n) __attribute__((aligned(n)))
 #endif
 
-#pragma pack(push, 1)
-
 namespace rf
 {
     /* Declarations */
@@ -30,7 +28,7 @@ namespace rf
     {
         float x, y, z;
 
-        Vector3() {}
+        Vector3() = default;
 
         Vector3(float x, float y, float z) :
             x(x), y(y), z(z) {}
@@ -113,26 +111,39 @@ namespace rf
             return Vector3(x * m, y * m, z * m);
         }
 
-        float len() const
+        float DotProd(const Vector3& other)
         {
-            return sqrtf(lenPow2());
+            return other.x * x + other.y * y + other.z * z;
         }
 
-        float lenPow2() const
+        float Len() const
+        {
+            return std::sqrt(LenPow2());
+        }
+
+        float LenPow2() const
         {
             return x * x + y * y + z * z;
         }
 
-        void normalize()
+        void Normalize()
         {
-            *this /= len();
+            *this /= Len();
         }
     };
+    static_assert(sizeof(Vector3) == 0xC);
 
-    struct Matrix3
+    union Matrix3
     {
         Vector3 rows[3];
+        struct
+        {
+            Vector3 rvec;
+            Vector3 uvec;
+            Vector3 fvec;
+        } n;
     };
+    static_assert(sizeof(Matrix3) == 0x24);
 
     /* String */
 
@@ -258,10 +269,14 @@ namespace rf
             return fun_ptr(this);
         }
     };
+    static_assert(sizeof(Timer) == 0x4);
 
     struct Color
     {
-        int val;
+        uint8_t red;
+        uint8_t green;
+        uint8_t blue;
+        uint8_t alpha;
     };
 
     template<typename T = char>
@@ -273,16 +288,17 @@ namespace rf
         T *data;
 
     public:
-        int Size()
+        int Size() const
         {
             return size;
         }
 
-        T& Get(int index)
+        T& Get(int index) const
         {
             return data[index];
         }
     };
+    static_assert(sizeof(DynamicArray<>) == 0xC);
 
     /* Stubs */
     typedef int ObjectFlags;
@@ -306,6 +322,7 @@ namespace rf
             reinterpret_cast<void(__thiscall*)(rf::DcCommand* self, const char* cmd, const char* descr, DcCmdHandler handler)>(
                 0x00509A70);
     };
+    static_assert(sizeof(DcCommand) == 0xC);
 
     enum DcArgType
     {
@@ -370,11 +387,57 @@ namespace rf
         BMPF_UNK_8_16B = 0x8,
     };
 
+    enum BmBitmapType
+    {
+        BM_INVALID = 0x0,
+        BM_PCX = 0x1,
+        BM_TGA = 0x2,
+        BM_USERBMAP = 0x3,
+        BM_VAF = 0x4,
+        BM_VBM = 0x5,
+        BM_M2V = 0x6,
+    };
+
+    struct BmBitmapEntry
+    {
+        char name[32];
+        int name_checksum;
+        int handle;
+        int16_t orig_width;
+        int16_t orig_height;
+        int16_t width;
+        int16_t height;
+        int num_pixels_in_all_levels;
+        BmBitmapType bitmap_type;
+        int animated_entry_type;
+        BmPixelFormat pixel_format;
+        char num_levels;
+        char orig_num_levels;
+        char num_levels_in_ext_files;
+        char num_frames;
+        char vbm_version;
+        void* locked_data;
+        float frames_per_ms;
+        void* locked_palette;
+        struct BmBitmapEntry* prev_bitmap;
+        struct BmBitmapEntry* next_bitmap;
+        char field_5C;
+        char cached_material_idx;
+        int16_t field_5E;
+        int total_bytes_for_all_levels;
+        int file_open_unk_arg;
+        int resolution_level;
+    };
+    static_assert(sizeof(BmBitmapEntry) == 0x6C);
+
     static auto& BmLoad = AddrAsRef<int(const char *filename, int a2, bool a3)>(0x0050F6A0);
     static auto& BmCreateUserBmap = AddrAsRef<int(BmPixelFormat pixel_format, int width, int height)>(0x005119C0);
     static auto& BmConvertFormat = AddrAsRef<void(void *dst_bits, BmPixelFormat dst_pixel_fmt, const void *src_bits, BmPixelFormat src_pixel_fmt, int num_pixels)>(0x0055DD20);
     static auto& BmGetBitmapSize = AddrAsRef<void(int bm_handle, int *width, int *height)>(0x00510630);
     static auto& BmGetFilename = AddrAsRef<const char*(int bm_handle)>(0x00511710);
+    static auto& BmHandleToIdxAnimAware = AddrAsRef<int(int bm_handle)>(0x0050F440);
+
+    static auto& bm_bitmaps = AddrAsRef<BmBitmapEntry*>(0x017C80C4);
 
     /* Graphics */
 
@@ -417,6 +480,7 @@ namespace rf
         int field_88;
         int field_8c;
     };
+    static_assert(sizeof(GrScreen) == 0x90);
 
     enum GrScreenMode
     {
@@ -435,6 +499,7 @@ namespace rf
         float v1;
         int color;
     };
+    static_assert(sizeof(GrVertex) == 0x30);
 
     struct GrLockData
     {
@@ -506,6 +571,7 @@ namespace rf
         void(*on_click)();
         void(*on_mouse_btn_down)();
     };
+    static_assert(sizeof(UiGadget) == 0x28);
 
     static auto& UiMsgBox = AddrAsRef<void(const char *title, const char *text, void(*callback)(), bool input)>(0x004560B0);
     using UiDialogCallbackPtr = void (*)();
@@ -603,6 +669,7 @@ namespace rf
             return !(*this == other);
         }
     };
+    static_assert(sizeof(NwAddr) == 0x8);
 
     struct NwStats
     {
@@ -629,6 +696,7 @@ namespace rf
         Timer field_588;
         int field_58c;
     };
+    static_assert(sizeof(NwStats) == 0x590);
 
     struct PlayerNetData
     {
@@ -650,7 +718,7 @@ namespace rf
         int field_9c0;
         Timer field_9c4;
     };
-    static_assert(sizeof(PlayerNetData) == 0x9C8, "invalid size");
+    static_assert(sizeof(PlayerNetData) == 0x9C8);
 
     static auto& NwSendNotReliablePacket =
         AddrAsRef<void(const NwAddr &addr, const void *packet, unsigned cb_packet)>(0x0052A080);
@@ -683,9 +751,12 @@ namespace rf
         Player *player;
         CameraType type;
     };
+    static_assert(sizeof(Camera) == 0xC);
 
     static auto& CameraSetFirstPerson = AddrAsRef<void(Camera *camera)>(0x0040DDF0);
     static auto& CameraSetFreelook = AddrAsRef<void(Camera *camera)>(0x0040DCF0);
+    static auto& CameraGetPos = AddrAsRef<void(rf::Vector3* camera_pos, rf::Camera *camera)>(0x0040D760);
+    static auto& CameraGetOrient = AddrAsRef<void(rf::Matrix3* camera_orient, rf::Camera *camera)>(0x0040D780);
 
     /* Config */
 
@@ -700,6 +771,7 @@ namespace rf
         int16_t mouse_btn_id;
         int16_t field_1a;
     };
+    static_assert(sizeof(ControlConfigItem) == 0x1C);
 
     struct ControlConfig
     {
@@ -726,6 +798,7 @@ namespace rf
         int field_f24;
         int field_f28;
     };
+    static_assert(sizeof(ControlConfig) == 0xE48);
 
     struct PlayerConfig
     {
@@ -763,7 +836,7 @@ namespace rf
         int mp_character;
         char name[12];
     };
-    static_assert(sizeof(PlayerConfig) == 0xE88, "invalid size");
+    static_assert(sizeof(PlayerConfig) == 0xE88);
 
     enum GameCtrl
     {
@@ -801,133 +874,143 @@ namespace rf
         uint16_t field_0;
         int16_t score;
         int16_t caps;
+        char padding[2];
     };
+    static_assert(sizeof(PlayerStats) == 0x8);
 
     struct PlayerWeaponInfo
     {
         int next_weapon_cls_id;
         Timer weapon_switch_timer;
-        Timer unk_reload_timer;
-        int field_f8c;
-        Timer unk_timer_f90;
-        char in_scope_view;
-        char field_f95;
-        char field_f96;
-        char field_f97;
+        Timer reload_timer;
+        int field_C;
+        Timer clip_drain_timer;
+        bool in_scope_view;
+        char field_15;
+        char field_16;
+        char field_17;
         float scope_zoom;
-        char field_f9c;
-        char field_1d;
-        char field_1e;
-        char field_1f;
-        int field_fa0;
-        Timer field_fa4;
-        Timer timer_f_a8;
-        Timer field_fac;
-        char railgun_scanner;
-        char scanner_view;
-        Color clr_unk_r;
-        char field_fb6;
-        char field_fb7;
-        int field_fb8;
-        int field_fbc;
-        float field_fc0;
-        Vector3 field_fc4;
-        Matrix3 field_fd0;
-        Matrix3 rot_fps_weapon;
-        Vector3 pos_fps_weapon;
-        int field_1024;
-        float field_1028;
-        int field_102c;
-        float field_1030;
+        char field_1C;
+        char rocket_launcher_locked;
+        char field_1E;
+        char field_1F;
+        int rocker_launcher_lock_obj_handle;
+        Timer rocker_launcher_lock_timer;
+        Timer rocket_scan_timer;
+        Timer rocket_scan_timer_unk1;
+        bool railgun_scanner_active;
+        char scanner_view_rendering;
+        Color scanner_mask_clr;
+        char field_36;
+        char field_37;
+        int field_38;
+        int field_3C;
+        float unk_time_40;
+        Vector3 field_44;
+        Matrix3 field_50;
+        Matrix3 fps_weapon_orient;
+        Vector3 fps_weapon_pos;
+        float field_A4;
+        float field_A8;
+        float field_AC;
+        float field_B0;
         int pivot1_prop_id;
-        Timer field_1038;
-        int field_103c;
-        int field_1040;
+        Timer field_B8;
+        int is_silenced_12mm_handgun;
+        int field_C0;
         int remote_charge_visible;
-        Vector3 field_1048;
-        Matrix3 field_1054;
-        int field_1078;
-        Timer field_107c;
+        Vector3 field_C8;
+        Matrix3 field_D4;
+        int field_F8;
+        Timer field_FC;
     };
-    static_assert(sizeof(PlayerWeaponInfo) == 0x100, "invalid size");
+    static_assert(sizeof(PlayerWeaponInfo) == 0x100);
 
-    struct Player1094
+    struct Player_1094
     {
-        Vector3 field_1094;
-        Matrix3 field_10a0;
+        Vector3 field_0;
+        Matrix3 field_C;
+    };
+
+    enum Team
+    {
+        TEAM_RED = 0,
+        TEAM_BLUE = 1,
     };
 
     struct Player
     {
-        Player *next;
-        Player *prev;
+        struct Player *next;
+        struct Player *prev;
         String name;
         PlayerFlags flags;
         int entity_handle;
         int entity_cls_id;
-        Vector3 field_1c;
+        Vector3 field_1C;
         int field_28;
         PlayerStats *stats;
-        char blue_team;
+        char team;
         char collide;
         char field_32;
         char field_33;
         AnimMesh *fpgun_mesh;
         AnimMesh *last_fpgun_mesh;
-        Timer timer3_c;
+        Timer timer_3C;
         int fpgun_muzzle_props[2];
         int fpgun_ammo_digit1_prop;
         int fpgun_ammo_digit2_prop;
-        int field_50[24];
-        char field_b0;
+        char key_items[32];
+        int field_70[16];
+        char unk_landed;
         char is_crouched;
-        char field_b2;
-        char field_b3;
+        char field_B2;
+        char field_B3;
         int view_obj_handle;
         Timer weapon_switch_timer2;
         Timer use_key_timer;
-        Timer field_c0;
+        Timer spawn_protection_timer;
         Camera *camera;
-        int x_viewport;
-        int y_viewport;
-        int cx_viewport;
-        int cy_viewport;
+        int viewport_x;
+        int viewport_y;
+        int viewport_w;
+        int viewport_h;
         float fov;
         int view_mode;
-        int field_e0;
+        int front_collision_light;
         PlayerConfig config;
-        int field_f6c;
-        int field_f70;
-        int field_f74;
-        int field_f78;
-        int field_f7c;
+        int field_F6C;
+        int field_F70;
+        int field_F74;
+        int field_F78;
+        int field_F7C;
         PlayerWeaponInfo weapon_info;
         int fpgun_weapon_id;
-        int field_1084;
+        char is_scanner_bm_empty;
         int scanner_bm_handle;
-        int field_108c[2];
-        Player1094 field_1094;
-        int field_10c4[3];
-        Color hit_scr_color;
-        int hit_scr_alpha;
-        int field_10d8;
-        int field_10dc;
-        int field_10e0;
-        int field_10e4;
-        int field_10e8[26];
-        int sound1150_not_sure;
+        int field_108C;
+        int infrared_weapon_cls_id;
+        Player_1094 field_1094;
+        int field_10C4[3];
+        Color screen_overlay_color;
+        int screen_overlay_alpha;
+        float field_10D8;
+        float field_10DC;
+        int field_10E0;
+        int weapon_cls_state_id;
+        int field_10E8[26];
+        int gasp_outside_sound;
         int pref_weapons[32];
-        float field_11d4;
-        float field_11d8;
-        void(__cdecl *field_11dc)(Player *);
-        float field_11e0[4];
-        int field_11f0;
-        float field_11f4;
-        int field_11f8;
-        int field_11fc;
+        float black_out_time;
+        float black_out_time2;
+        void (__cdecl *black_out_callback)(Player *);
+        float damage_indicator_alpha[4];
+        int field_11F0;
+        float field_11F4;
+        int field_11F8;
+        int field_11FC;
         PlayerNetData *nw_data;
     };
-    static_assert(sizeof(Player) == 0x1204, "invalid size");
+    static_assert(sizeof(Player) == 0x1204);
 
     static auto& player_list = AddrAsRef<Player*>(0x007C75CC);
     static auto& local_player = AddrAsRef<Player*>(0x007C75D4);
@@ -956,20 +1039,6 @@ namespace rf
         OT_GLARE = 0xA,
     };
 
-    struct PosRotUnk
-    {
-        int field_88;
-        float field_8c;
-        int field_90;
-        int field_94;
-        float mass;
-        Matrix3 field_9c;
-        Matrix3 field_c0;
-        Vector3 pos;
-        Vector3 new_pos;
-        Matrix3 yaw_rot;
-    };
-
     struct CollisionInfo
     {
         Vector3 hit_point;
@@ -984,6 +1053,7 @@ namespace rf
         void* face;
         int field_40;
     };
+    static_assert(sizeof(CollisionInfo) == 0x44);
 
     struct PhysicsInfo
     {
@@ -1012,7 +1082,15 @@ namespace rf
         float frame_time;
         CollisionInfo floor_collision_info;
     };
-    static_assert(sizeof(PhysicsInfo) == 0x170, "invalid size");
+    static_assert(sizeof(PhysicsInfo) == 0x170);
+
+    enum Friendliness
+    {
+        UNFRIENDLY = 0x0,
+        NEUTRAL = 0x1,
+        FRIENDLY = 0x2,
+        OUTCAST = 0x3,
+    };
 
     struct Object
     {
@@ -1036,7 +1114,7 @@ namespace rf
         AnimMesh *anim_mesh;
         int field_84;
         PhysicsInfo phys_info;
-        int friendliness;
+        Friendliness friendliness;
         int material;
         int parent_handle;
         int unk_prop_id_204;
@@ -1053,7 +1131,7 @@ namespace rf
         int field_27c;
         Vector3 field_280;
     };
-    static_assert(sizeof(Object) == 0x28C, "invalid size");
+    static_assert(sizeof(Object) == 0x28C);
 
     struct ObjCreateInfo
     {
@@ -1072,22 +1150,22 @@ namespace rf
         DynamicArray<void*> col_spheres;
         int physics_flags;
     };
-    static_assert(sizeof(ObjCreateInfo) == 0x98, "invalid size");
+    static_assert(sizeof(ObjCreateInfo) == 0x98);
 
     struct EventObj
     {
-        int vtbl;
+        void** vtbl;
         Object _super;
         int event_type;
         float delay;
-        int field_298;
-        int link_list;
-        int field_2a0;
-        int field_2a4;
-        int field_2a8;
-        int field_2ac;
-        int field_2b0;
+        Timer delay_timer;
+        DynamicArray<int> link_list;
+        int activated_by_entity_handle;
+        int activated_by_trigger_handle;
+        int field_2B0;
+        int is_on_state;
     };
+    static_assert(sizeof(EventObj) == 0x2B8);
 
     struct ItemObj
     {
@@ -1104,7 +1182,7 @@ namespace rf
         int field_2bc;
         int field_2c0;
     };
-    static_assert(sizeof(ItemObj) == 0x2C4, "invalid size");
+    static_assert(sizeof(ItemObj) == 0x2C4);
 
     struct ClutterObj
     {
@@ -1128,7 +1206,7 @@ namespace rf
         uint16_t killable_index;
         uint16_t field_2d6;
     };
-    static_assert(sizeof(ClutterObj) == 0x2D8, "invalid size");
+    static_assert(sizeof(ClutterObj) == 0x2D8);
 
     struct TriggerObj
     {
@@ -1153,7 +1231,6 @@ namespace rf
         int activation_failed_entity_handle;
         Timer field_2e8;
         char one_way;
-        char padding[3];
         float button_active_time_seconds;
         Timer field_2f4;
         float inside_time_seconds;
@@ -1161,9 +1238,8 @@ namespace rf
         int attached_to_uid;
         int use_clutter_uid;
         char team;
-        char padding2[3];
     };
-    static_assert(sizeof(TriggerObj) == 0x30C, "invalid size");
+    static_assert(sizeof(TriggerObj) == 0x30C);
 
     static auto& ObjGetFromUid = AddrAsRef<Object*(int uid)>(0x0048A4A0);
     static auto& ObjGetFromHandle = AddrAsRef<Object*(int handle)>(0x0040A0E0);
@@ -1171,15 +1247,171 @@ namespace rf
 
     /* Entity */
 
-    union EntityClass
+    using V3DType = int;
+    using ObjectUse = int;
+
+    struct EntityColSphere
     {
-        struct
-        {
-            String::Pod name;
-        };
-        char padding[0x1514];
+        float radius;
+        int field_4;
+        float dmg_factor_single;
+        float dmg_factor_multi;
+        float spring_constant;
+        float spring_length;
+        char name[24];
     };
-    static_assert(sizeof(EntityClass) == 0x1514, "invalid size");
+
+    struct EntityColSphereArray
+    {
+        int num;
+        EntityColSphere col_spheres[8];
+    };
+
+    struct EntityClassFootstepTriggerInfo
+    {
+        String field_0;
+        float value;
+    };
+
+    struct EntityClassStateActionInfo
+    {
+        String name;
+        String anim_filename;
+        int field_10;
+        int num_footstep_triggers;
+        EntityClassFootstepTriggerInfo footstep_triggers[2];
+        int field_30;
+    };
+
+    struct Skin
+    {
+        String name;
+        int num_textures;
+        String textures[12];
+    };
+
+    struct EntityClass
+    {
+        String name;
+        String v3d_filename;
+        String debris_filename;
+        String corpse_v3d_filename;
+        String death_anim;
+        int corpse_emitter;
+        float corpse_emitter_lifetime;
+        String move_mode;
+        String helmet_v3d_filename;
+        float col_radius;
+        float life;
+        float envirosuit;
+        float col_damage_given;
+        float max_vel;
+        float slow_factor;
+        float fast_factor;
+        float acceleration;
+        float max_rot_vel;
+        float rot_acceleration;
+        float mass;
+        Vector3 min_rel_eye_phb;
+        Vector3 max_rel_eye_phb;
+        int field_84;
+        int default_primary_weapon;
+        int default_secondary_weapon;
+        int default_melee_weapon;
+        V3DType v3d_type;
+        int material;
+        Vector3 field_9C;
+        Vector3 field_A8;
+        char allowed_weapons[64];
+        int muzzle1_prop_id;
+        int led1prop_id;
+        int primary_muzzle_glare;
+        int fly_snd_not_sure;
+        String fly_snd;
+        float fly_snd_unk1;
+        float fly_snd_unk2;
+        int attach_snd;
+        int detach_snd;
+        int rotate_snd;
+        int jump_snd;
+        int death_snd;
+        int impact_death_sound;
+        int head_lamp_on_snd;
+        int head_lamp_off_snd;
+        int engine_rev_fwd_sound;
+        int engine_rev_back_sound;
+        int move_sound;
+        int land_sounds[10];
+        int startle_snd;
+        int low_pain_snd;
+        int med_pain_snd;
+        int squash_snd;
+        int footstep_sounds[10];
+        int climb_footstep_sounds[3];
+        int crawl_footstep_sound;
+        float min_fly_snd_volume;
+        ObjectUse use;
+        float use_radius;
+        int primary_prop_ids[3];
+        int secondary_prop_ids[3];
+        int primary_weapon_prop_ids[3];
+        int secondary_weapon_prop_ids[3];
+        int unk_prop_id_1ec;
+        int thruster_prop_ids[33];
+        char thruster_vfx[1024];
+        int thruster_vfx_count;
+        int corona_prop_ids[9];
+        int corona_glare[8];
+        int field_6bc;
+        int corona_glare_headlamp[8];
+        int field_6e0;
+        int helmet_prop_id;
+        int shell_eject_prop_id;
+        int hand_left_prop_id;
+        int hand_right_prop_id;
+        int persona;
+        int explode_anim_vclip;
+        float explode_anim_radius;
+        Vector3 explode_offset;
+        int num_emitters;
+        int emitters[2];
+        float blind_pursuit_time;
+        int field_71C;
+        int attack_style;
+        int flags;
+        int flags2;
+        int field_72C[6];
+        String primary_warmup_fx;
+        float movement_radius;
+        int force_launch_sound;
+        int state_count;
+        int action_count;
+        EntityClassStateActionInfo *state_array;
+        EntityClassStateActionInfo *action_array;
+        float fov;
+        int weapon_specific_states_count[64];
+        int weapon_specific_action_count[64];
+        EntityClassStateActionInfo *weapon_specific_states[64];
+        EntityClassStateActionInfo *weapon_specific_actions[64];
+        EntityColSphereArray collision_spheres;
+        int unk_col_spheres_unused[81];
+        int unk_col_spheres2[81];
+        float field_F74;
+        float unholster_delay;
+        int num_skins;
+        Skin skins[10];
+        int num_lod_distances;
+        float lod_distances[4];
+        String cockpit_vfx;
+        int corpse_carry_prop_id;
+        int spine_bone1;
+        int spine_bone2;
+        int head_bone;
+        float body_temp;
+        float damage_type_factors[11];
+        float weapon_specific_spine_adjustments[64];
+    };
+    static_assert(sizeof(EntityClass) == 0x1514);
 
     static auto& num_entity_classes = AddrAsRef<int>(0x0062F2D0);
     static auto& entity_classes = AddrAsRef<EntityClass[75]>(0x005CC500);
@@ -1204,7 +1436,7 @@ namespace rf
         int weapon_cls_id2;
     };
 
-    struct SEntityMotion
+    struct EntityMotion
     {
         Vector3 rot_change;
         Vector3 pos_change;
@@ -1262,103 +1494,189 @@ namespace rf
         Vector3 field_174;
     };
 
+    using NavPointType = int;
+
+    struct NavPoint
+    {
+        Vector3 pos;
+        Vector3 unk_mut_pos;
+        float radius2;
+        float radius1;
+        float height;
+        float pause_time;
+        DynamicArray<> linked_nav_points_ptrs;
+        char skip;
+        char skip0;
+        __int16 field_36;
+        float unk_dist;
+        struct NavPoint *field_3C;
+        NavPointType type;
+        char is_directional;
+        Matrix3 orient;
+        int uid;
+        DynamicArray<> linked_uids;
+    };
+    static_assert(sizeof(NavPoint) == 0x7C);
+
+    struct AiNavInfo
+    {
+        int field_0;
+        Vector3 *target_pos_unk_slots[4];
+        int field_14;
+        int current_slot;
+        NavPoint field_1C;
+        NavPoint field_98;
+        NavPoint *field_114;
+        NavPoint *field_118;
+        Timer timer_11C;
+        int waypoint_list_idx;
+        int waypoint_idx;
+        int field_128;
+        int waypoint_method;
+        int hEntityUnk;
+        Timer timer_134;
+        Vector3 orient_target;
+        int moving_grp_handle_unk;
+        int field_148;
+        Vector3 field_14C;
+        int field_158;
+        char field_15C;
+        int field_160;
+        Vector3 unk_target_pos;
+        int field_170;
+        Vector3 target_pos0;
+    };
+    static_assert(sizeof(AiNavInfo) == 0x180);
+
+    enum AiMode
+    {
+        AIM_NONE = 0x0,
+        AIM_CATATONIC = 0x1,
+        AIM_WAITING = 0x2,
+        AIM_ATTACK = 0x3,
+        AIM_WAYPOINTS = 0x4,
+        AIM_COLLECTING = 0x5,
+        AIM_AFTER_NOISE = 0x6,
+        AIM_FLEE = 0x7,
+        AIM_LOOK_AT = 0x8,
+        AIM_SHOOT_AT = 0x9,
+        AIM_WATCHFUL = 0xA,
+        AIM_MOTION_DETECTION = 0xB,
+        AIM_C = 0xC,
+        AIM_TURRET_UNK = 0xD,
+        AIM_HEALING = 0xE,
+        AIM_CAMERA_UNK = 0xF,
+        AIM_ACTIVATE_ALARM = 0x10,
+        AIM_PANIC = 0x11,
+    };
+
+    enum AiAttackStyle
+    {
+        AIAS_DEFAULT = 0xFFFFFFFF,
+        AIAS_EVASIVE = 0x1,
+        AIAS_STAND_GROUND = 0x2,
+        AIAS_DIRECT = 0x3,
+    };
+
     struct AiInfo
     {
-        EntityObj *entity;
+        struct EntityObj *entity;
         int weapon_cls_id;
         int weapon_cls_id2;
         int clip_ammo[32];
         int weapons_ammo[64];
-        char field_18c[64];
-        char field_1cc[64];
-        DynamicArray<> field_20c;
+        char possesed_weapons_bitmap[64];
+        char is_loop_fire[64];
+        DynamicArray<int> target_obj_handles;
         Timer fire_wait_timer;
         Timer alt_fire_wait_in_veh_timer;
         Timer impact_delay_timer[2];
-        int field_228;
-        Timer timer_22c;
-        Timer timer_230;
+        char was_alt_impact_delay;
+        Timer timer_22C;
+        Timer watchful_mode_update_target_pos_timer;
         Timer timer_234;
         Timer timer_238;
-        Timer timer_23c;
+        Timer timer_23C;
         Vector3 field_240;
-        int field_24c;
-        Timer timer_250;
+        int field_24C;
+        Timer flee_timer_unk;
         Timer timer_254;
         Timer timer_258;
-        Timer timer_25c;
-        int field_260;
-        Timer timer_264;
-        int field_268;
-        int field_26c;
+        Timer primary_burst_delay_timer;
+        int primary_burst_count_left;
+        Timer seconary_burst_delay_timer;
+        int secondary_burst_count_left;
+        int field_26C;
         int field_270;
-        Timer unk_weapon_timer;
+        Timer unholster_timer;
         Timer field_278;
         int cooperation;
-        int ai_mode;
-        int field_284;
-        int unk_time288;
-        int field_28c;
+        AiMode ai_mode;
+        AiMode base_ai_mode;
+        int mode_change_time;
+        int field_28C;
         int field_290;
         Timer timer_294;
-        float create_time;
-        char field_29c;
-        char field_29d;
-        int16_t field_29e;
-        Timer timer_2a0;
-        Timer timer_2a4;
-        Timer timer_2a8;
+        float unk_time;
+        char field_29C;
+        char field_29D;
+        __int16 field_29E;
+        Timer timer_2A0;
+        Timer timer_2A4;
+        Timer timer_2A8;
         int field_2AC;
         int field_2B0;
-        int submode;
+        int ai_submode;
         int field_2B8;
         int submode_change_time;
-        int unk_obj_handle;
-        Vector3 field_2c4;
-        Timer field_2d0;
-        int field_2d4;
-        int field_2d8;
-        Timer field_2dc;
-        Timer field_2e0;
-        int field_2e4;
-        EntityWeapon2E8 field_2e8;
-        SEntityMotion motion_change;
-        Timer field_48c;
+        int target_obj_handle;
+        Vector3 target_obj_pos;
+        Timer field_2D0;
+        int look_at_handle;
+        int shoot_at_handle;
+        Timer field_2DC;
+        Timer field_2E0;
+        int field_2E4;
+        AiNavInfo nav;
+        EntityMotion motion_change;
+        Timer field_48C;
         Vector3 field_490;
         float last_dmg_time;
-        int field_4a0;
-        Timer field_4a4;
-        int field_4a8[3];
-        Timer field_4b4;
-        Timer field_4b8;
-        int unk_handle;
-        int field_4c0;
-        Timer field_4c4;
-        int field_4c8;
-        int field_4cc;
-        Timer field_4d0;
-        Timer field_4d4;
-        Timer field_4d8;
-        Timer field_4dc;
-        Timer field_4e0;
-        Timer field_4e4;
-        Timer field_4e8;
-        Vector3 field_4ec;
-        Timer timer_4f8;
-        Timer timer_4fc;
+        AiAttackStyle ai_attack_style;
+        Timer field_4A4;
+        int waypoint_list_idx;
+        int waypoint_method;
+        int turret_uid;
+        Timer field_4B4;
+        Timer field_4B8;
+        int held_corpse_handle;
+        float field_4C0;
+        Timer field_4C4;
+        int alert_camera_uid;
+        int alarm_event_uid;
+        Timer field_4D0;
+        Timer field_4D4;
+        Timer field_4D8;
+        Timer waiting_to_waypoints_mode_timer;
+        Timer timeout_timer;
+        Timer field_4E4;
+        Timer field_4E8;
+        Vector3 unk_target_pos;
+        Timer timer_4F8;
+        Timer timer_4FC;
         Vector3 pos_delta;
-        int field_50c;
+        int field_50C;
         float last_rot_time;
         float last_move_time;
-        float last_fire_level_time;
-        int field_51c_;
+        float last_fire_time;
+        int field_51C_;
         float movement_radius;
         float field_524_;
-        int field_528;
-        int field_52c;
+        char use_custom_attack_range;
+        float custom_attack_range;
         int flags;
     };
-    static_assert(sizeof(AiInfo) == 0x534, "invalid size");
+    static_assert(sizeof(AiInfo) == 0x534);
 
     struct EntityCameraInfo
     {
@@ -1375,6 +1693,7 @@ namespace rf
         float camera_shake_time;
         Timer camera_shake_timer;
     };
+    static_assert(sizeof(EntityCameraInfo) == 0x60);
 
     struct EntityObj
     {
@@ -1484,7 +1803,7 @@ namespace rf
         AnimMesh *respawn_vfx;
         Timer field_1490;
     };
-    static_assert(sizeof(EntityObj) == 0x1494, "invalid size");
+    static_assert(sizeof(EntityObj) == 0x1494);
 
     static auto& EntityGetFromHandle = AddrAsRef<EntityObj*(uint32_t handle)>(0x00426FC0);
     static auto& EntityCreate =
@@ -1501,6 +1820,7 @@ namespace rf
         int sound_id;
         int sound_handle;
     };
+    static_assert(sizeof(WeaponStateAction) == 0x1C);
 
     struct WeaponClass
     {
@@ -1679,7 +1999,7 @@ namespace rf
         int field_548always0;
         float multi_b_box_size_factor;
     };
-    static_assert(sizeof(WeaponClass) == 0x550, "invalid size");
+    static_assert(sizeof(WeaponClass) == 0x550);
 
     struct WeaponObj
     {
@@ -1696,7 +2016,7 @@ namespace rf
         int field_2B0;
         Vector3 field_2B4;
         Matrix3 field_2C0;
-        int entity_friendliness;
+        Friendliness entity_friendliness;
         int field_2E8;
         Timer field_2EC;
         float fPiercingPower;
@@ -1705,7 +2025,7 @@ namespace rf
         Vector3 last_hit_point;
         Vector3 field_308;
     };
-    static_assert(sizeof(WeaponObj) == 0x314, "invalid size");
+    static_assert(sizeof(WeaponObj) == 0x314);
 
     static auto& weapon_classes = AddrAsRef<WeaponClass[64]>(0x0085CD08);
     static auto& riot_stick_cls_id = AddrAsRef<int32_t>(0x00872468);
@@ -1832,7 +2152,7 @@ namespace rf
     static auto& rfl_static_geometry = AddrAsRef<void*>(0x006460E8);
 
     static auto& RfBeep = AddrAsRef<void(unsigned u1, unsigned u2, unsigned u3, float volume)>(0x00505560);
-    static auto& GetFileExt = AddrAsRef<char *(const char *path)>(0x005143F0);
+    static auto& GetFileExt = AddrAsRef<char*(const char *path)>(0x005143F0);
     static auto& SetNextLevelFilename = AddrAsRef<void(String::Pod level_filename, String::Pod save_filename)>(0x0045E2E0);
     static auto& DemoLoadLevel = AddrAsRef<void(const char *level_filename)>(0x004CC270);
     static auto& SetCursorVisible = AddrAsRef<void(bool visible)>(0x0051E680);
@@ -1880,7 +2200,7 @@ namespace rf
         char is_looping;
         char field_3f_sndload_param;
     };
-    static_assert(sizeof(GameSound) == 0x40, "invalid size");
+    static_assert(sizeof(GameSound) == 0x40);
 
     struct LevelSound
     {
@@ -1893,9 +2213,8 @@ namespace rf
         Vector3 pos;
         float orig_volume;
         bool is_3d_sound;
-        char _padding[3];
     };
-    static_assert(sizeof(LevelSound) == 0x2C, "invalid size");
+    static_assert(sizeof(LevelSound) == 0x2C);
 
     struct SoundChannel
     {
@@ -1911,7 +2230,7 @@ namespace rf
         Timer timer24;
         int flags;
     };
-    static_assert(sizeof(SoundChannel) == 0x2C, "invalid size");
+    static_assert(sizeof(SoundChannel) == 0x2C);
 
     enum SoundChannelFlags
     {
@@ -1938,5 +2257,3 @@ namespace rf
     static auto& Free = AddrAsRef<void(void *mem)>(0x00573C71);
     static auto& Malloc = AddrAsRef<void*(uint32_t cb_size)>(0x00573B37);
 }
-
-#pragma pack(pop)

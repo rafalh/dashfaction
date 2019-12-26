@@ -115,7 +115,7 @@ rf::Vector3 ForwardVectorFromNonLinearYawPitch(float yaw, float pitch)
     fvec0.z = factor * std::cos(yaw);
 
     rf::Vector3 fvec = fvec0;
-    fvec.normalize(); // vector is never zero
+    fvec.Normalize(); // vector is never zero
 
     return fvec;
 }
@@ -131,7 +131,7 @@ rf::Vector3 ForwardVectorFromLinearYawPitch(float yaw, float pitch)
     fvec.y = std::sin(pitch);
     fvec.x = std::cos(pitch) * std::sin(yaw);
     fvec.z = std::cos(pitch) * std::cos(yaw);
-    fvec.normalize();
+    fvec.Normalize();
     return fvec;
 }
 

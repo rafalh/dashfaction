@@ -303,7 +303,7 @@ FunHook<void(rf::TriggerObj*, int32_t, bool)> TriggerActivate_hook{
         // Check team
         auto player = rf::GetPlayerFromEntityHandle(h_entity);
         auto trigger_name = trigger->_super.name.CStr();
-        if (player && trigger->team != -1 && trigger->team != player->blue_team) {
+        if (player && trigger->team != -1 && trigger->team != player->team) {
             // rf::DcPrintf("Trigger team does not match: %d vs %d (%s)", trigger->team, Player->blue_team,
             // trigger_name);
             return;
