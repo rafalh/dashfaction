@@ -103,7 +103,7 @@ bool ConvertPixelFormat(uint8_t*& dst_ptr, rf::BmPixelFormat dst_fmt, const uint
 
 bool ConvertBitmapFormat(uint8_t* dst_bits_ptr, rf::BmPixelFormat dst_fmt, const uint8_t* src_bits_ptr,
                          rf::BmPixelFormat src_fmt, int width, int height, int dst_pitch, int src_pitch,
-                         const uint8_t* palette = nullptr, bool swap_bytes = false)
+                         const uint8_t* palette, bool swap_bytes)
 {
     if (dst_fmt == src_fmt) {
         for (int y = 0; y < height; ++y) {
@@ -174,36 +174,6 @@ bool ConvertBitmapFormat(uint8_t* dst_bits_ptr, rf::BmPixelFormat dst_fmt, const
         return false;
     }
 }
-
-using GrD3DSetTextureData_Type =
-    int(int, const uint8_t*, const uint8_t*, int, int, rf::BmPixelFormat, void*, int, int, IDirect3DTexture8*);
-FunHook<GrD3DSetTextureData_Type> GrD3DSetTextureData_hook{
-    0x0055BA10,
-    [](int level, const uint8_t* src_bits_ptr, const uint8_t* palette, int bm_w, int bm_h,
-        rf::BmPixelFormat pixel_fmt, void* a7, int tex_w, int tex_h, IDirect3DTexture8* texture) {
-
-        D3DLOCKED_RECT locked_rect;
-        HRESULT hr = texture->LockRect(level, &locked_rect, 0, 0);
-        if (FAILED(hr)) {
-            ERR("LockRect failed");
-            return -1;
-        }
-        D3DSURFACE_DESC desc;
-        texture->GetLevelDesc(level, &desc);
-        auto tex_pixel_fmt = GetPixelFormatFromD3DFormat(desc.Format);
-        bool success = ConvertBitmapFormat(reinterpret_cast<uint8_t*>(locked_rect.pBits), tex_pixel_fmt,
-                                            src_bits_ptr, pixel_fmt, bm_w, bm_h, locked_rect.Pitch,
-                                            GetPixelFormatSize(pixel_fmt) * bm_w, palette);
-        texture->UnlockRect(level);
-
-        if (success)
-            return 0;
-
-        WARN("Color conversion failed (format %d -> %d)", pixel_fmt, tex_pixel_fmt);
-        return GrD3DSetTextureData_hook.CallTarget(level, src_bits_ptr, palette, bm_w, bm_h, pixel_fmt, a7, tex_w,
-                                                    tex_h, texture);
-    },
-};
 
 CodeInjection RflLoadLightmaps_color_conv_patch{
     0x004ED3E9,
@@ -418,7 +388,6 @@ void GrColorInit()
         WriteMem<u32>(0x005A7E08, D3DFMT_A8R8G8B8); // old: D3DFMT_A4R4G4B4
         WriteMem<u32>(0x005A7E0C, D3DFMT_A4R4G4B4); // old: D3DFMT_A8R3G3B2
 
-        GrD3DSetTextureData_hook.Install();
         BinkInitDeviceInfo_hook.Install();
 
         // lightmaps

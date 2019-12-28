@@ -101,6 +101,15 @@ inline std::string StringFormat(const char* format, ...)
     return std::string(buf.get(), buf.get() + size - 1); // We don't want the '\0' inside
 }
 
+inline std::string_view GetFilenameWithoutExt(std::string_view filename)
+{
+    auto dot_pos = filename.rfind('.');
+    if (dot_pos == std::string_view::npos) {
+        return filename;
+    }
+    return filename.substr(0, dot_pos);
+}
+
 template<typename T>
 class SinglyLinkedList
 {

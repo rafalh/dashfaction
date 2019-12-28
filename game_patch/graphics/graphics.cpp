@@ -14,7 +14,6 @@
 namespace rf
 {
 
-static auto& gr_adapter_idx = AddrAsRef<uint32_t>(0x01CFCC34);
 static auto& gr_scale_vec = AddrAsRef<Vector3>(0x01818B48);
 static auto& gr_view_matrix = AddrAsRef<Matrix3>(0x018186C8);
 static auto& gr_d3d_device_caps = AddrAsRef<D3DCAPS8>(0x01CFCAC8);
@@ -499,6 +498,8 @@ CodeInjection gr_direct3d_lock_crash_fix{
     },
 };
 
+void ApplyTexturePatches();
+
 void GraphicsInit()
 {
     // Fix for "At least 8 MB of available video memory"
@@ -605,6 +606,9 @@ void GraphicsInit()
 
     // Init True Color improvements
     GrColorInit();
+
+    // Patch texture handling
+    ApplyTexturePatches();
 
     // Enable mip-mapping for textures bigger than 256x256
     AsmWriter(0x0050FEDA, 0x0050FEE9).nop();

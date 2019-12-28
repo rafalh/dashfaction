@@ -25,7 +25,7 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/misc/experimental.cpp")
 endif()
 
 if(NOT MSVC)
-    add_compile_options(-Wall -Wextra -Wundef)
+    add_compile_options(-Wall -Wextra -Wundef -Wno-multichar)
     add_compile_options(-Wno-pmf-conversions)
 endif()
 
@@ -44,6 +44,7 @@ add_library(DashFaction SHARED
     graphics/gamma.h
     graphics/capture.cpp
     graphics/capture.h
+    graphics/texture.cpp
     server/server.h
     server/server.cpp
     server/win32_server_console.cpp

@@ -435,6 +435,7 @@ namespace rf
     static auto& BmConvertFormat = AddrAsRef<void(void *dst_bits, BmPixelFormat dst_pixel_fmt, const void *src_bits, BmPixelFormat src_pixel_fmt, int num_pixels)>(0x0055DD20);
     static auto& BmGetBitmapSize = AddrAsRef<void(int bm_handle, int *width, int *height)>(0x00510630);
     static auto& BmGetFilename = AddrAsRef<const char*(int bm_handle)>(0x00511710);
+    static auto& BmGetPixelFormat = AddrAsRef<BmPixelFormat(int bm_handle)>(0x005106F0);
     static auto& BmHandleToIdxAnimAware = AddrAsRef<int(int bm_handle)>(0x0050F440);
 
     static auto& bm_bitmaps = AddrAsRef<BmBitmapEntry*>(0x017C80C4);
@@ -524,6 +525,7 @@ namespace rf
     static auto& gr_d3d = AddrAsRef<IDirect3D8*>(0x01CFCBE0);
     static auto& gr_d3d_device = AddrAsRef<IDirect3DDevice8*>(0x01CFCBE4);
     static auto& gr_d3d_pp = AddrAsRef<D3DPRESENT_PARAMETERS>(0x01CFCA18);
+    static auto& gr_adapter_idx = AddrAsRef<uint32_t>(0x01CFCC34);
     static auto& gr_screen = AddrAsRef<GrScreen>(0x017C7BC0);
 
     static auto& gr_line_material = AddrAsRef<uint32_t>(0x01775B00);

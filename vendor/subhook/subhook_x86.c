@@ -101,7 +101,8 @@ static size_t subhook_disasm(void *src, int32_t *reloc_op_offset) {
     IMM8       = 1 << 3,
     IMM16      = 1 << 4,
     IMM32      = 1 << 5,
-    RELOC      = 1 << 6
+    RELOC      = 1 << 6,
+    TWO_BYTE   = 1 << 7,
   };
 
   static uint8_t prefixes[] = {
@@ -115,6 +116,7 @@ static size_t subhook_disasm(void *src, int32_t *reloc_op_offset) {
     uint8_t opcode;
     uint8_t reg_opcode;
     unsigned int flags;
+    uint8_t opcode2;
   };
 
   /*
@@ -177,6 +179,7 @@ static size_t subhook_disasm(void *src, int32_t *reloc_op_offset) {
     /* INC r32           */ {0x40, 0, PLUS_R},
     /* DEC r32           */ {0x48, 0, PLUS_R},
     /* NOP               */ {0x90, 0, 0},
+    /* IMUL r32, r/m32   */ {0x0F, 0, MODRM | TWO_BYTE, 0xAF},
   };
 
   uint8_t *code = src;
@@ -213,7 +216,9 @@ static size_t subhook_disasm(void *src, int32_t *reloc_op_offset) {
     int found = false;
 
     if (code[len] == opcodes[i].opcode) {
-      if (opcodes[i].flags & REG_OPCODE) {
+      if (opcodes[i].flags & TWO_BYTE) {
+        found = code[len + 1] == opcodes[i].opcode2;
+      } else if (opcodes[i].flags & REG_OPCODE) {
         found = ((code[len + 1] >> 3) & 7) == opcodes[i].reg_opcode;
       } else {
         found = true;
@@ -227,6 +232,9 @@ static size_t subhook_disasm(void *src, int32_t *reloc_op_offset) {
 
     if (found) {
       opcode = code[len++];
+      if (opcodes[i].flags & TWO_BYTE) {
+        len++;
+      }
       break;
     }
   }

@@ -36,6 +36,9 @@ inline D3DFORMAT GetD3DFormatFromPixelFormat(rf::BmPixelFormat pixel_fmt)
     case rf::BMPF_4444:
         return D3DFMT_A4R4G4B4;
     default:
+        if (static_cast<unsigned>(pixel_fmt) >= 0x10) {
+            return static_cast<D3DFORMAT>(pixel_fmt);
+        }
         ERR("unknown pixel format %d", pixel_fmt);
         return D3DFMT_UNKNOWN;
     }
@@ -59,8 +62,11 @@ inline rf::BmPixelFormat GetPixelFormatFromD3DFormat(D3DFORMAT d3d_fmt)
         return rf::BMPF_8888;
     default:
         ERR("unknown D3D format 0x%X", d3d_fmt);
-        return rf::BMPF_INVALID;
+        return static_cast<rf::BmPixelFormat>(d3d_fmt);
     }
 }
 
 void GrColorInit();
+bool ConvertBitmapFormat(uint8_t* dst_bits_ptr, rf::BmPixelFormat dst_fmt, const uint8_t* src_bits_ptr,
+                         rf::BmPixelFormat src_fmt, int width, int height, int dst_pitch, int src_pitch,
+                         const uint8_t* palette = nullptr, bool swap_bytes = false);

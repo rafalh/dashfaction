@@ -15,10 +15,11 @@ const char g_screenshot_dir_name[] = "screenshots";
 
 static std::unique_ptr<byte* []> g_screenshot_scanlines_buf;
 static int g_screenshot_dir_id;
-static bool g_force_texture_in_backbuffer_format = false;
 static ComPtr<IDirect3DSurface8> g_render_target;
 static ComPtr<IDirect3DSurface8> g_capture_tmp_surface;
 static ComPtr<IDirect3DSurface8> g_depth_stencil_surface;
+
+void RunWithTextureInBackBufferFormatForced(std::function<void()> callback);
 
 namespace rf
 {
@@ -129,9 +130,10 @@ bool GrD3DCaptureBackBufferFast(int x, int y, int width, int height, int bm_hand
     rf::GrFlushBuffers();
 
     // Note: Release call on D3D texture is not needed (no additional ref is added)
-    g_force_texture_in_backbuffer_format = true;
-    auto d3d_tex = rf::GrD3DGetBitmapTexture(bm_handle);
-    g_force_texture_in_backbuffer_format = false;
+    IDirect3DTexture8* d3d_tex;
+    RunWithTextureInBackBufferFormatForced([&]() {
+        d3d_tex = rf::GrD3DGetBitmapTexture(bm_handle);
+    });
     if (!d3d_tex) {
         WARN_ONCE("Bitmap without D3D texture provided in GrCaptureBackBuffer");
         return false;
@@ -194,24 +196,14 @@ FunHook<void(int, int, int, int, int)> GrCaptureBackBuffer_hook{
     },
 };
 
-CodeInjection GrD3DCreateVramTexture_patch{
-    0x0055B9CA,
-    [](auto& regs) {
-        if (g_force_texture_in_backbuffer_format) {
-            TRACE("Forcing texture in backbuffer format");
-            regs.eax = rf::gr_d3d_pp.BackBufferFormat;
-        }
-    },
-};
-
 CodeInjection MonitorInit_bitmap_format_fix{
     0x0041254C,
     [](auto& regs) {
-        g_force_texture_in_backbuffer_format = true;
-        // request D3D texture object to force its instantiation
-        if (rf::gr_screen.mode == rf::GR_DIRECT3D)
-            rf::GrD3DGetBitmapTexture(regs.eax);
-        g_force_texture_in_backbuffer_format = false;
+        RunWithTextureInBackBufferFormatForced([&]() {
+            // request D3D texture object to force its instantiation
+            if (rf::gr_screen.mode == rf::GR_DIRECT3D)
+                rf::GrD3DGetBitmapTexture(regs.eax);
+        });
     },
 };
 
@@ -333,7 +325,6 @@ void GraphicsCaptureInit()
     }
 
     // Make sure bitmaps used together with GrCaptureBackBuffer have the same format as backbuffer
-    GrD3DCreateVramTexture_patch.Install();
     MonitorInit_bitmap_format_fix.Install();
 
     // Override screenshot directory
