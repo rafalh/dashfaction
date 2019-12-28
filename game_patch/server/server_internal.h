@@ -35,6 +35,7 @@ struct ServerAdditionalConfig
     std::string default_player_weapon;
     std::optional<int> default_player_weapon_ammo;
     bool require_client_mod = true;
+    float player_damage_modifier = 1.0f;
 };
 
 extern ServerAdditionalConfig g_additional_server_config;

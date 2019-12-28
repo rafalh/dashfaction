@@ -114,6 +114,10 @@ void LoadAdditionalServerConfig(rf::StrParser& parser)
         g_additional_server_config.require_client_mod = parser.GetBool();
     }
 
+    if (parser.OptionalString("$DF Player Damage Modifier:")) {
+        g_additional_server_config.player_damage_modifier = parser.GetFloat();
+    }
+
     if (!parser.OptionalString("$Name:") && !parser.OptionalString("#End")) {
         parser.Error("end of server configuration");
     }
@@ -220,13 +224,18 @@ void SendHitSoundPacket(rf::Player* target)
 FunHook<float(rf::EntityObj*, float, int, int, int)> EntityTakeDamage_hook{
     0x0041A350,
     [](rf::EntityObj* entity, float damage, int responsible_entity_handle, int dmg_type, int responsible_entity_uid) {
-        float dmg = EntityTakeDamage_hook.CallTarget(entity, damage, responsible_entity_handle, dmg_type, responsible_entity_uid);
-
-        if (g_additional_server_config.hit_sounds.enabled) {
-            auto responsible_player = rf::GetPlayerFromEntityHandle(responsible_entity_handle);
-            if (responsible_player) {
-                SendHitSoundPacket(responsible_player);
+        auto damaged_player = rf::GetPlayerFromEntityHandle(entity->_super.handle);
+        auto responsible_player = rf::GetPlayerFromEntityHandle(responsible_entity_handle);
+        if (damaged_player && responsible_player) {
+            damage *= g_additional_server_config.player_damage_modifier;
+            if (damage == 0.0f) {
+                return 0.0f;
             }
+        }
+
+        float dmg = EntityTakeDamage_hook.CallTarget(entity, damage, responsible_entity_handle, dmg_type, responsible_entity_uid);
+        if (g_additional_server_config.hit_sounds.enabled && responsible_player) {
+            SendHitSoundPacket(responsible_player);
         }
 
         return dmg;
