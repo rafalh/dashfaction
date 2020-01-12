@@ -327,6 +327,14 @@ FunHook<void(rf::EntityObj&, rf::Vector3&)> EntityOnLand_hook{
     },
 };
 
+CallHook<void(rf::EntityObj&)> entity_make_run_after_climbing_patch{
+    0x00430D5D,
+    [](rf::EntityObj& entity) {
+        entity_make_run_after_climbing_patch.CallTarget(entity);
+        entity._super.phys_info.vel.y = 0.0f;
+    },
+};
+
 void HighFpsInit()
 {
     // Fix animations broken on high FPS because of ignored ftol remainder
@@ -375,7 +383,9 @@ void HighFpsInit()
 
     // Fix flee AI mode on high FPS by avoiding clearing velocity in Y axis in EntityMakeRun
     AsmWriter(0x00428121, 0x0042812B).nop();
+    AsmWriter(0x0042809F, 0x004280A9).nop();
     EntityOnLand_hook.Install();
+    entity_make_run_after_climbing_patch.Install();
 }
 
 void HighFpsUpdate()
