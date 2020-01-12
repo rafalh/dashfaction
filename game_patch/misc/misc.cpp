@@ -931,6 +931,20 @@ CodeInjection rfl_load_items_crash_fix{
     },
 };
 
+CodeInjection anim_mesh_col_fix{
+    0x00499BCF,
+    [](auto& regs) {
+        auto stack_frame = regs.esp + 0xC8;
+        auto params = reinterpret_cast<void*>(regs.eax);
+        // Reset flags field so start_pos/dir always gets transformed into mesh space
+        // Note: MeshCollide function adds flag 2 after doing transformation into mesh space
+        // If start_pos/dir is being updated for next call, flags must be reset as well
+        StructFieldRef<int>(params, 0x4C) = 0;
+        // Reset dir field
+        StructFieldRef<rf::Vector3>(params, 0x3C) = AddrAsRef<rf::Vector3>(stack_frame - 0xAC);
+    },
+};
+
 void MiscInit()
 {
     // Version in Main Menu
@@ -1156,4 +1170,7 @@ void MiscInit()
 
     // Fix ItemCreate null result handling in RFL loading (affects multiplayer only)
     rfl_load_items_crash_fix.Install();
+
+    // Fix col-spheres vs mesh collisions
+    anim_mesh_col_fix.Install();
 }
