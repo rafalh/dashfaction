@@ -58,6 +58,12 @@ bool GameConfig::load() try
     max_fps = std::clamp(max_fps, MIN_FPS_LIMIT, MAX_FPS_LIMIT);
 #endif
 
+    if (update_rate == 0) {
+        // Update Rate is set to "None" - this would prevent Multi menu from working - fix it
+        update_rate = DEFAULT_UPDATE_RATE;
+        result = false;
+    }
+
     return result;
 }
 catch (...) {

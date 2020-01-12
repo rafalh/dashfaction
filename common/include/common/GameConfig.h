@@ -12,6 +12,7 @@ inline const char DEFAULT_RF_TRACKER[] = "rfgt.factionfiles.com";
 inline const char DEFAULT_EXECUTABLE_PATH[] = "C:\\games\\RedFaction\\rf.exe";
 constexpr unsigned MIN_FPS_LIMIT = 10u;
 constexpr unsigned MAX_FPS_LIMIT = 240u;
+constexpr unsigned DEFAULT_UPDATE_RATE = 200000; // T1/LAN in stock launcher
 
 struct GameConfig
 {
@@ -44,7 +45,7 @@ struct GameConfig
 
     // Multiplayer
     std::string tracker = DEFAULT_RF_TRACKER;
-    unsigned update_rate = 2600;
+    unsigned update_rate = DEFAULT_UPDATE_RATE;
     unsigned force_port = 0;
 
     // Misc
