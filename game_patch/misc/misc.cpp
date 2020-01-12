@@ -964,6 +964,32 @@ CodeInjection weapon_vs_obj_collision_fix{
     },
 };
 
+CallHook<void(int, int, int, int, int, int, int, int, int, char, char, int)> gr_bitmap_stretched_message_log_hook{
+    0x004551F0,
+    [](int bm_handle, int dst_x, int dst_y, int dst_w, int dst_h, int src_x, int src_y, int src_w, int src_h,
+        char unk_u, char unk_v, int render_state) {
+
+        float scale_x = rf::GrGetMaxWidth() / 640.0f;
+        float scale_y = rf::GrGetMaxHeight() / 480.0f;
+        dst_w = src_w * scale_x;
+        dst_h = src_h * scale_y;
+        dst_x = (rf::GrGetMaxWidth() - dst_w) / 2;
+        dst_y = (rf::GrGetMaxHeight() - dst_h) / 2;
+        gr_bitmap_stretched_message_log_hook.CallTarget(bm_handle, dst_x, dst_y, dst_w, dst_h,
+            src_x, src_y, src_w, src_h, unk_u, unk_v, render_state);
+
+        auto& message_log_entries_clip_h = AddrAsRef<int>(0x006425D4);
+        auto& message_log_entries_clip_y = AddrAsRef<int>(0x006425D8);
+        auto& message_log_entries_clip_w = AddrAsRef<int>(0x006425DC);
+        auto& message_log_entries_clip_x = AddrAsRef<int>(0x006425E0);
+
+        message_log_entries_clip_x = dst_x + scale_x * 30;
+        message_log_entries_clip_y = dst_y + scale_y * 41;
+        message_log_entries_clip_w = scale_x * 313;
+        message_log_entries_clip_h = scale_y * 296;
+    },
+};
+
 void MiscInit()
 {
     // Version in Main Menu
@@ -1195,4 +1221,7 @@ void MiscInit()
 
     // Fix weapon vs object collisions for big objects
     weapon_vs_obj_collision_fix.Install();
+
+    // Fix message log rendering in resolutions with ratio different than 4:3
+    gr_bitmap_stretched_message_log_hook.Install();
 }

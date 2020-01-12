@@ -18,6 +18,7 @@ Version 1.4.2
 - fix crash when item cannot be created during RFL load in multi-player (RF bug)
 - fix entity collisions with objects near absolute zero position (RF bug)
 - fix bullets collisions with big objects, especially with high FPS (RF bug)
+- fix Message Log window rendering if resolution ratio is not 4:3
 
 Version 1.4.1 (released 2019-12-07)
 -----------------------------------
