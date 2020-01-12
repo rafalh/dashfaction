@@ -945,6 +945,25 @@ CodeInjection anim_mesh_col_fix{
     },
 };
 
+CodeInjection weapon_vs_obj_collision_fix{
+    0x0048C803,
+    [](auto& regs) {
+        auto obj = reinterpret_cast<rf::Object*>(regs.edi);
+        auto weapon = reinterpret_cast<rf::Object*>(regs.ebp);
+        auto dir = obj->pos - weapon->pos;
+        // Take into account weapon and object radius
+        float rad = weapon->radius + obj->radius;
+        if (dir.DotProd(weapon->orient.n.fvec) < -rad) {
+            // Ignore this pair
+            regs.eip = 0x0048C82A;
+        }
+        else {
+            // Continue processing this pair
+            regs.eip = 0x0048C834;
+        }
+    },
+};
+
 void MiscInit()
 {
     // Version in Main Menu
@@ -1173,4 +1192,7 @@ void MiscInit()
 
     // Fix col-spheres vs mesh collisions
     anim_mesh_col_fix.Install();
+
+    // Fix weapon vs object collisions for big objects
+    weapon_vs_obj_collision_fix.Install();
 }

@@ -17,6 +17,7 @@ Version 1.4.2
 - fix crash when executing camera2 command in main menu (RF bug)
 - fix crash when item cannot be created during RFL load in multi-player (RF bug)
 - fix entity collisions with objects near absolute zero position (RF bug)
+- fix bullets collisions with big objects, especially with high FPS (RF bug)
 
 Version 1.4.1 (released 2019-12-07)
 -----------------------------------
