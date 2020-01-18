@@ -142,8 +142,89 @@ namespace rf
             Vector3 uvec;
             Vector3 fvec;
         } n;
+
+        void SetIdentity()
+        {
+            auto fun_ptr = reinterpret_cast<void(__thiscall*)(Matrix3& self)>(0x004FCE70);
+            fun_ptr(*this);
+        }
     };
     static_assert(sizeof(Matrix3) == 0x24);
+
+    class File
+    {
+        using SelfType = File;
+
+        char m_internal_data[0x114];
+
+    public:
+        enum SeekOrigin {
+            seek_set = 0,
+            seek_cur = 1,
+            seek_end = 2,
+        };
+
+        File()
+        {
+            auto fun_ptr = reinterpret_cast<void(__thiscall*)(SelfType*)>(0x00523940);
+            fun_ptr(this);
+        }
+
+        ~File()
+        {
+            auto fun_ptr = reinterpret_cast<void(__thiscall*)(SelfType*)>(0x00523960);
+            fun_ptr(this);
+        }
+
+        int Open(const char* filename, int flags = 1, int unk = 9999999)
+        {
+            auto fun_ptr = reinterpret_cast<int(__thiscall*)(SelfType*, const char*, int, int)>(0x00524190);
+            return fun_ptr(this, filename, flags, unk);
+        }
+
+        void Close()
+        {
+            auto fun_ptr = reinterpret_cast<void(__thiscall*)(SelfType*)>(0x005242A0);
+            fun_ptr(this);
+        }
+
+        bool CheckVersion(int min_ver) const
+        {
+            auto fun_ptr = reinterpret_cast<bool(__thiscall*)(const SelfType*, int)>(0x00523990);
+            return fun_ptr(this, min_ver);
+        }
+
+        bool HasReadFailed() const
+        {
+            auto fun_ptr = reinterpret_cast<bool(__thiscall*)(const SelfType*)>(0x00524530);
+            return fun_ptr(this);
+        }
+
+        int Seek(int pos, SeekOrigin origin)
+        {
+            auto fun_ptr = reinterpret_cast<int(__thiscall*)(const SelfType*, int, SeekOrigin)>(0x00524400);
+            return fun_ptr(this, pos, origin);
+        }
+
+        int Read(void *buf, int buf_len, int min_ver = 0, int unused = 0)
+        {
+            auto fun_ptr = reinterpret_cast<int(__thiscall*)(SelfType*, void*, int, int, int)>(0x0052CF60);
+            return fun_ptr(this, buf, buf_len, min_ver, unused);
+        }
+
+        template<typename T>
+        T Read(int min_ver = 0, T def_val = 0)
+        {
+            if (CheckVersion(min_ver)) {
+                T val;
+                Read(&val, sizeof(val));
+                if (!HasReadFailed()) {
+                    return val;
+                }
+            }
+            return def_val;
+        }
+    };
 
     /* String */
 
@@ -301,12 +382,16 @@ namespace rf
     static_assert(sizeof(DynamicArray<>) == 0xC);
 
     /* Stubs */
+    struct UnknownStruct {};
     typedef int ObjectFlags;
     typedef int PhysicsFlags;
     typedef int EntityFlags;
     typedef int EntityPowerups;
     typedef int PlayerFlags;
     typedef int NwPlayerFlags;
+    typedef UnknownStruct RflRoom;
+    typedef UnknownStruct RflGeometry;
+    typedef UnknownStruct RflFace;
 
     /* Debug Console */
 
@@ -1057,30 +1142,39 @@ namespace rf
     };
     static_assert(sizeof(CollisionInfo) == 0x44);
 
+    struct ColSphere
+    {
+        Vector3 center;
+        float radius;
+        float field_10;
+        int field_14;
+    };
+    static_assert(sizeof(ColSphere) == 0x18);
+
     struct PhysicsInfo
     {
         float elasticity;
-        float field_8c;
+        float field_4;
         float friction;
-        int field_94;
+        int field_C;
         float mass;
-        Matrix3 field_9c;
-        Matrix3 field_c0;
+        Matrix3 field_14;
+        Matrix3 field_38;
         Vector3 pos;
         Vector3 new_pos;
-        Matrix3 yaw_rot;
-        Matrix3 field_120;
+        Matrix3 yaw_rot_mat;
+        Matrix3 new_yaw_rot_mat_unk;
         Vector3 vel;
         Vector3 rot_change_unk;
-        Vector3 field_15c;
-        Vector3 field_168;
+        Vector3 field_D4;
+        Vector3 field_E0;
         Vector3 rot_change_unk_delta;
         float radius;
-        DynamicArray<> field_184;
+        DynamicArray<ColSphere> colliders;
         Vector3 aabb_min;
         Vector3 aabb_max;
-        PhysicsFlags flags;
-        int flags_splash_1_ac;
+        int flags;
+        int flags2;
         float frame_time;
         CollisionInfo floor_collision_info;
     };
@@ -1096,7 +1190,7 @@ namespace rf
 
     struct Object
     {
-        void *room;
+        RflRoom *room;
         Vector3 last_pos_in_room;
         Object *next_obj;
         Object *prev_obj;
@@ -1130,7 +1224,7 @@ namespace rf
         char pad[3]; // FIXME
         int multi_handle;
         int anim;
-        int field_27c;
+        void* mesh_lighting_data;
         Vector3 field_280;
     };
     static_assert(sizeof(Object) == 0x28C);
