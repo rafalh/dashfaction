@@ -20,6 +20,7 @@
     static bool skip = false; \
     if (!skip) \
         logging::Logger::root().lvl(__VA_ARGS__); \
+        skip = true; \
     } while (false)
 #define ERR_ONCE(...) LOG_ONCE(ERR, __VA_ARGS__)
 #define WARN_ONCE(...) LOG_ONCE(WARN, __VA_ARGS__)
