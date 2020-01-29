@@ -183,3 +183,73 @@ public:
         return Iterator(nullptr);
     }
 };
+
+template<typename T>
+class DoublyLinkedList
+{
+    T& m_list;
+
+public:
+    class Iterator
+    {
+        T* current;
+
+    public:
+        typedef Iterator self_type;
+        typedef T value_type;
+        typedef T& reference;
+        typedef T* pointer;
+        typedef std::forward_iterator_tag iterator_category;
+        typedef int difference_type;
+
+        Iterator(pointer current) :
+            current(current)
+        {}
+
+        self_type operator++()
+        {
+            current = current->next;
+            return *this;
+        }
+
+        self_type operator++(int junk)
+        {
+            self_type copy = *this;
+            ++copy;
+            return copy;
+        }
+
+        bool operator==(const self_type& rhs) const
+        {
+            return current == rhs.current;
+        }
+
+        bool operator!=(const self_type& rhs) const
+        {
+            return !(*this == rhs);
+        }
+
+        reference operator*() const
+        {
+            return *current;
+        }
+
+        pointer operator->() const
+        {
+            return *current;
+        }
+    };
+
+    DoublyLinkedList(T& list) : m_list(list)
+    {}
+
+    Iterator begin()
+    {
+        return Iterator(m_list.next);
+    }
+
+    Iterator end()
+    {
+        return Iterator(&m_list);
+    }
+};
