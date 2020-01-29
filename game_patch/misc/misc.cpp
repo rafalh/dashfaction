@@ -990,6 +990,45 @@ CallHook<void(int, int, int, int, int, int, int, int, int, char, char, int)> gr_
     },
 };
 
+CodeInjection switch_model_event_custom_mesh_patch{
+    0x004BB921,
+    [](auto& regs) {
+        auto& mesh_type = regs.ebx;
+        if (mesh_type) {
+            return;
+        }
+        auto& mesh_name = *reinterpret_cast<rf::String*>(regs.esi);
+        const char* ext = strrchr(mesh_name.CStr(), '.');
+        if (!ext) {
+            ext = "";
+        }
+        if (stricmp(ext, ".v3m") == 0) {
+            mesh_type = 1;
+        }
+        else if (stricmp(ext, ".v3c") == 0) {
+            mesh_type = 2;
+        }
+        else if (ext && stricmp(ext, ".vfx") == 0) {
+            mesh_type = 3;
+        }
+    },
+};
+
+CodeInjection switch_model_event_obj_lighting_and_physics_fix{
+    0x004BB940,
+    [](auto& regs) {
+        auto obj = reinterpret_cast<rf::Object*>(regs.edi);
+        obj->mesh_lighting_data = nullptr;
+        // Try to fix physics
+        assert(obj->phys_info.colliders.Size() >= 1);
+        auto& csphere = obj->phys_info.colliders.Get(0);
+        csphere.center = rf::Vector3(.0f, .0f, .0f);
+        csphere.radius = obj->radius + 1000.0f;
+        auto PhysUpdateSizeFromColliders = AddrAsRef<void(rf::PhysicsInfo& pi)>(0x004A0CB0);
+        PhysUpdateSizeFromColliders(obj->phys_info);
+    },
+};
+
 void MiscInit()
 {
     // Version in Main Menu
@@ -1224,4 +1263,8 @@ void MiscInit()
 
     // Fix message log rendering in resolutions with ratio different than 4:3
     gr_bitmap_stretched_message_log_hook.Install();
+
+    // Allow custom mesh (not used in clutter.tbl or items.tbl) in Switch_Model event
+    switch_model_event_custom_mesh_patch.Install();
+    switch_model_event_obj_lighting_and_physics_fix.Install();
 }

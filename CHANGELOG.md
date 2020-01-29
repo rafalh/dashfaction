@@ -6,6 +6,7 @@ Version 1.4.2
 - add DDS texture format support (useful for DXTn compressed textures)
 - rewrite crash reporting system UI
 - improve sound handling when active sounds pool is full
+- allow custom meshes in Switch_Model event
 - log error when RFA cannot be loaded
 - fix sending crash reports
 - fix non-working face scrolling before first geomod use in custom levels (RF bug)
