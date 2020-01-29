@@ -14,6 +14,7 @@
 #include <common/rfproto.h>
 #include <cstddef>
 #include <algorithm>
+#include <regex>
 
 namespace rf
 {
@@ -40,6 +41,14 @@ constexpr int EGG_ANIM_IDLE_TIME = 3000;
 
 int g_version_click_counter = 0;
 int g_egg_anim_start;
+
+// Note: this must be called from DLL init function
+// Note: we can't use global variable because that would lead to crash when launcher loads this DLL to check dependencies
+static rf::CmdLineParam& GetUrlCmdLineParam()
+{
+    static rf::CmdLineParam url_param{"-url", "", true};
+    return url_param;
+}
 
 // Note: fastcall is used because MSVC does not allow free thiscall functions
 using UiLabel_Create2_Type = void __fastcall(rf::UiGadget*, void*, rf::UiGadget*, int, int, int, int, const char*, int);
@@ -508,12 +517,25 @@ FunHook<void()> DoQuickSave_hook{
     },
 };
 
+struct JoinMpGameData
+{
+    rf::NwAddr addr;
+    std::string password;
+};
+
 bool g_in_mp_game = false;
 bool g_jump_to_multi_server_list = false;
+std::optional<JoinMpGameData> g_join_mp_game_seq_data;
 
 void SetJumpToMultiServerList(bool jump)
 {
     g_jump_to_multi_server_list = jump;
+}
+
+void StartJoinMpGameSequence(const rf::NwAddr& addr, const std::string& password)
+{
+    g_jump_to_multi_server_list = true;
+    g_join_mp_game_seq_data = {JoinMpGameData{addr, password}};
 }
 
 FunHook<void(int, int)> GameEnterState_hook{
@@ -546,6 +568,17 @@ FunHook<void(int, int)> GameEnterState_hook{
         if (state == rf::GS_MP_SERVER_LIST_MENU && g_jump_to_multi_server_list) {
             g_jump_to_multi_server_list = false;
             SetSoundEnabled(true);
+
+            if (g_join_mp_game_seq_data) {
+                auto MultiSetCurrentServerAddr = AddrAsRef<void(const rf::NwAddr& addr)>(0x0044B380);
+                auto SendJoinReqPacket = AddrAsRef<void(const rf::NwAddr& addr, rf::String::Pod name, rf::String::Pod password, int max_rate)>(0x0047AA40);
+
+                auto addr = g_join_mp_game_seq_data.value().addr;
+                rf::String password{g_join_mp_game_seq_data.value().password.c_str()};
+                g_join_mp_game_seq_data.reset();
+                MultiSetCurrentServerAddr(addr);
+                SendJoinReqPacket(addr, rf::local_player->name, password, rf::local_player->nw_data->connection_speed);
+            }
         }
 
         if (state == rf::GS_MP_LIMBO) {
@@ -1267,4 +1300,48 @@ void MiscInit()
     // Allow custom mesh (not used in clutter.tbl or items.tbl) in Switch_Model event
     switch_model_event_custom_mesh_patch.Install();
     switch_model_event_obj_lighting_and_physics_fix.Install();
+
+    // Init cmd line param
+    GetUrlCmdLineParam();
+}
+
+void HandleUrlParam()
+{
+    if (!GetUrlCmdLineParam().IsEnabled()) {
+        return;
+    }
+
+    auto url = GetUrlCmdLineParam().GetArg();
+    std::regex e("^rf://([\\w\\.-]+):(\\d+)/?(?:\\?password=(.*))?$");
+    std::cmatch cm;
+    if (!std::regex_match(url, cm, e)) {
+        WARN("Unsupported URL: %s", url);
+        return;
+    }
+
+    auto host_name = cm[1].str();
+    auto port = static_cast<u16>(std::stoi(cm[2].str()));
+    auto password = cm[3].str();
+
+    auto hp = gethostbyname(host_name.c_str());
+    if (!hp) {
+        WARN("URL host lookup failed");
+        return;
+    }
+
+    if (hp->h_addrtype != AF_INET) {
+        WARN("Unsupported address type (only IPv4 is supported)");
+        return;
+    }
+
+    rf::DcPrintf("Connecting to %s:%d...", host_name.c_str(), port);
+    auto host = ntohl(reinterpret_cast<in_addr *>(hp->h_addr_list[0])->S_un.S_addr);
+
+    rf::NwAddr addr{host, port};
+    StartJoinMpGameSequence(addr, password);
+}
+
+void MiscAfterFullGameInit()
+{
+    HandleUrlParam();
 }

@@ -381,6 +381,36 @@ namespace rf
     };
     static_assert(sizeof(DynamicArray<>) == 0xC);
 
+    class CmdLineParam
+    {
+        using SelfType = CmdLineParam;
+
+        struct CmdLineParam *next;
+        struct CmdLineParam *prev;
+        const char *name;
+        void *unknown;
+        char *arg;
+        bool is_enabled;
+        bool has_arg;
+
+    public:
+        CmdLineParam(const char* name, const char* unk, bool has_arg)
+        {
+            auto fun_ptr = reinterpret_cast<SelfType&(__thiscall*)(SelfType & self, const char* name, const char* unk, bool has_arg)>(0x00523690);
+            fun_ptr(*this, name, unk, has_arg);
+        }
+
+        bool IsEnabled() const
+        {
+            return is_enabled;
+        }
+
+        const char* GetArg() const
+        {
+            return arg;
+        }
+    };
+
     /* Stubs */
     struct UnknownStruct {};
     typedef int ObjectFlags;
@@ -744,7 +774,6 @@ namespace rf
     {
         uint32_t ip_addr;
         uint16_t port;
-        uint16_t unused;
 
         bool operator==(const NwAddr &other) const
         {
@@ -2093,7 +2122,7 @@ namespace rf
         float fine_aim_reg_size_ss;
         String tracer_effect;
         int field_548always0;
-        float multi_b_box_size_factor;
+        float multi_bbox_size_factor;
     };
     static_assert(sizeof(WeaponClass) == 0x550);
 

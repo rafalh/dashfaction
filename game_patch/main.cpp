@@ -86,6 +86,7 @@ CodeInjection after_full_game_init_hook{
 #endif
         GraphicsCaptureAfterGameInit();
         ConsoleInit();
+        MiscAfterFullGameInit();
 
         INFO("Game fully initialized");
     },
