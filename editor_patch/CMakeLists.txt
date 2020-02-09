@@ -7,8 +7,13 @@ if(NOT MSVC)
     add_compile_options(-Wall -Wextra)
 endif()
 
-file(GLOB SRCS *.cpp *.h)
-add_library(DashEditor SHARED ${SRCS} resources.rc)
+set(SRCS
+    exports.h
+    graphics.cpp
+    main.cpp
+    resources.rc
+)
+add_library(DashEditor SHARED ${SRCS})
 
 target_compile_features(DashEditor PUBLIC cxx_std_17)
 set_target_properties(DashEditor PROPERTIES CXX_EXTENSIONS NO)

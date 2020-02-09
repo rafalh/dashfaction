@@ -18,7 +18,7 @@ extern "C"
 {
 #endif
 
-DWORD DF_DLL_EXPORT Init(void *pUnused);
+DWORD DF_DLL_EXPORT Init(void* unused);
 
 #ifdef __cplusplus
 }
