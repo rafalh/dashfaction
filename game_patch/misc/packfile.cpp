@@ -1,6 +1,6 @@
 #include "packfile.h"
 #include "../main.h"
-#include "../rf.h"
+#include "../rf/misc.h"
 #include <xxhash.h>
 #include <common/BuildConfig.h>
 #include <patch_common/ShortTypes.h>

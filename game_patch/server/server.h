@@ -1,6 +1,10 @@
 #pragma once
 
-#include "../rf.h"
+// Forward declarations
+namespace rf
+{
+    class Player;
+}
 
 void ServerInit();
 void ServerCleanup();

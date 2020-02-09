@@ -2,6 +2,7 @@
 #include "pf.h"
 #include "pf_packets.h"
 #include "pf_secret.h"
+#include "../rf/network.h"
 #include "../multi/kill.h"
 #include <cstddef>
 

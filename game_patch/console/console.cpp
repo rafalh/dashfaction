@@ -1,6 +1,7 @@
 #include "console.h"
 #include "../main.h"
-#include "../rf.h"
+#include "../rf/player.h"
+#include "../rf/game_seq.h"
 #include <common/BuildConfig.h>
 #include <common/version.h>
 #include <patch_common/CodeInjection.h>

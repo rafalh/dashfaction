@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../rf.h"
+#include "../rf/bmpman.h"
 
 // Custom pixel formats
 constexpr auto render_target_pixel_format = static_cast<rf::BmPixelFormat>(0x10); // texture is used as render target

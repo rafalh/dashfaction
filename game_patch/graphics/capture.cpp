@@ -3,7 +3,10 @@
 #include "gr_color.h"
 #include "graphics_internal.h"
 #include "../main.h"
-#include "../rf.h"
+#include "../rf/graphics.h"
+#include "../rf/object.h"
+#include "../rf/player.h"
+#include "../rf/misc.h"
 #include <cstddef>
 #include <common/BuildConfig.h>
 #include <patch_common/CallHook.h>

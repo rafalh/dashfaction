@@ -1,6 +1,10 @@
 #pragma once
 
-#include "../rf.h"
+// Forward declarations
+namespace rf
+{
+    class Player;
+}
 
 void SpectateModeSetTargetPlayer(rf::Player* player);
 void SpectateModeInit();

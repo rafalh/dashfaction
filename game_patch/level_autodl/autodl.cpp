@@ -1,5 +1,7 @@
 #include "autodl.h"
-#include "../rf.h"
+#include "../rf/network.h"
+#include "../rf/misc.h"
+#include "../rf/graphics.h"
 #include "../misc/misc.h"
 #include <common/HttpRequest.h>
 #include <common/rfproto.h>

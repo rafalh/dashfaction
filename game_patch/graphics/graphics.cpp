@@ -2,7 +2,9 @@
 #include "gr_color.h"
 #include "../console/console.h"
 #include "../main.h"
-#include "../rf.h"
+#include "../rf/graphics.h"
+#include "../rf/player.h"
+#include "../rf/network.h"
 #include <common/BuildConfig.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>

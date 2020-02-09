@@ -5,7 +5,8 @@
 #include <windows.h>
 #include <thread>
 #include <algorithm>
-#include "../rf.h"
+#include "../rf/debug_console.h"
+#include "../rf/network.h"
 
 #if SERVER_WIN32_CONSOLE
 

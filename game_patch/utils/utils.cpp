@@ -1,9 +1,9 @@
 #include "utils.h"
-#include "../rf.h"
 #include <iomanip>
 #include <map>
 #include <common/Exception.h>
 #include <common/Win32Error.h>
+#include <d3d8.h>
 
 #ifdef __GNUC__
 #ifndef __cpuid

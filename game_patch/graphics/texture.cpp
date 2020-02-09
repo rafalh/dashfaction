@@ -3,7 +3,7 @@
 #include <ddraw.h>
 #include <cstddef>
 #include <set>
-#include "../rf.h"
+#include "../rf/graphics.h"
 #include "gr_color.h"
 #include "graphics_internal.h"
 

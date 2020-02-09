@@ -1,6 +1,8 @@
 #include "server_internal.h"
 #include "../console/console.h"
-#include "../rf.h"
+#include "../rf/network.h"
+#include "../rf/debug_console.h"
+#include "../rf/player.h"
 #include <patch_common/AsmWriter.h>
 
 namespace rf

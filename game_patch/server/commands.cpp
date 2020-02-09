@@ -1,5 +1,7 @@
 #include "../console/console.h"
 #include "server_internal.h"
+#include "../rf/network.h"
+#include "../rf/game_seq.h"
 
 void ExtendRoundTime(int minutes)
 {

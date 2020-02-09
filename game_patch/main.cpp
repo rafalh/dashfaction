@@ -1,6 +1,5 @@
 #include <common/GameConfig.h>
 #include "main.h"
-#include "rf.h"
 #include "stdafx.h"
 #include "level_autodl/autodl.h"
 #include "console/console.h"
@@ -22,6 +21,7 @@
 #include "utils/utils.h"
 #include "server/server.h"
 #include "input/input.h"
+#include "rf/network.h"
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>

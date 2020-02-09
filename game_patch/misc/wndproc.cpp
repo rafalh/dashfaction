@@ -1,5 +1,6 @@
 #include "wndproc.h"
-#include "../rf.h"
+#include "../rf/misc.h"
+#include "../rf/network.h"
 #include <windows.h>
 #include <patch_common/AsmWriter.h>
 

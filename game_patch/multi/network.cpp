@@ -1,5 +1,9 @@
 #include "network.h"
-#include "../rf.h"
+#include "../rf/network.h"
+#include "../rf/misc.h"
+#include "../rf/player.h"
+#include "../rf/weapon.h"
+#include "../rf/entity.h"
 #include "../server/server.h"
 #include <common/BuildConfig.h>
 #include <patch_common/CallHook.h>

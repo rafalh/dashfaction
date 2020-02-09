@@ -5,7 +5,7 @@
 #include <patch_common/CodeInjection.h>
 #include <patch_common/ShortTypes.h>
 #include <algorithm>
-#include "../rf.h"
+#include "../rf/sound.h"
 #include "../main.h"
 #include "../console/console.h"
 

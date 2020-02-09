@@ -1,7 +1,9 @@
 #pragma once
 
-#include "../rf.h"
+#include "../rf/bmpman.h"
 #include <log/Logger.h>
+#include <windef.h>
+#include <d3d8types.h>
 
 inline int GetPixelFormatSize(rf::BmPixelFormat pixel_fmt)
 {

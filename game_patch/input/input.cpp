@@ -6,7 +6,10 @@
 #include <windows.h>
 #include <dinput.h>
 #include <algorithm>
-#include "../rf.h"
+#include "../rf/misc.h"
+#include "../rf/graphics.h"
+#include "../rf/network.h"
+#include "../rf/player.h"
 #include "../console/console.h"
 #include "../main.h"
 

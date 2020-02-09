@@ -34,7 +34,23 @@ add_library(DashFaction SHARED
     ${SRCS}
     main.cpp
     main.h
-    rf.h
+    rf/bmpman.h
+    rf/clutter.h
+    rf/common.h
+    rf/debug_console.h
+    rf/entity.h
+    rf/event.h
+    rf/game_seq.h
+    rf/graphics.h
+    rf/item.h
+    rf/misc.h
+    rf/network.h
+    rf/object.h
+    rf/parse.h
+    rf/player.h
+    rf/sound.h
+    rf/trigger.h
+    rf/weapon.h
     stdafx.h
     graphics/graphics.cpp
     graphics/graphics.h

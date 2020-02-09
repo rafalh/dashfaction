@@ -1,5 +1,6 @@
 #include "gamma.h"
-#include "../rf.h"
+#include "../rf/misc.h"
+#include "../rf/graphics.h"
 #include <log/Logger.h>
 #include <patch_common/AsmWriter.h>
 

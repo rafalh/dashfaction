@@ -1,5 +1,7 @@
 #include <string_view>
-#include "../rf.h"
+#include "../rf/player.h"
+#include "../rf/network.h"
+#include "../rf/game_seq.h"
 #include "server_internal.h"
 #include "../console/console.h"
 #include "../main.h"

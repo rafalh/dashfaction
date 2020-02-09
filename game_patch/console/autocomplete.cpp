@@ -1,6 +1,7 @@
 #include "console.h"
 #include "../main.h"
 #include "../misc/packfile.h"
+#include "../rf/player.h"
 #include <patch_common/FunHook.h>
 
 void DcShowCmdHelp(rf::DcCommand* cmd)

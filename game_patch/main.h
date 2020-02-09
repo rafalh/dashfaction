@@ -1,8 +1,14 @@
 #pragma once
 
-#include "rf.h"
 #include <common/GameConfig.h>
 #include "utils/utils.h"
+
+// Forward declarations
+namespace rf
+{
+    struct Player;
+}
+
 
 struct PlayerAdditionalData
 {

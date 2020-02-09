@@ -1,6 +1,6 @@
 #include "hud.h"
 #include "../console/console.h"
-#include "../rf.h"
+#include "../rf/graphics.h"
 #include <patch_common/ShortTypes.h>
 #include <patch_common/AsmWriter.h>
 #include <patch_common/MemUtils.h>

@@ -1,10 +1,17 @@
 #pragma once
 #pragma once
 
-#include "../rf.h"
 #include <patch_common/Traits.h>
 #include <functional>
 #include <optional>
+#include "../rf/debug_console.h"
+#include "../rf/misc.h"
+
+// Forward declarations
+namespace rf
+{
+    class Player;
+}
 
 void ConsoleInit();
 void ConsoleApplyPatches();

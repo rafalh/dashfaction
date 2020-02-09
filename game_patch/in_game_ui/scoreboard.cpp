@@ -1,6 +1,10 @@
 #include "scoreboard.h"
 #include "../multi/kill.h"
-#include "../rf.h"
+#include "../rf/graphics.h"
+#include "../rf/network.h"
+#include "../rf/misc.h"
+#include "../rf/entity.h"
+#include "../rf/game_seq.h"
 #include "../main.h"
 #include <common/rfproto.h>
 #include "spectate_mode.h"

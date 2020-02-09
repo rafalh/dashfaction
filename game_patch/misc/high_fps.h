@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../rf.h"
+#include "../rf/common.h"
 
 void HighFpsInit();
 void HighFpsUpdate();

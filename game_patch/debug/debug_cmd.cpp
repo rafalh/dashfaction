@@ -1,5 +1,5 @@
 #include "debug_cmd.h"
-#include "../rf.h"
+#include "../rf/network.h"
 #include "../console/console.h"
 #include <patch_common/MemUtils.h>
 #include <patch_common/CodeInjection.h>

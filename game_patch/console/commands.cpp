@@ -1,7 +1,8 @@
 #include <common/BuildConfig.h>
 #include "console.h"
 #include "../main.h"
-#include "../rf.h"
+#include "../rf/network.h"
+#include "../rf/player.h"
 #include "../misc/misc.h"
 #include "../misc/packfile.h"
 #include <algorithm>

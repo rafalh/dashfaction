@@ -9,6 +9,11 @@
 #include "server_internal.h"
 #include "../console/console.h"
 #include "../main.h"
+#include "../rf/player.h"
+#include "../rf/network.h"
+#include "../rf/parse.h"
+#include "../rf/weapon.h"
+#include "../rf/entity.h"
 
 const char* g_rcon_cmd_whitelist[] = {
     "kick",

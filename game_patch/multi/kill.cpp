@@ -1,5 +1,8 @@
 #include "kill.h"
-#include "../rf.h"
+#include "../rf/player.h"
+#include "../rf/entity.h"
+#include "../rf/misc.h"
+#include "../rf/weapon.h"
 #include <patch_common/FunHook.h>
 #include <patch_common/ShortTypes.h>
 #include <patch_common/AsmWriter.h>

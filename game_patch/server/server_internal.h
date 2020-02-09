@@ -4,7 +4,12 @@
 #include <string>
 #include <map>
 #include <optional>
-#include "../rf.h"
+
+// Forward declarations
+namespace rf
+{
+    class Player;
+}
 
 struct VoteConfig
 {

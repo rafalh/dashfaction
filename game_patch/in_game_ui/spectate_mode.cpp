@@ -1,6 +1,12 @@
 #include "spectate_mode.h"
 #include "scoreboard.h"
 #include "../console/console.h"
+#include "../rf/entity.h"
+#include "../rf/player.h"
+#include "../rf/network.h"
+#include "../rf/game_seq.h"
+#include "../rf/weapon.h"
+#include "../rf/graphics.h"
 #include <common/BuildConfig.h>
 #include <common/rfproto.h>
 #include <patch_common/CallHook.h>

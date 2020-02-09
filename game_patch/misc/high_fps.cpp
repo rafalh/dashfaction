@@ -1,6 +1,8 @@
 #include "high_fps.h"
 #include "../console/console.h"
-#include "../rf.h"
+#include "../rf/graphics.h"
+#include "../rf/entity.h"
+#include "../rf/event.h"
 #include <patch_common/FunHook.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/InlineAsm.h>
