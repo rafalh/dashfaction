@@ -112,15 +112,21 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     InitLogging();
     INFO("DashFaction Editor log started.");
 
-    // Prepare command
-    static char cmd_buf[512];
-    GetModuleFileNameA(g_module, cmd_buf, sizeof(cmd_buf));
-    char* ptr = std::strrchr(cmd_buf, '\\');
-    std::strcpy(ptr, "\\" LAUNCHER_FILENAME " -level \"");
+    // Change command for Play Level action to use Dash Faction launcher
+    static char module_filename[MAX_PATH];
+    if (GetModuleFileNameA(g_module, module_filename, sizeof(module_filename)) != sizeof(module_filename)) {
+        static std::string play_level_cmd_part;
+        char* dir_path_end = std::strrchr(module_filename, '\\');
+        play_level_cmd_part.assign(module_filename, dir_path_end + 1);
+        play_level_cmd_part += LAUNCHER_FILENAME;
+        play_level_cmd_part += " -level \"";
 
-    // Change command for starting level test
-    WriteMemPtr(0x00447973 + 1, cmd_buf);
-    WriteMemPtr(0x00447CB9 + 1, cmd_buf);
+        WriteMemPtr(0x00447973 + 1, play_level_cmd_part.c_str());
+        WriteMemPtr(0x00447CB9 + 1, play_level_cmd_part.c_str());
+    }
+    else {
+        WARN("GetModuleFileNameA failed");
+    }
 
     // Zero first argument for CreateProcess call
     using namespace asm_regs;
