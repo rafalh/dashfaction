@@ -2,8 +2,10 @@
 #include <patch_common/CodeInjection.h>
 #include <ddraw.h>
 #include <cstddef>
+#include <set>
 #include "../rf.h"
 #include "gr_color.h"
+#include "graphics_internal.h"
 
 constexpr uint32_t dds_magic = 0x20534444;
 
@@ -50,12 +52,22 @@ struct GrTextureSection
     int height;
 };
 
+struct GrTexture
+{
+    int bm_handle;
+    short num_sections;
+    short preserve_counter;
+    short lock_count;
+    uint8_t ref_count;
+    bool reset;
+    GrTextureSection *sections;
+};
+
 }
 
 constexpr rf::BmBitmapType dds_bm_type = static_cast<rf::BmBitmapType>(0x10);
-constexpr rf::BmPixelFormat custom_pixel_fmt = static_cast<rf::BmPixelFormat>(0x10);
 
-bool g_force_texture_in_backbuffer_format = false;
+std::set<rf::GrTexture*> g_default_pool_tslots;
 
 int GetSurfacePitch(int w, D3DFORMAT d3d_fmt)
 {
@@ -161,9 +173,21 @@ FunHook<int(rf::BmPixelFormat, int, int, int, IDirect3DTexture8**)> gr_d3d_creat
     0x0055B970,
     [](rf::BmPixelFormat pixel_fmt, int width, int height, int levels, IDirect3DTexture8** texture_out) {
         D3DFORMAT d3d_format;
-        if (g_force_texture_in_backbuffer_format) {
-            TRACE("Forcing texture in backbuffer format");
+        D3DPOOL d3d_pool = D3DPOOL_MANAGED;
+        int usage = 0;
+        if (pixel_fmt == render_target_pixel_format) {
+            TRACE("Creating render target texture");
             d3d_format = rf::gr_d3d_pp.BackBufferFormat;
+            d3d_pool = D3DPOOL_DEFAULT;
+            usage = D3DUSAGE_RENDERTARGET;
+        }
+        else if (pixel_fmt == dynamic_texture_pixel_format) {
+            TRACE("Creating dynamic texture");
+            d3d_format = rf::gr_d3d_pp.BackBufferFormat;
+            // Note: In Direct3D 9 D3DUSAGE_DYNAMIC can be used but it has poor performance when texture is locked
+            //       without D3DLOCK_DISCARD flag so keep it disabled for now
+            // d3d_pool = D3DPOOL_DEFAULT;
+            // usage = D3DUSAGE_DYNAMIC;
         }
         else if (static_cast<unsigned>(pixel_fmt) >= 0x10) {
             d3d_format = static_cast<D3DFORMAT>(pixel_fmt);
@@ -173,7 +197,7 @@ FunHook<int(rf::BmPixelFormat, int, int, int, IDirect3DTexture8**)> gr_d3d_creat
         }
 
         TRACE("Creating texture in format %x", d3d_format);
-        auto hr = rf::gr_d3d_device->CreateTexture(width, height, levels, 0, d3d_format, D3DPOOL_MANAGED, texture_out);
+        auto hr = rf::gr_d3d_device->CreateTexture(width, height, levels, usage, d3d_format, d3d_pool, texture_out);
         if (FAILED(hr)) {
             ERR("Failed to create texture %dx%d in format %x", width, height, d3d_format);
             return -1;
@@ -200,13 +224,6 @@ CodeInjection gr_d3d_create_vram_texture_with_mipmaps_pitch_fix{
         num_total_vram_bytes += total_surface_bytes;
     },
 };
-
-void RunWithTextureInBackBufferFormatForced(std::function<void()> callback)
-{
-    g_force_texture_in_backbuffer_format = true;
-    callback();
-    g_force_texture_in_backbuffer_format = false;
-}
 
 D3DFORMAT GetD3DFormatFromDDSPixelFormat(DDS_PIXELFORMAT& ddspf)
 {
@@ -406,6 +423,37 @@ FunHook <void(int, float, float, rf::Color*)> gr_d3d_get_bitmap_pixel_hook{
     },
 };
 
+FunHook<int(int, rf::GrTexture&)> gr_d3d_create_texture_hook{
+    0x0055CC00,
+    [](int bm_handle, rf::GrTexture& tslot) {
+        auto result = gr_d3d_create_texture_hook.CallTarget(bm_handle, tslot);
+        if (result != 1) {
+            WARN("Failed to load texture %s", rf::BmGetFilename(bm_handle));
+            return result;
+        }
+        auto pixel_fmt = rf::BmGetPixelFormat(bm_handle);
+        if (pixel_fmt == render_target_pixel_format || pixel_fmt == dynamic_texture_pixel_format) {
+            g_default_pool_tslots.insert(&tslot);
+        }
+        return result;
+    },
+};
+
+FunHook<void(rf::GrTexture&)> gr_d3d_free_texture_hook{
+    0x0055B640,
+    [](rf::GrTexture& tslot) {
+        gr_d3d_free_texture_hook.CallTarget(tslot);
+
+        if (tslot.bm_handle >= 0) {
+            INFO("Freeing texture");
+            auto it = g_default_pool_tslots.find(&tslot);
+            if (it != g_default_pool_tslots.end()) {
+                g_default_pool_tslots.erase(it);
+            }
+        }
+    },
+};
+
 // FunHook<void(int, int, int)> gr_d3d_set_state_and_texture_hook{
 //     0x00550850,
 //     [](int state, int bm0, int bm1) {
@@ -426,5 +474,32 @@ void ApplyTexturePatches()
     bm_lock_hook.Install();
     gr_d3d_create_vram_texture_with_mipmaps_pitch_fix.Install();
     gr_d3d_get_bitmap_pixel_hook.Install();
+    gr_d3d_create_texture_hook.Install();
+    gr_d3d_free_texture_hook.Install();
     //gr_d3d_set_state_and_texture_hook.Install();
+}
+
+void ReleaseAllDefaultPoolTextures()
+{
+    for (auto tslot : g_default_pool_tslots) {
+        gr_d3d_free_texture_hook.CallTarget(*tslot);
+    }
+    g_default_pool_tslots.clear();
+}
+
+void DestroyTexture(int bmh)
+{
+    auto& gr_d3d_tcache_add_ref = AddrAsRef<void(int bmh)>(0x0055D160);
+    auto& gr_d3d_tcache_remove_ref = AddrAsRef<void(int bmh)>(0x0055D190);
+    gr_d3d_tcache_add_ref(bmh);
+    gr_d3d_tcache_remove_ref(bmh);
+}
+
+void ChangeUserBitmapPixelFormat(int bmh, rf::BmPixelFormat pixel_fmt)
+{
+    DestroyTexture(bmh);
+    int bm_idx = rf::BmHandleToIdxAnimAware(bmh);
+    auto& bm = rf::bm_bitmaps[bm_idx];
+    assert(bm.bitmap_type == rf::BM_USERBMAP);
+    bm.pixel_format = pixel_fmt;
 }

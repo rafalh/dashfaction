@@ -10,6 +10,7 @@ Version 1.4.2
 - add 'rf' protocol handler (URLs has format: rf://IP:PORT)
 - add setup program
 - log error when RFA cannot be loaded
+- improve performance of rendering to texture (e.g. mirrors and scanners)
 - fix sending crash reports
 - fix non-working face scrolling before first geomod use in custom levels (RF bug)
 - fix memory and VRAM leak when quick saving (RF bug)

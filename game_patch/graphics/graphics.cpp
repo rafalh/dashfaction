@@ -226,8 +226,8 @@ CallHook<void(int, rf::GrVertex**, int, int)> GrDrawRect_GrDrawPoly_hook{
     0x0050DD69,
     [](int num, rf::GrVertex** pp_vertices, int flags, int mat) {
         for (int i = 0; i < num; ++i) {
-            pp_vertices[i]->screen_pos.x -= 0.5f;
-            pp_vertices[i]->screen_pos.y -= 0.5f;
+            pp_vertices[i]->spos.x -= 0.5f;
+            pp_vertices[i]->spos.y -= 0.5f;
         }
         GrDrawRect_GrDrawPoly_hook.CallTarget(num, pp_vertices, flags, mat);
     },
@@ -426,17 +426,6 @@ CodeInjection load_tga_alloc_fail_fix{
             WARN("Failed to allocate buffer for a bitmap: %d bytes!", num_bytes);
             regs.eip = 0x00510944;
         }
-    },
-};
-
-FunHook<int(int, void*)> gr_d3d_create_texture_hook{
-    0x0055CC00,
-    [](int bm_handle, void* tex) {
-        int result = gr_d3d_create_texture_hook.CallTarget(bm_handle, tex);
-        if (result != 1) {
-            WARN("Failed to load texture %s", rf::BmGetFilename(bm_handle));
-        }
-        return result;
     },
 };
 
@@ -640,7 +629,6 @@ void GraphicsInit()
     load_tga_alloc_fail_fix.Install();
 
     // Fix memory leak if texture cannot be created
-    gr_d3d_create_texture_hook.Install();
     gr_d3d_create_vram_texture_with_mipmaps_hook.Install();
     gr_d3d_create_texture_fail_hook.Install();
 

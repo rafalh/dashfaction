@@ -4,9 +4,12 @@
 #include <cmath>
 #include <cstdarg>
 #include <windows.h>
-#include <d3d8.h>
 #include <patch_common/MemUtils.h>
 #include "utils/utils.h"
+
+#ifndef NO_D3D8
+#include <d3d8.h>
+#endif
 
 
 #ifndef __GNUC__
@@ -421,7 +424,9 @@ namespace rf
     typedef int NwPlayerFlags;
     typedef UnknownStruct RflRoom;
     typedef UnknownStruct RflGeometry;
+#ifndef NO_STUB_STRUCTS
     typedef UnknownStruct RflFace;
+#endif
 
     /* Debug Console */
 
@@ -545,7 +550,7 @@ namespace rf
     };
     static_assert(sizeof(BmBitmapEntry) == 0x6C);
 
-    static auto& BmLoad = AddrAsRef<int(const char *filename, int a2, bool a3)>(0x0050F6A0);
+    static auto& BmLoad = AddrAsRef<int(const char *filename, int a2, bool generate_mipmaps)>(0x0050F6A0);
     static auto& BmCreateUserBmap = AddrAsRef<int(BmPixelFormat pixel_format, int width, int height)>(0x005119C0);
     static auto& BmConvertFormat = AddrAsRef<void(void *dst_bits, BmPixelFormat dst_pixel_fmt, const void *src_bits, BmPixelFormat src_pixel_fmt, int num_pixels)>(0x0055DD20);
     static auto& BmGetBitmapSize = AddrAsRef<void(int bm_handle, int *width, int *height)>(0x00510630);
@@ -606,9 +611,12 @@ namespace rf
 
     struct GrVertex
     {
-        Vector3 pos3_d;
-        Vector3 screen_pos;
-        int clip_flags;
+        Vector3 pos; // world or clip space
+        Vector3 spos; // screen space
+        uint8_t codes;
+        uint8_t flags;
+        uint8_t unk0;
+        uint8_t unk1;
         float u0;
         float v0;
         float u1;
@@ -637,9 +645,14 @@ namespace rf
         GR_ALIGN_RIGHT = 2,
     };
 
+#ifndef NO_D3D8
     static auto& gr_d3d = AddrAsRef<IDirect3D8*>(0x01CFCBE0);
     static auto& gr_d3d_device = AddrAsRef<IDirect3DDevice8*>(0x01CFCBE4);
     static auto& gr_d3d_pp = AddrAsRef<D3DPRESENT_PARAMETERS>(0x01CFCA18);
+#else
+    static auto& gr_d3d = AddrAsRef<IUnknown*>(0x01CFCBE0);
+    static auto& gr_d3d_device = AddrAsRef<IUnknown*>(0x01CFCBE4);
+#endif
     static auto& gr_adapter_idx = AddrAsRef<uint32_t>(0x01CFCC34);
     static auto& gr_screen = AddrAsRef<GrScreen>(0x017C7BC0);
 

@@ -6,6 +6,7 @@
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/AsmWriter.h>
+#include <patch_common/CodeInjection.h>
 #include <shlwapi.h>
 #include <windows.h>
 
@@ -255,12 +256,11 @@ FunHook<rf::EntityObj*(rf::Player*, int, const rf::Vector3*, const rf::Matrix3*,
     },
 };
 
-CallHook<void()> GrResetClip_RenderScannerViewForLocalPlayers_hook{
+CodeInjection render_scanner_view_for_spectated_player_injection{
     0x00431890,
     []() {
         if (g_spectate_mode_enabled)
             rf::PlayerRenderRocketLauncherScannerView(g_spectate_mode_target);
-        GrResetClip_RenderScannerViewForLocalPlayers_hook.CallTarget();
     },
 };
 
@@ -405,7 +405,7 @@ void SpectateModeInit()
     WriteMemPtr(0x00421889 + 2, &g_spectate_mode_target); // EntityRender
     WriteMemPtr(0x004218A2 + 2, &g_spectate_mode_target); // EntityRender
 
-    GrResetClip_RenderScannerViewForLocalPlayers_hook.Install();
+    render_scanner_view_for_spectated_player_injection.Install();
     PlayerFpgunUpdateState_hook.Install();
 #endif // SPECTATE_MODE_SHOW_WEAPON
 }
