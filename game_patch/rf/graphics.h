@@ -121,13 +121,23 @@ namespace rf
     static auto& frametime = AddrAsRef<float>(0x005A4014);
     static auto& min_framerate = AddrAsRef<float>(0x005A4024);
 
+    static auto& gr_d3d_buffers_locked = AddrAsRef<bool>(0x01E652ED);
+    static auto& gr_d3d_in_optimized_drawing_proc = AddrAsRef<bool>(0x01E652EE);
+    static auto& gr_d3d_num_vertices = AddrAsRef<int>(0x01E652F0);
+    static auto& gr_d3d_num_indices = AddrAsRef<int>(0x01E652F4);
+    static auto& gr_d3d_max_hw_vertex = AddrAsRef<int>(0x01818348);
+    static auto& gr_d3d_max_hw_index = AddrAsRef<int>(0x0181834C);
+    static auto& gr_d3d_min_hw_vertex = AddrAsRef<int>(0x01E652F8);
+    static auto& gr_d3d_min_hw_index = AddrAsRef<int>(0x01E652FC);
+    static auto& gr_d3d_primitive_type = AddrAsRef<D3DPRIMITIVETYPE>(0x01D862A8);
+
     static auto& GrGetMaxWidth = AddrAsRef<int()>(0x0050C640);
     static auto& GrGetMaxHeight = AddrAsRef<int()>(0x0050C650);
     static auto& GrGetViewportWidth = AddrAsRef<unsigned()>(0x0050CDB0);
     static auto& GrGetViewportHeight = AddrAsRef<unsigned()>(0x0050CDC0);
     static auto& GrSetColor = AddrAsRef<void(unsigned r, unsigned g, unsigned b, unsigned a)>(0x0050CF80);
     static auto& GrReadBackBuffer = AddrAsRef<int(int x, int y, int width, int height, void *buffer)>(0x0050DFF0);
-    static auto& GrFlushBuffers = AddrAsRef<void()>(0x00559D90);
+    static auto& GrD3DFlushBuffers = AddrAsRef<void()>(0x00559D90);
     static auto& GrClear = AddrAsRef<void()>(0x0050CDF0);
 
     static auto& GrDrawRect = AddrAsRef<void(unsigned x, unsigned y, unsigned cx, unsigned cy, unsigned material)>(0x0050DBE0);

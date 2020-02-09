@@ -489,6 +489,103 @@ CodeInjection gr_direct3d_lock_crash_fix{
     },
 };
 
+CodeInjection gr_d3d_bitmap_patch_1{
+    0x00550CD6,
+    [](auto& regs) {
+        if (!rf::gr_d3d_buffers_locked || rf::gr_d3d_primitive_type != D3DPT_TRIANGLELIST) {
+            regs.eip = 0x00550CEC;
+        }
+    },
+};
+
+CodeInjection gr_d3d_bitmap_patch_2{
+    0x0055105F,
+    [](auto& regs) {
+        if (!rf::gr_d3d_buffers_locked || rf::gr_d3d_primitive_type != D3DPT_TRIANGLELIST) {
+            regs.eip = 0x0055107B;
+        }
+    },
+};
+
+CodeInjection gr_d3d_line_patch_1{
+    0x0055147D,
+    [](auto& regs) {
+        bool flush_needed = !rf::gr_d3d_buffers_locked
+                         || rf::gr_d3d_primitive_type != D3DPT_LINELIST
+                         || rf::gr_d3d_max_hw_vertex + 2 > 6000
+                         || rf::gr_d3d_max_hw_index + rf::gr_d3d_num_indices + 2 > 10000;
+        if (!flush_needed) {
+            TRACE("Skipping gr_d3d_prepare_buffers");
+            regs.eip = 0x00551482;
+        }
+        else {
+            TRACE("Line drawing requires gr_d3d_prepare_buffers %d %d %d %d",
+                 rf::gr_d3d_buffers_locked, rf::gr_d3d_primitive_type, rf::gr_d3d_max_hw_vertex,
+                 rf::gr_d3d_max_hw_index + rf::gr_d3d_num_indices);
+        }
+    },
+};
+
+CallHook<void()> gr_d3d_line_patch_2{
+    0x005515B2,
+    []() {
+        rf::gr_d3d_num_vertices += 2;
+    },
+};
+
+CodeInjection gr_d3d_line_vertex_internal_patch_1{
+    0x005516FE,
+    [](auto& regs) {
+        bool flush_needed = !rf::gr_d3d_buffers_locked
+                         || rf::gr_d3d_primitive_type != D3DPT_LINELIST
+                         || rf::gr_d3d_max_hw_vertex + 2 > 6000
+                         || rf::gr_d3d_max_hw_index + rf::gr_d3d_num_indices + 2 > 10000;
+        if (!flush_needed) {
+            TRACE("Skipping gr_d3d_prepare_buffers");
+            regs.eip = 0x00551703;
+        }
+        else {
+            TRACE("Line drawing requires gr_d3d_prepare_buffers %d %d %d %d",
+                 rf::gr_d3d_buffers_locked, rf::gr_d3d_primitive_type, rf::gr_d3d_max_hw_vertex,
+                 rf::gr_d3d_max_hw_index + rf::gr_d3d_num_indices);
+        }
+    },
+};
+
+CallHook<void()> gr_d3d_line_vertex_internal_patch_2{
+    0x005518E8,
+    []() {
+        rf::gr_d3d_num_vertices += 2;
+    },
+};
+
+CodeInjection gr_d3d_tmapper_patch{
+    0x0055193B,
+    [](auto& regs) {
+        if (!rf::gr_d3d_buffers_locked || rf::gr_d3d_primitive_type != D3DPT_TRIANGLELIST) {
+            regs.eip = 0x00551958;
+        }
+    },
+};
+
+CodeInjection gr_d3d_draw_geometry_face_patch_1{
+    0x00551EF5,
+    [](auto& regs) {
+        if (!rf::gr_d3d_buffers_locked || rf::gr_d3d_primitive_type != D3DPT_TRIANGLELIST) {
+            regs.eip = 0x00551F13;
+        }
+    },
+};
+
+CodeInjection gr_d3d_draw_geometry_face_patch_2{
+    0x00551CB9,
+    [](auto& regs) {
+        if (!rf::gr_d3d_buffers_locked || rf::gr_d3d_primitive_type != D3DPT_TRIANGLELIST) {
+            regs.eip = 0x00551CD6;
+        }
+    },
+};
+
 void ApplyTexturePatches();
 
 void GraphicsInit()
@@ -617,6 +714,38 @@ void GraphicsInit()
 
     // Do not flush drawing buffers during GrSetColor call
     WriteMem<u8>(0x0050CFEB, asm_opcodes::jmp_rel_short);
+
+    // Flush instead of preparing D3D drawing buffers in gr_d3d_set_state, gr_d3d_set_state_and_texture, gr_d3d_tcache_set
+    // Note: By default RF calls gr_d3d_tcache_set for many textures during level load process. It causes D3D buffers
+    // to be locked and unlocked multiple times with discard flag. For some driver implementations (e.g. DXVK) such
+    // behaviour leads to allocation of new vertex/index buffers during each lock and in the end it can cause end of
+    // memory error.
+    AsmWriter(0x0054F1A9).call(rf::GrD3DFlushBuffers);
+    AsmWriter(0x0055088A).call(rf::GrD3DFlushBuffers);
+    AsmWriter(0x0055CAE9).call(rf::GrD3DFlushBuffers);
+    AsmWriter(0x0055CB77).call(rf::GrD3DFlushBuffers);
+    AsmWriter(0x0055CB58).call(rf::GrD3DFlushBuffers);
+
+    // Do not check if buffers are locked before preparing them in gr_d3d_tmapper
+    AsmWriter(0x0055191D, 0x00551925).nop();
+
+    // Call gr_d3d_prepare_buffers when buffers are not locked or primitive type is not matching
+    // This is needed after removal of gr_d3d_prepare_buffers calls from
+    // gr_d3d_set_state, gr_d3d_set_state_and_texture and gr_d3d_tcache_set
+    gr_d3d_bitmap_patch_1.Install();
+    gr_d3d_bitmap_patch_2.Install();
+    gr_d3d_line_patch_1.Install();
+    gr_d3d_line_patch_2.Install();
+    gr_d3d_line_vertex_internal_patch_1.Install();
+    gr_d3d_line_vertex_internal_patch_2.Install();
+    gr_d3d_tmapper_patch.Install();
+    gr_d3d_draw_geometry_face_patch_1.Install();
+    gr_d3d_draw_geometry_face_patch_2.Install();
+
+    // Do not flush D3D buffers explicity in gr_d3d_line_vertex_internal and gr_d3d_line
+    // Buffers will be flushed if needed by gr_d3d_prepare_buffers
+    AsmWriter(0x00551474).nop(5);
+    AsmWriter(0x005516F5).nop(5);
 
 #ifdef DEBUG
     profile_frame_cmd.Register();

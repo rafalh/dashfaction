@@ -131,7 +131,7 @@ void EndRenderToTexture()
 CallHook<rf::BmPixelFormat(int, int, int, int, std::byte*)> GrD3DReadBackBuffer_hook{
     0x0050E015,
     [](int x, int y, int width, int height, std::byte* buffer) {
-        rf::GrFlushBuffers();
+        rf::GrD3DFlushBuffers();
 
         ComPtr<IDirect3DSurface8> back_buffer;
         HRESULT hr = rf::gr_d3d_device->GetRenderTarget(&back_buffer);
@@ -205,7 +205,9 @@ FunHook<void(int, int, int, int, int)> GrCaptureBackBuffer_hook{
     [](int x, int y, int width, int height, int bm_handle) {
         if (g_render_to_texture_active) {
             // Nothing to do because we render directly to texture
-            rf::GrFlushBuffers();
+            if (rf::gr_screen.mode == rf::GR_DIRECT3D) {
+                rf::GrD3DFlushBuffers();
+            }
         } else {
             GrCaptureBackBuffer_hook.CallTarget(x, y, width, height, bm_handle);
         }
