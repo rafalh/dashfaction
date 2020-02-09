@@ -64,6 +64,7 @@ static void InvalidParameterHandler(const wchar_t* expression, const wchar_t* fu
 static void SignalHandler(int signal_number)
 {
     ERR("Abort signal (%d) received!", signal_number);
+    RaiseException(0, 0, 0, nullptr);
 }
 
 void CrashHandlerInit(HMODULE module_handle)
