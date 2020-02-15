@@ -3,6 +3,7 @@
 #include "../rf/graphics.h"
 #include "../rf/entity.h"
 #include "../rf/event.h"
+#include "../rf/particle_emitter.h"
 #include <patch_common/FunHook.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/InlineAsm.h>
@@ -337,6 +338,32 @@ CallHook<void(rf::EntityObj&)> entity_make_run_after_climbing_patch{
     },
 };
 
+CodeInjection particle_update_accel_patch{
+    0x00495282,
+    [](auto& regs) {
+        auto& vel = AddrAsRef<rf::Vector3>(regs.ecx);
+        if (vel.Len() < 0.0001f) {
+            regs.eip = 0x00495301;
+        }
+    },
+};
+
+FunHook<rf::ParticleEmitter*(int, rf::ParticleEmitterType&, rf::RflRoom*, rf::Vector3&, bool)> particle_emitter_create_hook{
+    0x00497CA0,
+    [](int objh, rf::ParticleEmitterType& type, rf::RflRoom* room, rf::Vector3& pos, bool is_on) {
+        float min_spawn_delay = 1.0f / 60.0f;
+        if ((type.flags & rf::PEF_CONTINOUS) || type.min_spawn_delay < min_spawn_delay) {
+            INFO("Particle emitter spawn delay is too small: %.2f. Increasing to %.2f...", type.min_spawn_delay, min_spawn_delay);
+            rf::ParticleEmitterType new_type = type;
+            new_type.flags &= ~rf::PEF_CONTINOUS;
+            new_type.min_spawn_delay = std::max(new_type.min_spawn_delay, min_spawn_delay);
+            new_type.max_spawn_delay = std::max(new_type.max_spawn_delay, min_spawn_delay);
+            return particle_emitter_create_hook.CallTarget(objh, new_type, room, pos, is_on);
+        }
+        return particle_emitter_create_hook.CallTarget(objh, type, room, pos, is_on);
+    },
+};
+
 void HighFpsInit()
 {
     // Fix animations broken on high FPS because of ignored ftol remainder
@@ -388,6 +415,17 @@ void HighFpsInit()
     AsmWriter(0x0042809F, 0x004280A9).nop();
     EntityOnLand_hook.Install();
     entity_make_run_after_climbing_patch.Install();
+
+    // Fix flamethrower "stroboscopic effect" on high FPS
+    // g3_draw_sprite interprets parameters differently than g3_draw_sprite_stretch expects - zero angle does not use
+    // diamond shape and size is not divided by 2. Instead of calling it when p0 to p1 distance is small get rid of this
+    // special case. g3_draw_sprite_stretch should handle it properly even if distance is 0 because it
+    // uses Vector3::normalize_safe() API.
+    WriteMem<u8>(0x00558E61, asm_opcodes::jmp_rel_short);
+    particle_update_accel_patch.Install();
+
+    // Recude particle emitters maximal spawn rate
+    particle_emitter_create_hook.Install();
 }
 
 void HighFpsUpdate()
