@@ -12,6 +12,8 @@ namespace rf
 {
     /* Graphics */
 
+    using GrRenderState = int;
+
     struct GrScreen
     {
         int signature;
@@ -106,11 +108,11 @@ namespace rf
     static auto& gr_adapter_idx = AddrAsRef<uint32_t>(0x01CFCC34);
     static auto& gr_screen = AddrAsRef<GrScreen>(0x017C7BC0);
 
-    static auto& gr_line_material = AddrAsRef<uint32_t>(0x01775B00);
-    static auto& gr_rect_material = AddrAsRef<uint32_t>(0x17756C0);
-    static auto& gr_text_material = AddrAsRef<uint32_t>(0x17C7C5C);
-    static auto& gr_bitmap_material = AddrAsRef<uint32_t>(0x017756BC);
-    static auto& gr_image_material = AddrAsRef<uint32_t>(0x017756DC);
+    static auto& gr_bitmap_material = AddrAsRef<GrRenderState>(0x017756BC);
+    static auto& gr_rect_material = AddrAsRef<GrRenderState>(0x017756C0);
+    static auto& gr_image_material = AddrAsRef<GrRenderState>(0x017756DC);
+    static auto& gr_line_material = AddrAsRef<GrRenderState>(0x01775B00);
+    static auto& gr_text_material = AddrAsRef<GrRenderState>(0x017C7C5C);
 
     static auto& large_font_id = AddrAsRef<int>(0x0063C05C);
     static auto& medium_font_id = AddrAsRef<int>(0x0063C060);
@@ -140,11 +142,11 @@ namespace rf
     static auto& GrD3DFlushBuffers = AddrAsRef<void()>(0x00559D90);
     static auto& GrClear = AddrAsRef<void()>(0x0050CDF0);
 
-    static auto& GrDrawRect = AddrAsRef<void(unsigned x, unsigned y, unsigned cx, unsigned cy, unsigned material)>(0x0050DBE0);
-    static auto& GrDrawImage = AddrAsRef<void(int bm_handle, int x, int y, int material)>(0x0050D2A0);
-    static auto& GrDrawBitmapStretched = AddrAsRef<void(int bm_handle, int dst_x, int dst_y, int dst_w, int dst_h, int src_x, int src_y, int src_w, int src_h, float a10, float a11, int material)>(0x0050D250);
-    static auto& GrDrawText = AddrAsRef<void(unsigned x, unsigned y, const char *text, int font, unsigned material)>(0x0051FEB0);
-    static auto& GrDrawAlignedText = AddrAsRef<void(GrTextAlignment align, unsigned x, unsigned y, const char *text, int font, unsigned material)>(0x0051FE50);
+    static auto& GrDrawRect = AddrAsRef<void(unsigned x, unsigned y, unsigned cx, unsigned cy, GrRenderState render_state)>(0x0050DBE0);
+    static auto& GrDrawImage = AddrAsRef<void(int bm_handle, int x, int y, GrRenderState render_state)>(0x0050D2A0);
+    static auto& GrDrawBitmapStretched = AddrAsRef<void(int bm_handle, int dst_x, int dst_y, int dst_w, int dst_h, int src_x, int src_y, int src_w, int src_h, float a10, float a11, GrRenderState render_state)>(0x0050D250);
+    static auto& GrDrawText = AddrAsRef<void(unsigned x, unsigned y, const char *text, int font, GrRenderState render_state)>(0x0051FEB0);
+    static auto& GrDrawAlignedText = AddrAsRef<void(GrTextAlignment align, unsigned x, unsigned y, const char *text, int font, GrRenderState render_state)>(0x0051FE50);
 
     static auto& GrFitText = AddrAsRef<String* (String* result, String::Pod str, int cx_max)>(0x00471EC0);
     static auto& GrLoadFont = AddrAsRef<int(const char *file_name, int a2)>(0x0051F6E0);
