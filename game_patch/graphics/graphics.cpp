@@ -323,7 +323,7 @@ CodeInjection GrD3DSetMaterialFlags_profile_patch{
     0x0054F19C,
     [](auto& regs) {
         if (g_profile_frame) {
-            unsigned state_flags = AddrAsRef<unsigned>(regs.esp + 0x10 + 0x4);
+            auto state_flags = AddrAsRef<rf::GrRenderState>(regs.esp + 0x10 + 0x4);
             const char* desc = "";
             if (state_flags == rf::gr_text_material)
                 desc = " (text)";
