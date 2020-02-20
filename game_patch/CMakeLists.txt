@@ -101,6 +101,7 @@ add_library(DashFaction SHARED
     misc/wndproc.h
     misc/sound.cpp
     misc/sound.h
+    misc/limits.cpp
     ${PF_SRCS}
     res/resources.rc
 )

@@ -3,6 +3,10 @@ DashFaction Changelog
 
 Version 1.4.2
 -------------
+- increase object limit from 1024 to 65536
+- remove additional limits on number of allocated bullet, item, debris and corpse objects
+- remove limit of loaded object meshes (v3d files)
+- remove some limits of level geometry related objects
 - add DDS texture format support (useful for DXTn compressed textures)
 - rewrite crash reporting system UI
 - improve sound handling when active sounds pool is full

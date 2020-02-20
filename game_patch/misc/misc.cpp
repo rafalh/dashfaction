@@ -51,6 +51,8 @@ constexpr int EGG_ANIM_IDLE_TIME = 3000;
 int g_version_click_counter = 0;
 int g_egg_anim_start;
 
+void ApplyLimitsPatches();
+
 // Note: this must be called from DLL init function
 // Note: we can't use global variable because that would lead to crash when launcher loads this DLL to check dependencies
 static rf::CmdLineParam& GetUrlCmdLineParam()
@@ -1312,6 +1314,9 @@ void MiscInit()
 
     // Init cmd line param
     GetUrlCmdLineParam();
+
+    // Apply patches from other files
+    ApplyLimitsPatches();
 }
 
 void HandleUrlParam()

@@ -5,6 +5,7 @@
 #include "../rf/weapon.h"
 #include "../rf/entity.h"
 #include "../server/server.h"
+#include "../misc/misc.h"
 #include <common/BuildConfig.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
@@ -445,13 +446,11 @@ FunHook<uint8_t()> MultiAllocPlayerId_hook{
     },
 };
 
-constexpr int MULTI_HANDLE_MAPPING_ARRAY_SIZE = 1024;
-
 FunHook<rf::Object*(int32_t)> MultiGetObjFromRemoteHandle_hook{
     0x00484B00,
     [](int32_t remote_handle) {
         int index = static_cast<uint16_t>(remote_handle);
-        if (index >= MULTI_HANDLE_MAPPING_ARRAY_SIZE)
+        if (index >= obj_limit)
             return static_cast<rf::Object*>(nullptr);
         return MultiGetObjFromRemoteHandle_hook.CallTarget(remote_handle);
     },
@@ -461,7 +460,7 @@ FunHook<int32_t(int32_t)> MultiGetLocalHandleFromRemoteHandle_hook{
     0x00484B30,
     [](int32_t remote_handle) {
         int index = static_cast<uint16_t>(remote_handle);
-        if (index >= MULTI_HANDLE_MAPPING_ARRAY_SIZE)
+        if (index >= obj_limit)
             return -1;
         return MultiGetLocalHandleFromRemoteHandle_hook.CallTarget(remote_handle);
     },
@@ -471,7 +470,7 @@ FunHook<void(int32_t, int32_t)> MultiSetObjHandleMapping_hook{
     0x00484B70,
     [](int32_t remote_handle, int32_t local_handle) {
         int index = static_cast<uint16_t>(remote_handle);
-        if (index >= MULTI_HANDLE_MAPPING_ARRAY_SIZE)
+        if (index >= obj_limit)
             return;
         MultiSetObjHandleMapping_hook.CallTarget(remote_handle, local_handle);
     },
