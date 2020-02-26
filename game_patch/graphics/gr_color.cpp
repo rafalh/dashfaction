@@ -319,16 +319,23 @@ CodeInjection GetAmbientColorFromLightmaps_color_conv_patch{
         int bm_handle = regs.eax;
         int x = regs.edi;
         int y = regs.ebx;
-        auto& color = *reinterpret_cast<uint32_t*>(regs.esp + 0x34 - 0x28);
+        auto& color = *reinterpret_cast<rf::Color*>(regs.esp + 0x34 - 0x28);
 
         rf::GrLockData lock_data;
         if (rf::GrLock(bm_handle, 0, &lock_data, 0)) {
             auto src_bytes_per_pixel = GetPixelFormatSize(lock_data.pixel_format);
             const uint8_t* src_ptr = lock_data.bits + y * lock_data.pitch + x * src_bytes_per_pixel;
-            auto dst_ptr = reinterpret_cast<uint8_t*>(&color);
+            uint32_t raw_color; // color in D3DFMT_A8R8G8B8 (MSB belongs to Alpha, LSB belongs to Blue)
+            auto dst_ptr = reinterpret_cast<uint8_t*>(&raw_color);
             // Note: GrLock never returns indexed bitmap
             ConvertPixelFormat(dst_ptr, rf::BMPF_8888, src_ptr, lock_data.pixel_format, nullptr);
             rf::GrUnlock(&lock_data);
+            color.SetRGBA(
+                (raw_color >> 16) & 0xFF,
+                (raw_color >> 8) & 0xFF,
+                raw_color & 0xFF,
+                0xFF
+            );
         }
     },
 };

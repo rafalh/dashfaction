@@ -31,6 +31,7 @@ Version 1.4.2
 - fix Message Log window rendering if resolution ratio is not 4:3 (RF bug)
 - fix flamethrower graphical issues when playing with high FPS (RF bug)
 - reduce maximal particle emitter spawn rate to 60 particles per frame in order to improve graphics and performance (framerate dependent particle emitters like flamethrower weren't designed with 240 FPS in mind so they look bad with too many overlapping particles)
+- fix entity/fpgun ambient color being improperly calculated when 'True color textures' option is active
 
 Version 1.4.1 (released 2019-12-07)
 -----------------------------------
