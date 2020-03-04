@@ -755,32 +755,60 @@ T validate_save_file_num(T value, T limit, const char* what)
     return value;
 }
 
+void ValidateLevelSaveData(LevelSaveData* data)
+{
+    data->num_goal_create_events = validate_save_file_num<uint8_t>(data->num_goal_create_events, 8, "goal_create events");
+    data->num_alarm_siren_events = validate_save_file_num<uint8_t>(data->num_alarm_siren_events, 8, "alarm_siren events");
+    data->num_when_dead_events = validate_save_file_num<uint8_t>(data->num_when_dead_events, 20, "when_dead events");
+    data->num_cyclic_timer_events = validate_save_file_num<uint8_t>(data->num_cyclic_timer_events, 12, "cyclic_timer events");
+    data->num_make_invulnerable_events = validate_save_file_num<uint8_t>(data->num_make_invulnerable_events, 8, "make_invulnerable events");
+    data->num_other_events = validate_save_file_num<uint8_t>(data->num_other_events, 32, "other events");
+    data->num_emitters = validate_save_file_num<uint8_t>(data->num_emitters, 16, "emitters");
+    data->num_decals = validate_save_file_num<uint8_t>(data->num_decals, 64, "decals");
+    data->num_entities = validate_save_file_num<uint8_t>(data->num_entities, 64, "entities");
+    data->num_items = validate_save_file_num<uint8_t>(data->num_items, 64, "items");
+    data->num_clutter = validate_save_file_num<uint16_t>(data->num_clutter, 512, "clutters");
+    data->num_triggers = validate_save_file_num<uint8_t>(data->num_triggers, 96, "triggers");
+    data->num_keyframes = validate_save_file_num<uint8_t>(data->num_keyframes, 128, "keyframes");
+    data->num_push_regions = validate_save_file_num<uint8_t>(data->num_push_regions, 32, "push regions");
+    data->num_persistent_goals = validate_save_file_num<uint8_t>(data->num_persistent_goals, 10, "persistent goals");
+    data->num_weapons = validate_save_file_num<uint8_t>(data->num_weapons, 8, "weapons");
+    data->num_blood_smears = validate_save_file_num<uint8_t>(data->num_blood_smears, 16, "blood smears");
+    data->num_corpse = validate_save_file_num<uint8_t>(data->num_corpse, 32, "corpses");
+    data->num_geomod_craters = validate_save_file_num<uint8_t>(data->num_geomod_craters, 128, "geomod craters");
+    data->num_killed_room_ids = validate_save_file_num<uint8_t>(data->num_killed_room_ids, 128, "killed rooms");
+    data->num_dead_entities = validate_save_file_num<uint8_t>(data->num_dead_entities, 64, "dead entities");
+    data->num_deleted_events = validate_save_file_num<uint8_t>(data->num_deleted_events, 32, "deleted events");
+}
+
 FunHook<void(LevelSaveData*)> SaveRestoreDeserializeAllObjects_hook{
     0x004B4FB0,
     [](LevelSaveData *data) {
-        data->num_goal_create_events = validate_save_file_num<uint8_t>(data->num_goal_create_events, 8, "goal_create events");
-        data->num_alarm_siren_events = validate_save_file_num<uint8_t>(data->num_alarm_siren_events, 8, "alarm_siren events");
-        data->num_when_dead_events = validate_save_file_num<uint8_t>(data->num_when_dead_events, 20, "when_dead events");
-        data->num_cyclic_timer_events = validate_save_file_num<uint8_t>(data->num_cyclic_timer_events, 12, "cyclic_timer events");
-        data->num_make_invulnerable_events = validate_save_file_num<uint8_t>(data->num_make_invulnerable_events, 8, "make_invulnerable events");
-        data->num_other_events = validate_save_file_num<uint8_t>(data->num_other_events, 32, "other events");
-        data->num_emitters = validate_save_file_num<uint8_t>(data->num_emitters, 16, "emitters");
-        data->num_decals = validate_save_file_num<uint8_t>(data->num_decals, 64, "decals");
-        data->num_entities = validate_save_file_num<uint8_t>(data->num_entities, 64, "entities");
-        data->num_items = validate_save_file_num<uint8_t>(data->num_items, 64, "items");
-        data->num_clutter = validate_save_file_num<uint16_t>(data->num_clutter, 512, "clutters");
-        data->num_triggers = validate_save_file_num<uint8_t>(data->num_triggers, 96, "triggers");
-        data->num_keyframes = validate_save_file_num<uint8_t>(data->num_keyframes, 128, "keyframes");
-        data->num_push_regions = validate_save_file_num<uint8_t>(data->num_push_regions, 32, "push regions");
-        data->num_persistent_goals = validate_save_file_num<uint8_t>(data->num_persistent_goals, 10, "persistent goals");
-        data->num_weapons = validate_save_file_num<uint8_t>(data->num_weapons, 8, "weapons");
-        data->num_blood_smears = validate_save_file_num<uint8_t>(data->num_blood_smears, 16, "blood smears");
-        data->num_corpse = validate_save_file_num<uint8_t>(data->num_corpse, 32, "corpses");
-        data->num_geomod_craters = validate_save_file_num<uint8_t>(data->num_geomod_craters, 128, "geomod craters");
-        data->num_killed_room_ids = validate_save_file_num<uint8_t>(data->num_killed_room_ids, 128, "killed rooms");
-        data->num_dead_entities = validate_save_file_num<uint8_t>(data->num_dead_entities, 64, "dead entities");
-        data->num_deleted_events = validate_save_file_num<uint8_t>(data->num_deleted_events, 32, "deleted events");
+        ValidateLevelSaveData(data);
         SaveRestoreDeserializeAllObjects_hook.CallTarget(data);
+    },
+};
+
+FunHook<void(LevelSaveData*)> SaveRestoreSerializeAllObjects_hook{
+    0x004B4450,
+    [](LevelSaveData *data) {
+        SaveRestoreSerializeAllObjects_hook.CallTarget(data);
+        ValidateLevelSaveData(data);
+    },
+};
+
+FunHook<void(rf::Object*)> RememberLevelLoadTakenObjsAnimMeshes_hook{
+    0x004B5660,
+    [](rf::Object *obj) {
+        auto& num_level_load_taken_objs = AddrAsRef<int>(0x00856058);
+        // Note: uid -999 belongs to local player entity and it must be preserved
+        if (num_level_load_taken_objs < 23 || obj->uid == -999) {
+            RememberLevelLoadTakenObjsAnimMeshes_hook.CallTarget(obj);
+        }
+        else {
+            WARN("Cannot bring object %d to next level", obj->uid);
+            rf::ObjQueueDelete(obj);
+        }
     },
 };
 
@@ -1237,6 +1265,10 @@ void MiscInit()
 
     // Fix crash caused by buffer overflows in level save/load code
     SaveRestoreDeserializeAllObjects_hook.Install();
+    SaveRestoreSerializeAllObjects_hook.Install();
+
+    // Fix buffer overflow during level load if there are more than 24 objects in current room
+    RememberLevelLoadTakenObjsAnimMeshes_hook.Install();
 
     // Log error when object cannot be created
     ObjCreate_hook.Install();

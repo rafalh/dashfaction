@@ -24,6 +24,7 @@ Version 1.4.2
 - fix AI flee animation regression
 - fix crash caused by AI state not being properly updated during level load for entites that are taken from the previous level (RF bug)
 - fix crash caused by corpse pose pointing to not loaded entity action animation for corpses that are taken from the previous level (RF bug)
+- fix buffer overflow on level load when too many objects are being preserved from the previous level; fixes crash in Spaceport Redux campaign (RF bug)
 - fix crash when executing camera2 command in main menu (RF bug)
 - fix crash when item cannot be created during RFL load in multi-player (RF bug)
 - fix entity collisions with objects near absolute zero position (RF bug)
