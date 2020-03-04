@@ -97,6 +97,22 @@ namespace rf
         GR_ALIGN_RIGHT = 2,
     };
 
+    enum GrTextureSource
+    {
+        TEXTURE_SOURCE_NONE = 0x0,
+        TEXTURE_SOURCE_WRAP = 0x1,
+        TEXTURE_SOURCE_CLAMP = 0x2,
+        TEXTURE_SOURCE_CLAMP_NO_FILTERING = 0x3,
+        TEXTURE_SOURCE_MT_WRAP = 0x4,
+        TEXTURE_SOURCE_MT_WRAP_M2X = 0x5,
+        TEXTURE_SOURCE_MT_CLAMP = 0x6,
+        TEXTURE_SOURCE_7 = 0x7,
+        TEXTURE_SOURCE_MT_U_WRAP_V_CLAMP = 0x8,
+        TEXTURE_SOURCE_MT_U_CLAMP_V_WRAP = 0x9,
+        TEXTURE_SOURCE_MT_WRAP_TRILIN = 0xA,
+        TEXTURE_SOURCE_MT_CLAMP_TRILIN = 0xB,
+    };
+
 #ifndef NO_D3D8
     static auto& gr_d3d = AddrAsRef<IDirect3D8*>(0x01CFCBE0);
     static auto& gr_d3d_device = AddrAsRef<IDirect3DDevice8*>(0x01CFCBE4);

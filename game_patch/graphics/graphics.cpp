@@ -605,6 +605,27 @@ DcCommand2 screen_flash_cmd{
     "Toggle screen flash effect",
 };
 
+FunHook<void(int*, void*, int, int, int, rf::GrRenderState, int)> gr_d3d_queue_triangles_hook{
+    0x005614B0,
+    [](int *list_idx, void *vertices, int num_vertices, int bm0, int bm1, rf::GrRenderState state, int pass_id) {
+        // Fix glass_house level having faces that use MT state but don't have any lightmap
+        if (bm1 == -1) {
+            WARN_ONCE("Prevented rendering of an unlit face with multi-texturing render state");
+            constexpr int texture_source_mask = 0x1F;
+            int tex_src = state & texture_source_mask;
+            if (tex_src == rf::TEXTURE_SOURCE_MT_WRAP || tex_src == rf::TEXTURE_SOURCE_MT_WRAP_M2X) {
+                tex_src = rf::TEXTURE_SOURCE_WRAP;
+            } else if (tex_src == rf::TEXTURE_SOURCE_MT_CLAMP) {
+                tex_src = rf::TEXTURE_SOURCE_CLAMP;
+            }
+            state = state & ~texture_source_mask;
+            state |= tex_src;
+        }
+
+        gr_d3d_queue_triangles_hook.CallTarget(list_idx, vertices, num_vertices, bm0, bm1, state, pass_id);
+    },
+};
+
 void ApplyTexturePatches();
 
 void GraphicsInit()
@@ -807,6 +828,10 @@ void GraphicsInit()
     // Support disabling of screen flash effect
     PlayerSetScreenFlash_hook.Install();
     screen_flash_cmd.Register();
+
+    // Fix glass_house level having faces that use multi-textured state but don't have any lightmap (stage 1 texture
+    // from previous drawing operation was used)
+    gr_d3d_queue_triangles_hook.Install();
 }
 
 void GraphicsDrawFpsCounter()

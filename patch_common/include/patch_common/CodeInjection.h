@@ -32,6 +32,7 @@ public:
         int16_t name;     \
         int8_t name##l;   \
     }
+
     struct Regs
     {
         uint32_t eflags;

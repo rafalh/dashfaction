@@ -35,6 +35,7 @@ Version 1.4.2
 - reduce maximal particle emitter spawn rate to 60 particles per frame in order to improve graphics and performance (framerate dependent particle emitters like flamethrower weren't designed with 240 FPS in mind so they look bad with too many overlapping particles)
 - fix rendering of liquids and details with alpha in Railgun scanner (RF bug)
 - fix entity/fpgun ambient color being improperly calculated when 'True color textures' option is active
+- fix invalid lightmap sometimes being used for rendering of details with alpha; fixes glass color being affected by shooting in glass_house.rfl (RF bug)
 
 Version 1.4.1 (released 2019-12-07)
 -----------------------------------
