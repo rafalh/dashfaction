@@ -18,10 +18,10 @@ endif()
 
 # Set target Windows version to XP SP3
 add_definitions(
-	-DWINVER=0x0501
-	# needed for PROCESS_DEP_ENABLE on MinGW
-	-D_WIN32_WINNT=0x0601
-	-D_WIN32_IE=0x0501
+    -DWINVER=0x0501
+    # needed for PROCESS_DEP_ENABLE on MinGW
+    -D_WIN32_WINNT=0x0601
+    -D_WIN32_IE=0x0501
 )
 
 include_directories(include)
@@ -44,8 +44,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 if(MSVC)
     add_compile_options(/Zc:threadSafeInit-)
     add_compile_options(/arch:IA32)
-	# Static linked CRT
-	add_compile_options(
+    # Static linked CRT
+    add_compile_options(
         "$<$<CONFIG:Debug>:/MTd>"
         "$<$<CONFIG:RelWithDebInfo>:/MT>"
         "$<$<CONFIG:Release>:/MT>"
