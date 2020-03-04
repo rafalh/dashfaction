@@ -38,6 +38,7 @@ Version 1.4.2
 - fix rendering of liquids and details with alpha in Railgun scanner (RF bug)
 - fix entity/fpgun ambient color being improperly calculated when 'True color textures' option is active
 - fix invalid lightmap sometimes being used for rendering of details with alpha; fixes glass color being affected by shooting in glass_house.rfl (RF bug)
+- fix items not being respawned after ~25 days of server uptime (RF bug)
 
 Version 1.4.1 (released 2019-12-07)
 -----------------------------------

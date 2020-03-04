@@ -403,6 +403,9 @@ void ServerInit()
 
     // Allow disabling mod name announcement
     get_mod_name_for_game_info_packet_patch.Install();
+
+    // Fix items not being respawned after 25 days of server uptime
+    AsmWriter(0x004599DB).nop(2);
 }
 
 void ServerCleanup()
