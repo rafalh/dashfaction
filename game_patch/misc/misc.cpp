@@ -1101,6 +1101,14 @@ CodeInjection switch_model_event_obj_lighting_and_physics_fix{
     },
 };
 
+CodeInjection render_corpse_in_monitor_patch{
+    0x00412905,
+    []() {
+        auto PlayerRenderHeldCorpse = AddrAsRef<void(rf::Player* player)>(0x004A2B90);
+        PlayerRenderHeldCorpse(rf::local_player);
+    },
+};
+
 void MiscInit()
 {
     // Version in Main Menu
@@ -1343,6 +1351,9 @@ void MiscInit()
     // Allow custom mesh (not used in clutter.tbl or items.tbl) in Switch_Model event
     switch_model_event_custom_mesh_patch.Install();
     switch_model_event_obj_lighting_and_physics_fix.Install();
+
+    // Render held corpse in monitor
+    render_corpse_in_monitor_patch.Install();
 
     // Init cmd line param
     GetUrlCmdLineParam();

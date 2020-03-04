@@ -18,6 +18,7 @@ Version 1.4.2
 - improve 2D drawing performance
 - improve level loading time
 - add 'screen_flash' command for toggling screen flash effect
+- render held corpse in monitors/mirrors
 - fix sending crash reports
 - fix non-working face scrolling before first geomod use in custom levels (RF bug)
 - fix memory and VRAM leak when quick saving (RF bug)
