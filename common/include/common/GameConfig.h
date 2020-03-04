@@ -42,6 +42,7 @@ struct GameConfig
     bool high_scanner_res = true;
     bool high_monitor_res = true;
     bool true_color_textures = true;
+    bool screen_flash = true;
 
     // Multiplayer
     std::string tracker = DEFAULT_RF_TRACKER;

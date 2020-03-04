@@ -586,6 +586,25 @@ CodeInjection gr_d3d_draw_geometry_face_patch_2{
     },
 };
 
+FunHook<void(rf::Player&, int, int, int, int)> PlayerSetScreenFlash_hook{
+    0x00416450,
+    [](rf::Player& player, int r, int g, int b, int a) {
+        if (g_game_config.screen_flash) {
+            PlayerSetScreenFlash_hook.CallTarget(player, r, g, b, a);
+        }
+    },
+};
+
+DcCommand2 screen_flash_cmd{
+    "screen_flash",
+    []() {
+        g_game_config.screen_flash = !g_game_config.screen_flash;
+        g_game_config.save();
+        rf::DcPrintf("Screen flash effect is %s", g_game_config.screen_flash ? "enabled" : "disabled");
+    },
+    "Toggle screen flash effect",
+};
+
 void ApplyTexturePatches();
 
 void GraphicsInit()
@@ -784,6 +803,10 @@ void GraphicsInit()
     // handled by drawing a green rectangle after all the geometry is drawn)
     WriteMem<u8>(0x004D33F3, asm_opcodes::jmp_rel_short);
     WriteMem<u8>(0x004D410D, asm_opcodes::jmp_rel_short);
+
+    // Support disabling of screen flash effect
+    PlayerSetScreenFlash_hook.Install();
+    screen_flash_cmd.Register();
 }
 
 void GraphicsDrawFpsCounter()

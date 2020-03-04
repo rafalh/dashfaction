@@ -53,6 +53,7 @@ bool GameConfig::load() try
     result &= dash_faction_key.read_value("Show Enemy Bullets", &show_enemy_bullets);
     result &= dash_faction_key.read_value("Keep Launcher Open", &keep_launcher_open);
     result &= dash_faction_key.read_value("Skip Cutscene Control", &skip_cutscene_ctrl);
+    result &= dash_faction_key.read_value("Screen Flash", &screen_flash);
 
 #ifdef NDEBUG
     max_fps = std::clamp(max_fps, MIN_FPS_LIMIT, MAX_FPS_LIMIT);
@@ -109,6 +110,7 @@ void GameConfig::save() try
     dash_faction_key.write_value("Show Enemy Bullets", show_enemy_bullets);
     dash_faction_key.write_value("Keep Launcher Open", keep_launcher_open);
     dash_faction_key.write_value("Skip Cutscene Control", skip_cutscene_ctrl);
+    dash_faction_key.write_value("Screen Flash", screen_flash);
 }
 catch (...) {
     std::throw_with_nested(std::runtime_error("failed to save config"));
