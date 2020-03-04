@@ -41,6 +41,7 @@ Version 1.4.2
 - fix invalid lightmap sometimes being used for rendering of details with alpha; fixes glass color being affected by shooting in glass_house.rfl (RF bug)
 - fix items not being respawned after ~25 days of server uptime (RF bug)
 - fix players' pings being improperly calculated after ~25 days of server uptime (RF bug)
+- fix compatibility of Crash Handler module with Windows XP and Vista
 
 Version 1.4.1 (released 2019-12-07)
 -----------------------------------

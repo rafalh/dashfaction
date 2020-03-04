@@ -22,6 +22,8 @@ add_definitions(
     # needed for PROCESS_DEP_ENABLE on MinGW
     -D_WIN32_WINNT=0x0601
     -D_WIN32_IE=0x0501
+    # needed for GetModuleFileNameEx resolution before Windows 7
+    -DPSAPI_VERSION=1
 )
 
 include_directories(include)
