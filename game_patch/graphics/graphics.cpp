@@ -774,6 +774,10 @@ void GraphicsInit()
 
     // Crash-fix in case texture has not been created (this happens if GrReadBackbuffer fails)
     gr_direct3d_lock_crash_fix.Install();
+
+    // Fix undefined behavior in D3D state handling: alpha operations cannot be disabled when color operations are enabled
+    WriteMem<u8>(0x0054F785 + 1, D3DTOP_SELECTARG2);
+    WriteMem<u8>(0x0054FF18 + 1, D3DTOP_SELECTARG2);
 }
 
 void GraphicsDrawFpsCounter()
