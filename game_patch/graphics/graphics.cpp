@@ -626,6 +626,32 @@ FunHook<void(int*, void*, int, int, int, rf::GrRenderState, int)> gr_d3d_queue_t
     },
 };
 
+FunHook<void()> update_mesh_lighting_hook{
+    0x0048B0E0,
+    []() {
+        // Init transform for lighting calculation
+        auto& gr_view_matrix = AddrAsRef<rf::Matrix3>(0x018186C8);
+        auto& gr_view_pos = AddrAsRef<rf::Vector3>(0x01818690);
+        auto& light_matrix = AddrAsRef<rf::Matrix3>(0x01818A38);
+        auto& light_base = AddrAsRef<rf::Vector3>(0x01818A28);
+        gr_view_matrix.SetIdentity();
+        gr_view_pos = rf::Vector3(.0f, .0f, .0f);
+        light_matrix.SetIdentity();
+        light_base = rf::Vector3(.0f, .0f, .0f);
+
+        auto& experimental_alloc_and_lighting = AddrAsRef<bool>(0x00879AF8);
+        auto& light_cache_key = AddrAsRef<int>(0x00C96874);
+        // Enable some experimental flag that causes static lights to be included in computations
+        auto old_experimental_alloc_and_lighting = experimental_alloc_and_lighting;
+        experimental_alloc_and_lighting = true;
+        // Calculate lightins for meshes now
+        update_mesh_lighting_hook.CallTarget();
+        experimental_alloc_and_lighting = old_experimental_alloc_and_lighting;
+        // Change cache key to rebuild cached arrays of lights in rooms - this is needed to get rid of static lights
+        light_cache_key++;
+    },
+};
+
 void ApplyTexturePatches();
 
 void GraphicsInit()
@@ -832,6 +858,12 @@ void GraphicsInit()
     // Fix glass_house level having faces that use multi-textured state but don't have any lightmap (stage 1 texture
     // from previous drawing operation was used)
     gr_d3d_queue_triangles_hook.Install();
+
+    // Fix/improve items and clutters static lighting calculation: fix matrices being zero and use static lights
+    update_mesh_lighting_hook.Install();
+
+    // Fix invalid vertex offset in mesh lighting calculation
+    WriteMem<i8>(0x005042F0 + 2, sizeof(rf::Vector3));
 }
 
 void GraphicsDrawFpsCounter()

@@ -7,6 +7,7 @@ Version 1.4.2
 - remove additional limits on number of allocated bullet, item, debris and corpse objects
 - remove limit of loaded object meshes (v3d files)
 - remove some limits of level geometry related objects
+- enable and fix items and clutters static lighting calculation
 - add DDS texture format support (useful for DXTn compressed textures)
 - rewrite crash reporting system UI
 - improve sound handling when active sounds pool is full
