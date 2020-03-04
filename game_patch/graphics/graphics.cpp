@@ -778,6 +778,12 @@ void GraphicsInit()
     // Fix undefined behavior in D3D state handling: alpha operations cannot be disabled when color operations are enabled
     WriteMem<u8>(0x0054F785 + 1, D3DTOP_SELECTARG2);
     WriteMem<u8>(0x0054FF18 + 1, D3DTOP_SELECTARG2);
+
+    // Fix details and liquids rendering in railgun scanner. They were unnecessary modulated with very dark green color,
+    // which seems to be a left-over from an old implementationof railgun scanner green overlay (currently it is
+    // handled by drawing a green rectangle after all the geometry is drawn)
+    WriteMem<u8>(0x004D33F3, asm_opcodes::jmp_rel_short);
+    WriteMem<u8>(0x004D410D, asm_opcodes::jmp_rel_short);
 }
 
 void GraphicsDrawFpsCounter()
