@@ -181,7 +181,6 @@ private:
     }
 };
 
-// Note: limit should fit in int8_t
-constexpr int CMD_LIMIT = 127;
+constexpr int CMD_LIMIT = 256;
 
 extern rf::DcCommand* g_commands_buffer[CMD_LIMIT];

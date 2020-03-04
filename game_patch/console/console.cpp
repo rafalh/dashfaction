@@ -48,6 +48,15 @@ FunHook<int()> MenuUpdate_hook{
     },
 };
 
+CodeInjection DcCommand_Init_limit_check_patch{
+    0x00509A7E,
+    [](auto& regs) {
+        if (regs.eax >= CMD_LIMIT) {
+            regs.eip = 0x00509ACD;
+        }
+    },
+};
+
 CodeInjection DcRunCmd_CallHandlerPatch{
     0x00509DBB,
     [](auto& regs) {
@@ -88,7 +97,6 @@ void ConsoleApplyPatches()
     // Change limit of commands
     ASSERT(rf::dc_num_commands == 0);
     WriteMemPtr(0x005099AC + 1, g_commands_buffer);
-    WriteMem<u8>(0x00509A78 + 2, CMD_LIMIT);
     WriteMemPtr(0x00509A8A + 1, g_commands_buffer);
     WriteMemPtr(0x00509AB0 + 3, g_commands_buffer);
     WriteMemPtr(0x00509AE1 + 3, g_commands_buffer);
@@ -98,6 +106,8 @@ void ConsoleApplyPatches()
     WriteMemPtr(0x00509E6F + 1, g_commands_buffer);
     WriteMemPtr(0x0050A648 + 4, g_commands_buffer);
     WriteMemPtr(0x0050A6A0 + 3, g_commands_buffer);
+    AsmWriter(0x00509A7E).nop(2);
+    DcCommand_Init_limit_check_patch.Install();
 
     DcRunCmd_CallHandlerPatch.Install();
 
