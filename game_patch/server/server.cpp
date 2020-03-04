@@ -355,6 +355,13 @@ CallHook<void(char*)> get_mod_name_for_game_info_packet_patch{
     },
 };
 
+CodeInjection send_ping_after_time_wrap_fix{
+    0x0047CCF3,
+    [](auto& regs) {
+        regs.ebx = -1;
+    },
+};
+
 void ServerInit()
 {
     // Override rcon command whitelist
@@ -404,8 +411,13 @@ void ServerInit()
     // Allow disabling mod name announcement
     get_mod_name_for_game_info_packet_patch.Install();
 
-    // Fix items not being respawned after 25 days of server uptime
+    // Fix items not being respawned after time in ms wraps around (~25 days)
     AsmWriter(0x004599DB).nop(2);
+
+    // Fix sending ping packets after time in ms wraps around (~25 days)
+    send_ping_after_time_wrap_fix.Install();
+    WriteMem<u8>(0x0047CCF9, asm_opcodes::jz_rel_short);
+    WriteMem<u8>(0x0047CD01, asm_opcodes::jz_rel_short);
 }
 
 void ServerCleanup()
