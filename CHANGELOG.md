@@ -8,6 +8,7 @@ Version 1.4.2
 - remove limit of loaded object meshes (v3d files)
 - remove some limits of level geometry related objects
 - enable and fix items and clutters static lighting calculation
+- enable Set_Liquid_Depth implementation - check out Geothermal Plant in single player and see what changed
 - add DDS texture format support (useful for DXTn compressed textures)
 - rewrite crash reporting system UI
 - improve sound handling when active sounds pool is full

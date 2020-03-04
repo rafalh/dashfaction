@@ -18,4 +18,6 @@ namespace rf
         int is_on_state;
     };
     static_assert(sizeof(EventObj) == 0x2B8);
+
+    static auto& EventGetByUid = AddrAsRef<EventObj*(int uid)>(0x004B6820);
 }

@@ -171,8 +171,10 @@ FunHook<int(rf::String&, rf::String&, char*)> RflLoad_hook{
         int ret = RflLoad_hook.CallTarget(level_filename, save_filename, error);
         if (ret != 0)
             WARN("Loading failed: %s", error);
-        else
+        else {
             HighFpsAfterLevelLoad(level_filename);
+            MiscAfterLevelLoad(level_filename);
+        }
         return ret;
     },
 };

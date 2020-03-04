@@ -2,6 +2,7 @@
 
 void MiscInit();
 void MiscAfterFullGameInit();
+void MiscAfterLevelLoad(const char* level_filename);
 void SetPlaySoundEventsVolumeScale(float volume_scale);
 void SetJumpToMultiServerList(bool jump);
 

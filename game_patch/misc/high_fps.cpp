@@ -265,9 +265,8 @@ void HighFpsAfterLevelLoad(rf::String& level_filename)
         //INFO("Fixing Submarine exploding bug...");
         int uids[] = {4679, 4680};
         for (int uid : uids) {
-            rf::Object* obj = rf::ObjGetFromUid(uid);
-            if (obj && obj->type == rf::OT_EVENT) {
-                rf::EventObj* event = reinterpret_cast<rf::EventObj*>(reinterpret_cast<uintptr_t>(obj) - 4);
+            auto event = rf::EventGetByUid(uid);
+            if (event && event->delay == 1.5f) {
                 event->delay += 1.5f;
             }
         }

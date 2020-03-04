@@ -7,6 +7,7 @@
 #include "../rf/trigger.h"
 #include "../rf/item.h"
 #include "../rf/clutter.h"
+#include "../rf/event.h"
 #include "../rf/graphics.h"
 #include "../rf/player.h"
 #include "../rf/weapon.h"
@@ -1109,6 +1110,85 @@ CodeInjection render_corpse_in_monitor_patch{
     },
 };
 
+struct EventSetLiquidDepthHook : rf::EventObj
+{
+    float depth;
+    float duration;
+
+    void HandleOnMsg()
+    {
+        auto AddLiquidDepthUpdate =
+            AddrAsRef<void(rf::RflRoom* room, float target_liquid_depth, float duration)>(0x0045E640);
+        auto RoomGetByUid = AddrAsRef<rf::RflRoom*(int uid)>(0x0045E7C0);
+
+        INFO("Processing Set_Liquid_Depth event: uid %d depth %.2f duration %.2f", _super.uid, depth, duration);
+        if (link_list.Size() == 0) {
+            TRACE("no links");
+            AddLiquidDepthUpdate(_super.room, depth, duration);
+        }
+        else {
+            for (int i = 0; i < link_list.Size(); ++i) {
+                auto room_uid = link_list.Get(i);
+                auto room = RoomGetByUid(room_uid);
+                TRACE("link %d %p", room_uid, room);
+                if (room) {
+                    AddLiquidDepthUpdate(room, depth, duration);
+                }
+            }
+        }
+    }
+};
+
+void MiscAfterLevelLoad(const char* level_filename)
+{
+    if (_stricmp(level_filename, "L5S2.rfl") == 0) {
+        // HACKFIX: make Set_Liquid_Depth events properties in lava control room more sensible
+        auto event1 = reinterpret_cast<EventSetLiquidDepthHook*>(rf::EventGetByUid(3940));
+        auto event2 = reinterpret_cast<EventSetLiquidDepthHook*>(rf::EventGetByUid(4132));
+        if (event1 && event2 && event1->duration == 0.15f && event2->duration == 0.15f) {
+            event1->duration = 1.5f;
+            event2->duration = 1.5f;
+        }
+    }
+}
+
+extern CallHook<void __fastcall (rf::RflRoom* room, int edx, void* geo)> RflRoom_SetupLiquidRoom_EventSetLiquid_hook;
+
+void __fastcall RflRoom_SetupLiquidRoom_EventSetLiquid(rf::RflRoom* room, int edx, void* geo) {
+    RflRoom_SetupLiquidRoom_EventSetLiquid_hook.CallTarget(room, edx, geo);
+
+    auto EntityCheckIsInLiquid = AddrAsRef<void(rf::EntityObj* entity)>(0x00429100);
+    auto ObjCheckIsInLiquid = AddrAsRef<void(rf::Object* obj)>(0x00486C30);
+    auto EntityCanSwim = AddrAsRef<bool(rf::EntityObj* entity)>(0x00427FF0);
+
+    // check objects in room if they are in water
+    auto& object_list = AddrAsRef<rf::Object>(0x0073D880);
+    auto obj = object_list.next_obj;
+    while (obj != &object_list) {
+        if (obj->room == room) {
+            if (obj->type == rf::OT_ENTITY) {
+                auto entity = reinterpret_cast<rf::EntityObj*>(obj);
+                EntityCheckIsInLiquid(entity);
+                bool is_in_liquid = entity->_super.flags & 0x80000;
+                // check if entity doesn't have 'swim' flag
+                if (is_in_liquid && !EntityCanSwim(entity)) {
+                    // he does not have swim animation - kill him
+                    obj->life = 0.0f;
+                }
+            }
+            else {
+                ObjCheckIsInLiquid(obj);
+            }
+        }
+        obj = obj->next_obj;
+    }
+}
+
+CallHook<void __fastcall (rf::RflRoom* room, int edx, void* geo)> RflRoom_SetupLiquidRoom_EventSetLiquid_hook{
+    0x0045E4AC,
+    RflRoom_SetupLiquidRoom_EventSetLiquid,
+};
+
 void MiscInit()
 {
     // Version in Main Menu
@@ -1354,6 +1434,10 @@ void MiscInit()
 
     // Render held corpse in monitor
     render_corpse_in_monitor_patch.Install();
+
+    // Fix Set_Liquid_Depth event
+    AsmWriter(0x004BCBE0).jmp(reinterpret_cast<void*>(&EventSetLiquidDepthHook::HandleOnMsg));
+    RflRoom_SetupLiquidRoom_EventSetLiquid_hook.Install();
 
     // Init cmd line param
     GetUrlCmdLineParam();
