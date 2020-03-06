@@ -80,3 +80,5 @@ void DebugCmdRender();
 void DebugCmdRenderUI();
 void ProfilerInit();
 void ProfilerDrawUI();
+void RegisterObjDebugCommands();
+void RenderObjDebugUI();

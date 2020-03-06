@@ -11,6 +11,9 @@ void DebugApplyPatches()
 void DebugInit()
 {
     DebugCmdInit();
+#ifndef NDEBUG
+    RegisterObjDebugCommands();
+#endif
 }
 
 void DebugRender()
@@ -23,5 +26,6 @@ void DebugRenderUI()
     DebugCmdRenderUI();
 #ifndef NDEBUG
     ProfilerDrawUI();
+    RenderObjDebugUI();
 #endif
 }

@@ -80,6 +80,7 @@ add_library(DashFaction SHARED
     debug/debugwinmsg.cpp
     debug/debug_cmd.cpp
     debug/debug.cpp
+    debug/obj_debug.cpp
     debug/debug.h
     debug/debug_internal.h
     debug/profiler.cpp
