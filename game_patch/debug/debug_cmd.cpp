@@ -1,4 +1,4 @@
-#include "debug_cmd.h"
+#include "debug_internal.h"
 #include "../rf/network.h"
 #include "../console/console.h"
 #include <patch_common/MemUtils.h>
@@ -95,7 +95,7 @@ CodeInjection MpInit_disable_debug_flags_patch{
     },
 };
 
-void DebugRender3d()
+void DebugCmdRender()
 {
     const auto dbg_waypoints = AddrAsRef<void()>(0x00468F00);
     const auto dbg_internal_lights = AddrAsRef<void()>(0x004DB830);
@@ -105,7 +105,7 @@ void DebugRender3d()
         dbg_internal_lights();
 }
 
-void DebugRender2d()
+void DebugCmdRenderUI()
 {
     const auto dbg_rendering_stats = AddrAsRef<void()>(0x004D36B0);
     const auto dbg_particle_stats = AddrAsRef<void()>(0x004964E0);

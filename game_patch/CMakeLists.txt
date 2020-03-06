@@ -79,6 +79,10 @@ add_library(DashFaction SHARED
     debug/crashhandler.h
     debug/debugwinmsg.cpp
     debug/debug_cmd.cpp
+    debug/debug.cpp
+    debug/debug.h
+    debug/debug_internal.h
+    debug/profiler.cpp
     level_autodl/autodl.cpp
     level_autodl/autodl.h
     multi/kill.cpp

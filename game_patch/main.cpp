@@ -4,7 +4,7 @@
 #include "level_autodl/autodl.h"
 #include "console/console.h"
 #include "debug/crashhandler.h"
-#include "debug/debug_cmd.h"
+#include "debug/debug.h"
 #include "exports.h"
 #include "graphics/gamma.h"
 #include "graphics/graphics.h"
@@ -115,7 +115,7 @@ CodeInjection after_level_render_hook{
 #if !defined(NDEBUG) && defined(HAS_EXPERIMENTAL)
         ExperimentalRenderInGame();
 #endif
-        DebugRender3d();
+        DebugRender();
     },
 };
 
@@ -132,7 +132,7 @@ CodeInjection after_frame_render_hook{
 #if !defined(NDEBUG) && defined(HAS_EXPERIMENTAL)
         ExperimentalRender();
 #endif
-        DebugRender2d();
+        DebugRenderUI();
     },
 };
 
@@ -345,10 +345,10 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     ServerInit();
     InputInit();
 #if !defined(NDEBUG) && defined(HAS_EXPERIMENTAL)
-    ExperimentalInit();
+    //ExperimentalInit();
 #endif
-    DebugCmdApplyPatches();
-    DebugCmdInit();
+    DebugApplyPatches();
+    DebugInit();
 
     INFO("Installing hooks took %lu ms", GetTickCount() - start_ticks);
 
