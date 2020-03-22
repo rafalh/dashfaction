@@ -82,3 +82,7 @@ void ProfilerInit();
 void ProfilerDrawUI();
 void RegisterObjDebugCommands();
 void RenderObjDebugUI();
+void DebugUnresponsiveApplyPatches();
+void DebugUnresponsiveInit();
+void DebugUnresponsiveCleanup();
+void DebugUnresponsiveDoUpdate();

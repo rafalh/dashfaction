@@ -3,6 +3,7 @@
 void DebugApplyPatches()
 {
     DebugCmdApplyPatches();
+    DebugUnresponsiveApplyPatches();
 #ifndef NDEBUG
     ProfilerInit();
 #endif
@@ -11,6 +12,7 @@ void DebugApplyPatches()
 void DebugInit()
 {
     DebugCmdInit();
+    DebugUnresponsiveInit();
 #ifndef NDEBUG
     RegisterObjDebugCommands();
 #endif
@@ -28,4 +30,14 @@ void DebugRenderUI()
     ProfilerDrawUI();
     RenderObjDebugUI();
 #endif
+}
+
+void DebugCleanup()
+{
+    DebugUnresponsiveCleanup();
+}
+
+void DebugDoUpdate()
+{
+    DebugUnresponsiveDoUpdate();
 }

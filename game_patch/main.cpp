@@ -87,6 +87,7 @@ CodeInjection after_full_game_init_hook{
         GraphicsCaptureAfterGameInit();
         ConsoleInit();
         MiscAfterFullGameInit();
+        DebugInit();
 
         INFO("Game fully initialized");
     },
@@ -97,6 +98,7 @@ CodeInjection cleanup_game_hook{
     []() {
         ResetGammaRamp();
         ServerCleanup();
+        DebugCleanup();
     },
 };
 
@@ -106,6 +108,7 @@ CodeInjection before_frame_hook{
         ProcessWaitingMessages();
         HighFpsUpdate();
         ServerDoFrame();
+        DebugDoUpdate();
     },
 };
 
@@ -348,7 +351,6 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     ExperimentalInit();
 #endif
     DebugApplyPatches();
-    DebugInit();
 
     INFO("Installing hooks took %lu ms", GetTickCount() - start_ticks);
 

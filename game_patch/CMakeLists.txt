@@ -84,6 +84,7 @@ add_library(DashFaction SHARED
     debug/debug.h
     debug/debug_internal.h
     debug/profiler.cpp
+    debug/unresponsive.cpp
     level_autodl/autodl.cpp
     level_autodl/autodl.h
     multi/kill.cpp
