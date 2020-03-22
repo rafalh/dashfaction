@@ -93,37 +93,46 @@ bool LauncherApp::LaunchGame(HWND hwnd, const char* mod_name)
     {
         launcher.check_installation();
     }
-    catch (InstallationCheckFailedException &e)
+    catch (FileNotFoundException &e)
     {
         std::stringstream ss;
         std::string download_url;
 
-        if (e.getCrc32() == 0)
-        {
-            ss << "Game directory validation has failed: " << e.getFilename() << " file is missing!\n"
-                << "Please make sure game executable specified in options is located inside a valid Red Faction installation "
-                << "root directory.";
-        }
-        else
-        {
-            ss << "Game directory validation has failed: invalid " << e.getFilename() << " file has been detected "
-                << "(CRC32 = 0x" << std::hex << e.getCrc32() << ").";
-            if (e.getFilename() == std::string("tables.vpp"))
-            {
-                ss << "\nIt can prevent multiplayer functionality or entire game from working properly.\n"
-                    << "If your game has not been updated to 1.20 please do it first. If the error still shows up "
-                    << "replace your tables.vpp file with original 1.20 NA " << e.getFilename() << " available on FactionFiles.com.\n"
-                    << "Click OK to open download page. Click Cancel to skip this warning.";
-                download_url = "https://www.factionfiles.com/ff.php?action=file&id=517871";
-            }
-
-        }
+        ss << "Game directory validation has failed! File is missing:\n" << e.get_file_name() << "\n"
+            << "Please make sure game executable specified in options is located inside a valid Red Faction installation "
+            << "root directory.";
         std::string str = ss.str();
-        if (Message(hwnd, str.c_str(), nullptr, MB_OKCANCEL | MB_ICONWARNING) == IDOK)
-        {
-            if (!download_url.empty())
+        Message(hwnd, str.c_str(), nullptr, MB_OK | MB_ICONWARNING);
+        return false;
+    }
+    catch (FileHashVerificationException &e)
+    {
+        std::stringstream ss;
+        std::string download_url;
+
+        ss << "Game directory validation has failed! File " << e.get_file_name() << " has unrecognized hash sum.\n\n"
+            << "SHA1:\n" << e.get_sha1();
+        if (e.get_file_name() == "tables.vpp") {
+            ss << "\n\nIt can prevent multiplayer functionality or entire game from working properly.\n"
+                << "If your game has not been updated to 1.20 please do it first. If this warning still shows up "
+                << "replace your tables.vpp file with original 1.20 NA " << e.get_file_name() << " available on FactionFiles.com.\n"
+                << "Do you want to open download page?";
+            std::string str = ss.str();
+            download_url = "https://www.factionfiles.com/ff.php?action=file&id=517871";
+            int result = Message(hwnd, str.c_str(), nullptr, MB_YESNOCANCEL | MB_ICONWARNING);
+            if (result == IDYES) {
                 ShellExecuteA(hwnd, "open", download_url.c_str(), nullptr, nullptr, SW_SHOW);
-            return true;
+                return false;
+            }
+            else if (result == IDCANCEL) {
+                return false;
+            }
+        }
+        else {
+            std::string str = ss.str();
+            if (Message(hwnd, str.c_str(), nullptr, MB_OKCANCEL | MB_ICONWARNING) == IDCANCEL) {
+                return false;
+            }
         }
     }
 
@@ -139,36 +148,31 @@ bool LauncherApp::LaunchGame(HWND hwnd, const char* mod_name)
             "compatibility settings (Run as administrator, Compatibility mode for Windows XX, etc.) or run "
             "Dash Faction launcher as administrator.",
             nullptr, MB_OK | MB_ICONERROR);
-        return false;
     }
-    catch (IntegrityCheckFailedException &e)
+    catch (FileNotFoundException& e)
     {
-        if (e.getCrc32() == 0)
-        {
-            Message(hwnd, "Game executable has not been found. Please set a proper path in Options.",
+        Message(hwnd, "Game executable has not been found. Please set a proper path in Options.",
                 nullptr, MB_OK | MB_ICONERROR);
-        }
-        else
-        {
-            std::stringstream ss;
-            ss << "Unsupported game executable has been detected (CRC32 = 0x" << std::hex << e.getCrc32() << "). "
-                << "Dash Faction supports only unmodified Red Faction 1.20 NA executable.\n"
-                << "If your game has not been updated to 1.20 please do it first. If the error still shows up "
-                << "replace your RF.exe file with original 1.20 NA RF.exe available on FactionFiles.com.\n"
-                << "Click OK to open download page.";
-            std::string str = ss.str();
-            if (Message(hwnd, str.c_str(), nullptr, MB_OKCANCEL | MB_ICONERROR) == IDOK)
-                ShellExecuteA(hwnd, "open", "https://www.factionfiles.com/ff.php?action=file&id=517545", NULL, NULL, SW_SHOW);
-        }
-        return false;
+    }
+    catch (FileHashVerificationException &e)
+    {
+        std::stringstream ss;
+        ss << "Unsupported game executable has been detected!\n\n"
+            << "SHA1:\n" << e.get_sha1() << "\n\n"
+            << "Dash Faction supports only unmodified Red Faction 1.20 NA executable.\n"
+            << "If your game has not been updated to 1.20 please do it first. If the error still shows up "
+            << "replace your RF.exe file with original 1.20 NA RF.exe available on FactionFiles.com.\n"
+            << "Click OK to open download page.";
+        std::string str = ss.str();
+        if (Message(hwnd, str.c_str(), nullptr, MB_OKCANCEL | MB_ICONERROR) == IDOK)
+            ShellExecuteA(hwnd, "open", "https://www.factionfiles.com/ff.php?action=file&id=517545", NULL, NULL, SW_SHOW);
     }
     catch (std::exception &e)
     {
         std::string msg = generate_message_for_exception(e);
         Message(hwnd, msg.c_str(), nullptr, MB_ICONERROR | MB_OK);
-        return false;
     }
-    return true;
+    return false;
 }
 
 bool LauncherApp::LaunchEditor(HWND hwnd, const char* mod_name)

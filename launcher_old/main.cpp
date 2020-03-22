@@ -19,24 +19,24 @@ bool launch_game(HWND hwnd)
                     nullptr, MB_OK | MB_ICONERROR);
         return false;
     }
-    catch (const IntegrityCheckFailedException& e) {
-        if (e.getCrc32() == 0) {
-            MessageBoxA(hwnd, "Game executable has not been found. Please set a proper path in Options.", NULL,
-                        MB_OK | MB_ICONERROR);
+    catch (const FileNotFoundException& e) {
+        MessageBoxA(hwnd, "Game executable has not been found. Please set a proper path in Options.", NULL,
+                    MB_OK | MB_ICONERROR);
+        return false;
+    }
+    catch (const FileHashVerificationException& e) {
+        std::stringstream ss;
+        ss << "Unsupported game executable has been detected (SHA1: " << e.get_sha1() << ").\n"
+            << "Dash Faction supports only unmodified Red Faction 1.20 NA executable.\n"
+            << "If your game has not been updated to 1.20 please do it first. If the error still shows up "
+            << "replace your RF.exe file with original 1.20 NA RF.exe available on FactionFiles.com (you MUST "
+            << "unpack it inside the game root directory).\n"
+            << "Click OK to open download page.";
+        std::string str = ss.str();
+        if (MessageBoxA(hwnd, str.c_str(), nullptr, MB_OKCANCEL | MB_ICONERROR) == IDOK) {
+            ShellExecuteA(hwnd, "open", "https://www.factionfiles.com/ff.php?action=file&id=517545", NULL, NULL, SW_SHOW);
         }
-        else {
-            std::stringstream ss;
-            ss << "Unsupported game executable has been detected (CRC32 = 0x" << std::hex << e.getCrc32() << ").\n"
-               << "Dash Faction supports only unmodified Red Faction 1.20 NA executable.\n"
-               << "If your game has not been updated to 1.20 please do it first. If the error still shows up "
-               << "replace your RF.exe file with original 1.20 NA RF.exe available on FactionFiles.com (you MUST "
-               << "unpack it inside the game root directory).\n"
-               << "Click OK to open download page.";
-            std::string str = ss.str();
-            if (MessageBoxA(hwnd, str.c_str(), nullptr, MB_OKCANCEL | MB_ICONERROR) == IDOK)
-                ShellExecuteA(hwnd, "open", "https://www.factionfiles.com/ff.php?action=file&id=517545", NULL, NULL,
-                              SW_SHOW);
-        }
+
         return false;
     }
     catch (const std::exception& e) {

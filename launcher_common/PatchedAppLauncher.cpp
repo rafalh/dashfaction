@@ -1,5 +1,5 @@
 #include "PatchedAppLauncher.h"
-#include "crc32.h"
+#include "sha1.h"
 #include "Win32Handle.h"
 #include "Process.h"
 #include "Thread.h"
@@ -10,6 +10,7 @@
 #include <common/Win32Error.h>
 #include <windows.h>
 #include <shlwapi.h>
+#include <fstream>
 
 // Needed by MinGW
 #ifndef ERROR_ELEVATION_REQUIRED
@@ -17,8 +18,10 @@
 #endif
 
 #define INIT_TIMEOUT 10000
-#define RF_120_NA_CRC32 0xA7BF79E4
-#define RED_120_NA_CRC32 0xBAF6C754
+#define RF_120_NA_SHA1  "f94f2e3f565d18f75ab6066e77f73a62a593fe03"
+#define RF_120_NA_4GB_SHA1  "4140f7619b6427c170542c66178b47bd48795a99"
+#define RED_120_NA_SHA1 "b4f421bfa9343362d7cc565e9f7ab8c6cc36f3a2"
+#define TABLES_VPP_SHA1 "ded5e1b5932f47044ba760699d5931fda6bdc8ba"
 
 std::string PatchedAppLauncher::get_patch_dll_path()
 {
@@ -36,15 +39,17 @@ std::string PatchedAppLauncher::get_patch_dll_path()
 void PatchedAppLauncher::launch(const char* mod_name)
 {
     std::string app_path = get_app_path();
-    uint32_t checksum = file_crc32(app_path.c_str());
+    std::ifstream file(app_path.c_str(), std::fstream::in | std::fstream::binary);
+    if (!file.is_open()) {
+        throw FileNotFoundException(app_path);
+    }
+    SHA1 sha1;
+    sha1.update(file);
+    auto hash = sha1.final();
 
     // Error reporting for headless env
-    if (checksum != m_expected_crc32) {
-        if (checksum == 0)
-            std::fprintf(stderr, "Invalid App Path %s\n", app_path.c_str());
-        else
-            std::fprintf(stderr, "Invalid App Checksum %x, expected %x\n", checksum, m_expected_crc32);
-        throw IntegrityCheckFailedException(checksum);
+    if (!check_app_hash(hash)) {
+        throw FileHashVerificationException(app_path, hash);
     }
 
     std::string work_dir = get_dir_from_path(app_path);
@@ -107,19 +112,21 @@ void PatchedAppLauncher::check_installation()
     std::string root_dir = get_dir_from_path(app_path);
 
     auto tables_vpp_path = root_dir + "\\tables.vpp";
-    uint32_t checksum = file_crc32(tables_vpp_path.c_str());
+    std::ifstream file(tables_vpp_path.c_str(), std::fstream::in | std::fstream::binary);
+    if (!file.is_open()) {
+        throw FileNotFoundException("tables.vpp");
+    }
 
-    // Error reporting for headless env
-    if (checksum != 0xF4A85BF) {
-        if (checksum == 0)
-            std::fprintf(stderr, "Cannot find tables.vpp path %s\n", tables_vpp_path.c_str());
-        else
-            std::fprintf(stderr, "Invalid tables.vpp checksum %x, expected %x\n", checksum, m_expected_crc32);
-        throw InstallationCheckFailedException("tables.vpp", checksum);
+    SHA1 sha1;
+    sha1.update(file);
+    auto checksum = sha1.final();
+
+    if (checksum != TABLES_VPP_SHA1) {
+        throw FileHashVerificationException("tables.vpp", checksum);
     }
 }
 
-GameLauncher::GameLauncher() : PatchedAppLauncher("DashFaction.dll", RF_120_NA_CRC32)
+GameLauncher::GameLauncher() : PatchedAppLauncher("DashFaction.dll")
 {
     if (!m_conf.load()) {
         // Failed to load config - save defaults
@@ -132,7 +139,13 @@ std::string GameLauncher::get_app_path()
     return m_conf.game_executable_path;
 }
 
-EditorLauncher::EditorLauncher() : PatchedAppLauncher("DashEditor.dll", RED_120_NA_CRC32)
+bool GameLauncher::check_app_hash(const std::string& sha1)
+{
+    return sha1 == RF_120_NA_SHA1 || sha1 == RF_120_NA_4GB_SHA1;
+}
+
+
+EditorLauncher::EditorLauncher() : PatchedAppLauncher("DashEditor.dll")
 {
     if (!m_conf.load()) {
         // Failed to load config - save defaults
@@ -144,4 +157,9 @@ std::string EditorLauncher::get_app_path()
 {
     std::string workDir = get_dir_from_path(m_conf.game_executable_path);
     return workDir + "\\RED.exe";
+}
+
+bool EditorLauncher::check_app_hash(const std::string& sha1)
+{
+    return sha1 == RED_120_NA_SHA1;
 }

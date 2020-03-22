@@ -3,45 +3,48 @@
 #include <common/GameConfig.h>
 #include <stdexcept>
 
+class FileNotFoundException : public std::runtime_error
+{
+public:
+    FileNotFoundException(const std::string& file_name) :
+        std::runtime_error("file not found"), m_file_name(file_name)
+    {}
+
+    const std::string& get_file_name() const
+    {
+        return m_file_name;
+    }
+
+private:
+    std::string m_file_name;
+};
+
+class FileHashVerificationException : public std::runtime_error
+{
+public:
+    FileHashVerificationException(const std::string& file_name, const std::string& sha1) :
+        std::runtime_error("file hash sum verification failed"), m_file_name(file_name), m_sha1(sha1)
+    {}
+
+    const std::string& get_file_name() const
+    {
+        return m_file_name;
+    }
+
+    const std::string& get_sha1() const
+    {
+        return m_sha1;
+    }
+
+private:
+    std::string m_file_name;
+    std::string m_sha1;
+};
+
 class PrivilegeElevationRequiredException : public std::runtime_error
 {
 public:
     PrivilegeElevationRequiredException() : std::runtime_error("privilage elevation required") {}
-};
-
-class IntegrityCheckFailedException : public std::runtime_error
-{
-public:
-    IntegrityCheckFailedException(uint32_t crc32) : std::runtime_error("integrity check failed"), m_crc32(crc32) {}
-
-    uint32_t getCrc32() const
-    {
-        return m_crc32;
-    }
-
-private:
-    uint32_t m_crc32;
-};
-
-class InstallationCheckFailedException : public std::runtime_error
-{
-public:
-    InstallationCheckFailedException(const char* filename, uint32_t crc32) :
-        std::runtime_error("installation check failed"), m_filename(filename), m_crc32(crc32) {}
-
-    const char* getFilename() const
-    {
-        return m_filename;
-    }
-
-    uint32_t getCrc32() const
-    {
-        return m_crc32;
-    }
-
-private:
-    const char* m_filename;
-    uint32_t m_crc32;
 };
 
 class LauncherError : public std::runtime_error
@@ -53,8 +56,8 @@ public:
 class PatchedAppLauncher
 {
 public:
-    PatchedAppLauncher(const char* patch_dll_name, uint32_t expected_crc32) :
-        m_patch_dll_name(patch_dll_name), m_expected_crc32(expected_crc32)
+    PatchedAppLauncher(const char* patch_dll_name) :
+        m_patch_dll_name(patch_dll_name)
     {}
     void check_installation();
     void launch(const char* mod_name = nullptr);
@@ -62,9 +65,9 @@ public:
 protected:
     std::string get_patch_dll_path();
     virtual std::string get_app_path() = 0;
+    virtual bool check_app_hash(const std::string&) = 0;
 
     std::string m_patch_dll_name;
-    uint32_t m_expected_crc32;
 };
 
 class GameLauncher : public PatchedAppLauncher
@@ -72,6 +75,7 @@ class GameLauncher : public PatchedAppLauncher
 public:
     GameLauncher();
     std::string get_app_path() override;
+    bool check_app_hash(const std::string& sha1) override;
 
 private:
     GameConfig m_conf;
@@ -82,6 +86,7 @@ class EditorLauncher : public PatchedAppLauncher
 public:
     EditorLauncher();
     std::string get_app_path() override;
+    bool check_app_hash(const std::string& sha1) override;
 
 private:
     GameConfig m_conf;
