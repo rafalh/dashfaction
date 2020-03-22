@@ -1,23 +1,14 @@
-// RF uses DirectInput 8
-#define DIRECTINPUT_VERSION	0x0800
-
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
 #include <windows.h>
-#include <dinput.h>
 #include <algorithm>
 #include "../rf/misc.h"
 #include "../rf/graphics.h"
 #include "../rf/network.h"
 #include "../rf/player.h"
+#include "../rf/input.h"
 #include "../console/console.h"
 #include "../main.h"
-
-namespace rf
-{
-    auto& di_mouse = AddrAsRef<LPDIRECTINPUTDEVICE8A>(0x0188545C);
-    auto& keep_mouse_centered = AddrAsRef<bool>(0x01885471);
-}
 
 bool SetDirectInputEnabled(bool enabled)
 {
@@ -236,16 +227,136 @@ DcCommand2 linear_pitch_cmd{
     "Toggles linear pitch angle",
 };
 
+FunHook<int(int16_t)> key_to_ascii_hook{
+    0x0051EFC0,
+    [](int16_t key) {
+        if (!key) {
+            return 0xFF;
+        }
+        return key_to_ascii_hook.CallTarget(key);
+        // special handling for Num Lock (because ToAscii API does not support it)
+        switch (key & rf::KEY_MASK) {
+            // Numpad keys that always work
+            case rf::KEY_PADMULTIPLY: return static_cast<int>('*');
+            case rf::KEY_PADMINUS: return static_cast<int>('-');
+            case rf::KEY_PADPLUS: return static_cast<int>('+');
+            // Disable Numpad Enter key because game is not prepared for getting new line character from this function
+            case rf::KEY_PADENTER: return 0xFF;
+        }
+        if (GetKeyState(VK_NUMLOCK) & 1) {
+            switch (key & rf::KEY_MASK) {
+                case rf::KEY_PAD7: return static_cast<int>('7');
+                case rf::KEY_PAD8: return static_cast<int>('8');
+                case rf::KEY_PAD9: return static_cast<int>('9');
+                case rf::KEY_PAD4: return static_cast<int>('4');
+                case rf::KEY_PAD5: return static_cast<int>('5');
+                case rf::KEY_PAD6: return static_cast<int>('6');
+                case rf::KEY_PAD1: return static_cast<int>('1');
+                case rf::KEY_PAD2: return static_cast<int>('2');
+                case rf::KEY_PAD3: return static_cast<int>('3');
+                case rf::KEY_PAD0: return static_cast<int>('0');
+                case rf::KEY_PADPERIOD: return static_cast<int>('.');
+            }
+        }
+        BYTE key_state[256] = {0};
+        if (key & rf::KEY_SHIFTED) {
+            key_state[VK_SHIFT] = 0x80;
+        }
+        if (key & rf::KEY_ALTED) {
+            key_state[VK_MENU] = 0x80;
+        }
+        if (key & rf::KEY_CTRLED) {
+            key_state[VK_CONTROL] = 0x80;
+        }
+        WORD chars[3];
+        int scan_code = key & 0x7F;
+        auto vk = MapVirtualKeyA(scan_code, MAPVK_VSC_TO_VK);
+        auto num_chars = ToAscii(vk, scan_code, key_state, chars, 0);
+        if (num_chars < 1 || (chars[0] & 0x80) != 0 || !std::isprint(chars[0])) {
+            return 0xFF;
+        }
+        TRACE("vk %X (%c) char %c", vk, vk, chars[0]);
+        return static_cast<int>(chars[0]);
+    },
+};
+
+int GetKeyName(int key, char* buf, size_t buf_len)
+{
+     LONG lparam = (key & 0x7F) << 16;
+    if (key & 0x80) {
+        lparam |= 1 << 24;
+    }
+    // Note: it seems broken on Wine with non-US layout (most likely broken MAPVK_VSC_TO_VK_EX mapping is responsible)
+    int ret = GetKeyNameTextA(lparam, buf, buf_len);
+    if (ret <= 0) {
+        WARN_ONCE("GetKeyNameTextA failed for 0x%X", key);
+        buf[0] = '\0';
+    }
+    else {
+        TRACE("key 0x%X name %s", key, buf);
+    }
+    return ret;
+}
+
+FunHook<int(rf::String&, int)> get_key_name_hook{
+    0x0043D930,
+    [](rf::String& out_name, int key) {
+        static char buf[32];
+        int result = 0;
+        if (GetKeyName(key, buf, std::size(buf)) <= 0) {
+            result = -1;
+        }
+        out_name = buf;
+        return result;
+    },
+};
+
+CodeInjection key_name_in_options_patch{
+    0x00450328,
+    [](auto& regs) {
+        static char buf[32];
+        int key = regs.edx;
+        GetKeyName(key, buf, std::size(buf));
+        regs.edi = reinterpret_cast<int>(buf);
+        regs.eip = 0x0045032F;
+    },
+};
+
+auto& GetTextFromClipboard = AddrAsRef<void(char *buf, unsigned int max_len)>(0x00525AFC);
+auto& UiInputBox_AddChar = AddrAsRef<bool __thiscall(void *this_, char c)>(0x00457260);
+
+extern FunHook<bool __fastcall(void *this_, void* edx, rf::Key key)> UiInputBox_ProcessKey_hook;
+bool __fastcall UiInputBox_ProcessKey_new(void *this_, void* edx, rf::Key key)
+{
+    if (key == (rf::KEY_V | rf::KEY_CTRLED)) {
+        char buf[256];
+        GetTextFromClipboard(buf, std::size(buf) - 1);
+        for (int i = 0; buf[i]; ++i) {
+            UiInputBox_AddChar(this_, buf[i]);
+        }
+        return true;
+    }
+    else {
+        return UiInputBox_ProcessKey_hook.CallTarget(this_, edx, key);
+    }
+}
+FunHook<bool __fastcall(void *this_, void* edx, rf::Key key)> UiInputBox_ProcessKey_hook{
+    0x00457300,
+    UiInputBox_ProcessKey_new,
+};
+
 void InputInit()
 {
-    // Fix keyboard layout
-    uint8_t kbd_layout = 0;
-    if (MapVirtualKeyA(0x10, MAPVK_VSC_TO_VK) == 'A')
-        kbd_layout = 2; // AZERTY
-    else if (MapVirtualKeyA(0x15, MAPVK_VSC_TO_VK) == 'Z')
-        kbd_layout = 3; // QWERTZ
-    INFO("Keyboard layout: %u", kbd_layout);
-    WriteMem<u8>(0x004B14B4 + 1, kbd_layout);
+    // Support non-US keyboard layouts
+    key_to_ascii_hook.Install();
+    get_key_name_hook.Install();
+    key_name_in_options_patch.Install();
+
+    // Disable broken numlock handling
+    WriteMem<u8>(0x004B14B2 + 1, 0);
+
+    // Handle CTRL+V in input boxes
+    UiInputBox_ProcessKey_hook.Install();
 
     // Add DirectInput mouse support
     mouse_eval_deltas_di_hook.Install();

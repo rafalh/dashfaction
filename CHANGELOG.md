@@ -21,6 +21,8 @@ Version 1.4.2
 - improve level loading time
 - add 'screen_flash' command for toggling screen flash effect
 - render held corpse in monitors/mirrors
+- add better support for non-US keyboard layouts
+- add support for CTRL+V (paste from clipboard) in dialog boxes
 - fix sending crash reports
 - fix non-working face scrolling before first geomod use in custom levels (RF bug)
 - fix memory and VRAM leak when quick saving (RF bug)

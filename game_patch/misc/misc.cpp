@@ -13,6 +13,7 @@
 #include "../rf/weapon.h"
 #include "../rf/network.h"
 #include "../rf/game_seq.h"
+#include "../rf/input.h"
 #include "../stdafx.h"
 #include "../server/server.h"
 #include <common/version.h>

@@ -94,13 +94,6 @@ namespace rf
     static auto& close_app_req = AddrAsRef<uint8_t>(0x01B0D758);
     static auto& num_redraw_server = AddrAsRef<uint32_t>(0x01775698);
 
-    /* Input */
-    static auto& MouseGetPos = AddrAsRef<int(int &x, int &y, int &z)>(0x0051E450);
-    static auto& MouseWasButtonPressed = AddrAsRef<int(int btn_idx)>(0x0051E5D0);
-
-    static auto& mouse_initialized = AddrAsRef<uint8_t>(0x01885461);
-    static auto& direct_input_disabled = AddrAsRef<bool>(0x005A4F88);
-
     /* Other */
 
     struct RflLightmap
