@@ -51,8 +51,37 @@ T& StructFieldRef(void* struct_ptr, size_t offset)
     return *reinterpret_cast<T*>(addr);
 }
 
-template<typename... A>
-void *CallAddr(uintptr_t addr, A... args)
+// Note: references will not be properly passed as argments unless type is specified explicity.
+// The reason for that is that argument deduction strips reference from type.
+class AddrCaller
 {
-    return AddrAsRef<void*(A...)>(addr)(args...);
-}
+    uintptr_t addr_;
+
+public:
+    constexpr AddrCaller(uintptr_t addr) : addr_(addr)
+    {}
+
+    template<typename RetVal = void, typename... A>
+    constexpr RetVal c_call(A... args)
+    {
+        return AddrAsRef<RetVal __cdecl(A...)>(addr_)(args...);
+    }
+
+    template<typename RetVal = void, typename... A>
+    constexpr RetVal this_call(A... args)
+    {
+        return AddrAsRef<RetVal __thiscall(A...)>(addr_)(args...);
+    }
+
+    template<typename RetVal = void, typename... A>
+    constexpr RetVal fast_call(A... args)
+    {
+        return AddrAsRef<RetVal __fastcall(A...)>(addr_)(args...);
+    }
+
+    template<typename RetVal = void, typename... A>
+    constexpr RetVal std_call(A... args)
+    {
+        return AddrAsRef<RetVal __stdcall(A...)>(addr_)(args...);
+    }
+};

@@ -134,8 +134,7 @@ namespace rf
 
         void SetIdentity()
         {
-            auto fun_ptr = reinterpret_cast<void(__thiscall*)(Matrix3& self)>(0x004FCE70);
-            fun_ptr(*this);
+            AddrCaller{0x004FCE70}.this_call(this);
         }
     };
     static_assert(sizeof(Matrix3) == 0x24);
@@ -155,50 +154,42 @@ namespace rf
 
         File()
         {
-            auto fun_ptr = reinterpret_cast<void(__thiscall*)(SelfType*)>(0x00523940);
-            fun_ptr(this);
+            AddrCaller{0x00523940}.this_call(this);
         }
 
         ~File()
         {
-            auto fun_ptr = reinterpret_cast<void(__thiscall*)(SelfType*)>(0x00523960);
-            fun_ptr(this);
+            AddrCaller{0x00523960}.this_call(this);
         }
 
         int Open(const char* filename, int flags = 1, int unk = 9999999)
         {
-            auto fun_ptr = reinterpret_cast<int(__thiscall*)(SelfType*, const char*, int, int)>(0x00524190);
-            return fun_ptr(this, filename, flags, unk);
+            return AddrCaller{0x00524190}.this_call<int>(this, filename, flags, unk);
         }
 
         void Close()
         {
-            auto fun_ptr = reinterpret_cast<void(__thiscall*)(SelfType*)>(0x005242A0);
-            fun_ptr(this);
+            AddrCaller{0x005242A0}.this_call(this);
         }
 
         bool CheckVersion(int min_ver) const
         {
-            auto fun_ptr = reinterpret_cast<bool(__thiscall*)(const SelfType*, int)>(0x00523990);
-            return fun_ptr(this, min_ver);
+            return AddrCaller{0x00523990}.this_call<bool>(this, min_ver);
         }
 
         bool HasReadFailed() const
         {
-            auto fun_ptr = reinterpret_cast<bool(__thiscall*)(const SelfType*)>(0x00524530);
-            return fun_ptr(this);
+            return AddrCaller{0x00524530}.this_call<bool>(this);
         }
 
         int Seek(int pos, SeekOrigin origin)
         {
-            auto fun_ptr = reinterpret_cast<int(__thiscall*)(const SelfType*, int, SeekOrigin)>(0x00524400);
-            return fun_ptr(this, pos, origin);
+            return AddrCaller{0x00524530}.this_call<int>(this, pos, origin);
         }
 
         int Read(void *buf, int buf_len, int min_ver = 0, int unused = 0)
         {
-            auto fun_ptr = reinterpret_cast<int(__thiscall*)(SelfType*, void*, int, int, int)>(0x0052CF60);
-            return fun_ptr(this, buf, buf_len, min_ver, unused);
+            return AddrCaller{0x0052CF60}.this_call<int>(this, buf, buf_len, min_ver, unused);
         }
 
         template<typename T>
@@ -237,26 +228,22 @@ namespace rf
     public:
         String()
         {
-            auto fun_ptr = reinterpret_cast<String& (__thiscall*)(String& self)>(0x004FF3B0);
-            fun_ptr(*this);
+            AddrCaller{0x004FF3B0}.this_call(this);
         }
 
         String(const char* c_str)
         {
-            auto fun_ptr = reinterpret_cast<String&(__thiscall*)(String & self, const char* c_str)>(0x004FF3D0);
-            fun_ptr(*this, c_str);
+            AddrCaller{0x004FF3D0}.this_call(this, c_str);
         }
 
         String(const String& str)
         {
-            // Use Pod cast operator to make a clone
-            m_pod = str;
+            AddrCaller{0x004FF410}.this_call(this, &str);
         }
 
         ~String()
         {
-            auto fun_ptr = reinterpret_cast<void(__thiscall*)(String & self)>(0x004FF470);
-            fun_ptr(*this);
+            AddrCaller{0x004FF470}.this_call(this);
         }
 
         operator const char*() const
@@ -267,29 +254,33 @@ namespace rf
         operator Pod() const
         {
             // Make a copy
-            auto fun_ptr = reinterpret_cast<Pod&(__thiscall*)(Pod & self, const Pod& str)>(0x004FF410);
-            Pod pod_copy;
-            fun_ptr(pod_copy, m_pod);
-            return pod_copy;
+            auto copy = *this;
+            // Copy POD from copied string
+            Pod pod = copy.m_pod;
+            // Clear POD in copied string so memory pointed by copied POD is not freed
+            copy.m_pod.buf = nullptr;
+            copy.m_pod.buf_size = 0;
+            return pod;
         }
 
         String& operator=(const String& other)
         {
-            auto fun_ptr = reinterpret_cast<String&(__thiscall*)(String & self, const String& str)>(0x004FFA20);
-            fun_ptr(*this, other);
-            return *this;
+            return AddrCaller{0x004FFA20}.this_call<String&>(this, &other);
+        }
+
+        String& operator=(const char* other)
+        {
+            return AddrCaller{0x004FFA80}.this_call<String&>(this, other);
         }
 
         const char *CStr() const
         {
-            auto fun_ptr = reinterpret_cast<const char*(__thiscall*)(const String& self)>(0x004FF480);
-            return fun_ptr(*this);
+            return AddrCaller{0x004FF480}.this_call<const char*>(this);
         }
 
         int Size() const
         {
-            auto fun_ptr = reinterpret_cast<int(__thiscall*)(const String& self)>(0x004FF490);
-            return fun_ptr(*this);
+            return AddrCaller{0x004FF490}.this_call<int>(this);
         }
 
         PRINTF_FMT_ATTRIBUTE(1, 2)
@@ -318,14 +309,12 @@ namespace rf
 
         bool IsFinished() const
         {
-            auto fun_ptr = reinterpret_cast<bool(__thiscall*)(const Timer*)>(0x004FA3F0);
-            return fun_ptr(this);
+            return AddrCaller{0x004FA3F0}.this_call<bool>(this);
         }
 
         void Set(int value_ms)
         {
-            auto fun_ptr = reinterpret_cast<void(__thiscall*)(Timer*, int)>(0x004FA360);
-            fun_ptr(this, value_ms);
+            AddrCaller{0x004FA360}.this_call(this, value_ms);
         }
 
         bool IsSet() const
@@ -335,8 +324,7 @@ namespace rf
 
         int GetTimeLeftMs() const
         {
-            auto fun_ptr = reinterpret_cast<int(__thiscall*)(const Timer*)>(0x004FA420);
-            return fun_ptr(this);
+            return AddrCaller{0x004FA420}.this_call<int>(this);
         }
     };
     static_assert(sizeof(Timer) == 0x4);

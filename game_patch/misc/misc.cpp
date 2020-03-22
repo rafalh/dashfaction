@@ -566,13 +566,13 @@ FunHook<void(int, int)> GameEnterState_hook{
         if (state == rf::GS_MAIN_MENU && g_jump_to_multi_server_list) {
             TRACE("jump to mp menu!");
             SetSoundEnabled(false);
-            CallAddr(0x00443C20); // OpenMultiMenu
+            AddrCaller{0x00443C20}.c_call(); // OpenMultiMenu
             old_state = state;
             state = rf::GameSeqProcessDeferredChange();
             GameEnterState_hook.CallTarget(state, old_state);
         }
         if (state == rf::GS_MP_MENU && g_jump_to_multi_server_list) {
-            CallAddr(0x00448B70); // OnMpJoinGameBtnClick
+            AddrCaller{0x00448B70}.c_call(); // OnMpJoinGameBtnClick
             old_state = state;
             state = rf::GameSeqProcessDeferredChange();
             GameEnterState_hook.CallTarget(state, old_state);
