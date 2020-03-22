@@ -25,6 +25,7 @@ Version 1.4.2
 - add support for CTRL+V (paste from clipboard) in dialog boxes
 - use SHA1 for files verification in launcher
 - add support for RF.exe in version 1.20 NA with 4GB flag enabled
+- stretch image header in launcher so it is properly displayed when system DPI is changed
 - fix sending crash reports
 - fix non-working face scrolling before first geomod use in custom levels (RF bug)
 - fix memory and VRAM leak when quick saving (RF bug)
