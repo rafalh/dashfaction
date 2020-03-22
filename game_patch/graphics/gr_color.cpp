@@ -344,11 +344,12 @@ FunHook<unsigned()> BinkInitDeviceInfo_hook{
     0x005210C0,
     []() {
         unsigned bink_flags = BinkInitDeviceInfo_hook.CallTarget();
+        const int BINKSURFACE32 = 3;
 
         if (g_game_config.true_color_textures && g_game_config.res_bpp == 32) {
             static auto& bink_bm_pixel_fmt = AddrAsRef<uint32_t>(0x018871C0);
             bink_bm_pixel_fmt = rf::BMPF_888;
-            bink_flags = 3;
+            bink_flags = BINKSURFACE32;
         }
 
         return bink_flags;
