@@ -345,7 +345,7 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     ServerInit();
     InputInit();
 #if !defined(NDEBUG) && defined(HAS_EXPERIMENTAL)
-    //ExperimentalInit();
+    ExperimentalInit();
 #endif
     DebugApplyPatches();
     DebugInit();
