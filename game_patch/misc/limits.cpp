@@ -1,36 +1,12 @@
 #include <patch_common/StaticBufferResizePatch.h>
 #include <patch_common/AsmWriter.h>
+#include <patch_common/CodeInjection.h>
 #include "../rf/object.h"
+#include "../rf/network.h"
 #include "misc.h"
 
-StaticBufferResizePatch obj_free_slot_buffer_resize_patch{
-    0x0073A880,
-    0xC,
-    old_obj_limit,
-    obj_limit,
-    {
-        {0x00486882},
-        {0x00486D18},
-        {0x00486E48},
-        {0x00486E55},
-        {0x004875C5},
-        {0x004875E6},
-        {0x004875EE},
-        {0x004875FD},
-        {0x0048687C},
-        {0x00486E42},
-        {0x00486E5B},
-        {0x004875BF},
-        {0x004875E0},
-        {0x004875F4},
-        {0x00487607},
-        {0x00486D31, StaticBufferResizePatch::end_ref},
-    },
-};
-
-StaticBufferResizePatch obj_ptr_array_resize_patch{
+StaticBufferResizePatch<rf::Object*> obj_ptr_array_resize_patch{
     0x007394CC,
-    sizeof(rf::Object*),
     old_obj_limit,
     obj_limit,
     {
@@ -43,14 +19,13 @@ StaticBufferResizePatch obj_ptr_array_resize_patch{
          {0x0048759E},
          {0x004875B4},
          {0x0048A78A},
-         {0x00486D70, StaticBufferResizePatch::end_ref},
-         {0x0048A7A1, StaticBufferResizePatch::end_ref},
+         {0x00486D70, StaticBufferResizePatch<rf::Object*>::end_ref},
+         {0x0048A7A1, StaticBufferResizePatch<rf::Object*>::end_ref},
     },
 };
 
-StaticBufferResizePatch obj_multi_handle_mapping_resize_patch{
+StaticBufferResizePatch<int> obj_multi_handle_mapping_resize_patch{
     0x006FB428,
-    sizeof(int),
     old_obj_limit,
     obj_limit,
     {
@@ -72,14 +47,78 @@ void SimObjArrayAddHook(rf::Object* obj)
     g_sim_obj_array.objects[g_sim_obj_array.count++] = obj;
 }
 
+CodeInjection obj_create_find_slot_patch{
+    0x00486DFC,
+    [](auto& regs) {
+        auto obj_type = regs.ebx;
+
+        static int low_index_hint = 0;
+        static int high_index_hint = old_obj_limit;
+        auto objects = obj_ptr_array_resize_patch.GetBuffer();
+
+        int index_hint, min_index, max_index;
+        bool use_low_index;
+        if (rf::is_local_net_game && (obj_type == rf::OT_ENTITY || obj_type == rf::OT_ITEM)) {
+            // Use low object numbers server-side for entities and items for better client compatibility
+            use_low_index = true;
+            index_hint = low_index_hint;
+            min_index = 0;
+            max_index = old_obj_limit - 1;
+        }
+        else {
+            use_low_index = false;
+            index_hint = high_index_hint;
+            min_index = rf::is_local_net_game ? old_obj_limit : 0;
+            max_index = obj_limit - 1;
+        }
+
+        int index = index_hint;
+        while (objects[index]) {
+            ++index;
+            if (index > max_index) {
+                index = min_index;
+            }
+
+            if (index == index_hint) {
+                // failure: no free slots
+                regs.eip = 0x00486E08;
+                return;
+            }
+        }
+
+        // success: current index is free
+        TRACE("Using index %d for object type %d", index, obj_type);
+        index_hint = index + 1;
+        if (index_hint > max_index) {
+            index_hint = min_index;
+        }
+
+        if (use_low_index) {
+            low_index_hint = index_hint;
+        }
+        else {
+            high_index_hint = index_hint;
+        }
+
+        regs.edi = index;
+        regs.eip = 0x00486E15;
+    },
+};
+
 void ApplyLimitsPatches()
 {
     // Change object limit
-    obj_free_slot_buffer_resize_patch.Install();
+    //obj_free_slot_buffer_resize_patch.Install();
     obj_ptr_array_resize_patch.Install();
     obj_multi_handle_mapping_resize_patch.Install();
     WriteMem<u32>(0x0040A0F0 + 1, obj_limit);
     WriteMem<u32>(0x0047D8C1 + 1, obj_limit);
+
+    // Change object index allocation strategy
+    obj_create_find_slot_patch.Install();
+    AsmWriter(0x00486E3F, 0x00486E61).nop();
+    AsmWriter(0x0048685F, 0x0048687B).nop();
+    AsmWriter(0x0048687C, 0x00486895).nop();
 
     // Remap simulated objects array
     AsmWriter(0x00487A6B, 0x00487A74).mov(asm_regs::ecx, &g_sim_obj_array);
@@ -97,12 +136,6 @@ void ApplyLimitsPatches()
     WriteMem<u8>(0x004F97DB + 1, asm_opcodes::jmp_rel_short); // bbox
     WriteMem<u8>(0x004F9C5B + 1, asm_opcodes::jmp_rel_short); // vertex
     WriteMem<u8>(0x005047AB + 1, asm_opcodes::jmp_rel_short); // vmesh
-
-    // Change object type-specific limits
-    // WriteMem<u8>(0x0048712A + 6, 127); // corpse
-    // WriteMem<u8>(0x00487173 + 6, 127); // debris
-    // WriteMem<u32>(0x004871D9 + 6, 1024); // item
-    // WriteMem<u8>(0x00487271 + 6, 127); // weapon
 
     // Remove object type-specific limits
     AsmWriter(0x0048712A, 0x00487137).nop(); // corpse
