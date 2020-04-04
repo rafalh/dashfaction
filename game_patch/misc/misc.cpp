@@ -1190,6 +1190,18 @@ CallHook<void __fastcall (rf::RflRoom* room, int edx, void* geo)> RflRoom_SetupL
     RflRoom_SetupLiquidRoom_EventSetLiquid,
 };
 
+CodeInjection PlayBikFile_infinite_loop_fix{
+    0x00520BEE,
+    [](auto& regs) {
+        if (!regs.eax) {
+            // pop edi
+            regs.edi = *reinterpret_cast<int*>(regs.esp);
+            regs.esp += 4;
+            regs.eip = 0x00520C6E;
+        }
+    },
+};
+
 void MiscInit()
 {
     // Version in Main Menu
@@ -1439,6 +1451,12 @@ void MiscInit()
     // Fix Set_Liquid_Depth event
     AsmWriter(0x004BCBE0).jmp(reinterpret_cast<void*>(&EventSetLiquidDepthHook::HandleOnMsg));
     RflRoom_SetupLiquidRoom_EventSetLiquid_hook.Install();
+
+    // Fix possible infinite loop when starting Bink video
+    PlayBikFile_infinite_loop_fix.Install();
+
+    // Fix memory leak when trying to play non-existing Bink video
+    WriteMem<i32>(0x00520B7E + 2, 0x00520C6E - (0x00520B7E + 6));
 
     // Init cmd line param
     GetUrlCmdLineParam();

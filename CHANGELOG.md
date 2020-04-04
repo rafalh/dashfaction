@@ -47,6 +47,8 @@ Version 1.4.2
 - fix items not being respawned after ~25 days of server uptime (RF bug)
 - fix players' pings being improperly calculated after ~25 days of server uptime (RF bug)
 - fix compatibility of Crash Handler module with Windows XP and Vista
+- fix infinite loop when failed to load Bink video (RF bug)
+- fix memory leak when trying to load non-existing Bink video (RF bug)
 
 Version 1.4.1 (released 2019-12-07)
 -----------------------------------
