@@ -35,7 +35,7 @@ namespace rf
         int num_sent_bytes_unk_idx1_ec[30];
         int num_recv_bytes_unk_idx1_ec[30];
         int unk_idx1_ec;
-        Timer field_1f0;
+        Timer packet_loss_update_timer;
         int num_obj_update_packets_sent;
         int num_obj_update_packets_recv;
         int field_1fc[3];
@@ -44,11 +44,10 @@ namespace rf
         int num_packets_sent[55];
         int num_packets_recv[55];
         Timer field_578;
-        int field_57c;
-        int field_580;
-        int field_584;
-        Timer field_588;
-        int field_58c;
+        int ping_array[2];
+        int current_ping_idx;
+        Timer send_ping_packet_timer;
+        int last_ping_time;
     };
     static_assert(sizeof(NwStats) == 0x590);
 
@@ -107,6 +106,7 @@ namespace rf
     static auto& BanIp = AddrAsRef<void(const NwAddr& addr)>(0x0046D0F0);
     static auto& MultiSetNextWeapon = AddrAsRef<void(int weapon_cls_id)>(0x0047FCA0);
     static auto& MultiChangeLevel = AddrAsRef<void(const char* filename)>(0x0047BF50);
+    static auto& PingPlayer = AddrAsRef<void(rf::Player*)>(0x00484D00);
 
     static auto& serv_addr = AddrAsRef<NwAddr>(0x0064EC5C);
     static auto& serv_name = AddrAsRef<String>(0x0064EC28);

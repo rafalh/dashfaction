@@ -355,10 +355,19 @@ CallHook<void(char*)> get_mod_name_for_game_info_packet_patch{
     },
 };
 
-CodeInjection send_ping_after_time_wrap_fix{
-    0x0047CCF3,
+
+CodeInjection send_ping_time_wrap_fix{
+    0x0047CCE8,
     [](auto& regs) {
-        regs.ebx = -1;
+        auto& nw_stats = AddrAsRef<rf::NwStats>(regs.esi);
+        auto player = *AddrAsRef<rf::Player**>(regs.esp + 0xC + 0x4);
+        if (!nw_stats.send_ping_packet_timer.IsSet() || nw_stats.send_ping_packet_timer.IsFinished()) {
+            TRACE("sending ping");
+            nw_stats.send_ping_packet_timer.Set(3000);
+            rf::PingPlayer(player);
+            nw_stats.last_ping_time = rf::TimerGet(1000);
+        }
+        regs.eip = 0x0047CD64;
     },
 };
 
@@ -415,9 +424,7 @@ void ServerInit()
     AsmWriter(0x004599DB).nop(2);
 
     // Fix sending ping packets after time in ms wraps around (~25 days)
-    send_ping_after_time_wrap_fix.Install();
-    WriteMem<u8>(0x0047CCF9, asm_opcodes::jz_rel_short);
-    WriteMem<u8>(0x0047CD01, asm_opcodes::jz_rel_short);
+    send_ping_time_wrap_fix.Install();
 }
 
 void ServerCleanup()

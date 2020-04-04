@@ -329,6 +329,32 @@ namespace rf
     };
     static_assert(sizeof(Timer) == 0x4);
 
+    struct TimerApp
+    {
+        int end_time_ms = -1;
+
+        bool IsFinished() const
+        {
+            return AddrCaller{0x004FA560}.this_call<bool>(this);
+        }
+
+        void Set(int value_ms)
+        {
+            AddrCaller{0x004FA4D0}.this_call(this, value_ms);
+        }
+
+        int GetTimeLeftMs() const
+        {
+            return AddrCaller{0x004FA590}.this_call<int>(this);
+        }
+
+        bool IsSet() const
+        {
+            return AddrCaller{0x004FA5E0}.this_call<bool>(this);
+        }
+    };
+    static_assert(sizeof(Timer) == 0x4);
+
     struct Color
     {
         uint8_t red;
