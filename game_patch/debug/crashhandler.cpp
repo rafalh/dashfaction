@@ -7,7 +7,7 @@
 static WCHAR g_module_path[MAX_PATH];
 static LPTOP_LEVEL_EXCEPTION_FILTER g_old_exception_filter;
 
-static LONG WINAPI CrashHandlerExceptionFilter(PEXCEPTION_POINTERS exception_ptrs)
+void CrashHandlerProcessException(PEXCEPTION_POINTERS exception_ptrs, DWORD thread_id)
 {
     ERR("Unhandled exception: ExceptionAddress=0x%p ExceptionCode=0x%lX",
         exception_ptrs->ExceptionRecord->ExceptionAddress, exception_ptrs->ExceptionRecord->ExceptionCode);
@@ -32,7 +32,7 @@ static LONG WINAPI CrashHandlerExceptionFilter(PEXCEPTION_POINTERS exception_ptr
 
         static WCHAR cmd_line[256];
         std::swprintf(cmd_line, ARRAYSIZE(cmd_line), L"%ls\\CrashHandler.exe 0x%p 0x%p %lu 0x%p", g_module_path,
-                      exception_ptrs, process_handle, GetCurrentThreadId(), event_handle);
+                      exception_ptrs, process_handle, thread_id, event_handle);
 
         static PROCESS_INFORMATION proc_info;
         if (!CreateProcessW(nullptr, cmd_line, nullptr, nullptr, TRUE, 0, nullptr, nullptr, &startup_info, &proc_info)) {
@@ -49,7 +49,11 @@ static LONG WINAPI CrashHandlerExceptionFilter(PEXCEPTION_POINTERS exception_ptr
         CloseHandle(process_handle);
     if (event_handle)
         CloseHandle(event_handle);
+}
 
+static LONG WINAPI CrashHandlerExceptionFilter(PEXCEPTION_POINTERS exception_ptrs)
+{
+    CrashHandlerProcessException(exception_ptrs, GetCurrentThreadId());
     return g_old_exception_filter ? g_old_exception_filter(exception_ptrs) : EXCEPTION_EXECUTE_HANDLER;
 }
 
@@ -58,13 +62,15 @@ static void InvalidParameterHandler(const wchar_t* expression, const wchar_t* fu
 {
     ERR("Invalid parameter detected in function %ls. File: %ls Line: %d", function, file, line);
     ERR("Expression: %ls", expression);
-    std::abort();
+    RaiseException(custom_exceptions::invalid_parameter, EXCEPTION_NONCONTINUABLE_EXCEPTION, 0, nullptr);
+    ExitProcess(0);
 }
 
 static void SignalHandler(int signal_number)
 {
     ERR("Abort signal (%d) received!", signal_number);
-    RaiseException(0, 0, 0, nullptr);
+    RaiseException(custom_exceptions::abort, EXCEPTION_NONCONTINUABLE_EXCEPTION, 0, nullptr);
+    ExitProcess(0);
 }
 
 void CrashHandlerInit(HMODULE module_handle)

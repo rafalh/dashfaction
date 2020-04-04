@@ -5,6 +5,7 @@
 #include <patch_common/FunHook.h>
 #include "debug_internal.h"
 #include "../console/console.h"
+#include "crashhandler.h"
 
 class UnresponsiveThreadDetector
 {
@@ -56,7 +57,7 @@ public:
 
     void HandleUnresponsiveThread()
     {
-        if (GetAsyncKeyState(VK_DELETE) & 0x8000) {
+        if ((GetAsyncKeyState(VK_DELETE) & 0x8000)) {
             CrashObservedThread();
         }
         else {
@@ -69,14 +70,23 @@ public:
         SuspendThread(m_observed_thread_handle);
         CONTEXT ctx;
         ZeroMemory(&ctx, sizeof(ctx));
-        ctx.ContextFlags = CONTEXT_CONTROL;
+        ctx.ContextFlags = CONTEXT_FULL;
         if (!GetThreadContext(m_observed_thread_handle, &ctx)) {
             WARN("GetThreadContext failed");
         }
-        ERR("Unresponsive thread EIP before the crash: 0x%lX", ctx.Eip);
-        ctx.Eip = 0;
-        SetThreadContext(m_observed_thread_handle, &ctx);
-        ResumeThread(m_observed_thread_handle);
+
+        // Simulate exception
+        EXCEPTION_POINTERS exc_ptrs;
+        EXCEPTION_RECORD exc_rec;
+        exc_ptrs.ContextRecord = &ctx;
+        exc_ptrs.ExceptionRecord = &exc_rec;
+        exc_rec.ExceptionCode = custom_exceptions::unresponsive;
+        exc_rec.ExceptionFlags = EXCEPTION_NONCONTINUABLE;
+        exc_rec.ExceptionRecord = nullptr;
+        exc_rec.ExceptionAddress = reinterpret_cast<void*>(ctx.Eip);
+        exc_rec.NumberParameters = 0;
+        CrashHandlerProcessException(&exc_ptrs, GetThreadId(m_observed_thread_handle));
+        ExitProcess(0);
     }
 };
 
@@ -96,7 +106,7 @@ DcCommand2 hang_cmd{
     "d_hang",
     []() {
         int start = GetTickCount();
-        while (GetTickCount() - start < 10000) {}
+        while (GetTickCount() - start < 6000) {}
     },
 };
 #endif
