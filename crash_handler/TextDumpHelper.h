@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <optional>
 #include <cstddef>
+#include "ProcessMemoryCache.h"
 
 inline std::string StringFormat(const char* format, ...)
 {
@@ -27,10 +28,10 @@ class TextDumpHelper {
 private:
     SYSTEM_INFO m_sys_info;
     std::vector<MEMORY_BASIC_INFORMATION> m_memory_map;
-    std::unordered_map<size_t, std::unique_ptr<uint32_t[]>> m_page_cache;
+    ProcessMemoryCache m_mem_cache;
 
 public:
-    TextDumpHelper() {
+    TextDumpHelper(HANDLE process) : m_mem_cache(process) {
         GetSystemInfo(&m_sys_info);
     }
 
@@ -42,7 +43,7 @@ public:
 
     void write_dump(std::ostream& out, EXCEPTION_POINTERS* exception_pointers, HANDLE process)
     {
-        auto [exc_rec, ctx] = fetch_exception_info(exception_pointers, process);
+        auto [exc_rec, ctx] = fetch_exception_info(exception_pointers);
 
         out << "Unhandled exception\n";
         write_current_time(out);
@@ -56,6 +57,7 @@ public:
 
         m_memory_map = fetch_memory_map(process);
 
+        write_ebp_based_backtrace(out, ctx);
         write_backtrace(out, ctx, process);
         write_stack_dump(out, ctx, process);
         write_modules(out, process);
@@ -63,22 +65,24 @@ public:
     }
 
 private:
-    std::tuple<EXCEPTION_RECORD, CONTEXT> fetch_exception_info(EXCEPTION_POINTERS* exception_pointers, HANDLE process)
+    std::tuple<EXCEPTION_RECORD, CONTEXT> fetch_exception_info(EXCEPTION_POINTERS* exception_pointers)
     {
         EXCEPTION_POINTERS exception_pointers_local;
-        SIZE_T bytes_read;
 
-        if (!ReadProcessMemory(process, exception_pointers, &exception_pointers_local, sizeof(exception_pointers_local), &bytes_read)) {
+        auto exception_ptrs_addr = reinterpret_cast<uintptr_t>(exception_pointers);
+        if (!m_mem_cache.read(exception_ptrs_addr, &exception_pointers_local, sizeof(exception_pointers_local))) {
             THROW_WIN32_ERROR();
         }
 
         CONTEXT context;
-        if (!ReadProcessMemory(process, exception_pointers_local.ContextRecord, &context, sizeof(context), &bytes_read)) {
+        auto context_record_addr = reinterpret_cast<uintptr_t>(exception_pointers_local.ContextRecord);
+        if (!m_mem_cache.read(context_record_addr, &context, sizeof(context))) {
             THROW_WIN32_ERROR();
         }
 
         EXCEPTION_RECORD exception_record;
-        if (!ReadProcessMemory(process, exception_pointers_local.ExceptionRecord, &exception_record, sizeof(exception_record), &bytes_read)) {
+        auto exception_record_addr = reinterpret_cast<uintptr_t>(exception_pointers_local.ExceptionRecord);
+        if (!m_mem_cache.read(exception_record_addr, &exception_record, sizeof(exception_record))) {
             THROW_WIN32_ERROR();
         }
 
@@ -88,11 +92,11 @@ private:
     void write_current_time(std::ostream& out)
     {
         time_t rawtime;
-        struct tm* timeinfo;
-
         time(&rawtime);
-        timeinfo = localtime(&rawtime);
-        out << "Date and time: " << asctime(timeinfo);
+        auto local_time_info = localtime(&rawtime);
+        out << "Date and time (local): " << asctime(local_time_info);
+        auto utc_time_info = gmtime(&rawtime);
+        out << "Date and time (UTC): " << asctime(utc_time_info);
     }
 
     void write_exception_info(std::ostream& out, const EXCEPTION_RECORD& exc_rec)
@@ -154,45 +158,50 @@ private:
             || protect == PAGE_EXECUTE_WRITECOPY;
     }
 
-    void* load_page_into_cache(uintptr_t page_addr, HANDLE process)
+    void write_ebp_based_backtrace(std::ostream& out, const CONTEXT& ctx)
     {
-        auto it = m_page_cache.find(page_addr);
-        if (it == m_page_cache.end()) {
-            SIZE_T bytes_read;
-            auto page_buf = std::make_unique<uint32_t[]>(m_sys_info.dwPageSize / sizeof(uint32_t));
-            bool read_success = ReadProcessMemory(process, reinterpret_cast<void*>(page_addr), page_buf.get(),
-                m_sys_info.dwPageSize, &bytes_read);
-            if (!read_success || !bytes_read) {
-                return nullptr;
+        out << "Backtrace (EBP chain):\n";
+        out << StringFormat("%08X\n", ctx.Eip);
+        auto frame_addr = ctx.Ebp;
+        uintptr_t stack_max_addr = reinterpret_cast<uintptr_t>(find_stack_max_addr(ctx));
+        for (int i = 0; i < 1000; ++i) {
+            // Check EBP points to stack area
+            if (frame_addr < ctx.Esp || frame_addr >= stack_max_addr) {
+                break;
             }
-            it = m_page_cache.insert(std::make_pair(page_addr, std::move(page_buf))).first;
-        }
-        return it->second.get();
-    }
-
-    bool read_mem(void* buf, void* addr, size_t size, HANDLE process)
-    {
-        auto out_buf_bytes = reinterpret_cast<std::byte*>(buf);
-        auto addr_uint = reinterpret_cast<uintptr_t>(addr);
-
-        while (size > 0) {
-            uintptr_t offset = addr_uint % m_sys_info.dwPageSize;
-            uintptr_t page_addr = addr_uint - offset;
-            std::byte* page_data = reinterpret_cast<std::byte*>(load_page_into_cache(page_addr, process));
-            if (page_data == nullptr) {
-                return false;
+            // Read next frame pointer and return address
+            uintptr_t buf[2];
+            if (!m_mem_cache.read(frame_addr, &buf, sizeof(buf))) {
+                break;
             }
-            size_t bytes_to_copy = std::min<size_t>(size, m_sys_info.dwPageSize - offset);
-            std::copy(page_data + offset, page_data + offset + bytes_to_copy, out_buf_bytes);
-            size -= bytes_to_copy;
-            addr_uint += bytes_to_copy;
+            // Make sure we don't have an infinite loop here
+            if (buf[0] == frame_addr) {
+                break;
+            }
+            frame_addr = buf[0];
+            // Check if return address points to executable section
+            auto ret_addr = buf[1];
+            auto call_addr = ret_addr - 5;
+            if (!is_executable_addr(reinterpret_cast<void*>(call_addr))) {
+                continue;
+            }
+            // Check if return address points near a call instruction
+            unsigned char insn_buf[5];
+            if (!m_mem_cache.read(call_addr, insn_buf, sizeof(insn_buf))) {
+                continue;
+            }
+            if (insn_buf[0] != 0xE8 && insn_buf[2] != 0xFF && insn_buf[3] != 0xFF) {
+                break;
+            }
+            // All checks succeeded so print the address
+            out << StringFormat("%08X\n", static_cast<unsigned>(call_addr));
         }
-        return true;
+        out << std::endl;
     }
 
     void write_backtrace(std::ostream& out, const CONTEXT& ctx, HANDLE process)
     {
-        out << "Backtrace:\n";
+        out << "Backtrace (potential calls):\n";
         out << StringFormat("%08X\n", ctx.Eip);
 
         SIZE_T bytes_read;
@@ -206,7 +215,6 @@ private:
             return;
         }
 
-
         uint8_t insn_buf[5];
         size_t dwords_read = bytes_read / sizeof(uint32_t);
         for (unsigned i = 0; i < dwords_read; ++i) {
@@ -215,7 +223,7 @@ private:
                 continue;
             }
 
-            if (!read_mem(insn_buf, reinterpret_cast<std::byte*>(potential_call_addr), sizeof(insn_buf), process)) {
+            if (!m_mem_cache.read(potential_call_addr, insn_buf, sizeof(insn_buf))) {
                 continue;
             }
 

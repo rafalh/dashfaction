@@ -112,7 +112,7 @@ void CrashReportApp::PrepareReport(const CommandLineInfo& cmd_line_info) try
     dump_helper.set_info_level(CRASHHANDLER_DMP_LEVEL);
     dump_helper.write_dump(crash_dump_filename.c_str(), exception_ptrs, process_handle, thread_id);
 
-    TextDumpHelper text_dump_hlp;
+    TextDumpHelper text_dump_hlp{process_handle};
     text_dump_hlp.write_dump(exc_info_filename.c_str(), exception_ptrs, process_handle);
 
     SetEvent(event);
