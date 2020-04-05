@@ -505,10 +505,15 @@ static void PackfileInit_New()
     // Note: language changes in binary are done here to make sure RootPath is already initialized
 
     // Switch UI language - can be anything even if this is US edition
-    WriteMem<u8>(0x004B27D2 + 1, static_cast<uint8_t>(GetInstalledGameLang()));
+    auto installation_lang = GetInstalledGameLang();
+    int lang_id = installation_lang;
+    if (g_game_config.language >= 0 && g_game_config.language < 3) {
+        lang_id = g_game_config.language;
+    }
+    WriteMem<u8>(0x004B27D2 + 1, static_cast<uint8_t>(lang_id));
 
     // Switch localized tables names
-    if (GetInstalledGameLang() != LANG_EN) {
+    if (installation_lang != LANG_EN) {
         WriteMemPtr(0x0043DCAB + 1, "localized_credits.tbl");
         WriteMemPtr(0x0043E50B + 1, "localized_endgame.tbl");
         WriteMemPtr(0x004B082B + 1, "localized_strings.tbl");

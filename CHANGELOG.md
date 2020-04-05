@@ -26,6 +26,7 @@ Version 1.4.2
 - use SHA1 for files verification in launcher
 - add support for RF.exe in version 1.20 NA with 4GB flag enabled
 - stretch image header in launcher so it is properly displayed when system DPI is changed
+- add option for switching game language (English, German or French)
 - fix sending crash reports
 - fix non-working face scrolling before first geomod use in custom levels (RF bug)
 - fix memory and VRAM leak when quick saving (RF bug)

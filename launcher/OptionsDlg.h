@@ -35,4 +35,5 @@ private:
     GameConfig m_conf;
     CComboBox m_resCombo;
     CComboBox m_msaaCombo;
+    CComboBox m_langCombo;
 };

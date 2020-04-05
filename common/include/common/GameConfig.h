@@ -57,6 +57,7 @@ struct GameConfig
     bool scoreboard_anim = false;
     bool keep_launcher_open = false;
     int skip_cutscene_ctrl = -1;
+    int language = -1;
 
     // Advanced
     float level_sound_volume = 1.0f;

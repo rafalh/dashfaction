@@ -22,6 +22,7 @@ BOOL OptionsDlg::OnInitDialog()
     // Attach controls
     AttachItem(IDC_RESOLUTIONS_COMBO, m_resCombo);
     AttachItem(IDC_MSAA_COMBO, m_msaaCombo);
+    AttachItem(IDC_LANG_COMBO, m_langCombo);
 
     try
     {
@@ -74,6 +75,12 @@ BOOL OptionsDlg::OnInitDialog()
     CheckDlgButton(IDC_LINEAR_PITCH_CHECK, m_conf.linear_pitch ? BST_CHECKED : BST_UNCHECKED);
 
     InitToolTip();
+
+    m_langCombo.AddString("Auto");
+    m_langCombo.AddString("English");
+    m_langCombo.AddString("German");
+    m_langCombo.AddString("French");
+    m_langCombo.SetCurSel(m_conf.language + 1);
 
     return TRUE;
 }
@@ -257,6 +264,7 @@ void OptionsDlg::OnBnClickedOk()
     m_conf.allow_overwrite_game_files = (IsDlgButtonChecked(IDC_ALLOW_OVERWRITE_GAME_CHECK) == BST_CHECKED);
     m_conf.keep_launcher_open = (IsDlgButtonChecked(IDC_KEEP_LAUNCHER_OPEN_CHECK) == BST_CHECKED);
     m_conf.linear_pitch = (IsDlgButtonChecked(IDC_LINEAR_PITCH_CHECK) == BST_CHECKED);
+    m_conf.language = m_langCombo.GetCurSel() - 1;
 
     try
     {
