@@ -360,7 +360,7 @@ CodeInjection send_ping_time_wrap_fix{
     0x0047CCE8,
     [](auto& regs) {
         auto& nw_stats = AddrAsRef<rf::NwStats>(regs.esi);
-        auto player = *AddrAsRef<rf::Player**>(regs.esp + 0xC + 0x4);
+        auto player = AddrAsRef<rf::Player*>(regs.esp + 0xC + 0x4);
         if (!nw_stats.send_ping_packet_timer.IsSet() || nw_stats.send_ping_packet_timer.IsFinished()) {
             TRACE("sending ping");
             nw_stats.send_ping_packet_timer.Set(3000);

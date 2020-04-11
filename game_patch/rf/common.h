@@ -353,7 +353,7 @@ namespace rf
             return AddrCaller{0x004FA5E0}.this_call<bool>(this);
         }
     };
-    static_assert(sizeof(Timer) == 0x4);
+    static_assert(sizeof(TimerApp) == 0x4);
 
     struct Color
     {

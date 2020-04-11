@@ -35,7 +35,7 @@ namespace rf
         int num_sent_bytes_unk_idx1_ec[30];
         int num_recv_bytes_unk_idx1_ec[30];
         int unk_idx1_ec;
-        Timer packet_loss_update_timer;
+        TimerApp packet_loss_update_timer;
         int num_obj_update_packets_sent;
         int num_obj_update_packets_recv;
         int field_1fc[3];
@@ -43,10 +43,10 @@ namespace rf
         int num_recv_bytes_per_packet[55];
         int num_packets_sent[55];
         int num_packets_recv[55];
-        Timer field_578;
+        TimerApp field_578;
         int ping_array[2];
         int current_ping_idx;
-        Timer send_ping_packet_timer;
+        TimerApp send_ping_packet_timer;
         int last_ping_time;
     };
     static_assert(sizeof(NwStats) == 0x590);
