@@ -1205,6 +1205,16 @@ CodeInjection PlayBikFile_infinite_loop_fix{
     },
 };
 
+CodeInjection explosion_crash_fix{
+    0x00436594,
+    [](auto& regs) {
+        if (!regs.edx) {
+            regs.esp += 4;
+            regs.eip = 0x004365EC;
+        }
+    },
+};
+
 void MiscInit()
 {
     // Version in Main Menu
@@ -1460,6 +1470,9 @@ void MiscInit()
 
     // Fix memory leak when trying to play non-existing Bink video
     WriteMem<i32>(0x00520B7E + 2, 0x00520C6E - (0x00520B7E + 6));
+
+    // Fix crash caused by explosion near dying player-controlled entity (entity->local_player is null)
+    explosion_crash_fix.Install();
 
     // Init cmd line param
     GetUrlCmdLineParam();

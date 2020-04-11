@@ -51,6 +51,7 @@ Version 1.4.2
 - fix compatibility of Crash Handler module with Windows XP and Vista
 - fix infinite loop when failed to load Bink video (RF bug)
 - fix memory leak when trying to load non-existing Bink video (RF bug)
+- fix crash caused by explosion near dying player-controlled entity (RF bug)
 
 Version 1.4.1 (released 2019-12-07)
 -----------------------------------
