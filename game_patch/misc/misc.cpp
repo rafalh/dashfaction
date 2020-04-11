@@ -405,6 +405,9 @@ rf::String GetGameCtrlBindName(int game_ctrl)
 
 void RenderSkipCutsceneHintText(rf::GameCtrl ctrl)
 {
+    if (rf::is_hud_hidden) {
+        return;
+    }
     auto bind_name = GetGameCtrlBindName(ctrl);
     auto& ctrl_name = rf::local_player->config.controls.keys[ctrl].name;
     rf::GrSetColor(255, 255, 255, 255);

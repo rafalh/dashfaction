@@ -423,7 +423,7 @@ void SpectateModeAfterFullGameInit()
 
 void SpectateModeDrawUI()
 {
-    if (SpectateModeIsFreeLook()) {
+    if (rf::is_hud_hidden || rf::GameSeqGetState() != rf::GS_IN_GAME || SpectateModeIsFreeLook()) {
         return;
     }
 
@@ -436,15 +436,8 @@ void SpectateModeDrawUI()
         return;
     }
 
-    static int large_font = -1;
-    if (large_font == -1)
-        large_font = rf::GrLoadFont("rfpc-large.vf", -1);
-    static int medium_font = -1;
-    if (medium_font == -1)
-        medium_font = rf::GrLoadFont("rfpc-medium.vf", -1);
-    static int small_font = -1;
-    if (small_font == -1)
-        small_font = rf::GrLoadFont("rfpc-small.vf", -1);
+    static int large_font = rf::GrLoadFont("rfpc-large.vf", -1);
+    static int medium_font = rf::GrLoadFont("rfpc-medium.vf", -1);
 
     const unsigned cx = 500, cy = 50;
     unsigned cx_scr = rf::GrGetMaxWidth(), cy_src = rf::GrGetMaxHeight();

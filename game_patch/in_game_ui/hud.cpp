@@ -3,6 +3,7 @@
 #include "../rf/graphics.h"
 #include <patch_common/ShortTypes.h>
 #include <patch_common/AsmWriter.h>
+#include <patch_common/FunHook.h>
 #include <patch_common/MemUtils.h>
 
 namespace rf
@@ -15,30 +16,22 @@ static auto& hud_points_1280 = AddrAsRef<POINT[num_hud_points]>(0x00637560);
 static auto& hud_points = AddrAsRef<POINT[num_hud_points]>(0x006376E8);
 } // namespace rf
 
+FunHook<void()> hud_render_for_multi_hook{
+    0x0046ECB0,
+    []() {
+        if (!rf::is_hud_hidden) {
+            hud_render_for_multi_hook.CallTarget();
+        }
+    },
+};
+
 DcCommand2 hud_cmd{
     "hud",
     [](std::optional<bool> hud_opt) {
-        static auto& hud_hidden = AddrAsRef<bool>(0x006379F0);
-        static auto& hud_hidden2 = AddrAsRef<bool>(0x006A1448);
 
         // toggle if no parameter passed
-        bool hud_visible = hud_opt.value_or(hud_hidden);
-
-        // toggle
-        hud_hidden = !hud_visible;
-        hud_hidden2 = !hud_visible;
-
-        // HudRender2
-        if (hud_hidden) {
-            AsmWriter(0x00476D70).ret();
-        }
-        else {
-            AsmWriter(0x00476D70).push(asm_regs::ecx);
-        }
-
-        // Powerups textures
-        WriteMem<i32>(0x006FC43C, hud_hidden ? -2 : -1);
-        WriteMem<i32>(0x006FC440, hud_hidden ? -2 : -1);
+        bool hud_visible = hud_opt.value_or(rf::is_hud_hidden);
+        rf::is_hud_hidden = !hud_visible;
     },
     "Show and hide HUD",
 };
@@ -99,5 +92,7 @@ void InitHud()
     // Fix HUD on not supported resolutions
     AsmWriter(0x004377C0).jmp(HudSetupPositionsHook);
 
+    // Command for hidding the HUD
+    hud_render_for_multi_hook.Install();
     hud_cmd.Register();
 }

@@ -61,6 +61,9 @@ namespace rf
                        UiDialogCallbackPtr callbacks[], unsigned unknown1, unsigned unknown2)>(0x004562A0);
     static auto& UiGetGadgetFromPos = AddrAsRef<int(int x, int y, UiGadget * const gadgets[], int num_gadgets)>(0x00442ED0);
 
+
+    static auto& is_hud_hidden = AddrAsRef<bool>(0x006379F0);
+
     /* Chat */
 
     enum class ChatMsgColor
