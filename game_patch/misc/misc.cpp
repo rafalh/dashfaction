@@ -1300,6 +1300,18 @@ CodeInjection muzzle_flash_light_not_disabled_fix{
     },
 };
 
+CallHook<void(rf::Player* player, int weapon_cls_id)> ProcessCreateEntityPacket_switch_weapon_fix{
+    0x004756B7,
+    [](rf::Player* player, int weapon_cls_id) {
+        ProcessCreateEntityPacket_switch_weapon_fix.CallTarget(player, weapon_cls_id);
+        // Check if local player is being spawned
+        if (!rf::is_local_net_game && player == rf::local_player) {
+            // Update requested weapon to make sure server does not auto-switch the weapon during item pickup
+            rf::MultiSetRequestedWeapon(weapon_cls_id);
+        }
+    },
+};
+
 void MiscInit()
 {
     // Version in Main Menu
@@ -1574,6 +1586,9 @@ void MiscInit()
 
     // Make d3d_zm variable not dependent on fov to fix wall-peeking
     AsmWriter(0x0054715E).nop(2);
+
+    // Fix weapon being auto-switched to previous one after respawn even when auto-switch is disabled
+    ProcessCreateEntityPacket_switch_weapon_fix.Install();
 
     // Init cmd line param
     GetUrlCmdLineParam();
