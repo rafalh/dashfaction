@@ -157,6 +157,7 @@ namespace rf
     static auto& GrReadBackBuffer = AddrAsRef<int(int x, int y, int width, int height, void *buffer)>(0x0050DFF0);
     static auto& GrD3DFlushBuffers = AddrAsRef<void()>(0x00559D90);
     static auto& GrClear = AddrAsRef<void()>(0x0050CDF0);
+    static auto& GrIsSphereOutsideView = AddrAsRef<bool(rf::Vector3& pos, float radius)>(0x005186A0);
 
     static auto& GrDrawRect = AddrAsRef<void(unsigned x, unsigned y, unsigned cx, unsigned cy, GrRenderState render_state)>(0x0050DBE0);
     static auto& GrDrawImage = AddrAsRef<void(int bm_handle, int x, int y, GrRenderState render_state)>(0x0050D2A0);

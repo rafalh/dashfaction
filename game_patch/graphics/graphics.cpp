@@ -864,6 +864,9 @@ void GraphicsInit()
 
     // Fix invalid vertex offset in mesh lighting calculation
     WriteMem<i8>(0x005042F0 + 2, sizeof(rf::Vector3));
+
+    // Make d3d_zm variable not dependent on fov to fix wall-peeking
+    AsmWriter(0x0054715E).nop(2);
 }
 
 void GraphicsDrawFpsCounter()

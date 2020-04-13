@@ -75,6 +75,8 @@ add_library(DashFaction SHARED
     in_game_ui/scoreboard.h
     in_game_ui/spectate_mode.cpp
     in_game_ui/spectate_mode.h
+    in_game_ui/in_game_ui.cpp
+    in_game_ui/in_game_ui.h
     debug/crashhandler.cpp
     debug/crashhandler.h
     debug/debugwinmsg.cpp
@@ -108,6 +110,13 @@ add_library(DashFaction SHARED
     misc/sound.cpp
     misc/sound.h
     misc/limits.cpp
+    misc/trigger.cpp
+    misc/cutscene.cpp
+    misc/event.cpp
+    misc/save_restore.cpp
+    misc/weapon.cpp
+    misc/main_menu.cpp
+    misc/glare.cpp
     ${PF_SRCS}
     res/resources.rc
 )
