@@ -135,6 +135,23 @@ CodeInjection GrClearZBuffer_fix_rect{
     },
 };
 
+D3DFORMAT DetermineDepthBufferFormat(D3DFORMAT adapter_format)
+{
+    D3DFORMAT formats_to_check[] = {D3DFMT_D24X8, D3DFMT_D24S8, D3DFMT_D24X4S4, D3DFMT_D32, D3DFMT_D16, D3DFMT_D15S1};
+    for (auto depth_fmt : formats_to_check) {
+
+        if (SUCCEEDED(rf::gr_d3d->CheckDeviceFormat(rf::gr_adapter_idx, D3DDEVTYPE_HAL, adapter_format, D3DUSAGE_DEPTHSTENCIL,
+                                                    D3DRTYPE_SURFACE, depth_fmt)) &&
+            SUCCEEDED(rf::gr_d3d->CheckDepthStencilMatch(rf::gr_adapter_idx, D3DDEVTYPE_HAL, adapter_format, adapter_format,
+                                                         depth_fmt))) {
+            INFO("Selected D3D depth format: %u", depth_fmt);
+            return depth_fmt;
+        }
+    }
+    WARN("CheckDeviceFormat failed for all depth formats!");
+    return D3DFMT_D16;
+}
+
 CodeInjection update_pp_hook{
     0x00545BC7,
     []() {
@@ -166,6 +183,13 @@ CodeInjection update_pp_hook{
         if (g_game_config.msaa == D3DMULTISAMPLE_NONE)
             rf::gr_d3d_pp.Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
 #endif
+
+        // Use glorad detail map on all cards (multi-texturing support is required)
+        auto& use_glorad_detail_map = AddrAsRef<bool>(0x01CFCBCC);
+        use_glorad_detail_map = true;
+
+        // Override depth format to avoid card specific hackfixes that makes it different on Nvidia and AMD
+        rf::gr_d3d_pp.AutoDepthStencilFormat = DetermineDepthBufferFormat(format);
     },
 };
 

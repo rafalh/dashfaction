@@ -29,6 +29,8 @@ Version 1.4.2
 - add option for switching game language (English, German or French)
 - improve hidding HUD by 'hud' command
 - add server-size validation of ammo when handling weapon fire
+- use 24-bit depth buffer if supported even if video card is not Nvidia (fixes Z-fighting on Intel and AMD cards)
+- use dynamic light detail texture for all cards if multi-texturing is available (improves graphics quality on Intel cards)
 - fix sending crash reports
 - fix non-working face scrolling before first geomod use in custom levels (RF bug)
 - fix memory and VRAM leak when quick saving (RF bug)
