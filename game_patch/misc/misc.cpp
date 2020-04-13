@@ -1572,6 +1572,9 @@ void MiscInit()
     // in multiplayer)
     muzzle_flash_light_not_disabled_fix.Install();
 
+    // Make d3d_zm variable not dependent on fov to fix wall-peeking
+    AsmWriter(0x0054715E).nop(2);
+
     // Init cmd line param
     GetUrlCmdLineParam();
 
