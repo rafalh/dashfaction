@@ -28,6 +28,7 @@ Version 1.4.2
 - stretch image header in launcher so it is properly displayed when system DPI is changed
 - add option for switching game language (English, German or French)
 - improve hidding HUD by 'hud' command
+- add server-size validation of ammo when handling weapon fire
 - fix sending crash reports
 - fix non-working face scrolling before first geomod use in custom levels (RF bug)
 - fix memory and VRAM leak when quick saving (RF bug)

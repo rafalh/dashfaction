@@ -1228,6 +1228,68 @@ FunHook<void(rf::Player*, int)> PlayerSwitchWeaponInstant_hook{
     },
 };
 
+bool WeaponClsUsesAmmo(int weapon_cls_id, bool alt_fire)
+{
+    if (rf::WeaponClsIsDetonator(weapon_cls_id)) {
+         return false;
+    }
+    if (rf::WeaponClsIsRiotStick(weapon_cls_id) && alt_fire) {
+        return true;
+    }
+    auto weapon_cls = &rf::weapon_classes[weapon_cls_id];
+    if (weapon_cls->flags & rf::WTF_MELEE) {
+        return false;
+    }
+    return true;
+}
+
+bool IsEntityOutOfAmmo(rf::EntityObj *entity, int weapon_cls_id, bool alt_fire)
+{
+    if (!WeaponClsUsesAmmo(weapon_cls_id, alt_fire)) {
+        return false;
+    }
+    auto weapon_cls = &rf::weapon_classes[weapon_cls_id];
+    if (weapon_cls->clip_size == 0) {
+        auto ammo = entity->ai_info.ammo[weapon_cls->ammo_type];
+        return ammo == 0;
+    }
+    else {
+        auto clip_ammo = entity->ai_info.clip_ammo[weapon_cls_id];
+        return clip_ammo == 0;
+    }
+}
+
+FunHook<void(rf::EntityObj*, int, rf::Vector3*, rf::Matrix3*, bool)> MultiProcessRemoteWeaponFire_hook{
+    0x0047D220,
+    [](rf::EntityObj *entity, int weapon_cls_id, rf::Vector3 *pos, rf::Matrix3 *orient, bool alt_fire) {
+        if (entity->ai_info.weapon_cls_id != weapon_cls_id) {
+            INFO("Weapon mismatch when processing weapon fire packet");
+            auto player = rf::GetPlayerFromEntityHandle(entity->_super.handle);
+            rf::PlayerSwitchWeaponInstant(player, weapon_cls_id);
+        }
+
+        if (rf::is_local_net_game && IsEntityOutOfAmmo(entity, weapon_cls_id, alt_fire)) {
+            INFO("Skipping weapon fire packet because player is out of ammunition");
+        }
+        else {
+            MultiProcessRemoteWeaponFire_hook.CallTarget(entity, weapon_cls_id, pos, orient, alt_fire);
+        }
+    },
+};
+
+CodeInjection ProcessObjUpdatePacket_check_if_weapon_is_possessed_patch{
+    0x0047E404,
+    [](auto& regs) {
+        auto entity = reinterpret_cast<rf::EntityObj*>(regs.edi);
+        auto weapon_cls_id = regs.ebx;
+        if (rf::is_local_net_game && !rf::AiPossessesWeapon(&entity->ai_info, weapon_cls_id)) {
+            // skip switching player weapon
+            INFO("Skipping weapon switch because player does not possess the weapon");
+            regs.eip = 0x0047E467;
+        }
+    },
+};
+
 void MiscInit()
 {
     // Version in Main Menu
@@ -1489,6 +1551,12 @@ void MiscInit()
 
     // Reset impact delay timers when switching weapon to avoid delayed fire after switching
     PlayerSwitchWeaponInstant_hook.Install();
+
+    // Check ammo server-side when handling weapon fire packets
+    MultiProcessRemoteWeaponFire_hook.Install();
+
+    // Verify if player possesses a weapon before switching during obj_update packet handling
+    ProcessObjUpdatePacket_check_if_weapon_is_possessed_patch.Install();
 
     // Init cmd line param
     GetUrlCmdLineParam();

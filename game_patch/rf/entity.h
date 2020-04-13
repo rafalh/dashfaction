@@ -563,4 +563,5 @@ namespace rf
     static auto& EntityCreate =
         AddrAsRef<EntityObj*(int cls_id, const char* name, int owner_handle, const Vector3& pos,
         const Matrix3& orient, int create_flags, int mp_character)>(0x00422360);
+    static auto& AiPossessesWeapon = AddrAsRef<bool(rf::AiInfo *ai_info, int weapon_cls_id)>(0x00403250);
 }

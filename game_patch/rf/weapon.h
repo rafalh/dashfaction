@@ -196,6 +196,40 @@ namespace rf
     };
     static_assert(sizeof(WeaponClass) == 0x550);
 
+    enum WeaponTypeFlags
+    {
+        WTF_ALT_FIRE = 0x1,
+        WTF_CONTINUOUS_FIRE = 0x2,
+        WTF_ALT_CONTINUOUS_FIRE = 0x4,
+        WTF_FLICKERS = 0x8,
+        WTF_THRUSTER = 0x10,
+        WTF_MELEE = 0x20,
+        WTF_REMOTE_CHARGE = 0x40,
+        WTF_PLAYER_WEP = 0x80,
+        WTF_ALT_ZOOM = 0x100,
+        WTF_UNDERWATER = 0x200,
+        WTF_FROM_EYE = 0x400,
+        WTF_INFRARED = 0x800,
+        WTF_GRAVITY = 0x1000,
+        WTF_FIXED_MUZ_FLASH = 0x2000,
+        WTF_ALT_LOCK = 0x4000,
+        WTF_SILENT = 0x8000,
+        WTF_TORPEDO = 0x10000,
+        WTF_DRILL = 0x20000,
+        WTF_DETONATOR = 0x40000,
+        WTF_ALT_CUSTOM_MODE = 0x80000,
+        WTF_SEMI_AUTOMATIC = 0x100000,
+        WTF_AUTOAIM = 0x200000,
+        WTF_PS2_FP_FULL_CLIP = 0x400000,
+        WTF_HOMING = 0x800000,
+        WTF_STICKY = 0x1000000,
+        WTF_HEAD_LENGTH_AND_TAIL_RADIUS = 0x4000000,
+        WTF_BURST_MODE = 0x8000000,
+        WTF_BURST_MODE_ALT_FIRE = 0x10000000,
+        WTF_CAMERA_SHAKE = 0x20000000,
+        WTF_TRACERS = 0x40000000,
+        WTF_PIERCING = 0x80000000,
+    };
     struct WeaponObj
     {
         struct Object _super;
@@ -225,4 +259,8 @@ namespace rf
     static auto& weapon_classes = AddrAsRef<WeaponClass[64]>(0x0085CD08);
     static auto& riot_stick_cls_id = AddrAsRef<int32_t>(0x00872468);
     static auto& remote_charge_cls_id = AddrAsRef<int32_t>(0x0087210C);
+
+    static auto& WeaponClsIsDetonator = AddrAsRef<bool(int weapon_cls_id)>(0x004C9070);
+    static auto& WeaponClsIsRiotStick = AddrAsRef<bool(int weapon_cls_id)>(0x004C90D0);
+    static auto& PlayerSwitchWeaponInstant = AddrAsRef<void(rf::Player *player, int weapon_cls_id)>(0x004A4980);
 }
