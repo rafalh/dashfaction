@@ -1290,6 +1290,16 @@ CodeInjection ProcessObjUpdatePacket_check_if_weapon_is_possessed_patch{
     },
 };
 
+CodeInjection muzzle_flash_light_not_disabled_fix{
+    0x0041E806,
+    [](auto& regs) {
+        auto muzzle_flash_timer = AddrAsRef<rf::Timer>(regs.ecx);
+        if (!muzzle_flash_timer.IsSet()) {
+            regs.eip = 0x0041E969;
+        }
+    },
+};
+
 void MiscInit()
 {
     // Version in Main Menu
@@ -1557,6 +1567,10 @@ void MiscInit()
 
     // Verify if player possesses a weapon before switching during obj_update packet handling
     ProcessObjUpdatePacket_check_if_weapon_is_possessed_patch.Install();
+
+    // Fix muzzle flash light sometimes not getting disabled (e.g. when weapon is switched during riot stick attack
+    // in multiplayer)
+    muzzle_flash_light_not_disabled_fix.Install();
 
     // Init cmd line param
     GetUrlCmdLineParam();

@@ -495,8 +495,8 @@ namespace rf
         int field_1260;
         int field_1264;
         int field_1268[65];
-        Timer timer_136_c;
-        Timer timer1370;
+        Timer muzzle_flash_timer;
+        Timer last_state_action_change_timer;
         Timer shell_eject_timer;
         int field_1378;
         Timer field_137c;
