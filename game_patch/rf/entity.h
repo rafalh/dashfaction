@@ -337,8 +337,8 @@ namespace rf
         struct EntityObj *entity;
         int weapon_cls_id;
         int weapon_cls_id2;
-        int clip_ammo[32];
-        int weapons_ammo[64];
+        int ammo[32];
+        int clip_ammo[64];
         char possesed_weapons_bitmap[64];
         char is_loop_fire[64];
         DynamicArray<int> target_obj_handles;

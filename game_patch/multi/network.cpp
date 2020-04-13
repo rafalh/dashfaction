@@ -404,12 +404,12 @@ FunHook<NwPacketHandler_Type> ProcessReloadPacket_hook{
         if (!rf::is_local_net_game) { // client-side
             // Update ClipSize and MaxAmmo if received values are greater than values from local weapons.tbl
             int weapon_cls_id = *reinterpret_cast<int32_t*>(data + 4);
-            int clip_ammo = *reinterpret_cast<int32_t*>(data + 8);
-            int ammo = *reinterpret_cast<int32_t*>(data + 12);
-            if (rf::weapon_classes[weapon_cls_id].clip_size < ammo)
-                rf::weapon_classes[weapon_cls_id].clip_size = ammo;
-            if (rf::weapon_classes[weapon_cls_id].max_ammo < clip_ammo)
-                rf::weapon_classes[weapon_cls_id].max_ammo = clip_ammo;
+            int ammo = *reinterpret_cast<int32_t*>(data + 8);
+            int clip_ammo = *reinterpret_cast<int32_t*>(data + 12);
+            if (rf::weapon_classes[weapon_cls_id].clip_size < clip_ammo)
+                rf::weapon_classes[weapon_cls_id].clip_size = clip_ammo;
+            if (rf::weapon_classes[weapon_cls_id].max_ammo < ammo)
+                rf::weapon_classes[weapon_cls_id].max_ammo = ammo;
             TRACE("ProcessReloadPacket WeaponClsId %d ClipAmmo %d Ammo %d", weapon_cls_id, clip_ammo, ammo);
 
             // Call original handler

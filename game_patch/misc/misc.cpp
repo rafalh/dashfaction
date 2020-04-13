@@ -218,7 +218,7 @@ bool EntityIsReloading_SwitchWeapon_New(rf::EntityObj* entity)
     int weapon_cls_id = entity->ai_info.weapon_cls_id;
     if (weapon_cls_id >= 0) {
         rf::WeaponClass* weapon_cls = &rf::weapon_classes[weapon_cls_id];
-        if (entity->ai_info.weapons_ammo[weapon_cls_id] == 0 && entity->ai_info.clip_ammo[weapon_cls->ammo_type] > 0)
+        if (entity->ai_info.clip_ammo[weapon_cls_id] == 0 && entity->ai_info.ammo[weapon_cls->ammo_type] > 0)
             return true;
     }
     return false;

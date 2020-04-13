@@ -680,8 +680,8 @@ typedef struct _rfItemApply
     uint32_t item_handle; /* Item handle */
     uint32_t entity_handle; /* Entity handle */
     uint32_t weapon; /* Weapon type, 0xFFFFFFFF if no weapon is given */
-    uint32_t ammo; /* Ammunition in current magazine or 0xFFFFFFFF */
-    uint32_t clip_ammo; /* Ammunition in other magazines or 0xFFFFFFFF */
+    uint32_t clip_ammo; /* Ammunition in current clip or 0xFFFFFFFF */
+    uint32_t ammo; /* Reserve ammunition or 0xFFFFFFFF */
 } rfItemApply;
 
 typedef struct _rfEntitySpawn
@@ -734,8 +734,8 @@ typedef struct _rfReload
     uint16_t size; /* Size of the following part */
     uint32_t entity_handle; /* Entity handle */
     uint32_t weapon; /* Entity weapon type */
-    uint32_t clip_ammo; /* Ammunition left in magazines */
-    uint32_t ammo; /* Ammunition in current magazine */
+    uint32_t ammo; /* Reserve ammunition */
+    uint32_t clip_ammo; /* Ammunition in current clip */
 } rfReload;
 
 typedef struct _rfReloadRequest
