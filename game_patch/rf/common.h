@@ -326,6 +326,11 @@ namespace rf
         {
             return AddrCaller{0x004FA420}.this_call<int>(this);
         }
+
+        void Unset()
+        {
+            AddrCaller{0x004FA3E0}.this_call(this);
+        }
     };
     static_assert(sizeof(Timer) == 0x4);
 

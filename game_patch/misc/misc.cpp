@@ -1215,6 +1215,19 @@ CodeInjection explosion_crash_fix{
     },
 };
 
+FunHook<void(rf::Player*, int)> PlayerSwitchWeaponInstant_hook{
+    0x004A4980,
+    [](rf::Player* player, int weapon_cls_id) {
+        PlayerSwitchWeaponInstant_hook.CallTarget(player, weapon_cls_id);
+        auto entity = rf::EntityGetFromHandle(player->entity_handle);
+        if (entity && rf::is_net_game) {
+            // Reset impact delay timers when switching weapon (except in SP because of speedrunners)
+            entity->ai_info.impact_delay_timer[0].Unset();
+            entity->ai_info.impact_delay_timer[1].Unset();
+        }
+    },
+};
+
 void MiscInit()
 {
     // Version in Main Menu
@@ -1473,6 +1486,9 @@ void MiscInit()
 
     // Fix crash caused by explosion near dying player-controlled entity (entity->local_player is null)
     explosion_crash_fix.Install();
+
+    // Reset impact delay timers when switching weapon to avoid delayed fire after switching
+    PlayerSwitchWeaponInstant_hook.Install();
 
     // Init cmd line param
     GetUrlCmdLineParam();
