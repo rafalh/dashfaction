@@ -265,4 +265,5 @@ namespace rf
     static auto& WeaponClsIsRiotStick = AddrAsRef<bool(int weapon_cls_id)>(0x004C90D0);
     static auto& PlayerSwitchWeaponInstant = AddrAsRef<void(rf::Player *player, int weapon_cls_id)>(0x004A4980);
     static auto& EntityIsReloading = AddrAsRef<bool(EntityObj* entity)>(0x00425250);
+    static auto& IsEntityWeaponInContinousFire = AddrAsRef<bool(int entity_handle, int weapon_cls_id)>(0x0041A830);
 }

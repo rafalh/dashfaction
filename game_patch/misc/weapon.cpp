@@ -9,35 +9,75 @@
 #include "../console/console.h"
 #include "../main.h"
 
-bool IsHoldingAssaultRifle()
+bool ShouldSwapWeaponAltFire(rf::Player* player)
 {
+    if (!g_game_config.swap_assault_rifle_controls) {
+        return false;
+    }
+
+    auto entity = rf::EntityGetFromHandle(player->entity_handle);
+    if (!entity) {
+        return false;
+    }
+
+    // Check if local entity is attached to a parent (vehicle or torret)
+    auto parent = rf::EntityGetFromHandle(entity->_super.parent_handle);
+    if (parent) {
+        return false;
+    }
+
     static auto& assault_rifle_cls_id = AddrAsRef<int>(0x00872470);
-    rf::EntityObj* entity = rf::EntityGetFromHandle(rf::local_player->entity_handle);
-    return entity && entity->ai_info.weapon_cls_id == assault_rifle_cls_id;
+    return entity->ai_info.weapon_cls_id == assault_rifle_cls_id;
+}
+
+bool IsPlayerWeaponInContinousFire(rf::Player* player, bool alt_fire) {
+    if (!player) {
+        player = rf::local_player;
+    }
+    auto entity = rf::EntityGetFromHandle(player->entity_handle);
+    bool is_continous_fire = rf::IsEntityWeaponInContinousFire(entity->_super.handle, entity->ai_info.weapon_cls_id);
+    bool is_alt_fire_flag_set = (entity->ai_info.flags & 0x2000) != 0; // EWF_ALT_FIRE = 0x2000
+    if (ShouldSwapWeaponAltFire(player)) {
+        is_alt_fire_flag_set = !is_alt_fire_flag_set;
+    }
+    return is_continous_fire && is_alt_fire_flag_set == alt_fire;
 }
 
 FunHook<void(rf::Player*, bool, bool)> PlayerLocalFireControl_hook{
     0x004A4E80,
-    [](rf::Player* player, bool secondary, bool was_pressed) {
-        if (g_game_config.swap_assault_rifle_controls && IsHoldingAssaultRifle())
-            secondary = !secondary;
-        PlayerLocalFireControl_hook.CallTarget(player, secondary, was_pressed);
+    [](rf::Player* player, bool alt_fire, bool was_pressed) {
+        if (ShouldSwapWeaponAltFire(player)) {
+            alt_fire = !alt_fire;
+        }
+        PlayerLocalFireControl_hook.CallTarget(player, alt_fire, was_pressed);
     },
 };
 
-extern CallHook<bool(rf::ControlConfig*, rf::GameCtrl, bool*)> IsEntityCtrlActive_hook1;
-bool IsEntityCtrlActive_New(rf::ControlConfig* control_config, rf::GameCtrl game_ctrl, bool* was_pressed)
-{
-    if (g_game_config.swap_assault_rifle_controls && IsHoldingAssaultRifle()) {
-        if (game_ctrl == rf::GC_PRIMARY_ATTACK)
-            game_ctrl = rf::GC_SECONDARY_ATTACK;
-        else if (game_ctrl == rf::GC_SECONDARY_ATTACK)
-            game_ctrl = rf::GC_PRIMARY_ATTACK;
+CodeInjection stop_continous_primary_fire_patch{
+    0x00430EC5,
+    [](auto& regs) {
+        auto entity = reinterpret_cast<rf::EntityObj*>(regs.esi);
+        if (IsPlayerWeaponInContinousFire(entity->local_player, false)) {
+            regs.eip = 0x00430EDF;
+        }
+        else {
+            regs.eip = 0x00430EF2;
+        }
     }
-    return IsEntityCtrlActive_hook1.CallTarget(control_config, game_ctrl, was_pressed);
-}
-CallHook<bool(rf::ControlConfig*, rf::GameCtrl, bool*)> IsEntityCtrlActive_hook1{0x00430E65, IsEntityCtrlActive_New};
-CallHook<bool(rf::ControlConfig*, rf::GameCtrl, bool*)> IsEntityCtrlActive_hook2{0x00430EF7, IsEntityCtrlActive_New};
+};
+
+CodeInjection stop_continous_alternate_fire_patch{
+    0x00430F09,
+    [](auto& regs) {
+        auto entity = reinterpret_cast<rf::EntityObj*>(regs.esi);
+        if (IsPlayerWeaponInContinousFire(entity->local_player, true)) {
+            regs.eip = 0x00430F23;
+        }
+        else {
+            regs.eip = 0x00430F36;
+        }
+    }
+};
 
 DcCommand2 swap_assault_rifle_controls_cmd{
     "swap_assault_rifle_controls",
@@ -264,10 +304,10 @@ void ApplyWeaponPatches()
     // Fix weapon being auto-switched to previous one after respawn even when auto-switch is disabled
     ProcessCreateEntityPacket_switch_weapon_fix.Install();
 
-    // Swap Assault Rifle fire controls
+    // Allow swapping Assault Rifle primary and alternate fire controls
     PlayerLocalFireControl_hook.Install();
-    IsEntityCtrlActive_hook1.Install();
-    IsEntityCtrlActive_hook2.Install();
+    stop_continous_primary_fire_patch.Install();
+    stop_continous_alternate_fire_patch.Install();
     swap_assault_rifle_controls_cmd.Register();
 
     // Show enemy bullets

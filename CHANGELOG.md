@@ -58,6 +58,7 @@ Version 1.4.2
 - fix unwanted fire after weapon switch from weapon with impact delay (RF bug)
 - fix wall-peeking (RF bug)
 - fix weapon being auto-switched to previous one after respawn even when auto-switch is disabled (RF bug)
+- fix swap_assault_rifle_controls cvar issues with stopping the fire and shooting from vehicles
 
 Version 1.4.1 (released 2019-12-07)
 -----------------------------------
