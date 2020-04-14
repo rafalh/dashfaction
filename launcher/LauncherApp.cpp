@@ -10,6 +10,7 @@
 #include <common/version.h>
 #include <common/ErrorUtils.h>
 #include <launcher_common/PatchedAppLauncher.h>
+#include <log/Logger.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -25,6 +26,7 @@ BOOL LauncherApp::InitInstance()
     Win32xx::LoadCommonControls();
 
     // Command line parsing
+    INFO("Parsing command line");
     LauncherCommandLineInfo cmd_line_info;
     cmd_line_info.Parse();
 
@@ -58,11 +60,13 @@ BOOL LauncherApp::InitInstance()
     }
 
     // Show main dialog
+    INFO("Showing main dialog");
 	MainDlg dlg;
 	dlg.DoModal();
 
 	// Since the dialog has been closed, return FALSE so that we exit the
 	//  application, rather than start the application's message pump.
+    INFO("Closing the launcher");
 	return FALSE;
 }
 
@@ -73,6 +77,7 @@ void LauncherApp::MigrateConfig()
         GameConfig config;
         if (config.load() && config.dash_faction_version != VERSION_STR)
         {
+            INFO("Migrating config");
             if (config.tracker == "rf.thqmultiplay.net" && config.dash_faction_version.empty()) // < 1.1.0
                 config.tracker = DEFAULT_RF_TRACKER;
             config.dash_faction_version = VERSION_STR;
@@ -91,7 +96,9 @@ bool LauncherApp::LaunchGame(HWND hwnd, const char* mod_name)
 
     try
     {
+        INFO("Checking installation");
         launcher.check_installation();
+        INFO("Installation is okay");
     }
     catch (FileNotFoundException &e)
     {
@@ -138,7 +145,9 @@ bool LauncherApp::LaunchGame(HWND hwnd, const char* mod_name)
 
     try
     {
+        INFO("Launching the game...");
         launcher.launch(mod_name);
+        INFO("Game launched!");
         return true;
     }
     catch (PrivilegeElevationRequiredException&)
@@ -180,7 +189,9 @@ bool LauncherApp::LaunchEditor(HWND hwnd, const char* mod_name)
     EditorLauncher launcher;
     try
     {
+        INFO("Launching editor...");
         launcher.launch(mod_name);
+        INFO("Editor launched!");
         return true;
     }
     catch (std::exception &e)
@@ -193,6 +204,7 @@ bool LauncherApp::LaunchEditor(HWND hwnd, const char* mod_name)
 
 int LauncherApp::Message(HWND hwnd, const char *pszText, const char *pszTitle, int Flags)
 {
+    INFO("%s: %s", pszTitle ? pszTitle : "Error", pszText);
     if (GetSystemMetrics(SM_CMONITORS) > 0)
         return MessageBoxA(hwnd, pszText, pszTitle, Flags);
     else

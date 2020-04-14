@@ -10,6 +10,7 @@
 #include "OptionsDlg.h"
 #include <common/version.h>
 #include <common/ErrorUtils.h>
+#include <log/Logger.h>
 #include <launcher_common/PatchedAppLauncher.h>
 #include <launcher_common/UpdateChecker.h>
 #include <wxx_wincore.h>
@@ -101,6 +102,7 @@ INT_PTR MainDlg::DialogProc(UINT msg, WPARAM wparam, LPARAM lparam)
 
 void MainDlg::RefreshModSelector()
 {
+    INFO("Refreshing mods list");
     CString selected_mod;
     selected_mod = m_mod_selector.GetWindowText();
     m_mod_selector.ResetContent();
@@ -146,10 +148,13 @@ LRESULT MainDlg::OnUpdateCheck(WPARAM wParam, LPARAM lParam)
         m_update_status.SetWindowText("No update is available.");
     else {
         m_update_status.SetWindowText("New version available!");
-        int iResult = MessageBoxA(m_pUpdateChecker->get_message().c_str(), "Dash Faction update is available!",
+        int result = MessageBoxA(m_pUpdateChecker->get_message().c_str(), "Dash Faction update is available!",
                                   MB_OKCANCEL | MB_ICONEXCLAMATION);
-        if (iResult == IDOK) {
-            ShellExecuteA(*this, "open", m_pUpdateChecker->get_url().c_str(), NULL, NULL, SW_SHOW);
+        if (result == IDOK) {
+            auto exec_ret = ShellExecuteA(*this, "open", m_pUpdateChecker->get_url().c_str(), NULL, NULL, SW_SHOW);
+            if (reinterpret_cast<int>(exec_ret) <= 32) {
+                ERR("ShellExecuteA failed %p", exec_ret);
+            }
             EndDialog(0);
         }
     }
@@ -193,7 +198,11 @@ void MainDlg::OnBnClickedEditorBtn()
 
 void MainDlg::OnBnClickedSupportBtn()
 {
-    ShellExecuteA(*this, "open", "https://discord.gg/bC2WzvJ", NULL, NULL, SW_SHOW);
+    INFO("Opening support channel");
+    auto ret = ShellExecuteA(*this, "open", "https://discord.gg/bC2WzvJ", NULL, NULL, SW_SHOW);
+    if (reinterpret_cast<int>(ret) <= 32) {
+        ERR("ShellExecuteA failed %p", ret);
+    }
 }
 
 CString MainDlg::GetSelectedMod()
@@ -203,6 +212,7 @@ CString MainDlg::GetSelectedMod()
 
 void MainDlg::AfterLaunch()
 {
+    INFO("Checking if launcher should be closed");
     GameConfig config;
     try {
         config.load();
@@ -211,6 +221,8 @@ void MainDlg::AfterLaunch()
         // ignore
     }
 
-    if (!config.keep_launcher_open)
+    if (!config.keep_launcher_open) {
+        INFO("Closing launcher after launch");
         CDialog::OnOK();
+    }
 }

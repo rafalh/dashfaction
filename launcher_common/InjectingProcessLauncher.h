@@ -1,6 +1,7 @@
 #pragma once
 
 #include <windows.h>
+#include <log/Logger.h>
 #include "Process.h"
 #include "Thread.h"
 #include "DllInjector.h"
@@ -29,7 +30,7 @@ public:
                 m_process.terminate(1);
         }
         catch (const std::exception& e) {
-            std::fprintf(stderr, "%s\n", e.what());
+            ERR("%s", e.what());
         }
     }
 

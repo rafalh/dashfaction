@@ -15,4 +15,4 @@ set_target_properties(LauncherCommon PROPERTIES CXX_EXTENSIONS NO)
 
 target_include_directories(LauncherCommon PUBLIC include)
 
-target_link_libraries(LauncherCommon Common)
+target_link_libraries(LauncherCommon Common Logger)

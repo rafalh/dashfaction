@@ -6,7 +6,7 @@ include_directories(
 file(GLOB SRCS *.cpp *.h *.rc)
 add_executable(DashFactionLauncher WIN32 ${SRCS})
 
-target_link_libraries(DashFactionLauncher LauncherCommon comctl32)
+target_link_libraries(DashFactionLauncher LauncherCommon Logger comctl32)
 
 if(MSVC)
     # generate PDB files

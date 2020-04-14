@@ -1,4 +1,5 @@
 #include "InjectingProcessLauncher.h"
+#include <log/Logger.h>
 #include <fstream>
 
 static uintptr_t get_pe_file_entrypoint(const char* filename)
@@ -62,6 +63,7 @@ void InjectingProcessLauncher::wait_for_process_initialization(uintptr_t entry_p
 InjectingProcessLauncher::InjectingProcessLauncher(
     const char* app_name, const char* work_dir, const char* command_line, STARTUPINFO& startup_info, int timeout)
 {
+    INFO("Creating suspended process");
     PROCESS_INFORMATION process_info;
     BOOL result = CreateProcessA(app_name, const_cast<char*>(command_line), nullptr, nullptr, FALSE, CREATE_SUSPENDED,
                                  nullptr, work_dir, &startup_info, &process_info);
@@ -72,6 +74,8 @@ InjectingProcessLauncher::InjectingProcessLauncher(
     m_process = Process{process_info.hProcess};
     m_thread = Thread{process_info.hThread};
 
+    INFO("Finding entry-point");
     uintptr_t entry_point = get_pe_file_entrypoint(app_name);
+    INFO("Waiting for process initialization");
     wait_for_process_initialization(entry_point, timeout);
 }
