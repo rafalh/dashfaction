@@ -53,6 +53,7 @@ void PatchedAppLauncher::launch(const char* mod_name)
     if (!check_app_hash(hash)) {
         throw FileHashVerificationException(app_path, hash);
     }
+    INFO("SHA1 is valid");
 
     std::string work_dir = get_dir_from_path(app_path);
 
@@ -76,7 +77,11 @@ void PatchedAppLauncher::launch(const char* mod_name)
         si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
     }
 
-    std::string cmd_line = GetCommandLineA();
+    std::string cmd_line;
+    cmd_line += '"';
+    cmd_line += app_path;
+    cmd_line += "\" ";
+    cmd_line += GetCommandLineA(); // TODO: strip argv[0]
     if (mod_name && mod_name[0]) {
         cmd_line += " -mod ";
         cmd_line += mod_name;

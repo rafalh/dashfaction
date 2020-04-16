@@ -65,8 +65,11 @@ InjectingProcessLauncher::InjectingProcessLauncher(
 {
     INFO("Creating suspended process");
     PROCESS_INFORMATION process_info;
+    ZeroMemory(&process_info, sizeof(process_info));
+    INFO("Calling CreateProcessA app_name %s, command_line %s, work_dir %s", app_name, command_line, work_dir);
     BOOL result = CreateProcessA(app_name, const_cast<char*>(command_line), nullptr, nullptr, FALSE, CREATE_SUSPENDED,
                                  nullptr, work_dir, &startup_info, &process_info);
+    INFO("CreateProcessA returned %d", result);
     if (!result) {
         THROW_WIN32_ERROR();
     }
