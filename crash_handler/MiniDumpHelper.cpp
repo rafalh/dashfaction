@@ -86,7 +86,7 @@ bool MiniDumpHelper::write_dump(const char* path, PEXCEPTION_POINTERS exception_
     if (!m_MiniDumpWriteDump)
         return false;
 
-    static HANDLE file = nullptr;
+    HANDLE file = nullptr;
     file = CreateFileA(path, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,
                         nullptr);
 
@@ -97,13 +97,14 @@ bool MiniDumpHelper::write_dump(const char* path, PEXCEPTION_POINTERS exception_
         return false;
     }
 
-    static MINIDUMP_EXCEPTION_INFORMATION exc_info;
+    MINIDUMP_EXCEPTION_INFORMATION exc_info;
     exc_info.ThreadId = thread_id;
     exc_info.ExceptionPointers = exception_pointers;
     exc_info.ClientPointers = TRUE;
 
-    static MINIDUMP_TYPE dump_type = MiniDumpNormal;
-    static MINIDUMP_CALLBACK_INFORMATION* callback_info_ptr = nullptr;
+    MINIDUMP_TYPE dump_type = MiniDumpNormal;
+    MINIDUMP_CALLBACK_INFORMATION callback_info;
+    MINIDUMP_CALLBACK_INFORMATION* callback_info_ptr = nullptr;
 
     // See http://www.debuginfo.com/articles/effminidumps2.html
     if (m_info_level == 0) {
@@ -117,7 +118,6 @@ bool MiniDumpHelper::write_dump(const char* path, PEXCEPTION_POINTERS exception_
             MiniDumpWithDataSegs | MiniDumpWithHandleData | MiniDumpWithFullMemoryInfo |
             MiniDumpWithThreadInfo | MiniDumpWithUnloadedModules);
 
-        static MINIDUMP_CALLBACK_INFORMATION callback_info;
         callback_info.CallbackRoutine = (MINIDUMP_CALLBACK_ROUTINE)mini_dump_callback;
         callback_info.CallbackParam = this;
         callback_info_ptr = &callback_info;
@@ -131,10 +131,14 @@ bool MiniDumpHelper::write_dump(const char* path, PEXCEPTION_POINTERS exception_
         callback_info_ptr = nullptr;
     }
 
-    BOOL result =
-        m_MiniDumpWriteDump(process, GetProcessId(process), file, dump_type, &exc_info, nullptr, callback_info_ptr);
-    if (!result)
-        CRASHHANDLER_ERR("MiniDumpWriteDump failed");
+    SetLastError(0);
+    auto process_id = GetProcessId(process);
+    BOOL result = m_MiniDumpWriteDump(process, process_id, file, dump_type, &exc_info, nullptr, callback_info_ptr);
+    if (!result) {
+        char buf[256];
+        sprintf(buf, "MiniDumpWriteDump %lu %lu %p failed with error %lu", process_id, thread_id, file, GetLastError());
+        CRASHHANDLER_ERR(buf); // ERROR_INVALID_PARAMETER?
+    }
 
     CloseHandle(file);
     return result != FALSE;

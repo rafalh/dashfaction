@@ -3,7 +3,7 @@
 #include "stdafx.h"
 #include "level_autodl/autodl.h"
 #include "console/console.h"
-#include "debug/crashhandler.h"
+#include "crash_handler_stub.h"
 #include "debug/debug.h"
 #include "exports.h"
 #include "graphics/gamma.h"
@@ -290,7 +290,7 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
 
     // Init logging and crash dump support first
     InitLogging();
-    CrashHandlerInit(g_hmodule);
+    CrashHandlerStubInstall(g_hmodule);
 
     // Enable Data Execution Prevention
     if (!SetProcessDEPPolicy(PROCESS_DEP_ENABLE))

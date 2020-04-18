@@ -6,6 +6,7 @@
 #include <patch_common/FunHook.h>
 #include <patch_common/AsmWriter.h>
 #include <cstddef>
+#include <crash_handler_stub.h>
 
 #include <log/ConsoleAppender.h>
 #include <log/FileAppender.h>
@@ -103,6 +104,7 @@ void InitLogging()
     logger_config.add_appender(std::make_unique<logging::FileAppender>("logs/DashEditor.log", false));
     logger_config.add_appender(std::make_unique<logging::ConsoleAppender>());
     logger_config.add_appender(std::make_unique<logging::Win32Appender>());
+    INFO("DashFaction Editor log started.");
 }
 
 void ApplyGraphicsPatches();
@@ -110,7 +112,7 @@ void ApplyGraphicsPatches();
 extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
 {
     InitLogging();
-    INFO("DashFaction Editor log started.");
+    CrashHandlerStubInstall(g_module);
 
     // Change command for Play Level action to use Dash Faction launcher
     static char module_filename[MAX_PATH];

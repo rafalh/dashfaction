@@ -92,6 +92,7 @@ void LauncherApp::MigrateConfig()
 
 bool LauncherApp::LaunchGame(HWND hwnd, const char* mod_name)
 {
+    WatchDogTimer::ScopedStartStop wdt_start{m_watch_dog_timer};
     GameLauncher launcher;
 
     try
@@ -186,6 +187,7 @@ bool LauncherApp::LaunchGame(HWND hwnd, const char* mod_name)
 
 bool LauncherApp::LaunchEditor(HWND hwnd, const char* mod_name)
 {
+    WatchDogTimer::ScopedStartStop wdt_start{m_watch_dog_timer};
     EditorLauncher launcher;
     try
     {
@@ -204,9 +206,11 @@ bool LauncherApp::LaunchEditor(HWND hwnd, const char* mod_name)
 
 int LauncherApp::Message(HWND hwnd, const char *pszText, const char *pszTitle, int Flags)
 {
+    WatchDogTimer::ScopedPause wdt_pause{m_watch_dog_timer};
     INFO("%s: %s", pszTitle ? pszTitle : "Error", pszText);
-    if (GetSystemMetrics(SM_CMONITORS) > 0)
+    if (GetSystemMetrics(SM_CMONITORS) > 0) {
         return MessageBoxA(hwnd, pszText, pszTitle, Flags);
+    }
     else
     {
         fprintf(stderr, "%s: %s", pszTitle ? pszTitle : "Error", pszText);

@@ -2,9 +2,12 @@
 
 #include <wxx_wincore.h>
 #include "resource.h"
+#include <crash_handler_stub/WatchDogTimer.h>
 
 class LauncherApp : public CWinApp
 {
+    WatchDogTimer m_watch_dog_timer;
+
 public:
     virtual BOOL InitInstance() override;
 

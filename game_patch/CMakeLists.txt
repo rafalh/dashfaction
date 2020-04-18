@@ -77,8 +77,6 @@ add_library(DashFaction SHARED
     in_game_ui/spectate_mode.h
     in_game_ui/in_game_ui.cpp
     in_game_ui/in_game_ui.h
-    debug/crashhandler.cpp
-    debug/crashhandler.h
     debug/debugwinmsg.cpp
     debug/debug_cmd.cpp
     debug/debug.cpp
@@ -138,6 +136,7 @@ target_link_libraries(DashFaction
     PatchCommon
     Logger
     Common
+    CrashHandlerStub
     xxhash
     gdi32
     winmm

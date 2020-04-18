@@ -24,6 +24,7 @@ target_link_libraries(DashEditor
     PatchCommon
     Common
     Logger
+    CrashHandlerStub
     shlwapi
 )
 

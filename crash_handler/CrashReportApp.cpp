@@ -67,7 +67,11 @@ void ArchiveReport(const char* crash_dump_filename, const char* exc_info_filenam
     ZipHelper zip(CRASHHANDLER_TARGET_DIR "/" CRASHHANDLER_TARGET_NAME);
     zip.add_file(crash_dump_filename, "CrashDump.dmp");
     zip.add_file(exc_info_filename, "exception.txt");
-    zip.add_file(CRASHHANDLER_LOG_PATH, "AppLog.log");
+    try {
+        zip.add_file(CRASHHANDLER_LOG_PATH, "AppLog.log");
+    } catch (...) {
+        // log file may not exist yet - ignore exception
+    }
     zip.close();
 }
 catch (...) {
@@ -108,8 +112,11 @@ void CrashReportApp::PrepareReport(const CommandLineInfo& cmd_line_info) try
     MiniDumpHelper dump_helper;
     dump_helper.add_known_module(L"ntdll");
     dump_helper.add_known_module(L"DashFaction");
+    dump_helper.add_known_module(L"DashEditor");
+    dump_helper.add_known_module(L"DashFactionLauncher");
     dump_helper.add_known_module(L"RF");
-    dump_helper.set_info_level(CRASHHANDLER_DMP_LEVEL);
+    dump_helper.add_known_module(L"RED");
+    dump_helper.set_info_level(0);//CRASHHANDLER_DMP_LEVEL);
     dump_helper.write_dump(crash_dump_filename.c_str(), exception_ptrs, process_handle, thread_id);
 
     TextDumpHelper text_dump_hlp{process_handle};

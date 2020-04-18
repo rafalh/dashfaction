@@ -5,6 +5,7 @@
 #include <log/FileAppender.h>
 #include <log/Win32Appender.h>
 #include <log/ConsoleAppender.h>
+#include <crash_handler_stub.h>
 
 void InitLogging()
 {
@@ -22,6 +23,7 @@ void InitLogging()
 int APIENTRY WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
     InitLogging();
+    CrashHandlerStubInstall(nullptr);
 
     try
     {
