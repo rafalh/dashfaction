@@ -10,6 +10,7 @@
 class UnresponsiveThreadDetector
 {
     HANDLE m_observed_thread_handle;
+    DWORD m_observed_thread_id;
     int m_ticks = 0;
     std::thread m_checker_thread;
     std::condition_variable m_cond_var;
@@ -28,6 +29,7 @@ public:
             FALSE, DUPLICATE_SAME_ACCESS)) {
             WARN("DuplicateHandle failed");
         }
+        m_observed_thread_id = GetCurrentThreadId();
         m_checker_thread = std::thread{[this]() { CheckerThreadProc(); }};
     }
 
@@ -85,7 +87,7 @@ public:
         exc_rec.ExceptionRecord = nullptr;
         exc_rec.ExceptionAddress = reinterpret_cast<void*>(ctx.Eip);
         exc_rec.NumberParameters = 0;
-        CrashHandlerProcessException(&exc_ptrs, GetThreadId(m_observed_thread_handle));
+        CrashHandlerProcessException(&exc_ptrs, m_observed_thread_id);
         ExitProcess(0);
     }
 };
