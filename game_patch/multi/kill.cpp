@@ -102,11 +102,11 @@ void OnPlayerKill(rf::Player* killed_player, rf::Player* killer_player)
     if (killer_player) {
         auto killer_stats = reinterpret_cast<PlayerStatsNew*>(killer_player->stats);
         if (killer_player != killed_player) {
-            ++killer_stats->score;
+            rf::AddPlayerScore(killer_player, 1);
             ++killer_stats->num_kills;
         }
         else
-            --killer_stats->score;
+            rf::AddPlayerScore(killer_player, -1);
     }
 }
 

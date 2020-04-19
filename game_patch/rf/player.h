@@ -303,4 +303,5 @@ namespace rf
     static auto& GetPlayerFromEntityHandle = AddrAsRef<Player*(int32_t entity_handle)>(0x004A3740);
     static auto& IsPlayerEntityInvalid = AddrAsRef<bool(Player *player)>(0x004A4920);
     static auto& IsPlayerDying = AddrAsRef<bool(Player *player)>(0x004A4940);
+    static auto& AddPlayerScore = AddrAsRef<void(Player *player, int delta)>(0x004A7460);
 }
