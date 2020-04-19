@@ -78,7 +78,10 @@ void OnPlayerKill(rf::Player* killed_player, rf::Player* killer_player)
     else {
         color_id = rf::ChatMsgColor::default_;
         if (killer_player == killed_player) {
-            mui_msg = NullToEmpty(rf::strings::was_killed_by_his_own_hand);
+            if (rf::IsFemaleMpCharacter(killed_player->config.mp_character))
+                mui_msg = NullToEmpty(rf::strings::was_killed_by_her_own_hand);
+            else
+                mui_msg = NullToEmpty(rf::strings::was_killed_by_his_own_hand);
             msg = rf::String::Format("%s%s", killed_player->name.CStr(), mui_msg);
         }
         else {

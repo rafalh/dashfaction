@@ -135,6 +135,7 @@ namespace rf
         static const auto &frags = array[676];
         static const auto &ping = array[677];
         static const auto &caps = array[681];
+        static const auto &was_killed_by_her_own_hand = array[692];
         static const auto &was_killed_by_his_own_hand = array[693];
         static const auto &was_killed_by = array[694];
         static const auto &was_killed_mysteriously = array[695];
