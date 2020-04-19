@@ -43,6 +43,8 @@ void ApplySaveRestorePatches();
 void ApplyWeaponPatches();
 void ApplyMainMenuPatches();
 void ApplyGlarePatches();
+void ApplySoundPatches();
+void RegisterSoundCommands();
 
 struct JoinMpGameData
 {
@@ -587,6 +589,8 @@ void MiscInit()
     ApplyWeaponPatches();
     ApplyMainMenuPatches();
     ApplyGlarePatches();
+    ApplySoundPatches();
+    RegisterSoundCommands();
 }
 
 void HandleUrlParam()

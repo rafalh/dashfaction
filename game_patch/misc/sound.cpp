@@ -203,12 +203,12 @@ DcCommand2 level_sounds_cmd{
     "levelsounds <volume>",
 };
 
-void InitMiscSound()
+void RegisterSoundCommands()
 {
     level_sounds_cmd.Register();
 }
 
-void ApplyMiscSoundPatches()
+void ApplySoundPatches()
 {
     // Sound loop fix
     WriteMem<u8>(0x00505D07 + 1, 0x00505D5B - (0x00505D07 + 2));
