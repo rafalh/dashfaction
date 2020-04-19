@@ -1,5 +1,5 @@
 #include "InjectingProcessLauncher.h"
-#include <log/Logger.h>
+#include <xlog/xlog.h>
 #include <fstream>
 
 static uintptr_t get_pe_file_entrypoint(const char* filename)
@@ -63,13 +63,13 @@ void InjectingProcessLauncher::wait_for_process_initialization(uintptr_t entry_p
 InjectingProcessLauncher::InjectingProcessLauncher(
     const char* app_name, const char* work_dir, const char* command_line, STARTUPINFO& startup_info, int timeout)
 {
-    INFO("Creating suspended process");
+    xlog::info("Creating suspended process");
     PROCESS_INFORMATION process_info;
     ZeroMemory(&process_info, sizeof(process_info));
-    INFO("Calling CreateProcessA app_name %s, command_line %s, work_dir %s", app_name, command_line, work_dir);
+    xlog::info("Calling CreateProcessA app_name %s, command_line %s, work_dir %s", app_name, command_line, work_dir);
     BOOL result = CreateProcessA(app_name, const_cast<char*>(command_line), nullptr, nullptr, FALSE, CREATE_SUSPENDED,
                                  nullptr, work_dir, &startup_info, &process_info);
-    INFO("CreateProcessA returned %d", result);
+    xlog::info("CreateProcessA returned %d", result);
     if (!result) {
         THROW_WIN32_ERROR();
     }
@@ -77,8 +77,8 @@ InjectingProcessLauncher::InjectingProcessLauncher(
     m_process = Process{process_info.hProcess};
     m_thread = Thread{process_info.hThread};
 
-    INFO("Finding entry-point");
+    xlog::info("Finding entry-point");
     uintptr_t entry_point = get_pe_file_entrypoint(app_name);
-    INFO("Waiting for process initialization");
+    xlog::info("Waiting for process initialization");
     wait_for_process_initialization(entry_point, timeout);
 }

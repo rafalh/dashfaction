@@ -135,7 +135,7 @@ protected:
     void enter()
     {
         if (m_is_cpu_in_range) {
-            WARN("Recursion not supported in CallProfiler");
+            xlog::warn("Recursion not supported in CallProfiler");
             return;
         }
         m_enter_time = current_time();
@@ -146,7 +146,7 @@ protected:
     void leave()
     {
         if (!m_is_cpu_in_range) {
-            //WARN("Leaveing without entering in CallProfiler");
+            //xlog::warn("Leaveing without entering in CallProfiler");
             return;
         }
         m_is_cpu_in_range = false;

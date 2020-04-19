@@ -10,7 +10,7 @@
 #endif
 
 #include <wxx_wincore.h>
-// undefine TRACE to get rid of warnings when it is defined by logging module
+// undefine TRACE (defined by wxx) to get rid of warnings when it is redefined by xlog module
 #undef TRACE
 
 #include <wininet.h>

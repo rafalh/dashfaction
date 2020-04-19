@@ -362,7 +362,7 @@ CodeInjection send_ping_time_wrap_fix{
         auto& nw_stats = AddrAsRef<rf::NwStats>(regs.esi);
         auto player = AddrAsRef<rf::Player*>(regs.esp + 0xC + 0x4);
         if (!nw_stats.send_ping_packet_timer.IsSet() || nw_stats.send_ping_packet_timer.IsFinished()) {
-            TRACE("sending ping");
+            xlog::trace("sending ping");
             nw_stats.send_ping_packet_timer.Set(3000);
             rf::PingPlayer(player);
             nw_stats.last_ping_time = rf::TimerGet(1000);

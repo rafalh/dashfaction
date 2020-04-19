@@ -9,7 +9,7 @@ const char* GetWndMsgName(UINT msg);
 
 LRESULT WINAPI WndProc(HWND wnd_handle, UINT msg, WPARAM w_param, LPARAM l_param)
 {
-    // TRACE("%08x: msg %s %x %x", GetTickCount(), GetWndMsgName(msg), w_param, l_param);
+    // xlog::trace("%08x: msg %s %x %x", GetTickCount(), GetWndMsgName(msg), w_param, l_param);
 
     for (unsigned i = 0; i < rf::num_msg_handlers; ++i) {
         rf::msg_handlers[i](msg, w_param, l_param);

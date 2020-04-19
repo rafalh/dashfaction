@@ -97,7 +97,7 @@ CodeInjection GrCreateD3DDevice_error_patch{
     0x00545CBD,
     [](auto& regs) {
         auto hr = static_cast<HRESULT>(regs.eax);
-        ERR("D3D CreateDevice failed (hr 0x%lX - %s)", hr, getDxErrorStr(hr));
+        xlog::error("D3D CreateDevice failed (hr 0x%lX - %s)", hr, getDxErrorStr(hr));
 
         auto text = StringFormat("Failed to create Direct3D device object - error 0x%lX (%s).\n"
                                  "A critical error has occurred and the program cannot continue.\n"
@@ -107,17 +107,17 @@ CodeInjection GrCreateD3DDevice_error_patch{
         hr = rf::gr_d3d->CheckDeviceType(rf::gr_adapter_idx, D3DDEVTYPE_HAL, rf::gr_d3d_pp.BackBufferFormat,
             rf::gr_d3d_pp.BackBufferFormat, rf::gr_d3d_pp.Windowed);
         if (FAILED(hr)) {
-            ERR("CheckDeviceType for format %d failed: %lX", rf::gr_d3d_pp.BackBufferFormat, hr);
+            xlog::error("CheckDeviceType for format %d failed: %lX", rf::gr_d3d_pp.BackBufferFormat, hr);
         }
 
         hr = rf::gr_d3d->CheckDeviceFormat(rf::gr_adapter_idx, D3DDEVTYPE_HAL, rf::gr_d3d_pp.BackBufferFormat,
             D3DUSAGE_DEPTHSTENCIL, D3DRTYPE_SURFACE, rf::gr_d3d_pp.AutoDepthStencilFormat);
         if (FAILED(hr)) {
-            ERR("CheckDeviceFormat for depth-stencil format %d failed: %lX", rf::gr_d3d_pp.AutoDepthStencilFormat, hr);
+            xlog::error("CheckDeviceFormat for depth-stencil format %d failed: %lX", rf::gr_d3d_pp.AutoDepthStencilFormat, hr);
         }
 
         if (!(rf::gr_d3d_device_caps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT)) {
-            ERR("No T&L hardware support!");
+            xlog::error("No T&L hardware support!");
         }
 
         ShowWindow(rf::main_wnd, SW_HIDE);
@@ -144,11 +144,11 @@ D3DFORMAT DetermineDepthBufferFormat(D3DFORMAT adapter_format)
                                                     D3DRTYPE_SURFACE, depth_fmt)) &&
             SUCCEEDED(rf::gr_d3d->CheckDepthStencilMatch(rf::gr_adapter_idx, D3DDEVTYPE_HAL, adapter_format, adapter_format,
                                                          depth_fmt))) {
-            INFO("Selected D3D depth format: %u", depth_fmt);
+            xlog::info("Selected D3D depth format: %u", depth_fmt);
             return depth_fmt;
         }
     }
-    WARN("CheckDeviceFormat failed for all depth formats!");
+    xlog::warn("CheckDeviceFormat failed for all depth formats!");
     return D3DFMT_D16;
 }
 
@@ -156,10 +156,10 @@ CodeInjection update_pp_hook{
     0x00545BC7,
     []() {
         auto& format = AddrAsRef<D3DFORMAT>(0x005A135C);
-        INFO("D3D Format: %u", format);
+        xlog::info("D3D Format: %u", format);
 
-        INFO("D3D DevCaps: %lX", rf::gr_d3d_device_caps.DevCaps);
-        INFO("Max texture size: %ldx%ld", rf::gr_d3d_device_caps.MaxTextureWidth, rf::gr_d3d_device_caps.MaxTextureHeight);
+        xlog::info("D3D DevCaps: %lX", rf::gr_d3d_device_caps.DevCaps);
+        xlog::info("Max texture size: %ldx%ld", rf::gr_d3d_device_caps.MaxTextureWidth, rf::gr_d3d_device_caps.MaxTextureHeight);
 
         if (g_game_config.msaa && format > 0) {
             // Make sure selected MSAA mode is available
@@ -167,11 +167,11 @@ CodeInjection update_pp_hook{
             HRESULT hr = rf::gr_d3d->CheckDeviceMultiSampleType(rf::gr_adapter_idx, D3DDEVTYPE_HAL, format,
                                                                 rf::gr_d3d_pp.Windowed, multi_sample_type);
             if (SUCCEEDED(hr)) {
-                INFO("Enabling Anti-Aliasing (%ux MSAA)...", g_game_config.msaa);
+                xlog::info("Enabling Anti-Aliasing (%ux MSAA)...", g_game_config.msaa);
                 rf::gr_d3d_pp.MultiSampleType = multi_sample_type;
             }
             else {
-                WARN("MSAA not supported (0x%lx)...", hr);
+                xlog::warn("MSAA not supported (0x%lx)...", hr);
                 g_game_config.msaa = D3DMULTISAMPLE_NONE;
             }
         }
@@ -217,11 +217,11 @@ CodeInjection d3d_behavior_flags_patch{
         auto& behavior_flags = *reinterpret_cast<u32*>(regs.esp);
         // Use hardware vertex processing instead of software processing if supported
         if (rf::gr_d3d_device_caps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT) {
-            INFO("Enabling T&L in hardware");
+            xlog::info("Enabling T&L in hardware");
             behavior_flags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
         }
         else {
-            INFO("T&L in hardware is not supported");
+            xlog::info("T&L in hardware is not supported");
         }
     },
 };
@@ -357,7 +357,7 @@ CodeInjection GrD3DSetMaterialFlags_profile_patch{
                 desc = " (line)";
             else if (state_flags == rf::gr_bitmap_material)
                 desc = " (bitmap)";
-            INFO("GrD3DSetMaterialFlags 0x%X%s", state_flags, desc);
+            xlog::info("GrD3DSetMaterialFlags 0x%X%s", state_flags, desc);
         }
     },
 };
@@ -368,7 +368,7 @@ CodeInjection GrD3DSetTexture_profile_patch{
         if (g_profile_frame) {
             unsigned bm_handle = regs.edi;
             int stage_id = (regs.ebx - 0x01E65308) / 0x18;
-            INFO("GrD3DSetTexture %d 0x%X %s", stage_id, bm_handle, rf::BmGetFilename(bm_handle));
+            xlog::info("GrD3DSetTexture %d 0x%X %s", stage_id, bm_handle, rf::BmGetFilename(bm_handle));
         }
     },
 };
@@ -383,7 +383,7 @@ CodeInjection D3D_DrawIndexedPrimitive_profile_patch{
             auto num_vertices = AddrAsRef<unsigned>(regs.esp + 16);
             auto start_index = AddrAsRef<unsigned>(regs.esp + 20);
             auto prim_count = AddrAsRef<unsigned>(regs.esp + 24);
-            INFO("DrawIndexedPrimitive %d %d %u %u %u", prim_type, min_index, num_vertices, start_index, prim_count);
+            xlog::info("DrawIndexedPrimitive %d %d %u %u %u", prim_type, min_index, num_vertices, start_index, prim_count);
             ++g_num_draw_calls;
         }
     },
@@ -395,7 +395,7 @@ FunHook<void()> GrSwapBuffers_profile_patch{
         GrSwapBuffers_profile_patch.CallTarget();
 
         if (g_profile_frame) {
-            INFO("Total draw calls: %d", g_num_draw_calls);
+            xlog::info("Total draw calls: %d", g_num_draw_calls);
         }
         g_profile_frame = g_profile_frame_req;
         g_profile_frame_req = false;
@@ -430,7 +430,7 @@ CodeInjection after_gr_init_hook{
         if (rf::gr_d3d_device_caps.MaxAnisotropy > 0 && g_game_config.anisotropic_filtering && !rf::is_dedicated_server) {
             SetTextureMinMagFilterInCode(D3DTEXF_ANISOTROPIC);
             DWORD anisotropy_level = SetupMaxAnisotropy();
-            INFO("Anisotropic Filtering enabled (level: %lu)", anisotropy_level);
+            xlog::info("Anisotropic Filtering enabled (level: %lu)", anisotropy_level);
         }
 
         // Change font for Time Left text
@@ -449,7 +449,7 @@ CodeInjection load_tga_alloc_fail_fix{
         if (regs.eax == 0) {
             regs.esp += 4;
             auto num_bytes = *reinterpret_cast<size_t*>(regs.ebp + 0x30) * regs.esi;
-            WARN("Failed to allocate buffer for a bitmap: %d bytes!", num_bytes);
+            xlog::warn("Failed to allocate buffer for a bitmap: %d bytes!", num_bytes);
             regs.eip = 0x00510944;
         }
     },
@@ -471,7 +471,7 @@ CodeInjection gr_d3d_create_texture_fail_hook{
     0x0055B9FD,
     [](auto& regs) {
         auto hr = static_cast<HRESULT>(regs.eax);
-        WARN("Failed to alloc texture - HRESULT 0x%lX %s", hr, getDxErrorStr(hr));
+        xlog::warn("Failed to alloc texture - HRESULT 0x%lX %s", hr, getDxErrorStr(hr));
     },
 };
 
@@ -539,11 +539,11 @@ CodeInjection gr_d3d_line_patch_1{
                          || rf::gr_d3d_max_hw_vertex + 2 > 6000
                          || rf::gr_d3d_max_hw_index + rf::gr_d3d_num_indices + 2 > 10000;
         if (!flush_needed) {
-            TRACE("Skipping gr_d3d_prepare_buffers");
+            xlog::trace("Skipping gr_d3d_prepare_buffers");
             regs.eip = 0x00551482;
         }
         else {
-            TRACE("Line drawing requires gr_d3d_prepare_buffers %d %d %d %d",
+            xlog::trace("Line drawing requires gr_d3d_prepare_buffers %d %d %d %d",
                  rf::gr_d3d_buffers_locked, rf::gr_d3d_primitive_type, rf::gr_d3d_max_hw_vertex,
                  rf::gr_d3d_max_hw_index + rf::gr_d3d_num_indices);
         }
@@ -565,11 +565,11 @@ CodeInjection gr_d3d_line_vertex_internal_patch_1{
                          || rf::gr_d3d_max_hw_vertex + 2 > 6000
                          || rf::gr_d3d_max_hw_index + rf::gr_d3d_num_indices + 2 > 10000;
         if (!flush_needed) {
-            TRACE("Skipping gr_d3d_prepare_buffers");
+            xlog::trace("Skipping gr_d3d_prepare_buffers");
             regs.eip = 0x00551703;
         }
         else {
-            TRACE("Line drawing requires gr_d3d_prepare_buffers %d %d %d %d",
+            xlog::trace("Line drawing requires gr_d3d_prepare_buffers %d %d %d %d",
                  rf::gr_d3d_buffers_locked, rf::gr_d3d_primitive_type, rf::gr_d3d_max_hw_vertex,
                  rf::gr_d3d_max_hw_index + rf::gr_d3d_num_indices);
         }

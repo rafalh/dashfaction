@@ -16,5 +16,5 @@ set_target_properties(CrashHandlerStub PROPERTIES CXX_EXTENSIONS NO)
 target_include_directories(CrashHandlerStub PUBLIC include)
 
 target_link_libraries(CrashHandlerStub
-    Logger
+    Xlog
 )

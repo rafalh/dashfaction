@@ -12,6 +12,8 @@
 #include <unrar/dll.hpp>
 #include <unzip.h>
 #include <windows.h>
+#include <sstream>
+#include <fstream>
 
 #define AUTODL_AGENT_NAME "hoverlees"
 #define AUTODL_BASE_URL "http://pfapi.factionfiles.com"
@@ -41,7 +43,7 @@ static bool UnzipVpp(const char* path)
     unzFile archive = unzOpen(path);
     if (!archive) {
 #ifdef DEBUG
-        ERR("unzOpen failed: %s", path);
+        xlog::error("unzOpen failed: %s", path);
 #endif
         return false;
     }
@@ -50,7 +52,7 @@ static bool UnzipVpp(const char* path)
     unz_global_info global_info;
     int code = unzGetGlobalInfo(archive, &global_info);
     if (code != UNZ_OK) {
-        ERR("unzGetGlobalInfo failed - error %d, path %s", code, path);
+        xlog::error("unzGetGlobalInfo failed - error %d, path %s", code, path);
         std::memset(&global_info, 0, sizeof(global_info));
         ret = false;
     }
@@ -60,31 +62,31 @@ static bool UnzipVpp(const char* path)
     for (unsigned long i = 0; i < global_info.number_entry; i++) {
         code = unzGetCurrentFileInfo(archive, &file_info, file_name, sizeof(file_name), nullptr, 0, nullptr, 0);
         if (code != UNZ_OK) {
-            ERR("unzGetCurrentFileInfo failed - error %d, path %s", code, path);
+            xlog::error("unzGetCurrentFileInfo failed - error %d, path %s", code, path);
             break;
         }
 
         if (IsVppFilename(file_name)) {
 #ifdef DEBUG
-            TRACE("Unpacking %s", file_name);
+            xlog::trace("Unpacking %s", file_name);
 #endif
             auto output_path = StringFormat("%suser_maps\\multi\\%s", rf::root_path, file_name);
             std::ofstream file(output_path, std::ios_base::out | std::ios_base::binary);
             if (!file) {
-                ERR("Cannot open file: %s", output_path.c_str());
+                xlog::error("Cannot open file: %s", output_path.c_str());
                 break;
             }
 
             code = unzOpenCurrentFile(archive);
             if (code != UNZ_OK) {
-                ERR("unzOpenCurrentFile failed - error %d, path %s", code, path);
+                xlog::error("unzOpenCurrentFile failed - error %d, path %s", code, path);
                 break;
             }
 
             while ((code = unzReadCurrentFile(archive, buf, sizeof(buf))) > 0) file.write(buf, code);
 
             if (code < 0) {
-                ERR("unzReadCurrentFile failed - error %d, path %s", code, path);
+                xlog::error("unzReadCurrentFile failed - error %d, path %s", code, path);
                 break;
             }
 
@@ -97,7 +99,7 @@ static bool UnzipVpp(const char* path)
         if (i + 1 < global_info.number_entry) {
             code = unzGoToNextFile(archive);
             if (code != UNZ_OK) {
-                ERR("unzGoToNextFile failed - error %d, path %s", code, path);
+                xlog::error("unzGoToNextFile failed - error %d, path %s", code, path);
                 break;
             }
         }
@@ -121,7 +123,7 @@ static bool UnrarVpp(const char* path)
     HANDLE archive_handle = RAROpenArchiveEx(&open_archive_data);
 
     if (!archive_handle || open_archive_data.OpenResult != 0) {
-        ERR("RAROpenArchiveEx failed - result %d, path %s", open_archive_data.OpenResult, path);
+        xlog::error("RAROpenArchiveEx failed - result %d, path %s", open_archive_data.OpenResult, path);
         return false;
     }
 
@@ -136,12 +138,12 @@ static bool UnrarVpp(const char* path)
             break;
 
         if (code != 0) {
-            ERR("RARReadHeader failed - result %d, path %s", code, path);
+            xlog::error("RARReadHeader failed - result %d, path %s", code, path);
             break;
         }
 
         if (IsVppFilename(header_data.FileName)) {
-            TRACE("Unpacking %s", header_data.FileName);
+            xlog::trace("Unpacking %s", header_data.FileName);
             auto output_dir = StringFormat("%suser_maps\\multi", rf::root_path);
             code = RARProcessFile(archive_handle, RAR_EXTRACT, const_cast<char*>(output_dir.c_str()), nullptr);
             if (code == 0) {
@@ -149,12 +151,12 @@ static bool UnrarVpp(const char* path)
             }
         }
         else {
-            TRACE("Skipping %s", header_data.FileName);
+            xlog::trace("Skipping %s", header_data.FileName);
             code = RARProcessFile(archive_handle, RAR_SKIP, nullptr, nullptr);
         }
 
         if (code != 0) {
-            ERR("RARProcessFile failed - result %d, path %s", code, path);
+            xlog::error("RARProcessFile failed - result %d, path %s", code, path);
             break;
         }
     }
@@ -171,7 +173,7 @@ static bool FetchLevelFile(const char* tmp_filename, int ticket_id) try {
 
     std::ofstream tmp_file(tmp_filename, std::ios_base::out | std::ios_base::binary);
     if (!tmp_file) {
-        ERR("Cannot open file: %s", tmp_filename);
+        xlog::error("Cannot open file: %s", tmp_filename);
         return false;
     }
 
@@ -187,7 +189,7 @@ static bool FetchLevelFile(const char* tmp_filename, int ticket_id) try {
     return true;
 }
 catch (std::exception& e) {
-    ERR("%s", e.what());
+    xlog::error("%s", e.what());
     return false;
 }
 
@@ -210,7 +212,7 @@ static void DownloadLevelThread()
 {
     auto temp_filename_opt = GetTempFileNameInTempDir("DF_Level_");
     if (!temp_filename_opt) {
-        ERR("Failed to generate a temp filename");
+        xlog::error("Failed to generate a temp filename");
         return;
     }
 
@@ -219,7 +221,7 @@ static void DownloadLevelThread()
     bool success = false;
     if (FetchLevelFile(temp_filename, g_level_info.ticket_id)) {
         if (!UnzipVpp(temp_filename) && !UnrarVpp(temp_filename))
-            ERR("UnzipVpp and UnrarVpp failed");
+            xlog::error("UnzipVpp and UnrarVpp failed");
         else
             success = true;
     }
@@ -236,7 +238,7 @@ static void DownloadLevelThread()
 static void StartLevelDownload()
 {
     if (g_download_in_progress) {
-        ERR("Level download already in progress!");
+        xlog::error("Level download already in progress!");
         return;
     }
 
@@ -281,7 +283,7 @@ static std::optional<LevelInfo> FetchLevelInfo(const char* file_name) try {
     session.set_receive_timeout(3000);
     auto url = AUTODL_BASE_URL "/findmap.php";
 
-    TRACE("Fetching level info: %s", file_name);
+    xlog::trace("Fetching level info: %s", file_name);
     HttpRequest req{url, "POST", session};
     std::string body = std::string("rflName=") + file_name;
 
@@ -294,18 +296,18 @@ static std::optional<LevelInfo> FetchLevelInfo(const char* file_name) try {
         return {};
 
     buf[num_bytes_read] = '\0';
-    TRACE("FactionFiles response: %s", buf);
+    xlog::trace("FactionFiles response: %s", buf);
 
     return ParseLevelInfo(buf);
 }
 catch (std::exception& e) {
-    ERR("Failed to fetch level info: %s", e.what());
+    xlog::error("Failed to fetch level info: %s", e.what());
     return {};
 }
 
 static void DisplayDownloadDialog(LevelInfo& level_info)
 {
-    TRACE("Download ticket id: %u", level_info.ticket_id);
+    xlog::trace("Download ticket id: %u", level_info.ticket_id);
     g_level_info = level_info;
 
     auto msg =
@@ -319,19 +321,19 @@ static void DisplayDownloadDialog(LevelInfo& level_info)
 bool TryToDownloadLevel(const char* filename)
 {
     if (g_download_in_progress) {
-        TRACE("Level download already in progress!");
+        xlog::trace("Level download already in progress!");
         rf::UiMsgBox("Error!", "You can download only one level at once!", nullptr, false);
         return false;
     }
 
-    TRACE("Fetching level info");
+    xlog::trace("Fetching level info");
     auto level_info_opt = FetchLevelInfo(filename);
     if (!level_info_opt) {
-        ERR("Level has not found in FactionFiles database!");
+        xlog::error("Level has not found in FactionFiles database!");
         return false;
     }
 
-    TRACE("Displaying download dialog");
+    xlog::trace("Displaying download dialog");
     DisplayDownloadDialog(level_info_opt.value());
     return true;
 }
@@ -345,7 +347,7 @@ CodeInjection g_join_failed_injection{
         }
 
         auto& level_filename = AddrAsRef<rf::String>(0x00646074);
-        TRACE("Preparing level download %s", level_filename.CStr());
+        xlog::trace("Preparing level download %s", level_filename.CStr());
         if (!TryToDownloadLevel(level_filename)) {
             return;
         }
@@ -370,7 +372,7 @@ void RenderDownloadProgress()
             // Load one packfile per frame
             auto& filename = g_packfiles_to_load.front();
             if (!rf::PackfileLoad(filename.c_str(), "user_maps\\multi\\"))
-                ERR("PackfileLoad failed - %s", filename.c_str());
+                xlog::error("PackfileLoad failed - %s", filename.c_str());
             g_packfiles_to_load.erase(g_packfiles_to_load.begin());
         }
         return;

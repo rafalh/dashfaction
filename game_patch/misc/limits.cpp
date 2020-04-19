@@ -87,7 +87,7 @@ CodeInjection obj_create_find_slot_patch{
         }
 
         // success: current index is free
-        TRACE("Using index %d for object type %d", index, obj_type);
+        xlog::trace("Using index %d for object type %d", index, obj_type);
         index_hint = index + 1;
         if (index_hint > max_index) {
             index_hint = min_index;

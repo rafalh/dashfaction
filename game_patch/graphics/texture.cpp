@@ -121,7 +121,7 @@ FunHook<GrD3DSetTextureData_Type> gr_d3d_set_texture_data_hook{
         D3DLOCKED_RECT locked_rect;
         HRESULT hr = texture->LockRect(level, &locked_rect, 0, 0);
         if (FAILED(hr)) {
-            ERR("LockRect failed");
+            xlog::error("LockRect failed");
             return -1;
         }
         D3DSURFACE_DESC desc;
@@ -129,7 +129,7 @@ FunHook<GrD3DSetTextureData_Type> gr_d3d_set_texture_data_hook{
 
         bool success = true;
         if (static_cast<int>(pixel_fmt) >= 0x10) {
-            TRACE("Writing texture in custom format level %d src %p bm %dx%d tex %dx%d section %d %d",
+            xlog::trace("Writing texture in custom format level %d src %p bm %dx%d tex %dx%d section %d %d",
                 level, src_bits_ptr, bm_w, bm_h, tex_w, tex_h, section->x, section->y);
             auto d3d_fmt = static_cast<D3DFORMAT>(pixel_fmt);
             auto src_pitch = GetSurfacePitch(bm_w, d3d_fmt);
@@ -148,7 +148,7 @@ FunHook<GrD3DSetTextureData_Type> gr_d3d_set_texture_data_hook{
                 dst_ptr += locked_rect.Pitch;
                 src_ptr += src_pitch;
             }
-            TRACE("Writing completed");
+            xlog::trace("Writing completed");
         }
         else {
             auto tex_pixel_fmt = GetPixelFormatFromD3DFormat(desc.Format);
@@ -156,7 +156,7 @@ FunHook<GrD3DSetTextureData_Type> gr_d3d_set_texture_data_hook{
                                           src_bits_ptr, pixel_fmt, bm_w, bm_h, locked_rect.Pitch,
                                           GetPixelFormatSize(pixel_fmt) * bm_w, palette);
             if (!success)
-                WARN("Color conversion failed (format %d -> %d)", pixel_fmt, tex_pixel_fmt);
+                xlog::warn("Color conversion failed (format %d -> %d)", pixel_fmt, tex_pixel_fmt);
         }
 
         texture->UnlockRect(level);
@@ -176,13 +176,13 @@ FunHook<int(rf::BmPixelFormat, int, int, int, IDirect3DTexture8**)> gr_d3d_creat
         D3DPOOL d3d_pool = D3DPOOL_MANAGED;
         int usage = 0;
         if (pixel_fmt == render_target_pixel_format) {
-            TRACE("Creating render target texture");
+            xlog::trace("Creating render target texture");
             d3d_format = rf::gr_d3d_pp.BackBufferFormat;
             d3d_pool = D3DPOOL_DEFAULT;
             usage = D3DUSAGE_RENDERTARGET;
         }
         else if (pixel_fmt == dynamic_texture_pixel_format) {
-            TRACE("Creating dynamic texture");
+            xlog::trace("Creating dynamic texture");
             d3d_format = rf::gr_d3d_pp.BackBufferFormat;
             // Note: In Direct3D 9 D3DUSAGE_DYNAMIC can be used but it has poor performance when texture is locked
             //       without D3DLOCK_DISCARD flag so keep it disabled for now
@@ -196,10 +196,10 @@ FunHook<int(rf::BmPixelFormat, int, int, int, IDirect3DTexture8**)> gr_d3d_creat
             return gr_d3d_create_vram_texture_hook.CallTarget(pixel_fmt, width, height, levels, texture_out);
         }
 
-        TRACE("Creating texture in format %x", d3d_format);
+        xlog::trace("Creating texture in format %x", d3d_format);
         auto hr = rf::gr_d3d_device->CreateTexture(width, height, levels, usage, d3d_format, d3d_pool, texture_out);
         if (FAILED(hr)) {
-            ERR("Failed to create texture %dx%d in format %x", width, height, d3d_format);
+            xlog::error("Failed to create texture %dx%d in format %x", width, height, d3d_format);
             return -1;
         }
         return 0;
@@ -259,7 +259,7 @@ D3DFORMAT GetD3DFormatFromDDSPixelFormat(DDS_PIXELFORMAT& ddspf)
                 return D3DFMT_DXT5;
         }
     }
-    WARN("Unsupported DDS pixel format");
+    xlog::warn("Unsupported DDS pixel format");
     return D3DFMT_UNKNOWN;
 }
 
@@ -268,13 +268,13 @@ rf::BmBitmapType ReadDdsHeader(rf::File& file, int *width_out, int *height_out, 
 {
     auto magic = file.Read<uint32_t>();
     if (magic != dds_magic) {
-        WARN("Invalid magic number in DDS file: %X", magic);
+        xlog::warn("Invalid magic number in DDS file: %X", magic);
         return rf::BM_INVALID;
     }
     DDS_HEADER hdr;
     file.Read(&hdr, sizeof(hdr));
     if (hdr.dwSize != sizeof(DDS_HEADER)) {
-        WARN("Invalid header size in DDS file: %lX", hdr.dwSize);
+        xlog::warn("Invalid header size in DDS file: %lX", hdr.dwSize);
         return rf::BM_INVALID;
     }
     D3DFORMAT d3d_fmt = GetD3DFormatFromDDSPixelFormat(hdr.ddspf);
@@ -284,10 +284,10 @@ rf::BmBitmapType ReadDdsHeader(rf::File& file, int *width_out, int *height_out, 
     auto hr = rf::gr_d3d->CheckDeviceFormat(rf::gr_adapter_idx, D3DDEVTYPE_HAL, rf::gr_d3d_pp.BackBufferFormat, 0,
         D3DRTYPE_TEXTURE, d3d_fmt);
     if (FAILED(hr)) {
-        WARN("Unsupported by video card DDS pixel format: %X", d3d_fmt);
+        xlog::warn("Unsupported by video card DDS pixel format: %X", d3d_fmt);
         return rf::BM_INVALID;
     }
-    TRACE("Using DDS format %X", d3d_fmt);
+    xlog::trace("Using DDS format %X", d3d_fmt);
 
     *width_out = hdr.dwWidth;
     *height_out = hdr.dwHeight;
@@ -298,7 +298,7 @@ rf::BmBitmapType ReadDdsHeader(rf::File& file, int *width_out, int *height_out, 
     *num_levels_out = 1;
     if (hdr.dwFlags & DDSD_MIPMAPCOUNT) {
         *num_levels_out = hdr.dwMipMapCount;
-        TRACE("DDS mipmaps %lu (%lux%lu)", hdr.dwMipMapCount, hdr.dwWidth, hdr.dwHeight);
+        xlog::trace("DDS mipmaps %lu (%lux%lu)", hdr.dwMipMapCount, hdr.dwWidth, hdr.dwHeight);
     }
     return dds_bm_type;
 }
@@ -309,22 +309,22 @@ int LockDdsBitmap(rf::BmBitmapEntry& bm_entry)
     std::string filename_without_ext{GetFilenameWithoutExt(bm_entry.name)};
     auto dds_filename = filename_without_ext + ".dds";
 
-    TRACE("Locking DDS: %s", dds_filename.c_str());
+    xlog::trace("Locking DDS: %s", dds_filename.c_str());
     if (file.Open(dds_filename.c_str()) != 0) {
-        ERR("failed to open DDS file: %s", dds_filename.c_str());
+        xlog::error("failed to open DDS file: %s", dds_filename.c_str());
         return -1;
     }
 
     auto magic = file.Read<uint32_t>();
     if (magic != dds_magic) {
-        ERR("Invalid magic number in %s: %x", dds_filename.c_str(), magic);
+        xlog::error("Invalid magic number in %s: %x", dds_filename.c_str(), magic);
         return -1;
     }
     DDS_HEADER hdr;
     file.Read(&hdr, sizeof(hdr));
 
     if (bm_entry.orig_width != static_cast<int>(hdr.dwWidth) || bm_entry.orig_height != static_cast<int>(hdr.dwHeight)) {
-        ERR("Bitmap file has changed before being loaded!");
+        xlog::error("Bitmap file has changed before being loaded!");
         return -1;
     }
 
@@ -354,7 +354,7 @@ int LockDdsBitmap(rf::BmBitmapEntry& bm_entry)
     bm_entry.locked_data = rf::Malloc(num_total_bytes);
     file.Read(bm_entry.locked_data, num_total_bytes);
     if (file.HasReadFailed()) {
-        ERR("Unexpected EOF when reading %s", dds_filename.c_str());
+        xlog::error("Unexpected EOF when reading %s", dds_filename.c_str());
         return -1;
     }
     return 0;
@@ -378,7 +378,7 @@ bm_read_header_hook{
         std::string filename_without_ext{GetFilenameWithoutExt(filename)};
         auto dds_filename = filename_without_ext + ".dds";
         if (dds_file.Open(dds_filename.c_str()) == 0) {
-            TRACE("Loading %s", dds_filename.c_str());
+            xlog::trace("Loading %s", dds_filename.c_str());
             auto bm_type = ReadDdsHeader(dds_file, width_out, height_out, pixel_fmt_out, num_levels_out);
             if (bm_type != rf::BM_INVALID) {
                 return bm_type;
@@ -428,7 +428,7 @@ FunHook<int(int, rf::GrTexture&)> gr_d3d_create_texture_hook{
     [](int bm_handle, rf::GrTexture& tslot) {
         auto result = gr_d3d_create_texture_hook.CallTarget(bm_handle, tslot);
         if (result != 1) {
-            WARN("Failed to load texture %s", rf::BmGetFilename(bm_handle));
+            xlog::warn("Failed to load texture %s", rf::BmGetFilename(bm_handle));
             return result;
         }
         auto pixel_fmt = rf::BmGetPixelFormat(bm_handle);
@@ -445,7 +445,7 @@ FunHook<void(rf::GrTexture&)> gr_d3d_free_texture_hook{
         gr_d3d_free_texture_hook.CallTarget(tslot);
 
         if (tslot.bm_handle >= 0) {
-            INFO("Freeing texture");
+            xlog::info("Freeing texture");
             auto it = g_default_pool_tslots.find(&tslot);
             if (it != g_default_pool_tslots.end()) {
                 g_default_pool_tslots.erase(it);

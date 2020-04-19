@@ -44,7 +44,7 @@ public:
         auto& state = self->m_state_map[key];
 
         if (state.num_calls_in_frame > 0 && state.last_val != value)
-            TRACE("Different ftol argument during a single frame in address 0x%X", self->m_ftol_call_addr);
+            xlog::trace("Different ftol argument during a single frame in address 0x%X", self->m_ftol_call_addr);
 
         value += state.remainder;
         long result = static_cast<long>(value);
@@ -262,7 +262,7 @@ void HighFpsAfterLevelLoad(rf::String& level_filename)
 {
     if (_stricmp(level_filename, "L5S3.rfl") == 0) {
         // Fix submarine exploding - change delay of two events to make submarine physics enabled later
-        //INFO("Fixing Submarine exploding bug...");
+        //xlog::info("Fixing Submarine exploding bug...");
         int uids[] = {4679, 4680};
         for (int uid : uids) {
             auto event = rf::EventGetByUid(uid);
@@ -315,7 +315,7 @@ CodeInjection cutscene_shot_sync_fix{
             // decrease time for next shot using current shot timer value
             int shot_time_left_ms = current_shot_timer.GetTimeLeftMs();
             if (shot_time_left_ms > 0 || shot_time_left_ms < -100)
-                WARN("invalid shot_time_left_ms %d", shot_time_left_ms);
+                xlog::warn("invalid shot_time_left_ms %d", shot_time_left_ms);
             regs.eax += shot_time_left_ms;
         }
     },
@@ -352,7 +352,7 @@ FunHook<rf::ParticleEmitter*(int, rf::ParticleEmitterType&, rf::RflRoom*, rf::Ve
     [](int objh, rf::ParticleEmitterType& type, rf::RflRoom* room, rf::Vector3& pos, bool is_on) {
         float min_spawn_delay = 1.0f / 60.0f;
         if ((type.flags & rf::PEF_CONTINOUS) || type.min_spawn_delay < min_spawn_delay) {
-            INFO("Particle emitter spawn delay is too small: %.2f. Increasing to %.2f...", type.min_spawn_delay, min_spawn_delay);
+            xlog::info("Particle emitter spawn delay is too small: %.2f. Increasing to %.2f...", type.min_spawn_delay, min_spawn_delay);
             rf::ParticleEmitterType new_type = type;
             new_type.flags &= ~rf::PEF_CONTINOUS;
             new_type.min_spawn_delay = std::max(new_type.min_spawn_delay, min_spawn_delay);

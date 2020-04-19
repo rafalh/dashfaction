@@ -67,12 +67,12 @@ int TryToFreeDsChannel(float volume)
     }
     // Free channel with the lowest volume and use it for new sound
     if (chnl_id > 0 && rf::snd_channels[chnl_id].volume <= volume) {
-        INFO("Freeing sound channel %d to make place for a new sound (volume %.4f duration %.1f)", chnl_id,
+        xlog::info("Freeing sound channel %d to make place for a new sound (volume %.4f duration %.1f)", chnl_id,
             rf::snd_channels[chnl_id].volume, rf::SndDsEstimateDuration(rf::snd_channels[chnl_id].snd_ds_id));
         rf::SndDsCloseChannel(chnl_id);
     }
     else {
-        WARN("Failed to allocate a sound channel: volume %.2f, num_music %d, num_looping %d, num_long %d", volume,
+        xlog::warn("Failed to allocate a sound channel: volume %.2f, num_music %d, num_looping %d, num_long %d", volume,
             num_music, num_looping, num_long);
     }
     return chnl_id;
@@ -116,14 +116,14 @@ CodeInjection PlaySound_no_free_slots_fix{
             auto& lvl_snd = rf::level_sounds[i];
             // Skip looping sounds
             if (rf::game_sounds[lvl_snd.game_snd_id].is_looping) {
-                TRACE("Skipping sound %d because it is looping", i);
+                xlog::trace("Skipping sound %d because it is looping", i);
                 ++num_looping;
                 continue;
             }
             // Skip long sounds
             float duration = rf::SndGetDuration(lvl_snd.game_snd_id);
             if (duration > 10.0f) {
-                TRACE("Skipping sound %d because of duration: %f", i, duration);
+                xlog::trace("Skipping sound %d because of duration: %f", i, duration);
                 ++num_long;
                 continue;
             }
@@ -138,7 +138,7 @@ CodeInjection PlaySound_no_free_slots_fix{
         if (best_idx >= 0 && best_vol_scale <= new_sound_vol_scale) {
             // Free the selected slot and use it for a new sound
             auto& best_lvl_snd = rf::level_sounds[best_idx];
-            INFO("Freeing level sound %d to make place for a new sound (volume %.4f duration %.1f)", best_idx,
+            xlog::info("Freeing level sound %d to make place for a new sound (volume %.4f duration %.1f)", best_idx,
                 best_vol_scale, rf::SndGetDuration(best_lvl_snd.game_snd_id));
             rf::SndStop(best_lvl_snd.sig);
             rf::ClearLevelSound(&best_lvl_snd);
@@ -147,7 +147,7 @@ CodeInjection PlaySound_no_free_slots_fix{
             regs.eip = 0x005055EB;
         }
         else {
-            WARN("Failed to allocate a level sound: volume %.2f num_looping %d num_long %d ",
+            xlog::warn("Failed to allocate a level sound: volume %.2f num_looping %d num_long %d ",
                 new_sound_vol_scale, num_looping, num_long);
         }
     },

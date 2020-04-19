@@ -1,6 +1,7 @@
 #pragma once
 
 #include <common/GameConfig.h>
+#include <functional>
 #include "utils/utils.h"
 
 // Forward declarations

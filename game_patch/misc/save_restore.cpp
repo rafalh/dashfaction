@@ -17,7 +17,7 @@ template<typename T>
 T validate_save_file_num(T value, T limit, const char* what)
 {
     if (value > limit) {
-        WARN("Save file is corrupted: expected up to %d %s but got %d", limit, what, value);
+        xlog::warn("Save file is corrupted: expected up to %d %s but got %d", limit, what, value);
         return limit;
     }
     return value;
@@ -74,7 +74,7 @@ FunHook<void(rf::Object*)> RememberLevelLoadTakenObjsAnimMeshes_hook{
             RememberLevelLoadTakenObjsAnimMeshes_hook.CallTarget(obj);
         }
         else {
-            WARN("Cannot bring object %d to next level", obj->uid);
+            xlog::warn("Cannot bring object %d to next level", obj->uid);
             rf::ObjQueueDelete(obj);
         }
     },

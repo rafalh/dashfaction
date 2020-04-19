@@ -1,6 +1,6 @@
 #pragma once
 
-#include <log/Logger.h>
+#include <xlog/xlog.h>
 #include <windows.h>
 
 const char* stristr(const char* haystack, const char* needle);

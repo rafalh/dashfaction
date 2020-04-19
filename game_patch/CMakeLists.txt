@@ -134,7 +134,7 @@ target_link_libraries(DashFaction
     unzip
     zlib
     PatchCommon
-    Logger
+    Xlog
     Common
     CrashHandlerStub
     xxhash

@@ -55,16 +55,16 @@ struct EventSetLiquidDepthHook : rf::EventObj
             AddrAsRef<void(rf::RflRoom* room, float target_liquid_depth, float duration)>(0x0045E640);
         auto RoomGetByUid = AddrAsRef<rf::RflRoom*(int uid)>(0x0045E7C0);
 
-        INFO("Processing Set_Liquid_Depth event: uid %d depth %.2f duration %.2f", _super.uid, depth, duration);
+        xlog::info("Processing Set_Liquid_Depth event: uid %d depth %.2f duration %.2f", _super.uid, depth, duration);
         if (link_list.Size() == 0) {
-            TRACE("no links");
+            xlog::trace("no links");
             AddLiquidDepthUpdate(_super.room, depth, duration);
         }
         else {
             for (int i = 0; i < link_list.Size(); ++i) {
                 auto room_uid = link_list.Get(i);
                 auto room = RoomGetByUid(room_uid);
-                TRACE("link %d %p", room_uid, room);
+                xlog::trace("link %d %p", room_uid, room);
                 if (room) {
                     AddLiquidDepthUpdate(room, depth, duration);
                 }

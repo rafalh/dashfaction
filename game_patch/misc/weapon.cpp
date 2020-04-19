@@ -108,7 +108,7 @@ CodeInjection weapons_tbl_buffer_overflow_fix_1{
     0x004C6855,
     [](auto& regs) {
         if (AddrAsRef<u32>(0x00872448) == 64) {
-            WARN("weapons.tbl limit of 64 definitions has been reached!");
+            xlog::warn("weapons.tbl limit of 64 definitions has been reached!");
             regs.eip = 0x004C6881;
         }
     },
@@ -118,7 +118,7 @@ CodeInjection weapons_tbl_buffer_overflow_fix_2{
     0x004C68AD,
     [](auto& regs) {
         if (AddrAsRef<u32>(0x00872448) == 64) {
-            WARN("weapons.tbl limit of 64 definitions has been reached!");
+            xlog::warn("weapons.tbl limit of 64 definitions has been reached!");
             regs.eip = 0x004C68D9;
         }
     },
@@ -210,13 +210,13 @@ FunHook<void(rf::EntityObj*, int, rf::Vector3*, rf::Matrix3*, bool)> MultiProces
     0x0047D220,
     [](rf::EntityObj *entity, int weapon_cls_id, rf::Vector3 *pos, rf::Matrix3 *orient, bool alt_fire) {
         if (entity->ai_info.weapon_cls_id != weapon_cls_id) {
-            INFO("Weapon mismatch when processing weapon fire packet");
+            xlog::info("Weapon mismatch when processing weapon fire packet");
             auto player = rf::GetPlayerFromEntityHandle(entity->_super.handle);
             rf::PlayerSwitchWeaponInstant(player, weapon_cls_id);
         }
 
         if (rf::is_local_net_game && IsEntityOutOfAmmo(entity, weapon_cls_id, alt_fire)) {
-            INFO("Skipping weapon fire packet because player is out of ammunition");
+            xlog::info("Skipping weapon fire packet because player is out of ammunition");
         }
         else {
             MultiProcessRemoteWeaponFire_hook.CallTarget(entity, weapon_cls_id, pos, orient, alt_fire);
@@ -231,7 +231,7 @@ CodeInjection ProcessObjUpdatePacket_check_if_weapon_is_possessed_patch{
         auto weapon_cls_id = regs.ebx;
         if (rf::is_local_net_game && !rf::AiPossessesWeapon(&entity->ai_info, weapon_cls_id)) {
             // skip switching player weapon
-            INFO("Skipping weapon switch because player does not possess the weapon");
+            xlog::info("Skipping weapon switch because player does not possess the weapon");
             regs.eip = 0x0047E467;
         }
     },

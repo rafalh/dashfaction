@@ -16,4 +16,4 @@ target_include_directories(PatchCommon PUBLIC
 
 target_compile_definitions(PatchCommon PUBLIC SUBHOOK_STATIC)
 
-target_link_libraries(PatchCommon subhook)
+target_link_libraries(PatchCommon subhook Xlog)

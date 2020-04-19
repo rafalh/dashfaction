@@ -38,11 +38,11 @@ CodeInjection gr_d3d_draw_line_3d_patch_1{
                          || red::gr_d3d_max_hw_vertex + 2 > 6000
                          || red::gr_d3d_max_hw_index + red::gr_d3d_num_indices + 2 > 10000;
         if (!flush_needed) {
-            TRACE("Skipping gr_d3d_prepare_buffers");
+            xlog::trace("Skipping gr_d3d_prepare_buffers");
             regs.eip = 0x004E1343;
         }
         else {
-            TRACE("Line drawing requires gr_d3d_prepare_buffers %d %d %d %d",
+            xlog::trace("Line drawing requires gr_d3d_prepare_buffers %d %d %d %d",
                  red::gr_d3d_buffers_locked, red::gr_d3d_primitive_type, red::gr_d3d_max_hw_vertex,
                  red::gr_d3d_max_hw_index + red::gr_d3d_num_indices);
         }
@@ -64,11 +64,11 @@ CodeInjection gr_d3d_draw_line_2d_patch_1{
                          || red::gr_d3d_max_hw_vertex + 2 > 6000
                          || red::gr_d3d_max_hw_index + red::gr_d3d_num_indices + 2 > 10000;
         if (!flush_needed) {
-            TRACE("Skipping gr_d3d_prepare_buffers");
+            xlog::trace("Skipping gr_d3d_prepare_buffers");
             regs.eip = 0x004E10C2;
         }
         else {
-            TRACE("Line drawing requires gr_d3d_prepare_buffers %d %d %d %d",
+            xlog::trace("Line drawing requires gr_d3d_prepare_buffers %d %d %d %d",
                  red::gr_d3d_buffers_locked, red::gr_d3d_primitive_type, red::gr_d3d_max_hw_vertex,
                  red::gr_d3d_max_hw_index + red::gr_d3d_num_indices);
         }

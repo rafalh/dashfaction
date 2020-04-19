@@ -267,11 +267,11 @@ CodeInjection ProcessGamePacket_whitelist_filter{
             allowed = std::find(whitelist.begin(), whitelist.end(), packet_type) != whitelist.end();
         }
         if (!allowed) {
-            WARN("Ignoring packet 0x%X", packet_type);
+            xlog::warn("Ignoring packet 0x%X", packet_type);
             regs.eip = 0x00479194;
         }
         else {
-            TRACE("Processing packet 0x%X", packet_type);
+            xlog::trace("Processing packet 0x%X", packet_type);
         }
     },
 };
@@ -410,7 +410,7 @@ FunHook<NwPacketHandler_Type> ProcessReloadPacket_hook{
                 rf::weapon_classes[weapon_cls_id].clip_size = clip_ammo;
             if (rf::weapon_classes[weapon_cls_id].max_ammo < ammo)
                 rf::weapon_classes[weapon_cls_id].max_ammo = ammo;
-            TRACE("ProcessReloadPacket WeaponClsId %d ClipAmmo %d Ammo %d", weapon_cls_id, clip_ammo, ammo);
+            xlog::trace("ProcessReloadPacket WeaponClsId %d ClipAmmo %d Ammo %d", weapon_cls_id, clip_ammo, ammo);
 
             // Call original handler
             ProcessReloadPacket_hook.CallTarget(data, addr);
@@ -423,13 +423,13 @@ rf::EntityObj* SecureObjUpdatePacket(rf::EntityObj* entity, uint8_t flags, rf::P
     if (rf::is_local_net_game) {
         // server-side
         if (entity && entity->_super.handle != src_player->entity_handle) {
-            TRACE("Invalid ObjUpdate entity %x %x %s", entity->_super.handle, src_player->entity_handle,
+            xlog::trace("Invalid ObjUpdate entity %x %x %s", entity->_super.handle, src_player->entity_handle,
                   src_player->name.CStr());
             return nullptr;
         }
 
         if (flags & (0x4 | 0x20 | 0x80)) { // OUF_WEAPON_TYPE | OUF_HEALTH_ARMOR | OUF_ARMOR_STATE
-            TRACE("Invalid ObjUpdate flags %x", flags);
+            xlog::trace("Invalid ObjUpdate flags %x", flags);
             return nullptr;
         }
     }
@@ -486,7 +486,7 @@ CodeInjection ProcessBooleanPacket_ValidateRoomId_patch{
     [](auto& regs) {
         int num_rooms = StructFieldRef<int>(rf::rfl_static_geometry, 0x90);
         if (regs.edx < 0 || regs.edx >= num_rooms) {
-            WARN("Invalid room in Boolean packet - skipping");
+            xlog::warn("Invalid room in Boolean packet - skipping");
             regs.esp += 0x64;
             regs.eip = 0x004766A5;
         }
@@ -506,7 +506,7 @@ CodeInjection ProcessPregameBooleanPacket_ValidateRoomId_patch{
     [](auto& regs) {
         int num_rooms = StructFieldRef<int>(rf::rfl_static_geometry, 0x90);
         if (regs.edx < 0 || regs.edx >= num_rooms) {
-            WARN("Invalid room in PregameBoolean packet - skipping");
+            xlog::warn("Invalid room in PregameBoolean packet - skipping");
             regs.esp += 0x68;
             regs.eip = 0x004767AA;
         }

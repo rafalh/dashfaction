@@ -10,7 +10,7 @@
 #include <common/version.h>
 #include <common/ErrorUtils.h>
 #include <launcher_common/PatchedAppLauncher.h>
-#include <log/Logger.h>
+#include <xlog/xlog.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -26,7 +26,7 @@ BOOL LauncherApp::InitInstance()
     Win32xx::LoadCommonControls();
 
     // Command line parsing
-    INFO("Parsing command line");
+    xlog::info("Parsing command line");
     LauncherCommandLineInfo cmd_line_info;
     cmd_line_info.Parse();
 
@@ -60,13 +60,13 @@ BOOL LauncherApp::InitInstance()
     }
 
     // Show main dialog
-    INFO("Showing main dialog");
+    xlog::info("Showing main dialog");
 	MainDlg dlg;
 	dlg.DoModal();
 
 	// Since the dialog has been closed, return FALSE so that we exit the
 	//  application, rather than start the application's message pump.
-    INFO("Closing the launcher");
+    xlog::info("Closing the launcher");
 	return FALSE;
 }
 
@@ -77,7 +77,7 @@ void LauncherApp::MigrateConfig()
         GameConfig config;
         if (config.load() && config.dash_faction_version != VERSION_STR)
         {
-            INFO("Migrating config");
+            xlog::info("Migrating config");
             if (config.tracker == "rf.thqmultiplay.net" && config.dash_faction_version.empty()) // < 1.1.0
                 config.tracker = DEFAULT_RF_TRACKER;
             config.dash_faction_version = VERSION_STR;
@@ -97,9 +97,9 @@ bool LauncherApp::LaunchGame(HWND hwnd, const char* mod_name)
 
     try
     {
-        INFO("Checking installation");
+        xlog::info("Checking installation");
         launcher.check_installation();
-        INFO("Installation is okay");
+        xlog::info("Installation is okay");
     }
     catch (FileNotFoundException &e)
     {
@@ -146,9 +146,9 @@ bool LauncherApp::LaunchGame(HWND hwnd, const char* mod_name)
 
     try
     {
-        INFO("Launching the game...");
+        xlog::info("Launching the game...");
         launcher.launch(mod_name);
-        INFO("Game launched!");
+        xlog::info("Game launched!");
         return true;
     }
     catch (PrivilegeElevationRequiredException&)
@@ -191,9 +191,9 @@ bool LauncherApp::LaunchEditor(HWND hwnd, const char* mod_name)
     EditorLauncher launcher;
     try
     {
-        INFO("Launching editor...");
+        xlog::info("Launching editor...");
         launcher.launch(mod_name);
-        INFO("Editor launched!");
+        xlog::info("Editor launched!");
         return true;
     }
     catch (std::exception &e)
@@ -207,7 +207,7 @@ bool LauncherApp::LaunchEditor(HWND hwnd, const char* mod_name)
 int LauncherApp::Message(HWND hwnd, const char *pszText, const char *pszTitle, int Flags)
 {
     WatchDogTimer::ScopedPause wdt_pause{m_watch_dog_timer};
-    INFO("%s: %s", pszTitle ? pszTitle : "Error", pszText);
+    xlog::info("%s: %s", pszTitle ? pszTitle : "Error", pszText);
     if (GetSystemMetrics(SM_CMONITORS) > 0) {
         return MessageBoxA(hwnd, pszText, pszTitle, Flags);
     }

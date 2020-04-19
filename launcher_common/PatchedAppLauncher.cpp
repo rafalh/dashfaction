@@ -8,7 +8,7 @@
 #include <common/GameConfig.h>
 #include <common/Exception.h>
 #include <common/Win32Error.h>
-#include <log/Logger.h>
+#include <xlog/xlog.h>
 #include <windows.h>
 #include <shlwapi.h>
 #include <fstream>
@@ -40,7 +40,7 @@ std::string PatchedAppLauncher::get_patch_dll_path()
 void PatchedAppLauncher::launch(const char* mod_name)
 {
     std::string app_path = get_app_path();
-    INFO("Verifying %s SHA1", app_path.c_str());
+    xlog::info("Verifying %s SHA1", app_path.c_str());
     std::ifstream file(app_path.c_str(), std::fstream::in | std::fstream::binary);
     if (!file.is_open()) {
         throw FileNotFoundException(app_path);
@@ -53,7 +53,7 @@ void PatchedAppLauncher::launch(const char* mod_name)
     if (!check_app_hash(hash)) {
         throw FileHashVerificationException(app_path, hash);
     }
-    INFO("SHA1 is valid");
+    xlog::info("SHA1 is valid");
 
     std::string work_dir = get_dir_from_path(app_path);
 
@@ -87,21 +87,21 @@ void PatchedAppLauncher::launch(const char* mod_name)
         cmd_line += mod_name;
     }
 
-    INFO("Starting the process: %s", app_path.c_str());
+    xlog::info("Starting the process: %s", app_path.c_str());
     try {
         InjectingProcessLauncher proc_launcher{app_path.c_str(), work_dir.c_str(), cmd_line.c_str(), si, INIT_TIMEOUT};
 
         std::string mod_path = get_patch_dll_path();
-        INFO("Injecting %s", mod_path.c_str());
+        xlog::info("Injecting %s", mod_path.c_str());
         proc_launcher.inject_dll(mod_path.c_str(), "Init", INIT_TIMEOUT);
 
-        INFO("Resuming app main thread");
+        xlog::info("Resuming app main thread");
         proc_launcher.resume_main_thread();
-        INFO("Process launched successfully");
+        xlog::info("Process launched successfully");
 
         // Wait for child process in Wine No GUI mode
         if (no_gui) {
-            INFO("Waiting for app to close");
+            xlog::info("Waiting for app to close");
             proc_launcher.wait(INFINITE);
         }
     }
@@ -141,10 +141,10 @@ void PatchedAppLauncher::check_installation()
 
 GameLauncher::GameLauncher() : PatchedAppLauncher("DashFaction.dll")
 {
-    INFO("Checking if config exists");
+    xlog::info("Checking if config exists");
     if (!m_conf.load()) {
         // Failed to load config - save defaults
-        INFO("Saving default config");
+        xlog::info("Saving default config");
         m_conf.save();
     }
 }

@@ -93,7 +93,7 @@ void SpectateModeSetTargetPlayer(rf::Player* player)
     if (entity) {
         // make sure weapon mesh is loaded now
         rf::PlayerFpgunSetupMesh(player, entity->ai_info.weapon_cls_id);
-        TRACE("FpgunMesh %p", player->fpgun_mesh);
+        xlog::trace("FpgunMesh %p", player->fpgun_mesh);
 
         // Hide target player from camera
         entity->local_player = player;

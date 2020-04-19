@@ -1,6 +1,6 @@
 #include "crash_handler_stub.h"
 #include "crash_handler_stub/custom_exceptions.h"
-#include <log/Logger.h>
+#include <xlog/xlog.h>
 #include <windows.h>
 #include <signal.h>
 #include <cstring>
@@ -10,10 +10,10 @@ static LPTOP_LEVEL_EXCEPTION_FILTER g_old_exception_filter;
 
 void CrashHandlerStubProcessException(PEXCEPTION_POINTERS exception_ptrs, DWORD thread_id)
 {
-    ERR("Unhandled exception: ExceptionAddress=0x%p ExceptionCode=0x%lX",
+    xlog::error("Unhandled exception: ExceptionAddress=0x%p ExceptionCode=0x%lX",
         exception_ptrs->ExceptionRecord->ExceptionAddress, exception_ptrs->ExceptionRecord->ExceptionCode);
     for (unsigned i = 0; i < exception_ptrs->ExceptionRecord->NumberParameters; ++i)
-        ERR("ExceptionInformation[%d]=0x%lX", i, exception_ptrs->ExceptionRecord->ExceptionInformation[i]);
+        xlog::error("ExceptionInformation[%d]=0x%lX", i, exception_ptrs->ExceptionRecord->ExceptionInformation[i]);
 
     HANDLE process_handle = nullptr;
     HANDLE event_handle = nullptr;
@@ -34,11 +34,11 @@ void CrashHandlerStubProcessException(PEXCEPTION_POINTERS exception_ptrs, DWORD 
         WCHAR cmd_line[256];
         std::swprintf(cmd_line, ARRAYSIZE(cmd_line), L"%ls\\CrashHandler.exe 0x%p 0x%p %lu 0x%p", g_module_path,
                       exception_ptrs, process_handle, thread_id, event_handle);
-        INFO("Running crash handler: %ls", cmd_line);
+        xlog::info("Running crash handler: %ls", cmd_line);
 
         PROCESS_INFORMATION proc_info;
         if (!CreateProcessW(nullptr, cmd_line, nullptr, nullptr, TRUE, 0, nullptr, nullptr, &startup_info, &proc_info)) {
-            ERR("Failed to start CrashHandler process - CreateProcessW %ls failed with error %lu", cmd_line, GetLastError());
+            xlog::error("Failed to start CrashHandler process - CreateProcessW %ls failed with error %lu", cmd_line, GetLastError());
             break;
         }
 
@@ -62,15 +62,15 @@ static LONG WINAPI CrashHandlerExceptionFilter(PEXCEPTION_POINTERS exception_ptr
 static void InvalidParameterHandler(const wchar_t* expression, const wchar_t* function, const wchar_t* file,
                                     unsigned line, [[maybe_unused]] uintptr_t reserved)
 {
-    ERR("Invalid parameter detected in function %ls. File: %ls Line: %d", function, file, line);
-    ERR("Expression: %ls", expression);
+    xlog::error("Invalid parameter detected in function %ls. File: %ls Line: %d", function, file, line);
+    xlog::error("Expression: %ls", expression);
     RaiseException(custom_exceptions::invalid_parameter, EXCEPTION_NONCONTINUABLE_EXCEPTION, 0, nullptr);
     ExitProcess(0);
 }
 
 static void SignalHandler(int signal_number)
 {
-    ERR("Abort signal (%d) received!", signal_number);
+    xlog::error("Abort signal (%d) received!", signal_number);
     RaiseException(custom_exceptions::abort, EXCEPTION_NONCONTINUABLE_EXCEPTION, 0, nullptr);
     ExitProcess(0);
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include "../utils/utils.h"
 
 enum GameLang

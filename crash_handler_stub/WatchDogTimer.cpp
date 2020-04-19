@@ -3,7 +3,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <atomic>
-#include <log/Logger.h>
+#include <xlog/xlog.h>
 #include "crash_handler_stub/custom_exceptions.h"
 #include "crash_handler_stub.h"
 #include "crash_handler_stub/WatchDogTimer.h"
@@ -27,13 +27,13 @@ public:
     void Start()
     {
         if (m_running) {
-            ERR("Trying to start a running watch-dog timer");
+            xlog::error("Trying to start a running watch-dog timer");
             return;
         }
 
         if (!DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), &m_observed_thread_handle, 0,
             FALSE, DUPLICATE_SAME_ACCESS)) {
-            WARN("DuplicateHandle failed");
+            xlog::warn("DuplicateHandle failed");
         }
         m_observed_thread_id = GetCurrentThreadId();
 
@@ -42,20 +42,20 @@ public:
 
         m_checker_thread = std::thread{&WatchDogTimer::Impl::CheckerThreadProc, this};
         m_running = true;
-        INFO("Watchdog timer started");
+        xlog::info("Watchdog timer started");
     }
 
     void Stop()
     {
         if (!m_running) {
-            ERR("Trying to stop a watch-dog timer that is not running");
+            xlog::error("Trying to stop a watch-dog timer that is not running");
             return;
         }
         m_exiting = true;
         m_cond_var.notify_all();
         m_checker_thread.join();
         m_running = false;
-        INFO("Watchdog timer stopped");
+        xlog::info("Watchdog timer stopped");
     }
 
     void Restart()
@@ -91,7 +91,7 @@ private:
             CrashObservedThread();
         }
         else {
-            WARN("Application is not responding! Press DEL key to trigger a crash that will allow to debug the problem...");
+            xlog::warn("Application is not responding! Press DEL key to trigger a crash that will allow to debug the problem...");
         }
     }
 
@@ -102,7 +102,7 @@ private:
         ZeroMemory(&ctx, sizeof(ctx));
         ctx.ContextFlags = CONTEXT_FULL;
         if (!GetThreadContext(m_observed_thread_handle, &ctx)) {
-            WARN("GetThreadContext failed");
+            xlog::warn("GetThreadContext failed");
         }
 
         // Simulate exception

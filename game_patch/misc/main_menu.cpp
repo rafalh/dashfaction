@@ -46,7 +46,7 @@ CallHook<void()> MenuMainProcessMouse_hook{
             rf::UiGadget* gadgets_to_check[1] = {&rf::menu_version_label};
             int matched = rf::UiGetGadgetFromPos(x, y, gadgets_to_check, std::size(gadgets_to_check));
             if (matched == 0) {
-                TRACE("Version clicked");
+                xlog::trace("Version clicked");
                 ++g_version_click_counter;
                 if (g_version_click_counter == 3)
                     g_egg_anim_start = GetTickCount();
@@ -59,17 +59,17 @@ int LoadEasterEggImage()
 {
     HRSRC res_handle = FindResourceA(g_hmodule, MAKEINTRESOURCEA(100), RT_RCDATA);
     if (!res_handle) {
-        ERR("FindResourceA failed");
+        xlog::error("FindResourceA failed");
         return -1;
     }
     HGLOBAL res_data_handle = LoadResource(g_hmodule, res_handle);
     if (!res_data_handle) {
-        ERR("LoadResource failed");
+        xlog::error("LoadResource failed");
         return -1;
     }
     void* res_data = LockResource(res_data_handle);
     if (!res_data) {
-        ERR("LockResource failed");
+        xlog::error("LockResource failed");
         return -1;
     }
 

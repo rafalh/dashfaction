@@ -74,7 +74,7 @@ bool ConvertPixelFormat(uint8_t*& dst_ptr, rf::BmPixelFormat dst_fmt, const uint
         return true;
     }
     if (dst_fmt != rf::BMPF_8888) {
-        ERR("unsupported dest pixel format %d (ConvertPixelFormat)", dst_fmt);
+        xlog::error("unsupported dest pixel format %d (ConvertPixelFormat)", dst_fmt);
         return false;
     }
     switch (src_fmt) {
@@ -97,7 +97,7 @@ bool ConvertPixelFormat(uint8_t*& dst_ptr, rf::BmPixelFormat dst_fmt, const uint
         ConvertPixel_MONO8_To_RGBA8(dst_ptr, src_ptr, palette);
         return true;
     default:
-        ERR("unsupported src pixel format %d", src_fmt);
+        xlog::error("unsupported src pixel format %d", src_fmt);
         return false;
     }
 }
@@ -171,7 +171,7 @@ bool ConvertBitmapFormat(uint8_t* dst_bits_ptr, rf::BmPixelFormat dst_fmt, const
         }
         return true;
     default:
-        ERR("unsupported src format %d", src_fmt);
+        xlog::error("unsupported src format %d", src_fmt);
         return false;
     }
 }
@@ -196,7 +196,7 @@ CodeInjection RflLoadLightmaps_color_conv_patch{
         bool success = ConvertBitmapFormat(lock_data.bits, lock_data.pixel_format, lightmap->buf, rf::BMPF_888, lightmap->w,
                                            lightmap->h, lock_data.pitch, 3 * lightmap->w, nullptr, true);
         if (!success)
-            ERR("ConvertBitmapFormat failed for lightmap");
+            xlog::error("ConvertBitmapFormat failed for lightmap");
 
         rf::GrUnlock(&lock_data);
     },
@@ -226,7 +226,7 @@ CodeInjection GeoModGenerateTexture_color_conv_patch{
         bool success = ConvertBitmapFormat(dst_data, lock_data.pixel_format, src_data, rf::BMPF_888, src_width, height,
                                            lock_data.pitch, src_pitch);
         if (!success)
-            ERR("ConvertBitmapFormat failed for geomod (fmt %d)", lock_data.pixel_format);
+            xlog::error("ConvertBitmapFormat failed for geomod (fmt %d)", lock_data.pixel_format);
         rf::GrUnlock(&lock_data);
     },
 };
@@ -257,7 +257,7 @@ CodeInjection GeoModGenerateLightmap_color_conv_patch{
         bool success = ConvertBitmapFormat(dst_row_ptr, lock_data.pixel_format, src_data, rf::BMPF_888, src_width,
                                            height, lock_data.pitch, src_pitch);
         if (!success)
-            ERR("ConvertBitmapFormat failed for geomod2 (fmt %d)", lock_data.pixel_format);
+            xlog::error("ConvertBitmapFormat failed for geomod2 (fmt %d)", lock_data.pixel_format);
         rf::GrUnlock(&lock_data);
     },
 };

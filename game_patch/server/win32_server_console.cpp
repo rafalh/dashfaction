@@ -44,7 +44,7 @@ void PrintCmdInputLine()
 
 BOOL WINAPI ConsoleCtrlHandler([[maybe_unused]] DWORD ctrl_type)
 {
-    INFO("Quiting after Console CTRL");
+    xlog::info("Quiting after Console CTRL");
     static auto& close = AddrAsRef<int32_t>(0x01B0D758);
     close = 1;
     return TRUE;
@@ -109,7 +109,7 @@ FunHook<void(const char*, const int*)> DcPrint_hook{
                 attr = white_attr;
             else {
                 if (!color.empty())
-                    ERR("unknown color %s", color.c_str());
+                    xlog::error("unknown color %s", color.c_str());
                 attr = gray_attr;
             }
 

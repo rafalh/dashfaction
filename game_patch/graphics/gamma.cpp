@@ -1,7 +1,7 @@
 #include "gamma.h"
 #include "../rf/misc.h"
 #include "../rf/graphics.h"
-#include <log/Logger.h>
+#include <xlog/xlog.h>
 #include <patch_common/AsmWriter.h>
 
 #ifndef D3DSGR_NO_CALIBRATION
@@ -25,11 +25,11 @@ static void SetGammaRamp(D3DGAMMARAMP* gamma_ramp)
     HDC hdc = GetDC(rf::main_wnd);
     if (hdc) {
         if (!SetDeviceGammaRamp(hdc, gamma_ramp))
-            ERR("SetDeviceGammaRamp failed %lu", GetLastError());
+            xlog::error("SetDeviceGammaRamp failed %lu", GetLastError());
         ReleaseDC(rf::main_wnd, hdc);
     }
     else
-        ERR("GetDC failed");
+        xlog::error("GetDC failed");
 #endif
 }
 
@@ -65,7 +65,7 @@ static void GammaMsgHandler(UINT msg, WPARAM w_param, [[maybe_unused]] LPARAM l_
     switch (msg) {
     case WM_ACTIVATE:
     case WM_ACTIVATEAPP:
-        TRACE("WM_ACTIVATE %x", w_param);
+        xlog::trace("WM_ACTIVATE %x", w_param);
         if (g_gamma_ramp_initialized) {
             if (w_param)
                 SetGammaRamp(&g_gamma_ramp);

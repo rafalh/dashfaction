@@ -12,7 +12,7 @@
 #define DEBUG_VFS_FILENAME1 "DM RTS MiniGolf 2.1.rfl"
 #define DEBUG_VFS_FILENAME2 "JumpPad.wav"
 
-#define VFS_DBGPRINT TRACE
+#define VFS_DBGPRINT xlog::trace
 
 namespace rf
 {
@@ -132,13 +132,13 @@ static GameLang DetectInstalledGameLang()
     for (unsigned i = 0; i < lang_codes.size(); ++i) {
         auto full_path = StringFormat("%smaps_%s.vpp", rf::root_path, lang_codes[i]);
         BOOL exists = PathFileExistsA(full_path.c_str());
-        INFO("Checking file %s: %s", full_path.c_str(), exists ? "found" : "not found");
+        xlog::info("Checking file %s: %s", full_path.c_str(), exists ? "found" : "not found");
         if (exists) {
-            INFO("Detected game language: %s", lang_codes[i]);
+            xlog::info("Detected game language: %s", lang_codes[i]);
             return static_cast<GameLang>(i);
         }
     }
-    WARN("Cannot detect game language");
+    xlog::warn("Cannot detect game language");
     return LANG_EN; // default
 }
 
@@ -169,7 +169,7 @@ static int PackfileLoad_New(const char* filename, const char* dir)
         full_path = StringFormat("%s%s%s", rf::root_path, dir ? dir : "", filename);
 
     if (!filename || strlen(filename) > 0x1F || full_path.size() > 0x7F) {
-        ERR("Packfile name or path too long: %s", full_path.c_str());
+        xlog::error("Packfile name or path too long: %s", full_path.c_str());
         return 0;
     }
 
@@ -183,7 +183,7 @@ static int PackfileLoad_New(const char* filename, const char* dir)
         if (it != GameFileChecksums.end()) {
             unsigned Checksum = HashFile(FullPath);
             if (Checksum != it->second) {
-                INFO("Packfile %s has invalid checksum 0x%X", Filename, Checksum);
+                xlog::info("Packfile %s has invalid checksum 0x%X", Filename, Checksum);
                 g_is_modded_game = true;
             }
         }
@@ -192,7 +192,7 @@ static int PackfileLoad_New(const char* filename, const char* dir)
 
     FILE* file = fopen(full_path.c_str(), "rb");
     if (!file) {
-        ERR("Failed to open packfile %s", full_path.c_str());
+        xlog::error("Failed to open packfile %s", full_path.c_str());
         return 0;
     }
 
@@ -218,7 +218,7 @@ static int PackfileLoad_New(const char* filename, const char* dir)
         for (unsigned i = 0; i < packfile->num_files; i += 32) {
             if (fread(buf, sizeof(buf), 1, file) != 1) {
                 ret = 0;
-                ERR("Failed to fread vpp %s", full_path.c_str());
+                xlog::error("Failed to fread vpp %s", full_path.c_str());
                 break;
             }
 
@@ -228,7 +228,7 @@ static int PackfileLoad_New(const char* filename, const char* dir)
         }
     }
     else
-        ERR("Failed to fread vpp 2 %s", full_path.c_str());
+        xlog::error("Failed to fread vpp 2 %s", full_path.c_str());
 
     if (ret)
         rf::PackfileSetupFileOffsets(packfile, offset_in_blocks);
@@ -253,7 +253,7 @@ static rf::Packfile* PackfileFindArchive_New(const char* filename)
             return packfile;
     }
 
-    ERR("Packfile %s not found", filename);
+    xlog::error("Packfile %s not found", filename);
     return nullptr;
 }
 
@@ -359,19 +359,19 @@ static void PackfileAddToLookupTable_New(rf::PackfileEntry* entry)
                 Whitelisted = IsModFileInWhitelist(Entry->file_name);
 #endif
                 if (!g_game_config.allow_overwrite_game_files && !whitelisted) {
-                    TRACE("Denied overwriting game file %s (old packfile %s, new packfile %s)", entry->file_name,
+                    xlog::trace("Denied overwriting game file %s (old packfile %s, new packfile %s)", entry->file_name,
                           old_archive, new_archive);
                     return;
                 }
                 else {
-                    TRACE("Allowed overwriting game file %s (old packfile %s, new packfile %s)", entry->file_name,
+                    xlog::trace("Allowed overwriting game file %s (old packfile %s, new packfile %s)", entry->file_name,
                           old_archive, new_archive);
                     if (!whitelisted)
                         g_is_modded_game = true;
                 }
             }
             else {
-                TRACE("Overwriting packfile item %s (old packfile %s, new packfile %s)", entry->file_name, old_archive,
+                xlog::trace("Overwriting packfile item %s (old packfile %s, new packfile %s)", entry->file_name, old_archive,
                       new_archive);
             }
             break;
@@ -440,9 +440,9 @@ static void LoadDashFactionVpp()
         if (ptr)
             *(ptr + 1) = '\0';
     }
-    INFO("Loading dashfaction.vpp from directory: %s", buf);
+    xlog::info("Loading dashfaction.vpp from directory: %s", buf);
     if (!rf::PackfileLoad("dashfaction.vpp", buf))
-        ERR("Failed to load dashfaction.vpp");
+        xlog::error("Failed to load dashfaction.vpp");
 }
 
 void ForceFileFromPackfile(const char* name, const char* packfile_name)
@@ -522,11 +522,11 @@ static void PackfileInit_New()
     // Allow modded strings.tbl in ui.vpp
     ForceFileFromPackfile("strings.tbl", "ui.vpp");
 
-    INFO("Packfiles initialization took %lums", GetTickCount() - start_ticks);
-    INFO("Packfile name collisions: %d", g_NumNameCollisions);
+    xlog::info("Packfiles initialization took %lums", GetTickCount() - start_ticks);
+    xlog::info("Packfile name collisions: %d", g_NumNameCollisions);
 
     if (g_is_modded_game)
-        INFO("Modded game detected!");
+        xlog::info("Modded game detected!");
 }
 
 static void PackfileCleanup_New()

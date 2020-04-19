@@ -1,10 +1,10 @@
 #include "stdafx.h"
 #include "LauncherApp.h"
 #include <common/version.h>
-#include <log/Logger.h>
-#include <log/FileAppender.h>
-#include <log/Win32Appender.h>
-#include <log/ConsoleAppender.h>
+#include <xlog/xlog.h>
+#include <xlog/FileAppender.h>
+#include <xlog/Win32Appender.h>
+#include <xlog/ConsoleAppender.h>
 #include <crash_handler_stub.h>
 
 void InitLogging()
@@ -13,11 +13,11 @@ void InitLogging()
     auto df_data_dir = app_data_dir + "\\Dash Faction";
     CreateDirectoryA(df_data_dir, nullptr);
     auto log_file_path = df_data_dir + "\\DashFactionLauncher.log";
-    auto& logger_config = logging::LoggerConfig::root();
-    logger_config.add_appender(std::make_unique<logging::FileAppender>(log_file_path.c_str(), false));
-    logger_config.add_appender(std::make_unique<logging::ConsoleAppender>());
-    logger_config.add_appender(std::make_unique<logging::Win32Appender>());
-    INFO("Dash Faction Launcher %s (%s %s)", VERSION_STR, __DATE__, __TIME__);
+    xlog::LoggerConfig::get()
+        .add_appender<xlog::FileAppender>(log_file_path.c_str(), false)
+        .add_appender<xlog::ConsoleAppender>()
+        .add_appender<xlog::Win32Appender>();
+    xlog::info("Dash Faction Launcher %s (%s %s)", VERSION_STR, __DATE__, __TIME__);
 }
 
 int APIENTRY WinMain(HINSTANCE, HINSTANCE, LPSTR, int)

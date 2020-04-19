@@ -85,7 +85,7 @@ FunHook<int(void*, void*)> GeomCachePrepareRoom_hook{
             if (room_vert_num > 8000) {
                 static int once = 0;
                 if (!(once++))
-                    WARN("Not rendering room with %u vertices!", room_vert_num);
+                    xlog::warn("Not rendering room with %u vertices!", room_vert_num);
                 *pp_room_geom = nullptr;
                 return -1;
             }
@@ -105,7 +105,7 @@ CodeInjection RflLoadInternal_CheckRestoreStatus_patch{
         if (!strcmp(save_filename, "auto.svl"))
             return;
         // manual load failed
-        ERR("Restoring game state failed");
+        xlog::error("Restoring game state failed");
         char* error_info = *reinterpret_cast<char**>(regs.esp + 0x2B0 + 0xC);
         strcpy(error_info, "Save file is corrupted");
         // return to RflLoadInternal failure path
@@ -128,7 +128,7 @@ FunHook<void(int, int)> GameEnterState_hook{
     0x004B1AC0,
     [](int state, int old_state) {
         GameEnterState_hook.CallTarget(state, old_state);
-        TRACE("state %d old_state %d g_jump_to_multi_server_list %d", state, old_state, g_jump_to_multi_server_list);
+        xlog::trace("state %d old_state %d g_jump_to_multi_server_list %d", state, old_state, g_jump_to_multi_server_list);
 
         bool exiting_game = state == rf::GS_MAIN_MENU &&
             (old_state == rf::GS_EXIT_GAME || old_state == rf::GS_LOADING_LEVEL);
@@ -138,7 +138,7 @@ FunHook<void(int, int)> GameEnterState_hook{
         }
 
         if (state == rf::GS_MAIN_MENU && g_jump_to_multi_server_list) {
-            TRACE("jump to mp menu!");
+            xlog::trace("jump to mp menu!");
             SetSoundEnabled(false);
             AddrCaller{0x00443C20}.c_call(); // OpenMultiMenu
             old_state = state;
@@ -215,7 +215,7 @@ CodeInjection parser_xstr_oob_fix{
     0x0051212E,
     [](auto& regs) {
         if (regs.edi >= 1000) {
-            WARN("XSTR index is out of bounds: %d!", regs.edi);
+            xlog::warn("XSTR index is out of bounds: %d!", regs.edi);
             regs.edi = -1;
         }
     }
@@ -225,7 +225,7 @@ CodeInjection ammo_tbl_buffer_overflow_fix{
     0x004C218E,
     [](auto& regs) {
         if (AddrAsRef<u32>(0x0085C760) == 32) {
-            WARN("ammo.tbl limit of 32 definitions has been reached!");
+            xlog::warn("ammo.tbl limit of 32 definitions has been reached!");
             regs.eip = 0x004C21B8;
         }
     },
@@ -235,7 +235,7 @@ CodeInjection clutter_tbl_buffer_overflow_fix{
     0x0040F49E,
     [](auto& regs) {
         if (regs.ecx == 450) {
-            WARN("clutter.tbl limit of 450 definitions has been reached!");
+            xlog::warn("clutter.tbl limit of 450 definitions has been reached!");
             regs.eip = 0x0040F4B0;
         }
     },
@@ -248,7 +248,7 @@ FunHook<void(const char*, int)> strings_tbl_buffer_overflow_fix{
             strings_tbl_buffer_overflow_fix.CallTarget(str, id);
         }
         else {
-            WARN("strings.tbl index is out of bounds: %d", id);
+            xlog::warn("strings.tbl index is out of bounds: %d", id);
         }
     },
 };
@@ -266,7 +266,7 @@ FunHook<rf::Object*(int, int, int, void*, int, void*)> ObjCreate_hook{
     [](int type, int sub_type, int parent, void* create_info, int flags, void* room) {
         auto obj = ObjCreate_hook.CallTarget(type, sub_type, parent, create_info, flags, room);
         if (!obj) {
-            WARN("Failed to create object (type %d)", type);
+            xlog::warn("Failed to create object (type %d)", type);
         }
         return obj;
     },
@@ -369,7 +369,7 @@ int DebugPrintHook(char* buf, const char *fmt, ...) {
     va_start(vl, fmt);
     int ret = vsprintf(buf, fmt, vl);
     va_end(vl);
-    ERR("%s", buf);
+    xlog::error("%s", buf);
     return ret;
 }
 
@@ -603,7 +603,7 @@ void HandleUrlParam()
     std::regex e("^rf://([\\w\\.-]+):(\\d+)/?(?:\\?password=(.*))?$");
     std::cmatch cm;
     if (!std::regex_match(url, cm, e)) {
-        WARN("Unsupported URL: %s", url);
+        xlog::warn("Unsupported URL: %s", url);
         return;
     }
 
@@ -613,12 +613,12 @@ void HandleUrlParam()
 
     auto hp = gethostbyname(host_name.c_str());
     if (!hp) {
-        WARN("URL host lookup failed");
+        xlog::warn("URL host lookup failed");
         return;
     }
 
     if (hp->h_addrtype != AF_INET) {
-        WARN("Unsupported address type (only IPv4 is supported)");
+        xlog::warn("Unsupported address type (only IPv4 is supported)");
         return;
     }
 

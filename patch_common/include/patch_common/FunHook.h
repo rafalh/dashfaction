@@ -2,7 +2,7 @@
 
 #include <patch_common/Traits.h>
 #include <cstdint>
-#include <log/Logger.h>
+#include <xlog/xlog.h>
 #include <subhook.h>
 
 class FunHookImpl
@@ -23,7 +23,7 @@ public:
     {
         m_subhook.Install(m_target_fun_ptr, m_hook_fun_ptr);
         if (!m_subhook.GetTrampoline())
-            ERR("trampoline is null for 0x%p", m_target_fun_ptr);
+            xlog::error("trampoline is null for 0x%p", m_target_fun_ptr);
     }
 
     void SetAddr(uintptr_t target_fun_addr)

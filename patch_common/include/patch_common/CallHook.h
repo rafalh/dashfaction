@@ -5,7 +5,7 @@
 #include <patch_common/AsmOpcodes.h>
 #include <patch_common/MemUtils.h>
 #include <cstdint>
-#include <log/Logger.h>
+#include <xlog/xlog.h>
 
 class CallHookImpl
 {
@@ -23,7 +23,7 @@ public:
     {
         uint8_t Opcode = *reinterpret_cast<uint8_t*>(m_call_op_addr);
         if (Opcode != asm_opcodes::call_rel_long) {
-            ERR("not a call at 0x%X", m_call_op_addr);
+            xlog::error("not a call at 0x%X", m_call_op_addr);
             return;
         }
 

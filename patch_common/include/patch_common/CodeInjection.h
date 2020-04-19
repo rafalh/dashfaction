@@ -3,7 +3,7 @@
 #include <patch_common/AsmWriter.h>
 #include <patch_common/CodeBuffer.h>
 #include <cstdint>
-#include <log/Logger.h>
+#include <xlog/xlog.h>
 #include <subhook.h>
 
 class BaseCodeInjection
@@ -61,7 +61,7 @@ public:
         m_subhook.Install(reinterpret_cast<void*>(m_addr), m_code_buf);
         void* trampoline = m_subhook.GetTrampoline();
         if (!trampoline)
-            WARN("trampoline is null for 0x%X", m_addr);
+            xlog::warn("trampoline is null for 0x%X", m_addr);
 
         AsmWriter asm_writter{m_code_buf};
         EmitCode(asm_writter, trampoline);

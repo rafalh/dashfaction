@@ -5,6 +5,7 @@
 #include "../rf/network.h"
 #include "../multi/kill.h"
 #include <cstddef>
+#include <sstream>
 
 void process_pf_player_announce_packet(const void* data, size_t len, [[ maybe_unused ]] const rf::NwAddr& addr)
 {
@@ -19,14 +20,14 @@ void process_pf_player_announce_packet(const void* data, size_t len, [[ maybe_un
     if (in_packet.version != 2)
         return;
 
-    TRACE("PF player_announce packet: player %u is_pure %d", in_packet.player_id, in_packet.is_pure);
+    xlog::trace("PF player_announce packet: player %u is_pure %d", in_packet.player_id, in_packet.is_pure);
 
     if (in_packet.player_id == rf::local_player->nw_data->player_id) {
         static const char* pf_verification_status_names[] = { "none", "blue", "gold", "red" };
         auto pf_verification_status =
             in_packet.is_pure < std::size(pf_verification_status_names)
             ? pf_verification_status_names[in_packet.is_pure] : "unknown";
-        INFO("PF Verification Status: %s (%u)", pf_verification_status, in_packet.is_pure);
+        xlog::info("PF Verification Status: %s (%u)", pf_verification_status, in_packet.is_pure);
     }
 }
 
@@ -44,7 +45,7 @@ void process_pf_player_stats_packet(const void* data, size_t len, [[ maybe_unuse
     if (in_packet.version != 2)
         return;
 
-    TRACE("PF player_stats packet (count %d)", in_packet.player_count);
+    xlog::trace("PF player_stats packet (count %d)", in_packet.player_count);
 
     auto players_stats = reinterpret_cast<const pf_player_stats_packet::player_stats*>(&in_packet + 1);
     for (int i = 0; i < in_packet.player_count; ++i) {
@@ -56,14 +57,14 @@ void process_pf_player_stats_packet(const void* data, size_t len, [[ maybe_unuse
             stats.num_deaths = player_data.deaths;
         }
         else {
-            WARN("PF player_stats packet: player %u not found", player_data.player_id);
+            xlog::warn("PF player_stats packet: player %u not found", player_data.player_id);
         }
     }
 }
 
 void process_pf_players_request_packet([[ maybe_unused ]] const void* data, [[ maybe_unused ]] size_t len, const rf::NwAddr& addr)
 {
-    TRACE("PF players_request packet");
+    xlog::trace("PF players_request packet");
 
     // Server-side packet
     if (!rf::is_local_net_game) {

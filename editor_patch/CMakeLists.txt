@@ -23,7 +23,7 @@ set_property(TARGET DashEditor PROPERTY PREFIX "")
 target_link_libraries(DashEditor
     PatchCommon
     Common
-    Logger
+    Xlog
     CrashHandlerStub
     shlwapi
 )

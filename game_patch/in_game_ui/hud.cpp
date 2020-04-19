@@ -41,7 +41,7 @@ void HudSetupPositionsHook(int width)
     int height = rf::GrGetMaxHeight();
     POINT* pos_data = nullptr;
 
-    TRACE("HudSetupPositionsHook(%d)", width);
+    xlog::trace("HudSetupPositionsHook(%d)", width);
 
     switch (width) {
     case 640:

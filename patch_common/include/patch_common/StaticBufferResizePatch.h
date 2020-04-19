@@ -4,7 +4,7 @@
 #include <memory>
 #include <cstdlib>
 #include <patch_common/MemUtils.h>
-#include <log/Logger.h>
+#include <xlog/xlog.h>
 
 template<typename T>
 class StaticBufferResizePatch
@@ -66,7 +66,7 @@ public:
                 }
             }
             if (offset == max_offset) {
-                WARN("Invalid reference %x", ref.addr);
+                xlog::warn("Invalid reference %x", ref.addr);
             }
         }
     }

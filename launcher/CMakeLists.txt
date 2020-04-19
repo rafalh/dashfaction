@@ -8,7 +8,7 @@ add_executable(DashFactionLauncher WIN32 ${SRCS})
 
 target_link_libraries(DashFactionLauncher
     LauncherCommon
-    Logger
+    Xlog
     CrashHandlerStub
     comctl32
 )

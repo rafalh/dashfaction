@@ -194,7 +194,7 @@ CallHook<rf::BmPixelFormat(int, int, int, int, std::byte*)> GrD3DReadBackBuffer_
         }
         g_capture_tmp_surface->UnlockRect();
 
-        TRACE("GrReadBackBufferHook (%d %d %d %d) returns %d", x, y, width, height, pixel_fmt);
+        xlog::trace("GrReadBackBufferHook (%d %d %d %d) returns %d", x, y, width, height, pixel_fmt);
         return pixel_fmt;
     },
 };
@@ -224,7 +224,7 @@ CallHook<int(rf::BmPixelFormat, int, int)> bm_create_user_bitmap_monitor_hook{
 void MakeSureMonitorBitmapIsDynamic(rf::ClutterMonitor& mon)
 {
     if (rf::BmGetPixelFormat(mon.bitmap) == render_target_pixel_format) {
-        TRACE("Changing pixel format for monitor bitmap");
+        xlog::trace("Changing pixel format for monitor bitmap");
         ChangeUserBitmapPixelFormat(mon.bitmap, dynamic_texture_pixel_format);
     }
 }
@@ -337,7 +337,7 @@ void RefreshAllMonitors()
 CodeInjection d3d_device_lost_patch{
     0x00545042,
     []() {
-        TRACE("D3D device lost");
+        xlog::trace("D3D device lost");
         g_depth_stencil_surface.release();
         // Note: g_capture_tmp_surface is in D3DPOOL_SYSTEMMEM so no need to release here
         ReleaseAllDefaultPoolTextures();
@@ -415,8 +415,8 @@ void GraphicsCaptureAfterGameInit()
 {
     auto full_path = StringFormat("%s\\%s", rf::root_path, g_screenshot_dir_name);
     if (CreateDirectoryA(full_path.c_str(), nullptr))
-        INFO("Created screenshots directory");
+        xlog::info("Created screenshots directory");
     else if (GetLastError() != ERROR_ALREADY_EXISTS)
-        ERR("Failed to create screenshots directory %lu", GetLastError());
+        xlog::error("Failed to create screenshots directory %lu", GetLastError());
     g_screenshot_dir_id = rf::FsAddDirectoryEx(g_screenshot_dir_name, "", true);
 }

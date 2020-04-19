@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../rf/bmpman.h"
-#include <log/Logger.h>
+#include <xlog/xlog.h>
 #include <windef.h>
 #include <d3d8types.h>
 
@@ -19,7 +19,7 @@ inline int GetPixelFormatSize(rf::BmPixelFormat pixel_fmt)
     case rf::BMPF_8888:
         return 4;
     default:
-        WARN("unknown pixel format %d", pixel_fmt);
+        xlog::warn("unknown pixel format %d", pixel_fmt);
         return 2;
     }
 }
@@ -41,7 +41,7 @@ inline D3DFORMAT GetD3DFormatFromPixelFormat(rf::BmPixelFormat pixel_fmt)
         if (static_cast<unsigned>(pixel_fmt) >= 0x10) {
             return static_cast<D3DFORMAT>(pixel_fmt);
         }
-        ERR("unknown pixel format %d", pixel_fmt);
+        xlog::error("unknown pixel format %d", pixel_fmt);
         return D3DFMT_UNKNOWN;
     }
 }
@@ -63,7 +63,7 @@ inline rf::BmPixelFormat GetPixelFormatFromD3DFormat(D3DFORMAT d3d_fmt)
     case D3DFMT_X8R8G8B8:
         return rf::BMPF_8888;
     default:
-        ERR("unknown D3D format 0x%X", d3d_fmt);
+        xlog::error("unknown D3D format 0x%X", d3d_fmt);
         return static_cast<rf::BmPixelFormat>(d3d_fmt);
     }
 }

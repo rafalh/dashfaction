@@ -1,6 +1,6 @@
 #pragma once
 
-namespace logging
+namespace xlog
 {
 
 class NullStream
@@ -13,4 +13,4 @@ public:
     }
 };
 
-} // namespace logging
+}

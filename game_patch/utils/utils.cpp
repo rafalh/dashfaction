@@ -117,13 +117,13 @@ bool IsUserAdmin()
     BOOL ret = AllocateAndInitializeSid(&nt_authority, 2, SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0,
                                         0, 0, 0, &administrators_group);
     if (!ret) {
-        ERR("AllocateAndInitializeSid failed");
+        xlog::error("AllocateAndInitializeSid failed");
         return false;
     }
 
     BOOL is_member;
     if (!CheckTokenMembership(nullptr, administrators_group, &is_member)) {
-        ERR("CheckTokenMembership failed");
+        xlog::error("CheckTokenMembership failed");
         is_member = false;
     }
     FreeSid(administrators_group);
@@ -138,7 +138,7 @@ const char* GetProcessElevationType()
     DWORD dw_size;
 
     if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token_handle)) {
-        ERR("OpenProcessToken failed");
+        xlog::error("OpenProcessToken failed");
         return "unknown";
     }
     if (!GetTokenInformation(token_handle, TokenElevationType, &elevation_type, sizeof(elevation_type), &dw_size))

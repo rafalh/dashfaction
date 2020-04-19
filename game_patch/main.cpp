@@ -28,9 +28,10 @@
 #include <patch_common/CodeInjection.h>
 #include <common/version.h>
 
-#include <log/ConsoleAppender.h>
-#include <log/FileAppender.h>
-#include <log/Win32Appender.h>
+#include <xlog/ConsoleAppender.h>
+#include <xlog/FileAppender.h>
+#include <xlog/Win32Appender.h>
+#include <xlog/xlog.h>
 
 #ifdef HAS_EXPERIMENTAL
 #include "misc/experimental.h"
@@ -50,7 +51,7 @@ static void ProcessWaitingMessages()
             break;
         TranslateMessage(&msg);
         DispatchMessage(&msg);
-        // INFO("msg %u\n", msg.message);
+        // xlog::info("msg %u\n", msg.message);
     }
 }
 
@@ -72,9 +73,9 @@ CallHook<void()> InitGame_hook{
     0x004B27CD,
     []() {
         auto start_ticks = GetTickCount();
-        INFO("Initializing game...");
+        xlog::info("Initializing game...");
         InitGame_hook.CallTarget();
-        INFO("Game initialized (%lu ms).", GetTickCount() - start_ticks);
+        xlog::info("Game initialized (%lu ms).", GetTickCount() - start_ticks);
     },
 };
 
@@ -90,7 +91,8 @@ CodeInjection after_full_game_init_hook{
         MiscAfterFullGameInit();
         DebugInit();
 
-        INFO("Game fully initialized");
+        xlog::info("Game fully initialized");
+        xlog::LoggerConfig::get().flush_appenders();
     },
 };
 
@@ -169,12 +171,12 @@ FunHook<void(rf::Player*)> PlayerDestroy_hook{
 FunHook<int(rf::String&, rf::String&, char*)> RflLoad_hook{
     0x0045C540,
     [](rf::String& level_filename, rf::String& save_filename, char* error) {
-        INFO("Loading level: %s", level_filename.CStr());
+        xlog::info("Loading level: %s", level_filename.CStr());
         if (save_filename.Size() > 0)
-            INFO("Restoring game from save file: %s", save_filename.CStr());
+            xlog::info("Restoring game from save file: %s", save_filename.CStr());
         int ret = RflLoad_hook.CallTarget(level_filename, save_filename, error);
         if (ret != 0)
-            WARN("Loading failed: %s", error);
+            xlog::warn("Loading failed: %s", error);
         else {
             HighFpsAfterLevelLoad(level_filename);
             MiscAfterLevelLoad(level_filename);
@@ -187,65 +189,79 @@ FunHook<void(bool)> GameWideOnLevelStart_hook{
     0x00435DF0,
     [](bool is_auto_level_load) {
         GameWideOnLevelStart_hook.CallTarget(is_auto_level_load);
-        INFO("Level loaded: %s%s", rf::level_filename.CStr(), is_auto_level_load ? " (caused by event)" : "");
+        xlog::info("Level loaded: %s%s", rf::level_filename.CStr(), is_auto_level_load ? " (caused by event)" : "");
     },
 };
 
-#ifndef NDEBUG
-class RfConsoleLogAppender : public logging::BaseAppender
+class RfConsoleLogAppender : public xlog::Appender
 {
-    const int m_error_color = 0xFF0000;
-    std::vector<std::pair<std::string, logging::Level>> m_startup_buf;
+    std::vector<std::pair<std::string, xlog::Level>> m_startup_buf;
 
-    virtual void append([[maybe_unused]] logging::Level lvl, const std::string& str) override
+public:
+    RfConsoleLogAppender()
+    {
+#ifdef NDEBUG
+        set_level(xlog::Level::warn);
+#endif
+    }
+
+protected:
+    virtual void append([[maybe_unused]] xlog::Level level, const std::string& str) override
     {
         auto& console_inited = AddrAsRef<bool>(0x01775680);
         if (console_inited) {
-            for (auto& p : m_startup_buf) {
-                uint32_t color = color_from_level(p.second);
-                rf::DcPrint(p.first.c_str(), &color);
-            }
-            m_startup_buf.clear();
+            flush_startup_buf();
 
-            uint32_t color = color_from_level(lvl);
+            uint32_t color = color_from_level(level);
             rf::DcPrint(str.c_str(), &color);
         }
         else {
-            m_startup_buf.push_back({str, lvl});
+            m_startup_buf.push_back({str, level});
         }
     }
 
-    uint32_t color_from_level(logging::Level lvl) const
+    virtual void flush() override
     {
-        switch (lvl) {
-            case logging::Level::fatal:
-                return 0xFF0000FF;
-            case logging::Level::error:
-                return 0xFF0000FF;
-            case logging::Level::warning:
-                return 0xFF00FFFF;
-            case logging::Level::info:
-                return 0xFFAAAAAA;
-            case logging::Level::trace:
-                return 0xFF888888;
-            default:
-                return 0xFFFFFFFF;
+        auto& console_inited = AddrAsRef<bool>(0x01775680);
+        if (console_inited) {
+            flush_startup_buf();
         }
     }
+
+private:
+    uint32_t color_from_level(xlog::Level level) const
+    {
+        switch (level) {
+            case xlog::Level::error:
+                return 0xFF0000FF;
+            case xlog::Level::warn:
+                return 0xFF00FFFF;
+            case xlog::Level::info:
+                return 0xFFAAAAAA;
+            default:
+                return 0xFF888888;
+        }
+    }
+
+    void flush_startup_buf()
+    {
+        for (auto& p : m_startup_buf) {
+            uint32_t color = color_from_level(p.second);
+            rf::DcPrint(p.first.c_str(), &color);
+        }
+        m_startup_buf.clear();
+    }
 };
-#endif // NDEBUG
 
 void InitLogging()
 {
     CreateDirectoryA("logs", nullptr);
-    auto& logger_config = logging::LoggerConfig::root();
-    logger_config.add_appender(std::make_unique<logging::FileAppender>("logs/DashFaction.log", false));
-    logger_config.add_appender(std::make_unique<logging::ConsoleAppender>());
-    logger_config.add_appender(std::make_unique<logging::Win32Appender>());
-#ifndef NDEBUG
-    logger_config.add_appender(std::make_unique<RfConsoleLogAppender>());
-#endif
-    INFO("Dash Faction %s (%s %s)", VERSION_STR, __DATE__, __TIME__);
+    xlog::LoggerConfig::get()
+        .add_appender<xlog::FileAppender>("logs/DashFaction.log", false)
+        .add_appender<xlog::ConsoleAppender>()
+        .add_appender<xlog::Win32Appender>()
+        .add_appender<RfConsoleLogAppender>();
+    xlog::info("Dash Faction %s (%s %s)", VERSION_STR, __DATE__, __TIME__);
 }
 
 std::optional<std::string> GetWineVersion()
@@ -261,27 +277,27 @@ std::optional<std::string> GetWineVersion()
 void LogSystemInfo()
 {
     try {
-        logging::Logger::root().info() << "Real system version: " << getRealOsVersion();
-        logging::Logger::root().info() << "Emulated system version: " << getOsVersion();
+        xlog::info() << "Real system version: " << getRealOsVersion();
+        xlog::info() << "Emulated system version: " << getOsVersion();
         auto wine_ver = GetWineVersion();
         if (wine_ver)
-            logging::Logger::root().info() << "Running on Wine: " << wine_ver.value();
+            xlog::info() << "Running on Wine: " << wine_ver.value();
 
-        INFO("Running as %s (elevation type: %s)", IsUserAdmin() ? "admin" : "user", GetProcessElevationType());
-        logging::Logger::root().info() << "CPU Brand: " << getCpuBrand();
-        logging::Logger::root().info() << "CPU ID: " << getCpuId();
+        xlog::info("Running as %s (elevation type: %s)", IsUserAdmin() ? "admin" : "user", GetProcessElevationType());
+        xlog::info() << "CPU Brand: " << getCpuBrand();
+        xlog::info() << "CPU ID: " << getCpuId();
         LARGE_INTEGER qpc_freq;
         QueryPerformanceFrequency(&qpc_freq);
-        INFO("QPC Frequency: %08lX %08lX", static_cast<DWORD>(qpc_freq.HighPart), qpc_freq.LowPart);
+        xlog::info("QPC Frequency: %08lX %08lX", static_cast<DWORD>(qpc_freq.HighPart), qpc_freq.LowPart);
     }
     catch (std::exception& e) {
-        ERR("Failed to read system info: %s", e.what());
+        xlog::error("Failed to read system info: %s", e.what());
     }
 }
 
 extern "C" void subhook_unk_opcode_handler(uint8_t* opcode)
 {
-    ERR("SubHook unknown opcode 0x%X at 0x%p", *opcode, opcode);
+    xlog::error("SubHook unknown opcode 0x%X at 0x%p", *opcode, opcode);
 }
 
 extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
@@ -294,7 +310,7 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
 
     // Enable Data Execution Prevention
     if (!SetProcessDEPPolicy(PROCESS_DEP_ENABLE))
-        WARN("SetProcessDEPPolicy failed (error %ld)", GetLastError());
+        xlog::warn("SetProcessDEPPolicy failed (error %ld)", GetLastError());
 
     // Log system info
     LogSystemInfo();
@@ -302,17 +318,17 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     // Load config
     try {
         if (!g_game_config.load())
-            ERR("Configuration has not been found in registry!");
+            xlog::error("Configuration has not been found in registry!");
     }
     catch (std::exception& e) {
-        ERR("Failed to load configuration: %s", e.what());
+        xlog::error("Failed to load configuration: %s", e.what());
     }
 
     // Log information from config
-    INFO("Resolution: %dx%dx%d", g_game_config.res_width, g_game_config.res_height, g_game_config.res_bpp);
-    INFO("Window Mode: %d", static_cast<int>(g_game_config.wnd_mode));
-    INFO("Max FPS: %u", g_game_config.max_fps);
-    INFO("Allow Overwriting Game Files: %d", static_cast<int>(g_game_config.allow_overwrite_game_files));
+    xlog::info("Resolution: %dx%dx%d", g_game_config.res_width, g_game_config.res_height, g_game_config.res_bpp);
+    xlog::info("Window Mode: %d", static_cast<int>(g_game_config.wnd_mode));
+    xlog::info("Max FPS: %u", g_game_config.max_fps);
+    xlog::info("Allow Overwriting Game Files: %d", static_cast<int>(g_game_config.allow_overwrite_game_files));
 
     // Process messages in the same thread as DX processing (alternative: D3DCREATE_MULTITHREADED)
     AsmWriter(0x00524C48, 0x00524C83).nop(); // disable msg loop thread
@@ -354,7 +370,7 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
 #endif
     DebugApplyPatches();
 
-    INFO("Installing hooks took %lu ms", GetTickCount() - start_ticks);
+    xlog::info("Installing hooks took %lu ms", GetTickCount() - start_ticks);
 
     return 1; // success
 }

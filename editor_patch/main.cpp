@@ -8,9 +8,9 @@
 #include <cstddef>
 #include <crash_handler_stub.h>
 
-#include <log/ConsoleAppender.h>
-#include <log/FileAppender.h>
-#include <log/Win32Appender.h>
+#include <xlog/ConsoleAppender.h>
+#include <xlog/FileAppender.h>
+#include <xlog/Win32Appender.h>
 
 #define LAUNCHER_FILENAME "DashFactionLauncher.exe"
 
@@ -100,11 +100,11 @@ FunHook<brush_mode_handle_selection_type> brush_mode_handle_selection_hook{0x004
 void InitLogging()
 {
     CreateDirectoryA("logs", nullptr);
-    auto& logger_config = logging::LoggerConfig::root();
-    logger_config.add_appender(std::make_unique<logging::FileAppender>("logs/DashEditor.log", false));
-    logger_config.add_appender(std::make_unique<logging::ConsoleAppender>());
-    logger_config.add_appender(std::make_unique<logging::Win32Appender>());
-    INFO("DashFaction Editor log started.");
+    xlog::LoggerConfig::get()
+        .add_appender<xlog::FileAppender>("logs/DashEditor.log", false)
+        .add_appender<xlog::ConsoleAppender>()
+        .add_appender<xlog::Win32Appender>();
+    xlog::info("DashFaction Editor log started.");
 }
 
 void ApplyGraphicsPatches();
@@ -127,7 +127,7 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
         WriteMemPtr(0x00447CB9 + 1, play_level_cmd_part.c_str());
     }
     else {
-        WARN("GetModuleFileNameA failed");
+        xlog::warn("GetModuleFileNameA failed");
     }
 
     // Zero first argument for CreateProcess call
@@ -156,7 +156,7 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
 
 extern "C" void subhook_unk_opcode_handler(uint8_t* opcode)
 {
-    ERR("SubHook unknown opcode 0x%X at 0x%p", *opcode, opcode);
+    xlog::error("SubHook unknown opcode 0x%X at 0x%p", *opcode, opcode);
 }
 
 BOOL WINAPI DllMain(HINSTANCE instance, [[maybe_unused]] DWORD reason, [[maybe_unused]] LPVOID reserved)

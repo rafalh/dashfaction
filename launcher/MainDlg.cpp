@@ -10,7 +10,7 @@
 #include "OptionsDlg.h"
 #include <common/version.h>
 #include <common/ErrorUtils.h>
-#include <log/Logger.h>
+#include <xlog/xlog.h>
 #include <launcher_common/PatchedAppLauncher.h>
 #include <launcher_common/UpdateChecker.h>
 #include <wxx_wincore.h>
@@ -102,7 +102,7 @@ INT_PTR MainDlg::DialogProc(UINT msg, WPARAM wparam, LPARAM lparam)
 
 void MainDlg::RefreshModSelector()
 {
-    INFO("Refreshing mods list");
+    xlog::info("Refreshing mods list");
     CString selected_mod;
     selected_mod = m_mod_selector.GetWindowText();
     m_mod_selector.ResetContent();
@@ -153,7 +153,7 @@ LRESULT MainDlg::OnUpdateCheck(WPARAM wParam, LPARAM lParam)
         if (result == IDOK) {
             auto exec_ret = ShellExecuteA(*this, "open", m_pUpdateChecker->get_url().c_str(), NULL, NULL, SW_SHOW);
             if (reinterpret_cast<int>(exec_ret) <= 32) {
-                ERR("ShellExecuteA failed %p", exec_ret);
+                xlog::error("ShellExecuteA failed %p", exec_ret);
             }
             EndDialog(0);
         }
@@ -198,10 +198,10 @@ void MainDlg::OnBnClickedEditorBtn()
 
 void MainDlg::OnBnClickedSupportBtn()
 {
-    INFO("Opening support channel");
+    xlog::info("Opening support channel");
     auto ret = ShellExecuteA(*this, "open", "https://discord.gg/bC2WzvJ", NULL, NULL, SW_SHOW);
     if (reinterpret_cast<int>(ret) <= 32) {
-        ERR("ShellExecuteA failed %p", ret);
+        xlog::error("ShellExecuteA failed %p", ret);
     }
 }
 
@@ -212,7 +212,7 @@ CString MainDlg::GetSelectedMod()
 
 void MainDlg::AfterLaunch()
 {
-    INFO("Checking if launcher should be closed");
+    xlog::info("Checking if launcher should be closed");
     GameConfig config;
     try {
         config.load();
@@ -222,7 +222,7 @@ void MainDlg::AfterLaunch()
     }
 
     if (!config.keep_launcher_open) {
-        INFO("Closing launcher after launch");
+        xlog::info("Closing launcher after launch");
         CDialog::OnOK();
     }
 }

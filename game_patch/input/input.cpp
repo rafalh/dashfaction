@@ -17,7 +17,7 @@ bool SetDirectInputEnabled(bool enabled)
     rf::direct_input_disabled = !enabled;
     if (enabled && !direct_input_initialized) {
         if (InitDirectInput() != 0) {
-            ERR("Failed to initialize DirectInput");
+            xlog::error("Failed to initialize DirectInput");
             rf::direct_input_disabled = true;
             return false;
         }
@@ -217,7 +217,7 @@ CodeInjection LinearPitchPatch{
         float new_pitch_non_lin = NonLinearPitchFromForwardVector(fvec_new);
         // Update non-linear pitch delta
         float new_pitch_delta = new_pitch_non_lin - current_pitch_non_lin;
-        TRACE("non-lin %f lin %f delta %f new %f", current_pitch_non_lin, current_pitch_lin, pitch_delta,
+        xlog::trace("non-lin %f lin %f delta %f new %f", current_pitch_non_lin, current_pitch_lin, pitch_delta,
               new_pitch_delta);
         pitch_delta = new_pitch_delta;
     },
@@ -285,7 +285,7 @@ FunHook<int(int16_t)> key_to_ascii_hook{
         if (num_chars < 1 || (chars[0] & 0x80) != 0 || !std::isprint(chars[0])) {
             return 0xFF;
         }
-        TRACE("vk %X (%c) char %c", vk, vk, chars[0]);
+        xlog::trace("vk %X (%c) char %c", vk, vk, chars[0]);
         return static_cast<int>(chars[0]);
     },
 };
@@ -303,7 +303,7 @@ int GetKeyName(int key, char* buf, size_t buf_len)
         buf[0] = '\0';
     }
     else {
-        TRACE("key 0x%X name %s", key, buf);
+        xlog::trace("key 0x%X name %s", key, buf);
     }
     return ret;
 }
