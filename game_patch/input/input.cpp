@@ -32,6 +32,16 @@ bool SetDirectInputEnabled(bool enabled)
     return true;
 }
 
+FunHook<void()> mouse_eval_deltas_hook{
+    0x0051DC70,
+    []() {
+        // disable mouse when window is not active
+        if (rf::OsForeground()) {
+            mouse_eval_deltas_hook.CallTarget();
+        }
+    },
+};
+
 FunHook<void()> mouse_eval_deltas_di_hook{
     0x0051DEB0,
     []() {
@@ -357,6 +367,9 @@ void InputInit()
 
     // Handle CTRL+V in input boxes
     UiInputBox_ProcessKey_hook.Install();
+
+    // Disable mouse when window is not active
+    mouse_eval_deltas_hook.Install();
 
     // Add DirectInput mouse support
     mouse_eval_deltas_di_hook.Install();

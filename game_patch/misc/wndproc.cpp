@@ -7,11 +7,6 @@
 
 const char* GetWndMsgName(UINT msg);
 
-static bool IsMouseEnabled()
-{
-    return rf::mouse_initialized && rf::is_main_wnd_active;
-}
-
 LRESULT WINAPI WndProc(HWND wnd_handle, UINT msg, WPARAM w_param, LPARAM l_param)
 {
     // TRACE("%08x: msg %s %x %x", GetTickCount(), GetWndMsgName(msg), w_param, l_param);
@@ -63,7 +58,4 @@ void InitWndProc()
 {
     // Subclass window
     WriteMemPtr(0x00524E66, &WndProc);
-
-    // Disable mouse when window is not active
-    AsmWriter(0x0051DC70).call(IsMouseEnabled);
 }

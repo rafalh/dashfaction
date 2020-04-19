@@ -88,6 +88,7 @@ namespace rf
 
     typedef void(*MsgHandlerPtr)(UINT, WPARAM, LPARAM);
     static auto &AddMsgHandler = AddrAsRef<unsigned(MsgHandlerPtr)>(0x00524AE0);
+    static auto &OsForeground = AddrAsRef<bool()>(0x00524AD0);
 
     static auto& msg_handlers = AddrAsRef<MsgHandlerPtr[32]>(0x01B0D5A0);
     static auto& num_msg_handlers = AddrAsRef<uint32_t>(0x01B0D760);
