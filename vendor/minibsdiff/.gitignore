@@ -1,0 +1,9 @@
+.DS_Store
+*~
+*.o
+minibsdiff
+*.exe
+*.swp
+
+build*/
+/result

@@ -1,0 +1,9 @@
+language: c
+script: echo # Dummy rule
+
+matrix:
+  include:
+    - script:   make
+      compiler: clang
+    - script:   make
+      compiler: gcc
