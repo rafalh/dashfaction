@@ -57,3 +57,5 @@ add_library(unrar STATIC
     dll.cpp
     qopen.cpp
 )
+
+target_link_libraries(unrar powrprof)

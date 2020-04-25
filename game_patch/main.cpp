@@ -283,7 +283,7 @@ void LogSystemInfo()
         if (wine_ver)
             xlog::info() << "Running on Wine: " << wine_ver.value();
 
-        xlog::info("Running as %s (elevation type: %s)", IsUserAdmin() ? "admin" : "user", GetProcessElevationType());
+        xlog::info("Running as %s (elevation type: %s)", IsCurrentUserAdmin() ? "admin" : "user", GetProcessElevationType());
         xlog::info() << "CPU Brand: " << getCpuBrand();
         xlog::info() << "CPU ID: " << getCpuId();
         LARGE_INTEGER qpc_freq;

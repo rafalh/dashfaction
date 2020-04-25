@@ -21,10 +21,6 @@ void IntToExt(const char *Src,char *Dest,size_t DestSize)
     DestSize=SrcLength;
   OemToCharBuffA(Src,Dest,(DWORD)DestSize);
   Dest[DestSize-1]=0;
-#elif defined(_ANDROID)
-  wchar DestW[NM];
-  JniCharToWide(Src,DestW,ASIZE(DestW),true);
-  WideToChar(DestW,Dest,DestSize);
 #else
   if (Dest!=Src)
     strncpyz(Dest,Src,DestSize);
@@ -32,19 +28,38 @@ void IntToExt(const char *Src,char *Dest,size_t DestSize)
 }
 
 
-// Convert archived names to Unicode. Allow user to select a code page in GUI.
+// Convert archived names and comments to Unicode.
+// Allows user to select a code page in GUI.
 void ArcCharToWide(const char *Src,wchar *Dest,size_t DestSize,ACTW_ENCODING Encoding)
 {
+#if defined(_WIN_ALL) // Console Windows RAR.
+  if (Encoding==ACTW_UTF8)
+    UtfToWide(Src,Dest,DestSize);
+  else
+  {
+    Array<char> NameA;
+    if (Encoding==ACTW_OEM)
+    {
+      NameA.Alloc(DestSize+1);
+      IntToExt(Src,&NameA[0],NameA.Size());
+      Src=&NameA[0];
+    }
+    CharToWide(Src,Dest,DestSize);
+  }
+#else // RAR for Unix.
   if (Encoding==ACTW_UTF8)
     UtfToWide(Src,Dest,DestSize);
   else
     CharToWide(Src,Dest,DestSize);
+#endif
   // Ensure that we return a zero terminate string for security reason.
   // While [Jni]CharToWide might already do it, be protected in case of future
   // changes in these functions.
   if (DestSize>0)
     Dest[DestSize-1]=0;
 }
+
+
 
 
 int stricomp(const char *s1,const char *s2)
@@ -108,9 +123,10 @@ wchar* RemoveLF(wchar *Str)
 
 unsigned char loctolower(unsigned char ch)
 {
-#ifdef _WIN_ALL
+#if defined(_WIN_ALL)
   // Convert to LPARAM first to avoid a warning in 64 bit mode.
-  return (int)(LPARAM)CharLowerA((LPSTR)ch);
+  // Convert to uintptr_t to avoid Clang/win error: cast to 'char *' from smaller integer type 'unsigned char' [-Werror,-Wint-to-pointer-cast]
+  return (int)(LPARAM)CharLowerA((LPSTR)(uintptr_t)ch);
 #else
   return tolower(ch);
 #endif
@@ -119,9 +135,10 @@ unsigned char loctolower(unsigned char ch)
 
 unsigned char loctoupper(unsigned char ch)
 {
-#ifdef _WIN_ALL
+#if defined(_WIN_ALL)
   // Convert to LPARAM first to avoid a warning in 64 bit mode.
-  return (int)(LPARAM)CharUpperA((LPSTR)ch);
+  // Convert to uintptr_t to avoid Clang/win error: cast to 'char *' from smaller integer type 'unsigned char' [-Werror,-Wint-to-pointer-cast]
+  return (int)(LPARAM)CharUpperA((LPSTR)(uintptr_t)ch);
 #else
   return toupper(ch);
 #endif
@@ -224,8 +241,8 @@ uint GetDigits(uint Number)
 
 bool LowAscii(const char *Str)
 {
-  for (int I=0;Str[I]!=0;I++)
-    if ((byte)Str[I]<32 || (byte)Str[I]>127)
+  for (size_t I=0;Str[I]!=0;I++)
+    if (/*(byte)Str[I]<32 || */(byte)Str[I]>127)
       return false;
   return true;
 }
@@ -233,74 +250,80 @@ bool LowAscii(const char *Str)
 
 bool LowAscii(const wchar *Str)
 {
-  for (int I=0;Str[I]!=0;I++)
+  for (size_t I=0;Str[I]!=0;I++)
   {
     // We convert wchar_t to uint just in case if some compiler
     // uses signed wchar_t.
-    if ((uint)Str[I]<32 || (uint)Str[I]>127)
+    if (/*(uint)Str[I]<32 || */(uint)Str[I]>127)
       return false;
   }
   return true;
 }
 
 
-int wcsicompc(const wchar *Str1,const wchar *Str2)
+int wcsicompc(const wchar *s1,const wchar *s2) // For path comparison.
 {
 #if defined(_UNIX)
-  return wcscmp(Str1,Str2);
+  return wcscmp(s1,s2);
 #else
-  return wcsicomp(Str1,Str2);
+  return wcsicomp(s1,s2);
 #endif
 }
 
 
-// safe strncpy: copies maxlen-1 max and always returns zero terminated dest
-char* strncpyz(char *dest, const char *src, size_t maxlen)
+int wcsnicompc(const wchar *s1,const wchar *s2,size_t n)
+{
+#if defined(_UNIX)
+  return wcsncmp(s1,s2,n);
+#else
+  return wcsnicomp(s1,s2,n);
+#endif
+}
+
+
+// Safe copy: copies maxlen-1 max and for maxlen>0 returns zero terminated dest.
+void strncpyz(char *dest, const char *src, size_t maxlen)
 {
   if (maxlen>0)
   {
-    strncpy(dest,src,maxlen-1);
-    dest[maxlen-1]=0;
+    while (--maxlen>0 && *src!=0)
+      *dest++=*src++;
+    *dest=0;
   }
-  return dest;
 }
 
 
-// Safe wcsncpy: copies maxlen-1 max and always returns zero terminated dest.
-wchar* wcsncpyz(wchar *dest, const wchar *src, size_t maxlen)
+// Safe copy: copies maxlen-1 max and for maxlen>0 returns zero terminated dest.
+void wcsncpyz(wchar *dest, const wchar *src, size_t maxlen)
 {
   if (maxlen>0)
   {
-    wcsncpy(dest,src,maxlen-1);
-    dest[maxlen-1]=0;
+    while (--maxlen>0 && *src!=0)
+      *dest++=*src++;
+    *dest=0;
   }
-  return dest;
 }
 
 
-// Safe strncat: resulting dest length cannot exceed maxlen and dest 
-// is always zero terminated. Note that 'maxlen' parameter defines the entire
-// dest buffer size and is not compatible with standard strncat.
-char* strncatz(char* dest, const char* src, size_t maxlen)
+// Safe append: resulting dest length cannot exceed maxlen and dest 
+// is always zero terminated. 'maxlen' parameter defines the entire
+// dest buffer size and is not compatible with wcsncat.
+void strncatz(char* dest, const char* src, size_t maxlen)
 {
-  size_t Length = strlen(dest);
-  int avail=int(maxlen - Length - 1);
-  if (avail > 0)
-    strncat(dest, src, avail);
-  return dest;
+  size_t length = strlen(dest);
+  if (maxlen > length)
+    strncpyz(dest + length, src, maxlen - length);
 }
 
 
-// Safe wcsncat: resulting dest length cannot exceed maxlen and dest 
-// is always zero terminated. Note that 'maxlen' parameter defines the entire
-// dest buffer size and is not compatible with standard wcsncat.
-wchar* wcsncatz(wchar* dest, const wchar* src, size_t maxlen)
+// Safe append: resulting dest length cannot exceed maxlen and dest 
+// is always zero terminated. 'maxlen' parameter defines the entire
+// dest buffer size and is not compatible with wcsncat.
+void wcsncatz(wchar* dest, const wchar* src, size_t maxlen)
 {
-  size_t Length = wcslen(dest);
-  int avail=int(maxlen - Length - 1);
-  if (avail > 0)
-    wcsncat(dest, src, avail);
-  return dest;
+  size_t length = wcslen(dest);
+  if (maxlen > length)
+    wcsncpyz(dest + length, src, maxlen - length);
 }
 
 
@@ -407,7 +430,7 @@ const wchar* GetCmdParam(const wchar *CmdLine,wchar *Param,size_t MaxSize)
 }
 
 
-#ifndef SILENT
+#ifndef RARDLL
 // For compatibility with existing translations we use %s to print Unicode
 // strings in format strings and convert them to %ls here. %s could work
 // without such conversion in Windows, but not in Unix wprintf.

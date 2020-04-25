@@ -8,7 +8,7 @@ const char* stristr(const char* haystack, const char* needle);
 const char* getDxErrorStr(HRESULT hr);
 std::string getOsVersion();
 std::string getRealOsVersion();
-bool IsUserAdmin();
+bool IsCurrentUserAdmin();
 const char* GetProcessElevationType();
 std::string getCpuId();
 std::string getCpuBrand();

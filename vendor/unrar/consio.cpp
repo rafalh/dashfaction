@@ -49,9 +49,14 @@ void InitConsole()
 }
 
 
-void InitConsoleOptions(MESSAGE_TYPE MsgStream,RAR_CHARSET RedirectCharset)
+void SetConsoleMsgStream(MESSAGE_TYPE MsgStream)
 {
   ::MsgStream=MsgStream;
+}
+
+
+void SetConsoleRedirectCharset(RAR_CHARSET RedirectCharset)
+{
   ::RedirectCharset=RedirectCharset;
 }
 
@@ -76,8 +81,11 @@ static void cvt_wprintf(FILE *dest,const wchar *fmt,va_list arglist)
     {
       // Avoid Unicode for redirect in Windows, it does not work with pipes.
       safebuf char MsgA[MaxMsgSize];
-      WideToChar(Msg,MsgA,ASIZE(MsgA));
-      if (RedirectCharset!=RCH_ANSI)
+      if (RedirectCharset==RCH_UTF8)
+        WideToUtf(Msg,MsgA,ASIZE(MsgA));
+      else
+        WideToChar(Msg,MsgA,ASIZE(MsgA));
+      if (RedirectCharset==RCH_DEFAULT || RedirectCharset==RCH_OEM)
         CharToOemA(MsgA,MsgA); // Console tools like 'more' expect OEM encoding.
 
       // We already converted \n to \r\n above, so we use WriteFile instead

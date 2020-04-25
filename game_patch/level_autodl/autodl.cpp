@@ -106,6 +106,7 @@ static bool UnzipVpp(const char* path)
     }
 
     unzClose(archive);
+    xlog::debug("Unzipped");
     return ret;
 }
 
@@ -162,6 +163,7 @@ static bool UnrarVpp(const char* path)
     }
 
     RARCloseArchive(archive_handle);
+    xlog::debug("Unrared");
     return ret;
 }
 
@@ -220,6 +222,7 @@ static void DownloadLevelThread()
 
     bool success = false;
     if (FetchLevelFile(temp_filename, g_level_info.ticket_id)) {
+        xlog::debug("Unpacking level from %s", temp_filename);
         if (!UnzipVpp(temp_filename) && !UnrarVpp(temp_filename))
             xlog::error("UnzipVpp and UnrarVpp failed");
         else

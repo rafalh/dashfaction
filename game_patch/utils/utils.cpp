@@ -110,7 +110,7 @@ std::string getRealOsVersion()
                         HIWORD(file_info->dwProductVersionLS));
 }
 
-bool IsUserAdmin()
+bool IsCurrentUserAdmin()
 {
     SID_IDENTIFIER_AUTHORITY nt_authority = SECURITY_NT_AUTHORITY;
     PSID administrators_group;
