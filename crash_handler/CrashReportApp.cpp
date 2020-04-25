@@ -116,7 +116,7 @@ void CrashReportApp::PrepareReport(const CommandLineInfo& cmd_line_info) try
     dump_helper.add_known_module(L"DashFactionLauncher");
     dump_helper.add_known_module(L"RF");
     dump_helper.add_known_module(L"RED");
-    dump_helper.set_info_level(0);//CRASHHANDLER_DMP_LEVEL);
+    dump_helper.set_info_level(CRASHHANDLER_DMP_LEVEL);
     dump_helper.write_dump(crash_dump_filename.c_str(), exception_ptrs, process_handle, thread_id);
 
     TextDumpHelper text_dump_hlp{process_handle};
