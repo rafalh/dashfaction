@@ -13,9 +13,4 @@ target_link_libraries(DashFactionLauncher
     comctl32
 )
 
-if(MSVC)
-    # generate PDB files
-    set_property(TARGET DashFactionLauncher PROPERTY LINK_FLAGS /DEBUG)
-else()
-    set_property(TARGET DashFactionLauncher PROPERTY LINK_FLAGS -Wl,-Map,${CMAKE_CURRENT_BINARY_DIR}/DashFaction.map)
-endif()
+setup_debug_info(DashFactionLauncher)

@@ -215,10 +215,10 @@ private:
             return;
         }
 
-        uint8_t insn_buf[5];
+        uint8_t insn_buf[6];
         size_t dwords_read = bytes_read / sizeof(uint32_t);
         for (unsigned i = 0; i < dwords_read; ++i) {
-            uint32_t potential_call_addr = stack_buf[i] - 5;
+            uint32_t potential_call_addr = stack_buf[i] - 6;
             if (!is_executable_addr(reinterpret_cast<void*>(potential_call_addr))) {
                 continue;
             }
@@ -227,7 +227,10 @@ private:
                 continue;
             }
 
-            if (insn_buf[0] == 0xE8) {
+            if (insn_buf[1] == 0xE8) {
+                out << StringFormat("%08X\n", static_cast<unsigned>(potential_call_addr + 1));
+            }
+            else if (insn_buf[0] == 0xFF && insn_buf[1] == 0x15) {
                 out << StringFormat("%08X\n", static_cast<unsigned>(potential_call_addr));
             }
         }

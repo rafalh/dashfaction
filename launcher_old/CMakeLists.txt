@@ -11,3 +11,5 @@ file(GLOB SRCS *.cpp *.h *.rc)
 add_executable(DashFactionLauncher_OLD ${SRCS})
 
 target_link_libraries(DashFactionLauncher_OLD LauncherCommon)
+
+setup_debug_info(DashFactionLauncher_OLD)

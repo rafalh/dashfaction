@@ -28,10 +28,4 @@ target_link_libraries(DashEditor
     shlwapi
 )
 
-if(MSVC)
-    # generate PDB files
-    set_property(TARGET DashEditor PROPERTY LINK_FLAGS /DEBUG)
-else()
-    # generate Map file
-    set_property(TARGET DashEditor PROPERTY LINK_FLAGS -Wl,-Map,${CMAKE_CURRENT_BINARY_DIR}/DashEditor.map)
-endif()
+setup_debug_info(DashEditor)

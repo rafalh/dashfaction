@@ -33,3 +33,5 @@ target_link_libraries(CrashHandler
     zip
     zlib
 )
+
+setup_debug_info(CrashHandler)

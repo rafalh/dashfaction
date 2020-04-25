@@ -143,10 +143,4 @@ target_link_libraries(DashFaction
     ws2_32
 )
 
-if(MSVC)
-    # generate PDB files
-    set_property(TARGET DashFaction PROPERTY LINK_FLAGS /DEBUG)
-else()
-    # generate Map file
-    set_property(TARGET DashFaction PROPERTY LINK_FLAGS -Wl,-Map,${CMAKE_CURRENT_BINARY_DIR}/DashFaction.map)
-endif()
+setup_debug_info(DashFaction)

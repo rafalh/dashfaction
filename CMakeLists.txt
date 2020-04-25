@@ -33,8 +33,8 @@ add_compile_options("$<$<CONFIG:RELEASE>:-DNDEBUG>")
 
 if(NOT MSVC)
     # Strip binaries in Release configuration
-    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
+    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
     # Use static linking
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -static")
@@ -59,6 +59,20 @@ endif()
 # if(MSVC)
 #     set(CMAKE_GENERATOR_TOOLSET v141_xp)
 # endif()
+
+# Macros
+macro(setup_debug_info target)
+    if(MSVC)
+        # MSVC - generate PDB files
+        set_property(TARGET ${target} PROPERTY LINK_FLAGS /DEBUG)
+    else()
+        # MinGW - copy symbols to separate file and strip from executable
+        add_custom_command(TARGET ${target} POST_BUILD
+            COMMAND ${CMAKE_OBJCOPY} --only-keep-debug "$<TARGET_FILE:${target}>" "$<TARGET_FILE:${target}>.debug"
+            COMMAND ${CMAKE_STRIP} --strip-debug --strip-unneeded "$<TARGET_FILE:${target}>"
+            COMMAND ${CMAKE_OBJCOPY} --add-gnu-debuglink="$<TARGET_FILE:${target}>.debug" "$<TARGET_FILE:${target}>")
+    endif()
+endmacro()
 
 add_subdirectory(vendor)
 add_subdirectory(launcher_old)
