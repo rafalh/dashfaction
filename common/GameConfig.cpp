@@ -142,7 +142,13 @@ bool GameConfig::detect_game_path()
     // Steam
     try
     {
-        RegKey reg_key(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Steam App 20530", KEY_READ);
+        BOOL Wow64Process = FALSE;
+        IsWow64Process(GetCurrentProcess(), &Wow64Process);
+        REGSAM reg_sam = KEY_READ;
+        if (Wow64Process) {
+            reg_sam |= KEY_WOW64_64KEY;
+        }
+        RegKey reg_key(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Steam App 20530", reg_sam);
         if (reg_key.read_value("InstallLocation", &install_path))
         {
             game_executable_path = install_path + "\\RF.exe";

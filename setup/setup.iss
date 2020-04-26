@@ -219,13 +219,19 @@ begin
 end;
 
 function DetectGameExecutablePath(): String;
+var
+    NativeHKLM: Integer;
 begin
+    if IsWin64() then
+        NativeHKLM := HKEY_LOCAL_MACHINE_64
+    else
+        NativeHKLM := HKEY_LOCAL_MACHINE;
     if RegQueryStringValue(HKEY_CURRENT_USER, 'SOFTWARE\Volition\Red Faction\Dash Faction', 'Executable Path', Result) then
         // Dash Faction options - nothing to do
     else if RegQueryStringValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\Volition\Red Faction', 'InstallPath', Result) then
         // Install from CD
         Result := Result + '\RF.exe'
-    else if RegQueryStringValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 20530', 'InstallLocation', Result) then
+    else if RegQueryStringValue(NativeHKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 20530', 'InstallLocation', Result) then
         // Steam
         Result := Result + '\RF.exe'
     else if RegQueryStringValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\GOG.com\GOGREDFACTION', 'PATH', Result) then
