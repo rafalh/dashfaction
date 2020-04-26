@@ -23,7 +23,6 @@
 #include <patch_common/CodeInjection.h>
 #include <patch_common/ShortTypes.h>
 #include <cstddef>
-#include <algorithm>
 #include <regex>
 
 namespace rf
