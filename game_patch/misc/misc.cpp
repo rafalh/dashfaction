@@ -577,6 +577,11 @@ void MiscInit()
     // Fix crash caused by explosion near dying player-controlled entity (entity->local_player is null)
     explosion_crash_fix.Install();
 
+    // If speed reduction in background is not wanted disable that code in RF
+    if (!g_game_config.reduced_speed_in_background) {
+        WriteMem<u8>(0x004353CC, asm_opcodes::jmp_rel_short);
+    }
+
     // Init cmd line param
     GetUrlCmdLineParam();
 

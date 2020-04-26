@@ -45,6 +45,7 @@
 #define IDC_HIGH_MON_RES_CHECK          1034
 #define IDC_LINEAR_PITCH_CHECK          1035
 #define IDC_LANG_COMBO                  1036
+#define IDC_REDUCED_SPEED_IN_BG_CHECK   1037
 
 // Next default values for new objects
 //
@@ -52,7 +53,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        104
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1037
+#define _APS_NEXT_CONTROL_VALUE         1038
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
