@@ -63,10 +63,10 @@ Root: HKCR; Subkey: "rf\DefaultIcon"; ValueType: "string"; ValueData: "{app}\Das
 Root: HKCR; Subkey: "rf\shell\open\command"; ValueType: "string"; ValueData: """{app}\DashFactionLauncher.exe"" -game -url %1"; Tasks: rfproto
 
 [CustomMessages]
-RFExeLocation=Please select Red Faction executable file.%nFor installation from Steam it is usually: C:\Program Files\Steam\steamapps\common\red faction\RF.exe%nFor installation from CD (retail) it is usually: C:\games\RedFaction\RF.exe%nNote: Dash Faction requires 1.20-NA version of this file. You may have to replace the file if you have uncompatible version. Find more help at https://redfaction.help%n%n&Location of RF.exe:
+RFExeLocation=Please specify location of RF.exe file from Red Faction installation directory:
 GameNeedsPatches=Detected Red Faction version is not directly supported by Dash Faction. Setup program will install all the needed patches automatically.%n%nPatches that will be installed:%n
-UnkGameExeVersion=Unknown RF.exe version (SHA1 = %1). Dash Faction will not function correctly.%nDo you want to continue anyway?
-UnkTablesVppVersion=Unknown tables.vpp version (SHA1 = %1). Multiplayer will not function correctly.%nDo you want to continue anyway?
+UnkGameExeVersion=Unknown RF.exe version (SHA1 = %1). Dash Faction will not function correctly.%nFind help at http://redfaction.help and http://redfaction.chat (Discord).%n%nDo you want to ignore this error and continue?
+UnkTablesVppVersion=Unknown tables.vpp version (SHA1 = %1). Multiplayer will not function correctly.%nFind help at http://redfaction.help and http://redfaction.chat (Discord).%n%nDo you want to ignore this error and continue?
 
 [Code]
 type
