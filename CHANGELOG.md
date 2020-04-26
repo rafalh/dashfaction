@@ -31,6 +31,7 @@ Version 1.4.2
 - add server-size validation of ammo when handling weapon fire
 - use 24-bit depth buffer if supported even if video card is not Nvidia (fixes Z-fighting on Intel and AMD cards)
 - use dynamic light detail texture for all cards if multi-texturing is available (improves graphics quality on Intel cards)
+- not treat every chat message starting with 'server' as a server command
 - fix sending crash reports
 - fix non-working face scrolling before first geomod use in custom levels (RF bug)
 - fix memory and VRAM leak when quick saving (RF bug)

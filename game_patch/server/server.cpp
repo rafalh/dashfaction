@@ -152,7 +152,7 @@ void HandleNextMapCommand(rf::Player* source)
     SendChatLinePacket(msg.c_str(), source);
 }
 
-void HandleServerChatCommand(std::string_view server_command, rf::Player* sender)
+bool HandleServerChatCommand(std::string_view server_command, rf::Player* sender)
 {
     auto [cmd_name, cmd_arg] = StripBySpace(server_command);
 
@@ -166,25 +166,25 @@ void HandleServerChatCommand(std::string_view server_command, rf::Player* sender
         HandleNextMapCommand(sender);
     }
     else
-        SendChatLinePacket("Unrecognized server command!", sender);
+        return false;
+    return true;
 }
 
 bool CheckServerChatCommand(const char* msg, rf::Player* sender)
 {
     if (msg[0] == '/') {
-        HandleServerChatCommand(msg + 1, sender);
+        if (!HandleServerChatCommand(msg + 1, sender))
+            SendChatLinePacket("Unrecognized server command!", sender);
         return true;
     }
 
     auto [cmd, rest] = StripBySpace(msg);
     if (cmd == "server")
-        HandleServerChatCommand(rest, sender);
+        return HandleServerChatCommand(rest, sender);
     else if (cmd == "vote")
-        HandleServerChatCommand(msg, sender);
+        return HandleServerChatCommand(msg, sender);
     else
         return false;
-
-    return true;
 }
 
 CodeInjection spawn_protection_duration_patch{
