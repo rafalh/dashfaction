@@ -41,12 +41,12 @@ struct ServerAdditionalConfig
     std::optional<int> default_player_weapon_ammo;
     bool require_client_mod = true;
     float player_damage_modifier = 1.0f;
+    bool saving_enabled = false;
 };
 
 extern ServerAdditionalConfig g_additional_server_config;
 extern std::string g_prev_level;
 
-void SendChatLinePacket(const char* msg, rf::Player* target, rf::Player* sender = nullptr, bool is_team_msg = false);
 void InitWin32ServerConsole();
 void CleanupWin32ServerConsole();
 void HandleVoteCommand(std::string_view vote_name, std::string_view vote_arg, rf::Player* sender);

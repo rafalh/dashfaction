@@ -4,6 +4,7 @@
 #include "../rf/game_seq.h"
 #include "server_internal.h"
 #include "../console/console.h"
+#include "../multi/network.h"
 #include "../main.h"
 #include <map>
 #include <set>

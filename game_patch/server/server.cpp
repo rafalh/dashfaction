@@ -8,6 +8,7 @@
 #include "server.h"
 #include "server_internal.h"
 #include "../console/console.h"
+#include "../multi/network.h"
 #include "../main.h"
 #include "../rf/player.h"
 #include "../rf/network.h"
@@ -28,25 +29,6 @@ const char* g_rcon_cmd_whitelist[] = {
 
 ServerAdditionalConfig g_additional_server_config;
 std::string g_prev_level;
-
-void SendChatLinePacket(const char* msg, rf::Player* target, rf::Player* sender, bool is_team_msg)
-{
-    uint8_t buf[512];
-    rfMessage& packet = *reinterpret_cast<rfMessage*>(buf);
-    packet.type = RF_MESSAGE;
-    packet.size = static_cast<uint16_t>(std::strlen(msg) + 3);
-    packet.player_id = sender ? sender->nw_data->player_id : 0xFF;
-    packet.is_team_msg = is_team_msg;
-    std::strncpy(packet.message, msg, 255);
-    packet.message[255] = 0;
-    if (target == nullptr) {
-        rf::NwSendReliablePacketToAll(buf, packet.size + 3, 0);
-        rf::DcPrintf("Server: %s", msg);
-    }
-    else {
-        rf::NwSendReliablePacket(target, buf, packet.size + 3, 0);
-    }
-}
 
 void ParseVoteConfig(const char* vote_name, VoteConfig& config, rf::StrParser& parser)
 {
@@ -123,6 +105,10 @@ void LoadAdditionalServerConfig(rf::StrParser& parser)
         g_additional_server_config.player_damage_modifier = parser.GetFloat();
     }
 
+    if (parser.OptionalString("$DF Saving Enabled:")) {
+        g_additional_server_config.saving_enabled = parser.GetBool();
+    }
+
     if (!parser.OptionalString("$Name:") && !parser.OptionalString("#End")) {
         parser.Error("end of server configuration");
     }
@@ -145,19 +131,84 @@ std::pair<std::string_view, std::string_view> StripBySpace(std::string_view str)
         return {str.substr(0, space_pos), str.substr(space_pos + 1)};
 }
 
-void HandleNextMapCommand(rf::Player* source)
+void HandleNextMapCommand(rf::Player* player)
 {
     int next_idx = (rf::level_rotation_idx + 1) % rf::server_level_list.Size();
     auto msg = StringFormat("Next level: %s", rf::server_level_list.Get(next_idx).CStr());
-    SendChatLinePacket(msg.c_str(), source);
+    SendChatLinePacket(msg.c_str(), player);
 }
+
+void HandleSaveCommand(rf::Player* player, std::string_view save_name)
+{
+    auto& pdata = GetPlayerAdditionalData(player);
+    auto entity = rf::EntityGetFromHandle(player->entity_handle);
+    if (entity && g_additional_server_config.saving_enabled) {
+        PlayerNetGameSaveData save_data;
+        save_data.pos = entity->_super.pos;
+        save_data.orient = entity->_super.orient;
+        pdata.saves.insert_or_assign(std::string{save_name}, save_data);
+        SendChatLinePacket("Your position has been saved!", player);
+    }
+}
+
+void HandleLoadCommand(rf::Player* player, std::string_view save_name)
+{
+    auto& pdata = GetPlayerAdditionalData(player);
+    auto entity = rf::EntityGetFromHandle(player->entity_handle);
+    if (entity && g_additional_server_config.saving_enabled) {
+        auto it = pdata.saves.find(std::string{save_name});
+        if (it != pdata.saves.end()) {
+            auto& save_data = it->second;
+            entity->_super.phys_info.pos = save_data.pos;
+            entity->_super.phys_info.new_pos = save_data.pos;
+            entity->_super.pos = save_data.pos;
+            entity->_super.orient = save_data.orient;
+            if (entity->_super.obj_interp) {
+                entity->_super.obj_interp->Clear();
+            }
+            rf::SendEntityCreatePacket(entity, player);
+            pdata.last_teleport_timer.Set(300);
+            pdata.last_teleport_pos = save_data.pos;
+            SendChatLinePacket("Your position has been restored!", player);
+        }
+        else {
+            SendChatLinePacket("You do not have any position saved!", player);
+        }
+    }
+}
+
+CodeInjection ProcessObjUpdate_set_pos_injection{
+    0x0047E563,
+    [](auto& regs) {
+        if (!rf::is_local_net_game) {
+            return;
+        }
+        auto& entity = AddrAsRef<rf::EntityObj>(regs.edi);
+        auto& pos = AddrAsRef<rf::Vector3>(regs.esp + 0x9C - 0x60);
+        auto player = rf::GetPlayerFromEntityHandle(entity._super.handle);
+        auto& pdata = GetPlayerAdditionalData(player);
+        if (pdata.last_teleport_timer.IsSet()) {
+            float dist = (pos - pdata.last_teleport_pos).Len();
+            if (!pdata.last_teleport_timer.IsFinished() && dist > 1.0f) {
+                // Ignore obj_update packets for some time after restoring the position
+                xlog::warn("ignoring obj_update after teleportation (distance %f)", dist);
+                regs.eip = 0x0047DFF6;
+            }
+            else {
+                xlog::warn("not ignoring obj_update anymore after teleportation (distance %f)", dist);
+                pdata.last_teleport_timer.Unset();
+            }
+        }
+    },
+};
 
 bool HandleServerChatCommand(std::string_view server_command, rf::Player* sender)
 {
     auto [cmd_name, cmd_arg] = StripBySpace(server_command);
 
-    if (cmd_name == "info")
+    if (cmd_name == "info") {
         SendChatLinePacket("Server powered by Dash Faction", sender);
+    }
     else if (cmd_name == "vote") {
         auto [vote_name, vote_arg] = StripBySpace(cmd_arg);
         HandleVoteCommand(vote_name, vote_arg, sender);
@@ -165,8 +216,15 @@ bool HandleServerChatCommand(std::string_view server_command, rf::Player* sender
     else if (cmd_name == "nextmap" || cmd_name == "nextlevel") {
         HandleNextMapCommand(sender);
     }
-    else
+    else if (cmd_name == "save") {
+        HandleSaveCommand(sender, cmd_arg);
+    }
+    else if (cmd_name == "load") {
+        HandleLoadCommand(sender, cmd_arg);
+    }
+    else {
         return false;
+    }
     return true;
 }
 
@@ -425,6 +483,9 @@ void ServerInit()
 
     // Fix sending ping packets after time in ms wraps around (~25 days)
     send_ping_time_wrap_fix.Install();
+
+    // Ignore obj_update position for some time after teleportation
+    ProcessObjUpdate_set_pos_injection.Install();
 }
 
 void ServerCleanup()
@@ -443,4 +504,17 @@ void ServerOnLimboStateEnter()
 {
     g_prev_level = rf::level_filename.CStr();
     ServerVoteOnLimboStateEnter();
+
+    // Clear save data for all players
+    auto player_list = SinglyLinkedList{rf::player_list};
+    for (auto& player : player_list) {
+        auto& pdata = GetPlayerAdditionalData(&player);
+        pdata.saves.clear();
+        pdata.last_teleport_timer.Unset();
+    }
+}
+
+bool ServerIsSavingEnabled()
+{
+    return g_additional_server_config.saving_enabled;
 }

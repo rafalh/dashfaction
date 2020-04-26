@@ -15,6 +15,7 @@ Version 1.4.2
 - allow custom meshes in Switch_Model event
 - add 'rf' protocol handler (URLs has format: rf://IP:PORT)
 - add setup program
+- add '/save' and '/load' chat commands and quick save/load controls handling for saving and restoring player position in multiplayer (useful for runmap servers, can be enabled in dedicated_server.txt)
 - log error when RFA cannot be loaded
 - improve render to texture performance (e.g. mirrors and scanners)
 - improve 2D drawing performance

@@ -134,6 +134,8 @@ Configuration example:
     $DF Require Client Mod: true
     // Multiplied with damage when shooting at players. Set to 0 if you want invulnerable players e.g. in run-map server
     $DF Player Damage Modifier: 1.0
+    // Enable '/save' and '/load' chat commands (works for all clients) and quick save/load controls handling (works for Dash Faction 1.5.0+ clients). Option designed with run-maps in mind.
+    $DF Saving Enabled: false
 
 License
 -------

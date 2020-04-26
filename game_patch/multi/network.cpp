@@ -4,8 +4,11 @@
 #include "../rf/player.h"
 #include "../rf/weapon.h"
 #include "../rf/entity.h"
+#include "../rf/debug_console.h"
 #include "../server/server.h"
 #include "../misc/misc.h"
+#include "../main.h"
+#include "../utils/enum-bitwise-operators.h"
 #include <common/BuildConfig.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
@@ -252,6 +255,8 @@ std::array g_client_side_packet_whitelist{
     glass_kill,
 };
 // clang-format on
+
+std::optional<DashFactionServerInfo> g_df_server_info;
 
 CodeInjection ProcessGamePacket_whitelist_filter{
     0x0047918D,
@@ -537,10 +542,21 @@ constexpr uint32_t DASH_FACTION_SIGNATURE = 0xDA58FAC7;
 // Appended to game_info and join_req packets
 struct df_sign_packet_ext
 {
-    uint32_t df_signature; // DASH_FACTION_SIGNATURE
-    uint8_t version_major;
-    uint8_t version_minor;
+    uint32_t df_signature = DASH_FACTION_SIGNATURE;
+    uint8_t version_major = VERSION_MAJOR;
+    uint8_t version_minor = VERSION_MINOR;
 };
+
+template<typename T>
+std::pair<std::unique_ptr<std::byte[]>, size_t> ExtendPacket(std::byte* data, size_t len, const T& ext_data)
+{
+    auto new_data = std::make_unique<std::byte[]>(len + sizeof(ext_data));
+    std::copy(data, data + len, new_data.get());
+    std::copy(&ext_data, &ext_data + 1, reinterpret_cast<T*>(new_data.get() + len));
+    auto& new_header = *reinterpret_cast<rfPacketHeader*>(new_data.get());
+    new_header.size += sizeof(ext_data);
+    return {std::move(new_data), len + sizeof(ext_data)};
+}
 
 std::pair<std::unique_ptr<std::byte[]>, size_t> ExtendPacketWithDashFactionSignature(std::byte* data, size_t len)
 {
@@ -548,12 +564,7 @@ std::pair<std::unique_ptr<std::byte[]>, size_t> ExtendPacketWithDashFactionSigna
     ext.df_signature = DASH_FACTION_SIGNATURE;
     ext.version_major = VERSION_MAJOR;
     ext.version_minor = VERSION_MINOR;
-    auto new_data = std::make_unique<std::byte[]>(len + sizeof(ext));
-    std::copy(data, data + len, new_data.get());
-    std::copy(&ext, &ext + 1, reinterpret_cast<df_sign_packet_ext*>(new_data.get() + len));
-    auto& new_header = *reinterpret_cast<rfPacketHeader*>(new_data.get());
-    new_header.size += sizeof(ext);
-    return {std::move(new_data), len + sizeof(ext)};
+    return ExtendPacket(data, len, ext);
 }
 
 CallHook<int(const rf::NwAddr*, std::byte*, size_t)> send_game_info_packet_hook{
@@ -565,6 +576,22 @@ CallHook<int(const rf::NwAddr*, std::byte*, size_t)> send_game_info_packet_hook{
     },
 };
 
+struct DashFactionJoinAcceptPacketExt
+{
+    uint32_t df_signature = DASH_FACTION_SIGNATURE;
+    uint8_t version_major = VERSION_MAJOR;
+    uint8_t version_minor = VERSION_MINOR;
+    //uint32_t flags = 0;
+
+    enum class Flags : uint32_t {
+        none = 0,
+        saving_enabled = 1,
+    } flags = Flags::none;
+
+};
+template<>
+struct EnableEnumBitwiseOperators<DashFactionJoinAcceptPacketExt::Flags> : std::true_type {};
+
 CallHook<int(const rf::NwAddr*, std::byte*, size_t)> send_join_req_packet_hook{
     0x0047ABFB,
     [](const rf::NwAddr* addr, std::byte* data, size_t len) {
@@ -573,6 +600,65 @@ CallHook<int(const rf::NwAddr*, std::byte*, size_t)> send_join_req_packet_hook{
         return send_join_req_packet_hook.CallTarget(addr, new_data.get(), new_len);
     },
 };
+
+CallHook<int(const rf::NwAddr*, std::byte*, size_t)> send_join_accept_packet_hook{
+    0x0047A825,
+    [](const rf::NwAddr* addr, std::byte* data, size_t len) {
+        // Add Dash Faction signature to join_accept packet
+        DashFactionJoinAcceptPacketExt ext_data;
+        if (ServerIsSavingEnabled()) {
+            ext_data.flags |= DashFactionJoinAcceptPacketExt::Flags::saving_enabled;
+        }
+        auto [new_data, new_len] = ExtendPacket(data, len, ext_data);
+        return send_join_accept_packet_hook.CallTarget(addr, new_data.get(), new_len);
+    },
+};
+
+CodeInjection process_join_accept_injection{
+    0x0047A979,
+    [](auto& regs) {
+        auto packet = reinterpret_cast<std::byte*>(regs.ebp);
+        auto ext_offset = regs.esi + 5;
+        auto& ext_data = *reinterpret_cast<DashFactionJoinAcceptPacketExt*>(&packet[ext_offset]);
+        xlog::debug("Checking for join_accept DF extension: %08X", ext_data.df_signature);
+        if (ext_data.df_signature == DASH_FACTION_SIGNATURE) {
+            DashFactionServerInfo server_info;
+            server_info.version_major = ext_data.version_major;
+            server_info.version_minor = ext_data.version_minor;
+            xlog::debug("Got DF server info: %d %d %d", ext_data.version_major, ext_data.version_minor,
+                static_cast<int>(ext_data.flags));
+            server_info.saving_enabled = !!(ext_data.flags & DashFactionJoinAcceptPacketExt::Flags::saving_enabled);
+            g_df_server_info = std::optional{server_info};
+        }
+        else {
+            g_df_server_info.reset();
+        }
+    },
+};
+
+const std::optional<DashFactionServerInfo>& GetDashFactionServerInfo()
+{
+    return g_df_server_info;
+}
+
+void SendChatLinePacket(const char* msg, rf::Player* target, rf::Player* sender, bool is_team_msg)
+{
+    uint8_t buf[512];
+    rfMessage& packet = *reinterpret_cast<rfMessage*>(buf);
+    packet.type = RF_MESSAGE;
+    packet.size = static_cast<uint16_t>(std::strlen(msg) + 3);
+    packet.player_id = sender ? sender->nw_data->player_id : 0xFF;
+    packet.is_team_msg = is_team_msg;
+    std::strncpy(packet.message, msg, 255);
+    packet.message[255] = 0;
+    if (target == nullptr && rf::is_local_net_game) {
+        rf::NwSendReliablePacketToAll(buf, packet.size + 3, 0);
+        rf::DcPrintf("Server: %s", msg);
+    }
+    else {
+        rf::NwSendReliablePacket(target, buf, packet.size + 3, 0);
+    }
+}
 
 void NetworkInit()
 {
@@ -673,7 +759,9 @@ void NetworkInit()
     // Make sure tracker packets come from configured tracker
     nw_get_packet_tracker_hook.Install();
 
-    // Add Dash Faction signature to game_info and join_req packets
+    // Add Dash Faction signature to game_info join_req, join_accept packets
     send_game_info_packet_hook.Install();
     send_join_req_packet_hook.Install();
+    send_join_accept_packet_hook.Install();
+    process_join_accept_injection.Install();
 }

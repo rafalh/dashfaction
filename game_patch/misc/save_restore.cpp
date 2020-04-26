@@ -4,6 +4,8 @@
 #include "../rf/misc.h"
 #include "../rf/object.h"
 #include "../rf/entity.h"
+#include "../rf/network.h"
+#include "../multi/network.h"
 
 FunHook<void()> DoQuickSave_hook{
     0x004B5E20,
@@ -101,6 +103,30 @@ CodeInjection corpse_deserialize_all_obj_create_patch{
     },
 };
 
+FunHook<void()> quick_save_hook{
+    0x004B6160,
+    []() {
+        quick_save_hook.CallTarget();
+        bool server_side_saving_enabled = rf::is_net_game && !rf::is_local_net_game && GetDashFactionServerInfo()
+            && GetDashFactionServerInfo().value().saving_enabled;
+        if (server_side_saving_enabled) {
+            SendChatLinePacket("/save", nullptr);
+        }
+    },
+};
+
+FunHook<void()> quick_load_hook{
+    0x004B6180,
+    []() {
+        quick_load_hook.CallTarget();
+        bool server_side_saving_enabled = rf::is_net_game && !rf::is_local_net_game && GetDashFactionServerInfo()
+            && GetDashFactionServerInfo().value().saving_enabled;
+        if (server_side_saving_enabled) {
+            SendChatLinePacket("/load", nullptr);
+        }
+    },
+};
+
 void ApplySaveRestorePatches()
 {
     // Dont overwrite player name and prefered weapons when loading saved game
@@ -126,4 +152,8 @@ void ApplySaveRestorePatches()
     // Fix crash caused by corpse pose pointing to not loaded entity action animation
     // It only affects corpses there are taken from the previous level
     corpse_deserialize_all_obj_create_patch.Install();
+
+    // Save-restore in multi
+    quick_save_hook.Install();
+    quick_load_hook.Install();
 }

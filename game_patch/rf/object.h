@@ -57,6 +57,16 @@ namespace rf
     };
     static_assert(sizeof(ColSphere) == 0x18);
 
+    struct ObjInterp
+    {
+        char data_[0x900];
+
+        void Clear()
+        {
+            AddrCaller{0x00483330}.this_call(this);
+        }
+    };
+
     struct PhysicsInfo
     {
         float elasticity;
@@ -129,7 +139,7 @@ namespace rf
         char killer_id;
         char pad[3]; // FIXME
         int multi_handle;
-        int anim;
+        ObjInterp* obj_interp;
         void* mesh_lighting_data;
         Vector3 field_280;
     };
