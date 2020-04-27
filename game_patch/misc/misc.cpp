@@ -433,6 +433,7 @@ CodeInjection explosion_crash_fix{
 void MiscAfterLevelLoad(const char* level_filename)
 {
     DoLevelSpecificEventHacks(level_filename);
+    ClearTriggersForLateJoiners();
 }
 
 void MiscInit()

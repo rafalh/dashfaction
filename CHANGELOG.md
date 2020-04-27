@@ -34,6 +34,7 @@ Version 1.4.2
 - use dynamic light detail texture for all cards if multi-texturing is available (improves graphics quality on Intel cards)
 - not treat every chat message starting with 'server' as a server command
 - add GOG install directory auto-detection
+- add support for late joiners aware triggers (improves Pure Faction compatibility)
 - fix sending crash reports
 - fix non-working face scrolling before first geomod use in custom levels (RF bug)
 - fix memory and VRAM leak when quick saving (RF bug)

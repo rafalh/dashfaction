@@ -11,6 +11,7 @@ constexpr uint8_t TRIGGER_SOLO = 0x4;
 constexpr uint8_t TRIGGER_TELEPORT = 0x8;
 
 rf::Player* g_trigger_solo_player = nullptr;
+std::vector<int> g_triggers_uids_for_late_joiners;
 
 void SendTriggerActivatePacket(rf::Player* player, int trigger_uid, int32_t entity_handle)
 {
@@ -58,6 +59,11 @@ FunHook<void(rf::TriggerObj*, int32_t, bool)> TriggerActivate_hook{
             }
         }
 
+        // Resets times set to 1 enabled late joiners support in Pure Faction
+        if (rf::is_net_game && rf::is_local_net_game && trigger->resets_times == 1) {
+            g_triggers_uids_for_late_joiners.push_back(trigger->_super.uid);
+        }
+
         // Normal activation
         // rf::DcPrintf("trigger normal activation %s %d", trigger_name, ext_flags);
         TriggerActivate_hook.CallTarget(trigger, h_entity, skip_movers);
@@ -77,6 +83,27 @@ CodeInjection TriggerCheckActivation_patch{
     },
 };
 
+void ActivateTriggersForLateJoiner(rf::Player* player)
+{
+    for (auto trigger_uid : g_triggers_uids_for_late_joiners) {
+        xlog::debug("Activating trigger %d for late joiner %s", trigger_uid, player->name.CStr());
+        SendTriggerActivatePacket(player, trigger_uid, -1);
+    }
+}
+
+void ClearTriggersForLateJoiners()
+{
+    g_triggers_uids_for_late_joiners.clear();
+}
+
+CodeInjection SendStateInfo_injection{
+    0x0048186F,
+    [](auto& regs) {
+        auto player = reinterpret_cast<rf::Player*>(regs.edi);
+        ActivateTriggersForLateJoiner(player);
+    },
+};
+
 void ApplyTriggerPatches()
 {
     // Solo/Teleport triggers handling + filtering by team ID
@@ -85,5 +112,7 @@ void ApplyTriggerPatches()
 
     // Client-side trigger flag handling
     TriggerCheckActivation_patch.Install();
-}
 
+    // Send trigger_activate packets for late joiners
+    SendStateInfo_injection.Install();
+}

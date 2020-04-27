@@ -191,11 +191,11 @@ CodeInjection ProcessObjUpdate_set_pos_injection{
             float dist = (pos - pdata.last_teleport_pos).Len();
             if (!pdata.last_teleport_timer.IsFinished() && dist > 1.0f) {
                 // Ignore obj_update packets for some time after restoring the position
-                xlog::warn("ignoring obj_update after teleportation (distance %f)", dist);
+                xlog::trace("ignoring obj_update after teleportation (distance %f)", dist);
                 regs.eip = 0x0047DFF6;
             }
             else {
-                xlog::warn("not ignoring obj_update anymore after teleportation (distance %f)", dist);
+                xlog::trace("not ignoring obj_update anymore after teleportation (distance %f)", dist);
                 pdata.last_teleport_timer.Unset();
             }
         }
