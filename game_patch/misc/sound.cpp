@@ -153,27 +153,31 @@ CodeInjection PlaySound_no_free_slots_fix{
     },
 };
 
-CallHook<int()> PlayHardcodedBackgroundMusicForCutscene_hook{
+CallHook<void()> PlayHardcodedBackgroundMusicForCutscene_hook{
     0x0045BB85,
     []() {
-        g_cutscene_bg_sound_sig = PlayHardcodedBackgroundMusicForCutscene_hook.CallTarget();
+        g_cutscene_bg_sound_sig = -1;
+        PlayHardcodedBackgroundMusicForCutscene_hook.CallTarget();
+    },
+};
+
+FunHook<int(const char*, float )> PlayCutsceneBackgroundMusic_hook{
+    0x00505D70,
+    [](const char *filename, float volume) {
+        g_cutscene_bg_sound_sig = PlayCutsceneBackgroundMusic_hook.CallTarget(filename, volume);
         return g_cutscene_bg_sound_sig;
     },
 };
 
 void DisableSoundBeforeCutsceneSkip()
 {
-    auto& snd_stop = AddrAsRef<char(int sig)>(0x005442B0);
-    auto& destroy_all_paused_sounds = AddrAsRef<void()>(0x005059F0);
-    auto& set_all_playing_sounds_paused = AddrAsRef<void(bool paused)>(0x00505C70);
-
     if (g_cutscene_bg_sound_sig != -1) {
-        snd_stop(g_cutscene_bg_sound_sig);
+        rf::SndStop(g_cutscene_bg_sound_sig);
         g_cutscene_bg_sound_sig = -1;
     }
 
-    set_all_playing_sounds_paused(true);
-    destroy_all_paused_sounds();
+    rf::SetAllPlayingSoundsPaused(true);
+    rf::DestroyAllPausedSounds();
     rf::sound_enabled = false;
 }
 
@@ -215,6 +219,7 @@ void ApplySoundPatches()
 
     // Cutscene skip support
     PlayHardcodedBackgroundMusicForCutscene_hook.Install();
+    PlayCutsceneBackgroundMusic_hook.Install();
 
     // Level sounds
     SetPlaySoundEventsVolumeScale(g_game_config.level_sound_volume);
@@ -225,5 +230,4 @@ void ApplySoundPatches()
     snd_ds_play_no_free_slots_fix.Install();
     PlaySound_no_free_slots_fix.Install();
     //WriteMem<u8>(0x005055AB, asm_opcodes::jmp_rel_short); // never free level sounds, uncomment to test
-
 }

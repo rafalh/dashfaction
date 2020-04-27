@@ -65,6 +65,8 @@ namespace rf
     static auto& snd_channels = AddrAsRef<SoundChannel[30]>(0x01AD7520);
 
     static auto ClearLevelSound = AddrAsRef<int(LevelSound* lvl_snd)>(0x00505680);
+    static auto DestroyAllPausedSounds = AddrAsRef<void()>(0x005059F0);
+    static auto SetAllPlayingSoundsPaused = AddrAsRef<void(bool paused)>(0x00505C70);
     static auto SndStop = AddrAsRef<char(int sig)>(0x005442B0);
     static auto SndGetDuration = AddrAsRef<float(int game_snd_id)>(0x00544760);
     static auto SndDsCloseChannel = AddrAsRef<bool(int channel)>(0x00521930);
