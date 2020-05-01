@@ -27,6 +27,7 @@ struct Packfile
     uint32_t num_files;
     std::vector<PackfileEntry> files;
     uint32_t packfile_size;
+    bool is_user_maps;
 };
 
 // Note: this struct memory layout cannot be changed because it is used internally by rf::File class
@@ -204,6 +205,7 @@ static int PackfileLoad_New(const char* filename, const char* dir)
     packfile->path[sizeof(packfile->path) - 1] = '\0';
     packfile->field_a0 = 0;
     packfile->num_files = 0;
+    packfile->is_user_maps = rf::packfile_ignore_tbl_files;
 
     // Process file header
     char buf[0x800];
@@ -299,7 +301,7 @@ static bool IsLookupTableEntryOverrideAllowed(rf::PackfileEntry* old_entry, rf::
 {
     const char* old_archive = old_entry->archive->name;
     const char* new_archive = new_entry->archive->name;
-    if (rf::packfile_ignore_tbl_files) { // this is set to true for user_maps
+    if (new_entry->archive->is_user_maps) { // this is set to true for user_maps
         bool whitelisted = false;
 #ifdef MOD_FILE_WHITELIST
         whitelisted = IsModFileInWhitelist(new_entry->file_name);
@@ -418,10 +420,26 @@ void ForceFileFromPackfile(const char* name, const char* packfile_name)
 {
     rf::Packfile* packfile = PackfileFindArchive(packfile_name);
     if (packfile) {
-        for (unsigned i = 0; i < packfile->num_files; ++i) {
-            if (!stricmp(packfile->files[i].file_name, name))
-                PackfileAddToLookupTable(&packfile->files[i]);
+        for (auto& entry : packfile->files) {
+            if (!stricmp(entry.file_name, name)) {
+                PackfileAddToLookupTable(&entry);
+            }
         }
+    }
+}
+
+void PrioritizePackfile(rf::Packfile* packfile)
+{
+    for (auto& entry : packfile->files) {
+        PackfileAddToLookupTable(&entry);
+    }
+}
+
+void PrioritizePackfileWithFile(const char* filename)
+{
+    auto entry = PackfileFindFile_New(filename);
+    if (entry) {
+        PrioritizePackfile(entry->archive);
     }
 }
 
