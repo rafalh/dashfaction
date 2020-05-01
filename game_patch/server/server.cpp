@@ -145,8 +145,8 @@ void HandleSaveCommand(rf::Player* player, std::string_view save_name)
     auto entity = rf::EntityGetFromHandle(player->entity_handle);
     if (entity && g_additional_server_config.saving_enabled) {
         PlayerNetGameSaveData save_data;
-        save_data.pos = entity->_super.pos;
-        save_data.orient = entity->_super.orient;
+        save_data.pos = entity->pos;
+        save_data.orient = entity->orient;
         pdata.saves.insert_or_assign(std::string{save_name}, save_data);
         SendChatLinePacket("Your position has been saved!", player);
     }
@@ -160,12 +160,12 @@ void HandleLoadCommand(rf::Player* player, std::string_view save_name)
         auto it = pdata.saves.find(std::string{save_name});
         if (it != pdata.saves.end()) {
             auto& save_data = it->second;
-            entity->_super.phys_info.pos = save_data.pos;
-            entity->_super.phys_info.new_pos = save_data.pos;
-            entity->_super.pos = save_data.pos;
-            entity->_super.orient = save_data.orient;
-            if (entity->_super.obj_interp) {
-                entity->_super.obj_interp->Clear();
+            entity->phys_info.pos = save_data.pos;
+            entity->phys_info.new_pos = save_data.pos;
+            entity->pos = save_data.pos;
+            entity->orient = save_data.orient;
+            if (entity->obj_interp) {
+                entity->obj_interp->Clear();
             }
             rf::SendEntityCreatePacket(entity, player);
             pdata.last_teleport_timer.Set(300);
@@ -186,7 +186,7 @@ CodeInjection ProcessObjUpdate_set_pos_injection{
         }
         auto& entity = AddrAsRef<rf::EntityObj>(regs.edi);
         auto& pos = AddrAsRef<rf::Vector3>(regs.esp + 0x9C - 0x60);
-        auto player = rf::GetPlayerFromEntityHandle(entity._super.handle);
+        auto player = rf::GetPlayerFromEntityHandle(entity.handle);
         auto& pdata = GetPlayerAdditionalData(player);
         if (pdata.last_teleport_timer.IsSet()) {
             float dist = (pos - pdata.last_teleport_pos).Len();
@@ -288,7 +288,7 @@ void SendHitSoundPacket(rf::Player* target)
 FunHook<float(rf::EntityObj*, float, int, int, int)> EntityTakeDamage_hook{
     0x0041A350,
     [](rf::EntityObj* entity, float damage, int responsible_entity_handle, int dmg_type, int responsible_entity_uid) {
-        auto damaged_player = rf::GetPlayerFromEntityHandle(entity->_super.handle);
+        auto damaged_player = rf::GetPlayerFromEntityHandle(entity->handle);
         auto responsible_player = rf::GetPlayerFromEntityHandle(responsible_entity_handle);
         if (damaged_player && responsible_player) {
             damage *= g_additional_server_config.player_damage_modifier;
@@ -361,7 +361,7 @@ FunHook<void(rf::Player*)> spawn_player_sync_ammo_hook{
             rfReload packet;
             packet.type = RF_RELOAD;
             packet.size = sizeof(packet) - sizeof(rfPacketHeader);
-            packet.entity_handle = entity->_super.handle;
+            packet.entity_handle = entity->handle;
             int weapon_cls_id = entity->ai_info.weapon_cls_id;
             packet.weapon = weapon_cls_id;
             packet.clip_ammo = entity->ai_info.clip_ammo[weapon_cls_id];

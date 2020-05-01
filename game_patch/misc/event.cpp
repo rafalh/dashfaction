@@ -55,10 +55,10 @@ struct EventSetLiquidDepthHook : rf::EventObj
             AddrAsRef<void(rf::RflRoom* room, float target_liquid_depth, float duration)>(0x0045E640);
         auto RoomGetByUid = AddrAsRef<rf::RflRoom*(int uid)>(0x0045E7C0);
 
-        xlog::info("Processing Set_Liquid_Depth event: uid %d depth %.2f duration %.2f", _super.uid, depth, duration);
+        xlog::info("Processing Set_Liquid_Depth event: uid %d depth %.2f duration %.2f", uid, depth, duration);
         if (links.Size() == 0) {
             xlog::trace("no links");
-            AddLiquidDepthUpdate(_super.room, depth, duration);
+            AddLiquidDepthUpdate(room, depth, duration);
         }
         else {
             for (int i = 0; i < links.Size(); ++i) {
@@ -90,7 +90,7 @@ void __fastcall RflRoom_SetupLiquidRoom_EventSetLiquid(rf::RflRoom* room, int ed
             if (obj->type == rf::OT_ENTITY) {
                 auto entity = reinterpret_cast<rf::EntityObj*>(obj);
                 EntityCheckIsInLiquid(entity);
-                bool is_in_liquid = entity->_super.obj_flags & 0x80000;
+                bool is_in_liquid = entity->obj_flags & 0x80000;
                 // check if entity doesn't have 'swim' flag
                 if (is_in_liquid && !EntityCanSwim(entity)) {
                     // he does not have swim animation - kill him

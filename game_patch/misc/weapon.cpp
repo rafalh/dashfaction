@@ -21,7 +21,7 @@ bool ShouldSwapWeaponAltFire(rf::Player* player)
     }
 
     // Check if local entity is attached to a parent (vehicle or torret)
-    auto parent = rf::EntityGetFromHandle(entity->_super.parent_handle);
+    auto parent = rf::EntityGetFromHandle(entity->parent_handle);
     if (parent) {
         return false;
     }
@@ -35,7 +35,7 @@ bool IsPlayerWeaponInContinousFire(rf::Player* player, bool alt_fire) {
         player = rf::local_player;
     }
     auto entity = rf::EntityGetFromHandle(player->entity_handle);
-    bool is_continous_fire = rf::IsEntityWeaponInContinousFire(entity->_super.handle, entity->ai_info.weapon_cls_id);
+    bool is_continous_fire = rf::IsEntityWeaponInContinousFire(entity->handle, entity->ai_info.weapon_cls_id);
     bool is_alt_fire_flag_set = (entity->ai_info.flags & 0x2000) != 0; // EWF_ALT_FIRE = 0x2000
     if (ShouldSwapWeaponAltFire(player)) {
         is_alt_fire_flag_set = !is_alt_fire_flag_set;
@@ -130,15 +130,15 @@ FunHook<void(rf::WeaponObj *weapon)> WeaponMoveOne_hook{
         WeaponMoveOne_hook.CallTarget(weapon);
         auto& level_aabb_min = StructFieldRef<rf::Vector3>(rf::rfl_static_geometry, 0x48);
         auto& level_aabb_max = StructFieldRef<rf::Vector3>(rf::rfl_static_geometry, 0x54);
-        float margin = weapon->_super.anim_mesh ? 275.0f : 10.0f;
-        bool has_gravity_flag = weapon->_super.phys_info.flags & 1;
+        float margin = weapon->anim_mesh ? 275.0f : 10.0f;
+        bool has_gravity_flag = weapon->phys_info.flags & 1;
         bool check_y_axis = !(has_gravity_flag || weapon->weapon_cls->thrust_lifetime > 0.0f);
-        auto& pos = weapon->_super.pos;
+        auto& pos = weapon->pos;
         if (pos.x < level_aabb_min.x - margin || pos.x > level_aabb_max.x + margin
         || pos.z < level_aabb_min.z - margin || pos.z > level_aabb_max.z + margin
         || (check_y_axis && (pos.y < level_aabb_min.y - margin || pos.y > level_aabb_max.y + margin))) {
             // Weapon is outside the level - delete it
-            rf::ObjQueueDelete(&weapon->_super);
+            rf::ObjQueueDelete(weapon);
         }
     },
 };
@@ -211,7 +211,7 @@ FunHook<void(rf::EntityObj*, int, rf::Vector3*, rf::Matrix3*, bool)> MultiProces
     [](rf::EntityObj *entity, int weapon_cls_id, rf::Vector3 *pos, rf::Matrix3 *orient, bool alt_fire) {
         if (entity->ai_info.weapon_cls_id != weapon_cls_id) {
             xlog::info("Weapon mismatch when processing weapon fire packet");
-            auto player = rf::GetPlayerFromEntityHandle(entity->_super.handle);
+            auto player = rf::GetPlayerFromEntityHandle(entity->handle);
             rf::PlayerSwitchWeaponInstant(player, weapon_cls_id);
         }
 

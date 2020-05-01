@@ -328,8 +328,8 @@ static void PlayerFpgunRender_New(rf::Player* player)
 
         if (g_spectate_mode_target != rf::local_player && entity) {
             static rf::Vector3 old_vel;
-            rf::Vector3 vel_diff = entity->_super.phys_info.vel - old_vel;
-            old_vel = entity->_super.phys_info.vel;
+            rf::Vector3 vel_diff = entity->phys_info.vel - old_vel;
+            old_vel = entity->phys_info.vel;
 
             if (vel_diff.y > 0.1f)
                 entity->entity_flags |= 2; // jump
@@ -354,10 +354,10 @@ FunHook<void(rf::Player*)> PlayerFpgunUpdateState_hook{
         if (player != rf::local_player) {
             rf::EntityObj* entity = rf::EntityGetFromHandle(player->entity_handle);
             if (entity) {
-                float horz_speed_pow2 = entity->_super.phys_info.vel.x * entity->_super.phys_info.vel.x +
-                                          entity->_super.phys_info.vel.z * entity->_super.phys_info.vel.z;
+                float horz_speed_pow2 = entity->phys_info.vel.x * entity->phys_info.vel.x +
+                                          entity->phys_info.vel.z * entity->phys_info.vel.z;
                 int state = 0;
-                if (rf::IsEntityLoopFire(entity->_super.handle, entity->ai_info.weapon_cls_id))
+                if (rf::IsEntityLoopFire(entity->handle, entity->ai_info.weapon_cls_id))
                     state = 2;
                 else if (rf::EntityIsSwimming(entity) || rf::EntityIsFalling(entity))
                     state = 0;

@@ -449,9 +449,8 @@ namespace rf
     };
     static_assert(sizeof(EntityCameraInfo) == 0x60);
 
-    struct EntityObj
+    struct EntityObj : Object
     {
-        Object _super;
         EntityObj *next;
         EntityObj *prev;
         EntityClass *cls;

@@ -4,10 +4,8 @@
 
 namespace rf
 {
-    struct EventObj
+    struct EventObj : Object
     {
-        void** vtbl;
-        Object _super;
         int event_type;
         float delay;
         Timer delay_timer;
@@ -16,6 +14,12 @@ namespace rf
         int activated_by_trigger_handle;
         int field_2B0;
         int is_on_state;
+
+        virtual void UnkVirtFun() = 0;
+        virtual void HandleOnMsg() = 0;
+        virtual void HandleOffMsg() = 0;
+        virtual void Update() = 0;
+
     };
     static_assert(sizeof(EventObj) == 0x2B8);
 

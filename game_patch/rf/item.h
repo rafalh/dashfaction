@@ -6,9 +6,8 @@ namespace rf
 {
     struct ItemCls;
 
-    struct ItemObj
+    struct ItemObj : Object
     {
-        Object _super;
         struct ItemObj *next;
         struct ItemObj *prev;
         ItemCls *cls;

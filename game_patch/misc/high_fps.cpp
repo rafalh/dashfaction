@@ -241,9 +241,9 @@ CodeInjection entity_water_decelerate_fix{
     [](auto& regs) {
         auto entity = reinterpret_cast<rf::EntityObj*>(regs.esi);
         float vel_factor = 1.0f - (rf::frametime * 4.5f);
-        entity->_super.phys_info.vel.x *= vel_factor;
-        entity->_super.phys_info.vel.y *= vel_factor;
-        entity->_super.phys_info.vel.z *= vel_factor;
+        entity->phys_info.vel.x *= vel_factor;
+        entity->phys_info.vel.y *= vel_factor;
+        entity->phys_info.vel.z *= vel_factor;
         regs.eip = 0x0049D835;
     },
 };
@@ -325,7 +325,7 @@ FunHook<void(rf::EntityObj&, rf::Vector3&)> EntityOnLand_hook{
     0x00419830,
     [](rf::EntityObj& entity, rf::Vector3& pos) {
         EntityOnLand_hook.CallTarget(entity, pos);
-        entity._super.phys_info.vel.y = 0.0f;
+        entity.phys_info.vel.y = 0.0f;
     },
 };
 
@@ -333,7 +333,7 @@ CallHook<void(rf::EntityObj&)> entity_make_run_after_climbing_patch{
     0x00430D5D,
     [](rf::EntityObj& entity) {
         entity_make_run_after_climbing_patch.CallTarget(entity);
-        entity._super.phys_info.vel.y = 0.0f;
+        entity.phys_info.vel.y = 0.0f;
     },
 };
 

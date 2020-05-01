@@ -38,7 +38,7 @@ FunHook<void(rf::TriggerObj*, int32_t, bool)> TriggerActivate_hook{
     [](rf::TriggerObj* trigger, int32_t h_entity, bool skip_movers) {
         // Check team
         auto player = rf::GetPlayerFromEntityHandle(h_entity);
-        auto trigger_name = trigger->_super.name.CStr();
+        auto trigger_name = trigger->name.CStr();
         if (player && trigger->team != -1 && trigger->team != player->team) {
             // rf::DcPrintf("Trigger team does not match: %d vs %d (%s)", trigger->team, Player->blue_team,
             // trigger_name);
@@ -51,7 +51,7 @@ FunHook<void(rf::TriggerObj*, int32_t, bool)> TriggerActivate_hook{
         if (rf::is_net_game && rf::is_local_net_game && is_solo_trigger && player) {
             // rf::DcPrintf("Solo/Teleport trigger activated %s", trigger_name);
             if (player != rf::local_player) {
-                SendTriggerActivatePacket(player, trigger->_super.uid, h_entity);
+                SendTriggerActivatePacket(player, trigger->uid, h_entity);
                 return;
             }
             else {
@@ -61,7 +61,7 @@ FunHook<void(rf::TriggerObj*, int32_t, bool)> TriggerActivate_hook{
 
         // Resets times set to 1 enabled late joiners support in Pure Faction
         if (rf::is_net_game && rf::is_local_net_game && trigger->resets_times == 1) {
-            g_triggers_uids_for_late_joiners.push_back(trigger->_super.uid);
+            g_triggers_uids_for_late_joiners.push_back(trigger->uid);
         }
 
         // Normal activation
@@ -75,7 +75,7 @@ CodeInjection TriggerCheckActivation_patch{
     0x004BFC7D,
     [](auto& regs) {
         auto trigger = reinterpret_cast<rf::TriggerObj*>(regs.eax);
-        auto trigger_name = trigger->_super.name.CStr();
+        auto trigger_name = trigger->name.CStr();
         uint8_t ext_flags = trigger_name[0] == '\xAB' ? trigger_name[1] : 0;
         bool is_client_side = (ext_flags & TRIGGER_CLIENT_SIDE) != 0;
         if (is_client_side)

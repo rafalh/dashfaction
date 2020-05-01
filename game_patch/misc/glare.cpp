@@ -20,8 +20,8 @@ CodeInjection CoronaEntityCollisionTestFix{
 
         rf::Vector3 root_bone_pos;
         get_entity_root_bone_pos(entity, root_bone_pos);
-        rf::Vector3 aabb_min = root_bone_pos - entity->_super.phys_info.radius;
-        rf::Vector3 aabb_max = root_bone_pos + entity->_super.phys_info.radius;
+        rf::Vector3 aabb_min = root_bone_pos - entity->phys_info.radius;
+        rf::Vector3 aabb_max = root_bone_pos + entity->phys_info.radius;
         auto corona_pos = reinterpret_cast<rf::Vector3*>(regs.edi);
         auto eye_pos = reinterpret_cast<rf::Vector3*>(regs.ebx);
         auto tmp_vec = reinterpret_cast<rf::Vector3*>(regs.ecx);

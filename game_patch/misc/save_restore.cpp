@@ -99,7 +99,7 @@ CodeInjection corpse_deserialize_all_obj_create_patch{
         // Create entity before creating the corpse to make sure entity action animations are fully loaded
         // This is needed to make sure pose_action_anim points to a valid animation
         auto entity = rf::EntityCreate(entity_cls_id, "", -1, create_info.pos, create_info.orient, 0, -1);
-        rf::ObjQueueDelete(&entity->_super);
+        rf::ObjQueueDelete(entity);
     },
 };
 

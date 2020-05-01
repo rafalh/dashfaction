@@ -95,8 +95,7 @@ rf::Object* FindObjectInReticle()
     rf::CameraGetOrient(&orient, rf::local_player->camera);
     rf::Vector3 p1 = p0 + orient.rows[2] * 100.0f;
     rf::EntityObj* local_entity = rf::EntityGetFromHandle(rf::local_player->entity_handle);
-    bool hit = CollideLineSegmentLevel(p0, p1, &local_entity->_super,
-        nullptr, &col_info, 0.0f, false, 1.0f);
+    bool hit = CollideLineSegmentLevel(p0, p1, local_entity, nullptr, &col_info, 0.0f, false, 1.0f);
     if (hit && col_info.obj_handle != -1)
         return rf::ObjGetFromHandle(col_info.obj_handle);
     else
@@ -184,7 +183,7 @@ DcCommand2 dbg_entity_action_cmd{
         else if (action_opt.value() >= 0 && action_opt.value() < num_actions) {
             last_action = action_opt.value();
         }
-        rf::AnimMeshResetActionAnim(entity->_super.anim_mesh);
+        rf::AnimMeshResetActionAnim(entity->anim_mesh);
         rf::EntityStartAction(entity, last_action, 1.0f, true, true);
 
         rf::DcPrintf("Entity action: %s (%d)", rf::entity_action_names[last_action].CStr(), last_action);

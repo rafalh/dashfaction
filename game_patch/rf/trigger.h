@@ -4,9 +4,8 @@
 
 namespace rf
 {
-    struct TriggerObj
+    struct TriggerObj : Object
     {
-        Object _super;
         TriggerObj *next;
         TriggerObj *prev;
         int shape;

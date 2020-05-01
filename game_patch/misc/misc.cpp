@@ -276,7 +276,7 @@ CodeInjection sort_items_patch{
     0x004593AC,
     [](auto& regs) {
         auto item = reinterpret_cast<rf::ItemObj*>(regs.esi);
-        auto anim_mesh = item->_super.anim_mesh;
+        auto anim_mesh = item->anim_mesh;
         auto mesh_name = anim_mesh ? rf::AnimMeshGetName(anim_mesh) : nullptr;
         if (!mesh_name) {
             // Sometimes on level change some objects can stay and have only anim_mesh destroyed
@@ -287,13 +287,13 @@ CodeInjection sort_items_patch{
         // Note: material used for alpha-blending is flare_blue1.tga - it uses non-alpha texture
         // so information about alpha-blending cannot be taken from material alone - it must be read from VFX
         if (!strcmp(mesh_name, "powerup_invuln.vfx")) {
-            item->_super.obj_flags |= 0x100000; // OF_HAS_ALPHA
+            item->obj_flags |= 0x100000; // OF_HAS_ALPHA
         }
 
         auto& item_obj_list = AddrAsRef<rf::ItemObj>(0x00642DD8);
         rf::ItemObj* current = item_obj_list.next;
         while (current != &item_obj_list) {
-            auto current_anim_mesh = current->_super.anim_mesh;
+            auto current_anim_mesh = current->anim_mesh;
             auto current_mesh_name = current_anim_mesh ? rf::AnimMeshGetName(current_anim_mesh) : nullptr;
             if (current_mesh_name && !strcmp(mesh_name, current_mesh_name)) {
                 break;
@@ -314,7 +314,7 @@ CodeInjection sort_clutter_patch{
     0x004109D4,
     [](auto& regs) {
         auto clutter = reinterpret_cast<rf::ClutterObj*>(regs.esi);
-        auto anim_mesh = clutter->_super.anim_mesh;
+        auto anim_mesh = clutter->anim_mesh;
         auto mesh_name = anim_mesh ? rf::AnimMeshGetName(anim_mesh) : nullptr;
         if (!mesh_name) {
             // Sometimes on level change some objects can stay and have only anim_mesh destroyed
@@ -323,7 +323,7 @@ CodeInjection sort_clutter_patch{
         auto& clutter_obj_list = AddrAsRef<rf::ClutterObj>(0x005C9360);
         auto current = clutter_obj_list.next;
         while (current != &clutter_obj_list) {
-            auto current_anim_mesh = current->_super.anim_mesh;
+            auto current_anim_mesh = current->anim_mesh;
             auto current_mesh_name = current_anim_mesh ? rf::AnimMeshGetName(current_anim_mesh) : nullptr;
             if (current_mesh_name && !strcmp(mesh_name, current_mesh_name)) {
                 break;

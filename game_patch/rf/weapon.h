@@ -230,9 +230,8 @@ namespace rf
         WTF_TRACERS = 0x40000000,
         WTF_PIERCING = 0x80000000,
     };
-    struct WeaponObj
+    struct WeaponObj : Object
     {
-        struct Object _super;
         struct WeaponObj *next;
         struct WeaponObj *prev;
         WeaponClass *weapon_cls;

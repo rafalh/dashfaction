@@ -6,9 +6,8 @@ namespace rf
 {
     struct ClutterCls;
 
-    struct ClutterObj
+    struct ClutterObj : Object
     {
-        Object _super;
         struct ClutterObj *next;
         struct ClutterObj *prev;
         ClutterCls* cls;
