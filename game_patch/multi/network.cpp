@@ -636,6 +636,15 @@ CodeInjection process_join_accept_injection{
     },
 };
 
+FunHook<void()> multi_stop_hook{
+    0x0046E2C0,
+    []() {
+        // Clear server info when leaving
+        g_df_server_info.reset();
+        multi_stop_hook.CallTarget();
+    },
+};
+
 const std::optional<DashFactionServerInfo>& GetDashFactionServerInfo()
 {
     return g_df_server_info;
@@ -662,32 +671,32 @@ void SendChatLinePacket(const char* msg, rf::Player* target, rf::Player* sender,
 
 void NetworkInit()
 {
-    /* ProcessGamePackets hook (not reliable only) */
+    // ProcessGamePackets hook (not reliable only)
     ProcessUnreliableGamePackets_hook.Install();
 
-    /* Improve simultaneous ping */
+    // Improve simultaneous ping
     rf::simultaneous_ping = 32;
 
-    /* Change server info timeout to 2s */
+    // Change server info timeout to 2s
     WriteMem<u32>(0x0044D357 + 2, 2000);
 
-    /* Change delay between server info requests */
+    // Change delay between server info requests
     WriteMem<u8>(0x0044D338 + 1, 20);
 
-    /* Allow ports < 1023 (especially 0 - any port) */
+    // Allow ports < 1023 (especially 0 - any port)
     AsmWriter(0x00528F24).nop(2);
 
-    /* Default port: 0 */
+    // Default port: 0 */
     WriteMem<u16>(0x0059CDE4, 0);
     WriteMem<i32>(0x004B159D + 1, 0); // TODO: add setting in launcher
 
-    /* Dont overwrite MpCharacter in Single Player */
+    // Dont overwrite MpCharacter in Single Player
     AsmWriter(0x004A415F).nop(10);
 
-    /* Show valid info for servers with incompatible version */
+    // Show valid info for servers with incompatible version
     WriteMem<u8>(0x0047B3CB, asm_opcodes::jmp_rel_short);
 
-    /* Change default Server List sort to players count */
+    // Change default Server List sort to players count
     WriteMem<u32>(0x00599D20, 4);
 
     // Buffer Overflow fixes
@@ -764,4 +773,5 @@ void NetworkInit()
     send_join_req_packet_hook.Install();
     send_join_accept_packet_hook.Install();
     process_join_accept_injection.Install();
+    multi_stop_hook.Install();
 }
