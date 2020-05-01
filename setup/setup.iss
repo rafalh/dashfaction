@@ -260,21 +260,25 @@ end;
 function RTPatchApply32NoCall(CmdLine: PAnsiChar): Longint;
 external 'RTPatchApply32NoCall@files:patchw32.dll cdecl delayload';
 
-procedure ApplyRTPatch(WorkDir: String; PatchFile: String);
+function ApplyRTPatch(WorkDir: String; PatchFile: String): Boolean;
 var
     CmdLine: AnsiString;
     ResultCode: Longint;
 begin
     ExtractTemporaryFile(PatchFile);
     CmdLine := '"' + WorkDir + '" "' + ExpandConstant('{tmp}\') + PatchFile + '"';
-    Log('Running RTPatch with command line ' + CmdLine);
+    Log('Running RTPatch with command line: ' + CmdLine);
     ResultCode := RTPatchApply32NoCall(CmdLine);
-    Log('RTPatchApply32 result ' + IntToStr(ResultCode));
+    Log('RTPatchApply32 result code: ' + IntToStr(ResultCode));
+    Result := False;
     if ResultCode <> 0 then
-        MsgBox('Failed to install patch ' + PatchFile + #13 + 'Result code: ' + IntToStr(ResultCode), mbError, MB_OK);
+        MsgBox('Failed to install patch ' + PatchFile + '. You have to patch the game manually!' + #13#13 +
+            'Error details:' + #13 + 'RTPatchApply32NoCall returned error code: ' + IntToStr(ResultCode), mbError, MB_OK)
+    else
+        Result := True;
 end;
 
-procedure ApplyBSDiffPatch(WorkDir: String; PatchFile: String; SrcFile: String; DestFile: String);
+function ApplyBSDiffPatch(WorkDir: String; PatchFile: String; SrcFile: String; DestFile: String): Boolean;
 var
     Args: String;
     ResultCode: Integer;
@@ -283,18 +287,28 @@ begin
     ExtractTemporaryFile(PatchFile);
     Args := 'app "' + SrcFile + '" "' + ExpandConstant('{tmp}\') + PatchFile + '" "' + DestFile + '"';
     Log('Running minibsdiff ' + Args);
+    Result := False;
     if not Exec(ExpandConstant('{tmp}\minibsdiff.exe'), Args, WorkDir, SW_SHOW, ewWaitUntilTerminated, ResultCode) then
-        MsgBox('Failed to install patch ' + PatchFile + #13 + 'Result code: ' + IntToStr(ResultCode) + #13#13 + SysErrorMessage(ResultCode), mbError, MB_OK)
+        MsgBox('Failed to install patch ' + PatchFile + '. You have to patch the game manually!' + #13#13 +
+            'Error details:' + #13 + 'Minibsdiff process cannot be created. Error: ' + IntToStr(ResultCode) + #13 + SysErrorMessage(ResultCode), mbError, MB_OK)
+    else if ResultCode <> 0 then
+        MsgBox('Failed to install patch ' + PatchFile + '. You have to patch the game manually!' + #13#13 +
+            'Error details:' + #13 + 'Minibsdiff returned error code: ' + IntToStr(ResultCode), mbError, MB_OK)
     else
+    begin
         Log('minibsdiff result code: ' + IntToStr(ResultCode));
+        Result := True;
+    end;
 end;
 
-procedure ApplyPatch(Patch: TPatchInfo);
+function ApplyPatch(Patch: TPatchInfo): Boolean;
 begin
     if Patch.PatchType = RTPatch then
-        ApplyRTPatch(GetGameDir(''), Patch.FileName)
+        Result := ApplyRTPatch(GetGameDir(''), Patch.FileName)
     else if Patch.PatchType = BSDiff then
-        ApplyBSDiffPatch(GetGameDir(''), Patch.FileName, Patch.SrcFile, Patch.DestFile);
+        Result := ApplyBSDiffPatch(GetGameDir(''), Patch.FileName, Patch.SrcFile, Patch.DestFile)
+    else
+        Result := False;
 end;
 
 procedure ApplyPatches;
@@ -305,8 +319,9 @@ begin
     begin
         Log('Applying patches...');
         for i := 0 to Length(Patches) - 1 do
-            ApplyPatch(Patches[i]);
-        Log('Patches applied.');
+            if not ApplyPatch(Patches[i]) then
+                break;
+        Log('Finished applying patches.');
     end;
 end;
 
