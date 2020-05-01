@@ -8,6 +8,7 @@
 #define IDD_MAIN                        101
 #define IDD_OPTIONS                     102
 #define IDB_HEADER                      103
+#define IDD_ABOUT                       104
 #define IDC_EDITOR_BTN                  1000
 #define IDC_OPTIONS_BTN                 1001
 #define IDC_RESOLUTIONS_COMBO           1002
@@ -46,14 +47,17 @@
 #define IDC_LINEAR_PITCH_CHECK          1035
 #define IDC_LANG_COMBO                  1036
 #define IDC_REDUCED_SPEED_IN_BG_CHECK   1037
+#define IDC_ABOUT_LINK                  1038
+#define IDC_APP_NAME                    1039
+#define IDC_LICENSE_LINK                1040
 
 // Next default values for new objects
 //
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        104
+#define _APS_NEXT_RESOURCE_VALUE        105
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1038
+#define _APS_NEXT_CONTROL_VALUE         1041
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

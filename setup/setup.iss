@@ -14,7 +14,6 @@ AppSupportURL=https://ravin.tk/
 AppUpdatesURL=https://ravin.tk/
 DefaultDirName={commonpf}\Dash Faction
 DefaultGroupName=Dash Faction
-LicenseFile={#SrcRootDir}\LICENSE.txt
 InfoBeforeFile={#SrcRootDir}\README.md
 OutputBaseFilename=DashFaction-{#AppVer}-setup
 Compression=lzma2/max
@@ -34,6 +33,8 @@ Source: "{#BinDir}\CrashHandler.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#BinDir}\DashEditor.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#BinDir}\DashFaction.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#BinDir}\dashfaction.vpp"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#SrcRootDir}\licenses.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#SrcRootDir}\LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion
 ; RTPatch patches (extracted from official 1.20 patches)
 Source: "{#PatchesDir}\patchw32.dll"; Flags: dontcopy
 Source: "{#PatchesDir}\rf120_na.rtp"; Flags: dontcopy

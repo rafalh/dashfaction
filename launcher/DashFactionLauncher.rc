@@ -8,6 +8,7 @@
 // Generated from the TEXTINCLUDE 2 resource.
 //
 #include <windows.h>
+#include <common/version.h>
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -34,6 +35,7 @@ END
 2 TEXTINCLUDE
 BEGIN
     "#include <windows.h>\r\n"
+    "#include <common/version.h>\r\n"
     "\0"
 END
 
@@ -72,7 +74,7 @@ IDB_HEADER              BITMAP                  "res/header.bmp"
 IDD_MAIN DIALOGEX 0, 0, 213, 236
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "Dash Faction Launcher"
+CAPTION "Dash Faction"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     CONTROL         IDB_HEADER,IDC_HEADER_PIC,"Static",SS_BITMAP|SS_REALSIZECONTROL,0,0,213,49
@@ -84,7 +86,7 @@ BEGIN
     LTEXT           "Mod:",IDC_STATIC,48,206,17,8
     COMBOBOX        IDC_MOD_COMBO,67,204,95,200,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     LTEXT           "Checking for update...",IDC_UPDATE_STATUS,6,222,114,8,SS_NOTIFY
-    RTEXT           "Copyright (c) 2019 rafalh",IDC_STATIC,126,222,84,8
+    CONTROL         "<a>About Dash Faction</a>",IDC_ABOUT_LINK,"SysLink",LWS_RIGHT | WS_TABSTOP,142,222,68,8
 END
 
 IDD_OPTIONS DIALOGEX 0, 0, 282, 350
@@ -145,13 +147,18 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,226,330,50,14
 END
 
-IDD_ABOUT DIALOGEX 0, 0, 282, 350
+IDD_ABOUT DIALOGEX 0, 0, 174, 106
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "About Dash Faction"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,172,330,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,226,330,50,14
+    LTEXT           "Dash Faction",IDC_APP_NAME,12,6,100,16
+    LTEXT           "Version: " VERSION_STR,IDC_STATIC,12,22,100,8
+    LTEXT           "Copyright (c) 2020 rafalh",IDC_STATIC,12,34,100,8
+    LTEXT           "This software uses open-source components.",IDC_STATIC,12,46,160,8
+    CONTROL         "<a HREF=""https://github.com/rafalh/dashfaction"">Source code</a>",IDC_STATIC,"SysLink",WS_TABSTOP,12,58,100,8
+    CONTROL         "<a>Licensing information</a>",IDC_LICENSE_LINK,"SysLink",WS_TABSTOP,12,70,100,8
+    DEFPUSHBUTTON   "OK",IDOK,62,86,50,14
 END
 
 

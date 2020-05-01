@@ -8,6 +8,7 @@
 #include "LauncherApp.h"
 #include "MainDlg.h"
 #include "OptionsDlg.h"
+#include "AboutDlg.h"
 #include <common/version.h>
 #include <common/ErrorUtils.h>
 #include <xlog/xlog.h>
@@ -34,8 +35,6 @@ MainDlg::MainDlg() : CDialog(IDD_MAIN)
 BOOL MainDlg::OnInitDialog()
 {
     CDialog::OnInitDialog();
-
-    SetWindowTextA(PRODUCT_NAME_VERSION);
 
     // Set the icon for this dialog
     SetIconLarge(IDR_ICON);
@@ -91,6 +90,21 @@ BOOL MainDlg::OnCommand(WPARAM wparam, LPARAM lparam)
     }
 
     return FALSE;
+}
+
+LRESULT MainDlg::OnNotify([[ maybe_unused ]] WPARAM wparam, LPARAM lparam)
+{
+    auto& nmhdr = *reinterpret_cast<LPNMHDR>(lparam);
+    switch (nmhdr.code) {
+        case NM_CLICK:
+            // fall through
+        case NM_RETURN:
+            if (nmhdr.idFrom == IDC_ABOUT_LINK) {
+                OnAboutLinkClick();
+            }
+            break;
+    }
+    return 0;
 }
 
 INT_PTR MainDlg::DialogProc(UINT msg, WPARAM wparam, LPARAM lparam)
@@ -203,6 +217,12 @@ void MainDlg::OnBnClickedSupportBtn()
     if (reinterpret_cast<int>(ret) <= 32) {
         xlog::error("ShellExecuteA failed %p", ret);
     }
+}
+
+void MainDlg::OnAboutLinkClick()
+{
+    AboutDlg dlg;
+    dlg.DoModal(*this);
 }
 
 CString MainDlg::GetSelectedMod()

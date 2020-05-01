@@ -16,6 +16,7 @@ protected:
     BOOL OnInitDialog() override;
     void OnOK() override;
     BOOL OnCommand(WPARAM wparam, LPARAM lparam) override;
+    LRESULT OnNotify(WPARAM wparam, LPARAM lparam) override;
     INT_PTR DialogProc(UINT msg, WPARAM wparam, LPARAM lparam) override;
 
 private:
@@ -24,6 +25,7 @@ private:
     void OnBnClickedOk();
     void OnBnClickedEditorBtn();
     void OnBnClickedSupportBtn();
+    void OnAboutLinkClick();
     void RefreshModSelector();
     CString GetSelectedMod();
     void AfterLaunch();
