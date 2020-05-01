@@ -3,7 +3,7 @@
 // Used by DashFactionLauncher.rc
 //
 #define IDC_STATIC -1
-#define IDC_SUPPORT_BTN                 3
+#define IDC_SUPPORT_LINK                3
 #define IDR_ICON                        100
 #define IDD_MAIN                        101
 #define IDD_OPTIONS                     102

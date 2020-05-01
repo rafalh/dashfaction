@@ -84,9 +84,6 @@ BOOL MainDlg::OnCommand(WPARAM wparam, LPARAM lparam)
     case IDC_EDITOR_BTN:
         OnBnClickedEditorBtn();
         return TRUE;
-    case IDC_SUPPORT_BTN:
-        OnBnClickedSupportBtn();
-        return TRUE;
     }
 
     return FALSE;
@@ -96,13 +93,16 @@ LRESULT MainDlg::OnNotify([[ maybe_unused ]] WPARAM wparam, LPARAM lparam)
 {
     auto& nmhdr = *reinterpret_cast<LPNMHDR>(lparam);
     switch (nmhdr.code) {
-        case NM_CLICK:
-            // fall through
-        case NM_RETURN:
-            if (nmhdr.idFrom == IDC_ABOUT_LINK) {
-                OnAboutLinkClick();
-            }
-            break;
+    case NM_CLICK:
+        // fall through
+    case NM_RETURN:
+        if (nmhdr.idFrom == IDC_ABOUT_LINK) {
+            OnAboutLinkClick();
+        }
+        else if (nmhdr.idFrom == IDC_SUPPORT_LINK) {
+            OnSupportLinkClick();
+        }
+        break;
     }
     return 0;
 }
@@ -210,7 +210,7 @@ void MainDlg::OnBnClickedEditorBtn()
         AfterLaunch();
 }
 
-void MainDlg::OnBnClickedSupportBtn()
+void MainDlg::OnSupportLinkClick()
 {
     xlog::info("Opening support channel");
     auto ret = ShellExecuteA(*this, "open", "https://discord.gg/bC2WzvJ", NULL, NULL, SW_SHOW);

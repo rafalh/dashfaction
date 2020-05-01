@@ -24,7 +24,7 @@ private:
     void OnBnClickedOptionsBtn();
     void OnBnClickedOk();
     void OnBnClickedEditorBtn();
-    void OnBnClickedSupportBtn();
+    void OnSupportLinkClick();
     void OnAboutLinkClick();
     void RefreshModSelector();
     CString GetSelectedMod();
