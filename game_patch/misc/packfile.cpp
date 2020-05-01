@@ -205,6 +205,7 @@ static int PackfileLoad_New(const char* filename, const char* dir)
     packfile->path[sizeof(packfile->path) - 1] = '\0';
     packfile->field_a0 = 0;
     packfile->num_files = 0;
+    // this is set to true for user_maps
     packfile->is_user_maps = rf::packfile_ignore_tbl_files;
 
     // Process file header
@@ -299,32 +300,25 @@ static int PackfileBuildEntriesList_New(const char* ext_list, char*& filenames, 
 
 static bool IsLookupTableEntryOverrideAllowed(rf::PackfileEntry* old_entry, rf::PackfileEntry* new_entry)
 {
-    const char* old_archive = old_entry->archive->name;
-    const char* new_archive = new_entry->archive->name;
-    if (new_entry->archive->is_user_maps) { // this is set to true for user_maps
-        bool whitelisted = false;
-#ifdef MOD_FILE_WHITELIST
-        whitelisted = IsModFileInWhitelist(new_entry->file_name);
-#endif
-        if (!g_game_config.allow_overwrite_game_files && !whitelisted) {
-            xlog::trace("Denied overwriting game file %s (old packfile %s, new packfile %s)", new_entry->file_name,
-                old_archive, new_archive);
-            return false;
-        }
-        else {
-            xlog::trace("Allowed overwriting game file %s (old packfile %s, new packfile %s)", new_entry->file_name,
-                old_archive, new_archive);
-            if (!whitelisted) {
-                g_is_modded_game = true;
-            }
-            return true;
-        }
+    if (!old_entry->archive->is_user_maps && !stricmp(rf::GetFileExt(new_entry->file_name), ".tbl")) {
+        // Always skip overriding tbl files from game by user_maps
+        return false;
     }
-    else {
-        xlog::trace("Overwriting packfile item %s (old packfile %s, new packfile %s)", new_entry->file_name,
-            old_archive, new_archive);
+    if (!new_entry->archive->is_user_maps) {
+        // Allow overriding by packfiles from game root and from mods
         return true;
     }
+#ifdef MOD_FILE_WHITELIST
+    if (IsModFileInWhitelist(new_entry->file_name)) {
+        // Always allow overriding for specific files
+        return true;
+    }
+#endif
+    if (!g_game_config.allow_overwrite_game_files) {
+        return false;
+    }
+    g_is_modded_game = true;
+    return true;
 }
 
 static void PackfileAddToLookupTable(rf::PackfileEntry* entry)
@@ -335,7 +329,13 @@ static void PackfileAddToLookupTable(rf::PackfileEntry* entry)
     if (!inserted) {
         ++g_num_name_collisions;
         if (IsLookupTableEntryOverrideAllowed(it->second, entry)) {
+            xlog::trace("Allowed overriding packfile file %s (old packfile %s, new packfile %s)", entry->file_name,
+                it->second->archive->name, entry->archive->name);
             it->second = entry;
+        }
+        else {
+            xlog::trace("Denied overriding packfile file %s (old packfile %s, new packfile %s)", entry->file_name,
+                it->second->archive->name, entry->archive->name);
         }
     }
 }
@@ -353,16 +353,11 @@ static int PackfileAddEntries_New(rf::Packfile* packfile, const void* block, uns
     for (unsigned i = 0; i < num_files; ++i) {
         auto file_name = record->name;
         rf::PackfileEntry& entry = packfile->files[num_added_files];
-        if (rf::packfile_ignore_tbl_files && !stricmp(rf::GetFileExt(file_name), ".tbl")) {
-            continue;
-        }
-        else {
-            // Note: we can't use string pool from RF because it's too small
-            char* file_name_buf = new char[strlen(file_name) + 10];
-            memset(file_name_buf, 0, strlen(file_name) + 10);
-            strcpy(file_name_buf, file_name);
-            entry.file_name = file_name_buf;
-        }
+
+        // Note: we can't use string pool from RF because it's too small
+        char* file_name_buf = new char[strlen(file_name) + 1];
+        strcpy(file_name_buf, file_name);
+        entry.file_name = file_name_buf;
         entry.name_checksum = rf::PackfileCalcFileNameChecksum(entry.file_name);
         entry.file_size = record->size;
         entry.archive = packfile;

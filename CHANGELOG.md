@@ -36,6 +36,7 @@ Version 1.4.2
 - add GOG install directory auto-detection
 - add support for late joiners aware triggers (improves Pure Faction compatibility)
 - prioritize packfile that contains rfl being loaded
+- load .tbl files in user_maps (default files cannot be overriden) - allows inclusion of HUD messages in custom maps (*_text.tbl)
 - fix sending crash reports
 - fix non-working face scrolling before first geomod use in custom levels (RF bug)
 - fix memory and VRAM leak when quick saving (RF bug)
