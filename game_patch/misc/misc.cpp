@@ -34,15 +34,16 @@ auto AnimMeshGetName = AddrAsRef<const char*(rf::AnimMesh* anim_mesh)>(0x0050347
 
 } // namespace rf
 
-void ApplyLimitsPatches();
-void ApplyTriggerPatches();
 void ApplyCutscenePatches();
+void ApplyEventPatches();
+void ApplyGlarePatches();
+void ApplyLimitsPatches();
+void ApplyMainMenuPatches();
 void DoLevelSpecificEventHacks(const char* level_filename);
 void ApplySaveRestorePatches();
 void ApplyWeaponPatches();
-void ApplyMainMenuPatches();
-void ApplyGlarePatches();
 void ApplySoundPatches();
+void ApplyTriggerPatches();
 void RegisterSoundCommands();
 
 struct JoinMpGameData
@@ -587,14 +588,15 @@ void MiscInit()
     GetUrlCmdLineParam();
 
     // Apply patches from other files
-    ApplyLimitsPatches();
-    ApplyTriggerPatches();
+    ApplyEventPatches();
     ApplyCutscenePatches();
-    ApplySaveRestorePatches();
-    ApplyWeaponPatches();
-    ApplyMainMenuPatches();
     ApplyGlarePatches();
+    ApplyLimitsPatches();
+    ApplyMainMenuPatches();
+    ApplySaveRestorePatches();
     ApplySoundPatches();
+    ApplyTriggerPatches();
+    ApplyWeaponPatches();
     RegisterSoundCommands();
 }
 
