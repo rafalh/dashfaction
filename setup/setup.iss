@@ -47,6 +47,13 @@ Source: "{#PatchesDir}\RF-1.21.exe.mbsdiff"; Flags: dontcopy
 Source: "{#PatchesDir}\RF-1.21-steam.exe.mbsdiff"; Flags: dontcopy
 Source: "{#PatchesDir}\tables-gog-gr.vpp.mbsdiff"; Flags: dontcopy
 
+; Allow write by non-admin users in directories used by the game (may be needed when elevation is not used)
+[Dirs]
+Name: "{code:GetGameDir}"; Permissions: users-modify
+Name: "{code:GetGameDir}\user_maps\multi"; Permissions: users-modify
+Name: "{code:GetGameDir}\screenshots"; Permissions: users-modify
+Name: "{code:GetGameDir}\logs"; Permissions: users-modify
+
 [Icons]
 Name: "{group}\Dash Faction"; Filename: "{app}\DashFactionLauncher.exe"
 Name: "{commondesktop}\Dash Faction"; Filename: "{app}\DashFactionLauncher.exe"; Tasks: desktopicon
