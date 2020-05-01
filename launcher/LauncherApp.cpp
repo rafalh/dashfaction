@@ -46,6 +46,9 @@ BOOL LauncherApp::InitInstance()
     // Migrate Dash Faction config from old version
     MigrateConfig();
 
+    // Disable elevation (UAC)
+    SetEnvironmentVariableA("__COMPAT_LAYER", "RunAsInvoker");
+
     // Launch game or editor based on command line flag
     if (cmd_line_info.HasGameFlag())
     {
