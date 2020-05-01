@@ -24,6 +24,7 @@ add_definitions(
     -D_WIN32_IE=0x0501
     # needed for GetModuleFileNameEx resolution before Windows 7
     -DPSAPI_VERSION=1
+    -DDASH_FACTION
 )
 
 include_directories(include)

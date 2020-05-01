@@ -2,6 +2,7 @@
 
 #include <patch_common/MemUtils.h>
 #include "common.h"
+#include <dsound.h>
 
 namespace rf
 {
@@ -36,11 +37,30 @@ namespace rf
     };
     static_assert(sizeof(LevelSound) == 0x2C);
 
-    struct SoundChannel
+    struct DsBuffer
     {
-        void* sound_buffer;
-        void* sound_3d_buffer;
-        int snd_ds_id;
+        char filename[256];
+        char packfile[256];
+        int packfile_offset;
+        int name_checksum;
+        int field_208_ds_load_buffer_param;
+        IDirectSoundBuffer *ds_buffer;
+        IDirectSound3DBuffer *ds_3d_buffer;
+        WAVEFORMATEX *wave_format_orig;
+        WAVEFORMATEX *wave_format_fixed;
+        int field_21c;
+        HMMIO hmmio;
+        MMCKINFO data_chunk_info;
+        MMCKINFO riff_chunk_info;
+        int num_refs;
+    };
+    static_assert(sizeof(DsBuffer) == 0x250);
+
+    struct DsChannel
+    {
+        IDirectSoundBuffer* sound_buffer;
+        IDirectSound3DBuffer* sound_3d_buffer;
+        int buf_id;
         int read_timer_id;
         int sig;
         float volume;
@@ -50,9 +70,9 @@ namespace rf
         Timer timer24;
         int flags;
     };
-    static_assert(sizeof(SoundChannel) == 0x2C);
+    static_assert(sizeof(DsChannel) == 0x2C);
 
-    enum SoundChannelFlags
+    enum DsChannelFlags
     {
         SCHF_LOOPING = 0x1,
         SCHF_PAUSED = 0x2,
@@ -61,8 +81,18 @@ namespace rf
     };
 
     static auto& game_sounds = AddrAsRef<GameSound[2600]>(0x01CD3BA8);
-    static auto& level_sounds = AddrAsRef<LevelSound[30]>(0x01753C38);
-    static auto& snd_channels = AddrAsRef<SoundChannel[30]>(0x01AD7520);
+    static auto& sound_enabled = AddrAsRef<bool>(0x017543D8);
+#ifdef DASH_FACTION
+    // In DF sound channels limit has been raised
+    constexpr int num_sound_channels = 64;
+    extern LevelSound level_sounds[num_sound_channels];
+    extern DsChannel ds_channels[num_sound_channels];
+#else
+    constexpr int num_sound_channels = 30;
+    static auto& level_sounds = AddrAsRef<LevelSound[num_sound_channels]>(0x01753C38);
+    static auto& ds_channels = AddrAsRef<DsChannel[num_sound_channels]>(0x01AD7520);
+#endif
+    static auto& ds_buffers = AddrAsRef<DsBuffer[0x1000]>(0x01887388);
 
     static auto ClearLevelSound = AddrAsRef<int(LevelSound* lvl_snd)>(0x00505680);
     static auto DestroyAllPausedSounds = AddrAsRef<void()>(0x005059F0);

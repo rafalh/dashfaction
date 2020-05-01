@@ -19,8 +19,8 @@ StaticBufferResizePatch<rf::Object*> obj_ptr_array_resize_patch{
          {0x0048759E},
          {0x004875B4},
          {0x0048A78A},
-         {0x00486D70, StaticBufferResizePatch<rf::Object*>::end_ref},
-         {0x0048A7A1, StaticBufferResizePatch<rf::Object*>::end_ref},
+         {0x00486D70, true},
+         {0x0048A7A1, true},
     },
 };
 
