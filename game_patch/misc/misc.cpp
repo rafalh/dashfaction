@@ -286,7 +286,7 @@ CodeInjection sort_items_patch{
         // Note: material used for alpha-blending is flare_blue1.tga - it uses non-alpha texture
         // so information about alpha-blending cannot be taken from material alone - it must be read from VFX
         if (!strcmp(mesh_name, "powerup_invuln.vfx")) {
-            item->_super.flags |= 0x100000; // OF_HAS_ALPHA
+            item->_super.obj_flags |= 0x100000; // OF_HAS_ALPHA
         }
 
         auto& item_obj_list = AddrAsRef<rf::ItemObj>(0x00642DD8);

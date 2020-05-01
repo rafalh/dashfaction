@@ -5,6 +5,7 @@
 #include "../rf/misc.h"
 #include "../rf/entity.h"
 #include "../rf/game_seq.h"
+#include "../utils/list-utils.h"
 #include "../main.h"
 #include "spectate_mode.h"
 #include <patch_common/FunHook.h>

@@ -4,17 +4,19 @@
 
 namespace rf
 {
+    struct ClutterCls;
+
     struct ClutterObj
     {
         Object _super;
         struct ClutterObj *next;
         struct ClutterObj *prev;
-        void* cls;
+        ClutterCls* cls;
         int cls_id;
         int corpse_cls_id;
         int sound;
-        Timer timer_2a4;
-        int snd_2a8;
+        Timer delete_timer;
+        int delete_sound;
         int killing_dmg_type;
         Timer emitter_timer;
         Timer timer_2b4;
@@ -22,7 +24,7 @@ namespace rf
         int field_2bC;
         DynamicArray<void*> field_2c0;
         int field_2cc;
-        int field_2d0;
+        int use_sound;
         uint16_t killable_index;
         uint16_t field_2d6;
     };

@@ -11,7 +11,7 @@ namespace rf
         int event_type;
         float delay;
         Timer delay_timer;
-        DynamicArray<int> link_list;
+        DynamicArray<int> links;
         int activated_by_entity_handle;
         int activated_by_trigger_handle;
         int field_2B0;

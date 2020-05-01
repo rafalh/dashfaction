@@ -122,7 +122,7 @@ namespace rf
         Matrix3 orient;
         Vector3 last_pos;
         float radius;
-        ObjectFlags flags;
+        ObjectFlags obj_flags;
         AnimMesh *anim_mesh;
         int field_84;
         PhysicsInfo phys_info;

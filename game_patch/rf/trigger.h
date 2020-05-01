@@ -16,7 +16,7 @@ namespace rf
         int resets_times;
         float last_activation_time;
         int key_item_cls_id;
-        int flags;
+        int trigger_flags;
         String field_2b4;
         int field_2bc;
         int airlock_room_uid;

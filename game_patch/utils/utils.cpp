@@ -1,4 +1,5 @@
 #include "utils.h"
+#include "string-utils.h"
 #include <iomanip>
 #include <map>
 #include <common/Exception.h>
@@ -12,21 +13,6 @@
 #else
 #include <intrin.h>
 #endif
-
-const char* stristr(const char* haystack, const char* needle)
-{
-    unsigned i, j;
-
-    for (i = 0; haystack[i]; ++i) {
-        for (j = 0; needle[j]; ++j)
-            if (tolower(haystack[i + j]) != tolower(needle[j]))
-                break;
-
-        if (!needle[j])
-            return haystack + i;
-    }
-    return nullptr;
-}
 
 #define DEFINE_HRESULT_ERROR(hr) {hr, #hr},
 

@@ -5,6 +5,7 @@
 #include "../rf/graphics.h"
 #include "../rf/player.h"
 #include "../rf/network.h"
+#include "../utils/string-utils.h"
 #include <common/BuildConfig.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>

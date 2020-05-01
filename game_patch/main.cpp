@@ -20,6 +20,7 @@
 #include "misc/wndproc.h"
 #include "misc/high_fps.h"
 #include "utils/utils.h"
+#include "utils/list-utils.h"
 #include "server/server.h"
 #include "input/input.h"
 #include "rf/network.h"

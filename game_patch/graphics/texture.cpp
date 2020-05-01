@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <set>
 #include "../rf/graphics.h"
+#include "../utils/string-utils.h"
 #include "gr_color.h"
 #include "graphics_internal.h"
 

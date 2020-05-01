@@ -6,6 +6,7 @@
 #include "../console/console.h"
 #include "../multi/network.h"
 #include "../main.h"
+#include "../utils/list-utils.h"
 #include <map>
 #include <set>
 #include <ctime>

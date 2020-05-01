@@ -1,7 +1,7 @@
 #pragma once
 
 #include <patch_common/MemUtils.h>
-#include "../utils/utils.h"
+#include "../utils/string-utils.h"
 #include "common.h"
 
 namespace rf

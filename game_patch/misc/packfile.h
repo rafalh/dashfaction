@@ -1,7 +1,7 @@
 #pragma once
 
 #include <functional>
-#include "../utils/utils.h"
+#include "../utils/string-utils.h"
 
 enum GameLang
 {

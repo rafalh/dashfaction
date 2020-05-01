@@ -191,7 +191,7 @@ namespace rf
         float fine_aim_reg_size;
         float fine_aim_reg_size_ss;
         String tracer_effect;
-        int field_548always0;
+        int field_548_always_0;
         float multi_bbox_size_factor;
     };
     static_assert(sizeof(WeaponClass) == 0x550);
@@ -238,7 +238,7 @@ namespace rf
         WeaponClass *weapon_cls;
         int weapon_cls_id;
         float lifetime;
-        int FlySound;
+        int fly_sound;
         int glow_light;
         int weapon_flags;
         float field_2AC;
@@ -248,8 +248,8 @@ namespace rf
         Friendliness entity_friendliness;
         int field_2E8;
         Timer field_2EC;
-        float fPiercingPower;
-        float fThrustLifetime;
+        float piercing_power;
+        float thrust_lifetime;
         int weapon_flags2;
         Vector3 last_hit_point;
         Vector3 field_308;

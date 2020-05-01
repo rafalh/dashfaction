@@ -10,6 +10,7 @@
 #include "../console/console.h"
 #include "../multi/network.h"
 #include "../main.h"
+#include "../utils/list-utils.h"
 #include "../rf/player.h"
 #include "../rf/network.h"
 #include "../rf/parse.h"

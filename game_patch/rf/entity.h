@@ -139,8 +139,8 @@ namespace rf
         float blind_pursuit_time;
         int field_71C;
         int attack_style;
-        int flags;
-        int flags2;
+        int entity_flags;
+        int entity_flags2;
         int field_72C[6];
         String primary_warmup_fx;
         float movement_radius;

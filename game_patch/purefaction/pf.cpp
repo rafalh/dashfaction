@@ -4,8 +4,10 @@
 #include "pf_secret.h"
 #include "../rf/network.h"
 #include "../multi/kill.h"
+#include "../utils/list-utils.h"
 #include <cstddef>
 #include <sstream>
+#include <xlog/xlog.h>
 
 void process_pf_player_announce_packet(const void* data, size_t len, [[ maybe_unused ]] const rf::NwAddr& addr)
 {

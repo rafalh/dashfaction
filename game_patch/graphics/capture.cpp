@@ -7,6 +7,8 @@
 #include "../rf/object.h"
 #include "../rf/player.h"
 #include "../rf/misc.h"
+#include "../utils/list-utils.h"
+#include "../utils/string-utils.h"
 #include <cstddef>
 #include <common/BuildConfig.h>
 #include <patch_common/CallHook.h>
