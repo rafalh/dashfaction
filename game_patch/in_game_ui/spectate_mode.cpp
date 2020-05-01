@@ -8,7 +8,6 @@
 #include "../rf/weapon.h"
 #include "../rf/graphics.h"
 #include <common/BuildConfig.h>
-#include <common/rfproto.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/AsmWriter.h>
@@ -61,7 +60,7 @@ void SpectateModeSetTargetPlayer(rf::Player* player)
     if (!rf::local_player || !rf::local_player->camera || !g_spectate_mode_target || g_spectate_mode_target == player)
         return;
 
-    if (rf::game_options & RF_GO_FORCE_RESPAWN) {
+    if (rf::game_options & rf::GO_FORCE_RESPAWN) {
         rf::String msg{"You cannot use Spectate Mode because Force Respawn option is enabled on this server!"};
         rf::String prefix;
         rf::ChatPrint(msg, rf::ChatMsgColor::white_white, prefix);
@@ -288,7 +287,7 @@ DcCommand2 spectate_cmd{
             return;
         }
 
-        if (rf::game_options & RF_GO_FORCE_RESPAWN) {
+        if (rf::game_options & rf::GO_FORCE_RESPAWN) {
             rf::DcPrint("Spectate mode is disabled because of Force Respawn server option!", nullptr);
             return;
         }

@@ -6,7 +6,6 @@
 #include "../rf/entity.h"
 #include "../rf/game_seq.h"
 #include "../main.h"
-#include <common/rfproto.h>
 #include "spectate_mode.h"
 #include <patch_common/FunHook.h>
 #include <patch_common/AsmWriter.h>
@@ -35,7 +34,7 @@ void DrawScoreboardInternal_New(bool draw)
 
     unsigned c_left_col = 0, c_right_col = 0;
     int game_type = rf::MpGetGameMode();
-    bool single_column = game_type == RF_DM;
+    bool single_column = game_type == rf::GM_DM;
 
     // Sort players by score
     rf::Player* players[32];
@@ -101,9 +100,9 @@ void DrawScoreboardInternal_New(bool draw)
 
     // Draw Game Type name
     const char* game_type_name;
-    if (game_type == RF_DM)
+    if (game_type == rf::GM_DM)
         game_type_name = rf::strings::array[974];
-    else if (game_type == RF_CTF)
+    else if (game_type == rf::GM_CTF)
         game_type_name = rf::strings::array[975];
     else
         game_type_name = rf::strings::array[976];
@@ -130,7 +129,7 @@ void DrawScoreboardInternal_New(bool draw)
 
     // Draw team scores
     unsigned red_score = 0, blue_score = 0;
-    if (game_type == RF_CTF) {
+    if (game_type == rf::GM_CTF) {
         static int hud_flag_red_bm = rf::BmLoad("hud_flag_red.tga", -1, true);
         static int hud_flag_blue_bm = rf::BmLoad("hud_flag_blue.tga", -1, true);
         rf::GrDrawImage(hud_flag_red_bm, x + cx * 2 / 6, y, rf::gr_image_material);
@@ -138,12 +137,12 @@ void DrawScoreboardInternal_New(bool draw)
         red_score = rf::CtfGetRedScore();
         blue_score = rf::CtfGetBlueScore();
     }
-    else if (game_type == RF_TEAMDM) {
+    else if (game_type == rf::GM_TEAMDM) {
         red_score = rf::TdmGetRedScore();
         blue_score = rf::TdmGetBlueScore();
     }
 
-    if (game_type != RF_DM) {
+    if (game_type != rf::GM_DM) {
         rf::GrSetColor(0xD0, 0x20, 0x20, 0xFF);
         auto red_score_str = std::to_string(red_score);
         rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, x + cx * 1 / 6, y, red_score_str.c_str(), rf::big_font_id,
@@ -162,7 +161,7 @@ void DrawScoreboardInternal_New(bool draw)
 
     // Draw headers
     unsigned num_sect = single_column ? 1 : 2;
-    unsigned cx_name_max = cx / num_sect - 25 - 50 * (game_type == RF_CTF ? 3 : 2) - 70;
+    unsigned cx_name_max = cx / num_sect - 25 - 50 * (game_type == rf::GM_CTF ? 3 : 2) - 70;
     rf::GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
     for (unsigned i = 0; i < num_sect; ++i) {
         int x_col = x + i * (cx / 2) + 13;
@@ -181,7 +180,7 @@ void DrawScoreboardInternal_New(bool draw)
         rf::GrDrawText(x_col, y, "K/D", -1, rf::gr_text_material);
         x_col += 70;
 
-        if (game_type == RF_CTF) {
+        if (game_type == rf::GM_CTF) {
             col_offsets[i].ctf_flags = x_col;
             rf::GrDrawText(x_col, y, rf::strings::caps, -1, rf::gr_text_material);
             x_col += 50;
@@ -234,7 +233,7 @@ void DrawScoreboardInternal_New(bool draw)
         auto kills_deaths_str = StringFormat("%hd/%hd", stats->num_kills, stats->num_deaths);
         rf::GrDrawText(offsets.kills_deaths, row_y, kills_deaths_str.c_str(), -1, rf::gr_text_material);
 
-        if (game_type == RF_CTF) {
+        if (game_type == rf::GM_CTF) {
             auto caps_str = std::to_string(stats->caps);
             rf::GrDrawText(offsets.ctf_flags, row_y, caps_str.c_str(), -1, rf::gr_text_material);
         }

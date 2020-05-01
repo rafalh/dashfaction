@@ -95,6 +95,21 @@ namespace rf
         GM_TEAMDM = 2,
     };
 
+    enum MpGameOptions
+    {
+        GO_DEBUG_SCOREBOARD = 0x1,
+        GO_LEVEL_LOADED = 0x2,
+        GO_CHANGING_LEVEL = 0x4,
+        GO_RANDOM_MAP_ROTATION = 0x8,
+        GO_WEAPON_STAY = 0x10,
+        GO_FORCE_RESPAWN = 0x20,
+        GO_FALL_DAMAGE = 0x80,
+        GO_REAL_FALL_DAMAGE = 0x100,
+        GO_TEAM_DAMAGE = 0x240,
+        GO_NOT_LAN_ONLY = 0x400,
+        GO_BALANCE_TEAMS = 0x2000,
+    };
+
     static auto& MpGetGameMode = AddrAsRef<MpGameMode()>(0x00470770);
     static auto& GetPlayersCount = AddrAsRef<unsigned()>(0x00484830);
     static auto& CtfGetRedScore = AddrAsRef<uint8_t()>(0x00475020);

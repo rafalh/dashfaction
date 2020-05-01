@@ -8,7 +8,6 @@
 #include <patch_common/CodeBuffer.h>
 #include <patch_common/MemUtils.h>
 #include <cstddef>
-#include <common/rfproto.h>
 #include "debug_internal.h"
 
 class Installable
