@@ -5,6 +5,7 @@
 #include <fstream>
 #include <ctime>
 #include <cassert>
+#include <cstring>
 #include <algorithm>
 #include <unordered_map>
 #include <optional>
@@ -29,6 +30,15 @@ private:
     SYSTEM_INFO m_sys_info;
     std::vector<MEMORY_BASIC_INFORMATION> m_memory_map;
     ProcessMemoryCache m_mem_cache;
+
+    struct ModuleInfo
+    {
+        std::string name;
+        std::string path;
+        uintptr_t start_addr;
+        uintptr_t end_addr;
+    };
+    std::vector<ModuleInfo> m_modules;
 
 public:
     TextDumpHelper(HANDLE process) : m_mem_cache(process) {
@@ -56,11 +66,12 @@ public:
         write_context(out, ctx);
 
         m_memory_map = fetch_memory_map(process);
+        fetch_modules(process);
 
         write_ebp_based_backtrace(out, ctx);
         write_backtrace(out, ctx, process);
         write_stack_dump(out, ctx, process);
-        write_modules(out, process);
+        write_modules(out);
         write_memory_map(out);
     }
 
@@ -161,7 +172,7 @@ private:
     void write_ebp_based_backtrace(std::ostream& out, const CONTEXT& ctx)
     {
         out << "Backtrace (EBP chain):\n";
-        out << StringFormat("%08X\n", ctx.Eip);
+        out << format_module_relative_address(ctx.Eip) << '\n';
         auto frame_addr = ctx.Ebp;
         uintptr_t stack_max_addr = reinterpret_cast<uintptr_t>(find_stack_max_addr(ctx));
         for (int i = 0; i < 1000; ++i) {
@@ -194,7 +205,7 @@ private:
                 break;
             }
             // All checks succeeded so print the address
-            out << StringFormat("%08X\n", static_cast<unsigned>(call_addr));
+            out << format_module_relative_address(call_addr) << '\n';
         }
         out << std::endl;
     }
@@ -202,7 +213,7 @@ private:
     void write_backtrace(std::ostream& out, const CONTEXT& ctx, HANDLE process)
     {
         out << "Backtrace (potential calls):\n";
-        out << StringFormat("%08X\n", ctx.Eip);
+        out << format_module_relative_address(ctx.Eip) << '\n';
 
         SIZE_T bytes_read;
         uintptr_t addr = ctx.Esp & ~3;
@@ -228,10 +239,10 @@ private:
             }
 
             if (insn_buf[1] == 0xE8) {
-                out << StringFormat("%08X\n", static_cast<unsigned>(potential_call_addr + 1));
+                out << format_module_relative_address(potential_call_addr + 1) << '\n';
             }
             else if (insn_buf[0] == 0xFF && insn_buf[1] == 0x15) {
-                out << StringFormat("%08X\n", static_cast<unsigned>(potential_call_addr));
+                out << format_module_relative_address(potential_call_addr) << '\n';
             }
         }
 
@@ -316,28 +327,52 @@ private:
         out << std::endl;
     }
 
-    void write_modules(std::ostream& out, HANDLE process)
+    void fetch_modules(HANDLE process)
     {
-        out << "Modules:\n";
-
         HMODULE modules[256];
         DWORD bytes_needed;
         if (EnumProcessModules(process, modules, sizeof(modules), &bytes_needed)) {
             size_t num_modules = std::min<size_t>(bytes_needed / sizeof(HMODULE), std::size(modules));
             std::sort(modules, modules + num_modules);
 
-            char mod_name[MAX_PATH];
+            char path[MAX_PATH];
+            char base_name[MAX_PATH];
             MODULEINFO mod_info;
             for (size_t i = 0; i < num_modules; i++) {
-                if (GetModuleFileNameEx(process, modules[i], mod_name, std::size(mod_name)) &&
-                    GetModuleInformation(process, modules[i], &mod_info, sizeof(mod_info))) {
+                if (!GetModuleFileNameExA(process, modules[i], path, std::size(path))) {
+                    std::strcpy(path, "?");
+                }
+                if (!GetModuleBaseNameA(process, modules[i], base_name, std::size(base_name))) {
+                    std::strcpy(base_name, "?");
+                }
+                if (GetModuleInformation(process, modules[i], &mod_info, sizeof(mod_info))) {
                     uintptr_t start_addr = reinterpret_cast<uintptr_t>(mod_info.lpBaseOfDll);
                     uintptr_t end_addr = start_addr + mod_info.SizeOfImage;
-                    out << StringFormat("%08X - %08X: %s\n", start_addr, end_addr, mod_name);
+                    m_modules.push_back({base_name, path, start_addr, end_addr});
                 }
             }
         }
+    }
 
+    void write_modules(std::ostream& out)
+    {
+        out << "Modules:\n";
+        for (auto& mod_info : m_modules) {
+            out << StringFormat("%08X - %08X: %s\n", mod_info.start_addr, mod_info.end_addr, mod_info.path.c_str());
+        }
         out << std::endl;
+    }
+
+    std::string format_module_relative_address(uintptr_t addr)
+    {
+        std::stringstream ss;
+        ss << StringFormat("%08X", addr);
+        for (auto& mod_info : m_modules) {
+            if (addr >= mod_info.start_addr && addr < mod_info.end_addr) {
+                ss << StringFormat(" (%s+%X)", mod_info.name.c_str(), addr - mod_info.start_addr);
+                break;
+            }
+        }
+        return ss.str();
     }
 };
