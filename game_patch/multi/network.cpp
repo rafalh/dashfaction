@@ -9,15 +9,18 @@
 #include "../misc/misc.h"
 #include "../main.h"
 #include "../utils/enum-bitwise-operators.h"
+#include <natupnp.h>
 #include <common/BuildConfig.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
 #include <patch_common/ShortTypes.h>
+#include <patch_common/ComPtr.h>
 #include <array>
 #include <algorithm>
 #include <cstddef>
 #include <functional>
+#include <thread>
 #include <common/rfproto.h>
 #include <common/version.h>
 
@@ -636,6 +639,84 @@ CodeInjection process_join_accept_injection{
     },
 };
 
+bool TryToAutoForwardPort(int port)
+{
+    xlog::Logger log{"UPnP"};
+    log.info("Configuring UPnP port forwarding (port %d)", port);
+    HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
+    if (FAILED(hr)) {
+        log.warn("CoInitializeEx failed: hr %lx", hr);
+        return false;
+    }
+
+    ComPtr<IUPnPNAT> nat;
+    hr = CoCreateInstance(__uuidof(UPnPNAT), NULL, CLSCTX_ALL, __uuidof(IUPnPNAT), reinterpret_cast<void**>(&nat));
+    if (FAILED(hr)) {
+        log.warn("CoCreateInstance IUPnPNAT failed: hr %lx", hr);
+        return false;
+    }
+    log.debug("CoCreateInstance IUPnPNAT returned hr %lx, nat %p", hr, &*nat);
+
+    char hostname[256];
+    if (gethostname(hostname, sizeof(hostname)) != 0) {
+        log.warn("gethostname failed");
+        return false;
+    }
+    struct hostent *host_ent = gethostbyname(hostname);
+    if (!host_ent || host_ent->h_length == 0) {
+        log.warn("gethostbyname failed");
+        return false;
+    }
+    struct in_addr addr;
+    std::memcpy(&addr, host_ent->h_addr_list[0], sizeof(addr));
+    auto ip_addr_str = inet_ntoa(addr);
+    if (!ip_addr_str) {
+        log.warn("inet_ntoa failed");
+    }
+    log.info("Local IP address: %s", ip_addr_str);
+
+    ComPtr<IStaticPortMappingCollection> collection;
+    int attempt_num = 0;
+    while (true) {
+        hr = nat->get_StaticPortMappingCollection(&collection);
+        if (FAILED(hr)) {
+            log.warn("IUPnPNAT::get_StaticPortMappingCollection failed: hr %lx", hr);
+            return false;
+        }
+        if (collection) {
+            break;
+        }
+
+        // get_StaticPortMappingCollection sometimes sets collection to nullptr and does not return error
+        // Try calling it multiple times like here:
+        // https://github.com/larytet/UltraVNC/blob/master/UltraVNC%20Project%20Root/UltraVNC/uvnc_settings2/uvnc_settings/upnp.cpp
+        log.info("IUPnPNAT::get_StaticPortMappingCollection returned hr %lx, collection %p", hr, &*collection);
+        ++attempt_num;
+        if (attempt_num == 10) {
+            return false;
+        }
+        Sleep(1000);
+    }
+    log.info("Got NAT port mapping table after %d tries", attempt_num);
+
+    wchar_t ip_addr_wide_str[256];
+    mbstowcs(ip_addr_wide_str, ip_addr_str, std::size(ip_addr_wide_str));
+    auto proto = SysAllocString(L"UDP");
+    auto desc = SysAllocString(L"Red Faction");
+    auto internal_client = SysAllocString(ip_addr_wide_str);
+    ComPtr<IStaticPortMapping> mapping;
+    hr = collection->Add(port, proto, port, internal_client, TRUE, desc, &mapping);
+    SysFreeString(proto);
+    SysFreeString(desc);
+    SysFreeString(internal_client);
+    if (FAILED(hr)) {
+        log.warn("IStaticPortMappingCollection::Add failed: hr %lx", hr);
+        return false;
+    }
+    log.info("Successfully added UPnP port forwarding (port %d)", port);
+    return true;
+}
+
 FunHook<void(int, rf::NwAddr*)> multi_start_hook{
     0x0046D5B0,
     [](int is_client, rf::NwAddr *serv_addr) {
@@ -645,6 +726,10 @@ FunHook<void(int, rf::NwAddr*)> multi_start_hook{
             shutdown(rf::nw_sock, 1);
             closesocket(rf::nw_sock);
             rf::NwInitSocket(7755);
+        }
+        if (rf::nw_port) {
+            std::thread upnp_thread{TryToAutoForwardPort, rf::nw_port};
+            upnp_thread.detach();
         }
         multi_start_hook.CallTarget(is_client, serv_addr);
     },

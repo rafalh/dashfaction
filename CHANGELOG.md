@@ -39,6 +39,7 @@ Version 1.4.2
 - load .tbl files in user_maps (default files cannot be overriden) - allows inclusion of HUD messages in custom maps (*_text.tbl)
 - increase maximal number of simultaneously playing sounds to 64
 - use port 7755 for server hosting when 'Force port' option is disabled
+- add UPnP automatic port forwarding
 - fix sending crash reports
 - fix non-working face scrolling before first geomod use in custom levels (RF bug)
 - fix memory and VRAM leak when quick saving (RF bug)

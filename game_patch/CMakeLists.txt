@@ -6,6 +6,10 @@ include_directories(
 	${CMAKE_SOURCE_DIR}/vendor/d3d8
 	${CMAKE_SOURCE_DIR}/vendor/xxhash
 )
+if(NOT MSVC)
+    # natupnp.h is not distributed with MinGW
+    include_directories(${CMAKE_SOURCE_DIR}/vendor/natupnp)
+endif()
 
 add_definitions(-DNOMINMAX -DBUILD_DLL)
 
