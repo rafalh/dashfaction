@@ -32,7 +32,17 @@ Client commands:
 * `inputmode` - switches between default and DirectInput mouse input handling
 * `ms value` - mouse sensitivity
 * `vli` - toggles volumetric lightining
+* `fullscreen` - enters fullscreen mode
+* `windowed` - enters windowed mode
+* `antialiasing` - toggles anti-aliasting
+* `screen_flash` - toggles screen flash effect (e.g. when player is being hit)
+* `findlevel rfl_fragment` - finds level using rfl name fragment
 * `download_level rfl_name` - downloads level from FactionFiles.com
+* `linear_pitch` - toggles linear pitch angle
+* `skip_cutscene_bind control` - sets binding for cutscene skip action
+* `levelsounds` - sets volume scale for level ambient sounds
+* `swap_assault_rifle_controls` - swaps primary and alternate fire controls for Assault Rifle weapon
+* `show_enemy_bullets` - toggles visibility of enemy bullets in multiplayer
 
 Server commands:
 * `unban_last` - unbans last banned player
