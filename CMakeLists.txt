@@ -32,7 +32,10 @@ include_directories(include)
 add_compile_options("$<$<CONFIG:DEBUG>:-DDEBUG>")
 add_compile_options("$<$<CONFIG:RELEASE>:-DNDEBUG>")
 
-if(NOT MSVC)
+if(MSVC)
+    set(CMAKE_EXE_LINKER_FLAGS    "${CMAKE_EXE_LINKER_FLAGS} /MANIFEST:NO")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /MANIFEST:NO")
+else()
     # Keep debugging info in Release configuration - it is stripped later
     set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -g")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -g")

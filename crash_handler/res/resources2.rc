@@ -3,3 +3,5 @@
 #define VER_ORIGINAL_FILENAME "CrashHandler.exe"
 #define VER_FILETYPE 0x1L // VFT_APP
 #include <common/version.rc>
+
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "CrashHandler.manifest"
