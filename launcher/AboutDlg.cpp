@@ -44,6 +44,10 @@ LRESULT AboutDlg::OnNotify([[ maybe_unused ]] WPARAM wparam, LPARAM lparam)
         if (nmhdr.idFrom == IDC_LICENSE_LINK) {
             OpenLicensingInfo();
         }
+        else if (nmhdr.idFrom == IDC_SRC_LINK) {
+            auto& nmlink = *reinterpret_cast<PNMLINK>(lparam);
+            ShellExecuteW(NULL, L"open", nmlink.item.szUrl, NULL, NULL, SW_SHOW);
+        }
         break;
     }
     return 0;
