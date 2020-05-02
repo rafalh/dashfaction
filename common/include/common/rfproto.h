@@ -13,17 +13,7 @@
 
 #include <stdint.h>
 
-#ifdef C_ASSERT
-#undef C_ASSERT
-#define HAS_C_ASSERT
-#endif
-#define C_ASSERT(e) extern void __C_ASSERT__##__LINE__(int [(e)?1:-1])
-
-C_ASSERT(sizeof(float) == 4);
-
-#ifndef HAS_C_ASSERT
-#undef C_ASSERT
-#endif
+static_assert(sizeof(float) == 4);
 
 #ifdef __BIG_ENDIAN__
 #error Big Endian not supported

@@ -1,3 +1,4 @@
+#include <winsock2.h>
 #include "network.h"
 #include "../rf/network.h"
 #include "../rf/misc.h"
@@ -23,6 +24,8 @@
 #include <thread>
 #include <common/rfproto.h>
 #include <common/version.h>
+#include <iphlpapi.h>
+#include <Ws2ipdef.h>
 
 #if MASK_AS_PF
 #include "../purefaction/pf.h"
@@ -639,10 +642,69 @@ CodeInjection process_join_accept_injection{
     },
 };
 
+std::optional<std::string> DetermineLocalIpAddress()
+{
+    ULONG forward_table_size = 0;
+    if (GetIpForwardTable(nullptr, &forward_table_size, FALSE) != ERROR_INSUFFICIENT_BUFFER) {
+        xlog::error("GetIpForwardTable failed");
+        return {};
+    }
+
+    std::unique_ptr<MIB_IPFORWARDTABLE> forward_table{ reinterpret_cast<PMIB_IPFORWARDTABLE>(operator new(forward_table_size)) };
+    if (GetIpForwardTable(forward_table.get(), &forward_table_size, TRUE) != NO_ERROR) {
+        xlog::error("GetIpForwardTable failed");
+        return {};
+    }
+    IF_INDEX default_route_if_index = NET_IFINDEX_UNSPECIFIED;
+    for (unsigned i = 0; i < forward_table->dwNumEntries; i++) {
+        auto& row = forward_table->table[i];
+        if (row.dwForwardDest == 0) {
+            // Default route to gateway
+            xlog::debug("Found default route: IfIndex %lu", row.dwForwardIfIndex);
+            default_route_if_index = row.dwForwardIfIndex;
+            break;
+        }
+    }
+    if (default_route_if_index == NET_IFINDEX_UNSPECIFIED) {
+        xlog::info("No default route found - is this computer connected to internet?");
+        return {};
+    }
+
+    ULONG ip_table_size = 0;
+    if (GetIpAddrTable(nullptr, &ip_table_size, FALSE) != ERROR_INSUFFICIENT_BUFFER) {
+        xlog::error("GetIpAddrTable failed");
+        return {};
+    }
+    std::unique_ptr<MIB_IPADDRTABLE> ip_table{ reinterpret_cast<PMIB_IPADDRTABLE>(operator new(ip_table_size)) };
+    if (GetIpAddrTable(ip_table.get(), &ip_table_size, FALSE) != NO_ERROR) {
+        xlog::error("GetIpAddrTable failed");
+        return {};
+    }
+    for (unsigned i = 0; i < ip_table->dwNumEntries; ++i) {
+        auto& row = ip_table->table[i];
+        auto addr_bytes = reinterpret_cast<uint8_t*>(&row.dwAddr);
+        auto addr_str = StringFormat("%d.%d.%d.%d", addr_bytes[0], addr_bytes[1], addr_bytes[2], addr_bytes[3]);
+        xlog::debug("IpAddrTable: dwIndex %lu dwAddr %s", row.dwIndex, addr_str.c_str());
+        if (row.dwIndex == default_route_if_index) {
+            return {addr_str};
+        }
+    }
+    xlog::debug("Interface %lu not found", default_route_if_index);
+    return {};
+}
+
 bool TryToAutoForwardPort(int port)
 {
     xlog::Logger log{"UPnP"};
     log.info("Configuring UPnP port forwarding (port %d)", port);
+
+    auto local_ip_addr_opt = DetermineLocalIpAddress();
+    if (!local_ip_addr_opt) {
+        log.warn("Cannot determine local IP address");
+        return false;
+    }
+    log.info("Local IP address: %s", local_ip_addr_opt.value().c_str());
+
     HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
     if (FAILED(hr)) {
         log.warn("CoInitializeEx failed: hr %lx", hr);
@@ -655,25 +717,6 @@ bool TryToAutoForwardPort(int port)
         log.warn("CoCreateInstance IUPnPNAT failed: hr %lx", hr);
         return false;
     }
-    log.debug("CoCreateInstance IUPnPNAT returned hr %lx, nat %p", hr, &*nat);
-
-    char hostname[256];
-    if (gethostname(hostname, sizeof(hostname)) != 0) {
-        log.warn("gethostname failed");
-        return false;
-    }
-    struct hostent *host_ent = gethostbyname(hostname);
-    if (!host_ent || host_ent->h_length == 0) {
-        log.warn("gethostbyname failed");
-        return false;
-    }
-    struct in_addr addr;
-    std::memcpy(&addr, host_ent->h_addr_list[0], sizeof(addr));
-    auto ip_addr_str = inet_ntoa(addr);
-    if (!ip_addr_str) {
-        log.warn("inet_ntoa failed");
-    }
-    log.info("Local IP address: %s", ip_addr_str);
 
     ComPtr<IStaticPortMappingCollection> collection;
     int attempt_num = 0;
@@ -687,9 +730,9 @@ bool TryToAutoForwardPort(int port)
             break;
         }
 
-        // get_StaticPortMappingCollection sometimes sets collection to nullptr and does not return error
-        // Try calling it multiple times like here:
-        // https://github.com/larytet/UltraVNC/blob/master/UltraVNC%20Project%20Root/UltraVNC/uvnc_settings2/uvnc_settings/upnp.cpp
+        // get_StaticPortMappingCollection sometimes sets collection to nullptr and returns success
+        // It may return a proper collecion pointer after few seconds. See UltraVNC code:
+        // https://github.com/veyon/ultravnc/blob/master/uvnc_settings2/uvnc_settings/upnp.cpp
         log.info("IUPnPNAT::get_StaticPortMappingCollection returned hr %lx, collection %p", hr, &*collection);
         ++attempt_num;
         if (attempt_num == 10) {
@@ -700,7 +743,7 @@ bool TryToAutoForwardPort(int port)
     log.info("Got NAT port mapping table after %d tries", attempt_num);
 
     wchar_t ip_addr_wide_str[256];
-    mbstowcs(ip_addr_wide_str, ip_addr_str, std::size(ip_addr_wide_str));
+    mbstowcs(ip_addr_wide_str, local_ip_addr_opt.value().c_str(), std::size(ip_addr_wide_str));
     auto proto = SysAllocString(L"UDP");
     auto desc = SysAllocString(L"Red Faction");
     auto internal_client = SysAllocString(ip_addr_wide_str);

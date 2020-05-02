@@ -148,6 +148,7 @@ target_link_libraries(DashFaction
     xxhash
     gdi32
     winmm
+    iphlpapi
     ws2_32
 )
 
