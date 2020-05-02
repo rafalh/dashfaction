@@ -11,7 +11,7 @@ struct DashFactionServerInfo
 
 namespace rf
 {
-    class Player;
+    struct Player;
 }
 
 void NetworkInit();

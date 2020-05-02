@@ -6,7 +6,7 @@
 namespace rf
 {
     // Forward declarations
-    class Player;
+    struct Player;
 
     using EntityFlags = int;
     using EntityPowerups = int;

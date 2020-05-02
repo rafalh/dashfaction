@@ -20,6 +20,7 @@ set(SRCS
     ZipHelper.h
     res/resources.rc
     res/resources2.rc
+    res/CrashHandler.manifest
 )
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRCS})

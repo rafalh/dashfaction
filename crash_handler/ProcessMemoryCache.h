@@ -23,11 +23,10 @@ public:
     bool read(uintptr_t addr, void* buf, size_t size)
     {
         auto out_buf_bytes = reinterpret_cast<std::byte*>(buf);
-        auto addr_uint = reinterpret_cast<uintptr_t>(addr);
 
         while (size > 0) {
-            uintptr_t offset = addr_uint % m_page_size;
-            uintptr_t page_addr = addr_uint - offset;
+            uintptr_t offset = addr % m_page_size;
+            uintptr_t page_addr = addr - offset;
             std::byte* page_data = reinterpret_cast<std::byte*>(load_page_into_cache(page_addr));
             if (page_data == nullptr) {
                 return false;
@@ -35,7 +34,7 @@ public:
             size_t bytes_to_copy = std::min<size_t>(size, m_page_size - offset);
             std::copy(page_data + offset, page_data + offset + bytes_to_copy, out_buf_bytes);
             size -= bytes_to_copy;
-            addr_uint += bytes_to_copy;
+            addr += bytes_to_copy;
         }
         return true;
     }

@@ -16,14 +16,16 @@ public:
             throw std::runtime_error("zipOpen failed");
     }
 
-    ~ZipHelper() try
+    ~ZipHelper()
     {
-        if (m_zf)
-            close();
-    }
-    catch(...)
-    {
-        // Destructor cannot throw
+        if (m_zf) {
+            try {
+                close();
+            }
+            catch (...) {
+                // Destructor cannot throw
+            }
+        }
     }
 
     void add_file(const char* path, const char* name_in_zip)

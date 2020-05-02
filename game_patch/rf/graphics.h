@@ -2,7 +2,7 @@
 
 #include <patch_common/MemUtils.h>
 #ifndef NO_D3D8
-#include <windef.h>
+#include <windows.h>
 #include <d3d8.h>
 #endif
 #include "bmpman.h"

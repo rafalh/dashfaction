@@ -70,7 +70,7 @@ public:
     template<typename RetVal = void, typename... A>
     constexpr RetVal this_call(A... args)
     {
-        return AddrAsRef<RetVal __thiscall(A...)>(addr_)(args...);
+        return reinterpret_cast<RetVal(__thiscall*)(A...)>(addr_)(args...);
     }
 
     template<typename RetVal = void, typename... A>

@@ -3,6 +3,7 @@
 #include <ddraw.h>
 #include <cstddef>
 #include <set>
+#include <algorithm>
 #include "../rf/graphics.h"
 #include "../utils/string-utils.h"
 #include "gr_color.h"

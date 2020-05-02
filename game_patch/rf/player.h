@@ -6,10 +6,10 @@
 namespace rf
 {
     // Forward declarations
-    class EntityObj;
-    class AnimMesh;
-    class Player;
-    class PlayerNetData;
+    struct EntityObj;
+    struct AnimMesh;
+    struct Player;
+    struct PlayerNetData;
 
     /* Camera */
 

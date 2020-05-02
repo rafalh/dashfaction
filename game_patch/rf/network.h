@@ -6,8 +6,8 @@
 namespace rf
 {
     // Forward declarations
-    class Player;
-    class EntityObj;
+    struct Player;
+    struct EntityObj;
 
     struct NwAddr
     {

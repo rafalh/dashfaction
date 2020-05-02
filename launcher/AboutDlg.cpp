@@ -4,7 +4,7 @@
 #include <wxx_wincore.h>
 #include <wxx_dialog.h>
 #include <xlog/xlog.h>
-
+#include <common/version.h>
 
 AboutDlg::AboutDlg()
 	: CDialog(IDD_ABOUT)
@@ -13,7 +13,7 @@ AboutDlg::AboutDlg()
 
 BOOL AboutDlg::OnInitDialog()
 {
-    // Make header font bold
+    // Change font of application name label
     CWnd app_name_label;
     AttachItem(IDC_APP_NAME, app_name_label);
     auto font = app_name_label.GetFont();
@@ -24,6 +24,12 @@ BOOL AboutDlg::OnInitDialog()
     app_name_label.SetFont(font);
     font.Detach();
     app_name_label.Detach();
+
+    // Set version label text
+    // Note: it is set here to avoid joining strings in .rc file (it is problematic in MSVC and not supported by
+    // visual editor)
+    SetDlgItemTextA(IDC_APP_VERSION, "Version: " VERSION_STR);
+
     return TRUE;
 }
 

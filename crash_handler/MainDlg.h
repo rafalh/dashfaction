@@ -3,6 +3,7 @@
 #include <wxx_wincore.h>
 #include <wxx_dialog.h>
 #include <wxx_controls.h>
+#include <optional>
 
 class MainDlg : public CDialog
 {

@@ -1,5 +1,6 @@
 #include <xlog/SimpleFormatter.h>
 #include <sstream>
+#include <string_view>
 #include <ctime>
 
 std::string xlog::SimpleFormatter::format(xlog::Level level, const std::string& logger_name, std::string_view message)

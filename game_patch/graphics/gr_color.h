@@ -2,8 +2,8 @@
 
 #include "../rf/bmpman.h"
 #include <xlog/xlog.h>
-#include <windef.h>
-#include <d3d8types.h>
+#include <windows.h>
+#include <d3d8.h>
 
 inline int GetPixelFormatSize(rf::BmPixelFormat pixel_fmt)
 {

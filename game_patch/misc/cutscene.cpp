@@ -1,4 +1,5 @@
 #include <patch_common/FunHook.h>
+#include <algorithm>
 #include "../console/console.h"
 #include "../rf/player.h"
 #include "../rf/graphics.h"

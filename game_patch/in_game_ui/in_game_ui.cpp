@@ -31,8 +31,8 @@ CallHook<void(int, int, int, int, int, int, int, int, int, char, char, int)> gr_
 
         float scale_x = rf::GrGetMaxWidth() / 640.0f;
         float scale_y = rf::GrGetMaxHeight() / 480.0f;
-        dst_w = src_w * scale_x;
-        dst_h = src_h * scale_y;
+        dst_w = static_cast<int>(src_w * scale_x);
+        dst_h = static_cast<int>(src_h * scale_y);
         dst_x = (rf::GrGetMaxWidth() - dst_w) / 2;
         dst_y = (rf::GrGetMaxHeight() - dst_h) / 2;
         gr_bitmap_stretched_message_log_hook.CallTarget(bm_handle, dst_x, dst_y, dst_w, dst_h,
@@ -43,10 +43,10 @@ CallHook<void(int, int, int, int, int, int, int, int, int, char, char, int)> gr_
         auto& message_log_entries_clip_w = AddrAsRef<int>(0x006425DC);
         auto& message_log_entries_clip_x = AddrAsRef<int>(0x006425E0);
 
-        message_log_entries_clip_x = dst_x + scale_x * 30;
-        message_log_entries_clip_y = dst_y + scale_y * 41;
-        message_log_entries_clip_w = scale_x * 313;
-        message_log_entries_clip_h = scale_y * 296;
+        message_log_entries_clip_x = static_cast<int>(dst_x + scale_x * 30);
+        message_log_entries_clip_y = static_cast<int>(dst_y + scale_y * 41);
+        message_log_entries_clip_w = static_cast<int>(scale_x * 313);
+        message_log_entries_clip_h = static_cast<int>(scale_y * 296);
     },
 };
 

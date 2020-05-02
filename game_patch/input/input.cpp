@@ -2,6 +2,7 @@
 #include <patch_common/CodeInjection.h>
 #include <windows.h>
 #include <algorithm>
+#include <cctype>
 #include "../rf/misc.h"
 #include "../rf/graphics.h"
 #include "../rf/network.h"
@@ -333,7 +334,7 @@ CodeInjection key_name_in_options_patch{
 };
 
 auto& GetTextFromClipboard = AddrAsRef<void(char *buf, unsigned int max_len)>(0x00525AFC);
-auto& UiInputBox_AddChar = AddrAsRef<bool __thiscall(void *this_, char c)>(0x00457260);
+auto UiInputBox_AddChar = reinterpret_cast<bool (__thiscall*)(void *this_, char c)>(0x00457260);
 
 extern FunHook<bool __fastcall(void *this_, void* edx, rf::Key key)> UiInputBox_ProcessKey_hook;
 bool __fastcall UiInputBox_ProcessKey_new(void *this_, void* edx, rf::Key key)

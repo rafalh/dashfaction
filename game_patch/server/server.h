@@ -3,7 +3,7 @@
 // Forward declarations
 namespace rf
 {
-    class Player;
+    struct Player;
 }
 
 void ServerInit();

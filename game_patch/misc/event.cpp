@@ -48,30 +48,30 @@ struct EventSetLiquidDepthHook : rf::EventObj
 {
     float depth;
     float duration;
+};
 
-    void HandleOnMsg()
-    {
-        auto AddLiquidDepthUpdate =
-            AddrAsRef<void(rf::RflRoom* room, float target_liquid_depth, float duration)>(0x0045E640);
-        auto RoomGetByUid = AddrAsRef<rf::RflRoom*(int uid)>(0x0045E7C0);
+void __fastcall EventSetLiquidDepth__HandleOnMsg_New(EventSetLiquidDepthHook* this_)
+{
+    auto AddLiquidDepthUpdate =
+        AddrAsRef<void(rf::RflRoom* room, float target_liquid_depth, float duration)>(0x0045E640);
+    auto RoomGetByUid = AddrAsRef<rf::RflRoom*(int uid)>(0x0045E7C0);
 
-        xlog::info("Processing Set_Liquid_Depth event: uid %d depth %.2f duration %.2f", uid, depth, duration);
-        if (links.Size() == 0) {
-            xlog::trace("no links");
-            AddLiquidDepthUpdate(room, depth, duration);
-        }
-        else {
-            for (int i = 0; i < links.Size(); ++i) {
-                auto room_uid = links.Get(i);
-                auto room = RoomGetByUid(room_uid);
-                xlog::trace("link %d %p", room_uid, room);
-                if (room) {
-                    AddLiquidDepthUpdate(room, depth, duration);
-                }
+    xlog::info("Processing Set_Liquid_Depth event: uid %d depth %.2f duration %.2f", this_->uid, this_->depth, this_->duration);
+    if (this_->links.Size() == 0) {
+        xlog::trace("no links");
+        AddLiquidDepthUpdate(this_->room, this_->depth, this_->duration);
+    }
+    else {
+        for (int i = 0; i < this_->links.Size(); ++i) {
+            auto room_uid = this_->links.Get(i);
+            auto room = RoomGetByUid(room_uid);
+            xlog::trace("link %d %p", room_uid, room);
+            if (room) {
+                AddLiquidDepthUpdate(room, this_->depth, this_->duration);
             }
         }
     }
-};
+}
 
 extern CallHook<void __fastcall (rf::RflRoom* room, int edx, void* geo)> RflRoom_SetupLiquidRoom_EventSetLiquid_hook;
 
@@ -140,7 +140,7 @@ void ApplyEventPatches()
     switch_model_event_obj_lighting_and_physics_fix.Install();
 
     // Fix Set_Liquid_Depth event
-    AsmWriter(0x004BCBE0).jmp(reinterpret_cast<void*>(&EventSetLiquidDepthHook::HandleOnMsg));
+    AsmWriter(0x004BCBE0).jmp(&EventSetLiquidDepth__HandleOnMsg_New);
     RflRoom_SetupLiquidRoom_EventSetLiquid_hook.Install();
 
     // Fix crash after level change (Load_Level event) caused by NavPoint pointers in AiNav not being cleared for entities

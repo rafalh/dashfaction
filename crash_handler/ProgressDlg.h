@@ -53,7 +53,7 @@ protected:
 private:
     void RunCallback()
     {
-        m_thread = std::thread{ThreadProc, this};
+        m_thread = std::thread{&ProgressDlg::ThreadProc, this};
     }
 
     void ThreadProc() try

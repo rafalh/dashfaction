@@ -8,7 +8,7 @@
 // Forward declarations
 namespace rf
 {
-    class Player;
+    struct Player;
 }
 
 struct VoteConfig

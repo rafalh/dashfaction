@@ -1,6 +1,6 @@
 #pragma once
 
-#include <windef.h>
+#include <windows.h>
 #include <patch_common/MemUtils.h>
 #include "common.h"
 
@@ -10,8 +10,8 @@ namespace rf
     {
         using SelfType = CmdLineParam;
 
-        struct CmdLineParam *next;
-        struct CmdLineParam *prev;
+        SelfType *next;
+        SelfType *prev;
         const char *name;
         void *unknown;
         char *arg;

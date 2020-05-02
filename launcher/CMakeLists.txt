@@ -3,7 +3,7 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/vendor/win32xx
 )
 
-file(GLOB SRCS *.cpp *.h *.rc)
+file(GLOB SRCS *.cpp *.h *.rc res/*.manifest)
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRCS})
 

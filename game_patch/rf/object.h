@@ -6,8 +6,8 @@
 namespace rf
 {
     // Forward declarations
-    class RflRoom;
-    class AnimMesh;
+    struct RflRoom;
+    struct AnimMesh;
 
     // Typedefs
     using ObjectFlags = int;
