@@ -96,6 +96,8 @@ set(SRCS
     multi/network.h
     utils/utils.cpp
     utils/utils.h
+    utils/string-utils.h
+    utils/list-utils.h
     console/console.cpp
     console/console.h
     console/commands.cpp

@@ -32,6 +32,7 @@ Client commands:
 * `inputmode` - switches between default and DirectInput mouse input handling
 * `ms value` - mouse sensitivity
 * `vli` - toggles volumetric lightining
+* `download_level rfl_name` - downloads level from FactionFiles.com
 
 Server commands:
 * `unban_last` - unbans last banned player

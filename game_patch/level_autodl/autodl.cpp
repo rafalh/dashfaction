@@ -3,6 +3,7 @@
 #include "../rf/misc.h"
 #include "../rf/graphics.h"
 #include "../misc/misc.h"
+#include "../console/console.h"
 #include <common/HttpRequest.h>
 #include <common/rfproto.h>
 #include <common/BuildConfig.h>
@@ -362,9 +363,34 @@ CodeInjection g_join_failed_injection{
     },
 };
 
+DcCommand2 download_level_cmd{
+    "download_level",
+    [](std::string filename) {
+        if (filename.rfind('.') == std::string::npos) {
+            filename += ".rfl";
+        }
+        auto level_info_opt = FetchLevelInfo(filename.c_str());
+        if (!level_info_opt) {
+            rf::DcPrintf("Level has not found in FactionFiles database!");
+        }
+        else if (g_download_in_progress) {
+            rf::DcPrintf("Another level is currently being downloaded!");
+        }
+        else {
+            rf::DcPrintf("Downloading level %s by %s", level_info_opt.value().name.c_str(),
+                level_info_opt.value().author.c_str());
+            g_level_info = level_info_opt.value();
+            StartLevelDownload();
+        }
+    },
+    "Downloads level from FactionFiles.com",
+    "download_level <rfl_name>",
+};
+
 void InitAutodownloader()
 {
     g_join_failed_injection.Install();
+    download_level_cmd.Register();
 }
 
 void RenderDownloadProgress()
