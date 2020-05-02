@@ -636,6 +636,20 @@ CodeInjection process_join_accept_injection{
     },
 };
 
+FunHook<void(int, rf::NwAddr*)> multi_start_hook{
+    0x0046D5B0,
+    [](int is_client, rf::NwAddr *serv_addr) {
+        if (!g_game_config.force_port && !is_client) {
+            // Rebind socket to port 7755 when running in server mode
+            xlog::info("Recreating socket using TCP port 7755");
+            shutdown(rf::nw_sock, 1);
+            closesocket(rf::nw_sock);
+            rf::NwInitSocket(7755);
+        }
+        multi_start_hook.CallTarget(is_client, serv_addr);
+    },
+};
+
 FunHook<void()> multi_stop_hook{
     0x0046E2C0,
     []() {
@@ -686,7 +700,7 @@ void NetworkInit()
     // Allow ports < 1023 (especially 0 - any port)
     AsmWriter(0x00528F24).nop(2);
 
-    // Default port: 0 */
+    // Default port: 0
     WriteMem<u16>(0x0059CDE4, 0);
     WriteMem<i32>(0x004B159D + 1, 0); // TODO: add setting in launcher
 
@@ -774,4 +788,7 @@ void NetworkInit()
     send_join_accept_packet_hook.Install();
     process_join_accept_injection.Install();
     multi_stop_hook.Install();
+
+    // Use port 7755 when hosting a server without 'Force port' option
+    multi_start_hook.Install();
 }

@@ -124,7 +124,10 @@ namespace rf
     static auto& MultiChangeLevel = AddrAsRef<void(const char* filename)>(0x0047BF50);
     static auto& PingPlayer = AddrAsRef<void(Player*)>(0x00484D00);
     static auto& SendEntityCreatePacket = AddrAsRef<void(EntityObj *entity, Player* player)>(0x00475160);
+    static auto& NwInitSocket = AddrAsRef<void(unsigned short port)>(0x00528F10);
 
+    static auto& nw_sock = AddrAsRef<int>(0x005A660C);
+    static auto& nw_port = AddrAsRef<unsigned short>(0x01B587D4);
     static auto& serv_addr = AddrAsRef<NwAddr>(0x0064EC5C);
     static auto& serv_name = AddrAsRef<String>(0x0064EC28);
     static auto& is_net_game = AddrAsRef<uint8_t>(0x0064ECB9);
