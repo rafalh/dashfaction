@@ -25,10 +25,15 @@
 #include <common/rfproto.h>
 #include <common/version.h>
 #include <iphlpapi.h>
-#include <Ws2ipdef.h>
+#include <ws2ipdef.h>
 
 #if MASK_AS_PF
 #include "../purefaction/pf.h"
+#endif
+
+// NET_IFINDEX_UNSPECIFIED is not defined in MinGW headers
+#ifndef NET_IFINDEX_UNSPECIFIED
+#define NET_IFINDEX_UNSPECIFIED 0
 #endif
 
 namespace rf
@@ -460,7 +465,7 @@ FunHook<uint8_t()> MultiAllocPlayerId_hook{
 FunHook<rf::Object*(int32_t)> MultiGetObjFromRemoteHandle_hook{
     0x00484B00,
     [](int32_t remote_handle) {
-        int index = static_cast<uint16_t>(remote_handle);
+        size_t index = static_cast<uint16_t>(remote_handle);
         if (index >= obj_limit)
             return static_cast<rf::Object*>(nullptr);
         return MultiGetObjFromRemoteHandle_hook.CallTarget(remote_handle);
@@ -470,7 +475,7 @@ FunHook<rf::Object*(int32_t)> MultiGetObjFromRemoteHandle_hook{
 FunHook<int32_t(int32_t)> MultiGetLocalHandleFromRemoteHandle_hook{
     0x00484B30,
     [](int32_t remote_handle) {
-        int index = static_cast<uint16_t>(remote_handle);
+        size_t index = static_cast<uint16_t>(remote_handle);
         if (index >= obj_limit)
             return -1;
         return MultiGetLocalHandleFromRemoteHandle_hook.CallTarget(remote_handle);
@@ -480,7 +485,7 @@ FunHook<int32_t(int32_t)> MultiGetLocalHandleFromRemoteHandle_hook{
 FunHook<void(int32_t, int32_t)> MultiSetObjHandleMapping_hook{
     0x00484B70,
     [](int32_t remote_handle, int32_t local_handle) {
-        int index = static_cast<uint16_t>(remote_handle);
+        size_t index = static_cast<uint16_t>(remote_handle);
         if (index >= obj_limit)
             return;
         MultiSetObjHandleMapping_hook.CallTarget(remote_handle, local_handle);

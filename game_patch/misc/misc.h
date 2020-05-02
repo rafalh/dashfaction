@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+
 void MiscInit();
 void MiscAfterFullGameInit();
 void MiscAfterLevelLoad(const char* level_filename);
