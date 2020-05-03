@@ -62,6 +62,8 @@ BOOL OptionsDlg::OnInitDialog()
         SetDlgItemInt(IDC_PORT_EDIT, m_conf.force_port, false);
     else
         GetDlgItem(IDC_PORT_EDIT).EnableWindow(FALSE);
+    SetDlgItemInt(IDC_RATE_EDIT, m_conf.update_rate, false);
+
     CheckDlgButton(IDC_DIRECT_INPUT_CHECK, m_conf.direct_input ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_EAX_SOUND_CHECK, m_conf.eax_sound ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_FAST_START_CHECK, m_conf.fast_start ? BST_CHECKED : BST_UNCHECKED);
@@ -174,6 +176,7 @@ void OptionsDlg::InitToolTip()
     m_toolTip.AddTool(GetDlgItem(IDC_HIGH_MON_RES_CHECK), "Increase monitors and mirrors resolution");
     m_toolTip.AddTool(GetDlgItem(IDC_TRUE_COLOR_TEXTURES_CHECK), "Increase texture color depth - especially visible for lightmaps and shadows");
     m_toolTip.AddTool(GetDlgItem(IDC_TRACKER_EDIT), "Hostname of tracker used to find avaliable Multiplayer servers");
+    m_toolTip.AddTool(GetDlgItem(IDC_RATE_EDIT), "Internet connection speed in bytes/s (default value - 200000 - should work fine for all modern setups)");
     m_toolTip.AddTool(GetDlgItem(IDC_FAST_START_CHECK), "Skip game intro videos and go straight to Main Menu");
     m_toolTip.AddTool(GetDlgItem(IDC_DIRECT_INPUT_CHECK), "Use DirectInput for mouse input handling");
     m_toolTip.AddTool(GetDlgItem(IDC_FORCE_PORT_CHECK), "If not checked automatic port is used");
@@ -256,6 +259,8 @@ void OptionsDlg::OnBnClickedOk()
     m_conf.tracker = str;
     bool force_port = IsDlgButtonChecked(IDC_FORCE_PORT_CHECK) == BST_CHECKED;
     m_conf.force_port = force_port ? GetDlgItemInt(IDC_PORT_EDIT, false) : 0;
+    m_conf.update_rate = GetDlgItemInt(IDC_RATE_EDIT, false);
+
     m_conf.direct_input = (IsDlgButtonChecked(IDC_DIRECT_INPUT_CHECK) == BST_CHECKED);
     m_conf.eax_sound = (IsDlgButtonChecked(IDC_EAX_SOUND_CHECK) == BST_CHECKED);
     m_conf.fast_start = (IsDlgButtonChecked(IDC_FAST_START_CHECK) == BST_CHECKED);
