@@ -17,12 +17,14 @@ protected:
     BOOL OnInitDialog() override;
     void OnOK() override;
     BOOL OnCommand(WPARAM wparam, LPARAM lparam) override;
+    LRESULT OnNotify(WPARAM wparam, LPARAM lparam) override;
 
 private:
     void InitToolTip();
-    void InitResolutionCombo();
-    void InitMsaaCombo();
-    void InitAnisotropyCheckbox();
+    void UpdateAdapterCombo();
+    void UpdateResolutionCombo();
+    void UpdateMsaaCombo();
+    void UpdateAnisotropyCheckbox();
     void OnBnClickedOk();
     void OnBnClickedExeBrowse();
     void OnBnClickedResetTrackerBtn();
@@ -33,6 +35,7 @@ private:
     std::vector<unsigned> m_multiSampleTypes;
     CToolTip m_toolTip;
     GameConfig m_conf;
+    CComboBox m_adapterCombo;
     CComboBox m_resCombo;
     CComboBox m_msaaCombo;
     CComboBox m_langCombo;

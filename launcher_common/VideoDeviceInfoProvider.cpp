@@ -3,6 +3,7 @@
 #include "VideoDeviceInfoProvider.h"
 #include <common/Exception.h>
 #include <common/Win32Error.h>
+#include <xlog/xlog.h>
 
 #if USE_D3D9
 
@@ -53,7 +54,24 @@ VideoDeviceInfoProvider::~VideoDeviceInfoProvider()
     FreeLibrary(m_lib);
 }
 
-std::set<VideoDeviceInfoProvider::Resolution> VideoDeviceInfoProvider::get_resolutions([[maybe_unused]] D3DFORMAT format)
+std::vector<std::string> VideoDeviceInfoProvider::get_adapters()
+{
+    std::vector<std::string> adapters;
+    auto count = m_d3d->GetAdapterCount();
+    for (unsigned i = 0; i < count; ++i) {
+        D3DADAPTER_IDENTIFIER8 adapter_identifier;
+        auto hr = m_d3d->GetAdapterIdentifier(i, 0, &adapter_identifier);
+        if (SUCCEEDED(hr)) {
+            adapters.push_back(adapter_identifier.Description);
+        }
+        else {
+            xlog::error("GetAdapterIdentifier failed %lx", hr);
+        }
+    }
+    return adapters;
+}
+
+std::set<VideoDeviceInfoProvider::Resolution> VideoDeviceInfoProvider::get_resolutions(unsigned adapter, [[maybe_unused]] D3DFORMAT format)
 {
     std::set<VideoDeviceInfoProvider::Resolution> result;
     unsigned mode_idx = 0;
@@ -61,9 +79,9 @@ std::set<VideoDeviceInfoProvider::Resolution> VideoDeviceInfoProvider::get_resol
     while (true)
     {
 #ifdef USE_D3D9
-        HRESULT hr = m_d3d->EnumAdapterModes(D3DADAPTER_DEFAULT, format, mode_idx++, &d3d_display_mode);
+        HRESULT hr = m_d3d->EnumAdapterModes(adapter, format, mode_idx++, &d3d_display_mode);
 #else
-        HRESULT hr = m_d3d->EnumAdapterModes(D3DADAPTER_DEFAULT, mode_idx++, &d3d_display_mode);
+        HRESULT hr = m_d3d->EnumAdapterModes(adapter, mode_idx++, &d3d_display_mode);
 #endif
         if (hr == D3DERR_INVALIDCALL)
             break;
@@ -80,16 +98,16 @@ std::set<VideoDeviceInfoProvider::Resolution> VideoDeviceInfoProvider::get_resol
     return result;
 }
 
-std::set<D3DMULTISAMPLE_TYPE> VideoDeviceInfoProvider::get_multisample_types(D3DFORMAT format, BOOL windowed)
+std::set<D3DMULTISAMPLE_TYPE> VideoDeviceInfoProvider::get_multisample_types(unsigned adapter, D3DFORMAT format, BOOL windowed)
 {
     std::set<D3DMULTISAMPLE_TYPE> result;
     for (unsigned i = 2; i < 16; ++i)
     {
 #ifdef USE_D3D9
-        HRESULT hr = m_d3d->CheckDeviceMultiSampleType(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, format, windowed,
+        HRESULT hr = m_d3d->CheckDeviceMultiSampleType(adapter, D3DDEVTYPE_HAL, format, windowed,
             static_cast<D3DMULTISAMPLE_TYPE>(i), nullptr);
 #else
-        HRESULT hr = m_d3d->CheckDeviceMultiSampleType(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, format, windowed,
+        HRESULT hr = m_d3d->CheckDeviceMultiSampleType(adapter, D3DDEVTYPE_HAL, format, windowed,
             static_cast<D3DMULTISAMPLE_TYPE>(i));
 #endif
         if (SUCCEEDED(hr))
@@ -98,14 +116,14 @@ std::set<D3DMULTISAMPLE_TYPE> VideoDeviceInfoProvider::get_multisample_types(D3D
     return result;
 }
 
-bool VideoDeviceInfoProvider::has_anisotropy_support()
+bool VideoDeviceInfoProvider::has_anisotropy_support(unsigned adapter)
 {
 #ifdef USE_D3D9
     D3DCAPS9 caps;
 #else
     D3DCAPS8 caps;
 #endif
-    HRESULT hr = m_d3d->GetDeviceCaps(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, &caps);
+    HRESULT hr = m_d3d->GetDeviceCaps(adapter, D3DDEVTYPE_HAL, &caps);
     if (FAILED(hr))
         THROW_EXCEPTION("GetDeviceCaps failed, hresult %lx", hr);
 

@@ -5,6 +5,7 @@
 #include "LauncherApp.h"
 #include "OptionsDlg.h"
 #include <common/GameConfig.h>
+#include <xlog/xlog.h>
 #include <wxx_wincore.h>
 #include <wxx_dialog.h>
 #include <wxx_commondlg.h>
@@ -20,23 +21,23 @@ OptionsDlg::OptionsDlg()
 BOOL OptionsDlg::OnInitDialog()
 {
     // Attach controls
+    AttachItem(IDC_ADAPTER_COMBO, m_adapterCombo);
     AttachItem(IDC_RESOLUTIONS_COMBO, m_resCombo);
     AttachItem(IDC_MSAA_COMBO, m_msaaCombo);
     AttachItem(IDC_LANG_COMBO, m_langCombo);
 
-    try
-    {
+    try {
         m_conf.load();
     }
-    catch (std::exception &e)
-    {
+    catch (std::exception &e) {
         MessageBoxA(e.what(), NULL, MB_ICONERROR | MB_OK);
     }
 
     SetDlgItemTextA(IDC_EXE_PATH_EDIT, m_conf.game_executable_path.c_str());
 
-    InitResolutionCombo();
-    InitMsaaCombo();
+    UpdateAdapterCombo();
+    UpdateResolutionCombo();
+    UpdateMsaaCombo();
 
     CheckDlgButton(IDC_32BIT_RADIO, m_conf.res_bpp == 32 ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_16BIT_RADIO, m_conf.res_bpp == 16 ? BST_CHECKED : BST_UNCHECKED);
@@ -48,7 +49,7 @@ BOOL OptionsDlg::OnInitDialog()
     SetDlgItemInt(IDC_RENDERING_CACHE_EDIT, m_conf.geometry_cache_size, false);
     SetDlgItemInt(IDC_MAX_FPS_EDIT, m_conf.max_fps, false);
 
-    InitAnisotropyCheckbox();
+    UpdateAnisotropyCheckbox();
 
     CheckDlgButton(IDC_DISABLE_LOD_CHECK, m_conf.disable_lod_models ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_FPS_COUNTER_CHECK, m_conf.fps_counter ? BST_CHECKED : BST_UNCHECKED);
@@ -88,46 +89,62 @@ BOOL OptionsDlg::OnInitDialog()
     return TRUE;
 }
 
-void OptionsDlg::InitResolutionCombo()
+void OptionsDlg::UpdateAdapterCombo()
+{
+    m_adapterCombo.Clear();
+    int selected_idx = -1;
+    try {
+        auto adapters = m_videoInfo.get_adapters();
+        for (const auto &adapter : adapters) {
+            int idx = m_adapterCombo.AddString(adapter.c_str());
+            if (m_conf.selected_video_card == idx)
+                selected_idx = idx;
+        }
+    }
+    catch (std::exception &e) {
+        xlog::error("Cannot get video adapters: %s", e.what());
+    }
+    if (selected_idx != -1)
+        m_adapterCombo.SetCurSel(selected_idx);
+    m_adapterCombo.Detach();
+}
+
+void OptionsDlg::UpdateResolutionCombo()
 {
     CString buf;
     int selectedRes = -1;
-    try
-    {
-        auto resolutions = m_videoInfo.get_resolutions(D3DFMT_X8R8G8B8);
-        for (const auto &res : resolutions)
-        {
+    m_resCombo.Clear();
+    try {
+        auto resolutions = m_videoInfo.get_resolutions(m_conf.selected_video_card, D3DFMT_X8R8G8B8);
+        for (const auto &res : resolutions) {
             buf.Format("%dx%d", res.width, res.height);
             int pos = m_resCombo.AddString(buf);
             if (m_conf.res_width == res.width && m_conf.res_height == res.height)
                 selectedRes = pos;
         }
     }
-    catch (std::exception &e)
-    {
+    catch (std::exception &e) {
         // Only 'Disabled' option available. Log error in console.
-        printf("Cannot get available screen resolutions: %s", e.what());
+        xlog::error("Cannot get available screen resolutions: %s", e.what());
     }
     if (selectedRes != -1)
         m_resCombo.SetCurSel(selectedRes);
-    else
-    {
+    else {
         char buf[32];
         sprintf(buf, "%dx%d", m_conf.res_width, m_conf.res_height);
         m_resCombo.SetWindowTextA(buf);
     }
 }
 
-void OptionsDlg::InitMsaaCombo()
+void OptionsDlg::UpdateMsaaCombo()
 {
+    m_msaaCombo.Clear();
     m_msaaCombo.AddString("Disabled");
     int selectedMsaa = 0;
     m_multiSampleTypes.push_back(0);
-    try
-    {
-        auto multiSampleTypes = m_videoInfo.get_multisample_types(D3DFMT_X8R8G8B8, FALSE);
-        for (auto msaa : multiSampleTypes)
-        {
+    try {
+        auto multiSampleTypes = m_videoInfo.get_multisample_types(m_conf.selected_video_card, D3DFMT_X8R8G8B8, FALSE);
+        for (auto msaa : multiSampleTypes) {
             char buf[16];
             sprintf(buf, "MSAAx%u", msaa);
             int idx = m_msaaCombo.AddString(buf);
@@ -136,26 +153,25 @@ void OptionsDlg::InitMsaaCombo()
             m_multiSampleTypes.push_back(msaa);
         }
     }
-    catch (std::exception &e)
-    {
-        printf("Cannot check available MSAA modes: %s", e.what());
+    catch (std::exception &e) {
+        xlog::error("Cannot check available MSAA modes: %s", e.what());
     }
     m_msaaCombo.SetCurSel(selectedMsaa);
 }
 
-void OptionsDlg::InitAnisotropyCheckbox()
+void OptionsDlg::UpdateAnisotropyCheckbox()
 {
     bool anisotropySupported = false;
-    try
-    {
-        anisotropySupported = m_videoInfo.has_anisotropy_support();
+    try {
+        anisotropySupported = m_videoInfo.has_anisotropy_support(m_conf.selected_video_card);
     }
-    catch (std::exception &e)
-    {
-        printf("Cannot check anisotropy support: %s", e.what());
+    catch (std::exception &e) {
+        xlog::error("Cannot check anisotropy support: %s", e.what());
     }
-    if (anisotropySupported)
+    if (anisotropySupported) {
+        GetDlgItem(IDC_ANISOTROPIC_CHECK).EnableWindow(TRUE);
         CheckDlgButton(IDC_ANISOTROPIC_CHECK, m_conf.anisotropic_filtering ? BST_CHECKED : BST_UNCHECKED);
+    }
     else
         GetDlgItem(IDC_ANISOTROPIC_CHECK).EnableWindow(FALSE);
 }
@@ -214,12 +230,29 @@ BOOL OptionsDlg::OnCommand(WPARAM wparam, LPARAM lparam)
     return FALSE;
 }
 
+LRESULT OptionsDlg::OnNotify([[ maybe_unused ]] WPARAM wparam, LPARAM lparam)
+{
+    auto& nmhdr = *reinterpret_cast<LPNMHDR>(lparam);
+    switch (nmhdr.code) {
+    case CBN_SELCHANGE:
+        if (nmhdr.idFrom == IDC_ADAPTER_COMBO) {
+            UpdateResolutionCombo();
+            UpdateMsaaCombo();
+            UpdateAnisotropyCheckbox();
+        }
+        break;
+    }
+    return 0;
+}
+
 void OptionsDlg::OnBnClickedOk()
 {
     CString str;
 
     str = GetDlgItemTextA(IDC_EXE_PATH_EDIT);
     m_conf.game_executable_path = str;
+
+    m_conf.selected_video_card = m_adapterCombo.GetCurSel();
 
     str = GetDlgItemTextA(IDC_RESOLUTIONS_COMBO);
     char *ptr = (char*)(const char *)str;
