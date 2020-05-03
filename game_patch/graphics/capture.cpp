@@ -257,9 +257,60 @@ struct MeshMaterial
 static_assert(sizeof(MeshMaterial) == 0xC8);
 
 static auto& AnimMeshGetMaterialsArray = AddrAsRef<void(AnimMesh *anim_mesh, int *num_materials_out, MeshMaterial **materials_array_out)>(0x00503650);
-
 }
 
+FunHook<void(rf::ClutterMonitor&)> MonitorRenderOffState_hook{
+    0x00412410,
+    [](rf::ClutterMonitor& mon) {
+        // monitor is no longer displaying view from camera so its texture usage must be changed
+        // from render target to dynamic texture
+        MakeSureMonitorBitmapIsDynamic(mon);
+        MonitorRenderOffState_hook.CallTarget(mon);
+    },
+};
+
+#if 1
+inline bool GenerateStaticNoise()
+{
+    static int noise_buf;
+    static int counter = 0;
+    if (counter == 0)
+        noise_buf = std::rand();
+    bool white = noise_buf & 1;
+    noise_buf >>= 1;
+    // assume rand() returns 15-bit long random number
+    counter = (counter + 1) % 15;
+    return white;
+}
+
+FunHook<void(rf::ClutterMonitor&)> MonitorRenderNoise_hook{
+    0x00412370,
+    [](rf::ClutterMonitor& mon) {
+        // No longer use render target texture
+        MakeSureMonitorBitmapIsDynamic(mon);
+        // Use custom noise generation algohritm because the default one is not uniform enough in high resolution
+        rf::GrLockData lock;
+        auto pixel_size = GetPixelFormatSize(lock.pixel_format);
+        if (rf::GrLock(mon.bitmap, 0, &lock, 0)) {
+            for (int y = 0; y < lock.height; ++y) {
+                auto ptr = lock.bits + y * lock.pitch;
+                for (int x = 0; x < lock.width; ++x) {
+                    bool white = GenerateStaticNoise();
+                    // support 32-bit textures
+                    if (pixel_size == 4) {
+                        *reinterpret_cast<int32_t*>(ptr) = white ? 0 : -1;
+                    }
+                    else {
+                        *reinterpret_cast<int16_t*>(ptr) = white ? 0 : -1;
+                    }
+                    ptr += pixel_size;
+                }
+            }
+            rf::GrUnlock(&lock);
+        }
+    },
+};
+#else
 void ReplaceMonitorScreenBitmap(rf::ClutterMonitor& mon, int hbm)
 {
     auto clutter = rf::ObjGetFromHandle(mon.clutter_handle);
@@ -276,16 +327,6 @@ void ReplaceMonitorScreenBitmap(rf::ClutterMonitor& mon, int hbm)
     }
 }
 
-FunHook<void(rf::ClutterMonitor&)> MonitorRenderOffState_hook{
-    0x00412410,
-    [](rf::ClutterMonitor& mon) {
-        // monitor is no longer displaying view from camera so its texture usage must be changed
-        // from render target to dynamic texture
-        MakeSureMonitorBitmapIsDynamic(mon);
-        MonitorRenderOffState_hook.CallTarget(mon);
-    },
-};
-
 FunHook<void(rf::ClutterMonitor&)> MonitorRenderNoise_hook{
     0x00412370,
     [](rf::ClutterMonitor& mon) {
@@ -301,6 +342,7 @@ FunHook<void(rf::ClutterMonitor&)> MonitorRenderNoise_hook{
         //MonitorRenderNoise_hook.CallTarget(mon);
     },
 };
+#endif
 
 CodeInjection monitor_render_from_camera_start_render_to_texture{
     0x00412860,
