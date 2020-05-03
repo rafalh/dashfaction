@@ -42,6 +42,8 @@ Version 1.4.2
 - add UPnP automatic port forwarding
 - add 'download_level' command
 - improve alghoritm for selecting texture D3D format (should reduce VRAM usage)
+- add 'Rate' setting in Options window (allows specifying network connection speed)
+- add 'Adapter' setting in Options window (allows selection of graphics card)
 - fix sending crash reports
 - fix non-working face scrolling before first geomod use in custom levels (RF bug)
 - fix memory and VRAM leak when quick saving (RF bug)
