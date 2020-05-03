@@ -181,7 +181,7 @@ int TryToFreeDsChannel(float volume)
     }
     // Free channel with the lowest volume and use it for new sound
     if (chnl_id > 0 && rf::ds_channels[chnl_id].volume <= volume) {
-        xlog::info("Freeing sound channel %d to make place for a new sound (volume %.4f duration %.1f)", chnl_id,
+        xlog::debug("Freeing sound channel %d to make place for a new sound (volume %.4f duration %.1f)", chnl_id,
             rf::ds_channels[chnl_id].volume, rf::SndDsEstimateDuration(rf::ds_channels[chnl_id].buf_id));
         rf::SndDsCloseChannel(chnl_id);
     }

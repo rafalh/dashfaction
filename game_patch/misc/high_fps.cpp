@@ -352,7 +352,7 @@ FunHook<rf::ParticleEmitter*(int, rf::ParticleEmitterType&, rf::RflRoom*, rf::Ve
     [](int objh, rf::ParticleEmitterType& type, rf::RflRoom* room, rf::Vector3& pos, bool is_on) {
         float min_spawn_delay = 1.0f / 60.0f;
         if ((type.flags & rf::PEF_CONTINOUS) || type.min_spawn_delay < min_spawn_delay) {
-            xlog::info("Particle emitter spawn delay is too small: %.2f. Increasing to %.2f...", type.min_spawn_delay, min_spawn_delay);
+            xlog::debug("Particle emitter spawn delay is too small: %.2f. Increasing to %.2f...", type.min_spawn_delay, min_spawn_delay);
             rf::ParticleEmitterType new_type = type;
             new_type.flags &= ~rf::PEF_CONTINOUS;
             new_type.min_spawn_delay = std::max(new_type.min_spawn_delay, min_spawn_delay);
