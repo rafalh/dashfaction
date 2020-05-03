@@ -431,6 +431,18 @@ CodeInjection explosion_crash_fix{
     },
 };
 
+void __fastcall HandleCtrlInGame_TimerSet_New(rf::Timer* fire_wait_timer, int, int value)
+{
+    if (!fire_wait_timer->IsSet() || fire_wait_timer->GetTimeLeftMs() < value) {
+        fire_wait_timer->Set(value);
+    }
+}
+
+CallHook<void __fastcall(rf::Timer*, int, int)> HandleCtrlInGame_TimerSet_fire_wait_patch{
+    {0x004A62C2u, 0x004A6325u},
+    &HandleCtrlInGame_TimerSet_New,
+};
+
 void MiscAfterLevelLoad(const char* level_filename)
 {
     DoLevelSpecificEventHacks(level_filename);
@@ -583,6 +595,10 @@ void MiscInit()
     if (!g_game_config.reduced_speed_in_background) {
         WriteMem<u8>(0x004353CC, asm_opcodes::jmp_rel_short);
     }
+
+    // Fix setting fire wait timer when closing weapon switch menu
+    // Note: this timer makes sense for weapons that require holding (not clicking) the control to fire (e.g. shotgun)
+    HandleCtrlInGame_TimerSet_fire_wait_patch.Install();
 
     // Init cmd line param
     GetUrlCmdLineParam();

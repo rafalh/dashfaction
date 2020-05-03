@@ -49,6 +49,11 @@ public:
         CallHookImpl(call_op_addr, reinterpret_cast<void*>(hook_fun_ptr))
     {}
 
+    template<unsigned N>
+    CallHook(uintptr_t (&&call_op_addr)[N], FunType* hook_fun_ptr) :
+        CallHookImpl(call_op_addr[0], reinterpret_cast<void*>(hook_fun_ptr))
+    {}
+
     R CallTarget(A... a) const
     {
         auto target_fun = reinterpret_cast<FunType*>(m_target_fun_ptr);
@@ -65,6 +70,11 @@ private:
 public:
     CallHook(uintptr_t call_op_addr, FunType* hook_fun_ptr) :
         CallHookImpl(call_op_addr, reinterpret_cast<void*>(hook_fun_ptr))
+    {}
+
+    template<unsigned N>
+    CallHook(uintptr_t (&&call_op_addr)[N], FunType* hook_fun_ptr) :
+        CallHookImpl(call_op_addr[0], reinterpret_cast<void*>(hook_fun_ptr))
     {}
 
     R CallTarget(A... a) const

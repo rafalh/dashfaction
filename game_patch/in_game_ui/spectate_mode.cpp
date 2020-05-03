@@ -198,9 +198,9 @@ bool SpectateModeHandleCtrlInGame(rf::GameCtrl key_id, bool was_pressed)
 
 FunHook<void(rf::Player*, rf::GameCtrl, bool)> HandleCtrlInGame_hook{
     0x004A6210,
-    [](rf::Player* player, rf::GameCtrl key_id, bool was_pressed) {
-        if (!SpectateModeHandleCtrlInGame(key_id, was_pressed)) {
-            HandleCtrlInGame_hook.CallTarget(player, key_id, was_pressed);
+    [](rf::Player* player, rf::GameCtrl ctrl, bool was_pressed) {
+        if (!SpectateModeHandleCtrlInGame(ctrl, was_pressed)) {
+            HandleCtrlInGame_hook.CallTarget(player, ctrl, was_pressed);
         }
     },
 };
