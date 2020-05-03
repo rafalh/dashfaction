@@ -71,6 +71,7 @@ Version 1.4.2
 - fix swap_assault_rifle_controls cvar issues with stopping the fire and shooting from vehicles
 - fix team scores in TDM
 - fix auto-detection of Steam based Red Faction installation directory
+- fix crash if camera cannot be restored to first-person mode after cutscene (RF bug)
 
 Version 1.4.1 (released 2019-12-07)
 -----------------------------------

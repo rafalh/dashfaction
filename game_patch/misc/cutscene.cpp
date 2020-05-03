@@ -1,4 +1,5 @@
 #include <patch_common/FunHook.h>
+#include <patch_common/CallHook.h>
 #include <algorithm>
 #include "../console/console.h"
 #include "../rf/player.h"
@@ -87,6 +88,16 @@ FunHook<void(bool)> MenuInGameUpdateCutscene_hook{
     },
 };
 
+CallHook<bool(rf::Camera*)> CutsceneWhenOver_CameraSetFirstPerson_hook{
+    0x0045BDBD,
+    [](rf::Camera* camera) {
+        if (!CutsceneWhenOver_CameraSetFirstPerson_hook.CallTarget(camera)) {
+            rf::CameraSetFixed(camera);
+        }
+        return true;
+    },
+};
+
 DcCommand2 skip_cutscene_bind_cmd{
     "skip_cutscene_bind",
     [](std::string bind_name) {
@@ -115,4 +126,7 @@ void ApplyCutscenePatches()
     // Support skipping cutscenes
     MenuInGameUpdateCutscene_hook.Install();
     skip_cutscene_bind_cmd.Register();
+
+    // Fix crash if camera cannot be restored to first-person mode after cutscene
+    CutsceneWhenOver_CameraSetFirstPerson_hook.Install();
 }
