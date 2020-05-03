@@ -54,7 +54,15 @@ inline void ConvertPixel_RGB565_To_RGBA8(uint8_t*& dst_ptr, const uint8_t*& src_
     *(dst_ptr++) = 255;
 }
 
-inline void ConvertPixel_MONO8_To_RGBA8(uint8_t*& dst_ptr, const uint8_t*& src_ptr, const uint8_t* palette)
+inline void ConvertPixel_A8_To_RGBA8(uint8_t*& dst_ptr, const uint8_t*& src_ptr)
+{
+    *(dst_ptr++) = 0; // B
+    *(dst_ptr++) = 0; // G
+    *(dst_ptr++) = 0; // R
+    *(dst_ptr++) = *(src_ptr++); // A
+}
+
+inline void ConvertPixel_INDEXED_To_RGBA8(uint8_t*& dst_ptr, const uint8_t*& src_ptr, const uint8_t* palette)
 {
     const auto& clr = &palette[3 * *(src_ptr++)];
     *(dst_ptr++) = clr[0]; // B
@@ -73,29 +81,33 @@ bool ConvertPixelFormat(uint8_t*& dst_ptr, rf::BmPixelFormat dst_fmt, const uint
         src_ptr += pixel_size;
         return true;
     }
-    if (dst_fmt != rf::BMPF_8888) {
+    if (dst_fmt != rf::BMPF_RGBA_8888) {
         xlog::error("unsupported dest pixel format %d (ConvertPixelFormat)", dst_fmt);
         return false;
     }
     switch (src_fmt) {
-    case rf::BMPF_888:
+    case rf::BMPF_RGB_888:
         ConvertPixel_RGB8_To_RGBA8(dst_ptr, src_ptr);
         return true;
-    case rf::BMPF_4444:
+    case rf::BMPF_RGBA_4444:
         ConvertPixel_RGBA4_To_RGBA8(dst_ptr, src_ptr);
         return true;
-    case rf::BMPF_565:
+    case rf::BMPF_RGB_565:
         ConvertPixel_RGB565_To_RGBA8(dst_ptr, src_ptr);
         return true;
-    case rf::BMPF_1555:
+    case rf::BMPF_RGBA_1555:
         ConvertPixel_ARGB1555_To_RGBA8(dst_ptr, src_ptr);
         return true;
-    case rf::BMPF_MONO8:
+    case rf::BMPF_A_8:
+        ConvertPixel_A8_To_RGBA8(dst_ptr, src_ptr);
+        return true;
+    case rf::BMPF_BGR_888_INDEXED:
         if (!palette) {
             return false;
         }
-        ConvertPixel_MONO8_To_RGBA8(dst_ptr, src_ptr, palette);
+        ConvertPixel_INDEXED_To_RGBA8(dst_ptr, src_ptr, palette);
         return true;
+
     default:
         xlog::error("unsupported src pixel format %d", src_fmt);
         return false;
@@ -114,10 +126,10 @@ bool ConvertBitmapFormat(uint8_t* dst_bits_ptr, rf::BmPixelFormat dst_fmt, const
         }
         return true;
     }
-    if (dst_fmt != rf::BMPF_8888)
+    if (dst_fmt != rf::BMPF_RGBA_8888)
         return false;
     switch (src_fmt) {
-    case rf::BMPF_888:
+    case rf::BMPF_RGB_888:
         for (int y = 0; y < height; ++y) {
             uint8_t* dst_ptr = dst_bits_ptr;
             const uint8_t* src_ptr = src_bits_ptr;
@@ -131,7 +143,7 @@ bool ConvertBitmapFormat(uint8_t* dst_bits_ptr, rf::BmPixelFormat dst_fmt, const
             src_bits_ptr += src_pitch;
         }
         return true;
-    case rf::BMPF_4444:
+    case rf::BMPF_RGBA_4444:
         for (int y = 0; y < height; ++y) {
             uint8_t* dst_ptr = dst_bits_ptr;
             const uint8_t* src_ptr = src_bits_ptr;
@@ -140,7 +152,7 @@ bool ConvertBitmapFormat(uint8_t* dst_bits_ptr, rf::BmPixelFormat dst_fmt, const
             src_bits_ptr += src_pitch;
         }
         return true;
-    case rf::BMPF_1555:
+    case rf::BMPF_RGBA_1555:
         for (int y = 0; y < height; ++y) {
             uint8_t* dst_ptr = dst_bits_ptr;
             const uint8_t* src_ptr = src_bits_ptr;
@@ -149,7 +161,7 @@ bool ConvertBitmapFormat(uint8_t* dst_bits_ptr, rf::BmPixelFormat dst_fmt, const
             src_bits_ptr += src_pitch;
         }
         return true;
-    case rf::BMPF_565:
+    case rf::BMPF_RGB_565:
         for (int y = 0; y < height; ++y) {
             uint8_t* dst_ptr = dst_bits_ptr;
             const uint8_t* src_ptr = src_bits_ptr;
@@ -158,14 +170,23 @@ bool ConvertBitmapFormat(uint8_t* dst_bits_ptr, rf::BmPixelFormat dst_fmt, const
             src_bits_ptr += src_pitch;
         }
         return true;
-    case rf::BMPF_MONO8:
+    case rf::BMPF_A_8:
+        for (int y = 0; y < height; ++y) {
+            uint8_t* dst_ptr = dst_bits_ptr;
+            const uint8_t* src_ptr = src_bits_ptr;
+            for (int x = 0; x < width; ++x) ConvertPixel_A8_To_RGBA8(dst_ptr, src_ptr);
+            dst_bits_ptr += dst_pitch;
+            src_bits_ptr += src_pitch;
+        }
+        return true;
+    case rf::BMPF_BGR_888_INDEXED:
         if (!palette) {
             return false;
         }
         for (int y = 0; y < height; ++y) {
             uint8_t* dst_ptr = dst_bits_ptr;
             const uint8_t* src_ptr = src_bits_ptr;
-            for (int x = 0; x < width; ++x) ConvertPixel_MONO8_To_RGBA8(dst_ptr, src_ptr, palette);
+            for (int x = 0; x < width; ++x) ConvertPixel_INDEXED_To_RGBA8(dst_ptr, src_ptr, palette);
             dst_bits_ptr += dst_pitch;
             src_bits_ptr += src_pitch;
         }
@@ -193,7 +214,7 @@ CodeInjection RflLoadLightmaps_color_conv_patch{
             lightmap->buf[i] = std::max(lightmap->buf[i], (uint8_t)(4 << 3)); // 32
     #endif
 
-        bool success = ConvertBitmapFormat(lock_data.bits, lock_data.pixel_format, lightmap->buf, rf::BMPF_888, lightmap->w,
+        bool success = ConvertBitmapFormat(lock_data.bits, lock_data.pixel_format, lightmap->buf, rf::BMPF_RGB_888, lightmap->w,
                                            lightmap->h, lock_data.pitch, 3 * lightmap->w, nullptr, true);
         if (!success)
             xlog::error("ConvertBitmapFormat failed for lightmap");
@@ -202,7 +223,7 @@ CodeInjection RflLoadLightmaps_color_conv_patch{
     },
 };
 
-CodeInjection GeoModGenerateTexture_color_conv_patch{
+CodeInjection FaceLightingData_CalculateLightmap_color_conv_patch{
     0x004F2F23,
     [](auto& regs) {
         // Always skip original code
@@ -223,7 +244,7 @@ CodeInjection GeoModGenerateTexture_color_conv_patch{
         uint8_t* dst_data = &lock_data.bits[dst_pixel_size * offset_x + offset_y * lock_data.pitch];
         int height = StructFieldRef<int>(face_light_info, 28);
         int src_pitch = 3 * src_width;
-        bool success = ConvertBitmapFormat(dst_data, lock_data.pixel_format, src_data, rf::BMPF_888, src_width, height,
+        bool success = ConvertBitmapFormat(dst_data, lock_data.pixel_format, src_data, rf::BMPF_RGB_888, src_width, height,
                                            lock_data.pitch, src_pitch);
         if (!success)
             xlog::error("ConvertBitmapFormat failed for geomod (fmt %d)", lock_data.pixel_format);
@@ -231,7 +252,7 @@ CodeInjection GeoModGenerateTexture_color_conv_patch{
     },
 };
 
-CodeInjection GeoModGenerateLightmap_color_conv_patch{
+CodeInjection FaceLightingData_AllocLightmap_color_conv_patch{
     0x004E487B,
     [](auto& regs) {
         // Skip original code
@@ -254,7 +275,7 @@ CodeInjection GeoModGenerateLightmap_color_conv_patch{
         int dst_pixel_size = GetPixelFormatSize(lock_data.pixel_format);
         uint8_t* dst_row_ptr = &lock_data.bits[dst_pixel_size * offset_x + offset_y * lock_data.pitch];
         int src_pitch = 3 * src_width;
-        bool success = ConvertBitmapFormat(dst_row_ptr, lock_data.pixel_format, src_data, rf::BMPF_888, src_width,
+        bool success = ConvertBitmapFormat(dst_row_ptr, lock_data.pixel_format, src_data, rf::BMPF_RGB_888, src_width,
                                            height, lock_data.pitch, src_pitch);
         if (!success)
             xlog::error("ConvertBitmapFormat failed for geomod2 (fmt %d)", lock_data.pixel_format);
@@ -328,7 +349,7 @@ CodeInjection GetAmbientColorFromLightmaps_color_conv_patch{
             uint32_t raw_color; // color in D3DFMT_A8R8G8B8 (MSB belongs to Alpha, LSB belongs to Blue)
             auto dst_ptr = reinterpret_cast<uint8_t*>(&raw_color);
             // Note: GrLock never returns indexed bitmap
-            ConvertPixelFormat(dst_ptr, rf::BMPF_8888, src_ptr, lock_data.pixel_format, nullptr);
+            ConvertPixelFormat(dst_ptr, rf::BMPF_RGBA_8888, src_ptr, lock_data.pixel_format, nullptr);
             rf::GrUnlock(&lock_data);
             color.SetRGBA(
                 (raw_color >> 16) & 0xFF,
@@ -348,7 +369,7 @@ FunHook<unsigned()> BinkInitDeviceInfo_hook{
 
         if (g_game_config.true_color_textures && g_game_config.res_bpp == 32) {
             static auto& bink_bm_pixel_fmt = AddrAsRef<uint32_t>(0x018871C0);
-            bink_bm_pixel_fmt = rf::BMPF_888;
+            bink_bm_pixel_fmt = rf::BMPF_RGB_888;
             bink_flags = BINKSURFACE32;
         }
 
@@ -402,8 +423,8 @@ void GrColorInit()
         // lightmaps
         RflLoadLightmaps_color_conv_patch.Install();
         // geomod
-        GeoModGenerateTexture_color_conv_patch.Install();
-        GeoModGenerateLightmap_color_conv_patch.Install();
+        FaceLightingData_CalculateLightmap_color_conv_patch.Install();
+        FaceLightingData_AllocLightmap_color_conv_patch.Install();
         // water
         AsmWriter(0x004E68B0, 0x004E68B6).nop();
         WaterGenerateTexture_color_conv_patch.Install();

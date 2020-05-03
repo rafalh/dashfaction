@@ -6,15 +6,16 @@ namespace rf
 {
     enum BmPixelFormat
     {
+        // All formats are listed from left to right, most-significant bit to least-significant bit as in D3DFORMAT
         BMPF_INVALID = 0x0,
-        BMPF_MONO8 = 0x1,
-        BMPF_UNK_2_8B = 0x2,
-        BMPF_565 = 0x3,
-        BMPF_4444 = 0x4,
-        BMPF_1555 = 0x5,
-        BMPF_888 = 0x6,
-        BMPF_8888 = 0x7,
-        BMPF_UNK_8_16B = 0x8,
+        BMPF_BGR_888_INDEXED = 0x1,
+        BMPF_A_8 = 0x2,
+        BMPF_RGB_565 = 0x3,
+        BMPF_RGBA_4444 = 0x4,
+        BMPF_RGBA_1555 = 0x5,
+        BMPF_RGB_888 = 0x6,
+        BMPF_RGBA_8888 = 0x7,
+        BMPF_UNK_8_16BIT = 0x8, // not supported by D3D routines
     };
 
     enum BmBitmapType

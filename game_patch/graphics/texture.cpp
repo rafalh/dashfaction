@@ -76,6 +76,7 @@ int GetSurfacePitch(int w, D3DFORMAT d3d_fmt)
     switch (d3d_fmt) {
         case D3DFMT_A8R8G8B8:
         case D3DFMT_X8R8G8B8:
+        case D3DFMT_A2B10G10R10:
             return w * 4;
         case D3DFMT_R8G8B8:
             return w * 3;
@@ -83,7 +84,12 @@ int GetSurfacePitch(int w, D3DFORMAT d3d_fmt)
         case D3DFMT_X1R5G5B5:
         case D3DFMT_A1R5G5B5:
         case D3DFMT_A4R4G4B4:
+        case D3DFMT_A8R3G3B2:
+        case D3DFMT_X4R4G4B4:
             return w * 2;
+        case D3DFMT_R3G3B2:
+        case D3DFMT_A8:
+            return w;
         case D3DFMT_DXT1:
             // 4x4 pixels per block, 64 bits per block
             return (w + 3) / 4 * 64 / 8;
