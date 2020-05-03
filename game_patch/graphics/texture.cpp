@@ -6,6 +6,7 @@
 #include <algorithm>
 #include "../rf/graphics.h"
 #include "../utils/string-utils.h"
+#include "../main.h"
 #include "gr_color.h"
 #include "graphics_internal.h"
 
@@ -71,6 +72,84 @@ constexpr rf::BmBitmapType dds_bm_type = static_cast<rf::BmBitmapType>(0x10);
 
 std::set<rf::GrTexture*> g_default_pool_tslots;
 
+class D3DTextureFormatSelector
+{
+    D3DFORMAT rgb_888_format_;
+    D3DFORMAT rgba_8888_format_;
+    D3DFORMAT rgb_565_format_;
+    D3DFORMAT argb_1555_format_;
+    D3DFORMAT argb_4444_format_;
+    D3DFORMAT a_8_format_;
+
+    template<size_t N>
+    D3DFORMAT find_best_format(D3DFORMAT (&&allowed)[N])
+    {
+        for (auto d3d_fmt : allowed) {
+            auto hr = rf::gr_d3d->CheckDeviceFormat(rf::gr_adapter_idx, D3DDEVTYPE_HAL, rf::gr_d3d_pp.BackBufferFormat, 0,
+                D3DRTYPE_TEXTURE, d3d_fmt);
+            if (SUCCEEDED(hr)) {
+                return d3d_fmt;
+            }
+        }
+        return D3DFMT_UNKNOWN;
+    }
+
+public:
+    void init()
+    {
+        if (g_game_config.res_bpp == 32 && g_game_config.true_color_textures) {
+            xlog::info("Using 32-bit texture formats");
+            rgb_888_format_ = find_best_format({D3DFMT_X8R8G8B8, D3DFMT_R5G6B5, D3DFMT_X1R5G5B5});
+            rgba_8888_format_ = find_best_format({D3DFMT_A8R8G8B8, D3DFMT_A4R4G4B4, D3DFMT_A1R5G5B5});
+            rgb_565_format_ = find_best_format({D3DFMT_R5G6B5, D3DFMT_X8R8G8B8, D3DFMT_X1R5G5B5});
+            argb_1555_format_ = find_best_format({D3DFMT_A1R5G5B5, D3DFMT_A8R8G8B8, D3DFMT_A4R4G4B4});
+            argb_4444_format_ = find_best_format({D3DFMT_A4R4G4B4, D3DFMT_A8R8G8B8, D3DFMT_A1R5G5B5});
+            a_8_format_ = find_best_format({D3DFMT_A8, D3DFMT_A8R8G8B8, D3DFMT_A4R4G4B4, D3DFMT_A1R5G5B5});
+        }
+        else {
+            xlog::info("Using 16-bit texture formats");
+            rgb_888_format_ = find_best_format({D3DFMT_R5G6B5, D3DFMT_X1R5G5B5});
+            rgba_8888_format_ = find_best_format({D3DFMT_A4R4G4B4, D3DFMT_A1R5G5B5});
+            rgb_565_format_ = find_best_format({D3DFMT_R5G6B5, D3DFMT_X1R5G5B5});
+            argb_1555_format_ = find_best_format({D3DFMT_A1R5G5B5, D3DFMT_A4R4G4B4});
+            argb_4444_format_ = find_best_format({D3DFMT_A4R4G4B4, D3DFMT_A1R5G5B5});
+            a_8_format_ = find_best_format({D3DFMT_A8, D3DFMT_A4R4G4B4, D3DFMT_A1R5G5B5});
+        }
+        xlog::debug("rgb_888_format %d", rgb_888_format_);
+        xlog::debug("rgba_8888_format %d", rgba_8888_format_);
+        xlog::debug("rgb_565_format %d", rgb_565_format_);
+        xlog::debug("argb_1555_format %d", argb_1555_format_);
+        xlog::debug("argb_4444_format %d", argb_4444_format_);
+        xlog::debug("a_8_format %d", a_8_format_);
+    }
+
+    D3DFORMAT select(rf::BmPixelFormat pixel_fmt)
+    {
+        if (static_cast<unsigned>(pixel_fmt) >= 0x10) {
+            return static_cast<D3DFORMAT>(pixel_fmt);
+        }
+        switch (pixel_fmt) {
+            case rf::BMPF_A_8:
+                return a_8_format_;
+            case rf::BMPF_BGR_888_INDEXED:
+                return rgb_888_format_;
+            case rf::BMPF_RGB_888:
+                return rgb_888_format_;
+            case rf::BMPF_RGB_565:
+                return rgb_565_format_;
+            case rf::BMPF_RGBA_1555:
+                return argb_1555_format_;
+            case rf::BMPF_RGBA_8888:
+                return rgba_8888_format_;
+            case rf::BMPF_RGBA_4444:
+                return argb_4444_format_;
+            default:
+                return D3DFMT_UNKNOWN;
+        }
+    }
+};
+D3DTextureFormatSelector g_texture_format_selector;
+
 int GetSurfacePitch(int w, D3DFORMAT d3d_fmt)
 {
     switch (d3d_fmt) {
@@ -117,6 +196,11 @@ int GetSurfaceNumRows(int h, D3DFORMAT d3d_fmt)
         default:
             return h;
     }
+}
+
+size_t GetSurfaceLengthInBytes(int w, int h, D3DFORMAT d3d_fmt)
+{
+    return GetSurfacePitch(w, d3d_fmt) * GetSurfaceNumRows(h, d3d_fmt);
 }
 
 using GrD3DSetTextureData_Type =
@@ -201,13 +285,17 @@ FunHook<int(rf::BmPixelFormat, int, int, int, IDirect3DTexture8**)> gr_d3d_creat
             d3d_format = static_cast<D3DFORMAT>(pixel_fmt);
         }
         else {
-            return gr_d3d_create_vram_texture_hook.CallTarget(pixel_fmt, width, height, levels, texture_out);
+            d3d_format = g_texture_format_selector.select(pixel_fmt);
+            if (d3d_format == D3DFMT_UNKNOWN) {
+                xlog::error("Failed to determine texture format for pixel format %u", d3d_format);
+                return -1;
+            }
         }
 
         xlog::trace("Creating texture in format %x", d3d_format);
         auto hr = rf::gr_d3d_device->CreateTexture(width, height, levels, usage, d3d_format, d3d_pool, texture_out);
         if (FAILED(hr)) {
-            xlog::error("Failed to create texture %dx%d in format %x", width, height, d3d_format);
+            xlog::error("Failed to create texture %dx%d in format %u", width, height, d3d_format);
             return -1;
         }
         return 0;
@@ -226,10 +314,10 @@ CodeInjection gr_d3d_create_vram_texture_with_mipmaps_pitch_fix{
 
         regs.eip = 0x0055B82E;
 
-        auto d3d_fmt = GetD3DFormatFromPixelFormat(pixel_fmt);
-        int total_surface_bytes = GetSurfacePitch(w, d3d_fmt) * GetSurfaceNumRows(h, d3d_fmt);
-        src_bits_ptr += total_surface_bytes;
-        num_total_vram_bytes += total_surface_bytes;
+        auto vram_tex_fmt = g_texture_format_selector.select(pixel_fmt);
+        auto src_d3d_fmt = GetD3DFormatFromPixelFormat(pixel_fmt);
+        src_bits_ptr += GetSurfaceLengthInBytes(w, h, src_d3d_fmt);
+        num_total_vram_bytes += GetSurfaceLengthInBytes(w, h, vram_tex_fmt);
     },
 };
 
@@ -510,4 +598,9 @@ void ChangeUserBitmapPixelFormat(int bmh, rf::BmPixelFormat pixel_fmt)
     auto& bm = rf::bm_bitmaps[bm_idx];
     assert(bm.bitmap_type == rf::BM_USERBMAP);
     bm.pixel_format = pixel_fmt;
+}
+
+void InitSupportedTextureFormats()
+{
+    g_texture_format_selector.init();
 }

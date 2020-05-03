@@ -41,6 +41,7 @@ Version 1.4.2
 - use port 7755 for server hosting when 'Force port' option is disabled
 - add UPnP automatic port forwarding
 - add 'download_level' command
+- improve alghoritm for selecting texture D3D format (should reduce VRAM usage)
 - fix sending crash reports
 - fix non-working face scrolling before first geomod use in custom levels (RF bug)
 - fix memory and VRAM leak when quick saving (RF bug)

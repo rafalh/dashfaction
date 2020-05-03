@@ -9,3 +9,4 @@ constexpr auto dynamic_texture_pixel_format = static_cast<rf::BmPixelFormat>(0x1
 void ReleaseAllDefaultPoolTextures();
 void DestroyTexture(int bmh);
 void ChangeUserBitmapPixelFormat(int bmh, rf::BmPixelFormat pixel_fmt);
+void InitSupportedTextureFormats();

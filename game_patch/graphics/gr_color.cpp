@@ -217,7 +217,7 @@ CodeInjection RflLoadLightmaps_color_conv_patch{
         bool success = ConvertBitmapFormat(lock_data.bits, lock_data.pixel_format, lightmap->buf, rf::BMPF_RGB_888, lightmap->w,
                                            lightmap->h, lock_data.pitch, 3 * lightmap->w, nullptr, true);
         if (!success)
-            xlog::error("ConvertBitmapFormat failed for lightmap");
+            xlog::error("ConvertBitmapFormat failed for lightmap (dest format %d)", lock_data.pixel_format);
 
         rf::GrUnlock(&lock_data);
     },
@@ -418,6 +418,7 @@ void GrColorInit()
         WriteMem<u32>(0x005A7E08, D3DFMT_A8R8G8B8); // old: D3DFMT_A4R4G4B4
         WriteMem<u32>(0x005A7E0C, D3DFMT_A4R4G4B4); // old: D3DFMT_A8R3G3B2
 
+        // use 32-bit texture for Bink rendering
         BinkInitDeviceInfo_hook.Install();
 
         // lightmaps
@@ -436,4 +437,6 @@ void GrColorInit()
     MonitorRenderNoise_patch.Install();
     // monitor off state
     MonitorRenderOffState_patch.Install();
+    // fix pixel format for lightmaps
+    WriteMem<u8>(0x004F5EB8 + 1, rf::BMPF_RGB_888);
 }

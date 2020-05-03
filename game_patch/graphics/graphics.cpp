@@ -1,4 +1,5 @@
 #include "graphics.h"
+#include "graphics_internal.h"
 #include "gr_color.h"
 #include "../console/console.h"
 #include "../main.h"
@@ -191,6 +192,8 @@ CodeInjection update_pp_hook{
 
         // Override depth format to avoid card specific hackfixes that makes it different on Nvidia and AMD
         rf::gr_d3d_pp.AutoDepthStencilFormat = DetermineDepthBufferFormat(format);
+
+        InitSupportedTextureFormats();
     },
 };
 
