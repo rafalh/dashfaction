@@ -322,7 +322,8 @@ private:
 
             out << StringFormat("%08X", buf[i]);
             col = (col + 1) % 8;
-            out << (col == 0 ? '\n' : ' ');
+            bool is_new_line = col == 0 || i + 1 == dwords_read;
+            out << (is_new_line ? '\n' : ' ');
         }
         out << std::endl;
     }
