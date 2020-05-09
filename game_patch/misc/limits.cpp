@@ -58,7 +58,7 @@ CodeInjection obj_create_find_slot_patch{
 
         int index_hint, min_index, max_index;
         bool use_low_index;
-        if (rf::is_local_net_game && (obj_type == rf::OT_ENTITY || obj_type == rf::OT_ITEM)) {
+        if (rf::is_server && (obj_type == rf::OT_ENTITY || obj_type == rf::OT_ITEM)) {
             // Use low object numbers server-side for entities and items for better client compatibility
             use_low_index = true;
             index_hint = low_index_hint;
@@ -68,7 +68,7 @@ CodeInjection obj_create_find_slot_patch{
         else {
             use_low_index = false;
             index_hint = high_index_hint;
-            min_index = rf::is_local_net_game ? old_obj_limit : 0;
+            min_index = rf::is_server ? old_obj_limit : 0;
             max_index = obj_limit - 1;
         }
 

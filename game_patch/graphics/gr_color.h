@@ -2,8 +2,6 @@
 
 #include "../rf/bmpman.h"
 #include <xlog/xlog.h>
-#include <windows.h>
-#include <d3d8.h>
 
 inline int GetPixelFormatSize(rf::BmPixelFormat pixel_fmt)
 {
@@ -24,6 +22,8 @@ inline int GetPixelFormatSize(rf::BmPixelFormat pixel_fmt)
         return 2;
     }
 }
+
+#ifdef DIRECT3D_VERSION
 
 inline D3DFORMAT GetD3DFormatFromPixelFormat(rf::BmPixelFormat pixel_fmt)
 {
@@ -75,6 +75,8 @@ inline rf::BmPixelFormat GetPixelFormatFromD3DFormat(D3DFORMAT d3d_fmt)
         return static_cast<rf::BmPixelFormat>(d3d_fmt);
     }
 }
+
+#endif
 
 void GrColorInit();
 bool ConvertBitmapFormat(uint8_t* dst_bits_ptr, rf::BmPixelFormat dst_fmt, const uint8_t* src_bits_ptr,

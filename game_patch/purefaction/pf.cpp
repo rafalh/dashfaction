@@ -12,7 +12,7 @@
 void process_pf_player_announce_packet(const void* data, size_t len, [[ maybe_unused ]] const rf::NwAddr& addr)
 {
     // Client-side packet
-    if (rf::is_local_net_game)
+    if (rf::is_server)
         return;
 
     if (len < sizeof(pf_player_announce_packet))
@@ -36,7 +36,7 @@ void process_pf_player_announce_packet(const void* data, size_t len, [[ maybe_un
 void process_pf_player_stats_packet(const void* data, size_t len, [[ maybe_unused ]] const rf::NwAddr& addr)
 {
     // Client-side packet
-    if (rf::is_local_net_game)
+    if (rf::is_server)
         return;
 
     if (len < sizeof(pf_player_announce_packet))
@@ -69,7 +69,7 @@ void process_pf_players_request_packet([[ maybe_unused ]] const void* data, [[ m
     xlog::trace("PF players_request packet");
 
     // Server-side packet
-    if (!rf::is_local_net_game) {
+    if (!rf::is_server) {
         return;
     }
 

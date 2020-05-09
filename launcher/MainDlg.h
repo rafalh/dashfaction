@@ -3,14 +3,15 @@
 #include <wxx_wincore.h>
 #include <wxx_dialog.h>
 #include <wxx_controls.h>
+#include <memory>
 
 class UpdateChecker;
 
 class MainDlg : public CDialog
 {
 public:
-    // Constructor
     MainDlg();
+    ~MainDlg();
 
 protected:
     BOOL OnInitDialog() override;
@@ -36,6 +37,6 @@ protected:
     CStatic m_update_status;
     CComboBox m_mod_selector;
 
-    UpdateChecker *m_pUpdateChecker;
-    CToolTip m_ToolTip;
+    std::unique_ptr<UpdateChecker> m_update_checker;
+    CToolTip m_tool_tip;
 };

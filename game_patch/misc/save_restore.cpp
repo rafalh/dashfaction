@@ -107,7 +107,7 @@ FunHook<void()> quick_save_hook{
     0x004B6160,
     []() {
         quick_save_hook.CallTarget();
-        bool server_side_saving_enabled = rf::is_net_game && !rf::is_local_net_game && GetDashFactionServerInfo()
+        bool server_side_saving_enabled = rf::is_multi && !rf::is_server && GetDashFactionServerInfo()
             && GetDashFactionServerInfo().value().saving_enabled;
         if (server_side_saving_enabled) {
             SendChatLinePacket("/save", nullptr);
@@ -119,7 +119,7 @@ FunHook<void()> quick_load_hook{
     0x004B6180,
     []() {
         quick_load_hook.CallTarget();
-        bool server_side_saving_enabled = rf::is_net_game && !rf::is_local_net_game && GetDashFactionServerInfo()
+        bool server_side_saving_enabled = rf::is_multi && !rf::is_server && GetDashFactionServerInfo()
             && GetDashFactionServerInfo().value().saving_enabled;
         if (server_side_saving_enabled) {
             SendChatLinePacket("/load", nullptr);

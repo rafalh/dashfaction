@@ -3,7 +3,7 @@
 #include <common/GameConfig.h>
 #include <functional>
 #include <map>
-#include "utils/utils.h"
+//#include <windows.h>
 #include "rf/common.h"
 
 // Forward declarations
@@ -11,7 +11,6 @@ namespace rf
 {
     struct Player;
 }
-
 
 struct PlayerNetGameSaveData
 {
@@ -32,4 +31,6 @@ void FindPlayer(const StringMatcher& query, std::function<void(rf::Player*)> con
 PlayerAdditionalData& GetPlayerAdditionalData(rf::Player* player);
 
 extern GameConfig g_game_config;
+#ifdef _WINDOWS_
 extern HMODULE g_hmodule;
+#endif

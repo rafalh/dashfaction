@@ -6,12 +6,10 @@
 #include <wxx_dialog.h>
 #include <wxx_controls.h>
 
-// OptionsDlg dialog
-
 class OptionsDlg : public CDialog
 {
 public:
-	OptionsDlg();   // standard constructor
+	OptionsDlg();
 
 protected:
     BOOL OnInitDialog() override;
@@ -31,12 +29,12 @@ private:
     void OnForcePortClick();
 
 private:
-    VideoDeviceInfoProvider m_videoInfo;
-    std::vector<unsigned> m_multiSampleTypes;
-    CToolTip m_toolTip;
+    VideoDeviceInfoProvider m_video_info;
+    std::vector<unsigned> m_multi_sample_types;
+    CToolTip m_tool_tip;
     GameConfig m_conf;
-    CComboBox m_adapterCombo;
-    CComboBox m_resCombo;
-    CComboBox m_msaaCombo;
-    CComboBox m_langCombo;
+    CComboBox m_adapter_combo;
+    CComboBox m_res_combo;
+    CComboBox m_msaa_combo;
+    CComboBox m_lang_combo;
 };

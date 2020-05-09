@@ -21,7 +21,7 @@ static auto& banlist_null_entry = AddrAsRef<BanlistEntry>(0x0064EC08);
 
 void BanCmdHandlerHook()
 {
-    if (rf::is_net_game && rf::is_local_net_game) {
+    if (rf::is_multi && rf::is_server) {
         if (rf::dc_run) {
             rf::DcGetArg(rf::DC_ARG_STR, true);
             rf::Player* player = FindBestMatchingPlayer(rf::dc_str_arg);
@@ -46,7 +46,7 @@ void BanCmdHandlerHook()
 
 void KickCmdHandlerHook()
 {
-    if (rf::is_net_game && rf::is_local_net_game) {
+    if (rf::is_multi && rf::is_server) {
         if (rf::dc_run) {
             rf::DcGetArg(rf::DC_ARG_STR, 1);
             rf::Player* player = FindBestMatchingPlayer(rf::dc_str_arg);
@@ -71,7 +71,7 @@ void KickCmdHandlerHook()
 DcCommand2 unban_last_cmd{
     "unban_last",
     []() {
-        if (rf::is_net_game && rf::is_local_net_game) {
+        if (rf::is_multi && rf::is_server) {
             rf::BanlistEntry* entry = rf::banlist_last_entry;
             if (entry != &rf::banlist_null_entry) {
                 rf::DcPrintf("%s has been unbanned!", entry->ip_addr);

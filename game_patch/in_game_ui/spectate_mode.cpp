@@ -60,7 +60,7 @@ void SpectateModeSetTargetPlayer(rf::Player* player)
     if (!rf::local_player || !rf::local_player->camera || !g_spectate_mode_target || g_spectate_mode_target == player)
         return;
 
-    if (rf::game_options & rf::GO_FORCE_RESPAWN) {
+    if (rf::multi_game_options & rf::MGO_FORCE_RESPAWN) {
         rf::String msg{"You cannot use Spectate Mode because Force Respawn option is enabled on this server!"};
         rf::String prefix;
         rf::ChatPrint(msg, rf::ChatMsgColor::white_white, prefix);
@@ -125,7 +125,7 @@ static void SpectateNextPlayer(bool dir, bool try_alive_players_first = false)
 
 void SpectateModeEnterFreeLook()
 {
-    if (!rf::local_player || !rf::local_player->camera || !rf::is_net_game)
+    if (!rf::local_player || !rf::local_player->camera || !rf::is_multi)
         return;
 
     rf::KillLocalPlayer();
@@ -134,7 +134,7 @@ void SpectateModeEnterFreeLook()
 
 bool SpectateModeIsFreeLook()
 {
-    if (!rf::local_player || !rf::local_player->camera || !rf::is_net_game)
+    if (!rf::local_player || !rf::local_player->camera || !rf::is_multi)
         return false;
 
     auto camera_type = rf::local_player->camera->type;
@@ -156,7 +156,7 @@ void SpectateModeLeave()
 
 bool SpectateModeHandleCtrlInGame(rf::GameCtrl key_id, bool was_pressed)
 {
-    if (!rf::is_net_game) {
+    if (!rf::is_multi) {
         return false;
     }
 
@@ -282,12 +282,12 @@ FunHook<bool(rf::Player*)> CanPlayerFire_hook{
 DcCommand2 spectate_cmd{
     "spectate",
     [](std::optional<std::string> player_name) {
-        if (!rf::is_net_game) {
+        if (!rf::is_multi) {
             rf::DcPrint("Spectate mode is only supported in multiplayer game!", nullptr);
             return;
         }
 
-        if (rf::game_options & rf::GO_FORCE_RESPAWN) {
+        if (rf::multi_game_options & rf::MGO_FORCE_RESPAWN) {
             rf::DcPrint("Spectate mode is disabled because of Force Respawn server option!", nullptr);
             return;
         }

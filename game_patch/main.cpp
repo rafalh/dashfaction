@@ -19,7 +19,7 @@
 #include "misc/packfile.h"
 #include "misc/wndproc.h"
 #include "misc/high_fps.h"
-#include "utils/utils.h"
+#include "utils/os-utils.h"
 #include "utils/list-utils.h"
 #include "server/server.h"
 #include "input/input.h"
@@ -131,7 +131,7 @@ CodeInjection after_frame_render_hook{
     []() {
         // Draw on top (after scene)
 
-        if (rf::is_net_game)
+        if (rf::is_multi)
             SpectateModeDrawUI();
 
         GraphicsDrawFpsCounter();

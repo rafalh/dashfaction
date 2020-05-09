@@ -1,3 +1,5 @@
+#include <windows.h>
+#include <d3d8.h>
 #include "gr_color.h"
 #include "../main.h"
 #include "../rf/graphics.h"

@@ -1,28 +1,18 @@
-
-// MainDlg.cpp : implementation file
-//
-
-#include "stdafx.h"
-
-#include <common/GameConfig.h>
-#include "LauncherApp.h"
 #include "MainDlg.h"
+#include "LauncherApp.h"
 #include "OptionsDlg.h"
 #include "AboutDlg.h"
+#include <wxx_wincore.h>
+#include <xlog/xlog.h>
+#include <cstring>
 #include <common/version.h>
 #include <common/ErrorUtils.h>
-#include <xlog/xlog.h>
 #include <launcher_common/PatchedAppLauncher.h>
 #include <launcher_common/UpdateChecker.h>
-#include <wxx_wincore.h>
-#include <wxx_dialog.h>
-#include <cstring>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
-
-// MainDlg dialog
 
 #define WM_UPDATE_CHECK (WM_USER + 10)
 
@@ -30,7 +20,9 @@ MainDlg::MainDlg() : CDialog(IDD_MAIN)
 {
 }
 
-// MainDlg message handlers
+MainDlg::~MainDlg()
+{
+}
 
 BOOL MainDlg::OnInitDialog()
 {
@@ -53,14 +45,12 @@ BOOL MainDlg::OnInitDialog()
     // Fill mod selector
     RefreshModSelector();
 
-    m_ToolTip.Create(*this);
-    m_ToolTip.AddTool(m_mod_selector, "Select a game mod (you can download them from FactionFiles.com)");
+    m_tool_tip.Create(*this);
+    m_tool_tip.AddTool(m_mod_selector, "Select a game mod (you can download them from FactionFiles.com)");
 
 #ifdef NDEBUG
-    m_pUpdateChecker = new UpdateChecker(*this);
-    m_pUpdateChecker->check_async([=]() { PostMessageA(WM_UPDATE_CHECK, 0, 0); });
-#else
-    m_pUpdateChecker = nullptr;
+    m_update_checker = std::make_unique<UpdateChecker>(*this);
+    m_update_checker->check_async([=]() { PostMessageA(WM_UPDATE_CHECK, 0, 0); });
 #endif
 
     return TRUE; // return TRUE  unless you set the focus to a control
@@ -76,8 +66,7 @@ BOOL MainDlg::OnCommand(WPARAM wparam, LPARAM lparam)
     UNREFERENCED_PARAMETER(lparam);
 
     UINT id = LOWORD(wparam);
-    switch (id)
-    {
+    switch (id) {
     case IDC_OPTIONS_BTN:
         OnBnClickedOptionsBtn();
         return TRUE;
@@ -147,25 +136,25 @@ void MainDlg::RefreshModSelector()
     m_mod_selector.SetWindowTextA(selected_mod);
 }
 
-LRESULT MainDlg::OnUpdateCheck(WPARAM wParam, LPARAM lParam)
+LRESULT MainDlg::OnUpdateCheck(WPARAM wparam, LPARAM lparam)
 {
-    UNREFERENCED_PARAMETER(wParam);
-    UNREFERENCED_PARAMETER(lParam);
+    UNREFERENCED_PARAMETER(wparam);
+    UNREFERENCED_PARAMETER(lparam);
 
-    if (m_pUpdateChecker->has_error()) {
+    if (m_update_checker->has_error()) {
         m_update_status.SetWindowText("Failed to check for update");
-        m_ToolTip.AddTool(m_update_status, m_pUpdateChecker->get_error().c_str());
+        m_tool_tip.AddTool(m_update_status, m_update_checker->get_error().c_str());
         return 0;
     }
 
-    if (!m_pUpdateChecker->is_new_version_available())
+    if (!m_update_checker->is_new_version_available())
         m_update_status.SetWindowText("No update is available.");
     else {
         m_update_status.SetWindowText("New version available!");
-        int result = MessageBoxA(m_pUpdateChecker->get_message().c_str(), "Dash Faction update is available!",
+        int result = MessageBoxA(m_update_checker->get_message().c_str(), "Dash Faction update is available!",
                                   MB_OKCANCEL | MB_ICONEXCLAMATION);
         if (result == IDOK) {
-            auto exec_ret = ShellExecuteA(*this, "open", m_pUpdateChecker->get_url().c_str(), NULL, NULL, SW_SHOW);
+            auto exec_ret = ShellExecuteA(*this, "open", m_update_checker->get_url().c_str(), NULL, NULL, SW_SHOW);
             if (reinterpret_cast<int>(exec_ret) <= 32) {
                 xlog::error("ShellExecuteA failed %p", exec_ret);
             }
@@ -191,8 +180,8 @@ void MainDlg::OnBnClickedOptionsBtn()
 
 void MainDlg::OnBnClickedOk()
 {
-    if (m_pUpdateChecker)
-        m_pUpdateChecker->abort();
+    if (m_update_checker)
+        m_update_checker->abort();
 
     CString selected_mod = GetSelectedMod();
 
@@ -202,8 +191,8 @@ void MainDlg::OnBnClickedOk()
 
 void MainDlg::OnBnClickedEditorBtn()
 {
-    if (m_pUpdateChecker)
-        m_pUpdateChecker->abort();
+    if (m_update_checker)
+        m_update_checker->abort();
 
     CStringA selected_mod = GetSelectedMod();
     if (GetLauncherApp()->LaunchEditor(*this, selected_mod))

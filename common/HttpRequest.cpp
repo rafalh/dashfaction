@@ -12,7 +12,7 @@ struct ParsedUrl
     std::string resource;
 };
 
-static ParsedUrl parseHttpUrl(std::string_view url)
+static ParsedUrl parse_http_url(std::string_view url)
 {
     ParsedUrl result;
     std::string_view http = "http://";
@@ -73,7 +73,7 @@ void HttpSession::set_receive_timeout(unsigned long timeout_ms)
 
 HttpRequest::HttpRequest(std::string_view url, const char* method, HttpSession& session)
 {
-    ParsedUrl parsed_url = parseHttpUrl(url);
+    ParsedUrl parsed_url = parse_http_url(url);
 
     HINTERNET inet = session.get_internet_handle();
     int port = parsed_url.ssl ? INTERNET_DEFAULT_HTTPS_PORT : INTERNET_DEFAULT_HTTP_PORT;

@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "resource.h"
 #include "AboutDlg.h"
 #include <wxx_wincore.h>
@@ -36,8 +35,7 @@ BOOL AboutDlg::OnInitDialog()
 LRESULT AboutDlg::OnNotify([[ maybe_unused ]] WPARAM wparam, LPARAM lparam)
 {
     auto& nmhdr = *reinterpret_cast<LPNMHDR>(lparam);
-    switch (nmhdr.code)
-    {
+    switch (nmhdr.code) {
     case NM_CLICK:
         // Fall through to the next case.
     case NM_RETURN:

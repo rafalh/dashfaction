@@ -1,3 +1,5 @@
+#include <windows.h>
+#include <d3d8.h>
 #include "graphics.h"
 #include "graphics_internal.h"
 #include "gr_color.h"
@@ -6,6 +8,7 @@
 #include "../rf/graphics.h"
 #include "../rf/player.h"
 #include "../rf/network.h"
+#include "../utils/com-utils.h"
 #include "../utils/string-utils.h"
 #include <common/BuildConfig.h>
 #include <patch_common/CallHook.h>
@@ -14,17 +17,6 @@
 #include <patch_common/ShortTypes.h>
 #include <patch_common/AsmWriter.h>
 #include <algorithm>
-
-namespace rf
-{
-
-static auto& gr_scale_vec = AddrAsRef<Vector3>(0x01818B48);
-static auto& gr_view_matrix = AddrAsRef<Matrix3>(0x018186C8);
-static auto& gr_d3d_device_caps = AddrAsRef<D3DCAPS8>(0x01CFCAC8);
-static auto& gr_default_wfar = AddrAsRef<float>(0x00596140);
-
-static auto& GrSetTextureMipFilter = AddrAsRef<void(bool linear)>(0x0050E830);
-} // namespace rf
 
 static float g_gr_clipped_geom_offset_x = -0.5;
 static float g_gr_clipped_geom_offset_y = -0.5;

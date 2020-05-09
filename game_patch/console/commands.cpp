@@ -31,7 +31,7 @@ DcCommand2 vli_cmd{
 DcCommand2 player_count_cmd{
     "playercount",
     []() {
-        if (!rf::is_net_game)
+        if (!rf::is_multi)
             return;
 
         auto player_list = SinglyLinkedList{rf::player_list};

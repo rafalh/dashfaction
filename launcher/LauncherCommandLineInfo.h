@@ -1,8 +1,9 @@
 #pragma once
 
 #include <wxx_wincore.h>
+#include <string_view>
 
-class LauncherCommandLineInfo //: public CCommandLineInfo
+class LauncherCommandLineInfo
 {
 public:
     void Parse()
@@ -15,13 +16,13 @@ public:
         }
     }
 
-    void ParseFlag(const char* flag_name)
+    void ParseFlag(std::string_view flag_name)
     {
-        if (!strcmp(flag_name, "game") || !strcmp(flag_name, "level") || !strcmp(flag_name, "dedicated"))
+        if (flag_name == "game" || flag_name == "level" || flag_name == "dedicated")
             m_game = true;
-        if (!strcmp(flag_name, "editor"))
+        if (flag_name == "editor")
             m_editor = true;
-        if (!strcmp(flag_name, "help") || !strcmp(flag_name, "h"))
+        if (flag_name == "help" || flag_name == "h")
             m_help = true;
     }
 

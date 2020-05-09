@@ -51,7 +51,7 @@ DcCommand2 debug_cmd{
     [](std::string type) {
 
 #ifdef NDEBUG
-        if (rf::is_net_game) {
+        if (rf::is_multi) {
             rf::DcPrintf("This command is disabled in multiplayer!");
             return;
         }

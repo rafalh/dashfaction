@@ -23,11 +23,11 @@ void LoadPrevLevel()
 {
     rf::level_rotation_idx--;
     if (rf::level_rotation_idx < 0) {
-        rf::level_rotation_idx = rf::server_level_list.Size() - 1;
+        rf::level_rotation_idx = rf::server_levels.Size() - 1;
     }
     if (g_prev_level.empty()) {
         // this is the first level running - use previous level from rotation
-        rf::MultiChangeLevel(rf::server_level_list.Get(rf::level_rotation_idx));
+        rf::MultiChangeLevel(rf::server_levels.Get(rf::level_rotation_idx));
     }
     else {
         rf::MultiChangeLevel(g_prev_level.c_str());
@@ -36,7 +36,7 @@ void LoadPrevLevel()
 
 bool ValidateIsServer()
 {
-    if (!rf::is_local_net_game) {
+    if (!rf::is_server) {
         rf::DcPrint("Command can be only executed on server", nullptr);
         return false;
     }

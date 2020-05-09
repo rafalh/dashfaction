@@ -48,7 +48,7 @@ FunHook<void(rf::TriggerObj*, int32_t, bool)> TriggerActivate_hook{
         // Check if this is Solo or Teleport trigger (REDPF feature)
         uint8_t ext_flags = trigger_name[0] == '\xAB' ? trigger_name[1] : 0;
         bool is_solo_trigger = (ext_flags & (TRIGGER_SOLO | TRIGGER_TELEPORT)) != 0;
-        if (rf::is_net_game && rf::is_local_net_game && is_solo_trigger && player) {
+        if (rf::is_multi && rf::is_server && is_solo_trigger && player) {
             // rf::DcPrintf("Solo/Teleport trigger activated %s", trigger_name);
             if (player != rf::local_player) {
                 SendTriggerActivatePacket(player, trigger->uid, h_entity);
@@ -60,7 +60,7 @@ FunHook<void(rf::TriggerObj*, int32_t, bool)> TriggerActivate_hook{
         }
 
         // Resets times set to 1 enabled late joiners support in Pure Faction
-        if (rf::is_net_game && rf::is_local_net_game && trigger->resets_times == 1) {
+        if (rf::is_multi && rf::is_server && trigger->resets_times == 1) {
             g_triggers_uids_for_late_joiners.push_back(trigger->uid);
         }
 

@@ -1,12 +1,6 @@
 #pragma once
 
 #include <string>
-#include <windows.h>
-
-// Only include D3D header if one has not been included before (fix for afx.h including d3d9 and DF using d3d8)
-#ifndef DIRECT3D_VERSION
-#include <d3d8.h>
-#endif
 
 inline const char DEFAULT_RF_TRACKER[] = "rfgt.factionfiles.com";
 inline const char DEFAULT_EXECUTABLE_PATH[] = "C:\\games\\RedFaction\\rf.exe";
@@ -22,7 +16,7 @@ struct GameConfig
     unsigned res_width = 1024;
     unsigned res_height = 768;
     unsigned res_bpp = 32;
-    unsigned res_backbuffer_format = D3DFMT_X8R8G8B8;
+    unsigned res_backbuffer_format = 22U; // D3DFMT_X8R8G8B8
     unsigned selected_video_card = 0;
     enum WndMode
     {

@@ -70,7 +70,7 @@ void ConsoleRegisterCommand(rf::DcCommand* cmd)
     if (rf::dc_num_commands < CMD_LIMIT)
         rf::DcCommand::Init(cmd, cmd->cmd_name, cmd->descr, cmd->func);
     else
-        ASSERT(false);
+        assert(false);
 }
 
 void ConsoleCommandsApplyPatches();
@@ -95,7 +95,7 @@ void ConsoleApplyPatches()
     MenuUpdate_hook.Install();
 
     // Change limit of commands
-    ASSERT(rf::dc_num_commands == 0);
+    assert(rf::dc_num_commands == 0);
     WriteMemPtr(0x005099AC + 1, g_commands_buffer);
     WriteMemPtr(0x00509A8A + 1, g_commands_buffer);
     WriteMemPtr(0x00509AB0 + 3, g_commands_buffer);

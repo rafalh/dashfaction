@@ -1,6 +1,5 @@
 #include "debug_internal.h"
 #include "../stdafx.h"
-#include "../utils/utils.h"
 #include "../console/console.h"
 #include <patch_common/FunHook.h>
 #include <patch_common/CallHook.h>

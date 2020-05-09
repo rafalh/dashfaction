@@ -55,6 +55,7 @@ set(SRCS
     rf/trigger.h
     rf/weapon.h
     stdafx.h
+    graphics/dds.cpp
     graphics/graphics.cpp
     graphics/graphics.h
     graphics/gr_color.cpp
@@ -94,10 +95,14 @@ set(SRCS
     multi/kill.h
     multi/network.cpp
     multi/network.h
-    utils/utils.cpp
-    utils/utils.h
-    utils/string-utils.h
+    utils/com-utils.h
+    utils/com-utils.cpp
+    utils/enum-bitwise-operators.h
+    utils/iterable-utils.h
     utils/list-utils.h
+    utils/os-utils.cpp
+    utils/os-utils.h
+    utils/string-utils.h
     console/console.cpp
     console/console.h
     console/commands.cpp

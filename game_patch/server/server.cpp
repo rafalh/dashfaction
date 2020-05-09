@@ -134,8 +134,8 @@ std::pair<std::string_view, std::string_view> StripBySpace(std::string_view str)
 
 void HandleNextMapCommand(rf::Player* player)
 {
-    int next_idx = (rf::level_rotation_idx + 1) % rf::server_level_list.Size();
-    auto msg = StringFormat("Next level: %s", rf::server_level_list.Get(next_idx).CStr());
+    int next_idx = (rf::level_rotation_idx + 1) % rf::server_levels.Size();
+    auto msg = StringFormat("Next level: %s", rf::server_levels.Get(next_idx).CStr());
     SendChatLinePacket(msg.c_str(), player);
 }
 
@@ -181,7 +181,7 @@ void HandleLoadCommand(rf::Player* player, std::string_view save_name)
 CodeInjection ProcessObjUpdate_set_pos_injection{
     0x0047E563,
     [](auto& regs) {
-        if (!rf::is_local_net_game) {
+        if (!rf::is_server) {
             return;
         }
         auto& entity = AddrAsRef<rf::EntityObj>(regs.edi);

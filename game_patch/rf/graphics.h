@@ -1,10 +1,6 @@
 #pragma once
 
 #include <patch_common/MemUtils.h>
-#ifndef NO_D3D8
-#include <windows.h>
-#include <d3d8.h>
-#endif
 #include "bmpman.h"
 #include "common.h"
 
@@ -113,16 +109,44 @@ namespace rf
         TEXTURE_SOURCE_MT_CLAMP_TRILIN = 0xB,
     };
 
-#ifndef NO_D3D8
+    struct GrD3DTextureSection
+    {
+#ifdef DIRECT3D_VERSION
+        IDirect3DTexture8 *d3d_texture;
+#else
+        void *d3d_texture;
+#endif
+        int num_vram_bytes;
+        float u_scale;
+        float v_scale;
+        int x;
+        int y;
+        int width;
+        int height;
+    };
+
+    struct GrD3DTexture
+    {
+        int bm_handle;
+        short num_sections;
+        short preserve_counter;
+        short lock_count;
+        uint8_t ref_count;
+        bool reset;
+        GrD3DTextureSection *sections;
+    };
+
+#if defined(DIRECT3D_VERSION)
     static auto& gr_d3d = AddrAsRef<IDirect3D8*>(0x01CFCBE0);
     static auto& gr_d3d_device = AddrAsRef<IDirect3DDevice8*>(0x01CFCBE4);
     static auto& gr_d3d_pp = AddrAsRef<D3DPRESENT_PARAMETERS>(0x01CFCA18);
-#else
+#elif defined(HRESULT)
     static auto& gr_d3d = AddrAsRef<IUnknown*>(0x01CFCBE0);
     static auto& gr_d3d_device = AddrAsRef<IUnknown*>(0x01CFCBE4);
 #endif
     static auto& gr_adapter_idx = AddrAsRef<uint32_t>(0x01CFCC34);
     static auto& gr_screen = AddrAsRef<GrScreen>(0x017C7BC0);
+    static auto& gr_gamma_ramp = AddrAsRef<uint32_t[256]>(0x017C7C68);
 
     static auto& gr_bitmap_material = AddrAsRef<GrRenderState>(0x017756BC);
     static auto& gr_rect_material = AddrAsRef<GrRenderState>(0x017756C0);
@@ -147,7 +171,16 @@ namespace rf
     static auto& gr_d3d_max_hw_index = AddrAsRef<int>(0x0181834C);
     static auto& gr_d3d_min_hw_vertex = AddrAsRef<int>(0x01E652F8);
     static auto& gr_d3d_min_hw_index = AddrAsRef<int>(0x01E652FC);
+#ifdef DIRECT3D_VERSION
     static auto& gr_d3d_primitive_type = AddrAsRef<D3DPRIMITIVETYPE>(0x01D862A8);
+#endif
+
+    static auto& gr_scale_vec = AddrAsRef<Vector3>(0x01818B48);
+    static auto& gr_view_matrix = AddrAsRef<Matrix3>(0x018186C8);
+    static auto& gr_default_wfar = AddrAsRef<float>(0x00596140);
+#ifdef DIRECT3D_VERSION
+    static auto& gr_d3d_device_caps = AddrAsRef<D3DCAPS8>(0x01CFCAC8);
+#endif
 
     static auto& GrGetMaxWidth = AddrAsRef<int()>(0x0050C640);
     static auto& GrGetMaxHeight = AddrAsRef<int()>(0x0050C650);
@@ -158,6 +191,7 @@ namespace rf
     static auto& GrD3DFlushBuffers = AddrAsRef<void()>(0x00559D90);
     static auto& GrClear = AddrAsRef<void()>(0x0050CDF0);
     static auto& GrIsSphereOutsideView = AddrAsRef<bool(rf::Vector3& pos, float radius)>(0x005186A0);
+    static auto& GrSetTextureMipFilter = AddrAsRef<void(bool linear)>(0x0050E830);
 
     static auto& GrDrawRect = AddrAsRef<void(unsigned x, unsigned y, unsigned cx, unsigned cy, GrRenderState render_state)>(0x0050DBE0);
     static auto& GrDrawImage = AddrAsRef<void(int bm_handle, int x, int y, GrRenderState render_state)>(0x0050D2A0);

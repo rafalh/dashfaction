@@ -1,3 +1,4 @@
+#include <windows.h>
 #include "packfile.h"
 #include "../main.h"
 #include "../rf/misc.h"
@@ -6,6 +7,7 @@
 #include <common/BuildConfig.h>
 #include <patch_common/ShortTypes.h>
 #include <patch_common/AsmWriter.h>
+#include <xlog/xlog.h>
 #include <fstream>
 #include <array>
 #include <cctype>

@@ -1,3 +1,5 @@
+#include <windows.h>
+#include <d3d8.h>
 #include "misc.h"
 #include "sound.h"
 #include "../console/console.h"
@@ -163,7 +165,7 @@ FunHook<void(int, int)> GameEnterState_hook{
                 rf::String password{g_join_mp_game_seq_data.value().password.c_str()};
                 g_join_mp_game_seq_data.reset();
                 MultiSetCurrentServerAddr(addr);
-                SendJoinReqPacket(addr, rf::local_player->name, password, rf::local_player->nw_data->connection_speed);
+                SendJoinReqPacket(addr, rf::local_player->name, password, rf::local_player->nw_data->max_update_rate);
             }
         }
 

@@ -3,6 +3,8 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/vendor/win32xx
 )
 
+add_definitions(-DXLOG_NO_MACROS)
+
 file(GLOB SRCS *.cpp *.h *.rc)
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRCS})

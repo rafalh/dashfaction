@@ -1,17 +1,9 @@
-// OptionsDlg.cpp : implementation file
-//
-
-#include "stdafx.h"
-#include "LauncherApp.h"
 #include "OptionsDlg.h"
-#include <common/GameConfig.h>
+#include "LauncherApp.h"
 #include <xlog/xlog.h>
 #include <wxx_wincore.h>
 #include <wxx_dialog.h>
 #include <wxx_commondlg.h>
-
-
-// OptionsDlg dialog
 
 OptionsDlg::OptionsDlg()
 	: CDialog(IDD_OPTIONS)
@@ -21,10 +13,10 @@ OptionsDlg::OptionsDlg()
 BOOL OptionsDlg::OnInitDialog()
 {
     // Attach controls
-    AttachItem(IDC_ADAPTER_COMBO, m_adapterCombo);
-    AttachItem(IDC_RESOLUTIONS_COMBO, m_resCombo);
-    AttachItem(IDC_MSAA_COMBO, m_msaaCombo);
-    AttachItem(IDC_LANG_COMBO, m_langCombo);
+    AttachItem(IDC_ADAPTER_COMBO, m_adapter_combo);
+    AttachItem(IDC_RESOLUTIONS_COMBO, m_res_combo);
+    AttachItem(IDC_MSAA_COMBO, m_msaa_combo);
+    AttachItem(IDC_LANG_COMBO, m_lang_combo);
 
     try {
         m_conf.load();
@@ -80,23 +72,23 @@ BOOL OptionsDlg::OnInitDialog()
 
     InitToolTip();
 
-    m_langCombo.AddString("Auto");
-    m_langCombo.AddString("English");
-    m_langCombo.AddString("German");
-    m_langCombo.AddString("French");
-    m_langCombo.SetCurSel(m_conf.language + 1);
+    m_lang_combo.AddString("Auto");
+    m_lang_combo.AddString("English");
+    m_lang_combo.AddString("German");
+    m_lang_combo.AddString("French");
+    m_lang_combo.SetCurSel(m_conf.language + 1);
 
     return TRUE;
 }
 
 void OptionsDlg::UpdateAdapterCombo()
 {
-    m_adapterCombo.Clear();
+    m_adapter_combo.Clear();
     int selected_idx = -1;
     try {
-        auto adapters = m_videoInfo.get_adapters();
+        auto adapters = m_video_info.get_adapters();
         for (const auto &adapter : adapters) {
-            int idx = m_adapterCombo.AddString(adapter.c_str());
+            int idx = m_adapter_combo.AddString(adapter.c_str());
             if (m_conf.selected_video_card == idx)
                 selected_idx = idx;
         }
@@ -105,20 +97,20 @@ void OptionsDlg::UpdateAdapterCombo()
         xlog::error("Cannot get video adapters: %s", e.what());
     }
     if (selected_idx != -1)
-        m_adapterCombo.SetCurSel(selected_idx);
-    m_adapterCombo.Detach();
+        m_adapter_combo.SetCurSel(selected_idx);
+    m_adapter_combo.Detach();
 }
 
 void OptionsDlg::UpdateResolutionCombo()
 {
     CString buf;
     int selectedRes = -1;
-    m_resCombo.Clear();
+    m_res_combo.Clear();
     try {
-        auto resolutions = m_videoInfo.get_resolutions(m_conf.selected_video_card, D3DFMT_X8R8G8B8);
+        auto resolutions = m_video_info.get_resolutions(m_conf.selected_video_card, D3DFMT_X8R8G8B8);
         for (const auto &res : resolutions) {
             buf.Format("%dx%d", res.width, res.height);
-            int pos = m_resCombo.AddString(buf);
+            int pos = m_res_combo.AddString(buf);
             if (m_conf.res_width == res.width && m_conf.res_height == res.height)
                 selectedRes = pos;
         }
@@ -128,47 +120,47 @@ void OptionsDlg::UpdateResolutionCombo()
         xlog::error("Cannot get available screen resolutions: %s", e.what());
     }
     if (selectedRes != -1)
-        m_resCombo.SetCurSel(selectedRes);
+        m_res_combo.SetCurSel(selectedRes);
     else {
         char buf[32];
         sprintf(buf, "%dx%d", m_conf.res_width, m_conf.res_height);
-        m_resCombo.SetWindowTextA(buf);
+        m_res_combo.SetWindowTextA(buf);
     }
 }
 
 void OptionsDlg::UpdateMsaaCombo()
 {
-    m_msaaCombo.Clear();
-    m_msaaCombo.AddString("Disabled");
-    int selectedMsaa = 0;
-    m_multiSampleTypes.push_back(0);
+    m_msaa_combo.Clear();
+    m_msaa_combo.AddString("Disabled");
+    int selected_msaa = 0;
+    m_multi_sample_types.push_back(0);
     try {
-        auto multiSampleTypes = m_videoInfo.get_multisample_types(m_conf.selected_video_card, D3DFMT_X8R8G8B8, FALSE);
+        auto multiSampleTypes = m_video_info.get_multisample_types(m_conf.selected_video_card, D3DFMT_X8R8G8B8, FALSE);
         for (auto msaa : multiSampleTypes) {
             char buf[16];
             sprintf(buf, "MSAAx%u", msaa);
-            int idx = m_msaaCombo.AddString(buf);
+            int idx = m_msaa_combo.AddString(buf);
             if (m_conf.msaa == msaa)
-                selectedMsaa = idx;
-            m_multiSampleTypes.push_back(msaa);
+                selected_msaa = idx;
+            m_multi_sample_types.push_back(msaa);
         }
     }
     catch (std::exception &e) {
         xlog::error("Cannot check available MSAA modes: %s", e.what());
     }
-    m_msaaCombo.SetCurSel(selectedMsaa);
+    m_msaa_combo.SetCurSel(selected_msaa);
 }
 
 void OptionsDlg::UpdateAnisotropyCheckbox()
 {
-    bool anisotropySupported = false;
+    bool anisotropy_supported = false;
     try {
-        anisotropySupported = m_videoInfo.has_anisotropy_support(m_conf.selected_video_card);
+        anisotropy_supported = m_video_info.has_anisotropy_support(m_conf.selected_video_card);
     }
     catch (std::exception &e) {
         xlog::error("Cannot check anisotropy support: %s", e.what());
     }
-    if (anisotropySupported) {
+    if (anisotropy_supported) {
         GetDlgItem(IDC_ANISOTROPIC_CHECK).EnableWindow(TRUE);
         CheckDlgButton(IDC_ANISOTROPIC_CHECK, m_conf.anisotropic_filtering ? BST_CHECKED : BST_UNCHECKED);
     }
@@ -178,29 +170,29 @@ void OptionsDlg::UpdateAnisotropyCheckbox()
 
 void OptionsDlg::InitToolTip()
 {
-    m_toolTip.Create(*this);
+    m_tool_tip.Create(*this);
 
-    m_toolTip.AddTool(GetDlgItem(IDC_RESOLUTIONS_COMBO), "Please select resolution from provided dropdown list - custom resolution is supposed to work in Windowed/Stretched mode only");
-    m_toolTip.AddTool(GetDlgItem(IDC_STRETCHED_RADIO), "Full Screen Windowed - reduced performance but faster to switch to other window");
-    m_toolTip.AddTool(GetDlgItem(IDC_VSYNC_CHECK), "Enable vertical synchronization (should limit FPS to monitor refresh rate - usually 60)");
-    m_toolTip.AddTool(GetDlgItem(IDC_MAX_FPS_EDIT), "FPS limit - maximal value is 240 - high FPS can trigger minor bugs in game");
-    m_toolTip.AddTool(GetDlgItem(IDC_FAST_ANIMS_CHECK), "Reduce animation smoothness for far models");
-    m_toolTip.AddTool(GetDlgItem(IDC_DISABLE_LOD_CHECK), "Improve details for far models");
-    m_toolTip.AddTool(GetDlgItem(IDC_ANISOTROPIC_CHECK), "Improve far textures quality");
-    m_toolTip.AddTool(GetDlgItem(IDC_FPS_COUNTER_CHECK), "Enable FPS counter in right-top corner of the screen");
-    m_toolTip.AddTool(GetDlgItem(IDC_HIGH_SCANNER_RES_CHECK), "Increase scanner resolution (used by Rail Gun, Rocket Launcher and Fusion Launcher)");
-    m_toolTip.AddTool(GetDlgItem(IDC_HIGH_MON_RES_CHECK), "Increase monitors and mirrors resolution");
-    m_toolTip.AddTool(GetDlgItem(IDC_TRUE_COLOR_TEXTURES_CHECK), "Increase texture color depth - especially visible for lightmaps and shadows");
-    m_toolTip.AddTool(GetDlgItem(IDC_TRACKER_EDIT), "Hostname of tracker used to find avaliable Multiplayer servers");
-    m_toolTip.AddTool(GetDlgItem(IDC_RATE_EDIT), "Internet connection speed in bytes/s (default value - 200000 - should work fine for all modern setups)");
-    m_toolTip.AddTool(GetDlgItem(IDC_FAST_START_CHECK), "Skip game intro videos and go straight to Main Menu");
-    m_toolTip.AddTool(GetDlgItem(IDC_DIRECT_INPUT_CHECK), "Use DirectInput for mouse input handling");
-    m_toolTip.AddTool(GetDlgItem(IDC_FORCE_PORT_CHECK), "If not checked automatic port is used");
-    m_toolTip.AddTool(GetDlgItem(IDC_SCOREBOARD_ANIM_CHECK), "Scoreboard open/close animations");
-    m_toolTip.AddTool(GetDlgItem(IDC_LEVEL_SOUNDS_CHECK), "Enable/disable Play Sound and Ambient Sound objects in level. You can also specify volume multiplier by using levelsounds command in game.");
-    m_toolTip.AddTool(GetDlgItem(IDC_ALLOW_OVERWRITE_GAME_CHECK), "Enable this if you want to modify game content by putting mods into user_maps folder. Can have side effect of level packfiles modyfing common textures/sounds.");
-    m_toolTip.AddTool(GetDlgItem(IDC_KEEP_LAUNCHER_OPEN_CHECK), "Keep launcher window open after game or editor launch");
-    m_toolTip.AddTool(GetDlgItem(IDC_LINEAR_PITCH_CHECK), "Stop mouse movement from slowing down when looking up and down");
+    m_tool_tip.AddTool(GetDlgItem(IDC_RESOLUTIONS_COMBO), "Please select resolution from provided dropdown list - custom resolution is supposed to work in Windowed/Stretched mode only");
+    m_tool_tip.AddTool(GetDlgItem(IDC_STRETCHED_RADIO), "Full Screen Windowed - reduced performance but faster to switch to other window");
+    m_tool_tip.AddTool(GetDlgItem(IDC_VSYNC_CHECK), "Enable vertical synchronization (should limit FPS to monitor refresh rate - usually 60)");
+    m_tool_tip.AddTool(GetDlgItem(IDC_MAX_FPS_EDIT), "FPS limit - maximal value is 240 - high FPS can trigger minor bugs in game");
+    m_tool_tip.AddTool(GetDlgItem(IDC_FAST_ANIMS_CHECK), "Reduce animation smoothness for far models");
+    m_tool_tip.AddTool(GetDlgItem(IDC_DISABLE_LOD_CHECK), "Improve details for far models");
+    m_tool_tip.AddTool(GetDlgItem(IDC_ANISOTROPIC_CHECK), "Improve far textures quality");
+    m_tool_tip.AddTool(GetDlgItem(IDC_FPS_COUNTER_CHECK), "Enable FPS counter in right-top corner of the screen");
+    m_tool_tip.AddTool(GetDlgItem(IDC_HIGH_SCANNER_RES_CHECK), "Increase scanner resolution (used by Rail Gun, Rocket Launcher and Fusion Launcher)");
+    m_tool_tip.AddTool(GetDlgItem(IDC_HIGH_MON_RES_CHECK), "Increase monitors and mirrors resolution");
+    m_tool_tip.AddTool(GetDlgItem(IDC_TRUE_COLOR_TEXTURES_CHECK), "Increase texture color depth - especially visible for lightmaps and shadows");
+    m_tool_tip.AddTool(GetDlgItem(IDC_TRACKER_EDIT), "Hostname of tracker used to find avaliable Multiplayer servers");
+    m_tool_tip.AddTool(GetDlgItem(IDC_RATE_EDIT), "Internet connection speed in bytes/s (default value - 200000 - should work fine for all modern setups)");
+    m_tool_tip.AddTool(GetDlgItem(IDC_FAST_START_CHECK), "Skip game intro videos and go straight to Main Menu");
+    m_tool_tip.AddTool(GetDlgItem(IDC_DIRECT_INPUT_CHECK), "Use DirectInput for mouse input handling");
+    m_tool_tip.AddTool(GetDlgItem(IDC_FORCE_PORT_CHECK), "If not checked automatic port is used");
+    m_tool_tip.AddTool(GetDlgItem(IDC_SCOREBOARD_ANIM_CHECK), "Scoreboard open/close animations");
+    m_tool_tip.AddTool(GetDlgItem(IDC_LEVEL_SOUNDS_CHECK), "Enable/disable Play Sound and Ambient Sound objects in level. You can also specify volume multiplier by using levelsounds command in game.");
+    m_tool_tip.AddTool(GetDlgItem(IDC_ALLOW_OVERWRITE_GAME_CHECK), "Enable this if you want to modify game content by putting mods into user_maps folder. Can have side effect of level packfiles modyfing common textures/sounds.");
+    m_tool_tip.AddTool(GetDlgItem(IDC_KEEP_LAUNCHER_OPEN_CHECK), "Keep launcher window open after game or editor launch");
+    m_tool_tip.AddTool(GetDlgItem(IDC_LINEAR_PITCH_CHECK), "Stop mouse movement from slowing down when looking up and down");
 }
 
 void OptionsDlg::OnOK()
@@ -214,8 +206,7 @@ BOOL OptionsDlg::OnCommand(WPARAM wparam, LPARAM lparam)
     UNREFERENCED_PARAMETER(lparam);
 
     UINT id = LOWORD(wparam);
-    switch (id)
-    {
+    switch (id) {
     case IDC_EXE_BROWSE:
         OnBnClickedExeBrowse();
         return TRUE;
@@ -252,14 +243,13 @@ void OptionsDlg::OnBnClickedOk()
     str = GetDlgItemTextA(IDC_EXE_PATH_EDIT);
     m_conf.game_executable_path = str;
 
-    m_conf.selected_video_card = m_adapterCombo.GetCurSel();
+    m_conf.selected_video_card = m_adapter_combo.GetCurSel();
 
     str = GetDlgItemTextA(IDC_RESOLUTIONS_COMBO);
     char *ptr = (char*)(const char *)str;
     const char *widthStr = strtok(ptr, "x");
     const char *heightStr = strtok(nullptr, "x");
-    if (widthStr && heightStr)
-    {
+    if (widthStr && heightStr) {
         m_conf.res_width = atoi(widthStr);
         m_conf.res_height = atoi(heightStr);
     }
@@ -279,7 +269,7 @@ void OptionsDlg::OnBnClickedOk()
     m_conf.geometry_cache_size = GetDlgItemInt(IDC_RENDERING_CACHE_EDIT, false);
     m_conf.max_fps = GetDlgItemInt(IDC_MAX_FPS_EDIT, false);
 
-    m_conf.msaa = m_multiSampleTypes[m_msaaCombo.GetCurSel()];
+    m_conf.msaa = m_multi_sample_types[m_msaa_combo.GetCurSel()];
 
     m_conf.anisotropic_filtering = (IsDlgButtonChecked(IDC_ANISOTROPIC_CHECK) == BST_CHECKED);
     m_conf.disable_lod_models = (IsDlgButtonChecked(IDC_DISABLE_LOD_CHECK) == BST_CHECKED);
@@ -304,14 +294,12 @@ void OptionsDlg::OnBnClickedOk()
     m_conf.keep_launcher_open = (IsDlgButtonChecked(IDC_KEEP_LAUNCHER_OPEN_CHECK) == BST_CHECKED);
     m_conf.linear_pitch = (IsDlgButtonChecked(IDC_LINEAR_PITCH_CHECK) == BST_CHECKED);
     m_conf.reduced_speed_in_background = (IsDlgButtonChecked(IDC_REDUCED_SPEED_IN_BG_CHECK) == BST_CHECKED);
-    m_conf.language = m_langCombo.GetCurSel() - 1;
+    m_conf.language = m_lang_combo.GetCurSel() - 1;
 
-    try
-    {
+    try {
         m_conf.save();
     }
-    catch (std::exception &e)
-    {
+    catch (std::exception &e) {
         MessageBoxA(e.what(), NULL, MB_ICONERROR | MB_OK);
     }
 }

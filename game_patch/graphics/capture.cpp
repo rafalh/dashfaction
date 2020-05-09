@@ -1,4 +1,5 @@
-
+#include <windows.h>
+#include <d3d8.h>
 #include "capture.h"
 #include "gr_color.h"
 #include "graphics_internal.h"
@@ -7,6 +8,7 @@
 #include "../rf/object.h"
 #include "../rf/player.h"
 #include "../rf/misc.h"
+#include "../utils/com-utils.h"
 #include "../utils/list-utils.h"
 #include "../utils/string-utils.h"
 #include <cstddef>

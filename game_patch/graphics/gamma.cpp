@@ -1,3 +1,5 @@
+#include <windows.h>
+#include <d3d8.h>
 #include "gamma.h"
 #include "../rf/misc.h"
 #include "../rf/graphics.h"
@@ -10,11 +12,6 @@
 
 static D3DGAMMARAMP g_gamma_ramp;
 static bool g_gamma_ramp_initialized = false;
-
-namespace rf
-{
-static auto& gr_gamma_ramp = AddrAsRef<uint32_t[256]>(0x017C7C68);
-}
 
 static void SetGammaRamp(D3DGAMMARAMP* gamma_ramp)
 {

@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "LauncherApp.h"
 #include <common/version.h>
 #include <xlog/xlog.h>
@@ -25,18 +24,15 @@ int APIENTRY WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     InitLogging();
     CrashHandlerStubInstall(nullptr);
 
-    try
-    {
+    try {
         // Start Win32++
         LauncherApp app;
 
         // Run the application
         return app.Run();
     }
-
     // catch all unhandled CException types
-    catch (const CException &e)
-    {
+    catch (const CException &e) {
         // Display the exception and quit
         MessageBox(NULL, e.GetText(), AtoT(e.what()), MB_ICONERROR);
 

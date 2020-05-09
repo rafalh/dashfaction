@@ -274,7 +274,7 @@ CodeInjection ProcessGamePacket_whitelist_filter{
     [](auto& regs) {
         bool allowed = false;
         int packet_type = regs.esi;
-        if (rf::is_local_net_game) {
+        if (rf::is_server) {
             auto& whitelist = g_server_side_packet_whitelist;
             allowed = std::find(whitelist.begin(), whitelist.end(), packet_type) != whitelist.end();
         }
@@ -321,7 +321,7 @@ FunHook<NwPacketHandler_Type> ProcessLeftGamePacket_hook{
     0x0047BBC0,
     [](char* data, const rf::NwAddr& addr) {
         // server-side and client-side
-        if (rf::is_local_net_game) {
+        if (rf::is_server) {
             rf::Player* src_player = rf::NwGetPlayerFromAddr(addr);
             data[0] = src_player->nw_data->player_id; // fix player ID
         }
@@ -333,7 +333,7 @@ FunHook<NwPacketHandler_Type> ProcessChatLinePacket_hook{
     0x00444860,
     [](char* data, const rf::NwAddr& addr) {
         // server-side and client-side
-        if (rf::is_local_net_game) {
+        if (rf::is_server) {
             rf::Player* src_player = rf::NwGetPlayerFromAddr(addr);
             if (!src_player)
                 return; // shouldnt happen (protected in rf::NwProcessGamePackets)
@@ -352,7 +352,7 @@ FunHook<NwPacketHandler_Type> ProcessNameChangePacket_hook{
     0x0046EAE0,
     [](char* data, const rf::NwAddr& addr) {
         // server-side and client-side
-        if (rf::is_local_net_game) {
+        if (rf::is_server) {
             rf::Player* src_player = rf::NwGetPlayerFromAddr(addr);
             if (!src_player)
                 return;                               // shouldnt happen (protected in rf::NwProcessGamePackets)
@@ -366,7 +366,7 @@ FunHook<NwPacketHandler_Type> ProcessTeamChangePacket_hook{
     0x004825B0,
     [](char* data, const rf::NwAddr& addr) {
         // server-side and client-side
-        if (rf::is_local_net_game) {
+        if (rf::is_server) {
             rf::Player* src_player = rf::NwGetPlayerFromAddr(addr);
             if (!src_player)
                 return; // shouldnt happen (protected in rf::NwProcessGamePackets)
@@ -382,7 +382,7 @@ FunHook<NwPacketHandler_Type> ProcessRateChangePacket_hook{
     0x004807B0,
     [](char* data, const rf::NwAddr& addr) {
         // server-side and client-side?
-        if (rf::is_local_net_game) {
+        if (rf::is_server) {
             rf::Player* src_player = rf::NwGetPlayerFromAddr(addr);
             if (!src_player)
                 return;                               // shouldnt happen (protected in rf::NwProcessGamePackets)
@@ -417,7 +417,7 @@ FunHook<NwPacketHandler_Type> ProcessEntityCreatePacket_hook{
 FunHook<NwPacketHandler_Type> ProcessReloadPacket_hook{
     0x00485AB0,
     [](char* data, const rf::NwAddr& addr) {
-        if (!rf::is_local_net_game) { // client-side
+        if (!rf::is_server) { // client-side
             // Update ClipSize and MaxAmmo if received values are greater than values from local weapons.tbl
             int weapon_cls_id = *reinterpret_cast<int32_t*>(data + 4);
             int ammo = *reinterpret_cast<int32_t*>(data + 8);
@@ -436,7 +436,7 @@ FunHook<NwPacketHandler_Type> ProcessReloadPacket_hook{
 
 rf::EntityObj* SecureObjUpdatePacket(rf::EntityObj* entity, uint8_t flags, rf::Player* src_player)
 {
-    if (rf::is_local_net_game) {
+    if (rf::is_server) {
         // server-side
         if (entity && entity->handle != src_player->entity_handle) {
             xlog::trace("Invalid ObjUpdate entity %x %x %s", entity->handle, src_player->entity_handle,
@@ -808,7 +808,7 @@ void SendChatLinePacket(const char* msg, rf::Player* target, rf::Player* sender,
     packet.is_team_msg = is_team_msg;
     std::strncpy(packet.message, msg, 255);
     packet.message[255] = 0;
-    if (target == nullptr && rf::is_local_net_game) {
+    if (target == nullptr && rf::is_server) {
         rf::NwSendReliablePacketToAll(buf, packet.size + 3, 0);
         rf::DcPrintf("Server: %s", msg);
     }

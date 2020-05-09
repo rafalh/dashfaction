@@ -1,8 +1,3 @@
-
-// DashFactionLauncher.cpp : Defines the class behaviors for the application.
-//
-
-#include "stdafx.h"
 #include "LauncherApp.h"
 #include "MainDlg.h"
 #include "LauncherCommandLineInfo.h"
@@ -30,8 +25,7 @@ BOOL LauncherApp::InitInstance()
     LauncherCommandLineInfo cmd_line_info;
     cmd_line_info.Parse();
 
-    if (cmd_line_info.HasHelpFlag())
-    {
+    if (cmd_line_info.HasHelpFlag()) {
         // Note: we can't use stdio console API in win32 application
         Message(NULL,
             "Usage: DashFactionLauncher [-game] [-level name] [-editor] args...\n"
@@ -50,14 +44,12 @@ BOOL LauncherApp::InitInstance()
     SetEnvironmentVariableA("__COMPAT_LAYER", "RunAsInvoker");
 
     // Launch game or editor based on command line flag
-    if (cmd_line_info.HasGameFlag())
-    {
+    if (cmd_line_info.HasGameFlag()) {
         LaunchGame(nullptr);
         return FALSE;
     }
 
-    if (cmd_line_info.HasEditorFlag())
-    {
+    if (cmd_line_info.HasEditorFlag()) {
         LaunchEditor(nullptr);
         return FALSE;
     }
@@ -75,11 +67,9 @@ BOOL LauncherApp::InitInstance()
 
 void LauncherApp::MigrateConfig()
 {
-    try
-    {
+    try {
         GameConfig config;
-        if (config.load() && config.dash_faction_version != VERSION_STR)
-        {
+        if (config.load() && config.dash_faction_version != VERSION_STR) {
             xlog::info("Migrating config");
             if (config.tracker == "rf.thqmultiplay.net" && config.dash_faction_version.empty()) // < 1.1.0
                 config.tracker = DEFAULT_RF_TRACKER;
@@ -87,8 +77,7 @@ void LauncherApp::MigrateConfig()
             config.save();
         }
     }
-    catch (std::exception&)
-    {
+    catch (std::exception&) {
         // ignore
     }
 }
@@ -98,14 +87,12 @@ bool LauncherApp::LaunchGame(HWND hwnd, const char* mod_name)
     WatchDogTimer::ScopedStartStop wdt_start{m_watch_dog_timer};
     GameLauncher launcher;
 
-    try
-    {
+    try {
         xlog::info("Checking installation");
         launcher.check_installation();
         xlog::info("Installation is okay");
     }
-    catch (FileNotFoundException &e)
-    {
+    catch (FileNotFoundException &e) {
         std::stringstream ss;
         std::string download_url;
 
@@ -116,8 +103,7 @@ bool LauncherApp::LaunchGame(HWND hwnd, const char* mod_name)
         Message(hwnd, str.c_str(), nullptr, MB_OK | MB_ICONWARNING);
         return false;
     }
-    catch (FileHashVerificationException &e)
-    {
+    catch (FileHashVerificationException &e) {
         std::stringstream ss;
         std::string download_url;
 
@@ -147,28 +133,24 @@ bool LauncherApp::LaunchGame(HWND hwnd, const char* mod_name)
         }
     }
 
-    try
-    {
+    try {
         xlog::info("Launching the game...");
         launcher.launch(mod_name);
         xlog::info("Game launched!");
         return true;
     }
-    catch (PrivilegeElevationRequiredException&)
-    {
+    catch (PrivilegeElevationRequiredException&){
         Message(hwnd,
             "Privilege elevation is required. Please change RF.exe file properties and disable all "
             "compatibility settings (Run as administrator, Compatibility mode for Windows XX, etc.) or run "
             "Dash Faction launcher as administrator.",
             nullptr, MB_OK | MB_ICONERROR);
     }
-    catch (FileNotFoundException& e)
-    {
+    catch (FileNotFoundException& e) {
         Message(hwnd, "Game executable has not been found. Please set a proper path in Options.",
                 nullptr, MB_OK | MB_ICONERROR);
     }
-    catch (FileHashVerificationException &e)
-    {
+    catch (FileHashVerificationException &e) {
         std::stringstream ss;
         ss << "Unsupported game executable has been detected!\n\n"
             << "SHA1:\n" << e.get_sha1() << "\n\n"
@@ -180,8 +162,7 @@ bool LauncherApp::LaunchGame(HWND hwnd, const char* mod_name)
         if (Message(hwnd, str.c_str(), nullptr, MB_OKCANCEL | MB_ICONERROR) == IDOK)
             ShellExecuteA(hwnd, "open", "https://www.factionfiles.com/ff.php?action=file&id=517545", NULL, NULL, SW_SHOW);
     }
-    catch (std::exception &e)
-    {
+    catch (std::exception &e) {
         std::string msg = generate_message_for_exception(e);
         Message(hwnd, msg.c_str(), nullptr, MB_ICONERROR | MB_OK);
     }
@@ -192,31 +173,29 @@ bool LauncherApp::LaunchEditor(HWND hwnd, const char* mod_name)
 {
     WatchDogTimer::ScopedStartStop wdt_start{m_watch_dog_timer};
     EditorLauncher launcher;
-    try
-    {
+    try {
         xlog::info("Launching editor...");
         launcher.launch(mod_name);
         xlog::info("Editor launched!");
         return true;
     }
-    catch (std::exception &e)
-    {
+    catch (std::exception &e) {
         std::string msg = generate_message_for_exception(e);
         Message(hwnd, msg.c_str(), nullptr, MB_ICONERROR | MB_OK);
         return false;
     }
 }
 
-int LauncherApp::Message(HWND hwnd, const char *pszText, const char *pszTitle, int Flags)
+int LauncherApp::Message(HWND hwnd, const char *text, const char *title, int flags)
 {
     WatchDogTimer::ScopedPause wdt_pause{m_watch_dog_timer};
-    xlog::info("%s: %s", pszTitle ? pszTitle : "Error", pszText);
-    if (GetSystemMetrics(SM_CMONITORS) > 0) {
-        return MessageBoxA(hwnd, pszText, pszTitle, Flags);
-    }
-    else
-    {
-        fprintf(stderr, "%s: %s", pszTitle ? pszTitle : "Error", pszText);
+    xlog::info("%s: %s", title ? title : "Error", text);
+    bool no_gui = GetSystemMetrics(SM_CMONITORS) == 0;
+    if (no_gui) {
+        std::fprintf(stderr, "%s: %s", title ? title : "Error", text);
         return -1;
+    }
+    else {
+        return MessageBoxA(hwnd, text, title, flags);
     }
 }
