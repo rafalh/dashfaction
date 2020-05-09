@@ -300,13 +300,13 @@ static int PackfileBuildEntriesList_New(const char* ext_list, char*& filenames, 
 
 static bool IsLookupTableEntryOverrideAllowed(rf::PackfileEntry* old_entry, rf::PackfileEntry* new_entry)
 {
-    if (!old_entry->archive->is_user_maps && !stricmp(rf::GetFileExt(new_entry->file_name), ".tbl")) {
-        // Always skip overriding tbl files from game by user_maps
-        return false;
-    }
     if (!new_entry->archive->is_user_maps) {
         // Allow overriding by packfiles from game root and from mods
         return true;
+    }
+    if (!old_entry->archive->is_user_maps && !stricmp(rf::GetFileExt(new_entry->file_name), ".tbl")) {
+        // Always skip overriding tbl files from game by user_maps
+        return false;
     }
 #ifdef MOD_FILE_WHITELIST
     if (IsModFileInWhitelist(new_entry->file_name)) {
