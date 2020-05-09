@@ -1,6 +1,9 @@
 #pragma once
 
 #include <string>
+#include <string_view>
+#include <vector>
+#include <algorithm>
 #include <memory>
 #include <cstdarg>
 #include <cstring>
@@ -26,6 +29,34 @@ inline const char* stristr(const char* haystack, const char* needle)
         }
     }
     return nullptr;
+}
+
+inline std::vector<std::string_view> StringSplit(std::string_view str, std::string_view delims = " ")
+{
+    std::vector<std::string_view> output;
+    size_t first = 0;
+
+    while (first < str.size()) {
+        const auto second = str.find_first_of(delims, first);
+
+        if (first != second)
+            output.emplace_back(str.substr(first, second - first));
+
+        if (second == std::string_view::npos)
+            break;
+
+        first = second + 1;
+    }
+
+    return output;
+}
+
+inline std::string StringToLower(std::string_view str)
+{
+    std::string output;
+    output.reserve(str.size());
+    std::transform(str.begin(), str.end(), std::back_inserter(output), ::tolower);
+    return output;
 }
 
 struct StringMatcher

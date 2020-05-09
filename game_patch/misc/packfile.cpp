@@ -1,6 +1,7 @@
 #include "packfile.h"
 #include "../main.h"
 #include "../rf/misc.h"
+#include "../utils/iterable-utils.h"
 #include <xxhash.h>
 #include <common/BuildConfig.h>
 #include <patch_common/ShortTypes.h>
@@ -199,9 +200,9 @@ static int PackfileLoad_New(const char* filename, const char* dir)
     }
 
     auto packfile = std::make_unique<rf::Packfile>();
-    strncpy(packfile->name, filename, sizeof(packfile->name) - 1);
+    std::strncpy(packfile->name, filename, sizeof(packfile->name) - 1);
     packfile->name[sizeof(packfile->name) - 1] = '\0';
-    strncpy(packfile->path, full_path.c_str(), sizeof(packfile->path) - 1);
+    std::strncpy(packfile->path, full_path.c_str(), sizeof(packfile->path) - 1);
     packfile->path[sizeof(packfile->path) - 1] = '\0';
     packfile->field_a0 = 0;
     packfile->num_files = 0;
@@ -257,44 +258,53 @@ static rf::Packfile* PackfileFindArchive(const char* filename)
     return nullptr;
 }
 
-static int PackfileBuildEntriesList_New(const char* ext_list, char*& filenames, unsigned& num_files,
-                                        const char* packfile_name)
+template<typename F>
+static void ForEachPackfileEntry(const std::vector<std::string_view>& ext_filter, const char* packfile_filter, F fun)
 {
-    unsigned num_bytes = 1;
-
-    xlog::trace("PackfileBuildEntriesList called");
-    num_files = 0;
-    filenames = 0;
-
+    std::vector<std::string> ext_filter_lower;
+    ext_filter_lower.reserve(ext_filter.size());
+    std::transform(ext_filter.begin(), ext_filter.end(), std::back_inserter(ext_filter_lower), StringToLower);
     for (auto& packfile : g_packfiles) {
-        if (!packfile_name || !stricmp(packfile_name, packfile->name)) {
+        if (!packfile_filter || !stricmp(packfile_filter, packfile->name)) {
             for (auto& entry : packfile->files) {
-                const char* ext = rf::GetFileExt(entry.file_name);
-                if (ext[0] && strstr(ext_list, ext + 1))
-                    num_bytes += strlen(entry.file_name) + 1;
-            }
-        }
-    }
-
-    filenames = static_cast<char*>(rf::Malloc(num_bytes));
-    if (!filenames)
-        return 0;
-    char* buf_ptr = filenames;
-    for (auto& packfile : g_packfiles) {
-        if (!packfile_name || !stricmp(packfile_name, packfile->name)) {
-            for (auto& entry : packfile->files) {
-                const char* ext = rf::GetFileExt(entry.file_name);
-                if (ext[0] && strstr(ext_list, ext + 1)) {
-                    strcpy(buf_ptr, entry.file_name);
-                    buf_ptr += strlen(entry.file_name) + 1;
-                    ++num_files;
+                const char* ext_ptr = rf::GetFileExt(entry.file_name);
+                if (ext_ptr[0]) {
+                    ++ext_ptr;
+                }
+                std::string ext_lower = StringToLower(ext_ptr);
+                if (IterableContains(ext_filter_lower, ext_lower)) {
+                    fun(entry);
                 }
             }
         }
     }
-    // terminating zero
-    buf_ptr[0] = 0;
+}
 
+static int PackfileBuildFileList_New(const char* ext_filter, char*& filenames, unsigned& num_files,
+                                     const char* packfile_filter)
+{
+    xlog::trace("PackfileBuildFileList begin");
+    auto ext_filter_splitted = StringSplit(ext_filter, ",");
+    // Calculate number of bytes needed by result (zero terminated file names + buffer terminating zero)
+    unsigned num_bytes = 1;
+    ForEachPackfileEntry(ext_filter_splitted, packfile_filter, [&](auto& entry) {
+        num_bytes += std::strlen(entry.file_name) + 1;
+    });
+    // Allocate result buffer
+    filenames = static_cast<char*>(rf::Malloc(num_bytes));
+    if (!filenames)
+        return 0;
+    // Fill result buffer and count matching files
+    num_files = 0;
+    char* buf_ptr = filenames;
+    ForEachPackfileEntry(ext_filter_splitted, packfile_filter, [&](auto& entry) {
+        strcpy(buf_ptr, entry.file_name);
+        buf_ptr += std::strlen(entry.file_name) + 1;
+        ++num_files;
+    });
+    // Add terminating zero to the buffer
+    buf_ptr[0] = 0;
+    xlog::trace("PackfileBuildFileList end");
     return 1;
 }
 
@@ -323,8 +333,7 @@ static bool IsLookupTableEntryOverrideAllowed(rf::PackfileEntry* old_entry, rf::
 
 static void PackfileAddToLookupTable(rf::PackfileEntry* entry)
 {
-    std::string filename_str{entry->file_name};
-    std::transform(filename_str.begin(), filename_str.end(), filename_str.begin(), ::tolower);
+    std::string filename_str = StringToLower(entry->file_name);
     auto [it, inserted] = g_loopup_table.insert({filename_str, entry});
     if (!inserted) {
         ++g_num_name_collisions;
@@ -356,7 +365,7 @@ static int PackfileAddEntries_New(rf::Packfile* packfile, const void* block, uns
 
         // Note: we can't use string pool from RF because it's too small
         char* file_name_buf = new char[strlen(file_name) + 1];
-        strcpy(file_name_buf, file_name);
+        std::strcpy(file_name_buf, file_name);
         entry.file_name = file_name_buf;
         entry.name_checksum = rf::PackfileCalcFileNameChecksum(entry.file_name);
         entry.file_size = record->size;
@@ -390,19 +399,19 @@ static void LoadDashFactionVpp()
     char buf[MAX_PATH];
     GetModuleFileNameA(g_hmodule, buf, sizeof(buf));
     char* ptr = strrchr(buf, '\\');
-    strcpy(ptr + 1, "dashfaction.vpp");
+    std::strcpy(ptr + 1, "dashfaction.vpp");
     if (PathFileExistsA(buf))
         *(ptr + 1) = '\0';
     else {
         // try to remove 3 path components (build/(debug|release)/bin)
         *ptr = '\0';
-        ptr = strrchr(buf, '\\');
+        ptr = std::strrchr(buf, '\\');
         if (ptr)
             *ptr = '\0';
-        ptr = strrchr(buf, '\\');
+        ptr = std::strrchr(buf, '\\');
         if (ptr)
             *ptr = '\0';
-        ptr = strrchr(buf, '\\');
+        ptr = std::strrchr(buf, '\\');
         if (ptr)
             *(ptr + 1) = '\0';
     }
@@ -521,7 +530,7 @@ void PackfileApplyPatches()
     // Packfile handling implemetation getting rid of all limits
 
     AsmWriter(0x0052BD40).jmp(PackfileAddEntries_New);
-    AsmWriter(0x0052C4D0).jmp(PackfileBuildEntriesList_New);
+    AsmWriter(0x0052C4D0).jmp(PackfileBuildFileList_New);
     AsmWriter(0x0052C070).jmp(PackfileLoad_New);
     AsmWriter(0x0052C220).jmp(PackfileFindFile_New);
     AsmWriter(0x0052BB60).jmp(PackfileInit_New);
