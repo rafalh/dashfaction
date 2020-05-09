@@ -768,14 +768,15 @@ bool TryToAutoForwardPort(int port)
 FunHook<void(int, rf::NwAddr*)> multi_start_hook{
     0x0046D5B0,
     [](int is_client, rf::NwAddr *serv_addr) {
-        if (!g_game_config.force_port && !is_client) {
-            // Rebind socket to port 7755 when running in server mode
+        if (!rf::nw_port && !is_client) {
+            // If no port was specified and this is a server recreate the socket and bind it to port 7755
             xlog::info("Recreating socket using TCP port 7755");
             shutdown(rf::nw_sock, 1);
             closesocket(rf::nw_sock);
             rf::NwInitSocket(7755);
         }
-        if (rf::nw_port) {
+        if (!is_client) {
+            // Auto forward server port using UPnP (in background thread)
             std::thread upnp_thread{TryToAutoForwardPort, rf::nw_port};
             upnp_thread.detach();
         }
