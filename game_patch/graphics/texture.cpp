@@ -79,11 +79,11 @@ public:
                 return rgb_888_format_;
             case rf::BMPF_RGB_565:
                 return rgb_565_format_;
-            case rf::BMPF_RGBA_1555:
+            case rf::BMPF_ARGB_1555:
                 return argb_1555_format_;
-            case rf::BMPF_RGBA_8888:
+            case rf::BMPF_ARGB_8888:
                 return rgba_8888_format_;
-            case rf::BMPF_RGBA_4444:
+            case rf::BMPF_ARGB_4444:
                 return argb_4444_format_;
             default:
                 return D3DFMT_UNKNOWN;
@@ -152,14 +152,26 @@ FunHook<GrD3DSetTextureData_Type> gr_d3d_set_texture_data_hook{
     [](int level, const uint8_t* src_bits_ptr, const uint8_t* palette, int bm_w, int bm_h,
         rf::BmPixelFormat pixel_fmt, rf::GrD3DTextureSection* section, int tex_w, int tex_h, IDirect3DTexture8* texture) {
 
+        D3DSURFACE_DESC desc;
+        auto hr = texture->GetLevelDesc(level, &desc);
+        if (FAILED(hr)) {
+            xlog::error("GetLevelDesc failed %lx", hr);
+            return -1;
+        }
+
+        auto tex_pixel_fmt = GetPixelFormatFromD3DFormat(desc.Format);
+        if (static_cast<int>(pixel_fmt) < 0x10 && GetPixelFormatSize(tex_pixel_fmt) == 2) {
+            // original code can handle only 16 bit surfaces
+            return gr_d3d_set_texture_data_hook.CallTarget(level, src_bits_ptr, palette, bm_w, bm_h, pixel_fmt, section,
+                                                           tex_w, tex_h, texture);
+        }
+
         D3DLOCKED_RECT locked_rect;
-        HRESULT hr = texture->LockRect(level, &locked_rect, 0, 0);
+        hr = texture->LockRect(level, &locked_rect, 0, 0);
         if (FAILED(hr)) {
             xlog::error("LockRect failed");
             return -1;
         }
-        D3DSURFACE_DESC desc;
-        texture->GetLevelDesc(level, &desc);
 
         bool success = true;
         if (static_cast<int>(pixel_fmt) >= 0x10) {
@@ -186,20 +198,17 @@ FunHook<GrD3DSetTextureData_Type> gr_d3d_set_texture_data_hook{
         }
         else {
             auto tex_pixel_fmt = GetPixelFormatFromD3DFormat(desc.Format);
-            success = ConvertBitmapFormat(reinterpret_cast<uint8_t*>(locked_rect.pBits), tex_pixel_fmt,
-                                          src_bits_ptr, pixel_fmt, bm_w, bm_h, locked_rect.Pitch,
-                                          GetPixelFormatSize(pixel_fmt) * bm_w, palette);
+            auto bm_pitch = GetPixelFormatSize(pixel_fmt) * bm_w;
+            success = ConvertSurfacePixelFormat(locked_rect.pBits, tex_pixel_fmt,
+                                                src_bits_ptr, pixel_fmt, bm_w, bm_h, locked_rect.Pitch,
+                                                bm_pitch, palette);
             if (!success)
                 xlog::warn("Color conversion failed (format %d -> %d)", pixel_fmt, tex_pixel_fmt);
         }
 
         texture->UnlockRect(level);
 
-        if (success)
-            return 0;
-
-        return gr_d3d_set_texture_data_hook.CallTarget(level, src_bits_ptr, palette, bm_w, bm_h, pixel_fmt, section,
-                                                       tex_w, tex_h, texture);
+        return success ? 0 : -1;
     },
 };
 

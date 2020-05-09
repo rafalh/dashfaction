@@ -10,12 +10,12 @@ inline int GetPixelFormatSize(rf::BmPixelFormat pixel_fmt)
     case rf::BMPF_A_8:
         return 1;
     case rf::BMPF_RGB_565:
-    case rf::BMPF_RGBA_4444:
-    case rf::BMPF_RGBA_1555:
+    case rf::BMPF_ARGB_4444:
+    case rf::BMPF_ARGB_1555:
         return 2;
     case rf::BMPF_RGB_888:
         return 3;
-    case rf::BMPF_RGBA_8888:
+    case rf::BMPF_ARGB_8888:
         return 4;
     default:
         xlog::warn("unknown pixel format %d", pixel_fmt);
@@ -33,15 +33,15 @@ inline D3DFORMAT GetD3DFormatFromPixelFormat(rf::BmPixelFormat pixel_fmt)
         // is returned instead (it is used only for pixel size related calculations)
     case rf::BMPF_A_8:
         return D3DFMT_A8;
-    case rf::BMPF_RGBA_8888:
+    case rf::BMPF_ARGB_8888:
         return D3DFMT_A8R8G8B8;
     case rf::BMPF_RGB_888:
         return D3DFMT_R8G8B8;
     case rf::BMPF_RGB_565:
         return D3DFMT_R5G6B5;
-    case rf::BMPF_RGBA_1555:
+    case rf::BMPF_ARGB_1555:
         return D3DFMT_A1R5G5B5;
-    case rf::BMPF_RGBA_4444:
+    case rf::BMPF_ARGB_4444:
         return D3DFMT_A4R4G4B4;
     default:
         if (static_cast<unsigned>(pixel_fmt) >= 0x10) {
@@ -59,15 +59,15 @@ inline rf::BmPixelFormat GetPixelFormatFromD3DFormat(D3DFORMAT d3d_fmt)
         return rf::BMPF_RGB_565;
     case D3DFMT_X1R5G5B5:
     case D3DFMT_A1R5G5B5:
-        return rf::BMPF_RGBA_1555;
+        return rf::BMPF_ARGB_1555;
     case D3DFMT_A4R4G4B4:
     case D3DFMT_X4R4G4B4:
-        return rf::BMPF_RGBA_4444;
+        return rf::BMPF_ARGB_4444;
     case D3DFMT_R8G8B8:
         return rf::BMPF_RGB_888;
     case D3DFMT_A8R8G8B8:
     case D3DFMT_X8R8G8B8:
-        return rf::BMPF_RGBA_8888;
+        return rf::BMPF_ARGB_8888;
     case D3DFMT_A8:
         return rf::BMPF_A_8;
     default:
@@ -79,6 +79,6 @@ inline rf::BmPixelFormat GetPixelFormatFromD3DFormat(D3DFORMAT d3d_fmt)
 #endif
 
 void GrColorInit();
-bool ConvertBitmapFormat(uint8_t* dst_bits_ptr, rf::BmPixelFormat dst_fmt, const uint8_t* src_bits_ptr,
-                         rf::BmPixelFormat src_fmt, int width, int height, int dst_pitch, int src_pitch,
-                         const uint8_t* palette = nullptr, bool swap_bytes = false);
+bool ConvertSurfacePixelFormat(void* dst_bits_ptr, rf::BmPixelFormat dst_fmt, const void* src_bits_ptr,
+                               rf::BmPixelFormat src_fmt, int width, int height, int dst_pitch, int src_pitch,
+                               const uint8_t* palette = nullptr);

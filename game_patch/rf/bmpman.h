@@ -11,11 +11,14 @@ namespace rf
         BMPF_BGR_888_INDEXED = 0x1,
         BMPF_A_8 = 0x2,
         BMPF_RGB_565 = 0x3,
-        BMPF_RGBA_4444 = 0x4,
-        BMPF_RGBA_1555 = 0x5,
+        BMPF_ARGB_4444 = 0x4,
+        BMPF_ARGB_1555 = 0x5,
         BMPF_RGB_888 = 0x6,
-        BMPF_RGBA_8888 = 0x7,
+        BMPF_ARGB_8888 = 0x7,
         BMPF_UNK_8_16BIT = 0x8, // not supported by D3D routines
+#ifdef DASH_FACTION
+        BMPF_BGR_888 = 0x9,
+#endif
     };
 
     enum BmBitmapType

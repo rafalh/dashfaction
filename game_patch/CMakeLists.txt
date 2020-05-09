@@ -102,6 +102,7 @@ set(SRCS
     utils/list-utils.h
     utils/os-utils.cpp
     utils/os-utils.h
+    utils/perf-utils.h
     utils/string-utils.h
     console/console.cpp
     console/console.h

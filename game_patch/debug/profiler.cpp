@@ -8,6 +8,9 @@
 #include <patch_common/MemUtils.h>
 #include <cstddef>
 #include "debug_internal.h"
+#include "../utils/perf-utils.h"
+
+std::vector<std::unique_ptr<PerfAggregator>> PerfAggregator::instances_;
 
 class Installable
 {
@@ -243,6 +246,17 @@ DcCommand2 profiler_cmd{
     },
 };
 
+DcCommand2 perf_dump_cmd{
+    "d_perf_dump",
+    []() {
+        rf::DcPrintf("Number of performance aggregators: %u", PerfAggregator::get_instances().size());
+        for (auto& ptr : PerfAggregator::get_instances()) {
+            rf::DcPrintf("%s: calls %u, duration %u us, avg %u us", ptr->get_name().c_str(),
+                ptr->get_calls(), ptr->get_total_duration_us(), ptr->get_avg_duration_us());
+        }
+    },
+};
+
 void ProfilerInit()
 {
     g_profilers.push_back(std::make_unique<CallProfiler>(0x0043363B, "simulation frame"));
@@ -295,6 +309,7 @@ void ProfilerInit()
     g_profilers.push_back(std::make_unique<AddrRangeProfiler>(0x00432A1D, 0x00432F4F, "  misc (after HUD)"));
 
     profiler_cmd.Register();
+    perf_dump_cmd.Register();
 }
 
 void ProfilerDrawUI()

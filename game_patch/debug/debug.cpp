@@ -1,10 +1,14 @@
 #include "debug_internal.h"
 
+#ifndef NDEBUG
+#define DEBUG_PERF
+#endif
+
 void DebugApplyPatches()
 {
     DebugCmdApplyPatches();
     DebugUnresponsiveApplyPatches();
-#ifndef NDEBUG
+#ifdef DEBUG_PERF
     ProfilerInit();
 #endif
 }
@@ -26,8 +30,10 @@ void DebugRender()
 void DebugRenderUI()
 {
     DebugCmdRenderUI();
-#ifndef NDEBUG
+#ifdef DEBUG_PERF
     ProfilerDrawUI();
+#endif
+#ifndef NDEBUG
     RenderObjDebugUI();
 #endif
 }
