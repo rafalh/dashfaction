@@ -1,7 +1,7 @@
+#include <wxx_wincore.h>
 #include "OptionsDlg.h"
 #include "LauncherApp.h"
 #include <xlog/xlog.h>
-#include <wxx_wincore.h>
 #include <wxx_dialog.h>
 #include <wxx_commondlg.h>
 

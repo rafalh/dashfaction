@@ -53,18 +53,17 @@ static bool check_for_update()
 {
     UpdateChecker update_checker;
 
-    if (!update_checker.check()) {
+    auto chk_result = update_checker.check();
+    if (!chk_result) {
         std::printf("No new version is available.\n");
         return false;
     }
 
-    const std::string& msg = update_checker.get_message();
-    std::printf("%s\n", msg.c_str());
-    int result = MessageBox(nullptr, msg.c_str(), "DashFaction update is available!", MB_OKCANCEL | MB_ICONEXCLAMATION);
+    std::printf("%s\n", chk_result.message.c_str());
+    int result = MessageBox(nullptr, chk_result.message.c_str(), "DashFaction update is available!", MB_OKCANCEL | MB_ICONEXCLAMATION);
     if (result == IDOK) {
-        const std::string& url = update_checker.get_url();
-        std::printf("url %s\n", url.c_str());
-        ShellExecute(nullptr, "open", url.c_str(), nullptr, nullptr, SW_SHOW);
+        std::printf("url %s\n", chk_result.url.c_str());
+        ShellExecute(nullptr, "open", chk_result.url.c_str(), nullptr, nullptr, SW_SHOW);
         return true;
     }
 

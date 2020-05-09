@@ -49,8 +49,7 @@ BOOL MainDlg::OnInitDialog()
     m_tool_tip.AddTool(m_mod_selector, "Select a game mod (you can download them from FactionFiles.com)");
 
 #ifdef NDEBUG
-    m_update_checker = std::make_unique<UpdateChecker>(*this);
-    m_update_checker->check_async([=]() { PostMessageA(WM_UPDATE_CHECK, 0, 0); });
+    m_update_checker.check_async([=]() { PostMessageA(WM_UPDATE_CHECK, 0, 0); });
 #endif
 
     return TRUE; // return TRUE  unless you set the focus to a control
@@ -141,20 +140,24 @@ LRESULT MainDlg::OnUpdateCheck(WPARAM wparam, LPARAM lparam)
     UNREFERENCED_PARAMETER(wparam);
     UNREFERENCED_PARAMETER(lparam);
 
-    if (m_update_checker->has_error()) {
+    UpdateChecker::CheckResult chk_result;
+    try {
+        chk_result = m_update_checker.get_result();
+    }
+    catch (std::exception& e) {
         m_update_status.SetWindowText("Failed to check for update");
-        m_tool_tip.AddTool(m_update_status, m_update_checker->get_error().c_str());
+        m_tool_tip.AddTool(m_update_status, e.what());
         return 0;
     }
 
-    if (!m_update_checker->is_new_version_available())
+    if (!chk_result)
         m_update_status.SetWindowText("No update is available.");
     else {
         m_update_status.SetWindowText("New version available!");
-        int result = MessageBoxA(m_update_checker->get_message().c_str(), "Dash Faction update is available!",
+        int result = MessageBoxA(chk_result.message.c_str(), "Dash Faction update is available!",
                                   MB_OKCANCEL | MB_ICONEXCLAMATION);
         if (result == IDOK) {
-            auto exec_ret = ShellExecuteA(*this, "open", m_update_checker->get_url().c_str(), NULL, NULL, SW_SHOW);
+            auto exec_ret = ShellExecuteA(*this, "open", chk_result.url.c_str(), NULL, NULL, SW_SHOW);
             if (reinterpret_cast<int>(exec_ret) <= 32) {
                 xlog::error("ShellExecuteA failed %p", exec_ret);
             }
@@ -180,20 +183,13 @@ void MainDlg::OnBnClickedOptionsBtn()
 
 void MainDlg::OnBnClickedOk()
 {
-    if (m_update_checker)
-        m_update_checker->abort();
-
     CString selected_mod = GetSelectedMod();
-
     if (GetLauncherApp()->LaunchGame(*this, selected_mod))
         AfterLaunch();
 }
 
 void MainDlg::OnBnClickedEditorBtn()
 {
-    if (m_update_checker)
-        m_update_checker->abort();
-
     CStringA selected_mod = GetSelectedMod();
     if (GetLauncherApp()->LaunchEditor(*this, selected_mod))
         AfterLaunch();

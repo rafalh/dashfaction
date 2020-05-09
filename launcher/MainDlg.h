@@ -4,8 +4,7 @@
 #include <wxx_dialog.h>
 #include <wxx_controls.h>
 #include <memory>
-
-class UpdateChecker;
+#include <launcher_common/UpdateChecker.h>
 
 class MainDlg : public CDialog
 {
@@ -37,6 +36,6 @@ protected:
     CStatic m_update_status;
     CComboBox m_mod_selector;
 
-    std::unique_ptr<UpdateChecker> m_update_checker;
+    AsyncUpdateChecker m_update_checker;
     CToolTip m_tool_tip;
 };

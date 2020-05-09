@@ -3,23 +3,12 @@
 #include <common/version.h>
 #include <common/HttpRequest.h>
 #include <cstring>
+#include <thread>
+#include <mutex>
 
 #define UPDATE_CHECK_ENDPOINT_URL "https://ravin.tk/api/rf/dashfaction/checkupdate.php"
 
-void UpdateChecker::check_async(std::function<void()> callback)
-{
-    m_abort = false;
-    m_callback = callback;
-    std::thread th(&UpdateChecker::thread_proc, this);
-    m_thread = std::move(th);
-}
-
-void UpdateChecker::abort()
-{
-    m_abort = true;
-}
-
-bool UpdateChecker::check()
+UpdateChecker::CheckResult UpdateChecker::check()
 {
     HttpSession session{"DashFaction"};
     auto url = UPDATE_CHECK_ENDPOINT_URL "?version=" VERSION_STR;
@@ -27,43 +16,69 @@ bool UpdateChecker::check()
     HttpRequest req{url, "GET", session};
     req.send();
 
-    if (m_abort)
-        return false;
-
     char buf[4096];
     size_t bytes_read = req.read(buf, sizeof(buf) - 1);
     buf[bytes_read] = 0;
 
-    if (m_abort)
-        return false;
-
-    if (!buf[0])
-        m_new_version = false;
-    else {
-        // printf("%s\n", buf);x
+    UpdateChecker::CheckResult result;
+    if (buf[0]) {
         char* url = buf;
         char* msg_text = std::strchr(buf, '\n');
         if (msg_text) {
             *msg_text = 0;
             ++msg_text;
         }
-        m_new_version = true;
-        m_url = url;
-        m_message = msg_text;
+        result.url = url;
+        result.message = msg_text;
     }
 
-    return m_new_version;
+    return result;
 }
 
-void UpdateChecker::thread_proc()
+struct AsyncUpdateChecker::SharedData
 {
-    try {
-        check();
-    }
-    catch (const std::exception& e) {
-        m_error = e.what();
-    }
+    std::mutex mutex;
+    bool aborted = false;
+    std::string error;
+    std::optional<UpdateChecker::CheckResult> result_opt;
+};
 
-    if (!m_abort)
-        m_callback();
+AsyncUpdateChecker::~AsyncUpdateChecker()
+{
+    std::lock_guard lg{m_shared_data->mutex};
+    m_shared_data->aborted = true;
+}
+
+void AsyncUpdateChecker::check_async(std::function<void()> callback)
+{
+    auto shared_data = std::make_shared<SharedData>();
+    std::thread th([shared_data, callback]() {
+        UpdateChecker checker;
+        bool aborted;
+        try {
+            auto result = checker.check();
+            std::lock_guard lg{shared_data->mutex};
+            shared_data->result_opt = std::optional{result};
+            aborted = shared_data->aborted;
+        }
+        catch (const std::exception& e) {
+            std::lock_guard lg{shared_data->mutex};
+            shared_data->error = e.what();
+            aborted = shared_data->aborted;
+        }
+        if (!aborted) {
+            callback();
+        }
+    });
+    th.detach();
+    m_shared_data = shared_data;
+}
+
+UpdateChecker::CheckResult AsyncUpdateChecker::get_result()
+{
+    std::lock_guard lg{m_shared_data->mutex};
+    if (!m_shared_data->error.empty()) {
+        throw std::runtime_error{m_shared_data->error};
+    }
+    return m_shared_data->result_opt.value();
 }
