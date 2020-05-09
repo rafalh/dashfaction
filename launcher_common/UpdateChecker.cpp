@@ -2,7 +2,6 @@
 #include <common/Exception.h>
 #include <common/version.h>
 #include <common/HttpRequest.h>
-#include <cstring>
 #include <thread>
 #include <mutex>
 
@@ -18,18 +17,18 @@ UpdateChecker::CheckResult UpdateChecker::check()
 
     char buf[4096];
     size_t bytes_read = req.read(buf, sizeof(buf) - 1);
-    buf[bytes_read] = 0;
+    std::string_view response{buf, bytes_read};
 
     UpdateChecker::CheckResult result;
-    if (buf[0]) {
-        char* url = buf;
-        char* msg_text = std::strchr(buf, '\n');
-        if (msg_text) {
-            *msg_text = 0;
-            ++msg_text;
+    if (!response.empty()) {
+        auto new_line_pos = response.find('\n');
+        if (new_line_pos != std::string_view::npos) {
+            result.url = response.substr(0, new_line_pos);
+            result.message = response.substr(new_line_pos + 1);
         }
-        result.url = url;
-        result.message = msg_text;
+        else {
+            throw std::runtime_error{"Invalid response format"};
+        }
     }
 
     return result;
