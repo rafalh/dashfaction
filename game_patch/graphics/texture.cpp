@@ -67,7 +67,7 @@ public:
 
     D3DFORMAT select(rf::BmPixelFormat pixel_fmt)
     {
-        if (static_cast<unsigned>(pixel_fmt) >= 0x10) {
+        if (static_cast<unsigned>(pixel_fmt) >= 20) {
             return static_cast<D3DFORMAT>(pixel_fmt);
         }
         switch (pixel_fmt) {
@@ -174,7 +174,7 @@ FunHook<GrD3DSetTextureData_Type> gr_d3d_set_texture_data_hook{
         }
 
         bool success = true;
-        if (static_cast<int>(pixel_fmt) >= 0x10) {
+        if (static_cast<int>(pixel_fmt) >= 20) {
             xlog::trace("Writing texture in custom format level %d src %p bm %dx%d tex %dx%d section %d %d",
                 level, src_bits_ptr, bm_w, bm_h, tex_w, tex_h, section->x, section->y);
             auto d3d_fmt = static_cast<D3DFORMAT>(pixel_fmt);

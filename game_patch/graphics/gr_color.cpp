@@ -493,34 +493,39 @@ CodeInjection WaterGenerateTexture_color_conv_patch{
             return;
         }
 
-        CallWithPixelFormat(src_lock_data.pixel_format, [=](auto s) {
-            CallWithPixelFormat(dst_lock_data.pixel_format, [=](auto d) {
-                auto& byte_1370f90 = AddrAsRef<uint8_t[256]>(0x1370F90);
-                auto& byte_1371b14 = AddrAsRef<uint8_t[256]>(0x1371B14);
-                auto& byte_1371090 = AddrAsRef<uint8_t[512]>(0x1371090);
+        try {
+            CallWithPixelFormat(src_lock_data.pixel_format, [=](auto s) {
+                CallWithPixelFormat(dst_lock_data.pixel_format, [=](auto d) {
+                    auto& byte_1370f90 = AddrAsRef<uint8_t[256]>(0x1370F90);
+                    auto& byte_1371b14 = AddrAsRef<uint8_t[256]>(0x1371B14);
+                    auto& byte_1371090 = AddrAsRef<uint8_t[512]>(0x1371090);
 
-                uint8_t* dst_row_ptr = dst_lock_data.bits;
-                int src_pixel_size = GetPixelFormatSize(src_lock_data.pixel_format);
+                    uint8_t* dst_row_ptr = dst_lock_data.bits;
+                    int src_pixel_size = GetPixelFormatSize(src_lock_data.pixel_format);
 
-                for (int y = 0; y < dst_lock_data.height; ++y) {
-                    int t1 = byte_1370f90[y];
-                    int t2 = byte_1371b14[y];
-                    uint8_t* off_arr = &byte_1371090[-t1];
-                    PixelsWriter<decltype(d)::value> wrt{dst_row_ptr};
-                    for (int x = 0; x < dst_lock_data.width; ++x) {
-                        int src_x = t1;
-                        int src_y = t2 + off_arr[t1];
-                        int src_x_limited = src_x & (dst_lock_data.width - 1);
-                        int src_y_limited = src_y & (dst_lock_data.height - 1);
-                        const uint8_t* src_ptr = src_lock_data.bits + src_x_limited * src_pixel_size + src_y_limited * src_lock_data.pitch;
-                        PixelsReader<decltype(s)::value> rdr{src_ptr};
-                        wrt.write(rdr.read());
-                        ++t1;
+                    for (int y = 0; y < dst_lock_data.height; ++y) {
+                        int t1 = byte_1370f90[y];
+                        int t2 = byte_1371b14[y];
+                        uint8_t* off_arr = &byte_1371090[-t1];
+                        PixelsWriter<decltype(d)::value> wrt{dst_row_ptr};
+                        for (int x = 0; x < dst_lock_data.width; ++x) {
+                            int src_x = t1;
+                            int src_y = t2 + off_arr[t1];
+                            int src_x_limited = src_x & (dst_lock_data.width - 1);
+                            int src_y_limited = src_y & (dst_lock_data.height - 1);
+                            const uint8_t* src_ptr = src_lock_data.bits + src_x_limited * src_pixel_size + src_y_limited * src_lock_data.pitch;
+                            PixelsReader<decltype(s)::value> rdr{src_ptr};
+                            wrt.write(rdr.read());
+                            ++t1;
+                        }
+                        dst_row_ptr += dst_lock_data.pitch;
                     }
-                    dst_row_ptr += dst_lock_data.pitch;
-                }
+                });
             });
-        });
+        }
+        catch (const std::exception& e) {
+            xlog::error("Pixel format conversion failed for liquid wave texture: %s", e.what());
+        }
 
         rf::GrUnlock(&src_lock_data);
         rf::GrUnlock(&dst_lock_data);
@@ -543,11 +548,16 @@ CodeInjection GetAmbientColorFromLightmaps_color_conv_patch{
             auto src_bytes_per_pixel = GetPixelFormatSize(lock_data.pixel_format);
             const uint8_t* src_ptr = lock_data.bits + y * lock_data.pitch + x * src_bytes_per_pixel;
             // Note: GrLock never returns indexed bitmap
-            CallWithPixelFormat(lock_data.pixel_format, [&](auto fmt) {
-                PixelsReader<decltype(fmt)::value> rdr{src_ptr};
-                PixelColor<rf::BMPF_ARGB_8888> pixel = rdr.read();
-                color.SetRGBA(pixel.r.value, pixel.g.value, pixel.b.value, 255);
-            });
+            try {
+                CallWithPixelFormat(lock_data.pixel_format, [&](auto fmt) {
+                    PixelsReader<decltype(fmt)::value> rdr{src_ptr};
+                    PixelColor<rf::BMPF_ARGB_8888> pixel = rdr.read();
+                    color.SetRGBA(pixel.r.value, pixel.g.value, pixel.b.value, 255);
+                });
+            }
+            catch (const std::exception& e) {
+                xlog::error("Pixel format conversion failed: %s", e.what());
+            }
             rf::GrUnlock(&lock_data);
         }
     },
@@ -609,10 +619,10 @@ void GrColorInit()
         WriteMem<u32>(0x005A7E04, D3DFMT_A8R8G8B8); // old: D3DFMT_A1R5G5B5, lightmaps
         WriteMem<u32>(0x005A7E08, D3DFMT_A8R8G8B8); // old: D3DFMT_A4R4G4B4
         WriteMem<u32>(0x005A7E0C, D3DFMT_A4R4G4B4); // old: D3DFMT_A8R3G3B2
-    }
 
-    // use 32-bit texture for Bink rendering
-    BinkInitDeviceInfo_hook.Install();
+        // use 32-bit texture for Bink rendering
+        BinkInitDeviceInfo_hook.Install();
+    }
 
     // lightmaps
     RflLoadLightmaps_color_conv_patch.Install();
