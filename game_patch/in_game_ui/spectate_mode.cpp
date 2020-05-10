@@ -240,7 +240,7 @@ void SpectateModeOnDestroyPlayer(rf::Player* player)
 FunHook<void(rf::Player*)> RenderReticle_hook{
     0x0043A2C0,
     [](rf::Player* player) {
-        if (rf::GameSeqGetState() == rf::GS_MP_LIMBO)
+        if (rf::GameSeqGetState() == rf::GS_MULTI_LIMBO)
             return;
         if (g_spectate_mode_enabled)
             RenderReticle_hook.CallTarget(g_spectate_mode_target);

@@ -43,6 +43,7 @@ set(SRCS
     rf/debug_console.h
     rf/entity.h
     rf/event.h
+    rf/fs.h
     rf/game_seq.h
     rf/graphics.h
     rf/item.h

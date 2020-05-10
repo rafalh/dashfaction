@@ -27,7 +27,7 @@ struct ParticleEmitterType
     float min_spawn_delay;
     float max_spawn_delay;
     float spawn_radius;
-    __int16 flags;
+    int16_t flags;
     float min_life_secs;
     float max_life_secs;
     float min_pradius;

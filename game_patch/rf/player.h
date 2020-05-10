@@ -238,7 +238,7 @@ namespace rf
         char field_33;
         AnimMesh *fpgun_mesh;
         AnimMesh *last_fpgun_mesh;
-        Timer timer_3C;
+        Timer fpgun_idle_timer;
         int fpgun_muzzle_props[2];
         int fpgun_ammo_digit1_prop;
         int fpgun_ammo_digit2_prop;
@@ -274,13 +274,13 @@ namespace rf
         int infrared_weapon_cls_id;
         Player_1094 field_1094;
         int field_10C4[3];
-        Color screen_overlay_color;
-        int screen_overlay_alpha;
+        Color screen_flash_color;
+        int screen_flash_alpha;
         float field_10D8;
         float field_10DC;
         int field_10E0;
         int weapon_cls_state_id;
-        int field_10E8[26];
+        void* riot_shield_hits[26];
         int gasp_outside_sound;
         int pref_weapons[32];
         float black_out_time;

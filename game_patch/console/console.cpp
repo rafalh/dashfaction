@@ -40,7 +40,7 @@ FunHook<int()> MenuUpdate_hook{
     0x00434230,
     []() {
         int menu_id = MenuUpdate_hook.CallTarget();
-        if (menu_id == rf::GS_MP_LIMBO) // hide cursor when changing level - hackfixed in RF by changing rendering logic
+        if (menu_id == rf::GS_MULTI_LIMBO) // hide cursor when changing level - hackfixed in RF by changing rendering logic
             rf::SetCursorVisible(false);
         else if (menu_id == rf::GS_MAIN_MENU)
             rf::SetCursorVisible(true);

@@ -28,7 +28,7 @@ void BanCmdHandlerHook()
 
             if (player) {
                 if (player != rf::local_player) {
-                    rf::DcPrintf(rf::strings::array[959], player->name.CStr());
+                    rf::DcPrintf(rf::strings::banning_player, player->name.CStr());
                     rf::BanIp(player->nw_data->addr);
                     rf::KickPlayer(player);
                 }

@@ -62,7 +62,7 @@ CodeInjection GrSetViewMatrix_widescreen_fix{
         // g_gr_screen.aspect == ScrW / ScrH * 0.75 (1.0 for 4:3 monitors, 1.2 for 16:10) - looks like Pixel Aspect
         // Ratio We use here MaxWidth and MaxHeight to calculate proper FOV for windowed mode
 
-        float viewport_aspect_ratio = static_cast<float>(rf::gr_screen.viewport_width) / rf::gr_screen.viewport_height;
+        float viewport_aspect_ratio = static_cast<float>(rf::gr_screen.clip_width) / rf::gr_screen.clip_height;
         float aspect_ratio = static_cast<float>(rf::gr_screen.max_width) / rf::gr_screen.max_height;
         float scale_x = 1.0f;
         // this is how RF does compute scale_y and it is needed for working scanner

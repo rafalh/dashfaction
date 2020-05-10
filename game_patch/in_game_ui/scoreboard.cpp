@@ -34,7 +34,7 @@ void DrawScoreboardInternal_New(bool draw)
         return;
 
     unsigned c_left_col = 0, c_right_col = 0;
-    int game_type = rf::MultiGetGameType();
+    auto game_type = rf::MultiGetGameType();
     bool single_column = game_type == rf::MGT_DM;
 
     // Sort players by score
@@ -102,11 +102,11 @@ void DrawScoreboardInternal_New(bool draw)
     // Draw Game Type name
     const char* game_type_name;
     if (game_type == rf::MGT_DM)
-        game_type_name = rf::strings::array[974];
+        game_type_name = rf::strings::deathmatch;
     else if (game_type == rf::MGT_CTF)
-        game_type_name = rf::strings::array[975];
+        game_type_name = rf::strings::capture_the_flag;
     else
-        game_type_name = rf::strings::array[976];
+        game_type_name = rf::strings::team_deathmatch;
     rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, x_center, y, game_type_name, rf::medium_font_id, rf::gr_text_material);
     y += 20;
 
@@ -255,7 +255,7 @@ void HudRender_00437BC0()
 
     bool scoreboard_control_active = rf::IsEntityCtrlActive(&rf::local_player->config.controls, rf::GC_MP_STATS, 0);
     bool is_player_dead = rf::IsPlayerEntityInvalid(rf::local_player) || rf::IsPlayerDying(rf::local_player);
-    bool limbo = rf::GameSeqGetState() == rf::GS_MP_LIMBO;
+    bool limbo = rf::GameSeqGetState() == rf::GS_MULTI_LIMBO;
     bool show_scoreboard = scoreboard_control_active || (!SpectateModeIsActive() && is_player_dead) || limbo;
 
     if (g_game_config.scoreboard_anim) {

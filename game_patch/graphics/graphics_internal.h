@@ -2,6 +2,7 @@
 
 #include "../rf/common.h"
 #include "../rf/bmpman.h"
+#include "../rf/fs.h"
 
 void ReleaseAllDefaultPoolTextures();
 void DestroyTexture(int bmh);

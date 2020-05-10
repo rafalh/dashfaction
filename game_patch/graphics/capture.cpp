@@ -8,6 +8,7 @@
 #include "../rf/object.h"
 #include "../rf/player.h"
 #include "../rf/misc.h"
+#include "../rf/fs.h"
 #include "../utils/com-utils.h"
 #include "../utils/list-utils.h"
 #include "../utils/string-utils.h"

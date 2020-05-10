@@ -1,7 +1,7 @@
 #include <windows.h>
 #include "packfile.h"
 #include "../main.h"
-#include "../rf/misc.h"
+#include "../rf/fs.h"
 #include "../utils/iterable-utils.h"
 #include <xxhash.h>
 #include <common/BuildConfig.h>

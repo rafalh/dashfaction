@@ -79,11 +79,6 @@ namespace rf
     static auto& ChatPrint = AddrAsRef<void(String::Pod text, ChatMsgColor color, String::Pod prefix)>(0x004785A0);
     static auto& ChatSay = AddrAsRef<void(const char *msg, bool is_team_msg)>(0x00444150);
 
-    /* File System */
-
-    static auto& PackfileLoad = AddrAsRef<int(const char *file_name, const char *dir)>(0x0052C070);
-    static auto& FsAddDirectoryEx = AddrAsRef<int(const char *dir, const char *ext_list, bool unknown)>(0x00514070);
-
     /* Window */
 
     typedef void(*MsgHandlerPtr)(UINT, WPARAM, LPARAM);
@@ -111,7 +106,6 @@ namespace rf
     };
     static_assert(sizeof(RflLightmap) == 0x18);
 
-    static auto& root_path = AddrAsRef<char[256]>(0x018060E8);
     static auto& level_name = AddrAsRef<String>(0x00645FDC);
     static auto& level_filename = AddrAsRef<String>(0x00645FE4);
     static auto& level_author = AddrAsRef<String>(0x00645FEC);
@@ -120,14 +114,13 @@ namespace rf
     static auto& rfl_static_geometry = AddrAsRef<void*>(0x006460E8);
 
     static auto& RfBeep = AddrAsRef<void(unsigned u1, unsigned u2, unsigned u3, float volume)>(0x00505560);
-    static auto& GetFileExt = AddrAsRef<char*(const char *path)>(0x005143F0);
     static auto& SetNextLevelFilename = AddrAsRef<void(String::Pod level_filename, String::Pod save_filename)>(0x0045E2E0);
     static auto& DemoLoadLevel = AddrAsRef<void(const char *level_filename)>(0x004CC270);
     static auto& SetCursorVisible = AddrAsRef<void(bool visible)>(0x0051E680);
     static auto& CutsceneIsActive = AddrAsRef<bool()>(0x0045BE80);
     static auto& TimerGet = AddrAsRef<int(int mult)>(0x00504AB0);
     static auto& GeomClearCache = AddrAsRef<void()>(0x004F0B90);
-    static auto& FileGetChecksum = AddrAsRef<int(const char* filename)>(0x00436630);
+    static auto& GetFileChecksum = AddrAsRef<int(const char* filename)>(0x00436630);
 
     /* Strings Table */
     namespace strings {
@@ -150,6 +143,10 @@ namespace rf
         static const auto &you_killed = array[945];
         static const auto &got_beat_down_by = array[946];
         static const auto &kicking_player = array[958];
+        static const auto &banning_player = array[959];
+        static const auto &deathmatch = array[974];
+        static const auto &capture_the_flag = array[975];
+        static const auto &team_deathmatch = array[976];
     }
 
     /* Save-restore */
