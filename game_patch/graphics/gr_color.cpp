@@ -35,7 +35,8 @@ struct ColorChannelConverter
 {
     constexpr ColorChannel<DST_BITS> operator()(ColorChannel<SRC_BITS> src)
     {
-        return {src.value * ColorChannel<DST_BITS>::max / ColorChannel<SRC_BITS>::max};
+        return {(src.value * ColorChannel<DST_BITS>::max + ColorChannel<SRC_BITS>::max / 2)
+            / ColorChannel<SRC_BITS>::max};
     }
 };
 
