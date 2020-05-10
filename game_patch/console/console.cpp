@@ -83,10 +83,11 @@ void ConsoleApplyPatches()
     WriteMemPtr(0x004B2534, "-- " PRODUCT_NAME " Initializing --\n");
 
     // Console background color
-    WriteMem<u32>(0x005098D1, CONSOLE_BG_A); // Alpha
-    WriteMem<u8>(0x005098D6, CONSOLE_BG_B);  // Blue
-    WriteMem<u8>(0x005098D8, CONSOLE_BG_G);  // Green
-    WriteMem<u8>(0x005098DA, CONSOLE_BG_R);  // Red
+    constexpr rf::Color console_color{0x00, 0x00, 0x40, 0xC0};
+    WriteMem<u32>(0x005098D1, console_color.alpha);
+    WriteMem<u8>(0x005098D6, console_color.blue);
+    WriteMem<u8>(0x005098D8, console_color.green);
+    WriteMem<u8>(0x005098DA, console_color.red);
 
     // Fix console rendering when changing level
     AsmWriter(0x0047C490).ret();

@@ -6,6 +6,7 @@
 #include "../rf/misc.h"
 #include "../stdafx.h"
 #include "../utils/perf-utils.h"
+#include <common/BuildConfig.h>
 #include <patch_common/AsmWriter.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
@@ -18,15 +19,35 @@ struct ColorChannelConverter;
 template<int BITS>
 struct ColorChannel
 {
-    static constexpr unsigned bits = BITS;
-    static constexpr unsigned max = (1 << BITS) - 1;
+    static constexpr int bits = BITS;
+    static constexpr int max = (1 << BITS) - 1;
 
-    unsigned value;
+    int value = 0;
 
     template<int DST_BITS>
     constexpr operator ColorChannel<DST_BITS>() const
     {
         return ColorChannelConverter<BITS, DST_BITS>{}(*this);
+    }
+
+    ColorChannel<BITS> operator+(ColorChannel<BITS> other) const
+    {
+        return ColorChannel<BITS>{value + other.value};
+    }
+
+    ColorChannel<BITS> operator-(ColorChannel<BITS> other) const
+    {
+        return ColorChannel<BITS>{value - other.value};
+    }
+
+    ColorChannel<BITS> operator*(int n) const
+    {
+        return ColorChannel<BITS>{value * n};
+    }
+
+    ColorChannel<BITS> operator/(int n) const
+    {
+        return ColorChannel<BITS>{value / n};
     }
 };
 
@@ -191,6 +212,26 @@ struct PixelColor
     {
         return PixelColor<PF2>{a, r, g, b};
     }
+
+    PixelColor<FMT> operator-(PixelColor<FMT> other) const
+    {
+        return PixelColor<FMT>{a - other.a, r - other.r, g - other.g, b - other.b};
+    }
+
+    PixelColor<FMT> operator+(PixelColor<FMT> other) const
+    {
+        return PixelColor<FMT>{a + other.a, r + other.r, g + other.g, b + other.b};
+    }
+
+    PixelColor<FMT> operator*(int n) const
+    {
+        return PixelColor<FMT>{a * n, r * n, g * n, b * n};
+    }
+
+    PixelColor<FMT> operator/(int n) const
+    {
+        return PixelColor<FMT>{a / n, r / n, g / n, b / n};
+    }
 };
 
 template<rf::BmPixelFormat PF>
@@ -210,8 +251,8 @@ class PixelsReader
             return {val[CH::index]};
         }
         else {
-            constexpr unsigned mask = (1 << CH::bits) - 1;
-            return {(val >> CH::offset) & mask};
+            constexpr int mask = (1 << CH::bits) - 1;
+            return {static_cast<int>(val >> CH::offset) & mask};
         }
     }
 
@@ -309,6 +350,31 @@ public:
 
     void operator()()
     {
+#if TEXTURE_DITHERING
+        auto prev_row_deltas = std::make_unique<PixelColor<SRC_FMT>[]>(w_ + 2);
+        auto cur_row_deltas = std::make_unique<PixelColor<SRC_FMT>[]>(w_ + 2);
+        while (h_ > 0) {
+            PixelsReader<SRC_FMT> rdr{src_ptr_, src_palette_};
+            PixelsWriter<DST_FMT> wrt{dst_ptr_};
+            PixelColor<SRC_FMT> delta;
+            for (size_t x = 0; x < w_; ++x) {
+                PixelColor<SRC_FMT> old_clr = rdr.read()
+                    + delta                  * 7 / 16
+                    + prev_row_deltas[x]     * 3 / 16
+                    + prev_row_deltas[x + 1] * 5 / 16
+                    + prev_row_deltas[x + 2] * 1 / 16;
+                // TODO: make sure values are in range?
+                PixelColor<DST_FMT> new_clr = old_clr;
+                delta = old_clr - static_cast<PixelColor<SRC_FMT>>(new_clr);
+                cur_row_deltas[x + 1] = delta;
+                wrt.write(new_clr);
+            }
+            --h_;
+            src_ptr_ += src_pitch_;
+            dst_ptr_ += dst_pitch_;
+            cur_row_deltas.swap(prev_row_deltas);
+        }
+#else
         while (h_ > 0) {
             PixelsReader<SRC_FMT> rdr{src_ptr_, src_palette_};
             PixelsWriter<DST_FMT> wrt{dst_ptr_};
@@ -319,6 +385,7 @@ public:
             src_ptr_ += src_pitch_;
             dst_ptr_ += dst_pitch_;
         }
+#endif
     }
 };
 
@@ -365,7 +432,7 @@ bool ConvertSurfacePixelFormat(void* dst_bits_ptr, rf::BmPixelFormat dst_fmt, co
                                rf::BmPixelFormat src_fmt, int width, int height, int dst_pitch, int src_pitch,
                                const uint8_t* palette)
 {
-#ifdef DEBUG_PERF
+#if DEBUG_PERF
     static auto& color_conv_perf = PerfAggregator::create("ConvertSurfacePixelFormat");
     ScopedPerfMonitor mon{color_conv_perf};
 #endif
