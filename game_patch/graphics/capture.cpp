@@ -221,15 +221,15 @@ FunHook<void(int, int, int, int, int)> GrCaptureBackBuffer_hook{
 CallHook<int(rf::BmPixelFormat, int, int)> bm_create_user_bitmap_monitor_hook{
     0x00412547,
     []([[ maybe_unused ]] rf::BmPixelFormat pixel_fmt, int w, int h) {
-        return bm_create_user_bitmap_monitor_hook.CallTarget(render_target_pixel_format, w, h);
+        return bm_create_user_bitmap_monitor_hook.CallTarget(rf::BMPF_RENDER_TARGET, w, h);
     },
 };
 
 void MakeSureMonitorBitmapIsDynamic(rf::ClutterMonitor& mon)
 {
-    if (rf::BmGetPixelFormat(mon.bitmap) == render_target_pixel_format) {
+    if (rf::BmGetPixelFormat(mon.bitmap) == rf::BMPF_RENDER_TARGET) {
         xlog::trace("Changing pixel format for monitor bitmap");
-        ChangeUserBitmapPixelFormat(mon.bitmap, dynamic_texture_pixel_format);
+        ChangeUserBitmapPixelFormat(mon.bitmap, rf::BMPF_RGB_888, true);
     }
 }
 
@@ -454,7 +454,7 @@ void GraphicsCaptureInit()
     rocket_launcher_start_render_to_texture.Install();
 
     // Make sure scanner bitmap is a render target
-    WriteMem<u8>(0x004A34BF + 1, render_target_pixel_format);
+    WriteMem<u8>(0x004A34BF + 1, rf::BMPF_RENDER_TARGET);
 }
 
 void GraphicsCaptureAfterGameInit()

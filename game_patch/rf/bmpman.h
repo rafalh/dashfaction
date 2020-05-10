@@ -17,7 +17,9 @@ namespace rf
         BMPF_ARGB_8888 = 0x7,
         BMPF_UNK_8_16BIT = 0x8, // not supported by D3D routines
 #ifdef DASH_FACTION
-        BMPF_BGR_888 = 0x9,
+        // custom Dash Faction formats
+        BMPF_BGR_888 = 0x9,        // used by lightmaps
+        BMPF_RENDER_TARGET = 0x10, // texture is used as render target
 #endif
     };
 
@@ -30,6 +32,10 @@ namespace rf
         BM_VAF = 0x4,
         BM_VBM = 0x5,
         BM_M2V = 0x6,
+#ifdef DASH_FACTION
+        // Custom Dash Faction bitmap types
+        BM_DDS = 0x10,
+#endif
     };
 
     struct BmBitmapEntry

@@ -218,19 +218,11 @@ FunHook<int(rf::BmPixelFormat, int, int, int, IDirect3DTexture8**)> gr_d3d_creat
         D3DFORMAT d3d_format;
         D3DPOOL d3d_pool = D3DPOOL_MANAGED;
         int usage = 0;
-        if (pixel_fmt == render_target_pixel_format) {
+        if (pixel_fmt == rf::BMPF_RENDER_TARGET) {
             xlog::trace("Creating render target texture");
             d3d_format = rf::gr_d3d_pp.BackBufferFormat;
             d3d_pool = D3DPOOL_DEFAULT;
             usage = D3DUSAGE_RENDERTARGET;
-        }
-        else if (pixel_fmt == dynamic_texture_pixel_format) {
-            xlog::trace("Creating dynamic texture");
-            d3d_format = rf::gr_d3d_pp.BackBufferFormat;
-            // Note: In Direct3D 9 D3DUSAGE_DYNAMIC can be used but it has poor performance when texture is locked
-            //       without D3DLOCK_DISCARD flag so keep it disabled for now
-            // d3d_pool = D3DPOOL_DEFAULT;
-            // usage = D3DUSAGE_DYNAMIC;
         }
         else if (static_cast<unsigned>(pixel_fmt) >= 0x10) {
             d3d_format = static_cast<D3DFORMAT>(pixel_fmt);
@@ -242,6 +234,9 @@ FunHook<int(rf::BmPixelFormat, int, int, int, IDirect3DTexture8**)> gr_d3d_creat
                 return -1;
             }
         }
+
+        // TODO: In Direct3D 9 D3DPOOL_DEFAULT + D3DUSAGE_DYNAMIC can be used
+        // Note: it has poor performance when texture is locked without D3DLOCK_DISCARD flag
 
         xlog::trace("Creating texture in format %x", d3d_format);
         auto hr = rf::gr_d3d_device->CreateTexture(width, height, levels, usage, d3d_format, d3d_pool, texture_out);
@@ -306,7 +301,7 @@ FunHook<rf::BmPixelFormat(int, void**, void**)> bm_lock_hook{
     0x00510780,
     [](int bmh, void** pixels_out, void** palette_out) {
         auto& bm_entry = rf::bm_bitmaps[rf::BmHandleToIdxAnimAware(bmh)];
-        if (bm_entry.bitmap_type == dds_bm_type) {
+        if (bm_entry.bitmap_type == rf::BM_DDS) {
             LockDdsBitmap(bm_entry);
             *pixels_out = bm_entry.locked_data;
             *palette_out = bm_entry.locked_palette;
@@ -344,7 +339,7 @@ FunHook<int(int, rf::GrD3DTexture&)> gr_d3d_create_texture_hook{
             return result;
         }
         auto pixel_fmt = rf::BmGetPixelFormat(bm_handle);
-        if (pixel_fmt == render_target_pixel_format || pixel_fmt == dynamic_texture_pixel_format) {
+        if (pixel_fmt == rf::BMPF_RENDER_TARGET) {
             g_default_pool_tslots.insert(&tslot);
         }
         return result;
@@ -407,13 +402,14 @@ void DestroyTexture(int bmh)
     gr_d3d_tcache_remove_ref(bmh);
 }
 
-void ChangeUserBitmapPixelFormat(int bmh, rf::BmPixelFormat pixel_fmt)
+void ChangeUserBitmapPixelFormat(int bmh, rf::BmPixelFormat pixel_fmt, [[ maybe_unused ]] bool dynamic)
 {
     DestroyTexture(bmh);
     int bm_idx = rf::BmHandleToIdxAnimAware(bmh);
     auto& bm = rf::bm_bitmaps[bm_idx];
     assert(bm.bitmap_type == rf::BM_USERBMAP);
     bm.pixel_format = pixel_fmt;
+    // TODO: in DX9 use dynamic flag
 }
 
 void InitSupportedTextureFormats()

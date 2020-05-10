@@ -112,7 +112,7 @@ rf::BmBitmapType ReadDdsHeader(rf::File& file, int *width_out, int *height_out, 
         *num_levels_out = hdr.dwMipMapCount;
         xlog::trace("DDS mipmaps %lu (%lux%lu)", hdr.dwMipMapCount, hdr.dwWidth, hdr.dwHeight);
     }
-    return dds_bm_type;
+    return rf::BM_DDS;
 }
 
 int LockDdsBitmap(rf::BmBitmapEntry& bm_entry)

@@ -503,7 +503,7 @@ CodeInjection FaceLightingData_CalculateLightmap_color_conv_patch{
         uint8_t* dst_data = &lock_data.bits[dst_pixel_size * offset_x + offset_y * lock_data.pitch];
         int height = StructFieldRef<int>(face_light_info, 28);
         int src_pitch = 3 * src_width;
-        bool success = ConvertSurfacePixelFormat(dst_data, lock_data.pixel_format, src_data, rf::BMPF_RGB_888,
+        bool success = ConvertSurfacePixelFormat(dst_data, lock_data.pixel_format, src_data, rf::BMPF_BGR_888,
             src_width, height, lock_data.pitch, src_pitch);
         if (!success)
             xlog::error("ConvertSurfacePixelFormat failed for geomod (fmt %d)", lock_data.pixel_format);
@@ -534,7 +534,7 @@ CodeInjection FaceLightingData_AllocLightmap_color_conv_patch{
         int dst_pixel_size = GetPixelFormatSize(lock_data.pixel_format);
         uint8_t* dst_row_ptr = &lock_data.bits[dst_pixel_size * offset_x + offset_y * lock_data.pitch];
         int src_pitch = 3 * src_width;
-        bool success = ConvertSurfacePixelFormat(dst_row_ptr, lock_data.pixel_format, src_data, rf::BMPF_RGB_888,
+        bool success = ConvertSurfacePixelFormat(dst_row_ptr, lock_data.pixel_format, src_data, rf::BMPF_BGR_888,
                                                  src_width, height, lock_data.pitch, src_pitch);
         if (!success)
             xlog::error("ConvertBitmapFormat failed for geomod2 (fmt %d)", lock_data.pixel_format);
