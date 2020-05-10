@@ -68,9 +68,9 @@ private:
     void PrintInternal(int x, int y, const char* str)
     {
         rf::GrSetColor(0, 0, 0, 255);
-        rf::GrDrawText(x + 1, y + 1, str, -1, rf::gr_text_material);
+        rf::GrString(x + 1, y + 1, str);
         rf::GrSetColor(255, 255, 255, 255);
-        rf::GrDrawText(x, y, str, -1, rf::gr_text_material);
+        rf::GrString(x, y, str);
     }
 };
 

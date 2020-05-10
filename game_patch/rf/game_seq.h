@@ -44,4 +44,5 @@ namespace rf
 
     static auto& GameSeqSetState = AddrAsRef<int(GameSeqState state, bool force)>(0x00434190);
     static auto& GameSeqGetState = AddrAsRef<GameSeqState()>(0x00434200);
+    static auto& GameSeqIsCurrentlyInGame = AddrAsRef<bool()>(0x00434460);
 }

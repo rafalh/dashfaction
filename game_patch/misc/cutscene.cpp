@@ -38,7 +38,7 @@ void RenderSkipCutsceneHintText(rf::GameCtrl ctrl)
     auto msg = rf::String::Format("Press %s (%s) to skip the cutscene", ctrl_name.CStr(), bind_name.CStr());
     auto x = rf::GrGetMaxWidth() / 2;
     auto y = rf::GrGetMaxHeight() - 30;
-    rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, x, y, msg.CStr(), -1, rf::gr_text_material);
+    rf::GrStringAligned(rf::GR_ALIGN_CENTER, x, y, msg.CStr(), -1, rf::gr_string_state);
 }
 
 FunHook<void(bool)> MenuInGameUpdateCutscene_hook{

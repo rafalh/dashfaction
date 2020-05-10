@@ -112,7 +112,7 @@ CallHook<void()> MenuMainRender_hook{
                 if (leave_delta > EGG_ANIM_LEAVE_TIME)
                     g_version_click_counter = 0;
             }
-            rf::GrDrawImage(img, pos_x, pos_y, rf::gr_bitmap_material);
+            rf::GrBitmap(img, pos_x, pos_y, rf::gr_bitmap_clamp_state);
         }
     },
 };

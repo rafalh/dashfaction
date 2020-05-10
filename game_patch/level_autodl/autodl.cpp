@@ -419,17 +419,17 @@ void RenderDownloadProgress()
 
     if (cx_progress > 0) {
         rf::GrSetColor(0x80, 0x80, 0, 0x80);
-        rf::GrDrawRect(x, y, cx_progress, cy, rf::gr_rect_material);
+        rf::GrRect(x, y, cx_progress, cy);
     }
 
     if (cx > cx_progress) {
         rf::GrSetColor(0, 0, 0x60, 0x80);
-        rf::GrDrawRect(x + cx_progress, y, cx - cx_progress, cy, rf::gr_rect_material);
+        rf::GrRect(x + cx_progress, y, cx - cx_progress, cy);
     }
 
     rf::GrSetColor(0, 0xFF, 0, 0x80);
     auto text = StringFormat("Downloading: %.2f MB / %.2f MB", g_level_bytes_downloaded / 1024.0f / 1024.0f,
                              g_level_info.size_in_bytes / 1024.0f / 1024.0f);
-    rf::GrDrawAlignedText(rf::GR_ALIGN_CENTER, x + cx / 2, y + cy / 2 - cy_font / 2, text.c_str(), -1,
-                          rf::gr_text_material);
+    rf::GrStringAligned(rf::GR_ALIGN_CENTER, x + cx / 2, y + cy / 2 - cy_font / 2, text.c_str(), -1,
+                        rf::gr_string_state);
 }

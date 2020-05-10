@@ -345,13 +345,13 @@ CodeInjection GrD3DSetMaterialFlags_profile_patch{
         if (g_profile_frame) {
             auto state_flags = AddrAsRef<rf::GrRenderState>(regs.esp + 0x10 + 0x4);
             const char* desc = "";
-            if (state_flags == rf::gr_text_material)
+            if (state_flags == rf::gr_string_state)
                 desc = " (text)";
-            else if (state_flags == rf::gr_rect_material)
+            else if (state_flags == rf::gr_rect_state)
                 desc = " (rect)";
-            else if (state_flags == rf::gr_line_material)
+            else if (state_flags == rf::gr_line_state)
                 desc = " (line)";
-            else if (state_flags == rf::gr_bitmap_material)
+            else if (state_flags == rf::gr_bitmap_clamp_state)
                 desc = " (bitmap)";
             xlog::info("GrD3DSetMaterialFlags 0x%X%s", state_flags, desc);
         }
@@ -894,6 +894,6 @@ void GraphicsDrawFpsCounter()
     if (g_game_config.fps_counter && !rf::is_hud_hidden) {
         auto text = StringFormat("FPS: %.1f", rf::current_fps);
         rf::GrSetColor(0, 255, 0, 255);
-        rf::GrDrawAlignedText(rf::GR_ALIGN_RIGHT, rf::GrGetMaxWidth() - 10, 60, text.c_str(), -1, rf::gr_text_material);
+        rf::GrStringAligned(rf::GR_ALIGN_RIGHT, rf::GrGetMaxWidth() - 10, 60, text.c_str(), -1, rf::gr_string_state);
     }
 }

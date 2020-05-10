@@ -148,11 +148,11 @@ namespace rf
     static auto& gr_screen = AddrAsRef<GrScreen>(0x017C7BC0);
     static auto& gr_gamma_ramp = AddrAsRef<uint32_t[256]>(0x017C7C68);
 
-    static auto& gr_bitmap_material = AddrAsRef<GrRenderState>(0x017756BC);
-    static auto& gr_rect_material = AddrAsRef<GrRenderState>(0x017756C0);
-    static auto& gr_image_material = AddrAsRef<GrRenderState>(0x017756DC);
-    static auto& gr_line_material = AddrAsRef<GrRenderState>(0x01775B00);
-    static auto& gr_text_material = AddrAsRef<GrRenderState>(0x017C7C5C);
+    static auto& gr_bitmap_clamp_state = AddrAsRef<GrRenderState>(0x017756BC);
+    static auto& gr_rect_state = AddrAsRef<GrRenderState>(0x017756C0);
+    static auto& gr_bitmap_wrap_state = AddrAsRef<GrRenderState>(0x017756DC);
+    static auto& gr_line_state = AddrAsRef<GrRenderState>(0x01775B00);
+    static auto& gr_string_state = AddrAsRef<GrRenderState>(0x017C7C5C);
 
     static auto& large_font_id = AddrAsRef<int>(0x0063C05C);
     static auto& medium_font_id = AddrAsRef<int>(0x0063C060);
@@ -187,23 +187,43 @@ namespace rf
     static auto& GrGetViewportWidth = AddrAsRef<unsigned()>(0x0050CDB0);
     static auto& GrGetViewportHeight = AddrAsRef<unsigned()>(0x0050CDC0);
     static auto& GrSetColor = AddrAsRef<void(unsigned r, unsigned g, unsigned b, unsigned a)>(0x0050CF80);
+    static auto& GrSetColorPtr = AddrAsRef<void(Color *color)>(0x0050D000);
     static auto& GrReadBackBuffer = AddrAsRef<int(int x, int y, int width, int height, void *buffer)>(0x0050DFF0);
     static auto& GrD3DFlushBuffers = AddrAsRef<void()>(0x00559D90);
     static auto& GrClear = AddrAsRef<void()>(0x0050CDF0);
     static auto& GrIsSphereOutsideView = AddrAsRef<bool(rf::Vector3& pos, float radius)>(0x005186A0);
     static auto& GrSetTextureMipFilter = AddrAsRef<void(bool linear)>(0x0050E830);
 
-    static auto& GrDrawRect = AddrAsRef<void(unsigned x, unsigned y, unsigned cx, unsigned cy, GrRenderState render_state)>(0x0050DBE0);
-    static auto& GrDrawImage = AddrAsRef<void(int bm_handle, int x, int y, GrRenderState render_state)>(0x0050D2A0);
-    static auto& GrDrawBitmapStretched = AddrAsRef<void(int bm_handle, int dst_x, int dst_y, int dst_w, int dst_h, int src_x, int src_y, int src_w, int src_h, float a10, float a11, GrRenderState render_state)>(0x0050D250);
-    static auto& GrDrawText = AddrAsRef<void(unsigned x, unsigned y, const char *text, int font, GrRenderState render_state)>(0x0051FEB0);
-    static auto& GrDrawAlignedText = AddrAsRef<void(GrTextAlignment align, unsigned x, unsigned y, const char *text, int font, GrRenderState render_state)>(0x0051FE50);
+    inline void GrRect(int x, int y, int cx, int cy, GrRenderState state = gr_rect_state)
+    {
+        AddrCaller{0x0050DBE0}.c_call(x, y, cx, cy, state);
+    }
+
+    inline void GrBitmap(int bmh, int x, int y, GrRenderState state = gr_bitmap_wrap_state)
+    {
+        AddrCaller{0x0050D2A0}.c_call(bmh, x, y, state);
+    }
+
+    inline void GrBitmapStretched(int bmh, int dst_x, int dst_y, int dst_w, int dst_h, int src_x, int src_y, int src_w, int src_h, float a10, float a11, GrRenderState state = gr_bitmap_wrap_state)
+    {
+        AddrCaller{0x0050D250}.c_call(bmh, dst_x, dst_y, dst_w, dst_h, src_x, src_y, src_w, src_h, a10, a11, state);
+    }
+
+    inline void GrString(int x, int y, const char *text, int font_num = -1, GrRenderState state = gr_string_state)
+    {
+        AddrCaller{0x0051FEB0}.c_call(x, y, text, font_num, state);
+    }
+
+    inline void GrStringAligned(GrTextAlignment align, int x, int y, const char *text, int font_num = -1, GrRenderState state = gr_string_state)
+    {
+        AddrCaller{0x0051FE50}.c_call(align, x, y, text, font_num, state);
+    }
 
     static auto& GrFitText = AddrAsRef<String* (String* result, String::Pod str, int cx_max)>(0x00471EC0);
     static auto& GrLoadFont = AddrAsRef<int(const char *file_name, int a2)>(0x0051F6E0);
-    static auto& GrGetFontHeight = AddrAsRef<unsigned(int font_id)>(0x0051F4D0);
-    static auto& GrGetTextWidth = AddrAsRef<void(int *out_width, int *out_height, const char *text, int text_len, int font_id)>(0x0051F530);
+    static auto& GrGetFontHeight = AddrAsRef<unsigned(int font_num)>(0x0051F4D0);
+    static auto& GrGetTextWidth = AddrAsRef<void(int *out_width, int *out_height, const char *text, int text_len, int font_num)>(0x0051F530);
 
-    static auto& GrLock = AddrAsRef<char(int bm_handle, int section_idx, GrLockData *data, int a4)>(0x0050E2E0);
+    static auto& GrLock = AddrAsRef<char(int bmh, int section_idx, GrLockData *data, int a4)>(0x0050E2E0);
     static auto& GrUnlock = AddrAsRef<void(GrLockData *data)>(0x0050E310);
 }
