@@ -120,7 +120,9 @@ private:
 
         void operator()()
         {
-            m_handler(DcReadArg<Args>()...);
+            // Note: The order of evaluation of arguments is unspecified in C++ so we have to use a tuple here
+            std::tuple<Args...> args = {DcReadArg<Args>()...};
+            std::apply(m_handler, args);
         }
     };
 
