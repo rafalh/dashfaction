@@ -42,7 +42,6 @@ auto AiGetAttackRange = AddrAsRef<float(AiInfo& ai)>(0x004077A0);
 auto EntityEnterState = AddrAsRef<void(EntityObj* entity, int state, float transition_time)>(0x0042A580);
 auto EntityStartAction = AddrAsRef<void(EntityObj* entity, int action, float transition_time, bool hold_last_frame, bool with_sound)>(0x00428C90);
 auto AnimMeshResetActionAnim = AddrAsRef<void(AnimMesh* anim_mesh)>(0x00503400);
-auto& ObjGetByHandle = AddrAsRef<rf::Object*(int handle)>(0x0040A0E0);
 
 }
 
@@ -94,10 +93,10 @@ rf::Object* FindObjectInReticle()
     rf::CameraGetPos(&p0, rf::local_player->camera);
     rf::CameraGetOrient(&orient, rf::local_player->camera);
     rf::Vector3 p1 = p0 + orient.rows[2] * 100.0f;
-    rf::EntityObj* local_entity = rf::EntityGetFromHandle(rf::local_player->entity_handle);
+    rf::EntityObj* local_entity = rf::EntityGetByHandle(rf::local_player->entity_handle);
     bool hit = CollideLineSegmentLevel(p0, p1, local_entity, nullptr, &col_info, 0.0f, false, 1.0f);
     if (hit && col_info.obj_handle != -1)
-        return rf::ObjGetFromHandle(col_info.obj_handle);
+        return rf::ObjGetByHandle(col_info.obj_handle);
     else
         return nullptr;
 }
@@ -108,7 +107,7 @@ DcCommand2 dbg_target_uid_cmd{
         // uid -999 is used by local entity
         if (uid_opt) {
             int uid = uid_opt.value();
-            rf::Object* obj = rf::ObjGetFromUid(uid);
+            rf::Object* obj = rf::ObjGetByUid(uid);
             if (!obj) {
                 rf::DcPrintf("UID not found!");
                 return;
@@ -153,7 +152,7 @@ DcCommand2 dbg_target_reticle_cmd{
 DcCommand2 dbg_entity_state_cmd{
     "d_entity_state",
     [](std::optional<int> state_opt) {
-        auto entity = rf::EntityGetFromHandle(rf::target_obj_handle);
+        auto entity = rf::EntityGetByHandle(rf::target_obj_handle);
         if (!entity) {
             return;
         }
@@ -171,7 +170,7 @@ DcCommand2 dbg_entity_state_cmd{
 DcCommand2 dbg_entity_action_cmd{
     "d_entity_action",
     [](std::optional<int> action_opt) {
-        auto entity = rf::EntityGetFromHandle(rf::target_obj_handle);
+        auto entity = rf::EntityGetByHandle(rf::target_obj_handle);
         if (!entity) {
             return;
         }
@@ -328,7 +327,7 @@ void RenderObjDebugUI()
             dbg_hud.Print("submode", "NONE");
         dbg_hud.Print("style", GetAiAttackStyleName(entity->ai_info.ai_attack_style));
         dbg_hud.Print("friend", GetFriendlinessName(object->friendliness));
-        auto target_obj = rf::ObjGetFromHandle(entity->ai_info.target_obj_handle);
+        auto target_obj = rf::ObjGetByHandle(entity->ai_info.target_obj_handle);
         dbg_hud.Print("target", target_obj ? target_obj->name.CStr() : "none");
         dbg_hud.Printf("accel", "%.1f", entity->cls->acceleration);
         dbg_hud.Printf("mvmode", "%s", move_mode_names[entity->movement_mode->id]);

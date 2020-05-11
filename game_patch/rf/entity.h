@@ -558,10 +558,11 @@ namespace rf
     };
     static_assert(sizeof(EntityObj) == 0x1494);
 
-    static auto& EntityGetFromHandle = AddrAsRef<EntityObj*(uint32_t handle)>(0x00426FC0);
+    static auto& EntityGetByHandle = AddrAsRef<EntityObj*(uint32_t handle)>(0x00426FC0);
     static auto& EntityCreate =
         AddrAsRef<EntityObj*(int cls_id, const char* name, int owner_handle, const Vector3& pos,
         const Matrix3& orient, int create_flags, int mp_character)>(0x00422360);
     static auto& AiPossessesWeapon = AddrAsRef<bool(rf::AiInfo *ai_info, int weapon_cls_id)>(0x00403250);
     static auto& IsFemaleMpCharacter = AddrAsRef<bool(int mp_character_idx)>(0x004762C0);
+    static auto& EntityIsAttachedToVehicle = AddrAsRef<bool(EntityObj *entity)>(0x004290D0);
 }

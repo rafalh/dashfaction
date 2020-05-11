@@ -316,7 +316,7 @@ FunHook<void(rf::ClutterMonitor&)> MonitorRenderNoise_hook{
 #else
 void ReplaceMonitorScreenBitmap(rf::ClutterMonitor& mon, int hbm)
 {
-    auto clutter = rf::ObjGetFromHandle(mon.clutter_handle);
+    auto clutter = rf::ObjGetByHandle(mon.clutter_handle);
     auto anim_mesh = clutter->anim_mesh;
     int num_materials;
     rf::MeshMaterial *materials;

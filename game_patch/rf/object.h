@@ -164,7 +164,7 @@ namespace rf
     };
     static_assert(sizeof(ObjCreateInfo) == 0x98);
 
-    static auto& ObjGetFromUid = AddrAsRef<Object*(int uid)>(0x0048A4A0);
-    static auto& ObjGetFromHandle = AddrAsRef<Object*(int handle)>(0x0040A0E0);
+    static auto& ObjGetByUid = AddrAsRef<Object*(int uid)>(0x0048A4A0);
+    static auto& ObjGetByHandle = AddrAsRef<Object*(int handle)>(0x0040A0E0);
     static auto& ObjQueueDelete = AddrAsRef<void(Object* obj)>(0x0048AB40);
 }

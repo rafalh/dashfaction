@@ -223,6 +223,7 @@ namespace rf
     static auto& GrLoadFont = AddrAsRef<int(const char *file_name, int a2)>(0x0051F6E0);
     static auto& GrGetFontHeight = AddrAsRef<unsigned(int font_num)>(0x0051F4D0);
     static auto& GrGetTextWidth = AddrAsRef<void(int *out_width, int *out_height, const char *text, int text_len, int font_num)>(0x0051F530);
+    static auto& GrSetDefaultFont = AddrAsRef<bool(const char *file_name)>(0x0051FE20);
 
     static auto& GrLock = AddrAsRef<char(int bmh, int section_idx, GrLockData *data, int a4)>(0x0050E2E0);
     static auto& GrUnlock = AddrAsRef<void(GrLockData *data)>(0x0050E310);

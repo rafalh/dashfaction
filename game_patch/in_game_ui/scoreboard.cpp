@@ -212,7 +212,7 @@ void DrawScoreboardInternal_New(bool draw)
         static int red_bm = rf::BmLoad("DF_red.tga", -1, true);
         static int hud_micro_flag_red_bm = rf::BmLoad("hud_microflag_red.tga", -1, true);
         static int hud_micro_flag_blue_bm = rf::BmLoad("hud_microflag_blue.tga", -1, true);
-        rf::EntityObj* entity = rf::EntityGetFromHandle(player->entity_handle);
+        rf::EntityObj* entity = rf::EntityGetByHandle(player->entity_handle);
         int status_bm = entity ? green_bm : red_bm;
         if (player == red_flag_player)
             status_bm = hud_micro_flag_red_bm;

@@ -74,7 +74,7 @@ void SpectateModeSetTargetPlayer(rf::Player* player)
 
 #if SPECTATE_MODE_SHOW_WEAPON
         g_spectate_mode_target->flags &= ~(1 << 4);
-        rf::EntityObj* entity = rf::EntityGetFromHandle(g_spectate_mode_target->entity_handle);
+        rf::EntityObj* entity = rf::EntityGetByHandle(g_spectate_mode_target->entity_handle);
         if (entity)
             entity->local_player = nullptr;
 #endif // SPECTATE_MODE_SHOW_WEAPON
@@ -88,7 +88,7 @@ void SpectateModeSetTargetPlayer(rf::Player* player)
 
 #if SPECTATE_MODE_SHOW_WEAPON
     player->flags |= 1 << 4;
-    rf::EntityObj* entity = rf::EntityGetFromHandle(player->entity_handle);
+    rf::EntityObj* entity = rf::EntityGetByHandle(player->entity_handle);
     if (entity) {
         // make sure weapon mesh is loaded now
         rf::PlayerFpgunSetupMesh(player, entity->ai_info.weapon_cls_id);
@@ -320,7 +320,7 @@ DcCommand2 spectate_cmd{
 static void PlayerFpgunRender_New(rf::Player* player)
 {
     if (g_spectate_mode_enabled) {
-        rf::EntityObj* entity = rf::EntityGetFromHandle(g_spectate_mode_target->entity_handle);
+        rf::EntityObj* entity = rf::EntityGetByHandle(g_spectate_mode_target->entity_handle);
 
         // HACKFIX: RF uses function PlayerSetRemoteChargeVisible for local player only
         g_spectate_mode_target->weapon_info.remote_charge_visible =
@@ -352,7 +352,7 @@ FunHook<void(rf::Player*)> PlayerFpgunUpdateState_hook{
     [](rf::Player* player) {
         PlayerFpgunUpdateState_hook.CallTarget(player);
         if (player != rf::local_player) {
-            rf::EntityObj* entity = rf::EntityGetFromHandle(player->entity_handle);
+            rf::EntityObj* entity = rf::EntityGetByHandle(player->entity_handle);
             if (entity) {
                 float horz_speed_pow2 = entity->phys_info.vel.x * entity->phys_info.vel.x +
                                           entity->phys_info.vel.z * entity->phys_info.vel.z;
@@ -466,7 +466,7 @@ void SpectateModeDrawUI()
     rf::GrStringAligned(rf::GR_ALIGN_CENTER, x + cx / 2, y + cy / 2 - cy_font / 2 - 5, str.c_str(), large_font,
                           rf::gr_string_state);
 
-    rf::EntityObj* entity = rf::EntityGetFromHandle(g_spectate_mode_target->entity_handle);
+    rf::EntityObj* entity = rf::EntityGetByHandle(g_spectate_mode_target->entity_handle);
     if (!entity) {
         rf::GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
         static int blood_bm = rf::BmLoad("bloodsmear07_A.tga", -1, true);

@@ -142,7 +142,7 @@ void HandleNextMapCommand(rf::Player* player)
 void HandleSaveCommand(rf::Player* player, std::string_view save_name)
 {
     auto& pdata = GetPlayerAdditionalData(player);
-    auto entity = rf::EntityGetFromHandle(player->entity_handle);
+    auto entity = rf::EntityGetByHandle(player->entity_handle);
     if (entity && g_additional_server_config.saving_enabled) {
         PlayerNetGameSaveData save_data;
         save_data.pos = entity->pos;
@@ -155,7 +155,7 @@ void HandleSaveCommand(rf::Player* player, std::string_view save_name)
 void HandleLoadCommand(rf::Player* player, std::string_view save_name)
 {
     auto& pdata = GetPlayerAdditionalData(player);
-    auto entity = rf::EntityGetFromHandle(player->entity_handle);
+    auto entity = rf::EntityGetByHandle(player->entity_handle);
     if (entity && g_additional_server_config.saving_enabled) {
         auto it = pdata.saves.find(std::string{save_name});
         if (it != pdata.saves.end()) {
@@ -357,7 +357,7 @@ FunHook<void(rf::Player*)> spawn_player_sync_ammo_hook{
         spawn_player_sync_ammo_hook.CallTarget(player);
         // if default player weapon has ammo override sync ammo using additional reload packet
         if (g_additional_server_config.default_player_weapon_ammo && !rf::IsPlayerEntityInvalid(player)) {
-            rf::EntityObj* entity = rf::EntityGetFromHandle(player->entity_handle);
+            rf::EntityObj* entity = rf::EntityGetByHandle(player->entity_handle);
             rfReload packet;
             packet.type = RF_RELOAD;
             packet.size = sizeof(packet) - sizeof(rfPacketHeader);

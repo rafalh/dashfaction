@@ -15,13 +15,13 @@ bool ShouldSwapWeaponAltFire(rf::Player* player)
         return false;
     }
 
-    auto entity = rf::EntityGetFromHandle(player->entity_handle);
+    auto entity = rf::EntityGetByHandle(player->entity_handle);
     if (!entity) {
         return false;
     }
 
     // Check if local entity is attached to a parent (vehicle or torret)
-    auto parent = rf::EntityGetFromHandle(entity->parent_handle);
+    auto parent = rf::EntityGetByHandle(entity->parent_handle);
     if (parent) {
         return false;
     }
@@ -34,7 +34,7 @@ bool IsPlayerWeaponInContinousFire(rf::Player* player, bool alt_fire) {
     if (!player) {
         player = rf::local_player;
     }
-    auto entity = rf::EntityGetFromHandle(player->entity_handle);
+    auto entity = rf::EntityGetByHandle(player->entity_handle);
     bool is_continous_fire = rf::IsEntityWeaponInContinousFire(entity->handle, entity->ai_info.weapon_cls_id);
     bool is_alt_fire_flag_set = (entity->ai_info.flags & 0x2000) != 0; // EWF_ALT_FIRE = 0x2000
     if (ShouldSwapWeaponAltFire(player)) {
@@ -166,7 +166,7 @@ FunHook<void(rf::Player*, int)> PlayerSwitchWeaponInstant_hook{
     0x004A4980,
     [](rf::Player* player, int weapon_cls_id) {
         PlayerSwitchWeaponInstant_hook.CallTarget(player, weapon_cls_id);
-        auto entity = rf::EntityGetFromHandle(player->entity_handle);
+        auto entity = rf::EntityGetByHandle(player->entity_handle);
         if (entity && rf::is_multi) {
             // Reset impact delay timers when switching weapon (except in SP because of speedrunners)
             entity->ai_info.impact_delay_timer[0].Unset();
