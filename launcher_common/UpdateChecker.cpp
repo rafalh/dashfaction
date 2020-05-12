@@ -44,8 +44,10 @@ struct AsyncUpdateChecker::SharedData
 
 AsyncUpdateChecker::~AsyncUpdateChecker()
 {
-    std::lock_guard lg{m_shared_data->mutex};
-    m_shared_data->aborted = true;
+    if (m_shared_data) {
+        std::lock_guard lg{m_shared_data->mutex};
+        m_shared_data->aborted = true;
+    }
 }
 
 void AsyncUpdateChecker::check_async(std::function<void()> callback)
