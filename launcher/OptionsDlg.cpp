@@ -98,7 +98,6 @@ void OptionsDlg::UpdateAdapterCombo()
     }
     if (selected_idx != -1)
         m_adapter_combo.SetCurSel(selected_idx);
-    m_adapter_combo.Detach();
 }
 
 void OptionsDlg::UpdateResolutionCombo()
