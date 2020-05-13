@@ -1,5 +1,6 @@
 #include "LauncherApp.h"
 #include <common/version.h>
+#include <common/ErrorUtils.h>
 #include <xlog/xlog.h>
 #include <xlog/FileAppender.h>
 #include <xlog/Win32Appender.h>
@@ -19,23 +20,31 @@ void InitLogging()
     xlog::info("Dash Faction Launcher %s (%s %s)", VERSION_STR, __DATE__, __TIME__);
 }
 
-int APIENTRY WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
+int APIENTRY WinMain(HINSTANCE, HINSTANCE, LPSTR, int) try
 {
     InitLogging();
     CrashHandlerStubInstall(nullptr);
 
-    try {
-        // Start Win32++
-        LauncherApp app;
+    // Start Win32++
+    LauncherApp app;
 
-        // Run the application
-        return app.Run();
-    }
-    // catch all unhandled CException types
-    catch (const CException &e) {
-        // Display the exception and quit
-        MessageBox(NULL, e.GetText(), AtoT(e.what()), MB_ICONERROR);
+    // Run the application
+    return app.Run();
+}
+// catch all unhandled std::exception types
+catch (const std::exception& e) {
+    std::string msg = "Fatal error: ";
+    msg += generate_message_for_exception(e);
+    MessageBox(nullptr, msg.c_str(), nullptr, MB_ICONERROR | MB_OK);
+    return -1;
+}
+// catch all unhandled CException types
+catch (const Win32xx::CException &e) {
+    // Display the exception and quit
+    std::ostringstream ss;
+    ss << e.GetText() << "\nerror " << e.GetError() << ": " << e.GetErrorString();
+    auto msg = ss.str();
+    MessageBox(nullptr, msg.c_str(), nullptr, MB_ICONERROR | MB_OK);
 
-        return -1;
-    }
+    return -1;
 }

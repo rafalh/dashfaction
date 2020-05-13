@@ -7,14 +7,12 @@
 #include "ZipHelper.h"
 #include "config.h"
 #include "res/resource.h"
-#include <common/Exception.h>
-#include <common/ErrorUtils.h>
 #include <common/version.h>
 #include <common/HttpRequest.h>
 #include <windows.h>
 #include <fstream>
 
-BOOL CrashReportApp::InitInstance() try
+BOOL CrashReportApp::InitInstance()
 {
     CommandLineInfo cmd_line_info;
     if (!cmd_line_info.Parse())
@@ -52,12 +50,6 @@ BOOL CrashReportApp::InitInstance() try
 
     // Since the dialog has been closed, return FALSE so that we exit the
     //  application, rather than start the application's message pump.
-    return FALSE;
-}
-catch (const std::exception& e) {
-    std::string msg = "Fatal error: ";
-    msg += generate_message_for_exception(e);
-    Message(nullptr, msg.c_str(), nullptr, MB_ICONERROR | MB_OK | MB_SETFOREGROUND | MB_TASKMODAL);
     return FALSE;
 }
 
@@ -142,7 +134,7 @@ void CrashReportApp::SendReport() try
     auto file_path = GetArchivedReportFilePath();
     std::ifstream file(file_path, std::ios_base::in | std::ios_base::binary);
     if (!file)
-        THROW_EXCEPTION("cannot open " CRASHHANDLER_TARGET_NAME);
+        throw std::runtime_error("cannot open " CRASHHANDLER_TARGET_NAME);
 
     file.seekg(0, std::ios_base::end);
     size_t size = static_cast<size_t>(file.tellg());
