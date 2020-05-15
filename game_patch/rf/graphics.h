@@ -8,7 +8,85 @@ namespace rf
 {
     /* Graphics */
 
-    using GrRenderState = int;
+    //using GrRenderState = int;
+
+    enum GrTextureSource
+    {
+        TEXTURE_SOURCE_NONE = 0x0,
+        TEXTURE_SOURCE_WRAP = 0x1,
+        TEXTURE_SOURCE_CLAMP = 0x2,
+        TEXTURE_SOURCE_CLAMP_NO_FILTERING = 0x3,
+        TEXTURE_SOURCE_MT_WRAP = 0x4,
+        TEXTURE_SOURCE_MT_WRAP_M2X = 0x5,
+        TEXTURE_SOURCE_MT_CLAMP = 0x6,
+        TEXTURE_SOURCE_7 = 0x7,
+        TEXTURE_SOURCE_MT_U_WRAP_V_CLAMP = 0x8,
+        TEXTURE_SOURCE_MT_U_CLAMP_V_WRAP = 0x9,
+        TEXTURE_SOURCE_MT_WRAP_TRILIN = 0xA,
+        TEXTURE_SOURCE_MT_CLAMP_TRILIN = 0xB,
+    };
+
+    enum GrColorOp
+    {
+        COLOR_OP_SEL_TEXTURE_UNK = 0x0,
+        COLOR_OP_SEL_TEXTURE = 0x1,
+        COLOR_OP_MUL = 0x2,
+        COLOR_OP_ADD = 0x3,
+        COLOR_OP_MUL2X = 0x4,
+    };
+
+    enum GrAlphaOp
+    {
+        ALPHA_OP_SEL_DIFFUSE = 0x0,
+        ALPHA_OP_UNK = 0x1,
+        ALPHA_OP_SEL_TEXTURE = 0x2,
+        ALPHA_OP_MUL = 0x3,
+    };
+
+    enum GrAlphaBlend
+    {
+        ALPHA_BLEND_NONE = 0x0,
+        ALPHA_BLEND_ADDITIVE = 0x1,
+        ALPHA_BLEND_ADDITIVE_SRC_ALPHA_2 = 0x2,
+        ALPHA_BLEND_DEFAULT = 0x3,
+        ALPHA_BLEND_ADDITIVE_SRC_ALPHA_4 = 0x4,
+        ALPHA_BLEND_DEST_COLOR = 0x5,
+        ALPHA_BLEND_INV_DEST_COLOR = 0x6,
+        ALPHA_BLEND_SWAPPED_SRC_DEST_COLOR = 0x7,
+    };
+
+    enum GrZbufferType
+    {
+        ZBUFFER_TYPE_NONE = 0x0,
+        ZBUFFER_TYPE_READ = 0x1,
+        ZBUFFER_TYPE_READ_EQ_FUNC = 0x2,
+        ZBUFFER_TYPE_WRITE = 0x3,
+        ZBUFFER_TYPE_FULL = 0x4,
+        ZBUFFER_TYPE_FULL_ALPHA_TEST = 0x5,
+    };
+
+    enum GrFogType
+    {
+        FOG_TYPE_0 = 0x0,
+        FOG_TYPE_1 = 0x1,
+        FOG_TYPE_2 = 0x2,
+        FOG_TYPE_FORCE_OFF = 0x3,
+    };
+
+    struct GrRenderState
+    {
+        int value;
+
+        GrRenderState(GrTextureSource tex_src, GrColorOp clr_op, GrAlphaOp alpha_op, GrAlphaBlend alpha_blend, GrZbufferType zbuf_type, GrFogType fog)
+        {
+            value = tex_src | 32 * (clr_op | 32 * (alpha_op | 32 * (alpha_blend | 32 * (zbuf_type | 32 * fog))));
+        }
+
+        bool operator==(const GrRenderState& other) const
+        {
+            return value == other.value;
+        }
+    };
 
     struct GrScreen
     {
@@ -93,22 +171,6 @@ namespace rf
         GR_ALIGN_RIGHT = 2,
     };
 
-    enum GrTextureSource
-    {
-        TEXTURE_SOURCE_NONE = 0x0,
-        TEXTURE_SOURCE_WRAP = 0x1,
-        TEXTURE_SOURCE_CLAMP = 0x2,
-        TEXTURE_SOURCE_CLAMP_NO_FILTERING = 0x3,
-        TEXTURE_SOURCE_MT_WRAP = 0x4,
-        TEXTURE_SOURCE_MT_WRAP_M2X = 0x5,
-        TEXTURE_SOURCE_MT_CLAMP = 0x6,
-        TEXTURE_SOURCE_7 = 0x7,
-        TEXTURE_SOURCE_MT_U_WRAP_V_CLAMP = 0x8,
-        TEXTURE_SOURCE_MT_U_CLAMP_V_WRAP = 0x9,
-        TEXTURE_SOURCE_MT_WRAP_TRILIN = 0xA,
-        TEXTURE_SOURCE_MT_CLAMP_TRILIN = 0xB,
-    };
-
     struct GrD3DTextureSection
     {
 #ifdef DIRECT3D_VERSION
@@ -154,9 +216,9 @@ namespace rf
     static auto& gr_line_state = AddrAsRef<GrRenderState>(0x01775B00);
     static auto& gr_string_state = AddrAsRef<GrRenderState>(0x017C7C5C);
 
-    static auto& large_font_id = AddrAsRef<int>(0x0063C05C);
-    static auto& medium_font_id = AddrAsRef<int>(0x0063C060);
-    static auto& small_font_id = AddrAsRef<int>(0x0063C068);
+    static auto& rfpc_large_font_id = AddrAsRef<int>(0x0063C05C);
+    static auto& rfpc_medium_font_id = AddrAsRef<int>(0x0063C060);
+    static auto& rfpc_small_font_id = AddrAsRef<int>(0x0063C068);
     static auto& big_font_id = AddrAsRef<int>(0x006C74C0);
 
     static auto& current_fps = AddrAsRef<float>(0x005A4018);
@@ -184,15 +246,23 @@ namespace rf
 
     static auto& GrGetMaxWidth = AddrAsRef<int()>(0x0050C640);
     static auto& GrGetMaxHeight = AddrAsRef<int()>(0x0050C650);
-    static auto& GrGetViewportWidth = AddrAsRef<unsigned()>(0x0050CDB0);
-    static auto& GrGetViewportHeight = AddrAsRef<unsigned()>(0x0050CDC0);
+    static auto& GrGetClipWidth = AddrAsRef<unsigned()>(0x0050CDB0);
+    static auto& GrGetClipHeight = AddrAsRef<unsigned()>(0x0050CDC0);
     static auto& GrSetColor = AddrAsRef<void(unsigned r, unsigned g, unsigned b, unsigned a)>(0x0050CF80);
     static auto& GrSetColorPtr = AddrAsRef<void(Color *color)>(0x0050D000);
+    static auto& GrSetColorAlpha = AddrAsRef<void(int a)>(0x0050D030);
     static auto& GrReadBackBuffer = AddrAsRef<int(int x, int y, int width, int height, void *buffer)>(0x0050DFF0);
     static auto& GrD3DFlushBuffers = AddrAsRef<void()>(0x00559D90);
     static auto& GrClear = AddrAsRef<void()>(0x0050CDF0);
     static auto& GrIsSphereOutsideView = AddrAsRef<bool(rf::Vector3& pos, float radius)>(0x005186A0);
     static auto& GrSetTextureMipFilter = AddrAsRef<void(bool linear)>(0x0050E830);
+    static auto& GrLock = AddrAsRef<char(int bmh, int section_idx, GrLockData *data, int a4)>(0x0050E2E0);
+    static auto& GrUnlock = AddrAsRef<void(GrLockData *data)>(0x0050E310);
+
+    inline void GrLine(float x0, float y0, float x1, float y1, GrRenderState render_state = gr_line_state)
+    {
+        AddrCaller{0x0050D770}.c_call(x0, y0, x1, y1, render_state);
+    }
 
     inline void GrRect(int x, int y, int cx, int cy, GrRenderState state = gr_rect_state)
     {
@@ -219,12 +289,18 @@ namespace rf
         AddrCaller{0x0051FE50}.c_call(align, x, y, text, font_num, state);
     }
 
+    inline int GrLoadFont(const char *file_name, int a2 = -1)
+    {
+        return AddrCaller{0x0051F6E0}.c_call<int>(file_name, a2);
+    }
+
+    inline int GrGetFontHeight(int font_num = -1)
+    {
+        return AddrCaller{0x0051F4D0}.c_call<int>(font_num);
+    }
+
     static auto& GrFitText = AddrAsRef<String* (String* result, String::Pod str, int cx_max)>(0x00471EC0);
-    static auto& GrLoadFont = AddrAsRef<int(const char *file_name, int a2)>(0x0051F6E0);
-    static auto& GrGetFontHeight = AddrAsRef<unsigned(int font_num)>(0x0051F4D0);
+    static auto& GrFitMultilineText = AddrAsRef<int(int *len_array, int *offset_array, char *text, int max_width, int max_lines, char unk_char, int font_no)>(0x00520810);
     static auto& GrGetTextWidth = AddrAsRef<void(int *out_width, int *out_height, const char *text, int text_len, int font_num)>(0x0051F530);
     static auto& GrSetDefaultFont = AddrAsRef<bool(const char *file_name)>(0x0051FE20);
-
-    static auto& GrLock = AddrAsRef<char(int bmh, int section_idx, GrLockData *data, int a4)>(0x0050E2E0);
-    static auto& GrUnlock = AddrAsRef<void(GrLockData *data)>(0x0050E310);
 }

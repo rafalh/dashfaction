@@ -174,6 +174,9 @@ namespace rf
             AddrCaller{0x004FF410}.this_call(this, &str);
         }
 
+        String(Pod pod) : m_pod(pod)
+        {}
+
         ~String()
         {
             AddrCaller{0x004FF470}.this_call(this);
@@ -214,6 +217,21 @@ namespace rf
         int Size() const
         {
             return AddrCaller{0x004FF490}.this_call<int>(this);
+        }
+
+        bool IsEmpty() const
+        {
+            return Size() == 0;
+        }
+
+        String* SubStr(String *str_out, int begin, int end) const
+        {
+            return AddrCaller{0x004FF590}.this_call<String*>(this, str_out, begin, end);
+        }
+
+        static String* Concat(String *str_out, const String& first, const String& second)
+        {
+            return AddrCaller{0x004FFB50}.c_call<String*>(str_out, &first, &second);
         }
 
         PRINTF_FMT_ATTRIBUTE(1, 2)

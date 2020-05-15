@@ -353,7 +353,7 @@ CodeInjection GrD3DSetMaterialFlags_profile_patch{
                 desc = " (line)";
             else if (state_flags == rf::gr_bitmap_clamp_state)
                 desc = " (bitmap)";
-            xlog::info("GrD3DSetMaterialFlags 0x%X%s", state_flags, desc);
+            xlog::info("GrD3DSetMaterialFlags 0x%X%s", state_flags.value, desc);
         }
     },
 };
@@ -430,7 +430,7 @@ CodeInjection after_gr_init_hook{
         }
 
         // Change font for Time Left text
-        static int time_left_font = rf::GrLoadFont("rfpc-large.vf", -1);
+        static int time_left_font = rf::GrLoadFont("rfpc-large.vf");
         if (time_left_font >= 0) {
             WriteMem<i8>(0x00477157 + 1, time_left_font);
             WriteMem<i8>(0x0047715F + 2, 21);
@@ -632,14 +632,14 @@ FunHook<void(int*, void*, int, int, int, rf::GrRenderState, int)> gr_d3d_queue_t
         if (bm1 == -1) {
             WARN_ONCE("Prevented rendering of an unlit face with multi-texturing render state");
             constexpr int texture_source_mask = 0x1F;
-            int tex_src = state & texture_source_mask;
+            int tex_src = state.value & texture_source_mask;
             if (tex_src == rf::TEXTURE_SOURCE_MT_WRAP || tex_src == rf::TEXTURE_SOURCE_MT_WRAP_M2X) {
                 tex_src = rf::TEXTURE_SOURCE_WRAP;
             } else if (tex_src == rf::TEXTURE_SOURCE_MT_CLAMP) {
                 tex_src = rf::TEXTURE_SOURCE_CLAMP;
             }
-            state = state & ~texture_source_mask;
-            state |= tex_src;
+            state.value = state.value & ~texture_source_mask;
+            state.value |= tex_src;
         }
 
         gr_d3d_queue_triangles_hook.CallTarget(list_idx, vertices, num_vertices, bm0, bm1, state, pass_id);

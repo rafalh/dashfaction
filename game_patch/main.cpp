@@ -12,7 +12,6 @@
 #include "in_game_ui/hud.h"
 #include "in_game_ui/scoreboard.h"
 #include "in_game_ui/spectate_mode.h"
-#include "in_game_ui/in_game_ui.h"
 #include "multi/kill.h"
 #include "multi/network.h"
 #include "misc/misc.h"
@@ -357,7 +356,7 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     GraphicsCaptureInit();
     NetworkInit();
     InitWndProc();
-    InitHud();
+    ApplyHudPatches();
     InitAutodownloader();
     InitScoreboard();
     InitKill();
@@ -365,7 +364,6 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     SpectateModeInit();
     HighFpsInit();
     MiscInit();
-    ApplyGameUiPatches();
     ServerInit();
     InputInit();
 #if !defined(NDEBUG) && defined(HAS_EXPERIMENTAL)

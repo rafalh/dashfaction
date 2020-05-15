@@ -562,7 +562,14 @@ namespace rf
     static auto& EntityCreate =
         AddrAsRef<EntityObj*(int cls_id, const char* name, int owner_handle, const Vector3& pos,
         const Matrix3& orient, int create_flags, int mp_character)>(0x00422360);
-    static auto& AiPossessesWeapon = AddrAsRef<bool(rf::AiInfo *ai_info, int weapon_cls_id)>(0x00403250);
+    static auto& AiPossessesWeapon = AddrAsRef<bool(AiInfo *ai_info, int weapon_cls_id)>(0x00403250);
     static auto& IsFemaleMpCharacter = AddrAsRef<bool(int mp_character_idx)>(0x004762C0);
     static auto& EntityIsAttachedToVehicle = AddrAsRef<bool(EntityObj *entity)>(0x004290D0);
+    static auto& EntityIsJeepDriver = AddrAsRef<bool(EntityObj *entity)>(0x0042AC80);
+    static auto& EntityIsJeepShooter = AddrAsRef<bool(EntityObj *entity)>(0x0042ACD0);
+    static auto& EntityIsDriller = AddrAsRef<bool(EntityObj *entity)>(0x0042D780);
+    static auto& EntityIsSub = AddrAsRef<bool(EntityObj *entity)>(0x0040A270);
+    static auto& EntityIsJeep = AddrAsRef<bool(EntityObj *entity)>(0x0040A2F0);
+    static auto& EntityIsFighter = AddrAsRef<bool(EntityObj *entity)>(0x0040A210);
+    static auto& EntityIsHoldingBody = AddrAsRef<bool(EntityObj *entity)>(0x00429D20);
 }

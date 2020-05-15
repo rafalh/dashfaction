@@ -429,14 +429,13 @@ void SpectateModeDrawUI()
     if (!g_spectate_mode_enabled) {
         if (rf::IsPlayerEntityInvalid(rf::local_player)) {
             rf::GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
-            rf::GrStringAligned(rf::GR_ALIGN_LEFT, 20, 200, "Press JUMP key to enter Spectate Mode", -1,
-                                rf::gr_string_state);
+            rf::GrStringAligned(rf::GR_ALIGN_LEFT, 20, 200, "Press JUMP key to enter Spectate Mode");
         }
         return;
     }
 
-    static int large_font = rf::GrLoadFont("rfpc-large.vf", -1);
-    static int medium_font = rf::GrLoadFont("rfpc-medium.vf", -1);
+    static int large_font = rf::GrLoadFont("rfpc-large.vf");
+    static int medium_font = rf::GrLoadFont("rfpc-medium.vf");
 
     const unsigned cx = 500, cy = 50;
     unsigned cx_scr = rf::GrGetMaxWidth(), cy_src = rf::GrGetMaxHeight();
@@ -445,26 +444,23 @@ void SpectateModeDrawUI()
     unsigned cy_font = rf::GrGetFontHeight(-1);
 
     rf::GrSetColor(0, 0, 0, 0x80);
-    rf::GrStringAligned(rf::GR_ALIGN_CENTER, cx_scr / 2 + 2, 150 + 2, "SPECTATE MODE", large_font,
-                          rf::gr_string_state);
+    rf::GrStringAligned(rf::GR_ALIGN_CENTER, cx_scr / 2 + 2, 150 + 2, "SPECTATE MODE", large_font);
     rf::GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
-    rf::GrStringAligned(rf::GR_ALIGN_CENTER, cx_scr / 2, 150, "SPECTATE MODE", large_font, rf::gr_string_state);
+    rf::GrStringAligned(rf::GR_ALIGN_CENTER, cx_scr / 2, 150, "SPECTATE MODE", large_font);
 
     rf::GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
-    rf::GrStringAligned(rf::GR_ALIGN_LEFT, 20, 200, "Press JUMP key to exit Spectate Mode", medium_font,
-                          rf::gr_string_state);
+    rf::GrStringAligned(rf::GR_ALIGN_LEFT, 20, 200, "Press JUMP key to exit Spectate Mode", medium_font);
     rf::GrStringAligned(rf::GR_ALIGN_LEFT, 20, 215, "Press PRIMARY ATTACK key to switch to the next player",
-                          medium_font, rf::gr_string_state);
+        medium_font);
     rf::GrStringAligned(rf::GR_ALIGN_LEFT, 20, 230, "Press SECONDARY ATTACK key to switch to the previous player",
-                          medium_font, rf::gr_string_state);
+        medium_font);
 
     rf::GrSetColor(0, 0, 0x00, 0x60);
     rf::GrRect(x, y, cx, cy);
 
     rf::GrSetColor(0xFF, 0xFF, 0, 0x80);
     auto str = StringFormat("Spectating: %s", g_spectate_mode_target->name.CStr());
-    rf::GrStringAligned(rf::GR_ALIGN_CENTER, x + cx / 2, y + cy / 2 - cy_font / 2 - 5, str.c_str(), large_font,
-                          rf::gr_string_state);
+    rf::GrStringAligned(rf::GR_ALIGN_CENTER, x + cx / 2, y + cy / 2 - cy_font / 2 - 5, str.c_str(), large_font);
 
     rf::EntityObj* entity = rf::EntityGetByHandle(g_spectate_mode_target->entity_handle);
     if (!entity) {
@@ -476,9 +472,8 @@ void SpectateModeDrawUI()
                                   blood_h * 2, 0, 0, blood_w, blood_h, 0.0f, 0.0f, rf::gr_bitmap_clamp_state);
 
         rf::GrSetColor(0, 0, 0, 0x80);
-        rf::GrStringAligned(rf::GR_ALIGN_CENTER, cx_scr / 2 + 2, cy_src / 2 + 2, "DEAD", large_font,
-                              rf::gr_string_state);
+        rf::GrStringAligned(rf::GR_ALIGN_CENTER, cx_scr / 2 + 2, cy_src / 2 + 2, "DEAD", large_font);
         rf::GrSetColor(0xF0, 0x20, 0x10, 0xC0);
-        rf::GrStringAligned(rf::GR_ALIGN_CENTER, cx_scr / 2, cy_src / 2, "DEAD", large_font, rf::gr_string_state);
+        rf::GrStringAligned(rf::GR_ALIGN_CENTER, cx_scr / 2, cy_src / 2, "DEAD", large_font);
     }
 }

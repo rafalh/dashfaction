@@ -10,6 +10,7 @@ namespace rf
     struct AnimMesh;
     struct Player;
     struct PlayerNetData;
+    struct AiInfo;
 
     /* Camera */
 
@@ -305,4 +306,6 @@ namespace rf
     static auto& IsPlayerEntityInvalid = AddrAsRef<bool(Player *player)>(0x004A4920);
     static auto& IsPlayerDying = AddrAsRef<bool(Player *player)>(0x004A4940);
     static auto& AddPlayerScore = AddrAsRef<void(Player *player, int delta)>(0x004A7460);
+    static auto& PlayerGetAiInfo = AddrAsRef<rf::AiInfo*(rf::Player *player)>(0x004A3260);
+    static auto& PlayerGetWeaponTotalAmmo = AddrAsRef<int(rf::Player *player, int weapon_cls_id)>(0x004A3280);
 }

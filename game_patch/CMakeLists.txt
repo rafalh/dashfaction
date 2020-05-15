@@ -74,14 +74,17 @@ set(SRCS
     server/commands.cpp
     input/input.cpp
     input/input.h
+    in_game_ui/chatbox.cpp
+    in_game_ui/health_armor_hud.cpp
+    in_game_ui/hud_internal.h
     in_game_ui/hud.cpp
     in_game_ui/hud.h
+    in_game_ui/persona_msg_hud.cpp
     in_game_ui/scoreboard.cpp
     in_game_ui/scoreboard.h
     in_game_ui/spectate_mode.cpp
     in_game_ui/spectate_mode.h
-    in_game_ui/in_game_ui.cpp
-    in_game_ui/in_game_ui.h
+    in_game_ui/weapon_cycle_hud.cpp
     debug/debugwinmsg.cpp
     debug/debug_cmd.cpp
     debug/debug.cpp

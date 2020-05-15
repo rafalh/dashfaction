@@ -53,6 +53,7 @@ struct GameConfig
     int skip_cutscene_ctrl = -1;
     int language = -1;
     bool reduced_speed_in_background = false;
+    bool big_hud = false;
 
     // Advanced
     float level_sound_volume = 1.0f;
