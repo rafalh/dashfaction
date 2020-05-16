@@ -36,7 +36,6 @@ Version 1.5.0
 - not treat every chat message starting with 'server' as a server command
 - add GOG install directory auto-detection
 - add support for late joiners aware triggers (improves Pure Faction compatibility)
-- prioritize packfile that contains rfl being loaded
 - load .tbl files in user_maps (default files cannot be overriden) - allows inclusion of HUD messages in custom maps (*_text.tbl)
 - increase maximal number of simultaneously playing sounds to 64
 - use port 7755 for server hosting when 'Force port' option is disabled

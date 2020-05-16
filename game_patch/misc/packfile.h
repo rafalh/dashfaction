@@ -14,4 +14,3 @@ void PackfileApplyPatches();
 GameLang GetInstalledGameLang();
 bool IsModdedGame();
 void PackfileFindMatchingFiles(const StringMatcher& query, std::function<void(const char*)> result_consumer);
-void PrioritizePackfileWithFile(const char* filename);

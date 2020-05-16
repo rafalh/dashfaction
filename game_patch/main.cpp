@@ -172,8 +172,6 @@ FunHook<int(rf::String&, rf::String&, char*)> RflLoad_hook{
     0x0045C540,
     [](rf::String& level_filename, rf::String& save_filename, char* error) {
         xlog::info("Loading level: %s", level_filename.CStr());
-        // Prioritize packfile that contains rfl being loaded
-        PrioritizePackfileWithFile(level_filename.CStr());
         if (save_filename.Size() > 0)
             xlog::info("Restoring game from save file: %s", save_filename.CStr());
         int ret = RflLoad_hook.CallTarget(level_filename, save_filename, error);

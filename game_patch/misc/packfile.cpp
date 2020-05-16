@@ -434,21 +434,6 @@ void ForceFileFromPackfile(const char* name, const char* packfile_name)
     }
 }
 
-void PrioritizePackfile(rf::Packfile* packfile)
-{
-    for (auto& entry : packfile->files) {
-        PackfileAddToLookupTable(&entry);
-    }
-}
-
-void PrioritizePackfileWithFile(const char* filename)
-{
-    auto entry = PackfileFindFile_New(filename);
-    if (entry) {
-        PrioritizePackfile(entry->archive);
-    }
-}
-
 static void PackfileInit_New()
 {
     unsigned start_ticks = GetTickCount();
