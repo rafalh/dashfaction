@@ -69,6 +69,7 @@ static unsigned g_num_name_collisions = 0;
 static std::vector<std::unique_ptr<rf::Packfile>> g_packfiles;
 static std::unordered_map<std::string, rf::PackfileEntry*> g_loopup_table;
 static bool g_is_modded_game = false;
+static bool g_is_overriding_disabled = true;
 
 #ifdef MOD_FILE_WHITELIST
 
@@ -312,6 +313,10 @@ static int PackfileBuildFileList_New(const char* ext_filter, char*& filenames, u
 
 static bool IsLookupTableEntryOverrideAllowed(rf::PackfileEntry* old_entry, rf::PackfileEntry* new_entry)
 {
+    if (g_is_overriding_disabled) {
+        // Don't allow overriding files after game is initialized because it can lead to crashes
+        return false;
+    }
     if (!new_entry->archive->is_user_maps) {
         // Allow overriding by packfiles from game root and from mods
         return true;
@@ -542,4 +547,9 @@ void PackfileFindMatchingFiles(const StringMatcher& query, std::function<void(co
             result_consumer(p.first.c_str());
         }
     }
+}
+
+void PackfileDisableOverriding()
+{
+    g_is_overriding_disabled = true;
 }

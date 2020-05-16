@@ -75,6 +75,7 @@ CallHook<void()> InitGame_hook{
         auto start_ticks = GetTickCount();
         xlog::info("Initializing game...");
         InitGame_hook.CallTarget();
+        PackfileDisableOverriding();
         xlog::info("Game initialized (%lu ms).", GetTickCount() - start_ticks);
     },
 };
