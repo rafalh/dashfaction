@@ -364,11 +364,11 @@ void ApplySoundPatches()
 
     AsmWriter(0x00505FE4).nop(2);
     // Fix ambient sound volume updating
-    // AsmWriter(0x00505FD7, 0x00505FFB)
-    //     .mov(asm_regs::eax, *(asm_regs::esp + 0x58 + 4))
-    //     .push(asm_regs::eax)
-    //     .mov(asm_regs::eax, *(asm_regs::esi))
-    //     .push(asm_regs::eax);
+    AsmWriter(0x00505FD7, 0x00505FFB)
+        .mov(asm_regs::eax, *(asm_regs::esp + 0x58 + 4))
+        .push(asm_regs::eax)
+        .mov(asm_regs::eax, *(asm_regs::esi))
+        .push(asm_regs::eax);
 
     // Delete sounds with lowest volume when there is no free slot for a new sound
     snd_ds_play_3d_no_free_slots_fix.Install();
