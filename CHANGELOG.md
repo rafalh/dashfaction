@@ -16,7 +16,7 @@ Version 1.5.0
 - add 'rf' protocol handler (URLs has format: rf://IP:PORT)
 - add setup program
 - add '/save' and '/load' chat commands and quick save/load controls handling for saving and restoring player position in multiplayer (useful for runmap servers, can be enabled in dedicated_server.txt)
-- add 'bighud' command that makes HUD larger
+- add 'Big HUD' option and 'bighud' command for making the HUD larger
 - log error when RFA cannot be loaded
 - improve render to texture performance (e.g. mirrors and scanners)
 - improve 2D drawing performance
