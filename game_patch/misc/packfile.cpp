@@ -69,7 +69,7 @@ static unsigned g_num_name_collisions = 0;
 static std::vector<std::unique_ptr<rf::Packfile>> g_packfiles;
 static std::unordered_map<std::string, rf::PackfileEntry*> g_loopup_table;
 static bool g_is_modded_game = false;
-static bool g_is_overriding_disabled = true;
+static bool g_is_overriding_disabled = false;
 
 #ifdef MOD_FILE_WHITELIST
 
