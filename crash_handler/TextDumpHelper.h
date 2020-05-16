@@ -223,6 +223,7 @@ private:
 
         bool read_success = ReadProcessMemory(process, reinterpret_cast<void*>(addr), stack_buf.get(), stack_size, &bytes_read);
         if (!read_success || !bytes_read) {
+            out << "(error " << GetLastError() << ")\n\n";
             return;
         }
 
@@ -310,6 +311,7 @@ private:
 
         bool read_success = ReadProcessMemory(process, reinterpret_cast<void*>(addr), buf.get(), stack_size, &bytes_read);
         if (!read_success || !bytes_read) {
+            out << "(error " << GetLastError() << ")\n\n";
             return;
         }
 
