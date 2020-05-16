@@ -77,10 +77,9 @@ namespace rf
     {
         int value;
 
-        GrRenderState(GrTextureSource tex_src, GrColorOp clr_op, GrAlphaOp alpha_op, GrAlphaBlend alpha_blend, GrZbufferType zbuf_type, GrFogType fog)
-        {
-            value = tex_src | 32 * (clr_op | 32 * (alpha_op | 32 * (alpha_blend | 32 * (zbuf_type | 32 * fog))));
-        }
+        constexpr GrRenderState(GrTextureSource tex_src, GrColorOp clr_op, GrAlphaOp alpha_op, GrAlphaBlend alpha_blend, GrZbufferType zbuf_type, GrFogType fog) :
+            value(tex_src | 32 * (clr_op | 32 * (alpha_op | 32 * (alpha_blend | 32 * (zbuf_type | 32 * fog)))))
+        {}
 
         bool operator==(const GrRenderState& other) const
         {
