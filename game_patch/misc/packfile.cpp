@@ -44,7 +44,7 @@ struct PackfileEntry
     FILE* raw_file;
 };
 
-static auto& packfile_ignore_tbl_files = AddrAsRef<bool>(0x01BDB21C);
+static auto& packfile_loading_user_maps = AddrAsRef<bool>(0x01BDB21C);
 
 static auto& PackfileCalcFileNameChecksum = AddrAsRef<uint32_t(const char* file_name)>(0x0052BE70);
 typedef uint32_t PackfileAddEntries_Type(Packfile* packfile, const void* buf, unsigned num_files_in_block,
@@ -209,7 +209,7 @@ static int PackfileLoad_New(const char* filename, const char* dir)
     packfile->field_a0 = 0;
     packfile->num_files = 0;
     // this is set to true for user_maps
-    packfile->is_user_maps = rf::packfile_ignore_tbl_files;
+    packfile->is_user_maps = rf::packfile_loading_user_maps;
 
     // Process file header
     char buf[0x800];
