@@ -87,6 +87,7 @@ void SetBigHud(bool is_big)
     SetBigPersonaMsgHud(is_big);
     SetBigWeaponCycleHud(is_big);
     SetBigScoreboard(is_big);
+    SetBigTeamScoresHud(is_big);
     if (is_big) {
         rf::hud_text_font_num = rf::rfpc_large_font_id;
     }
@@ -119,7 +120,7 @@ DcCommand2 hud_coords_cmd{
     },
 };
 
-void GrScaledBitmap(int bmh, int x, int y, float scale, rf::GrRenderState render_state)
+void HudScaledBitmap(int bmh, int x, int y, float scale, rf::GrRenderState render_state)
 {
     int bm_w, bm_h;
     rf::BmGetBitmapSize(bmh, &bm_w, &bm_h);
@@ -128,7 +129,7 @@ void GrScaledBitmap(int bmh, int x, int y, float scale, rf::GrRenderState render
     rf::GrBitmapStretched(bmh, x, y, dst_w, dst_h, 0, 0, bm_w, bm_h, 0.0f, 0.0f, render_state);
 }
 
-void GrRectBorder(int x, int y, int w, int h, int border, rf::GrRenderState state)
+void HudRectBorder(int x, int y, int w, int h, int border, rf::GrRenderState state)
 {
     // top
     rf::GrRect(x, y, w, border, state);
@@ -138,6 +139,23 @@ void GrRectBorder(int x, int y, int w, int h, int border, rf::GrRenderState stat
     rf::GrRect(x, y + border, border, h - 2 * border, state);
     // right
     rf::GrRect(x + w - border, y + border, border, h - 2 * border, state);
+}
+
+std::string HudFitString(std::string_view str, int max_w, int* str_w_out, int font_id)
+{
+    std::string result{str};
+    int str_w, str_h;
+    bool has_ellipsis = false;
+    rf::GrGetTextWidth(&str_w, &str_h, result.c_str(), -1, font_id);
+    while (str_w > max_w) {
+        result = result.substr(0, result.size() - (has_ellipsis ? 4 : 1)) + "...";
+        has_ellipsis = true;
+        rf::GrGetTextWidth(&str_w, &str_h, result.c_str(), -1, font_id);
+    }
+    if (str_w_out) {
+        *str_w_out = str_w;
+    }
+    return result;
 }
 
 CallHook<void(int, int, int, int, int, int, int, int, int, char, char, int)> gr_bitmap_stretched_message_log_hook{
@@ -203,4 +221,5 @@ void ApplyHudPatches()
     InstallChatboxPatches();
     InstallWeaponCycleHudPatches();
     InstallPersonaMsgHudPatches();
+    ApplyTeamScoresHudPatches();
 }

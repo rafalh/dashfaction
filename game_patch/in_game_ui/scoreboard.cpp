@@ -97,12 +97,12 @@ int DrawScoreboardHeader(int x, int y, int w, rf::MultiGameType game_type, bool 
                 rf::BmGetBitmapSize(hud_flag_red_bm, &flag_bm_w, &flag_bm_h);
                 rf::GrBitmap(hud_flag_red_bm, x + w * 2 / 6 - flag_bm_w / 2, cur_y);
                 rf::GrBitmap(hud_flag_blue_bm, x + w * 4 / 6 - flag_bm_w / 2, cur_y);
-                red_score = rf::CtfGetRedScore();
-                blue_score = rf::CtfGetBlueScore();
+                red_score = rf::CtfGetRedTeamScore();
+                blue_score = rf::CtfGetBlueTeamScore();
             }
             else if (game_type == rf::MGT_TEAMDM) {
-                red_score = rf::TdmGetRedScore();
-                blue_score = rf::TdmGetBlueScore();
+                red_score = rf::TdmGetRedTeamScore();
+                blue_score = rf::TdmGetBlueTeamScore();
             }
             rf::GrSetColor(0xD0, 0x20, 0x20, 0xFF);
             auto red_score_str = std::to_string(red_score);

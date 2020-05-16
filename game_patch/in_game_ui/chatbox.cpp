@@ -68,7 +68,7 @@ void ChatRender()
 
     int border_alpha = rf::scoreboard_visible ? 255 : chatbox_border_alpha;
     rf::GrSetColor(255, 255, 255, static_cast<int>(border_alpha * fade_out));
-    GrRectBorder(box_x, box_y, box_w, box_h, border);
+    HudRectBorder(box_x, box_y, box_w, box_h, border);
     int bg_alpha = rf::scoreboard_visible ? 255 : chatbox_bg_alpha;
     rf::GrSetColor(0, 0, 0, static_cast<int>(bg_alpha * fade_out));
     rf::GrRect(box_x + border, box_y + border, content_w, content_h);
@@ -147,7 +147,7 @@ void ChatboxInputRender(rf::String::Pod label_pod, rf::String::Pod msg_pod)
     }
 
     rf::GrSetColor(255, 255, 255, rf::scoreboard_visible ? 255 : chatbox_border_alpha);
-    GrRectBorder(input_box_x, input_box_y, box_w, input_box_h, 2);
+    HudRectBorder(input_box_x, input_box_y, box_w, input_box_h, 2);
 
     rf::GrSetColor(0, 0, 0, rf::scoreboard_visible ? 255 : chatbox_bg_alpha);
     rf::GrRect(input_box_x + border, input_box_y + border, content_w, input_box_content_h);

@@ -84,6 +84,7 @@ set(SRCS
     in_game_ui/scoreboard.h
     in_game_ui/spectate_mode.cpp
     in_game_ui/spectate_mode.h
+    in_game_ui/team_scores_hud.cpp
     in_game_ui/weapon_cycle_hud.cpp
     debug/debugwinmsg.cpp
     debug/debug_cmd.cpp

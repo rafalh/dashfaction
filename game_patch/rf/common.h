@@ -199,6 +199,11 @@ namespace rf
             return pod;
         }
 
+        operator std::string_view() const
+        {
+            return {m_pod.buf};
+        }
+
         String& operator=(const String& other)
         {
             return AddrCaller{0x004FFA20}.this_call<String&>(this, &other);

@@ -58,7 +58,7 @@ FunHook<void(rf::Player*)> HudRenderHealthAndEnviro_hook{
             int health_tex_idx = static_cast<int>(entity->life * 0.1f);
             health_tex_idx = std::clamp(health_tex_idx, 0, 10);
             int health_bmh = rf::hud_health_bitmaps[health_tex_idx];
-            GrScaledBitmap(health_bmh,
+            HudScaledBitmap(health_bmh,
                 rf::hud_points[rf::hud_health].x * scale,
                 rf::hud_points[rf::hud_health].y * scale,
                 scale,
@@ -66,7 +66,7 @@ FunHook<void(rf::Player*)> HudRenderHealthAndEnviro_hook{
             int enviro_tex_idx = static_cast<int>(entity->armor / entity->cls->envirosuit * 10.0f);
             enviro_tex_idx = std::clamp(enviro_tex_idx, 0, 10);
             int enviro_bmh = rf::hud_enviro_bitmaps[enviro_tex_idx];
-            GrScaledBitmap(enviro_bmh,
+            HudScaledBitmap(enviro_bmh,
                 rf::hud_points[rf::hud_envirosuit].x * scale,
                 rf::hud_points[rf::hud_envirosuit].y * scale,
                 scale,

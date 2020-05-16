@@ -2,6 +2,7 @@
 
 #include <patch_common/MemUtils.h>
 #include "common.h"
+#include "graphics.h"
 
 namespace rf
 {
@@ -81,12 +82,12 @@ namespace rf
         hud_driller_value                             = 47,
     };
 
-    static auto& HudDrawDamageIndicators = AddrAsRef<void(rf::Player*)>(0x00439CA0);
+    static auto& HudDrawDamageIndicators = AddrAsRef<void(Player*)>(0x00439CA0);
 
-    static auto& hud_full_color = AddrAsRef<rf::Color>(0x006373B8);
-    static auto& hud_mid_color = AddrAsRef<rf::Color>(0x006373BC);
-    static auto& hud_low_color = AddrAsRef<rf::Color>(0x006373C0);
-    static auto& hud_body_color = AddrAsRef<rf::Color>(0x00637228);
+    static auto& hud_full_color = AddrAsRef<Color>(0x006373B8);
+    static auto& hud_mid_color = AddrAsRef<Color>(0x006373BC);
+    static auto& hud_low_color = AddrAsRef<Color>(0x006373C0);
+    static auto& hud_body_color = AddrAsRef<Color>(0x00637228);
     static auto& hud_enviro_bitmaps = AddrAsRef<int[11]>(0x00639078);
     static auto& hud_health_bitmaps = AddrAsRef<int[11]>(0x006390A4);
     static auto& hud_health_jeep_bmh = AddrAsRef<int>(0x005974D0);
@@ -101,30 +102,30 @@ namespace rf
         int color_id;
     };
 
-    static auto& chat_fully_visible_timer = AddrAsRef<rf::Timer>(0x006C9C7C);
-    static auto& chat_fade_out_timer = AddrAsRef<rf::Timer>(0x006C9C88);
+    static auto& chat_fully_visible_timer = AddrAsRef<Timer>(0x006C9C7C);
+    static auto& chat_fade_out_timer = AddrAsRef<Timer>(0x006C9C88);
     static auto& chat_messages = AddrAsRef<ChatMsg[8]>(0x006C9C98);
 
     struct HudPersonasTbl
     {
-        rf::String name;
-        rf::String image;
-        rf::String display_name;
+        String name;
+        String image;
+        String display_name;
         int image_bmh;
         int sound;
         int game_snd_id;
         char message[256];
-        rf::Timer fully_visible_timer;
+        Timer fully_visible_timer;
     };
 
     static auto& hud_persona_alpha = AddrAsRef<float>(0x00597290);
     static auto& hud_persona_target_alpha = AddrAsRef<float>(0x0059728C);
     static auto& hud_persona_current_idx = AddrAsRef<int>(0x006384C4);
-    static auto& hud_default_color = AddrAsRef<rf::Color>(0x00637554);
-    static auto& hud_msg_bg_color = AddrAsRef<rf::Color>(0x006379EC);
-    static auto& hud_msg_color = AddrAsRef<rf::Color>(0x006373B4);
+    static auto& hud_default_color = AddrAsRef<Color>(0x00637554);
+    static auto& hud_msg_bg_color = AddrAsRef<Color>(0x006379EC);
+    static auto& hud_msg_color = AddrAsRef<Color>(0x006373B4);
     static auto& hud_personas_tbl = AddrAsRef<HudPersonasTbl[10]>(0x006384D0);
-    static auto& hud_persona_image_render_state = AddrAsRef<rf::GrRenderState>(0x01775B18);
+    static auto& hud_persona_image_render_state = AddrAsRef<GrRenderState>(0x01775B18);
 
     struct WeaponCycle
     {

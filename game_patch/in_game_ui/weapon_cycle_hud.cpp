@@ -76,7 +76,7 @@ void RenderSelectWeaponGui()
     int active_sq_x = type_sq_start_x + selected_cycle_entry.type * sq_x_delta;
     rf::GrSetColor(239, 213, 52, 255);
     int sq_with_border_size = sq_bg_size + 2 * border; // 22
-    GrRectBorder(active_sq_x, type_sq_y, sq_with_border_size, sq_with_border_size, border);
+    HudRectBorder(active_sq_x, type_sq_y, sq_with_border_size, sq_with_border_size, border);
     // rf::GrRect(active_sq_x, type_sq_y, sq_with_border_size, border);
     // rf::GrRect(active_sq_x + sq_with_border_size, type_sq_y, border, sq_with_border_size);
     // rf::GrRect(active_sq_x, type_sq_y, border, sq_with_border_size);
@@ -138,10 +138,10 @@ void RenderSelectWeaponGui()
 
             int weapon_icon_y = weapon_icons_start_y + weapon_icon_delta_y * idx;
             int weapon_icon_bmh = weapon_icon_bitmaps[weapon_cls_id];
-            GrScaledBitmap(weapon_icon_bmh, weapon_icons_x, weapon_icon_y, weapon_icon_scale);
+            HudScaledBitmap(weapon_icon_bmh, weapon_icons_x, weapon_icon_y, weapon_icon_scale);
             if (weapon_cls_id == selected_cycle_entry.cls_id) {
                 rf::GrSetColor(239, 213, 52, 255);
-                GrRectBorder(weapon_icons_x - 1, weapon_icon_y - 1, weapon_icon_w + 2, weapon_icon_h + 2, 1);
+                HudRectBorder(weapon_icons_x - 1, weapon_icon_y - 1, weapon_icon_w + 2, weapon_icon_h + 2, 1);
             }
         }
         ++num_drawn_weapons_per_type[weapon_type];

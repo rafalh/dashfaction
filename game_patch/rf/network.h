@@ -110,12 +110,14 @@ namespace rf
     };
 
     static auto& MultiGetGameType = AddrAsRef<MultiGameType()>(0x00470770);
-    static auto& CtfGetRedScore = AddrAsRef<uint8_t()>(0x00475020);
-    static auto& CtfGetBlueScore = AddrAsRef<uint8_t()>(0x00475030);
+    static auto& CtfGetRedTeamScore = AddrAsRef<uint8_t()>(0x00475020);
+    static auto& CtfGetBlueTeamScore = AddrAsRef<uint8_t()>(0x00475030);
     static auto& CtfGetRedFlagPlayer = AddrAsRef<Player*()>(0x00474E60);
     static auto& CtfGetBlueFlagPlayer = AddrAsRef<Player*()>(0x00474E70);
-    static auto& TdmGetRedScore = AddrAsRef<uint8_t()>(0x004828F0);
-    static auto& TdmGetBlueScore = AddrAsRef<uint8_t()>(0x00482900);
+    static auto& CtfIsRedFlagInBase = AddrAsRef<bool()>(0x00474E80);
+    static auto& CtfIsBlueFlagInBase = AddrAsRef<bool()>(0x00474EA0);
+    static auto& TdmGetRedTeamScore = AddrAsRef<uint8_t()>(0x004828F0);
+    static auto& TdmGetBlueTeamScore = AddrAsRef<uint8_t()>(0x00482900);
     static auto& GetPlayersCount = AddrAsRef<unsigned()>(0x00484830);
     static auto& KickPlayer = AddrAsRef<void(Player *player)>(0x0047BF00);
     static auto& BanIp = AddrAsRef<void(const NwAddr& addr)>(0x0046D0F0);

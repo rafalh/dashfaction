@@ -84,7 +84,7 @@ void HudRenderPersonaMsg(rf::Player* player)
     rf::GrSetColor(255, 255, 255, static_cast<int>(rf::hud_default_color.alpha * rf::hud_persona_alpha));
     int img_x = img_box_x + img_border; // 161
     int img_y = img_box_y + img_border; // 14
-    GrScaledBitmap(hud_persona.image_bmh, img_x, img_y, img_scale);// hud_persona_image_render_state
+    HudScaledBitmap(hud_persona.image_bmh, img_x, img_y, img_scale);// hud_persona_image_render_state
 
     // persona name
     rf::GrSetColorPtr(&rf::hud_msg_color);
