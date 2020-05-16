@@ -23,8 +23,7 @@ void RenderSelectWeaponGui()
 
     int clip_w = rf::GrGetClipWidth();
     rf::GrSetColor(15, 242, 2, 255);
-    auto font_name = g_big_weapon_cycle_hud ? "rfpc-large.vf" : "rfpc-medium.vf";
-    rf::GrSetDefaultFont(font_name);
+    auto font_num = g_big_weapon_cycle_hud ? rf::rfpc_large_font_id : rf::rfpc_medium_font_id;
 
     // selected weapon type name
     auto& selected_cycle_entry = rf::hud_weapon_cycle[rf::hud_weapon_cycle_current_idx];
@@ -48,7 +47,7 @@ void RenderSelectWeaponGui()
     int weapon_type_y = 113;
     int center_x = clip_w - (g_big_weapon_cycle_hud ? 148 : 74);
     if (weapon_type_name) {
-        rf::GrStringAligned(rf::GR_ALIGN_CENTER, center_x, weapon_type_y, weapon_type_name);
+        rf::GrStringAligned(rf::GR_ALIGN_CENTER, center_x, weapon_type_y, weapon_type_name, font_num);
     }
     // weapon type squares
     int sq_bg_size = g_big_weapon_cycle_hud ? 30 : 20;
@@ -71,7 +70,7 @@ void RenderSelectWeaponGui()
     for (int i = 0; i < 4; ++i) {
         char digit_str[] = {static_cast<char>('1' + i), '\0'};
         int sq_x = type_sq_start_x + i * sq_x_delta;
-        rf::GrString(sq_x + border + text_offset_x, type_sq_y + text_offset_y, digit_str);
+        rf::GrString(sq_x + border + text_offset_x, type_sq_y + text_offset_y, digit_str, font_num);
     }
     // borders for active type square
     int active_sq_x = type_sq_start_x + selected_cycle_entry.type * sq_x_delta;
@@ -151,12 +150,7 @@ void RenderSelectWeaponGui()
     auto display_name = rf::weapon_classes[selected_cycle_entry.cls_id].display_name.CStr();
     int num_weapons_for_current_type = num_drawn_weapons_per_type[selected_cycle_entry.type];
     int weapon_name_y = weapon_icons_start_y + weapon_icon_delta_y * (num_weapons_for_current_type + 1);
-    rf::GrStringAligned(rf::GR_ALIGN_CENTER, center_x, weapon_name_y, display_name);
-
-    // Restore medium font
-    if (g_big_weapon_cycle_hud) {
-        rf::GrSetDefaultFont("rfpc-medium.vf");
-    }
+    rf::GrStringAligned(rf::GR_ALIGN_CENTER, center_x, weapon_name_y, display_name, font_num);
 }
 
 FunHook RenderSelectWeaponGui_hook{0x004A2CF0, RenderSelectWeaponGui};

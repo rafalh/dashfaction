@@ -299,8 +299,7 @@ namespace rf
         return AddrCaller{0x0051F4D0}.c_call<int>(font_num);
     }
 
-    static auto& GrFitText = AddrAsRef<String* (String* result, String::Pod str, int cx_max)>(0x00471EC0);
-    static auto& GrFitMultilineText = AddrAsRef<int(int *len_array, int *offset_array, char *text, int max_width, int max_lines, char unk_char, int font_no)>(0x00520810);
+    static auto& GrFitMultilineText = AddrAsRef<int(int *len_array, int *offset_array, char *text, int max_width, int max_lines, char unk_char, int font_num)>(0x00520810);
     static auto& GrGetTextWidth = AddrAsRef<void(int *out_width, int *out_height, const char *text, int text_len, int font_num)>(0x0051F530);
     static auto& GrSetDefaultFont = AddrAsRef<bool(const char *file_name)>(0x0051FE20);
 }

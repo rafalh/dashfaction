@@ -18,6 +18,7 @@
 namespace rf
 {
 static auto& DrawScoreboard = AddrAsRef<void(bool draw)>(0x00470860);
+static auto& FitScoreboardString = AddrAsRef<String* (String* result, String::Pod str, int cx_max)>(0x00471EC0);
 }
 
 constexpr float ENTER_ANIM_MS = 100.0f;
@@ -69,7 +70,7 @@ int DrawScoreboardHeader(int x, int y, int w, rf::MultiGameType game_type, bool 
         auto level_info = rf::String::Format("%s (%s) by %s", rf::level_name.CStr(), rf::level_filename.CStr(),
                                             rf::level_author.CStr());
         rf::String level_info_stripped;
-        rf::GrFitText(&level_info_stripped, level_info, w - 20); // Note: this destroys input string
+        rf::FitScoreboardString(&level_info_stripped, level_info, w - 20); // Note: this destroys input string
         rf::GrStringAligned(rf::GR_ALIGN_CENTER, x_center, cur_y, level_info_stripped);
     }
     cur_y += font_h + 3;
@@ -80,7 +81,7 @@ int DrawScoreboardHeader(int x, int y, int w, rf::MultiGameType game_type, bool 
         rf::NwAddrToStr(ip_addr_buf, sizeof(ip_addr_buf), rf::serv_addr);
         auto server_info = rf::String::Format("%s (%s)", rf::serv_name.CStr(), ip_addr_buf);
         rf::String server_info_stripped;
-        rf::GrFitText(&server_info_stripped, server_info, w - 20); // Note: this destroys input string
+        rf::FitScoreboardString(&server_info_stripped, server_info, w - 20); // Note: this destroys input string
         rf::GrStringAligned(rf::GR_ALIGN_CENTER, x_center, cur_y, server_info_stripped);
     }
     cur_y += font_h + 8;
@@ -177,7 +178,7 @@ int DrawScoreboardPlayers(const std::vector<rf::Player*>& players, int x, int y,
             rf::GrBitmap(status_bm, status_x, y + 2 * scale);
 
             rf::String player_name_stripped;
-            rf::GrFitText(&player_name_stripped, player->name, name_w - 12 * scale); // Note: this destroys Name
+            rf::FitScoreboardString(&player_name_stripped, player->name, name_w - 12 * scale); // Note: this destroys Name
             rf::GrString(name_x, y, player_name_stripped);
 
 #if DEBUG_SCOREBOARD
@@ -282,13 +283,13 @@ void DrawScoreboardInternal_New(bool draw)
 
     int w;
     float scale;
+    // Note: FitScoreboardString does not support providing font by argument so default font must be changed
     if (g_big_scoreboard) {
         rf::GrSetDefaultFont("rfpc-large.vf");
         w = std::min(!group_by_team ? 900u : 1400u, rf::GrGetClipWidth());
         scale = 2.0f;
     }
     else {
-        rf::GrSetDefaultFont("rfpc-medium.vf");
         w = std::min(!group_by_team ? 450u : 700u, rf::GrGetClipWidth());
         scale = 1.0f;
     }
@@ -312,8 +313,13 @@ void DrawScoreboardInternal_New(bool draw)
     rf::GrRect(x, y, w, h);
     y += top_padding;
 
-    if (progress_h < 1.0f || progress_w < 1.0f)
+    if (progress_h < 1.0f || progress_w < 1.0f) {
+        // Restore rfpc-medium as default font
+        if (g_big_scoreboard) {
+            rf::GrSetDefaultFont("rfpc-medium.vf");
+        }
         return;
+    }
 
     y += DrawScoreboardHeader(x, y, w, game_type);
     if (group_by_team) {
@@ -327,7 +333,9 @@ void DrawScoreboardInternal_New(bool draw)
     }
 
     // Restore rfpc-medium as default font
-    rf::GrSetDefaultFont("rfpc-medium.vf");
+    if (g_big_scoreboard) {
+        rf::GrSetDefaultFont("rfpc-medium.vf");
+    }
 }
 
 FunHook<void(bool)> DrawScoreboardInternal_hook{0x00470880, DrawScoreboardInternal_New};
