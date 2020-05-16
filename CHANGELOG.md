@@ -77,6 +77,7 @@ Version 1.5.0
 - fix crash if camera cannot be restored to first-person mode after cutscene (RF bug)
 - fix handling of alpha-only (A8) texture format when 32-bit textures are used
 - fix switch weapon UI resetting fire wait timer without checking old value
+- fix crash when particle emitter allocation fails during entity ignition
 
 Version 1.4.1 (released 2019-12-07)
 -----------------------------------

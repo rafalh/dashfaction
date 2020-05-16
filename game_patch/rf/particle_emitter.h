@@ -50,6 +50,92 @@ struct ParticleEmitterType
 };
 static_assert(sizeof(ParticleEmitterType) == 0x84);
 
-class ParticleEmitter {};
+struct ParticleCreateData
+{
+    Vector3 pos;
+    Vector3 velocity;
+    float pradius;
+    float growth_rate;
+    float acceleration;
+    float gravity_scale;
+    float life_secs;
+    int bitmap;
+    int field_30;
+    Color particle_clr;
+    Color particle_clr_dest;
+    int particle_flags;
+    int particle_flags2;
+    int field_44;
+    int field_48;
+};
+static_assert(sizeof(ParticleCreateData) == 0x4C);
+
+struct Particle
+{
+    struct Particle *next;
+    struct Particle *prev;
+    int parent_hobj;
+    Vector3 pos;
+    Vector3 velocity;
+    float current_life_time;
+    Color particle_clr;
+    Color particle_clr_dest;
+    Color particle_clr2;
+    float life_secs;
+    float p_radius;
+    float growth_rate;
+    float acceleration;
+    float gravity;
+    int bitmap;
+    short word_4C;
+    short particle_flags2;
+    unsigned char pool_id;
+    float unk_orient;
+    int particle_flags;
+    int field_5C;
+    void (__cdecl *unk_callback)(Vector3 *hit_pos, const Vector3 *vel, Vector3 *normal, float *, int *is_liquid, int *hit_obj_uid);
+    RflRoom *room;
+    ParticleEmitter *emitter;
+    Vector3 prev_pos;
+};
+static_assert(sizeof(Particle) == 0x78);
+
+struct ParticleEmitter
+{
+    int uid;
+    int parent_hobj;
+    Vector3 pos;
+    Vector3 dir;
+    float dir_rand;
+    float min_vel;
+    float max_vel;
+    float spawn_radius;
+    float min_spawn_delay;
+    float max_spawn_delay;
+    int emitter_flags;
+    float min_life_secs;
+    float max_life_secs;
+    float min_pradius;
+    float max_pradius;
+    RflRoom *room;
+    ParticleCreateData particle_data;
+    float max_render_radius;
+    float field_A0;
+    Vector3 field_A4;
+    Particle particle_list;
+    float alt_state_on_time;
+    float alt_state_on_time_variance;
+    float alt_state_off_time;
+    float alt_state_off_time_variance;
+    float max_time;
+    float time;
+    bool is_on;
+    int field_144;
+    struct ParticleEmitter *next;
+    struct ParticleEmitter *prev;
+    ParticleEmitter *next_entity_emitter;
+    Timer spawn_delay_timer;
+};
+static_assert(sizeof(ParticleEmitter) == 0x158);
 
 }

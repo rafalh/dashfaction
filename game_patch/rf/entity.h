@@ -7,6 +7,7 @@ namespace rf
 {
     // Forward declarations
     struct Player;
+    struct ParticleEmitter;
 
     using EntityFlags = int;
     using EntityPowerups = int;
@@ -558,7 +559,59 @@ namespace rf
     };
     static_assert(sizeof(EntityObj) == 0x1494);
 
-    static auto& EntityGetByHandle = AddrAsRef<EntityObj*(uint32_t handle)>(0x00426FC0);
+    struct EntityBurnInfo
+    {
+        ParticleEmitter *emitters[4];
+        int parent_hobj;
+        int lower_leg_l_bone;
+        int lower_leg_r_bone;
+        int spine_bone;
+        int head_bone;
+        int sound_handle;
+        float byte28;
+        char field_2C;
+        float field_30;
+        int field_34;
+        struct EntityBurnInfo *next;
+        struct EntityBurnInfo *prev;
+    };
+
+    struct ShadowInfo
+    {
+        float radius;
+        AnimMesh *anim_mesh;
+        int bone_id_unk;
+        Vector3 pos;
+        Matrix3 orient;
+    };
+
+    struct CorpseObj : Object
+    {
+        struct CorpseObj *next;
+        struct CorpseObj *prev;
+        float creation_level_time;
+        float seconds_left_before_delete;
+        int flags;
+        int entity_cls_id;
+        String corpse_pose_name;
+        Timer emitter_lifetime_timer;
+        float body_temp;
+        int entity_idle_state_anim_id;
+        int pose_action_anim;
+        int corpse_drop_anim;
+        int corpse_carry_anim;
+        int corpse_pose;
+        AnimMesh *helmet_anim_mesh;
+        int unk_item_handle;
+        EntityBurnInfo *burn_info;
+        int field_2D4;
+        Color ambient_clr;
+        ShadowInfo shadow_info;
+    };
+    static_assert(sizeof(CorpseObj) == 0x318);
+
+    static auto& EntityGetByHandle = AddrAsRef<EntityObj*(int handle)>(0x00426FC0);
+    static auto& CorpseGetByHandle = AddrAsRef<CorpseObj*(int handle)>(0x004174C0);
     static auto& EntityCreate =
         AddrAsRef<EntityObj*(int cls_id, const char* name, int owner_handle, const Vector3& pos,
         const Matrix3& orient, int create_flags, int mp_character)>(0x00422360);
@@ -572,4 +625,5 @@ namespace rf
     static auto& EntityIsJeep = AddrAsRef<bool(EntityObj *entity)>(0x0040A2F0);
     static auto& EntityIsFighter = AddrAsRef<bool(EntityObj *entity)>(0x0040A210);
     static auto& EntityIsHoldingBody = AddrAsRef<bool(EntityObj *entity)>(0x00429D20);
+    static auto& EntityBurnInitBones = AddrAsRef<bool(EntityBurnInfo *burn_info, Object *obj)>(0x0042EB20);
 }

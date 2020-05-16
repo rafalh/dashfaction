@@ -16,6 +16,7 @@
 #include "../rf/network.h"
 #include "../rf/game_seq.h"
 #include "../rf/input.h"
+#include "../rf/particle_emitter.h"
 #include "../stdafx.h"
 #include "../server/server.h"
 #include <common/version.h>
@@ -445,6 +446,23 @@ CallHook<void __fastcall(rf::Timer*, int, int)> HandleCtrlInGame_TimerSet_fire_w
     &HandleCtrlInGame_TimerSet_New,
 };
 
+FunHook<void(rf::EntityBurnInfo&, int)> EntityBurnSwitchParentToCorpse_hook{
+    0x0042F510,
+    [](rf::EntityBurnInfo& burn_info, int corpse_hobj) {
+        auto corpse = rf::CorpseGetByHandle(corpse_hobj);
+        burn_info.parent_hobj = corpse_hobj;
+        rf::EntityBurnInitBones(&burn_info, corpse);
+        for (auto& emitter_ptr : burn_info.emitters) {
+            if (emitter_ptr) {
+                emitter_ptr->parent_hobj = corpse_hobj;
+            }
+        }
+        burn_info.field_2C = 1;
+        burn_info.field_30 = 0.0f;
+        corpse->flags |= 0x200;
+    },
+};
+
 void MiscAfterLevelLoad(const char* level_filename)
 {
     DoLevelSpecificEventHacks(level_filename);
@@ -601,6 +619,9 @@ void MiscInit()
     // Fix setting fire wait timer when closing weapon switch menu
     // Note: this timer makes sense for weapons that require holding (not clicking) the control to fire (e.g. shotgun)
     HandleCtrlInGame_TimerSet_fire_wait_patch.Install();
+
+    // Fix crash when particle emitter allocation fails during entity ignition
+    EntityBurnSwitchParentToCorpse_hook.Install();
 
     // Init cmd line param
     GetUrlCmdLineParam();
