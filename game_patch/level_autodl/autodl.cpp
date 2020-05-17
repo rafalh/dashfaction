@@ -333,7 +333,7 @@ bool TryToDownloadLevel(const char* filename)
     xlog::trace("Fetching level info");
     auto level_info_opt = FetchLevelInfo(filename);
     if (!level_info_opt) {
-        xlog::error("Level has not found in FactionFiles database!");
+        xlog::error("Level has not been found in FactionFiles database!");
         return false;
     }
 
