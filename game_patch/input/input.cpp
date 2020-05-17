@@ -244,7 +244,6 @@ FunHook<int(int16_t)> key_to_ascii_hook{
         if (!key) {
             return 0xFF;
         }
-        return key_to_ascii_hook.CallTarget(key);
         // special handling for Num Lock (because ToAscii API does not support it)
         switch (key & rf::KEY_MASK) {
             // Numpad keys that always work
