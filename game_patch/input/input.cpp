@@ -278,11 +278,11 @@ FunHook<int(int16_t)> key_to_ascii_hook{
         if (key & rf::KEY_CTRLED) {
             key_state[VK_CONTROL] = 0x80;
         }
-        WORD chars[3];
         int scan_code = key & 0x7F;
         auto vk = MapVirtualKeyA(scan_code, MAPVK_VSC_TO_VK);
-        auto num_chars = ToAscii(vk, scan_code, key_state, chars, 0);
-        if (num_chars < 1 || (chars[0] & 0x80) != 0 || !std::isprint(chars[0])) {
+        WCHAR chars[3];
+        auto num_chars = ToUnicode(vk, scan_code, key_state, chars, std::size(chars), 0);
+        if (num_chars < 1 || static_cast<char16_t>(chars[0]) >= 0x80 || !std::isprint(chars[0])) {
             return 0xFF;
         }
         xlog::trace("vk %X (%c) char %c", vk, vk, chars[0]);
