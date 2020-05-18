@@ -22,15 +22,15 @@ namespace rf
     static auto& hud_points_1280 = AddrAsRef<HudPoint[num_hud_points]>(0x00637560);
     static auto& hud_points = AddrAsRef<HudPoint[num_hud_points]>(0x006376E8);
 
-    static auto& hud_big_font = AddrAsRef<int>(0x00596F64);
-    static auto& hud_small_font = AddrAsRef<int>(0x00596F68);
+    static auto& hud_ammo_font = AddrAsRef<int>(0x00596F64);
+    static auto& hud_health_enviro_font = AddrAsRef<int>(0x00596F68);
     static auto& hud_msg_font_num = AddrAsRef<int>(0x005A1350);
     static auto& hud_text_font_num = AddrAsRef<int>(0x005A1358);
 
 
     static auto& scoreboard_visible = AddrAsRef<bool>(0x006A1448);
 
-    enum HudItems
+    enum HudItem
     {
         hud_health                                    = 0,
         hud_health_value_ul_corner                    = 1,

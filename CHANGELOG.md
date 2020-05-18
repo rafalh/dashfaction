@@ -3,6 +3,14 @@ DashFaction Changelog
 
 Version 1.5.0
 -------------
+
+TODO:
+- new lines in licenses.txt (and possibly other files)
+- bigfont?
+- crash if too long 'say' message
+- text goes out of chatbox in bighud
+
+
 - increase object limit from 1024 to 65536
 - remove additional limits on number of allocated bullet, item, debris and corpse objects
 - remove limit of loaded object meshes (v3d files)

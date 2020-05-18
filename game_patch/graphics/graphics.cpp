@@ -894,6 +894,8 @@ void GraphicsDrawFpsCounter()
     if (g_game_config.fps_counter && !rf::is_hud_hidden) {
         auto text = StringFormat("FPS: %.1f", rf::current_fps);
         rf::GrSetColor(0, 255, 0, 255);
-        rf::GrStringAligned(rf::GR_ALIGN_RIGHT, rf::GrGetMaxWidth() - 10, 60, text.c_str(), -1, rf::gr_string_state);
+        int x = rf::GrGetMaxWidth() - 10;
+        int y = g_game_config.big_hud ? 120 : 60;
+        rf::GrStringAligned(rf::GR_ALIGN_RIGHT, x, y, text.c_str());
     }
 }

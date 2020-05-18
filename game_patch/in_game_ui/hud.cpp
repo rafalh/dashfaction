@@ -80,6 +80,62 @@ void HudSetupPositions(int width)
 }
 FunHook HudSetupPositions_hook{0x004377C0, HudSetupPositions};
 
+CallHook<void(int, int, int, rf::GrRenderState)> HudRenderAmmo_GrBitmap_hook{
+    {
+        0x0043A5E9u,
+        0x0043A637u,
+        0x0043A680u,
+    },
+    [](int bm_handle, int x, int y, rf::GrRenderState render_state) {
+        float scale = g_game_config.big_hud ? 2.0f : 1.0f;
+        HudScaledBitmap(bm_handle, x, y, scale, render_state);
+    },
+};
+
+static int HudScaleValue(int val, int max, float scale)
+{
+    if (val < max / 3) {
+        return static_cast<int>(val * scale);
+    }
+    else if (val < max * 2 / 3) {
+        return max / 2 + static_cast<int>((val - max / 2) * scale);
+    }
+    else {
+        return max + static_cast<int>((val - max) * scale);
+    }
+}
+
+rf::HudPoint HudScaleCoords(rf::HudPoint pt, float scale)
+{
+    return {
+        HudScaleValue(pt.x, rf::GrGetMaxWidth(), scale),
+        HudScaleValue(pt.y, rf::GrGetMaxWidth(), scale),
+    };
+}
+
+void SetBigAmmo(bool is_big)
+{
+    rf::HudItem ammo_hud_items[] = {
+        rf::hud_ammo_bar,
+        rf::hud_ammo_signal,
+        rf::hud_ammo_icon,
+        rf::hud_ammo_in_clip_text_ul_region_coord,
+        rf::hud_ammo_in_clip_text_width_and_height,
+        rf::hud_ammo_in_inv_text_ul_region_coord,
+        rf::hud_ammo_in_inv_text_width_and_height,
+        rf::hud_ammo_bar_position_no_clip,
+        rf::hud_ammo_signal_position_no_clip,
+        rf::hud_ammo_icon_position_no_clip,
+        rf::hud_ammo_in_inv_ul_region_coord_no_clip,
+        rf::hud_ammo_in_inv_text_width_and_height_no_clip,
+    };
+    float hud_ammo_scale = is_big ? 2.0f : 1.0f;
+    for (auto item_num : ammo_hud_items) {
+        rf::hud_points[item_num] = HudScaleCoords(rf::hud_points[item_num], hud_ammo_scale);
+    }
+    rf::hud_ammo_font = rf::GrLoadFont(is_big ? "biggerfont.vf" : "bigfont.vf");
+}
+
 void SetBigHud(bool is_big)
 {
     SetBigHealthArmorHud(is_big);
@@ -89,6 +145,9 @@ void SetBigHud(bool is_big)
     SetBigScoreboard(is_big);
     SetBigTeamScoresHud(is_big);
     rf::hud_text_font_num = is_big ? rf::GrLoadFont("rfpc-large.vf") : -1;
+
+    HudSetupPositions(rf::GrGetMaxWidth());
+    SetBigAmmo(is_big);
 }
 
 DcCommand2 bighud_cmd{
@@ -210,6 +269,8 @@ void ApplyHudPatches()
 
     // Fix message log rendering in resolutions with ratio different than 4:3
     gr_bitmap_stretched_message_log_hook.Install();
+
+    HudRenderAmmo_GrBitmap_hook.Install();
 
     // Patches from other files
     InstallHealthArmorHudPatches();
