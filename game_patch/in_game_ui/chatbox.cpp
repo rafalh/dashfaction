@@ -4,6 +4,7 @@
 #include <patch_common/FunHook.h>
 #include <patch_common/AsmOpcodes.h>
 #include <patch_common/AsmWriter.h>
+#include <patch_common/CodeInjection.h>
 
 bool g_big_chatbox = false;
 
@@ -113,6 +114,13 @@ void ChatRender()
 
 FunHook<void()> ChatRender_hook{0x004773D0, ChatRender};
 
+CodeInjection ChatboxAddMsg_max_width_injection{
+    0x004788E3,
+    [](auto& regs) {
+        regs.esi = rf::GrGetMaxWidth() - (g_big_chatbox ? 620 : 320);
+    },
+};
+
 void ChatboxInputRender(rf::String::Pod label_pod, rf::String::Pod msg_pod)
 {
     // Note: POD has to be used here because of differences between compilers ABI
@@ -189,6 +197,7 @@ void InstallChatboxPatches()
     ChatSayAccept_hook.Install();
 
     ChatRender_hook.Install();
+    ChatboxAddMsg_max_width_injection.Install();
     ChatboxInputRender_hook.Install();
 }
 
