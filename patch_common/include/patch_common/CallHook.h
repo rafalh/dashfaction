@@ -10,28 +10,42 @@
 class CallHookImpl
 {
 protected:
-    uintptr_t m_call_op_addr;
+    std::vector<uintptr_t> m_call_op_addr_vec;
     void* m_target_fun_ptr;
     void* m_hook_fun_ptr;
 
     CallHookImpl(uintptr_t call_op_addr, void* hook_fun_ptr) :
-        m_call_op_addr{call_op_addr}, m_hook_fun_ptr{hook_fun_ptr}
+        m_call_op_addr_vec{{call_op_addr}}, m_hook_fun_ptr{hook_fun_ptr}
+    {}
+
+    CallHookImpl(std::initializer_list<uintptr_t> call_op_addr, void* hook_fun_ptr) :
+        m_call_op_addr_vec{call_op_addr}, m_hook_fun_ptr{hook_fun_ptr}
     {}
 
 public:
     void Install()
     {
-        uint8_t Opcode = *reinterpret_cast<uint8_t*>(m_call_op_addr);
-        if (Opcode != asm_opcodes::call_rel_long) {
-            xlog::error("not a call at 0x%X", m_call_op_addr);
-            return;
-        }
+        m_target_fun_ptr = nullptr;
+        for (auto addr : m_call_op_addr_vec) {
+            uint8_t opcode = *reinterpret_cast<uint8_t*>(addr);
+            if (opcode != asm_opcodes::call_rel_long) {
+                xlog::error("not a call at 0x%X", addr);
+                return;
+            }
 
-        intptr_t call_offset = *reinterpret_cast<intptr_t*>(m_call_op_addr + 1);
-        int call_op_size = 1 + sizeof(uintptr_t);
-        m_target_fun_ptr = reinterpret_cast<void*>(m_call_op_addr + call_op_size + call_offset);
-        intptr_t new_offset = reinterpret_cast<intptr_t>(m_hook_fun_ptr) - m_call_op_addr - call_op_size;
-        WriteMem<i32>(m_call_op_addr + 1, new_offset);
+            intptr_t call_offset = *reinterpret_cast<intptr_t*>(addr + 1);
+            int call_op_size = 1 + sizeof(uintptr_t);
+            auto call_addr = reinterpret_cast<void*>(addr + call_op_size + call_offset);
+            if (!m_target_fun_ptr) {
+                m_target_fun_ptr = call_addr;
+            }
+            else if (call_addr != m_target_fun_ptr) {
+                xlog::error("call target function differs at 0x%X", addr);
+            }
+
+            intptr_t new_offset = reinterpret_cast<intptr_t>(m_hook_fun_ptr) - addr - call_op_size;
+            WriteMem<i32>(addr + 1, new_offset);
+        }
     }
 };
 
@@ -49,9 +63,8 @@ public:
         CallHookImpl(call_op_addr, reinterpret_cast<void*>(hook_fun_ptr))
     {}
 
-    template<unsigned N>
-    CallHook(uintptr_t (&&call_op_addr)[N], FunType* hook_fun_ptr) :
-        CallHookImpl(call_op_addr[0], reinterpret_cast<void*>(hook_fun_ptr))
+    CallHook(std::initializer_list<uintptr_t> call_op_addr, FunType* hook_fun_ptr) :
+        CallHookImpl(call_op_addr, reinterpret_cast<void*>(hook_fun_ptr))
     {}
 
     R CallTarget(A... a) const
@@ -72,9 +85,8 @@ public:
         CallHookImpl(call_op_addr, reinterpret_cast<void*>(hook_fun_ptr))
     {}
 
-    template<unsigned N>
-    CallHook(uintptr_t (&&call_op_addr)[N], FunType* hook_fun_ptr) :
-        CallHookImpl(call_op_addr[0], reinterpret_cast<void*>(hook_fun_ptr))
+    CallHook(std::initializer_list<uintptr_t> call_op_addr, FunType* hook_fun_ptr) :
+        CallHookImpl(call_op_addr, reinterpret_cast<void*>(hook_fun_ptr))
     {}
 
     R CallTarget(A... a) const
