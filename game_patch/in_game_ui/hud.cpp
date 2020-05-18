@@ -88,12 +88,7 @@ void SetBigHud(bool is_big)
     SetBigWeaponCycleHud(is_big);
     SetBigScoreboard(is_big);
     SetBigTeamScoresHud(is_big);
-    if (is_big) {
-        rf::hud_text_font_num = rf::rfpc_large_font_id;
-    }
-    else {
-        rf::hud_text_font_num = rf::rfpc_medium_font_id;
-    }
+    rf::hud_text_font_num = is_big ? rf::GrLoadFont("rfpc-large.vf") : -1;
 }
 
 DcCommand2 bighud_cmd{
