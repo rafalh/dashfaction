@@ -286,11 +286,11 @@ void DrawScoreboardInternal_New(bool draw)
     // Note: FitScoreboardString does not support providing font by argument so default font must be changed
     if (g_big_scoreboard) {
         rf::GrSetDefaultFont("rfpc-large.vf");
-        w = std::min(!group_by_team ? 900u : 1400u, rf::GrGetClipWidth());
+        w = std::min(!group_by_team ? 900 : 1400, rf::GrGetClipWidth());
         scale = 2.0f;
     }
     else {
-        w = std::min(!group_by_team ? 450u : 700u, rf::GrGetClipWidth());
+        w = std::min(!group_by_team ? 450 : 700, rf::GrGetClipWidth());
         scale = 1.0f;
     }
 

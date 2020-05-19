@@ -896,6 +896,8 @@ void GraphicsDrawFpsCounter()
         rf::GrSetColor(0, 255, 0, 255);
         int x = rf::GrGetMaxWidth() - 10;
         int y = g_game_config.big_hud ? 120 : 60;
-        rf::GrStringAligned(rf::GR_ALIGN_RIGHT, x, y, text.c_str());
+        static int large_font_id = rf::GrLoadFont("rfpc-large.vf");
+        int font_id = g_game_config.big_hud ? large_font_id : -1;
+        rf::GrStringAligned(rf::GR_ALIGN_RIGHT, x, y, text.c_str(), font_id);
     }
 }

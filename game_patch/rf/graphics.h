@@ -245,8 +245,8 @@ namespace rf
 
     static auto& GrGetMaxWidth = AddrAsRef<int()>(0x0050C640);
     static auto& GrGetMaxHeight = AddrAsRef<int()>(0x0050C650);
-    static auto& GrGetClipWidth = AddrAsRef<unsigned()>(0x0050CDB0);
-    static auto& GrGetClipHeight = AddrAsRef<unsigned()>(0x0050CDC0);
+    static auto& GrGetClipWidth = AddrAsRef<int()>(0x0050CDB0);
+    static auto& GrGetClipHeight = AddrAsRef<int()>(0x0050CDC0);
     static auto& GrSetColor = AddrAsRef<void(unsigned r, unsigned g, unsigned b, unsigned a)>(0x0050CF80);
     static auto& GrSetColorPtr = AddrAsRef<void(Color *color)>(0x0050D000);
     static auto& GrSetColorAlpha = AddrAsRef<void(int a)>(0x0050D030);

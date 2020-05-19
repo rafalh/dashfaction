@@ -44,7 +44,7 @@ void RenderSelectWeaponGui()
     default:
         break;
     }
-    int weapon_type_y = 113;
+    int weapon_type_y = g_big_weapon_cycle_hud ? 200 : 113;
     int center_x = clip_w - (g_big_weapon_cycle_hud ? 148 : 74);
     if (weapon_type_name) {
         rf::GrStringAligned(rf::GR_ALIGN_CENTER, center_x, weapon_type_y, weapon_type_name, font_num);
@@ -77,10 +77,6 @@ void RenderSelectWeaponGui()
     rf::GrSetColor(239, 213, 52, 255);
     int sq_with_border_size = sq_bg_size + 2 * border; // 22
     HudRectBorder(active_sq_x, type_sq_y, sq_with_border_size, sq_with_border_size, border);
-    // rf::GrRect(active_sq_x, type_sq_y, sq_with_border_size, border);
-    // rf::GrRect(active_sq_x + sq_with_border_size, type_sq_y, border, sq_with_border_size);
-    // rf::GrRect(active_sq_x, type_sq_y, border, sq_with_border_size);
-    // rf::GrRect(active_sq_x + border, type_sq_y + sq_with_border_size, sq_with_border_size, border);
 
     int num_ind_start_y = type_sq_y + sq_bg_size + 2 * border + sq_spacing; // 150
     int weapon_icons_start_y = num_ind_start_y + 26; // 176

@@ -54,6 +54,7 @@ struct GameConfig
     int language = -1;
     bool reduced_speed_in_background = false;
     bool big_hud = false;
+    float reticle_scale = 1.0f;
 
     // Advanced
     float level_sound_volume = 1.0f;
