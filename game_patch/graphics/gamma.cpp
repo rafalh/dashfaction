@@ -13,21 +13,55 @@
 static D3DGAMMARAMP g_gamma_ramp;
 static bool g_gamma_ramp_initialized = false;
 
+static bool SetGammaRampViaD3D(D3DGAMMARAMP* gamma_ramp)
+{
+    // Avoid crash before D3D is initialized or in dedicated server mode
+    if (!rf::gr_d3d_device) {
+        return true;
+    }
+    // D3D Gamma Ramp doesn't work in windowed mode
+    if (rf::gr_d3d_pp.Windowed) {
+        return false;
+    }
+    if (!(rf::gr_d3d_device_caps.Caps2 & D3DCAPS2_FULLSCREENGAMMA)) {
+        xlog::info("Swap chain does not support gamma ramps");
+        return false;
+    }
+    rf::gr_d3d_device->SetGammaRamp(D3DSGR_NO_CALIBRATION, gamma_ramp);
+    return true;
+}
+
+static bool SetGammaRampViaGDI(D3DGAMMARAMP* gamma_ramp)
+{
+    //HDC hdc = GetDC(rf::main_wnd);
+    HDC hdc = CreateDCA("DISPLAY", nullptr, nullptr, nullptr);
+    if (!hdc) {
+        xlog::warn("CreateDCA failed, error %lu", GetLastError());
+        return false;
+    }
+    int cmcap = GetDeviceCaps(hdc, COLORMGMTCAPS);
+    if (cmcap != CM_GAMMA_RAMP) {
+        xlog::info("Display device does not support gamma ramps");
+        return false;
+    }
+    SetLastError(0);
+    bool result = SetDeviceGammaRamp(hdc, gamma_ramp);
+    //ReleaseDC(rf::main_wnd, hdc);
+    DeleteDC(hdc);
+
+    if (!result) {
+        xlog::info("SetDeviceGammaRamp failed, error %lu", GetLastError());
+        return false;
+    }
+    return true;
+}
+
 static void SetGammaRamp(D3DGAMMARAMP* gamma_ramp)
 {
-#if 0 // Note: D3D Gamma Ramp doesn't work in windowed mode
-    if (g_gr_d3d_device)
-        g_gr_d3d_device->SetGammaRamp(D3DSGR_NO_CALIBRATION, gamma_ramp);
-#else
-    HDC hdc = GetDC(rf::main_wnd);
-    if (hdc) {
-        if (!SetDeviceGammaRamp(hdc, gamma_ramp))
-            xlog::error("SetDeviceGammaRamp failed %lu", GetLastError());
-        ReleaseDC(rf::main_wnd, hdc);
+    bool d3d_result = SetGammaRampViaD3D(gamma_ramp);
+    if (!d3d_result) {
+        SetGammaRampViaGDI(gamma_ramp);
     }
-    else
-        xlog::error("GetDC failed");
-#endif
 }
 
 static void GrUpdateGammaRampHook()
