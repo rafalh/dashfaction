@@ -33,7 +33,7 @@ Source: "{#BinDir}\CrashHandler.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#BinDir}\DashEditor.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#BinDir}\DashFaction.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#BinDir}\dashfaction.vpp"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#SrcRootDir}\licenses.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#SrcRootDir}\licensing-info.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SrcRootDir}\LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion
 ; RTPatch patches (extracted from official 1.20 patches)
 Source: "{#PatchesDir}\patchw32.dll"; Flags: dontcopy
