@@ -6,7 +6,11 @@
 #include <common/version.h>
 #include <patch_common/CodeInjection.h>
 #include <patch_common/FunHook.h>
+#include <patch_common/CallHook.h>
 #include <algorithm>
+
+// DcDrawClientConsole uses 200 bytes long buffer for: "] ", user input and '\0'
+constexpr int max_cmd_line_len = 200 - 2 - 1;
 
 rf::DcCommand* g_commands_buffer[CMD_LIMIT];
 
@@ -65,6 +69,14 @@ CodeInjection DcRunCmd_CallHandlerPatch{
     },
 };
 
+CallHook<void(char*, int)> DcProcessKbd_GetTextFromClipboard_hook{
+    0x0050A2FD,
+    [](char *buf, int max_len) {
+        max_len = std::min(max_len, max_cmd_line_len - rf::dc_cmd_line_len);
+        DcProcessKbd_GetTextFromClipboard_hook.CallTarget(buf, max_len);
+    },
+};
+
 void ConsoleRegisterCommand(rf::DcCommand* cmd)
 {
     if (rf::dc_num_commands < CMD_LIMIT)
@@ -111,6 +123,10 @@ void ConsoleApplyPatches()
     DcCommand_Init_limit_check_patch.Install();
 
     DcRunCmd_CallHandlerPatch.Install();
+
+    // Fix possible input buffer overflow
+    DcProcessKbd_GetTextFromClipboard_hook.Install();
+    WriteMem<u32>(0x0050A2D0 + 2, max_cmd_line_len);
 
     ConsoleCommandsApplyPatches();
     ConsoleAutoCompleteApplyPatch();

@@ -66,5 +66,5 @@ namespace rf
     static auto& dc_int_arg = AddrAsRef<int>(0x01775220);
     static auto& dc_float_arg = AddrAsRef<float>(0x01754628);
     static auto& dc_cmd_line = AddrAsRef<char[256]>(0x01775330);
-    static auto& dc_cmd_line_len = AddrAsRef<uint32_t>(0x0177568C);
+    static auto& dc_cmd_line_len = AddrAsRef<int>(0x0177568C);
 }
