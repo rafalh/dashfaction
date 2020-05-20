@@ -23,7 +23,7 @@ Version 1.5.0
 - improve render to texture performance (e.g. mirrors and scanners)
 - improve 2D drawing performance
 - improve level loading time
-- add 'screen_flash' command for toggling screen flash effect
+- add 'damage_screen_flash' command for toggling damage screen flash effect
 - render held corpse in monitors/mirrors
 - add better support for non-US keyboard layouts
 - add support for CTRL+V (paste from clipboard) in dialog boxes

@@ -53,7 +53,7 @@ bool GameConfig::load() try
     result &= dash_faction_key.read_value("Show Enemy Bullets", &show_enemy_bullets);
     result &= dash_faction_key.read_value("Keep Launcher Open", &keep_launcher_open);
     result &= dash_faction_key.read_value("Skip Cutscene Control", &skip_cutscene_ctrl);
-    result &= dash_faction_key.read_value("Screen Flash", &screen_flash);
+    result &= dash_faction_key.read_value("Damage Screen Flash", &damage_screen_flash);
     result &= dash_faction_key.read_value("Language", &language);
     result &= dash_faction_key.read_value("Reduced Speed In Background", &reduced_speed_in_background);
     result &= dash_faction_key.read_value("Big HUD", &big_hud);
@@ -114,7 +114,7 @@ void GameConfig::save() try
     dash_faction_key.write_value("Show Enemy Bullets", show_enemy_bullets);
     dash_faction_key.write_value("Keep Launcher Open", keep_launcher_open);
     dash_faction_key.write_value("Skip Cutscene Control", skip_cutscene_ctrl);
-    dash_faction_key.write_value("Screen Flash", screen_flash);
+    dash_faction_key.write_value("Damage Screen Flash", damage_screen_flash);
     dash_faction_key.write_value("Language", language);
     dash_faction_key.write_value("Reduced Speed In Background", reduced_speed_in_background);
     dash_faction_key.write_value("Big HUD", big_hud);

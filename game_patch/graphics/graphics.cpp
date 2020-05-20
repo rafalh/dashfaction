@@ -606,23 +606,23 @@ CodeInjection gr_d3d_draw_geometry_face_patch_2{
     },
 };
 
-FunHook<void(rf::Player&, int, int, int, int)> PlayerSetScreenFlash_hook{
-    0x00416450,
-    [](rf::Player& player, int r, int g, int b, int a) {
-        if (g_game_config.screen_flash) {
-            PlayerSetScreenFlash_hook.CallTarget(player, r, g, b, a);
+FunHook<void()> DoDamageScreenFlash_hook{
+    0x004A7520,
+    []() {
+        if (g_game_config.damage_screen_flash) {
+            DoDamageScreenFlash_hook.CallTarget();
         }
     },
 };
 
-DcCommand2 screen_flash_cmd{
-    "screen_flash",
+DcCommand2 damage_screen_flash_cmd{
+    "damage_screen_flash",
     []() {
-        g_game_config.screen_flash = !g_game_config.screen_flash;
+        g_game_config.damage_screen_flash = !g_game_config.damage_screen_flash;
         g_game_config.save();
-        rf::DcPrintf("Screen flash effect is %s", g_game_config.screen_flash ? "enabled" : "disabled");
+        rf::DcPrintf("Damage screen flash effect is %s", g_game_config.damage_screen_flash ? "enabled" : "disabled");
     },
-    "Toggle screen flash effect",
+    "Toggle damage screen flash effect",
 };
 
 FunHook<void(int*, void*, int, int, int, rf::GrRenderState, int)> gr_d3d_queue_triangles_hook{
@@ -871,9 +871,9 @@ void GraphicsInit()
     WriteMem<u8>(0x004D33F3, asm_opcodes::jmp_rel_short);
     WriteMem<u8>(0x004D410D, asm_opcodes::jmp_rel_short);
 
-    // Support disabling of screen flash effect
-    PlayerSetScreenFlash_hook.Install();
-    screen_flash_cmd.Register();
+    // Support disabling of damage screen flash effect
+    DoDamageScreenFlash_hook.Install();
+    damage_screen_flash_cmd.Register();
 
     // Fix glass_house level having faces that use multi-textured state but don't have any lightmap (stage 1 texture
     // from previous drawing operation was used)
