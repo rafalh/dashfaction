@@ -41,8 +41,12 @@ static bool SetGammaRampViaGDI(D3DGAMMARAMP* gamma_ramp)
     }
     int cmcap = GetDeviceCaps(hdc, COLORMGMTCAPS);
     if (cmcap != CM_GAMMA_RAMP) {
-        xlog::info("Display device does not support gamma ramps");
-        return false;
+        static bool once = false;
+        if (!once) {
+            xlog::warn("Display device does not support gamma ramps (cmcap %x)", cmcap);
+            once = true;
+        }
+        // try it anyway - Wine returns 0 here but SetDeviceGammaRamp actually work
     }
     SetLastError(0);
     bool result = SetDeviceGammaRamp(hdc, gamma_ramp);
@@ -50,7 +54,9 @@ static bool SetGammaRampViaGDI(D3DGAMMARAMP* gamma_ramp)
     DeleteDC(hdc);
 
     if (!result) {
-        xlog::info("SetDeviceGammaRamp failed, error %lu", GetLastError());
+        if (cmcap == CM_GAMMA_RAMP) {
+            xlog::info("SetDeviceGammaRamp failed, error %lu", GetLastError());
+        }
         return false;
     }
     return true;
