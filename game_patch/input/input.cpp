@@ -241,8 +241,9 @@ DcCommand2 linear_pitch_cmd{
 FunHook<int(int16_t)> key_to_ascii_hook{
     0x0051EFC0,
     [](int16_t key) {
+        constexpr int empty_result = 0xFF;
         if (!key) {
-            return 0xFF;
+            return empty_result;
         }
         // special handling for Num Lock (because ToAscii API does not support it)
         switch (key & rf::KEY_MASK) {
@@ -251,7 +252,7 @@ FunHook<int(int16_t)> key_to_ascii_hook{
             case rf::KEY_PADMINUS: return static_cast<int>('-');
             case rf::KEY_PADPLUS: return static_cast<int>('+');
             // Disable Numpad Enter key because game is not prepared for getting new line character from this function
-            case rf::KEY_PADENTER: return 0xFF;
+            case rf::KEY_PADENTER: return empty_result;
         }
         if (GetKeyState(VK_NUMLOCK) & 1) {
             switch (key & rf::KEY_MASK) {
@@ -280,13 +281,26 @@ FunHook<int(int16_t)> key_to_ascii_hook{
         }
         int scan_code = key & 0x7F;
         auto vk = MapVirtualKeyA(scan_code, MAPVK_VSC_TO_VK);
-        WCHAR chars[3];
-        auto num_chars = ToUnicode(vk, scan_code, key_state, chars, std::size(chars), 0);
-        if (num_chars < 1 || static_cast<char16_t>(chars[0]) >= 0x80 || !std::isprint(chars[0])) {
-            return 0xFF;
+        WCHAR unicode_chars[3];
+        auto num_unicode_chars = ToUnicode(vk, scan_code, key_state, unicode_chars, std::size(unicode_chars), 0);
+        if (num_unicode_chars < 1) {
+            return empty_result;
         }
-        xlog::trace("vk %X (%c) char %c", vk, vk, chars[0]);
-        return static_cast<int>(chars[0]);
+        char ansi_char;
+#if 0 // Windows-1252 codepage support - disabled because callers of this function expects ASCII
+        int num_ansi_chars = WideCharToMultiByte(1252, 0, unicode_chars, num_unicode_chars,
+            &ansi_char, sizeof(ansi_char), nullptr, nullptr);
+        if (num_ansi_chars == 0) {
+            return empty_result;
+        }
+#else
+        if (static_cast<char16_t>(unicode_chars[0]) >= 0x80 || !std::isprint(unicode_chars[0])) {
+            return empty_result;
+        }
+        ansi_char = unicode_chars[0];
+#endif
+        xlog::trace("vk %X (%c) char %c", vk, vk, ansi_char);
+        return static_cast<int>(ansi_char);
     },
 };
 
