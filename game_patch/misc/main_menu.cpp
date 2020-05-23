@@ -1,11 +1,14 @@
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
 #include <common/version.h>
-#include "../rf/misc.h"
+#include "../rf/ui.h"
 #include "../rf/graphics.h"
 #include "../rf/input.h"
 #include "../rf/network.h"
 #include "../main.h"
+
+#define DEBUG_UI_LAYOUT 0
+#define SHARP_UI_TEXT 0
 
 constexpr int EGG_ANIM_ENTER_TIME = 2000;
 constexpr int EGG_ANIM_LEAVE_TIME = 2000;
@@ -29,6 +32,10 @@ void __fastcall UiLabel_Create2_VersionLabel(rf::UiGadget* self, void* edx, rf::
 {
     text = PRODUCT_NAME_VERSION;
     rf::GrGetTextWidth(&w, &h, text, -1, font_id);
+#if SHARP_UI_TEXT
+    w /= rf::ui_scale_x;
+    h /= rf::ui_scale_y;
+#endif
     x = 430 - w;
     w += 5;
     h += 2;
@@ -146,6 +153,272 @@ FunHook<int(const int&, const int&)> ServerListCmpFunc_hook{
     },
 };
 
+int GetUiFont()
+{
+    if (rf::ui_scale_y > 1.5f) {
+        static int large_font = rf::GrLoadFont("rfpc-large.vf");
+        return large_font;
+    }
+    else {
+        static int medium_font = rf::GrLoadFont("rfpc-medium.vf");
+        return medium_font;
+    }
+}
+
+static inline void DebugUiLayout([[ maybe_unused ]] rf::UiGadget& gadget)
+{
+#if DEBUG_UI_LAYOUT
+    int x = gadget.GetAbsoluteX() * rf::ui_scale_x;
+    int y = gadget.GetAbsoluteY() * rf::ui_scale_y;
+    int w = gadget.w * rf::ui_scale_x;
+    int h = gadget.h * rf::ui_scale_y;
+    rf::GrSetColor((x ^ y) & 255, 0, 0, 64);
+    rf::GrRect(x, y, w, h);
+#endif
+}
+
+void __fastcall UiButton_Create(rf::UiButton& this_, void*, const char *normal_bm, const char *selected_bm, int x, int y, int id, const char *text, int font)
+{
+    this_.key = id;
+    this_.x = x;
+    this_.y = y;
+    if (*normal_bm) {
+        this_.bg_bitmap = rf::BmLoad(normal_bm, -1, false);
+        rf::GrTcacheAddRef(this_.bg_bitmap);
+        rf::BmGetBitmapSize(this_.bg_bitmap, &this_.w, &this_.h);
+    }
+    if (*selected_bm) {
+        this_.selected_bitmap = rf::BmLoad(selected_bm, -1, false);
+        rf::GrTcacheAddRef(this_.selected_bitmap);
+        if (this_.bg_bitmap < 0) {
+            rf::BmGetBitmapSize(this_.selected_bitmap, &this_.w, &this_.h);
+        }
+    }
+    this_.text = strdup(text);
+    this_.font = font;
+}
+FunHook UiButton_Create_hook{0x004574D0, UiButton_Create};
+
+void __fastcall UiButton_SetText(rf::UiButton& this_, void*, const char *text, int font)
+{
+    delete[] this_.text;
+    this_.text = strdup(text);
+    this_.font = font;
+}
+FunHook UiButton_SetText_hook{0x00457710, UiButton_SetText};
+
+void __fastcall UiButton_Render(rf::UiButton& this_, void*)
+{
+    int x = this_.GetAbsoluteX() * rf::ui_scale_x;
+    int y = this_.GetAbsoluteY() * rf::ui_scale_y;
+    int w = this_.w * rf::ui_scale_x;
+    int h = this_.h * rf::ui_scale_y;
+
+    if (this_.bg_bitmap >= 0) {
+        rf::GrSetColor(255, 255, 255, 255);
+        rf::GrBitmapStretched(this_.bg_bitmap, x, y, w, h, 0, 0, this_.w, this_.h);
+    }
+
+    if (!this_.enabled) {
+        rf::GrSetColor(96, 96, 96, 255);
+    }
+    else if (this_.highlighted) {
+        rf::GrSetColor(240, 240, 240, 255);
+    }
+    else {
+        rf::GrSetColor(192, 192, 192, 255);
+    }
+
+    if (this_.enabled && this_.highlighted && this_.selected_bitmap >= 0) {
+        auto state = AddrAsRef<rf::GrRenderState>(0x01775B0C);
+        rf::GrBitmapStretched(this_.selected_bitmap, x, y, w, h, 0, 0, this_.w, this_.h, false, false, state);
+    }
+
+    int text_w, text_h;
+    rf::GrGetTextWidth(&text_w, &text_h, this_.text, -1, this_.font);
+    int text_x = x + w / 2;
+    int text_y = y + (h - text_h) / 2;
+    rf::GrStringAligned(rf::GR_ALIGN_CENTER, text_x, text_y, this_.text, this_.font);
+
+    DebugUiLayout(this_);
+}
+FunHook UiButton_Render_hook{0x004577A0, UiButton_Render};
+
+void __fastcall UiLabel_Create(rf::UiLabel& this_, void*, rf::UiGadget *parent, int x, int y, const char *text, int font)
+{
+    this_.parent = parent;
+    this_.x = x;
+    this_.y = y;
+    rf::GrGetTextWidth(&this_.w, &this_.h, text, -1, font);
+    this_.text = strdup(text);
+    this_.font = font;
+    this_.align = rf::GR_ALIGN_LEFT;
+}
+FunHook UiLabel_Create_hook{0x00456B60, UiLabel_Create};
+
+void __fastcall UiLabel_Create2(rf::UiLabel& this_, void*, rf::UiGadget *parent, int x, int y, int w, int h, const char *text, int font)
+{
+    this_.parent = parent;
+    this_.x = x;
+    this_.y = y;
+    this_.w = w;
+    this_.h = h;
+    if (*text == ' ') {
+        while (*text == ' ') {
+            ++text;
+        }
+        this_.align = rf::GR_ALIGN_CENTER;
+    }
+    else {
+        this_.align = rf::GR_ALIGN_LEFT;
+    }
+    this_.text = strdup(text);
+    this_.font = font;
+}
+FunHook UiLabel_Create2_hook{0x00456C20, UiLabel_Create2};
+
+void __fastcall UiLabel_SetText(rf::UiLabel& this_, void*, const char *text, int font)
+{
+    delete[] this_.text;
+    this_.text = strdup(text);
+    this_.font = font;
+}
+FunHook UiLabel_SetText_hook{0x00456DC0, UiLabel_SetText};
+
+void __fastcall UiLabel_Render(rf::UiLabel& this_, void*)
+{
+    if (!this_.enabled) {
+        rf::GrSetColor(48, 48, 48, 128);
+    }
+    else if (this_.highlighted) {
+        rf::GrSetColor(240, 240, 240, 255);
+    }
+    else {
+        rf::GrSetColor(0, 0, 0, 255);
+    }
+    int x = (this_.GetAbsoluteX() + 1) * rf::ui_scale_x;
+    int y = this_.GetAbsoluteY() * rf::ui_scale_y;
+    int text_w, text_h;
+    rf::GrGetTextWidth(&text_w, &text_h, this_.text, -1, this_.font);
+    if (this_.align == rf::GR_ALIGN_CENTER) {
+        x += this_.w * rf::ui_scale_x / 2;
+    }
+    else if (this_.align == rf::GR_ALIGN_RIGHT) {
+        x += this_.w * rf::ui_scale_x;
+    }
+    rf::GrStringAligned(this_.align, x, y, this_.text, this_.font);
+
+    DebugUiLayout(this_);
+}
+FunHook UiLabel_Render_hook{0x00456ED0, UiLabel_Render};
+
+void __fastcall UiInputBox_Create(rf::UiInputBox& this_, void*, rf::UiGadget *parent, int x, int y, const char *text, int font, int w)
+{
+    this_.parent = parent;
+    this_.x = x;
+    this_.y = y;
+    this_.w = w;
+    this_.h = rf::GrGetFontHeight(font) / rf::ui_scale_y;
+    this_.max_text_width = w * rf::ui_scale_x;
+    this_.font = font;
+    std::strncpy(this_.text, text, std::size(this_.text));
+    this_.text[std::size(this_.text) - 1] = '\0';
+}
+FunHook UiInputBox_Create_hook{0x00456FE0, UiInputBox_Create};
+
+void __fastcall UiInputBox_Render(rf::UiInputBox& this_, void*)
+{
+    if (this_.enabled && this_.highlighted) {
+        rf::GrSetColor(240, 240, 240, 255);
+    }
+    else {
+        rf::GrSetColor(192, 192, 192, 255);
+    }
+
+    int x = (this_.GetAbsoluteX() + 1) * rf::ui_scale_x;
+    int y = this_.GetAbsoluteY() * rf::ui_scale_y;
+    int clip_x, clip_y, clip_w, clip_h;
+    rf::GrGetClip(&clip_x, &clip_y, &clip_w, &clip_h);
+    //rf::GrSetClip(x, y, this_.max_text_width, this_.h);
+    rf::GrString(x, y, this_.text, this_.font);
+
+    if (this_.enabled && this_.highlighted) {
+        rf::UiUpdateInputBoxCursor();
+        if (rf::ui_input_box_cursor_visible) {
+            int text_w, text_h;
+            rf::GrGetTextWidth(&text_w, &text_h, this_.text, -1, this_.font);
+            rf::GrString(x + text_w, y, "-", this_.font); // FIXME: rfpc-large does not have 'this_'
+        }
+    }
+    rf::GrSetClip(clip_x, clip_y, clip_w, clip_h);
+
+    DebugUiLayout(this_);
+}
+FunHook UiInputBox_Render_hook{0x004570E0, UiInputBox_Render};
+
+void __fastcall UiCycler_AddItem(rf::UiCycler& this_, void*, const char *text, int font)
+{
+    if (this_.num_items < this_.max_items) {
+        this_.items_text[this_.num_items] = strdup(text);
+        this_.items_font[this_.num_items] = font;
+        ++this_.num_items;
+    }
+}
+FunHook UiCycler_AddItem_hook{0x00458080, UiCycler_AddItem};
+
+void __fastcall UiCycler_Render(rf::UiCycler& this_, void*)
+{
+    if (this_.enabled && this_.highlighted) {
+        rf::GrSetColor(255, 255, 255, 255);
+    }
+    else if (this_.enabled) {
+        rf::GrSetColor(192, 192, 192, 255);
+    }
+    else {
+        rf::GrSetColor(96, 96, 96, 255);
+    }
+
+    int x = (this_.GetAbsoluteX() + 1) * rf::ui_scale_x;
+    int y = this_.GetAbsoluteY() * rf::ui_scale_y;
+
+    auto text = this_.items_text[this_.current_item];
+    auto font = this_.items_font[this_.current_item];
+    auto font_h = rf::GrGetFontHeight(font);
+    auto text_x = x + this_.w * rf::ui_scale_x / 2;
+    auto text_y = y + (this_.h * rf::ui_scale_y - font_h) / 2;
+    rf::GrStringAligned(rf::GR_ALIGN_CENTER, text_x, text_y, text, font);
+
+    DebugUiLayout(this_);
+}
+FunHook UiCycler_Render_hook{0x00457F40, UiCycler_Render};
+
+CallHook<void(int*, int*, const char*, int, int, char, int)> GrFitMultilineText_UiSetModalDlgText_hook{
+    0x00455A7D,
+    [](int *len_array, int *offset_array, const char *text, int max_width, int max_lines, char unk_char, int font) {
+        max_width *= rf::ui_scale_x;
+        GrFitMultilineText_UiSetModalDlgText_hook.CallTarget(len_array, offset_array, text, max_width, max_lines, unk_char, font);
+    },
+};
+
+FunHook<void()> MenuInit_hook{
+    0x00442BB0,
+    []() {
+        MenuInit_hook.CallTarget();
+#if SHARP_UI_TEXT
+        if (rf::ui_scale_y > 1.5f) {
+            rf::ui_medium_font_0 = rf::GrLoadFont("rfpc-large.vf");
+            rf::ui_medium_font_1 = rf::GrLoadFont("rfpc-large.vf");
+        }
+        if (rf::ui_scale_y > 2.0f) {
+            rf::ui_small_font = rf::GrLoadFont("rfpc-large.vf");
+        }
+        else if (rf::ui_scale_y > 1.5f) {
+            rf::ui_small_font = rf::GrLoadFont("rfpc-medium.vf");
+        }
+#endif
+    },
+};
+
 void ApplyMainMenuPatches()
 {
     // Version in Main Menu
@@ -157,4 +430,23 @@ void ApplyMainMenuPatches()
 
     // Put not responding servers at the bottom of server list
     ServerListCmpFunc_hook.Install();
+
+    // Sharp UI text
+#if SHARP_UI_TEXT
+    UiButton_Create_hook.Install();
+    UiButton_SetText_hook.Install();
+    UiButton_Render_hook.Install();
+    UiLabel_Create_hook.Install();
+    UiLabel_Create2_hook.Install();
+    UiLabel_SetText_hook.Install();
+    UiLabel_Render_hook.Install();
+    UiInputBox_Create_hook.Install();
+    UiInputBox_Render_hook.Install();
+    UiCycler_AddItem_hook.Install();
+    UiCycler_Render_hook.Install();
+    GrFitMultilineText_UiSetModalDlgText_hook.Install();
+#endif
+
+    // Init
+    MenuInit_hook.Install();
 }

@@ -21,9 +21,16 @@ struct function_traits<ReturnType (ClassType::*)(Args...)>
     typedef ReturnType f_type(Args...);
 };
 
-// for function pointers
+// for cdecl function pointers
 template<typename ReturnType, typename... Args>
-struct function_traits<ReturnType (*)(Args...)>
+struct function_traits<ReturnType (__cdecl*)(Args...)>
 {
-    typedef ReturnType f_type(Args...);
+    typedef ReturnType __cdecl f_type(Args...);
+};
+
+// for fastcall function pointers
+template<typename ReturnType, typename... Args>
+struct function_traits<ReturnType (__fastcall*)(Args...)>
+{
+    typedef ReturnType __fastcall f_type(Args...);
 };

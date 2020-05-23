@@ -2,6 +2,7 @@
 #include "../rf/network.h"
 #include "../rf/fs.h"
 #include "../rf/graphics.h"
+#include "../rf/ui.h"
 #include "../misc/misc.h"
 #include "../console/console.h"
 #include <common/HttpRequest.h>

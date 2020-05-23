@@ -257,6 +257,10 @@ namespace rf
     static auto& GrSetTextureMipFilter = AddrAsRef<void(bool linear)>(0x0050E830);
     static auto& GrLock = AddrAsRef<char(int bmh, int section_idx, GrLockData *data, int a4)>(0x0050E2E0);
     static auto& GrUnlock = AddrAsRef<void(GrLockData *data)>(0x0050E310);
+    static auto& GrSetClip = AddrAsRef<void(int x, int y, int w, int h)>(0x0050CC60);
+    static auto& GrGetClip = AddrAsRef<void(int* x, int* y, int* w, int* h)>(0x0050CD80);
+    static auto& GrTcacheAddRef = AddrAsRef<void(int bm_handle)>(0x0050E850);
+
 
     inline void GrLine(float x0, float y0, float x1, float y1, GrRenderState render_state = gr_line_state)
     {
@@ -273,7 +277,7 @@ namespace rf
         AddrCaller{0x0050D2A0}.c_call(bmh, x, y, state);
     }
 
-    inline void GrBitmapStretched(int bmh, int dst_x, int dst_y, int dst_w, int dst_h, int src_x, int src_y, int src_w, int src_h, float a10, float a11, GrRenderState state = gr_bitmap_wrap_state)
+    inline void GrBitmapStretched(int bmh, int dst_x, int dst_y, int dst_w, int dst_h, int src_x, int src_y, int src_w, int src_h, bool a10 = false, bool a11 = false, GrRenderState state = gr_bitmap_wrap_state)
     {
         AddrCaller{0x0050D250}.c_call(bmh, dst_x, dst_y, dst_w, dst_h, src_x, src_y, src_w, src_h, a10, a11, state);
     }

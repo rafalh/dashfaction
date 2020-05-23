@@ -4,6 +4,7 @@
 #include "../console/console.h"
 #include "../rf/player.h"
 #include "../rf/graphics.h"
+#include "../rf/hud.h"
 #include "../main.h"
 #include "sound.h"
 

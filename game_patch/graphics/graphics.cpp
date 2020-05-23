@@ -8,6 +8,7 @@
 #include "../rf/graphics.h"
 #include "../rf/player.h"
 #include "../rf/network.h"
+#include "../rf/hud.h"
 #include "../utils/com-utils.h"
 #include "../utils/string-utils.h"
 #include <common/BuildConfig.h>

@@ -16,6 +16,7 @@
 #include "../rf/network.h"
 #include "../rf/game_seq.h"
 #include "../rf/input.h"
+#include "../rf/ui.h"
 #include "../rf/particle_emitter.h"
 #include "../stdafx.h"
 #include "../server/server.h"

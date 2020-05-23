@@ -7,6 +7,8 @@
 #include "../rf/game_seq.h"
 #include "../rf/weapon.h"
 #include "../rf/graphics.h"
+#include "../rf/hud.h"
+#include "../main.h"
 #include <common/BuildConfig.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
@@ -429,7 +431,8 @@ void SpectateModeDrawUI()
     if (!g_spectate_mode_enabled) {
         if (rf::IsPlayerEntityInvalid(rf::local_player)) {
             rf::GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
-            rf::GrStringAligned(rf::GR_ALIGN_LEFT, 20, 200, "Press JUMP key to enter Spectate Mode");
+            int font = g_game_config.big_hud ? rf::rfpc_large_font_id : -1;
+            rf::GrStringAligned(rf::GR_ALIGN_LEFT, 20, 200, "Press JUMP key to enter Spectate Mode", font);
         }
         return;
     }

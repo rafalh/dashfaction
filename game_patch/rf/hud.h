@@ -27,7 +27,7 @@ namespace rf
     static auto& hud_msg_font_num = AddrAsRef<int>(0x005A1350);
     static auto& hud_text_font_num = AddrAsRef<int>(0x005A1358);
 
-
+    static auto& is_hud_hidden = AddrAsRef<bool>(0x006379F0);
     static auto& scoreboard_visible = AddrAsRef<bool>(0x006A1448);
 
     enum HudItem

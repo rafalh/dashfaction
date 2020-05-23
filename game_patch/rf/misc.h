@@ -36,34 +36,6 @@ namespace rf
         }
     };
 
-    /* User Interface (UI) */
-
-    struct UiGadget
-    {
-        void **vtbl;
-        UiGadget *parent;
-        bool highlighted;
-        bool enabled;
-        int x;
-        int y;
-        int w;
-        int h;
-        int key;
-        void(*on_click)();
-        void(*on_mouse_btn_down)();
-    };
-    static_assert(sizeof(UiGadget) == 0x28);
-
-    static auto& UiMsgBox = AddrAsRef<void(const char *title, const char *text, void(*callback)(), bool input)>(0x004560B0);
-    using UiDialogCallbackPtr = void (*)();
-    static auto& UiCreateDialog =
-        AddrAsRef<void(const char *title, const char *text, unsigned num_buttons, const char *ppsz_btn_titles[],
-                       UiDialogCallbackPtr callbacks[], unsigned unknown1, unsigned unknown2)>(0x004562A0);
-    static auto& UiGetGadgetFromPos = AddrAsRef<int(int x, int y, UiGadget * const gadgets[], int num_gadgets)>(0x00442ED0);
-
-
-    static auto& is_hud_hidden = AddrAsRef<bool>(0x006379F0);
-
     /* Chat */
 
     enum class ChatMsgColor
