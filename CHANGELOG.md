@@ -46,6 +46,7 @@ Version 1.5.0
 - improve alghoritm for selecting texture D3D format (should reduce VRAM usage)
 - add 'Rate' setting in Options window (allows specifying network connection speed)
 - add 'Adapter' setting in Options window (allows selection of graphics card)
+- insert server name in window title when hosting dedicated server
 - fix sending crash reports
 - fix non-working face scrolling before first geomod use in custom levels (RF bug)
 - fix memory and VRAM leak when quick saving (RF bug)

@@ -3,6 +3,7 @@
 #include <patch_common/CodeInjection.h>
 #include <patch_common/ShortTypes.h>
 #include <common/BuildConfig.h>
+#include <common/version.h>
 #include <common/rfproto.h>
 #include <algorithm>
 #include "server.h"
@@ -120,6 +121,12 @@ CodeInjection dedicated_server_load_config_patch{
     [](auto& regs) {
         auto& parser = *reinterpret_cast<rf::StrParser*>(regs.esp - 4 + 0x4C0 - 0x470);
         LoadAdditionalServerConfig(parser);
+
+        // Insert server name in window title when hosting dedicated server
+        std::string wnd_name;
+        wnd_name.append(rf::serv_name.CStr());
+        wnd_name.append(" - " PRODUCT_NAME " Dedicated Server");
+        SetWindowTextA(rf::main_wnd, wnd_name.c_str());
     },
 };
 
