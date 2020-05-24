@@ -270,7 +270,7 @@ FunHook<rf::Object*(int, int, int, void*, int, void*)> ObjCreate_hook{
     [](int type, int sub_type, int parent, void* create_info, int flags, void* room) {
         auto obj = ObjCreate_hook.CallTarget(type, sub_type, parent, create_info, flags, room);
         if (!obj) {
-            xlog::warn("Failed to create object (type %d)", type);
+            xlog::info("Failed to create object (type %d)", type);
         }
         return obj;
     },

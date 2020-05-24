@@ -8,7 +8,7 @@ class WatchDogTimer
     std::unique_ptr<Impl> m_impl;
 
 public:
-    WatchDogTimer(int interval_ms = 3000);
+    WatchDogTimer(int interval_ms = 5000);
     ~WatchDogTimer();
     void Start();
     void Stop();

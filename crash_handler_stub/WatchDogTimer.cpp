@@ -91,7 +91,7 @@ private:
             CrashObservedThread();
         }
         else {
-            xlog::warn("Application is not responding! Press DEL key to trigger a crash that will allow to debug the problem...");
+            xlog::info("Application is not responding! Press DEL key to trigger a crash that will allow to debug the problem...");
         }
     }
 
