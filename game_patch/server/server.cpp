@@ -163,7 +163,7 @@ void HandleLoadCommand(rf::Player* player, std::string_view save_name)
 {
     auto& pdata = GetPlayerAdditionalData(player);
     auto entity = rf::EntityGetByHandle(player->entity_handle);
-    if (entity && g_additional_server_config.saving_enabled) {
+    if (entity && g_additional_server_config.saving_enabled && !rf::EntityIsDying(entity)) {
         auto it = pdata.saves.find(std::string{save_name});
         if (it != pdata.saves.end()) {
             auto& save_data = it->second;

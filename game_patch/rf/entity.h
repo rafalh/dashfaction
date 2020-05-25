@@ -617,6 +617,7 @@ namespace rf
         const Matrix3& orient, int create_flags, int mp_character)>(0x00422360);
     static auto& AiPossessesWeapon = AddrAsRef<bool(AiInfo *ai_info, int weapon_cls_id)>(0x00403250);
     static auto& IsFemaleMpCharacter = AddrAsRef<bool(int mp_character_idx)>(0x004762C0);
+    static auto& EntityIsDying = AddrAsRef<bool(EntityObj *entity)>(0x00427020);
     static auto& EntityIsAttachedToVehicle = AddrAsRef<bool(EntityObj *entity)>(0x004290D0);
     static auto& EntityIsJeepDriver = AddrAsRef<bool(EntityObj *entity)>(0x0042AC80);
     static auto& EntityIsJeepShooter = AddrAsRef<bool(EntityObj *entity)>(0x0042ACD0);
