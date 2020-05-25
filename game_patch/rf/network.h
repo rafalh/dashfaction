@@ -125,6 +125,7 @@ namespace rf
     static auto& MultiChangeLevel = AddrAsRef<void(const char* filename)>(0x0047BF50);
     static auto& PingPlayer = AddrAsRef<void(Player*)>(0x00484D00);
     static auto& SendEntityCreatePacket = AddrAsRef<void(EntityObj *entity, Player* player)>(0x00475160);
+    static auto& SendEntityCreatePacketToAll = AddrAsRef<void(EntityObj *entity)>(0x00475110);
     static auto& NwInitSocket = AddrAsRef<void(unsigned short port)>(0x00528F10);
 
     static auto& nw_sock = AddrAsRef<int>(0x005A660C);

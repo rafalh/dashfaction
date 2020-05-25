@@ -174,7 +174,7 @@ void HandleLoadCommand(rf::Player* player, std::string_view save_name)
             if (entity->obj_interp) {
                 entity->obj_interp->Clear();
             }
-            rf::SendEntityCreatePacket(entity, player);
+            rf::SendEntityCreatePacketToAll(entity);
             pdata.last_teleport_timer.Set(300);
             pdata.last_teleport_pos = save_data.pos;
             SendChatLinePacket("Your position has been restored!", player);
