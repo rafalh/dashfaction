@@ -297,7 +297,7 @@ FunHook<float(rf::EntityObj*, float, int, int, int)> EntityTakeDamage_hook{
     [](rf::EntityObj* entity, float damage, int responsible_entity_handle, int dmg_type, int responsible_entity_uid) {
         auto damaged_player = rf::GetPlayerFromEntityHandle(entity->handle);
         auto responsible_player = rf::GetPlayerFromEntityHandle(responsible_entity_handle);
-        if (damaged_player && responsible_player) {
+        if (damaged_player && responsible_player && damaged_player != responsible_player) {
             damage *= g_additional_server_config.player_damage_modifier;
             if (damage == 0.0f) {
                 return 0.0f;
