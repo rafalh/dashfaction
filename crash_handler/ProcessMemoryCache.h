@@ -11,7 +11,6 @@ class ProcessMemoryCache
     std::unordered_map<size_t, std::unique_ptr<uint32_t[]>> m_page_cache;
     DWORD m_page_size;
 
-
 public:
     ProcessMemoryCache(HANDLE process) : m_process(process)
     {
@@ -39,6 +38,7 @@ public:
         return true;
     }
 
+private:
     void* load_page_into_cache(uintptr_t page_addr)
     {
         auto it = m_page_cache.find(page_addr);

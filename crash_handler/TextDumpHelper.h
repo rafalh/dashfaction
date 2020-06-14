@@ -252,20 +252,24 @@ private:
 
     std::vector<MEMORY_BASIC_INFORMATION>::const_iterator find_in_memory_map(void* addr) const
     {
-        auto first = std::lower_bound(m_memory_map.begin(), m_memory_map.end(), addr, [](const auto& e, const auto& v) {
+        auto it = std::lower_bound(m_memory_map.begin(), m_memory_map.end(), addr, [](const auto& e, const auto& v) {
             return e.BaseAddress < v;
         });
-        if (first == m_memory_map.end()) {
+        if (it == m_memory_map.end()) {
             return m_memory_map.end();
         }
-        if (first->BaseAddress > addr) {
-            if (first == m_memory_map.begin()) {
+        if (it->BaseAddress > addr) {
+            if (it == m_memory_map.begin()) {
                 return m_memory_map.end();
             }
-            --first;
+            --it;
         }
-        assert(first->BaseAddress <= addr);
-        return first;
+        assert(it->BaseAddress <= addr);
+        auto addr_uint = reinterpret_cast<uintptr_t>(addr);
+        if (reinterpret_cast<uintptr_t>(it->BaseAddress) + it->RegionSize < addr_uint) {
+            return m_memory_map.end();
+        }
+        return it;
     }
 
     const MEMORY_BASIC_INFORMATION* find_page_in_memory_map(void* addr)
@@ -288,16 +292,33 @@ private:
 
     void* find_stack_max_addr(const CONTEXT& ctx)
     {
-        void* addr = reinterpret_cast<void*>(ctx.Esp);
-        auto it = find_in_memory_map(addr);
+        void* stack_ptr = reinterpret_cast<void*>(ctx.Esp);
+        auto stack_ptr_uint = static_cast<uintptr_t>(ctx.Esp);
+        auto it = find_in_memory_map(stack_ptr);
+        constexpr uintptr_t max_size = 1024 * 1024;
 
+        // Stack pointer should point to writable memory
+        if (it->State != MEM_COMMIT || it->Protect != PAGE_READWRITE) {
+            return stack_ptr;
+        }
+
+        // Go to next region
+        ++it;
+        assert(it == m_memory_map.end() || it->BaseAddress > stack_ptr);
+
+        // Find first not writable or not commited region
         while (it != m_memory_map.end()) {
+            auto reg_base_addr_uint = reinterpret_cast<uintptr_t>(it->BaseAddress);
+            auto size = reg_base_addr_uint - stack_ptr_uint;
+            if (size > max_size) {
+                return reinterpret_cast<void*>(stack_ptr_uint + max_size);
+            }
             if (it->State != MEM_COMMIT || it->Protect != PAGE_READWRITE) {
                 return it->BaseAddress;
             }
             ++it;
         }
-        return addr;
+        return stack_ptr;
     }
 
     void write_stack_dump(std::ostream& out, const CONTEXT& ctx, HANDLE process)
@@ -306,9 +327,10 @@ private:
         uintptr_t addr = ctx.Esp & ~3;
         uintptr_t stack_max_addr = reinterpret_cast<uintptr_t>(find_stack_max_addr(ctx));
         size_t stack_size = stack_max_addr - addr;
-        auto buf = std::make_unique<uint32_t[]>(stack_size / sizeof(uint32_t));
+
         out << "Stack dump:\n";
 
+        auto buf = std::make_unique<uint32_t[]>(stack_size / sizeof(uint32_t));
         bool read_success = ReadProcessMemory(process, reinterpret_cast<void*>(addr), buf.get(), stack_size, &bytes_read);
         if (!read_success || !bytes_read) {
             out << "(error " << GetLastError() << ")\n\n";
