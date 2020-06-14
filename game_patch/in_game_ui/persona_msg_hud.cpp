@@ -1,4 +1,5 @@
 #include "hud_internal.h"
+#include "hud.h"
 #include "../rf/hud.h"
 #include "../rf/entity.h"
 #include "../rf/player.h"
@@ -54,7 +55,7 @@ void HudRenderPersonaMsg(rf::Player* player)
     int box_y = offset_y + rf::hud_points[rf::hud_persona_message_box_background_ul].y; // 10
     int content_w = box_w - 2 * box_border;
     int content_h = box_h - 2 * box_border;
-    int hud_persona_font = g_big_hud_persona ? rf::rfpc_large_font_id : rf::rfpc_medium_font_id;
+    int hud_persona_font = HudGetDefaultFont();
 
     // border
     rf::GrSetColor(255, 255, 255, static_cast<int>(rf::hud_persona_alpha * 77.0f));

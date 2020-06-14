@@ -31,13 +31,13 @@ inline const char* stristr(const char* haystack, const char* needle)
     return nullptr;
 }
 
-inline std::vector<std::string_view> StringSplit(std::string_view str, std::string_view delims = " ")
+inline std::vector<std::string_view> StringSplit(std::string_view str, char delim = ' ')
 {
     std::vector<std::string_view> output;
     size_t first = 0;
 
     while (first < str.size()) {
-        const auto second = str.find_first_of(delims, first);
+        const auto second = str.find_first_of(delim, first);
 
         if (first != second)
             output.emplace_back(str.substr(first, second - first));
@@ -57,6 +57,21 @@ inline std::string StringToLower(std::string_view str)
     output.reserve(str.size());
     std::transform(str.begin(), str.end(), std::back_inserter(output), ::tolower);
     return output;
+}
+
+inline bool StringStartsWith(std::string_view str, std::string_view prefix)
+{
+    return str.substr(0, prefix.size()) == prefix;
+}
+
+inline bool StringEndsWith(std::string_view str, std::string_view suffix)
+{
+    return str.size() >= suffix.size() ? (str.substr(str.size() - suffix.size()) == suffix) : false;
+}
+
+inline bool StringContains(std::string_view str, char ch)
+{
+    return str.find(ch) != std::string::npos;
 }
 
 struct StringMatcher
@@ -145,3 +160,13 @@ inline std::string_view GetFilenameWithoutExt(std::string_view filename)
     }
     return filename.substr(0, dot_pos);
 }
+
+inline std::string_view GetExtFromFileName(std::string_view filename)
+{
+    auto dot_pos = filename.rfind('.');
+    if (dot_pos == std::string_view::npos) {
+        return "";
+    }
+    return filename.substr(dot_pos + 1);
+}
+

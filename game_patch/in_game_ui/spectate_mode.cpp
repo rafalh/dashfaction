@@ -1,4 +1,5 @@
 #include "spectate_mode.h"
+#include "hud.h"
 #include "scoreboard.h"
 #include "../console/console.h"
 #include "../rf/entity.h"
@@ -422,48 +423,65 @@ void SpectateModeAfterFullGameInit()
     g_spectate_mode_target = rf::local_player;
 }
 
+template<typename F>
+static void DrawWithShadow(int x, int y, int shadow_dx, int shadow_dy, rf::Color clr, rf::Color shadow_clr, F fun)
+{
+    rf::GrSetColorPtr(&shadow_clr);
+    fun(x + shadow_dx, y + shadow_dy);
+    rf::GrSetColorPtr(&clr);
+    fun(x, y);
+}
+
 void SpectateModeDrawUI()
 {
     if (rf::is_hud_hidden || rf::GameSeqGetState() != rf::GS_IN_GAME || SpectateModeIsFreeLook()) {
         return;
     }
 
+    int large_font = HudGetLargeFont();
+    int large_font_h = rf::GrGetFontHeight(large_font);
+    int medium_font = HudGetDefaultFont();
+    int medium_font_h = rf::GrGetFontHeight(medium_font);
+
+    int hints_x = 20;
+    int hints_y = g_game_config.big_hud ? 350 : 200;
+    int hints_line_spacing = medium_font_h + 3;
     if (!g_spectate_mode_enabled) {
         if (rf::IsPlayerEntityInvalid(rf::local_player)) {
             rf::GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
-            int font = g_game_config.big_hud ? rf::rfpc_large_font_id : -1;
-            rf::GrStringAligned(rf::GR_ALIGN_LEFT, 20, 200, "Press JUMP key to enter Spectate Mode", font);
+            rf::GrString(hints_x, hints_y, "Press JUMP key to enter Spectate Mode", medium_font);
         }
         return;
     }
 
-    static int large_font = rf::GrLoadFont("rfpc-large.vf");
-    static int medium_font = rf::GrLoadFont("rfpc-medium.vf");
+    int scr_w = rf::GrGetMaxWidth();
+    int scr_h = rf::GrGetMaxHeight();
 
-    const unsigned cx = 500, cy = 50;
-    unsigned cx_scr = rf::GrGetMaxWidth(), cy_src = rf::GrGetMaxHeight();
-    unsigned x = (cx_scr - cx) / 2;
-    unsigned y = cy_src - 100;
-    unsigned cy_font = rf::GrGetFontHeight(-1);
-
-    rf::GrSetColor(0, 0, 0, 0x80);
-    rf::GrStringAligned(rf::GR_ALIGN_CENTER, cx_scr / 2 + 2, 150 + 2, "SPECTATE MODE", large_font);
-    rf::GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
-    rf::GrStringAligned(rf::GR_ALIGN_CENTER, cx_scr / 2, 150, "SPECTATE MODE", large_font);
+    int title_x = scr_w / 2;
+    int title_y = g_game_config.big_hud ? 250 : 150;
+    rf::Color white_clr{255, 255, 255, 255};
+    rf::Color shadow_clr{0, 0, 0, 128};
+    DrawWithShadow(title_x, title_y, 2, 2, white_clr, shadow_clr, [=](int x, int y) {
+        rf::GrStringAligned(rf::GR_ALIGN_CENTER, x, y, "SPECTATE MODE", large_font);
+    });
 
     rf::GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
-    rf::GrStringAligned(rf::GR_ALIGN_LEFT, 20, 200, "Press JUMP key to exit Spectate Mode", medium_font);
-    rf::GrStringAligned(rf::GR_ALIGN_LEFT, 20, 215, "Press PRIMARY ATTACK key to switch to the next player",
-        medium_font);
-    rf::GrStringAligned(rf::GR_ALIGN_LEFT, 20, 230, "Press SECONDARY ATTACK key to switch to the previous player",
-        medium_font);
+    rf::GrString(hints_x, hints_y, "Press JUMP key to exit Spectate Mode", medium_font);
+    hints_y += hints_line_spacing;
+    rf::GrString(hints_x, hints_y, "Press PRIMARY ATTACK key to switch to the next player", medium_font);
+    hints_y += hints_line_spacing;
+    rf::GrString(hints_x, hints_y, "Press SECONDARY ATTACK key to switch to the previous player", medium_font);
 
+    const int bar_w = g_game_config.big_hud ? 800 : 500;
+    const int bar_h = 50;
+    int bar_x = (scr_w - bar_w) / 2;
+    int bar_y = scr_h - 100;
     rf::GrSetColor(0, 0, 0x00, 0x60);
-    rf::GrRect(x, y, cx, cy);
+    rf::GrRect(bar_x, bar_y, bar_w, bar_h);
 
     rf::GrSetColor(0xFF, 0xFF, 0, 0x80);
     auto str = StringFormat("Spectating: %s", g_spectate_mode_target->name.CStr());
-    rf::GrStringAligned(rf::GR_ALIGN_CENTER, x + cx / 2, y + cy / 2 - cy_font / 2 - 5, str.c_str(), large_font);
+    rf::GrStringAligned(rf::GR_ALIGN_CENTER, bar_x + bar_w / 2, bar_y + bar_h / 2 - large_font_h / 2, str.c_str(), large_font);
 
     rf::EntityObj* entity = rf::EntityGetByHandle(g_spectate_mode_target->entity_handle);
     if (!entity) {
@@ -471,12 +489,12 @@ void SpectateModeDrawUI()
         static int blood_bm = rf::BmLoad("bloodsmear07_A.tga", -1, true);
         int blood_w, blood_h;
         rf::BmGetBitmapSize(blood_bm, &blood_w, &blood_h);
-        rf::GrBitmapStretched(blood_bm, (cx_scr - blood_w * 2) / 2, (cy_src - blood_h * 2) / 2, blood_w * 2,
+        rf::GrBitmapStretched(blood_bm, (scr_w - blood_w * 2) / 2, (scr_h - blood_h * 2) / 2, blood_w * 2,
                                   blood_h * 2, 0, 0, blood_w, blood_h, 0.0f, 0.0f, rf::gr_bitmap_clamp_state);
 
-        rf::GrSetColor(0, 0, 0, 0x80);
-        rf::GrStringAligned(rf::GR_ALIGN_CENTER, cx_scr / 2 + 2, cy_src / 2 + 2, "DEAD", large_font);
-        rf::GrSetColor(0xF0, 0x20, 0x10, 0xC0);
-        rf::GrStringAligned(rf::GR_ALIGN_CENTER, cx_scr / 2, cy_src / 2, "DEAD", large_font);
+        rf::Color dead_clr{0xF0, 0x20, 0x10, 0xC0};
+        DrawWithShadow(scr_w / 2, scr_h / 2, 2, 2, dead_clr, shadow_clr, [=](int x, int y) {
+            rf::GrStringAligned(rf::GR_ALIGN_CENTER, x, y, "DEAD", large_font);
+        });
     }
 }

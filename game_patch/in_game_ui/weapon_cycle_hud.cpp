@@ -1,4 +1,5 @@
 #include "hud_internal.h"
+#include "hud.h"
 #include "../rf/hud.h"
 #include "../rf/player.h"
 #include "../rf/entity.h"
@@ -23,7 +24,7 @@ void RenderSelectWeaponGui()
 
     int clip_w = rf::GrGetClipWidth();
     rf::GrSetColor(15, 242, 2, 255);
-    auto font_num = g_big_weapon_cycle_hud ? rf::rfpc_large_font_id : rf::rfpc_medium_font_id;
+    auto font_num = HudGetDefaultFont();
 
     // selected weapon type name
     auto& selected_cycle_entry = rf::hud_weapon_cycle[rf::hud_weapon_cycle_current_idx];
@@ -54,9 +55,9 @@ void RenderSelectWeaponGui()
     int border = 1;
     int sq_spacing = 1;
     int sq_x_delta = sq_bg_size + 2 * border + sq_spacing; // 23
-    int type_sq_y = weapon_type_y + (g_big_weapon_cycle_hud ? 22 : 14); // 127
+    int type_sq_y = weapon_type_y + (g_big_weapon_cycle_hud ? 24 : 14); // 127
     int type_sq_start_x = center_x - 2 * sq_x_delta; // w - 120
-    int text_offset_x = 5;
+    int text_offset_x = sq_bg_size / 2;
     int text_offset_y = 5;
 
     // type squares - backgrounds
@@ -70,7 +71,8 @@ void RenderSelectWeaponGui()
     for (int i = 0; i < 4; ++i) {
         char digit_str[] = {static_cast<char>('1' + i), '\0'};
         int sq_x = type_sq_start_x + i * sq_x_delta;
-        rf::GrString(sq_x + border + text_offset_x, type_sq_y + text_offset_y, digit_str, font_num);
+        int sq_text_x = sq_x + border + text_offset_x;
+        rf::GrStringAligned(rf::GR_ALIGN_CENTER, sq_text_x, type_sq_y + text_offset_y, digit_str, font_num);
     }
     // borders for active type square
     int active_sq_x = type_sq_start_x + selected_cycle_entry.type * sq_x_delta;
@@ -78,7 +80,7 @@ void RenderSelectWeaponGui()
     int sq_with_border_size = sq_bg_size + 2 * border; // 22
     HudRectBorder(active_sq_x, type_sq_y, sq_with_border_size, sq_with_border_size, border);
 
-    int num_ind_start_y = type_sq_y + sq_bg_size + 2 * border + sq_spacing; // 150
+    int num_ind_start_y = type_sq_y + sq_bg_size + 2 * border + sq_spacing + 1; // 150
     int weapon_icons_start_y = num_ind_start_y + 26; // 176
     float weapon_icon_scale = g_big_weapon_cycle_hud ? 1.5f : 1.0f;
     int weapon_icon_w = static_cast<int>(128 * weapon_icon_scale);

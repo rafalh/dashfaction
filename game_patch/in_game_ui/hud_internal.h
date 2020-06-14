@@ -21,3 +21,5 @@ void HudScaledBitmap(int bmh, int x, int y, float scale, rf::GrRenderState rende
 void HudRectBorder(int x, int y, int w, int h, int border, rf::GrRenderState state = rf::gr_rect_state);
 std::string HudFitString(std::string_view str, int max_w, int* str_w_out, int font_id);
 rf::HudPoint HudScaleCoords(rf::HudPoint pt, float scale);
+const char* HudGetDefaultFontName(bool big);
+const char* HudGetBoldFontName(bool big);

@@ -19,6 +19,7 @@ Version 1.5.0
 - add '/save' and '/load' chat commands and quick save/load controls handling for saving and restoring player position in multiplayer (useful for runmap servers, can be enabled in dedicated_server.txt)
 - add 'Big HUD' option and 'bighud' command for making the HUD larger
 - add 'reticle_scale' command for changing reticle size
+- make texts in main menu and in HUD sharp by using TrueType fonts
 - log error when RFA cannot be loaded
 - improve render to texture performance (e.g. mirrors and scanners)
 - improve 2D drawing performance

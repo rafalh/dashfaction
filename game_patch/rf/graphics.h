@@ -8,8 +8,6 @@ namespace rf
 {
     /* Graphics */
 
-    //using GrRenderState = int;
-
     enum GrTextureSource
     {
         TEXTURE_SOURCE_NONE = 0x0,
@@ -84,6 +82,16 @@ namespace rf
         bool operator==(const GrRenderState& other) const
         {
             return value == other.value;
+        }
+
+        GrTextureSource GetTextureSource() const
+        {
+            return static_cast<GrTextureSource>(value & 31);
+        }
+
+        void SetTextureSource(GrTextureSource tex_src)
+        {
+            value = (value & (~31)) | static_cast<int>(tex_src);
         }
     };
 
@@ -197,6 +205,46 @@ namespace rf
         GrD3DTextureSection *sections;
     };
 
+    struct GrFontKernEntry
+    {
+        char ch0;
+        char ch1;
+        char offset;
+    };
+
+    struct GrFontCharInfo
+    {
+        int spacing;
+        int width;
+        int pixel_data_offset;
+        short kerning_entry;
+        short user_data;
+    };
+
+    struct GrFont
+    {
+        char filename[32];
+        int signature;
+        int format;
+        int num_chars;
+        int first_ascii;
+        int default_spacing;
+        int height;
+        int height2;
+        int num_kern_pairs;
+        int pixel_data_size;
+        GrFontKernEntry *kern_data;
+        GrFontCharInfo *chars;
+        unsigned char *pixel_data;
+        int *palette;
+        int bm_handle;
+        int bm_width;
+        int bm_height;
+        int *char_x_coords;
+        int *char_y_coords;
+        unsigned char *bm_bits;
+    };
+
 #if defined(DIRECT3D_VERSION)
     static auto& gr_d3d = AddrAsRef<IDirect3D8*>(0x01CFCBE0);
     static auto& gr_d3d_device = AddrAsRef<IDirect3DDevice8*>(0x01CFCBE4);
@@ -214,11 +262,6 @@ namespace rf
     static auto& gr_bitmap_wrap_state = AddrAsRef<GrRenderState>(0x017756DC);
     static auto& gr_line_state = AddrAsRef<GrRenderState>(0x01775B00);
     static auto& gr_string_state = AddrAsRef<GrRenderState>(0x017C7C5C);
-
-    static auto& rfpc_large_font_id = AddrAsRef<int>(0x0063C05C);
-    static auto& rfpc_medium_font_id = AddrAsRef<int>(0x0063C060);
-    static auto& rfpc_small_font_id = AddrAsRef<int>(0x0063C068);
-    static auto& big_font_id = AddrAsRef<int>(0x006C74C0);
 
     static auto& current_fps = AddrAsRef<float>(0x005A4018);
     static auto& frametime = AddrAsRef<float>(0x005A4014);
@@ -243,6 +286,10 @@ namespace rf
     static auto& gr_d3d_device_caps = AddrAsRef<D3DCAPS8>(0x01CFCAC8);
 #endif
 
+    static constexpr int max_fonts = 12;
+    static auto& gr_fonts = AddrAsRef<GrFont[max_fonts]>(0x01886C90);
+    static auto& gr_num_fonts = AddrAsRef<int>(0x018871A0);
+
     static auto& GrGetMaxWidth = AddrAsRef<int()>(0x0050C640);
     static auto& GrGetMaxHeight = AddrAsRef<int()>(0x0050C650);
     static auto& GrGetClipWidth = AddrAsRef<int()>(0x0050CDB0);
@@ -261,6 +308,7 @@ namespace rf
     static auto& GrGetClip = AddrAsRef<void(int* x, int* y, int* w, int* h)>(0x0050CD80);
     static auto& GrTcacheAddRef = AddrAsRef<void(int bm_handle)>(0x0050E850);
 
+    static constexpr int center_x = 0x8000; // supported by GrString
 
     inline void GrLine(float x0, float y0, float x1, float y1, GrRenderState render_state = gr_line_state)
     {
@@ -275,6 +323,11 @@ namespace rf
     inline void GrBitmap(int bmh, int x, int y, GrRenderState state = gr_bitmap_wrap_state)
     {
         AddrCaller{0x0050D2A0}.c_call(bmh, x, y, state);
+    }
+
+    inline void GrBitmapEx(int bmh, int x, int y, int w, int h, int src_x, int src_y, GrRenderState state = gr_bitmap_wrap_state)
+    {
+        AddrCaller{0x0050D0A0}.c_call(bmh, x, y, w, h, src_x, src_y, state);
     }
 
     inline void GrBitmapStretched(int bmh, int dst_x, int dst_y, int dst_w, int dst_h, int src_x, int src_y, int src_w, int src_h, bool a10 = false, bool a11 = false, GrRenderState state = gr_bitmap_wrap_state)

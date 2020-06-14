@@ -4,6 +4,7 @@
 #include "../rf/network.h"
 #include "../rf/player.h"
 #include "hud_internal.h"
+#include "hud.h"
 
 static bool g_big_team_scores_hud = false;
 constexpr bool g_debug_team_scores_hud = false;
@@ -38,7 +39,8 @@ void HudRenderTeamScores()
 
     rf::GrRect(10, clip_h - box_h - 10, box_w, box_h);
     auto game_type = rf::MultiGetGameType();
-    int font_id = g_big_team_scores_hud ? rf::rfpc_large_font_id : rf::rfpc_medium_font_id;
+    int font_id = HudGetDefaultFont();
+
     if (game_type == rf::MGT_CTF) {
         static float hud_flag_alpha = 255.0f;
         static bool hud_flag_pulse_dir = false;

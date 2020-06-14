@@ -50,6 +50,16 @@ namespace rf
             return AddrCaller{0x00524530}.this_call<int>(this, pos, origin);
         }
 
+        int Tell() const
+        {
+            return AddrCaller{0x005244E0}.this_call<int>(this);
+        }
+
+        int GetSize(const char *filename = nullptr, int a3 = 9999999) const
+        {
+            return AddrCaller{0x00524370}.this_call<int>(this, filename, a3);
+        }
+
         int Read(void *buf, int buf_len, int min_ver = 0, int unused = 0)
         {
             return AddrCaller{0x0052CF60}.this_call<int>(this, buf, buf_len, min_ver, unused);

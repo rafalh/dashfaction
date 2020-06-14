@@ -5,6 +5,8 @@ include_directories(
 	${CMAKE_SOURCE_DIR}/vendor/unrar
 	${CMAKE_SOURCE_DIR}/vendor/d3d8
 	${CMAKE_SOURCE_DIR}/vendor/xxhash
+	${CMAKE_SOURCE_DIR}/vendor/stb
+	${CMAKE_SOURCE_DIR}/vendor/freetype/include
 )
 if(NOT MSVC)
     # natupnp.h is not distributed with MinGW
@@ -57,6 +59,7 @@ set(SRCS
     rf/weapon.h
     stdafx.h
     graphics/dds.cpp
+    graphics/font.cpp
     graphics/graphics.cpp
     graphics/graphics.h
     graphics/gr_color.cpp
@@ -163,6 +166,7 @@ target_link_libraries(DashFaction
     winmm
     iphlpapi
     ws2_32
+    freetype
 )
 
 setup_debug_info(DashFaction)

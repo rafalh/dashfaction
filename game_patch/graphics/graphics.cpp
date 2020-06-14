@@ -4,6 +4,7 @@
 #include "graphics_internal.h"
 #include "gr_color.h"
 #include "../console/console.h"
+#include "../in_game_ui/hud.h"
 #include "../main.h"
 #include "../rf/graphics.h"
 #include "../rf/player.h"
@@ -32,7 +33,7 @@ static void SetTextureMinMagFilterInCode(D3DTEXTUREFILTERTYPE filter_type)
         // GrD3DSetMaterialFlags
         0x0054F2E8, 0x0054F2FC,
         0x0054F438, 0x0054F44C,
-        0x0054F567, 0x0054F57B,
+        //0x0054F567, 0x0054F57B,
         0x0054F62D, 0x0054F641,
         0x0054F709, 0x0054F71D,
         0x0054F800, 0x0054F814,
@@ -674,6 +675,7 @@ FunHook<void()> update_mesh_lighting_hook{
 };
 
 void ApplyTexturePatches();
+void ApplyFontPatches();
 
 void GraphicsInit()
 {
@@ -785,6 +787,9 @@ void GraphicsInit()
     // Patch texture handling
     ApplyTexturePatches();
 
+    // Fonts
+    ApplyFontPatches();
+
     // Enable mip-mapping for textures bigger than 256x256
     AsmWriter(0x0050FEDA, 0x0050FEE9).nop();
     WriteMem<u8>(0x0055B739, asm_opcodes::jmp_rel_short);
@@ -895,10 +900,9 @@ void GraphicsDrawFpsCounter()
     if (g_game_config.fps_counter && !rf::is_hud_hidden) {
         auto text = StringFormat("FPS: %.1f", rf::current_fps);
         rf::GrSetColor(0, 255, 0, 255);
-        int x = rf::GrGetMaxWidth() - 10;
+        int x = rf::GrGetMaxWidth() - (g_game_config.big_hud ? 150 : 90);
         int y = g_game_config.big_hud ? 120 : 60;
-        static int large_font_id = rf::GrLoadFont("rfpc-large.vf");
-        int font_id = g_game_config.big_hud ? large_font_id : -1;
-        rf::GrStringAligned(rf::GR_ALIGN_RIGHT, x, y, text.c_str(), font_id);
+        int font_id = HudGetDefaultFont();
+        rf::GrString(x, y, text.c_str(), font_id);
     }
 }

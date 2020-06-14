@@ -105,6 +105,7 @@ namespace rf
     static auto& ui_scale_x = AddrAsRef<float>(0x00598FB8);
     static auto& ui_scale_y = AddrAsRef<float>(0x00598FBC);
     static auto& ui_input_box_cursor_visible = AddrAsRef<bool>(0x00642DC8);
+    static auto& ui_large_font = AddrAsRef<int>(0x0063C05C);
     static auto& ui_medium_font_0 = AddrAsRef<int>(0x0063C060);
     static auto& ui_medium_font_1 = AddrAsRef<int>(0x0063C064);
     static auto& ui_small_font = AddrAsRef<int>(0x0063C068);

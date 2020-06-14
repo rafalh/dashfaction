@@ -8,7 +8,7 @@
 #include "../main.h"
 
 #define DEBUG_UI_LAYOUT 0
-#define SHARP_UI_TEXT 0
+#define SHARP_UI_TEXT 1
 
 constexpr int EGG_ANIM_ENTER_TIME = 2000;
 constexpr int EGG_ANIM_LEAVE_TIME = 2000;
@@ -153,18 +153,6 @@ FunHook<int(const int&, const int&)> ServerListCmpFunc_hook{
     },
 };
 
-int GetUiFont()
-{
-    if (rf::ui_scale_y > 1.5f) {
-        static int large_font = rf::GrLoadFont("rfpc-large.vf");
-        return large_font;
-    }
-    else {
-        static int medium_font = rf::GrLoadFont("rfpc-medium.vf");
-        return medium_font;
-    }
-}
-
 static inline void DebugUiLayout([[ maybe_unused ]] rf::UiGadget& gadget)
 {
 #if DEBUG_UI_LAYOUT
@@ -234,11 +222,19 @@ void __fastcall UiButton_Render(rf::UiButton& this_, void*)
         rf::GrBitmapStretched(this_.selected_bitmap, x, y, w, h, 0, 0, this_.w, this_.h, false, false, state);
     }
 
-    int text_w, text_h;
-    rf::GrGetTextWidth(&text_w, &text_h, this_.text, -1, this_.font);
-    int text_x = x + w / 2;
-    int text_y = y + (h - text_h) / 2;
-    rf::GrStringAligned(rf::GR_ALIGN_CENTER, text_x, text_y, this_.text, this_.font);
+    // Change clip region for text rendering
+    int clip_x, clip_y, clip_w, clip_h;
+    rf::GrGetClip(&clip_x, &clip_y, &clip_w, &clip_h);
+    rf::GrSetClip(x, y, w, h);
+
+    std::string_view text_sv{this_.text};
+    int num_lines = 1 + std::count(text_sv.begin(), text_sv.end(), '\n');
+    int text_h = rf::GrGetFontHeight(this_.font) * num_lines;
+    int text_y = (h - text_h) / 2;
+    rf::GrString(rf::center_x, text_y, this_.text, this_.font);
+
+    // Restore clip region
+    rf::GrSetClip(clip_x, clip_y, clip_w, clip_h);
 
     DebugUiLayout(this_);
 }
@@ -249,10 +245,14 @@ void __fastcall UiLabel_Create(rf::UiLabel& this_, void*, rf::UiGadget *parent, 
     this_.parent = parent;
     this_.x = x;
     this_.y = y;
-    rf::GrGetTextWidth(&this_.w, &this_.h, text, -1, font);
+    int text_w, text_h;
+    rf::GrGetTextWidth(&text_w, &text_h, text, -1, font);
+    this_.w = static_cast<int>(text_w / rf::ui_scale_x);
+    this_.h = static_cast<int>(text_h / rf::ui_scale_y);
     this_.text = strdup(text);
     this_.font = font;
     this_.align = rf::GR_ALIGN_LEFT;
+    this_.clr.SetRGBA(0, 0, 0, 255);
 }
 FunHook UiLabel_Create_hook{0x00456B60, UiLabel_Create};
 
@@ -274,6 +274,7 @@ void __fastcall UiLabel_Create2(rf::UiLabel& this_, void*, rf::UiGadget *parent,
     }
     this_.text = strdup(text);
     this_.font = font;
+    this_.clr.SetRGBA(0, 0, 0, 255);
 }
 FunHook UiLabel_Create2_hook{0x00456C20, UiLabel_Create2};
 
@@ -294,9 +295,9 @@ void __fastcall UiLabel_Render(rf::UiLabel& this_, void*)
         rf::GrSetColor(240, 240, 240, 255);
     }
     else {
-        rf::GrSetColor(0, 0, 0, 255);
+        rf::GrSetColorPtr(&this_.clr);
     }
-    int x = (this_.GetAbsoluteX() + 1) * rf::ui_scale_x;
+    int x = this_.GetAbsoluteX() * rf::ui_scale_x;
     int y = this_.GetAbsoluteY() * rf::ui_scale_y;
     int text_w, text_h;
     rf::GrGetTextWidth(&text_w, &text_h, this_.text, -1, this_.font);
@@ -305,6 +306,9 @@ void __fastcall UiLabel_Render(rf::UiLabel& this_, void*)
     }
     else if (this_.align == rf::GR_ALIGN_RIGHT) {
         x += this_.w * rf::ui_scale_x;
+    }
+    else {
+        x += static_cast<int>(1 * rf::ui_scale_x);
     }
     rf::GrStringAligned(this_.align, x, y, this_.text, this_.font);
 
@@ -339,15 +343,16 @@ void __fastcall UiInputBox_Render(rf::UiInputBox& this_, void*)
     int y = this_.GetAbsoluteY() * rf::ui_scale_y;
     int clip_x, clip_y, clip_w, clip_h;
     rf::GrGetClip(&clip_x, &clip_y, &clip_w, &clip_h);
-    //rf::GrSetClip(x, y, this_.max_text_width, this_.h);
-    rf::GrString(x, y, this_.text, this_.font);
+    rf::GrSetClip(x, y, this_.max_text_width, this_.h * rf::ui_scale_y + 5); // for some reason input fields are too thin
+    int text_offset_x = static_cast<int>(1 * rf::ui_scale_x);
+    rf::GrString(text_offset_x, 0, this_.text, this_.font);
 
     if (this_.enabled && this_.highlighted) {
         rf::UiUpdateInputBoxCursor();
         if (rf::ui_input_box_cursor_visible) {
             int text_w, text_h;
             rf::GrGetTextWidth(&text_w, &text_h, this_.text, -1, this_.font);
-            rf::GrString(x + text_w, y, "-", this_.font); // FIXME: rfpc-large does not have 'this_'
+            rf::GrString(text_offset_x + text_w, 0, "_", this_.font);
         }
     }
     rf::GrSetClip(clip_x, clip_y, clip_w, clip_h);
@@ -378,7 +383,7 @@ void __fastcall UiCycler_Render(rf::UiCycler& this_, void*)
         rf::GrSetColor(96, 96, 96, 255);
     }
 
-    int x = (this_.GetAbsoluteX() + 1) * rf::ui_scale_x;
+    int x = this_.GetAbsoluteX() * rf::ui_scale_x;
     int y = this_.GetAbsoluteY() * rf::ui_scale_y;
 
     auto text = this_.items_text[this_.current_item];
@@ -405,15 +410,17 @@ FunHook<void()> MenuInit_hook{
     []() {
         MenuInit_hook.CallTarget();
 #if SHARP_UI_TEXT
-        if (rf::ui_scale_y > 1.5f) {
-            rf::ui_medium_font_0 = rf::GrLoadFont("rfpc-large.vf");
-            rf::ui_medium_font_1 = rf::GrLoadFont("rfpc-large.vf");
-        }
-        if (rf::ui_scale_y > 2.0f) {
-            rf::ui_small_font = rf::GrLoadFont("rfpc-large.vf");
-        }
-        else if (rf::ui_scale_y > 1.5f) {
-            rf::ui_small_font = rf::GrLoadFont("rfpc-medium.vf");
+        xlog::info("UI scale: %.4f %.4f", rf::ui_scale_x, rf::ui_scale_y);
+        if (rf::ui_scale_y > 1.0f) {
+            int large_font_size = std::min(128, static_cast<int>(std::round(rf::ui_scale_y * 14.5f))); // 32
+            int medium_font_size = std::min(128, static_cast<int>(std::round(rf::ui_scale_y * 9.0f))); // 20
+            int small_font_size = std::min(128, static_cast<int>(std::round(rf::ui_scale_y * 7.5f))); // 16
+            xlog::info("UI font sizes: %d %d %d", large_font_size, medium_font_size, small_font_size);
+
+            rf::ui_large_font = rf::GrLoadFont(StringFormat("boldfont.ttf:%d", large_font_size).c_str());
+            rf::ui_medium_font_0 = rf::GrLoadFont(StringFormat("regularfont.ttf:%d", medium_font_size).c_str());
+            rf::ui_medium_font_1 = rf::ui_medium_font_0;
+            rf::ui_small_font = rf::GrLoadFont(StringFormat("regularfont.ttf:%d", small_font_size).c_str());
         }
 #endif
     },

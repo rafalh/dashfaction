@@ -9,6 +9,7 @@
 #include "../utils/list-utils.h"
 #include "../main.h"
 #include "spectate_mode.h"
+#include "hud_internal.h"
 #include <patch_common/FunHook.h>
 #include <patch_common/AsmWriter.h>
 #include <algorithm>
@@ -105,11 +106,12 @@ int DrawScoreboardHeader(int x, int y, int w, rf::MultiGameType game_type, bool 
                 blue_score = rf::TdmGetBlueTeamScore();
             }
             rf::GrSetColor(0xD0, 0x20, 0x20, 0xFF);
+            int team_scores_font = rf::scoreboard_big_font;
             auto red_score_str = std::to_string(red_score);
-            rf::GrStringAligned(rf::GR_ALIGN_CENTER, x + w * 1 / 6, cur_y + 10, red_score_str.c_str(), rf::big_font_id);
+            rf::GrStringAligned(rf::GR_ALIGN_CENTER, x + w * 1 / 6, cur_y + 10, red_score_str.c_str(), team_scores_font);
             rf::GrSetColor(0x20, 0x20, 0xD0, 0xFF);
             auto blue_score_str = std::to_string(blue_score);
-            rf::GrStringAligned(rf::GR_ALIGN_CENTER, x + w * 5 / 6, cur_y + 10, blue_score_str.c_str(), rf::big_font_id);
+            rf::GrStringAligned(rf::GR_ALIGN_CENTER, x + w * 5 / 6, cur_y + 10, blue_score_str.c_str(), team_scores_font);
         }
 
         cur_y += 60;
@@ -124,7 +126,7 @@ int DrawScoreboardPlayers(const std::vector<rf::Player*>& players, int x, int y,
     int initial_y = y;
     int font_h = rf::GrGetFontHeight(-1);
 
-    int status_w = 12;
+    int status_w = 12 * scale;
     int score_w = 50 * scale;
     int kd_w = 70 * scale;
     int caps_w = game_type == rf::MGT_CTF ? 45 * scale : 0;
@@ -175,7 +177,7 @@ int DrawScoreboardPlayers(const std::vector<rf::Player*>& players, int x, int y,
                 status_bm = hud_micro_flag_red_bm;
             else if (player == blue_flag_player)
                 status_bm = hud_micro_flag_blue_bm;
-            rf::GrBitmap(status_bm, status_x, y + 2 * scale);
+            HudScaledBitmap(status_bm, status_x, y + 2 * scale, scale);
 
             rf::String player_name_stripped;
             rf::FitScoreboardString(&player_name_stripped, player->name, name_w - 12 * scale); // Note: this destroys Name
@@ -211,7 +213,7 @@ int DrawScoreboardPlayers(const std::vector<rf::Player*>& players, int x, int y,
             rf::GrString(ping_x, y, ping_str.c_str());
         }
 
-        y += font_h + 3 * scale;
+        y += font_h + (scale == 1.0f ? 3 : 0);
     }
 
     return y - initial_y;
@@ -285,7 +287,7 @@ void DrawScoreboardInternal_New(bool draw)
     float scale;
     // Note: FitScoreboardString does not support providing font by argument so default font must be changed
     if (g_big_scoreboard) {
-        rf::GrSetDefaultFont("rfpc-large.vf");
+        rf::GrSetDefaultFont(HudGetDefaultFontName(true));
         w = std::min(!group_by_team ? 900 : 1400, rf::GrGetClipWidth());
         scale = 2.0f;
     }

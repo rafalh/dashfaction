@@ -1,4 +1,5 @@
 #include "hud_internal.h"
+#include "../in_game_ui/hud.h"
 #include "../rf/hud.h"
 #include "../rf/graphics.h"
 #include <patch_common/FunHook.h>
@@ -30,13 +31,6 @@ FunHook<void(const char*, bool)> ChatSayAccept_hook{
     },
 };
 
-int GetChatboxFont()
-{
-    static int medium_font = rf::GrLoadFont("rfpc-medium.vf");
-    static int large_font = rf::GrLoadFont("rfpc-large.vf");
-    return g_big_chatbox ? large_font : medium_font;
-}
-
 void ChatRender()
 {
     if (!rf::chat_fully_visible_timer.IsSet() && !rf::chat_fade_out_timer.IsSet()) {
@@ -56,7 +50,7 @@ void ChatRender()
         fade_out = rf::chat_fade_out_timer.GetTimeLeftMs() / 750.0f;
     }
 
-    int chatbox_font = GetChatboxFont();
+    int chatbox_font = HudGetDefaultFont();
     int clip_w = rf::GrGetClipWidth();
     int font_h = rf::GrGetFontHeight(chatbox_font);
     int border = g_big_chatbox ? 3 : 2;
@@ -130,7 +124,7 @@ void ChatboxInputRender(rf::String::Pod label_pod, rf::String::Pod msg_pod)
         return;
     }
 
-    int chatbox_font = GetChatboxFont();
+    int chatbox_font = HudGetDefaultFont();
     int clip_w = rf::GrGetClipWidth();
     int font_h = rf::GrGetFontHeight(chatbox_font); // 12
     int border = g_big_chatbox ? 3 : 2;

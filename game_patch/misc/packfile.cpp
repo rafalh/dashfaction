@@ -287,7 +287,7 @@ static int PackfileBuildFileList_New(const char* ext_filter, char*& filenames, u
                                      const char* packfile_filter)
 {
     xlog::trace("PackfileBuildFileList begin");
-    auto ext_filter_splitted = StringSplit(ext_filter, ",");
+    auto ext_filter_splitted = StringSplit(ext_filter, ',');
     // Calculate number of bytes needed by result (zero terminated file names + buffer terminating zero)
     unsigned num_bytes = 1;
     ForEachPackfileEntry(ext_filter_splitted, packfile_filter, [&](auto& entry) {

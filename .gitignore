@@ -1,11 +1,11 @@
-bin
-dist
-obj
-build*
-lib
-research
+/bin
+/dist
+/obj
+/build*
+/lib
+/research
 
-docs
+/docs
 *.tbl
 *.lnk
 
