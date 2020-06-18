@@ -2,6 +2,7 @@
 #include <unordered_map>
 #include <cstddef>
 #include <exception>
+#include <cctype>
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
 #include <windows.h>

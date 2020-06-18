@@ -19,7 +19,7 @@ bool launch_game(HWND hwnd)
                     nullptr, MB_OK | MB_ICONERROR);
         return false;
     }
-    catch (const FileNotFoundException& e) {
+    catch (const FileNotFoundException&) {
         MessageBoxA(hwnd, "Game executable has not been found. Please set a proper path in Options.", NULL,
                     MB_OK | MB_ICONERROR);
         return false;

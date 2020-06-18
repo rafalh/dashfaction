@@ -27,14 +27,14 @@ STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_VIS
 CAPTION "Additional information about the crash"
 FONT 8, "Ms Shell Dlg"
 {
-    LTEXT           "- steps to reproduce the crash", 0, 8, 40, 200, 9, SS_LEFT, WS_EX_LEFT
+    LTEXT           "- steps to reproduce the crash", IDC_STATIC, 8, 40, 200, 9, SS_LEFT, WS_EX_LEFT
     EDITTEXT        IDC_ADDITIONAL_INFO_EDIT, 8, 72, 200, 48, ES_AUTOVSCROLL | ES_MULTILINE | ES_WANTRETURN, WS_EX_LEFT
-    LTEXT           "Please provide as much information about the crash as possible. It will help to resolve the problem. Most useful information includes:", 0, 8, 8, 200, 25, SS_LEFT, WS_EX_LEFT
-    LTEXT           "- description of what were you doing before crash happened", 0, 8, 32, 200, 8, SS_LEFT, WS_EX_LEFT
+    LTEXT           "Please provide as much information about the crash as possible. It will help to resolve the problem. Most useful information includes:", IDC_STATIC, 8, 8, 200, 25, SS_LEFT, WS_EX_LEFT
+    LTEXT           "- description of what were you doing before crash happened", IDC_STATIC, 8, 32, 200, 8, SS_LEFT, WS_EX_LEFT
     PUSHBUTTON      "Cancel", IDCANCEL, 160, 128, 50, 14, 0, WS_EX_LEFT
     DEFPUSHBUTTON   "OK", IDOK, 104, 128, 50, 14, 0, WS_EX_LEFT
-    LTEXT           "- how often the crash happens", 0, 8, 48, 100, 9, SS_LEFT, WS_EX_LEFT
-    LTEXT           "- optionally some contact information (e.g. email)", 0, 8, 56, 162, 9, SS_LEFT, WS_EX_LEFT
+    LTEXT           "- how often the crash happens", IDC_STATIC, 8, 48, 100, 9, SS_LEFT, WS_EX_LEFT
+    LTEXT           "- optionally some contact information (e.g. email)", IDC_STATIC, 8, 56, 162, 9, SS_LEFT, WS_EX_LEFT
 }
 
 
@@ -47,13 +47,13 @@ FONT 8, "Ms Shell Dlg"
 {
     CONTROL         "<a>View the report</a>", IDC_OPEN_REPORT, "SysLink", 0x50020000, 8, 64, 96, 10, 0x00000000
     LTEXT           "", IDC_HEADER_BACKGROUND, 0, 0, 240, 30, SS_LEFT, WS_EX_LEFT
-    LTEXT           "Please send us this error report to help fix the problem and improve the software.", 0, 8, 40, 224, 17, SS_LEFT, WS_EX_LEFT
+    LTEXT           "Please send us this error report to help fix the problem and improve the software.", IDC_STATIC, 8, 40, 224, 17, SS_LEFT, WS_EX_LEFT
     CONTROL         IDB_HDR_PIC, IDC_HEADER_PIC, WC_STATIC, SS_BITMAP, 0, 0, 32, 30, WS_EX_LEFT
-    LTEXT           "", 0, 0, 30, 240, 1, SS_LEFT, WS_EX_STATICEDGE
+    LTEXT           "", IDC_STATIC, 0, 30, 240, 1, SS_LEFT, WS_EX_STATICEDGE
     LTEXT           "@PROGRAM_NAME@ has stopped working.", IDC_HEADER_TEXT, 40, 10, 141, 9, SS_LEFT, WS_EX_LEFT
     PUSHBUTTON      "Close", IDCANCEL, 184, 104, 47, 14, 0, WS_EX_LEFT
     DEFPUSHBUTTON   "Send report", IDOK, 128, 104, 51, 14, 0, WS_EX_LEFT
-    LTEXT           "", 0, 0, 96, 240, 1, SS_LEFT, WS_EX_STATICEDGE
+    LTEXT           "", IDC_STATIC, 0, 96, 240, 1, SS_LEFT, WS_EX_STATICEDGE
     CONTROL         "<a>Add additional information</a>", IDC_ADDITIONAL_INFO, "SysLink", 0x50020000, 8, 80, 96, 10, 0x00000000
 }
 

@@ -126,11 +126,11 @@ int DrawScoreboardPlayers(const std::vector<rf::Player*>& players, int x, int y,
     int initial_y = y;
     int font_h = rf::GrGetFontHeight(-1);
 
-    int status_w = 12 * scale;
-    int score_w = 50 * scale;
-    int kd_w = 70 * scale;
-    int caps_w = game_type == rf::MGT_CTF ? 45 * scale : 0;
-    int ping_w = 35 * scale;
+    int status_w = static_cast<int>(12 * scale);
+    int score_w = static_cast<int>(50 * scale);
+    int kd_w = static_cast<int>(70 * scale);
+    int caps_w = game_type == rf::MGT_CTF ? static_cast<int>(45 * scale) : 0;
+    int ping_w = static_cast<int>(35 * scale);
     int name_w = w - status_w - score_w - kd_w - caps_w - ping_w;
 
     int status_x = x;
@@ -177,10 +177,10 @@ int DrawScoreboardPlayers(const std::vector<rf::Player*>& players, int x, int y,
                 status_bm = hud_micro_flag_red_bm;
             else if (player == blue_flag_player)
                 status_bm = hud_micro_flag_blue_bm;
-            HudScaledBitmap(status_bm, status_x, y + 2 * scale, scale);
+            HudScaledBitmap(status_bm, status_x, static_cast<int>(y + 2 * scale), scale);
 
             rf::String player_name_stripped;
-            rf::FitScoreboardString(&player_name_stripped, player->name, name_w - 12 * scale); // Note: this destroys Name
+            rf::FitScoreboardString(&player_name_stripped, player->name, name_w - static_cast<int>(12 * scale)); // Note: this destroys Name
             rf::GrString(name_x, y, player_name_stripped);
 
 #if DEBUG_SCOREBOARD

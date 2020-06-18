@@ -4,6 +4,7 @@
 #include <common/HttpRequest.h>
 #include <thread>
 #include <mutex>
+#include <optional>
 
 #define UPDATE_CHECK_ENDPOINT_URL "https://ravin.tk/api/rf/dashfaction/checkupdate.php"
 

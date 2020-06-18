@@ -70,8 +70,8 @@ void HudRenderPersonaMsg(rf::Player* player)
 
     // persona image background (black)
     float img_scale = g_big_hud_persona ? 2.0f : 1.0f;
-    int img_w = 64 * img_scale;
-    int img_h = 64 * img_scale;
+    int img_w = static_cast<int>(64 * img_scale);
+    int img_h = static_cast<int>(64 * img_scale);
     int img_box_x = box_x + box_border; // 159
     int img_box_y = box_y + box_border; // 12
     int img_border = 2;

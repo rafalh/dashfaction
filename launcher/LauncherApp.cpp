@@ -146,7 +146,7 @@ bool LauncherApp::LaunchGame(HWND hwnd, const char* mod_name)
             "Dash Faction launcher as administrator.",
             nullptr, MB_OK | MB_ICONERROR);
     }
-    catch (FileNotFoundException& e) {
+    catch (FileNotFoundException&) {
         Message(hwnd, "Game executable has not been found. Please set a proper path in Options.",
                 nullptr, MB_OK | MB_ICONERROR);
     }

@@ -297,7 +297,7 @@ FunHook<int(int16_t)> key_to_ascii_hook{
         if (static_cast<char16_t>(unicode_chars[0]) >= 0x80 || !std::isprint(unicode_chars[0])) {
             return empty_result;
         }
-        ansi_char = unicode_chars[0];
+        ansi_char = static_cast<char>(unicode_chars[0]);
 #endif
         xlog::trace("vk %X (%c) char %c", vk, vk, ansi_char);
         return static_cast<int>(ansi_char);

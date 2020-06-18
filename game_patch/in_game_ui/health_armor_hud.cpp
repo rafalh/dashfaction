@@ -71,7 +71,7 @@ FunHook<void(rf::Player*)> HudRenderHealthAndEnviro_hook{
             auto [envirosuit_x, envirosuit_y] = HudScaleCoords(rf::hud_points[rf::hud_envirosuit], scale);
             HudScaledBitmap(enviro_bmh, envirosuit_x, envirosuit_y, scale);
             rf::GrSetColorPtr(&rf::hud_full_color);
-            int health = std::max(entity->life, 1.0f);
+            int health = static_cast<int>(std::max(entity->life, 1.0f));
             auto health_str = std::to_string(health);
             int text_w, text_h;
             rf::GrGetTextWidth(&text_w, &text_h, health_str.c_str(), -1, font_id);

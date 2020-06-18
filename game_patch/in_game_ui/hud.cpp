@@ -139,8 +139,8 @@ CallHook<void(int, int, int, rf::GrRenderState)> RenderReticle_GrBitmap_hook{
         float base_scale = g_game_config.big_hud ? 2.0f : 1.0f;
         float scale = base_scale * g_game_config.reticle_scale;
 
-        x = (x - rf::GrGetClipWidth() / 2) * scale + rf::GrGetClipWidth() / 2;
-        y = (y - rf::GrGetClipHeight() / 2) * scale + rf::GrGetClipHeight() / 2;
+        x = static_cast<int>((x - rf::GrGetClipWidth() / 2) * scale) + rf::GrGetClipWidth() / 2;
+        y = static_cast<int>((y - rf::GrGetClipHeight() / 2) * scale) + rf::GrGetClipHeight() / 2;
 
         HudScaledBitmap(bm_handle, x, y, scale, render_state);
     },
@@ -287,8 +287,8 @@ void HudScaledBitmap(int bmh, int x, int y, float scale, rf::GrRenderState rende
     // Get bitmap size and scale it
     int bm_w, bm_h;
     rf::BmGetBitmapSize(bmh, &bm_w, &bm_h);
-    int dst_w = bm_w * scale;
-    int dst_h = bm_h * scale;
+    int dst_w = static_cast<int>(bm_w * scale);
+    int dst_h = static_cast<int>(bm_h * scale);
 
     rf::GrBitmapStretched(bmh, x, y, dst_w, dst_h, 0, 0, bm_w, bm_h, 0.0f, 0.0f, render_state);
 }

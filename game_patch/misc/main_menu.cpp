@@ -33,8 +33,8 @@ void __fastcall UiLabel_Create2_VersionLabel(rf::UiGadget* self, void* edx, rf::
     text = PRODUCT_NAME_VERSION;
     rf::GrGetTextWidth(&w, &h, text, -1, font_id);
 #if SHARP_UI_TEXT
-    w /= rf::ui_scale_x;
-    h /= rf::ui_scale_y;
+    w = static_cast<int>(w / rf::ui_scale_x);
+    h = static_cast<int>(h / rf::ui_scale_y);
 #endif
     x = 430 - w;
     w += 5;
@@ -197,10 +197,10 @@ FunHook UiButton_SetText_hook{0x00457710, UiButton_SetText};
 
 void __fastcall UiButton_Render(rf::UiButton& this_, void*)
 {
-    int x = this_.GetAbsoluteX() * rf::ui_scale_x;
-    int y = this_.GetAbsoluteY() * rf::ui_scale_y;
-    int w = this_.w * rf::ui_scale_x;
-    int h = this_.h * rf::ui_scale_y;
+    int x = static_cast<int>(this_.GetAbsoluteX() * rf::ui_scale_x);
+    int y = static_cast<int>(this_.GetAbsoluteY() * rf::ui_scale_y);
+    int w = static_cast<int>(this_.w * rf::ui_scale_x);
+    int h = static_cast<int>(this_.h * rf::ui_scale_y);
 
     if (this_.bg_bitmap >= 0) {
         rf::GrSetColor(255, 255, 255, 255);
@@ -297,15 +297,15 @@ void __fastcall UiLabel_Render(rf::UiLabel& this_, void*)
     else {
         rf::GrSetColorPtr(&this_.clr);
     }
-    int x = this_.GetAbsoluteX() * rf::ui_scale_x;
-    int y = this_.GetAbsoluteY() * rf::ui_scale_y;
+    int x = static_cast<int>(this_.GetAbsoluteX() * rf::ui_scale_x);
+    int y = static_cast<int>(this_.GetAbsoluteY() * rf::ui_scale_y);
     int text_w, text_h;
     rf::GrGetTextWidth(&text_w, &text_h, this_.text, -1, this_.font);
     if (this_.align == rf::GR_ALIGN_CENTER) {
-        x += this_.w * rf::ui_scale_x / 2;
+        x += static_cast<int>(this_.w * rf::ui_scale_x / 2);
     }
     else if (this_.align == rf::GR_ALIGN_RIGHT) {
-        x += this_.w * rf::ui_scale_x;
+        x += static_cast<int>(this_.w * rf::ui_scale_x);
     }
     else {
         x += static_cast<int>(1 * rf::ui_scale_x);
@@ -322,8 +322,8 @@ void __fastcall UiInputBox_Create(rf::UiInputBox& this_, void*, rf::UiGadget *pa
     this_.x = x;
     this_.y = y;
     this_.w = w;
-    this_.h = rf::GrGetFontHeight(font) / rf::ui_scale_y;
-    this_.max_text_width = w * rf::ui_scale_x;
+    this_.h = static_cast<int>(rf::GrGetFontHeight(font) / rf::ui_scale_y);
+    this_.max_text_width = static_cast<int>(w * rf::ui_scale_x);
     this_.font = font;
     std::strncpy(this_.text, text, std::size(this_.text));
     this_.text[std::size(this_.text) - 1] = '\0';
@@ -339,11 +339,11 @@ void __fastcall UiInputBox_Render(rf::UiInputBox& this_, void*)
         rf::GrSetColor(192, 192, 192, 255);
     }
 
-    int x = (this_.GetAbsoluteX() + 1) * rf::ui_scale_x;
-    int y = this_.GetAbsoluteY() * rf::ui_scale_y;
+    int x = static_cast<int>((this_.GetAbsoluteX() + 1) * rf::ui_scale_x);
+    int y = static_cast<int>(this_.GetAbsoluteY() * rf::ui_scale_y);
     int clip_x, clip_y, clip_w, clip_h;
     rf::GrGetClip(&clip_x, &clip_y, &clip_w, &clip_h);
-    rf::GrSetClip(x, y, this_.max_text_width, this_.h * rf::ui_scale_y + 5); // for some reason input fields are too thin
+    rf::GrSetClip(x, y, this_.max_text_width, static_cast<int>(this_.h * rf::ui_scale_y + 5)); // for some reason input fields are too thin
     int text_offset_x = static_cast<int>(1 * rf::ui_scale_x);
     rf::GrString(text_offset_x, 0, this_.text, this_.font);
 
@@ -383,14 +383,14 @@ void __fastcall UiCycler_Render(rf::UiCycler& this_, void*)
         rf::GrSetColor(96, 96, 96, 255);
     }
 
-    int x = this_.GetAbsoluteX() * rf::ui_scale_x;
-    int y = this_.GetAbsoluteY() * rf::ui_scale_y;
+    int x = static_cast<int>(this_.GetAbsoluteX() * rf::ui_scale_x);
+    int y = static_cast<int>(this_.GetAbsoluteY() * rf::ui_scale_y);
 
     auto text = this_.items_text[this_.current_item];
     auto font = this_.items_font[this_.current_item];
     auto font_h = rf::GrGetFontHeight(font);
-    auto text_x = x + this_.w * rf::ui_scale_x / 2;
-    auto text_y = y + (this_.h * rf::ui_scale_y - font_h) / 2;
+    auto text_x = x + static_cast<int>(this_.w * rf::ui_scale_x / 2);
+    auto text_y = y + static_cast<int>((this_.h * rf::ui_scale_y - font_h) / 2);
     rf::GrStringAligned(rf::GR_ALIGN_CENTER, text_x, text_y, text, font);
 
     DebugUiLayout(this_);
@@ -400,7 +400,7 @@ FunHook UiCycler_Render_hook{0x00457F40, UiCycler_Render};
 CallHook<void(int*, int*, const char*, int, int, char, int)> GrFitMultilineText_UiSetModalDlgText_hook{
     0x00455A7D,
     [](int *len_array, int *offset_array, const char *text, int max_width, int max_lines, char unk_char, int font) {
-        max_width *= rf::ui_scale_x;
+        max_width = static_cast<int>(max_width * rf::ui_scale_x);
         GrFitMultilineText_UiSetModalDlgText_hook.CallTarget(len_array, offset_array, text, max_width, max_lines, unk_char, font);
     },
 };
