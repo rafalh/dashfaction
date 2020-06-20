@@ -2,6 +2,7 @@
 
 #include <set>
 #include <vector>
+#include <string>
 
 // Only include D3D header if one has not been included before (fix for afx.h including d3d9 and DF using d3d8)
 #ifndef DIRECT3D_VERSION

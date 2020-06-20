@@ -2,7 +2,7 @@ if(NOT MSVC)
     add_compile_options(-Wall -Wextra)
 endif()
 
-file(GLOB SRCS *.cpp *.h)
+file(GLOB SRCS *.cpp *.h include/patch_common/*.h)
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRCS})
 
