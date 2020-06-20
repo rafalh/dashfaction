@@ -3,6 +3,7 @@
 #include <vector>
 #include <memory>
 #include <cstdlib>
+#include <cstddef>
 #include <patch_common/MemUtils.h>
 #include <xlog/xlog.h>
 
