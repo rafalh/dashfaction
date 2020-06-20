@@ -23,7 +23,7 @@ private:
     size_t old_num_elements_;
     size_t new_num_elements_;
     std::vector<RefInfo> refs_;
-    std::unique_ptr<T[]> new_buf_owned_;
+    std::unique_ptr<std::byte[]> new_buf_owned_;
     T* new_buf_;
 
 public:
@@ -46,12 +46,12 @@ public:
         constexpr int max_offset = 6;
         if (!new_buf_) {
             // Alloc owned buffer
-            new_buf_owned_ = std::make_unique<T[]>(new_num_elements_);
-            new_buf_ = new_buf_owned_.get();
+            // Note: raw memory is used here because it is expected the patched program will call constructors
+            new_buf_owned_ = std::make_unique<std::byte[]>(new_num_elements_ * sizeof(T));
+            // zero new buffer (as if it was global variable and part of BSS section)
+            std::memset(new_buf_owned_.get(), 0, sizeof(T) * new_num_elements_);
+            new_buf_ = reinterpret_cast<T*>(new_buf_owned_.get());
         }
-
-        // zero new buffer
-        std::memset(new_buf_, 0, sizeof(T) * new_num_elements_);
 
         // update all references
         for (auto& ref : refs_) {

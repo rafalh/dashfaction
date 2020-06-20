@@ -265,10 +265,13 @@ void InitLogging()
     xlog::info("Dash Faction %s (%s %s)", VERSION_STR, __DATE__, __TIME__);
 }
 
+
 std::optional<std::string> GetWineVersion()
 {
     auto ntdll_handle = GetModuleHandleA("ntdll.dll");
-    auto wine_get_version = reinterpret_cast<const char*(*)()>(GetProcAddress(ntdll_handle, "wine_get_version"));
+    // Note: double cast is needed to fix cast-function-type GCC warning
+    auto wine_get_version = reinterpret_cast<const char*(*)()>(reinterpret_cast<void(*)()>(
+        GetProcAddress(ntdll_handle, "wine_get_version")));
     if (!wine_get_version)
         return {};
     auto ver = wine_get_version();

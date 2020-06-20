@@ -151,7 +151,7 @@ CodeInjection weapon_vs_obj_collision_fix{
         auto dir = obj->pos - weapon->pos;
         // Take into account weapon and object radius
         float rad = weapon->radius + obj->radius;
-        if (dir.DotProd(weapon->orient.n.fvec) < -rad) {
+        if (dir.DotProd(weapon->orient.fvec) < -rad) {
             // Ignore this pair
             regs.eip = 0x0048C82A;
         }

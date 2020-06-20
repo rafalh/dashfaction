@@ -288,7 +288,15 @@ void SendHitSoundPacket(rf::Player* target)
     packet.size = sizeof(packet) - sizeof(rfPacketHeader);
     packet.sound_id = g_additional_server_config.hit_sounds.sound_id;
     // FIXME: it does not work on RF 1.21
-    memset(&packet.x, 0xFF, 12);
+    // TODO: replace by nanf
+    union {
+        float f;
+        uint32_t u;
+    } u;
+    u.u = 0xFFFFFFFF;
+    packet.x = u.f;
+    packet.y = u.f;
+    packet.z = u.f;
     rf::NwSendNotReliablePacket(target->nw_data->addr, &packet, sizeof(packet));
 }
 

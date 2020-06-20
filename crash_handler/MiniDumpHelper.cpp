@@ -147,9 +147,11 @@ bool MiniDumpHelper::write_dump(const char* path, PEXCEPTION_POINTERS exception_
 MiniDumpHelper::MiniDumpHelper()
 {
     m_dbghelp_lib = LoadLibraryW(L"Dbghelp.dll");
-    if (m_dbghelp_lib)
-        m_MiniDumpWriteDump = reinterpret_cast<MiniDumpWriteDump_Type>(
-            GetProcAddress(m_dbghelp_lib, "MiniDumpWriteDump"));
+    if (m_dbghelp_lib) {
+        // Note: double cast is needed to fix cast-function-type GCC warning
+        m_MiniDumpWriteDump = reinterpret_cast<MiniDumpWriteDump_Type>(reinterpret_cast<void(*)()>(
+            GetProcAddress(m_dbghelp_lib, "MiniDumpWriteDump")));
+    }
 }
 
 MiniDumpHelper::~MiniDumpHelper()

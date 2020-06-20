@@ -138,7 +138,7 @@ bool GameConfig::detect_game_path()
             return true;
         }
     }
-    catch (std::exception)
+    catch (...)
     {
         // ignore
     }
@@ -159,7 +159,7 @@ bool GameConfig::detect_game_path()
             return true;
         }
     }
-    catch (std::exception)
+    catch (...)
     {
         // ignore
     }
@@ -174,7 +174,7 @@ bool GameConfig::detect_game_path()
             return true;
         }
     }
-    catch (std::exception)
+    catch (...)
     {
         // ignore
     }

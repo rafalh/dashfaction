@@ -56,7 +56,7 @@ rf::Object* FindClosestObject()
     auto obj = rf::object_list.next_obj;
     rf::Object* best_obj = nullptr;
     float best_dist = 100.0f; // max dist
-    rf::Vector3 fw = cam_orient.rows[2];
+    rf::Vector3 fw = cam_orient.fvec;
     while (obj != &rf::object_list) {
         auto dir = obj->pos - cam_pos;
         float dist = dir.Len();
@@ -92,7 +92,7 @@ rf::Object* FindObjectInReticle()
     rf::Matrix3 orient;
     rf::CameraGetPos(&p0, rf::local_player->camera);
     rf::CameraGetOrient(&orient, rf::local_player->camera);
-    rf::Vector3 p1 = p0 + orient.rows[2] * 100.0f;
+    rf::Vector3 p1 = p0 + orient.fvec * 100.0f;
     rf::EntityObj* local_entity = rf::EntityGetByHandle(rf::local_player->entity_handle);
     bool hit = CollideLineSegmentLevel(p0, p1, local_entity, nullptr, &col_info, 0.0f, false, 1.0f);
     if (hit && col_info.obj_handle != -1)

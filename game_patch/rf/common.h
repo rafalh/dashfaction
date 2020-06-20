@@ -15,7 +15,9 @@ namespace rf
 {
     struct Vector3
     {
-        float x, y, z;
+        float x = 0.0f;
+        float y = 0.0f;
+        float z = 0.0f;
 
         Vector3() = default;
 
@@ -122,15 +124,11 @@ namespace rf
     };
     static_assert(sizeof(Vector3) == 0xC);
 
-    union Matrix3
+    struct Matrix3
     {
-        Vector3 rows[3];
-        struct
-        {
-            Vector3 rvec;
-            Vector3 uvec;
-            Vector3 fvec;
-        } n;
+        Vector3 rvec;
+        Vector3 uvec;
+        Vector3 fvec;
 
         void SetIdentity()
         {

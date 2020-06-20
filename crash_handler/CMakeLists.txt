@@ -1,4 +1,4 @@
-include_directories(
+include_directories(SYSTEM
 	${CMAKE_SOURCE_DIR}/vendor/zlib
 	${CMAKE_SOURCE_DIR}/vendor/zlib/contrib/minizip
     ${CMAKE_SOURCE_DIR}/vendor/win32xx

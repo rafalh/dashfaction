@@ -17,7 +17,7 @@ static ParsedUrl parse_http_url(std::string_view url)
     ParsedUrl result;
     std::string_view http = "http://";
     std::string_view https = "https://";
-    size_t host_pos;
+    size_t host_pos = 0;
     if (url.substr(0, https.size()) == https) {
         result.ssl = true;
         host_pos = https.size();

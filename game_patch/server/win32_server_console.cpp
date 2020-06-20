@@ -145,11 +145,11 @@ CallHook<void()> DcPutChar_NewLine_hook{
 FunHook<void()> DcDrawServerConsole_hook{
     0x0050A770,
     []() {
-        static char prev_cmd_line[256];
+        static char prev_cmd_line[sizeof(rf::dc_cmd_line)];
         if (strncmp(rf::dc_cmd_line, prev_cmd_line, std::size(prev_cmd_line)) != 0) {
             ResetConsoleCursorColumn(true);
             PrintCmdInputLine();
-            strncpy(prev_cmd_line, rf::dc_cmd_line, std::size(prev_cmd_line));
+            std::strcpy(prev_cmd_line, rf::dc_cmd_line);
         }
     },
 };

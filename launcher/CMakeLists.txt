@@ -1,4 +1,4 @@
-include_directories(
+include_directories(SYSTEM
     ${CMAKE_SOURCE_DIR}/vendor/d3d8
     ${CMAKE_SOURCE_DIR}/vendor/win32xx
 )

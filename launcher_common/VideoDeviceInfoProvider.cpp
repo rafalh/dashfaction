@@ -26,7 +26,9 @@ VideoDeviceInfoProvider::VideoDeviceInfoProvider()
     if (!m_lib)
         THROW_WIN32_ERROR("Failed to load d3d8.dll");
 
-    PDIRECT3DCREATE8 Direct3DCreate8 = reinterpret_cast<PDIRECT3DCREATE8>(GetProcAddress(m_lib, "Direct3DCreate8"));
+    // Note: double cast is needed to fix cast-function-type GCC warning
+    PDIRECT3DCREATE8 Direct3DCreate8 = reinterpret_cast<PDIRECT3DCREATE8>(reinterpret_cast<void(*)()>(
+        GetProcAddress(m_lib, "Direct3DCreate8")));
     if (!Direct3DCreate8)
         THROW_WIN32_ERROR("Failed to load get Direct3DCreate8 function address");
 
