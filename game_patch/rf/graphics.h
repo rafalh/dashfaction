@@ -125,7 +125,7 @@ namespace rf
         int fog_color;
         float fog_near;
         float fog_far;
-        float fog_far_scalled;
+        float fog_far_scaled;
         bool recolor_enabled;
         float recolor_red;
         float recolor_green;

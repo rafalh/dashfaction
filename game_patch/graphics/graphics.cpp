@@ -440,7 +440,7 @@ CodeInjection after_gr_init_hook{
         }
 
         // Fix performance issues caused by this field being initialized to inf
-        rf::gr_screen.fog_far_scalled = 255.0f / rf::gr_screen.fog_far;
+        rf::gr_screen.fog_far_scaled = 255.0f / rf::gr_screen.fog_far;
     },
 };
 

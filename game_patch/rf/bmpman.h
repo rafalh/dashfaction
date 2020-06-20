@@ -59,8 +59,8 @@ namespace rf
         void* locked_data;
         float frames_per_ms;
         void* locked_palette;
-        struct BmBitmapEntry* prev_bitmap;
-        struct BmBitmapEntry* next_bitmap;
+        struct BmBitmapEntry* next;
+        struct BmBitmapEntry* prev;
         char field_5C;
         char cached_material_idx;
         int16_t field_5E;

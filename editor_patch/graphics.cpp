@@ -37,7 +37,7 @@ namespace red
         int fog_color;
         float fog_near;
         float fog_far;
-        float fog_far_scalled;
+        float fog_far_scaled;
         bool recolor_enabled;
         float recolor_red;
         float recolor_green;
@@ -77,8 +77,7 @@ CodeInjection after_gr_init_hook{
     0x004B8D4D,
     []() {
         // Fix performance issues caused by this field being initialized to inf
-        xlog::info("red::gr_screen.fog_far_scalled %f", red::gr_screen.fog_far_scalled);
-        red::gr_screen.fog_far_scalled = 255.0f / red::gr_screen.fog_far;
+        red::gr_screen.fog_far_scaled = 255.0f / red::gr_screen.fog_far;
     },
 };
 
