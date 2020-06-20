@@ -24,6 +24,7 @@ Version 1.5.0
 - improve render to texture performance (e.g. mirrors and scanners)
 - improve 2D drawing performance
 - improve level loading time
+- fix performance degradation occuring if no level with fog effect was played in current game session, for some levels it can double the FPS (RF bug)
 - add 'damage_screen_flash' command for toggling damage screen flash effect
 - render held corpse in monitors/mirrors
 - add better support for non-US keyboard layouts

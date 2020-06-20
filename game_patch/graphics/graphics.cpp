@@ -438,6 +438,9 @@ CodeInjection after_gr_init_hook{
             WriteMem<i8>(0x0047715F + 2, 21);
             WriteMem<i32>(0x00477168 + 1, 154);
         }
+
+        // Fix performance issues caused by this field being initialized to inf
+        rf::gr_screen.fog_far_scalled = 255.0f / rf::gr_screen.fog_far;
     },
 };
 
