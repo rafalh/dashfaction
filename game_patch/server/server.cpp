@@ -6,6 +6,7 @@
 #include <common/version.h>
 #include <common/rfproto.h>
 #include <algorithm>
+#include <limits>
 #include "server.h"
 #include "server_internal.h"
 #include "../console/console.h"
@@ -288,15 +289,7 @@ void SendHitSoundPacket(rf::Player* target)
     packet.size = sizeof(packet) - sizeof(rfPacketHeader);
     packet.sound_id = g_additional_server_config.hit_sounds.sound_id;
     // FIXME: it does not work on RF 1.21
-    // TODO: replace by nanf
-    union {
-        float f;
-        uint32_t u;
-    } u;
-    u.u = 0xFFFFFFFF;
-    packet.x = u.f;
-    packet.y = u.f;
-    packet.z = u.f;
+    packet.x = packet.y = packet.z = std::numeric_limits<float>::quiet_NaN();
     rf::NwSendNotReliablePacket(target->nw_data->addr, &packet, sizeof(packet));
 }
 
