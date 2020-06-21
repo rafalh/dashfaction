@@ -46,8 +46,8 @@ FunHook<void(bool)> MenuInGameUpdateCutscene_hook{
     0x0045B5E0,
     [](bool dlg_open) {
         bool skip_cutscene = false;
-        auto skip_cutscene_ctrl = g_game_config.skip_cutscene_ctrl != -1
-            ? static_cast<rf::GameCtrl>(g_game_config.skip_cutscene_ctrl)
+        auto skip_cutscene_ctrl = g_game_config.skip_cutscene_ctrl.value() != -1
+            ? static_cast<rf::GameCtrl>(g_game_config.skip_cutscene_ctrl.value())
             : default_skip_cutscene_ctrl;
         rf::IsEntityCtrlActive(&rf::local_player->config.controls, skip_cutscene_ctrl, &skip_cutscene);
 

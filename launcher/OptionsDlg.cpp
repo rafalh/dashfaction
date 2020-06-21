@@ -25,7 +25,7 @@ BOOL OptionsDlg::OnInitDialog()
         MessageBoxA(e.what(), NULL, MB_ICONERROR | MB_OK);
     }
 
-    SetDlgItemTextA(IDC_EXE_PATH_EDIT, m_conf.game_executable_path.c_str());
+    SetDlgItemTextA(IDC_EXE_PATH_EDIT, m_conf.game_executable_path->c_str());
 
     UpdateAdapterCombo();
     UpdateResolutionCombo();
@@ -50,7 +50,7 @@ BOOL OptionsDlg::OnInitDialog()
     CheckDlgButton(IDC_TRUE_COLOR_TEXTURES_CHECK, m_conf.true_color_textures ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_BIG_HUD_CHECK, m_conf.big_hud ? BST_CHECKED : BST_UNCHECKED);
 
-    SetDlgItemTextA(IDC_TRACKER_EDIT, m_conf.tracker.c_str());
+    SetDlgItemTextA(IDC_TRACKER_EDIT, m_conf.tracker->c_str());
     CheckDlgButton(IDC_FORCE_PORT_CHECK, m_conf.force_port != 0);
     if (m_conf.force_port)
         SetDlgItemInt(IDC_PORT_EDIT, m_conf.force_port, false);
@@ -242,7 +242,7 @@ void OptionsDlg::OnBnClickedOk()
     CString str;
 
     str = GetDlgItemTextA(IDC_EXE_PATH_EDIT);
-    m_conf.game_executable_path = str;
+    m_conf.game_executable_path = str.GetString();
 
     m_conf.selected_video_card = m_adapter_combo.GetCurSel();
 
@@ -281,7 +281,7 @@ void OptionsDlg::OnBnClickedOk()
     m_conf.big_hud = (IsDlgButtonChecked(IDC_BIG_HUD_CHECK) == BST_CHECKED);
 
     str = GetDlgItemTextA(IDC_TRACKER_EDIT);
-    m_conf.tracker = str;
+    m_conf.tracker = str.GetString();
     bool force_port = IsDlgButtonChecked(IDC_FORCE_PORT_CHECK) == BST_CHECKED;
     m_conf.force_port = force_port ? GetDlgItemInt(IDC_PORT_EDIT, false) : 0;
     m_conf.update_rate = GetDlgItemInt(IDC_RATE_EDIT, false);

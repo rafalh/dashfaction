@@ -8,59 +8,18 @@ const char df_subkey_name[] = "Dash Faction";
 
 bool GameConfig::load() try
 {
-    bool result = true;
+    bool result = visit_vars([](RegKey& reg_key, const char* name, CfgVar<auto>& var) {
+        bool read_success = reg_key.read_value(name, &var.value());
+        var.set_dirty(!read_success);
+        return read_success;
+    }, false);
 
-    RegKey reg_key(HKEY_CURRENT_USER, rf_key_name, KEY_READ);
-    result &= reg_key.is_open();
-
-    result &= reg_key.read_value("Resolution Width", &res_width);
-    result &= reg_key.read_value("Resolution Height", &res_height);
-    result &= reg_key.read_value("Resolution Bit Depth", &res_bpp);
-    result &= reg_key.read_value("Resolution Backbuffer Format", &res_backbuffer_format);
-    result &= reg_key.read_value("Selected Video Card", &selected_video_card);
-    result &= reg_key.read_value("Vsync", &vsync);
-    result &= reg_key.read_value("Fast Animations", &fast_anims);
-    result &= reg_key.read_value("Geometry Cache Size", &geometry_cache_size);
-    result &= reg_key.read_value("GameTracker", &tracker);
-    result &= reg_key.read_value("EAX", &eax_sound);
-    result &= reg_key.read_value("UpdateRate", &update_rate);
-    result &= reg_key.read_value("ForcePort", &force_port);
-
-    RegKey dash_faction_key(reg_key, df_subkey_name, KEY_READ);
-    result &= reg_key.is_open();
-    unsigned temp;
-    if (dash_faction_key.read_value("Window Mode", &temp))
-        wnd_mode = (WndMode)temp;
-    result &= dash_faction_key.read_value("Disable LOD Models", &disable_lod_models);
-    result &= dash_faction_key.read_value("Anisotropic Filtering", &anisotropic_filtering);
-    result &= dash_faction_key.read_value("MSAA", &msaa);
-    result &= dash_faction_key.read_value("FPS Counter", &fps_counter);
-    result &= dash_faction_key.read_value("Max FPS", &max_fps);
-    result &= dash_faction_key.read_value("High Scanner Resolution", &high_scanner_res);
-    result &= dash_faction_key.read_value("High Monitor Resolution", &high_monitor_res);
-    result &= dash_faction_key.read_value("True Color Textures", &true_color_textures);
-    if (!dash_faction_key.read_value("Executable Path", &game_executable_path))
-        detect_game_path();
-    result &= dash_faction_key.read_value("Direct Input", &direct_input);
-    result &= dash_faction_key.read_value("Fast Start", &fast_start);
-    result &= dash_faction_key.read_value("Scoreboard Animations", &scoreboard_anim);
-    result &= dash_faction_key.read_value("Level Sound Volume", &level_sound_volume);
-    result &= dash_faction_key.read_value("Allow Overwriting Game Files", &allow_overwrite_game_files);
-    result &= dash_faction_key.read_value("Version", &dash_faction_version);
-    result &= dash_faction_key.read_value("Swap Assault Rifle Controls", &swap_assault_rifle_controls);
-    result &= dash_faction_key.read_value("Glares", &glares);
-    result &= dash_faction_key.read_value("Linear Pitch", &linear_pitch);
-    result &= dash_faction_key.read_value("Show Enemy Bullets", &show_enemy_bullets);
-    result &= dash_faction_key.read_value("Keep Launcher Open", &keep_launcher_open);
-    result &= dash_faction_key.read_value("Skip Cutscene Control", &skip_cutscene_ctrl);
-    result &= dash_faction_key.read_value("Damage Screen Flash", &damage_screen_flash);
-    result &= dash_faction_key.read_value("Language", &language);
-    result &= dash_faction_key.read_value("Reduced Speed In Background", &reduced_speed_in_background);
-    result &= dash_faction_key.read_value("Big HUD", &big_hud);
-    result &= dash_faction_key.read_value("Reticle Scale", &reticle_scale);
+    if (game_executable_path.value().empty() && !detect_game_path()) {
+        game_executable_path = DEFAULT_EXECUTABLE_PATH;
+    }
 
 #ifdef NDEBUG
-    max_fps = std::clamp(max_fps, MIN_FPS_LIMIT, MAX_FPS_LIMIT);
+    max_fps = std::clamp(max_fps.value(), MIN_FPS_LIMIT, MAX_FPS_LIMIT);
 #endif
 
     if (update_rate == 0) {
@@ -77,48 +36,13 @@ catch (...) {
 
 void GameConfig::save() try
 {
-    RegKey reg_key(HKEY_CURRENT_USER, rf_key_name, KEY_WRITE, true);
-    reg_key.write_value("Resolution Width", res_width);
-    reg_key.write_value("Resolution Height", res_height);
-    reg_key.write_value("Resolution Bit Depth", res_bpp);
-    reg_key.write_value("Resolution Backbuffer Format", res_backbuffer_format);
-    reg_key.write_value("Selected Video Card", selected_video_card);
-    reg_key.write_value("Vsync", vsync);
-    reg_key.write_value("Fast Animations", fast_anims);
-    reg_key.write_value("Geometry Cache Size", geometry_cache_size);
-    reg_key.write_value("GameTracker", tracker);
-    reg_key.write_value("UpdateRate", update_rate);
-    reg_key.write_value("EAX", eax_sound);
-    reg_key.write_value("ForcePort", force_port);
-
-    RegKey dash_faction_key(reg_key, df_subkey_name, KEY_WRITE, true);
-    dash_faction_key.write_value("Window Mode", (unsigned)wnd_mode);
-    dash_faction_key.write_value("Disable LOD Models", disable_lod_models);
-    dash_faction_key.write_value("Anisotropic Filtering", anisotropic_filtering);
-    dash_faction_key.write_value("MSAA", msaa);
-    dash_faction_key.write_value("FPS Counter", fps_counter);
-    dash_faction_key.write_value("Max FPS", max_fps);
-    dash_faction_key.write_value("High Scanner Resolution", high_scanner_res);
-    dash_faction_key.write_value("High Monitor Resolution", high_monitor_res);
-    dash_faction_key.write_value("True Color Textures", true_color_textures);
-    dash_faction_key.write_value("Executable Path", game_executable_path);
-    dash_faction_key.write_value("Direct Input", direct_input);
-    dash_faction_key.write_value("Fast Start", fast_start);
-    dash_faction_key.write_value("Scoreboard Animations", scoreboard_anim);
-    dash_faction_key.write_value("Level Sound Volume", level_sound_volume);
-    dash_faction_key.write_value("Allow Overwriting Game Files", allow_overwrite_game_files);
-    dash_faction_key.write_value("Version", dash_faction_version);
-    dash_faction_key.write_value("Swap Assault Rifle Controls", swap_assault_rifle_controls);
-    dash_faction_key.write_value("Glares", &glares);
-    dash_faction_key.write_value("Linear Pitch", linear_pitch);
-    dash_faction_key.write_value("Show Enemy Bullets", show_enemy_bullets);
-    dash_faction_key.write_value("Keep Launcher Open", keep_launcher_open);
-    dash_faction_key.write_value("Skip Cutscene Control", skip_cutscene_ctrl);
-    dash_faction_key.write_value("Damage Screen Flash", damage_screen_flash);
-    dash_faction_key.write_value("Language", language);
-    dash_faction_key.write_value("Reduced Speed In Background", reduced_speed_in_background);
-    dash_faction_key.write_value("Big HUD", big_hud);
-    dash_faction_key.write_value("Reticle Scale", reticle_scale);
+    visit_vars([](RegKey& reg_key, const char* name, CfgVar<auto>& var) {
+        if (var.is_dirty()) {
+            reg_key.write_value(name, var.value());
+            var.set_dirty(false);
+        }
+        return true;
+    }, true);
 }
 catch (...) {
     std::throw_with_nested(std::runtime_error("failed to save config"));
@@ -189,4 +113,64 @@ bool GameConfig::detect_game_path()
     }
 
     return false;
+}
+
+template<typename T>
+bool GameConfig::visit_vars(T visitor, bool is_save)
+{
+    bool result = true;
+
+    RegKey red_faction_key(HKEY_CURRENT_USER, rf_key_name, is_save ? KEY_WRITE : KEY_READ, is_save);
+    result &= red_faction_key.is_open();
+    result &= visitor(red_faction_key, "Resolution Width", res_width);
+    result &= visitor(red_faction_key, "Resolution Height", res_height);
+    result &= visitor(red_faction_key, "Resolution Bit Depth", res_bpp);
+    result &= visitor(red_faction_key, "Resolution Backbuffer Format", res_backbuffer_format);
+    result &= visitor(red_faction_key, "Selected Video Card", selected_video_card);
+    result &= visitor(red_faction_key, "Vsync", vsync);
+    result &= visitor(red_faction_key, "Fast Animations", fast_anims);
+    result &= visitor(red_faction_key, "Geometry Cache Size", geometry_cache_size);
+    result &= visitor(red_faction_key, "GameTracker", tracker);
+    result &= visitor(red_faction_key, "UpdateRate", update_rate);
+    result &= visitor(red_faction_key, "EAX", eax_sound);
+    result &= visitor(red_faction_key, "ForcePort", force_port);
+
+    RegKey dash_faction_key(red_faction_key, df_subkey_name, is_save ? KEY_WRITE : KEY_READ, is_save);
+    result &= dash_faction_key.is_open();
+    result &= visitor(dash_faction_key, "Window Mode", wnd_mode);
+    result &= visitor(dash_faction_key, "Disable LOD Models", disable_lod_models);
+    result &= visitor(dash_faction_key, "Anisotropic Filtering", anisotropic_filtering);
+    result &= visitor(dash_faction_key, "MSAA", msaa);
+    result &= visitor(dash_faction_key, "FPS Counter", fps_counter);
+    result &= visitor(dash_faction_key, "Max FPS", max_fps);
+    result &= visitor(dash_faction_key, "High Scanner Resolution", high_scanner_res);
+    result &= visitor(dash_faction_key, "High Monitor Resolution", high_monitor_res);
+    result &= visitor(dash_faction_key, "True Color Textures", true_color_textures);
+    result &= visitor(dash_faction_key, "Executable Path", game_executable_path);
+    result &= visitor(dash_faction_key, "Direct Input", direct_input);
+    result &= visitor(dash_faction_key, "Fast Start", fast_start);
+    result &= visitor(dash_faction_key, "Scoreboard Animations", scoreboard_anim);
+    result &= visitor(dash_faction_key, "Level Sound Volume", level_sound_volume);
+    result &= visitor(dash_faction_key, "Allow Overwriting Game Files", allow_overwrite_game_files);
+    result &= visitor(dash_faction_key, "Version", dash_faction_version);
+    result &= visitor(dash_faction_key, "Swap Assault Rifle Controls", swap_assault_rifle_controls);
+    result &= visitor(dash_faction_key, "Glares", glares);
+    result &= visitor(dash_faction_key, "Linear Pitch", linear_pitch);
+    result &= visitor(dash_faction_key, "Show Enemy Bullets", show_enemy_bullets);
+    result &= visitor(dash_faction_key, "Keep Launcher Open", keep_launcher_open);
+    result &= visitor(dash_faction_key, "Skip Cutscene Control", skip_cutscene_ctrl);
+    result &= visitor(dash_faction_key, "Damage Screen Flash", damage_screen_flash);
+    result &= visitor(dash_faction_key, "Language", language);
+    result &= visitor(dash_faction_key, "Reduced Speed In Background", reduced_speed_in_background);
+    result &= visitor(dash_faction_key, "Big HUD", big_hud);
+    result &= visitor(dash_faction_key, "Reticle Scale", reticle_scale);
+    return result;
+}
+
+template<>
+bool is_valid_enum_value<GameConfig::WndMode>(int value)
+{
+    return value == GameConfig::FULLSCREEN
+        || value == GameConfig::WINDOWED
+        || value == GameConfig::STRETCHED;
 }

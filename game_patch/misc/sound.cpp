@@ -317,7 +317,7 @@ DcCommand2 level_sounds_cmd{
             g_game_config.level_sound_volume = vol_scale;
             g_game_config.save();
         }
-        rf::DcPrintf("Level sound volume: %.1f", g_game_config.level_sound_volume);
+        rf::DcPrintf("Level sound volume: %.1f", g_game_config.level_sound_volume.value());
     },
     "Sets level sounds volume scale",
     "levelsounds <volume>",

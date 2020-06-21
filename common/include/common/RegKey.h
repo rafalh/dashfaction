@@ -5,6 +5,9 @@
 #include <memory>
 #include <common/Win32Error.h>
 
+template<typename T>
+bool is_valid_enum_value(int value);
+
 class RegKey
 {
 public:
@@ -52,7 +55,7 @@ public:
             RegCloseKey(m_key);
     }
 
-    bool read_value(const char* name, unsigned* value)
+    bool read_value(const char* name, uint32_t* value)
     {
         if (!m_open)
             return false;
@@ -77,19 +80,19 @@ public:
         if (type != REG_SZ && type != REG_EXPAND_SZ)
             return false;
 
-        auto buf = std::make_unique<char[]>(cb + 1);
-        error = RegQueryValueEx(m_key, name, nullptr, &type, reinterpret_cast<BYTE*>(buf.get()), &cb);
+        value->resize(cb);
+
+        error = RegQueryValueEx(m_key, name, nullptr, &type, reinterpret_cast<BYTE*>(value->data()), &cb);
         if (error != ERROR_SUCCESS) {
             return false;
         }
-        buf[cb] = '\0';
-        value->assign(buf.get());
+        value->resize(cb);
         return true;
     }
 
     bool read_value(const char* name, bool* value)
     {
-        unsigned temp;
+        uint32_t temp;
         bool result = read_value(name, &temp);
         if (result)
             *value = (temp != 0);
@@ -98,7 +101,7 @@ public:
 
     bool read_value(const char* name, int* value)
     {
-        unsigned temp;
+        uint32_t temp;
         bool result = read_value(name, &temp);
         if (result)
             *value = static_cast<int>(temp);
@@ -107,14 +110,28 @@ public:
 
     bool read_value(const char* name, float* value)
     {
-        unsigned temp;
-        bool result = read_value(name, &temp);
+        static_assert(sizeof(float) == sizeof(uint32_t));
+        union {
+            float f;
+            uint32_t u32;
+        } u;
+        bool result = read_value(name, &u.u32);
         if (result)
-            std::copy(reinterpret_cast<char*>(&temp), reinterpret_cast<char*>(&temp + 1), reinterpret_cast<char*>(value));
+            *value = u.f;
         return result;
     }
 
-    void write_value(const char* name, unsigned value)
+    template<typename T, typename = std::enable_if_t<std::is_enum_v<T>>>
+    bool read_value(const char* name, T* value)
+    {
+        int temp;
+        bool result = read_value(name, &temp) && is_valid_enum_value<T>(temp);
+        if (result)
+            *value = static_cast<T>(temp);
+        return result;
+    }
+
+    void write_value(const char* name, uint32_t value)
     {
         DWORD temp = value;
         LONG error = RegSetValueExA(m_key, name, 0, REG_DWORD, reinterpret_cast<const BYTE*>(&temp), sizeof(temp));
@@ -136,14 +153,18 @@ public:
 
     void write_value(const char* name, int value)
     {
-        write_value(name, static_cast<unsigned>(value));
+        write_value(name, static_cast<uint32_t>(value));
     }
 
     void write_value(const char* name, float value)
     {
-        unsigned temp;
-        std::copy(reinterpret_cast<char*>(&value), reinterpret_cast<char*>(&value + 1), reinterpret_cast<char*>(&temp));
-        write_value(name, temp);
+        static_assert(sizeof(float) == sizeof(uint32_t));
+        union {
+            float f;
+            uint32_t u32;
+        } u;
+        u.f = value;
+        write_value(name, u.u32);
     }
 
     bool is_open() const

@@ -329,10 +329,10 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     }
 
     // Log information from config
-    xlog::info("Resolution: %dx%dx%d", g_game_config.res_width, g_game_config.res_height, g_game_config.res_bpp);
-    xlog::info("Window Mode: %d", static_cast<int>(g_game_config.wnd_mode));
-    xlog::info("Max FPS: %u", g_game_config.max_fps);
-    xlog::info("Allow Overwriting Game Files: %d", static_cast<int>(g_game_config.allow_overwrite_game_files));
+    xlog::info("Resolution: %dx%dx%d", g_game_config.res_width.value(), g_game_config.res_height.value(), g_game_config.res_bpp.value());
+    xlog::info("Window Mode: %d", static_cast<int>(g_game_config.wnd_mode.value()));
+    xlog::info("Max FPS: %u", g_game_config.max_fps.value());
+    xlog::info("Allow Overwriting Game Files: %d", g_game_config.allow_overwrite_game_files.value());
 
     // Process messages in the same thread as DX processing (alternative: D3DCREATE_MULTITHREADED)
     AsmWriter(0x00524C48, 0x00524C83).nop(); // disable msg loop thread

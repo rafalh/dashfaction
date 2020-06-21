@@ -237,7 +237,7 @@ DcCommand2 reticle_scale_cmd{
             g_game_config.reticle_scale = scale_opt.value();
             g_game_config.save();
         }
-        rf::DcPrintf("Reticle scale %.4f", g_game_config.reticle_scale);
+        rf::DcPrintf("Reticle scale %.4f", g_game_config.reticle_scale.value());
     },
     "Sets/gets reticle scale",
 };

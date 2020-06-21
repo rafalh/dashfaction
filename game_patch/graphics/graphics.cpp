@@ -159,11 +159,11 @@ CodeInjection update_pp_hook{
 
         if (g_game_config.msaa && format > 0) {
             // Make sure selected MSAA mode is available
-            auto multi_sample_type = static_cast<D3DMULTISAMPLE_TYPE>(g_game_config.msaa);
+            auto multi_sample_type = static_cast<D3DMULTISAMPLE_TYPE>(g_game_config.msaa.value());
             HRESULT hr = rf::gr_d3d->CheckDeviceMultiSampleType(rf::gr_adapter_idx, D3DDEVTYPE_HAL, format,
                                                                 rf::gr_d3d_pp.Windowed, multi_sample_type);
             if (SUCCEEDED(hr)) {
-                xlog::info("Enabling Anti-Aliasing (%ux MSAA)...", g_game_config.msaa);
+                xlog::info("Enabling Anti-Aliasing (%ux MSAA)...", g_game_config.msaa.value());
                 rf::gr_d3d_pp.MultiSampleType = multi_sample_type;
             }
             else {
