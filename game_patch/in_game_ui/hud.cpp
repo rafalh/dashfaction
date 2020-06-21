@@ -9,6 +9,7 @@
 #include "../rf/fs.h"
 #include <patch_common/FunHook.h>
 #include <patch_common/CallHook.h>
+#include <xlog/xlog.h>
 
 float g_hud_ammo_scale = 1.0f;
 int g_target_player_name_font = -1;

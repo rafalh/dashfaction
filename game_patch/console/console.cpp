@@ -7,7 +7,10 @@
 #include <patch_common/CodeInjection.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CallHook.h>
+#include <patch_common/AsmWriter.h>
+#include <patch_common/ShortTypes.h>
 #include <algorithm>
+#include <cassert>
 
 // DcDrawClientConsole uses 200 bytes long buffer for: "] ", user input and '\0'
 constexpr int max_cmd_line_len = 200 - 2 - 1;

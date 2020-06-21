@@ -8,7 +8,9 @@
 #include <patch_common/CallHook.h>
 #include <patch_common/InlineAsm.h>
 #include <patch_common/CodeInjection.h>
+#include <patch_common/AsmWriter.h>
 #include <patch_common/ShortTypes.h>
+#include <xlog/xlog.h>
 #include <array>
 #include <unordered_map>
 #include <unordered_set>

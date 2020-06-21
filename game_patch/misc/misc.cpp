@@ -23,6 +23,7 @@
 #include "../server/server.h"
 #include <common/version.h>
 #include <common/BuildConfig.h>
+#include <xlog/xlog.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>

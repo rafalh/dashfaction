@@ -1,6 +1,8 @@
 #include <patch_common/FunHook.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/CodeInjection.h>
+#include <patch_common/ShortTypes.h>
+#include <xlog/xlog.h>
 #include "../rf/common.h"
 #include "../rf/player.h"
 #include "../rf/weapon.h"

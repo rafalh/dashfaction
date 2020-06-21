@@ -4,6 +4,8 @@
 #include <patch_common/CodeInjection.h>
 #include <ddraw.h>
 #include <cstddef>
+#include <cassert>
+#include <cstring>
 #include <set>
 #include <algorithm>
 #include "../rf/graphics.h"

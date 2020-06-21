@@ -12,7 +12,6 @@
 #endif
 
 #include <cstdarg>
-#include <cstdio>
 #include <xlog/Level.h>
 #include <xlog/Logger.h>
 
@@ -27,10 +26,12 @@ namespace xlog
         va_end(args);
     }
 
+#ifdef XLOG_STREAMS
     inline LogStream log(Level level)
     {
         return Logger::root().log(level);
     }
+#endif
 
     inline void error(const char *format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(1, 2);
     inline void error(const char *format, ...)
@@ -41,10 +42,12 @@ namespace xlog
         va_end(args);
     }
 
+#ifdef XLOG_STREAMS
     inline auto error()
     {
         return Logger::root().error();
     }
+#endif
 
     inline void warn(const char *format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(1, 2);
     inline void warn(const char *format, ...)
@@ -55,10 +58,12 @@ namespace xlog
         va_end(args);
     }
 
+#ifdef XLOG_STREAMS
     inline auto warn()
     {
         return Logger::root().warn();
     }
+#endif
 
     inline void info(const char *format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(1, 2);
     inline void info(const char *format, ...)
@@ -69,10 +74,12 @@ namespace xlog
         va_end(args);
     }
 
+#ifdef XLOG_STREAMS
     inline auto info()
     {
         return Logger::root().info();
     }
+#endif
 
     inline void debug(const char *format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(1, 2);
     inline void debug(const char *format, ...)
@@ -83,10 +90,12 @@ namespace xlog
         va_end(args);
     }
 
+#ifdef XLOG_STREAMS
     inline auto debug()
     {
         return Logger::root().debug();
     }
+#endif
 
     inline void trace(const char *format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(1, 2);
 #ifndef XLOG_DISCARD_TRACE
@@ -103,10 +112,12 @@ namespace xlog
     }
 #endif
 
+#ifdef XLOG_STREAMS
     inline auto trace()
     {
         return Logger::root().trace();
     }
+#endif
 }
 
 // Undefine helper macro

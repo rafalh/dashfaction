@@ -6,6 +6,7 @@
 #include <patch_common/CodeInjection.h>
 #include <patch_common/CodeBuffer.h>
 #include <patch_common/MemUtils.h>
+#include <xlog/xlog.h>
 #include <cstddef>
 #include "debug_internal.h"
 #include "../utils/perf-utils.h"

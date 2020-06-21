@@ -2,7 +2,7 @@
 
 #include <vector>
 #include <memory>
-#include <cstdarg>
+#include <string>
 #include <xlog/Level.h>
 #include <xlog/Appender.h>
 
@@ -12,20 +12,7 @@ namespace xlog
 class LoggerConfig
 {
 public:
-    LoggerConfig()
-    {
-        auto level_name = std::getenv("XLOG_LEVEL");
-        if (level_name) {
-            default_level_ = parse_level(level_name);
-        }
-        else {
-#ifdef NDEBUG
-            default_level_ = Level::info;
-#else
-            default_level_ = Level::debug;
-#endif
-        }
-    }
+    LoggerConfig();
 
     static LoggerConfig& get()
     {

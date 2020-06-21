@@ -9,6 +9,7 @@
 #include <common/rfproto.h>
 #include <common/BuildConfig.h>
 #include <patch_common/CodeInjection.h>
+#include <xlog/xlog.h>
 #include <stdexcept>
 #include <thread>
 #include <unrar/dll.hpp>
@@ -16,6 +17,7 @@
 #include <windows.h>
 #include <sstream>
 #include <fstream>
+#include <cstring>
 
 #define AUTODL_AGENT_NAME "hoverlees"
 #define AUTODL_BASE_URL "http://pfapi.factionfiles.com"

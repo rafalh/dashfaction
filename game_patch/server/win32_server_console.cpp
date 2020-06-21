@@ -2,9 +2,11 @@
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/AsmWriter.h>
+#include <xlog/xlog.h>
 #include <windows.h>
 #include <thread>
 #include <algorithm>
+#include <cstring>
 #include "../rf/debug_console.h"
 #include "../rf/network.h"
 

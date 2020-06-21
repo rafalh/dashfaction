@@ -3,6 +3,7 @@
 #include "../misc/packfile.h"
 #include "../rf/player.h"
 #include <patch_common/FunHook.h>
+#include <cstring>
 
 void DcShowCmdHelp(rf::DcCommand* cmd)
 {

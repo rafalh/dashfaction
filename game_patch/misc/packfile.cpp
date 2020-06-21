@@ -11,6 +11,7 @@
 #include <fstream>
 #include <array>
 #include <cctype>
+#include <cstring>
 #include <unordered_map>
 #include <shlwapi.h>
 

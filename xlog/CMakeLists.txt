@@ -15,6 +15,7 @@ add_library(Xlog STATIC
     include/xlog/SimpleFormatter.h
     include/xlog/Win32Appender.h
     include/xlog/xlog.h
+    src/LoggerConfig.cpp
     src/FileAppender.cpp
     src/SimpleFormatter.cpp
     src/Win32Appender.cpp

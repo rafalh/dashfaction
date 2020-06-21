@@ -1,6 +1,7 @@
 #include <patch_common/MemUtils.h>
 #include <windows.h>
 #include <xlog/xlog.h>
+#include <cstring>
 
 void WriteMem(unsigned addr, const void* data, unsigned size)
 {

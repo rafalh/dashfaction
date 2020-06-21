@@ -13,6 +13,7 @@
 #include "../utils/list-utils.h"
 #include "../utils/string-utils.h"
 #include <cstddef>
+#include <cstring>
 #include <common/BuildConfig.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>

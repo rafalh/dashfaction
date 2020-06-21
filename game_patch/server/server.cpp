@@ -2,9 +2,11 @@
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
 #include <patch_common/ShortTypes.h>
+#include <patch_common/AsmWriter.h>
 #include <common/BuildConfig.h>
 #include <common/version.h>
 #include <common/rfproto.h>
+#include <xlog/xlog.h>
 #include <algorithm>
 #include <limits>
 #include <windows.h>

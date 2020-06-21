@@ -28,6 +28,8 @@
 #include <patch_common/CodeInjection.h>
 #include <common/version.h>
 
+#define XLOG_STREAMS 1
+
 #include <xlog/ConsoleAppender.h>
 #include <xlog/FileAppender.h>
 #include <xlog/Win32Appender.h>

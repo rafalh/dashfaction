@@ -1,11 +1,13 @@
 #include "exports.h"
 #include <common/version.h>
 #include <common/BuildConfig.h>
+#include <xlog/xlog.h>
 #include <patch_common/MemUtils.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/AsmWriter.h>
 #include <cstddef>
+#include <cstring>
 #include <crash_handler_stub.h>
 
 #include <xlog/ConsoleAppender.h>

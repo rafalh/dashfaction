@@ -1,5 +1,9 @@
 #include <patch_common/CodeInjection.h>
 #include <patch_common/CallHook.h>
+#include <patch_common/AsmWriter.h>
+#include <xlog/xlog.h>
+#include <cassert>
+#include <cstring>
 #include "../rf/common.h"
 #include "../rf/object.h"
 #include "../rf/event.h"
@@ -13,17 +17,14 @@ CodeInjection switch_model_event_custom_mesh_patch{
             return;
         }
         auto& mesh_name = *reinterpret_cast<rf::String*>(regs.esi);
-        const char* ext = strrchr(mesh_name.CStr(), '.');
-        if (!ext) {
-            ext = "";
-        }
-        if (stricmp(ext, ".v3m") == 0) {
+        std::string_view mesh_name_sv{mesh_name.CStr()};
+        if (StringEndsWithIgnoreCase(mesh_name_sv, ".v3m")) {
             mesh_type = 1;
         }
-        else if (stricmp(ext, ".v3c") == 0) {
+        else if (StringEndsWithIgnoreCase(mesh_name_sv, ".v3c")) {
             mesh_type = 2;
         }
-        else if (ext && stricmp(ext, ".vfx") == 0) {
+        else if (StringEndsWithIgnoreCase(mesh_name_sv, ".vfx")) {
             mesh_type = 3;
         }
     },

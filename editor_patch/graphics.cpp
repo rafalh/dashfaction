@@ -1,6 +1,10 @@
 #include <common/BuildConfig.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/CodeInjection.h>
+#include <patch_common/AsmWriter.h>
+#include <patch_common/MemUtils.h>
+#include <patch_common/ShortTypes.h>
+#include <xlog/xlog.h>
 #include <windows.h>
 #include <d3d8.h>
 

@@ -1,8 +1,12 @@
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
+#include <patch_common/AsmWriter.h>
+#include <patch_common/ShortTypes.h>
+#include <xlog/xlog.h>
 #include <windows.h>
 #include <algorithm>
 #include <cctype>
+#include <cassert>
 #include "../rf/os.h"
 #include "../rf/graphics.h"
 #include "../rf/network.h"

@@ -2,8 +2,10 @@
 
 #include <xlog/Level.h>
 #include <xlog/LoggerConfig.h>
+#ifdef XLOG_STREAMS
 #include <xlog/LogStream.h>
 #include <xlog/NullStream.h>
+#endif
 
 namespace xlog
 {
@@ -40,10 +42,12 @@ namespace xlog
             }
         }
 
+#ifdef XLOG_STREAMS
         LogStream log(Level level)
         {
             return LogStream(level, name_, level_);
         }
+#endif
 
         void error(const char *format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(2, 3)
         {
@@ -53,10 +57,12 @@ namespace xlog
             va_end(args);
         }
 
+#ifdef XLOG_STREAMS
         LogStream error()
         {
             return log(Level::error);
         }
+#endif
 
         void warn(const char *format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(2, 3)
         {
@@ -66,10 +72,12 @@ namespace xlog
             va_end(args);
         }
 
+#ifdef XLOG_STREAMS
         LogStream warn()
         {
             return log(Level::warn);
         }
+#endif
 
         void info(const char *format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(2, 3)
         {
@@ -79,10 +87,12 @@ namespace xlog
             va_end(args);
         }
 
+#ifdef XLOG_STREAMS
         LogStream info()
         {
             return log(Level::info);
         }
+#endif
 
         void debug(const char *format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(2, 3)
         {
@@ -92,10 +102,12 @@ namespace xlog
             va_end(args);
         }
 
+#ifdef XLOG_STREAMS
         LogStream debug()
         {
             return log(Level::debug);
         }
+#endif
 
         void trace([[ maybe_unused ]] const char *format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(2, 3)
         {
@@ -107,6 +119,7 @@ namespace xlog
 #endif
         }
 
+#ifdef XLOG_STREAMS
         auto trace()
         {
 #ifndef XLOG_DISCARD_TRACE
@@ -115,6 +128,7 @@ namespace xlog
             return NullStream();
 #endif
         }
+#endif
 
         const std::string& name() const
         {
