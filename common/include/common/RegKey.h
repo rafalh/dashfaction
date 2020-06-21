@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <windows.h>
 #include <memory>
+#include <cstring>
 #include <common/Win32Error.h>
 
 template<typename T>
@@ -60,7 +61,7 @@ public:
         if (!m_open)
             return false;
         DWORD temp_value, type, cb = sizeof(temp_value);
-        LONG error = RegQueryValueEx(m_key, name, nullptr, &type, reinterpret_cast<BYTE*>(&temp_value), &cb);
+        LONG error = RegQueryValueExA(m_key, name, nullptr, &type, reinterpret_cast<BYTE*>(&temp_value), &cb);
         if (error != ERROR_SUCCESS)
             return false;
         if (type != REG_DWORD)
@@ -74,19 +75,22 @@ public:
         if (!m_open)
             return false;
         DWORD type, cb = 0;
-        LONG error = RegQueryValueEx(m_key, name, nullptr, &type, nullptr, &cb);
+        LONG error = RegQueryValueExA(m_key, name, nullptr, &type, nullptr, &cb);
         if (error != ERROR_SUCCESS)
             return false;
         if (type != REG_SZ && type != REG_EXPAND_SZ)
             return false;
 
-        value->resize(cb);
+        // Note: value can but not have to be terminated with null character, therefore additional null character
+        // is added here by resizing string to bigger buffer (it is initialized to zeros because it is cleared first)
+        value->clear();
+        value->resize(cb + 1);
 
-        error = RegQueryValueEx(m_key, name, nullptr, &type, reinterpret_cast<BYTE*>(value->data()), &cb);
+        error = RegQueryValueExA(m_key, name, nullptr, &type, reinterpret_cast<BYTE*>(value->data()), &cb);
         if (error != ERROR_SUCCESS) {
             return false;
         }
-        value->resize(cb);
+        value->resize(std::strlen(value->c_str()));
         return true;
     }
 
