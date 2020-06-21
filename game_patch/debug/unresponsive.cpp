@@ -18,8 +18,8 @@ FunHook<void()> gr_flip_hook{
 DcCommand2 hang_cmd{
     "d_hang",
     []() {
-        int start = GetTickCount();
-        while (GetTickCount() - start < 6000) {}
+        int start = rf::TimerGet(1000);
+        while (rf::TimerGet(1000) - start < 6000) {}
     },
 };
 #endif

@@ -3,7 +3,7 @@
 #include <xlog/xlog.h>
 #include <windows.h>
 #include <signal.h>
-#include <cstring>
+#include <cwchar>
 
 static WCHAR g_module_path[MAX_PATH];
 static LPTOP_LEVEL_EXCEPTION_FILTER g_old_exception_filter;
@@ -28,7 +28,7 @@ void CrashHandlerStubProcessException(PEXCEPTION_POINTERS exception_ptrs, DWORD 
             break;
 
         STARTUPINFOW startup_info;
-        std::memset(&startup_info, 0, sizeof(startup_info));
+        ZeroMemory(&startup_info, sizeof(startup_info));
         startup_info.cb = sizeof(startup_info);
 
         WCHAR cmd_line[256];

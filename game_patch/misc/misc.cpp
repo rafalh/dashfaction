@@ -18,6 +18,7 @@
 #include "../rf/input.h"
 #include "../rf/ui.h"
 #include "../rf/particle_emitter.h"
+#include "../rf/os.h"
 #include "../stdafx.h"
 #include "../server/server.h"
 #include <common/version.h>

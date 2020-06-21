@@ -12,6 +12,7 @@
 #include <array>
 #include <unordered_map>
 #include <unordered_set>
+#include <windows.h>
 
 constexpr auto reference_fps = 30.0f;
 constexpr auto reference_framerate = 1.0f / reference_fps;

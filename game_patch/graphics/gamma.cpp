@@ -1,7 +1,7 @@
 #include <windows.h>
 #include <d3d8.h>
 #include "gamma.h"
-#include "../rf/misc.h"
+#include "../rf/os.h"
 #include "../rf/graphics.h"
 #include <xlog/xlog.h>
 #include <patch_common/AsmWriter.h>

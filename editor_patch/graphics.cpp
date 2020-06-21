@@ -1,6 +1,7 @@
 #include <common/BuildConfig.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/CodeInjection.h>
+#include <windows.h>
 #include <d3d8.h>
 
 extern HWND g_editor_wnd;

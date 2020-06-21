@@ -1,9 +1,9 @@
 #include <common/HttpRequest.h>
 #include <common/Win32Error.h>
+#include <string>
+#include <string_view>
 #include <sstream>
 #include <cassert>
-#include <cstring>
-#include <string_view>
 
 struct ParsedUrl
 {
@@ -109,7 +109,7 @@ void HttpRequest::add_raw_headers(std::string_view headers)
 void HttpRequest::begin_body(size_t total_body_size)
 {
     INTERNET_BUFFERS inet_buffers;
-    std::memset(&inet_buffers, 0, sizeof(inet_buffers));
+    ZeroMemory(&inet_buffers, sizeof(inet_buffers));
     inet_buffers.dwStructSize = sizeof(inet_buffers);
     inet_buffers.dwBufferTotal = total_body_size;
     if (!HttpSendRequestExA(m_req, &inet_buffers, nullptr, 0, 0))

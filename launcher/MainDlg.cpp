@@ -4,7 +4,6 @@
 #include "AboutDlg.h"
 #include <wxx_wincore.h>
 #include <xlog/xlog.h>
-#include <cstring>
 #include <common/version.h>
 #include <common/ErrorUtils.h>
 #include <launcher_common/PatchedAppLauncher.h>
@@ -124,8 +123,9 @@ void MainDlg::RefreshModSelector()
     HANDLE hfind = FindFirstFileExA(mods_dir.c_str(), FindExInfoBasic, &fi, FindExSearchLimitToDirectories, NULL, 0);
     if (hfind != INVALID_HANDLE_VALUE) {
         do {
-            if (fi.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY && std::strcmp(fi.cFileName, ".") != 0 &&
-                std::strcmp(fi.cFileName, "..") != 0) {
+            bool is_dir = fi.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
+            std::string_view file_name{fi.cFileName};
+            if (is_dir && file_name != "." && file_name != "..") {
                 m_mod_selector.AddString(fi.cFileName);
             }
         } while (FindNextFileA(hfind, &fi));

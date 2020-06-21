@@ -7,6 +7,7 @@
 #include <common/rfproto.h>
 #include <algorithm>
 #include <limits>
+#include <windows.h>
 #include "server.h"
 #include "server_internal.h"
 #include "../console/console.h"
@@ -18,6 +19,7 @@
 #include "../rf/parse.h"
 #include "../rf/weapon.h"
 #include "../rf/entity.h"
+#include "../rf/os.h"
 
 const char* g_rcon_cmd_whitelist[] = {
     "kick",
@@ -351,10 +353,10 @@ FunHook<bool (const char*, int)> MpIsLevelForGameMode_hook{
     0x00445050,
     [](const char *filename, int game_mode) {
         if (game_mode == RF_CTF) {
-            return _strnicmp(filename, "ctf", 3) == 0 || _strnicmp(filename, "pctf", 4) == 0;
+            return StringStartsWithIgnoreCase(filename, "ctf") || StringStartsWithIgnoreCase(filename, "pctf");
         }
         else {
-            return _strnicmp(filename, "dm", 2) == 0 || _strnicmp(filename, "pdm", 3) == 0;
+            return StringStartsWithIgnoreCase(filename, "dm") || StringStartsWithIgnoreCase(filename, "pdm");
         }
     },
 };

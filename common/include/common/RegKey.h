@@ -1,9 +1,6 @@
 #pragma once
 
-#include <stdexcept>
 #include <windows.h>
-#include <memory>
-#include <cstring>
 #include <common/Win32Error.h>
 
 template<typename T>
@@ -90,7 +87,7 @@ public:
         if (error != ERROR_SUCCESS) {
             return false;
         }
-        value->resize(std::strlen(value->c_str()));
+        value->resize(value->find('\0'));
         return true;
     }
 

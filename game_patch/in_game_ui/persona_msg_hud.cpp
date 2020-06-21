@@ -7,6 +7,7 @@
 #include "../rf/sound.h"
 #include <patch_common/AsmWriter.h>
 #include <algorithm>
+#include <cstring>
 
 bool g_big_hud_persona = false;
 

@@ -3,7 +3,6 @@
 #include <common/GameConfig.h>
 #include <functional>
 #include <map>
-//#include <windows.h>
 #include "rf/common.h"
 
 // Forward declarations

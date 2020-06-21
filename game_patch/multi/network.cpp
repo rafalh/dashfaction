@@ -6,6 +6,7 @@
 #include "../rf/weapon.h"
 #include "../rf/entity.h"
 #include "../rf/debug_console.h"
+#include "../rf/os.h"
 #include "../server/server.h"
 #include "../misc/misc.h"
 #include "../main.h"

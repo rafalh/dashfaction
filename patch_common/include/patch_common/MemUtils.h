@@ -1,7 +1,6 @@
 #pragma once
 
-#include <cstring>
-#include <stdint.h>
+#include <cstdint>
 
 template<typename T>
 struct TypeIdentity
@@ -31,11 +30,6 @@ template<typename T>
 inline void WriteMemPtr(unsigned addr, T* value)
 {
     WriteMem(addr, &value, sizeof(value));
-}
-
-inline void WriteMemStr(unsigned addr, const char* str)
-{
-    WriteMem(addr, str, std::strlen(str) + 1);
 }
 
 template<typename T>

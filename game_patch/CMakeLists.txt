@@ -52,6 +52,7 @@ set(SRCS
     rf/misc.h
     rf/network.h
     rf/object.h
+    rf/os.h
     rf/parse.h
     rf/player.h
     rf/sound.h

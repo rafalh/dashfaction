@@ -5,7 +5,6 @@
 #include <common/ErrorUtils.h>
 #include <wxx_wincore.h>
 #include <wxx_dialog.h>
-#include <cstring>
 #include "res/resource.h"
 
 MainDlg::MainDlg() : CDialog(IDD_MAIN)

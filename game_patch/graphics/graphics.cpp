@@ -10,6 +10,7 @@
 #include "../rf/player.h"
 #include "../rf/network.h"
 #include "../rf/hud.h"
+#include "../rf/os.h"
 #include "../utils/com-utils.h"
 #include "../utils/string-utils.h"
 #include <common/BuildConfig.h>

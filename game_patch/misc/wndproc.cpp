@@ -1,5 +1,5 @@
 #include "wndproc.h"
-#include "../rf/misc.h"
+#include "../rf/os.h"
 #include "../rf/network.h"
 #include "../rf/input.h"
 #include <windows.h>

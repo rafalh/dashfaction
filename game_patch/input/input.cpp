@@ -3,7 +3,7 @@
 #include <windows.h>
 #include <algorithm>
 #include <cctype>
-#include "../rf/misc.h"
+#include "../rf/os.h"
 #include "../rf/graphics.h"
 #include "../rf/network.h"
 #include "../rf/player.h"

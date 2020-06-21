@@ -265,7 +265,7 @@ void DrawScoreboardInternal_New(bool draw)
     // Animation
     float anim_progress = 1.0f, progress_w = 1.0f, progress_h = 1.0f;
     if (g_game_config.scoreboard_anim) {
-        unsigned anim_delta = GetTickCount() - g_anim_ticks;
+        unsigned anim_delta = rf::TimerGet(1000) - g_anim_ticks;
         if (g_enter_anim)
             anim_progress = anim_delta / ENTER_ANIM_MS;
         else if (g_leave_anim)
@@ -359,13 +359,13 @@ void HudRender_00437BC0()
         if (!g_scoreboard_visible && show_scoreboard) {
             g_enter_anim = true;
             g_leave_anim = false;
-            g_anim_ticks = GetTickCount();
+            g_anim_ticks = rf::TimerGet(1000);
             g_scoreboard_visible = true;
         }
         if (g_scoreboard_visible && !show_scoreboard && !g_leave_anim) {
             g_enter_anim = false;
             g_leave_anim = true;
-            g_anim_ticks = GetTickCount();
+            g_anim_ticks = rf::TimerGet(1000);
         }
     }
     else

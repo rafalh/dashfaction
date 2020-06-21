@@ -1,6 +1,7 @@
 #pragma once
 
 #include <patch_common/MemUtils.h>
+#include <memory>
 #include "../utils/string-utils.h"
 #include "common.h"
 

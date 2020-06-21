@@ -85,20 +85,25 @@ FunHook<void(const char*, const int*)> DcPrint_hook{
 
         ResetConsoleCursorColumn(true);
 
-        const char* ptr = text;
-        while (*ptr) {
+        constexpr std::string_view color_prefix{"[$"};
+        constexpr std::string_view color_suffix{"]"};
+        std::string_view text_sv{text};
+        size_t pos = 0;
+        while (pos < text_sv.size()) {
             std::string color;
-            if (ptr[0] == '[' && ptr[1] == '$') {
-                const char* color_end_ptr = strchr(ptr + 2, ']');
-                if (color_end_ptr) {
-                    color.assign(ptr + 2, color_end_ptr - ptr - 2);
-                    ptr = color_end_ptr + 1;
+            if (text_sv.substr(pos, color_prefix.size()) == color_prefix) {
+                size_t color_name_pos = pos + color_prefix.size();
+                size_t color_suffix_pos = text_sv.find(color_suffix, color_name_pos);
+                if (color_suffix_pos != std::string_view::npos) {
+                    color = text_sv.substr(color_name_pos, color_suffix_pos - color_name_pos);
+                    pos = color_suffix_pos + color_suffix.size();
                 }
             }
-
-            const char* end_ptr = strstr(ptr, "[$");
-            if (!end_ptr)
-                end_ptr = ptr + strlen(ptr);
+            size_t end_pos = text_sv.find(color_prefix, pos);
+            if (end_pos == std::string_view::npos) {
+                end_pos = text_sv.size();
+            }
+            std::string_view text_part = text_sv.substr(pos, end_pos - pos);
 
             WORD attr;
             if (color == "Red")
@@ -118,12 +123,11 @@ FunHook<void(const char*, const int*)> DcPrint_hook{
                 SetConsoleTextAttribute(output_handle, attr);
             }
 
-            DWORD num_chars = end_ptr - ptr;
-            WriteFile(output_handle, ptr, num_chars, nullptr, nullptr);
-            ptr = end_ptr;
+            WriteFile(output_handle, text_part.data(), text_part.size(), nullptr, nullptr);
+            pos = end_pos;
         }
 
-        if (ptr > text && ptr[-1] != '\n')
+        if (pos > 0 && text_sv[-1] != '\n')
             WriteFile(output_handle, "\n", 1, nullptr, nullptr);
 
         if (current_attr != gray_attr)
@@ -146,7 +150,7 @@ FunHook<void()> DcDrawServerConsole_hook{
     0x0050A770,
     []() {
         static char prev_cmd_line[sizeof(rf::dc_cmd_line)];
-        if (strncmp(rf::dc_cmd_line, prev_cmd_line, std::size(prev_cmd_line)) != 0) {
+        if (std::strncmp(rf::dc_cmd_line, prev_cmd_line, std::size(prev_cmd_line)) != 0) {
             ResetConsoleCursorColumn(true);
             PrintCmdInputLine();
             std::strcpy(prev_cmd_line, rf::dc_cmd_line);
@@ -179,7 +183,7 @@ FunHook<int()> KeyGetFromQueue_hook{
 
 void InitWin32ServerConsole()
 {
-    g_win32_console = stristr(GetCommandLineA(), "-win32-console") != nullptr;
+    g_win32_console = StringContainsIgnoreCase(GetCommandLineA(), "-win32-console");
     if (g_win32_console) {
         OsInitWindow_Server_hook.Install();
         DcPrint_hook.Install();
