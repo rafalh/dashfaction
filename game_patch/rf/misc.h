@@ -92,6 +92,10 @@ namespace rf
         static const auto &was_killed_by = array[694];
         static const auto &was_killed_mysteriously = array[695];
         static const auto &score = array[720];
+        static const auto &close_combat = array[779];
+        static const auto &semi_auto = array[780];
+        static const auto &heavy = array[781];
+        static const auto &explosive = array[782];
         static const auto &player_name = array[835];
         static const auto &exiting_game = array[884];
         static const auto &usage = array[886];

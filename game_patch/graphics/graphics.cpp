@@ -10,6 +10,7 @@
 #include "../rf/player.h"
 #include "../rf/network.h"
 #include "../rf/hud.h"
+#include "../rf/game_seq.h"
 #include "../rf/os.h"
 #include "../utils/com-utils.h"
 #include "../utils/string-utils.h"
@@ -905,10 +906,14 @@ void GraphicsDrawFpsCounter()
         auto text = StringFormat("FPS: %.1f", rf::current_fps);
         rf::GrSetColor(0, 255, 0, 255);
         int x = rf::GrGetMaxWidth() - (g_game_config.big_hud ? 165 : 90);
-        int y = g_game_config.big_hud ? 110 : 60;
-        if (IsDoubleAmmoHud()) {
-            y += g_game_config.big_hud ? 80 : 40;
+        int y = 10;
+        if (rf::GameSeqIsCurrentlyInGame()) {
+            y = g_game_config.big_hud ? 110 : 60;
+            if (IsDoubleAmmoHud()) {
+                y += g_game_config.big_hud ? 80 : 40;
+            }
         }
+
         int font_id = HudGetDefaultFont();
         rf::GrString(x, y, text.c_str(), font_id);
     }

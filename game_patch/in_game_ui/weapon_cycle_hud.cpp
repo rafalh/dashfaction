@@ -31,21 +31,21 @@ void RenderSelectWeaponGui()
     const char* weapon_type_name = nullptr;
     switch (selected_cycle_entry.type) {
     case 0:
-        weapon_type_name = rf::strings::array[779]; // Close Combat
+        weapon_type_name = rf::strings::close_combat;
         break;
     case 1:
-        weapon_type_name = rf::strings::array[780]; // Semi-Auto
+        weapon_type_name = rf::strings::semi_auto;
         break;
     case 2:
-        weapon_type_name = rf::strings::array[781]; // Heavy
+        weapon_type_name = rf::strings::heavy;
         break;
     case 3:
-        weapon_type_name = rf::strings::array[782]; // Explosive
+        weapon_type_name = rf::strings::explosive;
         break;
     default:
         break;
     }
-    int weapon_type_y = g_big_weapon_cycle_hud ? 200 : 113;
+    int weapon_type_y = g_big_weapon_cycle_hud ? 210 : 113;
     int center_x = clip_w - (g_big_weapon_cycle_hud ? 148 : 74);
     if (weapon_type_name) {
         rf::GrStringAligned(rf::GR_ALIGN_CENTER, center_x, weapon_type_y, weapon_type_name, font_num);
