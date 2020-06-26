@@ -3,3 +3,4 @@
 void ApplyHudPatches();
 int HudGetDefaultFont();
 int HudGetLargeFont();
+bool IsDoubleAmmoHud();

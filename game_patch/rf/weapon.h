@@ -258,6 +258,8 @@ namespace rf
     static auto& weapon_classes = AddrAsRef<WeaponClass[64]>(0x0085CD08);
     static auto& riot_stick_cls_id = AddrAsRef<int32_t>(0x00872468);
     static auto& remote_charge_cls_id = AddrAsRef<int32_t>(0x0087210C);
+    static auto& machine_pistol_cls_id = AddrAsRef<int32_t>(0x0085CCD8);
+    static auto& machine_pistol_special_cls_id = AddrAsRef<int32_t>(0x0085CD00);
     static auto& hide_enemy_bullets = AddrAsRef<bool>(0x005A24D0);
 
     static auto& WeaponClsIsDetonator = AddrAsRef<bool(int weapon_cls_id)>(0x004C9070);

@@ -904,8 +904,11 @@ void GraphicsDrawFpsCounter()
     if (g_game_config.fps_counter && !rf::is_hud_hidden) {
         auto text = StringFormat("FPS: %.1f", rf::current_fps);
         rf::GrSetColor(0, 255, 0, 255);
-        int x = rf::GrGetMaxWidth() - (g_game_config.big_hud ? 150 : 90);
-        int y = g_game_config.big_hud ? 120 : 60;
+        int x = rf::GrGetMaxWidth() - (g_game_config.big_hud ? 165 : 90);
+        int y = g_game_config.big_hud ? 110 : 60;
+        if (IsDoubleAmmoHud()) {
+            y += g_game_config.big_hud ? 80 : 40;
+        }
         int font_id = HudGetDefaultFont();
         rf::GrString(x, y, text.c_str(), font_id);
     }

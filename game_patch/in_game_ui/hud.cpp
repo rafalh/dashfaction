@@ -7,6 +7,9 @@
 #include "../rf/hud.h"
 #include "../rf/network.h"
 #include "../rf/fs.h"
+#include "../rf/entity.h"
+#include "../rf/player.h"
+#include "../rf/weapon.h"
 #include <patch_common/FunHook.h>
 #include <patch_common/CallHook.h>
 #include <xlog/xlog.h>
@@ -474,4 +477,17 @@ void ApplyHudPatches()
     InstallWeaponCycleHudPatches();
     InstallPersonaMsgHudPatches();
     ApplyTeamScoresHudPatches();
+}
+
+bool IsDoubleAmmoHud()
+{
+    if (rf::is_multi) {
+        return false;
+    }
+    auto entity = rf::EntityGetByHandle(rf::local_player->entity_handle);
+    if (!entity) {
+        return false;
+    }
+    auto weapon_cls_id = entity->ai_info.weapon_cls_id;
+    return weapon_cls_id == rf::machine_pistol_cls_id || weapon_cls_id == rf::machine_pistol_special_cls_id;
 }
