@@ -131,6 +131,14 @@ CallHook<void(int, int, int, rf::GrRenderState)> HudRenderAmmo_GrBitmap_hook{
     },
 };
 
+FunHook<void(rf::EntityObj*, int, int, bool)> HudRenderAmmo_hook{
+    0x0043A510,
+    [](rf::EntityObj *entity, int weapon_cls_id, int offset_y, bool is_inactive) {
+        offset_y = static_cast<int>(offset_y * g_hud_ammo_scale);
+        HudRenderAmmo_hook.CallTarget(entity, weapon_cls_id, offset_y, is_inactive);
+    },
+};
+
 CallHook<void(int, int, int, rf::GrRenderState)> RenderReticle_GrBitmap_hook{
     {
         0x0043A499,
@@ -451,6 +459,7 @@ void ApplyHudPatches()
 
     // Big HUD support
     HudRenderAmmo_GrBitmap_hook.Install();
+    HudRenderAmmo_hook.Install();
     RenderReticle_GrBitmap_hook.Install();
     HudRenderStatusMsg_GrGetFontHeight_hook.Install();
     HudRenderPowerUps_GrBitmap_hook.Install();
