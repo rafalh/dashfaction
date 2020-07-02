@@ -656,6 +656,7 @@ FunHook<void(int*, void*, int, int, int, rf::GrRenderState, int)> gr_d3d_queue_t
 FunHook<void()> update_mesh_lighting_hook{
     0x0048B0E0,
     []() {
+        xlog::trace("update_mesh_lighting_hook");
         // Init transform for lighting calculation
         auto& gr_view_matrix = AddrAsRef<rf::Matrix3>(0x018186C8);
         auto& gr_view_pos = AddrAsRef<rf::Vector3>(0x01818690);
@@ -671,6 +672,7 @@ FunHook<void()> update_mesh_lighting_hook{
         // Enable some experimental flag that causes static lights to be included in computations
         auto old_experimental_alloc_and_lighting = experimental_alloc_and_lighting;
         experimental_alloc_and_lighting = true;
+        light_cache_key++;
         // Calculate lightins for meshes now
         update_mesh_lighting_hook.CallTarget();
         experimental_alloc_and_lighting = old_experimental_alloc_and_lighting;
