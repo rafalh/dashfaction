@@ -147,6 +147,8 @@ Configuration example:
     $DF Player Damage Modifier: 1.0
     // Enable '/save' and '/load' chat commands (works for all clients) and quick save/load controls handling (works for Dash Faction 1.5.0+ clients). Option designed with run-maps in mind.
     $DF Saving Enabled: false
+    // Force all players to use the same character (check pc_multi.tbl for valid names)
+    $DF Force Player Character: "enviro_parker"
 
 License
 -------

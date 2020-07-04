@@ -42,6 +42,7 @@ struct ServerAdditionalConfig
     bool require_client_mod = true;
     float player_damage_modifier = 1.0f;
     bool saving_enabled = false;
+    std::optional<int> force_player_character;
 };
 
 extern ServerAdditionalConfig g_additional_server_config;

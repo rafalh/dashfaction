@@ -127,6 +127,7 @@ namespace rf
     static auto& SendEntityCreatePacket = AddrAsRef<void(EntityObj *entity, Player* player)>(0x00475160);
     static auto& SendEntityCreatePacketToAll = AddrAsRef<void(EntityObj *entity)>(0x00475110);
     static auto& NwInitSocket = AddrAsRef<void(unsigned short port)>(0x00528F10);
+    static auto& MultiFindCharacter = AddrAsRef<int(const char *name)>(0x00476270);
 
     static auto& nw_sock = AddrAsRef<int>(0x005A660C);
     static auto& nw_port = AddrAsRef<unsigned short>(0x01B587D4);

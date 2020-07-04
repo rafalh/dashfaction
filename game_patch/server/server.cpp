@@ -116,6 +116,18 @@ void LoadAdditionalServerConfig(rf::StrParser& parser)
         g_additional_server_config.saving_enabled = parser.GetBool();
     }
 
+    if (parser.OptionalString("$DF Force Player Character:")) {
+        rf::String character_name;
+        parser.GetString(&character_name);
+        int character_num = rf::MultiFindCharacter(character_name.CStr());
+        if (character_num != -1) {
+            g_additional_server_config.force_player_character = {character_num};
+        }
+        else {
+            xlog::warn("Unknown character name in Force Player Character setting: %s", character_name.CStr());
+        }
+    }
+
     if (!parser.OptionalString("$Name:") && !parser.OptionalString("#End")) {
         parser.Error("end of server configuration");
     }
@@ -453,6 +465,16 @@ CodeInjection MultiOnNewPlayer_injection{
     },
 };
 
+FunHook<void(rf::Player*)> MultiSpawnPlayerServerSide_hook{
+    0x00480820,
+    [](rf::Player* player) {
+        if (g_additional_server_config.force_player_character) {
+            player->config.mp_character = g_additional_server_config.force_player_character.value();
+        }
+        MultiSpawnPlayerServerSide_hook.CallTarget(player);
+    },
+};
+
 void ServerInit()
 {
     // Override rcon command whitelist
@@ -514,6 +536,9 @@ void ServerInit()
     // Customized dedicated server console message when player joins
     MultiOnNewPlayer_injection.Install();
     AsmWriter(0x0047B061, 0x0047B064).add(asm_regs::esp, 0x14);
+
+    // Support forcing player character
+    MultiSpawnPlayerServerSide_hook.Install();
 }
 
 void ServerCleanup()
