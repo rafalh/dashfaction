@@ -42,6 +42,7 @@ struct GameConfig
     CfgVar<bool> high_monitor_res = true;
     CfgVar<bool> true_color_textures = true;
     CfgVar<bool> damage_screen_flash = true;
+    CfgVar<bool> mesh_static_lighting = true;
 
     // Multiplayer
     CfgVar<std::string> tracker{DEFAULT_RF_TRACKER};

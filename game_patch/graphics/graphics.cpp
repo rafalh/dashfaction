@@ -667,18 +667,41 @@ FunHook<void()> update_mesh_lighting_hook{
         light_matrix.SetIdentity();
         light_base = rf::Vector3(.0f, .0f, .0f);
 
-        auto& experimental_alloc_and_lighting = AddrAsRef<bool>(0x00879AF8);
-        auto& light_cache_key = AddrAsRef<int>(0x00C96874);
-        // Enable some experimental flag that causes static lights to be included in computations
-        auto old_experimental_alloc_and_lighting = experimental_alloc_and_lighting;
-        experimental_alloc_and_lighting = true;
-        light_cache_key++;
-        // Calculate lightins for meshes now
-        update_mesh_lighting_hook.CallTarget();
-        experimental_alloc_and_lighting = old_experimental_alloc_and_lighting;
-        // Change cache key to rebuild cached arrays of lights in rooms - this is needed to get rid of static lights
-        light_cache_key++;
+        if (g_game_config.mesh_static_lighting) {
+            auto& experimental_alloc_and_lighting = AddrAsRef<bool>(0x00879AF8);
+            auto& light_cache_key = AddrAsRef<int>(0x00C96874);
+            // Enable some experimental flag that causes static lights to be included in computations
+            auto old_experimental_alloc_and_lighting = experimental_alloc_and_lighting;
+            experimental_alloc_and_lighting = true;
+            light_cache_key++;
+            // Calculate lighting for meshes now
+            update_mesh_lighting_hook.CallTarget();
+            experimental_alloc_and_lighting = old_experimental_alloc_and_lighting;
+            // Change cache key to rebuild cached arrays of lights in rooms - this is needed to get rid of static lights
+            light_cache_key++;
+        }
+        else {
+            update_mesh_lighting_hook.CallTarget();
+        }
     },
+};
+
+void RecalcMeshStaticLighting()
+{
+    AddrCaller{0x0048B370}.c_call(); // CleanupMeshLighting
+    AddrCaller{0x0048B1D0}.c_call(); // AllocBuffersForMeshLighting
+    AddrCaller{0x0048B0E0}.c_call(); // UpdateMeshLighting
+}
+
+DcCommand2 mesh_static_lighting_cmd{
+    "mesh_static_lighting",
+    []() {
+        g_game_config.mesh_static_lighting = !g_game_config.mesh_static_lighting;
+        g_game_config.save();
+        RecalcMeshStaticLighting();
+        rf::DcPrintf("Mesh static lighting is %s", g_game_config.mesh_static_lighting ? "enabled" : "disabled");
+    },
+    "Toggle mesh static lighting calculation",
 };
 
 void ApplyTexturePatches();
@@ -894,6 +917,7 @@ void GraphicsInit()
 
     // Fix/improve items and clutters static lighting calculation: fix matrices being zero and use static lights
     update_mesh_lighting_hook.Install();
+    mesh_static_lighting_cmd.Register();
 
     // Fix invalid vertex offset in mesh lighting calculation
     WriteMem<i8>(0x005042F0 + 2, sizeof(rf::Vector3));

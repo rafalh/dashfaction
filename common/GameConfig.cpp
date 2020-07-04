@@ -164,6 +164,7 @@ bool GameConfig::visit_vars(T visitor, bool is_save)
     result &= visitor(dash_faction_key, "Reduced Speed In Background", reduced_speed_in_background);
     result &= visitor(dash_faction_key, "Big HUD", big_hud);
     result &= visitor(dash_faction_key, "Reticle Scale", reticle_scale);
+    result &= visitor(dash_faction_key, "Mesh Static Lighting", mesh_static_lighting);
     return result;
 }
 
