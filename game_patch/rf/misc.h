@@ -70,6 +70,7 @@ namespace rf
     static auto& default_player_weapon = AddrAsRef<String>(0x007C7600);
     static auto& active_cutscene = AddrAsRef<void*>(0x00645320);
     static auto& rfl_static_geometry = AddrAsRef<void*>(0x006460E8);
+    static auto& lan_only_cmd_line_param = AddrAsRef<CmdLineParam>(0x0063F608);
 
     static auto& RfBeep = AddrAsRef<void(unsigned u1, unsigned u2, unsigned u3, float volume)>(0x00505560);
     static auto& SetNextLevelFilename = AddrAsRef<void(String::Pod level_filename, String::Pod save_filename)>(0x0045E2E0);

@@ -780,12 +780,17 @@ FunHook<void(int, rf::NwAddr*)> multi_start_hook{
             closesocket(rf::nw_sock);
             rf::NwInitSocket(7755);
         }
-        if (!is_client) {
-            // Auto forward server port using UPnP (in background thread)
-            std::thread upnp_thread{TryToAutoForwardPort, rf::nw_port};
-            upnp_thread.detach();
-        }
         multi_start_hook.CallTarget(is_client, serv_addr);
+    },
+};
+
+FunHook<void()> TrackerDoBroadcastServer_hook{
+    0x00483130,
+    []() {
+        TrackerDoBroadcastServer_hook.CallTarget();
+        // Auto forward server port using UPnP (in background thread)
+        std::thread upnp_thread{TryToAutoForwardPort, rf::nw_port};
+        upnp_thread.detach();
     },
 };
 
@@ -930,4 +935,7 @@ void NetworkInit()
 
     // Use port 7755 when hosting a server without 'Force port' option
     multi_start_hook.Install();
+
+    // Use UPnP for port forwarding if server is not in LAN-only mode
+    TrackerDoBroadcastServer_hook.Install();
 }
