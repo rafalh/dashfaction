@@ -442,6 +442,17 @@ CodeInjection send_ping_time_wrap_fix{
     },
 };
 
+CodeInjection MultiOnNewPlayer_injection{
+    0x0047B013,
+    [](auto& regs) {
+        auto player = reinterpret_cast<rf::Player*>(regs.esi);
+        in_addr addr;
+        addr.S_un.S_addr = ntohl(player->nw_data->addr.ip_addr);
+        rf::DcPrintf("%s%s (%s)", player->name.CStr(),  rf::strings::has_joined, inet_ntoa(addr));
+        regs.eip = 0x0047B051;
+    },
+};
+
 void ServerInit()
 {
     // Override rcon command whitelist
@@ -499,6 +510,10 @@ void ServerInit()
 
     // Ignore obj_update position for some time after teleportation
     ProcessObjUpdate_set_pos_injection.Install();
+
+    // Customized dedicated server console message when player joins
+    MultiOnNewPlayer_injection.Install();
+    AsmWriter(0x0047B061, 0x0047B064).add(asm_regs::esp, 0x14);
 }
 
 void ServerCleanup()

@@ -49,6 +49,7 @@ Version 1.5.0
 - add 'Rate' setting in Options window (allows specifying network connection speed)
 - add 'Adapter' setting in Options window (allows selection of graphics card)
 - insert server name in window title when hosting dedicated server
+- display joining player IP address in dedicated server console
 - fix sending crash reports
 - fix non-working face scrolling before first geomod use in custom levels (RF bug)
 - fix memory and VRAM leak when quick saving (RF bug)
