@@ -13,6 +13,7 @@
 #include <patch_common/FunHook.h>
 #include <patch_common/CallHook.h>
 #include <xlog/xlog.h>
+#include <cassert>
 
 float g_hud_ammo_scale = 1.0f;
 int g_target_player_name_font = -1;
@@ -125,9 +126,18 @@ FunHook HudSetupPositions_hook{0x004377C0, HudSetupPositions};
 
 CallHook<void(int, int, int, rf::GrRenderState)> HudRenderAmmo_GrBitmap_hook{
     {
+        // HudRenderAmmoClip
         0x0043A5E9u,
         0x0043A637u,
         0x0043A680u,
+        // HudRenderAmmoPower
+        0x0043A988u,
+        0x0043A9DDu,
+        0x0043AA24u,
+        // HudRenderAmmoNoClip
+        0x0043AE80u,
+        0x0043AEC3u,
+        0x0043AF0Au,
     },
     [](int bm_handle, int x, int y, rf::GrRenderState render_state) {
         HudScaledBitmap(bm_handle, x, y, g_hud_ammo_scale, render_state);
@@ -197,6 +207,8 @@ void SetBigAmmo(bool is_big)
         rf::hud_ammo_icon_position_no_clip,
         rf::hud_ammo_in_inv_ul_region_coord_no_clip,
         rf::hud_ammo_in_inv_text_width_and_height_no_clip,
+        rf::hud_ammo_in_clip_ul_coord,
+        rf::hud_ammo_in_clip_width_and_height,
     };
     g_hud_ammo_scale = is_big ? 1.875f : 1.0f;
     for (auto item_num : ammo_hud_items) {
@@ -270,15 +282,25 @@ void HudScaledBitmap(int bmh, int x, int y, float scale, rf::GrRenderState rende
 {
     static std::unordered_map<int, int> hi_res_bm_map;
     if (scale > 1.0f) {
-        // Use bitmap with '_2x' suffix if it exists
+        // Use bitmap with "_1" suffix instead of "_0" if it exists
         int hi_res_bm = -1;
         auto it = hi_res_bm_map.find(bmh);
         if (it == hi_res_bm_map.end()) {
             std::string filename = rf::BmGetFilename(bmh);
-            auto dot_pos = filename.rfind('.');
-            if (dot_pos != std::string::npos) {
-                filename.insert(dot_pos, "_2x");
+            auto ext_pos = filename.rfind('.');
+            if (ext_pos != std::string::npos) {
+                if (ext_pos >= 2 && filename.compare(ext_pos - 2, 2, "_0") == 0) {
+                    // ends with "_0" - replace '0' by '1'
+                    filename[ext_pos - 1] = '1';
+                }
+                else {
+                    // does not end with "_0" - append "_1"
+                    filename.insert(ext_pos, "_1");
+                    assert(filename.size() < 32);
+                }
             }
+
+            xlog::info("loading high res bm %s", filename.c_str());
             rf::File file;
             if (file.Open(filename.c_str()) == 0) {
                 file.Close();
