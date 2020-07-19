@@ -51,6 +51,7 @@ Version 1.5.0
 - insert server name in window title when hosting dedicated server
 - display joining player IP address in dedicated server console
 - add dedicated server option for forcing player character
+- add '-exe-path' launcher command line argument that allows running multiple dedicated servers using separate RF directories
 - fix sending crash reports
 - fix non-working face scrolling before first geomod use in custom levels (RF bug)
 - fix memory and VRAM leak when quick saving (RF bug)

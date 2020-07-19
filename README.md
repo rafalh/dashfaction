@@ -86,6 +86,7 @@ Dash Faction specific arguments:
 * `-game` - launch game immediately without displaying the launcher window
 * `-editor` - launch mod immediately without displaying the launcher window
 * `-win32-console` - use native Win32 console in dedicated server mode
+* `-exe-path` - override launched executable path (RF.exe or RED.exe) - useful for running multiple dedicated servers using separate RF directories
 
 Problems
 --------

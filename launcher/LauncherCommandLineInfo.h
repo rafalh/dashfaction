@@ -23,7 +23,7 @@ public:
                 else if (arg == "-help" || arg == "-h") {
                     m_help = true;
                 }
-                else if (arg == "-exepath") {
+                else if (arg == "-exe-path") {
                     m_exe_path = {args[++i].c_str()};
                 }
             }
