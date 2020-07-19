@@ -75,7 +75,7 @@ class CodeInjection2;
 class BaseCodeInjectionWithRegsAccess : public BaseCodeInjection
 {
 protected:
-    typedef void (__thiscall * WrapperPtr)(void* this_, Regs& regs);
+    typedef void *WrapperPtr;
 
     WrapperPtr m_wrapper_ptr;
 
@@ -110,7 +110,7 @@ private:
 class BaseCodeInjectionWithoutRegsAccess : public BaseCodeInjection
 {
 protected:
-    typedef void (__thiscall * WrapperPtr)(void* this_);
+    typedef void *WrapperPtr;
 
     WrapperPtr m_wrapper_ptr;
 
