@@ -24,6 +24,11 @@
 #define RED_120_NA_SHA1 "b4f421bfa9343362d7cc565e9f7ab8c6cc36f3a2"
 #define TABLES_VPP_SHA1 "ded5e1b5932f47044ba760699d5931fda6bdc8ba"
 
+inline bool is_no_gui_mode()
+{
+    return GetSystemMetrics(SM_CMONITORS) == 0;
+}
+
 std::string PatchedAppLauncher::get_patch_dll_path()
 {
     char buf[MAX_PATH];
@@ -50,6 +55,49 @@ std::string PatchedAppLauncher::get_app_path()
 void PatchedAppLauncher::launch(const char* mod_name)
 {
     std::string app_path = get_app_path();
+    std::string work_dir = get_dir_from_path(app_path);
+    verify_before_launch();
+
+    STARTUPINFO si;
+    setup_startup_info(si);
+
+    std::string cmd_line = build_cmd_line(app_path, mod_name);
+
+    xlog::info("Starting the process: %s", app_path.c_str());
+    try {
+        InjectingProcessLauncher proc_launcher{app_path.c_str(), work_dir.c_str(), cmd_line.c_str(), si, INIT_TIMEOUT};
+
+        std::string patch_dll_path = get_patch_dll_path();
+        xlog::info("Injecting %s", patch_dll_path.c_str());
+        proc_launcher.inject_dll(patch_dll_path.c_str(), "Init", INIT_TIMEOUT);
+
+        xlog::info("Resuming app main thread");
+        proc_launcher.resume_main_thread();
+        xlog::info("Process launched successfully");
+
+        // Wait for child process in Wine No GUI mode
+        if (is_no_gui_mode()) {
+            xlog::info("Waiting for app to close");
+            proc_launcher.wait(INFINITE);
+        }
+    }
+    catch (const Win32Error& e)
+    {
+        if (e.error() == ERROR_ELEVATION_REQUIRED)
+            throw PrivilegeElevationRequiredException();
+        throw;
+    }
+    catch (const ProcessTerminatedError&)
+    {
+        throw LauncherError(
+            "Game process has terminated before injection!\n"
+            "Check your Red Faction installation.");
+    }
+}
+
+void PatchedAppLauncher::verify_before_launch()
+{
+    std::string app_path = get_app_path();
     xlog::info("Verifying %s SHA1", app_path.c_str());
     std::ifstream file(app_path.c_str(), std::fstream::in | std::fstream::binary);
     if (!file.is_open()) {
@@ -73,20 +121,24 @@ void PatchedAppLauncher::launch(const char* mod_name)
             "Game directory validation has failed.\nPlease make sure game executable specified in options is located "
             "inside a valid Red Faction installation root directory.");
     }
+}
 
-    STARTUPINFO si;
-    ZeroMemory(&si, sizeof(si));
-    si.cb = sizeof(si);
+void PatchedAppLauncher::setup_startup_info(_STARTUPINFOA& startup_info)
+{
+    ZeroMemory(&startup_info, sizeof(startup_info));
+    startup_info.cb = sizeof(startup_info);
 
-    bool no_gui = GetSystemMetrics(SM_CMONITORS) == 0;
-    if (no_gui) {
+    if (is_no_gui_mode()) {
         // Redirect std handles - fixes nohup logging
-        si.dwFlags |= STARTF_USESTDHANDLES;
-        si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
-        si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
-        si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
+        startup_info.dwFlags |= STARTF_USESTDHANDLES;
+        startup_info.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
+        startup_info.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+        startup_info.hStdError = GetStdHandle(STD_ERROR_HANDLE);
     }
+}
 
+std::string PatchedAppLauncher::build_cmd_line(const std::string& app_path, const char* mod_name)
+{
     std::string cmd_line;
     cmd_line += '"';
     cmd_line += app_path;
@@ -96,37 +148,7 @@ void PatchedAppLauncher::launch(const char* mod_name)
         cmd_line += " -mod ";
         cmd_line += mod_name;
     }
-
-    xlog::info("Starting the process: %s", app_path.c_str());
-    try {
-        InjectingProcessLauncher proc_launcher{app_path.c_str(), work_dir.c_str(), cmd_line.c_str(), si, INIT_TIMEOUT};
-
-        std::string mod_path = get_patch_dll_path();
-        xlog::info("Injecting %s", mod_path.c_str());
-        proc_launcher.inject_dll(mod_path.c_str(), "Init", INIT_TIMEOUT);
-
-        xlog::info("Resuming app main thread");
-        proc_launcher.resume_main_thread();
-        xlog::info("Process launched successfully");
-
-        // Wait for child process in Wine No GUI mode
-        if (no_gui) {
-            xlog::info("Waiting for app to close");
-            proc_launcher.wait(INFINITE);
-        }
-    }
-    catch (const Win32Error& e)
-    {
-        if (e.error() == ERROR_ELEVATION_REQUIRED)
-            throw PrivilegeElevationRequiredException();
-        throw;
-    }
-    catch (const ProcessTerminatedError&)
-    {
-        throw LauncherError(
-            "Game process has terminated before injection!\n"
-            "Check your Red Faction installation.");
-    }
+    return cmd_line;
 }
 
 void PatchedAppLauncher::check_installation()

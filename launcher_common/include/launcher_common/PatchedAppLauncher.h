@@ -5,6 +5,8 @@
 #include <string>
 #include <optional>
 
+struct _STARTUPINFOA;
+
 class FileNotFoundException : public std::runtime_error
 {
 public:
@@ -74,6 +76,11 @@ protected:
     std::string get_app_path();
     virtual std::string get_default_app_path() = 0;
     virtual bool check_app_hash(const std::string&) = 0;
+
+private:
+    void verify_before_launch();
+    void setup_startup_info(_STARTUPINFOA& startup_info);
+    std::string build_cmd_line(const std::string& app_path, const char* mod_name);
 
     std::optional<std::string> m_forced_app_exe_path;
     std::string m_patch_dll_name;
