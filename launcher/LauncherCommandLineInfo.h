@@ -2,6 +2,8 @@
 
 #include <wxx_wincore.h>
 #include <string_view>
+#include <string>
+#include <optional>
 
 class LauncherCommandLineInfo
 {
@@ -9,21 +11,23 @@ public:
     void Parse()
     {
         auto args = Win32xx::GetCommandLineArgs();
-        for (auto& arg : args) {
+        for (int i = 0; i < args.size(); ++i) {
+            std::string_view arg = args[i].c_str();
             if (arg[0] == '-') {
-                ParseFlag(arg.c_str() + 1);
+                if (arg == "-game" || arg == "-level" || arg == "-dedicated") {
+                    m_game = true;
+                }
+                else if (arg == "-editor") {
+                    m_editor = true;
+                }
+                else if (arg == "-help" || arg == "-h") {
+                    m_help = true;
+                }
+                else if (arg == "-exepath") {
+                    m_exe_path = {args[++i].c_str()};
+                }
             }
         }
-    }
-
-    void ParseFlag(std::string_view flag_name)
-    {
-        if (flag_name == "game" || flag_name == "level" || flag_name == "dedicated")
-            m_game = true;
-        if (flag_name == "editor")
-            m_editor = true;
-        if (flag_name == "help" || flag_name == "h")
-            m_help = true;
     }
 
     bool HasGameFlag() const
@@ -41,8 +45,14 @@ public:
         return m_help;
     }
 
+    std::optional<std::string> GetExePath() const
+    {
+        return m_exe_path;
+    }
+
 private:
     bool m_game = false;
     bool m_editor = false;
     bool m_help = false;
+    std::optional<std::string> m_exe_path;
 };

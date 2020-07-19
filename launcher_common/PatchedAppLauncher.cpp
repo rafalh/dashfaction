@@ -37,6 +37,16 @@ std::string PatchedAppLauncher::get_patch_dll_path()
     return dir + "\\" + m_patch_dll_name;
 }
 
+std::string PatchedAppLauncher::get_app_path()
+{
+    if (m_forced_app_exe_path) {
+        return m_forced_app_exe_path.value();
+    }
+    else {
+        return get_default_app_path();
+    }
+}
+
 void PatchedAppLauncher::launch(const char* mod_name)
 {
     std::string app_path = get_app_path();
@@ -149,7 +159,7 @@ GameLauncher::GameLauncher() : PatchedAppLauncher("DashFaction.dll")
     }
 }
 
-std::string GameLauncher::get_app_path()
+std::string GameLauncher::get_default_app_path()
 {
     return m_conf.game_executable_path;
 }
@@ -168,7 +178,7 @@ EditorLauncher::EditorLauncher() : PatchedAppLauncher("DashEditor.dll")
     }
 }
 
-std::string EditorLauncher::get_app_path()
+std::string EditorLauncher::get_default_app_path()
 {
     std::string workDir = get_dir_from_path(m_conf.game_executable_path);
     return workDir + "\\RED.exe";

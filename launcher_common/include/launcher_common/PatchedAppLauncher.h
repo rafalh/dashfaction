@@ -2,6 +2,8 @@
 
 #include <common/GameConfig.h>
 #include <stdexcept>
+#include <string>
+#include <optional>
 
 class FileNotFoundException : public std::runtime_error
 {
@@ -62,11 +64,18 @@ public:
     void check_installation();
     void launch(const char* mod_name = nullptr);
 
+    void set_app_exe_path(const std::string& app_exe_path)
+    {
+        m_forced_app_exe_path = {app_exe_path};
+    }
+
 protected:
     std::string get_patch_dll_path();
-    virtual std::string get_app_path() = 0;
+    std::string get_app_path();
+    virtual std::string get_default_app_path() = 0;
     virtual bool check_app_hash(const std::string&) = 0;
 
+    std::optional<std::string> m_forced_app_exe_path;
     std::string m_patch_dll_name;
 };
 
@@ -74,7 +83,7 @@ class GameLauncher : public PatchedAppLauncher
 {
 public:
     GameLauncher();
-    std::string get_app_path() override;
+    std::string get_default_app_path() override;
     bool check_app_hash(const std::string& sha1) override;
 
 private:
@@ -85,7 +94,7 @@ class EditorLauncher : public PatchedAppLauncher
 {
 public:
     EditorLauncher();
-    std::string get_app_path() override;
+    std::string get_default_app_path() override;
     bool check_app_hash(const std::string& sha1) override;
 
 private:

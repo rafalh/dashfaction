@@ -32,6 +32,7 @@ BOOL LauncherApp::InitInstance()
             "-game        Starts game immediately\n"
             "-level name  Starts game immediately and loads specified level\n"
             "-editor      Starts level editor immediately\n"
+            "-exepath     Override patched executable file location\n"
             "args...      Additional arguments passed to game or editor\n",
             "Dash Faction Launcher Help", MB_OK | MB_ICONINFORMATION);
         return FALSE;
@@ -43,14 +44,15 @@ BOOL LauncherApp::InitInstance()
     // Disable elevation (UAC)
     SetEnvironmentVariableA("__COMPAT_LAYER", "RunAsInvoker");
 
+
     // Launch game or editor based on command line flag
     if (cmd_line_info.HasGameFlag()) {
-        LaunchGame(nullptr);
+        LaunchGame(nullptr, nullptr, cmd_line_info.GetExePath());
         return FALSE;
     }
 
     if (cmd_line_info.HasEditorFlag()) {
-        LaunchEditor(nullptr);
+        LaunchEditor(nullptr, nullptr, cmd_line_info.GetExePath());
         return FALSE;
     }
 
@@ -82,10 +84,13 @@ void LauncherApp::MigrateConfig()
     }
 }
 
-bool LauncherApp::LaunchGame(HWND hwnd, const char* mod_name)
+bool LauncherApp::LaunchGame(HWND hwnd, const char* mod_name, std::optional<std::string> exe_path)
 {
     WatchDogTimer::ScopedStartStop wdt_start{m_watch_dog_timer};
     GameLauncher launcher;
+    if (exe_path) {
+        launcher.set_app_exe_path(exe_path.value());
+    }
 
     try {
         xlog::info("Checking installation");
@@ -169,10 +174,13 @@ bool LauncherApp::LaunchGame(HWND hwnd, const char* mod_name)
     return false;
 }
 
-bool LauncherApp::LaunchEditor(HWND hwnd, const char* mod_name)
+bool LauncherApp::LaunchEditor(HWND hwnd, const char* mod_name, std::optional<std::string> exe_path)
 {
     WatchDogTimer::ScopedStartStop wdt_start{m_watch_dog_timer};
     EditorLauncher launcher;
+    if (exe_path) {
+        launcher.set_app_exe_path(exe_path.value());
+    }
     try {
         xlog::info("Launching editor...");
         launcher.launch(mod_name);

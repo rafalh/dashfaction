@@ -3,6 +3,8 @@
 #include <wxx_wincore.h>
 #include "resource.h"
 #include <crash_handler_stub/WatchDogTimer.h>
+#include <optional>
+#include <string>
 
 class LauncherApp : public CWinApp
 {
@@ -11,8 +13,8 @@ class LauncherApp : public CWinApp
 public:
     virtual BOOL InitInstance() override;
 
-    bool LaunchGame(HWND hwnd, const char* mod_name = nullptr);
-    bool LaunchEditor(HWND hwnd, const char* mod_name = nullptr);
+    bool LaunchGame(HWND hwnd, const char* mod_name = nullptr, std::optional<std::string> rf_exe_path = {});
+    bool LaunchEditor(HWND hwnd, const char* mod_name = nullptr, std::optional<std::string> rf_exe_path = {});
 
 private:
     void MigrateConfig();
