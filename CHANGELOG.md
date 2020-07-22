@@ -87,6 +87,7 @@ Version 1.5.0
 - fix switch weapon UI resetting fire wait timer without checking old value (RF bug)
 - fix crash when particle emitter allocation fails during entity ignition (RF bug)
 - fix possible buffer overflow in console input buffer (RF bug)
+- fix possible server side crash when kicking a player using rcon (RF bug)
 
 Version 1.4.1 (released 2019-12-07)
 -----------------------------------

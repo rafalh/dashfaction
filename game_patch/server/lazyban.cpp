@@ -4,6 +4,7 @@
 #include "../rf/debug_console.h"
 #include "../rf/player.h"
 #include <patch_common/AsmWriter.h>
+#include <patch_common/CallHook.h>
 
 namespace rf
 {
@@ -19,6 +20,30 @@ static auto& banlist_last_entry = AddrAsRef<BanlistEntry*>(0x0064EC24);
 static auto& banlist_null_entry = AddrAsRef<BanlistEntry>(0x0064EC08);
 } // namespace rf
 
+std::vector<int> g_players_to_kick;
+
+void KickPlayerDelayed(rf::Player* player)
+{
+    g_players_to_kick.push_back(player->nw_data->player_id);
+}
+
+CallHook<void(rf::Player*)> KickPlayer_hook{
+    0x0047B9BD,
+    KickPlayerDelayed,
+};
+
+void ProcessDelayedKicks()
+{
+    // Process kicks outside of packet processing loop to avoid crash when a player is suddenly destroyed (00479299)
+    for (int player_id : g_players_to_kick) {
+        auto player = rf::GetPlayerById(player_id);
+        if (player) {
+            rf::KickPlayer(player);
+        }
+    }
+    g_players_to_kick.clear();
+}
+
 void BanCmdHandlerHook()
 {
     if (rf::is_multi && rf::is_server) {
@@ -30,7 +55,7 @@ void BanCmdHandlerHook()
                 if (player != rf::local_player) {
                     rf::DcPrintf(rf::strings::banning_player, player->name.CStr());
                     rf::BanIp(player->nw_data->addr);
-                    rf::KickPlayer(player);
+                    KickPlayerDelayed(player);
                 }
                 else
                     rf::DcPrintf("You cannot ban yourself!");
@@ -54,7 +79,7 @@ void KickCmdHandlerHook()
             if (player) {
                 if (player != rf::local_player) {
                     rf::DcPrintf(rf::strings::kicking_player, player->name.CStr());
-                    rf::KickPlayer(player);
+                    KickPlayerDelayed(player);
                 }
                 else
                     rf::DcPrintf("You cannot kick yourself!");
@@ -90,4 +115,6 @@ void InitLazyban()
     AsmWriter(0x0047B580).jmp(KickCmdHandlerHook);
 
     unban_last_cmd.Register();
+
+    KickPlayer_hook.Install();
 }

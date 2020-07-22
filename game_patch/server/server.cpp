@@ -551,6 +551,7 @@ void ServerCleanup()
 void ServerDoFrame()
 {
     ServerVoteDoFrame();
+    ProcessDelayedKicks();
 }
 
 void ServerOnLimboStateEnter()

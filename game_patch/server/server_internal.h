@@ -59,3 +59,4 @@ void RestartCurrentLevel();
 void LoadNextLevel();
 void LoadPrevLevel();
 void ServerVoteOnLimboStateEnter();
+void ProcessDelayedKicks();
