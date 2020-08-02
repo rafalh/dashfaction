@@ -6,6 +6,7 @@
 #include "../rf/ui.h"
 #include "../rf/graphics.h"
 #include "../rf/input.h"
+#include "../rf/fs.h"
 #include "../rf/network.h"
 #include "../main.h"
 
@@ -428,6 +429,29 @@ FunHook<void()> MenuInit_hook{
     },
 };
 
+int BmLoadIfExists(const char* name, int unk, bool generate_mipmaps)
+{
+    if (rf::FsFileExists(name)) {
+        return rf::BmLoad(name, unk, generate_mipmaps);
+    }
+    else {
+        return -1;
+    }
+}
+
+CallHook<void(int, int, int, rf::GrRenderState)> GrBitmap_DrawCursor_hook{
+    0x004354E4,
+    [](int bm_handle, int x, int y, rf::GrRenderState render_state) {
+        if (rf::ui_scale_y >= 2.0f) {
+            static int cursor_1_bmh = BmLoadIfExists("cursor_1.tga", -1, false);
+            if (cursor_1_bmh != -1) {
+                bm_handle = cursor_1_bmh;
+            }
+        }
+        GrBitmap_DrawCursor_hook.CallTarget(bm_handle, x, y, render_state);
+    },
+};
+
 void ApplyMainMenuPatches()
 {
     // Version in Main Menu
@@ -458,4 +482,7 @@ void ApplyMainMenuPatches()
 
     // Init
     MenuInit_hook.Install();
+
+    // Bigger cursor bitmap support
+    GrBitmap_DrawCursor_hook.Install();
 }
