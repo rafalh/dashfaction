@@ -34,13 +34,13 @@ static int HudTransformValue(int val, int old_max, int new_max)
 static int HudScaleValue(int val, int max, float scale)
 {
     if (val < max / 3) {
-        return static_cast<int>(val * scale);
+        return static_cast<int>(std::round(val * scale));
     }
     else if (val < max * 2 / 3) {
-        return max / 2 + static_cast<int>((val - max / 2) * scale);
+        return static_cast<int>(std::round(max / 2.0f + (val - max / 2.0f) * scale));
     }
     else {
-        return max + static_cast<int>((val - max) * scale);
+        return static_cast<int>(std::round(max + (val - max) * scale));
     }
 }
 

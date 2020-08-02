@@ -28,6 +28,7 @@ FunHook<void(rf::Player*)> HudRenderHealthAndEnviro_hook{
         }
 
         int font_id = rf::hud_health_enviro_font;
+        // Note: 2x scale does not look good because bigfont is not exactly 2x version of smallfont
         float scale = 1.875f;
 
         if (rf::EntityIsAttachedToVehicle(entity)) {
