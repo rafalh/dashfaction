@@ -280,10 +280,13 @@ DcCommand2 hud_coords_cmd{
 
 void HudScaledBitmap(int bmh, int x, int y, float scale, rf::GrRenderState render_state)
 {
-    static std::unordered_map<int, int> hi_res_bm_map;
+    struct ScaledBmInfo {
+        int bmh = -1;
+        float scale = 2.0f;
+    };
+    static std::unordered_map<int, ScaledBmInfo> hi_res_bm_map;
     if (scale > 1.0f) {
         // Use bitmap with "_1" suffix instead of "_0" if it exists
-        int hi_res_bm = -1;
         auto it = hi_res_bm_map.find(bmh);
         if (it == hi_res_bm_map.end()) {
             std::string filename = rf::BmGetFilename(bmh);
@@ -301,30 +304,40 @@ void HudScaledBitmap(int bmh, int x, int y, float scale, rf::GrRenderState rende
             }
 
             xlog::info("loading high res bm %s", filename.c_str());
+            ScaledBmInfo scaled_bm_info;
             rf::File file;
-            if (file.Open(filename.c_str()) == 0) {
-                file.Close();
-                hi_res_bm = rf::BmLoad(filename.c_str(), -1, false);
+            if (rf::FsFileExists(filename.c_str())) {
+                scaled_bm_info.bmh = rf::BmLoad(filename.c_str(), -1, false);
             }
-            xlog::trace("loaded high res bm %s: %d", filename.c_str(), hi_res_bm);
-            hi_res_bm_map.insert({bmh, hi_res_bm});
+            xlog::trace("loaded high res bm %s: %d", filename.c_str(), scaled_bm_info.bmh);
+            if (scaled_bm_info.bmh != -1) {
+                int bm_w, bm_h;
+                rf::BmGetBitmapSize(bmh, &bm_w, &bm_h);
+                int scaled_bm_w, scaled_bm_h;
+                rf::BmGetBitmapSize(scaled_bm_info.bmh, &scaled_bm_w, &scaled_bm_h);
+                scaled_bm_info.scale = static_cast<float>(scaled_bm_w) / static_cast<float>(bm_w);
+            }
+
+            it = hi_res_bm_map.insert({bmh, scaled_bm_info}).first;
         }
-        else {
-            hi_res_bm = it->second;
-        }
-        if (hi_res_bm != -1) {
-            bmh = hi_res_bm;
-            scale /= 2.0f;
+        ScaledBmInfo& scaled_bm_info = it->second;
+        if (scaled_bm_info.bmh != -1) {
+            bmh = scaled_bm_info.bmh;
+            scale /= scaled_bm_info.scale;
         }
     }
 
-    // Get bitmap size and scale it
-    int bm_w, bm_h;
-    rf::BmGetBitmapSize(bmh, &bm_w, &bm_h);
-    int dst_w = static_cast<int>(bm_w * scale);
-    int dst_h = static_cast<int>(bm_h * scale);
-
-    rf::GrBitmapStretched(bmh, x, y, dst_w, dst_h, 0, 0, bm_w, bm_h, 0.0f, 0.0f, render_state);
+    if (scale == 1.0f) {
+        rf::GrBitmap(bmh, x, y, render_state);
+    }
+    else {
+        // Get bitmap size and scale it
+        int bm_w, bm_h;
+        rf::BmGetBitmapSize(bmh, &bm_w, &bm_h);
+        int dst_w = static_cast<int>(std::round(bm_w * scale));
+        int dst_h = static_cast<int>(std::round(bm_h * scale));
+        rf::GrBitmapStretched(bmh, x, y, dst_w, dst_h, 0, 0, bm_w, bm_h, 0.0f, 0.0f, render_state);
+    }
 }
 
 void HudRectBorder(int x, int y, int w, int h, int border, rf::GrRenderState state)
