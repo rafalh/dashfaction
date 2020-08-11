@@ -10,6 +10,7 @@
 #include "../server/server.h"
 #include "../misc/misc.h"
 #include "../main.h"
+#include "../rf/geometry.h"
 #include "../utils/enum-bitwise-operators.h"
 #include <natupnp.h>
 #include <common/BuildConfig.h>
@@ -505,7 +506,7 @@ CodeInjection ProcessBooleanPacket_ValidateMeshId_patch{
 CodeInjection ProcessBooleanPacket_ValidateRoomId_patch{
     0x0047661C,
     [](auto& regs) {
-        int num_rooms = StructFieldRef<int>(rf::rfl_static_geometry, 0x90);
+        int num_rooms = rf::rfl_static_geometry->rooms.Size();
         if (regs.edx < 0 || regs.edx >= num_rooms) {
             xlog::warn("Invalid room in Boolean packet - skipping");
             regs.esp += 0x64;
@@ -525,7 +526,7 @@ CodeInjection ProcessPregameBooleanPacket_ValidateMeshId_patch{
 CodeInjection ProcessPregameBooleanPacket_ValidateRoomId_patch{
     0x00476752,
     [](auto& regs) {
-        int num_rooms = StructFieldRef<int>(rf::rfl_static_geometry, 0x90);
+        int num_rooms = rf::rfl_static_geometry->rooms.Size();
         if (regs.edx < 0 || regs.edx >= num_rooms) {
             xlog::warn("Invalid room in PregameBoolean packet - skipping");
             regs.esp += 0x68;

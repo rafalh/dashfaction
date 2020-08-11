@@ -53,23 +53,13 @@ namespace rf
 
     /* Other */
 
-    struct RflLightmap
-    {
-        uint8_t *unk;
-        int w;
-        int h;
-        uint8_t *buf;
-        int bm_handle;
-        int lightmap_idx;
-    };
-    static_assert(sizeof(RflLightmap) == 0x18);
+    struct RflCutscene;
 
     static auto& level_name = AddrAsRef<String>(0x00645FDC);
     static auto& level_filename = AddrAsRef<String>(0x00645FE4);
     static auto& level_author = AddrAsRef<String>(0x00645FEC);
     static auto& default_player_weapon = AddrAsRef<String>(0x007C7600);
-    static auto& active_cutscene = AddrAsRef<void*>(0x00645320);
-    static auto& rfl_static_geometry = AddrAsRef<void*>(0x006460E8);
+    static auto& active_cutscene = AddrAsRef<RflCutscene*>(0x00645320);
     static auto& lan_only_cmd_line_param = AddrAsRef<CmdLineParam>(0x0063F608);
 
     static auto& RfBeep = AddrAsRef<void(unsigned u1, unsigned u2, unsigned u3, float volume)>(0x00505560);
@@ -78,7 +68,6 @@ namespace rf
     static auto& SetCursorVisible = AddrAsRef<void(bool visible)>(0x0051E680);
     static auto& CutsceneIsActive = AddrAsRef<bool()>(0x0045BE80);
     static auto& TimerGet = AddrAsRef<int(int mult)>(0x00504AB0);
-    static auto& GeomClearCache = AddrAsRef<void()>(0x004F0B90);
     static auto& GetFileChecksum = AddrAsRef<int(const char* filename)>(0x00436630);
 
     /* Strings Table */
@@ -145,4 +134,42 @@ namespace rf
     static_assert(sizeof(LevelSaveData) == 0x18720);
 
     static auto& CanSave = AddrAsRef<bool()>(0x004B61A0);
+
+    /* Model collide */
+
+    struct ModelCollideInput
+    {
+        Vector3 mesh_pos;
+        Matrix3 mesh_orient;
+        Vector3 start_pos;
+        Vector3 dir;
+        float radius;
+        int flags;
+        Vector3 transformed_start_pos;
+        Vector3 transformed_pos_diff;
+
+        ModelCollideInput()
+        {
+            AddrCaller{0x00416190}.this_call(this);
+        }
+
+    };
+    static_assert(sizeof(ModelCollideInput) == 0x68);
+
+    struct ModelCollideOutput
+    {
+        float fraction;
+        Vector3 hit_point;
+        Vector3 hit_normal;
+        short *triangle_indices;
+
+        ModelCollideOutput()
+        {
+            AddrCaller{0x004161D0}.this_call(this);
+        }
+    };
+    static_assert(sizeof(ModelCollideOutput) == 0x20);
+
+    struct AnimMesh;
+    static auto& ModelCollide = AddrAsRef<bool(AnimMesh *anim_mesh, ModelCollideInput *in, ModelCollideOutput *out, bool clear)>(0x005031F0);
 }

@@ -4,6 +4,7 @@
 #include "../main.h"
 #include "../rf/graphics.h"
 #include "../rf/misc.h"
+#include "../rf/geometry.h"
 #include "../stdafx.h"
 #include "../utils/perf-utils.h"
 #include <common/BuildConfig.h>

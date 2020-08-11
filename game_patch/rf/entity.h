@@ -627,4 +627,8 @@ namespace rf
     static auto& EntityIsFighter = AddrAsRef<bool(EntityObj *entity)>(0x0040A210);
     static auto& EntityIsHoldingBody = AddrAsRef<bool(EntityObj *entity)>(0x00429D20);
     static auto& EntityBurnInitBones = AddrAsRef<bool(EntityBurnInfo *burn_info, Object *obj)>(0x0042EB20);
+    static auto& EntityGetRootBonePos = AddrAsRef<void(rf::EntityObj*, rf::Vector3&)>(0x48AC70);
+
+    static auto& entity_obj_list = AddrAsRef<EntityObj>(0x005CB060);
+    static auto& local_entity = AddrAsRef<EntityObj*>(0x005CB054);
 }

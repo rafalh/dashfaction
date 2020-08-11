@@ -173,6 +173,7 @@ namespace rf
     static auto& ObjGetByUid = AddrAsRef<Object*(int uid)>(0x0048A4A0);
     static auto& ObjGetByHandle = AddrAsRef<Object*(int handle)>(0x0040A0E0);
     static auto& ObjQueueDelete = AddrAsRef<void(Object* obj)>(0x0048AB40);
+    static auto& TestLineCollisionWithObject = AddrAsRef<bool(Object *obj, const Vector3 *p0, const Vector3 *p1, float *fraction)>(0x004A21E0);
 }
 
 template<>

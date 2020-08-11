@@ -8,6 +8,7 @@
 #include "../rf/weapon.h"
 #include "../rf/entity.h"
 #include "../rf/network.h"
+#include "../rf/geometry.h"
 #include "../console/console.h"
 #include "../main.h"
 
@@ -130,8 +131,8 @@ FunHook<void(rf::WeaponObj *weapon)> WeaponMoveOne_hook{
     0x004C69A0,
     [](rf::WeaponObj* weapon) {
         WeaponMoveOne_hook.CallTarget(weapon);
-        auto& level_aabb_min = StructFieldRef<rf::Vector3>(rf::rfl_static_geometry, 0x48);
-        auto& level_aabb_max = StructFieldRef<rf::Vector3>(rf::rfl_static_geometry, 0x54);
+        auto& level_aabb_min = rf::rfl_static_geometry->aabb_min;
+        auto& level_aabb_max = rf::rfl_static_geometry->aabb_max;
         float margin = weapon->anim_mesh ? 275.0f : 10.0f;
         bool has_gravity_flag = weapon->phys_info.flags & 1;
         bool check_y_axis = !(has_gravity_flag || weapon->weapon_cls->thrust_lifetime > 0.0f);

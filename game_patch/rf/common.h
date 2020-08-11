@@ -137,6 +137,13 @@ namespace rf
     };
     static_assert(sizeof(Matrix3) == 0x24);
 
+    struct Plane
+    {
+        Vector3 normal;
+        float offset;
+    };
+    static_assert(sizeof(Plane) == 0x10);
+
     /* String */
 
     static auto& StringAlloc = AddrAsRef<char*(unsigned size)>(0x004FF300);
@@ -363,4 +370,10 @@ namespace rf
 
     static auto& Free = AddrAsRef<void(void *mem)>(0x00573C71);
     static auto& Malloc = AddrAsRef<void*(uint32_t cb_size)>(0x00573B37);
+
+    // Collide
+
+    using CollideBoxSegmentType = bool(const rf::Vector3& box_min, const rf::Vector3& box_max, const rf::Vector3& p0,
+                                       const rf::Vector3& p1, rf::Vector3 *hit_pt);
+    static auto& CollideBoxSegment = AddrAsRef<CollideBoxSegmentType>(0x00508B70);
 }

@@ -28,4 +28,6 @@ namespace rf
         uint16_t field_2d6;
     };
     static_assert(sizeof(ClutterObj) == 0x2D8);
+
+    static auto& clutter_obj_list = AddrAsRef<rf::ClutterObj>(0x005C9360);
 }

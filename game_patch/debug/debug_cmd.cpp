@@ -1,5 +1,6 @@
 #include "debug_internal.h"
 #include "../rf/network.h"
+#include "../rf/geometry.h"
 #include "../console/console.h"
 #include <patch_common/MemUtils.h>
 #include <patch_common/CodeInjection.h>
