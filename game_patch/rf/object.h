@@ -2,6 +2,7 @@
 
 #include <patch_common/MemUtils.h>
 #include "common.h"
+#include "../utils/enum-bitwise-operators.h"
 
 namespace rf
 {
@@ -10,7 +11,6 @@ namespace rf
     struct AnimMesh;
 
     // Typedefs
-    using ObjectFlags = int;
     using PhysicsFlags = int;
     using V3DType = int;
     using ObjectUse = int;
@@ -30,6 +30,12 @@ namespace rf
         OT_MOVING_GROUP = 0x8,
         OT_MOVER = 0x9,
         OT_GLARE = 0xA,
+    };
+
+    enum ObjectFlags
+    {
+        OF_WAS_RENDERED = 0x10,
+        OF_HAS_ALPHA = 0x100000,
     };
 
     struct CollisionInfo
@@ -168,3 +174,6 @@ namespace rf
     static auto& ObjGetByHandle = AddrAsRef<Object*(int handle)>(0x0040A0E0);
     static auto& ObjQueueDelete = AddrAsRef<void(Object* obj)>(0x0048AB40);
 }
+
+template<>
+struct EnableEnumBitwiseOperators<rf::ObjectFlags> : std::true_type {};

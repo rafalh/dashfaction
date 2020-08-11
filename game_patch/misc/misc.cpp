@@ -288,12 +288,20 @@ CodeInjection sort_items_patch{
             // Sometimes on level change some objects can stay and have only anim_mesh destroyed
             return;
         }
+        std::string_view mesh_name_sv = mesh_name;
 
-        // HACKFIX: enable alpha sorting for Invulnerability Powerup
+        // HACKFIX: enable alpha sorting for Invulnerability Powerup and Riot Shield
         // Note: material used for alpha-blending is flare_blue1.tga - it uses non-alpha texture
         // so information about alpha-blending cannot be taken from material alone - it must be read from VFX
-        if (!strcmp(mesh_name, "powerup_invuln.vfx")) {
-            item->obj_flags |= 0x100000; // OF_HAS_ALPHA
+        static const char* force_alpha_mesh_names[] = {
+            "powerup_invuln.vfx",
+            "Weapon_RiotShield.V3D",
+        };
+        for (auto alpha_mesh_name : force_alpha_mesh_names) {
+            if (mesh_name_sv == alpha_mesh_name) {
+                item->obj_flags |= rf::OF_HAS_ALPHA;
+                break;
+            }
         }
 
         auto& item_obj_list = AddrAsRef<rf::ItemObj>(0x00642DD8);
@@ -301,7 +309,7 @@ CodeInjection sort_items_patch{
         while (current != &item_obj_list) {
             auto current_anim_mesh = current->anim_mesh;
             auto current_mesh_name = current_anim_mesh ? rf::AnimMeshGetName(current_anim_mesh) : nullptr;
-            if (current_mesh_name && !strcmp(mesh_name, current_mesh_name)) {
+            if (current_mesh_name && mesh_name_sv == current_mesh_name) {
                 break;
             }
             current = current->next;
@@ -326,16 +334,24 @@ CodeInjection sort_clutter_patch{
             // Sometimes on level change some objects can stay and have only anim_mesh destroyed
             return;
         }
+        std::string_view mesh_name_sv = mesh_name;
+
         auto& clutter_obj_list = AddrAsRef<rf::ClutterObj>(0x005C9360);
         auto current = clutter_obj_list.next;
         while (current != &clutter_obj_list) {
             auto current_anim_mesh = current->anim_mesh;
             auto current_mesh_name = current_anim_mesh ? rf::AnimMeshGetName(current_anim_mesh) : nullptr;
-            if (current_mesh_name && !strcmp(mesh_name, current_mesh_name)) {
+            if (current_mesh_name && mesh_name_sv == current_mesh_name) {
+                break;
+            }
+            if (std::string_view{current_mesh_name} == "LavaTester01.v3d") {
+                // HACKFIX: place LavaTester01 at the end to fix alpha draw order issues in L5S2 (Geothermal Plant)
+                // Note: OF_HAS_ALPHA cannot be used because it causes another draw-order issue when lava goes up
                 break;
             }
             current = current->next;
         }
+        // insert before current
         clutter->next = current;
         clutter->prev = current->prev;
         clutter->next->prev = clutter;
