@@ -38,6 +38,11 @@ def process_patch(patch_file_name, input_file_name, output_file_name):
                 tgt_start = int(tokens[1], 0)
                 data = bytes.fromhex(tokens[2])
                 buf = buf[:tgt_start] + data + buf[tgt_start:]
+            elif op == 'rep':
+                tgt_start = int(tokens[1], 0)
+                data = bytes.fromhex(tokens[2])
+                tgt_end = tgt_start + len(data)
+                buf = buf[:tgt_start] + data + buf[tgt_end:]
             else:
                 assert False
     print('Output file size:', len(buf))

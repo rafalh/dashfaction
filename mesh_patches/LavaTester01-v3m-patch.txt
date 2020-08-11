@@ -1,0 +1,7 @@
+# MOV, start offset, end offset (inclusive), target offset
+# submesh 7 - top
+REP 0x10130 418C5100
+# submesh 6
+MOV 0x8142 0x9361 0x10fb4
+# submesh 0 - pipe on the top
+MOV 0x28 0x5a5 0x10fb4

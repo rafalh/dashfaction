@@ -88,7 +88,7 @@ Version 1.5.0
 - fix crash when particle emitter allocation fails during entity ignition (RF bug)
 - fix possible buffer overflow in console input buffer (RF bug)
 - fix possible server side crash when kicking a player using rcon (RF bug)
-- fix glasses rendering in Hendrix mesh (RF bug)
+- fix alpha draw order issues in Hendrix, Generator_Small01, Generator_Small02, LavaTester01 meshes (RF bug)
 
 Version 1.4.1 (released 2019-12-07)
 -----------------------------------
