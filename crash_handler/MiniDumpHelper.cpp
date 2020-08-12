@@ -12,7 +12,7 @@ bool MiniDumpHelper::is_data_section_needed(const WCHAR* module_name)
     _wsplitpath(module_name, nullptr, nullptr, file_name, nullptr);
 
     // Compare the name with the list of known names and decide
-    for (auto name : m_known_modules) {
+    for (const auto& name : m_known_modules) {
         if (wcsicmp(file_name, name.c_str()) == 0) {
             return true;
         }

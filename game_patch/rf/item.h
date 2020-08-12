@@ -23,4 +23,6 @@ namespace rf
         float spin_angle;
     };
     static_assert(sizeof(ItemObj) == 0x2C4);
+
+    static auto& item_obj_list = AddrAsRef<rf::ItemObj>(0x00642DD8);
 }

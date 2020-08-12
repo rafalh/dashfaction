@@ -10,14 +10,6 @@
 #include <patch_common/CallHook.h>
 #include <patch_common/AsmWriter.h>
 
-CallHook<void(bool)> GlareRenderAllCorona_hook{
-    0x0043233E,
-    [](bool reflections) {
-        if (g_game_config.glares)
-            GlareRenderAllCorona_hook.CallTarget(reflections);
-    },
-};
-
 DcCommand2 vli_cmd{
     "vli",
     []() {
@@ -74,9 +66,6 @@ static void RegisterBuiltInCommand(const char* name, const char* description, ui
 
 void ConsoleCommandsApplyPatches()
 {
-    // vli command support
-    GlareRenderAllCorona_hook.Install();
-
     // Allow 'level' command outside of multiplayer game
     AsmWriter(0x00434FEC, 0x00434FF2).nop();
 }

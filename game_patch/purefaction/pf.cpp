@@ -75,7 +75,7 @@ void process_pf_players_request_packet([[ maybe_unused ]] const void* data, [[ m
 
     std::stringstream ss;
     auto player_list = SinglyLinkedList(rf::player_list);
-    for (auto player : player_list) {
+    for (auto& player : player_list) {
         ss.write(player.name.CStr(), player.name.Size() + 1);
     }
     auto players_str = ss.str();

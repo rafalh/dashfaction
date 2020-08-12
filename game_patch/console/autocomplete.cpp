@@ -53,7 +53,7 @@ void DcAutoCompletePutComponent(int offset, const std::string& component, bool f
 template<typename T, typename F>
 void DcAutoCompletePrintSuggestions(T& suggestions, F mapping_fun)
 {
-    for (auto item : suggestions) {
+    for (auto& item : suggestions) {
         rf::DcPrintf("%s\n", mapping_fun(item));
     }
 }

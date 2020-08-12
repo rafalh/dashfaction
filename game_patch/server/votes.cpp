@@ -96,7 +96,7 @@ public:
         }
         else if (passed_time_sec >= vote_config.time_limit_seconds / 2 && !reminder_sent) {
             // Send reminder to player who did not vote yet
-            for (auto player : remaining_players) {
+            for (rf::Player* player : remaining_players) {
                 SendChatLinePacket("\xA6 Send message \"/vote yes\" or \"/vote no\" to vote.", player);
             }
             reminder_sent = true;

@@ -304,9 +304,8 @@ CodeInjection sort_items_patch{
             }
         }
 
-        auto& item_obj_list = AddrAsRef<rf::ItemObj>(0x00642DD8);
-        rf::ItemObj* current = item_obj_list.next;
-        while (current != &item_obj_list) {
+        rf::ItemObj* current = rf::item_obj_list.next;
+        while (current != &rf::item_obj_list) {
             auto current_anim_mesh = current->anim_mesh;
             auto current_mesh_name = current_anim_mesh ? rf::AnimMeshGetName(current_anim_mesh) : nullptr;
             if (current_mesh_name && mesh_name_sv == current_mesh_name) {

@@ -631,4 +631,5 @@ namespace rf
 
     static auto& entity_obj_list = AddrAsRef<EntityObj>(0x005CB060);
     static auto& local_entity = AddrAsRef<EntityObj*>(0x005CB054);
+    static auto& corpse_obj_list = AddrAsRef<CorpseObj>(0x005CABB8);
 }
