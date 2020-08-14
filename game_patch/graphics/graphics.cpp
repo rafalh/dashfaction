@@ -25,35 +25,35 @@
 static float g_gr_clipped_geom_offset_x = -0.5;
 static float g_gr_clipped_geom_offset_y = -0.5;
 
-static void SetTextureMinMagFilterInCode(D3DTEXTUREFILTERTYPE filter_type)
+static void SetTextureMinMagFilterInCode(D3DTEXTUREFILTERTYPE filter_type0, D3DTEXTUREFILTERTYPE filter_type1)
 {
     // clang-format off
-    uintptr_t addresses[] = {
-        // GrInitD3D
-        0x00546283, 0x00546295,
-        0x005462A9, 0x005462BD,
-        // GrD3DSetMaterialFlags
-        0x0054F2E8, 0x0054F2FC,
-        0x0054F438, 0x0054F44C,
-        //0x0054F567, 0x0054F57B,
-        0x0054F62D, 0x0054F641,
-        0x0054F709, 0x0054F71D,
-        0x0054F800, 0x0054F814,
-        0x0054F909, 0x0054F91D,
-        0x0054FA1A, 0x0054FA2E,
-        0x0054FB22, 0x0054FB36,
-        0x0054FBFE, 0x0054FC12,
-        0x0054FD06, 0x0054FD1A,
-        0x0054FD90, 0x0054FDA4,
-        0x0054FE98, 0x0054FEAC,
-        0x0054FF74, 0x0054FF88,
-        0x0055007C, 0x00550090,
-        0x005500C6, 0x005500DA,
-        0x005501A2, 0x005501B6,
+    uintptr_t addresses_tex0[] = {
+        0x0054F2E8, 0x0054F2FC, // TEXTURE_SOURCE_WRAP
+        0x0054F438, 0x0054F44C, // TEXTURE_SOURCE_CLAMP
+        0x0054F62D, 0x0054F641, // TEXTURE_SOURCE_MT_WRAP 0
+        0x0054F800, 0x0054F814, // TEXTURE_SOURCE_MT_CLAMP 0
+        0x0054FA1A, 0x0054FA2E, // TEXTURE_SOURCE_MT_WRAP_M2X 0
+        0x0054FBFE, 0x0054FC12, // TEXTURE_SOURCE_MT_U_WRAP_V_CLAMP 0
+        0x0054FD90, 0x0054FDA4, // TEXTURE_SOURCE_MT_U_CLAMP_V_WRAP 0
+        0x0054FF74, 0x0054FF88, // TEXTURE_SOURCE_MT_WRAP_TRILIN 0
+        0x005500C6, 0x005500DA, // TEXTURE_SOURCE_MT_CLAMP_TRILIN 0
+    };
+    uintptr_t addresses_tex1[] = {
+        0x0054F709, 0x0054F71D, // TEXTURE_SOURCE_MT_WRAP 1
+        0x0054F909, 0x0054F91D, // TEXTURE_SOURCE_MT_CLAMP 1
+        0x0054FB22, 0x0054FB36, // TEXTURE_SOURCE_MT_WRAP_M2X 1
+        0x0054FD06, 0x0054FD1A, // TEXTURE_SOURCE_MT_U_WRAP_V_CLAMP 1
+        0x0054FE98, 0x0054FEAC, // TEXTURE_SOURCE_MT_U_CLAMP_V_WRAP 1
+        0x0055007C, 0x00550090, // TEXTURE_SOURCE_MT_WRAP_TRILIN 1
+        0x005501A2, 0x005501B6, // TEXTURE_SOURCE_MT_CLAMP_TRILIN 1
     };
     // clang-format on
-    for (auto address : addresses) {
-        WriteMem<u8>(address + 1, filter_type);
+    for (auto address : addresses_tex0) {
+        WriteMem<u8>(address + 1, filter_type0);
+    }
+    for (auto address : addresses_tex1) {
+        WriteMem<u8>(address + 1, filter_type1);
     }
 }
 
@@ -259,6 +259,20 @@ CallHook<void(int, rf::GrVertex**, int, int)> GrDrawRect_GrDrawPoly_hook{
     },
 };
 
+void SetupTextureFiltering()
+{
+    if (g_game_config.nearest_filtering) {
+        // use linear filtering for lightmaps because otherwise it looks bad
+        SetTextureMinMagFilterInCode(D3DTEXF_POINT, D3DTEXF_LINEAR);
+    }
+    else if (rf::gr_d3d_device_caps.MaxAnisotropy > 0 && g_game_config.anisotropic_filtering && !rf::is_dedicated_server) {
+        // Anisotropic texture filtering
+        SetTextureMinMagFilterInCode(D3DTEXF_ANISOTROPIC, D3DTEXF_ANISOTROPIC);
+    } else {
+        SetTextureMinMagFilterInCode(D3DTEXF_LINEAR, D3DTEXF_LINEAR);
+    }
+}
+
 DWORD SetupMaxAnisotropy()
 {
     DWORD anisotropy_level = std::min(rf::gr_d3d_device_caps.MaxAnisotropy, 16ul);
@@ -426,9 +440,8 @@ DcCommand2 profile_frame_cmd{
 CodeInjection after_gr_init_hook{
     0x0050C5CD,
     []() {
-        // Anisotropic texture filtering
+        SetupTextureFiltering();
         if (rf::gr_d3d_device_caps.MaxAnisotropy > 0 && g_game_config.anisotropic_filtering && !rf::is_dedicated_server) {
-            SetTextureMinMagFilterInCode(D3DTEXF_ANISOTROPIC);
             DWORD anisotropy_level = SetupMaxAnisotropy();
             xlog::info("Anisotropic Filtering enabled (level: %lu)", anisotropy_level);
         }
@@ -704,6 +717,17 @@ DcCommand2 mesh_static_lighting_cmd{
     "Toggle mesh static lighting calculation",
 };
 
+DcCommand2 nearest_filtering_cmd{
+    "nearest_filtering",
+    []() {
+        g_game_config.nearest_filtering = !g_game_config.nearest_filtering;
+        g_game_config.save();
+        SetupTextureFiltering();
+        rf::DcPrintf("Nearest texture filter is %s", g_game_config.nearest_filtering ? "enabled" : "disabled");
+    },
+    "Toggle nearest texture filtering",
+};
+
 void ApplyTexturePatches();
 void ApplyFontPatches();
 
@@ -832,7 +856,9 @@ void GraphicsInit()
     fullscreen_cmd.Register();
     windowed_cmd.Register();
 
+    // Other commands
     antialiasing_cmd.Register();
+    nearest_filtering_cmd.Register();
 
     // Do not flush drawing buffers during GrSetColor call
     WriteMem<u8>(0x0050CFEB, asm_opcodes::jmp_rel_short);
