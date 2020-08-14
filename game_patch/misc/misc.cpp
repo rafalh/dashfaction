@@ -481,6 +481,17 @@ FunHook<void(rf::EntityBurnInfo&, int)> EntityBurnSwitchParentToCorpse_hook{
     },
 };
 
+CallHook<bool(rf::Object*)> ObjIsPlayer_EntityCheckIsInLiquid_hook{
+    {
+        0x0042932A,
+        0x0042932A,
+        0x004293F4,
+    },
+    [](rf::Object* obj) {
+        return obj == rf::local_entity;
+    },
+};
+
 void MiscAfterLevelLoad(const char* level_filename)
 {
     DoLevelSpecificEventHacks(level_filename);
@@ -640,6 +651,9 @@ void MiscInit()
 
     // Fix crash when particle emitter allocation fails during entity ignition
     EntityBurnSwitchParentToCorpse_hook.Install();
+
+    // Fix buzzing sound when some player is floating in water
+    ObjIsPlayer_EntityCheckIsInLiquid_hook.Install();
 
     // Init cmd line param
     GetUrlCmdLineParam();
