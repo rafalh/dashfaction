@@ -26,6 +26,11 @@ static bool GlareCollideObject(rf::GlareObj* glare, rf::Object* obj, const rf::V
         return false;
     }
 
+    // Skip local entity vehicle
+    if (rf::EntityIsAttachedToVehicle(rf::local_entity) && obj->handle == rf::local_entity->parent_handle) {
+        return false;
+    }
+
     rf::Vector3 hit_pt;
     if (rf::CutsceneIsActive() && obj->type == rf::OT_ENTITY) {
         // Fix glares/coronas being visible through characters during cutscenes
