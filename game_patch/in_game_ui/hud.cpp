@@ -278,49 +278,62 @@ DcCommand2 hud_coords_cmd{
     },
 };
 
+struct ScaledBitmapInfo {
+    int bmh = -1;
+    float scale = 2.0f;
+};
+
+const ScaledBitmapInfo& HudGetScaledBitmapInfo(int bmh)
+{
+    static std::unordered_map<int, ScaledBitmapInfo> scaled_bm_cache;
+    // Use bitmap with "_1" suffix instead of "_0" if it exists
+    auto it = scaled_bm_cache.find(bmh);
+    if (it == scaled_bm_cache.end()) {
+        std::string filename = rf::BmGetFilename(bmh);
+        auto ext_pos = filename.rfind('.');
+        if (ext_pos != std::string::npos) {
+            if (ext_pos >= 2 && filename.compare(ext_pos - 2, 2, "_0") == 0) {
+                // ends with "_0" - replace '0' by '1'
+                filename[ext_pos - 1] = '1';
+            }
+            else {
+                // does not end with "_0" - append "_1"
+                filename.insert(ext_pos, "_1");
+                assert(filename.size() < 32);
+            }
+        }
+
+        xlog::trace("loading high res bm %s", filename.c_str());
+        ScaledBitmapInfo scaled_bm_info;
+        rf::File file;
+        if (rf::FsFileExists(filename.c_str())) {
+            scaled_bm_info.bmh = rf::BmLoad(filename.c_str(), -1, false);
+        }
+        xlog::trace("loaded high res bm %s: %d", filename.c_str(), scaled_bm_info.bmh);
+        if (scaled_bm_info.bmh != -1) {
+            rf::GrTcacheAddRef(scaled_bm_info.bmh);
+            int bm_w, bm_h;
+            rf::BmGetBitmapSize(bmh, &bm_w, &bm_h);
+            int scaled_bm_w, scaled_bm_h;
+            rf::BmGetBitmapSize(scaled_bm_info.bmh, &scaled_bm_w, &scaled_bm_h);
+            scaled_bm_info.scale = static_cast<float>(scaled_bm_w) / static_cast<float>(bm_w);
+
+        }
+
+        it = scaled_bm_cache.insert({bmh, scaled_bm_info}).first;
+    }
+    return it->second;
+}
+
+void HudPreloadScaledBitmap(int bmh)
+{
+    HudGetScaledBitmapInfo(bmh);
+}
+
 void HudScaledBitmap(int bmh, int x, int y, float scale, rf::GrRenderState render_state)
 {
-    struct ScaledBmInfo {
-        int bmh = -1;
-        float scale = 2.0f;
-    };
-    static std::unordered_map<int, ScaledBmInfo> hi_res_bm_map;
     if (scale > 1.0f) {
-        // Use bitmap with "_1" suffix instead of "_0" if it exists
-        auto it = hi_res_bm_map.find(bmh);
-        if (it == hi_res_bm_map.end()) {
-            std::string filename = rf::BmGetFilename(bmh);
-            auto ext_pos = filename.rfind('.');
-            if (ext_pos != std::string::npos) {
-                if (ext_pos >= 2 && filename.compare(ext_pos - 2, 2, "_0") == 0) {
-                    // ends with "_0" - replace '0' by '1'
-                    filename[ext_pos - 1] = '1';
-                }
-                else {
-                    // does not end with "_0" - append "_1"
-                    filename.insert(ext_pos, "_1");
-                    assert(filename.size() < 32);
-                }
-            }
-
-            xlog::info("loading high res bm %s", filename.c_str());
-            ScaledBmInfo scaled_bm_info;
-            rf::File file;
-            if (rf::FsFileExists(filename.c_str())) {
-                scaled_bm_info.bmh = rf::BmLoad(filename.c_str(), -1, false);
-            }
-            xlog::trace("loaded high res bm %s: %d", filename.c_str(), scaled_bm_info.bmh);
-            if (scaled_bm_info.bmh != -1) {
-                int bm_w, bm_h;
-                rf::BmGetBitmapSize(bmh, &bm_w, &bm_h);
-                int scaled_bm_w, scaled_bm_h;
-                rf::BmGetBitmapSize(scaled_bm_info.bmh, &scaled_bm_w, &scaled_bm_h);
-                scaled_bm_info.scale = static_cast<float>(scaled_bm_w) / static_cast<float>(bm_w);
-            }
-
-            it = hi_res_bm_map.insert({bmh, scaled_bm_info}).first;
-        }
-        ScaledBmInfo& scaled_bm_info = it->second;
+        const auto& scaled_bm_info = HudGetScaledBitmapInfo(bmh);
         if (scaled_bm_info.bmh != -1) {
             bmh = scaled_bm_info.bmh;
             scale /= scaled_bm_info.scale;

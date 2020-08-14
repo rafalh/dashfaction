@@ -117,4 +117,14 @@ void SetBigHealthArmorHud(bool is_big)
 {
     g_big_health_armor_hud = is_big;
     rf::hud_health_enviro_font = rf::GrLoadFont(is_big ? "bigfont.vf" : "smallfont.vf");
+    static bool big_bitmaps_preloaded = false;
+    if (is_big && !big_bitmaps_preloaded) {
+        for (int i = 0; i <= 10; ++i) {
+            HudPreloadScaledBitmap(rf::hud_health_bitmaps[i]);
+        }
+        for (int i = 0; i <= 10; ++i) {
+            HudPreloadScaledBitmap(rf::hud_enviro_bitmaps[i]);
+        }
+        big_bitmaps_preloaded = true;
+    }
 }

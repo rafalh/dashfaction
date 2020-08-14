@@ -306,6 +306,7 @@ namespace rf
     static auto& GrUnlock = AddrAsRef<void(GrLockData *data)>(0x0050E310);
     static auto& GrSetClip = AddrAsRef<void(int x, int y, int w, int h)>(0x0050CC60);
     static auto& GrGetClip = AddrAsRef<void(int* x, int* y, int* w, int* h)>(0x0050CD80);
+    static auto& GrPreloadBitmap = AddrAsRef<int(int bm_handle)>(0x0050CE00);
     static auto& GrTcacheAddRef = AddrAsRef<void(int bm_handle)>(0x0050E850);
 
     static constexpr int center_x = 0x8000; // supported by GrString
