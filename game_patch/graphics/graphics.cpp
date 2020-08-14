@@ -924,6 +924,9 @@ void GraphicsInit()
 
     // Make d3d_zm variable not dependent on fov to fix wall-peeking
     AsmWriter(0x0054715E).nop(2);
+
+    // Use gr_clear instead of gr_rect for faster drawing of the fog background
+    AsmWriter(0x00431F99).call(0x0050CDF0);
 }
 
 void GraphicsDrawFpsCounter()
