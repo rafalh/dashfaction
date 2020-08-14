@@ -606,28 +606,14 @@ CodeInjection GetAmbientColorFromLightmaps_color_conv_patch{
         // Skip original code
         regs.eip = 0x004E5D57;
 
-        int bm_handle = regs.eax;
         int x = regs.edi;
         int y = regs.ebx;
+        auto& lm = *reinterpret_cast<rf::RflLightmap*>(regs.esi);
         auto& color = *reinterpret_cast<rf::Color*>(regs.esp + 0x34 - 0x28);
 
-        rf::GrLockData lock_data;
-        if (rf::GrLock(bm_handle, 0, &lock_data, 0)) {
-            auto src_bytes_per_pixel = GetPixelFormatSize(lock_data.pixel_format);
-            const uint8_t* src_ptr = lock_data.bits + y * lock_data.pitch + x * src_bytes_per_pixel;
-            // Note: GrLock never returns indexed bitmap
-            try {
-                CallWithPixelFormat(lock_data.pixel_format, [&](auto fmt) {
-                    PixelsReader<decltype(fmt)::value> rdr{src_ptr};
-                    PixelColor<rf::BMPF_ARGB_8888> pixel = rdr.read();
-                    color.SetRGBA(pixel.r.value, pixel.g.value, pixel.b.value, 255);
-                });
-            }
-            catch (const std::exception& e) {
-                xlog::error("Pixel format conversion failed: %s", e.what());
-            }
-            rf::GrUnlock(&lock_data);
-        }
+        // Optimization: instead of locking the lightmap texture get color data from lightmap pixels stored in RAM
+        const uint8_t* src_ptr = lm.buf + (y * lm.w + x) * 3;
+        color.SetRGBA(src_ptr[0], src_ptr[1], src_ptr[2], 255);
     },
 };
 
