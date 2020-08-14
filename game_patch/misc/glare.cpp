@@ -148,7 +148,7 @@ FunHook<bool(rf::GlareObj* glare, const rf::Vector3& eye_pos)> GlareIsInView_hoo
 
         if (glare->last_covering_objh != -1) {
             auto obj = rf::ObjGetByHandle(glare->last_covering_objh);
-            if (GlareCollideObject(glare, obj, eye_pos)) {
+            if (obj && GlareCollideObject(glare, obj, eye_pos)) {
                 return false;
             }
             glare->last_covering_objh = -1;
