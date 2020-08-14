@@ -145,7 +145,7 @@ template<typename T>
 inline void TextureAtlasPacker<T>::pack()
 {
     update_size();
-    xlog::info("Texture atlas usage: %.2f", total_pixels_ * 100.0f / (atlas_size_.first * atlas_size_.second));
+    xlog::trace("Texture atlas usage: %.2f", total_pixels_ * 100.0f / (atlas_size_.first * atlas_size_.second));
     // Sort by area (from largest to smallest)
     std::sort(items_.begin(), items_.end(), [](Item& a, Item& b) {
         return a.area > b.area;
@@ -216,9 +216,9 @@ GrNewFont::GrNewFont(std::string_view name) :
 {
     auto [filename, size_x, size_y, digits_only] = ParseFontName(name);
     std::vector<unsigned char> buffer;
-    xlog::info("Loading font %s size %d", filename.c_str(), size_y);
+    xlog::trace("Loading font %s size %d", filename.c_str(), size_y);
     if (!LoadFileIntoBuffer(filename.c_str(), buffer)) {
-        xlog::error("LoadFileIntoBuffer failed");
+        xlog::error("LoadFileIntoBuffer failed for %s", filename.c_str());
         throw std::runtime_error{"failed to load font"};
     }
 
@@ -235,13 +235,13 @@ GrNewFont::GrNewFont(std::string_view name) :
         throw std::runtime_error{"failed to load font"};
     }
 
-    xlog::info("raw height %d ascender %d descender %d", face->height, face->ascender, face->descender);
-    xlog::info("scaled height %ld ascender %ld descender %ld", face->size->metrics.height / 64,
+    xlog::trace("raw height %d ascender %d descender %d", face->height, face->ascender, face->descender);
+    xlog::trace("scaled height %ld ascender %ld descender %ld", face->size->metrics.height / 64,
         face->size->metrics.ascender / 64, face->size->metrics.descender / 64);
     line_spacing_ = face->size->metrics.height / 64;
     height_ = line_spacing_; //(face->size->metrics.ascender - face->size->metrics.descender) / 64;
     baseline_y_ = face->size->metrics.ascender / 64;
-    xlog::info("line_spacing %d height %d baseline_y %d", line_spacing_, height_, baseline_y_);
+    xlog::trace("line_spacing %d height %d baseline_y %d", line_spacing_, height_, baseline_y_);
 
     // Prepare lookup table for translating Windows 1252 characters (encoding used by RF) into Unicode codepoints
 
@@ -301,7 +301,7 @@ GrNewFont::GrNewFont(std::string_view name) :
     atlas_packer.pack();
     auto [atlas_w, atlas_h] = atlas_packer.get_size();
 
-    xlog::info("creating font texture atlas %dx%d", atlas_w, atlas_h);
+    xlog::trace("Creating font texture atlas %dx%d", atlas_w, atlas_h);
     bitmap_ = rf::BmCreateUserBmap(rf::BMPF_ARGB_8888, atlas_w, atlas_h);
     if (bitmap_ == -1) {
         xlog::error("BmCreateUserBmap failed");
