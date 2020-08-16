@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <exception>
 #include <cctype>
+#include <stdexcept>
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
 #include <windows.h>
