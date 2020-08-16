@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <iterator>
 #include <cstdarg>
+#include <cctype>
 
 #ifdef __GNUC__
 #define PRINTF_FMT_ATTRIBUTE(fmt_idx, va_idx) __attribute__ ((format (printf, fmt_idx, va_idx)))
