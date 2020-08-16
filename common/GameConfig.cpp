@@ -8,7 +8,7 @@ const char df_subkey_name[] = "Dash Faction";
 
 bool GameConfig::load() try
 {
-    bool result = visit_vars([](RegKey& reg_key, const char* name, CfgVar<auto>& var) {
+    bool result = visit_vars([](RegKey& reg_key, const char* name, auto& var) {
         bool read_success = reg_key.read_value(name, &var.value());
         var.set_dirty(!read_success);
         return read_success;
@@ -36,7 +36,7 @@ catch (...) {
 
 void GameConfig::save() try
 {
-    visit_vars([](RegKey& reg_key, const char* name, CfgVar<auto>& var) {
+    visit_vars([](RegKey& reg_key, const char* name, auto& var) {
         if (var.is_dirty()) {
             reg_key.write_value(name, var.value());
             var.set_dirty(false);
@@ -116,7 +116,7 @@ bool GameConfig::detect_game_path()
 }
 
 template<typename T>
-bool GameConfig::visit_vars(T visitor, bool is_save)
+bool GameConfig::visit_vars(T&& visitor, bool is_save)
 {
     bool result = true;
 

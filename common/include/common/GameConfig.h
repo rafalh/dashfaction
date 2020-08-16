@@ -77,5 +77,5 @@ struct GameConfig
 
 private:
     template<typename T>
-    bool visit_vars(T visitor, bool is_save);
+    bool visit_vars(T&& visitor, bool is_save);
 };

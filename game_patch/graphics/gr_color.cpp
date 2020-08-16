@@ -13,6 +13,7 @@
 #include <patch_common/CodeInjection.h>
 #include <patch_common/ShortTypes.h>
 #include <algorithm>
+#include <stdexcept>
 
 template<int SRC_BITS, int DST_BITS>
 struct ColorChannelConverter;
