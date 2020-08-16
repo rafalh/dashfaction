@@ -68,7 +68,16 @@ void DcAutoCompleteUpdateCommonPrefix(std::string& common_prefix, const std::str
     if (common_prefix.size() > value.size())
         common_prefix.resize(value.size());
     for (size_t i = 0; i < common_prefix.size(); ++i) {
-        if ((case_sensitive && common_prefix[i] != value[i]) || tolower(common_prefix[i]) != tolower(value[i])) {
+        bool match;
+        if (case_sensitive) {
+            match = common_prefix[i] == value[i];
+        }
+        else {
+            char l = std::tolower(static_cast<unsigned char>(common_prefix[i]));
+            char r = std::tolower(static_cast<unsigned char>(value[i]));
+            match = l == r;
+        }
+        if (!match) {
             common_prefix.resize(i);
             break;
         }

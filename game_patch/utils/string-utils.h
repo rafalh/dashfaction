@@ -38,13 +38,15 @@ inline std::string StringToLower(std::string_view str)
 {
     std::string output;
     output.reserve(str.size());
-    std::transform(str.begin(), str.end(), std::back_inserter(output), ::tolower);
+    std::transform(str.begin(), str.end(), std::back_inserter(output), [](unsigned char ch) {
+        return std::tolower(ch);
+    });
     return output;
 }
 
 inline bool StringEqualsIgnoreCase(std::string_view left, std::string_view right)
 {
-    return left.size() == right.size() && std::equal(left.begin(), left.end(), right.begin(), [](auto a, auto b) {
+    return left.size() == right.size() && std::equal(left.begin(), left.end(), right.begin(), [](unsigned char a, unsigned char b) {
         return std::tolower(a) == std::tolower(b);
     });
 }
@@ -82,7 +84,7 @@ inline bool StringContains(std::string_view str, std::string_view infix)
 inline bool StringContainsIgnoreCase(std::string_view str, std::string_view infix)
 {
     auto it = std::search(str.begin(), str.end(),
-        infix.begin(), infix.end(),  [](auto a, auto b) {
+        infix.begin(), infix.end(),  [](unsigned char a, unsigned char b) {
         return std::tolower(a) == std::tolower(b);
     });
     return it != str.end();

@@ -392,7 +392,9 @@ static int PackfileAddEntries_New(rf::Packfile* packfile, const void* block, uns
 static rf::PackfileEntry* PackfileFindFile_New(const char* filename)
 {
     std::string filename_str{filename};
-    std::transform(filename_str.begin(), filename_str.end(), filename_str.begin(), ::tolower);
+    std::transform(filename_str.begin(), filename_str.end(), filename_str.begin(), [](unsigned char ch) {
+        return std::tolower(ch);
+    });
     auto it = g_loopup_table.find(filename_str);
     if (it != g_loopup_table.end()) {
         return it->second;
