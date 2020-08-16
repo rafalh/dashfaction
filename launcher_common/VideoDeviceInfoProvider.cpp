@@ -1,4 +1,4 @@
-//#define USE_DIRECTX9
+#define USE_D3D9 0
 
 #include "VideoDeviceInfoProvider.h"
 #include <common/Exception.h>
@@ -21,7 +21,7 @@ typedef IDirect3D8*(__stdcall *PDIRECT3DCREATE8)(UINT SDKVersion);
 
 VideoDeviceInfoProvider::VideoDeviceInfoProvider()
 {
-#ifndef USE_D3D9
+#if !USE_D3D9
     m_lib = LoadLibraryA("d3d8.dll");
     if (!m_lib)
         THROW_WIN32_ERROR("Failed to load d3d8.dll");
@@ -80,7 +80,7 @@ std::set<VideoDeviceInfoProvider::Resolution> VideoDeviceInfoProvider::get_resol
     D3DDISPLAYMODE d3d_display_mode;
     while (true)
     {
-#ifdef USE_D3D9
+#if USE_D3D9
         HRESULT hr = m_d3d->EnumAdapterModes(adapter, format, mode_idx++, &d3d_display_mode);
 #else
         HRESULT hr = m_d3d->EnumAdapterModes(adapter, mode_idx++, &d3d_display_mode);
@@ -105,7 +105,7 @@ std::set<D3DMULTISAMPLE_TYPE> VideoDeviceInfoProvider::get_multisample_types(uns
     std::set<D3DMULTISAMPLE_TYPE> result;
     for (unsigned i = 2; i < 16; ++i)
     {
-#ifdef USE_D3D9
+#if USE_D3D9
         HRESULT hr = m_d3d->CheckDeviceMultiSampleType(adapter, D3DDEVTYPE_HAL, format, windowed,
             static_cast<D3DMULTISAMPLE_TYPE>(i), nullptr);
 #else
@@ -120,7 +120,7 @@ std::set<D3DMULTISAMPLE_TYPE> VideoDeviceInfoProvider::get_multisample_types(uns
 
 bool VideoDeviceInfoProvider::has_anisotropy_support(unsigned adapter)
 {
-#ifdef USE_D3D9
+#if USE_D3D9
     D3DCAPS9 caps;
 #else
     D3DCAPS8 caps;
