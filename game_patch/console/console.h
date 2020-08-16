@@ -24,7 +24,7 @@ class DcInvalidArgTypeError : public std::exception
 class DcRequiredArgMissingError : public std::exception
 {};
 
-inline bool ReadArgInternal(int type_flag, bool preserve_case = false)
+inline bool ReadArgInternal(unsigned type_flag, bool preserve_case = false)
 {
     rf::DcGetArg(rf::DC_ARG_ANY, preserve_case);
     if (rf::dc_arg_type & type_flag)

@@ -37,7 +37,7 @@ namespace rf
     };
 
     static auto& DcPrint = AddrAsRef<void(const char *text, const uint32_t *color)>(0x00509EC0);
-    static auto& DcGetArg = AddrAsRef<void(int type, bool preserve_case)>(0x0050AED0);
+    static auto& DcGetArg = AddrAsRef<void(unsigned type, bool preserve_case)>(0x0050AED0);
     static auto& DcRunCmd = AddrAsRef<int(const char *cmd)>(0x00509B00);
 
     // Note: DcPrintf is reimplemented to allow static validation of format string
