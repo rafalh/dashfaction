@@ -483,7 +483,7 @@ FunHook<void(rf::EntityBurnInfo&, int)> EntityBurnSwitchParentToCorpse_hook{
 
 CallHook<bool(rf::Object*)> ObjIsPlayer_EntityCheckIsInLiquid_hook{
     {
-        0x0042932A,
+        0x004292E3,
         0x0042932A,
         0x004293F4,
     },
