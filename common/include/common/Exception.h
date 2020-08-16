@@ -6,22 +6,32 @@
 #include <string>
 #include <memory>
 
-#define THROW_EXCEPTION(fmt, ...) throw Exception(fmt " in %s:%u", ##__VA_ARGS__, __FILE__, __LINE__)
+#define THROW_EXCEPTION(...) throw Exception({__FILE__, __LINE__}, __VA_ARGS__)
 
 class Exception : public std::exception
 {
 public:
-    Exception(const char* format, ...)
+    struct SourceLocation
+    {
+        const char* file;
+        int line;
+    };
+
+    Exception(SourceLocation loc, const char* format, ...)
     {
         va_list args;
         va_start(args, format);
-        int size = std::vsnprintf(nullptr, 0, format, args) + 1;
+        int size = 1;
+        size += std::vsnprintf(nullptr, 0, format, args);
+        size += std::snprintf(nullptr, 0, " in %s:%u", loc.file, loc.line);
         va_end(args);
 
         std::unique_ptr<char[]> buf(new char[size]);
 
         va_start(args, format);
-        std::vsnprintf(buf.get(), size, format, args);
+        int pos = 0;
+        pos += std::vsnprintf(buf.get() + pos, size - pos, format, args);
+        pos += std::snprintf(buf.get() + pos, size - pos, " in %s:%u", loc.file, loc.line);
         va_end(args);
 
         m_what = buf.get();
