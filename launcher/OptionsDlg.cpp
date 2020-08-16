@@ -90,7 +90,9 @@ void OptionsDlg::UpdateAdapterCombo()
         auto adapters = m_video_info.get_adapters();
         for (const auto &adapter : adapters) {
             int idx = m_adapter_combo.AddString(adapter.c_str());
-            if (m_conf.selected_video_card == idx)
+            if (idx < 0)
+                throw std::runtime_error("failed to add string to combo box");
+            if (m_conf.selected_video_card == static_cast<unsigned>(idx))
                 selected_idx = idx;
         }
     }
@@ -123,7 +125,7 @@ void OptionsDlg::UpdateResolutionCombo()
         m_res_combo.SetCurSel(selectedRes);
     else {
         char buf[32];
-        sprintf(buf, "%dx%d", m_conf.res_width, m_conf.res_height);
+        sprintf(buf, "%dx%d", m_conf.res_width.value(), m_conf.res_height.value());
         m_res_combo.SetWindowTextA(buf);
     }
 }

@@ -11,7 +11,7 @@ public:
     void Parse()
     {
         auto args = Win32xx::GetCommandLineArgs();
-        for (int i = 0; i < args.size(); ++i) {
+        for (unsigned i = 0; i < args.size(); ++i) {
             std::string_view arg = args[i].c_str();
             if (arg[0] == '-') {
                 if (arg == "-game" || arg == "-level" || arg == "-dedicated") {

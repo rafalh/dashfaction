@@ -30,10 +30,7 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/misc/experimental.cpp")
     add_definitions(-DHAS_EXPERIMENTAL)
 endif()
 
-if(NOT MSVC)
-    add_compile_options(-Wall -Wextra -Wundef -Wno-multichar)
-    add_compile_options(-Wno-pmf-conversions)
-endif()
+enable_warnings()
 
 file(GLOB EXPERIMENTAL_SRCS misc/experimental*.cpp misc/experimental*.h)
 set(SRCS

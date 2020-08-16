@@ -3,9 +3,7 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/vendor/d3d8
 )
 
-if(NOT MSVC)
-    add_compile_options(-Wall -Wextra)
-endif()
+enable_warnings()
 
 file(GLOB SRCS *.cpp include/common/*.h)
 

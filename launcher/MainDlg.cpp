@@ -173,7 +173,9 @@ void MainDlg::OnBnClickedOptionsBtn()
     try {
         OptionsDlg dlg;
         INT_PTR nResponse = dlg.DoModal(*this);
-        RefreshModSelector();
+        if (nResponse == IDOK) {
+            RefreshModSelector();
+        }
     }
     catch (std::exception& e) {
         std::string msg = generate_message_for_exception(e);

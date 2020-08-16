@@ -65,6 +65,13 @@ endif()
 # endif()
 
 # Macros
+
+macro(enable_warnings)
+    if(NOT MSVC)
+        add_compile_options(-Wall -Wextra -Wundef)
+    endif()
+endmacro()
+
 macro(setup_debug_info target)
     if(MSVC)
         # MSVC - generate PDB files

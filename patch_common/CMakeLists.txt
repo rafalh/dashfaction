@@ -1,6 +1,4 @@
-if(NOT MSVC)
-    add_compile_options(-Wall -Wextra)
-endif()
+enable_warnings()
 
 file(GLOB SRCS *.cpp *.h include/patch_common/*.h)
 

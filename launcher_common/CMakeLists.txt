@@ -3,9 +3,7 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/include/launcher_common
 )
 
-if(NOT MSVC)
-    add_compile_options(-Wall -Wextra)
-endif()
+enable_warnings()
 
 file(GLOB SRCS *.cpp *.h include/launcher_common/*.h)
 

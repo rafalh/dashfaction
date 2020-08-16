@@ -4,9 +4,7 @@ include_directories(SYSTEM
     ${CMAKE_SOURCE_DIR}/vendor/win32xx
 )
 
-if(NOT MSVC)
-    add_compile_options(-Wall -Wextra)
-endif()
+enable_warnings()
 
 set(SRCS
     main.cpp

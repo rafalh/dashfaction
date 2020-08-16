@@ -3,9 +3,7 @@ include_directories(
 )
 add_definitions(-DNOMINMAX -DBUILD_DLL)
 
-if(NOT MSVC)
-    add_compile_options(-Wall -Wextra)
-endif()
+enable_warnings()
 
 set(SRCS
     exports.h

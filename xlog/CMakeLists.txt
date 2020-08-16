@@ -1,6 +1,4 @@
-if(NOT MSVC)
-    add_compile_options(-Wall -Wextra)
-endif()
+enable_warnings()
 
 add_library(Xlog STATIC
     include/xlog/Appender.h

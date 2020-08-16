@@ -4,6 +4,7 @@ include_directories(SYSTEM
 )
 
 add_definitions(-DXLOG_NO_MACROS)
+enable_warnings()
 
 file(GLOB SRCS *.cpp *.h *.rc)
 

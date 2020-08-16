@@ -1,6 +1,4 @@
-if(NOT MSVC)
-    add_compile_options(-Wall -Wextra)
-endif()
+enable_warnings()
 
 add_library(CrashHandlerStub STATIC
     crash_handler_stub.cpp
