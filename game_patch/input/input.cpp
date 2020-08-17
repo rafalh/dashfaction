@@ -329,9 +329,9 @@ int GetKeyName(int key, char* buf, size_t buf_len)
 FunHook<int(rf::String&, int)> get_key_name_hook{
     0x0043D930,
     [](rf::String& out_name, int key) {
-        static char buf[32];
+        static char buf[32] = "";
         int result = 0;
-        if (GetKeyName(key, buf, std::size(buf)) <= 0) {
+        if (key < 0 || GetKeyName(key, buf, std::size(buf)) <= 0) {
             result = -1;
         }
         out_name = buf;
