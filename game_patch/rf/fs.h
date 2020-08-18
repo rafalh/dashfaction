@@ -47,7 +47,7 @@ namespace rf
 
         int Seek(int pos, SeekOrigin origin)
         {
-            return AddrCaller{0x00524530}.this_call<int>(this, pos, origin);
+            return AddrCaller{0x00524400}.this_call<int>(this, pos, origin);
         }
 
         int Tell() const
