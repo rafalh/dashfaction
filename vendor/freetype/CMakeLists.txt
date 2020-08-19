@@ -205,36 +205,36 @@ endif ()
 
 
 # Find dependencies
-set(HARFBUZZ_MIN_VERSION "1.8.0")
-if (FT_WITH_HARFBUZZ)
-  find_package(HarfBuzz ${HARFBUZZ_MIN_VERSION} REQUIRED)
-else ()
-  find_package(HarfBuzz ${HARFBUZZ_MIN_VERSION})
-endif ()
+# set(HARFBUZZ_MIN_VERSION "1.8.0")
+# if (FT_WITH_HARFBUZZ)
+#   find_package(HarfBuzz ${HARFBUZZ_MIN_VERSION} REQUIRED)
+# else ()
+#   find_package(HarfBuzz ${HARFBUZZ_MIN_VERSION})
+# endif ()
 
-if (FT_WITH_PNG)
-  find_package(PNG REQUIRED)
-else ()
-  find_package(PNG)
-endif ()
+# if (FT_WITH_PNG)
+#   find_package(PNG REQUIRED)
+# else ()
+#   find_package(PNG)
+# endif ()
 
-if (FT_WITH_ZLIB)
-  find_package(ZLIB REQUIRED)
-else ()
-  find_package(ZLIB)
-endif ()
+# if (FT_WITH_ZLIB)
+#   find_package(ZLIB REQUIRED)
+# else ()
+#   find_package(ZLIB)
+# endif ()
 
-if (FT_WITH_BZIP2)
-  find_package(BZip2 REQUIRED)
-else ()
-  find_package(BZip2)
-endif ()
+# if (FT_WITH_BZIP2)
+#   find_package(BZip2 REQUIRED)
+# else ()
+#   find_package(BZip2)
+# endif ()
 
-if (FT_WITH_BROTLI)
-  find_package(BrotliDec REQUIRED)
-else ()
-  find_package(BrotliDec)
-endif ()
+# if (FT_WITH_BROTLI)
+#   find_package(BrotliDec REQUIRED)
+# else ()
+#   find_package(BrotliDec)
+# endif ()
 
 # Create the configuration file
 if (UNIX)
@@ -428,7 +428,7 @@ target_include_directories(
     PRIVATE
       ${CMAKE_CURRENT_BINARY_DIR}/include
       ${CMAKE_CURRENT_SOURCE_DIR}/include
-      
+
       # Make <ftconfig.h> available for builds/unix/ftsystem.c.
       ${CMAKE_CURRENT_BINARY_DIR}/include/freetype/config
 )
