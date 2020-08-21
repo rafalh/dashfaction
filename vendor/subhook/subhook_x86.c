@@ -181,6 +181,7 @@ static size_t subhook_disasm(void *src, int32_t *reloc_op_offset) {
     /* NOP               */ {0x90, 0, 0},
     /* ADD  r32, r/m32   */ {0x03, 0, MODRM}, // added
     /* IMUL r32, r/m32   */ {0x0F, 0, MODRM | TWO_BYTE, 0xAF}, // added
+    /* JZ  rel32         */ {0x0F, 0, IMM32 | RELOC | TWO_BYTE, 0x84}, // added
   };
 
   uint8_t *code = src;

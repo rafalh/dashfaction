@@ -262,26 +262,44 @@ void ProfilerInit()
 {
     g_profilers.push_back(std::make_unique<CallProfiler>(0x0043363B, "simulation frame"));
     g_profilers.push_back(std::make_unique<CallProfiler>(0x00433326, "  obj move all"));
+    g_profilers.push_back(std::make_unique<CallProfiler>(0x00487B60, "    move pre"));
+    //g_profilers.push_back(std::make_unique<CallProfiler>(0x00487BA3, "    entity pre2")); // causes crash
+    g_profilers.push_back(std::make_unique<CallProfiler>(0x00487C0E, "    physics"));
+    g_profilers.push_back(std::make_unique<CallProfiler>(0x00487C33, "    move post"));
+    // g_profilers.push_back(std::make_unique<CallProfiler>(0x00487FC1, "      entity floor collider")); // causes crash on pdm04
+    // g_profilers.push_back(std::make_unique<CallProfiler>(0x004A0C5D, "        get color from lightmap"));
+
+
+
     g_profilers.push_back(std::make_unique<CallProfiler>(0x004333E5, "  item update all"));
     g_profilers.push_back(std::make_unique<CallProfiler>(0x004333F9, "  trigger update all"));
     g_profilers.push_back(std::make_unique<CallProfiler>(0x00433428, "  particle update all"));
-    //g_profilers.push_back(std::make_unique<AddrRangeProfiler>(0x004951EF, 0x00495216, "    move with collisions"));
-    //g_profilers.push_back(std::make_unique<CallProfiler>(0x00495904, "      detect collision"));
-    //g_profilers.push_back(std::make_unique<CallProfiler>(0x00496357, "        bbox intersect"));
-    //g_profilers.push_back(std::make_unique<CallProfiler>(0x00496391, "        face intersect"));
-    //g_profilers.push_back(std::make_unique<AddrRangeProfiler>(0x004E1F50, 0x004E2074, "      vertices"));
-    //g_profilers.push_back(std::make_unique<CallProfiler>(0x00495329, "    particle process push regions"));
+    // g_profilers.push_back(std::make_unique<AddrRangeProfiler>(0x004951EF, 0x00495216, "    move with collisions"));
+    // g_profilers.push_back(std::make_unique<CallProfiler>(0x00495904, "      detect collision"));
+    // g_profilers.push_back(std::make_unique<CallProfiler>(0x00496357, "        bbox intersect"));
+    // g_profilers.push_back(std::make_unique<CallProfiler>(0x00496391, "        face intersect"));
+    // g_profilers.push_back(std::make_unique<AddrRangeProfiler>(0x004E1F50, 0x004E2074, "      vertices"));
+    // g_profilers.push_back(std::make_unique<CallProfiler>(0x00495329, "    particle process push regions"));
     // g_profilers.push_back(std::make_unique<AddrRangeProfiler>(0x00495282, 0x004952FC, "    particle unk"));
     // g_profilers.push_back(std::make_unique<AddrRangeProfiler>(0x00495445, 0x0049560A, "    particle dmg"));
-    //g_profilers.push_back(std::make_unique<CallProfiler>(0x00495170, "    find particle emitter"));
+    // g_profilers.push_back(std::make_unique<CallProfiler>(0x00495170, "    find particle emitter"));
 
     //g_profilers.push_back(std::make_unique<AddrRangeProfiler>(0x0049514D, 0x0049560A, "    particle one"));
 
     g_profilers.push_back(std::make_unique<CallProfiler>(0x00433450, "  emitters update all"));
     g_profilers.push_back(std::make_unique<CallProfiler>(0x00433653, "render frame"));
-    g_profilers.push_back(std::make_unique<AddrRangeProfiler>(0x00431A00, 0x00431FF8, "  misc (before level geometry)"));
+    g_profilers.push_back(std::make_unique<AddrRangeProfiler>(0x00431A00, 0x00431D1C, "  misc0 (before level geometry)"));
+    g_profilers.push_back(std::make_unique<AddrRangeProfiler>(0x00431D1C, 0x00431FA1, "  misc1 (before level geometry)")); // slow?
+    g_profilers.push_back(std::make_unique<AddrRangeProfiler>(0x00431FA1, 0x00431FF8, "  misc2 (before level geometry)"));
+    // g_profilers.push_back(std::make_unique<CallProfiler>(0x00431D2B, "    in liquid test"));
+    //g_profilers.push_back(std::make_unique<CallProfiler>(0x00431F4B, "    fog"));
+    //g_profilers.push_back(std::make_unique<FunProfiler>(0x0050E020, "      fog"));
+    //g_profilers.push_back(std::make_unique<CallProfiler>(0x00431F99, "    fog bg"));
+
     g_profilers.push_back(std::make_unique<CallProfiler>(0x00431FF8, "  level geometry"));
     g_profilers.push_back(std::make_unique<CallProfiler>(0x004D4703, "    static geometry"));
+    g_profilers.push_back(std::make_unique<CallProfiler>(0x0055F755, "      geocache"));
+    g_profilers.push_back(std::make_unique<CallProfiler>(0x005609BA, "      draw decal"));
     g_profilers.push_back(std::make_unique<CallProfiler>(0x004D4C6E, "    fill obj queue"));
     g_profilers.push_back(std::make_unique<CallProfiler>(0x004D4D57, "    glass shards"));
     g_profilers.push_back(std::make_unique<CallProfiler>(0x004D4D68, "    process obj queue"));
@@ -316,6 +334,7 @@ void ProfilerInit()
 void ProfilerDrawUI()
 {
     if (g_profiler_visible) {
+        //AddrAsRef<bool>(0x00596144) = 0;
         DebugNameValueBox dbg_box{10, 100};
         dbg_box.Section("Profilers:");
         for (auto& p : g_profilers) {
