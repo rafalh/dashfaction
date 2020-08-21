@@ -16,7 +16,8 @@ Version 1.5.0
 - allow custom meshes in Switch_Model event
 - add 'rf' protocol handler (URLs has format: rf://IP:PORT)
 - add setup program
-- add '/save' and '/load' chat commands and quick save/load controls handling for saving and restoring player position in multiplayer (useful for runmap servers, can be enabled in dedicated_server.txt)
+- add '/save' and '/load' chat commands and quick save/load controls handling for saving and restoring player position
+  in multiplayer (useful for runmap servers, can be enabled in dedicated_server.txt)
 - add 'Big HUD' option and 'bighud' command for making the HUD larger
 - add textures for big HUD contributed by Goober
 - add 'reticle_scale' command for changing reticle size
@@ -25,7 +26,8 @@ Version 1.5.0
 - improve render to texture performance (e.g. mirrors and scanners)
 - improve 2D drawing performance
 - improve level loading time
-- fix performance degradation occuring if no level with fog effect was played in current game session, for some levels it can double the FPS (RF bug)
+- fix performance degradation occurring if no level with fog effect was played in current game session, for some levels
+  it can double the FPS (RF bug)
 - add 'damage_screen_flash' command for toggling damage screen flash effect
 - render held corpse in monitors/mirrors
 - add better support for non-US keyboard layouts
@@ -37,11 +39,13 @@ Version 1.5.0
 - improve hidding HUD by 'hud' command
 - add server-size validation of ammo when handling weapon fire
 - use 24-bit depth buffer if supported even if video card is not Nvidia (fixes Z-fighting on Intel and AMD cards)
-- use dynamic light detail texture for all cards if multi-texturing is available (improves graphics quality on Intel cards)
+- use dynamic light detail texture for all cards if multi-texturing is available (improves graphics quality on Intel
+  cards)
 - not treat every chat message starting with 'server' as a server command
 - add GOG install directory auto-detection
 - add support for late joiners aware triggers (improves Pure Faction compatibility)
-- load .tbl files in user_maps (default files cannot be overriden) - allows inclusion of HUD messages in custom maps (*_text.tbl)
+- load .tbl files in user_maps (default files cannot be overriden) - allows inclusion of HUD messages in custom maps
+  (*_text.tbl)
 - increase maximal number of simultaneously playing sounds to 64
 - use port 7755 for server hosting when 'Force port' option is disabled
 - add UPnP automatic port forwarding
@@ -52,7 +56,8 @@ Version 1.5.0
 - insert server name in window title when hosting dedicated server
 - display joining player IP address in dedicated server console
 - add dedicated server option for forcing player character
-- add '-exe-path' launcher command line argument that allows running multiple dedicated servers using separate RF directories
+- add '-exe-path' launcher command line argument that allows running multiple dedicated servers using separate RF
+  directories
 - add support for nearest neighbor texture filtering ('nearest_texture_filtering' command)
 - try setting gamma using Direct3D in full-screen mode before falling back to WinAPI (can fix gamma issues)
 - fix sending crash reports
@@ -60,19 +65,25 @@ Version 1.5.0
 - fix memory and VRAM leak when quick saving (RF bug)
 - fix VRAM leak when playing Bink video (RF bug)
 - fix AI flee animation regression
-- fix crash caused by AI state not being properly updated during level load for entites that are taken from the previous level (RF bug)
-- fix crash caused by corpse pose pointing to not loaded entity action animation for corpses that are taken from the previous level (RF bug)
-- fix buffer overflow on level load when too many objects are being preserved from the previous level; fixes crash in Spaceport Redux campaign (RF bug)
+- fix crash caused by AI state not being properly updated during level load for entites that are taken from the
+  previous level (RF bug)
+- fix crash caused by corpse pose pointing to not loaded entity action animation for corpses that are taken from the
+  previous level (RF bug)
+- fix buffer overflow on level load when too many objects are being preserved from the previous level; fixes crash in
+  Spaceport Redux campaign (RF bug)
 - fix crash when executing camera2 command in main menu (RF bug)
 - fix crash when item cannot be created during RFL load in multi-player (RF bug)
 - fix entity collisions with objects near absolute zero position (RF bug)
 - fix bullets collisions with big objects, especially with high FPS (RF bug)
 - fix Message Log window rendering if resolution ratio is not 4:3 (RF bug)
 - fix flamethrower graphical issues when playing with high FPS (RF bug)
-- reduce maximal particle emitter spawn rate to 60 particles per frame in order to improve graphics and performance (framerate dependent particle emitters like flamethrower weren't designed with 240 FPS in mind so they look bad with too many overlapping particles)
+- reduce maximal particle emitter spawn rate to 60 particles per frame in order to improve graphics and performance
+  (framerate dependent particle emitters like flamethrower weren't designed with 240 FPS in mind so they look bad with
+  too many overlapping particles)
 - fix rendering of liquids and details with alpha in Railgun scanner (RF bug)
 - fix entity/fpgun ambient color being improperly calculated when 'True color textures' option is active
-- fix invalid lightmap sometimes being used for rendering of details with alpha; fixes glass color being affected by shooting in glass_house.rfl (RF bug)
+- fix invalid lightmap sometimes being used for rendering of details with alpha; fixes glass color being affected by
+  shooting in glass_house.rfl (RF bug)
 - fix items not being respawned after ~25 days of server uptime (RF bug)
 - fix players' pings being improperly calculated after ~25 days of server uptime (RF bug)
 - fix compatibility of Crash Handler module with Windows XP and Vista
@@ -91,14 +102,16 @@ Version 1.5.0
 - fix crash when particle emitter allocation fails during entity ignition (RF bug)
 - fix possible buffer overflow in console input buffer (RF bug)
 - fix possible server side crash when kicking a player using rcon (RF bug)
-- fix alpha draw order issues in Hendrix, Generator_Small01, Generator_Small02, LavaTester01, Weapon_RiotShield meshes (RF bug)
+- fix alpha draw order issues in Hendrix, Generator_Small01, Generator_Small02, LavaTester01, Weapon_RiotShield meshes
+  (RF bug)
 - fix corona lights being visible through clutters, items, corpses (RF bug)
 - fix possible 'buzzing' sound in multi-player game if some players are in water (RF bug)
 - fix dedicated server crash when loading level that uses directional light (RF bug)
 
 Version 1.4.1 (released 2019-12-07)
 -----------------------------------
-- add 'skip_cutscene_bind' command allowing to change the control used for skipping cutscenes (by default Multiplayer Stats - TAB)
+- add 'skip_cutscene_bind' command allowing to change the control used for skipping cutscenes (by default Multiplayer
+  Stats - TAB)
 - fix crash after exiting administration with Gryphon (regression)
 - fix crash when joining Pure Faction servers (regression)
 
@@ -107,7 +120,7 @@ Version 1.4.0 (released 2019-12-04)
 - add free camera spectate mode support
 - add vote system (server-side)
 - rework fix for sticking to the ground when jumping - now it is based on PF code (by Trotskie) - should fix free-fall
-animation bug in multi-player and occasionally sticking to the ground in some levels
+  animation bug in multi-player and occasionally sticking to the ground in some levels
 - add 'map_ext' command for extending round time (server-side)
 - increase precision of output from 'ms' command
 - add 'show_invisible_faces' subcommand in 'debug' command
@@ -128,8 +141,10 @@ animation bug in multi-player and occasionally sticking to the ground in some le
 - reduce launcher size and allow building it on Linux after replacing MFC by Win32++ library
 - skip processing of non-damaging particles on a dedicated server (optimization)
 - improve particles simulation performance
-- delete projectiles when they reach bounding box of the level (should fix playing space levels with huge amount of people)
-- stop distant sounds when sound pool is full and a new sound is being started (should fix sounds sometimes stoping working when playing multiplayer with a lot of players)
+- delete projectiles when they reach bounding box of the level (should fix playing space levels with huge amount of
+  people)
+- stop distant sounds when sound pool is full and a new sound is being started (should fix sounds sometimes stoping
+  working when playing multiplayer with a lot of players)
 - sort items and clutter by mesh to improve performance
 - change cutscene skip control to Multiplayer Stats to avoid unintended skipping
 - add control name in cutscene skip hint message
@@ -188,7 +203,8 @@ Version 1.3.0 (released 2019-05-07)
 - add 'findlevel' command as alias for 'findmap'
 - add 'map' command as alias for 'level'
 - allow 'level' command outside of multiplayer game and remove now redundant 'levelsp' command
-- add 'show_enemy_bullets' command for toggling enemy bullets visibility (configuration is persisted) - it was always enabled in previous versions
+- add 'show_enemy_bullets' command for toggling enemy bullets visibility (configuration is persisted) - it was always
+  enabled in previous versions
 - add persisting of volumetric lights (glares) configuration changed by 'vli' command
 - add 'fullscreen' and 'windowed' commands
 - fix "Buffer overrun" message being displed in RED (level editor) when too many objects were selected
