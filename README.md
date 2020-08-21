@@ -28,6 +28,7 @@ Features:
 Client commands:
 * `maxfps value` - sets maximal FPS
 * `hud` - shows and hides HUD
+* `bighud` - toggles HUD between big and normal size
 * `spectate [player]` - starts spectate mode (first person or free camera)
 * `inputmode` - switches between default and DirectInput mouse input handling
 * `ms value` - mouse sensitivity
@@ -35,8 +36,11 @@ Client commands:
 * `fullscreen` - enters fullscreen mode
 * `windowed` - enters windowed mode
 * `antialiasing` - toggles anti-aliasting
-* `screen_flash` - toggles screen flash effect (e.g. when player is being hit)
-* `findlevel rfl_fragment` - finds level using rfl name fragment
+* `nearest_texture_filtering` - toggles nearest neighbor texture filtering
+* `damage_screen_flash` - toggles screen flash effect when player is getting hit
+* `mesh_static_lighting` - toggles static lighting for clutters and items
+* `reticle_scale scale` - sets reticle scale
+* `findlevel rfl_name_fragment` - finds level using rfl name fragment
 * `download_level rfl_name` - downloads level from FactionFiles.com
 * `linear_pitch` - toggles linear pitch angle
 * `skip_cutscene_bind control` - sets binding for cutscene skip action

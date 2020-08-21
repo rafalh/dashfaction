@@ -266,6 +266,7 @@ DcCommand2 reticle_scale_cmd{
     "Sets/gets reticle scale",
 };
 
+#ifdef DEBUG
 DcCommand2 hud_coords_cmd{
     "d_hud_coords",
     [](int idx, std::optional<int> x, std::optional<int> y) {
@@ -277,6 +278,7 @@ DcCommand2 hud_coords_cmd{
 
     },
 };
+#endif
 
 struct ScaledBitmapInfo {
     int bmh = -1;
