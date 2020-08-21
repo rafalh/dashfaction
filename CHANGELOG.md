@@ -54,6 +54,7 @@ Version 1.5.0
 - add dedicated server option for forcing player character
 - add '-exe-path' launcher command line argument that allows running multiple dedicated servers using separate RF directories
 - add support for nearest neighbor texture filtering ('nearest_texture_filtering' command)
+- try setting gamma using Direct3D in full-screen mode before falling back to WinAPI (can fix gamma issues)
 - fix sending crash reports
 - fix non-working face scrolling before first geomod use in custom levels (RF bug)
 - fix memory and VRAM leak when quick saving (RF bug)
