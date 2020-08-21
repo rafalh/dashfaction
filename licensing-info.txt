@@ -295,3 +295,11 @@ This project uses highly modified versions of fonts:
 * OPTIEdgar-Extended
 * OPTIEdgarBold-Extended
 Copyright Copr. Castcraft Software, Inc. 1990-1991.
+
+###############################################################################
+## Contributors
+###############################################################################
+
+Goober:
+* HUD textures for the big mode
+* symbol glyphs in ttf fonts
