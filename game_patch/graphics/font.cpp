@@ -10,6 +10,7 @@
 #include "../rf/common.h"
 #include "../rf/graphics.h"
 #include "../rf/bmpman.h"
+#include "../rf/network.h"
 #include "../utils/string-utils.h"
 #include "graphics_internal.h"
 #include "gr_color.h"
@@ -305,12 +306,12 @@ GrNewFont::GrNewFont(std::string_view name) :
     xlog::trace("Creating font texture atlas %dx%d", atlas_w, atlas_h);
     bitmap_ = rf::BmCreateUserBmap(rf::BMPF_ARGB_8888, atlas_w, atlas_h);
     if (bitmap_ == -1) {
-        xlog::error("BmCreateUserBmap failed");
+        xlog::error("BmCreateUserBmap failed for font texture");
         throw std::runtime_error{"failed to load font"};
     }
     rf::GrLockData lock;
     if (!rf::GrLock(bitmap_, 0, &lock, 2)) {
-        xlog::error("GrLock failed");
+        xlog::error("GrLock failed for font texture");
         throw std::runtime_error{"failed to load font"};
     }
 
@@ -329,8 +330,8 @@ GrNewFont::GrNewFont(std::string_view name) :
         int glyph_bm_h = static_cast<int>(bitmap.rows);
 
         auto [glyph_bm_x, glyph_bm_y] = atlas_packer.get_pos(codepoint);
-        if (digits_only)
-        xlog::info("glyph %x bitmap x %d y %d w %d h %d left %d top %d advance %ld", codepoint, glyph_bm_x, glyph_bm_y,
+
+        xlog::trace("glyph %x bitmap x %d y %d w %d h %d left %d top %d advance %ld", codepoint, glyph_bm_x, glyph_bm_y,
             glyph_bm_w, glyph_bm_h, slot->bitmap_left, slot->bitmap_top, slot->advance.x >> 6);
 
         GlyphInfo glyph_info;
@@ -453,6 +454,9 @@ FunHook<int(const char*, int)> GrLoadFont_hook{
         if (StringEndsWith(name, ".vf")) {
             return GrLoadFont_hook.CallTarget(name, reserved);
         }
+        else if (rf::is_dedicated_server) {
+           return -1;
+        }
         else {
             for (unsigned i = 0; i < g_fonts.size(); ++i) {
                 auto& font = g_fonts[i];
@@ -466,7 +470,7 @@ FunHook<int(const char*, int)> GrLoadFont_hook{
                 return static_cast<int>((g_fonts.size() - 1) | ttf_font_flag);
             }
             catch (std::exception& e) {
-                xlog::error("Failed to load font: %s", e.what());
+                xlog::error("Failed to load font %s: %s", name, e.what());
                 return -1;
             }
         }
