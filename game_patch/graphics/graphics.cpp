@@ -261,7 +261,7 @@ CallHook<void(int, rf::GrVertex**, int, int)> GrDrawRect_GrDrawPoly_hook{
 
 void SetupTextureFiltering()
 {
-    if (g_game_config.nearest_filtering) {
+    if (g_game_config.nearest_texture_filtering) {
         // use linear filtering for lightmaps because otherwise it looks bad
         SetTextureMinMagFilterInCode(D3DTEXF_POINT, D3DTEXF_LINEAR);
     }
@@ -717,13 +717,13 @@ DcCommand2 mesh_static_lighting_cmd{
     "Toggle mesh static lighting calculation",
 };
 
-DcCommand2 nearest_filtering_cmd{
-    "nearest_filtering",
+DcCommand2 nearest_texture_filtering_cmd{
+    "nearest_texture_filtering",
     []() {
-        g_game_config.nearest_filtering = !g_game_config.nearest_filtering;
+        g_game_config.nearest_texture_filtering = !g_game_config.nearest_texture_filtering;
         g_game_config.save();
         SetupTextureFiltering();
-        rf::DcPrintf("Nearest texture filter is %s", g_game_config.nearest_filtering ? "enabled" : "disabled");
+        rf::DcPrintf("Nearest texture filtering is %s", g_game_config.nearest_texture_filtering ? "enabled" : "disabled");
     },
     "Toggle nearest texture filtering",
 };
@@ -858,7 +858,7 @@ void GraphicsInit()
 
     // Other commands
     antialiasing_cmd.Register();
-    nearest_filtering_cmd.Register();
+    nearest_texture_filtering_cmd.Register();
 
     // Do not flush drawing buffers during GrSetColor call
     WriteMem<u8>(0x0050CFEB, asm_opcodes::jmp_rel_short);
