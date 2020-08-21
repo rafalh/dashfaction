@@ -492,6 +492,16 @@ CallHook<bool(rf::Object*)> ObjIsPlayer_EntityCheckIsInLiquid_hook{
     },
 };
 
+CallHook<void(rf::Vector3*, float, float, float, float, bool, int, int)> LightAddDirectional_RflLoadLevelProperties_hook{
+    0x004619E1,
+    [](rf::Vector3 *dir, float intensity, float r, float g, float b, bool is_dynamic, int casts_shadow, int dropoff_type) {
+        auto LightingIsEnabled = AddrAsRef<bool()>(0x004DB8B0);
+        if (LightingIsEnabled()) {
+            LightAddDirectional_RflLoadLevelProperties_hook.CallTarget(dir, intensity, r, g, b, is_dynamic, casts_shadow, dropoff_type);
+        }
+    },
+};
+
 void MiscAfterLevelLoad(const char* level_filename)
 {
     DoLevelSpecificEventHacks(level_filename);
@@ -654,6 +664,9 @@ void MiscInit()
 
     // Fix buzzing sound when some player is floating in water
     ObjIsPlayer_EntityCheckIsInLiquid_hook.Install();
+
+    // Fix dedicated server crash when loading level that uses directional light
+    LightAddDirectional_RflLoadLevelProperties_hook.Install();
 
     // Init cmd line param
     GetUrlCmdLineParam();
