@@ -71,26 +71,28 @@ Application should work on Windows XP SP3 and newer (tested mostly on Windows 10
 
 Usage
 -----
-1. Unpack Dash Faction files to any folder (there is no requirement to put it in Red Faction folder).
+1. Unpack Dash Faction files to some folder (there is no requirement to put it in the Red Faction folder).
 
-2. Run DashFactionLauncher.exe.
+2. Run `DashFactionLauncher.exe`.
 
-3. On first run select Options and check if everything is OK (especially make sure game executable path is valid).
+3. When running launcher for the first time select "Options" button and check if everything is OK (especially make sure
+   game executable path is valid).
 
-4. Close settings and click "Launch Game" to start Dash Faction.
+4. Close options and click "Launch Game" button to start Dash Faction.
 
 Advanced usage
 --------------
 You can provide additional command line arguments to `DashFactionLauncher.exe` application. They are always forwarded
-to Red Faction process. For example to start a dedicated server with Dash Faction support use `-dedicated` argument
-just like in the original game.
+to the Red Faction process. For example to start a dedicated server use `-dedicated` argument just like in the original
+game.
 
 Dash Faction specific arguments:
 
-* `-game` - launch game immediately without displaying the launcher window
-* `-editor` - launch mod immediately without displaying the launcher window
-* `-win32-console` - use native Win32 console in dedicated server mode
-* `-exe-path` - override launched executable path (RF.exe or RED.exe) - useful for running multiple dedicated servers using separate RF directories
+* `-game` - launch the game immediately without displaying the launcher window
+* `-editor` - launch the level editor immediately without displaying the launcher window
+* `-win32-console` - use a native Win32 console in the dedicated server mode
+* `-exe-path` - override the launched executable file path (RF.exe or RED.exe) - useful for running multiple dedicated
+  servers using separate RF directories
 
 Problems
 --------
