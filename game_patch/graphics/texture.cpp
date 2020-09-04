@@ -294,8 +294,20 @@ bm_read_header_hook{
             }
         }
 
-        return bm_read_header_hook.CallTarget(filename, width_out, height_out, pixel_fmt_out, num_levels_out,
+        auto bm_type = bm_read_header_hook.CallTarget(filename, width_out, height_out, pixel_fmt_out, num_levels_out,
             num_levels_external_mips_out, num_frames_out, fps_out, total_bytes_m2v_out, vbm_ver_out, a11);
+
+        // Sanity checks
+        // Prevents heap corruption when width = 0 or height = 0
+        if (*width_out <= 0 || *height_out <= 0 || *pixel_fmt_out == rf::BMPF_INVALID || *num_levels_out < 1 || *num_frames_out < 1) {
+            bm_type = rf::BM_INVALID;
+        }
+
+        if (bm_type == rf::BM_INVALID) {
+            xlog::warn("Failed load bitmap header for '%s'", filename);
+        }
+
+        return bm_type;
     },
 };
 
@@ -310,7 +322,13 @@ FunHook<rf::BmPixelFormat(int, void**, void**)> bm_lock_hook{
             return bm_entry.pixel_format;
         }
         else {
-            return bm_lock_hook.CallTarget(bmh, pixels_out, palette_out);
+            auto pixel_fmt = bm_lock_hook.CallTarget(bmh, pixels_out, palette_out);
+            if (pixel_fmt == rf::BMPF_INVALID) {
+                *pixels_out = nullptr;
+                *palette_out = nullptr;
+                xlog::warn("bm_lock failed");
+            }
+            return pixel_fmt;
         }
     },
 };
@@ -337,8 +355,9 @@ FunHook<int(int, rf::GrD3DTexture&)> gr_d3d_create_texture_hook{
     [](int bm_handle, rf::GrD3DTexture& tslot) {
         auto result = gr_d3d_create_texture_hook.CallTarget(bm_handle, tslot);
         if (result != 1) {
-            xlog::warn("Failed to load texture %s", rf::BmGetFilename(bm_handle));
-            return result;
+            xlog::warn("Failed to load texture '%s'", rf::BmGetFilename(bm_handle));
+            // Note: callers of this function expects zero result on failure
+            return 0;
         }
         auto pixel_fmt = rf::BmGetPixelFormat(bm_handle);
         if (pixel_fmt == rf::BMPF_RENDER_TARGET) {
