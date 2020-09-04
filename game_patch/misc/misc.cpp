@@ -343,7 +343,7 @@ CodeInjection sort_clutter_patch{
             if (current_mesh_name && mesh_name_sv == current_mesh_name) {
                 break;
             }
-            if (std::string_view{current_mesh_name} == "LavaTester01.v3d") {
+            if (current_mesh_name && std::string_view{current_mesh_name} == "LavaTester01.v3d") {
                 // HACKFIX: place LavaTester01 at the end to fix alpha draw order issues in L5S2 (Geothermal Plant)
                 // Note: OF_HAS_ALPHA cannot be used because it causes another draw-order issue when lava goes up
                 break;
