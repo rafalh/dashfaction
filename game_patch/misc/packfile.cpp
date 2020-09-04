@@ -7,6 +7,7 @@
 #include <common/BuildConfig.h>
 #include <patch_common/ShortTypes.h>
 #include <patch_common/AsmWriter.h>
+#include <patch_common/CodeInjection.h>
 #include <xlog/xlog.h>
 #include <fstream>
 #include <array>
@@ -403,6 +404,14 @@ static rf::PackfileEntry* PackfileFindFile_New(const char* filename)
     return nullptr;
 }
 
+CodeInjection PackfileOpen_check_seek_result_injection{
+    0x0052C301,
+    [](auto& regs) {
+        regs.eax = !regs.eax;
+        regs.eip = 0x0052C306;
+    },
+};
+
 static void LoadDashFactionVpp()
 {
     // Load DashFaction specific packfile
@@ -530,6 +539,9 @@ void PackfileApplyPatches()
     AsmWriter(0x0052C220).jmp(PackfileFindFile_New);
     AsmWriter(0x0052BB60).jmp(PackfileInit_New);
     AsmWriter(0x0052BC80).jmp(PackfileCleanup_New);
+
+    // Don't return success from PackfileOpen if offset points out of file contents
+    PackfileOpen_check_seek_result_injection.Install();
 
 #ifdef DEBUG
     WriteMem<u8>(0x0052BEF0, asm_opcodes::int3); // PackfileInitFileList

@@ -502,6 +502,13 @@ CallHook<void(rf::Vector3*, float, float, float, float, bool, int, int)> LightAd
     },
 };
 
+CodeInjection Vfile_Read_stack_corruption_fix{
+    0x0052D0E0,
+    [](auto& regs) {
+        regs.esi = regs.eax;
+    },
+};
+
 void MiscAfterLevelLoad(const char* level_filename)
 {
     DoLevelSpecificEventHacks(level_filename);
@@ -667,6 +674,9 @@ void MiscInit()
 
     // Fix dedicated server crash when loading level that uses directional light
     LightAddDirectional_RflLoadLevelProperties_hook.Install();
+
+    // Fix stack corruption when packfile has lower size than expected
+    Vfile_Read_stack_corruption_fix.Install();
 
     // Init cmd line param
     GetUrlCmdLineParam();

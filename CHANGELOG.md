@@ -107,7 +107,8 @@ Version 1.5.0
 - fix corona lights being visible through clutters, items, corpses (RF bug)
 - fix possible 'buzzing' sound in multi-player game if some players are in water (RF bug)
 - fix dedicated server crash when loading level that uses directional light (RF bug)
-- fix heap corruption when loading corrupted bitmaps (RF bug)
+- fix heap corruption when loading a bitmap with corrupted header (RF bug)
+- fix stack corruption when loading a corrupted packfile (RF bug)
 
 Version 1.4.1 (released 2019-12-07)
 -----------------------------------

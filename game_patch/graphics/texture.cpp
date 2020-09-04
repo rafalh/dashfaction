@@ -294,8 +294,11 @@ bm_read_header_hook{
             }
         }
 
+        xlog::trace("Loading bitmap header for '%s'", filename);
         auto bm_type = bm_read_header_hook.CallTarget(filename, width_out, height_out, pixel_fmt_out, num_levels_out,
             num_levels_external_mips_out, num_frames_out, fps_out, total_bytes_m2v_out, vbm_ver_out, a11);
+        xlog::trace("Bitmap header for '%s': type %d size %dx%d pixel_fmt %d levels %d frames %d",
+            filename, bm_type, *width_out, *height_out, *pixel_fmt_out, *num_levels_out, *num_frames_out);
 
         // Sanity checks
         // Prevents heap corruption when width = 0 or height = 0
