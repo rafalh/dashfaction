@@ -300,12 +300,12 @@ void SendHitSoundPacket(rf::Player* target)
     pdata.last_hitsound_sent_ms = now;
 
     // Send sound packet
-    rfSound packet;
-    packet.type = RF_SOUND;
-    packet.size = sizeof(packet) - sizeof(rfPacketHeader);
+    RF_SoundPacket packet;
+    packet.header.type = RF_GPT_SOUND;
+    packet.header.size = sizeof(packet) - sizeof(packet.header);
     packet.sound_id = g_additional_server_config.hit_sounds.sound_id;
     // FIXME: it does not work on RF 1.21
-    packet.x = packet.y = packet.z = std::numeric_limits<float>::quiet_NaN();
+    packet.pos.x = packet.pos.y = packet.pos.z = std::numeric_limits<float>::quiet_NaN();
     rf::NwSendNotReliablePacket(target->nw_data->addr, &packet, sizeof(packet));
 }
 
@@ -366,7 +366,7 @@ CallHook<void(rf::Player*, int, int)> give_default_weapon_ammo_hook{
 FunHook<bool (const char*, int)> MpIsLevelForGameMode_hook{
     0x00445050,
     [](const char *filename, int game_mode) {
-        if (game_mode == RF_CTF) {
+        if (game_mode == RF_GT_CTF) {
             return StringStartsWithIgnoreCase(filename, "ctf") || StringStartsWithIgnoreCase(filename, "pctf");
         }
         else {
@@ -382,9 +382,9 @@ FunHook<void(rf::Player*)> spawn_player_sync_ammo_hook{
         // if default player weapon has ammo override sync ammo using additional reload packet
         if (g_additional_server_config.default_player_weapon_ammo && !rf::IsPlayerEntityInvalid(player)) {
             rf::EntityObj* entity = rf::EntityGetByHandle(player->entity_handle);
-            rfReload packet;
-            packet.type = RF_RELOAD;
-            packet.size = sizeof(packet) - sizeof(rfPacketHeader);
+            RF_ReloadPacket packet;
+            packet.header.type = RF_GPT_RELOAD;
+            packet.header.size = sizeof(packet) - sizeof(packet.header);
             packet.entity_handle = entity->handle;
             int weapon_cls_id = entity->ai_info.weapon_cls_id;
             packet.weapon = weapon_cls_id;

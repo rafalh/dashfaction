@@ -570,7 +570,7 @@ std::pair<std::unique_ptr<std::byte[]>, size_t> ExtendPacket(std::byte* data, si
     auto new_data = std::make_unique<std::byte[]>(len + sizeof(ext_data));
     std::copy(data, data + len, new_data.get());
     std::copy(&ext_data, &ext_data + 1, reinterpret_cast<T*>(new_data.get() + len));
-    auto& new_header = *reinterpret_cast<rfPacketHeader*>(new_data.get());
+    auto& new_header = *reinterpret_cast<RF_GamePacketHeader*>(new_data.get());
     new_header.size += sizeof(ext_data);
     return {std::move(new_data), len + sizeof(ext_data)};
 }
@@ -812,19 +812,19 @@ const std::optional<DashFactionServerInfo>& GetDashFactionServerInfo()
 void SendChatLinePacket(const char* msg, rf::Player* target, rf::Player* sender, bool is_team_msg)
 {
     uint8_t buf[512];
-    rfMessage& packet = *reinterpret_cast<rfMessage*>(buf);
-    packet.type = RF_MESSAGE;
-    packet.size = static_cast<uint16_t>(std::strlen(msg) + 3);
+    auto& packet = *reinterpret_cast<RF_ChatLinePacket*>(buf);
+    packet.header.type = RF_GPT_CHAT_LINE;
+    packet.header.size = static_cast<uint16_t>(sizeof(packet) - sizeof(packet.header) + std::strlen(msg) + 1);
     packet.player_id = sender ? sender->nw_data->player_id : 0xFF;
     packet.is_team_msg = is_team_msg;
     std::strncpy(packet.message, msg, 255);
     packet.message[255] = 0;
     if (target == nullptr && rf::is_server) {
-        rf::NwSendReliablePacketToAll(buf, packet.size + 3, 0);
+        rf::NwSendReliablePacketToAll(buf, packet.header.size + sizeof(packet.header), 0);
         rf::DcPrintf("Server: %s", msg);
     }
     else {
-        rf::NwSendReliablePacket(target, buf, packet.size + 3, 0);
+        rf::NwSendReliablePacket(target, buf, packet.header.size + sizeof(packet.header), 0);
     }
 }
 

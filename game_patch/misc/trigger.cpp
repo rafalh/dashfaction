@@ -16,9 +16,9 @@ std::vector<int> g_triggers_uids_for_late_joiners;
 
 void SendTriggerActivatePacket(rf::Player* player, int trigger_uid, int32_t entity_handle)
 {
-    rfTriggerActivate packet;
-    packet.type = RF_TRIGGER_ACTIVATE;
-    packet.size = sizeof(packet) - sizeof(rfPacketHeader);
+    RF_TriggerActivatePacket packet;
+    packet.header.type = RF_GPT_TRIGGER_ACTIVATE;
+    packet.header.size = sizeof(packet) - sizeof(packet.header);
     packet.uid = trigger_uid;
     packet.entity_handle = entity_handle;
     rf::NwSendReliablePacket(player, reinterpret_cast<uint8_t*>(&packet), sizeof(packet), 0);

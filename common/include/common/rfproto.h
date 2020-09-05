@@ -13,7 +13,17 @@
 
 #include <stdint.h>
 
-static_assert(sizeof(float) == 4);
+#ifdef C_ASSERT
+#undef C_ASSERT
+#define HAS_C_ASSERT
+#endif
+#define C_ASSERT(e) extern void __C_ASSERT__##__LINE__(int [(e)?1:-1])
+
+C_ASSERT(sizeof(float) == 4);
+
+#ifndef HAS_C_ASSERT
+#undef C_ASSERT
+#endif
 
 #ifdef __BIG_ENDIAN__
 #error Big Endian not supported
@@ -31,7 +41,11 @@ static_assert(sizeof(float) == 4);
 #define RF_TRACKER_HOST "rf.thqmultiplay.net"
 #define RF_TRACKER_PORT 18444
 
-enum rfMainPacketType
+/**
+ * Main Packet type
+ * First byte of a datagram.
+ */
+enum RF_MainPacketType
 {
     RF_GAME     = 0x00,
     RF_RELIABLE = 0x01,
@@ -44,182 +58,191 @@ enum rfMainPacketType
 
 /**
  * Packet type
- * Type of normal packet. See rfPacketHeader.
+ * Type of normal packet. See RF_GamePacketHeader.
  */
-enum rfPacketType
+enum RF_GamePacketType
 {
-    RF_SERVER_INFO_REQUEST    = 0x00,
-    RF_SERVER_INFO            = 0x01,
-    RF_JOIN_REQUEST           = 0x02,
-    RF_JOIN_SUCCESS           = 0x03,
-    RF_JOIN_FAILED            = 0x04,
-    RF_NEW_PLAYER             = 0x05,
-    RF_PLAYERS_LIST           = 0x06,
-    RF_PLAYER_LEFT            = 0x07,
-    RF_SERVER_STOP            = 0x08,
-    RF_STATE_REQUEST          = 0x09,
-    RF_STATE_END              = 0x0A,
-    RF_CLIENT_IN_GAME         = 0x0B, /* sent after joining and when player exit menu screen */
-    RF_MESSAGE                = 0x0C,
-    RF_NAME_CHANGE            = 0x0D,
-    RF_SPAWN_REQUEST          = 0x0E,
-    RF_TRIGGER_ACTIVATE       = 0x0F,
-    RF_USE_REQUEST            = 0x10,
-    RF_GEOMOD_STATE           = 0x11, /* unknown */
-    RF_GLASS_STATE            = 0x12,
-    /*  13  remote_charges_state */
-    RF_SUICIDE                = 0x14,
-    RF_LEVEL_END              = 0x15, // enter limbo
-    RF_LEVEL_CHANGE           = 0x16, // leave limbo
-    RF_TEAM_CHANGE            = 0x17,
-    RF_PING                   = 0x18,
-    RF_PONG                   = 0x19,
-    RF_STATS                  = 0x1A,
-    RF_PLAYER_RATE_CHANGE     = 0x1B,
-    /*  1c  select_weapon_request */
-    RF_CLUTTER_STATE          = 0x1D,
-    RF_CLUTTER_KILL           = 0x1E,
-    RF_FLAG_STEAL             = 0x1F,
-    RF_FLAG_CAPTURE           = 0x20,
-    RF_FLAGS_STATE            = 0x21,
-    RF_FLAG_RETURN            = 0x22,
-    RF_FLAG_DROP              = 0x23,
-    RF_DETONATE_REMOTE_CHARGE = 0x24,
-    RF_ITEM_UPDATE            = 0x25,
-    RF_ENTITY_UPDATE          = 0x26,
-    RF_ENTITY_KILL            = 0x27,
-    RF_ITEM_APPLY             = 0x28,
-    RF_GEOMOD                 = 0x29,
-    /*  2a  mover_update
-        2b  respawn */
-    RF_ENTITY_SPAWN           = 0x2C,
-    RF_ITEM_SPAWN             = 0x2D,
-    RF_RELOAD                 = 0x2E,
-    RF_RELOAD_REQUEST         = 0x2F,
-    RF_SHOOT                  = 0x30,
-    RF_FALL_DAMAGE            = 0x31,
-    RF_RCON_REQUEST           = 0x32,
-    RF_RCON_COMMAND           = 0x33,
-    RF_SOUND                  = 0x34,
-    RF_TEAM_SCORES            = 0x35,
-    RF_GLASS_KILL             = 0x36,
+    RF_GPT_GAME_INFO_REQUEST      = 0x00,
+    RF_GPT_GAME_INFO              = 0x01,
+    RF_GPT_JOIN_REQUEST           = 0x02,
+    RF_GPT_JOIN_ACCEPT            = 0x03,
+    RF_GPT_JOIN_DENY              = 0x04,
+    RF_GPT_NEW_PLAYER             = 0x05,
+    RF_GPT_PLAYERS                = 0x06,
+    RF_GPT_LEFT_GAME              = 0x07,
+    RF_GPT_END_GAME               = 0x08,
+    RF_GPT_STATE_INFO_REQUEST     = 0x09,
+    RF_GPT_STATE_INFO_DONE        = 0x0A,
+    RF_GPT_CLIENT_IN_GAME         = 0x0B, // sent after joining and when player exit menu screen
+    RF_GPT_CHAT_LINE              = 0x0C,
+    RF_GPT_NAME_CHANGE            = 0x0D,
+    RF_GPT_RESPAWN_REQUEST        = 0x0E,
+    RF_GPT_TRIGGER_ACTIVATE       = 0x0F,
+    RF_GPT_USE_KEY_PRESSED        = 0x10,
+    RF_GPT_PREGAME_BOOLEAN        = 0x11,
+    RF_GPT_PREGAME_GLASS          = 0x12,
+    RF_GPT_PREGAME_REMOTE_CHARGE  = 0x13,
+    RF_GPT_SUICIDE                = 0x14,
+    RF_GPT_ENTER_LIMBO            = 0x15, // level ended
+    RF_GPT_LEAVE_LIMBO            = 0x16, // level is changing
+    RF_GPT_TEAM_CHANGE            = 0x17,
+    RF_GPT_PING                   = 0x18,
+    RF_GPT_PONG                   = 0x19,
+    RF_GPT_NETGAME_UPDATE         = 0x1A,
+    RF_GPT_RATE_CHANGE            = 0x1B,
+    RF_GPT_SELECT_WEAPON          = 0x1C,
+    RF_GPT_CLUTTER_UPDATE         = 0x1D,
+    RF_GPT_CLUTTER_KILL           = 0x1E,
+    RF_GPT_CTF_FLAG_PICKED_UP     = 0x1F,
+    RF_GPT_CTF_FLAG_CAPTURED      = 0x20,
+    RF_GPT_CTF_FLAG_UPDATE        = 0x21,
+    RF_GPT_CTF_FLAG_RETURNED      = 0x22,
+    RF_GPT_CTF_FLAG_DROPED        = 0x23,
+    RF_GPT_REMOTE_CHARGE_KILL     = 0x24,
+    RF_GPT_ITEM_UPDATE            = 0x25,
+    RF_GPT_OBJECT_UPDATE          = 0x26,
+    RF_GPT_OBJECT_KILL            = 0x27,
+    RF_GPT_ITEM_APPLY             = 0x28,
+    RF_GPT_BOOLEAN                = 0x29, // geomod
+    RF_GPT_MOVER_UPDATE           = 0x2A, // unused
+    RF_GPT_RESPAWN                = 0x2B,
+    RF_GPT_ENTITY_CREATE          = 0x2C,
+    RF_GPT_ITEM_CREATE            = 0x2D,
+    RF_GPT_RELOAD                 = 0x2E,
+    RF_GPT_RELOAD_REQUEST         = 0x2F,
+    RF_GPT_WEAPON_FIRE            = 0x30,
+    RF_GPT_FALL_DAMAGE            = 0x31,
+    RF_GPT_RCON_REQUEST           = 0x32,
+    RF_GPT_RCON                   = 0x33,
+    RF_GPT_SOUND                  = 0x34,
+    RF_GPT_TEAM_SCORES            = 0x35,
+    RF_GPT_GLASS_KILL             = 0x36,
 };
 
 /**
  * Packet header
  * Header of each normal packet.
  */
-typedef struct _rfPacketHeader
+struct RF_GamePacketHeader
 {
-    uint8_t type;
-    uint16_t size;
-} rfPacketHeader;
+    uint8_t type;  // see RF_GamePacketType
+    uint16_t size; // length of data without the header
+};
 
-enum rfReliablePacketType
+enum RF_ReliablePacketType
 {
-    RF_REL_REPLY   = 0x00,
-    RF_REL_PACKETS = 0x01,
-    RF_REL_JOIN_03 = 0x03,
-    RF_REL_JOIN_06 = 0x06,
-    RF_REL_JOIN_05 = 0x05,
+    RF_RPT_REPLY   = 0x00,
+    RF_RPT_PACKETS = 0x01,
+    RF_RPT_JOIN_03 = 0x03,
+    RF_RPT_JOIN_06 = 0x06,
+    RF_RPT_JOIN_05 = 0x05,
 };
 
 /**
  * Reliable packet
  * Used for delivering ordered reliable packets. It has first byte set to RF_RELIABLE.
  */
-typedef struct _rfReliable
+struct RF_ReliablePacket
 {
-    uint8_t type; /* usually RF_REL_PACKETS */
+    uint8_t type;    // usually RF_RPT_PACKETS
     uint8_t unknown;
-    uint16_t id; /* Packet ID */
-    uint16_t len; /* Length of data */
-    uint32_t ticks; /* Milliseconds since client/server start */
+    uint16_t id;     // Packet ID
+    uint16_t len;    // Length of data
+    uint32_t ticks;  // Milliseconds since client/server start
     uint8_t data[];
-} rfReliable;
+};
 
 /**
  * Synchronization reply packet
  * Special type of packet. It has first byte set to 01.
  */
-typedef struct _rfReply
+struct RF_ReliableReplyPacket
 {
-    uint8_t type; /* RF_REL_REPLY */
-    uint8_t unknown; /* 0x00 */
-    uint16_t unknown2;  /* 0x0000 */
-    uint16_t len; /* 0x0004 */
-    uint32_t ticks; /* cn from packet which reply is for */
-    uint16_t packet_id; /* n from packet which reply is for */
-    uint16_t unknown3; /* 0x0000 */
-} rfReply;
-
-enum rfProtocolVersion
-{
-    RF_VER_10_11 = 0x87, /* 1.0 and 1.1 servers */
-    RF_VER_12    = 0x89, /* 1.2 servers */
-    RF_VER_13    = 0x91, /* 1.3 servers (unofficial path) */
+    uint8_t type;       // RF_RPT_REPLY
+    uint8_t unknown;    // 0x00
+    uint16_t unknown2;  // 0x0000
+    uint16_t len;       // 0x0004
+    uint32_t ticks;     // cn from packet which reply is for
+    uint16_t packet_id; // n from packet which reply is for
+    uint16_t unknown3;  // 0x0000
 };
 
-enum rfGameType
+enum RF_ProtocolVersion
 {
-    RF_DM     = 0x00,
-    RF_CTF    = 0x01,
-    RF_TEAMDM = 0x02,
+    RF_VER_10_11 = 0x87, // 1.0 and 1.1 servers
+    RF_VER_12    = 0x89, // 1.2 servers
+    RF_VER_13    = 0x91, // 1.3 servers (unofficial path)
 };
 
-enum rfServerFlags
+enum RF_GameType
 {
-    RF_SIF_DEDICATED = 0x01,
-    RF_SIF_NOT_LAN   = 0x02,
-    RF_SIF_PASSWORD  = 0x04,
+    RF_GT_DM     = 0x00,
+    RF_GT_CTF    = 0x01,
+    RF_GT_TEAMDM = 0x02,
 };
 
-typedef struct _rfServerInfo
+enum RF_ServerFlags
 {
-    uint8_t type; /* RF_SERVER_INFO */
-    uint16_t size; /* Size of the following part */
-    uint8_t version; /* Supported version of protocol */
+    RF_SF_DEDICATED = 0x01,
+    RF_SF_NOT_LAN   = 0x02,
+    RF_SF_PASSWORD  = 0x04,
+};
+
+struct RF_GameInfoPacket
+{
+    struct RF_GamePacketHeader header; // RF_GPT_GAME_INFO
+    uint8_t version;                   // Supported version of protocol
+#ifdef PSEUDOCODE
+    char name[];                       // Server name
+    uint8_t game_type;                 // Game type (RF_DM, RF_TEAMDM, RF_CTF)
+    uint8_t players_count;             // Players count on the server
+    uint8_t max_players_count;         // Maximal players count on the server
+    char level[];                      // Map name
+    char mod[];                        // MOD activated on the server
+    uint8_t flags;                     // Bitfield (RF_SF_*) *
+#else
     char rest[];
-    /*char name[]; * Server name *
-    uint8_t game_type; * Game type (RF_DM, RF_TEAMDM, RF_CTF) *
-    uint8_t players_count; * Players count on the server *
-    uint8_t max_players_count; * Maximal players count on the server *
-    char level[]; * Map name *
-    char mod[]; * MOD activated on the server *
-    uint8_t flags; * Bitfield (RF_SIF_*) * */
-} rfServerInfo;
+#endif
+};
 
-typedef struct _rfJoinRequest
+struct RF_JoinRequestPacket
 {
-    uint8_t type; /* RF_JOIN_REQUEST */
-    uint16_t size; /* Size of the following part */
-    uint8_t version; /* Supported version of protocol */
-    char rest[];
-    /*char name[];
-    uint32_t entity_type; * 0x5 *
+    struct RF_GamePacketHeader header;    // RF_GPT_JOIN_REQUEST
+    uint8_t version;                      // Supported version of protocol
+#ifdef PSEUDOCODE
+    char name[];
+    uint32_t entity_type;                 // 0x5
     char password[];
-    uint32_t connection_speed; * In bytes/second *
-    uint32_t meshes_vpp_checksum; * exists only if version==RF_VER_10_11 *
-    uint32_t meshes_vpp_size; * exists only if version==RF_VER_10_11 *
-    uint32_t motions_vpp_checksum; * exists only if version==RF_VER_10_11 *
-    uint32_t motions_vpp_size; * exists only if version==RF_VER_10_11 *
-    uint32_t tables_vpp_checksum; * not a public algorithm, for 1.2 it's 7e 40 c2 1a *
-    uint32_t tables_vpp_size; * Size of tables.vpp *
-    uint32_t mod_vpp_checksum; * Checksum of mod VPP if exists (modname.vpp) *
-    uint32_t mod_vpp_size; * Size of mod VPP if exists (modname.vpp) *
-    [struct rfJoinEx joinEx;]*/
-} rfJoinRequest;
-
-typedef struct _rfJoinSuccess
-{
-    uint8_t type; /* RF_JOIN_SUCCESS */
-    uint16_t size; /* Size of the following part */
+    uint32_t rate;                        // connection speed in bytes/second
+    if (version==RF_VER_10_11) {
+        uint32_t meshes_vpp_checksum;
+        uint32_t meshes_vpp_size;
+        uint32_t motions_vpp_checksum;
+        uint32_t motions_vpp_size;
+    }
+    uint32_t tables_vpp_checksum;         // not a public algorithm, for 1.2 it's 7e 40 c2 1a
+    uint32_t tables_vpp_size;             // Size of tables.vpp
+    uint32_t mod_vpp_checksum;            // Checksum of mod VPP if exists (modname.vpp)
+    uint32_t mod_vpp_size;                // Size of mod VPP if exists (modname.vpp)
+    /*struct RF_JoinEx joinEx;*/
+#else
     char rest[];
-    /*char level[]; * Name of current map RFL file *
-    rfJoinSuccess2; */
-} rfJoinSuccess;
+#endif
+};
 
-enum rfGameOptions
+struct RF_JoinAcceptPacket
+{
+    struct RF_GamePacketHeader header; // RF_GPT_JOIN_ACCEPT
+#ifdef PSEUDOCODE
+    char level[];                      // Name of current map RFL file
+    struct RF_JoinAcceptRest rest;
+#else
+    char rest[];
+#endif
+    /**/
+};
+
+enum RF_GameOptions
 {
     RF_GO_DEFAULT       = 0x0402,
     RF_GO_TEAM_DAMAGE   = 0x0240,
@@ -229,304 +252,309 @@ enum rfGameOptions
     RF_GO_BALANCE_TEAMS = 0x2000,
 };
 
-enum rfPlayerFlags
+enum RF_PlayerFlags
 {
     RF_PF_UNKNOWN   = 0x00000004,
     RF_PF_BLUE_TEAM = 0x00000080,
 };
 
-typedef struct _rfJoinSuccess2
+struct RF_JoinAcceptRest
 {
-    uint32_t level_checksum; /* RFL file checksum - not a standard alghoritm */
-    uint32_t game_type; /* Game type (RF_DM, RF_TEAMDM, RF_CTF) */
-    uint32_t game_options; /* Bitfield (RF_GO_*) */
-    float level_time; /* Time since level start */
-    float time_limit; /* Time limit */
-    uint8_t player_id; /* Player ID */
-    uint32_t flags; /* Bitfield (RF_PF_*) */
-} rfJoinSuccess2;
-
-enum rfJoinFailedReason
-{
-    RF_JFR_JOIN_ACCEPTED         = 0x00, // how it can be join failed? :D
-    RF_JFR_SERVER_IS_FULL        = 0x01,
-    RF_JFR_NO_ADDITIONAL_PLAYERS = 0x02,
-    RF_JFR_INVALID_PASSWORD      = 0x03,
-    RF_JFR_THE_SAME_IP           = 0x04,
-    RF_JFR_LEVEL_CHANGING        = 0x05,
-    RF_JFR_SERVER_ERROR          = 0x06,
-    RF_JFR_DATA_DOESNT_MATCH     = 0x07,
-    RF_JFR_UNSUPPOROTED_VERSION  = 0x08,
-    RF_JFR_UNKNOWN               = 0x09,
-    RF_JFR_BANNED                = 0x0A,
-    /* Note: reasons > 0x0A shows the same message as RF_JFR_UNKNOWN (tested in PF) */
+    uint32_t level_checksum; // RFL file checksum - not a standard alghoritm
+    uint32_t game_type;      // Game type (RF_GT_DM, RF_GT_TEAMDM, RF_GT_CTF)
+    uint32_t game_options;   // Bitfield (RF_GO_*)
+    float level_time;        // Time since level start
+    float time_limit;        // Time limit
+    uint8_t player_id;       // Player ID
+    uint32_t flags;          // Bitfield (RF_PF_*)
 };
 
-typedef struct _rfJoinFailed
+enum RF_JoinDenyReason
 {
-    uint8_t type; /* RF_JOIN_FAILED */
-    uint16_t size; /* Size of the following part */
-    uint8_t reason; /* Reason of join dening */
-} rfJoinFailed;
+    RF_JDR_SERVER_IS_FULL        = 0x01,
+    RF_JDR_NO_ADDITIONAL_PLAYERS = 0x02,
+    RF_JDR_INVALID_PASSWORD      = 0x03,
+    RF_JDR_THE_SAME_IP           = 0x04,
+    RF_JDR_LEVEL_CHANGING        = 0x05,
+    RF_JDR_SERVER_ERROR          = 0x06,
+    RF_JDR_DATA_DOESNT_MATCH     = 0x07,
+    RF_JDR_UNSUPPOROTED_VERSION  = 0x08,
+    RF_JDR_UNKNOWN               = 0x09,
+    RF_JDR_BANNED                = 0x0A,
+    // Note: reasons > 0x0A shows the same message as RF_JDR_UNKNOWN (tested in PF)
+};
 
-typedef struct _rfNewPlayer
+struct RF_JoinDenyPacket
 {
-    uint8_t type; /* RF_NEW_PLAYER */
-    uint16_t size; /* Size of the following part */
-    uint8_t id; /* Player ID */
-    uint32_t ip; /* Player IP address */
-    uint16_t port; /* Player port */
-    uint32_t flags; /* Bitfield (RF_PF_*) */
-    uint32_t connection_speed; /* Player connection speed in bytes per second. See rfJoin */
-    char name[]; /* Player name */
-} rfNewPlayer;
+    struct RF_GamePacketHeader header; // RF_GPT_JOIN_DENY
+    uint8_t reason;                    // Reason of join dening
+};
 
-typedef struct _rfPlayer
+struct RF_NewPlayerPacket
+{
+    struct RF_GamePacketHeader header; // RF_GPT_NEW_PLAYER
+    uint8_t id;                        // Player ID
+    uint32_t ip;                       // Player IP address
+    uint16_t port;                     // Player port
+    uint32_t flags;                    // Bitfield (RF_PF_*)
+    uint32_t rate;                     // Player connection speed in bytes per second. See RF_JoinRequestPacket
+    char name[];                       // Player name
+};
+
+struct RF_Player
 {
     uint8_t flags;
     uint8_t id;
-    /*uint32_t unknown] * exists only if flag 1 is set (flags&1). Example of content: 50 00 00 3B */
-    uint32_t unknown2; /* 08, 01 */
-    uint32_t ip; /* Player IP address */
-    uint16_t port; /* Player port */
+#ifdef PSEUDOCODE
+    if (flags & 1) {
+        uint32_t unknown; // Example of content: 50 00 00 3B
+    }
+    uint32_t unknown2; // 08, 01
+    uint32_t ip;       // Player IP address
+    uint16_t port;     // Player port
+    char name[];       // Player name
+    uint8_t team;      // Team (0 - red, 1 - blue)
+#else
     char rest[];
-    /* char name[]; * Player name *
-    uint8_t team; * Team (0 - red, 1 - blue) */
-} rfPlayer;
+#endif
+};
 
-#define RF_PLAYER_NAME(pplayer) ((pplayer)->rest+(((pplayer)->flags&1) ? 4 : 0))
-#define RF_PLAYER_IP(pplayer) (*((uint32_t*)(((char*)(pplayer))+(((pplayer)->flags&1) ? 10 : 6))))
-#define RF_PLAYER_TEAM(pplayer) ((pplayer)->rest[(((pplayer)->flags&1) ? 4 : 0)+strlen(RF_PLAYER_NAME(pplayer))+1])
-#define RF_PLAYER_TEAM_FAST(pplayer, name_len) ((pplayer)->rest[(((pplayer)->flags&1) ? 4 : 0)+(name_len)+1])
-#define RF_PLAYER_SIZE(pplayer) (sizeof(rfPlayer)+1+(((pplayer)->flags&1) ? 4 : 0)+strlen(RF_PLAYER_NAME(pplayer))+1)
-#define RF_PLAYER_SIZE_FAST(pplayer, name_len) (sizeof(rfPlayer)+1+(((pplayer)->flags&1) ? 4 : 0)+(name_len)+1)
-#define RF_NEXT_PLAYER(pplayer) ((rfPlayer*)(((PBYTE)(pplayer))+RF_PLAYER_SIZE(pplayer)))
-#define RF_NEXT_PLAYER_FAST(pplayer, name_len) ((rfPlayer*)(((PBYTE)(pplayer))+RF_PLAYER_SIZE_FAST(pplayer, name_len)))
-
-typedef struct _rfPlayersList
+struct RF_PlayersPacket
 {
-    uint8_t type; /* RF_PLAYERS_LIST */
-    uint16_t size; /* Size of the following part */
+    struct RF_GamePacketHeader header; // RF_GPT_PLAYERS
+#ifdef PSEUDOCODE
+    struct RF_Player players[];
+    uint8_t unknown; // 02
+#else
     char rest[];
-    /*rfPlayer players[];
-    uint8_t unknown; * 02 */
-} rfPlayersList;
+#endif
+};
 
-enum rfLeftReason
+enum RF_LeftReason
 {
     RF_LR_UNKNOWN           = 0x00,
     RF_LR_NORMAL            = 0x01,
     RF_LR_KICKED            = 0x02,
-    RF_LR_DATA_INCOMPATIBLE = 0x04, /* Note: received when PF wants to download map (?) */
+    RF_LR_DATA_INCOMPATIBLE = 0x04, // Note: received when PF wants to download map (?)
     RF_LR_BETWEEN_LEVELS    = 0x05,
-    RF_LR_EMPTY             = 0x06, /* TODO: check if it's polish translation bug */
+    RF_LR_EMPTY             = 0x06, // TODO: check if it's polish translation bug
     RF_LR_NO_LEVEL_FILE     = 0x07,
-    /* Note: other reasons shows the same message as RF_LR_UNKNOWN */
+    // Note: other reasons shows the same message as RF_LR_UNKNOWN
 };
 
-typedef struct _rfPlayerLeft /* or staterequest */
+struct RF_LeftGamePacket
 {
-    uint8_t type; /* RF_PLAYER_LEFT */
-    uint16_t size; /* Size of the following part */
-    uint8_t player_id; /* Player ID */
-    uint8_t reason; /* Reason of leaving */
-} rfPlayerLeft;
+    struct RF_GamePacketHeader header; // RF_GPT_LEFT_GAME
+    uint8_t player_id;                 // Player ID
+    uint8_t reason;                    // Reason of leaving
+};
 
-typedef struct _rfStateRequest
+struct RF_StateInfoRequestPacket
 {
-    uint8_t type; /* RF_STATE_REQUEST */
-    uint16_t size; /* Size of the following part */
+    struct RF_GamePacketHeader header; // RF_GPT_STATE_INFO_REQUEST
     char level[];
-} rfHaveLevel;
+};
 
-typedef struct _rfTriggerActivate
+struct RF_TriggerActivatePacket
 {
-    uint8_t type; /* RF_TRIGGER_ACTIVATE */
-    uint16_t size; /* Size of the following part */
-    uint32_t uid; /* Trigger UID */
-    uint32_t entity_handle; /* Entity handle */
-} rfTriggerActivate;
+    struct RF_GamePacketHeader header; // RF_GPT_TRIGGER_ACTIVATE
+    uint32_t uid;                      // Trigger UID
+    uint32_t entity_handle;            // Entity handle
+};
 
-typedef struct _rfGlassState
+struct RF_PregameGlassPacket
 {
-    uint8_t type; /* RF_GLASS_STATE */
-    uint16_t size; /* Size of the following part */
-    uint8_t rooms_bitmap[]; /* Bitmap of killable level rooms (only rooms with life >= 0): 1 - not broken, 0 - broken */
-} rfGlassState;
+    struct RF_GamePacketHeader header; // RF_GPT_PREGAME_GLASS
+    uint8_t rooms_bitmap[];            // Bitmap of killable level rooms (only rooms with life >= 0): 1 - not broken, 0 - broken
+};
 
-#define RF_SERVER 0xFF /* Player ID of server when sending a chat message */
+#define RF_SERVER 0xFF // Player ID of server when sending a chat message
 #define RF_MAX_MSG_LEN 0xF9
 
-typedef struct _rfMessage
+struct RF_ChatLinePacket
 {
-    uint8_t type; /* RF_MESSAGE */
-    uint16_t size; /* Size of the following part */
-    uint8_t player_id; /* Player ID of sender */
-    uint8_t is_team_msg; /* 0 - global message, 1 - team message */
-    char message[]; /* Message content */
-} rfMessage;
+    struct RF_GamePacketHeader header; // RF_GPT_CHAT_LINE
+    uint8_t player_id;                 // Player ID of sender
+    uint8_t is_team_msg;               // 0 - global message, 1 - team message
+    char message[];                    // Message content
+};
 
-typedef struct _rfNameChange
+struct RF_NameChangePacket
 {
-    uint8_t type; /* RF_NAME_CHANGE */
-    uint16_t size; /* Size of the following part */
-    uint8_t player_id; /* Player ID */
-    char name[]; /* New name */
-} rfNameChange;
+    struct RF_GamePacketHeader header; // RF_GPT_NAME_CHANGE
+    uint8_t player_id;                 // Player ID
+    char name[];                       // New name
+};
 
-typedef struct _rfSpawnRequest
+struct RF_RespawnRequestPacket
 {
-    uint8_t type; /* RF_SPAWN_REQUEST */
-    uint16_t size; /* Size of the following part */
-    uint32_t character; /* Player character (index in pc_multi.tbl) */
-    uint8_t player_id; /* Player ID */
-} rfSpawnRequest;
+    struct RF_GamePacketHeader header; // RF_GPT_RESPAWN_REQUEST
+    uint32_t character;                // Player character (index in pc_multi.tbl)
+    uint8_t player_id;                 // Player ID
+};
 
-typedef struct _rfLevelChange
+struct RF_LeaveLimboPacket
 {
-    uint8_t type; /* RF_LEVEL_CHANGE */
-    uint16_t size; /* Size of the following part */
+    struct RF_GamePacketHeader header; // RF_GPT_LEAVE_LIMBO
+#ifdef PSEUDOCODE
+    char level[];                      // Level name
+    uint32_t level_checksum;           // not a public algorithm
+#else
     char rest[];
-    /*char level[]; * Level name *
-    uint32_t level_checksum; * not a public algorithm */
-} rfLevelChange;
+#endif
+};
 
-typedef struct _rfTeamChange
+struct RF_TeamChangePacket
 {
-    uint8_t type; /* RF_TEAM_CHANGE */
-    uint16_t size; /* Size of the following part */
-    uint8_t player_id; /* Player ID */
-    uint8_t team; /* Team (0 - red, 1 - blue) */
-} rfTeamChange;
+    struct RF_GamePacketHeader header; // RF_GPT_TEAM_CHANGE
+    uint8_t player_id;                 // Player ID
+    uint8_t team;                      // Team (0 - red, 1 - blue)
+};
 
-typedef struct _rfPlayerStats
+struct RF_PlayerStats
 {
-    uint8_t player_id; /* Player ID */
-    uint16_t ping; /* Player ping */
-    uint8_t unknown; /* Ie. 0xFF */
-    int16_t score; /* Player score (points from kills and captures) */
-    uint8_t captures; /* Captured flags */
-    uint8_t unknown2; /* Ie. 0x00 */
-} rfPlayerStats;
+    uint8_t player_id; // Player ID
+    uint16_t ping;     // Player ping
+    uint8_t unknown;   // Ie. 0xFF
+    int16_t score;     // Player score (points from kills and captures)
+    uint8_t captures;  // Captured flags
+    uint8_t unknown2;  // Ie. 0x00
+};
 
-typedef struct _rfStats
+struct RF_NetgameUpdatePacket
 {
-    uint8_t type; /* RF_STATS */
-    uint16_t size; /* Size of the following part */
-    uint8_t unknown; /* 0x07 */
-    uint8_t cPlayers; /* Players count */
+    struct RF_GamePacketHeader header; // RF_GPT_NETGAME_UPDATE
+    uint8_t unknown;                   // 0x07
+    uint8_t player_count;              // Player count
+#ifdef PSEUDOCODE
+    struct RF_PlayerStats players[];
+    float level_time;                  // Time since level start
+    float time_limit;                  // Level time limit
+#else
     char rest[];
-    /* rfPlayerStats players[];
-    float level_time; * Time since level start *
-    float time_limit; * Level time limit */
-} rfStats;
+#endif
+};
 
-typedef struct _rfPlayerRateChange
+struct RF_RateChangePacket
 {
-    uint8_t type; /* RF_PLAYER_RATE_CHANGE */
-    uint16_t size; /* Size of the following part */
-    uint8_t player_id; /* Player changing rate */
-    uint16_t rate; /* New rate value (bytes/second) */
-} rfRateChange;
+    struct RF_GamePacketHeader header; // RF_GPT_RATE_CHANGE
+    uint8_t player_id;                 // Player changing rate
+    uint16_t rate;                     // New rate value (bytes/second)
+};
 
-typedef struct _rfClutterState
+struct RF_PregameClutterPacket
 {
-    uint8_t type; /* RF_CLUTTER_STATE */
-    uint16_t size; /* Size of the following part */
-    uint32_t clutter_count; /* Killable clutter count (only clutter with life >= 0) */
-    uint8_t clutter_bitmap[]; /* Killable clutter bitmap: 1 - not broken, 0 - broken */
-} rfClutterState;
+    struct RF_GamePacketHeader header; // RF_GPT_PREGAME_CLUTTER
+    uint32_t clutter_count;            // Killable clutter count (only clutter with life >= 0)
+    uint8_t clutter_bitmap[];          // Killable clutter bitmap: 1 - not broken, 0 - broken
+};
 
-typedef struct _rfClutterKill
+struct RF_ClutterKillPacket
 {
-    uint8_t type; /* RF_CLUTTER_KILL */
-    uint16_t size; /* Size of the following part */
-    uint32_t uid; /* Clutter UID */
-    uint32_t unknown; /* reason? (0 - melee/energy, 1 - normal fire, 2 - continous fire, 3 - boom) */
-} rfClutterKill;
+    struct RF_GamePacketHeader header; // RF_GPT_CLUTTER_KILL
+    uint32_t uid;                      // Clutter UID
+    uint32_t unknown;                  // reason? (0 - melee/energy, 1 - normal fire, 2 - continous fire, 3 - boom)
+};
 
-typedef struct _rfFlagSteal
+struct RF_CtfFlagPickedUpPacket
 {
-    uint8_t type; /* RF_FLAG_STEAL */
-    uint16_t size; /* Size of the following part */
-    uint8_t player_id; /* Player id of thief */
-    uint8_t flags_red; /* Red team score */
-    uint8_t flags_blue; /* Blue team score */
-} rfFlagSteal;
+    struct RF_GamePacketHeader header; // RF_GPT_CTF_FLAG_PICKED_UP
+    uint8_t player_id;                 // Player id of thief
+    uint8_t flags_red;                 // Red team score
+    uint8_t flags_blue;                // Blue team score
+};
 
-typedef struct _rfFlagCapture
+struct RF_CtfFlagCapturedPacket
 {
-    uint8_t type; /* RF_FLAG_CAPTURE */
-    uint16_t size; /* Size of the following part */
-    uint8_t team; /* Team which has captured the flag (0 - red, 1 - blue) */
-    uint8_t player_id; /* Player Id of flag thief */
-    uint8_t flags_red; /* Red team score after capture */
-    uint8_t flags_blue; /* Blue team score after capture */
-} rfFlagCapture;
+    struct RF_GamePacketHeader header; // RF_GPT_CTF_FLAG_CAPTURED
+    uint8_t team;                      // Team which has captured the flag (0 - red, 1 - blue)
+    uint8_t player_id;                 // Player Id of flag thief
+    uint8_t flags_red;                 // Red team score after capture
+    uint8_t flags_blue;                // Blue team score after capture
+};
 
-typedef struct _rfFlagsState
+struct RF_CtfFlagUpdatePacket
 {
-    uint8_t type; /* RF_FLAGS_STATE */
-    uint16_t size; /* Size of the following part */
-    uint8_t red_flag_player; /* Player ID or 0xFF */
-    uint8_t red_flag_in_base; /* Ie. 01,                 exists if red_flag_player == 0xFF */
-    float x_red, y_red, z_red; /* Red flag position,     exists if red_flag_player == 0xFF && !red_flag_in_base */
-    float rot_matrix_red[9]; /* Rotation matrix,         exists if red_flag_player == 0xFF && !red_flag_in_base */
-    uint8_t blue_flag_player; /* Player ID or 0xFF */
-    uint8_t blue_flag_in_base; /* Ie. 01,                exists if blue_flag_player == 0xFF */
-    float x_blue, y_blue, z_blue; /* Blue flag position, exists if blue_flag_player == 0xFF && !red_flag_in_base */
-    float rot_matrix_blue[9]; /* Rotation matrix,        exists if blue_flag_player == 0xFF && !red_flag_in_base  */
-} rfFlagsState;
+    struct RF_GamePacketHeader header;         // RF_GPT_CTF_FLAG_UPDATE
+#ifdef PSEUDOCODE
+    uint8_t red_flag_player;                   // Player ID or 0xFF
+    if (red_flag_player == 0xFF) {
+        uint8_t red_flag_in_base;              // Ie. 01
+        if (!red_flag_in_base) {
+            struct RF_Vector red_flag_pos;     // Red flag position
+            struct RF_Matrix red_flag_orient;  // Rotation matrix  
+        }
+    }
+    uint8_t blue_flag_player;                  // Player ID or 0xFF
+    if (blue_flag_player == 0xFF) {
+        uint8_t blue_flag_in_base;             // Ie. 01
+        if (!red_flag_in_base) {
+            struct RF_Vector blue_flag_pos;    // Blue flag position
+            struct RF_Matrix blue_flag_orient; // Rotation matrix   
+        }
+    }
+#else
+    char rest[];
+#endif
+};
 
-typedef struct _rfFlagReturn
+struct RF_CtfFlagReturnedPacket
 {
-    uint8_t type; /* RF_FLAG_RETURN */
-    uint16_t size; /* Size of the following part */
-    uint8_t team; /* Team which has stolen the flag (0 - red, 1 - blue) */
-    uint8_t player_id; /* Player ID */
-    uint8_t flags_red; /* Red team score */
-    uint8_t flags_blue; /* Blue team score */
-} rfFlagReturn;
+    struct RF_GamePacketHeader header; // RF_GPT_CTF_FLAG_RETURNED
+    uint8_t team;                      // Team which has stolen the flag (0 - red, 1 - blue)
+    uint8_t player_id;                 // Player ID
+    uint8_t flags_red;                 // Red team score
+    uint8_t flags_blue;                // Blue team score
+};
 
-typedef struct _rfFlagDrop
+struct RF_Vector
 {
-    uint8_t type; /* RF_FLAG_DROP */
-    uint16_t size; /* Size of the following part */
-    uint8_t team; /* Team which has stolen the flag (0 - red, 1 - blue) */
-    uint8_t flags_red; /* Red team score */
-    uint8_t flags_blue; /* Blue team score */
-    float x, y, z; /* Position of the flag */
-} rfFlagDrop;
+    float x;
+    float y;
+    float z;
+};
 
-typedef struct _rfDetonateRemoteCharge
+struct RF_Matrix
 {
-    uint8_t type; /* RF_DETONATE_REMOTE_CHARGE */
-    uint16_t size; /* Size of the following part */
-    uint32_t entity_handle; /* Handle of remote charge owner */
-    uint8_t player_id; /* Player ID of remote charge owner */
-} rfDetonateRemoteCharge;
+    float data[3][3];
+};
 
-/* Note: items created after death are hidden by rfItemApply packet */
-typedef struct _rfItemUpdate
+struct RF_CtfFlagDropedPacket
 {
-    uint8_t type; /* RF_ITEM_UPDATE */
-    uint16_t size; /* Size of the following part */
-    char level_items[25]; /* Bitmap of visible static items (loaded from RFL). Maximal number of visible items is 25*8=200 */
-} rfItemUpdate;
+    struct RF_GamePacketHeader header; // RF_GPT_CTF_FLAG_DROPED
+    uint8_t team;                      // Team which has stolen the flag (0 - red, 1 - blue)
+    uint8_t flags_red;                 // Red team score
+    uint8_t flags_blue;                // Blue team score
+    struct RF_Vector pos;              // Position of the flag
+};
 
-enum rfWeapon
+struct RF_RemoteChargeKillPacket
+{
+    struct RF_GamePacketHeader header; // RF_GPT_REMOTE_CHARGE_KILL
+    uint32_t entity_handle;            // Handle of remote charge owner
+    uint8_t player_id;                 // Player ID of remote charge owner
+};
+
+// Note: items created after death are hidden by RF_ItemApplyPacket
+struct RF_ItemUpdatePacket
+{
+    struct RF_GamePacketHeader header; // RF_GPT_ITEM_UPDATE
+    char level_items[25];              // Bitmap of visible static items (loaded from RFL). Maximal number of visible items is 25*8=200
+};
+
+enum RF_Weapon
 {
     RF_REMOTE_CHARGE             = 0x00,
     RF_REMOTE_CHARGE_DETONATOR   = 0x01,
     RF_CONTROL_BATON             = 0x02,
     RF_PISTOL                    = 0x03,
-    RF_SILENCED_PISTOL           = 0x04, /* not supported in RF multiplayer */
+    RF_SILENCED_PISTOL           = 0x04, // not supported in RF multiplayer
     RF_SHOTGUN                   = 0x05,
     RF_SNIPER_RIFLE              = 0x06,
     RF_ROCKET_LAUNCHER           = 0x07,
     RF_ASSOULT_RIFLE             = 0x08,
     RF_SUBMACHINE_GUN            = 0x09,
-    RF_SUBMACHINE_GUN_SPECIAL    = 0x0A, /* not supported in RF multiplayer */
+    RF_SUBMACHINE_GUN_SPECIAL    = 0x0A, // not supported in RF multiplayer
     RF_GRENADE                   = 0x0B,
     RF_FLAMETHROWER              = 0x0C,
     RF_RIOT_SHIELD               = 0x0D,
@@ -534,7 +562,7 @@ enum rfWeapon
     RF_HEAVY_MACHINE_GUN         = 0x0F,
     RF_PRECISION_RIFLE           = 0x10,
     RF_FUSION_ROCKET_LAUNCHER    = 0x11,
-
+    
     RF_VAUSS                     = 0x12,
     RF_TANKBOT_CHAINGUN          = 0x13,
     RF_TRIBEAM_LASER             = 0x14,
@@ -561,327 +589,340 @@ enum rfWeapon
     RF_TANKBOT_MISSILE           = 0x29,
     RF_FIGHTER_ROCKET            = 0x2A,
     RF_APC_ROCKET                = 0x2B,
-
+    
     RF_UNKNOWN_WEAPON            = 0xFF,
 };
 
-enum rfEntityDataFlags
+enum RF_ObjectUpdateFlags
 {
-    RF_EDF_POS_ROT_ANIM = 0x01,
-    RF_EDF_UNKNOWN4     = 0x02, /* Usually used with RF_ODF_POS_ROT */
-    RF_EDF_WEAPON_TYPE  = 0x04,
-    RF_EDF_UNKNOWN3     = 0x08, /* Usually used with RF_ODF_FIRE */
-    RF_EDF_ALT_FIRE     = 0x10,
-    RF_EDF_HEATH_ARMOR  = 0x20,
-    RF_EDF_FIRE         = 0x40,
-    RF_EDF_ARMOR_STATE  = 0x80,
+    RF_OUF_POS_ROT_ANIM = 0x01,
+    RF_OUF_UNKNOWN4     = 0x02, // Usually used with RF_ODF_POS_ROT
+    RF_OUF_WEAPON_TYPE  = 0x04,
+    RF_OUF_UNKNOWN3     = 0x08, // Usually used with RF_ODF_FIRE
+    RF_OUF_ALT_FIRE     = 0x10,
+    RF_OUF_HEATH_ARMOR  = 0x20,
+    RF_OUF_FIRE         = 0x40,
+    RF_OUF_AMP_FLAGS  = 0x80,
 };
 
-/* Animation first byte - needs more work */
+// Animation first byte - needs more work
 #define RF_OAF_NO_WEAPON   0x01
 #define RF_OAF_CROUCH      0x04
 #define RF_OAF_RELOAD      0x10
 #define RF_OAF_FAST_RELOAD 0x20
 
-enum rfEntityArmorStateFlags
+enum RF_EntityAmpFlags
 {
-    RF_EDAS_DAMAGE_AMPLIFIER = 0x01,
-    RF_EDAS_INVULNERABILITY  = 0x02,
+    RF_EAF_DAMAGE_AMPLIFIER = 0x01,
+    RF_EAF_INVULNERABILITY  = 0x02,
 };
 
-enum rfAnimFlags
+enum RF_EntityStateFlags
 {
     RF_AF_HIDDEN_WEAPON = 0x01, // not used in multi
     RF_AF_CROUCH        = 0x04,
-	RF_AF_ZOOM          = 0x08,
+    RF_AF_ZOOM          = 0x08,
     RF_AF_WEAPON_FIRE   = 0x10, // used only for remote charges and granades
-	RF_AF_WEAPON_FIRE2  = 0x20, // unknown
+    RF_AF_WEAPON_FIRE2  = 0x20, // unknown
 };
 
-typedef struct _rfEntityData
+struct RF_ObjectUpdate
 {
-    uint32_t entity_handle; /* Entity object handle */
-    uint8_t flags; /* Bitfield (RF_ODF_*) */
-    uint16_t ticks; /* Milliseconds since app. start, exists if RF_ODF_POS_ROT is set */
-
-    /* Position and rotation */
-    float x; /* X coordinate,                         exists if RF_ODF_POS_ROT is set */
-    float y; /* Y coordinate,                         exists if RF_ODF_POS_ROT is set */
-    float z; /* Z coordinate,                         exists if RF_ODF_POS_ROT is set */
-    int16_t angle_x; /* Rotation in X axis (pitch),   exists if RF_ODF_POS_ROT is set */
-    int16_t angle_y; /* Rotation in Y axis (yaw),     exists if RF_ODF_POS_ROT is set */
-
-    /* Animation */
-    uint8_t anim_flags; /* See rfAnimFlags,           exists if RF_ODF_POS_ROT is set */
-    int8_t anim_dir_x; /* Normalized velocity in X axis, exists if RF_ODF_POS_ROT is set */
-    int8_t anim_dir_y; /* Normalized velocity in Y axis, exists if RF_ODF_POS_ROT is set */
-    int8_t anim_speed; /* Speed, MSB is sign of anim_dir_z, exists if RF_ODF_POS_ROT is set */
-    /* Note: you can calculate anim_dir_z from anim_dir_x, anim_dir_y and anim_speed */
-
-    /* Other */
-    uint8_t armor_state; /* Bitfield (RF_EDAS_*),     exists if RF_ODF_ARMOR_STATE is set */
-    uint8_t weapon; /* Weapon type,                   exists if RF_ODF_WEAPON_TYPE is set */
-    uint8_t health; /* Entity health points,          exists if RF_ODF_HEATH_ARMOR is set */
-    uint8_t armor; /* Entity armor,                   exists if RF_ODF_HEATH_ARMOR is set */
-    uint8_t unknown2; /* Ie. 00,                      exists if RF_ODF_HEATH_ARMOR is set */
-    uint8_t unknown3; /* Ie. 00,                      exists if RF_ODF_UNKNOWN3 is set */
-    /*uint8_t _unknown3[unknown3*3]; *                exists if RF_ODF_UNKNOWN3 is set *
-    uint16_t unknown4; * Ie. 00 00,                   exists if RF_ODF_UNKNOWN4 is set */
-} rfEntityData;
-
-typedef struct _rfEntityUpdate
-{
-    uint8_t type; /* RF_ENTITY_UPDATE */
-    uint16_t size; /* Size of the following part */
-    rfEntityData entities[]; /* Entities data */
-    /*uint32_t terminator; * 0xFFFFFFFF */
-} rfObjectUpdate;
-
-enum rfKillFlags
-{
-    RF_KF_ITEM_UNKNOWN = 0x01, /* Note: it's usually not used by game */
-    RF_KF_ITEM         = 0x02, /* Creates item in place of death */
-};
-
-typedef struct _rfEntityKill
-{
-    uint8_t type; /* RF_ENTITY_KILL */
-    uint16_t size; /* Size of the following part */
-    uint32_t entity_handle; /* Entity handle */
-    float unknown; /* Ie. 0xC47A0000 (life?) */
-    uint8_t id_killer; /* Player ID of killer */
-    uint8_t id_killed; /* Player ID of killed player, probably 0xFF if entity is not player */
-    uint16_t animation; /* For suicide - 0x5, headshot - 0x9 */
-    uint8_t flags; /* Bitfield (RF_KF_*) */
-    uint16_t unknown2; /* Ie. 0x0000,  (its char unknown2[]; char unknown3;)                    exists if RF_KF_ITEM or RF_KF_ITEM_UNKNOWN is set */
-    uint32_t item_type; /* Type of item in place of killed player, Note: it must not be weapon, exists if RF_KF_ITEM or RF_KF_ITEM_UNKNOWN is set */
-    char unknown4[8]; /* Ie. FF FF FF FF 80 00 00 00,                                           exists if RF_KF_ITEM or RF_KF_ITEM_UNKNOWN is set */
-    uint32_t item_handle; /* Item handle,                                                       exists if RF_KF_ITEM or RF_KF_ITEM_UNKNOWN is set */
-    float x; /* X coordinate of item,                                                           exists if RF_KF_ITEM or RF_KF_ITEM_UNKNOWN is set */
-    float y; /* Y coordinate of item,                                                           exists if RF_KF_ITEM or RF_KF_ITEM_UNKNOWN is set */
-    float z; /* Z coordinate of item,                                                           exists if RF_KF_ITEM or RF_KF_ITEM_UNKNOWN is set */
-    float rot_matrix[3][3]; /* Rotation matrix,                                                 exists if RF_KF_ITEM or RF_KF_ITEM_UNKNOWN is set */
-} rfEntityKill;
-
-typedef struct _rfItemApply
-{
-    uint8_t type; /* RF_ITEM_APPLY */
-    uint16_t size; /* Size of the following part */
-    uint32_t item_handle; /* Item handle */
-    uint32_t entity_handle; /* Entity handle */
-    uint32_t weapon; /* Weapon type, 0xFFFFFFFF if no weapon is given */
-    uint32_t clip_ammo; /* Ammunition in current clip or 0xFFFFFFFF */
-    uint32_t ammo; /* Reserve ammunition or 0xFFFFFFFF */
-} rfItemApply;
-
-typedef struct _rfEntitySpawn
-{
-    uint8_t type; /* RF_ENTITY_SPAWN */
-    uint16_t size; /* Size of the following part */
+    uint32_t handle;          // Object object handle
+    uint8_t flags;            // Bitfield (RF_ObjectUpdateFlags)
+#ifdef PSEUDOCODE
+    if (flags & RF_OUF_POS_ROT) {
+        uint16_t ticks;       // Milliseconds since app. start   
+        struct RF_Vector pos; // position,                       
+        int16_t angle_x;      // Rotation in X axis (pitch)      
+        int16_t angle_y;      // Rotation in Y axis (yaw)        
+        uint8_t state_flags;  // See RF_EntityStateFlags         
+        int8_t move_dir_x;    // Normalized velocity in X axis   
+        int8_t move_dir_y;    // Normalized velocity in Y axis   
+        int8_t move_speed;    // Speed, MSB is sign of move_dir_z
+        // Note: you can calculate move_dir_z from move_dir_x, move_dir_y and move_speed
+    }
+    if (flags & RF_OUF_AMP_FLAGS) {
+        uint8_t amp_flags;    // Bitfield (RF_EntityAmpFlags)
+    }
+    if (flags & RF_OUF_WEAPON_TYPE) {
+        uint8_t weapon;       // Weapon type
+    }
+    if (flags & RF_OUF_HEATH_ARMOR) {
+        uint8_t health;       // Entity health points
+        uint8_t armor;        // Entity armor        
+        uint8_t unknown2;     // Ie. 00              
+    }
+    if (flags & RF_OUF_UNKNOWN3) {
+        uint8_t unknown3;     // Ie. 00
+        uint8_t _unknown3[unknown3*3];
+    }
+    if (flags & RF_OUF_UNKNOWN4) {
+        uint16_t unknown4;    // Ie. 00 00
+    }
+    
+#else
     char rest[];
-/*  char name[]; * Entity name *
-    rfEntitySpawn2; */
-} rfEntitySpawn;
-
-/* Note: Only loword of handles (first 2 bytes) are known to work for example in kill packet. Hiword seems to have no effect :? */
-
-typedef struct _rfEntitySpawn2
-{
-    uint8_t team; /* 0 - red, 1 - blue */
-    uint8_t entity_type; /* Usually 0x5 (miner1) */
-    uint32_t entity_handle; /* Object ID */
-    uint32_t unknown2; /* Ie. FF FF FF FF */
-    float x; /* X coordinate */
-    float y; /* Y coordinate */
-    float z; /* Z coordinate */
-    float rot_matrix[3][3];
-    uint8_t id; /* Player ID, probably 0xFF if entity is not player */
-    uint32_t character; /* Entity character (index in pc_multi.tbl) */
-    uint32_t weapon; /* Entity weapon */
-    uint32_t unknown3; /* Ie. FF FF FF FF */
-} rfEntitySpawn2;
-
-typedef struct _rfItemSpawn
-{
-    uint8_t type; /* RF_ITEM_SPAWN */
-    uint16_t size; /* Size of the following part */
-    char rest[];
-/*  char script_name[];
-    uint8_t unknown; * Ie. 00 *
-    uint32_t item_type; * Item type ID (entry number in items.tbl) *
-    uint32_t respawn_time; * Item respawn time in ms (0xFFFFFFFF if item is temporary) *
-    uint32_t count; * $Count or $Count Multi from items.tbl (not value from RFL) *
-    uint32_t item_handle; * Item object ID *
-    uint16_t item_bit; * Item index in rfObjectUpdate packet, 0xFFFF if item is temporary (created after death) *
-    uint8_t unknown2; * 0x75 - enabled, 0x68 - not enabled *
-    float x, y, z;
-    float rot_matrix[3][3];*/
-} rfItem;
-
-typedef struct _rfReload
-{
-    uint8_t type; /* RF_RELOAD */
-    uint16_t size; /* Size of the following part */
-    uint32_t entity_handle; /* Entity handle */
-    uint32_t weapon; /* Entity weapon type */
-    uint32_t ammo; /* Reserve ammunition */
-    uint32_t clip_ammo; /* Ammunition in current clip */
-} rfReload;
-
-typedef struct _rfReloadRequest
-{
-    uint8_t type; /* RF_RELOAD_REQUEST */
-    uint16_t size; /* Size of the following part */
-    uint32_t weapon; /* Player weapon */
-} rfReloadRequest;
-
-enum rfShootFlags
-{
-    RF_SF_ALT_FIRE   = 0x01,
-    RF_SF_UNKNOWN    = 0x02,
-    RF_SF_NO_POS_ROT = 0x04,
+#endif
 };
 
-typedef struct _rfShoot
+struct RF_ObjectUpdatePacket
 {
-    uint8_t type; /* RF_SHOOT */
-    uint16_t size; /* Size of the following part */
-    uint8_t weapon; /* Weapon type */
-    uint8_t flags; /* Bitfield (RF_SF_*) */
-    uint8_t player_id; /* Player ID. Note: exists only in packets sent by server */
-    float x; /* X coordinate of weapon, exists only if RF_SF_NO_POS_ROT is NOT set */
-    float y; /* Y coordinate of weapon, exists only if RF_SF_NO_POS_ROT is NOT set */
-    float z; /* Z coordinate of weapon, exists only if RF_SF_NO_POS_ROT is NOT set */
-    /* unsigned? */
-    int16_t direction_x; /* X coordinate of direction vector, exists only if RF_SF_NO_POS_ROT is NOT set */
-    int16_t direction_y; /* Y coordinate of direction vector, exists only if RF_SF_NO_POS_ROT is NOT set */
-    int16_t direction_z; /* Z coordinate of direction vector, exists only if RF_SF_NO_POS_ROT is NOT set */
-    uint8_t unknown; /* exists only if RF_SF_UNKNOWN is set */
-} rfShoot;
+    struct RF_GamePacketHeader header; // RF_GPT_OBJECT_UPDATE
+    RF_ObjectUpdate objects[];         // Objects data
+    // uint32_t terminator = 0xFFFFFFFF;
+};
 
-typedef struct _rfFallDamage
+enum RF_ObjectKillFlags
 {
-    uint8_t type; /* RF_FALL_DAMAGE */
-    uint16_t size; /* Size of the following part */
-    float force; /* Force? */
-} rfFallDemage;
+    RF_OKF_ITEM_UNKNOWN = 0x01, // Note: it's usually not used by game
+    RF_OKF_ITEM         = 0x02, // Creates item in place of death
+};
 
-typedef struct _rfSound
+struct RF_ObjectKillPacket
 {
-    uint8_t type; /* RF_SOUND */
-    uint16_t size; /* Size of the following part */
-    uint16_t sound_id; /* Sound ID from sounds.tbl */
-    float x, y, z; /* FF FF FF FF FF FF FF FF FF FF FF FF */
-} rfSound;
+    struct RF_GamePacketHeader header; // RF_GPT_OBJECT_KILL
+    uint32_t entity_handle;            // Entity handle
+    float unknown;                     // Ie. 0xC47A0000 (life?)
+    uint8_t id_killer;                 // Player ID of killer
+    uint8_t id_killed;                 // Player ID of killed player, probably 0xFF if entity is not player
+    uint16_t animation;                // For suicide - 0x5, headshot - 0x9
+    uint8_t flags;                     // Bitfield (RF_ObjectKillFlags)
+#ifdef PSEUDOCODE
+    if (flags & (RF_OKF_ITEM | RF_OKF_ITEM_UNKNOWN)) {
+        uint16_t unknown2;             // Ie. 0x0000,  (its char unknown2[]; char unknown3;)                 
+        uint32_t item_type;            // Type of item in place of killed player, Note: it must not be weapon
+        char unknown4[8];              // Ie. FF FF FF FF 80 00 00 00,                                       
+        uint32_t item_handle;          // Item handle,                                                       
+        struct RF_Vector item_pos;     // X coordinate of item,                                              
+        struct RF_Matrix rot_matrix;   // Rotation matrix,                                                   
+    }
+#else
+    char rest[];
+#endif
+};
 
-typedef struct _rfTeamsScores
+struct RF_ItemApplyPacket
 {
-    uint8_t type; /* RF_TEAM_SCORES */
-    uint16_t size; /* Size of the following part */
-    uint16_t score_red; /* Score of red team */
-    uint16_t score_blue; /* Score of blue team */
-} rfTeamsScores;
+    struct RF_GamePacketHeader header; // RF_GPT_ITEM_APPLY
+    uint32_t item_handle;              // Item handle
+    uint32_t entity_handle;            // Entity handle
+    uint32_t weapon;                   // Weapon type, 0xFFFFFFFF if no weapon is given
+    uint32_t ammo;                     // Ammunition in current magazine or 0xFFFFFFFF
+    uint32_t clip_ammo;                // Ammunition in other magazines or 0xFFFFFFFF
+};
 
-typedef struct _rfGlassKill
+struct RF_EntityCreatePacket
 {
-    uint8_t type; /* RF_GLASS_KILL */
-    uint16_t size; /* Size of the following part */
-    int32_t room_id; /* 0x7FFFFFFF - index starting from 1 */
-    uint8_t explosion; /* 1 or 0 */
-    float x, y, z; /* destruction start pos */
-    float unknown[3]; /* 0.0f if explosion == 1 */
-} rfGlassKill;
+    struct RF_GamePacketHeader header; // RF_GPT_ENTITY_CREATE
+#ifdef PSEUDOCODE
+    char name[];                       // Entity name
+    struct RF_EntityCreatePacketRest rest;
+#else
+    char rest[];
+#endif
+};
+
+// Note: Only loword of handles (first 2 bytes) are known to work for example in kill packet. Hiword seems to have no effect.
+
+struct RF_EntityCreatePacketRest
+{
+    uint8_t team;            // 0 - red, 1 - blue
+    uint8_t entity_type;     // Usually 0x5 (miner1)
+    uint32_t entity_handle;  // Object ID
+    uint32_t unknown2;       // Ie. 0xFFFFFFFF
+    struct RF_Vector pos;    // position vector
+    struct RF_Matrix orient; // orientation (rotation matrix)
+    uint8_t id;              // Player ID, probably 0xFF if entity is not player
+    uint32_t character;      // Entity character (index in pc_multi.tbl)
+    uint32_t weapon;         // Entity weapon
+    uint32_t unknown3;       // Ie. 0xFFFFFFFF
+};
+
+struct RF_ItemCreatePacket
+{
+    struct RF_GamePacketHeader header; // RF_GPT_ITEM_CREATE
+#ifdef PSEUDOCODE
+    char script_name[];
+    uint8_t unknown;                   // Ie. 00
+    uint32_t item_type;                // Item type ID (entry number in items.tbl)
+    uint32_t respawn_time;             // Item respawn time in ms (0xFFFFFFFF if item is temporary)
+    uint32_t count;                    // $Count or $Count Multi from items.tbl (not value from RFL)
+    uint32_t item_handle;              // Item object ID
+    uint16_t item_bit;                 // Item index in RF_ObjectUpdate packet, 0xFFFF if item is temporary (created after death)
+    uint8_t unknown2;                  // 0x75 - enabled, 0x68 - not enabled
+    struct RF_Vector pos;
+    struct RF_Matrix rot_matrix;
+#else
+    char rest[];
+#endif
+};
+
+struct RF_ReloadPacket
+{
+    struct RF_GamePacketHeader header; // RF_GPT_RELOAD
+    uint32_t entity_handle;            // Entity handle
+    uint32_t weapon;                   // Entity weapon type
+    uint32_t clip_ammo;                // Ammunition left in magazines
+    uint32_t ammo;                     // Ammunition in current magazine
+};
+
+struct RF_ReloadRequestPacket
+{
+    struct RF_GamePacketHeader header; // RF_RELOAD_REQUEST
+    uint32_t weapon;                   // Player weapon
+};
+
+enum RF_WeaponFireFlags
+{
+    RF_WFF_ALT_FIRE   = 0x01,
+    RF_WFF_UNKNOWN    = 0x02,
+    RF_WFF_NO_POS_ROT = 0x04,
+};
+
+struct RF_WeaponFirePacket
+{
+    struct RF_GamePacketHeader header; // RF_GPT_WEAPON_FIRE
+    uint8_t weapon;                    // Weapon type (see RF_Weapon)
+    uint8_t flags;                     // Bitfield (RF_WeaponFireFlags)
+#ifdef PSEUDOCODE
+    if (is_client) {                   // exists only in packets sent by server
+        uint8_t player_id;             // Player ID. Note: 
+    }
+    if ((flags & RF_WFF_NO_POS_ROT) == 0) {
+        struct RF_Vector pos;          // Position coordinate of weapon
+        // unsigned?
+        int16_t direction_x;           // X coordinate of direction vector
+        int16_t direction_y;           // Y coordinate of direction vector
+        int16_t direction_z;           // Z coordinate of direction vector
+    }
+    if (flags & RF_WFF_UNKNOWN) {
+        uint8_t unknown;
+    }
+#else
+    char rest[];
+#endif
+};
+
+struct RF_FallDamagePacket
+{
+    struct RF_GamePacketHeader header; // RF_GPT_FALL_DAMAGE
+    float force;                       // Force?
+};
+
+struct RF_SoundPacket
+{
+    struct RF_GamePacketHeader header; // RF_GPT_SOUND
+    uint16_t sound_id;                 // Sound ID from sounds.tbl
+    struct RF_Vector pos;              // NaN causes the sound to be position independent in RF 1.20
+};
+
+struct RF_TeamsScoresPacket
+{
+    struct RF_GamePacketHeader header; // RF_GPT_TEAM_SCORES
+    uint16_t score_red;                // Score of red team
+    uint16_t score_blue;               // Score of blue team
+};
+
+struct RF_GlassKillPacket
+{
+    struct RF_GamePacketHeader header; // RF_GPT_GLASS_KILL
+    int32_t room_id;                   // 0x7FFFFFFF - index starting from 1
+    uint8_t explosion;                 // 1 or 0
+    struct RF_Vector pos;              // destruction start pos
+    float unknown[3];                  // 0.0f if explosion == 1
+};
 
 
 /**
  * Packet union
  * Represents each normal game packet
  */
-typedef union _rfPacket
+union RF_Packet
 {
-    rfPacketHeader header;
-    rfServerInfo serverInfo;
-    rfJoinRequest joinRequest;
-    rfJoinSuccess joinSuccess;
-    rfJoinFailed joinFailed;
-    rfNewPlayer newPlayer;
-    rfPlayersList playersList;
-    rfPlayerLeft playerLeft;
-    rfHaveLevel haveLevel;
-    rfMessage message;
-    rfNameChange nameChange;
-    rfSpawnRequest spawnRequest;
-    rfLevelChange levelChange;
-    rfTeamChange teamChange;
-    rfStats stats;
-    rfFlagSteal flagSteal;
-    rfFlagCapture flagCapture;
-    rfFlagsState flagsState;
-    rfFlagReturn flagReturn;
-    rfObjectUpdate objectUpdate;
-    rfEntityKill entityKill;
-    rfEntitySpawn entitySpawn;
-    rfReloadRequest reloadRequest;
-    rfShoot shoot;
-    rfTeamsScores teamsScores;
-} rfPacket;
+    struct RF_GamePacketHeader header;
+    struct RF_GameInfoPacket game_info;
+    struct RF_JoinRequestPacket join_request;
+    struct RF_JoinAcceptPacket join_accept;
+    struct RF_JoinDenyPacket join_deny;
+    struct RF_NewPlayerPacket new_player;
+    struct RF_PlayersPacket players;
+    struct RF_LeftGamePacket left_game;
+    struct RF_StateInfoRequestPacket state_info_request;
+    struct RF_ChatLinePacket chat_line;
+    struct RF_NameChangePacket name_change;
+    struct RF_RespawnRequestPacket respawn_request;
+    struct RF_LeaveLimboPacket leave_limbo;
+    struct RF_TeamChangePacket team_change;
+    struct RF_NetgameUpdatePacket netgame_update;
+    struct RF_CtfFlagPickedUpPacket ctf_flag_picked_up;
+    struct RF_CtfFlagCapturedPacket ctf_flag_captured;
+    struct RF_CtfFlagUpdatePacket ctf_flags_update;
+    struct RF_CtfFlagReturnedPacket ctf_flag_returned;
+    struct RF_ObjectUpdatePacket object_update;
+    struct RF_ObjectKillPacket object_kill;
+    struct RF_EntityCreatePacket entity_create;
+    struct RF_ReloadRequestPacket reload_request;
+    struct RF_WeaponFirePacket weapon_fire;
+    struct RF_TeamsScoresPacket teams_scores;
+};
 
 /**
  * @page Tracker packets
  */
 
-enum rfTrackerPacketType
+enum RF_TrackerPacketType
 {
-    RF_TRACKER_REPLY               = 0x01,
-    RF_TRACKER_SERVER_STOPED       = 0x03,
-    RF_TRACKER_SERVER_PING         = 0x04,
-    RF_TRACKER_SERVER_LIST_REQUEST = 0x05,
-    RF_TRACKER_SERVER_LIST         = 0x06,
-    RF_TRACKER_SERVER_LIST_END     = 0x07,
+    RF_TPT_REPLY               = 0x01,
+    RF_TPT_SERVER_STOPPED      = 0x03,
+    RF_TPT_SERVER_PING         = 0x04,
+    RF_TPT_SERVER_LIST_REQUEST = 0x05,
+    RF_TPT_SERVER_LIST         = 0x06,
+    RF_TPT_SERVER_LIST_END     = 0x07,
 };
 
-typedef struct _rfTrackerHeader
+struct RF_TrackerHeader
 {
-    uint8_t unknown; /* 0x06 */
+    uint8_t unknown;     // 0x06
     uint16_t type;
     uint32_t seq;
-    uint16_t packet_len; /* Length of whole packet (with packet class) */
-} rfTrackerHeader;
+    uint16_t packet_len; // Length of whole packet (with packet class)
+};
 
-typedef struct _rfServerAddress
+struct RF_TrackerServerAddress
 {
     uint32_t ip;
     uint16_t port;
-} rfServerAddress;
+};
 
-typedef struct _rfTrackerServerList
+struct RF_TrackerServerList
 {
-    uint8_t unknown; /* 0x06 */
-    uint16_t type; /* RF_SERVER_LIST */
+    uint8_t unknown; // 0x06
+    uint16_t type;   // RF_TPT_SERVER_LIST
     uint32_t seq;
     uint16_t packet_len;
-    uint8_t packet_servers_count;
-    uint32_t servers_count;
-    rfServerAddress sl[];
-} rfTrackerServerList;
+    uint8_t packet_server_count;
+    uint32_t server_count;
+    struct RF_TrackerServerAddress servers[];
+};
 
-typedef struct _rfTrackerUnknown
+struct RF_TrackerUnknown
 {
-    uint8_t unknown; /* 0x06 */
-    uint16_t type; /* RF_SERVER_LIST */
+    uint8_t unknown; // 0x06
+    uint16_t type;   // RF_TPT_SERVER_LIST
     uint32_t seq;
     uint16_t packet_len;
     uint8_t unknown2;
-} rfTrackerUnknown;
+};
 
-typedef union _rfTracketPacket
+union RF_TrackerPacket
 {
-    rfTrackerHeader header;
-    rfTrackerServerList serverList;
-    rfTrackerUnknown serverPing;
-    rfTrackerUnknown serverStop;
-} rfTracketPacket;
+    struct RF_TrackerHeader header;
+    struct RF_TrackerServerList server_list;
+    struct RF_TrackerUnknown server_ping;
+    struct RF_TrackerUnknown server_stop;
+};
 
 #pragma pack(pop)
 
-#endif /* _RFPROTO_H */
+#endif // _RFPROTO_H
