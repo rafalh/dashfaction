@@ -8,29 +8,16 @@
 *
 *****************************************************************************/
 
+// Note: This file assumes a little-endian binary representation of integers and IEEE 754 compatible representation of
+//       floating point numbers.
+
 #ifndef _RFPROTO_H
 #define _RFPROTO_H
 
 #include <stdint.h>
 
-#ifdef C_ASSERT
-#undef C_ASSERT
-#define HAS_C_ASSERT
-#endif
-#define C_ASSERT(e) extern void __C_ASSERT__##__LINE__(int [(e)?1:-1])
-
-C_ASSERT(sizeof(float) == 4);
-
-#ifndef HAS_C_ASSERT
-#undef C_ASSERT
-#endif
-
-#ifdef __BIG_ENDIAN__
-#error Big Endian not supported
-#endif
-
 #ifdef _MSC_VER
-#pragma warning(disable : 4200)
+#pragma warning(disable : 4200) // nonstandard extension used : zero-sized array in struct/union
 #endif
 
 #pragma pack(push, 1)
@@ -287,7 +274,7 @@ enum RF_JoinDenyReason
 struct RF_JoinDenyPacket
 {
     struct RF_GamePacketHeader header; // RF_GPT_JOIN_DENY
-    uint8_t reason;                    // Reason of join dening
+    uint8_t reason;                    // Reason of join dening (see RF_JoinDenyReason)
 };
 
 struct RF_NewPlayerPacket
@@ -296,7 +283,7 @@ struct RF_NewPlayerPacket
     uint8_t id;                        // Player ID
     uint32_t ip;                       // Player IP address
     uint16_t port;                     // Player port
-    uint32_t flags;                    // Bitfield (RF_PF_*)
+    uint32_t flags;                    // Bitfield (see RF_PlayerFlags)
     uint32_t rate;                     // Player connection speed in bytes per second. See RF_JoinRequestPacket
     char name[];                       // Player name
 };
@@ -539,7 +526,7 @@ struct RF_RemoteChargeKillPacket
 struct RF_ItemUpdatePacket
 {
     struct RF_GamePacketHeader header; // RF_GPT_ITEM_UPDATE
-    char level_items[25];              // Bitmap of visible static items (loaded from RFL). Maximal number of visible items is 25*8=200
+    uint8_t level_items_bitmap[25];    // Bitmap of visible static items (loaded from RFL). Maximal number of visible items is 25*8=200
 };
 
 enum RF_Weapon
@@ -602,7 +589,7 @@ enum RF_ObjectUpdateFlags
     RF_OUF_ALT_FIRE     = 0x10,
     RF_OUF_HEATH_ARMOR  = 0x20,
     RF_OUF_FIRE         = 0x40,
-    RF_OUF_AMP_FLAGS  = 0x80,
+    RF_OUF_AMP_FLAGS    = 0x80,
 };
 
 // Animation first byte - needs more work
@@ -737,7 +724,7 @@ struct RF_EntityCreatePacketRest
     uint32_t unknown2;       // Ie. 0xFFFFFFFF
     struct RF_Vector pos;    // position vector
     struct RF_Matrix orient; // orientation (rotation matrix)
-    uint8_t id;              // Player ID, probably 0xFF if entity is not player
+    uint8_t player_id;       // Player ID, probably 0xFF if entity is not player
     uint32_t character;      // Entity character (index in pc_multi.tbl)
     uint32_t weapon;         // Entity weapon
     uint32_t unknown3;       // Ie. 0xFFFFFFFF
@@ -747,13 +734,13 @@ struct RF_ItemCreatePacket
 {
     struct RF_GamePacketHeader header; // RF_GPT_ITEM_CREATE
 #ifdef PSEUDOCODE
-    char script_name[];
+    char script_name[];                // Zero-terminated string
     uint8_t unknown;                   // Ie. 00
     uint32_t item_type;                // Item type ID (entry number in items.tbl)
     uint32_t respawn_time;             // Item respawn time in ms (0xFFFFFFFF if item is temporary)
     uint32_t count;                    // $Count or $Count Multi from items.tbl (not value from RFL)
     uint32_t item_handle;              // Item object ID
-    uint16_t item_bit;                 // Item index in RF_ObjectUpdate packet, 0xFFFF if item is temporary (created after death)
+    uint16_t item_bit;                 // Item index in RF_ItemUpdatePacket, 0xFFFF if item is temporary (created after death)
     uint8_t unknown2;                  // 0x75 - enabled, 0x68 - not enabled
     struct RF_Vector pos;
     struct RF_Matrix rot_matrix;
@@ -791,7 +778,7 @@ struct RF_WeaponFirePacket
     uint8_t flags;                     // Bitfield (RF_WeaponFireFlags)
 #ifdef PSEUDOCODE
     if (is_client) {                   // exists only in packets sent by server
-        uint8_t player_id;             // Player ID. Note:
+        uint8_t player_id;             // Player ID
     }
     if ((flags & RF_WFF_NO_POS_ROT) == 0) {
         struct RF_Vector pos;          // Position coordinate of weapon
