@@ -2,9 +2,9 @@
 *
 *  PROJECT:     Open Faction
 *  LICENSE:     See LICENSE in the top level directory
-*  FILE:        include/rfproto.h
+*  FILE:        rfproto.h
 *  PURPOSE:     RF protocol documentation
-*  DEVELOPERS:  Rafal Harabien
+*  DEVELOPERS:  Rafał Harabień
 *
 *****************************************************************************/
 
@@ -482,7 +482,7 @@ struct RF_CtfFlagUpdatePacket
         uint8_t red_flag_in_base;              // Ie. 01
         if (!red_flag_in_base) {
             struct RF_Vector red_flag_pos;     // Red flag position
-            struct RF_Matrix red_flag_orient;  // Rotation matrix  
+            struct RF_Matrix red_flag_orient;  // Rotation matrix
         }
     }
     uint8_t blue_flag_player;                  // Player ID or 0xFF
@@ -490,7 +490,7 @@ struct RF_CtfFlagUpdatePacket
         uint8_t blue_flag_in_base;             // Ie. 01
         if (!red_flag_in_base) {
             struct RF_Vector blue_flag_pos;    // Blue flag position
-            struct RF_Matrix blue_flag_orient; // Rotation matrix   
+            struct RF_Matrix blue_flag_orient; // Rotation matrix
         }
     }
 #else
@@ -562,7 +562,7 @@ enum RF_Weapon
     RF_HEAVY_MACHINE_GUN         = 0x0F,
     RF_PRECISION_RIFLE           = 0x10,
     RF_FUSION_ROCKET_LAUNCHER    = 0x11,
-    
+
     RF_VAUSS                     = 0x12,
     RF_TANKBOT_CHAINGUN          = 0x13,
     RF_TRIBEAM_LASER             = 0x14,
@@ -589,7 +589,7 @@ enum RF_Weapon
     RF_TANKBOT_MISSILE           = 0x29,
     RF_FIGHTER_ROCKET            = 0x2A,
     RF_APC_ROCKET                = 0x2B,
-    
+
     RF_UNKNOWN_WEAPON            = 0xFF,
 };
 
@@ -632,13 +632,13 @@ struct RF_ObjectUpdate
     uint8_t flags;            // Bitfield (RF_ObjectUpdateFlags)
 #ifdef PSEUDOCODE
     if (flags & RF_OUF_POS_ROT) {
-        uint16_t ticks;       // Milliseconds since app. start   
-        struct RF_Vector pos; // position,                       
-        int16_t angle_x;      // Rotation in X axis (pitch)      
-        int16_t angle_y;      // Rotation in Y axis (yaw)        
-        uint8_t state_flags;  // See RF_EntityStateFlags         
-        int8_t move_dir_x;    // Normalized velocity in X axis   
-        int8_t move_dir_y;    // Normalized velocity in Y axis   
+        uint16_t ticks;       // Milliseconds since app. start
+        struct RF_Vector pos; // position,
+        int16_t angle_x;      // Rotation in X axis (pitch)
+        int16_t angle_y;      // Rotation in Y axis (yaw)
+        uint8_t state_flags;  // See RF_EntityStateFlags
+        int8_t move_dir_x;    // Normalized velocity in X axis
+        int8_t move_dir_y;    // Normalized velocity in Y axis
         int8_t move_speed;    // Speed, MSB is sign of move_dir_z
         // Note: you can calculate move_dir_z from move_dir_x, move_dir_y and move_speed
     }
@@ -650,8 +650,8 @@ struct RF_ObjectUpdate
     }
     if (flags & RF_OUF_HEATH_ARMOR) {
         uint8_t health;       // Entity health points
-        uint8_t armor;        // Entity armor        
-        uint8_t unknown2;     // Ie. 00              
+        uint8_t armor;        // Entity armor
+        uint8_t unknown2;     // Ie. 00
     }
     if (flags & RF_OUF_UNKNOWN3) {
         uint8_t unknown3;     // Ie. 00
@@ -660,7 +660,7 @@ struct RF_ObjectUpdate
     if (flags & RF_OUF_UNKNOWN4) {
         uint16_t unknown4;    // Ie. 00 00
     }
-    
+
 #else
     char rest[];
 #endif
@@ -669,8 +669,12 @@ struct RF_ObjectUpdate
 struct RF_ObjectUpdatePacket
 {
     struct RF_GamePacketHeader header; // RF_GPT_OBJECT_UPDATE
+#ifdef PSEUDOCODE
     RF_ObjectUpdate objects[];         // Objects data
-    // uint32_t terminator = 0xFFFFFFFF;
+    uint32_t terminator = 0xFFFFFFFF;
+#else
+    char rest[];
+#endif
 };
 
 enum RF_ObjectKillFlags
@@ -690,12 +694,12 @@ struct RF_ObjectKillPacket
     uint8_t flags;                     // Bitfield (RF_ObjectKillFlags)
 #ifdef PSEUDOCODE
     if (flags & (RF_OKF_ITEM | RF_OKF_ITEM_UNKNOWN)) {
-        uint16_t unknown2;             // Ie. 0x0000,  (its char unknown2[]; char unknown3;)                 
+        uint16_t unknown2;             // Ie. 0x0000,  (its char unknown2[]; char unknown3;)
         uint32_t item_type;            // Type of item in place of killed player, Note: it must not be weapon
-        char unknown4[8];              // Ie. FF FF FF FF 80 00 00 00,                                       
-        uint32_t item_handle;          // Item handle,                                                       
-        struct RF_Vector item_pos;     // X coordinate of item,                                              
-        struct RF_Matrix rot_matrix;   // Rotation matrix,                                                   
+        char unknown4[8];              // Ie. FF FF FF FF 80 00 00 00,
+        uint32_t item_handle;          // Item handle,
+        struct RF_Vector item_pos;     // X coordinate of item,
+        struct RF_Matrix rot_matrix;   // Rotation matrix,
     }
 #else
     char rest[];
@@ -787,7 +791,7 @@ struct RF_WeaponFirePacket
     uint8_t flags;                     // Bitfield (RF_WeaponFireFlags)
 #ifdef PSEUDOCODE
     if (is_client) {                   // exists only in packets sent by server
-        uint8_t player_id;             // Player ID. Note: 
+        uint8_t player_id;             // Player ID. Note:
     }
     if ((flags & RF_WFF_NO_POS_ROT) == 0) {
         struct RF_Vector pos;          // Position coordinate of weapon
