@@ -2,7 +2,7 @@
 #define SrcRootDir ".."
 #define BinDir "..\build\Release\bin"
 #define PatchesDir "patches\output"
-#define AppVer "1.5.0-dev"
+#define AppVer "1.5.0"
 
 [Setup]
 AppId={{BDD60DE7-9374-463C-8E74-8227EB03E28F}
@@ -35,6 +35,7 @@ Source: "{#BinDir}\DashFaction.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SrcRootDir}\dashfaction.vpp"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SrcRootDir}\licensing-info.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SrcRootDir}\LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#SrcRootDir}\CHANGELOG.md"; DestDir: "{app}"; Flags: ignoreversion
 ; RTPatch patches (extracted from official 1.20 patches)
 Source: "{#PatchesDir}\patchw32.dll"; Flags: dontcopy
 Source: "{#PatchesDir}\rf120_na.rtp"; Flags: dontcopy

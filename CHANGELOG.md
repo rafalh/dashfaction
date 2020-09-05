@@ -1,9 +1,8 @@
 DashFaction Changelog
 =====================
 
-Version 1.5.0
--------------
-
+Version 1.5.0 (released 2020-09-05)
+-----------------------------------
 - increase object limit from 1024 to 65536
 - remove additional limits on number of allocated bullet, item, debris and corpse objects
 - remove limit of loaded object meshes (v3d files)
@@ -15,7 +14,7 @@ Version 1.5.0
 - improve sound handling when active sounds pool is full
 - allow custom meshes in Switch_Model event
 - add 'rf' protocol handler (URLs has format: rf://IP:PORT)
-- add setup program
+- add setup program which installs Dash Faction and patch Red Faction if needed
 - add '/save' and '/load' chat commands and quick save/load controls handling for saving and restoring player position
   in multiplayer (useful for runmap servers, can be enabled in dedicated_server.txt)
 - add 'Big HUD' option and 'bighud' command for making the HUD larger
@@ -36,21 +35,21 @@ Version 1.5.0
 - add support for RF.exe in version 1.20 NA with 4GB flag enabled
 - stretch image header in launcher so it is properly displayed when system DPI is changed
 - add option for switching game language (English, German or French)
-- improve hidding HUD by 'hud' command
+- improve hiding HUD by 'hud' command
 - add server-size validation of ammo when handling weapon fire
 - use 24-bit depth buffer if supported even if video card is not Nvidia (fixes Z-fighting on Intel and AMD cards)
 - use dynamic light detail texture for all cards if multi-texturing is available (improves graphics quality on Intel
   cards)
 - not treat every chat message starting with 'server' as a server command
 - add GOG install directory auto-detection
-- add support for late joiners aware triggers (improves Pure Faction compatibility)
-- load .tbl files in user_maps (default files cannot be overriden) - allows inclusion of HUD messages in custom maps
+- add server-side support for late joiners aware triggers (improves Pure Faction compatibility)
+- load .tbl files in user_maps (default files cannot be overridden) - allows inclusion of HUD messages in custom maps
   (*_text.tbl)
 - increase maximal number of simultaneously playing sounds to 64
 - use port 7755 for server hosting when 'Force port' option is disabled
-- add UPnP automatic port forwarding
-- add 'download_level' command
-- improve alghoritm for selecting texture D3D format (should reduce VRAM usage)
+- add UPnP automatic port forwarding when hosting a server
+- add 'download_level' command which invokes level downloader
+- improve algorithm for selecting texture D3D format (should reduce VRAM usage)
 - add 'Rate' setting in Options window (allows specifying network connection speed)
 - add 'Adapter' setting in Options window (allows selection of graphics card)
 - insert server name in window title when hosting dedicated server
