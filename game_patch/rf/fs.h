@@ -40,7 +40,7 @@ namespace rf
             return AddrCaller{0x00523990}.this_call<bool>(this, min_ver);
         }
 
-        bool HasReadFailed() const
+        int GetError() const
         {
             return AddrCaller{0x00524530}.this_call<bool>(this);
         }
@@ -71,7 +71,7 @@ namespace rf
             if (CheckVersion(min_ver)) {
                 T val;
                 Read(&val, sizeof(val));
-                if (!HasReadFailed()) {
+                if (!GetError()) {
                     return val;
                 }
             }

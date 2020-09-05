@@ -165,7 +165,7 @@ int LockDdsBitmap(rf::BmBitmapEntry& bm_entry)
     // Load actual data
     bm_entry.locked_data = rf::Malloc(num_total_bytes);
     file.Read(bm_entry.locked_data, num_total_bytes);
-    if (file.HasReadFailed()) {
+    if (file.GetError()) {
         xlog::error("Unexpected EOF when reading %s", dds_filename.c_str());
         return -1;
     }
