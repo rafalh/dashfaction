@@ -2,7 +2,7 @@
 #define SrcRootDir ".."
 #define BinDir "..\build\Release\bin"
 #define PatchesDir "patches\output"
-#define AppVer "1.5.0"
+#define AppVer "1.5.1-dev"
 
 [Setup]
 AppId={{BDD60DE7-9374-463C-8E74-8227EB03E28F}
