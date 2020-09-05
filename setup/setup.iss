@@ -12,7 +12,7 @@ AppPublisher=rafalh
 AppPublisherURL=https://ravin.tk/
 AppSupportURL=https://ravin.tk/
 AppUpdatesURL=https://ravin.tk/
-DefaultDirName={commonpf}\Dash Faction
+DefaultDirName={pf}\Dash Faction
 DefaultGroupName=Dash Faction
 InfoBeforeFile={#SrcRootDir}\README.md
 OutputBaseFilename=DashFaction-{#AppVer}-setup
@@ -99,9 +99,14 @@ begin
     Result := SelectGameExePage.Values[0];
 end;
 
+function IsPatchGameTaskSelected(): Boolean;
+begin
+    Result := Pos('patchgame', WizardSelectedTasks(false)) > 0;
+end;
+
 function GetFinalGameExePath(Param: String): String;
 begin
-    if WizardIsTaskSelected('patchgame') and (GameExeFileNameAfterPatches <> '') then
+    if IsPatchGameTaskSelected() and (GameExeFileNameAfterPatches <> '') then
         Result := ExtractFileDir(SelectGameExePage.Values[0]) + '\' + GameExeFileNameAfterPatches
     else
         Result := SelectGameExePage.Values[0];
@@ -316,7 +321,7 @@ procedure ApplyPatches;
 var
     i: Integer;
 begin
-    if WizardIsTaskSelected('patchgame') and (Length(Patches) > 0) then
+    if IsPatchGameTaskSelected() and (Length(Patches) > 0) then
     begin
         Log('Applying patches...');
         for i := 0 to Length(Patches) - 1 do
