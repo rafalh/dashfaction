@@ -1,6 +1,10 @@
 DashFaction Changelog
 =====================
 
+Version 1.5.1 (not released yet)
+--------------------------------
+- fix alpha draw order issues in envirosuit1.vcm mesh
+
 Version 1.5.0 (released 2020-09-05)
 -----------------------------------
 - increase object limit from 1024 to 65536
