@@ -350,6 +350,60 @@ void RegisterSoundCommands()
 #endif
 }
 
+std::string get_dash_faction_dsound_path()
+{
+    // Load DashFaction specific packfile
+    char buf[MAX_PATH];
+    GetModuleFileNameA(g_hmodule, buf, sizeof(buf));
+    char* ptr = strrchr(buf, '\\');
+    std::strcpy(ptr + 1, "dsoal-dsound.dll");
+    return buf;
+}
+
+CodeInjection dsound_init_openal_injection{
+    0x005213C1,
+    [](auto& regs) {
+        regs.eip = 0x005213E7;
+        regs.eax = E_FAIL;
+        auto& dsound = AddrAsRef<IDirectSound*>(0x01AD7A50);
+        auto& IID_IDirectSound = AddrAsRef<IID>(0x0058B440);
+        auto& CLSID_DirectSound = AddrAsRef<CLSID>(0x0058B450);
+        auto dsound_path = get_dash_faction_dsound_path();
+        auto dsound_lib = LoadLibraryA(dsound_path.c_str());
+        xlog::info("Loading %s", dsound_path.c_str());
+        if (!dsound_lib) {
+            xlog::error("LoadLibraryA '%s' failed", dsound_path.c_str());
+            return;
+        }
+        auto DllGetClassObject = reinterpret_cast<LPFNGETCLASSOBJECT>(
+            reinterpret_cast<void(*)()>(GetProcAddress(dsound_lib, "DllGetClassObject")));
+        if (!DllGetClassObject) {
+            xlog::error("DllGetClassObject function not found in '%s'", dsound_path.c_str());
+            return;
+        }
+        IClassFactory* cls_factory;
+        HRESULT hr = DllGetClassObject(CLSID_DirectSound, IID_IClassFactory, reinterpret_cast<void**>(&cls_factory));
+        if (FAILED(hr)) {
+            xlog::error("DllGetClassObject failed for dsound (hr %lx)", hr);
+            return;
+        }
+        hr = cls_factory->CreateInstance(nullptr, IID_IDirectSound, reinterpret_cast<void**>(&dsound));
+        if (FAILED(hr)) {
+            xlog::error("IClassFactory::CreateInstance failed for dsound (hr %lx)", hr);
+            return;
+        }
+        regs.eax = hr;
+    },
+};
+
+CodeInjection bink_set_sound_system_injection{
+    0x00520BBC,
+    [](auto& regs) {
+        auto& dsound = AddrAsRef<IDirectSound*>(0x01AD7A50);
+        *reinterpret_cast<IDirectSound**>(regs.esp + 4) = dsound;
+    },
+};
+
 void ApplySoundPatches()
 {
     // Sound loop fix
@@ -389,4 +443,13 @@ void ApplySoundPatches()
     WriteMem<i8>(0x0052191D + 2, rf::num_sound_channels); // SndDsCloseAllChannels
     WriteMem<i8>(0x00522F4F + 2, rf::num_sound_channels); // SndDsGetChannel
     WriteMem<i8>(0x00522D1D + 2, rf::num_sound_channels); // SndCleanupInternalSubsystem
+
+    if (g_game_config.openal_soft_sound) {
+        // Use dsoal as a DirectSound to OpenAL mapping
+        dsound_init_openal_injection.Install();
+        // Fix missing sound after Bink video when dsoal is used
+        bink_set_sound_system_injection.Install();
+        // Do not use DSPROPSETID_VoiceManager because it is not implemented by dsoal
+        WriteMem<i8>(0x00521597 + 4, 0);
+    }
 }

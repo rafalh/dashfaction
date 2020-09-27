@@ -53,6 +53,7 @@ struct GameConfig
     // Misc
     CfgVar<bool> direct_input = false;
     CfgVar<bool> eax_sound = true;
+    CfgVar<bool> openal_soft_sound = false;
     CfgVar<bool> fast_start = true;
     CfgVar<bool> allow_overwrite_game_files = false;
     CfgVar<bool> scoreboard_anim = false;

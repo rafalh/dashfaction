@@ -10,8 +10,8 @@ make PF anti-cheat features basically useless. It consists of few files in
 game_patch/purefaction directory. It is going to be linked statically during a
 release process of Dash Faction by owner of the project.
 
-You can find Mozilla Public License 2.0 full text in LICENSE.txt file in root
-directory of Dash Faction.
+You can find Mozilla Public License 2.0 full text in LICENSE.txt file in the
+root directory of Dash Faction.
 
 Dash Faction uses third-party open source components. Their licenses can be
 found below.
@@ -286,6 +286,39 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 Portions of this software are copyright © 2020 The FreeType
 Project (www.freetype.org).  All rights reserved.
+
+###############################################################################
+## OpenAL Soft
+###############################################################################
+
+Homepage: https://openal-soft.org/
+Source code repository: https://github.com/kcat/openal-soft/
+License: https://www.gnu.org/licenses/old-licenses/lgpl-2.0.html
+
+Copyright (C) 2020 kcat
+
+###############################################################################
+## dsoal
+###############################################################################
+
+Source code repository: https://github.com/kcat/dsoal
+License: https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
+
+Copyright (C) 2020 kcat
+
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 ###############################################################################
 ## Fonts

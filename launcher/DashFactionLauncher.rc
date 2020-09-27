@@ -142,6 +142,7 @@ BEGIN
     CONTROL         "Linear pitch",IDC_LINEAR_PITCH_CHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,96,270,53,10
     CONTROL         "Scoreboard animations",IDC_SCOREBOARD_ANIM_CHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,180,246,88,10
     CONTROL         "Level Sounds",IDC_LEVEL_SOUNDS_CHECK,"Button",BS_AUTO3STATE | WS_TABSTOP,180,258,58,10
+    CONTROL         "OpenAL Soft Sound",IDC_OPENAL_SOUND_CHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,180,270,88,10
     CONTROL         "Allow overriding game files by packages in user_maps",IDC_ALLOW_OVERWRITE_GAME_CHECK,
                     "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,12,282,260,10
     CONTROL         "Run game at reduced speed when window doesn't have focus",IDC_REDUCED_SPEED_IN_BG_CHECK,

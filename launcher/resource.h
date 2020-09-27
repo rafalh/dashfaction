@@ -55,6 +55,7 @@
 #define IDC_RATE_EDIT                   1043
 #define IDC_ADAPTER_COMBO               1044
 #define IDC_BIG_HUD_CHECK               1045
+#define IDC_OPENAL_SOUND_CHECK          1046
 
 // Next default values for new objects
 //
@@ -62,7 +63,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        105
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1046
+#define _APS_NEXT_CONTROL_VALUE         1047
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

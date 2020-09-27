@@ -60,6 +60,7 @@ BOOL OptionsDlg::OnInitDialog()
 
     CheckDlgButton(IDC_DIRECT_INPUT_CHECK, m_conf.direct_input ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_EAX_SOUND_CHECK, m_conf.eax_sound ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(IDC_OPENAL_SOUND_CHECK, m_conf.openal_soft_sound ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_FAST_START_CHECK, m_conf.fast_start ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_SCOREBOARD_ANIM_CHECK, m_conf.scoreboard_anim);
     if (m_conf.level_sound_volume == 1.0f)
@@ -196,6 +197,7 @@ void OptionsDlg::InitToolTip()
     m_tool_tip.AddTool(GetDlgItem(IDC_ALLOW_OVERWRITE_GAME_CHECK), "Enable this if you want to modify game content by putting mods into user_maps folder. Can have side effect of level packfiles modyfing common textures/sounds.");
     m_tool_tip.AddTool(GetDlgItem(IDC_KEEP_LAUNCHER_OPEN_CHECK), "Keep launcher window open after game or editor launch");
     m_tool_tip.AddTool(GetDlgItem(IDC_LINEAR_PITCH_CHECK), "Stop mouse movement from slowing down when looking up and down");
+    m_tool_tip.AddTool(GetDlgItem(IDC_OPENAL_SOUND_CHECK), "Use OpenAL Soft as a sound backend. Enables EAX effects on modern operating systems.");
 }
 
 void OptionsDlg::OnOK()
@@ -290,6 +292,7 @@ void OptionsDlg::OnBnClickedOk()
 
     m_conf.direct_input = (IsDlgButtonChecked(IDC_DIRECT_INPUT_CHECK) == BST_CHECKED);
     m_conf.eax_sound = (IsDlgButtonChecked(IDC_EAX_SOUND_CHECK) == BST_CHECKED);
+    m_conf.openal_soft_sound = (IsDlgButtonChecked(IDC_OPENAL_SOUND_CHECK) == BST_CHECKED);
     m_conf.fast_start = (IsDlgButtonChecked(IDC_FAST_START_CHECK) == BST_CHECKED);
     m_conf.scoreboard_anim = (IsDlgButtonChecked(IDC_SCOREBOARD_ANIM_CHECK) == BST_CHECKED);
     if (IsDlgButtonChecked(IDC_LEVEL_SOUNDS_CHECK) != BST_INDETERMINATE)

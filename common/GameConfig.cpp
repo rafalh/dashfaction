@@ -166,6 +166,7 @@ bool GameConfig::visit_vars(T&& visitor, bool is_save)
     result &= visitor(dash_faction_key, "Big HUD", big_hud);
     result &= visitor(dash_faction_key, "Reticle Scale", reticle_scale);
     result &= visitor(dash_faction_key, "Mesh Static Lighting", mesh_static_lighting);
+    result &= visitor(dash_faction_key, "OpenAL Soft Sound", openal_soft_sound);
     return result;
 }
 

@@ -96,3 +96,8 @@ add_subdirectory(patch_common)
 add_subdirectory(xlog)
 add_subdirectory(crash_handler)
 add_subdirectory(crash_handler_stub)
+
+configure_file(${CMAKE_SOURCE_DIR}/dashfaction.vpp ${CMAKE_BINARY_DIR}/bin/dashfaction.vpp COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/licensing-info.txt ${CMAKE_BINARY_DIR}/bin/licensing-info.txt COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/vendor/dsoal/dsound.dll ${CMAKE_BINARY_DIR}/bin/dsoal-dsound.dll COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/vendor/openal-soft/soft_oal.dll ${CMAKE_BINARY_DIR}/bin/dsoal-aldrv.dll COPYONLY)
