@@ -350,14 +350,32 @@ void RegisterSoundCommands()
 #endif
 }
 
-std::string get_dash_faction_dsound_path()
+std::string GetDashFactionDir()
 {
-    // Load DashFaction specific packfile
-    char buf[MAX_PATH];
-    GetModuleFileNameA(g_hmodule, buf, sizeof(buf));
-    char* ptr = strrchr(buf, '\\');
-    std::strcpy(ptr + 1, "dsoal-dsound.dll");
-    return buf;
+    std::vector<char> buf;
+    buf.resize(MAX_PATH);
+    while (true) {
+        auto ret = GetModuleFileNameA(g_hmodule, buf.data(), buf.size());
+        if (ret == 0) {
+            xlog::error("GetModuleFileNameA failed (error %lu)", GetLastError());
+            return ".";
+        }
+        if (ret > buf.size() || ret > 100000) {
+            xlog::error("GetModuleFileNameA returned unexpected value %ld", ret);
+            return ".";
+        }
+        if (ret < buf.size()) {
+            buf.resize(ret);
+            break;
+        }
+        buf.resize(buf.size() * 2);
+    }
+    std::string dir{buf.begin(), buf.end()};
+    auto file_name_pos = dir.rfind('\\');
+    if (file_name_pos != std::string::npos) {
+        dir.resize(file_name_pos);
+    }
+    return dir;
 }
 
 CodeInjection dsound_init_openal_injection{
@@ -365,20 +383,22 @@ CodeInjection dsound_init_openal_injection{
     [](auto& regs) {
         regs.eip = 0x005213E7;
         regs.eax = E_FAIL;
-        auto& dsound = AddrAsRef<IDirectSound*>(0x01AD7A50);
         auto& IID_IDirectSound = AddrAsRef<IID>(0x0058B440);
         auto& CLSID_DirectSound = AddrAsRef<CLSID>(0x0058B450);
-        auto dsound_path = get_dash_faction_dsound_path();
-        auto dsound_lib = LoadLibraryA(dsound_path.c_str());
-        xlog::info("Loading %s", dsound_path.c_str());
+        auto df_dir = GetDashFactionDir();
+        SetDllDirectoryA(df_dir.c_str());
+        xlog::info("Loading %s\\dsoal-dsound.dll", df_dir.c_str());
+        auto dsound_lib = LoadLibraryExA("dsoal-dsound.dll", nullptr, 0);
+        SetDllDirectoryA(nullptr);
+
         if (!dsound_lib) {
-            xlog::error("LoadLibraryA '%s' failed", dsound_path.c_str());
+            xlog::error("LoadLibraryA failed for dsoal-dsound.dll (error %lu)", GetLastError());
             return;
         }
         auto DllGetClassObject = reinterpret_cast<LPFNGETCLASSOBJECT>(
             reinterpret_cast<void(*)()>(GetProcAddress(dsound_lib, "DllGetClassObject")));
         if (!DllGetClassObject) {
-            xlog::error("DllGetClassObject function not found in '%s'", dsound_path.c_str());
+            xlog::error("DllGetClassObject function not found in dsoal-dsound.dll");
             return;
         }
         IClassFactory* cls_factory;
@@ -387,7 +407,7 @@ CodeInjection dsound_init_openal_injection{
             xlog::error("DllGetClassObject failed for dsound (hr %lx)", hr);
             return;
         }
-        hr = cls_factory->CreateInstance(nullptr, IID_IDirectSound, reinterpret_cast<void**>(&dsound));
+        hr = cls_factory->CreateInstance(nullptr, IID_IDirectSound, reinterpret_cast<void**>(&rf::dsound));
         if (FAILED(hr)) {
             xlog::error("IClassFactory::CreateInstance failed for dsound (hr %lx)", hr);
             return;
@@ -399,8 +419,15 @@ CodeInjection dsound_init_openal_injection{
 CodeInjection bink_set_sound_system_injection{
     0x00520BBC,
     [](auto& regs) {
-        auto& dsound = AddrAsRef<IDirectSound*>(0x01AD7A50);
-        *reinterpret_cast<IDirectSound**>(regs.esp + 4) = dsound;
+        *reinterpret_cast<IDirectSound**>(regs.esp + 4) = rf::dsound;
+    },
+};
+
+CodeInjection snd_init_device_leave_injection{
+    0x005215E0,
+    []() {
+        xlog::info("DS3D: %d", AddrAsRef<bool>(0x01AED340));
+        xlog::info("EAX: %d", AddrAsRef<bool>(0x01AD751C));
     },
 };
 
@@ -452,4 +479,6 @@ void ApplySoundPatches()
         // Do not use DSPROPSETID_VoiceManager because it is not implemented by dsoal
         WriteMem<i8>(0x00521597 + 4, 0);
     }
+    // Log information about used sound API
+    snd_init_device_leave_injection.Install();
 }

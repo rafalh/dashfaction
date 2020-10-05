@@ -92,6 +92,7 @@ namespace rf
     static auto& level_sounds = AddrAsRef<LevelSound[num_sound_channels]>(0x01753C38);
     static auto& ds_channels = AddrAsRef<DsChannel[num_sound_channels]>(0x01AD7520);
 #endif
+    static auto& dsound = AddrAsRef<IDirectSound*>(0x01AD7A50);
     static auto& ds_buffers = AddrAsRef<DsBuffer[0x1000]>(0x01887388);
 
     static auto ClearLevelSound = AddrAsRef<int(LevelSound* lvl_snd)>(0x00505680);
