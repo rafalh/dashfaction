@@ -8,6 +8,7 @@
 #include <patch_common/StaticBufferResizePatch.h>
 #include <algorithm>
 #include "../rf/sound.h"
+#include "../rf/entity.h"
 #include "../main.h"
 #include "../console/console.h"
 
@@ -431,6 +432,115 @@ CodeInjection snd_init_device_leave_injection{
     },
 };
 
+FunHook<int(int, const rf::Vector3&, float, const rf::Vector3&, int)> PlaySound3D_hook{
+    0x005056A0,
+    [](int game_snd_id, const rf::Vector3& pos, float vol_scale, const rf::Vector3& unk, int type) {
+        if (!rf::ds3d_enabled) {
+            return PlaySound3D_hook.CallTarget(game_snd_id, pos, vol_scale, unk, type);
+        }
+        if (!rf::sound_enabled) {
+            return -1;
+        }
+        if (rf::PreloadSound(game_snd_id) != 0) {
+            return -1;
+        }
+        for (int i = 0; i < rf::num_sound_channels; ++i) {
+            if (!rf::SndIsPlaying(rf::level_sounds[i].sig)) {
+                rf::SndStop(rf::level_sounds[i].sig);
+                rf::ClearLevelSound(&rf::level_sounds[i]);
+            }
+        }
+        for (int i = 0; i < rf::num_sound_channels; ++i) {
+            auto& lvl_snd = rf::level_sounds[i];
+            if (lvl_snd.game_snd_id < 0) {
+                bool looping = rf::game_sounds[game_snd_id].is_looping;
+                int sig = rf::SndPlay3D(game_snd_id, pos, looping, 0);
+                xlog::trace("PlaySound3D gs %d pos <%.2f %.2f %.2f> vol %.2f sig %d", game_snd_id, pos.x, pos.y, pos.z, vol_scale, sig);
+                if (sig < 0) {
+                    return -1;
+                }
+
+                float volume = vol_scale * rf::snd_vol_scale_per_type[type];
+                rf::SndSetVolume(sig, volume);
+
+                lvl_snd.sig = sig;
+                lvl_snd.game_snd_id = game_snd_id;
+                lvl_snd.type = type;
+                lvl_snd.vol_scale = vol_scale;
+                lvl_snd.pan = 0.0f;
+                lvl_snd.is_3d_sound = true;
+                lvl_snd.pos = pos;
+                lvl_snd.orig_volume = volume;
+                lvl_snd.handle_hi_word++;
+                int handle = i | (lvl_snd.handle_hi_word << 8);
+
+                return handle;
+            }
+        }
+        xlog::warn("No free slot for 3D sound");
+        return -1;
+    },
+};
+
+FunHook<void(int, const rf::Vector3&, const rf::Vector3&, float)> Update3DSound_hook{
+    0x005058C0,
+    [](int snd_handle, const rf::Vector3& snd_pos, const rf::Vector3& snd_vel, float vol_scale) {
+        if (!rf::ds3d_enabled) {
+            Update3DSound_hook.CallTarget(snd_handle, snd_pos, snd_vel, vol_scale);
+            return;
+        }
+        if (static_cast<uint8_t>(snd_handle) >= rf::num_sound_channels) {
+            return;
+        }
+        auto& snd = rf::level_sounds[static_cast<uint8_t>(snd_handle)];
+        if (snd.handle_hi_word != (snd_handle >> 8) || !snd.is_3d_sound) {
+            return;
+        }
+        if (vol_scale != snd.orig_volume) {
+            snd.orig_volume = vol_scale;
+            float volume = vol_scale * rf::snd_vol_scale_per_type[snd.type];
+            rf::SndSetVolume(snd.sig, volume);
+        }
+
+        snd.pos = snd_pos;
+        auto chnl = rf::SndDsGetChannel(snd.sig);
+        if (chnl >= 0) {
+            rf::GameSound* game_snd;
+            rf::SndGetById(snd.game_snd_id, &game_snd);
+            rf::SndDs3DUpdateBuffer(chnl, game_snd->min_dist, game_snd->max_dist, snd_pos, snd_vel);
+        }
+    },
+};
+
+std::vector<int> g_fpgun_sounds;
+
+CodeInjection FpgunSetAction_sound_injection{
+    0x004A947B,
+    [](auto& regs) {
+        if (regs.eax >= 0) {
+            g_fpgun_sounds.push_back(regs.eax);
+        }
+    },
+};
+
+CodeInjection GameUpdateSounds_injection{
+    0x00505EC0,
+    []() {
+        auto it = g_fpgun_sounds.begin();
+        while (it != g_fpgun_sounds.end()) {
+            int sndh = *it;
+            if (rf::IsSoundPlaying(sndh)) {
+                rf::Vector3 zero{0, 0, 0};
+                rf::Update3DSound(sndh, rf::local_entity->view_pos, zero, 1.0f);
+                ++it;
+            }
+            else {
+                it = g_fpgun_sounds.erase(it);
+            }
+        }
+    },
+};
+
 void ApplySoundPatches()
 {
     // Sound loop fix
@@ -476,9 +586,29 @@ void ApplySoundPatches()
         dsound_init_openal_injection.Install();
         // Fix missing sound after Bink video when dsoal is used
         bink_set_sound_system_injection.Install();
-        // Do not use DSPROPSETID_VoiceManager because it is not implemented by dsoal
-        WriteMem<i8>(0x00521597 + 4, 0);
+
+        //WriteMem<u8>(0x00521387, asm_opcodes::jmp_rel_short); // do not use ds3d with eax
     }
+    // Do not use DSPROPSETID_VoiceManager because it is not implemented by dsoal
+    WriteMem<i8>(0x00521597 + 4, 0);
+
+    // Change panning width from 1000 to 10000 (max)
+    // static float pan_mult = 10000.0f;
+    // WriteMemPtr(0x00522620 + 2, &pan_mult);
+    // WriteMemPtr(0x00522757 + 2, &pan_mult);
+    // WriteMemPtr(0x00522DA7 + 2, &pan_mult);
+
+    // do not set DS3DMODE_DISABLE on 3d buffers in SndDsPlay
+    //WriteMem<u8>(0x005225D1, asm_opcodes::jmp_rel_short);
+    // Use DirectSound 3D for 3D sounds
+    // PlaySound3D_hook.Install();
+    // // Properly update DirectSound 3D sounds
+    // Update3DSound_hook.Install();
     // Log information about used sound API
     snd_init_device_leave_injection.Install();
+    // Update fpgun 3D sounds positions
+    FpgunSetAction_sound_injection.Install();
+    GameUpdateSounds_injection.Install();
+
+    //WriteMem<float>(0x00562EB1 + 1, 1.0f); // rolloff
 }
