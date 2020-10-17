@@ -728,6 +728,21 @@ DcCommand2 nearest_texture_filtering_cmd{
     "Toggle nearest texture filtering",
 };
 
+CodeInjection display_full_screen_image_alpha_support_patch{
+    0x00432CAF,
+    [](auto& regs) {
+        static rf::GrMode mode{
+            rf::TEXTURE_SOURCE_WRAP,
+            rf::COLOR_SOURCE_TEXTURE,
+            rf::ALPHA_SOURCE_VERTEX_TIMES_TEXTURE,
+            rf::ALPHA_BLEND_ALPHA,
+            rf::ZBUFFER_TYPE_NONE,
+            rf::FOG_ALLOWED
+        };
+        regs.edx = mode.value;
+    },
+};
+
 void ApplyTexturePatches();
 void ApplyFontPatches();
 
@@ -953,6 +968,9 @@ void GraphicsInit()
 
     // Use gr_clear instead of gr_rect for faster drawing of the fog background
     AsmWriter(0x00431F99).call(0x0050CDF0);
+
+    // Support textures with alpha channel in Display_Fullscreen_Image event
+    display_full_screen_image_alpha_support_patch.Install();
 }
 
 void GraphicsDrawFpsCounter()
