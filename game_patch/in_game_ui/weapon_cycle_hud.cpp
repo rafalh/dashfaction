@@ -17,7 +17,7 @@ void RenderSelectWeaponGui()
         return;
     }
     if (rf::hud_close_weapon_cycle_timer.IsFinished() || !rf::hud_close_weapon_cycle_timer.IsSet()) {
-        rf::PlaySnd(rf::hud_weapon_display_off_foley_snd, 0, 0.0f, 1.0f);
+        rf::SndPlay(rf::hud_weapon_display_off_foley_snd, 0, 0.0f, 1.0f);
         rf::hud_render_weapon_cycle = false;
         return;
     }

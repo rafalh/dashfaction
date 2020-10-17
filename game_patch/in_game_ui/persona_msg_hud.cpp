@@ -45,7 +45,7 @@ void HudRenderPersonaMsg(rf::Player* player)
     if (parent && (rf::EntityIsSub(parent) || rf::EntityIsDriller(parent) || rf::EntityIsJeep(parent) || rf::EntityIsFighter(parent)))
         offset_y = rf::hud_points[rf::hud_persona_sub_offset].y; // 360
     auto& hud_persona = rf::hud_personas_tbl[rf::hud_persona_current_idx];
-    if (hud_persona.fully_visible_timer.IsFinished() && !rf::IsSoundPlaying(hud_persona.sound)) {
+    if (hud_persona.fully_visible_timer.IsFinished() && !rf::SndIsPlaying(hud_persona.sound)) {
         rf::hud_persona_target_alpha = 0.0f;
     }
     int box_border = 2;

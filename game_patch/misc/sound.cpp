@@ -12,10 +12,11 @@
 #include "../console/console.h"
 
 static int g_cutscene_bg_sound_sig = -1;
+std::vector<int> g_fpgun_sounds;
 
 namespace rf
 {
-    rf::LevelSound level_sounds[rf::num_sound_channels];
+    rf::SoundInstance sound_instances[rf::num_sound_channels];
     rf::DsChannel ds_channels[rf::num_sound_channels];
 }
 
@@ -31,18 +32,18 @@ void SetPlaySoundEventsVolumeScale(float volume_scale)
     }
 }
 
-CallHook<void(int, rf::Vector3*, float*, float*, float)> SndConvertVolume3D_AmbientSound_hook{
+CallHook<void(int, rf::Vector3*, float*, float*, float)> snd_calculate_1d_from_3d_ambient_sound_hook{
     0x00505F93,
-    [](int game_snd_id, rf::Vector3* sound_pos, float* pan_out, float* volume_out, float volume_in) {
-        SndConvertVolume3D_AmbientSound_hook.CallTarget(game_snd_id, sound_pos, pan_out, volume_out, volume_in);
+    [](int handle, rf::Vector3* sound_pos, float* pan_out, float* volume_out, float volume_in) {
+        snd_calculate_1d_from_3d_ambient_sound_hook.CallTarget(handle, sound_pos, pan_out, volume_out, volume_in);
         *volume_out *= g_game_config.level_sound_volume;
     },
 };
 
-StaticBufferResizePatch<rf::LevelSound> level_sounds_resize_patch{
+StaticBufferResizePatch<rf::SoundInstance> sound_instances_resize_patch{
     0x01753C38,
     30,
-    rf::level_sounds,
+    rf::sound_instances,
     {
         {0x005053F9},
         {0x00505599},
@@ -217,71 +218,70 @@ CodeInjection snd_ds_play_no_free_slots_fix{
     },
 };
 
-CodeInjection PlaySound_no_free_slots_fix{
+CodeInjection snd_play_no_free_slots_fix{
     0x005055E3,
     [](auto& regs) {
         auto stack_frame = regs.esp + 0x10;
-        auto type_arg = AddrAsRef<int>(stack_frame + 0x8);
+        auto group_arg = AddrAsRef<int>(stack_frame + 0x8);
         auto vol_scale_arg = AddrAsRef<float>(stack_frame + 0x10);
-        auto& snd_vol_scale_per_type = AddrAsRef<float[4]>(0x01753C18);
         // Try to free a slot
         int num_looping = 0;
         int num_long = 0;
         int best_idx = -1;
         float best_vol_scale = 0.0f;
-        for (size_t i = 0; i < std::size(rf::level_sounds); ++i) {
-            auto& lvl_snd = rf::level_sounds[i];
+        for (size_t i = 0; i < std::size(rf::sound_instances); ++i) {
+            auto& lvl_snd = rf::sound_instances[i];
             // Skip looping sounds
-            if (rf::game_sounds[lvl_snd.game_snd_id].is_looping) {
+            if (rf::sounds[lvl_snd.handle].is_looping) {
                 xlog::trace("Skipping sound %d because it is looping", i);
                 ++num_looping;
                 continue;
             }
             // Skip long sounds
-            float duration = rf::SndGetDuration(lvl_snd.game_snd_id);
+            float duration = rf::SndPcGetDuration(lvl_snd.handle);
             if (duration > 10.0f) {
                 xlog::trace("Skipping sound %d because of duration: %f", i, duration);
                 ++num_long;
                 continue;
             }
             // Find sound with the lowest volume
-            float current_vol_scale = snd_vol_scale_per_type[lvl_snd.type] * lvl_snd.vol_scale;
+            float current_vol_scale = rf::snd_group_volume[lvl_snd.group] * lvl_snd.vol_scale;
             if (best_idx == -1 || current_vol_scale < best_vol_scale) {
                 best_idx = static_cast<int>(i);
                 best_vol_scale = current_vol_scale;
             }
         }
-        float new_sound_vol_scale = snd_vol_scale_per_type[type_arg] * vol_scale_arg;
+        float new_sound_vol_scale = rf::snd_group_volume[group_arg] * vol_scale_arg;
         if (best_idx >= 0 && best_vol_scale <= new_sound_vol_scale) {
             // Free the selected slot and use it for a new sound
-            auto& best_lvl_snd = rf::level_sounds[best_idx];
-            xlog::info("Freeing level sound %d to make place for a new sound (volume %.4f duration %.1f)", best_idx,
-                best_vol_scale, rf::SndGetDuration(best_lvl_snd.game_snd_id));
-            rf::SndStop(best_lvl_snd.sig);
-            rf::ClearLevelSound(&best_lvl_snd);
+            auto& best_lvl_snd = rf::sound_instances[best_idx];
+            xlog::info("Freeing sound instance %d to make place for a new sound (volume %.4f duration %.1f)", best_idx,
+                best_vol_scale, rf::SndPcGetDuration(best_lvl_snd.handle));
+            rf::SndPcStop(best_lvl_snd.sig);
+            rf::SndClearInstanceSlot(&best_lvl_snd);
             regs.ebx = best_idx;
             regs.esi = reinterpret_cast<int32_t>(&best_lvl_snd);
             regs.eip = 0x005055EB;
         }
         else {
-            xlog::warn("Failed to allocate a level sound: volume %.2f num_looping %d num_long %d ",
+            xlog::warn("Failed to allocate a sound instance: volume %.2f num_looping %d num_long %d",
                 new_sound_vol_scale, num_looping, num_long);
         }
     },
 };
 
-CallHook<void()> PlayHardcodedBackgroundMusicForCutscene_hook{
+CallHook<void()> cutscene_play_music_hook{
     0x0045BB85,
     []() {
         g_cutscene_bg_sound_sig = -1;
-        PlayHardcodedBackgroundMusicForCutscene_hook.CallTarget();
+        cutscene_play_music_hook.CallTarget();
     },
 };
 
-FunHook<int(const char*, float )> PlayCutsceneBackgroundMusic_hook{
+FunHook<int(const char*, float )> snd_music_play_cutscene_hook{
     0x00505D70,
     [](const char *filename, float volume) {
-        g_cutscene_bg_sound_sig = PlayCutsceneBackgroundMusic_hook.CallTarget(filename, volume);
+        g_cutscene_bg_sound_sig = snd_music_play_cutscene_hook.CallTarget(filename, volume);
         return g_cutscene_bg_sound_sig;
     },
 };
@@ -289,12 +289,12 @@ FunHook<int(const char*, float )> PlayCutsceneBackgroundMusic_hook{
 void DisableSoundBeforeCutsceneSkip()
 {
     if (g_cutscene_bg_sound_sig != -1) {
-        rf::SndStop(g_cutscene_bg_sound_sig);
+        rf::SndPcStop(g_cutscene_bg_sound_sig);
         g_cutscene_bg_sound_sig = -1;
     }
 
-    rf::SetAllPlayingSoundsPaused(true);
-    rf::DestroyAllPausedSounds();
+    rf::SndPauseAll(true);
+    rf::SndDestroyAllPaused();
     rf::sound_enabled = false;
 }
 
@@ -356,12 +356,12 @@ void ApplySoundPatches()
     WriteMem<u8>(0x00505D07 + 1, 0x00505D5B - (0x00505D07 + 2));
 
     // Cutscene skip support
-    PlayHardcodedBackgroundMusicForCutscene_hook.Install();
-    PlayCutsceneBackgroundMusic_hook.Install();
+    cutscene_play_music_hook.Install();
+    snd_music_play_cutscene_hook.Install();
 
     // Level sounds
     SetPlaySoundEventsVolumeScale(g_game_config.level_sound_volume);
-    SndConvertVolume3D_AmbientSound_hook.Install();
+    snd_calculate_1d_from_3d_ambient_sound_hook.Install();
 
     AsmWriter(0x00505FE4).nop(2);
     // Fix ambient sound volume updating
@@ -374,19 +374,19 @@ void ApplySoundPatches()
     // Delete sounds with lowest volume when there is no free slot for a new sound
     snd_ds_play_3d_no_free_slots_fix.Install();
     snd_ds_play_no_free_slots_fix.Install();
-    PlaySound_no_free_slots_fix.Install();
+    snd_play_no_free_slots_fix.Install();
     //WriteMem<u8>(0x005055AB, asm_opcodes::jmp_rel_short); // never free level sounds, uncomment to test
-    level_sounds_resize_patch.Install();
+    sound_instances_resize_patch.Install();
     ds_channels_resize_patch.Install();
-    WriteMem<i8>(0x005053F5 + 1, rf::num_sound_channels); // LevelSoundsCtor
-    WriteMem<i8>(0x005058D8 + 2, rf::num_sound_channels); // UpdateLevelSoundVolume
-    WriteMem<i8>(0x0050598A + 2, rf::num_sound_channels); // SetSoundVolumeAndPan
-    WriteMem<i8>(0x00505A36 + 2, rf::num_sound_channels); // StopAllPausedSounds
-    WriteMem<i8>(0x00505A5A + 2, rf::num_sound_channels); // StopSound
-    WriteMem<i8>(0x00505C31 + 2, rf::num_sound_channels); // IsSoundPlaying
-    WriteMem<i8>(0x00521145 + 1, rf::num_sound_channels); // DsChannelsCtor
+    WriteMem<i8>(0x005053F5 + 1, rf::num_sound_channels); // SndInitSoundInstancesArray
+    WriteMem<i8>(0x005058D8 + 2, rf::num_sound_channels); // SndChange3D
+    WriteMem<i8>(0x0050598A + 2, rf::num_sound_channels); // SndChange
+    WriteMem<i8>(0x00505A36 + 2, rf::num_sound_channels); // SndStopAllPausedSounds
+    WriteMem<i8>(0x00505A5A + 2, rf::num_sound_channels); // SndStop
+    WriteMem<i8>(0x00505C31 + 2, rf::num_sound_channels); // SndIsPlaying
+    WriteMem<i8>(0x00521145 + 1, rf::num_sound_channels); // SndDsChannelsArrayCtor
     WriteMem<i8>(0x0052163D + 2, rf::num_sound_channels); // SndDsInitAllChannels
     WriteMem<i8>(0x0052191D + 2, rf::num_sound_channels); // SndDsCloseAllChannels
     WriteMem<i8>(0x00522F4F + 2, rf::num_sound_channels); // SndDsGetChannel
-    WriteMem<i8>(0x00522D1D + 2, rf::num_sound_channels); // SndCleanupInternalSubsystem
+    WriteMem<i8>(0x00522D1D + 2, rf::num_sound_channels); // SndDsCloseAllChannels2
 }
