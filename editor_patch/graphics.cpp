@@ -63,7 +63,7 @@ namespace red
 
 }
 
-CallHook<void()> frametime_update_hook{
+CallHook<void()> frametime_calculate_hook{
     0x00483047,
     []() {
         if (!IsWindowVisible(g_editor_wnd)) {
@@ -74,7 +74,7 @@ CallHook<void()> frametime_update_hook{
             // when in background 4 FPS
             Sleep(250);
         }
-        frametime_update_hook.CallTarget();
+        frametime_calculate_hook.CallTarget();
     },
 };
 
@@ -86,7 +86,7 @@ CodeInjection after_gr_init_hook{
     },
 };
 
-CodeInjection gr_d3d_draw_line_3d_patch_1{
+CodeInjection gr_d3d_line_3d_patch_1{
     0x004E133E,
     [](auto& regs) {
         bool flush_needed = !red::gr_d3d_buffers_locked
@@ -105,14 +105,14 @@ CodeInjection gr_d3d_draw_line_3d_patch_1{
     },
 };
 
-CallHook<void()> gr_d3d_draw_line_3d_patch_2{
+CallHook<void()> gr_d3d_line_3d_patch_2{
     0x004E1528,
     []() {
         red::gr_d3d_num_vertices += 2;
     },
 };
 
-CodeInjection gr_d3d_draw_line_2d_patch_1{
+CodeInjection gr_d3d_line_2d_patch_1{
     0x004E10BD,
     [](auto& regs) {
         bool flush_needed = !red::gr_d3d_buffers_locked
@@ -131,14 +131,14 @@ CodeInjection gr_d3d_draw_line_2d_patch_1{
     },
 };
 
-CallHook<void()> gr_d3d_draw_line_2d_patch_2{
+CallHook<void()> gr_d3d_line_2d_patch_2{
     0x004E11F2,
     []() {
         red::gr_d3d_num_vertices += 2;
     },
 };
 
-CodeInjection gr_d3d_draw_poly_patch{
+CodeInjection gr_d3d_poly_patch{
     0x004E1573,
     [](auto& regs) {
         if (red::gr_d3d_primitive_type != D3DPT_TRIANGLELIST) {
@@ -147,7 +147,7 @@ CodeInjection gr_d3d_draw_poly_patch{
     },
 };
 
-CodeInjection gr_d3d_draw_texture_patch_1{
+CodeInjection gr_d3d_bitmap_patch_1{
     0x004E090E,
     [](auto& regs) {
         if (red::gr_d3d_primitive_type != D3DPT_TRIANGLELIST) {
@@ -156,7 +156,7 @@ CodeInjection gr_d3d_draw_texture_patch_1{
     },
 };
 
-CodeInjection gr_d3d_draw_texture_patch_2{
+CodeInjection gr_d3d_bitmap_patch_2{
     0x004E0C97,
     [](auto& regs) {
         if (red::gr_d3d_primitive_type != D3DPT_TRIANGLELIST) {
@@ -165,7 +165,7 @@ CodeInjection gr_d3d_draw_texture_patch_2{
     },
 };
 
-CodeInjection gr_d3d_draw_geometry_face_patch_1{
+CodeInjection gr_d3d_render_geometry_face_patch_1{
     0x004E18F1,
     [](auto& regs) {
         if (red::gr_d3d_primitive_type != D3DPT_TRIANGLELIST) {
@@ -174,7 +174,7 @@ CodeInjection gr_d3d_draw_geometry_face_patch_1{
     },
 };
 
-CodeInjection gr_d3d_draw_geometry_face_patch_2{
+CodeInjection gr_d3d_render_geometry_face_patch_2{
     0x004E1B2D,
     [](auto& regs) {
         if (red::gr_d3d_primitive_type != D3DPT_TRIANGLELIST) {
@@ -192,25 +192,25 @@ void ApplyGraphicsPatches()
     WriteMem<u32>(0x004EBC77 + 1, D3DUSAGE_DYNAMIC|D3DUSAGE_DONOTCLIP|D3DUSAGE_WRITEONLY);
 #endif
 
-    // Avoid flushing D3D buffers in GrSetColor
+    // Avoid flushing D3D buffers in GrSetColorRgba
     AsmWriter(0x004B976D).nop(5);
 
     // Add Sleep if window is inactive
-    frametime_update_hook.Install();
+    frametime_calculate_hook.Install();
 
     // Improve performance
     after_gr_init_hook.Install();
 
     // Reduce number of draw-calls for line rendering
     AsmWriter(0x004E1335).nop(5);
-    gr_d3d_draw_line_3d_patch_1.Install();
-    gr_d3d_draw_line_3d_patch_2.Install();
+    gr_d3d_line_3d_patch_1.Install();
+    gr_d3d_line_3d_patch_2.Install();
     AsmWriter(0x004E10B4).nop(5);
-    gr_d3d_draw_line_2d_patch_1.Install();
-    gr_d3d_draw_line_2d_patch_2.Install();
-    gr_d3d_draw_poly_patch.Install();
-    gr_d3d_draw_texture_patch_1.Install();
-    gr_d3d_draw_texture_patch_2.Install();
-    gr_d3d_draw_geometry_face_patch_1.Install();
-    gr_d3d_draw_geometry_face_patch_2.Install();
+    gr_d3d_line_2d_patch_1.Install();
+    gr_d3d_line_2d_patch_2.Install();
+    gr_d3d_poly_patch.Install();
+    gr_d3d_bitmap_patch_1.Install();
+    gr_d3d_bitmap_patch_2.Install();
+    gr_d3d_render_geometry_face_patch_1.Install();
+    gr_d3d_render_geometry_face_patch_2.Install();
 }

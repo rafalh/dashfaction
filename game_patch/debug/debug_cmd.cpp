@@ -53,7 +53,7 @@ DcCommand2 debug_cmd{
 
 #ifdef NDEBUG
         if (rf::is_multi) {
-            rf::DcPrintf("This command is disabled in multiplayer!");
+            rf::ConsolePrintf("This command is disabled in multiplayer!");
             return;
         }
 #endif
@@ -61,7 +61,7 @@ DcCommand2 debug_cmd{
         for (auto& dbg_flag : g_debug_flags) {
             if (type == dbg_flag.name) {
                 dbg_flag.ref = !dbg_flag.ref;
-                rf::DcPrintf("Debug flag '%s' is %s", dbg_flag.name, dbg_flag.ref ? "enabled" : "disabled");
+                rf::ConsolePrintf("Debug flag '%s' is %s", dbg_flag.name, dbg_flag.ref ? "enabled" : "disabled");
                 if (dbg_flag.clear_geometry_cache) {
                     rf::GeomClearCache();
                 }
@@ -69,7 +69,7 @@ DcCommand2 debug_cmd{
             }
         }
 
-        rf::DcPrintf("Invalid debug flag: %s", type.c_str());
+        rf::ConsolePrintf("Invalid debug flag: %s", type.c_str());
     },
     nullptr,
     "debug [thruster | light | light2 | push_climb_reg | geo_reg | glass | mover | ignite | movemode | perf |\n"

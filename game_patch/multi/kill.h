@@ -2,7 +2,7 @@
 
 #include "../rf/player.h"
 
-struct PlayerStatsNew : rf::PlayerStats
+struct PlayerStatsNew : rf::PlayerLevelStats
 {
     unsigned short num_kills, num_deaths;
 };

@@ -6,15 +6,15 @@
 namespace rf
 {
     // Forward declarations
-    struct EntityObj;
-    struct AnimMesh;
+    struct Entity;
+    struct VMesh;
     struct Player;
     struct PlayerNetData;
     struct AiInfo;
 
     /* Camera */
 
-    enum CameraType
+    enum CameraMode
     {
         CAM_FIRST_PERSON = 0x0,
         CAM_THIRD_PERSON = 0x1,
@@ -28,9 +28,9 @@ namespace rf
 
     struct Camera
     {
-        EntityObj *camera_entity;
+        Entity *camera_entity;
         Player *player;
-        CameraType type;
+        CameraMode mode;
     };
     static_assert(sizeof(Camera) == 0xC);
 
@@ -82,7 +82,7 @@ namespace rf
     };
     static_assert(sizeof(ControlConfig) == 0xE48);
 
-    struct PlayerConfig
+    struct PlayerSettings
     {
         ControlConfig controls;
         int field_f2c;
@@ -118,55 +118,55 @@ namespace rf
         int mp_character;
         char name[12];
     };
-    static_assert(sizeof(PlayerConfig) == 0xE88);
+    static_assert(sizeof(PlayerSettings) == 0xE88);
 
-    enum GameCtrl
+    enum ControlAction
     {
-        GC_PRIMARY_ATTACK = 0x0,
-        GC_SECONDARY_ATTACK = 0x1,
-        GC_USE = 0x2,
-        GC_JUMP = 0x3,
-        GC_CROUCH = 0x4,
-        GC_HIDE_WEAPON = 0x5,
-        GC_RELOAD = 0x6,
-        GC_NEXT_WEAPON = 0x7,
-        GC_PREV_WEAPON = 0x8,
-        GC_CHAT = 0x9,
-        GC_TEAM_CHAT = 0xA,
-        GC_FORWARD = 0xB,
-        GC_BACKWARD = 0xC,
-        GC_SLIDE_LEFT = 0xD,
-        GC_SLIDE_RIGHT = 0xE,
-        GC_SLIDE_UP = 0xF,
-        GC_SLIDE_DOWN = 0x10,
-        GC_LOOK_DOWN = 0x11,
-        GC_LOOK_UP = 0x12,
-        GC_TURN_LEFT = 0x13,
-        GC_TURN_RIGHT = 0x14,
-        GC_MESSAGES = 0x15,
-        GC_MP_STATS = 0x16,
-        GC_QUICK_SAVE = 0x17,
-        GC_QUICK_LOAD = 0x18,
+        CA_PRIMARY_ATTACK = 0x0,
+        CA_SECONDARY_ATTACK = 0x1,
+        CA_USE = 0x2,
+        CA_JUMP = 0x3,
+        CA_CROUCH = 0x4,
+        CA_HIDE_WEAPON = 0x5,
+        CA_RELOAD = 0x6,
+        CA_NEXT_WEAPON = 0x7,
+        CA_PREV_WEAPON = 0x8,
+        CA_CHAT = 0x9,
+        CA_TEAM_CHAT = 0xA,
+        CA_FORWARD = 0xB,
+        CA_BACKWARD = 0xC,
+        CA_SLIDE_LEFT = 0xD,
+        CA_SLIDE_RIGHT = 0xE,
+        CA_SLIDE_UP = 0xF,
+        CA_SLIDE_DOWN = 0x10,
+        CA_LOOK_DOWN = 0x11,
+        CA_LOOK_UP = 0x12,
+        CA_TURN_LEFT = 0x13,
+        CA_TURN_RIGHT = 0x14,
+        CA_MESSAGES = 0x15,
+        CA_MP_STATS = 0x16,
+        CA_QUICK_SAVE = 0x17,
+        CA_QUICK_LOAD = 0x18,
     };
 
     /* Player */
 
-    struct PlayerStats
+    struct PlayerLevelStats
     {
         uint16_t field_0;
         int16_t score;
         int16_t caps;
         char padding[2];
     };
-    static_assert(sizeof(PlayerStats) == 0x8);
+    static_assert(sizeof(PlayerLevelStats) == 0x8);
 
-    struct PlayerWeaponInfo
+    struct PlayerFpgunData
     {
         int next_weapon_cls_id;
-        Timer weapon_switch_timer;
-        Timer reload_timer;
+        Timestamp weapon_switch_timestamp;
+        Timestamp reload_timestamp;
         int field_C;
-        Timer clip_drain_timer;
+        Timestamp clip_drain_timestamp;
         bool in_scope_view;
         char field_15;
         char field_16;
@@ -177,9 +177,9 @@ namespace rf
         char field_1E;
         char field_1F;
         int rocker_launcher_lock_obj_handle;
-        Timer rocker_launcher_lock_timer;
-        Timer rocket_scan_timer;
-        Timer rocket_scan_timer_unk1;
+        Timestamp rocker_launcher_lock_timestamp;
+        Timestamp rocket_scan_timestamp;
+        Timestamp rocket_scan_timer_unk1;
         bool railgun_scanner_active;
         char scanner_view_rendering;
         Color scanner_mask_clr;
@@ -197,16 +197,16 @@ namespace rf
         float field_AC;
         float field_B0;
         int pivot1_prop_id;
-        Timer field_B8;
+        Timestamp field_B8;
         int is_silenced_12mm_handgun;
         int field_C0;
         int remote_charge_visible;
         Vector3 field_C8;
         Matrix3 field_D4;
         int field_F8;
-        Timer field_FC;
+        Timestamp field_FC;
     };
-    static_assert(sizeof(PlayerWeaponInfo) == 0x100);
+    static_assert(sizeof(PlayerFpgunData) == 0x100);
 
     struct Player_1094
     {
@@ -222,6 +222,15 @@ namespace rf
 
     typedef int PlayerFlags;
 
+    struct PlayerViewport
+    {
+        int clip_x;
+        int clip_y;
+        int clip_w;
+        int clip_h;
+        float fov_h;
+    };
+
     struct Player
     {
         struct Player *next;
@@ -232,14 +241,14 @@ namespace rf
         int entity_cls_id;
         Vector3 field_1C;
         int field_28;
-        PlayerStats *stats;
+        PlayerLevelStats *stats;
         char team;
         char collide;
         char field_32;
         char field_33;
-        AnimMesh *fpgun_mesh;
-        AnimMesh *last_fpgun_mesh;
-        Timer fpgun_idle_timer;
+        VMesh *fpgun_mesh;
+        VMesh *last_fpgun_mesh;
+        Timestamp fpgun_idle_timestamp;
         int fpgun_muzzle_props[2];
         int fpgun_ammo_digit1_prop;
         int fpgun_ammo_digit2_prop;
@@ -250,24 +259,20 @@ namespace rf
         char field_B2;
         char field_B3;
         int view_obj_handle;
-        Timer weapon_switch_timer2;
-        Timer use_key_timer;
-        Timer spawn_protection_timer;
-        Camera *camera;
-        int viewport_x;
-        int viewport_y;
-        int viewport_w;
-        int viewport_h;
-        float fov;
-        int view_mode;
+        Timestamp weapon_switch_timer2;
+        Timestamp use_key_timestamp;
+        Timestamp spawn_protection_timestamp;
+        Camera *cam;
+        PlayerViewport viewport;
+        int viewport_mode;
         int front_collision_light;
-        PlayerConfig config;
+        PlayerSettings settings;
         int field_F6C;
         int field_F70;
         int field_F74;
         int field_F78;
         int field_F7C;
-        PlayerWeaponInfo weapon_info;
+        PlayerFpgunData fpgun_data;
         int fpgun_weapon_id;
         char is_scanner_bm_empty;
         int scanner_bm_handle;
@@ -299,13 +304,13 @@ namespace rf
     static auto& player_list = AddrAsRef<Player*>(0x007C75CC);
     static auto& local_player = AddrAsRef<Player*>(0x007C75D4);
 
-    static auto& KillLocalPlayer = AddrAsRef<void()>(0x004757A0);
-    static auto& IsEntityCtrlActive =
-        AddrAsRef<bool(ControlConfig *ctrl_conf, GameCtrl ctrl_id, bool *was_pressed)>(0x0043D4F0);
-    static auto& GetPlayerFromEntityHandle = AddrAsRef<Player*(int32_t entity_handle)>(0x004A3740);
-    static auto& IsPlayerEntityInvalid = AddrAsRef<bool(Player *player)>(0x004A4920);
-    static auto& IsPlayerDying = AddrAsRef<bool(Player *player)>(0x004A4940);
-    static auto& AddPlayerScore = AddrAsRef<void(Player *player, int delta)>(0x004A7460);
-    static auto& PlayerGetAiInfo = AddrAsRef<rf::AiInfo*(rf::Player *player)>(0x004A3260);
-    static auto& PlayerGetWeaponTotalAmmo = AddrAsRef<int(rf::Player *player, int weapon_cls_id)>(0x004A3280);
+    static auto& MultiKillLocalPlayer = AddrAsRef<void()>(0x004757A0);
+    static auto& ControlConfigCheckPressed =
+        AddrAsRef<bool(ControlConfig *cc, ControlAction action, bool *was_pressed)>(0x0043D4F0);
+    static auto& GetPlayerFromEntityHandle = AddrAsRef<Player*(int entity_handle)>(0x004A3740);
+    static auto& PlayerIsDead = AddrAsRef<bool(Player *player)>(0x004A4920);
+    static auto& PlayerIsDying = AddrAsRef<bool(Player *player)>(0x004A4940);
+    static auto& PlayerAddScore = AddrAsRef<void(Player *player, int delta)>(0x004A7460);
+    static auto& PlayerGetAiInfo = AddrAsRef<AiInfo*(Player *player)>(0x004A3260);
+    static auto& PlayerGetWeaponTotalAmmo = AddrAsRef<int(Player *player, int weapon_type)>(0x004A3280);
 }

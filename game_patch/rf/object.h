@@ -7,8 +7,9 @@
 namespace rf
 {
     // Forward declarations
-    struct RflRoom;
-    struct AnimMesh;
+    struct GRoom;
+    struct GSolid;
+    struct VMesh;
 
     // Typedefs
     using PhysicsFlags = int;
@@ -27,8 +28,8 @@ namespace rf
         OT_TRIGGER = 0x5,
         OT_EVENT = 0x6,
         OT_CORPSE = 0x7,
-        OT_MOVING_GROUP = 0x8,
-        OT_MOVER = 0x9,
+        OT_MOVER = 0x8,
+        OT_MOVER_BRUSH = 0x9,
         OT_GLARE = 0xA,
     };
 
@@ -38,7 +39,7 @@ namespace rf
         OF_HAS_ALPHA = 0x100000,
     };
 
-    struct CollisionInfo
+    struct PCollisionOut
     {
         Vector3 hit_point;
         Vector3 normal;
@@ -52,16 +53,16 @@ namespace rf
         void* face;
         int field_40;
     };
-    static_assert(sizeof(CollisionInfo) == 0x44);
+    static_assert(sizeof(PCollisionOut) == 0x44);
 
-    struct ColSphere
+    struct PCollisionSphere
     {
         Vector3 center;
         float radius;
         float field_10;
         int field_14;
     };
-    static_assert(sizeof(ColSphere) == 0x18);
+    static_assert(sizeof(PCollisionSphere) == 0x18);
 
     struct ObjInterp
     {
@@ -73,34 +74,34 @@ namespace rf
         }
     };
 
-    struct PhysicsInfo
+    struct PhysicsData
     {
         float elasticity;
-        float field_4;
+        float drag;
         float friction;
-        int field_C;
+        int bouyancy;
         float mass;
-        Matrix3 field_14;
-        Matrix3 field_38;
+        Matrix3 body_inv;
+        Matrix3 tensor_inv;
         Vector3 pos;
-        Vector3 new_pos;
-        Matrix3 yaw_rot_mat;
-        Matrix3 new_yaw_rot_mat_unk;
+        Vector3 next_pos;
+        Matrix3 orient;
+        Matrix3 next_orient;
         Vector3 vel;
-        Vector3 rot_change_unk;
+        Vector3 rotvel;
         Vector3 field_D4;
         Vector3 field_E0;
         Vector3 rot_change_unk_delta;
         float radius;
-        DynamicArray<ColSphere> colliders;
-        Vector3 aabb_min;
-        Vector3 aabb_max;
+        VArray<PCollisionSphere> cspheres;
+        Vector3 bbox_min;
+        Vector3 bbox_max;
         int flags;
         int flags2;
         float frame_time;
-        CollisionInfo floor_collision_info;
+        PCollisionOut collide_out;
     };
-    static_assert(sizeof(PhysicsInfo) == 0x170);
+    static_assert(sizeof(PhysicsData) == 0x170);
 
     enum Friendliness
     {
@@ -112,7 +113,7 @@ namespace rf
 
     struct Object
     {
-        RflRoom *room;
+        GRoom *room;
         Vector3 last_pos_in_room;
         Object *next_obj;
         Object *prev_obj;
@@ -121,7 +122,7 @@ namespace rf
         ObjectType type;
         int team;
         int handle;
-        int owner_entity_unk_handle;
+        int parent_handle;
         float life;
         float armor;
         Vector3 pos;
@@ -129,12 +130,12 @@ namespace rf
         Vector3 last_pos;
         float radius;
         ObjectFlags obj_flags;
-        AnimMesh *anim_mesh;
+        VMesh *vmesh;
         int field_84;
-        PhysicsInfo phys_info;
+        PhysicsData p_data;
         Friendliness friendliness;
         int material;
-        int parent_handle;
+        int host_handle;
         int unk_prop_id_204;
         Vector3 field_208;
         Matrix3 mat214;
@@ -144,36 +145,35 @@ namespace rf
         int field_26c;
         char killer_id;
         char pad[3]; // FIXME
-        int multi_handle;
+        int server_handle;
         ObjInterp* obj_interp;
         void* mesh_lighting_data;
         Vector3 field_280;
     };
     static_assert(sizeof(Object) == 0x28C);
 
-    struct ObjCreateInfo
+    struct ObjectCreateInfo
     {
-        const char *v3d_filename;
+        const char* v3d_filename;
         int v3d_type;
-        int unk_mesh;
-        float field_C;
+        GSolid* solid;
+        float drag;
         int material;
         float mass;
-        Matrix3 unk_density_aware_mat;
+        Matrix3 body_inv;
         Vector3 pos;
         Matrix3 orient;
-        Vector3 velocity;
-        Vector3 field_78;
+        Vector3 vel;
+        Vector3 rotvel;
         float radius;
-        DynamicArray<void*> col_spheres;
+        VArray<PCollisionSphere> spheres;
         int physics_flags;
     };
-    static_assert(sizeof(ObjCreateInfo) == 0x98);
+    static_assert(sizeof(ObjectCreateInfo) == 0x98);
 
-    static auto& ObjGetByUid = AddrAsRef<Object*(int uid)>(0x0048A4A0);
-    static auto& ObjGetByHandle = AddrAsRef<Object*(int handle)>(0x0040A0E0);
+    static auto& ObjLookupFromUid = AddrAsRef<Object*(int uid)>(0x0048A4A0);
+    static auto& ObjFromHandle = AddrAsRef<Object*(int handle)>(0x0040A0E0);
     static auto& ObjQueueDelete = AddrAsRef<void(Object* obj)>(0x0048AB40);
-    static auto& TestLineCollisionWithObject = AddrAsRef<bool(Object *obj, const Vector3 *p0, const Vector3 *p1, float *fraction)>(0x004A21E0);
 }
 
 template<>

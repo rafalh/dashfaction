@@ -250,9 +250,9 @@ DcCommand2 profiler_cmd{
 DcCommand2 perf_dump_cmd{
     "d_perf_dump",
     []() {
-        rf::DcPrintf("Number of performance aggregators: %u", PerfAggregator::get_instances().size());
+        rf::ConsolePrintf("Number of performance aggregators: %u", PerfAggregator::get_instances().size());
         for (auto& ptr : PerfAggregator::get_instances()) {
-            rf::DcPrintf("%s: calls %u, duration %u us, avg %u us", ptr->get_name().c_str(),
+            rf::ConsolePrintf("%s: calls %u, duration %u us, avg %u us", ptr->get_name().c_str(),
                 ptr->get_calls(), ptr->get_total_duration_us(), ptr->get_avg_duration_us());
         }
     },

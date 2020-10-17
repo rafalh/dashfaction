@@ -17,7 +17,7 @@ namespace rf
     };
     static_assert(sizeof(WeaponStateAction) == 0x1C);
 
-    struct WeaponClass
+    struct WeaponInfo
     {
         String name;
         String display_name;
@@ -26,7 +26,7 @@ namespace rf
         String embedded_v3d_filename;
         int ammo_type;
         String third_person_v3d;
-        AnimMesh *third_person_mesh_not_sure;
+        VMesh *third_person_mesh_not_sure;
         int muzzle1_prop_id;
         int third_person_grip1_mesh_prop;
         int third_person_muzzle_flash_glare;
@@ -194,7 +194,7 @@ namespace rf
         int field_548_always_0;
         float multi_bbox_size_factor;
     };
-    static_assert(sizeof(WeaponClass) == 0x550);
+    static_assert(sizeof(WeaponInfo) == 0x550);
 
     enum WeaponTypeFlags
     {
@@ -230,12 +230,12 @@ namespace rf
         WTF_TRACERS = 0x40000000,
         WTF_PIERCING = 0x80000000,
     };
-    struct WeaponObj : Object
+    struct Weapon : Object
     {
-        struct WeaponObj *next;
-        struct WeaponObj *prev;
-        WeaponClass *weapon_cls;
-        int weapon_cls_id;
+        struct Weapon *next;
+        struct Weapon *prev;
+        WeaponInfo *weapon_cls;
+        int weapon_type;
         float lifetime;
         int fly_sound;
         int glow_light;
@@ -246,25 +246,25 @@ namespace rf
         Matrix3 field_2C0;
         Friendliness entity_friendliness;
         int field_2E8;
-        Timer field_2EC;
+        Timestamp field_2EC;
         float piercing_power;
         float thrust_lifetime;
         int weapon_flags2;
         Vector3 last_hit_point;
         Vector3 field_308;
     };
-    static_assert(sizeof(WeaponObj) == 0x314);
+    static_assert(sizeof(Weapon) == 0x314);
 
-    static auto& weapon_classes = AddrAsRef<WeaponClass[64]>(0x0085CD08);
-    static auto& riot_stick_cls_id = AddrAsRef<int32_t>(0x00872468);
-    static auto& remote_charge_cls_id = AddrAsRef<int32_t>(0x0087210C);
-    static auto& machine_pistol_cls_id = AddrAsRef<int32_t>(0x0085CCD8);
-    static auto& machine_pistol_special_cls_id = AddrAsRef<int32_t>(0x0085CD00);
+    static auto& weapon_types = AddrAsRef<WeaponInfo[64]>(0x0085CD08);
+    static auto& riot_stick_weapon_type = AddrAsRef<int32_t>(0x00872468);
+    static auto& remote_charge_weapon_type = AddrAsRef<int32_t>(0x0087210C);
+    static auto& machine_pistol_weapon_type = AddrAsRef<int32_t>(0x0085CCD8);
+    static auto& machine_pistol_special_weapon_type = AddrAsRef<int32_t>(0x0085CD00);
     static auto& hide_enemy_bullets = AddrAsRef<bool>(0x005A24D0);
 
-    static auto& WeaponClsIsDetonator = AddrAsRef<bool(int weapon_cls_id)>(0x004C9070);
-    static auto& WeaponClsIsRiotStick = AddrAsRef<bool(int weapon_cls_id)>(0x004C90D0);
-    static auto& PlayerSwitchWeaponInstant = AddrAsRef<void(rf::Player *player, int weapon_cls_id)>(0x004A4980);
-    static auto& EntityIsReloading = AddrAsRef<bool(EntityObj* entity)>(0x00425250);
-    static auto& IsEntityWeaponInContinousFire = AddrAsRef<bool(int entity_handle, int weapon_cls_id)>(0x0041A830);
+    static auto& WeaponIsDetonator = AddrAsRef<bool(int weapon_type)>(0x004C9070);
+    static auto& WeaponIsRiotStick = AddrAsRef<bool(int weapon_type)>(0x004C90D0);
+    static auto& PlayerSwitchWeaponInstant = AddrAsRef<void(rf::Player *player, int weapon_type)>(0x004A4980);
+    static auto& EntityIsReloading = AddrAsRef<bool(Entity* entity)>(0x00425250);
+    static auto& IsEntityWeaponInContinousFire = AddrAsRef<bool(int entity_handle, int weapon_type)>(0x0041A830);
 }

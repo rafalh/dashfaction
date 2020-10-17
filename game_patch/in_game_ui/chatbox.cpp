@@ -33,25 +33,25 @@ FunHook<void(const char*, bool)> ChatSayAccept_hook{
 
 void ChatRender()
 {
-    if (!rf::chat_fully_visible_timer.IsSet() && !rf::chat_fade_out_timer.IsSet()) {
+    if (!rf::chat_fully_visible_timer.Valid() && !rf::chat_fade_out_timer.Valid()) {
         return;
     }
 
     float fade_out = 1.0;
-    if (rf::chat_fully_visible_timer.IsFinished() && !rf::chat_fade_out_timer.IsSet()) {
-        rf::chat_fully_visible_timer.Unset();
+    if (rf::chat_fully_visible_timer.Elapsed() && !rf::chat_fade_out_timer.Valid()) {
+        rf::chat_fully_visible_timer.Invalidate();
         rf::chat_fade_out_timer.Set(750);
     }
-    if (rf::chat_fade_out_timer.IsSet()) {
-        if (rf::chat_fade_out_timer.IsFinished()) {
-            rf::chat_fade_out_timer.Unset();
+    if (rf::chat_fade_out_timer.Valid()) {
+        if (rf::chat_fade_out_timer.Elapsed()) {
+            rf::chat_fade_out_timer.Invalidate();
             return;
         }
-        fade_out = rf::chat_fade_out_timer.GetTimeLeftMs() / 750.0f;
+        fade_out = rf::chat_fade_out_timer.TimeUntil() / 750.0f;
     }
 
     int chatbox_font = HudGetDefaultFont();
-    int clip_w = rf::GrGetClipWidth();
+    int clip_w = rf::GrClipWidth();
     int font_h = rf::GrGetFontHeight(chatbox_font);
     int border = g_big_chatbox ? 3 : 2;
     int box_w = clip_w - (g_big_chatbox ? 600 : 313);
@@ -62,10 +62,10 @@ void ChatRender()
     int box_x = (clip_w - box_w) / 2;
 
     int border_alpha = rf::scoreboard_visible ? 255 : chatbox_border_alpha;
-    rf::GrSetColor(255, 255, 255, static_cast<int>(border_alpha * fade_out));
+    rf::GrSetColorRgba(255, 255, 255, static_cast<int>(border_alpha * fade_out));
     HudRectBorder(box_x, box_y, box_w, box_h, border);
     int bg_alpha = rf::scoreboard_visible ? 255 : chatbox_bg_alpha;
-    rf::GrSetColor(0, 0, 0, static_cast<int>(bg_alpha * fade_out));
+    rf::GrSetColorRgba(0, 0, 0, static_cast<int>(bg_alpha * fade_out));
     rf::GrRect(box_x + border, box_y + border, content_w, content_h);
     int y = box_y + box_h - border - font_h - 5;
 
@@ -77,29 +77,29 @@ void ChatRender()
         int x = box_x + border + 6;
 
         int name_w, name_h;
-        rf::GrGetTextWidth(&name_w, &name_h, msg.name.CStr(), -1, chatbox_font);
+        rf::GrGetStringSize(&name_w, &name_h, msg.name.CStr(), -1, chatbox_font);
         if (msg.color_id == 0 || msg.color_id == 1) {
             if (msg.color_id == 0) {
-                rf::GrSetColor(227, 48, 47, text_alpha);
+                rf::GrSetColorRgba(227, 48, 47, text_alpha);
             }
             else {
-                rf::GrSetColor(117, 117, 254, text_alpha);
+                rf::GrSetColorRgba(117, 117, 254, text_alpha);
             }
             rf::GrString(x, y, msg.name.CStr(), chatbox_font);
-            rf::GrSetColor(255, 255, 255, text_alpha);
+            rf::GrSetColorRgba(255, 255, 255, text_alpha);
             x += name_w;
         }
         else if (msg.color_id == 2) {
-            rf::GrSetColor(227, 48, 47, text_alpha);
+            rf::GrSetColorRgba(227, 48, 47, text_alpha);
         }
         else if (msg.color_id == 3) {
-            rf::GrSetColor(117, 117, 254, text_alpha);
+            rf::GrSetColorRgba(117, 117, 254, text_alpha);
         }
         else if (msg.color_id == 4) {
-            rf::GrSetColor(255, 255, 255, text_alpha);
+            rf::GrSetColorRgba(255, 255, 255, text_alpha);
         }
         else {
-            rf::GrSetColor(52, 255, 57, text_alpha);
+            rf::GrSetColorRgba(52, 255, 57, text_alpha);
         }
         rf::GrString(x, y, msg.text.CStr(), chatbox_font);
         y -= font_h;
@@ -111,7 +111,7 @@ FunHook<void()> ChatRender_hook{0x004773D0, ChatRender};
 CodeInjection ChatboxAddMsg_max_width_injection{
     0x004788E3,
     [](auto& regs) {
-        regs.esi = rf::GrGetMaxWidth() - (g_big_chatbox ? 620 : 320);
+        regs.esi = rf::GrScreenWidth() - (g_big_chatbox ? 620 : 320);
     },
 };
 
@@ -125,7 +125,7 @@ void ChatboxInputRender(rf::String::Pod label_pod, rf::String::Pod msg_pod)
     }
 
     int chatbox_font = HudGetDefaultFont();
-    int clip_w = rf::GrGetClipWidth();
+    int clip_w = rf::GrClipWidth();
     int font_h = rf::GrGetFontHeight(chatbox_font); // 12
     int border = g_big_chatbox ? 3 : 2;
     int box_w = clip_w - (g_big_chatbox ? 600 : 313);
@@ -139,33 +139,33 @@ void ChatboxInputRender(rf::String::Pod label_pod, rf::String::Pod msg_pod)
 
     rf::String msg_shortened{msg};
     int msg_w, msg_h;
-    rf::GrGetTextWidth(&msg_w, &msg_h, msg_shortened.CStr(), -1, chatbox_font);
+    rf::GrGetStringSize(&msg_w, &msg_h, msg_shortened.CStr(), -1, chatbox_font);
     int label_w, label_h;
-    rf::GrGetTextWidth(&label_w, &label_h, label.CStr(), -1, chatbox_font);
-    int max_msg_w = -330 - label_w + rf::GrGetMaxWidth();
+    rf::GrGetStringSize(&label_w, &label_h, label.CStr(), -1, chatbox_font);
+    int max_msg_w = -330 - label_w + rf::GrScreenWidth();
     while (msg_w > max_msg_w) {
         msg_shortened.SubStr(&msg_shortened, 1, -1);
-        rf::GrGetTextWidth(&msg_w, &msg_h, msg_shortened.CStr(), -1, chatbox_font);
+        rf::GrGetStringSize(&msg_w, &msg_h, msg_shortened.CStr(), -1, chatbox_font);
     }
 
-    rf::GrSetColor(255, 255, 255, rf::scoreboard_visible ? 255 : chatbox_border_alpha);
+    rf::GrSetColorRgba(255, 255, 255, rf::scoreboard_visible ? 255 : chatbox_border_alpha);
     HudRectBorder(input_box_x, input_box_y, box_w, input_box_h, 2);
 
-    rf::GrSetColor(0, 0, 0, rf::scoreboard_visible ? 255 : chatbox_bg_alpha);
+    rf::GrSetColorRgba(0, 0, 0, rf::scoreboard_visible ? 255 : chatbox_bg_alpha);
     rf::GrRect(input_box_x + border, input_box_y + border, content_w, input_box_content_h);
 
     rf::String label_and_msg;
     rf::String::Concat(&label_and_msg, label, msg_shortened);
     int text_x = input_box_x + border + 4;
     int text_y = input_box_y + border + (g_big_chatbox ? 2 : 1);
-    rf::GrSetColor(53, 207, 22, 255);
+    rf::GrSetColorRgba(53, 207, 22, 255);
     rf::GrString(text_x, text_y, label_and_msg.CStr(), chatbox_font);
 
-    static rf::Timer cursor_blink_timer;
+    static rf::Timestamp cursor_blink_timestamp;
     static bool chatbox_cursor_visible = false;
 
-    if (!cursor_blink_timer.IsSet() || cursor_blink_timer.IsFinished()) {
-        cursor_blink_timer.Set(350);
+    if (!cursor_blink_timestamp.Valid() || cursor_blink_timestamp.Elapsed()) {
+        cursor_blink_timestamp.Set(350);
         chatbox_cursor_visible = !chatbox_cursor_visible;
     }
     if (chatbox_cursor_visible) {

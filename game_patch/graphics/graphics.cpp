@@ -10,7 +10,7 @@
 #include "../rf/player.h"
 #include "../rf/network.h"
 #include "../rf/hud.h"
-#include "../rf/game_seq.h"
+#include "../rf/gameseq.h"
 #include "../rf/os.h"
 #include "../utils/com-utils.h"
 #include "../utils/string-utils.h"
@@ -296,7 +296,7 @@ CallHook<void()> GrInitBuffers_AfterReset_hook{
         rf::gr_d3d_device->SetRenderState(D3DRS_CLIPPING, 0);
 
         if (rf::local_player)
-            rf::GrSetTextureMipFilter(rf::local_player->config.filtering_level == 0);
+            rf::GrSetTextureMipFilter(rf::local_player->settings.filtering_level == 0);
 
         if (rf::gr_d3d_device_caps.MaxAnisotropy > 0 && g_game_config.anisotropic_filtering)
             SetupMaxAnisotropy();
@@ -338,13 +338,13 @@ DcCommand2 antialiasing_cmd{
     "antialiasing",
     []() {
         if (!g_game_config.msaa)
-            rf::DcPrintf("Anti-aliasing is not supported");
+            rf::ConsolePrintf("Anti-aliasing is not supported");
         else {
             DWORD enabled = 0;
             rf::gr_d3d_device->GetRenderState(D3DRS_MULTISAMPLEANTIALIAS, &enabled);
             enabled = !enabled;
             rf::gr_d3d_device->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, enabled);
-            rf::DcPrintf("Anti-aliasing is %s", enabled ? "enabled" : "disabled");
+            rf::ConsolePrintf("Anti-aliasing is %s", enabled ? "enabled" : "disabled");
         }
     },
     "Toggles anti-aliasing",
@@ -361,15 +361,15 @@ CodeInjection GrD3DSetMaterialFlags_profile_patch{
     0x0054F19C,
     [](auto& regs) {
         if (g_profile_frame) {
-            auto state_flags = AddrAsRef<rf::GrRenderState>(regs.esp + 0x10 + 0x4);
+            auto state_flags = AddrAsRef<rf::GrMode>(regs.esp + 0x10 + 0x4);
             const char* desc = "";
-            if (state_flags == rf::gr_string_state)
+            if (state_flags == rf::gr_string_mode)
                 desc = " (text)";
-            else if (state_flags == rf::gr_rect_state)
+            else if (state_flags == rf::gr_rect_mode)
                 desc = " (rect)";
-            else if (state_flags == rf::gr_line_state)
+            else if (state_flags == rf::gr_line_mode)
                 desc = " (line)";
-            else if (state_flags == rf::gr_bitmap_clamp_state)
+            else if (state_flags == rf::gr_bitmap_clamp_mode)
                 desc = " (bitmap)";
             xlog::info("GrD3DSetMaterialFlags 0x%X%s", state_flags.value, desc);
         }
@@ -510,10 +510,10 @@ DcCommand2 max_fps_cmd{
 #endif
             g_game_config.max_fps = new_limit;
             g_game_config.save();
-            rf::min_framerate = 1.0f / new_limit;
+            rf::framerate_min = 1.0f / new_limit;
         }
         else
-            rf::DcPrintf("Maximal FPS: %.1f", 1.0f / rf::min_framerate);
+            rf::ConsolePrintf("Maximal FPS: %.1f", 1.0f / rf::framerate_min);
     },
     "Sets maximal FPS",
     "maxfps <limit>",
@@ -640,14 +640,14 @@ DcCommand2 damage_screen_flash_cmd{
     []() {
         g_game_config.damage_screen_flash = !g_game_config.damage_screen_flash;
         g_game_config.save();
-        rf::DcPrintf("Damage screen flash effect is %s", g_game_config.damage_screen_flash ? "enabled" : "disabled");
+        rf::ConsolePrintf("Damage screen flash effect is %s", g_game_config.damage_screen_flash ? "enabled" : "disabled");
     },
     "Toggle damage screen flash effect",
 };
 
-FunHook<void(int*, void*, int, int, int, rf::GrRenderState, int)> gr_d3d_queue_triangles_hook{
+FunHook<void(int*, void*, int, int, int, rf::GrMode, int)> gr_d3d_queue_triangles_hook{
     0x005614B0,
-    [](int *list_idx, void *vertices, int num_vertices, int bm0, int bm1, rf::GrRenderState state, int pass_id) {
+    [](int *list_idx, void *vertices, int num_vertices, int bm0, int bm1, rf::GrMode state, int pass_id) {
         // Fix glass_house level having faces that use MT state but don't have any lightmap
         if (bm1 == -1) {
             WARN_ONCE("Prevented rendering of an unlit face with multi-texturing render state");
@@ -712,7 +712,7 @@ DcCommand2 mesh_static_lighting_cmd{
         g_game_config.mesh_static_lighting = !g_game_config.mesh_static_lighting;
         g_game_config.save();
         RecalcMeshStaticLighting();
-        rf::DcPrintf("Mesh static lighting is %s", g_game_config.mesh_static_lighting ? "enabled" : "disabled");
+        rf::ConsolePrintf("Mesh static lighting is %s", g_game_config.mesh_static_lighting ? "enabled" : "disabled");
     },
     "Toggle mesh static lighting calculation",
 };
@@ -723,7 +723,7 @@ DcCommand2 nearest_texture_filtering_cmd{
         g_game_config.nearest_texture_filtering = !g_game_config.nearest_texture_filtering;
         g_game_config.save();
         SetupTextureFiltering();
-        rf::DcPrintf("Nearest texture filtering is %s", g_game_config.nearest_texture_filtering ? "enabled" : "disabled");
+        rf::ConsolePrintf("Nearest texture filtering is %s", g_game_config.nearest_texture_filtering ? "enabled" : "disabled");
     },
     "Toggle nearest texture filtering",
 };
@@ -860,7 +860,7 @@ void GraphicsInit()
     antialiasing_cmd.Register();
     nearest_texture_filtering_cmd.Register();
 
-    // Do not flush drawing buffers during GrSetColor call
+    // Do not flush drawing buffers during GrSetColorRgba call
     WriteMem<u8>(0x0050CFEB, asm_opcodes::jmp_rel_short);
 
     // Flush instead of preparing D3D drawing buffers in gr_d3d_set_state, gr_d3d_set_state_and_texture, gr_d3d_tcache_set
@@ -959,10 +959,10 @@ void GraphicsDrawFpsCounter()
 {
     if (g_game_config.fps_counter && !rf::is_hud_hidden) {
         auto text = StringFormat("FPS: %.1f", rf::current_fps);
-        rf::GrSetColor(0, 255, 0, 255);
-        int x = rf::GrGetMaxWidth() - (g_game_config.big_hud ? 165 : 90);
+        rf::GrSetColorRgba(0, 255, 0, 255);
+        int x = rf::GrScreenWidth() - (g_game_config.big_hud ? 165 : 90);
         int y = 10;
-        if (rf::GameSeqIsCurrentlyInGame()) {
+        if (rf::GameSeqInGameplay()) {
             y = g_game_config.big_hud ? 110 : 60;
             if (IsDoubleAmmoHud()) {
                 y += g_game_config.big_hud ? 80 : 40;

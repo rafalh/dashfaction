@@ -272,7 +272,7 @@ static void ForEachPackfileEntry(const std::vector<std::string_view>& ext_filter
     for (auto& packfile : g_packfiles) {
         if (!packfile_filter || !stricmp(packfile_filter, packfile->name)) {
             for (auto& entry : packfile->files) {
-                const char* ext_ptr = rf::GetFileExt(entry.file_name);
+                const char* ext_ptr = rf::FileGetExt(entry.file_name);
                 if (ext_ptr[0]) {
                     ++ext_ptr;
                 }
@@ -323,7 +323,7 @@ static bool IsLookupTableEntryOverrideAllowed(rf::PackfileEntry* old_entry, rf::
         // Allow overriding by packfiles from game root and from mods
         return true;
     }
-    if (!old_entry->archive->is_user_maps && !stricmp(rf::GetFileExt(new_entry->file_name), ".tbl")) {
+    if (!old_entry->archive->is_user_maps && !stricmp(rf::FileGetExt(new_entry->file_name), ".tbl")) {
         // Always skip overriding tbl files from game by user_maps
         return false;
     }

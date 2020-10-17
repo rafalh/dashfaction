@@ -34,7 +34,7 @@ void __fastcall UiLabel_Create2_VersionLabel(rf::UiGadget* self, void* edx, rf::
                                              int h, const char* text, int font_id)
 {
     text = PRODUCT_NAME_VERSION;
-    rf::GrGetTextWidth(&w, &h, text, -1, font_id);
+    rf::GrGetStringSize(&w, &h, text, -1, font_id);
 #if SHARP_UI_TEXT
     w = static_cast<int>(w / rf::ui_scale_x);
     h = static_cast<int>(h / rf::ui_scale_y);
@@ -85,15 +85,15 @@ int LoadEasterEggImage()
 
     constexpr int easter_egg_size = 128;
 
-    int hbm = rf::BmCreateUserBmap(rf::BMPF_ARGB_8888, easter_egg_size, easter_egg_size);
+    int hbm = rf::BmCreate(rf::BM_FORMAT_ARGB_8888, easter_egg_size, easter_egg_size);
 
-    rf::GrLockData lock_data;
-    if (!rf::GrLock(hbm, 0, &lock_data, 1))
+    rf::GrLockInfo lock;
+    if (!rf::GrLock(hbm, 0, &lock, 1))
         return -1;
 
-    rf::BmConvertFormat(lock_data.bits, lock_data.pixel_format, res_data, rf::BMPF_ARGB_8888,
+    rf::BmConvertFormat(lock.bits, lock.pixel_format, res_data, rf::BM_FORMAT_ARGB_8888,
                         easter_egg_size * easter_egg_size);
-    rf::GrUnlock(&lock_data);
+    rf::GrUnlock(&lock);
 
     return hbm;
 }
@@ -107,10 +107,10 @@ CallHook<void()> MenuMainRender_hook{
             if (img == -1)
                 return;
             int w, h;
-            rf::BmGetBitmapSize(img, &w, &h);
+            rf::BmGetDimension(img, &w, &h);
             int anim_delta_time = GetTickCount() - g_egg_anim_start;
-            int pos_x = (rf::GrGetMaxWidth() - w) / 2;
-            int pos_y = rf::GrGetMaxHeight() - h;
+            int pos_x = (rf::GrScreenWidth() - w) / 2;
+            int pos_y = rf::GrScreenHeight() - h;
             if (anim_delta_time < EGG_ANIM_ENTER_TIME) {
                 float enter_progress = anim_delta_time / static_cast<float>(EGG_ANIM_ENTER_TIME);
                 pos_y += h - static_cast<int>(sinf(enter_progress * static_cast<float>(PI) / 2.0f) * h);
@@ -122,7 +122,7 @@ CallHook<void()> MenuMainRender_hook{
                 if (leave_delta > EGG_ANIM_LEAVE_TIME)
                     g_version_click_counter = 0;
             }
-            rf::GrBitmap(img, pos_x, pos_y, rf::gr_bitmap_clamp_state);
+            rf::GrBitmap(img, pos_x, pos_y, rf::gr_bitmap_clamp_mode);
         }
     },
 };
@@ -163,7 +163,7 @@ static inline void DebugUiLayout([[ maybe_unused ]] rf::UiGadget& gadget)
     int y = gadget.GetAbsoluteY() * rf::ui_scale_y;
     int w = gadget.w * rf::ui_scale_x;
     int h = gadget.h * rf::ui_scale_y;
-    rf::GrSetColor((x ^ y) & 255, 0, 0, 64);
+    rf::GrSetColorRgba((x ^ y) & 255, 0, 0, 64);
     rf::GrRect(x, y, w, h);
 #endif
 }
@@ -176,13 +176,13 @@ void __fastcall UiButton_Create(rf::UiButton& this_, void*, const char *normal_b
     if (*normal_bm) {
         this_.bg_bitmap = rf::BmLoad(normal_bm, -1, false);
         rf::GrTcacheAddRef(this_.bg_bitmap);
-        rf::BmGetBitmapSize(this_.bg_bitmap, &this_.w, &this_.h);
+        rf::BmGetDimension(this_.bg_bitmap, &this_.w, &this_.h);
     }
     if (*selected_bm) {
         this_.selected_bitmap = rf::BmLoad(selected_bm, -1, false);
         rf::GrTcacheAddRef(this_.selected_bitmap);
         if (this_.bg_bitmap < 0) {
-            rf::BmGetBitmapSize(this_.selected_bitmap, &this_.w, &this_.h);
+            rf::BmGetDimension(this_.selected_bitmap, &this_.w, &this_.h);
         }
     }
     this_.text = strdup(text);
@@ -206,22 +206,22 @@ void __fastcall UiButton_Render(rf::UiButton& this_, void*)
     int h = static_cast<int>(this_.h * rf::ui_scale_y);
 
     if (this_.bg_bitmap >= 0) {
-        rf::GrSetColor(255, 255, 255, 255);
+        rf::GrSetColorRgba(255, 255, 255, 255);
         rf::GrBitmapStretched(this_.bg_bitmap, x, y, w, h, 0, 0, this_.w, this_.h);
     }
 
     if (!this_.enabled) {
-        rf::GrSetColor(96, 96, 96, 255);
+        rf::GrSetColorRgba(96, 96, 96, 255);
     }
     else if (this_.highlighted) {
-        rf::GrSetColor(240, 240, 240, 255);
+        rf::GrSetColorRgba(240, 240, 240, 255);
     }
     else {
-        rf::GrSetColor(192, 192, 192, 255);
+        rf::GrSetColorRgba(192, 192, 192, 255);
     }
 
     if (this_.enabled && this_.highlighted && this_.selected_bitmap >= 0) {
-        auto state = AddrAsRef<rf::GrRenderState>(0x01775B0C);
+        auto state = AddrAsRef<rf::GrMode>(0x01775B0C);
         rf::GrBitmapStretched(this_.selected_bitmap, x, y, w, h, 0, 0, this_.w, this_.h, false, false, state);
     }
 
@@ -249,13 +249,13 @@ void __fastcall UiLabel_Create(rf::UiLabel& this_, void*, rf::UiGadget *parent, 
     this_.x = x;
     this_.y = y;
     int text_w, text_h;
-    rf::GrGetTextWidth(&text_w, &text_h, text, -1, font);
+    rf::GrGetStringSize(&text_w, &text_h, text, -1, font);
     this_.w = static_cast<int>(text_w / rf::ui_scale_x);
     this_.h = static_cast<int>(text_h / rf::ui_scale_y);
     this_.text = strdup(text);
     this_.font = font;
     this_.align = rf::GR_ALIGN_LEFT;
-    this_.clr.SetRGBA(0, 0, 0, 255);
+    this_.clr.Set(0, 0, 0, 255);
 }
 FunHook UiLabel_Create_hook{0x00456B60, UiLabel_Create};
 
@@ -277,7 +277,7 @@ void __fastcall UiLabel_Create2(rf::UiLabel& this_, void*, rf::UiGadget *parent,
     }
     this_.text = strdup(text);
     this_.font = font;
-    this_.clr.SetRGBA(0, 0, 0, 255);
+    this_.clr.Set(0, 0, 0, 255);
 }
 FunHook UiLabel_Create2_hook{0x00456C20, UiLabel_Create2};
 
@@ -292,18 +292,18 @@ FunHook UiLabel_SetText_hook{0x00456DC0, UiLabel_SetText};
 void __fastcall UiLabel_Render(rf::UiLabel& this_, void*)
 {
     if (!this_.enabled) {
-        rf::GrSetColor(48, 48, 48, 128);
+        rf::GrSetColorRgba(48, 48, 48, 128);
     }
     else if (this_.highlighted) {
-        rf::GrSetColor(240, 240, 240, 255);
+        rf::GrSetColorRgba(240, 240, 240, 255);
     }
     else {
-        rf::GrSetColorPtr(&this_.clr);
+        rf::GrSetColor(this_.clr);
     }
     int x = static_cast<int>(this_.GetAbsoluteX() * rf::ui_scale_x);
     int y = static_cast<int>(this_.GetAbsoluteY() * rf::ui_scale_y);
     int text_w, text_h;
-    rf::GrGetTextWidth(&text_w, &text_h, this_.text, -1, this_.font);
+    rf::GrGetStringSize(&text_w, &text_h, this_.text, -1, this_.font);
     if (this_.align == rf::GR_ALIGN_CENTER) {
         x += static_cast<int>(this_.w * rf::ui_scale_x / 2);
     }
@@ -336,10 +336,10 @@ FunHook UiInputBox_Create_hook{0x00456FE0, UiInputBox_Create};
 void __fastcall UiInputBox_Render(rf::UiInputBox& this_, void*)
 {
     if (this_.enabled && this_.highlighted) {
-        rf::GrSetColor(240, 240, 240, 255);
+        rf::GrSetColorRgba(240, 240, 240, 255);
     }
     else {
-        rf::GrSetColor(192, 192, 192, 255);
+        rf::GrSetColorRgba(192, 192, 192, 255);
     }
 
     int x = static_cast<int>((this_.GetAbsoluteX() + 1) * rf::ui_scale_x);
@@ -354,7 +354,7 @@ void __fastcall UiInputBox_Render(rf::UiInputBox& this_, void*)
         rf::UiUpdateInputBoxCursor();
         if (rf::ui_input_box_cursor_visible) {
             int text_w, text_h;
-            rf::GrGetTextWidth(&text_w, &text_h, this_.text, -1, this_.font);
+            rf::GrGetStringSize(&text_w, &text_h, this_.text, -1, this_.font);
             rf::GrString(text_offset_x + text_w, 0, "_", this_.font);
         }
     }
@@ -377,13 +377,13 @@ FunHook UiCycler_AddItem_hook{0x00458080, UiCycler_AddItem};
 void __fastcall UiCycler_Render(rf::UiCycler& this_, void*)
 {
     if (this_.enabled && this_.highlighted) {
-        rf::GrSetColor(255, 255, 255, 255);
+        rf::GrSetColorRgba(255, 255, 255, 255);
     }
     else if (this_.enabled) {
-        rf::GrSetColor(192, 192, 192, 255);
+        rf::GrSetColorRgba(192, 192, 192, 255);
     }
     else {
-        rf::GrSetColor(96, 96, 96, 255);
+        rf::GrSetColorRgba(96, 96, 96, 255);
     }
 
     int x = static_cast<int>(this_.GetAbsoluteX() * rf::ui_scale_x);
@@ -431,7 +431,7 @@ FunHook<void()> MenuInit_hook{
 
 int BmLoadIfExists(const char* name, int unk, bool generate_mipmaps)
 {
-    if (rf::FsFileExists(name)) {
+    if (rf::FileExists(name)) {
         return rf::BmLoad(name, unk, generate_mipmaps);
     }
     else {
@@ -439,16 +439,16 @@ int BmLoadIfExists(const char* name, int unk, bool generate_mipmaps)
     }
 }
 
-CallHook<void(int, int, int, rf::GrRenderState)> GrBitmap_DrawCursor_hook{
+CallHook<void(int, int, int, rf::GrMode)> GrBitmap_DrawCursor_hook{
     0x004354E4,
-    [](int bm_handle, int x, int y, rf::GrRenderState render_state) {
+    [](int bm_handle, int x, int y, rf::GrMode mode) {
         if (rf::ui_scale_y >= 2.0f) {
             static int cursor_1_bmh = BmLoadIfExists("cursor_1.tga", -1, false);
             if (cursor_1_bmh != -1) {
                 bm_handle = cursor_1_bmh;
             }
         }
-        GrBitmap_DrawCursor_hook.CallTarget(bm_handle, x, y, render_state);
+        GrBitmap_DrawCursor_hook.CallTarget(bm_handle, x, y, mode);
     },
 };
 

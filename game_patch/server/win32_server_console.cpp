@@ -7,7 +7,7 @@
 #include <thread>
 #include <algorithm>
 #include <cstring>
-#include "../rf/debug_console.h"
+#include "../rf/console.h"
 #include "../rf/network.h"
 
 #if SERVER_WIN32_CONSOLE
@@ -40,8 +40,8 @@ void PrintCmdInputLine()
     CONSOLE_SCREEN_BUFFER_INFO scr_buf_info;
     GetConsoleScreenBufferInfo(output_handle, &scr_buf_info);
     WriteConsoleA(output_handle, "] ", 2, nullptr, nullptr);
-    unsigned Offset = std::max(0, static_cast<int>(rf::dc_cmd_line_len) - scr_buf_info.dwSize.X + 3);
-    WriteConsoleA(output_handle, rf::dc_cmd_line + Offset, rf::dc_cmd_line_len - Offset, nullptr, nullptr);
+    unsigned Offset = std::max(0, static_cast<int>(rf::console_cmd_line_len) - scr_buf_info.dwSize.X + 3);
+    WriteConsoleA(output_handle, rf::console_cmd_line + Offset, rf::console_cmd_line_len - Offset, nullptr, nullptr);
 }
 
 BOOL WINAPI ConsoleCtrlHandler([[maybe_unused]] DWORD ctrl_type)
@@ -76,7 +76,7 @@ CallHook<void()> OsInitWindow_Server_hook{
 };
 
 FunHook<void(const char*, const int*)> DcPrint_hook{
-    reinterpret_cast<uintptr_t>(rf::DcPrint),
+    reinterpret_cast<uintptr_t>(rf::ConsoleOutput),
     [](const char* text, [[maybe_unused]] const int* color) {
         HANDLE output_handle = GetStdHandle(STD_OUTPUT_HANDLE);
         constexpr WORD red_attr = FOREGROUND_RED | FOREGROUND_INTENSITY;
@@ -151,11 +151,11 @@ CallHook<void()> DcPutChar_NewLine_hook{
 FunHook<void()> DcDrawServerConsole_hook{
     0x0050A770,
     []() {
-        static char prev_cmd_line[sizeof(rf::dc_cmd_line)];
-        if (std::strncmp(rf::dc_cmd_line, prev_cmd_line, std::size(prev_cmd_line)) != 0) {
+        static char prev_cmd_line[sizeof(rf::console_cmd_line)];
+        if (std::strncmp(rf::console_cmd_line, prev_cmd_line, std::size(prev_cmd_line)) != 0) {
             ResetConsoleCursorColumn(true);
             PrintCmdInputLine();
-            std::strcpy(prev_cmd_line, rf::dc_cmd_line);
+            std::strcpy(prev_cmd_line, rf::console_cmd_line);
         }
     },
 };

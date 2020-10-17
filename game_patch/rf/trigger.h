@@ -4,12 +4,12 @@
 
 namespace rf
 {
-    struct TriggerObj : Object
+    struct Trigger : Object
     {
-        TriggerObj *next;
-        TriggerObj *prev;
+        Trigger *next;
+        Trigger *prev;
         int shape;
-        Timer resets_after_timer;
+        Timestamp resets_after_timestamp;
         int resets_after_ms;
         int resets_counter;
         int resets_times;
@@ -21,18 +21,18 @@ namespace rf
         int airlock_room_uid;
         int activated_by;
         Vector3 box_size;
-        DynamicArray<> links;
-        Timer activation_failed_timer;
+        VArray<int> links;
+        Timestamp activation_failed_timestamp;
         int activation_failed_entity_handle;
-        Timer field_2e8;
+        Timestamp field_2e8;
         char one_way;
         float button_active_time_seconds;
-        Timer field_2f4;
+        Timestamp field_2f4;
         float inside_time_seconds;
-        Timer inside_timer;
+        Timestamp inside_timestamp;
         int attached_to_uid;
         int use_clutter_uid;
         char team;
     };
-    static_assert(sizeof(TriggerObj) == 0x30C);
+    static_assert(sizeof(Trigger) == 0x30C);
 }

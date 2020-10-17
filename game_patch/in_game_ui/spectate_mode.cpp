@@ -5,7 +5,7 @@
 #include "../rf/entity.h"
 #include "../rf/player.h"
 #include "../rf/network.h"
-#include "../rf/game_seq.h"
+#include "../rf/gameseq.h"
 #include "../rf/weapon.h"
 #include "../rf/graphics.h"
 #include "../rf/hud.h"
@@ -22,13 +22,13 @@
 namespace rf
 {
 
-static auto& IsEntityLoopFire = AddrAsRef<bool(int entity_handle, signed int weapon_cls_id)>(0x0041A830);
-static auto& EntityIsSwimming = AddrAsRef<bool(EntityObj* entity)>(0x0042A0A0);
-static auto& EntityIsFalling = AddrAsRef<bool(EntityObj* entit)>(0x0042A020);
+static auto& IsEntityLoopFire = AddrAsRef<bool(int entity_handle, signed int weapon_type)>(0x0041A830);
+static auto& EntityIsSwimming = AddrAsRef<bool(Entity* entity)>(0x0042A0A0);
+static auto& EntityIsFalling = AddrAsRef<bool(Entity* entit)>(0x0042A020);
 
 static auto& PlayerFpgunRender = AddrAsRef<void(Player*)>(0x004A2B30);
 static auto& PlayerFpgunUpdate = AddrAsRef<void(Player*)>(0x004A2700);
-static auto& PlayerFpgunSetupMesh = AddrAsRef<void(Player*, int weapon_cls_id)>(0x004AA230);
+static auto& PlayerFpgunSetupMesh = AddrAsRef<void(Player*, int weapon_type)>(0x004AA230);
 static auto& PlayerFpgunUpdateMesh = AddrAsRef<void(Player*)>(0x004AA6D0);
 static auto& PlayerRenderRocketLauncherScannerView = AddrAsRef<void(Player* player)>(0x004AEEF0);
 static auto& PlayerFpgunSetState = AddrAsRef<void(Player* player, int state)>(0x004AA560);
@@ -43,15 +43,15 @@ static bool g_spectate_mode_enabled = false;
 static void SetCameraTarget(rf::Player* player)
 {
     // Based on function SetCamera1View
-    if (!rf::local_player || !rf::local_player->camera || !player)
+    if (!rf::local_player || !rf::local_player->cam || !player)
         return;
 
-    rf::Camera* camera = rf::local_player->camera;
-    camera->type = rf::CAM_FIRST_PERSON;
+    rf::Camera* camera = rf::local_player->cam;
+    camera->mode = rf::CAM_FIRST_PERSON;
     camera->player = player;
 
-    g_old_target_camera = player->camera;
-    player->camera = camera; // fix crash 0040D744
+    g_old_target_camera = player->cam;
+    player->cam = camera; // fix crash 0040D744
 
     rf::CameraSetFirstPerson(camera);
 }
@@ -61,7 +61,7 @@ void SpectateModeSetTargetPlayer(rf::Player* player)
     if (!player)
         player = rf::local_player;
 
-    if (!rf::local_player || !rf::local_player->camera || !g_spectate_mode_target || g_spectate_mode_target == player)
+    if (!rf::local_player || !rf::local_player->cam || !g_spectate_mode_target || g_spectate_mode_target == player)
         return;
 
     if (rf::multi_game_options & rf::MGO_FORCE_RESPAWN) {
@@ -73,12 +73,12 @@ void SpectateModeSetTargetPlayer(rf::Player* player)
 
     // fix old target
     if (g_spectate_mode_target && g_spectate_mode_target != rf::local_player) {
-        g_spectate_mode_target->camera = g_old_target_camera;
+        g_spectate_mode_target->cam = g_old_target_camera;
         g_old_target_camera = nullptr;
 
 #if SPECTATE_MODE_SHOW_WEAPON
         g_spectate_mode_target->flags &= ~(1 << 4);
-        rf::EntityObj* entity = rf::EntityGetByHandle(g_spectate_mode_target->entity_handle);
+        rf::Entity* entity = rf::EntityFromHandle(g_spectate_mode_target->entity_handle);
         if (entity)
             entity->local_player = nullptr;
 #endif // SPECTATE_MODE_SHOW_WEAPON
@@ -87,15 +87,15 @@ void SpectateModeSetTargetPlayer(rf::Player* player)
     g_spectate_mode_enabled = (player != rf::local_player);
     g_spectate_mode_target = player;
 
-    rf::KillLocalPlayer();
+    rf::MultiKillLocalPlayer();
     SetCameraTarget(player);
 
 #if SPECTATE_MODE_SHOW_WEAPON
     player->flags |= 1 << 4;
-    rf::EntityObj* entity = rf::EntityGetByHandle(player->entity_handle);
+    rf::Entity* entity = rf::EntityFromHandle(player->entity_handle);
     if (entity) {
         // make sure weapon mesh is loaded now
-        rf::PlayerFpgunSetupMesh(player, entity->ai_info.weapon_cls_id);
+        rf::PlayerFpgunSetupMesh(player, entity->ai_info.current_primary_weapon);
         xlog::trace("FpgunMesh %p", player->fpgun_mesh);
 
         // Hide target player from camera
@@ -115,7 +115,7 @@ static void SpectateNextPlayer(bool dir, bool try_alive_players_first = false)
         new_target = dir ? new_target->next : new_target->prev;
         if (!new_target || new_target == g_spectate_mode_target)
             break; // nothing found
-        if (try_alive_players_first && rf::IsPlayerEntityInvalid(new_target))
+        if (try_alive_players_first && rf::PlayerIsDead(new_target))
             continue;
         if (new_target != rf::local_player) {
             SpectateModeSetTargetPlayer(new_target);
@@ -129,20 +129,20 @@ static void SpectateNextPlayer(bool dir, bool try_alive_players_first = false)
 
 void SpectateModeEnterFreeLook()
 {
-    if (!rf::local_player || !rf::local_player->camera || !rf::is_multi)
+    if (!rf::local_player || !rf::local_player->cam || !rf::is_multi)
         return;
 
-    rf::KillLocalPlayer();
-    rf::CameraSetFreelook(rf::local_player->camera);
+    rf::MultiKillLocalPlayer();
+    rf::CameraSetFreelook(rf::local_player->cam);
 }
 
 bool SpectateModeIsFreeLook()
 {
-    if (!rf::local_player || !rf::local_player->camera || !rf::is_multi)
+    if (!rf::local_player || !rf::local_player->cam || !rf::is_multi)
         return false;
 
-    auto camera_type = rf::local_player->camera->type;
-    return camera_type == rf::CAM_FREELOOK;
+    auto camera_mode = rf::local_player->cam->mode;
+    return camera_mode == rf::CAM_FREELOOK;
 }
 
 bool SpectateModeIsActive()
@@ -158,24 +158,24 @@ void SpectateModeLeave()
         SetCameraTarget(rf::local_player);
 }
 
-bool SpectateModeHandleCtrlInGame(rf::GameCtrl key_id, bool was_pressed)
+bool SpectateModeHandleCtrlInGame(rf::ControlAction key_id, bool was_pressed)
 {
     if (!rf::is_multi) {
         return false;
     }
 
     if (g_spectate_mode_enabled) {
-        if (key_id == rf::GC_PRIMARY_ATTACK || key_id == rf::GC_SLIDE_RIGHT) {
+        if (key_id == rf::CA_PRIMARY_ATTACK || key_id == rf::CA_SLIDE_RIGHT) {
             if (was_pressed)
                 SpectateNextPlayer(true);
             return true; // dont allow spawn
         }
-        else if (key_id == rf::GC_SECONDARY_ATTACK || key_id == rf::GC_SLIDE_LEFT) {
+        else if (key_id == rf::CA_SECONDARY_ATTACK || key_id == rf::CA_SLIDE_LEFT) {
             if (was_pressed)
                 SpectateNextPlayer(false);
             return true;
         }
-        else if (key_id == rf::GC_JUMP) {
+        else if (key_id == rf::CA_JUMP) {
             if (was_pressed)
                 SpectateModeLeave();
             return true;
@@ -183,14 +183,14 @@ bool SpectateModeHandleCtrlInGame(rf::GameCtrl key_id, bool was_pressed)
     }
     else if (SpectateModeIsFreeLook()) {
         // don't allow respawn in freelook spectate
-        if (key_id == rf::GC_PRIMARY_ATTACK || key_id == rf::GC_SECONDARY_ATTACK) {
+        if (key_id == rf::CA_PRIMARY_ATTACK || key_id == rf::CA_SECONDARY_ATTACK) {
             if (was_pressed)
                 SpectateModeLeave();
             return true;
         }
     }
     else if (!g_spectate_mode_enabled) {
-        if (key_id == rf::GC_JUMP && was_pressed && rf::IsPlayerEntityInvalid(rf::local_player)) {
+        if (key_id == rf::CA_JUMP && was_pressed && rf::PlayerIsDead(rf::local_player)) {
             SpectateModeSetTargetPlayer(rf::local_player);
             SpectateNextPlayer(true, true);
             return true;
@@ -200,9 +200,9 @@ bool SpectateModeHandleCtrlInGame(rf::GameCtrl key_id, bool was_pressed)
     return false;
 }
 
-FunHook<void(rf::Player*, rf::GameCtrl, bool)> HandleCtrlInGame_hook{
+FunHook<void(rf::Player*, rf::ControlAction, bool)> HandleCtrlInGame_hook{
     0x004A6210,
-    [](rf::Player* player, rf::GameCtrl ctrl, bool was_pressed) {
+    [](rf::Player* player, rf::ControlAction ctrl, bool was_pressed) {
         if (!SpectateModeHandleCtrlInGame(ctrl, was_pressed)) {
             HandleCtrlInGame_hook.CallTarget(player, ctrl, was_pressed);
         }
@@ -214,7 +214,7 @@ bool IsPlayerEntityInvalid_New(rf::Player* player)
     if (SpectateModeIsActive())
         return false;
     else
-        return rf::IsPlayerEntityInvalid(player);
+        return rf::PlayerIsDead(player);
 }
 
 CallHook<bool(rf::Player*)> IsPlayerEntityInvalid_RedBars_hook{0x00432A52, IsPlayerEntityInvalid_New};
@@ -226,7 +226,7 @@ static bool IsPlayerDying_New(rf::Player* player)
     if (SpectateModeIsActive())
         return false;
     else
-        return rf::IsPlayerDying(player);
+        return rf::PlayerIsDying(player);
 }
 
 CallHook IsPlayerDying_RedBars_hook{0x00432A5F, IsPlayerDying_New};
@@ -253,11 +253,11 @@ FunHook<void(rf::Player*)> RenderReticle_hook{
     },
 };
 
-FunHook<rf::EntityObj*(rf::Player*, int, const rf::Vector3*, const rf::Matrix3*, int)> PlayerCreateEntity_hook{
+FunHook<rf::Entity*(rf::Player*, int, const rf::Vector3*, const rf::Matrix3*, int)> PlayerCreateEntity_hook{
     0x004A4130,
     [](rf::Player* player, int cls_id, const rf::Vector3* pos, const rf::Matrix3* orient, int mp_character) {
         // hide target player from camera after respawn
-        rf::EntityObj* entity = PlayerCreateEntity_hook.CallTarget(player, cls_id, pos, orient, mp_character);
+        rf::Entity* entity = PlayerCreateEntity_hook.CallTarget(player, cls_id, pos, orient, mp_character);
         if (entity && player == g_spectate_mode_target)
             entity->local_player = player;
 
@@ -287,12 +287,12 @@ DcCommand2 spectate_cmd{
     "spectate",
     [](std::optional<std::string> player_name) {
         if (!rf::is_multi) {
-            rf::DcPrint("Spectate mode is only supported in multiplayer game!", nullptr);
+            rf::ConsoleOutput("Spectate mode is only supported in multiplayer game!", nullptr);
             return;
         }
 
         if (rf::multi_game_options & rf::MGO_FORCE_RESPAWN) {
-            rf::DcPrint("Spectate mode is disabled because of Force Respawn server option!", nullptr);
+            rf::ConsoleOutput("Spectate mode is disabled because of Force Respawn server option!", nullptr);
             return;
         }
 
@@ -324,25 +324,25 @@ DcCommand2 spectate_cmd{
 static void PlayerFpgunRender_New(rf::Player* player)
 {
     if (g_spectate_mode_enabled) {
-        rf::EntityObj* entity = rf::EntityGetByHandle(g_spectate_mode_target->entity_handle);
+        rf::Entity* entity = rf::EntityFromHandle(g_spectate_mode_target->entity_handle);
 
         // HACKFIX: RF uses function PlayerSetRemoteChargeVisible for local player only
-        g_spectate_mode_target->weapon_info.remote_charge_visible =
-            (entity && entity->ai_info.weapon_cls_id == rf::remote_charge_cls_id);
+        g_spectate_mode_target->fpgun_data.remote_charge_visible =
+            (entity && entity->ai_info.current_primary_weapon == rf::remote_charge_weapon_type);
 
         if (g_spectate_mode_target != rf::local_player && entity) {
             static rf::Vector3 old_vel;
-            rf::Vector3 vel_diff = entity->phys_info.vel - old_vel;
-            old_vel = entity->phys_info.vel;
+            rf::Vector3 vel_diff = entity->p_data.vel - old_vel;
+            old_vel = entity->p_data.vel;
 
             if (vel_diff.y > 0.1f)
                 entity->entity_flags |= 2; // jump
         }
 
-        if (g_spectate_mode_target->weapon_info.in_scope_view)
-            g_spectate_mode_target->weapon_info.scope_zoom = 2.0f;
-        rf::local_player->weapon_info.in_scope_view = g_spectate_mode_target->weapon_info.in_scope_view;
-        rf::local_player->weapon_info.scope_zoom = g_spectate_mode_target->weapon_info.scope_zoom;
+        if (g_spectate_mode_target->fpgun_data.in_scope_view)
+            g_spectate_mode_target->fpgun_data.scope_zoom = 2.0f;
+        rf::local_player->fpgun_data.in_scope_view = g_spectate_mode_target->fpgun_data.in_scope_view;
+        rf::local_player->fpgun_data.scope_zoom = g_spectate_mode_target->fpgun_data.scope_zoom;
 
         rf::PlayerFpgunUpdateMesh(g_spectate_mode_target);
         rf::PlayerFpgunRender(g_spectate_mode_target);
@@ -356,12 +356,12 @@ FunHook<void(rf::Player*)> PlayerFpgunUpdateState_hook{
     [](rf::Player* player) {
         PlayerFpgunUpdateState_hook.CallTarget(player);
         if (player != rf::local_player) {
-            rf::EntityObj* entity = rf::EntityGetByHandle(player->entity_handle);
+            rf::Entity* entity = rf::EntityFromHandle(player->entity_handle);
             if (entity) {
-                float horz_speed_pow2 = entity->phys_info.vel.x * entity->phys_info.vel.x +
-                                          entity->phys_info.vel.z * entity->phys_info.vel.z;
+                float horz_speed_pow2 = entity->p_data.vel.x * entity->p_data.vel.x +
+                                          entity->p_data.vel.z * entity->p_data.vel.z;
                 int state = 0;
-                if (rf::IsEntityLoopFire(entity->handle, entity->ai_info.weapon_cls_id))
+                if (rf::IsEntityLoopFire(entity->handle, entity->ai_info.current_primary_weapon))
                     state = 2;
                 else if (rf::EntityIsSwimming(entity) || rf::EntityIsFalling(entity))
                     state = 0;
@@ -427,15 +427,15 @@ void SpectateModeAfterFullGameInit()
 template<typename F>
 static void DrawWithShadow(int x, int y, int shadow_dx, int shadow_dy, rf::Color clr, rf::Color shadow_clr, F fun)
 {
-    rf::GrSetColorPtr(&shadow_clr);
+    rf::GrSetColor(shadow_clr);
     fun(x + shadow_dx, y + shadow_dy);
-    rf::GrSetColorPtr(&clr);
+    rf::GrSetColor(clr);
     fun(x, y);
 }
 
 void SpectateModeDrawUI()
 {
-    if (rf::is_hud_hidden || rf::GameSeqGetState() != rf::GS_IN_GAME || SpectateModeIsFreeLook()) {
+    if (rf::is_hud_hidden || rf::GameSeqGetState() != rf::GS_GAMEPLAY || SpectateModeIsFreeLook()) {
         return;
     }
 
@@ -448,15 +448,15 @@ void SpectateModeDrawUI()
     int hints_y = g_game_config.big_hud ? 350 : 200;
     int hints_line_spacing = medium_font_h + 3;
     if (!g_spectate_mode_enabled) {
-        if (rf::IsPlayerEntityInvalid(rf::local_player)) {
-            rf::GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
+        if (rf::PlayerIsDead(rf::local_player)) {
+            rf::GrSetColorRgba(0xFF, 0xFF, 0xFF, 0xFF);
             rf::GrString(hints_x, hints_y, "Press JUMP key to enter Spectate Mode", medium_font);
         }
         return;
     }
 
-    int scr_w = rf::GrGetMaxWidth();
-    int scr_h = rf::GrGetMaxHeight();
+    int scr_w = rf::GrScreenWidth();
+    int scr_h = rf::GrScreenHeight();
 
     int title_x = scr_w / 2;
     int title_y = g_game_config.big_hud ? 250 : 150;
@@ -466,7 +466,7 @@ void SpectateModeDrawUI()
         rf::GrStringAligned(rf::GR_ALIGN_CENTER, x, y, "SPECTATE MODE", large_font);
     });
 
-    rf::GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
+    rf::GrSetColorRgba(0xFF, 0xFF, 0xFF, 0xFF);
     rf::GrString(hints_x, hints_y, "Press JUMP key to exit Spectate Mode", medium_font);
     hints_y += hints_line_spacing;
     rf::GrString(hints_x, hints_y, "Press PRIMARY ATTACK key to switch to the next player", medium_font);
@@ -477,21 +477,21 @@ void SpectateModeDrawUI()
     const int bar_h = 50;
     int bar_x = (scr_w - bar_w) / 2;
     int bar_y = scr_h - 100;
-    rf::GrSetColor(0, 0, 0x00, 0x60);
+    rf::GrSetColorRgba(0, 0, 0x00, 0x60);
     rf::GrRect(bar_x, bar_y, bar_w, bar_h);
 
-    rf::GrSetColor(0xFF, 0xFF, 0, 0x80);
+    rf::GrSetColorRgba(0xFF, 0xFF, 0, 0x80);
     auto str = StringFormat("Spectating: %s", g_spectate_mode_target->name.CStr());
     rf::GrStringAligned(rf::GR_ALIGN_CENTER, bar_x + bar_w / 2, bar_y + bar_h / 2 - large_font_h / 2, str.c_str(), large_font);
 
-    rf::EntityObj* entity = rf::EntityGetByHandle(g_spectate_mode_target->entity_handle);
+    rf::Entity* entity = rf::EntityFromHandle(g_spectate_mode_target->entity_handle);
     if (!entity) {
-        rf::GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
+        rf::GrSetColorRgba(0xFF, 0xFF, 0xFF, 0xFF);
         static int blood_bm = rf::BmLoad("bloodsmear07_A.tga", -1, true);
         int blood_w, blood_h;
-        rf::BmGetBitmapSize(blood_bm, &blood_w, &blood_h);
+        rf::BmGetDimension(blood_bm, &blood_w, &blood_h);
         rf::GrBitmapStretched(blood_bm, (scr_w - blood_w * 2) / 2, (scr_h - blood_h * 2) / 2, blood_w * 2,
-                                  blood_h * 2, 0, 0, blood_w, blood_h, 0.0f, 0.0f, rf::gr_bitmap_clamp_state);
+                                  blood_h * 2, 0, 0, blood_w, blood_h, 0.0f, 0.0f, rf::gr_bitmap_clamp_mode);
 
         rf::Color dead_clr{0xF0, 0x20, 0x10, 0xC0};
         DrawWithShadow(scr_w / 2, scr_h / 2, 2, 2, dead_clr, shadow_clr, [=](int x, int y) {

@@ -3,7 +3,7 @@
 #include "../rf/hud.h"
 #include "../rf/entity.h"
 #include "../rf/player.h"
-#include "../rf/game_seq.h"
+#include "../rf/gameseq.h"
 #include "../rf/sound.h"
 #include <patch_common/AsmWriter.h>
 #include <algorithm>
@@ -32,24 +32,24 @@ void HudRenderPersonaMsg(rf::Player* player)
     if (rf::hud_persona_alpha <= 0.0) {
         rf::hud_persona_current_idx = -1;
     }
-    if (rf::hud_persona_current_idx == -1 || !rf::GameSeqIsCurrentlyInGame()) {
+    if (rf::hud_persona_current_idx == -1 || !rf::GameSeqInGameplay()) {
         return;
     }
-    auto entity = rf::EntityGetByHandle(player->entity_handle);
+    auto entity = rf::EntityFromHandle(player->entity_handle);
     if (!entity) {
         return;
     }
 
     int offset_y = 0;
-    auto parent = rf::EntityGetByHandle(entity->parent_handle);
+    auto parent = rf::EntityFromHandle(entity->host_handle);
     if (parent && (rf::EntityIsSub(parent) || rf::EntityIsDriller(parent) || rf::EntityIsJeep(parent) || rf::EntityIsFighter(parent)))
         offset_y = rf::hud_points[rf::hud_persona_sub_offset].y; // 360
     auto& hud_persona = rf::hud_personas_tbl[rf::hud_persona_current_idx];
-    if (hud_persona.fully_visible_timer.IsFinished() && !rf::SndIsPlaying(hud_persona.sound)) {
+    if (hud_persona.fully_visible_timestamp.Elapsed() && !rf::SndIsPlaying(hud_persona.sound)) {
         rf::hud_persona_target_alpha = 0.0f;
     }
     int box_border = 2;
-    int clip_w = rf::GrGetClipWidth();
+    int clip_w = rf::GrClipWidth();
     int box_w = clip_w - (g_big_hud_persona ? 650 : 313);
     int box_h = (g_big_hud_persona ? 165 : 106);
     int box_x = (clip_w - box_w) / 2;
@@ -59,14 +59,14 @@ void HudRenderPersonaMsg(rf::Player* player)
     int hud_persona_font = HudGetDefaultFont();
 
     // border
-    rf::GrSetColor(255, 255, 255, static_cast<int>(rf::hud_persona_alpha * 77.0f));
+    rf::GrSetColorRgba(255, 255, 255, static_cast<int>(rf::hud_persona_alpha * 77.0f));
     rf::GrRect(box_x, box_y, box_border, box_h); // left
     rf::GrRect(box_x + box_w - box_border, box_y, box_border, box_h); // right
     rf::GrRect(box_x + box_border, box_y, content_w, box_border); // top
     rf::GrRect(box_x + box_border, offset_y + box_h + 8, content_w, box_border); // bottom
 
     // background
-    rf::GrSetColor(0, 0, 0, static_cast<int>(rf::hud_persona_alpha * 128.0f));
+    rf::GrSetColorRgba(0, 0, 0, static_cast<int>(rf::hud_persona_alpha * 128.0f));
     rf::GrRect(box_x + box_border, box_y + box_border, content_w, content_h);
 
     // persona image background (black)
@@ -76,20 +76,20 @@ void HudRenderPersonaMsg(rf::Player* player)
     int img_box_x = box_x + box_border; // 159
     int img_box_y = box_y + box_border; // 12
     int img_border = 2;
-    rf::GrSetColorPtr(&rf::hud_msg_bg_color);
+    rf::GrSetColor(rf::hud_msg_bg_color);
     rf::GrSetColorAlpha(static_cast<int>(rf::hud_msg_bg_color.alpha * rf::hud_persona_alpha));
     rf::GrRect(img_box_x, img_box_y, img_w + 2 * img_border, img_h + 2 * img_border);
 
     // persona image (64x64)
-    //rf::GrSetColorPtr(&hud_default_color);
+    //rf::GrSetColor(hud_default_color);
     //rf::GrSetColorAlpha(static_cast<int>(hud_default_color.alpha * hud_persona_alpha));
-    rf::GrSetColor(255, 255, 255, static_cast<int>(rf::hud_default_color.alpha * rf::hud_persona_alpha));
+    rf::GrSetColorRgba(255, 255, 255, static_cast<int>(rf::hud_default_color.alpha * rf::hud_persona_alpha));
     int img_x = img_box_x + img_border; // 161
     int img_y = img_box_y + img_border; // 14
     HudScaledBitmap(hud_persona.image_bmh, img_x, img_y, img_scale);// hud_persona_image_render_state
 
     // persona name
-    rf::GrSetColorPtr(&rf::hud_msg_color);
+    rf::GrSetColor(rf::hud_msg_color);
     rf::GrSetColorAlpha(static_cast<int>(rf::hud_msg_color.alpha * rf::hud_persona_alpha));
     const char* display_name;
     if (hud_persona.display_name.Size() == 0) {
@@ -110,9 +110,9 @@ void HudRenderPersonaMsg(rf::Player* player)
     int max_text_w = max_text_x - text_x; // rf::hud_points[hud_persona_message_box_text_area_width].x
     constexpr int max_lines = 8;
     int len_array[max_lines], offset_array[max_lines];
-    int num_lines = rf::GrFitMultilineText(len_array, offset_array, hud_persona.message,
+    int num_lines = rf::GrSplitStr(len_array, offset_array, hud_persona.message,
         max_text_w, max_lines, 0, hud_persona_font);
-    rf::GrSetColorPtr(&rf::hud_default_color);
+    rf::GrSetColor(rf::hud_default_color);
     rf::GrSetColorAlpha(static_cast<int>(rf::hud_default_color.alpha * rf::hud_persona_alpha));
     for (int i = 0; i < num_lines; ++i) {
         char buf[256];

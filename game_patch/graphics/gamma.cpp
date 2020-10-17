@@ -117,5 +117,5 @@ void InitGamma()
     /* Gamma fix */
     AsmWriter(0x00547A60).jmp(GrUpdateGammaRampHook);
 
-    rf::AddMsgHandler(GammaMsgHandler);
+    rf::OsAddMsgHandler(GammaMsgHandler);
 }

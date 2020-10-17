@@ -16,20 +16,20 @@ void RenderSelectWeaponGui()
     if (!rf::local_player) {
         return;
     }
-    if (rf::hud_close_weapon_cycle_timer.IsFinished() || !rf::hud_close_weapon_cycle_timer.IsSet()) {
+    if (rf::hud_close_weapon_cycle_timer.Elapsed() || !rf::hud_close_weapon_cycle_timer.Valid()) {
         rf::SndPlay(rf::hud_weapon_display_off_foley_snd, 0, 0.0f, 1.0f);
         rf::hud_render_weapon_cycle = false;
         return;
     }
 
-    int clip_w = rf::GrGetClipWidth();
-    rf::GrSetColor(15, 242, 2, 255);
+    int clip_w = rf::GrClipWidth();
+    rf::GrSetColorRgba(15, 242, 2, 255);
     auto font_num = HudGetDefaultFont();
 
     // selected weapon type name
     auto& selected_cycle_entry = rf::hud_weapon_cycle[rf::hud_weapon_cycle_current_idx];
     const char* weapon_type_name = nullptr;
-    switch (selected_cycle_entry.type) {
+    switch (selected_cycle_entry.category) {
     case 0:
         weapon_type_name = rf::strings::close_combat;
         break;
@@ -61,13 +61,13 @@ void RenderSelectWeaponGui()
     int text_offset_y = 5;
 
     // type squares - backgrounds
-    rf::GrSetColor(0, 0, 0, 128);
+    rf::GrSetColorRgba(0, 0, 0, 128);
     for (int i = 0; i < 4; ++i) {
         int sq_x = type_sq_start_x + i * sq_x_delta;
         rf::GrRect(sq_x + border, type_sq_y + border + 1, sq_bg_size, sq_bg_size);
     }
     // type squares - labels
-    rf::GrSetColor(15, 242, 2, 255);
+    rf::GrSetColorRgba(15, 242, 2, 255);
     for (int i = 0; i < 4; ++i) {
         char digit_str[] = {static_cast<char>('1' + i), '\0'};
         int sq_x = type_sq_start_x + i * sq_x_delta;
@@ -75,8 +75,8 @@ void RenderSelectWeaponGui()
         rf::GrStringAligned(rf::GR_ALIGN_CENTER, sq_text_x, type_sq_y + text_offset_y, digit_str, font_num);
     }
     // borders for active type square
-    int active_sq_x = type_sq_start_x + selected_cycle_entry.type * sq_x_delta;
-    rf::GrSetColor(239, 213, 52, 255);
+    int active_sq_x = type_sq_start_x + selected_cycle_entry.category * sq_x_delta;
+    rf::GrSetColorRgba(239, 213, 52, 255);
     int sq_with_border_size = sq_bg_size + 2 * border; // 22
     HudRectBorder(active_sq_x, type_sq_y, sq_with_border_size, sq_with_border_size, border);
 
@@ -88,7 +88,7 @@ void RenderSelectWeaponGui()
     int weapon_icons_x = center_x - weapon_icon_w / 2; // clip_w - 139
     int weapon_icon_delta_y = weapon_icon_h + 1; // 35
 
-    int num_drawn_weapons_per_type[4] = {0};
+    int num_drawn_weapons_per_category[4] = {0};
     auto ai_info = rf::PlayerGetAiInfo(rf::local_player);
     for (auto& pref_id : rf::local_player->pref_weapons) {
         rf::WeaponCycle* cycle_entry = nullptr;
@@ -97,30 +97,30 @@ void RenderSelectWeaponGui()
                 cycle_entry = &entry;
             }
         }
-        if (!cycle_entry || cycle_entry->cls_id == -1 ||  cycle_entry->type == -1) {
+        if (!cycle_entry || cycle_entry->cls_id == -1 ||  cycle_entry->category == -1) {
             continue;
         }
         if (!rf::AiPossessesWeapon(ai_info, cycle_entry->cls_id)) {
             continue;
         }
-        int weapon_cls_id = cycle_entry->cls_id;
-        int weapon_type = cycle_entry->type;
-        if (rf::PlayerGetWeaponTotalAmmo(rf::local_player, weapon_cls_id) <= 0) {
-            rf::GrSetColor(254, 55, 55, 255);
+        int weapon_type = cycle_entry->cls_id;
+        int weapon_category = cycle_entry->category;
+        if (rf::PlayerGetWeaponTotalAmmo(rf::local_player, weapon_type) <= 0) {
+            rf::GrSetColorRgba(254, 55, 55, 255);
         }
         else {
-            rf::GrSetColor(60, 126, 5, 255);
+            rf::GrSetColorRgba(60, 126, 5, 255);
         }
-        int idx = num_drawn_weapons_per_type[weapon_type];
+        int idx = num_drawn_weapons_per_category[weapon_category];
         // indicator below type square
         int num_ind_w = g_big_weapon_cycle_hud ? 14 : 10;
         int num_ind_h = 3;
         int num_ind_delta_y = num_ind_h + 2;
-        int num_ind_x = type_sq_start_x + sq_x_delta * weapon_type + sq_x_delta / 2 - num_ind_w / 2;
+        int num_ind_x = type_sq_start_x + sq_x_delta * weapon_category + sq_x_delta / 2 - num_ind_w / 2;
         int num_ind_y = num_ind_start_y + num_ind_delta_y * idx;
         rf::GrRect(num_ind_x, num_ind_y, num_ind_w, num_ind_h);
 
-        if (weapon_type == selected_cycle_entry.type) {
+        if (weapon_category == selected_cycle_entry.category) {
             static int weapon_icon_bitmaps[32];
             static bool weapon_icon_bitmaps_initialized = false;
             if (!weapon_icon_bitmaps_initialized) {
@@ -129,24 +129,24 @@ void RenderSelectWeaponGui()
                 }
                 weapon_icon_bitmaps_initialized = true;
             }
-            if (weapon_icon_bitmaps[weapon_cls_id] == -1) {
-                auto weapon_icon = rf::weapon_classes[weapon_cls_id].weapon_icon.CStr();
-                weapon_icon_bitmaps[weapon_cls_id] = rf::BmLoad(weapon_icon, -1, 1);
+            if (weapon_icon_bitmaps[weapon_type] == -1) {
+                auto weapon_icon = rf::weapon_types[weapon_type].weapon_icon.CStr();
+                weapon_icon_bitmaps[weapon_type] = rf::BmLoad(weapon_icon, -1, 1);
             }
 
             int weapon_icon_y = weapon_icons_start_y + weapon_icon_delta_y * idx;
-            int weapon_icon_bmh = weapon_icon_bitmaps[weapon_cls_id];
+            int weapon_icon_bmh = weapon_icon_bitmaps[weapon_type];
             HudScaledBitmap(weapon_icon_bmh, weapon_icons_x, weapon_icon_y, weapon_icon_scale);
-            if (weapon_cls_id == selected_cycle_entry.cls_id) {
-                rf::GrSetColor(239, 213, 52, 255);
+            if (weapon_type == selected_cycle_entry.cls_id) {
+                rf::GrSetColorRgba(239, 213, 52, 255);
                 HudRectBorder(weapon_icons_x - 1, weapon_icon_y - 1, weapon_icon_w + 2, weapon_icon_h + 2, 1);
             }
         }
-        ++num_drawn_weapons_per_type[weapon_type];
+        ++num_drawn_weapons_per_category[weapon_category];
     }
-    rf::GrSetColor(15, 242, 2, 255);
-    auto display_name = rf::weapon_classes[selected_cycle_entry.cls_id].display_name.CStr();
-    int num_weapons_for_current_type = num_drawn_weapons_per_type[selected_cycle_entry.type];
+    rf::GrSetColorRgba(15, 242, 2, 255);
+    auto display_name = rf::weapon_types[selected_cycle_entry.cls_id].display_name.CStr();
+    int num_weapons_for_current_type = num_drawn_weapons_per_category[selected_cycle_entry.category];
     int weapon_name_y = weapon_icons_start_y + weapon_icon_delta_y * (num_weapons_for_current_type + 1);
     rf::GrStringAligned(rf::GR_ALIGN_CENTER, center_x, weapon_name_y, display_name, font_num);
 }

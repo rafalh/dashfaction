@@ -11,8 +11,8 @@ std::optional<float> g_target_rotate_speed;
 namespace rf
 {
 
-class RflGeometry;
-class RflFace;
+class GSolid;
+class GFace;
 
 struct PersonasTbl
 {
@@ -37,22 +37,22 @@ auto& entity_action_names = AddrAsRef<String[0x2D]>(0x005CAEE0);
 auto& object_list = AddrAsRef<Object>(0x0073D880);
 auto& target_obj_handle = AddrAsRef<int>(0x007C7190);
 
-auto EntityIsActionAnimPlaying = AddrAsRef<bool(EntityObj* entity, int action_idx)>(0x00428D10);
+auto EntityIsActionAnimPlaying = AddrAsRef<bool(Entity* entity, int action_idx)>(0x00428D10);
 auto AiGetAttackRange = AddrAsRef<float(AiInfo& ai)>(0x004077A0);
-auto EntityEnterState = AddrAsRef<void(EntityObj* entity, int state, float transition_time)>(0x0042A580);
-auto EntityStartAction = AddrAsRef<void(EntityObj* entity, int action, float transition_time, bool hold_last_frame, bool with_sound)>(0x00428C90);
-auto AnimMeshResetActionAnim = AddrAsRef<void(AnimMesh* anim_mesh)>(0x00503400);
+auto EntityEnterState = AddrAsRef<void(Entity* entity, int state, float transition_time)>(0x0042A580);
+auto EntityStartAction = AddrAsRef<void(Entity* entity, int action, float transition_time, bool hold_last_frame, bool with_sound)>(0x00428C90);
+auto AnimMeshResetActionAnim = AddrAsRef<void(VMesh* vmesh)>(0x00503400);
 
 }
 
 rf::Object* FindClosestObject()
 {
-    if (!rf::local_player->camera)
+    if (!rf::local_player->cam)
         return nullptr;
     rf::Vector3 cam_pos;
     rf::Matrix3 cam_orient;
-    rf::CameraGetPos(&cam_pos, rf::local_player->camera);
-    rf::CameraGetOrient(&cam_orient, rf::local_player->camera);
+    rf::CameraGetPos(&cam_pos, rf::local_player->cam);
+    rf::CameraGetOrient(&cam_orient, rf::local_player->cam);
     auto obj = rf::object_list.next_obj;
     rf::Object* best_obj = nullptr;
     float best_dist = 100.0f; // max dist
@@ -72,7 +72,7 @@ rf::Object* FindClosestObject()
 
 rf::Object* FindObjectInReticle()
 {
-    struct CollisionInfo2
+    struct LevelCollisionOut
     {
         rf::Vector3 hit_point;
         float distance;
@@ -81,22 +81,22 @@ rf::Object* FindObjectInReticle()
     };
     auto& CollideLineSegmentLevel =
         AddrAsRef<bool(rf::Vector3& p0, rf::Vector3& p1, rf::Object *ignore1, rf::Object *ignore2,
-        CollisionInfo2 *out, float collision_radius, char use_mesh_collide, float bbox_size_factor)>(0x0049C690);
+        LevelCollisionOut *out, float collision_radius, char use_mesh_collide, float bbox_size_factor)>(0x0049C690);
 
-    if (!rf::local_player->camera)
+    if (!rf::local_player->cam)
         return nullptr;
-    CollisionInfo2 col_info;
+    LevelCollisionOut col_info;
     col_info.face = 0;
     col_info.obj_handle = -1;
     rf::Vector3 p0;
     rf::Matrix3 orient;
-    rf::CameraGetPos(&p0, rf::local_player->camera);
-    rf::CameraGetOrient(&orient, rf::local_player->camera);
+    rf::CameraGetPos(&p0, rf::local_player->cam);
+    rf::CameraGetOrient(&orient, rf::local_player->cam);
     rf::Vector3 p1 = p0 + orient.fvec * 100.0f;
-    rf::EntityObj* local_entity = rf::EntityGetByHandle(rf::local_player->entity_handle);
-    bool hit = CollideLineSegmentLevel(p0, p1, local_entity, nullptr, &col_info, 0.0f, false, 1.0f);
+    rf::Entity* entity = rf::EntityFromHandle(rf::local_player->entity_handle);
+    bool hit = CollideLineSegmentLevel(p0, p1, entity, nullptr, &col_info, 0.0f, false, 1.0f);
     if (hit && col_info.obj_handle != -1)
-        return rf::ObjGetByHandle(col_info.obj_handle);
+        return rf::ObjFromHandle(col_info.obj_handle);
     else
         return nullptr;
 }
@@ -107,9 +107,9 @@ DcCommand2 dbg_target_uid_cmd{
         // uid -999 is used by local entity
         if (uid_opt) {
             int uid = uid_opt.value();
-            rf::Object* obj = rf::ObjGetByUid(uid);
+            rf::Object* obj = rf::ObjLookupFromUid(uid);
             if (!obj) {
-                rf::DcPrintf("UID not found!");
+                rf::ConsolePrintf("UID not found!");
                 return;
             }
             rf::target_obj_handle = obj->handle;
@@ -117,11 +117,11 @@ DcCommand2 dbg_target_uid_cmd{
         else {
             rf::target_obj_handle = rf::local_player->entity_handle;
         }
-        auto obj = rf::ObjGetByHandle(rf::target_obj_handle);
+        auto obj = rf::ObjFromHandle(rf::target_obj_handle);
         if (obj)
-            rf::DcPrintf("Target object: uid %d, name '%s'", obj->uid, obj->name.CStr());
+            rf::ConsolePrintf("Target object: uid %d, name '%s'", obj->uid, obj->name.CStr());
         else
-            rf::DcPrintf("Target object not found");
+            rf::ConsolePrintf("Target object not found");
     },
 };
 
@@ -131,9 +131,9 @@ DcCommand2 dbg_target_closest_cmd{
         auto obj = FindClosestObject();
         rf::target_obj_handle = obj ? obj->handle : 0;
         if (obj)
-            rf::DcPrintf("Target object: uid %d, name '%s'", obj->uid, obj->name.CStr());
+            rf::ConsolePrintf("Target object: uid %d, name '%s'", obj->uid, obj->name.CStr());
         else
-            rf::DcPrintf("Target object not found");
+            rf::ConsolePrintf("Target object not found");
     },
 };
 
@@ -143,16 +143,16 @@ DcCommand2 dbg_target_reticle_cmd{
         auto obj = FindObjectInReticle();
         rf::target_obj_handle = obj ? obj->handle : 0;
         if (obj)
-            rf::DcPrintf("Target object: uid %d, name '%s'", obj->uid, obj->name.CStr());
+            rf::ConsolePrintf("Target object: uid %d, name '%s'", obj->uid, obj->name.CStr());
         else
-            rf::DcPrintf("Target object not found");
+            rf::ConsolePrintf("Target object not found");
     },
 };
 
 DcCommand2 dbg_entity_state_cmd{
     "d_entity_state",
     [](std::optional<int> state_opt) {
-        auto entity = rf::EntityGetByHandle(rf::target_obj_handle);
+        auto entity = rf::EntityFromHandle(rf::target_obj_handle);
         if (!entity) {
             return;
         }
@@ -163,14 +163,14 @@ DcCommand2 dbg_entity_state_cmd{
         else if (state_opt.value() >= 0 && state_opt.value() < num_states) {
             entity->force_state_anim = state_opt.value();
         }
-        rf::DcPrintf("Entity state: %s (%d)", rf::entity_action_names[entity->force_state_anim].CStr(), entity->force_state_anim);
+        rf::ConsolePrintf("Entity state: %s (%d)", rf::entity_action_names[entity->force_state_anim].CStr(), entity->force_state_anim);
     },
 };
 
 DcCommand2 dbg_entity_action_cmd{
     "d_entity_action",
     [](std::optional<int> action_opt) {
-        auto entity = rf::EntityGetByHandle(rf::target_obj_handle);
+        auto entity = rf::EntityFromHandle(rf::target_obj_handle);
         if (!entity) {
             return;
         }
@@ -182,10 +182,10 @@ DcCommand2 dbg_entity_action_cmd{
         else if (action_opt.value() >= 0 && action_opt.value() < num_actions) {
             last_action = action_opt.value();
         }
-        rf::AnimMeshResetActionAnim(entity->anim_mesh);
+        rf::AnimMeshResetActionAnim(entity->vmesh);
         rf::EntityStartAction(entity, last_action, 1.0f, true, true);
 
-        rf::DcPrintf("Entity action: %s (%d)", rf::entity_action_names[last_action].CStr(), last_action);
+        rf::ConsolePrintf("Entity action: %s (%d)", rf::entity_action_names[last_action].CStr(), last_action);
     },
 };
 
@@ -201,7 +201,7 @@ DcCommand2 dbg_ai_pause_cmd{
     []() {
         auto& ai_pause = AddrAsRef<bool>(0x005AF46D);
         ai_pause = !ai_pause;
-        rf::DcPrintf("AI pause: %d", ai_pause);
+        rf::ConsolePrintf("AI pause: %d", ai_pause);
     },
 };
 
@@ -216,8 +216,8 @@ const char* GetObjTypeName(rf::Object& obj)
         case rf::OT_TRIGGER: return "trigger";
         case rf::OT_EVENT: return "event";
         case rf::OT_CORPSE: return "corpse";
-        case rf::OT_MOVING_GROUP: return "moving group";
         case rf::OT_MOVER: return "mover";
+        case rf::OT_MOVER_BRUSH: return "mover_brash";
         case rf::OT_GLARE: return "glare";
         default: return "-";
     }
@@ -226,7 +226,7 @@ const char* GetObjTypeName(rf::Object& obj)
 const char* GetObjClassName(rf::Object& obj)
 {
     if (obj.type == rf::OT_ENTITY)
-        return reinterpret_cast<rf::EntityObj&>(obj).cls->name.CStr();
+        return reinterpret_cast<rf::Entity&>(obj).info->name.CStr();
     else
         return "-";
 }
@@ -291,21 +291,21 @@ void RegisterObjDebugCommands()
 
 void RenderObjDebugUI()
 {
-    auto object = rf::ObjGetByHandle(rf::target_obj_handle);
+    auto object = rf::ObjFromHandle(rf::target_obj_handle);
     if (!object) {
         return;
     }
 
-    DebugNameValueBox dbg_hud{rf::GrGetMaxWidth() - 300, 200};
+    DebugNameValueBox dbg_hud{rf::GrScreenWidth() - 300, 200};
 
-    if (!rf::local_player || !rf::local_player->camera) {
+    if (!rf::local_player || !rf::local_player->cam) {
         return;
     }
 
     rf::Vector3 cam_pos;
-    rf::CameraGetPos(&cam_pos, rf::local_player->camera);
+    rf::CameraGetPos(&cam_pos, rf::local_player->cam);
 
-    auto entity = object->type == rf::OT_ENTITY ? reinterpret_cast<rf::EntityObj*>(object) : nullptr;
+    auto entity = object->type == rf::OT_ENTITY ? reinterpret_cast<rf::Entity*>(object) : nullptr;
     auto move_mode_names = AddrAsRef<const char*[16]>(0x00596384);
 
     dbg_hud.Print("name", object->name.CStr());
@@ -320,21 +320,21 @@ void RenderObjDebugUI()
     if (entity) {
         dbg_hud.Print("eye_pos", entity->view_pos);
         dbg_hud.Printf("envsuit", "%.0f", object->armor);
-        dbg_hud.Print("mode", GetAiModeName(entity->ai_info.ai_mode));
-        if (entity->ai_info.ai_submode)
-            dbg_hud.Printf("submode", "%d", entity->ai_info.ai_submode);
+        dbg_hud.Print("mode", GetAiModeName(entity->ai_info.mode));
+        if (entity->ai_info.submode)
+            dbg_hud.Printf("submode", "%d", entity->ai_info.submode);
         else
             dbg_hud.Print("submode", "NONE");
         dbg_hud.Print("style", GetAiAttackStyleName(entity->ai_info.ai_attack_style));
         dbg_hud.Print("friend", GetFriendlinessName(object->friendliness));
-        auto target_obj = rf::ObjGetByHandle(entity->ai_info.target_obj_handle);
+        auto target_obj = rf::ObjFromHandle(entity->ai_info.target_obj_handle);
         dbg_hud.Print("target", target_obj ? target_obj->name.CStr() : "none");
-        dbg_hud.Printf("accel", "%.1f", entity->cls->acceleration);
+        dbg_hud.Printf("accel", "%.1f", entity->info->acceleration);
         dbg_hud.Printf("mvmode", "%s", move_mode_names[entity->movement_mode->id]);
         dbg_hud.Print("deaf", (entity->ai_info.flags & 0x800) ? "yes" : "no");
         dbg_hud.Print("pos", object->pos);
         auto feet = object->pos;
-        feet.y = object->phys_info.aabb_min.y;
+        feet.y = object->p_data.bbox_min.y;
         dbg_hud.Print("feet", feet);
         dbg_hud.Print("state", rf::entity_state_names[entity->current_state]);
 
@@ -345,10 +345,10 @@ void RenderObjDebugUI()
             }
         }
         dbg_hud.Print("action", action_name);
-        dbg_hud.Printf("persona", entity->cls->persona >= 0 ? rf::personas[entity->cls->persona].name.CStr() : "none");
+        dbg_hud.Printf("persona", entity->info->persona >= 0 ? rf::personas[entity->info->persona].name.CStr() : "none");
     }
 
     if (g_target_rotate_speed) {
-        object->phys_info.rot_change_unk.y = g_target_rotate_speed.value();
+        object->p_data.rotvel.y = g_target_rotate_speed.value();
     }
 }

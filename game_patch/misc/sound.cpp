@@ -318,7 +318,7 @@ DcCommand2 level_sounds_cmd{
             g_game_config.level_sound_volume = vol_scale;
             g_game_config.save();
         }
-        rf::DcPrintf("Level sound volume: %.1f", g_game_config.level_sound_volume.value());
+        rf::ConsolePrintf("Level sound volume: %.1f", g_game_config.level_sound_volume.value());
     },
     "Sets level sounds volume scale",
     "levelsounds <volume>",
@@ -334,7 +334,7 @@ DcCommand2 playing_sounds_cmd{
                 DWORD status;
                 chnl.sound_buffer->GetStatus(&status);
                 auto& buf = rf::ds_buffers[chnl.buf_id];
-                rf::DcPrintf("Channel %d: filename %s flags %x status %lx", chnl_num, buf.filename, chnl.flags, status);
+                rf::ConsolePrintf("Channel %d: filename %s flags %x status %lx", chnl_num, buf.filename, chnl.flags, status);
             }
         }
     },

@@ -71,12 +71,12 @@ PlayerAdditionalData& GetPlayerAdditionalData(rf::Player* player)
     return g_player_additional_data_map[player];
 }
 
-CallHook<void()> InitGame_hook{
+CallHook<void()> RFInit_hook{
     0x004B27CD,
     []() {
         auto start_ticks = GetTickCount();
         xlog::info("Initializing game...");
-        InitGame_hook.CallTarget();
+        RFInit_hook.CallTarget();
         PackfileDisableOverriding();
         xlog::info("Game initialized (%lu ms).", GetTickCount() - start_ticks);
     },
@@ -171,13 +171,13 @@ FunHook<void(rf::Player*)> PlayerDestroy_hook{
     },
 };
 
-FunHook<int(rf::String&, rf::String&, char*)> RflLoad_hook{
+FunHook<int(rf::String&, rf::String&, char*)> LevelLoad_hook{
     0x0045C540,
     [](rf::String& level_filename, rf::String& save_filename, char* error) {
         xlog::info("Loading level: %s", level_filename.CStr());
         if (save_filename.Size() > 0)
             xlog::info("Restoring game from save file: %s", save_filename.CStr());
-        int ret = RflLoad_hook.CallTarget(level_filename, save_filename, error);
+        int ret = LevelLoad_hook.CallTarget(level_filename, save_filename, error);
         if (ret != 0)
             xlog::warn("Loading failed: %s", error);
         else {
@@ -188,10 +188,10 @@ FunHook<int(rf::String&, rf::String&, char*)> RflLoad_hook{
     },
 };
 
-FunHook<void(bool)> GameWideOnLevelStart_hook{
+FunHook<void(bool)> LevelInitPost_hook{
     0x00435DF0,
     [](bool is_auto_level_load) {
-        GameWideOnLevelStart_hook.CallTarget(is_auto_level_load);
+        LevelInitPost_hook.CallTarget(is_auto_level_load);
         xlog::info("Level loaded: %s%s", rf::level_filename.CStr(), is_auto_level_load ? " (caused by event)" : "");
     },
 };
@@ -215,8 +215,8 @@ protected:
         if (console_inited) {
             flush_startup_buf();
 
-            uint32_t color = color_from_level(level);
-            rf::DcPrint(str.c_str(), &color);
+            rf::Color color = color_from_level(level);
+            rf::ConsoleOutput(str.c_str(), &color);
         }
         else {
             m_startup_buf.push_back({str, level});
@@ -232,25 +232,25 @@ protected:
     }
 
 private:
-    uint32_t color_from_level(xlog::Level level) const
+    rf::Color color_from_level(xlog::Level level) const
     {
         switch (level) {
             case xlog::Level::error:
-                return 0xFF0000FF;
+                return rf::Color{255, 0, 0};
             case xlog::Level::warn:
-                return 0xFF00FFFF;
+                return rf::Color{255, 255, 0};
             case xlog::Level::info:
-                return 0xFFAAAAAA;
+                return rf::Color{195, 195, 195};
             default:
-                return 0xFF888888;
+                return rf::Color{127, 127, 127};
         }
     }
 
     void flush_startup_buf()
     {
         for (auto& p : m_startup_buf) {
-            uint32_t color = color_from_level(p.second);
-            rf::DcPrint(p.first.c_str(), &color);
+            rf::Color color = color_from_level(p.second);
+            rf::ConsoleOutput(p.first.c_str(), &color);
         }
         m_startup_buf.clear();
     }
@@ -342,7 +342,7 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     KeyGetFromFifo_hook.Install();
 
     // General game hooks
-    InitGame_hook.Install();
+    RFInit_hook.Install();
     after_full_game_init_hook.Install();
     cleanup_game_hook.Install();
     before_frame_hook.Install();
@@ -350,8 +350,8 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     after_frame_render_hook.Install();
     PlayerCreate_hook.Install();
     PlayerDestroy_hook.Install();
-    RflLoad_hook.Install();
-    GameWideOnLevelStart_hook.Install();
+    LevelLoad_hook.Install();
+    LevelInitPost_hook.Install();
 
     // Init modules
     ConsoleApplyPatches();

@@ -30,26 +30,26 @@ static int g_screenshot_dir_id;
 
 namespace rf
 {
-struct ClutterMonitor
+struct Monitor
 {
-    struct ClutterMonitor *next;
-    struct ClutterMonitor *prev;
+    struct Monitor *next;
+    struct Monitor *prev;
     int monitor_state;
     int clutter_handle;
     int current_camera_handle;
     int bitmap;
-    DynamicArray<int> cameras_handles_array;
-    Timer camera_cycle_timer;
+    VArray<int> cameras_handles_array;
+    Timestamp camera_cycle_timestamp;
     float cycle_delay;
     int gap2C;
     int width;
     int height;
     int flags;
 };
-static_assert(sizeof(ClutterMonitor) == 0x3C);
+static_assert(sizeof(Monitor) == 0x3C);
 
 static auto& GrD3DGetBitmapTexture = AddrAsRef<IDirect3DTexture8*(int bm_handle)>(0x0055D1E0);
-static auto& monitor_list = AddrAsRef<ClutterMonitor>(0x005C98A8);
+static auto& monitor_list = AddrAsRef<Monitor>(0x005C98A8);
 } // namespace rf
 
 
@@ -134,7 +134,7 @@ void EndRenderToTexture()
 }
 
 #if !D3D_LOCKABLE_BACKBUFFER
-CallHook<rf::BmPixelFormat(int, int, int, int, std::byte*)> GrD3DReadBackBuffer_hook{
+CallHook<rf::BmFormat(int, int, int, int, std::byte*)> GrD3DReadBackBuffer_hook{
     0x0050E015,
     [](int x, int y, int width, int height, std::byte* buffer) {
         rf::GrD3DFlushBuffers();
@@ -143,18 +143,18 @@ CallHook<rf::BmPixelFormat(int, int, int, int, std::byte*)> GrD3DReadBackBuffer_
         HRESULT hr = rf::gr_d3d_device->GetRenderTarget(&back_buffer);
         if (FAILED(hr)) {
             ERR_ONCE("IDirect3DDevice8::GetRenderTarget failed 0x%lX", hr);
-            return rf::BMPF_INVALID;
+            return rf::BM_FORMAT_INVALID;
         }
 
         D3DSURFACE_DESC desc;
         hr = back_buffer->GetDesc(&desc);
         if (FAILED(hr)) {
             ERR_ONCE("IDirect3DSurface8::GetDesc failed 0x%lX", hr);
-            return rf::BMPF_INVALID;
+            return rf::BM_FORMAT_INVALID;
         }
 
         // function is sometimes called with all parameters set to 0 to get backbuffer format
-        rf::BmPixelFormat pixel_fmt = GetPixelFormatFromD3DFormat(desc.Format);
+        rf::BmFormat pixel_fmt = GetPixelFormatFromD3DFormat(desc.Format);
         if (width == 0 || height == 0) {
             return pixel_fmt;
         }
@@ -166,7 +166,7 @@ CallHook<rf::BmPixelFormat(int, int, int, int, std::byte*)> GrD3DReadBackBuffer_
             hr = rf::gr_d3d_device->CreateImageSurface(desc.Width, desc.Height, desc.Format, &g_capture_tmp_surface);
             if (FAILED(hr)) {
                 ERR_ONCE("IDirect3DDevice8::CreateImageSurface failed 0x%lX", hr);
-                return rf::BMPF_INVALID;
+                return rf::BM_FORMAT_INVALID;
             }
         }
 
@@ -177,7 +177,7 @@ CallHook<rf::BmPixelFormat(int, int, int, int, std::byte*)> GrD3DReadBackBuffer_
         hr = rf::gr_d3d_device->CopyRects(back_buffer, &src_rect, 1, g_capture_tmp_surface, &dst_pt);
         if (FAILED(hr)) {
             ERR_ONCE("IDirect3DDevice8::CopyRects failed 0x%lX", hr);
-            return rf::BMPF_INVALID;
+            return rf::BM_FORMAT_INVALID;
         }
 
         // Note: locking fragment of Render Target fails
@@ -185,7 +185,7 @@ CallHook<rf::BmPixelFormat(int, int, int, int, std::byte*)> GrD3DReadBackBuffer_
         hr = g_capture_tmp_surface->LockRect(&locked_rect, nullptr, D3DLOCK_READONLY | D3DLOCK_NO_DIRTY_UPDATE);
         if (FAILED(hr)) {
             ERR_ONCE("IDirect3DSurface8::LockRect failed 0x%lX (%s)", hr, getDxErrorStr(hr));
-            return rf::BMPF_INVALID;
+            return rf::BM_FORMAT_INVALID;
         }
 
         int bytes_per_pixel = GetPixelFormatSize(pixel_fmt);
@@ -220,18 +220,18 @@ FunHook<void(int, int, int, int, int)> GrCaptureBackBuffer_hook{
     },
 };
 
-CallHook<int(rf::BmPixelFormat, int, int)> bm_create_user_bitmap_monitor_hook{
+CallHook<int(rf::BmFormat, int, int)> bm_create_user_bitmap_monitor_hook{
     0x00412547,
-    []([[ maybe_unused ]] rf::BmPixelFormat pixel_fmt, int w, int h) {
-        return bm_create_user_bitmap_monitor_hook.CallTarget(rf::BMPF_RENDER_TARGET, w, h);
+    []([[ maybe_unused ]] rf::BmFormat pixel_fmt, int w, int h) {
+        return bm_create_user_bitmap_monitor_hook.CallTarget(rf::BM_FORMAT_RENDER_TARGET, w, h);
     },
 };
 
-void MakeSureMonitorBitmapIsDynamic(rf::ClutterMonitor& mon)
+void MakeSureMonitorBitmapIsDynamic(rf::Monitor& mon)
 {
-    if (rf::BmGetPixelFormat(mon.bitmap) == rf::BMPF_RENDER_TARGET) {
+    if (rf::BmGetFormat(mon.bitmap) == rf::BM_FORMAT_RENDER_TARGET) {
         xlog::trace("Changing pixel format for monitor bitmap");
-        ChangeUserBitmapPixelFormat(mon.bitmap, rf::BMPF_RGB_888, true);
+        ChangeUserBitmapPixelFormat(mon.bitmap, rf::BM_FORMAT_RGB_888, true);
     }
 }
 
@@ -260,12 +260,12 @@ struct MeshMaterial
 };
 static_assert(sizeof(MeshMaterial) == 0xC8);
 
-static auto& AnimMeshGetMaterialsArray = AddrAsRef<void(AnimMesh *anim_mesh, int *num_materials_out, MeshMaterial **materials_array_out)>(0x00503650);
+static auto& AnimMeshGetMaterialsArray = AddrAsRef<void(VMesh *vmesh, int *num_materials_out, MeshMaterial **materials_array_out)>(0x00503650);
 }
 
-FunHook<void(rf::ClutterMonitor&)> MonitorRenderOffState_hook{
+FunHook<void(rf::Monitor&)> MonitorRenderOffState_hook{
     0x00412410,
-    [](rf::ClutterMonitor& mon) {
+    [](rf::Monitor& mon) {
         // monitor is no longer displaying view from camera so its texture usage must be changed
         // from render target to dynamic texture
         MakeSureMonitorBitmapIsDynamic(mon);
@@ -287,13 +287,13 @@ inline bool GenerateStaticNoise()
     return white;
 }
 
-FunHook<void(rf::ClutterMonitor&)> MonitorRenderNoise_hook{
+FunHook<void(rf::Monitor&)> MonitorRenderNoise_hook{
     0x00412370,
-    [](rf::ClutterMonitor& mon) {
+    [](rf::Monitor& mon) {
         // No longer use render target texture
         MakeSureMonitorBitmapIsDynamic(mon);
         // Use custom noise generation algohritm because the default one is not uniform enough in high resolution
-        rf::GrLockData lock;
+        rf::GrLockInfo lock;
         if (rf::GrLock(mon.bitmap, 0, &lock, 0)) {
             auto pixel_size = GetPixelFormatSize(lock.pixel_format);
             for (int y = 0; y < lock.height; ++y) {
@@ -315,13 +315,13 @@ FunHook<void(rf::ClutterMonitor&)> MonitorRenderNoise_hook{
     },
 };
 #else
-void ReplaceMonitorScreenBitmap(rf::ClutterMonitor& mon, int hbm)
+void ReplaceMonitorScreenBitmap(rf::Monitor& mon, int hbm)
 {
-    auto clutter = rf::ObjGetByHandle(mon.clutter_handle);
-    auto anim_mesh = clutter->anim_mesh;
+    auto clutter = rf::ObjFromHandle(mon.clutter_handle);
+    auto vmesh = clutter->vmesh;
     int num_materials;
     rf::MeshMaterial *materials;
-    rf::AnimMeshGetMaterialsArray(anim_mesh, &num_materials, &materials);
+    rf::AnimMeshGetMaterialsArray(vmesh, &num_materials, &materials);
     for (int i = 0; i < num_materials; ++i) {
         auto& mat = materials[i];
         if (!_strcmpi(mat.name, "screen.tga")) {
@@ -331,9 +331,9 @@ void ReplaceMonitorScreenBitmap(rf::ClutterMonitor& mon, int hbm)
     }
 }
 
-FunHook<void(rf::ClutterMonitor&)> MonitorRenderNoise_hook{
+FunHook<void(rf::Monitor&)> MonitorRenderNoise_hook{
     0x00412370,
-    [](rf::ClutterMonitor& mon) {
+    [](rf::Monitor& mon) {
         // monitor is no longer displaying view from camera so its texture usage must be changed
         // from render target to dynamic texture
         //MakeSureMonitorBitmapIsDynamic(mon);
@@ -351,7 +351,7 @@ FunHook<void(rf::ClutterMonitor&)> MonitorRenderNoise_hook{
 CodeInjection monitor_render_from_camera_start_render_to_texture{
     0x00412860,
     [](auto& regs) {
-        auto mon = reinterpret_cast<rf::ClutterMonitor*>(regs.edi);
+        auto mon = reinterpret_cast<rf::Monitor*>(regs.edi);
         StartRenderToTexture(mon->bitmap);
     },
 };
@@ -456,7 +456,7 @@ void GraphicsCaptureInit()
     rocket_launcher_start_render_to_texture.Install();
 
     // Make sure scanner bitmap is a render target
-    WriteMem<u8>(0x004A34BF + 1, rf::BMPF_RENDER_TARGET);
+    WriteMem<u8>(0x004A34BF + 1, rf::BM_FORMAT_RENDER_TARGET);
 }
 
 void GraphicsCaptureAfterGameInit()
@@ -466,5 +466,5 @@ void GraphicsCaptureAfterGameInit()
         xlog::info("Created screenshots directory");
     else if (GetLastError() != ERROR_ALREADY_EXISTS)
         xlog::error("Failed to create screenshots directory %lu", GetLastError());
-    g_screenshot_dir_id = rf::FsAddDirectoryEx(g_screenshot_dir_name, "", true);
+    g_screenshot_dir_id = rf::FileAddDirectoryEx(g_screenshot_dir_name, "", true);
 }

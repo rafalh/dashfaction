@@ -5,7 +5,7 @@
 #include "../rf/player.h"
 #include "../rf/weapon.h"
 #include "../rf/entity.h"
-#include "../rf/debug_console.h"
+#include "../rf/console.h"
 #include "../rf/os.h"
 #include "../server/server.h"
 #include "../misc/misc.h"
@@ -408,9 +408,9 @@ FunHook<NwPacketHandler_Type> ProcessEntityCreatePacket_hook{
         char player_id = data[name_size + 58];
         // Check if this is not NPC
         if (player_id != '\xFF') {
-            int32_t weapon_cls_id = *reinterpret_cast<int32_t*>(data + name_size + 63);
+            int32_t weapon_type = *reinterpret_cast<int32_t*>(data + name_size + 63);
             auto old_default_player_weapon = rf::default_player_weapon;
-            rf::default_player_weapon = rf::weapon_classes[weapon_cls_id].name;
+            rf::default_player_weapon = rf::weapon_types[weapon_type].name;
             ProcessEntityCreatePacket_hook.CallTarget(data, addr);
             rf::default_player_weapon = old_default_player_weapon;
         }
@@ -425,14 +425,14 @@ FunHook<NwPacketHandler_Type> ProcessReloadPacket_hook{
     [](char* data, const rf::NwAddr& addr) {
         if (!rf::is_server) { // client-side
             // Update ClipSize and MaxAmmo if received values are greater than values from local weapons.tbl
-            int weapon_cls_id = *reinterpret_cast<int32_t*>(data + 4);
+            int weapon_type = *reinterpret_cast<int32_t*>(data + 4);
             int ammo = *reinterpret_cast<int32_t*>(data + 8);
             int clip_ammo = *reinterpret_cast<int32_t*>(data + 12);
-            if (rf::weapon_classes[weapon_cls_id].clip_size < clip_ammo)
-                rf::weapon_classes[weapon_cls_id].clip_size = clip_ammo;
-            if (rf::weapon_classes[weapon_cls_id].max_ammo < ammo)
-                rf::weapon_classes[weapon_cls_id].max_ammo = ammo;
-            xlog::trace("ProcessReloadPacket WeaponClsId %d ClipAmmo %d Ammo %d", weapon_cls_id, clip_ammo, ammo);
+            if (rf::weapon_types[weapon_type].clip_size < clip_ammo)
+                rf::weapon_types[weapon_type].clip_size = clip_ammo;
+            if (rf::weapon_types[weapon_type].max_ammo < ammo)
+                rf::weapon_types[weapon_type].max_ammo = ammo;
+            xlog::trace("ProcessReloadPacket WeaponClsId %d ClipAmmo %d Ammo %d", weapon_type, clip_ammo, ammo);
 
             // Call original handler
             ProcessReloadPacket_hook.CallTarget(data, addr);
@@ -440,7 +440,7 @@ FunHook<NwPacketHandler_Type> ProcessReloadPacket_hook{
     },
 };
 
-rf::EntityObj* SecureObjUpdatePacket(rf::EntityObj* entity, uint8_t flags, rf::Player* src_player)
+rf::Entity* SecureObjUpdatePacket(rf::Entity* entity, uint8_t flags, rf::Player* src_player)
 {
     if (rf::is_server) {
         // server-side
@@ -506,7 +506,7 @@ CodeInjection ProcessBooleanPacket_ValidateMeshId_patch{
 CodeInjection ProcessBooleanPacket_ValidateRoomId_patch{
     0x0047661C,
     [](auto& regs) {
-        int num_rooms = rf::rfl_static_geometry->rooms.Size();
+        int num_rooms = rf::rfl_static_geometry->all_rooms.Size();
         if (regs.edx < 0 || regs.edx >= num_rooms) {
             xlog::warn("Invalid room in Boolean packet - skipping");
             regs.esp += 0x64;
@@ -526,7 +526,7 @@ CodeInjection ProcessPregameBooleanPacket_ValidateMeshId_patch{
 CodeInjection ProcessPregameBooleanPacket_ValidateRoomId_patch{
     0x00476752,
     [](auto& regs) {
-        int num_rooms = rf::rfl_static_geometry->rooms.Size();
+        int num_rooms = rf::rfl_static_geometry->all_rooms.Size();
         if (regs.edx < 0 || regs.edx >= num_rooms) {
             xlog::warn("Invalid room in PregameBoolean packet - skipping");
             regs.esp += 0x68;
@@ -821,7 +821,7 @@ void SendChatLinePacket(const char* msg, rf::Player* target, rf::Player* sender,
     packet.message[255] = 0;
     if (target == nullptr && rf::is_server) {
         rf::NwSendReliablePacketToAll(buf, packet.header.size + sizeof(packet.header), 0);
-        rf::DcPrintf("Server: %s", msg);
+        rf::ConsolePrintf("Server: %s", msg);
     }
     else {
         rf::NwSendReliablePacket(target, buf, packet.header.size + sizeof(packet.header), 0);

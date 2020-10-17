@@ -39,11 +39,11 @@ set(SRCS
     rf/bmpman.h
     rf/clutter.h
     rf/common.h
-    rf/debug_console.h
+    rf/console.h
     rf/entity.h
     rf/event.h
     rf/fs.h
-    rf/game_seq.h
+    rf/gameseq.h
     rf/graphics.h
     rf/item.h
     rf/misc.h

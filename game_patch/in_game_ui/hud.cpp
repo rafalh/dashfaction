@@ -47,8 +47,8 @@ static int HudScaleValue(int val, int max, float scale)
 rf::HudPoint HudScaleCoords(rf::HudPoint pt, float scale)
 {
     return {
-        HudScaleValue(pt.x, rf::GrGetMaxWidth(), scale),
-        HudScaleValue(pt.y, rf::GrGetMaxHeight(), scale),
+        HudScaleValue(pt.x, rf::GrScreenWidth(), scale),
+        HudScaleValue(pt.y, rf::GrScreenHeight(), scale),
     };
 }
 
@@ -74,7 +74,7 @@ DcCommand2 hud_cmd{
 
 void HudSetupPositions(int width)
 {
-    int height = rf::GrGetMaxHeight();
+    int height = rf::GrScreenHeight();
     rf::HudPoint* pos_data = nullptr;
 
     xlog::trace("HudSetupPositionsHook(%d)", width);
@@ -124,7 +124,7 @@ void HudSetupPositions(int width)
 }
 FunHook HudSetupPositions_hook{0x004377C0, HudSetupPositions};
 
-CallHook<void(int, int, int, rf::GrRenderState)> HudRenderAmmo_GrBitmap_hook{
+CallHook<void(int, int, int, rf::GrMode)> HudRenderAmmo_GrBitmap_hook{
     {
         // HudRenderAmmoClip
         0x0043A5E9u,
@@ -139,47 +139,47 @@ CallHook<void(int, int, int, rf::GrRenderState)> HudRenderAmmo_GrBitmap_hook{
         0x0043AEC3u,
         0x0043AF0Au,
     },
-    [](int bm_handle, int x, int y, rf::GrRenderState render_state) {
-        HudScaledBitmap(bm_handle, x, y, g_hud_ammo_scale, render_state);
+    [](int bm_handle, int x, int y, rf::GrMode mode) {
+        HudScaledBitmap(bm_handle, x, y, g_hud_ammo_scale, mode);
     },
 };
 
-FunHook<void(rf::EntityObj*, int, int, bool)> HudRenderAmmo_hook{
+FunHook<void(rf::Entity*, int, int, bool)> HudRenderAmmo_hook{
     0x0043A510,
-    [](rf::EntityObj *entity, int weapon_cls_id, int offset_y, bool is_inactive) {
+    [](rf::Entity *entity, int weapon_type, int offset_y, bool is_inactive) {
         offset_y = static_cast<int>(offset_y * g_hud_ammo_scale);
-        HudRenderAmmo_hook.CallTarget(entity, weapon_cls_id, offset_y, is_inactive);
+        HudRenderAmmo_hook.CallTarget(entity, weapon_type, offset_y, is_inactive);
     },
 };
 
-CallHook<void(int, int, int, rf::GrRenderState)> RenderReticle_GrBitmap_hook{
+CallHook<void(int, int, int, rf::GrMode)> RenderReticle_GrBitmap_hook{
     {
         0x0043A499,
         0x0043A4FE,
     },
-    [](int bm_handle, int x, int y, rf::GrRenderState render_state) {
+    [](int bm_handle, int x, int y, rf::GrMode mode) {
         float base_scale = g_game_config.big_hud ? 2.0f : 1.0f;
         float scale = base_scale * g_game_config.reticle_scale;
 
-        x = static_cast<int>((x - rf::GrGetClipWidth() / 2) * scale) + rf::GrGetClipWidth() / 2;
-        y = static_cast<int>((y - rf::GrGetClipHeight() / 2) * scale) + rf::GrGetClipHeight() / 2;
+        x = static_cast<int>((x - rf::GrClipWidth() / 2) * scale) + rf::GrClipWidth() / 2;
+        y = static_cast<int>((y - rf::GrClipHeight() / 2) * scale) + rf::GrClipHeight() / 2;
 
-        HudScaledBitmap(bm_handle, x, y, scale, render_state);
+        HudScaledBitmap(bm_handle, x, y, scale, mode);
     },
 };
 
-CallHook<void(int, int, int, rf::GrRenderState)> HudRenderPowerUps_GrBitmap_hook{
+CallHook<void(int, int, int, rf::GrMode)> HudRenderPowerUps_GrBitmap_hook{
     {
         0x0047FF2F,
         0x0047FF96,
         0x0047FFFD,
     },
-    [](int bm_handle, int x, int y, rf::GrRenderState render_state) {
+    [](int bm_handle, int x, int y, rf::GrMode mode) {
         float scale = g_game_config.big_hud ? 2.0f : 1.0f;
-        x = HudTransformValue(x, 640, rf::GrGetClipWidth());
-        x = HudScaleValue(x, rf::GrGetClipWidth(), scale);
-        y = HudScaleValue(y, rf::GrGetClipHeight(), scale);
-        HudScaledBitmap(bm_handle, x, y, scale, render_state);
+        x = HudTransformValue(x, 640, rf::GrClipWidth());
+        x = HudScaleValue(x, rf::GrClipWidth(), scale);
+        y = HudScaleValue(y, rf::GrClipHeight(), scale);
+        HudScaledBitmap(bm_handle, x, y, scale, mode);
     },
 };
 
@@ -234,7 +234,7 @@ void SetBigHud(bool is_big)
     rf::hud_text_font_num = HudGetDefaultFont();
     g_target_player_name_font = HudGetDefaultFont();
 
-    HudSetupPositions(rf::GrGetMaxWidth());
+    HudSetupPositions(rf::GrScreenWidth());
     SetBigAmmo(is_big);
     SetBigCountdownCounter(is_big);
 
@@ -248,7 +248,7 @@ DcCommand2 bighud_cmd{
         g_game_config.big_hud = !g_game_config.big_hud;
         SetBigHud(g_game_config.big_hud);
         g_game_config.save();
-        rf::DcPrintf("Big HUD is %s", g_game_config.big_hud ? "enabled" : "disabled");
+        rf::ConsolePrintf("Big HUD is %s", g_game_config.big_hud ? "enabled" : "disabled");
     },
     "Toggle big HUD",
     "bighud",
@@ -261,7 +261,7 @@ DcCommand2 reticle_scale_cmd{
             g_game_config.reticle_scale = scale_opt.value();
             g_game_config.save();
         }
-        rf::DcPrintf("Reticle scale %.4f", g_game_config.reticle_scale.value());
+        rf::ConsolePrintf("Reticle scale %.4f", g_game_config.reticle_scale.value());
     },
     "Sets/gets reticle scale",
 };
@@ -274,7 +274,7 @@ DcCommand2 hud_coords_cmd{
             rf::hud_points[idx].x = x.value();
             rf::hud_points[idx].y = y.value();
         }
-        rf::DcPrintf("HUD coords[%d]: <%d, %d>", idx, rf::hud_points[idx].x, rf::hud_points[idx].y);
+        rf::ConsolePrintf("HUD coords[%d]: <%d, %d>", idx, rf::hud_points[idx].x, rf::hud_points[idx].y);
 
     },
 };
@@ -308,16 +308,16 @@ const ScaledBitmapInfo& HudGetScaledBitmapInfo(int bmh)
         xlog::trace("loading high res bm %s", filename.c_str());
         ScaledBitmapInfo scaled_bm_info;
         rf::File file;
-        if (rf::FsFileExists(filename.c_str())) {
+        if (rf::FileExists(filename.c_str())) {
             scaled_bm_info.bmh = rf::BmLoad(filename.c_str(), -1, false);
         }
         xlog::trace("loaded high res bm %s: %d", filename.c_str(), scaled_bm_info.bmh);
         if (scaled_bm_info.bmh != -1) {
             rf::GrTcacheAddRef(scaled_bm_info.bmh);
             int bm_w, bm_h;
-            rf::BmGetBitmapSize(bmh, &bm_w, &bm_h);
+            rf::BmGetDimension(bmh, &bm_w, &bm_h);
             int scaled_bm_w, scaled_bm_h;
-            rf::BmGetBitmapSize(scaled_bm_info.bmh, &scaled_bm_w, &scaled_bm_h);
+            rf::BmGetDimension(scaled_bm_info.bmh, &scaled_bm_w, &scaled_bm_h);
             scaled_bm_info.scale = static_cast<float>(scaled_bm_w) / static_cast<float>(bm_w);
 
         }
@@ -332,7 +332,7 @@ void HudPreloadScaledBitmap(int bmh)
     HudGetScaledBitmapInfo(bmh);
 }
 
-void HudScaledBitmap(int bmh, int x, int y, float scale, rf::GrRenderState render_state)
+void HudScaledBitmap(int bmh, int x, int y, float scale, rf::GrMode mode)
 {
     if (scale > 1.0f) {
         const auto& scaled_bm_info = HudGetScaledBitmapInfo(bmh);
@@ -343,19 +343,19 @@ void HudScaledBitmap(int bmh, int x, int y, float scale, rf::GrRenderState rende
     }
 
     if (scale == 1.0f) {
-        rf::GrBitmap(bmh, x, y, render_state);
+        rf::GrBitmap(bmh, x, y, mode);
     }
     else {
         // Get bitmap size and scale it
         int bm_w, bm_h;
-        rf::BmGetBitmapSize(bmh, &bm_w, &bm_h);
+        rf::BmGetDimension(bmh, &bm_w, &bm_h);
         int dst_w = static_cast<int>(std::round(bm_w * scale));
         int dst_h = static_cast<int>(std::round(bm_h * scale));
-        rf::GrBitmapStretched(bmh, x, y, dst_w, dst_h, 0, 0, bm_w, bm_h, 0.0f, 0.0f, render_state);
+        rf::GrBitmapStretched(bmh, x, y, dst_w, dst_h, 0, 0, bm_w, bm_h, 0.0f, 0.0f, mode);
     }
 }
 
-void HudRectBorder(int x, int y, int w, int h, int border, rf::GrRenderState state)
+void HudRectBorder(int x, int y, int w, int h, int border, rf::GrMode state)
 {
     // top
     rf::GrRect(x, y, w, border, state);
@@ -372,11 +372,11 @@ std::string HudFitString(std::string_view str, int max_w, int* str_w_out, int fo
     std::string result{str};
     int str_w, str_h;
     bool has_ellipsis = false;
-    rf::GrGetTextWidth(&str_w, &str_h, result.c_str(), -1, font_id);
+    rf::GrGetStringSize(&str_w, &str_h, result.c_str(), -1, font_id);
     while (str_w > max_w) {
         result = result.substr(0, result.size() - (has_ellipsis ? 4 : 1)) + "...";
         has_ellipsis = true;
-        rf::GrGetTextWidth(&str_w, &str_h, result.c_str(), -1, font_id);
+        rf::GrGetStringSize(&str_w, &str_h, result.c_str(), -1, font_id);
     }
     if (str_w_out) {
         *str_w_out = str_w;
@@ -446,16 +446,16 @@ int HudGetLargeFont()
 CallHook<void(int, int, int, int, int, int, int, int, int, char, char, int)> gr_bitmap_stretched_message_log_hook{
     0x004551F0,
     [](int bm_handle, int dst_x, int dst_y, int dst_w, int dst_h, int src_x, int src_y, int src_w, int src_h,
-        char unk_u, char unk_v, int render_state) {
+        char unk_u, char unk_v, int mode) {
 
-        float scale_x = rf::GrGetMaxWidth() / 640.0f;
-        float scale_y = rf::GrGetMaxHeight() / 480.0f;
+        float scale_x = rf::GrScreenWidth() / 640.0f;
+        float scale_y = rf::GrScreenHeight() / 480.0f;
         dst_w = static_cast<int>(src_w * scale_x);
         dst_h = static_cast<int>(src_h * scale_y);
-        dst_x = (rf::GrGetMaxWidth() - dst_w) / 2;
-        dst_y = (rf::GrGetMaxHeight() - dst_h) / 2;
+        dst_x = (rf::GrScreenWidth() - dst_w) / 2;
+        dst_y = (rf::GrScreenHeight() - dst_h) / 2;
         gr_bitmap_stretched_message_log_hook.CallTarget(bm_handle, dst_x, dst_y, dst_w, dst_h,
-            src_x, src_y, src_w, src_h, unk_u, unk_v, render_state);
+            src_x, src_y, src_w, src_h, unk_u, unk_v, mode);
 
         auto& message_log_entries_clip_h = AddrAsRef<int>(0x006425D4);
         auto& message_log_entries_clip_y = AddrAsRef<int>(0x006425D8);
@@ -534,10 +534,10 @@ bool IsDoubleAmmoHud()
     if (rf::is_multi) {
         return false;
     }
-    auto entity = rf::EntityGetByHandle(rf::local_player->entity_handle);
+    auto entity = rf::EntityFromHandle(rf::local_player->entity_handle);
     if (!entity) {
         return false;
     }
-    auto weapon_cls_id = entity->ai_info.weapon_cls_id;
-    return weapon_cls_id == rf::machine_pistol_cls_id || weapon_cls_id == rf::machine_pistol_special_cls_id;
+    auto weapon_type = entity->ai_info.current_primary_weapon;
+    return weapon_type == rf::machine_pistol_weapon_type || weapon_type == rf::machine_pistol_special_weapon_type;
 }

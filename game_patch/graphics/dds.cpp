@@ -75,29 +75,29 @@ D3DFORMAT GetD3DFormatFromDDSPixelFormat(DDS_PIXELFORMAT& ddspf)
     return D3DFMT_UNKNOWN;
 }
 
-rf::BmBitmapType ReadDdsHeader(rf::File& file, int *width_out, int *height_out, rf::BmPixelFormat *pixel_fmt_out,
+rf::BmType ReadDdsHeader(rf::File& file, int *width_out, int *height_out, rf::BmFormat *pixel_fmt_out,
     int *num_levels_out)
 {
     auto magic = file.Read<uint32_t>();
     if (magic != dds_magic) {
         xlog::warn("Invalid magic number in DDS file: %X", magic);
-        return rf::BM_INVALID;
+        return rf::BM_TYPE_INVALID;
     }
     DDS_HEADER hdr;
     file.Read(&hdr, sizeof(hdr));
     if (hdr.dwSize != sizeof(DDS_HEADER)) {
         xlog::warn("Invalid header size in DDS file: %lX", hdr.dwSize);
-        return rf::BM_INVALID;
+        return rf::BM_TYPE_INVALID;
     }
     D3DFORMAT d3d_fmt = GetD3DFormatFromDDSPixelFormat(hdr.ddspf);
     if (d3d_fmt == D3DFMT_UNKNOWN) {
-        return rf::BM_INVALID;
+        return rf::BM_TYPE_INVALID;
     }
     auto hr = rf::gr_d3d->CheckDeviceFormat(rf::gr_adapter_idx, D3DDEVTYPE_HAL, rf::gr_d3d_pp.BackBufferFormat, 0,
         D3DRTYPE_TEXTURE, d3d_fmt);
     if (FAILED(hr)) {
         xlog::warn("Unsupported by video card DDS pixel format: %X", d3d_fmt);
-        return rf::BM_INVALID;
+        return rf::BM_TYPE_INVALID;
     }
     xlog::trace("Using DDS format %X", d3d_fmt);
 
@@ -105,14 +105,14 @@ rf::BmBitmapType ReadDdsHeader(rf::File& file, int *width_out, int *height_out, 
     *height_out = hdr.dwHeight;
 
     // Use D3DFORMAT as BmPixelFormats - there are no conflicts because D3DFORMAT constants starts from 0x20
-    *pixel_fmt_out = static_cast<rf::BmPixelFormat>(d3d_fmt);
+    *pixel_fmt_out = static_cast<rf::BmFormat>(d3d_fmt);
 
     *num_levels_out = 1;
     if (hdr.dwFlags & DDSD_MIPMAPCOUNT) {
         *num_levels_out = hdr.dwMipMapCount;
         xlog::trace("DDS mipmaps %lu (%lux%lu)", hdr.dwMipMapCount, hdr.dwWidth, hdr.dwHeight);
     }
-    return rf::BM_DDS;
+    return rf::BM_TYPE_DDS;
 }
 
 int LockDdsBitmap(rf::BmBitmapEntry& bm_entry)

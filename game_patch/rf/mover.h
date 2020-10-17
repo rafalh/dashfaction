@@ -4,13 +4,13 @@
 
 namespace rf
 {
-    struct MoverObj : Object
+    struct MoverBrush : Object
     {
-        struct MoverObj *next;
-        struct MoverObj *prev;
-        RflGeometry *geometry;
+        struct MoverBrush *next;
+        struct MoverBrush *prev;
+        GSolid *geometry;
     };
 
-    auto& mover_obj_list = AddrAsRef<rf::MoverObj>(0x0064E6E0);
+    auto& mover_brush_list = AddrAsRef<rf::MoverBrush>(0x0064E6E0);
 }
 

@@ -14,7 +14,7 @@
 #include "../rf/player.h"
 #include "../rf/weapon.h"
 #include "../rf/network.h"
-#include "../rf/game_seq.h"
+#include "../rf/gameseq.h"
 #include "../rf/input.h"
 #include "../rf/ui.h"
 #include "../rf/particle_emitter.h"
@@ -33,11 +33,7 @@
 
 namespace rf
 {
-
-static auto& GameSeqPushState = AddrAsRef<int(int state, bool update_parent_state, bool parent_dlg_open)>(0x00434410);
-static auto& GameSeqProcessDeferredChange = AddrAsRef<int()>(0x00434310);
-auto AnimMeshGetName = AddrAsRef<const char*(rf::AnimMesh* anim_mesh)>(0x00503470);
-
+static auto& VMeshGetName = AddrAsRef<const char*(VMesh* vmesh)>(0x00503470);
 } // namespace rf
 
 void ApplyCutscenePatches();
@@ -80,11 +76,11 @@ CodeInjection CriticalError_hide_main_wnd_patch{
     },
 };
 
-FunHook<int(void*, void*)> GeomCachePrepareRoom_hook{
+FunHook<int(rf::GSolid*, rf::GRoom*)> GeomCachePrepareRoom_hook{
     0x004F0C00,
-    [](void* geom, void* room) {
+    [](rf::GSolid* geom, rf::GRoom* room) {
         int ret = GeomCachePrepareRoom_hook.CallTarget(geom, room);
-        std::byte** pp_room_geom = (std::byte**)(static_cast<std::byte*>(room) + 4);
+        std::byte** pp_room_geom = (std::byte**)(reinterpret_cast<std::byte*>(room) + 4);
         std::byte* room_geom = *pp_room_geom;
         if (ret == 0 && room_geom) {
             uint32_t room_vert_num = *reinterpret_cast<uint32_t*>(room_geom + 4);
@@ -100,7 +96,7 @@ FunHook<int(void*, void*)> GeomCachePrepareRoom_hook{
     },
 };
 
-CodeInjection RflLoadInternal_CheckRestoreStatus_patch{
+CodeInjection LevelLoadInternal_CheckRestoreStatus_patch{
     0x00461195,
     [](auto& regs) {
         // check if SaveRestoreLoadAll is successful
@@ -130,10 +126,10 @@ void StartJoinMpGameSequence(const rf::NwAddr& addr, const std::string& password
     g_join_mp_game_seq_data = {JoinMpGameData{addr, password}};
 }
 
-FunHook<void(int, int)> GameEnterState_hook{
+FunHook<void(int, int)> RFInitState_hook{
     0x004B1AC0,
     [](int state, int old_state) {
-        GameEnterState_hook.CallTarget(state, old_state);
+        RFInitState_hook.CallTarget(state, old_state);
         xlog::trace("state %d old_state %d g_jump_to_multi_server_list %d", state, old_state, g_jump_to_multi_server_list);
 
         bool exiting_game = state == rf::GS_MAIN_MENU &&
@@ -149,13 +145,13 @@ FunHook<void(int, int)> GameEnterState_hook{
             AddrCaller{0x00443C20}.c_call(); // OpenMultiMenu
             old_state = state;
             state = rf::GameSeqProcessDeferredChange();
-            GameEnterState_hook.CallTarget(state, old_state);
+            RFInitState_hook.CallTarget(state, old_state);
         }
-        if (state == rf::GS_MP_MENU && g_jump_to_multi_server_list) {
+        if (state == rf::GS_MULTI_MENU && g_jump_to_multi_server_list) {
             AddrCaller{0x00448B70}.c_call(); // OnMpJoinGameBtnClick
             old_state = state;
             state = rf::GameSeqProcessDeferredChange();
-            GameEnterState_hook.CallTarget(state, old_state);
+            RFInitState_hook.CallTarget(state, old_state);
         }
         if (state == rf::GS_MULTI_SERVER_LIST && g_jump_to_multi_server_list) {
             g_jump_to_multi_server_list = false;
@@ -196,7 +192,7 @@ FunHook<void()> MultiAfterPlayersPackets_hook{
     },
 };
 
-FunHook<char(int, int, int, int, char)> ClutterInitMonitor_hook{
+FunHook<char(int, int, int, int, char)> MonitorCreate_hook{
     0x00412470,
     [](int clutter_handle, int always_minus_1, int w, int h, char always_1) {
         if (g_game_config.high_monitor_res) {
@@ -204,11 +200,11 @@ FunHook<char(int, int, int, int, char)> ClutterInitMonitor_hook{
             w *= factor;
             h *= factor;
         }
-        return ClutterInitMonitor_hook.CallTarget(clutter_handle, always_minus_1, w, h, always_1);
+        return MonitorCreate_hook.CallTarget(clutter_handle, always_minus_1, w, h, always_1);
     },
 };
 
-CodeInjection moving_group_rotate_in_place_keyframe_oob_crashfix{
+CodeInjection mover_rotating_keyframe_oob_crashfix{
     0x0046A559,
     [](auto& regs) {
         float& unk_time = *reinterpret_cast<float*>(regs.esi + 0x308);
@@ -247,11 +243,11 @@ CodeInjection clutter_tbl_buffer_overflow_fix{
     },
 };
 
-FunHook<void(const char*, int)> strings_tbl_buffer_overflow_fix{
+FunHook<void(const char*, int)> localize_add_string_bof_fix{
     0x004B0720,
     [](const char* str, int id) {
         if (id < 1000) {
-            strings_tbl_buffer_overflow_fix.CallTarget(str, id);
+            localize_add_string_bof_fix.CallTarget(str, id);
         }
         else {
             xlog::warn("strings.tbl index is out of bounds: %d", id);
@@ -259,17 +255,17 @@ FunHook<void(const char*, int)> strings_tbl_buffer_overflow_fix{
     },
 };
 
-CodeInjection glass_kill_init_fix{
+CodeInjection glass_shard_level_init_fix{
     0x00435A90,
     []() {
-        auto GlassKillInit = AddrAsRef<void()>(0x00490F60);
-        GlassKillInit();
+        auto GlassShardInit = AddrAsRef<void()>(0x00490F60);
+        GlassShardInit();
     },
 };
 
-FunHook<rf::Object*(int, int, int, void*, int, void*)> ObjCreate_hook{
+FunHook<rf::Object*(int, int, int, rf::ObjectCreateInfo*, int, rf::GRoom*)> ObjCreate_hook{
     0x00486DA0,
-    [](int type, int sub_type, int parent, void* create_info, int flags, void* room) {
+    [](int type, int sub_type, int parent, rf::ObjectCreateInfo* create_info, int flags, rf::GRoom* room) {
         auto obj = ObjCreate_hook.CallTarget(type, sub_type, parent, create_info, flags, room);
         if (!obj) {
             xlog::info("Failed to create object (type %d)", type);
@@ -281,11 +277,11 @@ FunHook<rf::Object*(int, int, int, void*, int, void*)> ObjCreate_hook{
 CodeInjection sort_items_patch{
     0x004593AC,
     [](auto& regs) {
-        auto item = reinterpret_cast<rf::ItemObj*>(regs.esi);
-        auto anim_mesh = item->anim_mesh;
-        auto mesh_name = anim_mesh ? rf::AnimMeshGetName(anim_mesh) : nullptr;
+        auto item = reinterpret_cast<rf::Item*>(regs.esi);
+        auto vmesh = item->vmesh;
+        auto mesh_name = vmesh ? rf::VMeshGetName(vmesh) : nullptr;
         if (!mesh_name) {
-            // Sometimes on level change some objects can stay and have only anim_mesh destroyed
+            // Sometimes on level change some objects can stay and have only vmesh destroyed
             return;
         }
         std::string_view mesh_name_sv = mesh_name;
@@ -304,10 +300,10 @@ CodeInjection sort_items_patch{
             }
         }
 
-        rf::ItemObj* current = rf::item_obj_list.next;
-        while (current != &rf::item_obj_list) {
-            auto current_anim_mesh = current->anim_mesh;
-            auto current_mesh_name = current_anim_mesh ? rf::AnimMeshGetName(current_anim_mesh) : nullptr;
+        rf::Item* current = rf::item_list.next;
+        while (current != &rf::item_list) {
+            auto current_anim_mesh = current->vmesh;
+            auto current_mesh_name = current_anim_mesh ? rf::VMeshGetName(current_anim_mesh) : nullptr;
             if (current_mesh_name && mesh_name_sv == current_mesh_name) {
                 break;
             }
@@ -326,20 +322,20 @@ CodeInjection sort_items_patch{
 CodeInjection sort_clutter_patch{
     0x004109D4,
     [](auto& regs) {
-        auto clutter = reinterpret_cast<rf::ClutterObj*>(regs.esi);
-        auto anim_mesh = clutter->anim_mesh;
-        auto mesh_name = anim_mesh ? rf::AnimMeshGetName(anim_mesh) : nullptr;
+        auto clutter = reinterpret_cast<rf::Clutter*>(regs.esi);
+        auto vmesh = clutter->vmesh;
+        auto mesh_name = vmesh ? rf::VMeshGetName(vmesh) : nullptr;
         if (!mesh_name) {
-            // Sometimes on level change some objects can stay and have only anim_mesh destroyed
+            // Sometimes on level change some objects can stay and have only vmesh destroyed
             return;
         }
         std::string_view mesh_name_sv = mesh_name;
 
-        auto& clutter_obj_list = AddrAsRef<rf::ClutterObj>(0x005C9360);
-        auto current = clutter_obj_list.next;
-        while (current != &clutter_obj_list) {
-            auto current_anim_mesh = current->anim_mesh;
-            auto current_mesh_name = current_anim_mesh ? rf::AnimMeshGetName(current_anim_mesh) : nullptr;
+        auto& clutter_list = AddrAsRef<rf::Clutter>(0x005C9360);
+        auto current = clutter_list.next;
+        while (current != &clutter_list) {
+            auto current_anim_mesh = current->vmesh;
+            auto current_mesh_name = current_anim_mesh ? rf::VMeshGetName(current_anim_mesh) : nullptr;
             if (current_mesh_name && mesh_name_sv == current_mesh_name) {
                 break;
             }
@@ -366,10 +362,10 @@ CodeInjection face_scroll_fix{
     0x004EE1D6,
     [](auto& regs) {
         auto geometry = reinterpret_cast<void*>(regs.ebp);
-        auto& scroll_data_vec = StructFieldRef<rf::DynamicArray<void*>>(geometry, 0x2F4);
-        auto RflFaceScroll_SetupFaces = reinterpret_cast<void(__thiscall*)(void* self, void* geometry)>(0x004E60C0);
+        auto& scroll_data_vec = StructFieldRef<rf::VArray<void*>>(geometry, 0x2F4);
+        auto GTextureMover_SetupFaces = reinterpret_cast<void(__thiscall*)(void* self, void* geometry)>(0x004E60C0);
         for (int i = 0; i < scroll_data_vec.Size(); ++i) {
-            RflFaceScroll_SetupFaces(scroll_data_vec.Get(i), geometry);
+            GTextureMover_SetupFaces(scroll_data_vec.Get(i), geometry);
         }
     },
 };
@@ -399,7 +395,7 @@ CallHook<int(char*, const char*)> mvf_load_rfa_debug_print_patch{
     reinterpret_cast<int(*)(char*, const char*)>(DebugPrintHook),
 };
 
-CodeInjection rfl_load_items_crash_fix{
+CodeInjection level_load_items_crash_fix{
     0x0046519F,
     [](auto& regs) {
         if (!regs.eax) {
@@ -408,7 +404,7 @@ CodeInjection rfl_load_items_crash_fix{
     },
 };
 
-CodeInjection anim_mesh_col_fix{
+CodeInjection vmesh_col_fix{
     0x00499BCF,
     [](auto& regs) {
         auto stack_frame = regs.esp + 0xC8;
@@ -452,22 +448,22 @@ CodeInjection explosion_crash_fix{
     },
 };
 
-void __fastcall HandleCtrlInGame_TimerSet_New(rf::Timer* fire_wait_timer, int, int value)
+void __fastcall HandleCtrlInGame_TimerSet_New(rf::Timestamp* fire_wait_timer, int, int value)
 {
-    if (!fire_wait_timer->IsSet() || fire_wait_timer->GetTimeLeftMs() < value) {
+    if (!fire_wait_timer->Valid() || fire_wait_timer->TimeUntil() < value) {
         fire_wait_timer->Set(value);
     }
 }
 
-CallHook<void __fastcall(rf::Timer*, int, int)> HandleCtrlInGame_TimerSet_fire_wait_patch{
+CallHook<void __fastcall(rf::Timestamp*, int, int)> HandleCtrlInGame_TimerSet_fire_wait_patch{
     {0x004A62C2u, 0x004A6325u},
     &HandleCtrlInGame_TimerSet_New,
 };
 
-FunHook<void(rf::EntityBurnInfo&, int)> EntityBurnSwitchParentToCorpse_hook{
+FunHook<void(rf::EntityFireInfo&, int)> EntityBurnSwitchParentToCorpse_hook{
     0x0042F510,
-    [](rf::EntityBurnInfo& burn_info, int corpse_hobj) {
-        auto corpse = rf::CorpseGetByHandle(corpse_hobj);
+    [](rf::EntityFireInfo& burn_info, int corpse_hobj) {
+        auto corpse = rf::CorpseFromHandle(corpse_hobj);
         burn_info.parent_hobj = corpse_hobj;
         rf::EntityBurnInitBones(&burn_info, corpse);
         for (auto& emitter_ptr : burn_info.emitters) {
@@ -488,7 +484,7 @@ CallHook<bool(rf::Object*)> ObjIsPlayer_EntityCheckIsInLiquid_hook{
         0x004293F4,
     },
     [](rf::Object* obj) {
-        return obj == rf::local_entity;
+        return obj == rf::local_player_entity;
     },
 };
 
@@ -573,10 +569,10 @@ void MiscInit()
     WriteMem<i8>(0x0046C85A + 1, 1);
 
     // Add checking if restoring game state from save file failed during level loading
-    RflLoadInternal_CheckRestoreStatus_patch.Install();
+    LevelLoadInternal_CheckRestoreStatus_patch.Install();
 
     // Open server list menu instead of main menu when leaving multiplayer game
-    GameEnterState_hook.Install();
+    RFInitState_hook.Install();
     IsGameStateUiHidden_hook.Install();
     MultiAfterPlayersPackets_hook.Install();
 
@@ -588,10 +584,10 @@ void MiscInit()
     AsmWriter(0x004A414F, 0x004A4153).nop();
 
     // High monitors/mirrors resolution
-    ClutterInitMonitor_hook.Install();
+    MonitorCreate_hook.Install();
 
     // Fix crash when skipping cutscene after robot kill in L7S4
-    moving_group_rotate_in_place_keyframe_oob_crashfix.Install();
+    mover_rotating_keyframe_oob_crashfix.Install();
 
     // Fix crash in LEGO_MP mod caused by XSTR(1000, "RL"); for some reason it does not crash in PF...
     parser_xstr_oob_fix.Install();
@@ -599,16 +595,16 @@ void MiscInit()
     // Fix crashes caused by too many records in tbl files
     ammo_tbl_buffer_overflow_fix.Install();
     clutter_tbl_buffer_overflow_fix.Install();
-    strings_tbl_buffer_overflow_fix.Install();
+    localize_add_string_bof_fix.Install();
 
     // Fix killed glass restoration from a save file
     AsmWriter(0x0043604A).nop(5);
-    glass_kill_init_fix.Install();
+    glass_shard_level_init_fix.Install();
 
     // Log error when object cannot be created
     ObjCreate_hook.Install();
 
-    // Use local_player variable for debris distance calculation instead of local_entity
+    // Use local_player variable for debris distance calculation instead of local_player_entity
     // Fixed debris pool being exhausted when local player is dead
     AsmWriter(0x0042A223, 0x0042A232).mov(asm_regs::ecx, {&rf::local_player});
 
@@ -640,10 +636,10 @@ void MiscInit()
     AsmWriter(0x0040DCFC).nop(5);
 
     // Fix ItemCreate null result handling in RFL loading (affects multiplayer only)
-    rfl_load_items_crash_fix.Install();
+    level_load_items_crash_fix.Install();
 
     // Fix col-spheres vs mesh collisions
-    anim_mesh_col_fix.Install();
+    vmesh_col_fix.Install();
 
     // Render held corpse in monitor
     render_corpse_in_monitor_patch.Install();
@@ -723,7 +719,7 @@ void HandleUrlParam()
         return;
     }
 
-    rf::DcPrintf("Connecting to %s:%d...", host_name.c_str(), port);
+    rf::ConsolePrintf("Connecting to %s:%d...", host_name.c_str(), port);
     auto host = ntohl(reinterpret_cast<in_addr *>(hp->h_addr_list[0])->S_un.S_addr);
 
     rf::NwAddr addr{host, port};

@@ -34,14 +34,14 @@ FunHook<void(int, int)> SendTriggerActivatePacketToAllPlayers_hook{
     },
 };
 
-FunHook<void(rf::TriggerObj*, int32_t, bool)> TriggerActivate_hook{
+FunHook<void(rf::Trigger*, int32_t, bool)> TriggerActivate_hook{
     0x004C0220,
-    [](rf::TriggerObj* trigger, int32_t h_entity, bool skip_movers) {
+    [](rf::Trigger* trigger, int32_t h_entity, bool skip_movers) {
         // Check team
         auto player = rf::GetPlayerFromEntityHandle(h_entity);
         auto trigger_name = trigger->name.CStr();
         if (player && trigger->team != -1 && trigger->team != player->team) {
-            // rf::DcPrintf("Trigger team does not match: %d vs %d (%s)", trigger->team, Player->blue_team,
+            // rf::ConsolePrintf("Trigger team does not match: %d vs %d (%s)", trigger->team, Player->blue_team,
             // trigger_name);
             return;
         }
@@ -50,7 +50,7 @@ FunHook<void(rf::TriggerObj*, int32_t, bool)> TriggerActivate_hook{
         uint8_t ext_flags = trigger_name[0] == '\xAB' ? trigger_name[1] : 0;
         bool is_solo_trigger = (ext_flags & (TRIGGER_SOLO | TRIGGER_TELEPORT)) != 0;
         if (rf::is_multi && rf::is_server && is_solo_trigger && player) {
-            // rf::DcPrintf("Solo/Teleport trigger activated %s", trigger_name);
+            // rf::ConsolePrintf("Solo/Teleport trigger activated %s", trigger_name);
             if (player != rf::local_player) {
                 SendTriggerActivatePacket(player, trigger->uid, h_entity);
                 return;
@@ -66,7 +66,7 @@ FunHook<void(rf::TriggerObj*, int32_t, bool)> TriggerActivate_hook{
         }
 
         // Normal activation
-        // rf::DcPrintf("trigger normal activation %s %d", trigger_name, ext_flags);
+        // rf::ConsolePrintf("trigger normal activation %s %d", trigger_name, ext_flags);
         TriggerActivate_hook.CallTarget(trigger, h_entity, skip_movers);
         g_trigger_solo_player = nullptr;
     },
@@ -75,7 +75,7 @@ FunHook<void(rf::TriggerObj*, int32_t, bool)> TriggerActivate_hook{
 CodeInjection TriggerCheckActivation_patch{
     0x004BFC7D,
     [](auto& regs) {
-        auto trigger = reinterpret_cast<rf::TriggerObj*>(regs.eax);
+        auto trigger = reinterpret_cast<rf::Trigger*>(regs.eax);
         auto trigger_name = trigger->name.CStr();
         uint8_t ext_flags = trigger_name[0] == '\xAB' ? trigger_name[1] : 0;
         bool is_client_side = (ext_flags & TRIGGER_CLIENT_SIDE) != 0;

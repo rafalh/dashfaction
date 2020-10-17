@@ -94,7 +94,7 @@ struct Particle
     int particle_flags;
     int field_5C;
     void (__cdecl *unk_callback)(Vector3 *hit_pos, const Vector3 *vel, Vector3 *normal, float *, int *is_liquid, int *hit_obj_uid);
-    RflRoom *room;
+    GRoom *room;
     ParticleEmitter *emitter;
     Vector3 prev_pos;
 };
@@ -117,7 +117,7 @@ struct ParticleEmitter
     float max_life_secs;
     float min_pradius;
     float max_pradius;
-    RflRoom *room;
+    GRoom *room;
     ParticleCreateData particle_data;
     float max_render_radius;
     float field_A0;
@@ -134,7 +134,7 @@ struct ParticleEmitter
     struct ParticleEmitter *next;
     struct ParticleEmitter *prev;
     ParticleEmitter *next_entity_emitter;
-    Timer spawn_delay_timer;
+    Timestamp spawn_delay_timestamp;
 };
 static_assert(sizeof(ParticleEmitter) == 0x158);
 

@@ -6,7 +6,7 @@
 
 namespace rf
 {
-    struct AnimMesh;
+    struct VMesh;
     struct Player;
 
     struct HudPoint
@@ -103,8 +103,8 @@ namespace rf
         int color_id;
     };
 
-    static auto& chat_fully_visible_timer = AddrAsRef<Timer>(0x006C9C7C);
-    static auto& chat_fade_out_timer = AddrAsRef<Timer>(0x006C9C88);
+    static auto& chat_fully_visible_timer = AddrAsRef<Timestamp>(0x006C9C7C);
+    static auto& chat_fade_out_timer = AddrAsRef<Timestamp>(0x006C9C88);
     static auto& chat_messages = AddrAsRef<ChatMsg[8]>(0x006C9C98);
 
     struct HudPersonasTbl
@@ -116,7 +116,7 @@ namespace rf
         int sound;
         int game_snd_id;
         char message[256];
-        Timer fully_visible_timer;
+        Timestamp fully_visible_timestamp;
     };
 
     static auto& hud_persona_alpha = AddrAsRef<float>(0x00597290);
@@ -126,17 +126,17 @@ namespace rf
     static auto& hud_msg_bg_color = AddrAsRef<Color>(0x006379EC);
     static auto& hud_msg_color = AddrAsRef<Color>(0x006373B4);
     static auto& hud_personas_tbl = AddrAsRef<HudPersonasTbl[10]>(0x006384D0);
-    static auto& hud_persona_image_render_state = AddrAsRef<GrRenderState>(0x01775B18);
+    static auto& hud_persona_image_render_state = AddrAsRef<GrMode>(0x01775B18);
 
     struct WeaponCycle
     {
         int cls_id;
-        AnimMesh *mesh;
-        AnimMesh *fpgun_mesh;
-        int type;
+        VMesh *mesh;
+        VMesh *fpgun_mesh;
+        int category;
     };
 
-    static auto& hud_close_weapon_cycle_timer = AddrAsRef<rf::Timer>(0x007C73B8);
+    static auto& hud_close_weapon_cycle_timer = AddrAsRef<rf::Timestamp>(0x007C73B8);
     static auto& hud_weapon_cycle = AddrAsRef<rf::WeaponCycle[32]>(0x007C71B0);
     static auto& hud_render_weapon_cycle = AddrAsRef<bool>(0x007C7640);
     static auto& hud_weapon_display_off_foley_snd = AddrAsRef<int>(0x007C75D0);

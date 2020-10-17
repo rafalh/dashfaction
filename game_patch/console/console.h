@@ -4,7 +4,7 @@
 #include <patch_common/Traits.h>
 #include <functional>
 #include <optional>
-#include "../rf/debug_console.h"
+#include "../rf/console.h"
 #include "../rf/misc.h"
 
 // Forward declarations
@@ -15,7 +15,7 @@ namespace rf
 
 void ConsoleInit();
 void ConsoleApplyPatches();
-void ConsoleRegisterCommand(rf::DcCommand* cmd);
+void ConsoleRegisterCommand(rf::ConsoleCommand* cmd);
 rf::Player* FindBestMatchingPlayer(const char* name);
 
 class DcInvalidArgTypeError : public std::exception
@@ -26,10 +26,10 @@ class DcRequiredArgMissingError : public std::exception
 
 inline bool ReadArgInternal(unsigned type_flag, bool preserve_case = false)
 {
-    rf::DcGetArg(rf::DC_ARG_ANY, preserve_case);
-    if (rf::dc_arg_type & type_flag)
+    rf::ConsoleGetArg(rf::CONSOLE_ARG_ANY, preserve_case);
+    if (rf::console_arg_type & type_flag)
         return true;
-    if (!(rf::dc_arg_type & rf::DC_ARG_NONE))
+    if (!(rf::console_arg_type & rf::CONSOLE_ARG_NONE))
         throw DcInvalidArgTypeError();
     return false;
 }
@@ -46,47 +46,47 @@ inline T DcReadArg()
 template<>
 inline std::optional<int> DcReadArg()
 {
-    if (!ReadArgInternal(rf::DC_ARG_INT))
+    if (!ReadArgInternal(rf::CONSOLE_ARG_INT))
         return {};
-    return std::optional{rf::dc_int_arg};
+    return std::optional{rf::console_int_arg};
 }
 
 template<>
 inline std::optional<float> DcReadArg()
 {
-    if (!ReadArgInternal(rf::DC_ARG_FLOAT))
+    if (!ReadArgInternal(rf::CONSOLE_ARG_FLOAT))
         return {};
-    return std::optional{rf::dc_float_arg};
+    return std::optional{rf::console_float_arg};
 }
 
 template<>
 inline std::optional<bool> DcReadArg()
 {
-    if (!ReadArgInternal(rf::DC_ARG_TRUE | rf::DC_ARG_FALSE))
+    if (!ReadArgInternal(rf::CONSOLE_ARG_TRUE | rf::CONSOLE_ARG_FALSE))
         return {};
-    bool value = (rf::dc_arg_type & rf::DC_ARG_TRUE) == rf::DC_ARG_TRUE;
+    bool value = (rf::console_arg_type & rf::CONSOLE_ARG_TRUE) == rf::CONSOLE_ARG_TRUE;
     return std::optional{value};
 }
 
 template<>
 inline std::optional<std::string> DcReadArg()
 {
-    if (!ReadArgInternal(rf::DC_ARG_STR))
+    if (!ReadArgInternal(rf::CONSOLE_ARG_STR))
         return {};
-    return std::optional{rf::dc_str_arg};
+    return std::optional{rf::console_str_arg};
 }
 
-class BaseCommand : public rf::DcCommand
+class BaseCommand : public rf::ConsoleCommand
 {
 protected:
     BaseCommand(const char* name, const char* description = nullptr)
     {
-        this->cmd_name = name;
-        this->descr = description;
+        this->name = name;
+        this->help = description;
         this->func = reinterpret_cast<void (*)()>(StaticHandler);
     }
 
-    static void __thiscall StaticHandler(rf::DcCommand* cmd)
+    static void __thiscall StaticHandler(rf::ConsoleCommand* cmd)
     {
         // Note: this cast actually changes the offset taking into account the vtbl existance
         auto cmd2 = static_cast<BaseCommand*>(cmd);
@@ -139,9 +139,9 @@ public:
 private:
     void Handler() override
     {
-        if (rf::dc_run)
+        if (rf::console_run)
             Run();
-        else if (rf::dc_help)
+        else if (rf::console_help)
             Help();
     }
 
@@ -151,18 +151,18 @@ private:
             m_handler_wrapper();
         }
         catch (const DcInvalidArgTypeError&) {
-            rf::DcPrint("Invalid arg type!", nullptr);
+            rf::ConsoleOutput("Invalid arg type!", nullptr);
         }
         catch (const DcRequiredArgMissingError&) {
-            rf::DcPrint("Required arg is missing!", nullptr);
+            rf::ConsoleOutput("Required arg is missing!", nullptr);
         }
     }
 
     void Help()
     {
         if (m_usage_text) {
-            rf::DcPrint(rf::strings::usage, nullptr);
-            rf::DcPrintf("     %s", m_usage_text);
+            rf::ConsoleOutput(rf::strings::usage, nullptr);
+            rf::ConsolePrintf("     %s", m_usage_text);
         }
     }
 };
@@ -170,19 +170,19 @@ private:
 class DcCommandAlias : public BaseCommand
 {
 private:
-    rf::DcCommand& m_target_cmd;
+    rf::ConsoleCommand& m_target_cmd;
 
 public:
-    DcCommandAlias(const char* name, rf::DcCommand& target_cmd) : BaseCommand(name), m_target_cmd(target_cmd) {}
+    DcCommandAlias(const char* name, rf::ConsoleCommand& target_cmd) : BaseCommand(name), m_target_cmd(target_cmd) {}
 
 private:
     void Handler() override
     {
-        auto handler_fun = reinterpret_cast<void(__thiscall *)(rf::DcCommand*)>(m_target_cmd.func);
+        auto handler_fun = reinterpret_cast<void(__thiscall *)(rf::ConsoleCommand*)>(m_target_cmd.func);
         handler_fun(&m_target_cmd);
     }
 };
 
 constexpr int CMD_LIMIT = 256;
 
-extern rf::DcCommand* g_commands_buffer[CMD_LIMIT];
+extern rf::ConsoleCommand* g_commands_buffer[CMD_LIMIT];

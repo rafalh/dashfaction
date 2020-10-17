@@ -374,13 +374,13 @@ DcCommand2 download_level_cmd{
         }
         auto level_info_opt = FetchLevelInfo(filename.c_str());
         if (!level_info_opt) {
-            rf::DcPrintf("Level has not found in FactionFiles database!");
+            rf::ConsolePrintf("Level has not found in FactionFiles database!");
         }
         else if (g_download_in_progress) {
-            rf::DcPrintf("Another level is currently being downloaded!");
+            rf::ConsolePrintf("Another level is currently being downloaded!");
         }
         else {
-            rf::DcPrintf("Downloading level %s by %s", level_info_opt.value().name.c_str(),
+            rf::ConsolePrintf("Downloading level %s by %s", level_info_opt.value().name.c_str(),
                 level_info_opt.value().author.c_str());
             g_level_info = level_info_opt.value();
             StartLevelDownload();
@@ -418,23 +418,23 @@ void RenderDownloadProgress()
     if (cx_progress > cx)
         cx_progress = cx;
 
-    int x = (rf::GrGetMaxWidth() - cx) / 2;
-    int y = rf::GrGetMaxHeight() - 50;
+    int x = (rf::GrScreenWidth() - cx) / 2;
+    int y = rf::GrScreenHeight() - 50;
     int cy_font = rf::GrGetFontHeight(-1);
 
     if (cx_progress > 0) {
-        rf::GrSetColor(0x80, 0x80, 0, 0x80);
+        rf::GrSetColorRgba(0x80, 0x80, 0, 0x80);
         rf::GrRect(x, y, cx_progress, cy);
     }
 
     if (cx > cx_progress) {
-        rf::GrSetColor(0, 0, 0x60, 0x80);
+        rf::GrSetColorRgba(0, 0, 0x60, 0x80);
         rf::GrRect(x + cx_progress, y, cx - cx_progress, cy);
     }
 
-    rf::GrSetColor(0, 0xFF, 0, 0x80);
+    rf::GrSetColorRgba(0, 0xFF, 0, 0x80);
     auto text = StringFormat("Downloading: %.2f MB / %.2f MB", g_level_bytes_downloaded / 1024.0f / 1024.0f,
                              g_level_info.size_in_bytes / 1024.0f / 1024.0f);
     rf::GrStringAligned(rf::GR_ALIGN_CENTER, x + cx / 2, y + cy / 2 - cy_font / 2, text.c_str(), -1,
-                        rf::gr_string_state);
+                        rf::gr_string_mode);
 }

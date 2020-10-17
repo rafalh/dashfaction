@@ -1,7 +1,7 @@
 #include "../console/console.h"
 #include "server_internal.h"
 #include "../rf/network.h"
-#include "../rf/game_seq.h"
+#include "../rf/gameseq.h"
 
 void ExtendRoundTime(int minutes)
 {
@@ -37,7 +37,7 @@ void LoadPrevLevel()
 bool ValidateIsServer()
 {
     if (!rf::is_server) {
-        rf::DcPrint("Command can be only executed on server", nullptr);
+        rf::ConsoleOutput("Command can be only executed on server", nullptr);
         return false;
     }
     return true;
@@ -45,8 +45,8 @@ bool ValidateIsServer()
 
 bool ValidateNotLimbo()
 {
-    if (rf::GameSeqGetState() != rf::GS_IN_GAME) {
-        rf::DcPrint("Command can not be used between rounds", nullptr);
+    if (rf::GameSeqGetState() != rf::GS_GAMEPLAY) {
+        rf::ConsoleOutput("Command can not be used between rounds", nullptr);
         return false;
     }
     return true;

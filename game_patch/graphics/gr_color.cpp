@@ -102,11 +102,11 @@ struct ChannelIndexTrait
     static constexpr unsigned index = INDEX;
 };
 
-template<rf::BmPixelFormat PF>
+template<rf::BmFormat PF>
 struct PixelFormatTrait;
 
 template<>
-struct PixelFormatTrait<rf::BMPF_ARGB_8888>
+struct PixelFormatTrait<rf::BM_FORMAT_ARGB_8888>
 {
     using Pixel = uint32_t;
     using PaletteEntry = void;
@@ -118,7 +118,7 @@ struct PixelFormatTrait<rf::BMPF_ARGB_8888>
 };
 
 template<>
-struct PixelFormatTrait<rf::BMPF_RGB_888>
+struct PixelFormatTrait<rf::BM_FORMAT_RGB_888>
 {
     using Pixel = uint8_t[3];
     using PaletteEntry = void;
@@ -130,7 +130,7 @@ struct PixelFormatTrait<rf::BMPF_RGB_888>
 };
 
 template<>
-struct PixelFormatTrait<rf::BMPF_ARGB_1555>
+struct PixelFormatTrait<rf::BM_FORMAT_ARGB_1555>
 {
     using Pixel = uint16_t;
     using PaletteEntry = void;
@@ -142,7 +142,7 @@ struct PixelFormatTrait<rf::BMPF_ARGB_1555>
 };
 
 template<>
-struct PixelFormatTrait<rf::BMPF_RGB_565>
+struct PixelFormatTrait<rf::BM_FORMAT_RGB_565>
 {
     using Pixel = uint16_t;
     using PaletteEntry = void;
@@ -154,7 +154,7 @@ struct PixelFormatTrait<rf::BMPF_RGB_565>
 };
 
 template<>
-struct PixelFormatTrait<rf::BMPF_ARGB_4444>
+struct PixelFormatTrait<rf::BM_FORMAT_ARGB_4444>
 {
     using Pixel = uint16_t;
     using PaletteEntry = void;
@@ -166,7 +166,7 @@ struct PixelFormatTrait<rf::BMPF_ARGB_4444>
 };
 
 template<>
-struct PixelFormatTrait<rf::BMPF_A_8>
+struct PixelFormatTrait<rf::BM_FORMAT_A_8>
 {
     using Pixel = uint8_t;
     using PaletteEntry = void;
@@ -178,7 +178,7 @@ struct PixelFormatTrait<rf::BMPF_A_8>
 };
 
 template<>
-struct PixelFormatTrait<rf::BMPF_BGR_888_INDEXED>
+struct PixelFormatTrait<rf::BM_FORMAT_BGR_888_INDEXED>
 {
     using Pixel = uint8_t;
     using PaletteEntry = uint8_t[3];
@@ -190,7 +190,7 @@ struct PixelFormatTrait<rf::BMPF_BGR_888_INDEXED>
 };
 
 template<>
-struct PixelFormatTrait<rf::BMPF_BGR_888>
+struct PixelFormatTrait<rf::BM_FORMAT_BGR_888>
 {
     using Pixel = uint8_t[3];
     using PaletteEntry = void;
@@ -201,7 +201,7 @@ struct PixelFormatTrait<rf::BMPF_BGR_888>
     using Blue  = ChannelIndexTrait<8, 2>;
 };
 
-template<rf::BmPixelFormat FMT>
+template<rf::BmFormat FMT>
 struct PixelColor
 {
     ColorChannel<PixelFormatTrait<FMT>::Alpha::bits> a;
@@ -209,7 +209,7 @@ struct PixelColor
     ColorChannel<PixelFormatTrait<FMT>::Green::bits> g;
     ColorChannel<PixelFormatTrait<FMT>::Blue::bits> b;
 
-    template<rf::BmPixelFormat PF2>
+    template<rf::BmFormat PF2>
     operator PixelColor<PF2>() const
     {
         return PixelColor<PF2>{a, r, g, b};
@@ -236,7 +236,7 @@ struct PixelColor
     }
 };
 
-template<rf::BmPixelFormat PF>
+template<rf::BmFormat PF>
 class PixelsReader
 {
     using PFT = PixelFormatTrait<PF>;
@@ -287,7 +287,7 @@ public:
     }
 };
 
-template<rf::BmPixelFormat PF>
+template<rf::BmFormat PF>
 class PixelsWriter
 {
     using PFT = PixelFormatTrait<PF>;
@@ -333,7 +333,7 @@ public:
     }
 };
 
-template<rf::BmPixelFormat SRC_FMT, rf::BmPixelFormat DST_FMT>
+template<rf::BmFormat SRC_FMT, rf::BmFormat DST_FMT>
 class SurfacePixelFormatConverter
 {
     const uint8_t* src_ptr_;
@@ -391,47 +391,47 @@ public:
     }
 };
 
-template<rf::BmPixelFormat FMT>
+template<rf::BmFormat FMT>
 struct PixelFormatHolder
 {
-    static constexpr rf::BmPixelFormat value = FMT;
+    static constexpr rf::BmFormat value = FMT;
 };
 
 template<typename F>
-void CallWithPixelFormat(rf::BmPixelFormat pixel_fmt, F handler)
+void CallWithPixelFormat(rf::BmFormat pixel_fmt, F handler)
 {
     switch (pixel_fmt) {
-        case rf::BMPF_ARGB_8888:
-            handler(PixelFormatHolder<rf::BMPF_ARGB_8888>());
+        case rf::BM_FORMAT_ARGB_8888:
+            handler(PixelFormatHolder<rf::BM_FORMAT_ARGB_8888>());
             return;
-        case rf::BMPF_RGB_888:
-            handler(PixelFormatHolder<rf::BMPF_RGB_888>());
+        case rf::BM_FORMAT_RGB_888:
+            handler(PixelFormatHolder<rf::BM_FORMAT_RGB_888>());
             return;
-        case rf::BMPF_RGB_565:
-            handler(PixelFormatHolder<rf::BMPF_RGB_565>());
+        case rf::BM_FORMAT_RGB_565:
+            handler(PixelFormatHolder<rf::BM_FORMAT_RGB_565>());
             return;
-        case rf::BMPF_ARGB_4444:
-            handler(PixelFormatHolder<rf::BMPF_ARGB_4444>());
+        case rf::BM_FORMAT_ARGB_4444:
+            handler(PixelFormatHolder<rf::BM_FORMAT_ARGB_4444>());
             return;
-        case rf::BMPF_ARGB_1555:
-            handler(PixelFormatHolder<rf::BMPF_ARGB_1555>());
+        case rf::BM_FORMAT_ARGB_1555:
+            handler(PixelFormatHolder<rf::BM_FORMAT_ARGB_1555>());
             return;
-        case rf::BMPF_A_8:
-            handler(PixelFormatHolder<rf::BMPF_A_8>());
+        case rf::BM_FORMAT_A_8:
+            handler(PixelFormatHolder<rf::BM_FORMAT_A_8>());
             return;
-        case rf::BMPF_BGR_888_INDEXED:
-            handler(PixelFormatHolder<rf::BMPF_BGR_888_INDEXED>());
+        case rf::BM_FORMAT_BGR_888_INDEXED:
+            handler(PixelFormatHolder<rf::BM_FORMAT_BGR_888_INDEXED>());
             return;
-        case rf::BMPF_BGR_888:
-            handler(PixelFormatHolder<rf::BMPF_BGR_888>());
+        case rf::BM_FORMAT_BGR_888:
+            handler(PixelFormatHolder<rf::BM_FORMAT_BGR_888>());
             return;
         default:
             throw std::runtime_error{"Unhandled pixel format"};
     }
 }
 
-bool ConvertSurfacePixelFormat(void* dst_bits_ptr, rf::BmPixelFormat dst_fmt, const void* src_bits_ptr,
-                               rf::BmPixelFormat src_fmt, int width, int height, int dst_pitch, int src_pitch,
+bool ConvertSurfacePixelFormat(void* dst_bits_ptr, rf::BmFormat dst_fmt, const void* src_bits_ptr,
+                               rf::BmFormat src_fmt, int width, int height, int dst_pitch, int src_pitch,
                                const uint8_t* palette)
 {
 #if DEBUG_PERF
@@ -458,16 +458,16 @@ bool ConvertSurfacePixelFormat(void* dst_bits_ptr, rf::BmPixelFormat dst_fmt, co
     }
 }
 
-CodeInjection RflLoadLightmaps_color_conv_patch{
+CodeInjection LevelLoadLightmaps_color_conv_patch{
     0x004ED3E9,
     [](auto& regs) {
         // Always skip original code
         regs.eip = 0x004ED4FA;
 
-        auto lightmap = reinterpret_cast<rf::RflLightmap*>(regs.ebx);
+        auto lightmap = reinterpret_cast<rf::GLightmap*>(regs.ebx);
 
-        rf::GrLockData lock_data;
-        if (!rf::GrLock(lightmap->bm_handle, 0, &lock_data, 2))
+        rf::GrLockInfo lock;
+        if (!rf::GrLock(lightmap->bm_handle, 0, &lock, 2))
             return;
 
     #if 1 // cap minimal color channel value as RF does
@@ -475,54 +475,54 @@ CodeInjection RflLoadLightmaps_color_conv_patch{
             lightmap->buf[i] = std::max(lightmap->buf[i], (uint8_t)(4 << 3)); // 32
     #endif
 
-        bool success = ConvertSurfacePixelFormat(lock_data.bits, lock_data.pixel_format, lightmap->buf,
-            rf::BMPF_BGR_888, lightmap->w, lightmap->h, lock_data.pitch, 3 * lightmap->w, nullptr);
+        bool success = ConvertSurfacePixelFormat(lock.bits, lock.pixel_format, lightmap->buf,
+            rf::BM_FORMAT_BGR_888, lightmap->w, lightmap->h, lock.pitch, 3 * lightmap->w, nullptr);
         if (!success)
-            xlog::error("ConvertBitmapFormat failed for lightmap (dest format %d)", lock_data.pixel_format);
+            xlog::error("ConvertBitmapFormat failed for lightmap (dest format %d)", lock.pixel_format);
 
-        rf::GrUnlock(&lock_data);
+        rf::GrUnlock(&lock);
     },
 };
 
-CodeInjection FaceLightingData_CalculateLightmap_color_conv_patch{
+CodeInjection GSurface_CalculateLightmap_color_conv_patch{
     0x004F2F23,
     [](auto& regs) {
         // Always skip original code
         regs.eip = 0x004F3023;
 
         auto face_light_info = reinterpret_cast<void*>(regs.esi);
-        rf::RflLightmap& lightmap = *StructFieldRef<rf::RflLightmap*>(face_light_info, 12);
-        rf::GrLockData lock_data;
-        if (!rf::GrLock(lightmap.bm_handle, 0, &lock_data, 1)) {
+        rf::GLightmap& lightmap = *StructFieldRef<rf::GLightmap*>(face_light_info, 12);
+        rf::GrLockInfo lock;
+        if (!rf::GrLock(lightmap.bm_handle, 0, &lock, 1)) {
             return;
         }
 
         int offset_y = StructFieldRef<int>(face_light_info, 20);
         int offset_x = StructFieldRef<int>(face_light_info, 16);
         int src_width = lightmap.w;
-        int dst_pixel_size = GetPixelFormatSize(lock_data.pixel_format);
+        int dst_pixel_size = GetPixelFormatSize(lock.pixel_format);
         uint8_t* src_data = lightmap.buf + 3 * (offset_x + offset_y * src_width);
-        uint8_t* dst_data = &lock_data.bits[dst_pixel_size * offset_x + offset_y * lock_data.pitch];
+        uint8_t* dst_data = &lock.bits[dst_pixel_size * offset_x + offset_y * lock.pitch];
         int height = StructFieldRef<int>(face_light_info, 28);
         int src_pitch = 3 * src_width;
-        bool success = ConvertSurfacePixelFormat(dst_data, lock_data.pixel_format, src_data, rf::BMPF_BGR_888,
-            src_width, height, lock_data.pitch, src_pitch);
+        bool success = ConvertSurfacePixelFormat(dst_data, lock.pixel_format, src_data, rf::BM_FORMAT_BGR_888,
+            src_width, height, lock.pitch, src_pitch);
         if (!success)
-            xlog::error("ConvertSurfacePixelFormat failed for geomod (fmt %d)", lock_data.pixel_format);
-        rf::GrUnlock(&lock_data);
+            xlog::error("ConvertSurfacePixelFormat failed for geomod (fmt %d)", lock.pixel_format);
+        rf::GrUnlock(&lock);
     },
 };
 
-CodeInjection FaceLightingData_AllocLightmap_color_conv_patch{
+CodeInjection GSurface_AllocLightmap_color_conv_patch{
     0x004E487B,
     [](auto& regs) {
         // Skip original code
         regs.eip = 0x004E4993;
 
         auto face_light_info = reinterpret_cast<void*>(regs.esi);
-        rf::RflLightmap& lightmap = *StructFieldRef<rf::RflLightmap*>(face_light_info, 12);
-        rf::GrLockData lock_data;
-        if (!rf::GrLock(lightmap.bm_handle, 0, &lock_data, 1)) {
+        rf::GLightmap& lightmap = *StructFieldRef<rf::GLightmap*>(face_light_info, 12);
+        rf::GrLockInfo lock;
+        if (!rf::GrLock(lightmap.bm_handle, 0, &lock, 1)) {
             return;
         }
 
@@ -533,18 +533,18 @@ CodeInjection FaceLightingData_AllocLightmap_color_conv_patch{
         int src_offset = 3 * (offset_x + src_width * StructFieldRef<int>(face_light_info, 20)); // src offset
         uint8_t* src_data = src_offset + src_data_begin;
         int height = StructFieldRef<int>(face_light_info, 28);
-        int dst_pixel_size = GetPixelFormatSize(lock_data.pixel_format);
-        uint8_t* dst_row_ptr = &lock_data.bits[dst_pixel_size * offset_x + offset_y * lock_data.pitch];
+        int dst_pixel_size = GetPixelFormatSize(lock.pixel_format);
+        uint8_t* dst_row_ptr = &lock.bits[dst_pixel_size * offset_x + offset_y * lock.pitch];
         int src_pitch = 3 * src_width;
-        bool success = ConvertSurfacePixelFormat(dst_row_ptr, lock_data.pixel_format, src_data, rf::BMPF_BGR_888,
-                                                 src_width, height, lock_data.pitch, src_pitch);
+        bool success = ConvertSurfacePixelFormat(dst_row_ptr, lock.pixel_format, src_data, rf::BM_FORMAT_BGR_888,
+                                                 src_width, height, lock.pitch, src_pitch);
         if (!success)
-            xlog::error("ConvertBitmapFormat failed for geomod2 (fmt %d)", lock_data.pixel_format);
-        rf::GrUnlock(&lock_data);
+            xlog::error("ConvertBitmapFormat failed for geomod2 (fmt %d)", lock.pixel_format);
+        rf::GrUnlock(&lock);
     },
 };
 
-CodeInjection WaterGenerateTexture_color_conv_patch{
+CodeInjection GProcTexUpdateWater_patch{
     0x004E68D1,
     [](auto& regs) {
         // Skip original code
@@ -552,7 +552,7 @@ CodeInjection WaterGenerateTexture_color_conv_patch{
 
         uintptr_t waveform_info = static_cast<uintptr_t>(regs.esi);
         int src_bm_handle = *reinterpret_cast<int*>(waveform_info + 36);
-        rf::GrLockData src_lock_data, dst_lock_data;
+        rf::GrLockInfo src_lock_data, dst_lock_data;
         if (!rf::GrLock(src_bm_handle, 0, &src_lock_data, 0)) {
             return;
         }
@@ -601,7 +601,7 @@ CodeInjection WaterGenerateTexture_color_conv_patch{
     }
 };
 
-CodeInjection GetAmbientColorFromLightmaps_color_conv_patch{
+CodeInjection GSolid_GetAmbientColorFromLightmap_patch{
     0x004E5CE3,
     [](auto& regs) {
         // Skip original code
@@ -609,12 +609,12 @@ CodeInjection GetAmbientColorFromLightmaps_color_conv_patch{
 
         int x = regs.edi;
         int y = regs.ebx;
-        auto& lm = *reinterpret_cast<rf::RflLightmap*>(regs.esi);
+        auto& lm = *reinterpret_cast<rf::GLightmap*>(regs.esi);
         auto& color = *reinterpret_cast<rf::Color*>(regs.esp + 0x34 - 0x28);
 
         // Optimization: instead of locking the lightmap texture get color data from lightmap pixels stored in RAM
         const uint8_t* src_ptr = lm.buf + (y * lm.w + x) * 3;
-        color.SetRGBA(src_ptr[0], src_ptr[1], src_ptr[2], 255);
+        color.Set(src_ptr[0], src_ptr[1], src_ptr[2], 255);
     },
 };
 
@@ -626,7 +626,7 @@ FunHook<unsigned()> BinkInitDeviceInfo_hook{
 
         if (g_game_config.true_color_textures && g_game_config.res_bpp == 32) {
             static auto& bink_bm_pixel_fmt = AddrAsRef<uint32_t>(0x018871C0);
-            bink_bm_pixel_fmt = rf::BMPF_RGB_888;
+            bink_bm_pixel_fmt = rf::BM_FORMAT_RGB_888;
             bink_flags = BINKSURFACE32;
         }
 
@@ -634,7 +634,7 @@ FunHook<unsigned()> BinkInitDeviceInfo_hook{
     },
 };
 
-CodeInjection MonitorRenderNoise_patch{
+CodeInjection MonitorUpdateStatic_patch{
     0x004123AD,
     [](auto& regs) {
         // Note: default noise generation algohritm is not used because it's not uniform enough in high resolution
@@ -644,7 +644,7 @@ CodeInjection MonitorRenderNoise_patch{
         bool white = noise_buf & 1;
         noise_buf >>= 1;
 
-        auto& lock = *reinterpret_cast<rf::GrLockData*>(regs.esp + 0x2C - 0x20);
+        auto& lock = *reinterpret_cast<rf::GrLockInfo*>(regs.esp + 0x2C - 0x20);
         auto pixel_ptr = reinterpret_cast<char*>(regs.esi);
         int bytes_per_pixel = GetPixelFormatSize(lock.pixel_format);
 
@@ -655,11 +655,11 @@ CodeInjection MonitorRenderNoise_patch{
     },
 };
 
-CodeInjection MonitorRenderOffState_patch{
+CodeInjection MonitorUpdateOff_patch{
     0x00412430,
     [](auto& regs) {
-        auto& lock_data = *reinterpret_cast<rf::GrLockData*>(regs.esp + 0x34 - 0x20);
-        regs.ecx = lock_data.height * lock_data.pitch;
+        auto& lock = *reinterpret_cast<rf::GrLockInfo*>(regs.esp + 0x34 - 0x20);
+        regs.ecx = lock.height * lock.pitch;
         regs.eip = 0x0041243F;
     },
 };
@@ -680,21 +680,21 @@ void GrColorInit()
     }
 
     // lightmaps
-    RflLoadLightmaps_color_conv_patch.Install();
+    LevelLoadLightmaps_color_conv_patch.Install();
     // geomod
-    FaceLightingData_CalculateLightmap_color_conv_patch.Install();
-    FaceLightingData_AllocLightmap_color_conv_patch.Install();
+    GSurface_CalculateLightmap_color_conv_patch.Install();
+    GSurface_AllocLightmap_color_conv_patch.Install();
     // water
     AsmWriter(0x004E68B0, 0x004E68B6).nop();
-    WaterGenerateTexture_color_conv_patch.Install();
+    GProcTexUpdateWater_patch.Install();
     // ambient color
-    GetAmbientColorFromLightmaps_color_conv_patch.Install();
+    GSolid_GetAmbientColorFromLightmap_patch.Install();
     // fix pixel format for lightmaps
-    WriteMem<u8>(0x004F5EB8 + 1, rf::BMPF_RGB_888);
+    WriteMem<u8>(0x004F5EB8 + 1, rf::BM_FORMAT_RGB_888);
 
     // monitor noise
-    MonitorRenderNoise_patch.Install();
+    MonitorUpdateStatic_patch.Install();
     // monitor off state
-    MonitorRenderOffState_patch.Install();
+    MonitorUpdateOff_patch.Install();
 
 }

@@ -54,7 +54,7 @@ FunHook<void()> mouse_eval_deltas_di_hook{
 
         // center cursor if in game
         if (rf::keep_mouse_centered) {
-            POINT pt{rf::GrGetMaxWidth() / 2, rf::GrGetMaxHeight() / 2};
+            POINT pt{rf::GrScreenWidth() / 2, rf::GrScreenHeight() / 2};
             ClientToScreen(rf::main_wnd, &pt);
             SetCursorPos(pt.x, pt.y);
         }
@@ -87,15 +87,15 @@ DcCommand2 input_mode_cmd{
 
         if (g_game_config.direct_input) {
             if (!SetDirectInputEnabled(g_game_config.direct_input)) {
-                rf::DcPrintf("Failed to initialize DirectInput");
+                rf::ConsolePrintf("Failed to initialize DirectInput");
             }
             else {
                 SetDirectInputEnabled(rf::keep_mouse_centered);
-                rf::DcPrintf("DirectInput is enabled");
+                rf::ConsolePrintf("DirectInput is enabled");
             }
         }
         else
-            rf::DcPrintf("DirectInput is disabled");
+            rf::ConsolePrintf("DirectInput is disabled");
     },
     "Toggles input mode",
 };
@@ -106,9 +106,9 @@ DcCommand2 ms_cmd{
         if (value_opt) {
             float value = value_opt.value();
             value = std::clamp(value, 0.0f, 1.0f);
-            rf::local_player->config.controls.mouse_sensitivity = value;
+            rf::local_player->settings.controls.mouse_sensitivity = value;
         }
-        rf::DcPrintf("Mouse sensitivity: %.4f", rf::local_player->config.controls.mouse_sensitivity);
+        rf::ConsolePrintf("Mouse sensitivity: %.4f", rf::local_player->settings.controls.mouse_sensitivity);
     },
     "Sets mouse sensitivity",
     "ms <value>",
@@ -237,7 +237,7 @@ DcCommand2 linear_pitch_cmd{
 
         g_game_config.linear_pitch = !g_game_config.linear_pitch;
         g_game_config.save();
-        rf::DcPrintf("Linear pitch is %s", g_game_config.linear_pitch ? "enabled" : "disabled");
+        rf::ConsolePrintf("Linear pitch is %s", g_game_config.linear_pitch ? "enabled" : "disabled");
     },
     "Toggles linear pitch angle",
 };

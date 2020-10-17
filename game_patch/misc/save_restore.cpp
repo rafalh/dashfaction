@@ -69,13 +69,13 @@ FunHook<void(rf::LevelSaveData*)> SaveRestoreSerializeAllObjects_hook{
     },
 };
 
-FunHook<void(rf::Object*)> RememberLevelLoadTakenObjsAnimMeshes_hook{
+FunHook<void(rf::Object*)> RememberLevelLoadTakenObjsMeshes_hook{
     0x004B5660,
     [](rf::Object *obj) {
         auto& num_level_load_taken_objs = AddrAsRef<int>(0x00856058);
         // Note: uid -999 belongs to local player entity and it must be preserved
         if (num_level_load_taken_objs < 23 || obj->uid == -999) {
-            RememberLevelLoadTakenObjsAnimMeshes_hook.CallTarget(obj);
+            RememberLevelLoadTakenObjsMeshes_hook.CallTarget(obj);
         }
         else {
             xlog::warn("Cannot bring object %d to next level", obj->uid);
@@ -96,7 +96,7 @@ CodeInjection corpse_deserialize_all_obj_create_patch{
     [](auto& regs) {
         auto save_data = regs.edi;
         auto stack_frame = regs.esp + 0xD0;
-        auto create_info = AddrAsRef<rf::ObjCreateInfo>(stack_frame - 0xA4);
+        auto create_info = AddrAsRef<rf::ObjectCreateInfo>(stack_frame - 0xA4);
         auto entity_cls_id = AddrAsRef<int>(save_data + 0x144);
         // Create entity before creating the corpse to make sure entity action animations are fully loaded
         // This is needed to make sure pose_action_anim points to a valid animation
@@ -146,7 +146,7 @@ void ApplySaveRestorePatches()
     SaveRestoreSerializeAllObjects_hook.Install();
 
     // Fix buffer overflow during level load if there are more than 24 objects in current room
-    RememberLevelLoadTakenObjsAnimMeshes_hook.Install();
+    RememberLevelLoadTakenObjsMeshes_hook.Install();
 
     // Fix memory leak on quick save
     quick_save_mem_leak_fix.Install();

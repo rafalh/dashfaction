@@ -1,7 +1,7 @@
 #include <string_view>
 #include "../rf/player.h"
 #include "../rf/network.h"
-#include "../rf/game_seq.h"
+#include "../rf/gameseq.h"
 #include "server_internal.h"
 #include "../console/console.h"
 #include "../multi/network.h"
@@ -357,7 +357,7 @@ public:
             return false;
         }
 
-        if (!vote->IsAllowedInLimboState() && rf::GameSeqGetState() != rf::GS_IN_GAME) {
+        if (!vote->IsAllowedInLimboState() && rf::GameSeqGetState() != rf::GS_GAMEPLAY) {
             SendChatLinePacket("Vote cannot be started now!", source);
             return false;
         }

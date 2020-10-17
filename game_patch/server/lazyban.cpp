@@ -1,7 +1,7 @@
 #include "server_internal.h"
 #include "../console/console.h"
 #include "../rf/network.h"
-#include "../rf/debug_console.h"
+#include "../rf/console.h"
 #include "../rf/player.h"
 #include <patch_common/AsmWriter.h>
 #include <patch_common/CallHook.h>
@@ -47,24 +47,24 @@ void ProcessDelayedKicks()
 void BanCmdHandlerHook()
 {
     if (rf::is_multi && rf::is_server) {
-        if (rf::dc_run) {
-            rf::DcGetArg(rf::DC_ARG_STR, true);
-            rf::Player* player = FindBestMatchingPlayer(rf::dc_str_arg);
+        if (rf::console_run) {
+            rf::ConsoleGetArg(rf::CONSOLE_ARG_STR, true);
+            rf::Player* player = FindBestMatchingPlayer(rf::console_str_arg);
 
             if (player) {
                 if (player != rf::local_player) {
-                    rf::DcPrintf(rf::strings::banning_player, player->name.CStr());
+                    rf::ConsolePrintf(rf::strings::banning_player, player->name.CStr());
                     rf::BanIp(player->nw_data->addr);
                     KickPlayerDelayed(player);
                 }
                 else
-                    rf::DcPrintf("You cannot ban yourself!");
+                    rf::ConsolePrintf("You cannot ban yourself!");
             }
         }
 
-        if (rf::dc_help) {
-            rf::DcPrint(rf::strings::usage, nullptr);
-            rf::DcPrintf("     ban <%s>", rf::strings::player_name);
+        if (rf::console_help) {
+            rf::ConsoleOutput(rf::strings::usage, nullptr);
+            rf::ConsolePrintf("     ban <%s>", rf::strings::player_name);
         }
     }
 }
@@ -72,23 +72,23 @@ void BanCmdHandlerHook()
 void KickCmdHandlerHook()
 {
     if (rf::is_multi && rf::is_server) {
-        if (rf::dc_run) {
-            rf::DcGetArg(rf::DC_ARG_STR, 1);
-            rf::Player* player = FindBestMatchingPlayer(rf::dc_str_arg);
+        if (rf::console_run) {
+            rf::ConsoleGetArg(rf::CONSOLE_ARG_STR, 1);
+            rf::Player* player = FindBestMatchingPlayer(rf::console_str_arg);
 
             if (player) {
                 if (player != rf::local_player) {
-                    rf::DcPrintf(rf::strings::kicking_player, player->name.CStr());
+                    rf::ConsolePrintf(rf::strings::kicking_player, player->name.CStr());
                     KickPlayerDelayed(player);
                 }
                 else
-                    rf::DcPrintf("You cannot kick yourself!");
+                    rf::ConsolePrintf("You cannot kick yourself!");
             }
         }
 
-        if (rf::dc_help) {
-            rf::DcPrint(rf::strings::usage, nullptr);
-            rf::DcPrintf("     kick <%s>", rf::strings::player_name);
+        if (rf::console_help) {
+            rf::ConsoleOutput(rf::strings::usage, nullptr);
+            rf::ConsolePrintf("     kick <%s>", rf::strings::player_name);
         }
     }
 }
@@ -99,7 +99,7 @@ DcCommand2 unban_last_cmd{
         if (rf::is_multi && rf::is_server) {
             rf::BanlistEntry* entry = rf::banlist_last_entry;
             if (entry != &rf::banlist_null_entry) {
-                rf::DcPrintf("%s has been unbanned!", entry->ip_addr);
+                rf::ConsolePrintf("%s has been unbanned!", entry->ip_addr);
                 entry->next->prev = entry->prev;
                 entry->prev->next = entry->next;
                 rf::Free(entry);

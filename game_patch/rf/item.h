@@ -4,25 +4,25 @@
 
 namespace rf
 {
-    struct ItemCls;
+    struct ItemInfo;
 
-    struct ItemObj : Object
+    struct Item : Object
     {
-        struct ItemObj *next;
-        struct ItemObj *prev;
-        ItemCls *cls;
-        int cls_id;
+        struct Item *next;
+        struct Item *prev;
+        ItemInfo *info;
+        int info_index;
         String script_name;
         int count;
         int field_2A8;
         int respawn_time;
-        Timer respawn_timer;
+        Timestamp respawn_timestamp;
         float alpha;
         float create_time;
         int item_flags;
         float spin_angle;
     };
-    static_assert(sizeof(ItemObj) == 0x2C4);
+    static_assert(sizeof(Item) == 0x2C4);
 
-    static auto& item_obj_list = AddrAsRef<rf::ItemObj>(0x00642DD8);
+    static auto& item_list = AddrAsRef<rf::Item>(0x00642DD8);
 }

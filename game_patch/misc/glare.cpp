@@ -15,19 +15,19 @@
 #include "../main.h"
 
 static std::vector<rf::Object*> g_objects_to_check;
-static std::vector<rf::MoverObj*> g_movers_to_check;
+static std::vector<rf::MoverBrush*> g_movers_to_check;
 
-static bool GlareCollideObject(rf::GlareObj* glare, rf::Object* obj, const rf::Vector3& eye_pos)
+static bool GlareCollideObject(rf::Glare* glare, rf::Object* obj, const rf::Vector3& eye_pos)
 {
     if (!(obj->obj_flags & rf::OF_WAS_RENDERED)
-        || !obj->anim_mesh
-        || (obj == rf::local_entity && rf::local_player->camera && rf::local_player->camera->type == rf::CAM_FIRST_PERSON)
-        || glare->owner_entity_unk_handle == obj->handle) {
+        || !obj->vmesh
+        || (obj == rf::local_player_entity && rf::local_player->cam && rf::local_player->cam->mode == rf::CAM_FIRST_PERSON)
+        || glare->parent_handle == obj->handle) {
         return false;
     }
 
     // Skip local entity vehicle
-    if (rf::EntityIsAttachedToVehicle(rf::local_entity) && obj->handle == rf::local_entity->parent_handle) {
+    if (rf::EntityIsAttachedToVehicle(rf::local_player_entity) && obj->handle == rf::local_player_entity->host_handle) {
         return false;
     }
 
@@ -35,42 +35,42 @@ static bool GlareCollideObject(rf::GlareObj* glare, rf::Object* obj, const rf::V
     if (rf::CutsceneIsActive() && obj->type == rf::OT_ENTITY) {
         // Fix glares/coronas being visible through characters during cutscenes
         rf::Vector3 root_bone_pos;
-        rf::EntityGetRootBonePos(static_cast<rf::EntityObj*>(obj), root_bone_pos);
-        rf::Vector3 aabb_min = root_bone_pos - obj->phys_info.radius;
-        rf::Vector3 aabb_max = root_bone_pos + obj->phys_info.radius;
-        if (!rf::CollideBoxSegment(aabb_min, aabb_max, glare->pos, eye_pos, &hit_pt)) {
+        rf::ObjectFindRootBonePos(static_cast<rf::Entity*>(obj), root_bone_pos);
+        rf::Vector3 aabb_min = root_bone_pos - obj->p_data.radius;
+        rf::Vector3 aabb_max = root_bone_pos + obj->p_data.radius;
+        if (!rf::IxLineSegmentBoundingBox(aabb_min, aabb_max, glare->pos, eye_pos, &hit_pt)) {
             return false;
         }
     }
     else {
-        if (!rf::CollideBoxSegment(obj->phys_info.aabb_min, obj->phys_info.aabb_max, glare->pos, eye_pos, &hit_pt)) {
+        if (!rf::IxLineSegmentBoundingBox(obj->p_data.bbox_min, obj->p_data.bbox_max, glare->pos, eye_pos, &hit_pt)) {
             return false;
         }
     }
 
-    rf::ModelCollideInput col_in;
-    rf::ModelCollideOutput col_out;
+    rf::VMeshCollisionInput col_in;
+    rf::VMeshCollisionOutput col_out;
     col_in.flags = 1;
     col_in.start_pos = eye_pos;
     col_in.dir = glare->pos - eye_pos;
     col_in.mesh_pos = obj->pos;
     col_in.mesh_orient = obj->orient;
     col_in.radius = 0.0f;
-    return rf::ModelCollide(obj->anim_mesh, &col_in, &col_out, true);
+    return rf::VMeshCollide(obj->vmesh, &col_in, &col_out, true);
 }
 
-static bool GlareCollideMover(rf::GlareObj* glare, rf::MoverObj* mover, const rf::Vector3& eye_pos)
+static bool GlareCollideMover(rf::Glare* glare, rf::MoverBrush* mover, const rf::Vector3& eye_pos)
 {
     if (!(mover->obj_flags & rf::OF_WAS_RENDERED)) {
         return false;
     }
 
     rf::Vector3 hit_pt;
-    if (!rf::CollideBoxSegment(mover->phys_info.aabb_min, mover->phys_info.aabb_max, glare->pos, eye_pos, &hit_pt)) {
+    if (!rf::IxLineSegmentBoundingBox(mover->p_data.bbox_min, mover->p_data.bbox_max, glare->pos, eye_pos, &hit_pt)) {
         return false;
     }
-    rf::GeometryCollideInput col_in;
-    rf::GeometryCollideOutput col_out;
+    rf::GCollisionInput col_in;
+    rf::GCollisionOutput col_out;
     col_in.start_pos = eye_pos;
     col_in.len = glare->pos - eye_pos;
     col_in.flags = 1;
@@ -90,32 +90,32 @@ FunHook<void(bool)> GlareRenderAllCorona_hook{
         }
 
         g_objects_to_check.clear();
-        for (auto& entity: DoublyLinkedList{rf::entity_obj_list}) {
+        for (auto& entity: DoublyLinkedList{rf::entity_list}) {
             if (entity.obj_flags & rf::OF_WAS_RENDERED) {
                 g_objects_to_check.push_back(&entity);
             }
         }
 
-        for (auto& corpse: DoublyLinkedList{rf::corpse_obj_list}) {
+        for (auto& corpse: DoublyLinkedList{rf::corpse_list}) {
             if (corpse.obj_flags & rf::OF_WAS_RENDERED) {
                 g_objects_to_check.push_back(&corpse);
             }
         }
 
-        for (auto& clutter: DoublyLinkedList{rf::clutter_obj_list}) {
+        for (auto& clutter: DoublyLinkedList{rf::clutter_list}) {
             if (clutter.obj_flags & rf::OF_WAS_RENDERED) {
                 g_objects_to_check.push_back(&clutter);
             }
         }
 
-        for (auto& item: DoublyLinkedList{rf::item_obj_list}) {
+        for (auto& item: DoublyLinkedList{rf::item_list}) {
             if (item.obj_flags & rf::OF_WAS_RENDERED) {
                 g_objects_to_check.push_back(&item);
             }
         }
 
         g_movers_to_check.clear();
-        for (auto& mover: DoublyLinkedList{rf::mover_obj_list}) {
+        for (auto& mover: DoublyLinkedList{rf::mover_brush_list}) {
             if (mover.obj_flags & rf::OF_WAS_RENDERED) {
                 g_movers_to_check.push_back(&mover);
             }
@@ -125,11 +125,11 @@ FunHook<void(bool)> GlareRenderAllCorona_hook{
     },
 };
 
-FunHook<bool(rf::GlareObj* glare, const rf::Vector3& eye_pos)> GlareIsInView_hook{
+FunHook<bool(rf::Glare* glare, const rf::Vector3& eye_pos)> GlareIsInView_hook{
     0x00414E00,
-    [](rf::GlareObj* glare, const rf::Vector3& eye_pos) {
-        rf::GeometryCollideInput geo_collide_in;
-        rf::GeometryCollideOutput geo_collide_out;
+    [](rf::Glare* glare, const rf::Vector3& eye_pos) {
+        rf::GCollisionInput geo_collide_in;
+        rf::GCollisionOutput geo_collide_out;
         geo_collide_in.start_pos = eye_pos;
         geo_collide_in.len = glare->pos - eye_pos;
         geo_collide_in.flags = 5;
@@ -152,7 +152,7 @@ FunHook<bool(rf::GlareObj* glare, const rf::Vector3& eye_pos)> GlareIsInView_hoo
         }
 
         if (glare->last_covering_objh != -1) {
-            auto obj = rf::ObjGetByHandle(glare->last_covering_objh);
+            auto obj = rf::ObjFromHandle(glare->last_covering_objh);
             if (obj && GlareCollideObject(glare, obj, eye_pos)) {
                 return false;
             }
@@ -183,14 +183,14 @@ FunHook<bool(rf::GlareObj* glare, const rf::Vector3& eye_pos)> GlareIsInView_hoo
     },
 };
 
-FunHook<void(rf::GlareObj*, int)> GlareRenderCorona_hook{
+FunHook<void(rf::Glare*, int)> GlareRenderCorona_hook{
     0x00414860,
-    [](rf::GlareObj *glare, int player_idx) {
+    [](rf::Glare *glare, int player_idx) {
         // check if corona is in view using dynamic radius dedicated for this effect
         // Note: object radius matches volumetric effect size and can be very large so this check helps
         // to speed up rendering
         auto& current_radius = glare->current_radius[player_idx];
-        if (!rf::GrIsSphereOutsideView(glare->pos, current_radius)) {
+        if (!rf::GrCullSphere(glare->pos, current_radius)) {
             GlareRenderCorona_hook.CallTarget(glare, player_idx);
         }
     },

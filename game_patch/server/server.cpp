@@ -37,28 +37,28 @@ const char* g_rcon_cmd_whitelist[] = {
 ServerAdditionalConfig g_additional_server_config;
 std::string g_prev_level;
 
-void ParseVoteConfig(const char* vote_name, VoteConfig& config, rf::StrParser& parser)
+void ParseVoteConfig(const char* vote_name, VoteConfig& config, rf::Parser& parser)
 {
     std::string vote_option_name = StringFormat("$DF %s:", vote_name);
     if (parser.OptionalString(vote_option_name.c_str())) {
-        config.enabled = parser.GetBool();
-        rf::DcPrintf("DF %s: %s", vote_name, config.enabled ? "true" : "false");
+        config.enabled = parser.ParseBool();
+        rf::ConsolePrintf("DF %s: %s", vote_name, config.enabled ? "true" : "false");
 
         // if (parser.OptionalString("+Min Voters:")) {
-        //     config.min_voters = parser.GetUInt();
+        //     config.min_voters = parser.ParseUInt();
         // }
 
         // if (parser.OptionalString("+Min Percentage:")) {
-        //     config.min_percentage = parser.GetUInt();
+        //     config.min_percentage = parser.ParseUInt();
         // }
 
         if (parser.OptionalString("+Time Limit:")) {
-            config.time_limit_seconds = parser.GetUInt();
+            config.time_limit_seconds = parser.ParseUInt();
         }
     }
 }
 
-void LoadAdditionalServerConfig(rf::StrParser& parser)
+void LoadAdditionalServerConfig(rf::Parser& parser)
 {
     ParseVoteConfig("Vote Kick", g_additional_server_config.vote_kick, parser);
     ParseVoteConfig("Vote Level", g_additional_server_config.vote_level, parser);
@@ -67,58 +67,58 @@ void LoadAdditionalServerConfig(rf::StrParser& parser)
     ParseVoteConfig("Vote Next", g_additional_server_config.vote_next, parser);
     ParseVoteConfig("Vote Previous", g_additional_server_config.vote_previous, parser);
     if (parser.OptionalString("$DF Spawn Protection Duration:")) {
-        g_additional_server_config.spawn_protection_duration_ms = parser.GetUInt();
+        g_additional_server_config.spawn_protection_duration_ms = parser.ParseUInt();
     }
     if (parser.OptionalString("$DF Hitsounds:")) {
-        g_additional_server_config.hit_sounds.enabled = parser.GetBool();
+        g_additional_server_config.hit_sounds.enabled = parser.ParseBool();
         if (parser.OptionalString("+Sound ID:")) {
-            g_additional_server_config.hit_sounds.sound_id = parser.GetUInt();
+            g_additional_server_config.hit_sounds.sound_id = parser.ParseUInt();
         }
         if (parser.OptionalString("+Rate Limit:")) {
-            g_additional_server_config.hit_sounds.rate_limit = parser.GetUInt();
+            g_additional_server_config.hit_sounds.rate_limit = parser.ParseUInt();
         }
     }
 
     while (parser.OptionalString("$DF Item Replacement:")) {
         rf::String old_item, new_item;
-        parser.GetString(&old_item);
-        parser.GetString(&new_item);
+        parser.ParseString(&old_item);
+        parser.ParseString(&new_item);
         g_additional_server_config.item_replacements.insert({old_item.CStr(), new_item.CStr()});
     }
 
     if (parser.OptionalString("$DF Default Player Weapon:")) {
         rf::String default_weapon;
-        parser.GetString(&default_weapon);
+        parser.ParseString(&default_weapon);
         g_additional_server_config.default_player_weapon = default_weapon.CStr();
 
         if (parser.OptionalString("+Initial Ammo:")) {
-            auto ammo = parser.GetUInt();
+            auto ammo = parser.ParseUInt();
             g_additional_server_config.default_player_weapon_ammo = {ammo};
 
             auto WeaponClsFind = AddrAsRef<int(const char*)>(0x004C81F0);
-            auto weapon_cls_id = WeaponClsFind(g_additional_server_config.default_player_weapon.c_str());
-            if (weapon_cls_id >= 0) {
-                auto& weapon_cls = rf::weapon_classes[weapon_cls_id];
+            auto weapon_type = WeaponClsFind(g_additional_server_config.default_player_weapon.c_str());
+            if (weapon_type >= 0) {
+                auto& weapon_cls = rf::weapon_types[weapon_type];
                 weapon_cls.max_ammo_mp = std::max<int>(weapon_cls.max_ammo_mp, ammo);
             }
         }
     }
 
     if (parser.OptionalString("$DF Require Client Mod:")) {
-        g_additional_server_config.require_client_mod = parser.GetBool();
+        g_additional_server_config.require_client_mod = parser.ParseBool();
     }
 
     if (parser.OptionalString("$DF Player Damage Modifier:")) {
-        g_additional_server_config.player_damage_modifier = parser.GetFloat();
+        g_additional_server_config.player_damage_modifier = parser.ParseFloat();
     }
 
     if (parser.OptionalString("$DF Saving Enabled:")) {
-        g_additional_server_config.saving_enabled = parser.GetBool();
+        g_additional_server_config.saving_enabled = parser.ParseBool();
     }
 
     if (parser.OptionalString("$DF Force Player Character:")) {
         rf::String character_name;
-        parser.GetString(&character_name);
+        parser.ParseString(&character_name);
         int character_num = rf::MultiFindCharacter(character_name.CStr());
         if (character_num != -1) {
             g_additional_server_config.force_player_character = {character_num};
@@ -136,7 +136,7 @@ void LoadAdditionalServerConfig(rf::StrParser& parser)
 CodeInjection dedicated_server_load_config_patch{
     0x0046E216,
     [](auto& regs) {
-        auto& parser = *reinterpret_cast<rf::StrParser*>(regs.esp - 4 + 0x4C0 - 0x470);
+        auto& parser = *reinterpret_cast<rf::Parser*>(regs.esp - 4 + 0x4C0 - 0x470);
         LoadAdditionalServerConfig(parser);
 
         // Insert server name in window title when hosting dedicated server
@@ -166,7 +166,7 @@ void HandleNextMapCommand(rf::Player* player)
 void HandleSaveCommand(rf::Player* player, std::string_view save_name)
 {
     auto& pdata = GetPlayerAdditionalData(player);
-    auto entity = rf::EntityGetByHandle(player->entity_handle);
+    auto entity = rf::EntityFromHandle(player->entity_handle);
     if (entity && g_additional_server_config.saving_enabled) {
         PlayerNetGameSaveData save_data;
         save_data.pos = entity->pos;
@@ -179,20 +179,20 @@ void HandleSaveCommand(rf::Player* player, std::string_view save_name)
 void HandleLoadCommand(rf::Player* player, std::string_view save_name)
 {
     auto& pdata = GetPlayerAdditionalData(player);
-    auto entity = rf::EntityGetByHandle(player->entity_handle);
+    auto entity = rf::EntityFromHandle(player->entity_handle);
     if (entity && g_additional_server_config.saving_enabled && !rf::EntityIsDying(entity)) {
         auto it = pdata.saves.find(std::string{save_name});
         if (it != pdata.saves.end()) {
             auto& save_data = it->second;
-            entity->phys_info.pos = save_data.pos;
-            entity->phys_info.new_pos = save_data.pos;
+            entity->p_data.pos = save_data.pos;
+            entity->p_data.next_pos = save_data.pos;
             entity->pos = save_data.pos;
             entity->orient = save_data.orient;
             if (entity->obj_interp) {
                 entity->obj_interp->Clear();
             }
             rf::SendEntityCreatePacketToAll(entity);
-            pdata.last_teleport_timer.Set(300);
+            pdata.last_teleport_timestamp.Set(300);
             pdata.last_teleport_pos = save_data.pos;
             SendChatLinePacket("Your position has been restored!", player);
         }
@@ -208,20 +208,20 @@ CodeInjection ProcessObjUpdate_set_pos_injection{
         if (!rf::is_server) {
             return;
         }
-        auto& entity = AddrAsRef<rf::EntityObj>(regs.edi);
+        auto& entity = AddrAsRef<rf::Entity>(regs.edi);
         auto& pos = AddrAsRef<rf::Vector3>(regs.esp + 0x9C - 0x60);
         auto player = rf::GetPlayerFromEntityHandle(entity.handle);
         auto& pdata = GetPlayerAdditionalData(player);
-        if (pdata.last_teleport_timer.IsSet()) {
+        if (pdata.last_teleport_timestamp.Valid()) {
             float dist = (pos - pdata.last_teleport_pos).Len();
-            if (!pdata.last_teleport_timer.IsFinished() && dist > 1.0f) {
+            if (!pdata.last_teleport_timestamp.Elapsed() && dist > 1.0f) {
                 // Ignore obj_update packets for some time after restoring the position
                 xlog::trace("ignoring obj_update after teleportation (distance %f)", dist);
                 regs.eip = 0x0047DFF6;
             }
             else {
                 xlog::trace("not ignoring obj_update anymore after teleportation (distance %f)", dist);
-                pdata.last_teleport_timer.Unset();
+                pdata.last_teleport_timestamp.Invalidate();
             }
         }
     },
@@ -309,9 +309,9 @@ void SendHitSoundPacket(rf::Player* target)
     rf::NwSendNotReliablePacket(target->nw_data->addr, &packet, sizeof(packet));
 }
 
-FunHook<float(rf::EntityObj*, float, int, int, int)> EntityTakeDamage_hook{
+FunHook<float(rf::Entity*, float, int, int, int)> EntityTakeDamage_hook{
     0x0041A350,
-    [](rf::EntityObj* entity, float damage, int responsible_entity_handle, int dmg_type, int responsible_entity_uid) {
+    [](rf::Entity* entity, float damage, int responsible_entity_handle, int dmg_type, int responsible_entity_uid) {
         auto damaged_player = rf::GetPlayerFromEntityHandle(entity->handle);
         auto responsible_player = rf::GetPlayerFromEntityHandle(responsible_entity_handle);
         if (damaged_player && responsible_player && damaged_player != responsible_player) {
@@ -355,11 +355,11 @@ CallHook<int(const char*)> find_default_weapon_for_entity_hook{
 
 CallHook<void(rf::Player*, int, int)> give_default_weapon_ammo_hook{
     0x004A4414,
-    [](rf::Player* player, int weapon_cls_id, int ammo) {
+    [](rf::Player* player, int weapon_type, int ammo) {
         if (g_additional_server_config.default_player_weapon_ammo) {
             ammo = g_additional_server_config.default_player_weapon_ammo.value();
         }
-        give_default_weapon_ammo_hook.CallTarget(player, weapon_cls_id, ammo);
+        give_default_weapon_ammo_hook.CallTarget(player, weapon_type, ammo);
     },
 };
 
@@ -380,16 +380,16 @@ FunHook<void(rf::Player*)> spawn_player_sync_ammo_hook{
     [](rf::Player* player) {
         spawn_player_sync_ammo_hook.CallTarget(player);
         // if default player weapon has ammo override sync ammo using additional reload packet
-        if (g_additional_server_config.default_player_weapon_ammo && !rf::IsPlayerEntityInvalid(player)) {
-            rf::EntityObj* entity = rf::EntityGetByHandle(player->entity_handle);
+        if (g_additional_server_config.default_player_weapon_ammo && !rf::PlayerIsDead(player)) {
+            rf::Entity* entity = rf::EntityFromHandle(player->entity_handle);
             RF_ReloadPacket packet;
             packet.header.type = RF_GPT_RELOAD;
             packet.header.size = sizeof(packet) - sizeof(packet.header);
             packet.entity_handle = entity->handle;
-            int weapon_cls_id = entity->ai_info.weapon_cls_id;
-            packet.weapon = weapon_cls_id;
-            packet.clip_ammo = entity->ai_info.clip_ammo[weapon_cls_id];
-            int ammo_type = rf::weapon_classes[weapon_cls_id].ammo_type;
+            int weapon_type = entity->ai_info.current_primary_weapon;
+            packet.weapon = weapon_type;
+            packet.clip_ammo = entity->ai_info.clip_ammo[weapon_type];
+            int ammo_type = rf::weapon_types[weapon_type].ammo_type;
             packet.ammo = entity->ai_info.ammo[ammo_type];
             rf::NwSendReliablePacket(player, reinterpret_cast<uint8_t*>(&packet), sizeof(packet), 0);
         }
@@ -444,9 +444,9 @@ CodeInjection send_ping_time_wrap_fix{
     [](auto& regs) {
         auto& nw_stats = AddrAsRef<rf::NwStats>(regs.esi);
         auto player = AddrAsRef<rf::Player*>(regs.esp + 0xC + 0x4);
-        if (!nw_stats.send_ping_packet_timer.IsSet() || nw_stats.send_ping_packet_timer.IsFinished()) {
+        if (!nw_stats.send_ping_packet_timestamp.Valid() || nw_stats.send_ping_packet_timestamp.Elapsed()) {
             xlog::trace("sending ping");
-            nw_stats.send_ping_packet_timer.Set(3000);
+            nw_stats.send_ping_packet_timestamp.Set(3000);
             rf::PingPlayer(player);
             nw_stats.last_ping_time = rf::TimerGet(1000);
         }
@@ -460,7 +460,7 @@ CodeInjection MultiOnNewPlayer_injection{
         auto player = reinterpret_cast<rf::Player*>(regs.esi);
         in_addr addr;
         addr.S_un.S_addr = ntohl(player->nw_data->addr.ip_addr);
-        rf::DcPrintf("%s%s (%s)", player->name.CStr(),  rf::strings::has_joined, inet_ntoa(addr));
+        rf::ConsolePrintf("%s%s (%s)", player->name.CStr(),  rf::strings::has_joined, inet_ntoa(addr));
         regs.eip = 0x0047B051;
     },
 };
@@ -469,7 +469,7 @@ FunHook<void(rf::Player*)> MultiSpawnPlayerServerSide_hook{
     0x00480820,
     [](rf::Player* player) {
         if (g_additional_server_config.force_player_character) {
-            player->config.mp_character = g_additional_server_config.force_player_character.value();
+            player->settings.mp_character = g_additional_server_config.force_player_character.value();
         }
         MultiSpawnPlayerServerSide_hook.CallTarget(player);
     },
@@ -564,7 +564,7 @@ void ServerOnLimboStateEnter()
     for (auto& player : player_list) {
         auto& pdata = GetPlayerAdditionalData(&player);
         pdata.saves.clear();
-        pdata.last_teleport_timer.Unset();
+        pdata.last_teleport_timestamp.Invalidate();
     }
 }
 

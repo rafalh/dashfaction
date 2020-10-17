@@ -23,7 +23,7 @@ struct PlayerAdditionalData
     int last_hitsound_sent_ms = 0;
     std::map<std::string, PlayerNetGameSaveData> saves;
     rf::Vector3 last_teleport_pos;
-    rf::TimerApp last_teleport_timer;
+    rf::TimestampRealtime last_teleport_timestamp;
 };
 
 void FindPlayer(const StringMatcher& query, std::function<void(rf::Player*)> consumer);

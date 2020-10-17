@@ -67,25 +67,25 @@ public:
         xlog::debug("a_8_format %d", a_8_format_);
     }
 
-    D3DFORMAT select(rf::BmPixelFormat pixel_fmt)
+    D3DFORMAT select(rf::BmFormat pixel_fmt)
     {
         if (static_cast<unsigned>(pixel_fmt) >= 20) {
             return static_cast<D3DFORMAT>(pixel_fmt);
         }
         switch (pixel_fmt) {
-            case rf::BMPF_A_8:
+            case rf::BM_FORMAT_A_8:
                 return a_8_format_;
-            case rf::BMPF_BGR_888_INDEXED:
+            case rf::BM_FORMAT_BGR_888_INDEXED:
                 return rgb_888_format_;
-            case rf::BMPF_RGB_888:
+            case rf::BM_FORMAT_RGB_888:
                 return rgb_888_format_;
-            case rf::BMPF_RGB_565:
+            case rf::BM_FORMAT_RGB_565:
                 return rgb_565_format_;
-            case rf::BMPF_ARGB_1555:
+            case rf::BM_FORMAT_ARGB_1555:
                 return argb_1555_format_;
-            case rf::BMPF_ARGB_8888:
+            case rf::BM_FORMAT_ARGB_8888:
                 return rgba_8888_format_;
-            case rf::BMPF_ARGB_4444:
+            case rf::BM_FORMAT_ARGB_4444:
                 return argb_4444_format_;
             default:
                 return D3DFMT_UNKNOWN;
@@ -148,11 +148,11 @@ size_t GetSurfaceLengthInBytes(int w, int h, D3DFORMAT d3d_fmt)
 }
 
 using GrD3DSetTextureData_Type =
-    int(int, const uint8_t*, const uint8_t*, int, int, rf::BmPixelFormat, rf::GrD3DTextureSection*, int, int, IDirect3DTexture8*);
+    int(int, const uint8_t*, const uint8_t*, int, int, rf::BmFormat, rf::GrD3DTextureSection*, int, int, IDirect3DTexture8*);
 FunHook<GrD3DSetTextureData_Type> gr_d3d_set_texture_data_hook{
     0x0055BA10,
     [](int level, const uint8_t* src_bits_ptr, const uint8_t* palette, int bm_w, int bm_h,
-        rf::BmPixelFormat pixel_fmt, rf::GrD3DTextureSection* section, int tex_w, int tex_h, IDirect3DTexture8* texture) {
+        rf::BmFormat pixel_fmt, rf::GrD3DTextureSection* section, int tex_w, int tex_h, IDirect3DTexture8* texture) {
 
         D3DSURFACE_DESC desc;
         auto hr = texture->GetLevelDesc(level, &desc);
@@ -214,13 +214,13 @@ FunHook<GrD3DSetTextureData_Type> gr_d3d_set_texture_data_hook{
     },
 };
 
-FunHook<int(rf::BmPixelFormat, int, int, int, IDirect3DTexture8**)> gr_d3d_create_vram_texture_hook{
+FunHook<int(rf::BmFormat, int, int, int, IDirect3DTexture8**)> gr_d3d_create_vram_texture_hook{
     0x0055B970,
-    [](rf::BmPixelFormat pixel_fmt, int width, int height, int levels, IDirect3DTexture8** texture_out) {
+    [](rf::BmFormat pixel_fmt, int width, int height, int levels, IDirect3DTexture8** texture_out) {
         D3DFORMAT d3d_format;
         D3DPOOL d3d_pool = D3DPOOL_MANAGED;
         int usage = 0;
-        if (pixel_fmt == rf::BMPF_RENDER_TARGET) {
+        if (pixel_fmt == rf::BM_FORMAT_RENDER_TARGET) {
             xlog::trace("Creating render target texture");
             d3d_format = rf::gr_d3d_pp.BackBufferFormat;
             d3d_pool = D3DPOOL_DEFAULT;
@@ -254,7 +254,7 @@ CodeInjection gr_d3d_create_vram_texture_with_mipmaps_pitch_fix{
     0x0055B820,
     [](auto& regs) {
         auto stack_frame = regs.esp + 0x5C;
-        auto pixel_fmt = AddrAsRef<rf::BmPixelFormat>(stack_frame - 0x30);
+        auto pixel_fmt = AddrAsRef<rf::BmFormat>(stack_frame - 0x30);
         auto& src_bits_ptr = regs.ecx;
         auto& num_total_vram_bytes = regs.ebp;
         int w = regs.esi;
@@ -269,10 +269,10 @@ CodeInjection gr_d3d_create_vram_texture_with_mipmaps_pitch_fix{
     },
 };
 
-FunHook<rf::BmBitmapType(const char*, int*, int*, rf::BmPixelFormat*, int*, int*, int*, int*, int*, int*, int)>
+FunHook<rf::BmType(const char*, int*, int*, rf::BmFormat*, int*, int*, int*, int*, int*, int*, int)>
 bm_read_header_hook{
     0x0050FCB0,
-    [](const char* filename, int* width_out, int* height_out, rf::BmPixelFormat *pixel_fmt_out, int *num_levels_out,
+    [](const char* filename, int* width_out, int* height_out, rf::BmFormat *pixel_fmt_out, int *num_levels_out,
     int *num_levels_external_mips_out, int *num_frames_out, int *fps_out, int *total_bytes_m2v_out,
     int *vbm_ver_out, int a11) {
 
@@ -289,7 +289,7 @@ bm_read_header_hook{
         if (dds_file.Open(dds_filename.c_str()) == 0) {
             xlog::trace("Loading %s", dds_filename.c_str());
             auto bm_type = ReadDdsHeader(dds_file, width_out, height_out, pixel_fmt_out, num_levels_out);
-            if (bm_type != rf::BM_INVALID) {
+            if (bm_type != rf::BM_TYPE_INVALID) {
                 return bm_type;
             }
         }
@@ -302,11 +302,11 @@ bm_read_header_hook{
 
         // Sanity checks
         // Prevents heap corruption when width = 0 or height = 0
-        if (*width_out <= 0 || *height_out <= 0 || *pixel_fmt_out == rf::BMPF_INVALID || *num_levels_out < 1 || *num_frames_out < 1) {
-            bm_type = rf::BM_INVALID;
+        if (*width_out <= 0 || *height_out <= 0 || *pixel_fmt_out == rf::BM_FORMAT_INVALID || *num_levels_out < 1 || *num_frames_out < 1) {
+            bm_type = rf::BM_TYPE_INVALID;
         }
 
-        if (bm_type == rf::BM_INVALID) {
+        if (bm_type == rf::BM_TYPE_INVALID) {
             xlog::warn("Failed load bitmap header for '%s'", filename);
         }
 
@@ -314,11 +314,11 @@ bm_read_header_hook{
     },
 };
 
-FunHook<rf::BmPixelFormat(int, void**, void**)> bm_lock_hook{
+FunHook<rf::BmFormat(int, void**, void**)> bm_lock_hook{
     0x00510780,
     [](int bmh, void** pixels_out, void** palette_out) {
         auto& bm_entry = rf::bm_bitmaps[rf::BmHandleToIdxAnimAware(bmh)];
-        if (bm_entry.bitmap_type == rf::BM_DDS) {
+        if (bm_entry.bitmap_type == rf::BM_TYPE_DDS) {
             LockDdsBitmap(bm_entry);
             *pixels_out = bm_entry.locked_data;
             *palette_out = bm_entry.locked_palette;
@@ -326,7 +326,7 @@ FunHook<rf::BmPixelFormat(int, void**, void**)> bm_lock_hook{
         }
         else {
             auto pixel_fmt = bm_lock_hook.CallTarget(bmh, pixels_out, palette_out);
-            if (pixel_fmt == rf::BMPF_INVALID) {
+            if (pixel_fmt == rf::BM_FORMAT_INVALID) {
                 *pixels_out = nullptr;
                 *palette_out = nullptr;
                 xlog::warn("bm_lock failed");
@@ -336,10 +336,10 @@ FunHook<rf::BmPixelFormat(int, void**, void**)> bm_lock_hook{
     },
 };
 
-FunHook <void(int, float, float, rf::Color*)> gr_d3d_get_bitmap_pixel_hook{
+FunHook <void(int, float, float, rf::Color*)> gr_d3d_get_texel_hook{
     0x0055CFA0,
     [](int bmh, float u, float v, rf::Color* out_color) {
-        if (static_cast<unsigned>(rf::BmGetPixelFormat(bmh)) > 0x10) {
+        if (static_cast<unsigned>(rf::BmGetFormat(bmh)) > 0x10) {
             // Reading pixels is not yet supported in custom texture formats
             // This is only used when shooting at a texture with alpha
             out_color->red = 255;
@@ -348,7 +348,7 @@ FunHook <void(int, float, float, rf::Color*)> gr_d3d_get_bitmap_pixel_hook{
             out_color->alpha = 255;
         }
         else {
-            gr_d3d_get_bitmap_pixel_hook.CallTarget(bmh, u, v, out_color);
+            gr_d3d_get_texel_hook.CallTarget(bmh, u, v, out_color);
         }
     },
 };
@@ -362,8 +362,8 @@ FunHook<int(int, rf::GrD3DTexture&)> gr_d3d_create_texture_hook{
             // Note: callers of this function expects zero result on failure
             return 0;
         }
-        auto pixel_fmt = rf::BmGetPixelFormat(bm_handle);
-        if (pixel_fmt == rf::BMPF_RENDER_TARGET) {
+        auto pixel_fmt = rf::BmGetFormat(bm_handle);
+        if (pixel_fmt == rf::BM_FORMAT_RENDER_TARGET) {
             g_default_pool_tslots.insert(&tslot);
         }
         return result;
@@ -404,7 +404,7 @@ void ApplyTexturePatches()
     bm_read_header_hook.Install();
     bm_lock_hook.Install();
     gr_d3d_create_vram_texture_with_mipmaps_pitch_fix.Install();
-    gr_d3d_get_bitmap_pixel_hook.Install();
+    gr_d3d_get_texel_hook.Install();
     gr_d3d_create_texture_hook.Install();
     gr_d3d_free_texture_hook.Install();
     //gr_d3d_set_state_and_texture_hook.Install();
@@ -426,7 +426,7 @@ void DestroyTexture(int bmh)
     gr_d3d_tcache_remove_ref(bmh);
 }
 
-void ChangeUserBitmapPixelFormat(int bmh, rf::BmPixelFormat pixel_fmt, [[ maybe_unused ]] bool dynamic)
+void ChangeUserBitmapPixelFormat(int bmh, rf::BmFormat pixel_fmt, [[ maybe_unused ]] bool dynamic)
 {
     DestroyTexture(bmh);
     int bm_idx = rf::BmHandleToIdxAnimAware(bmh);

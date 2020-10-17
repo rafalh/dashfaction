@@ -67,9 +67,9 @@ public:
 private:
     void PrintInternal(int x, int y, const char* str)
     {
-        rf::GrSetColor(0, 0, 0, 255);
+        rf::GrSetColorRgba(0, 0, 0, 255);
         rf::GrString(x + 1, y + 1, str);
-        rf::GrSetColor(255, 255, 255, 255);
+        rf::GrSetColorRgba(255, 255, 255, 255);
         rf::GrString(x, y, str);
     }
 };

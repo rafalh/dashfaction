@@ -4,7 +4,7 @@
 #include "../rf/network.h"
 #include "../rf/misc.h"
 #include "../rf/entity.h"
-#include "../rf/game_seq.h"
+#include "../rf/gameseq.h"
 #include "../rf/hud.h"
 #include "../utils/list-utils.h"
 #include "../main.h"
@@ -45,7 +45,7 @@ int DrawScoreboardHeader(int x, int y, int w, rf::MultiGameType game_type, bool 
     int x_center = x + w / 2;
     int cur_y = y;
     if (!dry_run) {
-        rf::GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
+        rf::GrSetColorRgba(0xFF, 0xFF, 0xFF, 0xFF);
         static int score_rflogo_bm = rf::BmLoad("score_rflogo.tga", -1, false);
         rf::GrBitmap(score_rflogo_bm, x_center - 170, cur_y);
     }
@@ -67,7 +67,7 @@ int DrawScoreboardHeader(int x, int y, int w, rf::MultiGameType game_type, bool 
 
     // Draw level
     if (!dry_run) {
-        rf::GrSetColor(0xB0, 0xB0, 0xB0, 0xFF);
+        rf::GrSetColorRgba(0xB0, 0xB0, 0xB0, 0xFF);
         auto level_info = rf::String::Format("%s (%s) by %s", rf::level_name.CStr(), rf::level_filename.CStr(),
                                             rf::level_author.CStr());
         rf::String level_info_stripped;
@@ -95,7 +95,7 @@ int DrawScoreboardHeader(int x, int y, int w, rf::MultiGameType game_type, bool 
                 static int hud_flag_red_bm = rf::BmLoad("hud_flag_red.tga", -1, true);
                 static int hud_flag_blue_bm = rf::BmLoad("hud_flag_blue.tga", -1, true);
                 int flag_bm_w, flag_bm_h;
-                rf::BmGetBitmapSize(hud_flag_red_bm, &flag_bm_w, &flag_bm_h);
+                rf::BmGetDimension(hud_flag_red_bm, &flag_bm_w, &flag_bm_h);
                 rf::GrBitmap(hud_flag_red_bm, x + w * 2 / 6 - flag_bm_w / 2, cur_y);
                 rf::GrBitmap(hud_flag_blue_bm, x + w * 4 / 6 - flag_bm_w / 2, cur_y);
                 red_score = rf::CtfGetRedTeamScore();
@@ -105,11 +105,11 @@ int DrawScoreboardHeader(int x, int y, int w, rf::MultiGameType game_type, bool 
                 red_score = rf::TdmGetRedTeamScore();
                 blue_score = rf::TdmGetBlueTeamScore();
             }
-            rf::GrSetColor(0xD0, 0x20, 0x20, 0xFF);
+            rf::GrSetColorRgba(0xD0, 0x20, 0x20, 0xFF);
             int team_scores_font = rf::scoreboard_big_font;
             auto red_score_str = std::to_string(red_score);
             rf::GrStringAligned(rf::GR_ALIGN_CENTER, x + w * 1 / 6, cur_y + 10, red_score_str.c_str(), team_scores_font);
-            rf::GrSetColor(0x20, 0x20, 0xD0, 0xFF);
+            rf::GrSetColorRgba(0x20, 0x20, 0xD0, 0xFF);
             auto blue_score_str = std::to_string(blue_score);
             rf::GrStringAligned(rf::GR_ALIGN_CENTER, x + w * 5 / 6, cur_y + 10, blue_score_str.c_str(), team_scores_font);
         }
@@ -142,7 +142,7 @@ int DrawScoreboardPlayers(const std::vector<rf::Player*>& players, int x, int y,
 
     // Draw list header
     if (!dry_run) {
-        rf::GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
+        rf::GrSetColorRgba(0xFF, 0xFF, 0xFF, 0xFF);
         rf::GrString(name_x, y, rf::strings::player);
         rf::GrString(score_x, y, rf::strings::score); // Note: RF uses "Frags"
         rf::GrString(kd_x, y, "K/D");
@@ -162,16 +162,16 @@ int DrawScoreboardPlayers(const std::vector<rf::Player*>& players, int x, int y,
         if (!dry_run) {
             bool is_local_player = player == rf::player_list;
             if (is_local_player)
-                rf::GrSetColor(0xFF, 0xFF, 0x80, 0xFF);
+                rf::GrSetColorRgba(0xFF, 0xFF, 0x80, 0xFF);
             else
-                rf::GrSetColor(0xFF, 0xFF, 0xFF, 0xFF);
+                rf::GrSetColorRgba(0xFF, 0xFF, 0xFF, 0xFF);
 
             static int green_bm = rf::BmLoad("DF_green.tga", -1, true);
             static int red_bm = rf::BmLoad("DF_red.tga", -1, true);
             static int hud_micro_flag_red_bm = rf::BmLoad("hud_microflag_red.tga", -1, true);
             static int hud_micro_flag_blue_bm = rf::BmLoad("hud_microflag_blue.tga", -1, true);
 
-            rf::EntityObj* entity = rf::EntityGetByHandle(player->entity_handle);
+            rf::Entity* entity = rf::EntityFromHandle(player->entity_handle);
             int status_bm = entity ? green_bm : red_bm;
             if (player == red_flag_player)
                 status_bm = hud_micro_flag_red_bm;
@@ -288,11 +288,11 @@ void DrawScoreboardInternal_New(bool draw)
     // Note: FitScoreboardString does not support providing font by argument so default font must be changed
     if (g_big_scoreboard) {
         rf::GrSetDefaultFont(HudGetDefaultFontName(true));
-        w = std::min(!group_by_team ? 900 : 1400, rf::GrGetClipWidth());
+        w = std::min(!group_by_team ? 900 : 1400, rf::GrClipWidth());
         scale = 2.0f;
     }
     else {
-        w = std::min(!group_by_team ? 450 : 700, rf::GrGetClipWidth());
+        w = std::min(!group_by_team ? 450 : 700, rf::GrClipWidth());
         scale = 1.0f;
     }
 
@@ -309,9 +309,9 @@ void DrawScoreboardInternal_New(bool draw)
     // Draw background
     w = static_cast<int>(progress_w * w);
     h = static_cast<int>(progress_h * h);
-    int x = (static_cast<int>(rf::GrGetClipWidth()) - w) / 2;
-    int y = (static_cast<int>(rf::GrGetClipHeight()) - h) / 2;
-    rf::GrSetColor(0, 0, 0, 0x80);
+    int x = (static_cast<int>(rf::GrClipWidth()) - w) / 2;
+    int y = (static_cast<int>(rf::GrClipHeight()) - h) / 2;
+    rf::GrSetColorRgba(0, 0, 0, 0x80);
     rf::GrRect(x, y, w, h);
     y += top_padding;
 
@@ -350,8 +350,8 @@ void HudRender_00437BC0()
     if (!rf::is_multi || !rf::local_player)
         return;
 
-    bool scoreboard_control_active = rf::IsEntityCtrlActive(&rf::local_player->config.controls, rf::GC_MP_STATS, 0);
-    bool is_player_dead = rf::IsPlayerEntityInvalid(rf::local_player) || rf::IsPlayerDying(rf::local_player);
+    bool scoreboard_control_active = rf::ControlConfigCheckPressed(&rf::local_player->settings.controls, rf::CA_MP_STATS, 0);
+    bool is_player_dead = rf::PlayerIsDead(rf::local_player) || rf::PlayerIsDying(rf::local_player);
     bool limbo = rf::GameSeqGetState() == rf::GS_MULTI_LIMBO;
     bool show_scoreboard = scoreboard_control_active || (!SpectateModeIsActive() && is_player_dead) || limbo;
 

@@ -79,9 +79,9 @@ namespace rf
         }
     };
 
-    static auto& GetFileExt = AddrAsRef<char*(const char *path)>(0x005143F0);
-    static auto& FsAddDirectoryEx = AddrAsRef<int(const char *dir, const char *ext_list, bool unknown)>(0x00514070);
-    static auto& FsFileExists = AddrAsRef<bool(const char *filename)>(0x00544680);
+    static auto& FileGetExt = AddrAsRef<char*(const char *path)>(0x005143F0);
+    static auto& FileAddDirectoryEx = AddrAsRef<int(const char *dir, const char *ext_list, bool unknown)>(0x00514070);
+    static auto& FileExists = AddrAsRef<bool(const char *filename)>(0x00544680);
     static auto& PackfileLoad = AddrAsRef<int(const char *file_name, const char *dir)>(0x0052C070);
     static auto& PackfileSetLoadingUserMaps = AddrAsRef<void(bool loading_user_maps)>(0x0052BB50);
 

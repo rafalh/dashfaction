@@ -67,7 +67,7 @@ namespace rf
         int field_18_snd_ds_load_buffer_param;
         int field_1C;
         float fade_out_time_unk;
-        Timer timer24;
+        Timestamp timer24;
         int flags;
     };
     static_assert(sizeof(DsChannel) == 0x2C);

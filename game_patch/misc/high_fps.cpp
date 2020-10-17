@@ -164,19 +164,19 @@ void FtolIssuesDetectionDoFrame()
             if (is_fps_dependent && is_significant) {
                 bool is_new = g_ftol_issues.insert(p.first).second;
                 if (is_new)
-                    rf::DcPrintf("ftol issue detected: address %08X ratio %.2f estimated value %.4f", p.first - 5,
+                    rf::ConsolePrintf("ftol issue detected: address %08X ratio %.2f estimated value %.4f", p.first - 5,
                                  ratio, avg_high_fps);
             }
         }
 
-        rf::min_framerate = 1.0f / 30.0f;
+        rf::framerate_min = 1.0f / 30.0f;
         g_ftol_debug_info_map.clear();
         g_ftol_debug_info_map_old.clear();
     }
     else if (g_num_frames == 5) {
         g_ftol_debug_info_map_old = std::move(g_ftol_debug_info_map);
         g_ftol_debug_info_map.clear();
-        rf::min_framerate = 1.0f / 60.0f;
+        rf::framerate_min = 1.0f / 60.0f;
     }
 
     g_num_frames = (g_num_frames + 1) % 10;
@@ -197,22 +197,22 @@ DcCommand2 detect_ftol_issues_cmd{
         else {
             g_ftol_issue_detection = false;
         }
-        rf::DcPrintf("ftol issues detection is %s", g_ftol_issue_detection ? "enabled" : "disabled");
+        rf::ConsolePrintf("ftol issues detection is %s", g_ftol_issue_detection ? "enabled" : "disabled");
     },
     "detect_ftol_issues <fps>",
 };
 
 #endif // DEBUG
 
-rf::Timer g_player_jump_timer;
+rf::Timestamp g_player_jump_timestamp;
 
 CodeInjection stuck_to_ground_when_jumping_fix{
     0x0042891E,
     [](auto& regs) {
-        auto entity = reinterpret_cast<rf::EntityObj*>(regs.esi);
+        auto entity = reinterpret_cast<rf::Entity*>(regs.esi);
         if (entity->local_player) {
             // Skip land handling code for next 64 ms (like in PF)
-            g_player_jump_timer.Set(64);
+            g_player_jump_timestamp.Set(64);
         }
     },
 };
@@ -220,10 +220,10 @@ CodeInjection stuck_to_ground_when_jumping_fix{
 CodeInjection stuck_to_ground_when_using_jump_pad_fix{
     0x00486B60,
     [](auto& regs) {
-        auto entity = reinterpret_cast<rf::EntityObj*>(regs.esi);
+        auto entity = reinterpret_cast<rf::Entity*>(regs.esi);
         if (entity->local_player) {
             // Skip land handling code for next 64 ms
-            g_player_jump_timer.Set(64);
+            g_player_jump_timestamp.Set(64);
         }
     },
 };
@@ -231,8 +231,8 @@ CodeInjection stuck_to_ground_when_using_jump_pad_fix{
 CodeInjection stuck_to_ground_fix{
     0x00487F82,
     [](auto& regs) {
-        auto entity = reinterpret_cast<rf::EntityObj*>(regs.esi);
-        if (entity->local_player && g_player_jump_timer.IsSet() && !g_player_jump_timer.IsFinished()) {
+        auto entity = reinterpret_cast<rf::Entity*>(regs.esi);
+        if (entity->local_player && g_player_jump_timestamp.Valid() && !g_player_jump_timestamp.Elapsed()) {
             // Jump to jump handling code that sets entity to falling movement mode
             regs.eip = 0x00487F7B;
         }
@@ -242,11 +242,11 @@ CodeInjection stuck_to_ground_fix{
 CodeInjection entity_water_decelerate_fix{
     0x0049D82A,
     [](auto& regs) {
-        auto entity = reinterpret_cast<rf::EntityObj*>(regs.esi);
+        auto entity = reinterpret_cast<rf::Entity*>(regs.esi);
         float vel_factor = 1.0f - (rf::frametime * 4.5f);
-        entity->phys_info.vel.x *= vel_factor;
-        entity->phys_info.vel.y *= vel_factor;
-        entity->phys_info.vel.z *= vel_factor;
+        entity->p_data.vel.x *= vel_factor;
+        entity->p_data.vel.y *= vel_factor;
+        entity->p_data.vel.z *= vel_factor;
         regs.eip = 0x0049D835;
     },
 };
@@ -268,7 +268,7 @@ void HighFpsAfterLevelLoad(rf::String& level_filename)
         //xlog::info("Fixing Submarine exploding bug...");
         int uids[] = {4679, 4680};
         for (int uid : uids) {
-            auto event = rf::EventGetByUid(uid);
+            auto event = rf::EventLookupFromUid(uid);
             if (event && event->delay == 1.5f) {
                 event->delay += 1.5f;
             }
@@ -299,12 +299,12 @@ FunHook<int(int)> timer_get_hook{
     },
 };
 
-CallHook<void(int)> frametime_update_sleep_hook{
+CallHook<void(int)> frametime_calculate_sleep_hook{
     0x005095B4,
     [](int ms) {
         --ms;
         if (ms > 0) {
-            frametime_update_sleep_hook.CallTarget(ms);
+            frametime_calculate_sleep_hook.CallTarget(ms);
         }
     },
 };
@@ -313,10 +313,10 @@ CodeInjection cutscene_shot_sync_fix{
     0x0045B43B,
     [](auto& regs) {
         auto& current_shot_idx = StructFieldRef<int>(rf::active_cutscene, 0x808);
-        auto& current_shot_timer = StructFieldRef<rf::Timer>(rf::active_cutscene, 0x810);
+        auto& current_shot_timer = StructFieldRef<rf::Timestamp>(rf::active_cutscene, 0x810);
         if (current_shot_idx > 1) {
             // decrease time for next shot using current shot timer value
-            int shot_time_left_ms = current_shot_timer.GetTimeLeftMs();
+            int shot_time_left_ms = current_shot_timer.TimeUntil();
             if (shot_time_left_ms > 0 || shot_time_left_ms < -100)
                 xlog::warn("invalid shot_time_left_ms %d", shot_time_left_ms);
             regs.eax += shot_time_left_ms;
@@ -324,19 +324,19 @@ CodeInjection cutscene_shot_sync_fix{
     },
 };
 
-FunHook<void(rf::EntityObj&, rf::Vector3&)> EntityOnLand_hook{
+FunHook<void(rf::Entity&, rf::Vector3&)> EntityOnLand_hook{
     0x00419830,
-    [](rf::EntityObj& entity, rf::Vector3& pos) {
+    [](rf::Entity& entity, rf::Vector3& pos) {
         EntityOnLand_hook.CallTarget(entity, pos);
-        entity.phys_info.vel.y = 0.0f;
+        entity.p_data.vel.y = 0.0f;
     },
 };
 
-CallHook<void(rf::EntityObj&)> entity_make_run_after_climbing_patch{
+CallHook<void(rf::Entity&)> entity_make_run_after_climbing_patch{
     0x00430D5D,
-    [](rf::EntityObj& entity) {
+    [](rf::Entity& entity) {
         entity_make_run_after_climbing_patch.CallTarget(entity);
-        entity.phys_info.vel.y = 0.0f;
+        entity.p_data.vel.y = 0.0f;
     },
 };
 
@@ -350,9 +350,9 @@ CodeInjection particle_update_accel_patch{
     },
 };
 
-FunHook<rf::ParticleEmitter*(int, rf::ParticleEmitterType&, rf::RflRoom*, rf::Vector3&, bool)> particle_emitter_create_hook{
+FunHook<rf::ParticleEmitter*(int, rf::ParticleEmitterType&, rf::GRoom*, rf::Vector3&, bool)> particle_emitter_create_hook{
     0x00497CA0,
-    [](int objh, rf::ParticleEmitterType& type, rf::RflRoom* room, rf::Vector3& pos, bool is_on) {
+    [](int objh, rf::ParticleEmitterType& type, rf::GRoom* room, rf::Vector3& pos, bool is_on) {
         float min_spawn_delay = 1.0f / 60.0f;
         if ((type.flags & rf::PEF_CONTINOUS) || type.min_spawn_delay < min_spawn_delay) {
             xlog::debug("Particle emitter spawn delay is too small: %.2f. Increasing to %.2f...", type.min_spawn_delay, min_spawn_delay);
@@ -398,7 +398,7 @@ void HighFpsInit()
     // Fix incorrect frame time calculation
     AsmWriter(0x00509595).nop(2);
     WriteMem<u8>(0x00509532, asm_opcodes::jmp_rel_short);
-    frametime_update_sleep_hook.Install();
+    frametime_calculate_sleep_hook.Install();
 
     // Fix screen shake caused by some weapons (eg. Assault Rifle)
     WriteMemPtr(0x0040DBCC + 2, &g_camera_shake_factor);

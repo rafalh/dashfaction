@@ -264,11 +264,11 @@ namespace rf
 
     /* Utils */
 
-    struct Timer
+    struct Timestamp
     {
-        int end_time_ms = -1;
+        int value = -1;
 
-        bool IsFinished() const
+        bool Elapsed() const
         {
             return AddrCaller{0x004FA3F0}.this_call<bool>(this);
         }
@@ -278,28 +278,28 @@ namespace rf
             AddrCaller{0x004FA360}.this_call(this, value_ms);
         }
 
-        bool IsSet() const
+        bool Valid() const
         {
-            return end_time_ms >= 0;
+            return value >= 0;
         }
 
-        int GetTimeLeftMs() const
+        int TimeUntil() const
         {
             return AddrCaller{0x004FA420}.this_call<int>(this);
         }
 
-        void Unset()
+        void Invalidate()
         {
             AddrCaller{0x004FA3E0}.this_call(this);
         }
     };
-    static_assert(sizeof(Timer) == 0x4);
+    static_assert(sizeof(Timestamp) == 0x4);
 
-    struct TimerApp
+    struct TimestampRealtime
     {
-        int end_time_ms = -1;
+        int value = -1;
 
-        bool IsFinished() const
+        bool Elapsed() const
         {
             return AddrCaller{0x004FA560}.this_call<bool>(this);
         }
@@ -309,22 +309,22 @@ namespace rf
             AddrCaller{0x004FA4D0}.this_call(this, value_ms);
         }
 
-        int GetTimeLeftMs() const
+        int TimeUntil() const
         {
             return AddrCaller{0x004FA590}.this_call<int>(this);
         }
 
-        bool IsSet() const
+        bool Valid() const
         {
             return AddrCaller{0x004FA5E0}.this_call<bool>(this);
         }
 
-        void Unset()
+        void Invalidate()
         {
             AddrCaller{0x004FA550}.this_call(this);
         }
     };
-    static_assert(sizeof(TimerApp) == 0x4);
+    static_assert(sizeof(TimestampRealtime) == 0x4);
 
     struct Color
     {
@@ -333,38 +333,52 @@ namespace rf
         uint8_t blue;
         uint8_t alpha;
 
-        constexpr Color(uint8_t red, uint8_t green, uint8_t blue, uint8_t alpha = 255) :
-            red(red), green(green), blue(blue), alpha(alpha) {}
+        constexpr Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255) :
+            red(r), green(g), blue(b), alpha(a) {}
 
-        void SetRGBA(uint8_t red, uint8_t green, uint8_t blue, uint8_t alpha)
+        void Set(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
         {
-            this->red = red;
-            this->green = green;
-            this->blue = blue;
-            this->alpha = alpha;
+            this->red = r;
+            this->green = g;
+            this->blue = b;
+            this->alpha = a;
         }
     };
 
     template<typename T = char>
-    class DynamicArray
+    class VArray
     {
     private:
-        int size;
+        int num;
         int capacity;
-        T *data;
+        T *elements;
 
     public:
         int Size() const
         {
-            return size;
+            return num;
         }
 
         T& Get(int index) const
         {
-            return data[index];
+            return elements[index];
         }
     };
-    static_assert(sizeof(DynamicArray<>) == 0xC);
+    static_assert(sizeof(VArray<>) == 0xC);
+
+    template<typename T, int N>
+    struct FArray
+    {
+        int num;
+        T elements[N];
+    };
+
+    template<typename T>
+    struct VList
+    {
+        T* head;
+        int num_elements;
+    };
 
     /* RF stdlib functions are not compatible with GCC */
 
@@ -373,7 +387,7 @@ namespace rf
 
     // Collide
 
-    using CollideBoxSegmentType = bool(const rf::Vector3& box_min, const rf::Vector3& box_max, const rf::Vector3& p0,
+    using IxLineSegmentBoundingBoxType = bool(const rf::Vector3& box_min, const rf::Vector3& box_max, const rf::Vector3& p0,
                                        const rf::Vector3& p1, rf::Vector3 *hit_pt);
-    static auto& CollideBoxSegment = AddrAsRef<CollideBoxSegmentType>(0x00508B70);
+    static auto& IxLineSegmentBoundingBox = AddrAsRef<IxLineSegmentBoundingBoxType>(0x00508B70);
 }

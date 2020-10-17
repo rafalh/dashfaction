@@ -4,24 +4,24 @@
 
 namespace rf
 {
-    struct EventObj : Object
+    struct Event : Object
     {
         int event_type;
         float delay;
-        Timer delay_timer;
-        DynamicArray<int> links;
+        Timestamp delay_timestamp;
+        VArray<int> links;
         int activated_by_entity_handle;
         int activated_by_trigger_handle;
         int field_2B0;
         int is_on_state;
 
         virtual void UnkVirtFun() = 0;
-        virtual void HandleOnMsg() = 0;
-        virtual void HandleOffMsg() = 0;
-        virtual void Update() = 0;
+        virtual void TurnOn() = 0;
+        virtual void TurnOff() = 0;
+        virtual void Process() = 0;
 
     };
-    static_assert(sizeof(EventObj) == 0x2B8);
+    static_assert(sizeof(Event) == 0x2B8);
 
-    static auto& EventGetByUid = AddrAsRef<EventObj*(int uid)>(0x004B6820);
+    static auto& EventLookupFromUid = AddrAsRef<Event*(int uid)>(0x004B6820);
 }

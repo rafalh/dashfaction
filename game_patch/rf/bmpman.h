@@ -4,37 +4,37 @@
 
 namespace rf
 {
-    enum BmPixelFormat
+    enum BmFormat
     {
         // All formats are listed from left to right, most-significant bit to least-significant bit as in D3DFORMAT
-        BMPF_INVALID = 0x0,
-        BMPF_BGR_888_INDEXED = 0x1,
-        BMPF_A_8 = 0x2,
-        BMPF_RGB_565 = 0x3,
-        BMPF_ARGB_4444 = 0x4,
-        BMPF_ARGB_1555 = 0x5,
-        BMPF_RGB_888 = 0x6,
-        BMPF_ARGB_8888 = 0x7,
-        BMPF_UNK_8_16BIT = 0x8, // not supported by D3D routines
+        BM_FORMAT_INVALID = 0x0,
+        BM_FORMAT_BGR_888_INDEXED = 0x1,
+        BM_FORMAT_A_8 = 0x2,
+        BM_FORMAT_RGB_565 = 0x3,
+        BM_FORMAT_ARGB_4444 = 0x4,
+        BM_FORMAT_ARGB_1555 = 0x5,
+        BM_FORMAT_RGB_888 = 0x6,
+        BM_FORMAT_ARGB_8888 = 0x7,
+        BM_FORMAT_UNK_8_16BIT = 0x8, // not supported by D3D routines
 #ifdef DASH_FACTION
         // custom Dash Faction formats
-        BMPF_BGR_888 = 0x9,        // used by lightmaps
-        BMPF_RENDER_TARGET = 0x10, // texture is used as render target
+        BM_FORMAT_BGR_888 = 0x9,        // used by lightmaps
+        BM_FORMAT_RENDER_TARGET = 0x10, // texture is used as render target
 #endif
     };
 
-    enum BmBitmapType
+    enum BmType
     {
-        BM_INVALID = 0x0,
-        BM_PCX = 0x1,
-        BM_TGA = 0x2,
-        BM_USERBMAP = 0x3,
-        BM_VAF = 0x4,
-        BM_VBM = 0x5,
-        BM_M2V = 0x6,
+        BM_TYPE_INVALID = 0x0,
+        BM_TYPE_PCX = 0x1,
+        BM_TYPE_TGA = 0x2,
+        BM_TYPE_USERBMAP = 0x3,
+        BM_TYPE_VAF = 0x4,
+        BM_TYPE_VBM = 0x5,
+        BM_TYPE_M2V = 0x6,
 #ifdef DASH_FACTION
         // Custom Dash Faction bitmap types
-        BM_DDS = 0x10,
+        BM_TYPE_DDS = 0x10,
 #endif
     };
 
@@ -48,9 +48,9 @@ namespace rf
         int16_t width;
         int16_t height;
         int num_pixels_in_all_levels;
-        BmBitmapType bitmap_type;
+        BmType bitmap_type;
         int animated_entry_type;
-        BmPixelFormat pixel_format;
+        BmFormat pixel_format;
         char num_levels;
         char orig_num_levels;
         char num_levels_in_ext_files;
@@ -71,11 +71,11 @@ namespace rf
     static_assert(sizeof(BmBitmapEntry) == 0x6C);
 
     static auto& BmLoad = AddrAsRef<int(const char *filename, int a2, bool generate_mipmaps)>(0x0050F6A0);
-    static auto& BmCreateUserBmap = AddrAsRef<int(BmPixelFormat pixel_format, int width, int height)>(0x005119C0);
-    static auto& BmConvertFormat = AddrAsRef<void(void *dst_bits, BmPixelFormat dst_pixel_fmt, const void *src_bits, BmPixelFormat src_pixel_fmt, int num_pixels)>(0x0055DD20);
-    static auto& BmGetBitmapSize = AddrAsRef<void(int bm_handle, int *width, int *height)>(0x00510630);
+    static auto& BmCreate = AddrAsRef<int(BmFormat format, int w, int h)>(0x005119C0);
+    static auto& BmConvertFormat = AddrAsRef<void(void *dst_bits, BmFormat dst_fmt, const void *src_bits, BmFormat src_fmt, int num_pixels)>(0x0055DD20);
+    static auto& BmGetDimension = AddrAsRef<void(int bm_handle, int *w, int *h)>(0x00510630);
     static auto& BmGetFilename = AddrAsRef<const char*(int bm_handle)>(0x00511710);
-    static auto& BmGetPixelFormat = AddrAsRef<BmPixelFormat(int bm_handle)>(0x005106F0);
+    static auto& BmGetFormat = AddrAsRef<BmFormat(int bm_handle)>(0x005106F0);
     static auto& BmHandleToIdxAnimAware = AddrAsRef<int(int bm_handle)>(0x0050F440);
 
     static auto& bm_bitmaps = AddrAsRef<BmBitmapEntry*>(0x017C80C4);

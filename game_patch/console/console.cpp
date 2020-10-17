@@ -1,7 +1,7 @@
 #include "console.h"
 #include "../main.h"
 #include "../rf/player.h"
-#include "../rf/game_seq.h"
+#include "../rf/gameseq.h"
 #include <common/BuildConfig.h>
 #include <common/version.h>
 #include <patch_common/CodeInjection.h>
@@ -15,7 +15,7 @@
 // DcDrawClientConsole uses 200 bytes long buffer for: "] ", user input and '\0'
 constexpr int max_cmd_line_len = 200 - 2 - 1;
 
-rf::DcCommand* g_commands_buffer[CMD_LIMIT];
+rf::ConsoleCommand* g_commands_buffer[CMD_LIMIT];
 
 rf::Player* FindBestMatchingPlayer(const char* name)
 {
@@ -37,9 +37,9 @@ rf::Player* FindBestMatchingPlayer(const char* name)
     if (num_found == 1)
         return found_player;
     else if (num_found > 1)
-        rf::DcPrintf("Found %d players matching '%s'!", num_found, name);
+        rf::ConsolePrintf("Found %d players matching '%s'!", num_found, name);
     else
-        rf::DcPrintf("Cannot find player matching '%s'", name);
+        rf::ConsolePrintf("Cannot find player matching '%s'", name);
     return nullptr;
 }
 
@@ -75,15 +75,15 @@ CodeInjection DcRunCmd_CallHandlerPatch{
 CallHook<void(char*, int)> DcProcessKbd_GetTextFromClipboard_hook{
     0x0050A2FD,
     [](char *buf, int max_len) {
-        max_len = std::min(max_len, max_cmd_line_len - rf::dc_cmd_line_len);
+        max_len = std::min(max_len, max_cmd_line_len - rf::console_cmd_line_len);
         DcProcessKbd_GetTextFromClipboard_hook.CallTarget(buf, max_len);
     },
 };
 
-void ConsoleRegisterCommand(rf::DcCommand* cmd)
+void ConsoleRegisterCommand(rf::ConsoleCommand* cmd)
 {
-    if (rf::dc_num_commands < CMD_LIMIT)
-        rf::DcCommand::Init(cmd, cmd->cmd_name, cmd->descr, cmd->func);
+    if (rf::console_num_commands < CMD_LIMIT)
+        rf::ConsoleCommand::Init(cmd, cmd->name, cmd->help, cmd->func);
     else
         assert(false);
 }
@@ -111,7 +111,7 @@ void ConsoleApplyPatches()
     MenuUpdate_hook.Install();
 
     // Change limit of commands
-    assert(rf::dc_num_commands == 0);
+    assert(rf::console_num_commands == 0);
     WriteMemPtr(0x005099AC + 1, g_commands_buffer);
     WriteMemPtr(0x00509A8A + 1, g_commands_buffer);
     WriteMemPtr(0x00509AB0 + 3, g_commands_buffer);

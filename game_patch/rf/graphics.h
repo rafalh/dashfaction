@@ -24,21 +24,21 @@ namespace rf
         TEXTURE_SOURCE_MT_CLAMP_TRILIN = 0xB,
     };
 
-    enum GrColorOp
+    enum GrColorSource
     {
-        COLOR_OP_SEL_TEXTURE_UNK = 0x0,
-        COLOR_OP_SEL_TEXTURE = 0x1,
-        COLOR_OP_MUL = 0x2,
-        COLOR_OP_ADD = 0x3,
-        COLOR_OP_MUL2X = 0x4,
+        COLOR_SOURCE_SEL_TEXTURE_UNK = 0x0,
+        COLOR_SOURCE_SEL_TEXTURE = 0x1,
+        COLOR_SOURCE_MUL = 0x2,
+        COLOR_SOURCE_ADD = 0x3,
+        COLOR_SOURCE_MUL2X = 0x4,
     };
 
-    enum GrAlphaOp
+    enum GrAlphaSource
     {
-        ALPHA_OP_SEL_DIFFUSE = 0x0,
-        ALPHA_OP_UNK = 0x1,
-        ALPHA_OP_SEL_TEXTURE = 0x2,
-        ALPHA_OP_MUL = 0x3,
+        ALPHA_SOURCE_SEL_DIFFUSE = 0x0,
+        ALPHA_SOURCE_UNK = 0x1,
+        ALPHA_SOURCE_SEL_TEXTURE = 0x2,
+        ALPHA_SOURCE_MUL = 0x3,
     };
 
     enum GrAlphaBlend
@@ -71,15 +71,15 @@ namespace rf
         FOG_TYPE_FORCE_OFF = 0x3,
     };
 
-    struct GrRenderState
+    struct GrMode
     {
         int value;
 
-        constexpr GrRenderState(GrTextureSource tex_src, GrColorOp clr_op, GrAlphaOp alpha_op, GrAlphaBlend alpha_blend, GrZbufferType zbuf_type, GrFogType fog) :
+        constexpr GrMode(GrTextureSource tex_src, GrColorSource clr_op, GrAlphaSource alpha_op, GrAlphaBlend alpha_blend, GrZbufferType zbuf_type, GrFogType fog) :
             value(tex_src | 32 * (clr_op | 32 * (alpha_op | 32 * (alpha_blend | 32 * (zbuf_type | 32 * fog)))))
         {}
 
-        bool operator==(const GrRenderState& other) const
+        bool operator==(const GrMode& other) const
         {
             return value == other.value;
         }
@@ -158,18 +158,18 @@ namespace rf
     };
     static_assert(sizeof(GrVertex) == 0x30);
 
-    struct GrLockData
+    struct GrLockInfo
     {
         int bm_handle;
         int section_idx;
-        BmPixelFormat pixel_format;
+        BmFormat pixel_format;
         uint8_t *bits;
         int width;
         int height;
         int pitch;
         int field_1c;
     };
-    static_assert(sizeof(GrLockData) == 0x20);
+    static_assert(sizeof(GrLockInfo) == 0x20);
 
     enum GrTextAlignment
     {
@@ -257,15 +257,15 @@ namespace rf
     static auto& gr_screen = AddrAsRef<GrScreen>(0x017C7BC0);
     static auto& gr_gamma_ramp = AddrAsRef<uint32_t[256]>(0x017C7C68);
 
-    static auto& gr_bitmap_clamp_state = AddrAsRef<GrRenderState>(0x017756BC);
-    static auto& gr_rect_state = AddrAsRef<GrRenderState>(0x017756C0);
-    static auto& gr_bitmap_wrap_state = AddrAsRef<GrRenderState>(0x017756DC);
-    static auto& gr_line_state = AddrAsRef<GrRenderState>(0x01775B00);
-    static auto& gr_string_state = AddrAsRef<GrRenderState>(0x017C7C5C);
+    static auto& gr_bitmap_clamp_mode = AddrAsRef<GrMode>(0x017756BC);
+    static auto& gr_rect_mode = AddrAsRef<GrMode>(0x017756C0);
+    static auto& gr_bitmap_wrap_mode = AddrAsRef<GrMode>(0x017756DC);
+    static auto& gr_line_mode = AddrAsRef<GrMode>(0x01775B00);
+    static auto& gr_string_mode = AddrAsRef<GrMode>(0x017C7C5C);
 
     static auto& current_fps = AddrAsRef<float>(0x005A4018);
     static auto& frametime = AddrAsRef<float>(0x005A4014);
-    static auto& min_framerate = AddrAsRef<float>(0x005A4024);
+    static auto& framerate_min = AddrAsRef<float>(0x005A4024);
 
     static auto& gr_d3d_buffers_locked = AddrAsRef<bool>(0x01E652ED);
     static auto& gr_d3d_in_optimized_drawing_proc = AddrAsRef<bool>(0x01E652EE);
@@ -290,20 +290,20 @@ namespace rf
     static auto& gr_fonts = AddrAsRef<GrFont[max_fonts]>(0x01886C90);
     static auto& gr_num_fonts = AddrAsRef<int>(0x018871A0);
 
-    static auto& GrGetMaxWidth = AddrAsRef<int()>(0x0050C640);
-    static auto& GrGetMaxHeight = AddrAsRef<int()>(0x0050C650);
-    static auto& GrGetClipWidth = AddrAsRef<int()>(0x0050CDB0);
-    static auto& GrGetClipHeight = AddrAsRef<int()>(0x0050CDC0);
-    static auto& GrSetColor = AddrAsRef<void(unsigned r, unsigned g, unsigned b, unsigned a)>(0x0050CF80);
-    static auto& GrSetColorPtr = AddrAsRef<void(Color *color)>(0x0050D000);
+    static auto& GrScreenWidth = AddrAsRef<int()>(0x0050C640);
+    static auto& GrScreenHeight = AddrAsRef<int()>(0x0050C650);
+    static auto& GrClipWidth = AddrAsRef<int()>(0x0050CDB0);
+    static auto& GrClipHeight = AddrAsRef<int()>(0x0050CDC0);
+    static auto& GrSetColorRgba = AddrAsRef<void(unsigned r, unsigned g, unsigned b, unsigned a)>(0x0050CF80);
+    static auto& GrSetColor = AddrAsRef<void(const Color& clr)>(0x0050D000);
     static auto& GrSetColorAlpha = AddrAsRef<void(int a)>(0x0050D030);
-    static auto& GrReadBackBuffer = AddrAsRef<int(int x, int y, int width, int height, void *buffer)>(0x0050DFF0);
+    static auto& GrReadBackBuffer = AddrAsRef<int(int x, int y, int w, int h, void* buffer)>(0x0050DFF0);
     static auto& GrD3DFlushBuffers = AddrAsRef<void()>(0x00559D90);
     static auto& GrClear = AddrAsRef<void()>(0x0050CDF0);
-    static auto& GrIsSphereOutsideView = AddrAsRef<bool(rf::Vector3& pos, float radius)>(0x005186A0);
+    static auto& GrCullSphere = AddrAsRef<bool(rf::Vector3& pos, float radius)>(0x005186A0);
     static auto& GrSetTextureMipFilter = AddrAsRef<void(bool linear)>(0x0050E830);
-    static auto& GrLock = AddrAsRef<char(int bmh, int section_idx, GrLockData *data, int a4)>(0x0050E2E0);
-    static auto& GrUnlock = AddrAsRef<void(GrLockData *data)>(0x0050E310);
+    static auto& GrLock = AddrAsRef<char(int bmh, int section, GrLockInfo* lock, int a4)>(0x0050E2E0);
+    static auto& GrUnlock = AddrAsRef<void(GrLockInfo* lock)>(0x0050E310);
     static auto& GrSetClip = AddrAsRef<void(int x, int y, int w, int h)>(0x0050CC60);
     static auto& GrGetClip = AddrAsRef<void(int* x, int* y, int* w, int* h)>(0x0050CD80);
     static auto& GrPreloadBitmap = AddrAsRef<int(int bm_handle)>(0x0050CE00);
@@ -311,37 +311,37 @@ namespace rf
 
     static constexpr int center_x = 0x8000; // supported by GrString
 
-    inline void GrLine(float x0, float y0, float x1, float y1, GrRenderState render_state = gr_line_state)
+    inline void GrLine(float x0, float y0, float x1, float y1, GrMode mode = gr_line_mode)
     {
-        AddrCaller{0x0050D770}.c_call(x0, y0, x1, y1, render_state);
+        AddrCaller{0x0050D770}.c_call(x0, y0, x1, y1, mode);
     }
 
-    inline void GrRect(int x, int y, int cx, int cy, GrRenderState state = gr_rect_state)
+    inline void GrRect(int x, int y, int cx, int cy, GrMode mode = gr_rect_mode)
     {
-        AddrCaller{0x0050DBE0}.c_call(x, y, cx, cy, state);
+        AddrCaller{0x0050DBE0}.c_call(x, y, cx, cy, mode);
     }
 
-    inline void GrBitmap(int bmh, int x, int y, GrRenderState state = gr_bitmap_wrap_state)
+    inline void GrBitmap(int bmh, int x, int y, GrMode mode = gr_bitmap_wrap_mode)
     {
-        AddrCaller{0x0050D2A0}.c_call(bmh, x, y, state);
+        AddrCaller{0x0050D2A0}.c_call(bmh, x, y, mode);
     }
 
-    inline void GrBitmapEx(int bmh, int x, int y, int w, int h, int src_x, int src_y, GrRenderState state = gr_bitmap_wrap_state)
+    inline void GrBitmapEx(int bmh, int x, int y, int w, int h, int src_x, int src_y, GrMode mode = gr_bitmap_wrap_mode)
     {
-        AddrCaller{0x0050D0A0}.c_call(bmh, x, y, w, h, src_x, src_y, state);
+        AddrCaller{0x0050D0A0}.c_call(bmh, x, y, w, h, src_x, src_y, mode);
     }
 
-    inline void GrBitmapStretched(int bmh, int dst_x, int dst_y, int dst_w, int dst_h, int src_x, int src_y, int src_w, int src_h, bool a10 = false, bool a11 = false, GrRenderState state = gr_bitmap_wrap_state)
+    inline void GrBitmapStretched(int bmh, int x, int y, int w, int h, int sx, int sy, int sw, int sh, bool a10 = false, bool a11 = false, GrMode mode = gr_bitmap_wrap_mode)
     {
-        AddrCaller{0x0050D250}.c_call(bmh, dst_x, dst_y, dst_w, dst_h, src_x, src_y, src_w, src_h, a10, a11, state);
+        AddrCaller{0x0050D250}.c_call(bmh, x, y, w, h, sx, sy, sw, sh, a10, a11, mode);
     }
 
-    inline void GrString(int x, int y, const char *text, int font_num = -1, GrRenderState state = gr_string_state)
+    inline void GrString(int x, int y, const char *text, int font_num = -1, GrMode mode = gr_string_mode)
     {
-        AddrCaller{0x0051FEB0}.c_call(x, y, text, font_num, state);
+        AddrCaller{0x0051FEB0}.c_call(x, y, text, font_num, mode);
     }
 
-    inline void GrStringAligned(GrTextAlignment align, int x, int y, const char *text, int font_num = -1, GrRenderState state = gr_string_state)
+    inline void GrStringAligned(GrTextAlignment align, int x, int y, const char *text, int font_num = -1, GrMode state = gr_string_mode)
     {
         AddrCaller{0x0051FE50}.c_call(align, x, y, text, font_num, state);
     }
@@ -356,7 +356,7 @@ namespace rf
         return AddrCaller{0x0051F4D0}.c_call<int>(font_num);
     }
 
-    static auto& GrFitMultilineText = AddrAsRef<int(int *len_array, int *offset_array, char *text, int max_width, int max_lines, char unk_char, int font_num)>(0x00520810);
-    static auto& GrGetTextWidth = AddrAsRef<void(int *out_width, int *out_height, const char *text, int text_len, int font_num)>(0x0051F530);
+    static auto& GrSplitStr = AddrAsRef<int(int *len_array, int *offset_array, char *text, int max_w, int max_lines, char unk_char, int font_num)>(0x00520810);
+    static auto& GrGetStringSize = AddrAsRef<void(int *out_w, int *out_h, const char *text, int text_len, int font_num)>(0x0051F530);
     static auto& GrSetDefaultFont = AddrAsRef<bool(const char *file_name)>(0x0051FE20);
 }

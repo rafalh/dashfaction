@@ -7,7 +7,7 @@ namespace rf
 {
     // Forward declarations
     struct Player;
-    struct EntityObj;
+    struct Entity;
 
     struct NwAddr
     {
@@ -36,7 +36,7 @@ namespace rf
         int num_sent_bytes_unk_idx1_ec[30];
         int num_recv_bytes_unk_idx1_ec[30];
         int unk_idx1_ec;
-        TimerApp packet_loss_update_timer;
+        TimestampRealtime packet_loss_update_timestamp;
         int num_obj_update_packets_sent;
         int num_obj_update_packets_recv;
         int field_1fc[3];
@@ -44,10 +44,10 @@ namespace rf
         int num_recv_bytes_per_packet[55];
         int num_packets_sent[55];
         int num_packets_recv[55];
-        TimerApp field_578;
+        TimestampRealtime field_578;
         int ping_array[2];
         int current_ping_idx;
-        TimerApp send_ping_packet_timer;
+        TimestampRealtime send_ping_packet_timestamp;
         int last_ping_time;
     };
     static_assert(sizeof(NwStats) == 0x590);
@@ -71,7 +71,7 @@ namespace rf
         int out_reliable_buf_len;
         int max_update_rate;
         int obj_update_interval;
-        Timer obj_update_timer;
+        Timestamp obj_update_timestamp;
     };
     static_assert(sizeof(PlayerNetData) == 0x9C8);
 
@@ -121,11 +121,11 @@ namespace rf
     static auto& GetPlayersCount = AddrAsRef<unsigned()>(0x00484830);
     static auto& KickPlayer = AddrAsRef<void(Player *player)>(0x0047BF00);
     static auto& BanIp = AddrAsRef<void(const NwAddr& addr)>(0x0046D0F0);
-    static auto& MultiSetRequestedWeapon = AddrAsRef<void(int weapon_cls_id)>(0x0047FCA0);
+    static auto& MultiSetRequestedWeapon = AddrAsRef<void(int weapon_type)>(0x0047FCA0);
     static auto& MultiChangeLevel = AddrAsRef<void(const char* filename)>(0x0047BF50);
     static auto& PingPlayer = AddrAsRef<void(Player*)>(0x00484D00);
-    static auto& SendEntityCreatePacket = AddrAsRef<void(EntityObj *entity, Player* player)>(0x00475160);
-    static auto& SendEntityCreatePacketToAll = AddrAsRef<void(EntityObj *entity)>(0x00475110);
+    static auto& SendEntityCreatePacket = AddrAsRef<void(Entity *entity, Player* player)>(0x00475160);
+    static auto& SendEntityCreatePacketToAll = AddrAsRef<void(Entity *entity)>(0x00475110);
     static auto& NwInitSocket = AddrAsRef<void(unsigned short port)>(0x00528F10);
     static auto& MultiFindCharacter = AddrAsRef<int(const char *name)>(0x00476270);
 
@@ -135,7 +135,7 @@ namespace rf
     static auto& multi_game_options = AddrAsRef<uint32_t>(0x0064EC40);
     static auto& serv_addr = AddrAsRef<NwAddr>(0x0064EC5C);
     static auto& level_rotation_idx = AddrAsRef<int>(0x0064EC64);
-    static auto& server_levels = AddrAsRef<DynamicArray<String>>(0x0064EC68);
+    static auto& server_levels = AddrAsRef<VArray<String>>(0x0064EC68);
     static auto& is_multi = AddrAsRef<bool>(0x0064ECB9);
     static auto& is_server = AddrAsRef<bool>(0x0064ECBA);
     static auto& is_dedicated_server = AddrAsRef<bool>(0x0064ECBB);

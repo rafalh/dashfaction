@@ -15,7 +15,7 @@ DcCommand2 vli_cmd{
     []() {
         g_game_config.glares = !g_game_config.glares;
         g_game_config.save();
-        rf::DcPrintf("Volumetric lightining is %s.", g_game_config.glares ? "enabled" : "disabled");
+        rf::ConsolePrintf("Volumetric lightining is %s.", g_game_config.glares ? "enabled" : "disabled");
     },
     "Toggles volumetric lightining",
 };
@@ -28,7 +28,7 @@ DcCommand2 player_count_cmd{
 
         auto player_list = SinglyLinkedList{rf::player_list};
         auto player_count = std::distance(player_list.begin(), player_list.end());
-        rf::DcPrintf("Player count: %d\n", player_count);
+        rf::ConsolePrintf("Player count: %d\n", player_count);
     },
     "Get player count",
 };
@@ -38,7 +38,7 @@ DcCommand2 find_level_cmd{
     [](std::string pattern) {
         PackfileFindMatchingFiles(StringMatcher().Infix(pattern).Suffix(".rfl"), [](const char* name) {
             // Print all matching filenames
-            rf::DcPrintf("%s\n", name);
+            rf::ConsolePrintf("%s\n", name);
         });
     },
     "Find a level by a filename fragment",
@@ -50,7 +50,7 @@ DcCommandAlias find_map_cmd{
     find_level_cmd,
 };
 
-auto& level_cmd = AddrAsRef<rf::DcCommand>(0x00637078);
+auto& level_cmd = AddrAsRef<rf::ConsoleCommand>(0x00637078);
 DcCommandAlias map_cmd{
     "map",
     level_cmd,
@@ -58,9 +58,9 @@ DcCommandAlias map_cmd{
 
 static void RegisterBuiltInCommand(const char* name, const char* description, uintptr_t addr)
 {
-    static std::vector<std::unique_ptr<rf::DcCommand>> builtin_commands;
-    auto cmd = std::make_unique<rf::DcCommand>();
-    rf::DcCommand::Init(cmd.get(), name, description, reinterpret_cast<rf::DcCmdHandler>(addr));
+    static std::vector<std::unique_ptr<rf::ConsoleCommand>> builtin_commands;
+    auto cmd = std::make_unique<rf::ConsoleCommand>();
+    rf::ConsoleCommand::Init(cmd.get(), name, description, reinterpret_cast<rf::ConsoleCommandFuncPtr>(addr));
     builtin_commands.push_back(std::move(cmd));
 }
 
@@ -140,7 +140,7 @@ void ConsoleCommandsInit()
     RegisterBuiltInCommand("savegame", "Save the current game", 0x004B3410);
     RegisterBuiltInCommand("loadgame", "Load a game", 0x004B34C0);
     RegisterBuiltInCommand("show_obj_times", "Set the number of portal objects to show times for", 0x004D3250);
-    // Some commands does not use dc_exec variables and were not added e.g. 004D3290
+    // Some commands does not use console_exec variables and were not added e.g. 004D3290
     RegisterBuiltInCommand("save_commands", "Print out console commands to the text file console.txt", 0x00509920);
     RegisterBuiltInCommand("script", "Runs a console script file (.vcs)", 0x0050B7D0);
     RegisterBuiltInCommand("screen_res", nullptr, 0x0050E400);

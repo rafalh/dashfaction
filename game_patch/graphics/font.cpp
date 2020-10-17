@@ -53,8 +53,8 @@ class GrNewFont
 {
 public:
     GrNewFont(std::string_view name);
-    void draw(int x, int y, std::string_view text, rf::GrRenderState state) const;
-    void draw_aligned(rf::GrTextAlignment align, int x, int y, std::string_view text, rf::GrRenderState state) const;
+    void draw(int x, int y, std::string_view text, rf::GrMode state) const;
+    void draw_aligned(rf::GrTextAlignment align, int x, int y, std::string_view text, rf::GrMode state) const;
     void get_size(int* w, int* h, std::string_view text) const;
 
     const std::string& get_name() const
@@ -304,12 +304,12 @@ GrNewFont::GrNewFont(std::string_view name) :
     auto [atlas_w, atlas_h] = atlas_packer.get_size();
 
     xlog::trace("Creating font texture atlas %dx%d", atlas_w, atlas_h);
-    bitmap_ = rf::BmCreateUserBmap(rf::BMPF_ARGB_8888, atlas_w, atlas_h);
+    bitmap_ = rf::BmCreate(rf::BM_FORMAT_ARGB_8888, atlas_w, atlas_h);
     if (bitmap_ == -1) {
-        xlog::error("BmCreateUserBmap failed for font texture");
+        xlog::error("BmCreate failed for font texture");
         throw std::runtime_error{"failed to load font"};
     }
-    rf::GrLockData lock;
+    rf::GrLockInfo lock;
     if (!rf::GrLock(bitmap_, 0, &lock, 2)) {
         xlog::error("GrLock failed for font texture");
         throw std::runtime_error{"failed to load font"};
@@ -345,7 +345,7 @@ GrNewFont::GrNewFont(std::string_view name) :
 
         int pixel_size = GetPixelFormatSize(lock.pixel_format);
         auto dst_ptr = bitmap_bits + glyph_bm_y * lock.pitch + glyph_bm_x * pixel_size;
-        ConvertSurfacePixelFormat(dst_ptr, lock.pixel_format, bitmap.buffer, rf::BMPF_A_8, bitmap.width, bitmap.rows, lock.pitch, bitmap.pitch);
+        ConvertSurfacePixelFormat(dst_ptr, lock.pixel_format, bitmap.buffer, rf::BM_FORMAT_A_8, bitmap.width, bitmap.rows, lock.pitch, bitmap.pitch);
 
         glyphs_.push_back(glyph_info);
     }
@@ -354,7 +354,7 @@ GrNewFont::GrNewFont(std::string_view name) :
     rf::GrTcacheAddRef(bitmap_);
 }
 
-void GrNewFont::draw(int x, int y, std::string_view text, rf::GrRenderState state) const
+void GrNewFont::draw(int x, int y, std::string_view text, rf::GrMode state) const
 {
     if (x == rf::center_x) {
         draw_aligned(rf::GR_ALIGN_CENTER, rf::gr_screen.clip_width / 2, y, text, state);
@@ -381,7 +381,7 @@ void GrNewFont::draw(int x, int y, std::string_view text, rf::GrRenderState stat
     }
 }
 
-void GrNewFont::draw_aligned(rf::GrTextAlignment alignment, int x, int y, std::string_view text, rf::GrRenderState state) const
+void GrNewFont::draw_aligned(rf::GrTextAlignment alignment, int x, int y, std::string_view text, rf::GrMode state) const
 {
     size_t cur_pos = 0;
     while (cur_pos < text.size()) {
@@ -505,18 +505,18 @@ FunHook<int(int)> GrGetFontHeight_hook{
     },
 };
 
-FunHook<void(int, int, const char*, int, rf::GrRenderState)> GrString_hook{
+FunHook<void(int, int, const char*, int, rf::GrMode)> GrString_hook{
     0x0051FEB0,
-    [](int x, int y, const char *text, int font_num, rf::GrRenderState render_state) {
+    [](int x, int y, const char *text, int font_num, rf::GrMode mode) {
         if (font_num == -1) {
             font_num = g_default_font_id;
         }
         if (font_num & ttf_font_flag) {
             auto& font = g_fonts[font_num & ~ttf_font_flag];
-            font.draw(x, y, text, render_state);
+            font.draw(x, y, text, mode);
         }
         else {
-            GrString_hook.CallTarget(x, y, text, font_num, render_state);
+            GrString_hook.CallTarget(x, y, text, font_num, mode);
         }
     },
 };

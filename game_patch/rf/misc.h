@@ -53,13 +53,13 @@ namespace rf
 
     /* Other */
 
-    struct RflCutscene;
+    struct Cutscene;
 
     static auto& level_name = AddrAsRef<String>(0x00645FDC);
     static auto& level_filename = AddrAsRef<String>(0x00645FE4);
     static auto& level_author = AddrAsRef<String>(0x00645FEC);
     static auto& default_player_weapon = AddrAsRef<String>(0x007C7600);
-    static auto& active_cutscene = AddrAsRef<RflCutscene*>(0x00645320);
+    static auto& active_cutscene = AddrAsRef<Cutscene*>(0x00645320);
     static auto& lan_only_cmd_line_param = AddrAsRef<CmdLineParam>(0x0063F608);
 
     static auto& RfBeep = AddrAsRef<void(unsigned u1, unsigned u2, unsigned u3, float volume)>(0x00505560);
@@ -137,7 +137,7 @@ namespace rf
 
     /* Model collide */
 
-    struct ModelCollideInput
+    struct VMeshCollisionInput
     {
         Vector3 mesh_pos;
         Matrix3 mesh_orient;
@@ -148,28 +148,28 @@ namespace rf
         Vector3 transformed_start_pos;
         Vector3 transformed_pos_diff;
 
-        ModelCollideInput()
+        VMeshCollisionInput()
         {
             AddrCaller{0x00416190}.this_call(this);
         }
 
     };
-    static_assert(sizeof(ModelCollideInput) == 0x68);
+    static_assert(sizeof(VMeshCollisionInput) == 0x68);
 
-    struct ModelCollideOutput
+    struct VMeshCollisionOutput
     {
         float fraction;
         Vector3 hit_point;
         Vector3 hit_normal;
         short *triangle_indices;
 
-        ModelCollideOutput()
+        VMeshCollisionOutput()
         {
             AddrCaller{0x004161D0}.this_call(this);
         }
     };
-    static_assert(sizeof(ModelCollideOutput) == 0x20);
+    static_assert(sizeof(VMeshCollisionOutput) == 0x20);
 
-    struct AnimMesh;
-    static auto& ModelCollide = AddrAsRef<bool(AnimMesh *anim_mesh, ModelCollideInput *in, ModelCollideOutput *out, bool clear)>(0x005031F0);
+    struct VMesh;
+    static auto& VMeshCollide = AddrAsRef<bool(VMesh *vmesh, VMeshCollisionInput *in, VMeshCollisionOutput *out, bool clear)>(0x005031F0);
 }

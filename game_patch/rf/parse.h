@@ -4,7 +4,7 @@
 
 namespace rf
 {
-    struct StrParser
+    struct Parser
     {
         bool OptionalString(const char *str)
         {
@@ -16,32 +16,32 @@ namespace rf
             return AddrCaller{0x005126A0}.this_call<bool>(this, str);
         }
 
-        bool GetBool()
+        bool ParseBool()
         {
             return AddrCaller{0x005126F0}.this_call<bool>(this);
         }
 
-        int GetInt()
+        int ParseInt()
         {
             return AddrCaller{0x00512750}.this_call<int>(this);
         }
 
-        unsigned GetUInt()
+        unsigned ParseUInt()
         {
             return AddrCaller{0x00512840}.this_call<unsigned>(this);
         }
 
-        float GetFloat()
+        float ParseFloat()
         {
             return AddrCaller{0x00512920}.this_call<float>(this);
         }
 
-        int GetString(String *out_str, char first_char = '"', char last_char = '"')
+        int ParseString(String *out_str, char first_char = '"', char last_char = '"')
         {
             return AddrCaller{0x00512BB0}.this_call<int>(this, out_str, first_char, last_char);
         }
 
-        bool IsEof() const
+        bool ParseEof() const
         {
             return AddrCaller{0x00513780}.this_call<bool>(this);
         }
