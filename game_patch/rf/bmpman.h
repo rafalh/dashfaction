@@ -28,7 +28,7 @@ namespace rf
         BM_TYPE_INVALID = 0x0,
         BM_TYPE_PCX = 0x1,
         BM_TYPE_TGA = 0x2,
-        BM_TYPE_USERBMAP = 0x3,
+        BM_TYPE_USER = 0x3,
         BM_TYPE_VAF = 0x4,
         BM_TYPE_VBM = 0x5,
         BM_TYPE_M2V = 0x6,

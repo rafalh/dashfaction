@@ -36,12 +36,12 @@ CodeInjection switch_model_event_obj_lighting_and_physics_fix{
         auto obj = reinterpret_cast<rf::Object*>(regs.edi);
         obj->mesh_lighting_data = nullptr;
         // Try to fix physics
-        assert(obj->p_data.colliders.Size() >= 1);
+        assert(obj->p_data.cspheres.Size() >= 1);
         auto& csphere = obj->p_data.cspheres.Get(0);
         csphere.center = rf::Vector3(.0f, .0f, .0f);
         csphere.radius = obj->radius + 1000.0f;
-        auto PhysUpdateSizeFromColliders = AddrAsRef<void(rf::PhysicsData& pi)>(0x004A0CB0);
-        PhysUpdateSizeFromColliders(obj->p_data);
+        auto PhysicsUpdateBBox = AddrAsRef<void(rf::PhysicsData& pd)>(0x004A0CB0);
+        PhysicsUpdateBBox(obj->p_data);
     },
 };
 
