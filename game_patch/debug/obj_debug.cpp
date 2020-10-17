@@ -11,8 +11,8 @@ std::optional<float> g_target_rotate_speed;
 namespace rf
 {
 
-class GSolid;
-class GFace;
+struct GSolid;
+struct GFace;
 
 struct PersonasTbl
 {
