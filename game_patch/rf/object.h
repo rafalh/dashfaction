@@ -13,7 +13,6 @@ namespace rf
 
     // Typedefs
     using PhysicsFlags = int;
-    using V3DType = int;
     using ObjectUse = int;
 
     // Object
@@ -170,6 +169,14 @@ namespace rf
         int physics_flags;
     };
     static_assert(sizeof(ObjectCreateInfo) == 0x98);
+
+    enum VMeshType
+    {
+        MESH_TYPE_UNINITIALIZED = 0,
+        MESH_TYPE_STATIC = 1,
+        MESH_TYPE_CHARACTER = 2,
+        MESH_TYPE_ANIM_FX = 3,
+    };
 
     static auto& ObjLookupFromUid = AddrAsRef<Object*(int uid)>(0x0048A4A0);
     static auto& ObjFromHandle = AddrAsRef<Object*(int handle)>(0x0040A0E0);

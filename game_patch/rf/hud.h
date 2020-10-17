@@ -130,7 +130,7 @@ namespace rf
 
     struct WeaponCycle
     {
-        int cls_id;
+        int weapon_type;
         VMesh *mesh;
         VMesh *fpgun_mesh;
         int category;

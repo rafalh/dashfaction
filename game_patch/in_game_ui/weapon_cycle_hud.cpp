@@ -93,17 +93,17 @@ void RenderSelectWeaponGui()
     for (auto& pref_id : rf::local_player->pref_weapons) {
         rf::WeaponCycle* cycle_entry = nullptr;
         for (auto& entry : rf::hud_weapon_cycle) {
-            if (entry.cls_id == pref_id) {
+            if (entry.weapon_type == pref_id) {
                 cycle_entry = &entry;
             }
         }
-        if (!cycle_entry || cycle_entry->cls_id == -1 ||  cycle_entry->category == -1) {
+        if (!cycle_entry || cycle_entry->weapon_type == -1 ||  cycle_entry->category == -1) {
             continue;
         }
-        if (!rf::AiPossessesWeapon(ai_info, cycle_entry->cls_id)) {
+        if (!rf::AiPossessesWeapon(ai_info, cycle_entry->weapon_type)) {
             continue;
         }
-        int weapon_type = cycle_entry->cls_id;
+        int weapon_type = cycle_entry->weapon_type;
         int weapon_category = cycle_entry->category;
         if (rf::PlayerGetWeaponTotalAmmo(rf::local_player, weapon_type) <= 0) {
             rf::GrSetColorRgba(254, 55, 55, 255);
@@ -137,7 +137,7 @@ void RenderSelectWeaponGui()
             int weapon_icon_y = weapon_icons_start_y + weapon_icon_delta_y * idx;
             int weapon_icon_bmh = weapon_icon_bitmaps[weapon_type];
             HudScaledBitmap(weapon_icon_bmh, weapon_icons_x, weapon_icon_y, weapon_icon_scale);
-            if (weapon_type == selected_cycle_entry.cls_id) {
+            if (weapon_type == selected_cycle_entry.weapon_type) {
                 rf::GrSetColorRgba(239, 213, 52, 255);
                 HudRectBorder(weapon_icons_x - 1, weapon_icon_y - 1, weapon_icon_w + 2, weapon_icon_h + 2, 1);
             }
@@ -145,7 +145,8 @@ void RenderSelectWeaponGui()
         ++num_drawn_weapons_per_category[weapon_category];
     }
     rf::GrSetColorRgba(15, 242, 2, 255);
-    auto display_name = rf::weapon_types[selected_cycle_entry.cls_id].display_name.CStr();
+    auto& weapon_info = rf::weapon_types[selected_cycle_entry.weapon_type];
+    auto display_name = weapon_info.display_name.CStr();
     int num_weapons_for_current_type = num_drawn_weapons_per_category[selected_cycle_entry.category];
     int weapon_name_y = weapon_icons_start_y + weapon_icon_delta_y * (num_weapons_for_current_type + 1);
     rf::GrStringAligned(rf::GR_ALIGN_CENTER, center_x, weapon_name_y, display_name, font_num);

@@ -19,13 +19,13 @@ CodeInjection switch_model_event_custom_mesh_patch{
         auto& mesh_name = *reinterpret_cast<rf::String*>(regs.esi);
         std::string_view mesh_name_sv{mesh_name.CStr()};
         if (StringEndsWithIgnoreCase(mesh_name_sv, ".v3m")) {
-            mesh_type = 1;
+            mesh_type = rf::MESH_TYPE_STATIC;
         }
         else if (StringEndsWithIgnoreCase(mesh_name_sv, ".v3c")) {
-            mesh_type = 2;
+            mesh_type = rf::MESH_TYPE_CHARACTER;
         }
         else if (StringEndsWithIgnoreCase(mesh_name_sv, ".vfx")) {
-            mesh_type = 3;
+            mesh_type = rf::MESH_TYPE_ANIM_FX;
         }
     },
 };

@@ -87,7 +87,7 @@ namespace rf
         int default_primary_weapon;
         int default_secondary_weapon;
         int default_melee_weapon;
-        V3DType v3d_type;
+        VMeshType vmesh_class;
         int material;
         Vector3 field_9C;
         Vector3 field_A8;

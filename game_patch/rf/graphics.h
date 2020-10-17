@@ -26,38 +26,40 @@ namespace rf
 
     enum GrColorSource
     {
-        COLOR_SOURCE_SEL_TEXTURE_UNK = 0x0,
-        COLOR_SOURCE_SEL_TEXTURE = 0x1,
-        COLOR_SOURCE_MUL = 0x2,
-        COLOR_SOURCE_ADD = 0x3,
-        COLOR_SOURCE_MUL2X = 0x4,
+        COLOR_SOURCE_VERTEX = 0x0,
+        COLOR_SOURCE_TEXTURE = 0x1,
+        COLOR_SOURCE_VERTEX_TIMES_TEXTURE = 0x2,
+        COLOR_SOURCE_VERTEX_PLUS_TEXTURE = 0x3,
+        COLOR_SOURCE_VERTEX_TIMES_TEXTURE_2X = 0x4,
     };
+
 
     enum GrAlphaSource
     {
-        ALPHA_SOURCE_SEL_DIFFUSE = 0x0,
-        ALPHA_SOURCE_UNK = 0x1,
-        ALPHA_SOURCE_SEL_TEXTURE = 0x2,
-        ALPHA_SOURCE_MUL = 0x3,
+        ALPHA_SOURCE_VERTEX = 0x0,
+        ALPHA_SOURCE_VERTEX_NONDARKENING = 0x1,
+        ALPHA_SOURCE_TEXTURE = 0x2,
+        ALPHA_SOURCE_VERTEX_TIMES_TEXTURE = 0x3,
     };
 
     enum GrAlphaBlend
     {
         ALPHA_BLEND_NONE = 0x0,
         ALPHA_BLEND_ADDITIVE = 0x1,
-        ALPHA_BLEND_ADDITIVE_SRC_ALPHA_2 = 0x2,
-        ALPHA_BLEND_DEFAULT = 0x3,
-        ALPHA_BLEND_ADDITIVE_SRC_ALPHA_4 = 0x4,
-        ALPHA_BLEND_DEST_COLOR = 0x5,
-        ALPHA_BLEND_INV_DEST_COLOR = 0x6,
+        ALPHA_BLEND_ALPHA_ADDITIVE = 0x2,
+        ALPHA_BLEND_ALPHA = 0x3,
+        ALPHA_BLEND_SRC_COLOR = 0x4,
+        ALPHA_BLEND_LIGHTMAP = 0x5,
+        ALPHA_BLEND_SUBTRACTIVE = 0x6,
         ALPHA_BLEND_SWAPPED_SRC_DEST_COLOR = 0x7,
     };
+
 
     enum GrZbufferType
     {
         ZBUFFER_TYPE_NONE = 0x0,
         ZBUFFER_TYPE_READ = 0x1,
-        ZBUFFER_TYPE_READ_EQ_FUNC = 0x2,
+        ZBUFFER_TYPE_READ_EQUAL = 0x2,
         ZBUFFER_TYPE_WRITE = 0x3,
         ZBUFFER_TYPE_FULL = 0x4,
         ZBUFFER_TYPE_FULL_ALPHA_TEST = 0x5,
@@ -65,10 +67,10 @@ namespace rf
 
     enum GrFogType
     {
-        FOG_TYPE_0 = 0x0,
-        FOG_TYPE_1 = 0x1,
-        FOG_TYPE_2 = 0x2,
-        FOG_TYPE_FORCE_OFF = 0x3,
+        FOG_ALLOWED = 0x0,
+        FOG_ALLOWED_ADD2 = 0x1,
+        FOG_ALLOWED_MULT2 = 0x2,
+        FOG_NOT_ALLOWED = 0x3,
     };
 
     struct GrMode

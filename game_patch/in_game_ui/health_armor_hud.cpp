@@ -92,11 +92,11 @@ FunHook<void(rf::Player*)> HudRenderHealthAndEnviro_hook{
                 rf::GrSetColorRgba(255, 255, 255, 255);
                 static const rf::GrMode state{
                     rf::TEXTURE_SOURCE_WRAP,
-                    rf::COLOR_SOURCE_MUL,
-                    rf::ALPHA_SOURCE_MUL,
+                    rf::COLOR_SOURCE_VERTEX_TIMES_TEXTURE,
+                    rf::ALPHA_SOURCE_VERTEX_TIMES_TEXTURE,
                     rf::ALPHA_BLEND_ADDITIVE,
                     rf::ZBUFFER_TYPE_NONE,
-                    rf::FOG_TYPE_FORCE_OFF,
+                    rf::FOG_NOT_ALLOWED,
                 };
                 auto [corpse_icon_x, corpse_icon_y] = HudScaleCoords(rf::hud_points[rf::hud_corpse_icon], scale);
                 HudScaledBitmap(rf::hud_body_indicator_bmh, corpse_icon_x, corpse_icon_y, scale, state);
