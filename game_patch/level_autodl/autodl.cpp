@@ -403,10 +403,10 @@ void RenderDownloadProgress()
         if (!g_packfiles_to_load.empty()) {
             // Load one packfile per frame
             auto& filename = g_packfiles_to_load.front();
-            rf::PackfileSetLoadingUserMaps(true);
-            if (!rf::PackfileLoad(filename.c_str(), "user_maps\\multi\\"))
-                xlog::error("PackfileLoad failed - %s", filename.c_str());
-            rf::PackfileSetLoadingUserMaps(false);
+            rf::VPackfileSetLoadingUserMaps(true);
+            if (!rf::VPackfileAdd(filename.c_str(), "user_maps\\multi\\"))
+                xlog::error("VPackfileAdd failed - %s", filename.c_str());
+            rf::VPackfileSetLoadingUserMaps(false);
             g_packfiles_to_load.erase(g_packfiles_to_load.begin());
         }
         return;

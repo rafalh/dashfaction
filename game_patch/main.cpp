@@ -15,7 +15,7 @@
 #include "multi/kill.h"
 #include "multi/network.h"
 #include "misc/misc.h"
-#include "misc/packfile.h"
+#include "misc/vpackfile.h"
 #include "misc/wndproc.h"
 #include "misc/high_fps.h"
 #include "utils/os-utils.h"
@@ -77,7 +77,7 @@ CallHook<void()> RFInit_hook{
         auto start_ticks = GetTickCount();
         xlog::info("Initializing game...");
         RFInit_hook.CallTarget();
-        PackfileDisableOverriding();
+        VPackfileDisableOverriding();
         xlog::info("Game initialized (%lu ms).", GetTickCount() - start_ticks);
     },
 };
@@ -364,7 +364,7 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     InitAutodownloader();
     InitScoreboard();
     InitKill();
-    PackfileApplyPatches();
+    VPackfileApplyPatches();
     SpectateModeInit();
     HighFpsInit();
     MiscInit();

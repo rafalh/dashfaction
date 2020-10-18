@@ -1,6 +1,6 @@
 #include "console.h"
 #include "../main.h"
-#include "../misc/packfile.h"
+#include "../misc/vpackfile.h"
 #include "../rf/player.h"
 #include <patch_common/FunHook.h>
 #include <cstring>
@@ -94,7 +94,7 @@ void DcAutoCompleteLevel(int offset)
     bool first = true;
     std::string common_prefix;
     std::vector<std::string> matches;
-    PackfileFindMatchingFiles(StringMatcher().Prefix(level_name).Suffix(".rfl"), [&](const char* name) {
+    VPackfileFindMatchingFiles(StringMatcher().Prefix(level_name).Suffix(".rfl"), [&](const char* name) {
         auto ext = strrchr(name, '.');
         auto name_len = ext ? ext - name : strlen(name);
         std::string name_without_ext(name, name_len);

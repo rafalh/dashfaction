@@ -4,7 +4,7 @@
 #include "../rf/network.h"
 #include "../rf/player.h"
 #include "../misc/misc.h"
-#include "../misc/packfile.h"
+#include "../misc/vpackfile.h"
 #include "../utils/list-utils.h"
 #include <algorithm>
 #include <patch_common/CallHook.h>
@@ -36,7 +36,7 @@ DcCommand2 player_count_cmd{
 DcCommand2 find_level_cmd{
     "findlevel",
     [](std::string pattern) {
-        PackfileFindMatchingFiles(StringMatcher().Infix(pattern).Suffix(".rfl"), [](const char* name) {
+        VPackfileFindMatchingFiles(StringMatcher().Infix(pattern).Suffix(".rfl"), [](const char* name) {
             // Print all matching filenames
             rf::ConsolePrintf("%s\n", name);
         });

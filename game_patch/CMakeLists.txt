@@ -118,8 +118,8 @@ set(SRCS
     misc/high_fps.h
     misc/misc.cpp
     misc/misc.h
-    misc/packfile.cpp
-    misc/packfile.h
+    misc/vpackfile.cpp
+    misc/vpackfile.h
     misc/wndproc.cpp
     misc/wndproc.h
     misc/sound.cpp
