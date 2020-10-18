@@ -232,7 +232,7 @@ CodeInjection ProcessObjUpdatePacket_check_if_weapon_is_possessed_patch{
     [](auto& regs) {
         auto entity = reinterpret_cast<rf::Entity*>(regs.edi);
         auto weapon_type = regs.ebx;
-        if (rf::is_server && !rf::AiPossessesWeapon(&entity->ai_info, weapon_type)) {
+        if (rf::is_server && !rf::AiHasWeapon(&entity->ai_info, weapon_type)) {
             // skip switching player weapon
             xlog::info("Skipping weapon switch because player does not possess the weapon");
             regs.eip = 0x0047E467;

@@ -100,7 +100,7 @@ void RenderSelectWeaponGui()
         if (!cycle_entry || cycle_entry->weapon_type == -1 ||  cycle_entry->category == -1) {
             continue;
         }
-        if (!rf::AiPossessesWeapon(ai_info, cycle_entry->weapon_type)) {
+        if (!rf::AiHasWeapon(ai_info, cycle_entry->weapon_type)) {
             continue;
         }
         int weapon_type = cycle_entry->weapon_type;

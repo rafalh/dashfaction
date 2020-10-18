@@ -37,8 +37,8 @@ namespace rf
     static auto& CameraSetFirstPerson = AddrAsRef<bool(Camera *camera)>(0x0040DDF0);
     static auto& CameraSetFreelook = AddrAsRef<bool(Camera *camera)>(0x0040DCF0);
     static auto& CameraSetFixed = AddrAsRef<bool(Camera *camera)>(0x0040DF70);
-    static auto& CameraGetPos = AddrAsRef<void(rf::Vector3* camera_pos, rf::Camera *camera)>(0x0040D760);
-    static auto& CameraGetOrient = AddrAsRef<void(rf::Matrix3* camera_orient, rf::Camera *camera)>(0x0040D780);
+    static auto& CameraGetPos = AddrAsRef<void(Vector3* camera_pos, Camera *camera)>(0x0040D760);
+    static auto& CameraGetOrient = AddrAsRef<void(Matrix3* camera_orient, Camera *camera)>(0x0040D780);
 
     /* Config */
 

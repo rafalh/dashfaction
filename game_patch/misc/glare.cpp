@@ -35,7 +35,7 @@ static bool GlareCollideObject(rf::Glare* glare, rf::Object* obj, const rf::Vect
     if (rf::CutsceneIsActive() && obj->type == rf::OT_ENTITY) {
         // Fix glares/coronas being visible through characters during cutscenes
         rf::Vector3 root_bone_pos;
-        rf::ObjectFindRootBonePos(static_cast<rf::Entity*>(obj), root_bone_pos);
+        rf::ObjFindRootBonePos(static_cast<rf::Entity*>(obj), root_bone_pos);
         rf::Vector3 aabb_min = root_bone_pos - obj->p_data.radius;
         rf::Vector3 aabb_max = root_bone_pos + obj->p_data.radius;
         if (!rf::IxLineSegmentBoundingBox(aabb_min, aabb_max, glare->pos, eye_pos, &hit_pt)) {

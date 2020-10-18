@@ -181,6 +181,7 @@ namespace rf
     static auto& ObjLookupFromUid = AddrAsRef<Object*(int uid)>(0x0048A4A0);
     static auto& ObjFromHandle = AddrAsRef<Object*(int handle)>(0x0040A0E0);
     static auto& ObjQueueDelete = AddrAsRef<void(Object* obj)>(0x0048AB40);
+    static auto& ObjFindRootBonePos = AddrAsRef<void(Object*, Vector3&)>(0x0048AC70);
 }
 
 template<>

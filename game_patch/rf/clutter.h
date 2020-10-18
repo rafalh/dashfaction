@@ -29,5 +29,5 @@ namespace rf
     };
     static_assert(sizeof(Clutter) == 0x2D8);
 
-    static auto& clutter_list = AddrAsRef<rf::Clutter>(0x005C9360);
+    static auto& clutter_list = AddrAsRef<Clutter>(0x005C9360);
 }

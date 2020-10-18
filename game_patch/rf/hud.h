@@ -98,8 +98,8 @@ namespace rf
 
     struct ChatMsg
     {
-        rf::String name;
-        rf::String text;
+        String name;
+        String text;
         int color_id;
     };
 
@@ -136,8 +136,8 @@ namespace rf
         int category;
     };
 
-    static auto& hud_close_weapon_cycle_timer = AddrAsRef<rf::Timestamp>(0x007C73B8);
-    static auto& hud_weapon_cycle = AddrAsRef<rf::WeaponCycle[32]>(0x007C71B0);
+    static auto& hud_close_weapon_cycle_timer = AddrAsRef<Timestamp>(0x007C73B8);
+    static auto& hud_weapon_cycle = AddrAsRef<WeaponCycle[32]>(0x007C71B0);
     static auto& hud_render_weapon_cycle = AddrAsRef<bool>(0x007C7640);
     static auto& hud_weapon_display_off_foley_snd = AddrAsRef<int>(0x007C75D0);
     static auto& hud_weapon_cycle_current_idx = AddrAsRef<int>(0x007C71A8);

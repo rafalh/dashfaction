@@ -40,19 +40,19 @@ std::string g_prev_level;
 void ParseVoteConfig(const char* vote_name, VoteConfig& config, rf::Parser& parser)
 {
     std::string vote_option_name = StringFormat("$DF %s:", vote_name);
-    if (parser.OptionalString(vote_option_name.c_str())) {
+    if (parser.ParseOptional(vote_option_name.c_str())) {
         config.enabled = parser.ParseBool();
         rf::ConsolePrintf("DF %s: %s", vote_name, config.enabled ? "true" : "false");
 
-        // if (parser.OptionalString("+Min Voters:")) {
+        // if (parser.ParseOptional("+Min Voters:")) {
         //     config.min_voters = parser.ParseUInt();
         // }
 
-        // if (parser.OptionalString("+Min Percentage:")) {
+        // if (parser.ParseOptional("+Min Percentage:")) {
         //     config.min_percentage = parser.ParseUInt();
         // }
 
-        if (parser.OptionalString("+Time Limit:")) {
+        if (parser.ParseOptional("+Time Limit:")) {
             config.time_limit_seconds = parser.ParseUInt();
         }
     }
@@ -66,32 +66,32 @@ void LoadAdditionalServerConfig(rf::Parser& parser)
     ParseVoteConfig("Vote Restart", g_additional_server_config.vote_restart, parser);
     ParseVoteConfig("Vote Next", g_additional_server_config.vote_next, parser);
     ParseVoteConfig("Vote Previous", g_additional_server_config.vote_previous, parser);
-    if (parser.OptionalString("$DF Spawn Protection Duration:")) {
+    if (parser.ParseOptional("$DF Spawn Protection Duration:")) {
         g_additional_server_config.spawn_protection_duration_ms = parser.ParseUInt();
     }
-    if (parser.OptionalString("$DF Hitsounds:")) {
+    if (parser.ParseOptional("$DF Hitsounds:")) {
         g_additional_server_config.hit_sounds.enabled = parser.ParseBool();
-        if (parser.OptionalString("+Sound ID:")) {
+        if (parser.ParseOptional("+Sound ID:")) {
             g_additional_server_config.hit_sounds.sound_id = parser.ParseUInt();
         }
-        if (parser.OptionalString("+Rate Limit:")) {
+        if (parser.ParseOptional("+Rate Limit:")) {
             g_additional_server_config.hit_sounds.rate_limit = parser.ParseUInt();
         }
     }
 
-    while (parser.OptionalString("$DF Item Replacement:")) {
+    while (parser.ParseOptional("$DF Item Replacement:")) {
         rf::String old_item, new_item;
         parser.ParseString(&old_item);
         parser.ParseString(&new_item);
         g_additional_server_config.item_replacements.insert({old_item.CStr(), new_item.CStr()});
     }
 
-    if (parser.OptionalString("$DF Default Player Weapon:")) {
+    if (parser.ParseOptional("$DF Default Player Weapon:")) {
         rf::String default_weapon;
         parser.ParseString(&default_weapon);
         g_additional_server_config.default_player_weapon = default_weapon.CStr();
 
-        if (parser.OptionalString("+Initial Ammo:")) {
+        if (parser.ParseOptional("+Initial Ammo:")) {
             auto ammo = parser.ParseUInt();
             g_additional_server_config.default_player_weapon_ammo = {ammo};
 
@@ -104,19 +104,19 @@ void LoadAdditionalServerConfig(rf::Parser& parser)
         }
     }
 
-    if (parser.OptionalString("$DF Require Client Mod:")) {
+    if (parser.ParseOptional("$DF Require Client Mod:")) {
         g_additional_server_config.require_client_mod = parser.ParseBool();
     }
 
-    if (parser.OptionalString("$DF Player Damage Modifier:")) {
+    if (parser.ParseOptional("$DF Player Damage Modifier:")) {
         g_additional_server_config.player_damage_modifier = parser.ParseFloat();
     }
 
-    if (parser.OptionalString("$DF Saving Enabled:")) {
+    if (parser.ParseOptional("$DF Saving Enabled:")) {
         g_additional_server_config.saving_enabled = parser.ParseBool();
     }
 
-    if (parser.OptionalString("$DF Force Player Character:")) {
+    if (parser.ParseOptional("$DF Force Player Character:")) {
         rf::String character_name;
         parser.ParseString(&character_name);
         int character_num = rf::MultiFindCharacter(character_name.CStr());
@@ -128,7 +128,7 @@ void LoadAdditionalServerConfig(rf::Parser& parser)
         }
     }
 
-    if (!parser.OptionalString("$Name:") && !parser.OptionalString("#End")) {
+    if (!parser.ParseOptional("$Name:") && !parser.ParseOptional("#End")) {
         parser.Error("end of server configuration");
     }
 }

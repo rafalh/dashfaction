@@ -11,6 +11,6 @@ namespace rf
         GSolid *geometry;
     };
 
-    auto& mover_brush_list = AddrAsRef<rf::MoverBrush>(0x0064E6E0);
+    auto& mover_brush_list = AddrAsRef<MoverBrush>(0x0064E6E0);
 }
 

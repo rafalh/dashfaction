@@ -33,7 +33,6 @@ namespace rf
         COLOR_SOURCE_VERTEX_TIMES_TEXTURE_2X = 0x4,
     };
 
-
     enum GrAlphaSource
     {
         ALPHA_SOURCE_VERTEX = 0x0,
@@ -53,7 +52,6 @@ namespace rf
         ALPHA_BLEND_SUBTRACTIVE = 0x6,
         ALPHA_BLEND_SWAPPED_SRC_DEST_COLOR = 0x7,
     };
-
 
     enum GrZbufferType
     {
@@ -302,7 +300,7 @@ namespace rf
     static auto& GrReadBackBuffer = AddrAsRef<int(int x, int y, int w, int h, void* buffer)>(0x0050DFF0);
     static auto& GrD3DFlushBuffers = AddrAsRef<void()>(0x00559D90);
     static auto& GrClear = AddrAsRef<void()>(0x0050CDF0);
-    static auto& GrCullSphere = AddrAsRef<bool(rf::Vector3& pos, float radius)>(0x005186A0);
+    static auto& GrCullSphere = AddrAsRef<bool(Vector3& pos, float radius)>(0x005186A0);
     static auto& GrSetTextureMipFilter = AddrAsRef<void(bool linear)>(0x0050E830);
     static auto& GrLock = AddrAsRef<char(int bmh, int section, GrLockInfo* lock, int a4)>(0x0050E2E0);
     static auto& GrUnlock = AddrAsRef<void(GrLockInfo* lock)>(0x0050E310);

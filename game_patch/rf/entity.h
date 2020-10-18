@@ -16,9 +16,9 @@ namespace rf
     struct EntityCollisionSphereOverride
     {
         float radius;
-        int field_4;
-        float dmg_factor_single;
-        float dmg_factor_multi;
+        float damage_factor;
+        float damage_factor_single;
+        float damage_factor_multi;
         float spring_constant;
         float spring_length;
         char name[24];
@@ -52,7 +52,7 @@ namespace rf
         int field_30;
     };
 
-    struct Skin
+    struct ObjSkinInfo
     {
         String name;
         int num_textures;
@@ -91,7 +91,7 @@ namespace rf
         int material;
         Vector3 field_9C;
         Vector3 field_A8;
-        char allowed_weapons[64];
+        bool allowed_weapons[64];
         int muzzle1_prop_id;
         int led1prop_id;
         int primary_muzzle_glare;
@@ -121,19 +121,17 @@ namespace rf
         float min_fly_snd_volume;
         ObjectUse use;
         float use_radius;
-        int primary_prop_ids[3];
-        int secondary_prop_ids[3];
-        int primary_weapon_prop_ids[3];
-        int secondary_weapon_prop_ids[3];
-        int unk_prop_id_1ec;
-        int thruster_prop_ids[33];
+        FArray<int, 2> primary_prop_ids;
+        FArray<int, 2> secondary_prop_ids;
+        FArray<int, 2> primary_weapon_prop_ids;
+        FArray<int, 2> secondary_weapon_prop_ids;
+        int eye_tag;
+        FArray<int, 32> thruster_prop_ids;
         char thruster_vfx[1024];
         int thruster_vfx_count;
-        int corona_prop_ids[9];
-        int corona_glare[8];
-        int field_6bc;
-        int corona_glare_headlamp[8];
-        int field_6e0;
+        FArray<int, 8> corona_prop_ids;
+        FArray<int, 8> corona_glare;
+        FArray<int, 8> corona_glare_headlamp;
         int helmet_prop_id;
         int shell_eject_prop_id;
         int hand_left_prop_id;
@@ -142,8 +140,7 @@ namespace rf
         int explode_anim_vclip;
         float explode_anim_radius;
         Vector3 explode_offset;
-        int num_emitters;
-        int emitters[2];
+        FArray<int, 2> emitters;
         float blind_pursuit_time;
         int field_71C;
         int attack_style;
@@ -168,7 +165,7 @@ namespace rf
         float crouch_dist;
         float unholster_weapon_delay_seconds;
         int num_alt_skins;
-        Skin alt_skins[10];
+        ObjSkinInfo alt_skins[10];
         int num_detail_distances;
         float detail_distances[4];
         String cockpit_vfx;
@@ -545,12 +542,14 @@ namespace rf
     };
     static_assert(sizeof(Corpse) == 0x318);
 
-    static auto& EntityFromHandle = AddrAsRef<Entity*(int handle)>(0x00426FC0);
+    static auto& AiHasWeapon = AddrAsRef<bool(AiInfo *ai_info, int weapon_type)>(0x00403250);
+
     static auto& CorpseFromHandle = AddrAsRef<Corpse*(int handle)>(0x004174C0);
+
+    static auto& EntityFromHandle = AddrAsRef<Entity*(int handle)>(0x00426FC0);
     static auto& EntityCreate =
         AddrAsRef<Entity*(int entity_type, const char* name, int parent_handle, const Vector3& pos,
         const Matrix3& orient, int create_flags, int mp_character)>(0x00422360);
-    static auto& AiPossessesWeapon = AddrAsRef<bool(AiInfo *ai_info, int weapon_type)>(0x00403250);
     static auto& EntityIsDying = AddrAsRef<bool(Entity *entity)>(0x00427020);
     static auto& EntityIsAttachedToVehicle = AddrAsRef<bool(Entity *entity)>(0x004290D0);
     static auto& EntityIsJeepDriver = AddrAsRef<bool(Entity *entity)>(0x0042AC80);
@@ -562,7 +561,6 @@ namespace rf
     static auto& EntityIsHoldingBody = AddrAsRef<bool(Entity *entity)>(0x00429D20);
     static auto& EntityBurnInitBones = AddrAsRef<bool(EntityFireInfo *burn_info, Object *obj)>(0x0042EB20);
     static auto& MultiEntityIsFemale = AddrAsRef<bool(int mp_character_idx)>(0x004762C0);
-    static auto& ObjectFindRootBonePos = AddrAsRef<void(Object*, Vector3&)>(0x48AC70);
 
     static auto& entity_list = AddrAsRef<Entity>(0x005CB060);
     static auto& local_player_entity = AddrAsRef<Entity*>(0x005CB054);

@@ -387,7 +387,7 @@ namespace rf
 
     // Collide
 
-    using IxLineSegmentBoundingBoxType = bool(const rf::Vector3& box_min, const rf::Vector3& box_max, const rf::Vector3& p0,
-                                       const rf::Vector3& p1, rf::Vector3 *hit_pt);
+    using IxLineSegmentBoundingBoxType = bool(const Vector3& box_min, const Vector3& box_max, const Vector3& p0,
+                                       const Vector3& p1, Vector3 *hit_pt);
     static auto& IxLineSegmentBoundingBox = AddrAsRef<IxLineSegmentBoundingBoxType>(0x00508B70);
 }

@@ -6,12 +6,12 @@ namespace rf
 {
     struct Parser
     {
-        bool OptionalString(const char *str)
+        bool ParseOptional(const char *str)
         {
             return AddrCaller{0x005125C0}.this_call<bool>(this, str);
         }
 
-        bool RequiredString(const char *str)
+        bool ParseRequired(const char *str)
         {
             return AddrCaller{0x005126A0}.this_call<bool>(this, str);
         }
