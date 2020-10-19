@@ -7,6 +7,7 @@ Version 1.5.1 (not released yet)
 - add support for bitmaps with alpha channel in Display_Fullscreen_Image event
 - fix level editor not using all space for rendering when used with a big monitor
 - fix wrong aspect ratio in level editor when used with a wide screen
+- make level editor perspective view FOV depend on view aspect ratio
 
 Version 1.5.0 (released 2020-09-05)
 -----------------------------------

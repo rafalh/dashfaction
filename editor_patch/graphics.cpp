@@ -1,5 +1,6 @@
 #include <common/BuildConfig.h>
 #include <patch_common/CallHook.h>
+#include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
 #include <patch_common/AsmWriter.h>
 #include <patch_common/MemUtils.h>
@@ -7,6 +8,7 @@
 #include <xlog/xlog.h>
 #include <windows.h>
 #include <d3d8.h>
+#include <algorithm>
 
 extern HWND g_editor_wnd;
 
@@ -52,6 +54,9 @@ namespace red
         int zbuffer_mode;
     };
     static_assert(sizeof(GrScreen) == 0x90);
+
+    struct Vector3;
+    struct Matrix3;
 
     auto& gr_d3d_buffers_locked = AddrAsRef<bool>(0x0183930D);
     auto& gr_d3d_primitive_type = AddrAsRef<D3DPRIMITIVETYPE>(0x0175A2C8);
@@ -199,6 +204,20 @@ CodeInjection gr_init_widescreen_patch{
     },
 };
 
+FunHook<void(red::Matrix3*, red::Vector3*, float, bool, bool)> gr_setup_3d_hook{
+    0x004C5980,
+    [](red::Matrix3* viewer_orient, red::Vector3* viewer_pos, float horizontal_fov, bool zbuffer_flag, bool z_scale) {
+        // check if this is perspective view
+        if (z_scale) {
+            // RED uses h_fov = 90 by default - make it view aspect dependent
+            horizontal_fov *= static_cast<float>(red::gr_screen.clip_width) / red::gr_screen.clip_height * 0.75f;
+            horizontal_fov = std::clamp(horizontal_fov, 60.0f, 120.0f);
+            //xlog::info("fov %f", horizontal_fov);
+        }
+        gr_setup_3d_hook.CallTarget(viewer_orient, viewer_pos, horizontal_fov, zbuffer_flag, z_scale);
+    },
+};
+
 void ApplyGraphicsPatches()
 {
 #if D3D_HW_VERTEX_PROCESSING
@@ -235,4 +254,7 @@ void ApplyGraphicsPatches()
 
     // Fix aspect ratio on wide screens
     gr_init_widescreen_patch.Install();
+
+    // Make perspective view FOV aspect ratio dependent
+    gr_setup_3d_hook.Install();
 }
