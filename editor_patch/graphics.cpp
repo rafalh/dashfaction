@@ -183,6 +183,15 @@ CodeInjection gr_d3d_render_geometry_face_patch_2{
     },
 };
 
+CallHook<void(int, int, int, int, int, HWND, float, bool, int, D3DFORMAT)> gr_init_hook{
+    0x00482B78,
+    [](int max_w, int max_h, int bit_depth, int mode, int window_mode, HWND hwnd, float far_zvalue, bool sync_blit, int video_card, D3DFORMAT backbuffer_format) {
+        max_w = GetSystemMetrics(SM_CXSCREEN);
+        max_h = GetSystemMetrics(SM_CYSCREEN);
+        gr_init_hook.CallTarget(max_w, max_h, bit_depth, mode, window_mode, hwnd, far_zvalue, sync_blit, video_card, backbuffer_format);
+    },
+};
+
 void ApplyGraphicsPatches()
 {
 #if D3D_HW_VERTEX_PROCESSING
@@ -213,4 +222,7 @@ void ApplyGraphicsPatches()
     gr_d3d_bitmap_patch_2.Install();
     gr_d3d_render_geometry_face_patch_1.Install();
     gr_d3d_render_geometry_face_patch_2.Install();
+
+    // Fix editor not using all space for rendering when used with a big monitor
+    gr_init_hook.Install();
 }
