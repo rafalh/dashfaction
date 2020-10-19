@@ -192,6 +192,13 @@ CallHook<void(int, int, int, int, int, HWND, float, bool, int, D3DFORMAT)> gr_in
     },
 };
 
+CodeInjection gr_init_widescreen_patch{
+    0x004B8CD1,
+    []() {
+        red::gr_screen.aspect = 1.0f;
+    },
+};
+
 void ApplyGraphicsPatches()
 {
 #if D3D_HW_VERTEX_PROCESSING
@@ -225,4 +232,7 @@ void ApplyGraphicsPatches()
 
     // Fix editor not using all space for rendering when used with a big monitor
     gr_init_hook.Install();
+
+    // Fix aspect ratio on wide screens
+    gr_init_widescreen_patch.Install();
 }
