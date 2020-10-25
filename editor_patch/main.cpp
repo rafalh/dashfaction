@@ -67,10 +67,19 @@ CodeInjection CWnd_CreateDlg_injection{
     [](auto& regs) {
         auto& hCurrentResourceHandle = regs.esi;
         auto lpszTemplateName = AddrAsRef<LPCSTR>(regs.esp);
-        // Customize main window top bar (added tool buttons)
+        // Dialog resource customizations:
+        // - 136: main window top bar (added tool buttons)
         if (lpszTemplateName == MAKEINTRESOURCE(136)) {
             hCurrentResourceHandle = reinterpret_cast<int>(g_module);
         }
+    },
+};
+
+CodeInjection CDedLevel_OpenRespawnPointProperties_injection{
+    0x00404CB8,
+    [](auto& regs) {
+        // Fix wrong respawn point reference being used when copying booleans from checkboxes
+        regs.esi = regs.ebx;
     },
 };
 
@@ -168,6 +177,9 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
 
     // Remove "Packfile saved successfully!" message
     AsmWriter{0x0044CCA3, 0x0044CCB3}.nop();
+
+    // Fix changing properties of multiple respawn points
+    CDedLevel_OpenRespawnPointProperties_injection.Install();
 
     // Apply patches defined in other files
     ApplyGraphicsPatches();
