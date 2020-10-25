@@ -6,6 +6,7 @@
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/AsmWriter.h>
+#include <patch_common/CodeInjection.h>
 #include <cstddef>
 #include <cstring>
 #include <crash_handler_stub.h>
@@ -60,6 +61,18 @@ BOOL CEditorApp__InitInstance_AfterHook()
     SetWindowLongPtr(g_editor_wnd, GWL_EXSTYLE, ex_style | WS_EX_ACCEPTFILES);
     return TRUE;
 }
+
+CodeInjection CWnd_CreateDlg_injection{
+    0x0052F112,
+    [](auto& regs) {
+        auto& hCurrentResourceHandle = regs.esi;
+        auto lpszTemplateName = AddrAsRef<LPCSTR>(regs.esp);
+        // Customize main window top bar (added tool buttons)
+        if (lpszTemplateName == MAKEINTRESOURCE(136)) {
+            hCurrentResourceHandle = reinterpret_cast<int>(g_module);
+        }
+    },
+};
 
 using wnd_set_text_type = int __fastcall(void*, void*, const char*);
 extern CallHook<wnd_set_text_type> log_append_wnd_set_text_hook;
@@ -149,6 +162,9 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     log_append_wnd_set_text_hook.Install();
     brush_mode_handle_selection_hook.Install();
     group_mode_handle_selection_hook.Install();
+
+    // Replace some dialog resources
+    CWnd_CreateDlg_injection.Install();
 
     // Apply patches defined in other files
     ApplyGraphicsPatches();
