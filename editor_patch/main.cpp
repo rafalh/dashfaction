@@ -166,6 +166,9 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     // Replace some dialog resources
     CWnd_CreateDlg_injection.Install();
 
+    // Remove "Packfile saved successfully!" message
+    AsmWriter{0x0044CCA3, 0x0044CCB3}.nop();
+
     // Apply patches defined in other files
     ApplyGraphicsPatches();
 
