@@ -9,6 +9,7 @@
 #include <windows.h>
 #include <d3d8.h>
 #include <algorithm>
+#include <cmath>
 
 extern HWND g_editor_wnd;
 
@@ -207,10 +208,19 @@ CodeInjection gr_init_widescreen_patch{
 FunHook<void(red::Matrix3*, red::Vector3*, float, bool, bool)> gr_setup_3d_hook{
     0x004C5980,
     [](red::Matrix3* viewer_orient, red::Vector3* viewer_pos, float horizontal_fov, bool zbuffer_flag, bool z_scale) {
-        // check if this is perspective view
+        // check if this is a perspective view
         if (z_scale) {
-            // RED uses h_fov = 90 by default - make it view aspect dependent
-            horizontal_fov *= static_cast<float>(red::gr_screen.clip_width) / red::gr_screen.clip_height * 0.75f;
+            // Note: RED uses h_fov value of 90 degrees in the perspective view
+            // Use Hor+ scaling method to improve user experience when displayed on a widescreen
+            // Assume provided FOV makes sense on a 4:3 screen
+            float s = static_cast<float>(red::gr_screen.clip_width) / red::gr_screen.clip_height * 0.75f;
+            constexpr float pi = 3.141592;
+            float h_fov_rad = horizontal_fov / 180.0f * pi;
+            float x = std::tan(h_fov_rad / 2.0f);
+            float y = x * s;
+            h_fov_rad = 2.0f * std::atan(y);
+            horizontal_fov = h_fov_rad / pi * 180.0f;
+            // Clamp the value to avoid artifacts when view is very stretched
             horizontal_fov = std::clamp(horizontal_fov, 60.0f, 120.0f);
             //xlog::info("fov %f", horizontal_fov);
         }
@@ -255,6 +265,6 @@ void ApplyGraphicsPatches()
     // Fix aspect ratio on wide screens
     gr_init_widescreen_patch.Install();
 
-    // Make perspective view FOV aspect ratio dependent
+    // Use Hor+ FOV scaling
     gr_setup_3d_hook.Install();
 }
