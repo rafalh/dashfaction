@@ -10,6 +10,7 @@ Version 1.5.1 (not released yet)
 - use Hor+ FOV scaling method in level editor perspective view
 - make level editor perspective view FOV depend on view aspect ratio
 - add Save, Pack, Lighting, Play, Play (camera) buttons in top bar of main editor window
+- remove "Packfile saved successfully!" message after packfile generation in the level editor
 
 Version 1.5.0 (released 2020-09-05)
 -----------------------------------
