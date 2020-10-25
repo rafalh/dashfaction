@@ -11,6 +11,7 @@ Version 1.5.1 (not released yet)
 - make level editor perspective view FOV depend on view aspect ratio
 - add Save, Pack, Lighting, Play, Play (camera) buttons in top bar of main editor window
 - remove "Packfile saved successfully!" message after packfile generation in the level editor
+- do not reduce editor FPS when editor dialog box is open
 
 Version 1.5.0 (released 2020-09-05)
 -----------------------------------
