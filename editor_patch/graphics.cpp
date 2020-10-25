@@ -76,7 +76,7 @@ CallHook<void()> frametime_calculate_hook{
             // when minimized 1 FPS
             Sleep(1000);
         }
-        else if (GetForegroundWindow() != g_editor_wnd) {
+        else if (GetForegroundWindow() != g_editor_wnd && GetParent(GetForegroundWindow()) != g_editor_wnd) {
             // when in background 4 FPS
             Sleep(250);
         }
