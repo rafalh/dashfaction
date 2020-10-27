@@ -65,6 +65,24 @@ public:
     }
 };
 
+template<class R, class... A>
+class FunHook<R __stdcall(A...)> : public FunHookImpl
+{
+private:
+    typedef R __stdcall FunType(A...);
+
+public:
+    FunHook(uintptr_t target_fun_addr, FunType* hook_fun_ptr) :
+        FunHookImpl(target_fun_addr, reinterpret_cast<void*>(hook_fun_ptr))
+    {}
+
+    R CallTarget(A... a)
+    {
+        auto trampoline_ptr = reinterpret_cast<FunType*>(m_subhook.GetTrampoline());
+        return trampoline_ptr(a...);
+    }
+};
+
 #ifdef __cpp_deduction_guides
 // deduction guide for lambda functions
 template<class T>
