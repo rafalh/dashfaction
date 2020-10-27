@@ -13,6 +13,7 @@ Version 1.5.1 (not released yet)
 - remove "Packfile saved successfully!" message after packfile generation in the level editor
 - do not reduce editor FPS when editor dialog box is open
 - fix changing properties of multiple respawn points in level editor
+- add multiplayer settings in trigger properties window in level editor
 
 Version 1.5.0 (released 2020-09-05)
 -----------------------------------

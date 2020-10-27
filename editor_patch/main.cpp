@@ -10,6 +10,7 @@
 #include <cstddef>
 #include <cstring>
 #include <crash_handler_stub.h>
+#include "resources.h"
 
 #include <xlog/ConsoleAppender.h>
 #include <xlog/FileAppender.h>
@@ -69,7 +70,20 @@ CodeInjection CWnd_CreateDlg_injection{
         auto lpszTemplateName = AddrAsRef<LPCSTR>(regs.esp);
         // Dialog resource customizations:
         // - 136: main window top bar (added tool buttons)
-        if (lpszTemplateName == MAKEINTRESOURCE(136)) {
+        if (lpszTemplateName == MAKEINTRESOURCE(IDD_MAIN_FRAME_TOP_BAR)) {
+            hCurrentResourceHandle = reinterpret_cast<int>(g_module);
+        }
+    },
+};
+
+CodeInjection CDialog_DoModal_injection{
+    0x0052F461,
+    [](auto& regs) {
+        auto& hCurrentResourceHandle = regs.ebx;
+        auto lpszTemplateName = AddrAsRef<LPCSTR>(regs.esp);
+        // Customize:
+        // - 148: trigger properties dialog
+        if (lpszTemplateName == MAKEINTRESOURCE(IDD_TRIGGER_PROPERTIES)) {
             hCurrentResourceHandle = reinterpret_cast<int>(g_module);
         }
     },
@@ -132,6 +146,7 @@ void InitLogging()
 }
 
 void ApplyGraphicsPatches();
+void ApplyTriggerPatches();
 
 extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
 {
@@ -174,6 +189,7 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
 
     // Replace some dialog resources
     CWnd_CreateDlg_injection.Install();
+    CDialog_DoModal_injection.Install();
 
     // Remove "Packfile saved successfully!" message
     AsmWriter{0x0044CCA3, 0x0044CCB3}.nop();
@@ -183,6 +199,8 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
 
     // Apply patches defined in other files
     ApplyGraphicsPatches();
+    ApplyTriggerPatches();
+
 
     return 1; // success
 }

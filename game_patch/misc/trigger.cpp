@@ -7,6 +7,7 @@
 #include "../rf/trigger.h"
 #include "../rf/network.h"
 
+constexpr char TRIGGER_PF_FLAGS_PREFIX = '\xAB';
 constexpr uint8_t TRIGGER_CLIENT_SIDE = 0x2;
 constexpr uint8_t TRIGGER_SOLO = 0x4;
 constexpr uint8_t TRIGGER_TELEPORT = 0x8;
@@ -47,7 +48,7 @@ FunHook<void(rf::Trigger*, int32_t, bool)> TriggerActivate_hook{
         }
 
         // Check if this is Solo or Teleport trigger (REDPF feature)
-        uint8_t ext_flags = trigger_name[0] == '\xAB' ? trigger_name[1] : 0;
+        uint8_t ext_flags = trigger_name[0] == TRIGGER_PF_FLAGS_PREFIX ? trigger_name[1] : 0;
         bool is_solo_trigger = (ext_flags & (TRIGGER_SOLO | TRIGGER_TELEPORT)) != 0;
         if (rf::is_multi && rf::is_server && is_solo_trigger && player) {
             // rf::ConsolePrintf("Solo/Teleport trigger activated %s", trigger_name);
@@ -77,7 +78,7 @@ CodeInjection TriggerCheckActivation_patch{
     [](auto& regs) {
         auto trigger = reinterpret_cast<rf::Trigger*>(regs.eax);
         auto trigger_name = trigger->name.CStr();
-        uint8_t ext_flags = trigger_name[0] == '\xAB' ? trigger_name[1] : 0;
+        uint8_t ext_flags = trigger_name[0] == TRIGGER_PF_FLAGS_PREFIX ? trigger_name[1] : 0;
         bool is_client_side = (ext_flags & TRIGGER_CLIENT_SIDE) != 0;
         if (is_client_side)
             regs.eip = 0x004BFCDB;

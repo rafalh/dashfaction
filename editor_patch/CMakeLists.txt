@@ -9,7 +9,9 @@ set(SRCS
     exports.h
     graphics.cpp
     main.cpp
+    trigger.cpp
     resources.rc
+    resources.h
 )
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRCS})
 add_library(DashEditor SHARED ${SRCS})
