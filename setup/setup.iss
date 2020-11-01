@@ -20,10 +20,12 @@ Compression=lzma2/max
 SolidCompression=yes
 OutputDir=build
 SetupLogging=yes
+ChangesAssociations=yes
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 Name: "rfproto"; Description: "Register rf:// protocol handler"; GroupDescription: "Other options:"
+Name: "rflassoc"; Description: "Associate .rfl file extension with Dash Faction Level Editor"; GroupDescription: "Other options:"
 Name: "fftracker"; Description: "Set rfgt.factionfiles.com as multiplayer tracker"; GroupDescription: "Other options:"
 Name: "patchgame"; Description: "Install needed game patches"; GroupDescription: "Other options:"; Check: "PatchGameTaskCheck"
 
@@ -66,10 +68,17 @@ Filename: "{app}\DashFactionLauncher.exe"; Description: "{cm:LaunchProgram,Dash 
 [Registry]
 Root: HKCU; Subkey: "Software\Volition\Red Faction\Dash Faction"; ValueType: "string"; ValueName: "Executable Path"; ValueData: "{code:GetFinalGameExePath}"
 Root: HKCU; Subkey: "Software\Volition\Red Faction"; ValueType: "string"; ValueName: "GameTracker"; ValueData: "rfgt.factionfiles.com"; Tasks: fftracker
+; rf:// protocol
 Root: HKCR; Subkey: "rf"; ValueType: "string"; ValueData: "URL:Red Faction Protocol"; Flags: uninsdeletekey; Tasks: rfproto
 Root: HKCR; Subkey: "rf"; ValueType: "string"; ValueName: "URL Protocol"; ValueData: ""; Tasks: rfproto
 Root: HKCR; Subkey: "rf\DefaultIcon"; ValueType: "string"; ValueData: "{app}\DashFactionLauncher.exe,0"; Tasks: rfproto
 Root: HKCR; Subkey: "rf\shell\open\command"; ValueType: "string"; ValueData: """{app}\DashFactionLauncher.exe"" -game -url %1"; Tasks: rfproto
+; rfl file extension association
+Root: HKCR; Subkey: ".rfl"; ValueType: "string"; ValueData: "DashFactionLevelEditor"; Flags: uninsdeletekey; Tasks: rflassoc
+Root: HKCR; Subkey: "DashFactionLevelEditor"; ValueType: "string"; ValueData: "Dash Faction Level Editor"; Flags: uninsdeletekey; Tasks: rflassoc
+;Root: HKCR; Subkey: "DashFactionLevelEditor\DefaultIcon"; ValueType: "string"; ValueData: "{app}\DashFactionLauncher.exe,0"; Tasks: rflassoc
+Root: HKCR; Subkey: "DashFactionLevelEditor\shell\open\command"; ValueType: "string"; ValueData: """{app}\DashFactionLauncher.exe"" -editor -level %1"; Tasks: rflassoc
+
 
 [CustomMessages]
 RFExeLocation=Please specify location of RF.exe file from Red Faction installation directory:

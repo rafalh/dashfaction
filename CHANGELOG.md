@@ -19,6 +19,8 @@ Version 1.5.1 (not released yet)
 - fix rendering of VBM textures from `user_maps\textures` in the level editor
 - fix level editor crash when selecting decal texture from 'All' folder
 - no longer require "-sound" argument when launching level editor with sound support
+- allow opening a level in the level editor by using `-level` command line argument
+- add option to associate `rfl` file extension with Dash Faction level editor in the setup program
 
 Version 1.5.0 (released 2020-09-05)
 -----------------------------------

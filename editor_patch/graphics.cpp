@@ -11,7 +11,7 @@
 #include <algorithm>
 #include <cmath>
 
-extern HWND g_editor_wnd;
+HWND GetMainFrameHandle();
 
 namespace red
 {
@@ -72,11 +72,12 @@ namespace red
 CallHook<void()> frametime_calculate_hook{
     0x00483047,
     []() {
-        if (!IsWindowVisible(g_editor_wnd)) {
+        HWND hwnd = GetMainFrameHandle();
+        if (!IsWindowVisible(hwnd)) {
             // when minimized 1 FPS
             Sleep(1000);
         }
-        else if (GetForegroundWindow() != g_editor_wnd && GetParent(GetForegroundWindow()) != g_editor_wnd) {
+        else if (GetForegroundWindow() != hwnd && GetParent(GetForegroundWindow()) != hwnd) {
             // when in background 4 FPS
             Sleep(250);
         }

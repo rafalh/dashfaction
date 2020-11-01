@@ -10,7 +10,9 @@
 #include <cstddef>
 #include <cstring>
 #include <crash_handler_stub.h>
+#include <string_view>
 #include "resources.h"
+#include "mfc_types.h"
 
 #include <xlog/ConsoleAppender.h>
 #include <xlog/FileAppender.h>
@@ -25,14 +27,18 @@ struct String
 };
 
 HMODULE g_module;
-HWND g_editor_wnd;
-WNDPROC g_editor_wnd_proc_orig;
 bool g_skip_wnd_set_text = false;
 
 static auto& g_log_view = AddrAsRef<std::byte*>(0x006F9E68);
 static const auto g_editor_app = reinterpret_cast<std::byte*>(0x006F9DA0);
 
 static auto& log_wnd_append = AddrAsRef<int(void* self, const char* format, ...)>(0x00444980);
+
+HWND GetMainFrameHandle()
+{
+    auto main_frame = StructFieldRef<CWnd*>(g_editor_app, 0xC8);
+    return WndToHandle(main_frame);
+}
 
 void OpenLevel(const char* level_path)
 {
@@ -43,36 +49,45 @@ void OpenLevel(const char* level_path)
     DocManager_OpenDocumentFile(doc_manager, level_path);
 }
 
-LRESULT CALLBACK EditorWndProc_New(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
-{
-    if (msg == WM_DROPFILES) {
-        HDROP drop = (HDROP)wparam;
-        char file_name[MAX_PATH];
-        // Handle only first droped file
-        if (DragQueryFile(drop, 0, file_name, sizeof(file_name)))
-            OpenLevel(file_name);
-        DragFinish(drop);
-    }
-    // Call original procedure
-    return g_editor_wnd_proc_orig(hwnd, msg, wparam, lparam);
-}
+CodeInjection CMainFrame_PreCreateWindow_injection{
+    0x00447134,
+    [](auto& regs) {
+        auto& cs = AddrAsRef<CREATESTRUCTA>(regs.eax);
+        cs.dwExStyle |= WS_EX_ACCEPTFILES;
+    },
+};
 
-BOOL CEditorApp__InitInstance_AfterHook()
-{
-    std::byte* unk = *reinterpret_cast<std::byte**>(g_editor_app + 0x1C);
-    g_editor_wnd = *reinterpret_cast<HWND*>(unk + 28);
+CodeInjection CEditorApp_InitInstance_additional_file_paths_injection{
+    0x0048290D,
+    []() {
+        // Load v3m files from more localizations instead of only VPP packfiles
+        auto file_add_path = AddrAsRef<int(const char *path, const char *exts, bool cd)>(0x004C3950);
+        file_add_path("red\\meshes", ".v3m", false);
+        file_add_path("user_maps\\meshes", ".v3m", false);
+    },
+};
 
-    g_editor_wnd_proc_orig = reinterpret_cast<WNDPROC>(GetWindowLongPtr(g_editor_wnd, GWLP_WNDPROC));
-    SetWindowLongPtr(g_editor_wnd, GWLP_WNDPROC, (LONG)EditorWndProc_New);
-    DWORD ex_style = GetWindowLongPtr(g_editor_wnd, GWL_EXSTYLE);
-    SetWindowLongPtr(g_editor_wnd, GWL_EXSTYLE, ex_style | WS_EX_ACCEPTFILES);
-
-    // Load v3m files from more localizations instead of only VPP packfiles
-    auto file_add_path = AddrAsRef<int(const char *path, const char *exts, bool cd)>(0x004C3950);
-    file_add_path("red\\meshes", ".v3m", false);
-    file_add_path("user_maps\\meshes", ".v3m", false);
-    return TRUE;
-}
+CodeInjection CEditorApp_InitInstance_open_level_injection{
+    0x00482BF1,
+    []() {
+        static auto& argv = AddrAsRef<char**>(0x01DBF8E4);
+        static auto& argc = AddrAsRef<int>(0x01DBF8E0);
+        const char* level_param = nullptr;
+        for (int i = 1; i < argc; ++i) {
+            xlog::trace("argv[%d] = %s", i, argv[i]);
+            std::string_view arg = argv[i];
+            if (arg == "-level") {
+                ++i;
+                if (i < argc) {
+                    level_param = argv[i];
+                }
+            }
+        }
+        if (level_param) {
+            OpenLevel(level_param);
+        }
+    },
+};
 
 CodeInjection CWnd_CreateDlg_injection{
     0x0052F112,
@@ -146,7 +161,6 @@ void __fastcall brush_mode_handle_selection_new(void* self)
 }
 FunHook<brush_mode_handle_selection_type> brush_mode_handle_selection_hook{0x0043F430, brush_mode_handle_selection_new};
 
-
 void __fastcall DedLight_UpdateLevelLight(void *this_);
 FunHook DedLight_UpdateLevelLight_hook{
     0x00453200,
@@ -219,8 +233,14 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     AsmWriter(0x00448024, 0x0044802B).nop();
     AsmWriter(0x00448024).xor_(eax, eax);
 
-    // InitInstance hook
-    AsmWriter(0x00482C84).call(CEditorApp__InitInstance_AfterHook);
+    // Add additional file paths for V3M loading
+    CEditorApp_InitInstance_additional_file_paths_injection.Install();
+
+    // Add handling for "-level" command line argument
+    CEditorApp_InitInstance_open_level_injection.Install();
+
+    // Change main frame style flags to allow dropping files
+    CMainFrame_PreCreateWindow_injection.Install();
 
     // Increase memory size of log view buffer (500 lines * 64 characters)
     WriteMem<int32_t>(0x0044489C + 1, 32000);
