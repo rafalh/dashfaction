@@ -261,6 +261,9 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     // Fix crash when selecting decal texture from 'All' folder
     CTextureBrowserDialog_GetFolderName_hook.Install();
 
+    // No longer require "-sound" argument to enable sound support
+    AsmWriter{0x00482BC4}.nop(2);
+
     return 1; // success
 }
 
