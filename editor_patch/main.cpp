@@ -229,6 +229,8 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     WriteMemPtr(0x004624A9 + 1, ".v3m");
     WriteMemPtr(0x0044244A + 1, "RFBrush.v3m");
 
+    // Fix rendering of VBM textures from user_maps/textures
+    WriteMemPtr(0x004828C2 + 1, ".tga .vbm");
 
     // Fix lights sometimes not working
     DedLight_UpdateLevelLight_hook.Install();

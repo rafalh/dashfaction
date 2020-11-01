@@ -16,6 +16,7 @@ Version 1.5.1 (not released yet)
 - add multiplayer settings in trigger properties window in level editor
 - load V3M meshes from `user_maps\meshes` and `red\meshes` in the level editor
 - fix lights randomly stopping working after copying in the level editor
+- fix rendering of VBM textures from `user_maps\textures` in the level editor
 
 Version 1.5.0 (released 2020-09-05)
 -----------------------------------
