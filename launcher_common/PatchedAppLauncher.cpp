@@ -52,7 +52,7 @@ std::string PatchedAppLauncher::get_app_path()
     }
 }
 
-void PatchedAppLauncher::launch(const char* mod_name)
+void PatchedAppLauncher::launch()
 {
     std::string app_path = get_app_path();
     std::string work_dir = get_dir_from_path(app_path);
@@ -61,7 +61,7 @@ void PatchedAppLauncher::launch(const char* mod_name)
     STARTUPINFO si;
     setup_startup_info(si);
 
-    std::string cmd_line = build_cmd_line(app_path, mod_name);
+    std::string cmd_line = build_cmd_line(app_path);
 
     xlog::info("Starting the process: %s", app_path.c_str());
     try {
@@ -137,16 +137,42 @@ void PatchedAppLauncher::setup_startup_info(_STARTUPINFOA& startup_info)
     }
 }
 
-std::string PatchedAppLauncher::build_cmd_line(const std::string& app_path, const char* mod_name)
+static std::string escape_cmd_line_arg(const std::string& arg)
 {
+    std::string result;
+    bool enclose_in_quotes = arg.find(' ') != std::string::npos;
+    result.reserve(arg.size());
+    if (enclose_in_quotes) {
+        result += '"';
+    }
+    for (char c : arg) {
+        if (c == '\\' || c == '"') {
+            result += '\\';
+        }
+        result += c;
+    }
+    if (enclose_in_quotes) {
+        result += '"';
+    }
+    return result;
+}
+
+std::string PatchedAppLauncher::build_cmd_line(const std::string& app_path)
+{
+    std::vector<std::string> all_args;
+    all_args.push_back(app_path);
+    if (!m_mod_name.empty()) {
+        all_args.push_back("-mod");
+        all_args.push_back(m_mod_name);
+    }
+    all_args.insert(all_args.end(), m_args.begin(), m_args.end());
+
     std::string cmd_line;
-    cmd_line += '"';
-    cmd_line += app_path;
-    cmd_line += "\" ";
-    cmd_line += GetCommandLineA(); // TODO: strip argv[0]
-    if (mod_name && mod_name[0]) {
-        cmd_line += " -mod ";
-        cmd_line += mod_name;
+    for (const auto& arg : all_args) {
+        if (!cmd_line.empty()) {
+            cmd_line += ' ';
+        }
+        cmd_line += escape_cmd_line_arg(arg);
     }
     return cmd_line;
 }

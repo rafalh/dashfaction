@@ -2,19 +2,19 @@
 
 #include <wxx_wincore.h>
 #include "resource.h"
+#include "LauncherCommandLineInfo.h"
 #include <crash_handler_stub/WatchDogTimer.h>
-#include <optional>
-#include <string>
 
 class LauncherApp : public CWinApp
 {
     WatchDogTimer m_watch_dog_timer;
+    LauncherCommandLineInfo m_cmd_line_info;
 
 public:
     virtual BOOL InitInstance() override;
 
-    bool LaunchGame(HWND hwnd, const char* mod_name = nullptr, std::optional<std::string> rf_exe_path = {});
-    bool LaunchEditor(HWND hwnd, const char* mod_name = nullptr, std::optional<std::string> rf_exe_path = {});
+    bool LaunchGame(HWND hwnd, const char* mod_name = nullptr);
+    bool LaunchEditor(HWND hwnd, const char* mod_name = nullptr);
 
 private:
     void MigrateConfig();

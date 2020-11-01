@@ -22,10 +22,9 @@ BOOL LauncherApp::InitInstance()
 
     // Command line parsing
     xlog::info("Parsing command line");
-    LauncherCommandLineInfo cmd_line_info;
-    cmd_line_info.Parse();
+    m_cmd_line_info.Parse();
 
-    if (cmd_line_info.HasHelpFlag()) {
+    if (m_cmd_line_info.HasHelpFlag()) {
         // Note: we can't use stdio console API in win32 application
         Message(NULL,
             "Usage: DashFactionLauncher [-game] [-level name] [-editor] args...\n"
@@ -46,13 +45,13 @@ BOOL LauncherApp::InitInstance()
 
 
     // Launch game or editor based on command line flag
-    if (cmd_line_info.HasGameFlag()) {
-        LaunchGame(nullptr, nullptr, cmd_line_info.GetExePath());
+    if (m_cmd_line_info.HasGameFlag()) {
+        LaunchGame(nullptr, nullptr);
         return FALSE;
     }
 
-    if (cmd_line_info.HasEditorFlag()) {
-        LaunchEditor(nullptr, nullptr, cmd_line_info.GetExePath());
+    if (m_cmd_line_info.HasEditorFlag()) {
+        LaunchEditor(nullptr, nullptr);
         return FALSE;
     }
 
@@ -84,13 +83,18 @@ void LauncherApp::MigrateConfig()
     }
 }
 
-bool LauncherApp::LaunchGame(HWND hwnd, const char* mod_name, std::optional<std::string> exe_path)
+bool LauncherApp::LaunchGame(HWND hwnd, const char* mod_name)
 {
     WatchDogTimer::ScopedStartStop wdt_start{m_watch_dog_timer};
     GameLauncher launcher;
-    if (exe_path) {
-        launcher.set_app_exe_path(exe_path.value());
+    auto exe_path_opt = m_cmd_line_info.GetExePath();
+    if (exe_path_opt) {
+        launcher.set_app_exe_path(exe_path_opt.value());
     }
+    if (mod_name) {
+        launcher.set_mod(mod_name);
+    }
+    launcher.set_args(m_cmd_line_info.GetPassThroughArgs());
 
     try {
         xlog::info("Checking installation");
@@ -140,7 +144,7 @@ bool LauncherApp::LaunchGame(HWND hwnd, const char* mod_name, std::optional<std:
 
     try {
         xlog::info("Launching the game...");
-        launcher.launch(mod_name);
+        launcher.launch();
         xlog::info("Game launched!");
         return true;
     }
@@ -174,16 +178,22 @@ bool LauncherApp::LaunchGame(HWND hwnd, const char* mod_name, std::optional<std:
     return false;
 }
 
-bool LauncherApp::LaunchEditor(HWND hwnd, const char* mod_name, std::optional<std::string> exe_path)
+bool LauncherApp::LaunchEditor(HWND hwnd, const char* mod_name)
 {
     WatchDogTimer::ScopedStartStop wdt_start{m_watch_dog_timer};
     EditorLauncher launcher;
-    if (exe_path) {
-        launcher.set_app_exe_path(exe_path.value());
+    auto exe_path_opt = m_cmd_line_info.GetExePath();
+    if (exe_path_opt) {
+        launcher.set_app_exe_path(exe_path_opt.value());
     }
+    if (mod_name) {
+        launcher.set_mod(mod_name);
+    }
+    launcher.set_args(m_cmd_line_info.GetPassThroughArgs());
+
     try {
         xlog::info("Launching editor...");
-        launcher.launch(mod_name);
+        launcher.launch();
         xlog::info("Editor launched!");
         return true;
     }

@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <string>
 #include <optional>
+#include <vector>
 
 struct _STARTUPINFOA;
 
@@ -64,11 +65,21 @@ public:
         m_patch_dll_name(patch_dll_name)
     {}
     void check_installation();
-    void launch(const char* mod_name = nullptr);
+    void launch();
 
     void set_app_exe_path(const std::string& app_exe_path)
     {
         m_forced_app_exe_path = {app_exe_path};
+    }
+
+    void set_args(const std::vector<std::string>& args)
+    {
+        m_args = args;
+    }
+
+    void set_mod(const std::string& mod_name)
+    {
+        m_mod_name = mod_name;
     }
 
 protected:
@@ -80,10 +91,12 @@ protected:
 private:
     void verify_before_launch();
     void setup_startup_info(_STARTUPINFOA& startup_info);
-    std::string build_cmd_line(const std::string& app_path, const char* mod_name);
+    std::string build_cmd_line(const std::string& app_path);
 
     std::optional<std::string> m_forced_app_exe_path;
     std::string m_patch_dll_name;
+    std::vector<std::string> m_args;
+    std::string m_mod_name;
 };
 
 class GameLauncher : public PatchedAppLauncher
