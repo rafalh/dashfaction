@@ -14,6 +14,7 @@ Version 1.5.1 (not released yet)
 - do not reduce editor FPS when editor dialog box is open
 - fix changing properties of multiple respawn points in level editor
 - add multiplayer settings in trigger properties window in level editor
+- load V3M meshes from `user_maps\meshes` and `red\meshes` in the level editor
 
 Version 1.5.0 (released 2020-09-05)
 -----------------------------------

@@ -60,6 +60,11 @@ BOOL CEditorApp__InitInstance_AfterHook()
     SetWindowLongPtr(g_editor_wnd, GWLP_WNDPROC, (LONG)EditorWndProc_New);
     DWORD ex_style = GetWindowLongPtr(g_editor_wnd, GWL_EXSTYLE);
     SetWindowLongPtr(g_editor_wnd, GWL_EXSTYLE, ex_style | WS_EX_ACCEPTFILES);
+
+    // Load v3m files from more localizations instead of only VPP packfiles
+    auto file_add_path = AddrAsRef<int(const char *path, const char *exts, bool cd)>(0x004C3950);
+    file_add_path("red\\meshes", ".v3m", false);
+    file_add_path("user_maps\\meshes", ".v3m", false);
     return TRUE;
 }
 
@@ -200,6 +205,14 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     // Apply patches defined in other files
     ApplyGraphicsPatches();
     ApplyTriggerPatches();
+
+    // Browse for .v3m files instead of .v3d
+    static char mesh_ext_filter[] = "Mesh (*.v3m)|*.v3m|All Files (*.*)|*.*||";
+    WriteMemPtr(0x0044243E + 1, mesh_ext_filter);
+    WriteMemPtr(0x00462490 + 1, mesh_ext_filter);
+    WriteMemPtr(0x0044244F + 1, ".v3m");
+    WriteMemPtr(0x004624A9 + 1, ".v3m");
+    WriteMemPtr(0x0044244A + 1, "RFBrush.v3m");
 
 
     return 1; // success
