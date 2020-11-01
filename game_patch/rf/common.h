@@ -153,10 +153,10 @@ namespace rf
     {
     public:
         // GCC follows closely Itanium ABI which requires to always pass objects by reference if class has
-        // non-trivial destructor. Therefore for passing String by value Pod struct should be used.
+        // a non-trivial destructor. Therefore when passing a String by value the Pod struct should be used.
         struct Pod
         {
-            int32_t buf_size;
+            int max_len;
             char* buf;
         };
 
@@ -200,7 +200,7 @@ namespace rf
             Pod pod = copy.m_pod;
             // Clear POD in copied string so memory pointed by copied POD is not freed
             copy.m_pod.buf = nullptr;
-            copy.m_pod.buf_size = 0;
+            copy.m_pod.max_len = 0;
             return pod;
         }
 
@@ -250,12 +250,13 @@ namespace rf
             String str;
             va_list args;
             va_start(args, format);
-            int size = vsnprintf(nullptr, 0, format, args) + 1;
+            int len = vsnprintf(nullptr, 0, format, args);
             va_end(args);
-            str.m_pod.buf_size = size;
-            str.m_pod.buf = StringAlloc(str.m_pod.buf_size);
+            int buf_size = len + 1;
+            str.m_pod.max_len = len;
+            str.m_pod.buf = StringAlloc(buf_size);
             va_start(args, format);
-            vsnprintf(str.m_pod.buf, size, format, args);
+            vsnprintf(str.m_pod.buf, buf_size, format, args);
             va_end(args);
             return str;
         }
