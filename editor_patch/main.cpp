@@ -192,6 +192,15 @@ String * __fastcall CTextureBrowserDialog_GetFolderName(CTextureBrowserDialog *t
     return folder_name;
 }
 
+CodeInjection CCutscenePropertiesDialog_ct_crash_fix{
+    0x00458A84,
+    [](auto& regs) {
+        auto this_ = reinterpret_cast<void*>(regs.esi);
+        auto& this_num_shots = StructFieldRef<int>(this_, 0x60);
+        this_num_shots = 0;
+    },
+};
+
 void InitLogging()
 {
     CreateDirectoryA("logs", nullptr);
@@ -283,6 +292,9 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
 
     // No longer require "-sound" argument to enable sound support
     AsmWriter{0x00482BC4}.nop(2);
+
+    // Fix random crash when opening cutscene properties
+    CCutscenePropertiesDialog_ct_crash_fix.Install();
 
     return 1; // success
 }
