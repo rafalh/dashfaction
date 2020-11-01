@@ -18,6 +18,12 @@
 
 #define LAUNCHER_FILENAME "DashFactionLauncher.exe"
 
+struct String
+{
+    int max_len;
+    char* buf;
+};
+
 HMODULE g_module;
 HWND g_editor_wnd;
 WNDPROC g_editor_wnd_proc_orig;
@@ -155,6 +161,23 @@ void __fastcall DedLight_UpdateLevelLight(void *this_)
     DedLight_UpdateLevelLight_hook.CallTarget(this_);
 }
 
+struct CTextureBrowserDialog;
+String * __fastcall CTextureBrowserDialog_GetFolderName(CTextureBrowserDialog *this_, int edx, String *folder_name);
+FunHook CTextureBrowserDialog_GetFolderName_hook{
+    0x00471260,
+    CTextureBrowserDialog_GetFolderName,
+};
+String * __fastcall CTextureBrowserDialog_GetFolderName(CTextureBrowserDialog *this_, int edx, String *folder_name)
+{
+    auto& texture_browser_folder_index = AddrAsRef<int>(0x006CA404);
+    if (texture_browser_folder_index > 0) {
+        return CTextureBrowserDialog_GetFolderName_hook.CallTarget(this_, edx, folder_name);
+    }
+    folder_name->buf = nullptr;
+    folder_name->max_len = 0;
+    return folder_name;
+}
+
 void InitLogging()
 {
     CreateDirectoryA("logs", nullptr);
@@ -234,6 +257,9 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
 
     // Fix lights sometimes not working
     DedLight_UpdateLevelLight_hook.Install();
+
+    // Fix crash when selecting decal texture from 'All' folder
+    CTextureBrowserDialog_GetFolderName_hook.Install();
 
     return 1; // success
 }
