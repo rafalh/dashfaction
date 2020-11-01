@@ -140,6 +140,21 @@ void __fastcall brush_mode_handle_selection_new(void* self)
 }
 FunHook<brush_mode_handle_selection_type> brush_mode_handle_selection_hook{0x0043F430, brush_mode_handle_selection_new};
 
+
+void __fastcall DedLight_UpdateLevelLight(void *this_);
+FunHook DedLight_UpdateLevelLight_hook{
+    0x00453200,
+    DedLight_UpdateLevelLight,
+};
+void __fastcall DedLight_UpdateLevelLight(void *this_)
+{
+    auto& this_is_enabled = StructFieldRef<bool>(this_, 0xD5);
+    auto& level_light = StructFieldRef<void*>(this_, 0xD8);
+    auto& level_light_is_enabled = StructFieldRef<bool>(level_light, 0x91);
+    level_light_is_enabled = this_is_enabled;
+    DedLight_UpdateLevelLight_hook.CallTarget(this_);
+}
+
 void InitLogging()
 {
     CreateDirectoryA("logs", nullptr);
@@ -214,6 +229,9 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     WriteMemPtr(0x004624A9 + 1, ".v3m");
     WriteMemPtr(0x0044244A + 1, "RFBrush.v3m");
 
+
+    // Fix lights sometimes not working
+    DedLight_UpdateLevelLight_hook.Install();
 
     return 1; // success
 }
