@@ -328,6 +328,21 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     // Load DashEditor.vpp
     vpackfile_init_injection.Install();
 
+    // Add maps_df.txt to the collection of files scanned for default textures in order to add more textures from the
+    // base game to the texture browser
+    // Especially add Rck_DefaultP.tga to default textures to fix error when packing a level containing a particle
+    // emitter with default properties
+    static const char* maps_files_names[] = {
+        "maps.txt",
+        "maps1.txt",
+        "maps2.txt",
+        "maps3.txt",
+        "maps4.txt",
+        "maps_df.txt",
+    };
+    WriteMemPtr(0x0041B813 + 1, maps_files_names);
+    WriteMemPtr(0x0041B824 + 1, maps_files_names);
+
     return 1; // success
 }
 

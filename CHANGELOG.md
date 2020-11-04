@@ -23,6 +23,8 @@ Version 1.5.1 (not released yet)
 - add option to associate `rfl` file extension with Dash Faction level editor in the setup program
 - fix level editor crash randomly occuring when opening cutscene properties
 - add icon for EAX Effect objects in the level editor (icon provided by Goober)
+- add more textures from base game to the level editor texture browser
+- fix packing a level that contains a particle emitter with a default texture in the level editor
 
 Version 1.5.0 (released 2020-09-05)
 -----------------------------------
