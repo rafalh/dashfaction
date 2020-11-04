@@ -214,26 +214,55 @@ void InitLogging()
 void ApplyGraphicsPatches();
 void ApplyTriggerPatches();
 
+std::string GetModuleDir(HMODULE module)
+{
+    std::string buf(MAX_PATH, '\0');
+    auto num_copied = GetModuleFileNameA(module, buf.data(), buf.size());
+    if (num_copied == buf.size()) {
+        xlog::error("GetModuleFileNameA failed (%lu)", GetLastError());
+        return {};
+    }
+    buf.resize(num_copied);
+    auto last_sep = buf.rfind('\\');
+    if (last_sep != std::string::npos) {
+        buf.resize(last_sep + 1);
+    }
+    return buf;
+}
+
+void LoadDashEditorPackfile()
+{
+    static auto& vpackfile_add = AddrAsRef<int __cdecl(const char *name, const char *dir)>(0x004CA930);
+    static auto& root_path = AddrAsRef<char[256]>(0x0158CA10);
+
+    auto df_dir = GetModuleDir(g_module);
+    std::string old_root_path = root_path;
+    std::strncpy(root_path, df_dir.c_str(), sizeof(root_path) - 1);
+    if (!vpackfile_add("dashfaction.vpp", nullptr)) {
+        xlog::error("Failed to load dashfaction.vpp from %s", df_dir.c_str());
+    }
+    std::strncpy(root_path, old_root_path.c_str(), sizeof(root_path) - 1);
+}
+
+CodeInjection vpackfile_init_injection{
+    0x004CA533,
+    []() {
+        LoadDashEditorPackfile();
+    },
+};
+
 extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
 {
     InitLogging();
     CrashHandlerStubInstall(g_module);
 
     // Change command for Play Level action to use Dash Faction launcher
-    static char module_filename[MAX_PATH];
-    if (GetModuleFileNameA(g_module, module_filename, sizeof(module_filename)) != sizeof(module_filename)) {
-        static std::string play_level_cmd_part;
-        char* dir_path_end = std::strrchr(module_filename, '\\');
-        play_level_cmd_part.assign(module_filename, dir_path_end + 1);
-        play_level_cmd_part += LAUNCHER_FILENAME;
-        play_level_cmd_part += " -level \"";
+    static std::string play_level_cmd_part = GetModuleDir(g_module);
+    play_level_cmd_part += LAUNCHER_FILENAME;
+    play_level_cmd_part += " -level \"";
 
-        WriteMemPtr(0x00447973 + 1, play_level_cmd_part.c_str());
-        WriteMemPtr(0x00447CB9 + 1, play_level_cmd_part.c_str());
-    }
-    else {
-        xlog::warn("GetModuleFileNameA failed");
-    }
+    WriteMemPtr(0x00447973 + 1, play_level_cmd_part.c_str());
+    WriteMemPtr(0x00447CB9 + 1, play_level_cmd_part.c_str());
 
     // Zero first argument for CreateProcess call
     using namespace asm_regs;
@@ -295,6 +324,9 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
 
     // Fix random crash when opening cutscene properties
     CCutscenePropertiesDialog_ct_crash_fix.Install();
+
+    // Load DashEditor.vpp
+    vpackfile_init_injection.Install();
 
     return 1; // success
 }

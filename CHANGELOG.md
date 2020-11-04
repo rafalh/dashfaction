@@ -22,6 +22,7 @@ Version 1.5.1 (not released yet)
 - allow opening a level in the level editor by using `-level` command line argument
 - add option to associate `rfl` file extension with Dash Faction level editor in the setup program
 - fix level editor crash randomly occuring when opening cutscene properties
+- add icon for EAX Effect objects in the level editor (icon provided by Goober)
 
 Version 1.5.0 (released 2020-09-05)
 -----------------------------------
