@@ -82,6 +82,11 @@ public:
         m_mod_name = mod_name;
     }
 
+    void set_this_module(void* module)
+    {
+        m_module = module;
+    }
+
 protected:
     std::string get_patch_dll_path();
     std::string get_app_path();
@@ -97,6 +102,7 @@ private:
     std::string m_patch_dll_name;
     std::vector<std::string> m_args;
     std::string m_mod_name;
+    void* m_module = nullptr;
 };
 
 class GameLauncher : public PatchedAppLauncher
@@ -121,6 +127,16 @@ private:
     GameConfig m_conf;
 };
 
+class RedFactionLauncher : public PatchedAppLauncher
+{
+public:
+    RedFactionLauncher();
+    std::string get_default_app_path() override;
+    bool check_app_hash(const std::string& sha1) override;
+
+private:
+    GameConfig m_conf;
+};
 
 inline std::string get_dir_from_path(const std::string& path)
 {

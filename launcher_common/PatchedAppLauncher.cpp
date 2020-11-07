@@ -32,7 +32,7 @@ inline bool is_no_gui_mode()
 std::string PatchedAppLauncher::get_patch_dll_path()
 {
     char buf[MAX_PATH];
-    DWORD result = GetModuleFileNameA(nullptr, buf, std::size(buf));
+    DWORD result = GetModuleFileNameA(reinterpret_cast<HMODULE>(m_module), buf, std::size(buf));
     if (!result)
         THROW_WIN32_ERROR();
     if (result == std::size(buf))
@@ -236,3 +236,23 @@ bool EditorLauncher::check_app_hash(const std::string& sha1)
 {
     return sha1 == RED_120_NA_SHA1;
 }
+
+RedFactionLauncher::RedFactionLauncher() : PatchedAppLauncher("LauncherGuest.dll")
+{
+    if (!m_conf.load()) {
+        // Failed to load config - save defaults
+        m_conf.save();
+    }
+}
+
+std::string RedFactionLauncher::get_default_app_path()
+{
+    std::string workDir = get_dir_from_path(m_conf.game_executable_path);
+    return workDir + "\\RedFaction.exe";
+}
+
+bool RedFactionLauncher::check_app_hash(const std::string&)
+{
+    return true;
+}
+

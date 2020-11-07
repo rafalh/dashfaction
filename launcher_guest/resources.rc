@@ -1,0 +1,100 @@
+#include <windows.h>
+#include <commctrl.h>
+#include "resources.h"
+
+// Main frame top bar
+LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+IDD_MAIN_FRAME_TOP_BAR DIALOG 0, 0, 744, 21
+STYLE DS_SETFONT | WS_CHILDWINDOW
+FONT 8, "MS Sans Serif"
+{
+    LTEXT       "Mode:", 65535, 7, 4, 19, 12, SS_LEFT | SS_CENTERIMAGE
+    COMBOBOX    1047, 33, 4, 43, 74, WS_TABSTOP | CBS_DROPDOWNLIST
+    CONTROL     "Coordinates:", 65535, WC_STATIC, SS_LEFTNOWORDWRAP | SS_CENTERIMAGE, 89, 4, 40, 12
+    COMBOBOX    1041, 135, 4, 46, 56, WS_TABSTOP | CBS_DROPDOWNLIST
+    CONTROL     "Grid Size:", 65535, WC_STATIC, SS_LEFTNOWORDWRAP | SS_CENTERIMAGE, 196, 4, 32, 12
+    COMBOBOX    1042, 232, 4, 43, 112, WS_TABSTOP | CBS_DROPDOWNLIST
+    CONTROL     "meters", 1380, WC_STATIC, SS_LEFTNOWORDWRAP | SS_CENTERIMAGE, 277, 4, 23, 12
+    CONTROL     "Rotate By:", 65535, WC_STATIC, SS_LEFTNOWORDWRAP | SS_CENTERIMAGE, 313, 4, 37, 12
+    COMBOBOX    1043, 350, 4, 29, 112, WS_TABSTOP | CBS_DROPDOWNLIST
+    CONTROL     "degrees", 65535, WC_STATIC, SS_LEFTNOWORDWRAP | SS_CENTERIMAGE, 384, 4, 27, 12
+    CONTROL     "Camera Speed:", 65535, WC_STATIC, SS_LEFTNOWORDWRAP | SS_CENTERIMAGE, 427, 4, 51, 12
+    COMBOBOX    1044, 480, 4, 35, 112, WS_TABSTOP | CBS_DROPDOWNLIST
+    CONTROL     "m/s", 65535, WC_STATIC, SS_LEFTNOWORDWRAP | SS_CENTERIMAGE, 518, 4, 15, 12
+    //CONTROL     "To Move:  Hold ""M""", 65535, WC_STATIC, SS_LEFTNOWORDWRAP, 559, 4, 67, 12
+    //CONTROL     "To Rotate:  Hold ""R""", 65535, WC_STATIC, SS_LEFTNOWORDWRAP, 643, 4, 67, 12
+    PUSHBUTTON  "Save", 0xE103, 550, 4, 29, 14
+    PUSHBUTTON  "Pack", 0x8083, 580, 4, 29, 14
+    PUSHBUTTON  "Lighting", 0x807A, 615, 4, 39, 14
+    PUSHBUTTON  "Play", 0x800B, 660, 4, 29, 14
+    PUSHBUTTON  "Play (camera)", 0x8078, 690, 4, 49, 14
+}
+
+LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+IDD_TRIGGER_PROPERTIES DIALOGEX 0, 0, 241, 380
+STYLE DS_MODALFRAME | DS_SETFONT | WS_CAPTION | WS_VISIBLE | WS_POPUP | WS_SYSMENU
+CAPTION "Trigger Properties"
+FONT 8, "MS Sans Serif", 0, 0, 1
+{
+    LTEXT           "Script Name:", -1, 7, 9, 42, 8, SS_LEFT, WS_EX_LEFT
+    EDITTEXT        1042, 57, 7, 96, 14, ES_AUTOHSCROLL, WS_EX_LEFT
+    LTEXT           "Shape:", -1, 25, 28, 24, 8, SS_LEFT, WS_EX_LEFT
+    COMBOBOX        1423, 57, 26, 57, 89, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWN, WS_EX_LEFT
+    AUTO3STATE      "One way", 1215, 123, 28, 44, 10, 0, WS_EX_LEFT
+    GROUPBOX        "Sphere Size", -1, 7, 43, 86, 30, 0, WS_EX_LEFT
+    LTEXT           "Radius:", -1, 15, 57, 25, 8, SS_LEFT, WS_EX_LEFT
+    LTEXT           "Static", 1204, 47, 54, 37, 14, SS_LEFT, WS_EX_CLIENTEDGE
+    GROUPBOX        "Box Size", -1, 7, 80, 227, 34, 0, WS_EX_LEFT
+    LTEXT           "Width:", -1, 13, 94, 22, 8, SS_LEFT, WS_EX_LEFT
+    LTEXT           "Static", 1193, 41, 91, 37, 14, SS_LEFT, WS_EX_CLIENTEDGE
+    LTEXT           "Depth:", -1, 83, 94, 22, 8, SS_LEFT, WS_EX_LEFT
+    LTEXT           "Static", 1312, 111, 91, 37, 14, SS_LEFT, WS_EX_CLIENTEDGE
+    LTEXT           "Height:", -1, 155, 94, 24, 8, SS_LEFT, WS_EX_LEFT
+    LTEXT           "Static", 1311, 183, 91, 37, 14, SS_LEFT, WS_EX_CLIENTEDGE
+    LTEXT           "Trigger resets", -1, 7, 124, 44, 8, SS_LEFT, WS_EX_LEFT
+    LTEXT           "Static", 1205, 55, 122, 37, 14, SS_LEFT, WS_EX_CLIENTEDGE
+    LTEXT           "times (-1 = infinitely many)", -1, 96, 124, 80, 8, SS_LEFT, WS_EX_LEFT
+    LTEXT           "Trigger resets after", -1, 7, 146, 63, 8, SS_LEFT, WS_EX_LEFT
+    LTEXT           "Static", 1206, 71, 143, 37, 14, SS_LEFT, WS_EX_CLIENTEDGE
+    LTEXT           "seconds", -1, 111, 145, 28, 8, SS_LEFT, WS_EX_LEFT
+    LTEXT           "Activated By:", -1, 7, 168, 45, 8, SS_LEFT, WS_EX_LEFT
+    COMBOBOX        1345, 60, 166, 96, 104, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWN, WS_EX_LEFT
+    LTEXT           "Key Name:", -1, 7, 185, 45, 8, SS_LEFT, WS_EX_LEFT
+    EDITTEXT        1234, 60, 182, 95, 13, ES_AUTOHSCROLL, WS_EX_LEFT
+    LTEXT           "Air Lock Room UID:", -1, 7, 217, 64, 8, SS_LEFT, WS_EX_LEFT
+    LTEXT           "Static", 1207, 76, 214, 37, 14, SS_LEFT, WS_EX_CLIENTEDGE
+    LTEXT           "Attached to UID:", -1, 7, 234, 54, 8, SS_LEFT, WS_EX_LEFT
+    LTEXT           "Static", 1210, 76, 231, 37, 14, SS_LEFT, WS_EX_CLIENTEDGE
+    LTEXT           "Use Clutter UID:", -1, 7, 251, 52, 8, SS_LEFT, WS_EX_LEFT
+    LTEXT           "Static", 1211, 76, 248, 37, 14, SS_LEFT, WS_EX_CLIENTEDGE
+    LTEXT           "(clutter must exist for trigger to work)", -1, 116, 251, 118, 8, SS_LEFT, WS_EX_LEFT
+    LTEXT           "Button Active Time:", -1, 7, 267, 63, 8, SS_LEFT, WS_EX_LEFT
+    LTEXT           "Static", 1208, 76, 264, 37, 14, SS_LEFT, WS_EX_CLIENTEDGE
+    LTEXT           "seconds (-1 = remains changed)", -1, 116, 267, 102, 8, SS_LEFT, WS_EX_LEFT
+    LTEXT           "Inside Time:", -1, 7, 283, 39, 8, SS_LEFT, WS_EX_LEFT
+    LTEXT           "Static", 1209, 76, 281, 37, 14, SS_LEFT, WS_EX_CLIENTEDGE
+    LTEXT           "seconds", -1, 116, 283, 29, 8, SS_LEFT, WS_EX_LEFT
+    AUTO3STATE      "Is NPC Trigger", 1214, 7, 301, 71, 10, 0, WS_EX_LEFT
+    AUTO3STATE      "Is Auto Trigger", 1415, 7, 312, 67, 10, 0, WS_EX_LEFT
+    AUTO3STATE      "Use Key Is Required To Activate Trigger", 1063, 7, 322, 143, 10, 0, WS_EX_LEFT
+    AUTO3STATE      "Player Weapon Activates Trigger", 1096, 7, 332, 120, 10, 0, WS_EX_LEFT
+    AUTO3STATE      "Player In Vehicle", 1130, 7, 342, 69, 10, 0, WS_EX_LEFT
+    AUTO3STATE      "Disabled", 1129, 7, 352, 43, 10, 0, WS_EX_LEFT
+    AUTO3STATE      "Always Show Range", 1128, 7, 362, 81, 10, 0, WS_EX_LEFT
+    PUSHBUTTON      "Links", 1275, 184, 359, 50, 14, 0, WS_EX_LEFT
+    DEFPUSHBUTTON   "OK", 1, 184, 7, 50, 14, 0, WS_EX_LEFT
+    PUSHBUTTON      "Cancel", 2, 184, 25, 50, 14, 0, WS_EX_LEFT
+    LTEXT           "Team:", -1, 7, 201, 21, 8, SS_LEFT, WS_EX_LEFT
+    COMBOBOX        1691, 60, 198, 100, 56, WS_TABSTOP | CBS_DROPDOWNLIST, WS_EX_LEFT
+
+    GROUPBOX        "Multiplayer Settings", -1, 154, 301, 80, 50, 0, WS_EX_LEFT
+    AUTOCHECKBOX    "Is Solo", IDC_TRIGGER_SOLO, 160, 312, 69, 10, 0, WS_EX_LEFT
+    AUTOCHECKBOX    "Is Clientside", IDC_TRIGGER_CLIENTSIDE, 160, 323, 69, 10, 0, WS_EX_LEFT
+    AUTOCHECKBOX    "Is Teleport", IDC_TRIGGER_TELEPORT, 160, 334, 69, 10, 0, WS_EX_LEFT
+}
+
+// VERSIONINFO
+#define VER_FILE_DESCRIPTION "Dash Faction level editor patch"
+#define VER_ORIGINAL_FILENAME "DashEditor.dll"
+#define VER_FILETYPE 0x2L // VFT_DLL
+#include <common/version.rc>

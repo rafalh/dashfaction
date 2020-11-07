@@ -86,7 +86,7 @@ void LauncherApp::MigrateConfig()
 bool LauncherApp::LaunchGame(HWND hwnd, const char* mod_name)
 {
     WatchDogTimer::ScopedStartStop wdt_start{m_watch_dog_timer};
-    GameLauncher launcher;
+    RedFactionLauncher launcher;
     auto exe_path_opt = m_cmd_line_info.GetExePath();
     if (exe_path_opt) {
         launcher.set_app_exe_path(exe_path_opt.value());
