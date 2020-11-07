@@ -343,6 +343,12 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     WriteMemPtr(0x0041B813 + 1, maps_files_names);
     WriteMemPtr(0x0041B824 + 1, maps_files_names);
 
+    // Fix path node connections sometimes being rendered incorrectly
+    // For some reason editor code uses copies of radius and position fields in some situation and those copies
+    // are sometimes uninitialized
+    WriteMem<u8>(0x004190EB, asm_opcodes::jmp_rel_short);
+    WriteMem<u8>(0x0041924A, asm_opcodes::jmp_rel_short);
+
     return 1; // success
 }
 
