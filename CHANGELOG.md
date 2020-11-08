@@ -26,13 +26,14 @@ Version 1.5.1 (not released yet)
 - add more textures from base game to the level editor texture browser
 - fix packing a level that contains a particle emitter with a default texture in the level editor
 - fix path node connections sometimes being rendered incorrectly in the level editor
+- use dynamic allocation when pool is full for weapons, debris, corpses, decal polygons, faces, face vertices,
+  bounding boxes, vertices, meshes (it was listed as a feature of Dash Faction 1.5.0 but the patch was actually
+  broken)
 
 Version 1.5.0 (released 2020-09-05)
 -----------------------------------
 - increase object limit from 1024 to 65536
 - remove additional limits on number of allocated bullet, item, debris and corpse objects
-- remove limit of loaded object meshes (v3d files)
-- remove some limits of level geometry related objects
 - enable and fix items and clutters static lighting calculation
 - enable Set_Liquid_Depth implementation - check out Geothermal Plant in single player and see what changed
 - add DDS texture format support (useful for DXTn compressed textures)

@@ -127,15 +127,15 @@ void ApplyLimitsPatches()
     AsmWriter(0x00487BBA, 0x00487BC3).call(SimObjArrayAddHook).add(asm_regs::esp, 4);
 
     // Allow pool allocation beyond the limit
-    WriteMem<u8>(0x0048B5BB + 1, asm_opcodes::jmp_rel_short); // weapon
-    WriteMem<u8>(0x0048B72B + 1, asm_opcodes::jmp_rel_short); // debris
-    WriteMem<u8>(0x0048B89B + 1, asm_opcodes::jmp_rel_short); // corpse
-    WriteMem<u8>(0x004D7EEB + 1, asm_opcodes::jmp_rel_short); // decal poly
-    WriteMem<u8>(0x004E3C5B + 1, asm_opcodes::jmp_rel_short); // face
-    WriteMem<u8>(0x004E3DEB + 1, asm_opcodes::jmp_rel_short); // face vertex
-    WriteMem<u8>(0x004F97DB + 1, asm_opcodes::jmp_rel_short); // bbox
-    WriteMem<u8>(0x004F9C5B + 1, asm_opcodes::jmp_rel_short); // vertex
-    WriteMem<u8>(0x005047AB + 1, asm_opcodes::jmp_rel_short); // vmesh
+    WriteMem<u8>(0x0048B5BB, asm_opcodes::jmp_rel_short); // weapon
+    WriteMem<u8>(0x0048B72B, asm_opcodes::jmp_rel_short); // debris
+    WriteMem<u8>(0x0048B89B, asm_opcodes::jmp_rel_short); // corpse
+    WriteMem<u8>(0x004D7EEB, asm_opcodes::jmp_rel_short); // decal poly
+    WriteMem<u8>(0x004E3C5B, asm_opcodes::jmp_rel_short); // face
+    WriteMem<u8>(0x004E3DEB, asm_opcodes::jmp_rel_short); // face vertex
+    WriteMem<u8>(0x004F97DB, asm_opcodes::jmp_rel_short); // bbox
+    WriteMem<u8>(0x004F9C5B, asm_opcodes::jmp_rel_short); // vertex
+    WriteMem<u8>(0x005047AB, asm_opcodes::jmp_rel_short); // vmesh
 
     // Remove object type-specific limits
     AsmWriter(0x0048712A, 0x00487137).nop(); // corpse
