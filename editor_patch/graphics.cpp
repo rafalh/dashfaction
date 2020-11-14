@@ -215,7 +215,7 @@ FunHook<void(red::Matrix3*, red::Vector3*, float, bool, bool)> gr_setup_3d_hook{
             // Use Hor+ scaling method to improve user experience when displayed on a widescreen
             // Assume provided FOV makes sense on a 4:3 screen
             float s = static_cast<float>(red::gr_screen.clip_width) / red::gr_screen.clip_height * 0.75f;
-            constexpr float pi = 3.141592;
+            constexpr float pi = 3.141592f;
             float h_fov_rad = horizontal_fov / 180.0f * pi;
             float x = std::tan(h_fov_rad / 2.0f);
             float y = x * s;
