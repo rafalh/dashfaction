@@ -31,14 +31,45 @@ inline bool is_no_gui_mode()
 
 std::string PatchedAppLauncher::get_patch_dll_path()
 {
-    char buf[MAX_PATH];
-    DWORD result = GetModuleFileNameA(nullptr, buf, std::size(buf));
+    std::string buf;
+    buf.resize(MAX_PATH);
+    DWORD result = GetModuleFileNameA(nullptr, buf.data(), buf.size());
     if (!result)
         THROW_WIN32_ERROR();
-    if (result == std::size(buf))
+    if (result == buf.size())
         THROW_EXCEPTION("insufficient buffer for module file name");
+    buf.resize(result);
+
+    // Get GetFinalPathNameByHandleA function address dynamically in order to support Windows XP
+    using GetFinalPathNameByHandleA_Type = decltype(GetFinalPathNameByHandleA);
+    auto kernel32_module = GetModuleHandleA("kernel32");
+    auto GetFinalPathNameByHandleA_ptr =
+        reinterpret_cast<GetFinalPathNameByHandleA_Type*>(GetProcAddress(kernel32_module, "GetFinalPathNameByHandleA"));
+    // Make sure path is pointing to an actual module and not a symlink
+    if (GetFinalPathNameByHandleA_ptr) {
+        auto file_handle = CreateFileA(buf.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+        if (file_handle != INVALID_HANDLE_VALUE) {
+            buf.resize(MAX_PATH);
+
+            result = GetFinalPathNameByHandleA(file_handle, buf.data(), buf.size(), FILE_NAME_NORMALIZED);
+            if (result > buf.size()) {
+                buf.resize(result);
+                result = GetFinalPathNameByHandleA(file_handle, buf.data(), buf.size(), FILE_NAME_NORMALIZED);
+            }
+            if (result == 0 || result > buf.size()) {
+                THROW_WIN32_ERROR();
+            }
+            // Windows Vista returns number of characters including the terminating null character
+            if (buf[result - 1] == '\0') {
+                --result;
+            }
+            buf.resize(result);
+            CloseHandle(file_handle);
+        }
+    }
 
     std::string dir = get_dir_from_path(buf);
+    xlog::info("Determined Dash Faction directory: %s", dir.c_str());
     return dir + "\\" + m_patch_dll_name;
 }
 

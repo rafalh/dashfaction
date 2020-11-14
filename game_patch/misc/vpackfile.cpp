@@ -167,7 +167,7 @@ static int VPackfileAdd_New(const char* filename, const char* dir)
     xlog::trace("Load packfile %s %s", dir, filename);
 
     std::string full_path;
-    if (dir && dir[0] && dir[1] == ':')
+    if (dir && !PathIsRelativeA(dir))
         full_path = StringFormat("%s%s", dir, filename); // absolute path
     else
         full_path = StringFormat("%s%s%s", rf::root_path, dir ? dir : "", filename);
