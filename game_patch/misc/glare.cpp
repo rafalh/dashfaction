@@ -15,7 +15,7 @@
 #include "../main.h"
 
 static std::vector<rf::Object*> g_objects_to_check;
-static std::vector<rf::MoverBrush*> g_movers_to_check;
+static std::vector<rf::MoverBrush*> g_mover_brushes_to_check;
 
 static bool GlareCollideObject(rf::Glare* glare, rf::Object* obj, const rf::Vector3& eye_pos)
 {
@@ -59,14 +59,14 @@ static bool GlareCollideObject(rf::Glare* glare, rf::Object* obj, const rf::Vect
     return rf::VMeshCollide(obj->vmesh, &col_in, &col_out, true);
 }
 
-static bool GlareCollideMover(rf::Glare* glare, rf::MoverBrush* mover, const rf::Vector3& eye_pos)
+static bool GlareCollideMoverBrush(rf::Glare* glare, rf::MoverBrush* mbp, const rf::Vector3& eye_pos)
 {
-    if (!(mover->obj_flags & rf::OF_WAS_RENDERED)) {
+    if (!(mbp->obj_flags & rf::OF_WAS_RENDERED)) {
         return false;
     }
 
     rf::Vector3 hit_pt;
-    if (!rf::IxLineSegmentBoundingBox(mover->p_data.bbox_min, mover->p_data.bbox_max, glare->pos, eye_pos, &hit_pt)) {
+    if (!rf::IxLineSegmentBoundingBox(mbp->p_data.bbox_min, mbp->p_data.bbox_max, glare->pos, eye_pos, &hit_pt)) {
         return false;
     }
     rf::GCollisionInput col_in;
@@ -75,9 +75,9 @@ static bool GlareCollideMover(rf::Glare* glare, rf::MoverBrush* mover, const rf:
     col_in.len = glare->pos - eye_pos;
     col_in.flags = 1;
     col_in.radius = 0.0f;
-    col_in.geometry_pos = mover->pos;
-    col_in.geometry_orient = mover->orient;
-    mover->geometry->TestLineCollision(&col_in, &col_out, true);
+    col_in.geometry_pos = mbp->pos;
+    col_in.geometry_orient = mbp->orient;
+    mbp->geometry->Collide(&col_in, &col_out, true);
     return col_out.num_hits != 0;
 }
 
@@ -114,10 +114,10 @@ FunHook<void(bool)> GlareRenderAllCorona_hook{
             }
         }
 
-        g_movers_to_check.clear();
-        for (auto& mover: DoublyLinkedList{rf::mover_brush_list}) {
-            if (mover.obj_flags & rf::OF_WAS_RENDERED) {
-                g_movers_to_check.push_back(&mover);
+        g_mover_brushes_to_check.clear();
+        for (auto& mb: DoublyLinkedList{rf::mover_brush_list}) {
+            if (mb.obj_flags & rf::OF_WAS_RENDERED) {
+                g_mover_brushes_to_check.push_back(&mb);
             }
         }
 
@@ -137,18 +137,18 @@ FunHook<bool(rf::Glare* glare, const rf::Vector3& eye_pos)> GlareIsInView_hook{
 
         if (glare->last_covering_face) {
             geo_collide_in.face = glare->last_covering_face;
-            rf::level.geometry->TestLineCollision(&geo_collide_in, &geo_collide_out, true);
+            rf::level.geometry->Collide(&geo_collide_in, &geo_collide_out, true);
             if (geo_collide_out.num_hits != 0) {
                 return false;
             }
             glare->last_covering_face = nullptr;
         }
 
-        if (glare->last_covering_mover) {
-            if (GlareCollideMover(glare, glare->last_covering_mover, eye_pos)) {
+        if (glare->last_covering_mover_brush) {
+            if (GlareCollideMoverBrush(glare, glare->last_covering_mover_brush, eye_pos)) {
                 return false;
             }
-            glare->last_covering_mover = nullptr;
+            glare->last_covering_mover_brush = nullptr;
         }
 
         if (glare->last_covering_objh != -1) {
@@ -160,15 +160,15 @@ FunHook<bool(rf::Glare* glare, const rf::Vector3& eye_pos)> GlareIsInView_hook{
         }
 
         geo_collide_in.face = nullptr;
-        rf::level.geometry->TestLineCollision(&geo_collide_in, &geo_collide_out, true);
+        rf::level.geometry->Collide(&geo_collide_in, &geo_collide_out, true);
         if (geo_collide_out.num_hits != 0) {
             glare->last_covering_face = geo_collide_out.face;
             return false;
         }
 
-        for (auto mover_ptr : g_movers_to_check) {
-            if (GlareCollideMover(glare, mover_ptr, eye_pos)) {
-                glare->last_covering_mover = mover_ptr;
+        for (auto mbp : g_mover_brushes_to_check) {
+            if (GlareCollideMoverBrush(glare, mbp, eye_pos)) {
+                glare->last_covering_mover_brush = mbp;
                 return false;
             }
         }
@@ -189,7 +189,7 @@ FunHook<void(rf::Glare*, int)> GlareRenderCorona_hook{
         // check if corona is in view using dynamic radius dedicated for this effect
         // Note: object radius matches volumetric effect size and can be very large so this check helps
         // to speed up rendering
-        auto& current_radius = glare->current_radius[player_idx];
+        auto& current_radius = glare->last_rendered_radius[player_idx];
         if (!rf::GrCullSphere(glare->pos, current_radius)) {
             GlareRenderCorona_hook.CallTarget(glare, player_idx);
         }

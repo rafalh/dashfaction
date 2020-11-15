@@ -86,7 +86,7 @@ namespace rf
         int field_370;
         int field_374;
 
-        void TestLineCollision(GCollisionInput *in, GCollisionOutput *out, bool clear_fraction)
+        void Collide(GCollisionInput *in, GCollisionOutput *out, bool clear_fraction)
         {
             AddrCaller{0x004DF1C0}.this_call(this, in, out, clear_fraction);
         }

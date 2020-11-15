@@ -431,7 +431,7 @@ void ChangeUserBitmapPixelFormat(int bmh, rf::BmFormat pixel_fmt, [[ maybe_unuse
     DestroyTexture(bmh);
     int bm_idx = rf::BmHandleToIdxAnimAware(bmh);
     auto& bm = rf::bm_bitmaps[bm_idx];
-    assert(bm.bitmap_type == rf::BM_TYPE_USER);
+    assert(bm.bm_type == rf::BM_TYPE_USER);
     bm.format = pixel_fmt;
     // TODO: in DX9 use dynamic flag
 }
