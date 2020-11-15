@@ -318,11 +318,11 @@ FunHook<rf::BmFormat(int, void**, void**)> bm_lock_hook{
     0x00510780,
     [](int bmh, void** pixels_out, void** palette_out) {
         auto& bm_entry = rf::bm_bitmaps[rf::BmHandleToIdxAnimAware(bmh)];
-        if (bm_entry.bitmap_type == rf::BM_TYPE_DDS) {
+        if (bm_entry.bm_type == rf::BM_TYPE_DDS) {
             LockDdsBitmap(bm_entry);
             *pixels_out = bm_entry.locked_data;
             *palette_out = bm_entry.locked_palette;
-            return bm_entry.pixel_format;
+            return bm_entry.format;
         }
         else {
             auto pixel_fmt = bm_lock_hook.CallTarget(bmh, pixels_out, palette_out);
@@ -432,7 +432,7 @@ void ChangeUserBitmapPixelFormat(int bmh, rf::BmFormat pixel_fmt, [[ maybe_unuse
     int bm_idx = rf::BmHandleToIdxAnimAware(bmh);
     auto& bm = rf::bm_bitmaps[bm_idx];
     assert(bm.bitmap_type == rf::BM_TYPE_USER);
-    bm.pixel_format = pixel_fmt;
+    bm.format = pixel_fmt;
     // TODO: in DX9 use dynamic flag
 }
 

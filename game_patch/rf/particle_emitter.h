@@ -50,30 +50,30 @@ struct ParticleEmitterType
 };
 static_assert(sizeof(ParticleEmitterType) == 0x84);
 
-struct ParticleCreateData
+struct ParticleCreateInfo
 {
     Vector3 pos;
-    Vector3 velocity;
-    float pradius;
+    Vector3 vel;
+    float radius;
     float growth_rate;
     float acceleration;
     float gravity_scale;
-    float life_secs;
-    int bitmap;
-    int field_30;
-    Color particle_clr;
-    Color particle_clr_dest;
-    int particle_flags;
-    int particle_flags2;
-    int field_44;
-    int field_48;
+    float lifetime_seconds;
+    int bitmap_handle;
+    int num_frames;
+    Color clr;
+    Color clr_dest;
+    int flags;
+    int flags2;
+    int age_pct_to_finish_vbm;
+    int hit_callback;
 };
-static_assert(sizeof(ParticleCreateData) == 0x4C);
+static_assert(sizeof(ParticleCreateInfo) == 0x4C);
 
 struct Particle
 {
-    struct Particle *next;
-    struct Particle *prev;
+    Particle *next;
+    Particle *prev;
     int parent_hobj;
     Vector3 pos;
     Vector3 velocity;
@@ -93,7 +93,7 @@ struct Particle
     float unk_orient;
     int particle_flags;
     int field_5C;
-    void (__cdecl *unk_callback)(Vector3 *hit_pos, const Vector3 *vel, Vector3 *normal, float *, int *is_liquid, int *hit_obj_uid);
+    void (*unk_callback)(Vector3 *hit_pos, const Vector3 *vel, Vector3 *normal, float *, int *is_liquid, int *hit_obj_uid);
     GRoom *room;
     ParticleEmitter *emitter;
     Vector3 prev_pos;
@@ -103,7 +103,7 @@ static_assert(sizeof(Particle) == 0x78);
 struct ParticleEmitter
 {
     int uid;
-    int parent_hobj;
+    int parent_handle;
     Vector3 pos;
     Vector3 dir;
     float dir_rand;
@@ -118,23 +118,23 @@ struct ParticleEmitter
     float min_pradius;
     float max_pradius;
     GRoom *room;
-    ParticleCreateData particle_data;
-    float max_render_radius;
+    ParticleCreateInfo pci;
+    float cull_radius;
     float field_A0;
     Vector3 field_A4;
     Particle particle_list;
-    float alt_state_on_time;
-    float alt_state_on_time_variance;
-    float alt_state_off_time;
-    float alt_state_off_time_variance;
-    float max_time;
-    float time;
-    bool is_on;
+    float on_time;
+    float on_time_variance;
+    float off_time;
+    float off_time_variance;
+    float time_to_change;
+    float current_state_time;
+    bool active;
     int field_144;
-    struct ParticleEmitter *next;
-    struct ParticleEmitter *prev;
+    ParticleEmitter *next;
+    ParticleEmitter *prev;
     ParticleEmitter *next_entity_emitter;
-    Timestamp spawn_delay_timestamp;
+    Timestamp spawn_timer;
 };
 static_assert(sizeof(ParticleEmitter) == 0x158);
 

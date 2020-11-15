@@ -90,7 +90,7 @@ void RenderSelectWeaponGui()
 
     int num_drawn_weapons_per_category[4] = {0};
     auto ai_info = rf::PlayerGetAiInfo(rf::local_player);
-    for (auto& pref_id : rf::local_player->pref_weapons) {
+    for (auto& pref_id : rf::local_player->weapon_prefs) {
         rf::WeaponCycle* cycle_entry = nullptr;
         for (auto& entry : rf::hud_weapon_cycle) {
             if (entry.weapon_type == pref_id) {

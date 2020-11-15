@@ -21,13 +21,13 @@ void LoadNextLevel()
 
 void LoadPrevLevel()
 {
-    rf::level_rotation_idx--;
-    if (rf::level_rotation_idx < 0) {
-        rf::level_rotation_idx = rf::server_levels.Size() - 1;
+    rf::netgame.current_level_index--;
+    if (rf::netgame.current_level_index < 0) {
+        rf::netgame.current_level_index = rf::netgame.levels.Size() - 1;
     }
     if (g_prev_level.empty()) {
         // this is the first level running - use previous level from rotation
-        rf::MultiChangeLevel(rf::server_levels.Get(rf::level_rotation_idx));
+        rf::MultiChangeLevel(rf::netgame.levels.Get(rf::netgame.current_level_index));
     }
     else {
         rf::MultiChangeLevel(g_prev_level.c_str());

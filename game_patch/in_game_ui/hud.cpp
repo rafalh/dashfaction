@@ -6,7 +6,7 @@
 #include "../graphics/graphics.h"
 #include "../rf/hud.h"
 #include "../rf/network.h"
-#include "../rf/fs.h"
+#include "../rf/file.h"
 #include "../rf/entity.h"
 #include "../rf/player.h"
 #include "../rf/weapon.h"
@@ -538,6 +538,6 @@ bool IsDoubleAmmoHud()
     if (!entity) {
         return false;
     }
-    auto weapon_type = entity->ai_info.current_primary_weapon;
+    auto weapon_type = entity->ai.current_primary_weapon;
     return weapon_type == rf::machine_pistol_weapon_type || weapon_type == rf::machine_pistol_special_weapon_type;
 }

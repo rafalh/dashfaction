@@ -141,7 +141,7 @@ CodeInjection dedicated_server_load_config_patch{
 
         // Insert server name in window title when hosting dedicated server
         std::string wnd_name;
-        wnd_name.append(rf::serv_name.CStr());
+        wnd_name.append(rf::netgame.name.CStr());
         wnd_name.append(" - " PRODUCT_NAME " Dedicated Server");
         SetWindowTextA(rf::main_wnd, wnd_name.c_str());
     },
@@ -158,8 +158,8 @@ std::pair<std::string_view, std::string_view> StripBySpace(std::string_view str)
 
 void HandleNextMapCommand(rf::Player* player)
 {
-    int next_idx = (rf::level_rotation_idx + 1) % rf::server_levels.Size();
-    auto msg = StringFormat("Next level: %s", rf::server_levels.Get(next_idx).CStr());
+    int next_idx = (rf::netgame.current_level_index + 1) % rf::netgame.levels.Size();
+    auto msg = StringFormat("Next level: %s", rf::netgame.levels.Get(next_idx).CStr());
     SendChatLinePacket(msg.c_str(), player);
 }
 
@@ -306,7 +306,7 @@ void SendHitSoundPacket(rf::Player* target)
     packet.sound_id = g_additional_server_config.hit_sounds.sound_id;
     // FIXME: it does not work on RF 1.21
     packet.pos.x = packet.pos.y = packet.pos.z = std::numeric_limits<float>::quiet_NaN();
-    rf::NwSendNotReliablePacket(target->nw_data->addr, &packet, sizeof(packet));
+    rf::MultiIoSend(target, &packet, sizeof(packet));
 }
 
 FunHook<float(rf::Entity*, float, int, int, int)> EntityTakeDamage_hook{
@@ -386,12 +386,12 @@ FunHook<void(rf::Player*)> spawn_player_sync_ammo_hook{
             packet.header.type = RF_GPT_RELOAD;
             packet.header.size = sizeof(packet) - sizeof(packet.header);
             packet.entity_handle = entity->handle;
-            int weapon_type = entity->ai_info.current_primary_weapon;
+            int weapon_type = entity->ai.current_primary_weapon;
             packet.weapon = weapon_type;
-            packet.clip_ammo = entity->ai_info.clip_ammo[weapon_type];
+            packet.clip_ammo = entity->ai.clip_ammo[weapon_type];
             int ammo_type = rf::weapon_types[weapon_type].ammo_type;
-            packet.ammo = entity->ai_info.ammo[ammo_type];
-            rf::NwSendReliablePacket(player, reinterpret_cast<uint8_t*>(&packet), sizeof(packet), 0);
+            packet.ammo = entity->ai.ammo[ammo_type];
+            rf::MultiIoSendReliable(player, reinterpret_cast<uint8_t*>(&packet), sizeof(packet), 0);
         }
     },
 };
@@ -442,13 +442,13 @@ CallHook<void(char*)> get_mod_name_for_game_info_packet_patch{
 CodeInjection send_ping_time_wrap_fix{
     0x0047CCE8,
     [](auto& regs) {
-        auto& nw_stats = AddrAsRef<rf::NwStats>(regs.esi);
+        auto& io_stats = AddrAsRef<rf::MultiIoStats>(regs.esi);
         auto player = AddrAsRef<rf::Player*>(regs.esp + 0xC + 0x4);
-        if (!nw_stats.send_ping_packet_timestamp.Valid() || nw_stats.send_ping_packet_timestamp.Elapsed()) {
+        if (!io_stats.send_ping_packet_timestamp.Valid() || io_stats.send_ping_packet_timestamp.Elapsed()) {
             xlog::trace("sending ping");
-            nw_stats.send_ping_packet_timestamp.Set(3000);
+            io_stats.send_ping_packet_timestamp.Set(3000);
             rf::PingPlayer(player);
-            nw_stats.last_ping_time = rf::TimerGet(1000);
+            io_stats.last_ping_time = rf::TimerGet(1000);
         }
         regs.eip = 0x0047CD64;
     },
@@ -469,7 +469,7 @@ FunHook<void(rf::Player*)> MultiSpawnPlayerServerSide_hook{
     0x00480820,
     [](rf::Player* player) {
         if (g_additional_server_config.force_player_character) {
-            player->settings.mp_character = g_additional_server_config.force_player_character.value();
+            player->settings.multi_character = g_additional_server_config.force_player_character.value();
         }
         MultiSpawnPlayerServerSide_hook.CallTarget(player);
     },

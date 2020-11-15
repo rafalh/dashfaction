@@ -4,10 +4,12 @@
 
 namespace rf
 {
+    struct GSolid;
+
     struct MoverBrush : Object
     {
-        struct MoverBrush *next;
-        struct MoverBrush *prev;
+        MoverBrush *next;
+        MoverBrush *prev;
         GSolid *geometry;
     };
 

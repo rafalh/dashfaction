@@ -4,7 +4,6 @@
 
 namespace rf {
     struct GlareInfo;
-    struct GSolid;
     struct GFace;
     struct MoverBrush;
     struct Player;

@@ -1,6 +1,6 @@
 #include "autodl.h"
 #include "../rf/network.h"
-#include "../rf/fs.h"
+#include "../rf/file.h"
 #include "../rf/graphics.h"
 #include "../rf/ui.h"
 #include "../misc/misc.h"

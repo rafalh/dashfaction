@@ -113,7 +113,7 @@ namespace rf
     struct Object
     {
         GRoom *room;
-        Vector3 last_pos_in_room;
+        Vector3 correct_pos;
         Object *next_obj;
         Object *prev_obj;
         String name;
@@ -130,24 +130,23 @@ namespace rf
         float radius;
         ObjectFlags obj_flags;
         VMesh *vmesh;
-        int field_84;
+        int vmesh_submesh;
         PhysicsData p_data;
         Friendliness friendliness;
         int material;
         int host_handle;
-        int unk_prop_id_204;
-        Vector3 field_208;
-        Matrix3 mat214;
-        Vector3 pos3;
-        Matrix3 rot2;
+        int host_tag_handle;
+        Vector3 host_offset;
+        Matrix3 host_orient;
+        Vector3 start_pos;
+        Matrix3 start_orient;
         int *emitter_list_head;
-        int field_26c;
-        char killer_id;
-        char pad[3]; // FIXME
+        int root_bone_index;
+        char killer_netid;
         int server_handle;
         ObjInterp* obj_interp;
         void* mesh_lighting_data;
-        Vector3 field_280;
+        Vector3 relative_transition_pos;
     };
     static_assert(sizeof(Object) == 0x28C);
 

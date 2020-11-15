@@ -328,7 +328,7 @@ FunHook<NwPacketHandler_Type> ProcessLeftGamePacket_hook{
     [](char* data, const rf::NwAddr& addr) {
         // server-side and client-side
         if (rf::is_server) {
-            rf::Player* src_player = rf::NwGetPlayerFromAddr(addr);
+            rf::Player* src_player = rf::MultiFindPlayerByAddr(addr);
             data[0] = src_player->nw_data->player_id; // fix player ID
         }
         ProcessLeftGamePacket_hook.CallTarget(data, addr);
@@ -340,7 +340,7 @@ FunHook<NwPacketHandler_Type> ProcessChatLinePacket_hook{
     [](char* data, const rf::NwAddr& addr) {
         // server-side and client-side
         if (rf::is_server) {
-            rf::Player* src_player = rf::NwGetPlayerFromAddr(addr);
+            rf::Player* src_player = rf::MultiFindPlayerByAddr(addr);
             if (!src_player)
                 return; // shouldnt happen (protected in rf::NwProcessGamePackets)
 
@@ -359,7 +359,7 @@ FunHook<NwPacketHandler_Type> ProcessNameChangePacket_hook{
     [](char* data, const rf::NwAddr& addr) {
         // server-side and client-side
         if (rf::is_server) {
-            rf::Player* src_player = rf::NwGetPlayerFromAddr(addr);
+            rf::Player* src_player = rf::MultiFindPlayerByAddr(addr);
             if (!src_player)
                 return;                               // shouldnt happen (protected in rf::NwProcessGamePackets)
             data[0] = src_player->nw_data->player_id; // fix player ID
@@ -373,7 +373,7 @@ FunHook<NwPacketHandler_Type> ProcessTeamChangePacket_hook{
     [](char* data, const rf::NwAddr& addr) {
         // server-side and client-side
         if (rf::is_server) {
-            rf::Player* src_player = rf::NwGetPlayerFromAddr(addr);
+            rf::Player* src_player = rf::MultiFindPlayerByAddr(addr);
             if (!src_player)
                 return; // shouldnt happen (protected in rf::NwProcessGamePackets)
 
@@ -389,7 +389,7 @@ FunHook<NwPacketHandler_Type> ProcessRateChangePacket_hook{
     [](char* data, const rf::NwAddr& addr) {
         // server-side and client-side?
         if (rf::is_server) {
-            rf::Player* src_player = rf::NwGetPlayerFromAddr(addr);
+            rf::Player* src_player = rf::MultiFindPlayerByAddr(addr);
             if (!src_player)
                 return;                               // shouldnt happen (protected in rf::NwProcessGamePackets)
             data[0] = src_player->nw_data->player_id; // fix player ID
@@ -506,7 +506,7 @@ CodeInjection ProcessBooleanPacket_ValidateMeshId_patch{
 CodeInjection ProcessBooleanPacket_ValidateRoomId_patch{
     0x0047661C,
     [](auto& regs) {
-        int num_rooms = rf::rfl_static_geometry->all_rooms.Size();
+        int num_rooms = rf::level.geometry->all_rooms.Size();
         if (regs.edx < 0 || regs.edx >= num_rooms) {
             xlog::warn("Invalid room in Boolean packet - skipping");
             regs.esp += 0x64;
@@ -526,7 +526,7 @@ CodeInjection ProcessPregameBooleanPacket_ValidateMeshId_patch{
 CodeInjection ProcessPregameBooleanPacket_ValidateRoomId_patch{
     0x00476752,
     [](auto& regs) {
-        int num_rooms = rf::rfl_static_geometry->all_rooms.Size();
+        int num_rooms = rf::level.geometry->all_rooms.Size();
         if (regs.edx < 0 || regs.edx >= num_rooms) {
             xlog::warn("Invalid room in PregameBoolean packet - skipping");
             regs.esp += 0x68;
@@ -820,11 +820,11 @@ void SendChatLinePacket(const char* msg, rf::Player* target, rf::Player* sender,
     std::strncpy(packet.message, msg, 255);
     packet.message[255] = 0;
     if (target == nullptr && rf::is_server) {
-        rf::NwSendReliablePacketToAll(buf, packet.header.size + sizeof(packet.header), 0);
+        rf::MultiIoSendReliableToAll(buf, packet.header.size + sizeof(packet.header), 0);
         rf::ConsolePrintf("Server: %s", msg);
     }
     else {
-        rf::NwSendReliablePacket(target, buf, packet.header.size + sizeof(packet.header), 0);
+        rf::MultiIoSendReliable(target, buf, packet.header.size + sizeof(packet.header), 0);
     }
 }
 

@@ -13,6 +13,10 @@
 
 namespace rf
 {
+    using uint = unsigned int;
+    using ushort = unsigned short;
+    using ubyte = unsigned char;
+
     struct Vector3
     {
         float x = 0.0f;

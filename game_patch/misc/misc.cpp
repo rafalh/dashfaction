@@ -462,18 +462,18 @@ CallHook<void __fastcall(rf::Timestamp*, int, int)> HandleCtrlInGame_TimerSet_fi
 
 FunHook<void(rf::EntityFireInfo&, int)> EntityBurnSwitchParentToCorpse_hook{
     0x0042F510,
-    [](rf::EntityFireInfo& burn_info, int corpse_hobj) {
-        auto corpse = rf::CorpseFromHandle(corpse_hobj);
-        burn_info.parent_hobj = corpse_hobj;
+    [](rf::EntityFireInfo& burn_info, int corpse_handle) {
+        auto corpse = rf::CorpseFromHandle(corpse_handle);
+        burn_info.parent_handle = corpse_handle;
         rf::EntityBurnInitBones(&burn_info, corpse);
         for (auto& emitter_ptr : burn_info.emitters) {
             if (emitter_ptr) {
-                emitter_ptr->parent_hobj = corpse_hobj;
+                emitter_ptr->parent_handle = corpse_handle;
             }
         }
         burn_info.field_2C = 1;
         burn_info.field_30 = 0.0f;
-        corpse->flags |= 0x200;
+        corpse->corpse_flags |= 0x200;
     },
 };
 

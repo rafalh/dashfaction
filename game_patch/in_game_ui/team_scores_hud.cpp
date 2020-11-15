@@ -41,7 +41,7 @@ void HudRenderTeamScores()
     auto game_type = rf::MultiGetGameType();
     int font_id = HudGetDefaultFont();
 
-    if (game_type == rf::MGT_CTF) {
+    if (game_type == rf::NG_TYPE_CTF) {
         static float hud_flag_alpha = 255.0f;
         static bool hud_flag_pulse_dir = false;
         float delta_alpha = rf::frametime * 500.0f;
@@ -60,7 +60,7 @@ void HudRenderTeamScores()
             }
         }
         rf::GrSetColorRgba(53, 207, 22, 255);
-        auto red_flag_player = g_debug_team_scores_hud ? rf::local_player : rf::CtfGetRedFlagPlayer();
+        auto red_flag_player = g_debug_team_scores_hud ? rf::local_player : rf::MultiCtfGetRedFlagPlayer();
         if (red_flag_player) {
             auto name = g_debug_team_scores_hud ? "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii" : red_flag_player->name;
             std::string fitting_name = HudFitString(name, max_miniflag_label_w, nullptr, font_id);
@@ -71,14 +71,14 @@ void HudRenderTeamScores()
                 HudScaledBitmap(rf::hud_flag_red_bmh, flag_x, box_y, flag_scale, rf::hud_flag_render_state);
             }
         }
-        else if (rf::CtfIsRedFlagInBase()) {
+        else if (rf::MultiCtfIsRedFlagInBase()) {
             rf::GrString(miniflag_label_x, red_miniflag_label_y, "at base", font_id);
         }
         else {
             rf::GrString(miniflag_label_x, red_miniflag_label_y, "missing", font_id);
         }
         rf::GrSetColorRgba(53, 207, 22, 255);
-        auto blue_flag_player = rf::CtfGetBlueFlagPlayer();
+        auto blue_flag_player = rf::MultiCtfGetBlueFlagPlayer();
         if (blue_flag_player) {
             auto name = g_debug_team_scores_hud ? "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii" : blue_flag_player->name;
             std::string fitting_name = HudFitString(name, max_miniflag_label_w, nullptr, font_id);
@@ -89,7 +89,7 @@ void HudRenderTeamScores()
                 HudScaledBitmap(rf::hud_flag_blue_bmh, flag_x, box_y, flag_scale, rf::hud_flag_render_state);
             }
         }
-        else if (rf::CtfIsBlueFlagInBase()) {
+        else if (rf::MultiCtfIsBlueFlagInBase()) {
             rf::GrString(miniflag_label_x, blue_miniflag_label_y, "at base", font_id);
         }
         else {
@@ -117,14 +117,14 @@ void HudRenderTeamScores()
         red_score = 15;
         blue_score = 15;
     }
-    else if (game_type == rf::MGT_CTF) {
-        red_score = rf::CtfGetRedTeamScore();
-        blue_score = rf::CtfGetBlueTeamScore();
+    else if (game_type == rf::NG_TYPE_CTF) {
+        red_score = rf::MultiCtfGetRedTeamScore();
+        blue_score = rf::MultiCtfGetBlueTeamScore();
     }
-    else if (game_type == rf::MGT_TEAMDM) {
+    else if (game_type == rf::NG_TYPE_TEAMDM) {
         rf::GrSetColorRgba(53, 207, 22, 255);
-        red_score = rf::TdmGetRedTeamScore();
-        blue_score = rf::TdmGetBlueTeamScore();
+        red_score = rf::MultiTdmGetRedTeamScore();
+        blue_score = rf::MultiTdmGetBlueTeamScore();
     }
     else {
         red_score = 0;

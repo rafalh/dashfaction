@@ -16,30 +16,36 @@ namespace rf
     struct GPortal;
     struct GTextureMover;
     struct GRoom;
-    struct GrLight;
     struct GPathNode;
+    struct GrLight;
+    struct ParticleEmitter;
+    struct BoltEmitter;
+    struct LevelLight;
+    struct GeoRegion;
+    struct ClimbRegion;
+    struct PushRegion;
 
     using GPathNodeType = int;
 
     struct GPathNode
     {
         Vector3 pos;
-        Vector3 unk_mut_pos;
-        float radius2;
-        float radius1;
+        Vector3 use_pos;
+        float original_radius;
+        float radius;
         float height;
-        float pause_time;
-        VArray<> linked_nav_points_ptrs;
-        char skip;
-        char skip0;
-        __int16 field_36;
-        float unk_dist;
-        struct GPathNode *field_3C;
+        float pause_time_seconds;
+        VArray<GPathNode*> visible_nodes;
+        bool visited;
+        bool unusable;
+        __int16 adjacent;
+        float distance;
+        GPathNode *backptr;
         GPathNodeType type;
-        char is_directional;
+        bool directional;
         Matrix3 orient;
-        int uid;
-        VArray<> linked_uids;
+        int index;
+        VArray<int> linked_uids;
     };
     static_assert(sizeof(GPathNode) == 0x7C);
 
@@ -65,9 +71,9 @@ namespace rf
         VArray<GRoom*> cached_detail_room_list;
         VArray<GPortal*> portals;
         VArray<GSurface*> surfaces;
-        VArray<void*> sel_vertices;
-        VArray<void*> sel_faces;
-        VArray<void*> last_sel_faces;
+        VArray<GVertex*> sel_vertices;
+        VArray<GFace*> sel_faces;
+        VArray<GFace*> last_sel_faces;
         FArray<GDecal*, 128> decals;
         VArray<GTextureMover*> texture_movers;
         GNodeNetwork nodes;
@@ -76,7 +82,7 @@ namespace rf
         int field_350[3];
         int transform_cache_key;
         VArray<GrLight*> lights_affecting_me;
-        int num_total_lights;
+        int light_state;
         int field_370;
         int field_374;
 
@@ -87,10 +93,18 @@ namespace rf
     };
     static_assert(sizeof(GSolid) == 0x378);
 
+    struct GClipWnd
+    {
+        float left;
+        float top;
+        float right;
+        float bot;
+    };
+
     struct GRoom
     {
-        bool is_subroom;
-        bool is_skyroom;
+        bool is_detail;
+        bool is_sky;
         bool is_invisible;
         GCache *geo_cache;
         Vector3 bbox_min;
@@ -121,7 +135,7 @@ namespace rf
         bool visited_this_search;
         int render_depth;
         int creation_id;
-        float clip_wnd[4];
+        GClipWnd clip_wnd;
         int bfs_visited;
         int liquid_type;
         bool contains_liquid;
@@ -139,7 +153,7 @@ namespace rf
         float liquid_surface_pan_u;
         float liquid_surface_pan_v;
         VArray<GrLight*> cached_lights;
-        int num_total_lights;
+        int light_state;
     };
     static_assert(sizeof(GRoom) == 0x1CC);
 
@@ -189,7 +203,66 @@ namespace rf
     };
     static_assert(sizeof(GLightmap) == 0x18);
 
+    struct EmitterPair
+    {
+        ParticleEmitter *pemitter;
+        int sound_emitter_handle;
+        Vector3 emitting_pos;
+        EmitterPair *next;
+        EmitterPair *prev;
+        GRoom *room;
+    };
+    static_assert(sizeof(EmitterPair) == 0x20);
+
+    struct EmitterPairSet
+    {
+        EmitterPair head;
+    };
+    static_assert(sizeof(EmitterPairSet) == 0x20);
+
+    struct LevelInfo
+    {
+        int version;
+        String name;
+        String filename;
+        String author;
+        String level_date;
+        int level_timestamp;
+        int default_rock_texture;
+        int default_rock_hardness;
+        Color ambient_light;
+        Color distance_fog_color;
+        float distance_fog_near_clip;
+        float distance_fog_far_clip;
+        float old_distance_fog_far_clip;
+        char has_mirrored_faces;
+        char has_skyroom;
+        char skybox_rotation_axis;
+        float skybox_rotation_velocity;
+        float skybox_current_rotation;
+        Matrix3 skybox_current_orientation;
+        Matrix3 skybox_inverse_orientation;
+        int checksum;
+        String next_level_filename;
+        bool hard_level_break;
+        VArray<ParticleEmitter*> pemitters;
+        VArray<BoltEmitter*> bemitters;
+        VArray<LevelLight*> lights;
+        VArray<GeoRegion*> regions;
+        VArray<ClimbRegion*> ladders;
+        VArray<PushRegion*> pushers;
+        EmitterPairSet ep_set;
+        GSolid *geometry;
+        int flags;
+        float time;
+        float global_time;
+        float time_left;
+        Vector3 player_start_pos;
+        Matrix3 player_start_orient;
+    };
+    static_assert(sizeof(LevelInfo) == 0x154);
+
     static auto& GeomClearCache = AddrAsRef<void()>(0x004F0B90);
 
-    static auto& rfl_static_geometry = AddrAsRef<GSolid*>(0x006460E8);
+    static auto& level = AddrAsRef<LevelInfo>(0x00645FD8);
 }

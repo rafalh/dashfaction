@@ -50,7 +50,7 @@ void OnPlayerKill(rf::Player* killed_player, rf::Player* killer_player)
             mui_msg = NullToEmpty(rf::strings::you_killed_yourself);
             msg = rf::String::Format("%s", mui_msg);
         }
-        else if (killer_entity && killer_entity->ai_info.current_primary_weapon == rf::riot_stick_weapon_type) {
+        else if (killer_entity && killer_entity->ai.current_primary_weapon == rf::riot_stick_weapon_type) {
             mui_msg = NullToEmpty(rf::strings::you_just_got_beat_down_by);
             msg = rf::String::Format("%s%s!", mui_msg, killer_player->name.CStr());
         }
@@ -58,7 +58,7 @@ void OnPlayerKill(rf::Player* killed_player, rf::Player* killer_player)
             mui_msg = NullToEmpty(rf::strings::you_were_killed_by);
 
             const char* weapon_name = nullptr;
-            int killer_weapon_cls_id = killer_entity ? killer_entity->ai_info.current_primary_weapon : -1;
+            int killer_weapon_cls_id = killer_entity ? killer_entity->ai.current_primary_weapon : -1;
             if (killer_weapon_cls_id >= 0 && killer_weapon_cls_id < 64) {
                 auto& weapon_cls = rf::weapon_types[killer_weapon_cls_id];
                 weapon_name = weapon_cls.display_name.CStr();
@@ -79,14 +79,14 @@ void OnPlayerKill(rf::Player* killed_player, rf::Player* killer_player)
     else {
         color_id = rf::ChatMsgColor::default_;
         if (killer_player == killed_player) {
-            if (rf::MultiEntityIsFemale(killed_player->settings.mp_character))
+            if (rf::MultiEntityIsFemale(killed_player->settings.multi_character))
                 mui_msg = NullToEmpty(rf::strings::was_killed_by_her_own_hand);
             else
                 mui_msg = NullToEmpty(rf::strings::was_killed_by_his_own_hand);
             msg = rf::String::Format("%s%s", killed_player->name.CStr(), mui_msg);
         }
         else {
-            if (killer_entity && killer_entity->ai_info.current_primary_weapon == rf::riot_stick_weapon_type)
+            if (killer_entity && killer_entity->ai.current_primary_weapon == rf::riot_stick_weapon_type)
                 mui_msg = NullToEmpty(rf::strings::got_beat_down_by);
             else
                 mui_msg = NullToEmpty(rf::strings::was_killed_by);
@@ -115,10 +115,10 @@ FunHook<void(rf::Entity*)> EntityOnDeath_hook{
     0x0041FDC0,
     [](rf::Entity* entity) {
         // Reset fpgun animation when player dies
-        if (rf::local_player && entity->handle == rf::local_player->entity_handle && rf::local_player->fpgun_mesh) {
-            auto AnimMeshResetAction = AddrAsRef<void(rf::VMesh*)>(0x00503400);
+        if (rf::local_player && entity->handle == rf::local_player->entity_handle && rf::local_player->weapon_mesh_handle) {
+            auto VMeshStopAllActions = AddrAsRef<void(rf::VMesh*)>(0x00503400);
             auto FpgunStopActionSound = AddrAsRef<void(rf::Player*)>(0x004A9490);
-            AnimMeshResetAction(rf::local_player->fpgun_mesh);
+            VMeshStopAllActions(rf::local_player->weapon_mesh_handle);
             FpgunStopActionSound(rf::local_player);
         }
         EntityOnDeath_hook.CallTarget(entity);

@@ -22,7 +22,7 @@ void SendTriggerActivatePacket(rf::Player* player, int trigger_uid, int32_t enti
     packet.header.size = sizeof(packet) - sizeof(packet.header);
     packet.uid = trigger_uid;
     packet.entity_handle = entity_handle;
-    rf::NwSendReliablePacket(player, reinterpret_cast<uint8_t*>(&packet), sizeof(packet), 0);
+    rf::MultiIoSendReliable(player, reinterpret_cast<uint8_t*>(&packet), sizeof(packet), 0);
 }
 
 FunHook<void(int, int)> SendTriggerActivatePacketToAllPlayers_hook{
@@ -62,7 +62,7 @@ FunHook<void(rf::Trigger*, int32_t, bool)> TriggerActivate_hook{
         }
 
         // Resets times set to 1 enabled late joiners support in Pure Faction
-        if (rf::is_multi && rf::is_server && trigger->resets_times == 1) {
+        if (rf::is_multi && rf::is_server && trigger->max_count == 1) {
             g_triggers_uids_for_late_joiners.push_back(trigger->uid);
         }
 

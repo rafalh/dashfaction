@@ -232,10 +232,10 @@ namespace rf
     };
     struct Weapon : Object
     {
-        struct Weapon *next;
-        struct Weapon *prev;
-        WeaponInfo *weapon_cls;
-        int weapon_type;
+        Weapon *next;
+        Weapon *prev;
+        WeaponInfo *info;
+        int info_index;
         float lifetime;
         int fly_sound;
         int glow_light;
@@ -244,7 +244,7 @@ namespace rf
         int field_2B0;
         Vector3 field_2B4;
         Matrix3 field_2C0;
-        Friendliness entity_friendliness;
+        Friendliness friendliness;
         int field_2E8;
         Timestamp field_2EC;
         float piercing_power;
@@ -264,7 +264,7 @@ namespace rf
 
     static auto& WeaponIsDetonator = AddrAsRef<bool(int weapon_type)>(0x004C9070);
     static auto& WeaponIsRiotStick = AddrAsRef<bool(int weapon_type)>(0x004C90D0);
-    static auto& PlayerSwitchWeaponInstant = AddrAsRef<void(Player *player, int weapon_type)>(0x004A4980);
+    static auto& PlayerMakeWeaponCurrentSelection = AddrAsRef<void(Player *player, int weapon_type)>(0x004A4980);
     static auto& EntityIsReloading = AddrAsRef<bool(Entity* entity)>(0x00425250);
-    static auto& IsEntityWeaponInContinousFire = AddrAsRef<bool(int entity_handle, int weapon_type)>(0x0041A830);
+    static auto& EntityWeaponInOn = AddrAsRef<bool(int entity_handle, int weapon_type)>(0x0041A830);
 }

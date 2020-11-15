@@ -137,7 +137,7 @@ FunHook<bool(rf::Glare* glare, const rf::Vector3& eye_pos)> GlareIsInView_hook{
 
         if (glare->last_covering_face) {
             geo_collide_in.face = glare->last_covering_face;
-            rf::rfl_static_geometry->TestLineCollision(&geo_collide_in, &geo_collide_out, true);
+            rf::level.geometry->TestLineCollision(&geo_collide_in, &geo_collide_out, true);
             if (geo_collide_out.num_hits != 0) {
                 return false;
             }
@@ -160,7 +160,7 @@ FunHook<bool(rf::Glare* glare, const rf::Vector3& eye_pos)> GlareIsInView_hook{
         }
 
         geo_collide_in.face = nullptr;
-        rf::rfl_static_geometry->TestLineCollision(&geo_collide_in, &geo_collide_out, true);
+        rf::level.geometry->TestLineCollision(&geo_collide_in, &geo_collide_out, true);
         if (geo_collide_out.num_hits != 0) {
             glare->last_covering_face = geo_collide_out.face;
             return false;

@@ -52,7 +52,7 @@ void process_pf_player_stats_packet(const void* data, size_t len, [[ maybe_unuse
     auto players_stats = reinterpret_cast<const pf_player_stats_packet::player_stats*>(&in_packet + 1);
     for (int i = 0; i < in_packet.player_count; ++i) {
         auto& player_data = players_stats[i];
-        auto player = rf::GetPlayerById(player_data.player_id);
+        auto player = rf::MultiFindPlayerById(player_data.player_id);
         if (player) {
             auto& stats = *reinterpret_cast<PlayerStatsNew*>(player->stats);
             stats.num_kills = player_data.kills;
@@ -88,7 +88,7 @@ void process_pf_players_request_packet([[ maybe_unused ]] const void* data, [[ m
     response.show_ip = 0;
     std::copy(players_str.begin(), players_str.end(), reinterpret_cast<char*>(packet_buf.get() + sizeof(pf_players_packet)));
 
-    rf::NwSendNotReliablePacket(addr, &response, sizeof(response.hdr) + response.hdr.size);
+    rf::NwSend(addr, &response, sizeof(response.hdr) + response.hdr.size);
 }
 
 void ProcessPfPacket(const void* data, size_t len, const rf::NwAddr& addr, [[maybe_unused]] const rf::Player* player)

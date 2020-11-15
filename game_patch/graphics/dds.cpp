@@ -143,7 +143,7 @@ int LockDdsBitmap(rf::BmBitmapEntry& bm_entry)
     int w = bm_entry.orig_width;
     int h = bm_entry.orig_height;
     int num_skip_levels = std::min(bm_entry.resolution_level, 2);
-    auto d3d_fmt = GetD3DFormatFromPixelFormat(bm_entry.pixel_format);
+    auto d3d_fmt = GetD3DFormatFromPixelFormat(bm_entry.format);
     int num_skip_bytes = 0;
     int num_total_bytes = 0;
 

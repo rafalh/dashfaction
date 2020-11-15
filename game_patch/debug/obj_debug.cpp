@@ -313,25 +313,25 @@ void RenderObjDebugUI()
     dbg_hud.Print("type", GetObjTypeName(*object));
     dbg_hud.Print("class", GetObjClassName(*object));
     dbg_hud.Printf("dist", "%.3f", (cam_pos - object->pos).Len());
-    dbg_hud.Printf("atck_dist", "%.0f", entity ? rf::AiGetAttackRange(entity->ai_info) : 0.0f);
+    dbg_hud.Printf("atck_dist", "%.0f", entity ? rf::AiGetAttackRange(entity->ai) : 0.0f);
     dbg_hud.Printf("life", "%.0f", object->life);
     dbg_hud.Printf("room", "%d", object->room ? StructFieldRef<int>(object->room, 0x20) : -1);
     dbg_hud.Print("pos", object->pos);
     if (entity) {
         dbg_hud.Print("eye_pos", entity->view_pos);
         dbg_hud.Printf("envsuit", "%.0f", object->armor);
-        dbg_hud.Print("mode", GetAiModeName(entity->ai_info.mode));
-        if (entity->ai_info.submode)
-            dbg_hud.Printf("submode", "%d", entity->ai_info.submode);
+        dbg_hud.Print("mode", GetAiModeName(entity->ai.mode));
+        if (entity->ai.submode)
+            dbg_hud.Printf("submode", "%d", entity->ai.submode);
         else
             dbg_hud.Print("submode", "NONE");
-        dbg_hud.Print("style", GetAiAttackStyleName(entity->ai_info.ai_attack_style));
+        dbg_hud.Print("style", GetAiAttackStyleName(entity->ai.ai_attack_style));
         dbg_hud.Print("friend", GetFriendlinessName(object->friendliness));
-        auto target_obj = rf::ObjFromHandle(entity->ai_info.target_obj_handle);
+        auto target_obj = rf::ObjFromHandle(entity->ai.target_obj_handle);
         dbg_hud.Print("target", target_obj ? target_obj->name.CStr() : "none");
         dbg_hud.Printf("accel", "%.1f", entity->info->acceleration);
         dbg_hud.Printf("mvmode", "%s", move_mode_names[entity->movement_mode->id]);
-        dbg_hud.Print("deaf", (entity->ai_info.flags & 0x800) ? "yes" : "no");
+        dbg_hud.Print("deaf", (entity->ai.flags & 0x800) ? "yes" : "no");
         dbg_hud.Print("pos", object->pos);
         auto feet = object->pos;
         feet.y = object->p_data.bbox_min.y;

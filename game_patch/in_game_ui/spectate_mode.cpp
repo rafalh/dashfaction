@@ -64,7 +64,7 @@ void SpectateModeSetTargetPlayer(rf::Player* player)
     if (!rf::local_player || !rf::local_player->cam || !g_spectate_mode_target || g_spectate_mode_target == player)
         return;
 
-    if (rf::multi_game_options & rf::MGO_FORCE_RESPAWN) {
+    if (rf::netgame.flags & rf::NG_FLAG_FORCE_RESPAWN) {
         rf::String msg{"You cannot use Spectate Mode because Force Respawn option is enabled on this server!"};
         rf::String prefix;
         rf::ChatPrint(msg, rf::ChatMsgColor::white_white, prefix);
@@ -95,8 +95,8 @@ void SpectateModeSetTargetPlayer(rf::Player* player)
     rf::Entity* entity = rf::EntityFromHandle(player->entity_handle);
     if (entity) {
         // make sure weapon mesh is loaded now
-        rf::PlayerFpgunSetupMesh(player, entity->ai_info.current_primary_weapon);
-        xlog::trace("FpgunMesh %p", player->fpgun_mesh);
+        rf::PlayerFpgunSetupMesh(player, entity->ai.current_primary_weapon);
+        xlog::trace("FpgunMesh %p", player->weapon_mesh_handle);
 
         // Hide target player from camera
         entity->local_player = player;
@@ -291,7 +291,7 @@ DcCommand2 spectate_cmd{
             return;
         }
 
-        if (rf::multi_game_options & rf::MGO_FORCE_RESPAWN) {
+        if (rf::netgame.flags & rf::NG_FLAG_FORCE_RESPAWN) {
             rf::ConsoleOutput("Spectate mode is disabled because of Force Respawn server option!", nullptr);
             return;
         }
@@ -327,8 +327,8 @@ static void PlayerFpgunRender_New(rf::Player* player)
         rf::Entity* entity = rf::EntityFromHandle(g_spectate_mode_target->entity_handle);
 
         // HACKFIX: RF uses function PlayerSetRemoteChargeVisible for local player only
-        g_spectate_mode_target->fpgun_data.remote_charge_visible =
-            (entity && entity->ai_info.current_primary_weapon == rf::remote_charge_weapon_type);
+        g_spectate_mode_target->fpgun_data.remote_charge_in_hand =
+            (entity && entity->ai.current_primary_weapon == rf::remote_charge_weapon_type);
 
         if (g_spectate_mode_target != rf::local_player && entity) {
             static rf::Vector3 old_vel;
@@ -339,10 +339,10 @@ static void PlayerFpgunRender_New(rf::Player* player)
                 entity->entity_flags |= 2; // jump
         }
 
-        if (g_spectate_mode_target->fpgun_data.in_scope_view)
-            g_spectate_mode_target->fpgun_data.scope_zoom = 2.0f;
-        rf::local_player->fpgun_data.in_scope_view = g_spectate_mode_target->fpgun_data.in_scope_view;
-        rf::local_player->fpgun_data.scope_zoom = g_spectate_mode_target->fpgun_data.scope_zoom;
+        if (g_spectate_mode_target->fpgun_data.zooming_in)
+            g_spectate_mode_target->fpgun_data.zoom_factor = 2.0f;
+        rf::local_player->fpgun_data.zooming_in = g_spectate_mode_target->fpgun_data.zooming_in;
+        rf::local_player->fpgun_data.zoom_factor = g_spectate_mode_target->fpgun_data.zoom_factor;
 
         rf::PlayerFpgunUpdateMesh(g_spectate_mode_target);
         rf::PlayerFpgunRender(g_spectate_mode_target);
@@ -361,7 +361,7 @@ FunHook<void(rf::Player*)> PlayerFpgunUpdateState_hook{
                 float horz_speed_pow2 = entity->p_data.vel.x * entity->p_data.vel.x +
                                           entity->p_data.vel.z * entity->p_data.vel.z;
                 int state = 0;
-                if (rf::IsEntityLoopFire(entity->handle, entity->ai_info.current_primary_weapon))
+                if (rf::IsEntityLoopFire(entity->handle, entity->ai.current_primary_weapon))
                     state = 2;
                 else if (rf::EntityIsSwimming(entity) || rf::EntityIsFalling(entity))
                     state = 0;

@@ -30,7 +30,7 @@ bool ShouldSwapWeaponAltFire(rf::Player* player)
     }
 
     static auto& assault_rifle_cls_id = AddrAsRef<int>(0x00872470);
-    return entity->ai_info.current_primary_weapon == assault_rifle_cls_id;
+    return entity->ai.current_primary_weapon == assault_rifle_cls_id;
 }
 
 bool IsPlayerWeaponInContinousFire(rf::Player* player, bool alt_fire) {
@@ -38,8 +38,8 @@ bool IsPlayerWeaponInContinousFire(rf::Player* player, bool alt_fire) {
         player = rf::local_player;
     }
     auto entity = rf::EntityFromHandle(player->entity_handle);
-    bool is_continous_fire = rf::IsEntityWeaponInContinousFire(entity->handle, entity->ai_info.current_primary_weapon);
-    bool is_alt_fire_flag_set = (entity->ai_info.flags & 0x2000) != 0; // EWF_ALT_FIRE = 0x2000
+    bool is_continous_fire = rf::EntityWeaponInOn(entity->handle, entity->ai.current_primary_weapon);
+    bool is_alt_fire_flag_set = (entity->ai.flags & 0x2000) != 0; // EWF_ALT_FIRE = 0x2000
     if (ShouldSwapWeaponAltFire(player)) {
         is_alt_fire_flag_set = !is_alt_fire_flag_set;
     }
@@ -98,10 +98,10 @@ bool EntityIsReloading_SwitchWeapon_New(rf::Entity* entity)
     if (rf::EntityIsReloading(entity))
         return true;
 
-    int weapon_type = entity->ai_info.current_primary_weapon;
+    int weapon_type = entity->ai.current_primary_weapon;
     if (weapon_type >= 0) {
         rf::WeaponInfo* weapon_cls = &rf::weapon_types[weapon_type];
-        if (entity->ai_info.clip_ammo[weapon_type] == 0 && entity->ai_info.ammo[weapon_cls->ammo_type] > 0)
+        if (entity->ai.clip_ammo[weapon_type] == 0 && entity->ai.ammo[weapon_cls->ammo_type] > 0)
             return true;
     }
     return false;
@@ -131,11 +131,11 @@ FunHook<void(rf::Weapon *weapon)> WeaponMoveOne_hook{
     0x004C69A0,
     [](rf::Weapon* weapon) {
         WeaponMoveOne_hook.CallTarget(weapon);
-        auto& level_aabb_min = rf::rfl_static_geometry->bbox_min;
-        auto& level_aabb_max = rf::rfl_static_geometry->bbox_max;
+        auto& level_aabb_min = rf::level.geometry->bbox_min;
+        auto& level_aabb_max = rf::level.geometry->bbox_max;
         float margin = weapon->vmesh ? 275.0f : 10.0f;
         bool has_gravity_flag = weapon->p_data.flags & 1;
-        bool check_y_axis = !(has_gravity_flag || weapon->weapon_cls->thrust_lifetime > 0.0f);
+        bool check_y_axis = !(has_gravity_flag || weapon->info->thrust_lifetime > 0.0f);
         auto& pos = weapon->pos;
         if (pos.x < level_aabb_min.x - margin || pos.x > level_aabb_max.x + margin
         || pos.z < level_aabb_min.z - margin || pos.z > level_aabb_max.z + margin
@@ -172,8 +172,8 @@ FunHook<void(rf::Player*, int)> PlayerMakeWeaponCurrentSelection_hook{
         auto entity = rf::EntityFromHandle(player->entity_handle);
         if (entity && rf::is_multi) {
             // Reset impact delay timers when switching weapon (except in SP because of speedrunners)
-            entity->ai_info.create_weapon_delay_timestamps[0].Invalidate();
-            entity->ai_info.create_weapon_delay_timestamps[1].Invalidate();
+            entity->ai.create_weapon_delay_timestamps[0].Invalidate();
+            entity->ai.create_weapon_delay_timestamps[1].Invalidate();
         }
     },
 };
@@ -186,8 +186,8 @@ bool WeaponClsUsesAmmo(int weapon_type, bool alt_fire)
     if (rf::WeaponIsRiotStick(weapon_type) && alt_fire) {
         return true;
     }
-    auto weapon_cls = &rf::weapon_types[weapon_type];
-    if (weapon_cls->flags & rf::WTF_MELEE) {
+    auto info = &rf::weapon_types[weapon_type];
+    if (info->flags & rf::WTF_MELEE) {
         return false;
     }
     return true;
@@ -198,13 +198,13 @@ bool IsEntityOutOfAmmo(rf::Entity *entity, int weapon_type, bool alt_fire)
     if (!WeaponClsUsesAmmo(weapon_type, alt_fire)) {
         return false;
     }
-    auto weapon_cls = &rf::weapon_types[weapon_type];
-    if (weapon_cls->clip_size == 0) {
-        auto ammo = entity->ai_info.ammo[weapon_cls->ammo_type];
+    auto info = &rf::weapon_types[weapon_type];
+    if (info->clip_size == 0) {
+        auto ammo = entity->ai.ammo[info->ammo_type];
         return ammo == 0;
     }
     else {
-        auto clip_ammo = entity->ai_info.clip_ammo[weapon_type];
+        auto clip_ammo = entity->ai.clip_ammo[weapon_type];
         return clip_ammo == 0;
     }
 }
@@ -212,10 +212,10 @@ bool IsEntityOutOfAmmo(rf::Entity *entity, int weapon_type, bool alt_fire)
 FunHook<void(rf::Entity*, int, rf::Vector3*, rf::Matrix3*, bool)> MultiProcessRemoteWeaponFire_hook{
     0x0047D220,
     [](rf::Entity *entity, int weapon_type, rf::Vector3 *pos, rf::Matrix3 *orient, bool alt_fire) {
-        if (entity->ai_info.current_primary_weapon != weapon_type) {
+        if (entity->ai.current_primary_weapon != weapon_type) {
             xlog::info("Weapon mismatch when processing weapon fire packet");
             auto player = rf::GetPlayerFromEntityHandle(entity->handle);
-            rf::PlayerSwitchWeaponInstant(player, weapon_type);
+            rf::PlayerMakeWeaponCurrentSelection(player, weapon_type);
         }
 
         if (rf::is_server && IsEntityOutOfAmmo(entity, weapon_type, alt_fire)) {
@@ -232,7 +232,7 @@ CodeInjection ProcessObjUpdatePacket_check_if_weapon_is_possessed_patch{
     [](auto& regs) {
         auto entity = reinterpret_cast<rf::Entity*>(regs.edi);
         auto weapon_type = regs.ebx;
-        if (rf::is_server && !rf::AiHasWeapon(&entity->ai_info, weapon_type)) {
+        if (rf::is_server && !rf::AiHasWeapon(&entity->ai, weapon_type)) {
             // skip switching player weapon
             xlog::info("Skipping weapon switch because player does not possess the weapon");
             regs.eip = 0x0047E467;

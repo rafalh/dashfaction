@@ -48,9 +48,9 @@ namespace rf
         int16_t width;
         int16_t height;
         int num_pixels_in_all_levels;
-        BmType bitmap_type;
+        BmType bm_type;
         int animated_entry_type;
-        BmFormat pixel_format;
+        BmFormat format;
         char num_levels;
         char orig_num_levels;
         char num_levels_in_ext_files;
@@ -59,11 +59,10 @@ namespace rf
         void* locked_data;
         float frames_per_ms;
         void* locked_palette;
-        struct BmBitmapEntry* next;
-        struct BmBitmapEntry* prev;
+        BmBitmapEntry* next;
+        BmBitmapEntry* prev;
         char field_5C;
         char cached_material_idx;
-        int16_t field_5E;
         int total_bytes_for_all_levels;
         int file_open_unk_arg;
         int resolution_level;

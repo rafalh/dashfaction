@@ -269,8 +269,8 @@ void HighFpsAfterLevelLoad(rf::String& level_filename)
         int uids[] = {4679, 4680};
         for (int uid : uids) {
             auto event = rf::EventLookupFromUid(uid);
-            if (event && event->delay == 1.5f) {
-                event->delay += 1.5f;
+            if (event && event->delay_seconds == 1.5f) {
+                event->delay_seconds += 1.5f;
             }
         }
     }

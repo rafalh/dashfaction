@@ -12,6 +12,7 @@ namespace rf
 
     using EntityFlags = int;
     using EntityPowerups = int;
+    using EntitySpeed = int;
 
     struct EntityCollisionSphereOverride
     {
@@ -198,11 +199,11 @@ namespace rf
 
     struct ControlInfo
     {
-        Vector3 rot_change;
-        Vector3 pos_change;
-        int field_18;
-        float field_1c;
-        float field_20;
+        Vector3 rot;
+        Vector3 move;
+        bool field_18;
+        float mouse_dh;
+        float mouse_dp;
     };
 
     struct AiPathInfo
@@ -325,7 +326,7 @@ namespace rf
         Timestamp field_2E0;
         int field_2E4;
         AiPathInfo current_path;
-        ControlInfo motion_change;
+        ControlInfo ci;
         Timestamp field_48C;
         Vector3 field_490;
         float last_dmg_time;
@@ -389,7 +390,7 @@ namespace rf
         EntityInfo *info;
         int info_index;
         EntityInfo *info2;
-        AiInfo ai_info;
+        AiInfo ai;
         Vector3 view_pos;
         Matrix3 view_orient;
         int unk_ambient_sound;
@@ -415,7 +416,7 @@ namespace rf
         Matrix3 *field_85c;
         EntityControlData control_data;
         float max_vel;
-        int max_vel_modifier_type;
+        EntitySpeed entity_speed;
         int field_8c8;
         VArray<> interface_props;
         VArray<> unk_anim_mesh_array8_d8;
@@ -494,7 +495,7 @@ namespace rf
     struct EntityFireInfo
     {
         ParticleEmitter *emitters[4];
-        int parent_hobj;
+        int parent_handle;
         int lower_leg_l_bone;
         int lower_leg_r_bone;
         int spine_bone;
@@ -504,8 +505,8 @@ namespace rf
         char field_2C;
         float field_30;
         int field_34;
-        struct EntityFireInfo *next;
-        struct EntityFireInfo *prev;
+        EntityFireInfo *next;
+        EntityFireInfo *prev;
     };
 
     struct ShadowInfo
@@ -519,25 +520,25 @@ namespace rf
 
     struct Corpse : Object
     {
-        struct Corpse *next;
-        struct Corpse *prev;
-        float creation_level_time;
-        float seconds_left_before_delete;
-        int flags;
-        int entity_cls_id;
+        Corpse *next;
+        Corpse *prev;
+        float create_time;
+        float lifetime_seconds;
+        int corpse_flags;
+        int entity_type;
         String corpse_pose_name;
-        Timestamp emitter_lifetime_timestamp;
+        Timestamp emitter_kill_timestamp;
         float body_temp;
-        int entity_idle_state_anim_id;
-        int pose_action_anim;
-        int corpse_drop_anim;
-        int corpse_carry_anim;
+        int corpse_state_vmesh_anim_index;
+        int corpse_action_vmesh_anim_index;
+        int corpse_drop_vmesh_anim_index;
+        int corpse_carry_vmesh_anim_index;
         int corpse_pose;
-        VMesh *helmet_anim_mesh;
-        int unk_item_handle;
+        VMesh *helmet_v3d_handle;
+        int item_handle;
         EntityFireInfo *burn_info;
         int field_2D4;
-        Color ambient_clr;
+        Color ambient_color;
         ShadowInfo shadow_info;
     };
     static_assert(sizeof(Corpse) == 0x318);

@@ -39,7 +39,7 @@ void SetBigScoreboard(bool is_big)
     g_big_scoreboard = is_big;
 }
 
-int DrawScoreboardHeader(int x, int y, int w, rf::MultiGameType game_type, bool dry_run = false)
+int DrawScoreboardHeader(int x, int y, int w, rf::NetGameType game_type, bool dry_run = false)
 {
     // Draw RF logo
     int x_center = x + w / 2;
@@ -54,9 +54,9 @@ int DrawScoreboardHeader(int x, int y, int w, rf::MultiGameType game_type, bool 
     // Draw Game Type name
     if (!dry_run) {
         const char* game_type_name;
-        if (game_type == rf::MGT_DM)
+        if (game_type == rf::NG_TYPE_DM)
             game_type_name = rf::strings::deathmatch;
-        else if (game_type == rf::MGT_CTF)
+        else if (game_type == rf::NG_TYPE_CTF)
             game_type_name = rf::strings::capture_the_flag;
         else
             game_type_name = rf::strings::team_deathmatch;
@@ -79,8 +79,8 @@ int DrawScoreboardHeader(int x, int y, int w, rf::MultiGameType game_type, bool 
     // Draw server info
     if (!dry_run) {
         char ip_addr_buf[64];
-        rf::NwAddrToStr(ip_addr_buf, sizeof(ip_addr_buf), rf::serv_addr);
-        auto server_info = rf::String::Format("%s (%s)", rf::serv_name.CStr(), ip_addr_buf);
+        rf::NwAddrToString(ip_addr_buf, sizeof(ip_addr_buf), rf::netgame.server_addr);
+        auto server_info = rf::String::Format("%s (%s)", rf::netgame.name.CStr(), ip_addr_buf);
         rf::String server_info_stripped;
         rf::FitScoreboardString(&server_info_stripped, server_info, w - 20); // Note: this destroys input string
         rf::GrStringAligned(rf::GR_ALIGN_CENTER, x_center, cur_y, server_info_stripped);
@@ -88,22 +88,22 @@ int DrawScoreboardHeader(int x, int y, int w, rf::MultiGameType game_type, bool 
     cur_y += font_h + 8;
 
     // Draw team scores
-    if (game_type != rf::MGT_DM) {
+    if (game_type != rf::NG_TYPE_DM) {
         if (!dry_run) {
             unsigned red_score = 0, blue_score = 0;
-            if (game_type == rf::MGT_CTF) {
+            if (game_type == rf::NG_TYPE_CTF) {
                 static int hud_flag_red_bm = rf::BmLoad("hud_flag_red.tga", -1, true);
                 static int hud_flag_blue_bm = rf::BmLoad("hud_flag_blue.tga", -1, true);
                 int flag_bm_w, flag_bm_h;
                 rf::BmGetDimension(hud_flag_red_bm, &flag_bm_w, &flag_bm_h);
                 rf::GrBitmap(hud_flag_red_bm, x + w * 2 / 6 - flag_bm_w / 2, cur_y);
                 rf::GrBitmap(hud_flag_blue_bm, x + w * 4 / 6 - flag_bm_w / 2, cur_y);
-                red_score = rf::CtfGetRedTeamScore();
-                blue_score = rf::CtfGetBlueTeamScore();
+                red_score = rf::MultiCtfGetRedTeamScore();
+                blue_score = rf::MultiCtfGetBlueTeamScore();
             }
-            else if (game_type == rf::MGT_TEAMDM) {
-                red_score = rf::TdmGetRedTeamScore();
-                blue_score = rf::TdmGetBlueTeamScore();
+            else if (game_type == rf::NG_TYPE_TEAMDM) {
+                red_score = rf::MultiTdmGetRedTeamScore();
+                blue_score = rf::MultiTdmGetBlueTeamScore();
             }
             rf::GrSetColorRgba(0xD0, 0x20, 0x20, 0xFF);
             int team_scores_font = rf::scoreboard_big_font;
@@ -121,7 +121,7 @@ int DrawScoreboardHeader(int x, int y, int w, rf::MultiGameType game_type, bool 
 }
 
 int DrawScoreboardPlayers(const std::vector<rf::Player*>& players, int x, int y, int w, float scale,
-    rf::MultiGameType game_type, bool dry_run = false)
+    rf::NetGameType game_type, bool dry_run = false)
 {
     int initial_y = y;
     int font_h = rf::GrGetFontHeight(-1);
@@ -129,7 +129,7 @@ int DrawScoreboardPlayers(const std::vector<rf::Player*>& players, int x, int y,
     int status_w = static_cast<int>(12 * scale);
     int score_w = static_cast<int>(50 * scale);
     int kd_w = static_cast<int>(70 * scale);
-    int caps_w = game_type == rf::MGT_CTF ? static_cast<int>(45 * scale) : 0;
+    int caps_w = game_type == rf::NG_TYPE_CTF ? static_cast<int>(45 * scale) : 0;
     int ping_w = static_cast<int>(35 * scale);
     int name_w = w - status_w - score_w - kd_w - caps_w - ping_w;
 
@@ -146,7 +146,7 @@ int DrawScoreboardPlayers(const std::vector<rf::Player*>& players, int x, int y,
         rf::GrString(name_x, y, rf::strings::player);
         rf::GrString(score_x, y, rf::strings::score); // Note: RF uses "Frags"
         rf::GrString(kd_x, y, "K/D");
-        if (game_type == rf::MGT_CTF) {
+        if (game_type == rf::NG_TYPE_CTF) {
             rf::GrString(caps_x, y, rf::strings::caps);
         }
         rf::GrString(ping_x, y, rf::strings::ping, -1);
@@ -154,8 +154,8 @@ int DrawScoreboardPlayers(const std::vector<rf::Player*>& players, int x, int y,
 
     y += font_h + 8;
 
-    rf::Player* red_flag_player = rf::CtfGetRedFlagPlayer();
-    rf::Player* blue_flag_player = rf::CtfGetBlueFlagPlayer();
+    rf::Player* red_flag_player = rf::MultiCtfGetRedFlagPlayer();
+    rf::Player* blue_flag_player = rf::MultiCtfGetBlueFlagPlayer();
 
     // Draw the list
     for (const auto player : players) {
@@ -204,7 +204,7 @@ int DrawScoreboardPlayers(const std::vector<rf::Player*>& players, int x, int y,
             auto kills_deaths_str = StringFormat("%hd/%hd", num_kills, num_deaths);
             rf::GrString(kd_x, y, kills_deaths_str.c_str());
 
-            if (game_type == rf::MGT_CTF) {
+            if (game_type == rf::NG_TYPE_CTF) {
                 auto caps_str = std::to_string(caps);
                 rf::GrString(caps_x, y, caps_str.c_str());
             }
@@ -248,11 +248,11 @@ void DrawScoreboardInternal_New(bool draw)
     for (int i = 0; i < 8; ++i) {
         right_players.push_back(rf::local_player);
     }
-    game_type = rf::MGT_CTF;
-    bool group_by_team = game_type != rf::MGT_DM;
+    game_type = rf::NG_TYPE_CTF;
+    bool group_by_team = game_type != rf::NG_TYPE_DM;
 #else
     // Sort players by score
-    bool group_by_team = game_type != rf::MGT_DM;
+    bool group_by_team = game_type != rf::NG_TYPE_DM;
     if (group_by_team) {
         FilterAndSortPlayers(left_players, {rf::TEAM_RED});
         FilterAndSortPlayers(right_players, {rf::TEAM_BLUE});

@@ -12,7 +12,7 @@ namespace rf
         struct Item *prev;
         ItemInfo *info;
         int info_index;
-        String script_name;
+        String name;
         int count;
         int field_2A8;
         int respawn_time;

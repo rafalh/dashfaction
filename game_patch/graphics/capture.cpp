@@ -8,7 +8,7 @@
 #include "../rf/object.h"
 #include "../rf/player.h"
 #include "../rf/misc.h"
-#include "../rf/fs.h"
+#include "../rf/file.h"
 #include "../utils/com-utils.h"
 #include "../utils/list-utils.h"
 #include "../utils/string-utils.h"
@@ -360,7 +360,7 @@ CodeInjection railgun_scanner_start_render_to_texture{
     0x004ADD0A,
     [](auto& regs) {
         auto player = reinterpret_cast<rf::Player*>(regs.ebx);
-        StartRenderToTexture(player->scanner_bm_handle);
+        StartRenderToTexture(player->ir_data.ir_bitmap_handle);
     },
 };
 
@@ -368,7 +368,7 @@ CodeInjection rocket_launcher_start_render_to_texture{
     0x004AF0BC,
     [](auto& regs) {
         auto player = reinterpret_cast<rf::Player*>(regs.esi);
-        StartRenderToTexture(player->scanner_bm_handle);
+        StartRenderToTexture(player->ir_data.ir_bitmap_handle);
     },
 };
 

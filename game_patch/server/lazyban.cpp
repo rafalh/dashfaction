@@ -36,7 +36,7 @@ void ProcessDelayedKicks()
 {
     // Process kicks outside of packet processing loop to avoid crash when a player is suddenly destroyed (00479299)
     for (int player_id : g_players_to_kick) {
-        auto player = rf::GetPlayerById(player_id);
+        auto player = rf::MultiFindPlayerById(player_id);
         if (player) {
             rf::KickPlayer(player);
         }

@@ -42,7 +42,7 @@ set(SRCS
     rf/console.h
     rf/entity.h
     rf/event.h
-    rf/fs.h
+    rf/file.h
     rf/gameseq.h
     rf/graphics.h
     rf/item.h

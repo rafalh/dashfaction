@@ -7,15 +7,15 @@ namespace rf
     struct Event : Object
     {
         int event_type;
-        float delay;
+        float delay_seconds;
         Timestamp delay_timestamp;
         VArray<int> links;
-        int activated_by_entity_handle;
-        int activated_by_trigger_handle;
-        int field_2B0;
-        int is_on_state;
+        int triggered_by_handle;
+        int trigger_handle;
+        int event_flags;
+        bool delayed_msg;
 
-        virtual void UnkVirtFun() = 0;
+        virtual void Initialize() = 0;
         virtual void TurnOn() = 0;
         virtual void TurnOff() = 0;
         virtual void Process() = 0;
