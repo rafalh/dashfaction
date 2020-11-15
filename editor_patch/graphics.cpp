@@ -74,12 +74,24 @@ CallHook<void()> frametime_calculate_hook{
     []() {
         HWND hwnd = GetMainFrameHandle();
         if (!IsWindowVisible(hwnd)) {
-            // when minimized 1 FPS
+            // when minimized limit to 1 FPS
             Sleep(1000);
         }
-        else if (GetForegroundWindow() != hwnd && GetParent(GetForegroundWindow()) != hwnd) {
-            // when in background 4 FPS
-            Sleep(250);
+        else {
+            // Check if editor is a foreground window or an owner of foreground window
+            bool found = false;
+            auto foreground_wnd = GetForegroundWindow();
+            while (foreground_wnd) {
+                if (hwnd == foreground_wnd) {
+                    found = true;
+                    break;
+                }
+                foreground_wnd = GetParent(foreground_wnd);
+            }
+            // when editor is in background limit to 4 FPS
+            if (!found) {
+                Sleep(250);
+            }
         }
         frametime_calculate_hook.CallTarget();
     },
