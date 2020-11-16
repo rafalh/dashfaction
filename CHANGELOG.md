@@ -30,6 +30,7 @@ Version 1.5.1 (not released yet)
   bounding boxes, vertices, meshes (it was listed as a feature of Dash Faction 1.5.0 but the patch was actually
   broken)
 - support starting the launcher from a symlink
+- fix objects having invalid radius after Switch_Model event
 
 Version 1.5.0 (released 2020-09-05)
 -----------------------------------
