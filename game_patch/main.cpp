@@ -43,7 +43,7 @@ GameConfig g_game_config;
 HMODULE g_hmodule;
 std::unordered_map<rf::Player*, PlayerAdditionalData> g_player_additional_data_map;
 
-static void ProcessWaitingMessages()
+static void OsPool()
 {
     // Note: When using dedicated server we get WM_PAINT messages all the time
     MSG msg;
@@ -111,7 +111,7 @@ CodeInjection cleanup_game_hook{
 CodeInjection before_frame_hook{
     0x004B2818,
     []() {
-        ProcessWaitingMessages();
+        OsPool();
         HighFpsUpdate();
         ServerDoFrame();
         DebugDoUpdate();
@@ -145,11 +145,13 @@ CodeInjection after_frame_render_hook{
     },
 };
 
+FunHook<void()> OsPoll_hook{0x00524B60, OsPool};
+
 CodeInjection KeyGetFromFifo_hook{
     0x0051F000,
     []() {
         // Process messages here because when watching videos main loop is not running
-        ProcessWaitingMessages();
+        OsPool();
     },
 };
 
@@ -340,6 +342,7 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     AsmWriter(0x00524C48, 0x00524C83).nop(); // disable msg loop thread
     AsmWriter(0x00524C48).call(0x00524E40);  // CreateMainWindow
     KeyGetFromFifo_hook.Install();
+    OsPoll_hook.Install();
 
     // General game hooks
     RFInit_hook.Install();
