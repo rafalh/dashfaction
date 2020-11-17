@@ -147,7 +147,7 @@ CodeInjection after_frame_render_hook{
 
 FunHook<void()> OsPoll_hook{0x00524B60, OsPool};
 
-CodeInjection KeyGetFromFifo_hook{
+CodeInjection KeyGet_hook{
     0x0051F000,
     []() {
         // Process messages here because when watching videos main loop is not running
@@ -341,7 +341,7 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     // Process messages in the same thread as DX processing (alternative: D3DCREATE_MULTITHREADED)
     AsmWriter(0x00524C48, 0x00524C83).nop(); // disable msg loop thread
     AsmWriter(0x00524C48).call(0x00524E40);  // CreateMainWindow
-    KeyGetFromFifo_hook.Install();
+    KeyGet_hook.Install();
     OsPoll_hook.Install();
 
     // General game hooks

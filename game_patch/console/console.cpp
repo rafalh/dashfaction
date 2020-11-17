@@ -12,7 +12,7 @@
 #include <algorithm>
 #include <cassert>
 
-// DcDrawClientConsole uses 200 bytes long buffer for: "] ", user input and '\0'
+// ConsoleDrawClientConsole uses 200 bytes long buffer for: "] ", user input and '\0'
 constexpr int max_cmd_line_len = 200 - 2 - 1;
 
 rf::ConsoleCommand* g_commands_buffer[CMD_LIMIT];
@@ -43,10 +43,10 @@ rf::Player* FindBestMatchingPlayer(const char* name)
     return nullptr;
 }
 
-FunHook<int()> MenuUpdate_hook{
+FunHook<int()> GameseqProcess_hook{
     0x00434230,
     []() {
-        int menu_id = MenuUpdate_hook.CallTarget();
+        int menu_id = GameseqProcess_hook.CallTarget();
         if (menu_id == rf::GS_MULTI_LIMBO) // hide cursor when changing level - hackfixed in RF by changing rendering logic
             rf::SetCursorVisible(false);
         else if (menu_id == rf::GS_MAIN_MENU)
@@ -55,7 +55,7 @@ FunHook<int()> MenuUpdate_hook{
     },
 };
 
-CodeInjection DcCommand_Init_limit_check_patch{
+CodeInjection ConsoleCommand_Init_limit_check_patch{
     0x00509A7E,
     [](auto& regs) {
         if (regs.eax >= CMD_LIMIT) {
@@ -64,7 +64,7 @@ CodeInjection DcCommand_Init_limit_check_patch{
     },
 };
 
-CodeInjection DcRunCmd_CallHandlerPatch{
+CodeInjection ConsoleRunCmd_CallHandlerPatch{
     0x00509DBB,
     [](auto& regs) {
         // Make sure command pointer is in ecx register to support thiscall handlers
@@ -72,11 +72,11 @@ CodeInjection DcRunCmd_CallHandlerPatch{
     },
 };
 
-CallHook<void(char*, int)> DcProcessKbd_GetTextFromClipboard_hook{
+CallHook<void(char*, int)> ConsoleProcessKbd_GetTextFromClipboard_hook{
     0x0050A2FD,
     [](char *buf, int max_len) {
         max_len = std::min(max_len, max_cmd_line_len - rf::console_cmd_line_len);
-        DcProcessKbd_GetTextFromClipboard_hook.CallTarget(buf, max_len);
+        ConsoleProcessKbd_GetTextFromClipboard_hook.CallTarget(buf, max_len);
     },
 };
 
@@ -108,7 +108,7 @@ void ConsoleApplyPatches()
     AsmWriter(0x0047C490).ret();
     AsmWriter(0x0047C4AA).ret();
     AsmWriter(0x004B2E15).nop(2);
-    MenuUpdate_hook.Install();
+    GameseqProcess_hook.Install();
 
     // Change limit of commands
     assert(rf::console_num_commands == 0);
@@ -123,12 +123,12 @@ void ConsoleApplyPatches()
     WriteMemPtr(0x0050A648 + 4, g_commands_buffer);
     WriteMemPtr(0x0050A6A0 + 3, g_commands_buffer);
     AsmWriter(0x00509A7E).nop(2);
-    DcCommand_Init_limit_check_patch.Install();
+    ConsoleCommand_Init_limit_check_patch.Install();
 
-    DcRunCmd_CallHandlerPatch.Install();
+    ConsoleRunCmd_CallHandlerPatch.Install();
 
     // Fix possible input buffer overflow
-    DcProcessKbd_GetTextFromClipboard_hook.Install();
+    ConsoleProcessKbd_GetTextFromClipboard_hook.Install();
     WriteMem<u32>(0x0050A2D0 + 2, max_cmd_line_len);
 
     ConsoleCommandsApplyPatches();

@@ -93,7 +93,7 @@ void KickCmdHandlerHook()
     }
 }
 
-DcCommand2 unban_last_cmd{
+ConsoleCommand2 unban_last_cmd{
     "unban_last",
     []() {
         if (rf::is_multi && rf::is_server) {

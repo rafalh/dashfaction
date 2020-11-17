@@ -22,7 +22,7 @@
 #define AUTODL_AGENT_NAME "hoverlees"
 #define AUTODL_BASE_URL "http://pfapi.factionfiles.com"
 
-struct LevelInfo
+struct LevelDownloadInfo
 {
     std::string name;
     std::string author;
@@ -31,7 +31,7 @@ struct LevelInfo
     int ticket_id;
 };
 
-static LevelInfo g_level_info;
+static LevelDownloadInfo g_level_info;
 static volatile unsigned g_level_bytes_downloaded;
 static volatile bool g_download_in_progress = false;
 static std::vector<std::string> g_packfiles_to_load;
@@ -256,7 +256,7 @@ static void StartLevelDownload()
     download_thread.detach();
 }
 
-static std::optional<LevelInfo> ParseLevelInfo(char* buf)
+static std::optional<LevelDownloadInfo> ParseLevelDownloadInfo(char* buf)
 {
     std::stringstream ss(buf);
     ss.exceptions(std::ifstream::failbit | std::ifstream::badbit);
@@ -266,7 +266,7 @@ static std::optional<LevelInfo> ParseLevelInfo(char* buf)
     if (temp != "found")
         return {};
 
-    LevelInfo info;
+    LevelDownloadInfo info;
     std::getline(ss, info.name);
     std::getline(ss, info.author);
     std::getline(ss, info.description);
@@ -284,7 +284,7 @@ static std::optional<LevelInfo> ParseLevelInfo(char* buf)
     return {info};
 }
 
-static std::optional<LevelInfo> FetchLevelInfo(const char* file_name) try {
+static std::optional<LevelDownloadInfo> FetchLevelDownloadInfo(const char* file_name) try {
     HttpSession session{AUTODL_AGENT_NAME};
     session.set_connect_timeout(2000);
     session.set_receive_timeout(3000);
@@ -305,14 +305,14 @@ static std::optional<LevelInfo> FetchLevelInfo(const char* file_name) try {
     buf[num_bytes_read] = '\0';
     xlog::trace("FactionFiles response: %s", buf);
 
-    return ParseLevelInfo(buf);
+    return ParseLevelDownloadInfo(buf);
 }
 catch (std::exception& e) {
     xlog::error("Failed to fetch level info: %s", e.what());
     return {};
 }
 
-static void DisplayDownloadDialog(LevelInfo& level_info)
+static void DisplayDownloadDialog(LevelDownloadInfo& level_info)
 {
     xlog::trace("Download ticket id: %u", level_info.ticket_id);
     g_level_info = level_info;
@@ -334,7 +334,7 @@ bool TryToDownloadLevel(const char* filename)
     }
 
     xlog::trace("Fetching level info");
-    auto level_info_opt = FetchLevelInfo(filename);
+    auto level_info_opt = FetchLevelDownloadInfo(filename);
     if (!level_info_opt) {
         xlog::error("Level has not been found in FactionFiles database!");
         return false;
@@ -366,13 +366,13 @@ CodeInjection g_join_failed_injection{
     },
 };
 
-DcCommand2 download_level_cmd{
+ConsoleCommand2 download_level_cmd{
     "download_level",
     [](std::string filename) {
         if (filename.rfind('.') == std::string::npos) {
             filename += ".rfl";
         }
-        auto level_info_opt = FetchLevelInfo(filename.c_str());
+        auto level_info_opt = FetchLevelDownloadInfo(filename.c_str());
         if (!level_info_opt) {
             rf::ConsolePrintf("Level has not found in FactionFiles database!");
         }

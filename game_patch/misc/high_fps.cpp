@@ -182,7 +182,7 @@ void FtolIssuesDetectionDoFrame()
     g_num_frames = (g_num_frames + 1) % 10;
 }
 
-DcCommand2 detect_ftol_issues_cmd{
+ConsoleCommand2 detect_ftol_issues_cmd{
     "detect_ftol_issues",
     [](std::optional<float> fps_opt) {
         static bool patched = false;

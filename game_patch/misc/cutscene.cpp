@@ -42,7 +42,7 @@ void RenderSkipCutsceneHintText(rf::ControlAction ctrl)
     rf::GrStringAligned(rf::GR_ALIGN_CENTER, x, y, msg.CStr(), -1, rf::gr_string_mode);
 }
 
-FunHook<void(bool)> MenuInGameUpdateCutscene_hook{
+FunHook<void(bool)> CutsceneDoFrame_hook{
     0x0045B5E0,
     [](bool dlg_open) {
         bool skip_cutscene = false;
@@ -52,7 +52,7 @@ FunHook<void(bool)> MenuInGameUpdateCutscene_hook{
         rf::ControlConfigCheckPressed(&rf::local_player->settings.controls, skip_cutscene_ctrl, &skip_cutscene);
 
         if (!skip_cutscene) {
-            MenuInGameUpdateCutscene_hook.CallTarget(dlg_open);
+            CutsceneDoFrame_hook.CallTarget(dlg_open);
             RenderSkipCutsceneHintText(skip_cutscene_ctrl);
         }
         else {
@@ -81,7 +81,7 @@ FunHook<void(bool)> MenuInGameUpdateCutscene_hook{
                 timer_add_delta_time(shot_time_left_ms);
                 frame_time = shot_time_left_ms / 1000.0f;
                 timer_base -= static_cast<int64_t>(shot_time_left_ms) * timer_freq / 1000;
-                MenuInGameUpdateCutscene_hook.CallTarget(dlg_open);
+                CutsceneDoFrame_hook.CallTarget(dlg_open);
             }
 
             EnableSoundAfterCutsceneSkip();
@@ -89,17 +89,17 @@ FunHook<void(bool)> MenuInGameUpdateCutscene_hook{
     },
 };
 
-CallHook<bool(rf::Camera*)> CutsceneWhenOver_CameraSetFirstPerson_hook{
+CallHook<bool(rf::Camera*)> CutsceneStopCurrent_CameraSetFirstPerson_hook{
     0x0045BDBD,
     [](rf::Camera* camera) {
-        if (!CutsceneWhenOver_CameraSetFirstPerson_hook.CallTarget(camera)) {
+        if (!CutsceneStopCurrent_CameraSetFirstPerson_hook.CallTarget(camera)) {
             rf::CameraSetFixed(camera);
         }
         return true;
     },
 };
 
-DcCommand2 skip_cutscene_bind_cmd{
+ConsoleCommand2 skip_cutscene_bind_cmd{
     "skip_cutscene_bind",
     [](std::string bind_name) {
         if (bind_name == "default") {
@@ -125,9 +125,9 @@ DcCommand2 skip_cutscene_bind_cmd{
 void ApplyCutscenePatches()
 {
     // Support skipping cutscenes
-    MenuInGameUpdateCutscene_hook.Install();
+    CutsceneDoFrame_hook.Install();
     skip_cutscene_bind_cmd.Register();
 
     // Fix crash if camera cannot be restored to first-person mode after cutscene
-    CutsceneWhenOver_CameraSetFirstPerson_hook.Install();
+    CutsceneStopCurrent_CameraSetFirstPerson_hook.Install();
 }

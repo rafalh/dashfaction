@@ -363,10 +363,10 @@ CallHook<void(rf::Player*, int, int)> give_default_weapon_ammo_hook{
     },
 };
 
-FunHook<bool (const char*, int)> MpIsLevelForGameMode_hook{
+FunHook<bool (const char*, int)> MultiIsLevelMatchingGameType_hook{
     0x00445050,
-    [](const char *filename, int game_mode) {
-        if (game_mode == RF_GT_CTF) {
+    [](const char *filename, int ng_type) {
+        if (ng_type == RF_GT_CTF) {
             return StringStartsWithIgnoreCase(filename, "ctf") || StringStartsWithIgnoreCase(filename, "pctf");
         }
         else {
@@ -396,7 +396,7 @@ FunHook<void(rf::Player*)> spawn_player_sync_ammo_hook{
     },
 };
 
-struct ParticleCreateData
+struct ParticleCreateInfo
 {
     rf::Vector3 pos;
     rf::Vector3 velocity;
@@ -414,15 +414,15 @@ struct ParticleCreateData
     int field_44;
     int field_48;
 };
-static_assert(sizeof(ParticleCreateData) == 0x4C);
+static_assert(sizeof(ParticleCreateInfo) == 0x4C);
 
-FunHook<void(int, ParticleCreateData&, void*, rf::Vector3*, int, void**, void*)> ParticleCreate_hook{
+FunHook<void(int, ParticleCreateInfo&, void*, rf::Vector3*, int, void**, void*)> ParticleCreate_hook{
     0x00496840,
-    [](int pool_id, ParticleCreateData& create_data, void* room, rf::Vector3 *a4, int parent_obj, void** result, void* emitter) {
-        bool damages_flag = create_data.particle_flags2 & 1;
+    [](int pool_id, ParticleCreateInfo& pci, void* room, rf::Vector3 *a4, int parent_obj, void** result, void* emitter) {
+        bool damages_flag = pci.particle_flags2 & 1;
         // Do not create not damaging particles on a dedicated server
         if (damages_flag || !rf::is_dedicated_server)
-            ParticleCreate_hook.CallTarget(pool_id, create_data, room, a4, parent_obj, result, emitter);
+            ParticleCreate_hook.CallTarget(pool_id, pci, room, a4, parent_obj, result, emitter);
     },
 };
 
@@ -516,7 +516,7 @@ void ServerInit()
     AsmWriter(0x0046E179).nop(2);
 
     // In Multi -> Create game fix level filtering so 'pdm' and 'pctf' is supported
-    MpIsLevelForGameMode_hook.Install();
+    MultiIsLevelMatchingGameType_hook.Install();
 
     // Do not create not damaging particles on a dedicated server
     ParticleCreate_hook.Install();

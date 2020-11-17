@@ -10,7 +10,7 @@
 #include <patch_common/CallHook.h>
 #include <patch_common/AsmWriter.h>
 
-DcCommand2 vli_cmd{
+ConsoleCommand2 vli_cmd{
     "vli",
     []() {
         g_game_config.glares = !g_game_config.glares;
@@ -20,7 +20,7 @@ DcCommand2 vli_cmd{
     "Toggles volumetric lightining",
 };
 
-DcCommand2 player_count_cmd{
+ConsoleCommand2 player_count_cmd{
     "playercount",
     []() {
         if (!rf::is_multi)
@@ -33,7 +33,7 @@ DcCommand2 player_count_cmd{
     "Get player count",
 };
 
-DcCommand2 find_level_cmd{
+ConsoleCommand2 find_level_cmd{
     "findlevel",
     [](std::string pattern) {
         VPackfileFindMatchingFiles(StringMatcher().Infix(pattern).Suffix(".rfl"), [](const char* name) {

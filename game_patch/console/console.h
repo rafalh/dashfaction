@@ -103,7 +103,7 @@ public:
 };
 
 template<typename T>
-class DcCommand2 : public BaseCommand
+class ConsoleCommand2 : public BaseCommand
 {
 private:
     template<typename V>
@@ -130,7 +130,7 @@ private:
     const char* m_usage_text;
 
 public:
-    DcCommand2(const char* name, T handler, const char* description = nullptr,
+    ConsoleCommand2(const char* name, T handler, const char* description = nullptr,
                const char* usage_text = nullptr) :
         BaseCommand(name, description),
         m_handler_wrapper(handler), m_usage_text(usage_text)

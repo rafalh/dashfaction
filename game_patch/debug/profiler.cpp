@@ -239,7 +239,7 @@ void InstallProfilerPatches() {
     }
 }
 
-DcCommand2 profiler_cmd{
+ConsoleCommand2 profiler_cmd{
     "d_profiler",
     []() {
         InstallProfilerPatches();
@@ -247,7 +247,7 @@ DcCommand2 profiler_cmd{
     },
 };
 
-DcCommand2 perf_dump_cmd{
+ConsoleCommand2 perf_dump_cmd{
     "d_perf_dump",
     []() {
         rf::ConsolePrintf("Number of performance aggregators: %u", PerfAggregator::get_instances().size());

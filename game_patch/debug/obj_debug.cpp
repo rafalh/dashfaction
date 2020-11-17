@@ -101,7 +101,7 @@ rf::Object* FindObjectInReticle()
         return nullptr;
 }
 
-DcCommand2 dbg_target_uid_cmd{
+ConsoleCommand2 dbg_target_uid_cmd{
     "d_target_uid",
     [](std::optional<int> uid_opt) {
         // uid -999 is used by local entity
@@ -125,7 +125,7 @@ DcCommand2 dbg_target_uid_cmd{
     },
 };
 
-DcCommand2 dbg_target_closest_cmd{
+ConsoleCommand2 dbg_target_closest_cmd{
     "d_target_closest",
     []() {
         auto obj = FindClosestObject();
@@ -137,7 +137,7 @@ DcCommand2 dbg_target_closest_cmd{
     },
 };
 
-DcCommand2 dbg_target_reticle_cmd{
+ConsoleCommand2 dbg_target_reticle_cmd{
     "d_target_reticle",
     []() {
         auto obj = FindObjectInReticle();
@@ -149,7 +149,7 @@ DcCommand2 dbg_target_reticle_cmd{
     },
 };
 
-DcCommand2 dbg_entity_state_cmd{
+ConsoleCommand2 dbg_entity_state_cmd{
     "d_entity_state",
     [](std::optional<int> state_opt) {
         auto entity = rf::EntityFromHandle(rf::target_obj_handle);
@@ -167,7 +167,7 @@ DcCommand2 dbg_entity_state_cmd{
     },
 };
 
-DcCommand2 dbg_entity_action_cmd{
+ConsoleCommand2 dbg_entity_action_cmd{
     "d_entity_action",
     [](std::optional<int> action_opt) {
         auto entity = rf::EntityFromHandle(rf::target_obj_handle);
@@ -189,14 +189,14 @@ DcCommand2 dbg_entity_action_cmd{
     },
 };
 
-DcCommand2 dbg_spin_cmd{
+ConsoleCommand2 dbg_spin_cmd{
     "d_spin",
     [](float speed) {
         g_target_rotate_speed = {speed};
     },
 };
 
-DcCommand2 dbg_ai_pause_cmd{
+ConsoleCommand2 dbg_ai_pause_cmd{
     "d_ai_pause",
     []() {
         auto& ai_pause = AddrAsRef<bool>(0x005AF46D);

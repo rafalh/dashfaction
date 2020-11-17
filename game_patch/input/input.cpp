@@ -79,7 +79,7 @@ FunHook<void()> mouse_keep_centered_disable_hook{
     },
 };
 
-DcCommand2 input_mode_cmd{
+ConsoleCommand2 input_mode_cmd{
     "inputmode",
     []() {
         g_game_config.direct_input = !g_game_config.direct_input;
@@ -100,7 +100,7 @@ DcCommand2 input_mode_cmd{
     "Toggles input mode",
 };
 
-DcCommand2 ms_cmd{
+ConsoleCommand2 ms_cmd{
     "ms",
     [](std::optional<float> value_opt) {
         if (value_opt) {
@@ -228,7 +228,7 @@ CodeInjection LinearPitchPatch{
     },
 };
 
-DcCommand2 linear_pitch_cmd{
+ConsoleCommand2 linear_pitch_cmd{
     "linear_pitch",
     []() {
 #ifdef DEBUG

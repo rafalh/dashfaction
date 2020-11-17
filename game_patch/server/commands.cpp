@@ -52,7 +52,7 @@ bool ValidateNotLimbo()
     return true;
 }
 
-DcCommand2 map_ext_cmd{
+ConsoleCommand2 map_ext_cmd{
     "map_ext",
     [](std::optional<int> minutes_opt) {
         if (ValidateIsServer() && ValidateNotLimbo()) {
@@ -66,7 +66,7 @@ DcCommand2 map_ext_cmd{
     "map_ext [minutes]",
 };
 
-DcCommand2 map_rest_cmd{
+ConsoleCommand2 map_rest_cmd{
     "map_rest",
     []() {
         if (ValidateIsServer() && ValidateNotLimbo()) {
@@ -77,7 +77,7 @@ DcCommand2 map_rest_cmd{
     "Restart current level",
 };
 
-DcCommand2 map_next_cmd{
+ConsoleCommand2 map_next_cmd{
     "map_next",
     []() {
         if (ValidateIsServer() && ValidateNotLimbo()) {
@@ -88,7 +88,7 @@ DcCommand2 map_next_cmd{
     "Load next level",
 };
 
-DcCommand2 map_prev_cmd{
+ConsoleCommand2 map_prev_cmd{
     "map_prev",
     []() {
         if (ValidateIsServer() && ValidateNotLimbo()) {

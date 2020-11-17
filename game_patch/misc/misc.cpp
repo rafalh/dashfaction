@@ -390,7 +390,7 @@ int DebugPrintHook(char* buf, const char *fmt, ...) {
     return ret;
 }
 
-CallHook<int(char*, const char*)> mvf_load_rfa_debug_print_patch{
+CallHook<int(char*, const char*)> skeleton_pagein_debug_print_patch{
     0x0053AA73,
     reinterpret_cast<int(*)(char*, const char*)>(DebugPrintHook),
 };
@@ -448,16 +448,16 @@ CodeInjection explosion_crash_fix{
     },
 };
 
-void __fastcall HandleCtrlInGame_TimerSet_New(rf::Timestamp* fire_wait_timer, int, int value)
+void __fastcall PlayerExecuteAction_Timestamp_New(rf::Timestamp* fire_wait_timer, int, int value)
 {
     if (!fire_wait_timer->Valid() || fire_wait_timer->TimeUntil() < value) {
         fire_wait_timer->Set(value);
     }
 }
 
-CallHook<void __fastcall(rf::Timestamp*, int, int)> HandleCtrlInGame_TimerSet_fire_wait_patch{
+CallHook<void __fastcall(rf::Timestamp*, int, int)> PlayerExecuteAction_TimestampSet_fire_wait_patch{
     {0x004A62C2u, 0x004A6325u},
-    &HandleCtrlInGame_TimerSet_New,
+    &PlayerExecuteAction_Timestamp_New,
 };
 
 FunHook<void(rf::EntityFireInfo&, int)> EntityBurnSwitchParentToCorpse_hook{
@@ -488,12 +488,12 @@ CallHook<bool(rf::Object*)> ObjIsPlayer_EntityCheckIsInLiquid_hook{
     },
 };
 
-CallHook<void(rf::Vector3*, float, float, float, float, bool, int, int)> LightAddDirectional_RflLoadLevelProperties_hook{
+CallHook<void(rf::Vector3*, float, float, float, float, bool, int, int)> LightAddDirectional_LevelReadGeometryHeader_hook{
     0x004619E1,
     [](rf::Vector3 *dir, float intensity, float r, float g, float b, bool is_dynamic, int casts_shadow, int dropoff_type) {
         auto LightingIsEnabled = AddrAsRef<bool()>(0x004DB8B0);
         if (LightingIsEnabled()) {
-            LightAddDirectional_RflLoadLevelProperties_hook.CallTarget(dir, intensity, r, g, b, is_dynamic, casts_shadow, dropoff_type);
+            LightAddDirectional_LevelReadGeometryHeader_hook.CallTarget(dir, intensity, r, g, b, is_dynamic, casts_shadow, dropoff_type);
         }
     },
 };
@@ -630,7 +630,7 @@ void MiscInit()
     play_bik_file_vram_leak_fix.Install();
 
     // Log error when RFA cannot be loaded
-    mvf_load_rfa_debug_print_patch.Install();
+    skeleton_pagein_debug_print_patch.Install();
 
     // Fix crash when executing camera2 command in main menu
     AsmWriter(0x0040DCFC).nop(5);
@@ -660,7 +660,7 @@ void MiscInit()
 
     // Fix setting fire wait timer when closing weapon switch menu
     // Note: this timer makes sense for weapons that require holding (not clicking) the control to fire (e.g. shotgun)
-    HandleCtrlInGame_TimerSet_fire_wait_patch.Install();
+    PlayerExecuteAction_TimestampSet_fire_wait_patch.Install();
 
     // Fix crash when particle emitter allocation fails during entity ignition
     EntityBurnSwitchParentToCorpse_hook.Install();
@@ -669,7 +669,7 @@ void MiscInit()
     ObjIsPlayer_EntityCheckIsInLiquid_hook.Install();
 
     // Fix dedicated server crash when loading level that uses directional light
-    LightAddDirectional_RflLoadLevelProperties_hook.Install();
+    LightAddDirectional_LevelReadGeometryHeader_hook.Install();
 
     // Fix stack corruption when packfile has lower size than expected
     Vfile_Read_stack_corruption_fix.Install();

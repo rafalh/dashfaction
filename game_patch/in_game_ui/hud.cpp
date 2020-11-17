@@ -61,7 +61,7 @@ FunHook<void()> hud_render_for_multi_hook{
     },
 };
 
-DcCommand2 hud_cmd{
+ConsoleCommand2 hud_cmd{
     "hud",
     [](std::optional<bool> hud_opt) {
 
@@ -242,7 +242,7 @@ void SetBigHud(bool is_big)
     //WriteMem<i8>(0x004553DB + 1, is_big ? 127 : 70);
 }
 
-DcCommand2 bighud_cmd{
+ConsoleCommand2 bighud_cmd{
     "bighud",
     []() {
         g_game_config.big_hud = !g_game_config.big_hud;
@@ -254,7 +254,7 @@ DcCommand2 bighud_cmd{
     "bighud",
 };
 
-DcCommand2 reticle_scale_cmd{
+ConsoleCommand2 reticle_scale_cmd{
     "reticle_scale",
     [](std::optional<float> scale_opt) {
         if (scale_opt) {
@@ -267,7 +267,7 @@ DcCommand2 reticle_scale_cmd{
 };
 
 #ifdef DEBUG
-DcCommand2 hud_coords_cmd{
+ConsoleCommand2 hud_coords_cmd{
     "d_hud_coords",
     [](int idx, std::optional<int> x, std::optional<int> y) {
         if (x && y) {

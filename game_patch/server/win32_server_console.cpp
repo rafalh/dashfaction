@@ -75,7 +75,7 @@ CallHook<void()> OsInitWindow_Server_hook{
     },
 };
 
-FunHook<void(const char*, const int*)> DcPrint_hook{
+FunHook<void(const char*, const int*)> ConsolePrint_hook{
     reinterpret_cast<uintptr_t>(rf::ConsoleOutput),
     [](const char* text, [[maybe_unused]] const int* color) {
         HANDLE output_handle = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -148,7 +148,7 @@ CallHook<void()> DcPutChar_NewLine_hook{
     },
 };
 
-FunHook<void()> DcDrawServerConsole_hook{
+FunHook<void()> ConsoleDrawServer_hook{
     0x0050A770,
     []() {
         static char prev_cmd_line[sizeof(rf::console_cmd_line)];
@@ -160,11 +160,11 @@ FunHook<void()> DcDrawServerConsole_hook{
     },
 };
 
-FunHook<int()> KeyGetFromQueue_hook{
+FunHook<int()> KeyGet_hook{
     0x0051F000,
     []() {
         if (!rf::is_dedicated_server)
-            return KeyGetFromQueue_hook.CallTarget();
+            return KeyGet_hook.CallTarget();
 
         HANDLE input_handle = GetStdHandle(STD_INPUT_HANDLE);
         INPUT_RECORD input_record;
@@ -179,7 +179,7 @@ FunHook<int()> KeyGetFromQueue_hook{
             }
         }
 
-        return KeyGetFromQueue_hook.CallTarget();
+        return KeyGet_hook.CallTarget();
     },
 };
 
@@ -188,9 +188,9 @@ void InitWin32ServerConsole()
     g_win32_console = StringContainsIgnoreCase(GetCommandLineA(), "-win32-console");
     if (g_win32_console) {
         OsInitWindow_Server_hook.Install();
-        DcPrint_hook.Install();
-        DcDrawServerConsole_hook.Install();
-        KeyGetFromQueue_hook.Install();
+        ConsolePrint_hook.Install();
+        ConsoleDrawServer_hook.Install();
+        KeyGet_hook.Install();
         DcPutChar_NewLine_hook.Install();
     }
 }

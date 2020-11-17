@@ -308,7 +308,7 @@ void SetSoundEnabled(bool enabled)
     rf::sound_enabled = enabled;
 }
 
-DcCommand2 level_sounds_cmd{
+ConsoleCommand2 level_sounds_cmd{
     "levelsounds",
     [](std::optional<float> volume) {
         if (volume) {
@@ -325,7 +325,7 @@ DcCommand2 level_sounds_cmd{
 };
 
 #ifdef DEBUG
-DcCommand2 playing_sounds_cmd{
+ConsoleCommand2 playing_sounds_cmd{
     "d_playing_sounds",
     []() {
         for (int chnl_num = 0; chnl_num < rf::num_sound_channels; ++chnl_num) {

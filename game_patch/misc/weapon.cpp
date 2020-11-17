@@ -82,7 +82,7 @@ CodeInjection stop_continous_alternate_fire_patch{
     }
 };
 
-DcCommand2 swap_assault_rifle_controls_cmd{
+ConsoleCommand2 swap_assault_rifle_controls_cmd{
     "swap_assault_rifle_controls",
     []() {
         g_game_config.swap_assault_rifle_controls = !g_game_config.swap_assault_rifle_controls;
@@ -262,7 +262,7 @@ CallHook<void(rf::Player* player, int weapon_type)> ProcessCreateEntityPacket_sw
     },
 };
 
-DcCommand2 show_enemy_bullets_cmd{
+ConsoleCommand2 show_enemy_bullets_cmd{
     "show_enemy_bullets",
     []() {
         g_game_config.show_enemy_bullets = !g_game_config.show_enemy_bullets;

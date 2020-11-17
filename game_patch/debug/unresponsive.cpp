@@ -15,7 +15,7 @@ FunHook<void()> gr_flip_hook{
 };
 
 #ifndef NDEBUG
-DcCommand2 hang_cmd{
+ConsoleCommand2 hang_cmd{
     "d_hang",
     []() {
         int start = rf::TimerGet(1000);

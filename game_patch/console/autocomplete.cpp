@@ -5,7 +5,7 @@
 #include <patch_common/FunHook.h>
 #include <cstring>
 
-void DcShowCmdHelp(rf::ConsoleCommand* cmd)
+void ConsoleShowCmdHelp(rf::ConsoleCommand* cmd)
 {
     rf::console_run = 0;
     rf::console_help = 1;
@@ -14,7 +14,7 @@ void DcShowCmdHelp(rf::ConsoleCommand* cmd)
     handler(cmd);
 }
 
-int DcAutoCompleteGetComponent(int offset, std::string& result)
+int ConsoleAutoCompleteGetComponent(int offset, std::string& result)
 {
     const char *begin = rf::console_cmd_line + offset, *end = nullptr, *next;
     if (begin[0] == '"') {
@@ -34,7 +34,7 @@ int DcAutoCompleteGetComponent(int offset, std::string& result)
     return next ? next + 1 - rf::console_cmd_line : -1;
 }
 
-void DcAutoCompletePutComponent(int offset, const std::string& component, bool finished)
+void ConsoleAutoCompletePutComponent(int offset, const std::string& component, bool finished)
 {
     bool quote = component.find(' ') != std::string::npos;
     int max_len = std::size(rf::console_cmd_line);
@@ -51,14 +51,14 @@ void DcAutoCompletePutComponent(int offset, const std::string& component, bool f
 }
 
 template<typename T, typename F>
-void DcAutoCompletePrintSuggestions(T& suggestions, F mapping_fun)
+void ConsoleAutoCompletePrintSuggestions(T& suggestions, F mapping_fun)
 {
     for (auto& item : suggestions) {
         rf::ConsolePrintf("%s\n", mapping_fun(item));
     }
 }
 
-void DcAutoCompleteUpdateCommonPrefix(std::string& common_prefix, const std::string& value, bool& first,
+void ConsoleAutoCompleteUpdateCommonPrefix(std::string& common_prefix, const std::string& value, bool& first,
                                       bool case_sensitive = false)
 {
     if (first) {
@@ -84,10 +84,10 @@ void DcAutoCompleteUpdateCommonPrefix(std::string& common_prefix, const std::str
     }
 }
 
-void DcAutoCompleteLevel(int offset)
+void ConsoleAutoCompleteLevel(int offset)
 {
     std::string level_name;
-    DcAutoCompleteGetComponent(offset, level_name);
+    ConsoleAutoCompleteGetComponent(offset, level_name);
     if (level_name.size() < 3)
         return;
 
@@ -99,21 +99,21 @@ void DcAutoCompleteLevel(int offset)
         auto name_len = ext ? ext - name : strlen(name);
         std::string name_without_ext(name, name_len);
         matches.push_back(name_without_ext);
-        DcAutoCompleteUpdateCommonPrefix(common_prefix, name_without_ext, first);
+        ConsoleAutoCompleteUpdateCommonPrefix(common_prefix, name_without_ext, first);
     });
 
     if (matches.size() == 1)
-        DcAutoCompletePutComponent(offset, matches[0], true);
+        ConsoleAutoCompletePutComponent(offset, matches[0], true);
     else if (!matches.empty()) {
-        DcAutoCompletePrintSuggestions(matches, [](std::string& name) { return name.c_str(); });
-        DcAutoCompletePutComponent(offset, common_prefix, false);
+        ConsoleAutoCompletePrintSuggestions(matches, [](std::string& name) { return name.c_str(); });
+        ConsoleAutoCompletePutComponent(offset, common_prefix, false);
     }
 }
 
-void DcAutoCompletePlayer(int offset)
+void ConsoleAutoCompletePlayer(int offset)
 {
     std::string player_name;
-    DcAutoCompleteGetComponent(offset, player_name);
+    ConsoleAutoCompleteGetComponent(offset, player_name);
     if (player_name.size() < 1)
         return;
 
@@ -122,24 +122,24 @@ void DcAutoCompletePlayer(int offset)
     std::vector<rf::Player*> matching_players;
     FindPlayer(StringMatcher().Prefix(player_name), [&](rf::Player* player) {
         matching_players.push_back(player);
-        DcAutoCompleteUpdateCommonPrefix(common_prefix, player->name.CStr(), first);
+        ConsoleAutoCompleteUpdateCommonPrefix(common_prefix, player->name.CStr(), first);
     });
 
     if (matching_players.size() == 1)
-        DcAutoCompletePutComponent(offset, matching_players[0]->name.CStr(), true);
+        ConsoleAutoCompletePutComponent(offset, matching_players[0]->name.CStr(), true);
     else if (!matching_players.empty()) {
-        DcAutoCompletePrintSuggestions(matching_players, [](rf::Player* player) {
+        ConsoleAutoCompletePrintSuggestions(matching_players, [](rf::Player* player) {
             // Print player names
             return player->name.CStr();
         });
-        DcAutoCompletePutComponent(offset, common_prefix, false);
+        ConsoleAutoCompletePutComponent(offset, common_prefix, false);
     }
 }
 
-void DcAutoCompleteCommand(int offset)
+void ConsoleAutoCompleteCommand(int offset)
 {
     std::string cmd_name;
-    int next_offset = DcAutoCompleteGetComponent(offset, cmd_name);
+    int next_offset = ConsoleAutoCompleteGetComponent(offset, cmd_name);
     if (cmd_name.size() < 2)
         return;
 
@@ -152,23 +152,23 @@ void DcAutoCompleteCommand(int offset)
         if (!strnicmp(cmd->name, cmd_name.c_str(), cmd_name.size()) &&
             (next_offset == -1 || !cmd->name[cmd_name.size()])) {
             matching_cmds.push_back(cmd);
-            DcAutoCompleteUpdateCommonPrefix(common_prefix, cmd->name, first);
+            ConsoleAutoCompleteUpdateCommonPrefix(common_prefix, cmd->name, first);
         }
     }
 
     if (next_offset != -1) {
         if (!stricmp(cmd_name.c_str(), "level"))
-            DcAutoCompleteLevel(next_offset);
+            ConsoleAutoCompleteLevel(next_offset);
         else if (!stricmp(cmd_name.c_str(), "kick") || !stricmp(cmd_name.c_str(), "ban"))
-            DcAutoCompletePlayer(next_offset);
+            ConsoleAutoCompletePlayer(next_offset);
         else if (!stricmp(cmd_name.c_str(), "rcon"))
-            DcAutoCompleteCommand(next_offset);
+            ConsoleAutoCompleteCommand(next_offset);
         else if (!stricmp(cmd_name.c_str(), "help"))
-            DcAutoCompleteCommand(next_offset);
+            ConsoleAutoCompleteCommand(next_offset);
         else if (matching_cmds.size() != 1)
             return;
         else
-            DcShowCmdHelp(matching_cmds[0]);
+            ConsoleShowCmdHelp(matching_cmds[0]);
     }
     else if (matching_cmds.size() > 1) {
         for (auto* cmd : matching_cmds) {
@@ -177,22 +177,22 @@ void DcAutoCompleteCommand(int offset)
             else
                 rf::ConsolePrintf("%s", cmd->name);
         }
-        DcAutoCompletePutComponent(offset, common_prefix, false);
+        ConsoleAutoCompletePutComponent(offset, common_prefix, false);
     }
     else if (matching_cmds.size() == 1)
-        DcAutoCompletePutComponent(offset, matching_cmds[0]->name, true);
+        ConsoleAutoCompletePutComponent(offset, matching_cmds[0]->name, true);
 }
 
-FunHook<void()> DcAutoCompleteInput_hook{
+FunHook<void()> ConsoleAutoCompleteInput_hook{
     0x0050A620,
     []() {
         // autocomplete on offset 0
-        DcAutoCompleteCommand(0);
+        ConsoleAutoCompleteCommand(0);
     },
 };
 
 void ConsoleAutoCompleteApplyPatch()
 {
     // Better console autocomplete
-    DcAutoCompleteInput_hook.Install();
+    ConsoleAutoCompleteInput_hook.Install();
 }

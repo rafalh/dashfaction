@@ -57,7 +57,7 @@ static void SetTextureMinMagFilterInCode(D3DTEXTUREFILTERTYPE filter_type0, D3DT
     }
 }
 
-CodeInjection GrSetViewMatrix_widescreen_fix{
+CodeInjection GrD3DSetup3D_widescreen_fix{
     0x005473AD,
     []() {
         constexpr float ref_aspect_ratio = 4.0f / 3.0f;
@@ -91,7 +91,7 @@ CodeInjection GrSetViewMatrix_widescreen_fix{
     },
 };
 
-CodeInjection GrCreateD3DDevice_error_patch{
+CodeInjection GrD3DInit_error_patch{
     0x00545CBD,
     [](auto& regs) {
         auto hr = static_cast<HRESULT>(regs.eax);
@@ -124,7 +124,7 @@ CodeInjection GrCreateD3DDevice_error_patch{
     },
 };
 
-CodeInjection GrClearZBuffer_fix_rect{
+CodeInjection GrZBufferClear_fix_rect{
     0x00550A19,
     [](auto& regs) {
         auto& rect = *reinterpret_cast<D3DRECT*>(regs.edx);
@@ -248,14 +248,14 @@ CodeInjection d3d_index_buffer_usage_patch{
 
 #endif // D3D_HW_VERTEX_PROCESSING
 
-CallHook<void(int, rf::GrVertex**, int, int)> GrDrawRect_GrDrawPoly_hook{
+CallHook<void(int, rf::GrVertex**, int, int)> GrRect_GrTMapper_hook{
     0x0050DD69,
     [](int num, rf::GrVertex** pp_vertices, int flags, int mat) {
         for (int i = 0; i < num; ++i) {
             pp_vertices[i]->spos.x -= 0.5f;
             pp_vertices[i]->spos.y -= 0.5f;
         }
-        GrDrawRect_GrDrawPoly_hook.CallTarget(num, pp_vertices, flags, mat);
+        GrRect_GrTMapper_hook.CallTarget(num, pp_vertices, flags, mat);
     },
 };
 
@@ -281,10 +281,10 @@ DWORD SetupMaxAnisotropy()
     return anisotropy_level;
 }
 
-CallHook<void()> GrInitBuffers_AfterReset_hook{
+CallHook<void()> GrD3DInitBuffers_GrD3DFlip_hook{
     0x00545045,
     []() {
-        GrInitBuffers_AfterReset_hook.CallTarget();
+        GrD3DInitBuffers_GrD3DFlip_hook.CallTarget();
 
         // Apply state change after reset
         // Note: we dont have to set min/mag filtering because its set when selecting material
@@ -315,7 +315,7 @@ CodeInjection switch_d3d_mode_patch{
     },
 };
 
-DcCommand2 fullscreen_cmd{
+ConsoleCommand2 fullscreen_cmd{
     "fullscreen",
     []() {
         rf::gr_d3d_pp.Windowed = false;
@@ -325,7 +325,7 @@ DcCommand2 fullscreen_cmd{
     },
 };
 
-DcCommand2 windowed_cmd{
+ConsoleCommand2 windowed_cmd{
     "windowed",
     []() {
         rf::gr_d3d_pp.Windowed = true;
@@ -334,7 +334,7 @@ DcCommand2 windowed_cmd{
     },
 };
 
-DcCommand2 antialiasing_cmd{
+ConsoleCommand2 antialiasing_cmd{
     "antialiasing",
     []() {
         if (!g_game_config.msaa)
@@ -357,7 +357,7 @@ static bool g_profile_frame_req = false;
 static bool g_profile_frame = false;
 static int g_num_draw_calls = 0;
 
-CodeInjection GrD3DSetMaterialFlags_profile_patch{
+CodeInjection GrD3DSetState_profile_patch{
     0x0054F19C,
     [](auto& regs) {
         if (g_profile_frame) {
@@ -403,10 +403,10 @@ CodeInjection D3D_DrawIndexedPrimitive_profile_patch{
     },
 };
 
-FunHook<void()> GrSwapBuffers_profile_patch{
+FunHook<void()> GrFlip_profile_patch{
     0x0050CE20,
     []() {
-        GrSwapBuffers_profile_patch.CallTarget();
+        GrFlip_profile_patch.CallTarget();
 
         if (g_profile_frame) {
             xlog::info("Total draw calls: %d", g_num_draw_calls);
@@ -417,16 +417,16 @@ FunHook<void()> GrSwapBuffers_profile_patch{
     },
 };
 
-DcCommand2 profile_frame_cmd{
+ConsoleCommand2 profile_frame_cmd{
     "profile_frame",
     []() {
         g_profile_frame_req = true;
 
         static bool patches_installed = false;
         if (!patches_installed) {
-            GrD3DSetMaterialFlags_profile_patch.Install();
+            GrD3DSetState_profile_patch.Install();
             GrD3DSetTexture_profile_patch.Install();
-            GrSwapBuffers_profile_patch.Install();
+            GrFlip_profile_patch.Install();
             auto d3d_dev_vtbl = *reinterpret_cast<uintptr_t**>(rf::gr_d3d_device);
             D3D_DrawIndexedPrimitive_profile_patch.SetAddr(d3d_dev_vtbl[0x11C / 4]); // DrawIndexedPrimitive
             D3D_DrawIndexedPrimitive_profile_patch.Install();
@@ -499,7 +499,7 @@ CodeInjection GrLoadFontInternal_fix_texture_ref{
     },
 };
 
-DcCommand2 max_fps_cmd{
+ConsoleCommand2 max_fps_cmd{
     "maxfps",
     [](std::optional<int> limit_opt) {
         if (limit_opt) {
@@ -519,7 +519,7 @@ DcCommand2 max_fps_cmd{
     "maxfps <limit>",
 };
 
-CodeInjection gr_direct3d_lock_crash_fix{
+CodeInjection gr_d3d_lock_crash_fix{
     0x0055CE55,
     [](auto& regs) {
         if (regs.eax == 0) {
@@ -635,7 +635,7 @@ FunHook<void()> DoDamageScreenFlash_hook{
     },
 };
 
-DcCommand2 damage_screen_flash_cmd{
+ConsoleCommand2 damage_screen_flash_cmd{
     "damage_screen_flash",
     []() {
         g_game_config.damage_screen_flash = !g_game_config.damage_screen_flash;
@@ -706,7 +706,7 @@ void RecalcMeshStaticLighting()
     AddrCaller{0x0048B0E0}.c_call(); // UpdateMeshLighting
 }
 
-DcCommand2 mesh_static_lighting_cmd{
+ConsoleCommand2 mesh_static_lighting_cmd{
     "mesh_static_lighting",
     []() {
         g_game_config.mesh_static_lighting = !g_game_config.mesh_static_lighting;
@@ -717,7 +717,7 @@ DcCommand2 mesh_static_lighting_cmd{
     "Toggle mesh static lighting calculation",
 };
 
-DcCommand2 nearest_texture_filtering_cmd{
+ConsoleCommand2 nearest_texture_filtering_cmd{
     "nearest_texture_filtering",
     []() {
         g_game_config.nearest_texture_filtering = !g_game_config.nearest_texture_filtering;
@@ -783,12 +783,12 @@ void GraphicsInit()
     WriteMem<u8>(0x00546154, 1);
 
     // Properly restore state after device reset
-    GrInitBuffers_AfterReset_hook.Install();
+    GrD3DInitBuffers_GrD3DFlip_hook.Install();
 
 #if WIDESCREEN_FIX
     // Fix FOV for widescreen
     AsmWriter(0x00547354, 0x00547358).nop();
-    GrSetViewMatrix_widescreen_fix.Install();
+    GrD3DSetup3D_widescreen_fix.Install();
     WriteMem<float>(0x0058A29C, 0.0003f); // factor related to near plane, default is 0.000588f
 #endif
 
@@ -799,7 +799,7 @@ void GraphicsInit()
     }
 
     // Better error message in case of device creation error
-    GrCreateD3DDevice_error_patch.Install();
+    GrD3DInit_error_patch.Install();
 
     // Optimization - remove unused back buffer locking/unlocking in GrSwapBuffers
     AsmWriter(0x0054504A).jmp(0x0054508B);
@@ -810,14 +810,14 @@ void GraphicsInit()
     WriteMem<u8>(0x00431F6B, asm_opcodes::jmp_rel_short);
     WriteMem<u8>(0x004328CF, asm_opcodes::jmp_rel_short);
     AsmWriter(0x0043298F).jmp(0x004329DC);
-    GrClearZBuffer_fix_rect.Install();
+    GrZBufferClear_fix_rect.Install();
 
     // Left and top viewport edge fix for MSAA (RF does similar thing in GrDrawTextureD3D)
     WriteMem<u8>(0x005478C6, asm_opcodes::fadd);
     WriteMem<u8>(0x005478D7, asm_opcodes::fadd);
     WriteMemPtr(0x005478C6 + 2, &g_gr_clipped_geom_offset_x);
     WriteMemPtr(0x005478D7 + 2, &g_gr_clipped_geom_offset_y);
-    GrDrawRect_GrDrawPoly_hook.Install();
+    GrRect_GrTMapper_hook.Install();
 #endif
 
     if (g_game_config.high_scanner_res) {
@@ -936,7 +936,7 @@ void GraphicsInit()
     max_fps_cmd.Register();
 
     // Crash-fix in case texture has not been created (this happens if GrReadBackbuffer fails)
-    gr_direct3d_lock_crash_fix.Install();
+    gr_d3d_lock_crash_fix.Install();
 
     // Fix undefined behavior in D3D state handling: alpha operations cannot be disabled when color operations are enabled
     WriteMem<u8>(0x0054F785 + 1, D3DTOP_SELECTARG2);

@@ -15,14 +15,14 @@ void KillInitPlayer(rf::Player* player)
     stats->num_deaths = 0;
 }
 
-FunHook<void()> MpResetNetGame_hook{
+FunHook<void()> MultiLevelInit_hook{
     0x0046E450,
     []() {
         auto player_list = SinglyLinkedList{rf::player_list};
         for (auto& player : player_list) {
             KillInitPlayer(&player);
         }
-        MpResetNetGame_hook.CallTarget();
+        MultiLevelInit_hook.CallTarget();
     },
 };
 
@@ -138,7 +138,7 @@ void InitKill()
 
     // Change player stats structure
     WriteMem<i8>(0x004A33B5 + 1, sizeof(PlayerStatsNew));
-    MpResetNetGame_hook.Install();
+    MultiLevelInit_hook.Install();
 
     // Reset fpgun animation when player dies
     EntityOnDeath_hook.Install();

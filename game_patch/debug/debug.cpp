@@ -98,7 +98,7 @@ FunHook<size_t(void*)> msize_hook{
     },
 };
 
-DcCommand2 mem_stats_cmd{
+ConsoleCommand2 mem_stats_cmd{
     "d_mem_stats",
     []() {
         constexpr float mb_float = 1024.0f * 1024.0f;

@@ -209,7 +209,7 @@ FunHook<void(rf::Player*, rf::ControlAction, bool)> HandleCtrlInGame_hook{
     },
 };
 
-bool IsPlayerEntityInvalid_New(rf::Player* player)
+bool PlayerIsDead_New(rf::Player* player)
 {
     if (SpectateModeIsActive())
         return false;
@@ -217,11 +217,11 @@ bool IsPlayerEntityInvalid_New(rf::Player* player)
         return rf::PlayerIsDead(player);
 }
 
-CallHook<bool(rf::Player*)> IsPlayerEntityInvalid_RedBars_hook{0x00432A52, IsPlayerEntityInvalid_New};
-CallHook<bool(rf::Player*)> IsPlayerEntityInvalid_Scoreboard_hook{0x00437BEE, IsPlayerEntityInvalid_New};
-CallHook<bool(rf::Player*)> IsPlayerEntityInvalid_Scoreboard2_hook{0x00437C25, IsPlayerEntityInvalid_New};
+CallHook<bool(rf::Player*)> PlayerIsDead_RedBars_hook{0x00432A52, PlayerIsDead_New};
+CallHook<bool(rf::Player*)> PlayerIsDead_Scoreboard_hook{0x00437BEE, PlayerIsDead_New};
+CallHook<bool(rf::Player*)> PlayerIsDead_Scoreboard2_hook{0x00437C25, PlayerIsDead_New};
 
-static bool IsPlayerDying_New(rf::Player* player)
+static bool PlayerIsDying_New(rf::Player* player)
 {
     if (SpectateModeIsActive())
         return false;
@@ -229,9 +229,9 @@ static bool IsPlayerDying_New(rf::Player* player)
         return rf::PlayerIsDying(player);
 }
 
-CallHook IsPlayerDying_RedBars_hook{0x00432A5F, IsPlayerDying_New};
-CallHook IsPlayerDying_Scoreboard_hook{0x00437C01, IsPlayerDying_New};
-CallHook IsPlayerDying_Scoreboard2_hook{0x00437C36, IsPlayerDying_New};
+CallHook PlayerIsDying_RedBars_hook{0x00432A5F, PlayerIsDying_New};
+CallHook PlayerIsDying_Scoreboard_hook{0x00437C01, PlayerIsDying_New};
+CallHook PlayerIsDying_Scoreboard2_hook{0x00437C36, PlayerIsDying_New};
 
 void SpectateModeOnDestroyPlayer(rf::Player* player)
 {
@@ -283,7 +283,7 @@ FunHook<bool(rf::Player*)> CanPlayerFire_hook{
     }
 };
 
-DcCommand2 spectate_cmd{
+ConsoleCommand2 spectate_cmd{
     "spectate",
     [](std::optional<std::string> player_name) {
         if (!rf::is_multi) {
@@ -378,13 +378,13 @@ FunHook<void(rf::Player*)> PlayerFpgunUpdateState_hook{
 
 void SpectateModeInit()
 {
-    IsPlayerDying_RedBars_hook.Install();
-    IsPlayerDying_Scoreboard_hook.Install();
-    IsPlayerDying_Scoreboard2_hook.Install();
+    PlayerIsDying_RedBars_hook.Install();
+    PlayerIsDying_Scoreboard_hook.Install();
+    PlayerIsDying_Scoreboard2_hook.Install();
 
-    IsPlayerEntityInvalid_RedBars_hook.Install();
-    IsPlayerEntityInvalid_Scoreboard_hook.Install();
-    IsPlayerEntityInvalid_Scoreboard2_hook.Install();
+    PlayerIsDead_RedBars_hook.Install();
+    PlayerIsDead_Scoreboard_hook.Install();
+    PlayerIsDead_Scoreboard2_hook.Install();
 
     HandleCtrlInGame_hook.Install();
     RenderReticle_hook.Install();

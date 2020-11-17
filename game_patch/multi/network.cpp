@@ -44,20 +44,20 @@
 
 namespace rf
 {
-static const auto MpIsConnectingToServer = AddrAsRef<uint8_t(const rf::NwAddr& addr)>(0x0044AD80);
+static const auto MultiIsConnectingToServer = AddrAsRef<uint8_t(const rf::NwAddr& addr)>(0x0044AD80);
 
 static auto& simultaneous_ping = AddrAsRef<uint32_t>(0x00599CD8);
 
-typedef void NwProcessGamePackets_Type(const void* data, size_t len, const NwAddr& addr, Player* player);
-static auto& NwProcessGamePackets = AddrAsRef<NwProcessGamePackets_Type>(0x004790D0);
+typedef void MultiIoProcessPackets_Type(const void* data, size_t len, const NwAddr& addr, Player* player);
+static auto& MultiIoProcessPackets = AddrAsRef<MultiIoProcessPackets_Type>(0x004790D0);
 } // namespace rf
 
-typedef void NwPacketHandler_Type(char* data, const rf::NwAddr& addr);
+typedef void MultiIoPacketHandler(char* data, const rf::NwAddr& addr);
 
 CallHook<void(const void*, size_t, const rf::NwAddr&, rf::Player*)> ProcessUnreliableGamePackets_hook{
     0x00479244,
     [](const void* data, size_t len, const rf::NwAddr& addr, rf::Player* player) {
-        rf::NwProcessGamePackets(data, len, addr, player);
+        rf::MultiIoProcessPackets(data, len, addr, player);
 
 #if MASK_AS_PF
         ProcessPfPacket(data, len, addr, player);
@@ -306,15 +306,15 @@ CodeInjection ProcessGameInfoPacket_GameTypeBounds_patch{
     },
 };
 
-FunHook<NwPacketHandler_Type> ProcessJoinDenyPacket_hook{
+FunHook<MultiIoPacketHandler> ProcessJoinDenyPacket_hook{
     0x0047A400,
     [](char* data, const rf::NwAddr& addr) {
-        if (rf::MpIsConnectingToServer(addr)) // client-side
+        if (rf::MultiIsConnectingToServer(addr)) // client-side
             ProcessJoinDenyPacket_hook.CallTarget(data, addr);
     },
 };
 
-FunHook<NwPacketHandler_Type> ProcessNewPlayerPacket_hook{
+FunHook<MultiIoPacketHandler> ProcessNewPlayerPacket_hook{
     0x0047A580,
     [](char* data, const rf::NwAddr& addr) {
         if (GetForegroundWindow() != rf::main_wnd)
@@ -323,7 +323,7 @@ FunHook<NwPacketHandler_Type> ProcessNewPlayerPacket_hook{
     },
 };
 
-FunHook<NwPacketHandler_Type> ProcessLeftGamePacket_hook{
+FunHook<MultiIoPacketHandler> ProcessLeftGamePacket_hook{
     0x0047BBC0,
     [](char* data, const rf::NwAddr& addr) {
         // server-side and client-side
@@ -335,14 +335,14 @@ FunHook<NwPacketHandler_Type> ProcessLeftGamePacket_hook{
     },
 };
 
-FunHook<NwPacketHandler_Type> ProcessChatLinePacket_hook{
+FunHook<MultiIoPacketHandler> ProcessChatLinePacket_hook{
     0x00444860,
     [](char* data, const rf::NwAddr& addr) {
         // server-side and client-side
         if (rf::is_server) {
             rf::Player* src_player = rf::MultiFindPlayerByAddr(addr);
             if (!src_player)
-                return; // shouldnt happen (protected in rf::NwProcessGamePackets)
+                return; // shouldnt happen (protected in rf::MultiIoProcessPackets)
 
             char* msg = data + 2;
             if (CheckServerChatCommand(msg, src_player))
@@ -354,28 +354,28 @@ FunHook<NwPacketHandler_Type> ProcessChatLinePacket_hook{
     },
 };
 
-FunHook<NwPacketHandler_Type> ProcessNameChangePacket_hook{
+FunHook<MultiIoPacketHandler> ProcessNameChangePacket_hook{
     0x0046EAE0,
     [](char* data, const rf::NwAddr& addr) {
         // server-side and client-side
         if (rf::is_server) {
             rf::Player* src_player = rf::MultiFindPlayerByAddr(addr);
             if (!src_player)
-                return;                               // shouldnt happen (protected in rf::NwProcessGamePackets)
+                return;                               // shouldnt happen (protected in rf::MultiIoProcessPackets)
             data[0] = src_player->nw_data->player_id; // fix player ID
         }
         ProcessNameChangePacket_hook.CallTarget(data, addr);
     },
 };
 
-FunHook<NwPacketHandler_Type> ProcessTeamChangePacket_hook{
+FunHook<MultiIoPacketHandler> ProcessTeamChangePacket_hook{
     0x004825B0,
     [](char* data, const rf::NwAddr& addr) {
         // server-side and client-side
         if (rf::is_server) {
             rf::Player* src_player = rf::MultiFindPlayerByAddr(addr);
             if (!src_player)
-                return; // shouldnt happen (protected in rf::NwProcessGamePackets)
+                return; // shouldnt happen (protected in rf::MultiIoProcessPackets)
 
             data[0] = src_player->nw_data->player_id;  // fix player ID
             data[1] = std::clamp(data[1], '\0', '\1'); // team validation (fixes "green team")
@@ -384,21 +384,21 @@ FunHook<NwPacketHandler_Type> ProcessTeamChangePacket_hook{
     },
 };
 
-FunHook<NwPacketHandler_Type> ProcessRateChangePacket_hook{
+FunHook<MultiIoPacketHandler> ProcessRateChangePacket_hook{
     0x004807B0,
     [](char* data, const rf::NwAddr& addr) {
         // server-side and client-side?
         if (rf::is_server) {
             rf::Player* src_player = rf::MultiFindPlayerByAddr(addr);
             if (!src_player)
-                return;                               // shouldnt happen (protected in rf::NwProcessGamePackets)
+                return;                               // shouldnt happen (protected in rf::MultiIoProcessPackets)
             data[0] = src_player->nw_data->player_id; // fix player ID
         }
         ProcessRateChangePacket_hook.CallTarget(data, addr);
     },
 };
 
-FunHook<NwPacketHandler_Type> ProcessEntityCreatePacket_hook{
+FunHook<MultiIoPacketHandler> ProcessEntityCreatePacket_hook{
     0x00475420,
     [](char* data, const rf::NwAddr& addr) {
         // Temporary change default player weapon to the weapon type from the received packet
@@ -420,7 +420,7 @@ FunHook<NwPacketHandler_Type> ProcessEntityCreatePacket_hook{
     },
 };
 
-FunHook<NwPacketHandler_Type> ProcessReloadPacket_hook{
+FunHook<MultiIoPacketHandler> ProcessReloadPacket_hook{
     0x00485AB0,
     [](char* data, const rf::NwAddr& addr) {
         if (!rf::is_server) { // client-side

@@ -47,7 +47,7 @@ DebugFlagDesc g_debug_flags[] = {
     {AddrAsRef<bool>(0x009BB5B0), "show_invisible_faces", true},
 };
 
-DcCommand2 debug_cmd{
+ConsoleCommand2 debug_cmd{
     "debug",
     [](std::string type) {
 
