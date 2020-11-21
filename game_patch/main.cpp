@@ -173,6 +173,17 @@ FunHook<void(rf::Player*)> PlayerDestroy_hook{
     },
 };
 
+FunHook<rf::Entity*(rf::Player*, int, const rf::Vector3&, const rf::Matrix3&, int)> PlayerEntityCreate_hook{
+    0x004A35C0,
+    [](rf::Player* pp, int entity_type, const rf::Vector3& pos, const rf::Matrix3& orient, int multi_entity_index) {
+        auto ep = PlayerEntityCreate_hook.CallTarget(pp, entity_type, pos, orient, multi_entity_index);
+        if (ep) {
+            SpectateModePlayerCreateEntityPost(pp);
+        }
+        return ep;
+    },
+};
+
 FunHook<int(rf::String&, rf::String&, char*)> LevelLoad_hook{
     0x0045C540,
     [](rf::String& level_filename, rf::String& save_filename, char* error) {
@@ -185,6 +196,7 @@ FunHook<int(rf::String&, rf::String&, char*)> LevelLoad_hook{
         else {
             HighFpsAfterLevelLoad(level_filename);
             MiscAfterLevelLoad(level_filename);
+            SpectateModeLevelInit();
         }
         return ret;
     },
@@ -353,6 +365,7 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     after_frame_render_hook.Install();
     PlayerCreate_hook.Install();
     PlayerDestroy_hook.Install();
+    PlayerEntityCreate_hook.Install();
     LevelLoad_hook.Install();
     LevelInitPost_hook.Install();
 

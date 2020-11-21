@@ -39,6 +39,7 @@ static auto& PlayerFpgunHasState = AddrAsRef<bool(Player* player, int state)>(0x
 static rf::Player* g_spectate_mode_target;
 static rf::Camera* g_old_target_camera = nullptr;
 static bool g_spectate_mode_enabled = false;
+static bool g_spawned_in_current_level = false;
 
 static void SetCameraTarget(rf::Player* player)
 {
@@ -56,6 +57,11 @@ static void SetCameraTarget(rf::Player* player)
     rf::CameraSetFirstPerson(camera);
 }
 
+static bool IsForceRespawn()
+{
+    return g_spawned_in_current_level && (rf::netgame.flags & rf::NG_FLAG_FORCE_RESPAWN);
+}
+
 void SpectateModeSetTargetPlayer(rf::Player* player)
 {
     if (!player)
@@ -64,8 +70,8 @@ void SpectateModeSetTargetPlayer(rf::Player* player)
     if (!rf::local_player || !rf::local_player->cam || !g_spectate_mode_target || g_spectate_mode_target == player)
         return;
 
-    if (rf::netgame.flags & rf::NG_FLAG_FORCE_RESPAWN) {
-        rf::String msg{"You cannot use Spectate Mode because Force Respawn option is enabled on this server!"};
+    if (IsForceRespawn()) {
+        rf::String msg{"You cannot use Spectate Mode because Force Respawn option is enabled in this server!"};
         rf::String prefix;
         rf::ChatPrint(msg, rf::ChatMsgColor::white_white, prefix);
         return;
@@ -291,7 +297,7 @@ ConsoleCommand2 spectate_cmd{
             return;
         }
 
-        if (rf::netgame.flags & rf::NG_FLAG_FORCE_RESPAWN) {
+        if (IsForceRespawn()) {
             rf::ConsoleOutput("Spectate mode is disabled because of Force Respawn server option!", nullptr);
             return;
         }
@@ -422,6 +428,18 @@ void SpectateModeInit()
 void SpectateModeAfterFullGameInit()
 {
     g_spectate_mode_target = rf::local_player;
+}
+
+void SpectateModePlayerCreateEntityPost(rf::Player* player)
+{
+    if (player == rf::local_player) {
+        g_spawned_in_current_level = true;
+    }
+}
+
+void SpectateModeLevelInit()
+{
+    g_spawned_in_current_level = false;
 }
 
 template<typename F>
