@@ -1,7 +1,8 @@
 #include "../console/console.h"
 #include "server_internal.h"
-#include "../rf/network.h"
+#include "../rf/multi.h"
 #include "../rf/gameseq.h"
+#include "../rf/geometry.h"
 
 void ExtendRoundTime(int minutes)
 {
@@ -11,7 +12,7 @@ void ExtendRoundTime(int minutes)
 
 void RestartCurrentLevel()
 {
-    rf::MultiChangeLevel(rf::level_filename.CStr());
+    rf::MultiChangeLevel(rf::level.filename.CStr());
 }
 
 void LoadNextLevel()

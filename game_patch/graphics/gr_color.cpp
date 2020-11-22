@@ -3,9 +3,7 @@
 #include "gr_color.h"
 #include "../main.h"
 #include "../rf/graphics.h"
-#include "../rf/misc.h"
 #include "../rf/geometry.h"
-#include "../stdafx.h"
 #include "../utils/perf-utils.h"
 #include <common/BuildConfig.h>
 #include <patch_common/AsmWriter.h>
@@ -14,6 +12,8 @@
 #include <patch_common/ShortTypes.h>
 #include <algorithm>
 #include <stdexcept>
+
+#define TEXTURE_DITHERING 0
 
 template<int SRC_BITS, int DST_BITS>
 struct ColorChannelConverter;

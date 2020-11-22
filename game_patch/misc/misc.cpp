@@ -6,6 +6,7 @@
 #include "../main.h"
 #include "../rf/object.h"
 #include "../rf/entity.h"
+#include "../rf/corpse.h"
 #include "../rf/trigger.h"
 #include "../rf/item.h"
 #include "../rf/clutter.h"
@@ -13,28 +14,25 @@
 #include "../rf/graphics.h"
 #include "../rf/player.h"
 #include "../rf/weapon.h"
-#include "../rf/network.h"
+#include "../rf/multi.h"
 #include "../rf/gameseq.h"
 #include "../rf/input.h"
 #include "../rf/ui.h"
 #include "../rf/particle_emitter.h"
 #include "../rf/os.h"
-#include "../stdafx.h"
+#include "../rf/misc.h"
 #include "../server/server.h"
 #include <common/version.h>
 #include <common/BuildConfig.h>
 #include <xlog/xlog.h>
+#include <patch_common/AsmOpcodes.h>
+#include <patch_common/AsmWriter.h>
 #include <patch_common/CallHook.h>
-#include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
+#include <patch_common/FunHook.h>
 #include <patch_common/ShortTypes.h>
 #include <cstddef>
 #include <regex>
-
-namespace rf
-{
-static auto& VMeshGetName = AddrAsRef<const char*(VMesh* vmesh)>(0x00503470);
-} // namespace rf
 
 void ApplyCutscenePatches();
 void ApplyEventPatches();

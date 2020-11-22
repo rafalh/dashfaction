@@ -1,8 +1,8 @@
 #include "scoreboard.h"
 #include "../multi/kill.h"
 #include "../rf/graphics.h"
-#include "../rf/network.h"
-#include "../rf/misc.h"
+#include "../rf/multi.h"
+#include "../rf/localize.h"
 #include "../rf/entity.h"
 #include "../rf/gameseq.h"
 #include "../rf/hud.h"
@@ -68,8 +68,8 @@ int DrawScoreboardHeader(int x, int y, int w, rf::NetGameType game_type, bool dr
     // Draw level
     if (!dry_run) {
         rf::GrSetColorRgba(0xB0, 0xB0, 0xB0, 0xFF);
-        auto level_info = rf::String::Format("%s (%s) by %s", rf::level_name.CStr(), rf::level_filename.CStr(),
-                                            rf::level_author.CStr());
+        auto level_info = rf::String::Format("%s (%s) by %s", rf::level.name.CStr(), rf::level.filename.CStr(),
+                                            rf::level.author.CStr());
         rf::String level_info_stripped;
         rf::FitScoreboardString(&level_info_stripped, level_info, w - 20); // Note: this destroys input string
         rf::GrStringAligned(rf::GR_ALIGN_CENTER, x_center, cur_y, level_info_stripped);

@@ -3,6 +3,7 @@
 #include <patch_common/FunHook.h>
 #include "../rf/common.h"
 #include "../rf/entity.h"
+#include "../rf/corpse.h"
 #include "../rf/misc.h"
 #include "../rf/graphics.h"
 #include "../rf/clutter.h"

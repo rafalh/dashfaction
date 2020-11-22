@@ -1,6 +1,6 @@
 #include <winsock2.h>
 #include "network.h"
-#include "../rf/network.h"
+#include "../rf/multi.h"
 #include "../rf/misc.h"
 #include "../rf/player.h"
 #include "../rf/weapon.h"

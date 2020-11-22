@@ -1,6 +1,6 @@
 #include "wndproc.h"
 #include "../rf/os.h"
-#include "../rf/network.h"
+#include "../rf/multi.h"
 #include "../rf/input.h"
 #include <windows.h>
 #include <patch_common/AsmWriter.h>

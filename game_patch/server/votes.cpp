@@ -1,7 +1,8 @@
 #include <string_view>
 #include "../rf/player.h"
-#include "../rf/network.h"
+#include "../rf/multi.h"
 #include "../rf/gameseq.h"
+#include "../rf/misc.h"
 #include "server_internal.h"
 #include "../console/console.h"
 #include "../multi/network.h"

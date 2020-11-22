@@ -16,6 +16,8 @@
 #include <unordered_map>
 #include <shlwapi.h>
 
+#define CHECK_PACKFILE_CHECKSUM 0 // slow (1 second on SSD on first load after boot)
+
 namespace rf
 {
 struct VPackfileEntry;

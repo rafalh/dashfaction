@@ -1,7 +1,8 @@
 #include "kill.h"
 #include "../rf/player.h"
 #include "../rf/entity.h"
-#include "../rf/misc.h"
+#include "../rf/localize.h"
+#include "../rf/multi.h"
 #include "../rf/weapon.h"
 #include "../utils/list-utils.h"
 #include <patch_common/FunHook.h>

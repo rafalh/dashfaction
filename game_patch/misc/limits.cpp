@@ -2,7 +2,7 @@
 #include <patch_common/AsmWriter.h>
 #include <patch_common/CodeInjection.h>
 #include "../rf/object.h"
-#include "../rf/network.h"
+#include "../rf/multi.h"
 #include "misc.h"
 
 StaticBufferResizePatch<rf::Object*> obj_ptr_array_resize_patch{

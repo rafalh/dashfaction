@@ -1,11 +1,13 @@
 #include "debug_internal.h"
-#include "../stdafx.h"
+#include <common/BuildConfig.h>
 #include "../console/console.h"
 #include <patch_common/FunHook.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/CodeInjection.h>
 #include <patch_common/CodeBuffer.h>
 #include <patch_common/MemUtils.h>
+#include <patch_common/AsmWriter.h>
+#include <patch_common/ShortTypes.h>
 #include <xlog/xlog.h>
 #include <cstddef>
 #include "debug_internal.h"
@@ -311,9 +313,9 @@ void ProfilerInit()
     g_profilers.push_back(std::make_unique<CallProfiler>(0x00488BD5, "        debris"));
     g_profilers.push_back(std::make_unique<CallProfiler>(0x00488BE8, "        entity"));
     g_profilers.push_back(std::make_unique<CallProfiler>(0x00488C2A, "        item"));
-    g_profilers.push_back(std::make_unique<CallProfiler>(0x00488C50, "        mover"));
+    g_profilers.push_back(std::make_unique<CallProfiler>(0x00488C50, "        mover_brush"));
     g_profilers.push_back(std::make_unique<CallProfiler>(0x00488C76, "        weapon"));
-    g_profilers.push_back(std::make_unique<CallProfiler>(0x00488C89, "        volumetric lights"));
+    g_profilers.push_back(std::make_unique<CallProfiler>(0x00488C89, "        glare"));
     g_profilers.push_back(std::make_unique<CallProfiler>(0x0048D7D5, "      bolt emitter"));
     g_profilers.push_back(std::make_unique<FunProfiler>(0x004D33D0, "      details"));
     g_profilers.push_back(std::make_unique<AddrRangeProfiler>(0x00494B90, 0x00494D3C, "      particles"));
@@ -322,7 +324,7 @@ void ProfilerInit()
     //g_profilers.push_back(std::make_unique<CallProfiler>(0x004D3499, "      prepare lights"));
 
     g_profilers.push_back(std::make_unique<AddrRangeProfiler>(0x00431FFD, 0x00432A18, "  misc (after level geometry)"));
-    g_profilers.push_back(std::make_unique<CallProfiler>(0x0043233E, "  coronas"));
+    g_profilers.push_back(std::make_unique<CallProfiler>(0x0043233E, "  glare flares"));
     g_profilers.push_back(std::make_unique<CallProfiler>(0x0043285D, "  fpgun"));
     g_profilers.push_back(std::make_unique<CallProfiler>(0x00432A18, "  HUD"));
     g_profilers.push_back(std::make_unique<AddrRangeProfiler>(0x00432A1D, 0x00432F4F, "  misc (after HUD)"));

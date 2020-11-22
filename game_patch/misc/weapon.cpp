@@ -7,7 +7,7 @@
 #include "../rf/player.h"
 #include "../rf/weapon.h"
 #include "../rf/entity.h"
-#include "../rf/network.h"
+#include "../rf/multi.h"
 #include "../rf/geometry.h"
 #include "../console/console.h"
 #include "../main.h"
@@ -46,13 +46,13 @@ bool IsPlayerWeaponInContinousFire(rf::Player* player, bool alt_fire) {
     return is_continous_fire && is_alt_fire_flag_set == alt_fire;
 }
 
-FunHook<void(rf::Player*, bool, bool)> PlayerLocalFireControl_hook{
+FunHook<void(rf::Player*, bool, bool)> PlayerFirePrimaryWeapon_hook{
     0x004A4E80,
     [](rf::Player* player, bool alt_fire, bool was_pressed) {
         if (ShouldSwapWeaponAltFire(player)) {
             alt_fire = !alt_fire;
         }
-        PlayerLocalFireControl_hook.CallTarget(player, alt_fire, was_pressed);
+        PlayerFirePrimaryWeapon_hook.CallTarget(player, alt_fire, was_pressed);
     },
 };
 
@@ -93,7 +93,7 @@ ConsoleCommand2 swap_assault_rifle_controls_cmd{
     "Swap Assault Rifle controls",
 };
 
-bool EntityIsReloading_SwitchWeapon_New(rf::Entity* entity)
+bool EntityIsReloading_PlayerSelectWeapon_New(rf::Entity* entity)
 {
     if (rf::EntityIsReloading(entity))
         return true;
@@ -178,7 +178,7 @@ FunHook<void(rf::Player*, int)> PlayerMakeWeaponCurrentSelection_hook{
     },
 };
 
-bool WeaponClsUsesAmmo(int weapon_type, bool alt_fire)
+bool WeaponUsesAmmo(int weapon_type, bool alt_fire)
 {
     if (rf::WeaponIsDetonator(weapon_type)) {
          return false;
@@ -195,7 +195,7 @@ bool WeaponClsUsesAmmo(int weapon_type, bool alt_fire)
 
 bool IsEntityOutOfAmmo(rf::Entity *entity, int weapon_type, bool alt_fire)
 {
-    if (!WeaponClsUsesAmmo(weapon_type, alt_fire)) {
+    if (!WeaponUsesAmmo(weapon_type, alt_fire)) {
         return false;
     }
     auto info = &rf::weapon_types[weapon_type];
@@ -257,7 +257,7 @@ CallHook<void(rf::Player* player, int weapon_type)> ProcessCreateEntityPacket_sw
         // Check if local player is being spawned
         if (!rf::is_server && player == rf::local_player) {
             // Update requested weapon to make sure server does not auto-switch the weapon during item pickup
-            rf::MultiSetRequestedWeapon(weapon_type);
+            rf::MultiSetNextWeapon(weapon_type);
         }
     },
 };
@@ -281,8 +281,8 @@ void ApplyWeaponPatches()
 
 #if 0
     // Fix weapon switch glitch when reloading (should be used on Match Mode)
-    AsmWriter(0x004A4B4B).call(EntityIsReloading_SwitchWeapon_New);
-    AsmWriter(0x004A4B77).call(EntityIsReloading_SwitchWeapon_New);
+    AsmWriter(0x004A4B4B).call(EntityIsReloading_PlayerSelectWeapon_New);
+    AsmWriter(0x004A4B77).call(EntityIsReloading_PlayerSelectWeapon_New);
 #endif
 
     // Delete weapons (projectiles) that reach bounding box of the level
@@ -308,7 +308,7 @@ void ApplyWeaponPatches()
     ProcessCreateEntityPacket_switch_weapon_fix.Install();
 
     // Allow swapping Assault Rifle primary and alternate fire controls
-    PlayerLocalFireControl_hook.Install();
+    PlayerFirePrimaryWeapon_hook.Install();
     stop_continous_primary_fire_patch.Install();
     stop_continous_alternate_fire_patch.Install();
     swap_assault_rifle_controls_cmd.Register();

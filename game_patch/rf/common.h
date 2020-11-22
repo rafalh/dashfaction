@@ -390,7 +390,7 @@ namespace rf
         int num_elements;
     };
 
-    /* RF stdlib functions are not compatible with GCC */
+    // RF stdlib functions are not compatible with GCC
 
     static auto& Free = AddrAsRef<void(void *mem)>(0x00573C71);
     static auto& Malloc = AddrAsRef<void*(uint32_t cb_size)>(0x00573B37);
@@ -400,4 +400,7 @@ namespace rf
     using IxLineSegmentBoundingBoxType = bool(const Vector3& box_min, const Vector3& box_max, const Vector3& p0,
                                        const Vector3& p1, Vector3 *hit_pt);
     static auto& IxLineSegmentBoundingBox = AddrAsRef<IxLineSegmentBoundingBoxType>(0x00508B70);
+
+    // Timer
+    static auto& TimerGet = AddrAsRef<int(int frequency)>(0x00504AB0);
 }

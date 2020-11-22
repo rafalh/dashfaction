@@ -5,7 +5,7 @@
 #include "../rf/entity.h"
 #include "../rf/graphics.h"
 #include "../rf/weapon.h"
-#include "../rf/misc.h"
+#include "../rf/localize.h"
 #include "../rf/sound.h"
 #include <patch_common/FunHook.h>
 

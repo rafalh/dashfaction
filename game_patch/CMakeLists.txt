@@ -36,26 +36,30 @@ file(GLOB EXPERIMENTAL_SRCS misc/experimental*.cpp misc/experimental*.h)
 set(SRCS
     main.cpp
     main.h
+    rf/ai.h
     rf/bmpman.h
     rf/clutter.h
     rf/common.h
     rf/console.h
+    rf/corpse.h
     rf/entity.h
     rf/event.h
     rf/file.h
     rf/gameseq.h
     rf/graphics.h
     rf/item.h
+    rf/localize.h
     rf/misc.h
-    rf/network.h
+    rf/multi.h
     rf/object.h
     rf/os.h
     rf/parse.h
+    rf/physics.h
     rf/player.h
     rf/sound.h
     rf/trigger.h
+    rf/vmesh.h
     rf/weapon.h
-    stdafx.h
     graphics/dds.cpp
     graphics/font.cpp
     graphics/graphics.cpp

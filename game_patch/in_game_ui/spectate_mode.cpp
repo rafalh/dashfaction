@@ -4,11 +4,12 @@
 #include "../console/console.h"
 #include "../rf/entity.h"
 #include "../rf/player.h"
-#include "../rf/network.h"
+#include "../rf/multi.h"
 #include "../rf/gameseq.h"
 #include "../rf/weapon.h"
 #include "../rf/graphics.h"
 #include "../rf/hud.h"
+#include "../rf/misc.h"
 #include "../main.h"
 #include <common/BuildConfig.h>
 #include <xlog/xlog.h>

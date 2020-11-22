@@ -1,6 +1,6 @@
 #include "server_internal.h"
 #include "../console/console.h"
-#include "../rf/network.h"
+#include "../rf/multi.h"
 #include "../rf/console.h"
 #include "../rf/player.h"
 #include <patch_common/AsmWriter.h>

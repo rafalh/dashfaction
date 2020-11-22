@@ -6,7 +6,7 @@
 #include "../rf/misc.h"
 #include "../rf/object.h"
 #include "../rf/entity.h"
-#include "../rf/network.h"
+#include "../rf/multi.h"
 #include "../multi/network.h"
 
 FunHook<void()> DoQuickSave_hook{

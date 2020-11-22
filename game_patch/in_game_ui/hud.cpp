@@ -5,7 +5,7 @@
 #include "../console/console.h"
 #include "../graphics/graphics.h"
 #include "../rf/hud.h"
-#include "../rf/network.h"
+#include "../rf/multi.h"
 #include "../rf/file.h"
 #include "../rf/entity.h"
 #include "../rf/player.h"

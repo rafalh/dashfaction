@@ -17,7 +17,7 @@
 #include "../main.h"
 #include "../utils/list-utils.h"
 #include "../rf/player.h"
-#include "../rf/network.h"
+#include "../rf/multi.h"
 #include "../rf/parse.h"
 #include "../rf/weapon.h"
 #include "../rf/entity.h"
@@ -556,7 +556,7 @@ void ServerDoFrame()
 
 void ServerOnLimboStateEnter()
 {
-    g_prev_level = rf::level_filename.CStr();
+    g_prev_level = rf::level.filename.CStr();
     ServerVoteOnLimboStateEnter();
 
     // Clear save data for all players

@@ -2,6 +2,7 @@
 #include "../main.h"
 #include "../rf/player.h"
 #include "../rf/gameseq.h"
+#include "../rf/input.h"
 #include <common/BuildConfig.h>
 #include <common/version.h>
 #include <patch_common/CodeInjection.h>
@@ -48,9 +49,9 @@ FunHook<int()> GameseqProcess_hook{
     []() {
         int menu_id = GameseqProcess_hook.CallTarget();
         if (menu_id == rf::GS_MULTI_LIMBO) // hide cursor when changing level - hackfixed in RF by changing rendering logic
-            rf::SetCursorVisible(false);
+            rf::MouseSetVisible(false);
         else if (menu_id == rf::GS_MAIN_MENU)
-            rf::SetCursorVisible(true);
+            rf::MouseSetVisible(true);
         return menu_id;
     },
 };

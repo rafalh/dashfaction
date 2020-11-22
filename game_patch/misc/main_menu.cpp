@@ -7,7 +7,7 @@
 #include "../rf/graphics.h"
 #include "../rf/input.h"
 #include "../rf/file.h"
-#include "../rf/network.h"
+#include "../rf/multi.h"
 #include "../main.h"
 
 #define DEBUG_UI_LAYOUT 0

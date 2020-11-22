@@ -1,6 +1,6 @@
 #include <common/GameConfig.h>
+#include <common/BuildConfig.h>
 #include "main.h"
-#include "stdafx.h"
 #include "level_autodl/autodl.h"
 #include "console/console.h"
 #include "crash_handler_stub.h"
@@ -22,10 +22,12 @@
 #include "utils/list-utils.h"
 #include "server/server.h"
 #include "input/input.h"
-#include "rf/network.h"
+#include "rf/multi.h"
+#include "rf/geometry.h"
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
+#include <patch_common/AsmWriter.h>
 #include <common/version.h>
 
 #define XLOG_STREAMS 1
@@ -49,10 +51,10 @@ static void OsPool()
     MSG msg;
     constexpr int limit = 4;
     for (int i = 0; i < limit; ++i) {
-        if (!PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+        if (!PeekMessageA(&msg, nullptr, 0, 0, PM_REMOVE))
             break;
         TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        DispatchMessageA(&msg);
         // xlog::info("msg %u\n", msg.message);
     }
 }
@@ -207,7 +209,7 @@ FunHook<void(bool)> LevelInitPost_hook{
     [](bool is_auto_level_load) {
         LevelInitPost_hook.CallTarget(is_auto_level_load);
         GraphicsLevelInitPost();
-        xlog::info("Level loaded: %s%s", rf::level_filename.CStr(), is_auto_level_load ? " (caused by event)" : "");
+        xlog::info("Level loaded: %s%s", rf::level.filename.CStr(), is_auto_level_load ? " (caused by event)" : "");
     },
 };
 

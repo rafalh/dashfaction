@@ -1,8 +1,9 @@
-#include "../stdafx.h"
+
+#include <common/BuildConfig.h>
 #include "pf.h"
 #include "pf_packets.h"
 #include "pf_secret.h"
-#include "../rf/network.h"
+#include "../rf/multi.h"
 #include "../multi/kill.h"
 #include "../utils/list-utils.h"
 #include <cstddef>
@@ -82,8 +83,8 @@ void process_pf_players_request_packet([[ maybe_unused ]] const void* data, [[ m
 
     auto packet_buf = std::make_unique<std::byte[]>(sizeof(pf_players_packet) + players_str.size());
     auto& response = *reinterpret_cast<pf_players_packet*>(packet_buf.get());
-    response.hdr.type = static_cast<u8>(pf_packet_type::players);
-    response.hdr.size = static_cast<u16>(sizeof(pf_players_packet) + players_str.size() - sizeof(rf_packet_header));
+    response.hdr.type = static_cast<uint8_t>(pf_packet_type::players);
+    response.hdr.size = static_cast<uint16_t>(sizeof(pf_players_packet) + players_str.size() - sizeof(rf_packet_header));
     response.version = 1;
     response.show_ip = 0;
     std::copy(players_str.begin(), players_str.end(), reinterpret_cast<char*>(packet_buf.get() + sizeof(pf_players_packet)));
@@ -91,9 +92,9 @@ void process_pf_players_request_packet([[ maybe_unused ]] const void* data, [[ m
     rf::NwSend(addr, &response, sizeof(response.hdr) + response.hdr.size);
 }
 
-void ProcessPfPacket(const void* data, size_t len, const rf::NwAddr& addr, [[maybe_unused]] const rf::Player* player)
+void ProcessPfPacket(const void* data, int len, const rf::NwAddr& addr, [[maybe_unused]] const rf::Player* player)
 {
-    if (len < sizeof(rf_packet_header))
+    if (len < static_cast<int>(sizeof(rf_packet_header)))
         return;
 
     auto& header = *reinterpret_cast<const rf_packet_header*>(data);

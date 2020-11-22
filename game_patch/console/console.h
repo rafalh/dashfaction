@@ -5,7 +5,7 @@
 #include <functional>
 #include <optional>
 #include "../rf/console.h"
-#include "../rf/misc.h"
+#include "../rf/localize.h"
 
 // Forward declarations
 namespace rf

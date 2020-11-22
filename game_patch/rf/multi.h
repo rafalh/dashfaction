@@ -124,6 +124,16 @@ namespace rf
         VArray<String> levels;
     };
 
+    enum class ChatMsgColor
+    {
+        red_white = 0,
+        blue_white = 1,
+        red_red = 2,
+        blue_blue = 3,
+        white_white = 4,
+        default_ = 5,
+    };
+
     static auto& MultiGetGameType = AddrAsRef<NetGameType()>(0x00470770);
     static auto& MultiIoSend = AddrAsRef<void(Player *player, const void *packet, int len)>(0x00479370);
     static auto& MultiIoSendReliable =
@@ -143,12 +153,14 @@ namespace rf
     static auto& MultiNumPlayers = AddrAsRef<int()>(0x00484830);
     static auto& KickPlayer = AddrAsRef<void(Player *player)>(0x0047BF00);
     static auto& BanIp = AddrAsRef<void(const NwAddr& addr)>(0x0046D0F0);
-    static auto& MultiSetRequestedWeapon = AddrAsRef<void(int weapon_type)>(0x0047FCA0);
+    static auto& MultiSetNextWeapon = AddrAsRef<void(int weapon_type)>(0x0047FCA0);
     static auto& MultiChangeLevel = AddrAsRef<void(const char* filename)>(0x0047BF50);
     static auto& PingPlayer = AddrAsRef<void(Player*)>(0x00484D00);
     static auto& SendEntityCreatePacket = AddrAsRef<void(Entity *entity, Player* player)>(0x00475160);
     static auto& SendEntityCreatePacketToAll = AddrAsRef<void(Entity *entity)>(0x00475110);
     static auto& MultiFindCharacter = AddrAsRef<int(const char *name)>(0x00476270);
+    static auto& ChatPrint = AddrAsRef<void(String::Pod text, ChatMsgColor color, String::Pod prefix)>(0x004785A0);
+    static auto& ChatSay = AddrAsRef<void(const char *msg, bool is_team_msg)>(0x00444150);
 
     static auto& netgame = AddrAsRef<NetGameInfo>(0x0064EC28);
     static auto& is_multi = AddrAsRef<bool>(0x0064ECB9);

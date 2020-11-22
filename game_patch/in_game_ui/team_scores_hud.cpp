@@ -1,7 +1,7 @@
 #include <patch_common/AsmWriter.h>
 #include "../rf/hud.h"
 #include "../rf/graphics.h"
-#include "../rf/network.h"
+#include "../rf/multi.h"
 #include "../rf/player.h"
 #include "hud_internal.h"
 #include "hud.h"

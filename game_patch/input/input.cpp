@@ -9,7 +9,7 @@
 #include <cassert>
 #include "../rf/os.h"
 #include "../rf/graphics.h"
-#include "../rf/network.h"
+#include "../rf/multi.h"
 #include "../rf/player.h"
 #include "../rf/input.h"
 #include "../console/console.h"

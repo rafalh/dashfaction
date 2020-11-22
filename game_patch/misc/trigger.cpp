@@ -5,7 +5,7 @@
 #include "../rf/common.h"
 #include "../rf/player.h"
 #include "../rf/trigger.h"
-#include "../rf/network.h"
+#include "../rf/multi.h"
 
 constexpr char TRIGGER_PF_FLAGS_PREFIX = '\xAB';
 constexpr uint8_t TRIGGER_CLIENT_SIDE = 0x2;

@@ -4,6 +4,7 @@
 #include "../rf/entity.h"
 #include "../rf/event.h"
 #include "../rf/particle_emitter.h"
+#include "../rf/misc.h"
 #include <patch_common/FunHook.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/InlineAsm.h>

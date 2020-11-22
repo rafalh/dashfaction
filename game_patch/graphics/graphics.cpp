@@ -8,7 +8,7 @@
 #include "../main.h"
 #include "../rf/graphics.h"
 #include "../rf/player.h"
-#include "../rf/network.h"
+#include "../rf/multi.h"
 #include "../rf/hud.h"
 #include "../rf/gameseq.h"
 #include "../rf/os.h"
@@ -785,12 +785,10 @@ void GraphicsInit()
     // Properly restore state after device reset
     GrD3DInitBuffers_GrD3DFlip_hook.Install();
 
-#if WIDESCREEN_FIX
     // Fix FOV for widescreen
     AsmWriter(0x00547354, 0x00547358).nop();
     GrD3DSetup3D_widescreen_fix.Install();
     WriteMem<float>(0x0058A29C, 0.0003f); // factor related to near plane, default is 0.000588f
-#endif
 
     // Don't use LOD models
     if (g_game_config.disable_lod_models) {

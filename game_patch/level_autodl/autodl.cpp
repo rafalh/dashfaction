@@ -1,5 +1,5 @@
 #include "autodl.h"
-#include "../rf/network.h"
+#include "../rf/multi.h"
 #include "../rf/file.h"
 #include "../rf/graphics.h"
 #include "../rf/ui.h"

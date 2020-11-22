@@ -10,7 +10,7 @@
 #include "../rf/common.h"
 #include "../rf/graphics.h"
 #include "../rf/bmpman.h"
-#include "../rf/network.h"
+#include "../rf/multi.h"
 #include "../utils/string-utils.h"
 #include "graphics_internal.h"
 #include "gr_color.h"

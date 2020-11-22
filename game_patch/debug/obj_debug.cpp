@@ -2,7 +2,7 @@
 #include "../rf/object.h"
 #include "../rf/entity.h"
 #include "../rf/player.h"
-#include "../rf/network.h"
+#include "../rf/multi.h"
 #include "debug_internal.h"
 
 std::optional<float> g_target_rotate_speed;

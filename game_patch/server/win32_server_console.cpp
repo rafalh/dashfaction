@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <cstring>
 #include "../rf/console.h"
-#include "../rf/network.h"
+#include "../rf/multi.h"
 
 #if SERVER_WIN32_CONSOLE
 

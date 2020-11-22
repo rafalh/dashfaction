@@ -4,7 +4,7 @@
 #include "../rf/entity.h"
 #include "../rf/gameseq.h"
 #include "../rf/graphics.h"
-#include "../rf/misc.h"
+#include "../rf/localize.h"
 #include <patch_common/FunHook.h>
 #include <patch_common/MemUtils.h>
 
