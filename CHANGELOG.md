@@ -36,6 +36,7 @@ Version 1.5.1 (not released yet)
 - fix replacing collision spheres when using Switch_Model event
 - calculate mesh static lighting after Auto Triggers were activated
 - optimize logging
+- add an option to override RF launcher by a symbolic link in the setup program
 
 Version 1.5.0 (released 2020-09-05)
 -----------------------------------

@@ -28,6 +28,7 @@ Name: "rfproto"; Description: "Register rf:// protocol handler"; GroupDescriptio
 Name: "rflassoc"; Description: "Associate .rfl file extension with Dash Faction Level Editor"; GroupDescription: "Other options:"
 Name: "fftracker"; Description: "Set rfgt.factionfiles.com as multiplayer tracker"; GroupDescription: "Other options:"
 Name: "patchgame"; Description: "Install needed game patches"; GroupDescription: "Other options:"; Check: "PatchGameTaskCheck"
+Name: "replacerflauncher"; Description: "Replace Red Faction launcher by a link to Dash Faction launcher (allows starting Dash Faction from Steam client)"; GroupDescription: "Other options:"; Flags: unchecked
 
 [Files]
 Source: "{#BinDir}\DashFactionLauncher.exe"; DestDir: "{app}"; Flags: ignoreversion
@@ -109,14 +110,14 @@ begin
     Result := SelectGameExePage.Values[0];
 end;
 
-function IsPatchGameTaskSelected(): Boolean;
+function IsTaskSelected(TaskName: String): Boolean;
 begin
-    Result := Pos('patchgame', WizardSelectedTasks(false)) > 0;
+    Result := Pos(TaskName, WizardSelectedTasks(false)) > 0;
 end;
 
 function GetFinalGameExePath(Param: String): String;
 begin
-    if IsPatchGameTaskSelected() and (GameExeFileNameAfterPatches <> '') then
+    if IsTaskSelected('patchgame') and (GameExeFileNameAfterPatches <> '') then
         Result := ExtractFileDir(SelectGameExePage.Values[0]) + '\' + GameExeFileNameAfterPatches
     else
         Result := SelectGameExePage.Values[0];
@@ -125,6 +126,8 @@ end;
 function GetGameDir(Param: String): String;
 begin
     Result := ExtractFileDir(SelectGameExePage.Values[0]);
+    if Param <> '' then
+        Result := Result + '\' + Param;
 end;
 
 procedure AddBSDiffPatch(DisplayName: String; FileName: String; SrcFile: String; DestFile: String);
@@ -275,6 +278,8 @@ end;
 
 function RTPatchApply32NoCall(CmdLine: PAnsiChar): Longint;
 external 'RTPatchApply32NoCall@files:patchw32.dll cdecl delayload';
+function CreateSymbolicLinkA(lpSymlinkFileName: PAnsiChar; lpTargetFileName: PAnsiChar; dwFlags: Integer): Boolean;
+external 'CreateSymbolicLinkA@kernel32.dll stdcall delayload';
 
 function ApplyRTPatch(WorkDir: String; PatchFile: String): Boolean;
 var
@@ -331,13 +336,30 @@ procedure ApplyPatches;
 var
     i: Integer;
 begin
-    if IsPatchGameTaskSelected() and (Length(Patches) > 0) then
+    if IsTaskSelected('patchgame') and (Length(Patches) > 0) then
     begin
         Log('Applying patches...');
         for i := 0 to Length(Patches) - 1 do
             if not ApplyPatch(Patches[i]) then
                 break;
         Log('Finished applying patches.');
+    end;
+end;
+
+procedure ReplaceRedFactionLauncher;
+begin
+    if IsTaskSelected('replacerflauncher') then
+    begin
+        // Create a backup (if it does not exist already)
+        Log('Creating RedFaction.exe backup: ' + GetGameDir('RedFaction.exe.bak'));
+        FileCopy(GetGameDir('RedFaction.exe'), GetGameDir('RedFaction.exe.bak'), True);
+
+        Log('Creating RedFaction.exe symlink: ' + GetGameDir('RedFaction.exe'));
+        if not CreateSymbolicLinkA(GetGameDir('RedFaction.exe'), ExpandConstant('{app}\DashFactionLauncher.exe'), 0) then
+        begin
+            Log('CreateSymbolicLink failed');
+            MsgBox('Failed to replace Red Faction launcher by a symbolic link to Dash Faction launcher.', mbError, MB_OK);
+        end;
     end;
 end;
 
@@ -358,5 +380,8 @@ end;
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
     if CurStep = ssPostInstall then
+    begin
         ApplyPatches;
+        ReplaceRedFactionLauncher;
+    end;
 end;
