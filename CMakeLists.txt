@@ -86,7 +86,6 @@ macro(setup_debug_info target)
 endmacro()
 
 add_subdirectory(vendor)
-add_subdirectory(launcher_old)
 add_subdirectory(launcher_common)
 add_subdirectory(launcher)
 add_subdirectory(common)
