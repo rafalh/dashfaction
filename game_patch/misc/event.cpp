@@ -35,13 +35,27 @@ CodeInjection switch_model_event_obj_lighting_and_physics_fix{
     [](auto& regs) {
         auto obj = reinterpret_cast<rf::Object*>(regs.edi);
         obj->mesh_lighting_data = nullptr;
-        // Try to fix physics
-        assert(obj->p_data.cspheres.Size() >= 1);
-        auto& csphere = obj->p_data.cspheres.Get(0);
-        csphere.center = rf::Vector3(.0f, .0f, .0f);
-        csphere.radius = obj->radius;
-        auto PhysicsUpdateBBox = AddrAsRef<void(rf::PhysicsData& pd)>(0x004A0CB0);
-        PhysicsUpdateBBox(obj->p_data);
+        // Fix physics
+        if (obj->vmesh) {
+            rf::ObjectCreateInfo oci;
+            oci.pos = obj->p_data.pos;
+            oci.orient = obj->p_data.orient;
+            oci.material = obj->material;
+            oci.drag = obj->p_data.drag;
+            oci.mass = obj->p_data.mass;
+            oci.physics_flags = obj->p_data.flags;
+            oci.radius = obj->radius;
+            oci.vel = obj->p_data.vel;
+            int num_vmesh_cspheres = rf::VMeshGetNumCSpheres(obj->vmesh);
+            for (int i = 0; i < num_vmesh_cspheres; ++i) {
+                rf::PCollisionSphere csphere;
+                rf::VMeshGetCSphere(obj->vmesh, i, &csphere.center, &csphere.radius);
+                csphere.spring_const = -1.0f;
+                rf::VArray_PCollisionSphere__Add(&oci.spheres, csphere);
+            }
+            rf::PhysicsDeleteObject(&obj->p_data);
+            rf::PhysicsCreateObject(&obj->p_data, &oci);
+        }
     },
 };
 

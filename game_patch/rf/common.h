@@ -24,9 +24,7 @@ namespace rf
         float z = 0.0f;
 
         Vector3() = default;
-
-        Vector3(float x, float y, float z) :
-            x(x), y(y), z(z) {}
+        Vector3(float x, float y, float z) : x(x), y(y), z(z) {}
 
         Vector3& operator+=(const Vector3& other)
         {
@@ -44,23 +42,23 @@ namespace rf
             return *this;
         }
 
-        Vector3& operator*=(float m)
+        Vector3& operator*=(float scale)
         {
-            x *= m;
-            y *= m;
-            z *= m;
+            x *= scale;
+            y *= scale;
+            z *= scale;
             return *this;
         }
 
-        Vector3& operator/=(float m)
+        Vector3& operator/=(float scale)
         {
-            *this *= 1.0f / m;
+            *this *= 1.0f / scale;
             return *this;
         }
 
         Vector3 operator-() const
         {
-            return Vector3(-x, -y, -z);
+            return Vector3{-x, -y, -z};
         }
 
         Vector3& operator-=(const Vector3& other)
@@ -101,9 +99,16 @@ namespace rf
             return tmp;
         }
 
-        Vector3 operator*(float m) const
+        Vector3 operator*(float scale) const
         {
-            return Vector3(x * m, y * m, z * m);
+            return {x * scale, y * scale, z * scale};
+        }
+
+        void Zero()
+        {
+            x = 0.0f;
+            y = 0.0f;
+            z = 0.0f;
         }
 
         float DotProd(const Vector3& other)
@@ -134,7 +139,7 @@ namespace rf
         Vector3 uvec;
         Vector3 fvec;
 
-        void SetIdentity()
+        void MakeIdentity()
         {
             AddrCaller{0x004FCE70}.this_call(this);
         }
@@ -354,9 +359,9 @@ namespace rf
     class VArray
     {
     private:
-        int num;
-        int capacity;
-        T *elements;
+        int num = 0;
+        int capacity = 0;
+        T *elements = nullptr;
 
     public:
         int Size() const

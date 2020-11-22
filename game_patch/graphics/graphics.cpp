@@ -675,10 +675,10 @@ FunHook<void()> update_mesh_lighting_hook{
         auto& gr_view_pos = AddrAsRef<rf::Vector3>(0x01818690);
         auto& light_matrix = AddrAsRef<rf::Matrix3>(0x01818A38);
         auto& light_base = AddrAsRef<rf::Vector3>(0x01818A28);
-        gr_view_matrix.SetIdentity();
-        gr_view_pos = rf::Vector3(.0f, .0f, .0f);
-        light_matrix.SetIdentity();
-        light_base = rf::Vector3(.0f, .0f, .0f);
+        gr_view_matrix.MakeIdentity();
+        gr_view_pos.Zero();
+        light_matrix.MakeIdentity();
+        light_base.Zero();
 
         if (g_game_config.mesh_static_lighting) {
             auto& experimental_alloc_and_lighting = AddrAsRef<bool>(0x00879AF8);

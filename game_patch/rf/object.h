@@ -57,9 +57,9 @@ namespace rf
     struct PCollisionSphere
     {
         Vector3 center;
-        float radius;
-        float field_10;
-        int field_14;
+        float radius = 0.0f;
+        float spring_const = 0.0f;
+        int spring_length = 0;
     };
     static_assert(sizeof(PCollisionSphere) == 0x18);
 
@@ -150,25 +150,6 @@ namespace rf
     };
     static_assert(sizeof(Object) == 0x28C);
 
-    struct ObjectCreateInfo
-    {
-        const char* v3d_filename;
-        int v3d_type;
-        GSolid* solid;
-        float drag;
-        int material;
-        float mass;
-        Matrix3 body_inv;
-        Vector3 pos;
-        Matrix3 orient;
-        Vector3 vel;
-        Vector3 rotvel;
-        float radius;
-        VArray<PCollisionSphere> spheres;
-        int physics_flags;
-    };
-    static_assert(sizeof(ObjectCreateInfo) == 0x98);
-
     enum VMeshType
     {
         MESH_TYPE_UNINITIALIZED = 0,
@@ -177,10 +158,36 @@ namespace rf
         MESH_TYPE_ANIM_FX = 3,
     };
 
+    struct ObjectCreateInfo
+    {
+        const char* v3d_filename = nullptr;
+        VMeshType v3d_type = MESH_TYPE_UNINITIALIZED;
+        GSolid* solid = nullptr;
+        float drag = 0.0f;
+        int material = 0;
+        float mass = 0.0f;
+        Matrix3 body_inv;
+        Vector3 pos;
+        Matrix3 orient;
+        Vector3 vel;
+        Vector3 rotvel;
+        float radius = 0.0f;
+        VArray<PCollisionSphere> spheres;
+        int physics_flags = 0;
+    };
+    static_assert(sizeof(ObjectCreateInfo) == 0x98);
+
+
     static auto& ObjLookupFromUid = AddrAsRef<Object*(int uid)>(0x0048A4A0);
     static auto& ObjFromHandle = AddrAsRef<Object*(int handle)>(0x0040A0E0);
     static auto& ObjQueueDelete = AddrAsRef<void(Object* obj)>(0x0048AB40);
     static auto& ObjFindRootBonePos = AddrAsRef<void(Object*, Vector3&)>(0x0048AC70);
+    static auto& PhysicsCreateObject = AddrAsRef<void (rf::PhysicsData *pd, rf::ObjectCreateInfo *oci)>(0x0049EC90);
+    static auto& PhysicsDeleteObject = AddrAsRef<void (rf::PhysicsData *pd)>(0x0049F1D0);
+    static auto& VMeshGetNumCSpheres = AddrAsRef<int(rf::VMesh *vmesh)>(0x00503250);
+    static auto& VMeshGetCSphere = AddrAsRef<bool(rf::VMesh *vmesh, int index, rf::Vector3 *pos, float *radius)>(0x00503270);
+    static auto& VArray_PCollisionSphere__Add = AddrAsRef<int __thiscall(rf::VArray<rf::PCollisionSphere> *this_, rf::PCollisionSphere csphere)>(0x00417F30);
+
 }
 
 template<>

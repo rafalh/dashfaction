@@ -32,6 +32,8 @@ Version 1.5.1 (not released yet)
 - support starting the launcher from a symlink
 - fix objects having invalid radius after Switch_Model event
 - allow spectating in servers with Force Respawn enabled before player spawns for the first time
+- fix crash when using Switch_Model event on object with collisions disabled
+- fix replacing collision spheres when using Switch_Model event
 
 Version 1.5.0 (released 2020-09-05)
 -----------------------------------
