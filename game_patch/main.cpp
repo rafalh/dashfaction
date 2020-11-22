@@ -29,6 +29,7 @@
 #include <patch_common/CodeInjection.h>
 #include <patch_common/AsmWriter.h>
 #include <common/version.h>
+#include <ctime>
 
 #define XLOG_STREAMS 1
 
@@ -228,7 +229,7 @@ public:
 protected:
     virtual void append([[maybe_unused]] xlog::Level level, const std::string& str) override
     {
-        auto& console_inited = AddrAsRef<bool>(0x01775680);
+        static auto& console_inited = AddrAsRef<bool>(0x01775680);
         if (console_inited) {
             flush_startup_buf();
 
@@ -242,7 +243,7 @@ protected:
 
     virtual void flush() override
     {
-        auto& console_inited = AddrAsRef<bool>(0x01775680);
+        static auto& console_inited = AddrAsRef<bool>(0x01775680);
         if (console_inited) {
             flush_startup_buf();
         }
@@ -277,13 +278,12 @@ void InitLogging()
 {
     CreateDirectoryA("logs", nullptr);
     xlog::LoggerConfig::get()
-        .add_appender<xlog::FileAppender>("logs/DashFaction.log", false)
-        .add_appender<xlog::ConsoleAppender>()
-        .add_appender<xlog::Win32Appender>()
+        .add_appender<xlog::FileAppender>("logs/DashFaction.log", false, false)
+        // .add_appender<xlog::ConsoleAppender>()
+        // .add_appender<xlog::Win32Appender>()
         .add_appender<RfConsoleLogAppender>();
     xlog::info("Dash Faction %s (%s %s)", VERSION_STR, __DATE__, __TIME__);
 }
-
 
 std::optional<std::string> GetWineVersion()
 {

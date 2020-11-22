@@ -20,9 +20,15 @@ protected:
         std::lock_guard<std::mutex> lock(mutex_);
 #endif
         if (level <= max_stderr_level_)
-            std::cerr << formatted_message << std::endl;
+            std::cerr << formatted_message << '\n';
         else
-            std::cout << formatted_message << std::endl;
+            std::cout << formatted_message << '\n';
+    }
+
+    void flush() override
+    {
+        std::cerr.flush();
+        std::cout.flush();
     }
 
 private:

@@ -14,6 +14,7 @@ void CrashHandlerStubProcessException(PEXCEPTION_POINTERS exception_ptrs, DWORD 
         exception_ptrs->ExceptionRecord->ExceptionAddress, exception_ptrs->ExceptionRecord->ExceptionCode);
     for (unsigned i = 0; i < exception_ptrs->ExceptionRecord->NumberParameters; ++i)
         xlog::error("ExceptionInformation[%d]=0x%lX", i, exception_ptrs->ExceptionRecord->ExceptionInformation[i]);
+    xlog::flush();
 
     HANDLE process_handle = nullptr;
     HANDLE event_handle = nullptr;
@@ -51,6 +52,7 @@ void CrashHandlerStubProcessException(PEXCEPTION_POINTERS exception_ptrs, DWORD 
         CloseHandle(process_handle);
     if (event_handle)
         CloseHandle(event_handle);
+    xlog::flush();
 }
 
 static LONG WINAPI CrashHandlerExceptionFilter(PEXCEPTION_POINTERS exception_ptrs)
@@ -64,6 +66,7 @@ static void InvalidParameterHandler(const wchar_t* expression, const wchar_t* fu
 {
     xlog::error("Invalid parameter detected in function %ls. File: %ls Line: %d", function, file, line);
     xlog::error("Expression: %ls", expression);
+    xlog::flush();
     RaiseException(custom_exceptions::invalid_parameter, EXCEPTION_NONCONTINUABLE_EXCEPTION, 0, nullptr);
     ExitProcess(0);
 }
@@ -71,6 +74,7 @@ static void InvalidParameterHandler(const wchar_t* expression, const wchar_t* fu
 static void SignalHandler(int signal_number)
 {
     xlog::error("Abort signal (%d) received!", signal_number);
+    xlog::flush();
     RaiseException(custom_exceptions::abort, EXCEPTION_NONCONTINUABLE_EXCEPTION, 0, nullptr);
     ExitProcess(0);
 }

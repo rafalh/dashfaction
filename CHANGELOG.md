@@ -35,6 +35,7 @@ Version 1.5.1 (not released yet)
 - fix crash when using Switch_Model event on object with collisions disabled
 - fix replacing collision spheres when using Switch_Model event
 - calculate mesh static lighting after Auto Triggers were activated
+- optimize logging
 
 Version 1.5.0 (released 2020-09-05)
 -----------------------------------

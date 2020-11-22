@@ -1,37 +1,38 @@
 #include <xlog/SimpleFormatter.h>
-#include <sstream>
+#include <string>
 #include <string_view>
-#include <ctime>
+#include <windows.h>
 
 std::string xlog::SimpleFormatter::format(xlog::Level level, const std::string& logger_name, std::string_view message)
 {
-    std::ostringstream ss;
+    static auto start_ticks = GetTickCount();
+    std::string buf;
+    buf.reserve(message.size() + 32);
 
     if (include_time_) {
-        std::time_t now;
-        std::time(&now);
-        std::tm now_info;
-    #ifdef _WIN32
-        localtime_s(&now_info, &now);
-    #else
-        localtime_r(&now, &now_info);
-    #endif
-        char time_buf[32] = "";
-        std::strftime(time_buf, std::size(time_buf), "%H:%M:%S", &now_info);
-        ss << "[" << time_buf << "] ";
+        char time_buf[16] = "";
+        auto now = (GetTickCount() - start_ticks) / 1000;
+        unsigned h = (now / 3600) % 24;
+        unsigned m = (now / 60) % 60;
+        unsigned s = now % 60;
+        std::sprintf(time_buf, "[%02u:%02u:%02u] ", h, m, s);
+        buf += time_buf;
     }
 
     if (include_level_) {
         static const char* level_prefix[] = {"ERROR: ", "WARN: ", "INFO: ", "DEBUG: ", "TRACE: "};
         const char* lvl_str = level_prefix[static_cast<int>(level)];
-        ss << lvl_str;
+        buf += lvl_str;
     }
 
-    if (include_logger_name_ && !logger_name.empty())
-        ss << logger_name << ' ';
-    ss << message;
+    if (include_logger_name_ && !logger_name.empty()) {
+        buf += logger_name;
+        buf += ' ';
+    }
 
-    return ss.str();
+    buf += message;
+
+    return buf;
 }
 
 std::string xlog::SimpleFormatter::vformat(Level level, const std::string& logger_name, const char* format, std::va_list args)

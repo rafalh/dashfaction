@@ -17,7 +17,7 @@ void xlog::FileAppender::append([[maybe_unused]] xlog::Level level, const std::s
 #ifndef XLOG_SINGLE_THREADED
     std::lock_guard<std::mutex> lock(mutex_);
 #endif
-    file_ << formatted_message << std::endl;
+    file_ << formatted_message << '\n';
     if (flush_)
         file_.flush();
 }

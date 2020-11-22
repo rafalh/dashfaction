@@ -118,6 +118,13 @@ namespace xlog
         return Logger::root().trace();
     }
 #endif
+
+    inline void flush()
+    {
+        for (auto& appender : LoggerConfig::get().get_appenders()) {
+            appender->flush();
+        }
+    }
 }
 
 // Undefine helper macro
