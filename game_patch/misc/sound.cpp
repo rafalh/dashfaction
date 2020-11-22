@@ -190,7 +190,7 @@ int TryToFreeDsChannel(float volume)
         rf::SndDsCloseChannel(chnl_id);
     }
     else {
-        xlog::warn("Failed to allocate a sound channel: volume %.2f, num_music %d, num_looping %d, num_long %d", volume,
+        xlog::debug("Failed to allocate a sound channel: volume %.2f, num_music %d, num_looping %d, num_long %d", volume,
             num_music, num_looping, num_long);
     }
     return chnl_id;
@@ -255,7 +255,7 @@ CodeInjection snd_play_no_free_slots_fix{
         if (best_idx >= 0 && best_vol_scale <= new_sound_vol_scale) {
             // Free the selected slot and use it for a new sound
             auto& best_lvl_snd = rf::sound_instances[best_idx];
-            xlog::info("Freeing sound instance %d to make place for a new sound (volume %.4f duration %.1f)", best_idx,
+            xlog::debug("Freeing sound instance %d to make place for a new sound (volume %.4f duration %.1f)", best_idx,
                 best_vol_scale, rf::SndPcGetDuration(best_lvl_snd.handle));
             rf::SndPcStop(best_lvl_snd.sig);
             rf::SndClearInstanceSlot(&best_lvl_snd);
@@ -264,7 +264,7 @@ CodeInjection snd_play_no_free_slots_fix{
             regs.eip = 0x005055EB;
         }
         else {
-            xlog::warn("Failed to allocate a sound instance: volume %.2f num_looping %d num_long %d",
+            xlog::debug("Failed to allocate a sound instance: volume %.2f num_looping %d num_long %d",
                 new_sound_vol_scale, num_looping, num_long);
         }
     },
