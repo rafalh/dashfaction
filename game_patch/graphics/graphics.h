@@ -1,6 +1,7 @@
 #pragma once
 
 void GraphicsInit();
+void GraphicsLevelInitPost();
 void GraphicsDrawFpsCounter();
 int GetDefaultFontId();
 void SetDefaultFontId(int font_id);

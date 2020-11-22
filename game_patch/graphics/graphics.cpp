@@ -682,16 +682,16 @@ FunHook<void()> update_mesh_lighting_hook{
 
         if (g_game_config.mesh_static_lighting) {
             auto& experimental_alloc_and_lighting = AddrAsRef<bool>(0x00879AF8);
-            auto& light_cache_key = AddrAsRef<int>(0x00C96874);
+            auto& gr_light_state = AddrAsRef<int>(0x00C96874);
             // Enable some experimental flag that causes static lights to be included in computations
             auto old_experimental_alloc_and_lighting = experimental_alloc_and_lighting;
             experimental_alloc_and_lighting = true;
-            light_cache_key++;
+            gr_light_state++;
             // Calculate lighting for meshes now
             update_mesh_lighting_hook.CallTarget();
             experimental_alloc_and_lighting = old_experimental_alloc_and_lighting;
             // Change cache key to rebuild cached arrays of lights in rooms - this is needed to get rid of static lights
-            light_cache_key++;
+            gr_light_state++;
         }
         else {
             update_mesh_lighting_hook.CallTarget();
@@ -971,6 +971,18 @@ void GraphicsInit()
 
     // Support textures with alpha channel in Display_Fullscreen_Image event
     display_full_screen_image_alpha_support_patch.Install();
+
+    // Move obj_mesh_lighting_* calls to a point in time when auto triggers are already activated
+    // See GraphicsLevelInitPost
+    AsmWriter(0x0043601F).nop(10);
+}
+
+void GraphicsLevelInitPost()
+{
+    static auto& obj_mesh_lighting_alloc = AddrAsRef<void __cdecl()>(0x0048B1D0);
+    static auto& obj_mesh_lighting_init = AddrAsRef<void __cdecl()>(0x0048B0E0);
+    obj_mesh_lighting_alloc();
+    obj_mesh_lighting_init();
 }
 
 void GraphicsDrawFpsCounter()
