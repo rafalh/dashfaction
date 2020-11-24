@@ -37,6 +37,7 @@ Version 1.5.1 (not released yet)
 - recalculate mesh static lighting after Switch_Model event
 - optimize logging
 - add an option to override RF launcher by a symbolic link in the setup program
+- fix rockets not making damage after hitting a detail brush
 
 Version 1.5.0 (released 2020-09-05)
 -----------------------------------

@@ -273,6 +273,15 @@ ConsoleCommand2 show_enemy_bullets_cmd{
     "Toggles enemy bullets visibility",
 };
 
+CallHook<void(rf::Vector3&, float, float, int, int)> weapon_hit_wall_obj_apply_radius_damage_hook{
+    0x004C53A8,
+    [](rf::Vector3& epicenter, float damage, float radius, int killer_handle, int damage_type) {
+        auto& collide_out = *reinterpret_cast<rf::PCollisionOut*>(&epicenter);
+        auto new_epicenter = epicenter + collide_out.normal * 0.000001f;
+        weapon_hit_wall_obj_apply_radius_damage_hook.CallTarget(new_epicenter, damage, radius, killer_handle, damage_type);
+    },
+};
+
 void ApplyWeaponPatches()
 {
     // Fix crashes caused by too many records in weapons.tbl file
@@ -316,4 +325,7 @@ void ApplyWeaponPatches()
     // Show enemy bullets
     rf::hide_enemy_bullets = !g_game_config.show_enemy_bullets;
     show_enemy_bullets_cmd.Register();
+
+    // Fix rockets not making damage after hitting a detail brush
+    weapon_hit_wall_obj_apply_radius_damage_hook.Install();
 }
