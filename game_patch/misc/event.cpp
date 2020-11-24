@@ -52,7 +52,7 @@ CodeInjection switch_model_event_obj_lighting_and_physics_fix{
                 rf::PCollisionSphere csphere;
                 rf::VMeshGetCSphere(obj->vmesh, i, &csphere.center, &csphere.radius);
                 csphere.spring_const = -1.0f;
-                rf::VArray_PCollisionSphere__Add(&oci.spheres, csphere);
+                oci.spheres.Add(csphere);
             }
             rf::PhysicsDeleteObject(&obj->p_data);
             rf::PhysicsCreateObject(&obj->p_data, &oci);

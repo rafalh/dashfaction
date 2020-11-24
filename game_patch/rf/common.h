@@ -118,10 +118,10 @@ namespace rf
 
         float Len() const
         {
-            return std::sqrt(LenPow2());
+            return std::sqrt(LenSq());
         }
 
-        float LenPow2() const
+        float LenSq() const
         {
             return x * x + y * y + z * z;
         }
@@ -373,6 +373,8 @@ namespace rf
         {
             return elements[index];
         }
+
+        void Add(T element);
     };
     static_assert(sizeof(VArray<>) == 0xC);
 

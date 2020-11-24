@@ -62,6 +62,10 @@ namespace rf
 
     static auto& PhysicsCreateObject = AddrAsRef<void(PhysicsData *pd, ObjectCreateInfo *oci)>(0x0049EC90);
     static auto& PhysicsDeleteObject = AddrAsRef<void(PhysicsData *pd)>(0x0049F1D0);
-    static const auto VArray_PCollisionSphere__Add =
-        reinterpret_cast<int (__thiscall *)(VArray<PCollisionSphere> *this_, PCollisionSphere csphere)>(0x00417F30);
+
+    template<>
+    inline void VArray<PCollisionSphere>::Add(PCollisionSphere element)
+    {
+        AddrCaller{0x00417F30}.this_call(this, element);
+    }
 }
