@@ -353,7 +353,8 @@ begin
         // Create a backup (if it does not exist already)
         Log('Creating RedFaction.exe backup: ' + GetGameDir('RedFaction.exe.bak'));
         FileCopy(GetGameDir('RedFaction.exe'), GetGameDir('RedFaction.exe.bak'), True);
-
+        Log('Deleting RedFaction.exe');
+        DeleteFile(GetGameDir('RedFaction.exe'));
         Log('Creating RedFaction.exe symlink: ' + GetGameDir('RedFaction.exe'));
         if not CreateSymbolicLinkA(GetGameDir('RedFaction.exe'), ExpandConstant('{app}\DashFactionLauncher.exe'), 0) then
         begin
