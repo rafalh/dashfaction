@@ -8,6 +8,7 @@
 #include "../rf/object.h"
 #include "../rf/event.h"
 #include "../rf/entity.h"
+#include "../graphics/graphics.h"
 
 CodeInjection switch_model_event_custom_mesh_patch{
     0x004BB921,
@@ -55,6 +56,12 @@ CodeInjection switch_model_event_obj_lighting_and_physics_fix{
             }
             rf::PhysicsDeleteObject(&obj->p_data);
             rf::PhysicsCreateObject(&obj->p_data, &oci);
+
+            if (obj->type == rf::OT_CLUTTER) {
+                // Note: ObjDeleteMesh frees mesh_lighting_data
+                ObjMeshLightingAllocOne(obj);
+                ObjMeshLightingUpdateOne(obj);
+            }
         }
     },
 };
@@ -88,10 +95,10 @@ void __fastcall EventSetLiquidDepth__HandleOnMsg_New(EventSetLiquidDepthHook* th
     }
 }
 
-extern CallHook<void __fastcall (rf::GRoom* room, int edx, void* geo)> RflRoom_SetupLiquidRoom_EventSetLiquid_hook;
+extern CallHook<void __fastcall (rf::GRoom* room, int edx, rf::GSolid* geo)> GRoom_SetupLiquidRoom_EventSetLiquid_hook;
 
-void __fastcall RflRoom_SetupLiquidRoom_EventSetLiquid(rf::GRoom* room, int edx, void* geo) {
-    RflRoom_SetupLiquidRoom_EventSetLiquid_hook.CallTarget(room, edx, geo);
+void __fastcall GRoom_SetupLiquidRoom_EventSetLiquid(rf::GRoom* room, int edx, rf::GSolid* geo) {
+    GRoom_SetupLiquidRoom_EventSetLiquid_hook.CallTarget(room, edx, geo);
 
     auto EntityCheckIsInLiquid = AddrAsRef<void(rf::Entity* entity)>(0x00429100);
     auto ObjCheckIsInLiquid = AddrAsRef<void(rf::Object* obj)>(0x00486C30);
@@ -120,18 +127,18 @@ void __fastcall RflRoom_SetupLiquidRoom_EventSetLiquid(rf::GRoom* room, int edx,
     }
 }
 
-CallHook<void __fastcall (rf::GRoom* room, int edx, void* geo)> RflRoom_SetupLiquidRoom_EventSetLiquid_hook{
+CallHook<void __fastcall (rf::GRoom* room, int edx, rf::GSolid* geo)> GRoom_SetupLiquidRoom_EventSetLiquid_hook{
     0x0045E4AC,
-    RflRoom_SetupLiquidRoom_EventSetLiquid,
+    GRoom_SetupLiquidRoom_EventSetLiquid,
 };
 
-CallHook<int(void*)> AiNavClear_on_load_level_event_crash_fix{
+CallHook<int(rf::AiPathInfo*)> AiPathRelease_on_load_level_event_crash_fix{
     0x004BBD99,
-    [](void* nav) {
+    [](rf::AiPathInfo* pathp) {
         // Clear GNavNode pointers before level load
-        StructFieldRef<void*>(nav, 0x114) = nullptr;
-        StructFieldRef<void*>(nav, 0x118) = nullptr;
-        return AiNavClear_on_load_level_event_crash_fix.CallTarget(nav);
+        StructFieldRef<void*>(pathp, 0x114) = nullptr;
+        StructFieldRef<void*>(pathp, 0x118) = nullptr;
+        return AiPathRelease_on_load_level_event_crash_fix.CallTarget(pathp);
     },
 };
 
@@ -156,9 +163,9 @@ void ApplyEventPatches()
 
     // Fix Set_Liquid_Depth event
     AsmWriter(0x004BCBE0).jmp(&EventSetLiquidDepth__HandleOnMsg_New);
-    RflRoom_SetupLiquidRoom_EventSetLiquid_hook.Install();
+    GRoom_SetupLiquidRoom_EventSetLiquid_hook.Install();
 
-    // Fix crash after level change (Load_Level event) caused by GNavNode pointers in AiNav not being cleared for entities
+    // Fix crash after level change (Load_Level event) caused by GNavNode pointers in AiPathInfo not being cleared for entities
     // being taken from the previous level
-    AiNavClear_on_load_level_event_crash_fix.Install();
+    AiPathRelease_on_load_level_event_crash_fix.Install();
 }

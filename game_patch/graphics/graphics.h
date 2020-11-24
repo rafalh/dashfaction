@@ -1,10 +1,16 @@
 #pragma once
 
+namespace rf
+{
+    struct Object;
+}
+
 void GraphicsInit();
-void GraphicsLevelInitPost();
 void GraphicsDrawFpsCounter();
 int GetDefaultFontId();
 void SetDefaultFontId(int font_id);
+void ObjMeshLightingAllocOne(rf::Object *objp);
+void ObjMeshLightingUpdateOne(rf::Object *objp);
 
 template<typename F>
 void RunWithDefaultFont(int font_id, F fun)

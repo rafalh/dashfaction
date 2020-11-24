@@ -14,6 +14,9 @@
 #include "../rf/os.h"
 #include "../utils/com-utils.h"
 #include "../utils/string-utils.h"
+#include "../utils/list-utils.h"
+#include "../rf/item.h"
+#include "../rf/clutter.h"
 #include <common/BuildConfig.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
@@ -666,7 +669,32 @@ FunHook<void(int*, void*, int, int, int, rf::GrMode, int)> gr_d3d_queue_triangle
     },
 };
 
-FunHook<void()> update_mesh_lighting_hook{
+void GrLightUseStatic(bool use_static)
+{
+    // Enable some experimental flag that causes static lights to be included in computations
+    auto& experimental_alloc_and_lighting = AddrAsRef<bool>(0x00879AF8);
+    auto& gr_light_state = AddrAsRef<int>(0x00C96874);
+    experimental_alloc_and_lighting = use_static;
+    // Increment light cache key to trigger cache invalidation
+    gr_light_state++;
+}
+
+void ObjMeshLightingAllocOne(rf::Object *objp)
+{
+    // Note: ObjDeleteMesh frees mesh_lighting_data
+    assert(obj->mesh_lighting_data == nullptr);
+    auto size = rf::VMeshCalculateLightingDataSize(objp->vmesh);
+    objp->mesh_lighting_data = rf::Malloc(size);
+}
+
+void ObjMeshLightingUpdateOne(rf::Object *objp)
+{
+    GrLightUseStatic(true);
+    rf::VMeshUpdateLightingData(objp->vmesh, objp->room, objp->pos, objp->orient, objp->mesh_lighting_data);
+    GrLightUseStatic(false);
+}
+
+FunHook<void()> obj_mesh_lighting_update_hook{
     0x0048B0E0,
     []() {
         xlog::trace("update_mesh_lighting_hook");
@@ -681,20 +709,60 @@ FunHook<void()> update_mesh_lighting_hook{
         light_base.Zero();
 
         if (g_game_config.mesh_static_lighting) {
-            auto& experimental_alloc_and_lighting = AddrAsRef<bool>(0x00879AF8);
-            auto& gr_light_state = AddrAsRef<int>(0x00C96874);
-            // Enable some experimental flag that causes static lights to be included in computations
-            auto old_experimental_alloc_and_lighting = experimental_alloc_and_lighting;
-            experimental_alloc_and_lighting = true;
-            gr_light_state++;
+            // Enable static lights
+            GrLightUseStatic(true);
             // Calculate lighting for meshes now
-            update_mesh_lighting_hook.CallTarget();
-            experimental_alloc_and_lighting = old_experimental_alloc_and_lighting;
-            // Change cache key to rebuild cached arrays of lights in rooms - this is needed to get rid of static lights
-            gr_light_state++;
+            obj_mesh_lighting_update_hook.CallTarget();
+            // Switch back to dynamic lights
+            GrLightUseStatic(false);
         }
         else {
-            update_mesh_lighting_hook.CallTarget();
+            obj_mesh_lighting_update_hook.CallTarget();
+        }
+    },
+};
+
+FunHook<void()> obj_mesh_lighting_alloc_hook{
+    0x0048B1D0,
+    []() {
+        for (auto& item: DoublyLinkedList{rf::item_list}) {
+            if (item.vmesh && !(item.obj_flags & rf::OF_DELAYED_DELETE)
+                && rf::VMeshGetType(item.vmesh) == rf::MESH_TYPE_STATIC) {
+                auto size = rf::VMeshCalculateLightingDataSize(item.vmesh);
+                item.mesh_lighting_data = rf::Malloc(size);
+            }
+        }
+        for (auto& clutter: DoublyLinkedList{rf::clutter_list}) {
+            if (clutter.vmesh && !(clutter.obj_flags & rf::OF_DELAYED_DELETE)
+                && rf::VMeshGetType(clutter.vmesh) == rf::MESH_TYPE_STATIC) {
+                auto size = rf::VMeshCalculateLightingDataSize(clutter.vmesh);
+                clutter.mesh_lighting_data = rf::Malloc(size);
+            }
+        }
+    },
+};
+
+FunHook<void()> obj_mesh_lighting_free_hook{
+    0x0048B370,
+    []() {
+        for (auto& item: DoublyLinkedList{rf::item_list}) {
+            rf::Free(item.mesh_lighting_data);
+            item.mesh_lighting_data = nullptr;
+        }
+        for (auto& clutter: DoublyLinkedList{rf::clutter_list}) {
+            rf::Free(clutter.mesh_lighting_data);
+            clutter.mesh_lighting_data = nullptr;
+        }
+    },
+};
+
+FunHook<void(rf::Object*)> obj_delete_mesh_hook{
+    0x00489FC0,
+    [](rf::Object* objp) {
+        obj_delete_mesh_hook.CallTarget(objp);
+        if (objp->mesh_lighting_data) {
+            rf::Free(objp->mesh_lighting_data);
+            objp->mesh_lighting_data = nullptr;
         }
     },
 };
@@ -955,7 +1023,10 @@ void GraphicsInit()
     gr_d3d_queue_triangles_hook.Install();
 
     // Fix/improve items and clutters static lighting calculation: fix matrices being zero and use static lights
-    update_mesh_lighting_hook.Install();
+    obj_mesh_lighting_update_hook.Install();
+    obj_mesh_lighting_alloc_hook.Install();
+    obj_mesh_lighting_free_hook.Install();
+    obj_delete_mesh_hook.Install();
     mesh_static_lighting_cmd.Register();
 
     // Fix invalid vertex offset in mesh lighting calculation
@@ -969,18 +1040,6 @@ void GraphicsInit()
 
     // Support textures with alpha channel in Display_Fullscreen_Image event
     display_full_screen_image_alpha_support_patch.Install();
-
-    // Move obj_mesh_lighting_* calls to a point in time when auto triggers are already activated
-    // See GraphicsLevelInitPost
-    AsmWriter(0x0043601F).nop(10);
-}
-
-void GraphicsLevelInitPost()
-{
-    static auto& obj_mesh_lighting_alloc = AddrAsRef<void __cdecl()>(0x0048B1D0);
-    static auto& obj_mesh_lighting_init = AddrAsRef<void __cdecl()>(0x0048B0E0);
-    obj_mesh_lighting_alloc();
-    obj_mesh_lighting_init();
 }
 
 void GraphicsDrawFpsCounter()

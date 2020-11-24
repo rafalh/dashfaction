@@ -35,6 +35,7 @@ namespace rf
 
     enum ObjectFlags
     {
+        OF_DELAYED_DELETE = 0x2,
         OF_WAS_RENDERED = 0x10,
         OF_HAS_ALPHA = 0x100000,
     };

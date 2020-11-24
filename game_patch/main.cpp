@@ -209,7 +209,6 @@ FunHook<void(bool)> LevelInitPost_hook{
     0x00435DF0,
     [](bool is_auto_level_load) {
         LevelInitPost_hook.CallTarget(is_auto_level_load);
-        GraphicsLevelInitPost();
         xlog::info("Level loaded: %s%s", rf::level.filename.CStr(), is_auto_level_load ? " (caused by event)" : "");
     },
 };

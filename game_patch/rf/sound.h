@@ -98,6 +98,7 @@ namespace rf
 
     static auto SndPreload = AddrAsRef<int(int handle)>(0x005054D0);
     static auto SndPlay = AddrAsRef<int(int handle, int group, float pan, float volume)>(0x00505560);
+    static auto SndPlay3D = AddrAsRef<int(int handle, const Vector3& pos, float vol_scale, const Vector3& unused, int group)>(0x005056A0);
     static auto SndClearInstanceSlot = AddrAsRef<int(SoundInstance* instance)>(0x00505680);
     static auto SndDestroyAllPaused = AddrAsRef<void()>(0x005059F0);
     static auto SndIsPlaying = AddrAsRef<int(int instance_handle)>(0x00505C00);
