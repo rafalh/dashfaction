@@ -3,9 +3,9 @@
 #include "../rf/bmpman.h"
 #include <xlog/xlog.h>
 
-inline int GetPixelFormatSize(rf::BmFormat pixel_fmt)
+inline int GetBmFormatSize(rf::BmFormat format)
 {
-    switch (pixel_fmt) {
+    switch (format) {
     case rf::BM_FORMAT_8_PALETTED:
     case rf::BM_FORMAT_8_ALPHA:
         return 1;
@@ -18,16 +18,16 @@ inline int GetPixelFormatSize(rf::BmFormat pixel_fmt)
     case rf::BM_FORMAT_8888_ARGB:
         return 4;
     default:
-        xlog::warn("unknown pixel format %d", pixel_fmt);
+        xlog::warn("Unknown format: %d", format);
         return 2;
     }
 }
 
 #ifdef DIRECT3D_VERSION
 
-inline D3DFORMAT GetD3DFormatFromPixelFormat(rf::BmFormat pixel_fmt)
+inline D3DFORMAT GetD3DFormatFromBmFormat(rf::BmFormat format)
 {
-    switch (pixel_fmt) {
+    switch (format) {
     case rf::BM_FORMAT_8_PALETTED:
         // Note: this indexed format is not really A8 but because there is no corresponding D3D format A8 format
         // is returned instead (it is used only for pixel size related calculations)
@@ -43,16 +43,23 @@ inline D3DFORMAT GetD3DFormatFromPixelFormat(rf::BmFormat pixel_fmt)
         return D3DFMT_A1R5G5B5;
     case rf::BM_FORMAT_4444_ARGB:
         return D3DFMT_A4R4G4B4;
+    case rf::BM_FORMAT_DXT1:
+        return D3DFMT_DXT1;
+    case rf::BM_FORMAT_DXT2:
+        return D3DFMT_DXT2;
+    case rf::BM_FORMAT_DXT3:
+        return D3DFMT_DXT3;
+    case rf::BM_FORMAT_DXT4:
+        return D3DFMT_DXT4;
+    case rf::BM_FORMAT_DXT5:
+        return D3DFMT_DXT5;
     default:
-        if (static_cast<unsigned>(pixel_fmt) >= 0x10) {
-            return static_cast<D3DFORMAT>(pixel_fmt);
-        }
-        xlog::warn("unknown pixel format %d", pixel_fmt);
+        xlog::warn("unknown BM format %d", format);
         return D3DFMT_UNKNOWN;
     }
 }
 
-inline rf::BmFormat GetPixelFormatFromD3DFormat(D3DFORMAT d3d_fmt)
+inline rf::BmFormat GetBmFormatFromD3DFormat(D3DFORMAT d3d_fmt)
 {
     switch (d3d_fmt) {
     case D3DFMT_R5G6B5:
@@ -70,15 +77,25 @@ inline rf::BmFormat GetPixelFormatFromD3DFormat(D3DFORMAT d3d_fmt)
         return rf::BM_FORMAT_8888_ARGB;
     case D3DFMT_A8:
         return rf::BM_FORMAT_8_ALPHA;
+    case D3DFMT_DXT1:
+        return rf::BM_FORMAT_DXT1;
+    case D3DFMT_DXT2:
+        return rf::BM_FORMAT_DXT2;
+    case D3DFMT_DXT3:
+        return rf::BM_FORMAT_DXT3;
+    case D3DFMT_DXT4:
+        return rf::BM_FORMAT_DXT4;
+    case D3DFMT_DXT5:
+        return rf::BM_FORMAT_DXT5;
     default:
         xlog::error("unknown D3D format 0x%X", d3d_fmt);
-        return static_cast<rf::BmFormat>(d3d_fmt);
+        return rf::BM_FORMAT_NONE;
     }
 }
 
 #endif
 
 void GrColorInit();
-bool ConvertSurfacePixelFormat(void* dst_bits_ptr, rf::BmFormat dst_fmt, const void* src_bits_ptr,
-                               rf::BmFormat src_fmt, int width, int height, int dst_pitch, int src_pitch,
-                               const uint8_t* palette = nullptr);
+bool ConvertSurfaceFormat(void* dst_bits_ptr, rf::BmFormat dst_fmt, const void* src_bits_ptr,
+                          rf::BmFormat src_fmt, int width, int height, int dst_pitch, int src_pitch,
+                          const uint8_t* palette = nullptr);

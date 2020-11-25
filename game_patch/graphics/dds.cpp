@@ -1,11 +1,8 @@
 #include <windows.h>
-#include <d3d8.h>
 #include <ddraw.h>
 #include <xlog/xlog.h>
 #include "graphics_internal.h"
-#include "gr_color.h"
 #include "../rf/bmpman.h"
-#include "../rf/graphics.h"
 
 struct DDS_PIXELFORMAT {
     DWORD dwSize;
@@ -37,45 +34,45 @@ typedef struct {
 
 constexpr uint32_t dds_magic = 0x20534444;
 
-D3DFORMAT GetD3DFormatFromDDSPixelFormat(DDS_PIXELFORMAT& ddspf)
+rf::BmFormat GetBmFormatFromDDSPixelFormat(DDS_PIXELFORMAT& ddspf)
 {
     if (ddspf.dwFlags & DDPF_RGB) {
         switch (ddspf.dwRGBBitCount) {
             case 32:
                 if (ddspf.dwABitMask)
-                    return D3DFMT_A8R8G8B8;
+                    return rf::BM_FORMAT_8888_ARGB;
                 else
-                    return D3DFMT_X8R8G8B8;
+                    break;
             case 24:
-                return D3DFMT_R8G8B8;
+                return rf::BM_FORMAT_888_RGB;
             case 16:
                 if (ddspf.dwABitMask == 0x8000)
-                    return D3DFMT_A1R5G5B5;
+                    return rf::BM_FORMAT_1555_ARGB;
                 else if (ddspf.dwABitMask)
-                    return D3DFMT_A4R4G4B4;
+                    return rf::BM_FORMAT_4444_ARGB;
                 else
-                    return D3DFMT_R5G6B5;
+                    return rf::BM_FORMAT_565_RGB;
         }
     }
     else if (ddspf.dwFlags & DDPF_FOURCC) {
         switch (ddspf.dwFourCC) {
             case MAKEFOURCC('D', 'X', 'T', '1'):
-                return D3DFMT_DXT1;
+                return rf::BM_FORMAT_DXT1;
             case MAKEFOURCC('D', 'X', 'T', '2'):
-                return D3DFMT_DXT2;
+                return rf::BM_FORMAT_DXT2;
             case MAKEFOURCC('D', 'X', 'T', '3'):
-                return D3DFMT_DXT3;
+                return rf::BM_FORMAT_DXT3;
             case MAKEFOURCC('D', 'X', 'T', '4'):
-                return D3DFMT_DXT4;
+                return rf::BM_FORMAT_DXT4;
             case MAKEFOURCC('D', 'X', 'T', '5'):
-                return D3DFMT_DXT5;
+                return rf::BM_FORMAT_DXT5;
         }
     }
     xlog::warn("Unsupported DDS pixel format");
-    return D3DFMT_UNKNOWN;
+    return rf::BM_FORMAT_NONE;
 }
 
-rf::BmType ReadDdsHeader(rf::File& file, int *width_out, int *height_out, rf::BmFormat *pixel_fmt_out,
+rf::BmType ReadDdsHeader(rf::File& file, int *width_out, int *height_out, rf::BmFormat *format_out,
     int *num_levels_out)
 {
     auto magic = file.Read<uint32_t>();
@@ -89,23 +86,21 @@ rf::BmType ReadDdsHeader(rf::File& file, int *width_out, int *height_out, rf::Bm
         xlog::warn("Invalid header size in DDS file: %lX", hdr.dwSize);
         return rf::BM_TYPE_NONE;
     }
-    D3DFORMAT d3d_fmt = GetD3DFormatFromDDSPixelFormat(hdr.ddspf);
-    if (d3d_fmt == D3DFMT_UNKNOWN) {
+    auto format = GetBmFormatFromDDSPixelFormat(hdr.ddspf);
+    if (format == rf::BM_FORMAT_NONE) {
         return rf::BM_TYPE_NONE;
     }
-    auto hr = rf::gr_d3d->CheckDeviceFormat(rf::gr_adapter_idx, D3DDEVTYPE_HAL, rf::gr_d3d_pp.BackBufferFormat, 0,
-        D3DRTYPE_TEXTURE, d3d_fmt);
-    if (FAILED(hr)) {
-        xlog::warn("Unsupported by video card DDS pixel format: %X", d3d_fmt);
+
+    if (!GrIsFormatSupported(format)) {
+        xlog::warn("Unsupported by video card DDS pixel format: %X", format);
         return rf::BM_TYPE_NONE;
     }
-    xlog::trace("Using DDS format %X", d3d_fmt);
+
+    xlog::trace("Using DDS format 0x%X", format);
 
     *width_out = hdr.dwWidth;
     *height_out = hdr.dwHeight;
-
-    // Use D3DFORMAT as BmPixelFormats - there are no conflicts because D3DFORMAT constants starts from 0x20
-    *pixel_fmt_out = static_cast<rf::BmFormat>(d3d_fmt);
+    *format_out = format;
 
     *num_levels_out = 1;
     if (hdr.dwFlags & DDSD_MIPMAPCOUNT) {
@@ -143,12 +138,11 @@ int LockDdsBitmap(rf::BmBitmapEntry& bm_entry)
     int w = bm_entry.orig_width;
     int h = bm_entry.orig_height;
     int num_skip_levels = std::min(bm_entry.resolution_level, 2);
-    auto d3d_fmt = GetD3DFormatFromPixelFormat(bm_entry.format);
     int num_skip_bytes = 0;
     int num_total_bytes = 0;
 
     for (int i = 0; i < num_skip_levels + bm_entry.num_levels; ++i) {
-        int num_surface_bytes = GetSurfaceLengthInBytes(w, h, d3d_fmt);
+        int num_surface_bytes = GetSurfaceLengthInBytes(w, h, bm_entry.format);
         if (i < num_skip_levels) {
             num_skip_bytes += num_surface_bytes;
         }

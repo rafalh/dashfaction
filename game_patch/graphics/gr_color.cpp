@@ -430,12 +430,12 @@ void CallWithPixelFormat(rf::BmFormat pixel_fmt, F handler)
     }
 }
 
-bool ConvertSurfacePixelFormat(void* dst_bits_ptr, rf::BmFormat dst_fmt, const void* src_bits_ptr,
+bool ConvertSurfaceFormat(void* dst_bits_ptr, rf::BmFormat dst_fmt, const void* src_bits_ptr,
                                rf::BmFormat src_fmt, int width, int height, int dst_pitch, int src_pitch,
                                const uint8_t* palette)
 {
 #if DEBUG_PERF
-    static auto& color_conv_perf = PerfAggregator::create("ConvertSurfacePixelFormat");
+    static auto& color_conv_perf = PerfAggregator::create("ConvertSurfaceFormat");
     ScopedPerfMonitor mon{color_conv_perf};
 #endif
     try {
@@ -475,7 +475,7 @@ CodeInjection LevelLoadLightmaps_color_conv_patch{
             lightmap->buf[i] = std::max(lightmap->buf[i], (uint8_t)(4 << 3)); // 32
     #endif
 
-        bool success = ConvertSurfacePixelFormat(lock.bits, lock.pixel_format, lightmap->buf,
+        bool success = ConvertSurfaceFormat(lock.bits, lock.pixel_format, lightmap->buf,
             rf::BM_FORMAT_888_BGR, lightmap->w, lightmap->h, lock.pitch, 3 * lightmap->w, nullptr);
         if (!success)
             xlog::error("ConvertBitmapFormat failed for lightmap (dest format %d)", lock.pixel_format);
@@ -500,15 +500,15 @@ CodeInjection GSurface_CalculateLightmap_color_conv_patch{
         int offset_y = StructFieldRef<int>(face_light_info, 20);
         int offset_x = StructFieldRef<int>(face_light_info, 16);
         int src_width = lightmap.w;
-        int dst_pixel_size = GetPixelFormatSize(lock.pixel_format);
+        int dst_pixel_size = GetBmFormatSize(lock.pixel_format);
         uint8_t* src_data = lightmap.buf + 3 * (offset_x + offset_y * src_width);
         uint8_t* dst_data = &lock.bits[dst_pixel_size * offset_x + offset_y * lock.pitch];
         int height = StructFieldRef<int>(face_light_info, 28);
         int src_pitch = 3 * src_width;
-        bool success = ConvertSurfacePixelFormat(dst_data, lock.pixel_format, src_data, rf::BM_FORMAT_888_BGR,
+        bool success = ConvertSurfaceFormat(dst_data, lock.pixel_format, src_data, rf::BM_FORMAT_888_BGR,
             src_width, height, lock.pitch, src_pitch);
         if (!success)
-            xlog::error("ConvertSurfacePixelFormat failed for geomod (fmt %d)", lock.pixel_format);
+            xlog::error("ConvertSurfaceFormat failed for geomod (fmt %d)", lock.pixel_format);
         rf::GrUnlock(&lock);
     },
 };
@@ -533,10 +533,10 @@ CodeInjection GSurface_AllocLightmap_color_conv_patch{
         int src_offset = 3 * (offset_x + src_width * StructFieldRef<int>(face_light_info, 20)); // src offset
         uint8_t* src_data = src_offset + src_data_begin;
         int height = StructFieldRef<int>(face_light_info, 28);
-        int dst_pixel_size = GetPixelFormatSize(lock.pixel_format);
+        int dst_pixel_size = GetBmFormatSize(lock.pixel_format);
         uint8_t* dst_row_ptr = &lock.bits[dst_pixel_size * offset_x + offset_y * lock.pitch];
         int src_pitch = 3 * src_width;
-        bool success = ConvertSurfacePixelFormat(dst_row_ptr, lock.pixel_format, src_data, rf::BM_FORMAT_888_BGR,
+        bool success = ConvertSurfaceFormat(dst_row_ptr, lock.pixel_format, src_data, rf::BM_FORMAT_888_BGR,
                                                  src_width, height, lock.pitch, src_pitch);
         if (!success)
             xlog::error("ConvertBitmapFormat failed for geomod2 (fmt %d)", lock.pixel_format);
@@ -570,7 +570,7 @@ CodeInjection GProcTexUpdateWater_patch{
                     auto& byte_1371090 = AddrAsRef<uint8_t[512]>(0x1371090);
 
                     uint8_t* dst_row_ptr = dst_lock_data.bits;
-                    int src_pixel_size = GetPixelFormatSize(src_lock_data.pixel_format);
+                    int src_pixel_size = GetBmFormatSize(src_lock_data.pixel_format);
 
                     for (int y = 0; y < dst_lock_data.height; ++y) {
                         int t1 = byte_1370f90[y];
@@ -646,7 +646,7 @@ CodeInjection MonitorUpdateStatic_patch{
 
         auto& lock = *reinterpret_cast<rf::GrLockInfo*>(regs.esp + 0x2C - 0x20);
         auto pixel_ptr = reinterpret_cast<char*>(regs.esi);
-        int bytes_per_pixel = GetPixelFormatSize(lock.pixel_format);
+        int bytes_per_pixel = GetBmFormatSize(lock.pixel_format);
 
         std::fill(pixel_ptr, pixel_ptr + bytes_per_pixel, white ? '\0' : '\xFF');
         regs.esi += bytes_per_pixel;

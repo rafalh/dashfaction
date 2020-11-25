@@ -153,7 +153,7 @@ CallHook<rf::BmFormat(int, int, int, int, std::byte*)> GrD3DReadBackBuffer_hook{
         }
 
         // function is sometimes called with all parameters set to 0 to get backbuffer format
-        rf::BmFormat pixel_fmt = GetPixelFormatFromD3DFormat(desc.Format);
+        rf::BmFormat pixel_fmt = GetBmFormatFromD3DFormat(desc.Format);
         if (width == 0 || height == 0) {
             return pixel_fmt;
         }
@@ -187,7 +187,7 @@ CallHook<rf::BmFormat(int, int, int, int, std::byte*)> GrD3DReadBackBuffer_hook{
             return rf::BM_FORMAT_NONE;
         }
 
-        int bytes_per_pixel = GetPixelFormatSize(pixel_fmt);
+        int bytes_per_pixel = GetBmFormatSize(pixel_fmt);
         std::byte* src_ptr =
             reinterpret_cast<std::byte*>(locked_rect.pBits) + y * locked_rect.Pitch + x * bytes_per_pixel;
         std::byte* dst_ptr = buffer;
@@ -294,7 +294,7 @@ FunHook<void(rf::Monitor&)> MonitorRenderNoise_hook{
         // Use custom noise generation algohritm because the default one is not uniform enough in high resolution
         rf::GrLockInfo lock;
         if (rf::GrLock(mon.bitmap, 0, &lock, 0)) {
-            auto pixel_size = GetPixelFormatSize(lock.pixel_format);
+            auto pixel_size = GetBmFormatSize(lock.pixel_format);
             for (int y = 0; y < lock.height; ++y) {
                 auto ptr = lock.bits + y * lock.pitch;
                 for (int x = 0; x < lock.width; ++x) {

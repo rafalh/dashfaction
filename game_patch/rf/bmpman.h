@@ -20,6 +20,11 @@ namespace rf
         // custom Dash Faction formats
         BM_FORMAT_888_BGR = 0x9,        // used by lightmaps
         BM_FORMAT_RENDER_TARGET = 0x10, // texture is used as render target
+        BM_FORMAT_DXT1 = 0x11,
+        BM_FORMAT_DXT2 = 0x12,
+        BM_FORMAT_DXT3 = 0x13,
+        BM_FORMAT_DXT4 = 0x14,
+        BM_FORMAT_DXT5 = 0x15,
 #endif
     };
 

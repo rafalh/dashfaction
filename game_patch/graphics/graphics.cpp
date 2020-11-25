@@ -922,6 +922,9 @@ void GraphicsInit()
     // Patch texture handling
     ApplyTexturePatches();
 
+    // Apply bmpman patches
+    BmApplyPatches();
+
     // Fonts
     ApplyFontPatches();
 

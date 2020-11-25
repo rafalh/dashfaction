@@ -70,7 +70,8 @@ set(SRCS
     graphics/gamma.h
     graphics/capture.cpp
     graphics/capture.h
-    graphics/texture.cpp
+    graphics/gr_texture.cpp
+    graphics/bmpman.cpp
     server/server.h
     server/server.cpp
     server/win32_server_console.cpp

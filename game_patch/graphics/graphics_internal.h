@@ -6,12 +6,15 @@
 
 void ReleaseAllDefaultPoolTextures();
 void DestroyTexture(int bmh);
-void ChangeUserBitmapPixelFormat(int bmh, rf::BmFormat pixel_fmt, bool dynamic = false);
+void ChangeUserBitmapPixelFormat(int bmh, rf::BmFormat format, bool dynamic = false);
 void InitSupportedTextureFormats();
-#ifdef DIRECT3D_VERSION
-size_t GetSurfaceLengthInBytes(int w, int h, D3DFORMAT d3d_fmt);
-#endif
+size_t GetSurfaceLengthInBytes(int w, int h, rf::BmFormat format);
 
-rf::BmType ReadDdsHeader(rf::File& file, int *width_out, int *height_out, rf::BmFormat *pixel_fmt_out,
+rf::BmType ReadDdsHeader(rf::File& file, int *width_out, int *height_out, rf::BmFormat *format_out,
     int *num_levels_out);
 int LockDdsBitmap(rf::BmBitmapEntry& bm_entry);
+void BmApplyPatches();
+int GetSurfacePitch(int w, rf::BmFormat format);
+int GetSurfaceNumRows(int h, rf::BmFormat format);
+bool BmIsCompressedFormat(rf::BmFormat format);
+bool GrIsFormatSupported(rf::BmFormat format);
