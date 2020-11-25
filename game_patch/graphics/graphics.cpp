@@ -682,7 +682,7 @@ void GrLightUseStatic(bool use_static)
 void ObjMeshLightingAllocOne(rf::Object *objp)
 {
     // Note: ObjDeleteMesh frees mesh_lighting_data
-    assert(obj->mesh_lighting_data == nullptr);
+    assert(objp->mesh_lighting_data == nullptr);
     auto size = rf::VMeshCalculateLightingDataSize(objp->vmesh);
     objp->mesh_lighting_data = rf::Malloc(size);
 }
