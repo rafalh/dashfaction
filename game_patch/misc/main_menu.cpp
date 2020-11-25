@@ -85,13 +85,13 @@ int LoadEasterEggImage()
 
     constexpr int easter_egg_size = 128;
 
-    int hbm = rf::BmCreate(rf::BM_FORMAT_ARGB_8888, easter_egg_size, easter_egg_size);
+    int hbm = rf::BmCreate(rf::BM_FORMAT_8888_ARGB, easter_egg_size, easter_egg_size);
 
     rf::GrLockInfo lock;
     if (!rf::GrLock(hbm, 0, &lock, 1))
         return -1;
 
-    rf::BmConvertFormat(lock.bits, lock.pixel_format, res_data, rf::BM_FORMAT_ARGB_8888,
+    rf::BmConvertFormat(lock.bits, lock.pixel_format, res_data, rf::BM_FORMAT_8888_ARGB,
                         easter_egg_size * easter_egg_size);
     rf::GrUnlock(&lock);
 

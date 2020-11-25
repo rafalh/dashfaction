@@ -73,19 +73,19 @@ public:
             return static_cast<D3DFORMAT>(pixel_fmt);
         }
         switch (pixel_fmt) {
-            case rf::BM_FORMAT_A_8:
+            case rf::BM_FORMAT_8_ALPHA:
                 return a_8_format_;
-            case rf::BM_FORMAT_BGR_888_INDEXED:
+            case rf::BM_FORMAT_8_PALETTED:
                 return rgb_888_format_;
-            case rf::BM_FORMAT_RGB_888:
+            case rf::BM_FORMAT_888_RGB:
                 return rgb_888_format_;
-            case rf::BM_FORMAT_RGB_565:
+            case rf::BM_FORMAT_565_RGB:
                 return rgb_565_format_;
-            case rf::BM_FORMAT_ARGB_1555:
+            case rf::BM_FORMAT_1555_ARGB:
                 return argb_1555_format_;
-            case rf::BM_FORMAT_ARGB_8888:
+            case rf::BM_FORMAT_8888_ARGB:
                 return rgba_8888_format_;
-            case rf::BM_FORMAT_ARGB_4444:
+            case rf::BM_FORMAT_4444_ARGB:
                 return argb_4444_format_;
             default:
                 return D3DFMT_UNKNOWN;
@@ -289,7 +289,7 @@ bm_read_header_hook{
         if (dds_file.Open(dds_filename.c_str()) == 0) {
             xlog::trace("Loading %s", dds_filename.c_str());
             auto bm_type = ReadDdsHeader(dds_file, width_out, height_out, pixel_fmt_out, num_levels_out);
-            if (bm_type != rf::BM_TYPE_INVALID) {
+            if (bm_type != rf::BM_TYPE_NONE) {
                 return bm_type;
             }
         }
@@ -302,11 +302,11 @@ bm_read_header_hook{
 
         // Sanity checks
         // Prevents heap corruption when width = 0 or height = 0
-        if (*width_out <= 0 || *height_out <= 0 || *pixel_fmt_out == rf::BM_FORMAT_INVALID || *num_levels_out < 1 || *num_frames_out < 1) {
-            bm_type = rf::BM_TYPE_INVALID;
+        if (*width_out <= 0 || *height_out <= 0 || *pixel_fmt_out == rf::BM_FORMAT_NONE || *num_levels_out < 1 || *num_frames_out < 1) {
+            bm_type = rf::BM_TYPE_NONE;
         }
 
-        if (bm_type == rf::BM_TYPE_INVALID) {
+        if (bm_type == rf::BM_TYPE_NONE) {
             xlog::warn("Failed load bitmap header for '%s'", filename);
         }
 
@@ -326,7 +326,7 @@ FunHook<rf::BmFormat(int, void**, void**)> bm_lock_hook{
         }
         else {
             auto pixel_fmt = bm_lock_hook.CallTarget(bmh, pixels_out, palette_out);
-            if (pixel_fmt == rf::BM_FORMAT_INVALID) {
+            if (pixel_fmt == rf::BM_FORMAT_NONE) {
                 *pixels_out = nullptr;
                 *palette_out = nullptr;
                 xlog::warn("bm_lock failed");

@@ -304,7 +304,7 @@ GrNewFont::GrNewFont(std::string_view name) :
     auto [atlas_w, atlas_h] = atlas_packer.get_size();
 
     xlog::trace("Creating font texture atlas %dx%d", atlas_w, atlas_h);
-    bitmap_ = rf::BmCreate(rf::BM_FORMAT_ARGB_8888, atlas_w, atlas_h);
+    bitmap_ = rf::BmCreate(rf::BM_FORMAT_8888_ARGB, atlas_w, atlas_h);
     if (bitmap_ == -1) {
         xlog::error("BmCreate failed for font texture");
         throw std::runtime_error{"failed to load font"};
@@ -345,7 +345,7 @@ GrNewFont::GrNewFont(std::string_view name) :
 
         int pixel_size = GetPixelFormatSize(lock.pixel_format);
         auto dst_ptr = bitmap_bits + glyph_bm_y * lock.pitch + glyph_bm_x * pixel_size;
-        ConvertSurfacePixelFormat(dst_ptr, lock.pixel_format, bitmap.buffer, rf::BM_FORMAT_A_8, bitmap.width, bitmap.rows, lock.pitch, bitmap.pitch);
+        ConvertSurfacePixelFormat(dst_ptr, lock.pixel_format, bitmap.buffer, rf::BM_FORMAT_8_ALPHA, bitmap.width, bitmap.rows, lock.pitch, bitmap.pitch);
 
         glyphs_.push_back(glyph_info);
     }

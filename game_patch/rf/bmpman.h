@@ -7,25 +7,25 @@ namespace rf
     enum BmFormat
     {
         // All formats are listed from left to right, most-significant bit to least-significant bit as in D3DFORMAT
-        BM_FORMAT_INVALID = 0x0,
-        BM_FORMAT_BGR_888_INDEXED = 0x1,
-        BM_FORMAT_A_8 = 0x2,
-        BM_FORMAT_RGB_565 = 0x3,
-        BM_FORMAT_ARGB_4444 = 0x4,
-        BM_FORMAT_ARGB_1555 = 0x5,
-        BM_FORMAT_RGB_888 = 0x6,
-        BM_FORMAT_ARGB_8888 = 0x7,
-        BM_FORMAT_UNK_8_16BIT = 0x8, // not supported by D3D routines
+        BM_FORMAT_NONE = 0x0,
+        BM_FORMAT_8_PALETTED = 0x1,
+        BM_FORMAT_8_ALPHA = 0x2,
+        BM_FORMAT_565_RGB = 0x3,
+        BM_FORMAT_4444_ARGB = 0x4,
+        BM_FORMAT_1555_ARGB = 0x5,
+        BM_FORMAT_888_RGB = 0x6,
+        BM_FORMAT_8888_ARGB = 0x7,
+        BM_FORMAT_88_BUMPDUDV = 0x8, // not supported by D3D routines
 #ifdef DASH_FACTION
         // custom Dash Faction formats
-        BM_FORMAT_BGR_888 = 0x9,        // used by lightmaps
+        BM_FORMAT_888_BGR = 0x9,        // used by lightmaps
         BM_FORMAT_RENDER_TARGET = 0x10, // texture is used as render target
 #endif
     };
 
     enum BmType
     {
-        BM_TYPE_INVALID = 0x0,
+        BM_TYPE_NONE = 0x0,
         BM_TYPE_PCX = 0x1,
         BM_TYPE_TGA = 0x2,
         BM_TYPE_USER = 0x3,

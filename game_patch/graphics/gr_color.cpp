@@ -106,7 +106,7 @@ template<rf::BmFormat PF>
 struct PixelFormatTrait;
 
 template<>
-struct PixelFormatTrait<rf::BM_FORMAT_ARGB_8888>
+struct PixelFormatTrait<rf::BM_FORMAT_8888_ARGB>
 {
     using Pixel = uint32_t;
     using PaletteEntry = void;
@@ -118,7 +118,7 @@ struct PixelFormatTrait<rf::BM_FORMAT_ARGB_8888>
 };
 
 template<>
-struct PixelFormatTrait<rf::BM_FORMAT_RGB_888>
+struct PixelFormatTrait<rf::BM_FORMAT_888_RGB>
 {
     using Pixel = uint8_t[3];
     using PaletteEntry = void;
@@ -130,7 +130,7 @@ struct PixelFormatTrait<rf::BM_FORMAT_RGB_888>
 };
 
 template<>
-struct PixelFormatTrait<rf::BM_FORMAT_ARGB_1555>
+struct PixelFormatTrait<rf::BM_FORMAT_1555_ARGB>
 {
     using Pixel = uint16_t;
     using PaletteEntry = void;
@@ -142,7 +142,7 @@ struct PixelFormatTrait<rf::BM_FORMAT_ARGB_1555>
 };
 
 template<>
-struct PixelFormatTrait<rf::BM_FORMAT_RGB_565>
+struct PixelFormatTrait<rf::BM_FORMAT_565_RGB>
 {
     using Pixel = uint16_t;
     using PaletteEntry = void;
@@ -154,7 +154,7 @@ struct PixelFormatTrait<rf::BM_FORMAT_RGB_565>
 };
 
 template<>
-struct PixelFormatTrait<rf::BM_FORMAT_ARGB_4444>
+struct PixelFormatTrait<rf::BM_FORMAT_4444_ARGB>
 {
     using Pixel = uint16_t;
     using PaletteEntry = void;
@@ -166,7 +166,7 @@ struct PixelFormatTrait<rf::BM_FORMAT_ARGB_4444>
 };
 
 template<>
-struct PixelFormatTrait<rf::BM_FORMAT_A_8>
+struct PixelFormatTrait<rf::BM_FORMAT_8_ALPHA>
 {
     using Pixel = uint8_t;
     using PaletteEntry = void;
@@ -178,7 +178,7 @@ struct PixelFormatTrait<rf::BM_FORMAT_A_8>
 };
 
 template<>
-struct PixelFormatTrait<rf::BM_FORMAT_BGR_888_INDEXED>
+struct PixelFormatTrait<rf::BM_FORMAT_8_PALETTED>
 {
     using Pixel = uint8_t;
     using PaletteEntry = uint8_t[3];
@@ -190,7 +190,7 @@ struct PixelFormatTrait<rf::BM_FORMAT_BGR_888_INDEXED>
 };
 
 template<>
-struct PixelFormatTrait<rf::BM_FORMAT_BGR_888>
+struct PixelFormatTrait<rf::BM_FORMAT_888_BGR>
 {
     using Pixel = uint8_t[3];
     using PaletteEntry = void;
@@ -401,29 +401,29 @@ template<typename F>
 void CallWithPixelFormat(rf::BmFormat pixel_fmt, F handler)
 {
     switch (pixel_fmt) {
-        case rf::BM_FORMAT_ARGB_8888:
-            handler(PixelFormatHolder<rf::BM_FORMAT_ARGB_8888>());
+        case rf::BM_FORMAT_8888_ARGB:
+            handler(PixelFormatHolder<rf::BM_FORMAT_8888_ARGB>());
             return;
-        case rf::BM_FORMAT_RGB_888:
-            handler(PixelFormatHolder<rf::BM_FORMAT_RGB_888>());
+        case rf::BM_FORMAT_888_RGB:
+            handler(PixelFormatHolder<rf::BM_FORMAT_888_RGB>());
             return;
-        case rf::BM_FORMAT_RGB_565:
-            handler(PixelFormatHolder<rf::BM_FORMAT_RGB_565>());
+        case rf::BM_FORMAT_565_RGB:
+            handler(PixelFormatHolder<rf::BM_FORMAT_565_RGB>());
             return;
-        case rf::BM_FORMAT_ARGB_4444:
-            handler(PixelFormatHolder<rf::BM_FORMAT_ARGB_4444>());
+        case rf::BM_FORMAT_4444_ARGB:
+            handler(PixelFormatHolder<rf::BM_FORMAT_4444_ARGB>());
             return;
-        case rf::BM_FORMAT_ARGB_1555:
-            handler(PixelFormatHolder<rf::BM_FORMAT_ARGB_1555>());
+        case rf::BM_FORMAT_1555_ARGB:
+            handler(PixelFormatHolder<rf::BM_FORMAT_1555_ARGB>());
             return;
-        case rf::BM_FORMAT_A_8:
-            handler(PixelFormatHolder<rf::BM_FORMAT_A_8>());
+        case rf::BM_FORMAT_8_ALPHA:
+            handler(PixelFormatHolder<rf::BM_FORMAT_8_ALPHA>());
             return;
-        case rf::BM_FORMAT_BGR_888_INDEXED:
-            handler(PixelFormatHolder<rf::BM_FORMAT_BGR_888_INDEXED>());
+        case rf::BM_FORMAT_8_PALETTED:
+            handler(PixelFormatHolder<rf::BM_FORMAT_8_PALETTED>());
             return;
-        case rf::BM_FORMAT_BGR_888:
-            handler(PixelFormatHolder<rf::BM_FORMAT_BGR_888>());
+        case rf::BM_FORMAT_888_BGR:
+            handler(PixelFormatHolder<rf::BM_FORMAT_888_BGR>());
             return;
         default:
             throw std::runtime_error{"Unhandled pixel format"};
@@ -476,7 +476,7 @@ CodeInjection LevelLoadLightmaps_color_conv_patch{
     #endif
 
         bool success = ConvertSurfacePixelFormat(lock.bits, lock.pixel_format, lightmap->buf,
-            rf::BM_FORMAT_BGR_888, lightmap->w, lightmap->h, lock.pitch, 3 * lightmap->w, nullptr);
+            rf::BM_FORMAT_888_BGR, lightmap->w, lightmap->h, lock.pitch, 3 * lightmap->w, nullptr);
         if (!success)
             xlog::error("ConvertBitmapFormat failed for lightmap (dest format %d)", lock.pixel_format);
 
@@ -505,7 +505,7 @@ CodeInjection GSurface_CalculateLightmap_color_conv_patch{
         uint8_t* dst_data = &lock.bits[dst_pixel_size * offset_x + offset_y * lock.pitch];
         int height = StructFieldRef<int>(face_light_info, 28);
         int src_pitch = 3 * src_width;
-        bool success = ConvertSurfacePixelFormat(dst_data, lock.pixel_format, src_data, rf::BM_FORMAT_BGR_888,
+        bool success = ConvertSurfacePixelFormat(dst_data, lock.pixel_format, src_data, rf::BM_FORMAT_888_BGR,
             src_width, height, lock.pitch, src_pitch);
         if (!success)
             xlog::error("ConvertSurfacePixelFormat failed for geomod (fmt %d)", lock.pixel_format);
@@ -536,7 +536,7 @@ CodeInjection GSurface_AllocLightmap_color_conv_patch{
         int dst_pixel_size = GetPixelFormatSize(lock.pixel_format);
         uint8_t* dst_row_ptr = &lock.bits[dst_pixel_size * offset_x + offset_y * lock.pitch];
         int src_pitch = 3 * src_width;
-        bool success = ConvertSurfacePixelFormat(dst_row_ptr, lock.pixel_format, src_data, rf::BM_FORMAT_BGR_888,
+        bool success = ConvertSurfacePixelFormat(dst_row_ptr, lock.pixel_format, src_data, rf::BM_FORMAT_888_BGR,
                                                  src_width, height, lock.pitch, src_pitch);
         if (!success)
             xlog::error("ConvertBitmapFormat failed for geomod2 (fmt %d)", lock.pixel_format);
@@ -626,7 +626,7 @@ FunHook<unsigned()> BinkInitDeviceInfo_hook{
 
         if (g_game_config.true_color_textures && g_game_config.res_bpp == 32) {
             static auto& bink_bm_pixel_fmt = AddrAsRef<uint32_t>(0x018871C0);
-            bink_bm_pixel_fmt = rf::BM_FORMAT_RGB_888;
+            bink_bm_pixel_fmt = rf::BM_FORMAT_888_RGB;
             bink_flags = BINKSURFACE32;
         }
 
@@ -690,7 +690,7 @@ void GrColorInit()
     // ambient color
     GSolid_GetAmbientColorFromLightmap_patch.Install();
     // fix pixel format for lightmaps
-    WriteMem<u8>(0x004F5EB8 + 1, rf::BM_FORMAT_RGB_888);
+    WriteMem<u8>(0x004F5EB8 + 1, rf::BM_FORMAT_888_RGB);
 
     // monitor noise
     MonitorUpdateStatic_patch.Install();

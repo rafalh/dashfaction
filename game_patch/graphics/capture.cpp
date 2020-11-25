@@ -142,14 +142,14 @@ CallHook<rf::BmFormat(int, int, int, int, std::byte*)> GrD3DReadBackBuffer_hook{
         HRESULT hr = rf::gr_d3d_device->GetRenderTarget(&back_buffer);
         if (FAILED(hr)) {
             ERR_ONCE("IDirect3DDevice8::GetRenderTarget failed 0x%lX", hr);
-            return rf::BM_FORMAT_INVALID;
+            return rf::BM_FORMAT_NONE;
         }
 
         D3DSURFACE_DESC desc;
         hr = back_buffer->GetDesc(&desc);
         if (FAILED(hr)) {
             ERR_ONCE("IDirect3DSurface8::GetDesc failed 0x%lX", hr);
-            return rf::BM_FORMAT_INVALID;
+            return rf::BM_FORMAT_NONE;
         }
 
         // function is sometimes called with all parameters set to 0 to get backbuffer format
@@ -165,7 +165,7 @@ CallHook<rf::BmFormat(int, int, int, int, std::byte*)> GrD3DReadBackBuffer_hook{
             hr = rf::gr_d3d_device->CreateImageSurface(desc.Width, desc.Height, desc.Format, &g_capture_tmp_surface);
             if (FAILED(hr)) {
                 ERR_ONCE("IDirect3DDevice8::CreateImageSurface failed 0x%lX", hr);
-                return rf::BM_FORMAT_INVALID;
+                return rf::BM_FORMAT_NONE;
             }
         }
 
@@ -176,7 +176,7 @@ CallHook<rf::BmFormat(int, int, int, int, std::byte*)> GrD3DReadBackBuffer_hook{
         hr = rf::gr_d3d_device->CopyRects(back_buffer, &src_rect, 1, g_capture_tmp_surface, &dst_pt);
         if (FAILED(hr)) {
             ERR_ONCE("IDirect3DDevice8::CopyRects failed 0x%lX", hr);
-            return rf::BM_FORMAT_INVALID;
+            return rf::BM_FORMAT_NONE;
         }
 
         // Note: locking fragment of Render Target fails
@@ -184,7 +184,7 @@ CallHook<rf::BmFormat(int, int, int, int, std::byte*)> GrD3DReadBackBuffer_hook{
         hr = g_capture_tmp_surface->LockRect(&locked_rect, nullptr, D3DLOCK_READONLY | D3DLOCK_NO_DIRTY_UPDATE);
         if (FAILED(hr)) {
             ERR_ONCE("IDirect3DSurface8::LockRect failed 0x%lX (%s)", hr, getDxErrorStr(hr));
-            return rf::BM_FORMAT_INVALID;
+            return rf::BM_FORMAT_NONE;
         }
 
         int bytes_per_pixel = GetPixelFormatSize(pixel_fmt);
@@ -230,7 +230,7 @@ void MakeSureMonitorBitmapIsDynamic(rf::Monitor& mon)
 {
     if (rf::BmGetFormat(mon.bitmap) == rf::BM_FORMAT_RENDER_TARGET) {
         xlog::trace("Changing pixel format for monitor bitmap");
-        ChangeUserBitmapPixelFormat(mon.bitmap, rf::BM_FORMAT_RGB_888, true);
+        ChangeUserBitmapPixelFormat(mon.bitmap, rf::BM_FORMAT_888_RGB, true);
     }
 }
 

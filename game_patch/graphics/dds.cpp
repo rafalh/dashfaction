@@ -81,23 +81,23 @@ rf::BmType ReadDdsHeader(rf::File& file, int *width_out, int *height_out, rf::Bm
     auto magic = file.Read<uint32_t>();
     if (magic != dds_magic) {
         xlog::warn("Invalid magic number in DDS file: %X", magic);
-        return rf::BM_TYPE_INVALID;
+        return rf::BM_TYPE_NONE;
     }
     DDS_HEADER hdr;
     file.Read(&hdr, sizeof(hdr));
     if (hdr.dwSize != sizeof(DDS_HEADER)) {
         xlog::warn("Invalid header size in DDS file: %lX", hdr.dwSize);
-        return rf::BM_TYPE_INVALID;
+        return rf::BM_TYPE_NONE;
     }
     D3DFORMAT d3d_fmt = GetD3DFormatFromDDSPixelFormat(hdr.ddspf);
     if (d3d_fmt == D3DFMT_UNKNOWN) {
-        return rf::BM_TYPE_INVALID;
+        return rf::BM_TYPE_NONE;
     }
     auto hr = rf::gr_d3d->CheckDeviceFormat(rf::gr_adapter_idx, D3DDEVTYPE_HAL, rf::gr_d3d_pp.BackBufferFormat, 0,
         D3DRTYPE_TEXTURE, d3d_fmt);
     if (FAILED(hr)) {
         xlog::warn("Unsupported by video card DDS pixel format: %X", d3d_fmt);
-        return rf::BM_TYPE_INVALID;
+        return rf::BM_TYPE_NONE;
     }
     xlog::trace("Using DDS format %X", d3d_fmt);
 
