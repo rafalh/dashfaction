@@ -39,6 +39,7 @@ Version 1.5.1 (not released yet)
 - add an option to override RF launcher by a symbolic link in the setup program
 - fix rockets not making damage after hitting a detail brush
 - allow "debug network" command usage in multiplayer
+- fix rotation interpolation (Y axis) in multiplayer when it goes from 360 to 0 degrees
 
 Version 1.5.0 (released 2020-09-05)
 -----------------------------------

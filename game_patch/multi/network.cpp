@@ -828,6 +828,20 @@ void SendChatLinePacket(const char* msg, rf::Player* target, rf::Player* sender,
     }
 }
 
+CodeInjection obj_interp_rotation_fix{
+    0x0048443C,
+    [](auto& regs) {
+        auto& phb_diff = AddrAsRef<rf::Vector3>(regs.ecx);
+        constexpr float pi = 3.141592f;
+        if (phb_diff.y > pi) {
+            phb_diff.y -= 2 * pi;
+        }
+        else if (phb_diff.y < -pi) {
+            phb_diff.y += 2 * pi;
+        }
+    },
+};
+
 void NetworkInit()
 {
     // ProcessGamePackets hook (not reliable only)
@@ -939,4 +953,7 @@ void NetworkInit()
 
     // Use UPnP for port forwarding if server is not in LAN-only mode
     TrackerDoBroadcastServer_hook.Install();
+
+    // Fix rotation interpolation (Y axis) when it goes from 360 to 0 degrees
+    obj_interp_rotation_fix.Install();
 }
