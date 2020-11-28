@@ -1,6 +1,8 @@
 #include <patch_common/StaticBufferResizePatch.h>
 #include <patch_common/AsmWriter.h>
 #include <patch_common/CodeInjection.h>
+#include <patch_common/CallHook.h>
+#include <cstring>
 #include "../rf/object.h"
 #include "../rf/multi.h"
 #include "misc.h"
@@ -105,6 +107,29 @@ CodeInjection obj_create_find_slot_patch{
     },
 };
 
+CallHook<void*(size_t)> GPool_Allocate_new_hook{
+    {
+        0x0048B5C6,
+        0x0048B736,
+        0x0048B8A6,
+        0x0048BA16,
+        0x004D7EF6,
+        0x004E3C63,
+        0x004E3DF3,
+        0x004F97E3,
+        0x004F9C63,
+        0x005047B3,
+    },
+    [](size_t s) -> void* {
+        void* result = GPool_Allocate_new_hook.CallTarget(s);
+        if (result) {
+            // Zero memory allocated dynamically (static memory is zeroed by operating system automatically)
+            std::memset(result, 0, s);
+        }
+        return result;
+    },
+};
+
 void ApplyLimitsPatches()
 {
     // Change object limit
@@ -142,4 +167,7 @@ void ApplyLimitsPatches()
     AsmWriter(0x00487173, 0x00487180).nop(); // debris
     AsmWriter(0x004871D9, 0x004871E9).nop(); // item
     AsmWriter(0x00487271, 0x0048727A).nop(); // weapon
+
+    // Zero memory allocated from GPool dynamically
+    GPool_Allocate_new_hook.Install();
 }
