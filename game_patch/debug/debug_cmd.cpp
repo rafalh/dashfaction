@@ -10,6 +10,7 @@ struct DebugFlagDesc
     bool& ref;
     const char* name;
     bool clear_geometry_cache = false;
+    bool allow_multi = false;
 };
 
 bool g_dbg_geometry_rendering_stats = false;
@@ -30,7 +31,7 @@ DebugFlagDesc g_debug_flags[] = {
     {AddrAsRef<bool>(0x0062FE21), "perfbar"},
     {AddrAsRef<bool>(0x0064E39C), "waypoint"},
     // network meter in left-top corner
-    {AddrAsRef<bool>(0x006FED24), "network"},
+    {AddrAsRef<bool>(0x006FED24), "network", false, true},
     {AddrAsRef<bool>(0x007B2758), "particlestats"},
     // debug strings at the left side of the screen
     {AddrAsRef<bool>(0x007CAB59), "weapon"},
@@ -50,16 +51,14 @@ DebugFlagDesc g_debug_flags[] = {
 ConsoleCommand2 debug_cmd{
     "debug",
     [](std::string type) {
-
-#ifdef NDEBUG
-        if (rf::is_multi) {
-            rf::ConsolePrintf("This command is disabled in multiplayer!");
-            return;
-        }
-#endif
-
         for (auto& dbg_flag : g_debug_flags) {
             if (type == dbg_flag.name) {
+#ifdef NDEBUG
+                if (!dbg_flag.allow_multi && rf::is_multi) {
+                    rf::ConsolePrintf("This command is disabled in multiplayer!");
+                    return;
+                }
+#endif
                 dbg_flag.ref = !dbg_flag.ref;
                 rf::ConsolePrintf("Debug flag '%s' is %s", dbg_flag.name, dbg_flag.ref ? "enabled" : "disabled");
                 if (dbg_flag.clear_geometry_cache) {
