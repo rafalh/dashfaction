@@ -248,7 +248,7 @@ FunHook<void(rf::GrD3DTexture&)> gr_d3d_free_texture_hook{
         gr_d3d_free_texture_hook.CallTarget(tslot);
 
         if (tslot.bm_handle >= 0) {
-            xlog::info("Freeing texture");
+            xlog::trace("Freeing texture");
             auto it = g_default_pool_tslots.find(&tslot);
             if (it != g_default_pool_tslots.end()) {
                 g_default_pool_tslots.erase(it);

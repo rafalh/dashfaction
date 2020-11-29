@@ -14,6 +14,7 @@ int GetSurfacePitch(int w, rf::BmFormat format)
         case rf::BM_FORMAT_4444_ARGB:
             return w * 2;
         case rf::BM_FORMAT_8_ALPHA:
+        case rf::BM_FORMAT_8_PALETTED:
             return w;
         case rf::BM_FORMAT_DXT1:
             // 4x4 pixels per block, 64 bits per block
@@ -25,6 +26,7 @@ int GetSurfacePitch(int w, rf::BmFormat format)
             // 4x4 pixels per block, 128 bits per block
             return (w + 3) / 4 * 128 / 8;
         default:
+            xlog::warn("Unknown format %d in GetSurfacePitch", format);
             return -1;
     }
 }
