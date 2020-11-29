@@ -7,6 +7,7 @@ include_directories(
 	${CMAKE_SOURCE_DIR}/vendor/xxhash
 	${CMAKE_SOURCE_DIR}/vendor/stb
 	${CMAKE_SOURCE_DIR}/vendor/freetype/include
+	${CMAKE_SOURCE_DIR}/vendor/dds
 )
 if(NOT MSVC)
     # natupnp.h is not distributed with MinGW

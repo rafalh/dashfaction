@@ -1,61 +1,30 @@
-#include <windows.h>
-#include <ddraw.h>
+#include <dds.h>
 #include <xlog/xlog.h>
 #include "graphics_internal.h"
 #include "../rf/bmpman.h"
 
-struct DDS_PIXELFORMAT {
-    DWORD dwSize;
-    DWORD dwFlags;
-    DWORD dwFourCC;
-    DWORD dwRGBBitCount;
-    DWORD dwRBitMask;
-    DWORD dwGBitMask;
-    DWORD dwBBitMask;
-    DWORD dwABitMask;
-};
-
-typedef struct {
-    DWORD           dwSize;
-    DWORD           dwFlags;
-    DWORD           dwHeight;
-    DWORD           dwWidth;
-    DWORD           dwPitchOrLinearSize;
-    DWORD           dwDepth;
-    DWORD           dwMipMapCount;
-    DWORD           dwReserved1[11];
-    DDS_PIXELFORMAT ddspf;
-    DWORD           dwCaps;
-    DWORD           dwCaps2;
-    DWORD           dwCaps3;
-    DWORD           dwCaps4;
-    DWORD           dwReserved2;
-} DDS_HEADER;
-
-constexpr uint32_t dds_magic = 0x20534444;
-
 rf::BmFormat GetBmFormatFromDDSPixelFormat(DDS_PIXELFORMAT& ddspf)
 {
-    if (ddspf.dwFlags & DDPF_RGB) {
-        switch (ddspf.dwRGBBitCount) {
+    if (ddspf.flags & DDS_RGB) {
+        switch (ddspf.RGBBitCount) {
             case 32:
-                if (ddspf.dwABitMask)
+                if (ddspf.ABitMask)
                     return rf::BM_FORMAT_8888_ARGB;
                 else
                     break;
             case 24:
                 return rf::BM_FORMAT_888_RGB;
             case 16:
-                if (ddspf.dwABitMask == 0x8000)
+                if (ddspf.ABitMask == 0x8000)
                     return rf::BM_FORMAT_1555_ARGB;
-                else if (ddspf.dwABitMask)
+                else if (ddspf.ABitMask)
                     return rf::BM_FORMAT_4444_ARGB;
                 else
                     return rf::BM_FORMAT_565_RGB;
         }
     }
-    else if (ddspf.dwFlags & DDPF_FOURCC) {
-        switch (ddspf.dwFourCC) {
+    else if (ddspf.flags & DDS_FOURCC) {
+        switch (ddspf.fourCC) {
             case MAKEFOURCC('D', 'X', 'T', '1'):
                 return rf::BM_FORMAT_DXT1;
             case MAKEFOURCC('D', 'X', 'T', '2'):
@@ -76,14 +45,14 @@ rf::BmType ReadDdsHeader(rf::File& file, int *width_out, int *height_out, rf::Bm
     int *num_levels_out)
 {
     auto magic = file.Read<uint32_t>();
-    if (magic != dds_magic) {
+    if (magic != DDS_MAGIC) {
         xlog::warn("Invalid magic number in DDS file: %X", magic);
         return rf::BM_TYPE_NONE;
     }
     DDS_HEADER hdr;
     file.Read(&hdr, sizeof(hdr));
-    if (hdr.dwSize != sizeof(DDS_HEADER)) {
-        xlog::warn("Invalid header size in DDS file: %lX", hdr.dwSize);
+    if (hdr.size != sizeof(DDS_HEADER)) {
+        xlog::warn("Invalid header size in DDS file: %X", hdr.size);
         return rf::BM_TYPE_NONE;
     }
     auto format = GetBmFormatFromDDSPixelFormat(hdr.ddspf);
@@ -98,14 +67,14 @@ rf::BmType ReadDdsHeader(rf::File& file, int *width_out, int *height_out, rf::Bm
 
     xlog::trace("Using DDS format 0x%X", format);
 
-    *width_out = hdr.dwWidth;
-    *height_out = hdr.dwHeight;
+    *width_out = hdr.width;
+    *height_out = hdr.height;
     *format_out = format;
 
     *num_levels_out = 1;
-    if (hdr.dwFlags & DDSD_MIPMAPCOUNT) {
-        *num_levels_out = hdr.dwMipMapCount;
-        xlog::trace("DDS mipmaps %lu (%lux%lu)", hdr.dwMipMapCount, hdr.dwWidth, hdr.dwHeight);
+    if (hdr.flags & DDS_HEADER_FLAGS_MIPMAP) {
+        *num_levels_out = hdr.mipMapCount;
+        xlog::trace("DDS mipmaps %u (%ux%u)", hdr.mipMapCount, hdr.width, hdr.height);
     }
     return rf::BM_TYPE_DDS;
 }
@@ -123,14 +92,14 @@ int LockDdsBitmap(rf::BmBitmapEntry& bm_entry)
     }
 
     auto magic = file.Read<uint32_t>();
-    if (magic != dds_magic) {
+    if (magic != DDS_MAGIC) {
         xlog::error("Invalid magic number in %s: %x", dds_filename.c_str(), magic);
         return -1;
     }
     DDS_HEADER hdr;
     file.Read(&hdr, sizeof(hdr));
 
-    if (bm_entry.orig_width != static_cast<int>(hdr.dwWidth) || bm_entry.orig_height != static_cast<int>(hdr.dwHeight)) {
+    if (bm_entry.orig_width != static_cast<int>(hdr.width) || bm_entry.orig_height != static_cast<int>(hdr.height)) {
         xlog::error("Bitmap file has changed before being loaded!");
         return -1;
     }
