@@ -115,6 +115,19 @@ CodeInjection CDialog_DoModal_injection{
     },
 };
 
+CodeInjection CFrameWnd_Create_injection{
+    0x00540733,
+    [](auto& regs) {
+        auto& hCurrentResourceHandle = regs.eax;
+        auto lpszTemplateName = AddrAsRef<LPCSTR>(regs.esp);
+        // Customize:
+        // - 128: main menu
+        if (lpszTemplateName == MAKEINTRESOURCE(IDR_MAIN_MENU)) {
+            hCurrentResourceHandle = reinterpret_cast<int>(g_module);
+        }
+    },
+};
+
 CodeInjection CDedLevel_OpenRespawnPointProperties_injection{
     0x00404CB8,
     [](auto& regs) {
@@ -200,6 +213,35 @@ CodeInjection CCutscenePropertiesDialog_ct_crash_fix{
         this_num_shots = 0;
     },
 };
+
+BOOL __fastcall CMainFrame_OnCmdMsg(CWnd* this_, int, UINT nID, int nCode, void* pExtra, void* pHandlerInfo)
+{
+    constexpr int CN_COMMAND = 0;
+    if (nCode == CN_COMMAND && (nID == ID_WIKI_EDITING_MAIN_PAGE || nID == ID_WIKI_HOTKEYS)) {
+        // Tell MFC that this command has a handler so it does not disable menu item
+        if (pHandlerInfo) {
+            // It seems handler info is not used but it's better to initialize it just in case
+            ZeroMemory(pHandlerInfo, 8);
+        }
+        return TRUE;
+    }
+    return AddrCaller{0x00540C5B}.this_call<BOOL>(this_, nID, nCode, pExtra, pHandlerInfo);
+}
+
+BOOL __fastcall CMainFrame_OnCommand(CWnd* this_, int, WPARAM wParam, LPARAM lParam)
+{
+    if (wParam == ID_WIKI_HOTKEYS) {
+        ShellExecuteA(WndToHandle(this_), "open", "https://redfactionwiki.com/wiki/RED_Hotkey_Reference", nullptr, nullptr, SW_SHOW);
+        //MessageBox(0,"OnCommand",0,0);
+        return TRUE;
+    }
+    if (wParam == ID_WIKI_EDITING_MAIN_PAGE) {
+        ShellExecuteA(WndToHandle(this_), "open", "https://redfactionwiki.com/wiki/RF1_Editing_Main_Page", nullptr, nullptr, SW_SHOW);
+        //MessageBox(0,"OnCommand",0,0);
+        return TRUE;
+    }
+    return AddrCaller{0x005402B9}.this_call<BOOL>(this_, wParam, lParam);
+}
 
 void InitLogging()
 {
@@ -291,6 +333,7 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     // Replace some dialog resources
     CWnd_CreateDlg_injection.Install();
     CDialog_DoModal_injection.Install();
+    CFrameWnd_Create_injection.Install();
 
     // Remove "Packfile saved successfully!" message
     AsmWriter{0x0044CCA3, 0x0044CCB3}.nop();
@@ -348,6 +391,11 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     // are sometimes uninitialized
     WriteMem<u8>(0x004190EB, asm_opcodes::jmp_rel_short);
     WriteMem<u8>(0x0041924A, asm_opcodes::jmp_rel_short);
+
+    // Support additional commands
+    WriteMemPtr(0x00556574, &CMainFrame_OnCmdMsg);
+    WriteMemPtr(0x005565E0, &CMainFrame_OnCommand);
+
 
     return 1; // success
 }

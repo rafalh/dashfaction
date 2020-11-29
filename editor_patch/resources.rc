@@ -93,6 +93,101 @@ FONT 8, "MS Sans Serif", 0, 0, 1
     AUTOCHECKBOX    "Is Teleport", IDC_TRIGGER_TELEPORT, 160, 334, 69, 10, 0, WS_EX_LEFT
 }
 
+LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+IDR_MAIN_MENU MENU
+{
+    POPUP "&File"
+    {
+        MENUITEM "&New\tCtrl+N", 57600
+        MENUITEM "&Open...\tCtrl+O", 57601
+        MENUITEM "&Save\tCtrl+S", 57603
+        MENUITEM "Save &As...", 57604
+        MENUITEM SEPARATOR
+        MENUITEM "Recent File", 57616, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "A&utosave", 32845, CHECKED
+        MENUITEM "&Play Level\tF7", 32779
+        MENUITEM "Play Level from &Camera\tF8", 32888
+        MENUITEM "Open &Dialogue Text\tF9", 32892
+        MENUITEM SEPARATOR
+        MENUITEM "Export as &VRML", 32893
+        MENUITEM "Create &Level Packfile", 32899
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit", 57665
+    }
+    POPUP "&Edit"
+    {
+        MENUITEM "&Undo\tCtrl+Z", 57643
+        MENUITEM "&Redo\tCtrl+Y", 57644
+        MENUITEM SEPARATOR
+        MENUITEM "Cu&t\tCtrl+X", 57635
+        MENUITEM "&Copy\tCtrl+C", 57634
+        MENUITEM "&Paste\tCtrl+V", 57637
+        MENUITEM "Delete\tDel", 32792
+        MENUITEM SEPARATOR
+        MENUITEM "&Morph\tCtrl+M", 32886
+        MENUITEM SEPARATOR
+        MENUITEM "Properties\tCtrl+P", 32793
+        MENUITEM "Level Properties", 32801
+    }
+    POPUP "&Level"
+    {
+        MENUITEM "Remove lightmaps", 32835
+        MENUITEM "Calculate Lightmaps", 32836
+        MENUITEM "Calculate Lighting (no shadows)", 32882
+        MENUITEM "Calculate Lighting", 32837
+        MENUITEM SEPARATOR
+        MENUITEM "Calculate Maps and Light (no shadows)", 32889
+        MENUITEM "Calculate Maps and Light", 32890
+        MENUITEM SEPARATOR
+        MENUITEM "Rebuild with hole lines", 32898
+        MENUITEM "Check for holes", 32896
+        MENUITEM "Remove hole check lines", 32895
+    }
+    POPUP "&View"
+    {
+        MENUITEM "Show Just Textures", 32861
+        MENUITEM "Show Textures w/ Lightmaps", 32863
+        MENUITEM "Show Just Lightmaps, no Textures", 32864
+        MENUITEM "Show Rooms in Different Colors", 32865
+        MENUITEM "Show Everything See-through", 32866
+        MENUITEM SEPARATOR
+        MENUITEM "Render Nothing (Except brushes)", 32879
+        MENUITEM "Render Everything", 32867
+        MENUITEM "Render Current Room Only", 32868
+        MENUITEM "Render Using Portals (Like in-game)", 32869
+        MENUITEM SEPARATOR
+        MENUITEM "Don't Draw Portal Faces", 32872
+        MENUITEM "Draw See-thru Portal Faces", 32873
+        MENUITEM "Draw Non-see-thru Portal Faces", 32874
+        MENUITEM SEPARATOR
+        MENUITEM "Draw Sky (Like in-game)", 32877
+        MENUITEM SEPARATOR
+        MENUITEM "Use Multitexturing (If Possible)", 32878
+        MENUITEM SEPARATOR
+        MENUITEM "Show objects as &Bounding Boxes", 32891
+        MENUITEM SEPARATOR
+        MENUITEM "Show Path Node Connections", 32900
+    }
+    POPUP "&Tools"
+    {
+        MENUITEM "&Verify All Textures", 32847
+        MENUITEM SEPARATOR
+        MENUITEM "&Select Objects", 32797
+        MENUITEM "&Hide Objects", 32802
+        MENUITEM "&Generate Report", 32887
+        MENUITEM SEPARATOR
+        MENUITEM "&Preferences", 32795
+    }
+    POPUP "&Help"
+    {
+        MENUITEM "Wiki - &Editing Main Page", ID_WIKI_EDITING_MAIN_PAGE
+        MENUITEM "Wiki - &Hotkeys", ID_WIKI_HOTKEYS
+        MENUITEM SEPARATOR
+        MENUITEM "&About RED...", 57664
+    }
+}
+
 // VERSIONINFO
 #define VER_FILE_DESCRIPTION "Dash Faction level editor patch"
 #define VER_ORIGINAL_FILENAME "DashEditor.dll"
