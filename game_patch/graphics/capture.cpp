@@ -294,10 +294,10 @@ FunHook<void(rf::Monitor&)> MonitorRenderNoise_hook{
         // Use custom noise generation algohritm because the default one is not uniform enough in high resolution
         rf::GrLockInfo lock;
         if (rf::GrLock(mon.bitmap, 0, &lock, 0)) {
-            auto pixel_size = GetBmFormatSize(lock.pixel_format);
-            for (int y = 0; y < lock.height; ++y) {
-                auto ptr = lock.bits + y * lock.pitch;
-                for (int x = 0; x < lock.width; ++x) {
+            auto pixel_size = GetBmFormatSize(lock.format);
+            for (int y = 0; y < lock.h; ++y) {
+                auto ptr = lock.data + y * lock.stride_in_bytes;
+                for (int x = 0; x < lock.w; ++x) {
                     bool white = GenerateStaticNoise();
                     // support 32-bit textures
                     if (pixel_size == 4) {

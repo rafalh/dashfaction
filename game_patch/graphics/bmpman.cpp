@@ -132,8 +132,28 @@ FunHook<rf::BmFormat(int, void**, void**)> bm_lock_hook{
     },
 };
 
+FunHook<bool(rf::BmFormat)> bm_has_alpha_hook{
+    0x00510710,
+    [](rf::BmFormat format) {
+        switch (format) {
+            case rf::BM_FORMAT_4444_ARGB:
+            case rf::BM_FORMAT_1555_ARGB:
+            case rf::BM_FORMAT_8888_ARGB:
+            case rf::BM_FORMAT_DXT1:
+            case rf::BM_FORMAT_DXT2:
+            case rf::BM_FORMAT_DXT3:
+            case rf::BM_FORMAT_DXT4:
+            case rf::BM_FORMAT_DXT5:
+                return true;
+            default:
+                return false;
+        }
+    },
+};
+
 void BmApplyPatches()
 {
     bm_read_header_hook.Install();
     bm_lock_hook.Install();
+    bm_has_alpha_hook.Install();
 }

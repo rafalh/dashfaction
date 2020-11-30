@@ -315,7 +315,7 @@ GrNewFont::GrNewFont(std::string_view name) :
         throw std::runtime_error{"failed to load font"};
     }
 
-    auto bitmap_bits = reinterpret_cast<unsigned char*>(lock.bits);
+    auto bitmap_bits = reinterpret_cast<unsigned char*>(lock.data);
     glyphs_.reserve(unicode_code_points.size());
 
     for (auto codepoint : unicode_code_points) {
@@ -343,9 +343,9 @@ GrNewFont::GrNewFont(std::string_view name) :
         glyph_info.x = slot->bitmap_left;
         glyph_info.y = -slot->bitmap_top;
 
-        int pixel_size = GetBmFormatSize(lock.pixel_format);
-        auto dst_ptr = bitmap_bits + glyph_bm_y * lock.pitch + glyph_bm_x * pixel_size;
-        ConvertSurfaceFormat(dst_ptr, lock.pixel_format, bitmap.buffer, rf::BM_FORMAT_8_ALPHA, bitmap.width, bitmap.rows, lock.pitch, bitmap.pitch);
+        int pixel_size = GetBmFormatSize(lock.format);
+        auto dst_ptr = bitmap_bits + glyph_bm_y * lock.stride_in_bytes + glyph_bm_x * pixel_size;
+        ConvertSurfaceFormat(dst_ptr, lock.format, bitmap.buffer, rf::BM_FORMAT_8_ALPHA, bitmap.width, bitmap.rows, lock.stride_in_bytes, bitmap.pitch);
 
         glyphs_.push_back(glyph_info);
     }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../rf/bmpman.h"
+#include "../rf/common.h"
 #include <xlog/xlog.h>
 
 inline int GetBmFormatSize(rf::BmFormat format)
@@ -99,3 +100,4 @@ void GrColorInit();
 bool ConvertSurfaceFormat(void* dst_bits_ptr, rf::BmFormat dst_fmt, const void* src_bits_ptr,
                           rf::BmFormat src_fmt, int width, int height, int dst_pitch, int src_pitch,
                           const uint8_t* palette = nullptr);
+rf::Color DecodeBlockCompressedPixel(void* block, rf::BmFormat format, int x, int y);

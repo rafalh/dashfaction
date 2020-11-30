@@ -161,12 +161,12 @@ namespace rf
     struct GrLockInfo
     {
         int bm_handle;
-        int section_idx;
-        BmFormat pixel_format;
-        uint8_t *bits;
-        int width;
-        int height;
-        int pitch;
+        int section;
+        BmFormat format;
+        uint8_t *data;
+        int w;
+        int h;
+        int stride_in_bytes;
         int field_1c;
     };
     static_assert(sizeof(GrLockInfo) == 0x20);
@@ -285,6 +285,8 @@ namespace rf
 #ifdef DIRECT3D_VERSION
     static auto& gr_d3d_device_caps = AddrAsRef<D3DCAPS8>(0x01CFCAC8);
 #endif
+    static auto& gr_d3d_textures = AddrAsRef<GrD3DTexture*>(0x01E65338);
+
 
     static constexpr int max_fonts = 12;
     static auto& gr_fonts = AddrAsRef<GrFont[max_fonts]>(0x01886C90);
@@ -302,7 +304,7 @@ namespace rf
     static auto& GrClear = AddrAsRef<void()>(0x0050CDF0);
     static auto& GrCullSphere = AddrAsRef<bool(Vector3& pos, float radius)>(0x005186A0);
     static auto& GrSetTextureMipFilter = AddrAsRef<void(bool linear)>(0x0050E830);
-    static auto& GrLock = AddrAsRef<char(int bmh, int section, GrLockInfo* lock, int a4)>(0x0050E2E0);
+    static auto& GrLock = AddrAsRef<bool(int bm_handle, int section, GrLockInfo* lock, int a4)>(0x0050E2E0);
     static auto& GrUnlock = AddrAsRef<void(GrLockInfo* lock)>(0x0050E310);
     static auto& GrSetClip = AddrAsRef<void(int x, int y, int w, int h)>(0x0050CC60);
     static auto& GrGetClip = AddrAsRef<void(int* x, int* y, int* w, int* h)>(0x0050CD80);
