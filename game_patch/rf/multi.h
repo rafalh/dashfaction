@@ -40,23 +40,25 @@ namespace rf
 
     struct MultiIoStats
     {
-        int num_total_sent_bytes;
-        int num_total_recv_bytes;
-        int num_sent_bytes_unk_idx_f8[30];
-        int num_recv_bytes_unk_idx_f8[30];
-        int unk_idx_f8;
-        int num_sent_bytes_unk_idx1_ec[30];
-        int num_recv_bytes_unk_idx1_ec[30];
-        int unk_idx1_ec;
+        int total_bytes_sent;
+        int total_bytes_recvd;
+        int bytes_sent_per_frame[30];
+        int bytes_recvd_per_frame[30];
+        int frame_slot_index;
+        int bytes_sent_per_second[30];
+        int bytes_recvd_per_second[30];
+        int time_slot_index;
         TimestampRealtime packet_loss_update_timestamp;
-        int num_obj_update_packets_sent;
-        int num_obj_update_packets_recv;
-        int field_1fc[3];
-        int num_sent_bytes_per_packet[55];
-        int num_recv_bytes_per_packet[55];
-        int num_packets_sent[55];
-        int num_packets_recv[55];
-        TimestampRealtime field_578;
+        int obj_update_packets_sent;
+        int obj_update_packets_recvd;
+        int obj_update_repeated;
+        int obj_update_too_slow;
+        int obj_update_too_fast;
+        int bytes_sent_per_type[55];
+        int bytes_recvd_per_type[55];
+        int packets_sent_per_type[55];
+        int packets_recvd_per_type[55];
+        TimestampRealtime time_slot_increment_timestamp;
         int ping_array[2];
         int current_ping_idx;
         TimestampRealtime send_ping_packet_timestamp;

@@ -12,6 +12,7 @@
 #include "../main.h"
 #include "../rf/geometry.h"
 #include "../utils/enum-bitwise-operators.h"
+#include "../console/console.h"
 #include <natupnp.h>
 #include <common/BuildConfig.h>
 #include <xlog/xlog.h>
@@ -51,6 +52,8 @@ static auto& simultaneous_ping = AddrAsRef<uint32_t>(0x00599CD8);
 typedef void MultiIoProcessPackets_Type(const void* data, size_t len, const NwAddr& addr, Player* player);
 static auto& MultiIoProcessPackets = AddrAsRef<MultiIoProcessPackets_Type>(0x004790D0);
 } // namespace rf
+
+int g_update_rate = 30;
 
 typedef void MultiIoPacketHandler(char* data, const rf::NwAddr& addr);
 
@@ -828,6 +831,45 @@ void SendChatLinePacket(const char* msg, rf::Player* target, rf::Player* sender,
     }
 }
 
+CodeInjection client_update_rate_injection{
+    0x0047E5D8,
+    [](auto& regs) {
+        auto& send_obj_update_interval = *reinterpret_cast<int*>(regs.esp);
+        send_obj_update_interval = 1000 / g_update_rate;
+    },
+};
+
+CodeInjection server_update_rate_injection{
+    0x0047E891,
+    [](auto& regs) {
+        auto& min_send_obj_update_interval = *reinterpret_cast<int*>(regs.esp);
+        min_send_obj_update_interval = 1000 / g_update_rate;
+    },
+};
+
+ConsoleCommand2 update_rate_cmd{
+    "update_rate",
+    [](std::optional<int> update_rate) {
+        if (update_rate) {
+            if (rf::is_server) {
+                // By default server-side update-rate is set to 1/0.085 ~= 12, don't allow lower values
+                g_update_rate = std::clamp(update_rate.value(), 12, 60);
+                if (g_update_rate > 30) {
+                    static rf::Color yellow{255, 255, 0, 255};
+                    rf::ConsoleOutput(
+                        "Server update rate greater than 30 is not recommended. It can cause jitter for clients with "
+                        "default update rate and break hit registration for clients with high ping.", &yellow);
+                }
+            }
+            else {
+                // By default client-side update-rate is set to 20, don't allow lower values
+                g_update_rate = std::clamp(update_rate.value(), 20, 60);
+            }
+        }
+        rf::ConsolePrintf("Update rate per second: %d", g_update_rate);
+    },
+};
+
 CodeInjection obj_interp_rotation_fix{
     0x0048443C,
     [](auto& regs) {
@@ -953,6 +995,11 @@ void NetworkInit()
 
     // Use UPnP for port forwarding if server is not in LAN-only mode
     TrackerDoBroadcastServer_hook.Install();
+
+    // Allow changing client and server update rate
+    client_update_rate_injection.Install();
+    server_update_rate_injection.Install();
+    update_rate_cmd.Register();
 
     // Fix rotation interpolation (Y axis) when it goes from 360 to 0 degrees
     obj_interp_rotation_fix.Install();
