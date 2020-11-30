@@ -2,6 +2,8 @@
 #include <commctrl.h>
 #include "resources.h"
 
+128 ICON "resources/icon.ico"
+
 // Main frame top bar
 LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 IDD_MAIN_FRAME_TOP_BAR DIALOG 0, 0, 744, 21

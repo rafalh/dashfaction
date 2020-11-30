@@ -243,6 +243,14 @@ BOOL __fastcall CMainFrame_OnCommand(CWnd* this_, int, WPARAM wParam, LPARAM lPa
     return AddrCaller{0x005402B9}.this_call<BOOL>(this_, wParam, lParam);
 }
 
+HICON __stdcall LoadIconA_new(HINSTANCE hInstance, LPCSTR lpIconName) {
+    HICON result = LoadIconA(g_module, lpIconName);
+    if (!result) {
+        result = LoadIconA(hInstance, lpIconName);
+    }
+    return result;
+}
+
 void InitLogging()
 {
     CreateDirectoryA("logs", nullptr);
@@ -406,6 +414,9 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     WriteMem<int>(0x00447761 + 1, max_size);
     WriteMem<int>(0x004477A0 + 2, -max_size);
     WriteMem<int>(0x004477EE + 2, -max_size);
+
+    // Replace window small icon
+    WriteMemPtr(0x005544FC, &LoadIconA_new);
 
     return 1; // success
 }

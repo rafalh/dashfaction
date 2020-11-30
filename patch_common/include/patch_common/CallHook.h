@@ -69,6 +69,28 @@ public:
     }
 };
 
+template<class R, class... A>
+class CallHook<R __stdcall(A...)> : public CallHookImpl
+{
+private:
+    typedef R __stdcall FunType(A...);
+
+public:
+    CallHook(uintptr_t call_op_addr, FunType* hook_fun_ptr) :
+        CallHookImpl(call_op_addr, reinterpret_cast<void*>(hook_fun_ptr))
+    {}
+
+    CallHook(std::initializer_list<uintptr_t> call_op_addr, FunType* hook_fun_ptr) :
+        CallHookImpl(call_op_addr, reinterpret_cast<void*>(hook_fun_ptr))
+    {}
+
+    R CallTarget(A... a) const
+    {
+        auto target_fun = reinterpret_cast<FunType*>(m_target_fun_ptr);
+        return target_fun(a...);
+    }
+};
+
 #ifdef __cpp_deduction_guides
 // deduction guide for lambda functions
 template<class T>

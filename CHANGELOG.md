@@ -47,6 +47,7 @@ Version 1.5.1 (not released yet)
 - change default server update rate to 20
 - add 'update_rate' command server-side and client-side
 - fix object interpolation in multi-player being played too fast causing a possible jitter
+- replace editor window small icon (left from title) by a resized editor file icon
 
 Version 1.5.0 (released 2020-09-05)
 -----------------------------------
