@@ -884,6 +884,16 @@ CodeInjection obj_interp_rotation_fix{
     },
 };
 
+CodeInjection obj_interp_too_fast_fix{
+    0x00483C3B,
+    [](auto& regs) {
+        // Make all calculations on milliseconds instead of using microseconds and rounding them up
+        auto now = rf::TimerGet(1000);
+        regs.eax = now - regs.ebp;
+        regs.edi = now;
+    },
+};
+
 void NetworkInit()
 {
     // ProcessGamePackets hook (not reliable only)
@@ -1003,4 +1013,7 @@ void NetworkInit()
 
     // Fix rotation interpolation (Y axis) when it goes from 360 to 0 degrees
     obj_interp_rotation_fix.Install();
+
+    // Fix object interpolation playing too fast causing a possible jitter
+    obj_interp_too_fast_fix.Install();
 }
