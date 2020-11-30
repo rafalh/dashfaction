@@ -42,6 +42,7 @@ Version 1.5.1 (not released yet)
 - fix rotation interpolation (Y axis) in multiplayer when it goes from 360 to 0 degrees
 - add links to Red Faction Wiki in RED Help menu replacing old "Help Topics" menu item that did not work on modern
   Windows versions because of the lack of support for WinHelp format
+- fix F4 key (Maximize active viewport) in RED for screens larger than 1024x768
 
 Version 1.5.0 (released 2020-09-05)
 -----------------------------------

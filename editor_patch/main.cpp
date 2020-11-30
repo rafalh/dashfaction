@@ -396,6 +396,16 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     WriteMemPtr(0x00556574, &CMainFrame_OnCmdMsg);
     WriteMemPtr(0x005565E0, &CMainFrame_OnCommand);
 
+    // Fix F4 key (Maximize active viewport) for screens larger than 1024x768
+    constexpr int max_size = 0x7FFF;
+    WriteMem<int>(0x0044770D + 1, max_size);
+    WriteMem<int>(0x0044771D + 1, max_size);
+    WriteMem<int>(0x00447750 + 1, -max_size);
+    WriteMem<int>(0x004477E1 + 1, -max_size);
+    WriteMem<int>(0x00447797 + 1, max_size);
+    WriteMem<int>(0x00447761 + 1, max_size);
+    WriteMem<int>(0x004477A0 + 2, -max_size);
+    WriteMem<int>(0x004477EE + 2, -max_size);
 
     return 1; // success
 }
