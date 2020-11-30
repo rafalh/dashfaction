@@ -127,15 +127,15 @@ IDR_MAIN_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "&Morph\tCtrl+M", 32886
         MENUITEM SEPARATOR
-        MENUITEM "Properties\tCtrl+P", 32793
-        MENUITEM "Level Properties", 32801
+        MENUITEM "Properties...\tCtrl+P", 32793
+        MENUITEM "Level Properties...", 32801
     }
     POPUP "&Level"
     {
         MENUITEM "Remove lightmaps", 32835
-        MENUITEM "Calculate Lightmaps", 32836
+        MENUITEM "Calculate Lightmaps\tL", 32836
         MENUITEM "Calculate Lighting (no shadows)", 32882
-        MENUITEM "Calculate Lighting", 32837
+        MENUITEM "Calculate Lighting\tShift+L", 32837
         MENUITEM SEPARATOR
         MENUITEM "Calculate Maps and Light (no shadows)", 32889
         MENUITEM "Calculate Maps and Light", 32890
@@ -173,11 +173,11 @@ IDR_MAIN_MENU MENU
     {
         MENUITEM "&Verify All Textures", 32847
         MENUITEM SEPARATOR
-        MENUITEM "&Select Objects", 32797
-        MENUITEM "&Hide Objects", 32802
-        MENUITEM "&Generate Report", 32887
+        MENUITEM "&Select Objects...", 32797
+        MENUITEM "&Hide Objects...", 32802
+        MENUITEM "&Generate Report...", 32887
         MENUITEM SEPARATOR
-        MENUITEM "&Preferences", 32795
+        MENUITEM "&Preferences...", 32795
     }
     POPUP "&Help"
     {
