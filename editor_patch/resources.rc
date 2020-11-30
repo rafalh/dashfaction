@@ -113,7 +113,7 @@ IDR_MAIN_MENU MENU
         MENUITEM "Open &Dialogue Text\tF9", 32892
         MENUITEM SEPARATOR
         MENUITEM "Export as &VRML", 32893
-        MENUITEM "Create &Level Packfile", 32899
+        MENUITEM "Create &Level Packfile\tP", 32899
         MENUITEM SEPARATOR
         MENUITEM "E&xit", 57665
     }
@@ -140,7 +140,7 @@ IDR_MAIN_MENU MENU
         MENUITEM "Calculate Lighting\tShift+L", 32837
         MENUITEM SEPARATOR
         MENUITEM "Calculate Maps and Light (no shadows)", 32889
-        MENUITEM "Calculate Maps and Light", 32890
+        MENUITEM "Calculate Maps and Light\tCtrl+L", 32890
         MENUITEM SEPARATOR
         MENUITEM "Rebuild with hole lines", 32898
         MENUITEM "Check for holes", 32896
@@ -188,6 +188,33 @@ IDR_MAIN_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "&About RED...", 57664
     }
+}
+
+LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+128 ACCELERATORS
+{
+    "C",        57634, VIRTKEY, CONTROL
+    "M",        32886, VIRTKEY, CONTROL
+    "N",        57600, VIRTKEY, CONTROL
+    "O",        57601, VIRTKEY, CONTROL
+    "P",        32793, VIRTKEY, CONTROL
+    "S",        57603, VIRTKEY, CONTROL
+    "U",        32808, VIRTKEY, CONTROL
+    "V",        57637, VIRTKEY, CONTROL
+    VK_BACK,    57643, VIRTKEY, ALT
+    VK_DELETE,  57635, VIRTKEY, SHIFT
+    VK_F1,      57667, VIRTKEY
+    VK_F6,      57680, VIRTKEY
+    VK_F6,      57681, VIRTKEY, SHIFT
+    VK_INSERT,  57634, VIRTKEY, CONTROL
+    VK_INSERT,  57637, VIRTKEY, SHIFT
+    "X",        57635, VIRTKEY, CONTROL
+    "Y",        57644, VIRTKEY, CONTROL
+    "Z",        57643, VIRTKEY, CONTROL
+
+    // New accelerators
+    "P",        32899, VIRTKEY
+    "L",        32890, VIRTKEY, CONTROL
 }
 
 // VERSIONINFO

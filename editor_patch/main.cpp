@@ -243,10 +243,18 @@ BOOL __fastcall CMainFrame_OnCommand(CWnd* this_, int, WPARAM wParam, LPARAM lPa
     return AddrCaller{0x005402B9}.this_call<BOOL>(this_, wParam, lParam);
 }
 
-HICON __stdcall LoadIconA_new(HINSTANCE hInstance, LPCSTR lpIconName) {
+HICON WINAPI LoadIconA_new(HINSTANCE hInstance, LPCSTR lpIconName) {
     HICON result = LoadIconA(g_module, lpIconName);
     if (!result) {
         result = LoadIconA(hInstance, lpIconName);
+    }
+    return result;
+}
+
+HACCEL WINAPI LoadAcceleratorsA_new(HINSTANCE hInstance, LPCSTR lpTableName) {
+    HACCEL result = LoadAcceleratorsA(g_module, lpTableName);
+    if (!result) {
+        result = LoadAcceleratorsA(hInstance, lpTableName);
     }
     return result;
 }
@@ -417,6 +425,9 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
 
     // Replace window small icon
     WriteMemPtr(0x005544FC, &LoadIconA_new);
+
+    // Add more accelerators
+    WriteMemPtr(0x005543AC, &LoadAcceleratorsA_new);
 
     return 1; // success
 }

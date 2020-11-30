@@ -48,6 +48,8 @@ Version 1.5.1 (not released yet)
 - add 'update_rate' command server-side and client-side
 - fix object interpolation in multi-player being played too fast causing a possible jitter
 - replace editor window small icon (left from title) by a resized editor file icon
+- add P hotkey for packfile generation in editor
+- add Ctrl+L hotkey for lightmaps and lighting calculation in editor
 
 Version 1.5.0 (released 2020-09-05)
 -----------------------------------
