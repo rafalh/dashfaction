@@ -177,6 +177,9 @@ IDR_MAIN_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "&Select Objects...", 32797
         MENUITEM "&Hide Objects...", 32802
+        MENUITEM "Hide All Objects\tW", ID_HIDE_ALL_OBJECTS
+        MENUITEM "Show All Objects\tShift+W", ID_SHOW_ALL_OBJECTS
+        MENUITEM SEPARATOR
         MENUITEM "&Generate Report...", 32887
         MENUITEM SEPARATOR
         MENUITEM "&Preferences...", 32795

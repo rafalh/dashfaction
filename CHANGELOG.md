@@ -50,6 +50,7 @@ Version 1.5.1 (not released yet)
 - replace editor window small icon (left from title) by a resized editor file icon
 - add P hotkey for packfile generation in editor
 - add Ctrl+L hotkey for lightmaps and lighting calculation in editor
+- add more items in editor main menu
 
 Version 1.5.0 (released 2020-09-05)
 -----------------------------------

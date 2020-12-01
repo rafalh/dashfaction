@@ -115,18 +115,29 @@ CodeInjection CDialog_DoModal_injection{
     },
 };
 
-CodeInjection CFrameWnd_Create_injection{
-    0x00540733,
-    [](auto& regs) {
-        auto& hCurrentResourceHandle = regs.eax;
-        auto lpszTemplateName = AddrAsRef<LPCSTR>(regs.esp);
-        // Customize:
-        // - 128: main menu
-        if (lpszTemplateName == MAKEINTRESOURCE(IDR_MAIN_MENU)) {
-            hCurrentResourceHandle = reinterpret_cast<int>(g_module);
-        }
-    },
-};
+HMENU WINAPI LoadMenuA_new(HINSTANCE hInstance, LPCSTR lpMenuName) {
+    HMENU result = LoadMenuA(g_module, lpMenuName);
+    if (!result) {
+        result = LoadMenuA(hInstance, lpMenuName);
+    }
+    return result;
+}
+
+HICON WINAPI LoadIconA_new(HINSTANCE hInstance, LPCSTR lpIconName) {
+    HICON result = LoadIconA(g_module, lpIconName);
+    if (!result) {
+        result = LoadIconA(hInstance, lpIconName);
+    }
+    return result;
+}
+
+HACCEL WINAPI LoadAcceleratorsA_new(HINSTANCE hInstance, LPCSTR lpTableName) {
+    HACCEL result = LoadAcceleratorsA(g_module, lpTableName);
+    if (!result) {
+        result = LoadAcceleratorsA(hInstance, lpTableName);
+    }
+    return result;
+}
 
 CodeInjection CDedLevel_OpenRespawnPointProperties_injection{
     0x00404CB8,
@@ -214,49 +225,57 @@ CodeInjection CCutscenePropertiesDialog_ct_crash_fix{
     },
 };
 
+class CMainFrame;
+
+static auto RedrawEditorAfterModification = AddrAsRef<int __cdecl()>(0x00483560);
+
+void* GetLevelFromMainFrame(CWnd* main_frame)
+{
+    auto doc = StructFieldRef<void*>(main_frame, 0xD0);
+    return &StructFieldRef<int>(doc, 0x60);
+}
+
 BOOL __fastcall CMainFrame_OnCmdMsg(CWnd* this_, int, UINT nID, int nCode, void* pExtra, void* pHandlerInfo)
 {
     constexpr int CN_COMMAND = 0;
-    if (nCode == CN_COMMAND && (nID == ID_WIKI_EDITING_MAIN_PAGE || nID == ID_WIKI_HOTKEYS)) {
-        // Tell MFC that this command has a handler so it does not disable menu item
-        if (pHandlerInfo) {
-            // It seems handler info is not used but it's better to initialize it just in case
-            ZeroMemory(pHandlerInfo, 8);
+    if (nCode == CN_COMMAND) {
+        switch (nID) {
+            case ID_WIKI_EDITING_MAIN_PAGE:
+            case ID_WIKI_HOTKEYS:
+            case ID_HIDE_ALL_OBJECTS:
+            case ID_SHOW_ALL_OBJECTS:
+                // Tell MFC that this command has a handler so it does not disable menu item
+                if (pHandlerInfo) {
+                    // It seems handler info is not used but it's better to initialize it just in case
+                    ZeroMemory(pHandlerInfo, 8);
+                }
+                return TRUE;
         }
-        return TRUE;
     }
     return AddrCaller{0x00540C5B}.this_call<BOOL>(this_, nID, nCode, pExtra, pHandlerInfo);
 }
 
 BOOL __fastcall CMainFrame_OnCommand(CWnd* this_, int, WPARAM wParam, LPARAM lParam)
 {
-    if (wParam == ID_WIKI_HOTKEYS) {
-        ShellExecuteA(WndToHandle(this_), "open", "https://redfactionwiki.com/wiki/RED_Hotkey_Reference", nullptr, nullptr, SW_SHOW);
-        //MessageBox(0,"OnCommand",0,0);
-        return TRUE;
+    switch (wParam) {
+        case ID_WIKI_HOTKEYS:
+            ShellExecuteA(WndToHandle(this_), "open", "https://redfactionwiki.com/wiki/RED_Hotkey_Reference", nullptr, nullptr, SW_SHOW);
+            break;
+        case ID_WIKI_EDITING_MAIN_PAGE:
+            ShellExecuteA(WndToHandle(this_), "open", "https://redfactionwiki.com/wiki/RF1_Editing_Main_Page", nullptr, nullptr, SW_SHOW);
+            break;
+        case ID_HIDE_ALL_OBJECTS:
+            AddrCaller{0x0042DCA0}.this_call(GetLevelFromMainFrame(this_));
+            RedrawEditorAfterModification();
+            break;
+        case ID_SHOW_ALL_OBJECTS:
+            AddrCaller{0x0042DDA0}.this_call(GetLevelFromMainFrame(this_));
+            RedrawEditorAfterModification();
+            break;
+        default:
+            return AddrCaller{0x005402B9}.this_call<BOOL>(this_, wParam, lParam);
     }
-    if (wParam == ID_WIKI_EDITING_MAIN_PAGE) {
-        ShellExecuteA(WndToHandle(this_), "open", "https://redfactionwiki.com/wiki/RF1_Editing_Main_Page", nullptr, nullptr, SW_SHOW);
-        //MessageBox(0,"OnCommand",0,0);
-        return TRUE;
-    }
-    return AddrCaller{0x005402B9}.this_call<BOOL>(this_, wParam, lParam);
-}
-
-HICON WINAPI LoadIconA_new(HINSTANCE hInstance, LPCSTR lpIconName) {
-    HICON result = LoadIconA(g_module, lpIconName);
-    if (!result) {
-        result = LoadIconA(hInstance, lpIconName);
-    }
-    return result;
-}
-
-HACCEL WINAPI LoadAcceleratorsA_new(HINSTANCE hInstance, LPCSTR lpTableName) {
-    HACCEL result = LoadAcceleratorsA(g_module, lpTableName);
-    if (!result) {
-        result = LoadAcceleratorsA(hInstance, lpTableName);
-    }
-    return result;
+    return TRUE;
 }
 
 void InitLogging()
@@ -346,10 +365,12 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     brush_mode_handle_selection_hook.Install();
     group_mode_handle_selection_hook.Install();
 
-    // Replace some dialog resources
+    // Replace some editor resources
     CWnd_CreateDlg_injection.Install();
     CDialog_DoModal_injection.Install();
-    CFrameWnd_Create_injection.Install();
+    WriteMemPtr(0x0055456C, &LoadMenuA_new);
+    WriteMemPtr(0x005544FC, &LoadIconA_new);
+    WriteMemPtr(0x005543AC, &LoadAcceleratorsA_new);
 
     // Remove "Packfile saved successfully!" message
     AsmWriter{0x0044CCA3, 0x0044CCB3}.nop();
@@ -422,12 +443,6 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     WriteMem<int>(0x00447761 + 1, max_size);
     WriteMem<int>(0x004477A0 + 2, -max_size);
     WriteMem<int>(0x004477EE + 2, -max_size);
-
-    // Replace window small icon
-    WriteMemPtr(0x005544FC, &LoadIconA_new);
-
-    // Add more accelerators
-    WriteMemPtr(0x005543AC, &LoadAcceleratorsA_new);
 
     return 1; // success
 }
