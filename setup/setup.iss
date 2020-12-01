@@ -29,6 +29,7 @@ Name: "rflassoc"; Description: "Associate .rfl file extension with Dash Faction 
 Name: "fftracker"; Description: "Set rfgt.factionfiles.com as multiplayer tracker"; GroupDescription: "Other options:"
 Name: "patchgame"; Description: "Install needed game patches"; GroupDescription: "Other options:"; Check: "PatchGameTaskCheck"
 Name: "replacerflauncher"; Description: "Replace Red Faction launcher by a link to Dash Faction launcher (allows starting Dash Faction from Steam client)"; GroupDescription: "Other options:"; Flags: unchecked
+Name: "redvisualstyles"; Description: "Enable Windows Visual Styles for the level editor (experimental)"; GroupDescription: "Other options:"; Flags: unchecked
 
 [Files]
 Source: "{#BinDir}\DashFactionLauncher.exe"; DestDir: "{app}"; Flags: ignoreversion
@@ -39,6 +40,7 @@ Source: "{#SrcRootDir}\dashfaction.vpp"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SrcRootDir}\licensing-info.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SrcRootDir}\LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SrcRootDir}\CHANGELOG.md"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#SrcRootDir}\resources\RED.exe.manifest"; DestDir: "{code:GetGameDir}"; Flags: ignoreversion; Tasks: redvisualstyles
 ; RTPatch patches (extracted from official 1.20 patches)
 Source: "{#PatchesDir}\patchw32.dll"; Flags: dontcopy
 Source: "{#PatchesDir}\rf120_na.rtp"; Flags: dontcopy
