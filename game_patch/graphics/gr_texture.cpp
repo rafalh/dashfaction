@@ -303,7 +303,8 @@ bool gr_d3d_lock(int bm_handle, int section, rf::GrLockInfo *lock) {
     }
     D3DLOCKED_RECT locked_rect;
     auto d3d_texture = tslot.sections[section].d3d_texture;
-    if (FAILED(d3d_texture->LockRect(0, &locked_rect, nullptr, 0))) {
+    DWORD lock_flags = lock->mode == 0 ? D3DLOCK_READONLY : 0;
+    if (FAILED(d3d_texture->LockRect(0, &locked_rect, nullptr, lock_flags))) {
         return false;
     }
 

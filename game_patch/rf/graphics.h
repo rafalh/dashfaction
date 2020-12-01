@@ -167,7 +167,7 @@ namespace rf
         int w;
         int h;
         int stride_in_bytes;
-        int field_1c;
+        int mode;
     };
     static_assert(sizeof(GrLockInfo) == 0x20);
 

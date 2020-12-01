@@ -52,6 +52,7 @@ Version 1.5.1 (not released yet)
 - add Ctrl+L hotkey for lightmaps and lighting calculation in editor
 - add more items in editor main menu
 - add option in setup program to enable Windows Visual Styles for the level editor
+- performance optimizations
 
 Version 1.5.0 (released 2020-09-05)
 -----------------------------------
