@@ -19,7 +19,7 @@
 #include <fstream>
 #include <cstring>
 
-#define AUTODL_AGENT_NAME "hoverlees"
+#define AUTODL_AGENT_NAME "Dash Faction"
 #define AUTODL_BASE_URL "http://pfapi.factionfiles.com"
 
 struct LevelDownloadInfo
