@@ -158,6 +158,13 @@ namespace rf
     };
     static_assert(sizeof(GrVertex) == 0x30);
 
+    enum GrLockMode
+    {
+        GR_LOCK_READ_ONLY = 0,
+        GR_LOCK_READ_ONLY_WRITE = 1,
+        GR_LOCK_WRITE_ONLY = 2,
+    };
+
     struct GrLockInfo
     {
         int bm_handle;
@@ -167,7 +174,7 @@ namespace rf
         int w;
         int h;
         int stride_in_bytes;
-        int mode;
+        GrLockMode mode;
     };
     static_assert(sizeof(GrLockInfo) == 0x20);
 
@@ -304,7 +311,7 @@ namespace rf
     static auto& GrClear = AddrAsRef<void()>(0x0050CDF0);
     static auto& GrCullSphere = AddrAsRef<bool(Vector3& pos, float radius)>(0x005186A0);
     static auto& GrSetTextureMipFilter = AddrAsRef<void(bool linear)>(0x0050E830);
-    static auto& GrLock = AddrAsRef<bool(int bm_handle, int section, GrLockInfo* lock, int a4)>(0x0050E2E0);
+    static auto& GrLock = AddrAsRef<bool(int bm_handle, int section, GrLockInfo* lock, GrLockMode mode)>(0x0050E2E0);
     static auto& GrUnlock = AddrAsRef<void(GrLockInfo* lock)>(0x0050E310);
     static auto& GrSetClip = AddrAsRef<void(int x, int y, int w, int h)>(0x0050CC60);
     static auto& GrGetClip = AddrAsRef<void(int* x, int* y, int* w, int* h)>(0x0050CD80);

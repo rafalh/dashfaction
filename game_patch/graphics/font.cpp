@@ -310,7 +310,7 @@ GrNewFont::GrNewFont(std::string_view name) :
         throw std::runtime_error{"failed to load font"};
     }
     rf::GrLockInfo lock;
-    if (!rf::GrLock(bitmap_, 0, &lock, 2)) {
+    if (!rf::GrLock(bitmap_, 0, &lock, rf::GR_LOCK_WRITE_ONLY)) {
         xlog::error("GrLock failed for font texture");
         throw std::runtime_error{"failed to load font"};
     }

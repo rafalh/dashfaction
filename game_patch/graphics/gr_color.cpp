@@ -737,7 +737,7 @@ CodeInjection LevelLoadLightmaps_color_conv_patch{
         auto lightmap = reinterpret_cast<rf::GLightmap*>(regs.ebx);
 
         rf::GrLockInfo lock;
-        if (!rf::GrLock(lightmap->bm_handle, 0, &lock, 2))
+        if (!rf::GrLock(lightmap->bm_handle, 0, &lock, rf::GR_LOCK_WRITE_ONLY))
             return;
 
     #if 1 // cap minimal color channel value as RF does
@@ -763,7 +763,7 @@ CodeInjection GSurface_CalculateLightmap_color_conv_patch{
         auto face_light_info = reinterpret_cast<void*>(regs.esi);
         rf::GLightmap& lightmap = *StructFieldRef<rf::GLightmap*>(face_light_info, 12);
         rf::GrLockInfo lock;
-        if (!rf::GrLock(lightmap.bm_handle, 0, &lock, 1)) {
+        if (!rf::GrLock(lightmap.bm_handle, 0, &lock, rf::GR_LOCK_WRITE_ONLY)) {
             return;
         }
 
@@ -792,7 +792,7 @@ CodeInjection GSurface_AllocLightmap_color_conv_patch{
         auto face_light_info = reinterpret_cast<void*>(regs.esi);
         rf::GLightmap& lightmap = *StructFieldRef<rf::GLightmap*>(face_light_info, 12);
         rf::GrLockInfo lock;
-        if (!rf::GrLock(lightmap.bm_handle, 0, &lock, 1)) {
+        if (!rf::GrLock(lightmap.bm_handle, 0, &lock, rf::GR_LOCK_WRITE_ONLY)) {
             return;
         }
 
@@ -823,11 +823,11 @@ CodeInjection GProcTexUpdateWater_patch{
         uintptr_t waveform_info = static_cast<uintptr_t>(regs.esi);
         int src_bm_handle = *reinterpret_cast<int*>(waveform_info + 36);
         rf::GrLockInfo src_lock_data, dst_lock_data;
-        if (!rf::GrLock(src_bm_handle, 0, &src_lock_data, 0)) {
+        if (!rf::GrLock(src_bm_handle, 0, &src_lock_data, rf::GR_LOCK_READ_ONLY)) {
             return;
         }
         int dst_bm_handle = *reinterpret_cast<int*>(waveform_info + 24);
-        if (!rf::GrLock(dst_bm_handle, 0, &dst_lock_data, 2)) {
+        if (!rf::GrLock(dst_bm_handle, 0, &dst_lock_data, rf::GR_LOCK_WRITE_ONLY)) {
             rf::GrUnlock(&src_lock_data);
             return;
         }

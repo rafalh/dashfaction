@@ -230,7 +230,7 @@ FunHook <void(int, float, float, rf::Color*)> gr_d3d_get_texel_hook{
         if (BmIsCompressedFormat(rf::BmGetFormat(bm_handle))) {
             // This function is only used when shooting at a texture with alpha
             rf::GrLockInfo lock;
-            if (rf::GrLock(bm_handle, 0, &lock, 0)) {
+            if (rf::GrLock(bm_handle, 0, &lock, rf::GR_LOCK_READ_ONLY)) {
                 // Make sure u and v are in [0, 1] range
                 // Assume wrap addressing mode
                 u = std::fmod(u, 1.0f);
@@ -303,7 +303,7 @@ bool gr_d3d_lock(int bm_handle, int section, rf::GrLockInfo *lock) {
     }
     D3DLOCKED_RECT locked_rect;
     auto d3d_texture = tslot.sections[section].d3d_texture;
-    DWORD lock_flags = lock->mode == 0 ? D3DLOCK_READONLY : 0;
+    DWORD lock_flags = lock->mode == rf::GR_LOCK_READ_ONLY ? D3DLOCK_READONLY : 0;
     if (FAILED(d3d_texture->LockRect(0, &locked_rect, nullptr, lock_flags))) {
         return false;
     }
