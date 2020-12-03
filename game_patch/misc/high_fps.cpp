@@ -165,7 +165,7 @@ void FtolIssuesDetectionDoFrame()
             if (is_fps_dependent && is_significant) {
                 bool is_new = g_ftol_issues.insert(p.first).second;
                 if (is_new)
-                    rf::ConsolePrintf("ftol issue detected: address %08X ratio %.2f estimated value %.4f", p.first - 5,
+                    rf::console_printf("ftol issue detected: address %08X ratio %.2f estimated value %.4f", p.first - 5,
                                  ratio, avg_high_fps);
             }
         }
@@ -198,7 +198,7 @@ ConsoleCommand2 detect_ftol_issues_cmd{
         else {
             g_ftol_issue_detection = false;
         }
-        rf::ConsolePrintf("ftol issues detection is %s", g_ftol_issue_detection ? "enabled" : "disabled");
+        rf::console_printf("ftol issues detection is %s", g_ftol_issue_detection ? "enabled" : "disabled");
     },
     "detect_ftol_issues <fps>",
 };
@@ -213,7 +213,7 @@ CodeInjection stuck_to_ground_when_jumping_fix{
         auto entity = reinterpret_cast<rf::Entity*>(regs.esi);
         if (entity->local_player) {
             // Skip land handling code for next 64 ms (like in PF)
-            g_player_jump_timestamp.Set(64);
+            g_player_jump_timestamp.set(64);
         }
     },
 };
@@ -224,7 +224,7 @@ CodeInjection stuck_to_ground_when_using_jump_pad_fix{
         auto entity = reinterpret_cast<rf::Entity*>(regs.esi);
         if (entity->local_player) {
             // Skip land handling code for next 64 ms
-            g_player_jump_timestamp.Set(64);
+            g_player_jump_timestamp.set(64);
         }
     },
 };
@@ -233,7 +233,7 @@ CodeInjection stuck_to_ground_fix{
     0x00487F82,
     [](auto& regs) {
         auto entity = reinterpret_cast<rf::Entity*>(regs.esi);
-        if (entity->local_player && g_player_jump_timestamp.Valid() && !g_player_jump_timestamp.Elapsed()) {
+        if (entity->local_player && g_player_jump_timestamp.valid() && !g_player_jump_timestamp.elapsed()) {
             // Jump to jump handling code that sets entity to falling movement mode
             regs.eip = 0x00487F7B;
         }
@@ -269,7 +269,7 @@ void HighFpsAfterLevelLoad(rf::String& level_filename)
         //xlog::info("Fixing Submarine exploding bug...");
         int uids[] = {4679, 4680};
         for (int uid : uids) {
-            auto event = rf::EventLookupFromUid(uid);
+            auto event = rf::event_lookup_from_uid(uid);
             if (event && event->delay_seconds == 1.5f) {
                 event->delay_seconds += 1.5f;
             }
@@ -317,7 +317,7 @@ CodeInjection cutscene_shot_sync_fix{
         auto& current_shot_timer = StructFieldRef<rf::Timestamp>(rf::active_cutscene, 0x810);
         if (current_shot_idx > 1) {
             // decrease time for next shot using current shot timer value
-            int shot_time_left_ms = current_shot_timer.TimeUntil();
+            int shot_time_left_ms = current_shot_timer.time_until();
             if (shot_time_left_ms > 0 || shot_time_left_ms < -100)
                 xlog::warn("invalid shot_time_left_ms %d", shot_time_left_ms);
             regs.eax += shot_time_left_ms;
@@ -325,10 +325,10 @@ CodeInjection cutscene_shot_sync_fix{
     },
 };
 
-FunHook<void(rf::Entity&, rf::Vector3&)> EntityOnLand_hook{
+FunHook<void(rf::Entity&, rf::Vector3&)> entity_on_land_hook{
     0x00419830,
     [](rf::Entity& entity, rf::Vector3& pos) {
-        EntityOnLand_hook.CallTarget(entity, pos);
+        entity_on_land_hook.CallTarget(entity, pos);
         entity.p_data.vel.y = 0.0f;
     },
 };
@@ -345,7 +345,7 @@ CodeInjection particle_update_accel_patch{
     0x00495282,
     [](auto& regs) {
         auto& vel = AddrAsRef<rf::Vector3>(regs.ecx);
-        if (vel.Len() < 0.0001f) {
+        if (vel.len() < 0.0001f) {
             regs.eip = 0x00495301;
         }
     },
@@ -392,7 +392,7 @@ void HighFpsInit()
     AsmWriter(0x004E68B6, 0x004E68D1).nop();
     WaterAnimateWaves_speed_fix.Install();
 
-    // Fix TimerGet handling of frequency greater than 2MHz (sign bit is set in 32 bit dword)
+    // Fix timer_get handling of frequency greater than 2MHz (sign bit is set in 32 bit dword)
     QueryPerformanceFrequency(&g_qpc_frequency);
     timer_get_hook.Install();
 
@@ -416,7 +416,7 @@ void HighFpsInit()
     // Fix flee AI mode on high FPS by avoiding clearing velocity in Y axis in EntityMakeRun
     AsmWriter(0x00428121, 0x0042812B).nop();
     AsmWriter(0x0042809F, 0x004280A9).nop();
-    EntityOnLand_hook.Install();
+    entity_on_land_hook.Install();
     entity_make_run_after_climbing_patch.Install();
 
     // Fix flamethrower "stroboscopic effect" on high FPS

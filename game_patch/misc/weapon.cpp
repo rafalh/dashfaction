@@ -18,13 +18,13 @@ bool ShouldSwapWeaponAltFire(rf::Player* player)
         return false;
     }
 
-    auto entity = rf::EntityFromHandle(player->entity_handle);
+    auto entity = rf::entity_from_handle(player->entity_handle);
     if (!entity) {
         return false;
     }
 
     // Check if local entity is attached to a parent (vehicle or torret)
-    auto parent = rf::EntityFromHandle(entity->host_handle);
+    auto parent = rf::entity_from_handle(entity->host_handle);
     if (parent) {
         return false;
     }
@@ -37,8 +37,8 @@ bool IsPlayerWeaponInContinousFire(rf::Player* player, bool alt_fire) {
     if (!player) {
         player = rf::local_player;
     }
-    auto entity = rf::EntityFromHandle(player->entity_handle);
-    bool is_continous_fire = rf::EntityWeaponInOn(entity->handle, entity->ai.current_primary_weapon);
+    auto entity = rf::entity_from_handle(player->entity_handle);
+    bool is_continous_fire = rf::entity_weapon_is_on(entity->handle, entity->ai.current_primary_weapon);
     bool is_alt_fire_flag_set = (entity->ai.flags & 0x2000) != 0; // EWF_ALT_FIRE = 0x2000
     if (ShouldSwapWeaponAltFire(player)) {
         is_alt_fire_flag_set = !is_alt_fire_flag_set;
@@ -87,7 +87,7 @@ ConsoleCommand2 swap_assault_rifle_controls_cmd{
     []() {
         g_game_config.swap_assault_rifle_controls = !g_game_config.swap_assault_rifle_controls;
         g_game_config.save();
-        rf::ConsolePrintf("Swap assault rifle controls: %s",
+        rf::console_printf("Swap assault rifle controls: %s",
                      g_game_config.swap_assault_rifle_controls ? "enabled" : "disabled");
     },
     "Swap Assault Rifle controls",
@@ -95,7 +95,7 @@ ConsoleCommand2 swap_assault_rifle_controls_cmd{
 
 bool EntityIsReloading_PlayerSelectWeapon_New(rf::Entity* entity)
 {
-    if (rf::EntityIsReloading(entity))
+    if (rf::entity_is_reloading(entity))
         return true;
 
     int weapon_type = entity->ai.current_primary_weapon;
@@ -141,7 +141,7 @@ FunHook<void(rf::Weapon *weapon)> WeaponMoveOne_hook{
         || pos.z < level_aabb_min.z - margin || pos.z > level_aabb_max.z + margin
         || (check_y_axis && (pos.y < level_aabb_min.y - margin || pos.y > level_aabb_max.y + margin))) {
             // Weapon is outside the level - delete it
-            rf::ObjQueueDelete(weapon);
+            rf::obj_flag_dead(weapon);
         }
     },
 };
@@ -154,7 +154,7 @@ CodeInjection weapon_vs_obj_collision_fix{
         auto dir = obj->pos - weapon->pos;
         // Take into account weapon and object radius
         float rad = weapon->radius + obj->radius;
-        if (dir.DotProd(weapon->orient.fvec) < -rad) {
+        if (dir.dot_prod(weapon->orient.fvec) < -rad) {
             // Ignore this pair
             regs.eip = 0x0048C82A;
         }
@@ -169,21 +169,21 @@ FunHook<void(rf::Player*, int)> PlayerMakeWeaponCurrentSelection_hook{
     0x004A4980,
     [](rf::Player* player, int weapon_type) {
         PlayerMakeWeaponCurrentSelection_hook.CallTarget(player, weapon_type);
-        auto entity = rf::EntityFromHandle(player->entity_handle);
+        auto entity = rf::entity_from_handle(player->entity_handle);
         if (entity && rf::is_multi) {
             // Reset impact delay timers when switching weapon (except in SP because of speedrunners)
-            entity->ai.create_weapon_delay_timestamps[0].Invalidate();
-            entity->ai.create_weapon_delay_timestamps[1].Invalidate();
+            entity->ai.create_weapon_delay_timestamps[0].invalidate();
+            entity->ai.create_weapon_delay_timestamps[1].invalidate();
         }
     },
 };
 
 bool WeaponUsesAmmo(int weapon_type, bool alt_fire)
 {
-    if (rf::WeaponIsDetonator(weapon_type)) {
+    if (rf::weapon_is_detonator(weapon_type)) {
          return false;
     }
-    if (rf::WeaponIsRiotStick(weapon_type) && alt_fire) {
+    if (rf::weapon_is_riot_stick(weapon_type) && alt_fire) {
         return true;
     }
     auto info = &rf::weapon_types[weapon_type];
@@ -214,8 +214,8 @@ FunHook<void(rf::Entity*, int, rf::Vector3*, rf::Matrix3*, bool)> MultiProcessRe
     [](rf::Entity *entity, int weapon_type, rf::Vector3 *pos, rf::Matrix3 *orient, bool alt_fire) {
         if (entity->ai.current_primary_weapon != weapon_type) {
             xlog::info("Weapon mismatch when processing weapon fire packet");
-            auto player = rf::GetPlayerFromEntityHandle(entity->handle);
-            rf::PlayerMakeWeaponCurrentSelection(player, weapon_type);
+            auto player = rf::player_from_entity_handle(entity->handle);
+            rf::player_make_weapon_current_selection(player, weapon_type);
         }
 
         if (rf::is_server && IsEntityOutOfAmmo(entity, weapon_type, alt_fire)) {
@@ -232,7 +232,7 @@ CodeInjection ProcessObjUpdatePacket_check_if_weapon_is_possessed_patch{
     [](auto& regs) {
         auto entity = reinterpret_cast<rf::Entity*>(regs.edi);
         auto weapon_type = regs.ebx;
-        if (rf::is_server && !rf::AiHasWeapon(&entity->ai, weapon_type)) {
+        if (rf::is_server && !rf::ai_has_weapon(&entity->ai, weapon_type)) {
             // skip switching player weapon
             xlog::info("Skipping weapon switch because player does not possess the weapon");
             regs.eip = 0x0047E467;
@@ -244,7 +244,7 @@ CodeInjection muzzle_flash_light_not_disabled_fix{
     0x0041E806,
     [](auto& regs) {
         auto muzzle_flash_timer = AddrAsRef<rf::Timestamp>(regs.ecx);
-        if (!muzzle_flash_timer.Valid()) {
+        if (!muzzle_flash_timer.valid()) {
             regs.eip = 0x0041E969;
         }
     },
@@ -257,7 +257,7 @@ CallHook<void(rf::Player* player, int weapon_type)> ProcessCreateEntityPacket_sw
         // Check if local player is being spawned
         if (!rf::is_server && player == rf::local_player) {
             // Update requested weapon to make sure server does not auto-switch the weapon during item pickup
-            rf::MultiSetNextWeapon(weapon_type);
+            rf::multi_set_next_weapon(weapon_type);
         }
     },
 };
@@ -268,7 +268,7 @@ ConsoleCommand2 show_enemy_bullets_cmd{
         g_game_config.show_enemy_bullets = !g_game_config.show_enemy_bullets;
         g_game_config.save();
         rf::hide_enemy_bullets = !g_game_config.show_enemy_bullets;
-        rf::ConsolePrintf("Enemy bullets are %s", g_game_config.show_enemy_bullets ? "enabled" : "disabled");
+        rf::console_printf("Enemy bullets are %s", g_game_config.show_enemy_bullets ? "enabled" : "disabled");
     },
     "Toggles enemy bullets visibility",
 };

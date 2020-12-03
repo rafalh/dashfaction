@@ -48,12 +48,11 @@ namespace rf
     };
     static_assert(sizeof(VMeshCollisionOutput) == 0x20);
 
-
-    static auto& VMeshGetType = AddrAsRef<VMeshType(VMesh *vmesh)>(0x00502B00);
-    static auto& VMeshGetName = AddrAsRef<const char*(VMesh* vmesh)>(0x00503470);
-    static auto& VMeshGetNumCSpheres = AddrAsRef<int(VMesh *vmesh)>(0x00503250);
-    static auto& VMeshGetCSphere = AddrAsRef<bool(VMesh *vmesh, int index, Vector3 *pos, float *radius)>(0x00503270);
-    static auto& VMeshCollide = AddrAsRef<bool(VMesh *vmesh, VMeshCollisionInput *in, VMeshCollisionOutput *out, bool clear)>(0x005031F0);
-    static auto& VMeshCalculateLightingDataSize = AddrAsRef<int(VMesh *vmesh)>(0x00503F50);
-    static auto& VMeshUpdateLightingData = AddrAsRef<int(VMesh *vmesh, GRoom *room, const Vector3 &pos, const Matrix3 &orient, void *mesh_lighting_data)>(0x00504000);
+    static auto& vmesh_get_type = AddrAsRef<VMeshType(VMesh *vmesh)>(0x00502B00);
+    static auto& vmesh_get_name = AddrAsRef<const char*(VMesh* vmesh)>(0x00503470);
+    static auto& vmesh_get_num_cspheres = AddrAsRef<int(VMesh *vmesh)>(0x00503250);
+    static auto& vmesh_get_csphere = AddrAsRef<bool(VMesh *vmesh, int index, Vector3 *pos, float *radius)>(0x00503270);
+    static auto& vmesh_collide = AddrAsRef<bool(VMesh *vmesh, VMeshCollisionInput *in, VMeshCollisionOutput *out, bool clear)>(0x005031F0);
+    static auto& vmesh_calc_lighting_data_size = AddrAsRef<int(VMesh *vmesh)>(0x00503F50);
+    static auto& vmesh_update_lighting_data = AddrAsRef<int(VMesh *vmesh, GRoom *room, const Vector3 &pos, const Matrix3 &orient, void *mesh_lighting_data)>(0x00504000);
 }

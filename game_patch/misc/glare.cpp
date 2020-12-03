@@ -28,7 +28,7 @@ static bool GlareCollideObject(rf::Glare* glare, rf::Object* obj, const rf::Vect
     }
 
     // Skip local entity vehicle
-    if (rf::EntityIsAttachedToVehicle(rf::local_player_entity) && obj->handle == rf::local_player_entity->host_handle) {
+    if (rf::entity_is_attached_to_vehicle(rf::local_player_entity) && obj->handle == rf::local_player_entity->host_handle) {
         return false;
     }
 
@@ -36,15 +36,15 @@ static bool GlareCollideObject(rf::Glare* glare, rf::Object* obj, const rf::Vect
     if (rf::CutsceneIsActive() && obj->type == rf::OT_ENTITY) {
         // Fix glares/coronas being visible through characters during cutscenes
         rf::Vector3 root_bone_pos;
-        rf::ObjFindRootBonePos(static_cast<rf::Entity*>(obj), root_bone_pos);
+        rf::obj_find_root_bone_pos(static_cast<rf::Entity*>(obj), root_bone_pos);
         rf::Vector3 aabb_min = root_bone_pos - obj->p_data.radius;
         rf::Vector3 aabb_max = root_bone_pos + obj->p_data.radius;
-        if (!rf::IxLineSegmentBoundingBox(aabb_min, aabb_max, glare->pos, eye_pos, &hit_pt)) {
+        if (!rf::ix_linesegment_boundingbox(aabb_min, aabb_max, glare->pos, eye_pos, &hit_pt)) {
             return false;
         }
     }
     else {
-        if (!rf::IxLineSegmentBoundingBox(obj->p_data.bbox_min, obj->p_data.bbox_max, glare->pos, eye_pos, &hit_pt)) {
+        if (!rf::ix_linesegment_boundingbox(obj->p_data.bbox_min, obj->p_data.bbox_max, glare->pos, eye_pos, &hit_pt)) {
             return false;
         }
     }
@@ -57,7 +57,7 @@ static bool GlareCollideObject(rf::Glare* glare, rf::Object* obj, const rf::Vect
     col_in.mesh_pos = obj->pos;
     col_in.mesh_orient = obj->orient;
     col_in.radius = 0.0f;
-    return rf::VMeshCollide(obj->vmesh, &col_in, &col_out, true);
+    return rf::vmesh_collide(obj->vmesh, &col_in, &col_out, true);
 }
 
 static bool GlareCollideMoverBrush(rf::Glare* glare, rf::MoverBrush* mbp, const rf::Vector3& eye_pos)
@@ -67,7 +67,7 @@ static bool GlareCollideMoverBrush(rf::Glare* glare, rf::MoverBrush* mbp, const 
     }
 
     rf::Vector3 hit_pt;
-    if (!rf::IxLineSegmentBoundingBox(mbp->p_data.bbox_min, mbp->p_data.bbox_max, glare->pos, eye_pos, &hit_pt)) {
+    if (!rf::ix_linesegment_boundingbox(mbp->p_data.bbox_min, mbp->p_data.bbox_max, glare->pos, eye_pos, &hit_pt)) {
         return false;
     }
     rf::GCollisionInput col_in;
@@ -78,11 +78,11 @@ static bool GlareCollideMoverBrush(rf::Glare* glare, rf::MoverBrush* mbp, const 
     col_in.radius = 0.0f;
     col_in.geometry_pos = mbp->pos;
     col_in.geometry_orient = mbp->orient;
-    mbp->geometry->Collide(&col_in, &col_out, true);
+    mbp->geometry->collide(&col_in, &col_out, true);
     return col_out.num_hits != 0;
 }
 
-FunHook<void(bool)> GlareRenderAllCorona_hook{
+FunHook<void(bool)> glare_render_all_flares_hook{
     0x004154F0,
     [](bool reflections) {
         // check if glares were disabled by vli command
@@ -122,11 +122,11 @@ FunHook<void(bool)> GlareRenderAllCorona_hook{
             }
         }
 
-        GlareRenderAllCorona_hook.CallTarget(reflections);
+        glare_render_all_flares_hook.CallTarget(reflections);
     },
 };
 
-FunHook<bool(rf::Glare* glare, const rf::Vector3& eye_pos)> GlareIsInView_hook{
+FunHook<bool(rf::Glare* glare, const rf::Vector3& eye_pos)> glare_is_in_view_hook{
     0x00414E00,
     [](rf::Glare* glare, const rf::Vector3& eye_pos) {
         rf::GCollisionInput geo_collide_in;
@@ -138,7 +138,7 @@ FunHook<bool(rf::Glare* glare, const rf::Vector3& eye_pos)> GlareIsInView_hook{
 
         if (glare->last_covering_face) {
             geo_collide_in.face = glare->last_covering_face;
-            rf::level.geometry->Collide(&geo_collide_in, &geo_collide_out, true);
+            rf::level.geometry->collide(&geo_collide_in, &geo_collide_out, true);
             if (geo_collide_out.num_hits != 0) {
                 return false;
             }
@@ -153,7 +153,7 @@ FunHook<bool(rf::Glare* glare, const rf::Vector3& eye_pos)> GlareIsInView_hook{
         }
 
         if (glare->last_covering_objh != -1) {
-            auto obj = rf::ObjFromHandle(glare->last_covering_objh);
+            auto obj = rf::obj_from_handle(glare->last_covering_objh);
             if (obj && GlareCollideObject(glare, obj, eye_pos)) {
                 return false;
             }
@@ -161,7 +161,7 @@ FunHook<bool(rf::Glare* glare, const rf::Vector3& eye_pos)> GlareIsInView_hook{
         }
 
         geo_collide_in.face = nullptr;
-        rf::level.geometry->Collide(&geo_collide_in, &geo_collide_out, true);
+        rf::level.geometry->collide(&geo_collide_in, &geo_collide_out, true);
         if (geo_collide_out.num_hits != 0) {
             glare->last_covering_face = geo_collide_out.face;
             return false;
@@ -184,15 +184,15 @@ FunHook<bool(rf::Glare* glare, const rf::Vector3& eye_pos)> GlareIsInView_hook{
     },
 };
 
-FunHook<void(rf::Glare*, int)> GlareRenderCorona_hook{
+FunHook<void(rf::Glare*, int)> glare_render_corona_hook{
     0x00414860,
     [](rf::Glare *glare, int player_idx) {
         // check if corona is in view using dynamic radius dedicated for this effect
         // Note: object radius matches volumetric effect size and can be very large so this check helps
         // to speed up rendering
         auto& current_radius = glare->last_rendered_radius[player_idx];
-        if (!rf::GrCullSphere(glare->pos, current_radius)) {
-            GlareRenderCorona_hook.CallTarget(glare, player_idx);
+        if (!rf::gr_cull_sphere(glare->pos, current_radius)) {
+            glare_render_corona_hook.CallTarget(glare, player_idx);
         }
     },
 };
@@ -200,12 +200,11 @@ FunHook<void(rf::Glare*, int)> GlareRenderCorona_hook{
 void ApplyGlarePatches()
 {
     // Support disabling glares and optimize rendering
-    GlareRenderAllCorona_hook.Install();
+    glare_render_all_flares_hook.Install();
 
     // Handle collisions with clutter in glare rendering
-    GlareIsInView_hook.Install();
+    glare_is_in_view_hook.Install();
 
     // Corona rendering optimization
-    GlareRenderCorona_hook.Install();
-
+    glare_render_corona_hook.Install();
 }

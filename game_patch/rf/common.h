@@ -104,31 +104,31 @@ namespace rf
             return {x * scale, y * scale, z * scale};
         }
 
-        void Zero()
+        void zero()
         {
             x = 0.0f;
             y = 0.0f;
             z = 0.0f;
         }
 
-        float DotProd(const Vector3& other)
+        float dot_prod(const Vector3& other)
         {
             return other.x * x + other.y * y + other.z * z;
         }
 
-        float Len() const
+        float len() const
         {
-            return std::sqrt(LenSq());
+            return std::sqrt(len_sq());
         }
 
-        float LenSq() const
+        float len_sq() const
         {
             return x * x + y * y + z * z;
         }
 
-        void Normalize()
+        void normalize()
         {
-            *this /= Len();
+            *this /= len();
         }
     };
     static_assert(sizeof(Vector3) == 0xC);
@@ -139,7 +139,7 @@ namespace rf
         Vector3 uvec;
         Vector3 fvec;
 
-        void MakeIdentity()
+        void make_identity()
         {
             AddrCaller{0x004FCE70}.this_call(this);
         }
@@ -198,7 +198,7 @@ namespace rf
 
         operator const char*() const
         {
-            return CStr();
+            return c_str();
         }
 
         operator Pod() const
@@ -228,33 +228,33 @@ namespace rf
             return AddrCaller{0x004FFA80}.this_call<String&>(this, other);
         }
 
-        const char *CStr() const
+        const char *c_str() const
         {
             return AddrCaller{0x004FF480}.this_call<const char*>(this);
         }
 
-        int Size() const
+        int size() const
         {
             return AddrCaller{0x004FF490}.this_call<int>(this);
         }
 
-        bool IsEmpty() const
+        bool empty() const
         {
-            return Size() == 0;
+            return size() == 0;
         }
 
-        String* SubStr(String *str_out, int begin, int end) const
+        String* substr(String *str_out, int begin, int end) const
         {
             return AddrCaller{0x004FF590}.this_call<String*>(this, str_out, begin, end);
         }
 
-        static String* Concat(String *str_out, const String& first, const String& second)
+        static String* concat(String *str_out, const String& first, const String& second)
         {
             return AddrCaller{0x004FFB50}.c_call<String*>(str_out, &first, &second);
         }
 
         PRINTF_FMT_ATTRIBUTE(1, 2)
-        static inline String Format(const char* format, ...)
+        static inline String format(const char* format, ...)
         {
             String str;
             va_list args;
@@ -278,27 +278,27 @@ namespace rf
     {
         int value = -1;
 
-        bool Elapsed() const
+        bool elapsed() const
         {
             return AddrCaller{0x004FA3F0}.this_call<bool>(this);
         }
 
-        void Set(int value_ms)
+        void set(int value_ms)
         {
             AddrCaller{0x004FA360}.this_call(this, value_ms);
         }
 
-        bool Valid() const
+        bool valid() const
         {
             return value >= 0;
         }
 
-        int TimeUntil() const
+        int time_until() const
         {
             return AddrCaller{0x004FA420}.this_call<int>(this);
         }
 
-        void Invalidate()
+        void invalidate()
         {
             AddrCaller{0x004FA3E0}.this_call(this);
         }
@@ -309,27 +309,27 @@ namespace rf
     {
         int value = -1;
 
-        bool Elapsed() const
+        bool elapsed() const
         {
             return AddrCaller{0x004FA560}.this_call<bool>(this);
         }
 
-        void Set(int value_ms)
+        void set(int value_ms)
         {
             AddrCaller{0x004FA4D0}.this_call(this, value_ms);
         }
 
-        int TimeUntil() const
+        int time_until() const
         {
             return AddrCaller{0x004FA590}.this_call<int>(this);
         }
 
-        bool Valid() const
+        bool valid() const
         {
             return AddrCaller{0x004FA5E0}.this_call<bool>(this);
         }
 
-        void Invalidate()
+        void invalidate()
         {
             AddrCaller{0x004FA550}.this_call(this);
         }
@@ -346,7 +346,7 @@ namespace rf
         constexpr Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255) :
             red(r), green(g), blue(b), alpha(a) {}
 
-        void Set(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+        void set(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
         {
             this->red = r;
             this->green = g;
@@ -364,17 +364,22 @@ namespace rf
         T *elements = nullptr;
 
     public:
-        int Size() const
+        int size() const
         {
             return num;
         }
 
-        T& Get(int index) const
+        T& operator[](int index) const
         {
             return elements[index];
         }
 
-        void Add(T element);
+        T& get(int index) const
+        {
+            return elements[index];
+        }
+
+        void add(T element);
     };
     static_assert(sizeof(VArray<>) == 0xC);
 
@@ -401,8 +406,8 @@ namespace rf
 
     using IxLineSegmentBoundingBoxType = bool(const Vector3& box_min, const Vector3& box_max, const Vector3& p0,
                                        const Vector3& p1, Vector3 *hit_pt);
-    static auto& IxLineSegmentBoundingBox = AddrAsRef<IxLineSegmentBoundingBoxType>(0x00508B70);
+    static auto& ix_linesegment_boundingbox = AddrAsRef<IxLineSegmentBoundingBoxType>(0x00508B70);
 
     // Timer
-    static auto& TimerGet = AddrAsRef<int(int frequency)>(0x00504AB0);
+    static auto& timer_get = AddrAsRef<int(int frequency)>(0x00504AB0);
 }

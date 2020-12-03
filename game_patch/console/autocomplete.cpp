@@ -54,7 +54,7 @@ template<typename T, typename F>
 void ConsoleAutoCompletePrintSuggestions(T& suggestions, F mapping_fun)
 {
     for (auto& item : suggestions) {
-        rf::ConsolePrintf("%s\n", mapping_fun(item));
+        rf::console_printf("%s\n", mapping_fun(item));
     }
 }
 
@@ -122,15 +122,15 @@ void ConsoleAutoCompletePlayer(int offset)
     std::vector<rf::Player*> matching_players;
     FindPlayer(StringMatcher().Prefix(player_name), [&](rf::Player* player) {
         matching_players.push_back(player);
-        ConsoleAutoCompleteUpdateCommonPrefix(common_prefix, player->name.CStr(), first);
+        ConsoleAutoCompleteUpdateCommonPrefix(common_prefix, player->name.c_str(), first);
     });
 
     if (matching_players.size() == 1)
-        ConsoleAutoCompletePutComponent(offset, matching_players[0]->name.CStr(), true);
+        ConsoleAutoCompletePutComponent(offset, matching_players[0]->name.c_str(), true);
     else if (!matching_players.empty()) {
         ConsoleAutoCompletePrintSuggestions(matching_players, [](rf::Player* player) {
             // Print player names
-            return player->name.CStr();
+            return player->name.c_str();
         });
         ConsoleAutoCompletePutComponent(offset, common_prefix, false);
     }
@@ -173,9 +173,9 @@ void ConsoleAutoCompleteCommand(int offset)
     else if (matching_cmds.size() > 1) {
         for (auto* cmd : matching_cmds) {
             if (cmd->help)
-                rf::ConsolePrintf("%s - %s", cmd->name, cmd->help);
+                rf::console_printf("%s - %s", cmd->name, cmd->help);
             else
-                rf::ConsolePrintf("%s", cmd->name);
+                rf::console_printf("%s", cmd->name);
         }
         ConsoleAutoCompletePutComponent(offset, common_prefix, false);
     }
@@ -183,7 +183,7 @@ void ConsoleAutoCompleteCommand(int offset)
         ConsoleAutoCompletePutComponent(offset, matching_cmds[0]->name, true);
 }
 
-FunHook<void()> ConsoleAutoCompleteInput_hook{
+FunHook<void()> console_auto_complete_input_hook{
     0x0050A620,
     []() {
         // autocomplete on offset 0
@@ -194,5 +194,5 @@ FunHook<void()> ConsoleAutoCompleteInput_hook{
 void ConsoleAutoCompleteApplyPatch()
 {
     // Better console autocomplete
-    ConsoleAutoCompleteInput_hook.Install();
+    console_auto_complete_input_hook.Install();
 }

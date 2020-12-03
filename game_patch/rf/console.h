@@ -15,8 +15,8 @@ namespace rf
         const char *help;
         ConsoleCommandFuncPtr func;
 
-        inline static const auto Init =
-            reinterpret_cast<void(__thiscall*)(ConsoleCommand* self, const char* name, const char* help, ConsoleCommandFuncPtr func)>(
+        inline static const auto init =
+            reinterpret_cast<void(__thiscall*)(ConsoleCommand* this_, const char* name, const char* help, ConsoleCommandFuncPtr func)>(
                 0x00509A70);
     };
     static_assert(sizeof(ConsoleCommand) == 0xC);
@@ -36,23 +36,23 @@ namespace rf
         CONSOLE_ARG_ANY = 0xFFFFFFFF,
     };
 
-    static auto& ConsoleOutput = AddrAsRef<void(const char* text, const Color* color)>(0x00509EC0);
-    static auto& ConsoleGetArg = AddrAsRef<void(unsigned type, bool preserve_case)>(0x0050AED0);
+    static auto& console_output = AddrAsRef<void(const char* text, const Color* color)>(0x00509EC0);
+    static auto& console_get_arg = AddrAsRef<void(unsigned type, bool preserve_case)>(0x0050AED0);
 
-    // Note: ConsolePrintf is reimplemented to allow static validation of the format string
+    // Note: console_printf is reimplemented to allow static validation of the format string
     PRINTF_FMT_ATTRIBUTE(1, 2)
-    inline void ConsolePrintf(const char* format, ...)
+    inline void console_printf(const char* format, ...)
     {
         String str;
         va_list args;
         va_start(args, format);
-        int size = vsnprintf(nullptr, 0, format, args) + 1;
+        int size = std::vsnprintf(nullptr, 0, format, args) + 1;
         va_end(args);
         std::unique_ptr<char[]> buf(new char[size]);
         va_start(args, format);
-        vsnprintf(buf.get(), size, format, args);
+        std::vsnprintf(buf.get(), size, format, args);
         va_end(args);
-        ConsoleOutput(buf.get(), nullptr);
+        console_output(buf.get(), nullptr);
     }
 
     //static auto& console_commands = AddrAsRef<ConsoleCommand*[30]>(0x01775530);

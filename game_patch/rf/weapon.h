@@ -262,9 +262,9 @@ namespace rf
     static auto& machine_pistol_special_weapon_type = AddrAsRef<int32_t>(0x0085CD00);
     static auto& hide_enemy_bullets = AddrAsRef<bool>(0x005A24D0);
 
-    static auto& WeaponIsDetonator = AddrAsRef<bool(int weapon_type)>(0x004C9070);
-    static auto& WeaponIsRiotStick = AddrAsRef<bool(int weapon_type)>(0x004C90D0);
-    static auto& PlayerMakeWeaponCurrentSelection = AddrAsRef<void(Player *player, int weapon_type)>(0x004A4980);
-    static auto& EntityIsReloading = AddrAsRef<bool(Entity* entity)>(0x00425250);
-    static auto& EntityWeaponInOn = AddrAsRef<bool(int entity_handle, int weapon_type)>(0x0041A830);
+    static auto& weapon_is_detonator = AddrAsRef<bool(int weapon_type)>(0x004C9070);
+    static auto& weapon_is_riot_stick = AddrAsRef<bool(int weapon_type)>(0x004C90D0);
+    static auto& player_make_weapon_current_selection = AddrAsRef<void(Player *player, int weapon_type)>(0x004A4980);
+    static auto& entity_is_reloading = AddrAsRef<bool(Entity* entity)>(0x00425250);
+    static auto& entity_weapon_is_on = AddrAsRef<bool(int entity_handle, int weapon_type)>(0x0041A830);
 }

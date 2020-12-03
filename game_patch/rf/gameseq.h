@@ -42,9 +42,9 @@ namespace rf
         GS_MULTI_LIMBO = 0x22,
     };
 
-    static auto& GameSeqSetState = AddrAsRef<int(GameState state, bool force)>(0x00434190);
-    static auto& GameSeqGetState = AddrAsRef<GameState()>(0x00434200);
-    static auto& GameSeqInGameplay = AddrAsRef<bool()>(0x00434460);
-    static auto& GameSeqPushState = AddrAsRef<int(int state, bool update_parent_state, bool parent_dlg_open)>(0x00434410);
-    static auto& GameSeqProcessDeferredChange = AddrAsRef<int()>(0x00434310);
+    static auto& gameseq_set_state = AddrAsRef<int(GameState state, bool force)>(0x00434190);
+    static auto& gameseq_get_state = AddrAsRef<GameState()>(0x00434200);
+    static auto& gameseq_in_gameplay = AddrAsRef<bool()>(0x00434460);
+    static auto& gameseq_push_state = AddrAsRef<int(int state, bool update_parent_state, bool parent_dlg_open)>(0x00434410);
+    static auto& gameseq_process_deferred_change = AddrAsRef<int()>(0x00434310);
 }

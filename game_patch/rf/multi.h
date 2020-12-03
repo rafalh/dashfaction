@@ -136,33 +136,33 @@ namespace rf
         default_ = 5,
     };
 
-    static auto& MultiGetGameType = AddrAsRef<NetGameType()>(0x00470770);
-    static auto& MultiIoSend = AddrAsRef<void(Player *player, const void *packet, int len)>(0x00479370);
-    static auto& MultiIoSendReliable =
+    static auto& multi_get_game_type = AddrAsRef<NetGameType()>(0x00470770);
+    static auto& multi_io_send = AddrAsRef<void(Player *player, const void *packet, int len)>(0x00479370);
+    static auto& multi_io_send_reliable =
         AddrAsRef<void(Player *player, const uint8_t *data, int len, int a4)>(0x00479480);
-    static auto& MultiIoSendReliableToAll =
+    static auto& multi_io_send_reliable_to_all =
         AddrAsRef<void(const uint8_t *data, int len, int a4)>(0x004795A0);
-    static auto& MultiFindPlayerByAddr = AddrAsRef<Player*(const NwAddr& addr)>(0x00484850);
-    static auto& MultiFindPlayerById = AddrAsRef<Player*(uint8_t id)>(0x00484890);
-    static auto& MultiCtfGetRedTeamScore = AddrAsRef<uint8_t()>(0x00475020);
-    static auto& MultiCtfGetBlueTeamScore = AddrAsRef<uint8_t()>(0x00475030);
-    static auto& MultiCtfGetRedFlagPlayer = AddrAsRef<Player*()>(0x00474E60);
-    static auto& MultiCtfGetBlueFlagPlayer = AddrAsRef<Player*()>(0x00474E70);
-    static auto& MultiCtfIsRedFlagInBase = AddrAsRef<bool()>(0x00474E80);
-    static auto& MultiCtfIsBlueFlagInBase = AddrAsRef<bool()>(0x00474EA0);
-    static auto& MultiTdmGetRedTeamScore = AddrAsRef<uint8_t()>(0x004828F0);
-    static auto& MultiTdmGetBlueTeamScore = AddrAsRef<uint8_t()>(0x00482900);
-    static auto& MultiNumPlayers = AddrAsRef<int()>(0x00484830);
-    static auto& KickPlayer = AddrAsRef<void(Player *player)>(0x0047BF00);
-    static auto& BanIp = AddrAsRef<void(const NwAddr& addr)>(0x0046D0F0);
-    static auto& MultiSetNextWeapon = AddrAsRef<void(int weapon_type)>(0x0047FCA0);
-    static auto& MultiChangeLevel = AddrAsRef<void(const char* filename)>(0x0047BF50);
-    static auto& PingPlayer = AddrAsRef<void(Player*)>(0x00484D00);
-    static auto& SendEntityCreatePacket = AddrAsRef<void(Entity *entity, Player* player)>(0x00475160);
-    static auto& SendEntityCreatePacketToAll = AddrAsRef<void(Entity *entity)>(0x00475110);
-    static auto& MultiFindCharacter = AddrAsRef<int(const char *name)>(0x00476270);
-    static auto& ChatPrint = AddrAsRef<void(String::Pod text, ChatMsgColor color, String::Pod prefix)>(0x004785A0);
-    static auto& ChatSay = AddrAsRef<void(const char *msg, bool is_team_msg)>(0x00444150);
+    static auto& multi_find_player_by_addr = AddrAsRef<Player*(const NwAddr& addr)>(0x00484850);
+    static auto& multi_find_player_by_id = AddrAsRef<Player*(uint8_t id)>(0x00484890);
+    static auto& multi_ctf_get_red_team_score = AddrAsRef<uint8_t()>(0x00475020);
+    static auto& multi_ctf_get_blue_team_score = AddrAsRef<uint8_t()>(0x00475030);
+    static auto& multi_ctf_get_red_flag_player = AddrAsRef<Player*()>(0x00474E60);
+    static auto& multi_ctf_get_blue_flag_player = AddrAsRef<Player*()>(0x00474E70);
+    static auto& multi_ctf_is_red_flag_in_base = AddrAsRef<bool()>(0x00474E80);
+    static auto& multi_ctf_is_blue_flag_in_base = AddrAsRef<bool()>(0x00474EA0);
+    static auto& multi_tdm_get_red_team_score = AddrAsRef<uint8_t()>(0x004828F0);
+    static auto& multi_tdm_get_blue_team_score = AddrAsRef<uint8_t()>(0x00482900);
+    static auto& multi_num_players = AddrAsRef<int()>(0x00484830);
+    static auto& multi_kick_player = AddrAsRef<void(Player *player)>(0x0047BF00);
+    static auto& multi_ban_ip = AddrAsRef<void(const NwAddr& addr)>(0x0046D0F0);
+    static auto& multi_set_next_weapon = AddrAsRef<void(int weapon_type)>(0x0047FCA0);
+    static auto& multi_change_level = AddrAsRef<void(const char* filename)>(0x0047BF50);
+    static auto& multi_ping_player = AddrAsRef<void(Player*)>(0x00484D00);
+    static auto& send_entity_create_packet = AddrAsRef<void(Entity *entity, Player* player)>(0x00475160);
+    static auto& send_entity_create_packet_to_all = AddrAsRef<void(Entity *entity)>(0x00475110);
+    static auto& multi_find_character = AddrAsRef<int(const char *name)>(0x00476270);
+    static auto& multi_chat_print = AddrAsRef<void(String::Pod text, ChatMsgColor color, String::Pod prefix)>(0x004785A0);
+    static auto& multi_chat_say = AddrAsRef<void(const char *msg, bool is_team_msg)>(0x00444150);
 
     static auto& netgame = AddrAsRef<NetGameInfo>(0x0064EC28);
     static auto& is_multi = AddrAsRef<bool>(0x0064ECB9);

@@ -82,7 +82,7 @@ bm_read_header_hook{
         rf::File dds_file;
         std::string filename_without_ext{GetFilenameWithoutExt(filename)};
         auto dds_filename = filename_without_ext + ".dds";
-        if (dds_file.Open(dds_filename.c_str()) == 0) {
+        if (dds_file.open(dds_filename.c_str()) == 0) {
             xlog::trace("Loading %s", dds_filename.c_str());
             auto bm_type = ReadDdsHeader(dds_file, width_out, height_out, pixel_fmt_out, num_levels_out);
             if (bm_type != rf::BM_TYPE_NONE) {
@@ -113,7 +113,7 @@ bm_read_header_hook{
 FunHook<rf::BmFormat(int, void**, void**)> bm_lock_hook{
     0x00510780,
     [](int bmh, void** pixels_out, void** palette_out) {
-        auto& bm_entry = rf::bm_bitmaps[rf::BmHandleToIdxAnimAware(bmh)];
+        auto& bm_entry = rf::bm_bitmaps[rf::bm_handle_to_index_anim_aware(bmh)];
         if (bm_entry.bm_type == rf::BM_TYPE_DDS) {
             LockDdsBitmap(bm_entry);
             *pixels_out = bm_entry.locked_data;

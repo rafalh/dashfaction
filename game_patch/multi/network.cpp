@@ -45,22 +45,22 @@
 
 namespace rf
 {
-static const auto MultiIsConnectingToServer = AddrAsRef<uint8_t(const rf::NwAddr& addr)>(0x0044AD80);
+static const auto multi_is_connecting_to_server = AddrAsRef<uint8_t(const rf::NwAddr& addr)>(0x0044AD80);
 
 static auto& simultaneous_ping = AddrAsRef<uint32_t>(0x00599CD8);
 
 typedef void MultiIoProcessPackets_Type(const void* data, size_t len, const NwAddr& addr, Player* player);
-static auto& MultiIoProcessPackets = AddrAsRef<MultiIoProcessPackets_Type>(0x004790D0);
+static auto& multi_io_process_packets = AddrAsRef<MultiIoProcessPackets_Type>(0x004790D0);
 } // namespace rf
 
 int g_update_rate = 30;
 
 typedef void MultiIoPacketHandler(char* data, const rf::NwAddr& addr);
 
-CallHook<void(const void*, size_t, const rf::NwAddr&, rf::Player*)> ProcessUnreliableGamePackets_hook{
+CallHook<void(const void*, size_t, const rf::NwAddr&, rf::Player*)> process_unreliable_game_packets_hook{
     0x00479244,
     [](const void* data, size_t len, const rf::NwAddr& addr, rf::Player* player) {
-        rf::MultiIoProcessPackets(data, len, addr, player);
+        rf::multi_io_process_packets(data, len, addr, player);
 
 #if MASK_AS_PF
         ProcessPfPacket(data, len, addr, player);
@@ -278,7 +278,7 @@ std::array g_client_side_packet_whitelist{
 
 std::optional<DashFactionServerInfo> g_df_server_info;
 
-CodeInjection ProcessGamePacket_whitelist_filter{
+CodeInjection process_game_packet_whitelist_filter{
     0x0047918D,
     [](auto& regs) {
         bool allowed = false;
@@ -301,7 +301,7 @@ CodeInjection ProcessGamePacket_whitelist_filter{
     },
 };
 
-CodeInjection ProcessGameInfoPacket_GameTypeBounds_patch{
+CodeInjection process_game_info_packet_game_type_bounds_patch{
     0x0047B30B,
     [](auto& regs) {
         // Valid game types are between 0 and 2
@@ -309,43 +309,43 @@ CodeInjection ProcessGameInfoPacket_GameTypeBounds_patch{
     },
 };
 
-FunHook<MultiIoPacketHandler> ProcessJoinDenyPacket_hook{
+FunHook<MultiIoPacketHandler> process_join_deny_packet_hook{
     0x0047A400,
     [](char* data, const rf::NwAddr& addr) {
-        if (rf::MultiIsConnectingToServer(addr)) // client-side
-            ProcessJoinDenyPacket_hook.CallTarget(data, addr);
+        if (rf::multi_is_connecting_to_server(addr)) // client-side
+            process_join_deny_packet_hook.CallTarget(data, addr);
     },
 };
 
-FunHook<MultiIoPacketHandler> ProcessNewPlayerPacket_hook{
+FunHook<MultiIoPacketHandler> process_new_player_packet_hook{
     0x0047A580,
     [](char* data, const rf::NwAddr& addr) {
         if (GetForegroundWindow() != rf::main_wnd)
             Beep(750, 300);
-        ProcessNewPlayerPacket_hook.CallTarget(data, addr);
+        process_new_player_packet_hook.CallTarget(data, addr);
     },
 };
 
-FunHook<MultiIoPacketHandler> ProcessLeftGamePacket_hook{
+FunHook<MultiIoPacketHandler> process_left_game_packet_hook{
     0x0047BBC0,
     [](char* data, const rf::NwAddr& addr) {
         // server-side and client-side
         if (rf::is_server) {
-            rf::Player* src_player = rf::MultiFindPlayerByAddr(addr);
+            rf::Player* src_player = rf::multi_find_player_by_addr(addr);
             data[0] = src_player->nw_data->player_id; // fix player ID
         }
-        ProcessLeftGamePacket_hook.CallTarget(data, addr);
+        process_left_game_packet_hook.CallTarget(data, addr);
     },
 };
 
-FunHook<MultiIoPacketHandler> ProcessChatLinePacket_hook{
+FunHook<MultiIoPacketHandler> process_chat_line_packet_hook{
     0x00444860,
     [](char* data, const rf::NwAddr& addr) {
         // server-side and client-side
         if (rf::is_server) {
-            rf::Player* src_player = rf::MultiFindPlayerByAddr(addr);
+            rf::Player* src_player = rf::multi_find_player_by_addr(addr);
             if (!src_player)
-                return; // shouldnt happen (protected in rf::MultiIoProcessPackets)
+                return; // shouldnt happen (protected in rf::multi_io_process_packets)
 
             char* msg = data + 2;
             if (CheckServerChatCommand(msg, src_player))
@@ -353,55 +353,55 @@ FunHook<MultiIoPacketHandler> ProcessChatLinePacket_hook{
 
             data[0] = src_player->nw_data->player_id; // fix player ID
         }
-        ProcessChatLinePacket_hook.CallTarget(data, addr);
+        process_chat_line_packet_hook.CallTarget(data, addr);
     },
 };
 
-FunHook<MultiIoPacketHandler> ProcessNameChangePacket_hook{
+FunHook<MultiIoPacketHandler> process_name_change_packet_hook{
     0x0046EAE0,
     [](char* data, const rf::NwAddr& addr) {
         // server-side and client-side
         if (rf::is_server) {
-            rf::Player* src_player = rf::MultiFindPlayerByAddr(addr);
+            rf::Player* src_player = rf::multi_find_player_by_addr(addr);
             if (!src_player)
-                return;                               // shouldnt happen (protected in rf::MultiIoProcessPackets)
+                return;                               // shouldnt happen (protected in rf::multi_io_process_packets)
             data[0] = src_player->nw_data->player_id; // fix player ID
         }
-        ProcessNameChangePacket_hook.CallTarget(data, addr);
+        process_name_change_packet_hook.CallTarget(data, addr);
     },
 };
 
-FunHook<MultiIoPacketHandler> ProcessTeamChangePacket_hook{
+FunHook<MultiIoPacketHandler> process_team_change_packet_hook{
     0x004825B0,
     [](char* data, const rf::NwAddr& addr) {
         // server-side and client-side
         if (rf::is_server) {
-            rf::Player* src_player = rf::MultiFindPlayerByAddr(addr);
+            rf::Player* src_player = rf::multi_find_player_by_addr(addr);
             if (!src_player)
-                return; // shouldnt happen (protected in rf::MultiIoProcessPackets)
+                return; // shouldnt happen (protected in rf::multi_io_process_packets)
 
             data[0] = src_player->nw_data->player_id;  // fix player ID
             data[1] = std::clamp(data[1], '\0', '\1'); // team validation (fixes "green team")
         }
-        ProcessTeamChangePacket_hook.CallTarget(data, addr);
+        process_team_change_packet_hook.CallTarget(data, addr);
     },
 };
 
-FunHook<MultiIoPacketHandler> ProcessRateChangePacket_hook{
+FunHook<MultiIoPacketHandler> process_rate_change_packet_hook{
     0x004807B0,
     [](char* data, const rf::NwAddr& addr) {
         // server-side and client-side?
         if (rf::is_server) {
-            rf::Player* src_player = rf::MultiFindPlayerByAddr(addr);
+            rf::Player* src_player = rf::multi_find_player_by_addr(addr);
             if (!src_player)
-                return;                               // shouldnt happen (protected in rf::MultiIoProcessPackets)
+                return;                               // shouldnt happen (protected in rf::multi_io_process_packets)
             data[0] = src_player->nw_data->player_id; // fix player ID
         }
-        ProcessRateChangePacket_hook.CallTarget(data, addr);
+        process_rate_change_packet_hook.CallTarget(data, addr);
     },
 };
 
-FunHook<MultiIoPacketHandler> ProcessEntityCreatePacket_hook{
+FunHook<MultiIoPacketHandler> process_entity_create_packet_hook{
     0x00475420,
     [](char* data, const rf::NwAddr& addr) {
         // Temporary change default player weapon to the weapon type from the received packet
@@ -414,16 +414,16 @@ FunHook<MultiIoPacketHandler> ProcessEntityCreatePacket_hook{
             int32_t weapon_type = *reinterpret_cast<int32_t*>(data + name_size + 63);
             auto old_default_player_weapon = rf::default_player_weapon;
             rf::default_player_weapon = rf::weapon_types[weapon_type].name;
-            ProcessEntityCreatePacket_hook.CallTarget(data, addr);
+            process_entity_create_packet_hook.CallTarget(data, addr);
             rf::default_player_weapon = old_default_player_weapon;
         }
         else {
-            ProcessEntityCreatePacket_hook.CallTarget(data, addr);
+            process_entity_create_packet_hook.CallTarget(data, addr);
         }
     },
 };
 
-FunHook<MultiIoPacketHandler> ProcessReloadPacket_hook{
+FunHook<MultiIoPacketHandler> process_reload_packet_hook{
     0x00485AB0,
     [](char* data, const rf::NwAddr& addr) {
         if (!rf::is_server) { // client-side
@@ -438,7 +438,7 @@ FunHook<MultiIoPacketHandler> ProcessReloadPacket_hook{
             xlog::trace("ProcessReloadPacket WeaponClsId %d ClipAmmo %d Ammo %d", weapon_type, clip_ammo, ammo);
 
             // Call original handler
-            ProcessReloadPacket_hook.CallTarget(data, addr);
+            process_reload_packet_hook.CallTarget(data, addr);
         }
     },
 };
@@ -449,7 +449,7 @@ rf::Entity* SecureObjUpdatePacket(rf::Entity* entity, uint8_t flags, rf::Player*
         // server-side
         if (entity && entity->handle != src_player->entity_handle) {
             xlog::trace("Invalid ObjUpdate entity %x %x %s", entity->handle, src_player->entity_handle,
-                  src_player->name.CStr());
+                  src_player->name.c_str());
             return nullptr;
         }
 
@@ -461,55 +461,55 @@ rf::Entity* SecureObjUpdatePacket(rf::Entity* entity, uint8_t flags, rf::Player*
     return entity;
 }
 
-FunHook<uint8_t()> MultiAllocPlayerId_hook{
+FunHook<uint8_t()> multi_alloc_player_id_hook{
     0x0046EF00,
     []() {
-        uint8_t player_id = MultiAllocPlayerId_hook.CallTarget();
+        uint8_t player_id = multi_alloc_player_id_hook.CallTarget();
         if (player_id == 0xFF)
-            player_id = MultiAllocPlayerId_hook.CallTarget();
+            player_id = multi_alloc_player_id_hook.CallTarget();
         return player_id;
     },
 };
 
-FunHook<rf::Object*(int32_t)> MultiGetObjFromRemoteHandle_hook{
+FunHook<rf::Object*(int32_t)> multi_get_obj_from_server_handle_hook{
     0x00484B00,
     [](int32_t remote_handle) {
         size_t index = static_cast<uint16_t>(remote_handle);
         if (index >= obj_limit)
             return static_cast<rf::Object*>(nullptr);
-        return MultiGetObjFromRemoteHandle_hook.CallTarget(remote_handle);
+        return multi_get_obj_from_server_handle_hook.CallTarget(remote_handle);
     },
 };
 
-FunHook<int32_t(int32_t)> MultiGetLocalHandleFromRemoteHandle_hook{
+FunHook<int32_t(int32_t)> multi_get_obj_handle_from_server_handle_hook{
     0x00484B30,
     [](int32_t remote_handle) {
         size_t index = static_cast<uint16_t>(remote_handle);
         if (index >= obj_limit)
             return -1;
-        return MultiGetLocalHandleFromRemoteHandle_hook.CallTarget(remote_handle);
+        return multi_get_obj_handle_from_server_handle_hook.CallTarget(remote_handle);
     },
 };
 
-FunHook<void(int32_t, int32_t)> MultiSetObjHandleMapping_hook{
+FunHook<void(int32_t, int32_t)> multi_set_obj_handle_mapping_hook{
     0x00484B70,
     [](int32_t remote_handle, int32_t local_handle) {
         size_t index = static_cast<uint16_t>(remote_handle);
         if (index >= obj_limit)
             return;
-        MultiSetObjHandleMapping_hook.CallTarget(remote_handle, local_handle);
+        multi_set_obj_handle_mapping_hook.CallTarget(remote_handle, local_handle);
     },
 };
 
-CodeInjection ProcessBooleanPacket_ValidateMeshId_patch{
+CodeInjection process_boolean_packet_validate_shape_index_patch{
     0x004765A3,
     [](auto& regs) { regs.ecx = std::clamp(regs.ecx, 0, 3); },
 };
 
-CodeInjection ProcessBooleanPacket_ValidateRoomId_patch{
+CodeInjection process_boolean_packet_validate_room_uid_patch{
     0x0047661C,
     [](auto& regs) {
-        int num_rooms = rf::level.geometry->all_rooms.Size();
+        int num_rooms = rf::level.geometry->all_rooms.size();
         if (regs.edx < 0 || regs.edx >= num_rooms) {
             xlog::warn("Invalid room in Boolean packet - skipping");
             regs.esp += 0x64;
@@ -518,7 +518,7 @@ CodeInjection ProcessBooleanPacket_ValidateRoomId_patch{
     },
 };
 
-CodeInjection ProcessPregameBooleanPacket_ValidateMeshId_patch{
+CodeInjection process_pregame_boolean_packet_validate_shape_index_patch{
     0x0047672F,
     [](auto& regs) {
         // only meshes 0 - 3 are supported
@@ -526,10 +526,10 @@ CodeInjection ProcessPregameBooleanPacket_ValidateMeshId_patch{
     },
 };
 
-CodeInjection ProcessPregameBooleanPacket_ValidateRoomId_patch{
+CodeInjection process_pregame_boolean_packet_validate_room_uid_patch{
     0x00476752,
     [](auto& regs) {
-        int num_rooms = rf::level.geometry->all_rooms.Size();
+        int num_rooms = rf::level.geometry->all_rooms.size();
         if (regs.edx < 0 || regs.edx >= num_rooms) {
             xlog::warn("Invalid room in PregameBoolean packet - skipping");
             regs.esp += 0x68;
@@ -538,7 +538,7 @@ CodeInjection ProcessPregameBooleanPacket_ValidateRoomId_patch{
     },
 };
 
-CodeInjection ProcessGlassKillPacket_CheckRoomExists_patch{
+CodeInjection process_glass_kill_packet_check_room_exists_patch{
     0x004723B3,
     [](auto& regs) {
         if (!regs.eax)
@@ -788,10 +788,10 @@ FunHook<void(int, rf::NwAddr*)> multi_start_hook{
     },
 };
 
-FunHook<void()> TrackerDoBroadcastServer_hook{
+FunHook<void()> tracker_do_broadcast_server_hook{
     0x00483130,
     []() {
-        TrackerDoBroadcastServer_hook.CallTarget();
+        tracker_do_broadcast_server_hook.CallTarget();
         // Auto forward server port using UPnP (in background thread)
         std::thread upnp_thread{TryToAutoForwardPort, rf::nw_port};
         upnp_thread.detach();
@@ -823,11 +823,11 @@ void SendChatLinePacket(const char* msg, rf::Player* target, rf::Player* sender,
     std::strncpy(packet.message, msg, 255);
     packet.message[255] = 0;
     if (target == nullptr && rf::is_server) {
-        rf::MultiIoSendReliableToAll(buf, packet.header.size + sizeof(packet.header), 0);
-        rf::ConsolePrintf("Server: %s", msg);
+        rf::multi_io_send_reliable_to_all(buf, packet.header.size + sizeof(packet.header), 0);
+        rf::console_printf("Server: %s", msg);
     }
     else {
-        rf::MultiIoSendReliable(target, buf, packet.header.size + sizeof(packet.header), 0);
+        rf::multi_io_send_reliable(target, buf, packet.header.size + sizeof(packet.header), 0);
     }
 }
 
@@ -856,7 +856,7 @@ ConsoleCommand2 update_rate_cmd{
                 g_update_rate = std::clamp(update_rate.value(), 12, 60);
                 if (g_update_rate > 30) {
                     static rf::Color yellow{255, 255, 0, 255};
-                    rf::ConsoleOutput(
+                    rf::console_output(
                         "Server update rate greater than 30 is not recommended. It can cause jitter for clients with "
                         "default update rate and break hit registration for clients with high ping.", &yellow);
                 }
@@ -866,7 +866,7 @@ ConsoleCommand2 update_rate_cmd{
                 g_update_rate = std::clamp(update_rate.value(), 20, 60);
             }
         }
-        rf::ConsolePrintf("Update rate per second: %d", g_update_rate);
+        rf::console_printf("Update rate per second: %d", g_update_rate);
     },
 };
 
@@ -888,7 +888,7 @@ CodeInjection obj_interp_too_fast_fix{
     0x00483C3B,
     [](auto& regs) {
         // Make all calculations on milliseconds instead of using microseconds and rounding them up
-        auto now = rf::TimerGet(1000);
+        auto now = rf::timer_get(1000);
         regs.eax = now - regs.ebp;
         regs.edi = now;
     },
@@ -897,7 +897,7 @@ CodeInjection obj_interp_too_fast_fix{
 void NetworkInit()
 {
     // ProcessGamePackets hook (not reliable only)
-    ProcessUnreliableGamePackets_hook.Install();
+    process_unreliable_game_packets_hook.Install();
 
     // Improve simultaneous ping
     rf::simultaneous_ping = 32;
@@ -930,18 +930,18 @@ void NetworkInit()
     }
 
     //  Filter packets based on the side (client-side vs server-side)
-    ProcessGamePacket_whitelist_filter.Install();
+    process_game_packet_whitelist_filter.Install();
 
     // Hook packet handlers
-    ProcessJoinDenyPacket_hook.Install();
-    ProcessNewPlayerPacket_hook.Install();
-    ProcessLeftGamePacket_hook.Install();
-    ProcessChatLinePacket_hook.Install();
-    ProcessNameChangePacket_hook.Install();
-    ProcessTeamChangePacket_hook.Install();
-    ProcessRateChangePacket_hook.Install();
-    ProcessEntityCreatePacket_hook.Install();
-    ProcessReloadPacket_hook.Install();
+    process_join_deny_packet_hook.Install();
+    process_new_player_packet_hook.Install();
+    process_left_game_packet_hook.Install();
+    process_chat_line_packet_hook.Install();
+    process_name_change_packet_hook.Install();
+    process_team_change_packet_hook.Install();
+    process_rate_change_packet_hook.Install();
+    process_entity_create_packet_hook.Install();
+    process_reload_packet_hook.Install();
 
     // Fix ObjUpdate packet handling
     using namespace asm_regs;
@@ -965,30 +965,30 @@ void NetworkInit()
     AsmWriter(0x0047A4A6, 0x0047A4AA).xor_(ecx, ecx);
 
     // Fix "Orion bug" - default 'miner1' entity spawning client-side periodically
-    MultiAllocPlayerId_hook.Install();
+    multi_alloc_player_id_hook.Install();
 
     // Fix buffer-overflows in multi handle mapping
-    MultiGetObjFromRemoteHandle_hook.Install();
-    MultiGetLocalHandleFromRemoteHandle_hook.Install();
-    MultiSetObjHandleMapping_hook.Install();
+    multi_get_obj_from_server_handle_hook.Install();
+    multi_get_obj_handle_from_server_handle_hook.Install();
+    multi_set_obj_handle_mapping_hook.Install();
 
     // Fix GameType out of bounds vulnerability in GameInfo packet
-    ProcessGameInfoPacket_GameTypeBounds_patch.Install();
+    process_game_info_packet_game_type_bounds_patch.Install();
 
     // Fix MeshId out of bounds vulnerability in Boolean packet
-    ProcessBooleanPacket_ValidateMeshId_patch.Install();
+    process_boolean_packet_validate_shape_index_patch.Install();
 
     // Fix RoomId out of bounds vulnerability in Boolean packet
-    ProcessBooleanPacket_ValidateRoomId_patch.Install();
+    process_boolean_packet_validate_room_uid_patch.Install();
 
     // Fix MeshId out of bounds vulnerability in PregameBoolean packet
-    ProcessPregameBooleanPacket_ValidateMeshId_patch.Install();
+    process_pregame_boolean_packet_validate_shape_index_patch.Install();
 
     // Fix RoomId out of bounds vulnerability in PregameBoolean packet
-    ProcessPregameBooleanPacket_ValidateRoomId_patch.Install();
+    process_pregame_boolean_packet_validate_room_uid_patch.Install();
 
     // Fix crash if room does not exist in GlassKill packet
-    ProcessGlassKillPacket_CheckRoomExists_patch.Install();
+    process_glass_kill_packet_check_room_exists_patch.Install();
 
     // Make sure tracker packets come from configured tracker
     nw_get_packet_tracker_hook.Install();
@@ -1004,7 +1004,7 @@ void NetworkInit()
     multi_start_hook.Install();
 
     // Use UPnP for port forwarding if server is not in LAN-only mode
-    TrackerDoBroadcastServer_hook.Install();
+    tracker_do_broadcast_server_hook.Install();
 
     // Allow changing client and server update rate
     client_update_rate_injection.Install();

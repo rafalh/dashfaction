@@ -236,7 +236,7 @@ static void DownloadLevelThread()
     remove(temp_filename);
 
     if (!success)
-        rf::UiMsgBox("Error!", "Failed to download level file! More information can be found in console.", nullptr,
+        rf::ui_popup_message("Error!", "Failed to download level file! More information can be found in console.", nullptr,
                      false);
 
     g_download_in_progress = false;
@@ -322,14 +322,14 @@ static void DisplayDownloadDialog(LevelDownloadInfo& level_info)
                      level_info.name.c_str(), level_info.author.c_str(), level_info.size_in_bytes / 1024.f / 1024.f);
     const char* btn_titles[] = {"Cancel", "Download"};
     rf::UiDialogCallbackPtr callbacks[] = {nullptr, StartLevelDownload};
-    rf::UiCreateDialog("Download level", msg.c_str(), 2, btn_titles, callbacks, 0, 0);
+    rf::ui_popup_custom("Download level", msg.c_str(), 2, btn_titles, callbacks, 0, 0);
 }
 
 bool TryToDownloadLevel(const char* filename)
 {
     if (g_download_in_progress) {
         xlog::trace("Level download already in progress!");
-        rf::UiMsgBox("Error!", "You can download only one level at once!", nullptr, false);
+        rf::ui_popup_message("Error!", "You can download only one level at once!", nullptr, false);
         return false;
     }
 
@@ -354,7 +354,7 @@ CodeInjection g_join_failed_injection{
         }
 
         auto& level_filename = AddrAsRef<rf::String>(0x00646074);
-        xlog::trace("Preparing level download %s", level_filename.CStr());
+        xlog::trace("Preparing level download %s", level_filename.c_str());
         if (!TryToDownloadLevel(level_filename)) {
             return;
         }
@@ -374,13 +374,13 @@ ConsoleCommand2 download_level_cmd{
         }
         auto level_info_opt = FetchLevelDownloadInfo(filename.c_str());
         if (!level_info_opt) {
-            rf::ConsolePrintf("Level has not found in FactionFiles database!");
+            rf::console_printf("Level has not found in FactionFiles database!");
         }
         else if (g_download_in_progress) {
-            rf::ConsolePrintf("Another level is currently being downloaded!");
+            rf::console_printf("Another level is currently being downloaded!");
         }
         else {
-            rf::ConsolePrintf("Downloading level %s by %s", level_info_opt.value().name.c_str(),
+            rf::console_printf("Downloading level %s by %s", level_info_opt.value().name.c_str(),
                 level_info_opt.value().author.c_str());
             g_level_info = level_info_opt.value();
             StartLevelDownload();
@@ -403,10 +403,10 @@ void RenderDownloadProgress()
         if (!g_packfiles_to_load.empty()) {
             // Load one packfile per frame
             auto& filename = g_packfiles_to_load.front();
-            rf::VPackfileSetLoadingUserMaps(true);
-            if (!rf::VPackfileAdd(filename.c_str(), "user_maps\\multi\\"))
-                xlog::error("VPackfileAdd failed - %s", filename.c_str());
-            rf::VPackfileSetLoadingUserMaps(false);
+            rf::vpackfile_set_loading_user_maps(true);
+            if (!rf::vpackfile_add(filename.c_str(), "user_maps\\multi\\"))
+                xlog::error("vpackfile_add failed - %s", filename.c_str());
+            rf::vpackfile_set_loading_user_maps(false);
             g_packfiles_to_load.erase(g_packfiles_to_load.begin());
         }
         return;
@@ -418,23 +418,23 @@ void RenderDownloadProgress()
     if (cx_progress > cx)
         cx_progress = cx;
 
-    int x = (rf::GrScreenWidth() - cx) / 2;
-    int y = rf::GrScreenHeight() - 50;
-    int cy_font = rf::GrGetFontHeight(-1);
+    int x = (rf::gr_screen_width() - cx) / 2;
+    int y = rf::gr_screen_height() - 50;
+    int cy_font = rf::gr_get_font_height(-1);
 
     if (cx_progress > 0) {
-        rf::GrSetColorRgba(0x80, 0x80, 0, 0x80);
-        rf::GrRect(x, y, cx_progress, cy);
+        rf::gr_set_color_rgba(0x80, 0x80, 0, 0x80);
+        rf::gr_rect(x, y, cx_progress, cy);
     }
 
     if (cx > cx_progress) {
-        rf::GrSetColorRgba(0, 0, 0x60, 0x80);
-        rf::GrRect(x + cx_progress, y, cx - cx_progress, cy);
+        rf::gr_set_color_rgba(0, 0, 0x60, 0x80);
+        rf::gr_rect(x + cx_progress, y, cx - cx_progress, cy);
     }
 
-    rf::GrSetColorRgba(0, 0xFF, 0, 0x80);
+    rf::gr_set_color_rgba(0, 0xFF, 0, 0x80);
     auto text = StringFormat("Downloading: %.2f MB / %.2f MB", g_level_bytes_downloaded / 1024.0f / 1024.0f,
                              g_level_info.size_in_bytes / 1024.0f / 1024.0f);
-    rf::GrStringAligned(rf::GR_ALIGN_CENTER, x + cx / 2, y + cy / 2 - cy_font / 2, text.c_str(), -1,
+    rf::gr_string_aligned(rf::GR_ALIGN_CENTER, x + cx / 2, y + cy / 2 - cy_font / 2, text.c_str(), -1,
                         rf::gr_string_mode);
 }

@@ -83,7 +83,7 @@ namespace rf
         hud_driller_value                             = 47,
     };
 
-    static auto& HudDrawDamageIndicators = AddrAsRef<void(Player*)>(0x00439CA0);
+    static auto& hud_draw_damage_indicators = AddrAsRef<void(Player*)>(0x00439CA0);
 
     static auto& hud_full_color = AddrAsRef<Color>(0x006373B8);
     static auto& hud_mid_color = AddrAsRef<Color>(0x006373BC);
@@ -107,7 +107,7 @@ namespace rf
     static auto& chat_fade_out_timer = AddrAsRef<Timestamp>(0x006C9C88);
     static auto& chat_messages = AddrAsRef<ChatMsg[8]>(0x006C9C98);
 
-    struct HudPersonasTbl
+    struct HudPersonaInfo
     {
         String name;
         String image;
@@ -125,8 +125,8 @@ namespace rf
     static auto& hud_default_color = AddrAsRef<Color>(0x00637554);
     static auto& hud_msg_bg_color = AddrAsRef<Color>(0x006379EC);
     static auto& hud_msg_color = AddrAsRef<Color>(0x006373B4);
-    static auto& hud_personas_tbl = AddrAsRef<HudPersonasTbl[10]>(0x006384D0);
-    static auto& hud_persona_image_render_state = AddrAsRef<GrMode>(0x01775B18);
+    static auto& hud_personas_info = AddrAsRef<HudPersonaInfo[10]>(0x006384D0);
+    static auto& hud_persona_image_gr_mode = AddrAsRef<GrMode>(0x01775B18);
 
     struct WeaponCycle
     {

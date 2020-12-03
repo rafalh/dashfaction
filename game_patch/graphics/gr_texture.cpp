@@ -227,10 +227,10 @@ int GetBytesPerCompressedBlock(rf::BmFormat format)
 FunHook <void(int, float, float, rf::Color*)> gr_d3d_get_texel_hook{
     0x0055CFA0,
     [](int bm_handle, float u, float v, rf::Color* out_color) {
-        if (BmIsCompressedFormat(rf::BmGetFormat(bm_handle))) {
+        if (BmIsCompressedFormat(rf::bm_get_format(bm_handle))) {
             // This function is only used when shooting at a texture with alpha
             rf::GrLockInfo lock;
-            if (rf::GrLock(bm_handle, 0, &lock, rf::GR_LOCK_READ_ONLY)) {
+            if (rf::gr_lock(bm_handle, 0, &lock, rf::GR_LOCK_READ_ONLY)) {
                 // Make sure u and v are in [0, 1] range
                 // Assume wrap addressing mode
                 u = std::fmod(u, 1.0f);
@@ -248,10 +248,10 @@ FunHook <void(int, float, float, rf::Color*)> gr_d3d_get_texel_hook{
                 auto bytes_per_block = GetBytesPerCompressedBlock(lock.format);
                 auto block = lock.data + (y / block_h) * lock.stride_in_bytes + x / block_w * bytes_per_block;
                 *out_color = DecodeBlockCompressedPixel(block, lock.format, x % block_w, y % block_h);
-                rf::GrUnlock(&lock);
+                rf::gr_unlock(&lock);
             }
             else {
-                out_color->Set(255, 255, 255, 255);
+                out_color->set(255, 255, 255, 255);
             }
         }
         else {
@@ -265,11 +265,11 @@ extern FunHook<int(int, rf::GrD3DTexture&)> gr_d3d_create_texture_hook;
 int gr_d3d_create_texture(int bm_handle, rf::GrD3DTexture& tslot) {
     auto result = gr_d3d_create_texture_hook.CallTarget(bm_handle, tslot);
     if (result != 1) {
-        xlog::warn("Failed to load texture '%s'", rf::BmGetFilename(bm_handle));
+        xlog::warn("Failed to load texture '%s'", rf::bm_get_filename(bm_handle));
         // Note: callers of this function expects zero result on failure
         return 0;
     }
-    auto pixel_fmt = rf::BmGetFormat(bm_handle);
+    auto pixel_fmt = rf::bm_get_format(bm_handle);
     if (pixel_fmt == rf::BM_FORMAT_RENDER_TARGET) {
         g_default_pool_tslots.insert(&tslot);
     }
@@ -294,7 +294,7 @@ FunHook<void(rf::GrD3DTexture&)> gr_d3d_free_texture_hook{
 };
 
 bool gr_d3d_lock(int bm_handle, int section, rf::GrLockInfo *lock) {
-    auto& tslot = rf::gr_d3d_textures[rf::BmHandleToIdxAnimAware(bm_handle)];
+    auto& tslot = rf::gr_d3d_textures[rf::bm_handle_to_index_anim_aware(bm_handle)];
     if (tslot.num_sections < 1 || tslot.bm_handle != bm_handle) {
         auto ret = gr_d3d_create_texture(bm_handle, tslot);
         if (ret != 1) {
@@ -327,7 +327,7 @@ static FunHook<bool(int, int, rf::GrLockInfo *)> gr_d3d_lock_hook{0x0055CE00, gr
 // FunHook<void(int, int, int)> gr_d3d_set_state_and_texture_hook{
 //     0x00550850,
 //     [](int state, int bm0, int bm1) {
-//         auto bm0_filename = rf::BmGetFilename(bm0);
+//         auto bm0_filename = rf::bm_get_filename(bm0);
 //         if (bm0_filename && strstr(bm0_filename, "grate")) {
 //             // disable alpha-blending
 //             state &= ~(0x1F << 15);
@@ -386,7 +386,7 @@ void DestroyTexture(int bmh)
 void ChangeUserBitmapPixelFormat(int bmh, rf::BmFormat pixel_fmt, [[ maybe_unused ]] bool dynamic)
 {
     DestroyTexture(bmh);
-    int bm_idx = rf::BmHandleToIdxAnimAware(bmh);
+    int bm_idx = rf::bm_handle_to_index_anim_aware(bmh);
     auto& bm = rf::bm_bitmaps[bm_idx];
     assert(bm.bm_type == rf::BM_TYPE_USER);
     bm.format = pixel_fmt;

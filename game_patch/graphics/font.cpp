@@ -113,21 +113,21 @@ static inline ParsedFontName ParseFontName(std::string_view name)
 static bool LoadFileIntoBuffer(const char* name, std::vector<unsigned char>& buffer)
 {
     rf::File file;
-    if (file.Open(name) != 0) {
+    if (file.open(name) != 0) {
         xlog::error("Failed to open file %s", name);
         return false;
     }
-    auto len = file.GetSize();
+    auto len = file.size();
     buffer.resize(len);
     int total_bytes_read = 0;
     while (len - total_bytes_read > 0) {
-        int num_bytes_read = file.Read(buffer.data() + total_bytes_read, len - total_bytes_read);
+        int num_bytes_read = file.read(buffer.data() + total_bytes_read, len - total_bytes_read);
         if (num_bytes_read <= 0) {
             break;
         }
         total_bytes_read += num_bytes_read;
     }
-    file.Close();
+    file.close();
     if (total_bytes_read != len) {
         xlog::error("Cannot read all file bytes");
         return false;
@@ -304,14 +304,14 @@ GrNewFont::GrNewFont(std::string_view name) :
     auto [atlas_w, atlas_h] = atlas_packer.get_size();
 
     xlog::trace("Creating font texture atlas %dx%d", atlas_w, atlas_h);
-    bitmap_ = rf::BmCreate(rf::BM_FORMAT_8888_ARGB, atlas_w, atlas_h);
+    bitmap_ = rf::bm_create(rf::BM_FORMAT_8888_ARGB, atlas_w, atlas_h);
     if (bitmap_ == -1) {
-        xlog::error("BmCreate failed for font texture");
+        xlog::error("bm_create failed for font texture");
         throw std::runtime_error{"failed to load font"};
     }
     rf::GrLockInfo lock;
-    if (!rf::GrLock(bitmap_, 0, &lock, rf::GR_LOCK_WRITE_ONLY)) {
-        xlog::error("GrLock failed for font texture");
+    if (!rf::gr_lock(bitmap_, 0, &lock, rf::GR_LOCK_WRITE_ONLY)) {
+        xlog::error("gr_lock failed for font texture");
         throw std::runtime_error{"failed to load font"};
     }
 
@@ -350,8 +350,8 @@ GrNewFont::GrNewFont(std::string_view name) :
         glyphs_.push_back(glyph_info);
     }
 
-    rf::GrUnlock(&lock);
-    rf::GrTcacheAddRef(bitmap_);
+    rf::gr_unlock(&lock);
+    rf::gr_tcache_add_ref(bitmap_);
 }
 
 void GrNewFont::draw(int x, int y, std::string_view text, rf::GrMode state) const
@@ -372,8 +372,8 @@ void GrNewFont::draw(int x, int y, std::string_view text, rf::GrMode state) cons
             if (glyph_idx != -1) {
                 auto& glyph_info = glyphs_[glyph_idx];
                 if (glyph_info.bm_w) {
-                    //rf::GrRect(pen_x + glyph_info.x, pen_y + glyph_info.y, glyph_info.bm_w, glyph_info.bm_h);
-                    rf::GrBitmapEx(bitmap_, pen_x + glyph_info.x, pen_y + glyph_info.y, glyph_info.bm_w, glyph_info.bm_h, glyph_info.bm_x, glyph_info.bm_y, state);
+                    //rf::gr_rect(pen_x + glyph_info.x, pen_y + glyph_info.y, glyph_info.bm_w, glyph_info.bm_h);
+                    rf::gr_bitmap_ex(bitmap_, pen_x + glyph_info.x, pen_y + glyph_info.y, glyph_info.bm_w, glyph_info.bm_h, glyph_info.bm_x, glyph_info.bm_y, state);
                 }
                 pen_x += glyph_info.advance_x;
             }
@@ -448,11 +448,11 @@ void SetDefaultFontId(int font_id)
     g_default_font_id = font_id;
 }
 
-FunHook<int(const char*, int)> GrLoadFont_hook{
+FunHook<int(const char*, int)> gr_load_font_hook{
     0x0051F6E0,
     [](const char *name, int reserved) {
         if (StringEndsWith(name, ".vf")) {
-            return GrLoadFont_hook.CallTarget(name, reserved);
+            return gr_load_font_hook.CallTarget(name, reserved);
         }
         else if (rf::is_dedicated_server) {
            return -1;
@@ -477,10 +477,10 @@ FunHook<int(const char*, int)> GrLoadFont_hook{
     },
 };
 
-FunHook<bool(const char*)> GrSetDefaultFont_hook{
+FunHook<bool(const char*)> gr_set_default_font_hook{
     0x0051FE20,
     [](const char* name) {
-        int font = rf::GrLoadFont(name, -1);
+        int font = rf::gr_load_font(name, -1);
         if (font >= 0) {
             g_default_font_id = font;
             return true;
@@ -489,7 +489,7 @@ FunHook<bool(const char*)> GrSetDefaultFont_hook{
     },
 };
 
-FunHook<int(int)> GrGetFontHeight_hook{
+FunHook<int(int)> gr_get_font_height_hook{
     0x0051F4D0,
     [](int font_num) {
         if (font_num == -1) {
@@ -500,12 +500,12 @@ FunHook<int(int)> GrGetFontHeight_hook{
             return font.get_height();
         }
         else {
-            return GrGetFontHeight_hook.CallTarget(font_num);
+            return gr_get_font_height_hook.CallTarget(font_num);
         }
     },
 };
 
-FunHook<void(int, int, const char*, int, rf::GrMode)> GrString_hook{
+FunHook<void(int, int, const char*, int, rf::GrMode)> gr_string_hook{
     0x0051FEB0,
     [](int x, int y, const char *text, int font_num, rf::GrMode mode) {
         if (font_num == -1) {
@@ -516,12 +516,12 @@ FunHook<void(int, int, const char*, int, rf::GrMode)> GrString_hook{
             font.draw(x, y, text, mode);
         }
         else {
-            GrString_hook.CallTarget(x, y, text, font_num, mode);
+            gr_string_hook.CallTarget(x, y, text, font_num, mode);
         }
     },
 };
 
-FunHook<void(int*, int*, const char*, int, int)> GrGetTextSize_hook{
+FunHook<void(int*, int*, const char*, int, int)> gr_get_string_size_hook{
     0x0051F530,
     [](int *out_width, int *out_height, const char *text, int text_len, int font_num) {
         if (font_num == -1) {
@@ -539,7 +539,7 @@ FunHook<void(int*, int*, const char*, int, int)> GrGetTextSize_hook{
             font.get_size(out_width, out_height, text_sv);
         }
         else {
-            GrGetTextSize_hook.CallTarget(out_width, out_height, text, text_len, font_num);
+            gr_get_string_size_hook.CallTarget(out_width, out_height, text, text_len, font_num);
         }
     },
 };
@@ -547,10 +547,10 @@ FunHook<void(int*, int*, const char*, int, int)> GrGetTextSize_hook{
 void ApplyFontPatches()
 {
     // Support TrueType fonts
-    GrLoadFont_hook.Install();
-    GrSetDefaultFont_hook.Install();
-    GrGetFontHeight_hook.Install();
-    GrString_hook.Install();
-    GrGetTextSize_hook.Install();
+    gr_load_font_hook.Install();
+    gr_set_default_font_hook.Install();
+    gr_get_font_height_hook.Install();
+    gr_string_hook.Install();
+    gr_get_string_size_hook.Install();
     InitFreeTypeLib();
 }

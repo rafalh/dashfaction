@@ -23,20 +23,20 @@ namespace rf
             AddrCaller{0x00523690}.this_call(this, name, help, has_argument);
         }
 
-        bool IsEnabled() const
+        bool found() const
         {
             return name_found;
         }
 
-        const char* GetArg() const
+        const char* get_arg() const
         {
             return arg;
         }
     };
 
     typedef void(*MsgHandlerPtr)(UINT, WPARAM, LPARAM);
-    static auto &OsAddMsgHandler = AddrAsRef<unsigned(MsgHandlerPtr)>(0x00524AE0);
-    static auto &OsForeground = AddrAsRef<bool()>(0x00524AD0);
+    static auto &os_add_msg_handler = AddrAsRef<unsigned(MsgHandlerPtr)>(0x00524AE0);
+    static auto &os_foreground = AddrAsRef<bool()>(0x00524AD0);
 
     static auto& msg_handlers = AddrAsRef<MsgHandlerPtr[32]>(0x01B0D5A0);
     static auto& num_msg_handlers = AddrAsRef<uint32_t>(0x01B0D760);

@@ -30,7 +30,7 @@ namespace rf
     };
     static_assert(sizeof(Corpse) == 0x318);
 
-    static auto& CorpseFromHandle = AddrAsRef<Corpse*(int handle)>(0x004174C0);
+    static auto& corpse_from_handle = AddrAsRef<Corpse*(int handle)>(0x004174C0);
 
     static auto& corpse_list = AddrAsRef<Corpse>(0x005CABB8);
 }

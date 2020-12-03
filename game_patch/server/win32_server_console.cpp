@@ -14,7 +14,7 @@
 
 bool g_win32_console = false;
 
-static auto& KeyProcessEvent = AddrAsRef<void(int ScanCode, int KeyDown, int DeltaT)>(0x0051E6C0);
+static auto& key_process_event = AddrAsRef<void(int ScanCode, int KeyDown, int DeltaT)>(0x0051E6C0);
 
 void ResetConsoleCursorColumn(bool clear)
 {
@@ -61,7 +61,7 @@ BOOL WINAPI ConsoleCtrlHandler([[maybe_unused]] DWORD ctrl_type)
 //     }
 // }
 
-CallHook<void()> OsInitWindow_Server_hook{
+CallHook<void()> os_init_window_server_hook{
     0x004B27C5,
     []() {
         AllocConsole();
@@ -75,8 +75,8 @@ CallHook<void()> OsInitWindow_Server_hook{
     },
 };
 
-FunHook<void(const char*, const int*)> ConsolePrint_hook{
-    reinterpret_cast<uintptr_t>(rf::ConsoleOutput),
+FunHook<void(const char*, const int*)> console_print_hook{
+    reinterpret_cast<uintptr_t>(rf::console_output),
     [](const char* text, [[maybe_unused]] const int* color) {
         HANDLE output_handle = GetStdHandle(STD_OUTPUT_HANDLE);
         constexpr WORD red_attr = FOREGROUND_RED | FOREGROUND_INTENSITY;
@@ -139,7 +139,7 @@ FunHook<void(const char*, const int*)> ConsolePrint_hook{
     },
 };
 
-CallHook<void()> DcPutChar_NewLine_hook{
+CallHook<void()> console_put_char_new_line_hook{
     0x0050A081,
     [] {
         HANDLE output_handle = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -148,7 +148,7 @@ CallHook<void()> DcPutChar_NewLine_hook{
     },
 };
 
-FunHook<void()> ConsoleDrawServer_hook{
+FunHook<void()> console_draw_server_hook{
     0x0050A770,
     []() {
         static char prev_cmd_line[sizeof(rf::console_cmd_line)];
@@ -160,11 +160,11 @@ FunHook<void()> ConsoleDrawServer_hook{
     },
 };
 
-FunHook<int()> KeyGet_hook{
+FunHook<int()> key_get_hook{
     0x0051F000,
     []() {
         if (!rf::is_dedicated_server)
-            return KeyGet_hook.CallTarget();
+            return key_get_hook.CallTarget();
 
         HANDLE input_handle = GetStdHandle(STD_INPUT_HANDLE);
         INPUT_RECORD input_record;
@@ -175,11 +175,11 @@ FunHook<int()> KeyGet_hook{
             if (!ReadConsoleInput(input_handle, &input_record, 1, &num_read) || num_read == 0)
                 break;
             if (input_record.EventType == KEY_EVENT) {
-                KeyProcessEvent(input_record.Event.KeyEvent.wVirtualScanCode, input_record.Event.KeyEvent.bKeyDown, 0);
+                key_process_event(input_record.Event.KeyEvent.wVirtualScanCode, input_record.Event.KeyEvent.bKeyDown, 0);
             }
         }
 
-        return KeyGet_hook.CallTarget();
+        return key_get_hook.CallTarget();
     },
 };
 
@@ -187,11 +187,11 @@ void InitWin32ServerConsole()
 {
     g_win32_console = StringContainsIgnoreCase(GetCommandLineA(), "-win32-console");
     if (g_win32_console) {
-        OsInitWindow_Server_hook.Install();
-        ConsolePrint_hook.Install();
-        ConsoleDrawServer_hook.Install();
-        KeyGet_hook.Install();
-        DcPutChar_NewLine_hook.Install();
+        os_init_window_server_hook.Install();
+        console_print_hook.Install();
+        console_draw_server_hook.Install();
+        key_get_hook.Install();
+        console_put_char_new_line_hook.Install();
     }
 }
 

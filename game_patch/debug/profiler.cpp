@@ -133,7 +133,7 @@ protected:
 
     static int current_time()
     {
-        return rf::TimerGet(1000000);
+        return rf::timer_get(1000000);
     }
 
     void enter()
@@ -252,9 +252,9 @@ ConsoleCommand2 profiler_cmd{
 ConsoleCommand2 perf_dump_cmd{
     "d_perf_dump",
     []() {
-        rf::ConsolePrintf("Number of performance aggregators: %u", PerfAggregator::get_instances().size());
+        rf::console_printf("Number of performance aggregators: %u", PerfAggregator::get_instances().size());
         for (auto& ptr : PerfAggregator::get_instances()) {
-            rf::ConsolePrintf("%s: calls %u, duration %u us, avg %u us", ptr->get_name().c_str(),
+            rf::console_printf("%s: calls %u, duration %u us, avg %u us", ptr->get_name().c_str(),
                 ptr->get_calls(), ptr->get_total_duration_us(), ptr->get_avg_duration_us());
         }
     },

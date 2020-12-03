@@ -24,7 +24,7 @@ rf::String GetGameCtrlBindName(int game_ctrl)
         GetMouseButtonName(&name, ctrl_config.mouse_btn_id);
     }
     else {
-        return rf::String::Format("?");
+        return rf::String::format("?");
     }
     return name;
 }
@@ -36,24 +36,24 @@ void RenderSkipCutsceneHintText(rf::ControlAction ctrl)
     }
     auto bind_name = GetGameCtrlBindName(ctrl);
     auto& ctrl_name = rf::local_player->settings.controls.keys[ctrl].name;
-    rf::GrSetColorRgba(255, 255, 255, 255);
-    auto msg = rf::String::Format("Press %s (%s) to skip the cutscene", ctrl_name.CStr(), bind_name.CStr());
-    auto x = rf::GrScreenWidth() / 2;
-    auto y = rf::GrScreenHeight() - 30;
-    rf::GrStringAligned(rf::GR_ALIGN_CENTER, x, y, msg.CStr(), -1, rf::gr_string_mode);
+    rf::gr_set_color_rgba(255, 255, 255, 255);
+    auto msg = rf::String::format("Press %s (%s) to skip the cutscene", ctrl_name.c_str(), bind_name.c_str());
+    auto x = rf::gr_screen_width() / 2;
+    auto y = rf::gr_screen_height() - 30;
+    rf::gr_string_aligned(rf::GR_ALIGN_CENTER, x, y, msg.c_str(), -1, rf::gr_string_mode);
 }
 
-FunHook<void(bool)> CutsceneDoFrame_hook{
+FunHook<void(bool)> cutscene_do_frame_hook{
     0x0045B5E0,
     [](bool dlg_open) {
         bool skip_cutscene = false;
         auto skip_cutscene_ctrl = g_game_config.skip_cutscene_ctrl.value() != -1
             ? static_cast<rf::ControlAction>(g_game_config.skip_cutscene_ctrl.value())
             : default_skip_cutscene_ctrl;
-        rf::ControlConfigCheckPressed(&rf::local_player->settings.controls, skip_cutscene_ctrl, &skip_cutscene);
+        rf::control_config_check_pressed(&rf::local_player->settings.controls, skip_cutscene_ctrl, &skip_cutscene);
 
         if (!skip_cutscene) {
-            CutsceneDoFrame_hook.CallTarget(dlg_open);
+            cutscene_do_frame_hook.CallTarget(dlg_open);
             RenderSkipCutsceneHintText(skip_cutscene_ctrl);
         }
         else {
@@ -69,7 +69,7 @@ FunHook<void(bool)> CutsceneDoFrame_hook{
             DisableSoundBeforeCutsceneSkip();
 
             while (rf::CutsceneIsActive()) {
-                int shot_time_left_ms = current_shot_timer.TimeUntil();
+                int shot_time_left_ms = current_shot_timer.time_until();
 
                 if (current_shot_idx == num_shots - 1) {
                     // run last half second with a speed of 10 FPS so all events get properly processed before
@@ -82,7 +82,7 @@ FunHook<void(bool)> CutsceneDoFrame_hook{
                 timer_add_delta_time(shot_time_left_ms);
                 frame_time = shot_time_left_ms / 1000.0f;
                 timer_base -= static_cast<int64_t>(shot_time_left_ms) * timer_freq / 1000;
-                CutsceneDoFrame_hook.CallTarget(dlg_open);
+                cutscene_do_frame_hook.CallTarget(dlg_open);
             }
 
             EnableSoundAfterCutsceneSkip();
@@ -90,11 +90,11 @@ FunHook<void(bool)> CutsceneDoFrame_hook{
     },
 };
 
-CallHook<bool(rf::Camera*)> CutsceneStopCurrent_CameraSetFirstPerson_hook{
+CallHook<bool(rf::Camera*)> cutscene_stop_current_camera_set_first_person_hook{
     0x0045BDBD,
     [](rf::Camera* camera) {
-        if (!CutsceneStopCurrent_CameraSetFirstPerson_hook.CallTarget(camera)) {
-            rf::CameraSetFixed(camera);
+        if (!cutscene_stop_current_camera_set_first_person_hook.CallTarget(camera)) {
+            rf::camera_set_fixed(camera);
         }
         return true;
     },
@@ -110,12 +110,12 @@ ConsoleCommand2 skip_cutscene_bind_cmd{
             auto ConfigFindControlByName = AddrAsRef<int(rf::PlayerSettings&, const char*)>(0x0043D9F0);
             int ctrl = ConfigFindControlByName(rf::local_player->settings, bind_name.c_str());
             if (ctrl == -1) {
-                rf::ConsolePrintf("Cannot find control: %s", bind_name.c_str());
+                rf::console_printf("Cannot find control: %s", bind_name.c_str());
             }
             else {
                 g_game_config.skip_cutscene_ctrl = ctrl;
                 g_game_config.save();
-                rf::ConsolePrintf("Skip Cutscene bind changed to: %s", bind_name.c_str());
+                rf::console_printf("Skip Cutscene bind changed to: %s", bind_name.c_str());
             }
         }
     },
@@ -126,9 +126,9 @@ ConsoleCommand2 skip_cutscene_bind_cmd{
 void ApplyCutscenePatches()
 {
     // Support skipping cutscenes
-    CutsceneDoFrame_hook.Install();
+    cutscene_do_frame_hook.Install();
     skip_cutscene_bind_cmd.Register();
 
     // Fix crash if camera cannot be restored to first-person mode after cutscene
-    CutsceneStopCurrent_CameraSetFirstPerson_hook.Install();
+    cutscene_stop_current_camera_set_first_person_hook.Install();
 }

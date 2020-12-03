@@ -30,5 +30,5 @@ namespace rf {
     };
     static_assert(sizeof(Glare) == 0x2EC);
 
-    static auto& GlareEntityCollisionTest = AddrAsRef<bool(Object *obj, Glare *glare, Vector3 *eye_pos)>(0x00415280);
+    static auto& glare_collide_entity = AddrAsRef<bool(Object *obj, Glare *glare, Vector3 *eye_pos)>(0x00415280);
 }

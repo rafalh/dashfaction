@@ -22,27 +22,27 @@ void SendTriggerActivatePacket(rf::Player* player, int trigger_uid, int32_t enti
     packet.header.size = sizeof(packet) - sizeof(packet.header);
     packet.uid = trigger_uid;
     packet.entity_handle = entity_handle;
-    rf::MultiIoSendReliable(player, reinterpret_cast<uint8_t*>(&packet), sizeof(packet), 0);
+    rf::multi_io_send_reliable(player, reinterpret_cast<uint8_t*>(&packet), sizeof(packet), 0);
 }
 
-FunHook<void(int, int)> SendTriggerActivatePacketToAllPlayers_hook{
+FunHook<void(int, int)> send_trigger_activate_packet_to_all_players_hook{
     0x00483190,
     [](int trigger_uid, int entity_handle) {
         if (g_trigger_solo_player)
             SendTriggerActivatePacket(g_trigger_solo_player, trigger_uid, entity_handle);
         else
-            SendTriggerActivatePacketToAllPlayers_hook.CallTarget(trigger_uid, entity_handle);
+            send_trigger_activate_packet_to_all_players_hook.CallTarget(trigger_uid, entity_handle);
     },
 };
 
-FunHook<void(rf::Trigger*, int32_t, bool)> TriggerActivate_hook{
+FunHook<void(rf::Trigger*, int32_t, bool)> trigger_activate_hook{
     0x004C0220,
     [](rf::Trigger* trigger, int32_t h_entity, bool skip_movers) {
         // Check team
-        auto player = rf::GetPlayerFromEntityHandle(h_entity);
-        auto trigger_name = trigger->name.CStr();
+        auto player = rf::player_from_entity_handle(h_entity);
+        auto trigger_name = trigger->name.c_str();
         if (player && trigger->team != -1 && trigger->team != player->team) {
-            // rf::ConsolePrintf("Trigger team does not match: %d vs %d (%s)", trigger->team, Player->blue_team,
+            // rf::console_printf("Trigger team does not match: %d vs %d (%s)", trigger->team, Player->blue_team,
             // trigger_name);
             return;
         }
@@ -51,7 +51,7 @@ FunHook<void(rf::Trigger*, int32_t, bool)> TriggerActivate_hook{
         uint8_t ext_flags = trigger_name[0] == TRIGGER_PF_FLAGS_PREFIX ? trigger_name[1] : 0;
         bool is_solo_trigger = (ext_flags & (TRIGGER_SOLO | TRIGGER_TELEPORT)) != 0;
         if (rf::is_multi && rf::is_server && is_solo_trigger && player) {
-            // rf::ConsolePrintf("Solo/Teleport trigger activated %s", trigger_name);
+            // rf::console_printf("Solo/Teleport trigger activated %s", trigger_name);
             if (player != rf::local_player) {
                 SendTriggerActivatePacket(player, trigger->uid, h_entity);
                 return;
@@ -67,17 +67,17 @@ FunHook<void(rf::Trigger*, int32_t, bool)> TriggerActivate_hook{
         }
 
         // Normal activation
-        // rf::ConsolePrintf("trigger normal activation %s %d", trigger_name, ext_flags);
-        TriggerActivate_hook.CallTarget(trigger, h_entity, skip_movers);
+        // rf::console_printf("trigger normal activation %s %d", trigger_name, ext_flags);
+        trigger_activate_hook.CallTarget(trigger, h_entity, skip_movers);
         g_trigger_solo_player = nullptr;
     },
 };
 
-CodeInjection TriggerCheckActivation_patch{
+CodeInjection trigger_check_activation_patch{
     0x004BFC7D,
     [](auto& regs) {
         auto trigger = reinterpret_cast<rf::Trigger*>(regs.eax);
-        auto trigger_name = trigger->name.CStr();
+        auto trigger_name = trigger->name.c_str();
         uint8_t ext_flags = trigger_name[0] == TRIGGER_PF_FLAGS_PREFIX ? trigger_name[1] : 0;
         bool is_client_side = (ext_flags & TRIGGER_CLIENT_SIDE) != 0;
         if (is_client_side)
@@ -88,7 +88,7 @@ CodeInjection TriggerCheckActivation_patch{
 void ActivateTriggersForLateJoiner(rf::Player* player)
 {
     for (auto trigger_uid : g_triggers_uids_for_late_joiners) {
-        xlog::debug("Activating trigger %d for late joiner %s", trigger_uid, player->name.CStr());
+        xlog::debug("Activating trigger %d for late joiner %s", trigger_uid, player->name.c_str());
         SendTriggerActivatePacket(player, trigger_uid, -1);
     }
 }
@@ -98,7 +98,7 @@ void ClearTriggersForLateJoiners()
     g_triggers_uids_for_late_joiners.clear();
 }
 
-CodeInjection SendStateInfo_injection{
+CodeInjection send_state_info_injection{
     0x0048186F,
     [](auto& regs) {
         auto player = reinterpret_cast<rf::Player*>(regs.edi);
@@ -109,12 +109,12 @@ CodeInjection SendStateInfo_injection{
 void ApplyTriggerPatches()
 {
     // Solo/Teleport triggers handling + filtering by team ID
-    TriggerActivate_hook.Install();
-    SendTriggerActivatePacketToAllPlayers_hook.Install();
+    trigger_activate_hook.Install();
+    send_trigger_activate_packet_to_all_players_hook.Install();
 
     // Client-side trigger flag handling
-    TriggerCheckActivation_patch.Install();
+    trigger_check_activation_patch.Install();
 
     // Send trigger_activate packets for late joiners
-    SendStateInfo_injection.Install();
+    send_state_info_injection.Install();
 }

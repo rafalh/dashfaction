@@ -40,9 +40,9 @@ std::string g_prev_level;
 void ParseVoteConfig(const char* vote_name, VoteConfig& config, rf::Parser& parser)
 {
     std::string vote_option_name = StringFormat("$DF %s:", vote_name);
-    if (parser.ParseOptional(vote_option_name.c_str())) {
-        config.enabled = parser.ParseBool();
-        rf::ConsolePrintf("DF %s: %s", vote_name, config.enabled ? "true" : "false");
+    if (parser.parse_optional(vote_option_name.c_str())) {
+        config.enabled = parser.parse_bool();
+        rf::console_printf("DF %s: %s", vote_name, config.enabled ? "true" : "false");
 
         // if (parser.ParseOptional("+Min Voters:")) {
         //     config.min_voters = parser.ParseUInt();
@@ -52,8 +52,8 @@ void ParseVoteConfig(const char* vote_name, VoteConfig& config, rf::Parser& pars
         //     config.min_percentage = parser.ParseUInt();
         // }
 
-        if (parser.ParseOptional("+Time Limit:")) {
-            config.time_limit_seconds = parser.ParseUInt();
+        if (parser.parse_optional("+Time Limit:")) {
+            config.time_limit_seconds = parser.parse_uint();
         }
     }
 }
@@ -66,33 +66,33 @@ void LoadAdditionalServerConfig(rf::Parser& parser)
     ParseVoteConfig("Vote Restart", g_additional_server_config.vote_restart, parser);
     ParseVoteConfig("Vote Next", g_additional_server_config.vote_next, parser);
     ParseVoteConfig("Vote Previous", g_additional_server_config.vote_previous, parser);
-    if (parser.ParseOptional("$DF Spawn Protection Duration:")) {
-        g_additional_server_config.spawn_protection_duration_ms = parser.ParseUInt();
+    if (parser.parse_optional("$DF Spawn Protection Duration:")) {
+        g_additional_server_config.spawn_protection_duration_ms = parser.parse_uint();
     }
-    if (parser.ParseOptional("$DF Hitsounds:")) {
-        g_additional_server_config.hit_sounds.enabled = parser.ParseBool();
-        if (parser.ParseOptional("+Sound ID:")) {
-            g_additional_server_config.hit_sounds.sound_id = parser.ParseUInt();
+    if (parser.parse_optional("$DF Hitsounds:")) {
+        g_additional_server_config.hit_sounds.enabled = parser.parse_bool();
+        if (parser.parse_optional("+Sound ID:")) {
+            g_additional_server_config.hit_sounds.sound_id = parser.parse_uint();
         }
-        if (parser.ParseOptional("+Rate Limit:")) {
-            g_additional_server_config.hit_sounds.rate_limit = parser.ParseUInt();
+        if (parser.parse_optional("+Rate Limit:")) {
+            g_additional_server_config.hit_sounds.rate_limit = parser.parse_uint();
         }
     }
 
-    while (parser.ParseOptional("$DF Item Replacement:")) {
+    while (parser.parse_optional("$DF Item Replacement:")) {
         rf::String old_item, new_item;
-        parser.ParseString(&old_item);
-        parser.ParseString(&new_item);
-        g_additional_server_config.item_replacements.insert({old_item.CStr(), new_item.CStr()});
+        parser.parse_string(&old_item);
+        parser.parse_string(&new_item);
+        g_additional_server_config.item_replacements.insert({old_item.c_str(), new_item.c_str()});
     }
 
-    if (parser.ParseOptional("$DF Default Player Weapon:")) {
+    if (parser.parse_optional("$DF Default Player Weapon:")) {
         rf::String default_weapon;
-        parser.ParseString(&default_weapon);
-        g_additional_server_config.default_player_weapon = default_weapon.CStr();
+        parser.parse_string(&default_weapon);
+        g_additional_server_config.default_player_weapon = default_weapon.c_str();
 
-        if (parser.ParseOptional("+Initial Ammo:")) {
-            auto ammo = parser.ParseUInt();
+        if (parser.parse_optional("+Initial Ammo:")) {
+            auto ammo = parser.parse_uint();
             g_additional_server_config.default_player_weapon_ammo = {ammo};
 
             auto WeaponClsFind = AddrAsRef<int(const char*)>(0x004C81F0);
@@ -104,32 +104,32 @@ void LoadAdditionalServerConfig(rf::Parser& parser)
         }
     }
 
-    if (parser.ParseOptional("$DF Require Client Mod:")) {
-        g_additional_server_config.require_client_mod = parser.ParseBool();
+    if (parser.parse_optional("$DF Require Client Mod:")) {
+        g_additional_server_config.require_client_mod = parser.parse_bool();
     }
 
-    if (parser.ParseOptional("$DF Player Damage Modifier:")) {
-        g_additional_server_config.player_damage_modifier = parser.ParseFloat();
+    if (parser.parse_optional("$DF Player Damage Modifier:")) {
+        g_additional_server_config.player_damage_modifier = parser.parse_float();
     }
 
-    if (parser.ParseOptional("$DF Saving Enabled:")) {
-        g_additional_server_config.saving_enabled = parser.ParseBool();
+    if (parser.parse_optional("$DF Saving Enabled:")) {
+        g_additional_server_config.saving_enabled = parser.parse_bool();
     }
 
-    if (parser.ParseOptional("$DF Force Player Character:")) {
+    if (parser.parse_optional("$DF Force Player Character:")) {
         rf::String character_name;
-        parser.ParseString(&character_name);
-        int character_num = rf::MultiFindCharacter(character_name.CStr());
+        parser.parse_string(&character_name);
+        int character_num = rf::multi_find_character(character_name.c_str());
         if (character_num != -1) {
             g_additional_server_config.force_player_character = {character_num};
         }
         else {
-            xlog::warn("Unknown character name in Force Player Character setting: %s", character_name.CStr());
+            xlog::warn("Unknown character name in Force Player Character setting: %s", character_name.c_str());
         }
     }
 
-    if (!parser.ParseOptional("$Name:") && !parser.ParseOptional("#End")) {
-        parser.Error("end of server configuration");
+    if (!parser.parse_optional("$Name:") && !parser.parse_optional("#End")) {
+        parser.error("end of server configuration");
     }
 }
 
@@ -141,7 +141,7 @@ CodeInjection dedicated_server_load_config_patch{
 
         // Insert server name in window title when hosting dedicated server
         std::string wnd_name;
-        wnd_name.append(rf::netgame.name.CStr());
+        wnd_name.append(rf::netgame.name.c_str());
         wnd_name.append(" - " PRODUCT_NAME " Dedicated Server");
         SetWindowTextA(rf::main_wnd, wnd_name.c_str());
     },
@@ -158,15 +158,15 @@ std::pair<std::string_view, std::string_view> StripBySpace(std::string_view str)
 
 void HandleNextMapCommand(rf::Player* player)
 {
-    int next_idx = (rf::netgame.current_level_index + 1) % rf::netgame.levels.Size();
-    auto msg = StringFormat("Next level: %s", rf::netgame.levels.Get(next_idx).CStr());
+    int next_idx = (rf::netgame.current_level_index + 1) % rf::netgame.levels.size();
+    auto msg = StringFormat("Next level: %s", rf::netgame.levels[next_idx].c_str());
     SendChatLinePacket(msg.c_str(), player);
 }
 
 void HandleSaveCommand(rf::Player* player, std::string_view save_name)
 {
     auto& pdata = GetPlayerAdditionalData(player);
-    auto entity = rf::EntityFromHandle(player->entity_handle);
+    auto entity = rf::entity_from_handle(player->entity_handle);
     if (entity && g_additional_server_config.saving_enabled) {
         PlayerNetGameSaveData save_data;
         save_data.pos = entity->pos;
@@ -179,8 +179,8 @@ void HandleSaveCommand(rf::Player* player, std::string_view save_name)
 void HandleLoadCommand(rf::Player* player, std::string_view save_name)
 {
     auto& pdata = GetPlayerAdditionalData(player);
-    auto entity = rf::EntityFromHandle(player->entity_handle);
-    if (entity && g_additional_server_config.saving_enabled && !rf::EntityIsDying(entity)) {
+    auto entity = rf::entity_from_handle(player->entity_handle);
+    if (entity && g_additional_server_config.saving_enabled && !rf::entity_is_dying(entity)) {
         auto it = pdata.saves.find(std::string{save_name});
         if (it != pdata.saves.end()) {
             auto& save_data = it->second;
@@ -191,8 +191,8 @@ void HandleLoadCommand(rf::Player* player, std::string_view save_name)
             if (entity->obj_interp) {
                 entity->obj_interp->Clear();
             }
-            rf::SendEntityCreatePacketToAll(entity);
-            pdata.last_teleport_timestamp.Set(300);
+            rf::send_entity_create_packet_to_all(entity);
+            pdata.last_teleport_timestamp.set(300);
             pdata.last_teleport_pos = save_data.pos;
             SendChatLinePacket("Your position has been restored!", player);
         }
@@ -202,7 +202,7 @@ void HandleLoadCommand(rf::Player* player, std::string_view save_name)
     }
 }
 
-CodeInjection ProcessObjUpdate_set_pos_injection{
+CodeInjection process_obj_update_set_pos_injection{
     0x0047E563,
     [](auto& regs) {
         if (!rf::is_server) {
@@ -210,18 +210,18 @@ CodeInjection ProcessObjUpdate_set_pos_injection{
         }
         auto& entity = AddrAsRef<rf::Entity>(regs.edi);
         auto& pos = AddrAsRef<rf::Vector3>(regs.esp + 0x9C - 0x60);
-        auto player = rf::GetPlayerFromEntityHandle(entity.handle);
+        auto player = rf::player_from_entity_handle(entity.handle);
         auto& pdata = GetPlayerAdditionalData(player);
-        if (pdata.last_teleport_timestamp.Valid()) {
-            float dist = (pos - pdata.last_teleport_pos).Len();
-            if (!pdata.last_teleport_timestamp.Elapsed() && dist > 1.0f) {
+        if (pdata.last_teleport_timestamp.valid()) {
+            float dist = (pos - pdata.last_teleport_pos).len();
+            if (!pdata.last_teleport_timestamp.elapsed() && dist > 1.0f) {
                 // Ignore obj_update packets for some time after restoring the position
                 xlog::trace("ignoring obj_update after teleportation (distance %f)", dist);
                 regs.eip = 0x0047DFF6;
             }
             else {
                 xlog::trace("not ignoring obj_update anymore after teleportation (distance %f)", dist);
-                pdata.last_teleport_timestamp.Invalidate();
+                pdata.last_teleport_timestamp.invalidate();
             }
         }
     },
@@ -292,7 +292,7 @@ CodeInjection detect_browser_player_patch{
 void SendHitSoundPacket(rf::Player* target)
 {
     // rate limiting - max 5 per second
-    int now = rf::TimerGet(1000);
+    int now = rf::timer_get(1000);
     auto& pdata = GetPlayerAdditionalData(target);
     if (now - pdata.last_hitsound_sent_ms < 1000 / g_additional_server_config.hit_sounds.rate_limit) {
         return;
@@ -306,14 +306,14 @@ void SendHitSoundPacket(rf::Player* target)
     packet.sound_id = g_additional_server_config.hit_sounds.sound_id;
     // FIXME: it does not work on RF 1.21
     packet.pos.x = packet.pos.y = packet.pos.z = std::numeric_limits<float>::quiet_NaN();
-    rf::MultiIoSend(target, &packet, sizeof(packet));
+    rf::multi_io_send(target, &packet, sizeof(packet));
 }
 
-FunHook<float(rf::Entity*, float, int, int, int)> EntityTakeDamage_hook{
+FunHook<float(rf::Entity*, float, int, int, int)> entity_take_damage_hook{
     0x0041A350,
     [](rf::Entity* entity, float damage, int responsible_entity_handle, int dmg_type, int responsible_entity_uid) {
-        auto damaged_player = rf::GetPlayerFromEntityHandle(entity->handle);
-        auto responsible_player = rf::GetPlayerFromEntityHandle(responsible_entity_handle);
+        auto damaged_player = rf::player_from_entity_handle(entity->handle);
+        auto responsible_player = rf::player_from_entity_handle(responsible_entity_handle);
         if (damaged_player && responsible_player && damaged_player != responsible_player) {
             damage *= g_additional_server_config.player_damage_modifier;
             if (damage == 0.0f) {
@@ -321,7 +321,7 @@ FunHook<float(rf::Entity*, float, int, int, int)> EntityTakeDamage_hook{
             }
         }
 
-        float dmg = EntityTakeDamage_hook.CallTarget(entity, damage, responsible_entity_handle, dmg_type, responsible_entity_uid);
+        float dmg = entity_take_damage_hook.CallTarget(entity, damage, responsible_entity_handle, dmg_type, responsible_entity_uid);
         if (g_additional_server_config.hit_sounds.enabled && responsible_player) {
             SendHitSoundPacket(responsible_player);
         }
@@ -330,7 +330,7 @@ FunHook<float(rf::Entity*, float, int, int, int)> EntityTakeDamage_hook{
     },
 };
 
-CallHook<int(const char*)> find_rfl_item_class_hook{
+CallHook<int(const char*)> item_lookup_type_hook{
     0x00465102,
     [](const char* cls_name) {
         if (rf::is_dedicated_server) {
@@ -339,7 +339,7 @@ CallHook<int(const char*)> find_rfl_item_class_hook{
             if (it != g_additional_server_config.item_replacements.end())
                 cls_name = it->second.c_str();
         }
-        return find_rfl_item_class_hook.CallTarget(cls_name);
+        return item_lookup_type_hook.CallTarget(cls_name);
     },
 };
 
@@ -363,7 +363,7 @@ CallHook<void(rf::Player*, int, int)> give_default_weapon_ammo_hook{
     },
 };
 
-FunHook<bool (const char*, int)> MultiIsLevelMatchingGameType_hook{
+FunHook<bool (const char*, int)> multi_is_level_matching_game_type_hook{
     0x00445050,
     [](const char *filename, int ng_type) {
         if (ng_type == RF_GT_CTF) {
@@ -380,8 +380,8 @@ FunHook<void(rf::Player*)> spawn_player_sync_ammo_hook{
     [](rf::Player* player) {
         spawn_player_sync_ammo_hook.CallTarget(player);
         // if default player weapon has ammo override sync ammo using additional reload packet
-        if (g_additional_server_config.default_player_weapon_ammo && !rf::PlayerIsDead(player)) {
-            rf::Entity* entity = rf::EntityFromHandle(player->entity_handle);
+        if (g_additional_server_config.default_player_weapon_ammo && !rf::player_is_dead(player)) {
+            rf::Entity* entity = rf::entity_from_handle(player->entity_handle);
             RF_ReloadPacket packet;
             packet.header.type = RF_GPT_RELOAD;
             packet.header.size = sizeof(packet) - sizeof(packet.header);
@@ -391,7 +391,7 @@ FunHook<void(rf::Player*)> spawn_player_sync_ammo_hook{
             packet.clip_ammo = entity->ai.clip_ammo[weapon_type];
             int ammo_type = rf::weapon_types[weapon_type].ammo_type;
             packet.ammo = entity->ai.ammo[ammo_type];
-            rf::MultiIoSendReliable(player, reinterpret_cast<uint8_t*>(&packet), sizeof(packet), 0);
+            rf::multi_io_send_reliable(player, reinterpret_cast<uint8_t*>(&packet), sizeof(packet), 0);
         }
     },
 };
@@ -444,34 +444,34 @@ CodeInjection send_ping_time_wrap_fix{
     [](auto& regs) {
         auto& io_stats = AddrAsRef<rf::MultiIoStats>(regs.esi);
         auto player = AddrAsRef<rf::Player*>(regs.esp + 0xC + 0x4);
-        if (!io_stats.send_ping_packet_timestamp.Valid() || io_stats.send_ping_packet_timestamp.Elapsed()) {
+        if (!io_stats.send_ping_packet_timestamp.valid() || io_stats.send_ping_packet_timestamp.elapsed()) {
             xlog::trace("sending ping");
-            io_stats.send_ping_packet_timestamp.Set(3000);
-            rf::PingPlayer(player);
-            io_stats.last_ping_time = rf::TimerGet(1000);
+            io_stats.send_ping_packet_timestamp.set(3000);
+            rf::multi_ping_player(player);
+            io_stats.last_ping_time = rf::timer_get(1000);
         }
         regs.eip = 0x0047CD64;
     },
 };
 
-CodeInjection MultiOnNewPlayer_injection{
+CodeInjection multi_on_new_player_injection{
     0x0047B013,
     [](auto& regs) {
         auto player = reinterpret_cast<rf::Player*>(regs.esi);
         in_addr addr;
         addr.S_un.S_addr = ntohl(player->nw_data->addr.ip_addr);
-        rf::ConsolePrintf("%s%s (%s)", player->name.CStr(),  rf::strings::has_joined, inet_ntoa(addr));
+        rf::console_printf("%s%s (%s)", player->name.c_str(),  rf::strings::has_joined, inet_ntoa(addr));
         regs.eip = 0x0047B051;
     },
 };
 
-FunHook<void(rf::Player*)> MultiSpawnPlayerServerSide_hook{
+FunHook<void(rf::Player*)> multi_spawn_player_server_side_hook{
     0x00480820,
     [](rf::Player* player) {
         if (g_additional_server_config.force_player_character) {
             player->settings.multi_character = g_additional_server_config.force_player_character.value();
         }
-        MultiSpawnPlayerServerSide_hook.CallTarget(player);
+        multi_spawn_player_server_side_hook.CallTarget(player);
     },
 };
 
@@ -491,13 +491,13 @@ void ServerInit()
     detect_browser_player_patch.Install();
 
     // Hit sounds
-    EntityTakeDamage_hook.Install();
+    entity_take_damage_hook.Install();
 
     // Do not strip '%' characters from chat messages
     WriteMem<u8>(0x004785FD, asm_opcodes::jmp_rel_short);
 
     // Item replacements
-    find_rfl_item_class_hook.Install();
+    item_lookup_type_hook.Install();
 
     // Default player weapon class and ammo override
     find_default_weapon_for_entity_hook.Install();
@@ -516,7 +516,7 @@ void ServerInit()
     AsmWriter(0x0046E179).nop(2);
 
     // In Multi -> Create game fix level filtering so 'pdm' and 'pctf' is supported
-    MultiIsLevelMatchingGameType_hook.Install();
+    multi_is_level_matching_game_type_hook.Install();
 
     // Do not create not damaging particles on a dedicated server
     ParticleCreate_hook.Install();
@@ -531,14 +531,14 @@ void ServerInit()
     send_ping_time_wrap_fix.Install();
 
     // Ignore obj_update position for some time after teleportation
-    ProcessObjUpdate_set_pos_injection.Install();
+    process_obj_update_set_pos_injection.Install();
 
     // Customized dedicated server console message when player joins
-    MultiOnNewPlayer_injection.Install();
+    multi_on_new_player_injection.Install();
     AsmWriter(0x0047B061, 0x0047B064).add(asm_regs::esp, 0x14);
 
     // Support forcing player character
-    MultiSpawnPlayerServerSide_hook.Install();
+    multi_spawn_player_server_side_hook.Install();
 }
 
 void ServerCleanup()
@@ -556,7 +556,7 @@ void ServerDoFrame()
 
 void ServerOnLimboStateEnter()
 {
-    g_prev_level = rf::level.filename.CStr();
+    g_prev_level = rf::level.filename.c_str();
     ServerVoteOnLimboStateEnter();
 
     // Clear save data for all players
@@ -564,7 +564,7 @@ void ServerOnLimboStateEnter()
     for (auto& player : player_list) {
         auto& pdata = GetPlayerAdditionalData(&player);
         pdata.saves.clear();
-        pdata.last_teleport_timestamp.Invalidate();
+        pdata.last_teleport_timestamp.invalidate();
     }
 }
 

@@ -22,7 +22,7 @@ public:
             current_y += 5;
         }
         PrintInternal(name_x, current_y, name);
-        current_y += rf::GrGetFontHeight(-1) + 2;
+        current_y += rf::gr_get_font_height(-1) + 2;
     }
 
     void Print(const char* name, const char* val)
@@ -40,7 +40,7 @@ public:
             PrintInternal(name_x, current_y, buf.c_str());
         }
 
-        current_y += rf::GrGetFontHeight(-1) + 2;
+        current_y += rf::gr_get_font_height(-1) + 2;
     }
 
     void Print(const char* name, const rf::Vector3& val)
@@ -67,10 +67,10 @@ public:
 private:
     void PrintInternal(int x, int y, const char* str)
     {
-        rf::GrSetColorRgba(0, 0, 0, 255);
-        rf::GrString(x + 1, y + 1, str);
-        rf::GrSetColorRgba(255, 255, 255, 255);
-        rf::GrString(x, y, str);
+        rf::gr_set_color_rgba(0, 0, 0, 255);
+        rf::gr_string(x + 1, y + 1, str);
+        rf::gr_set_color_rgba(255, 255, 255, 255);
+        rf::gr_string(x, y, str);
     }
 };
 

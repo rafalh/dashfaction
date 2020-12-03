@@ -44,12 +44,12 @@ struct VPackfileEntry
     FILE* raw_file;
 };
 
-static auto& packfile_loading_user_maps = AddrAsRef<bool>(0x01BDB21C);
+static auto& vpackfile_loading_user_maps = AddrAsRef<bool>(0x01BDB21C);
 
-static auto& VPackfileCalcFileNameChecksum = AddrAsRef<uint32_t(const char* file_name)>(0x0052BE70);
+static auto& vpackfile_calc_file_name_checksum = AddrAsRef<uint32_t(const char* file_name)>(0x0052BE70);
 typedef uint32_t VPackfileAddEntries_Type(VPackfile* packfile, const void* buf, unsigned num_files_in_block,
                                          unsigned* num_added);
-static auto& VPackfileAddEntries = AddrAsRef<VPackfileAddEntries_Type>(0x0052BD40);
+static auto& vpackfile_add_entries = AddrAsRef<VPackfileAddEntries_Type>(0x0052BD40);
 } // namespace rf
 
 #if CHECK_PACKFILE_CHECKSUM
@@ -210,7 +210,7 @@ static int VPackfileAdd_New(const char* filename, const char* dir)
     packfile->field_a0 = 0;
     packfile->num_files = 0;
     // this is set to true for user_maps
-    packfile->is_user_maps = rf::packfile_loading_user_maps;
+    packfile->is_user_maps = rf::vpackfile_loading_user_maps;
 
     // Process file header
     char buf[0x800];
@@ -234,7 +234,7 @@ static int VPackfileAdd_New(const char* filename, const char* dir)
         }
 
         unsigned num_files_in_block = std::min(packfile->num_files - i, 32u);
-        rf::VPackfileAddEntries(packfile.get(), buf, num_files_in_block, &num_added);
+        rf::vpackfile_add_entries(packfile.get(), buf, num_files_in_block, &num_added);
         ++current_block;
     }
     packfile->files.resize(num_added);
@@ -270,7 +270,7 @@ static void ForEachPackfileEntry(const std::vector<std::string_view>& ext_filter
     for (auto& packfile : g_packfiles) {
         if (!packfile_filter || !stricmp(packfile_filter, packfile->filename)) {
             for (auto& entry : packfile->files) {
-                const char* ext_ptr = rf::FileGetExt(entry.name);
+                const char* ext_ptr = rf::file_get_ext(entry.name);
                 if (ext_ptr[0]) {
                     ++ext_ptr;
                 }
@@ -321,7 +321,7 @@ static bool IsLookupTableEntryOverrideAllowed(rf::VPackfileEntry* old_entry, rf:
         // Allow overriding by packfiles from game root and from mods
         return true;
     }
-    if (!old_entry->parent->is_user_maps && !stricmp(rf::FileGetExt(new_entry->name), ".tbl")) {
+    if (!old_entry->parent->is_user_maps && !stricmp(rf::file_get_ext(new_entry->name), ".tbl")) {
         // Always skip overriding tbl files from game by user_maps
         return false;
     }
@@ -374,7 +374,7 @@ static int VPackfileAddEntries_New(rf::VPackfile* packfile, const void* block, u
         char* file_name_buf = new char[strlen(file_name) + 1];
         std::strcpy(file_name_buf, file_name);
         entry.name = file_name_buf;
-        entry.name_checksum = rf::VPackfileCalcFileNameChecksum(entry.name);
+        entry.name_checksum = rf::vpackfile_calc_file_name_checksum(entry.name);
         entry.size = record->size;
         entry.parent = packfile;
         entry.raw_file = nullptr;
@@ -433,7 +433,7 @@ static void LoadDashFactionVpp()
             *(ptr + 1) = '\0';
     }
     xlog::info("Loading dashfaction.vpp from directory: %s", buf);
-    if (!rf::VPackfileAdd("dashfaction.vpp", buf))
+    if (!rf::vpackfile_add("dashfaction.vpp", buf))
         xlog::error("Failed to load dashfaction.vpp");
 }
 
@@ -456,41 +456,41 @@ static void VPackfileInit_New()
     g_loopup_table.reserve(10000);
 
     if (GetInstalledGameLang() == LANG_GR) {
-        rf::VPackfileAdd("audiog.vpp", nullptr);
-        rf::VPackfileAdd("maps_gr.vpp", nullptr);
-        rf::VPackfileAdd("levels1g.vpp", nullptr);
-        rf::VPackfileAdd("levels2g.vpp", nullptr);
-        rf::VPackfileAdd("levels3g.vpp", nullptr);
-        rf::VPackfileAdd("ltables.vpp", nullptr);
+        rf::vpackfile_add("audiog.vpp", nullptr);
+        rf::vpackfile_add("maps_gr.vpp", nullptr);
+        rf::vpackfile_add("levels1g.vpp", nullptr);
+        rf::vpackfile_add("levels2g.vpp", nullptr);
+        rf::vpackfile_add("levels3g.vpp", nullptr);
+        rf::vpackfile_add("ltables.vpp", nullptr);
     }
     else if (GetInstalledGameLang() == LANG_FR) {
-        rf::VPackfileAdd("audiof.vpp", nullptr);
-        rf::VPackfileAdd("maps_fr.vpp", nullptr);
-        rf::VPackfileAdd("levels1f.vpp", nullptr);
-        rf::VPackfileAdd("levels2f.vpp", nullptr);
-        rf::VPackfileAdd("levels3f.vpp", nullptr);
-        rf::VPackfileAdd("ltables.vpp", nullptr);
+        rf::vpackfile_add("audiof.vpp", nullptr);
+        rf::vpackfile_add("maps_fr.vpp", nullptr);
+        rf::vpackfile_add("levels1f.vpp", nullptr);
+        rf::vpackfile_add("levels2f.vpp", nullptr);
+        rf::vpackfile_add("levels3f.vpp", nullptr);
+        rf::vpackfile_add("ltables.vpp", nullptr);
     }
     else {
-        rf::VPackfileAdd("audio.vpp", nullptr);
-        rf::VPackfileAdd("maps_en.vpp", nullptr);
-        rf::VPackfileAdd("levels1.vpp", nullptr);
-        rf::VPackfileAdd("levels2.vpp", nullptr);
-        rf::VPackfileAdd("levels3.vpp", nullptr);
+        rf::vpackfile_add("audio.vpp", nullptr);
+        rf::vpackfile_add("maps_en.vpp", nullptr);
+        rf::vpackfile_add("levels1.vpp", nullptr);
+        rf::vpackfile_add("levels2.vpp", nullptr);
+        rf::vpackfile_add("levels3.vpp", nullptr);
     }
-    rf::VPackfileAdd("levelsm.vpp", nullptr);
-    // rf::VPackfileAdd("levelseb.vpp", nullptr);
-    // rf::VPackfileAdd("levelsbg.vpp", nullptr);
-    rf::VPackfileAdd("maps1.vpp", nullptr);
-    rf::VPackfileAdd("maps2.vpp", nullptr);
-    rf::VPackfileAdd("maps3.vpp", nullptr);
-    rf::VPackfileAdd("maps4.vpp", nullptr);
-    rf::VPackfileAdd("meshes.vpp", nullptr);
-    rf::VPackfileAdd("motions.vpp", nullptr);
-    rf::VPackfileAdd("music.vpp", nullptr);
-    rf::VPackfileAdd("ui.vpp", nullptr);
+    rf::vpackfile_add("levelsm.vpp", nullptr);
+    // rf::vpackfile_add("levelseb.vpp", nullptr);
+    // rf::vpackfile_add("levelsbg.vpp", nullptr);
+    rf::vpackfile_add("maps1.vpp", nullptr);
+    rf::vpackfile_add("maps2.vpp", nullptr);
+    rf::vpackfile_add("maps3.vpp", nullptr);
+    rf::vpackfile_add("maps4.vpp", nullptr);
+    rf::vpackfile_add("meshes.vpp", nullptr);
+    rf::vpackfile_add("motions.vpp", nullptr);
+    rf::vpackfile_add("music.vpp", nullptr);
+    rf::vpackfile_add("ui.vpp", nullptr);
     LoadDashFactionVpp();
-    rf::VPackfileAdd("tables.vpp", nullptr);
+    rf::vpackfile_add("tables.vpp", nullptr);
     AddrAsRef<int>(0x01BDB218) = 1;          // VPackfilesLoaded
     AddrAsRef<uint32_t>(0x01BDB210) = 10000; // NumFilesInVfs
     AddrAsRef<uint32_t>(0x01BDB214) = 100;   // NumPackfiles

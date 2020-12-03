@@ -34,11 +34,11 @@ namespace rf
     };
     static_assert(sizeof(Camera) == 0xC);
 
-    static auto& CameraSetFirstPerson = AddrAsRef<bool(Camera *camera)>(0x0040DDF0);
-    static auto& CameraSetFreelook = AddrAsRef<bool(Camera *camera)>(0x0040DCF0);
-    static auto& CameraSetFixed = AddrAsRef<bool(Camera *camera)>(0x0040DF70);
-    static auto& CameraGetPos = AddrAsRef<void(Vector3* camera_pos, Camera *camera)>(0x0040D760);
-    static auto& CameraGetOrient = AddrAsRef<void(Matrix3* camera_orient, Camera *camera)>(0x0040D780);
+    static auto& camera_set_first_person = AddrAsRef<bool(Camera *camera)>(0x0040DDF0);
+    static auto& camera_set_freelook = AddrAsRef<bool(Camera *camera)>(0x0040DCF0);
+    static auto& camera_set_fixed = AddrAsRef<bool(Camera *camera)>(0x0040DF70);
+    static auto& camera_get_pos = AddrAsRef<void(Vector3* camera_pos, Camera *camera)>(0x0040D760);
+    static auto& camera_get_orient = AddrAsRef<void(Matrix3* camera_orient, Camera *camera)>(0x0040D780);
 
     /* Config */
 
@@ -297,13 +297,13 @@ namespace rf
     static auto& player_list = AddrAsRef<Player*>(0x007C75CC);
     static auto& local_player = AddrAsRef<Player*>(0x007C75D4);
 
-    static auto& MultiKillLocalPlayer = AddrAsRef<void()>(0x004757A0);
-    static auto& ControlConfigCheckPressed =
+    static auto& multi_kill_local_player = AddrAsRef<void()>(0x004757A0);
+    static auto& control_config_check_pressed =
         AddrAsRef<bool(ControlConfig *cc, ControlAction action, bool *was_pressed)>(0x0043D4F0);
-    static auto& GetPlayerFromEntityHandle = AddrAsRef<Player*(int entity_handle)>(0x004A3740);
-    static auto& PlayerIsDead = AddrAsRef<bool(Player *player)>(0x004A4920);
-    static auto& PlayerIsDying = AddrAsRef<bool(Player *player)>(0x004A4940);
-    static auto& PlayerAddScore = AddrAsRef<void(Player *player, int delta)>(0x004A7460);
-    static auto& PlayerGetAiInfo = AddrAsRef<AiInfo*(Player *player)>(0x004A3260);
-    static auto& PlayerGetWeaponTotalAmmo = AddrAsRef<int(Player *player, int weapon_type)>(0x004A3280);
+    static auto& player_from_entity_handle = AddrAsRef<Player*(int entity_handle)>(0x004A3740);
+    static auto& player_is_dead = AddrAsRef<bool(Player *player)>(0x004A4920);
+    static auto& player_is_dying = AddrAsRef<bool(Player *player)>(0x004A4940);
+    static auto& player_add_score = AddrAsRef<void(Player *player, int delta)>(0x004A7460);
+    static auto& player_get_ai = AddrAsRef<AiInfo*(Player *player)>(0x004A3260);
+    static auto& player_get_weapon_total_ammo = AddrAsRef<int(Player *player, int weapon_type)>(0x004A3280);
 }

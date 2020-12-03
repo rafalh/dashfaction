@@ -20,12 +20,12 @@ namespace rf
         void(*on_click)();
         void(*on_mouse_btn_down)();
 
-        int GetAbsoluteX() const
+        int get_absolute_x() const
         {
             return AddrCaller{0x004569E0}.this_call<int>(this);
         }
 
-        int GetAbsoluteY() const
+        int get_absolute_y() const
         {
             return AddrCaller{0x00456A00}.this_call<int>(this);
         }
@@ -94,13 +94,13 @@ namespace rf
     };
     static_assert(sizeof(UiCycler) == 0x170);
 
-    static auto& UiMsgBox = AddrAsRef<void(const char *title, const char *text, void(*callback)(), bool input)>(0x004560B0);
+    static auto& ui_popup_message = AddrAsRef<void(const char *title, const char *text, void(*callback)(), bool input)>(0x004560B0);
     using UiDialogCallbackPtr = void (*)();
-    static auto& UiCreateDialog =
+    static auto& ui_popup_custom =
         AddrAsRef<void(const char *title, const char *text, unsigned num_buttons, const char *ppsz_btn_titles[],
                        UiDialogCallbackPtr callbacks[], unsigned unknown1, unsigned unknown2)>(0x004562A0);
-    static auto& UiGetGadgetFromPos = AddrAsRef<int(int x, int y, UiGadget * const gadgets[], int num_gadgets)>(0x00442ED0);
-    static auto& UiUpdateInputBoxCursor = AddrAsRef<void()>(0x00456960);
+    static auto& ui_get_gadget_from_pos = AddrAsRef<int(int x, int y, UiGadget * const gadgets[], int num_gadgets)>(0x00442ED0);
+    static auto& ui_update_input_box_cursor = AddrAsRef<void()>(0x00456960);
 
     static auto& ui_scale_x = AddrAsRef<float>(0x00598FB8);
     static auto& ui_scale_y = AddrAsRef<float>(0x00598FBC);

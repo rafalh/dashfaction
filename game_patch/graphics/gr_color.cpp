@@ -728,7 +728,7 @@ bool ConvertSurfaceFormat(void* dst_bits_ptr, rf::BmFormat dst_fmt, const void* 
     }
 }
 
-CodeInjection LevelLoadLightmaps_color_conv_patch{
+CodeInjection level_load_lightmaps_color_conv_patch{
     0x004ED3E9,
     [](auto& regs) {
         // Always skip original code
@@ -737,7 +737,7 @@ CodeInjection LevelLoadLightmaps_color_conv_patch{
         auto lightmap = reinterpret_cast<rf::GLightmap*>(regs.ebx);
 
         rf::GrLockInfo lock;
-        if (!rf::GrLock(lightmap->bm_handle, 0, &lock, rf::GR_LOCK_WRITE_ONLY))
+        if (!rf::gr_lock(lightmap->bm_handle, 0, &lock, rf::GR_LOCK_WRITE_ONLY))
             return;
 
     #if 1 // cap minimal color channel value as RF does
@@ -750,11 +750,11 @@ CodeInjection LevelLoadLightmaps_color_conv_patch{
         if (!success)
             xlog::error("ConvertBitmapFormat failed for lightmap (dest format %d)", lock.format);
 
-        rf::GrUnlock(&lock);
+        rf::gr_unlock(&lock);
     },
 };
 
-CodeInjection GSurface_CalculateLightmap_color_conv_patch{
+CodeInjection GSurface_calculate_lightmap_color_conv_patch{
     0x004F2F23,
     [](auto& regs) {
         // Always skip original code
@@ -763,7 +763,7 @@ CodeInjection GSurface_CalculateLightmap_color_conv_patch{
         auto face_light_info = reinterpret_cast<void*>(regs.esi);
         rf::GLightmap& lightmap = *StructFieldRef<rf::GLightmap*>(face_light_info, 12);
         rf::GrLockInfo lock;
-        if (!rf::GrLock(lightmap.bm_handle, 0, &lock, rf::GR_LOCK_WRITE_ONLY)) {
+        if (!rf::gr_lock(lightmap.bm_handle, 0, &lock, rf::GR_LOCK_WRITE_ONLY)) {
             return;
         }
 
@@ -779,11 +779,11 @@ CodeInjection GSurface_CalculateLightmap_color_conv_patch{
             src_width, height, lock.stride_in_bytes, src_pitch);
         if (!success)
             xlog::error("ConvertSurfaceFormat failed for geomod (fmt %d)", lock.format);
-        rf::GrUnlock(&lock);
+        rf::gr_unlock(&lock);
     },
 };
 
-CodeInjection GSurface_AllocLightmap_color_conv_patch{
+CodeInjection GSurface_alloc_lightmap_color_conv_patch{
     0x004E487B,
     [](auto& regs) {
         // Skip original code
@@ -792,7 +792,7 @@ CodeInjection GSurface_AllocLightmap_color_conv_patch{
         auto face_light_info = reinterpret_cast<void*>(regs.esi);
         rf::GLightmap& lightmap = *StructFieldRef<rf::GLightmap*>(face_light_info, 12);
         rf::GrLockInfo lock;
-        if (!rf::GrLock(lightmap.bm_handle, 0, &lock, rf::GR_LOCK_WRITE_ONLY)) {
+        if (!rf::gr_lock(lightmap.bm_handle, 0, &lock, rf::GR_LOCK_WRITE_ONLY)) {
             return;
         }
 
@@ -810,11 +810,11 @@ CodeInjection GSurface_AllocLightmap_color_conv_patch{
                                                  src_width, height, lock.stride_in_bytes, src_pitch);
         if (!success)
             xlog::error("ConvertBitmapFormat failed for geomod2 (fmt %d)", lock.format);
-        rf::GrUnlock(&lock);
+        rf::gr_unlock(&lock);
     },
 };
 
-CodeInjection GProcTexUpdateWater_patch{
+CodeInjection g_proctex_update_water_patch{
     0x004E68D1,
     [](auto& regs) {
         // Skip original code
@@ -823,12 +823,12 @@ CodeInjection GProcTexUpdateWater_patch{
         uintptr_t waveform_info = static_cast<uintptr_t>(regs.esi);
         int src_bm_handle = *reinterpret_cast<int*>(waveform_info + 36);
         rf::GrLockInfo src_lock_data, dst_lock_data;
-        if (!rf::GrLock(src_bm_handle, 0, &src_lock_data, rf::GR_LOCK_READ_ONLY)) {
+        if (!rf::gr_lock(src_bm_handle, 0, &src_lock_data, rf::GR_LOCK_READ_ONLY)) {
             return;
         }
         int dst_bm_handle = *reinterpret_cast<int*>(waveform_info + 24);
-        if (!rf::GrLock(dst_bm_handle, 0, &dst_lock_data, rf::GR_LOCK_WRITE_ONLY)) {
-            rf::GrUnlock(&src_lock_data);
+        if (!rf::gr_lock(dst_bm_handle, 0, &dst_lock_data, rf::GR_LOCK_WRITE_ONLY)) {
+            rf::gr_unlock(&src_lock_data);
             return;
         }
 
@@ -866,12 +866,12 @@ CodeInjection GProcTexUpdateWater_patch{
             xlog::error("Pixel format conversion failed for liquid wave texture: %s", e.what());
         }
 
-        rf::GrUnlock(&src_lock_data);
-        rf::GrUnlock(&dst_lock_data);
+        rf::gr_unlock(&src_lock_data);
+        rf::gr_unlock(&dst_lock_data);
     }
 };
 
-CodeInjection GSolid_GetAmbientColorFromLightmap_patch{
+CodeInjection GSolid_get_ambient_color_from_lightmap_patch{
     0x004E5CE3,
     [](auto& regs) {
         // Skip original code
@@ -884,14 +884,14 @@ CodeInjection GSolid_GetAmbientColorFromLightmap_patch{
 
         // Optimization: instead of locking the lightmap texture get color data from lightmap pixels stored in RAM
         const uint8_t* src_ptr = lm.buf + (y * lm.w + x) * 3;
-        color.Set(src_ptr[0], src_ptr[1], src_ptr[2], 255);
+        color.set(src_ptr[0], src_ptr[1], src_ptr[2], 255);
     },
 };
 
-FunHook<unsigned()> BinkInitDeviceInfo_hook{
+FunHook<unsigned()> bink_init_device_info_hook{
     0x005210C0,
     []() {
-        unsigned bink_flags = BinkInitDeviceInfo_hook.CallTarget();
+        unsigned bink_flags = bink_init_device_info_hook.CallTarget();
         const int BINKSURFACE32 = 3;
 
         if (g_game_config.true_color_textures && g_game_config.res_bpp == 32) {
@@ -946,19 +946,19 @@ void GrColorInit()
         WriteMem<u32>(0x005A7E0C, D3DFMT_A4R4G4B4); // old: D3DFMT_A8R3G3B2
 
         // use 32-bit texture for Bink rendering
-        BinkInitDeviceInfo_hook.Install();
+        bink_init_device_info_hook.Install();
     }
 
     // lightmaps
-    LevelLoadLightmaps_color_conv_patch.Install();
+    level_load_lightmaps_color_conv_patch.Install();
     // geomod
-    GSurface_CalculateLightmap_color_conv_patch.Install();
-    GSurface_AllocLightmap_color_conv_patch.Install();
+    GSurface_calculate_lightmap_color_conv_patch.Install();
+    GSurface_alloc_lightmap_color_conv_patch.Install();
     // water
     AsmWriter(0x004E68B0, 0x004E68B6).nop();
-    GProcTexUpdateWater_patch.Install();
+    g_proctex_update_water_patch.Install();
     // ambient color
-    GSolid_GetAmbientColorFromLightmap_patch.Install();
+    GSolid_get_ambient_color_from_lightmap_patch.Install();
     // fix pixel format for lightmaps
     WriteMem<u8>(0x004F5EB8 + 1, rf::BM_FORMAT_888_RGB);
 

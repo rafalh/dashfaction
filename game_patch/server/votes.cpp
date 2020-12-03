@@ -131,7 +131,7 @@ protected:
             "\n=============== VOTE STARTING ===============\n"
             "%s vote started by %s.\n"
             "Send message \"/vote yes\" or \"/vote no\" to participate.",
-            title.c_str(), source->name.CStr());
+            title.c_str(), source->name.c_str());
         SendChatLinePacket(msg.c_str(), nullptr);
     }
 
@@ -174,13 +174,13 @@ struct VoteKick : public Vote
 
     std::string GetTitle() override
     {
-        return StringFormat("KICK PLAYER '%s'", m_target_player->name.CStr());
+        return StringFormat("KICK PLAYER '%s'", m_target_player->name.c_str());
     }
 
     void OnAccepted() override
     {
         SendChatLinePacket("\xA6 Vote passed: kicking player", nullptr);
-        rf::KickPlayer(m_target_player);
+        rf::multi_kick_player(m_target_player);
     }
 
     bool OnPlayerLeave(rf::Player* player) override
@@ -245,8 +245,8 @@ struct VoteLevel : public Vote
     void OnAccepted() override
     {
         SendChatLinePacket("\xA6 Vote passed: changing level", nullptr);
-        auto& MultiChangeLevel = AddrAsRef<bool(const char* filename)>(0x0047BF50);
-        MultiChangeLevel(m_level_name.c_str());
+        auto& multi_change_level = AddrAsRef<bool(const char* filename)>(0x0047BF50);
+        multi_change_level(m_level_name.c_str());
     }
 
     bool IsAllowedInLimboState() override
@@ -358,7 +358,7 @@ public:
             return false;
         }
 
-        if (!vote->IsAllowedInLimboState() && rf::GameSeqGetState() != rf::GS_GAMEPLAY) {
+        if (!vote->IsAllowedInLimboState() && rf::gameseq_get_state() != rf::GS_GAMEPLAY) {
             SendChatLinePacket("Vote cannot be started now!", source);
             return false;
         }

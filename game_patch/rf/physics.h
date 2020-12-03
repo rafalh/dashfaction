@@ -60,11 +60,11 @@ namespace rf
     };
     static_assert(sizeof(PhysicsData) == 0x170);
 
-    static auto& PhysicsCreateObject = AddrAsRef<void(PhysicsData *pd, ObjectCreateInfo *oci)>(0x0049EC90);
-    static auto& PhysicsDeleteObject = AddrAsRef<void(PhysicsData *pd)>(0x0049F1D0);
+    static auto& physics_create_object = AddrAsRef<void(PhysicsData *pd, ObjectCreateInfo *oci)>(0x0049EC90);
+    static auto& physics_delete_object = AddrAsRef<void(PhysicsData *pd)>(0x0049F1D0);
 
     template<>
-    inline void VArray<PCollisionSphere>::Add(PCollisionSphere element)
+    inline void VArray<PCollisionSphere>::add(PCollisionSphere element)
     {
         AddrCaller{0x00417F30}.this_call(this, element);
     }

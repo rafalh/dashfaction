@@ -15,7 +15,7 @@ ConsoleCommand2 vli_cmd{
     []() {
         g_game_config.glares = !g_game_config.glares;
         g_game_config.save();
-        rf::ConsolePrintf("Volumetric lightining is %s.", g_game_config.glares ? "enabled" : "disabled");
+        rf::console_printf("Volumetric lightining is %s.", g_game_config.glares ? "enabled" : "disabled");
     },
     "Toggles volumetric lightining",
 };
@@ -28,7 +28,7 @@ ConsoleCommand2 player_count_cmd{
 
         auto player_list = SinglyLinkedList{rf::player_list};
         auto player_count = std::distance(player_list.begin(), player_list.end());
-        rf::ConsolePrintf("Player count: %d\n", player_count);
+        rf::console_printf("Player count: %d\n", player_count);
     },
     "Get player count",
 };
@@ -38,7 +38,7 @@ ConsoleCommand2 find_level_cmd{
     [](std::string pattern) {
         VPackfileFindMatchingFiles(StringMatcher().Infix(pattern).Suffix(".rfl"), [](const char* name) {
             // Print all matching filenames
-            rf::ConsolePrintf("%s\n", name);
+            rf::console_printf("%s\n", name);
         });
     },
     "Find a level by a filename fragment",
@@ -60,7 +60,7 @@ static void RegisterBuiltInCommand(const char* name, const char* description, ui
 {
     static std::vector<std::unique_ptr<rf::ConsoleCommand>> builtin_commands;
     auto cmd = std::make_unique<rf::ConsoleCommand>();
-    rf::ConsoleCommand::Init(cmd.get(), name, description, reinterpret_cast<rf::ConsoleCommandFuncPtr>(addr));
+    rf::ConsoleCommand::init(cmd.get(), name, description, reinterpret_cast<rf::ConsoleCommandFuncPtr>(addr));
     builtin_commands.push_back(std::move(cmd));
 }
 

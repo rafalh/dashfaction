@@ -86,7 +86,7 @@ namespace rf
         int field_370;
         int field_374;
 
-        void Collide(GCollisionInput *in, GCollisionOutput *out, bool clear_fraction)
+        void collide(GCollisionInput *in, GCollisionOutput *out, bool clear_fraction)
         {
             AddrCaller{0x004DF1C0}.this_call(this, in, out, clear_fraction);
         }
@@ -262,7 +262,7 @@ namespace rf
     };
     static_assert(sizeof(LevelInfo) == 0x154);
 
-    static auto& GeomClearCache = AddrAsRef<void()>(0x004F0B90);
+    static auto& g_cache_clear = AddrAsRef<void()>(0x004F0B90);
 
     static auto& level = AddrAsRef<LevelInfo>(0x00645FD8);
 }

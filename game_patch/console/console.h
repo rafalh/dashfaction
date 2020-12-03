@@ -26,7 +26,7 @@ class DcRequiredArgMissingError : public std::exception
 
 inline bool ReadArgInternal(unsigned type_flag, bool preserve_case = false)
 {
-    rf::ConsoleGetArg(rf::CONSOLE_ARG_ANY, preserve_case);
+    rf::console_get_arg(rf::CONSOLE_ARG_ANY, preserve_case);
     if (rf::console_arg_type & type_flag)
         return true;
     if (!(rf::console_arg_type & rf::CONSOLE_ARG_NONE))
@@ -151,18 +151,18 @@ private:
             m_handler_wrapper();
         }
         catch (const DcInvalidArgTypeError&) {
-            rf::ConsoleOutput("Invalid arg type!", nullptr);
+            rf::console_output("Invalid arg type!", nullptr);
         }
         catch (const DcRequiredArgMissingError&) {
-            rf::ConsoleOutput("Required arg is missing!", nullptr);
+            rf::console_output("Required arg is missing!", nullptr);
         }
     }
 
     void Help()
     {
         if (m_usage_text) {
-            rf::ConsoleOutput(rf::strings::usage, nullptr);
-            rf::ConsolePrintf("     %s", m_usage_text);
+            rf::console_output(rf::strings::usage, nullptr);
+            rf::console_printf("     %s", m_usage_text);
         }
     }
 };

@@ -38,25 +38,25 @@ rf::Player* FindBestMatchingPlayer(const char* name)
     if (num_found == 1)
         return found_player;
     else if (num_found > 1)
-        rf::ConsolePrintf("Found %d players matching '%s'!", num_found, name);
+        rf::console_printf("Found %d players matching '%s'!", num_found, name);
     else
-        rf::ConsolePrintf("Cannot find player matching '%s'", name);
+        rf::console_printf("Cannot find player matching '%s'", name);
     return nullptr;
 }
 
-FunHook<int()> GameseqProcess_hook{
+FunHook<int()> gameseq_process_hook{
     0x00434230,
     []() {
-        int menu_id = GameseqProcess_hook.CallTarget();
+        int menu_id = gameseq_process_hook.CallTarget();
         if (menu_id == rf::GS_MULTI_LIMBO) // hide cursor when changing level - hackfixed in RF by changing rendering logic
-            rf::MouseSetVisible(false);
+            rf::mouse_set_visible(false);
         else if (menu_id == rf::GS_MAIN_MENU)
-            rf::MouseSetVisible(true);
+            rf::mouse_set_visible(true);
         return menu_id;
     },
 };
 
-CodeInjection ConsoleCommand_Init_limit_check_patch{
+CodeInjection ConsoleCommand_init_limit_check_patch{
     0x00509A7E,
     [](auto& regs) {
         if (regs.eax >= CMD_LIMIT) {
@@ -65,7 +65,7 @@ CodeInjection ConsoleCommand_Init_limit_check_patch{
     },
 };
 
-CodeInjection ConsoleRunCmd_CallHandlerPatch{
+CodeInjection ConsoleRunCmd_call_handler_patch{
     0x00509DBB,
     [](auto& regs) {
         // Make sure command pointer is in ecx register to support thiscall handlers
@@ -73,18 +73,18 @@ CodeInjection ConsoleRunCmd_CallHandlerPatch{
     },
 };
 
-CallHook<void(char*, int)> ConsoleProcessKbd_GetTextFromClipboard_hook{
+CallHook<void(char*, int)> console_process_kbd_get_text_from_clipboard_hook{
     0x0050A2FD,
     [](char *buf, int max_len) {
         max_len = std::min(max_len, max_cmd_line_len - rf::console_cmd_line_len);
-        ConsoleProcessKbd_GetTextFromClipboard_hook.CallTarget(buf, max_len);
+        console_process_kbd_get_text_from_clipboard_hook.CallTarget(buf, max_len);
     },
 };
 
 void ConsoleRegisterCommand(rf::ConsoleCommand* cmd)
 {
     if (rf::console_num_commands < CMD_LIMIT)
-        rf::ConsoleCommand::Init(cmd, cmd->name, cmd->help, cmd->func);
+        rf::ConsoleCommand::init(cmd, cmd->name, cmd->help, cmd->func);
     else
         assert(false);
 }
@@ -109,7 +109,7 @@ void ConsoleApplyPatches()
     AsmWriter(0x0047C490).ret();
     AsmWriter(0x0047C4AA).ret();
     AsmWriter(0x004B2E15).nop(2);
-    GameseqProcess_hook.Install();
+    gameseq_process_hook.Install();
 
     // Change limit of commands
     assert(rf::console_num_commands == 0);
@@ -124,12 +124,12 @@ void ConsoleApplyPatches()
     WriteMemPtr(0x0050A648 + 4, g_commands_buffer);
     WriteMemPtr(0x0050A6A0 + 3, g_commands_buffer);
     AsmWriter(0x00509A7E).nop(2);
-    ConsoleCommand_Init_limit_check_patch.Install();
+    ConsoleCommand_init_limit_check_patch.Install();
 
-    ConsoleRunCmd_CallHandlerPatch.Install();
+    ConsoleRunCmd_call_handler_patch.Install();
 
     // Fix possible input buffer overflow
-    ConsoleProcessKbd_GetTextFromClipboard_hook.Install();
+    console_process_kbd_get_text_from_clipboard_hook.Install();
     WriteMem<u32>(0x0050A2D0 + 2, max_cmd_line_len);
 
     ConsoleCommandsApplyPatches();

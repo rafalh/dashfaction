@@ -116,9 +116,9 @@ namespace rf
         KEY_CTRLED = 0x4000,
     };
 
-    static auto& MouseGetPos = AddrAsRef<int(int &x, int &y, int &z)>(0x0051E450);
-    static auto& MouseWasButtonPressed = AddrAsRef<int(int btn_idx)>(0x0051E5D0);
-    static auto& MouseSetVisible = AddrAsRef<void(bool visible)>(0x0051E680);
+    static auto& mouse_get_pos = AddrAsRef<int(int &x, int &y, int &z)>(0x0051E450);
+    static auto& mouse_was_button_pressed = AddrAsRef<int(int btn_idx)>(0x0051E5D0);
+    static auto& mouse_set_visible = AddrAsRef<void(bool visible)>(0x0051E680);
 
     static auto& mouse_initialized = AddrAsRef<uint8_t>(0x01885461);
     static auto& direct_input_disabled = AddrAsRef<bool>(0x005A4F88);

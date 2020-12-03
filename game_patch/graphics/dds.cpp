@@ -44,13 +44,13 @@ rf::BmFormat GetBmFormatFromDDSPixelFormat(DDS_PIXELFORMAT& ddspf)
 rf::BmType ReadDdsHeader(rf::File& file, int *width_out, int *height_out, rf::BmFormat *format_out,
     int *num_levels_out)
 {
-    auto magic = file.Read<uint32_t>();
+    auto magic = file.read<uint32_t>();
     if (magic != DDS_MAGIC) {
         xlog::warn("Invalid magic number in DDS file: %X", magic);
         return rf::BM_TYPE_NONE;
     }
     DDS_HEADER hdr;
-    file.Read(&hdr, sizeof(hdr));
+    file.read(&hdr, sizeof(hdr));
     if (hdr.size != sizeof(DDS_HEADER)) {
         xlog::warn("Invalid header size in DDS file: %X", hdr.size);
         return rf::BM_TYPE_NONE;
@@ -86,18 +86,18 @@ int LockDdsBitmap(rf::BmBitmapEntry& bm_entry)
     auto dds_filename = filename_without_ext + ".dds";
 
     xlog::trace("Locking DDS: %s", dds_filename.c_str());
-    if (file.Open(dds_filename.c_str()) != 0) {
+    if (file.open(dds_filename.c_str()) != 0) {
         xlog::error("failed to open DDS file: %s", dds_filename.c_str());
         return -1;
     }
 
-    auto magic = file.Read<uint32_t>();
+    auto magic = file.read<uint32_t>();
     if (magic != DDS_MAGIC) {
         xlog::error("Invalid magic number in %s: %x", dds_filename.c_str(), magic);
         return -1;
     }
     DDS_HEADER hdr;
-    file.Read(&hdr, sizeof(hdr));
+    file.read(&hdr, sizeof(hdr));
 
     if (bm_entry.orig_width != static_cast<int>(hdr.width) || bm_entry.orig_height != static_cast<int>(hdr.height)) {
         xlog::error("Bitmap file has changed before being loaded!");
@@ -123,12 +123,12 @@ int LockDdsBitmap(rf::BmBitmapEntry& bm_entry)
     }
 
     // Skip levels with most details (depending on graphics settings)
-    file.Seek(num_skip_bytes, rf::File::seek_cur);
+    file.seek(num_skip_bytes, rf::File::seek_cur);
 
     // Load actual data
     bm_entry.locked_data = rf::Malloc(num_total_bytes);
-    file.Read(bm_entry.locked_data, num_total_bytes);
-    if (file.GetError()) {
+    file.read(bm_entry.locked_data, num_total_bytes);
+    if (file.error()) {
         xlog::error("Unexpected EOF when reading %s", dds_filename.c_str());
         return -1;
     }

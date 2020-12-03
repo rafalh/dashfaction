@@ -350,21 +350,23 @@ namespace rf
         Matrix3 orient;
     };
 
-    static auto& EntityFromHandle = AddrAsRef<Entity*(int handle)>(0x00426FC0);
-    static auto& EntityCreate =
+    static auto& entity_from_handle = AddrAsRef<Entity*(int handle)>(0x00426FC0);
+    static auto& entity_create =
         AddrAsRef<Entity*(int entity_type, const char* name, int parent_handle, const Vector3& pos,
         const Matrix3& orient, int create_flags, int mp_character)>(0x00422360);
-    static auto& EntityIsDying = AddrAsRef<bool(Entity *entity)>(0x00427020);
-    static auto& EntityIsAttachedToVehicle = AddrAsRef<bool(Entity *entity)>(0x004290D0);
-    static auto& EntityIsJeepDriver = AddrAsRef<bool(Entity *entity)>(0x0042AC80);
-    static auto& EntityIsJeepShooter = AddrAsRef<bool(Entity *entity)>(0x0042ACD0);
-    static auto& EntityIsDriller = AddrAsRef<bool(Entity *entity)>(0x0042D780);
-    static auto& EntityIsSub = AddrAsRef<bool(Entity *entity)>(0x0040A270);
-    static auto& EntityIsJeep = AddrAsRef<bool(Entity *entity)>(0x0040A2F0);
-    static auto& EntityIsFighter = AddrAsRef<bool(Entity *entity)>(0x0040A210);
-    static auto& EntityIsHoldingBody = AddrAsRef<bool(Entity *entity)>(0x00429D20);
-    static auto& EntityBurnInitBones = AddrAsRef<bool(EntityFireInfo *burn_info, Object *obj)>(0x0042EB20);
-    static auto& MultiEntityIsFemale = AddrAsRef<bool(int mp_character_idx)>(0x004762C0);
+    static auto& entity_is_dying = AddrAsRef<bool(Entity *entity)>(0x00427020);
+    static auto& entity_is_attached_to_vehicle = AddrAsRef<bool(Entity *entity)>(0x004290D0);
+    static auto& entity_is_jeep_driver = AddrAsRef<bool(Entity *entity)>(0x0042AC80);
+    static auto& entity_is_jeep_shooter = AddrAsRef<bool(Entity *entity)>(0x0042ACD0);
+    static auto& entity_is_driller = AddrAsRef<bool(Entity *entity)>(0x0042D780);
+    static auto& entity_is_sub = AddrAsRef<bool(Entity *entity)>(0x0040A270);
+    static auto& entity_is_jeep = AddrAsRef<bool(Entity *entity)>(0x0040A2F0);
+    static auto& entity_is_fighter = AddrAsRef<bool(Entity *entity)>(0x0040A210);
+    static auto& entity_is_holding_body = AddrAsRef<bool(Entity *entity)>(0x00429D20);
+    static auto& entity_fire_init_bones = AddrAsRef<bool(EntityFireInfo *burn_info, Object *obj)>(0x0042EB20);
+    static auto& entity_is_swimming = AddrAsRef<bool(Entity* entity)>(0x0042A0A0);
+    static auto& entity_is_falling = AddrAsRef<bool(Entity* entit)>(0x0042A020);
+    static auto& multi_entity_is_female = AddrAsRef<bool(int mp_character_idx)>(0x004762C0);
 
     static auto& entity_list = AddrAsRef<Entity>(0x005CB060);
     static auto& local_player_entity = AddrAsRef<Entity*>(0x005CB054);

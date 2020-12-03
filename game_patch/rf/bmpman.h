@@ -74,13 +74,13 @@ namespace rf
     };
     static_assert(sizeof(BmBitmapEntry) == 0x6C);
 
-    static auto& BmLoad = AddrAsRef<int(const char *filename, int a2, bool generate_mipmaps)>(0x0050F6A0);
-    static auto& BmCreate = AddrAsRef<int(BmFormat format, int w, int h)>(0x005119C0);
-    static auto& BmConvertFormat = AddrAsRef<void(void *dst_bits, BmFormat dst_fmt, const void *src_bits, BmFormat src_fmt, int num_pixels)>(0x0055DD20);
-    static auto& BmGetDimension = AddrAsRef<void(int bm_handle, int *w, int *h)>(0x00510630);
-    static auto& BmGetFilename = AddrAsRef<const char*(int bm_handle)>(0x00511710);
-    static auto& BmGetFormat = AddrAsRef<BmFormat(int bm_handle)>(0x005106F0);
-    static auto& BmHandleToIdxAnimAware = AddrAsRef<int(int bm_handle)>(0x0050F440);
+    static auto& bm_load = AddrAsRef<int(const char *filename, int a2, bool generate_mipmaps)>(0x0050F6A0);
+    static auto& bm_create = AddrAsRef<int(BmFormat format, int w, int h)>(0x005119C0);
+    static auto& bm_convert_format = AddrAsRef<void(void *dst_bits, BmFormat dst_fmt, const void *src_bits, BmFormat src_fmt, int num_pixels)>(0x0055DD20);
+    static auto& bm_get_dimensions = AddrAsRef<void(int bm_handle, int *w, int *h)>(0x00510630);
+    static auto& bm_get_filename = AddrAsRef<const char*(int bm_handle)>(0x00511710);
+    static auto& bm_get_format = AddrAsRef<BmFormat(int bm_handle)>(0x005106F0);
+    static auto& bm_handle_to_index_anim_aware = AddrAsRef<int(int bm_handle)>(0x0050F440);
 
     static auto& bm_bitmaps = AddrAsRef<BmBitmapEntry*>(0x017C80C4);
 }

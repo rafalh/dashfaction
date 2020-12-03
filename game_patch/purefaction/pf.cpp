@@ -53,7 +53,7 @@ void process_pf_player_stats_packet(const void* data, size_t len, [[ maybe_unuse
     auto players_stats = reinterpret_cast<const pf_player_stats_packet::player_stats*>(&in_packet + 1);
     for (int i = 0; i < in_packet.player_count; ++i) {
         auto& player_data = players_stats[i];
-        auto player = rf::MultiFindPlayerById(player_data.player_id);
+        auto player = rf::multi_find_player_by_id(player_data.player_id);
         if (player) {
             auto& stats = *reinterpret_cast<PlayerStatsNew*>(player->stats);
             stats.num_kills = player_data.kills;
@@ -77,7 +77,7 @@ void process_pf_players_request_packet([[ maybe_unused ]] const void* data, [[ m
     std::stringstream ss;
     auto player_list = SinglyLinkedList(rf::player_list);
     for (auto& player : player_list) {
-        ss.write(player.name.CStr(), player.name.Size() + 1);
+        ss.write(player.name.c_str(), player.name.size() + 1);
     }
     auto players_str = ss.str();
 

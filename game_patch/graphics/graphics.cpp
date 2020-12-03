@@ -60,7 +60,7 @@ static void SetTextureMinMagFilterInCode(D3DTEXTUREFILTERTYPE filter_type0, D3DT
     }
 }
 
-CodeInjection GrD3DSetup3D_widescreen_fix{
+CodeInjection gr_d3d_setup_3d_widescreen_fix{
     0x005473AD,
     []() {
         constexpr float ref_aspect_ratio = 4.0f / 3.0f;
@@ -94,7 +94,7 @@ CodeInjection GrD3DSetup3D_widescreen_fix{
     },
 };
 
-CodeInjection GrD3DInit_error_patch{
+CodeInjection gr_d3d_init_error_patch{
     0x00545CBD,
     [](auto& regs) {
         auto hr = static_cast<HRESULT>(regs.eax);
@@ -127,7 +127,7 @@ CodeInjection GrD3DInit_error_patch{
     },
 };
 
-CodeInjection GrZBufferClear_fix_rect{
+CodeInjection gr_zbuffer_clear_fix_rect{
     0x00550A19,
     [](auto& regs) {
         auto& rect = *reinterpret_cast<D3DRECT*>(regs.edx);
@@ -284,10 +284,10 @@ DWORD SetupMaxAnisotropy()
     return anisotropy_level;
 }
 
-CallHook<void()> GrD3DInitBuffers_GrD3DFlip_hook{
+CallHook<void()> gr_d3d_init_buffers_gr_d3d_flip_hook{
     0x00545045,
     []() {
-        GrD3DInitBuffers_GrD3DFlip_hook.CallTarget();
+        gr_d3d_init_buffers_gr_d3d_flip_hook.CallTarget();
 
         // Apply state change after reset
         // Note: we dont have to set min/mag filtering because its set when selecting material
@@ -299,7 +299,7 @@ CallHook<void()> GrD3DInitBuffers_GrD3DFlip_hook{
         rf::gr_d3d_device->SetRenderState(D3DRS_CLIPPING, 0);
 
         if (rf::local_player)
-            rf::GrSetTextureMipFilter(rf::local_player->settings.filtering_level == 0);
+            rf::gr_set_texture_mip_filter(rf::local_player->settings.filtering_level == 0);
 
         if (rf::gr_d3d_device_caps.MaxAnisotropy > 0 && g_game_config.anisotropic_filtering)
             SetupMaxAnisotropy();
@@ -341,13 +341,13 @@ ConsoleCommand2 antialiasing_cmd{
     "antialiasing",
     []() {
         if (!g_game_config.msaa)
-            rf::ConsolePrintf("Anti-aliasing is not supported");
+            rf::console_printf("Anti-aliasing is not supported");
         else {
             DWORD enabled = 0;
             rf::gr_d3d_device->GetRenderState(D3DRS_MULTISAMPLEANTIALIAS, &enabled);
             enabled = !enabled;
             rf::gr_d3d_device->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, enabled);
-            rf::ConsolePrintf("Anti-aliasing is %s", enabled ? "enabled" : "disabled");
+            rf::console_printf("Anti-aliasing is %s", enabled ? "enabled" : "disabled");
         }
     },
     "Toggles anti-aliasing",
@@ -360,7 +360,7 @@ static bool g_profile_frame_req = false;
 static bool g_profile_frame = false;
 static int g_num_draw_calls = 0;
 
-CodeInjection GrD3DSetState_profile_patch{
+CodeInjection gr_d3d_set_mode_profile_patch{
     0x0054F19C,
     [](auto& regs) {
         if (g_profile_frame) {
@@ -379,13 +379,13 @@ CodeInjection GrD3DSetState_profile_patch{
     },
 };
 
-CodeInjection GrD3DSetTexture_profile_patch{
+CodeInjection gr_d3d_set_texture_profile_patch{
     0x0055CB6A,
     [](auto& regs) {
         if (g_profile_frame) {
             unsigned bm_handle = regs.edi;
             int stage_id = (regs.ebx - 0x01E65308) / 0x18;
-            xlog::info("GrD3DSetTexture %d 0x%X %s", stage_id, bm_handle, rf::BmGetFilename(bm_handle));
+            xlog::info("GrD3DSetTexture %d 0x%X %s", stage_id, bm_handle, rf::bm_get_filename(bm_handle));
         }
     },
 };
@@ -406,10 +406,10 @@ CodeInjection D3D_DrawIndexedPrimitive_profile_patch{
     },
 };
 
-FunHook<void()> GrFlip_profile_patch{
+FunHook<void()> gr_flip_profile_patch{
     0x0050CE20,
     []() {
-        GrFlip_profile_patch.CallTarget();
+        gr_flip_profile_patch.CallTarget();
 
         if (g_profile_frame) {
             xlog::info("Total draw calls: %d", g_num_draw_calls);
@@ -427,9 +427,9 @@ ConsoleCommand2 profile_frame_cmd{
 
         static bool patches_installed = false;
         if (!patches_installed) {
-            GrD3DSetState_profile_patch.Install();
-            GrD3DSetTexture_profile_patch.Install();
-            GrFlip_profile_patch.Install();
+            gr_d3d_set_mode_profile_patch.Install();
+            gr_d3d_set_texture_profile_patch.Install();
+            gr_flip_profile_patch.Install();
             auto d3d_dev_vtbl = *reinterpret_cast<uintptr_t**>(rf::gr_d3d_device);
             D3D_DrawIndexedPrimitive_profile_patch.SetAddr(d3d_dev_vtbl[0x11C / 4]); // DrawIndexedPrimitive
             D3D_DrawIndexedPrimitive_profile_patch.Install();
@@ -450,7 +450,7 @@ CodeInjection after_gr_init_hook{
         }
 
         // Change font for Time Left text
-        static int time_left_font = rf::GrLoadFont("rfpc-large.vf");
+        static int time_left_font = rf::gr_load_font("rfpc-large.vf");
         if (time_left_font >= 0) {
             WriteMem<i8>(0x00477157 + 1, time_left_font);
             WriteMem<i8>(0x0047715F + 2, 21);
@@ -516,7 +516,7 @@ ConsoleCommand2 max_fps_cmd{
             rf::framerate_min = 1.0f / new_limit;
         }
         else
-            rf::ConsolePrintf("Maximal FPS: %.1f", 1.0f / rf::framerate_min);
+            rf::console_printf("Maximal FPS: %.1f", 1.0f / rf::framerate_min);
     },
     "Sets maximal FPS",
     "maxfps <limit>",
@@ -643,7 +643,7 @@ ConsoleCommand2 damage_screen_flash_cmd{
     []() {
         g_game_config.damage_screen_flash = !g_game_config.damage_screen_flash;
         g_game_config.save();
-        rf::ConsolePrintf("Damage screen flash effect is %s", g_game_config.damage_screen_flash ? "enabled" : "disabled");
+        rf::console_printf("Damage screen flash effect is %s", g_game_config.damage_screen_flash ? "enabled" : "disabled");
     },
     "Toggle damage screen flash effect",
 };
@@ -683,14 +683,14 @@ void ObjMeshLightingAllocOne(rf::Object *objp)
 {
     // Note: ObjDeleteMesh frees mesh_lighting_data
     assert(objp->mesh_lighting_data == nullptr);
-    auto size = rf::VMeshCalculateLightingDataSize(objp->vmesh);
+    auto size = rf::vmesh_calc_lighting_data_size(objp->vmesh);
     objp->mesh_lighting_data = rf::Malloc(size);
 }
 
 void ObjMeshLightingUpdateOne(rf::Object *objp)
 {
     GrLightUseStatic(true);
-    rf::VMeshUpdateLightingData(objp->vmesh, objp->room, objp->pos, objp->orient, objp->mesh_lighting_data);
+    rf::vmesh_update_lighting_data(objp->vmesh, objp->room, objp->pos, objp->orient, objp->mesh_lighting_data);
     GrLightUseStatic(false);
 }
 
@@ -703,10 +703,10 @@ FunHook<void()> obj_mesh_lighting_update_hook{
         auto& gr_view_pos = AddrAsRef<rf::Vector3>(0x01818690);
         auto& light_matrix = AddrAsRef<rf::Matrix3>(0x01818A38);
         auto& light_base = AddrAsRef<rf::Vector3>(0x01818A28);
-        gr_view_matrix.MakeIdentity();
-        gr_view_pos.Zero();
-        light_matrix.MakeIdentity();
-        light_base.Zero();
+        gr_view_matrix.make_identity();
+        gr_view_pos.zero();
+        light_matrix.make_identity();
+        light_base.zero();
 
         if (g_game_config.mesh_static_lighting) {
             // Enable static lights
@@ -727,15 +727,15 @@ FunHook<void()> obj_mesh_lighting_alloc_hook{
     []() {
         for (auto& item: DoublyLinkedList{rf::item_list}) {
             if (item.vmesh && !(item.obj_flags & rf::OF_DELAYED_DELETE)
-                && rf::VMeshGetType(item.vmesh) == rf::MESH_TYPE_STATIC) {
-                auto size = rf::VMeshCalculateLightingDataSize(item.vmesh);
+                && rf::vmesh_get_type(item.vmesh) == rf::MESH_TYPE_STATIC) {
+                auto size = rf::vmesh_calc_lighting_data_size(item.vmesh);
                 item.mesh_lighting_data = rf::Malloc(size);
             }
         }
         for (auto& clutter: DoublyLinkedList{rf::clutter_list}) {
             if (clutter.vmesh && !(clutter.obj_flags & rf::OF_DELAYED_DELETE)
-                && rf::VMeshGetType(clutter.vmesh) == rf::MESH_TYPE_STATIC) {
-                auto size = rf::VMeshCalculateLightingDataSize(clutter.vmesh);
+                && rf::vmesh_get_type(clutter.vmesh) == rf::MESH_TYPE_STATIC) {
+                auto size = rf::vmesh_calc_lighting_data_size(clutter.vmesh);
                 clutter.mesh_lighting_data = rf::Malloc(size);
             }
         }
@@ -780,7 +780,7 @@ ConsoleCommand2 mesh_static_lighting_cmd{
         g_game_config.mesh_static_lighting = !g_game_config.mesh_static_lighting;
         g_game_config.save();
         RecalcMeshStaticLighting();
-        rf::ConsolePrintf("Mesh static lighting is %s", g_game_config.mesh_static_lighting ? "enabled" : "disabled");
+        rf::console_printf("Mesh static lighting is %s", g_game_config.mesh_static_lighting ? "enabled" : "disabled");
     },
     "Toggle mesh static lighting calculation",
 };
@@ -791,7 +791,7 @@ ConsoleCommand2 nearest_texture_filtering_cmd{
         g_game_config.nearest_texture_filtering = !g_game_config.nearest_texture_filtering;
         g_game_config.save();
         SetupTextureFiltering();
-        rf::ConsolePrintf("Nearest texture filtering is %s", g_game_config.nearest_texture_filtering ? "enabled" : "disabled");
+        rf::console_printf("Nearest texture filtering is %s", g_game_config.nearest_texture_filtering ? "enabled" : "disabled");
     },
     "Toggle nearest texture filtering",
 };
@@ -851,11 +851,11 @@ void GraphicsInit()
     WriteMem<u8>(0x00546154, 1);
 
     // Properly restore state after device reset
-    GrD3DInitBuffers_GrD3DFlip_hook.Install();
+    gr_d3d_init_buffers_gr_d3d_flip_hook.Install();
 
     // Fix FOV for widescreen
     AsmWriter(0x00547354, 0x00547358).nop();
-    GrD3DSetup3D_widescreen_fix.Install();
+    gr_d3d_setup_3d_widescreen_fix.Install();
     WriteMem<float>(0x0058A29C, 0.0003f); // factor related to near plane, default is 0.000588f
 
     // Don't use LOD models
@@ -865,7 +865,7 @@ void GraphicsInit()
     }
 
     // Better error message in case of device creation error
-    GrD3DInit_error_patch.Install();
+    gr_d3d_init_error_patch.Install();
 
     // Optimization - remove unused back buffer locking/unlocking in GrSwapBuffers
     AsmWriter(0x0054504A).jmp(0x0054508B);
@@ -876,7 +876,7 @@ void GraphicsInit()
     WriteMem<u8>(0x00431F6B, asm_opcodes::jmp_rel_short);
     WriteMem<u8>(0x004328CF, asm_opcodes::jmp_rel_short);
     AsmWriter(0x0043298F).jmp(0x004329DC);
-    GrZBufferClear_fix_rect.Install();
+    gr_zbuffer_clear_fix_rect.Install();
 
     // Left and top viewport edge fix for MSAA (RF does similar thing in GrDrawTextureD3D)
     WriteMem<u8>(0x005478C6, asm_opcodes::fadd);
@@ -944,7 +944,7 @@ void GraphicsInit()
     antialiasing_cmd.Register();
     nearest_texture_filtering_cmd.Register();
 
-    // Do not flush drawing buffers during GrSetColorRgba call
+    // Do not flush drawing buffers during gr_set_color_rgba call
     WriteMem<u8>(0x0050CFEB, asm_opcodes::jmp_rel_short);
 
     // Flush instead of preparing D3D drawing buffers in gr_d3d_set_state, gr_d3d_set_state_and_texture, gr_d3d_tcache_set
@@ -952,11 +952,11 @@ void GraphicsInit()
     // to be locked and unlocked multiple times with discard flag. For some driver implementations (e.g. DXVK) such
     // behaviour leads to allocation of new vertex/index buffers during each lock and in the end it can cause end of
     // memory error.
-    AsmWriter(0x0054F1A9).call(rf::GrD3DFlushBuffers);
-    AsmWriter(0x0055088A).call(rf::GrD3DFlushBuffers);
-    AsmWriter(0x0055CAE9).call(rf::GrD3DFlushBuffers);
-    AsmWriter(0x0055CB77).call(rf::GrD3DFlushBuffers);
-    AsmWriter(0x0055CB58).call(rf::GrD3DFlushBuffers);
+    AsmWriter(0x0054F1A9).call(rf::gr_d3d_flush_buffers);
+    AsmWriter(0x0055088A).call(rf::gr_d3d_flush_buffers);
+    AsmWriter(0x0055CAE9).call(rf::gr_d3d_flush_buffers);
+    AsmWriter(0x0055CB77).call(rf::gr_d3d_flush_buffers);
+    AsmWriter(0x0055CB58).call(rf::gr_d3d_flush_buffers);
 
     // Do not check if buffers are locked before preparing them in gr_d3d_tmapper
     AsmWriter(0x0055191D, 0x00551925).nop();
@@ -1049,10 +1049,10 @@ void GraphicsDrawFpsCounter()
 {
     if (g_game_config.fps_counter && !rf::is_hud_hidden) {
         auto text = StringFormat("FPS: %.1f", rf::current_fps);
-        rf::GrSetColorRgba(0, 255, 0, 255);
-        int x = rf::GrScreenWidth() - (g_game_config.big_hud ? 165 : 90);
+        rf::gr_set_color_rgba(0, 255, 0, 255);
+        int x = rf::gr_screen_width() - (g_game_config.big_hud ? 165 : 90);
         int y = 10;
-        if (rf::GameSeqInGameplay()) {
+        if (rf::gameseq_in_gameplay()) {
             y = g_game_config.big_hud ? 110 : 60;
             if (IsDoubleAmmoHud()) {
                 y += g_game_config.big_hud ? 80 : 40;
@@ -1060,6 +1060,6 @@ void GraphicsDrawFpsCounter()
         }
 
         int font_id = HudGetDefaultFont();
-        rf::GrString(x, y, text.c_str(), font_id);
+        rf::gr_string(x, y, text.c_str(), font_id);
     }
 }

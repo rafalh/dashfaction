@@ -15,13 +15,13 @@ namespace rf
         int event_flags;
         bool delayed_msg;
 
-        virtual void Initialize() = 0;
-        virtual void TurnOn() = 0;
-        virtual void TurnOff() = 0;
-        virtual void Process() = 0;
+        virtual void initialize() = 0;
+        virtual void turn_on() = 0;
+        virtual void turn_off() = 0;
+        virtual void process() = 0;
 
     };
     static_assert(sizeof(Event) == 0x2B8);
 
-    static auto& EventLookupFromUid = AddrAsRef<Event*(int uid)>(0x004B6820);
+    static auto& event_lookup_from_uid = AddrAsRef<Event*(int uid)>(0x004B6820);
 }

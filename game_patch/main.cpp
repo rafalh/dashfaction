@@ -74,12 +74,12 @@ PlayerAdditionalData& GetPlayerAdditionalData(rf::Player* player)
     return g_player_additional_data_map[player];
 }
 
-CallHook<void()> RFInit_hook{
+CallHook<void()> rf_init_hook{
     0x004B27CD,
     []() {
         auto start_ticks = GetTickCount();
         xlog::info("Initializing game...");
-        RFInit_hook.CallTarget();
+        rf_init_hook.CallTarget();
         VPackfileDisableOverriding();
         xlog::info("Game initialized (%lu ms).", GetTickCount() - start_ticks);
     },
@@ -148,9 +148,9 @@ CodeInjection after_frame_render_hook{
     },
 };
 
-FunHook<void()> OsPoll_hook{0x00524B60, OsPool};
+FunHook<void()> os_poll_hook{0x00524B60, OsPool};
 
-CodeInjection KeyGet_hook{
+CodeInjection key_get_hook{
     0x0051F000,
     []() {
         // Process messages here because when watching videos main loop is not running
@@ -158,28 +158,28 @@ CodeInjection KeyGet_hook{
     },
 };
 
-FunHook<rf::Player*(bool)> PlayerCreate_hook{
+FunHook<rf::Player*(bool)> player_create_hook{
     0x004A3310,
     [](bool is_local) {
-        rf::Player* player = PlayerCreate_hook.CallTarget(is_local);
+        rf::Player* player = player_create_hook.CallTarget(is_local);
         KillInitPlayer(player);
         return player;
     },
 };
 
-FunHook<void(rf::Player*)> PlayerDestroy_hook{
+FunHook<void(rf::Player*)> player_destroy_hook{
     0x004A35C0,
     [](rf::Player* player) {
         SpectateModeOnDestroyPlayer(player);
-        PlayerDestroy_hook.CallTarget(player);
+        player_destroy_hook.CallTarget(player);
         g_player_additional_data_map.erase(player);
     },
 };
 
-FunHook<rf::Entity*(rf::Player*, int, const rf::Vector3&, const rf::Matrix3&, int)> PlayerEntityCreate_hook{
+FunHook<rf::Entity*(rf::Player*, int, const rf::Vector3&, const rf::Matrix3&, int)> player_entity_create_hook{
     0x004A35C0,
     [](rf::Player* pp, int entity_type, const rf::Vector3& pos, const rf::Matrix3& orient, int multi_entity_index) {
-        auto ep = PlayerEntityCreate_hook.CallTarget(pp, entity_type, pos, orient, multi_entity_index);
+        auto ep = player_entity_create_hook.CallTarget(pp, entity_type, pos, orient, multi_entity_index);
         if (ep) {
             SpectateModePlayerCreateEntityPost(pp);
         }
@@ -187,13 +187,13 @@ FunHook<rf::Entity*(rf::Player*, int, const rf::Vector3&, const rf::Matrix3&, in
     },
 };
 
-FunHook<int(rf::String&, rf::String&, char*)> LevelLoad_hook{
+FunHook<int(rf::String&, rf::String&, char*)> level_load_hook{
     0x0045C540,
     [](rf::String& level_filename, rf::String& save_filename, char* error) {
-        xlog::info("Loading level: %s", level_filename.CStr());
-        if (save_filename.Size() > 0)
-            xlog::info("Restoring game from save file: %s", save_filename.CStr());
-        int ret = LevelLoad_hook.CallTarget(level_filename, save_filename, error);
+        xlog::info("Loading level: %s", level_filename.c_str());
+        if (save_filename.size() > 0)
+            xlog::info("Restoring game from save file: %s", save_filename.c_str());
+        int ret = level_load_hook.CallTarget(level_filename, save_filename, error);
         if (ret != 0)
             xlog::warn("Loading failed: %s", error);
         else {
@@ -205,11 +205,11 @@ FunHook<int(rf::String&, rf::String&, char*)> LevelLoad_hook{
     },
 };
 
-FunHook<void(bool)> LevelInitPost_hook{
+FunHook<void(bool)> level_init_post_hook{
     0x00435DF0,
-    [](bool is_auto_level_load) {
-        LevelInitPost_hook.CallTarget(is_auto_level_load);
-        xlog::info("Level loaded: %s%s", rf::level.filename.CStr(), is_auto_level_load ? " (caused by event)" : "");
+    [](bool transition) {
+        level_init_post_hook.CallTarget(transition);
+        xlog::info("Level loaded: %s%s", rf::level.filename.c_str(), transition ? " (transition)" : "");
     },
 };
 
@@ -233,7 +233,7 @@ protected:
             flush_startup_buf();
 
             rf::Color color = color_from_level(level);
-            rf::ConsoleOutput(str.c_str(), &color);
+            rf::console_output(str.c_str(), &color);
         }
         else {
             m_startup_buf.push_back({str, level});
@@ -267,7 +267,7 @@ private:
     {
         for (auto& p : m_startup_buf) {
             rf::Color color = color_from_level(p.second);
-            rf::ConsoleOutput(p.first.c_str(), &color);
+            rf::console_output(p.first.c_str(), &color);
         }
         m_startup_buf.clear();
     }
@@ -355,21 +355,21 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     // Process messages in the same thread as DX processing (alternative: D3DCREATE_MULTITHREADED)
     AsmWriter(0x00524C48, 0x00524C83).nop(); // disable msg loop thread
     AsmWriter(0x00524C48).call(0x00524E40);  // CreateMainWindow
-    KeyGet_hook.Install();
-    OsPoll_hook.Install();
+    key_get_hook.Install();
+    os_poll_hook.Install();
 
     // General game hooks
-    RFInit_hook.Install();
+    rf_init_hook.Install();
     after_full_game_init_hook.Install();
     cleanup_game_hook.Install();
     before_frame_hook.Install();
     after_level_render_hook.Install();
     after_frame_render_hook.Install();
-    PlayerCreate_hook.Install();
-    PlayerDestroy_hook.Install();
-    PlayerEntityCreate_hook.Install();
-    LevelLoad_hook.Install();
-    LevelInitPost_hook.Install();
+    player_create_hook.Install();
+    player_destroy_hook.Install();
+    player_entity_create_hook.Install();
+    level_load_hook.Install();
+    level_init_post_hook.Install();
 
     // Init modules
     ConsoleApplyPatches();

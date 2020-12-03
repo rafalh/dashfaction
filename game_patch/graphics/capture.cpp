@@ -47,7 +47,7 @@ struct Monitor
 };
 static_assert(sizeof(Monitor) == 0x3C);
 
-static auto& GrD3DGetBitmapTexture = AddrAsRef<IDirect3DTexture8*(int bm_handle)>(0x0055D1E0);
+static auto& gr_d3d_get_texture = AddrAsRef<IDirect3DTexture8*(int bm_handle)>(0x0055D1E0);
 static auto& monitor_list = AddrAsRef<Monitor>(0x005C98A8);
 } // namespace rf
 
@@ -73,7 +73,7 @@ IDirect3DSurface8* GetCachedDepthStencilSurface()
 bool StartRenderToTexture(int bmh)
 {
     // Note: texture reference counter is not increased here so ComPtr is not used
-    IDirect3DTexture8* d3d_tex = rf::GrD3DGetBitmapTexture(bmh);
+    IDirect3DTexture8* d3d_tex = rf::gr_d3d_get_texture(bmh);
     if (!d3d_tex) {
         WARN_ONCE("Bitmap without D3D texture provided in StartRenderToTexture");
         return false;
@@ -133,10 +133,10 @@ void EndRenderToTexture()
 }
 
 #if !D3D_LOCKABLE_BACKBUFFER
-CallHook<rf::BmFormat(int, int, int, int, std::byte*)> GrD3DReadBackBuffer_hook{
+CallHook<rf::BmFormat(int, int, int, int, std::byte*)> gr_d3d_read_back_buffer_hook{
     0x0050E015,
     [](int x, int y, int width, int height, std::byte* buffer) {
-        rf::GrD3DFlushBuffers();
+        rf::gr_d3d_flush_buffers();
 
         ComPtr<IDirect3DSurface8> back_buffer;
         HRESULT hr = rf::gr_d3d_device->GetRenderTarget(&back_buffer);
@@ -205,16 +205,16 @@ CallHook<rf::BmFormat(int, int, int, int, std::byte*)> GrD3DReadBackBuffer_hook{
 };
 #endif // D3D_LOCKABLE_BACKBUFFER
 
-FunHook<void(int, int, int, int, int)> GrCaptureBackBuffer_hook{
+FunHook<void(int, int, int, int, int)> gr_capture_back_buffer_hook{
     0x0050E4F0,
     [](int x, int y, int width, int height, int bm_handle) {
         if (g_render_to_texture_active) {
             // Nothing to do because we render directly to texture
             if (rf::gr_screen.mode == rf::GR_DIRECT3D) {
-                rf::GrD3DFlushBuffers();
+                rf::gr_d3d_flush_buffers();
             }
         } else {
-            GrCaptureBackBuffer_hook.CallTarget(x, y, width, height, bm_handle);
+            gr_capture_back_buffer_hook.CallTarget(x, y, width, height, bm_handle);
         }
     },
 };
@@ -228,7 +228,7 @@ CallHook<int(rf::BmFormat, int, int)> bm_create_user_bitmap_monitor_hook{
 
 void MakeSureMonitorBitmapIsDynamic(rf::Monitor& mon)
 {
-    if (rf::BmGetFormat(mon.bitmap) == rf::BM_FORMAT_RENDER_TARGET) {
+    if (rf::bm_get_format(mon.bitmap) == rf::BM_FORMAT_RENDER_TARGET) {
         xlog::trace("Changing pixel format for monitor bitmap");
         ChangeUserBitmapPixelFormat(mon.bitmap, rf::BM_FORMAT_888_RGB, true);
     }
@@ -259,16 +259,16 @@ struct MeshMaterial
 };
 static_assert(sizeof(MeshMaterial) == 0xC8);
 
-static auto& AnimMeshGetMaterialsArray = AddrAsRef<void(VMesh *vmesh, int *num_materials_out, MeshMaterial **materials_array_out)>(0x00503650);
+static auto& vmesh_get_materials_array = AddrAsRef<void(VMesh *vmesh, int *num_materials_out, MeshMaterial **materials_array_out)>(0x00503650);
 }
 
-FunHook<void(rf::Monitor&)> MonitorRenderOffState_hook{
+FunHook<void(rf::Monitor&)> monitor_render_off_state_hook{
     0x00412410,
     [](rf::Monitor& mon) {
         // monitor is no longer displaying view from camera so its texture usage must be changed
         // from render target to dynamic texture
         MakeSureMonitorBitmapIsDynamic(mon);
-        MonitorRenderOffState_hook.CallTarget(mon);
+        monitor_render_off_state_hook.CallTarget(mon);
     },
 };
 
@@ -286,14 +286,14 @@ inline bool GenerateStaticNoise()
     return white;
 }
 
-FunHook<void(rf::Monitor&)> MonitorRenderNoise_hook{
+FunHook<void(rf::Monitor&)> monitor_render_noise_hook{
     0x00412370,
     [](rf::Monitor& mon) {
         // No longer use render target texture
         MakeSureMonitorBitmapIsDynamic(mon);
         // Use custom noise generation algohritm because the default one is not uniform enough in high resolution
         rf::GrLockInfo lock;
-        if (rf::GrLock(mon.bitmap, 0, &lock, rf::GR_LOCK_WRITE_ONLY)) {
+        if (rf::gr_lock(mon.bitmap, 0, &lock, rf::GR_LOCK_WRITE_ONLY)) {
             auto pixel_size = GetBmFormatSize(lock.format);
             for (int y = 0; y < lock.h; ++y) {
                 auto ptr = lock.data + y * lock.stride_in_bytes;
@@ -309,18 +309,18 @@ FunHook<void(rf::Monitor&)> MonitorRenderNoise_hook{
                     ptr += pixel_size;
                 }
             }
-            rf::GrUnlock(&lock);
+            rf::gr_unlock(&lock);
         }
     },
 };
 #else
 void ReplaceMonitorScreenBitmap(rf::Monitor& mon, int hbm)
 {
-    auto clutter = rf::ObjFromHandle(mon.clutter_handle);
+    auto clutter = rf::obj_from_handle(mon.clutter_handle);
     auto vmesh = clutter->vmesh;
     int num_materials;
     rf::MeshMaterial *materials;
-    rf::AnimMeshGetMaterialsArray(vmesh, &num_materials, &materials);
+    rf::vmesh_get_materials_array(vmesh, &num_materials, &materials);
     for (int i = 0; i < num_materials; ++i) {
         auto& mat = materials[i];
         if (!_strcmpi(mat.name, "screen.tga")) {
@@ -330,7 +330,7 @@ void ReplaceMonitorScreenBitmap(rf::Monitor& mon, int hbm)
     }
 }
 
-FunHook<void(rf::Monitor&)> MonitorRenderNoise_hook{
+FunHook<void(rf::Monitor&)> monitor_render_noise_hook{
     0x00412370,
     [](rf::Monitor& mon) {
         // monitor is no longer displaying view from camera so its texture usage must be changed
@@ -338,11 +338,11 @@ FunHook<void(rf::Monitor&)> MonitorRenderNoise_hook{
         //MakeSureMonitorBitmapIsDynamic(mon);
         if (!(mon.flags & 0x1000)) {
             // very good idea but needs more work on UVs...
-            auto hbm = rf::BmLoad("gls_noise01.tga", -1, true);
+            auto hbm = rf::bm_load("gls_noise01.tga", -1, true);
             ReplaceMonitorScreenBitmap(mon, hbm);
             mon.flags |= 0x1000;
         }
-        //MonitorRenderNoise_hook.CallTarget(mon);
+        //monitor_render_noise_hook.CallTarget(mon);
     },
 };
 #endif
@@ -429,19 +429,19 @@ void GraphicsCaptureInit()
 {
 #if !D3D_LOCKABLE_BACKBUFFER
     /* Override default because IDirect3DSurface8::LockRect fails on multisampled back-buffer */
-    GrD3DReadBackBuffer_hook.Install();
+    gr_d3d_read_back_buffer_hook.Install();
 #endif
 
     // Use fast GrCaptureBackBuffer implementation which copies backbuffer to texture without copying from VRAM to RAM
-    GrCaptureBackBuffer_hook.Install();
+    gr_capture_back_buffer_hook.Install();
     d3d_device_lost_patch.Install();
     d3d_cleanup_patch.Install();
     after_game_render_to_dynamic_textures.Install();
 
     // Make sure bitmaps used together with GrCaptureBackBuffer have the same format as backbuffer
     bm_create_user_bitmap_monitor_hook.Install();
-    MonitorRenderOffState_hook.Install();
-    MonitorRenderNoise_hook.Install();
+    monitor_render_off_state_hook.Install();
+    monitor_render_noise_hook.Install();
 
     // Override screenshot directory
     WriteMemPtr(0x004367CA + 2, &g_screenshot_dir_id);
@@ -465,5 +465,5 @@ void GraphicsCaptureAfterGameInit()
         xlog::info("Created screenshots directory");
     else if (GetLastError() != ERROR_ALREADY_EXISTS)
         xlog::error("Failed to create screenshots directory %lu", GetLastError());
-    g_screenshot_dir_id = rf::FileAddDirectoryEx(g_screenshot_dir_name, "", true);
+    g_screenshot_dir_id = rf::file_add_path(g_screenshot_dir_name, "", true);
 }

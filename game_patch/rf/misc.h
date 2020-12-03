@@ -47,5 +47,5 @@ namespace rf
     };
     static_assert(sizeof(LevelSaveData) == 0x18720);
 
-    static auto& CanSave = AddrAsRef<bool()>(0x004B61A0);
+    static auto& can_save = AddrAsRef<bool()>(0x004B61A0);
 }

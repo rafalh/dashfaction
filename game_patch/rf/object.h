@@ -117,10 +117,10 @@ namespace rf
     };
     static_assert(sizeof(ObjectCreateInfo) == 0x98);
 
-    static auto& ObjLookupFromUid = AddrAsRef<Object*(int uid)>(0x0048A4A0);
-    static auto& ObjFromHandle = AddrAsRef<Object*(int handle)>(0x0040A0E0);
-    static auto& ObjQueueDelete = AddrAsRef<void(Object* obj)>(0x0048AB40);
-    static auto& ObjFindRootBonePos = AddrAsRef<void(Object*, Vector3&)>(0x0048AC70);
+    static auto& obj_lookup_from_uid = AddrAsRef<Object*(int uid)>(0x0048A4A0);
+    static auto& obj_from_handle = AddrAsRef<Object*(int handle)>(0x0040A0E0);
+    static auto& obj_flag_dead = AddrAsRef<void(Object* obj)>(0x0048AB40);
+    static auto& obj_find_root_bone_pos = AddrAsRef<void(Object*, Vector3&)>(0x0048AC70);
 }
 
 template<>

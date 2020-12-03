@@ -12,33 +12,33 @@ void ExtendRoundTime(int minutes)
 
 void RestartCurrentLevel()
 {
-    rf::MultiChangeLevel(rf::level.filename.CStr());
+    rf::multi_change_level(rf::level.filename.c_str());
 }
 
 void LoadNextLevel()
 {
-    rf::MultiChangeLevel(nullptr);
+    rf::multi_change_level(nullptr);
 }
 
 void LoadPrevLevel()
 {
     rf::netgame.current_level_index--;
     if (rf::netgame.current_level_index < 0) {
-        rf::netgame.current_level_index = rf::netgame.levels.Size() - 1;
+        rf::netgame.current_level_index = rf::netgame.levels.size() - 1;
     }
     if (g_prev_level.empty()) {
         // this is the first level running - use previous level from rotation
-        rf::MultiChangeLevel(rf::netgame.levels.Get(rf::netgame.current_level_index));
+        rf::multi_change_level(rf::netgame.levels[rf::netgame.current_level_index]);
     }
     else {
-        rf::MultiChangeLevel(g_prev_level.c_str());
+        rf::multi_change_level(g_prev_level.c_str());
     }
 }
 
 bool ValidateIsServer()
 {
     if (!rf::is_server) {
-        rf::ConsoleOutput("Command can be only executed on server", nullptr);
+        rf::console_output("Command can be only executed on server", nullptr);
         return false;
     }
     return true;
@@ -46,8 +46,8 @@ bool ValidateIsServer()
 
 bool ValidateNotLimbo()
 {
-    if (rf::GameSeqGetState() != rf::GS_GAMEPLAY) {
-        rf::ConsoleOutput("Command can not be used between rounds", nullptr);
+    if (rf::gameseq_get_state() != rf::GS_GAMEPLAY) {
+        rf::console_output("Command can not be used between rounds", nullptr);
         return false;
     }
     return true;
@@ -60,7 +60,7 @@ ConsoleCommand2 map_ext_cmd{
             int minutes = minutes_opt.value_or(5);
             ExtendRoundTime(minutes);
             std::string msg = StringFormat("\xA6 Round extended by %d minutes", minutes);
-            rf::ChatSay(msg.c_str(), false);
+            rf::multi_chat_say(msg.c_str(), false);
         }
     },
     "Extend round time",
@@ -71,7 +71,7 @@ ConsoleCommand2 map_rest_cmd{
     "map_rest",
     []() {
         if (ValidateIsServer() && ValidateNotLimbo()) {
-            rf::ChatSay("\xA6 Restarting current level", false);
+            rf::multi_chat_say("\xA6 Restarting current level", false);
             RestartCurrentLevel();
         }
     },
@@ -82,7 +82,7 @@ ConsoleCommand2 map_next_cmd{
     "map_next",
     []() {
         if (ValidateIsServer() && ValidateNotLimbo()) {
-            rf::ChatSay("\xA6 Loading next level", false);
+            rf::multi_chat_say("\xA6 Loading next level", false);
             LoadNextLevel();
         }
     },
@@ -93,7 +93,7 @@ ConsoleCommand2 map_prev_cmd{
     "map_prev",
     []() {
         if (ValidateIsServer() && ValidateNotLimbo()) {
-            rf::ChatSay("\xA6 Loading previous level", false);
+            rf::multi_chat_say("\xA6 Loading previous level", false);
             LoadPrevLevel();
         }
     },

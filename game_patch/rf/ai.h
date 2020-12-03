@@ -174,5 +174,5 @@ namespace rf
     };
     static_assert(sizeof(AiInfo) == 0x534);
 
-    static auto& AiHasWeapon = AddrAsRef<bool(AiInfo *ai_info, int weapon_type)>(0x00403250);
+    static auto& ai_has_weapon = AddrAsRef<bool(AiInfo *ai_info, int weapon_type)>(0x00403250);
 }

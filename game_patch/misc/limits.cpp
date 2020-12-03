@@ -107,7 +107,7 @@ CodeInjection obj_create_find_slot_patch{
     },
 };
 
-CallHook<void*(size_t)> GPool_Allocate_new_hook{
+CallHook<void*(size_t)> GPool_allocate_new_hook{
     {
         0x0048B5C6,
         0x0048B736,
@@ -121,7 +121,7 @@ CallHook<void*(size_t)> GPool_Allocate_new_hook{
         0x005047B3,
     },
     [](size_t s) -> void* {
-        void* result = GPool_Allocate_new_hook.CallTarget(s);
+        void* result = GPool_allocate_new_hook.CallTarget(s);
         if (result) {
             // Zero memory allocated dynamically (static memory is zeroed by operating system automatically)
             std::memset(result, 0, s);
@@ -169,5 +169,5 @@ void ApplyLimitsPatches()
     AsmWriter(0x00487271, 0x0048727A).nop(); // weapon
 
     // Zero memory allocated from GPool dynamically
-    GPool_Allocate_new_hook.Install();
+    GPool_allocate_new_hook.Install();
 }

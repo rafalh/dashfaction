@@ -41,7 +41,7 @@ FunHook<void()> mouse_eval_deltas_hook{
     0x0051DC70,
     []() {
         // disable mouse when window is not active
-        if (rf::OsForeground()) {
+        if (rf::os_foreground()) {
             mouse_eval_deltas_hook.CallTarget();
         }
     },
@@ -54,7 +54,7 @@ FunHook<void()> mouse_eval_deltas_di_hook{
 
         // center cursor if in game
         if (rf::keep_mouse_centered) {
-            POINT pt{rf::GrScreenWidth() / 2, rf::GrScreenHeight() / 2};
+            POINT pt{rf::gr_screen_width() / 2, rf::gr_screen_height() / 2};
             ClientToScreen(rf::main_wnd, &pt);
             SetCursorPos(pt.x, pt.y);
         }
@@ -87,15 +87,15 @@ ConsoleCommand2 input_mode_cmd{
 
         if (g_game_config.direct_input) {
             if (!SetDirectInputEnabled(g_game_config.direct_input)) {
-                rf::ConsolePrintf("Failed to initialize DirectInput");
+                rf::console_printf("Failed to initialize DirectInput");
             }
             else {
                 SetDirectInputEnabled(rf::keep_mouse_centered);
-                rf::ConsolePrintf("DirectInput is enabled");
+                rf::console_printf("DirectInput is enabled");
             }
         }
         else
-            rf::ConsolePrintf("DirectInput is disabled");
+            rf::console_printf("DirectInput is disabled");
     },
     "Toggles input mode",
 };
@@ -108,7 +108,7 @@ ConsoleCommand2 ms_cmd{
             value = std::clamp(value, 0.0f, 1.0f);
             rf::local_player->settings.controls.mouse_sensitivity = value;
         }
-        rf::ConsolePrintf("Mouse sensitivity: %.4f", rf::local_player->settings.controls.mouse_sensitivity);
+        rf::console_printf("Mouse sensitivity: %.4f", rf::local_player->settings.controls.mouse_sensitivity);
     },
     "Sets mouse sensitivity",
     "ms <value>",
@@ -124,7 +124,7 @@ rf::Vector3 ForwardVectorFromNonLinearYawPitch(float yaw, float pitch)
     fvec0.z = factor * std::cos(yaw);
 
     rf::Vector3 fvec = fvec0;
-    fvec.Normalize(); // vector is never zero
+    fvec.normalize(); // vector is never zero
 
     return fvec;
 }
@@ -140,7 +140,7 @@ rf::Vector3 ForwardVectorFromLinearYawPitch(float yaw, float pitch)
     fvec.y = std::sin(pitch);
     fvec.x = std::cos(pitch) * std::sin(yaw);
     fvec.z = std::cos(pitch) * std::cos(yaw);
-    fvec.Normalize();
+    fvec.normalize();
     return fvec;
 }
 
@@ -196,7 +196,7 @@ void LinearPitchTest()
 }
 #endif // DEBUG
 
-CodeInjection LinearPitchPatch{
+CodeInjection linear_pitch_patch{
     0x0049DEC9,
     [](auto& regs) {
         if (!g_game_config.linear_pitch)
@@ -237,7 +237,7 @@ ConsoleCommand2 linear_pitch_cmd{
 
         g_game_config.linear_pitch = !g_game_config.linear_pitch;
         g_game_config.save();
-        rf::ConsolePrintf("Linear pitch is %s", g_game_config.linear_pitch ? "enabled" : "disabled");
+        rf::console_printf("Linear pitch is %s", g_game_config.linear_pitch ? "enabled" : "disabled");
     },
     "Toggles linear pitch angle",
 };
@@ -401,7 +401,7 @@ void InputInit()
     //WriteMem<u8>(0x0051E14B + 1, 5); // DISCL_EXCLUSIVE|DISCL_FOREGROUND
 
     // Linear vertical rotation (pitch)
-    LinearPitchPatch.Install();
+    linear_pitch_patch.Install();
 
     // Commands
     input_mode_cmd.Register();

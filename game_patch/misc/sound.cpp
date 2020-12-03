@@ -173,7 +173,7 @@ int TryToFreeDsChannel(float volume)
             continue;
         }
         // Skip long sounds
-        float duration = rf::SndDsEstimateDuration(rf::ds_channels[i].buf_id);
+        float duration = rf::snd_ds_estimate_duration(rf::ds_channels[i].buf_id);
         if (duration > 10.0f) {
             ++num_long;
             continue;
@@ -186,8 +186,8 @@ int TryToFreeDsChannel(float volume)
     // Free channel with the lowest volume and use it for new sound
     if (chnl_id > 0 && rf::ds_channels[chnl_id].volume <= volume) {
         xlog::debug("Freeing sound channel %d to make place for a new sound (volume %.4f duration %.1f)", chnl_id,
-            rf::ds_channels[chnl_id].volume, rf::SndDsEstimateDuration(rf::ds_channels[chnl_id].buf_id));
-        rf::SndDsCloseChannel(chnl_id);
+            rf::ds_channels[chnl_id].volume, rf::snd_ds_estimate_duration(rf::ds_channels[chnl_id].buf_id));
+        rf::snd_ds_close_channel(chnl_id);
     }
     else {
         xlog::debug("Failed to allocate a sound channel: volume %.2f, num_music %d, num_looping %d, num_long %d", volume,
@@ -238,7 +238,7 @@ CodeInjection snd_play_no_free_slots_fix{
                 continue;
             }
             // Skip long sounds
-            float duration = rf::SndPcGetDuration(lvl_snd.handle);
+            float duration = rf::snd_pc_get_duration(lvl_snd.handle);
             if (duration > 10.0f) {
                 xlog::trace("Skipping sound %d because of duration: %f", i, duration);
                 ++num_long;
@@ -256,9 +256,9 @@ CodeInjection snd_play_no_free_slots_fix{
             // Free the selected slot and use it for a new sound
             auto& best_lvl_snd = rf::sound_instances[best_idx];
             xlog::debug("Freeing sound instance %d to make place for a new sound (volume %.4f duration %.1f)", best_idx,
-                best_vol_scale, rf::SndPcGetDuration(best_lvl_snd.handle));
-            rf::SndPcStop(best_lvl_snd.sig);
-            rf::SndClearInstanceSlot(&best_lvl_snd);
+                best_vol_scale, rf::snd_pc_get_duration(best_lvl_snd.handle));
+            rf::snd_pc_stop(best_lvl_snd.sig);
+            rf::snd_clear_instance_slot(&best_lvl_snd);
             regs.ebx = best_idx;
             regs.esi = reinterpret_cast<int32_t>(&best_lvl_snd);
             regs.eip = 0x005055EB;
@@ -289,12 +289,12 @@ FunHook<int(const char*, float )> snd_music_play_cutscene_hook{
 void DisableSoundBeforeCutsceneSkip()
 {
     if (g_cutscene_bg_sound_sig != -1) {
-        rf::SndPcStop(g_cutscene_bg_sound_sig);
+        rf::snd_pc_stop(g_cutscene_bg_sound_sig);
         g_cutscene_bg_sound_sig = -1;
     }
 
-    rf::SndPauseAll(true);
-    rf::SndDestroyAllPaused();
+    rf::snd_pause_all(true);
+    rf::snd_destroy_all_paused();
     rf::sound_enabled = false;
 }
 
@@ -318,7 +318,7 @@ ConsoleCommand2 level_sounds_cmd{
             g_game_config.level_sound_volume = vol_scale;
             g_game_config.save();
         }
-        rf::ConsolePrintf("Level sound volume: %.1f", g_game_config.level_sound_volume.value());
+        rf::console_printf("Level sound volume: %.1f", g_game_config.level_sound_volume.value());
     },
     "Sets level sounds volume scale",
     "levelsounds <volume>",
@@ -334,7 +334,7 @@ ConsoleCommand2 playing_sounds_cmd{
                 DWORD status;
                 chnl.sound_buffer->GetStatus(&status);
                 auto& buf = rf::ds_buffers[chnl.buf_id];
-                rf::ConsolePrintf("Channel %d: filename %s flags %x status %lx", chnl_num, buf.filename, chnl.flags, status);
+                rf::console_printf("Channel %d: filename %s flags %x status %lx", chnl_num, buf.filename, chnl.flags, status);
             }
         }
     },
@@ -379,14 +379,14 @@ void ApplySoundPatches()
     sound_instances_resize_patch.Install();
     ds_channels_resize_patch.Install();
     WriteMem<i8>(0x005053F5 + 1, rf::num_sound_channels); // SndInitSoundInstancesArray
-    WriteMem<i8>(0x005058D8 + 2, rf::num_sound_channels); // SndChange3D
+    WriteMem<i8>(0x005058D8 + 2, rf::num_sound_channels); // snd_change_3d
     WriteMem<i8>(0x0050598A + 2, rf::num_sound_channels); // SndChange
     WriteMem<i8>(0x00505A36 + 2, rf::num_sound_channels); // SndStopAllPausedSounds
     WriteMem<i8>(0x00505A5A + 2, rf::num_sound_channels); // SndStop
-    WriteMem<i8>(0x00505C31 + 2, rf::num_sound_channels); // SndIsPlaying
+    WriteMem<i8>(0x00505C31 + 2, rf::num_sound_channels); // snd_is_playing
     WriteMem<i8>(0x00521145 + 1, rf::num_sound_channels); // SndDsChannelsArrayCtor
     WriteMem<i8>(0x0052163D + 2, rf::num_sound_channels); // SndDsInitAllChannels
     WriteMem<i8>(0x0052191D + 2, rf::num_sound_channels); // SndDsCloseAllChannels
-    WriteMem<i8>(0x00522F4F + 2, rf::num_sound_channels); // SndDsGetChannel
+    WriteMem<i8>(0x00522F4F + 2, rf::num_sound_channels); // snd_ds_get_channel
     WriteMem<i8>(0x00522D1D + 2, rf::num_sound_channels); // SndDsCloseAllChannels2
 }

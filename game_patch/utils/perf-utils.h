@@ -55,13 +55,13 @@ public:
 class ScopedPerfMonitor
 {
     PerfAggregator& agg_;
-    unsigned start_ = rf::TimerGet(1000000);
+    unsigned start_ = rf::timer_get(1000000);
 
 public:
     ScopedPerfMonitor(PerfAggregator& agg) : agg_(agg) {}
 
     ~ScopedPerfMonitor()
     {
-        agg_.add_call(rf::TimerGet(1000000) - start_);
+        agg_.add_call(rf::timer_get(1000000) - start_);
     }
 };

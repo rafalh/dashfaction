@@ -96,27 +96,27 @@ namespace rf
     static auto& ds_buffers = AddrAsRef<DsBuffer[0x1000]>(0x01887388);
     static auto& snd_group_volume = AddrAsRef<float[4]>(0x01753C18);
 
-    static auto SndPreload = AddrAsRef<int(int handle)>(0x005054D0);
-    static auto SndPlay = AddrAsRef<int(int handle, int group, float pan, float volume)>(0x00505560);
-    static auto SndPlay3D = AddrAsRef<int(int handle, const Vector3& pos, float vol_scale, const Vector3& unused, int group)>(0x005056A0);
-    static auto SndClearInstanceSlot = AddrAsRef<int(SoundInstance* instance)>(0x00505680);
-    static auto SndDestroyAllPaused = AddrAsRef<void()>(0x005059F0);
-    static auto SndIsPlaying = AddrAsRef<int(int instance_handle)>(0x00505C00);
-    static auto SndPauseAll = AddrAsRef<void(bool paused)>(0x00505C70);
-    static auto SndChange3D = AddrAsRef<void(int instance_handle, const Vector3& pos, const Vector3& vel, float vol_scale)>(0x005058C0);
+    static auto snd_load_hint = AddrAsRef<int(int handle)>(0x005054D0);
+    static auto snd_play = AddrAsRef<int(int handle, int group, float pan, float volume)>(0x00505560);
+    static auto snd_play_3d = AddrAsRef<int(int handle, const Vector3& pos, float vol_scale, const Vector3& unused, int group)>(0x005056A0);
+    static auto snd_clear_instance_slot = AddrAsRef<int(SoundInstance* instance)>(0x00505680);
+    static auto snd_destroy_all_paused = AddrAsRef<void()>(0x005059F0);
+    static auto snd_is_playing = AddrAsRef<int(int instance_handle)>(0x00505C00);
+    static auto snd_pause_all = AddrAsRef<void(bool paused)>(0x00505C70);
+    static auto snd_change_3d = AddrAsRef<void(int instance_handle, const Vector3& pos, const Vector3& vel, float vol_scale)>(0x005058C0);
 
-    static auto SndPcPlay3D = AddrAsRef<int(int handle, const Vector3& pos, bool looping, int unused)>(0x00544180);
-    static auto SndPcStop = AddrAsRef<char(int sig)>(0x005442B0);
-    static auto SndPcIsPlaying = AddrAsRef<bool(int sig)>(0x00544360);
-    static auto SndPcSetVolume = AddrAsRef<void(int sig, float volume)>(0x00544390);
-    static auto SndPcGetById = AddrAsRef<int(int handle, Sound** sound)>(0x00544700);
-    static auto SndPcGetDuration = AddrAsRef<float(int handle)>(0x00544760);
+    static auto snd_pc_play_3d = AddrAsRef<int(int handle, const Vector3& pos, bool looping, int unused)>(0x00544180);
+    static auto snd_pc_stop = AddrAsRef<char(int sig)>(0x005442B0);
+    static auto snd_pc_is_playing = AddrAsRef<bool(int sig)>(0x00544360);
+    static auto snd_pc_set_volume = AddrAsRef<void(int sig, float volume)>(0x00544390);
+    static auto snd_pc_get_by_id = AddrAsRef<int(int handle, Sound** sound)>(0x00544700);
+    static auto snd_pc_get_duration = AddrAsRef<float(int handle)>(0x00544760);
 
-    static auto SndDsCloseChannel = AddrAsRef<bool(int channel)>(0x00521930);
-    static auto SndDsChannelIsPlaying = AddrAsRef<bool(int channel)>(0x005224D0);
-    static auto SndDsIsChannelPaused = AddrAsRef<bool(int channel)>(0x00522500);
-    static auto SndDsGetChannel = AddrAsRef<int(int sig)>(0x00522F30);
-    static auto SndDsEstimateDuration = AddrAsRef<float(int snd_buf_id)>(0x00523170);
+    static auto snd_ds_close_channel = AddrAsRef<bool(int channel)>(0x00521930);
+    static auto snd_ds_channel_is_playing = AddrAsRef<bool(int channel)>(0x005224D0);
+    static auto snd_ds_channel_is_paused = AddrAsRef<bool(int channel)>(0x00522500);
+    static auto snd_ds_get_channel = AddrAsRef<int(int sig)>(0x00522F30);
+    static auto snd_ds_estimate_duration = AddrAsRef<float(int snd_buf_id)>(0x00523170);
 
-    static auto SndDs3DUpdateBuffer = AddrAsRef<int(int chnl, float min_dist, float max_dist, const Vector3& pos, const Vector3& vel)>(0x00562DB0);
+    static auto snd_ds_3d_update_buffer = AddrAsRef<int(int chnl, float min_dist, float max_dist, const Vector3& pos, const Vector3& vel)>(0x00562DB0);
 }
