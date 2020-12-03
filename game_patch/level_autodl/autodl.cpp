@@ -36,13 +36,13 @@ static volatile unsigned g_level_bytes_downloaded;
 static volatile bool g_download_in_progress = false;
 static std::vector<std::string> g_packfiles_to_load;
 
-static bool IsVppFilename(const char* filename)
+static bool is_vpp_filename(const char* filename)
 {
     const char* ext = strrchr(filename, '.');
     return ext && !stricmp(ext, ".vpp");
 }
 
-static bool UnzipVpp(const char* path)
+static bool unzip_vpp(const char* path)
 {
     unzFile archive = unzOpen(path);
     if (!archive) {
@@ -70,11 +70,11 @@ static bool UnzipVpp(const char* path)
             break;
         }
 
-        if (IsVppFilename(file_name)) {
+        if (is_vpp_filename(file_name)) {
 #ifdef DEBUG
             xlog::trace("Unpacking %s", file_name);
 #endif
-            auto output_path = StringFormat("%suser_maps\\multi\\%s", rf::root_path, file_name);
+            auto output_path = string_format("%suser_maps\\multi\\%s", rf::root_path, file_name);
             std::ofstream file(output_path, std::ios_base::out | std::ios_base::binary);
             if (!file) {
                 xlog::error("Cannot open file: %s", output_path.c_str());
@@ -114,7 +114,7 @@ static bool UnzipVpp(const char* path)
     return ret;
 }
 
-static bool UnrarVpp(const char* path)
+static bool unrar_vpp(const char* path)
 {
     char cmt_buf[16384];
 
@@ -147,9 +147,9 @@ static bool UnrarVpp(const char* path)
             break;
         }
 
-        if (IsVppFilename(header_data.FileName)) {
+        if (is_vpp_filename(header_data.FileName)) {
             xlog::trace("Unpacking %s", header_data.FileName);
-            auto output_dir = StringFormat("%suser_maps\\multi", rf::root_path);
+            auto output_dir = string_format("%suser_maps\\multi", rf::root_path);
             code = RARProcessFile(archive_handle, RAR_EXTRACT, const_cast<char*>(output_dir.c_str()), nullptr);
             if (code == 0) {
                 g_packfiles_to_load.push_back(header_data.FileName);
@@ -171,9 +171,9 @@ static bool UnrarVpp(const char* path)
     return ret;
 }
 
-static bool FetchLevelFile(const char* tmp_filename, int ticket_id) try {
+static bool fetch_level_file(const char* tmp_filename, int ticket_id) try {
     HttpSession session{AUTODL_AGENT_NAME};
-    auto url = StringFormat("%s/downloadmap.php?ticketid=%u", AUTODL_BASE_URL, ticket_id);
+    auto url = string_format("%s/downloadmap.php?ticketid=%u", AUTODL_BASE_URL, ticket_id);
     HttpRequest req{url, "GET", session};
     req.send();
 
@@ -199,7 +199,7 @@ catch (std::exception& e) {
     return false;
 }
 
-static std::optional<std::string> GetTempFileNameInTempDir(const char* prefix)
+static std::optional<std::string> get_temp_filename_in_temp_dir(const char* prefix)
 {
     char temp_dir[MAX_PATH];
     DWORD ret_val = GetTempPathA(std::size(temp_dir), temp_dir);
@@ -214,9 +214,9 @@ static std::optional<std::string> GetTempFileNameInTempDir(const char* prefix)
     return {result};
 }
 
-static void DownloadLevelThread()
+static void download_level_thread_proc()
 {
-    auto temp_filename_opt = GetTempFileNameInTempDir("DF_Level_");
+    auto temp_filename_opt = get_temp_filename_in_temp_dir("DF_Level_");
     if (!temp_filename_opt) {
         xlog::error("Failed to generate a temp filename");
         return;
@@ -225,10 +225,10 @@ static void DownloadLevelThread()
     auto temp_filename = temp_filename_opt.value().c_str();
 
     bool success = false;
-    if (FetchLevelFile(temp_filename, g_level_info.ticket_id)) {
+    if (fetch_level_file(temp_filename, g_level_info.ticket_id)) {
         xlog::debug("Unpacking level from %s", temp_filename);
-        if (!UnzipVpp(temp_filename) && !UnrarVpp(temp_filename))
-            xlog::error("UnzipVpp and UnrarVpp failed");
+        if (!unzip_vpp(temp_filename) && !unrar_vpp(temp_filename))
+            xlog::error("unzip_vpp and unrar_vpp failed");
         else
             success = true;
     }
@@ -242,7 +242,7 @@ static void DownloadLevelThread()
     g_download_in_progress = false;
 }
 
-static void StartLevelDownload()
+static void start_level_download()
 {
     if (g_download_in_progress) {
         xlog::error("Level download already in progress!");
@@ -252,11 +252,11 @@ static void StartLevelDownload()
     g_level_bytes_downloaded = 0;
     g_download_in_progress = true;
 
-    std::thread download_thread(DownloadLevelThread);
+    std::thread download_thread(download_level_thread_proc);
     download_thread.detach();
 }
 
-static std::optional<LevelDownloadInfo> ParseLevelDownloadInfo(char* buf)
+static std::optional<LevelDownloadInfo> parse_level_download_info(char* buf)
 {
     std::stringstream ss(buf);
     ss.exceptions(std::ifstream::failbit | std::ifstream::badbit);
@@ -284,7 +284,7 @@ static std::optional<LevelDownloadInfo> ParseLevelDownloadInfo(char* buf)
     return {info};
 }
 
-static std::optional<LevelDownloadInfo> FetchLevelDownloadInfo(const char* file_name) try {
+static std::optional<LevelDownloadInfo> fetch_level_download_info(const char* file_name) try {
     HttpSession session{AUTODL_AGENT_NAME};
     session.set_connect_timeout(2000);
     session.set_receive_timeout(3000);
@@ -305,27 +305,27 @@ static std::optional<LevelDownloadInfo> FetchLevelDownloadInfo(const char* file_
     buf[num_bytes_read] = '\0';
     xlog::trace("FactionFiles response: %s", buf);
 
-    return ParseLevelDownloadInfo(buf);
+    return parse_level_download_info(buf);
 }
 catch (std::exception& e) {
     xlog::error("Failed to fetch level info: %s", e.what());
     return {};
 }
 
-static void DisplayDownloadDialog(LevelDownloadInfo& level_info)
+static void display_download_popup(LevelDownloadInfo& level_info)
 {
     xlog::trace("Download ticket id: %u", level_info.ticket_id);
     g_level_info = level_info;
 
     auto msg =
-        StringFormat("You don't have needed level: %s (Author: %s, Size: %.2f MB)\nDo you want to download it now?",
+        string_format("You don't have needed level: %s (Author: %s, Size: %.2f MB)\nDo you want to download it now?",
                      level_info.name.c_str(), level_info.author.c_str(), level_info.size_in_bytes / 1024.f / 1024.f);
     const char* btn_titles[] = {"Cancel", "Download"};
-    rf::UiDialogCallbackPtr callbacks[] = {nullptr, StartLevelDownload};
+    rf::UiDialogCallbackPtr callbacks[] = {nullptr, start_level_download};
     rf::ui_popup_custom("Download level", msg.c_str(), 2, btn_titles, callbacks, 0, 0);
 }
 
-bool TryToDownloadLevel(const char* filename)
+bool try_to_download_level(const char* filename)
 {
     if (g_download_in_progress) {
         xlog::trace("Level download already in progress!");
@@ -334,18 +334,18 @@ bool TryToDownloadLevel(const char* filename)
     }
 
     xlog::trace("Fetching level info");
-    auto level_info_opt = FetchLevelDownloadInfo(filename);
+    auto level_info_opt = fetch_level_download_info(filename);
     if (!level_info_opt) {
         xlog::error("Level has not been found in FactionFiles database!");
         return false;
     }
 
     xlog::trace("Displaying download dialog");
-    DisplayDownloadDialog(level_info_opt.value());
+    display_download_popup(level_info_opt.value());
     return true;
 }
 
-CodeInjection g_join_failed_injection{
+CodeInjection join_failed_injection{
     0x0047C4EC,
     [](auto& regs) {
         int leave_reason = regs.esi;
@@ -355,11 +355,11 @@ CodeInjection g_join_failed_injection{
 
         auto& level_filename = addr_as_ref<rf::String>(0x00646074);
         xlog::trace("Preparing level download %s", level_filename.c_str());
-        if (!TryToDownloadLevel(level_filename)) {
+        if (!try_to_download_level(level_filename)) {
             return;
         }
 
-        SetJumpToMultiServerList(true);
+        set_jump_to_multi_server_list(true);
 
         regs.eip = 0x0047C502;
         regs.esp -= 0x14;
@@ -372,7 +372,7 @@ ConsoleCommand2 download_level_cmd{
         if (filename.rfind('.') == std::string::npos) {
             filename += ".rfl";
         }
-        auto level_info_opt = FetchLevelDownloadInfo(filename.c_str());
+        auto level_info_opt = fetch_level_download_info(filename.c_str());
         if (!level_info_opt) {
             rf::console_printf("Level has not found in FactionFiles database!");
         }
@@ -383,20 +383,20 @@ ConsoleCommand2 download_level_cmd{
             rf::console_printf("Downloading level %s by %s", level_info_opt.value().name.c_str(),
                 level_info_opt.value().author.c_str());
             g_level_info = level_info_opt.value();
-            StartLevelDownload();
+            start_level_download();
         }
     },
     "Downloads level from FactionFiles.com",
     "download_level <rfl_name>",
 };
 
-void InitAutodownloader()
+void init_autodownloader()
 {
-    g_join_failed_injection.install();
-    download_level_cmd.Register();
+    join_failed_injection.install();
+    download_level_cmd.register_cmd();
 }
 
-void RenderDownloadProgress()
+void level_download_render_progress()
 {
     if (!g_download_in_progress) {
         // Load packages in main thread
@@ -433,7 +433,7 @@ void RenderDownloadProgress()
     }
 
     rf::gr_set_color_rgba(0, 0xFF, 0, 0x80);
-    auto text = StringFormat("Downloading: %.2f MB / %.2f MB", g_level_bytes_downloaded / 1024.0f / 1024.0f,
+    auto text = string_format("Downloading: %.2f MB / %.2f MB", g_level_bytes_downloaded / 1024.0f / 1024.0f,
                              g_level_info.size_in_bytes / 1024.0f / 1024.0f);
     rf::gr_string_aligned(rf::GR_ALIGN_CENTER, x + cx / 2, y + cy / 2 - cy_font / 2, text.c_str(), -1,
                         rf::gr_string_mode);

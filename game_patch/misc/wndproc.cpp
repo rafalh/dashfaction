@@ -5,11 +5,11 @@
 #include <windows.h>
 #include <patch_common/AsmWriter.h>
 
-const char* GetWndMsgName(UINT msg);
+const char* get_win_msg_name(UINT msg);
 
-LRESULT WINAPI WndProc(HWND wnd_handle, UINT msg, WPARAM w_param, LPARAM l_param)
+LRESULT WINAPI wnd_proc(HWND wnd_handle, UINT msg, WPARAM w_param, LPARAM l_param)
 {
-    // xlog::trace("%08x: msg %s %x %x", GetTickCount(), GetWndMsgName(msg), w_param, l_param);
+    // xlog::trace("%08x: msg %s %x %x", GetTickCount(), get_win_msg_name(msg), w_param, l_param);
 
     for (unsigned i = 0; i < rf::num_msg_handlers; ++i) {
         rf::msg_handlers[i](msg, w_param, l_param);
@@ -54,8 +54,8 @@ LRESULT WINAPI WndProc(HWND wnd_handle, UINT msg, WPARAM w_param, LPARAM l_param
     return 0;
 }
 
-void InitWndProc()
+void init_wnd_proc()
 {
     // Subclass window
-    write_mem_ptr(0x00524E66, &WndProc);
+    write_mem_ptr(0x00524E66, &wnd_proc);
 }

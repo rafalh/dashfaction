@@ -14,6 +14,6 @@ namespace rf
     struct Player;
 }
 
-void NetworkInit();
-void SendChatLinePacket(const char* msg, rf::Player* target, rf::Player* sender = nullptr, bool is_team_msg = false);
-const std::optional<DashFactionServerInfo>& GetDashFactionServerInfo();
+void network_init();
+void send_chat_line_packet(const char* msg, rf::Player* target, rf::Player* sender = nullptr, bool is_team_msg = false);
+const std::optional<DashFactionServerInfo>& get_df_server_info();

@@ -2,4 +2,4 @@
 
 #include <windows.h>
 
-const char* getDxErrorStr(HRESULT hr);
+const char* get_d3d_error_str(HRESULT hr);

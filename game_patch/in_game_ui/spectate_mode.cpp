@@ -38,7 +38,7 @@ static rf::Camera* g_old_target_camera = nullptr;
 static bool g_spectate_mode_enabled = false;
 static bool g_spawned_in_current_level = false;
 
-static void SetCameraTarget(rf::Player* player)
+static void set_camera_target(rf::Player* player)
 {
     // Based on function SetCamera1View
     if (!rf::local_player || !rf::local_player->cam || !player)
@@ -54,12 +54,12 @@ static void SetCameraTarget(rf::Player* player)
     rf::camera_set_first_person(camera);
 }
 
-static bool IsForceRespawn()
+static bool is_force_respawn()
 {
     return g_spawned_in_current_level && (rf::netgame.flags & rf::NG_FLAG_FORCE_RESPAWN);
 }
 
-void SpectateModeSetTargetPlayer(rf::Player* player)
+void spectate_mode_set_target_player(rf::Player* player)
 {
     if (!player)
         player = rf::local_player;
@@ -67,7 +67,7 @@ void SpectateModeSetTargetPlayer(rf::Player* player)
     if (!rf::local_player || !rf::local_player->cam || !g_spectate_mode_target || g_spectate_mode_target == player)
         return;
 
-    if (IsForceRespawn()) {
+    if (is_force_respawn()) {
         rf::String msg{"You cannot use Spectate Mode because Force Respawn option is enabled in this server!"};
         rf::String prefix;
         rf::multi_chat_print(msg, rf::ChatMsgColor::white_white, prefix);
@@ -91,7 +91,7 @@ void SpectateModeSetTargetPlayer(rf::Player* player)
     g_spectate_mode_target = player;
 
     rf::multi_kill_local_player();
-    SetCameraTarget(player);
+    set_camera_target(player);
 
 #if SPECTATE_MODE_SHOW_WEAPON
     player->flags |= 1 << 4;
@@ -107,7 +107,7 @@ void SpectateModeSetTargetPlayer(rf::Player* player)
 #endif // SPECTATE_MODE_SHOW_WEAPON
 }
 
-static void SpectateNextPlayer(bool dir, bool try_alive_players_first = false)
+static void spectate_next_player(bool dir, bool try_alive_players_first = false)
 {
     rf::Player* new_target;
     if (g_spectate_mode_enabled)
@@ -121,16 +121,16 @@ static void SpectateNextPlayer(bool dir, bool try_alive_players_first = false)
         if (try_alive_players_first && rf::player_is_dead(new_target))
             continue;
         if (new_target != rf::local_player) {
-            SpectateModeSetTargetPlayer(new_target);
+            spectate_mode_set_target_player(new_target);
             return;
         }
     }
 
     if (try_alive_players_first)
-        SpectateNextPlayer(dir, false);
+        spectate_next_player(dir, false);
 }
 
-void SpectateModeEnterFreeLook()
+void spectate_mode_enter_freelook()
 {
     if (!rf::local_player || !rf::local_player->cam || !rf::is_multi)
         return;
@@ -139,7 +139,7 @@ void SpectateModeEnterFreeLook()
     rf::camera_set_freelook(rf::local_player->cam);
 }
 
-bool SpectateModeIsFreeLook()
+bool spectate_mode_is_freelook()
 {
     if (!rf::local_player || !rf::local_player->cam || !rf::is_multi)
         return false;
@@ -148,20 +148,20 @@ bool SpectateModeIsFreeLook()
     return camera_mode == rf::CAM_FREELOOK;
 }
 
-bool SpectateModeIsActive()
+bool spectate_mode_is_active()
 {
-    return g_spectate_mode_enabled || SpectateModeIsFreeLook();
+    return g_spectate_mode_enabled || spectate_mode_is_freelook();
 }
 
-void SpectateModeLeave()
+void spectate_mode_leave()
 {
     if (g_spectate_mode_enabled)
-        SpectateModeSetTargetPlayer(nullptr);
+        spectate_mode_set_target_player(nullptr);
     else
-        SetCameraTarget(rf::local_player);
+        set_camera_target(rf::local_player);
 }
 
-bool SpectateModeHandleCtrlInGame(rf::ControlAction key_id, bool was_pressed)
+bool spectate_mode_handle_ctrl_in_game(rf::ControlAction key_id, bool was_pressed)
 {
     if (!rf::is_multi) {
         return false;
@@ -170,32 +170,32 @@ bool SpectateModeHandleCtrlInGame(rf::ControlAction key_id, bool was_pressed)
     if (g_spectate_mode_enabled) {
         if (key_id == rf::CA_PRIMARY_ATTACK || key_id == rf::CA_SLIDE_RIGHT) {
             if (was_pressed)
-                SpectateNextPlayer(true);
+                spectate_next_player(true);
             return true; // dont allow spawn
         }
         else if (key_id == rf::CA_SECONDARY_ATTACK || key_id == rf::CA_SLIDE_LEFT) {
             if (was_pressed)
-                SpectateNextPlayer(false);
+                spectate_next_player(false);
             return true;
         }
         else if (key_id == rf::CA_JUMP) {
             if (was_pressed)
-                SpectateModeLeave();
+                spectate_mode_leave();
             return true;
         }
     }
-    else if (SpectateModeIsFreeLook()) {
+    else if (spectate_mode_is_freelook()) {
         // don't allow respawn in freelook spectate
         if (key_id == rf::CA_PRIMARY_ATTACK || key_id == rf::CA_SECONDARY_ATTACK) {
             if (was_pressed)
-                SpectateModeLeave();
+                spectate_mode_leave();
             return true;
         }
     }
     else if (!g_spectate_mode_enabled) {
         if (key_id == rf::CA_JUMP && was_pressed && rf::player_is_dead(rf::local_player)) {
-            SpectateModeSetTargetPlayer(rf::local_player);
-            SpectateNextPlayer(true, true);
+            spectate_mode_set_target_player(rf::local_player);
+            spectate_next_player(true, true);
             return true;
         }
     }
@@ -206,7 +206,7 @@ bool SpectateModeHandleCtrlInGame(rf::ControlAction key_id, bool was_pressed)
 FunHook<void(rf::Player*, rf::ControlAction, bool)> player_execute_action_hook{
     0x004A6210,
     [](rf::Player* player, rf::ControlAction ctrl, bool was_pressed) {
-        if (!SpectateModeHandleCtrlInGame(ctrl, was_pressed)) {
+        if (!spectate_mode_handle_ctrl_in_game(ctrl, was_pressed)) {
             player_execute_action_hook.call_target(player, ctrl, was_pressed);
         }
     },
@@ -214,7 +214,7 @@ FunHook<void(rf::Player*, rf::ControlAction, bool)> player_execute_action_hook{
 
 bool player_is_dead_new(rf::Player* player)
 {
-    if (SpectateModeIsActive())
+    if (spectate_mode_is_active())
         return false;
     else
         return rf::player_is_dead(player);
@@ -226,7 +226,7 @@ CallHook<bool(rf::Player*)> player_is_dead_scoreboard2_hook{0x00437C25, player_i
 
 static bool player_is_dying_new(rf::Player* player)
 {
-    if (SpectateModeIsActive())
+    if (spectate_mode_is_active())
         return false;
     else
         return rf::player_is_dying(player);
@@ -236,12 +236,12 @@ CallHook player_is_dying_red_bars_hook{0x00432A5F, player_is_dying_new};
 CallHook player_is_dying_scoreboard_hook{0x00437C01, player_is_dying_new};
 CallHook player_is_dying_scoreboard2_hook{0x00437C36, player_is_dying_new};
 
-void SpectateModeOnDestroyPlayer(rf::Player* player)
+void spectate_mode_on_destroy_player(rf::Player* player)
 {
     if (g_spectate_mode_target == player)
-        SpectateNextPlayer(true);
+        spectate_next_player(true);
     if (g_spectate_mode_target == player)
-        SpectateModeSetTargetPlayer(nullptr);
+        spectate_mode_set_target_player(nullptr);
 }
 
 FunHook<void(rf::Player*)> render_reticle_hook{
@@ -279,7 +279,7 @@ CodeInjection render_scanner_view_for_spectated_player_injection{
 FunHook<bool(rf::Player*)> player_is_local_hook{
     0x004A68D0,
     [](rf::Player* player) {
-        if (SpectateModeIsActive()) {
+        if (spectate_mode_is_active()) {
             return false;
         }
         return player_is_local_hook.call_target(player);
@@ -294,28 +294,28 @@ ConsoleCommand2 spectate_cmd{
             return;
         }
 
-        if (IsForceRespawn()) {
+        if (is_force_respawn()) {
             rf::console_output("Spectate mode is disabled because of Force Respawn server option!", nullptr);
             return;
         }
 
         if (player_name) {
             // spectate player using 1st person view
-            rf::Player* player = FindBestMatchingPlayer(player_name.value().c_str());
+            rf::Player* player = find_best_matching_player(player_name.value().c_str());
             if (!player) {
                 // player not found
                 return;
             }
             // player found - spectate
-            SpectateModeSetTargetPlayer(player);
+            spectate_mode_set_target_player(player);
         }
-        else if (g_spectate_mode_enabled || SpectateModeIsFreeLook()) {
+        else if (g_spectate_mode_enabled || spectate_mode_is_freelook()) {
             // leave spectate mode
-            SpectateModeLeave();
+            spectate_mode_leave();
         }
         else {
             // enter freelook spectate mode
-            SpectateModeEnterFreeLook();
+            spectate_mode_enter_freelook();
         }
     },
     "Toggles spectate mode (first person or free-look depending on the argument)",
@@ -379,7 +379,7 @@ FunHook<void(rf::Player*)> player_fpgun_update_state_hook{
 
 #endif // SPECTATE_MODE_SHOW_WEAPON
 
-void SpectateModeInit()
+void spectate_mode_init()
 {
     player_is_dying_red_bars_hook.install();
     player_is_dying_scoreboard_hook.install();
@@ -394,7 +394,7 @@ void SpectateModeInit()
     player_create_entity_hook.install();
     player_is_local_hook.install();
 
-    spectate_cmd.Register();
+    spectate_cmd.register_cmd();
 
     // Note: HUD rendering doesn't make sense because life and armor isn't synced
 
@@ -422,25 +422,25 @@ void SpectateModeInit()
 #endif // SPECTATE_MODE_SHOW_WEAPON
 }
 
-void SpectateModeAfterFullGameInit()
+void spectate_mode_after_full_game_init()
 {
     g_spectate_mode_target = rf::local_player;
 }
 
-void SpectateModePlayerCreateEntityPost(rf::Player* player)
+void spectate_mode_player_create_entity_post(rf::Player* player)
 {
     if (player == rf::local_player) {
         g_spawned_in_current_level = true;
     }
 }
 
-void SpectateModeLevelInit()
+void spectate_mode_level_init()
 {
     g_spawned_in_current_level = false;
 }
 
 template<typename F>
-static void DrawWithShadow(int x, int y, int shadow_dx, int shadow_dy, rf::Color clr, rf::Color shadow_clr, F fun)
+static void draw_with_shadow(int x, int y, int shadow_dx, int shadow_dy, rf::Color clr, rf::Color shadow_clr, F fun)
 {
     rf::gr_set_color(shadow_clr);
     fun(x + shadow_dx, y + shadow_dy);
@@ -448,15 +448,15 @@ static void DrawWithShadow(int x, int y, int shadow_dx, int shadow_dy, rf::Color
     fun(x, y);
 }
 
-void SpectateModeDrawUI()
+void spectate_mode_draw_ui()
 {
-    if (rf::is_hud_hidden || rf::gameseq_get_state() != rf::GS_GAMEPLAY || SpectateModeIsFreeLook()) {
+    if (rf::is_hud_hidden || rf::gameseq_get_state() != rf::GS_GAMEPLAY || spectate_mode_is_freelook()) {
         return;
     }
 
-    int large_font = HudGetLargeFont();
+    int large_font = hud_get_large_font();
     int large_font_h = rf::gr_get_font_height(large_font);
-    int medium_font = HudGetDefaultFont();
+    int medium_font = hud_get_default_font();
     int medium_font_h = rf::gr_get_font_height(medium_font);
 
     int hints_x = 20;
@@ -477,7 +477,7 @@ void SpectateModeDrawUI()
     int title_y = g_game_config.big_hud ? 250 : 150;
     rf::Color white_clr{255, 255, 255, 255};
     rf::Color shadow_clr{0, 0, 0, 128};
-    DrawWithShadow(title_x, title_y, 2, 2, white_clr, shadow_clr, [=](int x, int y) {
+    draw_with_shadow(title_x, title_y, 2, 2, white_clr, shadow_clr, [=](int x, int y) {
         rf::gr_string_aligned(rf::GR_ALIGN_CENTER, x, y, "SPECTATE MODE", large_font);
     });
 
@@ -496,7 +496,7 @@ void SpectateModeDrawUI()
     rf::gr_rect(bar_x, bar_y, bar_w, bar_h);
 
     rf::gr_set_color_rgba(0xFF, 0xFF, 0, 0x80);
-    auto str = StringFormat("Spectating: %s", g_spectate_mode_target->name.c_str());
+    auto str = string_format("Spectating: %s", g_spectate_mode_target->name.c_str());
     rf::gr_string_aligned(rf::GR_ALIGN_CENTER, bar_x + bar_w / 2, bar_y + bar_h / 2 - large_font_h / 2, str.c_str(), large_font);
 
     rf::Entity* entity = rf::entity_from_handle(g_spectate_mode_target->entity_handle);
@@ -509,7 +509,7 @@ void SpectateModeDrawUI()
                                   blood_h * 2, 0, 0, blood_w, blood_h, 0.0f, 0.0f, rf::gr_bitmap_clamp_mode);
 
         rf::Color dead_clr{0xF0, 0x20, 0x10, 0xC0};
-        DrawWithShadow(scr_w / 2, scr_h / 2, 2, 2, dead_clr, shadow_clr, [=](int x, int y) {
+        draw_with_shadow(scr_w / 2, scr_h / 2, 2, 2, dead_clr, shadow_clr, [=](int x, int y) {
             rf::gr_string_aligned(rf::GR_ALIGN_CENTER, x, y, "DEAD", large_font);
         });
     }

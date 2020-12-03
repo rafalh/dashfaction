@@ -34,7 +34,7 @@
 };
 // clang-format on
 
-const char* getDxErrorStr(HRESULT hr)
+const char* get_d3d_error_str(HRESULT hr)
 {
     auto it = DX_ERRORS.find(hr);
     if (it != DX_ERRORS.end())

@@ -79,7 +79,7 @@ const char* ModFileWhitelist[] = {
     "reticle_rocket_0.tga",
 };
 
-static bool IsModFileInWhitelist(const char* Filename)
+static bool is_mod_file_in_whitelist(const char* Filename)
 {
     for (unsigned i = 0; i < std::size(ModFileWhitelist); ++i)
         if (!stricmp(ModFileWhitelist[i], Filename))
@@ -91,7 +91,7 @@ static bool IsModFileInWhitelist(const char* Filename)
 
 #if CHECK_PACKFILE_CHECKSUM
 
-static unsigned HashFile(const char* Filename)
+static unsigned hash_file(const char* Filename)
 {
     FILE* File = fopen(Filename, "rb");
     if (!File)
@@ -114,12 +114,12 @@ static unsigned HashFile(const char* Filename)
 }
 #endif // CHECK_PACKFILE_CHECKSUM
 
-static GameLang DetectInstalledGameLang()
+static GameLang detect_installed_game_lang()
 {
     std::array lang_codes{"en", "gr", "fr"};
 
     for (unsigned i = 0; i < lang_codes.size(); ++i) {
-        auto full_path = StringFormat("%smaps_%s.vpp", rf::root_path, lang_codes[i]);
+        auto full_path = string_format("%smaps_%s.vpp", rf::root_path, lang_codes[i]);
         BOOL exists = PathFileExistsA(full_path.c_str());
         xlog::info("Checking file %s: %s", full_path.c_str(), exists ? "found" : "not found");
         if (exists) {
@@ -131,18 +131,18 @@ static GameLang DetectInstalledGameLang()
     return LANG_EN; // default
 }
 
-GameLang GetInstalledGameLang()
+GameLang get_installed_game_lang()
 {
     static bool initialized = false;
     static GameLang installed_game_lang;
     if (!initialized) {
-        installed_game_lang = DetectInstalledGameLang();
+        installed_game_lang = detect_installed_game_lang();
         initialized = true;
     }
     return installed_game_lang;
 }
 
-bool IsModdedGame()
+bool is_modded_game()
 {
     return g_is_modded_game;
 }
@@ -164,15 +164,15 @@ static uint32_t VPackfileProcessHeader(rf::VPackfile* packfile, const void* raw_
     return hdr.num_files;
 }
 
-static int VPackfileAdd_New(const char* filename, const char* dir)
+static int vpackfile_add_new(const char* filename, const char* dir)
 {
     xlog::trace("Load packfile %s %s", dir, filename);
 
     std::string full_path;
     if (dir && !PathIsRelativeA(dir))
-        full_path = StringFormat("%s%s", dir, filename); // absolute path
+        full_path = string_format("%s%s", dir, filename); // absolute path
     else
-        full_path = StringFormat("%s%s%s", rf::root_path, dir ? dir : "", filename);
+        full_path = string_format("%s%s%s", rf::root_path, dir ? dir : "", filename);
 
     if (!filename || strlen(filename) > 0x1F || full_path.size() > 0x7F) {
         xlog::error("VPackfile name or path too long: %s", full_path.c_str());
@@ -187,7 +187,7 @@ static int VPackfileAdd_New(const char* filename, const char* dir)
     if (!Dir) {
         auto it = GameFileChecksums.find(Filename);
         if (it != GameFileChecksums.end()) {
-            unsigned Checksum = HashFile(FullPath);
+            unsigned Checksum = hash_file(FullPath);
             if (Checksum != it->second) {
                 xlog::info("VPackfile %s has invalid checksum 0x%X", Filename, Checksum);
                 g_is_modded_game = true;
@@ -250,7 +250,7 @@ static int VPackfileAdd_New(const char* filename, const char* dir)
     return 1;
 }
 
-static rf::VPackfile* VPackfileFindPackfile(const char* filename)
+static rf::VPackfile* vpackfile_find_packfile(const char* filename)
 {
     for (auto& packfile : g_packfiles) {
         if (!stricmp(packfile->filename, filename))
@@ -262,11 +262,11 @@ static rf::VPackfile* VPackfileFindPackfile(const char* filename)
 }
 
 template<typename F>
-static void ForEachPackfileEntry(const std::vector<std::string_view>& ext_filter, const char* packfile_filter, F fun)
+static void for_each_packfile_entry(const std::vector<std::string_view>& ext_filter, const char* packfile_filter, F fun)
 {
     std::vector<std::string> ext_filter_lower;
     ext_filter_lower.reserve(ext_filter.size());
-    std::transform(ext_filter.begin(), ext_filter.end(), std::back_inserter(ext_filter_lower), StringToLower);
+    std::transform(ext_filter.begin(), ext_filter.end(), std::back_inserter(ext_filter_lower), string_to_lower);
     for (auto& packfile : g_packfiles) {
         if (!packfile_filter || !stricmp(packfile_filter, packfile->filename)) {
             for (auto& entry : packfile->files) {
@@ -274,8 +274,8 @@ static void ForEachPackfileEntry(const std::vector<std::string_view>& ext_filter
                 if (ext_ptr[0]) {
                     ++ext_ptr;
                 }
-                std::string ext_lower = StringToLower(ext_ptr);
-                if (IterableContains(ext_filter_lower, ext_lower)) {
+                std::string ext_lower = string_to_lower(ext_ptr);
+                if (iterable_contains(ext_filter_lower, ext_lower)) {
                     fun(entry);
                 }
             }
@@ -283,14 +283,14 @@ static void ForEachPackfileEntry(const std::vector<std::string_view>& ext_filter
     }
 }
 
-static int VPackfileBuildFileList_New(const char* ext_filter, char*& filenames, unsigned& num_files,
+static int vpackfile_build_file_list_new(const char* ext_filter, char*& filenames, unsigned& num_files,
                                      const char* packfile_filter)
 {
     xlog::trace("PackfileBuildFileList begin");
-    auto ext_filter_splitted = StringSplit(ext_filter, ',');
+    auto ext_filter_splitted = string_split(ext_filter, ',');
     // Calculate number of bytes needed by result (zero terminated file names + buffer terminating zero)
     unsigned num_bytes = 1;
-    ForEachPackfileEntry(ext_filter_splitted, packfile_filter, [&](auto& entry) {
+    for_each_packfile_entry(ext_filter_splitted, packfile_filter, [&](auto& entry) {
         num_bytes += std::strlen(entry.name) + 1;
     });
     // Allocate result buffer
@@ -300,7 +300,7 @@ static int VPackfileBuildFileList_New(const char* ext_filter, char*& filenames, 
     // Fill result buffer and count matching files
     num_files = 0;
     char* buf_ptr = filenames;
-    ForEachPackfileEntry(ext_filter_splitted, packfile_filter, [&](auto& entry) {
+    for_each_packfile_entry(ext_filter_splitted, packfile_filter, [&](auto& entry) {
         strcpy(buf_ptr, entry.name);
         buf_ptr += std::strlen(entry.name) + 1;
         ++num_files;
@@ -311,7 +311,7 @@ static int VPackfileBuildFileList_New(const char* ext_filter, char*& filenames, 
     return 1;
 }
 
-static bool IsLookupTableEntryOverrideAllowed(rf::VPackfileEntry* old_entry, rf::VPackfileEntry* new_entry)
+static bool is_lookup_table_entry_override_allowed(rf::VPackfileEntry* old_entry, rf::VPackfileEntry* new_entry)
 {
     if (g_is_overriding_disabled) {
         // Don't allow overriding files after game is initialized because it can lead to crashes
@@ -326,7 +326,7 @@ static bool IsLookupTableEntryOverrideAllowed(rf::VPackfileEntry* old_entry, rf:
         return false;
     }
 #ifdef MOD_FILE_WHITELIST
-    if (IsModFileInWhitelist(new_entry->file_name)) {
+    if (is_mod_file_in_whitelist(new_entry->file_name)) {
         // Always allow overriding for specific files
         return true;
     }
@@ -338,13 +338,13 @@ static bool IsLookupTableEntryOverrideAllowed(rf::VPackfileEntry* old_entry, rf:
     return true;
 }
 
-static void VPackfileAddToLookupTable(rf::VPackfileEntry* entry)
+static void vpackfile_add_to_lookup_table(rf::VPackfileEntry* entry)
 {
-    std::string filename_str = StringToLower(entry->name);
+    std::string filename_str = string_to_lower(entry->name);
     auto [it, inserted] = g_loopup_table.insert({filename_str, entry});
     if (!inserted) {
         ++g_num_name_collisions;
-        if (IsLookupTableEntryOverrideAllowed(it->second, entry)) {
+        if (is_lookup_table_entry_override_allowed(it->second, entry)) {
             xlog::trace("Allowed overriding packfile file %s (old packfile %s, new packfile %s)", entry->name,
                 it->second->parent->filename, entry->parent->filename);
             it->second = entry;
@@ -356,7 +356,7 @@ static void VPackfileAddToLookupTable(rf::VPackfileEntry* entry)
     }
 }
 
-static int VPackfileAddEntries_New(rf::VPackfile* packfile, const void* block, unsigned num_files,
+static int vpackfile_add_entries_new(rf::VPackfile* packfile, const void* block, unsigned num_files,
                                   unsigned& num_added_files)
 {
     struct VppFileInfo
@@ -382,13 +382,13 @@ static int VPackfileAddEntries_New(rf::VPackfile* packfile, const void* block, u
         ++record;
         ++num_added_files;
 
-        VPackfileAddToLookupTable(&entry);
+        vpackfile_add_to_lookup_table(&entry);
         ++g_num_files_in_packfiles;
     }
     return 1;
 }
 
-static rf::VPackfileEntry* VPackfileFind_New(const char* filename)
+static rf::VPackfileEntry* vpackfile_find_new(const char* filename)
 {
     std::string filename_str{filename};
     std::transform(filename_str.begin(), filename_str.end(), filename_str.begin(), [](unsigned char ch) {
@@ -402,7 +402,7 @@ static rf::VPackfileEntry* VPackfileFind_New(const char* filename)
     return nullptr;
 }
 
-CodeInjection VPackfileOpen_check_seek_result_injection{
+CodeInjection vpackfile_open_check_seek_result_injection{
     0x0052C301,
     [](auto& regs) {
         regs.eax = !regs.eax;
@@ -410,7 +410,7 @@ CodeInjection VPackfileOpen_check_seek_result_injection{
     },
 };
 
-static void LoadDashFactionVpp()
+static void load_dashfaction_vpp()
 {
     // Load DashFaction specific packfile
     char buf[MAX_PATH];
@@ -437,25 +437,25 @@ static void LoadDashFactionVpp()
         xlog::error("Failed to load dashfaction.vpp");
 }
 
-void ForceFileFromPackfile(const char* name, const char* packfile_name)
+void force_file_from_packfile(const char* name, const char* packfile_name)
 {
-    rf::VPackfile* packfile = VPackfileFindPackfile(packfile_name);
+    rf::VPackfile* packfile = vpackfile_find_packfile(packfile_name);
     if (packfile) {
         for (auto& entry : packfile->files) {
             if (!stricmp(entry.name, name)) {
-                VPackfileAddToLookupTable(&entry);
+                vpackfile_add_to_lookup_table(&entry);
             }
         }
     }
 }
 
-static void VPackfileInit_New()
+static void vpackfile_init_new()
 {
     unsigned start_ticks = GetTickCount();
 
     g_loopup_table.reserve(10000);
 
-    if (GetInstalledGameLang() == LANG_GR) {
+    if (get_installed_game_lang() == LANG_GR) {
         rf::vpackfile_add("audiog.vpp", nullptr);
         rf::vpackfile_add("maps_gr.vpp", nullptr);
         rf::vpackfile_add("levels1g.vpp", nullptr);
@@ -463,7 +463,7 @@ static void VPackfileInit_New()
         rf::vpackfile_add("levels3g.vpp", nullptr);
         rf::vpackfile_add("ltables.vpp", nullptr);
     }
-    else if (GetInstalledGameLang() == LANG_FR) {
+    else if (get_installed_game_lang() == LANG_FR) {
         rf::vpackfile_add("audiof.vpp", nullptr);
         rf::vpackfile_add("maps_fr.vpp", nullptr);
         rf::vpackfile_add("levels1f.vpp", nullptr);
@@ -489,7 +489,7 @@ static void VPackfileInit_New()
     rf::vpackfile_add("motions.vpp", nullptr);
     rf::vpackfile_add("music.vpp", nullptr);
     rf::vpackfile_add("ui.vpp", nullptr);
-    LoadDashFactionVpp();
+    load_dashfaction_vpp();
     rf::vpackfile_add("tables.vpp", nullptr);
     addr_as_ref<int>(0x01BDB218) = 1;          // VPackfilesLoaded
     addr_as_ref<uint32_t>(0x01BDB210) = 10000; // NumFilesInVfs
@@ -498,7 +498,7 @@ static void VPackfileInit_New()
     // Note: language changes in binary are done here to make sure RootPath is already initialized
 
     // Switch UI language - can be anything even if this is US edition
-    auto installation_lang = GetInstalledGameLang();
+    auto installation_lang = get_installed_game_lang();
     int lang_id = installation_lang;
     if (g_game_config.language >= 0 && g_game_config.language < 3) {
         lang_id = g_game_config.language;
@@ -513,7 +513,7 @@ static void VPackfileInit_New()
     }
 
     // Allow modded strings.tbl in ui.vpp
-    ForceFileFromPackfile("strings.tbl", "ui.vpp");
+    force_file_from_packfile("strings.tbl", "ui.vpp");
 
     xlog::info("Packfiles initialization took %lums", GetTickCount() - start_ticks);
     xlog::info("VPackfile name collisions: %d", g_num_name_collisions);
@@ -522,24 +522,24 @@ static void VPackfileInit_New()
         xlog::info("Modded game detected!");
 }
 
-static void VPackfileCleanup_New()
+static void vpackfile_cleanup_new()
 {
     g_packfiles.clear();
 }
 
-void VPackfileApplyPatches()
+void vpackfile_apply_patches()
 {
     // VPackfile handling implemetation getting rid of all limits
 
-    AsmWriter(0x0052BD40).jmp(VPackfileAddEntries_New);
-    AsmWriter(0x0052C4D0).jmp(VPackfileBuildFileList_New);
-    AsmWriter(0x0052C070).jmp(VPackfileAdd_New);
-    AsmWriter(0x0052C220).jmp(VPackfileFind_New);
-    AsmWriter(0x0052BB60).jmp(VPackfileInit_New);
-    AsmWriter(0x0052BC80).jmp(VPackfileCleanup_New);
+    AsmWriter(0x0052BD40).jmp(vpackfile_add_entries_new);
+    AsmWriter(0x0052C4D0).jmp(vpackfile_build_file_list_new);
+    AsmWriter(0x0052C070).jmp(vpackfile_add_new);
+    AsmWriter(0x0052C220).jmp(vpackfile_find_new);
+    AsmWriter(0x0052BB60).jmp(vpackfile_init_new);
+    AsmWriter(0x0052BC80).jmp(vpackfile_cleanup_new);
 
     // Don't return success from VPackfileOpen if offset points out of file contents
-    VPackfileOpen_check_seek_result_injection.install();
+    vpackfile_open_check_seek_result_injection.install();
 
 #ifdef DEBUG
     write_mem<u8>(0x0052BEF0, asm_opcodes::int3); // VPackfileInitFileList
@@ -547,13 +547,13 @@ void VPackfileApplyPatches()
     write_mem<u8>(0x0052C440, asm_opcodes::int3); // VPackfileFindEntry
     write_mem<u8>(0x0052BD10, asm_opcodes::int3); // VPackfileProcessHeader
     write_mem<u8>(0x0052BEB0, asm_opcodes::int3); // VPackfileSetupFileOffsets
-    write_mem<u8>(0x0052BCA0, asm_opcodes::int3); // VPackfileAddToLookupTable
-    write_mem<u8>(0x0052C1D0, asm_opcodes::int3); // VPackfileFindPackfile
+    write_mem<u8>(0x0052BCA0, asm_opcodes::int3); // vpackfile_add_to_lookup_table
+    write_mem<u8>(0x0052C1D0, asm_opcodes::int3); // vpackfile_find_packfile
 
 #endif
 }
 
-void VPackfileFindMatchingFiles(const StringMatcher& query, std::function<void(const char*)> result_consumer)
+void vpackfile_find_matching_files(const StringMatcher& query, std::function<void(const char*)> result_consumer)
 {
     for (auto& p : g_loopup_table) {
         if (query(p.first.c_str())) {
@@ -562,7 +562,7 @@ void VPackfileFindMatchingFiles(const StringMatcher& query, std::function<void(c
     }
 }
 
-void VPackfileDisableOverriding()
+void vpackfile_disable_overriding()
 {
     g_is_overriding_disabled = true;
 }

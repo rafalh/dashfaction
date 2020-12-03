@@ -46,7 +46,7 @@ GameConfig g_game_config;
 HMODULE g_hmodule;
 std::unordered_map<rf::Player*, PlayerAdditionalData> g_player_additional_data_map;
 
-static void OsPool()
+static void os_pool()
 {
     // Note: When using dedicated server we get WM_PAINT messages all the time
     MSG msg;
@@ -60,7 +60,7 @@ static void OsPool()
     }
 }
 
-void FindPlayer(const StringMatcher& query, std::function<void(rf::Player*)> consumer)
+void find_player(const StringMatcher& query, std::function<void(rf::Player*)> consumer)
 {
     auto player_list = SinglyLinkedList{rf::player_list};
     for (auto& player : player_list) {
@@ -69,7 +69,7 @@ void FindPlayer(const StringMatcher& query, std::function<void(rf::Player*)> con
     }
 }
 
-PlayerAdditionalData& GetPlayerAdditionalData(rf::Player* player)
+PlayerAdditionalData& get_player_additional_data(rf::Player* player)
 {
     return g_player_additional_data_map[player];
 }
@@ -80,7 +80,7 @@ CallHook<void()> rf_init_hook{
         auto start_ticks = GetTickCount();
         xlog::info("Initializing game...");
         rf_init_hook.call_target();
-        VPackfileDisableOverriding();
+        vpackfile_disable_overriding();
         xlog::info("Game initialized (%lu ms).", GetTickCount() - start_ticks);
     },
 };
@@ -88,14 +88,14 @@ CallHook<void()> rf_init_hook{
 CodeInjection after_full_game_init_hook{
     0x004B26C6,
     []() {
-        SpectateModeAfterFullGameInit();
+        spectate_mode_after_full_game_init();
 #if !defined(NDEBUG) && defined(HAS_EXPERIMENTAL)
-        ExperimentalInitAfterGame();
+        experimental_init_after_game();
 #endif
-        GraphicsCaptureAfterGameInit();
-        ConsoleInit();
-        MiscAfterFullGameInit();
-        DebugInit();
+        graphics_capture_after_game_init();
+        console_init();
+        misc_after_full_game_init();
+        debug_init();
 
         xlog::info("Game fully initialized");
         xlog::LoggerConfig::get().flush_appenders();
@@ -105,19 +105,19 @@ CodeInjection after_full_game_init_hook{
 CodeInjection cleanup_game_hook{
     0x004B2821,
     []() {
-        ResetGammaRamp();
-        ServerCleanup();
-        DebugCleanup();
+        reset_gamma_ramp();
+        server_cleanup();
+        debug_cleanup();
     },
 };
 
 CodeInjection before_frame_hook{
     0x004B2818,
     []() {
-        OsPool();
-        HighFpsUpdate();
-        ServerDoFrame();
-        DebugDoUpdate();
+        os_pool();
+        high_fps_update();
+        server_do_frame();
+        debug_do_frame();
     },
 };
 
@@ -125,9 +125,9 @@ CodeInjection after_level_render_hook{
     0x00432375,
     []() {
 #if !defined(NDEBUG) && defined(HAS_EXPERIMENTAL)
-        ExperimentalRenderInGame();
+        experimental_render_in_game();
 #endif
-        DebugRender();
+        debug_render();
     },
 };
 
@@ -137,24 +137,24 @@ CodeInjection after_frame_render_hook{
         // Draw on top (after scene)
 
         if (rf::is_multi)
-            SpectateModeDrawUI();
+            spectate_mode_draw_ui();
 
-        GraphicsDrawFpsCounter();
-        RenderDownloadProgress();
+        graphics_draw_fps_counter();
+        level_download_render_progress();
 #if !defined(NDEBUG) && defined(HAS_EXPERIMENTAL)
-        ExperimentalRender();
+        experimental_render();
 #endif
-        DebugRenderUI();
+        debug_render_ui();
     },
 };
 
-FunHook<void()> os_poll_hook{0x00524B60, OsPool};
+FunHook<void()> os_poll_hook{0x00524B60, os_pool};
 
 CodeInjection key_get_hook{
     0x0051F000,
     []() {
         // Process messages here because when watching videos main loop is not running
-        OsPool();
+        os_pool();
     },
 };
 
@@ -162,7 +162,7 @@ FunHook<rf::Player*(bool)> player_create_hook{
     0x004A3310,
     [](bool is_local) {
         rf::Player* player = player_create_hook.call_target(is_local);
-        KillInitPlayer(player);
+        kill_init_player(player);
         return player;
     },
 };
@@ -170,7 +170,7 @@ FunHook<rf::Player*(bool)> player_create_hook{
 FunHook<void(rf::Player*)> player_destroy_hook{
     0x004A35C0,
     [](rf::Player* player) {
-        SpectateModeOnDestroyPlayer(player);
+        spectate_mode_on_destroy_player(player);
         player_destroy_hook.call_target(player);
         g_player_additional_data_map.erase(player);
     },
@@ -181,7 +181,7 @@ FunHook<rf::Entity*(rf::Player*, int, const rf::Vector3&, const rf::Matrix3&, in
     [](rf::Player* pp, int entity_type, const rf::Vector3& pos, const rf::Matrix3& orient, int multi_entity_index) {
         auto ep = player_entity_create_hook.call_target(pp, entity_type, pos, orient, multi_entity_index);
         if (ep) {
-            SpectateModePlayerCreateEntityPost(pp);
+            spectate_mode_player_create_entity_post(pp);
         }
         return ep;
     },
@@ -197,9 +197,9 @@ FunHook<int(rf::String&, rf::String&, char*)> level_load_hook{
         if (ret != 0)
             xlog::warn("Loading failed: %s", error);
         else {
-            HighFpsAfterLevelLoad(level_filename);
-            MiscAfterLevelLoad(level_filename);
-            SpectateModeLevelInit();
+            high_fps_after_level_load(level_filename);
+            misc_after_level_load(level_filename);
+            spectate_mode_level_init();
         }
         return ret;
     },
@@ -273,7 +273,7 @@ private:
     }
 };
 
-void InitLogging()
+void init_logging()
 {
     CreateDirectoryA("logs", nullptr);
     xlog::LoggerConfig::get()
@@ -284,7 +284,7 @@ void InitLogging()
     xlog::info("Dash Faction %s (%s %s)", VERSION_STR, __DATE__, __TIME__);
 }
 
-std::optional<std::string> GetWineVersion()
+std::optional<std::string> get_wine_version()
 {
     auto ntdll_handle = GetModuleHandleA("ntdll.dll");
     // Note: double cast is needed to fix cast-function-type GCC warning
@@ -296,18 +296,18 @@ std::optional<std::string> GetWineVersion()
     return {ver};
 }
 
-void LogSystemInfo()
+void log_system_info()
 {
     try {
-        xlog::info() << "Real system version: " << getRealOsVersion();
-        xlog::info() << "Emulated system version: " << getOsVersion();
-        auto wine_ver = GetWineVersion();
+        xlog::info() << "Real system version: " << get_real_os_version();
+        xlog::info() << "Emulated system version: " << get_os_version();
+        auto wine_ver = get_wine_version();
         if (wine_ver)
             xlog::info() << "Running on Wine: " << wine_ver.value();
 
-        xlog::info("Running as %s (elevation type: %s)", IsCurrentUserAdmin() ? "admin" : "user", GetProcessElevationType());
-        xlog::info() << "CPU Brand: " << getCpuBrand();
-        xlog::info() << "CPU ID: " << getCpuId();
+        xlog::info("Running as %s (elevation type: %s)", is_current_user_admin() ? "admin" : "user", get_process_elevation_type());
+        xlog::info() << "CPU Brand: " << get_cpu_brand();
+        xlog::info() << "CPU ID: " << get_cpu_id();
         LARGE_INTEGER qpc_freq;
         QueryPerformanceFrequency(&qpc_freq);
         xlog::info("QPC Frequency: %08lX %08lX", static_cast<DWORD>(qpc_freq.HighPart), qpc_freq.LowPart);
@@ -327,7 +327,7 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     DWORD start_ticks = GetTickCount();
 
     // Init logging and crash dump support first
-    InitLogging();
+    init_logging();
     CrashHandlerStubInstall(g_hmodule);
 
     // Enable Data Execution Prevention
@@ -335,7 +335,7 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
         xlog::warn("SetProcessDEPPolicy failed (error %ld)", GetLastError());
 
     // Log system info
-    LogSystemInfo();
+    log_system_info();
 
     // Load config
     try {
@@ -372,26 +372,26 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     level_init_post_hook.install();
 
     // Init modules
-    ConsoleApplyPatches();
-    GraphicsInit();
-    InitGamma();
-    GraphicsCaptureInit();
-    NetworkInit();
-    InitWndProc();
-    ApplyHudPatches();
-    InitAutodownloader();
-    InitScoreboard();
-    InitKill();
-    VPackfileApplyPatches();
-    SpectateModeInit();
-    HighFpsInit();
-    MiscInit();
-    ServerInit();
-    InputInit();
+    console_apply_patches();
+    graphics_init();
+    init_gamma();
+    graphics_capture_init();
+    network_init();
+    init_wnd_proc();
+    apply_hud_patches();
+    init_autodownloader();
+    init_scoreboard();
+    init_kill();
+    vpackfile_apply_patches();
+    spectate_mode_init();
+    high_fps_init();
+    misc_init();
+    server_init();
+    input_init();
 #if !defined(NDEBUG) && defined(HAS_EXPERIMENTAL)
-    ExperimentalInit();
+    experimental_init();
 #endif
-    DebugApplyPatches();
+    debug_apply_patches();
 
     xlog::info("Installing hooks took %lu ms", GetTickCount() - start_ticks);
 

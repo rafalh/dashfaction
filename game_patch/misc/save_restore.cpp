@@ -27,7 +27,7 @@ T validate_save_file_num(T value, T limit, const char* what)
     return value;
 }
 
-void ValidateLevelSaveData(rf::LevelSaveData* data)
+void validate_level_save_data(rf::LevelSaveData* data)
 {
     data->num_goal_create_events = validate_save_file_num<uint8_t>(data->num_goal_create_events, 8, "goal_create events");
     data->num_alarm_siren_events = validate_save_file_num<uint8_t>(data->num_alarm_siren_events, 8, "alarm_siren events");
@@ -56,7 +56,7 @@ void ValidateLevelSaveData(rf::LevelSaveData* data)
 FunHook<void(rf::LevelSaveData*)> sr_deserialize_all_objects_hook{
     0x004B4FB0,
     [](rf::LevelSaveData *data) {
-        ValidateLevelSaveData(data);
+        validate_level_save_data(data);
         sr_deserialize_all_objects_hook.call_target(data);
     },
 };
@@ -65,7 +65,7 @@ FunHook<void(rf::LevelSaveData*)> sr_serialize_all_objects_hook{
     0x004B4450,
     [](rf::LevelSaveData *data) {
         sr_serialize_all_objects_hook.call_target(data);
-        ValidateLevelSaveData(data);
+        validate_level_save_data(data);
     },
 };
 
@@ -109,10 +109,10 @@ FunHook<void()> quick_save_hook{
     0x004B6160,
     []() {
         quick_save_hook.call_target();
-        bool server_side_saving_enabled = rf::is_multi && !rf::is_server && GetDashFactionServerInfo()
-            && GetDashFactionServerInfo().value().saving_enabled;
+        bool server_side_saving_enabled = rf::is_multi && !rf::is_server && get_df_server_info()
+            && get_df_server_info().value().saving_enabled;
         if (server_side_saving_enabled) {
-            SendChatLinePacket("/save", nullptr);
+            send_chat_line_packet("/save", nullptr);
         }
     },
 };
@@ -121,15 +121,15 @@ FunHook<void()> quick_load_hook{
     0x004B6180,
     []() {
         quick_load_hook.call_target();
-        bool server_side_saving_enabled = rf::is_multi && !rf::is_server && GetDashFactionServerInfo()
-            && GetDashFactionServerInfo().value().saving_enabled;
+        bool server_side_saving_enabled = rf::is_multi && !rf::is_server && get_df_server_info()
+            && get_df_server_info().value().saving_enabled;
         if (server_side_saving_enabled) {
-            SendChatLinePacket("/load", nullptr);
+            send_chat_line_packet("/load", nullptr);
         }
     },
 };
 
-void ApplySaveRestorePatches()
+void apply_save_restore_patches()
 {
     // Dont overwrite player name and prefered weapons when loading saved game
     AsmWriter(0x004B4D99, 0x004B4DA5).nop();

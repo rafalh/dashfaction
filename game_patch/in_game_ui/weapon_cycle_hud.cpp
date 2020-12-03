@@ -24,7 +24,7 @@ void RenderSelectWeaponGui()
 
     int clip_w = rf::gr_clip_width();
     rf::gr_set_color_rgba(15, 242, 2, 255);
-    auto font_num = HudGetDefaultFont();
+    auto font_num = hud_get_default_font();
 
     // selected weapon type name
     auto& selected_cycle_entry = rf::hud_weapon_cycle[rf::hud_weapon_cycle_current_idx];
@@ -78,7 +78,7 @@ void RenderSelectWeaponGui()
     int active_sq_x = type_sq_start_x + selected_cycle_entry.category * sq_x_delta;
     rf::gr_set_color_rgba(239, 213, 52, 255);
     int sq_with_border_size = sq_bg_size + 2 * border; // 22
-    HudRectBorder(active_sq_x, type_sq_y, sq_with_border_size, sq_with_border_size, border);
+    hud_rect_border(active_sq_x, type_sq_y, sq_with_border_size, sq_with_border_size, border);
 
     int num_ind_start_y = type_sq_y + sq_bg_size + 2 * border + sq_spacing + 1; // 150
     int weapon_icons_start_y = num_ind_start_y + 26; // 176
@@ -136,10 +136,10 @@ void RenderSelectWeaponGui()
 
             int weapon_icon_y = weapon_icons_start_y + weapon_icon_delta_y * idx;
             int weapon_icon_bmh = weapon_icon_bitmaps[weapon_type];
-            HudScaledBitmap(weapon_icon_bmh, weapon_icons_x, weapon_icon_y, weapon_icon_scale);
+            hud_scaled_bitmap(weapon_icon_bmh, weapon_icons_x, weapon_icon_y, weapon_icon_scale);
             if (weapon_type == selected_cycle_entry.weapon_type) {
                 rf::gr_set_color_rgba(239, 213, 52, 255);
-                HudRectBorder(weapon_icons_x - 1, weapon_icon_y - 1, weapon_icon_w + 2, weapon_icon_h + 2, 1);
+                hud_rect_border(weapon_icons_x - 1, weapon_icon_y - 1, weapon_icon_w + 2, weapon_icon_h + 2, 1);
             }
         }
         ++num_drawn_weapons_per_category[weapon_category];
@@ -154,12 +154,12 @@ void RenderSelectWeaponGui()
 
 FunHook RenderSelectWeaponGui_hook{0x004A2CF0, RenderSelectWeaponGui};
 
-void InstallWeaponCycleHudPatches()
+void hud_weapon_cycle_apply_patches()
 {
     RenderSelectWeaponGui_hook.install();
 }
 
-void SetBigWeaponCycleHud(bool is_big)
+void hud_weapon_cycle_set_big(bool is_big)
 {
     g_big_weapon_cycle_hud = is_big;
 }

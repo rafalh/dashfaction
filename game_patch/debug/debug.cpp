@@ -145,7 +145,7 @@ FunHook<void(void*, const void*, unsigned, rf::NwAddr*)> nw_add_packet_to_buffer
 
 #endif // EMULATE_PACKET_LOSS
 
-void DebugApplyPatches()
+void debug_apply_patches()
 {
     // Log error when memory allocation fails
     callnewh_hook.install();
@@ -166,48 +166,48 @@ void DebugApplyPatches()
     nw_add_packet_to_buffer_hook.install();
 #endif
 
-    DebugCmdApplyPatches();
-    DebugUnresponsiveApplyPatches();
+    debug_cmd_apply_patches();
+    debug_unresponsive_apply_patches();
 #ifdef DEBUG_PERF
-    ProfilerInit();
+    profiler_init();
 #endif
 }
 
-void DebugInit()
+void debug_init()
 {
 #if MEMORY_TRACKING
-    mem_stats_cmd.Register();
+    mem_stats_cmd.register_cmd();
 #endif
 
-    DebugCmdInit();
-    DebugUnresponsiveInit();
+    debug_cmd_init();
+    debug_unresponsive_init();
 #ifndef NDEBUG
-    RegisterObjDebugCommands();
+    register_obj_debug_commands();
 #endif
 }
 
-void DebugRender()
+void debug_render()
 {
-    DebugCmdRender();
+    debug_cmd_render();
 }
 
-void DebugRenderUI()
+void debug_render_ui()
 {
-    DebugCmdRenderUI();
+    debug_cmd_render_ui();
 #ifdef DEBUG_PERF
-    ProfilerDrawUI();
+    profiler_draw_ui();
 #endif
 #ifndef NDEBUG
-    RenderObjDebugUI();
+    render_obj_debug_ui();
 #endif
 }
 
-void DebugCleanup()
+void debug_cleanup()
 {
-    DebugUnresponsiveCleanup();
+    debug_unresponsive_cleanup();
 }
 
-void DebugDoUpdate()
+void debug_do_frame()
 {
-    DebugUnresponsiveDoUpdate();
+    debug_unresponsive_do_update();
 }

@@ -39,7 +39,7 @@ void HudRenderTeamScores()
 
     rf::gr_rect(10, clip_h - box_h - 10, box_w, box_h);
     auto game_type = rf::multi_get_game_type();
-    int font_id = HudGetDefaultFont();
+    int font_id = hud_get_default_font();
 
     if (game_type == rf::NG_TYPE_CTF) {
         static float hud_flag_alpha = 255.0f;
@@ -63,12 +63,12 @@ void HudRenderTeamScores()
         auto red_flag_player = g_debug_team_scores_hud ? rf::local_player : rf::multi_ctf_get_red_flag_player();
         if (red_flag_player) {
             auto name = g_debug_team_scores_hud ? "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii" : red_flag_player->name;
-            std::string fitting_name = HudFitString(name, max_miniflag_label_w, nullptr, font_id);
+            std::string fitting_name = hud_fit_string(name, max_miniflag_label_w, nullptr, font_id);
             rf::gr_string(miniflag_label_x, red_miniflag_label_y, fitting_name.c_str(), font_id);
 
             if (red_flag_player == rf::local_player) {
                 rf::gr_set_color_rgba(255, 255, 255, static_cast<int>(hud_flag_alpha));
-                HudScaledBitmap(rf::hud_flag_red_bmh, flag_x, box_y, flag_scale, rf::hud_flag_render_state);
+                hud_scaled_bitmap(rf::hud_flag_red_bmh, flag_x, box_y, flag_scale, rf::hud_flag_render_state);
             }
         }
         else if (rf::multi_ctf_is_red_flag_in_base()) {
@@ -81,12 +81,12 @@ void HudRenderTeamScores()
         auto blue_flag_player = rf::multi_ctf_get_blue_flag_player();
         if (blue_flag_player) {
             auto name = g_debug_team_scores_hud ? "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii" : blue_flag_player->name;
-            std::string fitting_name = HudFitString(name, max_miniflag_label_w, nullptr, font_id);
+            std::string fitting_name = hud_fit_string(name, max_miniflag_label_w, nullptr, font_id);
             rf::gr_string(miniflag_label_x, blue_miniflag_label_y, fitting_name.c_str(), font_id);
 
             if (blue_flag_player == rf::local_player) {
                 rf::gr_set_color_rgba(255, 255, 255, static_cast<int>(hud_flag_alpha));
-                HudScaledBitmap(rf::hud_flag_blue_bmh, flag_x, box_y, flag_scale, rf::hud_flag_render_state);
+                hud_scaled_bitmap(rf::hud_flag_blue_bmh, flag_x, box_y, flag_scale, rf::hud_flag_render_state);
             }
         }
         else if (rf::multi_ctf_is_blue_flag_in_base()) {
@@ -106,10 +106,10 @@ void HudRenderTeamScores()
             else {
                 miniflag_hilight_y = blue_miniflag_y;
             }
-            HudScaledBitmap(rf::hud_miniflag_hilight_bmh, miniflag_x, miniflag_hilight_y, miniflag_scale, rf::hud_flag_render_state);
+            hud_scaled_bitmap(rf::hud_miniflag_hilight_bmh, miniflag_x, miniflag_hilight_y, miniflag_scale, rf::hud_flag_render_state);
         }
-        HudScaledBitmap(rf::hud_miniflag_red_bmh, miniflag_x, red_miniflag_y, miniflag_scale, rf::hud_flag_render_state);
-        HudScaledBitmap(rf::hud_miniflag_blue_bmh, miniflag_x, blue_miniflag_y, miniflag_scale, rf::hud_flag_render_state);
+        hud_scaled_bitmap(rf::hud_miniflag_red_bmh, miniflag_x, red_miniflag_y, miniflag_scale, rf::hud_flag_render_state);
+        hud_scaled_bitmap(rf::hud_miniflag_blue_bmh, miniflag_x, blue_miniflag_y, miniflag_scale, rf::hud_flag_render_state);
     }
 
     int red_score, blue_score;
@@ -139,12 +139,12 @@ void HudRenderTeamScores()
     rf::gr_string(box_x + box_w - 5 - str_w, blue_miniflag_label_y, blue_score_str.c_str(), font_id);
 }
 
-void ApplyTeamScoresHudPatches()
+void hud_team_scores_apply_patches()
 {
     AsmWriter{0x00477790}.jmp(HudRenderTeamScores);
 }
 
-void SetBigTeamScoresHud(bool is_big)
+void hud_team_scores_set_big(bool is_big)
 {
     g_big_team_scores_hud = is_big;
 }

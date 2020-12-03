@@ -34,17 +34,17 @@
 #include <cstddef>
 #include <regex>
 
-void ApplyCutscenePatches();
-void ApplyEventPatches();
-void ApplyGlarePatches();
-void ApplyLimitsPatches();
-void ApplyMainMenuPatches();
-void DoLevelSpecificEventHacks(const char* level_filename);
-void ApplySaveRestorePatches();
-void ApplyWeaponPatches();
-void ApplySoundPatches();
-void ApplyTriggerPatches();
-void RegisterSoundCommands();
+void cutscene_apply_patches();
+void apply_event_patches();
+void glare_patches_patches();
+void apply_limits_patches();
+void apply_main_menu_patches();
+void do_level_specific_event_hacks(const char* level_filename);
+void apply_save_restore_patches();
+void apply_weapon_patches();
+void apply_sound_patches();
+void trigger_apply_patches();
+void register_sound_commands();
 
 struct JoinMpGameData
 {
@@ -58,7 +58,7 @@ std::optional<JoinMpGameData> g_join_mp_game_seq_data;
 
 // Note: this must be called from DLL init function
 // Note: we can't use global variable because that would lead to crash when launcher loads this DLL to check dependencies
-static rf::CmdLineParam& GetUrlCmdLineParam()
+static rf::CmdLineParam& get_url_cmd_line_param()
 {
     static rf::CmdLineParam url_param{"-url", "", true};
     return url_param;
@@ -74,10 +74,10 @@ CodeInjection CriticalError_hide_main_wnd_patch{
     },
 };
 
-FunHook<int(rf::GSolid*, rf::GRoom*)> GeomCachePrepareRoom_hook{
+FunHook<int(rf::GSolid*, rf::GRoom*)> geo_cache_prepare_room_hook{
     0x004F0C00,
     [](rf::GSolid* geom, rf::GRoom* room) {
-        int ret = GeomCachePrepareRoom_hook.call_target(geom, room);
+        int ret = geo_cache_prepare_room_hook.call_target(geom, room);
         std::byte** pp_room_geom = (std::byte**)(reinterpret_cast<std::byte*>(room) + 4);
         std::byte* room_geom = *pp_room_geom;
         if (ret == 0 && room_geom) {
@@ -113,12 +113,12 @@ CodeInjection level_read_data_check_restore_status_patch{
     },
 };
 
-void SetJumpToMultiServerList(bool jump)
+void set_jump_to_multi_server_list(bool jump)
 {
     g_jump_to_multi_server_list = jump;
 }
 
-void StartJoinMpGameSequence(const rf::NwAddr& addr, const std::string& password)
+void start_join_multi_game_sequence(const rf::NwAddr& addr, const std::string& password)
 {
     g_jump_to_multi_server_list = true;
     g_join_mp_game_seq_data = {JoinMpGameData{addr, password}};
@@ -139,7 +139,7 @@ FunHook<void(int, int)> rf_init_state_hook{
 
         if (state == rf::GS_MAIN_MENU && g_jump_to_multi_server_list) {
             xlog::trace("jump to mp menu!");
-            SetSoundEnabled(false);
+            set_sound_enabled(false);
             AddrCaller{0x00443C20}.c_call(); // OpenMultiMenu
             old_state = state;
             state = rf::gameseq_process_deferred_change();
@@ -153,7 +153,7 @@ FunHook<void(int, int)> rf_init_state_hook{
         }
         if (state == rf::GS_MULTI_SERVER_LIST && g_jump_to_multi_server_list) {
             g_jump_to_multi_server_list = false;
-            SetSoundEnabled(true);
+            set_sound_enabled(true);
 
             if (g_join_mp_game_seq_data) {
                 auto MultiSetCurrentServerAddr = addr_as_ref<void(const rf::NwAddr& addr)>(0x0044B380);
@@ -168,7 +168,7 @@ FunHook<void(int, int)> rf_init_state_hook{
         }
 
         if (state == rf::GS_MULTI_LIMBO) {
-            ServerOnLimboStateEnter();
+            server_on_limbo_state_enter();
         }
     },
 };
@@ -379,7 +379,7 @@ CallHook<void(int)> play_bik_file_vram_leak_fix{
     },
 };
 
-int DebugPrintHook(char* buf, const char *fmt, ...) {
+int debug_print_hook(char* buf, const char *fmt, ...) {
     va_list vl;
     va_start(vl, fmt);
     int ret = vsprintf(buf, fmt, vl);
@@ -390,7 +390,7 @@ int DebugPrintHook(char* buf, const char *fmt, ...) {
 
 CallHook<int(char*, const char*)> skeleton_pagein_debug_print_patch{
     0x0053AA73,
-    reinterpret_cast<int(*)(char*, const char*)>(DebugPrintHook),
+    reinterpret_cast<int(*)(char*, const char*)>(debug_print_hook),
 };
 
 CodeInjection level_load_items_crash_fix{
@@ -446,7 +446,7 @@ CodeInjection explosion_crash_fix{
     },
 };
 
-void __fastcall PlayerExecuteAction_Timestamp_New(rf::Timestamp* fire_wait_timer, int, int value)
+void __fastcall player_execute_action_timestamp_set_new(rf::Timestamp* fire_wait_timer, int, int value)
 {
     if (!fire_wait_timer->valid() || fire_wait_timer->time_until() < value) {
         fire_wait_timer->set(value);
@@ -455,7 +455,7 @@ void __fastcall PlayerExecuteAction_Timestamp_New(rf::Timestamp* fire_wait_timer
 
 CallHook<void __fastcall(rf::Timestamp*, int, int)> player_execute_action_timestamp_set_fire_wait_patch{
     {0x004A62C2u, 0x004A6325u},
-    &PlayerExecuteAction_Timestamp_New,
+    &player_execute_action_timestamp_set_new,
 };
 
 FunHook<void(rf::EntityFireInfo&, int)> entity_fire_switch_parent_to_corpse_hook{
@@ -503,13 +503,13 @@ CodeInjection vfile_read_stack_corruption_fix{
     },
 };
 
-void MiscAfterLevelLoad(const char* level_filename)
+void misc_after_level_load(const char* level_filename)
 {
-    DoLevelSpecificEventHacks(level_filename);
-    ClearTriggersForLateJoiners();
+    do_level_specific_event_hacks(level_filename);
+    clear_triggers_for_late_joiners();
 }
 
-void MiscInit()
+void misc_init()
 {
     // Window title (client and server)
     write_mem_ptr(0x004B2790, PRODUCT_NAME);
@@ -546,7 +546,7 @@ void MiscInit()
     write_mem<u8>(0x0054A3C0 + 2, 16);
 
     // Fix crash in geometry rendering
-    GeomCachePrepareRoom_hook.install();
+    geo_cache_prepare_room_hook.install();
 
     // Remove Sleep calls in TimerInit
     AsmWriter(0x00504A67, 0x00504A82).nop();
@@ -673,28 +673,28 @@ void MiscInit()
     vfile_read_stack_corruption_fix.install();
 
     // Init cmd line param
-    GetUrlCmdLineParam();
+    get_url_cmd_line_param();
 
     // Apply patches from other files
-    ApplyEventPatches();
-    ApplyCutscenePatches();
-    ApplyGlarePatches();
-    ApplyLimitsPatches();
-    ApplyMainMenuPatches();
-    ApplySaveRestorePatches();
-    ApplySoundPatches();
-    ApplyTriggerPatches();
-    ApplyWeaponPatches();
-    RegisterSoundCommands();
+    apply_event_patches();
+    cutscene_apply_patches();
+    glare_patches_patches();
+    apply_limits_patches();
+    apply_main_menu_patches();
+    apply_save_restore_patches();
+    apply_sound_patches();
+    trigger_apply_patches();
+    apply_weapon_patches();
+    register_sound_commands();
 }
 
-void HandleUrlParam()
+void handle_url_param()
 {
-    if (!GetUrlCmdLineParam().found()) {
+    if (!get_url_cmd_line_param().found()) {
         return;
     }
 
-    auto url = GetUrlCmdLineParam().get_arg();
+    auto url = get_url_cmd_line_param().get_arg();
     std::regex e("^rf://([\\w\\.-]+):(\\d+)/?(?:\\?password=(.*))?$");
     std::cmatch cm;
     if (!std::regex_match(url, cm, e)) {
@@ -721,10 +721,10 @@ void HandleUrlParam()
     auto host = ntohl(reinterpret_cast<in_addr *>(hp->h_addr_list[0])->S_un.S_addr);
 
     rf::NwAddr addr{host, port};
-    StartJoinMpGameSequence(addr, password);
+    start_join_multi_game_sequence(addr, password);
 }
 
-void MiscAfterFullGameInit()
+void misc_after_full_game_init()
 {
-    HandleUrlParam();
+    handle_url_param();
 }

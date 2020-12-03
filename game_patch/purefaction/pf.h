@@ -7,4 +7,4 @@ namespace rf
     struct NwAddr;
 }
 
-void ProcessPfPacket(const void* data, int len, const rf::NwAddr& addr, const rf::Player* player);
+void process_pf_packet(const void* data, int len, const rf::NwAddr& addr, const rf::Player* player);

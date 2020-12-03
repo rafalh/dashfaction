@@ -45,7 +45,7 @@ public:
 
     void Print(const char* name, const rf::Vector3& val)
     {
-        auto str = StringFormat("< %.2f, %.2f, %.2f >", val.x, val.y, val.z);
+        auto str = string_format("< %.2f, %.2f, %.2f >", val.x, val.y, val.z);
         Print(name, str.c_str());
     }
 
@@ -74,15 +74,15 @@ private:
     }
 };
 
-void DebugCmdApplyPatches();
-void DebugCmdInit();
-void DebugCmdRender();
-void DebugCmdRenderUI();
-void ProfilerInit();
-void ProfilerDrawUI();
-void RegisterObjDebugCommands();
-void RenderObjDebugUI();
-void DebugUnresponsiveApplyPatches();
-void DebugUnresponsiveInit();
-void DebugUnresponsiveCleanup();
-void DebugUnresponsiveDoUpdate();
+void debug_cmd_apply_patches();
+void debug_cmd_init();
+void debug_cmd_render();
+void debug_cmd_render_ui();
+void profiler_init();
+void profiler_draw_ui();
+void register_obj_debug_commands();
+void render_obj_debug_ui();
+void debug_unresponsive_apply_patches();
+void debug_unresponsive_init();
+void debug_unresponsive_cleanup();
+void debug_unresponsive_do_update();

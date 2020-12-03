@@ -196,7 +196,7 @@ static const WinMsgNameMapping g_all_messages[] =
     { 0, nullptr, }    // end of message list
 };
 
-const char *GetWndMsgName(UINT msg)
+const char *get_win_msg_name(UINT msg)
 {
     for (auto& mapping : g_all_messages) {
         if (mapping.msg_id == msg) {

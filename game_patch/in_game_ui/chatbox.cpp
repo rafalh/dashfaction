@@ -50,7 +50,7 @@ void ChatRender()
         fade_out = rf::chat_fade_out_timer.time_until() / 750.0f;
     }
 
-    int chatbox_font = HudGetDefaultFont();
+    int chatbox_font = hud_get_default_font();
     int clip_w = rf::gr_clip_width();
     int font_h = rf::gr_get_font_height(chatbox_font);
     int border = g_big_chatbox ? 3 : 2;
@@ -63,7 +63,7 @@ void ChatRender()
 
     int border_alpha = rf::scoreboard_visible ? 255 : chatbox_border_alpha;
     rf::gr_set_color_rgba(255, 255, 255, static_cast<int>(border_alpha * fade_out));
-    HudRectBorder(box_x, box_y, box_w, box_h, border);
+    hud_rect_border(box_x, box_y, box_w, box_h, border);
     int bg_alpha = rf::scoreboard_visible ? 255 : chatbox_bg_alpha;
     rf::gr_set_color_rgba(0, 0, 0, static_cast<int>(bg_alpha * fade_out));
     rf::gr_rect(box_x + border, box_y + border, content_w, content_h);
@@ -124,7 +124,7 @@ void ChatboxInputRender(rf::String::Pod label_pod, rf::String::Pod msg_pod)
         return;
     }
 
-    int chatbox_font = HudGetDefaultFont();
+    int chatbox_font = hud_get_default_font();
     int clip_w = rf::gr_clip_width();
     int font_h = rf::gr_get_font_height(chatbox_font); // 12
     int border = g_big_chatbox ? 3 : 2;
@@ -149,7 +149,7 @@ void ChatboxInputRender(rf::String::Pod label_pod, rf::String::Pod msg_pod)
     }
 
     rf::gr_set_color_rgba(255, 255, 255, rf::scoreboard_visible ? 255 : chatbox_border_alpha);
-    HudRectBorder(input_box_x, input_box_y, box_w, input_box_h, 2);
+    hud_rect_border(input_box_x, input_box_y, box_w, input_box_h, 2);
 
     rf::gr_set_color_rgba(0, 0, 0, rf::scoreboard_visible ? 255 : chatbox_bg_alpha);
     rf::gr_rect(input_box_x + border, input_box_y + border, content_w, input_box_content_h);
@@ -179,7 +179,7 @@ void ChatboxInputRender(rf::String::Pod label_pod, rf::String::Pod msg_pod)
 
 FunHook<void(rf::String::Pod, rf::String::Pod)> ChatboxInputRender_hook{0x00478CA0, ChatboxInputRender};
 
-void InstallChatboxPatches()
+void multi_hud_chat_apply_patches()
 {
     // Fix game beeping every frame if chat input buffer is full
     multi_chat_say_add_char_hook.install();
@@ -195,7 +195,7 @@ void InstallChatboxPatches()
     ChatboxInputRender_hook.install();
 }
 
-void SetBigChatbox(bool is_big)
+void multi_hud_chat_set_big(bool is_big)
 {
     g_big_chatbox = is_big;
 }

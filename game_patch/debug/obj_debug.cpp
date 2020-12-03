@@ -205,7 +205,7 @@ ConsoleCommand2 dbg_ai_pause_cmd{
     },
 };
 
-const char* GetObjTypeName(rf::Object& obj)
+const char* get_obj_type_name(rf::Object& obj)
 {
     switch (obj.type) {
         case rf::OT_ENTITY: return "entity";
@@ -223,7 +223,7 @@ const char* GetObjTypeName(rf::Object& obj)
     }
 }
 
-const char* GetObjClassName(rf::Object& obj)
+const char* get_obj_class_name(rf::Object& obj)
 {
     if (obj.type == rf::OT_ENTITY)
         return reinterpret_cast<rf::Entity&>(obj).info->name.c_str();
@@ -231,7 +231,7 @@ const char* GetObjClassName(rf::Object& obj)
         return "-";
 }
 
-const char* GetAiModeName(rf::AiMode ai_mode)
+const char* get_ai_mode_name(rf::AiMode ai_mode)
 {
     switch (ai_mode) {
         case rf::AIM_NONE: return "NONE";
@@ -256,7 +256,7 @@ const char* GetAiModeName(rf::AiMode ai_mode)
     }
 }
 
-const char* GetAiAttackStyleName(rf::AiAttackStyle attack_style)
+const char* get_ai_attack_style_name(rf::AiAttackStyle attack_style)
 {
     switch (attack_style) {
         case rf::AIAS_DEFAULT: return "DEFAULT";
@@ -267,7 +267,7 @@ const char* GetAiAttackStyleName(rf::AiAttackStyle attack_style)
     }
 }
 
-const char* GetFriendlinessName(rf::Friendliness friendliness)
+const char* get_friendliness_name(rf::Friendliness friendliness)
 {
     switch (friendliness) {
         case rf::UNFRIENDLY: return "UNFRIENDLY";
@@ -278,18 +278,18 @@ const char* GetFriendlinessName(rf::Friendliness friendliness)
     }
 }
 
-void RegisterObjDebugCommands()
+void register_obj_debug_commands()
 {
-    dbg_target_uid_cmd.Register();
-    dbg_target_closest_cmd.Register();
-    dbg_target_reticle_cmd.Register();
-    dbg_entity_state_cmd.Register();
-    dbg_entity_action_cmd.Register();
-    dbg_spin_cmd.Register();
-    dbg_ai_pause_cmd.Register();
+    dbg_target_uid_cmd.register_cmd();
+    dbg_target_closest_cmd.register_cmd();
+    dbg_target_reticle_cmd.register_cmd();
+    dbg_entity_state_cmd.register_cmd();
+    dbg_entity_action_cmd.register_cmd();
+    dbg_spin_cmd.register_cmd();
+    dbg_ai_pause_cmd.register_cmd();
 }
 
-void RenderObjDebugUI()
+void render_obj_debug_ui()
 {
     auto object = rf::obj_from_handle(rf::target_obj_handle);
     if (!object) {
@@ -310,8 +310,8 @@ void RenderObjDebugUI()
 
     dbg_hud.Print("name", object->name.c_str());
     dbg_hud.Printf("uid", "%d", object->uid);
-    dbg_hud.Print("type", GetObjTypeName(*object));
-    dbg_hud.Print("class", GetObjClassName(*object));
+    dbg_hud.Print("type", get_obj_type_name(*object));
+    dbg_hud.Print("class", get_obj_class_name(*object));
     dbg_hud.Printf("dist", "%.3f", (cam_pos - object->pos).len());
     dbg_hud.Printf("atck_dist", "%.0f", entity ? rf::ai_get_attack_range(entity->ai) : 0.0f);
     dbg_hud.Printf("life", "%.0f", object->life);
@@ -320,13 +320,13 @@ void RenderObjDebugUI()
     if (entity) {
         dbg_hud.Print("eye_pos", entity->view_pos);
         dbg_hud.Printf("envsuit", "%.0f", object->armor);
-        dbg_hud.Print("mode", GetAiModeName(entity->ai.mode));
+        dbg_hud.Print("mode", get_ai_mode_name(entity->ai.mode));
         if (entity->ai.submode)
             dbg_hud.Printf("submode", "%d", entity->ai.submode);
         else
             dbg_hud.Print("submode", "NONE");
-        dbg_hud.Print("style", GetAiAttackStyleName(entity->ai.ai_attack_style));
-        dbg_hud.Print("friend", GetFriendlinessName(object->friendliness));
+        dbg_hud.Print("style", get_ai_attack_style_name(entity->ai.ai_attack_style));
+        dbg_hud.Print("friend", get_friendliness_name(object->friendliness));
         auto target_obj = rf::obj_from_handle(entity->ai.target_obj_handle);
         dbg_hud.Print("target", target_obj ? target_obj->name.c_str() : "none");
         dbg_hud.Printf("accel", "%.1f", entity->info->acceleration);

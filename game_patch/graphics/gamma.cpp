@@ -13,7 +13,7 @@
 static D3DGAMMARAMP g_gamma_ramp;
 static bool g_gamma_ramp_initialized = false;
 
-static bool SetGammaRampViaD3D(D3DGAMMARAMP* gamma_ramp)
+static bool set_gamma_ramp_via_d3d(D3DGAMMARAMP* gamma_ramp)
 {
     // Avoid crash before D3D is initialized or in dedicated server mode
     if (!rf::gr_d3d_device) {
@@ -31,7 +31,7 @@ static bool SetGammaRampViaD3D(D3DGAMMARAMP* gamma_ramp)
     return true;
 }
 
-static bool SetGammaRampViaGDI(D3DGAMMARAMP* gamma_ramp)
+static bool set_gamma_ramp_via_gdi(D3DGAMMARAMP* gamma_ramp)
 {
     //HDC hdc = GetDC(rf::main_wnd);
     HDC hdc = CreateDCA("DISPLAY", nullptr, nullptr, nullptr);
@@ -62,15 +62,15 @@ static bool SetGammaRampViaGDI(D3DGAMMARAMP* gamma_ramp)
     return true;
 }
 
-static void SetGammaRamp(D3DGAMMARAMP* gamma_ramp)
+static void set_gamma_ramp(D3DGAMMARAMP* gamma_ramp)
 {
-    bool d3d_result = SetGammaRampViaD3D(gamma_ramp);
+    bool d3d_result = set_gamma_ramp_via_d3d(gamma_ramp);
     if (!d3d_result) {
-        SetGammaRampViaGDI(gamma_ramp);
+        set_gamma_ramp_via_gdi(gamma_ramp);
     }
 }
 
-static void GrUpdateGammaRampHook()
+static void gr_update_gamma_ramp_hook()
 {
     for (unsigned i = 0; i < 256; ++i) {
         unsigned val = rf::gr_gamma_ramp[i] << 8;
@@ -80,10 +80,10 @@ static void GrUpdateGammaRampHook()
     }
 
     g_gamma_ramp_initialized = true;
-    SetGammaRamp(&g_gamma_ramp);
+    set_gamma_ramp(&g_gamma_ramp);
 }
 
-void ResetGammaRamp()
+void reset_gamma_ramp()
 {
     D3DGAMMARAMP gamma_ramp;
 
@@ -94,10 +94,10 @@ void ResetGammaRamp()
         gamma_ramp.red[i] = gamma_ramp.green[i] = gamma_ramp.blue[i] = i << 8;
     }
 
-    SetGammaRamp(&gamma_ramp);
+    set_gamma_ramp(&gamma_ramp);
 }
 
-static void GammaMsgHandler(UINT msg, WPARAM w_param, [[maybe_unused]] LPARAM l_param)
+static void gamma_msg_handler(UINT msg, WPARAM w_param, [[maybe_unused]] LPARAM l_param)
 {
     switch (msg) {
     case WM_ACTIVATE:
@@ -105,17 +105,17 @@ static void GammaMsgHandler(UINT msg, WPARAM w_param, [[maybe_unused]] LPARAM l_
         xlog::trace("WM_ACTIVATE %x", w_param);
         if (g_gamma_ramp_initialized) {
             if (w_param)
-                SetGammaRamp(&g_gamma_ramp);
+                set_gamma_ramp(&g_gamma_ramp);
             else
-                ResetGammaRamp();
+                reset_gamma_ramp();
         }
     }
 }
 
-void InitGamma()
+void init_gamma()
 {
     /* Gamma fix */
-    AsmWriter(0x00547A60).jmp(GrUpdateGammaRampHook);
+    AsmWriter(0x00547A60).jmp(gr_update_gamma_ramp_hook);
 
-    rf::os_add_msg_handler(GammaMsgHandler);
+    rf::os_add_msg_handler(gamma_msg_handler);
 }

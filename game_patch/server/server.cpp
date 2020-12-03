@@ -37,9 +37,9 @@ const char* g_rcon_cmd_whitelist[] = {
 ServerAdditionalConfig g_additional_server_config;
 std::string g_prev_level;
 
-void ParseVoteConfig(const char* vote_name, VoteConfig& config, rf::Parser& parser)
+void parse_vote_config(const char* vote_name, VoteConfig& config, rf::Parser& parser)
 {
-    std::string vote_option_name = StringFormat("$DF %s:", vote_name);
+    std::string vote_option_name = string_format("$DF %s:", vote_name);
     if (parser.parse_optional(vote_option_name.c_str())) {
         config.enabled = parser.parse_bool();
         rf::console_printf("DF %s: %s", vote_name, config.enabled ? "true" : "false");
@@ -58,14 +58,14 @@ void ParseVoteConfig(const char* vote_name, VoteConfig& config, rf::Parser& pars
     }
 }
 
-void LoadAdditionalServerConfig(rf::Parser& parser)
+void load_additional_server_config(rf::Parser& parser)
 {
-    ParseVoteConfig("Vote Kick", g_additional_server_config.vote_kick, parser);
-    ParseVoteConfig("Vote Level", g_additional_server_config.vote_level, parser);
-    ParseVoteConfig("Vote Extend", g_additional_server_config.vote_extend, parser);
-    ParseVoteConfig("Vote Restart", g_additional_server_config.vote_restart, parser);
-    ParseVoteConfig("Vote Next", g_additional_server_config.vote_next, parser);
-    ParseVoteConfig("Vote Previous", g_additional_server_config.vote_previous, parser);
+    parse_vote_config("Vote Kick", g_additional_server_config.vote_kick, parser);
+    parse_vote_config("Vote Level", g_additional_server_config.vote_level, parser);
+    parse_vote_config("Vote Extend", g_additional_server_config.vote_extend, parser);
+    parse_vote_config("Vote Restart", g_additional_server_config.vote_restart, parser);
+    parse_vote_config("Vote Next", g_additional_server_config.vote_next, parser);
+    parse_vote_config("Vote Previous", g_additional_server_config.vote_previous, parser);
     if (parser.parse_optional("$DF Spawn Protection Duration:")) {
         g_additional_server_config.spawn_protection_duration_ms = parser.parse_uint();
     }
@@ -137,7 +137,7 @@ CodeInjection dedicated_server_load_config_patch{
     0x0046E216,
     [](auto& regs) {
         auto& parser = *reinterpret_cast<rf::Parser*>(regs.esp - 4 + 0x4C0 - 0x470);
-        LoadAdditionalServerConfig(parser);
+        load_additional_server_config(parser);
 
         // Insert server name in window title when hosting dedicated server
         std::string wnd_name;
@@ -147,7 +147,7 @@ CodeInjection dedicated_server_load_config_patch{
     },
 };
 
-std::pair<std::string_view, std::string_view> StripBySpace(std::string_view str)
+std::pair<std::string_view, std::string_view> strip_by_space(std::string_view str)
 {
     auto space_pos = str.find(' ');
     if (space_pos == std::string_view::npos)
@@ -156,29 +156,29 @@ std::pair<std::string_view, std::string_view> StripBySpace(std::string_view str)
         return {str.substr(0, space_pos), str.substr(space_pos + 1)};
 }
 
-void HandleNextMapCommand(rf::Player* player)
+void handle_next_map_command(rf::Player* player)
 {
     int next_idx = (rf::netgame.current_level_index + 1) % rf::netgame.levels.size();
-    auto msg = StringFormat("Next level: %s", rf::netgame.levels[next_idx].c_str());
-    SendChatLinePacket(msg.c_str(), player);
+    auto msg = string_format("Next level: %s", rf::netgame.levels[next_idx].c_str());
+    send_chat_line_packet(msg.c_str(), player);
 }
 
-void HandleSaveCommand(rf::Player* player, std::string_view save_name)
+void handle_save_command(rf::Player* player, std::string_view save_name)
 {
-    auto& pdata = GetPlayerAdditionalData(player);
+    auto& pdata = get_player_additional_data(player);
     auto entity = rf::entity_from_handle(player->entity_handle);
     if (entity && g_additional_server_config.saving_enabled) {
         PlayerNetGameSaveData save_data;
         save_data.pos = entity->pos;
         save_data.orient = entity->orient;
         pdata.saves.insert_or_assign(std::string{save_name}, save_data);
-        SendChatLinePacket("Your position has been saved!", player);
+        send_chat_line_packet("Your position has been saved!", player);
     }
 }
 
-void HandleLoadCommand(rf::Player* player, std::string_view save_name)
+void handle_load_command(rf::Player* player, std::string_view save_name)
 {
-    auto& pdata = GetPlayerAdditionalData(player);
+    auto& pdata = get_player_additional_data(player);
     auto entity = rf::entity_from_handle(player->entity_handle);
     if (entity && g_additional_server_config.saving_enabled && !rf::entity_is_dying(entity)) {
         auto it = pdata.saves.find(std::string{save_name});
@@ -194,10 +194,10 @@ void HandleLoadCommand(rf::Player* player, std::string_view save_name)
             rf::send_entity_create_packet_to_all(entity);
             pdata.last_teleport_timestamp.set(300);
             pdata.last_teleport_pos = save_data.pos;
-            SendChatLinePacket("Your position has been restored!", player);
+            send_chat_line_packet("Your position has been restored!", player);
         }
         else {
-            SendChatLinePacket("You do not have any position saved!", player);
+            send_chat_line_packet("You do not have any position saved!", player);
         }
     }
 }
@@ -211,7 +211,7 @@ CodeInjection process_obj_update_set_pos_injection{
         auto& entity = addr_as_ref<rf::Entity>(regs.edi);
         auto& pos = addr_as_ref<rf::Vector3>(regs.esp + 0x9C - 0x60);
         auto player = rf::player_from_entity_handle(entity.handle);
-        auto& pdata = GetPlayerAdditionalData(player);
+        auto& pdata = get_player_additional_data(player);
         if (pdata.last_teleport_timestamp.valid()) {
             float dist = (pos - pdata.last_teleport_pos).len();
             if (!pdata.last_teleport_timestamp.elapsed() && dist > 1.0f) {
@@ -227,25 +227,25 @@ CodeInjection process_obj_update_set_pos_injection{
     },
 };
 
-bool HandleServerChatCommand(std::string_view server_command, rf::Player* sender)
+bool handle_server_chat_command(std::string_view server_command, rf::Player* sender)
 {
-    auto [cmd_name, cmd_arg] = StripBySpace(server_command);
+    auto [cmd_name, cmd_arg] = strip_by_space(server_command);
 
     if (cmd_name == "info") {
-        SendChatLinePacket("Server powered by Dash Faction", sender);
+        send_chat_line_packet("Server powered by Dash Faction", sender);
     }
     else if (cmd_name == "vote") {
-        auto [vote_name, vote_arg] = StripBySpace(cmd_arg);
-        HandleVoteCommand(vote_name, vote_arg, sender);
+        auto [vote_name, vote_arg] = strip_by_space(cmd_arg);
+        handle_vote_command(vote_name, vote_arg, sender);
     }
     else if (cmd_name == "nextmap" || cmd_name == "nextlevel") {
-        HandleNextMapCommand(sender);
+        handle_next_map_command(sender);
     }
     else if (cmd_name == "save") {
-        HandleSaveCommand(sender, cmd_arg);
+        handle_save_command(sender, cmd_arg);
     }
     else if (cmd_name == "load") {
-        HandleLoadCommand(sender, cmd_arg);
+        handle_load_command(sender, cmd_arg);
     }
     else {
         return false;
@@ -253,19 +253,19 @@ bool HandleServerChatCommand(std::string_view server_command, rf::Player* sender
     return true;
 }
 
-bool CheckServerChatCommand(const char* msg, rf::Player* sender)
+bool check_server_chat_command(const char* msg, rf::Player* sender)
 {
     if (msg[0] == '/') {
-        if (!HandleServerChatCommand(msg + 1, sender))
-            SendChatLinePacket("Unrecognized server command!", sender);
+        if (!handle_server_chat_command(msg + 1, sender))
+            send_chat_line_packet("Unrecognized server command!", sender);
         return true;
     }
 
-    auto [cmd, rest] = StripBySpace(msg);
+    auto [cmd, rest] = strip_by_space(msg);
     if (cmd == "server")
-        return HandleServerChatCommand(rest, sender);
+        return handle_server_chat_command(rest, sender);
     else if (cmd == "vote")
-        return HandleServerChatCommand(msg, sender);
+        return handle_server_chat_command(msg, sender);
     else
         return false;
 }
@@ -283,17 +283,17 @@ CodeInjection detect_browser_player_patch{
         rf::Player* player = reinterpret_cast<rf::Player*>(regs.esi);
         int conn_rate = regs.eax;
         if (conn_rate == 1) {
-            auto& pdata = GetPlayerAdditionalData(player);
+            auto& pdata = get_player_additional_data(player);
             pdata.is_browser = true;
         }
     },
 };
 
-void SendHitSoundPacket(rf::Player* target)
+void send_hit_sound_packet(rf::Player* target)
 {
     // rate limiting - max 5 per second
     int now = rf::timer_get(1000);
-    auto& pdata = GetPlayerAdditionalData(target);
+    auto& pdata = get_player_additional_data(target);
     if (now - pdata.last_hitsound_sent_ms < 1000 / g_additional_server_config.hit_sounds.rate_limit) {
         return;
     }
@@ -323,7 +323,7 @@ FunHook<float(rf::Entity*, float, int, int, int)> entity_take_damage_hook{
 
         float dmg = entity_take_damage_hook.call_target(entity, damage, responsible_entity_handle, dmg_type, responsible_entity_uid);
         if (g_additional_server_config.hit_sounds.enabled && responsible_player) {
-            SendHitSoundPacket(responsible_player);
+            send_hit_sound_packet(responsible_player);
         }
 
         return dmg;
@@ -367,10 +367,10 @@ FunHook<bool (const char*, int)> multi_is_level_matching_game_type_hook{
     0x00445050,
     [](const char *filename, int ng_type) {
         if (ng_type == RF_GT_CTF) {
-            return StringStartsWithIgnoreCase(filename, "ctf") || StringStartsWithIgnoreCase(filename, "pctf");
+            return string_starts_with_ignore_case(filename, "ctf") || string_starts_with_ignore_case(filename, "pctf");
         }
         else {
-            return StringStartsWithIgnoreCase(filename, "dm") || StringStartsWithIgnoreCase(filename, "pdm");
+            return string_starts_with_ignore_case(filename, "dm") || string_starts_with_ignore_case(filename, "pdm");
         }
     },
 };
@@ -475,7 +475,7 @@ FunHook<void(rf::Player*)> multi_spawn_player_server_side_hook{
     },
 };
 
-void ServerInit()
+void server_init()
 {
     // Override rcon command whitelist
     write_mem_ptr(0x0046C794 + 1, g_rcon_cmd_whitelist);
@@ -505,11 +505,11 @@ void ServerInit()
     spawn_player_sync_ammo_hook.install();
 
 #if SERVER_WIN32_CONSOLE // win32 console
-    InitWin32ServerConsole();
+    init_win32_server_console();
 #endif
 
-    InitLazyban();
-    InitServerCommands();
+    init_lazy_ban();
+    init_server_commands();
 
     // Remove level prefix restriction (dm/ctf) for 'level' command and dedicated_server.txt
     AsmWriter(0x004350FE).nop(2);
@@ -541,34 +541,34 @@ void ServerInit()
     multi_spawn_player_server_side_hook.install();
 }
 
-void ServerCleanup()
+void server_cleanup()
 {
 #if SERVER_WIN32_CONSOLE // win32 console
-    CleanupWin32ServerConsole();
+    cleanup_win32_server_console();
 #endif
 }
 
-void ServerDoFrame()
+void server_do_frame()
 {
-    ServerVoteDoFrame();
-    ProcessDelayedKicks();
+    server_vote_do_frame();
+    process_delayed_kicks();
 }
 
-void ServerOnLimboStateEnter()
+void server_on_limbo_state_enter()
 {
     g_prev_level = rf::level.filename.c_str();
-    ServerVoteOnLimboStateEnter();
+    server_vote_on_limbo_state_enter();
 
     // Clear save data for all players
     auto player_list = SinglyLinkedList{rf::player_list};
     for (auto& player : player_list) {
-        auto& pdata = GetPlayerAdditionalData(&player);
+        auto& pdata = get_player_additional_data(&player);
         pdata.saves.clear();
         pdata.last_teleport_timestamp.invalidate();
     }
 }
 
-bool ServerIsSavingEnabled()
+bool server_is_saving_enabled()
 {
     return g_additional_server_config.saving_enabled;
 }

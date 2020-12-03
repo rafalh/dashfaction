@@ -15,7 +15,7 @@ constexpr uint8_t TRIGGER_TELEPORT = 0x8;
 rf::Player* g_trigger_solo_player = nullptr;
 std::vector<int> g_triggers_uids_for_late_joiners;
 
-void SendTriggerActivatePacket(rf::Player* player, int trigger_uid, int32_t entity_handle)
+void send_trigger_activate_packet(rf::Player* player, int trigger_uid, int32_t entity_handle)
 {
     RF_TriggerActivatePacket packet;
     packet.header.type = RF_GPT_TRIGGER_ACTIVATE;
@@ -29,7 +29,7 @@ FunHook<void(int, int)> send_trigger_activate_packet_to_all_players_hook{
     0x00483190,
     [](int trigger_uid, int entity_handle) {
         if (g_trigger_solo_player)
-            SendTriggerActivatePacket(g_trigger_solo_player, trigger_uid, entity_handle);
+            send_trigger_activate_packet(g_trigger_solo_player, trigger_uid, entity_handle);
         else
             send_trigger_activate_packet_to_all_players_hook.call_target(trigger_uid, entity_handle);
     },
@@ -53,7 +53,7 @@ FunHook<void(rf::Trigger*, int32_t, bool)> trigger_activate_hook{
         if (rf::is_multi && rf::is_server && is_solo_trigger && player) {
             // rf::console_printf("Solo/Teleport trigger activated %s", trigger_name);
             if (player != rf::local_player) {
-                SendTriggerActivatePacket(player, trigger->uid, h_entity);
+                send_trigger_activate_packet(player, trigger->uid, h_entity);
                 return;
             }
             else {
@@ -85,15 +85,15 @@ CodeInjection trigger_check_activation_patch{
     },
 };
 
-void ActivateTriggersForLateJoiner(rf::Player* player)
+void activate_triggers_for_late_joiners(rf::Player* player)
 {
     for (auto trigger_uid : g_triggers_uids_for_late_joiners) {
         xlog::debug("Activating trigger %d for late joiner %s", trigger_uid, player->name.c_str());
-        SendTriggerActivatePacket(player, trigger_uid, -1);
+        send_trigger_activate_packet(player, trigger_uid, -1);
     }
 }
 
-void ClearTriggersForLateJoiners()
+void clear_triggers_for_late_joiners()
 {
     g_triggers_uids_for_late_joiners.clear();
 }
@@ -102,11 +102,11 @@ CodeInjection send_state_info_injection{
     0x0048186F,
     [](auto& regs) {
         auto player = reinterpret_cast<rf::Player*>(regs.edi);
-        ActivateTriggersForLateJoiner(player);
+        activate_triggers_for_late_joiners(player);
     },
 };
 
-void ApplyTriggerPatches()
+void trigger_apply_patches()
 {
     // Solo/Teleport triggers handling + filtering by team ID
     trigger_activate_hook.install();

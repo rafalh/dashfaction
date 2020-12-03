@@ -28,7 +28,7 @@
 static float g_gr_clipped_geom_offset_x = -0.5;
 static float g_gr_clipped_geom_offset_y = -0.5;
 
-static void SetTextureMinMagFilterInCode(D3DTEXTUREFILTERTYPE filter_type0, D3DTEXTUREFILTERTYPE filter_type1)
+static void set_texture_min_mag_filter_in_code(D3DTEXTUREFILTERTYPE filter_type0, D3DTEXTUREFILTERTYPE filter_type1)
 {
     // clang-format off
     uintptr_t addresses_tex0[] = {
@@ -98,12 +98,12 @@ CodeInjection gr_d3d_init_error_patch{
     0x00545CBD,
     [](auto& regs) {
         auto hr = static_cast<HRESULT>(regs.eax);
-        xlog::error("D3D CreateDevice failed (hr 0x%lX - %s)", hr, getDxErrorStr(hr));
+        xlog::error("D3D CreateDevice failed (hr 0x%lX - %s)", hr, get_d3d_error_str(hr));
 
-        auto text = StringFormat("Failed to create Direct3D device object - error 0x%lX (%s).\n"
+        auto text = string_format("Failed to create Direct3D device object - error 0x%lX (%s).\n"
                                  "A critical error has occurred and the program cannot continue.\n"
                                  "Press OK to exit the program",
-                                 hr, getDxErrorStr(hr));
+                                 hr, get_d3d_error_str(hr));
 
         hr = rf::gr_d3d->CheckDeviceType(rf::gr_adapter_idx, D3DDEVTYPE_HAL, rf::gr_d3d_pp.BackBufferFormat,
             rf::gr_d3d_pp.BackBufferFormat, rf::gr_d3d_pp.Windowed);
@@ -136,7 +136,7 @@ CodeInjection gr_zbuffer_clear_fix_rect{
     },
 };
 
-D3DFORMAT DetermineDepthBufferFormat(D3DFORMAT adapter_format)
+D3DFORMAT determine_depth_buffer_format(D3DFORMAT adapter_format)
 {
     D3DFORMAT formats_to_check[] = {D3DFMT_D24X8, D3DFMT_D24S8, D3DFMT_D24X4S4, D3DFMT_D32, D3DFMT_D16, D3DFMT_D15S1};
     for (auto depth_fmt : formats_to_check) {
@@ -190,9 +190,9 @@ CodeInjection update_pp_hook{
         use_glorad_detail_map = true;
 
         // Override depth format to avoid card specific hackfixes that makes it different on Nvidia and AMD
-        rf::gr_d3d_pp.AutoDepthStencilFormat = DetermineDepthBufferFormat(format);
+        rf::gr_d3d_pp.AutoDepthStencilFormat = determine_depth_buffer_format(format);
 
-        InitSupportedTextureFormats();
+        init_supported_texture_formats();
     },
 };
 
@@ -262,21 +262,21 @@ CallHook<void(int, rf::GrVertex**, int, int)> GrRect_GrTMapper_hook{
     },
 };
 
-void SetupTextureFiltering()
+void setup_texture_filtering()
 {
     if (g_game_config.nearest_texture_filtering) {
         // use linear filtering for lightmaps because otherwise it looks bad
-        SetTextureMinMagFilterInCode(D3DTEXF_POINT, D3DTEXF_LINEAR);
+        set_texture_min_mag_filter_in_code(D3DTEXF_POINT, D3DTEXF_LINEAR);
     }
     else if (rf::gr_d3d_device_caps.MaxAnisotropy > 0 && g_game_config.anisotropic_filtering && !rf::is_dedicated_server) {
         // Anisotropic texture filtering
-        SetTextureMinMagFilterInCode(D3DTEXF_ANISOTROPIC, D3DTEXF_ANISOTROPIC);
+        set_texture_min_mag_filter_in_code(D3DTEXF_ANISOTROPIC, D3DTEXF_ANISOTROPIC);
     } else {
-        SetTextureMinMagFilterInCode(D3DTEXF_LINEAR, D3DTEXF_LINEAR);
+        set_texture_min_mag_filter_in_code(D3DTEXF_LINEAR, D3DTEXF_LINEAR);
     }
 }
 
-DWORD SetupMaxAnisotropy()
+DWORD setup_max_anisotropy()
 {
     DWORD anisotropy_level = std::min(rf::gr_d3d_device_caps.MaxAnisotropy, 16ul);
     rf::gr_d3d_device->SetTextureStageState(0, D3DTSS_MAXANISOTROPY, anisotropy_level);
@@ -302,7 +302,7 @@ CallHook<void()> gr_d3d_init_buffers_gr_d3d_flip_hook{
             rf::gr_set_texture_mip_filter(rf::local_player->settings.filtering_level == 0);
 
         if (rf::gr_d3d_device_caps.MaxAnisotropy > 0 && g_game_config.anisotropic_filtering)
-            SetupMaxAnisotropy();
+            setup_max_anisotropy();
     },
 };
 
@@ -443,9 +443,9 @@ ConsoleCommand2 profile_frame_cmd{
 CodeInjection after_gr_init_hook{
     0x0050C5CD,
     []() {
-        SetupTextureFiltering();
+        setup_texture_filtering();
         if (rf::gr_d3d_device_caps.MaxAnisotropy > 0 && g_game_config.anisotropic_filtering && !rf::is_dedicated_server) {
-            DWORD anisotropy_level = SetupMaxAnisotropy();
+            DWORD anisotropy_level = setup_max_anisotropy();
             xlog::info("Anisotropic Filtering enabled (level: %lu)", anisotropy_level);
         }
 
@@ -490,7 +490,7 @@ CodeInjection gr_d3d_create_texture_fail_hook{
     0x0055B9FD,
     [](auto& regs) {
         auto hr = static_cast<HRESULT>(regs.eax);
-        xlog::warn("Failed to alloc texture - HRESULT 0x%lX %s", hr, getDxErrorStr(hr));
+        xlog::warn("Failed to alloc texture - HRESULT 0x%lX %s", hr, get_d3d_error_str(hr));
     },
 };
 
@@ -669,7 +669,7 @@ FunHook<void(int*, void*, int, int, int, rf::GrMode, int)> gr_d3d_queue_triangle
     },
 };
 
-void GrLightUseStatic(bool use_static)
+void gr_light_use_static(bool use_static)
 {
     // Enable some experimental flag that causes static lights to be included in computations
     auto& experimental_alloc_and_lighting = addr_as_ref<bool>(0x00879AF8);
@@ -679,7 +679,7 @@ void GrLightUseStatic(bool use_static)
     gr_light_state++;
 }
 
-void ObjMeshLightingAllocOne(rf::Object *objp)
+void obj_mesh_lighting_alloc_one(rf::Object *objp)
 {
     // Note: ObjDeleteMesh frees mesh_lighting_data
     assert(objp->mesh_lighting_data == nullptr);
@@ -687,11 +687,11 @@ void ObjMeshLightingAllocOne(rf::Object *objp)
     objp->mesh_lighting_data = rf::Malloc(size);
 }
 
-void ObjMeshLightingUpdateOne(rf::Object *objp)
+void obj_mesh_lighting_update_one(rf::Object *objp)
 {
-    GrLightUseStatic(true);
+    gr_light_use_static(true);
     rf::vmesh_update_lighting_data(objp->vmesh, objp->room, objp->pos, objp->orient, objp->mesh_lighting_data);
-    GrLightUseStatic(false);
+    gr_light_use_static(false);
 }
 
 FunHook<void()> obj_mesh_lighting_update_hook{
@@ -710,11 +710,11 @@ FunHook<void()> obj_mesh_lighting_update_hook{
 
         if (g_game_config.mesh_static_lighting) {
             // Enable static lights
-            GrLightUseStatic(true);
+            gr_light_use_static(true);
             // Calculate lighting for meshes now
             obj_mesh_lighting_update_hook.call_target();
             // Switch back to dynamic lights
-            GrLightUseStatic(false);
+            gr_light_use_static(false);
         }
         else {
             obj_mesh_lighting_update_hook.call_target();
@@ -767,7 +767,7 @@ FunHook<void(rf::Object*)> obj_delete_mesh_hook{
     },
 };
 
-void RecalcMeshStaticLighting()
+void recalc_mesh_static_lighting()
 {
     AddrCaller{0x0048B370}.c_call(); // CleanupMeshLighting
     AddrCaller{0x0048B1D0}.c_call(); // AllocBuffersForMeshLighting
@@ -779,7 +779,7 @@ ConsoleCommand2 mesh_static_lighting_cmd{
     []() {
         g_game_config.mesh_static_lighting = !g_game_config.mesh_static_lighting;
         g_game_config.save();
-        RecalcMeshStaticLighting();
+        recalc_mesh_static_lighting();
         rf::console_printf("Mesh static lighting is %s", g_game_config.mesh_static_lighting ? "enabled" : "disabled");
     },
     "Toggle mesh static lighting calculation",
@@ -790,7 +790,7 @@ ConsoleCommand2 nearest_texture_filtering_cmd{
     []() {
         g_game_config.nearest_texture_filtering = !g_game_config.nearest_texture_filtering;
         g_game_config.save();
-        SetupTextureFiltering();
+        setup_texture_filtering();
         rf::console_printf("Nearest texture filtering is %s", g_game_config.nearest_texture_filtering ? "enabled" : "disabled");
     },
     "Toggle nearest texture filtering",
@@ -811,10 +811,10 @@ CodeInjection display_full_screen_image_alpha_support_patch{
     },
 };
 
-void ApplyTexturePatches();
-void ApplyFontPatches();
+void apply_texture_patches();
+void apply_font_patches();
 
-void GraphicsInit()
+void graphics_init()
 {
     // Fix for "At least 8 MB of available video memory"
     write_mem<u8>(0x005460CD, asm_opcodes::jae_rel_short);
@@ -917,16 +917,16 @@ void GraphicsInit()
     write_mem<u8>(0x00544FE6, asm_opcodes::jmp_rel_short);
 
     // Init True Color improvements
-    GrColorInit();
+    gr_color_init();
 
     // Patch texture handling
-    ApplyTexturePatches();
+    apply_texture_patches();
 
     // Apply bmpman patches
-    BmApplyPatches();
+    bm_apply_patches();
 
     // Fonts
-    ApplyFontPatches();
+    apply_font_patches();
 
     // Enable mip-mapping for textures bigger than 256x256
     AsmWriter(0x0050FEDA, 0x0050FEE9).nop();
@@ -937,12 +937,12 @@ void GraphicsInit()
 
     // fullscreen/windowed commands
     switch_d3d_mode_patch.install();
-    fullscreen_cmd.Register();
-    windowed_cmd.Register();
+    fullscreen_cmd.register_cmd();
+    windowed_cmd.register_cmd();
 
     // Other commands
-    antialiasing_cmd.Register();
-    nearest_texture_filtering_cmd.Register();
+    antialiasing_cmd.register_cmd();
+    nearest_texture_filtering_cmd.register_cmd();
 
     // Do not flush drawing buffers during gr_set_color_rgba call
     write_mem<u8>(0x0050CFEB, asm_opcodes::jmp_rel_short);
@@ -980,7 +980,7 @@ void GraphicsInit()
     AsmWriter(0x005516F5).nop(5);
 
 #ifdef DEBUG
-    profile_frame_cmd.Register();
+    profile_frame_cmd.register_cmd();
 #endif
 
     // Render rocket launcher scanner image every frame
@@ -1002,7 +1002,7 @@ void GraphicsInit()
     GrLoadFontInternal_fix_texture_ref.install();
 
     // maxfps command
-    max_fps_cmd.Register();
+    max_fps_cmd.register_cmd();
 
     // Crash-fix in case texture has not been created (this happens if GrReadBackbuffer fails)
     gr_d3d_lock_crash_fix.install();
@@ -1019,7 +1019,7 @@ void GraphicsInit()
 
     // Support disabling of damage screen flash effect
     DoDamageScreenFlash_hook.install();
-    damage_screen_flash_cmd.Register();
+    damage_screen_flash_cmd.register_cmd();
 
     // Fix glass_house level having faces that use multi-textured state but don't have any lightmap (stage 1 texture
     // from previous drawing operation was used)
@@ -1030,7 +1030,7 @@ void GraphicsInit()
     obj_mesh_lighting_alloc_hook.install();
     obj_mesh_lighting_free_hook.install();
     obj_delete_mesh_hook.install();
-    mesh_static_lighting_cmd.Register();
+    mesh_static_lighting_cmd.register_cmd();
 
     // Fix invalid vertex offset in mesh lighting calculation
     write_mem<i8>(0x005042F0 + 2, sizeof(rf::Vector3));
@@ -1045,21 +1045,21 @@ void GraphicsInit()
     display_full_screen_image_alpha_support_patch.install();
 }
 
-void GraphicsDrawFpsCounter()
+void graphics_draw_fps_counter()
 {
     if (g_game_config.fps_counter && !rf::is_hud_hidden) {
-        auto text = StringFormat("FPS: %.1f", rf::current_fps);
+        auto text = string_format("FPS: %.1f", rf::current_fps);
         rf::gr_set_color_rgba(0, 255, 0, 255);
         int x = rf::gr_screen_width() - (g_game_config.big_hud ? 165 : 90);
         int y = 10;
         if (rf::gameseq_in_gameplay()) {
             y = g_game_config.big_hud ? 110 : 60;
-            if (IsDoubleAmmoHud()) {
+            if (is_double_ammo_hud()) {
                 y += g_game_config.big_hud ? 80 : 40;
             }
         }
 
-        int font_id = HudGetDefaultFont();
+        int font_id = hud_get_default_font();
         rf::gr_string(x, y, text.c_str(), font_id);
     }
 }

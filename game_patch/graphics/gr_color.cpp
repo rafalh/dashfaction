@@ -491,7 +491,7 @@ rf::Color DecodeBlockCompressedPixelInternal(const void* block, int x, int y)
     };
 }
 
-rf::Color DecodeBlockCompressedPixel(void* block, rf::BmFormat format, int x, int y)
+rf::Color decode_block_compressed_pixel(void* block, rf::BmFormat format, int x, int y)
 {
     switch (format) {
         case rf::BM_FORMAT_DXT1:
@@ -700,12 +700,12 @@ void CallWithPixelFormat(rf::BmFormat pixel_fmt, F handler)
     }
 }
 
-bool ConvertSurfaceFormat(void* dst_bits_ptr, rf::BmFormat dst_fmt, const void* src_bits_ptr,
+bool conver_surface_format(void* dst_bits_ptr, rf::BmFormat dst_fmt, const void* src_bits_ptr,
                                rf::BmFormat src_fmt, int width, int height, int dst_pitch, int src_pitch,
                                const uint8_t* palette)
 {
 #if DEBUG_PERF
-    static auto& color_conv_perf = PerfAggregator::create("ConvertSurfaceFormat");
+    static auto& color_conv_perf = PerfAggregator::create("conver_surface_format");
     ScopedPerfMonitor mon{color_conv_perf};
 #endif
     try {
@@ -745,7 +745,7 @@ CodeInjection level_load_lightmaps_color_conv_patch{
             lightmap->buf[i] = std::max(lightmap->buf[i], (uint8_t)(4 << 3)); // 32
     #endif
 
-        bool success = ConvertSurfaceFormat(lock.data, lock.format, lightmap->buf,
+        bool success = conver_surface_format(lock.data, lock.format, lightmap->buf,
             rf::BM_FORMAT_888_BGR, lightmap->w, lightmap->h, lock.stride_in_bytes, 3 * lightmap->w, nullptr);
         if (!success)
             xlog::error("ConvertBitmapFormat failed for lightmap (dest format %d)", lock.format);
@@ -770,15 +770,15 @@ CodeInjection GSurface_calculate_lightmap_color_conv_patch{
         int offset_y = struct_field_ref<int>(face_light_info, 20);
         int offset_x = struct_field_ref<int>(face_light_info, 16);
         int src_width = lightmap.w;
-        int dst_pixel_size = GetBmFormatSize(lock.format);
+        int dst_pixel_size = get_bm_format_size(lock.format);
         uint8_t* src_data = lightmap.buf + 3 * (offset_x + offset_y * src_width);
         uint8_t* dst_data = &lock.data[dst_pixel_size * offset_x + offset_y * lock.stride_in_bytes];
         int height = struct_field_ref<int>(face_light_info, 28);
         int src_pitch = 3 * src_width;
-        bool success = ConvertSurfaceFormat(dst_data, lock.format, src_data, rf::BM_FORMAT_888_BGR,
+        bool success = conver_surface_format(dst_data, lock.format, src_data, rf::BM_FORMAT_888_BGR,
             src_width, height, lock.stride_in_bytes, src_pitch);
         if (!success)
-            xlog::error("ConvertSurfaceFormat failed for geomod (fmt %d)", lock.format);
+            xlog::error("conver_surface_format failed for geomod (fmt %d)", lock.format);
         rf::gr_unlock(&lock);
     },
 };
@@ -803,10 +803,10 @@ CodeInjection GSurface_alloc_lightmap_color_conv_patch{
         int src_offset = 3 * (offset_x + src_width * struct_field_ref<int>(face_light_info, 20)); // src offset
         uint8_t* src_data = src_offset + src_data_begin;
         int height = struct_field_ref<int>(face_light_info, 28);
-        int dst_pixel_size = GetBmFormatSize(lock.format);
+        int dst_pixel_size = get_bm_format_size(lock.format);
         uint8_t* dst_row_ptr = &lock.data[dst_pixel_size * offset_x + offset_y * lock.stride_in_bytes];
         int src_pitch = 3 * src_width;
-        bool success = ConvertSurfaceFormat(dst_row_ptr, lock.format, src_data, rf::BM_FORMAT_888_BGR,
+        bool success = conver_surface_format(dst_row_ptr, lock.format, src_data, rf::BM_FORMAT_888_BGR,
                                                  src_width, height, lock.stride_in_bytes, src_pitch);
         if (!success)
             xlog::error("ConvertBitmapFormat failed for geomod2 (fmt %d)", lock.format);
@@ -840,7 +840,7 @@ CodeInjection g_proctex_update_water_patch{
                     auto& byte_1371090 = addr_as_ref<uint8_t[512]>(0x1371090);
 
                     uint8_t* dst_row_ptr = dst_lock_data.data;
-                    int src_pixel_size = GetBmFormatSize(src_lock_data.format);
+                    int src_pixel_size = get_bm_format_size(src_lock_data.format);
 
                     for (int y = 0; y < dst_lock_data.h; ++y) {
                         int t1 = byte_1370f90[y];
@@ -916,7 +916,7 @@ CodeInjection MonitorUpdateStatic_patch{
 
         auto& lock = *reinterpret_cast<rf::GrLockInfo*>(regs.esp + 0x2C - 0x20);
         auto pixel_ptr = reinterpret_cast<char*>(regs.esi);
-        int bytes_per_pixel = GetBmFormatSize(lock.format);
+        int bytes_per_pixel = get_bm_format_size(lock.format);
 
         std::fill(pixel_ptr, pixel_ptr + bytes_per_pixel, white ? '\0' : '\xFF');
         regs.esi += bytes_per_pixel;
@@ -934,7 +934,7 @@ CodeInjection MonitorUpdateOff_patch{
     },
 };
 
-void GrColorInit()
+void gr_color_init()
 {
     // True Color textures
     if (g_game_config.res_bpp == 32 && g_game_config.true_color_textures) {

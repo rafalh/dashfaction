@@ -15,7 +15,7 @@
 #include "../console/console.h"
 #include "../main.h"
 
-bool SetDirectInputEnabled(bool enabled)
+bool set_direct_input_enabled(bool enabled)
 {
     auto direct_input_initialized = addr_as_ref<bool>(0x01885460);
     auto InitDirectInput = addr_as_ref<int()>(0x0051E070);
@@ -65,7 +65,7 @@ FunHook<void()> mouse_keep_centered_enable_hook{
     0x0051E690,
     []() {
         if (!rf::keep_mouse_centered && !rf::is_dedicated_server)
-            SetDirectInputEnabled(g_game_config.direct_input);
+            set_direct_input_enabled(g_game_config.direct_input);
         mouse_keep_centered_enable_hook.call_target();
     },
 };
@@ -74,7 +74,7 @@ FunHook<void()> mouse_keep_centered_disable_hook{
     0x0051E6A0,
     []() {
         if (rf::keep_mouse_centered)
-            SetDirectInputEnabled(false);
+            set_direct_input_enabled(false);
         mouse_keep_centered_disable_hook.call_target();
     },
 };
@@ -86,11 +86,11 @@ ConsoleCommand2 input_mode_cmd{
         g_game_config.save();
 
         if (g_game_config.direct_input) {
-            if (!SetDirectInputEnabled(g_game_config.direct_input)) {
+            if (!set_direct_input_enabled(g_game_config.direct_input)) {
                 rf::console_printf("Failed to initialize DirectInput");
             }
             else {
-                SetDirectInputEnabled(rf::keep_mouse_centered);
+                set_direct_input_enabled(rf::keep_mouse_centered);
                 rf::console_printf("DirectInput is enabled");
             }
         }
@@ -114,7 +114,7 @@ ConsoleCommand2 ms_cmd{
     "ms <value>",
 };
 
-rf::Vector3 ForwardVectorFromNonLinearYawPitch(float yaw, float pitch)
+rf::Vector3 fw_vector_from_non_linear_yaw_pitch(float yaw, float pitch)
 {
     // Based on RF code
     rf::Vector3 fvec0;
@@ -134,7 +134,7 @@ float LinearPitchFromForwardVector(const rf::Vector3& fvec)
     return std::asin(fvec.y);
 }
 
-rf::Vector3 ForwardVectorFromLinearYawPitch(float yaw, float pitch)
+rf::Vector3 fw_vector_from_linear_yaw_pitch(float yaw, float pitch)
 {
     rf::Vector3 fvec;
     fvec.y = std::sin(pitch);
@@ -144,7 +144,7 @@ rf::Vector3 ForwardVectorFromLinearYawPitch(float yaw, float pitch)
     return fvec;
 }
 
-float NonLinearPitchFromForwardVector(rf::Vector3 fvec)
+float non_linear_pitch_from_fw_vector(rf::Vector3 fvec)
 {
     float yaw = std::atan2(fvec.x, fvec.z);
     assert(!std::isnan(yaw));
@@ -184,14 +184,14 @@ float NonLinearPitchFromForwardVector(rf::Vector3 fvec)
 }
 
 #ifdef DEBUG
-void LinearPitchTest()
+void linear_pitch_test()
 {
     float yaw = 3.141592f / 4.0f;
     float pitch = 3.141592f / 4.0f;
-    rf::Vector3 fvec = ForwardVectorFromNonLinearYawPitch(yaw, pitch);
+    rf::Vector3 fvec = fw_vector_from_non_linear_yaw_pitch(yaw, pitch);
     float lin_pitch = LinearPitchFromForwardVector(fvec);
-    rf::Vector3 fvec2 = ForwardVectorFromLinearYawPitch(yaw, lin_pitch);
-    float pitch2 = NonLinearPitchFromForwardVector(fvec2);
+    rf::Vector3 fvec2 = fw_vector_from_linear_yaw_pitch(yaw, lin_pitch);
+    float pitch2 = non_linear_pitch_from_fw_vector(fvec2);
     assert(std::abs(pitch - pitch2) < 0.00001);
 }
 #endif // DEBUG
@@ -209,7 +209,7 @@ CodeInjection linear_pitch_patch{
         if (pitch_delta == 0)
             return;
         // Convert to linear space (see RotMatixFromEuler function at 004A0D70)
-        auto fvec = ForwardVectorFromNonLinearYawPitch(current_yaw, current_pitch_non_lin);
+        auto fvec = fw_vector_from_non_linear_yaw_pitch(current_yaw, current_pitch_non_lin);
         float current_pitch_lin = LinearPitchFromForwardVector(fvec);
         // Calculate new pitch in linear space
         float new_pitch_lin = current_pitch_lin + pitch_delta;
@@ -218,8 +218,8 @@ CodeInjection linear_pitch_patch{
         constexpr float half_pi = 1.5707964f;
         new_pitch_lin = std::clamp(new_pitch_lin, -half_pi, half_pi);
         // Convert back to non-linear space
-        auto fvec_new = ForwardVectorFromLinearYawPitch(new_yaw, new_pitch_lin);
-        float new_pitch_non_lin = NonLinearPitchFromForwardVector(fvec_new);
+        auto fvec_new = fw_vector_from_linear_yaw_pitch(new_yaw, new_pitch_lin);
+        float new_pitch_non_lin = non_linear_pitch_from_fw_vector(fvec_new);
         // Update non-linear pitch delta
         float new_pitch_delta = new_pitch_non_lin - current_pitch_non_lin;
         xlog::trace("non-lin %f lin %f delta %f new %f", current_pitch_non_lin, current_pitch_lin, pitch_delta,
@@ -232,7 +232,7 @@ ConsoleCommand2 linear_pitch_cmd{
     "linear_pitch",
     []() {
 #ifdef DEBUG
-        LinearPitchTest();
+        linear_pitch_test();
 #endif
 
         g_game_config.linear_pitch = !g_game_config.linear_pitch;
@@ -308,7 +308,7 @@ FunHook<int(int16_t)> key_to_ascii_hook{
     },
 };
 
-int GetKeyName(int key, char* buf, size_t buf_len)
+int get_key_name(int key, char* buf, size_t buf_len)
 {
      LONG lparam = (key & 0x7F) << 16;
     if (key & 0x80) {
@@ -331,7 +331,7 @@ FunHook<int(rf::String&, int)> get_key_name_hook{
     [](rf::String& out_name, int key) {
         static char buf[32] = "";
         int result = 0;
-        if (key < 0 || GetKeyName(key, buf, std::size(buf)) <= 0) {
+        if (key < 0 || get_key_name(key, buf, std::size(buf)) <= 0) {
             result = -1;
         }
         out_name = buf;
@@ -344,7 +344,7 @@ CodeInjection key_name_in_options_patch{
     [](auto& regs) {
         static char buf[32];
         int key = regs.edx;
-        GetKeyName(key, buf, std::size(buf));
+        get_key_name(key, buf, std::size(buf));
         regs.edi = reinterpret_cast<int>(buf);
         regs.eip = 0x0045032F;
     },
@@ -373,7 +373,7 @@ FunHook<bool __fastcall(void *this_, void* edx, rf::Key key)> UiInputBox_Process
     UiInputBox_ProcessKey_new,
 };
 
-void InputInit()
+void input_init()
 {
     // Support non-US keyboard layouts
     key_to_ascii_hook.install();
@@ -404,7 +404,7 @@ void InputInit()
     linear_pitch_patch.install();
 
     // Commands
-    input_mode_cmd.Register();
-    ms_cmd.Register();
-    linear_pitch_cmd.Register();
+    input_mode_cmd.register_cmd();
+    ms_cmd.register_cmd();
+    linear_pitch_cmd.register_cmd();
 }

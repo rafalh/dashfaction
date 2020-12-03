@@ -231,7 +231,7 @@ std::vector<std::unique_ptr<BaseProfiler>> g_profilers;
 
 bool g_profiler_visible = false;
 
-void InstallProfilerPatches() {
+void install_profiler_patches() {
     static bool installed = false;
     if (!installed) {
         for (auto& p : g_profilers) {
@@ -244,7 +244,7 @@ void InstallProfilerPatches() {
 ConsoleCommand2 profiler_cmd{
     "d_profiler",
     []() {
-        InstallProfilerPatches();
+        install_profiler_patches();
         g_profiler_visible = !g_profiler_visible;
     },
 };
@@ -260,7 +260,7 @@ ConsoleCommand2 perf_dump_cmd{
     },
 };
 
-void ProfilerInit()
+void profiler_init()
 {
     g_profilers.push_back(std::make_unique<CallProfiler>(0x0043363B, "simulation frame"));
     g_profilers.push_back(std::make_unique<CallProfiler>(0x00433326, "  obj move all"));
@@ -329,11 +329,11 @@ void ProfilerInit()
     g_profilers.push_back(std::make_unique<CallProfiler>(0x00432A18, "  HUD"));
     g_profilers.push_back(std::make_unique<AddrRangeProfiler>(0x00432A1D, 0x00432F4F, "  misc (after HUD)"));
 
-    profiler_cmd.Register();
-    perf_dump_cmd.Register();
+    profiler_cmd.register_cmd();
+    perf_dump_cmd.register_cmd();
 }
 
-void ProfilerDrawUI()
+void profiler_draw_ui()
 {
     if (g_profiler_visible) {
         //addr_as_ref<bool>(0x00596144) = 0;

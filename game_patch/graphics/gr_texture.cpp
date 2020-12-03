@@ -85,7 +85,7 @@ public:
             case rf::BM_FORMAT_4444_ARGB:
                 return argb_4444_format_;
             default:
-                return GetD3DFormatFromBmFormat(bm_format);
+                return get_d3d_format_from_bm_format(bm_format);
         }
     }
 };
@@ -105,8 +105,8 @@ FunHook<GrD3DSetTextureData_Type> gr_d3d_set_texture_data_hook{
             return -1;
         }
 
-        auto tex_pixel_fmt = GetBmFormatFromD3DFormat(desc.Format);
-        if (!BmIsCompressedFormat(tex_pixel_fmt) && GetBmFormatSize(tex_pixel_fmt) == 2) {
+        auto tex_pixel_fmt = get_bm_format_from_d3d_format(desc.Format);
+        if (!bm_is_compressed_format(tex_pixel_fmt) && get_bm_format_size(tex_pixel_fmt) == 2) {
             // original code can handle only 16 bit surfaces
             return gr_d3d_set_texture_data_hook.call_target(level, src_bits_ptr, palette, bm_w, bm_h, format, section,
                                                            tex_w, tex_h, texture);
@@ -120,19 +120,19 @@ FunHook<GrD3DSetTextureData_Type> gr_d3d_set_texture_data_hook{
         }
 
         bool success = true;
-        if (BmIsCompressedFormat(format)) {
+        if (bm_is_compressed_format(format)) {
             xlog::trace("Writing texture in compressed format level %d src %p bm %dx%d tex %dx%d section %d %d",
                 level, src_bits_ptr, bm_w, bm_h, tex_w, tex_h, section->x, section->y);
-            auto src_pitch = GetSurfacePitch(bm_w, format);
-            auto num_src_rows = GetSurfaceNumRows(bm_h, format);
+            auto src_pitch = get_surface_pitch(bm_w, format);
+            auto num_src_rows = get_surface_num_rows(bm_h, format);
 
             auto src_ptr = reinterpret_cast<const std::byte*>(src_bits_ptr);
             auto dst_ptr = reinterpret_cast<std::byte*>(locked_rect.pBits);
 
-            src_ptr += src_pitch * GetSurfaceNumRows(section->y, format);
-            src_ptr += GetSurfacePitch(section->x, format);
+            src_ptr += src_pitch * get_surface_num_rows(section->y, format);
+            src_ptr += get_surface_pitch(section->x, format);
 
-            auto copy_pitch = GetSurfacePitch(section->width, format);
+            auto copy_pitch = get_surface_pitch(section->width, format);
 
             for (int y = 0; y < num_src_rows; ++y) {
                 std::memcpy(dst_ptr, src_ptr, copy_pitch);
@@ -142,9 +142,9 @@ FunHook<GrD3DSetTextureData_Type> gr_d3d_set_texture_data_hook{
             xlog::trace("Writing completed");
         }
         else {
-            auto tex_pixel_fmt = GetBmFormatFromD3DFormat(desc.Format);
-            auto bm_pitch = GetBmFormatSize(format) * bm_w;
-            success = ConvertSurfaceFormat(locked_rect.pBits, tex_pixel_fmt,
+            auto tex_pixel_fmt = get_bm_format_from_d3d_format(desc.Format);
+            auto bm_pitch = get_bm_format_size(format) * bm_w;
+            success = conver_surface_format(locked_rect.pBits, tex_pixel_fmt,
                                                 src_bits_ptr, format, bm_w, bm_h, locked_rect.Pitch,
                                                 bm_pitch, palette);
             if (!success)
@@ -203,12 +203,12 @@ CodeInjection gr_d3d_create_vram_texture_with_mipmaps_pitch_fix{
         regs.eip = 0x0055B82E;
 
         auto vram_tex_fmt = g_texture_format_selector.select(bm_format);
-        src_bits_ptr += GetSurfaceLengthInBytes(w, h, bm_format);
-        num_total_vram_bytes += GetSurfaceLengthInBytes(w, h, GetBmFormatFromD3DFormat(vram_tex_fmt));
+        src_bits_ptr += get_surface_length_in_bytes(w, h, bm_format);
+        num_total_vram_bytes += get_surface_length_in_bytes(w, h, get_bm_format_from_d3d_format(vram_tex_fmt));
     },
 };
 
-int GetBytesPerCompressedBlock(rf::BmFormat format)
+int get_bytes_per_compressed_block(rf::BmFormat format)
 {
     switch (format) {
         case rf::BM_FORMAT_DXT1:
@@ -227,7 +227,7 @@ int GetBytesPerCompressedBlock(rf::BmFormat format)
 FunHook <void(int, float, float, rf::Color*)> gr_d3d_get_texel_hook{
     0x0055CFA0,
     [](int bm_handle, float u, float v, rf::Color* out_color) {
-        if (BmIsCompressedFormat(rf::bm_get_format(bm_handle))) {
+        if (bm_is_compressed_format(rf::bm_get_format(bm_handle))) {
             // This function is only used when shooting at a texture with alpha
             rf::GrLockInfo lock;
             if (rf::gr_lock(bm_handle, 0, &lock, rf::GR_LOCK_READ_ONLY)) {
@@ -245,9 +245,9 @@ FunHook <void(int, float, float, rf::Color*)> gr_d3d_get_texel_hook{
                 int y = static_cast<int>(v * lock.h + 0.5f);
                 constexpr int block_w = 4;
                 constexpr int block_h = 4;
-                auto bytes_per_block = GetBytesPerCompressedBlock(lock.format);
+                auto bytes_per_block = get_bytes_per_compressed_block(lock.format);
                 auto block = lock.data + (y / block_h) * lock.stride_in_bytes + x / block_w * bytes_per_block;
-                *out_color = DecodeBlockCompressedPixel(block, lock.format, x % block_w, y % block_h);
+                *out_color = decode_block_compressed_pixel(block, lock.format, x % block_w, y % block_h);
                 rf::gr_unlock(&lock);
             }
             else {
@@ -318,7 +318,7 @@ bool gr_d3d_lock(int bm_handle, int section, rf::GrLockInfo *lock) {
     lock->h = desc.Height;
     lock->section = section;
     lock->bm_handle = bm_handle;
-    lock->format = GetBmFormatFromD3DFormat(desc.Format);
+    lock->format = get_bm_format_from_d3d_format(desc.Format);
     return true;
 }
 
@@ -336,13 +336,13 @@ static FunHook<bool(int, int, rf::GrLockInfo *)> gr_d3d_lock_hook{0x0055CE00, gr
 //     },
 // };
 
-bool GrIsFormatSupported(rf::BmFormat format)
+bool gr_is_format_supported(rf::BmFormat format)
 {
     if (rf::gr_screen.mode != rf::GR_DIRECT3D) {
         return false;
     }
 
-    auto d3d_fmt = GetD3DFormatFromBmFormat(format);
+    auto d3d_fmt = get_d3d_format_from_bm_format(format);
     if (d3d_fmt == D3DFMT_UNKNOWN) {
         return false;
     }
@@ -355,7 +355,7 @@ bool GrIsFormatSupported(rf::BmFormat format)
     return true;
 }
 
-void ApplyTexturePatches()
+void apply_texture_patches()
 {
     gr_d3d_set_texture_data_hook.install();
     gr_d3d_create_vram_texture_hook.install();
@@ -367,7 +367,7 @@ void ApplyTexturePatches()
     gr_d3d_lock_hook.install();
 }
 
-void ReleaseAllDefaultPoolTextures()
+void release_all_default_pool_textures()
 {
     for (auto tslot : g_default_pool_tslots) {
         gr_d3d_free_texture_hook.call_target(*tslot);
@@ -375,7 +375,7 @@ void ReleaseAllDefaultPoolTextures()
     g_default_pool_tslots.clear();
 }
 
-void DestroyTexture(int bmh)
+void destroy_texture(int bmh)
 {
     auto& gr_d3d_tcache_add_ref = addr_as_ref<void(int bmh)>(0x0055D160);
     auto& gr_d3d_tcache_remove_ref = addr_as_ref<void(int bmh)>(0x0055D190);
@@ -383,9 +383,9 @@ void DestroyTexture(int bmh)
     gr_d3d_tcache_remove_ref(bmh);
 }
 
-void ChangeUserBitmapPixelFormat(int bmh, rf::BmFormat pixel_fmt, [[ maybe_unused ]] bool dynamic)
+void change_user_bitmap_format(int bmh, rf::BmFormat pixel_fmt, [[ maybe_unused ]] bool dynamic)
 {
-    DestroyTexture(bmh);
+    destroy_texture(bmh);
     int bm_idx = rf::bm_handle_to_index_anim_aware(bmh);
     auto& bm = rf::bm_bitmaps[bm_idx];
     assert(bm.bm_type == rf::BM_TYPE_USER);
@@ -393,7 +393,7 @@ void ChangeUserBitmapPixelFormat(int bmh, rf::BmFormat pixel_fmt, [[ maybe_unuse
     // TODO: in DX9 use dynamic flag
 }
 
-void InitSupportedTextureFormats()
+void init_supported_texture_formats()
 {
     g_texture_format_selector.init();
 }

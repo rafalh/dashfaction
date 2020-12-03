@@ -48,15 +48,15 @@ struct ServerAdditionalConfig
 extern ServerAdditionalConfig g_additional_server_config;
 extern std::string g_prev_level;
 
-void InitWin32ServerConsole();
-void CleanupWin32ServerConsole();
-void HandleVoteCommand(std::string_view vote_name, std::string_view vote_arg, rf::Player* sender);
-void ServerVoteDoFrame();
-void InitLazyban();
-void InitServerCommands();
-void ExtendRoundTime(int minutes);
-void RestartCurrentLevel();
-void LoadNextLevel();
-void LoadPrevLevel();
-void ServerVoteOnLimboStateEnter();
-void ProcessDelayedKicks();
+void init_win32_server_console();
+void cleanup_win32_server_console();
+void handle_vote_command(std::string_view vote_name, std::string_view vote_arg, rf::Player* sender);
+void server_vote_do_frame();
+void init_lazy_ban();
+void init_server_commands();
+void extend_round_time(int minutes);
+void restart_current_level();
+void load_next_level();
+void load_prev_level();
+void server_vote_on_limbo_state_enter();
+void process_delayed_kicks();

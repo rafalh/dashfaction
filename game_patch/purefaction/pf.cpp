@@ -92,7 +92,7 @@ void process_pf_players_request_packet([[ maybe_unused ]] const void* data, [[ m
     rf::NwSend(addr, &response, sizeof(response.hdr) + response.hdr.size);
 }
 
-void ProcessPfPacket(const void* data, int len, const rf::NwAddr& addr, [[maybe_unused]] const rf::Player* player)
+void process_pf_packet(const void* data, int len, const rf::NwAddr& addr, [[maybe_unused]] const rf::Player* player)
 {
     if (len < static_cast<int>(sizeof(rf_packet_header)))
         return;

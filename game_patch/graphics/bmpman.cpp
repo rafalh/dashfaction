@@ -2,7 +2,7 @@
 #include <patch_common/FunHook.h>
 #include <xlog/xlog.h>
 
-int GetSurfacePitch(int w, rf::BmFormat format)
+int get_surface_pitch(int w, rf::BmFormat format)
 {
     switch (format) {
         case rf::BM_FORMAT_8888_ARGB:
@@ -26,12 +26,12 @@ int GetSurfacePitch(int w, rf::BmFormat format)
             // 4x4 pixels per block, 128 bits per block
             return (w + 3) / 4 * 128 / 8;
         default:
-            xlog::warn("Unknown format %d in GetSurfacePitch", format);
+            xlog::warn("Unknown format %d in get_surface_pitch", format);
             return -1;
     }
 }
 
-int GetSurfaceNumRows(int h, rf::BmFormat format)
+int get_surface_num_rows(int h, rf::BmFormat format)
 {
     switch (format) {
         case rf::BM_FORMAT_DXT1:
@@ -46,12 +46,12 @@ int GetSurfaceNumRows(int h, rf::BmFormat format)
     }
 }
 
-size_t GetSurfaceLengthInBytes(int w, int h, rf::BmFormat format)
+size_t get_surface_length_in_bytes(int w, int h, rf::BmFormat format)
 {
-    return GetSurfacePitch(w, format) * GetSurfaceNumRows(h, format);
+    return get_surface_pitch(w, format) * get_surface_num_rows(h, format);
 }
 
-bool BmIsCompressedFormat(rf::BmFormat format)
+bool bm_is_compressed_format(rf::BmFormat format)
 {
     switch (format) {
         case rf::BM_FORMAT_DXT1:
@@ -80,11 +80,11 @@ bm_read_header_hook{
         *vbm_ver_out = 1;
 
         rf::File dds_file;
-        std::string filename_without_ext{GetFilenameWithoutExt(filename)};
+        std::string filename_without_ext{get_filename_without_ext(filename)};
         auto dds_filename = filename_without_ext + ".dds";
         if (dds_file.open(dds_filename.c_str()) == 0) {
             xlog::trace("Loading %s", dds_filename.c_str());
-            auto bm_type = ReadDdsHeader(dds_file, width_out, height_out, pixel_fmt_out, num_levels_out);
+            auto bm_type = read_dds_header(dds_file, width_out, height_out, pixel_fmt_out, num_levels_out);
             if (bm_type != rf::BM_TYPE_NONE) {
                 return bm_type;
             }
@@ -115,7 +115,7 @@ FunHook<rf::BmFormat(int, void**, void**)> bm_lock_hook{
     [](int bmh, void** pixels_out, void** palette_out) {
         auto& bm_entry = rf::bm_bitmaps[rf::bm_handle_to_index_anim_aware(bmh)];
         if (bm_entry.bm_type == rf::BM_TYPE_DDS) {
-            LockDdsBitmap(bm_entry);
+            lock_dds_bitmap(bm_entry);
             *pixels_out = bm_entry.locked_data;
             *palette_out = bm_entry.locked_palette;
             return bm_entry.format;
@@ -151,7 +151,7 @@ FunHook<bool(rf::BmFormat)> bm_has_alpha_hook{
     },
 };
 
-void BmApplyPatches()
+void bm_apply_patches()
 {
     bm_read_header_hook.install();
     bm_lock_hook.install();

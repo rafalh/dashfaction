@@ -56,7 +56,7 @@ void HudRenderPersonaMsg(rf::Player* player)
     int box_y = offset_y + rf::hud_points[rf::hud_persona_message_box_background_ul].y; // 10
     int content_w = box_w - 2 * box_border;
     int content_h = box_h - 2 * box_border;
-    int hud_persona_font = HudGetDefaultFont();
+    int hud_persona_font = hud_get_default_font();
 
     // border
     rf::gr_set_color_rgba(255, 255, 255, static_cast<int>(rf::hud_persona_alpha * 77.0f));
@@ -86,7 +86,7 @@ void HudRenderPersonaMsg(rf::Player* player)
     rf::gr_set_color_rgba(255, 255, 255, static_cast<int>(rf::hud_default_color.alpha * rf::hud_persona_alpha));
     int img_x = img_box_x + img_border; // 161
     int img_y = img_box_y + img_border; // 14
-    HudScaledBitmap(hud_persona.image_bmh, img_x, img_y, img_scale);// hud_persona_image_gr_mode
+    hud_scaled_bitmap(hud_persona.image_bmh, img_x, img_y, img_scale);// hud_persona_image_gr_mode
 
     // persona name
     rf::gr_set_color(rf::hud_msg_color);
@@ -123,12 +123,12 @@ void HudRenderPersonaMsg(rf::Player* player)
     }
 }
 
-void InstallPersonaMsgHudPatches()
+void hud_persona_msg_apply_patches()
 {
     AsmWriter{0x00439610}.jmp(HudRenderPersonaMsg);
 }
 
-void SetBigPersonaMsgHud(bool is_big)
+void hud_persona_msg_set_big(bool is_big)
 {
     g_big_hud_persona = is_big;
 }

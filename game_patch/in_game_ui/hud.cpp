@@ -44,7 +44,7 @@ static int HudScaleValue(int val, int max, float scale)
     }
 }
 
-rf::HudPoint HudScaleCoords(rf::HudPoint pt, float scale)
+rf::HudPoint hud_scale_coords(rf::HudPoint pt, float scale)
 {
     return {
         HudScaleValue(pt.x, rf::gr_screen_width(), scale),
@@ -140,7 +140,7 @@ CallHook<void(int, int, int, rf::GrMode)> HudRenderAmmo_GrBitmap_hook{
         0x0043AF0Au,
     },
     [](int bm_handle, int x, int y, rf::GrMode mode) {
-        HudScaledBitmap(bm_handle, x, y, g_hud_ammo_scale, mode);
+        hud_scaled_bitmap(bm_handle, x, y, g_hud_ammo_scale, mode);
     },
 };
 
@@ -164,7 +164,7 @@ CallHook<void(int, int, int, rf::GrMode)> RenderReticle_GrBitmap_hook{
         x = static_cast<int>((x - rf::gr_clip_width() / 2) * scale) + rf::gr_clip_width() / 2;
         y = static_cast<int>((y - rf::gr_clip_height() / 2) * scale) + rf::gr_clip_height() / 2;
 
-        HudScaledBitmap(bm_handle, x, y, scale, mode);
+        hud_scaled_bitmap(bm_handle, x, y, scale, mode);
     },
 };
 
@@ -179,14 +179,14 @@ CallHook<void(int, int, int, rf::GrMode)> HudRenderPowerUps_GrBitmap_hook{
         x = HudTransformValue(x, 640, rf::gr_clip_width());
         x = HudScaleValue(x, rf::gr_clip_width(), scale);
         y = HudScaleValue(y, rf::gr_clip_height(), scale);
-        HudScaledBitmap(bm_handle, x, y, scale, mode);
+        hud_scaled_bitmap(bm_handle, x, y, scale, mode);
     },
 };
 
 FunHook<void()> RenderLevelInfo_hook{
     0x00477180,
     []() {
-        RunWithDefaultFont(HudGetDefaultFont(), [&]() {
+        run_with_default_font(hud_get_default_font(), [&]() {
             RenderLevelInfo_hook.call_target();
         });
     },
@@ -212,7 +212,7 @@ void SetBigAmmo(bool is_big)
     };
     g_hud_ammo_scale = is_big ? 1.875f : 1.0f;
     for (auto item_num : ammo_hud_items) {
-        rf::hud_points[item_num] = HudScaleCoords(rf::hud_points[item_num], g_hud_ammo_scale);
+        rf::hud_points[item_num] = hud_scale_coords(rf::hud_points[item_num], g_hud_ammo_scale);
     }
     rf::hud_ammo_font = rf::gr_load_font(is_big ? "biggerfont.vf" : "bigfont.vf");
 }
@@ -220,19 +220,19 @@ void SetBigAmmo(bool is_big)
 void SetBigCountdownCounter(bool is_big)
 {
     float scale = is_big ? 2.0f : 1.0f;
-    rf::hud_points[rf::hud_countdown_timer] = HudScaleCoords(rf::hud_points[rf::hud_countdown_timer], scale);
+    rf::hud_points[rf::hud_countdown_timer] = hud_scale_coords(rf::hud_points[rf::hud_countdown_timer], scale);
 }
 
 void SetBigHud(bool is_big)
 {
-    SetBigHealthArmorHud(is_big);
-    SetBigChatbox(is_big);
-    SetBigPersonaMsgHud(is_big);
-    SetBigWeaponCycleHud(is_big);
-    SetBigScoreboard(is_big);
-    SetBigTeamScoresHud(is_big);
-    rf::hud_text_font_num = HudGetDefaultFont();
-    g_target_player_name_font = HudGetDefaultFont();
+    hud_status_set_big(is_big);
+    multi_hud_chat_set_big(is_big);
+    hud_persona_msg_set_big(is_big);
+    hud_weapon_cycle_set_big(is_big);
+    set_big_scoreboard(is_big);
+    hud_team_scores_set_big(is_big);
+    rf::hud_text_font_num = hud_get_default_font();
+    g_target_player_name_font = hud_get_default_font();
 
     HudSetupPositions(rf::gr_screen_width());
     SetBigAmmo(is_big);
@@ -327,12 +327,12 @@ const ScaledBitmapInfo& HudGetScaledBitmapInfo(int bmh)
     return it->second;
 }
 
-void HudPreloadScaledBitmap(int bmh)
+void hud_preload_scaled_bitmap(int bmh)
 {
     HudGetScaledBitmapInfo(bmh);
 }
 
-void HudScaledBitmap(int bmh, int x, int y, float scale, rf::GrMode mode)
+void hud_scaled_bitmap(int bmh, int x, int y, float scale, rf::GrMode mode)
 {
     if (scale > 1.0f) {
         const auto& scaled_bm_info = HudGetScaledBitmapInfo(bmh);
@@ -355,7 +355,7 @@ void HudScaledBitmap(int bmh, int x, int y, float scale, rf::GrMode mode)
     }
 }
 
-void HudRectBorder(int x, int y, int w, int h, int border, rf::GrMode state)
+void hud_rect_border(int x, int y, int w, int h, int border, rf::GrMode state)
 {
     // top
     rf::gr_rect(x, y, w, border, state);
@@ -367,7 +367,7 @@ void HudRectBorder(int x, int y, int w, int h, int border, rf::GrMode state)
     rf::gr_rect(x + w - border, y + border, border, h - 2 * border, state);
 }
 
-std::string HudFitString(std::string_view str, int max_w, int* str_w_out, int font_id)
+std::string hud_fit_string(std::string_view str, int max_w, int* str_w_out, int font_id)
 {
     std::string result{str};
     int str_w, str_h;
@@ -384,7 +384,7 @@ std::string HudFitString(std::string_view str, int max_w, int* str_w_out, int fo
     return result;
 }
 
-const char* HudGetDefaultFontName(bool big)
+const char* hud_get_default_font_name(bool big)
 {
     if (big) {
         return "regularfont.ttf:17";
@@ -394,7 +394,7 @@ const char* HudGetDefaultFontName(bool big)
     }
 }
 
-const char* HudGetBoldFontName(bool big)
+const char* hud_get_bold_font_name(bool big)
 {
     if (big) {
         return "boldfont.ttf:26";
@@ -404,30 +404,30 @@ const char* HudGetBoldFontName(bool big)
     }
 }
 
-int HudGetDefaultFont()
+int hud_get_default_font()
 {
     if (g_game_config.big_hud) {
         static int font = -2;
         if (font == -2) {
-            font = rf::gr_load_font(HudGetDefaultFontName(true));
+            font = rf::gr_load_font(hud_get_default_font_name(true));
         }
         return font;
     }
     else {
         static int font = -2;
         if (font == -2) {
-            font = rf::gr_load_font(HudGetDefaultFontName(false));
+            font = rf::gr_load_font(hud_get_default_font_name(false));
         }
         return font;
     }
 }
 
-int HudGetLargeFont()
+int hud_get_large_font()
 {
     if (g_game_config.big_hud) {
         static int font = -2;
         if (font == -2) {
-            font = rf::gr_load_font(HudGetBoldFontName(true));
+            font = rf::gr_load_font(hud_get_bold_font_name(true));
             if (font == -1) {
                 xlog::error("Failed to load boldfont!");
             }
@@ -437,7 +437,7 @@ int HudGetLargeFont()
     else {
         static int font = -2;
         if (font == -2) {
-            font = rf::gr_load_font(HudGetBoldFontName(false));
+            font = rf::gr_load_font(hud_get_bold_font_name(false));
         }
         return font;
     }
@@ -488,23 +488,23 @@ CallHook HudRenderStatusMsg_GrGetFontHeight_hook{
     },
 };
 
-void ApplyHudPatches()
+void apply_hud_patches()
 {
     // Fix HUD on not supported resolutions
     HudSetupPositions_hook.install();
 
     // Command for hidding the HUD
     hud_render_for_multi_hook.install();
-    hud_cmd.Register();
+    hud_cmd.register_cmd();
 
     // Add some init code
     HudInit_hook.install();
 
     // Other commands
-    bighud_cmd.Register();
-    reticle_scale_cmd.Register();
+    bighud_cmd.register_cmd();
+    reticle_scale_cmd.register_cmd();
 #ifndef NDEBUG
-    hud_coords_cmd.Register();
+    hud_coords_cmd.register_cmd();
 #endif
 
     // Fix message log rendering in resolutions with ratio different than 4:3
@@ -522,14 +522,14 @@ void ApplyHudPatches()
     write_mem_ptr(0x004780FC + 2, &g_target_player_name_font);
 
     // Patches from other files
-    InstallHealthArmorHudPatches();
-    InstallChatboxPatches();
-    InstallWeaponCycleHudPatches();
-    InstallPersonaMsgHudPatches();
-    ApplyTeamScoresHudPatches();
+    hud_status_apply_patches();
+    multi_hud_chat_apply_patches();
+    hud_weapon_cycle_apply_patches();
+    hud_persona_msg_apply_patches();
+    hud_team_scores_apply_patches();
 }
 
-bool IsDoubleAmmoHud()
+bool is_double_ammo_hud()
 {
     if (rf::is_multi) {
         return false;

@@ -14,7 +14,7 @@
 #define PRINTF_FMT_ATTRIBUTE(fmt_idx, va_idx)
 #endif
 
-inline std::vector<std::string_view> StringSplit(std::string_view str, char delim = ' ')
+inline std::vector<std::string_view> string_split(std::string_view str, char delim = ' ')
 {
     std::vector<std::string_view> output;
     size_t first = 0;
@@ -34,7 +34,7 @@ inline std::vector<std::string_view> StringSplit(std::string_view str, char deli
     return output;
 }
 
-inline std::string StringToLower(std::string_view str)
+inline std::string string_to_lower(std::string_view str)
 {
     std::string output;
     output.reserve(str.size());
@@ -44,44 +44,44 @@ inline std::string StringToLower(std::string_view str)
     return output;
 }
 
-inline bool StringEqualsIgnoreCase(std::string_view left, std::string_view right)
+inline bool string_equals_ignore_case(std::string_view left, std::string_view right)
 {
     return left.size() == right.size() && std::equal(left.begin(), left.end(), right.begin(), [](unsigned char a, unsigned char b) {
         return std::tolower(a) == std::tolower(b);
     });
 }
 
-inline bool StringStartsWith(std::string_view str, std::string_view prefix)
+inline bool string_starts_with(std::string_view str, std::string_view prefix)
 {
     return str.substr(0, prefix.size()) == prefix;
 }
 
-inline bool StringStartsWithIgnoreCase(std::string_view str, std::string_view prefix)
+inline bool string_starts_with_ignore_case(std::string_view str, std::string_view prefix)
 {
-    return StringEqualsIgnoreCase(str.substr(0, prefix.size()), prefix);
+    return string_equals_ignore_case(str.substr(0, prefix.size()), prefix);
 }
 
-inline bool StringEndsWith(std::string_view str, std::string_view suffix)
+inline bool string_ends_with(std::string_view str, std::string_view suffix)
 {
     return str.size() >= suffix.size() && str.substr(str.size() - suffix.size()) == suffix;
 }
 
-inline bool StringEndsWithIgnoreCase(std::string_view str, std::string_view suffix)
+inline bool string_ends_with_ignore_case(std::string_view str, std::string_view suffix)
 {
-    return str.size() >= suffix.size() && StringEqualsIgnoreCase(str.substr(str.size() - suffix.size()), suffix);
+    return str.size() >= suffix.size() && string_equals_ignore_case(str.substr(str.size() - suffix.size()), suffix);
 }
 
-inline bool StringContains(std::string_view str, char ch)
+inline bool string_contains(std::string_view str, char ch)
 {
     return str.find(ch) != std::string_view::npos;
 }
 
-inline bool StringContains(std::string_view str, std::string_view infix)
+inline bool string_contains(std::string_view str, std::string_view infix)
 {
     return str.find(infix) != std::string_view::npos;
 }
 
-inline bool StringContainsIgnoreCase(std::string_view str, std::string_view infix)
+inline bool string_contains_ignore_case(std::string_view str, std::string_view infix)
 {
     auto it = std::search(str.begin(), str.end(),
         infix.begin(), infix.end(),  [](unsigned char a, unsigned char b) {
@@ -99,25 +99,25 @@ private:
 public:
     StringMatcher(bool case_sensitive = false) : m_case_sensitive(case_sensitive) {}
 
-    StringMatcher& Exact(const std::string& exact)
+    StringMatcher& exact(const std::string& exact)
     {
         this->m_exact = exact;
         return *this;
     }
 
-    StringMatcher& Prefix(const std::string& prefix)
+    StringMatcher& prefix(const std::string& prefix)
     {
         this->m_prefix = prefix;
         return *this;
     }
 
-    StringMatcher& Infix(const std::string& infix)
+    StringMatcher& infix(const std::string& infix)
     {
         this->m_infix = infix;
         return *this;
     }
 
-    StringMatcher& Suffix(const std::string& suffix)
+    StringMatcher& suffix(const std::string& suffix)
     {
         this->m_suffix = suffix;
         return *this;
@@ -128,21 +128,21 @@ public:
         if (m_case_sensitive) {
             if (!m_exact.empty() && input != m_exact)
                 return false;
-            if (!m_prefix.empty() && !StringStartsWith(input, m_prefix))
+            if (!m_prefix.empty() && !string_starts_with(input, m_prefix))
                 return false;
-            if (!m_infix.empty() && !StringContains(input, m_infix))
+            if (!m_infix.empty() && !string_contains(input, m_infix))
                 return false;
-            if (!m_suffix.empty() && !StringEndsWith(input, m_suffix))
+            if (!m_suffix.empty() && !string_ends_with(input, m_suffix))
                 return false;
         }
         else {
-            if (!m_exact.empty() && !StringEqualsIgnoreCase(input, m_exact))
+            if (!m_exact.empty() && !string_equals_ignore_case(input, m_exact))
                 return false;
-            if (!m_prefix.empty() && !StringStartsWithIgnoreCase(input, m_prefix))
+            if (!m_prefix.empty() && !string_starts_with_ignore_case(input, m_prefix))
                 return false;
-            if (!m_infix.empty() && !StringContainsIgnoreCase(input, m_infix))
+            if (!m_infix.empty() && !string_contains_ignore_case(input, m_infix))
                 return false;
-            if (!m_suffix.empty() && !StringEndsWithIgnoreCase(input, m_suffix))
+            if (!m_suffix.empty() && !string_ends_with_ignore_case(input, m_suffix))
                 return false;
         }
         return true;
@@ -150,7 +150,7 @@ public:
 };
 
 PRINTF_FMT_ATTRIBUTE(1, 2)
-inline std::string StringFormat(const char* format, ...)
+inline std::string string_format(const char* format, ...)
 {
     std::va_list args;
     va_start(args, format);
@@ -165,7 +165,7 @@ inline std::string StringFormat(const char* format, ...)
     return str;
 }
 
-inline std::string_view GetFilenameWithoutExt(std::string_view filename)
+inline std::string_view get_filename_without_ext(std::string_view filename)
 {
     auto dot_pos = filename.rfind('.');
     if (dot_pos == std::string_view::npos) {
@@ -174,7 +174,7 @@ inline std::string_view GetFilenameWithoutExt(std::string_view filename)
     return filename.substr(0, dot_pos);
 }
 
-inline std::string_view GetExtFromFileName(std::string_view filename)
+inline std::string_view get_ext_from_filename(std::string_view filename)
 {
     auto dot_pos = filename.rfind('.');
     if (dot_pos == std::string_view::npos) {

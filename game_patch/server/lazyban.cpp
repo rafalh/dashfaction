@@ -22,17 +22,17 @@ static auto& banlist_null_entry = addr_as_ref<BanlistEntry>(0x0064EC08);
 
 std::vector<int> g_players_to_kick;
 
-void KickPlayerDelayed(rf::Player* player)
+void kick_player_delayed(rf::Player* player)
 {
     g_players_to_kick.push_back(player->nw_data->player_id);
 }
 
 CallHook<void(rf::Player*)> multi_kick_player_hook{
     0x0047B9BD,
-    KickPlayerDelayed,
+    kick_player_delayed,
 };
 
-void ProcessDelayedKicks()
+void process_delayed_kicks()
 {
     // Process kicks outside of packet processing loop to avoid crash when a player is suddenly destroyed (00479299)
     for (int player_id : g_players_to_kick) {
@@ -44,18 +44,18 @@ void ProcessDelayedKicks()
     g_players_to_kick.clear();
 }
 
-void BanCmdHandlerHook()
+void ban_cmd_handler_hook()
 {
     if (rf::is_multi && rf::is_server) {
         if (rf::console_run) {
             rf::console_get_arg(rf::CONSOLE_ARG_STR, true);
-            rf::Player* player = FindBestMatchingPlayer(rf::console_str_arg);
+            rf::Player* player = find_best_matching_player(rf::console_str_arg);
 
             if (player) {
                 if (player != rf::local_player) {
                     rf::console_printf(rf::strings::banning_player, player->name.c_str());
                     rf::multi_ban_ip(player->nw_data->addr);
-                    KickPlayerDelayed(player);
+                    kick_player_delayed(player);
                 }
                 else
                     rf::console_printf("You cannot ban yourself!");
@@ -69,17 +69,17 @@ void BanCmdHandlerHook()
     }
 }
 
-void KickCmdHandlerHook()
+void kick_cmd_handler_hook()
 {
     if (rf::is_multi && rf::is_server) {
         if (rf::console_run) {
             rf::console_get_arg(rf::CONSOLE_ARG_STR, 1);
-            rf::Player* player = FindBestMatchingPlayer(rf::console_str_arg);
+            rf::Player* player = find_best_matching_player(rf::console_str_arg);
 
             if (player) {
                 if (player != rf::local_player) {
                     rf::console_printf(rf::strings::kicking_player, player->name.c_str());
-                    KickPlayerDelayed(player);
+                    kick_player_delayed(player);
                 }
                 else
                     rf::console_printf("You cannot kick yourself!");
@@ -109,12 +109,12 @@ ConsoleCommand2 unban_last_cmd{
     "Unbans last banned player",
 };
 
-void InitLazyban()
+void init_lazy_ban()
 {
-    AsmWriter(0x0047B6F0).jmp(BanCmdHandlerHook);
-    AsmWriter(0x0047B580).jmp(KickCmdHandlerHook);
+    AsmWriter(0x0047B6F0).jmp(ban_cmd_handler_hook);
+    AsmWriter(0x0047B580).jmp(kick_cmd_handler_hook);
 
-    unban_last_cmd.Register();
+    unban_last_cmd.register_cmd();
 
     multi_kick_player_hook.install();
 }

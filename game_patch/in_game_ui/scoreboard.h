@@ -1,5 +1,5 @@
 #pragma once
 
-void InitScoreboard();
-void SetScoreboardHidden(bool hidden);
-void SetBigScoreboard(bool is_big);
+void init_scoreboard();
+void set_scoreboard_hidden(bool hidden);
+void set_big_scoreboard(bool is_big);

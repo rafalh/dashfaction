@@ -20,7 +20,7 @@ namespace rf
     rf::DsChannel ds_channels[rf::num_sound_channels];
 }
 
-void SetPlaySoundEventsVolumeScale(float volume_scale)
+void set_play_sound_events_volume_scale(float volume_scale)
 {
     volume_scale = std::clamp(volume_scale, 0.0f, 1.0f);
     uintptr_t offsets[] = {
@@ -156,7 +156,7 @@ StaticBufferResizePatch<rf::DsChannel> ds_channels_resize_patch{
     },
 };
 
-int TryToFreeDsChannel(float volume)
+int try_to_free_ds_channel(float volume)
 {
     int num_music = 0;
     int num_looping = 0;
@@ -202,7 +202,7 @@ CodeInjection snd_ds_play_3d_no_free_slots_fix{
         auto stack_frame = regs.esp + 0x14;
         auto volume_arg = addr_as_ref<float>(stack_frame + 0x18);
         if (regs.eax == -1) {
-            regs.eax = TryToFreeDsChannel(volume_arg);
+            regs.eax = try_to_free_ds_channel(volume_arg);
         }
     },
 };
@@ -213,7 +213,7 @@ CodeInjection snd_ds_play_no_free_slots_fix{
         auto stack_frame = regs.esp + 0x10;
         auto volume_arg = addr_as_ref<float>(stack_frame + 0x8);
         if (regs.eax == -1) {
-            regs.eax = TryToFreeDsChannel(volume_arg);
+            regs.eax = try_to_free_ds_channel(volume_arg);
         }
     },
 };
@@ -286,7 +286,7 @@ FunHook<int(const char*, float )> snd_music_play_cutscene_hook{
     },
 };
 
-void DisableSoundBeforeCutsceneSkip()
+void disable_sound_before_cutscene_skip()
 {
     if (g_cutscene_bg_sound_sig != -1) {
         rf::snd_pc_stop(g_cutscene_bg_sound_sig);
@@ -298,12 +298,12 @@ void DisableSoundBeforeCutsceneSkip()
     rf::sound_enabled = false;
 }
 
-void EnableSoundAfterCutsceneSkip()
+void enable_sound_after_cutscene_skip()
 {
     rf::sound_enabled = true;
 }
 
-void SetSoundEnabled(bool enabled)
+void set_sound_enabled(bool enabled)
 {
     rf::sound_enabled = enabled;
 }
@@ -313,7 +313,7 @@ ConsoleCommand2 level_sounds_cmd{
     [](std::optional<float> volume) {
         if (volume) {
             float vol_scale = std::clamp(volume.value(), 0.0f, 1.0f);
-            //SetPlaySoundEventsVolumeScale(vol_scale);
+            //set_play_sound_events_volume_scale(vol_scale);
 
             g_game_config.level_sound_volume = vol_scale;
             g_game_config.save();
@@ -341,16 +341,15 @@ ConsoleCommand2 playing_sounds_cmd{
 };
 #endif
 
-
-void RegisterSoundCommands()
+void register_sound_commands()
 {
-    level_sounds_cmd.Register();
+    level_sounds_cmd.register_cmd();
 #ifdef DEBUG
-    playing_sounds_cmd.Register();
+    playing_sounds_cmd.register_cmd();
 #endif
 }
 
-void ApplySoundPatches()
+void apply_sound_patches()
 {
     // Sound loop fix
     write_mem<u8>(0x00505D07 + 1, 0x00505D5B - (0x00505D07 + 2));
@@ -360,7 +359,7 @@ void ApplySoundPatches()
     snd_music_play_cutscene_hook.install();
 
     // Level sounds
-    SetPlaySoundEventsVolumeScale(g_game_config.level_sound_volume);
+    set_play_sound_events_volume_scale(g_game_config.level_sound_volume);
     snd_calculate_1d_from_3d_ambient_sound_hook.install();
 
     AsmWriter(0x00505FE4).nop(2);

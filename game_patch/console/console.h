@@ -13,10 +13,10 @@ namespace rf
     struct Player;
 }
 
-void ConsoleInit();
-void ConsoleApplyPatches();
-void ConsoleRegisterCommand(rf::ConsoleCommand* cmd);
-rf::Player* FindBestMatchingPlayer(const char* name);
+void console_init();
+void console_apply_patches();
+void console_register_command(rf::ConsoleCommand* cmd);
+rf::Player* find_best_matching_player(const char* name);
 
 class DcInvalidArgTypeError : public std::exception
 {};
@@ -24,7 +24,7 @@ class DcInvalidArgTypeError : public std::exception
 class DcRequiredArgMissingError : public std::exception
 {};
 
-inline bool ReadArgInternal(unsigned type_flag, bool preserve_case = false)
+inline bool console_read_arg_internal(unsigned type_flag, bool preserve_case = false)
 {
     rf::console_get_arg(rf::CONSOLE_ARG_ANY, preserve_case);
     if (rf::console_arg_type & type_flag)
@@ -35,43 +35,43 @@ inline bool ReadArgInternal(unsigned type_flag, bool preserve_case = false)
 }
 
 template<typename T>
-inline T DcReadArg()
+inline T console_read_arg()
 {
-    auto value_opt = DcReadArg<std::optional<T>>();
+    auto value_opt = console_read_arg<std::optional<T>>();
     if (!value_opt)
         throw DcRequiredArgMissingError();
     return value_opt.value();
 }
 
 template<>
-inline std::optional<int> DcReadArg()
+inline std::optional<int> console_read_arg()
 {
-    if (!ReadArgInternal(rf::CONSOLE_ARG_INT))
+    if (!console_read_arg_internal(rf::CONSOLE_ARG_INT))
         return {};
     return std::optional{rf::console_int_arg};
 }
 
 template<>
-inline std::optional<float> DcReadArg()
+inline std::optional<float> console_read_arg()
 {
-    if (!ReadArgInternal(rf::CONSOLE_ARG_FLOAT))
+    if (!console_read_arg_internal(rf::CONSOLE_ARG_FLOAT))
         return {};
     return std::optional{rf::console_float_arg};
 }
 
 template<>
-inline std::optional<bool> DcReadArg()
+inline std::optional<bool> console_read_arg()
 {
-    if (!ReadArgInternal(rf::CONSOLE_ARG_TRUE | rf::CONSOLE_ARG_FALSE))
+    if (!console_read_arg_internal(rf::CONSOLE_ARG_TRUE | rf::CONSOLE_ARG_FALSE))
         return {};
     bool value = (rf::console_arg_type & rf::CONSOLE_ARG_TRUE) == rf::CONSOLE_ARG_TRUE;
     return std::optional{value};
 }
 
 template<>
-inline std::optional<std::string> DcReadArg()
+inline std::optional<std::string> console_read_arg()
 {
-    if (!ReadArgInternal(rf::CONSOLE_ARG_STR))
+    if (!console_read_arg_internal(rf::CONSOLE_ARG_STR))
         return {};
     return std::optional{rf::console_str_arg};
 }
@@ -83,22 +83,22 @@ protected:
     {
         this->name = name;
         this->help = description;
-        this->func = reinterpret_cast<void (*)()>(StaticHandler);
+        this->func = reinterpret_cast<void (*)()>(static_handler);
     }
 
-    static void __thiscall StaticHandler(rf::ConsoleCommand* cmd)
+    static void __thiscall static_handler(rf::ConsoleCommand* cmd)
     {
         // Note: this cast actually changes the offset taking into account the vtbl existance
         auto cmd2 = static_cast<BaseCommand*>(cmd);
-        cmd2->Handler();
+        cmd2->handler();
     }
 
-    virtual void Handler() = 0;
+    virtual void handler() = 0;
 
 public:
-    void Register()
+    void register_cmd()
     {
-        ConsoleRegisterCommand(this);
+        console_register_command(this);
     }
 };
 
@@ -121,7 +121,7 @@ private:
         void operator()()
         {
             // Note: The order of evaluation of arguments is unspecified in C++ so we have to use a tuple here
-            std::tuple<Args...> args = {DcReadArg<Args>()...};
+            std::tuple<Args...> args = {console_read_arg<Args>()...};
             std::apply(m_handler, args);
         }
     };
@@ -137,15 +137,15 @@ public:
     {}
 
 private:
-    void Handler() override
+    void handler() override
     {
         if (rf::console_run)
-            Run();
+            run();
         else if (rf::console_help)
-            Help();
+            help();
     }
 
-    void Run()
+    void run()
     {
         try {
             m_handler_wrapper();
@@ -158,7 +158,7 @@ private:
         }
     }
 
-    void Help()
+    void help()
     {
         if (m_usage_text) {
             rf::console_output(rf::strings::usage, nullptr);
@@ -176,7 +176,7 @@ public:
     DcCommandAlias(const char* name, rf::ConsoleCommand& target_cmd) : BaseCommand(name), m_target_cmd(target_cmd) {}
 
 private:
-    void Handler() override
+    void handler() override
     {
         auto handler_fun = reinterpret_cast<void(__thiscall *)(rf::ConsoleCommand*)>(m_target_cmd.func);
         handler_fun(&m_target_cmd);

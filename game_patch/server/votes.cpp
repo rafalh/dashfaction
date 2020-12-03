@@ -25,20 +25,20 @@ private:
 public:
     virtual ~Vote() {}
 
-    bool Start(std::string_view arg, rf::Player* source)
+    bool start(std::string_view arg, rf::Player* source)
     {
-        if (!ProcessVoteArg(arg, source)) {
+        if (!process_vote_arg(arg, source)) {
             return false;
         }
 
-        SendVoteStartingMsg(source);
+        send_vote_starting_msg(source);
 
         start_time = std::time(nullptr);
 
         // prepare allowed player list
         auto player_list = SinglyLinkedList{rf::player_list};
         for (auto& player : player_list) {
-            if (&player != source && !GetPlayerAdditionalData(&player).is_browser) {
+            if (&player != source && !get_player_additional_data(&player).is_browser) {
                 remaining_players.insert(&player);
             }
         }
@@ -46,10 +46,10 @@ public:
         ++num_votes_yes;
         players_who_voted.insert({source, true});
 
-        return CheckForEarlyVoteFinish();
+        return check_for_early_vote_finish();
     }
 
-    virtual bool OnPlayerLeave(rf::Player* player)
+    virtual bool on_player_leave(rf::Player* player)
     {
         remaining_players.erase(player);
         auto it = players_who_voted.find(player);
@@ -59,20 +59,20 @@ public:
             else
                 num_votes_no--;
         }
-        return CheckForEarlyVoteFinish();
+        return check_for_early_vote_finish();
     }
 
-    virtual bool IsAllowedInLimboState()
+    virtual bool is_allowed_in_limbo_state()
     {
         return true;
     }
 
-    bool AddPlayerVote(bool is_yes_vote, rf::Player* source)
+    bool add_player_vote(bool is_yes_vote, rf::Player* source)
     {
         if (players_who_voted.count(source) == 1)
-            SendChatLinePacket("You already voted!", source);
+            send_chat_line_packet("You already voted!", source);
         else if (remaining_players.count(source) == 0)
-            SendChatLinePacket("You cannot vote!", source);
+            send_chat_line_packet("You cannot vote!", source);
         else {
             if (is_yes_vote)
                 num_votes_yes++;
@@ -80,25 +80,25 @@ public:
                 num_votes_no++;
             remaining_players.erase(source);
             players_who_voted.insert({source, is_yes_vote});
-            auto msg = StringFormat("\xA6 Vote status:  Yes: %d  No: %d  Waiting: %d", num_votes_yes, num_votes_no, remaining_players.size());
-            SendChatLinePacket(msg.c_str(), nullptr);
-            return CheckForEarlyVoteFinish();
+            auto msg = string_format("\xA6 Vote status:  Yes: %d  No: %d  Waiting: %d", num_votes_yes, num_votes_no, remaining_players.size());
+            send_chat_line_packet(msg.c_str(), nullptr);
+            return check_for_early_vote_finish();
         }
         return true;
     }
 
-    bool DoFrame()
+    bool do_frame()
     {
-        const auto& vote_config = GetConfig();
+        const auto& vote_config = get_config();
         std::time_t passed_time_sec = std::time(nullptr) - start_time;
         if (passed_time_sec >= vote_config.time_limit_seconds) {
-            SendChatLinePacket("\xA6 Vote timed out!", nullptr);
+            send_chat_line_packet("\xA6 Vote timed out!", nullptr);
             return false;
         }
         else if (passed_time_sec >= vote_config.time_limit_seconds / 2 && !reminder_sent) {
             // Send reminder to player who did not vote yet
             for (rf::Player* player : remaining_players) {
-                SendChatLinePacket("\xA6 Send message \"/vote yes\" or \"/vote no\" to vote.", player);
+                send_chat_line_packet("\xA6 Send message \"/vote yes\" or \"/vote no\" to vote.", player);
             }
             reminder_sent = true;
         }
@@ -106,53 +106,53 @@ public:
     }
 
 protected:
-    virtual std::string GetTitle() = 0;
-    virtual const VoteConfig& GetConfig() const = 0;
+    virtual std::string get_title() = 0;
+    virtual const VoteConfig& get_config() const = 0;
 
-    virtual bool ProcessVoteArg([[maybe_unused]] std::string_view arg, [[maybe_unused]] rf::Player* source)
+    virtual bool process_vote_arg([[maybe_unused]] std::string_view arg, [[maybe_unused]] rf::Player* source)
     {
         return true;
     }
 
-    virtual void OnAccepted()
+    virtual void on_accepted()
     {
-        SendChatLinePacket("\xA6 Vote passed!", nullptr);
+        send_chat_line_packet("\xA6 Vote passed!", nullptr);
     }
 
     virtual void OnRejected()
     {
-        SendChatLinePacket("\xA6 Vote failed!", nullptr);
+        send_chat_line_packet("\xA6 Vote failed!", nullptr);
     }
 
-    void SendVoteStartingMsg(rf::Player* source)
+    void send_vote_starting_msg(rf::Player* source)
     {
-        auto title = GetTitle();
-        auto msg = StringFormat(
+        auto title = get_title();
+        auto msg = string_format(
             "\n=============== VOTE STARTING ===============\n"
             "%s vote started by %s.\n"
             "Send message \"/vote yes\" or \"/vote no\" to participate.",
             title.c_str(), source->name.c_str());
-        SendChatLinePacket(msg.c_str(), nullptr);
+        send_chat_line_packet(msg.c_str(), nullptr);
     }
 
-    void FinishVote(bool is_accepted)
+    void finish_vote(bool is_accepted)
     {
         if (is_accepted) {
-            OnAccepted();
+            on_accepted();
         }
         else {
             OnRejected();
         }
     }
 
-    bool CheckForEarlyVoteFinish()
+    bool check_for_early_vote_finish()
     {
         if (num_votes_yes > num_votes_no + static_cast<int>(remaining_players.size())) {
-            FinishVote(true);
+            finish_vote(true);
             return false;
         }
         else if (num_votes_no > num_votes_yes + static_cast<int>(remaining_players.size())) {
-            FinishVote(false);
+            finish_vote(false);
             return false;
         }
         return true;
@@ -163,35 +163,35 @@ struct VoteKick : public Vote
 {
     rf::Player* m_target_player;
 
-    bool ProcessVoteArg(std::string_view arg, [[ maybe_unused ]] rf::Player* source) override
+    bool process_vote_arg(std::string_view arg, [[ maybe_unused ]] rf::Player* source) override
     {
         std::string player_name{arg};
-        m_target_player = FindBestMatchingPlayer(player_name.c_str());
+        m_target_player = find_best_matching_player(player_name.c_str());
         if (!m_target_player)
             return false;
         return true;
     }
 
-    std::string GetTitle() override
+    std::string get_title() override
     {
-        return StringFormat("KICK PLAYER '%s'", m_target_player->name.c_str());
+        return string_format("KICK PLAYER '%s'", m_target_player->name.c_str());
     }
 
-    void OnAccepted() override
+    void on_accepted() override
     {
-        SendChatLinePacket("\xA6 Vote passed: kicking player", nullptr);
+        send_chat_line_packet("\xA6 Vote passed: kicking player", nullptr);
         rf::multi_kick_player(m_target_player);
     }
 
-    bool OnPlayerLeave(rf::Player* player) override
+    bool on_player_leave(rf::Player* player) override
     {
         if (m_target_player == player) {
             return false;
         }
-        return Vote::OnPlayerLeave(player);
+        return Vote::on_player_leave(player);
     }
 
-    const VoteConfig& GetConfig() const override
+    const VoteConfig& get_config() const override
     {
         return g_additional_server_config.vote_kick;
     }
@@ -201,23 +201,23 @@ struct VoteExtend : public Vote
 {
     rf::Player* m_target_player;
 
-    std::string GetTitle() override
+    std::string get_title() override
     {
         return "EXTEND ROUND BY 5 MINUTES";
     }
 
-    void OnAccepted() override
+    void on_accepted() override
     {
-        SendChatLinePacket("\xA6 Vote passed: extending round", nullptr);
-        ExtendRoundTime(5);
+        send_chat_line_packet("\xA6 Vote passed: extending round", nullptr);
+        extend_round_time(5);
     }
 
-    bool IsAllowedInLimboState() override
+    bool is_allowed_in_limbo_state() override
     {
         return false;
     }
 
-    const VoteConfig& GetConfig() const override
+    const VoteConfig& get_config() const override
     {
         return g_additional_server_config.vote_extend;
     }
@@ -227,34 +227,34 @@ struct VoteLevel : public Vote
 {
     std::string m_level_name;
 
-    bool ProcessVoteArg([[maybe_unused]] std::string_view arg, rf::Player* source) override
+    bool process_vote_arg([[maybe_unused]] std::string_view arg, rf::Player* source) override
     {
         m_level_name = std::string{arg} + ".rfl";
         if (!rf::GetFileChecksum(m_level_name.c_str())) {
-            SendChatLinePacket("Cannot find specified level!", source);
+            send_chat_line_packet("Cannot find specified level!", source);
             return false;
         }
         return true;
     }
 
-    std::string GetTitle() override
+    std::string get_title() override
     {
-        return StringFormat("LOAD LEVEL '%s'", m_level_name.c_str());
+        return string_format("LOAD LEVEL '%s'", m_level_name.c_str());
     }
 
-    void OnAccepted() override
+    void on_accepted() override
     {
-        SendChatLinePacket("\xA6 Vote passed: changing level", nullptr);
+        send_chat_line_packet("\xA6 Vote passed: changing level", nullptr);
         auto& multi_change_level = addr_as_ref<bool(const char* filename)>(0x0047BF50);
         multi_change_level(m_level_name.c_str());
     }
 
-    bool IsAllowedInLimboState() override
+    bool is_allowed_in_limbo_state() override
     {
         return false;
     }
 
-    const VoteConfig& GetConfig() const override
+    const VoteConfig& get_config() const override
     {
         return g_additional_server_config.vote_level;
     }
@@ -262,23 +262,23 @@ struct VoteLevel : public Vote
 
 struct VoteRestart : public Vote
 {
-    std::string GetTitle() override
+    std::string get_title() override
     {
         return "RESTART LEVEL";
     }
 
-    void OnAccepted() override
+    void on_accepted() override
     {
-        SendChatLinePacket("\xA6 Vote passed: restarting level", nullptr);
-        RestartCurrentLevel();
+        send_chat_line_packet("\xA6 Vote passed: restarting level", nullptr);
+        restart_current_level();
     }
 
-    bool IsAllowedInLimboState() override
+    bool is_allowed_in_limbo_state() override
     {
         return false;
     }
 
-    const VoteConfig& GetConfig() const override
+    const VoteConfig& get_config() const override
     {
         return g_additional_server_config.vote_restart;
     }
@@ -286,23 +286,23 @@ struct VoteRestart : public Vote
 
 struct VoteNext : public Vote
 {
-    std::string GetTitle() override
+    std::string get_title() override
     {
         return "LOAD NEXT LEVEL";
     }
 
-    void OnAccepted() override
+    void on_accepted() override
     {
-        SendChatLinePacket("\xA6 Vote passed: loading next level", nullptr);
-        LoadNextLevel();
+        send_chat_line_packet("\xA6 Vote passed: loading next level", nullptr);
+        load_next_level();
     }
 
-    bool IsAllowedInLimboState() override
+    bool is_allowed_in_limbo_state() override
     {
         return false;
     }
 
-    const VoteConfig& GetConfig() const override
+    const VoteConfig& get_config() const override
     {
         return g_additional_server_config.vote_next;
     }
@@ -310,23 +310,23 @@ struct VoteNext : public Vote
 
 struct VotePrevious : public Vote
 {
-    std::string GetTitle() override
+    std::string get_title() override
     {
         return "LOAD PREV LEVEL";
     }
 
-    void OnAccepted() override
+    void on_accepted() override
     {
-        SendChatLinePacket("\xA6 Vote passed: loading previous level", nullptr);
-        LoadPrevLevel();
+        send_chat_line_packet("\xA6 Vote passed: loading previous level", nullptr);
+        load_prev_level();
     }
 
-    bool IsAllowedInLimboState() override
+    bool is_allowed_in_limbo_state() override
     {
         return false;
     }
 
-    const VoteConfig& GetConfig() const override
+    const VoteConfig& get_config() const override
     {
         return g_additional_server_config.vote_previous;
     }
@@ -338,32 +338,27 @@ private:
     std::optional<std::unique_ptr<Vote>> active_vote;
 
 public:
-    const std::optional<std::unique_ptr<Vote>>& GetActiveVote() const
-    {
-        return active_vote;
-    }
-
     template<typename T>
     bool StartVote(std::string_view arg, rf::Player* source)
     {
         if (active_vote) {
-            SendChatLinePacket("Another vote is currently in progress!", source);
+            send_chat_line_packet("Another vote is currently in progress!", source);
             return false;
         }
 
         auto vote = std::make_unique<T>();
 
-        if (!vote->GetConfig().enabled) {
-            SendChatLinePacket("This vote type is disabled!", source);
+        if (!vote->get_config().enabled) {
+            send_chat_line_packet("This vote type is disabled!", source);
             return false;
         }
 
-        if (!vote->IsAllowedInLimboState() && rf::gameseq_get_state() != rf::GS_GAMEPLAY) {
-            SendChatLinePacket("Vote cannot be started now!", source);
+        if (!vote->is_allowed_in_limbo_state() && rf::gameseq_get_state() != rf::GS_GAMEPLAY) {
+            send_chat_line_packet("Vote cannot be started now!", source);
             return false;
         }
 
-        if (!vote->Start(arg, source)) {
+        if (!vote->start(arg, source)) {
             return false;
         }
 
@@ -371,39 +366,39 @@ public:
         return true;
     }
 
-    void OnPlayerLeave(rf::Player* player)
+    void on_player_leave(rf::Player* player)
     {
-        if (active_vote && !active_vote.value()->OnPlayerLeave(player)) {
+        if (active_vote && !active_vote.value()->on_player_leave(player)) {
             active_vote.reset();
         }
     }
 
     void OnLimboStateEnter()
     {
-        if (active_vote && !active_vote.value()->IsAllowedInLimboState()) {
-            SendChatLinePacket("\xA6 Vote canceled!", nullptr);
+        if (active_vote && !active_vote.value()->is_allowed_in_limbo_state()) {
+            send_chat_line_packet("\xA6 Vote canceled!", nullptr);
             active_vote.reset();
         }
     }
 
-    void AddPlayerVote(bool is_yes_vote, rf::Player* source)
+    void add_player_vote(bool is_yes_vote, rf::Player* source)
     {
         if (!active_vote) {
-            SendChatLinePacket("No vote in progress!", source);
+            send_chat_line_packet("No vote in progress!", source);
             return;
         }
 
-        if (!active_vote.value()->AddPlayerVote(is_yes_vote, source)) {
+        if (!active_vote.value()->add_player_vote(is_yes_vote, source)) {
             active_vote.reset();
         }
     }
 
-    void DoFrame()
+    void do_frame()
     {
         if (!active_vote)
             return;
 
-        if (!active_vote.value()->DoFrame()) {
+        if (!active_vote.value()->do_frame()) {
             active_vote.reset();
         }
     }
@@ -411,10 +406,10 @@ public:
 
 VoteMgr g_vote_mgr;
 
-void HandleVoteCommand(std::string_view vote_name, std::string_view vote_arg, rf::Player* sender)
+void handle_vote_command(std::string_view vote_name, std::string_view vote_arg, rf::Player* sender)
 {
-    if (GetPlayerAdditionalData(sender).is_browser) {
-        SendChatLinePacket("Browsers are not allowed to vote!", sender);
+    if (get_player_additional_data(sender).is_browser) {
+        send_chat_line_packet("Browsers are not allowed to vote!", sender);
     }
     if (vote_name == "kick")
         g_vote_mgr.StartVote<VoteKick>(vote_arg, sender);
@@ -429,19 +424,19 @@ void HandleVoteCommand(std::string_view vote_name, std::string_view vote_arg, rf
     else if (vote_name == "previous" || vote_name == "prev")
         g_vote_mgr.StartVote<VotePrevious>(vote_arg, sender);
     else if (vote_name == "yes" || vote_name == "y")
-        g_vote_mgr.AddPlayerVote(true, sender);
+        g_vote_mgr.add_player_vote(true, sender);
     else if (vote_name == "no" || vote_name == "n")
-        g_vote_mgr.AddPlayerVote(false, sender);
+        g_vote_mgr.add_player_vote(false, sender);
     else
-        SendChatLinePacket("Unrecognized vote type!", sender);
+        send_chat_line_packet("Unrecognized vote type!", sender);
 }
 
-void ServerVoteDoFrame()
+void server_vote_do_frame()
 {
-    g_vote_mgr.DoFrame();
+    g_vote_mgr.do_frame();
 }
 
-void ServerVoteOnLimboStateEnter()
+void server_vote_on_limbo_state_enter()
 {
     g_vote_mgr.OnLimboStateEnter();
 }

@@ -19,13 +19,13 @@ CodeInjection switch_model_event_custom_mesh_patch{
         }
         auto& mesh_name = *reinterpret_cast<rf::String*>(regs.esi);
         std::string_view mesh_name_sv{mesh_name.c_str()};
-        if (StringEndsWithIgnoreCase(mesh_name_sv, ".v3m")) {
+        if (string_ends_with_ignore_case(mesh_name_sv, ".v3m")) {
             mesh_type = rf::MESH_TYPE_STATIC;
         }
-        else if (StringEndsWithIgnoreCase(mesh_name_sv, ".v3c")) {
+        else if (string_ends_with_ignore_case(mesh_name_sv, ".v3c")) {
             mesh_type = rf::MESH_TYPE_CHARACTER;
         }
-        else if (StringEndsWithIgnoreCase(mesh_name_sv, ".vfx")) {
+        else if (string_ends_with_ignore_case(mesh_name_sv, ".vfx")) {
             mesh_type = rf::MESH_TYPE_ANIM_FX;
         }
     },
@@ -59,8 +59,8 @@ CodeInjection switch_model_event_obj_lighting_and_physics_fix{
 
             if (obj->type == rf::OT_CLUTTER) {
                 // Note: ObjDeleteMesh frees mesh_lighting_data
-                ObjMeshLightingAllocOne(obj);
-                ObjMeshLightingUpdateOne(obj);
+                obj_mesh_lighting_alloc_one(obj);
+                obj_mesh_lighting_update_one(obj);
             }
         }
     },
@@ -142,7 +142,7 @@ CallHook<int(rf::AiPathInfo*)> ai_path_release_on_load_level_event_crash_fix{
     },
 };
 
-void DoLevelSpecificEventHacks(const char* level_filename)
+void do_level_specific_event_hacks(const char* level_filename)
 {
     if (_stricmp(level_filename, "L5S2.rfl") == 0) {
         // HACKFIX: make Set_Liquid_Depth events properties in lava control room more sensible
@@ -155,7 +155,7 @@ void DoLevelSpecificEventHacks(const char* level_filename)
     }
 }
 
-void ApplyEventPatches()
+void apply_event_patches()
 {
     // Allow custom mesh (not used in clutter.tbl or items.tbl) in Switch_Model event
     switch_model_event_custom_mesh_patch.install();

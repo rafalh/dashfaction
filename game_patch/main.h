@@ -26,8 +26,8 @@ struct PlayerAdditionalData
     rf::TimestampRealtime last_teleport_timestamp;
 };
 
-void FindPlayer(const StringMatcher& query, std::function<void(rf::Player*)> consumer);
-PlayerAdditionalData& GetPlayerAdditionalData(rf::Player* player);
+void find_player(const StringMatcher& query, std::function<void(rf::Player*)> consumer);
+PlayerAdditionalData& get_player_additional_data(rf::Player* player);
 
 extern GameConfig g_game_config;
 #ifdef _WINDOWS_

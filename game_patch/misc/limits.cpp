@@ -44,7 +44,7 @@ static struct {
     rf::Object* objects[obj_limit];
 } g_sim_obj_array;
 
-void SimObjArrayAddHook(rf::Object* obj)
+void sim_obj_array_add_hook(rf::Object* obj)
 {
     g_sim_obj_array.objects[g_sim_obj_array.count++] = obj;
 }
@@ -130,7 +130,7 @@ CallHook<void*(size_t)> GPool_allocate_new_hook{
     },
 };
 
-void ApplyLimitsPatches()
+void apply_limits_patches()
 {
     // Change object limit
     //obj_free_slot_buffer_resize_patch.install();
@@ -148,8 +148,8 @@ void ApplyLimitsPatches()
     // Remap simulated objects array
     AsmWriter(0x00487A6B, 0x00487A74).mov(asm_regs::ecx, &g_sim_obj_array);
     AsmWriter(0x00487C02, 0x00487C0B).mov(asm_regs::ecx, &g_sim_obj_array);
-    AsmWriter(0x00487AD2, 0x00487ADB).call(SimObjArrayAddHook).add(asm_regs::esp, 4);
-    AsmWriter(0x00487BBA, 0x00487BC3).call(SimObjArrayAddHook).add(asm_regs::esp, 4);
+    AsmWriter(0x00487AD2, 0x00487ADB).call(sim_obj_array_add_hook).add(asm_regs::esp, 4);
+    AsmWriter(0x00487BBA, 0x00487BC3).call(sim_obj_array_add_hook).add(asm_regs::esp, 4);
 
     // Allow pool allocation beyond the limit
     write_mem<u8>(0x0048B5BB, asm_opcodes::jmp_rel_short); // weapon

@@ -60,7 +60,7 @@ public:
         return result;
     }
 
-    void NextFrame()
+    void next_frame()
     {
         std::vector<void*> keys_to_erase;
         for (auto& p : m_state_map) {
@@ -146,7 +146,7 @@ void FtolIssuesDetectionStart()
     g_ftol_issue_detection = true;
 }
 
-void FtolIssuesDetectionDoFrame()
+void ftol_issues_detection_do_frame()
 {
     if (!g_ftol_issue_detection)
         return;
@@ -262,7 +262,7 @@ CodeInjection WaterAnimateWaves_speed_fix{
     },
 };
 
-void HighFpsAfterLevelLoad(rf::String& level_filename)
+void high_fps_after_level_load(rf::String& level_filename)
 {
     if (_stricmp(level_filename, "L5S3.rfl") == 0) {
         // Fix submarine exploding - change delay of two events to make submarine physics enabled later
@@ -367,7 +367,7 @@ FunHook<rf::ParticleEmitter*(int, rf::ParticleEmitterType&, rf::GRoom*, rf::Vect
     },
 };
 
-void HighFpsInit()
+void high_fps_init()
 {
     // Fix animations broken on high FPS because of ignored ftol remainder
     for (auto& ftol_fix : g_ftol_accuracy_fixes) {
@@ -375,7 +375,7 @@ void HighFpsInit()
     }
 
 #ifdef DEBUG
-    detect_ftol_issues_cmd.Register();
+    detect_ftol_issues_cmd.register_cmd();
 #endif
 
     // Fix player being stuck to ground when jumping, especially when FPS is greater than 200
@@ -431,7 +431,7 @@ void HighFpsInit()
     particle_emitter_create_hook.install();
 }
 
-void HighFpsUpdate()
+void high_fps_update()
 {
     float frame_time = rf::frametime;
     if (frame_time > 0.0001f) { // < 1000FPS
@@ -440,10 +440,10 @@ void HighFpsUpdate()
     }
 
 #ifdef DEBUG
-    FtolIssuesDetectionDoFrame();
+    ftol_issues_detection_do_frame();
 #endif
 
     for (auto& ftol_fix : g_ftol_accuracy_fixes) {
-        ftol_fix.NextFrame();
+        ftol_fix.next_frame();
     }
 }

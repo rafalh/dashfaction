@@ -2,6 +2,6 @@
 
 #include "../rf/common.h"
 
-void HighFpsInit();
-void HighFpsUpdate();
-void HighFpsAfterLevelLoad(rf::String& level_filename);
+void high_fps_init();
+void high_fps_update();
+void high_fps_after_level_load(rf::String& level_filename);

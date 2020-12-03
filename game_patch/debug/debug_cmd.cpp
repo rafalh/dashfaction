@@ -76,7 +76,7 @@ ConsoleCommand2 debug_cmd{
     "room | portal | lightmap | nolightmap | show_invisible_faces]",
 };
 
-void DisableAllDebugFlags()
+void disable_all_debug_flags()
 {
     bool clear_geom_cache = false;
     for (auto& dbg_flag : g_debug_flags) {
@@ -91,11 +91,11 @@ void DisableAllDebugFlags()
 CodeInjection MpInit_disable_debug_flags_patch{
     0x0046D5B0,
     []() {
-        DisableAllDebugFlags();
+        disable_all_debug_flags();
     },
 };
 
-void DebugCmdRender()
+void debug_cmd_render()
 {
     const auto dbg_waypoints = addr_as_ref<void()>(0x00468F00);
     const auto dbg_internal_lights = addr_as_ref<void()>(0x004DB830);
@@ -105,7 +105,7 @@ void DebugCmdRender()
         dbg_internal_lights();
 }
 
-void DebugCmdRenderUI()
+void debug_cmd_render_ui()
 {
     const auto dbg_rendering_stats = addr_as_ref<void()>(0x004D36B0);
     const auto dbg_particle_stats = addr_as_ref<void()>(0x004964E0);
@@ -114,13 +114,13 @@ void DebugCmdRenderUI()
     dbg_particle_stats();
 }
 
-void DebugCmdApplyPatches()
+void debug_cmd_apply_patches()
 {
     // Reset debug flags when entering multiplayer
     MpInit_disable_debug_flags_patch.install();
 }
 
-void DebugCmdInit()
+void debug_cmd_init()
 {
-    debug_cmd.Register();
+    debug_cmd.register_cmd();
 }

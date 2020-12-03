@@ -56,7 +56,7 @@ bool g_render_to_texture_active = false;
 ComPtr<IDirect3DSurface8> g_orig_render_target;
 ComPtr<IDirect3DSurface8> g_orig_depth_stencil_surface;
 
-IDirect3DSurface8* GetCachedDepthStencilSurface()
+IDirect3DSurface8* get_cached_depth_stencil_surface()
 {
     if (!g_depth_stencil_surface) {
         auto hr = rf::gr_d3d_device->CreateDepthStencilSurface(
@@ -70,12 +70,12 @@ IDirect3DSurface8* GetCachedDepthStencilSurface()
     return g_depth_stencil_surface;
 }
 
-bool StartRenderToTexture(int bmh)
+bool begin_render_to_texture(int bmh)
 {
     // Note: texture reference counter is not increased here so ComPtr is not used
     IDirect3DTexture8* d3d_tex = rf::gr_d3d_get_texture(bmh);
     if (!d3d_tex) {
-        WARN_ONCE("Bitmap without D3D texture provided in StartRenderToTexture");
+        WARN_ONCE("Bitmap without D3D texture provided in begin_render_to_texture");
         return false;
     }
 
@@ -103,7 +103,7 @@ bool StartRenderToTexture(int bmh)
         return false;
     }
 
-    auto depth_stencil = GetCachedDepthStencilSurface();
+    auto depth_stencil = get_cached_depth_stencil_surface();
     hr = rf::gr_d3d_device->SetRenderTarget(tex_surface, depth_stencil);
     if (FAILED(hr)) {
         ERR_ONCE("IDirect3DDevice8::SetRenderTarget failed 0x%lX", hr);
@@ -118,7 +118,7 @@ bool StartRenderToTexture(int bmh)
     return true;
 }
 
-void EndRenderToTexture()
+void end_render_to_texture()
 {
     if (!g_render_to_texture_active) {
         return;
@@ -153,7 +153,7 @@ CallHook<rf::BmFormat(int, int, int, int, std::byte*)> gr_d3d_read_back_buffer_h
         }
 
         // function is sometimes called with all parameters set to 0 to get backbuffer format
-        rf::BmFormat pixel_fmt = GetBmFormatFromD3DFormat(desc.Format);
+        rf::BmFormat pixel_fmt = get_bm_format_from_d3d_format(desc.Format);
         if (width == 0 || height == 0) {
             return pixel_fmt;
         }
@@ -183,11 +183,11 @@ CallHook<rf::BmFormat(int, int, int, int, std::byte*)> gr_d3d_read_back_buffer_h
         D3DLOCKED_RECT locked_rect;
         hr = g_capture_tmp_surface->LockRect(&locked_rect, nullptr, D3DLOCK_READONLY | D3DLOCK_NO_DIRTY_UPDATE);
         if (FAILED(hr)) {
-            ERR_ONCE("IDirect3DSurface8::LockRect failed 0x%lX (%s)", hr, getDxErrorStr(hr));
+            ERR_ONCE("IDirect3DSurface8::LockRect failed 0x%lX (%s)", hr, get_d3d_error_str(hr));
             return rf::BM_FORMAT_NONE;
         }
 
-        int bytes_per_pixel = GetBmFormatSize(pixel_fmt);
+        int bytes_per_pixel = get_bm_format_size(pixel_fmt);
         std::byte* src_ptr =
             reinterpret_cast<std::byte*>(locked_rect.pBits) + y * locked_rect.Pitch + x * bytes_per_pixel;
         std::byte* dst_ptr = buffer;
@@ -226,11 +226,11 @@ CallHook<int(rf::BmFormat, int, int)> bm_create_user_bitmap_monitor_hook{
     },
 };
 
-void MakeSureMonitorBitmapIsDynamic(rf::Monitor& mon)
+void ensure_monitor_bitmap_is_dynamic(rf::Monitor& mon)
 {
     if (rf::bm_get_format(mon.bitmap) == rf::BM_FORMAT_RENDER_TARGET) {
         xlog::trace("Changing pixel format for monitor bitmap");
-        ChangeUserBitmapPixelFormat(mon.bitmap, rf::BM_FORMAT_888_RGB, true);
+        change_user_bitmap_format(mon.bitmap, rf::BM_FORMAT_888_RGB, true);
     }
 }
 
@@ -267,7 +267,7 @@ FunHook<void(rf::Monitor&)> monitor_render_off_state_hook{
     [](rf::Monitor& mon) {
         // monitor is no longer displaying view from camera so its texture usage must be changed
         // from render target to dynamic texture
-        MakeSureMonitorBitmapIsDynamic(mon);
+        ensure_monitor_bitmap_is_dynamic(mon);
         monitor_render_off_state_hook.call_target(mon);
     },
 };
@@ -290,11 +290,11 @@ FunHook<void(rf::Monitor&)> monitor_render_noise_hook{
     0x00412370,
     [](rf::Monitor& mon) {
         // No longer use render target texture
-        MakeSureMonitorBitmapIsDynamic(mon);
+        ensure_monitor_bitmap_is_dynamic(mon);
         // Use custom noise generation algohritm because the default one is not uniform enough in high resolution
         rf::GrLockInfo lock;
         if (rf::gr_lock(mon.bitmap, 0, &lock, rf::GR_LOCK_WRITE_ONLY)) {
-            auto pixel_size = GetBmFormatSize(lock.format);
+            auto pixel_size = get_bm_format_size(lock.format);
             for (int y = 0; y < lock.h; ++y) {
                 auto ptr = lock.data + y * lock.stride_in_bytes;
                 for (int x = 0; x < lock.w; ++x) {
@@ -335,7 +335,7 @@ FunHook<void(rf::Monitor&)> monitor_render_noise_hook{
     [](rf::Monitor& mon) {
         // monitor is no longer displaying view from camera so its texture usage must be changed
         // from render target to dynamic texture
-        //MakeSureMonitorBitmapIsDynamic(mon);
+        //ensure_monitor_bitmap_is_dynamic(mon);
         if (!(mon.flags & 0x1000)) {
             // very good idea but needs more work on UVs...
             auto hbm = rf::bm_load("gls_noise01.tga", -1, true);
@@ -351,7 +351,7 @@ CodeInjection monitor_render_from_camera_start_render_to_texture{
     0x00412860,
     [](auto& regs) {
         auto mon = reinterpret_cast<rf::Monitor*>(regs.edi);
-        StartRenderToTexture(mon->bitmap);
+        begin_render_to_texture(mon->bitmap);
     },
 };
 
@@ -359,7 +359,7 @@ CodeInjection railgun_scanner_start_render_to_texture{
     0x004ADD0A,
     [](auto& regs) {
         auto player = reinterpret_cast<rf::Player*>(regs.ebx);
-        StartRenderToTexture(player->ir_data.ir_bitmap_handle);
+        begin_render_to_texture(player->ir_data.ir_bitmap_handle);
     },
 };
 
@@ -367,7 +367,7 @@ CodeInjection rocket_launcher_start_render_to_texture{
     0x004AF0BC,
     [](auto& regs) {
         auto player = reinterpret_cast<rf::Player*>(regs.esi);
-        StartRenderToTexture(player->ir_data.ir_bitmap_handle);
+        begin_render_to_texture(player->ir_data.ir_bitmap_handle);
     },
 };
 
@@ -387,7 +387,7 @@ CodeInjection d3d_device_lost_patch{
         xlog::trace("D3D device lost");
         g_depth_stencil_surface.release();
         // Note: g_capture_tmp_surface is in D3DPOOL_SYSTEMMEM so no need to release here
-        ReleaseAllDefaultPoolTextures();
+        release_all_default_pool_textures();
         RefreshAllMonitors();
     },
 };
@@ -404,7 +404,7 @@ CodeInjection after_game_render_to_dynamic_textures{
     0x00431890,
     []() {
         // Render to back-buffer from this point
-        EndRenderToTexture();
+        end_render_to_texture();
     },
 };
 
@@ -425,7 +425,7 @@ CodeInjection screenshot_scanlines_array_overflow_fix2{
     },
 };
 
-void GraphicsCaptureInit()
+void graphics_capture_init()
 {
 #if !D3D_LOCKABLE_BACKBUFFER
     /* Override default because IDirect3DSurface8::LockRect fails on multisampled back-buffer */
@@ -458,9 +458,9 @@ void GraphicsCaptureInit()
     write_mem<u8>(0x004A34BF + 1, rf::BM_FORMAT_RENDER_TARGET);
 }
 
-void GraphicsCaptureAfterGameInit()
+void graphics_capture_after_game_init()
 {
-    auto full_path = StringFormat("%s\\%s", rf::root_path, g_screenshot_dir_name);
+    auto full_path = string_format("%s\\%s", rf::root_path, g_screenshot_dir_name);
     if (CreateDirectoryA(full_path.c_str(), nullptr))
         xlog::info("Created screenshots directory");
     else if (GetLastError() != ERROR_ALREADY_EXISTS)

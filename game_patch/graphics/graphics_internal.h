@@ -4,17 +4,17 @@
 #include "../rf/bmpman.h"
 #include "../rf/file.h"
 
-void ReleaseAllDefaultPoolTextures();
-void DestroyTexture(int bmh);
-void ChangeUserBitmapPixelFormat(int bmh, rf::BmFormat format, bool dynamic = false);
-void InitSupportedTextureFormats();
-size_t GetSurfaceLengthInBytes(int w, int h, rf::BmFormat format);
+void release_all_default_pool_textures();
+void destroy_texture(int bmh);
+void change_user_bitmap_format(int bmh, rf::BmFormat format, bool dynamic = false);
+void init_supported_texture_formats();
+size_t get_surface_length_in_bytes(int w, int h, rf::BmFormat format);
 
-rf::BmType ReadDdsHeader(rf::File& file, int *width_out, int *height_out, rf::BmFormat *format_out,
+rf::BmType read_dds_header(rf::File& file, int *width_out, int *height_out, rf::BmFormat *format_out,
     int *num_levels_out);
-int LockDdsBitmap(rf::BmBitmapEntry& bm_entry);
-void BmApplyPatches();
-int GetSurfacePitch(int w, rf::BmFormat format);
-int GetSurfaceNumRows(int h, rf::BmFormat format);
-bool BmIsCompressedFormat(rf::BmFormat format);
-bool GrIsFormatSupported(rf::BmFormat format);
+int lock_dds_bitmap(rf::BmBitmapEntry& bm_entry);
+void bm_apply_patches();
+int get_surface_pitch(int w, rf::BmFormat format);
+int get_surface_num_rows(int h, rf::BmFormat format);
+bool bm_is_compressed_format(rf::BmFormat format);
+bool gr_is_format_supported(rf::BmFormat format);

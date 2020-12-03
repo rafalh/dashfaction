@@ -24,7 +24,7 @@ public:
     Impl(int interval_ms) : m_interval_ms(interval_ms)
     {}
 
-    void Start()
+    void start()
     {
         if (m_running) {
             xlog::error("Trying to start a running watch-dog timer");
@@ -40,12 +40,12 @@ public:
         m_ticks = GetTickCount();
         m_exiting = false;
 
-        m_checker_thread = std::thread{&WatchDogTimer::Impl::CheckerThreadProc, this};
+        m_checker_thread = std::thread{&WatchDogTimer::Impl::checker_thread_proc, this};
         m_running = true;
         xlog::info("Watchdog timer started");
     }
 
-    void Stop()
+    void stop()
     {
         if (!m_running) {
             xlog::error("Trying to stop a watch-dog timer that is not running");
@@ -58,44 +58,44 @@ public:
         xlog::info("Watchdog timer stopped");
     }
 
-    void Restart()
+    void restart()
     {
         m_ticks = GetTickCount();
     }
 
-    bool IsRunning()
+    bool is_running()
     {
         return m_running;
     }
 
 private:
-    void CheckerThreadProc()
+    void checker_thread_proc()
     {
         while (!m_exiting) {
-            if (CheckForTimeOut()) {
-                HandleTimeOut();
+            if (check_for_time_out()) {
+                handle_time_out();
             }
             std::unique_lock<std::mutex> lk(m_mutex);
             m_cond_var.wait_for(lk, std::chrono::milliseconds{m_interval_ms/2});
         }
     }
 
-    bool CheckForTimeOut()
+    bool check_for_time_out()
     {
         return GetTickCount() - m_ticks >= m_interval_ms;
     }
 
-    void HandleTimeOut()
+    void handle_time_out()
     {
         if ((GetAsyncKeyState(VK_DELETE) & 0x8000)) {
-            CrashObservedThread();
+            crash_observed_thread();
         }
         else {
             xlog::info("Application is not responding! Press DEL key to trigger a crash that will allow to debug the problem...");
         }
     }
 
-    void CrashObservedThread()
+    void crash_observed_thread()
     {
         SuspendThread(m_observed_thread_handle);
         CONTEXT ctx;
@@ -128,22 +128,22 @@ WatchDogTimer::~WatchDogTimer()
 {
 }
 
-void WatchDogTimer::Start()
+void WatchDogTimer::start()
 {
-    m_impl->Start();
+    m_impl->start();
 }
 
-void WatchDogTimer::Stop()
+void WatchDogTimer::stop()
 {
-    m_impl->Stop();
+    m_impl->stop();
 }
 
-void WatchDogTimer::Restart()
+void WatchDogTimer::restart()
 {
-    m_impl->Restart();
+    m_impl->restart();
 }
 
-bool WatchDogTimer::IsRunning()
+bool WatchDogTimer::is_running()
 {
-    return m_impl->IsRunning();
+    return m_impl->is_running();
 }

@@ -94,9 +94,9 @@ FT_Library g_freetype_lib = nullptr;
 int g_default_font_id = 0;
 std::vector<GrNewFont> g_fonts;
 
-static inline ParsedFontName ParseFontName(std::string_view name)
+static inline ParsedFontName parse_font_name(std::string_view name)
 {
-    auto name_splitted = StringSplit(name, ':');
+    auto name_splitted = string_split(name, ':');
     auto file_name_sv = name_splitted[0];
     auto size_y_sv = name_splitted.size() > 1 ? name_splitted[1] : "12";
     auto size_x_sv = name_splitted.size() > 2 ? name_splitted[2] : "0";
@@ -106,11 +106,11 @@ static inline ParsedFontName ParseFontName(std::string_view name)
     int size_y = std::stoi(size_y_str);
     std::string size_x_str{size_x_sv};
     int size_x = std::stoi(size_x_str);
-    bool digits_only = StringContains(flags_sv, 'd');
+    bool digits_only = string_contains(flags_sv, 'd');
     return {file_name_str, size_x, size_y, digits_only};
 }
 
-static bool LoadFileIntoBuffer(const char* name, std::vector<unsigned char>& buffer)
+static bool load_file_into_buffer(const char* name, std::vector<unsigned char>& buffer)
 {
     rf::File file;
     if (file.open(name) != 0) {
@@ -216,11 +216,11 @@ inline void TextureAtlasPacker<T>::update_size()
 GrNewFont::GrNewFont(std::string_view name) :
     name_{name}
 {
-    auto [filename, size_x, size_y, digits_only] = ParseFontName(name);
+    auto [filename, size_x, size_y, digits_only] = parse_font_name(name);
     std::vector<unsigned char> buffer;
     xlog::trace("Loading font %s size %d", filename.c_str(), size_y);
-    if (!LoadFileIntoBuffer(filename.c_str(), buffer)) {
-        xlog::error("LoadFileIntoBuffer failed for %s", filename.c_str());
+    if (!load_file_into_buffer(filename.c_str(), buffer)) {
+        xlog::error("load_file_into_buffer failed for %s", filename.c_str());
         throw std::runtime_error{"failed to load font"};
     }
 
@@ -343,9 +343,9 @@ GrNewFont::GrNewFont(std::string_view name) :
         glyph_info.x = slot->bitmap_left;
         glyph_info.y = -slot->bitmap_top;
 
-        int pixel_size = GetBmFormatSize(lock.format);
+        int pixel_size = get_bm_format_size(lock.format);
         auto dst_ptr = bitmap_bits + glyph_bm_y * lock.stride_in_bytes + glyph_bm_x * pixel_size;
-        ConvertSurfaceFormat(dst_ptr, lock.format, bitmap.buffer, rf::BM_FORMAT_8_ALPHA, bitmap.width, bitmap.rows, lock.stride_in_bytes, bitmap.pitch);
+        conver_surface_format(dst_ptr, lock.format, bitmap.buffer, rf::BM_FORMAT_8_ALPHA, bitmap.width, bitmap.rows, lock.stride_in_bytes, bitmap.pitch);
 
         glyphs_.push_back(glyph_info);
     }
@@ -430,7 +430,7 @@ void GrNewFont::get_size(int* w, int* h, std::string_view text) const
     *w = std::max(*w, cur_line_w);
 }
 
-void InitFreeTypeLib()
+void init_freetype_lib()
 {
     FT_Error error = FT_Init_FreeType(&g_freetype_lib);
     if (error) {
@@ -438,12 +438,12 @@ void InitFreeTypeLib()
     }
 }
 
-int GetDefaultFontId()
+int get_default_font_id()
 {
     return g_default_font_id;
 }
 
-void SetDefaultFontId(int font_id)
+void set_default_font_id(int font_id)
 {
     g_default_font_id = font_id;
 }
@@ -451,7 +451,7 @@ void SetDefaultFontId(int font_id)
 FunHook<int(const char*, int)> gr_load_font_hook{
     0x0051F6E0,
     [](const char *name, int reserved) {
-        if (StringEndsWith(name, ".vf")) {
+        if (string_ends_with(name, ".vf")) {
             return gr_load_font_hook.call_target(name, reserved);
         }
         else if (rf::is_dedicated_server) {
@@ -544,7 +544,7 @@ FunHook<void(int*, int*, const char*, int, int)> gr_get_string_size_hook{
     },
 };
 
-void ApplyFontPatches()
+void apply_font_patches()
 {
     // Support TrueType fonts
     gr_load_font_hook.install();
@@ -552,5 +552,5 @@ void ApplyFontPatches()
     gr_get_font_height_hook.install();
     gr_string_hook.install();
     gr_get_string_size_hook.install();
-    InitFreeTypeLib();
+    init_freetype_lib();
 }

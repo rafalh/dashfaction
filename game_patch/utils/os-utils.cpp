@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <common/Exception.h>
 #include <common/Win32Error.h>
+#include <cstring>
 
 #ifdef __GNUC__
 #ifndef __cpuid
@@ -13,17 +14,17 @@
 #include <intrin.h>
 #endif
 
-std::string getOsVersion()
+std::string get_os_version()
 {
     OSVERSIONINFO ver_info;
     ver_info.dwOSVersionInfoSize = sizeof(ver_info);
     if (!GetVersionEx(&ver_info))
         THROW_WIN32_ERROR("GetVersionEx failed");
 
-    return StringFormat("%lu.%lu.%lu", ver_info.dwMajorVersion, ver_info.dwMinorVersion, ver_info.dwBuildNumber);
+    return string_format("%lu.%lu.%lu", ver_info.dwMajorVersion, ver_info.dwMinorVersion, ver_info.dwBuildNumber);
 }
 
-std::string getRealOsVersion()
+std::string get_real_os_version()
 {
     // Note: GetVersionEx is deprecated and returns values limited by application manifest from Win 8.1
     // also GetVersionEx returns compatiblity version
@@ -49,13 +50,13 @@ std::string getRealOsVersion()
         THROW_WIN32_ERROR("VerQueryValueA returned unknown block");
     VS_FIXEDFILEINFO* file_info = reinterpret_cast<VS_FIXEDFILEINFO*>(block);
 
-    return StringFormat("%d.%d.%d",                            //
+    return string_format("%d.%d.%d",                            //
                         HIWORD(file_info->dwProductVersionMS), //
                         LOWORD(file_info->dwProductVersionMS), //
                         HIWORD(file_info->dwProductVersionLS));
 }
 
-bool IsCurrentUserAdmin()
+bool is_current_user_admin()
 {
     SID_IDENTIFIER_AUTHORITY nt_authority = SECURITY_NT_AUTHORITY;
     PSID administrators_group;
@@ -76,7 +77,7 @@ bool IsCurrentUserAdmin()
     return is_member != 0;
 }
 
-const char* GetProcessElevationType()
+const char* get_process_elevation_type()
 {
     HANDLE token_handle;
     TOKEN_ELEVATION_TYPE elevation_type;
@@ -103,7 +104,7 @@ const char* GetProcessElevationType()
     }
 }
 
-std::string getCpuId()
+std::string get_cpu_id()
 {
     int cpu_info[4] = {0};
     std::stringstream ss;
@@ -117,7 +118,7 @@ std::string getCpuId()
     return ss.str();
 }
 
-std::string getCpuBrand()
+std::string get_cpu_brand()
 {
     int cpu_info[4] = {0};
     char brand_str[0x40] = "";
@@ -136,11 +137,11 @@ std::string getCpuBrand()
 #endif
         // Interpret CPU brand string
         if (i == 0x80000002)
-            memcpy(brand_str, cpu_info, sizeof(cpu_info));
+            std::memcpy(brand_str, cpu_info, sizeof(cpu_info));
         else if (i == 0x80000003)
-            memcpy(brand_str + 16, cpu_info, sizeof(cpu_info));
+            std::memcpy(brand_str + 16, cpu_info, sizeof(cpu_info));
         else if (i == 0x80000004)
-            memcpy(brand_str + 32, cpu_info, sizeof(cpu_info));
+            std::memcpy(brand_str + 32, cpu_info, sizeof(cpu_info));
     }
 
     // string includes manufacturer, model and clockspeed

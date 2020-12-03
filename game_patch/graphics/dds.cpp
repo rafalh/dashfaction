@@ -3,7 +3,7 @@
 #include "graphics_internal.h"
 #include "../rf/bmpman.h"
 
-rf::BmFormat GetBmFormatFromDDSPixelFormat(DDS_PIXELFORMAT& ddspf)
+rf::BmFormat get_bm_format_from_dds_pixel_format(DDS_PIXELFORMAT& ddspf)
 {
     if (ddspf.flags & DDS_RGB) {
         switch (ddspf.RGBBitCount) {
@@ -41,7 +41,7 @@ rf::BmFormat GetBmFormatFromDDSPixelFormat(DDS_PIXELFORMAT& ddspf)
     return rf::BM_FORMAT_NONE;
 }
 
-rf::BmType ReadDdsHeader(rf::File& file, int *width_out, int *height_out, rf::BmFormat *format_out,
+rf::BmType read_dds_header(rf::File& file, int *width_out, int *height_out, rf::BmFormat *format_out,
     int *num_levels_out)
 {
     auto magic = file.read<uint32_t>();
@@ -55,12 +55,12 @@ rf::BmType ReadDdsHeader(rf::File& file, int *width_out, int *height_out, rf::Bm
         xlog::warn("Invalid header size in DDS file: %X", hdr.size);
         return rf::BM_TYPE_NONE;
     }
-    auto format = GetBmFormatFromDDSPixelFormat(hdr.ddspf);
+    auto format = get_bm_format_from_dds_pixel_format(hdr.ddspf);
     if (format == rf::BM_FORMAT_NONE) {
         return rf::BM_TYPE_NONE;
     }
 
-    if (!GrIsFormatSupported(format)) {
+    if (!gr_is_format_supported(format)) {
         xlog::warn("Unsupported by video card DDS pixel format: %X", format);
         return rf::BM_TYPE_NONE;
     }
@@ -79,10 +79,10 @@ rf::BmType ReadDdsHeader(rf::File& file, int *width_out, int *height_out, rf::Bm
     return rf::BM_TYPE_DDS;
 }
 
-int LockDdsBitmap(rf::BmBitmapEntry& bm_entry)
+int lock_dds_bitmap(rf::BmBitmapEntry& bm_entry)
 {
     rf::File file;
-    std::string filename_without_ext{GetFilenameWithoutExt(bm_entry.name)};
+    std::string filename_without_ext{get_filename_without_ext(bm_entry.name)};
     auto dds_filename = filename_without_ext + ".dds";
 
     xlog::trace("Locking DDS: %s", dds_filename.c_str());
@@ -111,7 +111,7 @@ int LockDdsBitmap(rf::BmBitmapEntry& bm_entry)
     int num_total_bytes = 0;
 
     for (int i = 0; i < num_skip_levels + bm_entry.num_levels; ++i) {
-        int num_surface_bytes = GetSurfaceLengthInBytes(w, h, bm_entry.format);
+        int num_surface_bytes = get_surface_length_in_bytes(w, h, bm_entry.format);
         if (i < num_skip_levels) {
             num_skip_bytes += num_surface_bytes;
         }

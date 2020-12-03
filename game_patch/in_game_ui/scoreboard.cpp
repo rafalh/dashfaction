@@ -34,12 +34,12 @@ static bool g_enter_anim = false;
 static bool g_leave_anim = false;
 static bool g_big_scoreboard = false;
 
-void SetBigScoreboard(bool is_big)
+void set_big_scoreboard(bool is_big)
 {
     g_big_scoreboard = is_big;
 }
 
-int DrawScoreboardHeader(int x, int y, int w, rf::NetGameType game_type, bool dry_run = false)
+int draw_scoreboard_header(int x, int y, int w, rf::NetGameType game_type, bool dry_run = false)
 {
     // Draw RF logo
     int x_center = x + w / 2;
@@ -120,7 +120,7 @@ int DrawScoreboardHeader(int x, int y, int w, rf::NetGameType game_type, bool dr
     return cur_y - y;
 }
 
-int DrawScoreboardPlayers(const std::vector<rf::Player*>& players, int x, int y, int w, float scale,
+int draw_scoreboard_players(const std::vector<rf::Player*>& players, int x, int y, int w, float scale,
     rf::NetGameType game_type, bool dry_run = false)
 {
     int initial_y = y;
@@ -177,7 +177,7 @@ int DrawScoreboardPlayers(const std::vector<rf::Player*>& players, int x, int y,
                 status_bm = hud_micro_flag_red_bm;
             else if (player == blue_flag_player)
                 status_bm = hud_micro_flag_blue_bm;
-            HudScaledBitmap(status_bm, status_x, static_cast<int>(y + 2 * scale), scale);
+            hud_scaled_bitmap(status_bm, status_x, static_cast<int>(y + 2 * scale), scale);
 
             rf::String player_name_stripped;
             rf::fit_scoreboard_string(&player_name_stripped, player->name, name_w - static_cast<int>(12 * scale)); // Note: this destroys Name
@@ -201,7 +201,7 @@ int DrawScoreboardPlayers(const std::vector<rf::Player*>& players, int x, int y,
             auto score_str = std::to_string(score);
             rf::gr_string(score_x, y, score_str.c_str());
 
-            auto kills_deaths_str = StringFormat("%hd/%hd", num_kills, num_deaths);
+            auto kills_deaths_str = string_format("%hd/%hd", num_kills, num_deaths);
             rf::gr_string(kd_x, y, kills_deaths_str.c_str());
 
             if (game_type == rf::NG_TYPE_CTF) {
@@ -219,7 +219,7 @@ int DrawScoreboardPlayers(const std::vector<rf::Player*>& players, int x, int y,
     return y - initial_y;
 }
 
-void FilterAndSortPlayers(std::vector<rf::Player*>& players, std::optional<int> team_id)
+void filter_and_sort_players(std::vector<rf::Player*>& players, std::optional<int> team_id)
 {
     players.clear();
     players.reserve(32);
@@ -234,7 +234,7 @@ void FilterAndSortPlayers(std::vector<rf::Player*>& players, std::optional<int> 
     });
 }
 
-void DrawScoreboardInternal_New(bool draw)
+void draw_scoreboard_internal_new(bool draw)
 {
     if (g_scoreboard_force_hide || !draw)
         return;
@@ -254,11 +254,11 @@ void DrawScoreboardInternal_New(bool draw)
     // Sort players by score
     bool group_by_team = game_type != rf::NG_TYPE_DM;
     if (group_by_team) {
-        FilterAndSortPlayers(left_players, {rf::TEAM_RED});
-        FilterAndSortPlayers(right_players, {rf::TEAM_BLUE});
+        filter_and_sort_players(left_players, {rf::TEAM_RED});
+        filter_and_sort_players(right_players, {rf::TEAM_BLUE});
     }
     else {
-        FilterAndSortPlayers(left_players, {});
+        filter_and_sort_players(left_players, {});
     }
 #endif
 
@@ -287,7 +287,7 @@ void DrawScoreboardInternal_New(bool draw)
     float scale;
     // Note: fit_scoreboard_string does not support providing font by argument so default font must be changed
     if (g_big_scoreboard) {
-        rf::gr_set_default_font(HudGetDefaultFontName(true));
+        rf::gr_set_default_font(hud_get_default_font_name(true));
         w = std::min(!group_by_team ? 900 : 1400, rf::gr_clip_width());
         scale = 2.0f;
     }
@@ -301,9 +301,9 @@ void DrawScoreboardInternal_New(bool draw)
     int middle_padding = static_cast<int>(15 * scale);
     int top_padding = static_cast<int>(10 * scale);
     int bottom_padding = static_cast<int>(5 * scale);
-    int hdr_h = DrawScoreboardHeader(0, 0, w, game_type, true);
-    int left_players_h = DrawScoreboardPlayers(left_players, 0, 0, 0, scale, game_type, true);
-    int right_players_h = DrawScoreboardPlayers(right_players, 0, 0, 0, scale, game_type, true);
+    int hdr_h = draw_scoreboard_header(0, 0, w, game_type, true);
+    int left_players_h = draw_scoreboard_players(left_players, 0, 0, 0, scale, game_type, true);
+    int right_players_h = draw_scoreboard_players(right_players, 0, 0, 0, scale, game_type, true);
     int h = top_padding + hdr_h + std::max(left_players_h, right_players_h) + bottom_padding;
 
     // Draw background
@@ -323,15 +323,15 @@ void DrawScoreboardInternal_New(bool draw)
         return;
     }
 
-    y += DrawScoreboardHeader(x, y, w, game_type);
+    y += draw_scoreboard_header(x, y, w, game_type);
     if (group_by_team) {
         int table_w = (w - left_padding - middle_padding - right_padding) / 2;
-        DrawScoreboardPlayers(left_players, x + left_padding, y, table_w, scale, game_type);
-        DrawScoreboardPlayers(right_players, x + left_padding + table_w + middle_padding, y, table_w, scale, game_type);
+        draw_scoreboard_players(left_players, x + left_padding, y, table_w, scale, game_type);
+        draw_scoreboard_players(right_players, x + left_padding + table_w + middle_padding, y, table_w, scale, game_type);
     }
     else {
         int table_w = w - left_padding - right_padding;
-        DrawScoreboardPlayers(left_players, x + left_padding, y, table_w, scale, game_type);
+        draw_scoreboard_players(left_players, x + left_padding, y, table_w, scale, game_type);
     }
 
     // Restore rfpc-medium as default font
@@ -340,9 +340,9 @@ void DrawScoreboardInternal_New(bool draw)
     }
 }
 
-FunHook<void(bool)> DrawScoreboardInternal_hook{0x00470880, DrawScoreboardInternal_New};
+FunHook<void(bool)> DrawScoreboardInternal_hook{0x00470880, draw_scoreboard_internal_new};
 
-void HudRender_00437BC0()
+void hud_render_00437BC0()
 {
 #if DEBUG_SCOREBOARD
     rf::draw_scoreboard(true);
@@ -353,7 +353,7 @@ void HudRender_00437BC0()
     bool scoreboard_control_active = rf::control_config_check_pressed(&rf::local_player->settings.controls, rf::CA_MP_STATS, 0);
     bool is_player_dead = rf::player_is_dead(rf::local_player) || rf::player_is_dying(rf::local_player);
     bool limbo = rf::gameseq_get_state() == rf::GS_MULTI_LIMBO;
-    bool show_scoreboard = scoreboard_control_active || (!SpectateModeIsActive() && is_player_dead) || limbo;
+    bool show_scoreboard = scoreboard_control_active || (!spectate_mode_is_active() && is_player_dead) || limbo;
 
     if (g_game_config.scoreboard_anim) {
         if (!g_scoreboard_visible && show_scoreboard) {
@@ -376,15 +376,15 @@ void HudRender_00437BC0()
 #endif
 }
 
-void InitScoreboard()
+void init_scoreboard()
 {
     DrawScoreboardInternal_hook.install();
 
-    AsmWriter(0x00437BC0).call(HudRender_00437BC0).jmp(0x00437C24);
+    AsmWriter(0x00437BC0).call(hud_render_00437BC0).jmp(0x00437C24);
     AsmWriter(0x00437D40).jmp(0x00437D5C);
 }
 
-void SetScoreboardHidden(bool hidden)
+void set_scoreboard_hidden(bool hidden)
 {
     g_scoreboard_force_hide = hidden;
 }

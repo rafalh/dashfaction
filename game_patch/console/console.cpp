@@ -18,11 +18,11 @@ constexpr int max_cmd_line_len = 200 - 2 - 1;
 
 rf::ConsoleCommand* g_commands_buffer[CMD_LIMIT];
 
-rf::Player* FindBestMatchingPlayer(const char* name)
+rf::Player* find_best_matching_player(const char* name)
 {
     rf::Player* found_player;
     int num_found = 0;
-    FindPlayer(StringMatcher().Exact(name), [&](rf::Player* player) {
+    find_player(StringMatcher().exact(name), [&](rf::Player* player) {
         found_player = player;
         ++num_found;
     });
@@ -30,7 +30,7 @@ rf::Player* FindBestMatchingPlayer(const char* name)
         return found_player;
 
     num_found = 0;
-    FindPlayer(StringMatcher().Infix(name), [&](rf::Player* player) {
+    find_player(StringMatcher().infix(name), [&](rf::Player* player) {
         found_player = player;
         ++num_found;
     });
@@ -65,7 +65,7 @@ CodeInjection ConsoleCommand_init_limit_check_patch{
     },
 };
 
-CodeInjection ConsoleRunCmd_call_handler_patch{
+CodeInjection console_run_cmd_call_handler_patch{
     0x00509DBB,
     [](auto& regs) {
         // Make sure command pointer is in ecx register to support thiscall handlers
@@ -81,7 +81,7 @@ CallHook<void(char*, int)> console_process_kbd_get_text_from_clipboard_hook{
     },
 };
 
-void ConsoleRegisterCommand(rf::ConsoleCommand* cmd)
+void console_register_command(rf::ConsoleCommand* cmd)
 {
     if (rf::console_num_commands < CMD_LIMIT)
         rf::ConsoleCommand::init(cmd, cmd->name, cmd->help, cmd->func);
@@ -89,11 +89,11 @@ void ConsoleRegisterCommand(rf::ConsoleCommand* cmd)
         assert(false);
 }
 
-void ConsoleCommandsApplyPatches();
-void ConsoleAutoCompleteApplyPatch();
-void ConsoleCommandsInit();
+void console_commands_apply_patches();
+void console_auto_complete_apply_patches();
+void console_commands_init();
 
-void ConsoleApplyPatches()
+void console_apply_patches()
 {
     // Console init string
     write_mem_ptr(0x004B2534, "-- " PRODUCT_NAME " Initializing --\n");
@@ -126,17 +126,17 @@ void ConsoleApplyPatches()
     AsmWriter(0x00509A7E).nop(2);
     ConsoleCommand_init_limit_check_patch.install();
 
-    ConsoleRunCmd_call_handler_patch.install();
+    console_run_cmd_call_handler_patch.install();
 
     // Fix possible input buffer overflow
     console_process_kbd_get_text_from_clipboard_hook.install();
     write_mem<u32>(0x0050A2D0 + 2, max_cmd_line_len);
 
-    ConsoleCommandsApplyPatches();
-    ConsoleAutoCompleteApplyPatch();
+    console_commands_apply_patches();
+    console_auto_complete_apply_patches();
 }
 
-void ConsoleInit()
+void console_init()
 {
-    ConsoleCommandsInit();
+    console_commands_init();
 }

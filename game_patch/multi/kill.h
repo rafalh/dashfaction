@@ -7,5 +7,5 @@ struct PlayerStatsNew : rf::PlayerLevelStats
     unsigned short num_kills, num_deaths;
 };
 
-void InitKill();
-void KillInitPlayer(rf::Player* player);
+void init_kill();
+void kill_init_player(rf::Player* player);

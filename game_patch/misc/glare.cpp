@@ -18,7 +18,7 @@
 static std::vector<rf::Object*> g_objects_to_check;
 static std::vector<rf::MoverBrush*> g_mover_brushes_to_check;
 
-static bool GlareCollideObject(rf::Glare* glare, rf::Object* obj, const rf::Vector3& eye_pos)
+static bool glare_collide_object(rf::Glare* glare, rf::Object* obj, const rf::Vector3& eye_pos)
 {
     if (!(obj->obj_flags & rf::OF_WAS_RENDERED)
         || !obj->vmesh
@@ -60,7 +60,7 @@ static bool GlareCollideObject(rf::Glare* glare, rf::Object* obj, const rf::Vect
     return rf::vmesh_collide(obj->vmesh, &col_in, &col_out, true);
 }
 
-static bool GlareCollideMoverBrush(rf::Glare* glare, rf::MoverBrush* mbp, const rf::Vector3& eye_pos)
+static bool glare_collide_mover_brush(rf::Glare* glare, rf::MoverBrush* mbp, const rf::Vector3& eye_pos)
 {
     if (!(mbp->obj_flags & rf::OF_WAS_RENDERED)) {
         return false;
@@ -146,7 +146,7 @@ FunHook<bool(rf::Glare* glare, const rf::Vector3& eye_pos)> glare_is_in_view_hoo
         }
 
         if (glare->last_covering_mover_brush) {
-            if (GlareCollideMoverBrush(glare, glare->last_covering_mover_brush, eye_pos)) {
+            if (glare_collide_mover_brush(glare, glare->last_covering_mover_brush, eye_pos)) {
                 return false;
             }
             glare->last_covering_mover_brush = nullptr;
@@ -154,7 +154,7 @@ FunHook<bool(rf::Glare* glare, const rf::Vector3& eye_pos)> glare_is_in_view_hoo
 
         if (glare->last_covering_objh != -1) {
             auto obj = rf::obj_from_handle(glare->last_covering_objh);
-            if (obj && GlareCollideObject(glare, obj, eye_pos)) {
+            if (obj && glare_collide_object(glare, obj, eye_pos)) {
                 return false;
             }
             glare->last_covering_objh = -1;
@@ -168,13 +168,13 @@ FunHook<bool(rf::Glare* glare, const rf::Vector3& eye_pos)> glare_is_in_view_hoo
         }
 
         for (auto mbp : g_mover_brushes_to_check) {
-            if (GlareCollideMoverBrush(glare, mbp, eye_pos)) {
+            if (glare_collide_mover_brush(glare, mbp, eye_pos)) {
                 glare->last_covering_mover_brush = mbp;
                 return false;
             }
         }
         for (auto obj_ptr : g_objects_to_check) {
-            if (GlareCollideObject(glare, obj_ptr, eye_pos)) {
+            if (glare_collide_object(glare, obj_ptr, eye_pos)) {
                 glare->last_covering_objh = obj_ptr->handle;
                 return false;
             }
@@ -197,7 +197,7 @@ FunHook<void(rf::Glare*, int)> glare_render_corona_hook{
     },
 };
 
-void ApplyGlarePatches()
+void glare_patches_patches()
 {
     // Support disabling glares and optimize rendering
     glare_render_all_flares_hook.install();

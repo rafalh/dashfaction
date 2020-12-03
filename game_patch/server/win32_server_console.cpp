@@ -16,7 +16,7 @@ bool g_win32_console = false;
 
 static auto& key_process_event = addr_as_ref<void(int ScanCode, int KeyDown, int DeltaT)>(0x0051E6C0);
 
-void ResetConsoleCursorColumn(bool clear)
+void reset_console_cursor_column(bool clear)
 {
     HANDLE output_handle = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_SCREEN_BUFFER_INFO scr_buf_info;
@@ -34,7 +34,7 @@ void ResetConsoleCursorColumn(bool clear)
     }
 }
 
-void PrintCmdInputLine()
+void print_cmd_input_line()
 {
     HANDLE output_handle = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_SCREEN_BUFFER_INFO scr_buf_info;
@@ -44,7 +44,7 @@ void PrintCmdInputLine()
     WriteConsoleA(output_handle, rf::console_cmd_line + Offset, rf::console_cmd_line_len - Offset, nullptr, nullptr);
 }
 
-BOOL WINAPI ConsoleCtrlHandler([[maybe_unused]] DWORD ctrl_type)
+BOOL WINAPI console_ctrl_handler([[maybe_unused]] DWORD ctrl_type)
 {
     xlog::info("Quiting after Console CTRL");
     static auto& close = addr_as_ref<int32_t>(0x01B0D758);
@@ -65,7 +65,7 @@ CallHook<void()> os_init_window_server_hook{
     0x004B27C5,
     []() {
         AllocConsole();
-        SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE);
+        SetConsoleCtrlHandler(console_ctrl_handler, TRUE);
         DWORD mode;
         GetConsoleMode(GetStdHandle(STD_INPUT_HANDLE), &mode);
         SetConsoleMode(GetStdHandle(STD_INPUT_HANDLE), mode & ~ ENABLE_ECHO_INPUT);
@@ -85,7 +85,7 @@ FunHook<void(const char*, const int*)> console_print_hook{
         constexpr WORD gray_attr = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
         WORD current_attr = 0;
 
-        ResetConsoleCursorColumn(true);
+        reset_console_cursor_column(true);
 
         constexpr std::string_view color_prefix{"[$"};
         constexpr std::string_view color_suffix{"]"};
@@ -135,7 +135,7 @@ FunHook<void(const char*, const int*)> console_print_hook{
         if (current_attr != gray_attr)
             SetConsoleTextAttribute(output_handle, gray_attr);
 
-        PrintCmdInputLine();
+        print_cmd_input_line();
     },
 };
 
@@ -144,7 +144,7 @@ CallHook<void()> console_put_char_new_line_hook{
     [] {
         HANDLE output_handle = GetStdHandle(STD_OUTPUT_HANDLE);
         WriteConsoleA(output_handle, "\r\n", 2, nullptr, nullptr);
-        PrintCmdInputLine();
+        print_cmd_input_line();
     },
 };
 
@@ -153,8 +153,8 @@ FunHook<void()> console_draw_server_hook{
     []() {
         static char prev_cmd_line[sizeof(rf::console_cmd_line)];
         if (std::strncmp(rf::console_cmd_line, prev_cmd_line, std::size(prev_cmd_line)) != 0) {
-            ResetConsoleCursorColumn(true);
-            PrintCmdInputLine();
+            reset_console_cursor_column(true);
+            print_cmd_input_line();
             std::strcpy(prev_cmd_line, rf::console_cmd_line);
         }
     },
@@ -183,9 +183,9 @@ FunHook<int()> key_get_hook{
     },
 };
 
-void InitWin32ServerConsole()
+void init_win32_server_console()
 {
-    g_win32_console = StringContainsIgnoreCase(GetCommandLineA(), "-win32-console");
+    g_win32_console = string_contains_ignore_case(GetCommandLineA(), "-win32-console");
     if (g_win32_console) {
         os_init_window_server_hook.install();
         console_print_hook.install();
@@ -195,7 +195,7 @@ void InitWin32ServerConsole()
     }
 }
 
-void CleanupWin32ServerConsole()
+void cleanup_win32_server_console()
 {
     if (g_win32_console)
         FreeConsole();

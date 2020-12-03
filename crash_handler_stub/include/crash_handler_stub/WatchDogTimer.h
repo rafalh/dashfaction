@@ -10,10 +10,10 @@ class WatchDogTimer
 public:
     WatchDogTimer(int interval_ms = 5000);
     ~WatchDogTimer();
-    void Start();
-    void Stop();
-    void Restart();
-    bool IsRunning();
+    void start();
+    void stop();
+    void restart();
+    bool is_running();
 
     class ScopedStartStop
     {
@@ -22,12 +22,12 @@ public:
     public:
         ScopedStartStop(WatchDogTimer& timer) : m_timer(timer)
         {
-            m_timer.Start();
+            m_timer.start();
         }
 
         ~ScopedStartStop()
         {
-            m_timer.Stop();
+            m_timer.stop();
         }
     };
 
@@ -39,16 +39,16 @@ public:
     public:
         ScopedPause(WatchDogTimer& timer) : m_timer(timer)
         {
-            m_running = m_timer.IsRunning();
+            m_running = m_timer.is_running();
             if (m_running) {
-                m_timer.Stop();
+                m_timer.stop();
             }
         }
 
         ~ScopedPause()
         {
             if (m_running) {
-                m_timer.Start();
+                m_timer.start();
             }
         }
     };

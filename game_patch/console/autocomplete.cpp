@@ -5,7 +5,7 @@
 #include <patch_common/FunHook.h>
 #include <cstring>
 
-void ConsoleShowCmdHelp(rf::ConsoleCommand* cmd)
+void console_show_cmd_help(rf::ConsoleCommand* cmd)
 {
     rf::console_run = 0;
     rf::console_help = 1;
@@ -14,7 +14,7 @@ void ConsoleShowCmdHelp(rf::ConsoleCommand* cmd)
     handler(cmd);
 }
 
-int ConsoleAutoCompleteGetComponent(int offset, std::string& result)
+int console_auto_complete_get_component(int offset, std::string& result)
 {
     const char *begin = rf::console_cmd_line + offset, *end = nullptr, *next;
     if (begin[0] == '"') {
@@ -34,7 +34,7 @@ int ConsoleAutoCompleteGetComponent(int offset, std::string& result)
     return next ? next + 1 - rf::console_cmd_line : -1;
 }
 
-void ConsoleAutoCompletePutComponent(int offset, const std::string& component, bool finished)
+void console_auto_complete_put_component(int offset, const std::string& component, bool finished)
 {
     bool quote = component.find(' ') != std::string::npos;
     int max_len = std::size(rf::console_cmd_line);
@@ -51,14 +51,14 @@ void ConsoleAutoCompletePutComponent(int offset, const std::string& component, b
 }
 
 template<typename T, typename F>
-void ConsoleAutoCompletePrintSuggestions(T& suggestions, F mapping_fun)
+void console_auto_complete_print_suggestions(T& suggestions, F mapping_fun)
 {
     for (auto& item : suggestions) {
         rf::console_printf("%s\n", mapping_fun(item));
     }
 }
 
-void ConsoleAutoCompleteUpdateCommonPrefix(std::string& common_prefix, const std::string& value, bool& first,
+void console_auto_complete_update_common_prefix(std::string& common_prefix, const std::string& value, bool& first,
                                       bool case_sensitive = false)
 {
     if (first) {
@@ -84,62 +84,62 @@ void ConsoleAutoCompleteUpdateCommonPrefix(std::string& common_prefix, const std
     }
 }
 
-void ConsoleAutoCompleteLevel(int offset)
+void console_auto_complete_level(int offset)
 {
     std::string level_name;
-    ConsoleAutoCompleteGetComponent(offset, level_name);
+    console_auto_complete_get_component(offset, level_name);
     if (level_name.size() < 3)
         return;
 
     bool first = true;
     std::string common_prefix;
     std::vector<std::string> matches;
-    VPackfileFindMatchingFiles(StringMatcher().Prefix(level_name).Suffix(".rfl"), [&](const char* name) {
+    vpackfile_find_matching_files(StringMatcher().prefix(level_name).suffix(".rfl"), [&](const char* name) {
         auto ext = strrchr(name, '.');
         auto name_len = ext ? ext - name : strlen(name);
         std::string name_without_ext(name, name_len);
         matches.push_back(name_without_ext);
-        ConsoleAutoCompleteUpdateCommonPrefix(common_prefix, name_without_ext, first);
+        console_auto_complete_update_common_prefix(common_prefix, name_without_ext, first);
     });
 
     if (matches.size() == 1)
-        ConsoleAutoCompletePutComponent(offset, matches[0], true);
+        console_auto_complete_put_component(offset, matches[0], true);
     else if (!matches.empty()) {
-        ConsoleAutoCompletePrintSuggestions(matches, [](std::string& name) { return name.c_str(); });
-        ConsoleAutoCompletePutComponent(offset, common_prefix, false);
+        console_auto_complete_print_suggestions(matches, [](std::string& name) { return name.c_str(); });
+        console_auto_complete_put_component(offset, common_prefix, false);
     }
 }
 
-void ConsoleAutoCompletePlayer(int offset)
+void console_auto_complete_player(int offset)
 {
     std::string player_name;
-    ConsoleAutoCompleteGetComponent(offset, player_name);
+    console_auto_complete_get_component(offset, player_name);
     if (player_name.size() < 1)
         return;
 
     bool first = true;
     std::string common_prefix;
     std::vector<rf::Player*> matching_players;
-    FindPlayer(StringMatcher().Prefix(player_name), [&](rf::Player* player) {
+    find_player(StringMatcher().prefix(player_name), [&](rf::Player* player) {
         matching_players.push_back(player);
-        ConsoleAutoCompleteUpdateCommonPrefix(common_prefix, player->name.c_str(), first);
+        console_auto_complete_update_common_prefix(common_prefix, player->name.c_str(), first);
     });
 
     if (matching_players.size() == 1)
-        ConsoleAutoCompletePutComponent(offset, matching_players[0]->name.c_str(), true);
+        console_auto_complete_put_component(offset, matching_players[0]->name.c_str(), true);
     else if (!matching_players.empty()) {
-        ConsoleAutoCompletePrintSuggestions(matching_players, [](rf::Player* player) {
+        console_auto_complete_print_suggestions(matching_players, [](rf::Player* player) {
             // Print player names
             return player->name.c_str();
         });
-        ConsoleAutoCompletePutComponent(offset, common_prefix, false);
+        console_auto_complete_put_component(offset, common_prefix, false);
     }
 }
 
-void ConsoleAutoCompleteCommand(int offset)
+void console_auto_complete_command(int offset)
 {
     std::string cmd_name;
-    int next_offset = ConsoleAutoCompleteGetComponent(offset, cmd_name);
+    int next_offset = console_auto_complete_get_component(offset, cmd_name);
     if (cmd_name.size() < 2)
         return;
 
@@ -152,23 +152,23 @@ void ConsoleAutoCompleteCommand(int offset)
         if (!strnicmp(cmd->name, cmd_name.c_str(), cmd_name.size()) &&
             (next_offset == -1 || !cmd->name[cmd_name.size()])) {
             matching_cmds.push_back(cmd);
-            ConsoleAutoCompleteUpdateCommonPrefix(common_prefix, cmd->name, first);
+            console_auto_complete_update_common_prefix(common_prefix, cmd->name, first);
         }
     }
 
     if (next_offset != -1) {
         if (!stricmp(cmd_name.c_str(), "level"))
-            ConsoleAutoCompleteLevel(next_offset);
+            console_auto_complete_level(next_offset);
         else if (!stricmp(cmd_name.c_str(), "kick") || !stricmp(cmd_name.c_str(), "ban"))
-            ConsoleAutoCompletePlayer(next_offset);
+            console_auto_complete_player(next_offset);
         else if (!stricmp(cmd_name.c_str(), "rcon"))
-            ConsoleAutoCompleteCommand(next_offset);
+            console_auto_complete_command(next_offset);
         else if (!stricmp(cmd_name.c_str(), "help"))
-            ConsoleAutoCompleteCommand(next_offset);
+            console_auto_complete_command(next_offset);
         else if (matching_cmds.size() != 1)
             return;
         else
-            ConsoleShowCmdHelp(matching_cmds[0]);
+            console_show_cmd_help(matching_cmds[0]);
     }
     else if (matching_cmds.size() > 1) {
         for (auto* cmd : matching_cmds) {
@@ -177,21 +177,21 @@ void ConsoleAutoCompleteCommand(int offset)
             else
                 rf::console_printf("%s", cmd->name);
         }
-        ConsoleAutoCompletePutComponent(offset, common_prefix, false);
+        console_auto_complete_put_component(offset, common_prefix, false);
     }
     else if (matching_cmds.size() == 1)
-        ConsoleAutoCompletePutComponent(offset, matching_cmds[0]->name, true);
+        console_auto_complete_put_component(offset, matching_cmds[0]->name, true);
 }
 
 FunHook<void()> console_auto_complete_input_hook{
     0x0050A620,
     []() {
         // autocomplete on offset 0
-        ConsoleAutoCompleteCommand(0);
+        console_auto_complete_command(0);
     },
 };
 
-void ConsoleAutoCompleteApplyPatch()
+void console_auto_complete_apply_patches()
 {
     // Better console autocomplete
     console_auto_complete_input_hook.install();

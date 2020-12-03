@@ -65,7 +65,7 @@ CallHook<void()> main_menu_process_mouse_hook{
     },
 };
 
-int LoadEasterEggImage()
+int load_easter_egg_image()
 {
     HRSRC res_handle = FindResourceA(g_hmodule, MAKEINTRESOURCEA(100), RT_RCDATA);
     if (!res_handle) {
@@ -103,7 +103,7 @@ CallHook<void()> main_menu_render_hook{
     []() {
         main_menu_render_hook.call_target();
         if (g_version_click_counter >= 3) {
-            static int img = LoadEasterEggImage(); // data.vpp
+            static int img = load_easter_egg_image(); // data.vpp
             if (img == -1)
                 return;
             int w, h;
@@ -156,7 +156,7 @@ FunHook<int(const int&, const int&)> server_list_cmp_func_hook{
     },
 };
 
-static inline void DebugUiLayout([[ maybe_unused ]] rf::UiGadget& gadget)
+static inline void debug_ui_layout([[ maybe_unused ]] rf::UiGadget& gadget)
 {
 #if DEBUG_UI_LAYOUT
     int x = gadget.GetAbsoluteX() * rf::ui_scale_x;
@@ -239,7 +239,7 @@ void __fastcall UiButton_render(rf::UiButton& this_, void*)
     // Restore clip region
     rf::gr_set_clip(clip_x, clip_y, clip_w, clip_h);
 
-    DebugUiLayout(this_);
+    debug_ui_layout(this_);
 }
 FunHook UiButton_render_hook{0x004577A0, UiButton_render};
 
@@ -315,7 +315,7 @@ void __fastcall UiLabel_render(rf::UiLabel& this_, void*)
     }
     rf::gr_string_aligned(this_.align, x, y, this_.text, this_.font);
 
-    DebugUiLayout(this_);
+    debug_ui_layout(this_);
 }
 FunHook UiLabel_render_hook{0x00456ED0, UiLabel_render};
 
@@ -360,7 +360,7 @@ void __fastcall UiInputBox_render(rf::UiInputBox& this_, void*)
     }
     rf::gr_set_clip(clip_x, clip_y, clip_w, clip_h);
 
-    DebugUiLayout(this_);
+    debug_ui_layout(this_);
 }
 FunHook UiInputBox_render_hook{0x004570E0, UiInputBox_render};
 
@@ -396,7 +396,7 @@ void __fastcall UiCycler_render(rf::UiCycler& this_, void*)
     auto text_y = y + static_cast<int>((this_.h * rf::ui_scale_y - font_h) / 2);
     rf::gr_string_aligned(rf::GR_ALIGN_CENTER, text_x, text_y, text, font);
 
-    DebugUiLayout(this_);
+    debug_ui_layout(this_);
 }
 FunHook UiCycler_render_hook{0x00457F40, UiCycler_render};
 
@@ -420,16 +420,16 @@ FunHook<void()> menu_init_hook{
             int small_font_size = std::min(128, static_cast<int>(std::round(rf::ui_scale_y * 7.5f))); // 16
             xlog::info("UI font sizes: %d %d %d", large_font_size, medium_font_size, small_font_size);
 
-            rf::ui_large_font = rf::gr_load_font(StringFormat("boldfont.ttf:%d", large_font_size).c_str());
-            rf::ui_medium_font_0 = rf::gr_load_font(StringFormat("regularfont.ttf:%d", medium_font_size).c_str());
+            rf::ui_large_font = rf::gr_load_font(string_format("boldfont.ttf:%d", large_font_size).c_str());
+            rf::ui_medium_font_0 = rf::gr_load_font(string_format("regularfont.ttf:%d", medium_font_size).c_str());
             rf::ui_medium_font_1 = rf::ui_medium_font_0;
-            rf::ui_small_font = rf::gr_load_font(StringFormat("regularfont.ttf:%d", small_font_size).c_str());
+            rf::ui_small_font = rf::gr_load_font(string_format("regularfont.ttf:%d", small_font_size).c_str());
         }
 #endif
     },
 };
 
-int BmLoadIfExists(const char* name, int unk, bool generate_mipmaps)
+int bm_load_if_exists(const char* name, int unk, bool generate_mipmaps)
 {
     if (rf::file_exists(name)) {
         return rf::bm_load(name, unk, generate_mipmaps);
@@ -443,7 +443,7 @@ CallHook<void(int, int, int, rf::GrMode)> gr_bitmap_draw_cursor_hook{
     0x004354E4,
     [](int bm_handle, int x, int y, rf::GrMode mode) {
         if (rf::ui_scale_y >= 2.0f) {
-            static int cursor_1_bmh = BmLoadIfExists("cursor_1.tga", -1, false);
+            static int cursor_1_bmh = bm_load_if_exists("cursor_1.tga", -1, false);
             if (cursor_1_bmh != -1) {
                 bm_handle = cursor_1_bmh;
             }
@@ -452,7 +452,7 @@ CallHook<void(int, int, int, rf::GrMode)> gr_bitmap_draw_cursor_hook{
     },
 };
 
-void ApplyMainMenuPatches()
+void apply_main_menu_patches()
 {
     // Version in Main Menu
     UiLabel_create2_version_label_hook.install();

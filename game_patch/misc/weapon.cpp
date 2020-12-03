@@ -12,7 +12,7 @@
 #include "../console/console.h"
 #include "../main.h"
 
-bool ShouldSwapWeaponAltFire(rf::Player* player)
+bool should_swap_weapon_alt_fire(rf::Player* player)
 {
     if (!g_game_config.swap_assault_rifle_controls) {
         return false;
@@ -33,14 +33,14 @@ bool ShouldSwapWeaponAltFire(rf::Player* player)
     return entity->ai.current_primary_weapon == assault_rifle_cls_id;
 }
 
-bool IsPlayerWeaponInContinousFire(rf::Player* player, bool alt_fire) {
+bool is_player_weapon_on(rf::Player* player, bool alt_fire) {
     if (!player) {
         player = rf::local_player;
     }
     auto entity = rf::entity_from_handle(player->entity_handle);
     bool is_continous_fire = rf::entity_weapon_is_on(entity->handle, entity->ai.current_primary_weapon);
     bool is_alt_fire_flag_set = (entity->ai.flags & 0x2000) != 0; // EWF_ALT_FIRE = 0x2000
-    if (ShouldSwapWeaponAltFire(player)) {
+    if (should_swap_weapon_alt_fire(player)) {
         is_alt_fire_flag_set = !is_alt_fire_flag_set;
     }
     return is_continous_fire && is_alt_fire_flag_set == alt_fire;
@@ -49,7 +49,7 @@ bool IsPlayerWeaponInContinousFire(rf::Player* player, bool alt_fire) {
 FunHook<void(rf::Player*, bool, bool)> PlayerFirePrimaryWeapon_hook{
     0x004A4E80,
     [](rf::Player* player, bool alt_fire, bool was_pressed) {
-        if (ShouldSwapWeaponAltFire(player)) {
+        if (should_swap_weapon_alt_fire(player)) {
             alt_fire = !alt_fire;
         }
         PlayerFirePrimaryWeapon_hook.call_target(player, alt_fire, was_pressed);
@@ -60,7 +60,7 @@ CodeInjection stop_continous_primary_fire_patch{
     0x00430EC5,
     [](auto& regs) {
         auto entity = reinterpret_cast<rf::Entity*>(regs.esi);
-        if (IsPlayerWeaponInContinousFire(entity->local_player, false)) {
+        if (is_player_weapon_on(entity->local_player, false)) {
             regs.eip = 0x00430EDF;
         }
         else {
@@ -73,7 +73,7 @@ CodeInjection stop_continous_alternate_fire_patch{
     0x00430F09,
     [](auto& regs) {
         auto entity = reinterpret_cast<rf::Entity*>(regs.esi);
-        if (IsPlayerWeaponInContinousFire(entity->local_player, true)) {
+        if (is_player_weapon_on(entity->local_player, true)) {
             regs.eip = 0x00430F23;
         }
         else {
@@ -93,7 +93,7 @@ ConsoleCommand2 swap_assault_rifle_controls_cmd{
     "Swap Assault Rifle controls",
 };
 
-bool EntityIsReloading_PlayerSelectWeapon_New(rf::Entity* entity)
+bool entity_is_reloading_player_select_weapon_new(rf::Entity* entity)
 {
     if (rf::entity_is_reloading(entity))
         return true;
@@ -127,10 +127,10 @@ CodeInjection weapons_tbl_buffer_overflow_fix_2{
     },
 };
 
-FunHook<void(rf::Weapon *weapon)> WeaponMoveOne_hook{
+FunHook<void(rf::Weapon *weapon)> weapon_move_one_hook{
     0x004C69A0,
     [](rf::Weapon* weapon) {
-        WeaponMoveOne_hook.call_target(weapon);
+        weapon_move_one_hook.call_target(weapon);
         auto& level_aabb_min = rf::level.geometry->bbox_min;
         auto& level_aabb_max = rf::level.geometry->bbox_max;
         float margin = weapon->vmesh ? 275.0f : 10.0f;
@@ -165,10 +165,10 @@ CodeInjection weapon_vs_obj_collision_fix{
     },
 };
 
-FunHook<void(rf::Player*, int)> PlayerMakeWeaponCurrentSelection_hook{
+FunHook<void(rf::Player*, int)> player_make_weapon_current_selection_hook{
     0x004A4980,
     [](rf::Player* player, int weapon_type) {
-        PlayerMakeWeaponCurrentSelection_hook.call_target(player, weapon_type);
+        player_make_weapon_current_selection_hook.call_target(player, weapon_type);
         auto entity = rf::entity_from_handle(player->entity_handle);
         if (entity && rf::is_multi) {
             // Reset impact delay timers when switching weapon (except in SP because of speedrunners)
@@ -178,7 +178,7 @@ FunHook<void(rf::Player*, int)> PlayerMakeWeaponCurrentSelection_hook{
     },
 };
 
-bool WeaponUsesAmmo(int weapon_type, bool alt_fire)
+bool weapon_uses_ammo(int weapon_type, bool alt_fire)
 {
     if (rf::weapon_is_detonator(weapon_type)) {
          return false;
@@ -193,9 +193,9 @@ bool WeaponUsesAmmo(int weapon_type, bool alt_fire)
     return true;
 }
 
-bool IsEntityOutOfAmmo(rf::Entity *entity, int weapon_type, bool alt_fire)
+bool is_entity_out_of_ammo(rf::Entity *entity, int weapon_type, bool alt_fire)
 {
-    if (!WeaponUsesAmmo(weapon_type, alt_fire)) {
+    if (!weapon_uses_ammo(weapon_type, alt_fire)) {
         return false;
     }
     auto info = &rf::weapon_types[weapon_type];
@@ -209,7 +209,7 @@ bool IsEntityOutOfAmmo(rf::Entity *entity, int weapon_type, bool alt_fire)
     }
 }
 
-FunHook<void(rf::Entity*, int, rf::Vector3*, rf::Matrix3*, bool)> MultiProcessRemoteWeaponFire_hook{
+FunHook<void(rf::Entity*, int, rf::Vector3*, rf::Matrix3*, bool)> multi_process_remote_weapon_fire_hook{
     0x0047D220,
     [](rf::Entity *entity, int weapon_type, rf::Vector3 *pos, rf::Matrix3 *orient, bool alt_fire) {
         if (entity->ai.current_primary_weapon != weapon_type) {
@@ -218,16 +218,16 @@ FunHook<void(rf::Entity*, int, rf::Vector3*, rf::Matrix3*, bool)> MultiProcessRe
             rf::player_make_weapon_current_selection(player, weapon_type);
         }
 
-        if (rf::is_server && IsEntityOutOfAmmo(entity, weapon_type, alt_fire)) {
+        if (rf::is_server && is_entity_out_of_ammo(entity, weapon_type, alt_fire)) {
             xlog::info("Skipping weapon fire packet because player is out of ammunition");
         }
         else {
-            MultiProcessRemoteWeaponFire_hook.call_target(entity, weapon_type, pos, orient, alt_fire);
+            multi_process_remote_weapon_fire_hook.call_target(entity, weapon_type, pos, orient, alt_fire);
         }
     },
 };
 
-CodeInjection ProcessObjUpdatePacket_check_if_weapon_is_possessed_patch{
+CodeInjection process_obj_update_packet_check_if_weapon_is_possessed_patch{
     0x0047E404,
     [](auto& regs) {
         auto entity = reinterpret_cast<rf::Entity*>(regs.edi);
@@ -250,10 +250,10 @@ CodeInjection muzzle_flash_light_not_disabled_fix{
     },
 };
 
-CallHook<void(rf::Player* player, int weapon_type)> ProcessCreateEntityPacket_switch_weapon_fix{
+CallHook<void(rf::Player* player, int weapon_type)> process_create_entity_packet_switch_weapon_fix{
     0x004756B7,
     [](rf::Player* player, int weapon_type) {
-        ProcessCreateEntityPacket_switch_weapon_fix.call_target(player, weapon_type);
+        process_create_entity_packet_switch_weapon_fix.call_target(player, weapon_type);
         // Check if local player is being spawned
         if (!rf::is_server && player == rf::local_player) {
             // Update requested weapon to make sure server does not auto-switch the weapon during item pickup
@@ -282,7 +282,7 @@ CallHook<void(rf::Vector3&, float, float, int, int)> weapon_hit_wall_obj_apply_r
     },
 };
 
-void ApplyWeaponPatches()
+void apply_weapon_patches()
 {
     // Fix crashes caused by too many records in weapons.tbl file
     weapons_tbl_buffer_overflow_fix_1.install();
@@ -290,41 +290,41 @@ void ApplyWeaponPatches()
 
 #if 0
     // Fix weapon switch glitch when reloading (should be used on Match Mode)
-    AsmWriter(0x004A4B4B).call(EntityIsReloading_PlayerSelectWeapon_New);
-    AsmWriter(0x004A4B77).call(EntityIsReloading_PlayerSelectWeapon_New);
+    AsmWriter(0x004A4B4B).call(entity_is_reloading_player_select_weapon_new);
+    AsmWriter(0x004A4B77).call(entity_is_reloading_player_select_weapon_new);
 #endif
 
     // Delete weapons (projectiles) that reach bounding box of the level
-    WeaponMoveOne_hook.install();
+    weapon_move_one_hook.install();
 
     // Fix weapon vs object collisions for big objects
     weapon_vs_obj_collision_fix.install();
 
     // Reset impact delay timers when switching weapon to avoid delayed fire after switching
-    PlayerMakeWeaponCurrentSelection_hook.install();
+    player_make_weapon_current_selection_hook.install();
 
     // Check ammo server-side when handling weapon fire packets
-    MultiProcessRemoteWeaponFire_hook.install();
+    multi_process_remote_weapon_fire_hook.install();
 
     // Verify if player possesses a weapon before switching during obj_update packet handling
-    ProcessObjUpdatePacket_check_if_weapon_is_possessed_patch.install();
+    process_obj_update_packet_check_if_weapon_is_possessed_patch.install();
 
     // Fix muzzle flash light sometimes not getting disabled (e.g. when weapon is switched during riot stick attack
     // in multiplayer)
     muzzle_flash_light_not_disabled_fix.install();
 
     // Fix weapon being auto-switched to previous one after respawn even when auto-switch is disabled
-    ProcessCreateEntityPacket_switch_weapon_fix.install();
+    process_create_entity_packet_switch_weapon_fix.install();
 
     // Allow swapping Assault Rifle primary and alternate fire controls
     PlayerFirePrimaryWeapon_hook.install();
     stop_continous_primary_fire_patch.install();
     stop_continous_alternate_fire_patch.install();
-    swap_assault_rifle_controls_cmd.Register();
+    swap_assault_rifle_controls_cmd.register_cmd();
 
     // Show enemy bullets
     rf::hide_enemy_bullets = !g_game_config.show_enemy_bullets;
-    show_enemy_bullets_cmd.Register();
+    show_enemy_bullets_cmd.register_cmd();
 
     // Fix rockets not making damage after hitting a detail brush
     weapon_hit_wall_obj_apply_radius_damage_hook.install();

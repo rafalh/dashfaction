@@ -63,7 +63,7 @@ CallHook<void(const void*, size_t, const rf::NwAddr&, rf::Player*)> process_unre
         rf::multi_io_process_packets(data, len, addr, player);
 
 #if MASK_AS_PF
-        ProcessPfPacket(data, len, addr, player);
+        process_pf_packet(data, len, addr, player);
 #endif
     },
 };
@@ -348,7 +348,7 @@ FunHook<MultiIoPacketHandler> process_chat_line_packet_hook{
                 return; // shouldnt happen (protected in rf::multi_io_process_packets)
 
             char* msg = data + 2;
-            if (CheckServerChatCommand(msg, src_player))
+            if (check_server_chat_command(msg, src_player))
                 return;
 
             data[0] = src_player->nw_data->player_id; // fix player ID
@@ -626,7 +626,7 @@ CallHook<int(const rf::NwAddr*, std::byte*, size_t)> send_join_accept_packet_hoo
     [](const rf::NwAddr* addr, std::byte* data, size_t len) {
         // Add Dash Faction signature to join_accept packet
         DashFactionJoinAcceptPacketExt ext_data;
-        if (ServerIsSavingEnabled()) {
+        if (server_is_saving_enabled()) {
             ext_data.flags |= DashFactionJoinAcceptPacketExt::Flags::saving_enabled;
         }
         auto [new_data, new_len] = ExtendPacket(data, len, ext_data);
@@ -656,7 +656,7 @@ CodeInjection process_join_accept_injection{
     },
 };
 
-std::optional<std::string> DetermineLocalIpAddress()
+std::optional<std::string> determine_local_ip_address()
 {
     ULONG forward_table_size = 0;
     if (GetIpForwardTable(nullptr, &forward_table_size, FALSE) != ERROR_INSUFFICIENT_BUFFER) {
@@ -697,7 +697,7 @@ std::optional<std::string> DetermineLocalIpAddress()
     for (unsigned i = 0; i < ip_table->dwNumEntries; ++i) {
         auto& row = ip_table->table[i];
         auto addr_bytes = reinterpret_cast<uint8_t*>(&row.dwAddr);
-        auto addr_str = StringFormat("%d.%d.%d.%d", addr_bytes[0], addr_bytes[1], addr_bytes[2], addr_bytes[3]);
+        auto addr_str = string_format("%d.%d.%d.%d", addr_bytes[0], addr_bytes[1], addr_bytes[2], addr_bytes[3]);
         xlog::debug("IpAddrTable: dwIndex %lu dwAddr %s", row.dwIndex, addr_str.c_str());
         if (row.dwIndex == default_route_if_index) {
             return {addr_str};
@@ -707,12 +707,12 @@ std::optional<std::string> DetermineLocalIpAddress()
     return {};
 }
 
-bool TryToAutoForwardPort(int port)
+bool try_to_auto_forward_port(int port)
 {
     xlog::Logger log{"UPnP"};
     log.info("Configuring UPnP port forwarding (port %d)", port);
 
-    auto local_ip_addr_opt = DetermineLocalIpAddress();
+    auto local_ip_addr_opt = determine_local_ip_address();
     if (!local_ip_addr_opt) {
         log.warn("Cannot determine local IP address");
         return false;
@@ -793,7 +793,7 @@ FunHook<void()> tracker_do_broadcast_server_hook{
     []() {
         tracker_do_broadcast_server_hook.call_target();
         // Auto forward server port using UPnP (in background thread)
-        std::thread upnp_thread{TryToAutoForwardPort, rf::nw_port};
+        std::thread upnp_thread{try_to_auto_forward_port, rf::nw_port};
         upnp_thread.detach();
     },
 };
@@ -807,12 +807,12 @@ FunHook<void()> multi_stop_hook{
     },
 };
 
-const std::optional<DashFactionServerInfo>& GetDashFactionServerInfo()
+const std::optional<DashFactionServerInfo>& get_df_server_info()
 {
     return g_df_server_info;
 }
 
-void SendChatLinePacket(const char* msg, rf::Player* target, rf::Player* sender, bool is_team_msg)
+void send_chat_line_packet(const char* msg, rf::Player* target, rf::Player* sender, bool is_team_msg)
 {
     uint8_t buf[512];
     auto& packet = *reinterpret_cast<RF_ChatLinePacket*>(buf);
@@ -894,7 +894,7 @@ CodeInjection obj_interp_too_fast_fix{
     },
 };
 
-void NetworkInit()
+void network_init()
 {
     // ProcessGamePackets hook (not reliable only)
     process_unreliable_game_packets_hook.install();
@@ -1009,7 +1009,7 @@ void NetworkInit()
     // Allow changing client and server update rate
     client_update_rate_injection.install();
     server_update_rate_injection.install();
-    update_rate_cmd.Register();
+    update_rate_cmd.register_cmd();
 
     // Fix rotation interpolation (Y axis) when it goes from 360 to 0 degrees
     obj_interp_rotation_fix.install();

@@ -4,7 +4,7 @@
 #include "../rf/common.h"
 #include <xlog/xlog.h>
 
-inline int GetBmFormatSize(rf::BmFormat format)
+inline int get_bm_format_size(rf::BmFormat format)
 {
     switch (format) {
     case rf::BM_FORMAT_8_PALETTED:
@@ -26,7 +26,7 @@ inline int GetBmFormatSize(rf::BmFormat format)
 
 #ifdef DIRECT3D_VERSION
 
-inline D3DFORMAT GetD3DFormatFromBmFormat(rf::BmFormat format)
+inline D3DFORMAT get_d3d_format_from_bm_format(rf::BmFormat format)
 {
     switch (format) {
     case rf::BM_FORMAT_8_PALETTED:
@@ -60,7 +60,7 @@ inline D3DFORMAT GetD3DFormatFromBmFormat(rf::BmFormat format)
     }
 }
 
-inline rf::BmFormat GetBmFormatFromD3DFormat(D3DFORMAT d3d_fmt)
+inline rf::BmFormat get_bm_format_from_d3d_format(D3DFORMAT d3d_fmt)
 {
     switch (d3d_fmt) {
     case D3DFMT_R5G6B5:
@@ -96,8 +96,8 @@ inline rf::BmFormat GetBmFormatFromD3DFormat(D3DFORMAT d3d_fmt)
 
 #endif
 
-void GrColorInit();
-bool ConvertSurfaceFormat(void* dst_bits_ptr, rf::BmFormat dst_fmt, const void* src_bits_ptr,
+void gr_color_init();
+bool conver_surface_format(void* dst_bits_ptr, rf::BmFormat dst_fmt, const void* src_bits_ptr,
                           rf::BmFormat src_fmt, int width, int height, int dst_pitch, int src_pitch,
                           const uint8_t* palette = nullptr);
-rf::Color DecodeBlockCompressedPixel(void* block, rf::BmFormat format, int x, int y);
+rf::Color decode_block_compressed_pixel(void* block, rf::BmFormat format, int x, int y);
