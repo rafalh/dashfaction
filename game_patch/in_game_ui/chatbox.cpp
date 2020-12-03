@@ -17,7 +17,7 @@ FunHook<void(uint16_t)> multi_chat_say_add_char_hook{
     0x00444740,
     [](uint16_t key) {
         if (key)
-            multi_chat_say_add_char_hook.CallTarget(key);
+            multi_chat_say_add_char_hook.call_target(key);
     },
 };
 
@@ -27,7 +27,7 @@ FunHook<void(const char*, bool)> multi_chat_say_accept_hook{
         std::string msg_str{msg};
         if (msg_str.size() > chat_msg_max_len)
             msg_str.resize(chat_msg_max_len);
-        multi_chat_say_accept_hook.CallTarget(msg_str.c_str(), is_team_msg);
+        multi_chat_say_accept_hook.call_target(msg_str.c_str(), is_team_msg);
     },
 };
 
@@ -182,17 +182,17 @@ FunHook<void(rf::String::Pod, rf::String::Pod)> ChatboxInputRender_hook{0x00478C
 void InstallChatboxPatches()
 {
     // Fix game beeping every frame if chat input buffer is full
-    multi_chat_say_add_char_hook.Install();
+    multi_chat_say_add_char_hook.install();
 
     // Change chat input limit to 224 (RF can support 255 safely but PF kicks if message is longer than 224)
-    WriteMem<i32>(0x0044474A + 1, chat_msg_max_len);
+    write_mem<i32>(0x0044474A + 1, chat_msg_max_len);
 
     // Add chat message limit for say/teamsay commands
-    multi_chat_say_accept_hook.Install();
+    multi_chat_say_accept_hook.install();
 
-    multi_chat_render_hook.Install();
-    multi_chat_add_msg_max_width_injection.Install();
-    ChatboxInputRender_hook.Install();
+    multi_chat_render_hook.install();
+    multi_chat_add_msg_max_width_injection.install();
+    ChatboxInputRender_hook.install();
 }
 
 void SetBigChatbox(bool is_big)

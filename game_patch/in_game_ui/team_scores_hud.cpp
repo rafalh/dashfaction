@@ -11,12 +11,12 @@ constexpr bool g_debug_team_scores_hud = false;
 
 namespace rf
 {
-    auto& hud_miniflag_red_bmh = AddrAsRef<int>(0x0059DF48);
-    auto& hud_miniflag_blue_bmh = AddrAsRef<int>(0x0059DF4C);
-    auto& hud_miniflag_hilight_bmh = AddrAsRef<int>(0x0059DF50);
-    auto& hud_flag_red_bmh = AddrAsRef<int>(0x0059DF54);
-    auto& hud_flag_blue_bmh = AddrAsRef<int>(0x0059DF58);
-    auto& hud_flag_render_state = AddrAsRef<rf::GrMode>(0x01775B30); //MatT2C2A3B2Z1F3
+    auto& hud_miniflag_red_bmh = addr_as_ref<int>(0x0059DF48);
+    auto& hud_miniflag_blue_bmh = addr_as_ref<int>(0x0059DF4C);
+    auto& hud_miniflag_hilight_bmh = addr_as_ref<int>(0x0059DF50);
+    auto& hud_flag_red_bmh = addr_as_ref<int>(0x0059DF54);
+    auto& hud_flag_blue_bmh = addr_as_ref<int>(0x0059DF58);
+    auto& hud_flag_render_state = addr_as_ref<rf::GrMode>(0x01775B30); //MatT2C2A3B2Z1F3
 }
 
 void HudRenderTeamScores()

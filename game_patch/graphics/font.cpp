@@ -452,7 +452,7 @@ FunHook<int(const char*, int)> gr_load_font_hook{
     0x0051F6E0,
     [](const char *name, int reserved) {
         if (StringEndsWith(name, ".vf")) {
-            return gr_load_font_hook.CallTarget(name, reserved);
+            return gr_load_font_hook.call_target(name, reserved);
         }
         else if (rf::is_dedicated_server) {
            return -1;
@@ -500,7 +500,7 @@ FunHook<int(int)> gr_get_font_height_hook{
             return font.get_height();
         }
         else {
-            return gr_get_font_height_hook.CallTarget(font_num);
+            return gr_get_font_height_hook.call_target(font_num);
         }
     },
 };
@@ -516,7 +516,7 @@ FunHook<void(int, int, const char*, int, rf::GrMode)> gr_string_hook{
             font.draw(x, y, text, mode);
         }
         else {
-            gr_string_hook.CallTarget(x, y, text, font_num, mode);
+            gr_string_hook.call_target(x, y, text, font_num, mode);
         }
     },
 };
@@ -539,7 +539,7 @@ FunHook<void(int*, int*, const char*, int, int)> gr_get_string_size_hook{
             font.get_size(out_width, out_height, text_sv);
         }
         else {
-            gr_get_string_size_hook.CallTarget(out_width, out_height, text, text_len, font_num);
+            gr_get_string_size_hook.call_target(out_width, out_height, text, text_len, font_num);
         }
     },
 };
@@ -547,10 +547,10 @@ FunHook<void(int*, int*, const char*, int, int)> gr_get_string_size_hook{
 void ApplyFontPatches()
 {
     // Support TrueType fonts
-    gr_load_font_hook.Install();
-    gr_set_default_font_hook.Install();
-    gr_get_font_height_hook.Install();
-    gr_string_hook.Install();
-    gr_get_string_size_hook.Install();
+    gr_load_font_hook.install();
+    gr_set_default_font_hook.install();
+    gr_get_font_height_hook.install();
+    gr_string_hook.install();
+    gr_get_string_size_hook.install();
     InitFreeTypeLib();
 }

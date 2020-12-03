@@ -5,7 +5,7 @@
 #include <patch_common/MemUtils.h>
 #include <cstdint>
 
-void CallHookImpl::Install()
+void CallHookImpl::install()
     {
         m_target_fun_ptr = nullptr;
         for (auto addr : m_call_op_addr_vec) {
@@ -26,6 +26,6 @@ void CallHookImpl::Install()
             }
 
             intptr_t new_offset = reinterpret_cast<intptr_t>(m_hook_fun_ptr) - addr - call_op_size;
-            WriteMem<i32>(addr + 1, new_offset);
+            write_mem<i32>(addr + 1, new_offset);
         }
     }

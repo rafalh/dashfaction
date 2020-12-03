@@ -44,12 +44,12 @@ struct VPackfileEntry
     FILE* raw_file;
 };
 
-static auto& vpackfile_loading_user_maps = AddrAsRef<bool>(0x01BDB21C);
+static auto& vpackfile_loading_user_maps = addr_as_ref<bool>(0x01BDB21C);
 
-static auto& vpackfile_calc_file_name_checksum = AddrAsRef<uint32_t(const char* file_name)>(0x0052BE70);
+static auto& vpackfile_calc_file_name_checksum = addr_as_ref<uint32_t(const char* file_name)>(0x0052BE70);
 typedef uint32_t VPackfileAddEntries_Type(VPackfile* packfile, const void* buf, unsigned num_files_in_block,
                                          unsigned* num_added);
-static auto& vpackfile_add_entries = AddrAsRef<VPackfileAddEntries_Type>(0x0052BD40);
+static auto& vpackfile_add_entries = addr_as_ref<VPackfileAddEntries_Type>(0x0052BD40);
 } // namespace rf
 
 #if CHECK_PACKFILE_CHECKSUM
@@ -491,9 +491,9 @@ static void VPackfileInit_New()
     rf::vpackfile_add("ui.vpp", nullptr);
     LoadDashFactionVpp();
     rf::vpackfile_add("tables.vpp", nullptr);
-    AddrAsRef<int>(0x01BDB218) = 1;          // VPackfilesLoaded
-    AddrAsRef<uint32_t>(0x01BDB210) = 10000; // NumFilesInVfs
-    AddrAsRef<uint32_t>(0x01BDB214) = 100;   // NumPackfiles
+    addr_as_ref<int>(0x01BDB218) = 1;          // VPackfilesLoaded
+    addr_as_ref<uint32_t>(0x01BDB210) = 10000; // NumFilesInVfs
+    addr_as_ref<uint32_t>(0x01BDB214) = 100;   // NumPackfiles
 
     // Note: language changes in binary are done here to make sure RootPath is already initialized
 
@@ -503,13 +503,13 @@ static void VPackfileInit_New()
     if (g_game_config.language >= 0 && g_game_config.language < 3) {
         lang_id = g_game_config.language;
     }
-    WriteMem<u8>(0x004B27D2 + 1, static_cast<uint8_t>(lang_id));
+    write_mem<u8>(0x004B27D2 + 1, static_cast<uint8_t>(lang_id));
 
     // Switch localized tables names
     if (installation_lang != LANG_EN) {
-        WriteMemPtr(0x0043DCAB + 1, "localized_credits.tbl");
-        WriteMemPtr(0x0043E50B + 1, "localized_endgame.tbl");
-        WriteMemPtr(0x004B082B + 1, "localized_strings.tbl");
+        write_mem_ptr(0x0043DCAB + 1, "localized_credits.tbl");
+        write_mem_ptr(0x0043E50B + 1, "localized_endgame.tbl");
+        write_mem_ptr(0x004B082B + 1, "localized_strings.tbl");
     }
 
     // Allow modded strings.tbl in ui.vpp
@@ -539,16 +539,16 @@ void VPackfileApplyPatches()
     AsmWriter(0x0052BC80).jmp(VPackfileCleanup_New);
 
     // Don't return success from VPackfileOpen if offset points out of file contents
-    VPackfileOpen_check_seek_result_injection.Install();
+    VPackfileOpen_check_seek_result_injection.install();
 
 #ifdef DEBUG
-    WriteMem<u8>(0x0052BEF0, asm_opcodes::int3); // VPackfileInitFileList
-    WriteMem<u8>(0x0052BF50, asm_opcodes::int3); // VPackfileLoadInternal
-    WriteMem<u8>(0x0052C440, asm_opcodes::int3); // VPackfileFindEntry
-    WriteMem<u8>(0x0052BD10, asm_opcodes::int3); // VPackfileProcessHeader
-    WriteMem<u8>(0x0052BEB0, asm_opcodes::int3); // VPackfileSetupFileOffsets
-    WriteMem<u8>(0x0052BCA0, asm_opcodes::int3); // VPackfileAddToLookupTable
-    WriteMem<u8>(0x0052C1D0, asm_opcodes::int3); // VPackfileFindPackfile
+    write_mem<u8>(0x0052BEF0, asm_opcodes::int3); // VPackfileInitFileList
+    write_mem<u8>(0x0052BF50, asm_opcodes::int3); // VPackfileLoadInternal
+    write_mem<u8>(0x0052C440, asm_opcodes::int3); // VPackfileFindEntry
+    write_mem<u8>(0x0052BD10, asm_opcodes::int3); // VPackfileProcessHeader
+    write_mem<u8>(0x0052BEB0, asm_opcodes::int3); // VPackfileSetupFileOffsets
+    write_mem<u8>(0x0052BCA0, asm_opcodes::int3); // VPackfileAddToLookupTable
+    write_mem<u8>(0x0052C1D0, asm_opcodes::int3); // VPackfileFindPackfile
 
 #endif
 }

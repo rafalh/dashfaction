@@ -56,7 +56,7 @@ CodeInjection obj_create_find_slot_patch{
 
         static int low_index_hint = 0;
         static int high_index_hint = old_obj_limit;
-        auto objects = obj_ptr_array_resize_patch.GetBuffer();
+        auto objects = obj_ptr_array_resize_patch.get_buffer();
 
         int index_hint, min_index, max_index;
         bool use_low_index;
@@ -121,7 +121,7 @@ CallHook<void*(size_t)> GPool_allocate_new_hook{
         0x005047B3,
     },
     [](size_t s) -> void* {
-        void* result = GPool_allocate_new_hook.CallTarget(s);
+        void* result = GPool_allocate_new_hook.call_target(s);
         if (result) {
             // Zero memory allocated dynamically (static memory is zeroed by operating system automatically)
             std::memset(result, 0, s);
@@ -133,14 +133,14 @@ CallHook<void*(size_t)> GPool_allocate_new_hook{
 void ApplyLimitsPatches()
 {
     // Change object limit
-    //obj_free_slot_buffer_resize_patch.Install();
-    obj_ptr_array_resize_patch.Install();
-    obj_multi_handle_mapping_resize_patch.Install();
-    WriteMem<u32>(0x0040A0F0 + 1, obj_limit);
-    WriteMem<u32>(0x0047D8C1 + 1, obj_limit);
+    //obj_free_slot_buffer_resize_patch.install();
+    obj_ptr_array_resize_patch.install();
+    obj_multi_handle_mapping_resize_patch.install();
+    write_mem<u32>(0x0040A0F0 + 1, obj_limit);
+    write_mem<u32>(0x0047D8C1 + 1, obj_limit);
 
     // Change object index allocation strategy
-    obj_create_find_slot_patch.Install();
+    obj_create_find_slot_patch.install();
     AsmWriter(0x00486E3F, 0x00486E61).nop();
     AsmWriter(0x0048685F, 0x0048687B).nop();
     AsmWriter(0x0048687C, 0x00486895).nop();
@@ -152,15 +152,15 @@ void ApplyLimitsPatches()
     AsmWriter(0x00487BBA, 0x00487BC3).call(SimObjArrayAddHook).add(asm_regs::esp, 4);
 
     // Allow pool allocation beyond the limit
-    WriteMem<u8>(0x0048B5BB, asm_opcodes::jmp_rel_short); // weapon
-    WriteMem<u8>(0x0048B72B, asm_opcodes::jmp_rel_short); // debris
-    WriteMem<u8>(0x0048B89B, asm_opcodes::jmp_rel_short); // corpse
-    WriteMem<u8>(0x004D7EEB, asm_opcodes::jmp_rel_short); // decal poly
-    WriteMem<u8>(0x004E3C5B, asm_opcodes::jmp_rel_short); // face
-    WriteMem<u8>(0x004E3DEB, asm_opcodes::jmp_rel_short); // face vertex
-    WriteMem<u8>(0x004F97DB, asm_opcodes::jmp_rel_short); // bbox
-    WriteMem<u8>(0x004F9C5B, asm_opcodes::jmp_rel_short); // vertex
-    WriteMem<u8>(0x005047AB, asm_opcodes::jmp_rel_short); // vmesh
+    write_mem<u8>(0x0048B5BB, asm_opcodes::jmp_rel_short); // weapon
+    write_mem<u8>(0x0048B72B, asm_opcodes::jmp_rel_short); // debris
+    write_mem<u8>(0x0048B89B, asm_opcodes::jmp_rel_short); // corpse
+    write_mem<u8>(0x004D7EEB, asm_opcodes::jmp_rel_short); // decal poly
+    write_mem<u8>(0x004E3C5B, asm_opcodes::jmp_rel_short); // face
+    write_mem<u8>(0x004E3DEB, asm_opcodes::jmp_rel_short); // face vertex
+    write_mem<u8>(0x004F97DB, asm_opcodes::jmp_rel_short); // bbox
+    write_mem<u8>(0x004F9C5B, asm_opcodes::jmp_rel_short); // vertex
+    write_mem<u8>(0x005047AB, asm_opcodes::jmp_rel_short); // vmesh
 
     // Remove object type-specific limits
     AsmWriter(0x0048712A, 0x00487137).nop(); // corpse
@@ -169,5 +169,5 @@ void ApplyLimitsPatches()
     AsmWriter(0x00487271, 0x0048727A).nop(); // weapon
 
     // Zero memory allocated from GPool dynamically
-    GPool_allocate_new_hook.Install();
+    GPool_allocate_new_hook.install();
 }

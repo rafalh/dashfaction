@@ -245,7 +245,7 @@ struct VoteLevel : public Vote
     void OnAccepted() override
     {
         SendChatLinePacket("\xA6 Vote passed: changing level", nullptr);
-        auto& multi_change_level = AddrAsRef<bool(const char* filename)>(0x0047BF50);
+        auto& multi_change_level = addr_as_ref<bool(const char* filename)>(0x0047BF50);
         multi_change_level(m_level_name.c_str());
     }
 

@@ -18,9 +18,9 @@ protected:
     }
 
 public:
-    void Install();
+    void install();
 
-    void SetAddr(uintptr_t target_fun_addr)
+    void set_addr(uintptr_t target_fun_addr)
     {
         m_target_fun_ptr = reinterpret_cast<void*>(target_fun_addr);
     }
@@ -40,7 +40,7 @@ public:
         FunHookImpl(target_fun_addr, reinterpret_cast<void*>(hook_fun_ptr))
     {}
 
-    R CallTarget(A... a)
+    R call_target(A... a)
     {
         auto trampoline_ptr = reinterpret_cast<FunType*>(m_subhook.GetTrampoline());
         return trampoline_ptr(a...);
@@ -58,7 +58,7 @@ public:
         FunHookImpl(target_fun_addr, reinterpret_cast<void*>(hook_fun_ptr))
     {}
 
-    R CallTarget(A... a)
+    R call_target(A... a)
     {
         auto trampoline_ptr = reinterpret_cast<FunType*>(m_subhook.GetTrampoline());
         return trampoline_ptr(a...);
@@ -76,7 +76,7 @@ public:
         FunHookImpl(target_fun_addr, reinterpret_cast<void*>(hook_fun_ptr))
     {}
 
-    R CallTarget(A... a)
+    R call_target(A... a)
     {
         auto trampoline_ptr = reinterpret_cast<FunType*>(m_subhook.GetTrampoline());
         return trampoline_ptr(a...);

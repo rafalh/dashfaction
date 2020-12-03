@@ -29,14 +29,14 @@ struct String
 HMODULE g_module;
 bool g_skip_wnd_set_text = false;
 
-static auto& g_log_view = AddrAsRef<std::byte*>(0x006F9E68);
+static auto& g_log_view = addr_as_ref<std::byte*>(0x006F9E68);
 static const auto g_editor_app = reinterpret_cast<std::byte*>(0x006F9DA0);
 
-static auto& log_wnd_append = AddrAsRef<int(void* self, const char* format, ...)>(0x00444980);
+static auto& log_wnd_append = addr_as_ref<int(void* self, const char* format, ...)>(0x00444980);
 
 HWND GetMainFrameHandle()
 {
-    auto main_frame = StructFieldRef<CWnd*>(g_editor_app, 0xC8);
+    auto main_frame = struct_field_ref<CWnd*>(g_editor_app, 0xC8);
     return WndToHandle(main_frame);
 }
 
@@ -52,7 +52,7 @@ void OpenLevel(const char* level_path)
 CodeInjection CMainFrame_PreCreateWindow_injection{
     0x00447134,
     [](auto& regs) {
-        auto& cs = AddrAsRef<CREATESTRUCTA>(regs.eax);
+        auto& cs = addr_as_ref<CREATESTRUCTA>(regs.eax);
         cs.dwExStyle |= WS_EX_ACCEPTFILES;
     },
 };
@@ -61,7 +61,7 @@ CodeInjection CEditorApp_InitInstance_additional_file_paths_injection{
     0x0048290D,
     []() {
         // Load v3m files from more localizations instead of only VPP packfiles
-        auto file_add_path = AddrAsRef<int(const char *path, const char *exts, bool cd)>(0x004C3950);
+        auto file_add_path = addr_as_ref<int(const char *path, const char *exts, bool cd)>(0x004C3950);
         file_add_path("red\\meshes", ".v3m", false);
         file_add_path("user_maps\\meshes", ".v3m", false);
     },
@@ -70,8 +70,8 @@ CodeInjection CEditorApp_InitInstance_additional_file_paths_injection{
 CodeInjection CEditorApp_InitInstance_open_level_injection{
     0x00482BF1,
     []() {
-        static auto& argv = AddrAsRef<char**>(0x01DBF8E4);
-        static auto& argc = AddrAsRef<int>(0x01DBF8E0);
+        static auto& argv = addr_as_ref<char**>(0x01DBF8E4);
+        static auto& argc = addr_as_ref<int>(0x01DBF8E0);
         const char* level_param = nullptr;
         for (int i = 1; i < argc; ++i) {
             xlog::trace("argv[%d] = %s", i, argv[i]);
@@ -93,7 +93,7 @@ CodeInjection CWnd_CreateDlg_injection{
     0x0052F112,
     [](auto& regs) {
         auto& hCurrentResourceHandle = regs.esi;
-        auto lpszTemplateName = AddrAsRef<LPCSTR>(regs.esp);
+        auto lpszTemplateName = addr_as_ref<LPCSTR>(regs.esp);
         // Dialog resource customizations:
         // - 136: main window top bar (added tool buttons)
         if (lpszTemplateName == MAKEINTRESOURCE(IDD_MAIN_FRAME_TOP_BAR)) {
@@ -106,7 +106,7 @@ CodeInjection CDialog_DoModal_injection{
     0x0052F461,
     [](auto& regs) {
         auto& hCurrentResourceHandle = regs.ebx;
-        auto lpszTemplateName = AddrAsRef<LPCSTR>(regs.esp);
+        auto lpszTemplateName = addr_as_ref<LPCSTR>(regs.esp);
         // Customize:
         // - 148: trigger properties dialog
         if (lpszTemplateName == MAKEINTRESOURCE(IDD_TRIGGER_PROPERTIES)) {
@@ -154,7 +154,7 @@ int __fastcall log_append_wnd_set_text_new(void* self, void* edx, const char* st
     if (g_skip_wnd_set_text)
         return std::strlen(str);
     else
-        return log_append_wnd_set_text_hook.CallTarget(self, edx, str);
+        return log_append_wnd_set_text_hook.call_target(self, edx, str);
 }
 CallHook<wnd_set_text_type> log_append_wnd_set_text_hook{0x004449C6, log_append_wnd_set_text_new};
 
@@ -163,7 +163,7 @@ extern FunHook<group_mode_handle_selection_type> group_mode_handle_selection_hoo
 void __fastcall group_mode_handle_selection_new(void* self)
 {
     g_skip_wnd_set_text = true;
-    group_mode_handle_selection_hook.CallTarget(self);
+    group_mode_handle_selection_hook.call_target(self);
     g_skip_wnd_set_text = false;
     // TODO: print
     auto log_view = *reinterpret_cast<void**>(g_log_view + 692);
@@ -176,7 +176,7 @@ extern FunHook<brush_mode_handle_selection_type> brush_mode_handle_selection_hoo
 void __fastcall brush_mode_handle_selection_new(void* self)
 {
     g_skip_wnd_set_text = true;
-    brush_mode_handle_selection_hook.CallTarget(self);
+    brush_mode_handle_selection_hook.call_target(self);
     g_skip_wnd_set_text = false;
     // TODO: print
     auto log_view = *reinterpret_cast<void**>(g_log_view + 692);
@@ -192,11 +192,11 @@ FunHook DedLight_UpdateLevelLight_hook{
 };
 void __fastcall DedLight_UpdateLevelLight(void *this_)
 {
-    auto& this_is_enabled = StructFieldRef<bool>(this_, 0xD5);
-    auto& level_light = StructFieldRef<void*>(this_, 0xD8);
-    auto& level_light_is_enabled = StructFieldRef<bool>(level_light, 0x91);
+    auto& this_is_enabled = struct_field_ref<bool>(this_, 0xD5);
+    auto& level_light = struct_field_ref<void*>(this_, 0xD8);
+    auto& level_light_is_enabled = struct_field_ref<bool>(level_light, 0x91);
     level_light_is_enabled = this_is_enabled;
-    DedLight_UpdateLevelLight_hook.CallTarget(this_);
+    DedLight_UpdateLevelLight_hook.call_target(this_);
 }
 
 struct CTextureBrowserDialog;
@@ -207,9 +207,9 @@ FunHook CTextureBrowserDialog_GetFolderName_hook{
 };
 String * __fastcall CTextureBrowserDialog_GetFolderName(CTextureBrowserDialog *this_, int edx, String *folder_name)
 {
-    auto& texture_browser_folder_index = AddrAsRef<int>(0x006CA404);
+    auto& texture_browser_folder_index = addr_as_ref<int>(0x006CA404);
     if (texture_browser_folder_index > 0) {
-        return CTextureBrowserDialog_GetFolderName_hook.CallTarget(this_, edx, folder_name);
+        return CTextureBrowserDialog_GetFolderName_hook.call_target(this_, edx, folder_name);
     }
     folder_name->buf = nullptr;
     folder_name->max_len = 0;
@@ -220,19 +220,19 @@ CodeInjection CCutscenePropertiesDialog_ct_crash_fix{
     0x00458A84,
     [](auto& regs) {
         auto this_ = reinterpret_cast<void*>(regs.esi);
-        auto& this_num_shots = StructFieldRef<int>(this_, 0x60);
+        auto& this_num_shots = struct_field_ref<int>(this_, 0x60);
         this_num_shots = 0;
     },
 };
 
 class CMainFrame;
 
-static auto RedrawEditorAfterModification = AddrAsRef<int __cdecl()>(0x00483560);
+static auto RedrawEditorAfterModification = addr_as_ref<int __cdecl()>(0x00483560);
 
 void* GetLevelFromMainFrame(CWnd* main_frame)
 {
-    auto doc = StructFieldRef<void*>(main_frame, 0xD0);
-    return &StructFieldRef<int>(doc, 0x60);
+    auto doc = struct_field_ref<void*>(main_frame, 0xD0);
+    return &struct_field_ref<int>(doc, 0x60);
 }
 
 BOOL __fastcall CMainFrame_OnCmdMsg(CWnd* this_, int, UINT nID, int nCode, void* pExtra, void* pHandlerInfo)
@@ -309,8 +309,8 @@ std::string GetModuleDir(HMODULE module)
 
 void LoadDashEditorPackfile()
 {
-    static auto& vpackfile_add = AddrAsRef<int __cdecl(const char *name, const char *dir)>(0x004CA930);
-    static auto& root_path = AddrAsRef<char[256]>(0x0158CA10);
+    static auto& vpackfile_add = addr_as_ref<int __cdecl(const char *name, const char *dir)>(0x004CA930);
+    static auto& root_path = addr_as_ref<char[256]>(0x0158CA10);
 
     auto df_dir = GetModuleDir(g_module);
     std::string old_root_path = root_path;
@@ -338,8 +338,8 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     play_level_cmd_part += LAUNCHER_FILENAME;
     play_level_cmd_part += " -level \"";
 
-    WriteMemPtr(0x00447973 + 1, play_level_cmd_part.c_str());
-    WriteMemPtr(0x00447CB9 + 1, play_level_cmd_part.c_str());
+    write_mem_ptr(0x00447973 + 1, play_level_cmd_part.c_str());
+    write_mem_ptr(0x00447CB9 + 1, play_level_cmd_part.c_str());
 
     // Zero first argument for CreateProcess call
     using namespace asm_regs;
@@ -349,34 +349,34 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     AsmWriter(0x00448024).xor_(eax, eax);
 
     // Add additional file paths for V3M loading
-    CEditorApp_InitInstance_additional_file_paths_injection.Install();
+    CEditorApp_InitInstance_additional_file_paths_injection.install();
 
     // Add handling for "-level" command line argument
-    CEditorApp_InitInstance_open_level_injection.Install();
+    CEditorApp_InitInstance_open_level_injection.install();
 
     // Change main frame style flags to allow dropping files
-    CMainFrame_PreCreateWindow_injection.Install();
+    CMainFrame_PreCreateWindow_injection.install();
 
     // Increase memory size of log view buffer (500 lines * 64 characters)
-    WriteMem<int32_t>(0x0044489C + 1, 32000);
+    write_mem<int32_t>(0x0044489C + 1, 32000);
 
     // Optimize object selection logging
-    log_append_wnd_set_text_hook.Install();
-    brush_mode_handle_selection_hook.Install();
-    group_mode_handle_selection_hook.Install();
+    log_append_wnd_set_text_hook.install();
+    brush_mode_handle_selection_hook.install();
+    group_mode_handle_selection_hook.install();
 
     // Replace some editor resources
-    CWnd_CreateDlg_injection.Install();
-    CDialog_DoModal_injection.Install();
-    WriteMemPtr(0x0055456C, &LoadMenuA_new);
-    WriteMemPtr(0x005544FC, &LoadIconA_new);
-    WriteMemPtr(0x005543AC, &LoadAcceleratorsA_new);
+    CWnd_CreateDlg_injection.install();
+    CDialog_DoModal_injection.install();
+    write_mem_ptr(0x0055456C, &LoadMenuA_new);
+    write_mem_ptr(0x005544FC, &LoadIconA_new);
+    write_mem_ptr(0x005543AC, &LoadAcceleratorsA_new);
 
     // Remove "Packfile saved successfully!" message
     AsmWriter{0x0044CCA3, 0x0044CCB3}.nop();
 
     // Fix changing properties of multiple respawn points
-    CDedLevel_OpenRespawnPointProperties_injection.Install();
+    CDedLevel_OpenRespawnPointProperties_injection.install();
 
     // Apply patches defined in other files
     ApplyGraphicsPatches();
@@ -384,29 +384,29 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
 
     // Browse for .v3m files instead of .v3d
     static char mesh_ext_filter[] = "Mesh (*.v3m)|*.v3m|All Files (*.*)|*.*||";
-    WriteMemPtr(0x0044243E + 1, mesh_ext_filter);
-    WriteMemPtr(0x00462490 + 1, mesh_ext_filter);
-    WriteMemPtr(0x0044244F + 1, ".v3m");
-    WriteMemPtr(0x004624A9 + 1, ".v3m");
-    WriteMemPtr(0x0044244A + 1, "RFBrush.v3m");
+    write_mem_ptr(0x0044243E + 1, mesh_ext_filter);
+    write_mem_ptr(0x00462490 + 1, mesh_ext_filter);
+    write_mem_ptr(0x0044244F + 1, ".v3m");
+    write_mem_ptr(0x004624A9 + 1, ".v3m");
+    write_mem_ptr(0x0044244A + 1, "RFBrush.v3m");
 
     // Fix rendering of VBM textures from user_maps/textures
-    WriteMemPtr(0x004828C2 + 1, ".tga .vbm");
+    write_mem_ptr(0x004828C2 + 1, ".tga .vbm");
 
     // Fix lights sometimes not working
-    DedLight_UpdateLevelLight_hook.Install();
+    DedLight_UpdateLevelLight_hook.install();
 
     // Fix crash when selecting decal texture from 'All' folder
-    CTextureBrowserDialog_GetFolderName_hook.Install();
+    CTextureBrowserDialog_GetFolderName_hook.install();
 
     // No longer require "-sound" argument to enable sound support
     AsmWriter{0x00482BC4}.nop(2);
 
     // Fix random crash when opening cutscene properties
-    CCutscenePropertiesDialog_ct_crash_fix.Install();
+    CCutscenePropertiesDialog_ct_crash_fix.install();
 
     // Load DashEditor.vpp
-    vpackfile_init_injection.Install();
+    vpackfile_init_injection.install();
 
     // Add maps_df.txt to the collection of files scanned for default textures in order to add more textures from the
     // base game to the texture browser
@@ -420,29 +420,29 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
         "maps4.txt",
         "maps_df.txt",
     };
-    WriteMemPtr(0x0041B813 + 1, maps_files_names);
-    WriteMemPtr(0x0041B824 + 1, maps_files_names);
+    write_mem_ptr(0x0041B813 + 1, maps_files_names);
+    write_mem_ptr(0x0041B824 + 1, maps_files_names);
 
     // Fix path node connections sometimes being rendered incorrectly
     // For some reason editor code uses copies of radius and position fields in some situation and those copies
     // are sometimes uninitialized
-    WriteMem<u8>(0x004190EB, asm_opcodes::jmp_rel_short);
-    WriteMem<u8>(0x0041924A, asm_opcodes::jmp_rel_short);
+    write_mem<u8>(0x004190EB, asm_opcodes::jmp_rel_short);
+    write_mem<u8>(0x0041924A, asm_opcodes::jmp_rel_short);
 
     // Support additional commands
-    WriteMemPtr(0x00556574, &CMainFrame_OnCmdMsg);
-    WriteMemPtr(0x005565E0, &CMainFrame_OnCommand);
+    write_mem_ptr(0x00556574, &CMainFrame_OnCmdMsg);
+    write_mem_ptr(0x005565E0, &CMainFrame_OnCommand);
 
     // Fix F4 key (Maximize active viewport) for screens larger than 1024x768
     constexpr int max_size = 0x7FFF;
-    WriteMem<int>(0x0044770D + 1, max_size);
-    WriteMem<int>(0x0044771D + 1, max_size);
-    WriteMem<int>(0x00447750 + 1, -max_size);
-    WriteMem<int>(0x004477E1 + 1, -max_size);
-    WriteMem<int>(0x00447797 + 1, max_size);
-    WriteMem<int>(0x00447761 + 1, max_size);
-    WriteMem<int>(0x004477A0 + 2, -max_size);
-    WriteMem<int>(0x004477EE + 2, -max_size);
+    write_mem<int>(0x0044770D + 1, max_size);
+    write_mem<int>(0x0044771D + 1, max_size);
+    write_mem<int>(0x00447750 + 1, -max_size);
+    write_mem<int>(0x004477E1 + 1, -max_size);
+    write_mem<int>(0x00447797 + 1, max_size);
+    write_mem<int>(0x00447761 + 1, max_size);
+    write_mem<int>(0x004477A0 + 2, -max_size);
+    write_mem<int>(0x004477EE + 2, -max_size);
 
     return 1; // success
 }

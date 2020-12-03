@@ -13,8 +13,8 @@ static constexpr rf::ControlAction default_skip_cutscene_ctrl = rf::CA_MP_STATS;
 
 rf::String GetGameCtrlBindName(int game_ctrl)
 {
-    auto GetKeyName = AddrAsRef<int(rf::String *out, int key)>(0x0043D930);
-    auto GetMouseButtonName = AddrAsRef<int(rf::String *out, int mouse_btn)>(0x0043D970);
+    auto GetKeyName = addr_as_ref<int(rf::String *out, int key)>(0x0043D930);
+    auto GetMouseButtonName = addr_as_ref<int(rf::String *out, int mouse_btn)>(0x0043D970);
     auto ctrl_config = rf::local_player->settings.controls.keys[game_ctrl];
     rf::String name;
     if (ctrl_config.scan_codes[0] >= 0) {
@@ -53,18 +53,18 @@ FunHook<void(bool)> cutscene_do_frame_hook{
         rf::control_config_check_pressed(&rf::local_player->settings.controls, skip_cutscene_ctrl, &skip_cutscene);
 
         if (!skip_cutscene) {
-            cutscene_do_frame_hook.CallTarget(dlg_open);
+            cutscene_do_frame_hook.call_target(dlg_open);
             RenderSkipCutsceneHintText(skip_cutscene_ctrl);
         }
         else {
-            auto& timer_add_delta_time = AddrAsRef<int(int delta_ms)>(0x004FA2D0);
+            auto& timer_add_delta_time = addr_as_ref<int(int delta_ms)>(0x004FA2D0);
 
-            auto& timer_base = AddrAsRef<int64_t>(0x01751BF8);
-            auto& timer_freq = AddrAsRef<int32_t>(0x01751C04);
-            auto& frame_time = AddrAsRef<float>(0x005A4014);
-            auto& num_shots = StructFieldRef<int>(rf::active_cutscene, 4);
-            auto& current_shot_idx = StructFieldRef<int>(rf::active_cutscene, 0x808);
-            auto& current_shot_timer = StructFieldRef<rf::Timestamp>(rf::active_cutscene, 0x810);
+            auto& timer_base = addr_as_ref<int64_t>(0x01751BF8);
+            auto& timer_freq = addr_as_ref<int32_t>(0x01751C04);
+            auto& frame_time = addr_as_ref<float>(0x005A4014);
+            auto& num_shots = struct_field_ref<int>(rf::active_cutscene, 4);
+            auto& current_shot_idx = struct_field_ref<int>(rf::active_cutscene, 0x808);
+            auto& current_shot_timer = struct_field_ref<rf::Timestamp>(rf::active_cutscene, 0x810);
 
             DisableSoundBeforeCutsceneSkip();
 
@@ -82,7 +82,7 @@ FunHook<void(bool)> cutscene_do_frame_hook{
                 timer_add_delta_time(shot_time_left_ms);
                 frame_time = shot_time_left_ms / 1000.0f;
                 timer_base -= static_cast<int64_t>(shot_time_left_ms) * timer_freq / 1000;
-                cutscene_do_frame_hook.CallTarget(dlg_open);
+                cutscene_do_frame_hook.call_target(dlg_open);
             }
 
             EnableSoundAfterCutsceneSkip();
@@ -93,7 +93,7 @@ FunHook<void(bool)> cutscene_do_frame_hook{
 CallHook<bool(rf::Camera*)> cutscene_stop_current_camera_set_first_person_hook{
     0x0045BDBD,
     [](rf::Camera* camera) {
-        if (!cutscene_stop_current_camera_set_first_person_hook.CallTarget(camera)) {
+        if (!cutscene_stop_current_camera_set_first_person_hook.call_target(camera)) {
             rf::camera_set_fixed(camera);
         }
         return true;
@@ -107,7 +107,7 @@ ConsoleCommand2 skip_cutscene_bind_cmd{
             g_game_config.skip_cutscene_ctrl = -1;
         }
         else {
-            auto ConfigFindControlByName = AddrAsRef<int(rf::PlayerSettings&, const char*)>(0x0043D9F0);
+            auto ConfigFindControlByName = addr_as_ref<int(rf::PlayerSettings&, const char*)>(0x0043D9F0);
             int ctrl = ConfigFindControlByName(rf::local_player->settings, bind_name.c_str());
             if (ctrl == -1) {
                 rf::console_printf("Cannot find control: %s", bind_name.c_str());
@@ -126,9 +126,9 @@ ConsoleCommand2 skip_cutscene_bind_cmd{
 void ApplyCutscenePatches()
 {
     // Support skipping cutscenes
-    cutscene_do_frame_hook.Install();
+    cutscene_do_frame_hook.install();
     skip_cutscene_bind_cmd.Register();
 
     // Fix crash if camera cannot be restored to first-person mode after cutscene
-    cutscene_stop_current_camera_set_first_person_hook.Install();
+    cutscene_stop_current_camera_set_first_person_hook.install();
 }

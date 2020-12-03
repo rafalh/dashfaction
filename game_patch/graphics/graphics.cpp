@@ -53,10 +53,10 @@ static void SetTextureMinMagFilterInCode(D3DTEXTUREFILTERTYPE filter_type0, D3DT
     };
     // clang-format on
     for (auto address : addresses_tex0) {
-        WriteMem<u8>(address + 1, filter_type0);
+        write_mem<u8>(address + 1, filter_type0);
     }
     for (auto address : addresses_tex1) {
-        WriteMem<u8>(address + 1, filter_type1);
+        write_mem<u8>(address + 1, filter_type1);
     }
 }
 
@@ -87,8 +87,8 @@ CodeInjection gr_d3d_setup_3d_widescreen_fix{
 
         g_gr_clipped_geom_offset_x = rf::gr_screen.offset_x - 0.5f;
         g_gr_clipped_geom_offset_y = rf::gr_screen.offset_y - 0.5f;
-        auto& gr_viewport_center_x = AddrAsRef<float>(0x01818B54);
-        auto& gr_viewport_center_y = AddrAsRef<float>(0x01818B5C);
+        auto& gr_viewport_center_x = addr_as_ref<float>(0x01818B54);
+        auto& gr_viewport_center_y = addr_as_ref<float>(0x01818B5C);
         gr_viewport_center_x -= 0.5f; // viewport center x
         gr_viewport_center_y -= 0.5f; // viewport center y
     },
@@ -156,7 +156,7 @@ D3DFORMAT DetermineDepthBufferFormat(D3DFORMAT adapter_format)
 CodeInjection update_pp_hook{
     0x00545BC7,
     []() {
-        auto& format = AddrAsRef<D3DFORMAT>(0x005A135C);
+        auto& format = addr_as_ref<D3DFORMAT>(0x005A135C);
         xlog::info("D3D Format: %u", format);
 
         xlog::info("D3D DevCaps: %lX", rf::gr_d3d_device_caps.DevCaps);
@@ -186,7 +186,7 @@ CodeInjection update_pp_hook{
 #endif
 
         // Use glorad detail map on all cards (multi-texturing support is required)
-        auto& use_glorad_detail_map = AddrAsRef<bool>(0x01CFCBCC);
+        auto& use_glorad_detail_map = addr_as_ref<bool>(0x01CFCBCC);
         use_glorad_detail_map = true;
 
         // Override depth format to avoid card specific hackfixes that makes it different on Nvidia and AMD
@@ -258,7 +258,7 @@ CallHook<void(int, rf::GrVertex**, int, int)> GrRect_GrTMapper_hook{
             pp_vertices[i]->spos.x -= 0.5f;
             pp_vertices[i]->spos.y -= 0.5f;
         }
-        GrRect_GrTMapper_hook.CallTarget(num, pp_vertices, flags, mat);
+        GrRect_GrTMapper_hook.call_target(num, pp_vertices, flags, mat);
     },
 };
 
@@ -287,7 +287,7 @@ DWORD SetupMaxAnisotropy()
 CallHook<void()> gr_d3d_init_buffers_gr_d3d_flip_hook{
     0x00545045,
     []() {
-        gr_d3d_init_buffers_gr_d3d_flip_hook.CallTarget();
+        gr_d3d_init_buffers_gr_d3d_flip_hook.call_target();
 
         // Apply state change after reset
         // Note: we dont have to set min/mag filtering because its set when selecting material
@@ -364,7 +364,7 @@ CodeInjection gr_d3d_set_mode_profile_patch{
     0x0054F19C,
     [](auto& regs) {
         if (g_profile_frame) {
-            auto state_flags = AddrAsRef<rf::GrMode>(regs.esp + 0x10 + 0x4);
+            auto state_flags = addr_as_ref<rf::GrMode>(regs.esp + 0x10 + 0x4);
             const char* desc = "";
             if (state_flags == rf::gr_string_mode)
                 desc = " (text)";
@@ -395,11 +395,11 @@ CodeInjection D3D_DrawIndexedPrimitive_profile_patch{
     [](auto& regs) {
         if (g_profile_frame) {
             // Note: this is passed by stack because d3d uses stdcall
-            auto prim_type = AddrAsRef<int>(regs.esp + 8);
-            auto min_index = AddrAsRef<unsigned>(regs.esp + 12);
-            auto num_vertices = AddrAsRef<unsigned>(regs.esp + 16);
-            auto start_index = AddrAsRef<unsigned>(regs.esp + 20);
-            auto prim_count = AddrAsRef<unsigned>(regs.esp + 24);
+            auto prim_type = addr_as_ref<int>(regs.esp + 8);
+            auto min_index = addr_as_ref<unsigned>(regs.esp + 12);
+            auto num_vertices = addr_as_ref<unsigned>(regs.esp + 16);
+            auto start_index = addr_as_ref<unsigned>(regs.esp + 20);
+            auto prim_count = addr_as_ref<unsigned>(regs.esp + 24);
             xlog::info("DrawIndexedPrimitive %d %d %u %u %u", prim_type, min_index, num_vertices, start_index, prim_count);
             ++g_num_draw_calls;
         }
@@ -409,7 +409,7 @@ CodeInjection D3D_DrawIndexedPrimitive_profile_patch{
 FunHook<void()> gr_flip_profile_patch{
     0x0050CE20,
     []() {
-        gr_flip_profile_patch.CallTarget();
+        gr_flip_profile_patch.call_target();
 
         if (g_profile_frame) {
             xlog::info("Total draw calls: %d", g_num_draw_calls);
@@ -427,12 +427,12 @@ ConsoleCommand2 profile_frame_cmd{
 
         static bool patches_installed = false;
         if (!patches_installed) {
-            gr_d3d_set_mode_profile_patch.Install();
-            gr_d3d_set_texture_profile_patch.Install();
-            gr_flip_profile_patch.Install();
+            gr_d3d_set_mode_profile_patch.install();
+            gr_d3d_set_texture_profile_patch.install();
+            gr_flip_profile_patch.install();
             auto d3d_dev_vtbl = *reinterpret_cast<uintptr_t**>(rf::gr_d3d_device);
-            D3D_DrawIndexedPrimitive_profile_patch.SetAddr(d3d_dev_vtbl[0x11C / 4]); // DrawIndexedPrimitive
-            D3D_DrawIndexedPrimitive_profile_patch.Install();
+            D3D_DrawIndexedPrimitive_profile_patch.set_addr(d3d_dev_vtbl[0x11C / 4]); // DrawIndexedPrimitive
+            D3D_DrawIndexedPrimitive_profile_patch.install();
             patches_installed = true;
         }
     },
@@ -452,9 +452,9 @@ CodeInjection after_gr_init_hook{
         // Change font for Time Left text
         static int time_left_font = rf::gr_load_font("rfpc-large.vf");
         if (time_left_font >= 0) {
-            WriteMem<i8>(0x00477157 + 1, time_left_font);
-            WriteMem<i8>(0x0047715F + 2, 21);
-            WriteMem<i32>(0x00477168 + 1, 154);
+            write_mem<i8>(0x00477157 + 1, time_left_font);
+            write_mem<i8>(0x0047715F + 2, 21);
+            write_mem<i32>(0x00477168 + 1, 154);
         }
 
         // Fix performance issues caused by this field being initialized to inf
@@ -477,9 +477,9 @@ CodeInjection load_tga_alloc_fail_fix{
 FunHook<int(int, void*)> gr_d3d_create_vram_texture_with_mipmaps_hook{
     0x0055B700,
     [](int bm_handle, void* tex) {
-        int result = gr_d3d_create_vram_texture_with_mipmaps_hook.CallTarget(bm_handle, tex);
+        int result = gr_d3d_create_vram_texture_with_mipmaps_hook.call_target(bm_handle, tex);
         if (result != 1) {
-            auto BmUnlock = AddrAsRef<void(int)>(0x00511700);
+            auto BmUnlock = addr_as_ref<void(int)>(0x00511700);
             BmUnlock(bm_handle);
         }
         return result;
@@ -497,7 +497,7 @@ CodeInjection gr_d3d_create_texture_fail_hook{
 CodeInjection GrLoadFontInternal_fix_texture_ref{
     0x0051F429,
     [](auto& regs) {
-        auto gr_tcache_add_ref = AddrAsRef<void(int bm_handle)>(0x0050E850);
+        auto gr_tcache_add_ref = addr_as_ref<void(int bm_handle)>(0x0050E850);
         gr_tcache_add_ref(regs.eax);
     },
 };
@@ -633,7 +633,7 @@ FunHook<void()> DoDamageScreenFlash_hook{
     0x004A7520,
     []() {
         if (g_game_config.damage_screen_flash) {
-            DoDamageScreenFlash_hook.CallTarget();
+            DoDamageScreenFlash_hook.call_target();
         }
     },
 };
@@ -665,15 +665,15 @@ FunHook<void(int*, void*, int, int, int, rf::GrMode, int)> gr_d3d_queue_triangle
             state.value |= tex_src;
         }
 
-        gr_d3d_queue_triangles_hook.CallTarget(list_idx, vertices, num_vertices, bm0, bm1, state, pass_id);
+        gr_d3d_queue_triangles_hook.call_target(list_idx, vertices, num_vertices, bm0, bm1, state, pass_id);
     },
 };
 
 void GrLightUseStatic(bool use_static)
 {
     // Enable some experimental flag that causes static lights to be included in computations
-    auto& experimental_alloc_and_lighting = AddrAsRef<bool>(0x00879AF8);
-    auto& gr_light_state = AddrAsRef<int>(0x00C96874);
+    auto& experimental_alloc_and_lighting = addr_as_ref<bool>(0x00879AF8);
+    auto& gr_light_state = addr_as_ref<int>(0x00C96874);
     experimental_alloc_and_lighting = use_static;
     // Increment light cache key to trigger cache invalidation
     gr_light_state++;
@@ -699,10 +699,10 @@ FunHook<void()> obj_mesh_lighting_update_hook{
     []() {
         xlog::trace("update_mesh_lighting_hook");
         // Init transform for lighting calculation
-        auto& gr_view_matrix = AddrAsRef<rf::Matrix3>(0x018186C8);
-        auto& gr_view_pos = AddrAsRef<rf::Vector3>(0x01818690);
-        auto& light_matrix = AddrAsRef<rf::Matrix3>(0x01818A38);
-        auto& light_base = AddrAsRef<rf::Vector3>(0x01818A28);
+        auto& gr_view_matrix = addr_as_ref<rf::Matrix3>(0x018186C8);
+        auto& gr_view_pos = addr_as_ref<rf::Vector3>(0x01818690);
+        auto& light_matrix = addr_as_ref<rf::Matrix3>(0x01818A38);
+        auto& light_base = addr_as_ref<rf::Vector3>(0x01818A28);
         gr_view_matrix.make_identity();
         gr_view_pos.zero();
         light_matrix.make_identity();
@@ -712,12 +712,12 @@ FunHook<void()> obj_mesh_lighting_update_hook{
             // Enable static lights
             GrLightUseStatic(true);
             // Calculate lighting for meshes now
-            obj_mesh_lighting_update_hook.CallTarget();
+            obj_mesh_lighting_update_hook.call_target();
             // Switch back to dynamic lights
             GrLightUseStatic(false);
         }
         else {
-            obj_mesh_lighting_update_hook.CallTarget();
+            obj_mesh_lighting_update_hook.call_target();
         }
     },
 };
@@ -759,7 +759,7 @@ FunHook<void()> obj_mesh_lighting_free_hook{
 FunHook<void(rf::Object*)> obj_delete_mesh_hook{
     0x00489FC0,
     [](rf::Object* objp) {
-        obj_delete_mesh_hook.CallTarget(objp);
+        obj_delete_mesh_hook.call_target(objp);
         if (objp->mesh_lighting_data) {
             rf::Free(objp->mesh_lighting_data);
             objp->mesh_lighting_data = nullptr;
@@ -817,104 +817,104 @@ void ApplyFontPatches();
 void GraphicsInit()
 {
     // Fix for "At least 8 MB of available video memory"
-    WriteMem<u8>(0x005460CD, asm_opcodes::jae_rel_short);
+    write_mem<u8>(0x005460CD, asm_opcodes::jae_rel_short);
 
     // Set initial FPS limit
-    WriteMem<float>(0x005094CA, 1.0f / g_game_config.max_fps);
+    write_mem<float>(0x005094CA, 1.0f / g_game_config.max_fps);
 
     if (g_game_config.wnd_mode != GameConfig::FULLSCREEN) {
         // Enable windowed mode
-        WriteMem<u32>(0x004B29A5 + 6, 0xC8);
-        setup_stretched_window_patch.Install();
+        write_mem<u32>(0x004B29A5 + 6, 0xC8);
+        setup_stretched_window_patch.install();
     }
 
     // Disable keyboard hooks (they were supposed to block alt-tab; they does not work in modern OSes anyway)
-    WriteMem<u8>(0x00524C98, asm_opcodes::jmp_rel_short);
+    write_mem<u8>(0x00524C98, asm_opcodes::jmp_rel_short);
 
 #if D3D_SWAP_DISCARD
     // Use Discard Swap Mode
-    WriteMem<u32>(0x00545B4D + 6, D3DSWAPEFFECT_DISCARD); // full screen
-    WriteMem<u32>(0x00545AE3 + 6, D3DSWAPEFFECT_DISCARD); // windowed
+    write_mem<u32>(0x00545B4D + 6, D3DSWAPEFFECT_DISCARD); // full screen
+    write_mem<u32>(0x00545AE3 + 6, D3DSWAPEFFECT_DISCARD); // windowed
 #endif
 
     // Update D3D present paremeters and misc flags
-    update_pp_hook.Install();
+    update_pp_hook.install();
 
     // Use hardware vertex processing if supported
 #if D3D_HW_VERTEX_PROCESSING
-    d3d_behavior_flags_patch.Install();
-    d3d_vertex_buffer_usage_patch.Install();
-    d3d_index_buffer_usage_patch.Install();
+    d3d_behavior_flags_patch.install();
+    d3d_vertex_buffer_usage_patch.install();
+    d3d_index_buffer_usage_patch.install();
 #endif
 
     // nVidia issue fix (make sure D3Dsc is enabled)
-    WriteMem<u8>(0x00546154, 1);
+    write_mem<u8>(0x00546154, 1);
 
     // Properly restore state after device reset
-    gr_d3d_init_buffers_gr_d3d_flip_hook.Install();
+    gr_d3d_init_buffers_gr_d3d_flip_hook.install();
 
     // Fix FOV for widescreen
     AsmWriter(0x00547354, 0x00547358).nop();
-    gr_d3d_setup_3d_widescreen_fix.Install();
-    WriteMem<float>(0x0058A29C, 0.0003f); // factor related to near plane, default is 0.000588f
+    gr_d3d_setup_3d_widescreen_fix.install();
+    write_mem<float>(0x0058A29C, 0.0003f); // factor related to near plane, default is 0.000588f
 
     // Don't use LOD models
     if (g_game_config.disable_lod_models) {
-        // WriteMem<u8>(0x00421A40, asm_opcodes::jmp_rel_short);
-        WriteMem<u8>(0x0052FACC, asm_opcodes::jmp_rel_short);
+        // write_mem<u8>(0x00421A40, asm_opcodes::jmp_rel_short);
+        write_mem<u8>(0x0052FACC, asm_opcodes::jmp_rel_short);
     }
 
     // Better error message in case of device creation error
-    gr_d3d_init_error_patch.Install();
+    gr_d3d_init_error_patch.install();
 
     // Optimization - remove unused back buffer locking/unlocking in GrSwapBuffers
     AsmWriter(0x0054504A).jmp(0x0054508B);
 
 #if 1
     // Fix rendering of right and bottom edges of viewport
-    WriteMem<u8>(0x00431D9F, asm_opcodes::jmp_rel_short);
-    WriteMem<u8>(0x00431F6B, asm_opcodes::jmp_rel_short);
-    WriteMem<u8>(0x004328CF, asm_opcodes::jmp_rel_short);
+    write_mem<u8>(0x00431D9F, asm_opcodes::jmp_rel_short);
+    write_mem<u8>(0x00431F6B, asm_opcodes::jmp_rel_short);
+    write_mem<u8>(0x004328CF, asm_opcodes::jmp_rel_short);
     AsmWriter(0x0043298F).jmp(0x004329DC);
-    gr_zbuffer_clear_fix_rect.Install();
+    gr_zbuffer_clear_fix_rect.install();
 
     // Left and top viewport edge fix for MSAA (RF does similar thing in GrDrawTextureD3D)
-    WriteMem<u8>(0x005478C6, asm_opcodes::fadd);
-    WriteMem<u8>(0x005478D7, asm_opcodes::fadd);
-    WriteMemPtr(0x005478C6 + 2, &g_gr_clipped_geom_offset_x);
-    WriteMemPtr(0x005478D7 + 2, &g_gr_clipped_geom_offset_y);
-    GrRect_GrTMapper_hook.Install();
+    write_mem<u8>(0x005478C6, asm_opcodes::fadd);
+    write_mem<u8>(0x005478D7, asm_opcodes::fadd);
+    write_mem_ptr(0x005478C6 + 2, &g_gr_clipped_geom_offset_x);
+    write_mem_ptr(0x005478D7 + 2, &g_gr_clipped_geom_offset_y);
+    GrRect_GrTMapper_hook.install();
 #endif
 
     if (g_game_config.high_scanner_res) {
         // Improved Railgun Scanner resolution
         constexpr int8_t scanner_resolution = 120;        // default is 64, max is 127 (signed byte)
-        WriteMem<u8>(0x004325E6 + 1, scanner_resolution); // RenderInGame
-        WriteMem<u8>(0x004325E8 + 1, scanner_resolution);
-        WriteMem<u8>(0x004A34BB + 1, scanner_resolution); // PlayerCreate
-        WriteMem<u8>(0x004A34BD + 1, scanner_resolution);
-        WriteMem<u8>(0x004ADD70 + 1, scanner_resolution); // PlayerRenderRailgunScannerViewToTexture
-        WriteMem<u8>(0x004ADD72 + 1, scanner_resolution);
-        WriteMem<u8>(0x004AE0B7 + 1, scanner_resolution);
-        WriteMem<u8>(0x004AE0B9 + 1, scanner_resolution);
-        WriteMem<u8>(0x004AF0B0 + 1, scanner_resolution); // PlayerRenderScannerView
-        WriteMem<u8>(0x004AF0B4 + 1, scanner_resolution * 3 / 4);
-        WriteMem<u8>(0x004AF0B6 + 1, scanner_resolution);
-        WriteMem<u8>(0x004AF7B0 + 1, scanner_resolution);
-        WriteMem<u8>(0x004AF7B2 + 1, scanner_resolution);
-        WriteMem<u8>(0x004AF7CF + 1, scanner_resolution);
-        WriteMem<u8>(0x004AF7D1 + 1, scanner_resolution);
-        WriteMem<u8>(0x004AF818 + 1, scanner_resolution);
-        WriteMem<u8>(0x004AF81A + 1, scanner_resolution);
-        WriteMem<u8>(0x004AF820 + 1, scanner_resolution);
-        WriteMem<u8>(0x004AF822 + 1, scanner_resolution);
-        WriteMem<u8>(0x004AF855 + 1, scanner_resolution);
-        WriteMem<u8>(0x004AF860 + 1, scanner_resolution * 3 / 4);
-        WriteMem<u8>(0x004AF862 + 1, scanner_resolution);
+        write_mem<u8>(0x004325E6 + 1, scanner_resolution); // RenderInGame
+        write_mem<u8>(0x004325E8 + 1, scanner_resolution);
+        write_mem<u8>(0x004A34BB + 1, scanner_resolution); // PlayerCreate
+        write_mem<u8>(0x004A34BD + 1, scanner_resolution);
+        write_mem<u8>(0x004ADD70 + 1, scanner_resolution); // PlayerRenderRailgunScannerViewToTexture
+        write_mem<u8>(0x004ADD72 + 1, scanner_resolution);
+        write_mem<u8>(0x004AE0B7 + 1, scanner_resolution);
+        write_mem<u8>(0x004AE0B9 + 1, scanner_resolution);
+        write_mem<u8>(0x004AF0B0 + 1, scanner_resolution); // PlayerRenderScannerView
+        write_mem<u8>(0x004AF0B4 + 1, scanner_resolution * 3 / 4);
+        write_mem<u8>(0x004AF0B6 + 1, scanner_resolution);
+        write_mem<u8>(0x004AF7B0 + 1, scanner_resolution);
+        write_mem<u8>(0x004AF7B2 + 1, scanner_resolution);
+        write_mem<u8>(0x004AF7CF + 1, scanner_resolution);
+        write_mem<u8>(0x004AF7D1 + 1, scanner_resolution);
+        write_mem<u8>(0x004AF818 + 1, scanner_resolution);
+        write_mem<u8>(0x004AF81A + 1, scanner_resolution);
+        write_mem<u8>(0x004AF820 + 1, scanner_resolution);
+        write_mem<u8>(0x004AF822 + 1, scanner_resolution);
+        write_mem<u8>(0x004AF855 + 1, scanner_resolution);
+        write_mem<u8>(0x004AF860 + 1, scanner_resolution * 3 / 4);
+        write_mem<u8>(0x004AF862 + 1, scanner_resolution);
     }
 
     // Always transfer entire framebuffer to entire window in Present call
-    WriteMem<u8>(0x00544FE6, asm_opcodes::jmp_rel_short);
+    write_mem<u8>(0x00544FE6, asm_opcodes::jmp_rel_short);
 
     // Init True Color improvements
     GrColorInit();
@@ -930,13 +930,13 @@ void GraphicsInit()
 
     // Enable mip-mapping for textures bigger than 256x256
     AsmWriter(0x0050FEDA, 0x0050FEE9).nop();
-    WriteMem<u8>(0x0055B739, asm_opcodes::jmp_rel_short);
+    write_mem<u8>(0x0055B739, asm_opcodes::jmp_rel_short);
 
     // Fix decal fade out
-    WriteMem<u8>(0x00560994 + 1, 3);
+    write_mem<u8>(0x00560994 + 1, 3);
 
     // fullscreen/windowed commands
-    switch_d3d_mode_patch.Install();
+    switch_d3d_mode_patch.install();
     fullscreen_cmd.Register();
     windowed_cmd.Register();
 
@@ -945,7 +945,7 @@ void GraphicsInit()
     nearest_texture_filtering_cmd.Register();
 
     // Do not flush drawing buffers during gr_set_color_rgba call
-    WriteMem<u8>(0x0050CFEB, asm_opcodes::jmp_rel_short);
+    write_mem<u8>(0x0050CFEB, asm_opcodes::jmp_rel_short);
 
     // Flush instead of preparing D3D drawing buffers in gr_d3d_set_state, gr_d3d_set_state_and_texture, gr_d3d_tcache_set
     // Note: By default RF calls gr_d3d_tcache_set for many textures during level load process. It causes D3D buffers
@@ -964,15 +964,15 @@ void GraphicsInit()
     // Call gr_d3d_prepare_buffers when buffers are not locked or primitive type is not matching
     // This is needed after removal of gr_d3d_prepare_buffers calls from
     // gr_d3d_set_state, gr_d3d_set_state_and_texture and gr_d3d_tcache_set
-    gr_d3d_bitmap_patch_1.Install();
-    gr_d3d_bitmap_patch_2.Install();
-    gr_d3d_line_patch_1.Install();
-    gr_d3d_line_patch_2.Install();
-    gr_d3d_line_vertex_internal_patch_1.Install();
-    gr_d3d_line_vertex_internal_patch_2.Install();
-    gr_d3d_tmapper_patch.Install();
-    gr_d3d_draw_geometry_face_patch_1.Install();
-    gr_d3d_draw_geometry_face_patch_2.Install();
+    gr_d3d_bitmap_patch_1.install();
+    gr_d3d_bitmap_patch_2.install();
+    gr_d3d_line_patch_1.install();
+    gr_d3d_line_patch_2.install();
+    gr_d3d_line_vertex_internal_patch_1.install();
+    gr_d3d_line_vertex_internal_patch_2.install();
+    gr_d3d_tmapper_patch.install();
+    gr_d3d_draw_geometry_face_patch_1.install();
+    gr_d3d_draw_geometry_face_patch_2.install();
 
     // Do not flush D3D buffers explicity in gr_d3d_line_vertex_internal and gr_d3d_line
     // Buffers will be flushed if needed by gr_d3d_prepare_buffers
@@ -984,56 +984,56 @@ void GraphicsInit()
 #endif
 
     // Render rocket launcher scanner image every frame
-    // AddrAsRef<bool>(0x5A1020) = 0;
+    // addr_as_ref<bool>(0x5A1020) = 0;
 
-    after_gr_init_hook.Install();
+    after_gr_init_hook.install();
 
     // Fix crash when loading very big TGA files
-    load_tga_alloc_fail_fix.Install();
+    load_tga_alloc_fail_fix.install();
 
     // Fix memory leak if texture cannot be created
-    gr_d3d_create_vram_texture_with_mipmaps_hook.Install();
-    gr_d3d_create_texture_fail_hook.Install();
+    gr_d3d_create_vram_texture_with_mipmaps_hook.install();
+    gr_d3d_create_texture_fail_hook.install();
 
     // Fix font texture leak
     // Original code sets bitmap handle in all fonts to -1 on level unload. On next font usage the font bitmap is reloaded.
     // Note: font bitmaps are dynamic (USERBMAP) so they cannot be found by name unlike normal bitmaps.
     AsmWriter(0x0050E1A8).ret();
-    GrLoadFontInternal_fix_texture_ref.Install();
+    GrLoadFontInternal_fix_texture_ref.install();
 
     // maxfps command
     max_fps_cmd.Register();
 
     // Crash-fix in case texture has not been created (this happens if GrReadBackbuffer fails)
-    gr_d3d_lock_crash_fix.Install();
+    gr_d3d_lock_crash_fix.install();
 
     // Fix undefined behavior in D3D state handling: alpha operations cannot be disabled when color operations are enabled
-    WriteMem<u8>(0x0054F785 + 1, D3DTOP_SELECTARG2);
-    WriteMem<u8>(0x0054FF18 + 1, D3DTOP_SELECTARG2);
+    write_mem<u8>(0x0054F785 + 1, D3DTOP_SELECTARG2);
+    write_mem<u8>(0x0054FF18 + 1, D3DTOP_SELECTARG2);
 
     // Fix details and liquids rendering in railgun scanner. They were unnecessary modulated with very dark green color,
     // which seems to be a left-over from an old implementationof railgun scanner green overlay (currently it is
     // handled by drawing a green rectangle after all the geometry is drawn)
-    WriteMem<u8>(0x004D33F3, asm_opcodes::jmp_rel_short);
-    WriteMem<u8>(0x004D410D, asm_opcodes::jmp_rel_short);
+    write_mem<u8>(0x004D33F3, asm_opcodes::jmp_rel_short);
+    write_mem<u8>(0x004D410D, asm_opcodes::jmp_rel_short);
 
     // Support disabling of damage screen flash effect
-    DoDamageScreenFlash_hook.Install();
+    DoDamageScreenFlash_hook.install();
     damage_screen_flash_cmd.Register();
 
     // Fix glass_house level having faces that use multi-textured state but don't have any lightmap (stage 1 texture
     // from previous drawing operation was used)
-    gr_d3d_queue_triangles_hook.Install();
+    gr_d3d_queue_triangles_hook.install();
 
     // Fix/improve items and clutters static lighting calculation: fix matrices being zero and use static lights
-    obj_mesh_lighting_update_hook.Install();
-    obj_mesh_lighting_alloc_hook.Install();
-    obj_mesh_lighting_free_hook.Install();
-    obj_delete_mesh_hook.Install();
+    obj_mesh_lighting_update_hook.install();
+    obj_mesh_lighting_alloc_hook.install();
+    obj_mesh_lighting_free_hook.install();
+    obj_delete_mesh_hook.install();
     mesh_static_lighting_cmd.Register();
 
     // Fix invalid vertex offset in mesh lighting calculation
-    WriteMem<i8>(0x005042F0 + 2, sizeof(rf::Vector3));
+    write_mem<i8>(0x005042F0 + 2, sizeof(rf::Vector3));
 
     // Make d3d_zm variable not dependent on fov to fix wall-peeking
     AsmWriter(0x0054715E).nop(2);
@@ -1042,7 +1042,7 @@ void GraphicsInit()
     AsmWriter(0x00431F99).call(0x0050CDF0);
 
     // Support textures with alpha channel in Display_Fullscreen_Image event
-    display_full_screen_image_alpha_support_patch.Install();
+    display_full_screen_image_alpha_support_patch.install();
 }
 
 void GraphicsDrawFpsCounter()

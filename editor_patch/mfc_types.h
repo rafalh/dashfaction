@@ -15,5 +15,5 @@ struct CDataExchange
 
 inline HWND WndToHandle(CWnd* wnd)
 {
-    return StructFieldRef<HWND>(wnd, 4 + 0x18);
+    return struct_field_ref<HWND>(wnd, 4 + 0x18);
 }

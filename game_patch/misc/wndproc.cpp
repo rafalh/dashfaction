@@ -57,5 +57,5 @@ LRESULT WINAPI WndProc(HWND wnd_handle, UINT msg, WPARAM w_param, LPARAM l_param
 void InitWndProc()
 {
     // Subclass window
-    WriteMemPtr(0x00524E66, &WndProc);
+    write_mem_ptr(0x00524E66, &WndProc);
 }

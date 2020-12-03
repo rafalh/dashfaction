@@ -454,7 +454,7 @@ private:
     template<typename T>
     void write(typename TypeIdentity<T>::type value)
     {
-        WriteMem<T>(m_addr, value);
+        write_mem<T>(m_addr, value);
         m_addr += sizeof(value);
     }
 

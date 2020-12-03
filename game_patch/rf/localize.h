@@ -5,7 +5,7 @@
 namespace rf
 {
     namespace strings {
-        static const auto &array = AddrAsRef<char*[1000]>(0x007CBBF0);
+        static const auto &array = addr_as_ref<char*[1000]>(0x007CBBF0);
         static const auto &player = array[675];
         static const auto &frags = array[676];
         static const auto &ping = array[677];

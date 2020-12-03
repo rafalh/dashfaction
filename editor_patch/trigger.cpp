@@ -78,7 +78,7 @@ void __fastcall CTriggerPropsDialog_DoDataExchange_new(CWnd* this_, int, CDataEx
         flags_helper.PullCheckBoxesStates();
         flags_helper.PutFlagsIntoScriptName();
     }
-    CTriggerPropsDialog_OnDataExchange_hook.CallTarget(this_, 0, dx);
+    CTriggerPropsDialog_OnDataExchange_hook.call_target(this_, 0, dx);
     if (!dx->m_bSaveAndValidate) {
         // Loading - extract flags from the script name field
         flags_helper.ExtractFlagsAndRemoveFromScriptName();
@@ -89,5 +89,5 @@ void __fastcall CTriggerPropsDialog_DoDataExchange_new(CWnd* this_, int, CDataEx
 void ApplyTriggerPatches()
 {
     // Add multiplayer settings in trigger properties dialog
-    CTriggerPropsDialog_OnDataExchange_hook.Install();
+    CTriggerPropsDialog_OnDataExchange_hook.install();
 }

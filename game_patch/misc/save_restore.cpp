@@ -13,7 +13,7 @@ FunHook<void()> do_quick_save_hook{
     0x004B5E20,
     []() {
         if (rf::can_save())
-            do_quick_save_hook.CallTarget();
+            do_quick_save_hook.call_target();
     },
 };
 
@@ -57,14 +57,14 @@ FunHook<void(rf::LevelSaveData*)> sr_deserialize_all_objects_hook{
     0x004B4FB0,
     [](rf::LevelSaveData *data) {
         ValidateLevelSaveData(data);
-        sr_deserialize_all_objects_hook.CallTarget(data);
+        sr_deserialize_all_objects_hook.call_target(data);
     },
 };
 
 FunHook<void(rf::LevelSaveData*)> sr_serialize_all_objects_hook{
     0x004B4450,
     [](rf::LevelSaveData *data) {
-        sr_serialize_all_objects_hook.CallTarget(data);
+        sr_serialize_all_objects_hook.call_target(data);
         ValidateLevelSaveData(data);
     },
 };
@@ -72,10 +72,10 @@ FunHook<void(rf::LevelSaveData*)> sr_serialize_all_objects_hook{
 FunHook<void(rf::Object*)> remember_level_transition_objects_meshes_hook{
     0x004B5660,
     [](rf::Object *obj) {
-        auto& num_level_load_taken_objs = AddrAsRef<int>(0x00856058);
+        auto& num_level_load_taken_objs = addr_as_ref<int>(0x00856058);
         // Note: uid -999 belongs to local player entity and it must be preserved
         if (num_level_load_taken_objs < 23 || obj->uid == -999) {
-            remember_level_transition_objects_meshes_hook.CallTarget(obj);
+            remember_level_transition_objects_meshes_hook.call_target(obj);
         }
         else {
             xlog::warn("Cannot bring object %d to next level", obj->uid);
@@ -87,7 +87,7 @@ FunHook<void(rf::Object*)> remember_level_transition_objects_meshes_hook{
 CodeInjection quick_save_mem_leak_fix{
     0x004B603F,
     []() {
-        AddrAsRef<bool>(0x00856054) = true;
+        addr_as_ref<bool>(0x00856054) = true;
     },
 };
 
@@ -96,8 +96,8 @@ CodeInjection corpse_deserialize_all_obj_create_patch{
     [](auto& regs) {
         auto save_data = regs.edi;
         auto stack_frame = regs.esp + 0xD0;
-        auto create_info = AddrAsRef<rf::ObjectCreateInfo>(stack_frame - 0xA4);
-        auto entity_cls_id = AddrAsRef<int>(save_data + 0x144);
+        auto create_info = addr_as_ref<rf::ObjectCreateInfo>(stack_frame - 0xA4);
+        auto entity_cls_id = addr_as_ref<int>(save_data + 0x144);
         // Create entity before creating the corpse to make sure entity action animations are fully loaded
         // This is needed to make sure pose_action_anim points to a valid animation
         auto entity = rf::entity_create(entity_cls_id, "", -1, create_info.pos, create_info.orient, 0, -1);
@@ -108,7 +108,7 @@ CodeInjection corpse_deserialize_all_obj_create_patch{
 FunHook<void()> quick_save_hook{
     0x004B6160,
     []() {
-        quick_save_hook.CallTarget();
+        quick_save_hook.call_target();
         bool server_side_saving_enabled = rf::is_multi && !rf::is_server && GetDashFactionServerInfo()
             && GetDashFactionServerInfo().value().saving_enabled;
         if (server_side_saving_enabled) {
@@ -120,7 +120,7 @@ FunHook<void()> quick_save_hook{
 FunHook<void()> quick_load_hook{
     0x004B6180,
     []() {
-        quick_load_hook.CallTarget();
+        quick_load_hook.call_target();
         bool server_side_saving_enabled = rf::is_multi && !rf::is_server && GetDashFactionServerInfo()
             && GetDashFactionServerInfo().value().saving_enabled;
         if (server_side_saving_enabled) {
@@ -139,23 +139,23 @@ void ApplySaveRestorePatches()
     AsmWriter(0x004B4B47).jmp(0x004B4B7B);
 
     // Fix creating corrupted saves if cutscene starts in the same frame as quick save button is pressed
-    do_quick_save_hook.Install();
+    do_quick_save_hook.install();
 
     // Fix crash caused by buffer overflows in level save/load code
-    sr_deserialize_all_objects_hook.Install();
-    sr_serialize_all_objects_hook.Install();
+    sr_deserialize_all_objects_hook.install();
+    sr_serialize_all_objects_hook.install();
 
     // Fix buffer overflow during level load if there are more than 24 objects in current room
-    remember_level_transition_objects_meshes_hook.Install();
+    remember_level_transition_objects_meshes_hook.install();
 
     // Fix memory leak on quick save
-    quick_save_mem_leak_fix.Install();
+    quick_save_mem_leak_fix.install();
 
     // Fix crash caused by corpse pose pointing to not loaded entity action animation
     // It only affects corpses there are taken from the previous level
-    corpse_deserialize_all_obj_create_patch.Install();
+    corpse_deserialize_all_obj_create_patch.install();
 
     // Save-restore in multi
-    quick_save_hook.Install();
-    quick_load_hook.Install();
+    quick_save_hook.install();
+    quick_load_hook.install();
 }

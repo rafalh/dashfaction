@@ -95,7 +95,7 @@ void LoadAdditionalServerConfig(rf::Parser& parser)
             auto ammo = parser.parse_uint();
             g_additional_server_config.default_player_weapon_ammo = {ammo};
 
-            auto WeaponClsFind = AddrAsRef<int(const char*)>(0x004C81F0);
+            auto WeaponClsFind = addr_as_ref<int(const char*)>(0x004C81F0);
             auto weapon_type = WeaponClsFind(g_additional_server_config.default_player_weapon.c_str());
             if (weapon_type >= 0) {
                 auto& weapon_cls = rf::weapon_types[weapon_type];
@@ -208,8 +208,8 @@ CodeInjection process_obj_update_set_pos_injection{
         if (!rf::is_server) {
             return;
         }
-        auto& entity = AddrAsRef<rf::Entity>(regs.edi);
-        auto& pos = AddrAsRef<rf::Vector3>(regs.esp + 0x9C - 0x60);
+        auto& entity = addr_as_ref<rf::Entity>(regs.edi);
+        auto& pos = addr_as_ref<rf::Vector3>(regs.esp + 0x9C - 0x60);
         auto player = rf::player_from_entity_handle(entity.handle);
         auto& pdata = GetPlayerAdditionalData(player);
         if (pdata.last_teleport_timestamp.valid()) {
@@ -321,7 +321,7 @@ FunHook<float(rf::Entity*, float, int, int, int)> entity_take_damage_hook{
             }
         }
 
-        float dmg = entity_take_damage_hook.CallTarget(entity, damage, responsible_entity_handle, dmg_type, responsible_entity_uid);
+        float dmg = entity_take_damage_hook.call_target(entity, damage, responsible_entity_handle, dmg_type, responsible_entity_uid);
         if (g_additional_server_config.hit_sounds.enabled && responsible_player) {
             SendHitSoundPacket(responsible_player);
         }
@@ -339,7 +339,7 @@ CallHook<int(const char*)> item_lookup_type_hook{
             if (it != g_additional_server_config.item_replacements.end())
                 cls_name = it->second.c_str();
         }
-        return item_lookup_type_hook.CallTarget(cls_name);
+        return item_lookup_type_hook.call_target(cls_name);
     },
 };
 
@@ -349,7 +349,7 @@ CallHook<int(const char*)> find_default_weapon_for_entity_hook{
         if (rf::is_dedicated_server && !g_additional_server_config.default_player_weapon.empty()) {
             weapon_name = g_additional_server_config.default_player_weapon.c_str();
         }
-        return find_default_weapon_for_entity_hook.CallTarget(weapon_name);
+        return find_default_weapon_for_entity_hook.call_target(weapon_name);
     },
 };
 
@@ -359,7 +359,7 @@ CallHook<void(rf::Player*, int, int)> give_default_weapon_ammo_hook{
         if (g_additional_server_config.default_player_weapon_ammo) {
             ammo = g_additional_server_config.default_player_weapon_ammo.value();
         }
-        give_default_weapon_ammo_hook.CallTarget(player, weapon_type, ammo);
+        give_default_weapon_ammo_hook.call_target(player, weapon_type, ammo);
     },
 };
 
@@ -378,7 +378,7 @@ FunHook<bool (const char*, int)> multi_is_level_matching_game_type_hook{
 FunHook<void(rf::Player*)> spawn_player_sync_ammo_hook{
     0x00480820,
     [](rf::Player* player) {
-        spawn_player_sync_ammo_hook.CallTarget(player);
+        spawn_player_sync_ammo_hook.call_target(player);
         // if default player weapon has ammo override sync ammo using additional reload packet
         if (g_additional_server_config.default_player_weapon_ammo && !rf::player_is_dead(player)) {
             rf::Entity* entity = rf::entity_from_handle(player->entity_handle);
@@ -422,7 +422,7 @@ FunHook<void(int, ParticleCreateInfo&, void*, rf::Vector3*, int, void**, void*)>
         bool damages_flag = pci.particle_flags2 & 1;
         // Do not create not damaging particles on a dedicated server
         if (damages_flag || !rf::is_dedicated_server)
-            ParticleCreate_hook.CallTarget(pool_id, pci, room, a4, parent_obj, result, emitter);
+            ParticleCreate_hook.call_target(pool_id, pci, room, a4, parent_obj, result, emitter);
     },
 };
 
@@ -430,7 +430,7 @@ CallHook<void(char*)> get_mod_name_for_game_info_packet_patch{
     0x0047B1E0,
     [](char* mod_name) {
         if (g_additional_server_config.require_client_mod) {
-            get_mod_name_for_game_info_packet_patch.CallTarget(mod_name);
+            get_mod_name_for_game_info_packet_patch.call_target(mod_name);
         }
         else {
             mod_name[0] = '\0';
@@ -442,8 +442,8 @@ CallHook<void(char*)> get_mod_name_for_game_info_packet_patch{
 CodeInjection send_ping_time_wrap_fix{
     0x0047CCE8,
     [](auto& regs) {
-        auto& io_stats = AddrAsRef<rf::MultiIoStats>(regs.esi);
-        auto player = AddrAsRef<rf::Player*>(regs.esp + 0xC + 0x4);
+        auto& io_stats = addr_as_ref<rf::MultiIoStats>(regs.esi);
+        auto player = addr_as_ref<rf::Player*>(regs.esp + 0xC + 0x4);
         if (!io_stats.send_ping_packet_timestamp.valid() || io_stats.send_ping_packet_timestamp.elapsed()) {
             xlog::trace("sending ping");
             io_stats.send_ping_packet_timestamp.set(3000);
@@ -471,38 +471,38 @@ FunHook<void(rf::Player*)> multi_spawn_player_server_side_hook{
         if (g_additional_server_config.force_player_character) {
             player->settings.multi_character = g_additional_server_config.force_player_character.value();
         }
-        multi_spawn_player_server_side_hook.CallTarget(player);
+        multi_spawn_player_server_side_hook.call_target(player);
     },
 };
 
 void ServerInit()
 {
     // Override rcon command whitelist
-    WriteMemPtr(0x0046C794 + 1, g_rcon_cmd_whitelist);
-    WriteMemPtr(0x0046C7D1 + 2, g_rcon_cmd_whitelist + std::size(g_rcon_cmd_whitelist));
+    write_mem_ptr(0x0046C794 + 1, g_rcon_cmd_whitelist);
+    write_mem_ptr(0x0046C7D1 + 2, g_rcon_cmd_whitelist + std::size(g_rcon_cmd_whitelist));
 
     // Additional server config
-    dedicated_server_load_config_patch.Install();
+    dedicated_server_load_config_patch.install();
 
     // Apply customized spawn protection duration
-    spawn_protection_duration_patch.Install();
+    spawn_protection_duration_patch.install();
 
     // Detect if player joining to the server is a browser
-    detect_browser_player_patch.Install();
+    detect_browser_player_patch.install();
 
     // Hit sounds
-    entity_take_damage_hook.Install();
+    entity_take_damage_hook.install();
 
     // Do not strip '%' characters from chat messages
-    WriteMem<u8>(0x004785FD, asm_opcodes::jmp_rel_short);
+    write_mem<u8>(0x004785FD, asm_opcodes::jmp_rel_short);
 
     // Item replacements
-    item_lookup_type_hook.Install();
+    item_lookup_type_hook.install();
 
     // Default player weapon class and ammo override
-    find_default_weapon_for_entity_hook.Install();
-    give_default_weapon_ammo_hook.Install();
-    spawn_player_sync_ammo_hook.Install();
+    find_default_weapon_for_entity_hook.install();
+    give_default_weapon_ammo_hook.install();
+    spawn_player_sync_ammo_hook.install();
 
 #if SERVER_WIN32_CONSOLE // win32 console
     InitWin32ServerConsole();
@@ -516,29 +516,29 @@ void ServerInit()
     AsmWriter(0x0046E179).nop(2);
 
     // In Multi -> Create game fix level filtering so 'pdm' and 'pctf' is supported
-    multi_is_level_matching_game_type_hook.Install();
+    multi_is_level_matching_game_type_hook.install();
 
     // Do not create not damaging particles on a dedicated server
-    ParticleCreate_hook.Install();
+    ParticleCreate_hook.install();
 
     // Allow disabling mod name announcement
-    get_mod_name_for_game_info_packet_patch.Install();
+    get_mod_name_for_game_info_packet_patch.install();
 
     // Fix items not being respawned after time in ms wraps around (~25 days)
     AsmWriter(0x004599DB).nop(2);
 
     // Fix sending ping packets after time in ms wraps around (~25 days)
-    send_ping_time_wrap_fix.Install();
+    send_ping_time_wrap_fix.install();
 
     // Ignore obj_update position for some time after teleportation
-    process_obj_update_set_pos_injection.Install();
+    process_obj_update_set_pos_injection.install();
 
     // Customized dedicated server console message when player joins
-    multi_on_new_player_injection.Install();
+    multi_on_new_player_injection.install();
     AsmWriter(0x0047B061, 0x0047B064).add(asm_regs::esp, 0x14);
 
     // Support forcing player character
-    multi_spawn_player_server_side_hook.Install();
+    multi_spawn_player_server_side_hook.install();
 }
 
 void ServerCleanup()

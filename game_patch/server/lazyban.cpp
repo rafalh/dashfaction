@@ -15,9 +15,9 @@ struct BanlistEntry
     BanlistEntry* prev;
 };
 
-static auto& banlist_first_entry = AddrAsRef<BanlistEntry*>(0x0064EC20);
-static auto& banlist_last_entry = AddrAsRef<BanlistEntry*>(0x0064EC24);
-static auto& banlist_null_entry = AddrAsRef<BanlistEntry>(0x0064EC08);
+static auto& banlist_first_entry = addr_as_ref<BanlistEntry*>(0x0064EC20);
+static auto& banlist_last_entry = addr_as_ref<BanlistEntry*>(0x0064EC24);
+static auto& banlist_null_entry = addr_as_ref<BanlistEntry>(0x0064EC08);
 } // namespace rf
 
 std::vector<int> g_players_to_kick;
@@ -116,5 +116,5 @@ void InitLazyban()
 
     unban_last_cmd.Register();
 
-    multi_kick_player_hook.Install();
+    multi_kick_player_hook.install();
 }

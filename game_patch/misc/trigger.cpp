@@ -31,7 +31,7 @@ FunHook<void(int, int)> send_trigger_activate_packet_to_all_players_hook{
         if (g_trigger_solo_player)
             SendTriggerActivatePacket(g_trigger_solo_player, trigger_uid, entity_handle);
         else
-            send_trigger_activate_packet_to_all_players_hook.CallTarget(trigger_uid, entity_handle);
+            send_trigger_activate_packet_to_all_players_hook.call_target(trigger_uid, entity_handle);
     },
 };
 
@@ -68,7 +68,7 @@ FunHook<void(rf::Trigger*, int32_t, bool)> trigger_activate_hook{
 
         // Normal activation
         // rf::console_printf("trigger normal activation %s %d", trigger_name, ext_flags);
-        trigger_activate_hook.CallTarget(trigger, h_entity, skip_movers);
+        trigger_activate_hook.call_target(trigger, h_entity, skip_movers);
         g_trigger_solo_player = nullptr;
     },
 };
@@ -109,12 +109,12 @@ CodeInjection send_state_info_injection{
 void ApplyTriggerPatches()
 {
     // Solo/Teleport triggers handling + filtering by team ID
-    trigger_activate_hook.Install();
-    send_trigger_activate_packet_to_all_players_hook.Install();
+    trigger_activate_hook.install();
+    send_trigger_activate_packet_to_all_players_hook.install();
 
     // Client-side trigger flag handling
-    trigger_check_activation_patch.Install();
+    trigger_check_activation_patch.install();
 
     // Send trigger_activate packets for late joiners
-    send_state_info_injection.Install();
+    send_state_info_injection.install();
 }

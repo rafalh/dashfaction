@@ -156,7 +156,7 @@ FunHook RenderSelectWeaponGui_hook{0x004A2CF0, RenderSelectWeaponGui};
 
 void InstallWeaponCycleHudPatches()
 {
-    RenderSelectWeaponGui_hook.Install();
+    RenderSelectWeaponGui_hook.install();
 }
 
 void SetBigWeaponCycleHud(bool is_big)

@@ -761,19 +761,19 @@ CodeInjection GSurface_calculate_lightmap_color_conv_patch{
         regs.eip = 0x004F3023;
 
         auto face_light_info = reinterpret_cast<void*>(regs.esi);
-        rf::GLightmap& lightmap = *StructFieldRef<rf::GLightmap*>(face_light_info, 12);
+        rf::GLightmap& lightmap = *struct_field_ref<rf::GLightmap*>(face_light_info, 12);
         rf::GrLockInfo lock;
         if (!rf::gr_lock(lightmap.bm_handle, 0, &lock, rf::GR_LOCK_WRITE_ONLY)) {
             return;
         }
 
-        int offset_y = StructFieldRef<int>(face_light_info, 20);
-        int offset_x = StructFieldRef<int>(face_light_info, 16);
+        int offset_y = struct_field_ref<int>(face_light_info, 20);
+        int offset_x = struct_field_ref<int>(face_light_info, 16);
         int src_width = lightmap.w;
         int dst_pixel_size = GetBmFormatSize(lock.format);
         uint8_t* src_data = lightmap.buf + 3 * (offset_x + offset_y * src_width);
         uint8_t* dst_data = &lock.data[dst_pixel_size * offset_x + offset_y * lock.stride_in_bytes];
-        int height = StructFieldRef<int>(face_light_info, 28);
+        int height = struct_field_ref<int>(face_light_info, 28);
         int src_pitch = 3 * src_width;
         bool success = ConvertSurfaceFormat(dst_data, lock.format, src_data, rf::BM_FORMAT_888_BGR,
             src_width, height, lock.stride_in_bytes, src_pitch);
@@ -790,19 +790,19 @@ CodeInjection GSurface_alloc_lightmap_color_conv_patch{
         regs.eip = 0x004E4993;
 
         auto face_light_info = reinterpret_cast<void*>(regs.esi);
-        rf::GLightmap& lightmap = *StructFieldRef<rf::GLightmap*>(face_light_info, 12);
+        rf::GLightmap& lightmap = *struct_field_ref<rf::GLightmap*>(face_light_info, 12);
         rf::GrLockInfo lock;
         if (!rf::gr_lock(lightmap.bm_handle, 0, &lock, rf::GR_LOCK_WRITE_ONLY)) {
             return;
         }
 
-        int offset_y = StructFieldRef<int>(face_light_info, 20);
+        int offset_y = struct_field_ref<int>(face_light_info, 20);
         int src_width = lightmap.w;
-        int offset_x = StructFieldRef<int>(face_light_info, 16);
+        int offset_x = struct_field_ref<int>(face_light_info, 16);
         uint8_t* src_data_begin = lightmap.buf;
-        int src_offset = 3 * (offset_x + src_width * StructFieldRef<int>(face_light_info, 20)); // src offset
+        int src_offset = 3 * (offset_x + src_width * struct_field_ref<int>(face_light_info, 20)); // src offset
         uint8_t* src_data = src_offset + src_data_begin;
-        int height = StructFieldRef<int>(face_light_info, 28);
+        int height = struct_field_ref<int>(face_light_info, 28);
         int dst_pixel_size = GetBmFormatSize(lock.format);
         uint8_t* dst_row_ptr = &lock.data[dst_pixel_size * offset_x + offset_y * lock.stride_in_bytes];
         int src_pitch = 3 * src_width;
@@ -835,9 +835,9 @@ CodeInjection g_proctex_update_water_patch{
         try {
             CallWithPixelFormat(src_lock_data.format, [=](auto s) {
                 CallWithPixelFormat(dst_lock_data.format, [=](auto d) {
-                    auto& byte_1370f90 = AddrAsRef<uint8_t[256]>(0x1370F90);
-                    auto& byte_1371b14 = AddrAsRef<uint8_t[256]>(0x1371B14);
-                    auto& byte_1371090 = AddrAsRef<uint8_t[512]>(0x1371090);
+                    auto& byte_1370f90 = addr_as_ref<uint8_t[256]>(0x1370F90);
+                    auto& byte_1371b14 = addr_as_ref<uint8_t[256]>(0x1371B14);
+                    auto& byte_1371090 = addr_as_ref<uint8_t[512]>(0x1371090);
 
                     uint8_t* dst_row_ptr = dst_lock_data.data;
                     int src_pixel_size = GetBmFormatSize(src_lock_data.format);
@@ -891,11 +891,11 @@ CodeInjection GSolid_get_ambient_color_from_lightmap_patch{
 FunHook<unsigned()> bink_init_device_info_hook{
     0x005210C0,
     []() {
-        unsigned bink_flags = bink_init_device_info_hook.CallTarget();
+        unsigned bink_flags = bink_init_device_info_hook.call_target();
         const int BINKSURFACE32 = 3;
 
         if (g_game_config.true_color_textures && g_game_config.res_bpp == 32) {
-            static auto& bink_bm_pixel_fmt = AddrAsRef<uint32_t>(0x018871C0);
+            static auto& bink_bm_pixel_fmt = addr_as_ref<uint32_t>(0x018871C0);
             bink_bm_pixel_fmt = rf::BM_FORMAT_888_RGB;
             bink_flags = BINKSURFACE32;
         }
@@ -939,32 +939,32 @@ void GrColorInit()
     // True Color textures
     if (g_game_config.res_bpp == 32 && g_game_config.true_color_textures) {
         // Available texture formats (tested for compatibility)
-        WriteMem<u32>(0x005A7DFC, D3DFMT_X8R8G8B8); // old: D3DFMT_R5G6B5
-        WriteMem<u32>(0x005A7E00, D3DFMT_A8R8G8B8); // old: D3DFMT_X1R5G5B5
-        WriteMem<u32>(0x005A7E04, D3DFMT_A8R8G8B8); // old: D3DFMT_A1R5G5B5, lightmaps
-        WriteMem<u32>(0x005A7E08, D3DFMT_A8R8G8B8); // old: D3DFMT_A4R4G4B4
-        WriteMem<u32>(0x005A7E0C, D3DFMT_A4R4G4B4); // old: D3DFMT_A8R3G3B2
+        write_mem<u32>(0x005A7DFC, D3DFMT_X8R8G8B8); // old: D3DFMT_R5G6B5
+        write_mem<u32>(0x005A7E00, D3DFMT_A8R8G8B8); // old: D3DFMT_X1R5G5B5
+        write_mem<u32>(0x005A7E04, D3DFMT_A8R8G8B8); // old: D3DFMT_A1R5G5B5, lightmaps
+        write_mem<u32>(0x005A7E08, D3DFMT_A8R8G8B8); // old: D3DFMT_A4R4G4B4
+        write_mem<u32>(0x005A7E0C, D3DFMT_A4R4G4B4); // old: D3DFMT_A8R3G3B2
 
         // use 32-bit texture for Bink rendering
-        bink_init_device_info_hook.Install();
+        bink_init_device_info_hook.install();
     }
 
     // lightmaps
-    level_load_lightmaps_color_conv_patch.Install();
+    level_load_lightmaps_color_conv_patch.install();
     // geomod
-    GSurface_calculate_lightmap_color_conv_patch.Install();
-    GSurface_alloc_lightmap_color_conv_patch.Install();
+    GSurface_calculate_lightmap_color_conv_patch.install();
+    GSurface_alloc_lightmap_color_conv_patch.install();
     // water
     AsmWriter(0x004E68B0, 0x004E68B6).nop();
-    g_proctex_update_water_patch.Install();
+    g_proctex_update_water_patch.install();
     // ambient color
-    GSolid_get_ambient_color_from_lightmap_patch.Install();
+    GSolid_get_ambient_color_from_lightmap_patch.install();
     // fix pixel format for lightmaps
-    WriteMem<u8>(0x004F5EB8 + 1, rf::BM_FORMAT_888_RGB);
+    write_mem<u8>(0x004F5EB8 + 1, rf::BM_FORMAT_888_RGB);
 
     // monitor noise
-    MonitorUpdateStatic_patch.Install();
+    MonitorUpdateStatic_patch.install();
     // monitor off state
-    MonitorUpdateOff_patch.Install();
+    MonitorUpdateOff_patch.install();
 
 }

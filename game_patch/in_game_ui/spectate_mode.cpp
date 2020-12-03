@@ -23,13 +23,13 @@
 namespace rf
 {
 
-static auto& player_fpgun_render = AddrAsRef<void(Player*)>(0x004A2B30);
-static auto& player_update = AddrAsRef<void(Player*)>(0x004A2700);
-static auto& player_fpgun_setup_mesh = AddrAsRef<void(Player*, int weapon_type)>(0x004AA230);
-static auto& player_fpgun_process = AddrAsRef<void(Player*)>(0x004AA6D0);
-static auto& player_fpgun_render_ir = AddrAsRef<void(Player* player)>(0x004AEEF0);
-static auto& player_fpgun_set_state = AddrAsRef<void(Player* player, int state)>(0x004AA560);
-static auto& player_fpgun_has_state = AddrAsRef<bool(Player* player, int state)>(0x004A9520);
+static auto& player_fpgun_render = addr_as_ref<void(Player*)>(0x004A2B30);
+static auto& player_update = addr_as_ref<void(Player*)>(0x004A2700);
+static auto& player_fpgun_setup_mesh = addr_as_ref<void(Player*, int weapon_type)>(0x004AA230);
+static auto& player_fpgun_process = addr_as_ref<void(Player*)>(0x004AA6D0);
+static auto& player_fpgun_render_ir = addr_as_ref<void(Player* player)>(0x004AEEF0);
+static auto& player_fpgun_set_state = addr_as_ref<void(Player* player, int state)>(0x004AA560);
+static auto& player_fpgun_has_state = addr_as_ref<bool(Player* player, int state)>(0x004A9520);
 
 } // namespace rf
 
@@ -207,7 +207,7 @@ FunHook<void(rf::Player*, rf::ControlAction, bool)> player_execute_action_hook{
     0x004A6210,
     [](rf::Player* player, rf::ControlAction ctrl, bool was_pressed) {
         if (!SpectateModeHandleCtrlInGame(ctrl, was_pressed)) {
-            player_execute_action_hook.CallTarget(player, ctrl, was_pressed);
+            player_execute_action_hook.call_target(player, ctrl, was_pressed);
         }
     },
 };
@@ -250,9 +250,9 @@ FunHook<void(rf::Player*)> render_reticle_hook{
         if (rf::gameseq_get_state() == rf::GS_MULTI_LIMBO)
             return;
         if (g_spectate_mode_enabled)
-            render_reticle_hook.CallTarget(g_spectate_mode_target);
+            render_reticle_hook.call_target(g_spectate_mode_target);
         else
-            render_reticle_hook.CallTarget(player);
+            render_reticle_hook.call_target(player);
     },
 };
 
@@ -260,7 +260,7 @@ FunHook<rf::Entity*(rf::Player*, int, const rf::Vector3*, const rf::Matrix3*, in
     0x004A4130,
     [](rf::Player* player, int cls_id, const rf::Vector3* pos, const rf::Matrix3* orient, int mp_character) {
         // hide target player from camera after respawn
-        rf::Entity* entity = player_create_entity_hook.CallTarget(player, cls_id, pos, orient, mp_character);
+        rf::Entity* entity = player_create_entity_hook.call_target(player, cls_id, pos, orient, mp_character);
         if (entity && player == g_spectate_mode_target)
             entity->local_player = player;
 
@@ -282,7 +282,7 @@ FunHook<bool(rf::Player*)> player_is_local_hook{
         if (SpectateModeIsActive()) {
             return false;
         }
-        return player_is_local_hook.CallTarget(player);
+        return player_is_local_hook.call_target(player);
     }
 };
 
@@ -357,7 +357,7 @@ static void player_fpgun_Render_New(rf::Player* player)
 FunHook<void(rf::Player*)> player_fpgun_update_state_hook{
     0x004AA3A0,
     [](rf::Player* player) {
-        player_fpgun_update_state_hook.CallTarget(player);
+        player_fpgun_update_state_hook.call_target(player);
         if (player != rf::local_player) {
             rf::Entity* entity = rf::entity_from_handle(player->entity_handle);
             if (entity) {
@@ -381,18 +381,18 @@ FunHook<void(rf::Player*)> player_fpgun_update_state_hook{
 
 void SpectateModeInit()
 {
-    player_is_dying_red_bars_hook.Install();
-    player_is_dying_scoreboard_hook.Install();
-    player_is_dying_scoreboard2_hook.Install();
+    player_is_dying_red_bars_hook.install();
+    player_is_dying_scoreboard_hook.install();
+    player_is_dying_scoreboard2_hook.install();
 
-    player_is_dead_red_bars_hook.Install();
-    player_is_dead_scoreboard_hook.Install();
-    player_is_dead_scoreboard2_hook.Install();
+    player_is_dead_red_bars_hook.install();
+    player_is_dead_scoreboard_hook.install();
+    player_is_dead_scoreboard2_hook.install();
 
-    player_execute_action_hook.Install();
-    render_reticle_hook.Install();
-    player_create_entity_hook.Install();
-    player_is_local_hook.Install();
+    player_execute_action_hook.install();
+    render_reticle_hook.install();
+    player_create_entity_hook.install();
+    player_is_local_hook.install();
 
     spectate_cmd.Register();
 
@@ -406,19 +406,19 @@ void SpectateModeInit()
     AsmWriter(0x004AE0DF).nop(2); // player_fpgun_LoadMesh
 
     AsmWriter(0x004A938F).nop(6);               // player_fpgun_SetAction
-    WriteMem<u8>(0x004A952C, asm_opcodes::jmp_rel_short); // player_fpgun_has_state
+    write_mem<u8>(0x004A952C, asm_opcodes::jmp_rel_short); // player_fpgun_has_state
     AsmWriter(0x004AA56D).nop(6);               // player_fpgun_set_state
     AsmWriter(0x004AA6E7).nop(6);               // player_fpgun_process
     AsmWriter(0x004AE384).nop(6);               // player_fpgun_PrepareWeapon
-    WriteMem<u8>(0x004ACE2C, asm_opcodes::jmp_rel_short); // GetZoomValue
+    write_mem<u8>(0x004ACE2C, asm_opcodes::jmp_rel_short); // GetZoomValue
 
-    WriteMemPtr(0x0048857E + 2, &g_spectate_mode_target); // RenderObjects
-    WriteMemPtr(0x00488598 + 1, &g_spectate_mode_target); // RenderObjects
-    WriteMemPtr(0x00421889 + 2, &g_spectate_mode_target); // EntityRender
-    WriteMemPtr(0x004218A2 + 2, &g_spectate_mode_target); // EntityRender
+    write_mem_ptr(0x0048857E + 2, &g_spectate_mode_target); // RenderObjects
+    write_mem_ptr(0x00488598 + 1, &g_spectate_mode_target); // RenderObjects
+    write_mem_ptr(0x00421889 + 2, &g_spectate_mode_target); // EntityRender
+    write_mem_ptr(0x004218A2 + 2, &g_spectate_mode_target); // EntityRender
 
-    render_scanner_view_for_spectated_player_injection.Install();
-    player_fpgun_update_state_hook.Install();
+    render_scanner_view_for_spectated_player_injection.install();
+    player_fpgun_update_state_hook.install();
 #endif // SPECTATE_MODE_SHOW_WEAPON
 }
 

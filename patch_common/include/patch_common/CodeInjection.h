@@ -57,15 +57,15 @@ public:
     BaseCodeInjection(uintptr_t addr) : m_addr(addr), m_code_buf(256) {}
     virtual ~BaseCodeInjection() {}
 
-    void Install();
+    void install();
 
-    void SetAddr(uintptr_t addr)
+    void set_addr(uintptr_t addr)
     {
         m_addr = addr;
     }
 
 protected:
-    virtual void EmitCode(AsmWriter& asm_writter, void* trampoline) = 0;
+    virtual void emit_code(AsmWriter& asm_writter, void* trampoline) = 0;
 };
 
 template<typename T, typename Enable = void>
@@ -83,7 +83,7 @@ protected:
         BaseCodeInjection(addr), m_wrapper_ptr(wrapper_ptr)
     {}
 
-    void EmitCode(AsmWriter& asm_writter, void* trampoline) override;
+    void emit_code(AsmWriter& asm_writter, void* trampoline) override;
 };
 
 template<typename T>
@@ -118,7 +118,7 @@ protected:
         BaseCodeInjection(addr), m_wrapper_ptr(wrapper_ptr)
     {}
 
-    void EmitCode(AsmWriter& asm_writter, void* trampoline) override;
+    void emit_code(AsmWriter& asm_writter, void* trampoline) override;
 };
 
 template<typename T>

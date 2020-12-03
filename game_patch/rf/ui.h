@@ -94,19 +94,19 @@ namespace rf
     };
     static_assert(sizeof(UiCycler) == 0x170);
 
-    static auto& ui_popup_message = AddrAsRef<void(const char *title, const char *text, void(*callback)(), bool input)>(0x004560B0);
+    static auto& ui_popup_message = addr_as_ref<void(const char *title, const char *text, void(*callback)(), bool input)>(0x004560B0);
     using UiDialogCallbackPtr = void (*)();
     static auto& ui_popup_custom =
-        AddrAsRef<void(const char *title, const char *text, unsigned num_buttons, const char *ppsz_btn_titles[],
+        addr_as_ref<void(const char *title, const char *text, unsigned num_buttons, const char *ppsz_btn_titles[],
                        UiDialogCallbackPtr callbacks[], unsigned unknown1, unsigned unknown2)>(0x004562A0);
-    static auto& ui_get_gadget_from_pos = AddrAsRef<int(int x, int y, UiGadget * const gadgets[], int num_gadgets)>(0x00442ED0);
-    static auto& ui_update_input_box_cursor = AddrAsRef<void()>(0x00456960);
+    static auto& ui_get_gadget_from_pos = addr_as_ref<int(int x, int y, UiGadget * const gadgets[], int num_gadgets)>(0x00442ED0);
+    static auto& ui_update_input_box_cursor = addr_as_ref<void()>(0x00456960);
 
-    static auto& ui_scale_x = AddrAsRef<float>(0x00598FB8);
-    static auto& ui_scale_y = AddrAsRef<float>(0x00598FBC);
-    static auto& ui_input_box_cursor_visible = AddrAsRef<bool>(0x00642DC8);
-    static auto& ui_large_font = AddrAsRef<int>(0x0063C05C);
-    static auto& ui_medium_font_0 = AddrAsRef<int>(0x0063C060);
-    static auto& ui_medium_font_1 = AddrAsRef<int>(0x0063C064);
-    static auto& ui_small_font = AddrAsRef<int>(0x0063C068);
+    static auto& ui_scale_x = addr_as_ref<float>(0x00598FB8);
+    static auto& ui_scale_y = addr_as_ref<float>(0x00598FBC);
+    static auto& ui_input_box_cursor_visible = addr_as_ref<bool>(0x00642DC8);
+    static auto& ui_large_font = addr_as_ref<int>(0x0063C05C);
+    static auto& ui_medium_font_0 = addr_as_ref<int>(0x0063C060);
+    static auto& ui_medium_font_1 = addr_as_ref<int>(0x0063C064);
+    static auto& ui_small_font = addr_as_ref<int>(0x0063C068);
 }

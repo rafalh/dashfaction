@@ -24,7 +24,7 @@ int g_egg_anim_start;
 
 namespace rf
 {
-    static auto& menu_version_label = AddrAsRef<UiGadget>(0x0063C088);
+    static auto& menu_version_label = addr_as_ref<UiGadget>(0x0063C088);
 }
 
 // Note: fastcall is used because MSVC does not allow free thiscall functions
@@ -42,14 +42,14 @@ void __fastcall UiLabel_create2_version_label(rf::UiGadget* self, void* edx, rf:
     x = 430 - w;
     w += 5;
     h += 2;
-    UiLabel_create2_version_label_hook.CallTarget(self, edx, parent, x, y, w, h, text, font_id);
+    UiLabel_create2_version_label_hook.call_target(self, edx, parent, x, y, w, h, text, font_id);
 }
 CallHook<UiLabel_Create2_Type> UiLabel_create2_version_label_hook{0x0044344D, UiLabel_create2_version_label};
 
 CallHook<void()> main_menu_process_mouse_hook{
     0x004437B9,
     []() {
-        main_menu_process_mouse_hook.CallTarget();
+        main_menu_process_mouse_hook.call_target();
         if (rf::mouse_was_button_pressed(0)) {
             int x, y, z;
             rf::mouse_get_pos(x, y, z);
@@ -101,7 +101,7 @@ int LoadEasterEggImage()
 CallHook<void()> main_menu_render_hook{
     0x00443802,
     []() {
-        main_menu_render_hook.CallTarget();
+        main_menu_render_hook.call_target();
         if (g_version_click_counter >= 3) {
             static int img = LoadEasterEggImage(); // data.vpp
             if (img == -1)
@@ -146,13 +146,13 @@ static_assert(sizeof(ServerListEntry) == 0x6C, "invalid size");
 FunHook<int(const int&, const int&)> server_list_cmp_func_hook{
     0x0044A6D0,
     [](const int& index1, const int& index2) {
-        auto server_list = AddrAsRef<ServerListEntry*>(0x0063F62C);
+        auto server_list = addr_as_ref<ServerListEntry*>(0x0063F62C);
         bool has_ping1 = server_list[index1].ping >= 0;
         bool has_ping2 = server_list[index2].ping >= 0;
         if (has_ping1 != has_ping2)
             return has_ping1 ? -1 : 1;
         else
-            return server_list_cmp_func_hook.CallTarget(index1, index2);
+            return server_list_cmp_func_hook.call_target(index1, index2);
     },
 };
 
@@ -221,7 +221,7 @@ void __fastcall UiButton_render(rf::UiButton& this_, void*)
     }
 
     if (this_.enabled && this_.highlighted && this_.selected_bitmap >= 0) {
-        auto state = AddrAsRef<rf::GrMode>(0x01775B0C);
+        auto state = addr_as_ref<rf::GrMode>(0x01775B0C);
         rf::gr_bitmap_stretched(this_.selected_bitmap, x, y, w, h, 0, 0, this_.w, this_.h, false, false, state);
     }
 
@@ -404,14 +404,14 @@ CallHook<void(int*, int*, const char*, int, int, char, int)> GrFitMultilineText_
     0x00455A7D,
     [](int *len_array, int *offset_array, const char *text, int max_width, int max_lines, char unk_char, int font) {
         max_width = static_cast<int>(max_width * rf::ui_scale_x);
-        GrFitMultilineText_UiSetModalDlgText_hook.CallTarget(len_array, offset_array, text, max_width, max_lines, unk_char, font);
+        GrFitMultilineText_UiSetModalDlgText_hook.call_target(len_array, offset_array, text, max_width, max_lines, unk_char, font);
     },
 };
 
 FunHook<void()> menu_init_hook{
     0x00442BB0,
     []() {
-        menu_init_hook.CallTarget();
+        menu_init_hook.call_target();
 #if SHARP_UI_TEXT
         xlog::info("UI scale: %.4f %.4f", rf::ui_scale_x, rf::ui_scale_y);
         if (rf::ui_scale_y > 1.0f) {
@@ -448,41 +448,41 @@ CallHook<void(int, int, int, rf::GrMode)> gr_bitmap_draw_cursor_hook{
                 bm_handle = cursor_1_bmh;
             }
         }
-        gr_bitmap_draw_cursor_hook.CallTarget(bm_handle, x, y, mode);
+        gr_bitmap_draw_cursor_hook.call_target(bm_handle, x, y, mode);
     },
 };
 
 void ApplyMainMenuPatches()
 {
     // Version in Main Menu
-    UiLabel_create2_version_label_hook.Install();
+    UiLabel_create2_version_label_hook.install();
 
     // Version Easter Egg
-    main_menu_process_mouse_hook.Install();
-    main_menu_render_hook.Install();
+    main_menu_process_mouse_hook.install();
+    main_menu_render_hook.install();
 
     // Put not responding servers at the bottom of server list
-    server_list_cmp_func_hook.Install();
+    server_list_cmp_func_hook.install();
 
     // Sharp UI text
 #if SHARP_UI_TEXT
-    UiButton_create_hook.Install();
-    UiButton_set_text_hook.Install();
-    UiButton_render_hook.Install();
-    UiLabel_create_hook.Install();
-    UiLabel_create2_hook.Install();
-    UiLabel_set_text_hook.Install();
-    UiLabel_render_hook.Install();
-    UiInputBox_create_hook.Install();
-    UiInputBox_render_hook.Install();
-    UiCycler_add_item_hook.Install();
-    UiCycler_render_hook.Install();
-    GrFitMultilineText_UiSetModalDlgText_hook.Install();
+    UiButton_create_hook.install();
+    UiButton_set_text_hook.install();
+    UiButton_render_hook.install();
+    UiLabel_create_hook.install();
+    UiLabel_create2_hook.install();
+    UiLabel_set_text_hook.install();
+    UiLabel_render_hook.install();
+    UiInputBox_create_hook.install();
+    UiInputBox_render_hook.install();
+    UiCycler_add_item_hook.install();
+    UiCycler_render_hook.install();
+    GrFitMultilineText_UiSetModalDlgText_hook.install();
 #endif
 
     // Init
-    menu_init_hook.Install();
+    menu_init_hook.install();
 
     // Bigger cursor bitmap support
-    gr_bitmap_draw_cursor_hook.Install();
+    gr_bitmap_draw_cursor_hook.install();
 }

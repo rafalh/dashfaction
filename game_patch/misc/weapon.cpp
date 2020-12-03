@@ -29,7 +29,7 @@ bool ShouldSwapWeaponAltFire(rf::Player* player)
         return false;
     }
 
-    static auto& assault_rifle_cls_id = AddrAsRef<int>(0x00872470);
+    static auto& assault_rifle_cls_id = addr_as_ref<int>(0x00872470);
     return entity->ai.current_primary_weapon == assault_rifle_cls_id;
 }
 
@@ -52,7 +52,7 @@ FunHook<void(rf::Player*, bool, bool)> PlayerFirePrimaryWeapon_hook{
         if (ShouldSwapWeaponAltFire(player)) {
             alt_fire = !alt_fire;
         }
-        PlayerFirePrimaryWeapon_hook.CallTarget(player, alt_fire, was_pressed);
+        PlayerFirePrimaryWeapon_hook.call_target(player, alt_fire, was_pressed);
     },
 };
 
@@ -110,7 +110,7 @@ bool EntityIsReloading_PlayerSelectWeapon_New(rf::Entity* entity)
 CodeInjection weapons_tbl_buffer_overflow_fix_1{
     0x004C6855,
     [](auto& regs) {
-        if (AddrAsRef<u32>(0x00872448) == 64) {
+        if (addr_as_ref<u32>(0x00872448) == 64) {
             xlog::warn("weapons.tbl limit of 64 definitions has been reached!");
             regs.eip = 0x004C6881;
         }
@@ -120,7 +120,7 @@ CodeInjection weapons_tbl_buffer_overflow_fix_1{
 CodeInjection weapons_tbl_buffer_overflow_fix_2{
     0x004C68AD,
     [](auto& regs) {
-        if (AddrAsRef<u32>(0x00872448) == 64) {
+        if (addr_as_ref<u32>(0x00872448) == 64) {
             xlog::warn("weapons.tbl limit of 64 definitions has been reached!");
             regs.eip = 0x004C68D9;
         }
@@ -130,7 +130,7 @@ CodeInjection weapons_tbl_buffer_overflow_fix_2{
 FunHook<void(rf::Weapon *weapon)> WeaponMoveOne_hook{
     0x004C69A0,
     [](rf::Weapon* weapon) {
-        WeaponMoveOne_hook.CallTarget(weapon);
+        WeaponMoveOne_hook.call_target(weapon);
         auto& level_aabb_min = rf::level.geometry->bbox_min;
         auto& level_aabb_max = rf::level.geometry->bbox_max;
         float margin = weapon->vmesh ? 275.0f : 10.0f;
@@ -168,7 +168,7 @@ CodeInjection weapon_vs_obj_collision_fix{
 FunHook<void(rf::Player*, int)> PlayerMakeWeaponCurrentSelection_hook{
     0x004A4980,
     [](rf::Player* player, int weapon_type) {
-        PlayerMakeWeaponCurrentSelection_hook.CallTarget(player, weapon_type);
+        PlayerMakeWeaponCurrentSelection_hook.call_target(player, weapon_type);
         auto entity = rf::entity_from_handle(player->entity_handle);
         if (entity && rf::is_multi) {
             // Reset impact delay timers when switching weapon (except in SP because of speedrunners)
@@ -222,7 +222,7 @@ FunHook<void(rf::Entity*, int, rf::Vector3*, rf::Matrix3*, bool)> MultiProcessRe
             xlog::info("Skipping weapon fire packet because player is out of ammunition");
         }
         else {
-            MultiProcessRemoteWeaponFire_hook.CallTarget(entity, weapon_type, pos, orient, alt_fire);
+            MultiProcessRemoteWeaponFire_hook.call_target(entity, weapon_type, pos, orient, alt_fire);
         }
     },
 };
@@ -243,7 +243,7 @@ CodeInjection ProcessObjUpdatePacket_check_if_weapon_is_possessed_patch{
 CodeInjection muzzle_flash_light_not_disabled_fix{
     0x0041E806,
     [](auto& regs) {
-        auto muzzle_flash_timer = AddrAsRef<rf::Timestamp>(regs.ecx);
+        auto muzzle_flash_timer = addr_as_ref<rf::Timestamp>(regs.ecx);
         if (!muzzle_flash_timer.valid()) {
             regs.eip = 0x0041E969;
         }
@@ -253,7 +253,7 @@ CodeInjection muzzle_flash_light_not_disabled_fix{
 CallHook<void(rf::Player* player, int weapon_type)> ProcessCreateEntityPacket_switch_weapon_fix{
     0x004756B7,
     [](rf::Player* player, int weapon_type) {
-        ProcessCreateEntityPacket_switch_weapon_fix.CallTarget(player, weapon_type);
+        ProcessCreateEntityPacket_switch_weapon_fix.call_target(player, weapon_type);
         // Check if local player is being spawned
         if (!rf::is_server && player == rf::local_player) {
             // Update requested weapon to make sure server does not auto-switch the weapon during item pickup
@@ -278,15 +278,15 @@ CallHook<void(rf::Vector3&, float, float, int, int)> weapon_hit_wall_obj_apply_r
     [](rf::Vector3& epicenter, float damage, float radius, int killer_handle, int damage_type) {
         auto& collide_out = *reinterpret_cast<rf::PCollisionOut*>(&epicenter);
         auto new_epicenter = epicenter + collide_out.normal * 0.000001f;
-        weapon_hit_wall_obj_apply_radius_damage_hook.CallTarget(new_epicenter, damage, radius, killer_handle, damage_type);
+        weapon_hit_wall_obj_apply_radius_damage_hook.call_target(new_epicenter, damage, radius, killer_handle, damage_type);
     },
 };
 
 void ApplyWeaponPatches()
 {
     // Fix crashes caused by too many records in weapons.tbl file
-    weapons_tbl_buffer_overflow_fix_1.Install();
-    weapons_tbl_buffer_overflow_fix_2.Install();
+    weapons_tbl_buffer_overflow_fix_1.install();
+    weapons_tbl_buffer_overflow_fix_2.install();
 
 #if 0
     // Fix weapon switch glitch when reloading (should be used on Match Mode)
@@ -295,31 +295,31 @@ void ApplyWeaponPatches()
 #endif
 
     // Delete weapons (projectiles) that reach bounding box of the level
-    WeaponMoveOne_hook.Install();
+    WeaponMoveOne_hook.install();
 
     // Fix weapon vs object collisions for big objects
-    weapon_vs_obj_collision_fix.Install();
+    weapon_vs_obj_collision_fix.install();
 
     // Reset impact delay timers when switching weapon to avoid delayed fire after switching
-    PlayerMakeWeaponCurrentSelection_hook.Install();
+    PlayerMakeWeaponCurrentSelection_hook.install();
 
     // Check ammo server-side when handling weapon fire packets
-    MultiProcessRemoteWeaponFire_hook.Install();
+    MultiProcessRemoteWeaponFire_hook.install();
 
     // Verify if player possesses a weapon before switching during obj_update packet handling
-    ProcessObjUpdatePacket_check_if_weapon_is_possessed_patch.Install();
+    ProcessObjUpdatePacket_check_if_weapon_is_possessed_patch.install();
 
     // Fix muzzle flash light sometimes not getting disabled (e.g. when weapon is switched during riot stick attack
     // in multiplayer)
-    muzzle_flash_light_not_disabled_fix.Install();
+    muzzle_flash_light_not_disabled_fix.install();
 
     // Fix weapon being auto-switched to previous one after respawn even when auto-switch is disabled
-    ProcessCreateEntityPacket_switch_weapon_fix.Install();
+    ProcessCreateEntityPacket_switch_weapon_fix.install();
 
     // Allow swapping Assault Rifle primary and alternate fire controls
-    PlayerFirePrimaryWeapon_hook.Install();
-    stop_continous_primary_fire_patch.Install();
-    stop_continous_alternate_fire_patch.Install();
+    PlayerFirePrimaryWeapon_hook.install();
+    stop_continous_primary_fire_patch.install();
+    stop_continous_alternate_fire_patch.install();
     swap_assault_rifle_controls_cmd.Register();
 
     // Show enemy bullets
@@ -327,5 +327,5 @@ void ApplyWeaponPatches()
     show_enemy_bullets_cmd.Register();
 
     // Fix rockets not making damage after hitting a detail brush
-    weapon_hit_wall_obj_apply_radius_damage_hook.Install();
+    weapon_hit_wall_obj_apply_radius_damage_hook.install();
 }

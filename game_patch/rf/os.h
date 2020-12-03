@@ -35,16 +35,16 @@ namespace rf
     };
 
     typedef void(*MsgHandlerPtr)(UINT, WPARAM, LPARAM);
-    static auto &os_add_msg_handler = AddrAsRef<unsigned(MsgHandlerPtr)>(0x00524AE0);
-    static auto &os_foreground = AddrAsRef<bool()>(0x00524AD0);
+    static auto &os_add_msg_handler = addr_as_ref<unsigned(MsgHandlerPtr)>(0x00524AE0);
+    static auto &os_foreground = addr_as_ref<bool()>(0x00524AD0);
 
-    static auto& msg_handlers = AddrAsRef<MsgHandlerPtr[32]>(0x01B0D5A0);
-    static auto& num_msg_handlers = AddrAsRef<uint32_t>(0x01B0D760);
+    static auto& msg_handlers = addr_as_ref<MsgHandlerPtr[32]>(0x01B0D5A0);
+    static auto& num_msg_handlers = addr_as_ref<uint32_t>(0x01B0D760);
 
-    static auto& main_wnd = AddrAsRef<HWND>(0x01B0D748);
-    static auto& is_main_wnd_active = AddrAsRef<uint8_t>(0x01B0D750);
-    static auto& close_app_req = AddrAsRef<uint8_t>(0x01B0D758);
-    static auto& num_redraw_server = AddrAsRef<uint32_t>(0x01775698);
+    static auto& main_wnd = addr_as_ref<HWND>(0x01B0D748);
+    static auto& is_main_wnd_active = addr_as_ref<uint8_t>(0x01B0D750);
+    static auto& close_app_req = addr_as_ref<uint8_t>(0x01B0D758);
+    static auto& num_redraw_server = addr_as_ref<uint32_t>(0x01775698);
 
-    static auto& lan_only_cmd_line_param = AddrAsRef<CmdLineParam>(0x0063F608);
+    static auto& lan_only_cmd_line_param = addr_as_ref<CmdLineParam>(0x0063F608);
 }

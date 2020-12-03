@@ -18,8 +18,8 @@
 
 namespace rf
 {
-static auto& draw_scoreboard = AddrAsRef<void(bool draw)>(0x00470860);
-static auto& fit_scoreboard_string = AddrAsRef<String* (String* result, String::Pod str, int cx_max)>(0x00471EC0);
+static auto& draw_scoreboard = addr_as_ref<void(bool draw)>(0x00470860);
+static auto& fit_scoreboard_string = addr_as_ref<String* (String* result, String::Pod str, int cx_max)>(0x00471EC0);
 }
 
 constexpr float ENTER_ANIM_MS = 100.0f;
@@ -378,7 +378,7 @@ void HudRender_00437BC0()
 
 void InitScoreboard()
 {
-    DrawScoreboardInternal_hook.Install();
+    DrawScoreboardInternal_hook.install();
 
     AsmWriter(0x00437BC0).call(HudRender_00437BC0).jmp(0x00437C24);
     AsmWriter(0x00437D40).jmp(0x00437D5C);

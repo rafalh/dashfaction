@@ -108,7 +108,7 @@ FunHook<GrD3DSetTextureData_Type> gr_d3d_set_texture_data_hook{
         auto tex_pixel_fmt = GetBmFormatFromD3DFormat(desc.Format);
         if (!BmIsCompressedFormat(tex_pixel_fmt) && GetBmFormatSize(tex_pixel_fmt) == 2) {
             // original code can handle only 16 bit surfaces
-            return gr_d3d_set_texture_data_hook.CallTarget(level, src_bits_ptr, palette, bm_w, bm_h, format, section,
+            return gr_d3d_set_texture_data_hook.call_target(level, src_bits_ptr, palette, bm_w, bm_h, format, section,
                                                            tex_w, tex_h, texture);
         }
 
@@ -194,7 +194,7 @@ CodeInjection gr_d3d_create_vram_texture_with_mipmaps_pitch_fix{
     0x0055B820,
     [](auto& regs) {
         auto stack_frame = regs.esp + 0x5C;
-        auto bm_format = AddrAsRef<rf::BmFormat>(stack_frame - 0x30);
+        auto bm_format = addr_as_ref<rf::BmFormat>(stack_frame - 0x30);
         auto& src_bits_ptr = regs.ecx;
         auto& num_total_vram_bytes = regs.ebp;
         int w = regs.esi;
@@ -255,7 +255,7 @@ FunHook <void(int, float, float, rf::Color*)> gr_d3d_get_texel_hook{
             }
         }
         else {
-            gr_d3d_get_texel_hook.CallTarget(bm_handle, u, v, out_color);
+            gr_d3d_get_texel_hook.call_target(bm_handle, u, v, out_color);
         }
     },
 };
@@ -263,7 +263,7 @@ FunHook <void(int, float, float, rf::Color*)> gr_d3d_get_texel_hook{
 extern FunHook<int(int, rf::GrD3DTexture&)> gr_d3d_create_texture_hook;
 
 int gr_d3d_create_texture(int bm_handle, rf::GrD3DTexture& tslot) {
-    auto result = gr_d3d_create_texture_hook.CallTarget(bm_handle, tslot);
+    auto result = gr_d3d_create_texture_hook.call_target(bm_handle, tslot);
     if (result != 1) {
         xlog::warn("Failed to load texture '%s'", rf::bm_get_filename(bm_handle));
         // Note: callers of this function expects zero result on failure
@@ -281,7 +281,7 @@ FunHook<int(int, rf::GrD3DTexture&)> gr_d3d_create_texture_hook{0x0055CC00, gr_d
 FunHook<void(rf::GrD3DTexture&)> gr_d3d_free_texture_hook{
     0x0055B640,
     [](rf::GrD3DTexture& tslot) {
-        gr_d3d_free_texture_hook.CallTarget(tslot);
+        gr_d3d_free_texture_hook.call_target(tslot);
 
         if (tslot.bm_handle >= 0) {
             xlog::trace("Freeing texture");
@@ -332,7 +332,7 @@ static FunHook<bool(int, int, rf::GrLockInfo *)> gr_d3d_lock_hook{0x0055CE00, gr
 //             // disable alpha-blending
 //             state &= ~(0x1F << 15);
 //         }
-//         gr_d3d_set_state_and_texture_hook.CallTarget(state, bm0, bm1);
+//         gr_d3d_set_state_and_texture_hook.call_target(state, bm0, bm1);
 //     },
 // };
 
@@ -357,28 +357,28 @@ bool GrIsFormatSupported(rf::BmFormat format)
 
 void ApplyTexturePatches()
 {
-    gr_d3d_set_texture_data_hook.Install();
-    gr_d3d_create_vram_texture_hook.Install();
-    gr_d3d_create_vram_texture_with_mipmaps_pitch_fix.Install();
-    gr_d3d_get_texel_hook.Install();
-    gr_d3d_create_texture_hook.Install();
-    gr_d3d_free_texture_hook.Install();
-    //gr_d3d_set_state_and_texture_hook.Install();
-    gr_d3d_lock_hook.Install();
+    gr_d3d_set_texture_data_hook.install();
+    gr_d3d_create_vram_texture_hook.install();
+    gr_d3d_create_vram_texture_with_mipmaps_pitch_fix.install();
+    gr_d3d_get_texel_hook.install();
+    gr_d3d_create_texture_hook.install();
+    gr_d3d_free_texture_hook.install();
+    //gr_d3d_set_state_and_texture_hook.install();
+    gr_d3d_lock_hook.install();
 }
 
 void ReleaseAllDefaultPoolTextures()
 {
     for (auto tslot : g_default_pool_tslots) {
-        gr_d3d_free_texture_hook.CallTarget(*tslot);
+        gr_d3d_free_texture_hook.call_target(*tslot);
     }
     g_default_pool_tslots.clear();
 }
 
 void DestroyTexture(int bmh)
 {
-    auto& gr_d3d_tcache_add_ref = AddrAsRef<void(int bmh)>(0x0055D160);
-    auto& gr_d3d_tcache_remove_ref = AddrAsRef<void(int bmh)>(0x0055D190);
+    auto& gr_d3d_tcache_add_ref = addr_as_ref<void(int bmh)>(0x0055D160);
+    auto& gr_d3d_tcache_remove_ref = addr_as_ref<void(int bmh)>(0x0055D190);
     gr_d3d_tcache_add_ref(bmh);
     gr_d3d_tcache_remove_ref(bmh);
 }

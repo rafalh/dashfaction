@@ -8,38 +8,38 @@ struct TypeIdentity
     using type = T;
 };
 
-void WriteMem(unsigned addr, const void* data, unsigned size);
-void UnprotectMem(void* ptr, unsigned len);
+void write_mem(unsigned addr, const void* data, unsigned size);
+void unprotect_mem(void* ptr, unsigned len);
 
 template<typename T>
-void WriteMem(uintptr_t addr, typename TypeIdentity<T>::type value)
+void write_mem(uintptr_t addr, typename TypeIdentity<T>::type value)
 {
-    WriteMem(addr, &value, sizeof(value));
+    write_mem(addr, &value, sizeof(value));
 }
 
-inline void WriteMem(unsigned addr, const void* data, unsigned size, unsigned num_repeat)
+inline void write_mem(unsigned addr, const void* data, unsigned size, unsigned num_repeat)
 {
     while (num_repeat > 0) {
-        WriteMem(addr, data, size);
+        write_mem(addr, data, size);
         addr += size;
         --num_repeat;
     }
 }
 
 template<typename T>
-inline void WriteMemPtr(unsigned addr, T* value)
+inline void write_mem_ptr(unsigned addr, T* value)
 {
-    WriteMem(addr, &value, sizeof(value));
+    write_mem(addr, &value, sizeof(value));
 }
 
 template<typename T>
-constexpr T& AddrAsRef(uintptr_t addr)
+constexpr T& addr_as_ref(uintptr_t addr)
 {
     return *reinterpret_cast<T*>(addr);
 }
 
 template<typename T>
-T& StructFieldRef(void* struct_ptr, size_t offset)
+T& struct_field_ref(void* struct_ptr, size_t offset)
 {
     auto addr = reinterpret_cast<uintptr_t>(struct_ptr) + offset;
     return *reinterpret_cast<T*>(addr);
@@ -58,7 +58,7 @@ public:
     template<typename RetVal = void, typename... A>
     constexpr RetVal c_call(A... args)
     {
-        return AddrAsRef<RetVal __cdecl(A...)>(addr_)(args...);
+        return addr_as_ref<RetVal __cdecl(A...)>(addr_)(args...);
     }
 
     template<typename RetVal = void, typename... A>
@@ -70,12 +70,12 @@ public:
     template<typename RetVal = void, typename... A>
     constexpr RetVal fast_call(A... args)
     {
-        return AddrAsRef<RetVal __fastcall(A...)>(addr_)(args...);
+        return addr_as_ref<RetVal __fastcall(A...)>(addr_)(args...);
     }
 
     template<typename RetVal = void, typename... A>
     constexpr RetVal std_call(A... args)
     {
-        return AddrAsRef<RetVal __stdcall(A...)>(addr_)(args...);
+        return addr_as_ref<RetVal __stdcall(A...)>(addr_)(args...);
     }
 };

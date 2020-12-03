@@ -79,7 +79,7 @@ CallHook<void()> rf_init_hook{
     []() {
         auto start_ticks = GetTickCount();
         xlog::info("Initializing game...");
-        rf_init_hook.CallTarget();
+        rf_init_hook.call_target();
         VPackfileDisableOverriding();
         xlog::info("Game initialized (%lu ms).", GetTickCount() - start_ticks);
     },
@@ -161,7 +161,7 @@ CodeInjection key_get_hook{
 FunHook<rf::Player*(bool)> player_create_hook{
     0x004A3310,
     [](bool is_local) {
-        rf::Player* player = player_create_hook.CallTarget(is_local);
+        rf::Player* player = player_create_hook.call_target(is_local);
         KillInitPlayer(player);
         return player;
     },
@@ -171,7 +171,7 @@ FunHook<void(rf::Player*)> player_destroy_hook{
     0x004A35C0,
     [](rf::Player* player) {
         SpectateModeOnDestroyPlayer(player);
-        player_destroy_hook.CallTarget(player);
+        player_destroy_hook.call_target(player);
         g_player_additional_data_map.erase(player);
     },
 };
@@ -179,7 +179,7 @@ FunHook<void(rf::Player*)> player_destroy_hook{
 FunHook<rf::Entity*(rf::Player*, int, const rf::Vector3&, const rf::Matrix3&, int)> player_entity_create_hook{
     0x004A35C0,
     [](rf::Player* pp, int entity_type, const rf::Vector3& pos, const rf::Matrix3& orient, int multi_entity_index) {
-        auto ep = player_entity_create_hook.CallTarget(pp, entity_type, pos, orient, multi_entity_index);
+        auto ep = player_entity_create_hook.call_target(pp, entity_type, pos, orient, multi_entity_index);
         if (ep) {
             SpectateModePlayerCreateEntityPost(pp);
         }
@@ -193,7 +193,7 @@ FunHook<int(rf::String&, rf::String&, char*)> level_load_hook{
         xlog::info("Loading level: %s", level_filename.c_str());
         if (save_filename.size() > 0)
             xlog::info("Restoring game from save file: %s", save_filename.c_str());
-        int ret = level_load_hook.CallTarget(level_filename, save_filename, error);
+        int ret = level_load_hook.call_target(level_filename, save_filename, error);
         if (ret != 0)
             xlog::warn("Loading failed: %s", error);
         else {
@@ -208,7 +208,7 @@ FunHook<int(rf::String&, rf::String&, char*)> level_load_hook{
 FunHook<void(bool)> level_init_post_hook{
     0x00435DF0,
     [](bool transition) {
-        level_init_post_hook.CallTarget(transition);
+        level_init_post_hook.call_target(transition);
         xlog::info("Level loaded: %s%s", rf::level.filename.c_str(), transition ? " (transition)" : "");
     },
 };
@@ -228,7 +228,7 @@ public:
 protected:
     virtual void append([[maybe_unused]] xlog::Level level, const std::string& str) override
     {
-        static auto& console_inited = AddrAsRef<bool>(0x01775680);
+        static auto& console_inited = addr_as_ref<bool>(0x01775680);
         if (console_inited) {
             flush_startup_buf();
 
@@ -242,7 +242,7 @@ protected:
 
     virtual void flush() override
     {
-        static auto& console_inited = AddrAsRef<bool>(0x01775680);
+        static auto& console_inited = addr_as_ref<bool>(0x01775680);
         if (console_inited) {
             flush_startup_buf();
         }
@@ -355,21 +355,21 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     // Process messages in the same thread as DX processing (alternative: D3DCREATE_MULTITHREADED)
     AsmWriter(0x00524C48, 0x00524C83).nop(); // disable msg loop thread
     AsmWriter(0x00524C48).call(0x00524E40);  // CreateMainWindow
-    key_get_hook.Install();
-    os_poll_hook.Install();
+    key_get_hook.install();
+    os_poll_hook.install();
 
     // General game hooks
-    rf_init_hook.Install();
-    after_full_game_init_hook.Install();
-    cleanup_game_hook.Install();
-    before_frame_hook.Install();
-    after_level_render_hook.Install();
-    after_frame_render_hook.Install();
-    player_create_hook.Install();
-    player_destroy_hook.Install();
-    player_entity_create_hook.Install();
-    level_load_hook.Install();
-    level_init_post_hook.Install();
+    rf_init_hook.install();
+    after_full_game_init_hook.install();
+    cleanup_game_hook.install();
+    before_frame_hook.install();
+    after_level_render_hook.install();
+    after_frame_render_hook.install();
+    player_create_hook.install();
+    player_destroy_hook.install();
+    player_entity_create_hook.install();
+    level_load_hook.install();
+    level_init_post_hook.install();
 
     // Init modules
     ConsoleApplyPatches();

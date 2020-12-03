@@ -194,5 +194,5 @@ FunHook<void()> console_auto_complete_input_hook{
 void ConsoleAutoCompleteApplyPatch()
 {
     // Better console autocomplete
-    console_auto_complete_input_hook.Install();
+    console_auto_complete_input_hook.install();
 }

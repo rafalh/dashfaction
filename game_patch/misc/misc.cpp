@@ -77,7 +77,7 @@ CodeInjection CriticalError_hide_main_wnd_patch{
 FunHook<int(rf::GSolid*, rf::GRoom*)> GeomCachePrepareRoom_hook{
     0x004F0C00,
     [](rf::GSolid* geom, rf::GRoom* room) {
-        int ret = GeomCachePrepareRoom_hook.CallTarget(geom, room);
+        int ret = GeomCachePrepareRoom_hook.call_target(geom, room);
         std::byte** pp_room_geom = (std::byte**)(reinterpret_cast<std::byte*>(room) + 4);
         std::byte* room_geom = *pp_room_geom;
         if (ret == 0 && room_geom) {
@@ -127,7 +127,7 @@ void StartJoinMpGameSequence(const rf::NwAddr& addr, const std::string& password
 FunHook<void(int, int)> rf_init_state_hook{
     0x004B1AC0,
     [](int state, int old_state) {
-        rf_init_state_hook.CallTarget(state, old_state);
+        rf_init_state_hook.call_target(state, old_state);
         xlog::trace("state %d old_state %d g_jump_to_multi_server_list %d", state, old_state, g_jump_to_multi_server_list);
 
         bool exiting_game = state == rf::GS_MAIN_MENU &&
@@ -143,21 +143,21 @@ FunHook<void(int, int)> rf_init_state_hook{
             AddrCaller{0x00443C20}.c_call(); // OpenMultiMenu
             old_state = state;
             state = rf::gameseq_process_deferred_change();
-            rf_init_state_hook.CallTarget(state, old_state);
+            rf_init_state_hook.call_target(state, old_state);
         }
         if (state == rf::GS_MULTI_MENU && g_jump_to_multi_server_list) {
             AddrCaller{0x00448B70}.c_call(); // OnMpJoinGameBtnClick
             old_state = state;
             state = rf::gameseq_process_deferred_change();
-            rf_init_state_hook.CallTarget(state, old_state);
+            rf_init_state_hook.call_target(state, old_state);
         }
         if (state == rf::GS_MULTI_SERVER_LIST && g_jump_to_multi_server_list) {
             g_jump_to_multi_server_list = false;
             SetSoundEnabled(true);
 
             if (g_join_mp_game_seq_data) {
-                auto MultiSetCurrentServerAddr = AddrAsRef<void(const rf::NwAddr& addr)>(0x0044B380);
-                auto SendJoinReqPacket = AddrAsRef<void(const rf::NwAddr& addr, rf::String::Pod name, rf::String::Pod password, int max_rate)>(0x0047AA40);
+                auto MultiSetCurrentServerAddr = addr_as_ref<void(const rf::NwAddr& addr)>(0x0044B380);
+                auto SendJoinReqPacket = addr_as_ref<void(const rf::NwAddr& addr, rf::String::Pod name, rf::String::Pod password, int max_rate)>(0x0047AA40);
 
                 auto addr = g_join_mp_game_seq_data.value().addr;
                 rf::String password{g_join_mp_game_seq_data.value().password.c_str()};
@@ -178,14 +178,14 @@ FunHook<bool(int)> rf_state_is_closed_hook{
     [](int state) {
         if (g_jump_to_multi_server_list)
             return true;
-        return rf_state_is_closed_hook.CallTarget(state);
+        return rf_state_is_closed_hook.call_target(state);
     },
 };
 
 FunHook<void()> multi_after_players_packet_hook{
     0x00482080,
     []() {
-        multi_after_players_packet_hook.CallTarget();
+        multi_after_players_packet_hook.call_target();
         g_in_mp_game = true;
     },
 };
@@ -198,7 +198,7 @@ FunHook<char(int, int, int, int, char)> monitor_create_hook{
             w *= factor;
             h *= factor;
         }
-        return monitor_create_hook.CallTarget(clutter_handle, always_minus_1, w, h, always_1);
+        return monitor_create_hook.call_target(clutter_handle, always_minus_1, w, h, always_1);
     },
 };
 
@@ -224,7 +224,7 @@ CodeInjection parser_xstr_oob_fix{
 CodeInjection ammo_tbl_buffer_overflow_fix{
     0x004C218E,
     [](auto& regs) {
-        if (AddrAsRef<u32>(0x0085C760) == 32) {
+        if (addr_as_ref<u32>(0x0085C760) == 32) {
             xlog::warn("ammo.tbl limit of 32 definitions has been reached!");
             regs.eip = 0x004C21B8;
         }
@@ -245,7 +245,7 @@ FunHook<void(const char*, int)> localize_add_string_bof_fix{
     0x004B0720,
     [](const char* str, int id) {
         if (id < 1000) {
-            localize_add_string_bof_fix.CallTarget(str, id);
+            localize_add_string_bof_fix.call_target(str, id);
         }
         else {
             xlog::warn("strings.tbl index is out of bounds: %d", id);
@@ -256,7 +256,7 @@ FunHook<void(const char*, int)> localize_add_string_bof_fix{
 CodeInjection glass_shard_level_init_fix{
     0x00435A90,
     []() {
-        auto GlassShardInit = AddrAsRef<void()>(0x00490F60);
+        auto GlassShardInit = addr_as_ref<void()>(0x00490F60);
         GlassShardInit();
     },
 };
@@ -264,7 +264,7 @@ CodeInjection glass_shard_level_init_fix{
 FunHook<rf::Object*(int, int, int, rf::ObjectCreateInfo*, int, rf::GRoom*)> obj_create_hook{
     0x00486DA0,
     [](int type, int sub_type, int parent, rf::ObjectCreateInfo* create_info, int flags, rf::GRoom* room) {
-        auto obj = obj_create_hook.CallTarget(type, sub_type, parent, create_info, flags, room);
+        auto obj = obj_create_hook.call_target(type, sub_type, parent, create_info, flags, room);
         if (!obj) {
             xlog::info("Failed to create object (type %d)", type);
         }
@@ -329,7 +329,7 @@ CodeInjection sort_clutter_patch{
         }
         std::string_view mesh_name_sv = mesh_name;
 
-        auto& clutter_list = AddrAsRef<rf::Clutter>(0x005C9360);
+        auto& clutter_list = addr_as_ref<rf::Clutter>(0x005C9360);
         auto current = clutter_list.next;
         while (current != &clutter_list) {
             auto current_anim_mesh = current->vmesh;
@@ -350,8 +350,8 @@ CodeInjection sort_clutter_patch{
         clutter->next->prev = clutter;
         clutter->prev->next = clutter;
         // Set up needed registers
-        regs.eax = AddrAsRef<bool>(regs.esp + 0xD0 + 0x18); // killable
-        regs.ecx = AddrAsRef<i32>(0x005C9358) + 1; // num_clutter_objs
+        regs.eax = addr_as_ref<bool>(regs.esp + 0xD0 + 0x18); // killable
+        regs.ecx = addr_as_ref<i32>(0x005C9358) + 1; // num_clutter_objs
         regs.eip = 0x00410A03;
     },
 };
@@ -360,7 +360,7 @@ CodeInjection face_scroll_fix{
     0x004EE1D6,
     [](auto& regs) {
         auto geometry = reinterpret_cast<void*>(regs.ebp);
-        auto& scroll_data_vec = StructFieldRef<rf::VArray<void*>>(geometry, 0x2F4);
+        auto& scroll_data_vec = struct_field_ref<rf::VArray<void*>>(geometry, 0x2F4);
         auto GTextureMover_SetupFaces = reinterpret_cast<void(__thiscall*)(void* self, void* geometry)>(0x004E60C0);
         for (int i = 0; i < scroll_data_vec.size(); ++i) {
             GTextureMover_SetupFaces(scroll_data_vec[i], geometry);
@@ -371,11 +371,11 @@ CodeInjection face_scroll_fix{
 CallHook<void(int)> play_bik_file_vram_leak_fix{
     0x00520C79,
     [](int hbm) {
-        auto gr_tcache_add_ref = AddrAsRef<void(int hbm)>(0x0050E850);
-        auto gr_tcache_remove_ref = AddrAsRef<void(int hbm)>(0x0050E870);
+        auto gr_tcache_add_ref = addr_as_ref<void(int hbm)>(0x0050E850);
+        auto gr_tcache_remove_ref = addr_as_ref<void(int hbm)>(0x0050E870);
         gr_tcache_add_ref(hbm);
         gr_tcache_remove_ref(hbm);
-        play_bik_file_vram_leak_fix.CallTarget(hbm);
+        play_bik_file_vram_leak_fix.call_target(hbm);
     },
 };
 
@@ -410,16 +410,16 @@ CodeInjection vmesh_col_fix{
         // Reset flags field so start_pos/dir always gets transformed into mesh space
         // Note: MeshCollide function adds flag 2 after doing transformation into mesh space
         // If start_pos/dir is being updated for next call, flags must be reset as well
-        StructFieldRef<int>(params, 0x4C) = 0;
+        struct_field_ref<int>(params, 0x4C) = 0;
         // Reset dir field
-        StructFieldRef<rf::Vector3>(params, 0x3C) = AddrAsRef<rf::Vector3>(stack_frame - 0xAC);
+        struct_field_ref<rf::Vector3>(params, 0x3C) = addr_as_ref<rf::Vector3>(stack_frame - 0xAC);
     },
 };
 
 CodeInjection render_corpse_in_monitor_patch{
     0x00412905,
     []() {
-        auto PlayerRenderHeldCorpse = AddrAsRef<void(rf::Player* player)>(0x004A2B90);
+        auto PlayerRenderHeldCorpse = addr_as_ref<void(rf::Player* player)>(0x004A2B90);
         PlayerRenderHeldCorpse(rf::local_player);
     },
 };
@@ -489,9 +489,9 @@ CallHook<bool(rf::Object*)> entity_check_is_in_liquid_obj_is_player_hook{
 CallHook<void(rf::Vector3*, float, float, float, float, bool, int, int)> level_read_geometry_header_light_add_directional_hook{
     0x004619E1,
     [](rf::Vector3 *dir, float intensity, float r, float g, float b, bool is_dynamic, int casts_shadow, int dropoff_type) {
-        auto LightingIsEnabled = AddrAsRef<bool()>(0x004DB8B0);
+        auto LightingIsEnabled = addr_as_ref<bool()>(0x004DB8B0);
         if (LightingIsEnabled()) {
-            level_read_geometry_header_light_add_directional_hook.CallTarget(dir, intensity, r, g, b, is_dynamic, casts_shadow, dropoff_type);
+            level_read_geometry_header_light_add_directional_hook.call_target(dir, intensity, r, g, b, is_dynamic, casts_shadow, dropoff_type);
         }
     },
 };
@@ -512,48 +512,48 @@ void MiscAfterLevelLoad(const char* level_filename)
 void MiscInit()
 {
     // Window title (client and server)
-    WriteMemPtr(0x004B2790, PRODUCT_NAME);
-    WriteMemPtr(0x004B27A4, PRODUCT_NAME);
+    write_mem_ptr(0x004B2790, PRODUCT_NAME);
+    write_mem_ptr(0x004B27A4, PRODUCT_NAME);
 
 #if NO_CD_FIX
     // No-CD fix
-    WriteMem<u8>(0x004B31B6, asm_opcodes::jmp_rel_short);
+    write_mem<u8>(0x004B31B6, asm_opcodes::jmp_rel_short);
 #endif // NO_CD_FIX
 
     // Disable thqlogo.bik
     if (g_game_config.fast_start) {
-        WriteMem<u8>(0x004B208A, asm_opcodes::jmp_rel_short);
-        WriteMem<u8>(0x004B24FD, asm_opcodes::jmp_rel_short);
+        write_mem<u8>(0x004B208A, asm_opcodes::jmp_rel_short);
+        write_mem<u8>(0x004B24FD, asm_opcodes::jmp_rel_short);
     }
 
     // Crash-fix... (probably argument for function is invalid); Page Heap is needed
-    WriteMem<u32>(0x0056A28C + 1, 0);
+    write_mem<u32>(0x0056A28C + 1, 0);
 
 #if 1
     // Buffer overflows in RflReadStaticGeometry
     // Note: Buffer size is 1024 but opcode allows only 1 byte size
     //       What is more important bm_load copies texture name to 32 bytes long buffers
-    WriteMem<i8>(0x004ED612 + 1, 32);
-    WriteMem<i8>(0x004ED66E + 1, 32);
-    WriteMem<i8>(0x004ED72E + 1, 32);
-    WriteMem<i8>(0x004EDB02 + 1, 32);
+    write_mem<i8>(0x004ED612 + 1, 32);
+    write_mem<i8>(0x004ED66E + 1, 32);
+    write_mem<i8>(0x004ED72E + 1, 32);
+    write_mem<i8>(0x004EDB02 + 1, 32);
 #endif
 
     // Increase damage for kill command in Single Player
-    WriteMem<float>(0x004A4DF5 + 1, 100000.0f);
+    write_mem<float>(0x004A4DF5 + 1, 100000.0f);
 
     // Fix crash in shadows rendering
-    WriteMem<u8>(0x0054A3C0 + 2, 16);
+    write_mem<u8>(0x0054A3C0 + 2, 16);
 
     // Fix crash in geometry rendering
-    GeomCachePrepareRoom_hook.Install();
+    GeomCachePrepareRoom_hook.install();
 
     // Remove Sleep calls in TimerInit
     AsmWriter(0x00504A67, 0x00504A82).nop();
 
     // Use spawnpoint team property in TeamDM game (PF compatible)
-    WriteMem<u8>(0x00470395 + 4, 0); // change cmp argument: CTF -> DM
-    WriteMem<u8>(0x0047039A, asm_opcodes::jz_rel_short);  // invert jump condition: jnz -> jz
+    write_mem<u8>(0x00470395 + 4, 0); // change cmp argument: CTF -> DM
+    write_mem<u8>(0x0047039A, asm_opcodes::jz_rel_short);  // invert jump condition: jnz -> jz
 
     // Disable broken optimization of segment vs geometry collision test
     // Fixes hitting objects if mover is in the line of the shot
@@ -564,43 +564,43 @@ void MiscInit()
     AsmWriter(0x0041AE47, 0x0041AE4C).nop();
 
     // Preserve password case when processing rcon_request command
-    WriteMem<i8>(0x0046C85A + 1, 1);
+    write_mem<i8>(0x0046C85A + 1, 1);
 
     // Add checking if restoring game state from save file failed during level loading
-    level_read_data_check_restore_status_patch.Install();
+    level_read_data_check_restore_status_patch.install();
 
     // Open server list menu instead of main menu when leaving multiplayer game
-    rf_init_state_hook.Install();
-    rf_state_is_closed_hook.Install();
-    multi_after_players_packet_hook.Install();
+    rf_init_state_hook.install();
+    rf_state_is_closed_hook.install();
+    multi_after_players_packet_hook.install();
 
     // Hide main window when displaying critical error message box
-    CriticalError_hide_main_wnd_patch.Install();
+    CriticalError_hide_main_wnd_patch.install();
 
     // Allow undefined mp_character in PlayerCreateEntity
     // Fixes Go_Undercover event not changing player 3rd person character
     AsmWriter(0x004A414F, 0x004A4153).nop();
 
     // High monitors/mirrors resolution
-    monitor_create_hook.Install();
+    monitor_create_hook.install();
 
     // Fix crash when skipping cutscene after robot kill in L7S4
-    mover_rotating_keyframe_oob_crashfix.Install();
+    mover_rotating_keyframe_oob_crashfix.install();
 
     // Fix crash in LEGO_MP mod caused by XSTR(1000, "RL"); for some reason it does not crash in PF...
-    parser_xstr_oob_fix.Install();
+    parser_xstr_oob_fix.install();
 
     // Fix crashes caused by too many records in tbl files
-    ammo_tbl_buffer_overflow_fix.Install();
-    clutter_tbl_buffer_overflow_fix.Install();
-    localize_add_string_bof_fix.Install();
+    ammo_tbl_buffer_overflow_fix.install();
+    clutter_tbl_buffer_overflow_fix.install();
+    localize_add_string_bof_fix.install();
 
     // Fix killed glass restoration from a save file
     AsmWriter(0x0043604A).nop(5);
-    glass_shard_level_init_fix.Install();
+    glass_shard_level_init_fix.install();
 
     // Log error when object cannot be created
-    obj_create_hook.Install();
+    obj_create_hook.install();
 
     // Use local_player variable for debris distance calculation instead of local_player_entity
     // Fixed debris pool being exhausted when local player is dead
@@ -609,68 +609,68 @@ void MiscInit()
     // Skip broken code that was supposed to skip particle emulation when particle emitter is in non-rendered room
     // RF code is broken here because level emitters have object handle set to 0 and other emitters are not added to
     // the searched list
-    WriteMem<u8>(0x00495158, asm_opcodes::jmp_rel_short);
+    write_mem<u8>(0x00495158, asm_opcodes::jmp_rel_short);
 
     // Sort objects by anim mesh name to improve rendering performance
-    sort_items_patch.Install();
-    sort_clutter_patch.Install();
+    sort_items_patch.install();
+    sort_clutter_patch.install();
 
     // Fix face scroll in levels after version 0xB4
-    face_scroll_fix.Install();
+    face_scroll_fix.install();
 
     // Increase entity simulation max distance
     // TODO: create a config property for this
     if (g_game_config.disable_lod_models) {
-        WriteMem<float>(0x00589548, 100.0f);
+        write_mem<float>(0x00589548, 100.0f);
     }
 
     // Fix PlayBikFile texture leak
-    play_bik_file_vram_leak_fix.Install();
+    play_bik_file_vram_leak_fix.install();
 
     // Log error when RFA cannot be loaded
-    skeleton_pagein_debug_print_patch.Install();
+    skeleton_pagein_debug_print_patch.install();
 
     // Fix crash when executing camera2 command in main menu
     AsmWriter(0x0040DCFC).nop(5);
 
     // Fix ItemCreate null result handling in RFL loading (affects multiplayer only)
-    level_load_items_crash_fix.Install();
+    level_load_items_crash_fix.install();
 
     // Fix col-spheres vs mesh collisions
-    vmesh_col_fix.Install();
+    vmesh_col_fix.install();
 
     // Render held corpse in monitor
-    render_corpse_in_monitor_patch.Install();
+    render_corpse_in_monitor_patch.install();
 
     // Fix possible infinite loop when starting Bink video
-    play_bik_file_infinite_loop_fix.Install();
+    play_bik_file_infinite_loop_fix.install();
 
     // Fix memory leak when trying to play non-existing Bink video
-    WriteMem<i32>(0x00520B7E + 2, 0x00520C6E - (0x00520B7E + 6));
+    write_mem<i32>(0x00520B7E + 2, 0x00520C6E - (0x00520B7E + 6));
 
     // Fix crash caused by explosion near dying player-controlled entity (entity->local_player is null)
-    explosion_crash_fix.Install();
+    explosion_crash_fix.install();
 
     // If speed reduction in background is not wanted disable that code in RF
     if (!g_game_config.reduced_speed_in_background) {
-        WriteMem<u8>(0x004353CC, asm_opcodes::jmp_rel_short);
+        write_mem<u8>(0x004353CC, asm_opcodes::jmp_rel_short);
     }
 
     // Fix setting fire wait timer when closing weapon switch menu
     // Note: this timer makes sense for weapons that require holding (not clicking) the control to fire (e.g. shotgun)
-    player_execute_action_timestamp_set_fire_wait_patch.Install();
+    player_execute_action_timestamp_set_fire_wait_patch.install();
 
     // Fix crash when particle emitter allocation fails during entity ignition
-    entity_fire_switch_parent_to_corpse_hook.Install();
+    entity_fire_switch_parent_to_corpse_hook.install();
 
     // Fix buzzing sound when some player is floating in water
-    entity_check_is_in_liquid_obj_is_player_hook.Install();
+    entity_check_is_in_liquid_obj_is_player_hook.install();
 
     // Fix dedicated server crash when loading level that uses directional light
-    level_read_geometry_header_light_add_directional_hook.Install();
+    level_read_geometry_header_light_add_directional_hook.install();
 
     // Fix stack corruption when packfile has lower size than expected
-    vfile_read_stack_corruption_fix.Install();
+    vfile_read_stack_corruption_fix.install();
 
     // Init cmd line param
     GetUrlCmdLineParam();

@@ -14,7 +14,7 @@ FunHook<void(rf::Player*)> hud_status_render_hook{
     0x00439D80,
     [](rf::Player *player) {
         if (!g_big_health_armor_hud) {
-            hud_status_render_hook.CallTarget(player);
+            hud_status_render_hook.call_target(player);
             return;
         }
 
@@ -110,7 +110,7 @@ FunHook<void(rf::Player*)> hud_status_render_hook{
 
 void InstallHealthArmorHudPatches()
 {
-    hud_status_render_hook.Install();
+    hud_status_render_hook.install();
 }
 
 void SetBigHealthArmorHud(bool is_big)

@@ -36,8 +36,8 @@ namespace rf
         CONSOLE_ARG_ANY = 0xFFFFFFFF,
     };
 
-    static auto& console_output = AddrAsRef<void(const char* text, const Color* color)>(0x00509EC0);
-    static auto& console_get_arg = AddrAsRef<void(unsigned type, bool preserve_case)>(0x0050AED0);
+    static auto& console_output = addr_as_ref<void(const char* text, const Color* color)>(0x00509EC0);
+    static auto& console_get_arg = addr_as_ref<void(unsigned type, bool preserve_case)>(0x0050AED0);
 
     // Note: console_printf is reimplemented to allow static validation of the format string
     PRINTF_FMT_ATTRIBUTE(1, 2)
@@ -55,16 +55,16 @@ namespace rf
         console_output(buf.get(), nullptr);
     }
 
-    //static auto& console_commands = AddrAsRef<ConsoleCommand*[30]>(0x01775530);
-    static auto& console_num_commands = AddrAsRef<uint32_t>(0x0177567C);
+    //static auto& console_commands = addr_as_ref<ConsoleCommand*[30]>(0x01775530);
+    static auto& console_num_commands = addr_as_ref<uint32_t>(0x0177567C);
 
-    static auto& console_run = AddrAsRef<uint32_t>(0x01775110);
-    static auto& console_help = AddrAsRef<uint32_t>(0x01775224);
-    static auto& console_status = AddrAsRef<uint32_t>(0x01774D00);
-    static auto& console_arg_type = AddrAsRef<uint32_t>(0x01774D04);
-    static auto& console_str_arg = AddrAsRef<char[256]>(0x0175462C);
-    static auto& console_int_arg = AddrAsRef<int>(0x01775220);
-    static auto& console_float_arg = AddrAsRef<float>(0x01754628);
-    static auto& console_cmd_line = AddrAsRef<char[256]>(0x01775330);
-    static auto& console_cmd_line_len = AddrAsRef<int>(0x0177568C);
+    static auto& console_run = addr_as_ref<uint32_t>(0x01775110);
+    static auto& console_help = addr_as_ref<uint32_t>(0x01775224);
+    static auto& console_status = addr_as_ref<uint32_t>(0x01774D00);
+    static auto& console_arg_type = addr_as_ref<uint32_t>(0x01774D04);
+    static auto& console_str_arg = addr_as_ref<char[256]>(0x0175462C);
+    static auto& console_int_arg = addr_as_ref<int>(0x01775220);
+    static auto& console_float_arg = addr_as_ref<float>(0x01754628);
+    static auto& console_cmd_line = addr_as_ref<char[256]>(0x01775330);
+    static auto& console_cmd_line_len = addr_as_ref<int>(0x0177568C);
 }

@@ -2,7 +2,7 @@
 #include <patch_common/AsmWriter.h>
 #include <xlog/xlog.h>
 
-void BaseCodeInjection::Install()
+void BaseCodeInjection::install()
 {
     m_subhook.Install(reinterpret_cast<void*>(m_addr), m_code_buf);
     void* trampoline = m_subhook.GetTrampoline();
@@ -10,10 +10,10 @@ void BaseCodeInjection::Install()
         xlog::warn("trampoline is null for 0x%X", m_addr);
 
     AsmWriter asm_writter{m_code_buf};
-    EmitCode(asm_writter, trampoline);
+    emit_code(asm_writter, trampoline);
 }
 
-void BaseCodeInjectionWithRegsAccess::EmitCode(AsmWriter& asm_writter, void* trampoline)
+void BaseCodeInjectionWithRegsAccess::emit_code(AsmWriter& asm_writter, void* trampoline)
 {
     using namespace asm_regs;
     constexpr int esp_offset = offsetof(Regs, esp);
@@ -37,7 +37,7 @@ void BaseCodeInjectionWithRegsAccess::EmitCode(AsmWriter& asm_writter, void* tra
         .ret();                         // return to address read from EIP field in Regs struct
 }
 
-void BaseCodeInjectionWithoutRegsAccess::EmitCode(AsmWriter& asm_writter, void* trampoline)
+void BaseCodeInjectionWithoutRegsAccess::emit_code(AsmWriter& asm_writter, void* trampoline)
 {
     using namespace asm_regs;
     asm_writter

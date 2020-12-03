@@ -1,7 +1,7 @@
 #include <patch_common/FunHook.h>
 #include <xlog/xlog.h>
 
-void FunHookImpl::Install()
+void FunHookImpl::install()
 {
     m_subhook.Install(m_target_fun_ptr, m_hook_fun_ptr);
     if (!m_subhook.GetTrampoline())

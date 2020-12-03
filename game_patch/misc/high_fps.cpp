@@ -75,10 +75,10 @@ public:
         }
     }
 
-    void Install()
+    void install()
     {
         char* code_buf = new char[512];
-        UnprotectMem(code_buf, 512);
+        unprotect_mem(code_buf, 512);
 
         using namespace asm_regs;
         AsmWriter{code_buf}
@@ -280,8 +280,8 @@ void HighFpsAfterLevelLoad(rf::String& level_filename)
 FunHook<int(int)> timer_get_hook{
     0x00504AB0,
     [](int scale) {
-        static auto& timer_base = AddrAsRef<LARGE_INTEGER>(0x01751BF8);
-        static auto& timer_last_value = AddrAsRef<LARGE_INTEGER>(0x01751BD0);
+        static auto& timer_base = addr_as_ref<LARGE_INTEGER>(0x01751BF8);
+        static auto& timer_last_value = addr_as_ref<LARGE_INTEGER>(0x01751BD0);
         // get QPC current value
         LARGE_INTEGER current_qpc_value;
         QueryPerformanceCounter(&current_qpc_value);
@@ -305,7 +305,7 @@ CallHook<void(int)> frametime_calculate_sleep_hook{
     [](int ms) {
         --ms;
         if (ms > 0) {
-            frametime_calculate_sleep_hook.CallTarget(ms);
+            frametime_calculate_sleep_hook.call_target(ms);
         }
     },
 };
@@ -313,8 +313,8 @@ CallHook<void(int)> frametime_calculate_sleep_hook{
 CodeInjection cutscene_shot_sync_fix{
     0x0045B43B,
     [](auto& regs) {
-        auto& current_shot_idx = StructFieldRef<int>(rf::active_cutscene, 0x808);
-        auto& current_shot_timer = StructFieldRef<rf::Timestamp>(rf::active_cutscene, 0x810);
+        auto& current_shot_idx = struct_field_ref<int>(rf::active_cutscene, 0x808);
+        auto& current_shot_timer = struct_field_ref<rf::Timestamp>(rf::active_cutscene, 0x810);
         if (current_shot_idx > 1) {
             // decrease time for next shot using current shot timer value
             int shot_time_left_ms = current_shot_timer.time_until();
@@ -328,7 +328,7 @@ CodeInjection cutscene_shot_sync_fix{
 FunHook<void(rf::Entity&, rf::Vector3&)> entity_on_land_hook{
     0x00419830,
     [](rf::Entity& entity, rf::Vector3& pos) {
-        entity_on_land_hook.CallTarget(entity, pos);
+        entity_on_land_hook.call_target(entity, pos);
         entity.p_data.vel.y = 0.0f;
     },
 };
@@ -336,7 +336,7 @@ FunHook<void(rf::Entity&, rf::Vector3&)> entity_on_land_hook{
 CallHook<void(rf::Entity&)> entity_make_run_after_climbing_patch{
     0x00430D5D,
     [](rf::Entity& entity) {
-        entity_make_run_after_climbing_patch.CallTarget(entity);
+        entity_make_run_after_climbing_patch.call_target(entity);
         entity.p_data.vel.y = 0.0f;
     },
 };
@@ -344,7 +344,7 @@ CallHook<void(rf::Entity&)> entity_make_run_after_climbing_patch{
 CodeInjection particle_update_accel_patch{
     0x00495282,
     [](auto& regs) {
-        auto& vel = AddrAsRef<rf::Vector3>(regs.ecx);
+        auto& vel = addr_as_ref<rf::Vector3>(regs.ecx);
         if (vel.len() < 0.0001f) {
             regs.eip = 0x00495301;
         }
@@ -361,9 +361,9 @@ FunHook<rf::ParticleEmitter*(int, rf::ParticleEmitterType&, rf::GRoom*, rf::Vect
             new_type.flags &= ~rf::PEF_CONTINOUS;
             new_type.min_spawn_delay = std::max(new_type.min_spawn_delay, min_spawn_delay);
             new_type.max_spawn_delay = std::max(new_type.max_spawn_delay, min_spawn_delay);
-            return particle_emitter_create_hook.CallTarget(objh, new_type, room, pos, is_on);
+            return particle_emitter_create_hook.call_target(objh, new_type, room, pos, is_on);
         }
-        return particle_emitter_create_hook.CallTarget(objh, type, room, pos, is_on);
+        return particle_emitter_create_hook.call_target(objh, type, room, pos, is_on);
     },
 };
 
@@ -371,7 +371,7 @@ void HighFpsInit()
 {
     // Fix animations broken on high FPS because of ignored ftol remainder
     for (auto& ftol_fix : g_ftol_accuracy_fixes) {
-        ftol_fix.Install();
+        ftol_fix.install();
     }
 
 #ifdef DEBUG
@@ -379,56 +379,56 @@ void HighFpsInit()
 #endif
 
     // Fix player being stuck to ground when jumping, especially when FPS is greater than 200
-    stuck_to_ground_when_jumping_fix.Install();
-    stuck_to_ground_when_using_jump_pad_fix.Install();
-    stuck_to_ground_fix.Install();
+    stuck_to_ground_when_jumping_fix.install();
+    stuck_to_ground_when_using_jump_pad_fix.install();
+    stuck_to_ground_fix.install();
 
     // Fix water deceleration on high FPS
     AsmWriter(0x0049D816).nop(5);
-    entity_water_decelerate_fix.Install();
+    entity_water_decelerate_fix.install();
 
     // Fix water waves animation on high FPS
     AsmWriter(0x004E68A0, 0x004E68A9).nop();
     AsmWriter(0x004E68B6, 0x004E68D1).nop();
-    WaterAnimateWaves_speed_fix.Install();
+    WaterAnimateWaves_speed_fix.install();
 
     // Fix timer_get handling of frequency greater than 2MHz (sign bit is set in 32 bit dword)
     QueryPerformanceFrequency(&g_qpc_frequency);
-    timer_get_hook.Install();
+    timer_get_hook.install();
 
     // Fix incorrect frame time calculation
     AsmWriter(0x00509595).nop(2);
-    WriteMem<u8>(0x00509532, asm_opcodes::jmp_rel_short);
-    frametime_calculate_sleep_hook.Install();
+    write_mem<u8>(0x00509532, asm_opcodes::jmp_rel_short);
+    frametime_calculate_sleep_hook.install();
 
     // Fix screen shake caused by some weapons (eg. Assault Rifle)
-    WriteMemPtr(0x0040DBCC + 2, &g_camera_shake_factor);
+    write_mem_ptr(0x0040DBCC + 2, &g_camera_shake_factor);
 
     // Remove cutscene sync RF hackfix
-    WriteMem<float>(0x005897B4, 1000.0f);
-    WriteMem<float>(0x005897B8, 1.0f);
+    write_mem<float>(0x005897B4, 1000.0f);
+    write_mem<float>(0x005897B8, 1.0f);
     static float zero = 0.0f;
-    WriteMemPtr(0x0045B42A + 2, &zero);
+    write_mem_ptr(0x0045B42A + 2, &zero);
 
     // Fix cutscene shot timer sync on high fps
-    cutscene_shot_sync_fix.Install();
+    cutscene_shot_sync_fix.install();
 
     // Fix flee AI mode on high FPS by avoiding clearing velocity in Y axis in EntityMakeRun
     AsmWriter(0x00428121, 0x0042812B).nop();
     AsmWriter(0x0042809F, 0x004280A9).nop();
-    entity_on_land_hook.Install();
-    entity_make_run_after_climbing_patch.Install();
+    entity_on_land_hook.install();
+    entity_make_run_after_climbing_patch.install();
 
     // Fix flamethrower "stroboscopic effect" on high FPS
     // g3_draw_sprite interprets parameters differently than g3_draw_sprite_stretch expects - zero angle does not use
     // diamond shape and size is not divided by 2. Instead of calling it when p0 to p1 distance is small get rid of this
     // special case. g3_draw_sprite_stretch should handle it properly even if distance is 0 because it
     // uses Vector3::normalize_safe() API.
-    WriteMem<u8>(0x00558E61, asm_opcodes::jmp_rel_short);
-    particle_update_accel_patch.Install();
+    write_mem<u8>(0x00558E61, asm_opcodes::jmp_rel_short);
+    particle_update_accel_patch.install();
 
     // Recude particle emitters maximal spawn rate
-    particle_emitter_create_hook.Install();
+    particle_emitter_create_hook.install();
 }
 
 void HighFpsUpdate()

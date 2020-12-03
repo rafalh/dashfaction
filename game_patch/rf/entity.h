@@ -182,8 +182,8 @@ namespace rf
     static_assert(sizeof(EntityInfo) == 0x1514);
 
     constexpr int MAX_ENTITY_TYPES = 75;
-    static auto& num_entity_types = AddrAsRef<int>(0x0062F2D0);
-    static auto& entity_types = AddrAsRef<EntityInfo[MAX_ENTITY_TYPES]>(0x005CC500);
+    static auto& num_entity_types = addr_as_ref<int>(0x0062F2D0);
+    static auto& entity_types = addr_as_ref<EntityInfo[MAX_ENTITY_TYPES]>(0x005CC500);
 
     struct MoveModeInfo
     {
@@ -350,24 +350,24 @@ namespace rf
         Matrix3 orient;
     };
 
-    static auto& entity_from_handle = AddrAsRef<Entity*(int handle)>(0x00426FC0);
+    static auto& entity_from_handle = addr_as_ref<Entity*(int handle)>(0x00426FC0);
     static auto& entity_create =
-        AddrAsRef<Entity*(int entity_type, const char* name, int parent_handle, const Vector3& pos,
+        addr_as_ref<Entity*(int entity_type, const char* name, int parent_handle, const Vector3& pos,
         const Matrix3& orient, int create_flags, int mp_character)>(0x00422360);
-    static auto& entity_is_dying = AddrAsRef<bool(Entity *entity)>(0x00427020);
-    static auto& entity_is_attached_to_vehicle = AddrAsRef<bool(Entity *entity)>(0x004290D0);
-    static auto& entity_is_jeep_driver = AddrAsRef<bool(Entity *entity)>(0x0042AC80);
-    static auto& entity_is_jeep_shooter = AddrAsRef<bool(Entity *entity)>(0x0042ACD0);
-    static auto& entity_is_driller = AddrAsRef<bool(Entity *entity)>(0x0042D780);
-    static auto& entity_is_sub = AddrAsRef<bool(Entity *entity)>(0x0040A270);
-    static auto& entity_is_jeep = AddrAsRef<bool(Entity *entity)>(0x0040A2F0);
-    static auto& entity_is_fighter = AddrAsRef<bool(Entity *entity)>(0x0040A210);
-    static auto& entity_is_holding_body = AddrAsRef<bool(Entity *entity)>(0x00429D20);
-    static auto& entity_fire_init_bones = AddrAsRef<bool(EntityFireInfo *burn_info, Object *obj)>(0x0042EB20);
-    static auto& entity_is_swimming = AddrAsRef<bool(Entity* entity)>(0x0042A0A0);
-    static auto& entity_is_falling = AddrAsRef<bool(Entity* entit)>(0x0042A020);
-    static auto& multi_entity_is_female = AddrAsRef<bool(int mp_character_idx)>(0x004762C0);
+    static auto& entity_is_dying = addr_as_ref<bool(Entity *entity)>(0x00427020);
+    static auto& entity_is_attached_to_vehicle = addr_as_ref<bool(Entity *entity)>(0x004290D0);
+    static auto& entity_is_jeep_driver = addr_as_ref<bool(Entity *entity)>(0x0042AC80);
+    static auto& entity_is_jeep_shooter = addr_as_ref<bool(Entity *entity)>(0x0042ACD0);
+    static auto& entity_is_driller = addr_as_ref<bool(Entity *entity)>(0x0042D780);
+    static auto& entity_is_sub = addr_as_ref<bool(Entity *entity)>(0x0040A270);
+    static auto& entity_is_jeep = addr_as_ref<bool(Entity *entity)>(0x0040A2F0);
+    static auto& entity_is_fighter = addr_as_ref<bool(Entity *entity)>(0x0040A210);
+    static auto& entity_is_holding_body = addr_as_ref<bool(Entity *entity)>(0x00429D20);
+    static auto& entity_fire_init_bones = addr_as_ref<bool(EntityFireInfo *burn_info, Object *obj)>(0x0042EB20);
+    static auto& entity_is_swimming = addr_as_ref<bool(Entity* entity)>(0x0042A0A0);
+    static auto& entity_is_falling = addr_as_ref<bool(Entity* entit)>(0x0042A020);
+    static auto& multi_entity_is_female = addr_as_ref<bool(int mp_character_idx)>(0x004762C0);
 
-    static auto& entity_list = AddrAsRef<Entity>(0x005CB060);
-    static auto& local_player_entity = AddrAsRef<Entity*>(0x005CB054);
+    static auto& entity_list = addr_as_ref<Entity>(0x005CB060);
+    static auto& local_player_entity = addr_as_ref<Entity*>(0x005CB054);
 }

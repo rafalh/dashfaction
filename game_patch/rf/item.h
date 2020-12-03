@@ -24,5 +24,5 @@ namespace rf
     };
     static_assert(sizeof(Item) == 0x2C4);
 
-    static auto& item_list = AddrAsRef<Item>(0x00642DD8);
+    static auto& item_list = addr_as_ref<Item>(0x00642DD8);
 }

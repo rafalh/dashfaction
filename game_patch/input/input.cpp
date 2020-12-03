@@ -17,8 +17,8 @@
 
 bool SetDirectInputEnabled(bool enabled)
 {
-    auto direct_input_initialized = AddrAsRef<bool>(0x01885460);
-    auto InitDirectInput = AddrAsRef<int()>(0x0051E070);
+    auto direct_input_initialized = addr_as_ref<bool>(0x01885460);
+    auto InitDirectInput = addr_as_ref<int()>(0x0051E070);
     rf::direct_input_disabled = !enabled;
     if (enabled && !direct_input_initialized) {
         if (InitDirectInput() != 0) {
@@ -42,7 +42,7 @@ FunHook<void()> mouse_eval_deltas_hook{
     []() {
         // disable mouse when window is not active
         if (rf::os_foreground()) {
-            mouse_eval_deltas_hook.CallTarget();
+            mouse_eval_deltas_hook.call_target();
         }
     },
 };
@@ -50,7 +50,7 @@ FunHook<void()> mouse_eval_deltas_hook{
 FunHook<void()> mouse_eval_deltas_di_hook{
     0x0051DEB0,
     []() {
-        mouse_eval_deltas_di_hook.CallTarget();
+        mouse_eval_deltas_di_hook.call_target();
 
         // center cursor if in game
         if (rf::keep_mouse_centered) {
@@ -66,7 +66,7 @@ FunHook<void()> mouse_keep_centered_enable_hook{
     []() {
         if (!rf::keep_mouse_centered && !rf::is_dedicated_server)
             SetDirectInputEnabled(g_game_config.direct_input);
-        mouse_keep_centered_enable_hook.CallTarget();
+        mouse_keep_centered_enable_hook.call_target();
     },
 };
 
@@ -75,7 +75,7 @@ FunHook<void()> mouse_keep_centered_disable_hook{
     []() {
         if (rf::keep_mouse_centered)
             SetDirectInputEnabled(false);
-        mouse_keep_centered_disable_hook.CallTarget();
+        mouse_keep_centered_disable_hook.call_target();
     },
 };
 
@@ -350,7 +350,7 @@ CodeInjection key_name_in_options_patch{
     },
 };
 
-auto& GetTextFromClipboard = AddrAsRef<void(char *buf, unsigned int max_len)>(0x00525AFC);
+auto& GetTextFromClipboard = addr_as_ref<void(char *buf, unsigned int max_len)>(0x00525AFC);
 auto UiInputBox_AddChar = reinterpret_cast<bool (__thiscall*)(void *this_, char c)>(0x00457260);
 
 extern FunHook<bool __fastcall(void *this_, void* edx, rf::Key key)> UiInputBox_ProcessKey_hook;
@@ -365,7 +365,7 @@ bool __fastcall UiInputBox_ProcessKey_new(void *this_, void* edx, rf::Key key)
         return true;
     }
     else {
-        return UiInputBox_ProcessKey_hook.CallTarget(this_, edx, key);
+        return UiInputBox_ProcessKey_hook.call_target(this_, edx, key);
     }
 }
 FunHook<bool __fastcall(void *this_, void* edx, rf::Key key)> UiInputBox_ProcessKey_hook{
@@ -376,32 +376,32 @@ FunHook<bool __fastcall(void *this_, void* edx, rf::Key key)> UiInputBox_Process
 void InputInit()
 {
     // Support non-US keyboard layouts
-    key_to_ascii_hook.Install();
-    get_key_name_hook.Install();
-    key_name_in_options_patch.Install();
+    key_to_ascii_hook.install();
+    get_key_name_hook.install();
+    key_name_in_options_patch.install();
 
     // Disable broken numlock handling
-    WriteMem<u8>(0x004B14B2 + 1, 0);
+    write_mem<u8>(0x004B14B2 + 1, 0);
 
     // Handle CTRL+V in input boxes
-    UiInputBox_ProcessKey_hook.Install();
+    UiInputBox_ProcessKey_hook.install();
 
     // Disable mouse when window is not active
-    mouse_eval_deltas_hook.Install();
+    mouse_eval_deltas_hook.install();
 
     // Add DirectInput mouse support
-    mouse_eval_deltas_di_hook.Install();
-    mouse_keep_centered_enable_hook.Install();
-    mouse_keep_centered_disable_hook.Install();
+    mouse_eval_deltas_di_hook.install();
+    mouse_keep_centered_enable_hook.install();
+    mouse_keep_centered_disable_hook.install();
 
     // Do not limit the cursor to the game window if in menu (Win32 mouse)
     AsmWriter(0x0051DD7C).jmp(0x0051DD8E);
 
     // Use exclusive DirectInput mode so cursor cannot exit game window
-    //WriteMem<u8>(0x0051E14B + 1, 5); // DISCL_EXCLUSIVE|DISCL_FOREGROUND
+    //write_mem<u8>(0x0051E14B + 1, 5); // DISCL_EXCLUSIVE|DISCL_FOREGROUND
 
     // Linear vertical rotation (pitch)
-    linear_pitch_patch.Install();
+    linear_pitch_patch.install();
 
     // Commands
     input_mode_cmd.Register();

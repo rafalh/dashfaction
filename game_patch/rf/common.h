@@ -155,8 +155,8 @@ namespace rf
 
     /* String */
 
-    static auto& StringAlloc = AddrAsRef<char*(unsigned size)>(0x004FF300);
-    static auto& StringFree = AddrAsRef<void(char* ptr)>(0x004FF3A0);
+    static auto& StringAlloc = addr_as_ref<char*(unsigned size)>(0x004FF300);
+    static auto& StringFree = addr_as_ref<void(char* ptr)>(0x004FF3A0);
 
     class String
     {
@@ -399,15 +399,15 @@ namespace rf
 
     // RF stdlib functions are not compatible with GCC
 
-    static auto& Free = AddrAsRef<void(void *mem)>(0x00573C71);
-    static auto& Malloc = AddrAsRef<void*(uint32_t cb_size)>(0x00573B37);
+    static auto& Free = addr_as_ref<void(void *mem)>(0x00573C71);
+    static auto& Malloc = addr_as_ref<void*(uint32_t cb_size)>(0x00573B37);
 
     // Collide
 
     using IxLineSegmentBoundingBoxType = bool(const Vector3& box_min, const Vector3& box_max, const Vector3& p0,
                                        const Vector3& p1, Vector3 *hit_pt);
-    static auto& ix_linesegment_boundingbox = AddrAsRef<IxLineSegmentBoundingBoxType>(0x00508B70);
+    static auto& ix_linesegment_boundingbox = addr_as_ref<IxLineSegmentBoundingBoxType>(0x00508B70);
 
     // Timer
-    static auto& timer_get = AddrAsRef<int(int frequency)>(0x00504AB0);
+    static auto& timer_get = addr_as_ref<int(int frequency)>(0x00504AB0);
 }

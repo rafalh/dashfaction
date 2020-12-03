@@ -91,7 +91,7 @@ bm_read_header_hook{
         }
 
         xlog::trace("Loading bitmap header for '%s'", filename);
-        auto bm_type = bm_read_header_hook.CallTarget(filename, width_out, height_out, pixel_fmt_out, num_levels_out,
+        auto bm_type = bm_read_header_hook.call_target(filename, width_out, height_out, pixel_fmt_out, num_levels_out,
             num_levels_external_mips_out, num_frames_out, fps_out, total_bytes_m2v_out, vbm_ver_out, a11);
         xlog::trace("Bitmap header for '%s': type %d size %dx%d pixel_fmt %d levels %d frames %d",
             filename, bm_type, *width_out, *height_out, *pixel_fmt_out, *num_levels_out, *num_frames_out);
@@ -121,7 +121,7 @@ FunHook<rf::BmFormat(int, void**, void**)> bm_lock_hook{
             return bm_entry.format;
         }
         else {
-            auto pixel_fmt = bm_lock_hook.CallTarget(bmh, pixels_out, palette_out);
+            auto pixel_fmt = bm_lock_hook.call_target(bmh, pixels_out, palette_out);
             if (pixel_fmt == rf::BM_FORMAT_NONE) {
                 *pixels_out = nullptr;
                 *palette_out = nullptr;
@@ -153,7 +153,7 @@ FunHook<bool(rf::BmFormat)> bm_has_alpha_hook{
 
 void BmApplyPatches()
 {
-    bm_read_header_hook.Install();
-    bm_lock_hook.Install();
-    bm_has_alpha_hook.Install();
+    bm_read_header_hook.install();
+    bm_lock_hook.install();
+    bm_has_alpha_hook.install();
 }

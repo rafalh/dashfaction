@@ -47,8 +47,8 @@ struct Monitor
 };
 static_assert(sizeof(Monitor) == 0x3C);
 
-static auto& gr_d3d_get_texture = AddrAsRef<IDirect3DTexture8*(int bm_handle)>(0x0055D1E0);
-static auto& monitor_list = AddrAsRef<Monitor>(0x005C98A8);
+static auto& gr_d3d_get_texture = addr_as_ref<IDirect3DTexture8*(int bm_handle)>(0x0055D1E0);
+static auto& monitor_list = addr_as_ref<Monitor>(0x005C98A8);
 } // namespace rf
 
 
@@ -214,7 +214,7 @@ FunHook<void(int, int, int, int, int)> gr_capture_back_buffer_hook{
                 rf::gr_d3d_flush_buffers();
             }
         } else {
-            gr_capture_back_buffer_hook.CallTarget(x, y, width, height, bm_handle);
+            gr_capture_back_buffer_hook.call_target(x, y, width, height, bm_handle);
         }
     },
 };
@@ -222,7 +222,7 @@ FunHook<void(int, int, int, int, int)> gr_capture_back_buffer_hook{
 CallHook<int(rf::BmFormat, int, int)> bm_create_user_bitmap_monitor_hook{
     0x00412547,
     []([[ maybe_unused ]] rf::BmFormat pixel_fmt, int w, int h) {
-        return bm_create_user_bitmap_monitor_hook.CallTarget(rf::BM_FORMAT_RENDER_TARGET, w, h);
+        return bm_create_user_bitmap_monitor_hook.call_target(rf::BM_FORMAT_RENDER_TARGET, w, h);
     },
 };
 
@@ -259,7 +259,7 @@ struct MeshMaterial
 };
 static_assert(sizeof(MeshMaterial) == 0xC8);
 
-static auto& vmesh_get_materials_array = AddrAsRef<void(VMesh *vmesh, int *num_materials_out, MeshMaterial **materials_array_out)>(0x00503650);
+static auto& vmesh_get_materials_array = addr_as_ref<void(VMesh *vmesh, int *num_materials_out, MeshMaterial **materials_array_out)>(0x00503650);
 }
 
 FunHook<void(rf::Monitor&)> monitor_render_off_state_hook{
@@ -268,7 +268,7 @@ FunHook<void(rf::Monitor&)> monitor_render_off_state_hook{
         // monitor is no longer displaying view from camera so its texture usage must be changed
         // from render target to dynamic texture
         MakeSureMonitorBitmapIsDynamic(mon);
-        monitor_render_off_state_hook.CallTarget(mon);
+        monitor_render_off_state_hook.call_target(mon);
     },
 };
 
@@ -342,7 +342,7 @@ FunHook<void(rf::Monitor&)> monitor_render_noise_hook{
             ReplaceMonitorScreenBitmap(mon, hbm);
             mon.flags |= 0x1000;
         }
-        //monitor_render_noise_hook.CallTarget(mon);
+        //monitor_render_noise_hook.call_target(mon);
     },
 };
 #endif
@@ -429,33 +429,33 @@ void GraphicsCaptureInit()
 {
 #if !D3D_LOCKABLE_BACKBUFFER
     /* Override default because IDirect3DSurface8::LockRect fails on multisampled back-buffer */
-    gr_d3d_read_back_buffer_hook.Install();
+    gr_d3d_read_back_buffer_hook.install();
 #endif
 
     // Use fast GrCaptureBackBuffer implementation which copies backbuffer to texture without copying from VRAM to RAM
-    gr_capture_back_buffer_hook.Install();
-    d3d_device_lost_patch.Install();
-    d3d_cleanup_patch.Install();
-    after_game_render_to_dynamic_textures.Install();
+    gr_capture_back_buffer_hook.install();
+    d3d_device_lost_patch.install();
+    d3d_cleanup_patch.install();
+    after_game_render_to_dynamic_textures.install();
 
     // Make sure bitmaps used together with GrCaptureBackBuffer have the same format as backbuffer
-    bm_create_user_bitmap_monitor_hook.Install();
-    monitor_render_off_state_hook.Install();
-    monitor_render_noise_hook.Install();
+    bm_create_user_bitmap_monitor_hook.install();
+    monitor_render_off_state_hook.install();
+    monitor_render_noise_hook.install();
 
     // Override screenshot directory
-    WriteMemPtr(0x004367CA + 2, &g_screenshot_dir_id);
+    write_mem_ptr(0x004367CA + 2, &g_screenshot_dir_id);
 
     // Fix buffer overflow in screenshot to JPG conversion code
-    screenshot_scanlines_array_overflow_fix1.Install();
-    screenshot_scanlines_array_overflow_fix2.Install();
+    screenshot_scanlines_array_overflow_fix1.install();
+    screenshot_scanlines_array_overflow_fix2.install();
 
-    monitor_render_from_camera_start_render_to_texture.Install();
-    railgun_scanner_start_render_to_texture.Install();
-    rocket_launcher_start_render_to_texture.Install();
+    monitor_render_from_camera_start_render_to_texture.install();
+    railgun_scanner_start_render_to_texture.install();
+    rocket_launcher_start_render_to_texture.install();
 
     // Make sure scanner bitmap is a render target
-    WriteMem<u8>(0x004A34BF + 1, rf::BM_FORMAT_RENDER_TARGET);
+    write_mem<u8>(0x004A34BF + 1, rf::BM_FORMAT_RENDER_TARGET);
 }
 
 void GraphicsCaptureAfterGameInit()

@@ -43,7 +43,7 @@ public:
         new_num_elements_(N), refs_(refs), new_buf_(new_buf)
     {}
 
-    void Install()
+    void install()
     {
         constexpr int max_offset = 6;
         if (!new_buf_) {
@@ -76,7 +76,7 @@ public:
                 std::memcpy(&data, ptr, sizeof(data));
                 if (data >= remap_begin_addr && data < remap_end_addr) {
                     data = (data - remap_begin_addr) + remap_new_addr;
-                    WriteMemPtr(addr, reinterpret_cast<void*>(data));
+                    write_mem_ptr(addr, reinterpret_cast<void*>(data));
                     break;
                 }
             }
@@ -86,7 +86,7 @@ public:
         }
     }
 
-    T* GetBuffer() const
+    T* get_buffer() const
     {
         return new_buf_;
     }

@@ -28,14 +28,14 @@ void SetPlaySoundEventsVolumeScale(float volume_scale)
         0x004BA4D8, 0x004BA515, 0x004BA71C, 0x004BA759, 0x004BA609, 0x004BA5F2, 0x004BA63F,
     };
     for (auto offset : offsets) {
-        WriteMem<float>(offset + 1, volume_scale);
+        write_mem<float>(offset + 1, volume_scale);
     }
 }
 
 CallHook<void(int, rf::Vector3*, float*, float*, float)> snd_calculate_1d_from_3d_ambient_sound_hook{
     0x00505F93,
     [](int handle, rf::Vector3* sound_pos, float* pan_out, float* volume_out, float volume_in) {
-        snd_calculate_1d_from_3d_ambient_sound_hook.CallTarget(handle, sound_pos, pan_out, volume_out, volume_in);
+        snd_calculate_1d_from_3d_ambient_sound_hook.call_target(handle, sound_pos, pan_out, volume_out, volume_in);
         *volume_out *= g_game_config.level_sound_volume;
     },
 };
@@ -200,7 +200,7 @@ CodeInjection snd_ds_play_3d_no_free_slots_fix{
     0x005222DF,
     [](auto& regs) {
         auto stack_frame = regs.esp + 0x14;
-        auto volume_arg = AddrAsRef<float>(stack_frame + 0x18);
+        auto volume_arg = addr_as_ref<float>(stack_frame + 0x18);
         if (regs.eax == -1) {
             regs.eax = TryToFreeDsChannel(volume_arg);
         }
@@ -211,7 +211,7 @@ CodeInjection snd_ds_play_no_free_slots_fix{
     0x0052255C,
     [](auto& regs) {
         auto stack_frame = regs.esp + 0x10;
-        auto volume_arg = AddrAsRef<float>(stack_frame + 0x8);
+        auto volume_arg = addr_as_ref<float>(stack_frame + 0x8);
         if (regs.eax == -1) {
             regs.eax = TryToFreeDsChannel(volume_arg);
         }
@@ -222,8 +222,8 @@ CodeInjection snd_play_no_free_slots_fix{
     0x005055E3,
     [](auto& regs) {
         auto stack_frame = regs.esp + 0x10;
-        auto group_arg = AddrAsRef<int>(stack_frame + 0x8);
-        auto vol_scale_arg = AddrAsRef<float>(stack_frame + 0x10);
+        auto group_arg = addr_as_ref<int>(stack_frame + 0x8);
+        auto vol_scale_arg = addr_as_ref<float>(stack_frame + 0x10);
         // Try to free a slot
         int num_looping = 0;
         int num_long = 0;
@@ -274,14 +274,14 @@ CallHook<void()> cutscene_play_music_hook{
     0x0045BB85,
     []() {
         g_cutscene_bg_sound_sig = -1;
-        cutscene_play_music_hook.CallTarget();
+        cutscene_play_music_hook.call_target();
     },
 };
 
 FunHook<int(const char*, float )> snd_music_play_cutscene_hook{
     0x00505D70,
     [](const char *filename, float volume) {
-        g_cutscene_bg_sound_sig = snd_music_play_cutscene_hook.CallTarget(filename, volume);
+        g_cutscene_bg_sound_sig = snd_music_play_cutscene_hook.call_target(filename, volume);
         return g_cutscene_bg_sound_sig;
     },
 };
@@ -353,15 +353,15 @@ void RegisterSoundCommands()
 void ApplySoundPatches()
 {
     // Sound loop fix
-    WriteMem<u8>(0x00505D07 + 1, 0x00505D5B - (0x00505D07 + 2));
+    write_mem<u8>(0x00505D07 + 1, 0x00505D5B - (0x00505D07 + 2));
 
     // Cutscene skip support
-    cutscene_play_music_hook.Install();
-    snd_music_play_cutscene_hook.Install();
+    cutscene_play_music_hook.install();
+    snd_music_play_cutscene_hook.install();
 
     // Level sounds
     SetPlaySoundEventsVolumeScale(g_game_config.level_sound_volume);
-    snd_calculate_1d_from_3d_ambient_sound_hook.Install();
+    snd_calculate_1d_from_3d_ambient_sound_hook.install();
 
     AsmWriter(0x00505FE4).nop(2);
     // Fix ambient sound volume updating
@@ -372,21 +372,21 @@ void ApplySoundPatches()
         .push(asm_regs::eax);
 
     // Delete sounds with lowest volume when there is no free slot for a new sound
-    snd_ds_play_3d_no_free_slots_fix.Install();
-    snd_ds_play_no_free_slots_fix.Install();
-    snd_play_no_free_slots_fix.Install();
-    //WriteMem<u8>(0x005055AB, asm_opcodes::jmp_rel_short); // never free level sounds, uncomment to test
-    sound_instances_resize_patch.Install();
-    ds_channels_resize_patch.Install();
-    WriteMem<i8>(0x005053F5 + 1, rf::num_sound_channels); // SndInitSoundInstancesArray
-    WriteMem<i8>(0x005058D8 + 2, rf::num_sound_channels); // snd_change_3d
-    WriteMem<i8>(0x0050598A + 2, rf::num_sound_channels); // SndChange
-    WriteMem<i8>(0x00505A36 + 2, rf::num_sound_channels); // SndStopAllPausedSounds
-    WriteMem<i8>(0x00505A5A + 2, rf::num_sound_channels); // SndStop
-    WriteMem<i8>(0x00505C31 + 2, rf::num_sound_channels); // snd_is_playing
-    WriteMem<i8>(0x00521145 + 1, rf::num_sound_channels); // SndDsChannelsArrayCtor
-    WriteMem<i8>(0x0052163D + 2, rf::num_sound_channels); // SndDsInitAllChannels
-    WriteMem<i8>(0x0052191D + 2, rf::num_sound_channels); // SndDsCloseAllChannels
-    WriteMem<i8>(0x00522F4F + 2, rf::num_sound_channels); // snd_ds_get_channel
-    WriteMem<i8>(0x00522D1D + 2, rf::num_sound_channels); // SndDsCloseAllChannels2
+    snd_ds_play_3d_no_free_slots_fix.install();
+    snd_ds_play_no_free_slots_fix.install();
+    snd_play_no_free_slots_fix.install();
+    //write_mem<u8>(0x005055AB, asm_opcodes::jmp_rel_short); // never free level sounds, uncomment to test
+    sound_instances_resize_patch.install();
+    ds_channels_resize_patch.install();
+    write_mem<i8>(0x005053F5 + 1, rf::num_sound_channels); // SndInitSoundInstancesArray
+    write_mem<i8>(0x005058D8 + 2, rf::num_sound_channels); // snd_change_3d
+    write_mem<i8>(0x0050598A + 2, rf::num_sound_channels); // SndChange
+    write_mem<i8>(0x00505A36 + 2, rf::num_sound_channels); // SndStopAllPausedSounds
+    write_mem<i8>(0x00505A5A + 2, rf::num_sound_channels); // SndStop
+    write_mem<i8>(0x00505C31 + 2, rf::num_sound_channels); // snd_is_playing
+    write_mem<i8>(0x00521145 + 1, rf::num_sound_channels); // SndDsChannelsArrayCtor
+    write_mem<i8>(0x0052163D + 2, rf::num_sound_channels); // SndDsInitAllChannels
+    write_mem<i8>(0x0052191D + 2, rf::num_sound_channels); // SndDsCloseAllChannels
+    write_mem<i8>(0x00522F4F + 2, rf::num_sound_channels); // snd_ds_get_channel
+    write_mem<i8>(0x00522D1D + 2, rf::num_sound_channels); // SndDsCloseAllChannels2
 }

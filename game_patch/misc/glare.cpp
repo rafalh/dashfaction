@@ -122,7 +122,7 @@ FunHook<void(bool)> glare_render_all_flares_hook{
             }
         }
 
-        glare_render_all_flares_hook.CallTarget(reflections);
+        glare_render_all_flares_hook.call_target(reflections);
     },
 };
 
@@ -192,7 +192,7 @@ FunHook<void(rf::Glare*, int)> glare_render_corona_hook{
         // to speed up rendering
         auto& current_radius = glare->last_rendered_radius[player_idx];
         if (!rf::gr_cull_sphere(glare->pos, current_radius)) {
-            glare_render_corona_hook.CallTarget(glare, player_idx);
+            glare_render_corona_hook.call_target(glare, player_idx);
         }
     },
 };
@@ -200,11 +200,11 @@ FunHook<void(rf::Glare*, int)> glare_render_corona_hook{
 void ApplyGlarePatches()
 {
     // Support disabling glares and optimize rendering
-    glare_render_all_flares_hook.Install();
+    glare_render_all_flares_hook.install();
 
     // Handle collisions with clutter in glare rendering
-    glare_is_in_view_hook.Install();
+    glare_is_in_view_hook.install();
 
     // Corona rendering optimization
-    glare_render_corona_hook.Install();
+    glare_render_corona_hook.install();
 }

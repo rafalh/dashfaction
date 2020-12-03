@@ -31,17 +31,17 @@ struct PersonasTbl
     int panic_snd;
 };
 
-auto& personas = AddrAsRef<PersonasTbl[0x10]>(0x0062F998);
-auto& entity_state_names = AddrAsRef<String[17]>(0x0062F208);
-auto& entity_action_names = AddrAsRef<String[0x2D]>(0x005CAEE0);
-auto& object_list = AddrAsRef<Object>(0x0073D880);
-auto& target_obj_handle = AddrAsRef<int>(0x007C7190);
+auto& personas = addr_as_ref<PersonasTbl[0x10]>(0x0062F998);
+auto& entity_state_names = addr_as_ref<String[17]>(0x0062F208);
+auto& entity_action_names = addr_as_ref<String[0x2D]>(0x005CAEE0);
+auto& object_list = addr_as_ref<Object>(0x0073D880);
+auto& target_obj_handle = addr_as_ref<int>(0x007C7190);
 
-auto entity_is_playing_action_animation = AddrAsRef<bool(Entity* entity, int action_idx)>(0x00428D10);
-auto ai_get_attack_range = AddrAsRef<float(AiInfo& ai)>(0x004077A0);
-auto entity_set_next_state_anim = AddrAsRef<void(Entity* entity, int state, float transition_time)>(0x0042A580);
-auto entity_play_action_animation = AddrAsRef<void(Entity* entity, int action, float transition_time, bool hold_last_frame, bool with_sound)>(0x00428C90);
-auto vmesh_stop_all_actions = AddrAsRef<void(VMesh* vmesh)>(0x00503400);
+auto entity_is_playing_action_animation = addr_as_ref<bool(Entity* entity, int action_idx)>(0x00428D10);
+auto ai_get_attack_range = addr_as_ref<float(AiInfo& ai)>(0x004077A0);
+auto entity_set_next_state_anim = addr_as_ref<void(Entity* entity, int state, float transition_time)>(0x0042A580);
+auto entity_play_action_animation = addr_as_ref<void(Entity* entity, int action, float transition_time, bool hold_last_frame, bool with_sound)>(0x00428C90);
+auto vmesh_stop_all_actions = addr_as_ref<void(VMesh* vmesh)>(0x00503400);
 
 }
 
@@ -80,7 +80,7 @@ rf::Object* FindObjectInReticle()
         void* face;
     };
     auto& CollideLineSegmentLevel =
-        AddrAsRef<bool(rf::Vector3& p0, rf::Vector3& p1, rf::Object *ignore1, rf::Object *ignore2,
+        addr_as_ref<bool(rf::Vector3& p0, rf::Vector3& p1, rf::Object *ignore1, rf::Object *ignore2,
         LevelCollisionOut *out, float collision_radius, char use_mesh_collide, float bbox_size_factor)>(0x0049C690);
 
     if (!rf::local_player->cam)
@@ -199,7 +199,7 @@ ConsoleCommand2 dbg_spin_cmd{
 ConsoleCommand2 dbg_ai_pause_cmd{
     "d_ai_pause",
     []() {
-        auto& ai_pause = AddrAsRef<bool>(0x005AF46D);
+        auto& ai_pause = addr_as_ref<bool>(0x005AF46D);
         ai_pause = !ai_pause;
         rf::console_printf("AI pause: %d", ai_pause);
     },
@@ -306,7 +306,7 @@ void RenderObjDebugUI()
     rf::camera_get_pos(&cam_pos, rf::local_player->cam);
 
     auto entity = object->type == rf::OT_ENTITY ? reinterpret_cast<rf::Entity*>(object) : nullptr;
-    auto move_mode_names = AddrAsRef<const char*[16]>(0x00596384);
+    auto move_mode_names = addr_as_ref<const char*[16]>(0x00596384);
 
     dbg_hud.Print("name", object->name.c_str());
     dbg_hud.Printf("uid", "%d", object->uid);
@@ -315,7 +315,7 @@ void RenderObjDebugUI()
     dbg_hud.Printf("dist", "%.3f", (cam_pos - object->pos).len());
     dbg_hud.Printf("atck_dist", "%.0f", entity ? rf::ai_get_attack_range(entity->ai) : 0.0f);
     dbg_hud.Printf("life", "%.0f", object->life);
-    dbg_hud.Printf("room", "%d", object->room ? StructFieldRef<int>(object->room, 0x20) : -1);
+    dbg_hud.Printf("room", "%d", object->room ? struct_field_ref<int>(object->room, 0x20) : -1);
     dbg_hud.Print("pos", object->pos);
     if (entity) {
         dbg_hud.Print("eye_pos", entity->view_pos);

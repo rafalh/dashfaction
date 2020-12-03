@@ -14,7 +14,7 @@
 
 bool g_win32_console = false;
 
-static auto& key_process_event = AddrAsRef<void(int ScanCode, int KeyDown, int DeltaT)>(0x0051E6C0);
+static auto& key_process_event = addr_as_ref<void(int ScanCode, int KeyDown, int DeltaT)>(0x0051E6C0);
 
 void ResetConsoleCursorColumn(bool clear)
 {
@@ -47,7 +47,7 @@ void PrintCmdInputLine()
 BOOL WINAPI ConsoleCtrlHandler([[maybe_unused]] DWORD ctrl_type)
 {
     xlog::info("Quiting after Console CTRL");
-    static auto& close = AddrAsRef<int32_t>(0x01B0D758);
+    static auto& close = addr_as_ref<int32_t>(0x01B0D758);
     close = 1;
     return TRUE;
 }
@@ -164,7 +164,7 @@ FunHook<int()> key_get_hook{
     0x0051F000,
     []() {
         if (!rf::is_dedicated_server)
-            return key_get_hook.CallTarget();
+            return key_get_hook.call_target();
 
         HANDLE input_handle = GetStdHandle(STD_INPUT_HANDLE);
         INPUT_RECORD input_record;
@@ -179,7 +179,7 @@ FunHook<int()> key_get_hook{
             }
         }
 
-        return key_get_hook.CallTarget();
+        return key_get_hook.call_target();
     },
 };
 
@@ -187,11 +187,11 @@ void InitWin32ServerConsole()
 {
     g_win32_console = StringContainsIgnoreCase(GetCommandLineA(), "-win32-console");
     if (g_win32_console) {
-        os_init_window_server_hook.Install();
-        console_print_hook.Install();
-        console_draw_server_hook.Install();
-        key_get_hook.Install();
-        console_put_char_new_line_hook.Install();
+        os_init_window_server_hook.install();
+        console_print_hook.install();
+        console_draw_server_hook.install();
+        key_get_hook.install();
+        console_put_char_new_line_hook.install();
     }
 }
 

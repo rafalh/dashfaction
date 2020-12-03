@@ -19,7 +19,7 @@ protected:
     {}
 
 public:
-    void Install();
+    void install();
 };
 
 template<class T>
@@ -40,7 +40,7 @@ public:
         CallHookImpl(call_op_addr, reinterpret_cast<void*>(hook_fun_ptr))
     {}
 
-    R CallTarget(A... a) const
+    R call_target(A... a) const
     {
         auto target_fun = reinterpret_cast<FunType*>(m_target_fun_ptr);
         return target_fun(a...);
@@ -62,7 +62,7 @@ public:
         CallHookImpl(call_op_addr, reinterpret_cast<void*>(hook_fun_ptr))
     {}
 
-    R CallTarget(A... a) const
+    R call_target(A... a) const
     {
         auto target_fun = reinterpret_cast<FunType*>(m_target_fun_ptr);
         return target_fun(a...);
@@ -84,7 +84,7 @@ public:
         CallHookImpl(call_op_addr, reinterpret_cast<void*>(hook_fun_ptr))
     {}
 
-    R CallTarget(A... a) const
+    R call_target(A... a) const
     {
         auto target_fun = reinterpret_cast<FunType*>(m_target_fun_ptr);
         return target_fun(a...);

@@ -17,35 +17,35 @@ bool g_dbg_geometry_rendering_stats = false;
 bool g_dbg_static_lights = false;
 
 DebugFlagDesc g_debug_flags[] = {
-    {AddrAsRef<bool>(0x0062F3AA), "thruster"},
+    {addr_as_ref<bool>(0x0062F3AA), "thruster"},
     // debug string at the left-top corner
-    {AddrAsRef<bool>(0x0062FE19), "light"},
+    {addr_as_ref<bool>(0x0062FE19), "light"},
     {g_dbg_static_lights, "light2"},
-    {AddrAsRef<bool>(0x0062FE1A), "push_climb_reg"},
-    {AddrAsRef<bool>(0x0062FE1B), "geo_reg"},
-    {AddrAsRef<bool>(0x0062FE1C), "glass"},
-    {AddrAsRef<bool>(0x0062FE1D), "mover"},
-    {AddrAsRef<bool>(0x0062FE1E), "ignite"},
-    {AddrAsRef<bool>(0x0062FE1F), "movemode"},
-    {AddrAsRef<bool>(0x0062FE20), "perf"},
-    {AddrAsRef<bool>(0x0062FE21), "perfbar"},
-    {AddrAsRef<bool>(0x0064E39C), "waypoint"},
+    {addr_as_ref<bool>(0x0062FE1A), "push_climb_reg"},
+    {addr_as_ref<bool>(0x0062FE1B), "geo_reg"},
+    {addr_as_ref<bool>(0x0062FE1C), "glass"},
+    {addr_as_ref<bool>(0x0062FE1D), "mover"},
+    {addr_as_ref<bool>(0x0062FE1E), "ignite"},
+    {addr_as_ref<bool>(0x0062FE1F), "movemode"},
+    {addr_as_ref<bool>(0x0062FE20), "perf"},
+    {addr_as_ref<bool>(0x0062FE21), "perfbar"},
+    {addr_as_ref<bool>(0x0064E39C), "waypoint"},
     // network meter in left-top corner
-    {AddrAsRef<bool>(0x006FED24), "network", false, true},
-    {AddrAsRef<bool>(0x007B2758), "particlestats"},
+    {addr_as_ref<bool>(0x006FED24), "network", false, true},
+    {addr_as_ref<bool>(0x007B2758), "particlestats"},
     // debug strings at the left side of the screen
-    {AddrAsRef<bool>(0x007CAB59), "weapon"},
-    {AddrAsRef<bool>(0x00856500), "event"},
-    {AddrAsRef<bool>(0x0085683C), "trigger"},
-    {AddrAsRef<bool>(0x009BB5AC), "objrender"},
+    {addr_as_ref<bool>(0x007CAB59), "weapon"},
+    {addr_as_ref<bool>(0x00856500), "event"},
+    {addr_as_ref<bool>(0x0085683C), "trigger"},
+    {addr_as_ref<bool>(0x009BB5AC), "objrender"},
     {g_dbg_geometry_rendering_stats, "roomstats"},
     // geometry rendering
-    {AddrAsRef<bool>(0x009BB594), "trans", true}, // transparent_faces
-    {AddrAsRef<bool>(0x009BB598), "room", true}, // show_rooms
-    {AddrAsRef<bool>(0x009BB59C), "portal", true}, // show_portals
-    {AddrAsRef<bool>(0x009BB5A4), "lightmap", true}, // show_lightmaps
-    {AddrAsRef<bool>(0x009BB5A8), "nolightmap", true}, // fullbright
-    {AddrAsRef<bool>(0x009BB5B0), "show_invisible_faces", true},
+    {addr_as_ref<bool>(0x009BB594), "trans", true}, // transparent_faces
+    {addr_as_ref<bool>(0x009BB598), "room", true}, // show_rooms
+    {addr_as_ref<bool>(0x009BB59C), "portal", true}, // show_portals
+    {addr_as_ref<bool>(0x009BB5A4), "lightmap", true}, // show_lightmaps
+    {addr_as_ref<bool>(0x009BB5A8), "nolightmap", true}, // fullbright
+    {addr_as_ref<bool>(0x009BB5B0), "show_invisible_faces", true},
 };
 
 ConsoleCommand2 debug_cmd{
@@ -97,8 +97,8 @@ CodeInjection MpInit_disable_debug_flags_patch{
 
 void DebugCmdRender()
 {
-    const auto dbg_waypoints = AddrAsRef<void()>(0x00468F00);
-    const auto dbg_internal_lights = AddrAsRef<void()>(0x004DB830);
+    const auto dbg_waypoints = addr_as_ref<void()>(0x00468F00);
+    const auto dbg_internal_lights = addr_as_ref<void()>(0x004DB830);
 
     dbg_waypoints();
     if (g_dbg_static_lights)
@@ -107,8 +107,8 @@ void DebugCmdRender()
 
 void DebugCmdRenderUI()
 {
-    const auto dbg_rendering_stats = AddrAsRef<void()>(0x004D36B0);
-    const auto dbg_particle_stats = AddrAsRef<void()>(0x004964E0);
+    const auto dbg_rendering_stats = addr_as_ref<void()>(0x004D36B0);
+    const auto dbg_particle_stats = addr_as_ref<void()>(0x004964E0);
     if (g_dbg_geometry_rendering_stats)
         dbg_rendering_stats();
     dbg_particle_stats();
@@ -117,7 +117,7 @@ void DebugCmdRenderUI()
 void DebugCmdApplyPatches()
 {
     // Reset debug flags when entering multiplayer
-    MpInit_disable_debug_flags_patch.Install();
+    MpInit_disable_debug_flags_patch.install();
 }
 
 void DebugCmdInit()

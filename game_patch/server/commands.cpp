@@ -6,7 +6,7 @@
 
 void ExtendRoundTime(int minutes)
 {
-    auto& level_time = AddrAsRef<float>(0x006460F0);
+    auto& level_time = addr_as_ref<float>(0x006460F0);
     level_time -= minutes * 60.0f;
 }
 

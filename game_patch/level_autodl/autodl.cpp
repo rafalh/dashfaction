@@ -353,7 +353,7 @@ CodeInjection g_join_failed_injection{
             return;
         }
 
-        auto& level_filename = AddrAsRef<rf::String>(0x00646074);
+        auto& level_filename = addr_as_ref<rf::String>(0x00646074);
         xlog::trace("Preparing level download %s", level_filename.c_str());
         if (!TryToDownloadLevel(level_filename)) {
             return;
@@ -392,7 +392,7 @@ ConsoleCommand2 download_level_cmd{
 
 void InitAutodownloader()
 {
-    g_join_failed_injection.Install();
+    g_join_failed_injection.install();
     download_level_cmd.Register();
 }
 

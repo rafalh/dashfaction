@@ -10,7 +10,7 @@ FunHook<void()> gr_flip_hook{
     []() {
         // Resetting detector is needed here to handle Bink videos properly
         g_watch_dog_timer.Restart();
-        gr_flip_hook.CallTarget();
+        gr_flip_hook.call_target();
     },
 };
 
@@ -26,7 +26,7 @@ ConsoleCommand2 hang_cmd{
 
 void DebugUnresponsiveApplyPatches()
 {
-    gr_flip_hook.Install();
+    gr_flip_hook.install();
 }
 
 void DebugUnresponsiveInit()

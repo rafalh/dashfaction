@@ -53,7 +53,7 @@ public:
 
     void install() override
     {
-        m_enter_patch->Install();
+        m_enter_patch->install();
     }
 
 private:
@@ -181,8 +181,8 @@ public:
 
     virtual void install() override
     {
-        m_enter_inject->Install();
-        m_leave_inject->Install();
+        m_enter_inject->install();
+        m_leave_inject->install();
     }
 
 private:
@@ -202,7 +202,7 @@ public:
     void install() override
     {
 #ifdef DEBUG
-        auto opcode = AddrAsRef<u8>(get_addr());
+        auto opcode = addr_as_ref<u8>(get_addr());
         assert(opcode == asm_opcodes::call_rel_long || opcode == asm_opcodes::jmp_rel_long);
 #endif
         AddrRangeProfiler::install();
@@ -336,7 +336,7 @@ void ProfilerInit()
 void ProfilerDrawUI()
 {
     if (g_profiler_visible) {
-        //AddrAsRef<bool>(0x00596144) = 0;
+        //addr_as_ref<bool>(0x00596144) = 0;
         DebugNameValueBox dbg_box{10, 100};
         dbg_box.Section("Profilers:");
         for (auto& p : g_profilers) {

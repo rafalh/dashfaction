@@ -23,7 +23,7 @@ FunHook<void()> multi_level_init_hook{
         for (auto& player : player_list) {
             KillInitPlayer(&player);
         }
-        multi_level_init_hook.CallTarget();
+        multi_level_init_hook.call_target();
     },
 };
 
@@ -117,12 +117,12 @@ FunHook<void(rf::Entity*)> entity_on_death_hook{
     [](rf::Entity* entity) {
         // Reset fpgun animation when player dies
         if (rf::local_player && entity->handle == rf::local_player->entity_handle && rf::local_player->weapon_mesh_handle) {
-            auto VMeshStopAllActions = AddrAsRef<void(rf::VMesh*)>(0x00503400);
-            auto FpgunStopActionSound = AddrAsRef<void(rf::Player*)>(0x004A9490);
+            auto VMeshStopAllActions = addr_as_ref<void(rf::VMesh*)>(0x00503400);
+            auto FpgunStopActionSound = addr_as_ref<void(rf::Player*)>(0x004A9490);
             VMeshStopAllActions(rf::local_player->weapon_mesh_handle);
             FpgunStopActionSound(rf::local_player);
         }
-        entity_on_death_hook.CallTarget(entity);
+        entity_on_death_hook.call_target(entity);
     },
 };
 
@@ -138,9 +138,9 @@ void InitKill()
         .jmp(0x00420B03);
 
     // Change player stats structure
-    WriteMem<i8>(0x004A33B5 + 1, sizeof(PlayerStatsNew));
-    multi_level_init_hook.Install();
+    write_mem<i8>(0x004A33B5 + 1, sizeof(PlayerStatsNew));
+    multi_level_init_hook.install();
 
     // Reset fpgun animation when player dies
-    entity_on_death_hook.Install();
+    entity_on_death_hook.install();
 }

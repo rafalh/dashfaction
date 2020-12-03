@@ -56,7 +56,7 @@ FunHook<void()> hud_render_for_multi_hook{
     0x0046ECB0,
     []() {
         if (!rf::is_hud_hidden) {
-            hud_render_for_multi_hook.CallTarget();
+            hud_render_for_multi_hook.call_target();
         }
     },
 };
@@ -148,7 +148,7 @@ FunHook<void(rf::Entity*, int, int, bool)> HudRenderAmmo_hook{
     0x0043A510,
     [](rf::Entity *entity, int weapon_type, int offset_y, bool is_inactive) {
         offset_y = static_cast<int>(offset_y * g_hud_ammo_scale);
-        HudRenderAmmo_hook.CallTarget(entity, weapon_type, offset_y, is_inactive);
+        HudRenderAmmo_hook.call_target(entity, weapon_type, offset_y, is_inactive);
     },
 };
 
@@ -187,7 +187,7 @@ FunHook<void()> RenderLevelInfo_hook{
     0x00477180,
     []() {
         RunWithDefaultFont(HudGetDefaultFont(), [&]() {
-            RenderLevelInfo_hook.CallTarget();
+            RenderLevelInfo_hook.call_target();
         });
     },
 };
@@ -239,7 +239,7 @@ void SetBigHud(bool is_big)
     SetBigCountdownCounter(is_big);
 
     // TODO: Message Log - Note: it remembers text height in save files so method of recalculation is needed
-    //WriteMem<i8>(0x004553DB + 1, is_big ? 127 : 70);
+    //write_mem<i8>(0x004553DB + 1, is_big ? 127 : 70);
 }
 
 ConsoleCommand2 bighud_cmd{
@@ -454,13 +454,13 @@ CallHook<void(int, int, int, int, int, int, int, int, int, char, char, int)> gr_
         dst_h = static_cast<int>(src_h * scale_y);
         dst_x = (rf::gr_screen_width() - dst_w) / 2;
         dst_y = (rf::gr_screen_height() - dst_h) / 2;
-        gr_bitmap_stretched_message_log_hook.CallTarget(bm_handle, dst_x, dst_y, dst_w, dst_h,
+        gr_bitmap_stretched_message_log_hook.call_target(bm_handle, dst_x, dst_y, dst_w, dst_h,
             src_x, src_y, src_w, src_h, unk_u, unk_v, mode);
 
-        auto& message_log_entries_clip_h = AddrAsRef<int>(0x006425D4);
-        auto& message_log_entries_clip_y = AddrAsRef<int>(0x006425D8);
-        auto& message_log_entries_clip_w = AddrAsRef<int>(0x006425DC);
-        auto& message_log_entries_clip_x = AddrAsRef<int>(0x006425E0);
+        auto& message_log_entries_clip_h = addr_as_ref<int>(0x006425D4);
+        auto& message_log_entries_clip_y = addr_as_ref<int>(0x006425D8);
+        auto& message_log_entries_clip_w = addr_as_ref<int>(0x006425DC);
+        auto& message_log_entries_clip_x = addr_as_ref<int>(0x006425E0);
 
         message_log_entries_clip_x = static_cast<int>(dst_x + scale_x * 30);
         message_log_entries_clip_y = static_cast<int>(dst_y + scale_y * 41);
@@ -472,7 +472,7 @@ CallHook<void(int, int, int, int, int, int, int, int, int, char, char, int)> gr_
 FunHook<void()> HudInit_hook{
     0x00437AB0,
     []() {
-        HudInit_hook.CallTarget();
+        HudInit_hook.call_target();
         // Init big HUD
         if (!rf::is_dedicated_server) {
             SetBigHud(g_game_config.big_hud);
@@ -491,14 +491,14 @@ CallHook HudRenderStatusMsg_GrGetFontHeight_hook{
 void ApplyHudPatches()
 {
     // Fix HUD on not supported resolutions
-    HudSetupPositions_hook.Install();
+    HudSetupPositions_hook.install();
 
     // Command for hidding the HUD
-    hud_render_for_multi_hook.Install();
+    hud_render_for_multi_hook.install();
     hud_cmd.Register();
 
     // Add some init code
-    HudInit_hook.Install();
+    HudInit_hook.install();
 
     // Other commands
     bighud_cmd.Register();
@@ -508,18 +508,18 @@ void ApplyHudPatches()
 #endif
 
     // Fix message log rendering in resolutions with ratio different than 4:3
-    gr_bitmap_stretched_message_log_hook.Install();
+    gr_bitmap_stretched_message_log_hook.install();
 
     // Big HUD support
-    HudRenderAmmo_GrBitmap_hook.Install();
-    HudRenderAmmo_hook.Install();
-    RenderReticle_GrBitmap_hook.Install();
-    HudRenderStatusMsg_GrGetFontHeight_hook.Install();
-    HudRenderPowerUps_GrBitmap_hook.Install();
-    RenderLevelInfo_hook.Install();
+    HudRenderAmmo_GrBitmap_hook.install();
+    HudRenderAmmo_hook.install();
+    RenderReticle_GrBitmap_hook.install();
+    HudRenderStatusMsg_GrGetFontHeight_hook.install();
+    HudRenderPowerUps_GrBitmap_hook.install();
+    RenderLevelInfo_hook.install();
 
-    WriteMemPtr(0x004780D2 + 1, &g_target_player_name_font);
-    WriteMemPtr(0x004780FC + 2, &g_target_player_name_font);
+    write_mem_ptr(0x004780D2 + 1, &g_target_player_name_font);
+    write_mem_ptr(0x004780FC + 2, &g_target_player_name_font);
 
     // Patches from other files
     InstallHealthArmorHudPatches();

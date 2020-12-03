@@ -50,7 +50,7 @@ DcCommandAlias find_map_cmd{
     find_level_cmd,
 };
 
-auto& level_cmd = AddrAsRef<rf::ConsoleCommand>(0x00637078);
+auto& level_cmd = addr_as_ref<rf::ConsoleCommand>(0x00637078);
 DcCommandAlias map_cmd{
     "map",
     level_cmd,

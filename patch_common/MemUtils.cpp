@@ -3,7 +3,7 @@
 #include <xlog/xlog.h>
 #include <cstring>
 
-void WriteMem(unsigned addr, const void* data, unsigned size)
+void write_mem(unsigned addr, const void* data, unsigned size)
 {
     DWORD old_protect;
 
@@ -14,7 +14,7 @@ void WriteMem(unsigned addr, const void* data, unsigned size)
     VirtualProtect(reinterpret_cast<void*>(addr), size, old_protect, NULL);
 }
 
-void UnprotectMem(void* ptr, unsigned len)
+void unprotect_mem(void* ptr, unsigned len)
 {
     DWORD old_protect;
     if (!VirtualProtect(ptr, len, PAGE_EXECUTE_READWRITE, &old_protect)) {

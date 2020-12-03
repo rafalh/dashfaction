@@ -16,20 +16,20 @@ namespace rf
     };
 
     constexpr int num_hud_points = 48;
-    static auto& hud_points_640 = AddrAsRef<HudPoint[num_hud_points]>(0x00637868);
-    static auto& hud_points_800 = AddrAsRef<HudPoint[num_hud_points]>(0x006373D0);
-    static auto& hud_points_1024 = AddrAsRef<HudPoint[num_hud_points]>(0x00637230);
-    static auto& hud_points_1280 = AddrAsRef<HudPoint[num_hud_points]>(0x00637560);
-    static auto& hud_points = AddrAsRef<HudPoint[num_hud_points]>(0x006376E8);
+    static auto& hud_points_640 = addr_as_ref<HudPoint[num_hud_points]>(0x00637868);
+    static auto& hud_points_800 = addr_as_ref<HudPoint[num_hud_points]>(0x006373D0);
+    static auto& hud_points_1024 = addr_as_ref<HudPoint[num_hud_points]>(0x00637230);
+    static auto& hud_points_1280 = addr_as_ref<HudPoint[num_hud_points]>(0x00637560);
+    static auto& hud_points = addr_as_ref<HudPoint[num_hud_points]>(0x006376E8);
 
-    static auto& hud_ammo_font = AddrAsRef<int>(0x00596F64);
-    static auto& hud_health_enviro_font = AddrAsRef<int>(0x00596F68);
-    static auto& hud_msg_font_num = AddrAsRef<int>(0x005A1350);
-    static auto& hud_text_font_num = AddrAsRef<int>(0x005A1358);
+    static auto& hud_ammo_font = addr_as_ref<int>(0x00596F64);
+    static auto& hud_health_enviro_font = addr_as_ref<int>(0x00596F68);
+    static auto& hud_msg_font_num = addr_as_ref<int>(0x005A1350);
+    static auto& hud_text_font_num = addr_as_ref<int>(0x005A1358);
 
-    static auto& is_hud_hidden = AddrAsRef<bool>(0x006379F0);
-    static auto& scoreboard_visible = AddrAsRef<bool>(0x006A1448);
-    static auto& scoreboard_big_font = AddrAsRef<int>(0x006C74C0);
+    static auto& is_hud_hidden = addr_as_ref<bool>(0x006379F0);
+    static auto& scoreboard_visible = addr_as_ref<bool>(0x006A1448);
+    static auto& scoreboard_big_font = addr_as_ref<int>(0x006C74C0);
 
     enum HudItem
     {
@@ -83,18 +83,18 @@ namespace rf
         hud_driller_value                             = 47,
     };
 
-    static auto& hud_draw_damage_indicators = AddrAsRef<void(Player*)>(0x00439CA0);
+    static auto& hud_draw_damage_indicators = addr_as_ref<void(Player*)>(0x00439CA0);
 
-    static auto& hud_full_color = AddrAsRef<Color>(0x006373B8);
-    static auto& hud_mid_color = AddrAsRef<Color>(0x006373BC);
-    static auto& hud_low_color = AddrAsRef<Color>(0x006373C0);
-    static auto& hud_body_color = AddrAsRef<Color>(0x00637228);
-    static auto& hud_enviro_bitmaps = AddrAsRef<int[11]>(0x00639078);
-    static auto& hud_health_bitmaps = AddrAsRef<int[11]>(0x006390A4);
-    static auto& hud_health_jeep_bmh = AddrAsRef<int>(0x005974D0);
-    static auto& hud_health_driller_bmh = AddrAsRef<int>(0x005974D4);
-    static auto& hud_health_veh_frame_bmh = AddrAsRef<int>(0x005974D8);
-    static auto& hud_body_indicator_bmh = AddrAsRef<int>(0x005974CC);
+    static auto& hud_full_color = addr_as_ref<Color>(0x006373B8);
+    static auto& hud_mid_color = addr_as_ref<Color>(0x006373BC);
+    static auto& hud_low_color = addr_as_ref<Color>(0x006373C0);
+    static auto& hud_body_color = addr_as_ref<Color>(0x00637228);
+    static auto& hud_enviro_bitmaps = addr_as_ref<int[11]>(0x00639078);
+    static auto& hud_health_bitmaps = addr_as_ref<int[11]>(0x006390A4);
+    static auto& hud_health_jeep_bmh = addr_as_ref<int>(0x005974D0);
+    static auto& hud_health_driller_bmh = addr_as_ref<int>(0x005974D4);
+    static auto& hud_health_veh_frame_bmh = addr_as_ref<int>(0x005974D8);
+    static auto& hud_body_indicator_bmh = addr_as_ref<int>(0x005974CC);
 
     struct ChatMsg
     {
@@ -103,9 +103,9 @@ namespace rf
         int color_id;
     };
 
-    static auto& chat_fully_visible_timer = AddrAsRef<Timestamp>(0x006C9C7C);
-    static auto& chat_fade_out_timer = AddrAsRef<Timestamp>(0x006C9C88);
-    static auto& chat_messages = AddrAsRef<ChatMsg[8]>(0x006C9C98);
+    static auto& chat_fully_visible_timer = addr_as_ref<Timestamp>(0x006C9C7C);
+    static auto& chat_fade_out_timer = addr_as_ref<Timestamp>(0x006C9C88);
+    static auto& chat_messages = addr_as_ref<ChatMsg[8]>(0x006C9C98);
 
     struct HudPersonaInfo
     {
@@ -119,14 +119,14 @@ namespace rf
         Timestamp fully_visible_timestamp;
     };
 
-    static auto& hud_persona_alpha = AddrAsRef<float>(0x00597290);
-    static auto& hud_persona_target_alpha = AddrAsRef<float>(0x0059728C);
-    static auto& hud_persona_current_idx = AddrAsRef<int>(0x006384C4);
-    static auto& hud_default_color = AddrAsRef<Color>(0x00637554);
-    static auto& hud_msg_bg_color = AddrAsRef<Color>(0x006379EC);
-    static auto& hud_msg_color = AddrAsRef<Color>(0x006373B4);
-    static auto& hud_personas_info = AddrAsRef<HudPersonaInfo[10]>(0x006384D0);
-    static auto& hud_persona_image_gr_mode = AddrAsRef<GrMode>(0x01775B18);
+    static auto& hud_persona_alpha = addr_as_ref<float>(0x00597290);
+    static auto& hud_persona_target_alpha = addr_as_ref<float>(0x0059728C);
+    static auto& hud_persona_current_idx = addr_as_ref<int>(0x006384C4);
+    static auto& hud_default_color = addr_as_ref<Color>(0x00637554);
+    static auto& hud_msg_bg_color = addr_as_ref<Color>(0x006379EC);
+    static auto& hud_msg_color = addr_as_ref<Color>(0x006373B4);
+    static auto& hud_personas_info = addr_as_ref<HudPersonaInfo[10]>(0x006384D0);
+    static auto& hud_persona_image_gr_mode = addr_as_ref<GrMode>(0x01775B18);
 
     struct WeaponCycle
     {
@@ -136,9 +136,9 @@ namespace rf
         int category;
     };
 
-    static auto& hud_close_weapon_cycle_timer = AddrAsRef<Timestamp>(0x007C73B8);
-    static auto& hud_weapon_cycle = AddrAsRef<WeaponCycle[32]>(0x007C71B0);
-    static auto& hud_render_weapon_cycle = AddrAsRef<bool>(0x007C7640);
-    static auto& hud_weapon_display_off_foley_snd = AddrAsRef<int>(0x007C75D0);
-    static auto& hud_weapon_cycle_current_idx = AddrAsRef<int>(0x007C71A8);
+    static auto& hud_close_weapon_cycle_timer = addr_as_ref<Timestamp>(0x007C73B8);
+    static auto& hud_weapon_cycle = addr_as_ref<WeaponCycle[32]>(0x007C71B0);
+    static auto& hud_render_weapon_cycle = addr_as_ref<bool>(0x007C7640);
+    static auto& hud_weapon_display_off_foley_snd = addr_as_ref<int>(0x007C75D0);
+    static auto& hud_weapon_cycle_current_idx = addr_as_ref<int>(0x007C71A8);
 }

@@ -243,70 +243,70 @@ namespace rf
     };
 
 #if defined(DIRECT3D_VERSION)
-    static auto& gr_d3d = AddrAsRef<IDirect3D8*>(0x01CFCBE0);
-    static auto& gr_d3d_device = AddrAsRef<IDirect3DDevice8*>(0x01CFCBE4);
-    static auto& gr_d3d_pp = AddrAsRef<D3DPRESENT_PARAMETERS>(0x01CFCA18);
+    static auto& gr_d3d = addr_as_ref<IDirect3D8*>(0x01CFCBE0);
+    static auto& gr_d3d_device = addr_as_ref<IDirect3DDevice8*>(0x01CFCBE4);
+    static auto& gr_d3d_pp = addr_as_ref<D3DPRESENT_PARAMETERS>(0x01CFCA18);
 #elif defined(HRESULT)
-    static auto& gr_d3d = AddrAsRef<IUnknown*>(0x01CFCBE0);
-    static auto& gr_d3d_device = AddrAsRef<IUnknown*>(0x01CFCBE4);
+    static auto& gr_d3d = addr_as_ref<IUnknown*>(0x01CFCBE0);
+    static auto& gr_d3d_device = addr_as_ref<IUnknown*>(0x01CFCBE4);
 #endif
-    static auto& gr_adapter_idx = AddrAsRef<uint32_t>(0x01CFCC34);
-    static auto& gr_screen = AddrAsRef<GrScreen>(0x017C7BC0);
-    static auto& gr_gamma_ramp = AddrAsRef<uint32_t[256]>(0x017C7C68);
+    static auto& gr_adapter_idx = addr_as_ref<uint32_t>(0x01CFCC34);
+    static auto& gr_screen = addr_as_ref<GrScreen>(0x017C7BC0);
+    static auto& gr_gamma_ramp = addr_as_ref<uint32_t[256]>(0x017C7C68);
 
-    static auto& gr_bitmap_clamp_mode = AddrAsRef<GrMode>(0x017756BC);
-    static auto& gr_rect_mode = AddrAsRef<GrMode>(0x017756C0);
-    static auto& gr_bitmap_wrap_mode = AddrAsRef<GrMode>(0x017756DC);
-    static auto& gr_line_mode = AddrAsRef<GrMode>(0x01775B00);
-    static auto& gr_string_mode = AddrAsRef<GrMode>(0x017C7C5C);
+    static auto& gr_bitmap_clamp_mode = addr_as_ref<GrMode>(0x017756BC);
+    static auto& gr_rect_mode = addr_as_ref<GrMode>(0x017756C0);
+    static auto& gr_bitmap_wrap_mode = addr_as_ref<GrMode>(0x017756DC);
+    static auto& gr_line_mode = addr_as_ref<GrMode>(0x01775B00);
+    static auto& gr_string_mode = addr_as_ref<GrMode>(0x017C7C5C);
 
-    static auto& current_fps = AddrAsRef<float>(0x005A4018);
-    static auto& frametime = AddrAsRef<float>(0x005A4014);
-    static auto& framerate_min = AddrAsRef<float>(0x005A4024);
+    static auto& current_fps = addr_as_ref<float>(0x005A4018);
+    static auto& frametime = addr_as_ref<float>(0x005A4014);
+    static auto& framerate_min = addr_as_ref<float>(0x005A4024);
 
-    static auto& gr_d3d_buffers_locked = AddrAsRef<bool>(0x01E652ED);
-    static auto& gr_d3d_in_optimized_drawing_proc = AddrAsRef<bool>(0x01E652EE);
-    static auto& gr_d3d_num_vertices = AddrAsRef<int>(0x01E652F0);
-    static auto& gr_d3d_num_indices = AddrAsRef<int>(0x01E652F4);
-    static auto& gr_d3d_max_hw_vertex = AddrAsRef<int>(0x01818348);
-    static auto& gr_d3d_max_hw_index = AddrAsRef<int>(0x0181834C);
-    static auto& gr_d3d_min_hw_vertex = AddrAsRef<int>(0x01E652F8);
-    static auto& gr_d3d_min_hw_index = AddrAsRef<int>(0x01E652FC);
+    static auto& gr_d3d_buffers_locked = addr_as_ref<bool>(0x01E652ED);
+    static auto& gr_d3d_in_optimized_drawing_proc = addr_as_ref<bool>(0x01E652EE);
+    static auto& gr_d3d_num_vertices = addr_as_ref<int>(0x01E652F0);
+    static auto& gr_d3d_num_indices = addr_as_ref<int>(0x01E652F4);
+    static auto& gr_d3d_max_hw_vertex = addr_as_ref<int>(0x01818348);
+    static auto& gr_d3d_max_hw_index = addr_as_ref<int>(0x0181834C);
+    static auto& gr_d3d_min_hw_vertex = addr_as_ref<int>(0x01E652F8);
+    static auto& gr_d3d_min_hw_index = addr_as_ref<int>(0x01E652FC);
 #ifdef DIRECT3D_VERSION
-    static auto& gr_d3d_primitive_type = AddrAsRef<D3DPRIMITIVETYPE>(0x01D862A8);
+    static auto& gr_d3d_primitive_type = addr_as_ref<D3DPRIMITIVETYPE>(0x01D862A8);
 #endif
 
-    static auto& gr_scale_vec = AddrAsRef<Vector3>(0x01818B48);
-    static auto& gr_view_matrix = AddrAsRef<Matrix3>(0x018186C8);
-    static auto& gr_default_wfar = AddrAsRef<float>(0x00596140);
+    static auto& gr_scale_vec = addr_as_ref<Vector3>(0x01818B48);
+    static auto& gr_view_matrix = addr_as_ref<Matrix3>(0x018186C8);
+    static auto& gr_default_wfar = addr_as_ref<float>(0x00596140);
 #ifdef DIRECT3D_VERSION
-    static auto& gr_d3d_device_caps = AddrAsRef<D3DCAPS8>(0x01CFCAC8);
+    static auto& gr_d3d_device_caps = addr_as_ref<D3DCAPS8>(0x01CFCAC8);
 #endif
-    static auto& gr_d3d_textures = AddrAsRef<GrD3DTexture*>(0x01E65338);
+    static auto& gr_d3d_textures = addr_as_ref<GrD3DTexture*>(0x01E65338);
 
 
     static constexpr int max_fonts = 12;
-    static auto& gr_fonts = AddrAsRef<GrFont[max_fonts]>(0x01886C90);
-    static auto& gr_num_fonts = AddrAsRef<int>(0x018871A0);
+    static auto& gr_fonts = addr_as_ref<GrFont[max_fonts]>(0x01886C90);
+    static auto& gr_num_fonts = addr_as_ref<int>(0x018871A0);
 
-    static auto& gr_screen_width = AddrAsRef<int()>(0x0050C640);
-    static auto& gr_screen_height = AddrAsRef<int()>(0x0050C650);
-    static auto& gr_clip_width = AddrAsRef<int()>(0x0050CDB0);
-    static auto& gr_clip_height = AddrAsRef<int()>(0x0050CDC0);
-    static auto& gr_set_color_rgba = AddrAsRef<void(unsigned r, unsigned g, unsigned b, unsigned a)>(0x0050CF80);
-    static auto& gr_set_color = AddrAsRef<void(const Color& clr)>(0x0050D000);
-    static auto& gr_set_alpha = AddrAsRef<void(int a)>(0x0050D030);
-    static auto& gr_read_backbuffer = AddrAsRef<int(int x, int y, int w, int h, void* buffer)>(0x0050DFF0);
-    static auto& gr_d3d_flush_buffers = AddrAsRef<void()>(0x00559D90);
-    static auto& gr_clear = AddrAsRef<void()>(0x0050CDF0);
-    static auto& gr_cull_sphere = AddrAsRef<bool(Vector3& pos, float radius)>(0x005186A0);
-    static auto& gr_set_texture_mip_filter = AddrAsRef<void(bool linear)>(0x0050E830);
-    static auto& gr_lock = AddrAsRef<bool(int bm_handle, int section, GrLockInfo* lock, GrLockMode mode)>(0x0050E2E0);
-    static auto& gr_unlock = AddrAsRef<void(GrLockInfo* lock)>(0x0050E310);
-    static auto& gr_set_clip = AddrAsRef<void(int x, int y, int w, int h)>(0x0050CC60);
-    static auto& gr_get_clip = AddrAsRef<void(int* x, int* y, int* w, int* h)>(0x0050CD80);
-    static auto& gr_preload_bitmap = AddrAsRef<int(int bm_handle)>(0x0050CE00);
-    static auto& gr_tcache_add_ref = AddrAsRef<void(int bm_handle)>(0x0050E850);
+    static auto& gr_screen_width = addr_as_ref<int()>(0x0050C640);
+    static auto& gr_screen_height = addr_as_ref<int()>(0x0050C650);
+    static auto& gr_clip_width = addr_as_ref<int()>(0x0050CDB0);
+    static auto& gr_clip_height = addr_as_ref<int()>(0x0050CDC0);
+    static auto& gr_set_color_rgba = addr_as_ref<void(unsigned r, unsigned g, unsigned b, unsigned a)>(0x0050CF80);
+    static auto& gr_set_color = addr_as_ref<void(const Color& clr)>(0x0050D000);
+    static auto& gr_set_alpha = addr_as_ref<void(int a)>(0x0050D030);
+    static auto& gr_read_backbuffer = addr_as_ref<int(int x, int y, int w, int h, void* buffer)>(0x0050DFF0);
+    static auto& gr_d3d_flush_buffers = addr_as_ref<void()>(0x00559D90);
+    static auto& gr_clear = addr_as_ref<void()>(0x0050CDF0);
+    static auto& gr_cull_sphere = addr_as_ref<bool(Vector3& pos, float radius)>(0x005186A0);
+    static auto& gr_set_texture_mip_filter = addr_as_ref<void(bool linear)>(0x0050E830);
+    static auto& gr_lock = addr_as_ref<bool(int bm_handle, int section, GrLockInfo* lock, GrLockMode mode)>(0x0050E2E0);
+    static auto& gr_unlock = addr_as_ref<void(GrLockInfo* lock)>(0x0050E310);
+    static auto& gr_set_clip = addr_as_ref<void(int x, int y, int w, int h)>(0x0050CC60);
+    static auto& gr_get_clip = addr_as_ref<void(int* x, int* y, int* w, int* h)>(0x0050CD80);
+    static auto& gr_preload_bitmap = addr_as_ref<int(int bm_handle)>(0x0050CE00);
+    static auto& gr_tcache_add_ref = addr_as_ref<void(int bm_handle)>(0x0050E850);
 
     static constexpr int center_x = 0x8000; // supported by gr_string
 
@@ -355,7 +355,7 @@ namespace rf
         return AddrCaller{0x0051F4D0}.c_call<int>(font_num);
     }
 
-    static auto& gr_split_str = AddrAsRef<int(int *len_array, int *offset_array, char *s, int max_w, int max_lines, char unk_char, int font_num)>(0x00520810);
-    static auto& gr_get_string_size = AddrAsRef<void(int *out_w, int *out_h, const char *s, int s_len, int font_num)>(0x0051F530);
-    static auto& gr_set_default_font = AddrAsRef<bool(const char *file_name)>(0x0051FE20);
+    static auto& gr_split_str = addr_as_ref<int(int *len_array, int *offset_array, char *s, int max_w, int max_lines, char unk_char, int font_num)>(0x00520810);
+    static auto& gr_get_string_size = addr_as_ref<void(int *out_w, int *out_h, const char *s, int s_len, int font_num)>(0x0051F530);
+    static auto& gr_set_default_font = addr_as_ref<bool(const char *file_name)>(0x0051FE20);
 }

@@ -262,7 +262,7 @@ namespace rf
     };
     static_assert(sizeof(LevelInfo) == 0x154);
 
-    static auto& g_cache_clear = AddrAsRef<void()>(0x004F0B90);
+    static auto& g_cache_clear = addr_as_ref<void()>(0x004F0B90);
 
-    static auto& level = AddrAsRef<LevelInfo>(0x00645FD8);
+    static auto& level = addr_as_ref<LevelInfo>(0x00645FD8);
 }

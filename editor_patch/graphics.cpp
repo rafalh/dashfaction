@@ -59,13 +59,13 @@ namespace red
     struct Vector3;
     struct Matrix3;
 
-    auto& gr_d3d_buffers_locked = AddrAsRef<bool>(0x0183930D);
-    auto& gr_d3d_primitive_type = AddrAsRef<D3DPRIMITIVETYPE>(0x0175A2C8);
-    auto& gr_d3d_max_hw_vertex = AddrAsRef<int>(0x01621FA8);
-    auto& gr_d3d_max_hw_index = AddrAsRef<int>(0x01621FAC);
-    auto& gr_d3d_num_vertices = AddrAsRef<int>(0x01839310);
-    auto& gr_d3d_num_indices = AddrAsRef<int>(0x01839314);
-    auto& gr_screen = AddrAsRef<GrScreen>(0x014CF748);
+    auto& gr_d3d_buffers_locked = addr_as_ref<bool>(0x0183930D);
+    auto& gr_d3d_primitive_type = addr_as_ref<D3DPRIMITIVETYPE>(0x0175A2C8);
+    auto& gr_d3d_max_hw_vertex = addr_as_ref<int>(0x01621FA8);
+    auto& gr_d3d_max_hw_index = addr_as_ref<int>(0x01621FAC);
+    auto& gr_d3d_num_vertices = addr_as_ref<int>(0x01839310);
+    auto& gr_d3d_num_indices = addr_as_ref<int>(0x01839314);
+    auto& gr_screen = addr_as_ref<GrScreen>(0x014CF748);
 
 }
 
@@ -93,7 +93,7 @@ CallHook<void()> frametime_calculate_hook{
                 Sleep(250);
             }
         }
-        frametime_calculate_hook.CallTarget();
+        frametime_calculate_hook.call_target();
     },
 };
 
@@ -207,7 +207,7 @@ CallHook<void(int, int, int, int, int, HWND, float, bool, int, D3DFORMAT)> gr_in
     [](int max_w, int max_h, int bit_depth, int mode, int window_mode, HWND hwnd, float far_zvalue, bool sync_blit, int video_card, D3DFORMAT backbuffer_format) {
         max_w = GetSystemMetrics(SM_CXSCREEN);
         max_h = GetSystemMetrics(SM_CYSCREEN);
-        gr_init_hook.CallTarget(max_w, max_h, bit_depth, mode, window_mode, hwnd, far_zvalue, sync_blit, video_card, backbuffer_format);
+        gr_init_hook.call_target(max_w, max_h, bit_depth, mode, window_mode, hwnd, far_zvalue, sync_blit, video_card, backbuffer_format);
     },
 };
 
@@ -237,7 +237,7 @@ FunHook<void(red::Matrix3*, red::Vector3*, float, bool, bool)> gr_setup_3d_hook{
             horizontal_fov = std::clamp(horizontal_fov, 60.0f, 120.0f);
             //xlog::info("fov %f", horizontal_fov);
         }
-        gr_setup_3d_hook.CallTarget(viewer_orient, viewer_pos, horizontal_fov, zbuffer_flag, z_scale);
+        gr_setup_3d_hook.call_target(viewer_orient, viewer_pos, horizontal_fov, zbuffer_flag, z_scale);
     },
 };
 
@@ -245,39 +245,39 @@ void ApplyGraphicsPatches()
 {
 #if D3D_HW_VERTEX_PROCESSING
     // Use hardware vertex processing instead of software processing
-    WriteMem<u8>(0x004EC73E + 1, D3DCREATE_HARDWARE_VERTEXPROCESSING);
-    WriteMem<u32>(0x004EBC3D + 1, D3DUSAGE_DYNAMIC|D3DUSAGE_DONOTCLIP|D3DUSAGE_WRITEONLY);
-    WriteMem<u32>(0x004EBC77 + 1, D3DUSAGE_DYNAMIC|D3DUSAGE_DONOTCLIP|D3DUSAGE_WRITEONLY);
+    write_mem<u8>(0x004EC73E + 1, D3DCREATE_HARDWARE_VERTEXPROCESSING);
+    write_mem<u32>(0x004EBC3D + 1, D3DUSAGE_DYNAMIC|D3DUSAGE_DONOTCLIP|D3DUSAGE_WRITEONLY);
+    write_mem<u32>(0x004EBC77 + 1, D3DUSAGE_DYNAMIC|D3DUSAGE_DONOTCLIP|D3DUSAGE_WRITEONLY);
 #endif
 
     // Avoid flushing D3D buffers in GrSetColorRgba
     AsmWriter(0x004B976D).nop(5);
 
     // Add Sleep if window is inactive
-    frametime_calculate_hook.Install();
+    frametime_calculate_hook.install();
 
     // Improve performance
-    after_gr_init_hook.Install();
+    after_gr_init_hook.install();
 
     // Reduce number of draw-calls for line rendering
     AsmWriter(0x004E1335).nop(5);
-    gr_d3d_line_3d_patch_1.Install();
-    gr_d3d_line_3d_patch_2.Install();
+    gr_d3d_line_3d_patch_1.install();
+    gr_d3d_line_3d_patch_2.install();
     AsmWriter(0x004E10B4).nop(5);
-    gr_d3d_line_2d_patch_1.Install();
-    gr_d3d_line_2d_patch_2.Install();
-    gr_d3d_poly_patch.Install();
-    gr_d3d_bitmap_patch_1.Install();
-    gr_d3d_bitmap_patch_2.Install();
-    gr_d3d_render_geometry_face_patch_1.Install();
-    gr_d3d_render_geometry_face_patch_2.Install();
+    gr_d3d_line_2d_patch_1.install();
+    gr_d3d_line_2d_patch_2.install();
+    gr_d3d_poly_patch.install();
+    gr_d3d_bitmap_patch_1.install();
+    gr_d3d_bitmap_patch_2.install();
+    gr_d3d_render_geometry_face_patch_1.install();
+    gr_d3d_render_geometry_face_patch_2.install();
 
     // Fix editor not using all space for rendering when used with a big monitor
-    gr_init_hook.Install();
+    gr_init_hook.install();
 
     // Fix aspect ratio on wide screens
-    gr_init_widescreen_patch.Install();
+    gr_init_widescreen_patch.install();
 
     // Use Hor+ FOV scaling
-    gr_setup_3d_hook.Install();
+    gr_setup_3d_hook.install();
 }

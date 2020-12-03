@@ -47,7 +47,7 @@ rf::Player* FindBestMatchingPlayer(const char* name)
 FunHook<int()> gameseq_process_hook{
     0x00434230,
     []() {
-        int menu_id = gameseq_process_hook.CallTarget();
+        int menu_id = gameseq_process_hook.call_target();
         if (menu_id == rf::GS_MULTI_LIMBO) // hide cursor when changing level - hackfixed in RF by changing rendering logic
             rf::mouse_set_visible(false);
         else if (menu_id == rf::GS_MAIN_MENU)
@@ -77,7 +77,7 @@ CallHook<void(char*, int)> console_process_kbd_get_text_from_clipboard_hook{
     0x0050A2FD,
     [](char *buf, int max_len) {
         max_len = std::min(max_len, max_cmd_line_len - rf::console_cmd_line_len);
-        console_process_kbd_get_text_from_clipboard_hook.CallTarget(buf, max_len);
+        console_process_kbd_get_text_from_clipboard_hook.call_target(buf, max_len);
     },
 };
 
@@ -96,41 +96,41 @@ void ConsoleCommandsInit();
 void ConsoleApplyPatches()
 {
     // Console init string
-    WriteMemPtr(0x004B2534, "-- " PRODUCT_NAME " Initializing --\n");
+    write_mem_ptr(0x004B2534, "-- " PRODUCT_NAME " Initializing --\n");
 
     // Console background color
     constexpr rf::Color console_color{0x00, 0x00, 0x40, 0xC0};
-    WriteMem<u32>(0x005098D1, console_color.alpha);
-    WriteMem<u8>(0x005098D6, console_color.blue);
-    WriteMem<u8>(0x005098D8, console_color.green);
-    WriteMem<u8>(0x005098DA, console_color.red);
+    write_mem<u32>(0x005098D1, console_color.alpha);
+    write_mem<u8>(0x005098D6, console_color.blue);
+    write_mem<u8>(0x005098D8, console_color.green);
+    write_mem<u8>(0x005098DA, console_color.red);
 
     // Fix console rendering when changing level
     AsmWriter(0x0047C490).ret();
     AsmWriter(0x0047C4AA).ret();
     AsmWriter(0x004B2E15).nop(2);
-    gameseq_process_hook.Install();
+    gameseq_process_hook.install();
 
     // Change limit of commands
     assert(rf::console_num_commands == 0);
-    WriteMemPtr(0x005099AC + 1, g_commands_buffer);
-    WriteMemPtr(0x00509A8A + 1, g_commands_buffer);
-    WriteMemPtr(0x00509AB0 + 3, g_commands_buffer);
-    WriteMemPtr(0x00509AE1 + 3, g_commands_buffer);
-    WriteMemPtr(0x00509AF5 + 3, g_commands_buffer);
-    WriteMemPtr(0x00509C8F + 1, g_commands_buffer);
-    WriteMemPtr(0x00509DB4 + 3, g_commands_buffer);
-    WriteMemPtr(0x00509E6F + 1, g_commands_buffer);
-    WriteMemPtr(0x0050A648 + 4, g_commands_buffer);
-    WriteMemPtr(0x0050A6A0 + 3, g_commands_buffer);
+    write_mem_ptr(0x005099AC + 1, g_commands_buffer);
+    write_mem_ptr(0x00509A8A + 1, g_commands_buffer);
+    write_mem_ptr(0x00509AB0 + 3, g_commands_buffer);
+    write_mem_ptr(0x00509AE1 + 3, g_commands_buffer);
+    write_mem_ptr(0x00509AF5 + 3, g_commands_buffer);
+    write_mem_ptr(0x00509C8F + 1, g_commands_buffer);
+    write_mem_ptr(0x00509DB4 + 3, g_commands_buffer);
+    write_mem_ptr(0x00509E6F + 1, g_commands_buffer);
+    write_mem_ptr(0x0050A648 + 4, g_commands_buffer);
+    write_mem_ptr(0x0050A6A0 + 3, g_commands_buffer);
     AsmWriter(0x00509A7E).nop(2);
-    ConsoleCommand_init_limit_check_patch.Install();
+    ConsoleCommand_init_limit_check_patch.install();
 
-    ConsoleRunCmd_call_handler_patch.Install();
+    ConsoleRunCmd_call_handler_patch.install();
 
     // Fix possible input buffer overflow
-    console_process_kbd_get_text_from_clipboard_hook.Install();
-    WriteMem<u32>(0x0050A2D0 + 2, max_cmd_line_len);
+    console_process_kbd_get_text_from_clipboard_hook.install();
+    write_mem<u32>(0x0050A2D0 + 2, max_cmd_line_len);
 
     ConsoleCommandsApplyPatches();
     ConsoleAutoCompleteApplyPatch();
