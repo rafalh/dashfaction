@@ -132,9 +132,10 @@ FunHook<rf::BmFormat(int, void**, void**)> bm_lock_hook{
     },
 };
 
-FunHook<bool(rf::BmFormat)> bm_has_alpha_hook{
+FunHook<bool(int)> bm_has_alpha_hook{
     0x00510710,
-    [](rf::BmFormat format) {
+    [](int bm_handle) {
+        auto format = rf::bm_get_format(bm_handle);
         switch (format) {
             case rf::BM_FORMAT_4444_ARGB:
             case rf::BM_FORMAT_1555_ARGB:
