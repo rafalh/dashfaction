@@ -5,9 +5,11 @@
 #include "graphics_internal.h"
 #include "../main.h"
 #include "../rf/graphics.h"
+#include "../rf/gr_direct3d.h"
 #include "../rf/object.h"
 #include "../rf/player.h"
 #include "../rf/file.h"
+#include "../rf/clutter.h"
 #include "../utils/com-utils.h"
 #include "../utils/list-utils.h"
 #include "../utils/string-utils.h"
@@ -26,31 +28,6 @@ static ComPtr<IDirect3DSurface8> g_capture_tmp_surface;
 static ComPtr<IDirect3DSurface8> g_depth_stencil_surface;
 static std::unique_ptr<byte* []> g_screenshot_scanlines_buf;
 static int g_screenshot_dir_id;
-
-namespace rf
-{
-struct Monitor
-{
-    struct Monitor *next;
-    struct Monitor *prev;
-    int monitor_state;
-    int clutter_handle;
-    int current_camera_handle;
-    int bitmap;
-    VArray<int> cameras_handles_array;
-    Timestamp camera_cycle_timestamp;
-    float cycle_delay;
-    int gap2C;
-    int width;
-    int height;
-    int flags;
-};
-static_assert(sizeof(Monitor) == 0x3C);
-
-static auto& gr_d3d_get_texture = addr_as_ref<IDirect3DTexture8*(int bm_handle)>(0x0055D1E0);
-static auto& monitor_list = addr_as_ref<Monitor>(0x005C98A8);
-} // namespace rf
-
 
 bool g_render_to_texture_active = false;
 ComPtr<IDirect3DSurface8> g_orig_render_target;

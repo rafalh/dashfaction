@@ -44,6 +44,11 @@ namespace rf
     };
     static_assert(sizeof(AiPathInfo) == 0x180);
 
+    enum AiFlags
+    {
+        AI_FLAG_DEAF = 0x800,
+    };
+
     enum AiMode
     {
         AIM_NONE = 0x0,
@@ -174,5 +179,8 @@ namespace rf
     };
     static_assert(sizeof(AiInfo) == 0x534);
 
+    static auto& ai_get_attack_range = addr_as_ref<float(AiInfo& ai)>(0x004077A0);
     static auto& ai_has_weapon = addr_as_ref<bool(AiInfo *ai_info, int weapon_type)>(0x00403250);
+
+    static auto& ai_pause = addr_as_ref<bool>(0x005AF46D);
 }

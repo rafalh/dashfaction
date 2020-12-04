@@ -1,0 +1,64 @@
+#include "common.h"
+
+namespace rf
+{
+    struct GrD3DTextureSection
+    {
+#ifdef DIRECT3D_VERSION
+        IDirect3DTexture8 *d3d_texture;
+#else
+        void *d3d_texture;
+#endif
+        int num_vram_bytes;
+        float u_scale;
+        float v_scale;
+        int x;
+        int y;
+        int width;
+        int height;
+    };
+
+    struct GrD3DTexture
+    {
+        int bm_handle;
+        short num_sections;
+        short preserve_counter;
+        short lock_count;
+        uint8_t ref_count;
+        bool reset;
+        GrD3DTextureSection *sections;
+    };
+
+    static auto& gr_d3d_flush_buffers = addr_as_ref<void()>(0x00559D90);
+    static auto& gr_d3d_get_texture = addr_as_ref<IDirect3DTexture8*(int bm_handle)>(0x0055D1E0);
+
+#if defined(DIRECT3D_VERSION)
+    static auto& gr_d3d = addr_as_ref<IDirect3D8*>(0x01CFCBE0);
+    static auto& gr_d3d_device = addr_as_ref<IDirect3DDevice8*>(0x01CFCBE4);
+    static auto& gr_d3d_pp = addr_as_ref<D3DPRESENT_PARAMETERS>(0x01CFCA18);
+#elif defined(HRESULT)
+    static auto& gr_d3d = addr_as_ref<IUnknown*>(0x01CFCBE0);
+    static auto& gr_d3d_device = addr_as_ref<IUnknown*>(0x01CFCBE4);
+#endif
+    static auto& gr_adapter_idx = addr_as_ref<uint32_t>(0x01CFCC34);
+#ifdef DIRECT3D_VERSION
+    static auto& gr_d3d_device_caps = addr_as_ref<D3DCAPS8>(0x01CFCAC8);
+#endif
+    static auto& gr_d3d_textures = addr_as_ref<GrD3DTexture*>(0x01E65338);
+
+    static auto& gr_d3d_buffers_locked = addr_as_ref<bool>(0x01E652ED);
+    static auto& gr_d3d_in_optimized_drawing_proc = addr_as_ref<bool>(0x01E652EE);
+    static auto& gr_d3d_num_vertices = addr_as_ref<int>(0x01E652F0);
+    static auto& gr_d3d_num_indices = addr_as_ref<int>(0x01E652F4);
+    static auto& gr_d3d_max_hw_vertex = addr_as_ref<int>(0x01818348);
+    static auto& gr_d3d_max_hw_index = addr_as_ref<int>(0x0181834C);
+    static auto& gr_d3d_min_hw_vertex = addr_as_ref<int>(0x01E652F8);
+    static auto& gr_d3d_min_hw_index = addr_as_ref<int>(0x01E652FC);
+#ifdef DIRECT3D_VERSION
+    static auto& gr_d3d_primitive_type = addr_as_ref<D3DPRIMITIVETYPE>(0x01D862A8);
+#endif
+
+    static auto& gr_scale_vec = addr_as_ref<Vector3>(0x01818B48);
+    static auto& gr_view_matrix = addr_as_ref<Matrix3>(0x018186C8);
+
+}

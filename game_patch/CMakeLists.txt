@@ -48,7 +48,9 @@ set(SRCS
     rf/file.h
     rf/gameseq.h
     rf/graphics.h
+    rf/gr_direct3d.h
     rf/item.h
+    rf/level.h
     rf/localize.h
     rf/misc.h
     rf/multi.h

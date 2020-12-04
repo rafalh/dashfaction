@@ -12,6 +12,7 @@
 #include "../rf/clutter.h"
 #include "../rf/event.h"
 #include "../rf/graphics.h"
+#include "../rf/gr_direct3d.h"
 #include "../rf/player.h"
 #include "../rf/weapon.h"
 #include "../rf/multi.h"

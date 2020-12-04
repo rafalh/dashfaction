@@ -16,7 +16,7 @@ namespace rf
     auto& hud_miniflag_hilight_bmh = addr_as_ref<int>(0x0059DF50);
     auto& hud_flag_red_bmh = addr_as_ref<int>(0x0059DF54);
     auto& hud_flag_blue_bmh = addr_as_ref<int>(0x0059DF58);
-    auto& hud_flag_render_state = addr_as_ref<rf::GrMode>(0x01775B30); //MatT2C2A3B2Z1F3
+    auto& hud_flag_gr_mode = addr_as_ref<rf::GrMode>(0x01775B30);
 }
 
 void HudRenderTeamScores()
@@ -68,7 +68,7 @@ void HudRenderTeamScores()
 
             if (red_flag_player == rf::local_player) {
                 rf::gr_set_color_rgba(255, 255, 255, static_cast<int>(hud_flag_alpha));
-                hud_scaled_bitmap(rf::hud_flag_red_bmh, flag_x, box_y, flag_scale, rf::hud_flag_render_state);
+                hud_scaled_bitmap(rf::hud_flag_red_bmh, flag_x, box_y, flag_scale, rf::hud_flag_gr_mode);
             }
         }
         else if (rf::multi_ctf_is_red_flag_in_base()) {
@@ -86,7 +86,7 @@ void HudRenderTeamScores()
 
             if (blue_flag_player == rf::local_player) {
                 rf::gr_set_color_rgba(255, 255, 255, static_cast<int>(hud_flag_alpha));
-                hud_scaled_bitmap(rf::hud_flag_blue_bmh, flag_x, box_y, flag_scale, rf::hud_flag_render_state);
+                hud_scaled_bitmap(rf::hud_flag_blue_bmh, flag_x, box_y, flag_scale, rf::hud_flag_gr_mode);
             }
         }
         else if (rf::multi_ctf_is_blue_flag_in_base()) {
@@ -106,10 +106,10 @@ void HudRenderTeamScores()
             else {
                 miniflag_hilight_y = blue_miniflag_y;
             }
-            hud_scaled_bitmap(rf::hud_miniflag_hilight_bmh, miniflag_x, miniflag_hilight_y, miniflag_scale, rf::hud_flag_render_state);
+            hud_scaled_bitmap(rf::hud_miniflag_hilight_bmh, miniflag_x, miniflag_hilight_y, miniflag_scale, rf::hud_flag_gr_mode);
         }
-        hud_scaled_bitmap(rf::hud_miniflag_red_bmh, miniflag_x, red_miniflag_y, miniflag_scale, rf::hud_flag_render_state);
-        hud_scaled_bitmap(rf::hud_miniflag_blue_bmh, miniflag_x, blue_miniflag_y, miniflag_scale, rf::hud_flag_render_state);
+        hud_scaled_bitmap(rf::hud_miniflag_red_bmh, miniflag_x, red_miniflag_y, miniflag_scale, rf::hud_flag_gr_mode);
+        hud_scaled_bitmap(rf::hud_miniflag_blue_bmh, miniflag_x, blue_miniflag_y, miniflag_scale, rf::hud_flag_gr_mode);
     }
 
     int red_score, blue_score;

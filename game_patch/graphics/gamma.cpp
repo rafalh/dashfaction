@@ -3,6 +3,7 @@
 #include "gamma.h"
 #include "../rf/os.h"
 #include "../rf/graphics.h"
+#include "../rf/gr_direct3d.h"
 #include <xlog/xlog.h>
 #include <patch_common/AsmWriter.h>
 

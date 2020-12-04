@@ -9,6 +9,7 @@
 #include <set>
 #include <algorithm>
 #include "../rf/graphics.h"
+#include "../rf/gr_direct3d.h"
 #include "../utils/string-utils.h"
 #include "../main.h"
 #include "gr_color.h"

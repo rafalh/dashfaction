@@ -117,10 +117,8 @@ FunHook<void(rf::Entity*)> entity_on_death_hook{
     [](rf::Entity* entity) {
         // Reset fpgun animation when player dies
         if (rf::local_player && entity->handle == rf::local_player->entity_handle && rf::local_player->weapon_mesh_handle) {
-            auto VMeshStopAllActions = addr_as_ref<void(rf::VMesh*)>(0x00503400);
-            auto FpgunStopActionSound = addr_as_ref<void(rf::Player*)>(0x004A9490);
-            VMeshStopAllActions(rf::local_player->weapon_mesh_handle);
-            FpgunStopActionSound(rf::local_player);
+            rf::vmesh_stop_all_actions(rf::local_player->weapon_mesh_handle);
+            rf::player_fpgun_clear_all_action_anim_sounds(rf::local_player);
         }
         entity_on_death_hook.call_target(entity);
     },

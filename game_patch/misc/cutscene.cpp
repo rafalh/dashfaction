@@ -14,14 +14,14 @@ static constexpr rf::ControlAction default_skip_cutscene_ctrl = rf::CA_MP_STATS;
 rf::String get_game_ctrl_bind_name(int game_ctrl)
 {
     auto get_key_name = addr_as_ref<int(rf::String *out, int key)>(0x0043D930);
-    auto GetMouseButtonName = addr_as_ref<int(rf::String *out, int mouse_btn)>(0x0043D970);
+    auto get_mouse_button_name = addr_as_ref<int(rf::String *out, int mouse_btn)>(0x0043D970);
     auto ctrl_config = rf::local_player->settings.controls.keys[game_ctrl];
     rf::String name;
     if (ctrl_config.scan_codes[0] >= 0) {
         get_key_name(&name, ctrl_config.scan_codes[0]);
     }
     else if (ctrl_config.mouse_btn_id >= 0) {
-        GetMouseButtonName(&name, ctrl_config.mouse_btn_id);
+        get_mouse_button_name(&name, ctrl_config.mouse_btn_id);
     }
     else {
         return rf::String::format("?");

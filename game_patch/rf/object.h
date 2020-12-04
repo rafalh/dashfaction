@@ -37,6 +37,7 @@ namespace rf
     {
         OF_DELAYED_DELETE = 0x2,
         OF_WAS_RENDERED = 0x10,
+        OF_IN_LIQUID = 0x80000,
         OF_HAS_ALPHA = 0x100000,
     };
 
@@ -121,6 +122,9 @@ namespace rf
     static auto& obj_from_handle = addr_as_ref<Object*(int handle)>(0x0040A0E0);
     static auto& obj_flag_dead = addr_as_ref<void(Object* obj)>(0x0048AB40);
     static auto& obj_find_root_bone_pos = addr_as_ref<void(Object*, Vector3&)>(0x0048AC70);
+    static auto& obj_update_liquid_status = addr_as_ref<void(Object* obj)>(0x00486C30);
+
+    static auto& object_list = addr_as_ref<Object>(0x0073D880);
 }
 
 template<>

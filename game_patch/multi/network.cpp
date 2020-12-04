@@ -7,10 +7,11 @@
 #include "../rf/entity.h"
 #include "../rf/console.h"
 #include "../rf/os.h"
+#include "../rf/geometry.h"
+#include "../rf/level.h"
 #include "../server/server.h"
 #include "../misc/misc.h"
 #include "../main.h"
-#include "../rf/geometry.h"
 #include "../utils/enum-bitwise-operators.h"
 #include "../console/console.h"
 #include <natupnp.h>

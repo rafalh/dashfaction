@@ -2,7 +2,7 @@
 #include "server_internal.h"
 #include "../rf/multi.h"
 #include "../rf/gameseq.h"
-#include "../rf/geometry.h"
+#include "../rf/level.h"
 
 void extend_round_time(int minutes)
 {

@@ -265,6 +265,4 @@ namespace rf
     static auto& weapon_is_detonator = addr_as_ref<bool(int weapon_type)>(0x004C9070);
     static auto& weapon_is_riot_stick = addr_as_ref<bool(int weapon_type)>(0x004C90D0);
     static auto& player_make_weapon_current_selection = addr_as_ref<void(Player *player, int weapon_type)>(0x004A4980);
-    static auto& entity_is_reloading = addr_as_ref<bool(Entity* entity)>(0x00425250);
-    static auto& entity_weapon_is_on = addr_as_ref<bool(int entity_handle, int weapon_type)>(0x0041A830);
 }

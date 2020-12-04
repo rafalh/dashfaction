@@ -20,19 +20,6 @@
 #include <shlwapi.h>
 #include <windows.h>
 
-namespace rf
-{
-
-static auto& player_fpgun_render = addr_as_ref<void(Player*)>(0x004A2B30);
-static auto& player_update = addr_as_ref<void(Player*)>(0x004A2700);
-static auto& player_fpgun_setup_mesh = addr_as_ref<void(Player*, int weapon_type)>(0x004AA230);
-static auto& player_fpgun_process = addr_as_ref<void(Player*)>(0x004AA6D0);
-static auto& player_fpgun_render_ir = addr_as_ref<void(Player* player)>(0x004AEEF0);
-static auto& player_fpgun_set_state = addr_as_ref<void(Player* player, int state)>(0x004AA560);
-static auto& player_fpgun_has_state = addr_as_ref<bool(Player* player, int state)>(0x004A9520);
-
-} // namespace rf
-
 static rf::Player* g_spectate_mode_target;
 static rf::Camera* g_old_target_camera = nullptr;
 static bool g_spectate_mode_enabled = false;

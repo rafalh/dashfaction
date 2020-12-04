@@ -306,4 +306,12 @@ namespace rf
     static auto& player_add_score = addr_as_ref<void(Player *player, int delta)>(0x004A7460);
     static auto& player_get_ai = addr_as_ref<AiInfo*(Player *player)>(0x004A3260);
     static auto& player_get_weapon_total_ammo = addr_as_ref<int(Player *player, int weapon_type)>(0x004A3280);
+    static auto& player_fpgun_render = addr_as_ref<void(Player*)>(0x004A2B30);
+    static auto& player_update = addr_as_ref<void(Player*)>(0x004A2700);
+    static auto& player_fpgun_setup_mesh = addr_as_ref<void(Player*, int weapon_type)>(0x004AA230);
+    static auto& player_fpgun_process = addr_as_ref<void(Player*)>(0x004AA6D0);
+    static auto& player_fpgun_render_ir = addr_as_ref<void(Player* player)>(0x004AEEF0);
+    static auto& player_fpgun_set_state = addr_as_ref<void(Player* player, int state)>(0x004AA560);
+    static auto& player_fpgun_has_state = addr_as_ref<bool(Player* player, int state)>(0x004A9520);
+    static auto& player_fpgun_clear_all_action_anim_sounds = addr_as_ref<void(rf::Player*)>(0x004A9490);
 }

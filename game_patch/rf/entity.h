@@ -350,24 +350,51 @@ namespace rf
         Matrix3 orient;
     };
 
+    struct PersonaInfo
+    {
+        String name;
+        int alert_snd;
+        int under_alert_snd;
+        int cower_snd;
+        int flee_snd;
+        int use_key_snd;
+        int healing_gone_snd;
+        int heal_ignore_snd;
+        int timeout_snd;
+        int humming_snd;
+        int fight_single_snd;
+        int fight_multi_snd;
+        int panic_snd;
+    };
+
     static auto& entity_from_handle = addr_as_ref<Entity*(int handle)>(0x00426FC0);
     static auto& entity_create =
         addr_as_ref<Entity*(int entity_type, const char* name, int parent_handle, const Vector3& pos,
         const Matrix3& orient, int create_flags, int mp_character)>(0x00422360);
-    static auto& entity_is_dying = addr_as_ref<bool(Entity *entity)>(0x00427020);
-    static auto& entity_is_attached_to_vehicle = addr_as_ref<bool(Entity *entity)>(0x004290D0);
-    static auto& entity_is_jeep_driver = addr_as_ref<bool(Entity *entity)>(0x0042AC80);
-    static auto& entity_is_jeep_shooter = addr_as_ref<bool(Entity *entity)>(0x0042ACD0);
-    static auto& entity_is_driller = addr_as_ref<bool(Entity *entity)>(0x0042D780);
-    static auto& entity_is_sub = addr_as_ref<bool(Entity *entity)>(0x0040A270);
-    static auto& entity_is_jeep = addr_as_ref<bool(Entity *entity)>(0x0040A2F0);
-    static auto& entity_is_fighter = addr_as_ref<bool(Entity *entity)>(0x0040A210);
-    static auto& entity_is_holding_body = addr_as_ref<bool(Entity *entity)>(0x00429D20);
-    static auto& entity_fire_init_bones = addr_as_ref<bool(EntityFireInfo *burn_info, Object *obj)>(0x0042EB20);
-    static auto& entity_is_swimming = addr_as_ref<bool(Entity* entity)>(0x0042A0A0);
-    static auto& entity_is_falling = addr_as_ref<bool(Entity* entit)>(0x0042A020);
+    static auto& entity_is_dying = addr_as_ref<bool(Entity *ep)>(0x00427020);
+    static auto& entity_is_attached_to_vehicle = addr_as_ref<bool(Entity *ep)>(0x004290D0);
+    static auto& entity_is_jeep_driver = addr_as_ref<bool(Entity *ep)>(0x0042AC80);
+    static auto& entity_is_jeep_shooter = addr_as_ref<bool(Entity *ep)>(0x0042ACD0);
+    static auto& entity_is_driller = addr_as_ref<bool(Entity *ep)>(0x0042D780);
+    static auto& entity_is_sub = addr_as_ref<bool(Entity *ep)>(0x0040A270);
+    static auto& entity_is_jeep = addr_as_ref<bool(Entity *ep)>(0x0040A2F0);
+    static auto& entity_is_fighter = addr_as_ref<bool(Entity *ep)>(0x0040A210);
+    static auto& entity_is_holding_body = addr_as_ref<bool(Entity *ep)>(0x00429D20);
+    static auto& entity_fire_init_bones = addr_as_ref<bool(EntityFireInfo *efi, Object *objp)>(0x0042EB20);
+    static auto& entity_is_swimming = addr_as_ref<bool(Entity* ep)>(0x0042A0A0);
+    static auto& entity_is_falling = addr_as_ref<bool(Entity* ep)>(0x0042A020);
+    static auto& entity_can_swim = addr_as_ref<bool(Entity* ep)>(0x00427FF0);
+    static auto& entity_update_liquid_status = addr_as_ref<void(Entity* ep)>(0x00429100);
+    static auto& entity_is_playing_action_animation = addr_as_ref<bool(Entity* entity, int action_idx)>(0x00428D10);
+    static auto& entity_set_next_state_anim = addr_as_ref<void(Entity* entity, int state, float transition_time)>(0x0042A580);
+    static auto& entity_play_action_animation = addr_as_ref<void(Entity* entity, int action, float transition_time, bool hold_last_frame, bool with_sound)>(0x00428C90);
+    static auto& entity_is_reloading = addr_as_ref<bool(Entity* entity)>(0x00425250);
+    static auto& entity_weapon_is_on = addr_as_ref<bool(int entity_handle, int weapon_type)>(0x0041A830);
+
     static auto& multi_entity_is_female = addr_as_ref<bool(int mp_character_idx)>(0x004762C0);
 
     static auto& entity_list = addr_as_ref<Entity>(0x005CB060);
     static auto& local_player_entity = addr_as_ref<Entity*>(0x005CB054);
+
+    static auto& persona_info = addr_as_ref<PersonaInfo[0x10]>(0x0062F998);
 }

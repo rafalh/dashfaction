@@ -8,6 +8,7 @@
 #include "../rf/object.h"
 #include "../rf/event.h"
 #include "../rf/entity.h"
+#include "../rf/level.h"
 #include "../graphics/graphics.h"
 
 CodeInjection switch_model_event_custom_mesh_patch{
@@ -74,62 +75,53 @@ struct EventSetLiquidDepthHook : rf::Event
 
 void __fastcall EventSetLiquidDepth__turn_on_new(EventSetLiquidDepthHook* this_)
 {
-    auto AddLiquidDepthUpdate =
-        addr_as_ref<void(rf::GRoom* room, float target_liquid_depth, float duration)>(0x0045E640);
-    auto RoomLookupFromUid = addr_as_ref<rf::GRoom*(int uid)>(0x0045E7C0);
-
     xlog::info("Processing Set_Liquid_Depth event: uid %d depth %.2f duration %.2f", this_->uid, this_->depth, this_->duration);
     if (this_->links.size() == 0) {
         xlog::trace("no links");
-        AddLiquidDepthUpdate(this_->room, this_->depth, this_->duration);
+        rf::add_liquid_depth_update(this_->room, this_->depth, this_->duration);
     }
     else {
         for (int i = 0; i < this_->links.size(); ++i) {
             auto room_uid = this_->links[i];
-            auto room = RoomLookupFromUid(room_uid);
+            auto room = rf::level_room_from_uid(room_uid);
             xlog::trace("link %d %p", room_uid, room);
             if (room) {
-                AddLiquidDepthUpdate(room, this_->depth, this_->duration);
+                rf::add_liquid_depth_update(room, this_->depth, this_->duration);
             }
         }
     }
 }
 
-extern CallHook<void __fastcall (rf::GRoom* room, int edx, rf::GSolid* geo)> GRoom_SetupLiquidRoom_EventSetLiquid_hook;
+extern CallHook<void __fastcall (rf::GRoom*, int, rf::GSolid*)> liquid_depth_update_apply_all_GRoom_reset_liquid_hook;
 
-void __fastcall GRoom_setup_liquid_room_EventSetLiquid(rf::GRoom* room, int edx, rf::GSolid* geo) {
-    GRoom_SetupLiquidRoom_EventSetLiquid_hook.call_target(room, edx, geo);
-
-    auto EntityCheckIsInLiquid = addr_as_ref<void(rf::Entity* entity)>(0x00429100);
-    auto ObjCheckIsInLiquid = addr_as_ref<void(rf::Object* obj)>(0x00486C30);
-    auto EntityCanSwim = addr_as_ref<bool(rf::Entity* entity)>(0x00427FF0);
+void __fastcall liquid_depth_update_apply_all_GRoom_reset_liquid(rf::GRoom* room, int edx, rf::GSolid* solid) {
+    liquid_depth_update_apply_all_GRoom_reset_liquid_hook.call_target(room, edx, solid);
 
     // check objects in room if they are in water
-    auto& object_list = addr_as_ref<rf::Object>(0x0073D880);
-    auto obj = object_list.next_obj;
-    while (obj != &object_list) {
-        if (obj->room == room) {
-            if (obj->type == rf::OT_ENTITY) {
-                auto entity = reinterpret_cast<rf::Entity*>(obj);
-                EntityCheckIsInLiquid(entity);
-                bool is_in_liquid = entity->obj_flags & 0x80000;
+    auto objp = rf::object_list.next_obj;
+    while (objp != &rf::object_list) {
+        if (objp->room == room) {
+            if (objp->type == rf::OT_ENTITY) {
+                auto ep = reinterpret_cast<rf::Entity*>(objp);
+                rf::entity_update_liquid_status(ep);
+                bool is_in_liquid = ep->obj_flags & rf::OF_IN_LIQUID;
                 // check if entity doesn't have 'swim' flag
-                if (is_in_liquid && !EntityCanSwim(entity)) {
+                if (is_in_liquid && !rf::entity_can_swim(ep)) {
                     // he does not have swim animation - kill him
-                    obj->life = 0.0f;
+                    objp->life = 0.0f;
                 }
             }
             else {
-                ObjCheckIsInLiquid(obj);
+                rf::obj_update_liquid_status(objp);
             }
         }
-        obj = obj->next_obj;
+        objp = objp->next_obj;
     }
 }
 
-CallHook<void __fastcall (rf::GRoom* room, int edx, rf::GSolid* geo)> GRoom_SetupLiquidRoom_EventSetLiquid_hook{
+CallHook<void __fastcall (rf::GRoom* room, int edx, rf::GSolid* geo)> liquid_depth_update_apply_all_GRoom_reset_liquid_hook{
     0x0045E4AC,
-    GRoom_setup_liquid_room_EventSetLiquid,
+    liquid_depth_update_apply_all_GRoom_reset_liquid,
 };
 
 CallHook<int(rf::AiPathInfo*)> ai_path_release_on_load_level_event_crash_fix{
@@ -144,7 +136,7 @@ CallHook<int(rf::AiPathInfo*)> ai_path_release_on_load_level_event_crash_fix{
 
 void do_level_specific_event_hacks(const char* level_filename)
 {
-    if (_stricmp(level_filename, "L5S2.rfl") == 0) {
+    if (string_equals_ignore_case(level_filename, "L5S2.rfl")) {
         // HACKFIX: make Set_Liquid_Depth events properties in lava control room more sensible
         auto event1 = reinterpret_cast<EventSetLiquidDepthHook*>(rf::event_lookup_from_uid(3940));
         auto event2 = reinterpret_cast<EventSetLiquidDepthHook*>(rf::event_lookup_from_uid(4132));
@@ -163,7 +155,7 @@ void apply_event_patches()
 
     // Fix Set_Liquid_Depth event
     AsmWriter(0x004BCBE0).jmp(&EventSetLiquidDepth__turn_on_new);
-    GRoom_SetupLiquidRoom_EventSetLiquid_hook.install();
+    liquid_depth_update_apply_all_GRoom_reset_liquid_hook.install();
 
     // Fix crash after level change (Load_Level event) caused by GNavNode pointers in AiPathInfo not being cleared for entities
     // being taken from the previous level

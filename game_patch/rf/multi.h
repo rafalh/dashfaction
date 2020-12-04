@@ -136,6 +136,13 @@ namespace rf
         default_ = 5,
     };
 
+    struct BanlistEntry
+    {
+        char ip_addr[24];
+        BanlistEntry* next;
+        BanlistEntry* prev;
+    };
+
     static auto& multi_get_game_type = addr_as_ref<NetGameType()>(0x00470770);
     static auto& multi_io_send = addr_as_ref<void(Player *player, const void *packet, int len)>(0x00479370);
     static auto& multi_io_send_reliable =
@@ -168,4 +175,7 @@ namespace rf
     static auto& is_multi = addr_as_ref<bool>(0x0064ECB9);
     static auto& is_server = addr_as_ref<bool>(0x0064ECBA);
     static auto& is_dedicated_server = addr_as_ref<bool>(0x0064ECBB);
+    static auto& banlist_first_entry = addr_as_ref<BanlistEntry*>(0x0064EC20);
+    static auto& banlist_last_entry = addr_as_ref<BanlistEntry*>(0x0064EC24);
+    static auto& banlist_null_entry = addr_as_ref<BanlistEntry>(0x0064EC08);
 }

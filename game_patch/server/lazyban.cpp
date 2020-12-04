@@ -6,20 +6,6 @@
 #include <patch_common/AsmWriter.h>
 #include <patch_common/CallHook.h>
 
-namespace rf
-{
-struct BanlistEntry
-{
-    char ip_addr[24];
-    BanlistEntry* next;
-    BanlistEntry* prev;
-};
-
-static auto& banlist_first_entry = addr_as_ref<BanlistEntry*>(0x0064EC20);
-static auto& banlist_last_entry = addr_as_ref<BanlistEntry*>(0x0064EC24);
-static auto& banlist_null_entry = addr_as_ref<BanlistEntry>(0x0064EC08);
-} // namespace rf
-
 std::vector<int> g_players_to_kick;
 
 void kick_player_delayed(rf::Player* player)

@@ -29,5 +29,24 @@ namespace rf
     };
     static_assert(sizeof(Clutter) == 0x2D8);
 
+    struct Monitor
+    {
+        struct Monitor *next;
+        struct Monitor *prev;
+        int monitor_state;
+        int clutter_handle;
+        int current_camera_handle;
+        int bitmap;
+        VArray<int> cameras_handles_array;
+        Timestamp camera_cycle_timestamp;
+        float cycle_delay;
+        int gap2C;
+        int width;
+        int height;
+        int flags;
+    };
+    static_assert(sizeof(Monitor) == 0x3C);
+
     static auto& clutter_list = addr_as_ref<Clutter>(0x005C9360);
+    static auto& monitor_list = addr_as_ref<Monitor>(0x005C98A8);
 }

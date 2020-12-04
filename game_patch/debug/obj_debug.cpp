@@ -11,37 +11,10 @@ std::optional<float> g_target_rotate_speed;
 namespace rf
 {
 
-struct GSolid;
-struct GFace;
-
-struct PersonasTbl
-{
-    String name;
-    int alert_snd;
-    int under_alert_snd;
-    int cower_snd;
-    int flee_snd;
-    int use_key_snd;
-    int healing_gone_snd;
-    int heal_ignore_snd;
-    int timeout_snd;
-    int humming_snd;
-    int fight_single_snd;
-    int fight_multi_snd;
-    int panic_snd;
-};
-
-auto& personas = addr_as_ref<PersonasTbl[0x10]>(0x0062F998);
 auto& entity_state_names = addr_as_ref<String[17]>(0x0062F208);
 auto& entity_action_names = addr_as_ref<String[0x2D]>(0x005CAEE0);
-auto& object_list = addr_as_ref<Object>(0x0073D880);
+auto& move_mode_names = addr_as_ref<const char*[16]>(0x00596384);
 auto& target_obj_handle = addr_as_ref<int>(0x007C7190);
-
-auto entity_is_playing_action_animation = addr_as_ref<bool(Entity* entity, int action_idx)>(0x00428D10);
-auto ai_get_attack_range = addr_as_ref<float(AiInfo& ai)>(0x004077A0);
-auto entity_set_next_state_anim = addr_as_ref<void(Entity* entity, int state, float transition_time)>(0x0042A580);
-auto entity_play_action_animation = addr_as_ref<void(Entity* entity, int action, float transition_time, bool hold_last_frame, bool with_sound)>(0x00428C90);
-auto vmesh_stop_all_actions = addr_as_ref<void(VMesh* vmesh)>(0x00503400);
 
 }
 
@@ -70,7 +43,7 @@ rf::Object* FindClosestObject()
     return best_obj;
 }
 
-rf::Object* FindObjectInReticle()
+rf::Object* find_object_in_reticle()
 {
     struct LevelCollisionOut
     {
@@ -140,7 +113,7 @@ ConsoleCommand2 dbg_target_closest_cmd{
 ConsoleCommand2 dbg_target_reticle_cmd{
     "d_target_reticle",
     []() {
-        auto obj = FindObjectInReticle();
+        auto obj = find_object_in_reticle();
         rf::target_obj_handle = obj ? obj->handle : 0;
         if (obj)
             rf::console_printf("Target object: uid %d, name '%s'", obj->uid, obj->name.c_str());
@@ -199,9 +172,8 @@ ConsoleCommand2 dbg_spin_cmd{
 ConsoleCommand2 dbg_ai_pause_cmd{
     "d_ai_pause",
     []() {
-        auto& ai_pause = addr_as_ref<bool>(0x005AF46D);
-        ai_pause = !ai_pause;
-        rf::console_printf("AI pause: %d", ai_pause);
+        rf::ai_pause = !rf::ai_pause;
+        rf::console_printf("AI pause: %d", rf::ai_pause);
     },
 };
 
@@ -306,7 +278,6 @@ void render_obj_debug_ui()
     rf::camera_get_pos(&cam_pos, rf::local_player->cam);
 
     auto entity = object->type == rf::OT_ENTITY ? reinterpret_cast<rf::Entity*>(object) : nullptr;
-    auto move_mode_names = addr_as_ref<const char*[16]>(0x00596384);
 
     dbg_hud.Print("name", object->name.c_str());
     dbg_hud.Printf("uid", "%d", object->uid);
@@ -330,8 +301,8 @@ void render_obj_debug_ui()
         auto target_obj = rf::obj_from_handle(entity->ai.target_obj_handle);
         dbg_hud.Print("target", target_obj ? target_obj->name.c_str() : "none");
         dbg_hud.Printf("accel", "%.1f", entity->info->acceleration);
-        dbg_hud.Printf("mvmode", "%s", move_mode_names[entity->movement_mode->id]);
-        dbg_hud.Print("deaf", (entity->ai.flags & 0x800) ? "yes" : "no");
+        dbg_hud.Printf("mvmode", "%s", rf::move_mode_names[entity->movement_mode->id]);
+        dbg_hud.Print("deaf", (entity->ai.flags & rf::AI_FLAG_DEAF) ? "yes" : "no");
         dbg_hud.Print("pos", object->pos);
         auto feet = object->pos;
         feet.y = object->p_data.bbox_min.y;
@@ -345,7 +316,7 @@ void render_obj_debug_ui()
             }
         }
         dbg_hud.Print("action", action_name);
-        dbg_hud.Printf("persona", entity->info->persona >= 0 ? rf::personas[entity->info->persona].name.c_str() : "none");
+        dbg_hud.Printf("persona", entity->info->persona >= 0 ? rf::persona_info[entity->info->persona].name.c_str() : "none");
     }
 
     if (g_target_rotate_speed) {

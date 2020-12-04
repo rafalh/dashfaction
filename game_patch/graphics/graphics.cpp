@@ -7,6 +7,7 @@
 #include "../in_game_ui/hud.h"
 #include "../main.h"
 #include "../rf/graphics.h"
+#include "../rf/gr_direct3d.h"
 #include "../rf/player.h"
 #include "../rf/multi.h"
 #include "../rf/hud.h"

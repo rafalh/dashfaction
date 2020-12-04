@@ -8,7 +8,7 @@
 #include "../rf/weapon.h"
 #include "../rf/entity.h"
 #include "../rf/multi.h"
-#include "../rf/geometry.h"
+#include "../rf/level.h"
 #include "../console/console.h"
 #include "../main.h"
 

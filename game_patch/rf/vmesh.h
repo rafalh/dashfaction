@@ -55,4 +55,5 @@ namespace rf
     static auto& vmesh_collide = addr_as_ref<bool(VMesh *vmesh, VMeshCollisionInput *in, VMeshCollisionOutput *out, bool clear)>(0x005031F0);
     static auto& vmesh_calc_lighting_data_size = addr_as_ref<int(VMesh *vmesh)>(0x00503F50);
     static auto& vmesh_update_lighting_data = addr_as_ref<int(VMesh *vmesh, GRoom *room, const Vector3 &pos, const Matrix3 &orient, void *mesh_lighting_data)>(0x00504000);
+    static auto& vmesh_stop_all_actions = addr_as_ref<void(VMesh* vmesh)>(0x00503400);
 }
