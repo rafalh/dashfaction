@@ -676,6 +676,9 @@ void misc_init()
     // Init cmd line param
     get_url_cmd_line_param();
 
+    // Fix memory corruption when transitioning to 5th level in a sequence and the level has no entry in ponr.tbl
+    AsmWriter{0x004B3CAF, 0x004B3CB2}.xor_(asm_regs::ebx, asm_regs::ebx);
+
     // Apply patches from other files
     apply_event_patches();
     cutscene_apply_patches();
