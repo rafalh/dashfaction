@@ -80,8 +80,26 @@ namespace rf
         SCHF_UNK8 = 0x8,
     };
 
+    enum SoundBackend
+    {
+        SOUND_BACKEND_NONE = 0,
+        SOUND_BACKEND_DS = 1,
+        SOUND_BACKEND_A3D = 2,
+    };
+
+    struct AmbientSound
+    {
+        int handle;
+        int sig;
+        Vector3 pos;
+        float volume;
+    };
+    static_assert(sizeof(AmbientSound) == 0x18);
+
+    static auto& sound_backend = addr_as_ref<SoundBackend>(0x01CFC5D4);
     static auto& sounds = addr_as_ref<Sound[2600]>(0x01CD3BA8);
     static auto& sound_enabled = addr_as_ref<bool>(0x017543D8);
+    static auto& ds3d_enabled = addr_as_ref<bool>(0x01AED340);
 #ifdef DASH_FACTION
     // In DF sound channels limit has been raised
     constexpr int num_sound_channels = 64;
@@ -95,6 +113,7 @@ namespace rf
     static auto& direct_sound = addr_as_ref<IDirectSound*>(0x01AD7A50);
     static auto& ds_buffers = addr_as_ref<DsBuffer[0x1000]>(0x01887388);
     static auto& snd_group_volume = addr_as_ref<float[4]>(0x01753C18);
+    static auto& ambient_sounds = addr_as_ref<AmbientSound[25]>(0x01754170);
 
     static auto snd_load_hint = addr_as_ref<int(int handle)>(0x005054D0);
     static auto snd_play = addr_as_ref<int(int handle, int group, float pan, float volume)>(0x00505560);
@@ -111,6 +130,8 @@ namespace rf
     static auto snd_pc_set_volume = addr_as_ref<void(int sig, float volume)>(0x00544390);
     static auto snd_pc_get_by_id = addr_as_ref<int(int handle, Sound** sound)>(0x00544700);
     static auto snd_pc_get_duration = addr_as_ref<float(int handle)>(0x00544760);
+    static auto snd_pc_change_listener = addr_as_ref<void(const Vector3& pos, const Vector3& vel, const Matrix3& orient)>(0x00543480);
+    static auto snd_pc_calc_volume_3d = addr_as_ref<float(int handle, const Vector3& pos, float vol_scale)>(0x00543C20);
 
     static auto snd_ds_close_channel = addr_as_ref<bool(int channel)>(0x00521930);
     static auto snd_ds_channel_is_playing = addr_as_ref<bool(int channel)>(0x005224D0);
@@ -118,5 +139,6 @@ namespace rf
     static auto snd_ds_get_channel = addr_as_ref<int(int sig)>(0x00522F30);
     static auto snd_ds_estimate_duration = addr_as_ref<float(int snd_buf_id)>(0x00523170);
 
-    static auto snd_ds_3d_update_buffer = addr_as_ref<int(int chnl, float min_dist, float max_dist, const Vector3& pos, const Vector3& vel)>(0x00562DB0);
+
+    static auto snd_ds3d_update_buffer = addr_as_ref<int(int chnl, float min_dist, float max_dist, const Vector3& pos, const Vector3& vel)>(0x00562DB0);
 }

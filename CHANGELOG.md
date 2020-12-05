@@ -55,6 +55,8 @@ Version 1.5.1 (not released yet)
 - performance optimizations
 - fix memory corruption when saving game after 4 level transitions and current level does not have an entry in ponr.tbl
   (fixes crash in Bearskinner SP campaign)
+- use DirectSound3D position and velocity parameters for 3D sounds instead of emulating 3D by panning (enables doppler effects and allows proper 3D experience in setups with more than 2 sound channels e.g. 5.1)
+- improve compatibility with dsoal (allows EAX effects emulation)
 
 Version 1.5.0 (released 2020-09-05)
 -----------------------------------
