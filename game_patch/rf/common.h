@@ -410,4 +410,8 @@ namespace rf
 
     // Timer
     static auto& timer_get = addr_as_ref<int(int frequency)>(0x00504AB0);
+
+    static auto& current_fps = addr_as_ref<float>(0x005A4018);
+    static auto& frametime = addr_as_ref<float>(0x005A4014);
+    static auto& framerate_min = addr_as_ref<float>(0x005A4024);
 }

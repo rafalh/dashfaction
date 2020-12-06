@@ -277,7 +277,7 @@ void init_logging()
 {
     CreateDirectoryA("logs", nullptr);
     xlog::LoggerConfig::get()
-        .add_appender<xlog::FileAppender>("logs/DashFaction.log", false, false)
+        .add_appender<xlog::FileAppender>("logs/DashFaction.log", false, true)
         // .add_appender<xlog::ConsoleAppender>()
         // .add_appender<xlog::Win32Appender>()
         .add_appender<RfConsoleLogAppender>();

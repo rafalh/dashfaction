@@ -14,6 +14,9 @@
 
 static int g_cutscene_bg_sound_sig = -1;
 std::vector<int> g_fpgun_sounds;
+#ifdef DEBUG
+int g_sound_test = 0;
+#endif
 
 namespace rf
 {
@@ -32,14 +35,6 @@ void set_play_sound_events_volume_scale(float volume_scale)
         write_mem<float>(offset + 1, volume_scale);
     }
 }
-
-CallHook<void(int, rf::Vector3*, float*, float*, float)> snd_calculate_1d_from_3d_ambient_sound_hook{
-    0x00505F93,
-    [](int handle, rf::Vector3* sound_pos, float* pan_out, float* volume_out, float volume_in) {
-        snd_calculate_1d_from_3d_ambient_sound_hook.call_target(handle, sound_pos, pan_out, volume_out, volume_in);
-        *volume_out *= g_game_config.level_sound_volume;
-    },
-};
 
 StaticBufferResizePatch<rf::SoundInstance> sound_instances_resize_patch{
     0x01753C38,
@@ -201,9 +196,9 @@ CodeInjection snd_ds_play_3d_no_free_slots_fix{
     0x005222DF,
     [](auto& regs) {
         auto stack_frame = regs.esp + 0x14;
-        auto volume_arg = addr_as_ref<float>(stack_frame + 0x18);
+        auto volume = addr_as_ref<float>(stack_frame + 0x18);
         if (regs.eax == -1) {
-            regs.eax = try_to_free_ds_channel(volume_arg);
+            regs.eax = try_to_free_ds_channel(volume);
         }
     },
 };
@@ -212,64 +207,68 @@ CodeInjection snd_ds_play_no_free_slots_fix{
     0x0052255C,
     [](auto& regs) {
         auto stack_frame = regs.esp + 0x10;
-        auto volume_arg = addr_as_ref<float>(stack_frame + 0x8);
+        auto volume = addr_as_ref<float>(stack_frame + 0x8);
         if (regs.eax == -1) {
-            regs.eax = try_to_free_ds_channel(volume_arg);
+            regs.eax = try_to_free_ds_channel(volume);
         }
     },
 };
 
-CodeInjection snd_play_no_free_slots_fix{
-    0x005055E3,
-    [](auto& regs) {
-        auto stack_frame = regs.esp + 0x10;
-        auto group_arg = addr_as_ref<int>(stack_frame + 0x8);
-        auto vol_scale_arg = addr_as_ref<float>(stack_frame + 0x10);
-        // Try to free a slot
-        int num_looping = 0;
-        int num_long = 0;
-        int best_idx = -1;
-        float best_vol_scale = 0.0f;
-        for (size_t i = 0; i < std::size(rf::sound_instances); ++i) {
-            auto& lvl_snd = rf::sound_instances[i];
-            // Skip looping sounds
-            if (rf::sounds[lvl_snd.handle].is_looping) {
-                xlog::trace("Skipping sound %d because it is looping", i);
-                ++num_looping;
-                continue;
-            }
-            // Skip long sounds
-            float duration = rf::snd_pc_get_duration(lvl_snd.handle);
-            if (duration > 10.0f) {
-                xlog::trace("Skipping sound %d because of duration: %f", i, duration);
-                ++num_long;
-                continue;
-            }
-            // Find sound with the lowest volume
-            float current_vol_scale = rf::snd_group_volume[lvl_snd.group] * lvl_snd.vol_scale;
-            if (best_idx == -1 || current_vol_scale < best_vol_scale) {
-                best_idx = static_cast<int>(i);
-                best_vol_scale = current_vol_scale;
-            }
+int snd_get_free_instance(float vol_scale, [[ maybe_unused ]] bool looping)
+{
+    for (unsigned i = 0; i < std::size(rf::sound_instances); ++i) {
+        auto& instance = rf::sound_instances[i];
+        if (!rf::snd_pc_is_playing(instance.sig)) {
+            rf::snd_pc_stop(instance.sig);
+            rf::snd_clear_instance(&instance);
         }
-        float new_sound_vol_scale = rf::snd_group_volume[group_arg] * vol_scale_arg;
-        if (best_idx >= 0 && best_vol_scale <= new_sound_vol_scale) {
-            // Free the selected slot and use it for a new sound
-            auto& best_lvl_snd = rf::sound_instances[best_idx];
-            xlog::debug("Freeing sound instance %d to make place for a new sound (volume %.4f duration %.1f)", best_idx,
-                best_vol_scale, rf::snd_pc_get_duration(best_lvl_snd.handle));
-            rf::snd_pc_stop(best_lvl_snd.sig);
-            rf::snd_clear_instance_slot(&best_lvl_snd);
-            regs.ebx = best_idx;
-            regs.esi = reinterpret_cast<int32_t>(&best_lvl_snd);
-            regs.eip = 0x005055EB;
+    }
+
+    for (unsigned i = 0; i < std::size(rf::sound_instances); ++i) {
+        auto& instance = rf::sound_instances[i];
+        if (instance.handle < 0) {
+            return i;
         }
-        else {
-            xlog::debug("Failed to allocate a sound instance: volume %.2f num_looping %d num_long %d",
-                new_sound_vol_scale, num_looping, num_long);
+    }
+
+    // All slots are in use - we have to stop some currently playing sound
+    int num_looping = 0;
+    int num_long = 0;
+    int best_idx = -1;
+    float best_vol_scale = 0.0f;
+    for (size_t i = 0; i < std::size(rf::sound_instances); ++i) {
+        auto& instance = rf::sound_instances[i];
+        // Skip looping sounds
+        if (rf::sounds[instance.handle].is_looping) {
+            xlog::trace("Skipping sound %d because it is looping", i);
+            ++num_looping;
+            continue;
         }
-    },
-};
+        // Skip long sounds
+        float duration = rf::snd_pc_get_duration(instance.handle);
+        if (duration > 10.0f) {
+            xlog::trace("Skipping sound %d because of duration: %f", i, duration);
+            ++num_long;
+            continue;
+        }
+        // Find sound with the lowest volume
+        float current_vol_scale = rf::snd_group_volume[instance.group] * instance.base_volume;
+        if (best_idx == -1 || current_vol_scale < best_vol_scale) {
+            best_idx = static_cast<int>(i);
+            best_vol_scale = current_vol_scale;
+        }
+    }
+    if (best_idx >= 0 && best_vol_scale <= vol_scale) {
+        // Free the selected slot and use it for a new sound
+        auto& best_instance = rf::sound_instances[best_idx];
+        xlog::debug("Freeing sound instance %d to make place for a new sound (volume %.4f duration %.1f)", best_idx,
+            best_vol_scale, rf::snd_pc_get_duration(best_instance.handle));
+        rf::snd_pc_stop(best_instance.sig);
+        rf::snd_clear_instance(&best_instance);
+        return best_idx;
+    }
+    return -1;
+}
 
 CallHook<void()> cutscene_play_music_hook{
     0x0045BB85,
@@ -329,7 +328,7 @@ ConsoleCommand2 level_sounds_cmd{
 ConsoleCommand2 playing_sounds_cmd{
     "d_playing_sounds",
     []() {
-        for (int chnl_num = 0; chnl_num < rf::num_sound_channels; ++chnl_num) {
+        for (unsigned chnl_num = 0; chnl_num < std::size(rf::ds_channels); ++chnl_num) {
             auto& chnl = rf::ds_channels[chnl_num];
             if (chnl.sound_buffer) {
                 DWORD status;
@@ -359,50 +358,102 @@ CodeInjection snd_ds_init_device_leave_injection{
     },
 };
 
-FunHook<int(int, const rf::Vector3&, float, const rf::Vector3&, int)> snd_play_3d_hook{
-    0x005056A0,
-    [](int handle, const rf::Vector3& pos, float vol_scale, const rf::Vector3& unk, int group) {
-        if (!rf::ds3d_enabled) {
-            return snd_play_3d_hook.call_target(handle, pos, vol_scale, unk, group);
-        }
-        if (!rf::sound_enabled || rf::snd_load_hint(handle) != 0) {
+FunHook<int(int, int, float, float)> snd_play_hook{
+    0x00505560,
+    [](int handle, int group, float pan, float volume) {
+        if (!rf::sound_enabled) {
             return -1;
         }
-        for (int i = 0; i < rf::num_sound_channels; ++i) {
-            if (!rf::snd_pc_is_playing(rf::sound_instances[i].sig)) {
-                rf::snd_pc_stop(rf::sound_instances[i].sig);
-                rf::snd_clear_instance_slot(&rf::sound_instances[i]);
-            }
+        if (rf::snd_load_hint(handle) != 0) {
+            xlog::warn("Failed to load sound %d", handle);
+            return -1;
         }
-        for (int i = 0; i < rf::num_sound_channels; ++i) {
-            auto& lvl_snd = rf::sound_instances[i];
-            if (lvl_snd.handle < 0) {
-                bool looping = rf::sounds[handle].is_looping;
-                int sig = rf::snd_pc_play_3d(handle, pos, looping, 0);
-                xlog::trace("snd_play_3d handle %d pos <%.2f %.2f %.2f> vol %.2f sig %d", handle, pos.x, pos.y, pos.z, vol_scale, sig);
-                if (sig < 0) {
-                    return -1;
-                }
 
-                float volume = vol_scale * rf::snd_group_volume[group];
-                rf::snd_pc_set_volume(sig, volume);
-
-                lvl_snd.sig = sig;
-                lvl_snd.handle = handle;
-                lvl_snd.group = group;
-                lvl_snd.vol_scale = vol_scale;
-                lvl_snd.pan = 0.0f;
-                lvl_snd.is_3d_sound = true;
-                lvl_snd.pos = pos;
-                lvl_snd.orig_volume = volume;
-                lvl_snd.use_count++;
-                int instance_handle = i | (lvl_snd.use_count << 8);
-
-                return instance_handle;
-            }
+        float vol_scale = volume * rf::snd_group_volume[group];
+        bool looping = rf::sounds[handle].is_looping;
+        int instance_index = snd_get_free_instance(vol_scale, looping);
+        if (instance_index < 0) {
+            return -1;
         }
-        xlog::warn("No free slot for 3D sound");
-        return -1;
+
+        auto& instance = rf::sound_instances[instance_index];
+        int sig;
+        if (looping) {
+            sig = rf::snd_pc_play_looping(handle, vol_scale, pan, 0.0f, false);
+        }
+        else {
+            sig = rf::snd_pc_play(handle, vol_scale, pan, 0, false);
+        }
+        xlog::trace("snd_play handle %d vol %.2f sig %d", handle, vol_scale, sig);
+        if (sig < 0) {
+            return -1;
+        }
+
+        instance.sig = sig;
+        instance.handle = handle;
+        instance.group = group;
+        instance.base_volume = volume;
+        instance.pan = pan;
+        instance.is_3d_sound = false;
+        instance.use_count++;
+
+        int instance_handle = instance_index | (instance.use_count << 8);
+        return instance_handle;
+    },
+};
+
+FunHook<int(int, const rf::Vector3&, float, const rf::Vector3&, int)> snd_play_3d_hook{
+    0x005056A0,
+    [](int handle, const rf::Vector3& pos, float volume, const rf::Vector3&, int group) {
+        // if (!rf::ds3d_enabled) {
+        //     return snd_play_3d_hook.call_target(handle, pos, volume, unk, group);
+        // }
+        if (!rf::sound_enabled) {
+            return -1;
+        }
+        if (rf::snd_load_hint(handle) != 0) {
+            xlog::warn("Failed to load sound %d", handle);
+            return -1;
+        }
+
+        float base_volume, pan;
+        rf::snd_calculate_2d_from_3d_info(handle, pos, &pan, &base_volume, volume);
+        float vol_scale = base_volume * rf::snd_group_volume[group];
+        bool looping = rf::sounds[handle].is_looping;
+        int instance_index = snd_get_free_instance(vol_scale, looping);
+        if (instance_index < 0) {
+            return -1;
+        }
+
+        auto& instance = rf::sound_instances[instance_index];
+        int sig;
+        if (rf::ds3d_enabled) {
+            sig = rf::snd_pc_play_3d(handle, pos, looping, 0);
+            rf::snd_pc_set_volume(instance.sig, vol_scale);
+        }
+        else if (looping) {
+            sig = rf::snd_pc_play_looping(handle, vol_scale, pan, 0.0f, true);
+        }
+        else {
+            sig = rf::snd_pc_play(handle, vol_scale, pan, 0.0f, true);
+        }
+        xlog::trace("snd_play_3d handle %d pos <%.2f %.2f %.2f> vol %.2f sig %d", handle, pos.x, pos.y, pos.z, vol_scale, sig);
+        if (sig < 0) {
+            return -1;
+        }
+
+        instance.sig = sig;
+        instance.handle = handle;
+        instance.group = group;
+        instance.base_volume = base_volume;
+        instance.pan = pan;
+        instance.is_3d_sound = true;
+        instance.pos = pos;
+        instance.base_volume_3d = volume;
+        instance.use_count++;
+
+        int instance_handle = instance_index | (instance.use_count << 8);
+        return instance_handle;
     },
 };
 
@@ -413,25 +464,30 @@ FunHook<void(int, const rf::Vector3&, const rf::Vector3&, float)> snd_change_3d_
             snd_change_3d_hook.call_target(instance_handle, pos, vel, volume);
             return;
         }
-        if (static_cast<uint8_t>(instance_handle) >= rf::num_sound_channels) {
+        auto instance_index = static_cast<uint8_t>(instance_handle);
+        if (instance_index >= std::size(rf::sound_instances)) {
+            assert(false);
             return;
         }
-        auto& snd_inst = rf::sound_instances[static_cast<uint8_t>(instance_handle)];
-        if (snd_inst.use_count != (instance_handle >> 8) || !snd_inst.is_3d_sound) {
+        auto& instance = rf::sound_instances[instance_index];
+        if (instance.use_count != (instance_handle >> 8) || !instance.is_3d_sound) {
             return;
-        }
-        if (volume != snd_inst.orig_volume) {
-            snd_inst.orig_volume = volume;
-            float scaled_volume = volume * rf::snd_group_volume[snd_inst.group];
-            rf::snd_pc_set_volume(snd_inst.sig, scaled_volume);
         }
 
-        snd_inst.pos = pos;
-        auto chnl = rf::snd_ds_get_channel(snd_inst.sig);
+        instance.pos = pos;
+
+        if (volume != instance.base_volume_3d) {
+            instance.base_volume_3d = volume;
+            rf::snd_calculate_2d_from_3d_info(instance.handle, instance.pos, &instance.pan, &instance.base_volume, instance.base_volume_3d);
+            float vol_scale = instance.base_volume * rf::snd_group_volume[instance.group];
+            rf::snd_pc_set_volume(instance.sig, vol_scale);
+        }
+
+        auto chnl = rf::snd_ds_get_channel(instance.sig);
         if (chnl >= 0) {
             rf::Sound* sound;
-            rf::snd_pc_get_by_id(snd_inst.handle, &sound);
-            rf::snd_ds3d_update_buffer(chnl, sound->min_dist, sound->max_dist, pos, vel);
+            rf::snd_pc_get_by_id(instance.handle, &sound);
+            rf::snd_ds3d_update_buffer(chnl, sound->min_range, sound->max_range, pos, vel);
         }
     },
 };
@@ -441,9 +497,14 @@ void snd_update_sound_instances([[ maybe_unused ]] const rf::Vector3& camera_pos
     // Update sound volume of all instances because we do not use Direct Sound 3D distance attenuation model
     for (auto& instance : rf::sound_instances) {
         if (instance.handle >= 0 && instance.is_3d_sound) {
-            float volume = rf::snd_pc_calc_volume_3d(instance.handle, instance.pos, instance.orig_volume);
-            float scaled_volume = volume * rf::snd_group_volume[instance.group];
-            rf::snd_pc_set_volume(instance.sig, scaled_volume);
+            // Note: we should use snd_pc_calc_volume_3d because snd_calculate_2d_from_3d_info ignores volume from sounds.tbl
+            //       but that is how it works in RF and fixing it would change volume levels for many sounds in game...
+            rf::snd_calculate_2d_from_3d_info(instance.handle, instance.pos, &instance.pan, &instance.base_volume, instance.base_volume_3d);
+            float vol_scale = instance.base_volume * rf::snd_group_volume[instance.group];
+            rf::snd_pc_set_volume(instance.sig, vol_scale);
+            if (!rf::ds3d_enabled) {
+                rf::snd_pc_set_pan(instance.sig, instance.pan);
+            }
         }
     }
 }
@@ -455,15 +516,16 @@ void snd_update_ambient_sounds(const rf::Vector3& camera_pos)
         if (ambient_snd.handle >= 0) {
             float distance = (camera_pos - ambient_snd.pos).len();
             auto& sound = rf::sounds[ambient_snd.handle];
-            bool in_range = distance <= sound.max_dist;
+            bool in_range = distance <= sound.max_range;
             if (in_range) {
                 if (ambient_snd.sig < 0) {
                     bool is_looping = rf::sounds[ambient_snd.handle].is_looping;
                     ambient_snd.sig = rf::snd_pc_play_3d(ambient_snd.handle, ambient_snd.pos, is_looping, 0);
                 }
+                // Update volume even for non-looping sounds unlike original code
                 float volume = rf::snd_pc_calc_volume_3d(ambient_snd.handle, ambient_snd.pos, ambient_snd.volume);
-                float scaled_volume = volume * rf::snd_group_volume[0];
-                rf::snd_pc_set_volume(ambient_snd.sig, scaled_volume);
+                float vol_scale = volume * rf::snd_group_volume[rf::SOUND_GROUP_EFFECTS];
+                rf::snd_pc_set_volume(ambient_snd.sig, vol_scale);
             }
             else if (ambient_snd.sig >= 0 && !in_range) {
                 rf::snd_pc_stop(ambient_snd.sig);
@@ -498,22 +560,56 @@ void player_fpgun_move_sounds(const rf::Vector3& camera_pos, const rf::Vector3& 
     }
 }
 
+#ifdef DEBUG
+
+ConsoleCommand2 sound_stress_test_cmd{
+    "sound_stress_test",
+    [](int num) {
+        g_sound_test = num;
+    },
+};
+
+void sound_test_do_frame()
+{
+    if (g_sound_test && rf::local_player_entity) {
+        static float sounds_to_add = 0.0f;
+        sounds_to_add += rf::frametime * g_sound_test;
+        while (sounds_to_add >= 1.0f) {
+            auto pos = rf::local_player_entity->p_data.pos;
+            pos.x += ((rand() % 200) - 100) / 50.0f;
+            pos.y += ((rand() % 200) - 100) / 50.0f;
+            pos.z += ((rand() % 200) - 100) / 50.0f;
+            rf::snd_play_3d(0, pos, 1.0f, rf::Vector3{}, 0);
+            sounds_to_add -= 1.0f;
+        }
+    }
+}
+
+#endif // DEBUG
+
 FunHook<void(const rf::Vector3&, const rf::Vector3&, const rf::Matrix3&)> snd_update_sounds_hook{
      0x00505EC0,
     [](const rf::Vector3& camera_pos, const rf::Vector3& camera_vel, const rf::Matrix3& camera_orient) {
+        rf::sound_listener_pos = camera_pos;
+        rf::sound_listener_rvec = camera_orient.rvec;
+
         player_fpgun_move_sounds(camera_pos, camera_vel);
 
-        // Use original implementation if DirectSound 3D is disabled
-        if (!rf::ds3d_enabled) {
-            snd_update_sounds_hook.call_target(camera_pos, camera_vel, camera_orient);
-            return;
+#ifdef DEBUG
+        sound_test_do_frame();
+#endif
+
+        if (rf::ds3d_enabled) {
+            // Update DirectSound 3D listener parameters
+            rf::snd_pc_change_listener(camera_pos, camera_vel, camera_orient);
+
+            snd_update_sound_instances(camera_pos);
+            snd_update_ambient_sounds(camera_pos);
         }
-
-        // Update DirectSound 3D listener parameters
-        rf::snd_pc_change_listener(camera_pos, camera_vel, camera_orient);
-
-        snd_update_sound_instances(camera_pos);
-        snd_update_ambient_sounds(camera_pos);
+        else {
+            // Use original implementation if DirectSound 3D is disabled
+            snd_update_sounds_hook.call_target(camera_pos, camera_vel, camera_orient);
+        }
     },
 };
 
@@ -528,10 +624,6 @@ void apply_sound_patches()
 
     // Level sounds
     set_play_sound_events_volume_scale(g_game_config.level_sound_volume);
-    snd_calculate_1d_from_3d_ambient_sound_hook.install();
-
-    // Update volume for non-looping sounds
-    AsmWriter(0x00505FE4).nop(2);
 
     // Fix ambient sound volume updating
     AsmWriter(0x00505FD7, 0x00505FFB)
@@ -543,21 +635,20 @@ void apply_sound_patches()
     // Delete sounds with lowest volume when there is no free slot for a new sound
     snd_ds_play_3d_no_free_slots_fix.install();
     snd_ds_play_no_free_slots_fix.install();
-    snd_play_no_free_slots_fix.install();
-    //write_mem<u8>(0x005055AB, asm_opcodes::jmp_rel_short); // never free level sounds, uncomment to test
+    //write_mem<u8>(0x005055AB, asm_opcodes::jmp_rel_short); // never free sound instances, uncomment to test
     sound_instances_resize_patch.install();
     ds_channels_resize_patch.install();
-    write_mem<i8>(0x005053F5 + 1, rf::num_sound_channels); // snd_init_sound_instances_array
-    write_mem<i8>(0x005058D8 + 2, rf::num_sound_channels); // snd_change_3d
-    write_mem<i8>(0x0050598A + 2, rf::num_sound_channels); // snd_change
-    write_mem<i8>(0x00505A36 + 2, rf::num_sound_channels); // snd_stop_all_paused_sounds
-    write_mem<i8>(0x00505A5A + 2, rf::num_sound_channels); // snd_stop
-    write_mem<i8>(0x00505C31 + 2, rf::num_sound_channels); // snd_is_playing
-    write_mem<i8>(0x00521145 + 1, rf::num_sound_channels); // snd_ds_channels_array_ctor
-    write_mem<i8>(0x0052163D + 2, rf::num_sound_channels); // snd_ds_init_all_channels
-    write_mem<i8>(0x0052191D + 2, rf::num_sound_channels); // snd_ds_close_all_channels
-    write_mem<i8>(0x00522F4F + 2, rf::num_sound_channels); // snd_ds_get_channel
-    write_mem<i8>(0x00522D1D + 2, rf::num_sound_channels); // snd_ds_close_all_channels2
+    write_mem<i8>(0x005053F5 + 1, std::size(rf::sound_instances)); // snd_init_sound_instances_array
+    write_mem<i8>(0x005058D8 + 2, std::size(rf::sound_instances)); // snd_change_3d
+    write_mem<i8>(0x0050598A + 2, std::size(rf::sound_instances)); // snd_change
+    write_mem<i8>(0x00505A36 + 2, std::size(rf::sound_instances)); // snd_stop_all_paused_sounds
+    write_mem<i8>(0x00505A5A + 2, std::size(rf::sound_instances)); // snd_stop
+    write_mem<i8>(0x00505C31 + 2, std::size(rf::sound_instances)); // snd_is_playing
+    write_mem<i8>(0x00521145 + 1, std::size(rf::ds_channels));     // snd_ds_channels_array_ctor
+    write_mem<i8>(0x0052163D + 2, std::size(rf::ds_channels));     // snd_ds_init_all_channels
+    write_mem<i8>(0x0052191D + 2, std::size(rf::ds_channels));     // snd_ds_close_all_channels
+    write_mem<i8>(0x00522F4F + 2, std::size(rf::ds_channels));     // snd_ds_get_channel
+    write_mem<i8>(0x00522D1D + 2, std::size(rf::ds_channels));     // snd_ds_close_all_channels2
 
     // Do not use DSPROPSETID_VoiceManager because it is not implemented by dsoal
     write_mem<i8>(0x00521597 + 4, 0);
@@ -567,6 +658,9 @@ void apply_sound_patches()
 
     // do not set DS3DMODE_DISABLE on 3D buffers in snd_ds_play
     write_mem<u8>(0x005225D1, asm_opcodes::jmp_rel_short);
+
+    // Improve handling of instance slot allocation in snd_play
+    snd_play_hook.install();
 
     // Use DirectSound 3D for 3D sounds
     snd_play_3d_hook.install();
@@ -592,5 +686,6 @@ void register_sound_commands()
     level_sounds_cmd.register_cmd();
 #ifdef DEBUG
     playing_sounds_cmd.register_cmd();
+    sound_stress_test_cmd.register_cmd();
 #endif
 }

@@ -224,10 +224,6 @@ namespace rf
     static auto& gr_line_mode = addr_as_ref<GrMode>(0x01775B00);
     static auto& gr_string_mode = addr_as_ref<GrMode>(0x017C7C5C);
 
-    static auto& current_fps = addr_as_ref<float>(0x005A4018);
-    static auto& frametime = addr_as_ref<float>(0x005A4014);
-    static auto& framerate_min = addr_as_ref<float>(0x005A4024);
-
     static auto& gr_default_wfar = addr_as_ref<float>(0x00596140);
 
     static constexpr int max_fonts = 12;
