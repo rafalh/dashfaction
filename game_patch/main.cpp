@@ -1,29 +1,25 @@
 #include <common/GameConfig.h>
 #include <common/BuildConfig.h>
 #include "main.h"
-#include "level_autodl/autodl.h"
 #include "console/console.h"
 #include "crash_handler_stub.h"
 #include "debug/debug.h"
 #include "exports.h"
-#include "graphics/gamma.h"
 #include "graphics/graphics.h"
-#include "graphics/capture.h"
 #include "in_game_ui/hud.h"
 #include "in_game_ui/scoreboard.h"
 #include "in_game_ui/spectate_mode.h"
-#include "multi/kill.h"
-#include "multi/network.h"
+#include "object/object.h"
+#include "multi/multi.h"
+#include "multi/server.h"
 #include "misc/misc.h"
 #include "misc/vpackfile.h"
-#include "misc/wndproc.h"
 #include "misc/high_fps.h"
 #include "utils/os-utils.h"
-#include "utils/list-utils.h"
-#include "server/server.h"
 #include "input/input.h"
 #include "rf/multi.h"
 #include "rf/level.h"
+#include "rf/os.h"
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
@@ -45,20 +41,6 @@
 GameConfig g_game_config;
 HMODULE g_hmodule;
 
-static void os_pool()
-{
-    // Note: When using dedicated server we get WM_PAINT messages all the time
-    MSG msg;
-    constexpr int limit = 4;
-    for (int i = 0; i < limit; ++i) {
-        if (!PeekMessageA(&msg, nullptr, 0, 0, PM_REMOVE))
-            break;
-        TranslateMessage(&msg);
-        DispatchMessageA(&msg);
-        // xlog::info("msg %u\n", msg.message);
-    }
-}
-
 CallHook<void()> rf_init_hook{
     0x004B27CD,
     []() {
@@ -77,9 +59,9 @@ CodeInjection after_full_game_init_hook{
 #if !defined(NDEBUG) && defined(HAS_EXPERIMENTAL)
         experimental_init_after_game();
 #endif
-        graphics_capture_after_game_init();
+        graphics_after_game_init();
         console_init();
-        misc_after_full_game_init();
+        multi_after_full_game_init();
         debug_init();
 
         xlog::info("Game fully initialized");
@@ -99,7 +81,7 @@ CodeInjection cleanup_game_hook{
 CodeInjection before_frame_hook{
     0x004B2818,
     []() {
-        os_pool();
+        rf::os_poll();
         high_fps_update();
         server_do_frame();
         debug_do_frame();
@@ -125,21 +107,11 @@ CodeInjection after_frame_render_hook{
             spectate_mode_draw_ui();
 
         graphics_draw_fps_counter();
-        level_download_render_progress();
+        multi_render_level_download_progress();
 #if !defined(NDEBUG) && defined(HAS_EXPERIMENTAL)
         experimental_render();
 #endif
         debug_render_ui();
-    },
-};
-
-FunHook<void()> os_poll_hook{0x00524B60, os_pool};
-
-CodeInjection key_get_hook{
-    0x0051F000,
-    []() {
-        // Process messages here because when watching videos main loop is not running
-        os_pool();
     },
 };
 
@@ -153,8 +125,6 @@ FunHook<int(rf::String&, rf::String&, char*)> level_load_hook{
         if (ret != 0)
             xlog::warn("Loading failed: %s", error);
         else {
-            high_fps_after_level_load(level_filename);
-            misc_after_level_load(level_filename);
             spectate_mode_level_init();
         }
         return ret;
@@ -273,6 +243,24 @@ void log_system_info()
     }
 }
 
+void load_config()
+{
+    // Load config
+    try {
+        if (!g_game_config.load())
+            xlog::error("Configuration has not been found in registry!");
+    }
+    catch (std::exception& e) {
+        xlog::error("Failed to load configuration: %s", e.what());
+    }
+
+    // Log information from config
+    xlog::info("Resolution: %dx%dx%d", g_game_config.res_width.value(), g_game_config.res_height.value(), g_game_config.res_bpp.value());
+    xlog::info("Window Mode: %d", static_cast<int>(g_game_config.wnd_mode.value()));
+    xlog::info("Max FPS: %u", g_game_config.max_fps.value());
+    xlog::info("Allow Overwriting Game Files: %d", g_game_config.allow_overwrite_game_files.value());
+}
+
 extern "C" void subhook_unk_opcode_handler(uint8_t* opcode)
 {
     xlog::error("SubHook unknown opcode 0x%X at 0x%p", *opcode, opcode);
@@ -290,29 +278,8 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     if (!SetProcessDEPPolicy(PROCESS_DEP_ENABLE))
         xlog::warn("SetProcessDEPPolicy failed (error %ld)", GetLastError());
 
-    // Log system info
     log_system_info();
-
-    // Load config
-    try {
-        if (!g_game_config.load())
-            xlog::error("Configuration has not been found in registry!");
-    }
-    catch (std::exception& e) {
-        xlog::error("Failed to load configuration: %s", e.what());
-    }
-
-    // Log information from config
-    xlog::info("Resolution: %dx%dx%d", g_game_config.res_width.value(), g_game_config.res_height.value(), g_game_config.res_bpp.value());
-    xlog::info("Window Mode: %d", static_cast<int>(g_game_config.wnd_mode.value()));
-    xlog::info("Max FPS: %u", g_game_config.max_fps.value());
-    xlog::info("Allow Overwriting Game Files: %d", g_game_config.allow_overwrite_game_files.value());
-
-    // Process messages in the same thread as DX processing (alternative: D3DCREATE_MULTITHREADED)
-    AsmWriter(0x00524C48, 0x00524C83).nop(); // disable msg loop thread
-    AsmWriter(0x00524C48).call(0x00524E40);  // CreateMainWindow
-    key_get_hook.install();
-    os_poll_hook.install();
+    load_config();
 
     // General game hooks
     rf_init_hook.install();
@@ -327,17 +294,13 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     // Init modules
     console_apply_patches();
     graphics_init();
-    init_gamma();
-    graphics_capture_init();
-    network_init();
-    init_wnd_proc();
     apply_hud_patches();
-    init_autodownloader();
+    multi_do_patch();
     init_scoreboard();
-    init_kill();
     vpackfile_apply_patches();
     spectate_mode_init();
     high_fps_init();
+    object_do_patch();
     misc_init();
     server_init();
     input_init();

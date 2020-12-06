@@ -1,6 +1,5 @@
 #include <windows.h>
 #include <d3d8.h>
-#include "capture.h"
 #include "gr_color.h"
 #include "graphics_internal.h"
 #include "../main.h"
@@ -158,7 +157,7 @@ CallHook<rf::BmFormat(int, int, int, int, std::byte*)> gr_d3d_read_back_buffer_h
             return rf::BM_FORMAT_NONE;
         }
 
-        int bytes_per_pixel = get_bm_format_size(pixel_fmt);
+        int bytes_per_pixel = bm_bytes_per_pixel(pixel_fmt);
         std::byte* src_ptr =
             reinterpret_cast<std::byte*>(locked_rect.pBits) + y * locked_rect.Pitch + x * bytes_per_pixel;
         std::byte* dst_ptr = buffer;

@@ -668,9 +668,9 @@ struct PixelFormatHolder
 };
 
 template<typename F>
-void CallWithPixelFormat(rf::BmFormat pixel_fmt, F handler)
+void call_with_format(rf::BmFormat format, F handler)
 {
-    switch (pixel_fmt) {
+    switch (format) {
         case rf::BM_FORMAT_8888_ARGB:
             handler(PixelFormatHolder<rf::BM_FORMAT_8888_ARGB>());
             return;
@@ -700,17 +700,55 @@ void CallWithPixelFormat(rf::BmFormat pixel_fmt, F handler)
     }
 }
 
-bool conver_surface_format(void* dst_bits_ptr, rf::BmFormat dst_fmt, const void* src_bits_ptr,
-                               rf::BmFormat src_fmt, int width, int height, int dst_pitch, int src_pitch,
-                               const uint8_t* palette)
+// perhaps this code should be in g_solid.cpp but we don't have access to PixelsReader/Writer there
+void gr_copy_water_bitmap(rf::GrLockInfo& src_lock, rf::GrLockInfo& dst_lock)
+{
+    try {
+        call_with_format(src_lock.format, [=](auto s) {
+            call_with_format(dst_lock.format, [=](auto d) {
+                auto& byte_1370f90 = addr_as_ref<uint8_t[256]>(0x1370F90);
+                auto& byte_1371b14 = addr_as_ref<uint8_t[256]>(0x1371B14);
+                auto& byte_1371090 = addr_as_ref<uint8_t[512]>(0x1371090);
+
+                uint8_t* dst_row_ptr = dst_lock.data;
+                int src_pixel_size = bm_bytes_per_pixel(src_lock.format);
+
+                for (int y = 0; y < dst_lock.h; ++y) {
+                    int t1 = byte_1370f90[y];
+                    int t2 = byte_1371b14[y];
+                    uint8_t* off_arr = &byte_1371090[-t1];
+                    PixelsWriter<decltype(d)::value> wrt{dst_row_ptr};
+                    for (int x = 0; x < dst_lock.w; ++x) {
+                        int src_x = t1;
+                        int src_y = t2 + off_arr[t1];
+                        int src_x_limited = src_x & (dst_lock.w - 1);
+                        int src_y_limited = src_y & (dst_lock.h - 1);
+                        const uint8_t* src_ptr = src_lock.data + src_x_limited * src_pixel_size + src_y_limited * src_lock.stride_in_bytes;
+                        PixelsReader<decltype(s)::value> rdr{src_ptr};
+                        wrt.write(rdr.read());
+                        ++t1;
+                    }
+                    dst_row_ptr += dst_lock.stride_in_bytes;
+                }
+            });
+        });
+    }
+    catch (const std::exception& e) {
+        xlog::error("Pixel format conversion failed for liquid wave texture: %s", e.what());
+    }
+}
+
+bool convert_surface_format(void* dst_bits_ptr, rf::BmFormat dst_fmt, const void* src_bits_ptr,
+                           rf::BmFormat src_fmt, int width, int height, int dst_pitch, int src_pitch,
+                           const uint8_t* palette)
 {
 #if DEBUG_PERF
-    static auto& color_conv_perf = PerfAggregator::create("conver_surface_format");
+    static auto& color_conv_perf = PerfAggregator::create("convert_surface_format");
     ScopedPerfMonitor mon{color_conv_perf};
 #endif
     try {
-        CallWithPixelFormat(src_fmt, [=](auto s) {
-            CallWithPixelFormat(dst_fmt, [=](auto d) {
+        call_with_format(src_fmt, [=](auto s) {
+            call_with_format(dst_fmt, [=](auto d) {
                 SurfacePixelFormatConverter<decltype(s)::value, decltype(d)::value> conv{
                     src_bits_ptr, dst_bits_ptr,
                     static_cast<size_t>(src_pitch), static_cast<size_t>(dst_pitch),
@@ -745,162 +783,12 @@ CodeInjection level_load_lightmaps_color_conv_patch{
             lightmap->buf[i] = std::max(lightmap->buf[i], (uint8_t)(4 << 3)); // 32
     #endif
 
-        bool success = conver_surface_format(lock.data, lock.format, lightmap->buf,
+        bool success = convert_surface_format(lock.data, lock.format, lightmap->buf,
             rf::BM_FORMAT_888_BGR, lightmap->w, lightmap->h, lock.stride_in_bytes, 3 * lightmap->w, nullptr);
         if (!success)
             xlog::error("ConvertBitmapFormat failed for lightmap (dest format %d)", lock.format);
 
         rf::gr_unlock(&lock);
-    },
-};
-
-CodeInjection GSurface_calculate_lightmap_color_conv_patch{
-    0x004F2F23,
-    [](auto& regs) {
-        // Always skip original code
-        regs.eip = 0x004F3023;
-
-        auto face_light_info = reinterpret_cast<void*>(regs.esi);
-        rf::GLightmap& lightmap = *struct_field_ref<rf::GLightmap*>(face_light_info, 12);
-        rf::GrLockInfo lock;
-        if (!rf::gr_lock(lightmap.bm_handle, 0, &lock, rf::GR_LOCK_WRITE_ONLY)) {
-            return;
-        }
-
-        int offset_y = struct_field_ref<int>(face_light_info, 20);
-        int offset_x = struct_field_ref<int>(face_light_info, 16);
-        int src_width = lightmap.w;
-        int dst_pixel_size = get_bm_format_size(lock.format);
-        uint8_t* src_data = lightmap.buf + 3 * (offset_x + offset_y * src_width);
-        uint8_t* dst_data = &lock.data[dst_pixel_size * offset_x + offset_y * lock.stride_in_bytes];
-        int height = struct_field_ref<int>(face_light_info, 28);
-        int src_pitch = 3 * src_width;
-        bool success = conver_surface_format(dst_data, lock.format, src_data, rf::BM_FORMAT_888_BGR,
-            src_width, height, lock.stride_in_bytes, src_pitch);
-        if (!success)
-            xlog::error("conver_surface_format failed for geomod (fmt %d)", lock.format);
-        rf::gr_unlock(&lock);
-    },
-};
-
-CodeInjection GSurface_alloc_lightmap_color_conv_patch{
-    0x004E487B,
-    [](auto& regs) {
-        // Skip original code
-        regs.eip = 0x004E4993;
-
-        auto face_light_info = reinterpret_cast<void*>(regs.esi);
-        rf::GLightmap& lightmap = *struct_field_ref<rf::GLightmap*>(face_light_info, 12);
-        rf::GrLockInfo lock;
-        if (!rf::gr_lock(lightmap.bm_handle, 0, &lock, rf::GR_LOCK_WRITE_ONLY)) {
-            return;
-        }
-
-        int offset_y = struct_field_ref<int>(face_light_info, 20);
-        int src_width = lightmap.w;
-        int offset_x = struct_field_ref<int>(face_light_info, 16);
-        uint8_t* src_data_begin = lightmap.buf;
-        int src_offset = 3 * (offset_x + src_width * struct_field_ref<int>(face_light_info, 20)); // src offset
-        uint8_t* src_data = src_offset + src_data_begin;
-        int height = struct_field_ref<int>(face_light_info, 28);
-        int dst_pixel_size = get_bm_format_size(lock.format);
-        uint8_t* dst_row_ptr = &lock.data[dst_pixel_size * offset_x + offset_y * lock.stride_in_bytes];
-        int src_pitch = 3 * src_width;
-        bool success = conver_surface_format(dst_row_ptr, lock.format, src_data, rf::BM_FORMAT_888_BGR,
-                                                 src_width, height, lock.stride_in_bytes, src_pitch);
-        if (!success)
-            xlog::error("ConvertBitmapFormat failed for geomod2 (fmt %d)", lock.format);
-        rf::gr_unlock(&lock);
-    },
-};
-
-CodeInjection g_proctex_update_water_patch{
-    0x004E68D1,
-    [](auto& regs) {
-        // Skip original code
-        regs.eip = 0x004E6B68;
-
-        uintptr_t waveform_info = static_cast<uintptr_t>(regs.esi);
-        int src_bm_handle = *reinterpret_cast<int*>(waveform_info + 36);
-        rf::GrLockInfo src_lock_data, dst_lock_data;
-        if (!rf::gr_lock(src_bm_handle, 0, &src_lock_data, rf::GR_LOCK_READ_ONLY)) {
-            return;
-        }
-        int dst_bm_handle = *reinterpret_cast<int*>(waveform_info + 24);
-        if (!rf::gr_lock(dst_bm_handle, 0, &dst_lock_data, rf::GR_LOCK_WRITE_ONLY)) {
-            rf::gr_unlock(&src_lock_data);
-            return;
-        }
-
-        try {
-            CallWithPixelFormat(src_lock_data.format, [=](auto s) {
-                CallWithPixelFormat(dst_lock_data.format, [=](auto d) {
-                    auto& byte_1370f90 = addr_as_ref<uint8_t[256]>(0x1370F90);
-                    auto& byte_1371b14 = addr_as_ref<uint8_t[256]>(0x1371B14);
-                    auto& byte_1371090 = addr_as_ref<uint8_t[512]>(0x1371090);
-
-                    uint8_t* dst_row_ptr = dst_lock_data.data;
-                    int src_pixel_size = get_bm_format_size(src_lock_data.format);
-
-                    for (int y = 0; y < dst_lock_data.h; ++y) {
-                        int t1 = byte_1370f90[y];
-                        int t2 = byte_1371b14[y];
-                        uint8_t* off_arr = &byte_1371090[-t1];
-                        PixelsWriter<decltype(d)::value> wrt{dst_row_ptr};
-                        for (int x = 0; x < dst_lock_data.w; ++x) {
-                            int src_x = t1;
-                            int src_y = t2 + off_arr[t1];
-                            int src_x_limited = src_x & (dst_lock_data.w - 1);
-                            int src_y_limited = src_y & (dst_lock_data.h - 1);
-                            const uint8_t* src_ptr = src_lock_data.data + src_x_limited * src_pixel_size + src_y_limited * src_lock_data.stride_in_bytes;
-                            PixelsReader<decltype(s)::value> rdr{src_ptr};
-                            wrt.write(rdr.read());
-                            ++t1;
-                        }
-                        dst_row_ptr += dst_lock_data.stride_in_bytes;
-                    }
-                });
-            });
-        }
-        catch (const std::exception& e) {
-            xlog::error("Pixel format conversion failed for liquid wave texture: %s", e.what());
-        }
-
-        rf::gr_unlock(&src_lock_data);
-        rf::gr_unlock(&dst_lock_data);
-    }
-};
-
-CodeInjection GSolid_get_ambient_color_from_lightmap_patch{
-    0x004E5CE3,
-    [](auto& regs) {
-        // Skip original code
-        regs.eip = 0x004E5D57;
-
-        int x = regs.edi;
-        int y = regs.ebx;
-        auto& lm = *reinterpret_cast<rf::GLightmap*>(regs.esi);
-        auto& color = *reinterpret_cast<rf::Color*>(regs.esp + 0x34 - 0x28);
-
-        // Optimization: instead of locking the lightmap texture get color data from lightmap pixels stored in RAM
-        const uint8_t* src_ptr = lm.buf + (y * lm.w + x) * 3;
-        color.set(src_ptr[0], src_ptr[1], src_ptr[2], 255);
-    },
-};
-
-FunHook<unsigned()> bink_init_device_info_hook{
-    0x005210C0,
-    []() {
-        unsigned bink_flags = bink_init_device_info_hook.call_target();
-        const int BINKSURFACE32 = 3;
-
-        if (g_game_config.true_color_textures && g_game_config.res_bpp == 32) {
-            static auto& bink_bm_pixel_fmt = addr_as_ref<uint32_t>(0x018871C0);
-            bink_bm_pixel_fmt = rf::BM_FORMAT_888_RGB;
-            bink_flags = BINKSURFACE32;
-        }
-
-        return bink_flags;
     },
 };
 
@@ -914,22 +802,10 @@ void gr_color_init()
         write_mem<u32>(0x005A7E04, D3DFMT_A8R8G8B8); // old: D3DFMT_A1R5G5B5, lightmaps
         write_mem<u32>(0x005A7E08, D3DFMT_A8R8G8B8); // old: D3DFMT_A4R4G4B4
         write_mem<u32>(0x005A7E0C, D3DFMT_A4R4G4B4); // old: D3DFMT_A8R3G3B2
-
-        // use 32-bit texture for Bink rendering
-        bink_init_device_info_hook.install();
     }
 
     // lightmaps
     level_load_lightmaps_color_conv_patch.install();
-    // geomod
-    GSurface_calculate_lightmap_color_conv_patch.install();
-    GSurface_alloc_lightmap_color_conv_patch.install();
-    // water
-    AsmWriter(0x004E68B0, 0x004E68B6).nop();
-    g_proctex_update_water_patch.install();
-    // ambient color
-    GSolid_get_ambient_color_from_lightmap_patch.install();
     // fix pixel format for lightmaps
     write_mem<u8>(0x004F5EB8 + 1, rf::BM_FORMAT_888_RGB);
-
 }

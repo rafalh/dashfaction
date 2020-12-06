@@ -93,16 +93,19 @@ void activate_triggers_for_late_joiners(rf::Player* player)
     }
 }
 
-void clear_triggers_for_late_joiners()
-{
-    g_triggers_uids_for_late_joiners.clear();
-}
-
 CodeInjection send_state_info_injection{
     0x0048186F,
     [](auto& regs) {
         auto player = reinterpret_cast<rf::Player*>(regs.edi);
         activate_triggers_for_late_joiners(player);
+    },
+};
+
+FunHook<void()> trigger_level_init{
+    0x004BF730,
+    []() {
+        trigger_level_init.call_target();
+        g_triggers_uids_for_late_joiners.clear();
     },
 };
 
@@ -117,4 +120,7 @@ void trigger_apply_patches()
 
     // Send trigger_activate packets for late joiners
     send_state_info_injection.install();
+
+    // level init hook
+    trigger_level_init.install();
 }

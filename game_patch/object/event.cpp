@@ -1,5 +1,6 @@
 #include <patch_common/CodeInjection.h>
 #include <patch_common/CallHook.h>
+#include <patch_common/FunHook.h>
 #include <patch_common/AsmWriter.h>
 #include <xlog/xlog.h>
 #include <cassert>
@@ -134,18 +135,33 @@ CallHook<int(rf::AiPathInfo*)> ai_path_release_on_load_level_event_crash_fix{
     },
 };
 
-void do_level_specific_event_hacks(const char* level_filename)
-{
-    if (string_equals_ignore_case(level_filename, "L5S2.rfl")) {
-        // HACKFIX: make Set_Liquid_Depth events properties in lava control room more sensible
-        auto event1 = reinterpret_cast<EventSetLiquidDepthHook*>(rf::event_lookup_from_uid(3940));
-        auto event2 = reinterpret_cast<EventSetLiquidDepthHook*>(rf::event_lookup_from_uid(4132));
-        if (event1 && event2 && event1->duration == 0.15f && event2->duration == 0.15f) {
-            event1->duration = 1.5f;
-            event2->duration = 1.5f;
+FunHook<void()> event_level_init_post_hook{
+    0x004BD890,
+    []() {
+        event_level_init_post_hook.call_target();
+        if (string_equals_ignore_case(rf::level.filename, "L5S2.rfl")) {
+            // HACKFIX: make Set_Liquid_Depth events properties in lava control room more sensible
+            xlog::trace("Changing Set_Liquid_Depth events in this level...");
+            auto event1 = reinterpret_cast<EventSetLiquidDepthHook*>(rf::event_lookup_from_uid(3940));
+            auto event2 = reinterpret_cast<EventSetLiquidDepthHook*>(rf::event_lookup_from_uid(4132));
+            if (event1 && event2 && event1->duration == 0.15f && event2->duration == 0.15f) {
+                event1->duration = 1.5f;
+                event2->duration = 1.5f;
+            }
         }
-    }
-}
+        if (string_equals_ignore_case(rf::level.filename, "L5S3.rfl")) {
+            // Fix submarine exploding - change delay of two events to make submarine physics enabled later
+            xlog::trace("Fixing Submarine exploding bug...");
+            int uids[] = {4679, 4680};
+            for (int uid : uids) {
+                auto event = rf::event_lookup_from_uid(uid);
+                if (event && event->delay_seconds == 1.5f) {
+                    event->delay_seconds += 1.5f;
+                }
+            }
+        }
+    },
+};
 
 void apply_event_patches()
 {
@@ -160,4 +176,6 @@ void apply_event_patches()
     // Fix crash after level change (Load_Level event) caused by GNavNode pointers in AiPathInfo not being cleared for entities
     // being taken from the previous level
     ai_path_release_on_load_level_event_crash_fix.install();
+
+    event_level_init_post_hook.install();
 }

@@ -4,7 +4,13 @@
 #include "../rf/common.h"
 #include <xlog/xlog.h>
 
-inline int get_bm_format_size(rf::BmFormat format)
+// Forward declarations
+namespace rf
+{
+    struct GrLockInfo;
+}
+
+inline int bm_bytes_per_pixel(rf::BmFormat format)
 {
     switch (format) {
     case rf::BM_FORMAT_8_PALETTED:
@@ -97,7 +103,8 @@ inline rf::BmFormat get_bm_format_from_d3d_format(D3DFORMAT d3d_fmt)
 #endif
 
 void gr_color_init();
-bool conver_surface_format(void* dst_bits_ptr, rf::BmFormat dst_fmt, const void* src_bits_ptr,
-                          rf::BmFormat src_fmt, int width, int height, int dst_pitch, int src_pitch,
-                          const uint8_t* palette = nullptr);
+void gr_copy_water_bitmap(rf::GrLockInfo& src_lock, rf::GrLockInfo& dst_lock);
+bool convert_surface_format(void* dst_bits_ptr, rf::BmFormat dst_fmt, const void* src_bits_ptr,
+                            rf::BmFormat src_fmt, int width, int height, int dst_pitch, int src_pitch,
+                            const uint8_t* palette = nullptr);
 rf::Color decode_block_compressed_pixel(void* block, rf::BmFormat format, int x, int y);

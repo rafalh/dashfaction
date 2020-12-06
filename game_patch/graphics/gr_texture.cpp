@@ -107,7 +107,7 @@ FunHook<GrD3DSetTextureData_Type> gr_d3d_set_texture_data_hook{
         }
 
         auto tex_pixel_fmt = get_bm_format_from_d3d_format(desc.Format);
-        if (!bm_is_compressed_format(tex_pixel_fmt) && get_bm_format_size(tex_pixel_fmt) == 2) {
+        if (!bm_is_compressed_format(tex_pixel_fmt) && bm_bytes_per_pixel(tex_pixel_fmt) == 2) {
             // original code can handle only 16 bit surfaces
             return gr_d3d_set_texture_data_hook.call_target(level, src_bits_ptr, palette, bm_w, bm_h, format, section,
                                                            tex_w, tex_h, texture);
@@ -144,8 +144,8 @@ FunHook<GrD3DSetTextureData_Type> gr_d3d_set_texture_data_hook{
         }
         else {
             auto tex_pixel_fmt = get_bm_format_from_d3d_format(desc.Format);
-            auto bm_pitch = get_bm_format_size(format) * bm_w;
-            success = conver_surface_format(locked_rect.pBits, tex_pixel_fmt,
+            auto bm_pitch = bm_bytes_per_pixel(format) * bm_w;
+            success = convert_surface_format(locked_rect.pBits, tex_pixel_fmt,
                                                 src_bits_ptr, format, bm_w, bm_h, locked_rect.Pitch,
                                                 bm_pitch, palette);
             if (!success)

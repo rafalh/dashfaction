@@ -52,7 +52,6 @@ void init_win32_server_console();
 void cleanup_win32_server_console();
 void handle_vote_command(std::string_view vote_name, std::string_view vote_arg, rf::Player* sender);
 void server_vote_do_frame();
-void init_lazy_ban();
 void init_server_commands();
 void extend_round_time(int minutes);
 void restart_current_level();

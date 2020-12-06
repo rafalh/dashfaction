@@ -343,9 +343,9 @@ GrNewFont::GrNewFont(std::string_view name) :
         glyph_info.x = slot->bitmap_left;
         glyph_info.y = -slot->bitmap_top;
 
-        int pixel_size = get_bm_format_size(lock.format);
+        int pixel_size = bm_bytes_per_pixel(lock.format);
         auto dst_ptr = bitmap_bits + glyph_bm_y * lock.stride_in_bytes + glyph_bm_x * pixel_size;
-        conver_surface_format(dst_ptr, lock.format, bitmap.buffer, rf::BM_FORMAT_8_ALPHA, bitmap.width, bitmap.rows, lock.stride_in_bytes, bitmap.pitch);
+        convert_surface_format(dst_ptr, lock.format, bitmap.buffer, rf::BM_FORMAT_8_ALPHA, bitmap.width, bitmap.rows, lock.stride_in_bytes, bitmap.pitch);
 
         glyphs_.push_back(glyph_info);
     }

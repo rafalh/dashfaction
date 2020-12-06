@@ -247,6 +247,7 @@ namespace rf
     static auto& gr_get_clip = addr_as_ref<void(int* x, int* y, int* w, int* h)>(0x0050CD80);
     static auto& gr_preload_bitmap = addr_as_ref<int(int bm_handle)>(0x0050CE00);
     static auto& gr_tcache_add_ref = addr_as_ref<void(int bm_handle)>(0x0050E850);
+    static auto& gr_close = addr_as_ref<void()>(0x0050CBE0);
 
     static constexpr int center_x = 0x8000; // supported by gr_string
 

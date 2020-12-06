@@ -70,17 +70,9 @@ set(SRCS
     graphics/gr_color.cpp
     graphics/gr_color.h
     graphics/gamma.cpp
-    graphics/gamma.h
     graphics/capture.cpp
-    graphics/capture.h
     graphics/gr_texture.cpp
     graphics/bmpman.cpp
-    server/server.h
-    server/server.cpp
-    server/win32_server_console.cpp
-    server/votes.cpp
-    server/lazyban.cpp
-    server/commands.cpp
     input/input.cpp
     input/input.h
     in_game_ui/chatbox.cpp
@@ -103,12 +95,18 @@ set(SRCS
     debug/debug_internal.h
     debug/profiler.cpp
     debug/unresponsive.cpp
-    level_autodl/autodl.cpp
-    level_autodl/autodl.h
+    multi/multi.h
+    multi/multi.cpp
     multi/kill.cpp
     multi/kill.h
     multi/network.cpp
     multi/network.h
+    multi/level_download.cpp
+    multi/server.h
+    multi/server.cpp
+    multi/win32_server_console.cpp
+    multi/votes.cpp
+    multi/commands.cpp
     utils/com-utils.h
     utils/com-utils.cpp
     utils/enum-bitwise-operators.h
@@ -122,27 +120,32 @@ set(SRCS
     console/console.h
     console/commands.cpp
     console/autocomplete.cpp
+    object/object.h
+    object/object_private.h
+    object/entity.cpp
+    object/event.cpp
+    object/trigger.cpp
+    object/weapon.cpp
+    object/cutscene.cpp
+    object/glare.cpp
+    object/object.cpp
+    object/monitor.cpp
+    object/particle.cpp
     misc/high_fps.cpp
     misc/high_fps.h
     misc/misc.cpp
     misc/misc.h
     misc/vpackfile.cpp
     misc/vpackfile.h
-    misc/wndproc.cpp
-    misc/wndproc.h
+    misc/os.cpp
     misc/sound.cpp
     misc/sound.h
-    misc/trigger.cpp
-    misc/cutscene.cpp
-    misc/event.cpp
     misc/save_restore.cpp
-    misc/weapon.cpp
     misc/main_menu.cpp
-    misc/glare.cpp
     misc/player.cpp
     misc/player_fpgun.cpp
-    misc/object.cpp
-    misc/monitor.cpp
+    misc/bink.cpp
+    misc/g_solid.cpp
     res/resources.rc
     ${PF_SRCS}
     ${EXPERIMENTAL_SRCS}

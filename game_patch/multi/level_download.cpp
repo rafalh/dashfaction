@@ -1,4 +1,4 @@
-#include "autodl.h"
+#include "multi.h"
 #include "../rf/multi.h"
 #include "../rf/file.h"
 #include "../rf/graphics.h"
@@ -396,7 +396,7 @@ void init_autodownloader()
     download_level_cmd.register_cmd();
 }
 
-void level_download_render_progress()
+void multi_render_level_download_progress()
 {
     if (!g_download_in_progress) {
         // Load packages in main thread

@@ -1,28 +1,18 @@
 #include "high_fps.h"
 #include "../console/console.h"
-#include "../rf/graphics.h"
-#include "../rf/entity.h"
-#include "../rf/event.h"
-#include "../rf/particle_emitter.h"
-#include "../rf/misc.h"
 #include <patch_common/FunHook.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/InlineAsm.h>
 #include <patch_common/CodeInjection.h>
 #include <patch_common/AsmWriter.h>
-#include <patch_common/ShortTypes.h>
 #include <xlog/xlog.h>
 #include <array>
 #include <unordered_map>
-#include <unordered_set>
-#include <windows.h>
+#include <optional>
 
-constexpr auto reference_fps = 30.0f;
-constexpr auto reference_framerate = 1.0f / reference_fps;
 constexpr auto screen_shake_fps = 150.0f;
 
 static float g_camera_shake_factor = 0.6f;
-static LARGE_INTEGER g_qpc_frequency;
 
 class FtolAccuracyFix
 {
@@ -205,168 +195,6 @@ ConsoleCommand2 detect_ftol_issues_cmd{
 
 #endif // DEBUG
 
-rf::Timestamp g_player_jump_timestamp;
-
-CodeInjection stuck_to_ground_when_jumping_fix{
-    0x0042891E,
-    [](auto& regs) {
-        auto entity = reinterpret_cast<rf::Entity*>(regs.esi);
-        if (entity->local_player) {
-            // Skip land handling code for next 64 ms (like in PF)
-            g_player_jump_timestamp.set(64);
-        }
-    },
-};
-
-CodeInjection stuck_to_ground_when_using_jump_pad_fix{
-    0x00486B60,
-    [](auto& regs) {
-        auto entity = reinterpret_cast<rf::Entity*>(regs.esi);
-        if (entity->local_player) {
-            // Skip land handling code for next 64 ms
-            g_player_jump_timestamp.set(64);
-        }
-    },
-};
-
-CodeInjection stuck_to_ground_fix{
-    0x00487F82,
-    [](auto& regs) {
-        auto entity = reinterpret_cast<rf::Entity*>(regs.esi);
-        if (entity->local_player && g_player_jump_timestamp.valid() && !g_player_jump_timestamp.elapsed()) {
-            // Jump to jump handling code that sets entity to falling movement mode
-            regs.eip = 0x00487F7B;
-        }
-    },
-};
-
-CodeInjection entity_water_decelerate_fix{
-    0x0049D82A,
-    [](auto& regs) {
-        auto entity = reinterpret_cast<rf::Entity*>(regs.esi);
-        float vel_factor = 1.0f - (rf::frametime * 4.5f);
-        entity->p_data.vel.x *= vel_factor;
-        entity->p_data.vel.y *= vel_factor;
-        entity->p_data.vel.z *= vel_factor;
-        regs.eip = 0x0049D835;
-    },
-};
-
-CodeInjection WaterAnimateWaves_speed_fix{
-    0x004E68A0,
-    [](auto& regs) {
-        rf::Vector3& result = *reinterpret_cast<rf::Vector3*>(regs.esi + 0x2C);
-        result.x += 12.8f * (rf::frametime) / reference_framerate;
-        result.y += 4.2666669f * (rf::frametime) / reference_framerate;
-        result.z += 3.878788f * (rf::frametime) / reference_framerate;
-    },
-};
-
-void high_fps_after_level_load(rf::String& level_filename)
-{
-    if (_stricmp(level_filename, "L5S3.rfl") == 0) {
-        // Fix submarine exploding - change delay of two events to make submarine physics enabled later
-        //xlog::info("Fixing Submarine exploding bug...");
-        int uids[] = {4679, 4680};
-        for (int uid : uids) {
-            auto event = rf::event_lookup_from_uid(uid);
-            if (event && event->delay_seconds == 1.5f) {
-                event->delay_seconds += 1.5f;
-            }
-        }
-    }
-}
-
-FunHook<int(int)> timer_get_hook{
-    0x00504AB0,
-    [](int scale) {
-        static auto& timer_base = addr_as_ref<LARGE_INTEGER>(0x01751BF8);
-        static auto& timer_last_value = addr_as_ref<LARGE_INTEGER>(0x01751BD0);
-        // get QPC current value
-        LARGE_INTEGER current_qpc_value;
-        QueryPerformanceCounter(&current_qpc_value);
-        // make sure time never goes backward
-        if (current_qpc_value.QuadPart < timer_last_value.QuadPart) {
-            current_qpc_value = timer_last_value;
-        }
-        timer_last_value = current_qpc_value;
-        // Make sure we count from game start
-        current_qpc_value.QuadPart -= timer_base.QuadPart;
-        // Multiply with unit scale (eg. ms/us) before division
-        current_qpc_value.QuadPart *= scale;
-        // Divide by frequency using 64 bits and then cast to 32 bits
-        // Note: sign of result does not matter because it is used only for deltas
-        return static_cast<int>(current_qpc_value.QuadPart / g_qpc_frequency.QuadPart);
-    },
-};
-
-CallHook<void(int)> frametime_calculate_sleep_hook{
-    0x005095B4,
-    [](int ms) {
-        --ms;
-        if (ms > 0) {
-            frametime_calculate_sleep_hook.call_target(ms);
-        }
-    },
-};
-
-CodeInjection cutscene_shot_sync_fix{
-    0x0045B43B,
-    [](auto& regs) {
-        auto& current_shot_idx = struct_field_ref<int>(rf::active_cutscene, 0x808);
-        auto& current_shot_timer = struct_field_ref<rf::Timestamp>(rf::active_cutscene, 0x810);
-        if (current_shot_idx > 1) {
-            // decrease time for next shot using current shot timer value
-            int shot_time_left_ms = current_shot_timer.time_until();
-            if (shot_time_left_ms > 0 || shot_time_left_ms < -100)
-                xlog::warn("invalid shot_time_left_ms %d", shot_time_left_ms);
-            regs.eax += shot_time_left_ms;
-        }
-    },
-};
-
-FunHook<void(rf::Entity&, rf::Vector3&)> entity_on_land_hook{
-    0x00419830,
-    [](rf::Entity& entity, rf::Vector3& pos) {
-        entity_on_land_hook.call_target(entity, pos);
-        entity.p_data.vel.y = 0.0f;
-    },
-};
-
-CallHook<void(rf::Entity&)> entity_make_run_after_climbing_patch{
-    0x00430D5D,
-    [](rf::Entity& entity) {
-        entity_make_run_after_climbing_patch.call_target(entity);
-        entity.p_data.vel.y = 0.0f;
-    },
-};
-
-CodeInjection particle_update_accel_patch{
-    0x00495282,
-    [](auto& regs) {
-        auto& vel = addr_as_ref<rf::Vector3>(regs.ecx);
-        if (vel.len() < 0.0001f) {
-            regs.eip = 0x00495301;
-        }
-    },
-};
-
-FunHook<rf::ParticleEmitter*(int, rf::ParticleEmitterType&, rf::GRoom*, rf::Vector3&, bool)> particle_emitter_create_hook{
-    0x00497CA0,
-    [](int objh, rf::ParticleEmitterType& type, rf::GRoom* room, rf::Vector3& pos, bool is_on) {
-        float min_spawn_delay = 1.0f / 60.0f;
-        if ((type.flags & rf::PEF_CONTINOUS) || type.min_spawn_delay < min_spawn_delay) {
-            xlog::debug("Particle emitter spawn delay is too small: %.2f. Increasing to %.2f...", type.min_spawn_delay, min_spawn_delay);
-            rf::ParticleEmitterType new_type = type;
-            new_type.flags &= ~rf::PEF_CONTINOUS;
-            new_type.min_spawn_delay = std::max(new_type.min_spawn_delay, min_spawn_delay);
-            new_type.max_spawn_delay = std::max(new_type.max_spawn_delay, min_spawn_delay);
-            return particle_emitter_create_hook.call_target(objh, new_type, room, pos, is_on);
-        }
-        return particle_emitter_create_hook.call_target(objh, type, room, pos, is_on);
-    },
-};
-
 void high_fps_init()
 {
     // Fix animations broken on high FPS because of ignored ftol remainder
@@ -378,57 +206,15 @@ void high_fps_init()
     detect_ftol_issues_cmd.register_cmd();
 #endif
 
-    // Fix player being stuck to ground when jumping, especially when FPS is greater than 200
-    stuck_to_ground_when_jumping_fix.install();
-    stuck_to_ground_when_using_jump_pad_fix.install();
-    stuck_to_ground_fix.install();
-
-    // Fix water deceleration on high FPS
-    AsmWriter(0x0049D816).nop(5);
-    entity_water_decelerate_fix.install();
-
-    // Fix water waves animation on high FPS
-    AsmWriter(0x004E68A0, 0x004E68A9).nop();
-    AsmWriter(0x004E68B6, 0x004E68D1).nop();
-    WaterAnimateWaves_speed_fix.install();
-
-    // Fix timer_get handling of frequency greater than 2MHz (sign bit is set in 32 bit dword)
-    QueryPerformanceFrequency(&g_qpc_frequency);
-    timer_get_hook.install();
-
-    // Fix incorrect frame time calculation
-    AsmWriter(0x00509595).nop(2);
-    write_mem<u8>(0x00509532, asm_opcodes::jmp_rel_short);
-    frametime_calculate_sleep_hook.install();
-
     // Fix screen shake caused by some weapons (eg. Assault Rifle)
     write_mem_ptr(0x0040DBCC + 2, &g_camera_shake_factor);
 
-    // Remove cutscene sync RF hackfix
-    write_mem<float>(0x005897B4, 1000.0f);
-    write_mem<float>(0x005897B8, 1.0f);
-    static float zero = 0.0f;
-    write_mem_ptr(0x0045B42A + 2, &zero);
-
-    // Fix cutscene shot timer sync on high fps
-    cutscene_shot_sync_fix.install();
-
-    // Fix flee AI mode on high FPS by avoiding clearing velocity in Y axis in EntityMakeRun
-    AsmWriter(0x00428121, 0x0042812B).nop();
-    AsmWriter(0x0042809F, 0x004280A9).nop();
-    entity_on_land_hook.install();
-    entity_make_run_after_climbing_patch.install();
-
     // Fix flamethrower "stroboscopic effect" on high FPS
-    // g3_draw_sprite interprets parameters differently than g3_draw_sprite_stretch expects - zero angle does not use
+    // gr_draw_sprite interprets parameters differently than gr_draw_sprite_stretch expects - zero angle does not use
     // diamond shape and size is not divided by 2. Instead of calling it when p0 to p1 distance is small get rid of this
-    // special case. g3_draw_sprite_stretch should handle it properly even if distance is 0 because it
+    // special case. gr_draw_sprite_stretch should handle it properly even if distance is 0 because it
     // uses Vector3::normalize_safe() API.
     write_mem<u8>(0x00558E61, asm_opcodes::jmp_rel_short);
-    particle_update_accel_patch.install();
-
-    // Recude particle emitters maximal spawn rate
-    particle_emitter_create_hook.install();
 }
 
 void high_fps_update()

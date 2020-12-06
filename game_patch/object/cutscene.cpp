@@ -1,13 +1,15 @@
 #include <patch_common/FunHook.h>
 #include <patch_common/CallHook.h>
+#include <patch_common/CodeInjection.h>
 #include <algorithm>
+#include <xlog/xlog.h>
 #include "../console/console.h"
 #include "../rf/player.h"
 #include "../rf/graphics.h"
 #include "../rf/hud.h"
 #include "../rf/misc.h"
 #include "../main.h"
-#include "sound.h"
+#include "../misc/sound.h"
 
 static constexpr rf::ControlAction default_skip_cutscene_ctrl = rf::CA_MP_STATS;
 
@@ -123,6 +125,21 @@ ConsoleCommand2 skip_cutscene_bind_cmd{
     "skip_cutscene_bind ctrl_name",
 };
 
+CodeInjection cutscene_shot_sync_fix{
+    0x0045B43B,
+    [](auto& regs) {
+        auto& current_shot_idx = struct_field_ref<int>(rf::active_cutscene, 0x808);
+        auto& current_shot_timer = struct_field_ref<rf::Timestamp>(rf::active_cutscene, 0x810);
+        if (current_shot_idx > 1) {
+            // decrease time for next shot using current shot timer value
+            int shot_time_left_ms = current_shot_timer.time_until();
+            if (shot_time_left_ms > 0 || shot_time_left_ms < -100)
+                xlog::warn("invalid shot_time_left_ms %d", shot_time_left_ms);
+            regs.eax += shot_time_left_ms;
+        }
+    },
+};
+
 void cutscene_apply_patches()
 {
     // Support skipping cutscenes
@@ -131,4 +148,13 @@ void cutscene_apply_patches()
 
     // Fix crash if camera cannot be restored to first-person mode after cutscene
     cutscene_stop_current_camera_set_first_person_hook.install();
+
+    // Remove cutscene sync RF hackfix
+    write_mem<float>(0x005897B4, 1000.0f);
+    write_mem<float>(0x005897B8, 1.0f);
+    static float zero = 0.0f;
+    write_mem_ptr(0x0045B42A + 2, &zero);
+
+    // Fix cutscene shot timer sync on high fps
+    cutscene_shot_sync_fix.install();
 }

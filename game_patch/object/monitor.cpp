@@ -71,7 +71,7 @@ FunHook<void(rf::Monitor&)> monitor_update_static_hook{
         // Use custom noise generation algohritm because the default one is not uniform enough in high resolution
         rf::GrLockInfo lock;
         if (rf::gr_lock(mon.bitmap, 0, &lock, rf::GR_LOCK_WRITE_ONLY)) {
-            auto pixel_size = get_bm_format_size(lock.format);
+            auto pixel_size = bm_bytes_per_pixel(lock.format);
             for (int y = 0; y < lock.h; ++y) {
                 auto ptr = lock.data + y * lock.stride_in_bytes;
                 for (int x = 0; x < lock.w; ++x) {

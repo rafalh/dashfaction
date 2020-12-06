@@ -398,36 +398,6 @@ FunHook<void(rf::Player*)> spawn_player_sync_ammo_hook{
     },
 };
 
-struct ParticleCreateInfo
-{
-    rf::Vector3 pos;
-    rf::Vector3 velocity;
-    float pradius;
-    float growth_rate;
-    float acceleration;
-    float gravity_scale;
-    float life_secs;
-    int bitmap;
-    int field_30;
-    rf::Color particle_clr;
-    rf::Color particle_clr_dest;
-    int particle_flags;
-    int particle_flags2;
-    int field_44;
-    int field_48;
-};
-static_assert(sizeof(ParticleCreateInfo) == 0x4C);
-
-FunHook<void(int, ParticleCreateInfo&, void*, rf::Vector3*, int, void**, void*)> ParticleCreate_hook{
-    0x00496840,
-    [](int pool_id, ParticleCreateInfo& pci, void* room, rf::Vector3 *a4, int parent_obj, void** result, void* emitter) {
-        bool damages_flag = pci.particle_flags2 & 1;
-        // Do not create not damaging particles on a dedicated server
-        if (damages_flag || !rf::is_dedicated_server)
-            ParticleCreate_hook.call_target(pool_id, pci, room, a4, parent_obj, result, emitter);
-    },
-};
-
 CallHook<void(char*)> get_mod_name_for_game_info_packet_patch{
     0x0047B1E0,
     [](char* mod_name) {
@@ -510,7 +480,6 @@ void server_init()
     init_win32_server_console();
 #endif
 
-    init_lazy_ban();
     init_server_commands();
 
     // Remove level prefix restriction (dm/ctf) for 'level' command and dedicated_server.txt
@@ -519,9 +488,6 @@ void server_init()
 
     // In Multi -> Create game fix level filtering so 'pdm' and 'pctf' is supported
     multi_is_level_matching_game_type_hook.install();
-
-    // Do not create not damaging particles on a dedicated server
-    ParticleCreate_hook.install();
 
     // Allow disabling mod name announcement
     get_mod_name_for_game_info_packet_patch.install();

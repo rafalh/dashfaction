@@ -314,7 +314,7 @@ ConsoleCommand2 level_sounds_cmd{
     [](std::optional<float> volume) {
         if (volume) {
             float vol_scale = std::clamp(volume.value(), 0.0f, 1.0f);
-            //set_play_sound_events_volume_scale(vol_scale);
+            set_play_sound_events_volume_scale(vol_scale);
 
             g_game_config.level_sound_volume = vol_scale;
             g_game_config.save();
@@ -341,13 +341,6 @@ ConsoleCommand2 playing_sounds_cmd{
     },
 };
 #endif
-
-CodeInjection bink_set_sound_system_injection{
-    0x00520BBC,
-    [](auto& regs) {
-        *reinterpret_cast<IDirectSound**>(regs.esp + 4) = rf::direct_sound;
-    },
-};
 
 CodeInjection snd_ds_init_device_leave_injection{
     0x005215E0,
@@ -625,9 +618,6 @@ void apply_sound_patches()
 
     // Do not use DSPROPSETID_VoiceManager because it is not implemented by dsoal
     write_mem<i8>(0x00521597 + 4, 0);
-
-    // Pass IDirectSound object to Bink Video engine
-    bink_set_sound_system_injection.install();
 
     // do not set DS3DMODE_DISABLE on 3D buffers in snd_ds_play
     write_mem<u8>(0x005225D1, asm_opcodes::jmp_rel_short);

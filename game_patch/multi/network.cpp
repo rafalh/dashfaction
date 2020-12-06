@@ -1,5 +1,6 @@
 #include <winsock2.h>
 #include "network.h"
+#include "server.h"
 #include "../rf/multi.h"
 #include "../rf/misc.h"
 #include "../rf/player.h"
@@ -9,8 +10,8 @@
 #include "../rf/os.h"
 #include "../rf/geometry.h"
 #include "../rf/level.h"
-#include "../server/server.h"
 #include "../misc/misc.h"
+#include "../object/object.h"
 #include "../main.h"
 #include "../utils/enum-bitwise-operators.h"
 #include "../console/console.h"

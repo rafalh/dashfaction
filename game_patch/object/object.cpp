@@ -3,12 +3,13 @@
 #include <patch_common/CodeInjection.h>
 #include <patch_common/AsmWriter.h>
 #include <patch_common/StaticBufferResizePatch.h>
+#include <xlog/xlog.h>
 #include "../rf/object.h"
 #include "../rf/item.h"
 #include "../rf/clutter.h"
 #include "../rf/multi.h"
-#include "misc.h"
-#include <xlog/xlog.h>
+#include "object.h"
+#include "object_private.h"
 
 FunHook<rf::Object*(int, int, int, rf::ObjectCreateInfo*, int, rf::GRoom*)> obj_create_hook{
     0x00486DA0,
@@ -228,7 +229,7 @@ CodeInjection sort_clutter_patch{
     },
 };
 
-void obj_do_patch()
+void object_do_patch()
 {
     // Log error when object cannot be created
     obj_create_hook.install();
@@ -275,4 +276,14 @@ void obj_do_patch()
     // Sort objects by anim mesh name to improve rendering performance
     sort_items_patch.install();
     sort_clutter_patch.install();
+
+    // Other files
+    entity_do_patch();
+    cutscene_apply_patches();
+    apply_event_patches();
+    glare_patches_patches();
+    apply_weapon_patches();
+    trigger_apply_patches();
+    monitor_do_patch();
+    particle_do_patch();
 }

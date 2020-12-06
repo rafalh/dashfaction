@@ -1,6 +1,6 @@
 #include <windows.h>
 #include <d3d8.h>
-#include "gamma.h"
+#include "graphics.h"
 #include "../rf/os.h"
 #include "../rf/graphics.h"
 #include "../rf/gr_direct3d.h"

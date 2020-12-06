@@ -814,6 +814,9 @@ CodeInjection display_full_screen_image_alpha_support_patch{
 
 void apply_texture_patches();
 void apply_font_patches();
+void graphics_capture_init();
+void graphics_capture_after_game_init();
+void init_gamma();
 
 void graphics_init()
 {
@@ -928,6 +931,12 @@ void graphics_init()
 
     // Fonts
     apply_font_patches();
+
+    // Back-buffer capture or render to texture related code
+    graphics_capture_init();
+
+    // Gamma related code
+    init_gamma();
 
     // Enable mip-mapping for textures bigger than 256x256
     AsmWriter(0x0050FEDA, 0x0050FEE9).nop();
@@ -1044,6 +1053,12 @@ void graphics_init()
 
     // Support textures with alpha channel in Display_Fullscreen_Image event
     display_full_screen_image_alpha_support_patch.install();
+}
+
+void graphics_after_game_init()
+{
+    graphics_capture_after_game_init();
+
 }
 
 void graphics_draw_fps_counter()

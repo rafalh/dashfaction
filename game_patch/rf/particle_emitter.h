@@ -5,6 +5,9 @@
 namespace rf
 {
 
+struct GRoom;
+struct ParticleEmitter;
+
 enum ParticleEmitterFlags
 {
     PEF_IMMEDIATE = 0x2,
