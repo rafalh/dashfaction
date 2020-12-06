@@ -57,6 +57,7 @@ Version 1.5.1 (not released yet)
   (fixes crash in Bearskinner SP campaign)
 - use DirectSound3D position and velocity parameters for 3D sounds instead of emulating 3D by panning (enables doppler effects and allows proper 3D experience in setups with more than 2 sound channels e.g. 5.1)
 - improve compatibility with dsoal (allows EAX effects emulation)
+- fix entity staying in crouched state in a liquid if it was crouching when entering the liquid
 
 Version 1.5.0 (released 2020-09-05)
 -----------------------------------

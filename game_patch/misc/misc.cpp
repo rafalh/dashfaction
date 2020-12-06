@@ -381,6 +381,18 @@ CodeInjection vfile_read_stack_corruption_fix{
     },
 };
 
+CallHook<bool(const rf::Vector3&, const rf::Vector3&, rf::PhysicsData*, rf::PCollisionOut*)> entity_maybe_stop_crouching_collide_spheres_world_hook{
+    0x00428AB9,
+    [](const rf::Vector3& p1, const rf::Vector3& p2, rf::PhysicsData* pd, rf::PCollisionOut* collision) {
+        // Temporarly disable collisions with liquid faces
+        auto collision_flags = pd->collision_flags;
+        pd->collision_flags &= ~0x1000;
+        bool result = entity_maybe_stop_crouching_collide_spheres_world_hook.call_target(p1, p2, pd, collision);
+        pd->collision_flags = collision_flags;
+        return result;
+    },
+};
+
 void misc_after_level_load(const char* level_filename)
 {
     do_level_specific_event_hacks(level_filename);
@@ -519,6 +531,9 @@ void misc_init()
     // Fix stack corruption when packfile has lower size than expected
     vfile_read_stack_corruption_fix.install();
 
+    // Fix entity staying in crouched state after entering liquid
+    entity_maybe_stop_crouching_collide_spheres_world_hook.install();
+
     // Init cmd line param
     get_url_cmd_line_param();
 
@@ -536,6 +551,29 @@ void misc_init()
     player_fpgun_do_patch();
     monitor_do_patch();
     register_sound_commands();
+
+
+    static CodeInjection entity_maybe_stop_crouching_injection{
+        0x00428A60,
+        []() {
+            xlog::warn("entity_maybe_stop_crouching");
+        },
+    };
+    entity_maybe_stop_crouching_injection.install();
+    static CodeInjection entity_crouch_injection{
+        0x004289D0,
+        []() {
+            xlog::warn("entity_crouch");
+        },
+    };
+    entity_crouch_injection.install();
+    static CodeInjection entity_make_swim_injection{
+        0x00428270,
+        []() {
+            xlog::warn("entity_make_swim");
+        },
+    };
+    entity_make_swim_injection.install();
 }
 
 void handle_url_param()

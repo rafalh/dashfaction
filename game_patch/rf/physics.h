@@ -54,7 +54,7 @@ namespace rf
         Vector3 bbox_min;
         Vector3 bbox_max;
         int flags;
-        int flags2;
+        int collision_flags;
         float frame_time;
         PCollisionOut collide_out;
     };
