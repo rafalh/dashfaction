@@ -132,7 +132,6 @@ set(SRCS
     misc/wndproc.h
     misc/sound.cpp
     misc/sound.h
-    misc/limits.cpp
     misc/trigger.cpp
     misc/cutscene.cpp
     misc/event.cpp
@@ -140,6 +139,10 @@ set(SRCS
     misc/weapon.cpp
     misc/main_menu.cpp
     misc/glare.cpp
+    misc/player.cpp
+    misc/player_fpgun.cpp
+    misc/object.cpp
+    misc/monitor.cpp
     res/resources.rc
     ${PF_SRCS}
     ${EXPERIMENTAL_SRCS}

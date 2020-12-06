@@ -904,36 +904,6 @@ FunHook<unsigned()> bink_init_device_info_hook{
     },
 };
 
-CodeInjection MonitorUpdateStatic_patch{
-    0x004123AD,
-    [](auto& regs) {
-        // Note: default noise generation algohritm is not used because it's not uniform enough in high resolution
-        static int noise_buf;
-        if (regs.edx % 15 == 0)
-            noise_buf = std::rand();
-        bool white = noise_buf & 1;
-        noise_buf >>= 1;
-
-        auto& lock = *reinterpret_cast<rf::GrLockInfo*>(regs.esp + 0x2C - 0x20);
-        auto pixel_ptr = reinterpret_cast<char*>(regs.esi);
-        int bytes_per_pixel = get_bm_format_size(lock.format);
-
-        std::fill(pixel_ptr, pixel_ptr + bytes_per_pixel, white ? '\0' : '\xFF');
-        regs.esi += bytes_per_pixel;
-        ++regs.edx;
-        regs.eip = 0x004123DA;
-    },
-};
-
-CodeInjection MonitorUpdateOff_patch{
-    0x00412430,
-    [](auto& regs) {
-        auto& lock = *reinterpret_cast<rf::GrLockInfo*>(regs.esp + 0x34 - 0x20);
-        regs.ecx = lock.h * lock.stride_in_bytes;
-        regs.eip = 0x0041243F;
-    },
-};
-
 void gr_color_init()
 {
     // True Color textures
@@ -961,10 +931,5 @@ void gr_color_init()
     GSolid_get_ambient_color_from_lightmap_patch.install();
     // fix pixel format for lightmaps
     write_mem<u8>(0x004F5EB8 + 1, rf::BM_FORMAT_888_RGB);
-
-    // monitor noise
-    MonitorUpdateStatic_patch.install();
-    // monitor off state
-    MonitorUpdateOff_patch.install();
 
 }

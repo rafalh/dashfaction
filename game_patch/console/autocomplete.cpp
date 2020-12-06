@@ -1,5 +1,6 @@
 #include "console.h"
 #include "../main.h"
+#include "../misc/player.h"
 #include "../misc/vpackfile.h"
 #include "../rf/player.h"
 #include <patch_common/FunHook.h>

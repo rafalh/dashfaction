@@ -6,7 +6,6 @@
 
 void release_all_default_pool_textures();
 void destroy_texture(int bmh);
-void change_user_bitmap_format(int bmh, rf::BmFormat format, bool dynamic = false);
 void init_supported_texture_formats();
 size_t get_surface_length_in_bytes(int w, int h, rf::BmFormat format);
 

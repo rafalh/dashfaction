@@ -255,6 +255,13 @@ namespace rf
     };
     static_assert(sizeof(Weapon) == 0x314);
 
+    enum WeaponState
+    {
+        WS_IDLE = 0,
+        WS_RUN = 1,
+        WS_LOOP_FIRE = 2,
+    };
+
     static auto& weapon_types = addr_as_ref<WeaponInfo[64]>(0x0085CD08);
     static auto& riot_stick_weapon_type = addr_as_ref<int32_t>(0x00872468);
     static auto& remote_charge_weapon_type = addr_as_ref<int32_t>(0x0087210C);

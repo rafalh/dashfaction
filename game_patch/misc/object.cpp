@@ -1,11 +1,25 @@
-#include <patch_common/StaticBufferResizePatch.h>
-#include <patch_common/AsmWriter.h>
-#include <patch_common/CodeInjection.h>
+#include <patch_common/FunHook.h>
 #include <patch_common/CallHook.h>
-#include <cstring>
+#include <patch_common/CodeInjection.h>
+#include <patch_common/AsmWriter.h>
+#include <patch_common/StaticBufferResizePatch.h>
 #include "../rf/object.h"
+#include "../rf/item.h"
+#include "../rf/clutter.h"
 #include "../rf/multi.h"
 #include "misc.h"
+#include <xlog/xlog.h>
+
+FunHook<rf::Object*(int, int, int, rf::ObjectCreateInfo*, int, rf::GRoom*)> obj_create_hook{
+    0x00486DA0,
+    [](int type, int sub_type, int parent, rf::ObjectCreateInfo* create_info, int flags, rf::GRoom* room) {
+        auto obj = obj_create_hook.call_target(type, sub_type, parent, create_info, flags, room);
+        if (!obj) {
+            xlog::info("Failed to create object (type %d)", type);
+        }
+        return obj;
+    },
+};
 
 StaticBufferResizePatch<rf::Object*> obj_ptr_array_resize_patch{
     0x007394CC,
@@ -130,8 +144,95 @@ CallHook<void*(size_t)> GPool_allocate_new_hook{
     },
 };
 
-void apply_limits_patches()
+CodeInjection sort_items_patch{
+    0x004593AC,
+    [](auto& regs) {
+        auto item = reinterpret_cast<rf::Item*>(regs.esi);
+        auto vmesh = item->vmesh;
+        auto mesh_name = vmesh ? rf::vmesh_get_name(vmesh) : nullptr;
+        if (!mesh_name) {
+            // Sometimes on level change some objects can stay and have only vmesh destroyed
+            return;
+        }
+        std::string_view mesh_name_sv = mesh_name;
+
+        // HACKFIX: enable alpha sorting for Invulnerability Powerup and Riot Shield
+        // Note: material used for alpha-blending is flare_blue1.tga - it uses non-alpha texture
+        // so information about alpha-blending cannot be taken from material alone - it must be read from VFX
+        static const char* force_alpha_mesh_names[] = {
+            "powerup_invuln.vfx",
+            "Weapon_RiotShield.V3D",
+        };
+        for (auto alpha_mesh_name : force_alpha_mesh_names) {
+            if (mesh_name_sv == alpha_mesh_name) {
+                item->obj_flags |= rf::OF_HAS_ALPHA;
+                break;
+            }
+        }
+
+        rf::Item* current = rf::item_list.next;
+        while (current != &rf::item_list) {
+            auto current_anim_mesh = current->vmesh;
+            auto current_mesh_name = current_anim_mesh ? rf::vmesh_get_name(current_anim_mesh) : nullptr;
+            if (current_mesh_name && mesh_name_sv == current_mesh_name) {
+                break;
+            }
+            current = current->next;
+        }
+        item->next = current;
+        item->prev = current->prev;
+        item->next->prev = item;
+        item->prev->next = item;
+        // Set up needed registers
+        regs.ecx = regs.esp + 0xC0 - 0xB0; // create_info
+        regs.eip = 0x004593D1;
+    },
+};
+
+CodeInjection sort_clutter_patch{
+    0x004109D4,
+    [](auto& regs) {
+        auto clutter = reinterpret_cast<rf::Clutter*>(regs.esi);
+        auto vmesh = clutter->vmesh;
+        auto mesh_name = vmesh ? rf::vmesh_get_name(vmesh) : nullptr;
+        if (!mesh_name) {
+            // Sometimes on level change some objects can stay and have only vmesh destroyed
+            return;
+        }
+        std::string_view mesh_name_sv = mesh_name;
+
+        auto& clutter_list = addr_as_ref<rf::Clutter>(0x005C9360);
+        auto current = clutter_list.next;
+        while (current != &clutter_list) {
+            auto current_anim_mesh = current->vmesh;
+            auto current_mesh_name = current_anim_mesh ? rf::vmesh_get_name(current_anim_mesh) : nullptr;
+            if (current_mesh_name && mesh_name_sv == current_mesh_name) {
+                break;
+            }
+            if (current_mesh_name && std::string_view{current_mesh_name} == "LavaTester01.v3d") {
+                // HACKFIX: place LavaTester01 at the end to fix alpha draw order issues in L5S2 (Geothermal Plant)
+                // Note: OF_HAS_ALPHA cannot be used because it causes another draw-order issue when lava goes up
+                break;
+            }
+            current = current->next;
+        }
+        // insert before current
+        clutter->next = current;
+        clutter->prev = current->prev;
+        clutter->next->prev = clutter;
+        clutter->prev->next = clutter;
+        // Set up needed registers
+        regs.eax = addr_as_ref<bool>(regs.esp + 0xD0 + 0x18); // killable
+        regs.ecx = addr_as_ref<i32>(0x005C9358) + 1; // num_clutter_objs
+        regs.eip = 0x00410A03;
+    },
+};
+
+void obj_do_patch()
 {
+    // Log error when object cannot be created
+    obj_create_hook.install();
+
     // Change object limit
     //obj_free_slot_buffer_resize_patch.install();
     obj_ptr_array_resize_patch.install();
@@ -170,4 +271,8 @@ void apply_limits_patches()
 
     // Zero memory allocated from GPool dynamically
     GPool_allocate_new_hook.install();
+
+    // Sort objects by anim mesh name to improve rendering performance
+    sort_items_patch.install();
+    sort_clutter_patch.install();
 }

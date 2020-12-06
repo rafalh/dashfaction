@@ -15,6 +15,8 @@ namespace rf
     using EntityPowerups = int;
     using EntitySpeed = int;
 
+    constexpr int EF_JUMP_START_ANIM = 2;
+
     struct EntityCollisionSphereOverride
     {
         float radius;

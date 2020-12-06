@@ -1017,4 +1017,11 @@ void network_init()
 
     // Fix object interpolation playing too fast causing a possible jitter
     obj_interp_too_fast_fix.install();
+
+    // Use spawnpoint team property in TeamDM game (PF compatible)
+    write_mem<u8>(0x00470395 + 4, 0); // change cmp argument: CTF -> DM
+    write_mem<u8>(0x0047039A, asm_opcodes::jz_rel_short);  // invert jump condition: jnz -> jz
+
+    // Preserve password case when processing rcon_request command
+    write_mem<i8>(0x0046C85A + 1, 1);
 }

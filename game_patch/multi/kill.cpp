@@ -9,6 +9,8 @@
 #include <patch_common/ShortTypes.h>
 #include <patch_common/AsmWriter.h>
 
+void player_fpgun_on_player_death(rf::Player* pp);
+
 void kill_init_player(rf::Player* player)
 {
     auto stats = reinterpret_cast<PlayerStatsNew*>(player->stats);
@@ -117,8 +119,7 @@ FunHook<void(rf::Entity*)> entity_on_death_hook{
     [](rf::Entity* entity) {
         // Reset fpgun animation when player dies
         if (rf::local_player && entity->handle == rf::local_player->entity_handle && rf::local_player->weapon_mesh_handle) {
-            rf::vmesh_stop_all_actions(rf::local_player->weapon_mesh_handle);
-            rf::player_fpgun_clear_all_action_anim_sounds(rf::local_player);
+            player_fpgun_on_player_death(rf::local_player);
         }
         entity_on_death_hook.call_target(entity);
     },

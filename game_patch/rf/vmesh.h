@@ -48,6 +48,29 @@ namespace rf
     };
     static_assert(sizeof(VMeshCollisionOutput) == 0x20);
 
+    struct MeshMaterial
+    {
+        int field_0;
+        int flags;
+        char has_flag_2_8;
+        Color field_9;
+        int texture;
+        char name[100];
+        int field_78;
+        int field_7C;
+        int field_80;
+        float mat_field_24;
+        float mat_field_28;
+        float ref_cof;
+        char ref_map_name[36];
+        int ref_tex;
+        int field_B8;
+        float *mat_field_20;
+        int field_C0;
+        int field_C4;
+    };
+    static_assert(sizeof(MeshMaterial) == 0xC8);
+
     static auto& vmesh_get_type = addr_as_ref<VMeshType(VMesh *vmesh)>(0x00502B00);
     static auto& vmesh_get_name = addr_as_ref<const char*(VMesh* vmesh)>(0x00503470);
     static auto& vmesh_get_num_cspheres = addr_as_ref<int(VMesh *vmesh)>(0x00503250);
@@ -56,4 +79,5 @@ namespace rf
     static auto& vmesh_calc_lighting_data_size = addr_as_ref<int(VMesh *vmesh)>(0x00503F50);
     static auto& vmesh_update_lighting_data = addr_as_ref<int(VMesh *vmesh, GRoom *room, const Vector3 &pos, const Matrix3 &orient, void *mesh_lighting_data)>(0x00504000);
     static auto& vmesh_stop_all_actions = addr_as_ref<void(VMesh* vmesh)>(0x00503400);
+    static auto& vmesh_get_materials_array = addr_as_ref<void(VMesh *vmesh, int *num_materials_out, MeshMaterial **materials_array_out)>(0x00503650);
 }

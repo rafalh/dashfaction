@@ -13,7 +13,6 @@
 #include "../console/console.h"
 
 static int g_cutscene_bg_sound_sig = -1;
-std::vector<int> g_fpgun_sounds;
 #ifdef DEBUG
 int g_sound_test = 0;
 #endif
@@ -23,6 +22,8 @@ namespace rf
     rf::SoundInstance sound_instances[rf::num_sound_channels];
     rf::DsChannel ds_channels[rf::num_sound_channels];
 }
+
+void player_fpgun_move_sounds(const rf::Vector3& camera_pos, const rf::Vector3& camera_vel);
 
 void set_play_sound_events_volume_scale(float volume_scale)
 {
@@ -361,7 +362,7 @@ CodeInjection snd_ds_init_device_leave_injection{
 FunHook<int(int, int, float, float)> snd_play_hook{
     0x00505560,
     [](int handle, int group, float pan, float volume) {
-        if (!rf::sound_enabled) {
+        if (!rf::sound_enabled || handle < 0) {
             return -1;
         }
         if (rf::snd_load_hint(handle) != 0) {
@@ -405,10 +406,7 @@ FunHook<int(int, int, float, float)> snd_play_hook{
 FunHook<int(int, const rf::Vector3&, float, const rf::Vector3&, int)> snd_play_3d_hook{
     0x005056A0,
     [](int handle, const rf::Vector3& pos, float volume, const rf::Vector3&, int group) {
-        // if (!rf::ds3d_enabled) {
-        //     return snd_play_3d_hook.call_target(handle, pos, volume, unk, group);
-        // }
-        if (!rf::sound_enabled) {
+        if (!rf::sound_enabled || handle < 0) {
             return -1;
         }
         if (rf::snd_load_hint(handle) != 0) {
@@ -535,31 +533,6 @@ void snd_update_ambient_sounds(const rf::Vector3& camera_pos)
     }
 }
 
-CodeInjection player_fpgun_play_action_anim_injection{
-    0x004A947B,
-    [](auto& regs) {
-        if (regs.eax >= 0) {
-            g_fpgun_sounds.push_back(regs.eax);
-        }
-    },
-};
-
-void player_fpgun_move_sounds(const rf::Vector3& camera_pos, const rf::Vector3& camera_vel)
-{
-    // Update position of fpgun sound
-    auto it = g_fpgun_sounds.begin();
-    while (it != g_fpgun_sounds.end()) {
-        int sound_handle = *it;
-        if (rf::snd_is_playing(sound_handle)) {
-            rf::snd_change_3d(sound_handle, camera_pos, camera_vel, 1.0f);
-            ++it;
-        }
-        else {
-            it = g_fpgun_sounds.erase(it);
-        }
-    }
-}
-
 #ifdef DEBUG
 
 ConsoleCommand2 sound_stress_test_cmd{
@@ -667,13 +640,10 @@ void apply_sound_patches()
 
     // Properly update DirectSound 3D sounds
     snd_change_3d_hook.install();
+    snd_update_sounds_hook.install();
 
     // Log information about used sound API
     snd_ds_init_device_leave_injection.install();
-
-    // Update fpgun 3D sounds positions
-    player_fpgun_play_action_anim_injection.install();
-    snd_update_sounds_hook.install();
 
     // Set rolloff factor to 0 for DirectSound 3D listener
     // It disables distance-based attenuation model from DirectSound 3D. It is necessary because Red Faction original

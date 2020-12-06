@@ -47,6 +47,9 @@ namespace rf
     };
     static_assert(sizeof(Monitor) == 0x3C);
 
+    // Monitor flags
+    constexpr int MF_BM_RENDERED = 4;
+
     static auto& clutter_list = addr_as_ref<Clutter>(0x005C9360);
     static auto& monitor_list = addr_as_ref<Monitor>(0x005C98A8);
 }

@@ -12,87 +12,6 @@
 #include "../console/console.h"
 #include "../main.h"
 
-bool should_swap_weapon_alt_fire(rf::Player* player)
-{
-    if (!g_game_config.swap_assault_rifle_controls) {
-        return false;
-    }
-
-    auto entity = rf::entity_from_handle(player->entity_handle);
-    if (!entity) {
-        return false;
-    }
-
-    // Check if local entity is attached to a parent (vehicle or torret)
-    auto parent = rf::entity_from_handle(entity->host_handle);
-    if (parent) {
-        return false;
-    }
-
-    static auto& assault_rifle_cls_id = addr_as_ref<int>(0x00872470);
-    return entity->ai.current_primary_weapon == assault_rifle_cls_id;
-}
-
-bool is_player_weapon_on(rf::Player* player, bool alt_fire) {
-    if (!player) {
-        player = rf::local_player;
-    }
-    auto entity = rf::entity_from_handle(player->entity_handle);
-    bool is_continous_fire = rf::entity_weapon_is_on(entity->handle, entity->ai.current_primary_weapon);
-    bool is_alt_fire_flag_set = (entity->ai.flags & 0x2000) != 0; // EWF_ALT_FIRE = 0x2000
-    if (should_swap_weapon_alt_fire(player)) {
-        is_alt_fire_flag_set = !is_alt_fire_flag_set;
-    }
-    return is_continous_fire && is_alt_fire_flag_set == alt_fire;
-}
-
-FunHook<void(rf::Player*, bool, bool)> PlayerFirePrimaryWeapon_hook{
-    0x004A4E80,
-    [](rf::Player* player, bool alt_fire, bool was_pressed) {
-        if (should_swap_weapon_alt_fire(player)) {
-            alt_fire = !alt_fire;
-        }
-        PlayerFirePrimaryWeapon_hook.call_target(player, alt_fire, was_pressed);
-    },
-};
-
-CodeInjection stop_continous_primary_fire_patch{
-    0x00430EC5,
-    [](auto& regs) {
-        auto entity = reinterpret_cast<rf::Entity*>(regs.esi);
-        if (is_player_weapon_on(entity->local_player, false)) {
-            regs.eip = 0x00430EDF;
-        }
-        else {
-            regs.eip = 0x00430EF2;
-        }
-    }
-};
-
-CodeInjection stop_continous_alternate_fire_patch{
-    0x00430F09,
-    [](auto& regs) {
-        auto entity = reinterpret_cast<rf::Entity*>(regs.esi);
-        if (is_player_weapon_on(entity->local_player, true)) {
-            regs.eip = 0x00430F23;
-        }
-        else {
-            regs.eip = 0x00430F36;
-        }
-    }
-};
-
-ConsoleCommand2 swap_assault_rifle_controls_cmd{
-    "swap_assault_rifle_controls",
-    []() {
-        g_game_config.swap_assault_rifle_controls = !g_game_config.swap_assault_rifle_controls;
-        g_game_config.save();
-        rf::console_printf("Swap assault rifle controls: %s",
-                     g_game_config.swap_assault_rifle_controls ? "enabled" : "disabled");
-    },
-    "Swap Assault Rifle controls",
-};
-
 bool entity_is_reloading_player_select_weapon_new(rf::Entity* entity)
 {
     if (rf::entity_is_reloading(entity))
@@ -161,19 +80,6 @@ CodeInjection weapon_vs_obj_collision_fix{
         else {
             // Continue processing this pair
             regs.eip = 0x0048C834;
-        }
-    },
-};
-
-FunHook<void(rf::Player*, int)> player_make_weapon_current_selection_hook{
-    0x004A4980,
-    [](rf::Player* player, int weapon_type) {
-        player_make_weapon_current_selection_hook.call_target(player, weapon_type);
-        auto entity = rf::entity_from_handle(player->entity_handle);
-        if (entity && rf::is_multi) {
-            // Reset impact delay timers when switching weapon (except in SP because of speedrunners)
-            entity->ai.create_weapon_delay_timestamps[0].invalidate();
-            entity->ai.create_weapon_delay_timestamps[1].invalidate();
         }
     },
 };
@@ -300,9 +206,6 @@ void apply_weapon_patches()
     // Fix weapon vs object collisions for big objects
     weapon_vs_obj_collision_fix.install();
 
-    // Reset impact delay timers when switching weapon to avoid delayed fire after switching
-    player_make_weapon_current_selection_hook.install();
-
     // Check ammo server-side when handling weapon fire packets
     multi_process_remote_weapon_fire_hook.install();
 
@@ -315,12 +218,6 @@ void apply_weapon_patches()
 
     // Fix weapon being auto-switched to previous one after respawn even when auto-switch is disabled
     process_create_entity_packet_switch_weapon_fix.install();
-
-    // Allow swapping Assault Rifle primary and alternate fire controls
-    PlayerFirePrimaryWeapon_hook.install();
-    stop_continous_primary_fire_patch.install();
-    stop_continous_alternate_fire_patch.install();
-    swap_assault_rifle_controls_cmd.register_cmd();
 
     // Show enemy bullets
     rf::hide_enemy_bullets = !g_game_config.show_enemy_bullets;

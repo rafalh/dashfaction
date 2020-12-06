@@ -6,6 +6,7 @@
 #include "server_internal.h"
 #include "../console/console.h"
 #include "../multi/network.h"
+#include "../misc/player.h"
 #include "../main.h"
 #include "../utils/list-utils.h"
 #include <map>

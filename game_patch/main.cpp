@@ -44,7 +44,6 @@
 
 GameConfig g_game_config;
 HMODULE g_hmodule;
-std::unordered_map<rf::Player*, PlayerAdditionalData> g_player_additional_data_map;
 
 static void os_pool()
 {
@@ -58,20 +57,6 @@ static void os_pool()
         DispatchMessageA(&msg);
         // xlog::info("msg %u\n", msg.message);
     }
-}
-
-void find_player(const StringMatcher& query, std::function<void(rf::Player*)> consumer)
-{
-    auto player_list = SinglyLinkedList{rf::player_list};
-    for (auto& player : player_list) {
-        if (query(player.name))
-            consumer(&player);
-    }
-}
-
-PlayerAdditionalData& get_player_additional_data(rf::Player* player)
-{
-    return g_player_additional_data_map[player];
 }
 
 CallHook<void()> rf_init_hook{
@@ -155,35 +140,6 @@ CodeInjection key_get_hook{
     []() {
         // Process messages here because when watching videos main loop is not running
         os_pool();
-    },
-};
-
-FunHook<rf::Player*(bool)> player_create_hook{
-    0x004A3310,
-    [](bool is_local) {
-        rf::Player* player = player_create_hook.call_target(is_local);
-        kill_init_player(player);
-        return player;
-    },
-};
-
-FunHook<void(rf::Player*)> player_destroy_hook{
-    0x004A35C0,
-    [](rf::Player* player) {
-        spectate_mode_on_destroy_player(player);
-        player_destroy_hook.call_target(player);
-        g_player_additional_data_map.erase(player);
-    },
-};
-
-FunHook<rf::Entity*(rf::Player*, int, const rf::Vector3&, const rf::Matrix3&, int)> player_entity_create_hook{
-    0x004A35C0,
-    [](rf::Player* pp, int entity_type, const rf::Vector3& pos, const rf::Matrix3& orient, int multi_entity_index) {
-        auto ep = player_entity_create_hook.call_target(pp, entity_type, pos, orient, multi_entity_index);
-        if (ep) {
-            spectate_mode_player_create_entity_post(pp);
-        }
-        return ep;
     },
 };
 
@@ -365,9 +321,6 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     before_frame_hook.install();
     after_level_render_hook.install();
     after_frame_render_hook.install();
-    player_create_hook.install();
-    player_destroy_hook.install();
-    player_entity_create_hook.install();
     level_load_hook.install();
     level_init_post_hook.install();
 

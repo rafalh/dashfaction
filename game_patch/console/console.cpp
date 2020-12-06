@@ -1,5 +1,6 @@
 #include "console.h"
 #include "../main.h"
+#include "../misc/player.h"
 #include "../rf/player.h"
 #include "../rf/gameseq.h"
 #include "../rf/input.h"

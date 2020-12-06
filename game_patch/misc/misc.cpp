@@ -46,6 +46,10 @@ void apply_weapon_patches();
 void apply_sound_patches();
 void trigger_apply_patches();
 void register_sound_commands();
+void player_do_patch();
+void player_fpgun_do_patch();
+void obj_do_patch();
+void monitor_do_patch();
 
 struct JoinMpGameData
 {
@@ -65,7 +69,7 @@ static rf::CmdLineParam& get_url_cmd_line_param()
     return url_param;
 }
 
-CodeInjection CriticalError_hide_main_wnd_patch{
+CodeInjection critical_error_hide_main_wnd_patch{
     0x0050BA90,
     []() {
         if (rf::gr_d3d_device)
@@ -77,8 +81,8 @@ CodeInjection CriticalError_hide_main_wnd_patch{
 
 FunHook<int(rf::GSolid*, rf::GRoom*)> geo_cache_prepare_room_hook{
     0x004F0C00,
-    [](rf::GSolid* geom, rf::GRoom* room) {
-        int ret = geo_cache_prepare_room_hook.call_target(geom, room);
+    [](rf::GSolid* solid, rf::GRoom* room) {
+        int ret = geo_cache_prepare_room_hook.call_target(solid, room);
         std::byte** pp_room_geom = (std::byte**)(reinterpret_cast<std::byte*>(room) + 4);
         std::byte* room_geom = *pp_room_geom;
         if (ret == 0 && room_geom) {
@@ -98,18 +102,18 @@ FunHook<int(rf::GSolid*, rf::GRoom*)> geo_cache_prepare_room_hook{
 CodeInjection level_read_data_check_restore_status_patch{
     0x00461195,
     [](auto& regs) {
-        // check if SaveRestoreLoadAll is successful
+        // check if sr_load_level_state is successful
         if (regs.eax)
             return;
         // check if this is auto-load when changing level
         const char* save_filename = reinterpret_cast<const char*>(regs.edi);
-        if (!strcmp(save_filename, "auto.svl"))
+        if (!std::strcmp(save_filename, "auto.svl"))
             return;
         // manual load failed
         xlog::error("Restoring game state failed");
         char* error_info = *reinterpret_cast<char**>(regs.esp + 0x2B0 + 0xC);
-        strcpy(error_info, "Save file is corrupted");
-        // return to RflLoadInternal failure path
+        std::strcpy(error_info, "Save file is corrupted");
+        // return to level_read_data failure path
         regs.eip = 0x004608CC;
     },
 };
@@ -191,18 +195,6 @@ FunHook<void()> multi_after_players_packet_hook{
     },
 };
 
-FunHook<char(int, int, int, int, char)> monitor_create_hook{
-    0x00412470,
-    [](int clutter_handle, int always_minus_1, int w, int h, char always_1) {
-        if (g_game_config.high_monitor_res) {
-            constexpr int factor = 2;
-            w *= factor;
-            h *= factor;
-        }
-        return monitor_create_hook.call_target(clutter_handle, always_minus_1, w, h, always_1);
-    },
-};
-
 CodeInjection mover_rotating_keyframe_oob_crashfix{
     0x0046A559,
     [](auto& regs) {
@@ -257,103 +249,8 @@ FunHook<void(const char*, int)> localize_add_string_bof_fix{
 CodeInjection glass_shard_level_init_fix{
     0x00435A90,
     []() {
-        auto GlassShardInit = addr_as_ref<void()>(0x00490F60);
-        GlassShardInit();
-    },
-};
-
-FunHook<rf::Object*(int, int, int, rf::ObjectCreateInfo*, int, rf::GRoom*)> obj_create_hook{
-    0x00486DA0,
-    [](int type, int sub_type, int parent, rf::ObjectCreateInfo* create_info, int flags, rf::GRoom* room) {
-        auto obj = obj_create_hook.call_target(type, sub_type, parent, create_info, flags, room);
-        if (!obj) {
-            xlog::info("Failed to create object (type %d)", type);
-        }
-        return obj;
-    },
-};
-
-CodeInjection sort_items_patch{
-    0x004593AC,
-    [](auto& regs) {
-        auto item = reinterpret_cast<rf::Item*>(regs.esi);
-        auto vmesh = item->vmesh;
-        auto mesh_name = vmesh ? rf::vmesh_get_name(vmesh) : nullptr;
-        if (!mesh_name) {
-            // Sometimes on level change some objects can stay and have only vmesh destroyed
-            return;
-        }
-        std::string_view mesh_name_sv = mesh_name;
-
-        // HACKFIX: enable alpha sorting for Invulnerability Powerup and Riot Shield
-        // Note: material used for alpha-blending is flare_blue1.tga - it uses non-alpha texture
-        // so information about alpha-blending cannot be taken from material alone - it must be read from VFX
-        static const char* force_alpha_mesh_names[] = {
-            "powerup_invuln.vfx",
-            "Weapon_RiotShield.V3D",
-        };
-        for (auto alpha_mesh_name : force_alpha_mesh_names) {
-            if (mesh_name_sv == alpha_mesh_name) {
-                item->obj_flags |= rf::OF_HAS_ALPHA;
-                break;
-            }
-        }
-
-        rf::Item* current = rf::item_list.next;
-        while (current != &rf::item_list) {
-            auto current_anim_mesh = current->vmesh;
-            auto current_mesh_name = current_anim_mesh ? rf::vmesh_get_name(current_anim_mesh) : nullptr;
-            if (current_mesh_name && mesh_name_sv == current_mesh_name) {
-                break;
-            }
-            current = current->next;
-        }
-        item->next = current;
-        item->prev = current->prev;
-        item->next->prev = item;
-        item->prev->next = item;
-        // Set up needed registers
-        regs.ecx = regs.esp + 0xC0 - 0xB0; // create_info
-        regs.eip = 0x004593D1;
-    },
-};
-
-CodeInjection sort_clutter_patch{
-    0x004109D4,
-    [](auto& regs) {
-        auto clutter = reinterpret_cast<rf::Clutter*>(regs.esi);
-        auto vmesh = clutter->vmesh;
-        auto mesh_name = vmesh ? rf::vmesh_get_name(vmesh) : nullptr;
-        if (!mesh_name) {
-            // Sometimes on level change some objects can stay and have only vmesh destroyed
-            return;
-        }
-        std::string_view mesh_name_sv = mesh_name;
-
-        auto& clutter_list = addr_as_ref<rf::Clutter>(0x005C9360);
-        auto current = clutter_list.next;
-        while (current != &clutter_list) {
-            auto current_anim_mesh = current->vmesh;
-            auto current_mesh_name = current_anim_mesh ? rf::vmesh_get_name(current_anim_mesh) : nullptr;
-            if (current_mesh_name && mesh_name_sv == current_mesh_name) {
-                break;
-            }
-            if (current_mesh_name && std::string_view{current_mesh_name} == "LavaTester01.v3d") {
-                // HACKFIX: place LavaTester01 at the end to fix alpha draw order issues in L5S2 (Geothermal Plant)
-                // Note: OF_HAS_ALPHA cannot be used because it causes another draw-order issue when lava goes up
-                break;
-            }
-            current = current->next;
-        }
-        // insert before current
-        clutter->next = current;
-        clutter->prev = current->prev;
-        clutter->next->prev = clutter;
-        clutter->prev->next = clutter;
-        // Set up needed registers
-        regs.eax = addr_as_ref<bool>(regs.esp + 0xD0 + 0x18); // killable
-        regs.ecx = addr_as_ref<i32>(0x005C9358) + 1; // num_clutter_objs
-        regs.eip = 0x00410A03;
+        auto glass_shard_level_init = addr_as_ref<void()>(0x00490F60);
+        glass_shard_level_init();
     },
 };
 
@@ -417,14 +314,6 @@ CodeInjection vmesh_col_fix{
     },
 };
 
-CodeInjection render_corpse_in_monitor_patch{
-    0x00412905,
-    []() {
-        auto PlayerRenderHeldCorpse = addr_as_ref<void(rf::Player* player)>(0x004A2B90);
-        PlayerRenderHeldCorpse(rf::local_player);
-    },
-};
-
 CodeInjection play_bik_file_infinite_loop_fix{
     0x00520BEE,
     [](auto& regs) {
@@ -447,18 +336,6 @@ CodeInjection explosion_crash_fix{
     },
 };
 
-void __fastcall player_execute_action_timestamp_set_new(rf::Timestamp* fire_wait_timer, int, int value)
-{
-    if (!fire_wait_timer->valid() || fire_wait_timer->time_until() < value) {
-        fire_wait_timer->set(value);
-    }
-}
-
-CallHook<void __fastcall(rf::Timestamp*, int, int)> player_execute_action_timestamp_set_fire_wait_patch{
-    {0x004A62C2u, 0x004A6325u},
-    &player_execute_action_timestamp_set_new,
-};
-
 FunHook<void(rf::EntityFireInfo&, int)> entity_fire_switch_parent_to_corpse_hook{
     0x0042F510,
     [](rf::EntityFireInfo& burn_info, int corpse_handle) {
@@ -476,7 +353,7 @@ FunHook<void(rf::EntityFireInfo&, int)> entity_fire_switch_parent_to_corpse_hook
     },
 };
 
-CallHook<bool(rf::Object*)> entity_check_is_in_liquid_obj_is_player_hook{
+CallHook<bool(rf::Object*)> entity_update_liquid_status_obj_is_player_hook{
     {
         0x004292E3,
         0x0042932A,
@@ -531,7 +408,7 @@ void misc_init()
     write_mem<u32>(0x0056A28C + 1, 0);
 
 #if 1
-    // Buffer overflows in RflReadStaticGeometry
+    // Buffer overflows in solid_read
     // Note: Buffer size is 1024 but opcode allows only 1 byte size
     //       What is more important bm_load copies texture name to 32 bytes long buffers
     write_mem<i8>(0x004ED612 + 1, 32);
@@ -540,21 +417,14 @@ void misc_init()
     write_mem<i8>(0x004EDB02 + 1, 32);
 #endif
 
-    // Increase damage for kill command in Single Player
-    write_mem<float>(0x004A4DF5 + 1, 100000.0f);
-
     // Fix crash in shadows rendering
     write_mem<u8>(0x0054A3C0 + 2, 16);
 
     // Fix crash in geometry rendering
     geo_cache_prepare_room_hook.install();
 
-    // Remove Sleep calls in TimerInit
+    // Remove Sleep calls in timer_init
     AsmWriter(0x00504A67, 0x00504A82).nop();
-
-    // Use spawnpoint team property in TeamDM game (PF compatible)
-    write_mem<u8>(0x00470395 + 4, 0); // change cmp argument: CTF -> DM
-    write_mem<u8>(0x0047039A, asm_opcodes::jz_rel_short);  // invert jump condition: jnz -> jz
 
     // Disable broken optimization of segment vs geometry collision test
     // Fixes hitting objects if mover is in the line of the shot
@@ -563,9 +433,6 @@ void misc_init()
     // Disable Flamethower debug sphere drawing (optimization)
     // It is not visible in game because other things are drawn over it
     AsmWriter(0x0041AE47, 0x0041AE4C).nop();
-
-    // Preserve password case when processing rcon_request command
-    write_mem<i8>(0x0046C85A + 1, 1);
 
     // Add checking if restoring game state from save file failed during level loading
     level_read_data_check_restore_status_patch.install();
@@ -576,14 +443,7 @@ void misc_init()
     multi_after_players_packet_hook.install();
 
     // Hide main window when displaying critical error message box
-    CriticalError_hide_main_wnd_patch.install();
-
-    // Allow undefined mp_character in PlayerCreateEntity
-    // Fixes Go_Undercover event not changing player 3rd person character
-    AsmWriter(0x004A414F, 0x004A4153).nop();
-
-    // High monitors/mirrors resolution
-    monitor_create_hook.install();
+    critical_error_hide_main_wnd_patch.install();
 
     // Fix crash when skipping cutscene after robot kill in L7S4
     mover_rotating_keyframe_oob_crashfix.install();
@@ -600,9 +460,6 @@ void misc_init()
     AsmWriter(0x0043604A).nop(5);
     glass_shard_level_init_fix.install();
 
-    // Log error when object cannot be created
-    obj_create_hook.install();
-
     // Use local_player variable for debris distance calculation instead of local_player_entity
     // Fixed debris pool being exhausted when local player is dead
     AsmWriter(0x0042A223, 0x0042A232).mov(asm_regs::ecx, {&rf::local_player});
@@ -611,10 +468,6 @@ void misc_init()
     // RF code is broken here because level emitters have object handle set to 0 and other emitters are not added to
     // the searched list
     write_mem<u8>(0x00495158, asm_opcodes::jmp_rel_short);
-
-    // Sort objects by anim mesh name to improve rendering performance
-    sort_items_patch.install();
-    sort_clutter_patch.install();
 
     // Fix face scroll in levels after version 0xB4
     face_scroll_fix.install();
@@ -634,14 +487,11 @@ void misc_init()
     // Fix crash when executing camera2 command in main menu
     AsmWriter(0x0040DCFC).nop(5);
 
-    // Fix ItemCreate null result handling in RFL loading (affects multiplayer only)
+    // Fix item_create null result handling in RFL loading (affects multiplayer only)
     level_load_items_crash_fix.install();
 
     // Fix col-spheres vs mesh collisions
     vmesh_col_fix.install();
-
-    // Render held corpse in monitor
-    render_corpse_in_monitor_patch.install();
 
     // Fix possible infinite loop when starting Bink video
     play_bik_file_infinite_loop_fix.install();
@@ -657,15 +507,11 @@ void misc_init()
         write_mem<u8>(0x004353CC, asm_opcodes::jmp_rel_short);
     }
 
-    // Fix setting fire wait timer when closing weapon switch menu
-    // Note: this timer makes sense for weapons that require holding (not clicking) the control to fire (e.g. shotgun)
-    player_execute_action_timestamp_set_fire_wait_patch.install();
-
     // Fix crash when particle emitter allocation fails during entity ignition
     entity_fire_switch_parent_to_corpse_hook.install();
 
     // Fix buzzing sound when some player is floating in water
-    entity_check_is_in_liquid_obj_is_player_hook.install();
+    entity_update_liquid_status_obj_is_player_hook.install();
 
     // Fix dedicated server crash when loading level that uses directional light
     level_read_geometry_header_light_add_directional_hook.install();
@@ -676,19 +522,19 @@ void misc_init()
     // Init cmd line param
     get_url_cmd_line_param();
 
-    // Fix memory corruption when transitioning to 5th level in a sequence and the level has no entry in ponr.tbl
-    AsmWriter{0x004B3CAF, 0x004B3CB2}.xor_(asm_regs::ebx, asm_regs::ebx);
-
     // Apply patches from other files
     apply_event_patches();
     cutscene_apply_patches();
     glare_patches_patches();
-    apply_limits_patches();
+    obj_do_patch();
     apply_main_menu_patches();
     apply_save_restore_patches();
     apply_sound_patches();
     trigger_apply_patches();
     apply_weapon_patches();
+    player_do_patch();
+    player_fpgun_do_patch();
+    monitor_do_patch();
     register_sound_commands();
 }
 

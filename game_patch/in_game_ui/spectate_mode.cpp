@@ -140,6 +140,11 @@ bool spectate_mode_is_active()
     return g_spectate_mode_enabled || spectate_mode_is_freelook();
 }
 
+rf::Player* spectate_mode_get_target()
+{
+    return g_spectate_mode_target;
+}
+
 void spectate_mode_leave()
 {
     if (g_spectate_mode_enabled)
@@ -190,39 +195,6 @@ bool spectate_mode_handle_ctrl_in_game(rf::ControlAction key_id, bool was_presse
     return false;
 }
 
-FunHook<void(rf::Player*, rf::ControlAction, bool)> player_execute_action_hook{
-    0x004A6210,
-    [](rf::Player* player, rf::ControlAction ctrl, bool was_pressed) {
-        if (!spectate_mode_handle_ctrl_in_game(ctrl, was_pressed)) {
-            player_execute_action_hook.call_target(player, ctrl, was_pressed);
-        }
-    },
-};
-
-bool player_is_dead_new(rf::Player* player)
-{
-    if (spectate_mode_is_active())
-        return false;
-    else
-        return rf::player_is_dead(player);
-}
-
-CallHook<bool(rf::Player*)> player_is_dead_red_bars_hook{0x00432A52, player_is_dead_new};
-CallHook<bool(rf::Player*)> player_is_dead_scoreboard_hook{0x00437BEE, player_is_dead_new};
-CallHook<bool(rf::Player*)> player_is_dead_scoreboard2_hook{0x00437C25, player_is_dead_new};
-
-static bool player_is_dying_new(rf::Player* player)
-{
-    if (spectate_mode_is_active())
-        return false;
-    else
-        return rf::player_is_dying(player);
-}
-
-CallHook player_is_dying_red_bars_hook{0x00432A5F, player_is_dying_new};
-CallHook player_is_dying_scoreboard_hook{0x00437C01, player_is_dying_new};
-CallHook player_is_dying_scoreboard2_hook{0x00437C36, player_is_dying_new};
-
 void spectate_mode_on_destroy_player(rf::Player* player)
 {
     if (g_spectate_mode_target == player)
@@ -243,34 +215,12 @@ FunHook<void(rf::Player*)> render_reticle_hook{
     },
 };
 
-FunHook<rf::Entity*(rf::Player*, int, const rf::Vector3*, const rf::Matrix3*, int)> player_create_entity_hook{
-    0x004A4130,
-    [](rf::Player* player, int cls_id, const rf::Vector3* pos, const rf::Matrix3* orient, int mp_character) {
-        // hide target player from camera after respawn
-        rf::Entity* entity = player_create_entity_hook.call_target(player, cls_id, pos, orient, mp_character);
-        if (entity && player == g_spectate_mode_target)
-            entity->local_player = player;
-
-        return entity;
-    },
-};
-
 CodeInjection render_scanner_view_for_spectated_player_injection{
     0x00431890,
     []() {
         if (g_spectate_mode_enabled)
             rf::player_fpgun_render_ir(g_spectate_mode_target);
     },
-};
-
-FunHook<bool(rf::Player*)> player_is_local_hook{
-    0x004A68D0,
-    [](rf::Player* player) {
-        if (spectate_mode_is_active()) {
-            return false;
-        }
-        return player_is_local_hook.call_target(player);
-    }
 };
 
 ConsoleCommand2 spectate_cmd{
@@ -311,12 +261,12 @@ ConsoleCommand2 spectate_cmd{
 
 #if SPECTATE_MODE_SHOW_WEAPON
 
-static void player_fpgun_Render_New(rf::Player* player)
+static void player_render_fpgun_new(rf::Player* player)
 {
     if (g_spectate_mode_enabled) {
         rf::Entity* entity = rf::entity_from_handle(g_spectate_mode_target->entity_handle);
 
-        // HACKFIX: RF uses function PlayerSetRemoteChargeVisible for local player only
+        // HACKFIX: RF uses function player_fpgun_set_remote_charge_visible for local player only
         g_spectate_mode_target->fpgun_data.remote_charge_in_hand =
             (entity && entity->ai.current_primary_weapon == rf::remote_charge_weapon_type);
 
@@ -326,7 +276,7 @@ static void player_fpgun_Render_New(rf::Player* player)
             old_vel = entity->p_data.vel;
 
             if (vel_diff.y > 0.1f)
-                entity->entity_flags |= 2; // jump
+                entity->entity_flags |= rf::EF_JUMP_START_ANIM; // jump
         }
 
         if (g_spectate_mode_target->fpgun_data.zooming_in)
@@ -341,45 +291,11 @@ static void player_fpgun_Render_New(rf::Player* player)
         rf::player_fpgun_render(player);
 }
 
-FunHook<void(rf::Player*)> player_fpgun_update_state_hook{
-    0x004AA3A0,
-    [](rf::Player* player) {
-        player_fpgun_update_state_hook.call_target(player);
-        if (player != rf::local_player) {
-            rf::Entity* entity = rf::entity_from_handle(player->entity_handle);
-            if (entity) {
-                float horz_speed_pow2 = entity->p_data.vel.x * entity->p_data.vel.x +
-                                          entity->p_data.vel.z * entity->p_data.vel.z;
-                int state = 0;
-                if (rf::entity_weapon_is_on(entity->handle, entity->ai.current_primary_weapon))
-                    state = 2;
-                else if (rf::entity_is_swimming(entity) || rf::entity_is_falling(entity))
-                    state = 0;
-                else if (horz_speed_pow2 > 0.2f)
-                    state = 1;
-                if (!rf::player_fpgun_has_state(player, state))
-                    rf::player_fpgun_set_state(player, state);
-            }
-        }
-    },
-};
-
 #endif // SPECTATE_MODE_SHOW_WEAPON
 
 void spectate_mode_init()
 {
-    player_is_dying_red_bars_hook.install();
-    player_is_dying_scoreboard_hook.install();
-    player_is_dying_scoreboard2_hook.install();
-
-    player_is_dead_red_bars_hook.install();
-    player_is_dead_scoreboard_hook.install();
-    player_is_dead_scoreboard2_hook.install();
-
-    player_execute_action_hook.install();
     render_reticle_hook.install();
-    player_create_entity_hook.install();
-    player_is_local_hook.install();
 
     spectate_cmd.register_cmd();
 
@@ -387,25 +303,16 @@ void spectate_mode_init()
 
 #if SPECTATE_MODE_SHOW_WEAPON
 
-    AsmWriter(0x0043285D).call(player_fpgun_Render_New);
-    AsmWriter(0x004AB1B8).nop(6); // player_fpgun_RenderInternal
-    AsmWriter(0x004AA23E).nop(6); // player_fpgun_setup_mesh
-    AsmWriter(0x004AE0DF).nop(2); // player_fpgun_LoadMesh
+    AsmWriter(0x0043285D).call(player_render_fpgun_new);
 
-    AsmWriter(0x004A938F).nop(6);               // player_fpgun_SetAction
-    write_mem<u8>(0x004A952C, asm_opcodes::jmp_rel_short); // player_fpgun_has_state
-    AsmWriter(0x004AA56D).nop(6);               // player_fpgun_set_state
-    AsmWriter(0x004AA6E7).nop(6);               // player_fpgun_process
-    AsmWriter(0x004AE384).nop(6);               // player_fpgun_PrepareWeapon
-    write_mem<u8>(0x004ACE2C, asm_opcodes::jmp_rel_short); // GetZoomValue
-
-    write_mem_ptr(0x0048857E + 2, &g_spectate_mode_target); // RenderObjects
-    write_mem_ptr(0x00488598 + 1, &g_spectate_mode_target); // RenderObjects
-    write_mem_ptr(0x00421889 + 2, &g_spectate_mode_target); // EntityRender
-    write_mem_ptr(0x004218A2 + 2, &g_spectate_mode_target); // EntityRender
+    write_mem_ptr(0x0048857E + 2, &g_spectate_mode_target); // obj_mark_all_for_room
+    write_mem_ptr(0x00488598 + 1, &g_spectate_mode_target); // obj_mark_all_for_room
+    write_mem_ptr(0x00421889 + 2, &g_spectate_mode_target); // entity_render
+    write_mem_ptr(0x004218A2 + 2, &g_spectate_mode_target); // entity_render
 
     render_scanner_view_for_spectated_player_injection.install();
-    player_fpgun_update_state_hook.install();
+
+    // Note: additional patches are in player_fpgun.cpp
 #endif // SPECTATE_MODE_SHOW_WEAPON
 }
 
@@ -414,8 +321,13 @@ void spectate_mode_after_full_game_init()
     g_spectate_mode_target = rf::local_player;
 }
 
-void spectate_mode_player_create_entity_post(rf::Player* player)
+void spectate_mode_player_create_entity_post(rf::Player* player, rf::Entity* entity)
 {
+    // hide target player from camera after respawn
+    if (player == g_spectate_mode_target) {
+        entity->local_player = player;
+    }
+    // Do not allow spectating in Force Respawn game after spawning for the first time
     if (player == rf::local_player) {
         g_spawned_in_current_level = true;
     }
