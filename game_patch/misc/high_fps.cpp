@@ -8,6 +8,7 @@
 #include <xlog/xlog.h>
 #include <array>
 #include <unordered_map>
+#include <unordered_set>
 #include <optional>
 
 constexpr auto screen_shake_fps = 150.0f;
