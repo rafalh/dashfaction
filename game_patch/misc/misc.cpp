@@ -9,6 +9,7 @@
 #include "../rf/gameseq.h"
 #include "../rf/os.h"
 #include "../rf/misc.h"
+#include "../rf/vmesh.h"
 #include "../object/object.h"
 #include <common/version.h>
 #include <common/BuildConfig.h>
@@ -29,6 +30,7 @@ void player_do_patch();
 void player_fpgun_do_patch();
 void bink_do_patch();
 void g_solid_do_patch();
+void camera_do_patch();
 
 struct JoinMpGameData
 {
@@ -227,13 +229,13 @@ CodeInjection vmesh_col_fix{
     0x00499BCF,
     [](auto& regs) {
         auto stack_frame = regs.esp + 0xC8;
-        auto params = reinterpret_cast<void*>(regs.eax);
+        auto& col_in = addr_as_ref<rf::VMeshCollisionInput>(regs.eax);
         // Reset flags field so start_pos/dir always gets transformed into mesh space
         // Note: MeshCollide function adds flag 2 after doing transformation into mesh space
         // If start_pos/dir is being updated for next call, flags must be reset as well
-        struct_field_ref<int>(params, 0x4C) = 0;
+        col_in.flags = 0;
         // Reset dir field
-        struct_field_ref<rf::Vector3>(params, 0x3C) = addr_as_ref<rf::Vector3>(stack_frame - 0xAC);
+        col_in.dir = addr_as_ref<rf::Vector3>(stack_frame - 0xAC);
     },
 };
 
@@ -321,15 +323,8 @@ void misc_init()
     AsmWriter(0x0043604A).nop(5);
     glass_shard_level_init_fix.install();
 
-    // Use local_player variable for debris distance calculation instead of local_player_entity
-    // Fixed debris pool being exhausted when local player is dead
-    AsmWriter(0x0042A223, 0x0042A232).mov(asm_regs::ecx, {&rf::local_player});
-
     // Log error when RFA cannot be loaded
     skeleton_pagein_debug_print_patch.install();
-
-    // Fix crash when executing camera2 command in main menu
-    AsmWriter(0x0040DCFC).nop(5);
 
     // Fix item_create null result handling in RFL loading (affects multiplayer only)
     level_load_items_crash_fix.install();
@@ -361,4 +356,5 @@ void misc_init()
     bink_do_patch();
     g_solid_do_patch();
     register_sound_commands();
+    camera_do_patch();
 }

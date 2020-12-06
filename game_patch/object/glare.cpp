@@ -23,7 +23,7 @@ static bool glare_collide_object(rf::Glare* glare, rf::Object* obj, const rf::Ve
 {
     if (!(obj->obj_flags & rf::OF_WAS_RENDERED)
         || !obj->vmesh
-        || (obj == rf::local_player_entity && rf::local_player->cam && rf::local_player->cam->mode == rf::CAM_FIRST_PERSON)
+        || (obj == rf::local_player_entity && rf::local_player->cam && rf::local_player->cam->mode == rf::CAMERA_FIRST_PERSON)
         || glare->parent_handle == obj->handle) {
         return false;
     }

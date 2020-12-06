@@ -27,13 +27,13 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/purefaction/pf_secret.cpp")
         purefaction/pf_secret.h
     )
 endif()
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/misc/experimental.cpp")
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/experimental/experimental.cpp")
     add_definitions(-DHAS_EXPERIMENTAL)
 endif()
 
 enable_warnings()
 
-file(GLOB EXPERIMENTAL_SRCS misc/experimental*.cpp misc/experimental*.h)
+file(GLOB EXPERIMENTAL_SRCS experimental/*.cpp experimental/*.h)
 set(SRCS
     main.cpp
     main.h
@@ -98,9 +98,7 @@ set(SRCS
     multi/multi.h
     multi/multi.cpp
     multi/kill.cpp
-    multi/kill.h
     multi/network.cpp
-    multi/network.h
     multi/level_download.cpp
     multi/server.h
     multi/server.cpp
@@ -146,6 +144,7 @@ set(SRCS
     misc/player_fpgun.cpp
     misc/bink.cpp
     misc/g_solid.cpp
+    misc/camera.cpp
     res/resources.rc
     ${PF_SRCS}
     ${EXPERIMENTAL_SRCS}

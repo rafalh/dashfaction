@@ -7,7 +7,7 @@
 #include "../rf/object.h"
 #include "../rf/entity.h"
 #include "../rf/multi.h"
-#include "../multi/network.h"
+#include "../multi/multi.h"
 
 FunHook<void()> do_quick_save_hook{
     0x004B5E20,

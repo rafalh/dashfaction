@@ -1,4 +1,4 @@
-#include "kill.h"
+#include "multi.h"
 #include "../rf/player.h"
 #include "../rf/entity.h"
 #include "../rf/localize.h"
@@ -11,7 +11,7 @@
 
 void player_fpgun_on_player_death(rf::Player* pp);
 
-void kill_init_player(rf::Player* player)
+void multi_kill_init_player(rf::Player* player)
 {
     auto stats = reinterpret_cast<PlayerStatsNew*>(player->stats);
     stats->num_kills = 0;
@@ -23,7 +23,7 @@ FunHook<void()> multi_level_init_hook{
     []() {
         auto player_list = SinglyLinkedList{rf::player_list};
         for (auto& player : player_list) {
-            kill_init_player(&player);
+            multi_kill_init_player(&player);
         }
         multi_level_init_hook.call_target();
     },
@@ -125,7 +125,7 @@ FunHook<void(rf::Entity*)> entity_on_death_hook{
     },
 };
 
-void init_kill()
+void multi_kill_do_patch()
 {
     // Player kill handling
     using namespace asm_regs;

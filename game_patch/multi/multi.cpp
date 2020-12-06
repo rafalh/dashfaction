@@ -8,10 +8,6 @@
 #include "../rf/multi.h"
 #include "../rf/console.h"
 
-void init_kill();
-void init_autodownloader();
-void network_init();
-
 // Note: this must be called from DLL init function
 // Note: we can't use global variable because that would lead to crash when launcher loads this DLL to check dependencies
 static rf::CmdLineParam& get_url_cmd_line_param()
@@ -64,11 +60,18 @@ FunHook<void()> multi_limbo_init{
     },
 };
 
+void multi_init_player(rf::Player* player)
+{
+    multi_kill_init_player(player);
+}
+
 void multi_do_patch()
 {
-    init_kill();
-    init_autodownloader();
+    multi_kill_do_patch();
+    level_download_do_patch();
     network_init();
+
+    level_download_init();
 
     // Init cmd line param
     get_url_cmd_line_param();

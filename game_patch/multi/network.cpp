@@ -1,6 +1,27 @@
+#include <array>
+#include <algorithm>
+#include <cstddef>
+#include <cassert>
+#include <cstring>
+#include <functional>
+#include <thread>
 #include <winsock2.h>
-#include "network.h"
+#include <iphlpapi.h>
+#include <ws2ipdef.h>
+#include <natupnp.h>
+#include <common/BuildConfig.h>
+#include <common/rfproto.h>
+#include <common/version.h>
+#include <xlog/xlog.h>
+#include <patch_common/CallHook.h>
+#include <patch_common/FunHook.h>
+#include <patch_common/CodeInjection.h>
+#include <patch_common/AsmWriter.h>
+#include <patch_common/ShortTypes.h>
+#include <patch_common/ComPtr.h>
+#include "multi.h"
 #include "server.h"
+#include "../main.h"
 #include "../rf/multi.h"
 #include "../rf/misc.h"
 #include "../rf/player.h"
@@ -12,29 +33,8 @@
 #include "../rf/level.h"
 #include "../misc/misc.h"
 #include "../object/object.h"
-#include "../main.h"
 #include "../utils/enum-bitwise-operators.h"
 #include "../console/console.h"
-#include <natupnp.h>
-#include <common/BuildConfig.h>
-#include <xlog/xlog.h>
-#include <patch_common/CallHook.h>
-#include <patch_common/FunHook.h>
-#include <patch_common/CodeInjection.h>
-#include <patch_common/AsmWriter.h>
-#include <patch_common/ShortTypes.h>
-#include <patch_common/ComPtr.h>
-#include <array>
-#include <algorithm>
-#include <cstddef>
-#include <cassert>
-#include <cstring>
-#include <functional>
-#include <thread>
-#include <common/rfproto.h>
-#include <common/version.h>
-#include <iphlpapi.h>
-#include <ws2ipdef.h>
 
 #if MASK_AS_PF
 #include "../purefaction/pf.h"
@@ -898,7 +898,7 @@ CodeInjection obj_interp_too_fast_fix{
 
 void network_init()
 {
-    // ProcessGamePackets hook (not reliable only)
+    // process_game_packets hook (not reliable only)
     process_unreliable_game_packets_hook.install();
 
     // Improve simultaneous ping

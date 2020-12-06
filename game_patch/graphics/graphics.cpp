@@ -1053,6 +1053,13 @@ void graphics_init()
 
     // Support textures with alpha channel in Display_Fullscreen_Image event
     display_full_screen_image_alpha_support_patch.install();
+
+    // Fix flamethrower "stroboscopic effect" on high FPS
+    // gr_3d_bitmap_angle interprets parameters differently than gr_3d_bitmap_stretched_square expects - zero angle does not use
+    // diamond shape and size is not divided by 2. Instead of calling it when p0 to p1 distance is small get rid of this
+    // special case. gr_3d_bitmap_stretched_square should handle it properly even if distance is 0 because it
+    // uses Vector3::normalize_safe() API.
+    write_mem<u8>(0x00558E61, asm_opcodes::jmp_rel_short);
 }
 
 void graphics_after_game_init()

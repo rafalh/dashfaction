@@ -92,11 +92,11 @@ FunHook<void(bool)> cutscene_do_frame_hook{
     },
 };
 
-CallHook<bool(rf::Camera*)> cutscene_stop_current_camera_set_first_person_hook{
+CallHook<bool(rf::Camera*)> cutscene_stop_current_camera_enter_first_person_hook{
     0x0045BDBD,
     [](rf::Camera* camera) {
-        if (!cutscene_stop_current_camera_set_first_person_hook.call_target(camera)) {
-            rf::camera_set_fixed(camera);
+        if (!cutscene_stop_current_camera_enter_first_person_hook.call_target(camera)) {
+            rf::camera_enter_fixed(camera);
         }
         return true;
     },
@@ -147,7 +147,7 @@ void cutscene_apply_patches()
     skip_cutscene_bind_cmd.register_cmd();
 
     // Fix crash if camera cannot be restored to first-person mode after cutscene
-    cutscene_stop_current_camera_set_first_person_hook.install();
+    cutscene_stop_current_camera_enter_first_person_hook.install();
 
     // Remove cutscene sync RF hackfix
     write_mem<float>(0x005897B4, 1000.0f);

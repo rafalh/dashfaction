@@ -1,5 +1,5 @@
 #include "scoreboard.h"
-#include "../multi/kill.h"
+#include "../multi/multi.h"
 #include "../rf/graphics.h"
 #include "../rf/multi.h"
 #include "../rf/localize.h"

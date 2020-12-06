@@ -1,17 +1,17 @@
 #include <string_view>
+#include <map>
+#include <set>
+#include <ctime>
 #include "../rf/player.h"
 #include "../rf/multi.h"
 #include "../rf/gameseq.h"
 #include "../rf/misc.h"
-#include "server_internal.h"
 #include "../console/console.h"
-#include "../multi/network.h"
 #include "../misc/player.h"
 #include "../main.h"
 #include "../utils/list-utils.h"
-#include <map>
-#include <set>
-#include <ctime>
+#include "server_internal.h"
+#include "multi.h"
 
 struct Vote
 {

@@ -12,8 +12,8 @@
 #include <windows.h>
 #include "server.h"
 #include "server_internal.h"
+#include "multi.h"
 #include "../console/console.h"
-#include "../multi/network.h"
 #include "../misc/player.h"
 #include "../main.h"
 #include "../utils/list-utils.h"

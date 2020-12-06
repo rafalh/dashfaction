@@ -4,7 +4,7 @@
 #include "../rf/multi.h"
 #include "../console/console.h"
 #include "../main.h"
-#include "../multi/kill.h"
+#include "../multi/multi.h"
 #include "../in_game_ui/spectate_mode.h"
 #include "../utils/list-utils.h"
 #include <common/GameConfig.h>
@@ -33,7 +33,7 @@ FunHook<rf::Player*(bool)> player_create_hook{
     0x004A3310,
     [](bool is_local) {
         rf::Player* player = player_create_hook.call_target(is_local);
-        kill_init_player(player);
+        multi_init_player(player);
         return player;
     },
 };

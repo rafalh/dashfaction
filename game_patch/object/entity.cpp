@@ -4,6 +4,7 @@
 #include <patch_common/AsmWriter.h>
 #include "../rf/entity.h"
 #include "../rf/corpse.h"
+#include "../rf/player.h"
 #include "../rf/particle_emitter.h"
 #include "../main.h"
 
@@ -141,4 +142,8 @@ void entity_do_patch()
 
     // Fix entity staying in crouched state after entering liquid
     entity_maybe_stop_crouching_collide_spheres_world_hook.install();
+
+    // Use local_player variable for weapon shell distance calculation instead of local_player_entity
+    // in entity_eject_shell. Fixed debris pool being exhausted when local player is dead.
+    AsmWriter(0x0042A223, 0x0042A232).mov(asm_regs::ecx, {&rf::local_player});
 }

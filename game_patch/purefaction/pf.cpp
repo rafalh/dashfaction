@@ -4,7 +4,7 @@
 #include "pf_packets.h"
 #include "pf_secret.h"
 #include "../rf/multi.h"
-#include "../multi/kill.h"
+#include "../multi/multi.h"
 #include "../utils/list-utils.h"
 #include <cstddef>
 #include <sstream>

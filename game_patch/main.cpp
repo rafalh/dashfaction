@@ -35,7 +35,7 @@
 #include <xlog/xlog.h>
 
 #ifdef HAS_EXPERIMENTAL
-#include "misc/experimental.h"
+#include "experimental/experimental.h"
 #endif
 
 GameConfig g_game_config;

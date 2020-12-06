@@ -16,14 +16,14 @@ namespace rf
 
     enum CameraMode
     {
-        CAM_FIRST_PERSON = 0x0,
-        CAM_THIRD_PERSON = 0x1,
-        CAM_FREELOOK = 0x2,
-        CAM_3 = 0x3,
-        CAM_FREELOOK2 = 0x4,
-        CAM_CUTSCENE_UNK = 0x5,
-        CAM_FIXED = 0x6,
-        CAM_ORBIT = 0x7,
+        CAMERA_FIRST_PERSON  = 0x0,
+        CAMERA_THIRD_PERSON  = 0x1,
+        CAMERA_FREELOOK      = 0x2,
+        CAMERA_DESCENT_FLY   = 0x3,
+        CAMERA_DEAD_VIEW     = 0x4,
+        CAMERA_CUTSCENE      = 0x5,
+        CAMERA_FIXED_VIEW    = 0x6,
+        CAMERA_ORBIT         = 0x7,
     };
 
     struct Camera
@@ -34,9 +34,9 @@ namespace rf
     };
     static_assert(sizeof(Camera) == 0xC);
 
-    static auto& camera_set_first_person = addr_as_ref<bool(Camera *camera)>(0x0040DDF0);
-    static auto& camera_set_freelook = addr_as_ref<bool(Camera *camera)>(0x0040DCF0);
-    static auto& camera_set_fixed = addr_as_ref<bool(Camera *camera)>(0x0040DF70);
+    static auto& camera_enter_first_person = addr_as_ref<bool(Camera *camera)>(0x0040DDF0);
+    static auto& camera_enter_freelook = addr_as_ref<bool(Camera *camera)>(0x0040DCF0);
+    static auto& camera_enter_fixed = addr_as_ref<bool(Camera *camera)>(0x0040DF70);
     static auto& camera_get_pos = addr_as_ref<void(Vector3* camera_pos, Camera *camera)>(0x0040D760);
     static auto& camera_get_orient = addr_as_ref<void(Matrix3* camera_orient, Camera *camera)>(0x0040D780);
 

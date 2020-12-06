@@ -27,18 +27,18 @@ static bool g_spawned_in_current_level = false;
 
 static void set_camera_target(rf::Player* player)
 {
-    // Based on function SetCamera1View
+    // Based on function set_camera1_view
     if (!rf::local_player || !rf::local_player->cam || !player)
         return;
 
     rf::Camera* camera = rf::local_player->cam;
-    camera->mode = rf::CAM_FIRST_PERSON;
+    camera->mode = rf::CAMERA_FIRST_PERSON;
     camera->player = player;
 
     g_old_target_camera = player->cam;
     player->cam = camera; // fix crash 0040D744
 
-    rf::camera_set_first_person(camera);
+    rf::camera_enter_first_person(camera);
 }
 
 static bool is_force_respawn()
@@ -123,7 +123,7 @@ void spectate_mode_enter_freelook()
         return;
 
     rf::multi_kill_local_player();
-    rf::camera_set_freelook(rf::local_player->cam);
+    rf::camera_enter_freelook(rf::local_player->cam);
 }
 
 bool spectate_mode_is_freelook()
@@ -132,7 +132,7 @@ bool spectate_mode_is_freelook()
         return false;
 
     auto camera_mode = rf::local_player->cam->mode;
-    return camera_mode == rf::CAM_FREELOOK;
+    return camera_mode == rf::CAMERA_FREELOOK;
 }
 
 bool spectate_mode_is_active()

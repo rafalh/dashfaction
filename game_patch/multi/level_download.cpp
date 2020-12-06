@@ -390,9 +390,13 @@ ConsoleCommand2 download_level_cmd{
     "download_level <rfl_name>",
 };
 
-void init_autodownloader()
+void level_download_do_patch()
 {
     join_failed_injection.install();
+}
+
+void level_download_init()
+{
     download_level_cmd.register_cmd();
 }
 

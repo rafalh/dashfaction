@@ -11,10 +11,6 @@
 #include <unordered_set>
 #include <optional>
 
-constexpr auto screen_shake_fps = 150.0f;
-
-static float g_camera_shake_factor = 0.6f;
-
 class FtolAccuracyFix
 {
     struct StateData
@@ -90,7 +86,7 @@ FtolAccuracyFix g_ftol_accuracy_fixes[]{
     {0x004D5214, asm_regs::esi}, // decal fade out
     {0x005096A7},                // timer
     {0x0050ABFB},                // console open/close
-    {0x0051BAD7, asm_regs::esi}, // anim mesh
+    {0x0051BAD7, asm_regs::esi}, // vmesh
 };
 
 #ifdef DEBUG
@@ -206,26 +202,10 @@ void high_fps_init()
 #ifdef DEBUG
     detect_ftol_issues_cmd.register_cmd();
 #endif
-
-    // Fix screen shake caused by some weapons (eg. Assault Rifle)
-    write_mem_ptr(0x0040DBCC + 2, &g_camera_shake_factor);
-
-    // Fix flamethrower "stroboscopic effect" on high FPS
-    // gr_draw_sprite interprets parameters differently than gr_draw_sprite_stretch expects - zero angle does not use
-    // diamond shape and size is not divided by 2. Instead of calling it when p0 to p1 distance is small get rid of this
-    // special case. gr_draw_sprite_stretch should handle it properly even if distance is 0 because it
-    // uses Vector3::normalize_safe() API.
-    write_mem<u8>(0x00558E61, asm_opcodes::jmp_rel_short);
 }
 
 void high_fps_update()
 {
-    float frame_time = rf::frametime;
-    if (frame_time > 0.0001f) { // < 1000FPS
-        // Fix screen shake caused by some weapons (eg. Assault Rifle)
-        g_camera_shake_factor = std::pow(0.6f, frame_time / (1 / screen_shake_fps));
-    }
-
 #ifdef DEBUG
     ftol_issues_detection_do_frame();
 #endif
