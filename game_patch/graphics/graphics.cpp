@@ -16,9 +16,11 @@
 #include "../utils/com-utils.h"
 #include "../utils/string-utils.h"
 #include "../utils/list-utils.h"
+#include "../utils/os-utils.h"
 #include "../rf/item.h"
 #include "../rf/clutter.h"
 #include <common/BuildConfig.h>
+#include <patch_common/ComPtr.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
@@ -157,6 +159,10 @@ D3DFORMAT determine_depth_buffer_format(D3DFORMAT adapter_format)
 CodeInjection update_pp_hook{
     0x00545BC7,
     []() {
+        if (gr_d3d_is_d3d8to9()) {
+            xlog::info("d3d8to9 detected");
+        }
+
         auto& format = addr_as_ref<D3DFORMAT>(0x005A135C);
         xlog::info("D3D Format: %u", format);
 
@@ -252,14 +258,14 @@ CodeInjection d3d_index_buffer_usage_patch{
 
 #endif // D3D_HW_VERTEX_PROCESSING
 
-CallHook<void(int, rf::GrVertex**, int, int)> GrRect_GrTMapper_hook{
+CallHook<void(int, rf::GrVertex**, int, int)> gr_rect_gr_tmapper_hook{
     0x0050DD69,
     [](int num, rf::GrVertex** pp_vertices, int flags, int mat) {
         for (int i = 0; i < num; ++i) {
             pp_vertices[i]->spos.x -= 0.5f;
             pp_vertices[i]->spos.y -= 0.5f;
         }
-        GrRect_GrTMapper_hook.call_target(num, pp_vertices, flags, mat);
+        gr_rect_gr_tmapper_hook.call_target(num, pp_vertices, flags, mat);
     },
 };
 
@@ -812,6 +818,19 @@ CodeInjection display_full_screen_image_alpha_support_patch{
     },
 };
 
+CodeInjection gr_d3d_init_load_library_injection{
+    0x005459AE,
+    [](auto& regs) {
+        auto d3d8to9_path = get_module_dir(g_hmodule) + "\\d3d8.dll";
+        xlog::info("Loading d3d8.dll: %s", d3d8to9_path.c_str());
+        auto d3d8to9_module = LoadLibraryA(d3d8to9_path.c_str());
+        if (d3d8to9_module) {
+            regs.eax = reinterpret_cast<int32_t>(d3d8to9_module);
+            regs.eip = 0x005459B9;
+        }
+    },
+};
+
 void apply_texture_patches();
 void apply_font_patches();
 void graphics_capture_init();
@@ -887,7 +906,7 @@ void graphics_init()
     write_mem<u8>(0x005478D7, asm_opcodes::fadd);
     write_mem_ptr(0x005478C6 + 2, &g_gr_clipped_geom_offset_x);
     write_mem_ptr(0x005478D7 + 2, &g_gr_clipped_geom_offset_y);
-    GrRect_GrTMapper_hook.install();
+    gr_rect_gr_tmapper_hook.install();
 #endif
 
     if (g_game_config.high_scanner_res) {
@@ -1060,6 +1079,9 @@ void graphics_init()
     // special case. gr_3d_bitmap_stretched_square should handle it properly even if distance is 0 because it
     // uses Vector3::normalize_safe() API.
     write_mem<u8>(0x00558E61, asm_opcodes::jmp_rel_short);
+
+    // Use d3d8to9 instead of d3d8
+    gr_d3d_init_load_library_injection.install();
 }
 
 void graphics_after_game_init()
@@ -1085,4 +1107,20 @@ void graphics_draw_fps_counter()
         int font_id = hud_get_default_font();
         rf::gr_string(x, y, text.c_str(), font_id);
     }
+}
+
+bool gr_d3d_is_d3d8to9()
+{
+    if (rf::gr_screen.mode != rf::GR_DIRECT3D) {
+        return false;
+    }
+    static bool is_d3d9 = false;
+    static bool is_d3d9_inited = false;
+    if (!is_d3d9_inited) {
+        static const GUID IID_IDirect3D9 = {0x81BDCBCA, 0x64D4, 0x426D, {0xAE, 0x8D, 0xAD, 0x01, 0x47, 0xF4, 0x27, 0x5C}};
+        ComPtr<IUnknown> d3d9;
+        is_d3d9 = SUCCEEDED(rf::gr_d3d->QueryInterface(IID_IDirect3D9, reinterpret_cast<void**>(&d3d9)));
+        is_d3d9_inited = true;
+    }
+    return is_d3d9;
 }

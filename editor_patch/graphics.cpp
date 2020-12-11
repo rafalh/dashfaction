@@ -241,6 +241,36 @@ FunHook<void(red::Matrix3*, red::Vector3*, float, bool, bool)> gr_setup_3d_hook{
     },
 };
 
+std::string get_module_dir(HMODULE module)
+{
+    std::string buf(MAX_PATH, '\0');
+    auto num_copied = GetModuleFileNameA(module, buf.data(), buf.size());
+    if (num_copied == buf.size()) {
+        xlog::error("GetModuleFileNameA failed (%lu)", GetLastError());
+        return {};
+    }
+    buf.resize(num_copied);
+    auto last_sep = buf.rfind('\\');
+    if (last_sep != std::string::npos) {
+        buf.resize(last_sep + 1);
+    }
+    return buf;
+}
+
+CodeInjection gr_d3d_init_load_library_injection{
+    0x004EC50E,
+    [](auto& regs) {
+        extern HMODULE g_module;
+        auto d3d8to9_path = get_module_dir(g_module) + "\\d3d8.dll";
+        xlog::info("Loading d3d8.dll: %s", d3d8to9_path.c_str());
+        auto d3d8to9_module = LoadLibraryA(d3d8to9_path.c_str());
+        if (d3d8to9_module) {
+            regs.eax = reinterpret_cast<int32_t>(d3d8to9_module);
+            regs.eip = 0x004EC519;
+        }
+    },
+};
+
 void ApplyGraphicsPatches()
 {
 #if D3D_HW_VERTEX_PROCESSING
@@ -280,4 +310,7 @@ void ApplyGraphicsPatches()
 
     // Use Hor+ FOV scaling
     gr_setup_3d_hook.install();
+
+    // Use d3d8to9 instead of d3d8
+    gr_d3d_init_load_library_injection.install();
 }

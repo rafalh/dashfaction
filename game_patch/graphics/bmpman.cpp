@@ -1,6 +1,8 @@
-#include "graphics_internal.h"
 #include <patch_common/FunHook.h>
 #include <xlog/xlog.h>
+#include <cassert>
+#include "graphics_internal.h"
+#include "graphics.h"
 
 int get_surface_pitch(int w, rf::BmFormat format)
 {
@@ -152,9 +154,41 @@ FunHook<bool(int)> bm_has_alpha_hook{
     },
 };
 
+FunHook<void(int)> bm_free_entry_hook{
+    0x0050F240,
+    [](int bm_index) {
+        rf::bm_bitmaps[bm_index].dynamic = false;
+        bm_free_entry_hook.call_target(bm_index);
+    },
+};
+
+void bm_set_dynamic(int bm_handle, bool dynamic)
+{
+    int bm_index = rf::bm_handle_to_index_anim_aware(bm_handle);
+    rf::bm_bitmaps[bm_index].dynamic = dynamic;
+}
+
+bool bm_is_dynamic(int bm_handle)
+{
+    int bm_index = rf::bm_handle_to_index_anim_aware(bm_handle);
+    return rf::bm_bitmaps[bm_index].dynamic;
+}
+
+void bm_change_format(int bm_handle, rf::BmFormat format)
+{
+    int bm_idx = rf::bm_handle_to_index_anim_aware(bm_handle);
+    auto& bm = rf::bm_bitmaps[bm_idx];
+    assert(bm.bm_type == rf::BM_TYPE_USER);
+    if (bm.format != format) {
+        gr_delete_texture(bm_handle);
+        bm.format = format;
+    }
+}
+
 void bm_apply_patches()
 {
     bm_read_header_hook.install();
     bm_lock_hook.install();
     bm_has_alpha_hook.install();
+    bm_free_entry_hook.install();
 }

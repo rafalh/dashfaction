@@ -7,6 +7,7 @@
 #include <cassert>
 #include <cstring>
 #include <set>
+#include <unordered_set>
 #include <algorithm>
 #include "../rf/graphics.h"
 #include "../rf/gr_direct3d.h"
@@ -14,8 +15,10 @@
 #include "../main.h"
 #include "gr_color.h"
 #include "graphics_internal.h"
+#include "graphics.h"
 
 std::set<rf::GrD3DTexture*> g_default_pool_tslots;
+int g_currently_creating_texture_for_bitmap = -1;
 
 class D3DTextureFormatSelector
 {
@@ -98,6 +101,7 @@ FunHook<GrD3DSetTextureData_Type> gr_d3d_set_texture_data_hook{
     0x0055BA10,
     [](int level, const uint8_t* src_bits_ptr, const uint8_t* palette, int bm_w, int bm_h,
         rf::BmFormat format, rf::GrD3DTextureSection* section, int tex_w, int tex_h, IDirect3DTexture8* texture) {
+        xlog::trace("gr_d3d_set_texture_data_hook");
 
         D3DSURFACE_DESC desc;
         auto hr = texture->GetLevelDesc(level, &desc);
@@ -143,7 +147,6 @@ FunHook<GrD3DSetTextureData_Type> gr_d3d_set_texture_data_hook{
             xlog::trace("Writing completed");
         }
         else {
-            auto tex_pixel_fmt = get_bm_format_from_d3d_format(desc.Format);
             auto bm_pitch = bm_bytes_per_pixel(format) * bm_w;
             success = convert_surface_format(locked_rect.pBits, tex_pixel_fmt,
                                                 src_bits_ptr, format, bm_w, bm_h, locked_rect.Pitch,
@@ -161,6 +164,7 @@ FunHook<GrD3DSetTextureData_Type> gr_d3d_set_texture_data_hook{
 FunHook<int(rf::BmFormat, int, int, int, IDirect3DTexture8**)> gr_d3d_create_vram_texture_hook{
     0x0055B970,
     [](rf::BmFormat format, int width, int height, int levels, IDirect3DTexture8** texture_out) {
+        xlog::trace("gr_d3d_create_vram_texture_hook");
         D3DFORMAT d3d_format;
         D3DPOOL d3d_pool = D3DPOOL_MANAGED;
         int usage = 0;
@@ -176,10 +180,13 @@ FunHook<int(rf::BmFormat, int, int, int, IDirect3DTexture8**)> gr_d3d_create_vra
                 xlog::error("Failed to determine texture format for pixel format %u", d3d_format);
                 return -1;
             }
+            assert(g_currently_creating_texture_for_bitmap != -1);
+            if (bm_is_dynamic(g_currently_creating_texture_for_bitmap) && gr_d3d_is_d3d8to9()) {
+                d3d_pool = D3DPOOL_DEFAULT;
+                usage = D3DUSAGE_DYNAMIC;
+                xlog::info("Creating dynamic texture %dx%d", width, height);
+            }
         }
-
-        // TODO: In Direct3D 9 D3DPOOL_DEFAULT + D3DUSAGE_DYNAMIC can be used
-        // Note: it has poor performance when texture is locked without D3DLOCK_DISCARD flag
 
         xlog::trace("Creating texture bm_format 0x%X d3d_format 0x%X", format, d3d_format);
         auto hr = rf::gr_d3d_device->CreateTexture(width, height, levels, usage, d3d_format, d3d_pool, texture_out);
@@ -264,14 +271,17 @@ FunHook <void(int, float, float, rf::Color*)> gr_d3d_get_texel_hook{
 extern FunHook<int(int, rf::GrD3DTexture&)> gr_d3d_create_texture_hook;
 
 int gr_d3d_create_texture(int bm_handle, rf::GrD3DTexture& tslot) {
+    g_currently_creating_texture_for_bitmap = bm_handle;
     auto result = gr_d3d_create_texture_hook.call_target(bm_handle, tslot);
+    g_currently_creating_texture_for_bitmap = -1;
+
     if (result != 1) {
         xlog::warn("Failed to load texture '%s'", rf::bm_get_filename(bm_handle));
         // Note: callers of this function expects zero result on failure
         return 0;
     }
-    auto pixel_fmt = rf::bm_get_format(bm_handle);
-    if (pixel_fmt == rf::BM_FORMAT_RENDER_TARGET) {
+    auto format = rf::bm_get_format(bm_handle);
+    if (format == rf::BM_FORMAT_RENDER_TARGET || (bm_is_dynamic(bm_handle) && gr_d3d_is_d3d8to9())) {
         g_default_pool_tslots.insert(&tslot);
     }
     return result;
@@ -295,6 +305,7 @@ FunHook<void(rf::GrD3DTexture&)> gr_d3d_free_texture_hook{
 };
 
 bool gr_d3d_lock(int bm_handle, int section, rf::GrLockInfo *lock) {
+    xlog::trace("gr_d3d_lock");
     auto& tslot = rf::gr_d3d_textures[rf::bm_handle_to_index_anim_aware(bm_handle)];
     if (tslot.num_sections < 1 || tslot.bm_handle != bm_handle) {
         auto ret = gr_d3d_create_texture(bm_handle, tslot);
@@ -304,14 +315,26 @@ bool gr_d3d_lock(int bm_handle, int section, rf::GrLockInfo *lock) {
     }
     D3DLOCKED_RECT locked_rect;
     auto d3d_texture = tslot.sections[section].d3d_texture;
-    DWORD lock_flags = lock->mode == rf::GR_LOCK_READ_ONLY ? D3DLOCK_READONLY : 0;
-    if (FAILED(d3d_texture->LockRect(0, &locked_rect, nullptr, lock_flags))) {
+    DWORD lock_flags = 0;
+    if (lock->mode == rf::GR_LOCK_READ_ONLY) {
+        lock_flags = D3DLOCK_READONLY;
+    }
+    else if (lock->mode == rf::GR_LOCK_WRITE_ONLY && gr_d3d_is_d3d8to9()) {
+        lock_flags = D3DLOCK_DISCARD;
+    }
+    auto hr = d3d_texture->LockRect(0, &locked_rect, nullptr, lock_flags);
+    if (FAILED(hr)) {
+        xlog::warn("gr_d3d_lock: IDirect3DTexture8::LockRect failed with result 0x%lx", hr);
         return false;
     }
 
     tslot.lock_count++;
     D3DSURFACE_DESC desc;
-    d3d_texture->GetLevelDesc(0, &desc);
+    hr = d3d_texture->GetLevelDesc(0, &desc);
+    if (FAILED(hr)) {
+        xlog::warn("gr_d3d_lock: IDirect3DTexture8::GetLevelDesc failed with result %lx", hr);
+        return false;
+    }
 
     lock->data = reinterpret_cast<rf::ubyte*>(locked_rect.pBits);
     lock->stride_in_bytes = locked_rect.Pitch;
@@ -368,7 +391,7 @@ void apply_texture_patches()
     gr_d3d_lock_hook.install();
 }
 
-void release_all_default_pool_textures()
+void gr_delete_all_default_pool_textures()
 {
     for (auto tslot : g_default_pool_tslots) {
         gr_d3d_free_texture_hook.call_target(*tslot);
@@ -376,22 +399,13 @@ void release_all_default_pool_textures()
     g_default_pool_tslots.clear();
 }
 
-void destroy_texture(int bmh)
+void gr_delete_texture(int bm_handle)
 {
-    auto& gr_d3d_tcache_add_ref = addr_as_ref<void(int bmh)>(0x0055D160);
-    auto& gr_d3d_tcache_remove_ref = addr_as_ref<void(int bmh)>(0x0055D190);
-    gr_d3d_tcache_add_ref(bmh);
-    gr_d3d_tcache_remove_ref(bmh);
-}
-
-void change_user_bitmap_format(int bmh, rf::BmFormat pixel_fmt, [[ maybe_unused ]] bool dynamic)
-{
-    destroy_texture(bmh);
-    int bm_idx = rf::bm_handle_to_index_anim_aware(bmh);
-    auto& bm = rf::bm_bitmaps[bm_idx];
-    assert(bm.bm_type == rf::BM_TYPE_USER);
-    bm.format = pixel_fmt;
-    // TODO: in DX9 use dynamic flag
+    if (rf::gr_screen.mode == rf::GR_DIRECT3D) {
+        auto bm_index = rf::bm_handle_to_index_anim_aware(bm_handle);
+        auto& tslot = rf::gr_d3d_textures[bm_index];
+        rf::gr_d3d_free_texture(tslot);
+    }
 }
 
 void init_supported_texture_formats()

@@ -36,9 +36,6 @@ if(MSVC)
     set(CMAKE_EXE_LINKER_FLAGS    "${CMAKE_EXE_LINKER_FLAGS} /MANIFEST:NO")
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /MANIFEST:NO")
 else()
-    # Keep debugging info in Release configuration - it is stripped later
-    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -g")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -g")
     # Use static linking
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -static")
@@ -77,6 +74,8 @@ macro(setup_debug_info target)
         # MSVC - generate PDB files
         set_property(TARGET ${target} PROPERTY LINK_FLAGS /DEBUG)
     else()
+        # Keep debugging info in Release configuration - it is stripped later
+        target_compile_options(${target} PRIVATE $<$<CONFIG:Release>:-g>$<$<CONFIG:RelWithDebInfo>:-g>)
         # MinGW - copy symbols to separate file and strip from executable
         add_custom_command(TARGET ${target} POST_BUILD
             COMMAND ${CMAKE_OBJCOPY} --only-keep-debug "$<TARGET_FILE:${target}>" "$<TARGET_FILE:${target}>.debug"

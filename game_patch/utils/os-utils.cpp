@@ -147,3 +147,19 @@ std::string get_cpu_brand()
     // string includes manufacturer, model and clockspeed
     return brand_str;
 }
+
+std::string get_module_dir(HMODULE module)
+{
+    std::string buf(MAX_PATH, '\0');
+    auto num_copied = GetModuleFileNameA(module, buf.data(), buf.size());
+    if (num_copied == buf.size()) {
+        xlog::error("GetModuleFileNameA failed (%lu)", GetLastError());
+        return {};
+    }
+    buf.resize(num_copied);
+    auto last_sep = buf.rfind('\\');
+    if (last_sep != std::string::npos) {
+        buf.resize(last_sep + 1);
+    }
+    return buf;
+}

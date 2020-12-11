@@ -56,18 +56,21 @@ namespace rf
         BmType bm_type;
         int animated_entry_type;
         BmFormat format;
-        char num_levels;
-        char orig_num_levels;
-        char num_levels_in_ext_files;
-        char num_frames;
-        char vbm_version;
+        uint8_t num_levels;
+        uint8_t orig_num_levels;
+        uint8_t num_levels_in_ext_files;
+        uint8_t num_frames;
+        uint8_t vbm_version;
         void* locked_data;
         float frames_per_ms;
         void* locked_palette;
         BmBitmapEntry* next;
         BmBitmapEntry* prev;
         char field_5C;
-        char cached_material_idx;
+        uint8_t cached_material_idx;
+#ifdef DASH_FACTION
+        bool dynamic;
+#endif
         int total_bytes_for_all_levels;
         int file_open_unk_arg;
         int resolution_level;

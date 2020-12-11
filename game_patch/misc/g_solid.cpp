@@ -5,6 +5,7 @@
 #include "../rf/geometry.h"
 #include "../rf/graphics.h"
 #include "../graphics/gr_color.h"
+#include "../graphics/graphics.h"
 
 constexpr auto reference_fps = 30.0f;
 constexpr auto reference_framerate = 1.0f / reference_fps;
@@ -119,6 +120,7 @@ CodeInjection g_proctex_update_water_patch{
             return;
         }
         int dst_bm_handle = *reinterpret_cast<int*>(waveform_info + 24);
+        bm_set_dynamic(dst_bm_handle, true);
         if (!rf::gr_lock(dst_bm_handle, 0, &dst_lock, rf::GR_LOCK_WRITE_ONLY)) {
             rf::gr_unlock(&src_lock);
             return;
@@ -131,14 +133,21 @@ CodeInjection g_proctex_update_water_patch{
     }
 };
 
+CodeInjection g_proctex_create_bm_create_injection{
+    0x004E66A2,
+    [](auto& regs) {
+        bm_set_dynamic(regs.eax, true);
+    },
+};
+
 CodeInjection face_scroll_fix{
     0x004EE1D6,
     [](auto& regs) {
         auto geometry = reinterpret_cast<void*>(regs.ebp);
         auto& scroll_data_vec = struct_field_ref<rf::VArray<void*>>(geometry, 0x2F4);
-        auto GTextureMover_SetupFaces = reinterpret_cast<void(__thiscall*)(void* self, void* geometry)>(0x004E60C0);
+        auto GTextureMover_setup_faces = reinterpret_cast<void(__thiscall*)(void* self, void* geometry)>(0x004E60C0);
         for (int i = 0; i < scroll_data_vec.size(); ++i) {
-            GTextureMover_SetupFaces(scroll_data_vec[i], geometry);
+            GTextureMover_setup_faces(scroll_data_vec[i], geometry);
         }
     },
 };
@@ -182,4 +191,7 @@ void g_solid_do_patch()
     AsmWriter(0x004E68A0, 0x004E68A9).nop();
     AsmWriter(0x004E68B6, 0x004E68D1).nop();
     g_proctex_update_water_speed_fix.install();
+
+    // Set dynamic flag on proctex texture
+    g_proctex_create_bm_create_injection.install();
 }

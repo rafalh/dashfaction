@@ -1,5 +1,3 @@
-#define USE_D3D9 0
-
 #include "VideoDeviceInfoProvider.h"
 #include <common/Exception.h>
 #include <common/Win32Error.h>
@@ -40,7 +38,8 @@ VideoDeviceInfoProvider::VideoDeviceInfoProvider()
     if (!m_lib)
         THROW_WIN32_ERROR("Failed to load d3d9.dll");
 
-    PDIRECT3DCREATE9 Direct3DCreate9 = reinterpret_cast<PDIRECT3DCREATE9>(GetProcAddress(m_lib, "Direct3DCreate9"));
+    PDIRECT3DCREATE9 Direct3DCreate9 = reinterpret_cast<PDIRECT3DCREATE9>(reinterpret_cast<void(*)()>(
+        GetProcAddress(m_lib, "Direct3DCreate9")));
     if (!Direct3DCreate9)
         THROW_WIN32_ERROR("Failed to load get Direct3DCreate9 function address");
 
@@ -61,7 +60,11 @@ std::vector<std::string> VideoDeviceInfoProvider::get_adapters()
     std::vector<std::string> adapters;
     auto count = m_d3d->GetAdapterCount();
     for (unsigned i = 0; i < count; ++i) {
+#if USE_D3D9
+        D3DADAPTER_IDENTIFIER9 adapter_identifier;
+#else
         D3DADAPTER_IDENTIFIER8 adapter_identifier;
+#endif
         auto hr = m_d3d->GetAdapterIdentifier(i, 0, &adapter_identifier);
         if (SUCCEEDED(hr)) {
             adapters.push_back(adapter_identifier.Description);

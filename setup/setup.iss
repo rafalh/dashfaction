@@ -36,6 +36,7 @@ Source: "{#BinDir}\DashFactionLauncher.exe"; DestDir: "{app}"; Flags: ignorevers
 Source: "{#BinDir}\CrashHandler.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#BinDir}\DashEditor.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#BinDir}\DashFaction.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#BinDir}\d3d8.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SrcRootDir}\dashfaction.vpp"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SrcRootDir}\licensing-info.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SrcRootDir}\LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion

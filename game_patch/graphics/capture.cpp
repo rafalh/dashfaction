@@ -123,6 +123,7 @@ CallHook<rf::BmFormat(int, int, int, int, std::byte*)> gr_d3d_read_back_buffer_h
         }
 
         // function is sometimes called with all parameters set to 0 to get backbuffer format
+        xlog::info("gr_d3d_read_back_buffer_hook");
         rf::BmFormat pixel_fmt = get_bm_format_from_d3d_format(desc.Format);
         if (width == 0 || height == 0) {
             return pixel_fmt;
@@ -197,7 +198,7 @@ CodeInjection d3d_device_lost_patch{
         xlog::trace("D3D device lost");
         g_depth_stencil_surface.release();
         // Note: g_capture_tmp_surface is in D3DPOOL_SYSTEMMEM so no need to release here
-        release_all_default_pool_textures();
+        gr_delete_all_default_pool_textures();
         monitor_refresh_all();
     },
 };

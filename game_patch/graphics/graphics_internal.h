@@ -4,8 +4,7 @@
 #include "../rf/bmpman.h"
 #include "../rf/file.h"
 
-void release_all_default_pool_textures();
-void destroy_texture(int bmh);
+void gr_delete_all_default_pool_textures();
 void init_supported_texture_formats();
 size_t get_surface_length_in_bytes(int w, int h, rf::BmFormat format);
 
@@ -17,3 +16,4 @@ int get_surface_pitch(int w, rf::BmFormat format);
 int get_surface_num_rows(int h, rf::BmFormat format);
 bool bm_is_compressed_format(rf::BmFormat format);
 bool gr_is_format_supported(rf::BmFormat format);
+bool gr_d3d_is_d3d8to9();

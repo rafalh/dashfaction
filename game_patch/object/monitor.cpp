@@ -45,7 +45,8 @@ void ensure_monitor_bitmap_is_dynamic(rf::Monitor& mon)
 {
     if (rf::bm_get_format(mon.bitmap) == rf::BM_FORMAT_RENDER_TARGET) {
         xlog::trace("Changing pixel format for monitor bitmap");
-        change_user_bitmap_format(mon.bitmap, rf::BM_FORMAT_888_RGB, true);
+        bm_change_format(mon.bitmap, rf::BM_FORMAT_888_RGB);
+        bm_set_dynamic(mon.bitmap, true);
     }
 }
 
@@ -114,11 +115,11 @@ FunHook<void(rf::Monitor&)> monitor_update_static_hook{
         // monitor is no longer displaying view from camera so its texture usage must be changed
         // from render target to dynamic texture
         //ensure_monitor_bitmap_is_dynamic(mon);
-        if (!(mon.flags & 0x1000)) {
+        if (!(mon.flags & rf::MF_BM_RENDERED)) {
             // very good idea but needs more work on UVs...
             auto hbm = rf::bm_load("gls_noise01.tga", -1, true);
             replace_monitor_screen_bitmap(mon, hbm);
-            mon.flags |= 0x1000;
+            mon.flags |= rf::MF_BM_RENDERED;
         }
         //monitor_update_static_hook.call_target(mon);
     },

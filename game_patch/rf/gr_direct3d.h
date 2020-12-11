@@ -2,15 +2,15 @@
 
 #include "common.h"
 
+#ifdef NO_D3D8
+using IDirect3DTexture8 = IUnknown;
+#endif
+
 namespace rf
 {
     struct GrD3DTextureSection
     {
-#ifdef DIRECT3D_VERSION
         IDirect3DTexture8 *d3d_texture;
-#else
-        void *d3d_texture;
-#endif
         int num_vram_bytes;
         float u_scale;
         float v_scale;
@@ -32,9 +32,11 @@ namespace rf
     };
 
     static auto& gr_d3d_flush_buffers = addr_as_ref<void()>(0x00559D90);
+    static auto& gr_d3d_create_texture = addr_as_ref<int(int bm_handle, rf::GrD3DTexture& tslot)>(0x0055CC00);
     static auto& gr_d3d_get_texture = addr_as_ref<IDirect3DTexture8*(int bm_handle)>(0x0055D1E0);
+    static auto& gr_d3d_free_texture = addr_as_ref<void(GrD3DTexture& tslot)>(0x0055B640);
 
-#if defined(DIRECT3D_VERSION)
+#if defined(DIRECT3D_VERSION) && DIRECT3D_VERSION == 0x0800
     static auto& gr_d3d = addr_as_ref<IDirect3D8*>(0x01CFCBE0);
     static auto& gr_d3d_device = addr_as_ref<IDirect3DDevice8*>(0x01CFCBE4);
     static auto& gr_d3d_pp = addr_as_ref<D3DPRESENT_PARAMETERS>(0x01CFCA18);
@@ -43,7 +45,7 @@ namespace rf
     static auto& gr_d3d_device = addr_as_ref<IUnknown*>(0x01CFCBE4);
 #endif
     static auto& gr_adapter_idx = addr_as_ref<uint32_t>(0x01CFCC34);
-#ifdef DIRECT3D_VERSION
+#if defined(DIRECT3D_VERSION) && DIRECT3D_VERSION == 0x0800
     static auto& gr_d3d_device_caps = addr_as_ref<D3DCAPS8>(0x01CFCAC8);
 #endif
     static auto& gr_d3d_textures = addr_as_ref<GrD3DTexture*>(0x01E65338);
@@ -56,7 +58,7 @@ namespace rf
     static auto& gr_d3d_max_hw_index = addr_as_ref<int>(0x0181834C);
     static auto& gr_d3d_min_hw_vertex = addr_as_ref<int>(0x01E652F8);
     static auto& gr_d3d_min_hw_index = addr_as_ref<int>(0x01E652FC);
-#ifdef DIRECT3D_VERSION
+#if defined(DIRECT3D_VERSION) && DIRECT3D_VERSION == 0x0800
     static auto& gr_d3d_primitive_type = addr_as_ref<D3DPRIMITIVETYPE>(0x01D862A8);
 #endif
 

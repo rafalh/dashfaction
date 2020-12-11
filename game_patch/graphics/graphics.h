@@ -14,10 +14,13 @@ int get_default_font_id();
 void set_default_font_id(int font_id);
 void obj_mesh_lighting_alloc_one(rf::Object *objp);
 void obj_mesh_lighting_update_one(rf::Object *objp);
-void change_user_bitmap_format(int bmh, rf::BmFormat format, bool dynamic = false);
-bool gr_begin_render_to_texture(int bmh);
+void bm_change_format(int bm_handle, rf::BmFormat format);
+bool gr_begin_render_to_texture(int bm_handle);
 void gr_end_render_to_texture();
+void gr_delete_texture(int bm_handle);
 void reset_gamma_ramp();
+void bm_set_dynamic(int bm_handle, bool dynamic);
+bool bm_is_dynamic(int bm_handle);
 
 template<typename F>
 void run_with_default_font(int font_id, F fun)
