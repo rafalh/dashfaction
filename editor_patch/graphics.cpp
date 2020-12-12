@@ -261,8 +261,8 @@ CodeInjection gr_d3d_init_load_library_injection{
     0x004EC50E,
     [](auto& regs) {
         extern HMODULE g_module;
-        auto d3d8to9_path = get_module_dir(g_module) + "\\d3d8.dll";
-        xlog::info("Loading d3d8.dll: %s", d3d8to9_path.c_str());
+        auto d3d8to9_path = get_module_dir(g_module) + "\\d3d8to9.dll";
+        xlog::info("Loading d3d8to9.dll: %s", d3d8to9_path.c_str());
         auto d3d8to9_module = LoadLibraryA(d3d8to9_path.c_str());
         if (d3d8to9_module) {
             regs.eax = reinterpret_cast<int32_t>(d3d8to9_module);

@@ -30,7 +30,7 @@ if(D3D8TO9_STATIC)
 else()
   add_library(d3d8to9 SHARED ${SRCS})
   set_target_properties(d3d8to9 PROPERTIES PREFIX "")
-  set_target_properties(d3d8to9 PROPERTIES OUTPUT_NAME "d3d8")
+  set_target_properties(d3d8to9 PROPERTIES OUTPUT_NAME "d3d8to9")
 endif()
 
 target_compile_definitions(d3d8to9 PUBLIC

@@ -821,8 +821,8 @@ CodeInjection display_full_screen_image_alpha_support_patch{
 CodeInjection gr_d3d_init_load_library_injection{
     0x005459AE,
     [](auto& regs) {
-        auto d3d8to9_path = get_module_dir(g_hmodule) + "\\d3d8.dll";
-        xlog::info("Loading d3d8.dll: %s", d3d8to9_path.c_str());
+        auto d3d8to9_path = get_module_dir(g_hmodule) + "\\d3d8to9.dll";
+        xlog::info("Loading d3d8to9.dll: %s", d3d8to9_path.c_str());
         auto d3d8to9_module = LoadLibraryA(d3d8to9_path.c_str());
         if (d3d8to9_module) {
             regs.eax = reinterpret_cast<int32_t>(d3d8to9_module);
