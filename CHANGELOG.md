@@ -60,6 +60,7 @@ Version 1.5.1 (not released yet)
 - fix entity staying in crouched state in a liquid if it was crouching when entering the liquid
 - use Direct3D 9 rendering API
 - optimize dynamic textures for Direct3D 9
+- send operating system version when checking for updates in the launcher
 
 Version 1.5.0 (released 2020-09-05)
 -----------------------------------

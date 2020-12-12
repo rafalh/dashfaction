@@ -56,6 +56,18 @@ std::string get_real_os_version()
                         HIWORD(file_info->dwProductVersionLS));
 }
 
+std::optional<std::string> get_wine_version()
+{
+    auto ntdll_handle = GetModuleHandleA("ntdll.dll");
+    // Note: double cast is needed to fix cast-function-type GCC warning
+    auto wine_get_version = reinterpret_cast<const char*(*)()>(reinterpret_cast<void(*)()>(
+        GetProcAddress(ntdll_handle, "wine_get_version")));
+    if (!wine_get_version)
+        return {};
+    auto ver = wine_get_version();
+    return {ver};
+}
+
 bool is_current_user_admin()
 {
     SID_IDENTIFIER_AUTHORITY nt_authority = SECURITY_NT_AUTHORITY;

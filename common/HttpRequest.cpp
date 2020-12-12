@@ -161,3 +161,38 @@ size_t HttpRequest::read(void* buffer, size_t buffer_size)
         THROW_WIN32_ERROR();
     return read;
 }
+
+static bool is_uri_reserved_char(char c)
+{
+    // encode the same characters as encodeURIComponent JS function
+    switch (c) {
+        case '-':
+        case '_':
+        case '.':
+        case '!':
+        case '~':
+        case '*':
+        case '\'':
+        case '(':
+        case ')':
+            return false;
+        default:
+            return !std::isalnum(c);
+    }
+}
+
+std::string encode_uri_component(std::string_view value)
+{
+    char buf[8];
+    std::string result;
+    result.reserve(value.size());
+    for (char c : value) {
+        if (is_uri_reserved_char(c)) {
+            sprintf(buf, "%%%02X", static_cast<unsigned char>(c));
+            result += buf;
+        } else {
+            result += c;
+        }
+    }
+    return result;
+}

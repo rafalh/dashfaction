@@ -94,3 +94,5 @@ public:
     void send(std::string_view body = "");
     size_t read(void* buf, size_t buf_size);
 };
+
+std::string encode_uri_component(std::string_view value);

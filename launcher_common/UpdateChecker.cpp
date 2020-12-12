@@ -2,6 +2,7 @@
 #include <common/Exception.h>
 #include <common/version.h>
 #include <common/HttpRequest.h>
+#include <common/utils/os-utils.h>
 #include <thread>
 #include <mutex>
 #include <optional>
@@ -11,7 +12,17 @@
 UpdateChecker::CheckResult UpdateChecker::check()
 {
     HttpSession session{"DashFaction"};
-    auto url = UPDATE_CHECK_ENDPOINT_URL "?version=" VERSION_STR;
+    std::string url = UPDATE_CHECK_ENDPOINT_URL "?version=" VERSION_STR;
+
+    auto os_ver = get_real_os_version();
+    url += "&os=";
+    url += encode_uri_component(os_ver);
+
+    auto wine_ver_opt = get_wine_version();
+    if (wine_ver_opt) {
+        url += "&wine=";
+        url += encode_uri_component(wine_ver_opt.value());
+    }
 
     HttpRequest req{url, "GET", session};
     req.send();
