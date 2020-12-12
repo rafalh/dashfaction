@@ -1,7 +1,7 @@
 DashFaction Changelog
 =====================
 
-Version 1.5.1 (not released yet)
+Version 1.6.0 (not released yet)
 --------------------------------
 - fix alpha draw order issues in envirosuit1.vcm, Vet1.v3m, coffeesmokedtbl2.v3m, coffeesmokedtblAlt.v3m meshes
 - add support for bitmaps with alpha channel in Display_Fullscreen_Image event
