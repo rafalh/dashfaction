@@ -5,7 +5,7 @@
 #include "../rf/player.h"
 #include "../misc/misc.h"
 #include "../misc/vpackfile.h"
-#include "../utils/list-utils.h"
+#include <common/utils/list-utils.h>
 #include <algorithm>
 #include <patch_common/CallHook.h>
 #include <patch_common/AsmWriter.h>

@@ -6,7 +6,7 @@
 #include "../main.h"
 #include "../multi/multi.h"
 #include "../in_game_ui/spectate_mode.h"
-#include "../utils/list-utils.h"
+#include <common/utils/list-utils.h>
 #include <common/GameConfig.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CallHook.h>

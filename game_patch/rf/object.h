@@ -4,7 +4,7 @@
 #include "common.h"
 #include "physics.h"
 #include "vmesh.h"
-#include "../utils/enum-bitwise-operators.h"
+#include <common/utils/enum-bitwise-operators.h>
 
 namespace rf
 {

@@ -11,7 +11,7 @@
 #include "../rf/graphics.h"
 #include "../rf/bmpman.h"
 #include "../rf/multi.h"
-#include "../utils/string-utils.h"
+#include <common/utils/string-utils.h>
 #include "graphics_internal.h"
 #include "gr_color.h"
 

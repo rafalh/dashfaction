@@ -16,7 +16,7 @@
 #include "../console/console.h"
 #include "../misc/player.h"
 #include "../main.h"
-#include "../utils/list-utils.h"
+#include <common/utils/list-utils.h>
 #include "../rf/player.h"
 #include "../rf/multi.h"
 #include "../rf/parse.h"

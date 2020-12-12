@@ -3,7 +3,7 @@
 #include "../main.h"
 #include "../rf/common.h"
 #include "../rf/file.h"
-#include "../utils/iterable-utils.h"
+#include <common/utils/iterable-utils.h>
 #include <xxhash.h>
 #include <common/BuildConfig.h>
 #include <patch_common/ShortTypes.h>

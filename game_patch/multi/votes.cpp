@@ -9,7 +9,7 @@
 #include "../console/console.h"
 #include "../misc/player.h"
 #include "../main.h"
-#include "../utils/list-utils.h"
+#include <common/utils/list-utils.h>
 #include "server_internal.h"
 #include "multi.h"
 

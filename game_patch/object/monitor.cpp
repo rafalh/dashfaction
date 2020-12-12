@@ -7,7 +7,7 @@
 #include "../rf/graphics.h"
 #include "../rf/bmpman.h"
 #include "../rf/player.h"
-#include "../utils/list-utils.h"
+#include <common/utils/list-utils.h>
 #include "../main.h"
 #include "../graphics/graphics.h"
 #include "../graphics/gr_color.h"

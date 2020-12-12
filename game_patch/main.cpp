@@ -1,5 +1,6 @@
 #include <common/GameConfig.h>
 #include <common/BuildConfig.h>
+#include <common/utils/os-utils.h>
 #include "main.h"
 #include "console/console.h"
 #include "crash_handler_stub.h"
@@ -15,7 +16,6 @@
 #include "misc/misc.h"
 #include "misc/vpackfile.h"
 #include "misc/high_fps.h"
-#include "utils/os-utils.h"
 #include "input/input.h"
 #include "rf/multi.h"
 #include "rf/level.h"

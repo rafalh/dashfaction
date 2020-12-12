@@ -7,7 +7,7 @@
 #include "../rf/gameseq.h"
 #include "../rf/hud.h"
 #include "../rf/level.h"
-#include "../utils/list-utils.h"
+#include <common/utils/list-utils.h>
 #include "../main.h"
 #include "spectate_mode.h"
 #include "hud_internal.h"

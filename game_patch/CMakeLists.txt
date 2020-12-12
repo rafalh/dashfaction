@@ -105,15 +105,6 @@ set(SRCS
     multi/win32_server_console.cpp
     multi/votes.cpp
     multi/commands.cpp
-    utils/com-utils.h
-    utils/com-utils.cpp
-    utils/enum-bitwise-operators.h
-    utils/iterable-utils.h
-    utils/list-utils.h
-    utils/os-utils.cpp
-    utils/os-utils.h
-    utils/perf-utils.h
-    utils/string-utils.h
     console/console.cpp
     console/console.h
     console/commands.cpp

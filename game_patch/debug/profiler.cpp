@@ -11,7 +11,7 @@
 #include <xlog/xlog.h>
 #include <cstddef>
 #include "debug_internal.h"
-#include "../utils/perf-utils.h"
+#include <common/utils/perf-utils.h>
 
 std::vector<std::unique_ptr<PerfAggregator>> PerfAggregator::instances_;
 

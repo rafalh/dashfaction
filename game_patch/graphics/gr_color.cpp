@@ -4,7 +4,7 @@
 #include "../main.h"
 #include "../rf/graphics.h"
 #include "../rf/geometry.h"
-#include "../utils/perf-utils.h"
+#include <common/utils/perf-utils.h>
 #include <common/BuildConfig.h>
 #include <patch_common/AsmWriter.h>
 #include <patch_common/FunHook.h>

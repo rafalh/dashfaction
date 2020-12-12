@@ -13,7 +13,7 @@
 #include "../rf/mover.h"
 #include "../rf/geometry.h"
 #include "../rf/level.h"
-#include "../utils/list-utils.h"
+#include <common/utils/list-utils.h>
 #include "../main.h"
 
 static std::vector<rf::Object*> g_objects_to_check;

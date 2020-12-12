@@ -5,7 +5,7 @@
 #include "../main.h"
 #include "../rf/graphics.h"
 #include "../rf/gr_direct3d.h"
-#include "../utils/com-utils.h"
+#include <common/utils/com-utils.h>
 #include <cstddef>
 #include <cstring>
 #include <common/BuildConfig.h>

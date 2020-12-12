@@ -33,7 +33,7 @@
 #include "../rf/level.h"
 #include "../misc/misc.h"
 #include "../object/object.h"
-#include "../utils/enum-bitwise-operators.h"
+#include <common/utils/enum-bitwise-operators.h>
 #include "../console/console.h"
 
 #if MASK_AS_PF

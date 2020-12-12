@@ -13,10 +13,10 @@
 #include "../rf/hud.h"
 #include "../rf/gameseq.h"
 #include "../rf/os.h"
-#include "../utils/com-utils.h"
-#include "../utils/string-utils.h"
-#include "../utils/list-utils.h"
-#include "../utils/os-utils.h"
+#include <common/utils/com-utils.h>
+#include <common/utils/string-utils.h>
+#include <common/utils/list-utils.h>
+#include <common/utils/os-utils.h>
 #include "../rf/item.h"
 #include "../rf/clutter.h"
 #include <common/BuildConfig.h>

@@ -3,7 +3,7 @@
 #include <cmath>
 #include <cstdarg>
 #include <patch_common/MemUtils.h>
-#include "../utils/string-utils.h"
+#include <common/utils/string-utils.h>
 
 #ifndef __GNUC__
 #define ALIGN(n) __declspec(align(n))
