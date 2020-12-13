@@ -1,6 +1,6 @@
 #include "UpdateChecker.h"
-#include <common/Exception.h>
-#include <common/version.h>
+#include <common/error/Exception.h>
+#include <common/version/version.h>
 #include <common/HttpRequest.h>
 #include <common/utils/os-utils.h>
 #include <thread>

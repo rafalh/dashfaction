@@ -1,9 +1,9 @@
 #include "LauncherApp.h"
 #include "MainDlg.h"
 #include "LauncherCommandLineInfo.h"
-#include <common/GameConfig.h>
-#include <common/version.h>
-#include <common/ErrorUtils.h>
+#include <common/config/GameConfig.h>
+#include <common/version/version.h>
+#include <common/error/error-utils.h>
 #include <launcher_common/PatchedAppLauncher.h>
 #include <xlog/xlog.h>
 

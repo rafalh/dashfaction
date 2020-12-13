@@ -2,7 +2,7 @@
 #define VER_FILE_DESCRIPTION "Dash Faction launcher"
 #define VER_ORIGINAL_FILENAME "DashFactionLauncher.exe"
 #define VER_FILETYPE 0x1L // VFT_APP
-#include <common/version.rc>
+#include <common/version/version.rc>
 
 #include <windows.h>
 CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "res/DashFactionLauncher.manifest"

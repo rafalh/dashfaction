@@ -4,4 +4,4 @@
 #define VER_FILE_DESCRIPTION "Dash Faction game patch"
 #define VER_ORIGINAL_FILENAME "DashFaction.dll"
 #define VER_FILETYPE 0x2L // VFT_DLL
-#include <common/version.rc>
+#include <common/version/version.rc>

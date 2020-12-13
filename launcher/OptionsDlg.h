@@ -1,7 +1,7 @@
 #pragma once
 
 #include <launcher_common/VideoDeviceInfoProvider.h>
-#include <common/GameConfig.h>
+#include <common/config/GameConfig.h>
 #include <wxx_wincore.h>
 #include <wxx_dialog.h>
 #include <wxx_controls.h>

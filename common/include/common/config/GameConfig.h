@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include <common/CfgVar.h>
+#include <common/config/CfgVar.h>
 
 inline const char DEFAULT_RF_TRACKER[] = "rfgt.factionfiles.com";
 inline const char DEFAULT_EXECUTABLE_PATH[] = "C:\\games\\RedFaction\\rf.exe";

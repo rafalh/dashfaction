@@ -4,8 +4,8 @@
 #include "../rf/player.h"
 #include "../rf/gameseq.h"
 #include "../rf/input.h"
-#include <common/BuildConfig.h>
-#include <common/version.h>
+#include <common/config/BuildConfig.h>
+#include <common/version/version.h>
 #include <patch_common/CodeInjection.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CallHook.h>

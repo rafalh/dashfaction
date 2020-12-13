@@ -1,4 +1,4 @@
-#include <common/utils/com-utils.h>
+#include <common/error/d3d-error.h>
 #include <d3d8.h>
 #include <map>
 

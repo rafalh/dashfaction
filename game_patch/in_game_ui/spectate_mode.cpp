@@ -11,7 +11,7 @@
 #include "../rf/hud.h"
 #include "../rf/misc.h"
 #include "../main.h"
-#include <common/BuildConfig.h>
+#include <common/config/BuildConfig.h>
 #include <xlog/xlog.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>

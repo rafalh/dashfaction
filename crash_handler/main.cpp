@@ -1,5 +1,5 @@
 #include "CrashReportApp.h"
-#include <common/ErrorUtils.h>
+#include <common/error/error-utils.h>
 
 int APIENTRY WinMain(HINSTANCE, HINSTANCE, LPSTR, int) try
 {

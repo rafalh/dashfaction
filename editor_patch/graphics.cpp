@@ -1,4 +1,4 @@
-#include <common/BuildConfig.h>
+#include <common/config/BuildConfig.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>

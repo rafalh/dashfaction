@@ -2,7 +2,7 @@
 #define VER_FILE_DESCRIPTION "Dash Faction crash handler"
 #define VER_ORIGINAL_FILENAME "CrashHandler.exe"
 #define VER_FILETYPE 0x1L // VFT_APP
-#include <common/version.rc>
+#include <common/version/version.rc>
 
 #include <windows.h>
 CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "CrashHandler.manifest"

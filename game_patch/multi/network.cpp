@@ -9,9 +9,9 @@
 #include <iphlpapi.h>
 #include <ws2ipdef.h>
 #include <natupnp.h>
-#include <common/BuildConfig.h>
+#include <common/config/BuildConfig.h>
 #include <common/rfproto.h>
-#include <common/version.h>
+#include <common/version/version.h>
 #include <xlog/xlog.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>

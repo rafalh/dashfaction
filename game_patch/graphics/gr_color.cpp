@@ -5,7 +5,7 @@
 #include "../rf/graphics.h"
 #include "../rf/geometry.h"
 #include <common/utils/perf-utils.h>
-#include <common/BuildConfig.h>
+#include <common/config/BuildConfig.h>
 #include <patch_common/AsmWriter.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>

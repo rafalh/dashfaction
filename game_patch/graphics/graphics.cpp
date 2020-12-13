@@ -13,13 +13,13 @@
 #include "../rf/hud.h"
 #include "../rf/gameseq.h"
 #include "../rf/os.h"
-#include <common/utils/com-utils.h>
+#include <common/error/d3d-error.h>
 #include <common/utils/string-utils.h>
 #include <common/utils/list-utils.h>
 #include <common/utils/os-utils.h>
 #include "../rf/item.h"
 #include "../rf/clutter.h"
-#include <common/BuildConfig.h>
+#include <common/config/BuildConfig.h>
 #include <patch_common/ComPtr.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>

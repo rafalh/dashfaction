@@ -1,4 +1,4 @@
-#include <common/BuildConfig.h>
+#include <common/config/BuildConfig.h>
 #include "console.h"
 #include "../main.h"
 #include "../rf/multi.h"

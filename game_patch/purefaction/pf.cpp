@@ -1,5 +1,5 @@
 
-#include <common/BuildConfig.h>
+#include <common/config/BuildConfig.h>
 #include "pf.h"
 #include "pf_packets.h"
 #include "pf_secret.h"

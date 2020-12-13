@@ -5,7 +5,7 @@
 #include "../rf/file.h"
 #include <common/utils/iterable-utils.h>
 #include <xxhash.h>
-#include <common/BuildConfig.h>
+#include <common/config/BuildConfig.h>
 #include <patch_common/ShortTypes.h>
 #include <patch_common/AsmWriter.h>
 #include <patch_common/CodeInjection.h>

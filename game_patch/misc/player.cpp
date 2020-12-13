@@ -7,7 +7,7 @@
 #include "../multi/multi.h"
 #include "../in_game_ui/spectate_mode.h"
 #include <common/utils/list-utils.h>
-#include <common/GameConfig.h>
+#include <common/config/GameConfig.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/CodeInjection.h>

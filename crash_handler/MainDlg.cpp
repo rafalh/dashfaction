@@ -1,8 +1,8 @@
 #include "CrashReportApp.h"
 #include "MainDlg.h"
 #include "AdditionalInfoDlg.h"
-#include <common/version.h>
-#include <common/ErrorUtils.h>
+#include <common/version/version.h>
+#include <common/error/error-utils.h>
 #include <wxx_wincore.h>
 #include <wxx_dialog.h>
 #include "res/resource.h"

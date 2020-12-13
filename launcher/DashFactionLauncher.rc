@@ -8,7 +8,7 @@
 // Generated from the TEXTINCLUDE 2 resource.
 //
 #include <windows.h>
-#include <common/version.h>
+#include <common/version/version.h>
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -35,7 +35,7 @@ END
 2 TEXTINCLUDE
 BEGIN
     "#include <windows.h>\r\n"
-    "#include <common/version.h>\r\n"
+    "#include <common/version/version.h>\r\n"
     "\0"
 END
 

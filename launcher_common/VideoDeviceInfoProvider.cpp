@@ -1,6 +1,6 @@
 #include "VideoDeviceInfoProvider.h"
-#include <common/Exception.h>
-#include <common/Win32Error.h>
+#include <common/error/Exception.h>
+#include <common/error/Win32Error.h>
 #include <xlog/xlog.h>
 
 #if USE_D3D9

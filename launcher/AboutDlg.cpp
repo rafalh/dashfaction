@@ -3,7 +3,7 @@
 #include <wxx_wincore.h>
 #include <wxx_dialog.h>
 #include <xlog/xlog.h>
-#include <common/version.h>
+#include <common/version/version.h>
 
 AboutDlg::AboutDlg()
 	: CDialog(IDD_ABOUT)

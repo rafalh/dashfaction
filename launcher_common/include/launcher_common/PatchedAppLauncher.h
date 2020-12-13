@@ -1,6 +1,6 @@
 #pragma once
 
-#include <common/GameConfig.h>
+#include <common/config/GameConfig.h>
 #include <stdexcept>
 #include <string>
 #include <optional>

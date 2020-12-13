@@ -7,7 +7,7 @@
 #include "ZipHelper.h"
 #include "config.h"
 #include "res/resource.h"
-#include <common/version.h>
+#include <common/version/version.h>
 #include <common/HttpRequest.h>
 #include <windows.h>
 #include <fstream>

@@ -224,4 +224,4 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 #define VER_FILE_DESCRIPTION "Dash Faction level editor patch"
 #define VER_ORIGINAL_FILENAME "DashEditor.dll"
 #define VER_FILETYPE 0x2L // VFT_DLL
-#include <common/version.rc>
+#include <common/version/version.rc>

@@ -7,6 +7,7 @@
 #define MEMORY_TRACKING 0
 #define VARRAY_OOB_CHECK 0
 #define EMULATE_PACKET_LOSS 0
+#define DEBUG_PERF
 #else // NDEBUG
 #define DEBUG_PERF
 #define MEMORY_TRACKING 1

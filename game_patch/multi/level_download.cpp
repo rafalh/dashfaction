@@ -7,7 +7,7 @@
 #include "../console/console.h"
 #include <common/HttpRequest.h>
 #include <common/rfproto.h>
-#include <common/BuildConfig.h>
+#include <common/config/BuildConfig.h>
 #include <patch_common/CodeInjection.h>
 #include <xlog/xlog.h>
 #include <stdexcept>

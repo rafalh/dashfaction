@@ -1,5 +1,5 @@
-#include "GameConfig.h"
-#include "RegKey.h"
+#include <common/config/GameConfig.h>
+#include <common/config/RegKey.h>
 #include <shlwapi.h>
 #include <algorithm>
 

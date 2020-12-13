@@ -1,6 +1,6 @@
 #pragma once
 
-#include <common/GameConfig.h>
+#include <common/config/GameConfig.h>
 
 extern GameConfig g_game_config;
 #ifdef _WINDOWS_

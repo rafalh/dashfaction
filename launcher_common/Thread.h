@@ -1,7 +1,7 @@
 #pragma once
 
 #include <windows.h>
-#include <common/Win32Error.h>
+#include <common/error/Win32Error.h>
 #include "Win32Handle.h"
 
 class Thread

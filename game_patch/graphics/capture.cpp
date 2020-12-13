@@ -5,10 +5,10 @@
 #include "../main.h"
 #include "../rf/graphics.h"
 #include "../rf/gr_direct3d.h"
-#include <common/utils/com-utils.h>
+#include <common/error/d3d-error.h>
 #include <cstddef>
 #include <cstring>
-#include <common/BuildConfig.h>
+#include <common/config/BuildConfig.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>

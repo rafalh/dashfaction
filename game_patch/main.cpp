@@ -1,5 +1,5 @@
-#include <common/GameConfig.h>
-#include <common/BuildConfig.h>
+#include <common/config/GameConfig.h>
+#include <common/config/BuildConfig.h>
 #include <common/utils/os-utils.h>
 #include "main.h"
 #include "console/console.h"
@@ -24,7 +24,7 @@
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
 #include <patch_common/AsmWriter.h>
-#include <common/version.h>
+#include <common/version/version.h>
 #include <ctime>
 
 #define XLOG_STREAMS 1

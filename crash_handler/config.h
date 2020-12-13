@@ -1,4 +1,4 @@
-#include <common/version.h>
+#include <common/version/version.h>
 
 // Config
 #define CRASHHANDLER_LOG_PATH "logs/DashFaction.log"

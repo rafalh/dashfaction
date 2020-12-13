@@ -2,8 +2,8 @@
 #include <common/utils/string-utils.h>
 #include <xlog/xlog.h>
 #include <iomanip>
-#include <common/Exception.h>
-#include <common/Win32Error.h>
+#include <common/error/Exception.h>
+#include <common/error/Win32Error.h>
 #include <cstring>
 
 #ifdef __GNUC__

@@ -1,6 +1,6 @@
 #include "LauncherApp.h"
-#include <common/version.h>
-#include <common/ErrorUtils.h>
+#include <common/version/version.h>
+#include <common/error/error-utils.h>
 #include <xlog/xlog.h>
 #include <xlog/FileAppender.h>
 #include <xlog/Win32Appender.h>

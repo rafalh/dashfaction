@@ -6,7 +6,7 @@
 #include <patch_common/CodeInjection.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/AsmWriter.h>
-#include <common/BuildConfig.h>
+#include <common/config/BuildConfig.h>
 #include "../graphics/graphics.h"
 
 static std::vector<int> g_fpgun_sounds;

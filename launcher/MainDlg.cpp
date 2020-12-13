@@ -4,8 +4,8 @@
 #include "AboutDlg.h"
 #include <wxx_wincore.h>
 #include <xlog/xlog.h>
-#include <common/version.h>
-#include <common/ErrorUtils.h>
+#include <common/version/version.h>
+#include <common/error/error-utils.h>
 #include <launcher_common/PatchedAppLauncher.h>
 #include <launcher_common/UpdateChecker.h>
 

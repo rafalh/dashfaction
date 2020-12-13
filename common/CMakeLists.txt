@@ -8,27 +8,27 @@ enable_warnings()
 file(GLOB SRCS *.cpp include/common/*.h)
 
 set(SRCS
-    include/common/BuildConfig.h
-    include/common/CfgVar.h
-    include/common/ErrorUtils.h
-    include/common/Exception.h
-    include/common/GameConfig.h
     include/common/HttpRequest.h
-    include/common/RegKey.h
     include/common/rfproto.h
-    include/common/version.h
-    include/common/Win32Error.h
-    include/common/utils/com-utils.h
+    include/common/config/BuildConfig.h
+    include/common/config/CfgVar.h
+    include/common/config/GameConfig.h
+    include/common/config/RegKey.h
+    include/common/error/error-utils.h
+    include/common/error/Exception.h
+    include/common/error/d3d-error.h
+    include/common/error/Win32Error.h
     include/common/utils/enum-bitwise-operators.h
     include/common/utils/iterable-utils.h
     include/common/utils/list-utils.h
     include/common/utils/os-utils.h
     include/common/utils/perf-utils.h
     include/common/utils/string-utils.h
-    GameConfig.cpp
-    HttpRequest.cpp
-    utils/com-utils.cpp
-    utils/os-utils.cpp
+    include/common/version/version.h
+    src/HttpRequest.cpp
+    src/config/GameConfig.cpp
+    src/error/d3d-error.cpp
+    src/utils/os-utils.cpp
 )
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRCS})

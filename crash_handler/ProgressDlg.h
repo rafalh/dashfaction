@@ -6,7 +6,7 @@
 #include <functional>
 #include <thread>
 #include <optional>
-#include <common/ErrorUtils.h>
+#include <common/error/error-utils.h>
 #include "res/resource.h"
 
 class ProgressDlg : public CDialog

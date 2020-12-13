@@ -1,6 +1,6 @@
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
-#include <common/version.h>
+#include <common/version/version.h>
 #include <xlog/xlog.h>
 #include <cstring>
 #include "../rf/ui.h"
