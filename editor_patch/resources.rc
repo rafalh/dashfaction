@@ -2,7 +2,7 @@
 #include <commctrl.h>
 #include "resources.h"
 
-128 ICON "resources/icon.ico"
+IDR_MAIN_FRAME ICON "resources/icon.ico"
 
 // Main frame top bar
 LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
@@ -25,7 +25,7 @@ FONT 8, "MS Sans Serif"
     CONTROL     "m/s", 65535, WC_STATIC, SS_LEFTNOWORDWRAP | SS_CENTERIMAGE, 518, 4, 15, 12
     //CONTROL     "To Move:  Hold ""M""", 65535, WC_STATIC, SS_LEFTNOWORDWRAP, 559, 4, 67, 12
     //CONTROL     "To Rotate:  Hold ""R""", 65535, WC_STATIC, SS_LEFTNOWORDWRAP, 643, 4, 67, 12
-    PUSHBUTTON  "Save", 0xE103, 550, 4, 29, 14
+    PUSHBUTTON  "Save", ID_FILE_SAVE, 550, 4, 29, 14
     PUSHBUTTON  "Pack", 0x8083, 580, 4, 29, 14
     PUSHBUTTON  "Lighting", 0x807A, 615, 4, 39, 14
     PUSHBUTTON  "Play", 0x800B, 660, 4, 29, 14
@@ -96,35 +96,35 @@ FONT 8, "MS Sans Serif", 0, 0, 1
 }
 
 LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
-IDR_MAIN_MENU MENU
+IDR_MAIN_FRAME MENU
 {
     POPUP "&File"
     {
-        MENUITEM "&New\tCtrl+N", 57600
-        MENUITEM "&Open...\tCtrl+O", 57601
-        MENUITEM "&Save\tCtrl+S", 57603
-        MENUITEM "Save &As...", 57604
+        MENUITEM "&New\tCtrl+N", ID_FILE_NEW
+        MENUITEM "&Open...\tCtrl+O", ID_FILE_OPEN
+        MENUITEM "&Save\tCtrl+S", ID_FILE_SAVE
+        MENUITEM "Save &As...", ID_FILE_SAVE_AS
         MENUITEM SEPARATOR
-        MENUITEM "Recent File", 57616, GRAYED
+        MENUITEM "Recent File", ID_FILE_MRU_FIRST, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "A&utosave", 32845, CHECKED
-        MENUITEM "&Play Level\tF7", 32779
+        MENUITEM "A&utosave", 0x804D, CHECKED
+        MENUITEM "&Play Level\tF7", 0x800B
         MENUITEM "Play Level from &Camera\tF8", 32888
         MENUITEM "Open &Dialogue Text\tF9", 32892
         MENUITEM SEPARATOR
         MENUITEM "Export as &VRML", 32893
-        MENUITEM "Create &Level Packfile\tP", 32899
+        MENUITEM "Create &Level Packfile\tP", 0x8083
         MENUITEM SEPARATOR
-        MENUITEM "E&xit", 57665
+        MENUITEM "E&xit", ID_APP_EXIT
     }
     POPUP "&Edit"
     {
-        MENUITEM "&Undo\tCtrl+Z", 57643
-        MENUITEM "&Redo\tCtrl+Y", 57644
+        MENUITEM "&Undo\tCtrl+Z", ID_EDIT_UNDO
+        MENUITEM "&Redo\tCtrl+Y", ID_EDIT_REDO
         MENUITEM SEPARATOR
-        MENUITEM "Cu&t\tCtrl+X", 57635
-        MENUITEM "&Copy\tCtrl+C", 57634
-        MENUITEM "&Paste\tCtrl+V", 57637
+        MENUITEM "Cu&t\tCtrl+X", ID_EDIT_CUT
+        MENUITEM "&Copy\tCtrl+C", ID_EDIT_COPY
+        MENUITEM "&Paste\tCtrl+V", ID_EDIT_PASTE
         MENUITEM "Delete\tDel", 32792
         MENUITEM SEPARATOR
         MENUITEM "&Morph\tCtrl+M", 32886
@@ -140,7 +140,7 @@ IDR_MAIN_MENU MENU
         MENUITEM "Calculate Lighting\tShift+L", 32837
         MENUITEM SEPARATOR
         MENUITEM "Calculate Maps and Light (no shadows)", 32889
-        MENUITEM "Calculate Maps and Light\tCtrl+L", 32890
+        MENUITEM "Calculate Maps and Light\tCtrl+L", 0x807A
         MENUITEM SEPARATOR
         MENUITEM "Rebuild with hole lines", 32898
         MENUITEM "Check for holes", 32896
@@ -173,51 +173,51 @@ IDR_MAIN_MENU MENU
     }
     POPUP "&Tools"
     {
-        MENUITEM "&Verify All Textures", 32847
+        MENUITEM "&Verify All Textures", 0x804F
         MENUITEM SEPARATOR
-        MENUITEM "&Select Objects...", 32797
-        MENUITEM "&Hide Objects...", 32802
+        MENUITEM "&Select Objects...", 0x801D
+        MENUITEM "&Hide Objects...", 0x8022
         MENUITEM "Hide All Objects\tW", ID_HIDE_ALL_OBJECTS
         MENUITEM "Show All Objects\tShift+W", ID_SHOW_ALL_OBJECTS
         MENUITEM SEPARATOR
-        MENUITEM "&Generate Report...", 32887
+        MENUITEM "&Generate Report...", 0x8077
         MENUITEM SEPARATOR
-        MENUITEM "&Preferences...", 32795
+        MENUITEM "&Preferences...", 0x801B
     }
     POPUP "&Help"
     {
-        MENUITEM "Wiki - &Editing Main Page", ID_WIKI_EDITING_MAIN_PAGE
+        MENUITEM "Wiki - &Editing Main Page\tF1", ID_WIKI_EDITING_MAIN_PAGE
         MENUITEM "Wiki - &Hotkeys", ID_WIKI_HOTKEYS
         MENUITEM SEPARATOR
-        MENUITEM "&About RED...", 57664
+        MENUITEM "&About RED...", ID_APP_ABOUT
     }
 }
 
 LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
-128 ACCELERATORS
+IDR_MAIN_FRAME ACCELERATORS
 {
-    "C",        57634, VIRTKEY, CONTROL
-    "M",        32886, VIRTKEY, CONTROL
-    "N",        57600, VIRTKEY, CONTROL
-    "O",        57601, VIRTKEY, CONTROL
-    "P",        32793, VIRTKEY, CONTROL
-    "S",        57603, VIRTKEY, CONTROL
-    "U",        32808, VIRTKEY, CONTROL
-    "V",        57637, VIRTKEY, CONTROL
-    VK_BACK,    57643, VIRTKEY, ALT
-    VK_DELETE,  57635, VIRTKEY, SHIFT
-    VK_F1,      57667, VIRTKEY
-    VK_F6,      57680, VIRTKEY
-    VK_F6,      57681, VIRTKEY, SHIFT
-    VK_INSERT,  57634, VIRTKEY, CONTROL
-    VK_INSERT,  57637, VIRTKEY, SHIFT
-    "X",        57635, VIRTKEY, CONTROL
-    "Y",        57644, VIRTKEY, CONTROL
-    "Z",        57643, VIRTKEY, CONTROL
+    "C",        ID_EDIT_COPY, VIRTKEY, CONTROL
+    "M",        0x8076, VIRTKEY, CONTROL
+    "N",        ID_FILE_NEW, VIRTKEY, CONTROL
+    "O",        ID_FILE_OPEN, VIRTKEY, CONTROL
+    "P",        0x8019, VIRTKEY, CONTROL
+    "S",        ID_FILE_SAVE, VIRTKEY, CONTROL
+    "U",        0x8028, VIRTKEY, CONTROL
+    "V",        ID_EDIT_PASTE, VIRTKEY, CONTROL
+    VK_BACK,    ID_EDIT_UNDO, VIRTKEY, ALT
+    VK_DELETE,  ID_EDIT_CUT, VIRTKEY, SHIFT
+    VK_F1,      ID_WIKI_EDITING_MAIN_PAGE, VIRTKEY
+    VK_F6,      ID_NEXT_PANE, VIRTKEY
+    VK_F6,      ID_PREV_PANE, VIRTKEY, SHIFT
+    VK_INSERT,  ID_EDIT_COPY, VIRTKEY, CONTROL
+    VK_INSERT,  ID_EDIT_PASTE, VIRTKEY, SHIFT
+    "X",        ID_EDIT_CUT, VIRTKEY, CONTROL
+    "Y",        ID_EDIT_REDO, VIRTKEY, CONTROL
+    "Z",        ID_EDIT_UNDO, VIRTKEY, CONTROL
 
     // New accelerators
-    "P",        32899, VIRTKEY
-    "L",        32890, VIRTKEY, CONTROL
+    "P",        0x8083, VIRTKEY
+    "L",        0x807A, VIRTKEY, CONTROL
 }
 
 // VERSIONINFO

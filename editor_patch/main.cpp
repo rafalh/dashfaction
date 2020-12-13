@@ -1,23 +1,23 @@
-#include "exports.h"
+#include <cstddef>
+#include <cstring>
+#include <functional>
+#include <string_view>
 #include <common/version/version.h>
 #include <common/config/BuildConfig.h>
 #include <common/utils/os-utils.h>
 #include <xlog/xlog.h>
+#include <xlog/ConsoleAppender.h>
+#include <xlog/FileAppender.h>
+#include <xlog/Win32Appender.h>
 #include <patch_common/MemUtils.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/AsmWriter.h>
 #include <patch_common/CodeInjection.h>
-#include <cstddef>
-#include <cstring>
 #include <crash_handler_stub.h>
-#include <string_view>
+#include "exports.h"
 #include "resources.h"
 #include "mfc_types.h"
-
-#include <xlog/ConsoleAppender.h>
-#include <xlog/FileAppender.h>
-#include <xlog/Win32Appender.h>
 
 #define LAUNCHER_FILENAME "DashFactionLauncher.exe"
 
@@ -236,47 +236,65 @@ void* GetLevelFromMainFrame(CWnd* main_frame)
     return &struct_field_ref<int>(doc, 0x60);
 }
 
+void CMainFrame_OpenHelp(CWnd* this_)
+{
+    ShellExecuteA(WndToHandle(this_), "open", "https://redfactionwiki.com/wiki/RF1_Editing_Main_Page", nullptr, nullptr, SW_SHOW);
+}
+
+void CMainFrame_OpenHotkeysHelp(CWnd* this_)
+{
+    ShellExecuteA(WndToHandle(this_), "open", "https://redfactionwiki.com/wiki/RED_Hotkey_Reference", nullptr, nullptr, SW_SHOW);
+}
+
+void CMainFrame_HideAllObjects(CWnd* this_)
+{
+    AddrCaller{0x0042DCA0}.this_call(GetLevelFromMainFrame(this_));
+    RedrawEditorAfterModification();
+}
+
+void CMainFrame_ShowAllObjects(CWnd* this_)
+{
+    AddrCaller{0x0042DDA0}.this_call(GetLevelFromMainFrame(this_));
+    RedrawEditorAfterModification();
+}
+
 BOOL __fastcall CMainFrame_OnCmdMsg(CWnd* this_, int, UINT nID, int nCode, void* pExtra, void* pHandlerInfo)
 {
+    char buf[256];
     constexpr int CN_COMMAND = 0;
+
     if (nCode == CN_COMMAND) {
+        std::function<void()> handler;
         switch (nID) {
             case ID_WIKI_EDITING_MAIN_PAGE:
+                sprintf(buf, "ID_WIKI_EDITING_MAIN_PAGE %p", pHandlerInfo);
+                handler = std::bind(CMainFrame_OpenHelp, this_);
+                break;
             case ID_WIKI_HOTKEYS:
+                handler = std::bind(CMainFrame_OpenHotkeysHelp, this_);
+                break;
             case ID_HIDE_ALL_OBJECTS:
+                handler = std::bind(CMainFrame_HideAllObjects, this_);
+                break;
             case ID_SHOW_ALL_OBJECTS:
-                // Tell MFC that this command has a handler so it does not disable menu item
-                if (pHandlerInfo) {
-                    // It seems handler info is not used but it's better to initialize it just in case
-                    ZeroMemory(pHandlerInfo, 8);
-                }
-                return TRUE;
+                handler = std::bind(CMainFrame_ShowAllObjects, this_);
+                break;
+        }
+
+        if (handler) {
+            // Tell MFC that this command has a handler so it does not disable menu item
+            if (pHandlerInfo) {
+                // It seems handler info is not used but it's better to initialize it just in case
+                ZeroMemory(pHandlerInfo, 8);
+            }
+            else {
+                // Run the handler
+                handler();
+            }
+            return TRUE;
         }
     }
     return AddrCaller{0x00540C5B}.this_call<BOOL>(this_, nID, nCode, pExtra, pHandlerInfo);
-}
-
-BOOL __fastcall CMainFrame_OnCommand(CWnd* this_, int, WPARAM wParam, LPARAM lParam)
-{
-    switch (wParam) {
-        case ID_WIKI_HOTKEYS:
-            ShellExecuteA(WndToHandle(this_), "open", "https://redfactionwiki.com/wiki/RED_Hotkey_Reference", nullptr, nullptr, SW_SHOW);
-            break;
-        case ID_WIKI_EDITING_MAIN_PAGE:
-            ShellExecuteA(WndToHandle(this_), "open", "https://redfactionwiki.com/wiki/RF1_Editing_Main_Page", nullptr, nullptr, SW_SHOW);
-            break;
-        case ID_HIDE_ALL_OBJECTS:
-            AddrCaller{0x0042DCA0}.this_call(GetLevelFromMainFrame(this_));
-            RedrawEditorAfterModification();
-            break;
-        case ID_SHOW_ALL_OBJECTS:
-            AddrCaller{0x0042DDA0}.this_call(GetLevelFromMainFrame(this_));
-            RedrawEditorAfterModification();
-            break;
-        default:
-            return AddrCaller{0x005402B9}.this_call<BOOL>(this_, wParam, lParam);
-    }
-    return TRUE;
 }
 
 void InitLogging()
@@ -416,7 +434,6 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
 
     // Support additional commands
     write_mem_ptr(0x00556574, &CMainFrame_OnCmdMsg);
-    write_mem_ptr(0x005565E0, &CMainFrame_OnCommand);
 
     // Fix F4 key (Maximize active viewport) for screens larger than 1024x768
     constexpr int max_size = 0x7FFF;
