@@ -420,7 +420,6 @@ FunHook<int(int, const rf::Vector3&, float, const rf::Vector3&, int)> snd_play_3
         int sig;
         if (rf::ds3d_enabled) {
             sig = rf::snd_pc_play_3d(handle, pos, looping, 0);
-            rf::snd_pc_set_volume(instance.sig, vol_scale);
         }
         else if (looping) {
             sig = rf::snd_pc_play_looping(handle, vol_scale, pan, 0.0f, true);
@@ -480,6 +479,16 @@ FunHook<void(int, const rf::Vector3&, const rf::Vector3&, float)> snd_change_3d_
             rf::snd_pc_get_by_id(instance.handle, &sound);
             rf::snd_ds3d_update_buffer(chnl, sound->min_range, sound->max_range, pos, vel);
         }
+    },
+};
+
+CodeInjection snd_pc_play_3d_injection{
+    0x0054423A,
+    [](auto& regs) {
+        auto stack_frame = regs.esp + 0x20;
+        auto& volume = addr_as_ref<float>(stack_frame + 0x8);
+        // strict aliasing compatible type punning
+        std::memcpy(&regs.edx, &volume, sizeof(volume));
     },
 };
 
@@ -639,6 +648,7 @@ void apply_sound_patches()
     // It disables distance-based attenuation model from DirectSound 3D. It is necessary because Red Faction original
     // distance model is very different and must be emulated manually using SetVolume API
     write_mem<float>(0x00562EB1 + 1, 0.0f);
+    snd_pc_play_3d_injection.install();
 }
 
 void register_sound_commands()
