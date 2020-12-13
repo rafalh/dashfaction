@@ -28,11 +28,10 @@ BOOL OptionsDlg::OnInitDialog()
     SetDlgItemTextA(IDC_EXE_PATH_EDIT, m_conf.game_executable_path->c_str());
 
     UpdateAdapterCombo();
+    UpdateColorDepthRadioButtons(); // should be before resolution
     UpdateResolutionCombo();
     UpdateMsaaCombo();
 
-    CheckDlgButton(IDC_32BIT_RADIO, m_conf.res_bpp == 32 ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(IDC_16BIT_RADIO, m_conf.res_bpp == 16 ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_FULL_SCREEN_RADIO, m_conf.wnd_mode == GameConfig::FULLSCREEN ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_WINDOWED_RADIO, m_conf.wnd_mode == GameConfig::WINDOWED ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_STRETCHED_RADIO, m_conf.wnd_mode == GameConfig::STRETCHED ? BST_CHECKED : BST_UNCHECKED);
@@ -84,7 +83,7 @@ BOOL OptionsDlg::OnInitDialog()
 
 void OptionsDlg::UpdateAdapterCombo()
 {
-    m_adapter_combo.Clear();
+    m_adapter_combo.ResetContent();
     int selected_idx = -1;
     try {
         auto adapters = m_video_info.get_adapters();
@@ -106,23 +105,24 @@ void OptionsDlg::UpdateAdapterCombo()
 void OptionsDlg::UpdateResolutionCombo()
 {
     CString buf;
-    int selectedRes = -1;
-    m_res_combo.Clear();
+    int selected_res = -1;
+    m_res_combo.ResetContent();
     try {
-        auto resolutions = m_video_info.get_resolutions(m_conf.selected_video_card, D3DFMT_X8R8G8B8);
+        auto format = m_conf.res_bpp == 32 ? D3DFMT_X8R8G8B8 : D3DFMT_R5G6B5;
+        auto resolutions = m_video_info.get_resolutions(m_conf.selected_video_card, format);
         for (const auto &res : resolutions) {
             buf.Format("%dx%d", res.width, res.height);
             int pos = m_res_combo.AddString(buf);
             if (m_conf.res_width == res.width && m_conf.res_height == res.height)
-                selectedRes = pos;
+                selected_res = pos;
         }
     }
     catch (std::exception &e) {
         // Only 'Disabled' option available. Log error in console.
         xlog::error("Cannot get available screen resolutions: %s", e.what());
     }
-    if (selectedRes != -1)
-        m_res_combo.SetCurSel(selectedRes);
+    if (selected_res != -1)
+        m_res_combo.SetCurSel(selected_res);
     else {
         char buf[32];
         sprintf(buf, "%dx%d", m_conf.res_width.value(), m_conf.res_height.value());
@@ -130,15 +130,35 @@ void OptionsDlg::UpdateResolutionCombo()
     }
 }
 
+void OptionsDlg::UpdateColorDepthRadioButtons()
+{
+    bool has_16bpp_modes = !m_video_info.get_resolutions(m_conf.selected_video_card, D3DFMT_R5G6B5).empty();
+    bool has_32bpp_modes = !m_video_info.get_resolutions(m_conf.selected_video_card, D3DFMT_X8R8G8B8).empty();
+    GetDlgItem(IDC_16BIT_RADIO).EnableWindow(has_16bpp_modes);
+    GetDlgItem(IDC_32BIT_RADIO).EnableWindow(has_32bpp_modes);
+    if (!has_16bpp_modes) {
+        m_conf.res_bpp = 32;
+        m_conf.res_backbuffer_format = D3DFMT_X8R8G8B8;
+    }
+    if (!has_32bpp_modes) {
+        m_conf.res_bpp = 16;
+        m_conf.res_backbuffer_format = D3DFMT_R5G6B5;
+    }
+    CheckDlgButton(IDC_32BIT_RADIO, m_conf.res_bpp == 32 ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(IDC_16BIT_RADIO, m_conf.res_bpp == 16 ? BST_CHECKED : BST_UNCHECKED);
+}
+
 void OptionsDlg::UpdateMsaaCombo()
 {
-    m_msaa_combo.Clear();
+    m_msaa_combo.ResetContent();
     m_msaa_combo.AddString("Disabled");
     int selected_msaa = 0;
     m_multi_sample_types.push_back(0);
     try {
-        auto multiSampleTypes = m_video_info.get_multisample_types(m_conf.selected_video_card, D3DFMT_X8R8G8B8, FALSE);
-        for (auto msaa : multiSampleTypes) {
+        BOOL windowed = m_conf.wnd_mode != GameConfig::FULLSCREEN;
+        auto format = static_cast<D3DFORMAT>(m_conf.res_backbuffer_format.value());
+        auto multi_sample_types = m_video_info.get_multisample_types(m_conf.selected_video_card, format, windowed);
+        for (auto msaa : multi_sample_types) {
             char buf[16];
             sprintf(buf, "MSAAx%u", msaa);
             int idx = m_msaa_combo.AddString(buf);
@@ -219,6 +239,15 @@ BOOL OptionsDlg::OnCommand(WPARAM wparam, LPARAM lparam)
     case IDC_FORCE_PORT_CHECK:
         OnForcePortClick();
         return TRUE;
+    case IDC_16BIT_RADIO:
+    case IDC_32BIT_RADIO:
+        OnColorDepthChange();
+        return TRUE;
+    case IDC_FULL_SCREEN_RADIO:
+    case IDC_WINDOWED_RADIO:
+    case IDC_STRETCHED_RADIO:
+        OnWindowModeChange();
+        return TRUE;
     }
 
     return FALSE;
@@ -230,9 +259,10 @@ LRESULT OptionsDlg::OnNotify([[ maybe_unused ]] WPARAM wparam, LPARAM lparam)
     switch (nmhdr.code) {
     case CBN_SELCHANGE:
         if (nmhdr.idFrom == IDC_ADAPTER_COMBO) {
-            UpdateResolutionCombo();
-            UpdateMsaaCombo();
-            UpdateAnisotropyCheckbox();
+            OnAdapterChange();
+        }
+        else if (nmhdr.idFrom == IDC_RESOLUTIONS_COMBO) {
+            OnResolutionChange();
         }
         break;
     }
@@ -328,4 +358,37 @@ void OptionsDlg::OnForcePortClick()
 {
     bool force_port = IsDlgButtonChecked(IDC_FORCE_PORT_CHECK) == BST_CHECKED;
     GetDlgItem(IDC_PORT_EDIT).EnableWindow(force_port);
+}
+
+void OptionsDlg::OnAdapterChange()
+{
+    m_conf.selected_video_card = m_adapter_combo.GetCurSel();
+    UpdateResolutionCombo();
+    UpdateColorDepthRadioButtons();
+    UpdateMsaaCombo();
+    UpdateAnisotropyCheckbox();
+}
+
+void OptionsDlg::OnResolutionChange()
+{
+    // empty
+}
+
+void OptionsDlg::OnColorDepthChange()
+{
+    m_conf.res_bpp = IsDlgButtonChecked(IDC_16BIT_RADIO) == BST_CHECKED ? 16 : 32;
+    m_conf.res_backbuffer_format = m_conf.res_bpp == 16 ? D3DFMT_R5G6B5 : D3DFMT_X8R8G8B8;
+    UpdateResolutionCombo();
+    UpdateMsaaCombo();
+}
+
+void OptionsDlg::OnWindowModeChange()
+{
+    if (IsDlgButtonChecked(IDC_FULL_SCREEN_RADIO) == BST_CHECKED)
+        m_conf.wnd_mode = GameConfig::FULLSCREEN;
+    else if (IsDlgButtonChecked(IDC_WINDOWED_RADIO) == BST_CHECKED)
+        m_conf.wnd_mode = GameConfig::WINDOWED;
+    else if (IsDlgButtonChecked(IDC_STRETCHED_RADIO) == BST_CHECKED)
+        m_conf.wnd_mode = GameConfig::STRETCHED;
+    UpdateMsaaCombo();
 }

@@ -76,7 +76,7 @@ std::vector<std::string> VideoDeviceInfoProvider::get_adapters()
     return adapters;
 }
 
-std::set<VideoDeviceInfoProvider::Resolution> VideoDeviceInfoProvider::get_resolutions(unsigned adapter, [[maybe_unused]] D3DFORMAT format)
+std::set<VideoDeviceInfoProvider::Resolution> VideoDeviceInfoProvider::get_resolutions(unsigned adapter, D3DFORMAT format)
 {
     std::set<VideoDeviceInfoProvider::Resolution> result;
     unsigned mode_idx = 0;
@@ -92,6 +92,9 @@ std::set<VideoDeviceInfoProvider::Resolution> VideoDeviceInfoProvider::get_resol
             break;
         else if (FAILED(hr))
             THROW_EXCEPTION("EnumAdapterModes failed: %lx", hr);
+
+        if (d3d_display_mode.Format != format)
+            continue;
 
         Resolution res;
         res.width = d3d_display_mode.Width;

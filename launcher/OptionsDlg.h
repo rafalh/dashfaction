@@ -21,12 +21,17 @@ private:
     void InitToolTip();
     void UpdateAdapterCombo();
     void UpdateResolutionCombo();
+    void UpdateColorDepthRadioButtons();
     void UpdateMsaaCombo();
     void UpdateAnisotropyCheckbox();
     void OnBnClickedOk();
     void OnBnClickedExeBrowse();
     void OnBnClickedResetTrackerBtn();
     void OnForcePortClick();
+    void OnAdapterChange();
+    void OnResolutionChange();
+    void OnColorDepthChange();
+    void OnWindowModeChange();
 
 private:
     VideoDeviceInfoProvider m_video_info;
