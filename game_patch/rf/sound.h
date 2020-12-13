@@ -106,7 +106,7 @@ namespace rf
     static auto& ds3d_enabled = addr_as_ref<bool>(0x01AED340);
 #ifdef DASH_FACTION
     // In DF sound channels limit has been raised
-    constexpr int num_sound_channels = 127;
+    constexpr int num_sound_channels = 64;
     extern SoundInstance sound_instances[num_sound_channels];
     extern DsChannel ds_channels[num_sound_channels];
 #else
