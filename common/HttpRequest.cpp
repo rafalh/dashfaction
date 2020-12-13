@@ -4,6 +4,7 @@
 #include <string_view>
 #include <sstream>
 #include <cassert>
+#include <cctype>
 
 struct ParsedUrl
 {
