@@ -76,7 +76,7 @@ FunHook<void(rf::Trigger*, int32_t, bool)> trigger_activate_hook{
 CodeInjection trigger_check_activation_patch{
     0x004BFC7D,
     [](auto& regs) {
-        auto trigger = reinterpret_cast<rf::Trigger*>(regs.eax);
+        rf::Trigger* trigger = regs.eax;
         auto trigger_name = trigger->name.c_str();
         uint8_t ext_flags = trigger_name[0] == TRIGGER_PF_FLAGS_PREFIX ? trigger_name[1] : 0;
         bool is_client_side = (ext_flags & TRIGGER_CLIENT_SIDE) != 0;
@@ -96,7 +96,7 @@ void activate_triggers_for_late_joiners(rf::Player* player)
 CodeInjection send_state_info_injection{
     0x0048186F,
     [](auto& regs) {
-        auto player = reinterpret_cast<rf::Player*>(regs.edi);
+        rf::Player* player = regs.edi;
         activate_triggers_for_late_joiners(player);
     },
 };

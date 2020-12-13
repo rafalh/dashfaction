@@ -105,7 +105,7 @@ FunHook<void(rf::Player*, bool, bool)> player_fire_primary_weapon_hook{
 CodeInjection stop_continous_primary_fire_patch{
     0x00430EC5,
     [](auto& regs) {
-        auto entity = reinterpret_cast<rf::Entity*>(regs.esi);
+        rf::Entity* entity = regs.esi;
         if (is_player_weapon_on(entity->local_player, false)) {
             regs.eip = 0x00430EDF;
         }
@@ -118,7 +118,7 @@ CodeInjection stop_continous_primary_fire_patch{
 CodeInjection stop_continous_alternate_fire_patch{
     0x00430F09,
     [](auto& regs) {
-        auto entity = reinterpret_cast<rf::Entity*>(regs.esi);
+        rf::Entity* entity = regs.esi;
         if (is_player_weapon_on(entity->local_player, true)) {
             regs.eip = 0x00430F23;
         }

@@ -78,7 +78,7 @@ void player_fpgun_on_player_death(rf::Player* pp)
 CodeInjection railgun_scanner_start_render_to_texture{
     0x004ADD0A,
     [](auto& regs) {
-        auto player = reinterpret_cast<rf::Player*>(regs.ebx);
+        rf::Player* player = regs.ebx;
         gr_begin_render_to_texture(player->ir_data.ir_bitmap_handle);
     },
 };
@@ -86,7 +86,7 @@ CodeInjection railgun_scanner_start_render_to_texture{
 CodeInjection player_fpgun_render_ir_begin_render_to_texture{
     0x004AF0BC,
     [](auto& regs) {
-        auto player = reinterpret_cast<rf::Player*>(regs.esi);
+        rf::Player* player = regs.esi;
         gr_begin_render_to_texture(player->ir_data.ir_bitmap_handle);
     },
 };

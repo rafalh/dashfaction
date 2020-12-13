@@ -133,9 +133,9 @@ CodeInjection gr_d3d_init_error_patch{
 CodeInjection gr_zbuffer_clear_fix_rect{
     0x00550A19,
     [](auto& regs) {
-        auto& rect = *reinterpret_cast<D3DRECT*>(regs.edx);
-        rect.x2++;
-        rect.y2++;
+        D3DRECT* rect = regs.edx;
+        rect->x2++;
+        rect->y2++;
     },
 };
 
@@ -224,7 +224,7 @@ CodeInjection setup_stretched_window_patch{
 CodeInjection d3d_behavior_flags_patch{
     0x00545BE0,
     [](auto& regs) {
-        auto& behavior_flags = *reinterpret_cast<u32*>(regs.esp);
+        auto& behavior_flags = *static_cast<u32*>(regs.esp);
         // Use hardware vertex processing instead of software processing if supported
         if (rf::gr_d3d_device_caps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT) {
             xlog::info("Enabling T&L in hardware");
@@ -239,7 +239,7 @@ CodeInjection d3d_behavior_flags_patch{
 CodeInjection d3d_vertex_buffer_usage_patch{
     0x005450E2,
     [](auto& regs) {
-        auto& usage = *reinterpret_cast<u32*>(regs.esp);
+        auto& usage = *static_cast<u32*>(regs.esp);
         if (rf::gr_d3d_device_caps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT) {
             usage &= ~D3DUSAGE_SOFTWAREPROCESSING;
         }
@@ -249,7 +249,7 @@ CodeInjection d3d_vertex_buffer_usage_patch{
 CodeInjection d3d_index_buffer_usage_patch{
     0x0054511C,
     [](auto& regs) {
-        auto& usage = *reinterpret_cast<u32*>(regs.esp);
+        auto& usage = *static_cast<u32*>(regs.esp);
         if (rf::gr_d3d_device_caps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT) {
             usage &= ~D3DUSAGE_SOFTWAREPROCESSING;
         }
@@ -474,7 +474,9 @@ CodeInjection load_tga_alloc_fail_fix{
     [](auto& regs) {
         if (regs.eax == 0) {
             regs.esp += 4;
-            auto num_bytes = *reinterpret_cast<size_t*>(regs.ebp + 0x30) * regs.esi;
+            unsigned bpp = regs.esi;
+            auto num_total_pixels = addr_as_ref<size_t>(regs.ebp + 0x30);
+            auto num_bytes = num_total_pixels * bpp;
             xlog::warn("Failed to allocate buffer for a bitmap: %d bytes!", num_bytes);
             regs.eip = 0x00510944;
         }

@@ -55,10 +55,10 @@ CodeInjection level_read_data_check_restore_status_patch{
     0x00461195,
     [](auto& regs) {
         // check if sr_load_level_state is successful
-        if (regs.eax)
+        if (regs.eax != 0)
             return;
         // check if this is auto-load when changing level
-        const char* save_filename = reinterpret_cast<const char*>(regs.edi);
+        const char* save_filename = regs.edi;
         if (!std::strcmp(save_filename, "auto.svl"))
             return;
         // manual load failed
@@ -156,7 +156,7 @@ CodeInjection parser_xstr_oob_fix{
     0x0051212E,
     [](auto& regs) {
         if (regs.edi >= 1000) {
-            xlog::warn("XSTR index is out of bounds: %d!", regs.edi);
+            xlog::warn("XSTR index is out of bounds: %d!", static_cast<int>(regs.edi));
             regs.edi = -1;
         }
     }
@@ -219,7 +219,7 @@ CallHook<int(char*, const char*)> skeleton_pagein_debug_print_patch{
 CodeInjection level_load_items_crash_fix{
     0x0046519F,
     [](auto& regs) {
-        if (!regs.eax) {
+        if (regs.eax == nullptr) {
             regs.eip = 0x004651C6;
         }
     },
@@ -242,7 +242,7 @@ CodeInjection vmesh_col_fix{
 CodeInjection explosion_crash_fix{
     0x00436594,
     [](auto& regs) {
-        if (!regs.edx) {
+        if (regs.edx == nullptr) {
             regs.esp += 4;
             regs.eip = 0x004365EC;
         }

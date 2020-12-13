@@ -16,10 +16,10 @@ CodeInjection switch_model_event_custom_mesh_patch{
     0x004BB921,
     [](auto& regs) {
         auto& mesh_type = regs.ebx;
-        if (mesh_type) {
+        if (mesh_type != rf::MESH_TYPE_UNINITIALIZED) {
             return;
         }
-        auto& mesh_name = *reinterpret_cast<rf::String*>(regs.esi);
+        auto& mesh_name = *static_cast<rf::String*>(regs.esi);
         std::string_view mesh_name_sv{mesh_name.c_str()};
         if (string_ends_with_ignore_case(mesh_name_sv, ".v3m")) {
             mesh_type = rf::MESH_TYPE_STATIC;
@@ -36,7 +36,7 @@ CodeInjection switch_model_event_custom_mesh_patch{
 CodeInjection switch_model_event_obj_lighting_and_physics_fix{
     0x004BB940,
     [](auto& regs) {
-        auto obj = reinterpret_cast<rf::Object*>(regs.edi);
+        rf::Object* obj = regs.edi;
         obj->mesh_lighting_data = nullptr;
         // Fix physics
         if (obj->vmesh) {

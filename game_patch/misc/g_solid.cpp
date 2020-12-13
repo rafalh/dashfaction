@@ -36,7 +36,7 @@ CodeInjection GSurface_calculate_lightmap_color_conv_patch{
         // Always skip original code
         regs.eip = 0x004F3023;
 
-        auto face_light_info = reinterpret_cast<void*>(regs.esi);
+        void* face_light_info = regs.esi;
         rf::GLightmap& lightmap = *struct_field_ref<rf::GLightmap*>(face_light_info, 12);
         rf::GrLockInfo lock;
         if (!rf::gr_lock(lightmap.bm_handle, 0, &lock, rf::GR_LOCK_WRITE_ONLY)) {
@@ -65,7 +65,7 @@ CodeInjection GSurface_alloc_lightmap_color_conv_patch{
         // Skip original code
         regs.eip = 0x004E4993;
 
-        auto face_light_info = reinterpret_cast<void*>(regs.esi);
+        void* face_light_info = regs.esi;
         rf::GLightmap& lightmap = *struct_field_ref<rf::GLightmap*>(face_light_info, 12);
         rf::GrLockInfo lock;
         if (!rf::gr_lock(lightmap.bm_handle, 0, &lock, rf::GR_LOCK_WRITE_ONLY)) {
@@ -98,7 +98,7 @@ CodeInjection GSolid_get_ambient_color_from_lightmap_patch{
 
         int x = regs.edi;
         int y = regs.ebx;
-        auto& lm = *reinterpret_cast<rf::GLightmap*>(regs.esi);
+        auto& lm = *static_cast<rf::GLightmap*>(regs.esi);
         auto& color = *reinterpret_cast<rf::Color*>(regs.esp + 0x34 - 0x28);
 
         // Optimization: instead of locking the lightmap texture get color data from lightmap pixels stored in RAM
@@ -143,7 +143,7 @@ CodeInjection g_proctex_create_bm_create_injection{
 CodeInjection face_scroll_fix{
     0x004EE1D6,
     [](auto& regs) {
-        auto geometry = reinterpret_cast<void*>(regs.ebp);
+        void* geometry = regs.ebp;
         auto& scroll_data_vec = struct_field_ref<rf::VArray<void*>>(geometry, 0x2F4);
         auto GTextureMover_setup_faces = reinterpret_cast<void(__thiscall*)(void* self, void* geometry)>(0x004E60C0);
         for (int i = 0; i < scroll_data_vec.size(); ++i) {

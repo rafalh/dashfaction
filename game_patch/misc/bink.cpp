@@ -8,9 +8,9 @@
 CodeInjection play_bik_file_infinite_loop_fix{
     0x00520BEE,
     [](auto& regs) {
-        if (!regs.eax) {
+        if (regs.eax == 0) {
             // pop edi
-            regs.edi = *reinterpret_cast<int*>(regs.esp);
+            regs.edi = *static_cast<int*>(regs.esp);
             regs.esp += 4;
             regs.eip = 0x00520C6E;
         }

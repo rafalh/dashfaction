@@ -129,7 +129,7 @@ FunHook<void(rf::Monitor&)> monitor_update_static_hook{
 CodeInjection monitor_update_from_camera_begin_render_to_texture{
     0x00412860,
     [](auto& regs) {
-        auto mon = reinterpret_cast<rf::Monitor*>(regs.edi);
+        rf::Monitor* mon = regs.edi;
         gr_begin_render_to_texture(mon->bitmap);
     },
 };

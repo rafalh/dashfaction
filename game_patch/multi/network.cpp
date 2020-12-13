@@ -113,9 +113,9 @@ public:
 private:
     void movsb_handler(BaseCodeInjection::Regs& regs)
     {
-        auto dst_ptr = reinterpret_cast<char*>(regs.edi);
-        auto src_ptr = reinterpret_cast<char*>(regs.esi);
-        auto num_bytes = regs.ecx;
+        char* dst_ptr = regs.edi;
+        char* src_ptr = regs.esi;
+        int num_bytes = regs.ecx;
         num_bytes = std::min(num_bytes, m_buffer_size - 1);
         std::memcpy(dst_ptr, src_ptr, num_bytes);
         dst_ptr[num_bytes] = '\0';
@@ -307,7 +307,7 @@ CodeInjection process_game_info_packet_game_type_bounds_patch{
     0x0047B30B,
     [](auto& regs) {
         // Valid game types are between 0 and 2
-        regs.ecx = std::clamp(regs.ecx, 0, 2);
+        regs.ecx = std::clamp<int>(regs.ecx, 0, 2);
     },
 };
 
@@ -505,7 +505,7 @@ FunHook<void(int32_t, int32_t)> multi_set_obj_handle_mapping_hook{
 
 CodeInjection process_boolean_packet_validate_shape_index_patch{
     0x004765A3,
-    [](auto& regs) { regs.ecx = std::clamp(regs.ecx, 0, 3); },
+    [](auto& regs) { regs.ecx = std::clamp<int>(regs.ecx, 0, 3); },
 };
 
 CodeInjection process_boolean_packet_validate_room_uid_patch{
@@ -524,7 +524,7 @@ CodeInjection process_pregame_boolean_packet_validate_shape_index_patch{
     0x0047672F,
     [](auto& regs) {
         // only meshes 0 - 3 are supported
-        regs.ecx = std::clamp(regs.ecx, 0, 3);
+        regs.ecx = std::clamp<int>(regs.ecx, 0, 3);
     },
 };
 
@@ -543,7 +543,7 @@ CodeInjection process_pregame_boolean_packet_validate_room_uid_patch{
 CodeInjection process_glass_kill_packet_check_room_exists_patch{
     0x004723B3,
     [](auto& regs) {
-        if (!regs.eax)
+        if (regs.eax == 0)
             regs.eip = 0x004723EC;
     },
 };
@@ -639,7 +639,7 @@ CallHook<int(const rf::NwAddr*, std::byte*, size_t)> send_join_accept_packet_hoo
 CodeInjection process_join_accept_injection{
     0x0047A979,
     [](auto& regs) {
-        auto packet = reinterpret_cast<std::byte*>(regs.ebp);
+        std::byte* packet = regs.ebp;
         auto ext_offset = regs.esi + 5;
         auto& ext_data = *reinterpret_cast<DashFactionJoinAcceptPacketExt*>(&packet[ext_offset]);
         xlog::debug("Checking for join_accept DF extension: %08X", ext_data.df_signature);
@@ -836,7 +836,7 @@ void send_chat_line_packet(const char* msg, rf::Player* target, rf::Player* send
 CodeInjection client_update_rate_injection{
     0x0047E5D8,
     [](auto& regs) {
-        auto& send_obj_update_interval = *reinterpret_cast<int*>(regs.esp);
+        auto& send_obj_update_interval = *static_cast<int*>(regs.esp);
         send_obj_update_interval = 1000 / g_update_rate;
     },
 };
@@ -844,7 +844,7 @@ CodeInjection client_update_rate_injection{
 CodeInjection server_update_rate_injection{
     0x0047E891,
     [](auto& regs) {
-        auto& min_send_obj_update_interval = *reinterpret_cast<int*>(regs.esp);
+        auto& min_send_obj_update_interval = *static_cast<int*>(regs.esp);
         min_send_obj_update_interval = 1000 / g_update_rate;
     },
 };
@@ -891,7 +891,8 @@ CodeInjection obj_interp_too_fast_fix{
     [](auto& regs) {
         // Make all calculations on milliseconds instead of using microseconds and rounding them up
         auto now = rf::timer_get(1000);
-        regs.eax = now - regs.ebp;
+        int frame_time_us = regs.ebp;
+        regs.eax = now - frame_time_us;
         regs.edi = now;
     },
 };

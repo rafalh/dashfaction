@@ -407,7 +407,8 @@ static rf::VPackfileEntry* vpackfile_find_new(const char* filename)
 CodeInjection vpackfile_open_check_seek_result_injection{
     0x0052C301,
     [](auto& regs) {
-        regs.eax = !regs.eax;
+        int fseek_result = regs.eax;
+        regs.eax = fseek_result == 0 ? 1 : 0;
         regs.eip = 0x0052C306;
     },
 };

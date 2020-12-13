@@ -59,7 +59,7 @@ public:
 private:
     void enter_handler(BaseCodeInjection::Regs& regs)
     {
-        auto& ret_addr = *reinterpret_cast<uintptr_t*>(regs.esp);
+        auto& ret_addr = *static_cast<uintptr_t*>(regs.esp);
         m_ret_stack.push_back(ret_addr);
         ret_addr = reinterpret_cast<uintptr_t>(m_leave_code.get());
         m_pre_cb();

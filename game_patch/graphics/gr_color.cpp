@@ -772,7 +772,7 @@ CodeInjection level_load_lightmaps_color_conv_patch{
         // Always skip original code
         regs.eip = 0x004ED4FA;
 
-        auto lightmap = reinterpret_cast<rf::GLightmap*>(regs.ebx);
+        rf::GLightmap* lightmap = regs.ebx;
 
         rf::GrLockInfo lock;
         if (!rf::gr_lock(lightmap->bm_handle, 0, &lock, rf::GR_LOCK_WRITE_ONLY))

@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <subhook.h>
 #include <utility>
+#include <cstring>
 
 class AsmWriter;
 
@@ -15,23 +16,106 @@ private:
     CodeBuffer m_code_buf;
 
 public:
+
+    template<typename T>
+    struct Reg {
+        T value;
+
+        template<typename U>
+        U operator=(U value)
+        {
+            static_assert(sizeof(T) == sizeof(U));
+            std::memcpy(&this->value, &value, sizeof(T));
+            return value;
+        }
+
+        template<typename U>
+        operator U() const
+        {
+            static_assert(sizeof(T) == sizeof(U));
+            U tmp;
+            std::memcpy(&tmp, &this->value, sizeof(T));
+            return tmp;
+        }
+
+        template<typename U>
+        bool operator==(U other) const
+        {
+            return static_cast<U>(*this) == other;
+        }
+
+        template<typename U>
+        bool operator!=(U other) const
+        {
+            return static_cast<U>(*this) != other;
+        }
+
+        template<typename U>
+        bool operator>(U other) const
+        {
+            return static_cast<U>(*this) > other;
+        }
+
+        template<typename U>
+        bool operator>=(U other) const
+        {
+            return static_cast<U>(*this) >= other;
+        }
+
+        template<typename U>
+        bool operator<(U other) const
+        {
+            return static_cast<U>(*this) < other;
+        }
+
+        template<typename U>
+        bool operator<=(U other) const
+        {
+            return static_cast<U>(*this) <= other;
+        }
+
+        template<typename U>
+        U operator+(U other) const
+        {
+            return static_cast<U>(*this) + other;
+        }
+
+        template<typename U>
+        U operator-(U other) const
+        {
+            return static_cast<U>(*this) - other;
+        }
+
+        template<typename U>
+        U operator+=(U other)
+        {
+            return *this = *this + other;
+        }
+
+        template<typename U>
+        U operator-=(U other)
+        {
+            return *this = *this - other;
+        }
+    };
+
     #define X86_GP_REG_X_UNION(letter) \
     union                        \
     {                            \
-        int32_t e##letter##x;    \
-        int16_t letter##x;       \
+        Reg<int32_t> e##letter##x;    \
+        Reg<int16_t> letter##x;       \
         struct                   \
         {                        \
-            int8_t letter##l;    \
-            int8_t letter##h;    \
+            Reg<int8_t> letter##l;    \
+            Reg<int8_t> letter##h;    \
         };                       \
     }
     #define X86_GP_REG_UNION(name) \
     union                 \
     {                     \
-        int32_t e##name;  \
-        int16_t name;     \
-        int8_t name##l;   \
+        Reg<int32_t> e##name;  \
+        Reg<int16_t> name;     \
+        Reg<int8_t> name##l;   \
     }
 
     struct Regs

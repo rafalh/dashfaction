@@ -68,8 +68,8 @@ FunHook<void(rf::Weapon *weapon)> weapon_move_one_hook{
 CodeInjection weapon_vs_obj_collision_fix{
     0x0048C803,
     [](auto& regs) {
-        auto obj = reinterpret_cast<rf::Object*>(regs.edi);
-        auto weapon = reinterpret_cast<rf::Object*>(regs.ebp);
+        rf::Object* obj = regs.edi;
+        rf::Object* weapon = regs.ebp;
         auto dir = obj->pos - weapon->pos;
         // Take into account weapon and object radius
         float rad = weapon->radius + obj->radius;
@@ -136,7 +136,7 @@ FunHook<void(rf::Entity*, int, rf::Vector3*, rf::Matrix3*, bool)> multi_process_
 CodeInjection process_obj_update_packet_check_if_weapon_is_possessed_patch{
     0x0047E404,
     [](auto& regs) {
-        auto entity = reinterpret_cast<rf::Entity*>(regs.edi);
+        rf::Entity* entity = regs.edi;
         auto weapon_type = regs.ebx;
         if (rf::is_server && !rf::ai_has_weapon(&entity->ai, weapon_type)) {
             // skip switching player weapon

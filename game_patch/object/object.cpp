@@ -67,7 +67,7 @@ void sim_obj_array_add_hook(rf::Object* obj)
 CodeInjection obj_create_find_slot_patch{
     0x00486DFC,
     [](auto& regs) {
-        auto obj_type = regs.ebx;
+        rf::ObjectType obj_type = regs.ebx;
 
         static int low_index_hint = 0;
         static int high_index_hint = old_obj_limit;
@@ -148,7 +148,7 @@ CallHook<void*(size_t)> GPool_allocate_new_hook{
 CodeInjection sort_items_patch{
     0x004593AC,
     [](auto& regs) {
-        auto item = reinterpret_cast<rf::Item*>(regs.esi);
+        rf::Item* item = regs.esi;
         auto vmesh = item->vmesh;
         auto mesh_name = vmesh ? rf::vmesh_get_name(vmesh) : nullptr;
         if (!mesh_name) {
@@ -193,7 +193,7 @@ CodeInjection sort_items_patch{
 CodeInjection sort_clutter_patch{
     0x004109D4,
     [](auto& regs) {
-        auto clutter = reinterpret_cast<rf::Clutter*>(regs.esi);
+        rf::Clutter* clutter = regs.esi;
         auto vmesh = clutter->vmesh;
         auto mesh_name = vmesh ? rf::vmesh_get_name(vmesh) : nullptr;
         if (!mesh_name) {
@@ -223,8 +223,8 @@ CodeInjection sort_clutter_patch{
         clutter->next->prev = clutter;
         clutter->prev->next = clutter;
         // Set up needed registers
-        regs.eax = addr_as_ref<bool>(regs.esp + 0xD0 + 0x18); // killable
-        regs.ecx = addr_as_ref<i32>(0x005C9358) + 1; // num_clutter_objs
+        regs.eax = addr_as_ref<int>(regs.esp + 0xD0 + 0x18); // killable
+        regs.ecx = addr_as_ref<int>(0x005C9358) + 1; // num_clutter_objs
         regs.eip = 0x00410A03;
     },
 };

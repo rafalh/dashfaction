@@ -275,14 +275,14 @@ bool check_server_chat_command(const char* msg, rf::Player* sender)
 CodeInjection spawn_protection_duration_patch{
     0x0048089A,
     [](auto& regs) {
-        *reinterpret_cast<int*>(regs.esp) = g_additional_server_config.spawn_protection_duration_ms;
+        *static_cast<int*>(regs.esp) = g_additional_server_config.spawn_protection_duration_ms;
     },
 };
 
 CodeInjection detect_browser_player_patch{
     0x0047AFFB,
     [](auto& regs) {
-        rf::Player* player = reinterpret_cast<rf::Player*>(regs.esi);
+        rf::Player* player = regs.esi;
         int conn_rate = regs.eax;
         if (conn_rate == 1) {
             auto& pdata = get_player_additional_data(player);
@@ -429,7 +429,7 @@ CodeInjection send_ping_time_wrap_fix{
 CodeInjection multi_on_new_player_injection{
     0x0047B013,
     [](auto& regs) {
-        auto player = reinterpret_cast<rf::Player*>(regs.esi);
+        rf::Player* player = regs.esi;
         in_addr addr;
         addr.S_un.S_addr = ntohl(player->nw_data->addr.ip_addr);
         rf::console_printf("%s%s (%s)", player->name.c_str(),  rf::strings::has_joined, inet_ntoa(addr));

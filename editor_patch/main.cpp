@@ -220,7 +220,7 @@ String * __fastcall CTextureBrowserDialog_GetFolderName(CTextureBrowserDialog *t
 CodeInjection CCutscenePropertiesDialog_ct_crash_fix{
     0x00458A84,
     [](auto& regs) {
-        auto this_ = reinterpret_cast<void*>(regs.esi);
+        void* this_ = regs.esi;
         auto& this_num_shots = struct_field_ref<int>(this_, 0x60);
         this_num_shots = 0;
     },

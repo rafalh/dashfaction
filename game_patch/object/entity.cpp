@@ -13,7 +13,7 @@ rf::Timestamp g_player_jump_timestamp;
 CodeInjection stuck_to_ground_when_jumping_fix{
     0x0042891E,
     [](auto& regs) {
-        auto entity = reinterpret_cast<rf::Entity*>(regs.esi);
+        rf::Entity* entity = regs.esi;
         if (entity->local_player) {
             // Skip land handling code for next 64 ms (like in PF)
             g_player_jump_timestamp.set(64);
@@ -24,7 +24,7 @@ CodeInjection stuck_to_ground_when_jumping_fix{
 CodeInjection stuck_to_ground_when_using_jump_pad_fix{
     0x00486B60,
     [](auto& regs) {
-        auto entity = reinterpret_cast<rf::Entity*>(regs.esi);
+        rf::Entity* entity = regs.esi;
         if (entity->local_player) {
             // Skip land handling code for next 64 ms
             g_player_jump_timestamp.set(64);
@@ -35,7 +35,7 @@ CodeInjection stuck_to_ground_when_using_jump_pad_fix{
 CodeInjection stuck_to_ground_fix{
     0x00487F82,
     [](auto& regs) {
-        auto entity = reinterpret_cast<rf::Entity*>(regs.esi);
+        rf::Entity* entity = regs.esi;
         if (entity->local_player && g_player_jump_timestamp.valid() && !g_player_jump_timestamp.elapsed()) {
             // Jump to jump handling code that sets entity to falling movement mode
             regs.eip = 0x00487F7B;
@@ -46,7 +46,7 @@ CodeInjection stuck_to_ground_fix{
 CodeInjection entity_water_decelerate_fix{
     0x0049D82A,
     [](auto& regs) {
-        auto entity = reinterpret_cast<rf::Entity*>(regs.esi);
+        rf::Entity* entity = regs.esi;
         float vel_factor = 1.0f - (rf::frametime * 4.5f);
         entity->p_data.vel.x *= vel_factor;
         entity->p_data.vel.y *= vel_factor;
