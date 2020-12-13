@@ -34,6 +34,15 @@ static FunHook<void(rf::Player*)> player_fpgun_update_state_hook{
     },
 };
 
+static FunHook<void(rf::Player*)> player_fpgun_render_ir_hook{
+    0x004AEEF0,
+    [](rf::Player* player) {
+        if (player->cam) {
+            player_fpgun_render_ir_hook.call_target(player->cam->player);
+        }
+    },
+};
+
 static CodeInjection player_fpgun_play_action_anim_injection{
     0x004A947B,
     [](auto& regs) {
@@ -74,7 +83,7 @@ CodeInjection railgun_scanner_start_render_to_texture{
     },
 };
 
-CodeInjection rocket_launcher_start_render_to_texture{
+CodeInjection player_fpgun_render_ir_begin_render_to_texture{
     0x004AF0BC,
     [](auto& regs) {
         auto player = reinterpret_cast<rf::Player*>(regs.esi);
@@ -105,6 +114,9 @@ void player_fpgun_do_patch()
     write_mem<u8>(0x004ACE2C, asm_opcodes::jmp_rel_short); // player_fpgun_get_zoom
 
     player_fpgun_update_state_hook.install();
+
+    // Render IR for player that is currently being shown by camera - needed for spectate mode
+    player_fpgun_render_ir_hook.install();
 #endif // SPECTATE_MODE_SHOW_WEAPON
 
     // Update fpgun 3D sounds positions
@@ -112,6 +124,6 @@ void player_fpgun_do_patch()
 
     // Faster IR and Railgun scanner bitmap update
     railgun_scanner_start_render_to_texture.install();
-    rocket_launcher_start_render_to_texture.install();
+    player_fpgun_render_ir_begin_render_to_texture.install();
     after_game_render_to_dynamic_textures.install();
 }

@@ -215,14 +215,6 @@ FunHook<void(rf::Player*)> render_reticle_hook{
     },
 };
 
-CodeInjection render_scanner_view_for_spectated_player_injection{
-    0x00431890,
-    []() {
-        if (g_spectate_mode_enabled)
-            rf::player_fpgun_render_ir(g_spectate_mode_target);
-    },
-};
-
 ConsoleCommand2 spectate_cmd{
     "spectate",
     [](std::optional<std::string> player_name) {
@@ -309,8 +301,6 @@ void spectate_mode_init()
     write_mem_ptr(0x00488598 + 1, &g_spectate_mode_target); // obj_mark_all_for_room
     write_mem_ptr(0x00421889 + 2, &g_spectate_mode_target); // entity_render
     write_mem_ptr(0x004218A2 + 2, &g_spectate_mode_target); // entity_render
-
-    render_scanner_view_for_spectated_player_injection.install();
 
     // Note: additional patches are in player_fpgun.cpp
 #endif // SPECTATE_MODE_SHOW_WEAPON
