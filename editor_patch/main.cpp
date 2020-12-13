@@ -297,7 +297,7 @@ BOOL __fastcall CMainFrame_OnCmdMsg(CWnd* this_, int, UINT nID, int nCode, void*
             case ID_SHOW_ALL_OBJECTS:
                 handler = std::bind(CMainFrame_ShowAllObjects, this_);
                 break;
-            case ID_HIDE_SELECTED_OBJECTS:
+            case ID_HIDE_SELECTED:
                 handler = std::bind(CMainFrame_HideSelected, this_);
                 break;
             case ID_SELECT_OBJECT_BY_UID:

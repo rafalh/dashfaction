@@ -182,7 +182,7 @@ IDR_MAIN_FRAME MENU
         MENUITEM "&Hide Objects...", 0x8022
         MENUITEM "Hide All Objects\tW", ID_HIDE_ALL_OBJECTS
         MENUITEM "Show All Objects\tShift+W", ID_SHOW_ALL_OBJECTS
-        MENUITEM "Hide Selected Object\tH", ID_HIDE_SELECTED_OBJECTS
+        MENUITEM "Hide Selected\tH", ID_HIDE_SELECTED
 
         MENUITEM SEPARATOR
         MENUITEM "&Generate Report...", 0x8077

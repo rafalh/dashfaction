@@ -14,7 +14,7 @@
 #define ID_WIKI_HOTKEYS            0x9001
 #define ID_SHOW_ALL_OBJECTS        0x9002
 #define ID_HIDE_ALL_OBJECTS        0x9003
-#define ID_HIDE_SELECTED_OBJECTS   0x9004
+#define ID_HIDE_SELECTED           0x9004
 #define ID_SELECT_OBJECT_BY_UID    0x9005
 #define ID_INVERT_SELECTION        0x9006
 
