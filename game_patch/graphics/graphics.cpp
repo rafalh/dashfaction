@@ -503,7 +503,7 @@ CodeInjection gr_d3d_create_texture_fail_hook{
     },
 };
 
-CodeInjection GrLoadFontInternal_fix_texture_ref{
+CodeInjection gr_load_font_internal_fix_texture_ref{
     0x0051F429,
     [](auto& regs) {
         auto gr_tcache_add_ref = addr_as_ref<void(int bm_handle)>(0x0050E850);
@@ -638,11 +638,11 @@ CodeInjection gr_d3d_draw_geometry_face_patch_2{
     },
 };
 
-FunHook<void()> DoDamageScreenFlash_hook{
+FunHook<void()> do_damage_screen_flash_hook{
     0x004A7520,
     []() {
         if (g_game_config.damage_screen_flash) {
-            DoDamageScreenFlash_hook.call_target();
+            do_damage_screen_flash_hook.call_target();
         }
     },
 };
@@ -892,7 +892,7 @@ void graphics_init()
     // Better error message in case of device creation error
     gr_d3d_init_error_patch.install();
 
-    // Optimization - remove unused back buffer locking/unlocking in GrSwapBuffers
+    // Optimization - remove unused back buffer locking/unlocking in gr_d3d_flip
     AsmWriter(0x0054504A).jmp(0x0054508B);
 
 #if 1
@@ -1030,12 +1030,12 @@ void graphics_init()
     // Original code sets bitmap handle in all fonts to -1 on level unload. On next font usage the font bitmap is reloaded.
     // Note: font bitmaps are dynamic (USERBMAP) so they cannot be found by name unlike normal bitmaps.
     AsmWriter(0x0050E1A8).ret();
-    GrLoadFontInternal_fix_texture_ref.install();
+    gr_load_font_internal_fix_texture_ref.install();
 
     // maxfps command
     max_fps_cmd.register_cmd();
 
-    // Crash-fix in case texture has not been created (this happens if GrReadBackbuffer fails)
+    // Crash-fix in case texture has not been created (this happens if gr_read_back_buffer fails)
     gr_d3d_lock_crash_fix.install();
 
     // Fix undefined behavior in D3D state handling: alpha operations cannot be disabled when color operations are enabled
@@ -1049,7 +1049,7 @@ void graphics_init()
     write_mem<u8>(0x004D410D, asm_opcodes::jmp_rel_short);
 
     // Support disabling of damage screen flash effect
-    DoDamageScreenFlash_hook.install();
+    do_damage_screen_flash_hook.install();
     damage_screen_flash_cmd.register_cmd();
 
     // Fix glass_house level having faces that use multi-textured state but don't have any lightmap (stage 1 texture
