@@ -8,6 +8,7 @@
 #include <common/config/GameConfig.h>
 #include <common/error/Exception.h>
 #include <common/error/Win32Error.h>
+#include <common/utils/os-utils.h>
 #include <xlog/xlog.h>
 #include <windows.h>
 #include <shlwapi.h>
@@ -31,14 +32,7 @@ inline bool is_no_gui_mode()
 
 std::string PatchedAppLauncher::get_patch_dll_path()
 {
-    std::string buf;
-    buf.resize(MAX_PATH);
-    DWORD result = GetModuleFileNameA(nullptr, buf.data(), buf.size());
-    if (!result)
-        THROW_WIN32_ERROR();
-    if (result == buf.size())
-        THROW_EXCEPTION("insufficient buffer for module file name");
-    buf.resize(result);
+    auto buf = get_module_pathname(nullptr);
 
     // Get GetFinalPathNameByHandleA function address dynamically in order to support Windows XP
     using GetFinalPathNameByHandleA_Type = decltype(GetFinalPathNameByHandleA);
@@ -51,7 +45,7 @@ std::string PatchedAppLauncher::get_patch_dll_path()
         if (file_handle != INVALID_HANDLE_VALUE) {
             buf.resize(MAX_PATH);
 
-            result = GetFinalPathNameByHandleA(file_handle, buf.data(), buf.size(), FILE_NAME_NORMALIZED);
+            DWORD result = GetFinalPathNameByHandleA(file_handle, buf.data(), buf.size(), FILE_NAME_NORMALIZED);
             if (result > buf.size()) {
                 buf.resize(result);
                 result = GetFinalPathNameByHandleA(file_handle, buf.data(), buf.size(), FILE_NAME_NORMALIZED);

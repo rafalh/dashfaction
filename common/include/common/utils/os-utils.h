@@ -2,7 +2,7 @@
 
 #include <string>
 #include <optional>
-#include <windows.h>
+#include <windef.h>
 
 std::string get_os_version();
 std::string get_real_os_version();
@@ -11,4 +11,5 @@ bool is_current_user_admin();
 const char* get_process_elevation_type();
 std::string get_cpu_id();
 std::string get_cpu_brand();
+std::string get_module_pathname(HMODULE module);
 std::string get_module_dir(HMODULE module);

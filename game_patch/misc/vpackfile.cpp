@@ -4,6 +4,7 @@
 #include "../rf/common.h"
 #include "../rf/file.h"
 #include <common/utils/iterable-utils.h>
+#include <common/utils/os-utils.h>
 #include <xxhash.h>
 #include <common/config/BuildConfig.h>
 #include <patch_common/ShortTypes.h>
@@ -414,28 +415,27 @@ CodeInjection vpackfile_open_check_seek_result_injection{
 static void load_dashfaction_vpp()
 {
     // Load DashFaction specific packfile
-    char buf[MAX_PATH];
-    GetModuleFileNameA(g_hmodule, buf, sizeof(buf));
-    char* ptr = strrchr(buf, '\\');
-    std::strcpy(ptr + 1, "dashfaction.vpp");
-    if (PathFileExistsA(buf))
-        *(ptr + 1) = '\0';
-    else {
-        // try to remove 3 path components (build/(debug|release)/bin)
-        *ptr = '\0';
-        ptr = std::strrchr(buf, '\\');
-        if (ptr)
-            *ptr = '\0';
-        ptr = std::strrchr(buf, '\\');
-        if (ptr)
-            *ptr = '\0';
-        ptr = std::strrchr(buf, '\\');
-        if (ptr)
-            *(ptr + 1) = '\0';
+    auto df_vpp_dir = get_module_dir(g_hmodule);
+    auto df_vpp_base_name = "dashfaction.vpp";
+    if (!PathFileExistsA((df_vpp_dir + df_vpp_base_name).c_str())) {
+        // try to remove 3 path components (build/(Debug|Release)/bin)
+        auto pos = df_vpp_dir.rfind('\\');
+        if (pos != df_vpp_dir.npos) {
+            df_vpp_dir.resize(pos);
+        }
+        pos = df_vpp_dir.rfind('\\');
+        if (pos != df_vpp_dir.npos) {
+            df_vpp_dir.resize(pos);
+        }
+        pos = df_vpp_dir.rfind('\\');
+        if (pos != df_vpp_dir.npos) {
+            df_vpp_dir.resize(pos);
+        }
     }
-    xlog::info("Loading dashfaction.vpp from directory: %s", buf);
-    if (!rf::vpackfile_add("dashfaction.vpp", buf))
-        xlog::error("Failed to load dashfaction.vpp");
+    xlog::info("Loading %s from directory: %s", df_vpp_base_name, df_vpp_dir.c_str());
+    if (!rf::vpackfile_add(df_vpp_base_name, df_vpp_dir.c_str())) {
+        xlog::error("Failed to load %s", df_vpp_base_name);
+    }
 }
 
 void force_file_from_packfile(const char* name, const char* packfile_name)

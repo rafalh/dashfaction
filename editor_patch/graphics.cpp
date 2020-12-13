@@ -1,12 +1,11 @@
 #include <common/config/BuildConfig.h>
+#include <common/utils/os-utils.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
 #include <patch_common/AsmWriter.h>
 #include <patch_common/MemUtils.h>
-#include <patch_common/ShortTypes.h>
 #include <xlog/xlog.h>
-#include <windows.h>
 #include <d3d8.h>
 #include <algorithm>
 #include <cmath>
@@ -240,22 +239,6 @@ FunHook<void(red::Matrix3*, red::Vector3*, float, bool, bool)> gr_setup_3d_hook{
         gr_setup_3d_hook.call_target(viewer_orient, viewer_pos, horizontal_fov, zbuffer_flag, z_scale);
     },
 };
-
-std::string get_module_dir(HMODULE module)
-{
-    std::string buf(MAX_PATH, '\0');
-    auto num_copied = GetModuleFileNameA(module, buf.data(), buf.size());
-    if (num_copied == buf.size()) {
-        xlog::error("GetModuleFileNameA failed (%lu)", GetLastError());
-        return {};
-    }
-    buf.resize(num_copied);
-    auto last_sep = buf.rfind('\\');
-    if (last_sep != std::string::npos) {
-        buf.resize(last_sep + 1);
-    }
-    return buf;
-}
 
 CodeInjection gr_d3d_init_load_library_injection{
     0x004EC50E,

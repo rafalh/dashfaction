@@ -1,6 +1,7 @@
 #include "exports.h"
 #include <common/version/version.h>
 #include <common/config/BuildConfig.h>
+#include <common/utils/os-utils.h>
 #include <xlog/xlog.h>
 #include <patch_common/MemUtils.h>
 #include <patch_common/CallHook.h>
@@ -291,28 +292,12 @@ void InitLogging()
 void ApplyGraphicsPatches();
 void ApplyTriggerPatches();
 
-std::string GetModuleDir(HMODULE module)
-{
-    std::string buf(MAX_PATH, '\0');
-    auto num_copied = GetModuleFileNameA(module, buf.data(), buf.size());
-    if (num_copied == buf.size()) {
-        xlog::error("GetModuleFileNameA failed (%lu)", GetLastError());
-        return {};
-    }
-    buf.resize(num_copied);
-    auto last_sep = buf.rfind('\\');
-    if (last_sep != std::string::npos) {
-        buf.resize(last_sep + 1);
-    }
-    return buf;
-}
-
 void LoadDashEditorPackfile()
 {
     static auto& vpackfile_add = addr_as_ref<int __cdecl(const char *name, const char *dir)>(0x004CA930);
     static auto& root_path = addr_as_ref<char[256]>(0x0158CA10);
 
-    auto df_dir = GetModuleDir(g_module);
+    auto df_dir = get_module_dir(g_module);
     std::string old_root_path = root_path;
     std::strncpy(root_path, df_dir.c_str(), sizeof(root_path) - 1);
     if (!vpackfile_add("dashfaction.vpp", nullptr)) {
@@ -334,7 +319,7 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     CrashHandlerStubInstall(g_module);
 
     // Change command for Play Level action to use Dash Faction launcher
-    static std::string play_level_cmd_part = GetModuleDir(g_module);
+    static std::string play_level_cmd_part = get_module_dir(g_module);
     play_level_cmd_part += LAUNCHER_FILENAME;
     play_level_cmd_part += " -level \"";
 

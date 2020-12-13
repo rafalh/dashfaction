@@ -160,18 +160,32 @@ std::string get_cpu_brand()
     return brand_str;
 }
 
+std::string get_module_pathname(HMODULE module)
+{
+    constexpr int max_attempts = 5;
+    std::string buf(MAX_PATH, '\0');
+    for (int i = 0; i < max_attempts; ++i) {
+        auto num_copied = GetModuleFileNameA(module, buf.data(), buf.size());
+        if (num_copied == 0) {
+            xlog::error("GetModuleFileNameA failed (%lu)", GetLastError());
+            return {};
+        }
+        if (num_copied < buf.size()) {
+            buf.resize(num_copied);
+            return buf;
+        }
+        buf.resize(buf.size() * 2);
+    }
+    xlog::error("GetModuleFileNameA is misbehaving or pathname is longer than %u...", buf.size());
+    return {};
+}
+
 std::string get_module_dir(HMODULE module)
 {
-    std::string buf(MAX_PATH, '\0');
-    auto num_copied = GetModuleFileNameA(module, buf.data(), buf.size());
-    if (num_copied == buf.size()) {
-        xlog::error("GetModuleFileNameA failed (%lu)", GetLastError());
-        return {};
-    }
-    buf.resize(num_copied);
-    auto last_sep = buf.rfind('\\');
+    auto pathname = get_module_pathname(module);
+    auto last_sep = pathname.rfind('\\');
     if (last_sep != std::string::npos) {
-        buf.resize(last_sep + 1);
+        pathname.resize(last_sep + 1);
     }
-    return buf;
+    return pathname;
 }
