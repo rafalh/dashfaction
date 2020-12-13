@@ -2,7 +2,7 @@
 
 #include <string>
 #include <optional>
-#include <windef.h>
+#include <windows.h>
 
 std::string get_os_version();
 std::string get_real_os_version();
