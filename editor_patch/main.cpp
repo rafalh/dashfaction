@@ -258,6 +258,24 @@ void CMainFrame_ShowAllObjects(CWnd* this_)
     RedrawEditorAfterModification();
 }
 
+void CMainFrame_HideSelected(CWnd* this_)
+{
+    AddrCaller{0x0042DBF0}.this_call(GetLevelFromMainFrame(this_));
+    RedrawEditorAfterModification();
+}
+
+void CMainFrame_SelectObjectByUid(CWnd* this_)
+{
+    AddrCaller{0x0042E720}.this_call(GetLevelFromMainFrame(this_));
+    RedrawEditorAfterModification();
+}
+
+void CMainFrame_InvertSelection(CWnd* this_)
+{
+    AddrCaller{0x0042E890}.this_call(GetLevelFromMainFrame(this_));
+    RedrawEditorAfterModification();
+}
+
 BOOL __fastcall CMainFrame_OnCmdMsg(CWnd* this_, int, UINT nID, int nCode, void* pExtra, void* pHandlerInfo)
 {
     char buf[256];
@@ -278,6 +296,15 @@ BOOL __fastcall CMainFrame_OnCmdMsg(CWnd* this_, int, UINT nID, int nCode, void*
                 break;
             case ID_SHOW_ALL_OBJECTS:
                 handler = std::bind(CMainFrame_ShowAllObjects, this_);
+                break;
+            case ID_HIDE_SELECTED_OBJECTS:
+                handler = std::bind(CMainFrame_HideSelected, this_);
+                break;
+            case ID_SELECT_OBJECT_BY_UID:
+                handler = std::bind(CMainFrame_SelectObjectByUid, this_);
+                break;
+            case ID_INVERT_SELECTION:
+                handler = std::bind(CMainFrame_InvertSelection, this_);
                 break;
         }
 
