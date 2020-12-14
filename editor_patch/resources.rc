@@ -26,8 +26,8 @@ FONT 8, "MS Sans Serif"
     //CONTROL     "To Move:  Hold ""M""", 65535, WC_STATIC, SS_LEFTNOWORDWRAP, 559, 4, 67, 12
     //CONTROL     "To Rotate:  Hold ""R""", 65535, WC_STATIC, SS_LEFTNOWORDWRAP, 643, 4, 67, 12
     PUSHBUTTON  "Save", ID_FILE_SAVE, 550, 4, 29, 14
-    PUSHBUTTON  "Pack", 0x8083, 580, 4, 29, 14
-    PUSHBUTTON  "Lighting", 0x807A, 615, 4, 39, 14
+    PUSHBUTTON  "Pack", ID_CREATE_LEVEL_PACKFILE, 580, 4, 29, 14
+    PUSHBUTTON  "Lighting", ID_CALCULATE_MAPS_AND_LIGHT, 615, 4, 39, 14
     PUSHBUTTON  "Play", 0x800B, 660, 4, 29, 14
     PUSHBUTTON  "Play (camera)", 0x8078, 690, 4, 49, 14
 }
@@ -113,7 +113,7 @@ IDR_MAIN_FRAME MENU
         MENUITEM "Open &Dialogue Text\tF9", 32892
         MENUITEM SEPARATOR
         MENUITEM "Export as &VRML", 32893
-        MENUITEM "Create &Level Packfile\tP", 0x8083
+        MENUITEM "Create &Level Packfile\tCtrl+Shift+S", ID_CREATE_LEVEL_PACKFILE
         MENUITEM SEPARATOR
         MENUITEM "E&xit", ID_APP_EXIT
     }
@@ -140,7 +140,7 @@ IDR_MAIN_FRAME MENU
         MENUITEM "Calculate Lighting\tShift+L", 32837
         MENUITEM SEPARATOR
         MENUITEM "Calculate Maps and Light (no shadows)", 32889
-        MENUITEM "Calculate Maps and Light\tCtrl+L", 0x807A
+        MENUITEM "Calculate Maps and Light\tCtrl+L", ID_CALCULATE_MAPS_AND_LIGHT
         MENUITEM SEPARATOR
         MENUITEM "Rebuild with hole lines", 32898
         MENUITEM "Check for holes", 32896
@@ -221,8 +221,8 @@ IDR_MAIN_FRAME ACCELERATORS
     "Z",        ID_EDIT_UNDO, VIRTKEY, CONTROL
 
     // New accelerators
-    "P",        0x8083, VIRTKEY
-    "L",        0x807A, VIRTKEY, CONTROL
+    "S",        ID_CREATE_LEVEL_PACKFILE, VIRTKEY, CONTROL, SHIFT
+    "L",        ID_CALCULATE_MAPS_AND_LIGHT, VIRTKEY, CONTROL
 }
 
 // VERSIONINFO
