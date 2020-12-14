@@ -162,6 +162,17 @@ CodeInjection g_proctex_update_water_speed_fix{
     },
 };
 
+CodeInjection g_face_does_point_lie_in_face_crashfix{
+    0x004E1F93,
+    [](auto& regs) {
+        void* face_vertex = regs.esi;
+        if (!face_vertex) {
+            regs.bl = false;
+            regs.eax = 0x004E206F;
+        }
+    },
+};
+
 void g_solid_do_patch()
 {
     // Buffer overflows in solid_read
@@ -194,4 +205,7 @@ void g_solid_do_patch()
 
     // Set dynamic flag on proctex texture
     g_proctex_create_bm_create_injection.install();
+
+    // Add a missing check if face has any vertex in GFace::does_point_lie_in_face
+    g_face_does_point_lie_in_face_crashfix.install();
 }
