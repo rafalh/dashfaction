@@ -189,6 +189,9 @@ std::string PatchedAppLauncher::build_cmd_line(const std::string& app_path)
     if (!m_mod_name.empty()) {
         all_args.push_back("-mod");
         all_args.push_back(m_mod_name);
+        if (m_mod_name.find(' ') != std::string::npos) {
+            MessageBoxA(nullptr, "Mods with space in the name are not supported", nullptr, MB_OK | MB_ICONWARNING);
+        }
     }
     all_args.insert(all_args.end(), m_args.begin(), m_args.end());
 
