@@ -52,12 +52,12 @@ inline D3DFORMAT get_d3d_format_from_bm_format(rf::BmFormat format)
         return D3DFMT_A4R4G4B4;
     case rf::BM_FORMAT_DXT1:
         return D3DFMT_DXT1;
-    case rf::BM_FORMAT_DXT2:
-        return D3DFMT_DXT2;
+    // case rf::BM_FORMAT_DXT2:
+    //     return D3DFMT_DXT2;
     case rf::BM_FORMAT_DXT3:
         return D3DFMT_DXT3;
-    case rf::BM_FORMAT_DXT4:
-        return D3DFMT_DXT4;
+    // case rf::BM_FORMAT_DXT4:
+    //     return D3DFMT_DXT4;
     case rf::BM_FORMAT_DXT5:
         return D3DFMT_DXT5;
     default:
@@ -86,12 +86,12 @@ inline rf::BmFormat get_bm_format_from_d3d_format(D3DFORMAT d3d_fmt)
         return rf::BM_FORMAT_8_ALPHA;
     case D3DFMT_DXT1:
         return rf::BM_FORMAT_DXT1;
-    case D3DFMT_DXT2:
-        return rf::BM_FORMAT_DXT2;
+    // case D3DFMT_DXT2:
+    //     return rf::BM_FORMAT_DXT2;
     case D3DFMT_DXT3:
         return rf::BM_FORMAT_DXT3;
-    case D3DFMT_DXT4:
-        return rf::BM_FORMAT_DXT4;
+    // case D3DFMT_DXT4:
+    //     return rf::BM_FORMAT_DXT4;
     case D3DFMT_DXT5:
         return rf::BM_FORMAT_DXT5;
     default:
