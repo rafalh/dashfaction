@@ -165,8 +165,10 @@ CodeInjection parser_xstr_oob_fix{
 CodeInjection ammo_tbl_buffer_overflow_fix{
     0x004C218E,
     [](auto& regs) {
-        if (addr_as_ref<u32>(0x0085C760) == 32) {
-            xlog::warn("ammo.tbl limit of 32 definitions has been reached!");
+        constexpr int max_ammo_types = 32;
+        auto num_ammo_types = addr_as_ref<int>(0x0085C760);
+        if (num_ammo_types == max_ammo_types) {
+            xlog::warn("ammo.tbl limit of %d definitions has been reached!", max_ammo_types);
             regs.eip = 0x004C21B8;
         }
     },
@@ -175,18 +177,104 @@ CodeInjection ammo_tbl_buffer_overflow_fix{
 CodeInjection clutter_tbl_buffer_overflow_fix{
     0x0040F49E,
     [](auto& regs) {
-        if (regs.ecx == 450) {
-            xlog::warn("clutter.tbl limit of 450 definitions has been reached!");
+        constexpr int max_clutter_types = 450;
+        if (regs.ecx == max_clutter_types) {
+            xlog::warn("clutter.tbl limit of %d definitions has been reached!", max_clutter_types);
             regs.eip = 0x0040F4B0;
         }
     },
 };
 
-FunHook<void(const char*, int)> localize_add_string_bof_fix{
+CodeInjection vclip_tbl_buffer_overflow_fix{
+    0x004C1401,
+    [](auto& regs) {
+        constexpr int max_vclips = 64;
+        auto num_vclips = addr_as_ref<int>(0x008568AC);
+        if (num_vclips == max_vclips) {
+            xlog::warn("vclip.tbl limit of %d definitions has been reached!", max_vclips);
+            regs.eip = 0x004C1420;
+        }
+    },
+};
+
+CodeInjection items_tbl_buffer_overflow_fix{
+    0x00458AD1,
+    [](auto& regs) {
+        constexpr int max_item_types = 96;
+        auto num_item_types = addr_as_ref<int>(0x00644EA0);
+        if (num_item_types == max_item_types) {
+            xlog::warn("items.tbl limit of %d definitions has been reached!", max_item_types);
+            regs.eip = 0x00458AFB;
+        }
+    },
+};
+
+CodeInjection explosion_tbl_buffer_overflow_fix{
+    0x0048E0F3,
+    [](auto& regs) {
+        constexpr int max_explosion_types = 12;
+        auto num_explosion_types = addr_as_ref<int>(0x0075EC44);
+        if (num_explosion_types == max_explosion_types) {
+            xlog::warn("explosion.tbl limit of %d definitions has been reached!", max_explosion_types);
+            regs.eip = 0x0048E112;
+        }
+    },
+};
+
+CodeInjection weapons_tbl_primary_buffer_overflow_fix{
+    0x004C6855,
+    [](auto& regs) {
+        constexpr int max_weapon_types = 64;
+        auto num_weapon_types = addr_as_ref<int>(0x00872448);
+        if (num_weapon_types == max_weapon_types) {
+            xlog::warn("weapons.tbl limit of %d definitions has been reached!", max_weapon_types);
+            regs.eip = 0x004C68D9;
+        }
+    },
+};
+
+CodeInjection weapons_tbl_secondary_buffer_overflow_fix{
+    0x004C68AD,
+    [](auto& regs) {
+        constexpr int max_weapon_types = 64;
+        auto num_weapon_types = addr_as_ref<int>(0x00872448);
+        if (num_weapon_types == max_weapon_types) {
+            xlog::warn("weapons.tbl limit of %d definitions has been reached!", max_weapon_types);
+            regs.eip = 0x004C68D9;
+        }
+    },
+};
+
+CodeInjection pc_multi_tbl_buffer_overflow_fix{
+    0x00475B50,
+    [](auto& regs) {
+        constexpr int max_multi_characters = 31;
+        auto num_multi_characters = addr_as_ref<int>(0x006C9C60);
+        if (num_multi_characters == max_multi_characters) {
+            xlog::warn("pc_multi.tbl limit of %d definitions has been reached!", max_multi_characters);
+            regs.eip = 0x0047621F;
+        }
+    },
+};
+
+CodeInjection emitters_tbl_buffer_overflow_fix{
+    0x00496E76,
+    [](auto& regs) {
+        constexpr int max_emitter_types = 64;
+        auto num_emitter_types = addr_as_ref<int>(0x006C9C60);
+        if (num_emitter_types == max_emitter_types) {
+            xlog::warn("emitters.tbl limit of %d definitions has been reached!", max_emitter_types);
+            regs.eip = 0x00496F1A;
+        }
+    },
+};
+
+FunHook<void(const char*, int)> lcl_add_message_bof_fix{
     0x004B0720,
     [](const char* str, int id) {
-        if (id < 1000) {
-            localize_add_string_bof_fix.call_target(str, id);
+        constexpr int xstr_size = 1000;
+        if (id < xstr_size) {
+            lcl_add_message_bof_fix.call_target(str, id);
         }
         else {
             xlog::warn("strings.tbl index is out of bounds: %d", id);
@@ -317,7 +405,14 @@ void misc_init()
     // Fix crashes caused by too many records in tbl files
     ammo_tbl_buffer_overflow_fix.install();
     clutter_tbl_buffer_overflow_fix.install();
-    localize_add_string_bof_fix.install();
+    vclip_tbl_buffer_overflow_fix.install();
+    items_tbl_buffer_overflow_fix.install();
+    explosion_tbl_buffer_overflow_fix.install();
+    weapons_tbl_primary_buffer_overflow_fix.install();
+    weapons_tbl_secondary_buffer_overflow_fix.install();
+    pc_multi_tbl_buffer_overflow_fix.install();
+    emitters_tbl_buffer_overflow_fix.install();
+    lcl_add_message_bof_fix.install();
 
     // Fix killed glass restoration from a save file
     AsmWriter(0x0043604A).nop(5);

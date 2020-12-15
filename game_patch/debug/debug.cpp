@@ -57,6 +57,9 @@ FunHook<void(void*)> free_hook{
     0x00573C71,
     [](void* ptr) {
         xlog::trace("free %p", ptr);
+        if (!ptr) {
+            return;
+        }
         auto bytes = reinterpret_cast<std::byte*>(ptr);
         bytes -= 8;
         auto size = *reinterpret_cast<size_t*>(bytes);

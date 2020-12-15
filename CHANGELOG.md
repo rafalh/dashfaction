@@ -3,6 +3,18 @@ DashFaction Changelog
 
 Version 1.6.0 (not released yet)
 --------------------------------
+- Fix rocket launcher IR scanner in spectate mode (regression)
+- Fix 3D sounds having wrong volume for a very short time (regression)
+- Disable unsupported color depths in launcher options
+- Open RF wiki instead of hlp file when F1 is pressed in editor
+- Add more tools in editor menu
+- Change editor hotkey for create packfile function to Ctrl+Shift+S
+- Do not render CTF flag being hold by a spectated player
+- Add more checks for buffer overflow errors when parsing tbl files
+- Other stability fixes
+
+Version 1.6.0-beta (released 2020-12-12)
+----------------------------------------
 - fix alpha draw order issues in envirosuit1.vcm, Vet1.v3m, coffeesmokedtbl2.v3m, coffeesmokedtblAlt.v3m meshes
 - add support for bitmaps with alpha channel in Display_Fullscreen_Image event
 - fix level editor not using all space for rendering when used with a big monitor
