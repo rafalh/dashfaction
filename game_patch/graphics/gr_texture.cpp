@@ -216,54 +216,33 @@ CodeInjection gr_d3d_create_vram_texture_with_mipmaps_pitch_fix{
     },
 };
 
-int get_bytes_per_compressed_block(rf::BmFormat format)
-{
-    switch (format) {
-        case rf::BM_FORMAT_DXT1:
-            return 8;
-        case rf::BM_FORMAT_DXT2:
-        case rf::BM_FORMAT_DXT3:
-        case rf::BM_FORMAT_DXT4:
-        case rf::BM_FORMAT_DXT5:
-            return 16;
-        default:
-            assert(false);
-            return 0;
-    }
-}
-
-FunHook <void(int, float, float, rf::Color*)> gr_d3d_get_texel_hook{
+FunHook<void(int, float, float, rf::Color*)> gr_d3d_get_texel_hook{
     0x0055CFA0,
     [](int bm_handle, float u, float v, rf::Color* out_color) {
-        if (bm_is_compressed_format(rf::bm_get_format(bm_handle))) {
-            // This function is only used when shooting at a texture with alpha
-            rf::GrLockInfo lock;
-            if (rf::gr_lock(bm_handle, 0, &lock, rf::GR_LOCK_READ_ONLY)) {
-                // Make sure u and v are in [0, 1] range
-                // Assume wrap addressing mode
-                u = std::fmod(u, 1.0f);
-                v = std::fmod(v, 1.0f);
-                if (u < 0.0f) {
-                    u += 1.0f;
-                }
-                if (v < 0.0f) {
-                    v += 1.0f;
-                }
-                int x = static_cast<int>(u * lock.w + 0.5f);
-                int y = static_cast<int>(v * lock.h + 0.5f);
-                constexpr int block_w = 4;
-                constexpr int block_h = 4;
-                auto bytes_per_block = get_bytes_per_compressed_block(lock.format);
-                auto block = lock.data + (y / block_h) * lock.stride_in_bytes + x / block_w * bytes_per_block;
-                *out_color = decode_block_compressed_pixel(block, lock.format, x % block_w, y % block_h);
-                rf::gr_unlock(&lock);
+        // This function is only used when shooting at a texture with alpha
+        // Note: original function has out of bounds error - it reads color for 16bpp and 32bpp (two addresses)
+        // before actually checking the format
+        rf::GrLockInfo lock;
+        if (rf::gr_lock(bm_handle, 0, &lock, rf::GR_LOCK_READ_ONLY)) {
+            // Make sure u and v are in [0, 1] range
+            // Assume wrap addressing mode
+            u = std::fmod(u, 1.0f);
+            v = std::fmod(v, 1.0f);
+            if (u < 0.0f) {
+                u += 1.0f;
             }
-            else {
-                out_color->set(255, 255, 255, 255);
+            if (v < 0.0f) {
+                v += 1.0f;
             }
+            int x = static_cast<int>(u * lock.w + 0.5f);
+            int y = static_cast<int>(v * lock.h + 0.5f);
+            *out_color = bm_get_pixel(lock.data, lock.format, lock.stride_in_bytes, x, y);
+
+
+            rf::gr_unlock(&lock);
         }
         else {
-            gr_d3d_get_texel_hook.call_target(bm_handle, u, v, out_color);
+            out_color->set(255, 255, 255, 255);
         }
     },
 };

@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <d3d8.h>
 #include "gr_color.h"
+#include "graphics_internal.h"
 #include "../main.h"
 #include "../rf/graphics.h"
 #include "../rf/geometry.h"
@@ -763,6 +764,48 @@ bool convert_surface_format(void* dst_bits_ptr, rf::BmFormat dst_fmt, const void
     catch (const std::exception& e) {
         xlog::error("Pixel format conversion failed (%d -> %d): %s", src_fmt, dst_fmt, e.what());
         return false;
+    }
+}
+
+static int get_bytes_per_compressed_block(rf::BmFormat format)
+{
+    switch (format) {
+        case rf::BM_FORMAT_DXT1:
+            return 8;
+        case rf::BM_FORMAT_DXT2:
+        case rf::BM_FORMAT_DXT3:
+        case rf::BM_FORMAT_DXT4:
+        case rf::BM_FORMAT_DXT5:
+            return 16;
+        default:
+            assert(false);
+            return 0;
+    }
+}
+
+rf::Color bm_get_pixel(uint8_t* data, rf::BmFormat format, int stride_in_bytes, int x, int y)
+{
+    if (bm_is_compressed_format(format)) {
+        constexpr int block_w = 4;
+        constexpr int block_h = 4;
+        auto bytes_per_block = get_bytes_per_compressed_block(format);
+        auto block = data + (y / block_h) * stride_in_bytes + x / block_w * bytes_per_block;
+        return decode_block_compressed_pixel(block, format, x % block_w, y % block_h);
+    }
+    else {
+        auto ptr = data + y * stride_in_bytes + x * bm_bytes_per_pixel(format);
+        rf::Color result{0, 0, 0, 0};
+        call_with_format(format, [&](auto s) {
+            PixelsReader<decltype(s)::value> rdr{ptr};
+            PixelColor<rf::BmFormat::BM_FORMAT_8888_ARGB> color = rdr.read();
+            result.set(
+                static_cast<uint8_t>(color.r.value),
+                static_cast<uint8_t>(color.g.value),
+                static_cast<uint8_t>(color.b.value),
+                static_cast<uint8_t>(color.a.value)
+            );
+        });
+        return result;
     }
 }
 
