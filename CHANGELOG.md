@@ -12,6 +12,7 @@ Version 1.6.0 (not released yet)
 - Do not render CTF flag being hold by a spectated player
 - Add more checks for buffer overflow errors when parsing tbl files
 - Add a warning message when starting game with a mod that has a space in the name
+- Add missing `mtl_archway04-mip1.tga` texture
 - Other stability fixes
 
 Version 1.6.0-beta (released 2020-12-12)
