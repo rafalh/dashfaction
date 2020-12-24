@@ -358,25 +358,34 @@ CodeInjection vpackfile_init_injection{
     },
 };
 
+CodeInjection CMainFrame_OnPlayLevelCmd_skip_level_dir_injection{
+    0x00447AC4,
+    [](auto& regs) {
+        char* level_pathname = regs.eax;
+        regs.eax = std::strrchr(level_pathname, '\\') + 1;
+    },
+};
+
+CodeInjection CMainFrame_OnPlayLevelFromCameraCmd_skip_level_dir_injection{
+    0x00447CF2,
+    [](auto& regs) {
+        char* level_pathname = regs.eax;
+        regs.eax = std::strrchr(level_pathname, '\\') + 1;
+    },
+};
+
 extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
 {
     InitLogging();
     CrashHandlerStubInstall(g_module);
 
     // Change command for Play Level action to use Dash Faction launcher
-    static std::string play_level_cmd_part = get_module_dir(g_module);
-    play_level_cmd_part += LAUNCHER_FILENAME;
-    play_level_cmd_part += " -level \"";
-
-    write_mem_ptr(0x00447973 + 1, play_level_cmd_part.c_str());
-    write_mem_ptr(0x00447CB9 + 1, play_level_cmd_part.c_str());
-
-    // Zero first argument for CreateProcess call
+    static std::string launcher_pathname = get_module_dir(g_module) + LAUNCHER_FILENAME;
     using namespace asm_regs;
-    AsmWriter(0x00447B32, 0x00447B39).nop();
-    AsmWriter(0x00447B32).xor_(eax, eax);
-    AsmWriter(0x00448024, 0x0044802B).nop();
-    AsmWriter(0x00448024).xor_(eax, eax);
+    AsmWriter(0x00447B32, 0x00447B39).mov(eax, launcher_pathname.c_str());
+    AsmWriter(0x00448024, 0x0044802B).mov(eax, launcher_pathname.c_str());
+    CMainFrame_OnPlayLevelCmd_skip_level_dir_injection.install();
+    CMainFrame_OnPlayLevelFromCameraCmd_skip_level_dir_injection.install();
 
     // Add additional file paths for V3M loading
     CEditorApp_InitInstance_additional_file_paths_injection.install();

@@ -14,6 +14,8 @@ Version 1.6.0 (not released yet)
 - Add a warning message when starting game with a mod that has a space in the name
 - Add missing textures: `mtl_archway04-mip1.tga`, `pls_airlockmat01-mip2.tga`
 - Add more textures from base game to the level editor texture browser
+- Fix buffer overflow occuring when using Play Level command in level editor if level path and/or Dash Faction path is
+  long
 - Other stability fixes
 
 Version 1.6.0-beta (released 2020-12-12)
