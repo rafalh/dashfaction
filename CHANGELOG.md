@@ -16,6 +16,7 @@ Version 1.6.0 (not released yet)
 - Add more textures from base game to the level editor texture browser
 - Fix buffer overflow occuring when using Play Level command in level editor if level path and/or Dash Faction path is
   long
+- Improve performance of sound function `ds_get_channel`
 - Other stability fixes
 
 Version 1.6.0-beta (released 2020-12-12)

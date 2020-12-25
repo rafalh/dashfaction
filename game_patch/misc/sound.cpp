@@ -588,6 +588,54 @@ FunHook<void(const rf::Vector3&, const rf::Vector3&, const rf::Matrix3&)> snd_up
     },
 };
 
+static void ds_populate_new_sig(int channel)
+{
+    static auto sig_counter = 1;
+    rf::ds_channels[channel].sig = 0x40000000 | (sig_counter << 8) | channel;
+    sig_counter = (sig_counter + 1) % 0x10000;
+}
+
+static CodeInjection snd_ds_play_sig_generation_patch{
+    0x00522683,
+    [](auto& regs) {
+        int channel = static_cast<int>(regs.esi) / sizeof(rf::DsChannel);
+        ds_populate_new_sig(channel);
+        regs.eip = 0x005226A0;
+    },
+};
+
+static CodeInjection snd_ds_play_3d_sig_generation_patch{
+    0x005223EF,
+    [](auto& regs) {
+        int channel = static_cast<rf::DsChannel*>(regs.esi) - rf::ds_channels;
+        ds_populate_new_sig(channel);
+        regs.eip = 0x00522409;
+    },
+};
+
+static CodeInjection snd_ds_play_music_sig_generation_patch{
+    0x005227D3,
+    [](auto& regs) {
+        int channel = static_cast<int>(regs.esi) / sizeof(rf::DsChannel);
+        ds_populate_new_sig(channel);
+        regs.eip = 0x005227F0;
+    },
+};
+
+static FunHook<int(int)> snd_ds_get_channel_hook{
+    0x00522F30,
+    [](int sig) -> int {
+        if (sig < 0) {
+            return -1;
+        }
+        int index = static_cast<rf::ubyte>(sig);
+        if (rf::ds_channels[index].sig != sig) {
+            return -1;
+        }
+        return index;
+    },
+};
+
 void apply_sound_patches()
 {
     // Sound loop fix
@@ -649,6 +697,12 @@ void apply_sound_patches()
     // distance model is very different and must be emulated manually using SetVolume API
     write_mem<float>(0x00562EB1 + 1, 0.0f);
     snd_pc_play_3d_injection.install();
+
+    // Optimize performance of mapping a sig to DS channel number
+    snd_ds_play_sig_generation_patch.install();
+    snd_ds_play_3d_sig_generation_patch.install();
+    snd_ds_play_music_sig_generation_patch.install();
+    snd_ds_get_channel_hook.install();
 }
 
 void register_sound_commands()
