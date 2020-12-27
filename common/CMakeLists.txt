@@ -1,10 +1,3 @@
-include_directories(
-    include/common
-    ${CMAKE_SOURCE_DIR}/vendor/d3d8
-)
-
-enable_warnings()
-
 file(GLOB SRCS *.cpp include/common/*.h)
 
 set(SRCS
@@ -37,6 +30,12 @@ add_library(Common STATIC ${SRCS})
 
 target_compile_features(Common PUBLIC cxx_std_17)
 set_target_properties(Common PROPERTIES CXX_EXTENSIONS NO)
+enable_warnings(Common)
+
+target_include_directories(Common PRIVATE
+    include/common
+    ${CMAKE_SOURCE_DIR}/vendor/d3d8
+)
 
 target_include_directories(Common PUBLIC include)
 

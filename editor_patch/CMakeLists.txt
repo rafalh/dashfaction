@@ -1,10 +1,3 @@
-include_directories(
-    ${CMAKE_SOURCE_DIR}/vendor/d3d8
-)
-add_definitions(-DNOMINMAX -DBUILD_DLL)
-
-enable_warnings()
-
 set(SRCS
     exports.h
     graphics.cpp
@@ -14,12 +7,21 @@ set(SRCS
     resources.h
 )
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRCS})
+
 add_library(DashEditor SHARED ${SRCS})
-
 target_compile_features(DashEditor PUBLIC cxx_std_17)
-set_target_properties(DashEditor PROPERTIES CXX_EXTENSIONS NO)
+set_target_properties(DashEditor PROPERTIES
+    PREFIX ""
+    CXX_EXTENSIONS NO
+)
+enable_warnings(DashEditor)
+setup_debug_info(DashEditor)
 
-set_property(TARGET DashEditor PROPERTY PREFIX "")
+target_compile_definitions(DashEditor PRIVATE NOMINMAX BUILD_DLL)
+
+target_include_directories(DashEditor PRIVATE
+    ${CMAKE_SOURCE_DIR}/vendor/d3d8
+)
 
 target_link_libraries(DashEditor
     PatchCommon
@@ -28,5 +30,3 @@ target_link_libraries(DashEditor
     CrashHandlerStub
     shlwapi
 )
-
-setup_debug_info(DashEditor)

@@ -1,11 +1,3 @@
-include_directories(SYSTEM
-	${CMAKE_SOURCE_DIR}/vendor/zlib
-	${CMAKE_SOURCE_DIR}/vendor/zlib/contrib/minizip
-    ${CMAKE_SOURCE_DIR}/vendor/win32xx
-)
-
-enable_warnings()
-
 set(SRCS
     main.cpp
     CrashReportApp.cpp
@@ -26,6 +18,14 @@ add_executable(CrashHandler WIN32 ${SRCS})
 
 target_compile_features(CrashHandler PRIVATE cxx_std_17)
 set_target_properties(CrashHandler PROPERTIES CXX_EXTENSIONS NO)
+enable_warnings(CrashHandler)
+setup_debug_info(CrashHandler)
+
+target_include_directories(CrashHandler SYSTEM PRIVATE
+    ${CMAKE_SOURCE_DIR}/vendor/zlib
+    ${CMAKE_SOURCE_DIR}/vendor/zlib/contrib/minizip
+    ${CMAKE_SOURCE_DIR}/vendor/win32xx
+)
 
 target_link_libraries(CrashHandler
     Common
@@ -35,4 +35,3 @@ target_link_libraries(CrashHandler
     zlib
 )
 
-setup_debug_info(CrashHandler)

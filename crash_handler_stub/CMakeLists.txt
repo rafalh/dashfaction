@@ -1,5 +1,3 @@
-enable_warnings()
-
 add_library(CrashHandlerStub STATIC
     crash_handler_stub.cpp
     WatchDogTimer.cpp
@@ -10,6 +8,7 @@ add_library(CrashHandlerStub STATIC
 
 target_compile_features(CrashHandlerStub PUBLIC cxx_std_17)
 set_target_properties(CrashHandlerStub PROPERTIES CXX_EXTENSIONS NO)
+enable_warnings(CrashHandlerStub)
 
 target_include_directories(CrashHandlerStub PUBLIC include)
 

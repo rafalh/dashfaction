@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.13)
 project(DashFaction)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
@@ -7,29 +7,26 @@ include(cotire)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 if(MSVC)
-    add_definitions(
-        -D_CRT_SECURE_NO_WARNINGS
-        -D_CRT_NONSTDC_NO_DEPRECATE
-        -D_USE_MATH_DEFINES
-        -D_SCL_SECURE_NO_WARNINGS
-        -D_CRT_SECURE_NO_DEPRECATE
+    add_compile_definitions(
+        _CRT_SECURE_NO_WARNINGS
+        _CRT_SECURE_NO_DEPRECATE
+        _CRT_NONSTDC_NO_DEPRECATE
+        _SCL_SECURE_NO_WARNINGS
+        _USE_MATH_DEFINES
     )
 endif()
 
 # Set target Windows version to XP SP3
-add_definitions(
-    -DWINVER=0x0501
+add_compile_definitions(
+    WINVER=0x0501
     # needed for PROCESS_DEP_ENABLE on MinGW
-    -D_WIN32_WINNT=0x0601
-    -D_WIN32_IE=0x0501
+    _WIN32_WINNT=0x0601
+    _WIN32_IE=0x0501
     # needed for GetModuleFileNameEx resolution before Windows 7
-    -DPSAPI_VERSION=1
-    -DDASH_FACTION
+    PSAPI_VERSION=1
+    DASH_FACTION
+    "$<$<CONFIG:Debug>:DEBUG>"
 )
-
-include_directories(include)
-
-add_compile_options("$<$<CONFIG:Debug>:-DDEBUG>")
 
 if(MSVC)
     set(CMAKE_EXE_LINKER_FLAGS    "${CMAKE_EXE_LINKER_FLAGS} /MANIFEST:NO")
@@ -62,16 +59,16 @@ endif()
 
 # Macros
 
-macro(enable_warnings)
+macro(enable_warnings target)
     if(NOT MSVC)
-        add_compile_options(-Wall -Wextra -Wundef)
+        target_compile_options(${target} PRIVATE -Wall -Wextra -Wundef)
     endif()
 endmacro()
 
 macro(setup_debug_info target)
     if(MSVC)
         # MSVC - generate PDB files
-        set_property(TARGET ${target} PROPERTY LINK_FLAGS /DEBUG)
+        target_link_options(${target} PRIVATE /DEBUG)
     else()
         # Keep debugging info in Release configuration - it is stripped later
         target_compile_options(${target} PRIVATE $<$<CONFIG:Release>:-g>$<$<CONFIG:RelWithDebInfo>:-g>)

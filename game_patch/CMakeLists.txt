@@ -1,23 +1,6 @@
-include_directories(
-	${CMAKE_SOURCE_DIR}/vendor
-	${CMAKE_SOURCE_DIR}/vendor/zlib
-	${CMAKE_SOURCE_DIR}/vendor/zlib/contrib/minizip
-	${CMAKE_SOURCE_DIR}/vendor/unrar
-	${CMAKE_SOURCE_DIR}/vendor/d3d8
-	${CMAKE_SOURCE_DIR}/vendor/xxhash
-	${CMAKE_SOURCE_DIR}/vendor/stb
-	${CMAKE_SOURCE_DIR}/vendor/freetype/include
-	${CMAKE_SOURCE_DIR}/vendor/dds
-)
-if(NOT MSVC)
-    # natupnp.h is not distributed with MinGW
-    include_directories(${CMAKE_SOURCE_DIR}/vendor/natupnp)
-endif()
-
-add_definitions(-DNOMINMAX -DBUILD_DLL)
+file(GLOB EXPERIMENTAL_SRCS experimental/*.cpp experimental/*.h)
 
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/purefaction/pf_secret.cpp")
-    add_definitions(-DHAS_PF)
     set(PF_SRCS
         purefaction/pf.cpp
         purefaction/pf.h
@@ -27,13 +10,7 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/purefaction/pf_secret.cpp")
         purefaction/pf_secret.h
     )
 endif()
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/experimental/experimental.cpp")
-    add_definitions(-DHAS_EXPERIMENTAL)
-endif()
 
-enable_warnings()
-
-file(GLOB EXPERIMENTAL_SRCS experimental/*.cpp experimental/*.h)
 set(SRCS
     main.cpp
     main.h
@@ -144,12 +121,40 @@ set(SRCS
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRCS})
 
 add_library(DashFaction SHARED ${SRCS})
-
 target_compile_features(DashFaction PUBLIC cxx_std_17)
-set_target_properties(DashFaction PROPERTIES CXX_EXTENSIONS NO)
-
-set_property(TARGET DashFaction PROPERTY PREFIX "")
+set_target_properties(DashFaction PROPERTIES
+    PREFIX ""
+    CXX_EXTENSIONS NO
+)
+enable_warnings(DashFaction)
+setup_debug_info(DashFaction)
 #cotire(DashFaction)
+
+target_include_directories(DashFaction PRIVATE
+    ${CMAKE_SOURCE_DIR}/vendor
+    ${CMAKE_SOURCE_DIR}/vendor/zlib
+    ${CMAKE_SOURCE_DIR}/vendor/zlib/contrib/minizip
+    ${CMAKE_SOURCE_DIR}/vendor/unrar
+    ${CMAKE_SOURCE_DIR}/vendor/d3d8
+    ${CMAKE_SOURCE_DIR}/vendor/xxhash
+    ${CMAKE_SOURCE_DIR}/vendor/stb
+    ${CMAKE_SOURCE_DIR}/vendor/freetype/include
+    ${CMAKE_SOURCE_DIR}/vendor/dds
+)
+
+if(NOT MSVC)
+    # natupnp.h is not distributed with MinGW
+    target_include_directories(DashFaction PRIVATE ${CMAKE_SOURCE_DIR}/vendor/natupnp)
+endif()
+
+target_compile_definitions(DashFaction PRIVATE NOMINMAX BUILD_DLL)
+
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/purefaction/pf_secret.cpp")
+    target_compile_definitions(DashFaction PRIVATE HAS_PF)
+endif()
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/experimental/experimental.cpp")
+    target_compile_definitions(DashFaction PRIVATE HAS_EXPERIMENTAL)
+endif()
 
 target_link_libraries(DashFaction
     psapi
@@ -171,4 +176,3 @@ target_link_libraries(DashFaction
     freetype
 )
 
-setup_debug_info(DashFaction)

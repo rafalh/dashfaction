@@ -1,5 +1,3 @@
-enable_warnings()
-
 add_library(Xlog STATIC
     include/xlog/Appender.h
     include/xlog/ConsoleAppender.h
@@ -20,5 +18,6 @@ add_library(Xlog STATIC
 )
 target_compile_features(Xlog PUBLIC cxx_std_17)
 set_target_properties(Xlog PROPERTIES CXX_EXTENSIONS NO)
+enable_warnings(Xlog)
 
 target_include_directories(Xlog PUBLIC include)
