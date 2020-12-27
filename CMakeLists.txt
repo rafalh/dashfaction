@@ -29,8 +29,7 @@ add_definitions(
 
 include_directories(include)
 
-add_compile_options("$<$<CONFIG:DEBUG>:-DDEBUG>")
-add_compile_options("$<$<CONFIG:RELEASE>:-DNDEBUG>")
+add_compile_options("$<$<CONFIG:Debug>:-DDEBUG>")
 
 if(MSVC)
     set(CMAKE_EXE_LINKER_FLAGS    "${CMAKE_EXE_LINKER_FLAGS} /MANIFEST:NO")
