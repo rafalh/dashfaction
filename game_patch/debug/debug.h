@@ -5,4 +5,5 @@ void debug_init();
 void debug_cleanup();
 void debug_render();
 void debug_render_ui();
-void debug_do_frame();
+void debug_do_frame_pre();
+void debug_do_frame_post();

@@ -279,35 +279,35 @@ void render_obj_debug_ui()
 
     auto entity = object->type == rf::OT_ENTITY ? reinterpret_cast<rf::Entity*>(object) : nullptr;
 
-    dbg_hud.Print("name", object->name.c_str());
-    dbg_hud.Printf("uid", "%d", object->uid);
-    dbg_hud.Print("type", get_obj_type_name(*object));
-    dbg_hud.Print("class", get_obj_class_name(*object));
-    dbg_hud.Printf("dist", "%.3f", (cam_pos - object->pos).len());
-    dbg_hud.Printf("atck_dist", "%.0f", entity ? rf::ai_get_attack_range(entity->ai) : 0.0f);
-    dbg_hud.Printf("life", "%.0f", object->life);
-    dbg_hud.Printf("room", "%d", object->room ? struct_field_ref<int>(object->room, 0x20) : -1);
-    dbg_hud.Print("pos", object->pos);
+    dbg_hud.print("name", object->name.c_str());
+    dbg_hud.printf("uid", "%d", object->uid);
+    dbg_hud.print("type", get_obj_type_name(*object));
+    dbg_hud.print("class", get_obj_class_name(*object));
+    dbg_hud.printf("dist", "%.3f", (cam_pos - object->pos).len());
+    dbg_hud.printf("atck_dist", "%.0f", entity ? rf::ai_get_attack_range(entity->ai) : 0.0f);
+    dbg_hud.printf("life", "%.0f", object->life);
+    dbg_hud.printf("room", "%d", object->room ? struct_field_ref<int>(object->room, 0x20) : -1);
+    dbg_hud.print("pos", object->pos);
     if (entity) {
-        dbg_hud.Print("eye_pos", entity->view_pos);
-        dbg_hud.Printf("envsuit", "%.0f", object->armor);
-        dbg_hud.Print("mode", get_ai_mode_name(entity->ai.mode));
+        dbg_hud.print("eye_pos", entity->view_pos);
+        dbg_hud.printf("envsuit", "%.0f", object->armor);
+        dbg_hud.print("mode", get_ai_mode_name(entity->ai.mode));
         if (entity->ai.submode)
-            dbg_hud.Printf("submode", "%d", entity->ai.submode);
+            dbg_hud.printf("submode", "%d", entity->ai.submode);
         else
-            dbg_hud.Print("submode", "NONE");
-        dbg_hud.Print("style", get_ai_attack_style_name(entity->ai.ai_attack_style));
-        dbg_hud.Print("friend", get_friendliness_name(object->friendliness));
+            dbg_hud.print("submode", "NONE");
+        dbg_hud.print("style", get_ai_attack_style_name(entity->ai.ai_attack_style));
+        dbg_hud.print("friend", get_friendliness_name(object->friendliness));
         auto target_obj = rf::obj_from_handle(entity->ai.target_obj_handle);
-        dbg_hud.Print("target", target_obj ? target_obj->name.c_str() : "none");
-        dbg_hud.Printf("accel", "%.1f", entity->info->acceleration);
-        dbg_hud.Printf("mvmode", "%s", rf::move_mode_names[entity->movement_mode->id]);
-        dbg_hud.Print("deaf", (entity->ai.flags & rf::AI_FLAG_DEAF) ? "yes" : "no");
-        dbg_hud.Print("pos", object->pos);
+        dbg_hud.print("target", target_obj ? target_obj->name.c_str() : "none");
+        dbg_hud.printf("accel", "%.1f", entity->info->acceleration);
+        dbg_hud.printf("mvmode", "%s", rf::move_mode_names[entity->movement_mode->id]);
+        dbg_hud.print("deaf", (entity->ai.flags & rf::AI_FLAG_DEAF) ? "yes" : "no");
+        dbg_hud.print("pos", object->pos);
         auto feet = object->pos;
         feet.y = object->p_data.bbox_min.y;
-        dbg_hud.Print("feet", feet);
-        dbg_hud.Print("state", rf::entity_state_names[entity->current_state]);
+        dbg_hud.print("feet", feet);
+        dbg_hud.print("state", rf::entity_state_names[entity->current_state]);
 
         const char* action_name = "none";
         for (size_t action_idx = 0; action_idx < std::size(rf::entity_action_names); ++action_idx) {
@@ -315,8 +315,8 @@ void render_obj_debug_ui()
                 action_name = rf::entity_action_names[action_idx];
             }
         }
-        dbg_hud.Print("action", action_name);
-        dbg_hud.Printf("persona", entity->info->persona >= 0 ? rf::persona_info[entity->info->persona].name.c_str() : "none");
+        dbg_hud.print("action", action_name);
+        dbg_hud.printf("persona", entity->info->persona >= 0 ? rf::persona_info[entity->info->persona].name.c_str() : "none");
     }
 
     if (g_target_rotate_speed) {

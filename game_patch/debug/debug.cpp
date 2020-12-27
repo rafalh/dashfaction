@@ -7,9 +7,9 @@
 #define MEMORY_TRACKING 0
 #define VARRAY_OOB_CHECK 0
 #define EMULATE_PACKET_LOSS 0
-#define DEBUG_PERF
+#define DEBUG_PERF 0
 #else // NDEBUG
-#define DEBUG_PERF
+#define DEBUG_PERF 1
 #define MEMORY_TRACKING 1
 #define VARRAY_OOB_CHECK 0
 #define EMULATE_PACKET_LOSS 0
@@ -172,7 +172,7 @@ void debug_apply_patches()
 
     debug_cmd_apply_patches();
     debug_unresponsive_apply_patches();
-#ifdef DEBUG_PERF
+#if DEBUG_PERF
     profiler_init();
 #endif
 }
@@ -198,7 +198,7 @@ void debug_render()
 void debug_render_ui()
 {
     debug_cmd_render_ui();
-#ifdef DEBUG_PERF
+#if DEBUG_PERF
     profiler_draw_ui();
 #endif
 #ifndef NDEBUG
@@ -211,7 +211,12 @@ void debug_cleanup()
     debug_unresponsive_cleanup();
 }
 
-void debug_do_frame()
+void debug_do_frame_pre()
 {
     debug_unresponsive_do_update();
+}
+
+void debug_do_frame_post()
+{
+    profiler_do_frame_post();
 }

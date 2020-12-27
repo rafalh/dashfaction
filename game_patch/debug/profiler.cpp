@@ -10,6 +10,7 @@
 #include <patch_common/ShortTypes.h>
 #include <xlog/xlog.h>
 #include <cstddef>
+#include <fstream>
 #include "debug_internal.h"
 #include <common/utils/perf-utils.h>
 
@@ -36,7 +37,7 @@ private:
 public:
     FunPrePostHook(uintptr_t addr, PreCallback pre_cb, PostCallback post_cb) :
         m_addr(addr), m_pre_cb(pre_cb), m_post_cb(post_cb),
-        m_leave_code(256),
+        m_leave_code(64),
         m_enter_patch(new CodeInjection{addr, [this](auto& regs) { enter_handler(regs); }})
     {
         using namespace asm_regs;
@@ -110,6 +111,16 @@ public:
         return m_num_calls_in_frame;
     }
 
+    int get_min_duration_in_frame() const
+    {
+        return m_min_duration_in_frame;
+    }
+
+    int get_max_duration_in_frame() const
+    {
+        return m_max_duration_in_frame;
+    }
+
     virtual void install() = 0;
 
     void next_frame()
@@ -117,6 +128,8 @@ public:
         m_current_frame_slot = (m_current_frame_slot + 1) % num_slots;
         m_frame_duration_array[m_current_frame_slot] = 0;
         m_num_calls_in_frame = 0;
+        m_min_duration_in_frame = std::numeric_limits<int>::max();
+        m_max_duration_in_frame = 0;
     }
 
 protected:
@@ -129,6 +142,8 @@ protected:
     int m_frame_duration_array[num_slots];
     int m_current_frame_slot = 0;
     int m_num_calls_in_frame = 0;
+    int m_min_duration_in_frame = std::numeric_limits<int>::max();
+    int m_max_duration_in_frame = 0;
     bool m_is_cpu_in_range = false;
 
     static int current_time()
@@ -155,6 +170,9 @@ protected:
         }
         m_is_cpu_in_range = false;
         int duration = current_time() - m_enter_time;
+
+        m_max_duration_in_frame = std::max(m_max_duration_in_frame, duration);
+        m_min_duration_in_frame = std::min(m_min_duration_in_frame, duration);
 
         m_duration_array[m_current_slot] = duration;
         m_current_slot = (m_current_slot + 1) % num_slots;
@@ -228,8 +246,8 @@ private:
 };
 
 std::vector<std::unique_ptr<BaseProfiler>> g_profilers;
-
 bool g_profiler_visible = false;
+std::ofstream g_profiler_log;
 
 void install_profiler_patches() {
     static bool installed = false;
@@ -241,11 +259,81 @@ void install_profiler_patches() {
     }
 }
 
+void profiler_log_init()
+{
+    g_profiler_log.open("logs/profile.csv", std::ofstream::out);
+    if (!g_profiler_log.is_open()) {
+        return;
+    }
+    g_profiler_log << "frametime;";
+    for (auto& p : g_profilers) {
+        g_profiler_log
+            << p->get_name() << " avg frame time;"
+            << p->get_name() << " num calls;"
+            << p->get_name() << " avg time;"
+            << p->get_name() << " min time;"
+            << p->get_name() << " max time;"
+            ;
+    }
+    g_profiler_log << '\n';
+}
+
+void profiler_log_dump()
+{
+    if (!g_profiler_log.is_open()) {
+        return;
+    }
+    g_profiler_log << rf::frametime << ';';
+    for (auto& p : g_profilers) {
+        g_profiler_log
+            << p->get_avg_frame_duration() << ';'
+            << p->get_num_calls_in_frame() << ';'
+            << p->get_avg_duration() << ';'
+            << p->get_min_duration_in_frame() << ';'
+            << p->get_max_duration_in_frame() << ';'
+            ;
+    }
+    g_profiler_log << '\n';
+}
+
+bool profiler_log_is_active()
+{
+    return g_profiler_log.is_open();
+}
+
+void profiler_log_close()
+{
+    g_profiler_log.close();
+}
+
 ConsoleCommand2 profiler_cmd{
     "d_profiler",
     []() {
         install_profiler_patches();
         g_profiler_visible = !g_profiler_visible;
+    },
+};
+
+ConsoleCommand2 profiler_log_cmd{
+    "d_profiler_log",
+    []() {
+        install_profiler_patches();
+        if (profiler_log_is_active()) {
+            profiler_log_close();
+        }
+        else {
+            profiler_log_init();
+        }
+        rf::console_printf("Profiler log: %s", profiler_log_is_active() ? "enabled" : "disabled");
+    },
+};
+
+ConsoleCommand2 profiler_print_cmd{
+    "d_profiler_print",
+    []() {
+        for (auto& p : g_profilers) {
+            rf::console_printf("%s: avg %d avg_frame %d", p->get_name(), p->get_avg_duration(), p->get_avg_frame_duration());
+        }
     },
 };
 
@@ -326,29 +414,42 @@ void profiler_init()
     g_profilers.push_back(std::make_unique<AddrRangeProfiler>(0x00431FFD, 0x00432A18, "  misc (after level geometry)"));
     g_profilers.push_back(std::make_unique<CallProfiler>(0x0043233E, "  glare flares"));
     g_profilers.push_back(std::make_unique<CallProfiler>(0x0043285D, "  fpgun"));
-    g_profilers.push_back(std::make_unique<CallProfiler>(0x00432A18, "  HUD"));
-    g_profilers.push_back(std::make_unique<AddrRangeProfiler>(0x00432A1D, 0x00432F4F, "  misc (after HUD)"));
+    //g_profilers.push_back(std::make_unique<CallProfiler>(0x00432A18, "  HUD"));
+    g_profilers.push_back(std::make_unique<AddrRangeProfiler>(0x00432A20, 0x00432F4F, "  misc (after HUD)"));
+
+    g_profilers.push_back(std::make_unique<FunProfiler>(0x005056A0, "  snd_play_3d"));
+    g_profilers.push_back(std::make_unique<FunProfiler>(0x00503100, "  vmesh_render"));
+    g_profilers.push_back(std::make_unique<FunProfiler>(0x0048A400, "  obj_hit_callback"));
 
     profiler_cmd.register_cmd();
+    profiler_log_cmd.register_cmd();
+    profiler_print_cmd.register_cmd();
     perf_dump_cmd.register_cmd();
+}
+
+void profiler_do_frame_post()
+{
+    if (g_profiler_visible || profiler_log_is_active()) {
+        profiler_log_dump();
+        for (auto& p : g_profilers) {
+            p->next_frame();
+        }
+    }
 }
 
 void profiler_draw_ui()
 {
     if (g_profiler_visible) {
-        //addr_as_ref<bool>(0x00596144) = 0;
         DebugNameValueBox dbg_box{10, 100};
-        dbg_box.Section("Profilers:");
+        dbg_box.section("Profilers:");
         for (auto& p : g_profilers) {
             if (p->get_num_calls_in_frame() > 1) {
-                dbg_box.Printf(p->get_name(), "%d us (%d calls, single %d us)", p->get_avg_frame_duration(),
+                dbg_box.printf(p->get_name(), "%d us (%d calls, single %d us)", p->get_avg_frame_duration(),
                     p->get_num_calls_in_frame(), p->get_avg_duration());
             }
             else {
-                dbg_box.Printf(p->get_name(), "%d us", p->get_avg_frame_duration());
+                dbg_box.printf(p->get_name(), "%d us", p->get_avg_frame_duration());
             }
-
-            p->next_frame();
         }
     }
 }

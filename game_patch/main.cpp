@@ -78,13 +78,16 @@ CodeInjection cleanup_game_hook{
     },
 };
 
-CodeInjection before_frame_hook{
-    0x004B2818,
+FunHook<int()> rf_do_frame_hook{
+    0x004B2D90,
     []() {
+        debug_do_frame_pre();
         rf::os_poll();
         high_fps_update();
         server_do_frame();
-        debug_do_frame();
+        int result = rf_do_frame_hook.call_target();
+        debug_do_frame_post();
+        return result;
     },
 };
 
@@ -279,7 +282,7 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     rf_init_hook.install();
     after_full_game_init_hook.install();
     cleanup_game_hook.install();
-    before_frame_hook.install();
+    rf_do_frame_hook.install();
     after_level_render_hook.install();
     after_frame_render_hook.install();
     level_load_hook.install();
