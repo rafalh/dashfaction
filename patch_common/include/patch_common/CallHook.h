@@ -1,9 +1,10 @@
 #pragma once
 
-#include <patch_common/Traits.h>
 #include <vector>
+#include <patch_common/Traits.h>
+#include <patch_common/Installable.h>
 
-class CallHookImpl
+class CallHookImpl : public Installable
 {
 protected:
     std::vector<uintptr_t> m_call_op_addr_vec;
@@ -19,7 +20,7 @@ protected:
     {}
 
 public:
-    void install();
+    void install() override;
 };
 
 template<class T>

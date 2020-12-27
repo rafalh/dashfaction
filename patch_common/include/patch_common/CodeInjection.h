@@ -1,14 +1,15 @@
 #pragma once
 
-#include <patch_common/CodeBuffer.h>
 #include <cstdint>
 #include <subhook.h>
 #include <utility>
 #include <cstring>
+#include <patch_common/CodeBuffer.h>
+#include <patch_common/Installable.h>
 
 class AsmWriter;
 
-class BaseCodeInjection
+class BaseCodeInjection : public Installable
 {
 private:
     uintptr_t m_addr;
@@ -141,7 +142,7 @@ public:
     BaseCodeInjection(uintptr_t addr) : m_addr(addr), m_code_buf(256) {}
     virtual ~BaseCodeInjection() {}
 
-    void install();
+    void install() override;
 
     void set_addr(uintptr_t addr)
     {

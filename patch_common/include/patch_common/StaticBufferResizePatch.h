@@ -6,10 +6,11 @@
 #include <cstddef>
 #include <cstring>
 #include <patch_common/MemUtils.h>
+#include <patch_common/Installable.h>
 #include <xlog/xlog.h>
 
 template<typename T>
-class StaticBufferResizePatch
+class StaticBufferResizePatch : public Installable
 {
 public:
     struct RefInfo
@@ -43,7 +44,7 @@ public:
         new_num_elements_(N), refs_(refs), new_buf_(new_buf)
     {}
 
-    void install()
+    void install() override
     {
         constexpr int max_offset = 6;
         if (!new_buf_) {

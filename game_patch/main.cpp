@@ -102,7 +102,7 @@ CodeInjection after_level_render_hook{
 };
 
 CodeInjection after_frame_render_hook{
-    0x004B2E3F,
+    0x004B2DC2,
     []() {
         // Draw on top (after scene)
 

@@ -1,10 +1,11 @@
 #pragma once
 
-#include <patch_common/Traits.h>
 #include <cstdint>
 #include <subhook.h>
+#include <patch_common/Traits.h>
+#include <patch_common/Installable.h>
 
-class FunHookImpl
+class FunHookImpl : public Installable
 {
 protected:
     void* m_target_fun_ptr;
@@ -18,7 +19,7 @@ protected:
     }
 
 public:
-    void install();
+    void install() override;
 
     void set_addr(uintptr_t target_fun_addr)
     {
