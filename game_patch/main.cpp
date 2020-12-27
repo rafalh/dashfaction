@@ -207,7 +207,13 @@ void init_logging()
         // .add_appender<xlog::ConsoleAppender>()
         // .add_appender<xlog::Win32Appender>()
         .add_appender<RfConsoleLogAppender>();
-    xlog::info("Dash Faction %s (%s %s)", VERSION_STR, __DATE__, __TIME__);
+    xlog::info("Dash Faction %s (build date: %s %s)", VERSION_STR, __DATE__, __TIME__);
+
+    auto now = std::time(nullptr);
+    auto tm = std::gmtime(&now);
+    char time_str[256];
+    std::strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", tm);
+    xlog::info("Current UTC time: %s", time_str);
 }
 
 void log_system_info()
