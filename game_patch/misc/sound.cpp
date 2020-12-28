@@ -524,7 +524,7 @@ void snd_update_ambient_sounds(const rf::Vector3& camera_pos)
                 }
                 // Update volume even for non-looping sounds unlike original code
                 float volume = rf::snd_pc_calc_volume_3d(ambient_snd.handle, ambient_snd.pos, ambient_snd.volume);
-                float vol_scale = volume * rf::snd_group_volume[rf::SOUND_GROUP_EFFECTS];
+                float vol_scale = volume * g_game_config.level_sound_volume * rf::snd_group_volume[rf::SOUND_GROUP_EFFECTS];
                 rf::snd_pc_set_volume(ambient_snd.sig, vol_scale);
             }
             else if (ambient_snd.sig >= 0 && !in_range) {

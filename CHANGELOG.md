@@ -17,6 +17,7 @@ Version 1.6.0 (not released yet)
 - Fix buffer overflow occuring when using Play Level command in level editor if level path and/or Dash Faction path is
   long
 - Improve performance of sound function `ds_get_channel`
+- Fix `level_sounds` command not affecting ambient sounds (1.6.0-beta regression)
 - Other stability fixes
 
 Version 1.6.0-beta (released 2020-12-12)
