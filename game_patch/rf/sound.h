@@ -58,8 +58,8 @@ namespace rf
 
     struct DsChannel
     {
-        IDirectSoundBuffer* sound_buffer;
-        IDirectSound3DBuffer* sound_3d_buffer;
+        IDirectSoundBuffer* pdsb;
+        IDirectSound3DBuffer* pds3db;
         int buf_id;
         int read_timer_id;
         int sig;
@@ -131,9 +131,9 @@ namespace rf
     static auto snd_change_3d = addr_as_ref<void(int instance_handle, const Vector3& pos, const Vector3& vel, float vol_scale)>(0x005058C0);
     static auto snd_calculate_2d_from_3d_info = addr_as_ref<void(int handle, const Vector3& pos, float* pan, float* volume, float vol_multiplier)>(0x00505740);
 
-    static auto snd_pc_play = addr_as_ref<int(int handle, float vol_scale, float pan, int unused, bool is_final_volume)>(0x005439D0);
+    static auto snd_pc_play = addr_as_ref<int(int handle, float vol_scale, float pan, float unused, bool is_final_volume)>(0x005439D0);
     static auto snd_pc_play_looping = addr_as_ref<int(int handle, float volume, float pan, float unused, bool skip_volume_scalling)>(0x00543A80);
-    static auto snd_pc_play_3d = addr_as_ref<int(int handle, const Vector3& pos, bool looping, int unused)>(0x00544180);
+    static auto snd_pc_play_3d = addr_as_ref<int(int handle, const Vector3& pos, bool looping, float unused)>(0x00544180);
     static auto snd_pc_stop = addr_as_ref<char(int sig)>(0x005442B0);
     static auto snd_pc_is_playing = addr_as_ref<bool(int sig)>(0x00544360);
     static auto snd_pc_set_volume = addr_as_ref<void(int sig, float volume)>(0x00544390);
@@ -147,7 +147,7 @@ namespace rf
     static auto snd_ds_channel_is_playing = addr_as_ref<bool(int channel)>(0x005224D0);
     static auto snd_ds_channel_is_paused = addr_as_ref<bool(int channel)>(0x00522500);
     static auto snd_ds_get_channel = addr_as_ref<int(int sig)>(0x00522F30);
-    static auto snd_ds_estimate_duration = addr_as_ref<float(int snd_buf_id)>(0x00523170);
+    static auto snd_ds_estimate_duration = addr_as_ref<float(int sid)>(0x00523170);
 
 
     static auto snd_ds3d_update_buffer = addr_as_ref<int(int chnl, float min_dist, float max_dist, const Vector3& pos, const Vector3& vel)>(0x00562DB0);

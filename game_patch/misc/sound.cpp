@@ -331,9 +331,9 @@ ConsoleCommand2 playing_sounds_cmd{
     []() {
         for (unsigned chnl_num = 0; chnl_num < std::size(rf::ds_channels); ++chnl_num) {
             auto& chnl = rf::ds_channels[chnl_num];
-            if (chnl.sound_buffer) {
+            if (chnl.pdsb) {
                 DWORD status;
-                chnl.sound_buffer->GetStatus(&status);
+                chnl.pdsb->GetStatus(&status);
                 auto& buf = rf::ds_buffers[chnl.buf_id];
                 rf::console_printf("Channel %d: filename %s flags %x status %lx", chnl_num, buf.filename, chnl.flags, status);
             }
@@ -376,7 +376,7 @@ FunHook<int(int, int, float, float)> snd_play_hook{
             sig = rf::snd_pc_play_looping(handle, vol_scale, pan, 0.0f, false);
         }
         else {
-            sig = rf::snd_pc_play(handle, vol_scale, pan, 0, false);
+            sig = rf::snd_pc_play(handle, vol_scale, pan, 0.0f, false);
         }
         xlog::trace("snd_play handle %d vol %.2f sig %d", handle, vol_scale, sig);
         if (sig < 0) {
@@ -419,7 +419,7 @@ FunHook<int(int, const rf::Vector3&, float, const rf::Vector3&, int)> snd_play_3
         auto& instance = rf::sound_instances[instance_index];
         int sig;
         if (rf::ds3d_enabled) {
-            sig = rf::snd_pc_play_3d(handle, pos, looping, 0);
+            sig = rf::snd_pc_play_3d(handle, pos, looping, 0.0f);
         }
         else if (looping) {
             sig = rf::snd_pc_play_looping(handle, vol_scale, pan, 0.0f, true);
@@ -486,6 +486,8 @@ CodeInjection snd_pc_play_3d_injection{
     0x0054423A,
     [](auto& regs) {
         auto stack_frame = regs.esp + 0x20;
+        // use a calculated volume scale that takes distance into account because we do not use
+        // Direct Sound 3D distance attenuation model
         auto& volume = addr_as_ref<float>(stack_frame + 0x8);
         // strict aliasing compatible type punning
         std::memcpy(&regs.edx, &volume, sizeof(volume));
