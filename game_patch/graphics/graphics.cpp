@@ -124,6 +124,14 @@ CodeInjection gr_d3d_init_error_patch{
             xlog::error("No T&L hardware support!");
         }
 
+        xlog::info("Supported adapter modes:");
+        unsigned num_modes = rf::gr_d3d->GetAdapterModeCount(rf::gr_adapter_idx);
+        D3DDISPLAYMODE mode;
+        for (unsigned i = 0; i < num_modes; ++i) {
+            rf::gr_d3d->EnumAdapterModes(rf::gr_adapter_idx, i, &mode);
+            xlog::info("- %ux%u (format %u refresh rate %u)", mode.Width, mode.Height, mode.Format, mode.RefreshRate);
+        }
+
         ShowWindow(rf::main_wnd, SW_HIDE);
         MessageBoxA(nullptr, text.c_str(), "Error!", MB_OK | MB_ICONERROR | MB_SETFOREGROUND | MB_TASKMODAL);
         ExitProcess(-1);
@@ -163,16 +171,15 @@ CodeInjection update_pp_hook{
             xlog::info("d3d8to9 detected");
         }
 
-        auto& format = addr_as_ref<D3DFORMAT>(0x005A135C);
-        xlog::info("D3D Format: %u", format);
-
-        xlog::info("D3D DevCaps: %lX", rf::gr_d3d_device_caps.DevCaps);
+        xlog::info("Back Buffer format: %u", rf::gr_d3d_pp.BackBufferFormat);
+        xlog::info("Back Buffer dimensions: %ux%u", rf::gr_d3d_pp.BackBufferWidth, rf::gr_d3d_pp.BackBufferHeight);
+        xlog::info("D3D Device Caps: %lX", rf::gr_d3d_device_caps.DevCaps);
         xlog::info("Max texture size: %ldx%ld", rf::gr_d3d_device_caps.MaxTextureWidth, rf::gr_d3d_device_caps.MaxTextureHeight);
 
-        if (g_game_config.msaa && format > 0) {
+        if (g_game_config.msaa) {
             // Make sure selected MSAA mode is available
             auto multi_sample_type = static_cast<D3DMULTISAMPLE_TYPE>(g_game_config.msaa.value());
-            HRESULT hr = rf::gr_d3d->CheckDeviceMultiSampleType(rf::gr_adapter_idx, D3DDEVTYPE_HAL, format,
+            HRESULT hr = rf::gr_d3d->CheckDeviceMultiSampleType(rf::gr_adapter_idx, D3DDEVTYPE_HAL, rf::gr_d3d_pp.BackBufferFormat,
                                                                 rf::gr_d3d_pp.Windowed, multi_sample_type);
             if (SUCCEEDED(hr)) {
                 xlog::info("Enabling Anti-Aliasing (%ux MSAA)...", g_game_config.msaa.value());
@@ -197,7 +204,7 @@ CodeInjection update_pp_hook{
         use_glorad_detail_map = true;
 
         // Override depth format to avoid card specific hackfixes that makes it different on Nvidia and AMD
-        rf::gr_d3d_pp.AutoDepthStencilFormat = determine_depth_buffer_format(format);
+        rf::gr_d3d_pp.AutoDepthStencilFormat = determine_depth_buffer_format(rf::gr_d3d_pp.BackBufferFormat);
 
         init_supported_texture_formats();
     },

@@ -305,8 +305,8 @@ CodeInjection snd_ds_init_device_leave_injection{
     []() {
         auto& ds_use_ds3d = addr_as_ref<bool>(0x01AED340);
         auto& ds_use_eax = addr_as_ref<bool>(0x01AD751C);
-        xlog::info("DS3D: %d", ds_use_ds3d);
-        xlog::info("EAX: %d", ds_use_eax);
+        xlog::info("DirectSound3D: %d", ds_use_ds3d);
+        xlog::info("EAX sound: %d", ds_use_eax);
     },
 };
 
