@@ -18,6 +18,8 @@ Version 1.6.0 (not released yet)
   long
 - Improve performance of sound function `ds_get_channel`
 - Fix `level_sounds` command not affecting ambient sounds (1.6.0-beta regression)
+- Refactor sounds allocation to avoid frequent allocation and freeing of DirectSound buffers when channels pool is
+  full - should improve performance
 - Other stability fixes
 
 Version 1.6.0-beta (released 2020-12-12)
