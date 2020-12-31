@@ -47,6 +47,7 @@ Client commands:
 * `levelsounds` - sets volume scale for level ambient sounds
 * `swap_assault_rifle_controls` - swaps primary and alternate fire controls for Assault Rifle weapon
 * `show_enemy_bullets` - toggles visibility of enemy bullets in multiplayer
+* `kill_messages` - toggles printing of kill messages in the chatbox and the game console
 
 Server commands:
 * `unban_last` - unbans last banned player

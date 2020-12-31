@@ -1,13 +1,16 @@
+#include <common/utils/list-utils.h>
+#include <patch_common/FunHook.h>
+#include <patch_common/ShortTypes.h>
+#include <patch_common/AsmWriter.h>
 #include "multi.h"
+#include "../console/console.h"
 #include "../rf/player.h"
 #include "../rf/entity.h"
 #include "../rf/localize.h"
 #include "../rf/multi.h"
 #include "../rf/weapon.h"
-#include <common/utils/list-utils.h>
-#include <patch_common/FunHook.h>
-#include <patch_common/ShortTypes.h>
-#include <patch_common/AsmWriter.h>
+
+bool kill_messages = true;
 
 void player_fpgun_on_player_death(rf::Player* pp);
 
@@ -34,7 +37,7 @@ static const char* null_to_empty(const char* str)
     return str ? str : "";
 }
 
-void on_player_kill(rf::Player* killed_player, rf::Player* killer_player)
+void print_kill_message(rf::Player* killed_player, rf::Player* killer_player)
 {
     rf::String msg;
     const char* mui_msg;
@@ -99,6 +102,13 @@ void on_player_kill(rf::Player* killed_player, rf::Player* killer_player)
 
     rf::String prefix;
     rf::multi_chat_print(msg, color_id, prefix);
+}
+
+void on_player_kill(rf::Player* killed_player, rf::Player* killer_player)
+{
+    if (kill_messages) {
+        print_kill_message(killed_player, killer_player);
+    }
 
     auto killed_stats = reinterpret_cast<PlayerStatsNew*>(killed_player->stats);
     ++killed_stats->num_deaths;
@@ -125,6 +135,14 @@ FunHook<void(rf::Entity*)> entity_on_death_hook{
     },
 };
 
+ConsoleCommand2 kill_messages_cmd{
+    "kill_messages",
+    []() {
+        kill_messages = !kill_messages;
+    },
+    "Toggles printing of kill messages in the chatbox and the game console",
+};
+
 void multi_kill_do_patch()
 {
     // Player kill handling
@@ -142,4 +160,7 @@ void multi_kill_do_patch()
 
     // Reset fpgun animation when player dies
     entity_on_death_hook.install();
+
+    // Allow disabling kill messages
+    kill_messages_cmd.register_cmd();
 }

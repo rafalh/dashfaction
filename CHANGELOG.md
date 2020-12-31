@@ -20,6 +20,7 @@ Version 1.6.0 (not released yet)
 - Fix `level_sounds` command not affecting ambient sounds (1.6.0-beta regression)
 - Refactor sounds allocation to avoid frequent allocation and freeing of DirectSound buffers when channels pool is
   full - should improve performance
+- Add `kill_messages` command that allows to disable printing information about kills in the chatbox and the game console
 - Other stability fixes
 
 Version 1.6.0-beta (released 2020-12-12)

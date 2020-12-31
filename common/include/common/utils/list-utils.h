@@ -1,5 +1,7 @@
 #pragma once
 
+#include <iterator>
+
 template<typename T, T* T::*NEXT_PTR = &T::next>
 class SinglyLinkedList
 {
