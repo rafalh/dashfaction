@@ -50,3 +50,6 @@ else()
 endif()
 
 target_link_libraries(d3d8to9 d3d9)
+
+# Added
+setup_debug_info(d3d8to9)
