@@ -22,6 +22,7 @@ Version 1.6.0 (not released yet)
   full - should improve performance
 - Add `kill_messages` command that allows to disable printing information about kills in the chatbox and the game console
 - Fix hud msg never disappearing in spectate mode
+- Fix Brush Cliping Tool window causing speed reduction for level editor
 - Other stability fixes
 
 Version 1.6.0-beta (released 2020-12-12)

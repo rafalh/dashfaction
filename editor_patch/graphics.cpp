@@ -77,18 +77,11 @@ CallHook<void()> frametime_calculate_hook{
             Sleep(1000);
         }
         else {
-            // Check if editor is a foreground window or an owner of foreground window
-            bool found = false;
+            // Check if editor is the foreground window
             auto foreground_wnd = GetForegroundWindow();
-            while (foreground_wnd) {
-                if (hwnd == foreground_wnd) {
-                    found = true;
-                    break;
-                }
-                foreground_wnd = GetParent(foreground_wnd);
-            }
+            bool editor_is_in_foreground = GetWindowThreadProcessId(foreground_wnd, nullptr) == GetCurrentThreadId();
             // when editor is in background limit to 4 FPS
-            if (!found) {
+            if (!editor_is_in_foreground) {
                 Sleep(250);
             }
         }
