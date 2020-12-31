@@ -170,6 +170,9 @@ static int ds_get_free_channel_new(int sid, float volume, bool is_looping)
             xlog::trace("sound %d channel priority 3", sid);
             max_channels /= 2;
         }
+        else {
+            xlog::trace("sound %d channel priority 4", sid);
+        }
     }
     for (int i = 0; i < max_channels; ++i) {
         auto& channel = rf::ds_channels[i];
@@ -186,6 +189,7 @@ static int ds_get_free_channel_new(int sid, float volume, bool is_looping)
             return i;
         }
     }
+    xlog::trace("No free channel for sound %d", sid);
     return -1;
 }
 

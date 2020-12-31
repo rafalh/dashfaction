@@ -2,6 +2,7 @@
 #include "../rf/player.h"
 #include "../rf/entity.h"
 #include "../rf/multi.h"
+#include "../rf/sound.h"
 #include "../console/console.h"
 #include "../main.h"
 #include "../multi/multi.h"
@@ -53,6 +54,15 @@ FunHook<rf::Entity*(rf::Player*, int, const rf::Vector3*, const rf::Matrix3*, in
         auto ep = player_create_entity_hook.call_target(pp, entity_type, pos, orient, multi_entity_index);
         if (ep) {
             spectate_mode_player_create_entity_post(pp, ep);
+        }
+        if (pp == rf::local_player) {
+            // Update sound listener position so respawn sound is not classified as too quiet to play
+            rf::Vector3 cam_pos;
+            rf::Matrix3 cam_orient;
+            rf::Vector3 zero{0.0f, 0.0f, 0.0f};
+            rf::camera_get_pos(&cam_pos, pp->cam);
+            rf::camera_get_orient(&cam_orient, pp->cam);
+            rf::snd_update_sounds(cam_pos, zero, cam_orient);
         }
         return ep;
     },
