@@ -3,6 +3,9 @@ DashFaction Changelog
 
 Version 1.6.0 (not released yet)
 --------------------------------
+
+Version 1.6.0-rc1 (released 2020-12-31)
+---------------------------------------
 - Fix rocket launcher IR scanner in spectate mode (regression)
 - Fix 3D sounds having wrong volume for a very short time (regression)
 - Disable unsupported color depths in launcher options
