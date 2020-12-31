@@ -1,3 +1,6 @@
+#include <algorithm>
+#include <common/utils/list-utils.h>
+#include <patch_common/FunHook.h>
 #include "scoreboard.h"
 #include "../multi/multi.h"
 #include "../rf/graphics.h"
@@ -7,13 +10,8 @@
 #include "../rf/gameseq.h"
 #include "../rf/hud.h"
 #include "../rf/level.h"
-#include <common/utils/list-utils.h>
 #include "../main.h"
-#include "spectate_mode.h"
 #include "hud_internal.h"
-#include <patch_common/FunHook.h>
-#include <patch_common/AsmWriter.h>
-#include <algorithm>
 
 #define DEBUG_SCOREBOARD 0
 
@@ -343,19 +341,8 @@ void draw_scoreboard_internal_new(bool draw)
 
 FunHook<void(bool)> draw_scoreboard_internal_hook{0x00470880, draw_scoreboard_internal_new};
 
-void hud_render_00437BC0()
+void scoreboard_maybe_render(bool show_scoreboard)
 {
-#if DEBUG_SCOREBOARD
-    rf::draw_scoreboard(true);
-#else
-    if (!rf::is_multi || !rf::local_player)
-        return;
-
-    bool scoreboard_control_active = rf::control_config_check_pressed(&rf::local_player->settings.controls, rf::CA_MP_STATS, 0);
-    bool is_player_dead = rf::player_is_dead(rf::local_player) || rf::player_is_dying(rf::local_player);
-    bool limbo = rf::gameseq_get_state() == rf::GS_MULTI_LIMBO;
-    bool show_scoreboard = scoreboard_control_active || (!spectate_mode_is_active() && is_player_dead) || limbo;
-
     if (g_game_config.scoreboard_anim) {
         if (!g_scoreboard_visible && show_scoreboard) {
             g_enter_anim = true;
@@ -369,20 +356,18 @@ void hud_render_00437BC0()
             g_anim_ticks = rf::timer_get(1000);
         }
     }
-    else
+    else {
         g_scoreboard_visible = show_scoreboard;
+    }
 
-    if (g_scoreboard_visible)
+    if (g_scoreboard_visible) {
         rf::draw_scoreboard(true);
-#endif
+    }
 }
 
 void init_scoreboard()
 {
     draw_scoreboard_internal_hook.install();
-
-    AsmWriter(0x00437BC0).call(hud_render_00437BC0).jmp(0x00437C24);
-    AsmWriter(0x00437D40).jmp(0x00437D5C);
 }
 
 void set_scoreboard_hidden(bool hidden)

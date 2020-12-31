@@ -1,3 +1,8 @@
+#include <cassert>
+#include <patch_common/FunHook.h>
+#include <patch_common/CallHook.h>
+#include <patch_common/AsmWriter.h>
+#include <xlog/xlog.h>
 #include "hud.h"
 #include "scoreboard.h"
 #include "hud_internal.h"
@@ -10,10 +15,8 @@
 #include "../rf/entity.h"
 #include "../rf/player.h"
 #include "../rf/weapon.h"
-#include <patch_common/FunHook.h>
-#include <patch_common/CallHook.h>
-#include <xlog/xlog.h>
-#include <cassert>
+#include "../rf/gameseq.h"
+#include "spectate_mode.h"
 
 float g_hud_ammo_scale = 1.0f;
 int g_target_player_name_font = -1;
@@ -488,6 +491,19 @@ CallHook hud_render_status_msg_gr_get_font_height_hook{
     },
 };
 
+void hud_render_00437BC0()
+{
+    if (!rf::is_multi || !rf::local_player)
+        return;
+
+    bool scoreboard_control_pressed = rf::control_config_check_pressed(&rf::local_player->settings.controls, rf::CA_MP_STATS, 0);
+    bool is_player_dead = rf::player_is_dead(rf::local_player) || rf::player_is_dying(rf::local_player);
+    bool limbo = rf::gameseq_get_state() == rf::GS_MULTI_LIMBO;
+    bool show_scoreboard = scoreboard_control_pressed || (!spectate_mode_is_active() && is_player_dead) || limbo;
+
+    scoreboard_maybe_render(show_scoreboard);
+}
+
 void apply_hud_patches()
 {
     // Fix HUD on not supported resolutions
@@ -520,6 +536,10 @@ void apply_hud_patches()
 
     write_mem_ptr(0x004780D2 + 1, &g_target_player_name_font);
     write_mem_ptr(0x004780FC + 2, &g_target_player_name_font);
+
+    // Change scoreboard rendering logic
+    AsmWriter(0x00437BC0).call(hud_render_00437BC0).jmp(0x00437C24);
+    AsmWriter(0x00437D40).jmp(0x00437D5C);
 
     // Patches from other files
     hud_status_apply_patches();
