@@ -295,7 +295,7 @@ int debug_print_hook(char* buf, const char *fmt, ...) {
     va_start(vl, fmt);
     int ret = vsprintf(buf, fmt, vl);
     va_end(vl);
-    xlog::error("%s", buf);
+    xlog::warn("%s", buf);
     return ret;
 }
 

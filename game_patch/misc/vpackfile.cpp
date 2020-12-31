@@ -177,7 +177,7 @@ static int vpackfile_add_new(const char* filename, const char* dir)
         full_path = string_format("%s%s%s", rf::root_path, dir ? dir : "", filename);
 
     if (!filename || strlen(filename) > 0x1F || full_path.size() > 0x7F) {
-        xlog::error("VPackfile name or path too long: %s", full_path.c_str());
+        xlog::error("Packfile name or path too long: %s", full_path.c_str());
         return 0;
     }
 
@@ -518,7 +518,7 @@ static void vpackfile_init_new()
     force_file_from_packfile("strings.tbl", "ui.vpp");
 
     xlog::info("Packfiles initialization took %lums", GetTickCount() - start_ticks);
-    xlog::info("VPackfile name collisions: %d", g_num_name_collisions);
+    xlog::info("Packfile name collisions: %d", g_num_name_collisions);
 
     if (g_is_modded_game)
         xlog::info("Modded game detected!");

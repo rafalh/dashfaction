@@ -669,7 +669,7 @@ FunHook<void(int*, void*, int, int, int, rf::GrMode, int)> gr_d3d_queue_triangle
     [](int *list_idx, void *vertices, int num_vertices, int bm0, int bm1, rf::GrMode state, int pass_id) {
         // Fix glass_house level having faces that use MT state but don't have any lightmap
         if (bm1 == -1) {
-            WARN_ONCE("Prevented rendering of an unlit face with multi-texturing render state");
+            INFO_ONCE("Prevented rendering of an unlit face with multi-texturing render state");
             constexpr int texture_source_mask = 0x1F;
             int tex_src = state.value & texture_source_mask;
             if (tex_src == rf::TEXTURE_SOURCE_MT_WRAP || tex_src == rf::TEXTURE_SOURCE_MT_WRAP_M2X) {
