@@ -18,7 +18,7 @@
 float g_hud_ammo_scale = 1.0f;
 int g_target_player_name_font = -1;
 
-static int HudTransformValue(int val, int old_max, int new_max)
+static int hud_transform_value(int val, int old_max, int new_max)
 {
     if (val < old_max / 3) {
         return val;
@@ -31,7 +31,7 @@ static int HudTransformValue(int val, int old_max, int new_max)
     }
 }
 
-static int HudScaleValue(int val, int max, float scale)
+static int hud_scale_value(int val, int max, float scale)
 {
     if (val < max / 3) {
         return static_cast<int>(std::round(val * scale));
@@ -47,8 +47,8 @@ static int HudScaleValue(int val, int max, float scale)
 rf::HudPoint hud_scale_coords(rf::HudPoint pt, float scale)
 {
     return {
-        HudScaleValue(pt.x, rf::gr_screen_width(), scale),
-        HudScaleValue(pt.y, rf::gr_screen_height(), scale),
+        hud_scale_value(pt.x, rf::gr_screen_width(), scale),
+        hud_scale_value(pt.y, rf::gr_screen_height(), scale),
     };
 }
 
@@ -72,12 +72,12 @@ ConsoleCommand2 hud_cmd{
     "Show and hide HUD",
 };
 
-void HudSetupPositions(int width)
+void hud_setup_positions(int width)
 {
     int height = rf::gr_screen_height();
     rf::HudPoint* pos_data = nullptr;
 
-    xlog::trace("HudSetupPositionsHook(%d)", width);
+    xlog::trace("hud_setup_positionsHook(%d)", width);
 
     switch (width) {
     case 640:
@@ -122,19 +122,19 @@ void HudSetupPositions(int width)
         }
     }
 }
-FunHook HudSetupPositions_hook{0x004377C0, HudSetupPositions};
+FunHook hud_setup_positions_hook{0x004377C0, hud_setup_positions};
 
-CallHook<void(int, int, int, rf::GrMode)> HudRenderAmmo_GrBitmap_hook{
+CallHook<void(int, int, int, rf::GrMode)> hud_render_ammo_gr_bitmap_hook{
     {
-        // HudRenderAmmoClip
+        // hud_render_ammo_clip
         0x0043A5E9u,
         0x0043A637u,
         0x0043A680u,
-        // HudRenderAmmoPower
+        // hud_render_ammo_power
         0x0043A988u,
         0x0043A9DDu,
         0x0043AA24u,
-        // HudRenderAmmoNoClip
+        // hud_render_ammo_no_clip
         0x0043AE80u,
         0x0043AEC3u,
         0x0043AF0Au,
@@ -144,15 +144,15 @@ CallHook<void(int, int, int, rf::GrMode)> HudRenderAmmo_GrBitmap_hook{
     },
 };
 
-FunHook<void(rf::Entity*, int, int, bool)> HudRenderAmmo_hook{
+FunHook<void(rf::Entity*, int, int, bool)> hud_render_ammo_hook{
     0x0043A510,
     [](rf::Entity *entity, int weapon_type, int offset_y, bool is_inactive) {
         offset_y = static_cast<int>(offset_y * g_hud_ammo_scale);
-        HudRenderAmmo_hook.call_target(entity, weapon_type, offset_y, is_inactive);
+        hud_render_ammo_hook.call_target(entity, weapon_type, offset_y, is_inactive);
     },
 };
 
-CallHook<void(int, int, int, rf::GrMode)> RenderReticle_GrBitmap_hook{
+CallHook<void(int, int, int, rf::GrMode)> render_reticle_gr_bitmap_hook{
     {
         0x0043A499,
         0x0043A4FE,
@@ -168,7 +168,7 @@ CallHook<void(int, int, int, rf::GrMode)> RenderReticle_GrBitmap_hook{
     },
 };
 
-CallHook<void(int, int, int, rf::GrMode)> HudRenderPowerUps_GrBitmap_hook{
+CallHook<void(int, int, int, rf::GrMode)> hud_render_power_ups_gr_bitmap_hook{
     {
         0x0047FF2F,
         0x0047FF96,
@@ -176,23 +176,23 @@ CallHook<void(int, int, int, rf::GrMode)> HudRenderPowerUps_GrBitmap_hook{
     },
     [](int bm_handle, int x, int y, rf::GrMode mode) {
         float scale = g_game_config.big_hud ? 2.0f : 1.0f;
-        x = HudTransformValue(x, 640, rf::gr_clip_width());
-        x = HudScaleValue(x, rf::gr_clip_width(), scale);
-        y = HudScaleValue(y, rf::gr_clip_height(), scale);
+        x = hud_transform_value(x, 640, rf::gr_clip_width());
+        x = hud_scale_value(x, rf::gr_clip_width(), scale);
+        y = hud_scale_value(y, rf::gr_clip_height(), scale);
         hud_scaled_bitmap(bm_handle, x, y, scale, mode);
     },
 };
 
-FunHook<void()> RenderLevelInfo_hook{
+FunHook<void()> render_level_info_hook{
     0x00477180,
     []() {
         run_with_default_font(hud_get_default_font(), [&]() {
-            RenderLevelInfo_hook.call_target();
+            render_level_info_hook.call_target();
         });
     },
 };
 
-void SetBigAmmo(bool is_big)
+void set_big_ammo(bool is_big)
 {
     rf::HudItem ammo_hud_items[] = {
         rf::hud_ammo_bar,
@@ -217,13 +217,13 @@ void SetBigAmmo(bool is_big)
     rf::hud_ammo_font = rf::gr_load_font(is_big ? "biggerfont.vf" : "bigfont.vf");
 }
 
-void SetBigCountdownCounter(bool is_big)
+void set_big_countdown_counter(bool is_big)
 {
     float scale = is_big ? 2.0f : 1.0f;
     rf::hud_points[rf::hud_countdown_timer] = hud_scale_coords(rf::hud_points[rf::hud_countdown_timer], scale);
 }
 
-void SetBigHud(bool is_big)
+void set_big_hud(bool is_big)
 {
     hud_status_set_big(is_big);
     multi_hud_chat_set_big(is_big);
@@ -234,9 +234,9 @@ void SetBigHud(bool is_big)
     rf::hud_text_font_num = hud_get_default_font();
     g_target_player_name_font = hud_get_default_font();
 
-    HudSetupPositions(rf::gr_screen_width());
-    SetBigAmmo(is_big);
-    SetBigCountdownCounter(is_big);
+    hud_setup_positions(rf::gr_screen_width());
+    set_big_ammo(is_big);
+    set_big_countdown_counter(is_big);
 
     // TODO: Message Log - Note: it remembers text height in save files so method of recalculation is needed
     //write_mem<i8>(0x004553DB + 1, is_big ? 127 : 70);
@@ -246,7 +246,7 @@ ConsoleCommand2 bighud_cmd{
     "bighud",
     []() {
         g_game_config.big_hud = !g_game_config.big_hud;
-        SetBigHud(g_game_config.big_hud);
+        set_big_hud(g_game_config.big_hud);
         g_game_config.save();
         rf::console_printf("Big HUD is %s", g_game_config.big_hud ? "enabled" : "disabled");
     },
@@ -285,7 +285,7 @@ struct ScaledBitmapInfo {
     float scale = 2.0f;
 };
 
-const ScaledBitmapInfo& HudGetScaledBitmapInfo(int bmh)
+const ScaledBitmapInfo& hud_get_scaled_bitmap_info(int bmh)
 {
     static std::unordered_map<int, ScaledBitmapInfo> scaled_bm_cache;
     // Use bitmap with "_1" suffix instead of "_0" if it exists
@@ -329,13 +329,13 @@ const ScaledBitmapInfo& HudGetScaledBitmapInfo(int bmh)
 
 void hud_preload_scaled_bitmap(int bmh)
 {
-    HudGetScaledBitmapInfo(bmh);
+    hud_get_scaled_bitmap_info(bmh);
 }
 
 void hud_scaled_bitmap(int bmh, int x, int y, float scale, rf::GrMode mode)
 {
     if (scale > 1.0f) {
-        const auto& scaled_bm_info = HudGetScaledBitmapInfo(bmh);
+        const auto& scaled_bm_info = hud_get_scaled_bitmap_info(bmh);
         if (scaled_bm_info.bmh != -1) {
             bmh = scaled_bm_info.bmh;
             scale /= scaled_bm_info.scale;
@@ -469,18 +469,18 @@ CallHook<void(int, int, int, int, int, int, int, int, int, char, char, int)> gr_
     },
 };
 
-FunHook<void()> HudInit_hook{
+FunHook<void()> hud_init_hook{
     0x00437AB0,
     []() {
-        HudInit_hook.call_target();
+        hud_init_hook.call_target();
         // Init big HUD
         if (!rf::is_dedicated_server) {
-            SetBigHud(g_game_config.big_hud);
+            set_big_hud(g_game_config.big_hud);
         }
     },
 };
 
-CallHook HudRenderStatusMsg_GrGetFontHeight_hook{
+CallHook hud_render_status_msg_gr_get_font_height_hook{
     0x004382DB,
     []([[ maybe_unused ]] int font_no) {
         // Fix wrong font number being used causing line spacing to be invalid
@@ -491,14 +491,14 @@ CallHook HudRenderStatusMsg_GrGetFontHeight_hook{
 void apply_hud_patches()
 {
     // Fix HUD on not supported resolutions
-    HudSetupPositions_hook.install();
+    hud_setup_positions_hook.install();
 
     // Command for hidding the HUD
     hud_render_for_multi_hook.install();
     hud_cmd.register_cmd();
 
     // Add some init code
-    HudInit_hook.install();
+    hud_init_hook.install();
 
     // Other commands
     bighud_cmd.register_cmd();
@@ -511,12 +511,12 @@ void apply_hud_patches()
     gr_bitmap_stretched_message_log_hook.install();
 
     // Big HUD support
-    HudRenderAmmo_GrBitmap_hook.install();
-    HudRenderAmmo_hook.install();
-    RenderReticle_GrBitmap_hook.install();
-    HudRenderStatusMsg_GrGetFontHeight_hook.install();
-    HudRenderPowerUps_GrBitmap_hook.install();
-    RenderLevelInfo_hook.install();
+    hud_render_ammo_gr_bitmap_hook.install();
+    hud_render_ammo_hook.install();
+    render_reticle_gr_bitmap_hook.install();
+    hud_render_status_msg_gr_get_font_height_hook.install();
+    hud_render_power_ups_gr_bitmap_hook.install();
+    render_level_info_hook.install();
 
     write_mem_ptr(0x004780D2 + 1, &g_target_player_name_font);
     write_mem_ptr(0x004780FC + 2, &g_target_player_name_font);

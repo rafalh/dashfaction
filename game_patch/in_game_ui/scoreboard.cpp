@@ -341,7 +341,7 @@ void draw_scoreboard_internal_new(bool draw)
     }
 }
 
-FunHook<void(bool)> DrawScoreboardInternal_hook{0x00470880, draw_scoreboard_internal_new};
+FunHook<void(bool)> draw_scoreboard_internal_hook{0x00470880, draw_scoreboard_internal_new};
 
 void hud_render_00437BC0()
 {
@@ -379,7 +379,7 @@ void hud_render_00437BC0()
 
 void init_scoreboard()
 {
-    DrawScoreboardInternal_hook.install();
+    draw_scoreboard_internal_hook.install();
 
     AsmWriter(0x00437BC0).call(hud_render_00437BC0).jmp(0x00437C24);
     AsmWriter(0x00437D40).jmp(0x00437D5C);

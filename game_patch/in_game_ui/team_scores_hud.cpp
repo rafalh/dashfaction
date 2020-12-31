@@ -19,7 +19,7 @@ namespace rf
     auto& hud_flag_gr_mode = addr_as_ref<rf::GrMode>(0x01775B30);
 }
 
-void HudRenderTeamScores()
+void hud_render_team_scores()
 {
     int clip_h = rf::gr_clip_height();
     rf::gr_set_color_rgba(0, 0, 0, 150);
@@ -141,7 +141,7 @@ void HudRenderTeamScores()
 
 void hud_team_scores_apply_patches()
 {
-    AsmWriter{0x00477790}.jmp(HudRenderTeamScores);
+    AsmWriter{0x00477790}.jmp(hud_render_team_scores);
 }
 
 void hud_team_scores_set_big(bool is_big)

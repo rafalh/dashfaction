@@ -13,7 +13,7 @@ bool g_big_hud_persona = false;
 
 #define HUD_PERSONA_TEST 0
 
-void HudRenderPersonaMsg(rf::Player* player)
+void hud_render_persona_msg(rf::Player* player)
 {
 #if HUD_PERSONA_TEST
     rf::hud_persona_alpha = 1.0f;
@@ -125,7 +125,7 @@ void HudRenderPersonaMsg(rf::Player* player)
 
 void hud_persona_msg_apply_patches()
 {
-    AsmWriter{0x00439610}.jmp(HudRenderPersonaMsg);
+    AsmWriter{0x00439610}.jmp(hud_render_persona_msg);
 }
 
 void hud_persona_msg_set_big(bool is_big)

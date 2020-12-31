@@ -11,7 +11,7 @@
 
 bool g_big_weapon_cycle_hud = false;
 
-void RenderSelectWeaponGui()
+void render_select_weapon_gui()
 {
     if (!rf::local_player) {
         return;
@@ -152,11 +152,11 @@ void RenderSelectWeaponGui()
     rf::gr_string_aligned(rf::GR_ALIGN_CENTER, center_x, weapon_name_y, display_name, font_num);
 }
 
-FunHook RenderSelectWeaponGui_hook{0x004A2CF0, RenderSelectWeaponGui};
+FunHook render_select_weapon_gui_hook{0x004A2CF0, render_select_weapon_gui};
 
 void hud_weapon_cycle_apply_patches()
 {
-    RenderSelectWeaponGui_hook.install();
+    render_select_weapon_gui_hook.install();
 }
 
 void hud_weapon_cycle_set_big(bool is_big)

@@ -115,7 +115,7 @@ CodeInjection multi_chat_add_msg_max_width_injection{
     },
 };
 
-void ChatboxInputRender(rf::String::Pod label_pod, rf::String::Pod msg_pod)
+void chatbox_input_render(rf::String::Pod label_pod, rf::String::Pod msg_pod)
 {
     // Note: POD has to be used here because of differences between compilers ABI
     rf::String label{label_pod};
@@ -177,7 +177,7 @@ void ChatboxInputRender(rf::String::Pod label_pod, rf::String::Pod msg_pod)
     }
 }
 
-FunHook<void(rf::String::Pod, rf::String::Pod)> ChatboxInputRender_hook{0x00478CA0, ChatboxInputRender};
+FunHook<void(rf::String::Pod, rf::String::Pod)> chatbox_input_render_hook{0x00478CA0, chatbox_input_render};
 
 void multi_hud_chat_apply_patches()
 {
@@ -192,7 +192,7 @@ void multi_hud_chat_apply_patches()
 
     multi_chat_render_hook.install();
     multi_chat_add_msg_max_width_injection.install();
-    ChatboxInputRender_hook.install();
+    chatbox_input_render_hook.install();
 }
 
 void multi_hud_chat_set_big(bool is_big)
