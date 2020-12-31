@@ -3,10 +3,11 @@ cmake_minimum_required(VERSION 3.12)
 project(d3d8to9 CXX)
 
 set(SRCS
-  source/d3d8to9_base.cpp
+  source/d3d8.hpp
   source/d3d8to9.cpp
-  source/d3d8to9_device.cpp
   source/d3d8to9.hpp
+  source/d3d8to9_base.cpp
+  source/d3d8to9_device.cpp
   source/d3d8to9_index_buffer.cpp
   source/d3d8to9_surface.cpp
   source/d3d8to9_swap_chain.cpp
@@ -31,12 +32,12 @@ if(D3D8TO9_STATIC)
 else()
   add_library(d3d8to9 SHARED ${SRCS})
   set_target_properties(d3d8to9 PROPERTIES PREFIX "")
-  set_target_properties(d3d8to9 PROPERTIES OUTPUT_NAME "d3d8to9")
+  set_target_properties(d3d8to9 PROPERTIES OUTPUT_NAME "d3d8to9") # Modified so Wine loads a proper dll
 endif()
 
 target_compile_definitions(d3d8to9 PUBLIC
-  $<$<CONFIG:Debug>:D3D_DEBUG_INFO>
-  $<$<CONFIG:RelWithDebInfo>:D3D_DEBUG_INFO>
+  $<$<CONFIG:Debug>:D3D_DEBUG_INFO;_DEBUG>
+  $<$<CONFIG:RelWithDebInfo>:D3D_DEBUG_INFO;_DEBUG>
   $<$<CONFIG:Release>:D3D8TO9NOLOG>
   $<$<CONFIG:MinSizeRel>:D3D8TO9NOLOG>
 )
