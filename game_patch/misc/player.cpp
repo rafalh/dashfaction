@@ -207,6 +207,17 @@ CallHook player_is_dying_red_bars_hook{0x00432A5F, player_is_dying_and_not_spect
 CallHook player_is_dying_scoreboard_hook{0x00437C01, player_is_dying_and_not_spectating};
 CallHook player_is_dying_scoreboard2_hook{0x00437C36, player_is_dying_and_not_spectating};
 
+FunHook<void()> players_do_frame_hook{
+    0x004A26D0,
+    []() {
+        players_do_frame_hook.call_target();
+        if (spectate_mode_is_active()) {
+            static auto hud_do_frame = addr_as_ref<void(rf::Player*)>(0x00437B80);
+            hud_do_frame(spectate_mode_get_target());
+        }
+    },
+};
+
 void player_do_patch()
 {
     // general hooks
@@ -245,4 +256,7 @@ void player_do_patch()
     // Allow undefined mp_character in player_create_entity
     // Fixes Go_Undercover event not changing player 3rd person character
     AsmWriter(0x004A414F, 0x004A4153).nop();
+
+    // Fix hud msg never disappearing in spectate mode
+    players_do_frame_hook.install();
 }
