@@ -9,11 +9,13 @@
 #include "../rf/vmesh.h"
 #include "../rf/weapon.h"
 #include "../rf/entity.h"
+#include "../rf/multi.h"
 #include "../graphics/gr.h"
 #include "../main/main.h"
 #include "../os/console.h"
 
 static std::vector<int> g_fpgun_sounds;
+static rf::Player* g_fpgun_main_player = nullptr;
 
 static FunHook<void(rf::Player*)> player_fpgun_update_state_anim_hook{
     0x004AA3A0,
@@ -72,6 +74,47 @@ void player_fpgun_move_sounds(const rf::Vector3& camera_pos, const rf::Vector3& 
     }
 }
 
+void player_fpgun_reload_meshes(bool force)
+{
+    int fpgun_team = 999;
+    auto game_type = rf::multi_get_game_type();
+    if (game_type == rf::NG_TYPE_TEAMDM || game_type == rf::NG_TYPE_CTF) {
+        fpgun_team = g_fpgun_main_player->team;
+    }
+    auto& fpgun_meshes_current_mp_character = addr_as_ref<int>(0x005A0AEC);
+    auto& fpgun_meshes_current_team = addr_as_ref<int>(0x005A0AF0);
+    if (g_fpgun_main_player->settings.multi_character != fpgun_meshes_current_mp_character || fpgun_team != fpgun_meshes_current_team || force) {
+        rf::player_fpgun_delete_meshes();
+        rf::player_fpgun_load_meshes();
+        auto entity = rf::entity_from_handle(g_fpgun_main_player->entity_handle);
+        if (entity) {
+            auto weapon_type = entity->ai.current_primary_weapon;
+            rf::player_fpgun_set_state(g_fpgun_main_player, weapon_type);
+            rf::player_fpgun_page_in(g_fpgun_main_player, 0, weapon_type);
+        }
+    }
+}
+
+#ifndef NDEBUG
+
+ConsoleCommand2 reload_fpgun_cmd{
+    "d_reload_fpgun",
+    []() {
+        player_fpgun_reload_meshes(true);
+    },
+};
+
+#endif // NDEBUG
+
+void player_fpgun_set_player(rf::Player* pp)
+{
+    if (g_fpgun_main_player == pp) {
+        return;
+    }
+    g_fpgun_main_player = pp;
+    player_fpgun_reload_meshes(false);
+}
+
 void player_fpgun_on_player_death(rf::Player* pp)
 {
     // Reset fpgun animation when player dies
@@ -124,6 +167,15 @@ ConsoleCommand2 fpgun_fov_scale_cmd{
     },
 };
 
+CodeInjection player_fpgun_render_main_player_entity_injection{
+    0x004ABB59,
+    [](auto& regs) {
+        // return entity that is used to determine what powerups are active during fpgun rendering
+        regs.eax = rf::entity_from_handle(g_fpgun_main_player->entity_handle);
+        regs.eip = 0x004ABB5E;
+    },
+};
+
 void player_fpgun_do_patch()
 {
 #if SPECTATE_MODE_SHOW_WEAPON
@@ -137,6 +189,16 @@ void player_fpgun_do_patch()
     AsmWriter(0x004AA6E7).nop(6);               // player_fpgun_process
     AsmWriter(0x004AE384).nop(6);               // player_fpgun_page_in
     write_mem<u8>(0x004ACE2C, asm_opcodes::jmp_rel_short); // player_fpgun_get_zoom
+
+    write_mem_ptr(0x004AE569 + 2, &g_fpgun_main_player); // player_fpgun_load_meshes
+    write_mem_ptr(0x004AE5E3 + 2, &g_fpgun_main_player); // player_fpgun_load_meshes
+    write_mem_ptr(0x004AE647 + 2, &g_fpgun_main_player); // player_fpgun_load_meshes
+    write_mem_ptr(0x004AE6F1 + 2, &g_fpgun_main_player); // player_fpgun_load_meshes
+    write_mem_ptr(0x004AEB86 + 1, &g_fpgun_main_player); // player_fpgun_delete_meshes
+    write_mem_ptr(0x004A44BF + 2, &g_fpgun_main_player); // player_create_entity
+    write_mem_ptr(0x004A44F7 + 2, &g_fpgun_main_player); // player_create_entity
+
+    player_fpgun_render_main_player_entity_injection.install();
 
     player_fpgun_update_state_anim_hook.install();
 
@@ -185,4 +247,6 @@ void player_fpgun_do_patch()
     // Allow customizing fpgun fov
     player_fpgun_render_gr_setup_3d_hook.install();
     fpgun_fov_scale_cmd.register_cmd();
+
+    reload_fpgun_cmd.register_cmd();
 }

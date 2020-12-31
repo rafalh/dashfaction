@@ -25,6 +25,8 @@ static rf::Camera* g_old_target_camera = nullptr;
 static bool g_spectate_mode_enabled = false;
 static bool g_spawned_in_current_level = false;
 
+void player_fpgun_set_player(rf::Player* pp);
+
 static void set_camera_target(rf::Player* player)
 {
     // Based on function set_camera1_view
@@ -82,6 +84,8 @@ void multi_spectate_set_target_player(rf::Player* player)
 
 #if SPECTATE_MODE_SHOW_WEAPON
     player->flags |= 1 << 4;
+    player->fpgun_data.fpgun_weapon_type = -1;
+    player->weapon_mesh_handle = nullptr;
     rf::Entity* entity = rf::entity_from_handle(player->entity_handle);
     if (entity) {
         // make sure weapon mesh is loaded now
@@ -91,6 +95,7 @@ void multi_spectate_set_target_player(rf::Player* player)
         // Hide target player from camera
         entity->local_player = player;
     }
+    player_fpgun_set_player(player);
 #endif // SPECTATE_MODE_SHOW_WEAPON
 }
 
@@ -124,6 +129,9 @@ void multi_spectate_enter_freelook()
 
     rf::multi_kill_local_player();
     rf::camera_enter_freelook(rf::local_player->cam);
+
+    // auto& hud_msg_current_index = addr_as_ref<int>(0x00597104);
+    // hud_msg_current_index = -1;
 }
 
 bool multi_spectate_is_freelook()
@@ -324,6 +332,7 @@ void multi_spectate_appy_patch()
 void multi_spectate_after_full_game_init()
 {
     g_spectate_mode_target = rf::local_player;
+    player_fpgun_set_player(rf::local_player);
 }
 
 void multi_spectate_player_create_entity_post(rf::Player* player, rf::Entity* entity)
