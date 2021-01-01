@@ -3,6 +3,7 @@ DashFaction Changelog
 
 Version 1.6.0 (not released yet)
 --------------------------------
+- Fix sounds being often skipped if volume in game options is set very low (1.6.0-rc1 regression)
 
 Version 1.6.0-rc1 (released 2020-12-31)
 ---------------------------------------
