@@ -37,8 +37,20 @@ namespace rf
     static auto& camera_enter_first_person = addr_as_ref<bool(Camera *camera)>(0x0040DDF0);
     static auto& camera_enter_freelook = addr_as_ref<bool(Camera *camera)>(0x0040DCF0);
     static auto& camera_enter_fixed = addr_as_ref<bool(Camera *camera)>(0x0040DF70);
-    static auto& camera_get_pos = addr_as_ref<void(Vector3* camera_pos, Camera *camera)>(0x0040D760);
-    static auto& camera_get_orient = addr_as_ref<void(Matrix3* camera_orient, Camera *camera)>(0x0040D780);
+
+    inline Vector3 camera_get_pos(Camera *camera)
+    {
+        rf::Vector3 result;
+        AddrCaller{0x0040D760}.c_call(&result, camera);
+        return result;
+    }
+
+    inline Matrix3 camera_get_orient(Camera *camera)
+    {
+        rf::Matrix3 result;
+        AddrCaller{0x0040D780}.c_call(&result, camera);
+        return result;
+    }
 
     /* Config */
 

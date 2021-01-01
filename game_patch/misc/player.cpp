@@ -57,11 +57,9 @@ FunHook<rf::Entity*(rf::Player*, int, const rf::Vector3*, const rf::Matrix3*, in
         }
         if (pp == rf::local_player) {
             // Update sound listener position so respawn sound is not classified as too quiet to play
-            rf::Vector3 cam_pos;
-            rf::Matrix3 cam_orient;
+            rf::Vector3 cam_pos = rf::camera_get_pos(pp->cam);
+            rf::Matrix3 cam_orient = rf::camera_get_orient(pp->cam);
             rf::Vector3 zero{0.0f, 0.0f, 0.0f};
-            rf::camera_get_pos(&cam_pos, pp->cam);
-            rf::camera_get_orient(&cam_orient, pp->cam);
             rf::snd_update_sounds(cam_pos, zero, cam_orient);
         }
         return ep;

@@ -22,10 +22,8 @@ rf::Object* FindClosestObject()
 {
     if (!rf::local_player->cam)
         return nullptr;
-    rf::Vector3 cam_pos;
-    rf::Matrix3 cam_orient;
-    rf::camera_get_pos(&cam_pos, rf::local_player->cam);
-    rf::camera_get_orient(&cam_orient, rf::local_player->cam);
+    rf::Vector3 cam_pos = rf::camera_get_pos(rf::local_player->cam);
+    rf::Matrix3 cam_orient = rf::camera_get_orient(rf::local_player->cam);
     auto obj = rf::object_list.next_obj;
     rf::Object* best_obj = nullptr;
     float best_dist = 100.0f; // max dist
@@ -61,10 +59,8 @@ rf::Object* find_object_in_reticle()
     LevelCollisionOut col_info;
     col_info.face = 0;
     col_info.obj_handle = -1;
-    rf::Vector3 p0;
-    rf::Matrix3 orient;
-    rf::camera_get_pos(&p0, rf::local_player->cam);
-    rf::camera_get_orient(&orient, rf::local_player->cam);
+    rf::Vector3 p0 = rf::camera_get_pos(rf::local_player->cam);
+    rf::Matrix3 orient = rf::camera_get_orient(rf::local_player->cam);
     rf::Vector3 p1 = p0 + orient.fvec * 100.0f;
     rf::Entity* entity = rf::entity_from_handle(rf::local_player->entity_handle);
     bool hit = CollideLineSegmentLevel(p0, p1, entity, nullptr, &col_info, 0.0f, false, 1.0f);
@@ -274,8 +270,7 @@ void render_obj_debug_ui()
         return;
     }
 
-    rf::Vector3 cam_pos;
-    rf::camera_get_pos(&cam_pos, rf::local_player->cam);
+    rf::Vector3 cam_pos = rf::camera_get_pos(rf::local_player->cam);
 
     auto entity = object->type == rf::OT_ENTITY ? reinterpret_cast<rf::Entity*>(object) : nullptr;
 
