@@ -183,7 +183,7 @@ CallHook<void(rf::Vector3&, float, float, int, int)> weapon_hit_wall_obj_apply_r
     0x004C53A8,
     [](rf::Vector3& epicenter, float damage, float radius, int killer_handle, int damage_type) {
         auto& collide_out = *reinterpret_cast<rf::PCollisionOut*>(&epicenter);
-        auto new_epicenter = epicenter + collide_out.normal * 0.000001f;
+        auto new_epicenter = epicenter + collide_out.normal * 0.0001f;
         weapon_hit_wall_obj_apply_radius_damage_hook.call_target(new_epicenter, damage, radius, killer_handle, damage_type);
     },
 };
