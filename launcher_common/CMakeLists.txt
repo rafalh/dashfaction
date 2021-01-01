@@ -1,4 +1,20 @@
-file(GLOB SRCS *.cpp *.h include/launcher_common/*.h)
+set(SRCS
+    DllInjector.cpp
+    DllInjector.h
+    InjectingProcessLauncher.cpp
+    InjectingProcessLauncher.h
+    PatchedAppLauncher.cpp
+    Process.h
+    sha1.cpp
+    sha1.h
+    Thread.h
+    UpdateChecker.cpp
+    VideoDeviceInfoProvider.cpp
+    Win32Handle.h
+    include/launcher_common/PatchedAppLauncher.h
+    include/launcher_common/UpdateChecker.h
+    include/launcher_common/VideoDeviceInfoProvider.h
+)
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRCS})
 

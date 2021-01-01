@@ -1,4 +1,22 @@
-file(GLOB SRCS *.cpp *.h *.rc)
+set(SRCS
+    AboutDlg.cpp
+    AboutDlg.h
+    CMakeLists.txt
+    DashFactionLauncher.rc
+    LauncherApp.cpp
+    LauncherApp.h
+    LauncherCommandLineInfo.h
+    main.cpp
+    MainDlg.cpp
+    MainDlg.h
+    OptionsDlg.cpp
+    OptionsDlg.h
+    res
+    resource.h
+    stdafx.cpp
+    stdafx.h
+    targetver.h
+)
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRCS})
 

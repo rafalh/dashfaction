@@ -1,5 +1,3 @@
-file(GLOB SRCS *.cpp include/common/*.h)
-
 set(SRCS
     include/common/HttpRequest.h
     include/common/rfproto.h

@@ -1,4 +1,25 @@
-file(GLOB SRCS *.cpp *.h include/patch_common/*.h)
+set(SRCS
+    CallHook.cpp
+    CodeBuffer.cpp
+    CodeInjection.cpp
+    FunHook.cpp
+    MemUtils.cpp
+    include/patch_common/AsmOpcodes.h
+    include/patch_common/AsmWriter.h
+    include/patch_common/CallHook.h
+    include/patch_common/CallPrePostHook.h
+    include/patch_common/CodeBuffer.h
+    include/patch_common/CodeInjection.h
+    include/patch_common/ComPtr.h
+    include/patch_common/FunHook.h
+    include/patch_common/FunPrePostHook.h
+    include/patch_common/InlineAsm.h
+    include/patch_common/Installable.h
+    include/patch_common/MemUtils.h
+    include/patch_common/ShortTypes.h
+    include/patch_common/StaticBufferResizePatch.h
+    include/patch_common/Traits.h
+)
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRCS})
 
