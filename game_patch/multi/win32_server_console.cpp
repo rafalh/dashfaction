@@ -75,6 +75,16 @@ CallHook<void()> os_init_window_server_hook{
     },
 };
 
+FunHook<void()> os_cleanup_hook{
+    0x00525240,
+    []() {
+        os_cleanup_hook.call_target();
+        if (g_win32_console) {
+            FreeConsole();
+        }
+    },
+};
+
 FunHook<void(const char*, const int*)> console_print_hook{
     reinterpret_cast<uintptr_t>(rf::console_output),
     [](const char* text, [[maybe_unused]] const int* color) {
@@ -188,17 +198,12 @@ void init_win32_server_console()
     g_win32_console = string_contains_ignore_case(GetCommandLineA(), "-win32-console");
     if (g_win32_console) {
         os_init_window_server_hook.install();
+        os_cleanup_hook.install();
         console_print_hook.install();
         console_draw_server_hook.install();
         key_get_hook.install();
         console_put_char_new_line_hook.install();
     }
-}
-
-void cleanup_win32_server_console()
-{
-    if (g_win32_console)
-        FreeConsole();
 }
 
 #endif // SERVER_WIN32_CONSOLE

@@ -509,13 +509,6 @@ void server_init()
     multi_spawn_player_server_side_hook.install();
 }
 
-void server_cleanup()
-{
-#if SERVER_WIN32_CONSOLE // win32 console
-    cleanup_win32_server_console();
-#endif
-}
-
 void server_do_frame()
 {
     server_vote_do_frame();

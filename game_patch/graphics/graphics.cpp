@@ -476,6 +476,14 @@ CodeInjection after_gr_init_hook{
     },
 };
 
+FunHook<void()> gr_close_hook{
+    0x0050CBE0,
+    []() {
+        reset_gamma_ramp();
+        gr_close_hook.call_target();
+    },
+};
+
 CodeInjection load_tga_alloc_fail_fix{
     0x0051095D,
     [](auto& regs) {
@@ -1025,6 +1033,7 @@ void graphics_init()
     // addr_as_ref<bool>(0x5A1020) = 0;
 
     after_gr_init_hook.install();
+    gr_close_hook.install();
 
     // Fix crash when loading very big TGA files
     load_tga_alloc_fail_fix.install();

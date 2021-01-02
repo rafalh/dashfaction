@@ -72,8 +72,6 @@ CodeInjection after_full_game_init_hook{
 CodeInjection cleanup_game_hook{
     0x004B2821,
     []() {
-        reset_gamma_ramp();
-        server_cleanup();
         debug_cleanup();
     },
 };

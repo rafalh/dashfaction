@@ -18,3 +18,4 @@ bool bm_is_compressed_format(rf::BmFormat format);
 bool gr_is_format_supported(rf::BmFormat format);
 bool gr_d3d_is_d3d8to9();
 rf::Color bm_get_pixel(uint8_t* data, rf::BmFormat format, int stride_in_bytes, int x, int y);
+void reset_gamma_ramp();

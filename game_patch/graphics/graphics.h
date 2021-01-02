@@ -18,7 +18,6 @@ void bm_change_format(int bm_handle, rf::BmFormat format);
 bool gr_begin_render_to_texture(int bm_handle);
 void gr_end_render_to_texture();
 void gr_delete_texture(int bm_handle);
-void reset_gamma_ramp();
 void bm_set_dynamic(int bm_handle, bool dynamic);
 bool bm_is_dynamic(int bm_handle);
 
