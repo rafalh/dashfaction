@@ -377,21 +377,21 @@ static bool g_profile_frame_req = false;
 static bool g_profile_frame = false;
 static int g_num_draw_calls = 0;
 
-CodeInjection gr_d3d_set_mode_profile_patch{
+CodeInjection gr_d3d_set_state_profile_patch{
     0x0054F19C,
     [](auto& regs) {
         if (g_profile_frame) {
-            auto state_flags = addr_as_ref<rf::GrMode>(regs.esp + 0x10 + 0x4);
+            auto mode = addr_as_ref<rf::GrMode>(regs.esp + 0x10 + 0x4);
             const char* desc = "";
-            if (state_flags == rf::gr_string_mode)
+            if (mode == rf::gr_string_mode)
                 desc = " (text)";
-            else if (state_flags == rf::gr_rect_mode)
+            else if (mode == rf::gr_rect_mode)
                 desc = " (rect)";
-            else if (state_flags == rf::gr_line_mode)
+            else if (mode == rf::gr_line_mode)
                 desc = " (line)";
-            else if (state_flags == rf::gr_bitmap_clamp_mode)
+            else if (mode == rf::gr_bitmap_clamp_mode)
                 desc = " (bitmap)";
-            xlog::info("GrD3DSetMaterialFlags 0x%X%s", state_flags.value, desc);
+            xlog::info("gr_d3d_set_state 0x%X%s", mode.value, desc);
         }
     },
 };
@@ -402,7 +402,7 @@ CodeInjection gr_d3d_set_texture_profile_patch{
         if (g_profile_frame) {
             unsigned bm_handle = regs.edi;
             int stage_id = (regs.ebx - 0x01E65308) / 0x18;
-            xlog::info("GrD3DSetTexture %d 0x%X %s", stage_id, bm_handle, rf::bm_get_filename(bm_handle));
+            xlog::info("gr_d3d_set_texture %d 0x%X %s", stage_id, bm_handle, rf::bm_get_filename(bm_handle));
         }
     },
 };
@@ -423,10 +423,10 @@ CodeInjection D3D_DrawIndexedPrimitive_profile_patch{
     },
 };
 
-FunHook<void()> gr_flip_profile_patch{
-    0x0050CE20,
+FunHook<void()> gr_d3d_flip_profile_patch{
+    0x00544FC0,
     []() {
-        gr_flip_profile_patch.call_target();
+        gr_d3d_flip_profile_patch.call_target();
 
         if (g_profile_frame) {
             xlog::info("Total draw calls: %d", g_num_draw_calls);
@@ -444,9 +444,9 @@ ConsoleCommand2 profile_frame_cmd{
 
         static bool patches_installed = false;
         if (!patches_installed) {
-            gr_d3d_set_mode_profile_patch.install();
+            gr_d3d_set_state_profile_patch.install();
             gr_d3d_set_texture_profile_patch.install();
-            gr_flip_profile_patch.install();
+            gr_d3d_flip_profile_patch.install();
             auto d3d_dev_vtbl = *reinterpret_cast<uintptr_t**>(rf::gr_d3d_device);
             D3D_DrawIndexedPrimitive_profile_patch.set_addr(d3d_dev_vtbl[0x11C / 4]); // DrawIndexedPrimitive
             D3D_DrawIndexedPrimitive_profile_patch.install();

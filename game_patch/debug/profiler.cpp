@@ -426,25 +426,33 @@ void profiler_init()
     // add_profiler<CallProfiler>(0x00431F99, "    fog bg");
 
     add_profiler<CallProfiler>(0x00431FF8, "  portal renderer");
+    add_profiler<CallProfiler>(0x004D4635, "    search rooms");
+    add_profiler<CallProfiler>(0x004D4663, "    sky room");
+
     add_profiler<CallProfiler>(0x004D4703, "    static geometry");
     add_profiler<CallProfiler>(0x0055F755, "      geocache");
     add_profiler<CallProfiler>(0x005609BA, "      draw decal");
-    add_profiler<CallProfiler>(0x004D4C6E, "    fill obj queue");
-    add_profiler<CallProfiler>(0x004D4D57, "    glass shards");
-    add_profiler<CallProfiler>(0x004D4D68, "    process obj queue");
-    add_profiler<CallProfiler>(0x004D3D2F, "      sort queue");
-    add_profiler<AddrRangeProfiler>(0x004D3460, 0x004D34C6, "      any object");
-    add_profiler<CallProfiler>(0x00488B0B, "      standard object");
-    add_profiler<CallProfiler>(0x00488BAF, "        corpse");
-    add_profiler<CallProfiler>(0x00488BC2, "        clutter");
-    add_profiler<CallProfiler>(0x00488BD5, "        debris");
-    add_profiler<CallProfiler>(0x00488BE8, "        entity");
-    add_profiler<CallProfiler>(0x00488C2A, "        item");
-    add_profiler<CallProfiler>(0x00488C50, "        mover_brush");
-    add_profiler<CallProfiler>(0x00488C76, "        weapon");
-    add_profiler<CallProfiler>(0x00488C89, "        glare");
-    add_profiler<CallProfiler>(0x0048D7D5, "      bolt emitter");
-    add_profiler<FunProfiler>(0x004D33D0, "      details");
+    add_profiler<CallProfiler>(0x004D473E, "    room");
+    add_profiler<CallProfiler>(0x004D4C6E, "      portal object mark");
+    add_profiler<AddrRangeProfiler>(0x004D4C92, 0x004D4D38, "      proctex mark");
+    add_profiler<CallProfiler>(0x004D4CED, "        proctex mark single");
+    add_profiler<CallProfiler>(0x004D4D4B, "      proctex process all");
+    add_profiler<CallProfiler>(0x004D4D51, "      geomod debris render room");
+    add_profiler<CallProfiler>(0x004D4D57, "      glass shard render room");
+    add_profiler<CallProfiler>(0x004D4D68, "      render room objects");
+    add_profiler<CallProfiler>(0x004D3D2F, "        sort objects");
+    add_profiler<AddrRangeProfiler>(0x004D3460, 0x004D34C6, "        any object");
+    add_profiler<CallProfiler>(0x00488B0B, "        standard object");
+    add_profiler<CallProfiler>(0x00488BAF, "          corpse");
+    add_profiler<CallProfiler>(0x00488BC2, "          clutter");
+    add_profiler<CallProfiler>(0x00488BD5, "          debris");
+    add_profiler<CallProfiler>(0x00488BE8, "          entity");
+    add_profiler<CallProfiler>(0x00488C2A, "          item");
+    add_profiler<CallProfiler>(0x00488C50, "          mover_brush");
+    add_profiler<CallProfiler>(0x00488C76, "          weapon");
+    add_profiler<CallProfiler>(0x00488C89, "          glare");
+    add_profiler<CallProfiler>(0x0048D7D5, "        bolt emitter");
+    add_profiler<FunProfiler>(0x004D33D0, "       details");
     add_profiler<AddrRangeProfiler>(0x00494B90, 0x00494D3C, "      particles");
 
     //add_profiler<AddrRangeProfiler>(0x004D34AB, 0x004D34B1, "      any render handler");
@@ -458,6 +466,9 @@ void profiler_init()
     add_profiler<FunProfiler>(0x005056A0, "snd_play_3d");
     add_profiler<FunProfiler>(0x00503100, "vmesh_render");
     add_profiler<FunProfiler>(0x0048A400, "obj_hit_callback");
+    add_profiler<FunProfiler>(0x004D3350, "set_currently_rendered_room");
+    add_profiler<FunProfiler>(0x004E6780, "g_proctex_update_water_1");
+
 
     profiler_cmd.register_cmd();
     profiler_log_cmd.register_cmd();
