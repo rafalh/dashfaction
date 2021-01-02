@@ -40,12 +40,12 @@ IDirect3DSurface8* get_cached_depth_stencil_surface()
     return g_depth_stencil_surface;
 }
 
-bool gr_begin_render_to_texture(int bmh)
+bool gr_render_to_texture(int bmh)
 {
     // Note: texture reference counter is not increased here so ComPtr is not used
     IDirect3DTexture8* d3d_tex = rf::gr_d3d_get_texture(bmh);
     if (!d3d_tex) {
-        WARN_ONCE("Bitmap without D3D texture provided in gr_begin_render_to_texture");
+        WARN_ONCE("Bitmap without D3D texture provided in gr_render_to_texture");
         return false;
     }
 
@@ -88,7 +88,7 @@ bool gr_begin_render_to_texture(int bmh)
     return true;
 }
 
-void gr_end_render_to_texture()
+void gr_render_to_back_buffer()
 {
     if (!g_render_to_texture_active) {
         return;

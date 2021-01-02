@@ -130,7 +130,7 @@ CodeInjection monitor_update_from_camera_begin_render_to_texture{
     0x00412860,
     [](auto& regs) {
         rf::Monitor* mon = regs.edi;
-        gr_begin_render_to_texture(mon->bitmap);
+        gr_render_to_texture(mon->bitmap);
     },
 };
 
