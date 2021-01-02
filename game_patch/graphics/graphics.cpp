@@ -30,6 +30,9 @@
 
 static float g_gr_clipped_geom_offset_x = -0.5;
 static float g_gr_clipped_geom_offset_y = -0.5;
+static float g_frametime_history[1024];
+static int g_frametime_history_index = 0;
+static bool g_show_frametime_graph = false;
 
 static void set_texture_min_mag_filter_in_code(D3DTEXTUREFILTERTYPE filter_type0, D3DTEXTUREFILTERTYPE filter_type1)
 {
@@ -848,6 +851,13 @@ CodeInjection gr_d3d_init_load_library_injection{
     },
 };
 
+ConsoleCommand2 frametime_graph_cmd{
+    "frametime_graph",
+    []() {
+        g_show_frametime_graph = !g_show_frametime_graph;
+    },
+};
+
 void apply_texture_patches();
 void apply_font_patches();
 void graphics_capture_init();
@@ -983,12 +993,6 @@ void graphics_init()
 
     // fullscreen/windowed commands
     switch_d3d_mode_patch.install();
-    fullscreen_cmd.register_cmd();
-    windowed_cmd.register_cmd();
-
-    // Other commands
-    antialiasing_cmd.register_cmd();
-    nearest_texture_filtering_cmd.register_cmd();
 
     // Do not flush drawing buffers during gr_set_color_rgba call
     write_mem<u8>(0x0050CFEB, asm_opcodes::jmp_rel_short);
@@ -1025,10 +1029,6 @@ void graphics_init()
     AsmWriter(0x00551474).nop(5);
     AsmWriter(0x005516F5).nop(5);
 
-#ifdef DEBUG
-    profile_frame_cmd.register_cmd();
-#endif
-
     // Render rocket launcher scanner image every frame
     // addr_as_ref<bool>(0x5A1020) = 0;
 
@@ -1048,9 +1048,6 @@ void graphics_init()
     AsmWriter(0x0050E1A8).ret();
     gr_load_font_internal_fix_texture_ref.install();
 
-    // maxfps command
-    max_fps_cmd.register_cmd();
-
     // Crash-fix in case texture has not been created (this happens if gr_read_back_buffer fails)
     gr_d3d_lock_crash_fix.install();
 
@@ -1066,7 +1063,6 @@ void graphics_init()
 
     // Support disabling of damage screen flash effect
     do_damage_screen_flash_hook.install();
-    damage_screen_flash_cmd.register_cmd();
 
     // Fix glass_house level having faces that use multi-textured state but don't have any lightmap (stage 1 texture
     // from previous drawing operation was used)
@@ -1077,7 +1073,6 @@ void graphics_init()
     obj_mesh_lighting_alloc_hook.install();
     obj_mesh_lighting_free_hook.install();
     obj_delete_mesh_hook.install();
-    mesh_static_lighting_cmd.register_cmd();
 
     // Fix invalid vertex offset in mesh lighting calculation
     write_mem<i8>(0x005042F0 + 2, sizeof(rf::Vector3));
@@ -1100,12 +1095,24 @@ void graphics_init()
 
     // Use d3d8to9 instead of d3d8
     gr_d3d_init_load_library_injection.install();
+
+    // Commands
+    fullscreen_cmd.register_cmd();
+    windowed_cmd.register_cmd();
+    antialiasing_cmd.register_cmd();
+    nearest_texture_filtering_cmd.register_cmd();
+    max_fps_cmd.register_cmd();
+    frametime_graph_cmd.register_cmd();
+    damage_screen_flash_cmd.register_cmd();
+    mesh_static_lighting_cmd.register_cmd();
+#ifdef DEBUG
+    profile_frame_cmd.register_cmd();
+#endif
 }
 
 void graphics_after_game_init()
 {
     graphics_capture_after_game_init();
-
 }
 
 void graphics_draw_fps_counter()
@@ -1124,6 +1131,25 @@ void graphics_draw_fps_counter()
 
         int font_id = hud_get_default_font();
         rf::gr_string(x, y, text.c_str(), font_id);
+    }
+
+    if (g_show_frametime_graph) {
+        g_frametime_history[g_frametime_history_index] = rf::frametime;
+        g_frametime_history_index = (g_frametime_history_index + 1) % std::size(g_frametime_history);
+        float max_frametime = 0.0f;
+        for (auto frametime : g_frametime_history) {
+            max_frametime = std::max(max_frametime, frametime);
+        }
+
+        rf::gr_set_color_rgba(255, 255, 255, 128);
+        int scr_w = rf::gr_screen_width();
+        int scr_h = rf::gr_screen_height();
+        for (unsigned i = 0; i < std::size(g_frametime_history); ++i) {
+            int slot_index = (g_frametime_history_index + 1 + i) % std::size(g_frametime_history);
+            int x = scr_w - i - 1;
+            int h = g_frametime_history[slot_index] / max_frametime * 100.0f;
+            rf::gr_rect(x, scr_h - h, 1, h);
+        }
     }
 }
 
