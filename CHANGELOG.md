@@ -1,9 +1,12 @@
 DashFaction Changelog
 =====================
 
-Version 1.6.0 (not released yet)
+Version 1.6.0 (released 2021-01-07)
 --------------------------------
 - Fix sounds being often skipped if volume in game options is set very low (1.6.0-rc1 regression)
+- Fix rockets not making damage after hitting a detail brush (fix included in 1.6.0-beta did not always work)
+- Add `frametime_graph` command
+- Small code improvements
 
 Version 1.6.0-rc1 (released 2020-12-31)
 ---------------------------------------
