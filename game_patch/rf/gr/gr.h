@@ -291,6 +291,7 @@ namespace rf::gr
     enum TMapperFlags
     {
         TMAP_FLAG_TEXTURED = 1,
+        TMAP_FLAG_TEXTURED_2 = 2,
         TMAP_FLAG_RGB = 4,
         TMAP_FLAG_ALPHA = 8,
     };

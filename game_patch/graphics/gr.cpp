@@ -22,6 +22,8 @@
 #include "../rf/item.h"
 #include "../rf/clutter.h"
 
+#define USE_D3D11 1
+
 CodeInjection gr_init_stretched_window_injection{
     0x0050C464,
     [](auto& regs) {
@@ -148,23 +150,56 @@ CallHook<void(int, rf::gr::Vertex**, int, rf::gr::Mode)> gr_rect_gr_tmapper_hook
 
 void gr_delete_texture(int bm_handle)
 {
+#if USE_D3D11
+    (void) bm_handle;
+#else
     if (rf::gr::screen.mode == rf::gr::DIRECT3D) {
         gr_d3d_delete_texture(bm_handle);
     }
+#endif
 }
 
 bool gr_is_texture_format_supported(rf::bm::Format format)
 {
+#if USE_D3D11
+    (void) format;
+    return true;
+#else
     if (rf::gr::screen.mode == rf::gr::DIRECT3D) {
         bool gr_d3d_is_texture_format_supported(rf::bm::Format);
         return gr_d3d_is_texture_format_supported(format);
     }
     return false;
+#endif
+}
+
+bool gr_render_to_texture(int bmh)
+{
+#if USE_D3D11
+    (void) bmh;
+    return false;
+#else
+    if (rf::gr::screen.mode == rf::gr::DIRECT3D) {
+        bool gr_d3d_render_to_texture(int bmh);
+        return gr_d3d_render_to_texture(bmh);
+    }
+#endif
+}
+
+void gr_render_to_back_buffer()
+{
+#if !USE_D3D11
+    if (rf::gr::screen.mode == rf::GR_DIRECT3D) {
+        bool gr_d3d_render_to_back_buffer();
+        gr_d3d_render_to_back_buffer();
+    }
+#endif
 }
 
 void gr_bitmap_scaled_float(int bitmap_handle, float x, float y, float w, float h,
                             float sx, float sy, float sw, float sh, bool flip_x, bool flip_y, rf::gr::Mode mode)
 {
+#if !USE_D3D11
     auto& gr_d3d_get_num_texture_sections = addr_as_ref<int(int bitmap_handle)>(0x0055CA60);
     if (rf::gr::screen.mode == rf::gr::DIRECT3D && gr_d3d_get_num_texture_sections(bitmap_handle) != 1) {
         // If bitmap is sectioned fall back to the old implementation...
@@ -174,6 +209,7 @@ void gr_bitmap_scaled_float(int bitmap_handle, float x, float y, float w, float 
             flip_x, flip_y, mode);
         return;
     }
+#endif
 
     rf::gr::set_texture(bitmap_handle, -1);
     int bm_w, bm_h;
@@ -249,6 +285,10 @@ void gr_apply_patch()
     // Lights
     gr_light_apply_patch();
 
+#if USE_D3D11
+    void gr_d3d11_apply_patch();
+    gr_d3d11_apply_patch();
+#else
     // D3D generic patches
     gr_d3d_apply_patch();
 
@@ -263,6 +303,7 @@ void gr_apply_patch()
 
     // Bink Video patch
     bink_apply_patch();
+#endif
 
     // Do not flush drawing buffers in gr_set_color
     write_mem<u8>(0x0050CFEB, asm_opcodes::jmp_rel_short);

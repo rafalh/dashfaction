@@ -71,6 +71,7 @@ set(SRCS
     graphics/gr_d3d_texture.cpp
     graphics/gr_d3d_capture.cpp
     graphics/gr_d3d_gamma.cpp
+    graphics/d3d11/gr_d3d11.cpp
     input/input.h
     input/mouse.cpp
     input/key.cpp

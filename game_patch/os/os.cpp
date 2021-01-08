@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/AsmWriter.h>
+#include <xlog/xlog.h>
 #include "../rf/os/os.h"
 #include "../rf/multi.h"
 #include "../rf/input.h"
@@ -34,6 +35,9 @@ FunHook<void()> os_poll_hook{
 LRESULT WINAPI wnd_proc(HWND wnd_handle, UINT msg, WPARAM w_param, LPARAM l_param)
 {
     // xlog::trace("%08x: msg %s %x %x", GetTickCount(), get_win_msg_name(msg), w_param, l_param);
+    if (rf::main_wnd && wnd_handle != rf::main_wnd) {
+        xlog::warn("Got unknown window in the window procedure: hwnd %p msg %u", wnd_handle, msg);
+    }
 
     for (int i = 0; i < rf::num_msg_handlers; ++i) {
         rf::msg_handlers[i](msg, w_param, l_param);
@@ -56,7 +60,7 @@ LRESULT WINAPI wnd_proc(HWND wnd_handle, UINT msg, WPARAM w_param, LPARAM l_para
         }
 
         rf::is_main_wnd_active = w_param;
-        return DefWindowProcA(wnd_handle, msg, w_param, l_param);
+        return 0; //DefWindowProcA(wnd_handle, msg, w_param, l_param);
 
     case WM_QUIT:
     case WM_CLOSE:

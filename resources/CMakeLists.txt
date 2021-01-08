@@ -82,6 +82,9 @@ add_packfile(dashfaction.vpp
     meshes/Vat1.v3m
     meshes/coffeesmokedtbl2.v3m
     meshes/coffeesmokedtblAlt.v3m
+
+    ${CMAKE_BINARY_DIR}/shaders/default_vs.bin
+    ${CMAKE_BINARY_DIR}/shaders/default_ps.bin
 )
 
 # Copy licensing-info.txt
@@ -91,3 +94,5 @@ add_custom_command(
     MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/licensing-info.txt
 )
 add_custom_target(LicensingInfoTxt ALL DEPENDS ${CMAKE_BINARY_DIR}/bin/licensing-info.txt)
+
+add_subdirectory(shaders)

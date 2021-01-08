@@ -36,7 +36,7 @@ IDirect3DSurface8* get_cached_depth_stencil_surface()
     return g_depth_stencil_surface;
 }
 
-bool gr_render_to_texture(int bmh)
+bool gr_d3d_render_to_texture(int bmh)
 {
     // Note: texture reference counter is not increased here so ComPtr is not used
     IDirect3DTexture8* d3d_tex = rf::gr::d3d::get_texture(bmh);
@@ -84,7 +84,7 @@ bool gr_render_to_texture(int bmh)
     return true;
 }
 
-void gr_render_to_back_buffer()
+void gr_d3d_render_to_back_buffer()
 {
     if (!g_render_to_texture_active) {
         return;
