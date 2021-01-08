@@ -8,6 +8,7 @@
 #include <patch_common/AsmWriter.h>
 #include <common/config/BuildConfig.h>
 #include "../graphics/graphics.h"
+#include "../main.h"
 
 static std::vector<int> g_fpgun_sounds;
 
@@ -126,4 +127,31 @@ void player_fpgun_do_patch()
     railgun_scanner_start_render_to_texture.install();
     player_fpgun_render_ir_begin_render_to_texture.install();
     after_game_render_to_dynamic_textures.install();
+
+    if (g_game_config.high_scanner_res) {
+        // Improved Railgun Scanner resolution
+        constexpr int8_t scanner_resolution = 120;        // default is 64, max is 127 (signed byte)
+        write_mem<u8>(0x004325E6 + 1, scanner_resolution); // gameplay_render_frame
+        write_mem<u8>(0x004325E8 + 1, scanner_resolution);
+        write_mem<u8>(0x004A34BB + 1, scanner_resolution); // player_allocate
+        write_mem<u8>(0x004A34BD + 1, scanner_resolution);
+        write_mem<u8>(0x004ADD70 + 1, scanner_resolution); // player_fpgun_render_for_rail_gun
+        write_mem<u8>(0x004ADD72 + 1, scanner_resolution);
+        write_mem<u8>(0x004AE0B7 + 1, scanner_resolution);
+        write_mem<u8>(0x004AE0B9 + 1, scanner_resolution);
+        write_mem<u8>(0x004AF0B0 + 1, scanner_resolution); // player_fpgun_render_ir
+        write_mem<u8>(0x004AF0B4 + 1, scanner_resolution * 3 / 4);
+        write_mem<u8>(0x004AF0B6 + 1, scanner_resolution);
+        write_mem<u8>(0x004AF7B0 + 1, scanner_resolution);
+        write_mem<u8>(0x004AF7B2 + 1, scanner_resolution);
+        write_mem<u8>(0x004AF7CF + 1, scanner_resolution);
+        write_mem<u8>(0x004AF7D1 + 1, scanner_resolution);
+        write_mem<u8>(0x004AF818 + 1, scanner_resolution);
+        write_mem<u8>(0x004AF81A + 1, scanner_resolution);
+        write_mem<u8>(0x004AF820 + 1, scanner_resolution);
+        write_mem<u8>(0x004AF822 + 1, scanner_resolution);
+        write_mem<u8>(0x004AF855 + 1, scanner_resolution);
+        write_mem<u8>(0x004AF860 + 1, scanner_resolution * 3 / 4);
+        write_mem<u8>(0x004AF862 + 1, scanner_resolution);
+    }
 }

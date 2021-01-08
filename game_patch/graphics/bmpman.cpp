@@ -1,4 +1,5 @@
 #include <patch_common/FunHook.h>
+#include <patch_common/CodeInjection.h>
 #include <xlog/xlog.h>
 #include <cassert>
 #include "graphics_internal.h"
@@ -162,6 +163,20 @@ FunHook<void(int)> bm_free_entry_hook{
     },
 };
 
+CodeInjection load_tga_alloc_fail_fix{
+    0x0051095D,
+    [](auto& regs) {
+        if (regs.eax == 0) {
+            regs.esp += 4;
+            unsigned bpp = regs.esi;
+            auto num_total_pixels = addr_as_ref<size_t>(regs.ebp + 0x30);
+            auto num_bytes = num_total_pixels * bpp;
+            xlog::warn("Failed to allocate buffer for a bitmap: %d bytes!", num_bytes);
+            regs.eip = 0x00510944;
+        }
+    },
+};
+
 void bm_set_dynamic(int bm_handle, bool dynamic)
 {
     int bm_index = rf::bm_handle_to_index_anim_aware(bm_handle);
@@ -191,4 +206,7 @@ void bm_apply_patches()
     bm_lock_hook.install();
     bm_has_alpha_hook.install();
     bm_free_entry_hook.install();
+
+    // Fix crash when loading very big TGA files
+    load_tga_alloc_fail_fix.install();
 }

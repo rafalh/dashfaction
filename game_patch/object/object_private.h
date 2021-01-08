@@ -9,3 +9,4 @@ void obj_do_patch();
 void monitor_do_patch();
 void entity_do_patch();
 void particle_do_patch();
+void obj_light_apply_patch();

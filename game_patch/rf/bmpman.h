@@ -84,6 +84,7 @@ namespace rf
     static auto& bm_get_filename = addr_as_ref<const char*(int bm_handle)>(0x00511710);
     static auto& bm_get_format = addr_as_ref<BmFormat(int bm_handle)>(0x005106F0);
     static auto& bm_handle_to_index_anim_aware = addr_as_ref<int(int bm_handle)>(0x0050F440);
+    static auto& bm_unlock = addr_as_ref<void(int)>(0x00511700);
 
     static auto& bm_bitmaps = addr_as_ref<BmBitmapEntry*>(0x017C80C4);
 }

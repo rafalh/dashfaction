@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
+#include <patch_common/AsmWriter.h>
 #include <windows.h>
 #include "../rf/common.h"
 #include "../rf/graphics.h"
@@ -430,6 +431,14 @@ void GrNewFont::get_size(int* w, int* h, std::string_view text) const
     *w = std::max(*w, cur_line_w);
 }
 
+CodeInjection gr_load_font_internal_fix_texture_ref{
+    0x0051F429,
+    [](auto& regs) {
+        auto gr_tcache_add_ref = addr_as_ref<void(int bm_handle)>(0x0050E850);
+        gr_tcache_add_ref(regs.eax);
+    },
+};
+
 void init_freetype_lib()
 {
     FT_Error error = FT_Init_FreeType(&g_freetype_lib);
@@ -546,6 +555,12 @@ FunHook<void(int*, int*, const char*, int, int)> gr_get_string_size_hook{
 
 void apply_font_patches()
 {
+    // Fix font texture leak
+    // Original code sets bitmap handle in all fonts to -1 on level unload. On next font usage the font bitmap is reloaded.
+    // Note: font bitmaps are dynamic (USERBMAP) so they cannot be found by name unlike normal bitmaps.
+    AsmWriter(0x0051F3E0).ret();
+    gr_load_font_internal_fix_texture_ref.install();
+
     // Support TrueType fonts
     gr_load_font_hook.install();
     gr_set_default_font_hook.install();

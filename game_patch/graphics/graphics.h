@@ -12,8 +12,6 @@ void graphics_after_game_init();
 void graphics_draw_fps_counter();
 int get_default_font_id();
 void set_default_font_id(int font_id);
-void obj_mesh_lighting_alloc_one(rf::Object *objp);
-void obj_mesh_lighting_update_one(rf::Object *objp);
 void bm_change_format(int bm_handle, rf::BmFormat format);
 bool gr_render_to_texture(int bm_handle);
 void gr_render_to_back_buffer();

@@ -1,6 +1,9 @@
 #include "../rf/os.h"
 #include "../rf/multi.h"
 #include "../rf/input.h"
+#include "../rf/graphics.h"
+#include "../console/console.h"
+#include "../main.h"
 #include <windows.h>
 #include <patch_common/AsmWriter.h>
 #include <patch_common/FunHook.h>
@@ -8,6 +11,9 @@
 #include <patch_common/CodeInjection.h>
 
 static LARGE_INTEGER g_qpc_frequency;
+static float g_frametime_history[1024];
+static int g_frametime_history_index = 0;
+static bool g_show_frametime_graph = false;
 
 const char* get_win_msg_name(UINT msg);
 
@@ -82,6 +88,28 @@ LRESULT WINAPI wnd_proc(HWND wnd_handle, UINT msg, WPARAM w_param, LPARAM l_para
     return 0;
 }
 
+void frametime_render()
+{
+    if (g_show_frametime_graph) {
+        g_frametime_history[g_frametime_history_index] = rf::frametime;
+        g_frametime_history_index = (g_frametime_history_index + 1) % std::size(g_frametime_history);
+        float max_frametime = 0.0f;
+        for (auto frametime : g_frametime_history) {
+            max_frametime = std::max(max_frametime, frametime);
+        }
+
+        rf::gr_set_color_rgba(255, 255, 255, 128);
+        int scr_w = rf::gr_screen_width();
+        int scr_h = rf::gr_screen_height();
+        for (unsigned i = 0; i < std::size(g_frametime_history); ++i) {
+            int slot_index = (g_frametime_history_index + 1 + i) % std::size(g_frametime_history);
+            int x = scr_w - i - 1;
+            int h = g_frametime_history[slot_index] / max_frametime * 100.0f;
+            rf::gr_rect(x, scr_h - h, 1, h);
+        }
+    }
+}
+
 FunHook<int(int)> timer_get_hook{
     0x00504AB0,
     [](int scale) {
@@ -115,6 +143,33 @@ CallHook<void(int)> frametime_calculate_sleep_hook{
     },
 };
 
+ConsoleCommand2 max_fps_cmd{
+    "maxfps",
+    [](std::optional<int> limit_opt) {
+        if (limit_opt) {
+#ifdef NDEBUG
+            int new_limit = std::clamp<int>(limit_opt.value(), MIN_FPS_LIMIT, MAX_FPS_LIMIT);
+#else
+            int new_limit = limit_opt.value();
+#endif
+            g_game_config.max_fps = new_limit;
+            g_game_config.save();
+            rf::framerate_min = 1.0f / new_limit;
+        }
+        else
+            rf::console_printf("Maximal FPS: %.1f", 1.0f / rf::framerate_min);
+    },
+    "Sets maximal FPS",
+    "maxfps <limit>",
+};
+
+ConsoleCommand2 frametime_graph_cmd{
+    "frametime_graph",
+    []() {
+        g_show_frametime_graph = !g_show_frametime_graph;
+    },
+};
+
 void os_do_patch()
 {
     // Process messages in the same thread as DX processing (alternative: D3DCREATE_MULTITHREADED)
@@ -137,4 +192,14 @@ void os_do_patch()
     AsmWriter(0x00509595).nop(2);
     write_mem<u8>(0x00509532, asm_opcodes::jmp_rel_short);
     frametime_calculate_sleep_hook.install();
+
+    // Disable keyboard hooks (they were supposed to block alt-tab; they does not work in modern OSes anyway)
+    write_mem<u8>(0x00524C98, asm_opcodes::jmp_rel_short);
+
+    // Set initial FPS limit
+    write_mem<float>(0x005094CA, 1.0f / g_game_config.max_fps);
+
+    // Commands
+    max_fps_cmd.register_cmd();
+    frametime_graph_cmd.register_cmd();
 }

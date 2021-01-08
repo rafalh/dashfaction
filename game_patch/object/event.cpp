@@ -10,7 +10,7 @@
 #include "../rf/event.h"
 #include "../rf/entity.h"
 #include "../rf/level.h"
-#include "../graphics/graphics.h"
+#include "../object/object.h"
 
 CodeInjection switch_model_event_custom_mesh_patch{
     0x004BB921,

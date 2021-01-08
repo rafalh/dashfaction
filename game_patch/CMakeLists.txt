@@ -97,6 +97,7 @@ set(SRCS
     object/object.cpp
     object/monitor.cpp
     object/particle.cpp
+    object/obj_light.cpp
     misc/high_fps.cpp
     misc/high_fps.h
     misc/misc.cpp
