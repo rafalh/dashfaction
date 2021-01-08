@@ -3,7 +3,8 @@
 #include <patch_common/FunHook.h>
 #include "scoreboard.h"
 #include "../multi/multi.h"
-#include "../rf/graphics.h"
+#include "../rf/gr.h"
+#include "../rf/gr_font.h"
 #include "../rf/multi.h"
 #include "../rf/localize.h"
 #include "../rf/entity.h"
@@ -44,7 +45,7 @@ int draw_scoreboard_header(int x, int y, int w, rf::NetGameType game_type, bool 
     int x_center = x + w / 2;
     int cur_y = y;
     if (!dry_run) {
-        rf::gr_set_color_rgba(0xFF, 0xFF, 0xFF, 0xFF);
+        rf::gr_set_color(0xFF, 0xFF, 0xFF, 0xFF);
         static int score_rflogo_bm = rf::bm_load("score_rflogo.tga", -1, false);
         rf::gr_bitmap(score_rflogo_bm, x_center - 170, cur_y);
     }
@@ -66,7 +67,7 @@ int draw_scoreboard_header(int x, int y, int w, rf::NetGameType game_type, bool 
 
     // Draw level
     if (!dry_run) {
-        rf::gr_set_color_rgba(0xB0, 0xB0, 0xB0, 0xFF);
+        rf::gr_set_color(0xB0, 0xB0, 0xB0, 0xFF);
         auto level_info = rf::String::format("%s (%s) by %s", rf::level.name.c_str(), rf::level.filename.c_str(),
                                             rf::level.author.c_str());
         rf::String level_info_stripped;
@@ -104,11 +105,11 @@ int draw_scoreboard_header(int x, int y, int w, rf::NetGameType game_type, bool 
                 red_score = rf::multi_tdm_get_red_team_score();
                 blue_score = rf::multi_tdm_get_blue_team_score();
             }
-            rf::gr_set_color_rgba(0xD0, 0x20, 0x20, 0xFF);
+            rf::gr_set_color(0xD0, 0x20, 0x20, 0xFF);
             int team_scores_font = rf::scoreboard_big_font;
             auto red_score_str = std::to_string(red_score);
             rf::gr_string_aligned(rf::GR_ALIGN_CENTER, x + w * 1 / 6, cur_y + 10, red_score_str.c_str(), team_scores_font);
-            rf::gr_set_color_rgba(0x20, 0x20, 0xD0, 0xFF);
+            rf::gr_set_color(0x20, 0x20, 0xD0, 0xFF);
             auto blue_score_str = std::to_string(blue_score);
             rf::gr_string_aligned(rf::GR_ALIGN_CENTER, x + w * 5 / 6, cur_y + 10, blue_score_str.c_str(), team_scores_font);
         }
@@ -141,7 +142,7 @@ int draw_scoreboard_players(const std::vector<rf::Player*>& players, int x, int 
 
     // Draw list header
     if (!dry_run) {
-        rf::gr_set_color_rgba(0xFF, 0xFF, 0xFF, 0xFF);
+        rf::gr_set_color(0xFF, 0xFF, 0xFF, 0xFF);
         rf::gr_string(name_x, y, rf::strings::player);
         rf::gr_string(score_x, y, rf::strings::score); // Note: RF uses "Frags"
         rf::gr_string(kd_x, y, "K/D");
@@ -161,9 +162,9 @@ int draw_scoreboard_players(const std::vector<rf::Player*>& players, int x, int 
         if (!dry_run) {
             bool is_local_player = player == rf::player_list;
             if (is_local_player)
-                rf::gr_set_color_rgba(0xFF, 0xFF, 0x80, 0xFF);
+                rf::gr_set_color(0xFF, 0xFF, 0x80, 0xFF);
             else
-                rf::gr_set_color_rgba(0xFF, 0xFF, 0xFF, 0xFF);
+                rf::gr_set_color(0xFF, 0xFF, 0xFF, 0xFF);
 
             static int green_bm = rf::bm_load("DF_green.tga", -1, true);
             static int red_bm = rf::bm_load("DF_red.tga", -1, true);
@@ -310,7 +311,7 @@ void draw_scoreboard_internal_new(bool draw)
     h = static_cast<int>(progress_h * h);
     int x = (static_cast<int>(rf::gr_clip_width()) - w) / 2;
     int y = (static_cast<int>(rf::gr_clip_height()) - h) / 2;
-    rf::gr_set_color_rgba(0, 0, 0, 0x80);
+    rf::gr_set_color(0, 0, 0, 0x80);
     rf::gr_rect(x, y, w, h);
     y += top_padding;
 

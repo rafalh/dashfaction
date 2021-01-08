@@ -9,6 +9,7 @@
 #include "../main.h"
 #include "../console/console.h"
 #include "../graphics/graphics.h"
+#include "../rf/gr_font.h"
 #include "../rf/hud.h"
 #include "../rf/multi.h"
 #include "../rf/file.h"

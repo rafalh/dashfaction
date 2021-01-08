@@ -1,7 +1,8 @@
 #include "multi.h"
 #include "../rf/multi.h"
 #include "../rf/file.h"
-#include "../rf/graphics.h"
+#include "../rf/gr.h"
+#include "../rf/gr_font.h"
 #include "../rf/ui.h"
 #include "../misc/misc.h"
 #include "../console/console.h"
@@ -427,16 +428,16 @@ void multi_render_level_download_progress()
     int cy_font = rf::gr_get_font_height(-1);
 
     if (cx_progress > 0) {
-        rf::gr_set_color_rgba(0x80, 0x80, 0, 0x80);
+        rf::gr_set_color(0x80, 0x80, 0, 0x80);
         rf::gr_rect(x, y, cx_progress, cy);
     }
 
     if (cx > cx_progress) {
-        rf::gr_set_color_rgba(0, 0, 0x60, 0x80);
+        rf::gr_set_color(0, 0, 0x60, 0x80);
         rf::gr_rect(x + cx_progress, y, cx - cx_progress, cy);
     }
 
-    rf::gr_set_color_rgba(0, 0xFF, 0, 0x80);
+    rf::gr_set_color(0, 0xFF, 0, 0x80);
     auto text = string_format("Downloading: %.2f MB / %.2f MB", g_level_bytes_downloaded / 1024.0f / 1024.0f,
                              g_level_info.size_in_bytes / 1024.0f / 1024.0f);
     rf::gr_string_aligned(rf::GR_ALIGN_CENTER, x + cx / 2, y + cy / 2 - cy_font / 2, text.c_str(), -1,

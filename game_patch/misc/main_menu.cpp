@@ -4,7 +4,8 @@
 #include <xlog/xlog.h>
 #include <cstring>
 #include "../rf/ui.h"
-#include "../rf/graphics.h"
+#include "../rf/gr.h"
+#include "../rf/gr_font.h"
 #include "../rf/input.h"
 #include "../rf/file.h"
 #include "../rf/multi.h"
@@ -163,7 +164,7 @@ static inline void debug_ui_layout([[ maybe_unused ]] rf::UiGadget& gadget)
     int y = gadget.GetAbsoluteY() * rf::ui_scale_y;
     int w = gadget.w * rf::ui_scale_x;
     int h = gadget.h * rf::ui_scale_y;
-    rf::gr_set_color_rgba((x ^ y) & 255, 0, 0, 64);
+    rf::gr_set_color((x ^ y) & 255, 0, 0, 64);
     rf::gr_rect(x, y, w, h);
 #endif
 }
@@ -206,18 +207,18 @@ void __fastcall UiButton_render(rf::UiButton& this_, void*)
     int h = static_cast<int>(this_.h * rf::ui_scale_y);
 
     if (this_.bg_bitmap >= 0) {
-        rf::gr_set_color_rgba(255, 255, 255, 255);
+        rf::gr_set_color(255, 255, 255, 255);
         rf::gr_bitmap_stretched(this_.bg_bitmap, x, y, w, h, 0, 0, this_.w, this_.h);
     }
 
     if (!this_.enabled) {
-        rf::gr_set_color_rgba(96, 96, 96, 255);
+        rf::gr_set_color(96, 96, 96, 255);
     }
     else if (this_.highlighted) {
-        rf::gr_set_color_rgba(240, 240, 240, 255);
+        rf::gr_set_color(240, 240, 240, 255);
     }
     else {
-        rf::gr_set_color_rgba(192, 192, 192, 255);
+        rf::gr_set_color(192, 192, 192, 255);
     }
 
     if (this_.enabled && this_.highlighted && this_.selected_bitmap >= 0) {
@@ -292,10 +293,10 @@ FunHook UiLabel_set_text_hook{0x00456DC0, UiLabel_set_text};
 void __fastcall UiLabel_render(rf::UiLabel& this_, void*)
 {
     if (!this_.enabled) {
-        rf::gr_set_color_rgba(48, 48, 48, 128);
+        rf::gr_set_color(48, 48, 48, 128);
     }
     else if (this_.highlighted) {
-        rf::gr_set_color_rgba(240, 240, 240, 255);
+        rf::gr_set_color(240, 240, 240, 255);
     }
     else {
         rf::gr_set_color(this_.clr);
@@ -336,10 +337,10 @@ FunHook UiInputBox_create_hook{0x00456FE0, UiInputBox_create};
 void __fastcall UiInputBox_render(rf::UiInputBox& this_, void*)
 {
     if (this_.enabled && this_.highlighted) {
-        rf::gr_set_color_rgba(240, 240, 240, 255);
+        rf::gr_set_color(240, 240, 240, 255);
     }
     else {
-        rf::gr_set_color_rgba(192, 192, 192, 255);
+        rf::gr_set_color(192, 192, 192, 255);
     }
 
     int x = static_cast<int>((this_.get_absolute_x() + 1) * rf::ui_scale_x);
@@ -377,13 +378,13 @@ FunHook UiCycler_add_item_hook{0x00458080, UiCycler_add_item};
 void __fastcall UiCycler_render(rf::UiCycler& this_, void*)
 {
     if (this_.enabled && this_.highlighted) {
-        rf::gr_set_color_rgba(255, 255, 255, 255);
+        rf::gr_set_color(255, 255, 255, 255);
     }
     else if (this_.enabled) {
-        rf::gr_set_color_rgba(192, 192, 192, 255);
+        rf::gr_set_color(192, 192, 192, 255);
     }
     else {
-        rf::gr_set_color_rgba(96, 96, 96, 255);
+        rf::gr_set_color(96, 96, 96, 255);
     }
 
     int x = static_cast<int>(this_.get_absolute_x() * rf::ui_scale_x);

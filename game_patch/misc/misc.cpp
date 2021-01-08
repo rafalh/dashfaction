@@ -3,7 +3,7 @@
 #include "sound.h"
 #include "../console/console.h"
 #include "../main.h"
-#include "../rf/graphics.h"
+#include "../rf/gr.h"
 #include "../rf/player.h"
 #include "../rf/multi.h"
 #include "../rf/gameseq.h"

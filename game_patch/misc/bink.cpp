@@ -2,7 +2,7 @@
 #include <patch_common/CallHook.h>
 #include <patch_common/CodeInjection.h>
 #include "../main.h"
-#include "../rf/graphics.h"
+#include "../rf/gr.h"
 #include "../rf/sound.h"
 
 CodeInjection play_bik_file_infinite_loop_fix{

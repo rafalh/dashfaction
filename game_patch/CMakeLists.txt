@@ -24,7 +24,7 @@ set(SRCS
     rf/event.h
     rf/file.h
     rf/gameseq.h
-    rf/graphics.h
+    rf/gr.h
     rf/gr_direct3d.h
     rf/item.h
     rf/level.h

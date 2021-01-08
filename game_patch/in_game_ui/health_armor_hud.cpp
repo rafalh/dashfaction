@@ -3,7 +3,8 @@
 #include "../rf/player.h"
 #include "../rf/entity.h"
 #include "../rf/gameseq.h"
-#include "../rf/graphics.h"
+#include "../rf/gr.h"
+#include "../rf/gr_font.h"
 #include "../rf/localize.h"
 #include <patch_common/FunHook.h>
 #include <patch_common/MemUtils.h>
@@ -35,7 +36,7 @@ FunHook<void(rf::Player*)> hud_status_render_hook{
             rf::hud_draw_damage_indicators(player);
             auto vehicle = rf::entity_from_handle(entity->host_handle);
             if (rf::entity_is_jeep_driver(entity) || rf::entity_is_jeep_shooter(entity)) {
-                rf::gr_set_color_rgba(255, 255, 255, 120);
+                rf::gr_set_color(255, 255, 255, 120);
                 auto [jeep_x, jeep_y] = hud_scale_coords(rf::hud_points[rf::hud_jeep], scale);
                 hud_scaled_bitmap(rf::hud_health_jeep_bmh, jeep_x, jeep_y, scale);
                 auto [jeep_frame_x, jeep_frame_y] = hud_scale_coords(rf::hud_points[rf::hud_jeep_frame], scale);
@@ -47,7 +48,7 @@ FunHook<void(rf::Player*)> hud_status_render_hook{
                 rf::gr_string(jeep_value_x, jeep_value_y, veh_life_str.c_str(), font_id);
             }
             else if (rf::entity_is_driller(vehicle)) {
-                rf::gr_set_color_rgba(255, 255, 255, 120);
+                rf::gr_set_color(255, 255, 255, 120);
                 auto [driller_x, driller_y] = hud_scale_coords(rf::hud_points[rf::hud_driller], scale);
                 hud_scaled_bitmap(rf::hud_health_driller_bmh, driller_x, driller_y, scale);
                 auto [driller_frame_x, driller_frame_y] = hud_scale_coords(rf::hud_points[rf::hud_driller_frame], scale);
@@ -60,7 +61,7 @@ FunHook<void(rf::Player*)> hud_status_render_hook{
             }
         }
         else {
-            rf::gr_set_color_rgba(255, 255, 255, 120);
+            rf::gr_set_color(255, 255, 255, 120);
             int health_tex_idx = static_cast<int>(entity->life * 0.1f);
             health_tex_idx = std::clamp(health_tex_idx, 0, 10);
             int health_bmh = rf::hud_health_bitmaps[health_tex_idx];
@@ -89,7 +90,7 @@ FunHook<void(rf::Player*)> hud_status_render_hook{
             rf::hud_draw_damage_indicators(player);
 
             if (rf::entity_is_holding_body(entity)) {
-                rf::gr_set_color_rgba(255, 255, 255, 255);
+                rf::gr_set_color(255, 255, 255, 255);
                 static const rf::GrMode state{
                     rf::TEXTURE_SOURCE_WRAP,
                     rf::COLOR_SOURCE_VERTEX_TIMES_TEXTURE,

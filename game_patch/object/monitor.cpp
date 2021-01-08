@@ -4,7 +4,7 @@
 #include <patch_common/CodeInjection.h>
 #include <xlog/xlog.h>
 #include "../rf/clutter.h"
-#include "../rf/graphics.h"
+#include "../rf/gr.h"
 #include "../rf/bmpman.h"
 #include "../rf/player.h"
 #include <common/utils/list-utils.h>

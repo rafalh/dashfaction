@@ -6,7 +6,8 @@
 #include "../console/console.h"
 #include "../in_game_ui/hud.h"
 #include "../main.h"
-#include "../rf/graphics.h"
+#include "../rf/gr.h"
+#include "../rf/gr_font.h"
 #include "../rf/gr_direct3d.h"
 #include "../rf/player.h"
 #include "../rf/multi.h"
@@ -73,7 +74,7 @@ CodeInjection gr_d3d_setup_3d_widescreen_fix{
         // Ratio We use here MaxWidth and MaxHeight to calculate proper FOV for windowed mode
 
         float viewport_aspect_ratio = static_cast<float>(rf::gr_screen.clip_width) / rf::gr_screen.clip_height;
-        float aspect_ratio = static_cast<float>(rf::gr_screen.max_width) / rf::gr_screen.max_height;
+        float aspect_ratio = static_cast<float>(rf::gr_screen.max_w) / rf::gr_screen.max_h;
         float scale_x = 1.0f;
         // this is how RF does compute scale_y and it is needed for working scanner
         float scale_y = ref_aspect_ratio * viewport_aspect_ratio / aspect_ratio;
@@ -265,12 +266,12 @@ CodeInjection d3d_index_buffer_usage_patch{
 
 #endif // D3D_HW_VERTEX_PROCESSING
 
-CallHook<void(int, rf::GrVertex**, int, int)> gr_rect_gr_tmapper_hook{
+CallHook<void(int, rf::Vertex**, int, int)> gr_rect_gr_tmapper_hook{
     0x0050DD69,
-    [](int num, rf::GrVertex** pp_vertices, int flags, int mat) {
+    [](int num, rf::Vertex** pp_vertices, int flags, int mat) {
         for (int i = 0; i < num; ++i) {
-            pp_vertices[i]->spos.x -= 0.5f;
-            pp_vertices[i]->spos.y -= 0.5f;
+            pp_vertices[i]->sx -= 0.5f;
+            pp_vertices[i]->sy -= 0.5f;
         }
         gr_rect_gr_tmapper_hook.call_target(num, pp_vertices, flags, mat);
     },
@@ -631,22 +632,20 @@ ConsoleCommand2 damage_screen_flash_cmd{
 
 FunHook<void(int*, void*, int, int, int, rf::GrMode, int)> gr_d3d_queue_triangles_hook{
     0x005614B0,
-    [](int *list_idx, void *vertices, int num_vertices, int bm0, int bm1, rf::GrMode state, int pass_id) {
+    [](int *list_idx, void *vertices, int num_vertices, int bm0, int bm1, rf::GrMode mode, int pass_id) {
         // Fix glass_house level having faces that use MT state but don't have any lightmap
         if (bm1 == -1) {
             INFO_ONCE("Prevented rendering of an unlit face with multi-texturing render state");
-            constexpr int texture_source_mask = 0x1F;
-            int tex_src = state.value & texture_source_mask;
-            if (tex_src == rf::TEXTURE_SOURCE_MT_WRAP || tex_src == rf::TEXTURE_SOURCE_MT_WRAP_M2X) {
-                tex_src = rf::TEXTURE_SOURCE_WRAP;
-            } else if (tex_src == rf::TEXTURE_SOURCE_MT_CLAMP) {
-                tex_src = rf::TEXTURE_SOURCE_CLAMP;
+            rf::GrTextureSource ts = mode.get_texture_source();
+            if (ts == rf::TEXTURE_SOURCE_CLAMP_1_WRAP_0 || ts == rf::TEXTURE_SOURCE_CLAMP_1_WRAP_0_MOD2X) {
+                ts = rf::TEXTURE_SOURCE_WRAP;
+            } else if (ts == rf::TEXTURE_SOURCE_CLAMP_1_CLAMP_0) {
+                ts = rf::TEXTURE_SOURCE_CLAMP;
             }
-            state.value = state.value & ~texture_source_mask;
-            state.value |= tex_src;
+            mode.set_texture_source(ts);
         }
 
-        gr_d3d_queue_triangles_hook.call_target(list_idx, vertices, num_vertices, bm0, bm1, state, pass_id);
+        gr_d3d_queue_triangles_hook.call_target(list_idx, vertices, num_vertices, bm0, bm1, mode, pass_id);
     },
 };
 
@@ -682,7 +681,7 @@ CodeInjection display_full_screen_image_alpha_support_patch{
             rf::ZBUFFER_TYPE_NONE,
             rf::FOG_ALLOWED
         };
-        regs.edx = mode.value;
+        regs.edx = mode;
     },
 };
 
@@ -917,7 +916,7 @@ void graphics_draw_fps_counter()
 {
     if (g_game_config.fps_counter && !rf::is_hud_hidden) {
         auto text = string_format("FPS: %.1f", rf::current_fps);
-        rf::gr_set_color_rgba(0, 255, 0, 255);
+        rf::gr_set_color(0, 255, 0, 255);
         int x = rf::gr_screen_width() - (g_game_config.big_hud ? 165 : 90);
         int y = 10;
         if (rf::gameseq_in_gameplay()) {

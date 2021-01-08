@@ -5,7 +5,7 @@
 #include "../rf/entity.h"
 #include "../rf/corpse.h"
 #include "../rf/misc.h"
-#include "../rf/graphics.h"
+#include "../rf/gr.h"
 #include "../rf/clutter.h"
 #include "../rf/item.h"
 #include "../rf/player.h"

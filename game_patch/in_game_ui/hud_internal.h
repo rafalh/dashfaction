@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../rf/graphics.h"
+#include "../rf/gr.h"
 
 namespace rf
 {

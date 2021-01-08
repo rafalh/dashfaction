@@ -9,7 +9,7 @@
 #include <set>
 #include <unordered_set>
 #include <algorithm>
-#include "../rf/graphics.h"
+#include "../rf/gr.h"
 #include "../rf/gr_direct3d.h"
 #include <common/utils/string-utils.h>
 #include "../main.h"
@@ -327,15 +327,15 @@ bool gr_d3d_lock(int bm_handle, int section, rf::GrLockInfo *lock) {
 
 static FunHook<bool(int, int, rf::GrLockInfo *)> gr_d3d_lock_hook{0x0055CE00, gr_d3d_lock};
 
-// FunHook<void(int, int, int)> gr_d3d_set_state_and_texture_hook{
+// FunHook<void(rf::GrMode, int, int)> gr_d3d_set_state_and_texture_hook{
 //     0x00550850,
-//     [](int state, int bm0, int bm1) {
+//     [](rf::GrMode mode, int bm0, int bm1) {
 //         auto bm0_filename = rf::bm_get_filename(bm0);
 //         if (bm0_filename && strstr(bm0_filename, "grate")) {
 //             // disable alpha-blending
-//             state &= ~(0x1F << 15);
+//             mode.set_alpha_blend(rf::ALPHA_BLEND_NONE);
 //         }
-//         gr_d3d_set_state_and_texture_hook.call_target(state, bm0, bm1);
+//         gr_d3d_set_state_and_texture_hook.call_target(mode, bm0, bm1);
 //     },
 // };
 

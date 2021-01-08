@@ -1,6 +1,7 @@
 #include <patch_common/AsmWriter.h>
 #include "../rf/hud.h"
-#include "../rf/graphics.h"
+#include "../rf/gr.h"
+#include "../rf/gr_font.h"
 #include "../rf/multi.h"
 #include "../rf/player.h"
 #include "hud_internal.h"
@@ -22,7 +23,7 @@ namespace rf
 void hud_render_team_scores()
 {
     int clip_h = rf::gr_clip_height();
-    rf::gr_set_color_rgba(0, 0, 0, 150);
+    rf::gr_set_color(0, 0, 0, 150);
     int box_w = g_big_team_scores_hud ? 370 : 185;
     int box_h = g_big_team_scores_hud ? 80 : 55;
     int box_x = 10;
@@ -59,7 +60,7 @@ void hud_render_team_scores()
                 hud_flag_pulse_dir = true;
             }
         }
-        rf::gr_set_color_rgba(53, 207, 22, 255);
+        rf::gr_set_color(53, 207, 22, 255);
         auto red_flag_player = g_debug_team_scores_hud ? rf::local_player : rf::multi_ctf_get_red_flag_player();
         if (red_flag_player) {
             auto name = g_debug_team_scores_hud ? "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii" : red_flag_player->name;
@@ -67,7 +68,7 @@ void hud_render_team_scores()
             rf::gr_string(miniflag_label_x, red_miniflag_label_y, fitting_name.c_str(), font_id);
 
             if (red_flag_player == rf::local_player) {
-                rf::gr_set_color_rgba(255, 255, 255, static_cast<int>(hud_flag_alpha));
+                rf::gr_set_color(255, 255, 255, static_cast<int>(hud_flag_alpha));
                 hud_scaled_bitmap(rf::hud_flag_red_bmh, flag_x, box_y, flag_scale, rf::hud_flag_gr_mode);
             }
         }
@@ -77,7 +78,7 @@ void hud_render_team_scores()
         else {
             rf::gr_string(miniflag_label_x, red_miniflag_label_y, "missing", font_id);
         }
-        rf::gr_set_color_rgba(53, 207, 22, 255);
+        rf::gr_set_color(53, 207, 22, 255);
         auto blue_flag_player = rf::multi_ctf_get_blue_flag_player();
         if (blue_flag_player) {
             auto name = g_debug_team_scores_hud ? "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii" : blue_flag_player->name;
@@ -85,7 +86,7 @@ void hud_render_team_scores()
             rf::gr_string(miniflag_label_x, blue_miniflag_label_y, fitting_name.c_str(), font_id);
 
             if (blue_flag_player == rf::local_player) {
-                rf::gr_set_color_rgba(255, 255, 255, static_cast<int>(hud_flag_alpha));
+                rf::gr_set_color(255, 255, 255, static_cast<int>(hud_flag_alpha));
                 hud_scaled_bitmap(rf::hud_flag_blue_bmh, flag_x, box_y, flag_scale, rf::hud_flag_gr_mode);
             }
         }
@@ -97,7 +98,7 @@ void hud_render_team_scores()
         }
 
         float miniflag_scale = g_big_team_scores_hud ? 1.5f : 1.0f;
-        rf::gr_set_color_rgba(255, 255, 255, 255);
+        rf::gr_set_color(255, 255, 255, 255);
         if (rf::local_player) {
             int miniflag_hilight_y;
             if (rf::local_player->team == rf::TEAM_RED) {
@@ -122,7 +123,7 @@ void hud_render_team_scores()
         blue_score = rf::multi_ctf_get_blue_team_score();
     }
     else if (game_type == rf::NG_TYPE_TEAMDM) {
-        rf::gr_set_color_rgba(53, 207, 22, 255);
+        rf::gr_set_color(53, 207, 22, 255);
         red_score = rf::multi_tdm_get_red_team_score();
         blue_score = rf::multi_tdm_get_blue_team_score();
     }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../rf/graphics.h"
+#include "../rf/gr_font.h"
 
 class DebugNameValueBox
 {
@@ -67,9 +67,9 @@ public:
 private:
     void print_internal(int x, int y, const char* str)
     {
-        rf::gr_set_color_rgba(0, 0, 0, 255);
+        rf::gr_set_color(0, 0, 0, 255);
         rf::gr_string(x + 1, y + 1, str);
-        rf::gr_set_color_rgba(255, 255, 255, 255);
+        rf::gr_set_color(255, 255, 255, 255);
         rf::gr_string(x, y, str);
     }
 };

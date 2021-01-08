@@ -1,7 +1,7 @@
 #pragma once
 
 #include "common.h"
-#include "graphics.h"
+#include "gr_font.h"
 #include <patch_common/MemUtils.h>
 
 namespace rf

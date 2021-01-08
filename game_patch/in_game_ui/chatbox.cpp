@@ -1,7 +1,8 @@
 #include "hud_internal.h"
 #include "../in_game_ui/hud.h"
 #include "../rf/hud.h"
-#include "../rf/graphics.h"
+#include "../rf/gr.h"
+#include "../rf/gr_font.h"
 #include <patch_common/FunHook.h>
 #include <patch_common/AsmOpcodes.h>
 #include <patch_common/AsmWriter.h>
@@ -62,10 +63,10 @@ void ChatRender()
     int box_x = (clip_w - box_w) / 2;
 
     int border_alpha = rf::scoreboard_visible ? 255 : chatbox_border_alpha;
-    rf::gr_set_color_rgba(255, 255, 255, static_cast<int>(border_alpha * fade_out));
+    rf::gr_set_color(255, 255, 255, static_cast<int>(border_alpha * fade_out));
     hud_rect_border(box_x, box_y, box_w, box_h, border);
     int bg_alpha = rf::scoreboard_visible ? 255 : chatbox_bg_alpha;
-    rf::gr_set_color_rgba(0, 0, 0, static_cast<int>(bg_alpha * fade_out));
+    rf::gr_set_color(0, 0, 0, static_cast<int>(bg_alpha * fade_out));
     rf::gr_rect(box_x + border, box_y + border, content_w, content_h);
     int y = box_y + box_h - border - font_h - 5;
 
@@ -80,26 +81,26 @@ void ChatRender()
         rf::gr_get_string_size(&name_w, &name_h, msg.name.c_str(), -1, chatbox_font);
         if (msg.color_id == 0 || msg.color_id == 1) {
             if (msg.color_id == 0) {
-                rf::gr_set_color_rgba(227, 48, 47, text_alpha);
+                rf::gr_set_color(227, 48, 47, text_alpha);
             }
             else {
-                rf::gr_set_color_rgba(117, 117, 254, text_alpha);
+                rf::gr_set_color(117, 117, 254, text_alpha);
             }
             rf::gr_string(x, y, msg.name.c_str(), chatbox_font);
-            rf::gr_set_color_rgba(255, 255, 255, text_alpha);
+            rf::gr_set_color(255, 255, 255, text_alpha);
             x += name_w;
         }
         else if (msg.color_id == 2) {
-            rf::gr_set_color_rgba(227, 48, 47, text_alpha);
+            rf::gr_set_color(227, 48, 47, text_alpha);
         }
         else if (msg.color_id == 3) {
-            rf::gr_set_color_rgba(117, 117, 254, text_alpha);
+            rf::gr_set_color(117, 117, 254, text_alpha);
         }
         else if (msg.color_id == 4) {
-            rf::gr_set_color_rgba(255, 255, 255, text_alpha);
+            rf::gr_set_color(255, 255, 255, text_alpha);
         }
         else {
-            rf::gr_set_color_rgba(52, 255, 57, text_alpha);
+            rf::gr_set_color(52, 255, 57, text_alpha);
         }
         rf::gr_string(x, y, msg.text.c_str(), chatbox_font);
         y -= font_h;
@@ -148,17 +149,17 @@ void chatbox_input_render(rf::String::Pod label_pod, rf::String::Pod msg_pod)
         rf::gr_get_string_size(&msg_w, &msg_h, msg_shortened.c_str(), -1, chatbox_font);
     }
 
-    rf::gr_set_color_rgba(255, 255, 255, rf::scoreboard_visible ? 255 : chatbox_border_alpha);
+    rf::gr_set_color(255, 255, 255, rf::scoreboard_visible ? 255 : chatbox_border_alpha);
     hud_rect_border(input_box_x, input_box_y, box_w, input_box_h, 2);
 
-    rf::gr_set_color_rgba(0, 0, 0, rf::scoreboard_visible ? 255 : chatbox_bg_alpha);
+    rf::gr_set_color(0, 0, 0, rf::scoreboard_visible ? 255 : chatbox_bg_alpha);
     rf::gr_rect(input_box_x + border, input_box_y + border, content_w, input_box_content_h);
 
     rf::String label_and_msg;
     rf::String::concat(&label_and_msg, label, msg_shortened);
     int text_x = input_box_x + border + 4;
     int text_y = input_box_y + border + (g_big_chatbox ? 2 : 1);
-    rf::gr_set_color_rgba(53, 207, 22, 255);
+    rf::gr_set_color(53, 207, 22, 255);
     rf::gr_string(text_x, text_y, label_and_msg.c_str(), chatbox_font);
 
     static rf::Timestamp cursor_blink_timestamp;

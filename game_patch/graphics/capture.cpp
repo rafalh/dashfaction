@@ -3,7 +3,7 @@
 #include "gr_color.h"
 #include "graphics_internal.h"
 #include "../main.h"
-#include "../rf/graphics.h"
+#include "../rf/gr.h"
 #include "../rf/gr_direct3d.h"
 #include <common/error/d3d-error.h>
 #include <cstddef>
@@ -214,7 +214,7 @@ CodeInjection d3d_cleanup_patch{
 CodeInjection screenshot_scanlines_array_overflow_fix1{
     0x0055A066,
     [](auto& regs) {
-        g_screenshot_scanlines_buf = std::make_unique<byte* []>(rf::gr_screen.max_height);
+        g_screenshot_scanlines_buf = std::make_unique<byte* []>(rf::gr_screen.max_h);
         regs.ecx = reinterpret_cast<int32_t>(g_screenshot_scanlines_buf.get());
         regs.eip = 0x0055A06D;
     },

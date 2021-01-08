@@ -1,7 +1,7 @@
 #include "../rf/os.h"
 #include "../rf/multi.h"
 #include "../rf/input.h"
-#include "../rf/graphics.h"
+#include "../rf/gr.h"
 #include "../console/console.h"
 #include "../main.h"
 #include <windows.h>
@@ -98,7 +98,7 @@ void frametime_render()
             max_frametime = std::max(max_frametime, frametime);
         }
 
-        rf::gr_set_color_rgba(255, 255, 255, 128);
+        rf::gr_set_color(255, 255, 255, 128);
         int scr_w = rf::gr_screen_width();
         int scr_h = rf::gr_screen_height();
         for (unsigned i = 0; i < std::size(g_frametime_history); ++i) {

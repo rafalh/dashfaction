@@ -8,7 +8,7 @@
 #include <cctype>
 #include <cassert>
 #include "../rf/os.h"
-#include "../rf/graphics.h"
+#include "../rf/gr.h"
 #include "../rf/multi.h"
 #include "../rf/player.h"
 #include "../rf/input.h"

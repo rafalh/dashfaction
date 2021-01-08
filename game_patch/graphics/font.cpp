@@ -9,7 +9,7 @@
 #include <patch_common/AsmWriter.h>
 #include <windows.h>
 #include "../rf/common.h"
-#include "../rf/graphics.h"
+#include "../rf/gr_font.h"
 #include "../rf/bmpman.h"
 #include "../rf/multi.h"
 #include <common/utils/string-utils.h>

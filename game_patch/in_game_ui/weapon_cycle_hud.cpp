@@ -3,7 +3,8 @@
 #include "../rf/hud.h"
 #include "../rf/player.h"
 #include "../rf/entity.h"
-#include "../rf/graphics.h"
+#include "../rf/gr.h"
+#include "../rf/gr_font.h"
 #include "../rf/weapon.h"
 #include "../rf/localize.h"
 #include "../rf/sound.h"
@@ -23,7 +24,7 @@ void render_select_weapon_gui()
     }
 
     int clip_w = rf::gr_clip_width();
-    rf::gr_set_color_rgba(15, 242, 2, 255);
+    rf::gr_set_color(15, 242, 2, 255);
     auto font_num = hud_get_default_font();
 
     // selected weapon type name
@@ -61,13 +62,13 @@ void render_select_weapon_gui()
     int text_offset_y = 5;
 
     // type squares - backgrounds
-    rf::gr_set_color_rgba(0, 0, 0, 128);
+    rf::gr_set_color(0, 0, 0, 128);
     for (int i = 0; i < 4; ++i) {
         int sq_x = type_sq_start_x + i * sq_x_delta;
         rf::gr_rect(sq_x + border, type_sq_y + border + 1, sq_bg_size, sq_bg_size);
     }
     // type squares - labels
-    rf::gr_set_color_rgba(15, 242, 2, 255);
+    rf::gr_set_color(15, 242, 2, 255);
     for (int i = 0; i < 4; ++i) {
         char digit_str[] = {static_cast<char>('1' + i), '\0'};
         int sq_x = type_sq_start_x + i * sq_x_delta;
@@ -76,7 +77,7 @@ void render_select_weapon_gui()
     }
     // borders for active type square
     int active_sq_x = type_sq_start_x + selected_cycle_entry.category * sq_x_delta;
-    rf::gr_set_color_rgba(239, 213, 52, 255);
+    rf::gr_set_color(239, 213, 52, 255);
     int sq_with_border_size = sq_bg_size + 2 * border; // 22
     hud_rect_border(active_sq_x, type_sq_y, sq_with_border_size, sq_with_border_size, border);
 
@@ -106,10 +107,10 @@ void render_select_weapon_gui()
         int weapon_type = cycle_entry->weapon_type;
         int weapon_category = cycle_entry->category;
         if (rf::player_get_weapon_total_ammo(rf::local_player, weapon_type) <= 0) {
-            rf::gr_set_color_rgba(254, 55, 55, 255);
+            rf::gr_set_color(254, 55, 55, 255);
         }
         else {
-            rf::gr_set_color_rgba(60, 126, 5, 255);
+            rf::gr_set_color(60, 126, 5, 255);
         }
         int idx = num_drawn_weapons_per_category[weapon_category];
         // indicator below type square
@@ -138,13 +139,13 @@ void render_select_weapon_gui()
             int weapon_icon_bmh = weapon_icon_bitmaps[weapon_type];
             hud_scaled_bitmap(weapon_icon_bmh, weapon_icons_x, weapon_icon_y, weapon_icon_scale);
             if (weapon_type == selected_cycle_entry.weapon_type) {
-                rf::gr_set_color_rgba(239, 213, 52, 255);
+                rf::gr_set_color(239, 213, 52, 255);
                 hud_rect_border(weapon_icons_x - 1, weapon_icon_y - 1, weapon_icon_w + 2, weapon_icon_h + 2, 1);
             }
         }
         ++num_drawn_weapons_per_category[weapon_category];
     }
-    rf::gr_set_color_rgba(15, 242, 2, 255);
+    rf::gr_set_color(15, 242, 2, 255);
     auto& weapon_info = rf::weapon_types[selected_cycle_entry.weapon_type];
     auto display_name = weapon_info.display_name.c_str();
     int num_weapons_for_current_type = num_drawn_weapons_per_category[selected_cycle_entry.category];

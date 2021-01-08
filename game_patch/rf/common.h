@@ -397,6 +397,29 @@ namespace rf
         int num_elements;
     };
 
+    struct BaseVertex
+    {
+        Vector3 world_pos; // world or clip space
+        float sx; // screen space
+        float sy;
+        float sw;
+        ubyte codes;
+        ubyte flags;
+    };
+
+    struct Vertex : BaseVertex
+    {
+        float u1;
+        float v1;
+        float u2;
+        float v2;
+        ubyte r;
+        ubyte g;
+        ubyte b;
+        ubyte a;
+    };
+    static_assert(sizeof(Vertex) == 0x30);
+
     // RF stdlib functions are not compatible with GCC
 
     static auto& Free = addr_as_ref<void(void *mem)>(0x00573C71);

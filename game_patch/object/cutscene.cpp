@@ -5,7 +5,8 @@
 #include <xlog/xlog.h>
 #include "../console/console.h"
 #include "../rf/player.h"
-#include "../rf/graphics.h"
+#include "../rf/gr.h"
+#include "../rf/gr_font.h"
 #include "../rf/hud.h"
 #include "../rf/misc.h"
 #include "../main.h"
@@ -38,7 +39,7 @@ void render_skip_cutscene_hint_text(rf::ControlAction ctrl)
     }
     auto bind_name = get_game_ctrl_bind_name(ctrl);
     auto& ctrl_name = rf::local_player->settings.controls.keys[ctrl].name;
-    rf::gr_set_color_rgba(255, 255, 255, 255);
+    rf::gr_set_color(255, 255, 255, 255);
     auto msg = rf::String::format("Press %s (%s) to skip the cutscene", ctrl_name.c_str(), bind_name.c_str());
     auto x = rf::gr_screen_width() / 2;
     auto y = rf::gr_screen_height() - 30;

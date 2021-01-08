@@ -7,7 +7,8 @@
 #include "../rf/multi.h"
 #include "../rf/gameseq.h"
 #include "../rf/weapon.h"
-#include "../rf/graphics.h"
+#include "../rf/gr.h"
+#include "../rf/gr_font.h"
 #include "../rf/hud.h"
 #include "../rf/misc.h"
 #include "../main.h"
@@ -355,7 +356,7 @@ void spectate_mode_draw_ui()
     int hints_line_spacing = medium_font_h + 3;
     if (!g_spectate_mode_enabled) {
         if (rf::player_is_dead(rf::local_player)) {
-            rf::gr_set_color_rgba(0xFF, 0xFF, 0xFF, 0xFF);
+            rf::gr_set_color(0xFF, 0xFF, 0xFF, 0xFF);
             rf::gr_string(hints_x, hints_y, "Press JUMP key to enter Spectate Mode", medium_font);
         }
         return;
@@ -372,7 +373,7 @@ void spectate_mode_draw_ui()
         rf::gr_string_aligned(rf::GR_ALIGN_CENTER, x, y, "SPECTATE MODE", large_font);
     });
 
-    rf::gr_set_color_rgba(0xFF, 0xFF, 0xFF, 0xFF);
+    rf::gr_set_color(0xFF, 0xFF, 0xFF, 0xFF);
     rf::gr_string(hints_x, hints_y, "Press JUMP key to exit Spectate Mode", medium_font);
     hints_y += hints_line_spacing;
     rf::gr_string(hints_x, hints_y, "Press PRIMARY ATTACK key to switch to the next player", medium_font);
@@ -383,16 +384,16 @@ void spectate_mode_draw_ui()
     const int bar_h = 50;
     int bar_x = (scr_w - bar_w) / 2;
     int bar_y = scr_h - 100;
-    rf::gr_set_color_rgba(0, 0, 0x00, 0x60);
+    rf::gr_set_color(0, 0, 0x00, 0x60);
     rf::gr_rect(bar_x, bar_y, bar_w, bar_h);
 
-    rf::gr_set_color_rgba(0xFF, 0xFF, 0, 0x80);
+    rf::gr_set_color(0xFF, 0xFF, 0, 0x80);
     auto str = string_format("Spectating: %s", g_spectate_mode_target->name.c_str());
     rf::gr_string_aligned(rf::GR_ALIGN_CENTER, bar_x + bar_w / 2, bar_y + bar_h / 2 - large_font_h / 2, str.c_str(), large_font);
 
     rf::Entity* entity = rf::entity_from_handle(g_spectate_mode_target->entity_handle);
     if (!entity) {
-        rf::gr_set_color_rgba(0xFF, 0xFF, 0xFF, 0xFF);
+        rf::gr_set_color(0xFF, 0xFF, 0xFF, 0xFF);
         static int blood_bm = rf::bm_load("bloodsmear07_A.tga", -1, true);
         int blood_w, blood_h;
         rf::bm_get_dimensions(blood_bm, &blood_w, &blood_h);

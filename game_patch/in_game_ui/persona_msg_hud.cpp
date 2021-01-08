@@ -5,6 +5,7 @@
 #include "../rf/player.h"
 #include "../rf/gameseq.h"
 #include "../rf/sound.h"
+#include "../rf/gr_font.h"
 #include <patch_common/AsmWriter.h>
 #include <algorithm>
 #include <cstring>
@@ -59,14 +60,14 @@ void hud_render_persona_msg(rf::Player* player)
     int hud_persona_font = hud_get_default_font();
 
     // border
-    rf::gr_set_color_rgba(255, 255, 255, static_cast<int>(rf::hud_persona_alpha * 77.0f));
+    rf::gr_set_color(255, 255, 255, static_cast<int>(rf::hud_persona_alpha * 77.0f));
     rf::gr_rect(box_x, box_y, box_border, box_h); // left
     rf::gr_rect(box_x + box_w - box_border, box_y, box_border, box_h); // right
     rf::gr_rect(box_x + box_border, box_y, content_w, box_border); // top
     rf::gr_rect(box_x + box_border, offset_y + box_h + 8, content_w, box_border); // bottom
 
     // background
-    rf::gr_set_color_rgba(0, 0, 0, static_cast<int>(rf::hud_persona_alpha * 128.0f));
+    rf::gr_set_color(0, 0, 0, static_cast<int>(rf::hud_persona_alpha * 128.0f));
     rf::gr_rect(box_x + box_border, box_y + box_border, content_w, content_h);
 
     // persona image background (black)
@@ -83,7 +84,7 @@ void hud_render_persona_msg(rf::Player* player)
     // persona image (64x64)
     //rf::gr_set_color(hud_default_color);
     //rf::gr_set_alpha(static_cast<int>(hud_default_color.alpha * hud_persona_alpha));
-    rf::gr_set_color_rgba(255, 255, 255, static_cast<int>(rf::hud_default_color.alpha * rf::hud_persona_alpha));
+    rf::gr_set_color(255, 255, 255, static_cast<int>(rf::hud_default_color.alpha * rf::hud_persona_alpha));
     int img_x = img_box_x + img_border; // 161
     int img_y = img_box_y + img_border; // 14
     hud_scaled_bitmap(hud_persona.image_bmh, img_x, img_y, img_scale);// hud_persona_image_gr_mode

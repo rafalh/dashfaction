@@ -3,7 +3,7 @@
 #include "gr_color.h"
 #include "graphics_internal.h"
 #include "../main.h"
-#include "../rf/graphics.h"
+#include "../rf/gr.h"
 #include "../rf/geometry.h"
 #include <common/utils/perf-utils.h>
 #include <common/config/BuildConfig.h>

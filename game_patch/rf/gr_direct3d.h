@@ -40,7 +40,7 @@ namespace rf
     static auto& gr_d3d = addr_as_ref<IDirect3D8*>(0x01CFCBE0);
     static auto& gr_d3d_device = addr_as_ref<IDirect3DDevice8*>(0x01CFCBE4);
     static auto& gr_d3d_pp = addr_as_ref<D3DPRESENT_PARAMETERS>(0x01CFCA18);
-#elif defined(HRESULT)
+#elif defined(DIRECT3D_VERSION)
     static auto& gr_d3d = addr_as_ref<IUnknown*>(0x01CFCBE0);
     static auto& gr_d3d_device = addr_as_ref<IUnknown*>(0x01CFCBE4);
 #endif

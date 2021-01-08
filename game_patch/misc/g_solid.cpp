@@ -3,7 +3,7 @@
 #include <patch_common/AsmWriter.h>
 #include <xlog/xlog.h>
 #include "../rf/geometry.h"
-#include "../rf/graphics.h"
+#include "../rf/gr.h"
 #include "../graphics/gr_color.h"
 #include "../graphics/graphics.h"
 
