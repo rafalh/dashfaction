@@ -1,42 +1,40 @@
+#define XLOG_STREAMS 1
+
+#include <ctime>
 #include <common/config/GameConfig.h>
 #include <common/config/BuildConfig.h>
 #include <common/utils/os-utils.h>
-#include "main.h"
-#include "os/console.h"
-#include "os/os.h"
-#include "crash_handler_stub.h"
-#include "debug/debug.h"
-#include "exports.h"
-#include "graphics/graphics.h"
-#include "in_game_ui/hud.h"
-#include "in_game_ui/scoreboard.h"
-#include "in_game_ui/spectate_mode.h"
-#include "object/object.h"
-#include "multi/multi.h"
-#include "multi/server.h"
-#include "misc/misc.h"
-#include "misc/vpackfile.h"
-#include "misc/high_fps.h"
-#include "input/input.h"
-#include "rf/multi.h"
-#include "rf/level.h"
-#include "rf/os.h"
+#include <crash_handler_stub.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
 #include <patch_common/AsmWriter.h>
 #include <common/version/version.h>
-#include <ctime>
-
-#define XLOG_STREAMS 1
-
 #include <xlog/ConsoleAppender.h>
 #include <xlog/FileAppender.h>
 #include <xlog/Win32Appender.h>
 #include <xlog/xlog.h>
+#include "main.h"
+#include "../os/console.h"
+#include "../os/os.h"
+#include "../debug/debug.h"
+#include "../graphics/graphics.h"
+#include "../in_game_ui/hud.h"
+#include "../in_game_ui/scoreboard.h"
+#include "../in_game_ui/spectate_mode.h"
+#include "../object/object.h"
+#include "../multi/multi.h"
+#include "../multi/server.h"
+#include "../misc/misc.h"
+#include "../misc/vpackfile.h"
+#include "../misc/high_fps.h"
+#include "../input/input.h"
+#include "../rf/multi.h"
+#include "../rf/level.h"
+#include "../rf/os.h"
 
 #ifdef HAS_EXPERIMENTAL
-#include "experimental/experimental.h"
+#include "../experimental/experimental.h"
 #endif
 
 GameConfig g_game_config;
@@ -262,7 +260,7 @@ extern "C" void subhook_unk_opcode_handler(uint8_t* opcode)
     xlog::error("SubHook unknown opcode 0x%X at 0x%p", *opcode, opcode);
 }
 
-extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
+extern "C" DWORD __declspec(dllexport) Init([[maybe_unused]] void* unused)
 {
     DWORD start_ticks = GetTickCount();
 

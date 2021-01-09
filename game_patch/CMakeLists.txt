@@ -12,8 +12,8 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/purefaction/pf_secret.cpp")
 endif()
 
 set(SRCS
-    main.cpp
-    main.h
+    main/main.cpp
+    main/main.h
     rf/ai.h
     rf/bmpman.h
     rf/clutter.h

@@ -8,7 +8,7 @@
 #include <patch_common/AsmWriter.h>
 #include <common/config/BuildConfig.h>
 #include "../graphics/graphics.h"
-#include "../main.h"
+#include "../main/main.h"
 
 static std::vector<int> g_fpgun_sounds;
 

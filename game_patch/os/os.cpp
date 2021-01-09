@@ -5,7 +5,7 @@
 #include "../rf/os.h"
 #include "../rf/multi.h"
 #include "../rf/input.h"
-#include "../main.h"
+#include "../main/main.h"
 #include "win32_console.h"
 
 const char* get_win_msg_name(UINT msg);

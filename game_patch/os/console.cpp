@@ -1,5 +1,5 @@
 #include "console.h"
-#include "../main.h"
+#include "../main/main.h"
 #include "../misc/player.h"
 #include "../rf/player.h"
 #include "../rf/gameseq.h"

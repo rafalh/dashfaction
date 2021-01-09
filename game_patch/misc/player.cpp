@@ -4,7 +4,7 @@
 #include "../rf/multi.h"
 #include "../rf/sound.h"
 #include "../os/console.h"
-#include "../main.h"
+#include "../main/main.h"
 #include "../multi/multi.h"
 #include "../in_game_ui/spectate_mode.h"
 #include <common/utils/list-utils.h>

@@ -2,7 +2,7 @@
 #include "misc.h"
 #include "sound.h"
 #include "../os/console.h"
-#include "../main.h"
+#include "../main/main.h"
 #include "../rf/gr.h"
 #include "../rf/player.h"
 #include "../rf/multi.h"

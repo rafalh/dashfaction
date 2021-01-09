@@ -5,7 +5,7 @@
 #include "gr_color.h"
 #include "../os/console.h"
 #include "../in_game_ui/hud.h"
-#include "../main.h"
+#include "../main/main.h"
 #include "../rf/gr.h"
 #include "../rf/gr_font.h"
 #include "../rf/gr_direct3d.h"

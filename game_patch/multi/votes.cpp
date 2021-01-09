@@ -8,7 +8,7 @@
 #include "../rf/misc.h"
 #include "../os/console.h"
 #include "../misc/player.h"
-#include "../main.h"
+#include "../main/main.h"
 #include <common/utils/list-utils.h>
 #include "server_internal.h"
 #include "multi.h"

@@ -21,7 +21,7 @@
 #include <patch_common/ComPtr.h>
 #include "multi.h"
 #include "server.h"
-#include "../main.h"
+#include "../main/main.h"
 #include "../rf/multi.h"
 #include "../rf/misc.h"
 #include "../rf/player.h"

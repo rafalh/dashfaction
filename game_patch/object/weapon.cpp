@@ -10,7 +10,7 @@
 #include "../rf/multi.h"
 #include "../rf/level.h"
 #include "../os/console.h"
-#include "../main.h"
+#include "../main/main.h"
 
 bool entity_is_reloading_player_select_weapon_new(rf::Entity* entity)
 {

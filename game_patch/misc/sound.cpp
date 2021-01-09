@@ -9,7 +9,7 @@
 #include <algorithm>
 #include "../rf/sound.h"
 #include "../rf/entity.h"
-#include "../main.h"
+#include "../main/main.h"
 #include "../os/console.h"
 
 static int g_cutscene_bg_sound_sig = -1;

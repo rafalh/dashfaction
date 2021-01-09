@@ -14,7 +14,7 @@
 #include "../rf/geometry.h"
 #include "../rf/level.h"
 #include <common/utils/list-utils.h>
-#include "../main.h"
+#include "../main/main.h"
 
 static std::vector<rf::Object*> g_objects_to_check;
 static std::vector<rf::MoverBrush*> g_mover_brushes_to_check;

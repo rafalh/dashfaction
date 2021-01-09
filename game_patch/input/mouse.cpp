@@ -9,7 +9,7 @@
 #include "../rf/gr.h"
 #include "../rf/multi.h"
 #include "../rf/player.h"
-#include "../main.h"
+#include "../main/main.h"
 
 bool set_direct_input_enabled(bool enabled)
 {

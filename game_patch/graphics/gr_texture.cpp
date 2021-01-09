@@ -12,7 +12,7 @@
 #include "../rf/gr.h"
 #include "../rf/gr_direct3d.h"
 #include <common/utils/string-utils.h>
-#include "../main.h"
+#include "../main/main.h"
 #include "gr_color.h"
 #include "graphics_internal.h"
 #include "graphics.h"

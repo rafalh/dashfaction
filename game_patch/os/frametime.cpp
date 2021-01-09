@@ -2,7 +2,7 @@
 #include <patch_common/AsmWriter.h>
 #include "console.h"
 #include "../rf/gr.h"
-#include "../main.h"
+#include "../main/main.h"
 
 static float g_frametime_history[1024];
 static int g_frametime_history_index = 0;

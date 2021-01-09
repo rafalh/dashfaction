@@ -11,7 +11,7 @@
 #include "../rf/gr_font.h"
 #include "../rf/hud.h"
 #include "../rf/misc.h"
-#include "../main.h"
+#include "../main/main.h"
 #include <common/config/BuildConfig.h>
 #include <xlog/xlog.h>
 #include <patch_common/CallHook.h>

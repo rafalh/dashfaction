@@ -15,7 +15,7 @@
 #include "multi.h"
 #include "../os/console.h"
 #include "../misc/player.h"
-#include "../main.h"
+#include "../main/main.h"
 #include <common/utils/list-utils.h>
 #include "../rf/player.h"
 #include "../rf/multi.h"

@@ -1,6 +1,6 @@
 #include <windows.h>
 #include "vpackfile.h"
-#include "../main.h"
+#include "../main/main.h"
 #include "../rf/common.h"
 #include "../rf/file.h"
 #include <common/utils/iterable-utils.h>

@@ -11,7 +11,7 @@
 #include "../rf/gameseq.h"
 #include "../rf/hud.h"
 #include "../rf/level.h"
-#include "../main.h"
+#include "../main/main.h"
 #include "hud_internal.h"
 
 #define DEBUG_SCOREBOARD 0

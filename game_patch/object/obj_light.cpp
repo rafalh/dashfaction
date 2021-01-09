@@ -6,7 +6,7 @@
 #include "../rf/item.h"
 #include "../rf/clutter.h"
 #include "../os/console.h"
-#include "../main.h"
+#include "../main/main.h"
 
 void gr_light_use_static(bool use_static);
 

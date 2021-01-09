@@ -9,7 +9,7 @@
 #include "../rf/input.h"
 #include "../rf/file.h"
 #include "../rf/multi.h"
-#include "../main.h"
+#include "../main/main.h"
 
 #define SHARP_UI_TEXT 1
 

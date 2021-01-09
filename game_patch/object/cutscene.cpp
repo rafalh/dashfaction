@@ -9,7 +9,7 @@
 #include "../rf/gr_font.h"
 #include "../rf/hud.h"
 #include "../rf/misc.h"
-#include "../main.h"
+#include "../main/main.h"
 #include "../misc/sound.h"
 
 static constexpr rf::ControlAction default_skip_cutscene_ctrl = rf::CA_MP_STATS;

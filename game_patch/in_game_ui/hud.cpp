@@ -6,7 +6,7 @@
 #include "hud.h"
 #include "scoreboard.h"
 #include "hud_internal.h"
-#include "../main.h"
+#include "../main/main.h"
 #include "../os/console.h"
 #include "../graphics/graphics.h"
 #include "../rf/gr_font.h"

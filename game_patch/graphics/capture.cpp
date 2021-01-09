@@ -2,7 +2,7 @@
 #include <d3d8.h>
 #include "gr_color.h"
 #include "graphics_internal.h"
-#include "../main.h"
+#include "../main/main.h"
 #include "../rf/gr.h"
 #include "../rf/gr_direct3d.h"
 #include <common/error/d3d-error.h>

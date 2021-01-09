@@ -6,7 +6,7 @@
 #include "../rf/corpse.h"
 #include "../rf/player.h"
 #include "../rf/particle_emitter.h"
-#include "../main.h"
+#include "../main/main.h"
 
 rf::Timestamp g_player_jump_timestamp;
 

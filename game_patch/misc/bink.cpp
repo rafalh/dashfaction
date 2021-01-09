@@ -1,7 +1,7 @@
 #include <patch_common/FunHook.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/CodeInjection.h>
-#include "../main.h"
+#include "../main/main.h"
 #include "../rf/gr.h"
 #include "../rf/sound.h"
 
