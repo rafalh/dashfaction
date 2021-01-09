@@ -389,7 +389,7 @@ CodeInjection gr_d3d_set_state_profile_patch{
                 desc = " (line)";
             else if (mode == rf::gr_bitmap_clamp_mode)
                 desc = " (bitmap)";
-            xlog::info("gr_d3d_set_state 0x%X%s", mode.value, desc);
+            xlog::info("gr_d3d_set_state 0x%X%s", static_cast<int>(mode), desc);
         }
     },
 };

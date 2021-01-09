@@ -96,6 +96,11 @@ namespace rf
             return value != other.value;
         }
 
+        operator int() const
+        {
+            return value;
+        }
+
         inline GrTextureSource get_texture_source()
         {
             return static_cast<GrTextureSource>((value >> ts_shift) & mask);
