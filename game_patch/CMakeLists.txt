@@ -50,8 +50,9 @@ set(SRCS
     graphics/capture.cpp
     graphics/gr_texture.cpp
     graphics/bmpman.cpp
-    input/input.cpp
     input/input.h
+    input/mouse.cpp
+    input/key.cpp
     in_game_ui/chatbox.cpp
     in_game_ui/health_armor_hud.cpp
     in_game_ui/hud_internal.h
@@ -117,6 +118,7 @@ set(SRCS
     misc/bink.cpp
     misc/g_solid.cpp
     misc/camera.cpp
+    misc/ui.cpp
     res/resources.rc
     ${PF_SRCS}
     ${EXPERIMENTAL_SRCS}

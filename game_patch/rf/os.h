@@ -35,9 +35,10 @@ namespace rf
     };
 
     typedef void(*MsgHandlerPtr)(UINT, WPARAM, LPARAM);
-    static auto &os_add_msg_handler = addr_as_ref<unsigned(MsgHandlerPtr)>(0x00524AE0);
-    static auto &os_foreground = addr_as_ref<bool()>(0x00524AD0);
-    static auto &os_poll = addr_as_ref<void()>(0x00524B60);
+    static auto& os_add_msg_handler = addr_as_ref<unsigned(MsgHandlerPtr)>(0x00524AE0);
+    static auto& os_foreground = addr_as_ref<bool()>(0x00524AD0);
+    static auto& os_poll = addr_as_ref<void()>(0x00524B60);
+    static auto& os_get_clipboard_text = addr_as_ref<void(char *buf, unsigned int max_len)>(0x00525AFC);
 
     static auto& msg_handlers = addr_as_ref<MsgHandlerPtr[32]>(0x01B0D5A0);
     static auto& num_msg_handlers = addr_as_ref<uint32_t>(0x01B0D760);

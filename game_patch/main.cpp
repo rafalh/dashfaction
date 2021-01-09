@@ -300,7 +300,8 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     object_do_patch();
     misc_init();
     server_init();
-    input_init();
+    mouse_apply_patch();
+    key_apply_patch();
 #if !defined(NDEBUG) && defined(HAS_EXPERIMENTAL)
     experimental_init();
 #endif

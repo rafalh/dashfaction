@@ -1,27 +1,23 @@
+#include <cassert>
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
 #include <patch_common/AsmWriter.h>
-#include <patch_common/ShortTypes.h>
 #include <xlog/xlog.h>
-#include <windows.h>
-#include <algorithm>
-#include <cctype>
-#include <cassert>
+#include "../os/console.h"
+#include "../rf/input.h"
 #include "../rf/os.h"
 #include "../rf/gr.h"
 #include "../rf/multi.h"
 #include "../rf/player.h"
-#include "../rf/input.h"
-#include "../os/console.h"
 #include "../main.h"
 
 bool set_direct_input_enabled(bool enabled)
 {
     auto direct_input_initialized = addr_as_ref<bool>(0x01885460);
-    auto InitDirectInput = addr_as_ref<int()>(0x0051E070);
+    auto mouse_di_init = addr_as_ref<int()>(0x0051E070);
     rf::direct_input_disabled = !enabled;
     if (enabled && !direct_input_initialized) {
-        if (InitDirectInput() != 0) {
+        if (mouse_di_init() != 0) {
             xlog::error("Failed to initialize DirectInput");
             rf::direct_input_disabled = true;
             return false;
@@ -129,7 +125,7 @@ rf::Vector3 fw_vector_from_non_linear_yaw_pitch(float yaw, float pitch)
     return fvec;
 }
 
-float LinearPitchFromForwardVector(const rf::Vector3& fvec)
+float linear_pitch_from_forward_vector(const rf::Vector3& fvec)
 {
     return std::asin(fvec.y);
 }
@@ -189,7 +185,7 @@ void linear_pitch_test()
     float yaw = 3.141592f / 4.0f;
     float pitch = 3.141592f / 4.0f;
     rf::Vector3 fvec = fw_vector_from_non_linear_yaw_pitch(yaw, pitch);
-    float lin_pitch = LinearPitchFromForwardVector(fvec);
+    float lin_pitch = linear_pitch_from_forward_vector(fvec);
     rf::Vector3 fvec2 = fw_vector_from_linear_yaw_pitch(yaw, lin_pitch);
     float pitch2 = non_linear_pitch_from_fw_vector(fvec2);
     assert(std::abs(pitch - pitch2) < 0.00001);
@@ -210,7 +206,7 @@ CodeInjection linear_pitch_patch{
             return;
         // Convert to linear space (see RotMatixFromEuler function at 004A0D70)
         auto fvec = fw_vector_from_non_linear_yaw_pitch(current_yaw, current_pitch_non_lin);
-        float current_pitch_lin = LinearPitchFromForwardVector(fvec);
+        float current_pitch_lin = linear_pitch_from_forward_vector(fvec);
         // Calculate new pitch in linear space
         float new_pitch_lin = current_pitch_lin + pitch_delta;
         float new_yaw = current_yaw + yaw_delta;
@@ -242,158 +238,8 @@ ConsoleCommand2 linear_pitch_cmd{
     "Toggles linear pitch angle",
 };
 
-FunHook<int(int16_t)> key_to_ascii_hook{
-    0x0051EFC0,
-    [](int16_t key) {
-        constexpr int empty_result = 0xFF;
-        if (!key) {
-            return empty_result;
-        }
-        // special handling for Num Lock (because ToAscii API does not support it)
-        switch (key & rf::KEY_MASK) {
-            // Numpad keys that always work
-            case rf::KEY_PADMULTIPLY: return static_cast<int>('*');
-            case rf::KEY_PADMINUS: return static_cast<int>('-');
-            case rf::KEY_PADPLUS: return static_cast<int>('+');
-            // Disable Numpad Enter key because game is not prepared for getting new line character from this function
-            case rf::KEY_PADENTER: return empty_result;
-        }
-        if (GetKeyState(VK_NUMLOCK) & 1) {
-            switch (key & rf::KEY_MASK) {
-                case rf::KEY_PAD7: return static_cast<int>('7');
-                case rf::KEY_PAD8: return static_cast<int>('8');
-                case rf::KEY_PAD9: return static_cast<int>('9');
-                case rf::KEY_PAD4: return static_cast<int>('4');
-                case rf::KEY_PAD5: return static_cast<int>('5');
-                case rf::KEY_PAD6: return static_cast<int>('6');
-                case rf::KEY_PAD1: return static_cast<int>('1');
-                case rf::KEY_PAD2: return static_cast<int>('2');
-                case rf::KEY_PAD3: return static_cast<int>('3');
-                case rf::KEY_PAD0: return static_cast<int>('0');
-                case rf::KEY_PADPERIOD: return static_cast<int>('.');
-            }
-        }
-        BYTE key_state[256] = {0};
-        if (key & rf::KEY_SHIFTED) {
-            key_state[VK_SHIFT] = 0x80;
-        }
-        if (key & rf::KEY_ALTED) {
-            key_state[VK_MENU] = 0x80;
-        }
-        if (key & rf::KEY_CTRLED) {
-            key_state[VK_CONTROL] = 0x80;
-        }
-        int scan_code = key & 0x7F;
-        auto vk = MapVirtualKeyA(scan_code, MAPVK_VSC_TO_VK);
-        WCHAR unicode_chars[3];
-        auto num_unicode_chars = ToUnicode(vk, scan_code, key_state, unicode_chars, std::size(unicode_chars), 0);
-        if (num_unicode_chars < 1) {
-            return empty_result;
-        }
-        char ansi_char;
-#if 0 // Windows-1252 codepage support - disabled because callers of this function expects ASCII
-        int num_ansi_chars = WideCharToMultiByte(1252, 0, unicode_chars, num_unicode_chars,
-            &ansi_char, sizeof(ansi_char), nullptr, nullptr);
-        if (num_ansi_chars == 0) {
-            return empty_result;
-        }
-#else
-        if (static_cast<char16_t>(unicode_chars[0]) >= 0x80 || !std::isprint(unicode_chars[0])) {
-            return empty_result;
-        }
-        ansi_char = static_cast<char>(unicode_chars[0]);
-#endif
-        xlog::trace("vk %X (%c) char %c", vk, vk, ansi_char);
-        return static_cast<int>(ansi_char);
-    },
-};
-
-int get_key_name(int key, char* buf, size_t buf_len)
+void mouse_apply_patch()
 {
-     LONG lparam = (key & 0x7F) << 16;
-    if (key & 0x80) {
-        lparam |= 1 << 24;
-    }
-    // Note: it seems broken on Wine with non-US layout (most likely broken MAPVK_VSC_TO_VK_EX mapping is responsible)
-    int ret = GetKeyNameTextA(lparam, buf, buf_len);
-    if (ret <= 0) {
-        WARN_ONCE("GetKeyNameTextA failed for 0x%X", key);
-        buf[0] = '\0';
-    }
-    else {
-        xlog::trace("key 0x%X name %s", key, buf);
-    }
-    return ret;
-}
-
-FunHook<int(rf::String&, int)> get_key_name_hook{
-    0x0043D930,
-    [](rf::String& out_name, int key) {
-        static char buf[32] = "";
-        int result = 0;
-        if (key < 0 || get_key_name(key, buf, std::size(buf)) <= 0) {
-            result = -1;
-        }
-        out_name = buf;
-        return result;
-    },
-};
-
-CodeInjection key_name_in_options_patch{
-    0x00450328,
-    [](auto& regs) {
-        static char buf[32];
-        int key = regs.edx;
-        get_key_name(key, buf, std::size(buf));
-        regs.edi = reinterpret_cast<int>(buf);
-        regs.eip = 0x0045032F;
-    },
-};
-
-auto& GetTextFromClipboard = addr_as_ref<void(char *buf, unsigned int max_len)>(0x00525AFC);
-auto UiInputBox_AddChar = reinterpret_cast<bool (__thiscall*)(void *this_, char c)>(0x00457260);
-
-extern FunHook<bool __fastcall(void *this_, void* edx, rf::Key key)> UiInputBox_ProcessKey_hook;
-bool __fastcall UiInputBox_ProcessKey_new(void *this_, void* edx, rf::Key key)
-{
-    if (key == (rf::KEY_V | rf::KEY_CTRLED)) {
-        char buf[256];
-        GetTextFromClipboard(buf, std::size(buf) - 1);
-        for (int i = 0; buf[i]; ++i) {
-            UiInputBox_AddChar(this_, buf[i]);
-        }
-        return true;
-    }
-    else {
-        return UiInputBox_ProcessKey_hook.call_target(this_, edx, key);
-    }
-}
-FunHook<bool __fastcall(void *this_, void* edx, rf::Key key)> UiInputBox_ProcessKey_hook{
-    0x00457300,
-    UiInputBox_ProcessKey_new,
-};
-
-CodeInjection key_get_hook{
-    0x0051F000,
-    []() {
-        // Process messages here because when watching videos main loop is not running
-        rf::os_poll();
-    },
-};
-
-void input_init()
-{
-    // Support non-US keyboard layouts
-    key_to_ascii_hook.install();
-    get_key_name_hook.install();
-    key_name_in_options_patch.install();
-
-    // Disable broken numlock handling
-    write_mem<u8>(0x004B14B2 + 1, 0);
-
-    // Handle CTRL+V in input boxes
-    UiInputBox_ProcessKey_hook.install();
-
     // Disable mouse when window is not active
     mouse_eval_deltas_hook.install();
 
@@ -411,12 +257,8 @@ void input_init()
     // Linear vertical rotation (pitch)
     linear_pitch_patch.install();
 
-    // win32 console support and addition of os_poll
-    key_get_hook.install();
-
     // Commands
     input_mode_cmd.register_cmd();
     ms_cmd.register_cmd();
     linear_pitch_cmd.register_cmd();
-
 }
