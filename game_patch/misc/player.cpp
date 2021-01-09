@@ -3,7 +3,7 @@
 #include "../rf/entity.h"
 #include "../rf/multi.h"
 #include "../rf/sound.h"
-#include "../console/console.h"
+#include "../os/console.h"
 #include "../main.h"
 #include "../multi/multi.h"
 #include "../in_game_ui/spectate_mode.h"

@@ -1,7 +1,7 @@
 #include "spectate_mode.h"
 #include "hud.h"
 #include "scoreboard.h"
-#include "../console/console.h"
+#include "../os/console.h"
 #include "../rf/entity.h"
 #include "../rf/player.h"
 #include "../rf/multi.h"

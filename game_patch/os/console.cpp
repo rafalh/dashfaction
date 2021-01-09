@@ -4,6 +4,7 @@
 #include "../rf/player.h"
 #include "../rf/gameseq.h"
 #include "../rf/input.h"
+#include "win32_console.h"
 #include <common/config/BuildConfig.h>
 #include <common/version/version.h>
 #include <patch_common/CodeInjection.h>
@@ -90,6 +91,42 @@ void console_register_command(rf::ConsoleCommand* cmd)
         assert(false);
 }
 
+static FunHook<void(const char*, const rf::Color*)> console_output_hook{
+    reinterpret_cast<uintptr_t>(rf::console_output),
+    [](const char* text, const rf::Color* color) {
+        if (win32_console_is_enabled()) {
+            win32_console_output(text, color);
+        }
+        else {
+            console_output_hook.call_target(text, color);
+        }
+    },
+};
+
+static FunHook<void()> console_draw_server_hook{
+    0x0050A770,
+    []() {
+        if (win32_console_is_enabled()) {
+            win32_console_update();
+        }
+        else {
+            console_draw_server_hook.call_target();
+        }
+    },
+};
+
+static CallHook<void(char)> console_put_char_new_line_hook{
+    0x0050A081,
+    [](char c) {
+        if (win32_console_is_enabled()) {
+            win32_console_new_line();
+        }
+        else {
+            console_put_char_new_line_hook.call_target(c);
+        }
+    },
+};
+
 void console_commands_apply_patches();
 void console_auto_complete_apply_patches();
 void console_commands_init();
@@ -132,6 +169,11 @@ void console_apply_patches()
     // Fix possible input buffer overflow
     console_process_kbd_get_text_from_clipboard_hook.install();
     write_mem<u32>(0x0050A2D0 + 2, max_cmd_line_len);
+
+    // Win32 console support
+    console_output_hook.install();
+    console_draw_server_hook.install();
+    console_put_char_new_line_hook.install();
 
     console_commands_apply_patches();
     console_auto_complete_apply_patches();

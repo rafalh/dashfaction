@@ -1,7 +1,7 @@
 #include "debug_internal.h"
 #include <patch_common/FunHook.h>
 #include <xlog/xlog.h>
-#include "../console/console.h"
+#include "../os/console.h"
 
 #ifdef NDEBUG
 #define MEMORY_TRACKING 0

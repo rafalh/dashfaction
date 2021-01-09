@@ -1,4 +1,4 @@
-#include "../console/console.h"
+#include "../os/console.h"
 #include "server_internal.h"
 #include "../rf/multi.h"
 #include "../rf/gameseq.h"

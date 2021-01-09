@@ -1,6 +1,6 @@
 #include <patch_common/FunHook.h>
 #include "debug_internal.h"
-#include "../console/console.h"
+#include "../os/console.h"
 #include "crash_handler_stub/WatchDogTimer.h"
 
 WatchDogTimer g_watch_dog_timer;

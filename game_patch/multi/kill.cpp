@@ -3,7 +3,7 @@
 #include <patch_common/ShortTypes.h>
 #include <patch_common/AsmWriter.h>
 #include "multi.h"
-#include "../console/console.h"
+#include "../os/console.h"
 #include "../rf/player.h"
 #include "../rf/entity.h"
 #include "../rf/localize.h"

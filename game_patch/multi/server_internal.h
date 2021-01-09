@@ -48,7 +48,6 @@ struct ServerAdditionalConfig
 extern ServerAdditionalConfig g_additional_server_config;
 extern std::string g_prev_level;
 
-void init_win32_server_console();
 void cleanup_win32_server_console();
 void handle_vote_command(std::string_view vote_name, std::string_view vote_arg, rf::Player* sender);
 void server_vote_do_frame();

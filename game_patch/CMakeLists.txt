@@ -79,13 +79,17 @@ set(SRCS
     multi/level_download.cpp
     multi/server.h
     multi/server.cpp
-    multi/win32_server_console.cpp
     multi/votes.cpp
     multi/commands.cpp
-    console/console.cpp
-    console/console.h
-    console/commands.cpp
-    console/autocomplete.cpp
+    os/console.cpp
+    os/console.h
+    os/commands.cpp
+    os/autocomplete.cpp
+    os/frametime.cpp
+    os/timer.cpp
+    os/win32_console.cpp
+    os/os.cpp
+    os/os.h
     object/object.h
     object/object_private.h
     object/entity.cpp
@@ -104,7 +108,6 @@ set(SRCS
     misc/misc.h
     misc/vpackfile.cpp
     misc/vpackfile.h
-    misc/os.cpp
     misc/sound.cpp
     misc/sound.h
     misc/save_restore.cpp

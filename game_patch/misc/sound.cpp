@@ -10,7 +10,7 @@
 #include "../rf/sound.h"
 #include "../rf/entity.h"
 #include "../main.h"
-#include "../console/console.h"
+#include "../os/console.h"
 
 static int g_cutscene_bg_sound_sig = -1;
 #ifdef DEBUG

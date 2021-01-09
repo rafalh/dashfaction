@@ -1,6 +1,6 @@
 #include "debug_internal.h"
 #include <common/config/BuildConfig.h>
-#include "../console/console.h"
+#include "../os/console.h"
 #include <patch_common/FunHook.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/CallPrePostHook.h>

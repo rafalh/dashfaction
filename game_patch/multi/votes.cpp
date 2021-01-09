@@ -6,7 +6,7 @@
 #include "../rf/multi.h"
 #include "../rf/gameseq.h"
 #include "../rf/misc.h"
-#include "../console/console.h"
+#include "../os/console.h"
 #include "../misc/player.h"
 #include "../main.h"
 #include <common/utils/list-utils.h>

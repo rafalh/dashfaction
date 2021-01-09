@@ -5,7 +5,7 @@
 #include "../rf/gr_font.h"
 #include "../rf/ui.h"
 #include "../misc/misc.h"
-#include "../console/console.h"
+#include "../os/console.h"
 #include <common/HttpRequest.h>
 #include <common/rfproto.h>
 #include <common/config/BuildConfig.h>

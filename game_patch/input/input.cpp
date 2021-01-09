@@ -12,7 +12,7 @@
 #include "../rf/multi.h"
 #include "../rf/player.h"
 #include "../rf/input.h"
-#include "../console/console.h"
+#include "../os/console.h"
 #include "../main.h"
 
 bool set_direct_input_enabled(bool enabled)
@@ -373,6 +373,14 @@ FunHook<bool __fastcall(void *this_, void* edx, rf::Key key)> UiInputBox_Process
     UiInputBox_ProcessKey_new,
 };
 
+CodeInjection key_get_hook{
+    0x0051F000,
+    []() {
+        // Process messages here because when watching videos main loop is not running
+        rf::os_poll();
+    },
+};
+
 void input_init()
 {
     // Support non-US keyboard layouts
@@ -403,8 +411,12 @@ void input_init()
     // Linear vertical rotation (pitch)
     linear_pitch_patch.install();
 
+    // win32 console support and addition of os_poll
+    key_get_hook.install();
+
     // Commands
     input_mode_cmd.register_cmd();
     ms_cmd.register_cmd();
     linear_pitch_cmd.register_cmd();
+
 }

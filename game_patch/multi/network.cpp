@@ -34,7 +34,7 @@
 #include "../misc/misc.h"
 #include "../object/object.h"
 #include <common/utils/enum-bitwise-operators.h>
-#include "../console/console.h"
+#include "../os/console.h"
 
 #if MASK_AS_PF
 #include "../purefaction/pf.h"

@@ -2,7 +2,8 @@
 #include <common/config/BuildConfig.h>
 #include <common/utils/os-utils.h>
 #include "main.h"
-#include "console/console.h"
+#include "os/console.h"
+#include "os/os.h"
 #include "crash_handler_stub.h"
 #include "debug/debug.h"
 #include "exports.h"
@@ -289,6 +290,7 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     // Init modules
     console_apply_patches();
     graphics_init();
+    os_apply_patch();
     apply_hud_patches();
     multi_do_patch();
     init_scoreboard();

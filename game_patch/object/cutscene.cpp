@@ -3,7 +3,7 @@
 #include <patch_common/CodeInjection.h>
 #include <algorithm>
 #include <xlog/xlog.h>
-#include "../console/console.h"
+#include "../os/console.h"
 #include "../rf/player.h"
 #include "../rf/gr.h"
 #include "../rf/gr_font.h"

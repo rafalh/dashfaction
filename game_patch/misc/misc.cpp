@@ -1,7 +1,7 @@
 #include <windows.h>
 #include "misc.h"
 #include "sound.h"
-#include "../console/console.h"
+#include "../os/console.h"
 #include "../main.h"
 #include "../rf/gr.h"
 #include "../rf/player.h"
@@ -21,7 +21,6 @@
 #include <patch_common/FunHook.h>
 #include <cstring>
 
-void os_do_patch();
 void apply_main_menu_patches();
 void apply_save_restore_patches();
 void apply_sound_patches();
@@ -442,7 +441,6 @@ void misc_init()
     vfile_read_stack_corruption_fix.install();
 
     // Apply patches from other files
-    os_do_patch();
     apply_main_menu_patches();
     apply_save_restore_patches();
     apply_sound_patches();

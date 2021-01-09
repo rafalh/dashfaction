@@ -3,7 +3,7 @@
 #include "graphics.h"
 #include "graphics_internal.h"
 #include "gr_color.h"
-#include "../console/console.h"
+#include "../os/console.h"
 #include "../in_game_ui/hud.h"
 #include "../main.h"
 #include "../rf/gr.h"

@@ -13,7 +13,7 @@
 #include "server.h"
 #include "server_internal.h"
 #include "multi.h"
-#include "../console/console.h"
+#include "../os/console.h"
 #include "../misc/player.h"
 #include "../main.h"
 #include <common/utils/list-utils.h>
@@ -475,10 +475,6 @@ void server_init()
     find_default_weapon_for_entity_hook.install();
     give_default_weapon_ammo_hook.install();
     spawn_player_sync_ammo_hook.install();
-
-#if SERVER_WIN32_CONSOLE // win32 console
-    init_win32_server_console();
-#endif
 
     init_server_commands();
 
