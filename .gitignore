@@ -1,13 +1,6 @@
-/bin
 /dist
-/obj
 /build*
-/lib
 /research
-
-/docs
-*.tbl
-*.lnk
 
 # Visual Studio
 *.sln
