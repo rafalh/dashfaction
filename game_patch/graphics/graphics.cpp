@@ -4,7 +4,7 @@
 #include "graphics_internal.h"
 #include "gr_color.h"
 #include "../os/console.h"
-#include "../in_game_ui/hud.h"
+#include "../hud/hud.h"
 #include "../main/main.h"
 #include "../rf/gr.h"
 #include "../rf/gr_font.h"
@@ -908,14 +908,14 @@ void graphics_after_game_init()
 
 void graphics_draw_fps_counter()
 {
-    if (g_game_config.fps_counter && !rf::is_hud_hidden) {
+    if (g_game_config.fps_counter && !rf::hud_disabled) {
         auto text = string_format("FPS: %.1f", rf::current_fps);
         rf::gr_set_color(0, 255, 0, 255);
         int x = rf::gr_screen_width() - (g_game_config.big_hud ? 165 : 90);
         int y = 10;
         if (rf::gameseq_in_gameplay()) {
             y = g_game_config.big_hud ? 110 : 60;
-            if (is_double_ammo_hud()) {
+            if (hud_weapons_is_double_ammo()) {
                 y += g_game_config.big_hud ? 80 : 40;
             }
         }

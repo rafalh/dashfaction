@@ -10,9 +10,9 @@
 #include "../rf/sound.h"
 #include <patch_common/FunHook.h>
 
-bool g_big_weapon_cycle_hud = false;
+bool weapon_select_big_mode = false;
 
-void render_select_weapon_gui()
+void weapon_select_render()
 {
     if (!rf::local_player) {
         return;
@@ -46,17 +46,17 @@ void render_select_weapon_gui()
     default:
         break;
     }
-    int weapon_type_y = g_big_weapon_cycle_hud ? 210 : 113;
-    int center_x = clip_w - (g_big_weapon_cycle_hud ? 148 : 74);
+    int weapon_type_y = weapon_select_big_mode ? 210 : 113;
+    int center_x = clip_w - (weapon_select_big_mode ? 148 : 74);
     if (weapon_type_name) {
         rf::gr_string_aligned(rf::GR_ALIGN_CENTER, center_x, weapon_type_y, weapon_type_name, font_num);
     }
     // weapon type squares
-    int sq_bg_size = g_big_weapon_cycle_hud ? 30 : 20;
+    int sq_bg_size = weapon_select_big_mode ? 30 : 20;
     int border = 1;
     int sq_spacing = 1;
     int sq_x_delta = sq_bg_size + 2 * border + sq_spacing; // 23
-    int type_sq_y = weapon_type_y + (g_big_weapon_cycle_hud ? 24 : 14); // 127
+    int type_sq_y = weapon_type_y + (weapon_select_big_mode ? 24 : 14); // 127
     int type_sq_start_x = center_x - 2 * sq_x_delta; // w - 120
     int text_offset_x = sq_bg_size / 2;
     int text_offset_y = 5;
@@ -83,7 +83,7 @@ void render_select_weapon_gui()
 
     int num_ind_start_y = type_sq_y + sq_bg_size + 2 * border + sq_spacing + 1; // 150
     int weapon_icons_start_y = num_ind_start_y + 26; // 176
-    float weapon_icon_scale = g_big_weapon_cycle_hud ? 1.5f : 1.0f;
+    float weapon_icon_scale = weapon_select_big_mode ? 1.5f : 1.0f;
     int weapon_icon_w = static_cast<int>(128 * weapon_icon_scale);
     int weapon_icon_h = static_cast<int>(34 * weapon_icon_scale);
     int weapon_icons_x = center_x - weapon_icon_w / 2; // clip_w - 139
@@ -114,7 +114,7 @@ void render_select_weapon_gui()
         }
         int idx = num_drawn_weapons_per_category[weapon_category];
         // indicator below type square
-        int num_ind_w = g_big_weapon_cycle_hud ? 14 : 10;
+        int num_ind_w = weapon_select_big_mode ? 14 : 10;
         int num_ind_h = 3;
         int num_ind_delta_y = num_ind_h + 2;
         int num_ind_x = type_sq_start_x + sq_x_delta * weapon_category + sq_x_delta / 2 - num_ind_w / 2;
@@ -153,14 +153,14 @@ void render_select_weapon_gui()
     rf::gr_string_aligned(rf::GR_ALIGN_CENTER, center_x, weapon_name_y, display_name, font_num);
 }
 
-FunHook render_select_weapon_gui_hook{0x004A2CF0, render_select_weapon_gui};
+FunHook weapon_select_render_hook{0x004A2CF0, weapon_select_render};
 
-void hud_weapon_cycle_apply_patches()
+void weapon_select_apply_patches()
 {
-    render_select_weapon_gui_hook.install();
+    weapon_select_render_hook.install();
 }
 
-void hud_weapon_cycle_set_big(bool is_big)
+void weapon_select_set_big(bool is_big)
 {
-    g_big_weapon_cycle_hud = is_big;
+    weapon_select_big_mode = is_big;
 }

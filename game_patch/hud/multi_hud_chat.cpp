@@ -1,5 +1,5 @@
 #include "hud_internal.h"
-#include "../in_game_ui/hud.h"
+#include "../hud/hud.h"
 #include "../rf/hud.h"
 #include "../rf/gr.h"
 #include "../rf/gr_font.h"
@@ -32,7 +32,7 @@ FunHook<void(const char*, bool)> multi_chat_say_accept_hook{
     },
 };
 
-void ChatRender()
+void multi_hud_render_chat()
 {
     if (!rf::chat_fully_visible_timer.valid() && !rf::chat_fade_out_timer.valid()) {
         return;
@@ -107,16 +107,16 @@ void ChatRender()
     }
 }
 
-FunHook<void()> multi_chat_render_hook{0x004773D0, ChatRender};
+FunHook<void()> multi_hud_render_chat_hook{0x004773D0, multi_hud_render_chat};
 
-CodeInjection multi_chat_add_msg_max_width_injection{
+CodeInjection multi_hud_add_chat_line_max_width_injection{
     0x004788E3,
     [](auto& regs) {
         regs.esi = rf::gr_screen_width() - (g_big_chatbox ? 620 : 320);
     },
 };
 
-void chatbox_input_render(rf::String::Pod label_pod, rf::String::Pod msg_pod)
+void multi_hud_render_chat_inputbox(rf::String::Pod label_pod, rf::String::Pod msg_pod)
 {
     // Note: POD has to be used here because of differences between compilers ABI
     rf::String label{label_pod};
@@ -178,7 +178,7 @@ void chatbox_input_render(rf::String::Pod label_pod, rf::String::Pod msg_pod)
     }
 }
 
-FunHook<void(rf::String::Pod, rf::String::Pod)> chatbox_input_render_hook{0x00478CA0, chatbox_input_render};
+FunHook<void(rf::String::Pod, rf::String::Pod)> multi_hud_render_chat_inputbox_hook{0x00478CA0, multi_hud_render_chat_inputbox};
 
 void multi_hud_chat_apply_patches()
 {
@@ -191,9 +191,9 @@ void multi_hud_chat_apply_patches()
     // Add chat message limit for say/teamsay commands
     multi_chat_say_accept_hook.install();
 
-    multi_chat_render_hook.install();
-    multi_chat_add_msg_max_width_injection.install();
-    chatbox_input_render_hook.install();
+    multi_hud_render_chat_hook.install();
+    multi_hud_add_chat_line_max_width_injection.install();
+    multi_hud_render_chat_inputbox_hook.install();
 }
 
 void multi_hud_chat_set_big(bool is_big)

@@ -34,7 +34,7 @@ rf::String get_game_ctrl_bind_name(int game_ctrl)
 
 void render_skip_cutscene_hint_text(rf::ControlAction ctrl)
 {
-    if (rf::is_hud_hidden) {
+    if (rf::hud_disabled) {
         return;
     }
     auto bind_name = get_game_ctrl_bind_name(ctrl);

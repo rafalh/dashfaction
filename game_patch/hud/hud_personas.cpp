@@ -14,7 +14,7 @@ bool g_big_hud_persona = false;
 
 #define HUD_PERSONA_TEST 0
 
-void hud_render_persona_msg(rf::Player* player)
+void hud_personas_render(rf::Player* player)
 {
 #if HUD_PERSONA_TEST
     rf::hud_persona_alpha = 1.0f;
@@ -44,9 +44,9 @@ void hud_render_persona_msg(rf::Player* player)
     int offset_y = 0;
     auto parent = rf::entity_from_handle(entity->host_handle);
     if (parent && (rf::entity_is_sub(parent) || rf::entity_is_driller(parent) || rf::entity_is_jeep(parent) || rf::entity_is_fighter(parent)))
-        offset_y = rf::hud_points[rf::hud_persona_sub_offset].y; // 360
+        offset_y = rf::hud_coords[rf::hud_persona_sub_offset].y; // 360
     auto& hud_persona = rf::hud_personas_info[rf::hud_persona_current_idx];
-    if (hud_persona.fully_visible_timestamp.elapsed() && !rf::snd_is_playing(hud_persona.sound)) {
+    if (hud_persona.fully_visible_timestamp.elapsed() && !rf::snd_is_playing(hud_persona.sound_instance)) {
         rf::hud_persona_target_alpha = 0.0f;
     }
     int box_border = 2;
@@ -54,7 +54,7 @@ void hud_render_persona_msg(rf::Player* player)
     int box_w = clip_w - (g_big_hud_persona ? 650 : 313);
     int box_h = (g_big_hud_persona ? 165 : 106);
     int box_x = (clip_w - box_w) / 2;
-    int box_y = offset_y + rf::hud_points[rf::hud_persona_message_box_background_ul].y; // 10
+    int box_y = offset_y + rf::hud_coords[rf::hud_persona_message_box_background_ul].y; // 10
     int content_w = box_w - 2 * box_border;
     int content_h = box_h - 2 * box_border;
     int hud_persona_font = hud_get_default_font();
@@ -87,7 +87,7 @@ void hud_render_persona_msg(rf::Player* player)
     rf::gr_set_color(255, 255, 255, static_cast<int>(rf::hud_default_color.alpha * rf::hud_persona_alpha));
     int img_x = img_box_x + img_border; // 161
     int img_y = img_box_y + img_border; // 14
-    hud_scaled_bitmap(hud_persona.image_bmh, img_x, img_y, img_scale);// hud_persona_image_gr_mode
+    hud_scaled_bitmap(hud_persona.image_handle, img_x, img_y, img_scale);// hud_persona_image_gr_mode
 
     // persona name
     rf::gr_set_color(rf::hud_msg_color);
@@ -108,7 +108,7 @@ void hud_render_persona_msg(rf::Player* player)
     int text_y = box_y + 6;
     int font_h = rf::gr_get_font_height(hud_persona_font);
     int max_text_x = box_x + box_w - box_border - 8;
-    int max_text_w = max_text_x - text_x; // rf::hud_points[hud_persona_message_box_text_area_width].x
+    int max_text_w = max_text_x - text_x; // rf::hud_coords[hud_persona_message_box_text_area_width].x
     constexpr int max_lines = 8;
     int len_array[max_lines], offset_array[max_lines];
     int num_lines = rf::gr_split_str(len_array, offset_array, hud_persona.message,
@@ -124,12 +124,12 @@ void hud_render_persona_msg(rf::Player* player)
     }
 }
 
-void hud_persona_msg_apply_patches()
+void hud_personas_apply_patches()
 {
-    AsmWriter{0x00439610}.jmp(hud_render_persona_msg);
+    AsmWriter{0x00439610}.jmp(hud_personas_render);
 }
 
-void hud_persona_msg_set_big(bool is_big)
+void hud_personas_set_big(bool is_big)
 {
     g_big_hud_persona = is_big;
 }

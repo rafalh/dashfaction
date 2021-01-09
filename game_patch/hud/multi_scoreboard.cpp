@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <common/utils/list-utils.h>
 #include <patch_common/FunHook.h>
-#include "scoreboard.h"
+#include "multi_scoreboard.h"
 #include "../multi/multi.h"
 #include "../rf/gr.h"
 #include "../rf/gr_font.h"
@@ -34,7 +34,7 @@ static bool g_enter_anim = false;
 static bool g_leave_anim = false;
 static bool g_big_scoreboard = false;
 
-void set_big_scoreboard(bool is_big)
+void multi_scoreboard_set_big(bool is_big)
 {
     g_big_scoreboard = is_big;
 }
@@ -366,12 +366,12 @@ void scoreboard_maybe_render(bool show_scoreboard)
     }
 }
 
-void init_scoreboard()
+void multi_scoreboard_apply_patch()
 {
     draw_scoreboard_internal_hook.install();
 }
 
-void set_scoreboard_hidden(bool hidden)
+void multi_scoreboard_set_hidden(bool hidden)
 {
     g_scoreboard_force_hide = hidden;
 }

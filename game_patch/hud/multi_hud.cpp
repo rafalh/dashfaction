@@ -1,9 +1,13 @@
 #include <patch_common/AsmWriter.h>
+#include <patch_common/FunHook.h>
+#include <patch_common/CallHook.h>
 #include "../rf/hud.h"
 #include "../rf/gr.h"
 #include "../rf/gr_font.h"
 #include "../rf/multi.h"
 #include "../rf/player.h"
+#include "../main/main.h"
+#include "../graphics/graphics.h"
 #include "hud_internal.h"
 #include "hud.h"
 
@@ -140,12 +144,38 @@ void hud_render_team_scores()
     rf::gr_string(box_x + box_w - 5 - str_w, blue_miniflag_label_y, blue_score_str.c_str(), font_id);
 }
 
-void hud_team_scores_apply_patches()
+CallHook<void(int, int, int, rf::GrMode)> hud_render_power_ups_gr_bitmap_hook{
+    {
+        0x0047FF2F,
+        0x0047FF96,
+        0x0047FFFD,
+    },
+    [](int bm_handle, int x, int y, rf::GrMode mode) {
+        float scale = g_game_config.big_hud ? 2.0f : 1.0f;
+        x = hud_transform_value(x, 640, rf::gr_clip_width());
+        x = hud_scale_value(x, rf::gr_clip_width(), scale);
+        y = hud_scale_value(y, rf::gr_clip_height(), scale);
+        hud_scaled_bitmap(bm_handle, x, y, scale, mode);
+    },
+};
+
+FunHook<void()> render_level_info_hook{
+    0x00477180,
+    []() {
+        run_with_default_font(hud_get_default_font(), [&]() {
+            render_level_info_hook.call_target();
+        });
+    },
+};
+
+void multi_hud_apply_patches()
 {
     AsmWriter{0x00477790}.jmp(hud_render_team_scores);
+    hud_render_power_ups_gr_bitmap_hook.install();
+    render_level_info_hook.install();
 }
 
-void hud_team_scores_set_big(bool is_big)
+void multi_hud_set_big(bool is_big)
 {
     g_big_team_scores_hud = is_big;
 }

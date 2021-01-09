@@ -6,7 +6,7 @@
 #include "../os/console.h"
 #include "../main/main.h"
 #include "../multi/multi.h"
-#include "../in_game_ui/spectate_mode.h"
+#include "../hud/multi_spectate.h"
 #include <common/utils/list-utils.h>
 #include <common/config/GameConfig.h>
 #include <patch_common/FunHook.h>
@@ -42,7 +42,7 @@ FunHook<rf::Player*(bool)> player_create_hook{
 FunHook<void(rf::Player*)> player_destroy_hook{
     0x004A35C0,
     [](rf::Player* player) {
-        spectate_mode_on_destroy_player(player);
+        multi_spectate_on_destroy_player(player);
         player_destroy_hook.call_target(player);
         g_player_additional_data_map.erase(player);
     },
@@ -53,7 +53,7 @@ FunHook<rf::Entity*(rf::Player*, int, const rf::Vector3*, const rf::Matrix3*, in
     [](rf::Player* pp, int entity_type, const rf::Vector3* pos, const rf::Matrix3* orient, int multi_entity_index) {
         auto ep = player_create_entity_hook.call_target(pp, entity_type, pos, orient, multi_entity_index);
         if (ep) {
-            spectate_mode_player_create_entity_post(pp, ep);
+            multi_spectate_player_create_entity_post(pp, ep);
         }
         if (pp == rf::local_player) {
             // Update sound listener position so respawn sound is not classified as too quiet to play
@@ -175,7 +175,7 @@ CallHook<void __fastcall(rf::Timestamp*, int, int)> player_execute_action_timest
 FunHook<void(rf::Player*, rf::ControlAction, bool)> player_execute_action_hook{
     0x004A6210,
     [](rf::Player* player, rf::ControlAction ctrl, bool was_pressed) {
-        if (!spectate_mode_handle_ctrl_in_game(ctrl, was_pressed)) {
+        if (!multi_spectate_execute_action(ctrl, was_pressed)) {
             player_execute_action_hook.call_target(player, ctrl, was_pressed);
         }
     },
@@ -184,7 +184,7 @@ FunHook<void(rf::Player*, rf::ControlAction, bool)> player_execute_action_hook{
 FunHook<bool(rf::Player*)> player_is_local_hook{
     0x004A68D0,
     [](rf::Player* player) {
-        if (spectate_mode_is_active()) {
+        if (multi_spectate_is_spectating()) {
             return false;
         }
         return player_is_local_hook.call_target(player);
@@ -193,7 +193,7 @@ FunHook<bool(rf::Player*)> player_is_local_hook{
 
 bool player_is_dead_and_not_spectating(rf::Player* player)
 {
-    if (spectate_mode_is_active())
+    if (multi_spectate_is_spectating())
         return false;
     else
         return rf::player_is_dead(player);
@@ -205,7 +205,7 @@ CallHook player_is_dead_scoreboard2_hook{0x00437C25, player_is_dead_and_not_spec
 
 static bool player_is_dying_and_not_spectating(rf::Player* player)
 {
-    if (spectate_mode_is_active())
+    if (multi_spectate_is_spectating())
         return false;
     else
         return rf::player_is_dying(player);
@@ -219,9 +219,9 @@ FunHook<void()> players_do_frame_hook{
     0x004A26D0,
     []() {
         players_do_frame_hook.call_target();
-        if (spectate_mode_is_active()) {
+        if (multi_spectate_is_spectating()) {
             static auto hud_do_frame = addr_as_ref<void(rf::Player*)>(0x00437B80);
-            hud_do_frame(spectate_mode_get_target());
+            hud_do_frame(multi_spectate_get_target_player());
         }
     },
 };

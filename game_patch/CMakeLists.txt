@@ -54,18 +54,19 @@ set(SRCS
     input/input.h
     input/mouse.cpp
     input/key.cpp
-    in_game_ui/chatbox.cpp
-    in_game_ui/health_armor_hud.cpp
-    in_game_ui/hud_internal.h
-    in_game_ui/hud.cpp
-    in_game_ui/hud.h
-    in_game_ui/persona_msg_hud.cpp
-    in_game_ui/scoreboard.cpp
-    in_game_ui/scoreboard.h
-    in_game_ui/spectate_mode.cpp
-    in_game_ui/spectate_mode.h
-    in_game_ui/team_scores_hud.cpp
-    in_game_ui/weapon_cycle_hud.cpp
+    hud/hud_personas.cpp
+    hud/hud_status.cpp
+    hud/hud_weapons.cpp
+    hud/hud_internal.h
+    hud/hud.cpp
+    hud/hud.h
+    hud/multi_scoreboard.cpp
+    hud/multi_scoreboard.h
+    hud/multi_spectate.cpp
+    hud/multi_spectate.h
+    hud/multi_hud.cpp
+    hud/multi_hud_chat.cpp
+    hud/weapon_select.cpp
     debug/debugwinmsg.cpp
     debug/debug_cmd.cpp
     debug/debug.cpp

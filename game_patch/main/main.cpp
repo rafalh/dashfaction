@@ -20,9 +20,9 @@
 #include "../bmpman/bmpman.h"
 #include "../debug/debug.h"
 #include "../graphics/graphics.h"
-#include "../in_game_ui/hud.h"
-#include "../in_game_ui/scoreboard.h"
-#include "../in_game_ui/spectate_mode.h"
+#include "../hud/hud.h"
+#include "../hud/multi_scoreboard.h"
+#include "../hud/multi_spectate.h"
 #include "../object/object.h"
 #include "../multi/multi.h"
 #include "../multi/server.h"
@@ -55,7 +55,7 @@ CallHook<void()> rf_init_hook{
 CodeInjection after_full_game_init_hook{
     0x004B26C6,
     []() {
-        spectate_mode_after_full_game_init();
+        multi_spectate_after_full_game_init();
 #if !defined(NDEBUG) && defined(HAS_EXPERIMENTAL)
         experimental_init_after_game();
 #endif
@@ -105,7 +105,7 @@ CodeInjection after_frame_render_hook{
         // Draw on top (after scene)
 
         if (rf::is_multi)
-            spectate_mode_draw_ui();
+            multi_spectate_render();
 
         graphics_draw_fps_counter();
         multi_render_level_download_progress();
@@ -126,7 +126,7 @@ FunHook<int(rf::String&, rf::String&, char*)> level_load_hook{
         if (ret != 0)
             xlog::warn("Loading failed: %s", error);
         else {
-            spectate_mode_level_init();
+            multi_spectate_level_init();
         }
         return ret;
     },
@@ -291,11 +291,11 @@ extern "C" DWORD __declspec(dllexport) Init([[maybe_unused]] void* unused)
     graphics_init();
     bm_apply_patch();
     os_apply_patch();
-    apply_hud_patches();
+    hud_apply_patches();
     multi_do_patch();
-    init_scoreboard();
+    multi_scoreboard_apply_patch();
     vpackfile_apply_patches();
-    spectate_mode_init();
+    multi_spectate_appy_patch();
     high_fps_init();
     object_do_patch();
     misc_init();

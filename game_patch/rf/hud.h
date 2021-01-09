@@ -15,19 +15,19 @@ namespace rf
         int y;
     };
 
-    constexpr int num_hud_points = 48;
-    static auto& hud_points_640 = addr_as_ref<HudPoint[num_hud_points]>(0x00637868);
-    static auto& hud_points_800 = addr_as_ref<HudPoint[num_hud_points]>(0x006373D0);
-    static auto& hud_points_1024 = addr_as_ref<HudPoint[num_hud_points]>(0x00637230);
-    static auto& hud_points_1280 = addr_as_ref<HudPoint[num_hud_points]>(0x00637560);
-    static auto& hud_points = addr_as_ref<HudPoint[num_hud_points]>(0x006376E8);
+    constexpr int num_hud_coords = 48;
+    static auto& hud_coords_640 = addr_as_ref<HudPoint[num_hud_coords]>(0x00637868);
+    static auto& hud_coords_800 = addr_as_ref<HudPoint[num_hud_coords]>(0x006373D0);
+    static auto& hud_coords_1024 = addr_as_ref<HudPoint[num_hud_coords]>(0x00637230);
+    static auto& hud_coords_1280 = addr_as_ref<HudPoint[num_hud_coords]>(0x00637560);
+    static auto& hud_coords = addr_as_ref<HudPoint[num_hud_coords]>(0x006376E8);
 
     static auto& hud_ammo_font = addr_as_ref<int>(0x00596F64);
-    static auto& hud_health_enviro_font = addr_as_ref<int>(0x00596F68);
+    static auto& hud_status_font = addr_as_ref<int>(0x00596F68);
     static auto& hud_msg_font_num = addr_as_ref<int>(0x005A1350);
     static auto& hud_text_font_num = addr_as_ref<int>(0x005A1358);
 
-    static auto& is_hud_hidden = addr_as_ref<bool>(0x006379F0);
+    static auto& hud_disabled = addr_as_ref<bool>(0x006379F0);
     static auto& scoreboard_visible = addr_as_ref<bool>(0x006A1448);
     static auto& scoreboard_big_font = addr_as_ref<int>(0x006C74C0);
 
@@ -112,9 +112,9 @@ namespace rf
         String name;
         String image;
         String display_name;
-        int image_bmh;
-        int sound;
-        int game_snd_id;
+        int image_handle;
+        int sound_instance;
+        int sound_handle;
         char message[256];
         Timestamp fully_visible_timestamp;
     };

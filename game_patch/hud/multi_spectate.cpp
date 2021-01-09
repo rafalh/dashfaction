@@ -1,6 +1,6 @@
-#include "spectate_mode.h"
+#include "multi_spectate.h"
 #include "hud.h"
-#include "scoreboard.h"
+#include "multi_scoreboard.h"
 #include "../os/console.h"
 #include "../rf/entity.h"
 #include "../rf/player.h"
@@ -47,7 +47,7 @@ static bool is_force_respawn()
     return g_spawned_in_current_level && (rf::netgame.flags & rf::NG_FLAG_FORCE_RESPAWN);
 }
 
-void spectate_mode_set_target_player(rf::Player* player)
+void multi_spectate_set_target_player(rf::Player* player)
 {
     if (!player)
         player = rf::local_player;
@@ -109,7 +109,7 @@ static void spectate_next_player(bool dir, bool try_alive_players_first = false)
         if (try_alive_players_first && rf::player_is_dead(new_target))
             continue;
         if (new_target != rf::local_player) {
-            spectate_mode_set_target_player(new_target);
+            multi_spectate_set_target_player(new_target);
             return;
         }
     }
@@ -118,7 +118,7 @@ static void spectate_next_player(bool dir, bool try_alive_players_first = false)
         spectate_next_player(dir, false);
 }
 
-void spectate_mode_enter_freelook()
+void multi_spectate_enter_freelook()
 {
     if (!rf::local_player || !rf::local_player->cam || !rf::is_multi)
         return;
@@ -127,7 +127,7 @@ void spectate_mode_enter_freelook()
     rf::camera_enter_freelook(rf::local_player->cam);
 }
 
-bool spectate_mode_is_freelook()
+bool multi_spectate_is_freelook()
 {
     if (!rf::local_player || !rf::local_player->cam || !rf::is_multi)
         return false;
@@ -136,25 +136,25 @@ bool spectate_mode_is_freelook()
     return camera_mode == rf::CAMERA_FREELOOK;
 }
 
-bool spectate_mode_is_active()
+bool multi_spectate_is_spectating()
 {
-    return g_spectate_mode_enabled || spectate_mode_is_freelook();
+    return g_spectate_mode_enabled || multi_spectate_is_freelook();
 }
 
-rf::Player* spectate_mode_get_target()
+rf::Player* multi_spectate_get_target_player()
 {
     return g_spectate_mode_target;
 }
 
-void spectate_mode_leave()
+void multi_spectate_leave()
 {
     if (g_spectate_mode_enabled)
-        spectate_mode_set_target_player(nullptr);
+        multi_spectate_set_target_player(nullptr);
     else
         set_camera_target(rf::local_player);
 }
 
-bool spectate_mode_handle_ctrl_in_game(rf::ControlAction key_id, bool was_pressed)
+bool multi_spectate_execute_action(rf::ControlAction key_id, bool was_pressed)
 {
     if (!rf::is_multi) {
         return false;
@@ -173,21 +173,21 @@ bool spectate_mode_handle_ctrl_in_game(rf::ControlAction key_id, bool was_presse
         }
         else if (key_id == rf::CA_JUMP) {
             if (was_pressed)
-                spectate_mode_leave();
+                multi_spectate_leave();
             return true;
         }
     }
-    else if (spectate_mode_is_freelook()) {
+    else if (multi_spectate_is_freelook()) {
         // don't allow respawn in freelook spectate
         if (key_id == rf::CA_PRIMARY_ATTACK || key_id == rf::CA_SECONDARY_ATTACK) {
             if (was_pressed)
-                spectate_mode_leave();
+                multi_spectate_leave();
             return true;
         }
     }
     else if (!g_spectate_mode_enabled) {
         if (key_id == rf::CA_JUMP && was_pressed && rf::player_is_dead(rf::local_player)) {
-            spectate_mode_set_target_player(rf::local_player);
+            multi_spectate_set_target_player(rf::local_player);
             spectate_next_player(true, true);
             return true;
         }
@@ -196,12 +196,12 @@ bool spectate_mode_handle_ctrl_in_game(rf::ControlAction key_id, bool was_presse
     return false;
 }
 
-void spectate_mode_on_destroy_player(rf::Player* player)
+void multi_spectate_on_destroy_player(rf::Player* player)
 {
     if (g_spectate_mode_target == player)
         spectate_next_player(true);
     if (g_spectate_mode_target == player)
-        spectate_mode_set_target_player(nullptr);
+        multi_spectate_set_target_player(nullptr);
 }
 
 FunHook<void(rf::Player*)> render_reticle_hook{
@@ -237,15 +237,15 @@ ConsoleCommand2 spectate_cmd{
                 return;
             }
             // player found - spectate
-            spectate_mode_set_target_player(player);
+            multi_spectate_set_target_player(player);
         }
-        else if (g_spectate_mode_enabled || spectate_mode_is_freelook()) {
+        else if (g_spectate_mode_enabled || multi_spectate_is_freelook()) {
             // leave spectate mode
-            spectate_mode_leave();
+            multi_spectate_leave();
         }
         else {
             // enter freelook spectate mode
-            spectate_mode_enter_freelook();
+            multi_spectate_enter_freelook();
         }
     },
     "Toggles spectate mode (first person or free-look depending on the argument)",
@@ -286,7 +286,7 @@ static void player_render_fpgun_new(rf::Player* player)
 
 #endif // SPECTATE_MODE_SHOW_WEAPON
 
-void spectate_mode_init()
+void multi_spectate_appy_patch()
 {
     render_reticle_hook.install();
 
@@ -309,12 +309,12 @@ void spectate_mode_init()
 #endif // SPECTATE_MODE_SHOW_WEAPON
 }
 
-void spectate_mode_after_full_game_init()
+void multi_spectate_after_full_game_init()
 {
     g_spectate_mode_target = rf::local_player;
 }
 
-void spectate_mode_player_create_entity_post(rf::Player* player, rf::Entity* entity)
+void multi_spectate_player_create_entity_post(rf::Player* player, rf::Entity* entity)
 {
     // hide target player from camera after respawn
     if (player == g_spectate_mode_target) {
@@ -326,7 +326,7 @@ void spectate_mode_player_create_entity_post(rf::Player* player, rf::Entity* ent
     }
 }
 
-void spectate_mode_level_init()
+void multi_spectate_level_init()
 {
     g_spawned_in_current_level = false;
 }
@@ -340,9 +340,9 @@ static void draw_with_shadow(int x, int y, int shadow_dx, int shadow_dy, rf::Col
     fun(x, y);
 }
 
-void spectate_mode_draw_ui()
+void multi_spectate_render()
 {
-    if (rf::is_hud_hidden || rf::gameseq_get_state() != rf::GS_GAMEPLAY || spectate_mode_is_freelook()) {
+    if (rf::hud_disabled || rf::gameseq_get_state() != rf::GS_GAMEPLAY || multi_spectate_is_freelook()) {
         return;
     }
 

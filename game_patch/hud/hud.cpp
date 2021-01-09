@@ -4,11 +4,10 @@
 #include <patch_common/AsmWriter.h>
 #include <xlog/xlog.h>
 #include "hud.h"
-#include "scoreboard.h"
+#include "multi_scoreboard.h"
 #include "hud_internal.h"
 #include "../main/main.h"
 #include "../os/console.h"
-#include "../graphics/graphics.h"
 #include "../rf/gr_font.h"
 #include "../rf/hud.h"
 #include "../rf/multi.h"
@@ -17,12 +16,11 @@
 #include "../rf/player.h"
 #include "../rf/weapon.h"
 #include "../rf/gameseq.h"
-#include "spectate_mode.h"
+#include "multi_spectate.h"
 
-float g_hud_ammo_scale = 1.0f;
 int g_target_player_name_font = -1;
 
-static int hud_transform_value(int val, int old_max, int new_max)
+int hud_transform_value(int val, int old_max, int new_max)
 {
     if (val < old_max / 3) {
         return val;
@@ -35,7 +33,7 @@ static int hud_transform_value(int val, int old_max, int new_max)
     }
 }
 
-static int hud_scale_value(int val, int max, float scale)
+int hud_scale_value(int val, int max, float scale)
 {
     if (val < max / 3) {
         return static_cast<int>(std::round(val * scale));
@@ -59,7 +57,7 @@ rf::HudPoint hud_scale_coords(rf::HudPoint pt, float scale)
 FunHook<void()> hud_render_for_multi_hook{
     0x0046ECB0,
     []() {
-        if (!rf::is_hud_hidden) {
+        if (!rf::hud_disabled) {
             hud_render_for_multi_hook.call_target();
         }
     },
@@ -70,8 +68,8 @@ ConsoleCommand2 hud_cmd{
     [](std::optional<bool> hud_opt) {
 
         // toggle if no parameter passed
-        bool hud_visible = hud_opt.value_or(rf::is_hud_hidden);
-        rf::is_hud_hidden = !hud_visible;
+        bool hud_visible = hud_opt.value_or(rf::hud_disabled);
+        rf::hud_disabled = !hud_visible;
     },
     "Show and hide HUD",
 };
@@ -86,29 +84,29 @@ void hud_setup_positions(int width)
     switch (width) {
     case 640:
         if (height == 480)
-            pos_data = rf::hud_points_640;
+            pos_data = rf::hud_coords_640;
         break;
     case 800:
         if (height == 600)
-            pos_data = rf::hud_points_800;
+            pos_data = rf::hud_coords_800;
         break;
     case 1024:
         if (height == 768)
-            pos_data = rf::hud_points_1024;
+            pos_data = rf::hud_coords_1024;
         break;
     case 1280:
         if (height == 1024)
-            pos_data = rf::hud_points_1280;
+            pos_data = rf::hud_coords_1280;
         break;
     }
     if (pos_data) {
-        std::copy(pos_data, pos_data + rf::num_hud_points, rf::hud_points);
+        std::copy(pos_data, pos_data + rf::num_hud_coords, rf::hud_coords);
     }
     else {
         // We have to scale positions from other resolution here
-        for (int i = 0; i < rf::num_hud_points; ++i) {
-            rf::HudPoint& src_pt = rf::hud_points_1024[i];
-            rf::HudPoint& dst_pt = rf::hud_points[i];
+        for (int i = 0; i < rf::num_hud_coords; ++i) {
+            rf::HudPoint& src_pt = rf::hud_coords_1024[i];
+            rf::HudPoint& dst_pt = rf::hud_coords[i];
 
             if (src_pt.x <= 1024 / 3)
                 dst_pt.x = src_pt.x;
@@ -121,125 +119,32 @@ void hud_setup_positions(int width)
                 dst_pt.y = src_pt.y;
             else if (src_pt.y > 768 / 3 && src_pt.y < 768 * 2 / 3)
                 dst_pt.y = src_pt.y + (height - 768) / 2;
-            else // hud_points_1024[i].y >= 768*2/3
+            else // hud_coords_1024[i].y >= 768*2/3
                 dst_pt.y = src_pt.y + height - 768;
         }
     }
 }
 FunHook hud_setup_positions_hook{0x004377C0, hud_setup_positions};
 
-CallHook<void(int, int, int, rf::GrMode)> hud_render_ammo_gr_bitmap_hook{
-    {
-        // hud_render_ammo_clip
-        0x0043A5E9u,
-        0x0043A637u,
-        0x0043A680u,
-        // hud_render_ammo_power
-        0x0043A988u,
-        0x0043A9DDu,
-        0x0043AA24u,
-        // hud_render_ammo_no_clip
-        0x0043AE80u,
-        0x0043AEC3u,
-        0x0043AF0Au,
-    },
-    [](int bm_handle, int x, int y, rf::GrMode mode) {
-        hud_scaled_bitmap(bm_handle, x, y, g_hud_ammo_scale, mode);
-    },
-};
-
-FunHook<void(rf::Entity*, int, int, bool)> hud_render_ammo_hook{
-    0x0043A510,
-    [](rf::Entity *entity, int weapon_type, int offset_y, bool is_inactive) {
-        offset_y = static_cast<int>(offset_y * g_hud_ammo_scale);
-        hud_render_ammo_hook.call_target(entity, weapon_type, offset_y, is_inactive);
-    },
-};
-
-CallHook<void(int, int, int, rf::GrMode)> render_reticle_gr_bitmap_hook{
-    {
-        0x0043A499,
-        0x0043A4FE,
-    },
-    [](int bm_handle, int x, int y, rf::GrMode mode) {
-        float base_scale = g_game_config.big_hud ? 2.0f : 1.0f;
-        float scale = base_scale * g_game_config.reticle_scale;
-
-        x = static_cast<int>((x - rf::gr_clip_width() / 2) * scale) + rf::gr_clip_width() / 2;
-        y = static_cast<int>((y - rf::gr_clip_height() / 2) * scale) + rf::gr_clip_height() / 2;
-
-        hud_scaled_bitmap(bm_handle, x, y, scale, mode);
-    },
-};
-
-CallHook<void(int, int, int, rf::GrMode)> hud_render_power_ups_gr_bitmap_hook{
-    {
-        0x0047FF2F,
-        0x0047FF96,
-        0x0047FFFD,
-    },
-    [](int bm_handle, int x, int y, rf::GrMode mode) {
-        float scale = g_game_config.big_hud ? 2.0f : 1.0f;
-        x = hud_transform_value(x, 640, rf::gr_clip_width());
-        x = hud_scale_value(x, rf::gr_clip_width(), scale);
-        y = hud_scale_value(y, rf::gr_clip_height(), scale);
-        hud_scaled_bitmap(bm_handle, x, y, scale, mode);
-    },
-};
-
-FunHook<void()> render_level_info_hook{
-    0x00477180,
-    []() {
-        run_with_default_font(hud_get_default_font(), [&]() {
-            render_level_info_hook.call_target();
-        });
-    },
-};
-
-void set_big_ammo(bool is_big)
-{
-    rf::HudItem ammo_hud_items[] = {
-        rf::hud_ammo_bar,
-        rf::hud_ammo_signal,
-        rf::hud_ammo_icon,
-        rf::hud_ammo_in_clip_text_ul_region_coord,
-        rf::hud_ammo_in_clip_text_width_and_height,
-        rf::hud_ammo_in_inv_text_ul_region_coord,
-        rf::hud_ammo_in_inv_text_width_and_height,
-        rf::hud_ammo_bar_position_no_clip,
-        rf::hud_ammo_signal_position_no_clip,
-        rf::hud_ammo_icon_position_no_clip,
-        rf::hud_ammo_in_inv_ul_region_coord_no_clip,
-        rf::hud_ammo_in_inv_text_width_and_height_no_clip,
-        rf::hud_ammo_in_clip_ul_coord,
-        rf::hud_ammo_in_clip_width_and_height,
-    };
-    g_hud_ammo_scale = is_big ? 1.875f : 1.0f;
-    for (auto item_num : ammo_hud_items) {
-        rf::hud_points[item_num] = hud_scale_coords(rf::hud_points[item_num], g_hud_ammo_scale);
-    }
-    rf::hud_ammo_font = rf::gr_load_font(is_big ? "biggerfont.vf" : "bigfont.vf");
-}
-
 void set_big_countdown_counter(bool is_big)
 {
     float scale = is_big ? 2.0f : 1.0f;
-    rf::hud_points[rf::hud_countdown_timer] = hud_scale_coords(rf::hud_points[rf::hud_countdown_timer], scale);
+    rf::hud_coords[rf::hud_countdown_timer] = hud_scale_coords(rf::hud_coords[rf::hud_countdown_timer], scale);
 }
 
 void set_big_hud(bool is_big)
 {
     hud_status_set_big(is_big);
     multi_hud_chat_set_big(is_big);
-    hud_persona_msg_set_big(is_big);
-    hud_weapon_cycle_set_big(is_big);
-    set_big_scoreboard(is_big);
-    hud_team_scores_set_big(is_big);
+    hud_personas_set_big(is_big);
+    weapon_select_set_big(is_big);
+    multi_scoreboard_set_big(is_big);
+    multi_hud_set_big(is_big);
     rf::hud_text_font_num = hud_get_default_font();
     g_target_player_name_font = hud_get_default_font();
 
     hud_setup_positions(rf::gr_screen_width());
-    set_big_ammo(is_big);
+    hud_weapons_set_big(is_big);
     set_big_countdown_counter(is_big);
 
     // TODO: Message Log - Note: it remembers text height in save files so method of recalculation is needed
@@ -258,27 +163,15 @@ ConsoleCommand2 bighud_cmd{
     "bighud",
 };
 
-ConsoleCommand2 reticle_scale_cmd{
-    "reticle_scale",
-    [](std::optional<float> scale_opt) {
-        if (scale_opt) {
-            g_game_config.reticle_scale = scale_opt.value();
-            g_game_config.save();
-        }
-        rf::console_printf("Reticle scale %.4f", g_game_config.reticle_scale.value());
-    },
-    "Sets/gets reticle scale",
-};
-
 #ifdef DEBUG
 ConsoleCommand2 hud_coords_cmd{
     "d_hud_coords",
     [](int idx, std::optional<int> x, std::optional<int> y) {
         if (x && y) {
-            rf::hud_points[idx].x = x.value();
-            rf::hud_points[idx].y = y.value();
+            rf::hud_coords[idx].x = x.value();
+            rf::hud_coords[idx].y = y.value();
         }
-        rf::console_printf("HUD coords[%d]: <%d, %d>", idx, rf::hud_points[idx].x, rf::hud_points[idx].y);
+        rf::console_printf("HUD coords[%d]: <%d, %d>", idx, rf::hud_coords[idx].x, rf::hud_coords[idx].y);
 
     },
 };
@@ -484,7 +377,7 @@ FunHook<void()> hud_init_hook{
     },
 };
 
-CallHook hud_render_status_msg_gr_get_font_height_hook{
+CallHook hud_msg_render_gr_get_font_height_hook{
     0x004382DB,
     []([[ maybe_unused ]] int font_no) {
         // Fix wrong font number being used causing line spacing to be invalid
@@ -500,12 +393,12 @@ void hud_render_00437BC0()
     bool scoreboard_control_pressed = rf::control_config_check_pressed(&rf::local_player->settings.controls, rf::CA_MP_STATS, 0);
     bool is_player_dead = rf::player_is_dead(rf::local_player) || rf::player_is_dying(rf::local_player);
     bool limbo = rf::gameseq_get_state() == rf::GS_MULTI_LIMBO;
-    bool show_scoreboard = scoreboard_control_pressed || (!spectate_mode_is_active() && is_player_dead) || limbo;
+    bool show_scoreboard = scoreboard_control_pressed || (!multi_spectate_is_spectating() && is_player_dead) || limbo;
 
     scoreboard_maybe_render(show_scoreboard);
 }
 
-void apply_hud_patches()
+void hud_apply_patches()
 {
     // Fix HUD on not supported resolutions
     hud_setup_positions_hook.install();
@@ -519,7 +412,6 @@ void apply_hud_patches()
 
     // Other commands
     bighud_cmd.register_cmd();
-    reticle_scale_cmd.register_cmd();
 #ifndef NDEBUG
     hud_coords_cmd.register_cmd();
 #endif
@@ -528,12 +420,7 @@ void apply_hud_patches()
     gr_bitmap_stretched_message_log_hook.install();
 
     // Big HUD support
-    hud_render_ammo_gr_bitmap_hook.install();
-    hud_render_ammo_hook.install();
-    render_reticle_gr_bitmap_hook.install();
-    hud_render_status_msg_gr_get_font_height_hook.install();
-    hud_render_power_ups_gr_bitmap_hook.install();
-    render_level_info_hook.install();
+    hud_msg_render_gr_get_font_height_hook.install();
 
     write_mem_ptr(0x004780D2 + 1, &g_target_player_name_font);
     write_mem_ptr(0x004780FC + 2, &g_target_player_name_font);
@@ -544,21 +431,9 @@ void apply_hud_patches()
 
     // Patches from other files
     hud_status_apply_patches();
+    hud_weapons_apply_patches();
+    hud_personas_apply_patches();
+    weapon_select_apply_patches();
     multi_hud_chat_apply_patches();
-    hud_weapon_cycle_apply_patches();
-    hud_persona_msg_apply_patches();
-    hud_team_scores_apply_patches();
-}
-
-bool is_double_ammo_hud()
-{
-    if (rf::is_multi) {
-        return false;
-    }
-    auto entity = rf::entity_from_handle(rf::local_player->entity_handle);
-    if (!entity) {
-        return false;
-    }
-    auto weapon_type = entity->ai.current_primary_weapon;
-    return weapon_type == rf::machine_pistol_weapon_type || weapon_type == rf::machine_pistol_special_weapon_type;
+    multi_hud_apply_patches();
 }
