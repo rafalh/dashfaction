@@ -7,7 +7,7 @@
 #include "../rf/multi.h"
 #include "../rf/player.h"
 #include "../main/main.h"
-#include "../graphics/graphics.h"
+#include "../graphics/gr.h"
 #include "hud_internal.h"
 #include "hud.h"
 
@@ -162,7 +162,7 @@ CallHook<void(int, int, int, rf::GrMode)> hud_render_power_ups_gr_bitmap_hook{
 FunHook<void()> render_level_info_hook{
     0x00477180,
     []() {
-        run_with_default_font(hud_get_default_font(), [&]() {
+        gr_font_run_with_default(hud_get_default_font(), [&]() {
             render_level_info_hook.call_target();
         });
     },

@@ -1,36 +1,9 @@
 #pragma once
 
-#include "../rf/bmpman.h"
-#include "../rf/common.h"
+#include <windows.h>
+#include <d3d8.h>
 #include <xlog/xlog.h>
-
-// Forward declarations
-namespace rf
-{
-    struct GrLockInfo;
-}
-
-inline int bm_bytes_per_pixel(rf::BmFormat format)
-{
-    switch (format) {
-    case rf::BM_FORMAT_8_PALETTED:
-    case rf::BM_FORMAT_8_ALPHA:
-        return 1;
-    case rf::BM_FORMAT_565_RGB:
-    case rf::BM_FORMAT_4444_ARGB:
-    case rf::BM_FORMAT_1555_ARGB:
-        return 2;
-    case rf::BM_FORMAT_888_RGB:
-        return 3;
-    case rf::BM_FORMAT_8888_ARGB:
-        return 4;
-    default:
-        xlog::warn("Unknown format: %d", format);
-        return 2;
-    }
-}
-
-#ifdef DIRECT3D_VERSION
+#include "../rf/bmpman.h"
 
 inline D3DFORMAT get_d3d_format_from_bm_format(rf::BmFormat format)
 {
@@ -99,11 +72,3 @@ inline rf::BmFormat get_bm_format_from_d3d_format(D3DFORMAT d3d_fmt)
         return rf::BM_FORMAT_NONE;
     }
 }
-
-#endif
-
-void gr_copy_water_bitmap(rf::GrLockInfo& src_lock, rf::GrLockInfo& dst_lock);
-bool convert_surface_format(void* dst_bits_ptr, rf::BmFormat dst_fmt, const void* src_bits_ptr,
-                            rf::BmFormat src_fmt, int width, int height, int dst_pitch, int src_pitch,
-                            const uint8_t* palette = nullptr);
-rf::Color decode_block_compressed_pixel(void* block, rf::BmFormat format, int x, int y);

@@ -4,17 +4,17 @@
 #include <exception>
 #include <cctype>
 #include <stdexcept>
+#include <windows.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
 #include <patch_common/AsmWriter.h>
-#include <windows.h>
+#include <common/utils/string-utils.h>
 #include "../rf/common.h"
 #include "../rf/gr_font.h"
 #include "../rf/bmpman.h"
 #include "../rf/multi.h"
-#include <common/utils/string-utils.h>
-#include "graphics_internal.h"
-#include "gr_color.h"
+#include "../rf/file.h"
+#include "../bmpman/bmpman.h"
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -346,7 +346,7 @@ GrNewFont::GrNewFont(std::string_view name) :
 
         int pixel_size = bm_bytes_per_pixel(lock.format);
         auto dst_ptr = bitmap_bits + glyph_bm_y * lock.stride_in_bytes + glyph_bm_x * pixel_size;
-        convert_surface_format(dst_ptr, lock.format, bitmap.buffer, rf::BM_FORMAT_8_ALPHA, bitmap.width, bitmap.rows, lock.stride_in_bytes, bitmap.pitch);
+        bm_convert_format(dst_ptr, lock.format, bitmap.buffer, rf::BM_FORMAT_8_ALPHA, bitmap.width, bitmap.rows, lock.stride_in_bytes, bitmap.pitch);
 
         glyphs_.push_back(glyph_info);
     }
@@ -447,12 +447,12 @@ void init_freetype_lib()
     }
 }
 
-int get_default_font_id()
+int gr_font_get_default()
 {
     return g_default_font_id;
 }
 
-void set_default_font_id(int font_id)
+void gr_font_set_default(int font_id)
 {
     g_default_font_id = font_id;
 }
@@ -553,7 +553,7 @@ FunHook<void(int*, int*, const char*, int, int)> gr_get_string_size_hook{
     },
 };
 
-void apply_font_patches()
+void gr_font_apply_patch()
 {
     // Fix font texture leak
     // Original code sets bitmap handle in all fonts to -1 on level unload. On next font usage the font bitmap is reloaded.

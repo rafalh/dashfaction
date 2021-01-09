@@ -3,6 +3,7 @@
 #include "../rf/entity.h"
 #include "../rf/multi.h"
 #include "../rf/sound.h"
+#include "../rf/bmpman.h"
 #include "../os/console.h"
 #include "../main/main.h"
 #include "../multi/multi.h"
@@ -267,4 +268,7 @@ void player_do_patch()
 
     // Fix hud msg never disappearing in spectate mode
     players_do_frame_hook.install();
+
+    // Make sure scanner bitmap is a render target in player_allocate
+    write_mem<u8>(0x004A34BF + 1, rf::BM_FORMAT_RENDER_TARGET);
 }

@@ -3,14 +3,13 @@
 #include <patch_common/CallHook.h>
 #include <patch_common/CodeInjection.h>
 #include <xlog/xlog.h>
+#include <common/utils/list-utils.h>
 #include "../rf/clutter.h"
 #include "../rf/gr.h"
 #include "../rf/bmpman.h"
 #include "../rf/player.h"
-#include <common/utils/list-utils.h>
 #include "../main/main.h"
-#include "../graphics/graphics.h"
-#include "../graphics/gr_color.h"
+#include "../graphics/gr.h"
 #include "../bmpman/bmpman.h"
 
 FunHook<char(int, int, int, int, char)> monitor_create_hook{

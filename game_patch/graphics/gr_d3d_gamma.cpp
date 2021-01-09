@@ -1,6 +1,6 @@
 #include <windows.h>
 #include <d3d8.h>
-#include "graphics.h"
+#include "gr.h"
 #include "../rf/os.h"
 #include "../rf/gr.h"
 #include "../rf/gr_direct3d.h"
@@ -71,7 +71,7 @@ static void set_gamma_ramp(D3DGAMMARAMP* gamma_ramp)
     }
 }
 
-static void gr_update_gamma_ramp_hook()
+static void gr_d3d_update_gamma_ramp_hook()
 {
     for (unsigned i = 0; i < 256; ++i) {
         unsigned val = rf::gr_gamma_ramp[i] << 8;
@@ -84,7 +84,7 @@ static void gr_update_gamma_ramp_hook()
     set_gamma_ramp(&g_gamma_ramp);
 }
 
-void reset_gamma_ramp()
+void gr_d3d_gamma_reset()
 {
     D3DGAMMARAMP gamma_ramp;
 
@@ -108,15 +108,19 @@ static void gamma_msg_handler(UINT msg, WPARAM w_param, [[maybe_unused]] LPARAM 
             if (w_param)
                 set_gamma_ramp(&g_gamma_ramp);
             else
-                reset_gamma_ramp();
+                gr_d3d_gamma_reset();
         }
     }
 }
 
-void init_gamma()
+void gr_d3d_gamma_init()
 {
-    /* Gamma fix */
-    AsmWriter(0x00547A60).jmp(gr_update_gamma_ramp_hook);
-
     rf::os_add_msg_handler(gamma_msg_handler);
+}
+
+void gr_d3d_gamma_apply_patch()
+{
+    // Add gamma support for windowed mode
+    AsmWriter(0x00547A60).jmp(gr_d3d_update_gamma_ramp_hook);
+
 }

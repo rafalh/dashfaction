@@ -156,29 +156,6 @@ FunHook<int(const int&, const int&)> server_list_cmp_func_hook{
     },
 };
 
-int bm_load_if_exists(const char* name, int unk, bool generate_mipmaps)
-{
-    if (rf::file_exists(name)) {
-        return rf::bm_load(name, unk, generate_mipmaps);
-    }
-    else {
-        return -1;
-    }
-}
-
-CallHook<void(int, int, int, rf::GrMode)> gr_bitmap_draw_cursor_hook{
-    0x004354E4,
-    [](int bm_handle, int x, int y, rf::GrMode mode) {
-        if (rf::ui_scale_y >= 2.0f) {
-            static int cursor_1_bmh = bm_load_if_exists("cursor_1.tga", -1, false);
-            if (cursor_1_bmh != -1) {
-                bm_handle = cursor_1_bmh;
-            }
-        }
-        gr_bitmap_draw_cursor_hook.call_target(bm_handle, x, y, mode);
-    },
-};
-
 void apply_main_menu_patches()
 {
     // Version in Main Menu
@@ -190,7 +167,4 @@ void apply_main_menu_patches()
 
     // Put not responding servers at the bottom of server list
     server_list_cmp_func_hook.install();
-
-    // Bigger cursor bitmap support
-    gr_bitmap_draw_cursor_hook.install();
 }

@@ -51,7 +51,7 @@ CallHook<void(int)> play_bik_file_vram_leak_fix{
     },
 };
 
-void bink_do_patch()
+void bink_apply_patch()
 {
     // Fix possible infinite loop when starting Bink video
     play_bik_file_infinite_loop_fix.install();

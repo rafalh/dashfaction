@@ -1,17 +1,6 @@
-#include "gr_color.h"
-#include "graphics_internal.h"
-#include "../main/main.h"
-#include "../rf/gr.h"
-#include "../rf/geometry.h"
-#include <common/utils/perf-utils.h>
-#include <common/config/BuildConfig.h>
-#include <patch_common/AsmWriter.h>
-#include <patch_common/FunHook.h>
-#include <patch_common/CodeInjection.h>
-#include <patch_common/ShortTypes.h>
-#include <algorithm>
-#include <stdexcept>
-#include "../bmpman/bmpman.h"
+#pragma once
+
+#include "../rf/bmpman.h"
 
 #define TEXTURE_DITHERING 0
 
@@ -491,7 +480,7 @@ rf::Color decode_block_compressed_pixel_internal(const void* block, int x, int y
     };
 }
 
-rf::Color decode_block_compressed_pixel(void* block, rf::BmFormat format, int x, int y)
+inline rf::Color decode_block_compressed_pixel(void* block, rf::BmFormat format, int x, int y)
 {
     switch (format) {
         case rf::BM_FORMAT_DXT1:
@@ -697,113 +686,5 @@ void call_with_format(rf::BmFormat format, F handler)
             return;
         default:
             throw std::runtime_error{"Unhandled pixel format"};
-    }
-}
-
-// perhaps this code should be in g_solid.cpp but we don't have access to PixelsReader/Writer there
-void gr_copy_water_bitmap(rf::GrLockInfo& src_lock, rf::GrLockInfo& dst_lock)
-{
-    try {
-        call_with_format(src_lock.format, [=](auto s) {
-            call_with_format(dst_lock.format, [=](auto d) {
-                auto& byte_1370f90 = addr_as_ref<uint8_t[256]>(0x1370F90);
-                auto& byte_1371b14 = addr_as_ref<uint8_t[256]>(0x1371B14);
-                auto& byte_1371090 = addr_as_ref<uint8_t[512]>(0x1371090);
-
-                uint8_t* dst_row_ptr = dst_lock.data;
-                int src_pixel_size = bm_bytes_per_pixel(src_lock.format);
-
-                for (int y = 0; y < dst_lock.h; ++y) {
-                    int t1 = byte_1370f90[y];
-                    int t2 = byte_1371b14[y];
-                    uint8_t* off_arr = &byte_1371090[-t1];
-                    PixelsWriter<decltype(d)::value> wrt{dst_row_ptr};
-                    for (int x = 0; x < dst_lock.w; ++x) {
-                        int src_x = t1;
-                        int src_y = t2 + off_arr[t1];
-                        int src_x_limited = src_x & (dst_lock.w - 1);
-                        int src_y_limited = src_y & (dst_lock.h - 1);
-                        const uint8_t* src_ptr = src_lock.data + src_x_limited * src_pixel_size + src_y_limited * src_lock.stride_in_bytes;
-                        PixelsReader<decltype(s)::value> rdr{src_ptr};
-                        wrt.write(rdr.read());
-                        ++t1;
-                    }
-                    dst_row_ptr += dst_lock.stride_in_bytes;
-                }
-            });
-        });
-    }
-    catch (const std::exception& e) {
-        xlog::error("Pixel format conversion failed for liquid wave texture: %s", e.what());
-    }
-}
-
-bool convert_surface_format(void* dst_bits_ptr, rf::BmFormat dst_fmt, const void* src_bits_ptr,
-                           rf::BmFormat src_fmt, int width, int height, int dst_pitch, int src_pitch,
-                           const uint8_t* palette)
-{
-#if DEBUG_PERF
-    static auto& color_conv_perf = PerfAggregator::create("convert_surface_format");
-    ScopedPerfMonitor mon{color_conv_perf};
-#endif
-    try {
-        call_with_format(src_fmt, [=](auto s) {
-            call_with_format(dst_fmt, [=](auto d) {
-                SurfacePixelFormatConverter<decltype(s)::value, decltype(d)::value> conv{
-                    src_bits_ptr, dst_bits_ptr,
-                    static_cast<size_t>(src_pitch), static_cast<size_t>(dst_pitch),
-                    static_cast<size_t>(width), static_cast<size_t>(height),
-                    palette,
-                };
-                conv();
-            });
-        });
-        return true;
-    }
-    catch (const std::exception& e) {
-        xlog::error("Pixel format conversion failed (%d -> %d): %s", src_fmt, dst_fmt, e.what());
-        return false;
-    }
-}
-
-static int get_bytes_per_compressed_block(rf::BmFormat format)
-{
-    switch (format) {
-        case rf::BM_FORMAT_DXT1:
-            return 8;
-        case rf::BM_FORMAT_DXT2:
-        case rf::BM_FORMAT_DXT3:
-        case rf::BM_FORMAT_DXT4:
-        case rf::BM_FORMAT_DXT5:
-            return 16;
-        default:
-            assert(false);
-            return 0;
-    }
-}
-
-rf::Color bm_get_pixel(uint8_t* data, rf::BmFormat format, int stride_in_bytes, int x, int y)
-{
-    if (bm_is_compressed_format(format)) {
-        constexpr int block_w = 4;
-        constexpr int block_h = 4;
-        auto bytes_per_block = get_bytes_per_compressed_block(format);
-        auto block = data + (y / block_h) * stride_in_bytes + x / block_w * bytes_per_block;
-        return decode_block_compressed_pixel(block, format, x % block_w, y % block_h);
-    }
-    else {
-        auto ptr = data + y * stride_in_bytes + x * bm_bytes_per_pixel(format);
-        rf::Color result{0, 0, 0, 0};
-        call_with_format(format, [&](auto s) {
-            PixelsReader<decltype(s)::value> rdr{ptr};
-            PixelColor<rf::BmFormat::BM_FORMAT_8888_ARGB> color = rdr.read();
-            result.set(
-                static_cast<uint8_t>(color.r.value),
-                static_cast<uint8_t>(color.g.value),
-                static_cast<uint8_t>(color.b.value),
-                static_cast<uint8_t>(color.a.value)
-            );
-        });
-        return result;
     }
 }

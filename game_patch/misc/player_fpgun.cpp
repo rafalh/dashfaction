@@ -7,7 +7,7 @@
 #include <patch_common/FunHook.h>
 #include <patch_common/AsmWriter.h>
 #include <common/config/BuildConfig.h>
-#include "../graphics/graphics.h"
+#include "../graphics/gr.h"
 #include "../main/main.h"
 
 static std::vector<int> g_fpgun_sounds;
@@ -154,4 +154,7 @@ void player_fpgun_do_patch()
         write_mem<u8>(0x004AF860 + 1, scanner_resolution * 3 / 4);
         write_mem<u8>(0x004AF862 + 1, scanner_resolution);
     }
+
+    // Render rocket launcher scanner image every frame
+    // addr_as_ref<bool>(0x5A1020) = 0;
 }

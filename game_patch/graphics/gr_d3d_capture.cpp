@@ -1,26 +1,23 @@
 #include <windows.h>
 #include <d3d8.h>
-#include "gr_color.h"
-#include "graphics_internal.h"
-#include "../main/main.h"
-#include "../rf/gr.h"
-#include "../rf/gr_direct3d.h"
-#include <common/error/d3d-error.h>
 #include <cstddef>
 #include <cstring>
+#include <common/error/d3d-error.h>
 #include <common/config/BuildConfig.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
 #include <patch_common/AsmWriter.h>
 #include <patch_common/ComPtr.h>
-
-const char g_screenshot_dir_name[] = "screenshots";
+#include "../rf/gr.h"
+#include "../rf/gr_direct3d.h"
+#include "../main/main.h"
+#include "../bmpman/bmpman.h"
+#include "gr_internal.h"
+#include "gr_d3d_internal.h"
 
 static ComPtr<IDirect3DSurface8> g_capture_tmp_surface;
 static ComPtr<IDirect3DSurface8> g_depth_stencil_surface;
-static std::unique_ptr<byte* []> g_screenshot_scanlines_buf;
-static int g_screenshot_dir_id;
 
 bool g_render_to_texture_active = false;
 ComPtr<IDirect3DSurface8> g_orig_render_target;
@@ -190,73 +187,26 @@ FunHook<void(int, int, int, int, int)> gr_capture_back_buffer_hook{
     },
 };
 
-CodeInjection d3d_device_lost_patch{
-    0x00545042,
-    []() {
-        void monitor_refresh_all();
+void gr_d3d_capture_device_lost()
+{
+    g_depth_stencil_surface.release();
+    // Note: g_capture_tmp_surface is in D3DPOOL_SYSTEMMEM so no need to release here
+}
 
-        xlog::trace("D3D device lost");
-        g_depth_stencil_surface.release();
-        // Note: g_capture_tmp_surface is in D3DPOOL_SYSTEMMEM so no need to release here
-        gr_delete_all_default_pool_textures();
-        monitor_refresh_all();
-    },
-};
+void gr_d3d_capture_close()
+{
+    g_depth_stencil_surface.release();
+    g_capture_tmp_surface.release();
+}
 
-CodeInjection d3d_cleanup_patch{
-    0x0054527A,
-    []() {
-        g_depth_stencil_surface.release();
-        g_capture_tmp_surface.release();
-    },
-};
-
-CodeInjection screenshot_scanlines_array_overflow_fix1{
-    0x0055A066,
-    [](auto& regs) {
-        g_screenshot_scanlines_buf = std::make_unique<byte* []>(rf::gr_screen.max_h);
-        regs.ecx = reinterpret_cast<int32_t>(g_screenshot_scanlines_buf.get());
-        regs.eip = 0x0055A06D;
-    },
-};
-
-CodeInjection screenshot_scanlines_array_overflow_fix2{
-    0x0055A0DF,
-    [](auto& regs) {
-        regs.eax = reinterpret_cast<int32_t>(g_screenshot_scanlines_buf.get());
-        regs.eip = 0x0055A0E6;
-    },
-};
-
-void graphics_capture_init()
+void gr_d3d_capture_apply_patch()
 {
 #if !D3D_LOCKABLE_BACKBUFFER
-    /* Override default because IDirect3DSurface8::LockRect fails on multisampled back-buffer */
+    // Override default because IDirect3DSurface8::LockRect fails on multisampled back-buffer
     gr_d3d_read_back_buffer_hook.install();
 #endif
 
-    // Use fast GrCaptureBackBuffer implementation which copies backbuffer to texture without copying from VRAM to RAM
+    // Use fast gr_capture_back_buffer implementation which uses Render To Texture approach (copies backbuffer to
+    // texture without copying from VRAM to RAM)
     gr_capture_back_buffer_hook.install();
-    d3d_device_lost_patch.install();
-    d3d_cleanup_patch.install();
-
-    // Override screenshot directory
-    write_mem_ptr(0x004367CA + 2, &g_screenshot_dir_id);
-
-    // Fix buffer overflow in screenshot to JPG conversion code
-    screenshot_scanlines_array_overflow_fix1.install();
-    screenshot_scanlines_array_overflow_fix2.install();
-
-    // Make sure scanner bitmap is a render target
-    write_mem<u8>(0x004A34BF + 1, rf::BM_FORMAT_RENDER_TARGET);
-}
-
-void graphics_capture_after_game_init()
-{
-    auto full_path = string_format("%s\\%s", rf::root_path, g_screenshot_dir_name);
-    if (CreateDirectoryA(full_path.c_str(), nullptr))
-        xlog::info("Created screenshots directory");
-    else if (GetLastError() != ERROR_ALREADY_EXISTS)
-        xlog::error("Failed to create screenshots directory %lu", GetLastError());
-    g_screenshot_dir_id = rf::file_add_path(g_screenshot_dir_name, "", true);
 }

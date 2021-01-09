@@ -4,8 +4,8 @@
 #include <xlog/xlog.h>
 #include "../rf/geometry.h"
 #include "../rf/gr.h"
-#include "../graphics/gr_color.h"
 #include "../bmpman/bmpman.h"
+#include "../bmpman/fmt_conv_templates.h"
 
 constexpr auto reference_fps = 30.0f;
 constexpr auto reference_framerate = 1.0f / reference_fps;
@@ -51,10 +51,10 @@ CodeInjection GSurface_calculate_lightmap_color_conv_patch{
         uint8_t* dst_data = &lock.data[dst_pixel_size * offset_x + offset_y * lock.stride_in_bytes];
         int height = struct_field_ref<int>(face_light_info, 28);
         int src_pitch = 3 * src_width;
-        bool success = convert_surface_format(dst_data, lock.format, src_data, rf::BM_FORMAT_888_BGR,
+        bool success = bm_convert_format(dst_data, lock.format, src_data, rf::BM_FORMAT_888_BGR,
             src_width, height, lock.stride_in_bytes, src_pitch);
         if (!success)
-            xlog::error("convert_surface_format failed for geomod (fmt %d)", lock.format);
+            xlog::error("bm_convert_format failed for geomod (fmt %d)", lock.format);
         rf::gr_unlock(&lock);
     },
 };
@@ -82,7 +82,7 @@ CodeInjection GSurface_alloc_lightmap_color_conv_patch{
         int dst_pixel_size = bm_bytes_per_pixel(lock.format);
         uint8_t* dst_row_ptr = &lock.data[dst_pixel_size * offset_x + offset_y * lock.stride_in_bytes];
         int src_pitch = 3 * src_width;
-        bool success = convert_surface_format(dst_row_ptr, lock.format, src_data, rf::BM_FORMAT_888_BGR,
+        bool success = bm_convert_format(dst_row_ptr, lock.format, src_data, rf::BM_FORMAT_888_BGR,
                                                  src_width, height, lock.stride_in_bytes, src_pitch);
         if (!success)
             xlog::error("ConvertBitmapFormat failed for geomod2 (fmt %d)", lock.format);
@@ -106,6 +106,44 @@ CodeInjection GSolid_get_ambient_color_from_lightmap_patch{
         color.set(src_ptr[0], src_ptr[1], src_ptr[2], 255);
     },
 };
+
+// perhaps this code should be in g_solid.cpp but we don't have access to PixelsReader/Writer there
+void gr_copy_water_bitmap(rf::GrLockInfo& src_lock, rf::GrLockInfo& dst_lock)
+{
+    try {
+        call_with_format(src_lock.format, [=](auto s) {
+            call_with_format(dst_lock.format, [=](auto d) {
+                auto& byte_1370f90 = addr_as_ref<uint8_t[256]>(0x1370F90);
+                auto& byte_1371b14 = addr_as_ref<uint8_t[256]>(0x1371B14);
+                auto& byte_1371090 = addr_as_ref<uint8_t[512]>(0x1371090);
+
+                uint8_t* dst_row_ptr = dst_lock.data;
+                int src_pixel_size = bm_bytes_per_pixel(src_lock.format);
+
+                for (int y = 0; y < dst_lock.h; ++y) {
+                    int t1 = byte_1370f90[y];
+                    int t2 = byte_1371b14[y];
+                    uint8_t* off_arr = &byte_1371090[-t1];
+                    PixelsWriter<decltype(d)::value> wrt{dst_row_ptr};
+                    for (int x = 0; x < dst_lock.w; ++x) {
+                        int src_x = t1;
+                        int src_y = t2 + off_arr[t1];
+                        int src_x_limited = src_x & (dst_lock.w - 1);
+                        int src_y_limited = src_y & (dst_lock.h - 1);
+                        const uint8_t* src_ptr = src_lock.data + src_x_limited * src_pixel_size + src_y_limited * src_lock.stride_in_bytes;
+                        PixelsReader<decltype(s)::value> rdr{src_ptr};
+                        wrt.write(rdr.read());
+                        ++t1;
+                    }
+                    dst_row_ptr += dst_lock.stride_in_bytes;
+                }
+            });
+        });
+    }
+    catch (const std::exception& e) {
+        xlog::error("Pixel format conversion failed for liquid wave texture: %s", e.what());
+    }
+}
 
 CodeInjection g_proctex_update_water_patch{
     0x004E68D1,
@@ -190,7 +228,7 @@ CodeInjection level_load_lightmaps_color_conv_patch{
             lightmap->buf[i] = std::max(lightmap->buf[i], (uint8_t)(4 << 3)); // 32
     #endif
 
-        bool success = convert_surface_format(lock.data, lock.format, lightmap->buf,
+        bool success = bm_convert_format(lock.data, lock.format, lightmap->buf,
             rf::BM_FORMAT_888_BGR, lightmap->w, lightmap->h, lock.stride_in_bytes, 3 * lightmap->w, nullptr);
         if (!success)
             xlog::error("ConvertBitmapFormat failed for lightmap (dest format %d)", lock.format);

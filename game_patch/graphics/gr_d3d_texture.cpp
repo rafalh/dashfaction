@@ -2,21 +2,20 @@
 #include <d3d8.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
-#include <ddraw.h>
 #include <cstddef>
 #include <cassert>
 #include <cstring>
 #include <set>
 #include <unordered_set>
 #include <algorithm>
+#include <common/utils/string-utils.h>
 #include "../rf/gr.h"
 #include "../rf/gr_direct3d.h"
-#include <common/utils/string-utils.h>
 #include "../main/main.h"
-#include "gr_color.h"
-#include "graphics_internal.h"
-#include "graphics.h"
 #include "../bmpman/bmpman.h"
+#include "gr_d3d_internal.h"
+#include "gr_internal.h"
+#include "gr.h"
 
 std::set<rf::GrD3DTexture*> g_default_pool_tslots;
 int g_currently_creating_texture_for_bitmap = -1;
@@ -129,16 +128,16 @@ FunHook<GrD3DSetTextureData_Type> gr_d3d_set_texture_data_hook{
         if (bm_is_compressed_format(format)) {
             xlog::trace("Writing texture in compressed format level %d src %p bm %dx%d tex %dx%d section %d %d",
                 level, src_bits_ptr, bm_w, bm_h, tex_w, tex_h, section->x, section->y);
-            auto src_pitch = get_surface_pitch(bm_w, format);
-            auto num_src_rows = get_surface_num_rows(bm_h, format);
+            auto src_pitch = bm_calculate_pitch(bm_w, format);
+            auto num_src_rows = bm_calculate_rows(bm_h, format);
 
             auto src_ptr = reinterpret_cast<const std::byte*>(src_bits_ptr);
             auto dst_ptr = reinterpret_cast<std::byte*>(locked_rect.pBits);
 
-            src_ptr += src_pitch * get_surface_num_rows(section->y, format);
-            src_ptr += get_surface_pitch(section->x, format);
+            src_ptr += src_pitch * bm_calculate_rows(section->y, format);
+            src_ptr += bm_calculate_pitch(section->x, format);
 
-            auto copy_pitch = get_surface_pitch(section->width, format);
+            auto copy_pitch = bm_calculate_pitch(section->width, format);
 
             for (int y = 0; y < num_src_rows; ++y) {
                 std::memcpy(dst_ptr, src_ptr, copy_pitch);
@@ -149,7 +148,7 @@ FunHook<GrD3DSetTextureData_Type> gr_d3d_set_texture_data_hook{
         }
         else {
             auto bm_pitch = bm_bytes_per_pixel(format) * bm_w;
-            success = convert_surface_format(locked_rect.pBits, tex_pixel_fmt,
+            success = bm_convert_format(locked_rect.pBits, tex_pixel_fmt,
                                                 src_bits_ptr, format, bm_w, bm_h, locked_rect.Pitch,
                                                 bm_pitch, palette);
             if (!success)
@@ -212,8 +211,8 @@ CodeInjection gr_d3d_create_vram_texture_with_mipmaps_pitch_fix{
         regs.eip = 0x0055B82E;
 
         auto vram_tex_fmt = g_texture_format_selector.select(bm_format);
-        src_bits_ptr += get_surface_length_in_bytes(w, h, bm_format);
-        num_total_vram_bytes += get_surface_length_in_bytes(w, h, get_bm_format_from_d3d_format(vram_tex_fmt));
+        src_bits_ptr += bm_calculate_total_bytes(w, h, bm_format);
+        num_total_vram_bytes += bm_calculate_total_bytes(w, h, get_bm_format_from_d3d_format(vram_tex_fmt));
     },
 };
 
@@ -340,7 +339,7 @@ static FunHook<bool(int, int, rf::GrLockInfo *)> gr_d3d_lock_hook{0x0055CE00, gr
 //     },
 // };
 
-bool gr_is_format_supported(rf::BmFormat format)
+bool gr_d3d_is_texture_format_supported(rf::BmFormat format)
 {
     if (rf::gr_screen.mode != rf::GR_DIRECT3D) {
         return false;
@@ -359,7 +358,7 @@ bool gr_is_format_supported(rf::BmFormat format)
     return true;
 }
 
-void apply_texture_patches()
+void gr_d3d_texture_apply_patch()
 {
     gr_d3d_set_texture_data_hook.install();
     gr_d3d_create_vram_texture_hook.install();
@@ -381,7 +380,7 @@ void apply_texture_patches()
     }
 }
 
-void gr_delete_all_default_pool_textures()
+void gr_d3d_texture_device_lost()
 {
     for (auto tslot : g_default_pool_tslots) {
         gr_d3d_free_texture_hook.call_target(*tslot);
@@ -389,16 +388,14 @@ void gr_delete_all_default_pool_textures()
     g_default_pool_tslots.clear();
 }
 
-void gr_delete_texture(int bm_handle)
+void gr_d3d_delete_texture(int bm_handle)
 {
-    if (rf::gr_screen.mode == rf::GR_DIRECT3D) {
-        auto bm_index = rf::bm_handle_to_index_anim_aware(bm_handle);
-        auto& tslot = rf::gr_d3d_textures[bm_index];
-        rf::gr_d3d_free_texture(tslot);
-    }
+    auto bm_index = rf::bm_handle_to_index_anim_aware(bm_handle);
+    auto& tslot = rf::gr_d3d_textures[bm_index];
+    rf::gr_d3d_free_texture(tslot);
 }
 
-void init_supported_texture_formats()
+void gr_d3d_texture_init()
 {
     g_texture_format_selector.init();
 }

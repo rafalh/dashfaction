@@ -1,36 +1,30 @@
 #include <windows.h>
 #include <d3d8.h>
-#include "graphics.h"
-#include "graphics_internal.h"
-#include "gr_color.h"
-#include "../os/console.h"
-#include "../hud/hud.h"
-#include "../main/main.h"
+#include <patch_common/FunHook.h>
+#include <patch_common/CallHook.h>
+#include <patch_common/CodeInjection.h>
+#include <patch_common/AsmWriter.h>
+#include <patch_common/ComPtr.h>
+#include <common/error/d3d-error.h>
+#include <common/config/BuildConfig.h>
+#include <xlog/xlog.h>
+#include <common/utils/os-utils.h>
 #include "../rf/gr.h"
 #include "../rf/gr_font.h"
 #include "../rf/gr_direct3d.h"
-#include "../rf/player.h"
-#include "../rf/multi.h"
-#include "../rf/hud.h"
-#include "../rf/gameseq.h"
 #include "../rf/os.h"
-#include <common/error/d3d-error.h>
-#include <common/utils/string-utils.h>
-#include <common/utils/list-utils.h>
-#include <common/utils/os-utils.h>
-#include "../rf/item.h"
-#include "../rf/clutter.h"
-#include <common/config/BuildConfig.h>
-#include <patch_common/ComPtr.h>
-#include <patch_common/CallHook.h>
-#include <patch_common/FunHook.h>
-#include <patch_common/CodeInjection.h>
-#include <patch_common/ShortTypes.h>
-#include <patch_common/AsmWriter.h>
-#include <algorithm>
+#include "../rf/multi.h"
+#include "../rf/player.h"
+#include "../main/main.h"
+#include "../os/console.h"
+#include "gr.h"
+#include "gr_internal.h"
 
 static float g_gr_clipped_geom_offset_x = -0.5;
 static float g_gr_clipped_geom_offset_y = -0.5;
+
+void gr_d3d_capture_device_lost();
+void gr_d3d_capture_close();
 
 static void set_texture_min_mag_filter_in_code(D3DTEXTUREFILTERTYPE filter_type0, D3DTEXTUREFILTERTYPE filter_type1)
 {
@@ -207,23 +201,7 @@ CodeInjection update_pp_hook{
         // Override depth format to avoid card specific hackfixes that makes it different on Nvidia and AMD
         rf::gr_d3d_pp.AutoDepthStencilFormat = determine_depth_buffer_format(rf::gr_d3d_pp.BackBufferFormat);
 
-        init_supported_texture_formats();
-    },
-};
-
-CodeInjection setup_stretched_window_patch{
-    0x0050C464,
-    [](auto& regs) {
-        if (g_game_config.wnd_mode == GameConfig::STRETCHED) {
-            // Make sure stretched window is always full screen
-            auto cx = GetSystemMetrics(SM_CXSCREEN);
-            auto cy = GetSystemMetrics(SM_CYSCREEN);
-            SetWindowLongA(rf::main_wnd, GWL_STYLE, WS_POPUP | WS_SYSMENU);
-            SetWindowLongA(rf::main_wnd, GWL_EXSTYLE, 0);
-            SetWindowPos(rf::main_wnd, HWND_NOTOPMOST, 0, 0, cx, cy, SWP_SHOWWINDOW);
-            rf::gr_screen.aspect = static_cast<float>(cx) / static_cast<float>(cy) * 0.75f;
-            regs.eip = 0x0050C551;
-        }
+        gr_d3d_texture_init();
     },
 };
 
@@ -265,17 +243,6 @@ CodeInjection d3d_index_buffer_usage_patch{
 };
 
 #endif // D3D_HW_VERTEX_PROCESSING
-
-CallHook<void(int, rf::Vertex**, int, int)> gr_rect_gr_tmapper_hook{
-    0x0050DD69,
-    [](int num, rf::Vertex** pp_vertices, int flags, int mat) {
-        for (int i = 0; i < num; ++i) {
-            pp_vertices[i]->sx -= 0.5f;
-            pp_vertices[i]->sy -= 0.5f;
-        }
-        gr_rect_gr_tmapper_hook.call_target(num, pp_vertices, flags, mat);
-    },
-};
 
 void setup_texture_filtering()
 {
@@ -477,14 +444,6 @@ CodeInjection after_gr_init_hook{
     },
 };
 
-FunHook<void()> gr_close_hook{
-    0x0050CBE0,
-    []() {
-        reset_gamma_ramp();
-        gr_close_hook.call_target();
-    },
-};
-
 FunHook<int(int, void*)> gr_d3d_create_vram_texture_with_mipmaps_hook{
     0x0055B700,
     [](int bm_handle, void* tex) {
@@ -611,25 +570,6 @@ CodeInjection gr_d3d_draw_geometry_face_patch_2{
     },
 };
 
-FunHook<void()> do_damage_screen_flash_hook{
-    0x004A7520,
-    []() {
-        if (g_game_config.damage_screen_flash) {
-            do_damage_screen_flash_hook.call_target();
-        }
-    },
-};
-
-ConsoleCommand2 damage_screen_flash_cmd{
-    "damage_screen_flash",
-    []() {
-        g_game_config.damage_screen_flash = !g_game_config.damage_screen_flash;
-        g_game_config.save();
-        rf::console_printf("Damage screen flash effect is %s", g_game_config.damage_screen_flash ? "enabled" : "disabled");
-    },
-    "Toggle damage screen flash effect",
-};
-
 FunHook<void(int*, void*, int, int, int, rf::GrMode, int)> gr_d3d_queue_triangles_hook{
     0x005614B0,
     [](int *list_idx, void *vertices, int num_vertices, int bm0, int bm1, rf::GrMode mode, int pass_id) {
@@ -649,16 +589,6 @@ FunHook<void(int*, void*, int, int, int, rf::GrMode, int)> gr_d3d_queue_triangle
     },
 };
 
-void gr_light_use_static(bool use_static)
-{
-    // Enable some experimental flag that causes static lights to be included in computations
-    auto& experimental_alloc_and_lighting = addr_as_ref<bool>(0x00879AF8);
-    auto& gr_light_state = addr_as_ref<int>(0x00C96874);
-    experimental_alloc_and_lighting = use_static;
-    // Increment light cache key to trigger cache invalidation
-    gr_light_state++;
-}
-
 ConsoleCommand2 nearest_texture_filtering_cmd{
     "nearest_texture_filtering",
     []() {
@@ -668,21 +598,6 @@ ConsoleCommand2 nearest_texture_filtering_cmd{
         rf::console_printf("Nearest texture filtering is %s", g_game_config.nearest_texture_filtering ? "enabled" : "disabled");
     },
     "Toggle nearest texture filtering",
-};
-
-CodeInjection display_full_screen_image_alpha_support_patch{
-    0x00432CAF,
-    [](auto& regs) {
-        static rf::GrMode mode{
-            rf::TEXTURE_SOURCE_WRAP,
-            rf::COLOR_SOURCE_TEXTURE,
-            rf::ALPHA_SOURCE_VERTEX_TIMES_TEXTURE,
-            rf::ALPHA_BLEND_ALPHA,
-            rf::ZBUFFER_TYPE_NONE,
-            rf::FOG_ALLOWED
-        };
-        regs.edx = mode;
-    },
 };
 
 CodeInjection gr_d3d_init_load_library_injection{
@@ -698,11 +613,41 @@ CodeInjection gr_d3d_init_load_library_injection{
     },
 };
 
-void apply_texture_patches();
-void apply_font_patches();
-void graphics_capture_init();
-void graphics_capture_after_game_init();
-void init_gamma();
+CodeInjection gr_d3d_device_lost_injection{
+    0x00545042,
+    []() {
+        void monitor_refresh_all();
+
+        xlog::trace("D3D device lost");
+        gr_d3d_capture_device_lost();
+        gr_d3d_texture_device_lost();
+        monitor_refresh_all();
+    },
+};
+
+CodeInjection gr_d3d_close_injection{
+    0x0054527A,
+    []() {
+        gr_d3d_capture_close();
+        gr_d3d_gamma_reset();
+    },
+};
+
+bool gr_d3d_is_d3d8to9()
+{
+    if (rf::gr_screen.mode != rf::GR_DIRECT3D) {
+        return false;
+    }
+    static bool is_d3d9 = false;
+    static bool is_d3d9_inited = false;
+    if (!is_d3d9_inited) {
+        static const GUID IID_IDirect3D9 = {0x81BDCBCA, 0x64D4, 0x426D, {0xAE, 0x8D, 0xAD, 0x01, 0x47, 0xF4, 0x27, 0x5C}};
+        ComPtr<IUnknown> d3d9;
+        is_d3d9 = SUCCEEDED(rf::gr_d3d->QueryInterface(IID_IDirect3D9, reinterpret_cast<void**>(&d3d9)));
+        is_d3d9_inited = true;
+    }
+    return is_d3d9;
+}
 
 void gr_d3d_apply_patch()
 {
@@ -802,7 +747,6 @@ void gr_d3d_apply_patch()
     switch_d3d_mode_patch.install();
 
     after_gr_init_hook.install();
-    gr_close_hook.install();
 
     // Fix memory leak if texture cannot be created
     gr_d3d_create_vram_texture_with_mipmaps_hook.install();
@@ -831,115 +775,17 @@ void gr_d3d_apply_patch()
 
     // Use d3d8to9 instead of d3d8
     gr_d3d_init_load_library_injection.install();
-}
 
-void graphics_init()
-{
-    gr_d3d_apply_patch();
-
-    if (g_game_config.wnd_mode != GameConfig::FULLSCREEN) {
-        // Enable windowed mode
-        write_mem<u32>(0x004B29A5 + 6, 0xC8);
-        setup_stretched_window_patch.install();
-    }
-
-#if 1
-    // Fix rendering of right and bottom edges of viewport (part 1)
-    write_mem<u8>(0x00431D9F, asm_opcodes::jmp_rel_short);
-    write_mem<u8>(0x00431F6B, asm_opcodes::jmp_rel_short);
-    write_mem<u8>(0x004328CF, asm_opcodes::jmp_rel_short);
-    AsmWriter(0x0043298F).jmp(0x004329DC);
-
-    // Left and top viewport edge fix for MSAA in gr_d3d_project_vertex (RF does similar thing in gr_d3d_bitmap)
-    gr_rect_gr_tmapper_hook.install();
-#endif
-
-    // Patch texture handling
-    apply_texture_patches();
-
-    // Fonts
-    apply_font_patches();
-
-    // Back-buffer capture or render to texture related code
-    graphics_capture_init();
-
-    // Gamma related code
-    init_gamma();
-
-    // Enable mip-mapping for textures bigger than 256x256 in bm_read_header
-    AsmWriter(0x0050FEDA, 0x0050FEE9).nop();
-
-    // Do not flush drawing buffers in gr_set_color
-    write_mem<u8>(0x0050CFEB, asm_opcodes::jmp_rel_short);
-
-    // Render rocket launcher scanner image every frame
-    // addr_as_ref<bool>(0x5A1020) = 0;
-
-    // Fix details and liquids rendering in railgun scanner. They were unnecessary modulated with very dark green color,
-    // which seems to be a left-over from an old implementationof railgun scanner green overlay (currently it is
-    // handled by drawing a green rectangle after all the geometry is drawn)
-    write_mem<u8>(0x004D33F3, asm_opcodes::jmp_rel_short);
-    write_mem<u8>(0x004D410D, asm_opcodes::jmp_rel_short);
-
-    // Support disabling of damage screen flash effect
-    do_damage_screen_flash_hook.install();
-
-    // Use gr_clear instead of gr_rect for faster drawing of the fog background
-    AsmWriter(0x00431F99).call(0x0050CDF0);
-
-    // Support textures with alpha channel in Display_Fullscreen_Image event
-    display_full_screen_image_alpha_support_patch.install();
+    // Release default pool resources
+    gr_d3d_device_lost_injection.install();
+    gr_d3d_close_injection.install();
 
     // Commands
     fullscreen_cmd.register_cmd();
     windowed_cmd.register_cmd();
     antialiasing_cmd.register_cmd();
     nearest_texture_filtering_cmd.register_cmd();
-    damage_screen_flash_cmd.register_cmd();
 #ifdef DEBUG
     profile_frame_cmd.register_cmd();
 #endif
-}
-
-void graphics_after_game_init()
-{
-    graphics_capture_after_game_init();
-}
-
-void graphics_draw_fps_counter()
-{
-    if (g_game_config.fps_counter && !rf::hud_disabled) {
-        auto text = string_format("FPS: %.1f", rf::current_fps);
-        rf::gr_set_color(0, 255, 0, 255);
-        int x = rf::gr_screen_width() - (g_game_config.big_hud ? 165 : 90);
-        int y = 10;
-        if (rf::gameseq_in_gameplay()) {
-            y = g_game_config.big_hud ? 110 : 60;
-            if (hud_weapons_is_double_ammo()) {
-                y += g_game_config.big_hud ? 80 : 40;
-            }
-        }
-
-        int font_id = hud_get_default_font();
-        rf::gr_string(x, y, text.c_str(), font_id);
-    }
-
-    void frametime_render();
-    frametime_render();
-}
-
-bool gr_d3d_is_d3d8to9()
-{
-    if (rf::gr_screen.mode != rf::GR_DIRECT3D) {
-        return false;
-    }
-    static bool is_d3d9 = false;
-    static bool is_d3d9_inited = false;
-    if (!is_d3d9_inited) {
-        static const GUID IID_IDirect3D9 = {0x81BDCBCA, 0x64D4, 0x426D, {0xAE, 0x8D, 0xAD, 0x01, 0x47, 0xF4, 0x27, 0x5C}};
-        ComPtr<IUnknown> d3d9;
-        is_d3d9 = SUCCEEDED(rf::gr_d3d->QueryInterface(IID_IDirect3D9, reinterpret_cast<void**>(&d3d9)));
-        is_d3d9_inited = true;
-    }
-    return is_d3d9;
 }

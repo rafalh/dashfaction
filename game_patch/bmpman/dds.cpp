@@ -1,7 +1,8 @@
 #include <dds.h>
 #include <xlog/xlog.h>
-#include "../graphics/graphics_internal.h"
+#include "../graphics/gr.h"
 #include "../rf/bmpman.h"
+#include "../rf/file.h"
 #include "bmpman.h"
 
 rf::BmFormat get_bm_format_from_dds_pixel_format(DDS_PIXELFORMAT& ddspf)
@@ -61,7 +62,7 @@ rf::BmType read_dds_header(rf::File& file, int *width_out, int *height_out, rf::
         return rf::BM_TYPE_NONE;
     }
 
-    if (!gr_is_format_supported(format)) {
+    if (!gr_is_texture_format_supported(format)) {
         xlog::warn("Unsupported by video card DDS pixel format: %X", format);
         return rf::BM_TYPE_NONE;
     }
@@ -112,7 +113,7 @@ int lock_dds_bitmap(rf::BmBitmapEntry& bm_entry)
     int num_total_bytes = 0;
 
     for (int i = 0; i < num_skip_levels + bm_entry.num_levels; ++i) {
-        int num_surface_bytes = get_surface_length_in_bytes(w, h, bm_entry.format);
+        int num_surface_bytes = bm_calculate_total_bytes(w, h, bm_entry.format);
         if (i < num_skip_levels) {
             num_skip_bytes += num_surface_bytes;
         }

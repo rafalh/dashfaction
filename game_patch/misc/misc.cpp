@@ -27,10 +27,10 @@ void apply_sound_patches();
 void register_sound_commands();
 void player_do_patch();
 void player_fpgun_do_patch();
-void bink_do_patch();
 void g_solid_do_patch();
 void camera_do_patch();
 void ui_apply_patch();
+void game_apply_patch();
 
 struct JoinMpGameData
 {
@@ -447,9 +447,9 @@ void misc_init()
     apply_sound_patches();
     player_do_patch();
     player_fpgun_do_patch();
-    bink_do_patch();
     g_solid_do_patch();
     register_sound_commands();
     camera_do_patch();
     ui_apply_patch();
+    game_apply_patch();
 }

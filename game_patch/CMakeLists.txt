@@ -43,14 +43,16 @@ set(SRCS
     bmpman/dds.cpp
     bmpman/bmpman.cpp
     bmpman/bmpman.h
-    graphics/font.cpp
-    graphics/graphics.cpp
-    graphics/graphics.h
-    graphics/gr_color.cpp
-    graphics/gr_color.h
-    graphics/gamma.cpp
-    graphics/capture.cpp
-    graphics/gr_texture.cpp
+    bmpman/fmt_conv.cpp
+    bmpman/fmt_conv_templates.h
+    graphics/bink.cpp
+    graphics/gr_font.cpp
+    graphics/gr.cpp
+    graphics/gr.h
+    graphics/gr_d3d.cpp
+    graphics/gr_d3d_texture.cpp
+    graphics/gr_d3d_capture.cpp
+    graphics/gr_d3d_gamma.cpp
     input/input.h
     input/mouse.cpp
     input/key.cpp
@@ -117,10 +119,10 @@ set(SRCS
     misc/main_menu.cpp
     misc/player.cpp
     misc/player_fpgun.cpp
-    misc/bink.cpp
     misc/g_solid.cpp
     misc/camera.cpp
     misc/ui.cpp
+    misc/game.cpp
     res/resources.rc
     ${PF_SRCS}
     ${EXPERIMENTAL_SRCS}

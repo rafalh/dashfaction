@@ -19,7 +19,7 @@
 #include "../os/os.h"
 #include "../bmpman/bmpman.h"
 #include "../debug/debug.h"
-#include "../graphics/graphics.h"
+#include "../graphics/gr.h"
 #include "../hud/hud.h"
 #include "../hud/multi_scoreboard.h"
 #include "../hud/multi_spectate.h"
@@ -59,7 +59,6 @@ CodeInjection after_full_game_init_hook{
 #if !defined(NDEBUG) && defined(HAS_EXPERIMENTAL)
         experimental_init_after_game();
 #endif
-        graphics_after_game_init();
         console_init();
         multi_after_full_game_init();
         debug_init();
@@ -107,7 +106,7 @@ CodeInjection after_frame_render_hook{
         if (rf::is_multi)
             multi_spectate_render();
 
-        graphics_draw_fps_counter();
+        gr_render_fps_counter();
         multi_render_level_download_progress();
 #if !defined(NDEBUG) && defined(HAS_EXPERIMENTAL)
         experimental_render();
@@ -288,7 +287,7 @@ extern "C" DWORD __declspec(dllexport) Init([[maybe_unused]] void* unused)
 
     // Init modules
     console_apply_patches();
-    graphics_init();
+    gr_apply_patch();
     bm_apply_patch();
     os_apply_patch();
     hud_apply_patches();

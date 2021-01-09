@@ -1,12 +1,14 @@
+#include <cassert>
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
+#include <patch_common/AsmWriter.h>
 #include <xlog/xlog.h>
-#include <cassert>
-#include "../graphics/graphics_internal.h"
-#include "../graphics/graphics.h"
+#include <common/utils/string-utils.h>
+#include "../graphics/gr.h"
+#include "../rf/file.h"
 #include "dds.h"
 
-int get_surface_pitch(int w, rf::BmFormat format)
+int bm_calculate_pitch(int w, rf::BmFormat format)
 {
     switch (format) {
         case rf::BM_FORMAT_8888_ARGB:
@@ -30,12 +32,12 @@ int get_surface_pitch(int w, rf::BmFormat format)
             // 4x4 pixels per block, 128 bits per block
             return (w + 3) / 4 * 128 / 8;
         default:
-            xlog::warn("Unknown format %d in get_surface_pitch", format);
+            xlog::warn("Unknown format %d in bm_calculate_pitch", format);
             return -1;
     }
 }
 
-int get_surface_num_rows(int h, rf::BmFormat format)
+int bm_calculate_rows(int h, rf::BmFormat format)
 {
     switch (format) {
         case rf::BM_FORMAT_DXT1:
@@ -50,9 +52,9 @@ int get_surface_num_rows(int h, rf::BmFormat format)
     }
 }
 
-size_t get_surface_length_in_bytes(int w, int h, rf::BmFormat format)
+size_t bm_calculate_total_bytes(int w, int h, rf::BmFormat format)
 {
-    return get_surface_pitch(w, format) * get_surface_num_rows(h, format);
+    return bm_calculate_pitch(w, format) * bm_calculate_rows(h, format);
 }
 
 bool bm_is_compressed_format(rf::BmFormat format)
@@ -210,4 +212,7 @@ void bm_apply_patch()
 
     // Fix crash when loading very big TGA files
     load_tga_alloc_fail_fix.install();
+
+    // Enable mip-mapping for textures bigger than 256x256 in bm_read_header
+    AsmWriter(0x0050FEDA, 0x0050FEE9).nop();
 }
