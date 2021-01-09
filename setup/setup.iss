@@ -37,10 +37,10 @@ Source: "{#BinDir}\CrashHandler.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#BinDir}\DashEditor.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#BinDir}\DashFaction.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#BinDir}\d3d8to9.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#SrcRootDir}\dashfaction.vpp"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#SrcRootDir}\licensing-info.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#SrcRootDir}\resources\dashfaction.vpp"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#SrcRootDir}\resources\licensing-info.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SrcRootDir}\LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#SrcRootDir}\CHANGELOG.md"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#SrcRootDir}\docs\CHANGELOG.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SrcRootDir}\resources\RED.exe.manifest"; DestDir: "{code:GetGameDir}"; Flags: ignoreversion; Tasks: redvisualstyles
 ; RTPatch patches (extracted from official 1.20 patches)
 Source: "{#PatchesDir}\patchw32.dll"; Flags: dontcopy

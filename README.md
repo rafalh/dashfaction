@@ -25,7 +25,9 @@ Features:
 * hit-sounds support for dedicated servers
 * other usability and stability fixes
 
-See `CHANGELOG` file for a detailed list of all features.
+See [CHANGELOG file](docs/CHANGELOG.md) for a detailed list of all features.
+
+You can also check out [examples of graphical improvements compared to the base game](docs/graphics_comparison).
 
 Client commands:
 * `maxfps value` - sets maximal FPS
@@ -163,7 +165,7 @@ Configuration example:
 License
 -------
 Most of Dash Faction source code is licensed under Mozilla Public License 2.0. It is available in the GitHub repository.
-See LICENSE.txt.
+See [LICENSE.txt](LICENSE.txt).
 
 Only Pure Faction anti-cheat support code is not open source because it would make PF anti-cheat features basically useless.
 It consists of few files in *game_patch/purefaction* directory. It is going to be linked statically during a release process
