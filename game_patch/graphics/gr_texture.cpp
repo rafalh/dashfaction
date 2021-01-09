@@ -16,6 +16,7 @@
 #include "gr_color.h"
 #include "graphics_internal.h"
 #include "graphics.h"
+#include "../bmpman/bmpman.h"
 
 std::set<rf::GrD3DTexture*> g_default_pool_tslots;
 int g_currently_creating_texture_for_bitmap = -1;
@@ -368,6 +369,16 @@ void apply_texture_patches()
     gr_d3d_free_texture_hook.install();
     //gr_d3d_set_state_and_texture_hook.install();
     gr_d3d_lock_hook.install();
+
+    // True Color textures (is it used?)
+    if (g_game_config.res_bpp == 32 && g_game_config.true_color_textures) {
+        // Available texture formats (tested for compatibility)
+        write_mem<int>(0x005A7DFC, D3DFMT_X8R8G8B8); // old: D3DFMT_R5G6B5
+        write_mem<int>(0x005A7E00, D3DFMT_A8R8G8B8); // old: D3DFMT_X1R5G5B5
+        write_mem<int>(0x005A7E04, D3DFMT_A8R8G8B8); // old: D3DFMT_A1R5G5B5, lightmaps
+        write_mem<int>(0x005A7E08, D3DFMT_A8R8G8B8); // old: D3DFMT_A4R4G4B4
+        write_mem<int>(0x005A7E0C, D3DFMT_A4R4G4B4); // old: D3DFMT_A8R3G3B2
+    }
 }
 
 void gr_delete_all_default_pool_textures()

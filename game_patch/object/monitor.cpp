@@ -11,6 +11,7 @@
 #include "../main/main.h"
 #include "../graphics/graphics.h"
 #include "../graphics/gr_color.h"
+#include "../bmpman/bmpman.h"
 
 FunHook<char(int, int, int, int, char)> monitor_create_hook{
     0x00412470,

@@ -5,7 +5,7 @@
 #include "../rf/geometry.h"
 #include "../rf/gr.h"
 #include "../graphics/gr_color.h"
-#include "../graphics/graphics.h"
+#include "../bmpman/bmpman.h"
 
 constexpr auto reference_fps = 30.0f;
 constexpr auto reference_framerate = 1.0f / reference_fps;
@@ -173,6 +173,32 @@ CodeInjection g_face_does_point_lie_in_face_crashfix{
     },
 };
 
+CodeInjection level_load_lightmaps_color_conv_patch{
+    0x004ED3E9,
+    [](auto& regs) {
+        // Always skip original code
+        regs.eip = 0x004ED4FA;
+
+        rf::GLightmap* lightmap = regs.ebx;
+
+        rf::GrLockInfo lock;
+        if (!rf::gr_lock(lightmap->bm_handle, 0, &lock, rf::GR_LOCK_WRITE_ONLY))
+            return;
+
+    #if 1 // cap minimal color channel value as RF does
+        for (int i = 0; i < lightmap->w * lightmap->h * 3; ++i)
+            lightmap->buf[i] = std::max(lightmap->buf[i], (uint8_t)(4 << 3)); // 32
+    #endif
+
+        bool success = convert_surface_format(lock.data, lock.format, lightmap->buf,
+            rf::BM_FORMAT_888_BGR, lightmap->w, lightmap->h, lock.stride_in_bytes, 3 * lightmap->w, nullptr);
+        if (!success)
+            xlog::error("ConvertBitmapFormat failed for lightmap (dest format %d)", lock.format);
+
+        rf::gr_unlock(&lock);
+    },
+};
+
 void g_solid_do_patch()
 {
     // Buffer overflows in solid_read
@@ -208,4 +234,10 @@ void g_solid_do_patch()
 
     // Add a missing check if face has any vertex in GFace::does_point_lie_in_face
     g_face_does_point_lie_in_face_crashfix.install();
+
+    // fix pixel format for lightmaps
+    write_mem<u8>(0x004F5EB8 + 1, rf::BM_FORMAT_888_RGB);
+
+    // lightmaps format conversion
+    level_load_lightmaps_color_conv_patch.install();
 }

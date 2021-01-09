@@ -1,7 +1,8 @@
 #include <dds.h>
 #include <xlog/xlog.h>
-#include "graphics_internal.h"
+#include "../graphics/graphics_internal.h"
 #include "../rf/bmpman.h"
+#include "bmpman.h"
 
 rf::BmFormat get_bm_format_from_dds_pixel_format(DDS_PIXELFORMAT& ddspf)
 {

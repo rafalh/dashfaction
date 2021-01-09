@@ -17,6 +17,7 @@
 #include "main.h"
 #include "../os/console.h"
 #include "../os/os.h"
+#include "../bmpman/bmpman.h"
 #include "../debug/debug.h"
 #include "../graphics/graphics.h"
 #include "../in_game_ui/hud.h"
@@ -288,6 +289,7 @@ extern "C" DWORD __declspec(dllexport) Init([[maybe_unused]] void* unused)
     // Init modules
     console_apply_patches();
     graphics_init();
+    bm_apply_patch();
     os_apply_patch();
     apply_hud_patches();
     multi_do_patch();

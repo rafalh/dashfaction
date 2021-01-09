@@ -2,8 +2,9 @@
 #include <patch_common/CodeInjection.h>
 #include <xlog/xlog.h>
 #include <cassert>
-#include "graphics_internal.h"
-#include "graphics.h"
+#include "../graphics/graphics_internal.h"
+#include "../graphics/graphics.h"
+#include "dds.h"
 
 int get_surface_pitch(int w, rf::BmFormat format)
 {
@@ -200,7 +201,7 @@ void bm_change_format(int bm_handle, rf::BmFormat format)
     }
 }
 
-void bm_apply_patches()
+void bm_apply_patch()
 {
     bm_read_header_hook.install();
     bm_lock_hook.install();

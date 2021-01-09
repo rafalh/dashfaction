@@ -40,7 +40,9 @@ set(SRCS
     rf/trigger.h
     rf/vmesh.h
     rf/weapon.h
-    graphics/dds.cpp
+    bmpman/dds.cpp
+    bmpman/bmpman.cpp
+    bmpman/bmpman.h
     graphics/font.cpp
     graphics/graphics.cpp
     graphics/graphics.h
@@ -49,7 +51,6 @@ set(SRCS
     graphics/gamma.cpp
     graphics/capture.cpp
     graphics/gr_texture.cpp
-    graphics/bmpman.cpp
     input/input.h
     input/mouse.cpp
     input/key.cpp

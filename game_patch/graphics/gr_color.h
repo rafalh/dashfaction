@@ -102,7 +102,6 @@ inline rf::BmFormat get_bm_format_from_d3d_format(D3DFORMAT d3d_fmt)
 
 #endif
 
-void gr_color_init();
 void gr_copy_water_bitmap(rf::GrLockInfo& src_lock, rf::GrLockInfo& dst_lock);
 bool convert_surface_format(void* dst_bits_ptr, rf::BmFormat dst_fmt, const void* src_bits_ptr,
                             rf::BmFormat src_fmt, int width, int height, int dst_pitch, int src_pitch,

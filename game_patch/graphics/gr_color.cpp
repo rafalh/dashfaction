@@ -1,5 +1,3 @@
-#include <windows.h>
-#include <d3d8.h>
 #include "gr_color.h"
 #include "graphics_internal.h"
 #include "../main/main.h"
@@ -13,6 +11,7 @@
 #include <patch_common/ShortTypes.h>
 #include <algorithm>
 #include <stdexcept>
+#include "../bmpman/bmpman.h"
 
 #define TEXTURE_DITHERING 0
 
@@ -477,7 +476,7 @@ private:
 };
 
 template<rf::BmFormat Fmt>
-rf::Color DecodeBlockCompressedPixelInternal(const void* block, int x, int y)
+rf::Color decode_block_compressed_pixel_internal(const void* block, int x, int y)
 {
     using PFT = PixelFormatTrait<Fmt>;
     using Block = typename PFT::Block;
@@ -496,11 +495,11 @@ rf::Color decode_block_compressed_pixel(void* block, rf::BmFormat format, int x,
 {
     switch (format) {
         case rf::BM_FORMAT_DXT1:
-            return DecodeBlockCompressedPixelInternal<rf::BM_FORMAT_DXT1>(block, x, y);
+            return decode_block_compressed_pixel_internal<rf::BM_FORMAT_DXT1>(block, x, y);
         case rf::BM_FORMAT_DXT3:
-            return DecodeBlockCompressedPixelInternal<rf::BM_FORMAT_DXT3>(block, x, y);
+            return decode_block_compressed_pixel_internal<rf::BM_FORMAT_DXT3>(block, x, y);
         case rf::BM_FORMAT_DXT5:
-            return DecodeBlockCompressedPixelInternal<rf::BM_FORMAT_DXT5>(block, x, y);
+            return decode_block_compressed_pixel_internal<rf::BM_FORMAT_DXT5>(block, x, y);
         // lets skip DXT2 and DXT4 for now because they are unpopular
         default:
             return rf::Color{0, 0, 0, 0};
@@ -807,48 +806,4 @@ rf::Color bm_get_pixel(uint8_t* data, rf::BmFormat format, int stride_in_bytes, 
         });
         return result;
     }
-}
-
-CodeInjection level_load_lightmaps_color_conv_patch{
-    0x004ED3E9,
-    [](auto& regs) {
-        // Always skip original code
-        regs.eip = 0x004ED4FA;
-
-        rf::GLightmap* lightmap = regs.ebx;
-
-        rf::GrLockInfo lock;
-        if (!rf::gr_lock(lightmap->bm_handle, 0, &lock, rf::GR_LOCK_WRITE_ONLY))
-            return;
-
-    #if 1 // cap minimal color channel value as RF does
-        for (int i = 0; i < lightmap->w * lightmap->h * 3; ++i)
-            lightmap->buf[i] = std::max(lightmap->buf[i], (uint8_t)(4 << 3)); // 32
-    #endif
-
-        bool success = convert_surface_format(lock.data, lock.format, lightmap->buf,
-            rf::BM_FORMAT_888_BGR, lightmap->w, lightmap->h, lock.stride_in_bytes, 3 * lightmap->w, nullptr);
-        if (!success)
-            xlog::error("ConvertBitmapFormat failed for lightmap (dest format %d)", lock.format);
-
-        rf::gr_unlock(&lock);
-    },
-};
-
-void gr_color_init()
-{
-    // True Color textures
-    if (g_game_config.res_bpp == 32 && g_game_config.true_color_textures) {
-        // Available texture formats (tested for compatibility)
-        write_mem<u32>(0x005A7DFC, D3DFMT_X8R8G8B8); // old: D3DFMT_R5G6B5
-        write_mem<u32>(0x005A7E00, D3DFMT_A8R8G8B8); // old: D3DFMT_X1R5G5B5
-        write_mem<u32>(0x005A7E04, D3DFMT_A8R8G8B8); // old: D3DFMT_A1R5G5B5, lightmaps
-        write_mem<u32>(0x005A7E08, D3DFMT_A8R8G8B8); // old: D3DFMT_A4R4G4B4
-        write_mem<u32>(0x005A7E0C, D3DFMT_A4R4G4B4); // old: D3DFMT_A8R3G3B2
-    }
-
-    // lightmaps
-    level_load_lightmaps_color_conv_patch.install();
-    // fix pixel format for lightmaps
-    write_mem<u8>(0x004F5EB8 + 1, rf::BM_FORMAT_888_RGB);
 }

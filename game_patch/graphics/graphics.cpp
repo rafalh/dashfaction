@@ -854,14 +854,8 @@ void graphics_init()
     gr_rect_gr_tmapper_hook.install();
 #endif
 
-    // Init True Color improvements
-    gr_color_init();
-
     // Patch texture handling
     apply_texture_patches();
-
-    // Apply bmpman patches
-    bm_apply_patches();
 
     // Fonts
     apply_font_patches();
