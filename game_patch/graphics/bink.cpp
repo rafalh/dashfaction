@@ -2,8 +2,8 @@
 #include <patch_common/CallHook.h>
 #include <patch_common/CodeInjection.h>
 #include "../main/main.h"
-#include "../rf/gr.h"
-#include "../rf/sound.h"
+#include "../rf/gr/gr.h"
+#include "../rf/sound/sound_ds.h"
 
 CodeInjection play_bik_file_infinite_loop_fix{
     0x00520BEE,

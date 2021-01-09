@@ -4,8 +4,8 @@
 #include "../rf/entity.h"
 #include "../rf/player.h"
 #include "../rf/gameseq.h"
-#include "../rf/sound.h"
-#include "../rf/gr_font.h"
+#include "../rf/sound/sound.h"
+#include "../rf/gr/gr_font.h"
 #include <patch_common/AsmWriter.h>
 #include <algorithm>
 #include <cstring>

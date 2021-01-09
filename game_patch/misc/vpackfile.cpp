@@ -296,7 +296,7 @@ static int vpackfile_build_file_list_new(const char* ext_filter, char*& filename
         num_bytes += std::strlen(entry.name) + 1;
     });
     // Allocate result buffer
-    filenames = static_cast<char*>(rf::Malloc(num_bytes));
+    filenames = static_cast<char*>(rf::rf_malloc(num_bytes));
     if (!filenames)
         return 0;
     // Fill result buffer and count matching files

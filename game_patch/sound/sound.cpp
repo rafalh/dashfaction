@@ -1,5 +1,3 @@
-
-
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
@@ -7,7 +5,8 @@
 #include <patch_common/ShortTypes.h>
 #include <patch_common/StaticBufferResizePatch.h>
 #include <algorithm>
-#include "../rf/sound.h"
+#include "../rf/sound/sound.h"
+#include "../rf/sound/sound_ds.h"
 #include "../rf/entity.h"
 #include "../main/main.h"
 #include "../os/console.h"
@@ -20,7 +19,6 @@ int g_sound_test = 0;
 namespace rf
 {
     rf::SoundInstance sound_instances[rf::num_sound_channels];
-    rf::DsChannel ds_channels[rf::num_sound_channels];
 }
 
 void player_fpgun_move_sounds(const rf::Vector3& camera_pos, const rf::Vector3& camera_vel);
@@ -65,156 +63,6 @@ StaticBufferResizePatch<rf::SoundInstance> sound_instances_resize_patch{
         {0x00505893, true},
         {0x00505F68, true},
         {0x005061C1, true},
-    },
-};
-
-StaticBufferResizePatch<rf::DsChannel> ds_channels_resize_patch{
-    0x01AD7520,
-    30,
-    rf::ds_channels,
-    {
-        {0x00521149},
-        {0x005211C3},
-        {0x0052165D},
-        {0x00522306},
-        {0x005224DA},
-        {0x0052250D},
-        {0x005225A3},
-        {0x005225B7},
-        {0x005225F2},
-        {0x00522608},
-        {0x00522632},
-        {0x0052265A},
-        {0x00522734},
-        {0x00522741},
-        {0x00522763},
-        {0x005227AD},
-        {0x0052282F},
-        {0x00522A61},
-        {0x00522AAD},
-        {0x00522B3A},
-        {0x00522BDA},
-        {0x00522C8E},
-        {0x00522D4B},
-        {0x00522D66},
-        {0x00522D98},
-        {0x00522DDF},
-        {0x00522E1B},
-        {0x00522F0B},
-        {0x0052312B},
-        {0x0054E8CC},
-        {0x0054E956},
-        {0x0054EAB5},
-        {0x0054EB64},
-        {0x0054EBB6},
-        {0x0054EC93},
-        {0x005211F5},
-        {0x005225BD},
-        {0x00562DC9},
-        {0x0052264C},
-        {0x00522781},
-        {0x00522792},
-        {0x00505E96},
-        {0x00522688},
-        {0x005226A0},
-        {0x005227D8},
-        {0x005227F0},
-        {0x00522CFE},
-        {0x00522F3A},
-        {0x00522626},
-        {0x0052275D},
-        {0x00522D75},
-        {0x0052262C},
-        {0x0052271E},
-        {0x00521945},
-        {0x00522478},
-        {0x0052251A},
-        {0x005225E4},
-        {0x005225EC},
-        {0x00522724},
-        {0x0052272E},
-        {0x00522A57},
-        {0x00522AA3},
-        {0x00522AF4},
-        {0x00522BE6},
-        {0x00522BEE},
-        {0x00522C04},
-        {0x00522C57},
-        {0x00522C80},
-        {0x00522C9F},
-        {0x00522CA7},
-        {0x00522CB4},
-        {0x0052194E},
-        {0x00522F47, true},
-        {0x005224A7, true},
-        {0x00522B0B, true},
-        {0x00522C29, true},
-        {0x00522CCB, true},
-    },
-};
-
-static int ds_get_free_channel_new(int sid, float volume, bool is_looping)
-{
-    float duration = rf::snd_ds_estimate_duration(sid);
-    int max_channels = static_cast<int>(std::size(rf::ds_channels));
-    if (!is_looping && duration < 10.0f) {
-        float normalized_volume = volume / rf::snd_group_volume[rf::SOUND_GROUP_EFFECTS];
-        if (normalized_volume < 0.1f) {
-            xlog::trace("sound %d channel priority 1", sid);
-            max_channels /= 8;
-        }
-        else if (normalized_volume < 0.2f) {
-            xlog::trace("sound %d channel priority 2", sid);
-            max_channels /= 4;
-        }
-        else if (normalized_volume < 0.5f) {
-            xlog::trace("sound %d channel priority 3", sid);
-            max_channels /= 2;
-        }
-        else {
-            xlog::trace("sound %d channel priority 4", sid);
-        }
-    }
-    for (int i = 0; i < max_channels; ++i) {
-        auto& channel = rf::ds_channels[i];
-        if (!channel.pdsb) {
-            return i;
-        }
-        if (channel.flags & (rf::SCHF_MUSIC | rf::SCHF_LOOPING | rf::SCHF_PAUSED)) {
-            continue;
-        }
-        DWORD status;
-        bool is_playing = SUCCEEDED(channel.pdsb->GetStatus(&status)) && (status & DSBSTATUS_PLAYING) != 0;
-        if (!is_playing) {
-            rf::snd_ds_close_channel(i);
-            return i;
-        }
-    }
-    xlog::trace("No free channel for sound %d", sid);
-    return -1;
-}
-
-static CodeInjection snd_ds_play_3d_get_free_channel_injection{
-    0x005222DA,
-    [](auto& regs) {
-        auto stack_frame = regs.esp + 0x14;
-        auto sid = addr_as_ref<int>(stack_frame + 0x4);
-        auto volume = addr_as_ref<float>(stack_frame + 0x18);
-        auto is_looping = addr_as_ref<bool>(stack_frame + 0x1C);
-        regs.eax = ds_get_free_channel_new(sid, volume, is_looping);
-        regs.eip = 0x005222DF;
-    },
-};
-
-static CodeInjection snd_ds_play_get_free_channel_injection{
-    0x00522557,
-    [](auto& regs) {
-        auto stack_frame = regs.esp + 0x10;
-        auto sid = addr_as_ref<int>(stack_frame + 0x4);
-        auto volume = addr_as_ref<float>(stack_frame + 0x8);
-        auto is_looping = addr_as_ref<bool>(stack_frame + 0x10);
-        regs.eax = ds_get_free_channel_new(sid, volume, is_looping);
-        regs.eip = 0x0052255C;
     },
 };
 
@@ -286,33 +134,6 @@ ConsoleCommand2 level_sounds_cmd{
     },
     "Sets level sounds volume scale",
     "levelsounds <volume>",
-};
-
-#ifdef DEBUG
-ConsoleCommand2 playing_sounds_cmd{
-    "d_playing_sounds",
-    []() {
-        for (unsigned chnl_num = 0; chnl_num < std::size(rf::ds_channels); ++chnl_num) {
-            auto& chnl = rf::ds_channels[chnl_num];
-            if (chnl.pdsb) {
-                DWORD status;
-                chnl.pdsb->GetStatus(&status);
-                auto& buf = rf::ds_buffers[chnl.buf_id];
-                rf::console_printf("Channel %d: filename %s flags %x status %lx", chnl_num, buf.filename, chnl.flags, status);
-            }
-        }
-    },
-};
-#endif
-
-CodeInjection snd_ds_init_device_leave_injection{
-    0x005215E0,
-    []() {
-        auto& ds_use_ds3d = addr_as_ref<bool>(0x01AED340);
-        auto& ds_use_eax = addr_as_ref<bool>(0x01AD751C);
-        xlog::info("DirectSound3D: %d", ds_use_ds3d);
-        xlog::info("EAX sound: %d", ds_use_eax);
-    },
 };
 
 FunHook<int(int, int, float, float)> snd_play_hook{
@@ -557,57 +378,11 @@ FunHook<void(const rf::Vector3&, const rf::Vector3&, const rf::Matrix3&)> snd_up
     },
 };
 
-static void ds_populate_new_sig(int channel)
-{
-    static auto sig_counter = 1;
-    rf::ds_channels[channel].sig = 0x40000000 | (sig_counter << 8) | channel;
-    sig_counter = (sig_counter + 1) % 0x10000;
-}
-
-static CodeInjection snd_ds_play_sig_generation_patch{
-    0x00522683,
-    [](auto& regs) {
-        int channel = static_cast<int>(regs.esi) / sizeof(rf::DsChannel);
-        ds_populate_new_sig(channel);
-        regs.eip = 0x005226A0;
-    },
-};
-
-static CodeInjection snd_ds_play_3d_sig_generation_patch{
-    0x005223EF,
-    [](auto& regs) {
-        int channel = static_cast<rf::DsChannel*>(regs.esi) - rf::ds_channels;
-        ds_populate_new_sig(channel);
-        regs.eip = 0x00522409;
-    },
-};
-
-static CodeInjection snd_ds_play_music_sig_generation_patch{
-    0x005227D3,
-    [](auto& regs) {
-        int channel = static_cast<int>(regs.esi) / sizeof(rf::DsChannel);
-        ds_populate_new_sig(channel);
-        regs.eip = 0x005227F0;
-    },
-};
-
-static FunHook<int(int)> snd_ds_get_channel_hook{
-    0x00522F30,
-    [](int sig) -> int {
-        if (sig < 0) {
-            return -1;
-        }
-        int index = static_cast<rf::ubyte>(sig);
-        if (rf::ds_channels[index].sig != sig) {
-            return -1;
-        }
-        return index;
-    },
-};
+void snd_ds_apply_patch();
 
 void apply_sound_patches()
 {
-    // Sound loop fix
+    // Sound loop fix in snd_music_play
     write_mem<u8>(0x00505D07 + 1, 0x00505D5B - (0x00505D07 + 2));
 
     // Cutscene skip support
@@ -624,29 +399,15 @@ void apply_sound_patches()
         .mov(asm_regs::eax, *(asm_regs::esi))
         .push(asm_regs::eax);
 
-    // Delete sounds with lowest volume when there is no free slot for a new sound
-    snd_ds_play_3d_get_free_channel_injection.install();
-    snd_ds_play_get_free_channel_injection.install();
+    // Change number of sound channels
     //write_mem<u8>(0x005055AB, asm_opcodes::jmp_rel_short); // never free sound instances, uncomment to test
     sound_instances_resize_patch.install();
-    ds_channels_resize_patch.install();
     write_mem<i8>(0x005053F5 + 1, std::size(rf::sound_instances)); // snd_init_sound_instances_array
     write_mem<i8>(0x005058D8 + 2, std::size(rf::sound_instances)); // snd_change_3d
     write_mem<i8>(0x0050598A + 2, std::size(rf::sound_instances)); // snd_change
     write_mem<i8>(0x00505A36 + 2, std::size(rf::sound_instances)); // snd_stop_all_paused_sounds
     write_mem<i8>(0x00505A5A + 2, std::size(rf::sound_instances)); // snd_stop
     write_mem<i8>(0x00505C31 + 2, std::size(rf::sound_instances)); // snd_is_playing
-    write_mem<i8>(0x00521145 + 1, std::size(rf::ds_channels));     // snd_ds_channels_array_ctor
-    write_mem<i8>(0x0052163D + 2, std::size(rf::ds_channels));     // snd_ds_init_all_channels
-    write_mem<i8>(0x0052191D + 2, std::size(rf::ds_channels));     // snd_ds_close_all_channels
-    write_mem<i8>(0x00522F4F + 2, std::size(rf::ds_channels));     // snd_ds_get_channel
-    write_mem<i8>(0x00522D1D + 2, std::size(rf::ds_channels));     // snd_ds_close_all_channels2
-
-    // Do not use DSPROPSETID_VoiceManager because it is not implemented by dsoal
-    write_mem<i8>(0x00521597 + 4, 0);
-
-    // do not set DS3DMODE_DISABLE on 3D buffers in snd_ds_play
-    write_mem<u8>(0x005225D1, asm_opcodes::jmp_rel_short);
 
     // Improve handling of instance slot allocation in snd_play
     snd_play_hook.install();
@@ -657,28 +418,16 @@ void apply_sound_patches()
     // Properly update DirectSound 3D sounds
     snd_change_3d_hook.install();
     snd_update_sounds_hook.install();
-
-    // Log information about used sound API
-    snd_ds_init_device_leave_injection.install();
-
-    // Set rolloff factor to 0 for DirectSound 3D listener
-    // It disables distance-based attenuation model from DirectSound 3D. It is necessary because Red Faction original
-    // distance model is very different and must be emulated manually using SetVolume API
-    write_mem<float>(0x00562EB1 + 1, 0.0f);
     snd_pc_play_3d_injection.install();
 
-    // Optimize performance of mapping a sig to DS channel number
-    snd_ds_play_sig_generation_patch.install();
-    snd_ds_play_3d_sig_generation_patch.install();
-    snd_ds_play_music_sig_generation_patch.install();
-    snd_ds_get_channel_hook.install();
+    // Apply patch for DirectSound specific code
+    snd_ds_apply_patch();
 }
 
 void register_sound_commands()
 {
     level_sounds_cmd.register_cmd();
 #ifdef DEBUG
-    playing_sounds_cmd.register_cmd();
     sound_stress_test_cmd.register_cmd();
 #endif
 }

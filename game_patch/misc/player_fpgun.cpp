@@ -1,5 +1,5 @@
 #include "../rf/player.h"
-#include "../rf/sound.h"
+#include "../rf/sound/sound.h"
 #include "../rf/vmesh.h"
 #include "../rf/weapon.h"
 #include "../rf/entity.h"

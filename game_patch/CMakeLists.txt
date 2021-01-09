@@ -14,29 +14,37 @@ endif()
 set(SRCS
     main/main.cpp
     main/main.h
+    rf/os/os.h
+    rf/os/console.h
+    rf/os/array.h
+    rf/os/string.h
+    rf/os/timestamp.h
+    rf/gr/gr.h
+    rf/gr/gr_font.h
+    rf/gr/gr_direct3d.h
+    rf/math/vector.h
+    rf/math/matrix.h
+    rf/math/plane.h
+    rf/math/ix.h
     rf/ai.h
     rf/bmpman.h
     rf/clutter.h
     rf/common.h
-    rf/console.h
     rf/corpse.h
     rf/entity.h
     rf/event.h
     rf/file.h
     rf/gameseq.h
-    rf/gr.h
-    rf/gr_direct3d.h
     rf/item.h
     rf/level.h
     rf/localize.h
     rf/misc.h
     rf/multi.h
     rf/object.h
-    rf/os.h
     rf/parse.h
     rf/physics.h
     rf/player.h
-    rf/sound.h
+    rf/sound/sound.h
     rf/trigger.h
     rf/vmesh.h
     rf/weapon.h
@@ -113,8 +121,6 @@ set(SRCS
     misc/misc.h
     misc/vpackfile.cpp
     misc/vpackfile.h
-    misc/sound.cpp
-    misc/sound.h
     misc/save_restore.cpp
     misc/main_menu.cpp
     misc/player.cpp
@@ -123,6 +129,9 @@ set(SRCS
     misc/camera.cpp
     misc/ui.cpp
     misc/game.cpp
+    sound/sound.cpp
+    sound/sound.h
+    sound/sound_ds.cpp
     res/resources.rc
     ${PF_SRCS}
     ${EXPERIMENTAL_SRCS}

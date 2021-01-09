@@ -2,7 +2,7 @@
 
 #include <patch_common/MemUtils.h>
 #include "common.h"
-#include "gr.h"
+#include "gr/gr.h"
 
 namespace rf
 {

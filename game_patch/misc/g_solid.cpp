@@ -3,7 +3,7 @@
 #include <patch_common/AsmWriter.h>
 #include <xlog/xlog.h>
 #include "../rf/geometry.h"
-#include "../rf/gr.h"
+#include "../rf/gr/gr.h"
 #include "../bmpman/bmpman.h"
 #include "../bmpman/fmt_conv_templates.h"
 

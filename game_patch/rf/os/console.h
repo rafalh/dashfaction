@@ -3,7 +3,7 @@
 #include <patch_common/MemUtils.h>
 #include <memory>
 #include <common/utils/string-utils.h>
-#include "common.h"
+#include "../common.h"
 
 namespace rf
 {

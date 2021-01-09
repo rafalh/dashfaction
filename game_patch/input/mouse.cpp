@@ -5,8 +5,8 @@
 #include <xlog/xlog.h>
 #include "../os/console.h"
 #include "../rf/input.h"
-#include "../rf/os.h"
-#include "../rf/gr.h"
+#include "../rf/os/os.h"
+#include "../rf/gr/gr.h"
 #include "../rf/multi.h"
 #include "../rf/player.h"
 #include "../main/main.h"

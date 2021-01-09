@@ -4,8 +4,8 @@
 #include <xlog/xlog.h>
 #include <cstring>
 #include "../rf/ui.h"
-#include "../rf/gr.h"
-#include "../rf/gr_font.h"
+#include "../rf/gr/gr.h"
+#include "../rf/gr/gr_font.h"
 #include "../rf/input.h"
 #include "../rf/file.h"
 #include "../rf/multi.h"

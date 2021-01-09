@@ -2,7 +2,7 @@
 #include "../rf/player.h"
 #include "../rf/entity.h"
 #include "../rf/multi.h"
-#include "../rf/sound.h"
+#include "../rf/sound/sound.h"
 #include "../rf/bmpman.h"
 #include "../os/console.h"
 #include "../main/main.h"
@@ -60,8 +60,7 @@ FunHook<rf::Entity*(rf::Player*, int, const rf::Vector3*, const rf::Matrix3*, in
             // Update sound listener position so respawn sound is not classified as too quiet to play
             rf::Vector3 cam_pos = rf::camera_get_pos(pp->cam);
             rf::Matrix3 cam_orient = rf::camera_get_orient(pp->cam);
-            rf::Vector3 zero{0.0f, 0.0f, 0.0f};
-            rf::snd_update_sounds(cam_pos, zero, cam_orient);
+            rf::snd_update_sounds(cam_pos, rf::zero_vector, cam_orient);
         }
         return ep;
     },

@@ -157,14 +157,14 @@ void ftol_issues_detection_do_frame()
             }
         }
 
-        rf::framerate_min = 1.0f / 30.0f;
+        rf::frametime_min = 1.0f / 30.0f;
         g_ftol_debug_info_map.clear();
         g_ftol_debug_info_map_old.clear();
     }
     else if (g_num_frames == 5) {
         g_ftol_debug_info_map_old = std::move(g_ftol_debug_info_map);
         g_ftol_debug_info_map.clear();
-        rf::framerate_min = 1.0f / 60.0f;
+        rf::frametime_min = 1.0f / 60.0f;
     }
 
     g_num_frames = (g_num_frames + 1) % 10;

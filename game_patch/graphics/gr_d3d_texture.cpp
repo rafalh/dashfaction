@@ -9,8 +9,8 @@
 #include <unordered_set>
 #include <algorithm>
 #include <common/utils/string-utils.h>
-#include "../rf/gr.h"
-#include "../rf/gr_direct3d.h"
+#include "../rf/gr/gr.h"
+#include "../rf/gr/gr_direct3d.h"
 #include "../main/main.h"
 #include "../bmpman/bmpman.h"
 #include "gr_d3d_internal.h"

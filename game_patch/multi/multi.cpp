@@ -4,9 +4,9 @@
 #include "multi.h"
 #include "multi_private.h"
 #include "../misc/misc.h"
-#include "../rf/os.h"
+#include "../rf/os/os.h"
 #include "../rf/multi.h"
-#include "../rf/console.h"
+#include "../rf/os/console.h"
 
 // Note: this must be called from DLL init function
 // Note: we can't use global variable because that would lead to crash when launcher loads this DLL to check dependencies

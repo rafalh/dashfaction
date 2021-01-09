@@ -3,8 +3,8 @@
 #include <patch_common/FunHook.h>
 #include "multi_scoreboard.h"
 #include "../multi/multi.h"
-#include "../rf/gr.h"
-#include "../rf/gr_font.h"
+#include "../rf/gr/gr.h"
+#include "../rf/gr/gr_font.h"
 #include "../rf/multi.h"
 #include "../rf/localize.h"
 #include "../rf/entity.h"

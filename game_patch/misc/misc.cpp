@@ -1,16 +1,4 @@
 #include <windows.h>
-#include "misc.h"
-#include "sound.h"
-#include "../os/console.h"
-#include "../main/main.h"
-#include "../rf/gr.h"
-#include "../rf/player.h"
-#include "../rf/multi.h"
-#include "../rf/gameseq.h"
-#include "../rf/os.h"
-#include "../rf/misc.h"
-#include "../rf/vmesh.h"
-#include "../object/object.h"
 #include <common/version/version.h>
 #include <common/config/BuildConfig.h>
 #include <xlog/xlog.h>
@@ -20,6 +8,18 @@
 #include <patch_common/CodeInjection.h>
 #include <patch_common/FunHook.h>
 #include <cstring>
+#include "misc.h"
+#include "../sound/sound.h"
+#include "../os/console.h"
+#include "../main/main.h"
+#include "../rf/gr/gr.h"
+#include "../rf/player.h"
+#include "../rf/multi.h"
+#include "../rf/gameseq.h"
+#include "../rf/os/os.h"
+#include "../rf/misc.h"
+#include "../rf/vmesh.h"
+#include "../object/object.h"
 
 void apply_main_menu_patches();
 void apply_save_restore_patches();

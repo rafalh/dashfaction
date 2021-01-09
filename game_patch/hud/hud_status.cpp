@@ -3,8 +3,8 @@
 #include "../rf/player.h"
 #include "../rf/entity.h"
 #include "../rf/gameseq.h"
-#include "../rf/gr.h"
-#include "../rf/gr_font.h"
+#include "../rf/gr/gr.h"
+#include "../rf/gr/gr_font.h"
 #include "../rf/localize.h"
 #include <patch_common/FunHook.h>
 #include <patch_common/MemUtils.h>

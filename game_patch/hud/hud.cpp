@@ -8,7 +8,7 @@
 #include "hud_internal.h"
 #include "../main/main.h"
 #include "../os/console.h"
-#include "../rf/gr_font.h"
+#include "../rf/gr/gr_font.h"
 #include "../rf/hud.h"
 #include "../rf/multi.h"
 #include "../rf/file.h"

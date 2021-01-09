@@ -4,7 +4,7 @@
 #include <xlog/xlog.h>
 #include "../rf/misc.h"
 #include "../rf/file.h"
-#include "../rf/gr.h"
+#include "../rf/gr/gr.h"
 #include "../rf/ui.h"
 
 const char screenshot_dir_name[] = "screenshots";

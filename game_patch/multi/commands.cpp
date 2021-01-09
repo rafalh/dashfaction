@@ -183,7 +183,7 @@ ConsoleCommand2 unban_last_cmd{
                 rf::console_printf("%s has been unbanned!", entry->ip_addr);
                 entry->next->prev = entry->prev;
                 entry->prev->next = entry->next;
-                rf::Free(entry);
+                rf::rf_free(entry);
             }
         }
     },

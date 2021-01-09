@@ -4,7 +4,7 @@
 #include <patch_common/Traits.h>
 #include <functional>
 #include <optional>
-#include "../rf/console.h"
+#include "../rf/os/console.h"
 #include "../rf/localize.h"
 
 // Forward declarations

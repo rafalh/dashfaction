@@ -5,7 +5,7 @@
 #include "../rf/entity.h"
 #include "../rf/corpse.h"
 #include "../rf/misc.h"
-#include "../rf/gr.h"
+#include "../rf/gr/gr.h"
 #include "../rf/clutter.h"
 #include "../rf/item.h"
 #include "../rf/player.h"
@@ -13,6 +13,7 @@
 #include "../rf/mover.h"
 #include "../rf/geometry.h"
 #include "../rf/level.h"
+#include "../rf/math/ix.h"
 #include <common/utils/list-utils.h>
 #include "../main/main.h"
 

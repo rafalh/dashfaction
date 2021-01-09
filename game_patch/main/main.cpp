@@ -32,7 +32,7 @@
 #include "../input/input.h"
 #include "../rf/multi.h"
 #include "../rf/level.h"
-#include "../rf/os.h"
+#include "../rf/os/os.h"
 
 #ifdef HAS_EXPERIMENTAL
 #include "../experimental/experimental.h"

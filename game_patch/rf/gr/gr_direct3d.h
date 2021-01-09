@@ -1,6 +1,6 @@
 #pragma once
 
-#include "common.h"
+#include "../common.h"
 
 #ifdef NO_D3D8
 using IDirect3DTexture8 = IUnknown;
@@ -63,6 +63,5 @@ namespace rf
 #endif
 
     static auto& gr_scale_vec = addr_as_ref<Vector3>(0x01818B48);
-    static auto& gr_view_matrix = addr_as_ref<Matrix3>(0x018186C8);
 
 }

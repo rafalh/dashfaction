@@ -1,8 +1,8 @@
 #include "hud_internal.h"
 #include "../hud/hud.h"
 #include "../rf/hud.h"
-#include "../rf/gr.h"
-#include "../rf/gr_font.h"
+#include "../rf/gr/gr.h"
+#include "../rf/gr/gr_font.h"
 #include <patch_common/FunHook.h>
 #include <patch_common/AsmOpcodes.h>
 #include <patch_common/AsmWriter.h>

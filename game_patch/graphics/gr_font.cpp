@@ -10,7 +10,7 @@
 #include <patch_common/AsmWriter.h>
 #include <common/utils/string-utils.h>
 #include "../rf/common.h"
-#include "../rf/gr_font.h"
+#include "../rf/gr/gr_font.h"
 #include "../rf/bmpman.h"
 #include "../rf/multi.h"
 #include "../rf/file.h"

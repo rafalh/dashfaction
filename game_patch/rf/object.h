@@ -124,6 +124,10 @@ namespace rf
     static auto& obj_find_root_bone_pos = addr_as_ref<void(Object*, Vector3&)>(0x0048AC70);
     static auto& obj_update_liquid_status = addr_as_ref<void(Object* obj)>(0x00486C30);
 
+    static auto& obj_light_free = addr_as_ref<void()>(0x0048B370);
+    static auto& obj_light_alloc = addr_as_ref<void()>(0x0048B1D0);
+    static auto& obj_light_calculate = addr_as_ref<void()>(0x0048B0E0);
+
     static auto& object_list = addr_as_ref<Object>(0x0073D880);
 }
 

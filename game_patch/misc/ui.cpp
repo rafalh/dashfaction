@@ -4,7 +4,7 @@
 #include <patch_common/CallHook.h>
 #include "../rf/ui.h"
 #include "../rf/input.h"
-#include "../rf/os.h"
+#include "../rf/os/os.h"
 
 #define DEBUG_UI_LAYOUT 0
 #define SHARP_UI_TEXT 1

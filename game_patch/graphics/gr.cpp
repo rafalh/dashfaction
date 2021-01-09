@@ -3,13 +3,13 @@
 #include "../os/console.h"
 #include "../hud/hud.h"
 #include "../main/main.h"
-#include "../rf/gr.h"
-#include "../rf/gr_font.h"
+#include "../rf/gr/gr.h"
+#include "../rf/gr/gr_font.h"
 #include "../rf/player.h"
 #include "../rf/multi.h"
 #include "../rf/hud.h"
 #include "../rf/gameseq.h"
-#include "../rf/os.h"
+#include "../rf/os/os.h"
 #include <common/error/d3d-error.h>
 #include <common/utils/string-utils.h>
 #include <common/utils/list-utils.h>

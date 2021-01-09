@@ -3,11 +3,11 @@
 #include "../rf/hud.h"
 #include "../rf/player.h"
 #include "../rf/entity.h"
-#include "../rf/gr.h"
-#include "../rf/gr_font.h"
+#include "../rf/gr/gr.h"
+#include "../rf/gr/gr_font.h"
 #include "../rf/weapon.h"
 #include "../rf/localize.h"
-#include "../rf/sound.h"
+#include "../rf/sound/sound.h"
 #include <patch_common/FunHook.h>
 
 bool weapon_select_big_mode = false;

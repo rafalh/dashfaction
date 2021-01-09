@@ -3,8 +3,8 @@
 #include <patch_common/CodeInjection.h>
 #include <xlog/xlog.h>
 #include "../rf/input.h"
-#include "../rf/console.h"
-#include "../rf/os.h"
+#include "../rf/os/console.h"
+#include "../rf/os/os.h"
 
 FunHook<int(int16_t)> key_to_ascii_hook{
     0x0051EFC0,

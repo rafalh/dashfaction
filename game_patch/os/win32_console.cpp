@@ -7,7 +7,7 @@
 #include <thread>
 #include <algorithm>
 #include <cstring>
-#include "../rf/console.h"
+#include "../rf/os/console.h"
 #include "../rf/multi.h"
 #include "../rf/input.h"
 

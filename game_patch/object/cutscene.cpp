@@ -5,12 +5,12 @@
 #include <xlog/xlog.h>
 #include "../os/console.h"
 #include "../rf/player.h"
-#include "../rf/gr.h"
-#include "../rf/gr_font.h"
+#include "../rf/gr/gr.h"
+#include "../rf/gr/gr_font.h"
 #include "../rf/hud.h"
 #include "../rf/misc.h"
 #include "../main/main.h"
-#include "../misc/sound.h"
+#include "../sound/sound.h"
 
 static constexpr rf::ControlAction default_skip_cutscene_ctrl = rf::CA_MP_STATS;
 

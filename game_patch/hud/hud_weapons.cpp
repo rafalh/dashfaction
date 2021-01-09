@@ -1,10 +1,10 @@
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
-#include "../rf/gr.h"
+#include "../rf/gr/gr.h"
 #include "../rf/hud.h"
 #include "../rf/entity.h"
 #include "../rf/weapon.h"
-#include "../rf/gr_font.h"
+#include "../rf/gr/gr_font.h"
 #include "../rf/player.h"
 #include "../rf/multi.h"
 #include "../main/main.h"

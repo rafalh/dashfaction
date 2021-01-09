@@ -1,8 +1,8 @@
 #pragma once
 
 #include <patch_common/MemUtils.h>
-#include "bmpman.h"
-#include "common.h"
+#include "../bmpman.h"
+#include "../common.h"
 
 namespace rf
 {
@@ -251,6 +251,11 @@ namespace rf
     static auto& gr_rect_mode = addr_as_ref<GrMode>(0x017756C0);
     static auto& gr_bitmap_wrap_mode = addr_as_ref<GrMode>(0x017756DC);
     static auto& gr_line_mode = addr_as_ref<GrMode>(0x01775B00);
+
+    static auto& gr_view_matrix = addr_as_ref<Matrix3>(0x018186C8);
+    static auto& gr_view_pos = addr_as_ref<Vector3>(0x01818690);
+    static auto& gr_light_matrix = addr_as_ref<Matrix3>(0x01818A38);
+    static auto& gr_light_base = addr_as_ref<Vector3>(0x01818A28);
 
     static auto& gr_screen_width = addr_as_ref<int()>(0x0050C640);
     static auto& gr_screen_height = addr_as_ref<int()>(0x0050C650);

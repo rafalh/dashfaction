@@ -5,7 +5,7 @@
 #include <xlog/xlog.h>
 #include <common/utils/list-utils.h>
 #include "../rf/clutter.h"
-#include "../rf/gr.h"
+#include "../rf/gr/gr.h"
 #include "../rf/bmpman.h"
 #include "../rf/player.h"
 #include "../main/main.h"

@@ -2,7 +2,7 @@
 #include <patch_common/CodeInjection.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/AsmWriter.h>
-#include "../rf/os.h"
+#include "../rf/os/os.h"
 #include "../rf/multi.h"
 #include "../rf/input.h"
 #include "../main/main.h"

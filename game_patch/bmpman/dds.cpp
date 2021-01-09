@@ -128,7 +128,7 @@ int lock_dds_bitmap(rf::BmBitmapEntry& bm_entry)
     file.seek(num_skip_bytes, rf::File::seek_cur);
 
     // Load actual data
-    bm_entry.locked_data = rf::Malloc(num_total_bytes);
+    bm_entry.locked_data = rf::rf_malloc(num_total_bytes);
     file.read(bm_entry.locked_data, num_total_bytes);
     if (file.error()) {
         xlog::error("Unexpected EOF when reading %s", dds_filename.c_str());

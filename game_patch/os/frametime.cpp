@@ -1,7 +1,7 @@
 #include <patch_common/CallHook.h>
 #include <patch_common/AsmWriter.h>
 #include "console.h"
-#include "../rf/gr.h"
+#include "../rf/gr/gr.h"
 #include "../main/main.h"
 
 static float g_frametime_history[1024];
@@ -51,10 +51,10 @@ ConsoleCommand2 max_fps_cmd{
 #endif
             g_game_config.max_fps = new_limit;
             g_game_config.save();
-            rf::framerate_min = 1.0f / new_limit;
+            rf::frametime_min = 1.0f / new_limit;
         }
         else
-            rf::console_printf("Maximal FPS: %.1f", 1.0f / rf::framerate_min);
+            rf::console_printf("Maximal FPS: %.1f", 1.0f / rf::frametime_min);
     },
     "Sets maximal FPS",
     "maxfps <limit>",

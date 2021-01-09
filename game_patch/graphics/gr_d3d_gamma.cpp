@@ -1,9 +1,9 @@
 #include <windows.h>
 #include <d3d8.h>
 #include "gr.h"
-#include "../rf/os.h"
-#include "../rf/gr.h"
-#include "../rf/gr_direct3d.h"
+#include "../rf/os/os.h"
+#include "../rf/gr/gr.h"
+#include "../rf/gr/gr_direct3d.h"
 #include <xlog/xlog.h>
 #include <patch_common/AsmWriter.h>
 
