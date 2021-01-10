@@ -8,21 +8,19 @@
 #include "../bmpman/fmt_conv_templates.h"
 
 constexpr auto reference_fps = 30.0f;
-constexpr auto reference_framerate = 1.0f / reference_fps;
+constexpr auto reference_frametime = 1.0f / reference_fps;
 
 FunHook<int(rf::GSolid*, rf::GRoom*)> geo_cache_prepare_room_hook{
     0x004F0C00,
     [](rf::GSolid* solid, rf::GRoom* room) {
         int ret = geo_cache_prepare_room_hook.call_target(solid, room);
-        std::byte** pp_room_geom = (std::byte**)(reinterpret_cast<std::byte*>(room) + 4);
-        std::byte* room_geom = *pp_room_geom;
-        if (ret == 0 && room_geom) {
-            uint32_t room_vert_num = *reinterpret_cast<uint32_t*>(room_geom + 4);
-            if (room_vert_num > 8000) {
+        if (ret == 0 && room->geo_cache) {
+            int num_verts = struct_field_ref<int>(room->geo_cache, 4);
+            if (num_verts > 8000) {
                 static int once = 0;
                 if (!(once++))
-                    xlog::warn("Not rendering room with %u vertices!", room_vert_num);
-                *pp_room_geom = nullptr;
+                    xlog::warn("Not rendering room with %d vertices!", num_verts);
+                room->geo_cache = nullptr;
                 return -1;
             }
         }
@@ -36,20 +34,20 @@ CodeInjection GSurface_calculate_lightmap_color_conv_patch{
         // Always skip original code
         regs.eip = 0x004F3023;
 
-        void* face_light_info = regs.esi;
-        rf::GLightmap& lightmap = *struct_field_ref<rf::GLightmap*>(face_light_info, 12);
+        rf::GSurface* surface = regs.esi;
+        rf::GLightmap& lightmap = *surface->lightmap;
         rf::GrLockInfo lock;
         if (!rf::gr_lock(lightmap.bm_handle, 0, &lock, rf::GR_LOCK_WRITE_ONLY)) {
             return;
         }
 
-        int offset_y = struct_field_ref<int>(face_light_info, 20);
-        int offset_x = struct_field_ref<int>(face_light_info, 16);
+        int offset_x = surface->xstart;
+        int offset_y = surface->ystart;
         int src_width = lightmap.w;
         int dst_pixel_size = bm_bytes_per_pixel(lock.format);
         uint8_t* src_data = lightmap.buf + 3 * (offset_x + offset_y * src_width);
         uint8_t* dst_data = &lock.data[dst_pixel_size * offset_x + offset_y * lock.stride_in_bytes];
-        int height = struct_field_ref<int>(face_light_info, 28);
+        int height = surface->height;
         int src_pitch = 3 * src_width;
         bool success = bm_convert_format(dst_data, lock.format, src_data, rf::BM_FORMAT_888_BGR,
             src_width, height, lock.stride_in_bytes, src_pitch);
@@ -65,20 +63,20 @@ CodeInjection GSurface_alloc_lightmap_color_conv_patch{
         // Skip original code
         regs.eip = 0x004E4993;
 
-        void* face_light_info = regs.esi;
-        rf::GLightmap& lightmap = *struct_field_ref<rf::GLightmap*>(face_light_info, 12);
+        rf::GSurface* surface = regs.esi;
+        rf::GLightmap& lightmap = *surface->lightmap;
         rf::GrLockInfo lock;
         if (!rf::gr_lock(lightmap.bm_handle, 0, &lock, rf::GR_LOCK_WRITE_ONLY)) {
             return;
         }
 
-        int offset_y = struct_field_ref<int>(face_light_info, 20);
+        int offset_y = surface->ystart;
         int src_width = lightmap.w;
-        int offset_x = struct_field_ref<int>(face_light_info, 16);
+        int offset_x = surface->xstart;
         uint8_t* src_data_begin = lightmap.buf;
-        int src_offset = 3 * (offset_x + src_width * struct_field_ref<int>(face_light_info, 20)); // src offset
+        int src_offset = 3 * (offset_x + src_width * surface->ystart); // src offset
         uint8_t* src_data = src_offset + src_data_begin;
-        int height = struct_field_ref<int>(face_light_info, 28);
+        int height = surface->height;
         int dst_pixel_size = bm_bytes_per_pixel(lock.format);
         uint8_t* dst_row_ptr = &lock.data[dst_pixel_size * offset_x + offset_y * lock.stride_in_bytes];
         int src_pitch = 3 * src_width;
@@ -93,13 +91,14 @@ CodeInjection GSurface_alloc_lightmap_color_conv_patch{
 CodeInjection GSolid_get_ambient_color_from_lightmap_patch{
     0x004E5CE3,
     [](auto& regs) {
-        // Skip original code
-        regs.eip = 0x004E5D57;
-
+        auto stack_frame = regs.esp + 0x34;
         int x = regs.edi;
         int y = regs.ebx;
         auto& lm = *static_cast<rf::GLightmap*>(regs.esi);
-        auto& color = *reinterpret_cast<rf::Color*>(regs.esp + 0x34 - 0x28);
+        auto& color = *reinterpret_cast<rf::Color*>(stack_frame - 0x28);
+
+        // Skip original code
+        regs.eip = 0x004E5D57;
 
         // Optimization: instead of locking the lightmap texture get color data from lightmap pixels stored in RAM
         const uint8_t* src_ptr = lm.buf + (y * lm.w + x) * 3;
@@ -110,16 +109,14 @@ CodeInjection GSolid_get_ambient_color_from_lightmap_patch{
 // perhaps this code should be in g_solid.cpp but we don't have access to PixelsReader/Writer there
 void gr_copy_water_bitmap(rf::GrLockInfo& src_lock, rf::GrLockInfo& dst_lock)
 {
+    static auto& byte_1370f90 = addr_as_ref<uint8_t[256]>(0x1370F90);
+    static auto& byte_1371b14 = addr_as_ref<uint8_t[256]>(0x1371B14);
+    static auto& byte_1371090 = addr_as_ref<uint8_t[512]>(0x1371090);
+    int src_pixel_size = bm_bytes_per_pixel(src_lock.format);
     try {
         call_with_format(src_lock.format, [=](auto s) {
             call_with_format(dst_lock.format, [=](auto d) {
-                auto& byte_1370f90 = addr_as_ref<uint8_t[256]>(0x1370F90);
-                auto& byte_1371b14 = addr_as_ref<uint8_t[256]>(0x1371B14);
-                auto& byte_1371090 = addr_as_ref<uint8_t[512]>(0x1371090);
-
                 uint8_t* dst_row_ptr = dst_lock.data;
-                int src_pixel_size = bm_bytes_per_pixel(src_lock.format);
-
                 for (int y = 0; y < dst_lock.h; ++y) {
                     int t1 = byte_1370f90[y];
                     int t2 = byte_1371b14[y];
@@ -151,23 +148,21 @@ CodeInjection g_proctex_update_water_patch{
         // Skip original code
         regs.eip = 0x004E6B68;
 
-        uintptr_t waveform_info = static_cast<uintptr_t>(regs.esi);
-        int src_bm_handle = *reinterpret_cast<int*>(waveform_info + 36);
-        rf::GrLockInfo src_lock, dst_lock;
-        if (!rf::gr_lock(src_bm_handle, 0, &src_lock, rf::GR_LOCK_READ_ONLY)) {
+        auto& proctex = *static_cast<rf::GProceduralTexture*>(regs.esi);
+        rf::GrLockInfo base_bm_lock, user_bm_lock;
+        if (!rf::gr_lock(proctex.base_bm_handle, 0, &base_bm_lock, rf::GR_LOCK_READ_ONLY)) {
             return;
         }
-        int dst_bm_handle = *reinterpret_cast<int*>(waveform_info + 24);
-        bm_set_dynamic(dst_bm_handle, true);
-        if (!rf::gr_lock(dst_bm_handle, 0, &dst_lock, rf::GR_LOCK_WRITE_ONLY)) {
-            rf::gr_unlock(&src_lock);
+        bm_set_dynamic(proctex.user_bm_handle, true);
+        if (!rf::gr_lock(proctex.user_bm_handle, 0, &user_bm_lock, rf::GR_LOCK_WRITE_ONLY)) {
+            rf::gr_unlock(&base_bm_lock);
             return;
         }
 
-        gr_copy_water_bitmap(src_lock, dst_lock);
+        gr_copy_water_bitmap(base_bm_lock, user_bm_lock);
 
-        rf::gr_unlock(&src_lock);
-        rf::gr_unlock(&dst_lock);
+        rf::gr_unlock(&base_bm_lock);
+        rf::gr_unlock(&user_bm_lock);
     }
 };
 
@@ -181,11 +176,10 @@ CodeInjection g_proctex_create_bm_create_injection{
 CodeInjection face_scroll_fix{
     0x004EE1D6,
     [](auto& regs) {
-        void* geometry = regs.ebp;
-        auto& scroll_data_vec = struct_field_ref<rf::VArray<void*>>(geometry, 0x2F4);
-        auto GTextureMover_setup_faces = reinterpret_cast<void(__thiscall*)(void* self, void* geometry)>(0x004E60C0);
-        for (int i = 0; i < scroll_data_vec.size(); ++i) {
-            GTextureMover_setup_faces(scroll_data_vec[i], geometry);
+        rf::GSolid* solid = regs.ebp;
+        auto& texture_movers = solid->texture_movers;
+        for (int i = 0; i < texture_movers.size(); ++i) {
+            texture_movers[i]->update_solid(solid);
         }
     },
 };
@@ -193,10 +187,10 @@ CodeInjection face_scroll_fix{
 CodeInjection g_proctex_update_water_speed_fix{
     0x004E68A0,
     [](auto& regs) {
-        rf::Vector3& result = *reinterpret_cast<rf::Vector3*>(regs.esi + 0x2C);
-        result.x += 12.8f * (rf::frametime) / reference_framerate;
-        result.y += 4.2666669f * (rf::frametime) / reference_framerate;
-        result.z += 3.878788f * (rf::frametime) / reference_framerate;
+        auto& pt = *static_cast<rf::GProceduralTexture*>(regs.esi);
+        pt.slide_pos_xt += 12.8f * rf::frametime / reference_frametime;
+        pt.slide_pos_yc += 4.27f * rf::frametime / reference_frametime;
+        pt.slide_pos_yt += 3.878788f * rf::frametime / reference_frametime;
     },
 };
 

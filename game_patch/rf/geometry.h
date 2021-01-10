@@ -17,35 +17,23 @@ namespace rf
     struct GTextureMover;
     struct GRoom;
     struct GPathNode;
+    struct GLightmap;
     struct GrLight;
+    struct DecalPoly;
 
     using GPathNodeType = int;
-
-    struct GPathNode
-    {
-        Vector3 pos;
-        Vector3 use_pos;
-        float original_radius;
-        float radius;
-        float height;
-        float pause_time_seconds;
-        VArray<GPathNode*> visible_nodes;
-        bool visited;
-        bool unusable;
-        __int16 adjacent;
-        float distance;
-        GPathNode *backptr;
-        GPathNodeType type;
-        bool directional;
-        Matrix3 orient;
-        int index;
-        VArray<int> linked_uids;
-    };
-    static_assert(sizeof(GPathNode) == 0x7C);
 
     struct GNodeNetwork
     {
         VArray<GPathNode*> nodes;
+    };
+
+    struct GClipWnd
+    {
+        float left;
+        float top;
+        float right;
+        float bot;
     };
 
     struct GSolid
@@ -71,12 +59,12 @@ namespace rf
         FArray<GDecal*, 128> decals;
         VArray<GTextureMover*> texture_movers;
         GNodeNetwork nodes;
-        int field_30C;
-        int field_310[16];
-        int field_350[3];
-        int transform_cache_key;
+        char cubes[64];
+        float cube_size;
+        float cube_zero_pos[3];
+        int current_frame; // used for caching
         VArray<GrLight*> lights_affecting_me;
-        int light_state;
+        int last_light_state;
         int field_370;
         int field_374;
 
@@ -86,14 +74,6 @@ namespace rf
         }
     };
     static_assert(sizeof(GSolid) == 0x378);
-
-    struct GClipWnd
-    {
-        float left;
-        float top;
-        float right;
-        float bot;
-    };
 
     struct GRoom
     {
@@ -118,7 +98,7 @@ namespace rf
         char eax_effect[32];
         bool has_alpha;
         VArray<GRoom*> detail_rooms;
-        struct GRoom *room_to_render_with;
+        GRoom *room_to_render_with;
         Plane room_plane;
         int last_frame_rendered_normal;
         int last_frame_rendered_alpha;
@@ -150,6 +130,170 @@ namespace rf
         int light_state;
     };
     static_assert(sizeof(GRoom) == 0x1CC);
+
+    struct GFaceAttributes
+    {
+        uint flags;
+        GTextureMover *texture_mover;
+        int bitmap_handle;
+        short portal_id; // portal index + 2 or 0
+        short surface_index;
+        int face_id;
+        int group_id; // bitfield of smoothing groups
+    };
+    static_assert(sizeof(GFaceAttributes) == 0x18);
+
+    struct GFace
+    {
+        Plane plane;
+        Vector3 bounding_box_min;
+        Vector3 bounding_box_max;
+        GFaceAttributes attributes;
+        GFaceVertex *edge_loop;
+        GRoom *which_room;
+        GBBox *which_bbox;
+        DecalPoly *decal_poly;
+        short unk_cache_index;
+        GFace *next_in_solid;
+        GFace *next_in_bbox;
+        GFace *next_in_room;
+    };
+    static_assert(sizeof(GFace) == 0x60);
+
+    struct GVertex
+    {
+        Vector3 pos;
+        Vector3 rotated_pos;
+        int last_frame; // last frame when vertex was transformed and possibly rendered
+        int clip_codes; // also used for other things by geometry cache
+        VArray<GFace*> adjacent_faces;
+    };
+    static_assert(sizeof(GVertex) == 0x2C);
+
+    struct GFaceVertex
+    {
+        GVertex *vertex;
+        float texture_u;
+        float texture_v;
+        float lightmap_u;
+        float lightmap_v;
+        GFaceVertex *next;
+        GFaceVertex *prev;
+    };
+    static_assert(sizeof(GFaceVertex) == 0x1C);
+
+    struct GSurface
+    {
+        int index;
+        int lightstate;
+        ubyte flags;
+        bool should_smooth;
+        bool fullbright;
+        GLightmap *lightmap;
+        int xstart;
+        int ystart;
+        int width;
+        int height;
+        VArray<> border_info; // unknown
+        float x_pixels_per_meter;
+        float y_pixels_per_meter;
+        Vector3 bbox_mn;
+        Vector3 bbox_mx;
+        Vector2 uv_scale;
+        Vector2 uv_add;
+        int dropped_coefficient;
+        int u_coefficient;
+        int v_coefficient;
+        int room_index;
+        Plane plane;
+    };
+    static_assert(sizeof(GSurface) == 0x7C);
+
+    struct GTextureMover
+    {
+        int face_id;
+        float u_pan_speed;
+        float v_pan_speed;
+        VArray<GFace*> faces;
+
+        void update_solid(GSolid* solid)
+        {
+            AddrCaller{0x004E60C0}.this_call(this, solid);
+        }
+    };
+    static_assert(sizeof(GTextureMover) == 0x18);
+
+    struct GPathNode
+    {
+        Vector3 pos;
+        Vector3 use_pos;
+        float original_radius;
+        float radius;
+        float height;
+        float pause_time_seconds;
+        VArray<GPathNode*> visible_nodes;
+        bool visited;
+        bool unusable;
+        __int16 adjacent;
+        float distance;
+        GPathNode *backptr;
+        GPathNodeType type;
+        bool directional;
+        Matrix3 orient;
+        int index;
+        VArray<int> linked_uids;
+    };
+    static_assert(sizeof(GPathNode) == 0x7C);
+
+    struct GDecal
+    {
+        Vector3 pos;
+        Matrix3 orient;
+        Vector3 width;
+        int bitmap_id;
+        GRoom *room;
+        GRoom *room2;
+        GSolid *solid;
+        ubyte alpha;
+        int flags;
+        int object_handle;
+        float tiling_scale;
+        Plane decal_poly_planes[6];
+        Vector3 bb_min;
+        Vector3 bb_max;
+        DecalPoly *poly_list;
+        int num_decal_polys;
+        float lifetime_sec;
+        GDecal *next;
+        GDecal *prev;
+        GSolid *editor_geometry;
+    };
+    static_assert(sizeof(GDecal) == 0xEC);
+
+    struct DecalVertex
+    {
+        Vector2 uv;
+        Vector2 lightmap_uv;
+        Vector3 pos;
+        Vector3 rotated_pos;
+        int field_28;
+    };
+    static_assert(sizeof(DecalVertex) == 0x2C);
+
+    struct DecalPoly
+    {
+        Vector2 uvs[25];
+        int face_priority;
+        int lightmap_bm_handle;
+        int nv;
+        DecalVertex verts[25];
+        GFace *face;
+        GDecal *my_decal;
+        DecalPoly *next;
+        DecalPoly *prev;
+        DecalPoly *next_for_face;
+    };
+    static_assert(sizeof(DecalPoly) == 0x534);
 
     struct GCollisionInput
     {
@@ -188,14 +332,34 @@ namespace rf
 
     struct GLightmap
     {
-        uint8_t *unk;
+        ubyte *unk;
         int w;
         int h;
-        uint8_t *buf;
+        ubyte *buf;
         int bm_handle;
         int index;
     };
     static_assert(sizeof(GLightmap) == 0x18);
+
+    using ProcTexType = int;
+    struct GProceduralTexture
+    {
+        int last_frame_updated;
+        int last_frame_needs_updating;
+        GProceduralTexture *next;
+        GProceduralTexture *prev;
+        int width;
+        int height;
+        int user_bm_handle;
+        ProcTexType type;
+        void (__cdecl *update_function)(GProceduralTexture *pt);
+        int base_bm_handle;
+        float slide_pos_xc; // unused?
+        float slide_pos_xt;
+        float slide_pos_yc;
+        float slide_pos_yt;
+    };
+    static_assert(sizeof(GProceduralTexture) == 0x38);
 
     static auto& g_cache_clear = addr_as_ref<void()>(0x004F0B90);
 }

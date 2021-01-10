@@ -3,6 +3,7 @@
 #include "../rf/entity.h"
 #include "../rf/player.h"
 #include "../rf/multi.h"
+#include "../rf/geometry.h"
 #include "debug_internal.h"
 
 std::optional<float> g_target_rotate_speed;
@@ -281,7 +282,7 @@ void render_obj_debug_ui()
     dbg_hud.printf("dist", "%.3f", (cam_pos - object->pos).len());
     dbg_hud.printf("atck_dist", "%.0f", entity ? rf::ai_get_attack_range(entity->ai) : 0.0f);
     dbg_hud.printf("life", "%.0f", object->life);
-    dbg_hud.printf("room", "%d", object->room ? struct_field_ref<int>(object->room, 0x20) : -1);
+    dbg_hud.printf("room", "%d", object->room ? object->room->room_index : -1);
     dbg_hud.print("pos", object->pos);
     if (entity) {
         dbg_hud.print("eye_pos", entity->view_pos);

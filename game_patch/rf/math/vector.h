@@ -121,4 +121,10 @@ namespace rf
     static_assert(sizeof(Vector3) == 0xC);
 
     static auto& zero_vector = addr_as_ref<Vector3>(0x0173C378);
+
+    struct Vector2
+    {
+        float x = 0.0f;
+        float y = 0.0f;
+    };
 }
