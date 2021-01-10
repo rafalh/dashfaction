@@ -1,5 +1,7 @@
 #pragma once
 
+#include "common.h"
+
 namespace rf
 {
     class File
@@ -15,6 +17,10 @@ namespace rf
             seek_end = 2,
         };
 
+        static constexpr uint mode_read = 1;
+        static constexpr uint mode_write = 2;
+        static constexpr uint mode_text = 0x80000000;
+
         File()
         {
             AddrCaller{0x00523940}.this_call(this);
@@ -25,9 +31,9 @@ namespace rf
             AddrCaller{0x00523960}.this_call(this);
         }
 
-        int open(const char* filename, int flags = 1, int unk = 9999999)
+        int open(const char* filename, int mode = mode_read, int path_id = 9999999)
         {
-            return AddrCaller{0x00524190}.this_call<int>(this, filename, flags, unk);
+            return AddrCaller{0x00524190}.this_call<int>(this, filename, mode, path_id);
         }
 
         void close()

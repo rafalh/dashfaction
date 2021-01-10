@@ -196,7 +196,7 @@ namespace rf
         Color current_color;
         int current_texture_1;
         int current_texture_2;
-        char fog_mode;
+        bool fog_mode;
         Color fog_color;
         float fog_near;
         float fog_far;
