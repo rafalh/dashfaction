@@ -1,6 +1,10 @@
 DashFaction Changelog
 =====================
 
+Version 1.6.0 (not yet released)
+--------------------------------
+- Fix items not respawning in DF-hosted server (1.6.0 regression)
+
 Version 1.6.0 (released 2021-01-07)
 --------------------------------
 - Fix sounds being often skipped if volume in game options is set very low (1.6.0-rc1 regression)
