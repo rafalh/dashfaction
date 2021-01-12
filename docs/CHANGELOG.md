@@ -1,7 +1,7 @@
 DashFaction Changelog
 =====================
 
-Version 1.6.0 (not yet released)
+Version 1.6.1 (not yet released)
 --------------------------------
 - Fix items not respawning in DF-hosted server (1.6.0 regression)
 
