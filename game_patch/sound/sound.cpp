@@ -355,26 +355,20 @@ void sound_test_do_frame()
 FunHook<void(const rf::Vector3&, const rf::Vector3&, const rf::Matrix3&)> snd_update_sounds_hook{
      0x00505EC0,
     [](const rf::Vector3& camera_pos, const rf::Vector3& camera_vel, const rf::Matrix3& camera_orient) {
-        rf::sound_listener_pos = camera_pos;
-        rf::sound_listener_rvec = camera_orient.rvec;
-
         player_fpgun_move_sounds(camera_pos, camera_vel);
 
 #ifdef DEBUG
         sound_test_do_frame();
 #endif
 
-        if (rf::ds3d_enabled) {
-            // Update DirectSound 3D listener parameters
-            rf::snd_pc_change_listener(camera_pos, camera_vel, camera_orient);
+        rf::sound_listener_pos = camera_pos;
+        rf::sound_listener_rvec = camera_orient.rvec;
 
-            snd_update_sound_instances(camera_pos);
-            snd_update_ambient_sounds(camera_pos);
-        }
-        else {
-            // Use original implementation if DirectSound 3D is disabled
-            snd_update_sounds_hook.call_target(camera_pos, camera_vel, camera_orient);
-        }
+        // Update DirectSound 3D listener parameters
+        rf::snd_pc_change_listener(camera_pos, camera_vel, camera_orient);
+
+        snd_update_sound_instances(camera_pos);
+        snd_update_ambient_sounds(camera_pos);
     },
 };
 
