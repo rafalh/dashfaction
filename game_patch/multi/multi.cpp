@@ -76,6 +76,7 @@ void multi_init_player(rf::Player* player)
 
 void multi_do_patch()
 {
+    multi_limbo_init.install();
     multi_start_injection.install();
 
     multi_kill_do_patch();
