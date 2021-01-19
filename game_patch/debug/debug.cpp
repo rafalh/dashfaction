@@ -3,13 +3,13 @@
 #include <xlog/xlog.h>
 #include "../os/console.h"
 
+#define DEBUG_PERF 1
+
 #ifdef NDEBUG
 #define MEMORY_TRACKING 0
 #define VARRAY_OOB_CHECK 0
 #define EMULATE_PACKET_LOSS 0
-#define DEBUG_PERF 0
 #else // NDEBUG
-#define DEBUG_PERF 1
 #define MEMORY_TRACKING 1
 #define VARRAY_OOB_CHECK 0
 #define EMULATE_PACKET_LOSS 0
@@ -149,6 +149,12 @@ FunHook<void(void*, const void*, unsigned, rf::NwAddr*)> nw_add_packet_to_buffer
 
 #endif // EMULATE_PACKET_LOSS
 
+void debug_multi_init()
+{
+    debug_cmd_multi_init();
+    profiler_multi_init();
+}
+
 void debug_apply_patches()
 {
     // Log error when memory allocation fails
@@ -170,7 +176,6 @@ void debug_apply_patches()
     nw_add_packet_to_buffer_hook.install();
 #endif
 
-    debug_cmd_apply_patches();
     debug_unresponsive_apply_patches();
 #if DEBUG_PERF
     profiler_init();

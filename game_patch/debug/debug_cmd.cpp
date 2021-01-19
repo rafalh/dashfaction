@@ -76,7 +76,7 @@ ConsoleCommand2 debug_cmd{
     "room | portal | lightmap | nolightmap | show_invisible_faces]",
 };
 
-void disable_all_debug_flags()
+void debug_cmd_multi_init()
 {
     bool clear_geom_cache = false;
     for (auto& dbg_flag : g_debug_flags) {
@@ -87,13 +87,6 @@ void disable_all_debug_flags()
     if (clear_geom_cache)
         rf::g_cache_clear();
 }
-
-CodeInjection MpInit_disable_debug_flags_patch{
-    0x0046D5B0,
-    []() {
-        disable_all_debug_flags();
-    },
-};
 
 void debug_cmd_render()
 {
@@ -112,12 +105,6 @@ void debug_cmd_render_ui()
     if (g_dbg_geometry_rendering_stats)
         dbg_rendering_stats();
     dbg_particle_stats();
-}
-
-void debug_cmd_apply_patches()
-{
-    // Reset debug flags when entering multiplayer
-    MpInit_disable_debug_flags_patch.install();
 }
 
 void debug_cmd_init()

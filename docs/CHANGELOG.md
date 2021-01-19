@@ -6,6 +6,7 @@ Version 1.6.1 (not yet released)
 - Fix items not respawning in DF-hosted server (1.6.0 regression)
 - Fix ambient sound volume not being affected by `levelsounds` command if EAX sounds are disabled (1.6.0 regression)
 - Add `screenshot` command
+- Add `d_profiler` command for Release builds (single player only)
 
 Version 1.6.0 (released 2021-01-07)
 --------------------------------

@@ -1,6 +1,4 @@
-#include "debug_internal.h"
 #include <common/config/BuildConfig.h>
-#include "../os/console.h"
 #include <patch_common/FunHook.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/CallPrePostHook.h>
@@ -9,7 +7,9 @@
 #include <xlog/xlog.h>
 #include <cstddef>
 #include <fstream>
+#include "../os/console.h"
 #include "debug_internal.h"
+#include "../rf/multi.h"
 #include <common/utils/perf-utils.h>
 
 std::vector<std::unique_ptr<PerfAggregator>> PerfAggregator::instances_;
@@ -342,6 +342,12 @@ void profiler_log_close()
 ConsoleCommand2 profiler_cmd{
     "d_profiler",
     []() {
+#ifdef NDEBUG
+        if (rf::is_multi) {
+            rf::console_printf("Profiler cannot be used in multiplayer");
+            return;
+        }
+#endif
         install_profiler_patches();
         g_profiler_visible = !g_profiler_visible;
     },
@@ -502,4 +508,9 @@ void profiler_draw_ui()
             }
         }
     }
+}
+
+void profiler_multi_init()
+{
+    g_profiler_visible = false;
 }

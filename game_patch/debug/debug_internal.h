@@ -74,16 +74,17 @@ private:
     }
 };
 
-void debug_cmd_apply_patches();
 void debug_cmd_init();
 void debug_cmd_render();
 void debug_cmd_render_ui();
 void profiler_init();
 void profiler_do_frame_post();
 void profiler_draw_ui();
+void profiler_multi_init();
 void register_obj_debug_commands();
 void render_obj_debug_ui();
 void debug_unresponsive_apply_patches();
 void debug_unresponsive_init();
 void debug_unresponsive_cleanup();
 void debug_unresponsive_do_update();
+void debug_cmd_multi_init();

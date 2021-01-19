@@ -1,6 +1,7 @@
 #include <regex>
 #include <xlog/xlog.h>
 #include <patch_common/FunHook.h>
+#include <patch_common/CodeInjection.h>
 #include "multi.h"
 #include "multi_private.h"
 #include "../misc/misc.h"
@@ -60,6 +61,14 @@ FunHook<void()> multi_limbo_init{
     },
 };
 
+CodeInjection multi_start_injection{
+    0x0046D5B0,
+    []() {
+        void debug_multi_init();
+        debug_multi_init();
+    },
+};
+
 void multi_init_player(rf::Player* player)
 {
     multi_kill_init_player(player);
@@ -67,6 +76,8 @@ void multi_init_player(rf::Player* player)
 
 void multi_do_patch()
 {
+    multi_start_injection.install();
+
     multi_kill_do_patch();
     level_download_do_patch();
     network_init();
