@@ -307,7 +307,8 @@ CallHook<int(char*, const char*)> skeleton_pagein_debug_print_patch{
 CodeInjection level_load_items_crash_fix{
     0x0046519F,
     [](auto& regs) {
-        if (regs.eax == nullptr) {
+        void* item = regs.eax;
+        if (item == nullptr) {
             regs.eip = 0x004651C6;
         }
     },
@@ -330,7 +331,8 @@ CodeInjection vmesh_col_fix{
 CodeInjection explosion_crash_fix{
     0x00436594,
     [](auto& regs) {
-        if (regs.edx == nullptr) {
+        rf::Player* player = regs.edx;
+        if (player == nullptr) {
             regs.esp += 4;
             regs.eip = 0x004365EC;
         }
