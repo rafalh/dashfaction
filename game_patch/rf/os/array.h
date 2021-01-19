@@ -42,6 +42,11 @@ namespace rf
             return num;
         }
 
+        T& operator[](int index)
+        {
+            return elements[index];
+        }
+
         T& get(int index) const
         {
             return elements[index];

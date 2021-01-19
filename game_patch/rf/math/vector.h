@@ -98,7 +98,7 @@ namespace rf
             z = 0.0f;
         }
 
-        float dot_prod(const Vector3& other)
+        float dot_prod(const Vector3& other) const
         {
             return other.x * x + other.y * y + other.z * z;
         }

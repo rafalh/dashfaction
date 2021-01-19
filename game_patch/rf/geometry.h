@@ -134,7 +134,7 @@ namespace rf
     struct GFaceAttributes
     {
         uint flags;
-        GTextureMover *texture_mover;
+        GTextureMover *texture_mover; // only used by rendering cache code
         int bitmap_handle;
         short portal_id; // portal index + 2 or 0
         short surface_index;

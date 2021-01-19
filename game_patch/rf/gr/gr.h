@@ -82,6 +82,7 @@ namespace rf
         int value;
 
     public:
+        constexpr GrMode() : value(0) {}
         constexpr GrMode(GrTextureSource ts, GrColorSource cs, GrAlphaSource as, GrAlphaBlend ab, GrZbufferType zbt, GrFogType ft) :
             value((ts << ts_shift) | (cs << cs_shift) | (as << as_shift) | (ab << ab_shift) | (zbt << zbt_shift) | (ft << ft_shift))
         {}
