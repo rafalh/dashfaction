@@ -21,7 +21,7 @@ jobs:
 
     - name: Configure CMake
       working-directory: ${{github.workspace}}/build
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_TOOLCHAIN_FILE=../cmake/mingw-ubuntu.cmake
+      run: cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_TOOLCHAIN_FILE=../cmake/mingw-ubuntu.cmake
 
     - name: Build
       working-directory: ${{github.workspace}}/build
@@ -41,8 +41,9 @@ jobs:
       working-directory: ${{github.workspace}}/build
       run: |
         call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
-        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+        cmake .. -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
 
     - name: Build
+      shell: cmd
       working-directory: ${{github.workspace}}/build
-      run: cmake --build . --config $BUILD_TYPE
+      run: cmake --build . --config %BUILD_TYPE%
