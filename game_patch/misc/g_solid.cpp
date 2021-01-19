@@ -109,15 +109,15 @@ CodeInjection GSolid_get_ambient_color_from_lightmap_patch{
 // perhaps this code should be in g_solid.cpp but we don't have access to PixelsReader/Writer there
 void gr_copy_water_bitmap(rf::GrLockInfo& src_lock, rf::GrLockInfo& dst_lock)
 {
-    static auto& byte_1370f90 = addr_as_ref<uint8_t[256]>(0x1370F90);
-    static auto& byte_1371b14 = addr_as_ref<uint8_t[256]>(0x1371B14);
-    static auto& byte_1371090 = addr_as_ref<uint8_t[512]>(0x1371090);
     int src_pixel_size = bm_bytes_per_pixel(src_lock.format);
     try {
         call_with_format(src_lock.format, [=](auto s) {
             call_with_format(dst_lock.format, [=](auto d) {
                 uint8_t* dst_row_ptr = dst_lock.data;
                 for (int y = 0; y < dst_lock.h; ++y) {
+                    auto& byte_1370f90 = addr_as_ref<uint8_t[256]>(0x1370F90);
+                    auto& byte_1371b14 = addr_as_ref<uint8_t[256]>(0x1371B14);
+                    auto& byte_1371090 = addr_as_ref<uint8_t[512]>(0x1371090);
                     int t1 = byte_1370f90[y];
                     int t2 = byte_1371b14[y];
                     uint8_t* off_arr = &byte_1371090[-t1];
