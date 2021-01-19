@@ -26,7 +26,7 @@ public:
         U operator=(U value)
         {
             static_assert(sizeof(T) == sizeof(U));
-            //static_assert(!std::is_null_pointer_v<U>);
+            static_assert(!std::is_null_pointer_v<U>);
             std::memcpy(&this->value, &value, sizeof(T));
             return value;
         }
@@ -35,7 +35,7 @@ public:
         operator U() const
         {
             static_assert(sizeof(T) == sizeof(U));
-            //static_assert(!std::is_null_pointer_v<U>);
+            static_assert(!std::is_null_pointer_v<U>);
             U tmp;
             std::memcpy(&tmp, &this->value, sizeof(T));
             return tmp;
@@ -44,13 +44,23 @@ public:
         template<typename U>
         bool operator==([[ maybe_unused ]] U other) const
         {
-            return static_cast<U>(*this) == other;
+            if constexpr (std::is_null_pointer_v<U>) {
+                return this->value == 0;
+            }
+            else {
+                return static_cast<U>(*this) == other;
+            }
         }
 
         template<typename U>
         bool operator!=([[ maybe_unused ]] U other) const
         {
-            return static_cast<U>(*this) != other;
+            if constexpr (std::is_null_pointer_v<U>) {
+                return this->value != 0;
+            }
+            else {
+                return static_cast<U>(*this) != other;
+            }
         }
 
         template<typename U>
