@@ -169,6 +169,7 @@ CodeInjection update_pp_hook{
         xlog::info("Back Buffer format: %u", rf::gr_d3d_pp.BackBufferFormat);
         xlog::info("Back Buffer dimensions: %ux%u", rf::gr_d3d_pp.BackBufferWidth, rf::gr_d3d_pp.BackBufferHeight);
         xlog::info("D3D Device Caps: %lX", rf::gr_d3d_device_caps.DevCaps);
+        xlog::info("D3D Raster Caps: %lX", rf::gr_d3d_device_caps.RasterCaps);
         xlog::info("Max texture size: %ldx%ld", rf::gr_d3d_device_caps.MaxTextureWidth, rf::gr_d3d_device_caps.MaxTextureHeight);
 
         if (g_game_config.msaa) {
@@ -274,11 +275,11 @@ CallHook<void()> gr_d3d_init_buffers_gr_d3d_flip_hook{
         // Apply state change after reset
         // Note: we dont have to set min/mag filtering because its set when selecting material
 
-        rf::gr_d3d_device->SetRenderState(D3DRS_CULLMODE, 1);
-        rf::gr_d3d_device->SetRenderState(D3DRS_SHADEMODE, 2);
-        rf::gr_d3d_device->SetRenderState(D3DRS_SPECULARENABLE, 0);
+        rf::gr_d3d_device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+        rf::gr_d3d_device->SetRenderState(D3DRS_SHADEMODE, D3DSHADE_GOURAUD);
+        rf::gr_d3d_device->SetRenderState(D3DRS_SPECULARENABLE, FALSE);
         rf::gr_d3d_device->SetRenderState(D3DRS_AMBIENT, 0xFF545454);
-        rf::gr_d3d_device->SetRenderState(D3DRS_CLIPPING, 0);
+        rf::gr_d3d_device->SetRenderState(D3DRS_CLIPPING, FALSE);
 
         if (rf::local_player)
             rf::gr_set_texture_mip_filter(rf::local_player->settings.filtering_level == 0);
