@@ -246,11 +246,12 @@ void snd_ds_apply_patch()
 
     // Change number of sound channels
     ds_channels_resize_patch.install();
-    write_mem<i8>(0x00521145 + 1, std::size(rf::ds_channels));     // snd_ds_channels_array_ctor
-    write_mem<i8>(0x0052163D + 2, std::size(rf::ds_channels));     // snd_ds_init_all_channels
-    write_mem<i8>(0x0052191D + 2, std::size(rf::ds_channels));     // snd_ds_close_all_channels
-    write_mem<i8>(0x00522F4F + 2, std::size(rf::ds_channels));     // snd_ds_get_channel
-    write_mem<i8>(0x00522D1D + 2, std::size(rf::ds_channels));     // snd_ds_close_all_channels2
+    auto max_ds_channels = static_cast<i8>(std::size(rf::ds_channels));
+    write_mem<i8>(0x00521145 + 1, max_ds_channels); // snd_ds_channels_array_ctor
+    write_mem<i8>(0x0052163D + 2, max_ds_channels); // snd_ds_init_all_channels
+    write_mem<i8>(0x0052191D + 2, max_ds_channels); // snd_ds_close_all_channels
+    write_mem<i8>(0x00522F4F + 2, max_ds_channels); // snd_ds_get_channel
+    write_mem<i8>(0x00522D1D + 2, max_ds_channels); // snd_ds_close_all_channels2
 
     // Do not use DSPROPSETID_VoiceManager because it is not implemented by dsoal
     write_mem<i8>(0x00521597 + 4, 0);

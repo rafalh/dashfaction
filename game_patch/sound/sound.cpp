@@ -396,12 +396,13 @@ void apply_sound_patches()
     // Change number of sound channels
     //write_mem<u8>(0x005055AB, asm_opcodes::jmp_rel_short); // never free sound instances, uncomment to test
     sound_instances_resize_patch.install();
-    write_mem<i8>(0x005053F5 + 1, std::size(rf::sound_instances)); // snd_init_sound_instances_array
-    write_mem<i8>(0x005058D8 + 2, std::size(rf::sound_instances)); // snd_change_3d
-    write_mem<i8>(0x0050598A + 2, std::size(rf::sound_instances)); // snd_change
-    write_mem<i8>(0x00505A36 + 2, std::size(rf::sound_instances)); // snd_stop_all_paused_sounds
-    write_mem<i8>(0x00505A5A + 2, std::size(rf::sound_instances)); // snd_stop
-    write_mem<i8>(0x00505C31 + 2, std::size(rf::sound_instances)); // snd_is_playing
+    auto max_sound_instances = static_cast<i8>(std::size(rf::sound_instances));
+    write_mem<i8>(0x005053F5 + 1, max_sound_instances); // snd_init_sound_instances_array
+    write_mem<i8>(0x005058D8 + 2, max_sound_instances); // snd_change_3d
+    write_mem<i8>(0x0050598A + 2, max_sound_instances); // snd_change
+    write_mem<i8>(0x00505A36 + 2, max_sound_instances); // snd_stop_all_paused_sounds
+    write_mem<i8>(0x00505A5A + 2, max_sound_instances); // snd_stop
+    write_mem<i8>(0x00505C31 + 2, max_sound_instances); // snd_is_playing
 
     // Improve handling of instance slot allocation in snd_play
     snd_play_hook.install();

@@ -24,7 +24,7 @@ void frametime_render()
         for (unsigned i = 0; i < std::size(g_frametime_history); ++i) {
             int slot_index = (g_frametime_history_index + 1 + i) % std::size(g_frametime_history);
             int x = scr_w - i - 1;
-            int h = g_frametime_history[slot_index] / max_frametime * 100.0f;
+            int h = static_cast<int>(g_frametime_history[slot_index] / max_frametime * 100.0f);
             rf::gr_rect(x, scr_h - h, 1, h);
         }
     }

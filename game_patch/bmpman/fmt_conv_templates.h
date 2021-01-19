@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdexcept>
 #include "../rf/bmpman.h"
 
 #define TEXTURE_DITHERING 0
