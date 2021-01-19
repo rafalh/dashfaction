@@ -2,6 +2,7 @@
 #include <patch_common/CodeInjection.h>
 #include <patch_common/CallHook.h>
 #include <xlog/xlog.h>
+#include "../os/console.h"
 #include "../rf/misc.h"
 #include "../rf/file.h"
 #include "../rf/gr/gr.h"
@@ -70,6 +71,17 @@ CallHook<void(int, int, int, rf::GrMode)> game_render_cursor_gr_bitmap_hook{
     },
 };
 
+static ConsoleCommand2 screenshot_cmd{
+    "screenshot",
+    []() {
+        auto game_print_screen = addr_as_ref<void(char* filename)>(0x004366E0);
+
+        char buf[MAX_PATH];
+        game_print_screen(buf);
+        rf::console_printf("Screenshot saved in %s", buf);
+    },
+};
+
 void game_apply_patch()
 {
     // Override screenshot directory
@@ -82,4 +94,7 @@ void game_apply_patch()
 
     // Bigger cursor bitmap support
     game_render_cursor_gr_bitmap_hook.install();
+
+    // Commands
+    screenshot_cmd.register_cmd();
 }
