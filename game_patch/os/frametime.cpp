@@ -1,5 +1,6 @@
 #include <patch_common/CallHook.h>
 #include <patch_common/AsmWriter.h>
+#include <common/version/version.h>
 #include "console.h"
 #include "../rf/gr/gr.h"
 #include "../main/main.h"
@@ -44,10 +45,9 @@ ConsoleCommand2 max_fps_cmd{
     "maxfps",
     [](std::optional<int> limit_opt) {
         if (limit_opt) {
-#ifdef NDEBUG
-            int new_limit = std::clamp<int>(limit_opt.value(), MIN_FPS_LIMIT, MAX_FPS_LIMIT);
-#else
             int new_limit = limit_opt.value();
+#if VERSION_TYPE != VERSION_TYPE_DEV
+            new_limit = std::clamp<int>(new_limit, MIN_FPS_LIMIT, MAX_FPS_LIMIT);
 #endif
             g_game_config.max_fps = new_limit;
             g_game_config.save();
