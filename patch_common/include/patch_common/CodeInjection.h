@@ -44,23 +44,13 @@ public:
         template<typename U>
         bool operator==([[ maybe_unused ]] U other) const
         {
-            if constexpr (std::is_null_pointer_v<U>) {
-                return this->value == 0;
-            }
-            else {
-                return static_cast<U>(*this) == other;
-            }
+            return static_cast<U>(*this) == other;
         }
 
         template<typename U>
         bool operator!=([[ maybe_unused ]] U other) const
         {
-            if constexpr (std::is_null_pointer_v<U>) {
-                return this->value != 0;
-            }
-            else {
-                return static_cast<U>(*this) != other;
-            }
+            return static_cast<U>(*this) != other;
         }
 
         template<typename U>
