@@ -10,6 +10,7 @@ Version 1.6.1 (not yet released)
 - Fix vote not ending when level ends in hosted server (1.6.0 regression)
 - Fix CTF flag sometimes not returning to the base automatically (RF bug)
 - Fix spectate camera staying in fixed mode after level change
+- Fix editor crash when building geometry after lightmap resolution for a face was set to Undefined (RF bug)
 
 Version 1.6.0 (released 2021-01-07)
 --------------------------------

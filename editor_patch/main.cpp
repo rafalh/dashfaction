@@ -482,6 +482,9 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     write_mem<int>(0x004477A0 + 2, -max_size);
     write_mem<int>(0x004477EE + 2, -max_size);
 
+    // Fix editor crash when building geometry after lightmap resolution for a face was set to Undefined
+    write_mem<u8>(0x00402DFA + 1, 0);
+
     return 1; // success
 }
 
