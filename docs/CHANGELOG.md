@@ -8,6 +8,7 @@ Version 1.6.1 (not yet released)
 - Add `screenshot` command
 - Add `d_profiler` command for Release builds (single player only)
 - Fix vote not ending when level ends in hosted server (1.6.0 regression)
+- Fix CTF flag sometimes not returning to the base automatically (RF bug)
 
 Version 1.6.0 (released 2021-01-07)
 --------------------------------

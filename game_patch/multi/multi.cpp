@@ -69,6 +69,20 @@ CodeInjection multi_start_injection{
     },
 };
 
+CodeInjection ctf_flag_return_fix{
+    0x0047381D,
+    [](auto& regs) {
+        auto stack_frame = regs.esp + 0x1C;
+        bool red = addr_as_ref<bool>(stack_frame + 4);
+        if (red) {
+            regs.eip = 0x00473827;
+        }
+        else {
+            regs.eip = 0x00473822;
+        }
+    },
+};
+
 void multi_init_player(rf::Player* player)
 {
     multi_kill_init_player(player);
@@ -78,6 +92,9 @@ void multi_do_patch()
 {
     multi_limbo_init.install();
     multi_start_injection.install();
+
+    // Fix CTF flag not returning to the base if the other flag was returned when the first one was waiting
+    ctf_flag_return_fix.install();
 
     multi_kill_do_patch();
     level_download_do_patch();
