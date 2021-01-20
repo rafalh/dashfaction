@@ -7,6 +7,7 @@
 
 static WCHAR g_module_path[MAX_PATH];
 static LPTOP_LEVEL_EXCEPTION_FILTER g_old_exception_filter;
+static CrashHandlerConfig g_config;
 
 void CrashHandlerStubProcessException(PEXCEPTION_POINTERS exception_ptrs, DWORD thread_id)
 {
@@ -33,8 +34,8 @@ void CrashHandlerStubProcessException(PEXCEPTION_POINTERS exception_ptrs, DWORD 
         startup_info.cb = sizeof(startup_info);
 
         WCHAR cmd_line[256];
-        std::swprintf(cmd_line, ARRAYSIZE(cmd_line), L"%ls\\CrashHandler.exe 0x%p 0x%p %lu 0x%p", g_module_path,
-                      exception_ptrs, process_handle, thread_id, event_handle);
+        std::swprintf(cmd_line, std::size(cmd_line), L"%ls\\CrashHandler.exe 0x%p 0x%p %lu 0x%p 0x%p", g_module_path,
+                      exception_ptrs, process_handle, thread_id, event_handle, &g_config);
         xlog::info("Running crash handler: %ls", cmd_line);
 
         PROCESS_INFORMATION proc_info;
@@ -79,9 +80,10 @@ static void SignalHandler(int signal_number)
     ExitProcess(0);
 }
 
-void CrashHandlerStubInstall(HMODULE module_handle)
+void CrashHandlerStubInstall(const CrashHandlerConfig& config)
 {
-    GetModuleFileNameW(module_handle, g_module_path, ARRAYSIZE(g_module_path));
+    g_config = config;
+    GetModuleFileNameW(config.this_module_handle, g_module_path, std::size(g_module_path));
 
     WCHAR* filename = wcsrchr(g_module_path, L'\\');
     if (filename)

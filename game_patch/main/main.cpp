@@ -255,6 +255,22 @@ void load_config()
     xlog::info("Allow Overwriting Game Files: %d", g_game_config.allow_overwrite_game_files.value());
 }
 
+void init_crash_handler()
+{
+    char current_dir[MAX_PATH] = ".";
+    GetCurrentDirectoryA(std::size(current_dir), current_dir);
+
+    CrashHandlerConfig config;
+    config.this_module_handle = g_hmodule;
+    std::snprintf(config.log_file, std::size(config.log_file), "%s\\logs\\DashFaction.log", current_dir);
+    std::snprintf(config.output_dir, std::size(config.output_dir), "%s\\logs", current_dir);
+    std::snprintf(config.app_name, std::size(config.app_name), "DashFaction");
+    config.add_known_module("RF");
+    config.add_known_module("DashFaction");
+
+    CrashHandlerStubInstall(config);
+}
+
 extern "C" void subhook_unk_opcode_handler(uint8_t* opcode)
 {
     xlog::error("SubHook unknown opcode 0x%X at 0x%p", *opcode, opcode);
@@ -266,7 +282,7 @@ extern "C" DWORD __declspec(dllexport) Init([[maybe_unused]] void* unused)
 
     // Init logging and crash dump support first
     init_logging();
-    CrashHandlerStubInstall(g_hmodule);
+    init_crash_handler();
 
     // Enable Data Execution Prevention
     if (!SetProcessDEPPolicy(PROCESS_DEP_ENABLE))

@@ -33,5 +33,6 @@ target_link_libraries(CrashHandler
     comctl32
     zip
     zlib
+    CrashHandlerStub
 )
 

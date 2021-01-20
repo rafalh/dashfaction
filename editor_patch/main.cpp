@@ -334,6 +334,22 @@ void InitLogging()
     xlog::info("DashFaction Editor log started.");
 }
 
+void InitCrashHandler()
+{
+    char current_dir[MAX_PATH] = ".";
+    GetCurrentDirectoryA(std::size(current_dir), current_dir);
+
+    CrashHandlerConfig config;
+    config.this_module_handle = g_module;
+    std::snprintf(config.log_file, std::size(config.log_file), "%s\\logs\\DashEditor.log", current_dir);
+    std::snprintf(config.output_dir, std::size(config.output_dir), "%s\\logs", current_dir);
+    std::snprintf(config.app_name, std::size(config.app_name), "DashEditor");
+    config.add_known_module("RED");
+    config.add_known_module("DashEditor");
+
+    CrashHandlerStubInstall(config);
+}
+
 void ApplyGraphicsPatches();
 void ApplyTriggerPatches();
 
@@ -377,7 +393,7 @@ CodeInjection CMainFrame_OnPlayLevelFromCameraCmd_skip_level_dir_injection{
 extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
 {
     InitLogging();
-    CrashHandlerStubInstall(g_module);
+    InitCrashHandler();
 
     // Change command for Play Level action to use Dash Faction launcher
     static std::string launcher_pathname = get_module_dir(g_module) + LAUNCHER_FILENAME;

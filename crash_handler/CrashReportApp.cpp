@@ -53,14 +53,22 @@ BOOL CrashReportApp::InitInstance()
     return FALSE;
 }
 
-void ArchiveReport(const char* crash_dump_filename, const char* exc_info_filename) try
+void CrashReportApp::ArchiveReport(const char* crash_dump_filename, const char* exc_info_filename) try
 {
-    CreateDirectoryA(CRASHHANDLER_TARGET_DIR, nullptr);
-    ZipHelper zip(CRASHHANDLER_TARGET_DIR "/" CRASHHANDLER_TARGET_NAME);
-    zip.add_file(crash_dump_filename, "CrashDump.dmp");
+    std::string output_dir = m_config.output_dir;
+    CreateDirectoryA(output_dir.c_str(), nullptr);
+
+    std::string archive_path_name = output_dir + "\\" + m_config.app_name + "-crash.zip";
+    ZipHelper zip(archive_path_name.c_str());
+    zip.add_file(crash_dump_filename, "minidump.dmp");
     zip.add_file(exc_info_filename, "exception.txt");
+    auto log_file_name = "app.log";
+    auto last_slash_ptr = std::strrchr(m_config.log_file, '\\');
+    if (last_slash_ptr) {
+        log_file_name = last_slash_ptr + 1;
+    }
     try {
-        zip.add_file(CRASHHANDLER_LOG_PATH, "AppLog.log");
+        zip.add_file(m_config.log_file, log_file_name);
     } catch (...) {
         // log file may not exist yet - ignore exception
     }
@@ -86,9 +94,9 @@ std::string GetTempFileNameInTempDir(const char* prefix)
 
 std::string CrashReportApp::GetArchivedReportFilePath() const
 {
-    char cur_dir[MAX_PATH];
-    GetCurrentDirectoryA(std::size(cur_dir), cur_dir);
-    return std::string(cur_dir) + "\\" + CRASHHANDLER_TARGET_DIR "\\" CRASHHANDLER_TARGET_NAME;
+    std::string output_dir = m_config.output_dir;
+    std::string archive_path_name = output_dir + "\\" + m_config.app_name + "-crash.zip";
+    return archive_path_name;
 }
 
 void CrashReportApp::PrepareReport(const CommandLineInfo& cmd_line_info) try
@@ -97,17 +105,20 @@ void CrashReportApp::PrepareReport(const CommandLineInfo& cmd_line_info) try
     auto process_handle = cmd_line_info.GetProcessHandle();
     auto thread_id = cmd_line_info.GetThreadId();
     auto event = cmd_line_info.GetEvent();
+    auto config_ptr = cmd_line_info.GetCrashHandlerConfigPtr();
+
+    ReadProcessMemory(process_handle, config_ptr, &m_config, sizeof(CrashHandlerConfig), nullptr);
 
     auto crash_dump_filename = GetTempFileNameInTempDir("DF_Dump");
     auto exc_info_filename = GetTempFileNameInTempDir("DF_ExcInfo");
 
     MiniDumpHelper dump_helper;
-    dump_helper.add_known_module(L"ntdll");
-    dump_helper.add_known_module(L"DashFaction");
-    dump_helper.add_known_module(L"DashEditor");
-    dump_helper.add_known_module(L"DashFactionLauncher");
-    dump_helper.add_known_module(L"RF");
-    dump_helper.add_known_module(L"RED");
+
+    for (int i = 0; i < m_config.num_known_modules; ++i) {
+        wchar_t known_module[256];
+        mbstowcs(known_module, m_config.known_modules[i], std::size(known_module));
+        dump_helper.add_known_module(known_module);
+    }
     dump_helper.set_info_level(CRASHHANDLER_DMP_LEVEL);
     dump_helper.write_dump(crash_dump_filename.c_str(), exception_ptrs, process_handle, thread_id);
 
@@ -134,7 +145,7 @@ void CrashReportApp::SendReport() try
     auto file_path = GetArchivedReportFilePath();
     std::ifstream file(file_path, std::ios_base::in | std::ios_base::binary);
     if (!file)
-        throw std::runtime_error("cannot open " CRASHHANDLER_TARGET_NAME);
+        throw std::runtime_error("cannot open crash report archive");
 
     file.seekg(0, std::ios_base::end);
     size_t size = static_cast<size_t>(file.tellg());

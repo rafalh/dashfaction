@@ -20,10 +20,21 @@ void InitLogging()
     xlog::info("Dash Faction Launcher %s (%s %s)", VERSION_STR, __DATE__, __TIME__);
 }
 
+void InitCrashHandler()
+{
+    auto app_data_dir = Win32xx::GetAppDataPath();
+    CrashHandlerConfig config;
+    std::snprintf(config.log_file, std::size(config.log_file), "%s\\Dash Faction\\DashFactionLauncher.log", app_data_dir.c_str());
+    std::snprintf(config.output_dir, std::size(config.output_dir), "%s\\Dash Faction", app_data_dir.c_str());
+    std::snprintf(config.app_name, std::size(config.app_name), "DashFactionLauncher");
+    config.add_known_module("DashFactionLauncher");
+    CrashHandlerStubInstall(config);
+}
+
 int APIENTRY WinMain(HINSTANCE, HINSTANCE, LPSTR, int) try
 {
     InitLogging();
-    CrashHandlerStubInstall(nullptr);
+    InitCrashHandler();
 
     // Start Win32++
     LauncherApp app;

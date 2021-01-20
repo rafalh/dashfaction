@@ -11,6 +11,7 @@ Version 1.6.1 (not yet released)
 - Fix CTF flag sometimes not returning to the base automatically (RF bug)
 - Fix spectate camera staying in fixed mode after level change
 - Fix editor crash when building geometry after lightmap resolution for a face was set to Undefined (RF bug)
+- Improve crash reporting for Dash Editor and launcher
 
 Version 1.6.0 (released 2021-01-07)
 --------------------------------

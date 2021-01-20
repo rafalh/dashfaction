@@ -8,13 +8,14 @@ public:
     bool Parse()
     {
         std::vector<CString> args = Win32xx::GetCommandLineArgs();
-        if (args.size() < 5) {
+        if (args.size() < 6) {
             return false;
         }
         m_exception_ptrs = reinterpret_cast<EXCEPTION_POINTERS*>(std::strtoull(args[1], nullptr, 0));
         m_process_handle = reinterpret_cast<HANDLE>(std::strtoull(args[2], nullptr, 0));
         m_thread_id = static_cast<DWORD>(std::strtoull(args[3], nullptr, 0));
         m_event = reinterpret_cast<HANDLE>(std::strtoull(args[4], nullptr, 0));
+        m_crash_handler_config_ptr = reinterpret_cast<void*>(std::strtoull(args[5], nullptr, 0));
         return true;
     }
 
@@ -38,9 +39,15 @@ public:
         return m_event;
     }
 
+    void* GetCrashHandlerConfigPtr() const
+    {
+        return m_crash_handler_config_ptr;
+    }
+
 private:
     EXCEPTION_POINTERS* m_exception_ptrs = nullptr;
     HANDLE m_process_handle = nullptr;
     DWORD m_thread_id = 0;
     HANDLE m_event = nullptr;
+    void* m_crash_handler_config_ptr;
 };
