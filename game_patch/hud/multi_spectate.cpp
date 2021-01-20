@@ -317,8 +317,14 @@ void multi_spectate_after_full_game_init()
 void multi_spectate_player_create_entity_post(rf::Player* player, rf::Entity* entity)
 {
     // hide target player from camera after respawn
-    if (player == g_spectate_mode_target) {
+    if (g_spectate_mode_enabled && player == g_spectate_mode_target) {
         entity->local_player = player;
+        // When entering limbo state the game changes camera mode to fixed
+        // Make sure we are in first person mode when target entity spawns
+        auto cam = rf::local_player->cam;
+        if (cam->mode != rf::CAMERA_FIRST_PERSON) {
+            rf::camera_enter_first_person(cam);
+        }
     }
     // Do not allow spectating in Force Respawn game after spawning for the first time
     if (player == rf::local_player) {
