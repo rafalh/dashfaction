@@ -5,6 +5,7 @@ namespace rf
     struct Color;
 }
 
+void win32_console_pre_init();
 void win32_console_init();
 void win32_console_close();
 bool win32_console_is_enabled();

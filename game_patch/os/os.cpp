@@ -110,12 +110,15 @@ void os_apply_patch()
     // Disable keyboard hooks (they were supposed to block alt-tab; they does not work in modern OSes anyway)
     write_mem<u8>(0x00524C98, asm_opcodes::jmp_rel_short);
 
+    // Hooks for win32 console support
+    os_init_window_server_hook.install();
     os_close_hook.install();
 
     // Apply patches from other files in 'os' dir
     void frametime_apply_patch();
     void timer_apply_patch();
-    void win32_console_apply_patch();
     frametime_apply_patch();
     timer_apply_patch();
+
+    win32_console_pre_init();
 }

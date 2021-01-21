@@ -10,12 +10,13 @@
 #include "../rf/os/console.h"
 #include "../rf/multi.h"
 #include "../rf/input.h"
+#include "../rf/os/os.h"
 
 static bool win32_console_enabled = false;
 
 bool win32_console_is_enabled()
 {
-    return rf::is_dedicated_server && win32_console_enabled;
+    return win32_console_enabled;
 }
 
 static void reset_console_cursor_column(bool clear)
@@ -63,9 +64,23 @@ static BOOL WINAPI console_ctrl_handler([[maybe_unused]] DWORD ctrl_type)
 //     }
 // }
 
+static rf::CmdLineParam& get_win32_console_cmd_line_param()
+{
+    static rf::CmdLineParam url_param{"-win32-console", "", false};
+    return url_param;
+}
+
+void win32_console_pre_init()
+{
+    // register cmdline param
+    get_win32_console_cmd_line_param();
+}
+
 void win32_console_init()
 {
-    win32_console_enabled = string_contains_ignore_case(GetCommandLineA(), "-win32-console");
+    win32_console_enabled = get_win32_console_cmd_line_param().found();
+    xlog::warn("win32_console_enabled %d", win32_console_enabled);
+    xlog::warn("GetCommandLineA() %s", GetCommandLineA());
     if (!win32_console_enabled) {
         return;
     }
