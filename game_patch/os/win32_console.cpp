@@ -13,6 +13,7 @@
 #include "../rf/os/os.h"
 
 static bool win32_console_enabled = false;
+static bool win32_console_input_line_printed = false;
 
 bool win32_console_is_enabled()
 {
@@ -26,14 +27,15 @@ static void reset_console_cursor_column(bool clear)
     GetConsoleScreenBufferInfo(output_handle, &scr_buf_info);
     if (scr_buf_info.dwCursorPosition.X == 0)
         return;
-    COORD NewPos = scr_buf_info.dwCursorPosition;
-    NewPos.X = 0;
-    SetConsoleCursorPosition(output_handle, NewPos);
+    COORD new_pos = scr_buf_info.dwCursorPosition;
+    new_pos.X = 0;
+    SetConsoleCursorPosition(output_handle, new_pos);
     if (clear) {
         for (int i = 0; i < scr_buf_info.dwCursorPosition.X; ++i) {
             WriteConsoleA(output_handle, " ", 1, nullptr, nullptr);
         }
-        SetConsoleCursorPosition(output_handle, NewPos);
+        SetConsoleCursorPosition(output_handle, new_pos);
+        win32_console_input_line_printed = false;
     }
 }
 
@@ -43,8 +45,9 @@ static void print_cmd_input_line()
     CONSOLE_SCREEN_BUFFER_INFO scr_buf_info;
     GetConsoleScreenBufferInfo(output_handle, &scr_buf_info);
     WriteConsoleA(output_handle, "] ", 2, nullptr, nullptr);
-    unsigned Offset = std::max(0, static_cast<int>(rf::console_cmd_line_len) - scr_buf_info.dwSize.X + 3);
-    WriteConsoleA(output_handle, rf::console_cmd_line + Offset, rf::console_cmd_line_len - Offset, nullptr, nullptr);
+    unsigned offset = std::max(0, rf::console_cmd_line_len - scr_buf_info.dwSize.X + 3);
+    WriteConsoleA(output_handle, rf::console_cmd_line + offset, rf::console_cmd_line_len - offset, nullptr, nullptr);
+    win32_console_input_line_printed = true;
 }
 
 static BOOL WINAPI console_ctrl_handler([[maybe_unused]] DWORD ctrl_type)
@@ -66,8 +69,8 @@ static BOOL WINAPI console_ctrl_handler([[maybe_unused]] DWORD ctrl_type)
 
 static rf::CmdLineParam& get_win32_console_cmd_line_param()
 {
-    static rf::CmdLineParam url_param{"-win32-console", "", false};
-    return url_param;
+    static rf::CmdLineParam win32_console_param{"-win32-console", "", false};
+    return win32_console_param;
 }
 
 void win32_console_pre_init()
@@ -79,8 +82,6 @@ void win32_console_pre_init()
 void win32_console_init()
 {
     win32_console_enabled = get_win32_console_cmd_line_param().found();
-    xlog::warn("win32_console_enabled %d", win32_console_enabled);
-    xlog::warn("GetCommandLineA() %s", GetCommandLineA());
     if (!win32_console_enabled) {
         return;
     }
@@ -104,7 +105,9 @@ void win32_console_output(const char* text, [[maybe_unused]] const rf::Color* co
     constexpr WORD gray_attr = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
     WORD current_attr = 0;
 
-    reset_console_cursor_column(true);
+    if (win32_console_input_line_printed) {
+        reset_console_cursor_column(true);
+    }
 
     constexpr std::string_view color_prefix{"[$"};
     constexpr std::string_view color_suffix{"]"};
@@ -148,13 +151,11 @@ void win32_console_output(const char* text, [[maybe_unused]] const rf::Color* co
         pos = end_pos;
     }
 
-    if (pos > 0 && text_sv[-1] != '\n')
+    if (text_sv.size() > 0 && text_sv[text_sv.size() - 1] != '\n')
         WriteFile(output_handle, "\n", 1, nullptr, nullptr);
 
     if (current_attr != gray_attr)
         SetConsoleTextAttribute(output_handle, gray_attr);
-
-    print_cmd_input_line();
 }
 
 void win32_console_new_line()
@@ -167,7 +168,7 @@ void win32_console_new_line()
 void win32_console_update()
 {
     static char prev_cmd_line[sizeof(rf::console_cmd_line)];
-    if (std::strncmp(rf::console_cmd_line, prev_cmd_line, std::size(prev_cmd_line)) != 0) {
+    if (std::strncmp(rf::console_cmd_line, prev_cmd_line, std::size(prev_cmd_line)) != 0 || !win32_console_input_line_printed) {
         reset_console_cursor_column(true);
         print_cmd_input_line();
         std::strcpy(prev_cmd_line, rf::console_cmd_line);
