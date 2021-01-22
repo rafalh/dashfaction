@@ -445,23 +445,37 @@ FunHook<MultiIoPacketHandler> process_reload_packet_hook{
     },
 };
 
-rf::Entity* SecureObjUpdatePacket(rf::Entity* entity, uint8_t flags, rf::Player* src_player)
+rf::Entity* process_obj_update_packet_validate(rf::Entity* entity, uint8_t flags, rf::Player* src_player)
 {
     if (rf::is_server) {
         // server-side
         if (entity && entity->handle != src_player->entity_handle) {
-            xlog::trace("Invalid ObjUpdate entity %x %x %s", entity->handle, src_player->entity_handle,
+            xlog::trace("Invalid obj_update entity %x %x %s", entity->handle, src_player->entity_handle,
                   src_player->name.c_str());
             return nullptr;
         }
 
         if (flags & (0x4 | 0x20 | 0x80)) { // OUF_WEAPON_TYPE | OUF_HEALTH_ARMOR | OUF_ARMOR_STATE
-            xlog::trace("Invalid ObjUpdate flags %x", flags);
+            xlog::trace("Invalid obj_update flags %x", flags);
             return nullptr;
         }
     }
     return entity;
 }
+
+CodeInjection process_obj_update_weapon_switch_from_on_off_fix{
+    0x0047E2FF,
+    [](auto& regs) {
+        static auto& weapon_is_on_off_weapon = addr_as_ref<bool (int weapon_type, bool alt_fire)>(0x004C8350);
+        rf::Entity* entity = regs.edi;
+        int flags = regs.ebx;
+        bool alt_fire = flags & 0x10;
+        // If current weapon is not an on/off weapon do not call entity_turn_weapon_on on it
+        if (!weapon_is_on_off_weapon(entity->ai.current_primary_weapon, alt_fire)) {
+            regs.eip = 0x0047E346;
+        }
+    },
+};
 
 FunHook<uint8_t()> multi_alloc_player_id_hook{
     0x0046EF00,
@@ -953,7 +967,7 @@ void network_init()
         .push(eax)
         .push(ebx)
         .push(edi)
-        .call(SecureObjUpdatePacket)
+        .call(process_obj_update_packet_validate)
         .add(esp, 12)
         .mov(edi, eax);
 
@@ -1026,4 +1040,7 @@ void network_init()
 
     // Preserve password case when processing rcon_request command
     write_mem<i8>(0x0046C85A + 1, 1);
+
+    // Make sure we don't turn weapon on after switch if it is not an on/off weapon (continous)
+    process_obj_update_weapon_switch_from_on_off_fix.install();
 }

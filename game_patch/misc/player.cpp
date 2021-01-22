@@ -156,6 +156,11 @@ FunHook<void(rf::Player*, int)> player_make_weapon_current_selection_hook{
             // Reset impact delay timers when switching weapon (except in SP because of speedrunners)
             entity->ai.create_weapon_delay_timestamps[0].invalidate();
             entity->ai.create_weapon_delay_timestamps[1].invalidate();
+            // Reset burst counters and timers
+            entity->ai.primary_burst_count_left = 0;
+            entity->ai.secondary_burst_count_left = 0;
+            entity->ai.primary_burst_delay_timestamp.invalidate();
+            entity->ai.seconary_burst_delay_timestamp.invalidate();
         }
     },
 };

@@ -13,6 +13,7 @@ Version 1.6.1 (not yet released)
 - Fix editor crash when building geometry after lightmap resolution for a face was set to Undefined (RF bug)
 - Improve crash reporting for Dash Editor and launcher
 - Do not print redundant new lines in `-win32-console` server mode and optimize it a little
+- Fix unwanted server-side weapon fire when switching from a continous weapon or a weapon with burst fire
 
 Version 1.6.0 (released 2021-01-07)
 --------------------------------
