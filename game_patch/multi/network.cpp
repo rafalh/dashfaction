@@ -429,18 +429,33 @@ FunHook<MultiIoPacketHandler> process_reload_packet_hook{
     0x00485AB0,
     [](char* data, const rf::NwAddr& addr) {
         if (!rf::is_server) { // client-side
-            // Update ClipSize and MaxAmmo if received values are greater than values from local weapons.tbl
-            int weapon_type = *reinterpret_cast<int32_t*>(data + 4);
-            int ammo = *reinterpret_cast<int32_t*>(data + 8);
-            int clip_ammo = *reinterpret_cast<int32_t*>(data + 12);
+            // Update clip_size and max_ammo if received values are greater than values from local weapons.tbl
+            int weapon_type = *reinterpret_cast<int*>(data + 4);
+            int ammo = *reinterpret_cast<int*>(data + 8);
+            int clip_ammo = *reinterpret_cast<int*>(data + 12);
             if (rf::weapon_types[weapon_type].clip_size < clip_ammo)
                 rf::weapon_types[weapon_type].clip_size = clip_ammo;
             if (rf::weapon_types[weapon_type].max_ammo < ammo)
                 rf::weapon_types[weapon_type].max_ammo = ammo;
-            xlog::trace("ProcessReloadPacket WeaponClsId %d ClipAmmo %d Ammo %d", weapon_type, clip_ammo, ammo);
+            xlog::trace("process_reload_packet weapon_type %d clip_ammo %d ammo %d", weapon_type, clip_ammo, ammo);
 
             // Call original handler
             process_reload_packet_hook.call_target(data, addr);
+        }
+    },
+};
+
+FunHook<MultiIoPacketHandler> process_reload_request_packet_hook{
+    0x00485A60,
+    [](char* data, const rf::NwAddr& addr) {
+        if (!rf::is_server) {
+            return;
+        }
+        auto pp = rf::multi_find_player_by_addr(addr);
+        auto weapon_type = *reinterpret_cast<int*>(data);
+        if (pp) {
+            void multi_reload_weapon_server_side(rf::Player* pp, int weapon_type);
+            multi_reload_weapon_server_side(pp, weapon_type);
         }
     },
 };
@@ -463,17 +478,54 @@ rf::Entity* process_obj_update_packet_validate(rf::Entity* entity, uint8_t flags
     return entity;
 }
 
-CodeInjection process_obj_update_weapon_switch_from_on_off_fix{
+CodeInjection process_obj_update_check_flags_injection{
+        0x0047E058,
+        [](auto& regs) {
+            auto stack_frame = regs.esp + 0x9C;
+            auto pp = addr_as_ref<rf::Player*>(stack_frame - 0x6C);
+            int flags = regs.ebx;
+            rf::Entity* ep = regs.edi;
+            bool valid = true;
+            if (rf::is_server) {
+                // server-side
+                if (ep && ep->handle != pp->entity_handle) {
+                    xlog::trace("Invalid obj_update entity %x %x %s", ep->handle, pp->entity_handle,
+                        pp->name.c_str());
+                    valid = false;
+                }
+                else if (flags & (0x4 | 0x20 | 0x80)) { // OUF_WEAPON_TYPE | OUF_HEALTH_ARMOR | OUF_ARMOR_STATE
+                    xlog::info("Invalid obj_update flags %x", flags);
+                    valid = false;
+                }
+            }
+            if (!valid) {
+                regs.edi = 0;
+            }
+        },
+    };
+
+CodeInjection process_obj_update_weapon_fire_injection{
     0x0047E2FF,
     [](auto& regs) {
-        static auto& weapon_is_on_off_weapon = addr_as_ref<bool (int weapon_type, bool alt_fire)>(0x004C8350);
         rf::Entity* entity = regs.edi;
         int flags = regs.ebx;
-        bool alt_fire = flags & 0x10;
-        // If current weapon is not an on/off weapon do not call entity_turn_weapon_on on it
-        if (!weapon_is_on_off_weapon(entity->ai.current_primary_weapon, alt_fire)) {
-            regs.eip = 0x0047E346;
+        auto stack_frame = regs.esp + 0x9C;
+        auto pp = addr_as_ref<rf::Player*>(stack_frame - 0x6C);
+
+        constexpr int ouf_fire = 0x40;
+        constexpr int ouf_alt_fire = 0x10;
+
+        bool is_on = flags & ouf_fire;
+        bool alt_fire = flags & ouf_alt_fire;
+        void multi_turn_weapon_on(rf::Entity* ep, rf::Player* pp, bool alt_fire);
+        void multi_turn_weapon_off(rf::Entity* ep, rf::Player* pp);
+        if (is_on) {
+            multi_turn_weapon_on(entity, pp, alt_fire);
         }
+        else {
+            multi_turn_weapon_off(entity, pp);
+        }
+        regs.eip = 0x0047E346;
     },
 };
 
@@ -959,19 +1011,25 @@ void network_init()
     process_rate_change_packet_hook.install();
     process_entity_create_packet_hook.install();
     process_reload_packet_hook.install();
+    process_reload_request_packet_hook.install();
 
-    // Fix ObjUpdate packet handling
-    using namespace asm_regs;
-    AsmWriter(0x0047E058, 0x0047E06A)
-        .mov(eax, *(esp + 0x9C - 0x6C)) // Player
-        .push(eax)
-        .push(ebx)
-        .push(edi)
-        .call(process_obj_update_packet_validate)
-        .add(esp, 12)
-        .mov(edi, eax);
+    // Fix obj_update packet handling
+    process_obj_update_check_flags_injection.install();
+    // using namespace asm_regs;
+    // AsmWriter(0x0047E058, 0x0047E06A)
+    //     .mov(eax, *(esp + 0x9C - 0x6C)) // Player
+    //     .push(eax)
+    //     .push(ebx)
+    //     .push(edi)
+    //     .call(process_obj_update_packet_validate)
+    //     .add(esp, 12)
+    //     .mov(edi, eax);
+
+    // Verify on/off weapons handling
+    process_obj_update_weapon_fire_injection.install();
 
     // Client-side green team fix
+    using namespace asm_regs;
     AsmWriter(0x0046CAD7, 0x0046CADA).cmp(al, -1);
 
     // Hide IP addresses in Players packet
@@ -1040,7 +1098,4 @@ void network_init()
 
     // Preserve password case when processing rcon_request command
     write_mem<i8>(0x0046C85A + 1, 1);
-
-    // Make sure we don't turn weapon on after switch if it is not an on/off weapon (continous)
-    process_obj_update_weapon_switch_from_on_off_fix.install();
 }

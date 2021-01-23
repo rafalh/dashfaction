@@ -274,8 +274,8 @@ namespace rf
         int next_state;
         float field_1394;
         float field_1398;
-        Timestamp field_139c;
-        Timestamp field_13a0;
+        Timestamp reload_done_timestamp;
+        Timestamp drop_clip_timestamp;
         Timestamp weapon_drain_timestamp;
         int reload_ammo;
         int reload_clip_ammo;
@@ -392,6 +392,9 @@ namespace rf
     static auto& entity_play_action_animation = addr_as_ref<void(Entity* entity, int action, float transition_time, bool hold_last_frame, bool with_sound)>(0x00428C90);
     static auto& entity_is_reloading = addr_as_ref<bool(Entity* entity)>(0x00425250);
     static auto& entity_weapon_is_on = addr_as_ref<bool(int entity_handle, int weapon_type)>(0x0041A830);
+    static auto& entity_reload_current_primary = addr_as_ref<bool __cdecl(Entity *entity, bool no_sound, bool is_reload_packet)>(0x00425280);
+    static auto& entity_turn_weapon_on = addr_as_ref<void __cdecl(int entity_handle, int weapon_type, bool alt_fire)>(0x0041A870);
+    static auto& entity_turn_weapon_off = addr_as_ref<void __cdecl(int entity_handle, int weapon_type)>(0x0041AE70);
 
     static auto& multi_entity_is_female = addr_as_ref<bool(int mp_character_idx)>(0x004762C0);
 

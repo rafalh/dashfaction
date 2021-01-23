@@ -263,13 +263,15 @@ namespace rf
     };
 
     static auto& weapon_types = addr_as_ref<WeaponInfo[64]>(0x0085CD08);
-    static auto& riot_stick_weapon_type = addr_as_ref<int32_t>(0x00872468);
-    static auto& remote_charge_weapon_type = addr_as_ref<int32_t>(0x0087210C);
-    static auto& machine_pistol_weapon_type = addr_as_ref<int32_t>(0x0085CCD8);
-    static auto& machine_pistol_special_weapon_type = addr_as_ref<int32_t>(0x0085CD00);
+    static auto& riot_stick_weapon_type = addr_as_ref<int>(0x00872468);
+    static auto& remote_charge_det_weapon_type = addr_as_ref<int>(0x0085CCE0);
+    static auto& remote_charge_weapon_type = addr_as_ref<int>(0x0087210C);
+    static auto& machine_pistol_weapon_type = addr_as_ref<int>(0x0085CCD8);
+    static auto& machine_pistol_special_weapon_type = addr_as_ref<int>(0x0085CD00);
     static auto& hide_enemy_bullets = addr_as_ref<bool>(0x005A24D0);
 
     static auto& weapon_is_detonator = addr_as_ref<bool(int weapon_type)>(0x004C9070);
     static auto& weapon_is_riot_stick = addr_as_ref<bool(int weapon_type)>(0x004C90D0);
+    static auto& weapon_is_on_off_weapon = addr_as_ref<bool (int weapon_type, bool alt_fire)>(0x004C8350);
     static auto& player_make_weapon_current_selection = addr_as_ref<void(Player *player, int weapon_type)>(0x004A4980);
 }

@@ -84,68 +84,6 @@ CodeInjection weapon_vs_obj_collision_fix{
     },
 };
 
-bool weapon_uses_ammo(int weapon_type, bool alt_fire)
-{
-    if (rf::weapon_is_detonator(weapon_type)) {
-         return false;
-    }
-    if (rf::weapon_is_riot_stick(weapon_type) && alt_fire) {
-        return true;
-    }
-    auto info = &rf::weapon_types[weapon_type];
-    if (info->flags & rf::WTF_MELEE) {
-        return false;
-    }
-    return true;
-}
-
-bool is_entity_out_of_ammo(rf::Entity *entity, int weapon_type, bool alt_fire)
-{
-    if (!weapon_uses_ammo(weapon_type, alt_fire)) {
-        return false;
-    }
-    auto info = &rf::weapon_types[weapon_type];
-    if (info->clip_size == 0) {
-        auto ammo = entity->ai.ammo[info->ammo_type];
-        return ammo == 0;
-    }
-    else {
-        auto clip_ammo = entity->ai.clip_ammo[weapon_type];
-        return clip_ammo == 0;
-    }
-}
-
-FunHook<void(rf::Entity*, int, rf::Vector3*, rf::Matrix3*, bool)> multi_process_remote_weapon_fire_hook{
-    0x0047D220,
-    [](rf::Entity *entity, int weapon_type, rf::Vector3 *pos, rf::Matrix3 *orient, bool alt_fire) {
-        if (entity->ai.current_primary_weapon != weapon_type) {
-            xlog::info("Weapon mismatch when processing weapon fire packet");
-            auto player = rf::player_from_entity_handle(entity->handle);
-            rf::player_make_weapon_current_selection(player, weapon_type);
-        }
-
-        if (rf::is_server && is_entity_out_of_ammo(entity, weapon_type, alt_fire)) {
-            xlog::info("Skipping weapon fire packet because player is out of ammunition");
-        }
-        else {
-            multi_process_remote_weapon_fire_hook.call_target(entity, weapon_type, pos, orient, alt_fire);
-        }
-    },
-};
-
-CodeInjection process_obj_update_packet_check_if_weapon_is_possessed_patch{
-    0x0047E404,
-    [](auto& regs) {
-        rf::Entity* entity = regs.edi;
-        auto weapon_type = regs.ebx;
-        if (rf::is_server && !rf::ai_has_weapon(&entity->ai, weapon_type)) {
-            // skip switching player weapon
-            xlog::info("Skipping weapon switch because player does not possess the weapon");
-            regs.eip = 0x0047E467;
-        }
-    },
-};
-
 CodeInjection muzzle_flash_light_not_disabled_fix{
     0x0041E806,
     [](auto& regs) {
@@ -205,12 +143,6 @@ void apply_weapon_patches()
 
     // Fix weapon vs object collisions for big objects
     weapon_vs_obj_collision_fix.install();
-
-    // Check ammo server-side when handling weapon fire packets
-    multi_process_remote_weapon_fire_hook.install();
-
-    // Verify if player possesses a weapon before switching during obj_update packet handling
-    process_obj_update_packet_check_if_weapon_is_possessed_patch.install();
 
     // Fix muzzle flash light sometimes not getting disabled (e.g. when weapon is switched during riot stick attack
     // in multiplayer)

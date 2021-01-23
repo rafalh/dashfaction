@@ -178,4 +178,6 @@ namespace rf
     static auto& banlist_first_entry = addr_as_ref<BanlistEntry*>(0x0064EC20);
     static auto& banlist_last_entry = addr_as_ref<BanlistEntry*>(0x0064EC24);
     static auto& banlist_null_entry = addr_as_ref<BanlistEntry>(0x0064EC08);
+
+    constexpr int multi_max_player_id = 256;
 }
