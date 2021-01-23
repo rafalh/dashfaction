@@ -8,6 +8,7 @@
 class FunHookImpl : public Installable
 {
 protected:
+    void* m_trampoline_ptr;
     void* m_target_fun_ptr;
     void* m_hook_fun_ptr;
     subhook::Hook m_subhook;
@@ -41,9 +42,9 @@ public:
         FunHookImpl(target_fun_addr, reinterpret_cast<void*>(hook_fun_ptr))
     {}
 
-    R call_target(A... a)
+    R call_target(A... a) const
     {
-        auto trampoline_ptr = reinterpret_cast<FunType*>(m_subhook.GetTrampoline());
+        auto trampoline_ptr = reinterpret_cast<FunType*>(m_trampoline_ptr);
         return trampoline_ptr(a...);
     }
 };
@@ -59,9 +60,9 @@ public:
         FunHookImpl(target_fun_addr, reinterpret_cast<void*>(hook_fun_ptr))
     {}
 
-    R call_target(A... a)
+    R call_target(A... a) const
     {
-        auto trampoline_ptr = reinterpret_cast<FunType*>(m_subhook.GetTrampoline());
+        auto trampoline_ptr = reinterpret_cast<FunType*>(m_trampoline_ptr);
         return trampoline_ptr(a...);
     }
 };
@@ -77,9 +78,9 @@ public:
         FunHookImpl(target_fun_addr, reinterpret_cast<void*>(hook_fun_ptr))
     {}
 
-    R call_target(A... a)
+    R call_target(A... a) const
     {
-        auto trampoline_ptr = reinterpret_cast<FunType*>(m_subhook.GetTrampoline());
+        auto trampoline_ptr = reinterpret_cast<FunType*>(m_trampoline_ptr);
         return trampoline_ptr(a...);
     }
 };

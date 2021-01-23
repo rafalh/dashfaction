@@ -4,6 +4,7 @@
 void FunHookImpl::install()
 {
     m_subhook.Install(m_target_fun_ptr, m_hook_fun_ptr);
-    if (!m_subhook.GetTrampoline())
+    m_trampoline_ptr = m_subhook.GetTrampoline();
+    if (!m_trampoline_ptr)
         xlog::error("trampoline is null for 0x%p", m_target_fun_ptr);
 }
