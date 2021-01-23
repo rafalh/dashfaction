@@ -3,6 +3,7 @@
 #include "../main/main.h"
 #include "../rf/common.h"
 #include "../rf/file.h"
+#include "../os/console.h"
 #include <common/utils/iterable-utils.h>
 #include <common/utils/os-utils.h>
 #include <xxhash.h>
@@ -149,7 +150,7 @@ bool is_modded_game()
     return g_is_modded_game;
 }
 
-static uint32_t VPackfileProcessHeader(rf::VPackfile* packfile, const void* raw_header)
+static uint32_t vpackfile_process_header(rf::VPackfile* packfile, const void* raw_header)
 {
     struct VppHeader
     {
@@ -221,7 +222,7 @@ static int vpackfile_add_new(const char* filename, const char* dir)
         return 0;
     }
     // Note: VPackfileProcessHeader returns number of files in packfile - result 0 is not always a true error
-    if (!VPackfileProcessHeader(packfile.get(), buf)) {
+    if (!vpackfile_process_header(packfile.get(), buf)) {
         return 0;
     }
 
@@ -255,7 +256,7 @@ static int vpackfile_add_new(const char* filename, const char* dir)
 static rf::VPackfile* vpackfile_find_packfile(const char* filename)
 {
     for (auto& packfile : g_packfiles) {
-        if (!stricmp(packfile->filename, filename))
+        if (string_equals_ignore_case(packfile->filename, filename))
             return packfile.get();
     }
 
@@ -439,6 +440,20 @@ static void load_dashfaction_vpp()
     }
 }
 
+ConsoleCommand2 which_packfile_cmd{
+    "which_packfile",
+    [](std::string filename) {
+        auto entry = vpackfile_find_new(filename.c_str());
+        if (entry) {
+            rf::console_printf("%s", entry->parent->path);
+        }
+        else {
+            rf::console_printf("Cannot find %s!", filename.c_str());
+        }
+    },
+    "Prints packfile path that the provided file is included in",
+};
+
 void force_file_from_packfile(const char* name, const char* packfile_name)
 {
     rf::VPackfile* packfile = vpackfile_find_packfile(packfile_name);
@@ -522,6 +537,9 @@ static void vpackfile_init_new()
 
     if (g_is_modded_game)
         xlog::info("Modded game detected!");
+
+    // Commands
+    which_packfile_cmd.register_cmd();
 }
 
 static void vpackfile_cleanup_new()
