@@ -239,7 +239,7 @@ void* __fastcall decals_farray_ctor(void* that)
 CodeInjection g_decal_add_internal_cmp_global_weak_limit_injection{
     0x004D54AC,
     [](auto& regs) {
-        if (regs.esi < 3 * 128) {
+        if (regs.esi < 448) {
             regs.eip = 0x004D54D6;
         }
         else {
@@ -364,14 +364,14 @@ void g_solid_do_patch()
     write_mem<i32>(0x004D5456 + 2, max_decals); // total hard limit,  128 by default
     g_decal_add_internal_cmp_global_weak_limit_injection.install(); // total soft limit,  96 by default
     write_mem<i8>(0x004D55C4 + 2, 127); // room hard limit,   48 by default
-    write_mem<i8>(0x004D5620 + 2, 96);  // room soft limit,   40 by default
+    write_mem<i8>(0x004D5620 + 2, 104); // room soft limit,   40 by default
     write_mem<i8>(0x004D5689 + 2, 127); // room hard limit,   48 by default
-    write_mem<i8>(0x004D56E5 + 2, 96);  // room soft limit,   40 by default
+    write_mem<i8>(0x004D56E5 + 2, 104); // room soft limit,   40 by default
     write_mem<i8>(0x004D5500 + 2, 127); // solid hard limit,  48 by default
-    write_mem<i8>(0x004D555C + 2, 96);  // solid soft limit,  40 by default
-    write_mem<i8>(0x004D5752 + 2, 64);  // weapon hard limit, 16 by default
-    write_mem<i8>(0x004D579F + 2, 64);  // weapon hard limit, 16 by default
-    write_mem<i8>(0x004D57AA + 2, 48);  // weapon soft limit, 14 by default
-    write_mem<i8>(0x004D584D + 2, 127); // geomod hard limit, 32 by default
-    write_mem<i8>(0x004D5852 + 2, 96);  // geomod soft limit, 30 by default
+    write_mem<i8>(0x004D555C + 2, 104); // solid soft limit,  40 by default
+    write_mem<i8>(0x004D5752 + 2, 47);  // weapon hard limit, 16 by default
+    write_mem<i8>(0x004D579F + 2, 47);  // weapon hard limit, 16 by default
+    write_mem<i8>(0x004D57AA + 2, 40);  // weapon soft limit, 14 by default
+    write_mem<i8>(0x004D584D + 2, 80);  // geomod hard limit, 32 by default
+    write_mem<i8>(0x004D5852 + 2, 72);  // geomod soft limit, 30 by default
 }
