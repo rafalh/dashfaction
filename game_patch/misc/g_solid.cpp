@@ -362,6 +362,7 @@ void g_solid_do_patch()
     // crossing soft limit causes fading out of old decals
     // crossing hard limit causes deletion of old decals
     write_mem<i32>(0x004D5456 + 2, max_decals); // total hard limit,  128 by default
+    AsmWriter{0x004D54AF}.nop(2); // fix subhook trampoline perparation error
     g_decal_add_internal_cmp_global_weak_limit_injection.install(); // total soft limit,  96 by default
     write_mem<i8>(0x004D55C4 + 2, 127); // room hard limit,   48 by default
     write_mem<i8>(0x004D5620 + 2, 104); // room soft limit,   40 by default
