@@ -22,6 +22,7 @@
 
 static float g_gr_clipped_geom_offset_x = -0.5;
 static float g_gr_clipped_geom_offset_y = -0.5;
+static float gr_lod_dist_scale = 1.0f;
 
 void gr_d3d_capture_device_lost();
 void gr_d3d_capture_close();
@@ -634,6 +635,24 @@ CodeInjection gr_d3d_close_injection{
     },
 };
 
+FunHook<float(const rf::Vector3&)> gr_get_apparent_distance_from_camera_hook{
+    0x005182F0,
+    [](const rf::Vector3& pos) {
+        return gr_get_apparent_distance_from_camera_hook.call_target(pos) / gr_lod_dist_scale;
+    },
+};
+
+ConsoleCommand2 lod_distance_scale_cmd{
+    "lod_distance_scale",
+    [](std::optional<float> scale_opt) {
+        if (scale_opt.has_value()) {
+            gr_lod_dist_scale = scale_opt.value();
+        }
+        rf::console_printf("LOD distance scale: %.2f", gr_lod_dist_scale);
+    },
+    "Sets LOD distance scale factor",
+};
+
 bool gr_d3d_is_d3d8to9()
 {
     if (rf::gr_screen.mode != rf::GR_DIRECT3D) {
@@ -682,10 +701,13 @@ void gr_d3d_apply_patch()
     gr_d3d_setup_3d_widescreen_fix.install();
     write_mem<float>(0x0058A29C, 0.0003f); // factor related to near plane, default is 0.000588f
 
-    // Don't use LOD models
+    // Increase mesh details
+    gr_get_apparent_distance_from_camera_hook.install();
     if (g_game_config.disable_lod_models) {
-        // write_mem<u8>(0x00421A40, asm_opcodes::jmp_rel_short);
-        write_mem<u8>(0x0052FACC, asm_opcodes::jmp_rel_short);
+        // Do not scale LOD distance for character in multi
+        AsmWriter{0x0052FAED, 0x0052FAFB}.nop();
+        // Change default LOD scale
+        gr_lod_dist_scale = 10.0f;
     }
 
     // Better error message in case of device creation error
@@ -786,6 +808,7 @@ void gr_d3d_apply_patch()
     windowed_cmd.register_cmd();
     antialiasing_cmd.register_cmd();
     nearest_texture_filtering_cmd.register_cmd();
+    lod_distance_scale_cmd.register_cmd();
 #ifdef DEBUG
     profile_frame_cmd.register_cmd();
 #endif

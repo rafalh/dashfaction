@@ -20,6 +20,8 @@ Version 1.6.1 (not yet released)
 - Separate maxfps cvar for dedicated server and client
 - Clear console input field when Control+C is pressed
 - Do not add repeated commands to the console history
+- Rename option "Disable LOD models" to "High model details" - it now scales LOD distances by 10, scale can be updated
+  using `lod_distance_scale` command
 
 Version 1.6.0 (released 2021-01-07)
 --------------------------------
