@@ -127,6 +127,18 @@ static CallHook<void(char)> console_put_char_new_line_hook{
     },
 };
 
+static CodeInjection console_handle_input_injection{
+    0x00509FAF,
+    [](auto& regs) {
+        rf::Key key = regs.eax;
+        if (key == (rf::KEY_C | rf::KEY_CTRLED)) {
+            // Clear input buffer
+            rf::console_cmd_line[0] = '\0';
+            rf::console_cmd_line_len = 0;
+        }
+    },
+};
+
 void console_commands_apply_patches();
 void console_auto_complete_apply_patches();
 void console_commands_init();
@@ -174,6 +186,9 @@ void console_apply_patches()
     console_output_hook.install();
     console_draw_server_hook.install();
     console_put_char_new_line_hook.install();
+
+    // Additional key handling
+    console_handle_input_injection.install();
 
     console_commands_apply_patches();
     console_auto_complete_apply_patches();

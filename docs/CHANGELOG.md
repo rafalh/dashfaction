@@ -18,6 +18,7 @@ Version 1.6.1 (not yet released)
 - Increase decals limits
 - Add server-side CPS limit
 - Separate maxfps cvar for dedicated server and client
+- Clear console input field when Control+C is pressed
 
 Version 1.6.0 (released 2021-01-07)
 --------------------------------
