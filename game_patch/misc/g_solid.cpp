@@ -231,7 +231,7 @@ CodeInjection level_load_lightmaps_color_conv_patch{
     },
 };
 
-void* __thiscall decals_farray_ctor(void* that)
+void* __fastcall decals_farray_ctor(void* that)
 {
     return AddrCaller{0x004D3120}.this_call<void*>(that, 64);
 }
