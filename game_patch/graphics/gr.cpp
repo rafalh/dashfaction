@@ -41,6 +41,29 @@ CodeInjection setup_stretched_window_patch{
     },
 };
 
+FunHook<void(rf::Matrix3&, rf::Vector3&, float, bool, bool)> gr_setup_3d_hook{
+    0x00517EB0,
+    [](rf::Matrix3& viewer_orient, rf::Vector3& viewer_pos, float horizontal_fov, bool zbuffer_flag, bool z_scale) {
+        rf::gr_screen.aspect = 1.0f;
+        // check if this is a perspective view
+        if (z_scale) {
+            // Note: RED uses h_fov value of 90 degrees in the perspective view
+            // Use Hor+ scaling method to improve user experience when displayed on a widescreen
+            // Assume provided FOV makes sense on a 4:3 screen
+            float s = static_cast<float>(rf::gr_screen.clip_width) / rf::gr_screen.clip_height * 0.75f;
+            constexpr float pi = 3.141592f;
+            float h_fov_rad = horizontal_fov / 180.0f * pi;
+            float x = std::tan(h_fov_rad / 2.0f);
+            float y = x * s;
+            h_fov_rad = 2.0f * std::atan(y);
+            horizontal_fov = h_fov_rad / pi * 180.0f;
+            // Clamp the value to avoid artifacts when view is very stretched
+            horizontal_fov = std::min(horizontal_fov, 120.0f);
+        }
+        gr_setup_3d_hook.call_target(viewer_orient, viewer_pos, horizontal_fov, zbuffer_flag, z_scale);
+    },
+};
+
 CallHook<void(int, rf::Vertex**, int, rf::GrMode)> gr_rect_gr_tmapper_hook{
     0x0050DD69,
     [](int nv, rf::Vertex** verts, int flags, rf::GrMode mode) {
@@ -119,6 +142,9 @@ void gr_apply_patch()
         write_mem<u32>(0x004B29A5 + 6, 0xC8);
         setup_stretched_window_patch.install();
     }
+
+    // Fix FOV for widescreen
+    gr_setup_3d_hook.install();
 
 #if 1
     // Fix rendering of right and bottom edges of viewport in gameplay_render_frame (part 1)

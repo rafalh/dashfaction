@@ -59,31 +59,11 @@ static void set_texture_min_mag_filter_in_code(D3DTEXTUREFILTERTYPE filter_type0
     }
 }
 
-CodeInjection gr_d3d_setup_3d_widescreen_fix{
-    0x005473AD,
-    []() {
-        constexpr float ref_aspect_ratio = 4.0f / 3.0f;
-        constexpr float max_wide_aspect_ratio = 21.0f / 9.0f; // biggest aspect ratio currently in market
-
-        // g_gr_screen.aspect == ScrW / ScrH * 0.75 (1.0 for 4:3 monitors, 1.2 for 16:10) - looks like Pixel Aspect
-        // Ratio We use here MaxWidth and MaxHeight to calculate proper FOV for windowed mode
-
-        float viewport_aspect_ratio = static_cast<float>(rf::gr_screen.clip_width) / rf::gr_screen.clip_height;
-        float aspect_ratio = static_cast<float>(rf::gr_screen.max_w) / rf::gr_screen.max_h;
-        float scale_x = 1.0f;
-        // this is how RF does compute scale_y and it is needed for working scanner
-        float scale_y = ref_aspect_ratio * viewport_aspect_ratio / aspect_ratio;
-
-        if (aspect_ratio <= max_wide_aspect_ratio) // never make X scale too high in windowed mode
-            scale_x *= ref_aspect_ratio / aspect_ratio;
-        else {
-            scale_x *= ref_aspect_ratio / max_wide_aspect_ratio;
-            scale_y *= aspect_ratio / max_wide_aspect_ratio;
-        }
-
-        rf::gr_scale_vec.x *= scale_x; // Note: original division by aspect ratio is noped
-        rf::gr_scale_vec.y *= scale_y;
-
+FunHook<void(rf::Matrix3&, rf::Vector3&, float, bool, bool)> gr_d3d_setup_3d_hook{
+    0x00547150,
+    [](rf::Matrix3& viewer_orient, rf::Vector3& viewer_pos, float horizontal_fov, bool zbuffer_flag, bool z_scale) {
+        gr_d3d_setup_3d_hook.call_target(viewer_orient, viewer_pos, horizontal_fov, zbuffer_flag, z_scale);
+        // Half pixel offset
         g_gr_clipped_geom_offset_x = rf::gr_screen.offset_x - 0.5f;
         g_gr_clipped_geom_offset_y = rf::gr_screen.offset_y - 0.5f;
         auto& gr_viewport_center_x = addr_as_ref<float>(0x01818B54);
@@ -690,16 +670,11 @@ void gr_d3d_apply_patch()
     d3d_index_buffer_usage_patch.install();
 #endif
 
-    // nVidia issue fix (make sure D3Dsc is enabled)
+    // nVidia issue fix - make sure D3Dsc (D3D software clipping) is enabled
     write_mem<u8>(0x00546154, 1);
 
     // Properly restore state after device reset
     gr_d3d_init_buffers_gr_d3d_flip_hook.install();
-
-    // Fix FOV for widescreen
-    AsmWriter(0x00547354, 0x00547358).nop();
-    gr_d3d_setup_3d_widescreen_fix.install();
-    write_mem<float>(0x0058A29C, 0.0003f); // factor related to near plane, default is 0.000588f
 
     // Increase mesh details
     gr_get_apparent_distance_from_camera_hook.install();
@@ -719,11 +694,12 @@ void gr_d3d_apply_patch()
     // Fix rendering of right and bottom edges of viewport (part 2)
     gr_d3d_zbuffer_clear_fix_rect.install();
 
-    // Left and top viewport edge fix for MSAA in gr_d3d_project_vertex (RF does similar thing in gr_d3d_bitmap)
+    // Half pixel offset fix that resolves issues on the screen corner when MSAA is enabled
     write_mem<u8>(0x005478C6, asm_opcodes::fadd);
     write_mem<u8>(0x005478D7, asm_opcodes::fadd);
     write_mem_ptr(0x005478C6 + 2, &g_gr_clipped_geom_offset_x);
     write_mem_ptr(0x005478D7 + 2, &g_gr_clipped_geom_offset_y);
+    gr_d3d_setup_3d_hook.install();
 
     // Always transfer entire framebuffer to entire window in Present call in gr_d3d_flip
     write_mem<u8>(0x00544FE6, asm_opcodes::jmp_rel_short);
