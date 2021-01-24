@@ -205,6 +205,50 @@ bool is_entity_out_of_ammo(rf::Entity *entity, int weapon_type, bool alt_fire)
     }
 }
 
+std::pair<bool, float> multi_is_cps_above_limit(rf::Player* pp, float max_cps)
+{
+    constexpr int num_samples = 4;
+    int player_id = pp->nw_data->player_id;
+    static int last_weapon_fire[rf::multi_max_player_id][num_samples];
+    int now = rf::timer_get(1000);
+    float avg_dt_secs = (now - last_weapon_fire[player_id][0]) / static_cast<float>(num_samples) / 1000.0f;
+    float cps = 1.0f / avg_dt_secs;
+    if (cps > max_cps) {
+        return {true, cps};
+    }
+    for (int i = 0; i < num_samples - 1; ++i) {
+        last_weapon_fire[player_id][i] = last_weapon_fire[player_id][i + 1];
+    }
+    last_weapon_fire[player_id][num_samples - 1] = now;
+    return {false, cps};
+}
+
+float multi_get_max_cps(int weapon_type, bool alt_fire)
+{
+    if (rf::weapon_is_semi_automatic(weapon_type)) {
+        // most people cannot do much more than 10 clicks per second so 20 should be safe
+        return 20.0f;
+    }
+    else {
+        int fire_wait_ms = rf::weapon_get_fire_wait_ms(weapon_type, alt_fire);
+        float fire_wait_secs = fire_wait_ms / 1000.0f;
+        float fire_rate = 1.0f / fire_wait_secs;
+        // allow 10% more to make sure we do not skip any legit packets
+        return fire_rate * 1.1f;
+    }
+}
+
+bool multi_check_cps(rf::Player* pp, int weapon_type, bool alt_fire)
+{
+    float max_cps = multi_get_max_cps(weapon_type, alt_fire);
+    auto [above_limit, cps] = multi_is_cps_above_limit(pp, max_cps);
+    if (above_limit) {
+        xlog::info("Player %s is shooting too fast: cps %.2f is greater than allowed %.2f",
+            pp->name.c_str(), cps, max_cps);
+    }
+    return above_limit;
+}
+
 FunHook<void(rf::Entity*, int, rf::Vector3*, rf::Matrix3*, bool)> multi_process_remote_weapon_fire_hook{
     0x0047D220,
     [](rf::Entity *ep, int weapon_type, rf::Vector3 *pos, rf::Matrix3 *orient, bool alt_fire) {
@@ -227,7 +271,7 @@ FunHook<void(rf::Entity*, int, rf::Vector3*, rf::Matrix3*, bool)> multi_process_
             else if (rf::entity_is_reloading(ep)) {
                 xlog::debug("Player %s attempted to fire weapon %d while reloading it", pp->name.c_str(), weapon_type);
             }
-            else {
+            else if (!multi_check_cps(pp, weapon_type, alt_fire)) {
                 valid = true;
             }
             if (!valid) {
