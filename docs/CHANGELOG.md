@@ -22,6 +22,7 @@ Version 1.6.1 (not yet released)
 - Do not add repeated commands to the console history
 - Rename option "Disable LOD models" to "High model details" - it now scales LOD distances by 10, scale can be updated
   using `lod_distance_scale` command
+- Add `fov` command which allows to override horizontal FOV value
 
 Version 1.6.0 (released 2021-01-07)
 --------------------------------

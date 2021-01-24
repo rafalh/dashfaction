@@ -1,3 +1,15 @@
+#include <algorithm>
+#include <common/error/d3d-error.h>
+#include <common/utils/string-utils.h>
+#include <common/utils/list-utils.h>
+#include <common/utils/os-utils.h>
+#include <common/config/BuildConfig.h>
+#include <patch_common/ComPtr.h>
+#include <patch_common/CallHook.h>
+#include <patch_common/FunHook.h>
+#include <patch_common/CodeInjection.h>
+#include <patch_common/ShortTypes.h>
+#include <patch_common/AsmWriter.h>
 #include "gr.h"
 #include "gr_internal.h"
 #include "../os/console.h"
@@ -10,20 +22,11 @@
 #include "../rf/hud.h"
 #include "../rf/gameseq.h"
 #include "../rf/os/os.h"
-#include <common/error/d3d-error.h>
-#include <common/utils/string-utils.h>
-#include <common/utils/list-utils.h>
-#include <common/utils/os-utils.h>
 #include "../rf/item.h"
 #include "../rf/clutter.h"
-#include <common/config/BuildConfig.h>
-#include <patch_common/ComPtr.h>
-#include <patch_common/CallHook.h>
-#include <patch_common/FunHook.h>
-#include <patch_common/CodeInjection.h>
-#include <patch_common/ShortTypes.h>
-#include <patch_common/AsmWriter.h>
-#include <algorithm>
+
+constexpr int min_fov = 75;
+constexpr int max_fov = 120;
 
 CodeInjection setup_stretched_window_patch{
     0x0050C464,
@@ -41,27 +44,54 @@ CodeInjection setup_stretched_window_patch{
     },
 };
 
+float gr_scale_horz_fov(float horizontal_fov = 90.0f)
+{
+    if (g_game_config.horz_fov >= min_fov && g_game_config.horz_fov <= max_fov) {
+        // Use user provided factor
+        // Note: 90 is the default FOV for RF
+        return horizontal_fov * g_game_config.horz_fov / 90.0f;
+    }
+    else {
+        // Use Hor+ FOV scaling method to improve user experience for wide screens
+        // Assume provided FOV makes sense on a 4:3 screen
+        float s = static_cast<float>(rf::gr_screen.clip_width) / rf::gr_screen.clip_height * 0.75f;
+        constexpr float pi = 3.141592f;
+        float h_fov_rad = horizontal_fov / 180.0f * pi;
+        float x = std::tan(h_fov_rad / 2.0f);
+        float y = x * s;
+        h_fov_rad = 2.0f * std::atan(y);
+        horizontal_fov = h_fov_rad / pi * 180.0f;
+        // Clamp the value to avoid artifacts when the view is very stretched
+        horizontal_fov = std::min<float>(horizontal_fov, max_fov);
+        return horizontal_fov;
+    }
+}
+
 FunHook<void(rf::Matrix3&, rf::Vector3&, float, bool, bool)> gr_setup_3d_hook{
     0x00517EB0,
     [](rf::Matrix3& viewer_orient, rf::Vector3& viewer_pos, float horizontal_fov, bool zbuffer_flag, bool z_scale) {
         rf::gr_screen.aspect = 1.0f;
-        // check if this is a perspective view
-        if (z_scale) {
-            // Note: RED uses h_fov value of 90 degrees in the perspective view
-            // Use Hor+ scaling method to improve user experience when displayed on a widescreen
-            // Assume provided FOV makes sense on a 4:3 screen
-            float s = static_cast<float>(rf::gr_screen.clip_width) / rf::gr_screen.clip_height * 0.75f;
-            constexpr float pi = 3.141592f;
-            float h_fov_rad = horizontal_fov / 180.0f * pi;
-            float x = std::tan(h_fov_rad / 2.0f);
-            float y = x * s;
-            h_fov_rad = 2.0f * std::atan(y);
-            horizontal_fov = h_fov_rad / pi * 180.0f;
-            // Clamp the value to avoid artifacts when view is very stretched
-            horizontal_fov = std::min(horizontal_fov, 120.0f);
-        }
+        horizontal_fov = gr_scale_horz_fov(horizontal_fov);
         gr_setup_3d_hook.call_target(viewer_orient, viewer_pos, horizontal_fov, zbuffer_flag, z_scale);
     },
+};
+
+ConsoleCommand2 fov_cmd{
+    "fov",
+    [](std::optional<int> fov_opt) {
+        if (fov_opt) {
+            if (fov_opt.value() <= 0) {
+                g_game_config.horz_fov = 0;
+            }
+            else {
+                g_game_config.horz_fov = std::clamp(fov_opt.value(), min_fov, max_fov);
+            }
+            g_game_config.save();
+        }
+        rf::console_printf("Horizontal FOV: %.0f", gr_scale_horz_fov());
+    },
+    "Sets horizontal FOV (field of view) in degrees. Use 0 to enable automatic FOV scaling.",
+    "fov [degrees]",
 };
 
 CallHook<void(int, rf::Vertex**, int, rf::GrMode)> gr_rect_gr_tmapper_hook{
@@ -194,6 +224,7 @@ void gr_apply_patch()
     display_full_screen_image_alpha_support_patch.install();
 
     // Commands
+    fov_cmd.register_cmd();
     damage_screen_flash_cmd.register_cmd();
 }
 
