@@ -15,6 +15,7 @@ Version 1.6.1 (not yet released)
 - Do not print redundant new lines in `-win32-console` server mode and optimize it a little
 - Fix unwanted server-side weapon fire when switching from a continous weapon or a weapon with burst fire
 - Prevent shooting and reloading while switching weapon server-side
+- Increase decals limits
 
 Version 1.6.0 (released 2021-01-07)
 --------------------------------

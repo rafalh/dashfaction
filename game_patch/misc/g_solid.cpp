@@ -231,6 +231,23 @@ CodeInjection level_load_lightmaps_color_conv_patch{
     },
 };
 
+void* __thiscall decals_farray_ctor(void* that)
+{
+    return AddrCaller{0x004D3120}.this_call<void*>(that, 64);
+}
+
+CodeInjection g_decal_add_internal_cmp_global_weak_limit_injection{
+    0x004D54AC,
+    [](auto& regs) {
+        if (regs.esi < 3 * 128) {
+            regs.eip = 0x004D54D6;
+        }
+        else {
+            regs.eip = 0x004D54B1;
+        }
+    },
+};
+
 void g_solid_do_patch()
 {
     // Buffer overflows in solid_read
@@ -272,4 +289,89 @@ void g_solid_do_patch()
 
     // lightmaps format conversion
     level_load_lightmaps_color_conv_patch.install();
+
+    // Change decals limit
+    unsigned decal_farray_get_addresses[] = {
+        0x00492298,
+        0x004BBEC9,
+
+        0x004D5515,
+        0x004D5525,
+        0x004D5545,
+        0x004D5579,
+        0x004D5589,
+        0x004D55AD,
+        0x004D55D9,
+        0x004D55E9,
+        0x004D5609,
+        0x004D5635,
+        0x004D5645,
+        0x004D5666,
+        0x004D569E,
+        0x004D56AE,
+        0x004D56CE,
+        0x004D56FA,
+        0x004D570A,
+        0x004D572B,
+    };
+    unsigned decal_farray_add_addresses[] = {
+        0x004D58AE,
+        0x004D58BE,
+        0x004D58D2,
+    };
+    unsigned decal_farray_add_unique_addresses[] = {
+        0x004D67B1,
+    };
+    unsigned decal_farray_remove_matching_addresses[] = {
+        0x004D6C68,
+        0x004D6C93,
+        0x004D6CB6,
+        0x004D6CE1,
+        0x004D6D10,
+    };
+    unsigned decal_farray_ctor_addresses[] = {
+        0x004CCC51,
+        0x004CF152,
+    };
+    unsigned decal_farray_dtor_addresses[] = {
+        0x004CCE79,
+        0x004CF452,
+    };
+    for (auto addr : decal_farray_get_addresses) {
+        AsmWriter{addr}.call(0x0040A480);
+    }
+    for (auto addr : decal_farray_add_addresses) {
+        AsmWriter{addr}.call(0x0045EC40);
+    }
+    for (auto addr : decal_farray_add_unique_addresses) {
+        AsmWriter{addr}.call(0x0040A450);
+    }
+    for (auto addr : decal_farray_remove_matching_addresses) {
+        AsmWriter{addr}.call(0x004BF550);
+    }
+    for (auto addr : decal_farray_ctor_addresses) {
+        AsmWriter{addr}.call(decals_farray_ctor);
+    }
+    for (auto addr : decal_farray_dtor_addresses) {
+        AsmWriter{addr}.call(0x0040EC50);
+    }
+    constexpr int max_decals = 512; // 128 by default
+    static rf::GDecal decal_slots[max_decals];
+    write_mem_ptr(0x004D4F51 + 1, &decal_slots);
+    write_mem_ptr(0x004D4F93 + 1, &decal_slots[std::size(decal_slots)]);
+    // crossing soft limit causes fading out of old decals
+    // crossing hard limit causes deletion of old decals
+    write_mem<i32>(0x004D5456 + 2, max_decals); // total hard limit,  128 by default
+    g_decal_add_internal_cmp_global_weak_limit_injection.install(); // total soft limit,  96 by default
+    write_mem<i8>(0x004D55C4 + 2, 127); // room hard limit,   48 by default
+    write_mem<i8>(0x004D5620 + 2, 96);  // room soft limit,   40 by default
+    write_mem<i8>(0x004D5689 + 2, 127); // room hard limit,   48 by default
+    write_mem<i8>(0x004D56E5 + 2, 96);  // room soft limit,   40 by default
+    write_mem<i8>(0x004D5500 + 2, 127); // solid hard limit,  48 by default
+    write_mem<i8>(0x004D555C + 2, 96);  // solid soft limit,  40 by default
+    write_mem<i8>(0x004D5752 + 2, 64);  // weapon hard limit, 16 by default
+    write_mem<i8>(0x004D579F + 2, 64);  // weapon hard limit, 16 by default
+    write_mem<i8>(0x004D57AA + 2, 48);  // weapon soft limit, 14 by default
+    write_mem<i8>(0x004D584D + 2, 127); // geomod hard limit, 32 by default
+    write_mem<i8>(0x004D5852 + 2, 96);  // geomod soft limit, 30 by default
 }
