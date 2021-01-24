@@ -127,14 +127,34 @@ static CallHook<void(char)> console_put_char_new_line_hook{
     },
 };
 
+void console_clear_input()
+{
+    static auto& console_history_current_index = addr_as_ref<int>(0x01775690);
+    rf::console_cmd_line[0] = '\0';
+    rf::console_cmd_line_len = 0;
+    console_history_current_index = 0;
+}
+
 static CodeInjection console_handle_input_injection{
     0x00509FAF,
     [](auto& regs) {
         rf::Key key = regs.eax;
         if (key == (rf::KEY_C | rf::KEY_CTRLED)) {
-            // Clear input buffer
-            rf::console_cmd_line[0] = '\0';
-            rf::console_cmd_line_len = 0;
+            console_clear_input();
+        }
+    },
+};
+
+static CodeInjection console_handle_input_history_injection{
+    0x0050A09B,
+    [](auto& regs) {
+        static auto& console_history = addr_as_ref<char[8][256]>(0x017744F4);
+        static auto& console_history_max_index = addr_as_ref<int>(0x005A4030);
+        if (console_history_max_index >= 0 &&
+            std::strcmp(console_history[console_history_max_index], rf::console_cmd_line) == 0) {
+            // Command was repeated - do not add it to the history
+            console_clear_input();
+            regs.eip = 0x0050A35C;
         }
     },
 };
@@ -189,6 +209,9 @@ void console_apply_patches()
 
     // Additional key handling
     console_handle_input_injection.install();
+
+    // Improve history handling
+    console_handle_input_history_injection.install();
 
     console_commands_apply_patches();
     console_auto_complete_apply_patches();
