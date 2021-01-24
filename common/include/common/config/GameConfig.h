@@ -38,6 +38,7 @@ struct GameConfig
     CfgVar<unsigned> msaa = 0;
     CfgVar<unsigned> geometry_cache_size = 32;
     CfgVar<unsigned> max_fps = 60;
+    CfgVar<unsigned> server_max_fps = 60;
     CfgVar<bool> fps_counter = true;
     CfgVar<bool> high_scanner_res = true;
     CfgVar<bool> high_monitor_res = true;

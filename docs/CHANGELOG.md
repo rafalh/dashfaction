@@ -17,6 +17,7 @@ Version 1.6.1 (not yet released)
 - Prevent shooting and reloading while switching weapon server-side
 - Increase decals limits
 - Add server-side CPS limit
+- Separate maxfps cvar for dedicated server and client
 
 Version 1.6.0 (released 2021-01-07)
 --------------------------------

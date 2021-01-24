@@ -1,8 +1,10 @@
 #include <patch_common/CallHook.h>
+#include <patch_common/FunHook.h>
 #include <patch_common/AsmWriter.h>
 #include <common/version/version.h>
 #include "console.h"
 #include "../rf/gr/gr.h"
+#include "../rf/multi.h"
 #include "../main/main.h"
 
 static float g_frametime_history[1024];
@@ -41,6 +43,17 @@ CallHook<void(int)> frametime_calculate_sleep_hook{
     },
 };
 
+FunHook<void()> frametime_reset_hook{
+    0x00509490,
+    []() {
+        frametime_reset_hook.call_target();
+
+        // Set initial FPS limit
+        float max_fps = rf::is_dedicated_server ? g_game_config.server_max_fps : g_game_config.max_fps;
+        rf::frametime_min = 1.0f / max_fps;
+    },
+};
+
 ConsoleCommand2 max_fps_cmd{
     "maxfps",
     [](std::optional<int> limit_opt) {
@@ -49,7 +62,12 @@ ConsoleCommand2 max_fps_cmd{
 #if VERSION_TYPE != VERSION_TYPE_DEV
             new_limit = std::clamp<int>(new_limit, MIN_FPS_LIMIT, MAX_FPS_LIMIT);
 #endif
-            g_game_config.max_fps = new_limit;
+            if (rf::is_dedicated_server) {
+                g_game_config.server_max_fps = new_limit;
+            }
+            else {
+                g_game_config.max_fps = new_limit;
+            }
             g_game_config.save();
             rf::frametime_min = 1.0f / new_limit;
         }
@@ -75,7 +93,7 @@ void frametime_apply_patch()
     frametime_calculate_sleep_hook.install();
 
     // Set initial FPS limit
-    write_mem<float>(0x005094CA, 1.0f / g_game_config.max_fps);
+    frametime_reset_hook.install();
 
     // Commands
     max_fps_cmd.register_cmd();
