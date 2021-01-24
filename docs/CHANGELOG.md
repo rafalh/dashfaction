@@ -23,6 +23,7 @@ Version 1.6.1 (not yet released)
 - Rename option "Disable LOD models" to "High model details" - it now scales LOD distances by 10, scale can be updated
   using `lod_distance_scale` command
 - Add `fov` command which allows to override horizontal FOV value
+- Fix crash that is occuring when cutscene path node is copied in the level editor (RF bug)
 
 Version 1.6.0 (released 2021-01-07)
 --------------------------------

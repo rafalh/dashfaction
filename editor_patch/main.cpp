@@ -390,6 +390,20 @@ CodeInjection CMainFrame_OnPlayLevelFromCameraCmd_skip_level_dir_injection{
     },
 };
 
+CodeInjection CDedLevel_CloneObject_injection{
+    0x004135B9,
+    [](auto& regs) {
+        void* that = regs.ecx;
+        int type = regs.eax;
+        void* obj = regs.edi;
+        if (type == 0xC) {
+            // clone cutscene path node
+            regs.eax = AddrCaller{0x00413C70}.this_call<void*>(that, obj);
+            regs.eip = 0x004135CF;
+        }
+    },
+};
+
 extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
 {
     InitLogging();
@@ -505,6 +519,9 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     write_mem<i8>(0x0041E2A9 + 2, 127);
     write_mem<i8>(0x0041E2BA + 2, 127);
     write_mem_ptr(0x0041E2C6 + 1, "There are more than 127 decals in the level! It can result in a crash for older game clients.");
+
+    // Fix copying cutscene path node
+    CDedLevel_CloneObject_injection.install();
 
     return 1; // success
 }
