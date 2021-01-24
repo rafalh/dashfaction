@@ -131,9 +131,45 @@ public:
         Reg<int8_t> name##l;   \
     }
 
+    struct FlagsReg
+    {
+        static constexpr int cf = (1 << 0);
+        static constexpr int pf = (1 << 2);
+        static constexpr int af = (1 << 4);
+        static constexpr int zf = (1 << 6);
+        static constexpr int sf = (1 << 7);
+        static constexpr int of = (1 << 11);
+
+        int value = 0;
+
+        void cmp(int a, int b)
+        {
+            int tmp = 0;
+#ifdef __GNUC__
+            __asm__(
+                "cmp %2, %1\n\t"
+                "pushf\n\t"
+                "pop %0"
+                : "=r" (tmp)
+                : "r" (a), "r" (b)
+                : "cc");
+#else
+            __asm {
+                mov eax, a
+                mov ecx, b
+                cmp eax, ecx
+                pushf
+                pop tmp
+            }
+#endif
+            value &= ~(cf | pf | af | zf | sf | of);
+            value |= tmp & (cf | pf | af | zf | sf | of);
+        }
+    };
+
     struct Regs
     {
-        uint32_t eflags;
+        FlagsReg eflags;
         // reversed PUSHA order of registers
         X86_GP_REG_UNION(di);
         X86_GP_REG_UNION(si);
