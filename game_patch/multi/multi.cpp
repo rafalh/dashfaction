@@ -52,7 +52,7 @@ void handle_url_param()
     rf::console_printf("Connecting to %s:%d...", host_name.c_str(), port);
     auto host = ntohl(reinterpret_cast<in_addr *>(hp->h_addr_list[0])->S_un.S_addr);
 
-    rf::NwAddr addr{host, port};
+    rf::NetAddr addr{host, port};
     start_join_multi_game_sequence(addr, password);
 }
 
@@ -90,7 +90,7 @@ static rf::Timestamp select_weapon_done_timestamp[rf::multi_max_player_id];
 
 bool multi_is_selecting_weapon(rf::Player* pp)
 {
-    auto& done_timestamp = select_weapon_done_timestamp[pp->nw_data->player_id];
+    auto& done_timestamp = select_weapon_done_timestamp[pp->net_data->player_id];
     return done_timestamp.valid() && !done_timestamp.elapsed();
 }
 
@@ -122,7 +122,7 @@ FunHook<void(rf::Player*, rf::Entity*, int)> multi_select_weapon_server_side_hoo
         else {
             rf::player_make_weapon_current_selection(pp, weapon_type);
             ep->ai.current_primary_weapon = weapon_type;
-            select_weapon_done_timestamp[pp->nw_data->player_id].set(300);
+            select_weapon_done_timestamp[pp->net_data->player_id].set(300);
         }
     },
 };
@@ -208,7 +208,7 @@ bool is_entity_out_of_ammo(rf::Entity *entity, int weapon_type, bool alt_fire)
 std::pair<bool, float> multi_is_cps_above_limit(rf::Player* pp, float max_cps)
 {
     constexpr int num_samples = 4;
-    int player_id = pp->nw_data->player_id;
+    int player_id = pp->net_data->player_id;
     static int last_weapon_fire[rf::multi_max_player_id][num_samples];
     int now = rf::timer_get(1000);
     float avg_dt_secs = (now - last_weapon_fire[player_id][0]) / static_cast<float>(num_samples) / 1000.0f;

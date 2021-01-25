@@ -302,7 +302,7 @@ namespace rf
         float field_11F4;
         int field_11F8;
         int field_11FC;
-        PlayerNetData *nw_data;
+        PlayerNetData *net_data;
     };
     static_assert(sizeof(Player) == 0x1204);
 

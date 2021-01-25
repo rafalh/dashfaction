@@ -11,30 +11,30 @@ namespace rf
 
     // nw/psnet
 
-    struct NwAddr
+    struct NetAddr
     {
         uint32_t ip_addr;
         uint16_t port;
 
-        bool operator==(const NwAddr &other) const
+        bool operator==(const NetAddr &other) const
         {
             return ip_addr == other.ip_addr && port == other.port;
         }
 
-        bool operator!=(const NwAddr &other) const
+        bool operator!=(const NetAddr &other) const
         {
             return !(*this == other);
         }
     };
-    static_assert(sizeof(NwAddr) == 0x8);
+    static_assert(sizeof(NetAddr) == 0x8);
 
-    static auto& NwInitSocket = addr_as_ref<void(unsigned short port)>(0x00528F10);
-    static auto& NwAddrToString = addr_as_ref<void(char *dest, int cb_dest, const NwAddr& addr)>(0x00529FE0);
-    static auto& NwSend = addr_as_ref<void(const NwAddr &addr, const void *packet, int len)>(0x0052A080);
-    static auto& NwIsSame = addr_as_ref<int(const NwAddr &addr1, const NwAddr &addr2, bool check_port)>(0x0052A930);
+    static auto& net_init_socket = addr_as_ref<void(unsigned short port)>(0x00528F10);
+    static auto& net_addr_to_string = addr_as_ref<void(char *buf, int buf_size, const NetAddr& addr)>(0x00529FE0);
+    static auto& net_send = addr_as_ref<void(const NetAddr &addr, const void *packet, int len)>(0x0052A080);
+    static auto& net_is_same = addr_as_ref<int(const NetAddr &addr1, const NetAddr &addr2, bool check_port)>(0x0052A930);
 
-    static auto& nw_sock = addr_as_ref<int>(0x005A660C);
-    static auto& nw_port = addr_as_ref<unsigned short>(0x01B587D4);
+    static auto& net_udp_socket = addr_as_ref<int>(0x005A660C);
+    static auto& net_port = addr_as_ref<unsigned short>(0x01B587D4);
 
     // multi
 
@@ -68,19 +68,19 @@ namespace rf
 
     struct PlayerNetData
     {
-        NwAddr addr;
+        NetAddr addr;
         int flags;
-        int join_state;
-        int sock_id;
-        uint8_t player_id;
+        int state;
+        uint reliable_socket;
+        ubyte player_id;
         int join_time_ms;
         MultiIoStats stats;
         int ping;
         float obj_update_packet_loss;
-        char packet_buf[512];
-        int packet_buf_len;
-        char out_reliable_buf[512];
-        int out_reliable_buf_len;
+        ubyte unreliable_buffer[512];
+        int unreliable_buffer_size;
+        ubyte reliable_buffer[512];
+        int reliable_buffer_size;
         int max_update_rate;
         int obj_update_interval;
         Timestamp obj_update_timestamp;
@@ -121,7 +121,7 @@ namespace rf
         int max_kills;
         int geomod_limit;
         int max_captures;
-        NwAddr server_addr;
+        NetAddr server_addr;
         int current_level_index;
         VArray<String> levels;
     };
@@ -149,7 +149,7 @@ namespace rf
         addr_as_ref<void(Player *player, const uint8_t *data, int len, int a4)>(0x00479480);
     static auto& multi_io_send_reliable_to_all =
         addr_as_ref<void(const uint8_t *data, int len, int a4)>(0x004795A0);
-    static auto& multi_find_player_by_addr = addr_as_ref<Player*(const NwAddr& addr)>(0x00484850);
+    static auto& multi_find_player_by_addr = addr_as_ref<Player*(const NetAddr& addr)>(0x00484850);
     static auto& multi_find_player_by_id = addr_as_ref<Player*(uint8_t id)>(0x00484890);
     static auto& multi_ctf_get_red_team_score = addr_as_ref<uint8_t()>(0x00475020);
     static auto& multi_ctf_get_blue_team_score = addr_as_ref<uint8_t()>(0x00475030);
@@ -161,7 +161,7 @@ namespace rf
     static auto& multi_tdm_get_blue_team_score = addr_as_ref<uint8_t()>(0x00482900);
     static auto& multi_num_players = addr_as_ref<int()>(0x00484830);
     static auto& multi_kick_player = addr_as_ref<void(Player *player)>(0x0047BF00);
-    static auto& multi_ban_ip = addr_as_ref<void(const NwAddr& addr)>(0x0046D0F0);
+    static auto& multi_ban_ip = addr_as_ref<void(const NetAddr& addr)>(0x0046D0F0);
     static auto& multi_set_next_weapon = addr_as_ref<void(int weapon_type)>(0x0047FCA0);
     static auto& multi_change_level = addr_as_ref<void(const char* filename)>(0x0047BF50);
     static auto& multi_ping_player = addr_as_ref<void(Player*)>(0x00484D00);

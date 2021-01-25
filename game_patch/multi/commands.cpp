@@ -108,7 +108,7 @@ ConsoleCommand2 map_prev_cmd{
 
 void kick_player_delayed(rf::Player* player)
 {
-    g_players_to_kick.push_back(player->nw_data->player_id);
+    g_players_to_kick.push_back(player->net_data->player_id);
 }
 
 CallHook<void(rf::Player*)> multi_kick_player_hook{0x0047B9BD, kick_player_delayed};
@@ -135,7 +135,7 @@ void ban_cmd_handler_hook()
             if (player) {
                 if (player != rf::local_player) {
                     rf::console_printf(rf::strings::banning_player, player->name.c_str());
-                    rf::multi_ban_ip(player->nw_data->addr);
+                    rf::multi_ban_ip(player->net_data->addr);
                     kick_player_delayed(player);
                 }
                 else

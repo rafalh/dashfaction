@@ -4,7 +4,7 @@
 namespace rf
 {
     struct Player;
-    struct NwAddr;
+    struct NetAddr;
 }
 
-void process_pf_packet(const void* data, int len, const rf::NwAddr& addr, const rf::Player* player);
+void process_pf_packet(const void* data, int len, const rf::NetAddr& addr, const rf::Player* player);

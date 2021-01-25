@@ -133,7 +133,7 @@ struct ServerListEntry
     char level_name[32];
     char mod_name[16];
     int game_type;
-    rf::NwAddr addr;
+    rf::NetAddr addr;
     char current_players;
     char max_players;
     int16_t ping;

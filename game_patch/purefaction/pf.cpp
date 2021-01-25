@@ -10,7 +10,7 @@
 #include <sstream>
 #include <xlog/xlog.h>
 
-void process_pf_player_announce_packet(const void* data, size_t len, [[ maybe_unused ]] const rf::NwAddr& addr)
+void process_pf_player_announce_packet(const void* data, size_t len, [[ maybe_unused ]] const rf::NetAddr& addr)
 {
     // Client-side packet
     if (rf::is_server)
@@ -25,7 +25,7 @@ void process_pf_player_announce_packet(const void* data, size_t len, [[ maybe_un
 
     xlog::trace("PF player_announce packet: player %u is_pure %d", in_packet.player_id, in_packet.is_pure);
 
-    if (in_packet.player_id == rf::local_player->nw_data->player_id) {
+    if (in_packet.player_id == rf::local_player->net_data->player_id) {
         static const char* pf_verification_status_names[] = { "none", "blue", "gold", "red" };
         auto pf_verification_status =
             in_packet.is_pure < std::size(pf_verification_status_names)
@@ -34,7 +34,7 @@ void process_pf_player_announce_packet(const void* data, size_t len, [[ maybe_un
     }
 }
 
-void process_pf_player_stats_packet(const void* data, size_t len, [[ maybe_unused ]] const rf::NwAddr& addr)
+void process_pf_player_stats_packet(const void* data, size_t len, [[ maybe_unused ]] const rf::NetAddr& addr)
 {
     // Client-side packet
     if (rf::is_server)
@@ -65,7 +65,7 @@ void process_pf_player_stats_packet(const void* data, size_t len, [[ maybe_unuse
     }
 }
 
-void process_pf_players_request_packet([[ maybe_unused ]] const void* data, [[ maybe_unused ]] size_t len, const rf::NwAddr& addr)
+void process_pf_players_request_packet([[ maybe_unused ]] const void* data, [[ maybe_unused ]] size_t len, const rf::NetAddr& addr)
 {
     xlog::trace("PF players_request packet");
 
@@ -89,10 +89,10 @@ void process_pf_players_request_packet([[ maybe_unused ]] const void* data, [[ m
     response.show_ip = 0;
     std::copy(players_str.begin(), players_str.end(), reinterpret_cast<char*>(packet_buf.get() + sizeof(pf_players_packet)));
 
-    rf::NwSend(addr, &response, sizeof(response.hdr) + response.hdr.size);
+    rf::net_send(addr, &response, sizeof(response.hdr) + response.hdr.size);
 }
 
-void process_pf_packet(const void* data, int len, const rf::NwAddr& addr, [[maybe_unused]] const rf::Player* player)
+void process_pf_packet(const void* data, int len, const rf::NetAddr& addr, [[maybe_unused]] const rf::Player* player)
 {
     if (len < static_cast<int>(sizeof(rf_packet_header)))
         return;

@@ -79,7 +79,7 @@ int draw_scoreboard_header(int x, int y, int w, rf::NetGameType game_type, bool 
     // Draw server info
     if (!dry_run) {
         char ip_addr_buf[64];
-        rf::NwAddrToString(ip_addr_buf, sizeof(ip_addr_buf), rf::netgame.server_addr);
+        rf::net_addr_to_string(ip_addr_buf, sizeof(ip_addr_buf), rf::netgame.server_addr);
         auto server_info = rf::String::format("%s (%s)", rf::netgame.name.c_str(), ip_addr_buf);
         rf::String server_info_stripped;
         rf::fit_scoreboard_string(&server_info_stripped, server_info, w - 20); // Note: this destroys input string
@@ -195,7 +195,7 @@ int draw_scoreboard_players(const std::vector<rf::Player*>& players, int x, int 
             int num_kills = stats->num_kills;
             int num_deaths = stats->num_deaths;
             int caps = stats->caps;
-            int ping = player->nw_data ? player->nw_data->ping : 0;
+            int ping = player->net_data ? player->net_data->ping : 0;
 #endif
 
             auto score_str = std::to_string(score);

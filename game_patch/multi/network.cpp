@@ -47,21 +47,21 @@
 
 namespace rf
 {
-static const auto multi_is_connecting_to_server = addr_as_ref<uint8_t(const rf::NwAddr& addr)>(0x0044AD80);
+static const auto multi_is_connecting_to_server = addr_as_ref<uint8_t(const rf::NetAddr& addr)>(0x0044AD80);
 
 static auto& simultaneous_ping = addr_as_ref<uint32_t>(0x00599CD8);
 
-typedef void MultiIoProcessPackets_Type(const void* data, size_t len, const NwAddr& addr, Player* player);
+typedef void MultiIoProcessPackets_Type(const void* data, size_t len, const NetAddr& addr, Player* player);
 static auto& multi_io_process_packets = addr_as_ref<MultiIoProcessPackets_Type>(0x004790D0);
 } // namespace rf
 
 int g_update_rate = 30;
 
-typedef void MultiIoPacketHandler(char* data, const rf::NwAddr& addr);
+typedef void MultiIoPacketHandler(char* data, const rf::NetAddr& addr);
 
-CallHook<void(const void*, size_t, const rf::NwAddr&, rf::Player*)> process_unreliable_game_packets_hook{
+CallHook<void(const void*, size_t, const rf::NetAddr&, rf::Player*)> process_unreliable_game_packets_hook{
     0x00479244,
-    [](const void* data, size_t len, const rf::NwAddr& addr, rf::Player* player) {
+    [](const void* data, size_t len, const rf::NetAddr& addr, rf::Player* player) {
         rf::multi_io_process_packets(data, len, addr, player);
 
 #if MASK_AS_PF
@@ -313,7 +313,7 @@ CodeInjection process_game_info_packet_game_type_bounds_patch{
 
 FunHook<MultiIoPacketHandler> process_join_deny_packet_hook{
     0x0047A400,
-    [](char* data, const rf::NwAddr& addr) {
+    [](char* data, const rf::NetAddr& addr) {
         if (rf::multi_is_connecting_to_server(addr)) // client-side
             process_join_deny_packet_hook.call_target(data, addr);
     },
@@ -321,7 +321,7 @@ FunHook<MultiIoPacketHandler> process_join_deny_packet_hook{
 
 FunHook<MultiIoPacketHandler> process_new_player_packet_hook{
     0x0047A580,
-    [](char* data, const rf::NwAddr& addr) {
+    [](char* data, const rf::NetAddr& addr) {
         if (GetForegroundWindow() != rf::main_wnd)
             Beep(750, 300);
         process_new_player_packet_hook.call_target(data, addr);
@@ -330,11 +330,11 @@ FunHook<MultiIoPacketHandler> process_new_player_packet_hook{
 
 FunHook<MultiIoPacketHandler> process_left_game_packet_hook{
     0x0047BBC0,
-    [](char* data, const rf::NwAddr& addr) {
+    [](char* data, const rf::NetAddr& addr) {
         // server-side and client-side
         if (rf::is_server) {
             rf::Player* src_player = rf::multi_find_player_by_addr(addr);
-            data[0] = src_player->nw_data->player_id; // fix player ID
+            data[0] = src_player->net_data->player_id; // fix player ID
         }
         process_left_game_packet_hook.call_target(data, addr);
     },
@@ -342,7 +342,7 @@ FunHook<MultiIoPacketHandler> process_left_game_packet_hook{
 
 FunHook<MultiIoPacketHandler> process_chat_line_packet_hook{
     0x00444860,
-    [](char* data, const rf::NwAddr& addr) {
+    [](char* data, const rf::NetAddr& addr) {
         // server-side and client-side
         if (rf::is_server) {
             rf::Player* src_player = rf::multi_find_player_by_addr(addr);
@@ -353,7 +353,7 @@ FunHook<MultiIoPacketHandler> process_chat_line_packet_hook{
             if (check_server_chat_command(msg, src_player))
                 return;
 
-            data[0] = src_player->nw_data->player_id; // fix player ID
+            data[0] = src_player->net_data->player_id; // fix player ID
         }
         process_chat_line_packet_hook.call_target(data, addr);
     },
@@ -361,13 +361,13 @@ FunHook<MultiIoPacketHandler> process_chat_line_packet_hook{
 
 FunHook<MultiIoPacketHandler> process_name_change_packet_hook{
     0x0046EAE0,
-    [](char* data, const rf::NwAddr& addr) {
+    [](char* data, const rf::NetAddr& addr) {
         // server-side and client-side
         if (rf::is_server) {
             rf::Player* src_player = rf::multi_find_player_by_addr(addr);
             if (!src_player)
                 return;                               // shouldnt happen (protected in rf::multi_io_process_packets)
-            data[0] = src_player->nw_data->player_id; // fix player ID
+            data[0] = src_player->net_data->player_id; // fix player ID
         }
         process_name_change_packet_hook.call_target(data, addr);
     },
@@ -375,14 +375,14 @@ FunHook<MultiIoPacketHandler> process_name_change_packet_hook{
 
 FunHook<MultiIoPacketHandler> process_team_change_packet_hook{
     0x004825B0,
-    [](char* data, const rf::NwAddr& addr) {
+    [](char* data, const rf::NetAddr& addr) {
         // server-side and client-side
         if (rf::is_server) {
             rf::Player* src_player = rf::multi_find_player_by_addr(addr);
             if (!src_player)
                 return; // shouldnt happen (protected in rf::multi_io_process_packets)
 
-            data[0] = src_player->nw_data->player_id;  // fix player ID
+            data[0] = src_player->net_data->player_id;  // fix player ID
             data[1] = std::clamp(data[1], '\0', '\1'); // team validation (fixes "green team")
         }
         process_team_change_packet_hook.call_target(data, addr);
@@ -391,13 +391,13 @@ FunHook<MultiIoPacketHandler> process_team_change_packet_hook{
 
 FunHook<MultiIoPacketHandler> process_rate_change_packet_hook{
     0x004807B0,
-    [](char* data, const rf::NwAddr& addr) {
+    [](char* data, const rf::NetAddr& addr) {
         // server-side and client-side?
         if (rf::is_server) {
             rf::Player* src_player = rf::multi_find_player_by_addr(addr);
             if (!src_player)
                 return;                               // shouldnt happen (protected in rf::multi_io_process_packets)
-            data[0] = src_player->nw_data->player_id; // fix player ID
+            data[0] = src_player->net_data->player_id; // fix player ID
         }
         process_rate_change_packet_hook.call_target(data, addr);
     },
@@ -405,7 +405,7 @@ FunHook<MultiIoPacketHandler> process_rate_change_packet_hook{
 
 FunHook<MultiIoPacketHandler> process_entity_create_packet_hook{
     0x00475420,
-    [](char* data, const rf::NwAddr& addr) {
+    [](char* data, const rf::NetAddr& addr) {
         // Temporary change default player weapon to the weapon type from the received packet
         // Created entity always receives Default Player Weapon (from game.tbl) and if server has it overriden
         // player weapons would be in inconsistent state with server without this change.
@@ -427,7 +427,7 @@ FunHook<MultiIoPacketHandler> process_entity_create_packet_hook{
 
 FunHook<MultiIoPacketHandler> process_reload_packet_hook{
     0x00485AB0,
-    [](char* data, const rf::NwAddr& addr) {
+    [](char* data, const rf::NetAddr& addr) {
         if (!rf::is_server) { // client-side
             // Update clip_size and max_ammo if received values are greater than values from local weapons.tbl
             int weapon_type = *reinterpret_cast<int*>(data + 4);
@@ -447,7 +447,7 @@ FunHook<MultiIoPacketHandler> process_reload_packet_hook{
 
 FunHook<MultiIoPacketHandler> process_reload_request_packet_hook{
     0x00485A60,
-    [](char* data, const rf::NwAddr& addr) {
+    [](char* data, const rf::NetAddr& addr) {
         if (!rf::is_server) {
             return;
         }
@@ -614,11 +614,11 @@ CodeInjection process_glass_kill_packet_check_room_exists_patch{
     },
 };
 
-CallHook<int(void*, int, int, rf::NwAddr&, int)> nw_get_packet_tracker_hook{
+CallHook<int(void*, int, int, rf::NetAddr&, int)> net_get_tracker_hook{
     0x00482ED4,
-    [](void* data, int a2, int a3, rf::NwAddr& addr, int super_type) {
-        int res = nw_get_packet_tracker_hook.call_target(data, a2, a3, addr, super_type);
-        auto& tracker_addr = addr_as_ref<rf::NwAddr>(0x006FC550);
+    [](void* data, int a2, int a3, rf::NetAddr& addr, int super_type) {
+        int res = net_get_tracker_hook.call_target(data, a2, a3, addr, super_type);
+        auto& tracker_addr = addr_as_ref<rf::NetAddr>(0x006FC550);
         if (res != -1 && addr != tracker_addr)
             res = -1;
         return res;
@@ -655,9 +655,9 @@ std::pair<std::unique_ptr<std::byte[]>, size_t> ExtendPacketWithDashFactionSigna
     return ExtendPacket(data, len, ext);
 }
 
-CallHook<int(const rf::NwAddr*, std::byte*, size_t)> send_game_info_packet_hook{
+CallHook<int(const rf::NetAddr*, std::byte*, size_t)> send_game_info_packet_hook{
     0x0047B287,
-    [](const rf::NwAddr* addr, std::byte* data, size_t len) {
+    [](const rf::NetAddr* addr, std::byte* data, size_t len) {
         // Add Dash Faction signature to game_info packet
         auto [new_data, new_len] = ExtendPacketWithDashFactionSignature(data, len);
         return send_game_info_packet_hook.call_target(addr, new_data.get(), new_len);
@@ -680,18 +680,18 @@ struct DashFactionJoinAcceptPacketExt
 template<>
 struct EnableEnumBitwiseOperators<DashFactionJoinAcceptPacketExt::Flags> : std::true_type {};
 
-CallHook<int(const rf::NwAddr*, std::byte*, size_t)> send_join_req_packet_hook{
+CallHook<int(const rf::NetAddr*, std::byte*, size_t)> send_join_req_packet_hook{
     0x0047ABFB,
-    [](const rf::NwAddr* addr, std::byte* data, size_t len) {
+    [](const rf::NetAddr* addr, std::byte* data, size_t len) {
         // Add Dash Faction signature to join_req packet
         auto [new_data, new_len] = ExtendPacketWithDashFactionSignature(data, len);
         return send_join_req_packet_hook.call_target(addr, new_data.get(), new_len);
     },
 };
 
-CallHook<int(const rf::NwAddr*, std::byte*, size_t)> send_join_accept_packet_hook{
+CallHook<int(const rf::NetAddr*, std::byte*, size_t)> send_join_accept_packet_hook{
     0x0047A825,
-    [](const rf::NwAddr* addr, std::byte* data, size_t len) {
+    [](const rf::NetAddr* addr, std::byte* data, size_t len) {
         // Add Dash Faction signature to join_accept packet
         DashFactionJoinAcceptPacketExt ext_data;
         if (server_is_saving_enabled()) {
@@ -842,15 +842,15 @@ bool try_to_auto_forward_port(int port)
     return true;
 }
 
-FunHook<void(int, rf::NwAddr*)> multi_start_hook{
+FunHook<void(int, rf::NetAddr*)> multi_start_hook{
     0x0046D5B0,
-    [](int is_client, rf::NwAddr *serv_addr) {
-        if (!rf::nw_port && !is_client) {
+    [](int is_client, rf::NetAddr *serv_addr) {
+        if (!rf::net_port && !is_client) {
             // If no port was specified and this is a server recreate the socket and bind it to port 7755
             xlog::info("Recreating socket using TCP port 7755");
-            shutdown(rf::nw_sock, 1);
-            closesocket(rf::nw_sock);
-            rf::NwInitSocket(7755);
+            shutdown(rf::net_udp_socket, 1);
+            closesocket(rf::net_udp_socket);
+            rf::net_init_socket(7755);
         }
         multi_start_hook.call_target(is_client, serv_addr);
     },
@@ -861,7 +861,7 @@ FunHook<void()> tracker_do_broadcast_server_hook{
     []() {
         tracker_do_broadcast_server_hook.call_target();
         // Auto forward server port using UPnP (in background thread)
-        std::thread upnp_thread{try_to_auto_forward_port, rf::nw_port};
+        std::thread upnp_thread{try_to_auto_forward_port, rf::net_port};
         upnp_thread.detach();
     },
 };
@@ -886,7 +886,7 @@ void send_chat_line_packet(const char* msg, rf::Player* target, rf::Player* send
     auto& packet = *reinterpret_cast<RF_ChatLinePacket*>(buf);
     packet.header.type = RF_GPT_CHAT_LINE;
     packet.header.size = static_cast<uint16_t>(sizeof(packet) - sizeof(packet.header) + std::strlen(msg) + 1);
-    packet.player_id = sender ? sender->nw_data->player_id : 0xFF;
+    packet.player_id = sender ? sender->net_data->player_id : 0xFF;
     packet.is_team_msg = is_team_msg;
     std::strncpy(packet.message, msg, 255);
     packet.message[255] = 0;
@@ -1066,7 +1066,7 @@ void network_init()
     process_glass_kill_packet_check_room_exists_patch.install();
 
     // Make sure tracker packets come from configured tracker
-    nw_get_packet_tracker_hook.install();
+    net_get_tracker_hook.install();
 
     // Add Dash Faction signature to game_info join_req, join_accept packets
     send_game_info_packet_hook.install();

@@ -431,7 +431,7 @@ CodeInjection multi_on_new_player_injection{
     [](auto& regs) {
         rf::Player* player = regs.esi;
         in_addr addr;
-        addr.S_un.S_addr = ntohl(player->nw_data->addr.ip_addr);
+        addr.S_un.S_addr = ntohl(player->net_data->addr.ip_addr);
         rf::console_printf("%s%s (%s)", player->name.c_str(),  rf::strings::has_joined, inet_ntoa(addr));
         regs.eip = 0x0047B051;
     },

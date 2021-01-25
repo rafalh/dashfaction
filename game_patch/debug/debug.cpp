@@ -129,21 +129,21 @@ CodeInjection VArray_Ptr__get_out_of_bounds_check{
 
 #if EMULATE_PACKET_LOSS
 
-FunHook<int(const void*, unsigned, int, const rf::NwAddr*, int)> nw_send_hook{
+FunHook<int(const void*, unsigned, int, const rf::NetAddr*, int)> net_send_hook{
     0x00528820,
-    [](const void* packet, unsigned packet_len, int flags, const rf::NwAddr* addr, int packet_kind) {
+    [](const void* packet, unsigned packet_len, int flags, const rf::NetAddr* addr, int packet_kind) {
         if (rand() % PACKET_LOSS_RATE == 0)
             return 0;
-        return nw_send_hook.call_target(packet, packet_len, flags, addr, packet_kind);
+        return net_send_hook.call_target(packet, packet_len, flags, addr, packet_kind);
     },
 };
 
-FunHook<void(void*, const void*, unsigned, rf::NwAddr*)> nw_add_packet_to_buffer_hook{
+FunHook<void(void*, const void*, unsigned, rf::NetAddr*)> net_buffer_packet_hook{
     0x00528950,
-    [](void* buffer, const void* data, unsigned data_len, rf::NwAddr* addr) {
+    [](void* buffer, const void* data, unsigned data_len, rf::NetAddr* addr) {
         if (rand() % PACKET_LOSS_RATE == 0)
             return;
-        return nw_add_packet_to_buffer_hook.call_target(buffer, data, data_len, addr);
+        return net_buffer_packet_hook.call_target(buffer, data, data_len, addr);
     },
 };
 
@@ -172,8 +172,8 @@ void debug_apply_patches()
 #endif
 
 #if EMULATE_PACKET_LOSS
-    nw_send_hook.install();
-    nw_add_packet_to_buffer_hook.install();
+    net_send_hook.install();
+    net_buffer_packet_hook.install();
 #endif
 
     debug_unresponsive_apply_patches();
