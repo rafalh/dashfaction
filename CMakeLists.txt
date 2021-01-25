@@ -90,17 +90,4 @@ add_subdirectory(patch_common)
 add_subdirectory(xlog)
 add_subdirectory(crash_handler)
 add_subdirectory(crash_handler_stub)
-
-add_custom_command(
-    OUTPUT ${CMAKE_BINARY_DIR}/bin/dashfaction.vpp
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/resources/dashfaction.vpp ${CMAKE_BINARY_DIR}/bin/dashfaction.vpp
-    MAIN_DEPENDENCY ${CMAKE_SOURCE_DIR}/resources/dashfaction.vpp
-)
-add_custom_target(DashFactionVpp ALL DEPENDS ${CMAKE_BINARY_DIR}/bin/dashfaction.vpp)
-
-add_custom_command(
-    OUTPUT ${CMAKE_BINARY_DIR}/bin/licensing-info.txt
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/resources/licensing-info.txt ${CMAKE_BINARY_DIR}/bin/licensing-info.txt
-    MAIN_DEPENDENCY ${CMAKE_SOURCE_DIR}/resources/licensing-info.txt
-)
-add_custom_target(LicensingInfoTxt ALL DEPENDS ${CMAKE_BINARY_DIR}/bin/licensing-info.txt)
+add_subdirectory(resources)
