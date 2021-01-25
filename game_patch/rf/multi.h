@@ -30,8 +30,8 @@ namespace rf
 
     static auto& net_init_socket = addr_as_ref<void(unsigned short port)>(0x00528F10);
     static auto& net_addr_to_string = addr_as_ref<void(char *buf, int buf_size, const NetAddr& addr)>(0x00529FE0);
-    static auto& net_send = addr_as_ref<void(const NetAddr &addr, const void *packet, int len)>(0x0052A080);
-    static auto& net_is_same = addr_as_ref<int(const NetAddr &addr1, const NetAddr &addr2, bool check_port)>(0x0052A930);
+    static auto& net_send = addr_as_ref<void(const NetAddr &addr, const void *data, int len)>(0x0052A080);
+    static auto& net_same = addr_as_ref<int(const NetAddr &addr1, const NetAddr &addr2, bool check_port)>(0x0052A930);
 
     static auto& net_udp_socket = addr_as_ref<int>(0x005A660C);
     static auto& net_port = addr_as_ref<unsigned short>(0x01B587D4);

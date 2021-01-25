@@ -147,20 +147,44 @@ void multi_reload_weapon_server_side(rf::Player* pp, int weapon_type)
     }
 }
 
-void multi_turn_weapon_on(rf::Entity* ep, rf::Player* pp, bool alt_fire)
+void multi_ensure_ammo_is_not_empty(rf::Entity* ep)
 {
-    auto current_primary_weapon = ep->ai.current_primary_weapon;
-    if (!rf::weapon_is_on_off_weapon(current_primary_weapon, alt_fire)) {
-        xlog::debug("Player %s attempted to turn on weapon %d which has no continous fire flag", pp->name.c_str(), current_primary_weapon);
+    int weapon_type = ep->ai.current_primary_weapon;
+    auto& wi = rf::weapon_types[weapon_type];
+    // at least ammo for 100 milliseconds
+    int min_ammo = std::max(static_cast<int>(0.1f / wi.fire_wait), 1);
+    if (rf::weapon_is_melee(weapon_type)) {
+        return;
     }
-    else if (rf::is_server && multi_is_selecting_weapon(pp)) {
-        xlog::debug("Player %s attempted to turn on weapon %d while selecting it", pp->name.c_str(), current_primary_weapon);
-    }
-    else if (rf::is_server && rf::entity_is_reloading(ep)) {
-        xlog::debug("Player %s attempted to turn on weapon %d while reloading it", pp->name.c_str(), current_primary_weapon);
+    if (rf::weapon_uses_clip(weapon_type)) {
+        auto& clip_ammo = ep->ai.clip_ammo[weapon_type];
+        clip_ammo = std::max(clip_ammo, min_ammo);
     }
     else {
-        rf::entity_turn_weapon_on(ep->handle, current_primary_weapon, alt_fire);
+        auto& ammo = ep->ai.ammo[wi.ammo_type];
+        ammo = std::max(ammo, min_ammo);
+    }
+}
+
+void multi_turn_weapon_on(rf::Entity* ep, rf::Player* pp, bool alt_fire)
+{
+    auto weapon_type = ep->ai.current_primary_weapon;
+    if (!rf::weapon_is_on_off_weapon(weapon_type, alt_fire)) {
+        xlog::debug("Player %s attempted to turn on weapon %d which has no continous fire flag", pp->name.c_str(), weapon_type);
+    }
+    else if (rf::is_server && multi_is_selecting_weapon(pp)) {
+        xlog::debug("Player %s attempted to turn on weapon %d while selecting it", pp->name.c_str(), weapon_type);
+    }
+    else if (rf::is_server && rf::entity_is_reloading(ep)) {
+        xlog::debug("Player %s attempted to turn on weapon %d while reloading it", pp->name.c_str(), weapon_type);
+    }
+    else {
+        if (!rf::is_server) {
+            // Make sure client-side ammo is not empty when we know that the player is currently shooting
+            // It can be empty if a reload packet was lost or if it got desynced because of network delays
+            multi_ensure_ammo_is_not_empty(ep);
+        }
+        rf::entity_turn_weapon_on(ep->handle, weapon_type, alt_fire);
     }
 }
 
@@ -249,32 +273,36 @@ bool multi_check_cps(rf::Player* pp, int weapon_type, bool alt_fire)
     return above_limit;
 }
 
-FunHook<void(rf::Entity*, int, rf::Vector3*, rf::Matrix3*, bool)> multi_process_remote_weapon_fire_hook{
+bool multi_is_weapon_fire_allowed_server_side(rf::Entity *ep, int weapon_type, bool alt_fire)
+{
+    auto pp = rf::player_from_entity_handle(ep->handle);
+    if (ep->ai.current_primary_weapon != weapon_type) {
+        xlog::debug("Player %s attempted to fire unselected weapon %d", pp->name.c_str(), weapon_type);
+    }
+    else if (is_entity_out_of_ammo(ep, weapon_type, alt_fire)) {
+        xlog::debug("Player %s attempted to fire weapon %d without ammunition", pp->name.c_str(), weapon_type);
+    }
+    else if (rf::weapon_is_on_off_weapon(weapon_type, alt_fire)) {
+        xlog::debug("Player %s attempted to fire a single bullet from on/off weapon %d", pp->name.c_str(), weapon_type);
+    }
+    else if (multi_is_selecting_weapon(pp)) {
+        xlog::debug("Player %s attempted to fire weapon %d while selecting it", pp->name.c_str(), weapon_type);
+    }
+    else if (rf::entity_is_reloading(ep)) {
+        xlog::debug("Player %s attempted to fire weapon %d while reloading it", pp->name.c_str(), weapon_type);
+    }
+    else if (!multi_check_cps(pp, weapon_type, alt_fire)) {
+        return true;
+    }
+    return false;
+}
+
+FunHook<void(rf::Entity*, int, rf::Vector3&, rf::Matrix3&, bool)> multi_process_remote_weapon_fire_hook{
     0x0047D220,
-    [](rf::Entity *ep, int weapon_type, rf::Vector3 *pos, rf::Matrix3 *orient, bool alt_fire) {
+    [](rf::Entity *ep, int weapon_type, rf::Vector3& pos, rf::Matrix3& orient, bool alt_fire) {
         if (rf::is_server) {
             // Do some checks server-side to prevent cheating
-            bool valid = false;
-            auto pp = rf::player_from_entity_handle(ep->handle);
-            if (ep->ai.current_primary_weapon != weapon_type) {
-                xlog::debug("Player %s attempted to fire unselected weapon %d", pp->name.c_str(), weapon_type);
-            }
-            else if (is_entity_out_of_ammo(ep, weapon_type, alt_fire)) {
-                xlog::debug("Player %s attempted to fire weapon %d without ammunition", pp->name.c_str(), weapon_type);
-            }
-            else if (rf::weapon_is_on_off_weapon(weapon_type, alt_fire)) {
-                xlog::debug("Player %s attempted to fire a single bullet from on/off weapon %d", pp->name.c_str(), weapon_type);
-            }
-            else if (multi_is_selecting_weapon(pp)) {
-                xlog::debug("Player %s attempted to fire weapon %d while selecting it", pp->name.c_str(), weapon_type);
-            }
-            else if (rf::entity_is_reloading(ep)) {
-                xlog::debug("Player %s attempted to fire weapon %d while reloading it", pp->name.c_str(), weapon_type);
-            }
-            else if (!multi_check_cps(pp, weapon_type, alt_fire)) {
-                valid = true;
-            }
-            if (!valid) {
+            if (!multi_is_weapon_fire_allowed_server_side(ep, weapon_type, alt_fire)) {
                 return;
             }
         }
