@@ -50,6 +50,7 @@ images/Icon_EAX.tga
 images/maps_df.txt
 images/mtl_archway04-mip1.tga
 images/pls_airlockmat01-mip2.tga
+images/consolebutton2A.tga
 
 fonts/biggerfont.vf
 fonts/regularfont.ttf
