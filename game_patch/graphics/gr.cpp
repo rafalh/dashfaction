@@ -54,7 +54,7 @@ float gr_scale_horz_fov(float horizontal_fov = 90.0f)
     else {
         // Use Hor+ FOV scaling method to improve user experience for wide screens
         // Assume provided FOV makes sense on a 4:3 screen
-        float s = static_cast<float>(rf::gr_screen.clip_width) / rf::gr_screen.clip_height * 0.75f;
+        float s = static_cast<float>(rf::gr_screen.max_w) / rf::gr_screen.max_h * 0.75f;
         constexpr float pi = 3.141592f;
         float h_fov_rad = horizontal_fov / 180.0f * pi;
         float x = std::tan(h_fov_rad / 2.0f);

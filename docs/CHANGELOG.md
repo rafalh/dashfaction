@@ -25,6 +25,7 @@ Version 1.6.1 (not yet released)
 - Add `fov` command which allows to override horizontal FOV value
 - Fix crash that is occuring when cutscene path node is copied in the level editor (RF bug)
 - Fix out of ammo sounds being played when ammo got out of sync client-side
+- Add missing `consolebutton2A.tga` texture
 
 Version 1.6.0 (released 2021-01-07)
 --------------------------------
