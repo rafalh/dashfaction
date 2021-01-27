@@ -396,7 +396,7 @@ void g_solid_do_patch()
     level_load_lightmaps_color_conv_patch.install();
 
     // Change decals limit
-    decal_patch_limit(rf::);
+    decal_patch_limit(512);
     AsmWriter{0x004D54AF}.nop(2); // fix subhook trampoline preparation error
     g_decal_add_internal_cmp_global_weak_limit_injection.install();
 
