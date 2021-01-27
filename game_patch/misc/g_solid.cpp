@@ -6,9 +6,11 @@
 #include "../rf/gr/gr.h"
 #include "../bmpman/bmpman.h"
 #include "../bmpman/fmt_conv_templates.h"
+#include "../os/console.h"
 
 constexpr auto reference_fps = 30.0f;
 constexpr auto reference_frametime = 1.0f / reference_fps;
+int g_max_decals = 512;
 
 FunHook<int(rf::GSolid*, rf::GRoom*)> geo_cache_prepare_room_hook{
     0x004F0C00,
@@ -239,7 +241,8 @@ void* __fastcall decals_farray_ctor(void* that)
 CodeInjection g_decal_add_internal_cmp_global_weak_limit_injection{
     0x004D54AC,
     [](auto& regs) {
-        if (regs.esi < 448) {
+        // total decals soft limit, 96 by default
+        if (regs.esi < g_max_decals * 3 / 4) {
             regs.eip = 0x004D54D6;
         }
         else {
@@ -248,49 +251,8 @@ CodeInjection g_decal_add_internal_cmp_global_weak_limit_injection{
     },
 };
 
-void g_solid_do_patch()
+void decal_patch_limit(int max_decals)
 {
-    // Buffer overflows in solid_read
-    // Note: Buffer size is 1024 but opcode allows only 1 byte size
-    //       What is more important bm_load copies texture name to 32 bytes long buffers
-    write_mem<i8>(0x004ED612 + 1, 32);
-    write_mem<i8>(0x004ED66E + 1, 32);
-    write_mem<i8>(0x004ED72E + 1, 32);
-    write_mem<i8>(0x004EDB02 + 1, 32);
-
-    // Fix crash in geometry rendering
-    geo_cache_prepare_room_hook.install();
-
-    // 32-bit color format - geomod
-    GSurface_calculate_lightmap_color_conv_patch.install();
-    GSurface_alloc_lightmap_color_conv_patch.install();
-    // 32-bit color format - ambient color
-    GSolid_get_ambient_color_from_lightmap_patch.install();
-    // water
-    AsmWriter(0x004E68B0, 0x004E68B6).nop();
-    g_proctex_update_water_patch.install();
-
-    // Fix face scroll in levels after version 0xB4
-    face_scroll_fix.install();
-
-    // Fix water waves animation on high FPS
-    AsmWriter(0x004E68A0, 0x004E68A9).nop();
-    AsmWriter(0x004E68B6, 0x004E68D1).nop();
-    g_proctex_update_water_speed_fix.install();
-
-    // Set dynamic flag on proctex texture
-    g_proctex_create_bm_create_injection.install();
-
-    // Add a missing check if face has any vertex in GFace::does_point_lie_in_face
-    g_face_does_point_lie_in_face_crashfix.install();
-
-    // fix pixel format for lightmaps
-    write_mem<u8>(0x004F5EB8 + 1, rf::BM_FORMAT_888_RGB);
-
-    // lightmaps format conversion
-    level_load_lightmaps_color_conv_patch.install();
-
-    // Change decals limit
     unsigned decal_farray_get_addresses[] = {
         0x00492298,
         0x004BBEC9,
@@ -355,24 +317,89 @@ void g_solid_do_patch()
     for (auto addr : decal_farray_dtor_addresses) {
         AsmWriter{addr}.call(0x0040EC50);
     }
-    constexpr int max_decals = 512; // 128 by default
-    static rf::GDecal decal_slots[max_decals];
+    max_decals = std::min(max_decals, 512);
+    constexpr int i8_max = std::numeric_limits<i8>::max();
+    static rf::GDecal decal_slots[512]; // 128 by default
     write_mem_ptr(0x004D4F51 + 1, &decal_slots);
     write_mem_ptr(0x004D4F93 + 1, &decal_slots[std::size(decal_slots)]);
     // crossing soft limit causes fading out of old decals
     // crossing hard limit causes deletion of old decals
     write_mem<i32>(0x004D5456 + 2, max_decals); // total hard limit,  128 by default
-    AsmWriter{0x004D54AF}.nop(2); // fix subhook trampoline perparation error
-    g_decal_add_internal_cmp_global_weak_limit_injection.install(); // total soft limit,  96 by default
-    write_mem<i8>(0x004D55C4 + 2, 127); // room hard limit,   48 by default
-    write_mem<i8>(0x004D5620 + 2, 104); // room soft limit,   40 by default
-    write_mem<i8>(0x004D5689 + 2, 127); // room hard limit,   48 by default
-    write_mem<i8>(0x004D56E5 + 2, 104); // room soft limit,   40 by default
-    write_mem<i8>(0x004D5500 + 2, 127); // solid hard limit,  48 by default
-    write_mem<i8>(0x004D555C + 2, 104); // solid soft limit,  40 by default
-    write_mem<i8>(0x004D5752 + 2, 47);  // weapon hard limit, 16 by default
-    write_mem<i8>(0x004D579F + 2, 47);  // weapon hard limit, 16 by default
-    write_mem<i8>(0x004D57AA + 2, 40);  // weapon soft limit, 14 by default
-    write_mem<i8>(0x004D584D + 2, 80);  // geomod hard limit, 32 by default
-    write_mem<i8>(0x004D5852 + 2, 72);  // geomod soft limit, 30 by default
+    // Note: total soft level is handled in g_decal_add_internal_cmp_global_weak_limit_injection
+    int max_decals_in_room = std::min<int>(max_decals / 3, i8_max);
+    write_mem<i8>(0x004D55C4 + 2, max_decals_in_room); // room hard limit,   48 by default
+    write_mem<i8>(0x004D5620 + 2, max_decals_in_room * 5 / 6); // room soft limit,   40 by default
+    write_mem<i8>(0x004D5689 + 2, max_decals_in_room); // room hard limit,   48 by default
+    write_mem<i8>(0x004D56E5 + 2, max_decals_in_room * 5 / 6); // room soft limit,   40 by default
+    write_mem<i8>(0x004D5500 + 2, max_decals_in_room); // solid hard limit,  48 by default
+    write_mem<i8>(0x004D555C + 2, max_decals_in_room * 5 / 6); // solid soft limit,  40 by default
+    int max_weapon_decals = std::min<int>(max_decals / 8, i8_max);
+    write_mem<i8>(0x004D5752 + 2, max_weapon_decals);  // weapon hard limit, 16 by default
+    write_mem<i8>(0x004D579F + 2, max_weapon_decals);  // weapon hard limit, 16 by default
+    write_mem<i8>(0x004D57AA + 2, max_weapon_decals * 7 / 8);  // weapon soft limit, 14 by default
+    int max_geomod_decals = std::min<int>(max_decals / 4, i8_max);
+    write_mem<i8>(0x004D584D + 2, max_geomod_decals);  // geomod hard limit, 32 by default
+    write_mem<i8>(0x004D5852 + 2, max_geomod_decals * 7 / 8);  // geomod soft limit, 30 by default
+}
+
+ConsoleCommand2 max_decals_cmd{
+    "max_decals",
+    [](std::optional<int> max_decals) {
+        if (max_decals) {
+            g_max_decals = std::clamp(max_decals.value(), 128, 512);
+            decal_patch_limit(g_max_decals);
+        }
+        rf::console_printf("Max decals: %d", g_max_decals);
+    },
+};
+
+void g_solid_do_patch()
+{
+    // Buffer overflows in solid_read
+    // Note: Buffer size is 1024 but opcode allows only 1 byte size
+    //       What is more important bm_load copies texture name to 32 bytes long buffers
+    write_mem<i8>(0x004ED612 + 1, 32);
+    write_mem<i8>(0x004ED66E + 1, 32);
+    write_mem<i8>(0x004ED72E + 1, 32);
+    write_mem<i8>(0x004EDB02 + 1, 32);
+
+    // Fix crash in geometry rendering
+    geo_cache_prepare_room_hook.install();
+
+    // 32-bit color format - geomod
+    GSurface_calculate_lightmap_color_conv_patch.install();
+    GSurface_alloc_lightmap_color_conv_patch.install();
+    // 32-bit color format - ambient color
+    GSolid_get_ambient_color_from_lightmap_patch.install();
+    // water
+    AsmWriter(0x004E68B0, 0x004E68B6).nop();
+    g_proctex_update_water_patch.install();
+
+    // Fix face scroll in levels after version 0xB4
+    face_scroll_fix.install();
+
+    // Fix water waves animation on high FPS
+    AsmWriter(0x004E68A0, 0x004E68A9).nop();
+    AsmWriter(0x004E68B6, 0x004E68D1).nop();
+    g_proctex_update_water_speed_fix.install();
+
+    // Set dynamic flag on proctex texture
+    g_proctex_create_bm_create_injection.install();
+
+    // Add a missing check if face has any vertex in GFace::does_point_lie_in_face
+    g_face_does_point_lie_in_face_crashfix.install();
+
+    // fix pixel format for lightmaps
+    write_mem<u8>(0x004F5EB8 + 1, rf::BM_FORMAT_888_RGB);
+
+    // lightmaps format conversion
+    level_load_lightmaps_color_conv_patch.install();
+
+    // Change decals limit
+    decal_patch_limit(rf::);
+    AsmWriter{0x004D54AF}.nop(2); // fix subhook trampoline preparation error
+    g_decal_add_internal_cmp_global_weak_limit_injection.install();
+
+    // Commands
+    max_decals_cmd.register_cmd();
 }
