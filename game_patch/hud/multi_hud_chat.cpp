@@ -130,7 +130,7 @@ void multi_hud_render_chat_inputbox(rf::String::Pod label_pod, rf::String::Pod m
     int font_h = rf::gr_get_font_height(chatbox_font); // 12
     int border = g_big_chatbox ? 3 : 2;
     int box_w = clip_w - (g_big_chatbox ? 600 : 313);
-    int content_w = box_w - 2 * border;
+    int content_w = box_w - 2 * border; // clip_w - 317
     int hist_box_y = 10;
     int hist_box_h = 8 * font_h + 2 * border + 6;
     int input_box_content_h = font_h + 3;
@@ -143,7 +143,9 @@ void multi_hud_render_chat_inputbox(rf::String::Pod label_pod, rf::String::Pod m
     rf::gr_get_string_size(&msg_w, &msg_h, msg_shortened.c_str(), -1, chatbox_font);
     int label_w, label_h;
     rf::gr_get_string_size(&label_w, &label_h, label.c_str(), -1, chatbox_font);
-    int max_msg_w = -330 - label_w + rf::gr_screen_width();
+    int cursor_w = g_big_chatbox ? 10 : 5;
+    int cursor_h = g_big_chatbox ? 2 : 1;
+    int max_msg_w = content_w - cursor_w - 7 - label_w;
     while (msg_w > max_msg_w) {
         msg_shortened.substr(&msg_shortened, 1, -1);
         rf::gr_get_string_size(&msg_w, &msg_h, msg_shortened.c_str(), -1, chatbox_font);
@@ -172,8 +174,7 @@ void multi_hud_render_chat_inputbox(rf::String::Pod label_pod, rf::String::Pod m
     if (chatbox_cursor_visible) {
         int cursor_x = text_x + label_w + msg_w + 2;
         int cursor_y = text_y + msg_h + (g_big_chatbox ? -2 : 0);
-        int cursor_w = g_big_chatbox ? 10 : 5;
-        int cursor_h = g_big_chatbox ? 2 : 1;
+
         rf::gr_rect(cursor_x, cursor_y, cursor_w, cursor_h);
     }
 }
