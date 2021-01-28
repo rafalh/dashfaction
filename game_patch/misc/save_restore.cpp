@@ -58,6 +58,7 @@ FunHook<void(rf::LevelSaveData*)> sr_deserialize_all_objects_hook{
     [](rf::LevelSaveData *data) {
         validate_level_save_data(data);
         sr_deserialize_all_objects_hook.call_target(data);
+        xlog::warn("aaaaaaaaaaa %d", addr_as_ref<int>(0x007DE5A0));
     },
 };
 
@@ -66,6 +67,19 @@ FunHook<void(rf::LevelSaveData*)> sr_serialize_all_objects_hook{
     [](rf::LevelSaveData *data) {
         sr_serialize_all_objects_hook.call_target(data);
         validate_level_save_data(data);
+    },
+};
+
+FunHook<void(int, int*)> sr_add_handle_for_delayed_resolution_hook{
+    0x004B5630,
+    [](int uid, int *obj_handle_ptr) {
+        auto& sr_num_delayed_handle_resolution = addr_as_ref<int>(0x007DE5A0);
+        if (sr_num_delayed_handle_resolution < 1500) {
+            sr_add_handle_for_delayed_resolution_hook.call_target(uid, obj_handle_ptr);
+        }
+        else {
+            xlog::warn("Too many handles in restored data");
+        }
     },
 };
 
@@ -147,6 +161,9 @@ void apply_save_restore_patches()
 
     // Fix buffer overflow during level load if there are more than 24 objects in current room
     remember_level_transition_objects_meshes_hook.install();
+
+    // Fix possible buffer overflow in sr_add_handle_for_delayed_resolution
+    sr_add_handle_for_delayed_resolution_hook.install();
 
     // Fix memory leak on quick save
     quick_save_mem_leak_fix.install();
