@@ -27,7 +27,7 @@ Version 1.6.1 (not yet released)
 - Fix out of ammo sounds being played when ammo got out of sync client-side
 - Add missing `consolebutton2A.tga` texture which is used by "Console Button02" clutter object
 - Fix chat input box rendering in big HUD mode when a very long message is being entered
-
+- Improve scope weapons zoom in spectate mode
 
 Version 1.6.0 (released 2021-01-07)
 --------------------------------

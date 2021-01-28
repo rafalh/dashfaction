@@ -273,7 +273,7 @@ static void player_render_fpgun_new(rf::Player* player)
         }
 
         if (g_spectate_mode_target->fpgun_data.zooming_in)
-            g_spectate_mode_target->fpgun_data.zoom_factor = 2.0f;
+            g_spectate_mode_target->fpgun_data.zoom_factor = 5.0f;
         rf::local_player->fpgun_data.zooming_in = g_spectate_mode_target->fpgun_data.zooming_in;
         rf::local_player->fpgun_data.zoom_factor = g_spectate_mode_target->fpgun_data.zoom_factor;
 
@@ -283,6 +283,18 @@ static void player_render_fpgun_new(rf::Player* player)
     else
         rf::player_fpgun_render(player);
 }
+
+CallHook<float(rf::Player*)> gameplay_render_frame_player_fpgun_get_zoom_hook{
+    0x00431B6D,
+    [](rf::Player* pp) {
+        if (g_spectate_mode_enabled) {
+            return gameplay_render_frame_player_fpgun_get_zoom_hook.call_target(g_spectate_mode_target);
+        }
+        else {
+            return gameplay_render_frame_player_fpgun_get_zoom_hook.call_target(pp);
+        }
+    },
+};
 
 #endif // SPECTATE_MODE_SHOW_WEAPON
 
@@ -297,6 +309,7 @@ void multi_spectate_appy_patch()
 #if SPECTATE_MODE_SHOW_WEAPON
 
     AsmWriter(0x0043285D).call(player_render_fpgun_new);
+    gameplay_render_frame_player_fpgun_get_zoom_hook.install();
 
     write_mem_ptr(0x0048857E + 2, &g_spectate_mode_target); // obj_mark_all_for_room
     write_mem_ptr(0x00488598 + 1, &g_spectate_mode_target); // obj_mark_all_for_room
