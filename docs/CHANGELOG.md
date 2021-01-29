@@ -1,8 +1,8 @@
 DashFaction Changelog
 =====================
 
-Version 1.6.1 (not yet released)
---------------------------------
+Version 1.6.1-beta (released 2021-01-29)
+----------------------------------------
 - Fix items not respawning in DF-hosted server (1.6.0 regression)
 - Fix ambient sound volume not being affected by `levelsounds` command if EAX sounds are disabled (1.6.0 regression)
 - Add `screenshot` command
@@ -30,7 +30,7 @@ Version 1.6.1 (not yet released)
 - Improve scope weapons zoom in spectate mode
 
 Version 1.6.0 (released 2021-01-07)
---------------------------------
+-----------------------------------
 - Fix sounds being often skipped if volume in game options is set very low (1.6.0-rc1 regression)
 - Fix rockets not making damage after hitting a detail brush (fix included in 1.6.0-beta did not always work)
 - Add `frametime_graph` command
