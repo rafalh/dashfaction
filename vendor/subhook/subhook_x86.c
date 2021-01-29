@@ -182,7 +182,22 @@ static size_t subhook_disasm(void *src, int32_t *reloc_op_offset) {
     /* ADD r32, r/m32    */ {0x03, 0, MODRM}, // added
     /* FLD STi/m32       */ {0xD9, 0, TWO_BYTE | IMM32, 0x5}, // added
     /* IMUL r32, r/m32   */ {0x0F, 0, MODRM | TWO_BYTE, 0xAF}, // added
-    /* JZ  rel32         */ {0x0F, 0, IMM32 | RELOC | TWO_BYTE, 0x84}, // added
+    /* JO   rel32        */ {0x0F, 0, IMM32 | RELOC | TWO_BYTE, 0x80}, // added
+    /* JNO  rel32        */ {0x0F, 0, IMM32 | RELOC | TWO_BYTE, 0x81}, // added
+    /* JB   rel32        */ {0x0F, 0, IMM32 | RELOC | TWO_BYTE, 0x82}, // added
+    /* JAE  rel32        */ {0x0F, 0, IMM32 | RELOC | TWO_BYTE, 0x83}, // added
+    /* JZ   rel32        */ {0x0F, 0, IMM32 | RELOC | TWO_BYTE, 0x84}, // added
+    /* JNZ  rel32        */ {0x0F, 0, IMM32 | RELOC | TWO_BYTE, 0x85}, // added
+    /* JBE  rel32        */ {0x0F, 0, IMM32 | RELOC | TWO_BYTE, 0x86}, // added
+    /* JA   rel32        */ {0x0F, 0, IMM32 | RELOC | TWO_BYTE, 0x87}, // added
+    /* JS   rel32        */ {0x0F, 0, IMM32 | RELOC | TWO_BYTE, 0x88}, // added
+    /* JNS  rel32        */ {0x0F, 0, IMM32 | RELOC | TWO_BYTE, 0x89}, // added
+    /* JP   rel32        */ {0x0F, 0, IMM32 | RELOC | TWO_BYTE, 0x8A}, // added
+    /* JNP  rel32        */ {0x0F, 0, IMM32 | RELOC | TWO_BYTE, 0x8B}, // added
+    /* JL   rel32        */ {0x0F, 0, IMM32 | RELOC | TWO_BYTE, 0x8C}, // added
+    /* JNL  rel32        */ {0x0F, 0, IMM32 | RELOC | TWO_BYTE, 0x8D}, // added
+    /* JLE  rel32        */ {0x0F, 0, IMM32 | RELOC | TWO_BYTE, 0x8E}, // added
+    /* JNLE rel32        */ {0x0F, 0, IMM32 | RELOC | TWO_BYTE, 0x8F}, // added
   };
 
   uint8_t *code = src;
