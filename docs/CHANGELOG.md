@@ -1,6 +1,10 @@
 DashFaction Changelog
 =====================
 
+Version 1.6.1 (not released yet)
+--------------------------------
+- Fix background image being scrolled too fast in multiplayer menu
+
 Version 1.6.1-beta (released 2021-01-29)
 ----------------------------------------
 - Fix items not respawning in DF-hosted server (1.6.0 regression)

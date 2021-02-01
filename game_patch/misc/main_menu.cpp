@@ -167,4 +167,8 @@ void apply_main_menu_patches()
 
     // Put not responding servers at the bottom of server list
     server_list_cmp_func_hook.install();
+
+    // Fix multi menu having background scroll speed doubled
+    write_mem<int8_t>(0x00443C2E + 1, 0);
+    write_mem<int8_t>(0x00443C30 + 1, 0);
 }
