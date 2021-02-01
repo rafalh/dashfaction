@@ -4,6 +4,7 @@ DashFaction Changelog
 Version 1.6.1 (not released yet)
 --------------------------------
 - Fix background image being scrolled too fast in multiplayer menu
+- Make sure CTF flag does not spin after level change if it was in dropped state in the previous level
 
 Version 1.6.1-beta (released 2021-01-29)
 ----------------------------------------

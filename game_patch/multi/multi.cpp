@@ -11,6 +11,7 @@
 #include "../rf/weapon.h"
 #include "../rf/entity.h"
 #include "../rf/ai.h"
+#include "../rf/item.h"
 
 // Note: this must be called from DLL init function
 // Note: we can't use global variable because that would lead to crash when launcher loads this DLL to check dependencies
@@ -82,6 +83,22 @@ CodeInjection ctf_flag_return_fix{
         }
         else {
             regs.eip = 0x00473822;
+        }
+    },
+};
+
+FunHook<void()> multi_ctf_level_init_hook{
+    0x00472E30,
+    []() {
+        multi_ctf_level_init_hook.call_target();
+        // Make sure CTF flag does not spin in new level if it was dropped in the previous level
+        int info_index = rf::item_lookup_type("flag_red");
+        if (info_index >= 0) {
+            rf::item_info[info_index].flags &= ~rf::IIF_SPINS_IN_MULTI;
+        }
+        info_index = rf::item_lookup_type("flag_blue");
+        if (info_index >= 0) {
+            rf::item_info[info_index].flags &= ~rf::IIF_SPINS_IN_MULTI;
         }
     },
 };
@@ -328,6 +345,9 @@ void multi_do_patch()
 
     // Check ammo server-side when handling weapon fire packets
     multi_process_remote_weapon_fire_hook.install();
+
+    // Make sure CTF flag does not spin in new level if it was dropped in the previous level
+    multi_ctf_level_init_hook.install();
 
     multi_kill_do_patch();
     level_download_do_patch();
