@@ -1,5 +1,6 @@
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
+#include <patch_common/CodeInjection.h>
 #include <common/version/version.h>
 #include <xlog/xlog.h>
 #include <cstring>
@@ -10,6 +11,7 @@
 #include "../rf/file.h"
 #include "../rf/multi.h"
 #include "../main/main.h"
+#include "../graphics/gr.h"
 
 #define SHARP_UI_TEXT 1
 
@@ -156,6 +158,21 @@ FunHook<int(const int&, const int&)> server_list_cmp_func_hook{
     },
 };
 
+
+CodeInjection menu_draw_background_injection{
+    0x00442D5C,
+    [](auto& regs) {
+        auto& menu_background_bitmap = addr_as_ref<int>(0x00598FEC);
+        auto& menu_background_x = addr_as_ref<float>(0x0063C074);
+
+        rf::gr_set_color(255, 255, 255, 255);
+        // Use function that accepts float sx
+        gr_bitmap_stretched_float(menu_background_bitmap, 0.0f, 0.0f, rf::gr_screen.max_w, rf::gr_screen.max_h,
+            menu_background_x, 0.0f, 640.0f, 480.0f, false, false, rf::gr_bitmap_clamp_mode);
+        regs.eip = 0x00442D94;
+    },
+};
+
 void apply_main_menu_patches()
 {
     // Version in Main Menu
@@ -171,4 +188,7 @@ void apply_main_menu_patches()
     // Fix multi menu having background scroll speed doubled
     write_mem<int8_t>(0x00443C2E + 1, 0);
     write_mem<int8_t>(0x00443C30 + 1, 0);
+
+    // Make menu background scrolling smooth on high resolutions
+    menu_draw_background_injection.install();
 }

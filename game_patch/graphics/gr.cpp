@@ -165,6 +165,55 @@ bool gr_is_texture_format_supported(rf::BmFormat format)
     return false;
 }
 
+void gr_bitmap_stretched_float(int bitmap_handle, float x, float y, float w, float h, float sx, float sy, float sw, float sh, bool flip_x, bool flip_y, rf::GrMode mode)
+{
+    auto& gr_d3d_get_num_texture_sections = addr_as_ref<int(int bitmap_handle)>(0x0055CA60);
+    if (rf::gr_screen.mode == rf::GR_DIRECT3D && gr_d3d_get_num_texture_sections(bitmap_handle) != 1) {
+        // If bitmap is sectioned fall back to the old implementation...
+        rf::gr_bitmap_stretched(bitmap_handle,
+            static_cast<int>(x), static_cast<int>(y), static_cast<int>(w), static_cast<int>(h),
+            static_cast<int>(sx), static_cast<int>(sy), static_cast<int>(sw), static_cast<int>(sh),
+            flip_x, flip_y, mode);
+        return;
+    }
+
+    rf::gr_set_texture(bitmap_handle, -1);
+    int bm_w, bm_h;
+    rf::bm_get_dimensions(bitmap_handle, &bm_w, &bm_h);
+
+    rf::Vertex verts[4];
+    rf::Vertex* verts_ptrs[4] = {&verts[0], &verts[1], &verts[2], &verts[3]};
+    float sx_left = rf::gr_screen.offset_x + x - 0.5f;
+    float sx_right = rf::gr_screen.offset_x + x + w - 0.5f;
+    float sy_top = rf::gr_screen.offset_y + y - 0.5f;
+    float sy_bottom = rf::gr_screen.offset_y + y + h - 0.5f;
+    float u_left = sx / bm_w * (flip_x ? -1.0f : 1.0f);
+    float u_right = (sx + sw) / bm_w * (flip_x ? -1.0f : 1.0f);
+    float v_top = sy / bm_h * (flip_y ? -1.0f : 1.0f);
+    float v_bottom = (sy + sh) / bm_h * (flip_y ? -1.0f : 1.0f);
+    verts[0].sx = sx_left;
+    verts[0].sy = sy_top;
+    verts[0].sw = 0.0f;
+    verts[0].u1 = u_left;
+    verts[0].v1 = v_top;
+    verts[1].sx = sx_right;
+    verts[1].sy = sy_top;
+    verts[1].sw = 0.0f;
+    verts[1].u1 = u_right;
+    verts[1].v1 = v_top;
+    verts[2].sx = sx_right;
+    verts[2].sy = sy_bottom;
+    verts[2].sw = 0.0f;
+    verts[2].u1 = u_right;
+    verts[2].v1 = v_bottom;
+    verts[3].sx = sx_left;
+    verts[3].sy = sy_bottom;
+    verts[3].sw = 0.0f;
+    verts[3].u1 = u_left;
+    verts[3].v1 = v_bottom;
+    rf::gr_tmapper(std::size(verts_ptrs), verts_ptrs, rf::TMAP_FLAG_TEXTURED, mode);
+}
+
 void gr_apply_patch()
 {
     if (g_game_config.wnd_mode != GameConfig::FULLSCREEN) {

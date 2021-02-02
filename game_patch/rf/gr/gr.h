@@ -244,6 +244,13 @@ namespace rf
     };
     static_assert(sizeof(GrLockInfo) == 0x20);
 
+    enum TMapperFlags
+    {
+        TMAP_FLAG_TEXTURED = 1,
+        TMAP_FLAG_RGB = 4,
+        TMAP_FLAG_ALPHA = 8,
+    };
+
     static auto& gr_screen = addr_as_ref<GrScreen>(0x017C7BC0);
     static auto& gr_gamma_ramp = addr_as_ref<uint32_t[256]>(0x017C7C68);
     static auto& gr_default_wfar = addr_as_ref<float>(0x00596140);
@@ -274,6 +281,8 @@ namespace rf
     static auto& gr_page_in = addr_as_ref<int(int bm_handle)>(0x0050CE00);
     static auto& gr_tcache_add_ref = addr_as_ref<void(int bm_handle)>(0x0050E850);
     static auto& gr_close = addr_as_ref<void()>(0x0050CBE0);
+    static auto& gr_set_texture = addr_as_ref<void (int bitmap_handle, int bitmap_handle2)>(0x0050D060);
+    static auto& gr_tmapper = addr_as_ref<void (int nv, Vertex **verts, TMapperFlags vertex_attributes, GrMode mode)>(0x0050DF80);
 
     inline void gr_set_color(ubyte r, ubyte g, ubyte b, ubyte a = gr_screen.current_color.alpha)
     {
