@@ -6,6 +6,7 @@ Version 1.6.1 (not released yet)
 - Fix background image being scrolled too fast in multiplayer menu
 - Make sure CTF flag does not spin after level change if it was in dropped state in the previous level
 - Make main menu background image scroll animation smooth on high resolution displays
+- Add `fpgun_fov_scale` command that allows adjustment of fpgun (view model) FOV
 
 Version 1.6.1-beta (released 2021-01-29)
 ----------------------------------------

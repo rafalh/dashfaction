@@ -46,6 +46,7 @@ struct GameConfig
     CfgVar<bool> damage_screen_flash = true;
     CfgVar<bool> mesh_static_lighting = true;
     CfgVar<int> horz_fov = 0;
+    CfgVar<float> fpgun_fov_scale = 1.0f;
 
     // Multiplayer
     CfgVar<std::string> tracker{DEFAULT_RF_TRACKER};

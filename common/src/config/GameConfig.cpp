@@ -149,6 +149,7 @@ bool GameConfig::visit_vars(T&& visitor, bool is_save)
     result &= visitor(dash_faction_key, "High Monitor Resolution", high_monitor_res);
     result &= visitor(dash_faction_key, "True Color Textures", true_color_textures);
     result &= visitor(dash_faction_key, "Horizontal FOV", horz_fov);
+    result &= visitor(dash_faction_key, "Fpgun FOV Scale", fpgun_fov_scale);
     result &= visitor(dash_faction_key, "Executable Path", game_executable_path);
     result &= visitor(dash_faction_key, "Direct Input", direct_input);
     result &= visitor(dash_faction_key, "Fast Start", fast_start);
