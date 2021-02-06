@@ -523,6 +523,9 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     // Fix copying cutscene path node
     CDedLevel_CloneObject_injection.install();
 
+    // Remove uid limit (50k) by removing cmp and jge instructions in FindBiggestUid function
+    AsmWriter{0x004844AC, 0x004844B3}.nop();
+
     return 1; // success
 }
 
