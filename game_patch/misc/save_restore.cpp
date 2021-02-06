@@ -58,7 +58,6 @@ FunHook<void(rf::LevelSaveData*)> sr_deserialize_all_objects_hook{
     [](rf::LevelSaveData *data) {
         validate_level_save_data(data);
         sr_deserialize_all_objects_hook.call_target(data);
-        xlog::warn("aaaaaaaaaaa %d", addr_as_ref<int>(0x007DE5A0));
     },
 };
 

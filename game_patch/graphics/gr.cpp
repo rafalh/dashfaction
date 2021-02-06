@@ -44,7 +44,23 @@ CodeInjection setup_stretched_window_patch{
     },
 };
 
-float gr_scale_horz_fov(float horizontal_fov = 90.0f)
+float gr_scale_fov_hor_plus(float horizontal_fov)
+{
+    // Use Hor+ FOV scaling method to improve user experience for wide screens
+    // Assume provided FOV makes sense on a 4:3 screen
+    float s = static_cast<float>(rf::gr_screen.max_w) / rf::gr_screen.max_h * 0.75f;
+    constexpr float pi = 3.141592f;
+    float h_fov_rad = horizontal_fov / 180.0f * pi;
+    float x = std::tan(h_fov_rad / 2.0f);
+    float y = x * s;
+    h_fov_rad = 2.0f * std::atan(y);
+    horizontal_fov = h_fov_rad / pi * 180.0f;
+    // Clamp the value to avoid artifacts when the view is very stretched
+    horizontal_fov = std::min<float>(horizontal_fov, max_fov);
+    return horizontal_fov;
+}
+
+float gr_scale_world_fov(float horizontal_fov = 90.0f)
 {
     if (g_game_config.horz_fov >= min_fov && g_game_config.horz_fov <= max_fov) {
         // Use user provided factor
@@ -52,27 +68,27 @@ float gr_scale_horz_fov(float horizontal_fov = 90.0f)
         return horizontal_fov * g_game_config.horz_fov / 90.0f;
     }
     else {
-        // Use Hor+ FOV scaling method to improve user experience for wide screens
-        // Assume provided FOV makes sense on a 4:3 screen
-        float s = static_cast<float>(rf::gr_screen.max_w) / rf::gr_screen.max_h * 0.75f;
-        constexpr float pi = 3.141592f;
-        float h_fov_rad = horizontal_fov / 180.0f * pi;
-        float x = std::tan(h_fov_rad / 2.0f);
-        float y = x * s;
-        h_fov_rad = 2.0f * std::atan(y);
-        horizontal_fov = h_fov_rad / pi * 180.0f;
-        // Clamp the value to avoid artifacts when the view is very stretched
-        horizontal_fov = std::min<float>(horizontal_fov, max_fov);
-        return horizontal_fov;
+        return gr_scale_fov_hor_plus(horizontal_fov);
     }
 }
 
-FunHook<void(rf::Matrix3&, rf::Vector3&, float, bool, bool)> gr_setup_3d_hook{
-    0x00517EB0,
-    [](rf::Matrix3& viewer_orient, rf::Vector3& viewer_pos, float horizontal_fov, bool zbuffer_flag, bool z_scale) {
+CodeInjection gameplay_render_frame_fov_injection{
+    0x00431BA1,
+    []() {
+        auto& rf_fov = addr_as_ref<float>(0x0059613C);
+        rf_fov = gr_scale_world_fov(rf_fov);
         rf::gr_screen.aspect = 1.0f;
-        horizontal_fov = gr_scale_horz_fov(horizontal_fov);
-        gr_setup_3d_hook.call_target(viewer_orient, viewer_pos, horizontal_fov, zbuffer_flag, z_scale);
+    },
+};
+
+CallHook<void(rf::Matrix3&, rf::Vector3&, float, bool, bool)> gr_setup_3d_railgun_hook{
+    {
+        0x00431CE9, // railgun
+        0x004ADDB4,
+    },
+    [](rf::Matrix3& viewer_orient, rf::Vector3& viewer_pos, float horizontal_fov, bool zbuffer_flag, bool z_scale) {
+        horizontal_fov = gr_scale_fov_hor_plus(horizontal_fov);
+        gr_setup_3d_railgun_hook.call_target(viewer_orient, viewer_pos, horizontal_fov, zbuffer_flag, z_scale);
     },
 };
 
@@ -88,7 +104,7 @@ ConsoleCommand2 fov_cmd{
             }
             g_game_config.save();
         }
-        rf::console_printf("Horizontal FOV: %.0f", gr_scale_horz_fov());
+        rf::console_printf("Horizontal FOV: %.0f", gr_scale_world_fov());
     },
     "Sets horizontal FOV (field of view) in degrees. Use 0 to enable automatic FOV scaling.",
     "fov [degrees]",
@@ -223,7 +239,9 @@ void gr_apply_patch()
     }
 
     // Fix FOV for widescreen
-    gr_setup_3d_hook.install();
+    //gr_setup_3d_hook.install();
+    gameplay_render_frame_fov_injection.install();
+    gr_setup_3d_railgun_hook.install();
 
 #if 1
     // Fix rendering of right and bottom edges of viewport in gameplay_render_frame (part 1)

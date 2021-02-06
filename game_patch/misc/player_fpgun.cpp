@@ -106,6 +106,7 @@ CallHook<void(rf::Matrix3&, rf::Vector3&, float, bool, bool)> player_fpgun_rende
     0x004AB411,
     [](rf::Matrix3& viewer_orient, rf::Vector3& viewer_pos, float horizontal_fov, bool zbuffer_flag, bool z_scale) {
         horizontal_fov *= g_game_config.fpgun_fov_scale;
+        horizontal_fov = gr_scale_fov_hor_plus(horizontal_fov);
         player_fpgun_render_gr_setup_3d_hook
             .call_target(viewer_orient, viewer_pos, horizontal_fov, zbuffer_flag, z_scale);
     },
@@ -115,7 +116,7 @@ ConsoleCommand2 fpgun_fov_scale_cmd{
     "fpgun_fov_scale",
     [](std::optional<float> scale_opt) {
         if (scale_opt) {
-            g_game_config.fpgun_fov_scale = std::clamp(scale_opt.value(), 0.2f, 2.0f);
+            g_game_config.fpgun_fov_scale = std::clamp(scale_opt.value(), 0.1f, 1.5f);
             g_game_config.save();
         }
         rf::console_printf("Fpgun FOV scale: %.4f", g_game_config.fpgun_fov_scale.value());
