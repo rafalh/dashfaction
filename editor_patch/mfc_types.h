@@ -13,6 +13,11 @@ struct CDataExchange
 	BOOL m_bEditLastControl;
 };
 
+struct CString
+{
+    LPTSTR m_pchData;
+};
+
 inline HWND WndToHandle(CWnd* wnd)
 {
     return struct_field_ref<HWND>(wnd, 4 + 0x18);

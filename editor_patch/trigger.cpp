@@ -1,8 +1,10 @@
 #include <windowsx.h>
 #include <patch_common/FunHook.h>
+#include <patch_common/CodeInjection.h>
 #include <string>
 #include "mfc_types.h"
 #include "resources.h"
+#include "vtypes.h"
 
 constexpr char TRIGGER_PF_FLAGS_PREFIX = '\xAB';
 constexpr uint8_t TRIGGER_CLIENT_SIDE = 0x2;
@@ -50,6 +52,12 @@ public:
         if (is_solo_ || is_clientside_ || is_teleport_) {
             char script_name[256];
             GetDlgItemTextA(hwnd_, IDC_TRIGGER_SCRIPT_NAME, script_name, sizeof(script_name));
+            if (!script_name[0]) {
+                // Script name can be empty if multiple triggers with different script names were selected.
+                // In such case we want to keep that field empty so script names in selected triggers won't get
+                // overwritten.
+                return;
+            }
             std::string new_script_name;
             new_script_name += TRIGGER_PF_FLAGS_PREFIX;
             uint8_t pf_flags = 0;
@@ -86,8 +94,36 @@ void __fastcall CTriggerPropsDialog_DoDataExchange_new(CWnd* this_, int, CDataEx
     }
 }
 
+#include <xlog/xlog.h>
+
+CodeInjection CDedLevel_OpenTriggerProperties_injection{
+    0x00405100,
+    [](auto& regs) {
+        void* trigger_dialog = regs.ecx;
+        void* current_trigger = regs.edi;
+
+        // Set Shape field to Undefined if selected triggers have different shapes
+        auto& trigger_shape = struct_field_ref<int>(current_trigger, 0x94);
+        auto& dialog_shape = struct_field_ref<int>(trigger_dialog, 0x3C8);
+        if (dialog_shape != trigger_shape) {
+            constexpr int SHAPE_UNDEFINED = 2;
+            dialog_shape = SHAPE_UNDEFINED;
+        }
+
+        // Set Script Name to empty string if selected triggers have different script names
+        auto& trigger_script_name = struct_field_ref<rf::String>(current_trigger, 0x44);
+        auto& dialog_script_name = struct_field_ref<CString>(trigger_dialog, 0x2F0);
+        if (std::strcmp(trigger_script_name.buf, dialog_script_name.m_pchData) != 0) {
+            dialog_script_name.m_pchData[0] = '\0';
+        }
+    },
+};
+
 void ApplyTriggerPatches()
 {
     // Add multiplayer settings in trigger properties dialog
     CTriggerPropsDialog_OnDataExchange_hook.install();
+
+    // Fix changing properties of multiple triggers if their shape differs
+    CDedLevel_OpenTriggerProperties_injection.install();
 }

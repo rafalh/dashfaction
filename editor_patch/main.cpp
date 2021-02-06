@@ -18,14 +18,9 @@
 #include "exports.h"
 #include "resources.h"
 #include "mfc_types.h"
+#include "vtypes.h"
 
 #define LAUNCHER_FILENAME "DashFactionLauncher.exe"
-
-struct String
-{
-    int max_len;
-    char* buf;
-};
 
 HMODULE g_module;
 bool g_skip_wnd_set_text = false;
@@ -201,12 +196,12 @@ void __fastcall DedLight_UpdateLevelLight(void *this_)
 }
 
 struct CTextureBrowserDialog;
-String * __fastcall CTextureBrowserDialog_GetFolderName(CTextureBrowserDialog *this_, int edx, String *folder_name);
+rf::String * __fastcall CTextureBrowserDialog_GetFolderName(CTextureBrowserDialog *this_, int edx, rf::String *folder_name);
 FunHook CTextureBrowserDialog_GetFolderName_hook{
     0x00471260,
     CTextureBrowserDialog_GetFolderName,
 };
-String * __fastcall CTextureBrowserDialog_GetFolderName(CTextureBrowserDialog *this_, int edx, String *folder_name)
+rf::String * __fastcall CTextureBrowserDialog_GetFolderName(CTextureBrowserDialog *this_, int edx, rf::String *folder_name)
 {
     auto& texture_browser_folder_index = addr_as_ref<int>(0x006CA404);
     if (texture_browser_folder_index > 0) {

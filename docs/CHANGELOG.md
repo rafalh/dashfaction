@@ -8,6 +8,8 @@ Version 1.6.1 (not released yet)
 - Make main menu background image scroll animation smooth on high resolution displays
 - Add `fpgun_fov_scale` command that allows adjustment of fpgun (view model) FOV
 - Remove UID limit (50k) in editor
+- Fix shape and script name being overwritten if editing properties of multiple triggers that have those fields set
+  differently
 
 Version 1.6.1-beta (released 2021-01-29)
 ----------------------------------------

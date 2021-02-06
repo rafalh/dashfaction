@@ -3,6 +3,7 @@ set(SRCS
     graphics.cpp
     main.cpp
     trigger.cpp
+    vtypes.h
     resources.rc
     resources.h
 )
