@@ -398,18 +398,20 @@ FunHook<void(rf::Player*)> spawn_player_sync_ammo_hook{
     },
 };
 
-CallHook<void(char*)> get_mod_name_for_game_info_packet_patch{
-    0x0047B1E0,
+CallHook<void(char*)> get_mod_name_require_client_mod_hook{
+    {
+        0x0047B1E0, // send_game_info_packet
+        0x004B32A3, // init_anticheat_checksums
+    },
     [](char* mod_name) {
-        if (g_additional_server_config.require_client_mod) {
-            get_mod_name_for_game_info_packet_patch.call_target(mod_name);
+        if (!rf::is_dedicated_server || g_additional_server_config.require_client_mod) {
+            get_mod_name_require_client_mod_hook.call_target(mod_name);
         }
         else {
             mod_name[0] = '\0';
         }
     },
 };
-
 
 CodeInjection send_ping_time_wrap_fix{
     0x0047CCE8,
@@ -486,7 +488,7 @@ void server_init()
     multi_is_level_matching_game_type_hook.install();
 
     // Allow disabling mod name announcement
-    get_mod_name_for_game_info_packet_patch.install();
+    get_mod_name_require_client_mod_hook.install();
 
     // Fix items not being respawned after time in ms wraps around (~25 days)
     AsmWriter(0x004599DB).nop(2);
