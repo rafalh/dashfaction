@@ -70,6 +70,22 @@ FunHook<void(rf::Matrix3&, rf::Vector3&, float, bool, bool)> gr_d3d_setup_3d_hoo
         auto& gr_viewport_center_y = addr_as_ref<float>(0x01818B5C);
         gr_viewport_center_x -= 0.5f; // viewport center x
         gr_viewport_center_y -= 0.5f; // viewport center y
+        if (z_scale) {
+            constexpr float pi = 3.141592f;
+            rf::gr_d3d_zm = 1 / 1700.0f;
+            // zm is proportional to near clipping plane
+            // Make sure zm is not increased when fov is getting smaller than 90 to fix wall peeking with scope weapons
+            // Make sure zm is decreased when fov is increased to fix clipping issues on a very high fov
+            float hfov_div = std::tan(horizontal_fov / 2.0f / 180.0f * pi);
+            if (hfov_div > 1.0f) {
+                rf::gr_d3d_zm /= hfov_div;
+            }
+            float clip_aspect = static_cast<float>(rf::gr_screen.clip_width) / rf::gr_screen.clip_height;
+            float vfov_div = hfov_div / clip_aspect;
+            if (vfov_div > 1.0f) {
+                rf::gr_d3d_zm /= vfov_div;
+            }
+        }
     },
 };
 
@@ -762,8 +778,8 @@ void gr_d3d_apply_patch()
     // from previous drawing operation was used)
     gr_d3d_queue_triangles_hook.install();
 
-    // Make d3d_zm variable not dependent on fov to fix wall-peeking (gr_d3d_setup_3d)
-    AsmWriter(0x0054715E).nop(2);
+    // Interpret horizontal fov values below 2 as degrees in gr_d3d_setup_3d
+    write_mem<u8>(0x00547257, asm_opcodes::jmp_rel_short);
 
     // Fix flamethrower "stroboscopic effect" on high FPS
     // gr_3d_bitmap_angle interprets parameters differently than gr_3d_bitmap_stretched_square expects - zero angle does not use

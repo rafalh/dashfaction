@@ -26,7 +26,7 @@
 #include "../rf/clutter.h"
 
 constexpr int min_fov = 75;
-constexpr int max_fov = 120;
+constexpr int max_fov = 160;
 
 CodeInjection setup_stretched_window_patch{
     0x0050C464,

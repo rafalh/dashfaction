@@ -61,7 +61,9 @@ namespace rf
 #if defined(DIRECT3D_VERSION) && DIRECT3D_VERSION == 0x0800
     static auto& gr_d3d_primitive_type = addr_as_ref<D3DPRIMITIVETYPE>(0x01D862A8);
 #endif
+    static auto& gr_d3d_zm = addr_as_ref<float>(0x005A7DD8);
 
     static auto& gr_scale_vec = addr_as_ref<Vector3>(0x01818B48);
+
 
 }
