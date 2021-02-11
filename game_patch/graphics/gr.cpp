@@ -25,8 +25,8 @@
 #include "../rf/item.h"
 #include "../rf/clutter.h"
 
-constexpr int min_fov = 75;
-constexpr int max_fov = 160;
+constexpr float min_fov = 75.0f;
+constexpr float max_fov = 160.0f;
 
 CodeInjection setup_stretched_window_patch{
     0x0050C464,
@@ -94,17 +94,17 @@ CallHook<void(rf::Matrix3&, rf::Vector3&, float, bool, bool)> gr_setup_3d_railgu
 
 ConsoleCommand2 fov_cmd{
     "fov",
-    [](std::optional<int> fov_opt) {
+    [](std::optional<float> fov_opt) {
         if (fov_opt) {
-            if (fov_opt.value() <= 0) {
-                g_game_config.horz_fov = 0;
+            if (fov_opt.value() <= 0.0f) {
+                g_game_config.horz_fov = 0.0f;
             }
             else {
                 g_game_config.horz_fov = std::clamp(fov_opt.value(), min_fov, max_fov);
             }
             g_game_config.save();
         }
-        rf::console_printf("Horizontal FOV: %.0f", gr_scale_world_fov());
+        rf::console_printf("Horizontal FOV: %.2f", gr_scale_world_fov());
     },
     "Sets horizontal FOV (field of view) in degrees. Use 0 to enable automatic FOV scaling.",
     "fov [degrees]",

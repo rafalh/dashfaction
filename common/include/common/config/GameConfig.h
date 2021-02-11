@@ -45,7 +45,7 @@ struct GameConfig
     CfgVar<bool> true_color_textures = true;
     CfgVar<bool> damage_screen_flash = true;
     CfgVar<bool> mesh_static_lighting = true;
-    CfgVar<int> horz_fov = 0;
+    CfgVar<float> horz_fov = 0;
     CfgVar<float> fpgun_fov_scale = 1.0f;
 
     // Multiplayer
