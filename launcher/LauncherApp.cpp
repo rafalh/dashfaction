@@ -73,7 +73,7 @@ void LauncherApp::MigrateConfig()
         if (config.load() && config.dash_faction_version.value() != VERSION_STR) {
             xlog::info("Migrating config");
             if (config.tracker.value() == "rf.thqmultiplay.net" && config.dash_faction_version->empty()) // < 1.1.0
-                config.tracker = DEFAULT_RF_TRACKER;
+                config.tracker = GameConfig::default_rf_tracker;
             config.dash_faction_version = VERSION_STR;
             config.save();
         }

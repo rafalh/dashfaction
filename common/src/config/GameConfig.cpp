@@ -6,25 +6,25 @@
 const char rf_key_name[] = "SOFTWARE\\Volition\\Red Faction";
 const char df_subkey_name[] = "Dash Faction";
 
+const char GameConfig::default_rf_tracker[] = "rfgt.factionfiles.com";
+const char fallback_executable_path[] = "C:\\games\\RedFaction\\rf.exe";
+
 bool GameConfig::load() try
 {
     bool result = visit_vars([](RegKey& reg_key, const char* name, auto& var) {
-        bool read_success = reg_key.read_value(name, &var.value());
-        var.set_dirty(!read_success);
+        auto value_temp = var.value();
+        bool read_success = reg_key.read_value(name, &value_temp);
+        var = value_temp;
         return read_success;
     }, false);
 
     if (game_executable_path.value().empty() && !detect_game_path()) {
-        game_executable_path = DEFAULT_EXECUTABLE_PATH;
+        game_executable_path = fallback_executable_path;
     }
-
-#ifdef NDEBUG
-    max_fps = std::clamp(max_fps.value(), MIN_FPS_LIMIT, MAX_FPS_LIMIT);
-#endif
 
     if (update_rate == 0) {
         // Update Rate is set to "None" - this would prevent Multi menu from working - fix it
-        update_rate = DEFAULT_UPDATE_RATE;
+        update_rate = GameConfig::default_update_rate;
         result = false;
     }
 

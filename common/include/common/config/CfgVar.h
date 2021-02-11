@@ -1,14 +1,18 @@
 #pragma once
 
+#include <functional>
+
 template<typename T>
 class CfgVar
 {
 private:
     T value_;
+    std::function<bool(T)> validator_;
     bool dirty_ = true;
 
 public:
-    CfgVar(T default_value) : value_(default_value)
+    CfgVar(T default_value, std::function<bool(T)> validator = [](T) { return true; }) :
+        value_(default_value), validator_(validator)
     {}
 
     operator T() const
@@ -18,35 +22,53 @@ public:
 
     T operator=(T&& value)
     {
-        if (value_ != value) {
-            value_ = value;
-            dirty_ = true;
-        }
+        assign(value);
         return value_;
     }
 
     T operator=(const T& value)
     {
+        assign(value);
+        return value_;
+    }
+
+    const T* operator->() const
+    {
+        return &value_;
+    }
+
+    const T* operator&() const
+    {
+        return &value_;
+    }
+
+    const T& value() const
+    {
+        return value_;
+    }
+
+    bool assign(const T& value)
+    {
+        if (!validator_(value)) {
+            return false;
+        }
         if (value_ != value) {
             value_ = value;
             dirty_ = true;
         }
-        return value_;
+        return true;
     }
 
-    T* operator->()
+    bool assign(T&& value)
     {
-        return &value_;
-    }
-
-    T* operator&()
-    {
-        return &value_;
-    }
-
-    T& value()
-    {
-        return value_;
+        if (!validator_(value)) {
+            return false;
+        }
+        if (value_ != value) {
+            value_ = value;
+            dirty_ = true;
+        }
+        return true;
     }
 
     bool is_dirty() const

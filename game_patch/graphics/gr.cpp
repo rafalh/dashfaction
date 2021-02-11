@@ -25,9 +25,6 @@
 #include "../rf/item.h"
 #include "../rf/clutter.h"
 
-constexpr float min_fov = 75.0f;
-constexpr float max_fov = 160.0f;
-
 CodeInjection setup_stretched_window_patch{
     0x0050C464,
     [](auto& regs) {
@@ -56,13 +53,13 @@ float gr_scale_fov_hor_plus(float horizontal_fov)
     h_fov_rad = 2.0f * std::atan(y);
     horizontal_fov = h_fov_rad / pi * 180.0f;
     // Clamp the value to avoid artifacts when the view is very stretched
-    horizontal_fov = std::min<float>(horizontal_fov, max_fov);
+    horizontal_fov = std::min<float>(horizontal_fov, GameConfig::max_fov);
     return horizontal_fov;
 }
 
 float gr_scale_world_fov(float horizontal_fov = 90.0f)
 {
-    if (g_game_config.horz_fov >= min_fov && g_game_config.horz_fov <= max_fov) {
+    if (g_game_config.horz_fov > 0.0f) {
         // Use user provided factor
         // Note: 90 is the default FOV for RF
         return horizontal_fov * g_game_config.horz_fov / 90.0f;
@@ -100,7 +97,7 @@ ConsoleCommand2 fov_cmd{
                 g_game_config.horz_fov = 0.0f;
             }
             else {
-                g_game_config.horz_fov = std::clamp(fov_opt.value(), min_fov, max_fov);
+                g_game_config.horz_fov = std::clamp(fov_opt.value(), GameConfig::min_fov, GameConfig::max_fov);
             }
             g_game_config.save();
         }

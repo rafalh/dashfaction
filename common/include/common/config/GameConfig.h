@@ -1,13 +1,8 @@
 #pragma once
 
 #include <string>
+#include <cmath>
 #include <common/config/CfgVar.h>
-
-inline const char DEFAULT_RF_TRACKER[] = "rfgt.factionfiles.com";
-inline const char DEFAULT_EXECUTABLE_PATH[] = "C:\\games\\RedFaction\\rf.exe";
-constexpr unsigned MIN_FPS_LIMIT = 10u;
-constexpr unsigned MAX_FPS_LIMIT = 240u;
-constexpr unsigned DEFAULT_UPDATE_RATE = 200000; // T1/LAN in stock launcher
 
 template<typename T>
 struct EnumTrait;
@@ -37,20 +32,32 @@ struct GameConfig
     CfgVar<bool> nearest_texture_filtering = false;
     CfgVar<unsigned> msaa = 0;
     CfgVar<unsigned> geometry_cache_size = 32;
-    CfgVar<unsigned> max_fps = 60;
-    CfgVar<unsigned> server_max_fps = 60;
+
+    static constexpr unsigned min_fps_limit = 10u;
+    static constexpr unsigned max_fps_limit = 240u;
+    CfgVar<unsigned> max_fps{60, [](unsigned val) { return val >= min_fps_limit && val <= max_fps_limit; }};
+    CfgVar<unsigned> server_max_fps{60, [](unsigned val) { return val >= min_fps_limit && val <= max_fps_limit; }};
+
     CfgVar<bool> fps_counter = true;
     CfgVar<bool> high_scanner_res = true;
     CfgVar<bool> high_monitor_res = true;
     CfgVar<bool> true_color_textures = true;
     CfgVar<bool> damage_screen_flash = true;
     CfgVar<bool> mesh_static_lighting = true;
-    CfgVar<float> horz_fov = 0;
+
+    static constexpr float min_fov = 75.0f;
+    static constexpr float max_fov = 160.0f;
+    CfgVar<float> horz_fov{0.0f, [](float val) { return val == 0.0f || (val >= min_fov && val <= max_fov); }};
+
     CfgVar<float> fpgun_fov_scale = 1.0f;
 
     // Multiplayer
-    CfgVar<std::string> tracker{DEFAULT_RF_TRACKER};
-    CfgVar<unsigned> update_rate = DEFAULT_UPDATE_RATE;
+    static const char default_rf_tracker[];
+    CfgVar<std::string> tracker{default_rf_tracker};
+
+    static constexpr unsigned default_update_rate = 200000; // T1/LAN in stock launcher
+    CfgVar<unsigned> update_rate = default_update_rate;
+
     CfgVar<unsigned> force_port = 0;
 
     // Misc

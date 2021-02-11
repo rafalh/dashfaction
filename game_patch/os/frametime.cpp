@@ -60,7 +60,7 @@ ConsoleCommand2 max_fps_cmd{
         if (limit_opt) {
             int new_limit = limit_opt.value();
 #if VERSION_TYPE != VERSION_TYPE_DEV
-            new_limit = std::clamp<int>(new_limit, MIN_FPS_LIMIT, MAX_FPS_LIMIT);
+            new_limit = std::clamp<int>(new_limit, GameConfig::min_fps_limit, GameConfig::max_fps_limit);
 #endif
             if (rf::is_dedicated_server) {
                 g_game_config.server_max_fps = new_limit;

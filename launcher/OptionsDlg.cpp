@@ -351,7 +351,7 @@ void OptionsDlg::OnBnClickedExeBrowse()
 
 void OptionsDlg::OnBnClickedResetTrackerBtn()
 {
-    SetDlgItemTextA(IDC_TRACKER_EDIT, DEFAULT_RF_TRACKER);
+    SetDlgItemTextA(IDC_TRACKER_EDIT, GameConfig::default_rf_tracker);
 }
 
 void OptionsDlg::OnForcePortClick()
