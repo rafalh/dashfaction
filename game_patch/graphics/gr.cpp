@@ -38,7 +38,7 @@ CodeInjection gr_init_stretched_window_injection{
 };
 
 CodeInjection gr_init_injection{
-    0x0050C55D,
+    0x0050C556,
     []() {
         // Make sure pixel aspect ratio is set to 1 so the frame is not stretched
         rf::gr_screen.aspect = 1.0f;
