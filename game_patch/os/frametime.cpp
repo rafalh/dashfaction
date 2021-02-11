@@ -4,14 +4,18 @@
 #include <common/version/version.h>
 #include "console.h"
 #include "../rf/gr/gr.h"
+#include "../rf/gr/gr_font.h"
 #include "../rf/multi.h"
+#include "../rf/gameseq.h"
+#include "../rf/hud.h"
 #include "../main/main.h"
+#include "../hud/hud.h"
 
 static float g_frametime_history[1024];
 static int g_frametime_history_index = 0;
 static bool g_show_frametime_graph = false;
 
-void frametime_render()
+static void frametime_render_graph()
 {
     if (g_show_frametime_graph) {
         g_frametime_history[g_frametime_history_index] = rf::frametime;
@@ -31,6 +35,31 @@ void frametime_render()
             rf::gr_rect(x, scr_h - h, 1, h);
         }
     }
+}
+
+static void frametime_render_fps_counter()
+{
+    if (g_game_config.fps_counter && !rf::hud_disabled) {
+        auto text = string_format("FPS: %.1f", rf::current_fps);
+        rf::gr_set_color(0, 255, 0, 255);
+        int x = rf::gr_screen_width() - (g_game_config.big_hud ? 165 : 90);
+        int y = 10;
+        if (rf::gameseq_in_gameplay()) {
+            y = g_game_config.big_hud ? 110 : 60;
+            if (hud_weapons_is_double_ammo()) {
+                y += g_game_config.big_hud ? 80 : 40;
+            }
+        }
+
+        int font_id = hud_get_default_font();
+        rf::gr_string(x, y, text.c_str(), font_id);
+    }
+}
+
+void frametime_render_ui()
+{
+    frametime_render_fps_counter();
+    frametime_render_graph();
 }
 
 CallHook<void(int)> frametime_calculate_sleep_hook{

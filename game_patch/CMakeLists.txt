@@ -57,6 +57,7 @@ set(SRCS
     graphics/gr_font.cpp
     graphics/gr.cpp
     graphics/gr.h
+    graphics/gr_light.cpp
     graphics/gr_d3d.cpp
     graphics/gr_d3d_texture.cpp
     graphics/gr_d3d_capture.cpp

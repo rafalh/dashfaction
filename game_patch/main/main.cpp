@@ -106,7 +106,7 @@ CodeInjection after_frame_render_hook{
         if (rf::is_multi)
             multi_spectate_render();
 
-        gr_render_fps_counter();
+        frametime_render_ui();
         multi_render_level_download_progress();
 #if !defined(NDEBUG) && defined(HAS_EXPERIMENTAL)
         experimental_render();

@@ -4,7 +4,6 @@
 #include "../rf/gr/gr.h"
 
 void gr_apply_patch();
-void gr_render_fps_counter();
 int gr_font_get_default();
 void gr_font_set_default(int font_id);
 bool gr_render_to_texture(int bm_handle);

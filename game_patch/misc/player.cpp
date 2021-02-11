@@ -231,6 +231,25 @@ FunHook<void()> players_do_frame_hook{
     },
 };
 
+FunHook<void()> player_do_damage_screen_flash_hook{
+    0x004A7520,
+    []() {
+        if (g_game_config.damage_screen_flash) {
+            player_do_damage_screen_flash_hook.call_target();
+        }
+    },
+};
+
+ConsoleCommand2 damage_screen_flash_cmd{
+    "damage_screen_flash",
+    []() {
+        g_game_config.damage_screen_flash = !g_game_config.damage_screen_flash;
+        g_game_config.save();
+        rf::console_printf("Damage screen flash effect is %s", g_game_config.damage_screen_flash ? "enabled" : "disabled");
+    },
+    "Toggle damage screen flash effect",
+};
+
 void player_do_patch()
 {
     // general hooks
@@ -275,4 +294,10 @@ void player_do_patch()
 
     // Make sure scanner bitmap is a render target in player_allocate
     write_mem<u8>(0x004A34BF + 1, rf::BM_FORMAT_RENDER_TARGET);
+
+    // Support disabling of damage screen flash effect
+    player_do_damage_screen_flash_hook.install();
+
+    // Commands
+    damage_screen_flash_cmd.register_cmd();
 }

@@ -82,6 +82,23 @@ static ConsoleCommand2 screenshot_cmd{
     },
 };
 
+CodeInjection gameplay_render_frame_display_full_screen_image_injection{
+    0x00432CAF,
+    [](auto& regs) {
+        // Change gr mode to one that uses alpha blending for Display_Fullscreen_Image event handling in
+        // gameplay_render_frame function
+        static rf::GrMode mode{
+            rf::TEXTURE_SOURCE_WRAP,
+            rf::COLOR_SOURCE_TEXTURE,
+            rf::ALPHA_SOURCE_VERTEX_TIMES_TEXTURE,
+            rf::ALPHA_BLEND_ALPHA,
+            rf::ZBUFFER_TYPE_NONE,
+            rf::FOG_ALLOWED
+        };
+        regs.edx = mode;
+    },
+};
+
 void game_apply_patch()
 {
     // Override screenshot directory
@@ -94,6 +111,9 @@ void game_apply_patch()
 
     // Bigger cursor bitmap support
     game_render_cursor_gr_bitmap_hook.install();
+
+    // Support textures with alpha channel in Display_Fullscreen_Image event
+    gameplay_render_frame_display_full_screen_image_injection.install();
 
     // Commands
     screenshot_cmd.register_cmd();

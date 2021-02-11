@@ -13,19 +13,15 @@
 #include "gr.h"
 #include "gr_internal.h"
 #include "../os/console.h"
-#include "../hud/hud.h"
 #include "../main/main.h"
 #include "../rf/gr/gr.h"
-#include "../rf/gr/gr_font.h"
 #include "../rf/player.h"
 #include "../rf/multi.h"
-#include "../rf/hud.h"
-#include "../rf/gameseq.h"
 #include "../rf/os/os.h"
 #include "../rf/item.h"
 #include "../rf/clutter.h"
 
-CodeInjection setup_stretched_window_patch{
+CodeInjection gr_init_stretched_window_injection{
     0x0050C464,
     [](auto& regs) {
         if (g_game_config.wnd_mode == GameConfig::STRETCHED) {
@@ -38,6 +34,14 @@ CodeInjection setup_stretched_window_patch{
             rf::gr_screen.aspect = static_cast<float>(cx) / static_cast<float>(cy) * 0.75f;
             regs.eip = 0x0050C551;
         }
+    },
+};
+
+CodeInjection gr_init_injection{
+    0x0050C55D,
+    []() {
+        // Make sure pixel aspect ratio is set to 1 so the frame is not stretched
+        rf::gr_screen.aspect = 1.0f;
     },
 };
 
@@ -72,9 +76,9 @@ float gr_scale_world_fov(float horizontal_fov = 90.0f)
 CodeInjection gameplay_render_frame_fov_injection{
     0x00431BA1,
     []() {
+        // Scale world FOV
         auto& rf_fov = addr_as_ref<float>(0x0059613C);
         rf_fov = gr_scale_world_fov(rf_fov);
-        rf::gr_screen.aspect = 1.0f;
     },
 };
 
@@ -115,50 +119,6 @@ CallHook<void(int, rf::Vertex**, int, rf::GrMode)> gr_rect_gr_tmapper_hook{
             verts[i]->sy -= 0.5f;
         }
         gr_rect_gr_tmapper_hook.call_target(nv, verts, flags, mode);
-    },
-};
-
-FunHook<void()> do_damage_screen_flash_hook{
-    0x004A7520,
-    []() {
-        if (g_game_config.damage_screen_flash) {
-            do_damage_screen_flash_hook.call_target();
-        }
-    },
-};
-
-ConsoleCommand2 damage_screen_flash_cmd{
-    "damage_screen_flash",
-    []() {
-        g_game_config.damage_screen_flash = !g_game_config.damage_screen_flash;
-        g_game_config.save();
-        rf::console_printf("Damage screen flash effect is %s", g_game_config.damage_screen_flash ? "enabled" : "disabled");
-    },
-    "Toggle damage screen flash effect",
-};
-
-void gr_light_use_static(bool use_static)
-{
-    // Enable some experimental flag that causes static lights to be included in computations
-    auto& experimental_alloc_and_lighting = addr_as_ref<bool>(0x00879AF8);
-    auto& gr_light_state = addr_as_ref<int>(0x00C96874);
-    experimental_alloc_and_lighting = use_static;
-    // Increment light cache key to trigger cache invalidation
-    gr_light_state++;
-}
-
-CodeInjection display_full_screen_image_alpha_support_patch{
-    0x00432CAF,
-    [](auto& regs) {
-        static rf::GrMode mode{
-            rf::TEXTURE_SOURCE_WRAP,
-            rf::COLOR_SOURCE_TEXTURE,
-            rf::ALPHA_SOURCE_VERTEX_TIMES_TEXTURE,
-            rf::ALPHA_BLEND_ALPHA,
-            rf::ZBUFFER_TYPE_NONE,
-            rf::FOG_ALLOWED
-        };
-        regs.edx = mode;
     },
 };
 
@@ -232,11 +192,11 @@ void gr_apply_patch()
     if (g_game_config.wnd_mode != GameConfig::FULLSCREEN) {
         // Enable windowed mode
         write_mem<u32>(0x004B29A5 + 6, 0xC8);
-        setup_stretched_window_patch.install();
+        gr_init_stretched_window_injection.install();
     }
 
     // Fix FOV for widescreen
-    //gr_setup_3d_hook.install();
+    gr_init_injection.install();
     gameplay_render_frame_fov_injection.install();
     gr_setup_3d_railgun_hook.install();
 
@@ -253,6 +213,9 @@ void gr_apply_patch()
 
     // Fonts
     gr_font_apply_patch();
+
+    // Lights
+    gr_light_apply_patch();
 
     // D3D generic patches
     gr_d3d_apply_patch();
@@ -278,38 +241,9 @@ void gr_apply_patch()
     write_mem<u8>(0x004D33F3, asm_opcodes::jmp_rel_short);
     write_mem<u8>(0x004D410D, asm_opcodes::jmp_rel_short);
 
-    // Support disabling of damage screen flash effect
-    do_damage_screen_flash_hook.install();
-
     // Use gr_clear instead of gr_rect for faster drawing of the fog background
     AsmWriter(0x00431F99).call(0x0050CDF0);
 
-    // Support textures with alpha channel in Display_Fullscreen_Image event
-    display_full_screen_image_alpha_support_patch.install();
-
     // Commands
     fov_cmd.register_cmd();
-    damage_screen_flash_cmd.register_cmd();
-}
-
-void gr_render_fps_counter()
-{
-    if (g_game_config.fps_counter && !rf::hud_disabled) {
-        auto text = string_format("FPS: %.1f", rf::current_fps);
-        rf::gr_set_color(0, 255, 0, 255);
-        int x = rf::gr_screen_width() - (g_game_config.big_hud ? 165 : 90);
-        int y = 10;
-        if (rf::gameseq_in_gameplay()) {
-            y = g_game_config.big_hud ? 110 : 60;
-            if (hud_weapons_is_double_ammo()) {
-                y += g_game_config.big_hud ? 80 : 40;
-            }
-        }
-
-        int font_id = hud_get_default_font();
-        rf::gr_string(x, y, text.c_str(), font_id);
-    }
-
-    void frametime_render();
-    frametime_render();
 }
