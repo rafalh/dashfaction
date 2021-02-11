@@ -11,7 +11,7 @@ private:
     bool dirty_ = true;
 
 public:
-    CfgVar(T default_value, std::function<bool(T)> validator = [](T) { return true; }) :
+    CfgVar(T default_value, std::function<bool(T)> validator = default_validator) :
         value_(default_value), validator_(validator)
     {}
 
@@ -79,5 +79,11 @@ public:
     void set_dirty(bool dirty)
     {
         dirty_ = dirty;
+    }
+
+private:
+    static bool default_validator(T)
+    {
+        return true;
     }
 };
