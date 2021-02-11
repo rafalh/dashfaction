@@ -11,7 +11,8 @@ Version 1.6.1 (not released yet)
 - Fix shape and script name being overwritten if editing properties of multiple triggers that have those fields set
   differently
 - Do not verify mod vpp checksum if `Require Client Mod` option is disabled in server config
-- Fix near plane clipping issues with big FOV
+- Fix near plane clipping issues happening when FOV is big
+- Fix clicking "Fav" checkbox in the server list
 
 Version 1.6.1-beta (released 2021-01-29)
 ----------------------------------------

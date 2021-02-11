@@ -173,6 +173,20 @@ CodeInjection menu_draw_background_injection{
     },
 };
 
+CodeInjection multi_servers_on_list_click_injection{
+    0x0044B084,
+    [](auto& regs) {
+        // Edi register contains mouse click X position relative to the server list box left edge.
+        // It is compared to hard-coded range of coordinates that designate area used by "fav" column.
+        // Those hard-coded coordinates make sense only in 640x480 resolution (menu native resolution).
+        // Because of that mouse click coordinate must be scaled from screen resolution to UI resolution before
+        // comparision.
+        int rel_y = regs.edi;
+        rel_y /= rf::ui_scale_x;
+        regs.edi = rel_y;
+    },
+};
+
 void apply_main_menu_patches()
 {
     // Version in Main Menu
@@ -191,4 +205,7 @@ void apply_main_menu_patches()
 
     // Make menu background scrolling smooth on high resolutions
     menu_draw_background_injection.install();
+
+    // Fix clicking fav checkbox in server list
+    multi_servers_on_list_click_injection.install();
 }
