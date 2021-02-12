@@ -82,8 +82,7 @@ void __fastcall EventSetLiquidDepth__turn_on_new(EventSetLiquidDepthHook* this_)
         rf::add_liquid_depth_update(this_->room, this_->depth, this_->duration);
     }
     else {
-        for (int i = 0; i < this_->links.size(); ++i) {
-            auto room_uid = this_->links[i];
+        for (auto room_uid : this_->links) {
             auto room = rf::level_room_from_uid(room_uid);
             xlog::trace("link %d %p", room_uid, room);
             if (room) {

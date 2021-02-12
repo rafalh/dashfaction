@@ -180,8 +180,8 @@ CodeInjection face_scroll_fix{
     [](auto& regs) {
         rf::GSolid* solid = regs.ebp;
         auto& texture_movers = solid->texture_movers;
-        for (int i = 0; i < texture_movers.size(); ++i) {
-            texture_movers[i]->update_solid(solid);
+        for (auto& tm : texture_movers) {
+            tm->update_solid(solid);
         }
     },
 };

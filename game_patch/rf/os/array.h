@@ -16,7 +16,12 @@ namespace rf
             return num;
         }
 
-        T& operator[](int index) const
+        T& operator[](int index)
+        {
+            return elements[index];
+        }
+
+        const T& operator[](int index) const
         {
             return elements[index];
         }
@@ -24,6 +29,26 @@ namespace rf
         T& get(int index) const
         {
             return elements[index];
+        }
+
+        T* begin()
+        {
+            return &elements[0];
+        }
+
+        const T* begin() const
+        {
+            return &elements[0];
+        }
+
+        T* end()
+        {
+            return &elements[num];
+        }
+
+        const T* end() const
+        {
+            return &elements[num];
         }
 
         void add(T element);
@@ -47,32 +72,34 @@ namespace rf
             return elements[index];
         }
 
+        const T& operator[](int index) const
+        {
+            return elements[index];
+        }
+
         T& get(int index) const
         {
             return elements[index];
         }
-    };
 
-    template<typename T>
-    class VList
-    {
-        T* head;
-        int num_elements;
-
-    public:
-        T* first() const
+        T* begin()
         {
-            return head;
+            return &elements[0];
         }
 
-        int size() const
+        const T* begin() const
         {
-            return num_elements;
+            return &elements[0];
         }
 
-        bool empty() const
+        T* end()
         {
-            return num_elements == 0;
+            return &elements[num];
+        }
+
+        const T* end() const
+        {
+            return &elements[num];
         }
     };
 }

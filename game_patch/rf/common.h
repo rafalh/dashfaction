@@ -9,6 +9,7 @@
 #include "math/plane.h"
 #include "os/string.h"
 #include "os/array.h"
+#include "os/linklist.h"
 #include "os/timestamp.h"
 
 #ifndef __GNUC__

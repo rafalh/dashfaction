@@ -36,6 +36,14 @@ namespace rf
         float bot;
     };
 
+    enum GFaceListId
+    {
+        FACE_LIST_SOLID = 0,
+        FACE_LIST_BBOX = 1,
+        FACE_LIST_ROOM = 2,
+        FACE_LIST_NUM = 3,
+    };
+
     struct GSolid
     {
         GBBox *bbox;
@@ -45,7 +53,7 @@ namespace rf
         Vector3 bbox_max;
         float bounding_sphere_radius;
         Vector3 bounding_sphere_center;
-        VList<GFace> face_list;
+        VList<GFace, FACE_LIST_SOLID> face_list;
         VArray<GVertex*> vertices;
         VArray<GRoom*> children;
         VArray<GRoom*> all_rooms;
@@ -85,7 +93,7 @@ namespace rf
         Vector3 bbox_max;
         int room_index;
         int uid;
-        VList<GFace> face_list;
+        VList<GFace, FACE_LIST_ROOM> face_list;
         VArray<GPortal*> portals;
         GBBox *bbox;
         bool is_blocked;
@@ -154,9 +162,7 @@ namespace rf
         GBBox *which_bbox;
         DecalPoly *decal_poly;
         short unk_cache_index;
-        GFace *next_in_solid;
-        GFace *next_in_bbox;
-        GFace *next_in_room;
+        GFace* next[FACE_LIST_NUM];
     };
     static_assert(sizeof(GFace) == 0x60);
 

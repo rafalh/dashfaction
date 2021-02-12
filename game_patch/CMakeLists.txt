@@ -17,6 +17,7 @@ set(SRCS
     rf/os/os.h
     rf/os/console.h
     rf/os/array.h
+    rf/os/linklist.h
     rf/os/string.h
     rf/os/timestamp.h
     rf/gr/gr.h
