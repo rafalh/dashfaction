@@ -1,7 +1,9 @@
 #pragma once
 
 #include <patch_common/MemUtils.h>
-#include "../common.h"
+#include "../math/vector.h"
+#include "../math/matrix.h"
+#include "../os/timestamp.h"
 
 namespace rf
 {

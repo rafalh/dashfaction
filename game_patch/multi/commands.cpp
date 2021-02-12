@@ -4,6 +4,7 @@
 #include "../rf/gameseq.h"
 #include "../rf/level.h"
 #include "../rf/player.h"
+#include "../rf/crt.h"
 #include <patch_common/AsmWriter.h>
 #include <patch_common/CallHook.h>
 #include <vector>

@@ -6,6 +6,7 @@
 #include "../rf/gr/gr_font.h"
 #include "../rf/multi.h"
 #include "../rf/player.h"
+#include "../rf/os/frametime.h"
 #include "../main/main.h"
 #include "../graphics/gr.h"
 #include "hud_internal.h"

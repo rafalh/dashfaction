@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+#include <common/utils/string-utils.h>
 #include "../rf/gr/gr_font.h"
 
 class DebugNameValueBox

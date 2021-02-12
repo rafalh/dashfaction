@@ -71,7 +71,7 @@ FunHook<void(bool)> cutscene_do_frame_hook{
 
             disable_sound_before_cutscene_skip();
 
-            while (rf::CutsceneIsActive()) {
+            while (rf::cutscene_is_active()) {
                 int shot_time_left_ms = current_shot_timer.time_until();
 
                 if (current_shot_idx == num_shots - 1) {

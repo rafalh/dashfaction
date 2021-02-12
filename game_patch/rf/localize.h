@@ -1,6 +1,6 @@
 #pragma once
 
-#include "common.h"
+#include <patch_common/MemUtils.h>
 
 namespace rf
 {

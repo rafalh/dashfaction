@@ -1,5 +1,7 @@
 #pragma once
 
+#include <common/utils/string-utils.h>
+
 namespace rf
 {
     static auto& string_alloc = addr_as_ref<char*(unsigned size)>(0x004FF300);
@@ -105,13 +107,13 @@ namespace rf
             String str;
             va_list args;
             va_start(args, format);
-            int len = vsnprintf(nullptr, 0, format, args);
+            int len = std::vsnprintf(nullptr, 0, format, args);
             va_end(args);
             int buf_size = len + 1;
             str.m_pod.max_len = len;
             str.m_pod.buf = string_alloc(buf_size);
             va_start(args, format);
-            vsnprintf(str.m_pod.buf, buf_size, format, args);
+            std::vsnprintf(str.m_pod.buf, buf_size, format, args);
             va_end(args);
             return str;
         }

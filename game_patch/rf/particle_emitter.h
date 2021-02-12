@@ -1,6 +1,8 @@
 #pragma once
 
-#include "common.h"
+#include "math/vector.h"
+#include "os/timestamp.h"
+#include "gr/gr.h"
 
 namespace rf
 {

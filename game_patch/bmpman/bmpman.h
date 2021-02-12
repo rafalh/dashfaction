@@ -3,7 +3,7 @@
 #include <cassert>
 #include <xlog/xlog.h>
 #include "../rf/bmpman.h"
-#include "../rf/common.h"
+#include "../rf/gr/gr.h"
 
 void bm_set_dynamic(int bm_handle, bool dynamic);
 bool bm_is_dynamic(int bm_handle);

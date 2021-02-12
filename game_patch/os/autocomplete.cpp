@@ -148,7 +148,7 @@ void console_auto_complete_command(int offset)
     std::string common_prefix;
 
     std::vector<rf::ConsoleCommand*> matching_cmds;
-    for (unsigned i = 0; i < rf::console_num_commands; ++i) {
+    for (int i = 0; i < rf::console_num_commands; ++i) {
         rf::ConsoleCommand* cmd = g_commands_buffer[i];
         if (!strnicmp(cmd->name, cmd_name.c_str(), cmd_name.size()) &&
             (next_offset == -1 || !cmd->name[cmd_name.size()])) {

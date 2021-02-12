@@ -231,7 +231,7 @@ struct VoteLevel : public Vote
     bool process_vote_arg([[maybe_unused]] std::string_view arg, rf::Player* source) override
     {
         m_level_name = std::string{arg} + ".rfl";
-        if (!rf::GetFileChecksum(m_level_name.c_str())) {
+        if (!rf::get_file_checksum(m_level_name.c_str())) {
             send_chat_line_packet("Cannot find specified level!", source);
             return false;
         }

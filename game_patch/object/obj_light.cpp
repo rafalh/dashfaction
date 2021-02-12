@@ -6,6 +6,7 @@
 #include "../rf/item.h"
 #include "../rf/clutter.h"
 #include "../rf/gr/gr.h"
+#include "../rf/crt.h"
 #include "../os/console.h"
 #include "../main/main.h"
 

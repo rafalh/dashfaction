@@ -1,4 +1,10 @@
-#include "common.h"
+#pragma once
+
+#include "math/vector.h"
+#include "math/matrix.h"
+#include "os/string.h"
+#include "os/array.h"
+#include "gr/gr.h"
 
 namespace rf
 {

@@ -23,6 +23,7 @@
 #include "../rf/weapon.h"
 #include "../rf/entity.h"
 #include "../rf/os/os.h"
+#include "../rf/os/timer.h"
 #include "../rf/level.h"
 
 const char* g_rcon_cmd_whitelist[] = {

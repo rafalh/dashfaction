@@ -1,8 +1,7 @@
 #pragma once
 
-//#include <windows.h>
 #include <patch_common/MemUtils.h>
-#include "common.h"
+#include "os/string.h"
 
 namespace rf
 {
@@ -13,8 +12,8 @@ namespace rf
     static auto& default_player_weapon = addr_as_ref<String>(0x007C7600);
     static auto& active_cutscene = addr_as_ref<Cutscene*>(0x00645320);
 
-    static auto& CutsceneIsActive = addr_as_ref<bool()>(0x0045BE80);
-    static auto& GetFileChecksum = addr_as_ref<int(const char* filename)>(0x00436630);
+    static auto& cutscene_is_active = addr_as_ref<bool()>(0x0045BE80);
+    static auto& get_file_checksum = addr_as_ref<int(const char* filename)>(0x00436630);
 
     /* Save-restore */
 

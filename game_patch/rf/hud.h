@@ -1,7 +1,8 @@
 #pragma once
 
 #include <patch_common/MemUtils.h>
-#include "common.h"
+#include "os/timestamp.h"
+#include "os/string.h"
 #include "gr/gr.h"
 
 namespace rf

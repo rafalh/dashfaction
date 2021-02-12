@@ -4,6 +4,8 @@
 // https://www.justsoftwaresolutions.co.uk/cplusplus/using-enum-classes-as-bitfields.html
 // http://blog.bitwigglers.org/using-enum-classes-as-type-safe-bitmasks/
 
+#include <type_traits>
+
 template<typename Enum>
 struct EnableEnumBitwiseOperators : std::false_type {};
 

@@ -8,6 +8,7 @@
 #include "../rf/multi.h"
 #include "../rf/gameseq.h"
 #include "../rf/hud.h"
+#include "../rf/os/frametime.h"
 #include "../main/main.h"
 #include "../hud/hud.h"
 

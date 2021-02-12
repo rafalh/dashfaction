@@ -1,3 +1,5 @@
+#pragma once
+
 namespace rf
 {
     template<typename T, int I = 0>

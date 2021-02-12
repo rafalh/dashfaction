@@ -1,7 +1,11 @@
 #pragma once
 
 #include <patch_common/MemUtils.h>
-#include "common.h"
+#include "math/vector.h"
+#include "math/matrix.h"
+#include "os/timestamp.h"
+#include "os/string.h"
+#include "gr/gr.h"
 
 namespace rf
 {
@@ -40,14 +44,14 @@ namespace rf
 
     inline Vector3 camera_get_pos(Camera *camera)
     {
-        rf::Vector3 result;
+        Vector3 result;
         AddrCaller{0x0040D760}.c_call(&result, camera);
         return result;
     }
 
     inline Matrix3 camera_get_orient(Camera *camera)
     {
-        rf::Matrix3 result;
+        Matrix3 result;
         AddrCaller{0x0040D780}.c_call(&result, camera);
         return result;
     }

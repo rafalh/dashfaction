@@ -2,6 +2,7 @@
 #include <xlog/xlog.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CallHook.h>
+#include <common/utils/string-utils.h>
 #include "../rf/ui.h"
 #include "../rf/input.h"
 #include "../rf/os/os.h"

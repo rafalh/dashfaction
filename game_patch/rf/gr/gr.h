@@ -2,10 +2,54 @@
 
 #include <patch_common/MemUtils.h>
 #include "../bmpman.h"
-#include "../common.h"
+#include "../os/vtypes.h"
+#include "../math/vector.h"
+#include "../math/matrix.h"
 
 namespace rf
 {
+    struct Color
+    {
+        ubyte red;
+        ubyte green;
+        ubyte blue;
+        ubyte alpha;
+
+        constexpr Color(ubyte r, ubyte g, ubyte b, ubyte a = 255) :
+            red(r), green(g), blue(b), alpha(a) {}
+
+        void set(ubyte r, ubyte g, ubyte b, ubyte a)
+        {
+            this->red = r;
+            this->green = g;
+            this->blue = b;
+            this->alpha = a;
+        }
+    };
+
+    struct BaseVertex
+    {
+        Vector3 world_pos; // world or clip space
+        float sx; // screen space
+        float sy;
+        float sw;
+        ubyte codes;
+        ubyte flags;
+    };
+
+    struct Vertex : BaseVertex
+    {
+        float u1;
+        float v1;
+        float u2;
+        float v2;
+        ubyte r;
+        ubyte g;
+        ubyte b;
+        ubyte a;
+    };
+    static_assert(sizeof(Vertex) == 0x30);
+
     enum GrTextureSource
     {
         TEXTURE_SOURCE_NONE = 0x0,

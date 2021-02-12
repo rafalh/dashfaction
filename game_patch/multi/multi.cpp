@@ -6,6 +6,7 @@
 #include "multi_private.h"
 #include "../misc/misc.h"
 #include "../rf/os/os.h"
+#include "../rf/os/timer.h"
 #include "../rf/multi.h"
 #include "../rf/os/console.h"
 #include "../rf/weapon.h"

@@ -2,7 +2,6 @@
 #include <patch_common/CodeInjection.h>
 #include <common/rfproto.h>
 #include <xlog/xlog.h>
-#include "../rf/common.h"
 #include "../rf/player.h"
 #include "../rf/trigger.h"
 #include "../rf/multi.h"

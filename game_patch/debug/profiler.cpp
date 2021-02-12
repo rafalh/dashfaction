@@ -8,8 +8,10 @@
 #include <cstddef>
 #include <fstream>
 #include "../os/console.h"
-#include "debug_internal.h"
 #include "../rf/multi.h"
+#include "../rf/os/timer.h"
+#include "../rf/os/frametime.h"
+#include "debug_internal.h"
 #include <common/utils/perf-utils.h>
 
 std::vector<std::unique_ptr<PerfAggregator>> PerfAggregator::instances_;

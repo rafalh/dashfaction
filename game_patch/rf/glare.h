@@ -1,6 +1,6 @@
 #pragma once
 
-#include "common.h"
+#include "object.h"
 
 namespace rf {
     struct GlareInfo;

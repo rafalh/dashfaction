@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>
 #include <patch_common/MemUtils.h>
 
 namespace rf

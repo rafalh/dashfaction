@@ -1,10 +1,13 @@
 #pragma once
 
 #include <patch_common/MemUtils.h>
-#include "common.h"
+#include <common/utils/enum-bitwise-operators.h>
+#include "math/vector.h"
+#include "math/matrix.h"
+#include "os/array.h"
+#include "os/string.h"
 #include "physics.h"
 #include "vmesh.h"
-#include <common/utils/enum-bitwise-operators.h>
 
 namespace rf
 {

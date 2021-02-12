@@ -29,6 +29,7 @@
 #include "../rf/entity.h"
 #include "../rf/os/console.h"
 #include "../rf/os/os.h"
+#include "../rf/os/timer.h"
 #include "../rf/geometry.h"
 #include "../rf/level.h"
 #include "../misc/misc.h"

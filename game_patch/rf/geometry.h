@@ -1,6 +1,11 @@
 #pragma once
 
-#include "common.h"
+#include "math/vector.h"
+#include "math/matrix.h"
+#include "math/plane.h"
+#include "os/array.h"
+#include "os/linklist.h"
+#include "gr/gr.h"
 
 namespace rf
 {

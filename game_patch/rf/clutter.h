@@ -1,6 +1,7 @@
 #pragma once
 
 #include "object.h"
+#include "os/timestamp.h"
 
 namespace rf
 {

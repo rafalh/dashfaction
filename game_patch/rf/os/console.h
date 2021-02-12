@@ -3,7 +3,8 @@
 #include <patch_common/MemUtils.h>
 #include <memory>
 #include <common/utils/string-utils.h>
-#include "../common.h"
+#include "string.h"
+#include "../gr/gr.h"
 
 namespace rf
 {
@@ -56,12 +57,12 @@ namespace rf
     }
 
     //static auto& console_commands = addr_as_ref<ConsoleCommand*[30]>(0x01775530);
-    static auto& console_num_commands = addr_as_ref<uint32_t>(0x0177567C);
+    static auto& console_num_commands = addr_as_ref<int>(0x0177567C);
 
-    static auto& console_run = addr_as_ref<uint32_t>(0x01775110);
-    static auto& console_help = addr_as_ref<uint32_t>(0x01775224);
-    static auto& console_status = addr_as_ref<uint32_t>(0x01774D00);
-    static auto& console_arg_type = addr_as_ref<uint32_t>(0x01774D04);
+    static auto& console_run = addr_as_ref<int>(0x01775110);
+    static auto& console_help = addr_as_ref<int>(0x01775224);
+    static auto& console_status = addr_as_ref<int>(0x01774D00);
+    static auto& console_arg_type = addr_as_ref<unsigned>(0x01774D04);
     static auto& console_str_arg = addr_as_ref<char[256]>(0x0175462C);
     static auto& console_int_arg = addr_as_ref<int>(0x01775220);
     static auto& console_float_arg = addr_as_ref<float>(0x01754628);

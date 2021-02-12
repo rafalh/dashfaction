@@ -6,6 +6,7 @@
 #include "../rf/gameseq.h"
 #include "../rf/sound/sound.h"
 #include "../rf/gr/gr_font.h"
+#include "../rf/os/frametime.h"
 #include <patch_common/AsmWriter.h>
 #include <algorithm>
 #include <cstring>

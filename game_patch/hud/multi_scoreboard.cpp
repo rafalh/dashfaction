@@ -11,6 +11,7 @@
 #include "../rf/gameseq.h"
 #include "../rf/hud.h"
 #include "../rf/level.h"
+#include "../rf/os/timer.h"
 #include "../main/main.h"
 #include "hud_internal.h"
 

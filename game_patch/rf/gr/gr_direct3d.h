@@ -1,6 +1,7 @@
 #pragma once
 
-#include "../common.h"
+#include <patch_common/MemUtils.h>
+#include "../math/vector.h"
 
 #ifdef NO_D3D8
 using IDirect3DTexture8 = IUnknown;

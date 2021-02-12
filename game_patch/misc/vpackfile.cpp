@@ -1,8 +1,8 @@
 #include <windows.h>
 #include "vpackfile.h"
 #include "../main/main.h"
-#include "../rf/common.h"
 #include "../rf/file.h"
+#include "../rf/crt.h"
 #include "../os/console.h"
 #include <common/utils/iterable-utils.h>
 #include <common/utils/os-utils.h>

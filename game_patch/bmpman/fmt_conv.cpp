@@ -6,7 +6,7 @@
 #include <patch_common/ShortTypes.h>
 #include <algorithm>
 #include <stdexcept>
-#include "../rf/common.h"
+#include "../rf/os/timer.h"
 #include <common/utils/perf-utils.h>
 #include "../bmpman/bmpman.h"
 #include "../bmpman/fmt_conv_templates.h"

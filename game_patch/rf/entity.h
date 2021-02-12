@@ -4,6 +4,7 @@
 #include "object.h"
 #include "geometry.h"
 #include "ai.h"
+#include "gr/gr.h"
 
 namespace rf
 {

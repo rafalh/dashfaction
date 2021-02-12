@@ -30,6 +30,7 @@
 #include "../misc/vpackfile.h"
 #include "../misc/high_fps.h"
 #include "../input/input.h"
+#include "../rf/gr/gr.h"
 #include "../rf/multi.h"
 #include "../rf/level.h"
 #include "../rf/os/os.h"

@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 #include "../rf/bmpman.h"
+#include "../rf/gr/gr.h"
 
 #define TEXTURE_DITHERING 0
 

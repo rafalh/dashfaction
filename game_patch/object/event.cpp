@@ -5,7 +5,6 @@
 #include <xlog/xlog.h>
 #include <cassert>
 #include <cstring>
-#include "../rf/common.h"
 #include "../rf/object.h"
 #include "../rf/event.h"
 #include "../rf/entity.h"

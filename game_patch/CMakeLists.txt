@@ -16,6 +16,7 @@ set(SRCS
     main/main.h
     rf/os/os.h
     rf/os/console.h
+    rf/os/vtypes.h
     rf/os/array.h
     rf/os/linklist.h
     rf/os/string.h
@@ -30,7 +31,6 @@ set(SRCS
     rf/ai.h
     rf/bmpman.h
     rf/clutter.h
-    rf/common.h
     rf/corpse.h
     rf/entity.h
     rf/event.h
