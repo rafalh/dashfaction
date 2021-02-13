@@ -172,7 +172,8 @@ CodeInjection g_proctex_update_water_patch{
 CodeInjection g_proctex_create_bm_create_injection{
     0x004E66A2,
     [](auto& regs) {
-        bm_set_dynamic(regs.eax, true);
+        int bm_handle = regs.eax;
+        bm_set_dynamic(bm_handle, true);
     },
 };
 

@@ -277,8 +277,7 @@ CodeInjection snd_pc_play_3d_injection{
         // use a calculated volume scale that takes distance into account because we do not use
         // Direct Sound 3D distance attenuation model
         auto& volume = addr_as_ref<float>(stack_frame + 0x8);
-        // strict aliasing compatible type punning
-        std::memcpy(&regs.edx, &volume, sizeof(volume));
+        regs.edx = volume;
     },
 };
 
