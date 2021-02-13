@@ -203,7 +203,7 @@ CodeInjection g_face_does_point_lie_in_face_crashfix{
         void* face_vertex = regs.esi;
         if (!face_vertex) {
             regs.bl = false;
-            regs.eax = 0x004E206F;
+            regs.eip = 0x004E206F;
         }
     },
 };
