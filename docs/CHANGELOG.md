@@ -1,8 +1,8 @@
 DashFaction Changelog
 =====================
 
-Version 1.6.1 (not released yet)
---------------------------------
+Version 1.6.1-rc1 (released 2021-02-13)
+---------------------------------------
 - Fix background image being scrolled too fast in multiplayer menu
 - Make sure CTF flag does not spin after level change if it was in dropped state in the previous level
 - Make main menu background image scroll animation smooth on high resolution displays
@@ -12,6 +12,7 @@ Version 1.6.1 (not released yet)
   differently
 - Do not verify mod vpp checksum if `Require Client Mod` option is disabled in server config
 - Fix near plane clipping issues happening when FOV is big
+- Increase max FOV to 160
 - Fix clicking "Fav" checkbox in the server list
 
 Version 1.6.1-beta (released 2021-01-29)
