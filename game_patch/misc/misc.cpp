@@ -342,8 +342,7 @@ CodeInjection explosion_crash_fix{
 CallHook<void(rf::Vector3*, float, float, float, float, bool, int, int)> level_read_geometry_header_light_add_directional_hook{
     0x004619E1,
     [](rf::Vector3 *dir, float intensity, float r, float g, float b, bool is_dynamic, int casts_shadow, int dropoff_type) {
-        auto gr_lighting_enabled = addr_as_ref<bool()>(0x004DB8B0);
-        if (gr_lighting_enabled()) {
+        if (rf::gr_lighting_enabled()) {
             level_read_geometry_header_light_add_directional_hook.call_target(dir, intensity, r, g, b, is_dynamic, casts_shadow, dropoff_type);
         }
     },

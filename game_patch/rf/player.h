@@ -71,24 +71,24 @@ namespace rf
     };
     static_assert(sizeof(ControlConfigItem) == 0x1C);
 
+    struct ControlMouseConfig
+    {
+        bool active;
+        bool invert;
+        int axis_id;
+        int field_8;
+        int field_C;
+    };
+    static_assert(sizeof(ControlMouseConfig) == 0x10);
+
     struct ControlConfig
     {
         float mouse_sensitivity;
         bool mouse_look;
-        int field_ec;
+        int current_delta_z;
         ControlConfigItem keys[128];
         int ctrl_count;
-        int field_ef4;
-        int field_ef8;
-        int field_efc;
-        int field_f00;
-        char field_f04;
-        char mouse_y_invert;
-        char field_e22;
-        char field_e23;
-        int field_f08;
-        int field_f0c;
-        int field_f10;
+        ControlMouseConfig mouse_controls[2];
         int field_f14;
         int field_f18;
         int field_f1c;
@@ -166,10 +166,10 @@ namespace rf
 
     struct PlayerLevelStats
     {
-        uint16_t field_0;
+        int16_t prev_score;
         int16_t score;
         int16_t caps;
-        char padding[2];
+        bool took_part_in_flag_capture;
     };
     static_assert(sizeof(PlayerLevelStats) == 0x8);
 

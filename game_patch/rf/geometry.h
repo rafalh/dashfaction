@@ -245,7 +245,7 @@ namespace rf
         VArray<GPathNode*> visible_nodes;
         bool visited;
         bool unusable;
-        __int16 adjacent;
+        short adjacent;
         float distance;
         GPathNode *backptr;
         GPathNodeType type;
@@ -363,7 +363,7 @@ namespace rf
         int height;
         int user_bm_handle;
         ProcTexType type;
-        void (__cdecl *update_function)(GProceduralTexture *pt);
+        void (*update_function)(GProceduralTexture *pt);
         int base_bm_handle;
         float slide_pos_xc; // unused?
         float slide_pos_xt;

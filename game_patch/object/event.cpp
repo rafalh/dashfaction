@@ -140,8 +140,8 @@ FunHook<void()> event_level_init_post_hook{
         if (string_equals_ignore_case(rf::level.filename, "L5S2.rfl")) {
             // HACKFIX: make Set_Liquid_Depth events properties in lava control room more sensible
             xlog::trace("Changing Set_Liquid_Depth events in this level...");
-            auto event1 = reinterpret_cast<EventSetLiquidDepthHook*>(rf::event_lookup_from_uid(3940));
-            auto event2 = reinterpret_cast<EventSetLiquidDepthHook*>(rf::event_lookup_from_uid(4132));
+            auto event1 = static_cast<EventSetLiquidDepthHook*>(rf::event_lookup_from_uid(3940));
+            auto event2 = static_cast<EventSetLiquidDepthHook*>(rf::event_lookup_from_uid(4132));
             if (event1 && event2 && event1->duration == 0.15f && event2->duration == 0.15f) {
                 event1->duration = 1.5f;
                 event2->duration = 1.5f;

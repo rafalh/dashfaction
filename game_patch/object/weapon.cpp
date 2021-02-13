@@ -18,8 +18,8 @@ bool entity_is_reloading_player_select_weapon_new(rf::Entity* entity)
 
     int weapon_type = entity->ai.current_primary_weapon;
     if (weapon_type >= 0) {
-        rf::WeaponInfo* weapon_cls = &rf::weapon_types[weapon_type];
-        if (entity->ai.clip_ammo[weapon_type] == 0 && entity->ai.ammo[weapon_cls->ammo_type] > 0)
+        rf::WeaponInfo& wi = rf::weapon_types[weapon_type];
+        if (entity->ai.clip_ammo[weapon_type] == 0 && entity->ai.ammo[wi.ammo_type] > 0)
             return true;
     }
     return false;
@@ -28,7 +28,7 @@ bool entity_is_reloading_player_select_weapon_new(rf::Entity* entity)
 CodeInjection weapons_tbl_buffer_overflow_fix_1{
     0x004C6855,
     [](auto& regs) {
-        if (addr_as_ref<u32>(0x00872448) == 64) {
+        if (rf::num_weapon_types == 64) {
             xlog::warn("weapons.tbl limit of 64 definitions has been reached!");
             regs.eip = 0x004C6881;
         }
@@ -38,14 +38,14 @@ CodeInjection weapons_tbl_buffer_overflow_fix_1{
 CodeInjection weapons_tbl_buffer_overflow_fix_2{
     0x004C68AD,
     [](auto& regs) {
-        if (addr_as_ref<u32>(0x00872448) == 64) {
+        if (rf::num_weapon_types == 64) {
             xlog::warn("weapons.tbl limit of 64 definitions has been reached!");
             regs.eip = 0x004C68D9;
         }
     },
 };
 
-FunHook<void(rf::Weapon *weapon)> weapon_move_one_hook{
+FunHook<void(rf::Weapon*)> weapon_move_one_hook{
     0x004C69A0,
     [](rf::Weapon* weapon) {
         weapon_move_one_hook.call_target(weapon);
@@ -53,7 +53,7 @@ FunHook<void(rf::Weapon *weapon)> weapon_move_one_hook{
         auto& level_aabb_max = rf::level.geometry->bbox_max;
         float margin = weapon->vmesh ? 275.0f : 10.0f;
         bool has_gravity_flag = weapon->p_data.flags & 1;
-        bool check_y_axis = !(has_gravity_flag || weapon->info->thrust_lifetime > 0.0f);
+        bool check_y_axis = !(has_gravity_flag || weapon->info->thrust_lifetime_seconds > 0.0f);
         auto& pos = weapon->pos;
         if (pos.x < level_aabb_min.x - margin || pos.x > level_aabb_max.x + margin
         || pos.z < level_aabb_min.z - margin || pos.z > level_aabb_max.z + margin
@@ -86,14 +86,14 @@ CodeInjection weapon_vs_obj_collision_fix{
 CodeInjection muzzle_flash_light_not_disabled_fix{
     0x0041E806,
     [](auto& regs) {
-        auto muzzle_flash_timer = addr_as_ref<rf::Timestamp>(regs.ecx);
-        if (!muzzle_flash_timer.valid()) {
+        rf::Timestamp* primary_muzzle_timestamp = regs.ecx;
+        if (!primary_muzzle_timestamp->valid()) {
             regs.eip = 0x0041E969;
         }
     },
 };
 
-CallHook<void(rf::Player* player, int weapon_type)> process_create_entity_packet_switch_weapon_fix{
+CallHook<void(rf::Player*, int)> process_create_entity_packet_switch_weapon_fix{
     0x004756B7,
     [](rf::Player* player, int weapon_type) {
         process_create_entity_packet_switch_weapon_fix.call_target(player, weapon_type);

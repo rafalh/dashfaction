@@ -327,6 +327,7 @@ namespace rf
     static auto& gr_close = addr_as_ref<void()>(0x0050CBE0);
     static auto& gr_set_texture = addr_as_ref<void (int bitmap_handle, int bitmap_handle2)>(0x0050D060);
     static auto& gr_tmapper = addr_as_ref<void (int nv, Vertex **verts, TMapperFlags vertex_attributes, GrMode mode)>(0x0050DF80);
+    static auto& gr_lighting_enabled = addr_as_ref<bool()>(0x004DB8B0);
 
     inline void gr_set_color(ubyte r, ubyte g, ubyte b, ubyte a = gr_screen.current_color.alpha)
     {

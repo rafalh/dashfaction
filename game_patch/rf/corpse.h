@@ -23,8 +23,8 @@ namespace rf
         int corpse_pose;
         VMesh *helmet_v3d_handle;
         int item_handle;
-        EntityFireInfo *burn_info;
-        int field_2D4;
+        EntityFireInfo *fire_info;
+        int body_drop_sound_handle;
         Color ambient_color;
         ShadowInfo shadow_info;
     };

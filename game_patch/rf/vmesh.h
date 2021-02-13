@@ -49,26 +49,35 @@ namespace rf
     };
     static_assert(sizeof(VMeshCollisionOutput) == 0x20);
 
+    struct TexMap
+    {
+        int tex_handle;
+        char name[33];
+        int start_frame;
+        float playback_rate;
+        int anim_type;
+    };
+    static_assert(sizeof(TexMap) == 0x34);
+
     struct MeshMaterial
     {
-        int field_0;
+        int material_type;
         int flags;
-        char has_flag_2_8;
-        Color field_9;
-        int texture;
-        char name[100];
-        int field_78;
-        int field_7C;
-        int field_80;
-        float mat_field_24;
-        float mat_field_28;
-        float ref_cof;
-        char ref_map_name[36];
-        int ref_tex;
-        int field_B8;
-        float *mat_field_20;
-        int field_C0;
-        int field_C4;
+        bool use_additive_blending;
+        Color diffuse_color;
+        TexMap texture_maps[2];
+        int framerate;
+        int num_mix_frames;
+        int *mix;
+        float specular_level;
+        float glossiness;
+        float reflection_amount;
+        char refl_tex_name[36];
+        int refl_tex_handle;
+        int num_self_illumination_frames;
+        float *self_illumination;
+        int num_opacity_frames;
+        int *opacity;
     };
     static_assert(sizeof(MeshMaterial) == 0xC8);
 

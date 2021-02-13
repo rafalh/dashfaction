@@ -7,20 +7,21 @@
 namespace rf
 {
     struct ObjectCreateInfo;
+    struct GFace;
 
     struct PCollisionOut
     {
         Vector3 hit_point;
         Vector3 normal;
         float fraction;
-        int material_idx;
-        int field_20;
-        Vector3 obj_vel;
+        int material;
+        int inv_mass;
+        Vector3 vel;
         int obj_handle;
-        int texture;
-        int field_38;
-        void* face;
-        int field_40;
+        int bitmap_handle;
+        int is_liquid;
+        GFace *hit_face;
+        short *hit_face_v3d;
     };
     static_assert(sizeof(PCollisionOut) == 0x44);
 

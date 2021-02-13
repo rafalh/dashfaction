@@ -14,15 +14,15 @@ namespace rf
         ClutterInfo* info;
         int info_index;
         int corpse_index;
-        int sound;
-        Timestamp delete_timestamp;
-        int delete_sound;
-        int killing_dmg_type;
-        Timestamp emitter_timestamp;
-        Timestamp timer_2b4;
-        VMesh *field_2b8;
-        int field_2bC;
-        VArray<void*> field_2c0;
+        int sound_handle;
+        Timestamp delayed_kill_timestamp;
+        int delayed_kill_sound;
+        int dmg_type_that_killed_me;
+        Timestamp emitter_kill_timestamp;
+        Timestamp corpse_create_timestamp;
+        VMesh *corpse_vmesh_handle;
+        int current_skin_index;
+        VArray<int> links;
         int field_2cc;
         int use_sound;
         uint16_t killable_index;
@@ -32,24 +32,29 @@ namespace rf
 
     struct Monitor
     {
-        struct Monitor *next;
-        struct Monitor *prev;
-        int monitor_state;
+        Monitor *next;
+        Monitor *prev;
+        int state;
         int clutter_handle;
-        int current_camera_handle;
-        int bitmap;
-        VArray<int> cameras_handles_array;
-        Timestamp camera_cycle_timestamp;
-        float cycle_delay;
-        int gap2C;
-        int width;
-        int height;
+        int camera_handle;
+        int user_bitmap;
+        VArray<int> camera_list;
+        Timestamp next_cam_switch;
+        float cycle_delay_seconds;
+        int resolution_index;
+        int bm_width;
+        int bm_height;
         int flags;
     };
     static_assert(sizeof(Monitor) == 0x3C);
 
     // Monitor flags
-    constexpr int MF_BM_RENDERED = 4;
+    enum MonitorFlags
+    {
+        MF_OBJ_RENDERED = 0x2,
+        MF_BM_RENDERED = 0x4,
+        MF_CONTINOUSLY_UPDATE = 0x8,
+    };
 
     static auto& clutter_list = addr_as_ref<Clutter>(0x005C9360);
     static auto& monitor_list = addr_as_ref<Monitor>(0x005C98A8);

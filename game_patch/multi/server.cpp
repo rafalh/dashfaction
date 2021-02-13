@@ -98,11 +98,10 @@ void load_additional_server_config(rf::Parser& parser)
             auto ammo = parser.parse_uint();
             g_additional_server_config.default_player_weapon_ammo = {ammo};
 
-            auto WeaponClsFind = addr_as_ref<int(const char*)>(0x004C81F0);
-            auto weapon_type = WeaponClsFind(g_additional_server_config.default_player_weapon.c_str());
+            auto weapon_type = rf::weapon_lookup_type(g_additional_server_config.default_player_weapon.c_str());
             if (weapon_type >= 0) {
                 auto& weapon_cls = rf::weapon_types[weapon_type];
-                weapon_cls.max_ammo_mp = std::max<int>(weapon_cls.max_ammo_mp, ammo);
+                weapon_cls.max_ammo_multi = std::max<int>(weapon_cls.max_ammo_multi, ammo);
             }
         }
     }

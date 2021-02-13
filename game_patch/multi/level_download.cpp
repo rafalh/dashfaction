@@ -39,8 +39,7 @@ static std::vector<std::string> g_packfiles_to_load;
 
 static bool is_vpp_filename(const char* filename)
 {
-    const char* ext = strrchr(filename, '.');
-    return ext && !stricmp(ext, ".vpp");
+    return string_ends_with_ignore_case(filename, ".vpp");
 }
 
 static bool unzip_vpp(const char* path)
@@ -425,7 +424,7 @@ void multi_render_level_download_progress()
 
     int x = (rf::gr_screen_width() - cx) / 2;
     int y = rf::gr_screen_height() - 50;
-    int cy_font = rf::gr_get_font_height(-1);
+    int cy_font = rf::gr_get_font_height();
 
     if (cx_progress > 0) {
         rf::gr_set_color(0x80, 0x80, 0, 0x80);
@@ -440,6 +439,5 @@ void multi_render_level_download_progress()
     rf::gr_set_color(0, 0xFF, 0, 0x80);
     auto text = string_format("Downloading: %.2f MB / %.2f MB", g_level_bytes_downloaded / 1024.0f / 1024.0f,
                              g_level_info.size_in_bytes / 1024.0f / 1024.0f);
-    rf::gr_string_aligned(rf::GR_ALIGN_CENTER, x + cx / 2, y + cy / 2 - cy_font / 2, text.c_str(), -1,
-                        rf::gr_string_mode);
+    rf::gr_string_aligned(rf::GR_ALIGN_CENTER, x + cx / 2, y + cy / 2 - cy_font / 2, text.c_str());
 }

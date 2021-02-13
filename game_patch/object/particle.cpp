@@ -25,8 +25,8 @@ FunHook<rf::ParticleEmitter*(int, rf::ParticleEmitterType&, rf::GRoom*, rf::Vect
 CodeInjection particle_update_accel_patch{
     0x00495282,
     [](auto& regs) {
-        auto& vel = addr_as_ref<rf::Vector3>(regs.ecx);
-        if (vel.len() < 0.0001f) {
+        rf::Vector3* vel = regs.ecx;
+        if (vel->len() < 0.0001f) {
             regs.eip = 0x00495301;
         }
     },

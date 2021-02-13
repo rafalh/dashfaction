@@ -128,12 +128,13 @@ ConsoleCommand2 dbg_entity_state_cmd{
         }
         int num_states = std::size(rf::entity_state_names);
         if (!state_opt) {
-            entity->force_state_anim =  (entity->force_state_anim + 1) % num_states;
+            entity->force_state_anim_index =  (entity->force_state_anim_index + 1) % num_states;
         }
         else if (state_opt.value() >= 0 && state_opt.value() < num_states) {
-            entity->force_state_anim = state_opt.value();
+            entity->force_state_anim_index = state_opt.value();
         }
-        rf::console_printf("Entity state: %s (%d)", rf::entity_action_names[entity->force_state_anim].c_str(), entity->force_state_anim);
+        rf::console_printf("Entity state: %s (%d)", rf::entity_action_names[entity->force_state_anim_index].c_str(),
+            entity->force_state_anim_index);
     },
 };
 
@@ -285,7 +286,7 @@ void render_obj_debug_ui()
     dbg_hud.printf("room", "%d", object->room ? object->room->room_index : -1);
     dbg_hud.print("pos", object->pos);
     if (entity) {
-        dbg_hud.print("eye_pos", entity->view_pos);
+        dbg_hud.print("eye_pos", entity->eye_pos);
         dbg_hud.printf("envsuit", "%.0f", object->armor);
         dbg_hud.print("mode", get_ai_mode_name(entity->ai.mode));
         if (entity->ai.submode)
@@ -297,13 +298,13 @@ void render_obj_debug_ui()
         auto target_obj = rf::obj_from_handle(entity->ai.target_obj_handle);
         dbg_hud.print("target", target_obj ? target_obj->name.c_str() : "none");
         dbg_hud.printf("accel", "%.1f", entity->info->acceleration);
-        dbg_hud.printf("mvmode", "%s", rf::move_mode_names[entity->movement_mode->id]);
+        dbg_hud.printf("mvmode", "%s", rf::move_mode_names[entity->move_mode->id]);
         dbg_hud.print("deaf", (entity->ai.flags & rf::AI_FLAG_DEAF) ? "yes" : "no");
         dbg_hud.print("pos", object->pos);
         auto feet = object->pos;
         feet.y = object->p_data.bbox_min.y;
         dbg_hud.print("feet", feet);
-        dbg_hud.print("state", rf::entity_state_names[entity->current_state]);
+        dbg_hud.print("state", rf::entity_state_names[entity->current_state_anim]);
 
         const char* action_name = "none";
         for (size_t action_idx = 0; action_idx < std::size(rf::entity_action_names); ++action_idx) {

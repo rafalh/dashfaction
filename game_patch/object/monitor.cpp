@@ -30,7 +30,7 @@ void monitor_refresh_all()
     for (auto& mon : mon_list) {
         // force rerender of this monitor in case it is not updated every frame
         // this is needed because DF uses default pool texture
-        mon.flags &= 0xFB;
+        mon.flags &= ~rf::MF_BM_RENDERED;
     }
 }
 
@@ -43,10 +43,10 @@ CallHook<int(rf::BmFormat, int, int)> bm_create_user_bitmap_monitor_hook{
 
 void ensure_monitor_bitmap_is_dynamic(rf::Monitor& mon)
 {
-    if (rf::bm_get_format(mon.bitmap) == rf::BM_FORMAT_RENDER_TARGET) {
+    if (rf::bm_get_format(mon.user_bitmap) == rf::BM_FORMAT_RENDER_TARGET) {
         xlog::trace("Changing pixel format for monitor bitmap");
-        bm_change_format(mon.bitmap, rf::BM_FORMAT_888_RGB);
-        bm_set_dynamic(mon.bitmap, true);
+        bm_change_format(mon.user_bitmap, rf::BM_FORMAT_888_RGB);
+        bm_set_dynamic(mon.user_bitmap, true);
     }
 }
 
@@ -71,7 +71,7 @@ FunHook<void(rf::Monitor&)> monitor_update_static_hook{
         ensure_monitor_bitmap_is_dynamic(mon);
         // Use custom noise generation algohritm because the default one is not uniform enough in high resolution
         rf::GrLockInfo lock;
-        if (rf::gr_lock(mon.bitmap, 0, &lock, rf::GR_LOCK_WRITE_ONLY)) {
+        if (rf::gr_lock(mon.user_bitmap, 0, &lock, rf::GR_LOCK_WRITE_ONLY)) {
             auto pixel_size = bm_bytes_per_pixel(lock.format);
             for (int y = 0; y < lock.h; ++y) {
                 auto ptr = lock.data + y * lock.stride_in_bytes;
@@ -130,7 +130,7 @@ CodeInjection monitor_update_from_camera_begin_render_to_texture{
     0x00412860,
     [](auto& regs) {
         rf::Monitor* mon = regs.edi;
-        gr_render_to_texture(mon->bitmap);
+        gr_render_to_texture(mon->user_bitmap);
     },
 };
 
@@ -145,7 +145,7 @@ FunHook<void(rf::Monitor&)> monitor_update_off_hook{
         ensure_monitor_bitmap_is_dynamic(mon);
         // Add support for 32-bit textures
         rf::GrLockInfo lock;
-        if (rf::gr_lock(mon.bitmap, 0, &lock, rf::GR_LOCK_WRITE_ONLY)) {
+        if (rf::gr_lock(mon.user_bitmap, 0, &lock, rf::GR_LOCK_WRITE_ONLY)) {
             std::memset(lock.data, 0, lock.h * lock.stride_in_bytes);
             rf::gr_unlock(&lock);
         }
