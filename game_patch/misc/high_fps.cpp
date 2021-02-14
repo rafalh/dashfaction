@@ -1,14 +1,15 @@
-#include "high_fps.h"
-#include "../os/console.h"
+#include <array>
+#include <unordered_map>
+#include <unordered_set>
+#include <optional>
 #include <patch_common/FunHook.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/InlineAsm.h>
 #include <patch_common/AsmWriter.h>
 #include <xlog/xlog.h>
-#include <array>
-#include <unordered_map>
-#include <unordered_set>
-#include <optional>
+#include "high_fps.h"
+#include "../os/console.h"
+#include "../rf/os/frametime.h"
 
 class FtolAccuracyFix
 {

@@ -8,6 +8,7 @@
 #include "../rf/sound/sound.h"
 #include "../rf/sound/sound_ds.h"
 #include "../rf/entity.h"
+#include "../rf/os/frametime.h"
 #include "../main/main.h"
 #include "../os/console.h"
 
