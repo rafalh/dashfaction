@@ -79,7 +79,7 @@ FunHook<void()> frametime_reset_hook{
         frametime_reset_hook.call_target();
 
         // Set initial FPS limit
-        float max_fps = rf::is_dedicated_server ? g_game_config.server_max_fps : g_game_config.max_fps;
+        float max_fps = rf::is_dedicated_server ? g_game_config.server_max_fps.value() : g_game_config.max_fps.value();
         rf::frametime_min = 1.0f / max_fps;
     },
 };

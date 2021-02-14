@@ -167,7 +167,8 @@ CodeInjection menu_draw_background_injection{
 
         rf::gr_set_color(255, 255, 255, 255);
         // Use function that accepts float sx
-        gr_bitmap_stretched_float(menu_background_bitmap, 0.0f, 0.0f, rf::gr_screen.max_w, rf::gr_screen.max_h,
+        gr_bitmap_stretched_float(menu_background_bitmap, 0.0f, 0.0f,
+            static_cast<float>(rf::gr_screen.max_w), static_cast<float>(rf::gr_screen.max_h),
             menu_background_x, 0.0f, 640.0f, 480.0f, false, false, rf::gr_bitmap_clamp_mode);
         regs.eip = 0x00442D94;
     },
@@ -182,7 +183,7 @@ CodeInjection multi_servers_on_list_click_injection{
         // Because of that mouse click coordinate must be scaled from screen resolution to UI resolution before
         // comparision.
         int rel_y = regs.edi;
-        rel_y /= rf::ui_scale_x;
+        rel_y = static_cast<int>(static_cast<float>(rel_y) / rf::ui_scale_x);
         regs.edi = rel_y;
     },
 };
