@@ -1,6 +1,10 @@
 DashFaction Changelog
 =====================
 
+Version 1.6.1 (not yet released)
+--------------------------------
+- Improve tbl parsing error message
+
 Version 1.6.1-rc1 (released 2021-02-13)
 ---------------------------------------
 - Fix background image being scrolled too fast in multiplayer menu

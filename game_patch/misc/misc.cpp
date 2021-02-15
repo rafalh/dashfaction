@@ -442,6 +442,13 @@ void misc_init()
     // Fix stack corruption when packfile has lower size than expected
     vfile_read_stack_corruption_fix.install();
 
+    // Improve parse error message
+    // For some reason RF replaces all characters with code lower than 0x20 (space) by character with code 0x16 (SYN)
+    // in "Found this text" and "Prior text" sections. This makes all new line characters (CRLF) and tabs to be
+    // replaced by ugly squeres. After this change only zero character is replaced.
+    write_mem<char>(0x00512389 + 2, '\1');
+    write_mem<char>(0x005123B6 + 2, '\1');
+
     // Apply patches from other files
     apply_main_menu_patches();
     apply_save_restore_patches();
