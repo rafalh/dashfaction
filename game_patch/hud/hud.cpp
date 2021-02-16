@@ -340,10 +340,10 @@ int hud_get_large_font()
     }
 }
 
-CallHook<void(int, int, int, int, int, int, int, int, int, char, char, int)> gr_bitmap_stretched_message_log_hook{
+CallHook<void(int, int, int, int, int, int, int, int, int, bool, bool, rf::GrMode)> gr_bitmap_stretched_message_log_hook{
     0x004551F0,
     [](int bm_handle, int dst_x, int dst_y, int dst_w, int dst_h, int src_x, int src_y, int src_w, int src_h,
-        char unk_u, char unk_v, int mode) {
+        bool flip_x, bool flip_y, rf::GrMode mode) {
 
         float scale_x = rf::gr_screen_width() / 640.0f;
         float scale_y = rf::gr_screen_height() / 480.0f;
@@ -352,7 +352,7 @@ CallHook<void(int, int, int, int, int, int, int, int, int, char, char, int)> gr_
         dst_x = (rf::gr_screen_width() - dst_w) / 2;
         dst_y = (rf::gr_screen_height() - dst_h) / 2;
         gr_bitmap_stretched_message_log_hook.call_target(bm_handle, dst_x, dst_y, dst_w, dst_h,
-            src_x, src_y, src_w, src_h, unk_u, unk_v, mode);
+            src_x, src_y, src_w, src_h, flip_x, flip_y, mode);
 
         auto& message_log_entries_clip_h = addr_as_ref<int>(0x006425D4);
         auto& message_log_entries_clip_y = addr_as_ref<int>(0x006425D8);
