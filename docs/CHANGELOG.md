@@ -4,6 +4,7 @@ DashFaction Changelog
 Version 1.6.1 (not yet released)
 --------------------------------
 - Improve tbl parsing error message
+- Bring back team icons in team scores HUD (left-bottom screen corner) in Team DM multiplayer game (1.5.0 regression)
 
 Version 1.6.1-rc1 (released 2021-02-13)
 ---------------------------------------

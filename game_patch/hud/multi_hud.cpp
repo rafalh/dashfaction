@@ -101,7 +101,9 @@ void hud_render_team_scores()
         else {
             rf::gr_string(miniflag_label_x, blue_miniflag_label_y, "missing", font_id);
         }
+    }
 
+    if (game_type == rf::NG_TYPE_CTF || game_type == rf::NG_TYPE_TEAMDM) {
         float miniflag_scale = g_big_team_scores_hud ? 1.5f : 1.0f;
         rf::gr_set_color(255, 255, 255, 255);
         if (rf::local_player) {
