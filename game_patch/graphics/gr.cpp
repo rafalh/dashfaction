@@ -101,7 +101,7 @@ ConsoleCommand2 fov_cmd{
                 g_game_config.horz_fov = 0.0f;
             }
             else {
-                g_game_config.horz_fov = std::clamp(fov_opt.value(), GameConfig::min_fov, GameConfig::max_fov);
+                g_game_config.horz_fov = fov_opt.value();
             }
             g_game_config.save();
         }

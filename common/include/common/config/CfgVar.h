@@ -7,12 +7,12 @@ class CfgVar
 {
 private:
     T value_;
-    std::function<bool(T)> validator_;
+    std::function<T(T)> assign_callback_;
     bool dirty_ = true;
 
 public:
-    CfgVar(T default_value, std::function<bool(T)> validator = default_validator) :
-        value_(default_value), validator_(validator)
+    CfgVar(T default_value, std::function<T(T)> assign_callback = default_assign_callback) :
+        value_(default_value), assign_callback_(assign_callback)
     {}
 
     operator T() const
@@ -49,11 +49,9 @@ public:
 
     bool assign(const T& value)
     {
-        if (!validator_(value)) {
-            return false;
-        }
-        if (value_ != value) {
-            value_ = value;
+        T corrected_value = assign_callback_(value);
+        if (value_ != corrected_value) {
+            value_ = corrected_value;
             dirty_ = true;
         }
         return true;
@@ -61,11 +59,9 @@ public:
 
     bool assign(T&& value)
     {
-        if (!validator_(value)) {
-            return false;
-        }
-        if (value_ != value) {
-            value_ = value;
+        T corrected_value = assign_callback_(value);
+        if (value_ != corrected_value) {
+            value_ = corrected_value;
             dirty_ = true;
         }
         return true;
@@ -82,8 +78,8 @@ public:
     }
 
 private:
-    static bool default_validator(T)
+    static T default_assign_callback(T value)
     {
-        return true;
+        return value;
     }
 };

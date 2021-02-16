@@ -35,8 +35,8 @@ struct GameConfig
 
     static constexpr unsigned min_fps_limit = 10u;
     static constexpr unsigned max_fps_limit = 240u;
-    CfgVar<unsigned> max_fps{60, [](unsigned val) { return val >= min_fps_limit && val <= max_fps_limit; }};
-    CfgVar<unsigned> server_max_fps{60, [](unsigned val) { return val >= min_fps_limit && val <= max_fps_limit; }};
+    CfgVar<unsigned> max_fps{60, [](unsigned val) { return std::clamp(val, min_fps_limit, max_fps_limit); }};
+    CfgVar<unsigned> server_max_fps{60, [](unsigned val) { return std::clamp(val, min_fps_limit, max_fps_limit); }};
 
     CfgVar<bool> fps_counter = true;
     CfgVar<bool> high_scanner_res = true;
@@ -47,7 +47,7 @@ struct GameConfig
 
     static constexpr float min_fov = 75.0f;
     static constexpr float max_fov = 160.0f;
-    CfgVar<float> horz_fov{0.0f, [](float val) { return val == 0.0f || (val >= min_fov && val <= max_fov); }};
+    CfgVar<float> horz_fov{0.0f, [](float val) { return val == 0.0f ? 0.0f : std::clamp(val, min_fov, max_fov); }};
 
     CfgVar<float> fpgun_fov_scale = 1.0f;
 
