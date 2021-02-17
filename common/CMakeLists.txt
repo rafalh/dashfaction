@@ -35,6 +35,9 @@ target_include_directories(Common PRIVATE
     ${CMAKE_SOURCE_DIR}/vendor/d3d8
 )
 
+# Make sure Windows min/max macro don't conflict with std::min/std::max
+target_compile_definitions(Common PUBLIC NOMINMAX)
+
 target_include_directories(Common PUBLIC include)
 
 target_link_libraries(Common
