@@ -511,7 +511,7 @@ CodeInjection process_obj_update_weapon_fire_injection{
         rf::Entity* entity = regs.edi;
         int flags = regs.ebx;
         auto stack_frame = regs.esp + 0x9C;
-        auto pp = addr_as_ref<rf::Player*>(stack_frame - 0x6C);
+        auto pp = addr_as_ref<rf::Player*>(stack_frame - 0x6C); // null client-side
 
         constexpr int ouf_fire = 0x40;
         constexpr int ouf_alt_fire = 0x10;
@@ -519,12 +519,12 @@ CodeInjection process_obj_update_weapon_fire_injection{
         bool is_on = flags & ouf_fire;
         bool alt_fire = flags & ouf_alt_fire;
         void multi_turn_weapon_on(rf::Entity* ep, rf::Player* pp, bool alt_fire);
-        void multi_turn_weapon_off(rf::Entity* ep, rf::Player* pp);
+        void multi_turn_weapon_off(rf::Entity* ep);
         if (is_on) {
             multi_turn_weapon_on(entity, pp, alt_fire);
         }
         else {
-            multi_turn_weapon_off(entity, pp);
+            multi_turn_weapon_off(entity);
         }
         regs.eip = 0x0047E346;
     },

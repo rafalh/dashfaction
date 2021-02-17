@@ -186,15 +186,16 @@ void multi_ensure_ammo_is_not_empty(rf::Entity* ep)
 
 void multi_turn_weapon_on(rf::Entity* ep, rf::Player* pp, bool alt_fire)
 {
+    // Note: pp is always null client-side
     auto weapon_type = ep->ai.current_primary_weapon;
     if (!rf::weapon_is_on_off_weapon(weapon_type, alt_fire)) {
-        xlog::debug("Player %s attempted to turn on weapon %d which has no continous fire flag", pp->name.c_str(), weapon_type);
+        xlog::debug("Player %s attempted to turn on weapon %d which has no continous fire flag", ep->name.c_str(), weapon_type);
     }
     else if (rf::is_server && multi_is_selecting_weapon(pp)) {
-        xlog::debug("Player %s attempted to turn on weapon %d while selecting it", pp->name.c_str(), weapon_type);
+        xlog::debug("Player %s attempted to turn on weapon %d while selecting it", ep->name.c_str(), weapon_type);
     }
     else if (rf::is_server && rf::entity_is_reloading(ep)) {
-        xlog::debug("Player %s attempted to turn on weapon %d while reloading it", pp->name.c_str(), weapon_type);
+        xlog::debug("Player %s attempted to turn on weapon %d while reloading it", ep->name.c_str(), weapon_type);
     }
     else {
         if (!rf::is_server) {
@@ -206,7 +207,7 @@ void multi_turn_weapon_on(rf::Entity* ep, rf::Player* pp, bool alt_fire)
     }
 }
 
-void multi_turn_weapon_off(rf::Entity* ep, [[maybe_unused]] rf::Player* pp)
+void multi_turn_weapon_off(rf::Entity* ep)
 {
     auto current_primary_weapon = ep->ai.current_primary_weapon;
     if (rf::weapon_is_on_off_weapon(current_primary_weapon, false)
