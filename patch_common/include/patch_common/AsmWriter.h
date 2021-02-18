@@ -72,7 +72,7 @@ struct AsmRegMem
         memory(false), reg_opt({reg}), displacement(0)
     {}
 
-    AsmRegMem(uint32_t addr) :
+    explicit AsmRegMem(uint32_t addr) :
         memory(true), displacement(static_cast<int32_t>(addr))
     {}
 
@@ -139,6 +139,20 @@ public:
             assert(m_addr <= m_end_addr);
             while (m_addr < m_end_addr) nop();
         }
+    }
+
+    AsmWriter& add(const AsmRegMem& dst_rm, const AsmReg32& src_reg)
+    {
+        write<u8>(0x01); // Opcode
+        write_mod_rm(dst_rm, src_reg);
+        return *this;
+    }
+
+    AsmWriter& add(const AsmReg32& dst_reg, const AsmRegMem& src_rm)
+    {
+        write<u8>(0x03); // Opcode
+        write_mod_rm(src_rm, dst_reg);
+        return *this;
     }
 
     AsmWriter& xor_(const AsmReg32& dst_reg, const AsmRegMem& src_reg_mem)

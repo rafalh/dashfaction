@@ -6,6 +6,7 @@ Version 1.6.1 (not yet released)
 - Improve tbl parsing error message
 - Bring back team icons in team scores HUD (left-bottom screen corner) in Team DM multiplayer game (1.5.0 regression)
 - Fixed rarely occuring client-side crash in multiplayer (regression from 1.6.1-beta)
+- Fix possible game freeze when scrolling the message log on a wide screen
 
 Version 1.6.1-rc1 (released 2021-02-13)
 ---------------------------------------
