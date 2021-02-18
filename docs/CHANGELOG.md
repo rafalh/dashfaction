@@ -10,6 +10,7 @@ Version 1.6.1 (not yet released)
 - Change launcher header image to one provided by Goober
 - Add `$DF UPnP Enabled` option in dedicated server config that allows to disable UPnP
 - Fix hit sound packet sometimes being sent from the client
+- Do not play hit sounds if player damages themselves
 
 Version 1.6.1-rc1 (released 2021-02-13)
 ---------------------------------------

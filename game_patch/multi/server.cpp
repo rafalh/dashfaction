@@ -319,9 +319,9 @@ FunHook<float(rf::Entity*, float, int, int, int)> entity_damage_hook{
     0x0041A350,
     [](rf::Entity* damaged_ep, float damage, int killer_handle, int damage_type, int killer_uid) {
         auto damaged_player = rf::player_from_entity_handle(damaged_ep->handle);
-        auto responsible_player = rf::player_from_entity_handle(killer_handle);
+        auto killer_player = rf::player_from_entity_handle(killer_handle);
         if (rf::is_server) {
-            if (damaged_player && responsible_player && damaged_player != responsible_player) {
+            if (damaged_player && killer_player && damaged_player != killer_player) {
                 damage *= g_additional_server_config.player_damage_modifier;
                 if (damage == 0.0f) {
                     return 0.0f;
@@ -330,8 +330,8 @@ FunHook<float(rf::Entity*, float, int, int, int)> entity_damage_hook{
         }
 
         float dmg = entity_damage_hook.call_target(damaged_ep, damage, killer_handle, damage_type, killer_uid);
-        if (rf::is_server && g_additional_server_config.hit_sounds.enabled && responsible_player) {
-            send_hit_sound_packet(responsible_player);
+        if (rf::is_server && g_additional_server_config.hit_sounds.enabled && killer_player && damaged_player != killer_player) {
+            send_hit_sound_packet(killer_player);
         }
 
         return dmg;
