@@ -8,6 +8,7 @@ Version 1.6.1 (not yet released)
 - Fixed rarely occuring client-side crash in multiplayer (regression from 1.6.1-beta)
 - Fix possible game freeze when scrolling the message log on a wide screen
 - Change launcher header image to one provided by Goober
+- Add `$DF UPnP Enabled` option in dedicated server config that allows to disable UPnP
 
 Version 1.6.1-rc1 (released 2021-02-13)
 ---------------------------------------

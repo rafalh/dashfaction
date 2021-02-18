@@ -21,6 +21,7 @@
 #include <patch_common/ComPtr.h>
 #include "multi.h"
 #include "server.h"
+#include "server_internal.h"
 #include "../main/main.h"
 #include "../rf/multi.h"
 #include "../rf/misc.h"
@@ -861,9 +862,11 @@ FunHook<void()> tracker_do_broadcast_server_hook{
     0x00483130,
     []() {
         tracker_do_broadcast_server_hook.call_target();
-        // Auto forward server port using UPnP (in background thread)
-        std::thread upnp_thread{try_to_auto_forward_port, rf::net_port};
-        upnp_thread.detach();
+        if (g_additional_server_config.upnp_enabled) {
+            // Auto forward server port using UPnP (in background thread)
+            std::thread upnp_thread{try_to_auto_forward_port, rf::net_port};
+            upnp_thread.detach();
+        }
     },
 };
 

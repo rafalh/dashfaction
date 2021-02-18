@@ -118,6 +118,10 @@ void load_additional_server_config(rf::Parser& parser)
         g_additional_server_config.saving_enabled = parser.parse_bool();
     }
 
+    if (parser.parse_optional("$DF UPnP Enabled:")) {
+        g_additional_server_config.upnp_enabled = parser.parse_bool();
+    }
+
     if (parser.parse_optional("$DF Force Player Character:")) {
         rf::String character_name;
         parser.parse_string(&character_name);
