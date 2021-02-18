@@ -279,7 +279,7 @@ CallHook<void()> gr_d3d_init_buffers_gr_d3d_flip_hook{
         rf::gr_d3d_device->SetRenderState(D3DRS_CLIPPING, FALSE);
 
         if (rf::local_player)
-            rf::gr_set_texture_mip_filter(rf::local_player->settings.filtering_level == 0);
+            rf::gr_set_texture_mip_filter(!rf::local_player->settings.bilinear_filtering);
 
         if (rf::gr_d3d_device_caps.MaxAnisotropy > 0 && g_game_config.anisotropic_filtering)
             setup_max_anisotropy();

@@ -123,15 +123,15 @@ namespace rf
         bool field_f45;
         bool field_f46;
         bool field_f47;
-        bool filtering_level;
+        bool bilinear_filtering;
         int detail_level;
         int textures_resolution_level;
         int character_detail_level;
         float field_f58;
         int multi_character;
-        char name[12];
+        char name[32];
     };
-    static_assert(sizeof(PlayerSettings) == 0xE88);
+    static_assert(sizeof(PlayerSettings) == 0xE9C);
 
     enum ControlAction
     {
@@ -225,11 +225,15 @@ namespace rf
     };
     static_assert(sizeof(PlayerIrData) == 0x10);
 
-    struct Player_1094
+    struct PlayerCockpitData
     {
-        Vector3 field_0;
-        Matrix3 field_C;
+        Vector3 camera_pos;
+        Matrix3 camera_orient;
+        int camera_index;
+        float chaingun_angle;
+        float chaingun_rot_vel;
     };
+    static_assert(sizeof(PlayerCockpitData) == 0x3C);
 
     enum Team
     {
@@ -280,15 +284,9 @@ namespace rf
         int viewport_mode;
         int flashlight_light;
         PlayerSettings settings;
-        int field_F6C;
-        int field_F70;
-        int field_F74;
-        int field_F78;
-        int field_F7C;
         PlayerFpgunData fpgun_data;
         PlayerIrData ir_data;
-        Player_1094 field_1094;
-        int field_10C4[3];
+        PlayerCockpitData cockpit_data;
         Color screen_flash_color;
         int screen_flash_alpha;
         float fpgun_total_transition_time;
