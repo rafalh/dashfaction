@@ -30,3 +30,4 @@ const char* hud_get_bold_font_name(bool big);
 void scoreboard_maybe_render(bool show_scoreboard);
 int hud_transform_value(int val, int old_max, int new_max);
 int hud_scale_value(int val, int max, float scale);
+void message_log_apply_patch();

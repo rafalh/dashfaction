@@ -79,6 +79,7 @@ set(SRCS
     hud/multi_hud.cpp
     hud/multi_hud_chat.cpp
     hud/weapon_select.cpp
+    hud/message_log.cpp
     debug/debugwinmsg.cpp
     debug/debug_cmd.cpp
     debug/debug.cpp
