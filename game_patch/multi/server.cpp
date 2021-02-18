@@ -315,20 +315,22 @@ void send_hit_sound_packet(rf::Player* target)
     rf::multi_io_send(target, &packet, sizeof(packet));
 }
 
-FunHook<float(rf::Entity*, float, int, int, int)> entity_take_damage_hook{
+FunHook<float(rf::Entity*, float, int, int, int)> entity_damage_hook{
     0x0041A350,
-    [](rf::Entity* entity, float damage, int responsible_entity_handle, int dmg_type, int responsible_entity_uid) {
-        auto damaged_player = rf::player_from_entity_handle(entity->handle);
-        auto responsible_player = rf::player_from_entity_handle(responsible_entity_handle);
-        if (damaged_player && responsible_player && damaged_player != responsible_player) {
-            damage *= g_additional_server_config.player_damage_modifier;
-            if (damage == 0.0f) {
-                return 0.0f;
+    [](rf::Entity* damaged_ep, float damage, int killer_handle, int damage_type, int killer_uid) {
+        auto damaged_player = rf::player_from_entity_handle(damaged_ep->handle);
+        auto responsible_player = rf::player_from_entity_handle(killer_handle);
+        if (rf::is_server) {
+            if (damaged_player && responsible_player && damaged_player != responsible_player) {
+                damage *= g_additional_server_config.player_damage_modifier;
+                if (damage == 0.0f) {
+                    return 0.0f;
+                }
             }
         }
 
-        float dmg = entity_take_damage_hook.call_target(entity, damage, responsible_entity_handle, dmg_type, responsible_entity_uid);
-        if (g_additional_server_config.hit_sounds.enabled && responsible_player) {
+        float dmg = entity_damage_hook.call_target(damaged_ep, damage, killer_handle, damage_type, killer_uid);
+        if (rf::is_server && g_additional_server_config.hit_sounds.enabled && responsible_player) {
             send_hit_sound_packet(responsible_player);
         }
 
@@ -469,7 +471,7 @@ void server_init()
     detect_browser_player_patch.install();
 
     // Hit sounds
-    entity_take_damage_hook.install();
+    entity_damage_hook.install();
 
     // Do not strip '%' characters from chat messages
     write_mem<u8>(0x004785FD, asm_opcodes::jmp_rel_short);
