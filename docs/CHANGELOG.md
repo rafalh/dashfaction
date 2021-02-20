@@ -11,6 +11,8 @@ Version 1.6.1 (not yet released)
 - Add `$DF UPnP Enabled` option in dedicated server config that allows to disable UPnP
 - Fix hit sound packet sometimes being sent from the client
 - Do not play hit sounds if player damages themselves
+- Fix possible network issues if multiple clients sharing one IP address connect to a server in a very short period of
+  time (RF bug)
 
 Version 1.6.1-rc1 (released 2021-02-13)
 ---------------------------------------

@@ -1102,4 +1102,9 @@ void network_init()
 
     // Preserve password case when processing rcon_request command
     write_mem<i8>(0x0046C85A + 1, 1);
+
+    // Fix reliable sockets being incorrectly assigned to clients server-side if two clients with the same IP address
+    // connect at the same time. Unpatched game assigns newly connected reliable sockets to a player with the same
+    // IP address that the reliable socket uses. This change ensures that the port is also compared.
+    write_mem<i8>(0x0046E8DA + 1, 1);
 }
