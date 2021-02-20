@@ -13,6 +13,7 @@ Version 1.6.1 (not yet released)
 - Do not play hit sounds if player damages themselves
 - Fix possible network issues if multiple clients sharing one IP address connect to a server in a very short period of
   time (RF bug)
+- Fix drawing main menu background on some graphics cards/drivers (1.6.1-rc1 regression)
 
 Version 1.6.1-rc1 (released 2021-02-13)
 ---------------------------------------
