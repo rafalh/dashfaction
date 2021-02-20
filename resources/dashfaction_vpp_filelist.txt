@@ -1,3 +1,5 @@
+maps_df.txt
+
 images/DF_green.tga
 images/DF_red.tga
 images/scope_zoom_corner256_red.tga
@@ -47,7 +49,6 @@ images/hud_miniflag_hilight_1.vbm
 images/hud_miniflag_red_1.vbm
 images/noclip_ammo_bar_1.tga
 images/Icon_EAX.tga
-images/maps_df.txt
 images/mtl_archway04-mip1.tga
 images/pls_airlockmat01-mip2.tga
 images/consolebutton2A.tga
