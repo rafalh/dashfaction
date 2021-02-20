@@ -44,6 +44,7 @@ struct ServerAdditionalConfig
     bool saving_enabled = false;
     bool upnp_enabled = true;
     std::optional<int> force_player_character;
+    std::optional<float> max_fov;
 };
 
 extern ServerAdditionalConfig g_additional_server_config;
@@ -59,3 +60,4 @@ void load_next_level();
 void load_prev_level();
 void server_vote_on_limbo_state_enter();
 void process_delayed_kicks();
+const ServerAdditionalConfig& server_get_df_config();

@@ -638,7 +638,7 @@ struct df_sign_packet_ext
 };
 
 template<typename T>
-std::pair<std::unique_ptr<std::byte[]>, size_t> ExtendPacket(std::byte* data, size_t len, const T& ext_data)
+std::pair<std::unique_ptr<std::byte[]>, size_t> extend_packet(std::byte* data, size_t len, const T& ext_data)
 {
     auto new_data = std::make_unique<std::byte[]>(len + sizeof(ext_data));
     std::copy(data, data + len, new_data.get());
@@ -648,20 +648,20 @@ std::pair<std::unique_ptr<std::byte[]>, size_t> ExtendPacket(std::byte* data, si
     return {std::move(new_data), len + sizeof(ext_data)};
 }
 
-std::pair<std::unique_ptr<std::byte[]>, size_t> ExtendPacketWithDashFactionSignature(std::byte* data, size_t len)
+std::pair<std::unique_ptr<std::byte[]>, size_t> extend_packet_with_df_signature(std::byte* data, size_t len)
 {
     df_sign_packet_ext ext;
     ext.df_signature = DASH_FACTION_SIGNATURE;
     ext.version_major = VERSION_MAJOR;
     ext.version_minor = VERSION_MINOR;
-    return ExtendPacket(data, len, ext);
+    return extend_packet(data, len, ext);
 }
 
 CallHook<int(const rf::NetAddr*, std::byte*, size_t)> send_game_info_packet_hook{
     0x0047B287,
     [](const rf::NetAddr* addr, std::byte* data, size_t len) {
         // Add Dash Faction signature to game_info packet
-        auto [new_data, new_len] = ExtendPacketWithDashFactionSignature(data, len);
+        auto [new_data, new_len] = extend_packet_with_df_signature(data, len);
         return send_game_info_packet_hook.call_target(addr, new_data.get(), new_len);
     },
 };
@@ -671,12 +671,14 @@ struct DashFactionJoinAcceptPacketExt
     uint32_t df_signature = DASH_FACTION_SIGNATURE;
     uint8_t version_major = VERSION_MAJOR;
     uint8_t version_minor = VERSION_MINOR;
-    //uint32_t flags = 0;
 
     enum class Flags : uint32_t {
-        none = 0,
+        none           = 0,
         saving_enabled = 1,
+        max_fov        = 2,
     } flags = Flags::none;
+
+    float max_fov;
 
 };
 template<>
@@ -686,7 +688,7 @@ CallHook<int(const rf::NetAddr*, std::byte*, size_t)> send_join_req_packet_hook{
     0x0047ABFB,
     [](const rf::NetAddr* addr, std::byte* data, size_t len) {
         // Add Dash Faction signature to join_req packet
-        auto [new_data, new_len] = ExtendPacketWithDashFactionSignature(data, len);
+        auto [new_data, new_len] = extend_packet_with_df_signature(data, len);
         return send_join_req_packet_hook.call_target(addr, new_data.get(), new_len);
     },
 };
@@ -699,7 +701,11 @@ CallHook<int(const rf::NetAddr*, std::byte*, size_t)> send_join_accept_packet_ho
         if (server_is_saving_enabled()) {
             ext_data.flags |= DashFactionJoinAcceptPacketExt::Flags::saving_enabled;
         }
-        auto [new_data, new_len] = ExtendPacket(data, len, ext_data);
+        if (server_get_df_config().max_fov) {
+            ext_data.flags |= DashFactionJoinAcceptPacketExt::Flags::max_fov;
+            ext_data.max_fov = server_get_df_config().max_fov.value();
+        }
+        auto [new_data, new_len] = extend_packet(data, len, ext_data);
         return send_join_accept_packet_hook.call_target(addr, new_data.get(), new_len);
     },
 };
@@ -718,6 +724,11 @@ CodeInjection process_join_accept_injection{
             xlog::debug("Got DF server info: %d %d %d", ext_data.version_major, ext_data.version_minor,
                 static_cast<int>(ext_data.flags));
             server_info.saving_enabled = !!(ext_data.flags & DashFactionJoinAcceptPacketExt::Flags::saving_enabled);
+
+            constexpr float default_fov = 90.0f;
+            if (!!(ext_data.flags & DashFactionJoinAcceptPacketExt::Flags::max_fov) && ext_data.max_fov >= default_fov) {
+                server_info.max_fov = ext_data.max_fov;
+            }
             g_df_server_info = std::optional{server_info};
         }
         else {

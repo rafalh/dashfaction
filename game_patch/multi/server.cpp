@@ -134,6 +134,13 @@ void load_additional_server_config(rf::Parser& parser)
         }
     }
 
+    if (parser.parse_optional("$DF Max FOV:")) {
+        float max_fov = parser.parse_float();
+        if (max_fov > 0.0f) {
+            g_additional_server_config.max_fov = {max_fov};
+        }
+    }
+
     if (!parser.parse_optional("$Name:") && !parser.parse_optional("#End")) {
         parser.error("end of server configuration");
     }
@@ -536,4 +543,9 @@ void server_on_limbo_state_enter()
 bool server_is_saving_enabled()
 {
     return g_additional_server_config.saving_enabled;
+}
+
+const ServerAdditionalConfig& server_get_df_config()
+{
+    return g_additional_server_config;
 }

@@ -14,6 +14,7 @@
 #include "gr_internal.h"
 #include "../os/console.h"
 #include "../main/main.h"
+#include "../multi/multi.h"
 #include "../rf/gr/gr.h"
 #include "../rf/player.h"
 #include "../rf/multi.h"
@@ -66,11 +67,17 @@ float gr_scale_world_fov(float horizontal_fov = 90.0f)
     if (g_game_config.horz_fov > 0.0f) {
         // Use user provided factor
         // Note: 90 is the default FOV for RF
-        return horizontal_fov * g_game_config.horz_fov / 90.0f;
+        horizontal_fov *= g_game_config.horz_fov / 90.0f;
     }
     else {
-        return gr_scale_fov_hor_plus(horizontal_fov);
+        horizontal_fov = gr_scale_fov_hor_plus(horizontal_fov);
     }
+
+    auto& server_info_opt = get_df_server_info();
+    if (server_info_opt && server_info_opt.value().max_fov) {
+        horizontal_fov = std::min(horizontal_fov, server_info_opt.value().max_fov.value());
+    }
+    return horizontal_fov;
 }
 
 CodeInjection gameplay_render_frame_fov_injection{
@@ -106,6 +113,11 @@ ConsoleCommand2 fov_cmd{
             g_game_config.save();
         }
         rf::console_printf("Horizontal FOV: %.2f", gr_scale_world_fov());
+
+        auto& server_info_opt = get_df_server_info();
+        if (server_info_opt && server_info_opt.value().max_fov) {
+            rf::console_printf("Server FOV limit: %.2f", server_info_opt.value().max_fov.value());
+        }
     },
     "Sets horizontal FOV (field of view) in degrees. Use 0 to enable automatic FOV scaling.",
     "fov [degrees]",

@@ -15,6 +15,7 @@ Version 1.6.1 (not yet released)
   time (RF bug)
 - Fix drawing main menu background on some graphics cards/drivers (1.6.1-rc1 regression)
 - Change the key that crashes a frozen game process to Alt and change the minimal hold time to 1 second
+- Add `$DF Max FOV` option in dedicated server config that allows to limit FOV used by clients for level rendering
 
 Version 1.6.1-rc1 (released 2021-02-13)
 ---------------------------------------

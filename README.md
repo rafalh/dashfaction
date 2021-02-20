@@ -163,6 +163,9 @@ Configuration example:
     $DF UPnP Enabled: true
     // Force all players to use the same character (check pc_multi.tbl for valid names)
     $DF Force Player Character: "enviro_parker"
+    // Maximal horizontal FOV that clients can use for level rendering
+    //$DF Max FOV: 125
+
 
 License
 -------
