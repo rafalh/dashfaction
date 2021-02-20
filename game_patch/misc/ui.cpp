@@ -61,7 +61,7 @@ void __fastcall UiButton_render(rf::UiButton& this_)
 
     if (this_.bg_bitmap >= 0) {
         rf::gr_set_color(255, 255, 255, 255);
-        rf::gr_bitmap_stretched(this_.bg_bitmap, x, y, w, h, 0, 0, this_.w, this_.h);
+        rf::gr_bitmap_scaled(this_.bg_bitmap, x, y, w, h, 0, 0, this_.w, this_.h);
     }
 
     if (!this_.enabled) {
@@ -75,8 +75,8 @@ void __fastcall UiButton_render(rf::UiButton& this_)
     }
 
     if (this_.enabled && this_.highlighted && this_.selected_bitmap >= 0) {
-        auto state = addr_as_ref<rf::GrMode>(0x01775B0C);
-        rf::gr_bitmap_stretched(this_.selected_bitmap, x, y, w, h, 0, 0, this_.w, this_.h, false, false, state);
+        auto mode = addr_as_ref<rf::GrMode>(0x01775B0C);
+        rf::gr_bitmap_scaled(this_.selected_bitmap, x, y, w, h, 0, 0, this_.w, this_.h, false, false, mode);
     }
 
     // Change clip region for text rendering

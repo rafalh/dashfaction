@@ -10,7 +10,7 @@ bool gr_render_to_texture(int bm_handle);
 void gr_render_to_back_buffer();
 void gr_delete_texture(int bm_handle);
 bool gr_is_texture_format_supported(rf::BmFormat format);
-void gr_bitmap_stretched_float(int bitmap_handle, float x, float y, float w, float h, float sx, float sy, float sw, float sh, bool flip_x, bool flip_y, rf::GrMode mode);
+void gr_bitmap_scaled_float(int bitmap_handle, float x, float y, float w, float h, float sx, float sy, float sw, float sh, bool flip_x, bool flip_y, rf::GrMode mode);
 float gr_scale_fov_hor_plus(float horizontal_fov);
 
 template<typename F>

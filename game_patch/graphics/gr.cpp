@@ -138,12 +138,13 @@ bool gr_is_texture_format_supported(rf::BmFormat format)
     return false;
 }
 
-void gr_bitmap_stretched_float(int bitmap_handle, float x, float y, float w, float h, float sx, float sy, float sw, float sh, bool flip_x, bool flip_y, rf::GrMode mode)
+void gr_bitmap_scaled_float(int bitmap_handle, float x, float y, float w, float h,
+                            float sx, float sy, float sw, float sh, bool flip_x, bool flip_y, rf::GrMode mode)
 {
     auto& gr_d3d_get_num_texture_sections = addr_as_ref<int(int bitmap_handle)>(0x0055CA60);
     if (rf::gr_screen.mode == rf::GR_DIRECT3D && gr_d3d_get_num_texture_sections(bitmap_handle) != 1) {
         // If bitmap is sectioned fall back to the old implementation...
-        rf::gr_bitmap_stretched(bitmap_handle,
+        rf::gr_bitmap_scaled(bitmap_handle,
             static_cast<int>(x), static_cast<int>(y), static_cast<int>(w), static_cast<int>(h),
             static_cast<int>(sx), static_cast<int>(sy), static_cast<int>(sw), static_cast<int>(sh),
             flip_x, flip_y, mode);

@@ -359,7 +359,7 @@ namespace rf
         AddrCaller{0x0050D0A0}.c_call(bm_handle, x, y, w, h, sx, sy, mode);
     }
 
-    inline void gr_bitmap_stretched(int bm_handle, int x, int y, int w, int h, int sx, int sy, int sw, int sh, bool flip_x = false, bool flip_y = false, GrMode mode = gr_bitmap_wrap_mode)
+    inline void gr_bitmap_scaled(int bm_handle, int x, int y, int w, int h, int sx, int sy, int sw, int sh, bool flip_x = false, bool flip_y = false, GrMode mode = gr_bitmap_wrap_mode)
     {
         AddrCaller{0x0050D250}.c_call(bm_handle, x, y, w, h, sx, sy, sw, sh, flip_x, flip_y, mode);
     }

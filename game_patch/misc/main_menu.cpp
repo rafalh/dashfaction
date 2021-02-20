@@ -167,7 +167,7 @@ CodeInjection menu_draw_background_injection{
 
         rf::gr_set_color(255, 255, 255, 255);
         // Use function that accepts float sx
-        gr_bitmap_stretched_float(menu_background_bitmap, 0.0f, 0.0f,
+        gr_bitmap_scaled_float(menu_background_bitmap, 0.0f, 0.0f,
             static_cast<float>(rf::gr_screen.max_w), static_cast<float>(rf::gr_screen.max_h),
             menu_background_x, 0.0f, 640.0f, 480.0f, false, false, rf::gr_bitmap_clamp_mode);
         regs.eip = 0x00442D94;

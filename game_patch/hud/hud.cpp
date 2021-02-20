@@ -248,7 +248,7 @@ void hud_scaled_bitmap(int bmh, int x, int y, float scale, rf::GrMode mode)
         rf::bm_get_dimensions(bmh, &bm_w, &bm_h);
         int dst_w = static_cast<int>(std::round(bm_w * scale));
         int dst_h = static_cast<int>(std::round(bm_h * scale));
-        rf::gr_bitmap_stretched(bmh, x, y, dst_w, dst_h, 0, 0, bm_w, bm_h, 0.0f, 0.0f, mode);
+        rf::gr_bitmap_scaled(bmh, x, y, dst_w, dst_h, 0, 0, bm_w, bm_h, false, false, mode);
     }
 }
 

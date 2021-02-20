@@ -415,8 +415,8 @@ void multi_spectate_render()
         static int blood_bm = rf::bm_load("bloodsmear07_A.tga", -1, true);
         int blood_w, blood_h;
         rf::bm_get_dimensions(blood_bm, &blood_w, &blood_h);
-        rf::gr_bitmap_stretched(blood_bm, (scr_w - blood_w * 2) / 2, (scr_h - blood_h * 2) / 2, blood_w * 2,
-                                  blood_h * 2, 0, 0, blood_w, blood_h, 0.0f, 0.0f, rf::gr_bitmap_clamp_mode);
+        rf::gr_bitmap_scaled(blood_bm, (scr_w - blood_w * 2) / 2, (scr_h - blood_h * 2) / 2, blood_w * 2,
+                             blood_h * 2, 0, 0, blood_w, blood_h, false, false, rf::gr_bitmap_clamp_mode);
 
         rf::Color dead_clr{0xF0, 0x20, 0x10, 0xC0};
         draw_with_shadow(scr_w / 2, scr_h / 2, 2, 2, dead_clr, shadow_clr, [=](int x, int y) {
