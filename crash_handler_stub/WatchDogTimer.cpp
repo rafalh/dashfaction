@@ -10,10 +10,12 @@
 
 class WatchDogTimer::Impl
 {
-    unsigned m_interval_ms;
+    static constexpr std::chrono::seconds check_interval{1};
+
     HANDLE m_observed_thread_handle;
     DWORD m_observed_thread_id;
-    DWORD m_ticks;
+    std::chrono::milliseconds m_timeout;
+    std::chrono::time_point<std::chrono::steady_clock> m_last_reset_time;
     std::thread m_checker_thread;
     std::condition_variable m_cond_var;
     std::mutex m_mutex;
@@ -21,7 +23,7 @@ class WatchDogTimer::Impl
     bool m_running = false;
 
 public:
-    Impl(int interval_ms) : m_interval_ms(interval_ms)
+    Impl(std::chrono::milliseconds timeout) : m_timeout(timeout)
     {}
 
     void start()
@@ -37,7 +39,7 @@ public:
         }
         m_observed_thread_id = GetCurrentThreadId();
 
-        m_ticks = GetTickCount();
+        m_last_reset_time = std::chrono::steady_clock::now();
         m_exiting = false;
 
         m_checker_thread = std::thread{&WatchDogTimer::Impl::checker_thread_proc, this};
@@ -60,7 +62,7 @@ public:
 
     void restart()
     {
-        m_ticks = GetTickCount();
+        m_last_reset_time = std::chrono::steady_clock::now();
     }
 
     bool is_running()
@@ -76,22 +78,25 @@ private:
                 handle_time_out();
             }
             std::unique_lock<std::mutex> lk(m_mutex);
-            m_cond_var.wait_for(lk, std::chrono::milliseconds{m_interval_ms/2});
+            m_cond_var.wait_for(lk, check_interval);
         }
     }
 
     bool check_for_time_out()
     {
-        return GetTickCount() - m_ticks >= m_interval_ms;
+        auto now = std::chrono::steady_clock::now();
+        auto duration = now - m_last_reset_time;
+        return duration >= m_timeout;
     }
 
     void handle_time_out()
     {
-        if ((GetAsyncKeyState(VK_DELETE) & 0x8000)) {
+        if (GetAsyncKeyState(VK_MENU) & 0x8000) {
+            xlog::info("Crash of not responding process has been requested");
             crash_observed_thread();
         }
         else {
-            xlog::info("Application is not responding! Press DEL key to trigger a crash that will allow to debug the problem...");
+            xlog::info("Process is not responding! Hold the Alt key for a few seconds to kill the process and generate a crash report that will allow to debug the problem...");
         }
     }
 
@@ -120,7 +125,7 @@ private:
     }
 };
 
-WatchDogTimer::WatchDogTimer(int interval_ms) : m_impl(new WatchDogTimer::Impl(interval_ms))
+WatchDogTimer::WatchDogTimer(unsigned timeout_ms) : m_impl(new WatchDogTimer::Impl(std::chrono::milliseconds{timeout_ms}))
 {
 }
 

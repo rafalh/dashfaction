@@ -14,6 +14,7 @@ Version 1.6.1 (not yet released)
 - Fix possible network issues if multiple clients sharing one IP address connect to a server in a very short period of
   time (RF bug)
 - Fix drawing main menu background on some graphics cards/drivers (1.6.1-rc1 regression)
+- Change the key that crashes a frozen game process to Alt and change the minimal hold time to 1 second
 
 Version 1.6.1-rc1 (released 2021-02-13)
 ---------------------------------------
