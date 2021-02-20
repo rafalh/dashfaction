@@ -7,9 +7,10 @@ endif()
 # Build dashfaction.vpp
 add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/bin/dashfaction.vpp
-    COMMAND ${VPP_TOOL} -c ${CMAKE_BINARY_DIR}/bin/dashfaction.vpp @dashfaction_vpp_filelist.txt
+    COMMAND ${VPP_TOOL} -c ${CMAKE_BINARY_DIR}/bin/dashfaction.vpp @dashfaction_vpp_filelist.txt --dep-info
     MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/dashfaction_vpp_filelist.txt
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    DEPFILE ${CMAKE_BINARY_DIR}/bin/dashfaction.vpp.d
 )
 add_custom_target(DashFactionVpp ALL DEPENDS ${CMAKE_BINARY_DIR}/bin/dashfaction.vpp)
 
