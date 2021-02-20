@@ -1,5 +1,7 @@
 #pragma once
 
+#include <algorithm>
+
 template<typename IT, typename V>
 inline bool iterable_contains(IT& iterable, const V& value)
 {

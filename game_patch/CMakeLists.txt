@@ -28,13 +28,16 @@ set(SRCS
     rf/math/matrix.h
     rf/math/plane.h
     rf/math/ix.h
+    rf/sound/sound.h
+    rf/sound/sound_ds.h
+    rf/file/file.h
+    rf/file/packfile.h
     rf/ai.h
     rf/bmpman.h
     rf/clutter.h
     rf/corpse.h
     rf/entity.h
     rf/event.h
-    rf/file.h
     rf/gameseq.h
     rf/item.h
     rf/level.h
@@ -45,7 +48,6 @@ set(SRCS
     rf/parse.h
     rf/physics.h
     rf/player.h
-    rf/sound/sound.h
     rf/trigger.h
     rf/vmesh.h
     rf/weapon.h

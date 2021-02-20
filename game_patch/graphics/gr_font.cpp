@@ -12,7 +12,7 @@
 #include "../rf/gr/gr_font.h"
 #include "../rf/bmpman.h"
 #include "../rf/multi.h"
-#include "../rf/file.h"
+#include "../rf/file/file.h"
 #include "../bmpman/bmpman.h"
 
 #include <ft2build.h>

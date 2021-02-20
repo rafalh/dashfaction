@@ -1,9 +1,4 @@
 #include <windows.h>
-#include "vpackfile.h"
-#include "../main/main.h"
-#include "../rf/file.h"
-#include "../rf/crt.h"
-#include "../os/console.h"
 #include <common/utils/iterable-utils.h>
 #include <common/utils/os-utils.h>
 #include <xxhash.h>
@@ -18,42 +13,14 @@
 #include <cstring>
 #include <unordered_map>
 #include <shlwapi.h>
+#include "vpackfile.h"
+#include "../main/main.h"
+#include "../rf/file/file.h"
+#include "../rf/file/packfile.h"
+#include "../rf/crt.h"
+#include "../os/console.h"
 
 #define CHECK_PACKFILE_CHECKSUM 0 // slow (1 second on SSD on first load after boot)
-
-namespace rf
-{
-struct VPackfileEntry;
-
-struct VPackfile
-{
-    char filename[32];
-    char path[128];
-    uint32_t field_a0;
-    uint32_t num_files;
-    std::vector<VPackfileEntry> files;
-    uint32_t file_size;
-    bool is_user_maps;
-};
-
-// Note: this struct memory layout cannot be changed because it is used internally by rf::File class
-struct VPackfileEntry
-{
-    uint32_t name_checksum;
-    const char* name;
-    uint32_t block;
-    uint32_t size;
-    VPackfile* parent;
-    FILE* raw_file;
-};
-
-static auto& vpackfile_loading_user_maps = addr_as_ref<bool>(0x01BDB21C);
-
-static auto& vpackfile_calc_file_name_checksum = addr_as_ref<uint32_t(const char* file_name)>(0x0052BE70);
-typedef uint32_t VPackfileAddEntries_Type(VPackfile* packfile, const void* buf, unsigned num_files_in_block,
-                                         unsigned* num_added);
-static auto& vpackfile_add_entries = addr_as_ref<VPackfileAddEntries_Type>(0x0052BD40);
-} // namespace rf
 
 #if CHECK_PACKFILE_CHECKSUM
 
@@ -76,7 +43,7 @@ static bool g_is_overriding_disabled = false;
 
 #ifdef MOD_FILE_WHITELIST
 
-const char* ModFileWhitelist[] = {
+const char* mod_file_allow_list[] = {
     "reticle_0.tga",
     "scope_ret_0.tga",
     "reticle_rocket_0.tga",
@@ -84,8 +51,8 @@ const char* ModFileWhitelist[] = {
 
 static bool is_mod_file_in_whitelist(const char* Filename)
 {
-    for (unsigned i = 0; i < std::size(ModFileWhitelist); ++i)
-        if (!stricmp(ModFileWhitelist[i], Filename))
+    for (unsigned i = 0; i < std::size(mod_file_allow_list); ++i)
+        if (!stricmp(mod_file_allow_list[i], Filename))
             return true;
     return false;
 }
@@ -159,10 +126,11 @@ static uint32_t vpackfile_process_header(rf::VPackfile* packfile, const void* ra
         uint32_t num_files;
         uint32_t total_size;
     };
+    constexpr unsigned VPP_SIG = 0x51890ACE;
     auto& hdr = *reinterpret_cast<const VppHeader*>(raw_header);
     packfile->num_files = hdr.num_files;
     packfile->file_size = hdr.total_size;
-    if (hdr.sig != 0x51890ACE || hdr.unk < 1u)
+    if (hdr.sig != VPP_SIG || hdr.unk < 1u)
         return 0;
     return hdr.num_files;
 }
@@ -360,7 +328,7 @@ static void vpackfile_add_to_lookup_table(rf::VPackfileEntry* entry)
 }
 
 static int vpackfile_add_entries_new(rf::VPackfile* packfile, const void* block, unsigned num_files,
-                                  unsigned& num_added_files)
+                                     unsigned& num_added_files)
 {
     struct VppFileInfo
     {
@@ -459,7 +427,7 @@ void force_file_from_packfile(const char* name, const char* packfile_name)
     rf::VPackfile* packfile = vpackfile_find_packfile(packfile_name);
     if (packfile) {
         for (auto& entry : packfile->files) {
-            if (!stricmp(entry.name, name)) {
+            if (string_equals_ignore_case(entry.name, name)) {
                 vpackfile_add_to_lookup_table(&entry);
             }
         }
@@ -558,18 +526,17 @@ void vpackfile_apply_patches()
     AsmWriter(0x0052BB60).jmp(vpackfile_init_new);
     AsmWriter(0x0052BC80).jmp(vpackfile_cleanup_new);
 
-    // Don't return success from VPackfileOpen if offset points out of file contents
+    // Don't return success from vpackfile_open if offset points out of file contents
     vpackfile_open_check_seek_result_injection.install();
 
 #ifdef DEBUG
-    write_mem<u8>(0x0052BEF0, asm_opcodes::int3); // VPackfileInitFileList
-    write_mem<u8>(0x0052BF50, asm_opcodes::int3); // VPackfileLoadInternal
-    write_mem<u8>(0x0052C440, asm_opcodes::int3); // VPackfileFindEntry
-    write_mem<u8>(0x0052BD10, asm_opcodes::int3); // VPackfileProcessHeader
-    write_mem<u8>(0x0052BEB0, asm_opcodes::int3); // VPackfileSetupFileOffsets
+    write_mem<u8>(0x0052BEF0, asm_opcodes::int3); // vpackfile_init_file_list
+    write_mem<u8>(0x0052BF50, asm_opcodes::int3); // vpackfile_load_internal
+    write_mem<u8>(0x0052C440, asm_opcodes::int3); // vpackfile_find_entry
+    write_mem<u8>(0x0052BD10, asm_opcodes::int3); // vpackfile_process_header
+    write_mem<u8>(0x0052BEB0, asm_opcodes::int3); // vpackfile_setup_file_offsets
     write_mem<u8>(0x0052BCA0, asm_opcodes::int3); // vpackfile_add_to_lookup_table
     write_mem<u8>(0x0052C1D0, asm_opcodes::int3); // vpackfile_find_packfile
-
 #endif
 }
 

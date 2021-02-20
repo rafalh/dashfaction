@@ -8,7 +8,7 @@
 #include "../rf/gr/gr.h"
 #include "../rf/gr/gr_font.h"
 #include "../rf/input.h"
-#include "../rf/file.h"
+#include "../rf/file/file.h"
 #include "../rf/multi.h"
 #include "../main/main.h"
 #include "../graphics/gr.h"

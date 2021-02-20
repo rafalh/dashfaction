@@ -5,7 +5,7 @@
 #include <xlog/xlog.h>
 #include <common/utils/string-utils.h>
 #include "../graphics/gr.h"
-#include "../rf/file.h"
+#include "../rf/file/file.h"
 #include "dds.h"
 
 int bm_calculate_pitch(int w, rf::BmFormat format)

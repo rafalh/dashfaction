@@ -254,11 +254,11 @@ void __fastcall UiCycler_render(rf::UiCycler& this_)
 }
 FunHook UiCycler_render_hook{0x00457F40, UiCycler_render};
 
-CallHook<void(int*, int*, const char*, int, int, char, int)> GrFitMultilineText_UiSetModalDlgText_hook{
+CallHook<void(int*, int*, const char*, int, int, char, int)> popup_set_text_gr_split_str_hook{
     0x00455A7D,
-    [](int *len_array, int *offset_array, const char *text, int max_width, int max_lines, char unk_char, int font) {
-        max_width = static_cast<int>(max_width * rf::ui_scale_x);
-        GrFitMultilineText_UiSetModalDlgText_hook.call_target(len_array, offset_array, text, max_width, max_lines, unk_char, font);
+    [](int *n_chars, int *start_indices, const char *str, int max_pixel_w, int max_lines, char ignore_char, int font) {
+        max_pixel_w = static_cast<int>(max_pixel_w * rf::ui_scale_x);
+        popup_set_text_gr_split_str_hook.call_target(n_chars, start_indices, str, max_pixel_w, max_lines, ignore_char, font);
     },
 };
 
@@ -285,7 +285,7 @@ FunHook<void()> menu_init_hook{
 
 auto UiInputBox_add_char = reinterpret_cast<bool (__thiscall*)(void *this_, char c)>(0x00457260);
 
-extern FunHook<bool __fastcall(void *this_, int edx, rf::Key key)> UiInputBox_process_key_hook;
+extern FunHook<bool __fastcall(void*, int, rf::Key)> UiInputBox_process_key_hook;
 bool __fastcall UiInputBox_process_key_new(void *this_, int edx, rf::Key key)
 {
     if (key == (rf::KEY_V | rf::KEY_CTRLED)) {
@@ -320,7 +320,7 @@ void ui_apply_patch()
     UiInputBox_render_hook.install();
     UiCycler_add_item_hook.install();
     UiCycler_render_hook.install();
-    GrFitMultilineText_UiSetModalDlgText_hook.install();
+    popup_set_text_gr_split_str_hook.install();
 #endif
 
     // Init

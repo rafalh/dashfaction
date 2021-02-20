@@ -3,7 +3,7 @@
 #include <common/utils/string-utils.h>
 #include "../graphics/gr.h"
 #include "../rf/bmpman.h"
-#include "../rf/file.h"
+#include "../rf/file/file.h"
 #include "../rf/crt.h"
 #include "bmpman.h"
 

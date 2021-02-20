@@ -1,11 +1,3 @@
-#include "multi.h"
-#include "../rf/multi.h"
-#include "../rf/file.h"
-#include "../rf/gr/gr.h"
-#include "../rf/gr/gr_font.h"
-#include "../rf/ui.h"
-#include "../misc/misc.h"
-#include "../os/console.h"
 #include <common/HttpRequest.h>
 #include <common/rfproto.h>
 #include <common/config/BuildConfig.h>
@@ -19,9 +11,15 @@
 #include <sstream>
 #include <fstream>
 #include <cstring>
-
-#define AUTODL_AGENT_NAME "Dash Faction"
-#define AUTODL_BASE_URL "http://pfapi.factionfiles.com"
+#include "../rf/multi.h"
+#include "../rf/file/file.h"
+#include "../rf/file/packfile.h"
+#include "../rf/gr/gr.h"
+#include "../rf/gr/gr_font.h"
+#include "../rf/ui.h"
+#include "../misc/misc.h"
+#include "../os/console.h"
+#include "multi.h"
 
 struct LevelDownloadInfo
 {
@@ -31,6 +29,9 @@ struct LevelDownloadInfo
     unsigned size_in_bytes;
     int ticket_id;
 };
+
+static const char level_download_agent_name[] = "Dash Faction";
+static const char level_download_base_url[] = "http://pfapi.factionfiles.com";
 
 static LevelDownloadInfo g_level_info;
 static volatile unsigned g_level_bytes_downloaded;
@@ -172,8 +173,8 @@ static bool unrar_vpp(const char* path)
 }
 
 static bool fetch_level_file(const char* tmp_filename, int ticket_id) try {
-    HttpSession session{AUTODL_AGENT_NAME};
-    auto url = string_format("%s/downloadmap.php?ticketid=%u", AUTODL_BASE_URL, ticket_id);
+    HttpSession session{level_download_agent_name};
+    auto url = string_format("%s/downloadmap.php?ticketid=%u", level_download_base_url, ticket_id);
     HttpRequest req{url, "GET", session};
     req.send();
 
@@ -256,7 +257,7 @@ static void start_level_download()
     download_thread.detach();
 }
 
-static std::optional<LevelDownloadInfo> parse_level_download_info(char* buf)
+static std::optional<LevelDownloadInfo> parse_level_download_info(const char* buf)
 {
     std::stringstream ss(buf);
     ss.exceptions(std::ifstream::failbit | std::ifstream::badbit);
@@ -285,10 +286,10 @@ static std::optional<LevelDownloadInfo> parse_level_download_info(char* buf)
 }
 
 static std::optional<LevelDownloadInfo> fetch_level_download_info(const char* file_name) try {
-    HttpSession session{AUTODL_AGENT_NAME};
+    HttpSession session{level_download_agent_name};
     session.set_connect_timeout(2000);
     session.set_receive_timeout(3000);
-    auto url = AUTODL_BASE_URL "/findmap.php";
+    auto url = std::string{level_download_base_url} + "/findmap.php";
 
     xlog::trace("Fetching level info: %s", file_name);
     HttpRequest req{url, "POST", session};
