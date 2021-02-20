@@ -11,9 +11,9 @@ Features:
 * spectate mode (first person or free camera)
 * wide-screen support
 * windowed and stretched display mode
-* better graphics quality (anti-aliasing, true-color textures, anisotropic filtering, higher scanner view resolution, disabled LOD models and more)
+* better graphics quality (anti-aliasing, higher textures color depth, anisotropic filtering, higher scanner view and mirrors resolution, LOD models improvements and more)
 * improved security (enabled Data Execution Prevention, multiple Buffer Overflows fixes)
-* removed limit of packfiles
+* removed/raised multiple game limits
 * improved Scoreboard with Kills/Deaths column
 * information about killer's weapon in chat
 * option to disable level ambient sounds
@@ -159,11 +159,11 @@ Configuration example:
     $DF Player Damage Modifier: 1.0
     // Enable '/save' and '/load' chat commands (works for all clients) and quick save/load controls handling (works for Dash Faction 1.5.0+ clients). Option designed with run-maps in mind.
     $DF Saving Enabled: false
-    // Enable Universal Plug-and-Play
+    // Enable Universal Plug-and-Play (enabled by default)
     $DF UPnP Enabled: true
     // Force all players to use the same character (check pc_multi.tbl for valid names)
     $DF Force Player Character: "enviro_parker"
-    // Maximal horizontal FOV that clients can use for level rendering
+    // Maximal horizontal FOV that clients can use for level rendering (unlimited by default)
     //$DF Max FOV: 125
 
 

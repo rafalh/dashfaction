@@ -332,3 +332,4 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 Chris "Goober" Parsons:
 * HUD textures for the big mode
 * symbol glyphs in ttf fonts
+* launcher header
