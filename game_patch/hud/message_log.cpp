@@ -22,8 +22,8 @@ CodeInjection message_log_init_injection{
         message_log_scale_x = rf::gr_screen_width() / 640.0f;
         message_log_scale_y = rf::gr_screen_height() / 480.0f;
 
-        float clip_w = rf::gr_clip_width();
-        float clip_h = rf::gr_clip_height();
+        float clip_w = static_cast<float>(rf::gr_clip_width());
+        float clip_h = static_cast<float>(rf::gr_clip_height());
         message_log_bg_x = static_cast<int>((clip_w - message_log_bm_w * message_log_scale_x) / 2.0f);
         message_log_bg_y = static_cast<int>((clip_h - message_log_bm_h * message_log_scale_y) / 2.0f);
         message_log_entries_clip_x = message_log_bg_x + static_cast<int>(30.0f * message_log_scale_x);
