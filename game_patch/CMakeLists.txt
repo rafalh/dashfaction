@@ -99,6 +99,7 @@ set(SRCS
     multi/server.cpp
     multi/votes.cpp
     multi/commands.cpp
+    multi/multi_tdm.cpp
     os/console.cpp
     os/console.h
     os/commands.cpp

@@ -9,3 +9,5 @@ void level_download_do_patch();
 void level_download_init();
 
 void network_init();
+
+void multi_tdm_apply_patch();

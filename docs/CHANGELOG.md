@@ -1,6 +1,11 @@
 DashFaction Changelog
 =====================
 
+Version 1.6.2 (not released yet)
+--------------------------------
+- Change maximal value of Max Kills dedicated server config to 999
+- Support Team DM scores above 255
+
 Version 1.6.1 (released 2021-02-20)
 -----------------------------------
 - Improve tbl parsing error message

@@ -354,6 +354,7 @@ void multi_do_patch()
     multi_kill_do_patch();
     level_download_do_patch();
     network_init();
+    multi_tdm_apply_patch();
 
     level_download_init();
 

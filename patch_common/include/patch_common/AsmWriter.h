@@ -162,6 +162,25 @@ public:
         return *this;
     }
 
+    AsmWriter& cmp(const AsmRegMem& dst, const AsmReg32& src)
+    {
+        write<u8>(0x39);
+        write_mod_rm(dst, src);
+        return *this;
+    }
+
+    AsmWriter& cmp(const AsmReg32& dst, const AsmRegMem& src)
+    {
+        write<u8>(0x3B);
+        write_mod_rm(src, dst);
+        return *this;
+    }
+
+    AsmWriter& cmp(const AsmReg32& dst, const AsmReg32& src)
+    {
+        return cmp(AsmRegMem{dst}, src);
+    }
+
     AsmWriter& cmp(const AsmReg8& reg, int8_t imm)
     {
         if (reg == asm_regs::al) // al

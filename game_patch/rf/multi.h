@@ -160,8 +160,8 @@ namespace rf
     static auto& multi_ctf_get_blue_flag_player = addr_as_ref<Player*()>(0x00474E70);
     static auto& multi_ctf_is_red_flag_in_base = addr_as_ref<bool()>(0x00474E80);
     static auto& multi_ctf_is_blue_flag_in_base = addr_as_ref<bool()>(0x00474EA0);
-    static auto& multi_tdm_get_red_team_score = addr_as_ref<uint8_t()>(0x004828F0);
-    static auto& multi_tdm_get_blue_team_score = addr_as_ref<uint8_t()>(0x00482900);
+    static auto& multi_tdm_get_red_team_score = addr_as_ref<int()>(0x004828F0); // returns ubyte in vanilla game
+    static auto& multi_tdm_get_blue_team_score = addr_as_ref<int()>(0x00482900); // returns ubyte in vanilla game
     static auto& multi_num_players = addr_as_ref<int()>(0x00484830);
     static auto& multi_kick_player = addr_as_ref<void(Player *player)>(0x0047BF00);
     static auto& multi_ban_ip = addr_as_ref<void(const NetAddr& addr)>(0x0046D0F0);
