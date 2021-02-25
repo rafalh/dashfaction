@@ -129,24 +129,24 @@ private:
 // Note: server browser internal functions use strings safely (see 0x0044DDCA for example)
 // Note: level filename was limited to 64 because of VPP format limits
 std::array g_buffer_overflow_patches{
-    BufferOverflowPatch{0x0047B2D3, 0x0047B2DE, 256}, // ProcessGameInfoPacket (server name)
-    BufferOverflowPatch{0x0047B334, 0x0047B33D, 256}, // ProcessGameInfoPacket (level name)
-    BufferOverflowPatch{0x0047B38E, 0x0047B397, 256}, // ProcessGameInfoPacket (mod name)
-    BufferOverflowPatch{0x0047ACF6, 0x0047AD03, 32},  // ProcessJoinReqPacket (player name)
-    BufferOverflowPatch{0x0047AD4E, 0x0047AD55, 256}, // ProcessJoinReqPacket (password)
-    BufferOverflowPatch{0x0047A8AE, 0x0047A8B5, 64},  // ProcessJoinAcceptPacket (level filename)
-    BufferOverflowPatch{0x0047A5F4, 0x0047A5FF, 32},  // ProcessNewPlayerPacket (player name)
-    BufferOverflowPatch{0x00481EE6, 0x00481EEF, 32},  // ProcessPlayersPacket (player name)
-    BufferOverflowPatch{0x00481BEC, 0x00481BF8, 64},  // ProcessStateInfoReqPacket (level filename)
-    BufferOverflowPatch{0x004448B0, 0x004448B7, 256}, // ProcessChatLinePacket (message)
-    BufferOverflowPatch{0x0046EB24, 0x0046EB2B, 32},  // ProcessNameChangePacket (player name)
-    BufferOverflowPatch{0x0047C1C3, 0x0047C1CA, 64},  // ProcessLeaveLimboPacket (level filename)
-    BufferOverflowPatch{0x0047EE6E, 0x0047EE77, 256}, // ProcessObjKillPacket (item name)
-    BufferOverflowPatch{0x0047EF9C, 0x0047EFA5, 256}, // ProcessObjKillPacket (item name)
-    BufferOverflowPatch{0x00475474, 0x0047547D, 256}, // ProcessEntityCreatePacket (entity name)
-    BufferOverflowPatch{0x00479FAA, 0x00479FB3, 256}, // ProcessItemCreatePacket (item name)
-    BufferOverflowPatch{0x0046C590, 0x0046C59B, 256}, // ProcessRconReqPacket (password)
-    BufferOverflowPatch{0x0046C751, 0x0046C75A, 512}, // ProcessRconPacket (command)
+    BufferOverflowPatch{0x0047B2D3, 0x0047B2DE, 256}, // process_game_info_packet (server name)
+    BufferOverflowPatch{0x0047B334, 0x0047B33D, 256}, // process_game_info_packet (level name)
+    BufferOverflowPatch{0x0047B38E, 0x0047B397, 256}, // process_game_info_packet (mod name)
+    BufferOverflowPatch{0x0047ACF6, 0x0047AD03, 32},  // process_join_req_packet (player name)
+    BufferOverflowPatch{0x0047AD4E, 0x0047AD55, 256}, // process_join_req_packet (password)
+    BufferOverflowPatch{0x0047A8AE, 0x0047A8B5, 64},  // process_join_accept_packet (level filename)
+    BufferOverflowPatch{0x0047A5F4, 0x0047A5FF, 32},  // process_new_player_packet (player name)
+    BufferOverflowPatch{0x00481EE6, 0x00481EEF, 32},  // process_players_packet (player name)
+    BufferOverflowPatch{0x00481BEC, 0x00481BF8, 64},  // process_state_info_req_packet (level filename)
+    BufferOverflowPatch{0x004448B0, 0x004448B7, 256}, // process_chat_line_packet (message)
+    BufferOverflowPatch{0x0046EB24, 0x0046EB2B, 32},  // process_name_change_packet (player name)
+    BufferOverflowPatch{0x0047C1C3, 0x0047C1CA, 64},  // process_leave_limbo_packet (level filename)
+    BufferOverflowPatch{0x0047EE6E, 0x0047EE77, 256}, // process_obj_kill_packet (item name)
+    BufferOverflowPatch{0x0047EF9C, 0x0047EFA5, 256}, // process_obj_kill_packet (item name)
+    BufferOverflowPatch{0x00475474, 0x0047547D, 256}, // process_entity_create_packet (entity name)
+    BufferOverflowPatch{0x00479FAA, 0x00479FB3, 256}, // process_item_create_packet (item name)
+    BufferOverflowPatch{0x0046C590, 0x0046C59B, 256}, // process_rcon_req_packet (password)
+    BufferOverflowPatch{0x0046C751, 0x0046C75A, 512}, // process_rcon_packet (command)
 };
 
 // clang-format off
@@ -477,24 +477,6 @@ FunHook<MultiIoPacketHandler> process_reload_request_packet_hook{
         }
     },
 };
-
-rf::Entity* process_obj_update_packet_validate(rf::Entity* entity, uint8_t flags, rf::Player* src_player)
-{
-    if (rf::is_server) {
-        // server-side
-        if (entity && entity->handle != src_player->entity_handle) {
-            xlog::trace("Invalid obj_update entity %x %x %s", entity->handle, src_player->entity_handle,
-                  src_player->name.c_str());
-            return nullptr;
-        }
-
-        if (flags & (0x4 | 0x20 | 0x80)) { // OUF_WEAPON_TYPE | OUF_HEALTH_ARMOR | OUF_ARMOR_STATE
-            xlog::trace("Invalid obj_update flags %x", flags);
-            return nullptr;
-        }
-    }
-    return entity;
-}
 
 CodeInjection process_obj_update_check_flags_injection{
         0x0047E058,
@@ -1027,7 +1009,7 @@ void network_init()
     write_mem<u16>(0x0059CDE4, 0);
     write_mem<i32>(0x004B159D + 1, 0); // TODO: add setting in launcher
 
-    // Dont overwrite MpCharacter in Single Player
+    // Do not overwrite multi_entity in Single Player
     AsmWriter(0x004A415F).nop(10);
 
     // Show valid info for servers with incompatible version
@@ -1058,15 +1040,6 @@ void network_init()
 
     // Fix obj_update packet handling
     process_obj_update_check_flags_injection.install();
-    // using namespace asm_regs;
-    // AsmWriter(0x0047E058, 0x0047E06A)
-    //     .mov(eax, *(esp + 0x9C - 0x6C)) // Player
-    //     .push(eax)
-    //     .push(ebx)
-    //     .push(edi)
-    //     .call(process_obj_update_packet_validate)
-    //     .add(esp, 12)
-    //     .mov(edi, eax);
 
     // Verify on/off weapons handling
     process_obj_update_weapon_fire_injection.install();
@@ -1075,10 +1048,10 @@ void network_init()
     using namespace asm_regs;
     AsmWriter(0x0046CAD7, 0x0046CADA).cmp(al, -1);
 
-    // Hide IP addresses in Players packet
+    // Hide IP addresses in players packet
     AsmWriter(0x00481D31, 0x00481D33).xor_(eax, eax);
     AsmWriter(0x00481D40, 0x00481D44).xor_(edx, edx);
-    // Hide IP addresses in New Player packet
+    // Hide IP addresses in new_player packet
     AsmWriter(0x0047A4A0, 0x0047A4A2).xor_(edx, edx);
     AsmWriter(0x0047A4A6, 0x0047A4AA).xor_(ecx, ecx);
 
@@ -1093,28 +1066,28 @@ void network_init()
     // Use server name from game_info packet for netgame name if address matches current server
     process_game_info_packet_hook.install();
 
-    // Fix GameType out of bounds vulnerability in GameInfo packet
+    // Fix game_type out of bounds vulnerability in game_info packet
     process_game_info_packet_game_type_bounds_patch.install();
 
-    // Fix MeshId out of bounds vulnerability in Boolean packet
+    // Fix shape_index out of bounds vulnerability in boolean packet
     process_boolean_packet_validate_shape_index_patch.install();
 
-    // Fix RoomId out of bounds vulnerability in Boolean packet
+    // Fix room_index out of bounds vulnerability in boolean packet
     process_boolean_packet_validate_room_uid_patch.install();
 
-    // Fix MeshId out of bounds vulnerability in PregameBoolean packet
+    // Fix shape_index out of bounds vulnerability in pregame_boolean packet
     process_pregame_boolean_packet_validate_shape_index_patch.install();
 
-    // Fix RoomId out of bounds vulnerability in PregameBoolean packet
+    // Fix room_index out of bounds vulnerability in pregame_boolean packet
     process_pregame_boolean_packet_validate_room_uid_patch.install();
 
-    // Fix crash if room does not exist in GlassKill packet
+    // Fix crash if room does not exist in glass_kill packet
     process_glass_kill_packet_check_room_exists_patch.install();
 
     // Make sure tracker packets come from configured tracker
     net_get_tracker_hook.install();
 
-    // Add Dash Faction signature to game_info join_req, join_accept packets
+    // Add Dash Faction signature to game_info, join_req, join_accept packets
     send_game_info_packet_hook.install();
     send_join_req_packet_hook.install();
     send_join_accept_packet_hook.install();
