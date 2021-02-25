@@ -6,6 +6,7 @@ Version 1.6.2 (not released yet)
 - Change maximal value of Max Kills dedicated server config to 999
 - Support Team DM scores above 255
 - Added additional textures from base game to level editor texture browser (contribution from Goober)
+- Display proper server name in the scoreboard when joining by link
 
 Version 1.6.1 (released 2021-02-20)
 -----------------------------------

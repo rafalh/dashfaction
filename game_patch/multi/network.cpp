@@ -305,6 +305,22 @@ CodeInjection process_game_packet_whitelist_filter{
     },
 };
 
+FunHook<MultiIoPacketHandler> process_game_info_packet_hook{
+    0x0047B2A0,
+    [](char* data, const rf::NetAddr& addr) {
+        xlog::warn("process_game_info_packet_hook");
+        process_game_info_packet_hook.call_target(data, addr);
+
+        // If this packet is from the server that we are connected to, use game_info for the netgame name
+        // Useful for joining using protocol handler because when we join we do not have the server name available yet
+        auto server_name = data + 1;
+        xlog::warn("process_game_info_packet_hook %s", server_name);
+        if (addr == rf::netgame.server_addr) {
+            rf::netgame.name = server_name;
+        }
+    },
+};
+
 CodeInjection process_game_info_packet_game_type_bounds_patch{
     0x0047B30B,
     [](auto& regs) {
@@ -737,6 +753,18 @@ CodeInjection process_join_accept_injection{
     },
 };
 
+CodeInjection process_join_accept_send_game_info_req_injection{
+    0x0047AA00,
+    [](auto& regs) {
+        // Force game_info update in case we were joining using protocol handler (server list not fully refreshed) or
+        // using old fav entry with outdated name
+        rf::NetAddr* server_addr = regs.edi;
+        xlog::warn("Sending game_info_req to %x:%d", server_addr->ip_addr, server_addr->port);
+        auto send_game_info_req_packet = addr_as_ref<void(const rf::NetAddr& addr)>(0x0047B450);
+        send_game_info_req_packet(*server_addr);
+    },
+};
+
 std::optional<std::string> determine_local_ip_address()
 {
     ULONG forward_table_size = 0;
@@ -1062,6 +1090,9 @@ void network_init()
     multi_get_obj_handle_from_server_handle_hook.install();
     multi_set_obj_handle_mapping_hook.install();
 
+    // Use server name from game_info packet for netgame name if address matches current server
+    process_game_info_packet_hook.install();
+
     // Fix GameType out of bounds vulnerability in GameInfo packet
     process_game_info_packet_game_type_bounds_patch.install();
 
@@ -1088,6 +1119,7 @@ void network_init()
     send_join_req_packet_hook.install();
     send_join_accept_packet_hook.install();
     process_join_accept_injection.install();
+    process_join_accept_send_game_info_req_injection.install();
     multi_stop_hook.install();
 
     // Use port 7755 when hosting a server without 'Force port' option
