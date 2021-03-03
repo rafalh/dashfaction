@@ -71,45 +71,37 @@ namespace rf
     };
     static_assert(sizeof(ControlConfigItem) == 0x1C);
 
-    struct ControlMouseConfig
+    struct ControlAxisConfig
     {
         bool active;
         bool invert;
-        int axis_id;
+        int mouse_axis;
         int field_8;
         int field_C;
     };
-    static_assert(sizeof(ControlMouseConfig) == 0x10);
+    static_assert(sizeof(ControlAxisConfig) == 0x10);
 
     struct ControlConfig
     {
         float mouse_sensitivity;
         bool mouse_look;
         int current_delta_z;
-        ControlConfigItem keys[128];
-        int ctrl_count;
-        ControlMouseConfig mouse_controls[2];
-        int field_f14;
-        int field_f18;
-        int field_f1c;
-        int field_f20;
-        int field_f24;
-        int field_f28;
+        ControlConfigItem bindings[128];
+        int num_bindings;
+        ControlAxisConfig axes[4];
     };
-    static_assert(sizeof(ControlConfig) == 0xE48);
+    static_assert(sizeof(ControlConfig) == 0xE50);
 
     struct PlayerSettings
     {
         ControlConfig controls;
-        int field_f2c;
-        int field_f30;
-        bool field_f34;
+        bool field_e50;
         bool field_e51;
         bool render_fpgun;
         bool weapons_sway;
         bool toggle_crouch;
-        bool field_f39;
-        bool field_f3a;
+        bool field_e55;
+        bool field_e56;
         bool show_hud;
         bool show_hud_ammo;
         bool show_hud_status;
@@ -120,14 +112,14 @@ namespace rf
         bool shadows_enabled;
         bool decals_enabled;
         bool dynamic_lightining_enabled;
-        bool field_f45;
-        bool field_f46;
-        bool field_f47;
+        bool field_e61;
+        bool field_e62;
+        bool field_e63;
         bool bilinear_filtering;
         int detail_level;
         int textures_resolution_level;
         int character_detail_level;
-        float field_f58;
+        float field_e74;
         int multi_character;
         char name[32];
     };
@@ -260,8 +252,8 @@ namespace rf
         PlayerFlags flags;
         int entity_handle;
         int entity_type;
-        Vector3 field_1C;
-        int field_28;
+        Vector3 spew_pos;
+        ubyte spew_vector_index;
         PlayerLevelStats *stats;
         ubyte team;
         bool collides_with_world;
@@ -271,8 +263,7 @@ namespace rf
         int muzzle_tag_index[2];
         int ammo_digit1_tag_index;
         int ammo_digit2_tag_index;
-        bool key_items[32];
-        int field_70[16];
+        bool key_items[96];
         bool just_landed;
         bool is_crouched;
         int view_from_handle;

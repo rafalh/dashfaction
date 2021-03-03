@@ -18,7 +18,7 @@ rf::String get_game_ctrl_bind_name(int game_ctrl)
 {
     auto get_key_name = addr_as_ref<int(rf::String *out, int key)>(0x0043D930);
     auto get_mouse_button_name = addr_as_ref<int(rf::String *out, int mouse_btn)>(0x0043D970);
-    auto ctrl_config = rf::local_player->settings.controls.keys[game_ctrl];
+    auto ctrl_config = rf::local_player->settings.controls.bindings[game_ctrl];
     rf::String name;
     if (ctrl_config.scan_codes[0] >= 0) {
         get_key_name(&name, ctrl_config.scan_codes[0]);
@@ -38,7 +38,7 @@ void render_skip_cutscene_hint_text(rf::ControlAction ctrl)
         return;
     }
     auto bind_name = get_game_ctrl_bind_name(ctrl);
-    auto& ctrl_name = rf::local_player->settings.controls.keys[ctrl].name;
+    auto& ctrl_name = rf::local_player->settings.controls.bindings[ctrl].name;
     rf::gr_set_color(255, 255, 255, 255);
     auto msg = rf::String::format("Press %s (%s) to skip the cutscene", ctrl_name.c_str(), bind_name.c_str());
     auto x = rf::gr_screen_width() / 2;
