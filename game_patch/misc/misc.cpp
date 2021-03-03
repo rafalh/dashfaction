@@ -81,6 +81,22 @@ void start_join_multi_game_sequence(const rf::NetAddr& addr, const std::string& 
     g_join_mp_game_seq_data = {JoinMpGameData{addr, password}};
 }
 
+bool multi_join_game(const rf::NetAddr& addr, const std::string& password)
+{
+    auto multi_set_current_server_addr = addr_as_ref<void(const rf::NetAddr& addr)>(0x0044B380);
+    auto send_join_req_packet = addr_as_ref<void(const rf::NetAddr& addr, rf::String::Pod name, rf::String::Pod password, int max_rate)>(0x0047AA40);
+
+    if (rf::gameseq_get_state() != rf::GS_MULTI_SERVER_LIST) {
+        return false;
+    }
+
+    rf::String password2{password.c_str()};
+    g_join_mp_game_seq_data.reset();
+    multi_set_current_server_addr(addr);
+    send_join_req_packet(addr, rf::local_player->name, password2, rf::local_player->net_data->max_update_rate);
+    return true;
+}
+
 FunHook<void(int, int)> rf_init_state_hook{
     0x004B1AC0,
     [](int state, int old_state) {
@@ -113,14 +129,10 @@ FunHook<void(int, int)> rf_init_state_hook{
             set_sound_enabled(true);
 
             if (g_join_mp_game_seq_data) {
-                auto multi_set_current_server_addr = addr_as_ref<void(const rf::NetAddr& addr)>(0x0044B380);
-                auto send_join_req_packet = addr_as_ref<void(const rf::NetAddr& addr, rf::String::Pod name, rf::String::Pod password, int max_rate)>(0x0047AA40);
-
                 auto addr = g_join_mp_game_seq_data.value().addr;
-                rf::String password{g_join_mp_game_seq_data.value().password.c_str()};
+                auto password = g_join_mp_game_seq_data.value().password;
                 g_join_mp_game_seq_data.reset();
-                multi_set_current_server_addr(addr);
-                send_join_req_packet(addr, rf::local_player->name, password, rf::local_player->net_data->max_update_rate);
+                multi_join_game(addr, password);
             }
         }
     },

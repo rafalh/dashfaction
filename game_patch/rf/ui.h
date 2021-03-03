@@ -96,8 +96,11 @@ namespace rf
     static auto& ui_popup_message = addr_as_ref<void(const char *title, const char *text, void(*callback)(), bool input)>(0x004560B0);
     using UiDialogCallbackPtr = void (*)();
     static auto& ui_popup_custom =
-        addr_as_ref<void(const char *title, const char *text, unsigned num_buttons, const char *ppsz_btn_titles[],
-                       UiDialogCallbackPtr callbacks[], unsigned unknown1, unsigned unknown2)>(0x004562A0);
+        addr_as_ref<void(const char *title, const char *text, int num_btns, const char *choices[],
+                       UiDialogCallbackPtr choices_callbacks[], int default_choice, int keys[])>(0x004562A0);
+    static auto& ui_popup_abort = addr_as_ref<void()>(0x004559C0);
+    static auto& ui_popup_set_text = addr_as_ref<void(const char *text)>(0x00455A50);
+
     static auto& ui_get_gadget_from_pos = addr_as_ref<int(int x, int y, UiGadget * const gadgets[], int num_gadgets)>(0x00442ED0);
     static auto& ui_update_input_box_cursor = addr_as_ref<void()>(0x00456960);
 
