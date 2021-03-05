@@ -429,7 +429,8 @@ FunHook<MultiIoPacketHandler> process_entity_create_packet_hook{
         char player_id = data[name_size + 58];
         // Check if this is not NPC
         if (player_id != '\xFF') {
-            int32_t weapon_type = *reinterpret_cast<int32_t*>(data + name_size + 63);
+            int weapon_type;
+            std::memcpy(&weapon_type, data + name_size + 63, sizeof(weapon_type));
             auto old_default_player_weapon = rf::default_player_weapon;
             rf::default_player_weapon = rf::weapon_types[weapon_type].name;
             process_entity_create_packet_hook.call_target(data, addr);
@@ -446,9 +447,11 @@ FunHook<MultiIoPacketHandler> process_reload_packet_hook{
     [](char* data, const rf::NetAddr& addr) {
         if (!rf::is_server) { // client-side
             // Update clip_size and max_ammo if received values are greater than values from local weapons.tbl
-            int weapon_type = *reinterpret_cast<int*>(data + 4);
-            int ammo = *reinterpret_cast<int*>(data + 8);
-            int clip_ammo = *reinterpret_cast<int*>(data + 12);
+            int weapon_type, ammo, clip_ammo;
+            std::memcpy(&weapon_type, data + 4, sizeof(weapon_type));
+            std::memcpy(&ammo, data + 8, sizeof(ammo));
+            std::memcpy(&clip_ammo, data + 12, sizeof(clip_ammo));
+
             if (rf::weapon_types[weapon_type].clip_size < clip_ammo)
                 rf::weapon_types[weapon_type].clip_size = clip_ammo;
             if (rf::weapon_types[weapon_type].max_ammo < ammo)
@@ -468,7 +471,8 @@ FunHook<MultiIoPacketHandler> process_reload_request_packet_hook{
             return;
         }
         auto pp = rf::multi_find_player_by_addr(addr);
-        auto weapon_type = *reinterpret_cast<int*>(data);
+        int weapon_type;
+        std::memcpy(&weapon_type, data, sizeof(weapon_type));
         if (pp) {
             void multi_reload_weapon_server_side(rf::Player* pp, int weapon_type);
             multi_reload_weapon_server_side(pp, weapon_type);
@@ -634,13 +638,22 @@ struct df_sign_packet_ext
 };
 
 template<typename T>
-std::pair<std::unique_ptr<std::byte[]>, size_t> extend_packet(std::byte* data, size_t len, const T& ext_data)
+std::pair<std::unique_ptr<std::byte[]>, size_t> extend_packet(const std::byte* data, size_t len, const T& ext_data)
 {
     auto new_data = std::make_unique<std::byte[]>(len + sizeof(ext_data));
-    std::copy(data, data + len, new_data.get());
-    std::copy(&ext_data, &ext_data + 1, reinterpret_cast<T*>(new_data.get() + len));
-    auto& new_header = *reinterpret_cast<RF_GamePacketHeader*>(new_data.get());
-    new_header.size += sizeof(ext_data);
+
+    // Modify size in packet header
+    RF_GamePacketHeader header;
+    std::memcpy(&header, data, sizeof(header));
+    header.size += sizeof(ext_data);
+    std::memcpy(new_data.get(), &header, sizeof(header));
+
+    // Copy old data
+    std::memcpy(new_data.get() + sizeof(header), data + sizeof(header), len - sizeof(header));
+
+    // Append extension data
+    std::memcpy(new_data.get() + len, reinterpret_cast<const std::byte*>(&ext_data), sizeof(ext_data));
+
     return {std::move(new_data), len + sizeof(ext_data)};
 }
 
@@ -711,7 +724,9 @@ CodeInjection process_join_accept_injection{
     [](auto& regs) {
         std::byte* packet = regs.ebp;
         auto ext_offset = regs.esi + 5;
-        auto& ext_data = *reinterpret_cast<DashFactionJoinAcceptPacketExt*>(&packet[ext_offset]);
+        DashFactionJoinAcceptPacketExt ext_data;
+        std::copy(packet + ext_offset, packet + ext_offset + sizeof(DashFactionJoinAcceptPacketExt),
+            reinterpret_cast<std::byte*>(&ext_data));
         xlog::debug("Checking for join_accept DF extension: %08X", ext_data.df_signature);
         if (ext_data.df_signature == DASH_FACTION_SIGNATURE) {
             DashFactionServerInfo server_info;
@@ -905,14 +920,16 @@ const std::optional<DashFactionServerInfo>& get_df_server_info()
 
 void send_chat_line_packet(const char* msg, rf::Player* target, rf::Player* sender, bool is_team_msg)
 {
-    uint8_t buf[512];
-    auto& packet = *reinterpret_cast<RF_ChatLinePacket*>(buf);
+    rf::ubyte buf[512];
+    RF_ChatLinePacket packet;
     packet.header.type = RF_GPT_CHAT_LINE;
     packet.header.size = static_cast<uint16_t>(sizeof(packet) - sizeof(packet.header) + std::strlen(msg) + 1);
     packet.player_id = sender ? sender->net_data->player_id : 0xFF;
     packet.is_team_msg = is_team_msg;
-    std::strncpy(packet.message, msg, 255);
-    packet.message[255] = 0;
+    std::memcpy(buf, reinterpret_cast<rf::ubyte*>(&packet), sizeof(packet));
+    char* packet_msg = reinterpret_cast<char*>(buf + sizeof(packet));
+    std::strncpy(packet_msg, msg, 255);
+    packet_msg[255] = 0;
     if (target == nullptr && rf::is_server) {
         rf::multi_io_send_reliable_to_all(buf, packet.header.size + sizeof(packet.header), 0);
         rf::console_printf("Server: %s", msg);
