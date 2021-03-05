@@ -308,13 +308,11 @@ CodeInjection process_game_packet_whitelist_filter{
 FunHook<MultiIoPacketHandler> process_game_info_packet_hook{
     0x0047B2A0,
     [](char* data, const rf::NetAddr& addr) {
-        xlog::warn("process_game_info_packet_hook");
         process_game_info_packet_hook.call_target(data, addr);
 
         // If this packet is from the server that we are connected to, use game_info for the netgame name
         // Useful for joining using protocol handler because when we join we do not have the server name available yet
         auto server_name = data + 1;
-        xlog::warn("process_game_info_packet_hook %s", server_name);
         if (addr == rf::netgame.server_addr) {
             rf::netgame.name = server_name;
         }
@@ -741,7 +739,7 @@ CodeInjection process_join_accept_send_game_info_req_injection{
         // Force game_info update in case we were joining using protocol handler (server list not fully refreshed) or
         // using old fav entry with outdated name
         rf::NetAddr* server_addr = regs.edi;
-        xlog::warn("Sending game_info_req to %x:%d", server_addr->ip_addr, server_addr->port);
+        xlog::trace("Sending game_info_req to %x:%d", server_addr->ip_addr, server_addr->port);
         auto send_game_info_req_packet = addr_as_ref<void(const rf::NetAddr& addr)>(0x0047B450);
         send_game_info_req_packet(*server_addr);
     },
