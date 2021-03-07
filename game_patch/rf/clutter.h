@@ -23,12 +23,19 @@ namespace rf
         VMesh *corpse_vmesh_handle;
         int current_skin_index;
         VArray<int> links;
-        int field_2cc;
+        bool already_spawned_glass;
         int use_sound;
         uint16_t killable_index;
-        uint16_t field_2d6;
     };
     static_assert(sizeof(Clutter) == 0x2D8);
+
+    enum MonitorState
+    {
+        MONITOR_STATE_ON = 0x0,
+        MONITOR_STATE_OFF = 0x1,
+        MONITOR_STATE_STATIC = 0x2,
+    };
+
 
     struct Monitor
     {

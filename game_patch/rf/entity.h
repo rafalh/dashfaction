@@ -14,11 +14,10 @@ namespace rf
     struct EntityFireInfo;
     struct ClimbRegion;
 
-    using EntityFlags = int;
-    using EntityFlags2 = int;
-    using EntitySpeed = int;
-
-    constexpr int EF_JUMP_START_ANIM = 2;
+    enum EntityFlags
+    {
+        EF_JUMP_START_ANIM = 2,
+    };
 
     struct EntityCollisionSphereOverride
     {
@@ -53,7 +52,7 @@ namespace rf
     {
         String name;
         String anim_filename;
-        int field_10;
+        int sound;
         int num_triggers;
         EntityAnimTrigger triggers[2];
         int field_30;
@@ -66,106 +65,113 @@ namespace rf
         String textures[12];
     };
 
+    enum EntitySpeed
+    {
+        ENTITY_SPEED_SLOW = 0x0,
+        ENTITY_SPEED_REGULAR = 0x1,
+        ENTITY_SPEED_FAST = 0x2,
+    };
+
     struct EntityInfo
     {
         String name;
-        String v3d_filename;
+        String vmesh_filename;
         String debris_filename;
-        String corpse_v3d_filename;
-        String death_anim;
-        int corpse_emitter;
+        String corpse_vmesh_filename;
+        String corpse_anim_string;
+        int corpse_emitter_handle;
         float corpse_emitter_lifetime;
-        String move_mode;
+        String movemode_name;
         String helmet_v3d_filename;
-        float col_radius;
-        float life;
-        float envirosuit;
-        float col_damage_given;
+        float collision_radius;
+        float max_life;
+        float max_armor;
+        float collision_damage_given;
         float max_vel;
-        float slow_factor;
-        float fast_factor;
+        float slow_vel_factor;
+        float fast_vel_factor;
         float acceleration;
         float max_rot_vel;
         float rot_acceleration;
         float mass;
         Vector3 min_rel_eye_phb;
         Vector3 max_rel_eye_phb;
-        int field_84;
+        float radius;
         int default_primary_weapon;
         int default_secondary_weapon;
         int default_melee_weapon;
         VMeshType vmesh_class;
         int material;
-        Vector3 field_9C;
-        Vector3 field_A8;
+        Vector3 local_eye_offset;
+        Vector3 local_crouch_eye_offset;
         bool allowed_weapons[64];
-        int muzzle1_prop_id;
-        int led1prop_id;
-        int primary_muzzle_glare;
-        int fly_snd_not_sure;
-        String fly_snd;
-        float fly_snd_unk1;
-        float fly_snd_unk2;
-        int attach_snd;
-        int detach_snd;
-        int rotate_snd;
-        int jump_snd;
-        int death_snd;
+        int primary_muzzle_flash_tag;
+        int motion_detect_led_tag;
+        int primary_muzzle_flash_glare_index;
+        int fly_sound_ambient;
+        String fly_sound_ambient_name;
+        float fly_sound_ambient_min_dist;
+        float fly_sound_ambient_vol_scale;
+        int attach_sound;
+        int detach_sound;
+        int rotate_sound;
+        int jump_sound;
+        int death_sound;
         int impact_death_sound;
-        int head_lamp_on_snd;
-        int head_lamp_off_snd;
+        int headlamp_on_sound;
+        int headlamp_off_sound;
         int engine_rev_fwd_sound;
         int engine_rev_back_sound;
         int move_sound;
-        int land_sounds[10];
-        int startle_snd;
-        int low_pain_snd;
-        int med_pain_snd;
-        int squash_snd;
-        int footstep_sounds[10];
-        int climb_footstep_sounds[3];
-        int crawl_footstep_sound;
-        float min_fly_snd_volume;
-        ObjectUse use;
+        int land_sound_id[10];
+        int startle_sound_id;
+        int low_pain_sounds_id;
+        int med_pain_sounds_id;
+        int squash_sounds_id;
+        int footstep_sound_id[10];
+        int footstep_sound_climb_id[3];
+        int crawl_footstep_sound_id;
+        float min_fly_sound_volume;
+        ObjectUseFunction use_function;
         float use_radius;
-        FArray<int, 2> primary_prop_ids;
-        FArray<int, 2> secondary_prop_ids;
-        FArray<int, 2> primary_weapon_prop_ids;
-        FArray<int, 2> secondary_weapon_prop_ids;
+        FArray<int, 2> primary_fire_points;
+        FArray<int, 2> secondary_fire_points;
+        FArray<int, 2> primary_gun_points;
+        FArray<int, 2> secondary_gun_points;
         int eye_tag;
-        FArray<int, 32> thruster_prop_ids;
-        char thruster_vfx[1024];
-        int thruster_vfx_count;
-        FArray<int, 8> corona_prop_ids;
-        FArray<int, 8> corona_glare;
-        FArray<int, 8> corona_glare_headlamp;
-        int helmet_prop_id;
-        int shell_eject_prop_id;
-        int hand_left_prop_id;
-        int hand_right_prop_id;
+        FArray<int, 32> thruster_points;
+        char thruster_vfx_names[32][32];
+        int num_thruster_vfx_names;
+        FArray<int, 8> glare_points;
+        FArray<int, 8> glare_indices;
+        FArray<int, 8> glare_headlamps;
+        int helmet_tag;
+        int shell_eject_tag;
+        int hand_tags[2];
         int persona;
-        int explode_anim_vclip;
-        float explode_anim_radius;
-        Vector3 explode_offset;
-        FArray<int, 2> emitters;
-        float blind_pursuit_time;
-        int field_71C;
-        int attack_style;
-        int entity_flags;
-        int entity_flags2;
-        int field_72C[6];
-        String primary_warmup_fx;
-        float movement_radius;
+        int explode_vclip_index;
+        float explode_vclip_radius;
+        Vector3 explode_local_offset;
+        FArray<int, 2> emitter_indices;
+        float blind_pursuit_time_seconds;
+        int backoff_attack_distance;
+        int default_attack_style;
+        int flags;
+        int flags2;
+        int field_72C;
+        FArray<int, 4> field_730;
+        String primary_warmup_vfx_filename;
+        float default_movement_radius;
         int force_launch_sound;
         int num_state_anims;
         int num_action_anims;
         EntityAnimInfo *state_anims;
         EntityAnimInfo *action_anims;
-        float fov;
-        int weapon_specific_states_count[64];
-        int weapon_specific_action_count[64];
-        EntityAnimInfo *num_state_weapon_anims[64];
-        EntityAnimInfo *num_action_weapon_anims[64];
+        float fov_dot;
+        int num_state_weapon_anims[64];
+        int num_action_weapon_anims[64];
+        EntityAnimInfo *state_weapon_anims[64];
+        EntityAnimInfo *action_weapon_anims[64];
         FArray<EntityCollisionSphereOverride, 8> csphere_overrides;
         FArray<EntityCollisionSphere, 8> collision_spheres;
         FArray<EntityCollisionSphere, 8> crouch_collision_spheres;
@@ -175,7 +181,7 @@ namespace rf
         ObjSkinInfo alt_skins[10];
         int num_detail_distances;
         float detail_distances[4];
-        String cockpit_vfx;
+        String cockpit_vfx_filename;
         int corpse_carry_tag;
         int lower_spine_tag;
         int upper_spine_tag;
@@ -190,11 +196,10 @@ namespace rf
     static auto& num_entity_types = addr_as_ref<int>(0x0062F2D0);
     static auto& entity_types = addr_as_ref<EntityInfo[MAX_ENTITY_TYPES]>(0x005CC500);
 
-    struct MoveModeInfo
+    struct MoveMode
     {
-        char available;
-        char unk, unk2, unk3;
-        int id;
+        bool valid;
+        int mode;
         int move_ref_x;
         int move_ref_y;
         int move_ref_z;
@@ -243,8 +248,8 @@ namespace rf
         int fly_sound_ambient_handle;
         int pain_sound_handle;
         int move_sound_handle;
-        EntityFlags entity_flags;
-        EntityFlags2 entity_flags2;
+        unsigned entity_flags;
+        unsigned entity_flags2;
         Timestamp weapon_looping_timestamp;
         int weapon_loop_sound_handle;
         int weapon_stop_sound_handle;
@@ -261,7 +266,7 @@ namespace rf
         VMesh *cockpit_vfx_handle;
         int nano_shield;
         int damage_sound_instance;
-        MoveModeInfo *move_mode;
+        MoveMode *move_mode;
         Matrix3 *move_parent_orient;
         EntityControlData control_data;
         float max_vel;

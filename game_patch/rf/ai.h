@@ -7,6 +7,8 @@
 
 namespace rf
 {
+    struct Entity;
+
     struct ControlInfo
     {
         Vector3 rot;
@@ -18,72 +20,106 @@ namespace rf
 
     struct AiPathInfo
     {
-        int field_0;
-        Vector3 *target_pos_unk_slots[4];
-        int field_14;
-        int current_slot;
-        GPathNode field_1C;
-        GPathNode field_98;
-        GPathNode *field_114;
-        GPathNode *field_118;
-        Timestamp timer_11C;
-        int waypoint_list_idx;
-        int waypoint_idx;
-        int field_128;
-        int waypoint_method;
-        int hEntityUnk;
-        Timestamp timer_134;
-        Vector3 orient_target;
-        int moving_grp_handle_unk;
-        int field_148;
-        Vector3 field_14C;
-        int field_158;
-        char field_15C;
-        int field_160;
-        Vector3 unk_target_pos;
-        int field_170;
-        Vector3 target_pos0;
+        int num_nodes;
+        GPathNode *nodes[4];
+        int previous_goal;
+        int current_goal;
+        GPathNode start_node;
+        GPathNode end_node;
+        GPathNode *adjacent_node1;
+        GPathNode *adjacent_node2;
+        Timestamp shortcut_next_check;
+        int waypoint_list_index;
+        int goal_waypoint_index;
+        int direction;
+        int flags;
+        int owner_handle;
+        Timestamp resume_path_timestamp;
+        Vector3 turn_towards_pos;
+        int mover_wait_handle;
+        int follow_style;
+        Vector3 start_pos;
+        int preferred_travel_ratio;
+        bool going_to_next_node;
+        int radius;
+        Vector3 goal_pos;
+        bool has_current_goal_pos;
+        Vector3 current_goal_pos;
     };
     static_assert(sizeof(AiPathInfo) == 0x180);
 
     enum AiFlags
     {
-        AI_FLAG_DEAF = 0x800,
+        AIF_DEAF = 0x800,
+        AIF_ALT_FIRE = 0x2000,
     };
 
     enum AiMode
     {
-        AIM_NONE = 0x0,
-        AIM_CATATONIC = 0x1,
-        AIM_WAITING = 0x2,
-        AIM_ATTACK = 0x3,
-        AIM_WAYPOINTS = 0x4,
-        AIM_COLLECTING = 0x5,
-        AIM_AFTER_NOISE = 0x6,
-        AIM_FLEE = 0x7,
-        AIM_LOOK_AT = 0x8,
-        AIM_SHOOT_AT = 0x9,
-        AIM_WATCHFUL = 0xA,
-        AIM_MOTION_DETECTION = 0xB,
-        AIM_C = 0xC,
-        AIM_TURRET_UNK = 0xD,
-        AIM_HEALING = 0xE,
-        AIM_CAMERA_UNK = 0xF,
-        AIM_ACTIVATE_ALARM = 0x10,
-        AIM_PANIC = 0x11,
+        AI_MODE_NONE = 0x0,
+        AI_MODE_CATATONIC = 0x1,
+        AI_MODE_WAITING = 0x2,
+        AI_MODE_CHASE = 0x3,
+        AI_MODE_WAYPOINTS = 0x4,
+        AI_MODE_COLLECTING = 0x5,
+        AI_MODE_INVESTIGATE_SOUND = 0x6,
+        AI_MODE_FLEE = 0x7,
+        AI_MODE_EVENT_LOOK_AT = 0x8,
+        AI_MODE_EVENT_SHOOT_AT = 0x9,
+        AI_MODE_FIND_PLAYER = 0xA,
+        AI_MODE_MOTION_DETECT = 0xB,
+        AI_MODE_FIND_COVER = 0xC,
+        AI_MODE_ON_TURRET = 0xD,
+        AI_MODE_HEALING = 0xE,
+        AI_MODE_SECURITY_CAM = 0xF,
+        AI_MODE_SET_ALARM = 0x10,
+        AI_MODE_BERSERK = 0x11,
+    };
+
+    enum AiSubmode
+    {
+        AI_SUBMODE_NONE = 0x0,
+        AI_SUBMODE_ON_PATH = 0x1,
+        AI_SUBMODE_ATTACK = 0x2,
+        AI_SUBMODE_ATTACK_MELEE = 0x3,
+        AI_SUBMODE_COLLECTING_PATROL = 0x4,
+        AI_SUBMODE_COLLECTING_PICK_UP = 0x5,
+        AI_SUBMODE_COLLECTING_MOVE_TO_DROP_POINT = 0x6,
+        AI_SUBMODE_COLLECTING_DROP = 0x7,
+        AI_SUBMODE_MOTION_DETECT_SWEEP = 0x8,
+        AI_SUBMODE_MOTION_DETECT_ATTACK = 0x9,
+        AI_SUBMODE_SET_ALARM_PLAY_ANIM = 0xA,
+        AI_SUBMODE_WANDER = 0xB,
+        AI_SUBMODE_12 = 0xC,
     };
 
     enum AiAttackStyle
     {
-        AIAS_DEFAULT = 0xFFFFFFFF,
-        AIAS_EVASIVE = 0x1,
-        AIAS_STAND_GROUND = 0x2,
-        AIAS_DIRECT = 0x3,
+        AI_ATTACK_STYLE_DEFAULT = 0xFFFFFFFF,
+        AI_ATTACK_STYLE_EVASIVE = 0x1,
+        AI_ATTACK_STYLE_STAND_GROUND = 0x2,
+        AI_ATTACK_STYLE_DIRECT = 0x3,
     };
+
+    enum AiCoverStyle
+    {
+        AI_COVER_STYLE_UNKNOWN = 0x0,
+        AI_COVER_STYLE_CROUCH = 0x1,
+        AI_COVER_STYLE_STAND = 0x2,
+    };
+
+
+    enum AiCooperation
+    {
+        AI_UNCOOPERATIVE = 0x0,
+        AI_SPECIES_COOPERATIVE = 0x1,
+        AI_COOPERATIVE = 0x2,
+    };
+
 
     struct AiInfo
     {
-        struct Entity *entity;
+        Entity *ep;
         int current_primary_weapon;
         int current_secondary_weapon;
         int ammo[32];
@@ -95,89 +131,89 @@ namespace rf
         Timestamp next_fire_secondary;
         Timestamp create_weapon_delay_timestamps[2];
         bool delayed_alt_fire;
-        Timestamp timer_22C;
-        Timestamp watchful_mode_update_target_pos_timestamp;
-        Timestamp timer_234;
-        Timestamp timer_238;
-        Timestamp timer_23C;
-        Vector3 field_240;
-        int field_24C;
-        Timestamp flee_timer_unk;
-        Timestamp timer_254;
-        Timestamp timer_258;
-        Timestamp primary_burst_delay_timestamp;
-        int primary_burst_count_left;
-        Timestamp seconary_burst_delay_timestamp;
-        int secondary_burst_count_left;
-        int field_26C;
-        int field_270;
-        Timestamp unholster_timestamp;
-        Timestamp field_278;
-        int cooperation;
+        Timestamp stop_continuous_weapon_timestamp;
+        Timestamp delay_before_pathfind_timestamp;
+        Timestamp delay_before_wander_timestamp;
+        Timestamp delay_before_chase_around_corner;
+        Timestamp find_cover_timestamp;
+        Vector3 cover_pos;
+        AiCoverStyle cover_style;
+        Timestamp flee_maybe_stop_timestamp;
+        Timestamp berserk_timestamp;
+        Timestamp attach_rock_timestamp;
+        Timestamp primary_burst_fire_next_timestamp;
+        int primary_burst_fire_remaining;
+        Timestamp secondary_burst_fire_next_timestamp;
+        int secondary_burst_fire_remaining;
+        int next_fire_secondary_slot;
+        int next_fire_primary_slot;
+        Timestamp unholster_done_timestamp;
+        Timestamp gun_in_hand_timestamp;
+        AiCooperation cooperation;
         AiMode mode;
         AiMode mode_default;
         int mode_change_time;
         int mode_parm_0;
         int mode_parm_1;
-        Timestamp timer_294;
-        float unk_time;
-        char field_29C;
-        char field_29D;
-        __int16 field_29E;
-        Timestamp timer_2A0;
-        Timestamp timer_2A4;
-        Timestamp timer_2A8;
-        int field_2AC;
-        int field_2B0;
-        int submode;
-        int submode_default;
+        Timestamp next_update_target_los;
+        float last_seen_target_time;
+        bool target_body_visible;
+        bool target_eye_visible;
+        bool friendly_blocking_visibility;
+        Timestamp motion_detect_stop_firing;
+        Timestamp motion_detect_resume_sweep;
+        Timestamp motion_detect_sweep_pause;
+        int motion_detect_degrees_plus;
+        int motion_detect_degrees_minus;
+        AiSubmode submode;
+        AiSubmode submode_default;
         int submode_change_time;
-        int target_obj_handle;
-        Vector3 target_obj_pos;
-        Timestamp field_2D0;
+        int target_handle;
+        Vector3 target_acquired_pos;
+        Timestamp target_acquired_timestamp;
         int look_at_handle;
         int shoot_at_handle;
-        Timestamp field_2DC;
-        Timestamp field_2E0;
-        int field_2E4;
+        Timestamp choose_target_timestamp;
+        Timestamp danger_weapon_scan_timestamp;
+        int danger_weapon_handle;
         AiPathInfo current_path;
         ControlInfo ci;
-        Timestamp field_48C;
-        Vector3 field_490;
-        float last_dmg_time;
-        AiAttackStyle ai_attack_style;
-        Timestamp field_4A4;
-        int waypoint_list_idx;
-        int waypoint_method;
-        int turret_uid;
-        Timestamp field_4B4;
-        Timestamp field_4B8;
-        int held_corpse_handle;
-        float field_4C0;
-        Timestamp field_4C4;
-        int alert_camera_uid;
+        Timestamp collecting_scan_timestamp;
+        Vector3 collecting_drop_pos;
+        float last_damage_time;
+        AiAttackStyle attack_style;
+        Timestamp fire_delay_timestamp;
+        int default_waypoint_path;
+        int default_waypoint_path_flags;
+        int on_turret_uid;
+        Timestamp change_weapon_state_timestamp;
+        Timestamp corpse_scan_timestamp;
+        int corpse_carry_handle;
+        float healing_left;
+        Timestamp healing_delay_timestamp;
+        int camera_uid;
         int alarm_event_uid;
         Timestamp field_4D0;
-        Timestamp field_4D4;
-        Timestamp field_4D8;
-        Timestamp waiting_to_waypoints_mode_timestamp;
-        Timestamp timeout_timestamp;
-        Timestamp field_4E4;
-        Timestamp field_4E8;
-        Vector3 unk_target_pos;
+        Timestamp cower_speak_timestamp;
+        Timestamp humming_timestamp;
+        Timestamp resume_waypoints_timestamp;
+        Timestamp player_timeout_timestamp;
+        Timestamp panic_timestamp;
+        Timestamp do_turning_timestamp;
+        Vector3 pos_to_turn_to;
         Timestamp timer_4F8;
         Timestamp timer_4FC;
-        Vector3 pos_delta;
-        int field_50C;
-        float last_rot_time;
+        Vector3 steering_vector;
+        int vertical_offset;
+        float last_turn_time;
         float last_move_time;
         float last_fire_time;
         int field_51C_;
         float movement_radius;
-        float field_524_;
-        char use_custom_attack_range;
+        float movement_height;
+        bool use_custom_attack_range;
         float custom_attack_range;
-        int flags;
+        int ai_flags;
     };
     static_assert(sizeof(AiInfo) == 0x534);
 

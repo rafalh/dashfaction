@@ -93,7 +93,7 @@ bool is_player_weapon_on(rf::Player* player, bool alt_fire) {
     }
     auto entity = rf::entity_from_handle(player->entity_handle);
     bool is_continous_fire = rf::entity_weapon_is_on(entity->handle, entity->ai.current_primary_weapon);
-    bool is_alt_fire_flag_set = (entity->ai.flags & 0x2000) != 0; // EWF_ALT_FIRE = 0x2000
+    bool is_alt_fire_flag_set = (entity->ai.ai_flags & rf::AIF_ALT_FIRE) != 0;
     if (should_swap_weapon_alt_fire(player)) {
         is_alt_fire_flag_set = !is_alt_fire_flag_set;
     }
@@ -157,10 +157,10 @@ FunHook<void(rf::Player*, int)> player_make_weapon_current_selection_hook{
             entity->ai.create_weapon_delay_timestamps[0].invalidate();
             entity->ai.create_weapon_delay_timestamps[1].invalidate();
             // Reset burst counters and timers
-            entity->ai.primary_burst_count_left = 0;
-            entity->ai.secondary_burst_count_left = 0;
-            entity->ai.primary_burst_delay_timestamp.invalidate();
-            entity->ai.seconary_burst_delay_timestamp.invalidate();
+            entity->ai.primary_burst_fire_remaining = 0;
+            entity->ai.secondary_burst_fire_remaining = 0;
+            entity->ai.primary_burst_fire_next_timestamp.invalidate();
+            entity->ai.secondary_burst_fire_next_timestamp.invalidate();
         }
     },
 };
@@ -177,11 +177,11 @@ CallHook<void __fastcall(rf::Timestamp*, int, int)> player_execute_action_timest
     &player_execute_action_timestamp_set_new,
 };
 
-FunHook<void(rf::Player*, rf::ControlAction, bool)> player_execute_action_hook{
+FunHook<void(rf::Player*, rf::ControlConfigAction, bool)> player_execute_action_hook{
     0x004A6210,
-    [](rf::Player* player, rf::ControlAction ctrl, bool was_pressed) {
-        if (!multi_spectate_execute_action(ctrl, was_pressed)) {
-            player_execute_action_hook.call_target(player, ctrl, was_pressed);
+    [](rf::Player* player, rf::ControlConfigAction action, bool was_pressed) {
+        if (!multi_spectate_execute_action(action, was_pressed)) {
+            player_execute_action_hook.call_target(player, action, was_pressed);
         }
     },
 };

@@ -67,7 +67,7 @@ FunHook<void(rf::Player*)> hud_status_render_hook{
             int health_bmh = rf::hud_health_bitmaps[health_tex_idx];
             auto [health_x, health_y] = hud_scale_coords(rf::hud_coords[rf::hud_health], scale);
             hud_scaled_bitmap(health_bmh, health_x, health_y, scale);
-            int enviro_tex_idx = static_cast<int>(entity->armor / entity->info->envirosuit * 10.0f);
+            int enviro_tex_idx = static_cast<int>(entity->armor / entity->info->max_armor * 10.0f);
             enviro_tex_idx = std::clamp(enviro_tex_idx, 0, 10);
             int enviro_bmh = rf::hud_enviro_bitmaps[enviro_tex_idx];
             auto [envirosuit_x, envirosuit_y] = hud_scale_coords(rf::hud_coords[rf::hud_envirosuit], scale);

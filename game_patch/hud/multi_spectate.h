@@ -11,4 +11,4 @@ void multi_spectate_render();
 void multi_spectate_on_destroy_player(rf::Player* player);
 void multi_spectate_player_create_entity_post(rf::Player* player, rf::Entity* entity);
 bool multi_spectate_is_spectating();
-bool multi_spectate_execute_action(rf::ControlAction key_id, bool was_pressed);
+bool multi_spectate_execute_action(rf::ControlConfigAction action, bool was_pressed);

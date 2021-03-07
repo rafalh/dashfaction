@@ -153,24 +153,24 @@ void multi_spectate_leave()
         set_camera_target(rf::local_player);
 }
 
-bool multi_spectate_execute_action(rf::ControlAction key_id, bool was_pressed)
+bool multi_spectate_execute_action(rf::ControlConfigAction action, bool was_pressed)
 {
     if (!rf::is_multi) {
         return false;
     }
 
     if (g_spectate_mode_enabled) {
-        if (key_id == rf::CA_PRIMARY_ATTACK || key_id == rf::CA_SLIDE_RIGHT) {
+        if (action == rf::CC_ACTION_PRIMARY_ATTACK || action == rf::CC_ACTION_SLIDE_RIGHT) {
             if (was_pressed)
                 spectate_next_player(true);
             return true; // dont allow spawn
         }
-        else if (key_id == rf::CA_SECONDARY_ATTACK || key_id == rf::CA_SLIDE_LEFT) {
+        else if (action == rf::CC_ACTION_SECONDARY_ATTACK || action == rf::CC_ACTION_SLIDE_LEFT) {
             if (was_pressed)
                 spectate_next_player(false);
             return true;
         }
-        else if (key_id == rf::CA_JUMP) {
+        else if (action == rf::CC_ACTION_JUMP) {
             if (was_pressed)
                 multi_spectate_leave();
             return true;
@@ -178,14 +178,14 @@ bool multi_spectate_execute_action(rf::ControlAction key_id, bool was_pressed)
     }
     else if (multi_spectate_is_freelook()) {
         // don't allow respawn in freelook spectate
-        if (key_id == rf::CA_PRIMARY_ATTACK || key_id == rf::CA_SECONDARY_ATTACK) {
+        if (action == rf::CC_ACTION_PRIMARY_ATTACK || action == rf::CC_ACTION_SECONDARY_ATTACK) {
             if (was_pressed)
                 multi_spectate_leave();
             return true;
         }
     }
     else if (!g_spectate_mode_enabled) {
-        if (key_id == rf::CA_JUMP && was_pressed && rf::player_is_dead(rf::local_player)) {
+        if (action == rf::CC_ACTION_JUMP && was_pressed && rf::player_is_dead(rf::local_player)) {
             multi_spectate_set_target_player(rf::local_player);
             spectate_next_player(true, true);
             return true;

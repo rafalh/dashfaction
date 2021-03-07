@@ -104,7 +104,7 @@ FunHook<void(int, int)> rf_init_state_hook{
         xlog::trace("state %d old_state %d g_jump_to_multi_server_list %d", state, old_state, g_jump_to_multi_server_list);
 
         bool exiting_game = state == rf::GS_MAIN_MENU &&
-            (old_state == rf::GS_EXIT_GAME || old_state == rf::GS_LOADING_LEVEL);
+            (old_state == rf::GS_EXIT_GAME || old_state == rf::GS_NEW_LEVEL);
         if (exiting_game && g_in_mp_game) {
             g_in_mp_game = false;
             g_jump_to_multi_server_list = true;

@@ -43,8 +43,8 @@ namespace rf
         String name;
         int count;
         int field_2A8;
-        int respawn_time;
-        Timestamp respawn_timestamp;
+        int respawn_time_ms;
+        Timestamp respawn_next;
         float alpha;
         float create_time;
         int item_flags;

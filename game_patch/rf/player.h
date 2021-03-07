@@ -63,11 +63,10 @@ namespace rf
         int16_t default_scan_codes[2];
         int16_t default_mouse_btn_id;
         int16_t field_6;
-        int field_8;
+        int is_repeat;
         String name;
         int16_t scan_codes[2];
         int16_t mouse_btn_id;
-        int16_t field_1a;
     };
     static_assert(sizeof(ControlConfigItem) == 0x1C);
 
@@ -125,33 +124,33 @@ namespace rf
     };
     static_assert(sizeof(PlayerSettings) == 0xE9C);
 
-    enum ControlAction
+    enum ControlConfigAction
     {
-        CA_PRIMARY_ATTACK = 0x0,
-        CA_SECONDARY_ATTACK = 0x1,
-        CA_USE = 0x2,
-        CA_JUMP = 0x3,
-        CA_CROUCH = 0x4,
-        CA_HIDE_WEAPON = 0x5,
-        CA_RELOAD = 0x6,
-        CA_NEXT_WEAPON = 0x7,
-        CA_PREV_WEAPON = 0x8,
-        CA_CHAT = 0x9,
-        CA_TEAM_CHAT = 0xA,
-        CA_FORWARD = 0xB,
-        CA_BACKWARD = 0xC,
-        CA_SLIDE_LEFT = 0xD,
-        CA_SLIDE_RIGHT = 0xE,
-        CA_SLIDE_UP = 0xF,
-        CA_SLIDE_DOWN = 0x10,
-        CA_LOOK_DOWN = 0x11,
-        CA_LOOK_UP = 0x12,
-        CA_TURN_LEFT = 0x13,
-        CA_TURN_RIGHT = 0x14,
-        CA_MESSAGES = 0x15,
-        CA_MP_STATS = 0x16,
-        CA_QUICK_SAVE = 0x17,
-        CA_QUICK_LOAD = 0x18,
+        CC_ACTION_PRIMARY_ATTACK = 0x0,
+        CC_ACTION_SECONDARY_ATTACK = 0x1,
+        CC_ACTION_USE = 0x2,
+        CC_ACTION_JUMP = 0x3,
+        CC_ACTION_CROUCH = 0x4,
+        CC_ACTION_HIDE_WEAPON = 0x5,
+        CC_ACTION_RELOAD = 0x6,
+        CC_ACTION_NEXT_WEAPON = 0x7,
+        CC_ACTION_PREV_WEAPON = 0x8,
+        CC_ACTION_CHAT = 0x9,
+        CC_ACTION_TEAM_CHAT = 0xA,
+        CC_ACTION_FORWARD = 0xB,
+        CC_ACTION_BACKWARD = 0xC,
+        CC_ACTION_SLIDE_LEFT = 0xD,
+        CC_ACTION_SLIDE_RIGHT = 0xE,
+        CC_ACTION_SLIDE_UP = 0xF,
+        CC_ACTION_SLIDE_DOWN = 0x10,
+        CC_ACTION_LOOK_DOWN = 0x11,
+        CC_ACTION_LOOK_UP = 0x12,
+        CC_ACTION_TURN_LEFT = 0x13,
+        CC_ACTION_TURN_RIGHT = 0x14,
+        CC_ACTION_MESSAGES = 0x15,
+        CC_ACTION_MP_STATS = 0x16,
+        CC_ACTION_QUICK_SAVE = 0x17,
+        CC_ACTION_QUICK_LOAD = 0x18,
     };
 
     /* Player */
@@ -284,7 +283,8 @@ namespace rf
         float fpgun_elapsed_transition_time;
         int fpgun_current_state_anim;
         int fpgun_next_state_anim;
-        void* shield_decals[26];
+        void* shield_decals[25];
+        bool field_114C;
         int exposure_damage_sound_handle;
         int weapon_prefs[32];
         float death_fade_alpha;
@@ -294,7 +294,7 @@ namespace rf
         int field_11F0;
         float field_11F4;
         int field_11F8;
-        int field_11FC;
+        ubyte last_damage_dir;
         PlayerNetData *net_data;
     };
     static_assert(sizeof(Player) == 0x1204);
@@ -304,7 +304,7 @@ namespace rf
 
     static auto& multi_kill_local_player = addr_as_ref<void()>(0x004757A0);
     static auto& control_config_check_pressed =
-        addr_as_ref<bool(ControlConfig *cc, ControlAction action, bool *was_pressed)>(0x0043D4F0);
+        addr_as_ref<bool(ControlConfig *cc, ControlConfigAction action, bool *was_pressed)>(0x0043D4F0);
     static auto& player_from_entity_handle = addr_as_ref<Player*(int entity_handle)>(0x004A3740);
     static auto& player_is_dead = addr_as_ref<bool(Player *player)>(0x004A4920);
     static auto& player_is_dying = addr_as_ref<bool(Player *player)>(0x004A4940);

@@ -12,7 +12,7 @@
 #include "../main/main.h"
 #include "../sound/sound.h"
 
-static constexpr rf::ControlAction default_skip_cutscene_ctrl = rf::CA_MP_STATS;
+static constexpr rf::ControlConfigAction default_skip_cutscene_ctrl = rf::CC_ACTION_MP_STATS;
 
 rf::String get_game_ctrl_bind_name(int game_ctrl)
 {
@@ -32,18 +32,18 @@ rf::String get_game_ctrl_bind_name(int game_ctrl)
     return name;
 }
 
-void render_skip_cutscene_hint_text(rf::ControlAction ctrl)
+void render_skip_cutscene_hint_text(rf::ControlConfigAction action)
 {
     if (rf::hud_disabled) {
         return;
     }
-    auto bind_name = get_game_ctrl_bind_name(ctrl);
-    auto& ctrl_name = rf::local_player->settings.controls.bindings[ctrl].name;
+    auto bind_name = get_game_ctrl_bind_name(action);
+    auto& action_name = rf::local_player->settings.controls.bindings[action].name;
     rf::gr_set_color(255, 255, 255, 255);
-    auto msg = rf::String::format("Press %s (%s) to skip the cutscene", ctrl_name.c_str(), bind_name.c_str());
+    auto msg = rf::String::format("Press %s (%s) to skip the cutscene", action_name.c_str(), bind_name.c_str());
     auto x = rf::gr_screen_width() / 2;
     auto y = rf::gr_screen_height() - 30;
-    rf::gr_string_aligned(rf::GR_ALIGN_CENTER, x, y, msg.c_str(), -1, rf::gr_string_mode);
+    rf::gr_string_aligned(rf::GR_ALIGN_CENTER, x, y, msg);
 }
 
 FunHook<void(bool)> cutscene_do_frame_hook{
@@ -51,7 +51,7 @@ FunHook<void(bool)> cutscene_do_frame_hook{
     [](bool dlg_open) {
         bool skip_cutscene = false;
         auto skip_cutscene_ctrl = g_game_config.skip_cutscene_ctrl.value() != -1
-            ? static_cast<rf::ControlAction>(g_game_config.skip_cutscene_ctrl.value())
+            ? static_cast<rf::ControlConfigAction>(g_game_config.skip_cutscene_ctrl.value())
             : default_skip_cutscene_ctrl;
         rf::control_config_check_pressed(&rf::local_player->settings.controls, skip_cutscene_ctrl, &skip_cutscene);
 

@@ -10,7 +10,7 @@ namespace rf
         GS_MAIN_MENU = 0x2,
         GS_EXTRAS_MENU = 0x3,
         GS_INTRO_VIDEO = 0x4,
-        GS_LOADING_LEVEL = 0x5,
+        GS_NEW_LEVEL = 0x5,
         GS_SAVE_GAME_MENU = 0x6,
         GS_LOAD_GAME_MENU = 0x7,
         GS_8 = 0x8,

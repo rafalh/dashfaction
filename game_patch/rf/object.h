@@ -17,7 +17,7 @@ namespace rf
     struct VMesh;
 
     // Typedefs
-    using ObjectUse = int;
+    using ObjectUseFunction = int;
 
     // Object
 
@@ -54,12 +54,12 @@ namespace rf
         }
     };
 
-    enum Friendliness
+    enum ObjFriendliness
     {
-        UNFRIENDLY = 0x0,
-        NEUTRAL = 0x1,
-        FRIENDLY = 0x2,
-        OUTCAST = 0x3,
+        OBJ_UNFRIENDLY = 0x0,
+        OBJ_NEUTRAL = 0x1,
+        OBJ_FRIENDLY = 0x2,
+        OBJ_OUTCAST = 0x3,
     };
 
     struct Object
@@ -84,7 +84,7 @@ namespace rf
         VMesh *vmesh;
         int vmesh_submesh;
         PhysicsData p_data;
-        Friendliness friendliness;
+        ObjFriendliness friendliness;
         int material;
         int host_handle;
         int host_tag_handle;

@@ -33,7 +33,7 @@ LRESULT WINAPI wnd_proc(HWND wnd_handle, UINT msg, WPARAM w_param, LPARAM l_para
 {
     // xlog::trace("%08x: msg %s %x %x", GetTickCount(), get_win_msg_name(msg), w_param, l_param);
 
-    for (unsigned i = 0; i < rf::num_msg_handlers; ++i) {
+    for (int i = 0; i < rf::num_msg_handlers; ++i) {
         rf::msg_handlers[i](msg, w_param, l_param);
     }
 
@@ -53,18 +53,18 @@ LRESULT WINAPI wnd_proc(HWND wnd_handle, UINT msg, WPARAM w_param, LPARAM l_para
             }
         }
 
-        rf::is_main_wnd_active = w_param ? 1 : 0;
+        rf::is_main_wnd_active = w_param;
         return DefWindowProcA(wnd_handle, msg, w_param, l_param);
 
     case WM_QUIT:
     case WM_CLOSE:
     case WM_DESTROY:
-        rf::close_app_req = 1;
+        rf::close_app_req = true;
         break;
 
     case WM_PAINT:
         if (rf::is_dedicated_server)
-            ++rf::num_redraw_server;
+            ++rf::console_redraw_counter;
         else
             return DefWindowProcA(wnd_handle, msg, w_param, l_param);
         break;

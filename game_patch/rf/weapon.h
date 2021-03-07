@@ -29,6 +29,11 @@ namespace rf
     };
     static_assert(sizeof(ObjLight) == 0x18);
 
+    enum WeaponInfoType {
+        WEAPON_PRIMARY = 0,
+        WEAPON_SECONDARY = 1,
+    };
+
     struct WeaponInfo
     {
         String name;
@@ -62,8 +67,8 @@ namespace rf
         int trail_emitter;
         float head_radius;
         float tail_radius;
-        float head_len;
-        int is_secondary; // type
+        float length;
+        WeaponInfoType type;
         float collision_radius;
         float lifetime_seconds;
         float lifetime_seconds_single;
@@ -94,9 +99,9 @@ namespace rf
         float ai_damage_scale_single;
         float ai_damage_scale_multi;
         float ai_damage_scale;
-        int field_124;
-        int field_128;
-        int field_12c;
+        int blast_force_unused;
+        int inner_radius_unused;
+        int outer_radius_unused;
         float turn_time;
         float fov;
         float scanning_range;
@@ -137,8 +142,7 @@ namespace rf
         int max_ammo;
         int flags;
         int flags2;
-        int field_26c;
-        int field_270;
+        String tracer_vmesh_filename;
         int tracer_frequency;
         int tracer_velocity_unused;
         float pierce_power;
@@ -181,12 +185,13 @@ namespace rf
         VMesh *spark_vfx;
         int spark_fp_tag;
         int spark_fp_flash_bitmap;
-        float ai_max_range[2];
-        float field_514;
+        float ai_max_range_single;
+        float ai_max_range_multi;
+        float ai_max_range;
         int weapon_fp_tag;
-        int field_51c_always1neg;
-        int weapon_type;
-        String weapon_icon;
+        int weapon_select_icon_unused;
+        int weapon_select_type;
+        String weapon_select_icon_filename;
         int damage_type;
         int cycle_position;
         int pref_position;
@@ -242,11 +247,11 @@ namespace rf
         int fly_sound_handle;
         int light_handle;
         int weapon_flags;
-        float field_2AC;
+        float flicker_index;
         int sticky_host_handle;
         Vector3 sticky_host_pos_offset;
         Matrix3 sticky_host_orient;
-        Friendliness friendliness;
+        ObjFriendliness friendliness;
         int target_handle;
         Timestamp scan_time;
         float pierce_power_left;

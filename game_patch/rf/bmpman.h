@@ -1,6 +1,7 @@
 #pragma once
 
 #include <patch_common/MemUtils.h>
+#include "os/vtypes.h"
 
 namespace rf
 {
@@ -48,26 +49,26 @@ namespace rf
         char name[32];
         int name_checksum;
         int handle;
-        int16_t orig_width;
-        int16_t orig_height;
-        int16_t width;
-        int16_t height;
+        ushort orig_width;
+        ushort orig_height;
+        ushort width;
+        ushort height;
         int num_pixels_in_all_levels;
         BmType bm_type;
         int animated_entry_type;
         BmFormat format;
-        uint8_t num_levels;
-        uint8_t orig_num_levels;
-        uint8_t num_levels_in_ext_files;
-        uint8_t num_frames;
-        uint8_t vbm_version;
+        ubyte num_levels;
+        ubyte orig_num_levels;
+        ubyte num_levels_in_ext_files;
+        ubyte num_frames;
+        ubyte vbm_version;
         void* locked_data;
         float frames_per_ms;
         void* locked_palette;
         BmBitmapEntry* next;
         BmBitmapEntry* prev;
         char field_5C;
-        uint8_t cached_material_idx;
+        ubyte cached_material_idx;
 #ifdef DASH_FACTION
         bool dynamic;
 #endif

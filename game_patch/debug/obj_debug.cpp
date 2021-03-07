@@ -204,24 +204,24 @@ const char* get_obj_class_name(rf::Object& obj)
 const char* get_ai_mode_name(rf::AiMode ai_mode)
 {
     switch (ai_mode) {
-        case rf::AIM_NONE: return "NONE";
-        case rf::AIM_CATATONIC: return "CATATONIC";
-        case rf::AIM_WAITING: return "WAITING";
-        case rf::AIM_ATTACK: return "ATTACK";
-        case rf::AIM_WAYPOINTS: return "WAYPOINTS";
-        case rf::AIM_COLLECTING: return "COLLECTING";
-        case rf::AIM_AFTER_NOISE: return "AFTER_NOISE";
-        case rf::AIM_FLEE: return "FLEE";
-        case rf::AIM_LOOK_AT: return "LOOK_AT";
-        case rf::AIM_SHOOT_AT: return "SHOOT_AT";
-        case rf::AIM_WATCHFUL: return "WATCHFUL";
-        case rf::AIM_MOTION_DETECTION: return "MOTION_DETECTION";
-        case rf::AIM_C: return "C";
-        case rf::AIM_TURRET_UNK: return "TURRET_UNK";
-        case rf::AIM_HEALING: return "HEALING";
-        case rf::AIM_CAMERA_UNK: return "CAMERA_UNK";
-        case rf::AIM_ACTIVATE_ALARM: return "ACTIVATE_ALARM";
-        case rf::AIM_PANIC: return "PANIC";
+        case rf::AI_MODE_NONE: return "NONE";
+        case rf::AI_MODE_CATATONIC: return "CATATONIC";
+        case rf::AI_MODE_WAITING: return "WAITING";
+        case rf::AI_MODE_CHASE: return "CHASE";
+        case rf::AI_MODE_WAYPOINTS: return "WAYPOINTS";
+        case rf::AI_MODE_COLLECTING: return "COLLECTING";
+        case rf::AI_MODE_INVESTIGATE_SOUND: return "INVESTIGATE_SOUND";
+        case rf::AI_MODE_FLEE: return "FLEE";
+        case rf::AI_MODE_EVENT_LOOK_AT: return "EVENT_LOOK_AT";
+        case rf::AI_MODE_EVENT_SHOOT_AT: return "EVENT_SHOOT_AT";
+        case rf::AI_MODE_FIND_PLAYER: return "FIND_PLAYER";
+        case rf::AI_MODE_MOTION_DETECT: return "MOTION_DETECT";
+        case rf::AI_MODE_FIND_COVER: return "FIND_COVER";
+        case rf::AI_MODE_ON_TURRET: return "ON_TURRET";
+        case rf::AI_MODE_HEALING: return "HEALING";
+        case rf::AI_MODE_SECURITY_CAM: return "SECURITY_CAM";
+        case rf::AI_MODE_SET_ALARM: return "SET_ALARM";
+        case rf::AI_MODE_BERSERK: return "BERSERK";
         default: return "?";
     }
 }
@@ -229,21 +229,21 @@ const char* get_ai_mode_name(rf::AiMode ai_mode)
 const char* get_ai_attack_style_name(rf::AiAttackStyle attack_style)
 {
     switch (attack_style) {
-        case rf::AIAS_DEFAULT: return "DEFAULT";
-        case rf::AIAS_EVASIVE: return "EVASIVE";
-        case rf::AIAS_STAND_GROUND: return "STAND_GROUND";
-        case rf::AIAS_DIRECT: return "DIRECT";
+        case rf::AI_ATTACK_STYLE_DEFAULT: return "DEFAULT";
+        case rf::AI_ATTACK_STYLE_EVASIVE: return "EVASIVE";
+        case rf::AI_ATTACK_STYLE_STAND_GROUND: return "STAND_GROUND";
+        case rf::AI_ATTACK_STYLE_DIRECT: return "DIRECT";
         default: return "?";
     }
 }
 
-const char* get_friendliness_name(rf::Friendliness friendliness)
+const char* get_friendliness_name(rf::ObjFriendliness friendliness)
 {
     switch (friendliness) {
-        case rf::UNFRIENDLY: return "UNFRIENDLY";
-        case rf::NEUTRAL: return "NEUTRAL";
-        case rf::FRIENDLY: return "FRIENDLY";
-        case rf::OUTCAST: return "OUTCAST";
+        case rf::OBJ_UNFRIENDLY: return "UNFRIENDLY";
+        case rf::OBJ_NEUTRAL: return "NEUTRAL";
+        case rf::OBJ_FRIENDLY: return "FRIENDLY";
+        case rf::OBJ_OUTCAST: return "OUTCAST";
         default: return "?";
     }
 }
@@ -293,13 +293,13 @@ void render_obj_debug_ui()
             dbg_hud.printf("submode", "%d", entity->ai.submode);
         else
             dbg_hud.print("submode", "NONE");
-        dbg_hud.print("style", get_ai_attack_style_name(entity->ai.ai_attack_style));
+        dbg_hud.print("style", get_ai_attack_style_name(entity->ai.attack_style));
         dbg_hud.print("friend", get_friendliness_name(object->friendliness));
-        auto target_obj = rf::obj_from_handle(entity->ai.target_obj_handle);
+        auto target_obj = rf::obj_from_handle(entity->ai.target_handle);
         dbg_hud.print("target", target_obj ? target_obj->name.c_str() : "none");
         dbg_hud.printf("accel", "%.1f", entity->info->acceleration);
-        dbg_hud.printf("mvmode", "%s", rf::move_mode_names[entity->move_mode->id]);
-        dbg_hud.print("deaf", (entity->ai.flags & rf::AI_FLAG_DEAF) ? "yes" : "no");
+        dbg_hud.printf("mvmode", "%s", rf::move_mode_names[entity->move_mode->mode]);
+        dbg_hud.print("deaf", (entity->ai.ai_flags & rf::AIF_DEAF) ? "yes" : "no");
         dbg_hud.print("pos", object->pos);
         auto feet = object->pos;
         feet.y = object->p_data.bbox_min.y;

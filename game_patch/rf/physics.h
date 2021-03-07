@@ -12,8 +12,8 @@ namespace rf
     struct PCollisionOut
     {
         Vector3 hit_point;
-        Vector3 normal;
-        float fraction;
+        Vector3 hit_normal;
+        float hit_time;
         int material;
         int inv_mass;
         Vector3 vel;
@@ -49,16 +49,16 @@ namespace rf
         Matrix3 next_orient;
         Vector3 vel;
         Vector3 rotvel;
-        Vector3 field_D4;
-        Vector3 field_E0;
-        Vector3 rot_change_unk_delta;
+        Vector3 ang_momentum;
+        Vector3 force;
+        Vector3 torque;
         float radius;
         VArray<PCollisionSphere> cspheres;
         Vector3 bbox_min;
         Vector3 bbox_max;
         int flags;
         int collision_flags;
-        float frame_time;
+        float frame_time_left;
         PCollisionOut collide_out;
     };
     static_assert(sizeof(PhysicsData) == 0x170);

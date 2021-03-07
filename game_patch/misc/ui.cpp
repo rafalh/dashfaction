@@ -290,7 +290,7 @@ bool __fastcall UiInputBox_process_key_new(void *this_, int edx, rf::Key key)
 {
     if (key == (rf::KEY_V | rf::KEY_CTRLED)) {
         char buf[256];
-        rf::os_get_clipboard_text(buf, std::size(buf) - 1);
+        rf::os_get_clipboard_text(buf, static_cast<int>(std::size(buf) - 1));
         for (int i = 0; buf[i]; ++i) {
             UiInputBox_add_char(this_, buf[i]);
         }

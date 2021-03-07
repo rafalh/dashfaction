@@ -72,7 +72,7 @@ namespace rf
         FArray<GDecal*, 128> decals;
         VArray<GTextureMover*> texture_movers;
         GNodeNetwork nodes;
-        char cubes[64];
+        ubyte cubes[64];
         float cube_size;
         float cube_zero_pos[3];
         int current_frame; // used for caching
