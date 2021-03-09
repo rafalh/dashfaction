@@ -23,3 +23,5 @@ void multi_after_full_game_init();
 void multi_init_player(rf::Player* player);
 void send_chat_line_packet(const char* msg, rf::Player* target, rf::Player* sender = nullptr, bool is_team_msg = false);
 const std::optional<DashFactionServerInfo>& get_df_server_info();
+void multi_level_download_do_frame();
+void multi_level_download_abort();

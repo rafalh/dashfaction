@@ -2,6 +2,9 @@
 #include <common/rfproto.h>
 #include <common/config/BuildConfig.h>
 #include <patch_common/CodeInjection.h>
+#include <patch_common/AsmWriter.h>
+#include <patch_common/FunHook.h>
+#include <patch_common/CallHook.h>
 #include <xlog/xlog.h>
 #include <stdexcept>
 #include <thread>
@@ -39,6 +42,7 @@ static std::atomic<unsigned> g_level_bytes_downloaded;
 static std::shared_ptr<std::atomic<bool>> g_level_download_cancel_flag_ptr;
 static std::atomic<float> g_level_download_bytes_per_sec;
 static std::function<void(bool)> g_level_download_callback;
+bool g_level_download_show_popup;
 static std::future<std::optional<LevelDownloadInfo>> g_level_info_future;
 static std::future<std::string> g_level_download_future;
 static std::future<std::vector<std::string>> g_level_unpack_future;
@@ -314,10 +318,13 @@ static std::optional<LevelDownloadInfo> fetch_level_download_info(std::string fi
 void level_download_cancel()
 {
     rf::ui_popup_abort();
-    g_level_download_callback(false);
-    g_level_download_callback = {};
+    if (g_level_download_callback) {
+        //g_level_download_callback(false);
+        g_level_download_callback = {};
+    }
     if (g_level_download_cancel_flag_ptr) {
         *g_level_download_cancel_flag_ptr = true;
+        g_level_download_cancel_flag_ptr = {};
     }
     g_level_download_state = LevelDownloadState::idle;
 }
@@ -339,26 +346,31 @@ static void display_download_popup(LevelDownloadInfo& level_info)
     xlog::debug("Download ticket id: %u", level_info.ticket_id);
     g_level_info = level_info;
 
-    auto text = build_download_popup_text();
-    const char* choices[] = {"Cancel"};
-    rf::UiDialogCallbackPtr callbacks[] = {level_download_cancel};
-    rf::ui_popup_custom("Downloading level...", text.c_str(), std::size(choices), choices, callbacks, 0, nullptr);
+    if (g_level_download_show_popup) {
+        auto text = build_download_popup_text();
+        const char* choices[] = {"Cancel"};
+        rf::UiDialogCallbackPtr callbacks[] = {level_download_cancel};
+        rf::ui_popup_custom("Downloading level...", text.c_str(), std::size(choices), choices, callbacks, 0, nullptr);
+    }
 }
 
-bool try_to_download_level(const char* filename, std::function<void(bool)> callback)
+bool try_to_download_level(const char* filename, bool popup, std::function<void(bool)> callback)
 {
     if (g_level_download_state != LevelDownloadState::idle) {
         xlog::error("Level download already in progress!");
         return false;
     }
 
-    auto text = "Searching for the level in FactionFiles.com database...";
-    const char* choices[] = {"Cancel"};
-    rf::UiDialogCallbackPtr callbacks[] = {level_download_cancel};
-    rf::ui_popup_custom("Level Download", text, std::size(choices), choices, callbacks, 0, nullptr);
-
     g_level_download_callback = callback;
     g_level_download_cancel_flag_ptr = std::make_shared<std::atomic<bool>>(false);
+    g_level_download_show_popup = popup;
+
+    if (g_level_download_show_popup) {
+        auto text = "Searching for the level in FactionFiles.com database...";
+        const char* choices[] = {"Cancel"};
+        rf::UiDialogCallbackPtr callbacks[] = {level_download_cancel};
+        rf::ui_popup_custom("Level Download", text, std::size(choices), choices, callbacks, 0, nullptr);
+    }
 
     xlog::trace("Fetching level info");
     std::string filename_owned = filename;
@@ -399,15 +411,21 @@ void level_download_fetching_info_do_frame()
 
 std::vector<std::string> level_download_do_uncompress(std::string temp_filename)
 {
-    std::vector<std::string> packfiles = unzip_vpp(temp_filename.c_str());
-    if (packfiles.empty()) {
-        packfiles = unrar_vpp(temp_filename.c_str());
+    try {
+        std::vector<std::string> packfiles = unzip_vpp(temp_filename.c_str());
+        if (packfiles.empty()) {
+            packfiles = unrar_vpp(temp_filename.c_str());
+        }
+        if (packfiles.empty()) {
+            xlog::error("unzip_vpp and unrar_vpp failed");
+        }
+        remove(temp_filename.c_str());
+        return packfiles;
     }
-    if (packfiles.empty()) {
-        xlog::error("unzip_vpp and unrar_vpp failed");
+    catch (const std::exception& e) {
+        remove(temp_filename.c_str());
+        throw e;
     }
-    remove(temp_filename.c_str());
-    return packfiles;
 }
 
 void level_download_fetching_data_do_frame()
@@ -486,77 +504,16 @@ void level_download_do_frame()
     }
 }
 
-void maybe_rejoin_server_after_level_download(bool download_success, rf::NetAddr server_addr)
+void render_progress_bar(int x, int y, int w, int h, float progress)
 {
-    if (download_success) {
-        multi_join_game(server_addr, "");
-    }
-}
-
-CodeInjection join_failed_injection{
-    0x0047C4EC,
-    [](auto& regs) {
-        int leave_reason = regs.esi;
-        if (leave_reason != RF_LR_NO_LEVEL_FILE) {
-            return;
-        }
-
-        auto& level_filename = addr_as_ref<rf::String>(0x00646074);
-        xlog::trace("Preparing level download %s", level_filename.c_str());
-        auto server_addr = rf::netgame.server_addr;
-        bool started = try_to_download_level(level_filename, [=](bool download_success) {
-            maybe_rejoin_server_after_level_download(download_success, server_addr);
-        });
-        if (!started) {
-            return;
-        }
-
-        set_jump_to_multi_server_list(true);
-
-        regs.eip = 0x0047C502;
-        regs.esp -= 0x14;
-    },
-};
-
-ConsoleCommand2 download_level_cmd{
-    "download_level",
-    [](std::string filename) {
-        if (filename.rfind('.') == std::string::npos) {
-            filename += ".rfl";
-        }
-        if (!try_to_download_level(filename.c_str(), [](bool) {})) {
-            rf::console_printf("Another level is currently being downloaded!");
-        }
-    },
-    "Downloads level from FactionFiles.com",
-    "download_level <rfl_name>",
-};
-
-void level_download_do_patch()
-{
-    join_failed_injection.install();
-}
-
-void level_download_init()
-{
-    download_level_cmd.register_cmd();
-}
-
-static void render_download_progress_bar()
-{
-    int w = 360 * rf::ui_scale_x;
-    int h = 12 * rf::ui_scale_x;
     int border = 2;
     int inner_w = w - 2 * border;
     int inner_h = h - 2 * border;
-    float progress = static_cast<float>(g_level_bytes_downloaded) / static_cast<float>(g_level_info.size_in_bytes);
     int progress_w = static_cast<int>(static_cast<float>(inner_w) * progress);
     if (progress_w > inner_w) {
         progress_w = inner_w;
     }
 
-    int x = (rf::gr_screen_width() - w) / 2;
-    int y = rf::gr_screen_height() / 2 - 20 * rf::ui_scale_x;
     int inner_x = x + border;
     int inner_y = y + border;
 
@@ -574,13 +531,218 @@ static void render_download_progress_bar()
     }
 }
 
+static void level_download_render_progress_bar(int x, int y, int w, int h)
+{
+    float progress = static_cast<float>(g_level_bytes_downloaded) / static_cast<float>(g_level_info.size_in_bytes);
+    render_progress_bar(x, y, w, h, progress);
+}
+
+void maybe_rejoin_server_after_level_download(bool download_success, rf::NetAddr server_addr)
+{
+    if (download_success) {
+        multi_join_game(server_addr, "");
+    }
+}
+
+#include "../rf/input.h"
+#include "../rf/gameseq.h"
+#include "../rf/level.h"
+#include "../rf/gameseq.h"
+#include "../hud/hud.h"
+
+namespace rf
+{
+    enum ChatSayType {
+        CHAT_SAY_GLOBAL = 0,
+        CHAT_SAY_TEAM = 1,
+    };
+    static auto& multi_chat_say_handle_key = addr_as_ref<void(int key)>(0x00444620);
+    static auto& multi_chat_is_say_visible = addr_as_ref<bool()>(0x00444AC0);
+    static auto& multi_chat_say_render = addr_as_ref<void()>(0x00444790);
+    static auto& multi_chat_say_show = addr_as_ref<void(ChatSayType type)>(0x00444A80);
+    static auto& multi_hud_render_chat = addr_as_ref<void()>(0x004773D0);
+    static auto& game_poll = addr_as_ref<void(void(*key_callback)(rf::Key k))>(0x004353C0);
+    static auto& scoreboard_render_internal = addr_as_ref<void(bool netgame_scoreboard)>(0x00470880);
+}
+
+void multi_level_download_handle_input(rf::Key key)
+{
+    if (!key) {
+        return;
+    }
+    else if (rf::multi_chat_is_say_visible()) {
+        rf::multi_chat_say_handle_key(key);
+    }
+    else if (key == rf::KEY_ESC) {
+         rf::gameseq_push_state(rf::GS_MAIN_MENU, false, false);
+    }
+}
+
+void multi_level_download_do_frame()
+{
+    rf::game_poll(multi_level_download_handle_input);
+
+    int scr_w = rf::gr_screen_width();
+    int scr_h = rf::gr_screen_height();
+
+    static int bg_bm = rf::bm_load("demo-gameover.tga", -1, false);
+    int bg_bm_w, bg_bm_h;
+    rf::bm_get_dimensions(bg_bm, &bg_bm_w, &bg_bm_h);
+    rf::gr_set_color(255, 255, 255, 255);
+    rf::gr_bitmap_scaled(bg_bm, 0, 0, scr_w, scr_h, 0, 0, bg_bm_w, bg_bm_h);
+
+    rf::multi_hud_render_chat();
+
+    auto ccp = &rf::local_player->settings.controls;
+    bool just_pressed;
+    if (rf::control_config_check_pressed(ccp, rf::CC_ACTION_CHAT, &just_pressed)) {
+        rf::multi_chat_say_show(rf::CHAT_SAY_GLOBAL);
+    }
+
+    int large_font = hud_get_large_font();
+    int large_font_h = rf::gr_get_font_height(large_font);
+    int medium_font = hud_get_default_font();
+    int medium_font_h = rf::gr_get_font_height(medium_font);
+
+    int center_x = scr_w / 2;
+    int y = scr_h / 3;
+
+    rf::gr_set_color(255, 255, 255, 255);
+    rf::gr_string_aligned(rf::GR_ALIGN_CENTER, center_x, y, "DOWNLOADING LEVEL", large_font);
+    y += large_font_h * 3;
+
+    if (g_level_download_state == LevelDownloadState::fetching_info) {
+        rf::gr_string_aligned(rf::GR_ALIGN_CENTER, center_x, y, "Getting level info...", medium_font);
+    }
+    else {
+        auto level_name_str = std::string{"Level name: "} + g_level_info.name;
+        int str_w, str_h;
+        rf::gr_get_string_size(&str_w, &str_h, level_name_str.c_str(), -1, medium_font);
+        int info_x = center_x - str_w / 2;
+        int info_spacing = medium_font_h * 3 / 2;
+        rf::gr_string(info_x, y, level_name_str.c_str(), medium_font);
+        y += info_spacing;
+
+        auto created_by_str = std::string{"Created by: "} + g_level_info.author;
+        rf::gr_string(info_x, y, created_by_str.c_str(), medium_font);
+        y += info_spacing;
+
+        rf::gr_string(info_x, y, string_format("%.2f MB / %.2f MB (%.2f MB/s)",
+            g_level_bytes_downloaded / 1000.0f / 1000.0f,
+            g_level_info.size_in_bytes / 1000.0f / 1000.0f,
+            g_level_download_bytes_per_sec / 1000.0f / 1000.0f).c_str(), medium_font);
+        y += info_spacing;
+
+        if (g_level_download_bytes_per_sec > 0) {
+            int remaining_size = g_level_info.size_in_bytes - g_level_bytes_downloaded;
+            int secs_left = remaining_size / g_level_download_bytes_per_sec;
+            auto time_left_str = std::to_string(secs_left) + " seconds left";
+            rf::gr_string(info_x, y, time_left_str.c_str(), medium_font);
+        }
+    }
+
+    if (g_level_download_state == LevelDownloadState::fetching_data) {
+        int w = 360 * rf::ui_scale_x;
+        int h = 12 * rf::ui_scale_x;
+        int x = (rf::gr_screen_width() - w) / 2;
+        int y = rf::gr_screen_height() * 4 / 5;
+        level_download_render_progress_bar(x, y, w, h);
+    }
+
+    // Scoreboard
+    if (rf::control_config_check_pressed(ccp, rf::CC_ACTION_MP_STATS, nullptr)) {
+        rf::scoreboard_render_internal(true);
+    }
+}
+
+void multi_level_download_abort()
+{
+    level_download_cancel();
+}
+
+static bool next_level_exists()
+{
+    // rf::File file;
+    // if (file.open(rf::level.next_level_filename) == 0) {
+    //     return true;
+    // }
+    return false;
+}
+
+CallHook<void(rf::GameState, bool)> process_leave_limbo_packet_gameseq_set_next_state_hook{
+    0x0047C24F,
+    [](rf::GameState state, bool force) {
+        if (!next_level_exists()) {
+            level_download_cancel();
+            rf::gameseq_set_state(rf::GS_MULTI_LEVEL_DOWNLOAD, false);
+            try_to_download_level(rf::level.next_level_filename, false, [=](bool) {
+                process_leave_limbo_packet_gameseq_set_next_state_hook.call_target(state, force);
+            });
+        }
+        else {
+            process_leave_limbo_packet_gameseq_set_next_state_hook.call_target(state, force);
+        }
+    },
+};
+
+CallHook<void(rf::GameState, bool)> game_new_game_gameseq_set_next_state_hook{
+    0x00436959,
+    [](rf::GameState state, bool force) {
+        if (rf::is_multi && !rf::is_server && !next_level_exists()) {
+            rf::gameseq_set_state(rf::GS_MULTI_LEVEL_DOWNLOAD, false);
+            try_to_download_level(rf::level.next_level_filename, false, [=](bool) {
+                game_new_game_gameseq_set_next_state_hook.call_target(state, force);
+            });
+        }
+        else {
+            game_new_game_gameseq_set_next_state_hook.call_target(state, force);
+        }
+    },
+};
+
+CodeInjection join_failed_injection{
+    0x0047C4EC,
+    []() {
+        set_jump_to_multi_server_list(true);
+    },
+};
+
+ConsoleCommand2 download_level_cmd{
+    "download_level",
+    [](std::string filename) {
+        if (filename.rfind('.') == std::string::npos) {
+            filename += ".rfl";
+        }
+        if (!try_to_download_level(filename.c_str(), true, [](bool) {})) {
+            rf::console_printf("Another level is currently being downloaded!");
+        }
+    },
+    "Downloads level from FactionFiles.com",
+    "download_level <rfl_name>",
+};
+
+void level_download_do_patch()
+{
+    join_failed_injection.install();
+    game_new_game_gameseq_set_next_state_hook.install();
+    process_leave_limbo_packet_gameseq_set_next_state_hook.install();
+}
+
+void level_download_init()
+{
+    download_level_cmd.register_cmd();
+}
+
 void multi_render_level_download_progress()
 {
     level_download_do_frame();
 
-    if (g_level_download_state == LevelDownloadState::fetching_data) {
-        render_download_progress_bar();
-
+    if (g_level_download_state == LevelDownloadState::fetching_data && g_level_download_show_popup) {
+        int w = 360 * rf::ui_scale_x;
+        int h = 12 * rf::ui_scale_y;
+        int x = (rf::gr_screen_width() - w) / 2;
+        int y = rf::gr_screen_height() / 2 - rf::ui_scale_y * 20;
+        level_download_render_progress_bar(x, y, w, h);
         auto popup_text = build_download_popup_text();
         rf::ui_popup_set_text(popup_text.c_str());
     }
