@@ -100,6 +100,8 @@ set(SRCS
     multi/votes.cpp
     multi/commands.cpp
     multi/multi_tdm.cpp
+    multi/faction_files.cpp
+    multi/faction_files.h
     os/console.cpp
     os/console.h
     os/commands.cpp

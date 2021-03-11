@@ -189,3 +189,20 @@ std::string get_module_dir(HMODULE module)
     }
     return pathname;
 }
+
+std::string get_temp_path_name(const char* prefix)
+{
+    char temp_dir[MAX_PATH];
+    DWORD ret_val = GetTempPathA(std::size(temp_dir), temp_dir);
+    if (ret_val == 0 || ret_val > std::size(temp_dir)) {
+        throw std::runtime_error("GetTempPathA failed");
+    }
+
+    char result[MAX_PATH];
+    ret_val = GetTempFileNameA(temp_dir, prefix, 0, result);
+    if (ret_val == 0) {
+        throw std::runtime_error("GetTempFileNameA failed");
+    }
+
+    return result;
+}

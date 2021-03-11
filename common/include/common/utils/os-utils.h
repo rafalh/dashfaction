@@ -13,3 +13,4 @@ std::string get_cpu_id();
 std::string get_cpu_brand();
 std::string get_module_pathname(HMODULE module);
 std::string get_module_dir(HMODULE module);
+std::string get_temp_path_name(const char* prefix);
