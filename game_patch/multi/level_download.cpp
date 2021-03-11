@@ -598,10 +598,10 @@ void multi_level_download_do_frame()
 
 static bool next_level_exists()
 {
-    // rf::File file;
-    // if (file.open(rf::level.next_level_filename) == 0) {
-    //     return true;
-    // }
+    rf::File file;
+    if (file.open(rf::level.next_level_filename) == 0) {
+        return true;
+    }
     return false;
 }
 
