@@ -526,6 +526,9 @@ void multi_level_download_do_frame()
     if (rf::control_config_check_pressed(ccp, rf::CC_ACTION_CHAT, &just_pressed)) {
         rf::multi_chat_say_show(rf::CHAT_SAY_GLOBAL);
     }
+    if (rf::multi_chat_is_say_visible()) {
+        rf::multi_chat_say_render();
+    }
 
     int large_font = hud_get_large_font();
     int large_font_h = rf::gr_get_font_height(large_font);
