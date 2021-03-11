@@ -55,14 +55,11 @@ std::optional<FactionFilesClient::LevelInfo> FactionFilesClient::parse_level_inf
 
 std::optional<FactionFilesClient::LevelInfo> FactionFilesClient::find_map(const char* file_name)
 {
-    auto url = std::string{level_download_base_url} + "/findmap.php";
+    auto url = std::string{level_download_base_url} + "/findmap.php?rflName=" + encode_uri_component(file_name);
 
     xlog::trace("Fetching level info: %s", file_name);
-    HttpRequest req{url, "POST", session_};
-    std::string body = std::string("rflName=") + file_name;
-
-    req.set_content_type("application/x-www-form-urlencoded");
-    req.send(body);
+    HttpRequest req{url, "GET", session_};
+    req.send();
 
     char buf[256];
     size_t num_bytes_read = req.read(buf, sizeof(buf) - 1);
