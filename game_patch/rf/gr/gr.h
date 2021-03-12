@@ -6,7 +6,7 @@
 #include "../math/vector.h"
 #include "../math/matrix.h"
 
-namespace rf
+namespace rf::gr
 {
     struct Color
     {
@@ -50,7 +50,7 @@ namespace rf
     };
     static_assert(sizeof(Vertex) == 0x30);
 
-    enum GrTextureSource
+    enum TextureSource
     {
         TEXTURE_SOURCE_NONE = 0x0,
         TEXTURE_SOURCE_WRAP = 0x1,
@@ -66,7 +66,7 @@ namespace rf
         TEXTURE_SOURCE_MT_CLAMP_TRILIN = 0xB,
     };
 
-    enum GrColorSource
+    enum ColorSource
     {
         COLOR_SOURCE_VERTEX = 0x0,
         COLOR_SOURCE_TEXTURE = 0x1,
@@ -75,7 +75,7 @@ namespace rf
         COLOR_SOURCE_VERTEX_TIMES_TEXTURE_2X = 0x4,
     };
 
-    enum GrAlphaSource
+    enum AlphaSource
     {
         ALPHA_SOURCE_VERTEX = 0x0,
         ALPHA_SOURCE_VERTEX_NONDARKENING = 0x1,
@@ -83,7 +83,7 @@ namespace rf
         ALPHA_SOURCE_VERTEX_TIMES_TEXTURE = 0x3,
     };
 
-    enum GrAlphaBlend
+    enum AlphaBlend
     {
         ALPHA_BLEND_NONE = 0x0,
         ALPHA_BLEND_ADDITIVE = 0x1,
@@ -95,7 +95,7 @@ namespace rf
         ALPHA_BLEND_SWAPPED_SRC_DEST_COLOR = 0x7,
     };
 
-    enum GrZbufferType
+    enum ZbufferType
     {
         ZBUFFER_TYPE_NONE = 0x0,
         ZBUFFER_TYPE_READ = 0x1,
@@ -105,7 +105,7 @@ namespace rf
         ZBUFFER_TYPE_FULL_ALPHA_TEST = 0x5,
     };
 
-    enum GrFogType
+    enum FogType
     {
         FOG_ALLOWED = 0x0,
         FOG_ALLOWED_ADD2 = 0x1,
@@ -113,7 +113,7 @@ namespace rf
         FOG_NOT_ALLOWED = 0x3,
     };
 
-    class GrMode
+    class Mode
     {
         static constexpr int mask = 0x1F;
         static constexpr int ts_shift = 0;
@@ -126,17 +126,17 @@ namespace rf
         int value;
 
     public:
-        constexpr GrMode() : value(0) {}
-        constexpr GrMode(GrTextureSource ts, GrColorSource cs, GrAlphaSource as, GrAlphaBlend ab, GrZbufferType zbt, GrFogType ft) :
+        constexpr Mode() : value(0) {}
+        constexpr Mode(TextureSource ts, ColorSource cs, AlphaSource as, AlphaBlend ab, ZbufferType zbt, FogType ft) :
             value((ts << ts_shift) | (cs << cs_shift) | (as << as_shift) | (ab << ab_shift) | (zbt << zbt_shift) | (ft << ft_shift))
         {}
 
-        bool operator==(const GrMode& other) const
+        bool operator==(const Mode& other) const
         {
             return value == other.value;
         }
 
-        bool operator!=(const GrMode& other) const
+        bool operator!=(const Mode& other) const
         {
             return value != other.value;
         }
@@ -146,76 +146,76 @@ namespace rf
             return value;
         }
 
-        inline GrTextureSource get_texture_source()
+        inline TextureSource get_texture_source()
         {
-            return static_cast<GrTextureSource>((value >> ts_shift) & mask);
+            return static_cast<TextureSource>((value >> ts_shift) & mask);
         }
 
-        inline GrColorSource get_color_source() const
+        inline ColorSource get_color_source() const
         {
-            return static_cast<GrColorSource>((value >> cs_shift) & mask);
+            return static_cast<ColorSource>((value >> cs_shift) & mask);
         }
 
-        inline GrAlphaSource get_alpha_source() const
+        inline AlphaSource get_alpha_source() const
         {
-            return static_cast<GrAlphaSource>((value >> as_shift) & mask);
+            return static_cast<AlphaSource>((value >> as_shift) & mask);
         }
 
-        inline GrAlphaBlend get_alpha_blend() const
+        inline AlphaBlend get_alpha_blend() const
         {
-            return static_cast<GrAlphaBlend>((value >> ab_shift) & mask);
+            return static_cast<AlphaBlend>((value >> ab_shift) & mask);
         }
 
-        inline GrZbufferType get_zbuffer_type() const
+        inline ZbufferType get_zbuffer_type() const
         {
-            return static_cast<GrZbufferType>((value >> zbt_shift) & mask);
+            return static_cast<ZbufferType>((value >> zbt_shift) & mask);
         }
 
-        inline GrFogType get_fog_type() const
+        inline FogType get_fog_type() const
         {
-            return static_cast<GrFogType>((value >> ft_shift) & mask);
+            return static_cast<FogType>((value >> ft_shift) & mask);
         }
 
-        inline void set_texture_source(GrTextureSource ts)
+        inline void set_texture_source(TextureSource ts)
         {
             value = (value & ~(mask << ts_shift)) | (static_cast<int>(ts) << ts_shift);
         }
 
-        inline void set_color_source(GrColorSource cs)
+        inline void set_color_source(ColorSource cs)
         {
             value = (value & ~(mask << cs_shift)) | (static_cast<int>(cs) << cs_shift);
         }
 
-        inline void set_alpha_source(GrAlphaSource as)
+        inline void set_alpha_source(AlphaSource as)
         {
             value = (value & ~(mask << as_shift)) | (static_cast<int>(as) << as_shift);
         }
 
-        inline void set_alpha_blend(GrAlphaBlend ab)
+        inline void set_alpha_blend(AlphaBlend ab)
         {
             value = (value & ~(mask << ab_shift)) | (static_cast<int>(ab) << ab_shift);
         }
 
-        inline void set_zbuffer_type(GrZbufferType zbt)
+        inline void set_zbuffer_type(ZbufferType zbt)
         {
             value = (value & ~(mask << zbt_shift)) | (static_cast<int>(zbt) << zbt_shift);
         }
 
-        inline void set_fog_type(GrFogType ft)
+        inline void set_fog_type(FogType ft)
         {
             value = (value & ~(mask << ft_shift)) | (static_cast<int>(ft) << ft_shift);
         }
     };
-    static_assert(sizeof(GrMode) == 4);
+    static_assert(sizeof(Mode) == 4);
 
-    enum GrDepthbuffer
+    enum Depthbuffer
     {
-        GR_DEPTHBUFFER_Z = 0x0,
-        GR_DEPTHBUFFER_W = 0x1,
-        GR_DEPTHBUFFER_NONE = 0x2,
+        DEPTHBUFFER_Z = 0x0,
+        DEPTHBUFFER_W = 0x1,
+        DEPTHBUFFER_NONE = 0x2,
     };
 
-    struct GrScreen
+    struct Screen
     {
         int signature;
         int max_w;
@@ -252,30 +252,30 @@ namespace rf
         float tint_b;
         bool sync_to_retrace;
         float zbias;
-        GrDepthbuffer depthbuffer_type;
+        Depthbuffer depthbuffer_type;
     };
-    static_assert(sizeof(GrScreen) == 0x90);
+    static_assert(sizeof(Screen) == 0x90);
 
-    enum GrScreenMode
+    enum ScreenMode
     {
-        GR_NONE = 0,
-        GR_DIRECT3D = 0x66,
+        NONE = 0,
+        DIRECT3D = 0x66,
     };
 
-    enum GrWindowMode
+    enum WindowMode
     {
-        GR_FULLSCREEN = 0xC9,
-        GR_WINDOWED = 0xC8,
+        FULLSCREEN = 0xC9,
+        WINDOWED = 0xC8,
     };
 
-    enum GrLockMode
+    enum LockMode
     {
-        GR_LOCK_READ_ONLY = 0,
-        GR_LOCK_READ_ONLY_WRITE = 1,
-        GR_LOCK_WRITE_ONLY = 2,
+        LOCK_READ_ONLY = 0,
+        LOCK_READ_ONLY_WRITE = 1,
+        LOCK_WRITE_ONLY = 2,
     };
 
-    struct GrLockInfo
+    struct LockInfo
     {
         int bm_handle;
         int section;
@@ -284,9 +284,9 @@ namespace rf
         int w;
         int h;
         int stride_in_bytes;
-        GrLockMode mode;
+        LockMode mode;
     };
-    static_assert(sizeof(GrLockInfo) == 0x20);
+    static_assert(sizeof(LockInfo) == 0x20);
 
     enum TMapperFlags
     {
@@ -295,72 +295,77 @@ namespace rf
         TMAP_FLAG_ALPHA = 8,
     };
 
-    static auto& gr_screen = addr_as_ref<GrScreen>(0x017C7BC0);
-    static auto& gr_gamma_ramp = addr_as_ref<uint32_t[256]>(0x017C7C68);
-    static auto& gr_default_wfar = addr_as_ref<float>(0x00596140);
+    static auto& screen = addr_as_ref<Screen>(0x017C7BC0);
+    static auto& gamma_ramp = addr_as_ref<uint32_t[256]>(0x017C7C68);
+    static auto& default_wfar = addr_as_ref<float>(0x00596140);
 
-    static auto& gr_bitmap_clamp_mode = addr_as_ref<GrMode>(0x017756BC);
-    static auto& gr_rect_mode = addr_as_ref<GrMode>(0x017756C0);
-    static auto& gr_bitmap_wrap_mode = addr_as_ref<GrMode>(0x017756DC);
-    static auto& gr_line_mode = addr_as_ref<GrMode>(0x01775B00);
+    static auto& bitmap_clamp_mode = addr_as_ref<Mode>(0x017756BC);
+    static auto& rect_mode = addr_as_ref<Mode>(0x017756C0);
+    static auto& bitmap_wrap_mode = addr_as_ref<Mode>(0x017756DC);
+    static auto& line_mode = addr_as_ref<Mode>(0x01775B00);
 
-    static auto& gr_view_matrix = addr_as_ref<Matrix3>(0x018186C8);
-    static auto& gr_view_pos = addr_as_ref<Vector3>(0x01818690);
-    static auto& gr_light_matrix = addr_as_ref<Matrix3>(0x01818A38);
-    static auto& gr_light_base = addr_as_ref<Vector3>(0x01818A28);
+    static auto& view_matrix = addr_as_ref<Matrix3>(0x018186C8);
+    static auto& view_pos = addr_as_ref<Vector3>(0x01818690);
+    static auto& light_matrix = addr_as_ref<Matrix3>(0x01818A38);
+    static auto& light_base = addr_as_ref<Vector3>(0x01818A28);
 
-    static auto& gr_screen_width = addr_as_ref<int()>(0x0050C640);
-    static auto& gr_screen_height = addr_as_ref<int()>(0x0050C650);
-    static auto& gr_clip_width = addr_as_ref<int()>(0x0050CDB0);
-    static auto& gr_clip_height = addr_as_ref<int()>(0x0050CDC0);
-    static auto& gr_set_alpha = addr_as_ref<void(ubyte a)>(0x0050D030);
-    static auto& gr_read_backbuffer = addr_as_ref<int(int x, int y, int w, int h, void* buffer)>(0x0050DFF0);
-    static auto& gr_clear = addr_as_ref<void()>(0x0050CDF0);
-    static auto& gr_cull_sphere = addr_as_ref<bool(const Vector3& pos, float radius)>(0x005186A0);
-    static auto& gr_set_texture_mip_filter = addr_as_ref<void(bool linear)>(0x0050E830);
-    static auto& gr_lock = addr_as_ref<bool(int bm_handle, int section, GrLockInfo* lock, GrLockMode mode)>(0x0050E2E0);
-    static auto& gr_unlock = addr_as_ref<void(GrLockInfo* lock)>(0x0050E310);
-    static auto& gr_set_clip = addr_as_ref<void(int x, int y, int w, int h)>(0x0050CC60);
-    static auto& gr_get_clip = addr_as_ref<void(int* x, int* y, int* w, int* h)>(0x0050CD80);
-    static auto& gr_page_in = addr_as_ref<int(int bm_handle)>(0x0050CE00);
-    static auto& gr_tcache_add_ref = addr_as_ref<void(int bm_handle)>(0x0050E850);
-    static auto& gr_close = addr_as_ref<void()>(0x0050CBE0);
-    static auto& gr_set_texture = addr_as_ref<void (int bitmap_handle, int bitmap_handle2)>(0x0050D060);
-    static auto& gr_tmapper = addr_as_ref<void (int nv, Vertex **verts, TMapperFlags vertex_attributes, GrMode mode)>(0x0050DF80);
-    static auto& gr_lighting_enabled = addr_as_ref<bool()>(0x004DB8B0);
+    static auto& screen_width = addr_as_ref<int()>(0x0050C640);
+    static auto& screen_height = addr_as_ref<int()>(0x0050C650);
+    static auto& clip_width = addr_as_ref<int()>(0x0050CDB0);
+    static auto& clip_height = addr_as_ref<int()>(0x0050CDC0);
+    static auto& set_alpha = addr_as_ref<void(ubyte a)>(0x0050D030);
+    static auto& read_backbuffer = addr_as_ref<int(int x, int y, int w, int h, void* buffer)>(0x0050DFF0);
+    static auto& clear = addr_as_ref<void()>(0x0050CDF0);
+    static auto& cull_sphere = addr_as_ref<bool(const Vector3& pos, float radius)>(0x005186A0);
+    static auto& set_texture_mip_filter = addr_as_ref<void(bool linear)>(0x0050E830);
+    static auto& lock = addr_as_ref<bool(int bm_handle, int section, LockInfo* lock, LockMode mode)>(0x0050E2E0);
+    static auto& unlock = addr_as_ref<void(LockInfo* lock)>(0x0050E310);
+    static auto& set_clip = addr_as_ref<void(int x, int y, int w, int h)>(0x0050CC60);
+    static auto& get_clip = addr_as_ref<void(int* x, int* y, int* w, int* h)>(0x0050CD80);
+    static auto& page_in = addr_as_ref<int(int bm_handle)>(0x0050CE00);
+    static auto& tcache_add_ref = addr_as_ref<void(int bm_handle)>(0x0050E850);
+    static auto& close = addr_as_ref<void()>(0x0050CBE0);
+    static auto& set_texture = addr_as_ref<void (int bitmap_handle, int bitmap_handle2)>(0x0050D060);
+    static auto& tmapper = addr_as_ref<void (int nv, Vertex **verts, TMapperFlags vertex_attributes, Mode mode)>(0x0050DF80);
+    static auto& lighting_enabled = addr_as_ref<bool()>(0x004DB8B0);
 
-    inline void gr_set_color(ubyte r, ubyte g, ubyte b, ubyte a = gr_screen.current_color.alpha)
+    inline void set_color(ubyte r, ubyte g, ubyte b, ubyte a = screen.current_color.alpha)
     {
         AddrCaller{0x0050CF80}.c_call(r, g, b, a);
     }
 
-    inline void gr_set_color(const Color& clr)
+    inline void set_color(const Color& clr)
     {
         AddrCaller{0x0050D000}.c_call(&clr);
     }
 
-    inline void gr_line(float x0, float y0, float x1, float y1, GrMode mode = gr_line_mode)
+    inline void line(float x0, float y0, float x1, float y1, Mode mode = line_mode)
     {
         AddrCaller{0x0050D770}.c_call(x0, y0, x1, y1, mode);
     }
 
-    inline void gr_rect(int x, int y, int cx, int cy, GrMode mode = gr_rect_mode)
+    inline void rect(int x, int y, int cx, int cy, Mode mode = rect_mode)
     {
         AddrCaller{0x0050DBE0}.c_call(x, y, cx, cy, mode);
     }
 
-    inline void gr_bitmap(int bm_handle, int x, int y, GrMode mode = gr_bitmap_wrap_mode)
+    inline void bitmap(int bm_handle, int x, int y, Mode mode = bitmap_wrap_mode)
     {
         AddrCaller{0x0050D2A0}.c_call(bm_handle, x, y, mode);
     }
 
-    inline void gr_bitmap_ex(int bm_handle, int x, int y, int w, int h, int sx, int sy, GrMode mode = gr_bitmap_wrap_mode)
+    inline void bitmap_ex(int bm_handle, int x, int y, int w, int h, int sx, int sy, Mode mode = bitmap_wrap_mode)
     {
         AddrCaller{0x0050D0A0}.c_call(bm_handle, x, y, w, h, sx, sy, mode);
     }
 
-    inline void gr_bitmap_scaled(int bm_handle, int x, int y, int w, int h, int sx, int sy, int sw, int sh, bool flip_x = false, bool flip_y = false, GrMode mode = gr_bitmap_wrap_mode)
+    inline void bitmap_scaled(int bm_handle, int x, int y, int w, int h, int sx, int sy, int sw, int sh, bool flip_x = false, bool flip_y = false, Mode mode = bitmap_wrap_mode)
     {
         AddrCaller{0x0050D250}.c_call(bm_handle, x, y, w, h, sx, sy, sw, sh, flip_x, flip_y, mode);
     }
+}
+
+namespace rf
+{
+    using Color = gr::Color;
 }

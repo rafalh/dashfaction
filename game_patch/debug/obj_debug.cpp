@@ -266,7 +266,7 @@ void render_obj_debug_ui()
         return;
     }
 
-    DebugNameValueBox dbg_hud{rf::gr_screen_width() - 300, 200};
+    DebugNameValueBox dbg_hud{rf::gr::screen_width() - 300, 200};
 
     if (!rf::local_player || !rf::local_player->cam) {
         return;

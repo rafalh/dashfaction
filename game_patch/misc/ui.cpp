@@ -29,12 +29,12 @@ void __fastcall UiButton_create(rf::UiButton& this_, int, const char *normal_bm,
     this_.y = y;
     if (*normal_bm) {
         this_.bg_bitmap = rf::bm_load(normal_bm, -1, false);
-        rf::gr_tcache_add_ref(this_.bg_bitmap);
+        rf::gr::tcache_add_ref(this_.bg_bitmap);
         rf::bm_get_dimensions(this_.bg_bitmap, &this_.w, &this_.h);
     }
     if (*selected_bm) {
         this_.selected_bitmap = rf::bm_load(selected_bm, -1, false);
-        rf::gr_tcache_add_ref(this_.selected_bitmap);
+        rf::gr::tcache_add_ref(this_.selected_bitmap);
         if (this_.bg_bitmap < 0) {
             rf::bm_get_dimensions(this_.selected_bitmap, &this_.w, &this_.h);
         }
@@ -60,38 +60,38 @@ void __fastcall UiButton_render(rf::UiButton& this_)
     int h = static_cast<int>(this_.h * rf::ui_scale_y);
 
     if (this_.bg_bitmap >= 0) {
-        rf::gr_set_color(255, 255, 255, 255);
-        rf::gr_bitmap_scaled(this_.bg_bitmap, x, y, w, h, 0, 0, this_.w, this_.h);
+        rf::gr::set_color(255, 255, 255, 255);
+        rf::gr::bitmap_scaled(this_.bg_bitmap, x, y, w, h, 0, 0, this_.w, this_.h);
     }
 
     if (!this_.enabled) {
-        rf::gr_set_color(96, 96, 96, 255);
+        rf::gr::set_color(96, 96, 96, 255);
     }
     else if (this_.highlighted) {
-        rf::gr_set_color(240, 240, 240, 255);
+        rf::gr::set_color(240, 240, 240, 255);
     }
     else {
-        rf::gr_set_color(192, 192, 192, 255);
+        rf::gr::set_color(192, 192, 192, 255);
     }
 
     if (this_.enabled && this_.highlighted && this_.selected_bitmap >= 0) {
-        auto mode = addr_as_ref<rf::GrMode>(0x01775B0C);
-        rf::gr_bitmap_scaled(this_.selected_bitmap, x, y, w, h, 0, 0, this_.w, this_.h, false, false, mode);
+        auto mode = addr_as_ref<rf::gr::Mode>(0x01775B0C);
+        rf::gr::bitmap_scaled(this_.selected_bitmap, x, y, w, h, 0, 0, this_.w, this_.h, false, false, mode);
     }
 
     // Change clip region for text rendering
     int clip_x, clip_y, clip_w, clip_h;
-    rf::gr_get_clip(&clip_x, &clip_y, &clip_w, &clip_h);
-    rf::gr_set_clip(x, y, w, h);
+    rf::gr::get_clip(&clip_x, &clip_y, &clip_w, &clip_h);
+    rf::gr::set_clip(x, y, w, h);
 
     std::string_view text_sv{this_.text};
     int num_lines = 1 + std::count(text_sv.begin(), text_sv.end(), '\n');
-    int text_h = rf::gr_get_font_height(this_.font) * num_lines;
+    int text_h = rf::gr::get_font_height(this_.font) * num_lines;
     int text_y = (h - text_h) / 2;
-    rf::gr_string(rf::center_x, text_y, this_.text, this_.font);
+    rf::gr::string(rf::gr::center_x, text_y, this_.text, this_.font);
 
     // Restore clip region
-    rf::gr_set_clip(clip_x, clip_y, clip_w, clip_h);
+    rf::gr::set_clip(clip_x, clip_y, clip_w, clip_h);
 
     debug_ui_layout(this_);
 }
@@ -103,12 +103,12 @@ void __fastcall UiLabel_create(rf::UiLabel& this_, int, rf::UiGadget *parent, in
     this_.x = x;
     this_.y = y;
     int text_w, text_h;
-    rf::gr_get_string_size(&text_w, &text_h, text, -1, font);
+    rf::gr::get_string_size(&text_w, &text_h, text, -1, font);
     this_.w = static_cast<int>(text_w / rf::ui_scale_x);
     this_.h = static_cast<int>(text_h / rf::ui_scale_y);
     this_.text = strdup(text);
     this_.font = font;
-    this_.align = rf::GR_ALIGN_LEFT;
+    this_.align = rf::gr::ALIGN_LEFT;
     this_.clr.set(0, 0, 0, 255);
 }
 FunHook UiLabel_create_hook{0x00456B60, UiLabel_create};
@@ -124,10 +124,10 @@ void __fastcall UiLabel_create2(rf::UiLabel& this_, int, rf::UiGadget *parent, i
         while (*text == ' ') {
             ++text;
         }
-        this_.align = rf::GR_ALIGN_CENTER;
+        this_.align = rf::gr::ALIGN_CENTER;
     }
     else {
-        this_.align = rf::GR_ALIGN_LEFT;
+        this_.align = rf::gr::ALIGN_LEFT;
     }
     this_.text = strdup(text);
     this_.font = font;
@@ -146,28 +146,28 @@ FunHook UiLabel_set_text_hook{0x00456DC0, UiLabel_set_text};
 void __fastcall UiLabel_render(rf::UiLabel& this_)
 {
     if (!this_.enabled) {
-        rf::gr_set_color(48, 48, 48, 128);
+        rf::gr::set_color(48, 48, 48, 128);
     }
     else if (this_.highlighted) {
-        rf::gr_set_color(240, 240, 240, 255);
+        rf::gr::set_color(240, 240, 240, 255);
     }
     else {
-        gr_set_color(this_.clr);
+        rf::gr::set_color(this_.clr);
     }
     int x = static_cast<int>(this_.get_absolute_x() * rf::ui_scale_x);
     int y = static_cast<int>(this_.get_absolute_y() * rf::ui_scale_y);
     int text_w, text_h;
-    rf::gr_get_string_size(&text_w, &text_h, this_.text, -1, this_.font);
-    if (this_.align == rf::GR_ALIGN_CENTER) {
+    rf::gr::get_string_size(&text_w, &text_h, this_.text, -1, this_.font);
+    if (this_.align == rf::gr::ALIGN_CENTER) {
         x += static_cast<int>(this_.w * rf::ui_scale_x / 2);
     }
-    else if (this_.align == rf::GR_ALIGN_RIGHT) {
+    else if (this_.align == rf::gr::ALIGN_RIGHT) {
         x += static_cast<int>(this_.w * rf::ui_scale_x);
     }
     else {
         x += static_cast<int>(1 * rf::ui_scale_x);
     }
-    gr_string_aligned(this_.align, x, y, this_.text, this_.font);
+    rf::gr::string_aligned(this_.align, x, y, this_.text, this_.font);
 
     debug_ui_layout(this_);
 }
@@ -179,7 +179,7 @@ void __fastcall UiInputBox_create(rf::UiInputBox& this_, int, rf::UiGadget *pare
     this_.x = x;
     this_.y = y;
     this_.w = w;
-    this_.h = static_cast<int>(rf::gr_get_font_height(font) / rf::ui_scale_y);
+    this_.h = static_cast<int>(rf::gr::get_font_height(font) / rf::ui_scale_y);
     this_.max_text_width = static_cast<int>(w * rf::ui_scale_x);
     this_.font = font;
     std::strncpy(this_.text, text, std::size(this_.text));
@@ -190,29 +190,29 @@ FunHook UiInputBox_create_hook{0x00456FE0, UiInputBox_create};
 void __fastcall UiInputBox_render(rf::UiInputBox& this_, void*)
 {
     if (this_.enabled && this_.highlighted) {
-        rf::gr_set_color(240, 240, 240, 255);
+        rf::gr::set_color(240, 240, 240, 255);
     }
     else {
-        rf::gr_set_color(192, 192, 192, 255);
+        rf::gr::set_color(192, 192, 192, 255);
     }
 
     int x = static_cast<int>((this_.get_absolute_x() + 1) * rf::ui_scale_x);
     int y = static_cast<int>(this_.get_absolute_y() * rf::ui_scale_y);
     int clip_x, clip_y, clip_w, clip_h;
-    rf::gr_get_clip(&clip_x, &clip_y, &clip_w, &clip_h);
-    rf::gr_set_clip(x, y, this_.max_text_width, static_cast<int>(this_.h * rf::ui_scale_y + 5)); // for some reason input fields are too thin
+    rf::gr::get_clip(&clip_x, &clip_y, &clip_w, &clip_h);
+    rf::gr::set_clip(x, y, this_.max_text_width, static_cast<int>(this_.h * rf::ui_scale_y + 5)); // for some reason input fields are too thin
     int text_offset_x = static_cast<int>(1 * rf::ui_scale_x);
-    rf::gr_string(text_offset_x, 0, this_.text, this_.font);
+    rf::gr::string(text_offset_x, 0, this_.text, this_.font);
 
     if (this_.enabled && this_.highlighted) {
         rf::ui_update_input_box_cursor();
         if (rf::ui_input_box_cursor_visible) {
             int text_w, text_h;
-            rf::gr_get_string_size(&text_w, &text_h, this_.text, -1, this_.font);
-            rf::gr_string(text_offset_x + text_w, 0, "_", this_.font);
+            rf::gr::get_string_size(&text_w, &text_h, this_.text, -1, this_.font);
+            rf::gr::string(text_offset_x + text_w, 0, "_", this_.font);
         }
     }
-    rf::gr_set_clip(clip_x, clip_y, clip_w, clip_h);
+    rf::gr::set_clip(clip_x, clip_y, clip_w, clip_h);
 
     debug_ui_layout(this_);
 }
@@ -231,13 +231,13 @@ FunHook UiCycler_add_item_hook{0x00458080, UiCycler_add_item};
 void __fastcall UiCycler_render(rf::UiCycler& this_)
 {
     if (this_.enabled && this_.highlighted) {
-        rf::gr_set_color(255, 255, 255, 255);
+        rf::gr::set_color(255, 255, 255, 255);
     }
     else if (this_.enabled) {
-        rf::gr_set_color(192, 192, 192, 255);
+        rf::gr::set_color(192, 192, 192, 255);
     }
     else {
-        rf::gr_set_color(96, 96, 96, 255);
+        rf::gr::set_color(96, 96, 96, 255);
     }
 
     int x = static_cast<int>(this_.get_absolute_x() * rf::ui_scale_x);
@@ -245,10 +245,10 @@ void __fastcall UiCycler_render(rf::UiCycler& this_)
 
     auto text = this_.items_text[this_.current_item];
     auto font = this_.items_font[this_.current_item];
-    auto font_h = rf::gr_get_font_height(font);
+    auto font_h = rf::gr::get_font_height(font);
     auto text_x = x + static_cast<int>(this_.w * rf::ui_scale_x / 2);
     auto text_y = y + static_cast<int>((this_.h * rf::ui_scale_y - font_h) / 2);
-    rf::gr_string_aligned(rf::GR_ALIGN_CENTER, text_x, text_y, text, font);
+    rf::gr::string_aligned(rf::gr::ALIGN_CENTER, text_x, text_y, text, font);
 
     debug_ui_layout(this_);
 }
@@ -274,10 +274,10 @@ FunHook<void()> menu_init_hook{
             int small_font_size = std::min(128, static_cast<int>(std::round(rf::ui_scale_y * 7.5f))); // 16
             xlog::info("UI font sizes: %d %d %d", large_font_size, medium_font_size, small_font_size);
 
-            rf::ui_large_font = rf::gr_load_font(string_format("boldfont.ttf:%d", large_font_size).c_str());
-            rf::ui_medium_font_0 = rf::gr_load_font(string_format("regularfont.ttf:%d", medium_font_size).c_str());
+            rf::ui_large_font = rf::gr::load_font(string_format("boldfont.ttf:%d", large_font_size).c_str());
+            rf::ui_medium_font_0 = rf::gr::load_font(string_format("regularfont.ttf:%d", medium_font_size).c_str());
             rf::ui_medium_font_1 = rf::ui_medium_font_0;
-            rf::ui_small_font = rf::gr_load_font(string_format("regularfont.ttf:%d", small_font_size).c_str());
+            rf::ui_small_font = rf::gr::load_font(string_format("regularfont.ttf:%d", small_font_size).c_str());
         }
 #endif
     },

@@ -45,7 +45,7 @@ std::optional<JoinMpGameData> g_join_mp_game_seq_data;
 CodeInjection critical_error_hide_main_wnd_patch{
     0x0050BA90,
     []() {
-        rf::gr_close();
+        rf::gr::close();
         if (rf::main_wnd)
             ShowWindow(rf::main_wnd, SW_HIDE);
     },
@@ -354,7 +354,7 @@ CodeInjection explosion_crash_fix{
 CallHook<void(rf::Vector3*, float, float, float, float, bool, int, int)> level_read_geometry_header_light_add_directional_hook{
     0x004619E1,
     [](rf::Vector3 *dir, float intensity, float r, float g, float b, bool is_dynamic, int casts_shadow, int dropoff_type) {
-        if (rf::gr_lighting_enabled()) {
+        if (rf::gr::lighting_enabled()) {
             level_read_geometry_header_light_add_directional_hook.call_target(dir, intensity, r, g, b, is_dynamic, casts_shadow, dropoff_type);
         }
     },

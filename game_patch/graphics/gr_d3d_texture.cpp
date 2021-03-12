@@ -17,7 +17,7 @@
 #include "gr_internal.h"
 #include "gr.h"
 
-std::set<rf::GrD3DTexture*> g_default_pool_tslots;
+std::set<rf::gr::d3d::Texture*> g_default_pool_tslots;
 int g_currently_creating_texture_for_bitmap = -1;
 
 class D3DTextureFormatSelector
@@ -33,7 +33,7 @@ class D3DTextureFormatSelector
     D3DFORMAT find_best_format(D3DFORMAT (&&allowed)[N])
     {
         for (auto d3d_fmt : allowed) {
-            auto hr = rf::gr_d3d->CheckDeviceFormat(rf::gr_adapter_idx, D3DDEVTYPE_HAL, rf::gr_d3d_pp.BackBufferFormat, 0,
+            auto hr = rf::gr::d3d::d3d->CheckDeviceFormat(rf::gr::d3d::adapter_idx, D3DDEVTYPE_HAL, rf::gr::d3d::pp.BackBufferFormat, 0,
                 D3DRTYPE_TEXTURE, d3d_fmt);
             if (SUCCEEDED(hr)) {
                 return d3d_fmt;
@@ -96,11 +96,11 @@ public:
 D3DTextureFormatSelector g_texture_format_selector;
 
 using GrD3DSetTextureData_Type =
-    int(int, const uint8_t*, const uint8_t*, int, int, rf::BmFormat, rf::GrD3DTextureSection*, int, int, IDirect3DTexture8*);
+    int(int, const uint8_t*, const uint8_t*, int, int, rf::BmFormat, rf::gr::d3d::TextureSection*, int, int, IDirect3DTexture8*);
 FunHook<GrD3DSetTextureData_Type> gr_d3d_set_texture_data_hook{
     0x0055BA10,
     [](int level, const uint8_t* src_bits_ptr, const uint8_t* palette, int bm_w, int bm_h,
-        rf::BmFormat format, rf::GrD3DTextureSection* section, int tex_w, int tex_h, IDirect3DTexture8* texture) {
+        rf::BmFormat format, rf::gr::d3d::TextureSection* section, int tex_w, int tex_h, IDirect3DTexture8* texture) {
         xlog::trace("gr_d3d_set_texture_data_hook");
 
         D3DSURFACE_DESC desc;
@@ -170,7 +170,7 @@ FunHook<int(rf::BmFormat, int, int, int, IDirect3DTexture8**)> gr_d3d_create_vra
         int usage = 0;
         if (format == rf::BM_FORMAT_RENDER_TARGET) {
             xlog::trace("Creating render target texture");
-            d3d_format = rf::gr_d3d_pp.BackBufferFormat;
+            d3d_format = rf::gr::d3d::pp.BackBufferFormat;
             d3d_pool = D3DPOOL_DEFAULT;
             usage = D3DUSAGE_RENDERTARGET;
         }
@@ -189,7 +189,7 @@ FunHook<int(rf::BmFormat, int, int, int, IDirect3DTexture8**)> gr_d3d_create_vra
         }
 
         xlog::trace("Creating texture bm_format 0x%X d3d_format 0x%X", format, d3d_format);
-        auto hr = rf::gr_d3d_device->CreateTexture(width, height, levels, usage, d3d_format, d3d_pool, texture_out);
+        auto hr = rf::gr::d3d::device->CreateTexture(width, height, levels, usage, d3d_format, d3d_pool, texture_out);
         if (FAILED(hr)) {
             xlog::error("Failed to create texture %dx%d in format %u", width, height, d3d_format);
             return -1;
@@ -222,8 +222,8 @@ FunHook<void(int, float, float, rf::Color*)> gr_d3d_get_texel_hook{
         // This function is only used when shooting at a texture with alpha
         // Note: original function has out of bounds error - it reads color for 16bpp and 32bpp (two addresses)
         // before actually checking the format
-        rf::GrLockInfo lock;
-        if (rf::gr_lock(bm_handle, 0, &lock, rf::GR_LOCK_READ_ONLY)) {
+        rf::gr::LockInfo lock;
+        if (rf::gr::lock(bm_handle, 0, &lock, rf::gr::LOCK_READ_ONLY)) {
             // Make sure u and v are in [0, 1] range
             // Assume wrap addressing mode
             u = std::fmod(u, 1.0f);
@@ -239,7 +239,7 @@ FunHook<void(int, float, float, rf::Color*)> gr_d3d_get_texel_hook{
             *out_color = bm_get_pixel(lock.data, lock.format, lock.stride_in_bytes, x, y);
 
 
-            rf::gr_unlock(&lock);
+            rf::gr::unlock(&lock);
         }
         else {
             out_color->set(255, 255, 255, 255);
@@ -247,9 +247,9 @@ FunHook<void(int, float, float, rf::Color*)> gr_d3d_get_texel_hook{
     },
 };
 
-extern FunHook<int(int, rf::GrD3DTexture&)> gr_d3d_create_texture_hook;
+extern FunHook<int(int, rf::gr::d3d::Texture&)> gr_d3d_create_texture_hook;
 
-int gr_d3d_create_texture(int bm_handle, rf::GrD3DTexture& tslot) {
+int gr_d3d_create_texture(int bm_handle, rf::gr::d3d::Texture& tslot) {
     g_currently_creating_texture_for_bitmap = bm_handle;
     auto result = gr_d3d_create_texture_hook.call_target(bm_handle, tslot);
     g_currently_creating_texture_for_bitmap = -1;
@@ -266,11 +266,11 @@ int gr_d3d_create_texture(int bm_handle, rf::GrD3DTexture& tslot) {
     return result;
 }
 
-FunHook<int(int, rf::GrD3DTexture&)> gr_d3d_create_texture_hook{0x0055CC00, gr_d3d_create_texture};
+FunHook<int(int, rf::gr::d3d::Texture&)> gr_d3d_create_texture_hook{0x0055CC00, gr_d3d_create_texture};
 
-FunHook<void(rf::GrD3DTexture&)> gr_d3d_free_texture_hook{
+FunHook<void(rf::gr::d3d::Texture&)> gr_d3d_free_texture_hook{
     0x0055B640,
-    [](rf::GrD3DTexture& tslot) {
+    [](rf::gr::d3d::Texture& tslot) {
         gr_d3d_free_texture_hook.call_target(tslot);
 
         if (tslot.bm_handle >= 0) {
@@ -283,9 +283,9 @@ FunHook<void(rf::GrD3DTexture&)> gr_d3d_free_texture_hook{
     },
 };
 
-bool gr_d3d_lock(int bm_handle, int section, rf::GrLockInfo *lock) {
+bool gr_d3d_lock(int bm_handle, int section, rf::gr::LockInfo *lock) {
     xlog::trace("gr_d3d_lock");
-    auto& tslot = rf::gr_d3d_textures[rf::bm_handle_to_index_anim_aware(bm_handle)];
+    auto& tslot = rf::gr::d3d::textures[rf::bm_handle_to_index_anim_aware(bm_handle)];
     if (tslot.num_sections < 1 || tslot.bm_handle != bm_handle) {
         auto ret = gr_d3d_create_texture(bm_handle, tslot);
         if (ret != 1) {
@@ -295,10 +295,10 @@ bool gr_d3d_lock(int bm_handle, int section, rf::GrLockInfo *lock) {
     D3DLOCKED_RECT locked_rect;
     auto d3d_texture = tslot.sections[section].d3d_texture;
     DWORD lock_flags = 0;
-    if (lock->mode == rf::GR_LOCK_READ_ONLY) {
+    if (lock->mode == rf::gr::LOCK_READ_ONLY) {
         lock_flags = D3DLOCK_READONLY;
     }
-    else if (lock->mode == rf::GR_LOCK_WRITE_ONLY && gr_d3d_is_d3d8to9()) {
+    else if (lock->mode == rf::gr::LOCK_WRITE_ONLY && gr_d3d_is_d3d8to9()) {
         lock_flags = D3DLOCK_DISCARD;
     }
     auto hr = d3d_texture->LockRect(0, &locked_rect, nullptr, lock_flags);
@@ -325,11 +325,11 @@ bool gr_d3d_lock(int bm_handle, int section, rf::GrLockInfo *lock) {
     return true;
 }
 
-static FunHook<bool(int, int, rf::GrLockInfo *)> gr_d3d_lock_hook{0x0055CE00, gr_d3d_lock};
+static FunHook<bool(int, int, rf::gr::LockInfo *)> gr_d3d_lock_hook{0x0055CE00, gr_d3d_lock};
 
-// FunHook<void(rf::GrMode, int, int)> gr_d3d_set_state_and_texture_hook{
+// FunHook<void(rf::gr::Mode, int, int)> gr_d3d_set_state_and_texture_hook{
 //     0x00550850,
-//     [](rf::GrMode mode, int bm0, int bm1) {
+//     [](rf::gr::Mode mode, int bm0, int bm1) {
 //         auto bm0_filename = rf::bm_get_filename(bm0);
 //         if (bm0_filename && strstr(bm0_filename, "grate")) {
 //             // disable alpha-blending
@@ -341,7 +341,7 @@ static FunHook<bool(int, int, rf::GrLockInfo *)> gr_d3d_lock_hook{0x0055CE00, gr
 
 bool gr_d3d_is_texture_format_supported(rf::BmFormat format)
 {
-    if (rf::gr_screen.mode != rf::GR_DIRECT3D) {
+    if (rf::gr::screen.mode != rf::gr::DIRECT3D) {
         return false;
     }
 
@@ -350,7 +350,7 @@ bool gr_d3d_is_texture_format_supported(rf::BmFormat format)
         return false;
     }
 
-    auto hr = rf::gr_d3d->CheckDeviceFormat(rf::gr_adapter_idx, D3DDEVTYPE_HAL, rf::gr_d3d_pp.BackBufferFormat, 0,
+    auto hr = rf::gr::d3d::d3d->CheckDeviceFormat(rf::gr::d3d::adapter_idx, D3DDEVTYPE_HAL, rf::gr::d3d::pp.BackBufferFormat, 0,
         D3DRTYPE_TEXTURE, d3d_fmt);
     if (FAILED(hr)) {
         return false;
@@ -391,8 +391,8 @@ void gr_d3d_texture_device_lost()
 void gr_d3d_delete_texture(int bm_handle)
 {
     auto bm_index = rf::bm_handle_to_index_anim_aware(bm_handle);
-    auto& tslot = rf::gr_d3d_textures[bm_index];
-    rf::gr_d3d_free_texture(tslot);
+    auto& tslot = rf::gr::d3d::textures[bm_index];
+    rf::gr::d3d::free_texture(tslot);
 }
 
 void gr_d3d_texture_init()

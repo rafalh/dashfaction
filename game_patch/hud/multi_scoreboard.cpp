@@ -46,9 +46,9 @@ int draw_scoreboard_header(int x, int y, int w, rf::NetGameType game_type, bool 
     int x_center = x + w / 2;
     int cur_y = y;
     if (!dry_run) {
-        rf::gr_set_color(0xFF, 0xFF, 0xFF, 0xFF);
+        rf::gr::set_color(0xFF, 0xFF, 0xFF, 0xFF);
         static int score_rflogo_bm = rf::bm_load("score_rflogo.tga", -1, false);
-        rf::gr_bitmap(score_rflogo_bm, x_center - 170, cur_y);
+        rf::gr::bitmap(score_rflogo_bm, x_center - 170, cur_y);
     }
     cur_y += 30;
 
@@ -61,19 +61,19 @@ int draw_scoreboard_header(int x, int y, int w, rf::NetGameType game_type, bool 
             game_type_name = rf::strings::capture_the_flag;
         else
             game_type_name = rf::strings::team_deathmatch;
-        rf::gr_string_aligned(rf::GR_ALIGN_CENTER, x_center, cur_y, game_type_name);
+        rf::gr::string_aligned(rf::gr::ALIGN_CENTER, x_center, cur_y, game_type_name);
     }
-    int font_h = rf::gr_get_font_height(-1);
+    int font_h = rf::gr::get_font_height(-1);
     cur_y += font_h + 8;
 
     // Draw level
     if (!dry_run) {
-        rf::gr_set_color(0xB0, 0xB0, 0xB0, 0xFF);
+        rf::gr::set_color(0xB0, 0xB0, 0xB0, 0xFF);
         auto level_info = rf::String::format("%s (%s) by %s", rf::level.name.c_str(), rf::level.filename.c_str(),
                                             rf::level.author.c_str());
         rf::String level_info_stripped;
         rf::fit_scoreboard_string(&level_info_stripped, level_info, w - 20); // Note: this destroys input string
-        rf::gr_string_aligned(rf::GR_ALIGN_CENTER, x_center, cur_y, level_info_stripped);
+        rf::gr::string_aligned(rf::gr::ALIGN_CENTER, x_center, cur_y, level_info_stripped);
     }
     cur_y += font_h + 3;
 
@@ -84,7 +84,7 @@ int draw_scoreboard_header(int x, int y, int w, rf::NetGameType game_type, bool 
         auto server_info = rf::String::format("%s (%s)", rf::netgame.name.c_str(), ip_addr_buf);
         rf::String server_info_stripped;
         rf::fit_scoreboard_string(&server_info_stripped, server_info, w - 20); // Note: this destroys input string
-        rf::gr_string_aligned(rf::GR_ALIGN_CENTER, x_center, cur_y, server_info_stripped);
+        rf::gr::string_aligned(rf::gr::ALIGN_CENTER, x_center, cur_y, server_info_stripped);
     }
     cur_y += font_h + 8;
 
@@ -97,8 +97,8 @@ int draw_scoreboard_header(int x, int y, int w, rf::NetGameType game_type, bool 
                 static int hud_flag_blue_bm = rf::bm_load("hud_flag_blue.tga", -1, true);
                 int flag_bm_w, flag_bm_h;
                 rf::bm_get_dimensions(hud_flag_red_bm, &flag_bm_w, &flag_bm_h);
-                rf::gr_bitmap(hud_flag_red_bm, x + w * 2 / 6 - flag_bm_w / 2, cur_y);
-                rf::gr_bitmap(hud_flag_blue_bm, x + w * 4 / 6 - flag_bm_w / 2, cur_y);
+                rf::gr::bitmap(hud_flag_red_bm, x + w * 2 / 6 - flag_bm_w / 2, cur_y);
+                rf::gr::bitmap(hud_flag_blue_bm, x + w * 4 / 6 - flag_bm_w / 2, cur_y);
                 red_score = rf::multi_ctf_get_red_team_score();
                 blue_score = rf::multi_ctf_get_blue_team_score();
             }
@@ -106,13 +106,13 @@ int draw_scoreboard_header(int x, int y, int w, rf::NetGameType game_type, bool 
                 red_score = rf::multi_tdm_get_red_team_score();
                 blue_score = rf::multi_tdm_get_blue_team_score();
             }
-            rf::gr_set_color(0xD0, 0x20, 0x20, 0xFF);
+            rf::gr::set_color(0xD0, 0x20, 0x20, 0xFF);
             int team_scores_font = rf::scoreboard_big_font;
             auto red_score_str = std::to_string(red_score);
-            rf::gr_string_aligned(rf::GR_ALIGN_CENTER, x + w * 1 / 6, cur_y + 10, red_score_str.c_str(), team_scores_font);
-            rf::gr_set_color(0x20, 0x20, 0xD0, 0xFF);
+            rf::gr::string_aligned(rf::gr::ALIGN_CENTER, x + w * 1 / 6, cur_y + 10, red_score_str.c_str(), team_scores_font);
+            rf::gr::set_color(0x20, 0x20, 0xD0, 0xFF);
             auto blue_score_str = std::to_string(blue_score);
-            rf::gr_string_aligned(rf::GR_ALIGN_CENTER, x + w * 5 / 6, cur_y + 10, blue_score_str.c_str(), team_scores_font);
+            rf::gr::string_aligned(rf::gr::ALIGN_CENTER, x + w * 5 / 6, cur_y + 10, blue_score_str.c_str(), team_scores_font);
         }
 
         cur_y += 60;
@@ -125,7 +125,7 @@ int draw_scoreboard_players(const std::vector<rf::Player*>& players, int x, int 
     rf::NetGameType game_type, bool dry_run = false)
 {
     int initial_y = y;
-    int font_h = rf::gr_get_font_height(-1);
+    int font_h = rf::gr::get_font_height(-1);
 
     int status_w = static_cast<int>(12 * scale);
     int score_w = static_cast<int>(50 * scale);
@@ -143,14 +143,14 @@ int draw_scoreboard_players(const std::vector<rf::Player*>& players, int x, int 
 
     // Draw list header
     if (!dry_run) {
-        rf::gr_set_color(0xFF, 0xFF, 0xFF, 0xFF);
-        rf::gr_string(name_x, y, rf::strings::player);
-        rf::gr_string(score_x, y, rf::strings::score); // Note: RF uses "Frags"
-        rf::gr_string(kd_x, y, "K/D");
+        rf::gr::set_color(0xFF, 0xFF, 0xFF, 0xFF);
+        rf::gr::string(name_x, y, rf::strings::player);
+        rf::gr::string(score_x, y, rf::strings::score); // Note: RF uses "Frags"
+        rf::gr::string(kd_x, y, "K/D");
         if (game_type == rf::NG_TYPE_CTF) {
-            rf::gr_string(caps_x, y, rf::strings::caps);
+            rf::gr::string(caps_x, y, rf::strings::caps);
         }
-        rf::gr_string(ping_x, y, rf::strings::ping, -1);
+        rf::gr::string(ping_x, y, rf::strings::ping, -1);
     }
 
     y += font_h + 8;
@@ -163,9 +163,9 @@ int draw_scoreboard_players(const std::vector<rf::Player*>& players, int x, int 
         if (!dry_run) {
             bool is_local_player = player == rf::player_list;
             if (is_local_player)
-                rf::gr_set_color(0xFF, 0xFF, 0x80, 0xFF);
+                rf::gr::set_color(0xFF, 0xFF, 0x80, 0xFF);
             else
-                rf::gr_set_color(0xFF, 0xFF, 0xFF, 0xFF);
+                rf::gr::set_color(0xFF, 0xFF, 0xFF, 0xFF);
 
             static int green_bm = rf::bm_load("DF_green.tga", -1, true);
             static int red_bm = rf::bm_load("DF_red.tga", -1, true);
@@ -182,7 +182,7 @@ int draw_scoreboard_players(const std::vector<rf::Player*>& players, int x, int 
 
             rf::String player_name_stripped;
             rf::fit_scoreboard_string(&player_name_stripped, player->name, name_w - static_cast<int>(12 * scale)); // Note: this destroys Name
-            rf::gr_string(name_x, y, player_name_stripped);
+            rf::gr::string(name_x, y, player_name_stripped);
 
 #if DEBUG_SCOREBOARD
             int score = 999;
@@ -200,18 +200,18 @@ int draw_scoreboard_players(const std::vector<rf::Player*>& players, int x, int 
 #endif
 
             auto score_str = std::to_string(score);
-            rf::gr_string(score_x, y, score_str.c_str());
+            rf::gr::string(score_x, y, score_str.c_str());
 
             auto kills_deaths_str = string_format("%hd/%hd", num_kills, num_deaths);
-            rf::gr_string(kd_x, y, kills_deaths_str.c_str());
+            rf::gr::string(kd_x, y, kills_deaths_str.c_str());
 
             if (game_type == rf::NG_TYPE_CTF) {
                 auto caps_str = std::to_string(caps);
-                rf::gr_string(caps_x, y, caps_str.c_str());
+                rf::gr::string(caps_x, y, caps_str.c_str());
             }
 
             auto ping_str = std::to_string(ping);
-            rf::gr_string(ping_x, y, ping_str.c_str());
+            rf::gr::string(ping_x, y, ping_str.c_str());
         }
 
         y += font_h + (scale == 1.0f ? 3 : 0);
@@ -288,12 +288,12 @@ void draw_scoreboard_internal_new(bool draw)
     float scale;
     // Note: fit_scoreboard_string does not support providing font by argument so default font must be changed
     if (g_big_scoreboard) {
-        rf::gr_set_default_font(hud_get_default_font_name(true));
-        w = std::min(!group_by_team ? 900 : 1400, rf::gr_clip_width());
+        rf::gr::set_default_font(hud_get_default_font_name(true));
+        w = std::min(!group_by_team ? 900 : 1400, rf::gr::clip_width());
         scale = 2.0f;
     }
     else {
-        w = std::min(!group_by_team ? 450 : 700, rf::gr_clip_width());
+        w = std::min(!group_by_team ? 450 : 700, rf::gr::clip_width());
         scale = 1.0f;
     }
 
@@ -310,16 +310,16 @@ void draw_scoreboard_internal_new(bool draw)
     // Draw background
     w = static_cast<int>(progress_w * w);
     h = static_cast<int>(progress_h * h);
-    int x = (static_cast<int>(rf::gr_clip_width()) - w) / 2;
-    int y = (static_cast<int>(rf::gr_clip_height()) - h) / 2;
-    rf::gr_set_color(0, 0, 0, 0x80);
-    rf::gr_rect(x, y, w, h);
+    int x = (static_cast<int>(rf::gr::clip_width()) - w) / 2;
+    int y = (static_cast<int>(rf::gr::clip_height()) - h) / 2;
+    rf::gr::set_color(0, 0, 0, 0x80);
+    rf::gr::rect(x, y, w, h);
     y += top_padding;
 
     if (progress_h < 1.0f || progress_w < 1.0f) {
         // Restore rfpc-medium as default font
         if (g_big_scoreboard) {
-            rf::gr_set_default_font("rfpc-medium.vf");
+            rf::gr::set_default_font("rfpc-medium.vf");
         }
         return;
     }
@@ -337,7 +337,7 @@ void draw_scoreboard_internal_new(bool draw)
 
     // Restore rfpc-medium as default font
     if (g_big_scoreboard) {
-        rf::gr_set_default_font("rfpc-medium.vf");
+        rf::gr::set_default_font("rfpc-medium.vf");
     }
 }
 

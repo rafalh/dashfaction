@@ -39,11 +39,11 @@ void render_skip_cutscene_hint_text(rf::ControlConfigAction action)
     }
     auto bind_name = get_game_ctrl_bind_name(action);
     auto& action_name = rf::local_player->settings.controls.bindings[action].name;
-    rf::gr_set_color(255, 255, 255, 255);
+    rf::gr::set_color(255, 255, 255, 255);
     auto msg = rf::String::format("Press %s (%s) to skip the cutscene", action_name.c_str(), bind_name.c_str());
-    auto x = rf::gr_screen_width() / 2;
-    auto y = rf::gr_screen_height() - 30;
-    rf::gr_string_aligned(rf::GR_ALIGN_CENTER, x, y, msg);
+    auto x = rf::gr::screen_width() / 2;
+    auto y = rf::gr::screen_height() - 30;
+    rf::gr::string_aligned(rf::gr::ALIGN_CENTER, x, y, msg);
 }
 
 FunHook<void(bool)> cutscene_do_frame_hook{

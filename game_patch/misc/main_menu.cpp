@@ -36,7 +36,7 @@ void __fastcall UiLabel_create2_version_label(rf::UiGadget* self, int edx, rf::U
                                              int h, const char* text, int font_id)
 {
     text = PRODUCT_NAME_VERSION;
-    rf::gr_get_string_size(&w, &h, text, -1, font_id);
+    rf::gr::get_string_size(&w, &h, text, -1, font_id);
 #if SHARP_UI_TEXT
     w = static_cast<int>(w / rf::ui_scale_x);
     h = static_cast<int>(h / rf::ui_scale_y);
@@ -89,13 +89,13 @@ int load_easter_egg_image()
 
     int hbm = rf::bm_create(rf::BM_FORMAT_8888_ARGB, easter_egg_size, easter_egg_size);
 
-    rf::GrLockInfo lock;
-    if (!rf::gr_lock(hbm, 0, &lock, rf::GR_LOCK_WRITE_ONLY))
+    rf::gr::LockInfo lock;
+    if (!rf::gr::lock(hbm, 0, &lock, rf::gr::LOCK_WRITE_ONLY))
         return -1;
 
     rf::bm_convert_format(lock.data, lock.format, res_data, rf::BM_FORMAT_8888_ARGB,
                         easter_egg_size * easter_egg_size);
-    rf::gr_unlock(&lock);
+    rf::gr::unlock(&lock);
 
     return hbm;
 }
@@ -111,8 +111,8 @@ CallHook<void()> main_menu_render_hook{
             int w, h;
             rf::bm_get_dimensions(img, &w, &h);
             int anim_delta_time = GetTickCount() - g_egg_anim_start;
-            int pos_x = (rf::gr_screen_width() - w) / 2;
-            int pos_y = rf::gr_screen_height() - h;
+            int pos_x = (rf::gr::screen_width() - w) / 2;
+            int pos_y = rf::gr::screen_height() - h;
             if (anim_delta_time < EGG_ANIM_ENTER_TIME) {
                 float enter_progress = anim_delta_time / static_cast<float>(EGG_ANIM_ENTER_TIME);
                 pos_y += h - static_cast<int>(sinf(enter_progress * static_cast<float>(PI) / 2.0f) * h);
@@ -124,7 +124,7 @@ CallHook<void()> main_menu_render_hook{
                 if (leave_delta > EGG_ANIM_LEAVE_TIME)
                     g_version_click_counter = 0;
             }
-            rf::gr_bitmap(img, pos_x, pos_y, rf::gr_bitmap_clamp_mode);
+            rf::gr::bitmap(img, pos_x, pos_y, rf::gr::bitmap_clamp_mode);
         }
     },
 };
@@ -165,11 +165,11 @@ CodeInjection menu_draw_background_injection{
         auto& menu_background_bitmap = addr_as_ref<int>(0x00598FEC);
         auto& menu_background_x = addr_as_ref<float>(0x0063C074);
 
-        rf::gr_set_color(255, 255, 255, 255);
+        rf::gr::set_color(255, 255, 255, 255);
         // Use function that accepts float sx
         gr_bitmap_scaled_float(menu_background_bitmap, 0.0f, 0.0f,
-            static_cast<float>(rf::gr_screen.max_w), static_cast<float>(rf::gr_screen.max_h),
-            menu_background_x, 0.0f, 640.0f, 480.0f, false, false, rf::gr_bitmap_clamp_mode);
+            static_cast<float>(rf::gr::screen.max_w), static_cast<float>(rf::gr::screen.max_h),
+            menu_background_x, 0.0f, 640.0f, 480.0f, false, false, rf::gr::bitmap_clamp_mode);
         regs.eip = 0x00442D94;
     },
 };

@@ -17,18 +17,18 @@ static bool g_gamma_ramp_initialized = false;
 static bool set_gamma_ramp_via_d3d(D3DGAMMARAMP* gamma_ramp)
 {
     // Avoid crash before D3D is initialized or in dedicated server mode
-    if (!rf::gr_d3d_device) {
+    if (!rf::gr::d3d::device) {
         return true;
     }
     // D3D Gamma Ramp doesn't work in windowed mode
-    if (rf::gr_d3d_pp.Windowed) {
+    if (rf::gr::d3d::pp.Windowed) {
         return false;
     }
-    if (!(rf::gr_d3d_device_caps.Caps2 & D3DCAPS2_FULLSCREENGAMMA)) {
+    if (!(rf::gr::d3d::device_caps.Caps2 & D3DCAPS2_FULLSCREENGAMMA)) {
         xlog::info("Swap chain does not support gamma ramps");
         return false;
     }
-    rf::gr_d3d_device->SetGammaRamp(D3DSGR_NO_CALIBRATION, gamma_ramp);
+    rf::gr::d3d::device->SetGammaRamp(D3DSGR_NO_CALIBRATION, gamma_ramp);
     return true;
 }
 
@@ -74,7 +74,7 @@ static void set_gamma_ramp(D3DGAMMARAMP* gamma_ramp)
 static void gr_d3d_update_gamma_ramp_hook()
 {
     for (unsigned i = 0; i < 256; ++i) {
-        unsigned val = rf::gr_gamma_ramp[i] << 8;
+        unsigned val = rf::gr::gamma_ramp[i] << 8;
         g_gamma_ramp.red[i] = val;
         g_gamma_ramp.green[i] = val;
         g_gamma_ramp.blue[i] = val;

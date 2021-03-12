@@ -479,17 +479,17 @@ void render_progress_bar(int x, int y, int w, int h, float progress)
     int inner_x = x + border;
     int inner_y = y + border;
 
-    rf::gr_set_color(0x40, 0x40, 0x40, 0xFF);
-    rf::gr_rect(x, y, w, h);
+    rf::gr::set_color(0x40, 0x40, 0x40, 0xFF);
+    rf::gr::rect(x, y, w, h);
 
     if (progress_w > 0) {
-        rf::gr_set_color(0, 0x80, 0, 0xFF);
-        rf::gr_rect(inner_x, inner_y, progress_w, inner_h);
+        rf::gr::set_color(0, 0x80, 0, 0xFF);
+        rf::gr::rect(inner_x, inner_y, progress_w, inner_h);
     }
 
     if (w > progress_w) {
-        rf::gr_set_color(0, 0, 0, 0xFF);
-        rf::gr_rect(inner_x + progress_w, inner_y, inner_w - progress_w, inner_h);
+        rf::gr::set_color(0, 0, 0, 0xFF);
+        rf::gr::rect(inner_x + progress_w, inner_y, inner_w - progress_w, inner_h);
     }
 }
 
@@ -510,14 +510,14 @@ void multi_level_download_do_frame()
 {
     rf::game_poll(multi_level_download_handle_input);
 
-    int scr_w = rf::gr_screen_width();
-    int scr_h = rf::gr_screen_height();
+    int scr_w = rf::gr::screen_width();
+    int scr_h = rf::gr::screen_height();
 
     static int bg_bm = rf::bm_load("demo-gameover.tga", -1, false);
     int bg_bm_w, bg_bm_h;
     rf::bm_get_dimensions(bg_bm, &bg_bm_w, &bg_bm_h);
-    rf::gr_set_color(255, 255, 255, 255);
-    rf::gr_bitmap_scaled(bg_bm, 0, 0, scr_w, scr_h, 0, 0, bg_bm_w, bg_bm_h);
+    rf::gr::set_color(255, 255, 255, 255);
+    rf::gr::bitmap_scaled(bg_bm, 0, 0, scr_w, scr_h, 0, 0, bg_bm_w, bg_bm_h);
 
     rf::multi_hud_render_chat();
 
@@ -531,15 +531,15 @@ void multi_level_download_do_frame()
     }
 
     int large_font = hud_get_large_font();
-    int large_font_h = rf::gr_get_font_height(large_font);
+    int large_font_h = rf::gr::get_font_height(large_font);
     int medium_font = hud_get_default_font();
-    int medium_font_h = rf::gr_get_font_height(medium_font);
+    int medium_font_h = rf::gr::get_font_height(medium_font);
 
     int center_x = scr_w / 2;
     int y = scr_h / 3;
 
-    rf::gr_set_color(255, 255, 255, 255);
-    rf::gr_string_aligned(rf::GR_ALIGN_CENTER, center_x, y, "DOWNLOADING LEVEL", large_font);
+    rf::gr::set_color(255, 255, 255, 255);
+    rf::gr::string_aligned(rf::gr::ALIGN_CENTER, center_x, y, "DOWNLOADING LEVEL", large_font);
     y += large_font_h * 3;
 
     const std::optional<LevelDownloadOperation>& operation_opt = LevelDownloadManager::instance().get_operation();
@@ -550,10 +550,10 @@ void multi_level_download_do_frame()
     auto& operation = operation_opt.value();
     auto state = operation.get_state();
     if (state == LevelDownloadState::fetching_info) {
-        rf::gr_string_aligned(rf::GR_ALIGN_CENTER, center_x, y, "Getting level info...", medium_font);
+        rf::gr::string_aligned(rf::gr::ALIGN_CENTER, center_x, y, "Getting level info...", medium_font);
     }
     else if (state == LevelDownloadState::extracting) {
-        rf::gr_string_aligned(rf::GR_ALIGN_CENTER, center_x, y, "Extracting packfiles...", medium_font);
+        rf::gr::string_aligned(rf::gr::ALIGN_CENTER, center_x, y, "Extracting packfiles...", medium_font);
     }
     else if (state == LevelDownloadState::fetching_data) {
         const FactionFilesClient::LevelInfo& info = operation.get_level_info();
@@ -562,17 +562,17 @@ void multi_level_download_do_frame()
 
         auto level_name_str = std::string{"Level name: "} + info.name;
         int str_w, str_h;
-        rf::gr_get_string_size(&str_w, &str_h, level_name_str.c_str(), -1, medium_font);
+        rf::gr::get_string_size(&str_w, &str_h, level_name_str.c_str(), -1, medium_font);
         int info_x = center_x - str_w / 2;
         int info_spacing = medium_font_h * 3 / 2;
-        rf::gr_string(info_x, y, level_name_str.c_str(), medium_font);
+        rf::gr::string(info_x, y, level_name_str.c_str(), medium_font);
         y += info_spacing;
 
         auto created_by_str = std::string{"Created by: "} + info.author;
-        rf::gr_string(info_x, y, created_by_str.c_str(), medium_font);
+        rf::gr::string(info_x, y, created_by_str.c_str(), medium_font);
         y += info_spacing;
 
-        rf::gr_string(info_x, y, string_format("%.2f MB / %.2f MB (%.2f MB/s)",
+        rf::gr::string(info_x, y, string_format("%.2f MB / %.2f MB (%.2f MB/s)",
             bytes_received / 1000.0f / 1000.0f,
             info.size_in_bytes / 1000.0f / 1000.0f,
             bytes_per_sec / 1000.0f / 1000.0f).c_str(), medium_font);
@@ -582,13 +582,13 @@ void multi_level_download_do_frame()
             int remaining_size = info.size_in_bytes - bytes_received;
             int secs_left = remaining_size / bytes_per_sec;
             auto time_left_str = std::to_string(secs_left) + " seconds left";
-            rf::gr_string(info_x, y, time_left_str.c_str(), medium_font);
+            rf::gr::string(info_x, y, time_left_str.c_str(), medium_font);
         }
 
         int w = 360 * rf::ui_scale_x;
         int h = 12 * rf::ui_scale_x;
-        int x = (rf::gr_screen_width() - w) / 2;
-        int y = rf::gr_screen_height() * 4 / 5;
+        int x = (rf::gr::screen_width() - w) / 2;
+        int y = rf::gr::screen_height() * 4 / 5;
         float progress = static_cast<float>(bytes_received) / static_cast<float>(info.size_in_bytes);
         render_progress_bar(x, y, w, h, progress);
     }

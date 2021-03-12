@@ -25,8 +25,8 @@ ComPtr<IDirect3DSurface8> g_orig_depth_stencil_surface;
 IDirect3DSurface8* get_cached_depth_stencil_surface()
 {
     if (!g_depth_stencil_surface) {
-        auto hr = rf::gr_d3d_device->CreateDepthStencilSurface(
-            rf::gr_d3d_pp.BackBufferWidth, rf::gr_d3d_pp.BackBufferHeight, rf::gr_d3d_pp.AutoDepthStencilFormat,
+        auto hr = rf::gr::d3d::device->CreateDepthStencilSurface(
+            rf::gr::d3d::pp.BackBufferWidth, rf::gr::d3d::pp.BackBufferHeight, rf::gr::d3d::pp.AutoDepthStencilFormat,
             D3DMULTISAMPLE_NONE, &g_depth_stencil_surface);
         if (FAILED(hr)) {
             ERR_ONCE("IDirect3DDevice8::CreateDepthStencilSurface failed 0x%lX", hr);
@@ -39,7 +39,7 @@ IDirect3DSurface8* get_cached_depth_stencil_surface()
 bool gr_render_to_texture(int bmh)
 {
     // Note: texture reference counter is not increased here so ComPtr is not used
-    IDirect3DTexture8* d3d_tex = rf::gr_d3d_get_texture(bmh);
+    IDirect3DTexture8* d3d_tex = rf::gr::d3d::get_texture(bmh);
     if (!d3d_tex) {
         WARN_ONCE("Bitmap without D3D texture provided in gr_render_to_texture");
         return false;
@@ -49,13 +49,13 @@ bool gr_render_to_texture(int bmh)
     ComPtr<IDirect3DSurface8> orig_depth_stencil_surface;
 
     if (!g_render_to_texture_active) {
-        auto hr = rf::gr_d3d_device->GetRenderTarget(&orig_render_target);
+        auto hr = rf::gr::d3d::device->GetRenderTarget(&orig_render_target);
         if (FAILED(hr)) {
             ERR_ONCE("IDirect3DDevice8::GetRenderTarget failed 0x%lX", hr);
             return false;
         }
 
-        hr = rf::gr_d3d_device->GetDepthStencilSurface(&orig_depth_stencil_surface);
+        hr = rf::gr::d3d::device->GetDepthStencilSurface(&orig_depth_stencil_surface);
         if (FAILED(hr)) {
             ERR_ONCE("IDirect3DDevice8::GetDepthStencilSurface failed 0x%lX", hr);
             return false;
@@ -70,7 +70,7 @@ bool gr_render_to_texture(int bmh)
     }
 
     auto depth_stencil = get_cached_depth_stencil_surface();
-    hr = rf::gr_d3d_device->SetRenderTarget(tex_surface, depth_stencil);
+    hr = rf::gr::d3d::device->SetRenderTarget(tex_surface, depth_stencil);
     if (FAILED(hr)) {
         ERR_ONCE("IDirect3DDevice8::SetRenderTarget failed 0x%lX", hr);
         return false;
@@ -89,7 +89,7 @@ void gr_render_to_back_buffer()
     if (!g_render_to_texture_active) {
         return;
     }
-    auto hr = rf::gr_d3d_device->SetRenderTarget(g_orig_render_target, g_orig_depth_stencil_surface);
+    auto hr = rf::gr::d3d::device->SetRenderTarget(g_orig_render_target, g_orig_depth_stencil_surface);
     if (FAILED(hr)) {
         ERR_ONCE("IDirect3DDevice8::SetRenderTarget failed 0x%lX", hr);
     }
@@ -102,10 +102,10 @@ void gr_render_to_back_buffer()
 CallHook<rf::BmFormat(int, int, int, int, std::byte*)> gr_d3d_read_back_buffer_hook{
     0x0050E015,
     [](int x, int y, int width, int height, std::byte* buffer) {
-        rf::gr_d3d_flush_buffers();
+        rf::gr::d3d::flush_buffers();
 
         ComPtr<IDirect3DSurface8> back_buffer;
-        HRESULT hr = rf::gr_d3d_device->GetRenderTarget(&back_buffer);
+        HRESULT hr = rf::gr::d3d::device->GetRenderTarget(&back_buffer);
         if (FAILED(hr)) {
             ERR_ONCE("IDirect3DDevice8::GetRenderTarget failed 0x%lX", hr);
             return rf::BM_FORMAT_NONE;
@@ -129,7 +129,7 @@ CallHook<rf::BmFormat(int, int, int, int, std::byte*)> gr_d3d_read_back_buffer_h
         // CreateRenderTarget or CreateTexture.
         // Note: it can be slower during resource allocation so create it once
         if (!g_capture_tmp_surface) {
-            hr = rf::gr_d3d_device->CreateImageSurface(desc.Width, desc.Height, desc.Format, &g_capture_tmp_surface);
+            hr = rf::gr::d3d::device->CreateImageSurface(desc.Width, desc.Height, desc.Format, &g_capture_tmp_surface);
             if (FAILED(hr)) {
                 ERR_ONCE("IDirect3DDevice8::CreateImageSurface failed 0x%lX", hr);
                 return rf::BM_FORMAT_NONE;
@@ -140,7 +140,7 @@ CallHook<rf::BmFormat(int, int, int, int, std::byte*)> gr_d3d_read_back_buffer_h
         POINT dst_pt{x, y};
         SetRect(&src_rect, x, y, x + width - 1, y + height - 1);
 
-        hr = rf::gr_d3d_device->CopyRects(back_buffer, &src_rect, 1, g_capture_tmp_surface, &dst_pt);
+        hr = rf::gr::d3d::device->CopyRects(back_buffer, &src_rect, 1, g_capture_tmp_surface, &dst_pt);
         if (FAILED(hr)) {
             ERR_ONCE("IDirect3DDevice8::CopyRects failed 0x%lX", hr);
             return rf::BM_FORMAT_NONE;
@@ -177,8 +177,8 @@ FunHook<void(int, int, int, int, int)> gr_capture_back_buffer_hook{
     [](int x, int y, int width, int height, int bm_handle) {
         if (g_render_to_texture_active) {
             // Nothing to do because we render directly to texture
-            if (rf::gr_screen.mode == rf::GR_DIRECT3D) {
-                rf::gr_d3d_flush_buffers();
+            if (rf::gr::screen.mode == rf::gr::DIRECT3D) {
+                rf::gr::d3d::flush_buffers();
             }
         } else {
             gr_capture_back_buffer_hook.call_target(x, y, width, height, bm_handle);

@@ -32,7 +32,7 @@ CodeInjection gr_init_stretched_window_injection{
             SetWindowLongA(rf::main_wnd, GWL_STYLE, WS_POPUP | WS_SYSMENU);
             SetWindowLongA(rf::main_wnd, GWL_EXSTYLE, 0);
             SetWindowPos(rf::main_wnd, HWND_NOTOPMOST, 0, 0, cx, cy, SWP_SHOWWINDOW);
-            rf::gr_screen.aspect = static_cast<float>(cx) / static_cast<float>(cy) * 0.75f;
+            rf::gr::screen.aspect = static_cast<float>(cx) / static_cast<float>(cy) * 0.75f;
             regs.eip = 0x0050C551;
         }
     },
@@ -42,7 +42,7 @@ CodeInjection gr_init_injection{
     0x0050C556,
     []() {
         // Make sure pixel aspect ratio is set to 1 so the frame is not stretched
-        rf::gr_screen.aspect = 1.0f;
+        rf::gr::screen.aspect = 1.0f;
     },
 };
 
@@ -50,7 +50,7 @@ float gr_scale_fov_hor_plus(float horizontal_fov)
 {
     // Use Hor+ FOV scaling method to improve user experience for wide screens
     // Assume provided FOV makes sense on a 4:3 screen
-    float s = static_cast<float>(rf::gr_screen.max_w) / rf::gr_screen.max_h * 0.75f;
+    float s = static_cast<float>(rf::gr::screen.max_w) / rf::gr::screen.max_h * 0.75f;
     constexpr float pi = 3.141592f;
     float h_fov_rad = horizontal_fov / 180.0f * pi;
     float x = std::tan(h_fov_rad / 2.0f);
@@ -123,9 +123,9 @@ ConsoleCommand2 fov_cmd{
     "fov [degrees]",
 };
 
-CallHook<void(int, rf::Vertex**, int, rf::GrMode)> gr_rect_gr_tmapper_hook{
+CallHook<void(int, rf::gr::Vertex**, int, rf::gr::Mode)> gr_rect_gr_tmapper_hook{
     0x0050DD69,
-    [](int nv, rf::Vertex** verts, int flags, rf::GrMode mode) {
+    [](int nv, rf::gr::Vertex** verts, int flags, rf::gr::Mode mode) {
         for (int i = 0; i < nv; ++i) {
             verts[i]->sx -= 0.5f;
             verts[i]->sy -= 0.5f;
@@ -136,14 +136,14 @@ CallHook<void(int, rf::Vertex**, int, rf::GrMode)> gr_rect_gr_tmapper_hook{
 
 void gr_delete_texture(int bm_handle)
 {
-    if (rf::gr_screen.mode == rf::GR_DIRECT3D) {
+    if (rf::gr::screen.mode == rf::gr::DIRECT3D) {
         gr_d3d_delete_texture(bm_handle);
     }
 }
 
 bool gr_is_texture_format_supported(rf::BmFormat format)
 {
-    if (rf::gr_screen.mode == rf::GR_DIRECT3D) {
+    if (rf::gr::screen.mode == rf::gr::DIRECT3D) {
         bool gr_d3d_is_texture_format_supported(rf::BmFormat);
         return gr_d3d_is_texture_format_supported(format);
     }
@@ -151,28 +151,28 @@ bool gr_is_texture_format_supported(rf::BmFormat format)
 }
 
 void gr_bitmap_scaled_float(int bitmap_handle, float x, float y, float w, float h,
-                            float sx, float sy, float sw, float sh, bool flip_x, bool flip_y, rf::GrMode mode)
+                            float sx, float sy, float sw, float sh, bool flip_x, bool flip_y, rf::gr::Mode mode)
 {
     auto& gr_d3d_get_num_texture_sections = addr_as_ref<int(int bitmap_handle)>(0x0055CA60);
-    if (rf::gr_screen.mode == rf::GR_DIRECT3D && gr_d3d_get_num_texture_sections(bitmap_handle) != 1) {
+    if (rf::gr::screen.mode == rf::gr::DIRECT3D && gr_d3d_get_num_texture_sections(bitmap_handle) != 1) {
         // If bitmap is sectioned fall back to the old implementation...
-        rf::gr_bitmap_scaled(bitmap_handle,
+        rf::gr::bitmap_scaled(bitmap_handle,
             static_cast<int>(x), static_cast<int>(y), static_cast<int>(w), static_cast<int>(h),
             static_cast<int>(sx), static_cast<int>(sy), static_cast<int>(sw), static_cast<int>(sh),
             flip_x, flip_y, mode);
         return;
     }
 
-    rf::gr_set_texture(bitmap_handle, -1);
+    rf::gr::set_texture(bitmap_handle, -1);
     int bm_w, bm_h;
     rf::bm_get_dimensions(bitmap_handle, &bm_w, &bm_h);
 
-    rf::Vertex verts[4];
-    rf::Vertex* verts_ptrs[4] = {&verts[0], &verts[1], &verts[2], &verts[3]};
-    float sx_left = rf::gr_screen.offset_x + x - 0.5f;
-    float sx_right = rf::gr_screen.offset_x + x + w - 0.5f;
-    float sy_top = rf::gr_screen.offset_y + y - 0.5f;
-    float sy_bottom = rf::gr_screen.offset_y + y + h - 0.5f;
+    rf::gr::Vertex verts[4];
+    rf::gr::Vertex* verts_ptrs[4] = {&verts[0], &verts[1], &verts[2], &verts[3]};
+    float sx_left = rf::gr::screen.offset_x + x - 0.5f;
+    float sx_right = rf::gr::screen.offset_x + x + w - 0.5f;
+    float sy_top = rf::gr::screen.offset_y + y - 0.5f;
+    float sy_bottom = rf::gr::screen.offset_y + y + h - 0.5f;
     float u_left = sx / bm_w * (flip_x ? -1.0f : 1.0f);
     float u_right = (sx + sw) / bm_w * (flip_x ? -1.0f : 1.0f);
     float v_top = sy / bm_h * (flip_y ? -1.0f : 1.0f);
@@ -197,7 +197,7 @@ void gr_bitmap_scaled_float(int bitmap_handle, float x, float y, float w, float 
     verts[3].sw = 1.0f;
     verts[3].u1 = u_left;
     verts[3].v1 = v_bottom;
-    rf::gr_tmapper(std::size(verts_ptrs), verts_ptrs, rf::TMAP_FLAG_TEXTURED, mode);
+    rf::gr::tmapper(std::size(verts_ptrs), verts_ptrs, rf::gr::TMAP_FLAG_TEXTURED, mode);
 }
 
 void gr_apply_patch()

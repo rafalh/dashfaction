@@ -64,26 +64,26 @@ FunHook<void(rf::Matrix3&, rf::Vector3&, float, bool, bool)> gr_d3d_setup_3d_hoo
     [](rf::Matrix3& viewer_orient, rf::Vector3& viewer_pos, float horizontal_fov, bool zbuffer_flag, bool z_scale) {
         gr_d3d_setup_3d_hook.call_target(viewer_orient, viewer_pos, horizontal_fov, zbuffer_flag, z_scale);
         // Half pixel offset
-        g_gr_clipped_geom_offset_x = rf::gr_screen.offset_x - 0.5f;
-        g_gr_clipped_geom_offset_y = rf::gr_screen.offset_y - 0.5f;
+        g_gr_clipped_geom_offset_x = rf::gr::screen.offset_x - 0.5f;
+        g_gr_clipped_geom_offset_y = rf::gr::screen.offset_y - 0.5f;
         auto& gr_viewport_center_x = addr_as_ref<float>(0x01818B54);
         auto& gr_viewport_center_y = addr_as_ref<float>(0x01818B5C);
         gr_viewport_center_x -= 0.5f; // viewport center x
         gr_viewport_center_y -= 0.5f; // viewport center y
         if (z_scale) {
             constexpr float pi = 3.141592f;
-            rf::gr_d3d_zm = 1 / 1700.0f;
+            rf::gr::d3d::zm = 1 / 1700.0f;
             // zm is proportional to near clipping plane
             // Make sure zm is not increased when fov is getting smaller than 90 to fix wall peeking with scope weapons
             // Make sure zm is decreased when fov is increased to fix clipping issues on a very high fov
             float hfov_div = std::tan(horizontal_fov / 2.0f / 180.0f * pi);
             if (hfov_div > 1.0f) {
-                rf::gr_d3d_zm /= hfov_div;
+                rf::gr::d3d::zm /= hfov_div;
             }
-            float clip_aspect = static_cast<float>(rf::gr_screen.clip_width) / rf::gr_screen.clip_height;
+            float clip_aspect = static_cast<float>(rf::gr::screen.clip_width) / rf::gr::screen.clip_height;
             float vfov_div = hfov_div / clip_aspect;
             if (vfov_div > 1.0f) {
-                rf::gr_d3d_zm /= vfov_div;
+                rf::gr::d3d::zm /= vfov_div;
             }
         }
     },
@@ -100,27 +100,27 @@ CodeInjection gr_d3d_init_error_patch{
                                  "Press OK to exit the program",
                                  hr, get_d3d_error_str(hr));
 
-        hr = rf::gr_d3d->CheckDeviceType(rf::gr_adapter_idx, D3DDEVTYPE_HAL, rf::gr_d3d_pp.BackBufferFormat,
-            rf::gr_d3d_pp.BackBufferFormat, rf::gr_d3d_pp.Windowed);
+        hr = rf::gr::d3d::d3d->CheckDeviceType(rf::gr::d3d::adapter_idx, D3DDEVTYPE_HAL, rf::gr::d3d::pp.BackBufferFormat,
+            rf::gr::d3d::pp.BackBufferFormat, rf::gr::d3d::pp.Windowed);
         if (FAILED(hr)) {
-            xlog::error("CheckDeviceType for format %d failed: %lX", rf::gr_d3d_pp.BackBufferFormat, hr);
+            xlog::error("CheckDeviceType for format %d failed: %lX", rf::gr::d3d::pp.BackBufferFormat, hr);
         }
 
-        hr = rf::gr_d3d->CheckDeviceFormat(rf::gr_adapter_idx, D3DDEVTYPE_HAL, rf::gr_d3d_pp.BackBufferFormat,
-            D3DUSAGE_DEPTHSTENCIL, D3DRTYPE_SURFACE, rf::gr_d3d_pp.AutoDepthStencilFormat);
+        hr = rf::gr::d3d::d3d->CheckDeviceFormat(rf::gr::d3d::adapter_idx, D3DDEVTYPE_HAL, rf::gr::d3d::pp.BackBufferFormat,
+            D3DUSAGE_DEPTHSTENCIL, D3DRTYPE_SURFACE, rf::gr::d3d::pp.AutoDepthStencilFormat);
         if (FAILED(hr)) {
-            xlog::error("CheckDeviceFormat for depth-stencil format %d failed: %lX", rf::gr_d3d_pp.AutoDepthStencilFormat, hr);
+            xlog::error("CheckDeviceFormat for depth-stencil format %d failed: %lX", rf::gr::d3d::pp.AutoDepthStencilFormat, hr);
         }
 
-        if (!(rf::gr_d3d_device_caps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT)) {
+        if (!(rf::gr::d3d::device_caps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT)) {
             xlog::error("No T&L hardware support!");
         }
 
         xlog::info("Supported adapter modes:");
-        unsigned num_modes = rf::gr_d3d->GetAdapterModeCount(rf::gr_adapter_idx);
+        unsigned num_modes = rf::gr::d3d::d3d->GetAdapterModeCount(rf::gr::d3d::adapter_idx);
         D3DDISPLAYMODE mode;
         for (unsigned i = 0; i < num_modes; ++i) {
-            rf::gr_d3d->EnumAdapterModes(rf::gr_adapter_idx, i, &mode);
+            rf::gr::d3d::d3d->EnumAdapterModes(rf::gr::d3d::adapter_idx, i, &mode);
             xlog::info("- %ux%u (format %u refresh rate %u)", mode.Width, mode.Height, mode.Format, mode.RefreshRate);
         }
 
@@ -144,9 +144,9 @@ D3DFORMAT determine_depth_buffer_format(D3DFORMAT adapter_format)
     D3DFORMAT formats_to_check[] = {D3DFMT_D24X8, D3DFMT_D24S8, D3DFMT_D24X4S4, D3DFMT_D32, D3DFMT_D16, D3DFMT_D15S1};
     for (auto depth_fmt : formats_to_check) {
 
-        if (SUCCEEDED(rf::gr_d3d->CheckDeviceFormat(rf::gr_adapter_idx, D3DDEVTYPE_HAL, adapter_format, D3DUSAGE_DEPTHSTENCIL,
+        if (SUCCEEDED(rf::gr::d3d::d3d->CheckDeviceFormat(rf::gr::d3d::adapter_idx, D3DDEVTYPE_HAL, adapter_format, D3DUSAGE_DEPTHSTENCIL,
                                                     D3DRTYPE_SURFACE, depth_fmt)) &&
-            SUCCEEDED(rf::gr_d3d->CheckDepthStencilMatch(rf::gr_adapter_idx, D3DDEVTYPE_HAL, adapter_format, adapter_format,
+            SUCCEEDED(rf::gr::d3d::d3d->CheckDepthStencilMatch(rf::gr::d3d::adapter_idx, D3DDEVTYPE_HAL, adapter_format, adapter_format,
                                                          depth_fmt))) {
             xlog::info("Selected D3D depth format: %u", depth_fmt);
             return depth_fmt;
@@ -163,20 +163,20 @@ CodeInjection update_pp_hook{
             xlog::info("d3d8to9 detected");
         }
 
-        xlog::info("Back Buffer format: %u", rf::gr_d3d_pp.BackBufferFormat);
-        xlog::info("Back Buffer dimensions: %ux%u", rf::gr_d3d_pp.BackBufferWidth, rf::gr_d3d_pp.BackBufferHeight);
-        xlog::info("D3D Device Caps: %lX", rf::gr_d3d_device_caps.DevCaps);
-        xlog::info("D3D Raster Caps: %lX", rf::gr_d3d_device_caps.RasterCaps);
-        xlog::info("Max texture size: %ldx%ld", rf::gr_d3d_device_caps.MaxTextureWidth, rf::gr_d3d_device_caps.MaxTextureHeight);
+        xlog::info("Back Buffer format: %u", rf::gr::d3d::pp.BackBufferFormat);
+        xlog::info("Back Buffer dimensions: %ux%u", rf::gr::d3d::pp.BackBufferWidth, rf::gr::d3d::pp.BackBufferHeight);
+        xlog::info("D3D Device Caps: %lX", rf::gr::d3d::device_caps.DevCaps);
+        xlog::info("D3D Raster Caps: %lX", rf::gr::d3d::device_caps.RasterCaps);
+        xlog::info("Max texture size: %ldx%ld", rf::gr::d3d::device_caps.MaxTextureWidth, rf::gr::d3d::device_caps.MaxTextureHeight);
 
         if (g_game_config.msaa) {
             // Make sure selected MSAA mode is available
             auto multi_sample_type = static_cast<D3DMULTISAMPLE_TYPE>(g_game_config.msaa.value());
-            HRESULT hr = rf::gr_d3d->CheckDeviceMultiSampleType(rf::gr_adapter_idx, D3DDEVTYPE_HAL, rf::gr_d3d_pp.BackBufferFormat,
-                                                                rf::gr_d3d_pp.Windowed, multi_sample_type);
+            HRESULT hr = rf::gr::d3d::d3d->CheckDeviceMultiSampleType(rf::gr::d3d::adapter_idx, D3DDEVTYPE_HAL, rf::gr::d3d::pp.BackBufferFormat,
+                                                                rf::gr::d3d::pp.Windowed, multi_sample_type);
             if (SUCCEEDED(hr)) {
                 xlog::info("Enabling Anti-Aliasing (%ux MSAA)...", g_game_config.msaa.value());
-                rf::gr_d3d_pp.MultiSampleType = multi_sample_type;
+                rf::gr::d3d::pp.MultiSampleType = multi_sample_type;
             }
             else {
                 xlog::warn("MSAA not supported (0x%lx)...", hr);
@@ -185,11 +185,11 @@ CodeInjection update_pp_hook{
         }
 
         // remove D3DPRESENTFLAG_LOCKABLE_BACKBUFFER flag
-        rf::gr_d3d_pp.Flags = 0;
+        rf::gr::d3d::pp.Flags = 0;
 #if D3D_LOCKABLE_BACKBUFFER
         // Note: if MSAA is used backbuffer cannot be lockable
         if (g_game_config.msaa == D3DMULTISAMPLE_NONE)
-            rf::gr_d3d_pp.Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
+            rf::gr::d3d::pp.Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
 #endif
 
         // Use glorad detail map on all cards (multi-texturing support is required)
@@ -197,7 +197,7 @@ CodeInjection update_pp_hook{
         use_glorad_detail_map = true;
 
         // Override depth format to avoid card specific hackfixes that makes it different on Nvidia and AMD
-        rf::gr_d3d_pp.AutoDepthStencilFormat = determine_depth_buffer_format(rf::gr_d3d_pp.BackBufferFormat);
+        rf::gr::d3d::pp.AutoDepthStencilFormat = determine_depth_buffer_format(rf::gr::d3d::pp.BackBufferFormat);
 
         gr_d3d_texture_init();
     },
@@ -210,7 +210,7 @@ CodeInjection d3d_behavior_flags_patch{
     [](auto& regs) {
         auto& behavior_flags = *static_cast<u32*>(regs.esp);
         // Use hardware vertex processing instead of software processing if supported
-        if (rf::gr_d3d_device_caps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT) {
+        if (rf::gr::d3d::device_caps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT) {
             xlog::info("Enabling T&L in hardware");
             behavior_flags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
         }
@@ -224,7 +224,7 @@ CodeInjection d3d_vertex_buffer_usage_patch{
     0x005450E2,
     [](auto& regs) {
         auto& usage = *static_cast<u32*>(regs.esp);
-        if (rf::gr_d3d_device_caps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT) {
+        if (rf::gr::d3d::device_caps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT) {
             usage &= ~D3DUSAGE_SOFTWAREPROCESSING;
         }
     },
@@ -234,7 +234,7 @@ CodeInjection d3d_index_buffer_usage_patch{
     0x0054511C,
     [](auto& regs) {
         auto& usage = *static_cast<u32*>(regs.esp);
-        if (rf::gr_d3d_device_caps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT) {
+        if (rf::gr::d3d::device_caps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT) {
             usage &= ~D3DUSAGE_SOFTWAREPROCESSING;
         }
     },
@@ -248,7 +248,7 @@ void setup_texture_filtering()
         // use linear filtering for lightmaps because otherwise it looks bad
         set_texture_min_mag_filter_in_code(D3DTEXF_POINT, D3DTEXF_LINEAR);
     }
-    else if (rf::gr_d3d_device_caps.MaxAnisotropy > 0 && g_game_config.anisotropic_filtering && !rf::is_dedicated_server) {
+    else if (rf::gr::d3d::device_caps.MaxAnisotropy > 0 && g_game_config.anisotropic_filtering && !rf::is_dedicated_server) {
         // Anisotropic texture filtering
         set_texture_min_mag_filter_in_code(D3DTEXF_ANISOTROPIC, D3DTEXF_ANISOTROPIC);
     } else {
@@ -258,9 +258,9 @@ void setup_texture_filtering()
 
 DWORD setup_max_anisotropy()
 {
-    DWORD anisotropy_level = std::min(rf::gr_d3d_device_caps.MaxAnisotropy, 16ul);
-    rf::gr_d3d_device->SetTextureStageState(0, D3DTSS_MAXANISOTROPY, anisotropy_level);
-    rf::gr_d3d_device->SetTextureStageState(1, D3DTSS_MAXANISOTROPY, anisotropy_level);
+    DWORD anisotropy_level = std::min(rf::gr::d3d::device_caps.MaxAnisotropy, 16ul);
+    rf::gr::d3d::device->SetTextureStageState(0, D3DTSS_MAXANISOTROPY, anisotropy_level);
+    rf::gr::d3d::device->SetTextureStageState(1, D3DTSS_MAXANISOTROPY, anisotropy_level);
     return anisotropy_level;
 }
 
@@ -272,16 +272,16 @@ CallHook<void()> gr_d3d_init_buffers_gr_d3d_flip_hook{
         // Apply state change after reset
         // Note: we dont have to set min/mag filtering because its set when selecting material
 
-        rf::gr_d3d_device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-        rf::gr_d3d_device->SetRenderState(D3DRS_SHADEMODE, D3DSHADE_GOURAUD);
-        rf::gr_d3d_device->SetRenderState(D3DRS_SPECULARENABLE, FALSE);
-        rf::gr_d3d_device->SetRenderState(D3DRS_AMBIENT, 0xFF545454);
-        rf::gr_d3d_device->SetRenderState(D3DRS_CLIPPING, FALSE);
+        rf::gr::d3d::device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+        rf::gr::d3d::device->SetRenderState(D3DRS_SHADEMODE, D3DSHADE_GOURAUD);
+        rf::gr::d3d::device->SetRenderState(D3DRS_SPECULARENABLE, FALSE);
+        rf::gr::d3d::device->SetRenderState(D3DRS_AMBIENT, 0xFF545454);
+        rf::gr::d3d::device->SetRenderState(D3DRS_CLIPPING, FALSE);
 
         if (rf::local_player)
-            rf::gr_set_texture_mip_filter(!rf::local_player->settings.bilinear_filtering);
+            rf::gr::set_texture_mip_filter(!rf::local_player->settings.bilinear_filtering);
 
-        if (rf::gr_d3d_device_caps.MaxAnisotropy > 0 && g_game_config.anisotropic_filtering)
+        if (rf::gr::d3d::device_caps.MaxAnisotropy > 0 && g_game_config.anisotropic_filtering)
             setup_max_anisotropy();
     },
 };
@@ -301,8 +301,8 @@ CodeInjection switch_d3d_mode_patch{
 ConsoleCommand2 fullscreen_cmd{
     "fullscreen",
     []() {
-        rf::gr_d3d_pp.Windowed = false;
-        rf::gr_d3d_pp.FullScreen_PresentationInterval =
+        rf::gr::d3d::pp.Windowed = false;
+        rf::gr::d3d::pp.FullScreen_PresentationInterval =
             g_game_config.vsync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
         g_reset_device_req = true;
     },
@@ -311,8 +311,8 @@ ConsoleCommand2 fullscreen_cmd{
 ConsoleCommand2 windowed_cmd{
     "windowed",
     []() {
-        rf::gr_d3d_pp.Windowed = true;
-        rf::gr_d3d_pp.FullScreen_PresentationInterval = 0;
+        rf::gr::d3d::pp.Windowed = true;
+        rf::gr::d3d::pp.FullScreen_PresentationInterval = 0;
         g_reset_device_req = true;
     },
 };
@@ -324,9 +324,9 @@ ConsoleCommand2 antialiasing_cmd{
             rf::console_printf("Anti-aliasing is not supported");
         else {
             DWORD enabled = 0;
-            rf::gr_d3d_device->GetRenderState(D3DRS_MULTISAMPLEANTIALIAS, &enabled);
+            rf::gr::d3d::device->GetRenderState(D3DRS_MULTISAMPLEANTIALIAS, &enabled);
             enabled = !enabled;
-            rf::gr_d3d_device->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, enabled);
+            rf::gr::d3d::device->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, enabled);
             rf::console_printf("Anti-aliasing is %s", enabled ? "enabled" : "disabled");
         }
     },
@@ -344,15 +344,15 @@ CodeInjection gr_d3d_set_state_profile_patch{
     0x0054F19C,
     [](auto& regs) {
         if (g_profile_frame) {
-            auto mode = addr_as_ref<rf::GrMode>(regs.esp + 0x10 + 0x4);
+            auto mode = addr_as_ref<rf::gr::Mode>(regs.esp + 0x10 + 0x4);
             const char* desc = "";
-            if (mode == rf::gr_string_mode)
+            if (mode == rf::gr::string_mode)
                 desc = " (text)";
-            else if (mode == rf::gr_rect_mode)
+            else if (mode == rf::gr::rect_mode)
                 desc = " (rect)";
-            else if (mode == rf::gr_line_mode)
+            else if (mode == rf::gr::line_mode)
                 desc = " (line)";
-            else if (mode == rf::gr_bitmap_clamp_mode)
+            else if (mode == rf::gr::bitmap_clamp_mode)
                 desc = " (bitmap)";
             xlog::info("gr_d3d_set_state 0x%X%s", static_cast<int>(mode), desc);
         }
@@ -410,7 +410,7 @@ ConsoleCommand2 profile_frame_cmd{
             gr_d3d_set_state_profile_patch.install();
             gr_d3d_set_texture_profile_patch.install();
             gr_d3d_flip_profile_patch.install();
-            auto d3d_dev_vtbl = *reinterpret_cast<uintptr_t**>(rf::gr_d3d_device);
+            auto d3d_dev_vtbl = *reinterpret_cast<uintptr_t**>(rf::gr::d3d::device);
             D3D_DrawIndexedPrimitive_profile_patch.set_addr(d3d_dev_vtbl[0x11C / 4]); // DrawIndexedPrimitive
             D3D_DrawIndexedPrimitive_profile_patch.install();
             patches_installed = true;
@@ -424,13 +424,13 @@ CodeInjection after_gr_init_hook{
     0x0050C5CD,
     []() {
         setup_texture_filtering();
-        if (rf::gr_d3d_device_caps.MaxAnisotropy > 0 && g_game_config.anisotropic_filtering && !rf::is_dedicated_server) {
+        if (rf::gr::d3d::device_caps.MaxAnisotropy > 0 && g_game_config.anisotropic_filtering && !rf::is_dedicated_server) {
             DWORD anisotropy_level = setup_max_anisotropy();
             xlog::info("Anisotropic Filtering enabled (level: %lu)", anisotropy_level);
         }
 
         // Change font for Time Left text
-        static int time_left_font = rf::gr_load_font("rfpc-large.vf");
+        static int time_left_font = rf::gr::load_font("rfpc-large.vf");
         if (time_left_font >= 0) {
             write_mem<i8>(0x00477157 + 1, time_left_font);
             write_mem<i8>(0x0047715F + 2, 21);
@@ -438,7 +438,7 @@ CodeInjection after_gr_init_hook{
         }
 
         // Fix performance issues caused by this field being initialized to inf
-        rf::gr_screen.fog_far_scaled = 255.0f / rf::gr_screen.fog_far;
+        rf::gr::screen.fog_far_scaled = 255.0f / rf::gr::screen.fog_far;
     },
 };
 
@@ -474,7 +474,7 @@ CodeInjection gr_d3d_lock_crash_fix{
 CodeInjection gr_d3d_bitmap_patch_1{
     0x00550CD6,
     [](auto& regs) {
-        if (!rf::gr_d3d_buffers_locked || rf::gr_d3d_primitive_type != D3DPT_TRIANGLELIST) {
+        if (!rf::gr::d3d::buffers_locked || rf::gr::d3d::primitive_type != D3DPT_TRIANGLELIST) {
             regs.eip = 0x00550CEC;
         }
     },
@@ -483,7 +483,7 @@ CodeInjection gr_d3d_bitmap_patch_1{
 CodeInjection gr_d3d_bitmap_patch_2{
     0x0055105F,
     [](auto& regs) {
-        if (!rf::gr_d3d_buffers_locked || rf::gr_d3d_primitive_type != D3DPT_TRIANGLELIST) {
+        if (!rf::gr::d3d::buffers_locked || rf::gr::d3d::primitive_type != D3DPT_TRIANGLELIST) {
             regs.eip = 0x0055107B;
         }
     },
@@ -492,18 +492,18 @@ CodeInjection gr_d3d_bitmap_patch_2{
 CodeInjection gr_d3d_line_patch_1{
     0x0055147D,
     [](auto& regs) {
-        bool flush_needed = !rf::gr_d3d_buffers_locked
-                         || rf::gr_d3d_primitive_type != D3DPT_LINELIST
-                         || rf::gr_d3d_max_hw_vertex + 2 > 6000
-                         || rf::gr_d3d_max_hw_index + rf::gr_d3d_num_indices + 2 > 10000;
+        bool flush_needed = !rf::gr::d3d::buffers_locked
+                         || rf::gr::d3d::primitive_type != D3DPT_LINELIST
+                         || rf::gr::d3d::max_hw_vertex + 2 > 6000
+                         || rf::gr::d3d::max_hw_index + rf::gr::d3d::num_indices + 2 > 10000;
         if (!flush_needed) {
             xlog::trace("Skipping gr_d3d_prepare_buffers");
             regs.eip = 0x00551482;
         }
         else {
             xlog::trace("Line drawing requires gr_d3d_prepare_buffers %d %d %d %d",
-                 rf::gr_d3d_buffers_locked, rf::gr_d3d_primitive_type, rf::gr_d3d_max_hw_vertex,
-                 rf::gr_d3d_max_hw_index + rf::gr_d3d_num_indices);
+                 rf::gr::d3d::buffers_locked, rf::gr::d3d::primitive_type, rf::gr::d3d::max_hw_vertex,
+                 rf::gr::d3d::max_hw_index + rf::gr::d3d::num_indices);
         }
     },
 };
@@ -511,25 +511,25 @@ CodeInjection gr_d3d_line_patch_1{
 CallHook<void()> gr_d3d_line_patch_2{
     0x005515B2,
     []() {
-        rf::gr_d3d_num_vertices += 2;
+        rf::gr::d3d::num_vertices += 2;
     },
 };
 
 CodeInjection gr_d3d_line_vertex_internal_patch_1{
     0x005516FE,
     [](auto& regs) {
-        bool flush_needed = !rf::gr_d3d_buffers_locked
-                         || rf::gr_d3d_primitive_type != D3DPT_LINELIST
-                         || rf::gr_d3d_max_hw_vertex + 2 > 6000
-                         || rf::gr_d3d_max_hw_index + rf::gr_d3d_num_indices + 2 > 10000;
+        bool flush_needed = !rf::gr::d3d::buffers_locked
+                         || rf::gr::d3d::primitive_type != D3DPT_LINELIST
+                         || rf::gr::d3d::max_hw_vertex + 2 > 6000
+                         || rf::gr::d3d::max_hw_index + rf::gr::d3d::num_indices + 2 > 10000;
         if (!flush_needed) {
             xlog::trace("Skipping gr_d3d_prepare_buffers");
             regs.eip = 0x00551703;
         }
         else {
             xlog::trace("Line drawing requires gr_d3d_prepare_buffers %d %d %d %d",
-                 rf::gr_d3d_buffers_locked, rf::gr_d3d_primitive_type, rf::gr_d3d_max_hw_vertex,
-                 rf::gr_d3d_max_hw_index + rf::gr_d3d_num_indices);
+                 rf::gr::d3d::buffers_locked, rf::gr::d3d::primitive_type, rf::gr::d3d::max_hw_vertex,
+                 rf::gr::d3d::max_hw_index + rf::gr::d3d::num_indices);
         }
     },
 };
@@ -537,14 +537,14 @@ CodeInjection gr_d3d_line_vertex_internal_patch_1{
 CallHook<void()> gr_d3d_line_vertex_internal_patch_2{
     0x005518E8,
     []() {
-        rf::gr_d3d_num_vertices += 2;
+        rf::gr::d3d::num_vertices += 2;
     },
 };
 
 CodeInjection gr_d3d_tmapper_patch{
     0x0055193B,
     [](auto& regs) {
-        if (!rf::gr_d3d_buffers_locked || rf::gr_d3d_primitive_type != D3DPT_TRIANGLELIST) {
+        if (!rf::gr::d3d::buffers_locked || rf::gr::d3d::primitive_type != D3DPT_TRIANGLELIST) {
             regs.eip = 0x00551958;
         }
     },
@@ -553,7 +553,7 @@ CodeInjection gr_d3d_tmapper_patch{
 CodeInjection gr_d3d_draw_geometry_face_patch_1{
     0x00551EF5,
     [](auto& regs) {
-        if (!rf::gr_d3d_buffers_locked || rf::gr_d3d_primitive_type != D3DPT_TRIANGLELIST) {
+        if (!rf::gr::d3d::buffers_locked || rf::gr::d3d::primitive_type != D3DPT_TRIANGLELIST) {
             regs.eip = 0x00551F13;
         }
     },
@@ -562,23 +562,23 @@ CodeInjection gr_d3d_draw_geometry_face_patch_1{
 CodeInjection gr_d3d_draw_geometry_face_patch_2{
     0x00551CB9,
     [](auto& regs) {
-        if (!rf::gr_d3d_buffers_locked || rf::gr_d3d_primitive_type != D3DPT_TRIANGLELIST) {
+        if (!rf::gr::d3d::buffers_locked || rf::gr::d3d::primitive_type != D3DPT_TRIANGLELIST) {
             regs.eip = 0x00551CD6;
         }
     },
 };
 
-FunHook<void(int*, void*, int, int, int, rf::GrMode, int)> gr_d3d_queue_triangles_hook{
+FunHook<void(int*, void*, int, int, int, rf::gr::Mode, int)> gr_d3d_queue_triangles_hook{
     0x005614B0,
-    [](int *list_idx, void *vertices, int num_vertices, int bm0, int bm1, rf::GrMode mode, int pass_id) {
+    [](int *list_idx, void *vertices, int num_vertices, int bm0, int bm1, rf::gr::Mode mode, int pass_id) {
         // Fix glass_house level having faces that use MT state but don't have any lightmap
         if (bm1 == -1) {
             INFO_ONCE("Prevented rendering of an unlit face with multi-texturing render state");
-            rf::GrTextureSource ts = mode.get_texture_source();
-            if (ts == rf::TEXTURE_SOURCE_CLAMP_1_WRAP_0 || ts == rf::TEXTURE_SOURCE_CLAMP_1_WRAP_0_MOD2X) {
-                ts = rf::TEXTURE_SOURCE_WRAP;
-            } else if (ts == rf::TEXTURE_SOURCE_CLAMP_1_CLAMP_0) {
-                ts = rf::TEXTURE_SOURCE_CLAMP;
+            rf::gr::TextureSource ts = mode.get_texture_source();
+            if (ts == rf::gr::TEXTURE_SOURCE_CLAMP_1_WRAP_0 || ts == rf::gr::TEXTURE_SOURCE_CLAMP_1_WRAP_0_MOD2X) {
+                ts = rf::gr::TEXTURE_SOURCE_WRAP;
+            } else if (ts == rf::gr::TEXTURE_SOURCE_CLAMP_1_CLAMP_0) {
+                ts = rf::gr::TEXTURE_SOURCE_CLAMP;
             }
             mode.set_texture_source(ts);
         }
@@ -651,7 +651,7 @@ ConsoleCommand2 lod_distance_scale_cmd{
 
 bool gr_d3d_is_d3d8to9()
 {
-    if (rf::gr_screen.mode != rf::GR_DIRECT3D) {
+    if (rf::gr::screen.mode != rf::gr::DIRECT3D) {
         return false;
     }
     static bool is_d3d9 = false;
@@ -659,7 +659,7 @@ bool gr_d3d_is_d3d8to9()
     if (!is_d3d9_inited) {
         static const GUID IID_IDirect3D9 = {0x81BDCBCA, 0x64D4, 0x426D, {0xAE, 0x8D, 0xAD, 0x01, 0x47, 0xF4, 0x27, 0x5C}};
         ComPtr<IUnknown> d3d9;
-        is_d3d9 = SUCCEEDED(rf::gr_d3d->QueryInterface(IID_IDirect3D9, reinterpret_cast<void**>(&d3d9)));
+        is_d3d9 = SUCCEEDED(rf::gr::d3d::d3d->QueryInterface(IID_IDirect3D9, reinterpret_cast<void**>(&d3d9)));
         is_d3d9_inited = true;
     }
     return is_d3d9;
@@ -731,11 +731,11 @@ void gr_d3d_apply_patch()
     // to be locked and unlocked multiple times with discard flag. For some driver implementations (e.g. DXVK) such
     // behaviour leads to allocation of new vertex/index buffers during each lock and in the end it can cause end of
     // memory error.
-    AsmWriter(0x0054F1A9).call(rf::gr_d3d_flush_buffers);
-    AsmWriter(0x0055088A).call(rf::gr_d3d_flush_buffers);
-    AsmWriter(0x0055CAE9).call(rf::gr_d3d_flush_buffers);
-    AsmWriter(0x0055CB77).call(rf::gr_d3d_flush_buffers);
-    AsmWriter(0x0055CB58).call(rf::gr_d3d_flush_buffers);
+    AsmWriter(0x0054F1A9).call(rf::gr::d3d::flush_buffers);
+    AsmWriter(0x0055088A).call(rf::gr::d3d::flush_buffers);
+    AsmWriter(0x0055CAE9).call(rf::gr::d3d::flush_buffers);
+    AsmWriter(0x0055CB77).call(rf::gr::d3d::flush_buffers);
+    AsmWriter(0x0055CB58).call(rf::gr::d3d::flush_buffers);
 
     // Do not check if buffers are locked before preparing them in gr_d3d_tmapper
     AsmWriter(0x0055191D, 0x00551925).nop();

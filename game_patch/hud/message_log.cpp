@@ -19,11 +19,11 @@ static int message_log_no_messages_text_y;
 CodeInjection message_log_init_injection{
     0x00454CD7,
     []() {
-        message_log_scale_x = rf::gr_screen_width() / 640.0f;
-        message_log_scale_y = rf::gr_screen_height() / 480.0f;
+        message_log_scale_x = rf::gr::screen_width() / 640.0f;
+        message_log_scale_y = rf::gr::screen_height() / 480.0f;
 
-        float clip_w = static_cast<float>(rf::gr_clip_width());
-        float clip_h = static_cast<float>(rf::gr_clip_height());
+        float clip_w = static_cast<float>(rf::gr::clip_width());
+        float clip_h = static_cast<float>(rf::gr::clip_height());
         message_log_bg_x = static_cast<int>((clip_w - message_log_bm_w * message_log_scale_x) / 2.0f);
         message_log_bg_y = static_cast<int>((clip_h - message_log_bm_h * message_log_scale_y) / 2.0f);
         message_log_entries_clip_x = message_log_bg_x + static_cast<int>(30.0f * message_log_scale_x);
@@ -34,9 +34,9 @@ CodeInjection message_log_init_injection{
     },
 };
 
-CallHook<void(int, int, int, int, int, int, int, int, int, bool, bool, rf::GrMode)> message_log_render_gr_bitmap_stretched_hook{
+CallHook<void(int, int, int, int, int, int, int, int, int, bool, bool, rf::gr::Mode)> message_log_render_gr_bitmap_stretched_hook{
     0x004551F0,
-    [](int bm_handle, int x, int y, int w, int h, int sx, int sy, int sw, int sh, bool flip_x, bool flip_y, rf::GrMode mode) {
+    [](int bm_handle, int x, int y, int w, int h, int sx, int sy, int sw, int sh, bool flip_x, bool flip_y, rf::gr::Mode mode) {
         w = static_cast<int>(sw * message_log_scale_x);
         h = static_cast<int>(sh * message_log_scale_y);
         message_log_render_gr_bitmap_stretched_hook.call_target(bm_handle, x, y, w, h, sx, sy, sw, sh, flip_x, flip_y, mode);

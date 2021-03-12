@@ -39,8 +39,8 @@ CodeInjection GSurface_calculate_lightmap_color_conv_patch{
 
         rf::GSurface* surface = regs.esi;
         rf::GLightmap& lightmap = *surface->lightmap;
-        rf::GrLockInfo lock;
-        if (!rf::gr_lock(lightmap.bm_handle, 0, &lock, rf::GR_LOCK_WRITE_ONLY)) {
+        rf::gr::LockInfo lock;
+        if (!rf::gr::lock(lightmap.bm_handle, 0, &lock, rf::gr::LOCK_WRITE_ONLY)) {
             return;
         }
 
@@ -56,7 +56,7 @@ CodeInjection GSurface_calculate_lightmap_color_conv_patch{
             src_width, height, lock.stride_in_bytes, src_pitch);
         if (!success)
             xlog::error("bm_convert_format failed for geomod (fmt %d)", lock.format);
-        rf::gr_unlock(&lock);
+        rf::gr::unlock(&lock);
     },
 };
 
@@ -68,8 +68,8 @@ CodeInjection GSurface_alloc_lightmap_color_conv_patch{
 
         rf::GSurface* surface = regs.esi;
         rf::GLightmap& lightmap = *surface->lightmap;
-        rf::GrLockInfo lock;
-        if (!rf::gr_lock(lightmap.bm_handle, 0, &lock, rf::GR_LOCK_WRITE_ONLY)) {
+        rf::gr::LockInfo lock;
+        if (!rf::gr::lock(lightmap.bm_handle, 0, &lock, rf::gr::LOCK_WRITE_ONLY)) {
             return;
         }
 
@@ -87,7 +87,7 @@ CodeInjection GSurface_alloc_lightmap_color_conv_patch{
                                                  src_width, height, lock.stride_in_bytes, src_pitch);
         if (!success)
             xlog::error("ConvertBitmapFormat failed for geomod2 (fmt %d)", lock.format);
-        rf::gr_unlock(&lock);
+        rf::gr::unlock(&lock);
     },
 };
 
@@ -110,7 +110,7 @@ CodeInjection GSolid_get_ambient_color_from_lightmap_patch{
 };
 
 // perhaps this code should be in g_solid.cpp but we don't have access to PixelsReader/Writer there
-void gr_copy_water_bitmap(rf::GrLockInfo& src_lock, rf::GrLockInfo& dst_lock)
+void gr_copy_water_bitmap(rf::gr::LockInfo& src_lock, rf::gr::LockInfo& dst_lock)
 {
     int src_pixel_size = bm_bytes_per_pixel(src_lock.format);
     try {
@@ -152,20 +152,20 @@ CodeInjection g_proctex_update_water_patch{
         regs.eip = 0x004E6B68;
 
         auto& proctex = *static_cast<rf::GProceduralTexture*>(regs.esi);
-        rf::GrLockInfo base_bm_lock, user_bm_lock;
-        if (!rf::gr_lock(proctex.base_bm_handle, 0, &base_bm_lock, rf::GR_LOCK_READ_ONLY)) {
+        rf::gr::LockInfo base_bm_lock, user_bm_lock;
+        if (!rf::gr::lock(proctex.base_bm_handle, 0, &base_bm_lock, rf::gr::LOCK_READ_ONLY)) {
             return;
         }
         bm_set_dynamic(proctex.user_bm_handle, true);
-        if (!rf::gr_lock(proctex.user_bm_handle, 0, &user_bm_lock, rf::GR_LOCK_WRITE_ONLY)) {
-            rf::gr_unlock(&base_bm_lock);
+        if (!rf::gr::lock(proctex.user_bm_handle, 0, &user_bm_lock, rf::gr::LOCK_WRITE_ONLY)) {
+            rf::gr::unlock(&base_bm_lock);
             return;
         }
 
         gr_copy_water_bitmap(base_bm_lock, user_bm_lock);
 
-        rf::gr_unlock(&base_bm_lock);
-        rf::gr_unlock(&user_bm_lock);
+        rf::gr::unlock(&base_bm_lock);
+        rf::gr::unlock(&user_bm_lock);
     }
 };
 
@@ -217,8 +217,8 @@ CodeInjection level_load_lightmaps_color_conv_patch{
 
         rf::GLightmap* lightmap = regs.ebx;
 
-        rf::GrLockInfo lock;
-        if (!rf::gr_lock(lightmap->bm_handle, 0, &lock, rf::GR_LOCK_WRITE_ONLY))
+        rf::gr::LockInfo lock;
+        if (!rf::gr::lock(lightmap->bm_handle, 0, &lock, rf::gr::LOCK_WRITE_ONLY))
             return;
 
     #if 1 // cap minimal color channel value as RF does
@@ -231,7 +231,7 @@ CodeInjection level_load_lightmaps_color_conv_patch{
         if (!success)
             xlog::error("ConvertBitmapFormat failed for lightmap (dest format %d)", lock.format);
 
-        rf::gr_unlock(&lock);
+        rf::gr::unlock(&lock);
     },
 };
 

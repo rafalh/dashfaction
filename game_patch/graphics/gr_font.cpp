@@ -53,8 +53,8 @@ class GrNewFont
 {
 public:
     GrNewFont(std::string_view name);
-    void draw(int x, int y, std::string_view text, rf::GrMode state) const;
-    void draw_aligned(rf::GrTextAlignment align, int x, int y, std::string_view text, rf::GrMode state) const;
+    void draw(int x, int y, std::string_view text, rf::gr::Mode state) const;
+    void draw_aligned(rf::gr::TextAlignment align, int x, int y, std::string_view text, rf::gr::Mode state) const;
     void get_size(int* w, int* h, std::string_view text) const;
 
     const std::string& get_name() const
@@ -309,8 +309,8 @@ GrNewFont::GrNewFont(std::string_view name) :
         xlog::error("bm_create failed for font texture");
         throw std::runtime_error{"failed to load font"};
     }
-    rf::GrLockInfo lock;
-    if (!rf::gr_lock(bitmap_, 0, &lock, rf::GR_LOCK_WRITE_ONLY)) {
+    rf::gr::LockInfo lock;
+    if (!rf::gr::lock(bitmap_, 0, &lock, rf::gr::LOCK_WRITE_ONLY)) {
         xlog::error("gr_lock failed for font texture");
         throw std::runtime_error{"failed to load font"};
     }
@@ -350,14 +350,14 @@ GrNewFont::GrNewFont(std::string_view name) :
         glyphs_.push_back(glyph_info);
     }
 
-    rf::gr_unlock(&lock);
-    rf::gr_tcache_add_ref(bitmap_);
+    rf::gr::unlock(&lock);
+    rf::gr::tcache_add_ref(bitmap_);
 }
 
-void GrNewFont::draw(int x, int y, std::string_view text, rf::GrMode state) const
+void GrNewFont::draw(int x, int y, std::string_view text, rf::gr::Mode state) const
 {
-    if (x == rf::center_x) {
-        draw_aligned(rf::GR_ALIGN_CENTER, rf::gr_screen.clip_width / 2, y, text, state);
+    if (x == rf::gr::center_x) {
+        draw_aligned(rf::gr::ALIGN_CENTER, rf::gr::screen.clip_width / 2, y, text, state);
         return;
     }
     int pen_x = x;
@@ -372,8 +372,8 @@ void GrNewFont::draw(int x, int y, std::string_view text, rf::GrMode state) cons
             if (glyph_idx != -1) {
                 auto& glyph_info = glyphs_[glyph_idx];
                 if (glyph_info.bm_w) {
-                    //rf::gr_rect(pen_x + glyph_info.x, pen_y + glyph_info.y, glyph_info.bm_w, glyph_info.bm_h);
-                    rf::gr_bitmap_ex(bitmap_, pen_x + glyph_info.x, pen_y + glyph_info.y, glyph_info.bm_w, glyph_info.bm_h, glyph_info.bm_x, glyph_info.bm_y, state);
+                    //rf::gr::rect(pen_x + glyph_info.x, pen_y + glyph_info.y, glyph_info.bm_w, glyph_info.bm_h);
+                    rf::gr::bitmap_ex(bitmap_, pen_x + glyph_info.x, pen_y + glyph_info.y, glyph_info.bm_w, glyph_info.bm_h, glyph_info.bm_x, glyph_info.bm_y, state);
                 }
                 pen_x += glyph_info.advance_x;
             }
@@ -381,7 +381,7 @@ void GrNewFont::draw(int x, int y, std::string_view text, rf::GrMode state) cons
     }
 }
 
-void GrNewFont::draw_aligned(rf::GrTextAlignment alignment, int x, int y, std::string_view text, rf::GrMode state) const
+void GrNewFont::draw_aligned(rf::gr::TextAlignment alignment, int x, int y, std::string_view text, rf::gr::Mode state) const
 {
     size_t cur_pos = 0;
     while (cur_pos < text.size()) {
@@ -397,10 +397,10 @@ void GrNewFont::draw_aligned(rf::GrTextAlignment alignment, int x, int y, std::s
         get_size(&w, &h, line);
 
         int line_x = x;
-        if (alignment == rf::GR_ALIGN_CENTER) {
+        if (alignment == rf::gr::ALIGN_CENTER) {
             line_x -= w / 2;
         }
-        else if (alignment == rf::GR_ALIGN_RIGHT) {
+        else if (alignment == rf::gr::ALIGN_RIGHT) {
             line_x -= w;
         }
         draw(line_x, y, line, state);
@@ -488,7 +488,7 @@ FunHook<int(const char*, int)> gr_load_font_hook{
 FunHook<bool(const char*)> gr_set_default_font_hook{
     0x0051FE20,
     [](const char* name) {
-        int font = rf::gr_load_font(name, -1);
+        int font = rf::gr::load_font(name, -1);
         if (font >= 0) {
             g_default_font_id = font;
             return true;
@@ -513,9 +513,9 @@ FunHook<int(int)> gr_get_font_height_hook{
     },
 };
 
-FunHook<void(int, int, const char*, int, rf::GrMode)> gr_string_hook{
+FunHook<void(int, int, const char*, int, rf::gr::Mode)> gr_string_hook{
     0x0051FEB0,
-    [](int x, int y, const char *text, int font_num, rf::GrMode mode) {
+    [](int x, int y, const char *text, int font_num, rf::gr::Mode mode) {
         if (font_num == -1) {
             font_num = g_default_font_id;
         }

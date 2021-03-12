@@ -32,10 +32,10 @@ FunHook<void()> obj_light_calculate_hook{
     []() {
         xlog::trace("update_mesh_lighting_hook");
         // Init transform for lighting calculation
-        rf::gr_view_matrix.make_identity();
-        rf::gr_view_pos.zero();
-        rf::gr_light_matrix.make_identity();
-        rf::gr_light_base.zero();
+        rf::gr::view_matrix.make_identity();
+        rf::gr::view_pos.zero();
+        rf::gr::light_matrix.make_identity();
+        rf::gr::light_base.zero();
 
         if (g_game_config.mesh_static_lighting) {
             // Enable static lights

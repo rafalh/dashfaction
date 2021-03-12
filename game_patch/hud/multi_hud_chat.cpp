@@ -52,8 +52,8 @@ void multi_hud_render_chat()
     }
 
     int chatbox_font = hud_get_default_font();
-    int clip_w = rf::gr_clip_width();
-    int font_h = rf::gr_get_font_height(chatbox_font);
+    int clip_w = rf::gr::clip_width();
+    int font_h = rf::gr::get_font_height(chatbox_font);
     int border = g_big_chatbox ? 3 : 2;
     int box_w = clip_w - (g_big_chatbox ? 600 : 313);
     int box_h = 8 * font_h + 2 * border + 6;
@@ -63,11 +63,11 @@ void multi_hud_render_chat()
     int box_x = (clip_w - box_w) / 2;
 
     int border_alpha = rf::scoreboard_visible ? 255 : chatbox_border_alpha;
-    rf::gr_set_color(255, 255, 255, static_cast<int>(border_alpha * fade_out));
+    rf::gr::set_color(255, 255, 255, static_cast<int>(border_alpha * fade_out));
     hud_rect_border(box_x, box_y, box_w, box_h, border);
     int bg_alpha = rf::scoreboard_visible ? 255 : chatbox_bg_alpha;
-    rf::gr_set_color(0, 0, 0, static_cast<int>(bg_alpha * fade_out));
-    rf::gr_rect(box_x + border, box_y + border, content_w, content_h);
+    rf::gr::set_color(0, 0, 0, static_cast<int>(bg_alpha * fade_out));
+    rf::gr::rect(box_x + border, box_y + border, content_w, content_h);
     int y = box_y + box_h - border - font_h - 5;
 
     int text_alpha = static_cast<int>(fade_out * 255.0);
@@ -78,31 +78,31 @@ void multi_hud_render_chat()
         int x = box_x + border + 6;
 
         int name_w, name_h;
-        rf::gr_get_string_size(&name_w, &name_h, msg.name.c_str(), -1, chatbox_font);
+        rf::gr::get_string_size(&name_w, &name_h, msg.name.c_str(), -1, chatbox_font);
         if (msg.color_id == 0 || msg.color_id == 1) {
             if (msg.color_id == 0) {
-                rf::gr_set_color(227, 48, 47, text_alpha);
+                rf::gr::set_color(227, 48, 47, text_alpha);
             }
             else {
-                rf::gr_set_color(117, 117, 254, text_alpha);
+                rf::gr::set_color(117, 117, 254, text_alpha);
             }
-            rf::gr_string(x, y, msg.name.c_str(), chatbox_font);
-            rf::gr_set_color(255, 255, 255, text_alpha);
+            rf::gr::string(x, y, msg.name.c_str(), chatbox_font);
+            rf::gr::set_color(255, 255, 255, text_alpha);
             x += name_w;
         }
         else if (msg.color_id == 2) {
-            rf::gr_set_color(227, 48, 47, text_alpha);
+            rf::gr::set_color(227, 48, 47, text_alpha);
         }
         else if (msg.color_id == 3) {
-            rf::gr_set_color(117, 117, 254, text_alpha);
+            rf::gr::set_color(117, 117, 254, text_alpha);
         }
         else if (msg.color_id == 4) {
-            rf::gr_set_color(255, 255, 255, text_alpha);
+            rf::gr::set_color(255, 255, 255, text_alpha);
         }
         else {
-            rf::gr_set_color(52, 255, 57, text_alpha);
+            rf::gr::set_color(52, 255, 57, text_alpha);
         }
-        rf::gr_string(x, y, msg.text.c_str(), chatbox_font);
+        rf::gr::string(x, y, msg.text.c_str(), chatbox_font);
         y -= font_h;
     }
 }
@@ -112,7 +112,7 @@ FunHook<void()> multi_hud_render_chat_hook{0x004773D0, multi_hud_render_chat};
 CodeInjection multi_hud_add_chat_line_max_width_injection{
     0x004788E3,
     [](auto& regs) {
-        regs.esi = rf::gr_screen_width() - (g_big_chatbox ? 620 : 320);
+        regs.esi = rf::gr::screen_width() - (g_big_chatbox ? 620 : 320);
     },
 };
 
@@ -126,8 +126,8 @@ void multi_hud_render_chat_inputbox(rf::String::Pod label_pod, rf::String::Pod m
     }
 
     int chatbox_font = hud_get_default_font();
-    int clip_w = rf::gr_clip_width();
-    int font_h = rf::gr_get_font_height(chatbox_font); // 12
+    int clip_w = rf::gr::clip_width();
+    int font_h = rf::gr::get_font_height(chatbox_font); // 12
     int border = g_big_chatbox ? 3 : 2;
     int box_w = clip_w - (g_big_chatbox ? 600 : 313);
     int content_w = box_w - 2 * border; // clip_w - 317
@@ -140,29 +140,29 @@ void multi_hud_render_chat_inputbox(rf::String::Pod label_pod, rf::String::Pod m
 
     rf::String msg_shortened{msg};
     int msg_w, msg_h;
-    rf::gr_get_string_size(&msg_w, &msg_h, msg_shortened.c_str(), -1, chatbox_font);
+    rf::gr::get_string_size(&msg_w, &msg_h, msg_shortened.c_str(), -1, chatbox_font);
     int label_w, label_h;
-    rf::gr_get_string_size(&label_w, &label_h, label.c_str(), -1, chatbox_font);
+    rf::gr::get_string_size(&label_w, &label_h, label.c_str(), -1, chatbox_font);
     int cursor_w = g_big_chatbox ? 10 : 5;
     int cursor_h = g_big_chatbox ? 2 : 1;
     int max_msg_w = content_w - cursor_w - 7 - label_w;
     while (msg_w > max_msg_w) {
         msg_shortened.substr(&msg_shortened, 1, -1);
-        rf::gr_get_string_size(&msg_w, &msg_h, msg_shortened.c_str(), -1, chatbox_font);
+        rf::gr::get_string_size(&msg_w, &msg_h, msg_shortened.c_str(), -1, chatbox_font);
     }
 
-    rf::gr_set_color(255, 255, 255, rf::scoreboard_visible ? 255 : chatbox_border_alpha);
+    rf::gr::set_color(255, 255, 255, rf::scoreboard_visible ? 255 : chatbox_border_alpha);
     hud_rect_border(input_box_x, input_box_y, box_w, input_box_h, 2);
 
-    rf::gr_set_color(0, 0, 0, rf::scoreboard_visible ? 255 : chatbox_bg_alpha);
-    rf::gr_rect(input_box_x + border, input_box_y + border, content_w, input_box_content_h);
+    rf::gr::set_color(0, 0, 0, rf::scoreboard_visible ? 255 : chatbox_bg_alpha);
+    rf::gr::rect(input_box_x + border, input_box_y + border, content_w, input_box_content_h);
 
     rf::String label_and_msg;
     rf::String::concat(&label_and_msg, label, msg_shortened);
     int text_x = input_box_x + border + 4;
     int text_y = input_box_y + border + (g_big_chatbox ? 2 : 1);
-    rf::gr_set_color(53, 207, 22, 255);
-    rf::gr_string(text_x, text_y, label_and_msg.c_str(), chatbox_font);
+    rf::gr::set_color(53, 207, 22, 255);
+    rf::gr::string(text_x, text_y, label_and_msg.c_str(), chatbox_font);
 
     static rf::Timestamp cursor_blink_timestamp;
     static bool chatbox_cursor_visible = false;
@@ -175,7 +175,7 @@ void multi_hud_render_chat_inputbox(rf::String::Pod label_pod, rf::String::Pod m
         int cursor_x = text_x + label_w + msg_w + 2;
         int cursor_y = text_y + msg_h + (g_big_chatbox ? -2 : 0);
 
-        rf::gr_rect(cursor_x, cursor_y, cursor_w, cursor_h);
+        rf::gr::rect(cursor_x, cursor_y, cursor_w, cursor_h);
     }
 }
 

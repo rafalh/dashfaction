@@ -70,8 +70,8 @@ FunHook<void(rf::Monitor&)> monitor_update_static_hook{
         // No longer use render target texture
         ensure_monitor_bitmap_is_dynamic(mon);
         // Use custom noise generation algohritm because the default one is not uniform enough in high resolution
-        rf::GrLockInfo lock;
-        if (rf::gr_lock(mon.user_bitmap, 0, &lock, rf::GR_LOCK_WRITE_ONLY)) {
+        rf::gr::LockInfo lock;
+        if (rf::gr::lock(mon.user_bitmap, 0, &lock, rf::gr::LOCK_WRITE_ONLY)) {
             auto pixel_size = bm_bytes_per_pixel(lock.format);
             for (int y = 0; y < lock.h; ++y) {
                 auto ptr = lock.data + y * lock.stride_in_bytes;
@@ -87,7 +87,7 @@ FunHook<void(rf::Monitor&)> monitor_update_static_hook{
                     ptr += pixel_size;
                 }
             }
-            rf::gr_unlock(&lock);
+            rf::gr::unlock(&lock);
         }
         mon.flags |= rf::MF_BM_RENDERED;
     },
@@ -144,10 +144,10 @@ FunHook<void(rf::Monitor&)> monitor_update_off_hook{
         // from render target to dynamic texture
         ensure_monitor_bitmap_is_dynamic(mon);
         // Add support for 32-bit textures
-        rf::GrLockInfo lock;
-        if (rf::gr_lock(mon.user_bitmap, 0, &lock, rf::GR_LOCK_WRITE_ONLY)) {
+        rf::gr::LockInfo lock;
+        if (rf::gr::lock(mon.user_bitmap, 0, &lock, rf::gr::LOCK_WRITE_ONLY)) {
             std::memset(lock.data, 0, lock.h * lock.stride_in_bytes);
-            rf::gr_unlock(&lock);
+            rf::gr::unlock(&lock);
         }
     },
 };

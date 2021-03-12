@@ -50,7 +50,7 @@ FunHook<void()> mouse_eval_deltas_di_hook{
 
         // center cursor if in game
         if (rf::keep_mouse_centered) {
-            POINT pt{rf::gr_screen_width() / 2, rf::gr_screen_height() / 2};
+            POINT pt{rf::gr::screen_width() / 2, rf::gr::screen_height() / 2};
             ClientToScreen(rf::main_wnd, &pt);
             SetCursorPos(pt.x, pt.y);
         }

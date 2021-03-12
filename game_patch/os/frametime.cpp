@@ -26,14 +26,14 @@ static void frametime_render_graph()
             max_frametime = std::max(max_frametime, frametime);
         }
 
-        rf::gr_set_color(255, 255, 255, 128);
-        int scr_w = rf::gr_screen_width();
-        int scr_h = rf::gr_screen_height();
+        rf::gr::set_color(255, 255, 255, 128);
+        int scr_w = rf::gr::screen_width();
+        int scr_h = rf::gr::screen_height();
         for (unsigned i = 0; i < std::size(g_frametime_history); ++i) {
             int slot_index = (g_frametime_history_index + 1 + i) % std::size(g_frametime_history);
             int x = scr_w - i - 1;
             int h = static_cast<int>(g_frametime_history[slot_index] / max_frametime * 100.0f);
-            rf::gr_rect(x, scr_h - h, 1, h);
+            rf::gr::rect(x, scr_h - h, 1, h);
         }
     }
 }
@@ -42,8 +42,8 @@ static void frametime_render_fps_counter()
 {
     if (g_game_config.fps_counter && !rf::hud_disabled) {
         auto text = string_format("FPS: %.1f", rf::current_fps);
-        rf::gr_set_color(0, 255, 0, 255);
-        int x = rf::gr_screen_width() - (g_game_config.big_hud ? 165 : 90);
+        rf::gr::set_color(0, 255, 0, 255);
+        int x = rf::gr::screen_width() - (g_game_config.big_hud ? 165 : 90);
         int y = 10;
         if (rf::gameseq_in_gameplay()) {
             y = g_game_config.big_hud ? 110 : 60;
@@ -53,7 +53,7 @@ static void frametime_render_fps_counter()
         }
 
         int font_id = hud_get_default_font();
-        rf::gr_string(x, y, text.c_str(), font_id);
+        rf::gr::string(x, y, text.c_str(), font_id);
     }
 }
 

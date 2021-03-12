@@ -57,7 +57,7 @@ namespace rf
 #ifdef DASH_FACTION
         char* text;
         int font;
-        GrTextAlignment align;
+        gr::TextAlignment align;
 #else
         int text_offset_x;
         int text_offset_y;

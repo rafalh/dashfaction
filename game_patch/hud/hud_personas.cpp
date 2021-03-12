@@ -51,7 +51,7 @@ void hud_personas_render(rf::Player* player)
         rf::hud_persona_target_alpha = 0.0f;
     }
     int box_border = 2;
-    int clip_w = rf::gr_clip_width();
+    int clip_w = rf::gr::clip_width();
     int box_w = clip_w - (g_big_hud_persona ? 650 : 313);
     int box_h = (g_big_hud_persona ? 165 : 106);
     int box_x = (clip_w - box_w) / 2;
@@ -61,15 +61,15 @@ void hud_personas_render(rf::Player* player)
     int hud_persona_font = hud_get_default_font();
 
     // border
-    rf::gr_set_color(255, 255, 255, static_cast<int>(rf::hud_persona_alpha * 77.0f));
-    rf::gr_rect(box_x, box_y, box_border, box_h); // left
-    rf::gr_rect(box_x + box_w - box_border, box_y, box_border, box_h); // right
-    rf::gr_rect(box_x + box_border, box_y, content_w, box_border); // top
-    rf::gr_rect(box_x + box_border, offset_y + box_h + 8, content_w, box_border); // bottom
+    rf::gr::set_color(255, 255, 255, static_cast<int>(rf::hud_persona_alpha * 77.0f));
+    rf::gr::rect(box_x, box_y, box_border, box_h); // left
+    rf::gr::rect(box_x + box_w - box_border, box_y, box_border, box_h); // right
+    rf::gr::rect(box_x + box_border, box_y, content_w, box_border); // top
+    rf::gr::rect(box_x + box_border, offset_y + box_h + 8, content_w, box_border); // bottom
 
     // background
-    rf::gr_set_color(0, 0, 0, static_cast<int>(rf::hud_persona_alpha * 128.0f));
-    rf::gr_rect(box_x + box_border, box_y + box_border, content_w, content_h);
+    rf::gr::set_color(0, 0, 0, static_cast<int>(rf::hud_persona_alpha * 128.0f));
+    rf::gr::rect(box_x + box_border, box_y + box_border, content_w, content_h);
 
     // persona image background (black)
     float img_scale = g_big_hud_persona ? 2.0f : 1.0f;
@@ -78,21 +78,21 @@ void hud_personas_render(rf::Player* player)
     int img_box_x = box_x + box_border; // 159
     int img_box_y = box_y + box_border; // 12
     int img_border = 2;
-    rf::gr_set_color(rf::hud_msg_bg_color);
-    rf::gr_set_alpha(static_cast<int>(rf::hud_msg_bg_color.alpha * rf::hud_persona_alpha));
-    rf::gr_rect(img_box_x, img_box_y, img_w + 2 * img_border, img_h + 2 * img_border);
+    rf::gr::set_color(rf::hud_msg_bg_color);
+    rf::gr::set_alpha(static_cast<int>(rf::hud_msg_bg_color.alpha * rf::hud_persona_alpha));
+    rf::gr::rect(img_box_x, img_box_y, img_w + 2 * img_border, img_h + 2 * img_border);
 
     // persona image (64x64)
-    //rf::gr_set_color(hud_default_color);
-    //rf::gr_set_alpha(static_cast<int>(hud_default_color.alpha * hud_persona_alpha));
-    rf::gr_set_color(255, 255, 255, static_cast<int>(rf::hud_default_color.alpha * rf::hud_persona_alpha));
+    //rf::gr::set_color(hud_default_color);
+    //rf::gr::set_alpha(static_cast<int>(hud_default_color.alpha * hud_persona_alpha));
+    rf::gr::set_color(255, 255, 255, static_cast<int>(rf::hud_default_color.alpha * rf::hud_persona_alpha));
     int img_x = img_box_x + img_border; // 161
     int img_y = img_box_y + img_border; // 14
     hud_scaled_bitmap(hud_persona.image_handle, img_x, img_y, img_scale);// hud_persona_image_gr_mode
 
     // persona name
-    rf::gr_set_color(rf::hud_msg_color);
-    rf::gr_set_alpha(static_cast<int>(rf::hud_msg_color.alpha * rf::hud_persona_alpha));
+    rf::gr::set_color(rf::hud_msg_color);
+    rf::gr::set_alpha(static_cast<int>(rf::hud_msg_color.alpha * rf::hud_persona_alpha));
     const char* display_name;
     if (hud_persona.display_name.size() == 0) {
         display_name = hud_persona.name.c_str();
@@ -102,25 +102,25 @@ void hud_personas_render(rf::Player* player)
     }
     int img_center_x = img_x + img_w / 2;
     int img_title_y = img_y + img_h + img_border + 2;
-    rf::gr_string_aligned(rf::GR_ALIGN_CENTER, img_center_x, img_title_y, display_name, hud_persona_font);
+    rf::gr::string_aligned(rf::gr::ALIGN_CENTER, img_center_x, img_title_y, display_name, hud_persona_font);
 
     // message
     int text_x = img_x + img_w + img_border + (g_big_hud_persona ? 12 : 8);
     int text_y = box_y + 6;
-    int font_h = rf::gr_get_font_height(hud_persona_font);
+    int font_h = rf::gr::get_font_height(hud_persona_font);
     int max_text_x = box_x + box_w - box_border - 8;
     int max_text_w = max_text_x - text_x; // rf::hud_coords[hud_persona_message_box_text_area_width].x
     constexpr int max_lines = 8;
     int len_array[max_lines], offset_array[max_lines];
-    int num_lines = rf::gr_split_str(len_array, offset_array, hud_persona.message,
+    int num_lines = rf::gr::split_str(len_array, offset_array, hud_persona.message,
         max_text_w, max_lines, 0, hud_persona_font);
-    rf::gr_set_color(rf::hud_default_color);
-    rf::gr_set_alpha(static_cast<int>(rf::hud_default_color.alpha * rf::hud_persona_alpha));
+    rf::gr::set_color(rf::hud_default_color);
+    rf::gr::set_alpha(static_cast<int>(rf::hud_default_color.alpha * rf::hud_persona_alpha));
     for (int i = 0; i < num_lines; ++i) {
         char buf[256];
         std::strncpy(buf, &hud_persona.message[offset_array[i]], len_array[i]);
         buf[len_array[i]] = 0;
-        rf::gr_string(text_x, text_y, buf, hud_persona_font);
+        rf::gr::string(text_x, text_y, buf, hud_persona_font);
         text_y += font_h;
     }
 }

@@ -192,7 +192,7 @@ FunHook<void(rf::Glare*, int)> glare_render_corona_hook{
         // Note: object radius matches volumetric effect size and can be very large so this check helps
         // to speed up rendering
         auto& current_radius = glare->last_rendered_radius[player_idx];
-        if (!rf::gr_cull_sphere(glare->pos, current_radius)) {
+        if (!rf::gr::cull_sphere(glare->pos, current_radius)) {
             glare_render_corona_hook.call_target(glare, player_idx);
         }
     },

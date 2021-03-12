@@ -49,8 +49,8 @@ int hud_scale_value(int val, int max, float scale)
 rf::HudPoint hud_scale_coords(rf::HudPoint pt, float scale)
 {
     return {
-        hud_scale_value(pt.x, rf::gr_screen_width(), scale),
-        hud_scale_value(pt.y, rf::gr_screen_height(), scale),
+        hud_scale_value(pt.x, rf::gr::screen_width(), scale),
+        hud_scale_value(pt.y, rf::gr::screen_height(), scale),
     };
 }
 
@@ -76,7 +76,7 @@ ConsoleCommand2 hud_cmd{
 
 void hud_setup_positions(int width)
 {
-    int height = rf::gr_screen_height();
+    int height = rf::gr::screen_height();
     rf::HudPoint* pos_data = nullptr;
 
     xlog::trace("hud_setup_positionsHook(%d)", width);
@@ -143,7 +143,7 @@ void set_big_hud(bool is_big)
     rf::hud_text_font_num = hud_get_default_font();
     g_target_player_name_font = hud_get_default_font();
 
-    hud_setup_positions(rf::gr_screen_width());
+    hud_setup_positions(rf::gr::screen_width());
     hud_weapons_set_big(is_big);
     set_big_countdown_counter(is_big);
 
@@ -210,7 +210,7 @@ const ScaledBitmapInfo& hud_get_scaled_bitmap_info(int bmh)
         }
         xlog::trace("loaded high res bm %s: %d", filename.c_str(), scaled_bm_info.bmh);
         if (scaled_bm_info.bmh != -1) {
-            rf::gr_tcache_add_ref(scaled_bm_info.bmh);
+            rf::gr::tcache_add_ref(scaled_bm_info.bmh);
             int bm_w, bm_h;
             rf::bm_get_dimensions(bmh, &bm_w, &bm_h);
             int scaled_bm_w, scaled_bm_h;
@@ -229,7 +229,7 @@ void hud_preload_scaled_bitmap(int bmh)
     hud_get_scaled_bitmap_info(bmh);
 }
 
-void hud_scaled_bitmap(int bmh, int x, int y, float scale, rf::GrMode mode)
+void hud_scaled_bitmap(int bmh, int x, int y, float scale, rf::gr::Mode mode)
 {
     if (scale > 1.0f) {
         const auto& scaled_bm_info = hud_get_scaled_bitmap_info(bmh);
@@ -240,7 +240,7 @@ void hud_scaled_bitmap(int bmh, int x, int y, float scale, rf::GrMode mode)
     }
 
     if (scale == 1.0f) {
-        rf::gr_bitmap(bmh, x, y, mode);
+        rf::gr::bitmap(bmh, x, y, mode);
     }
     else {
         // Get bitmap size and scale it
@@ -248,20 +248,20 @@ void hud_scaled_bitmap(int bmh, int x, int y, float scale, rf::GrMode mode)
         rf::bm_get_dimensions(bmh, &bm_w, &bm_h);
         int dst_w = static_cast<int>(std::round(bm_w * scale));
         int dst_h = static_cast<int>(std::round(bm_h * scale));
-        rf::gr_bitmap_scaled(bmh, x, y, dst_w, dst_h, 0, 0, bm_w, bm_h, false, false, mode);
+        rf::gr::bitmap_scaled(bmh, x, y, dst_w, dst_h, 0, 0, bm_w, bm_h, false, false, mode);
     }
 }
 
-void hud_rect_border(int x, int y, int w, int h, int border, rf::GrMode state)
+void hud_rect_border(int x, int y, int w, int h, int border, rf::gr::Mode state)
 {
     // top
-    rf::gr_rect(x, y, w, border, state);
+    rf::gr::rect(x, y, w, border, state);
     // bottom
-    rf::gr_rect(x, y + h - border, w, border, state);
+    rf::gr::rect(x, y + h - border, w, border, state);
     // left
-    rf::gr_rect(x, y + border, border, h - 2 * border, state);
+    rf::gr::rect(x, y + border, border, h - 2 * border, state);
     // right
-    rf::gr_rect(x + w - border, y + border, border, h - 2 * border, state);
+    rf::gr::rect(x + w - border, y + border, border, h - 2 * border, state);
 }
 
 std::string hud_fit_string(std::string_view str, int max_w, int* str_w_out, int font_id)
@@ -269,11 +269,11 @@ std::string hud_fit_string(std::string_view str, int max_w, int* str_w_out, int 
     std::string result{str};
     int str_w, str_h;
     bool has_ellipsis = false;
-    rf::gr_get_string_size(&str_w, &str_h, result.c_str(), -1, font_id);
+    rf::gr::get_string_size(&str_w, &str_h, result.c_str(), -1, font_id);
     while (str_w > max_w) {
         result = result.substr(0, result.size() - (has_ellipsis ? 4 : 1)) + "...";
         has_ellipsis = true;
-        rf::gr_get_string_size(&str_w, &str_h, result.c_str(), -1, font_id);
+        rf::gr::get_string_size(&str_w, &str_h, result.c_str(), -1, font_id);
     }
     if (str_w_out) {
         *str_w_out = str_w;
@@ -306,14 +306,14 @@ int hud_get_default_font()
     if (g_game_config.big_hud) {
         static int font = -2;
         if (font == -2) {
-            font = rf::gr_load_font(hud_get_default_font_name(true));
+            font = rf::gr::load_font(hud_get_default_font_name(true));
         }
         return font;
     }
     else {
         static int font = -2;
         if (font == -2) {
-            font = rf::gr_load_font(hud_get_default_font_name(false));
+            font = rf::gr::load_font(hud_get_default_font_name(false));
         }
         return font;
     }
@@ -324,7 +324,7 @@ int hud_get_large_font()
     if (g_game_config.big_hud) {
         static int font = -2;
         if (font == -2) {
-            font = rf::gr_load_font(hud_get_bold_font_name(true));
+            font = rf::gr::load_font(hud_get_bold_font_name(true));
             if (font == -1) {
                 xlog::error("Failed to load boldfont!");
             }
@@ -334,7 +334,7 @@ int hud_get_large_font()
     else {
         static int font = -2;
         if (font == -2) {
-            font = rf::gr_load_font(hud_get_bold_font_name(false));
+            font = rf::gr::load_font(hud_get_bold_font_name(false));
         }
         return font;
     }
@@ -355,7 +355,7 @@ CallHook hud_msg_render_gr_get_font_height_hook{
     0x004382DB,
     []([[ maybe_unused ]] int font_no) {
         // Fix wrong font number being used causing line spacing to be invalid
-        return rf::gr_get_font_height(rf::hud_text_font_num);
+        return rf::gr::get_font_height(rf::hud_text_font_num);
     },
 };
 

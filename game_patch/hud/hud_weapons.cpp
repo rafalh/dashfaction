@@ -13,7 +13,7 @@
 
 float g_hud_ammo_scale = 1.0f;
 
-CallHook<void(int, int, int, rf::GrMode)> hud_render_ammo_gr_bitmap_hook{
+CallHook<void(int, int, int, rf::gr::Mode)> hud_render_ammo_gr_bitmap_hook{
     {
         // hud_render_ammo_clip
         0x0043A5E9u,
@@ -28,22 +28,22 @@ CallHook<void(int, int, int, rf::GrMode)> hud_render_ammo_gr_bitmap_hook{
         0x0043AEC3u,
         0x0043AF0Au,
     },
-    [](int bm_handle, int x, int y, rf::GrMode mode) {
+    [](int bm_handle, int x, int y, rf::gr::Mode mode) {
         hud_scaled_bitmap(bm_handle, x, y, g_hud_ammo_scale, mode);
     },
 };
 
-CallHook<void(int, int, int, rf::GrMode)> render_reticle_gr_bitmap_hook{
+CallHook<void(int, int, int, rf::gr::Mode)> render_reticle_gr_bitmap_hook{
     {
         0x0043A499,
         0x0043A4FE,
     },
-    [](int bm_handle, int x, int y, rf::GrMode mode) {
+    [](int bm_handle, int x, int y, rf::gr::Mode mode) {
         float base_scale = g_game_config.big_hud ? 2.0f : 1.0f;
         float scale = base_scale * g_game_config.reticle_scale;
 
-        x = static_cast<int>((x - rf::gr_clip_width() / 2) * scale) + rf::gr_clip_width() / 2;
-        y = static_cast<int>((y - rf::gr_clip_height() / 2) * scale) + rf::gr_clip_height() / 2;
+        x = static_cast<int>((x - rf::gr::clip_width() / 2) * scale) + rf::gr::clip_width() / 2;
+        y = static_cast<int>((y - rf::gr::clip_height() / 2) * scale) + rf::gr::clip_height() / 2;
 
         hud_scaled_bitmap(bm_handle, x, y, scale, mode);
     },
@@ -79,7 +79,7 @@ void hud_weapons_set_big(bool is_big)
     for (auto item_num : ammo_hud_items) {
         rf::hud_coords[item_num] = hud_scale_coords(rf::hud_coords[item_num], g_hud_ammo_scale);
     }
-    rf::hud_ammo_font = rf::gr_load_font(is_big ? "biggerfont.vf" : "bigfont.vf");
+    rf::hud_ammo_font = rf::gr::load_font(is_big ? "biggerfont.vf" : "bigfont.vf");
 }
 
 ConsoleCommand2 reticle_scale_cmd{

@@ -127,7 +127,7 @@ namespace rf
     static auto& hud_msg_bg_color = addr_as_ref<Color>(0x006379EC);
     static auto& hud_msg_color = addr_as_ref<Color>(0x006373B4);
     static auto& hud_personas_info = addr_as_ref<HudPersonaInfo[10]>(0x006384D0);
-    static auto& hud_persona_image_gr_mode = addr_as_ref<GrMode>(0x01775B18);
+    static auto& hud_persona_image_gr_mode = addr_as_ref<gr::Mode>(0x01775B18);
 
     struct WeaponCycle
     {

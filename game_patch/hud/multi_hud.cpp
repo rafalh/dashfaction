@@ -22,13 +22,13 @@ namespace rf
     auto& hud_miniflag_hilight_bmh = addr_as_ref<int>(0x0059DF50);
     auto& hud_flag_red_bmh = addr_as_ref<int>(0x0059DF54);
     auto& hud_flag_blue_bmh = addr_as_ref<int>(0x0059DF58);
-    auto& hud_flag_gr_mode = addr_as_ref<rf::GrMode>(0x01775B30);
+    auto& hud_flag_gr_mode = addr_as_ref<rf::gr::Mode>(0x01775B30);
 }
 
 void hud_render_team_scores()
 {
-    int clip_h = rf::gr_clip_height();
-    rf::gr_set_color(0, 0, 0, 150);
+    int clip_h = rf::gr::clip_height();
+    rf::gr::set_color(0, 0, 0, 150);
     int box_w = g_big_team_scores_hud ? 370 : 185;
     int box_h = g_big_team_scores_hud ? 80 : 55;
     int box_x = 10;
@@ -43,7 +43,7 @@ void hud_render_team_scores()
     int flag_x = g_big_team_scores_hud ? 410 : 205;
     float flag_scale = g_big_team_scores_hud ? 1.5f : 1.0f;
 
-    rf::gr_rect(10, clip_h - box_h - 10, box_w, box_h);
+    rf::gr::rect(10, clip_h - box_h - 10, box_w, box_h);
     auto game_type = rf::multi_get_game_type();
     int font_id = hud_get_default_font();
 
@@ -65,47 +65,47 @@ void hud_render_team_scores()
                 hud_flag_pulse_dir = true;
             }
         }
-        rf::gr_set_color(53, 207, 22, 255);
+        rf::gr::set_color(53, 207, 22, 255);
         auto red_flag_player = g_debug_team_scores_hud ? rf::local_player : rf::multi_ctf_get_red_flag_player();
         if (red_flag_player) {
             auto name = g_debug_team_scores_hud ? "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii" : red_flag_player->name;
             std::string fitting_name = hud_fit_string(name, max_miniflag_label_w, nullptr, font_id);
-            rf::gr_string(miniflag_label_x, red_miniflag_label_y, fitting_name.c_str(), font_id);
+            rf::gr::string(miniflag_label_x, red_miniflag_label_y, fitting_name.c_str(), font_id);
 
             if (red_flag_player == rf::local_player) {
-                rf::gr_set_color(255, 255, 255, static_cast<int>(hud_flag_alpha));
+                rf::gr::set_color(255, 255, 255, static_cast<int>(hud_flag_alpha));
                 hud_scaled_bitmap(rf::hud_flag_red_bmh, flag_x, box_y, flag_scale, rf::hud_flag_gr_mode);
             }
         }
         else if (rf::multi_ctf_is_red_flag_in_base()) {
-            rf::gr_string(miniflag_label_x, red_miniflag_label_y, "at base", font_id);
+            rf::gr::string(miniflag_label_x, red_miniflag_label_y, "at base", font_id);
         }
         else {
-            rf::gr_string(miniflag_label_x, red_miniflag_label_y, "missing", font_id);
+            rf::gr::string(miniflag_label_x, red_miniflag_label_y, "missing", font_id);
         }
-        rf::gr_set_color(53, 207, 22, 255);
+        rf::gr::set_color(53, 207, 22, 255);
         auto blue_flag_player = rf::multi_ctf_get_blue_flag_player();
         if (blue_flag_player) {
             auto name = g_debug_team_scores_hud ? "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii" : blue_flag_player->name;
             std::string fitting_name = hud_fit_string(name, max_miniflag_label_w, nullptr, font_id);
-            rf::gr_string(miniflag_label_x, blue_miniflag_label_y, fitting_name.c_str(), font_id);
+            rf::gr::string(miniflag_label_x, blue_miniflag_label_y, fitting_name.c_str(), font_id);
 
             if (blue_flag_player == rf::local_player) {
-                rf::gr_set_color(255, 255, 255, static_cast<int>(hud_flag_alpha));
+                rf::gr::set_color(255, 255, 255, static_cast<int>(hud_flag_alpha));
                 hud_scaled_bitmap(rf::hud_flag_blue_bmh, flag_x, box_y, flag_scale, rf::hud_flag_gr_mode);
             }
         }
         else if (rf::multi_ctf_is_blue_flag_in_base()) {
-            rf::gr_string(miniflag_label_x, blue_miniflag_label_y, "at base", font_id);
+            rf::gr::string(miniflag_label_x, blue_miniflag_label_y, "at base", font_id);
         }
         else {
-            rf::gr_string(miniflag_label_x, blue_miniflag_label_y, "missing", font_id);
+            rf::gr::string(miniflag_label_x, blue_miniflag_label_y, "missing", font_id);
         }
     }
 
     if (game_type == rf::NG_TYPE_CTF || game_type == rf::NG_TYPE_TEAMDM) {
         float miniflag_scale = g_big_team_scores_hud ? 1.5f : 1.0f;
-        rf::gr_set_color(255, 255, 255, 255);
+        rf::gr::set_color(255, 255, 255, 255);
         if (rf::local_player) {
             int miniflag_hilight_y;
             if (rf::local_player->team == rf::TEAM_RED) {
@@ -130,7 +130,7 @@ void hud_render_team_scores()
         blue_score = rf::multi_ctf_get_blue_team_score();
     }
     else if (game_type == rf::NG_TYPE_TEAMDM) {
-        rf::gr_set_color(53, 207, 22, 255);
+        rf::gr::set_color(53, 207, 22, 255);
         red_score = rf::multi_tdm_get_red_team_score();
         blue_score = rf::multi_tdm_get_blue_team_score();
     }
@@ -141,23 +141,23 @@ void hud_render_team_scores()
     auto red_score_str = std::to_string(red_score);
     auto blue_score_str = std::to_string(blue_score);
     int str_w, str_h;
-    rf::gr_get_string_size(&str_w, &str_h, red_score_str.c_str(), -1, font_id);
-    rf::gr_string(box_x + box_w - 5 - str_w, red_miniflag_label_y, red_score_str.c_str(), font_id);
-    rf::gr_get_string_size(&str_w, &str_h, blue_score_str.c_str(), -1, font_id);
-    rf::gr_string(box_x + box_w - 5 - str_w, blue_miniflag_label_y, blue_score_str.c_str(), font_id);
+    rf::gr::get_string_size(&str_w, &str_h, red_score_str.c_str(), -1, font_id);
+    rf::gr::string(box_x + box_w - 5 - str_w, red_miniflag_label_y, red_score_str.c_str(), font_id);
+    rf::gr::get_string_size(&str_w, &str_h, blue_score_str.c_str(), -1, font_id);
+    rf::gr::string(box_x + box_w - 5 - str_w, blue_miniflag_label_y, blue_score_str.c_str(), font_id);
 }
 
-CallHook<void(int, int, int, rf::GrMode)> hud_render_power_ups_gr_bitmap_hook{
+CallHook<void(int, int, int, rf::gr::Mode)> hud_render_power_ups_gr_bitmap_hook{
     {
         0x0047FF2F,
         0x0047FF96,
         0x0047FFFD,
     },
-    [](int bm_handle, int x, int y, rf::GrMode mode) {
+    [](int bm_handle, int x, int y, rf::gr::Mode mode) {
         float scale = g_game_config.big_hud ? 2.0f : 1.0f;
-        x = hud_transform_value(x, 640, rf::gr_clip_width());
-        x = hud_scale_value(x, rf::gr_clip_width(), scale);
-        y = hud_scale_value(y, rf::gr_clip_height(), scale);
+        x = hud_transform_value(x, 640, rf::gr::clip_width());
+        x = hud_scale_value(x, rf::gr::clip_width(), scale);
+        y = hud_scale_value(y, rf::gr::clip_height(), scale);
         hud_scaled_bitmap(bm_handle, x, y, scale, mode);
     },
 };

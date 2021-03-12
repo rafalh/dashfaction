@@ -37,7 +37,7 @@ CodeInjection game_print_screen_injection{
 CodeInjection jpeg_write_bitmap_overflow_fix1{
     0x0055A066,
     [](auto& regs) {
-        g_screenshot_scanlines_buf = std::make_unique<byte* []>(rf::gr_screen.max_h);
+        g_screenshot_scanlines_buf = std::make_unique<byte* []>(rf::gr::screen.max_h);
         regs.ecx = reinterpret_cast<int32_t>(g_screenshot_scanlines_buf.get());
         regs.eip = 0x0055A06D;
     },
@@ -61,9 +61,9 @@ int bm_load_if_exists(const char* name, int unk, bool generate_mipmaps)
     }
 }
 
-CallHook<void(int, int, int, rf::GrMode)> game_render_cursor_gr_bitmap_hook{
+CallHook<void(int, int, int, rf::gr::Mode)> game_render_cursor_gr_bitmap_hook{
     0x004354E4,
-    [](int bm_handle, int x, int y, rf::GrMode mode) {
+    [](int bm_handle, int x, int y, rf::gr::Mode mode) {
         if (rf::ui_scale_y >= 2.0f) {
             static int cursor_1_bmh = bm_load_if_exists("cursor_1.tga", -1, false);
             if (cursor_1_bmh != -1) {
@@ -90,13 +90,13 @@ CodeInjection gameplay_render_frame_display_full_screen_image_injection{
     [](auto& regs) {
         // Change gr mode to one that uses alpha blending for Display_Fullscreen_Image event handling in
         // gameplay_render_frame function
-        static rf::GrMode mode{
-            rf::TEXTURE_SOURCE_WRAP,
-            rf::COLOR_SOURCE_TEXTURE,
-            rf::ALPHA_SOURCE_VERTEX_TIMES_TEXTURE,
-            rf::ALPHA_BLEND_ALPHA,
-            rf::ZBUFFER_TYPE_NONE,
-            rf::FOG_ALLOWED
+        static rf::gr::Mode mode{
+            rf::gr::TEXTURE_SOURCE_WRAP,
+            rf::gr::COLOR_SOURCE_TEXTURE,
+            rf::gr::ALPHA_SOURCE_VERTEX_TIMES_TEXTURE,
+            rf::gr::ALPHA_BLEND_ALPHA,
+            rf::gr::ZBUFFER_TYPE_NONE,
+            rf::gr::FOG_ALLOWED,
         };
         regs.edx = mode;
     },
