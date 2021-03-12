@@ -11,8 +11,8 @@
 #include "../bmpman/bmpman.h"
 #include "../bmpman/fmt_conv_templates.h"
 
-bool bm_convert_format(void* dst_bits_ptr, rf::BmFormat dst_fmt, const void* src_bits_ptr,
-                           rf::BmFormat src_fmt, int width, int height, int dst_pitch, int src_pitch,
+bool bm_convert_format(void* dst_bits_ptr, rf::bm::Format dst_fmt, const void* src_bits_ptr,
+                           rf::bm::Format src_fmt, int width, int height, int dst_pitch, int src_pitch,
                            const uint8_t* palette)
 {
 #if DEBUG_PERF
@@ -39,7 +39,7 @@ bool bm_convert_format(void* dst_bits_ptr, rf::BmFormat dst_fmt, const void* src
     }
 }
 
-rf::Color bm_get_pixel(uint8_t* data, rf::BmFormat format, int stride_in_bytes, int x, int y)
+rf::Color bm_get_pixel(uint8_t* data, rf::bm::Format format, int stride_in_bytes, int x, int y)
 {
     if (bm_is_compressed_format(format)) {
         constexpr int block_w = 4;
@@ -53,7 +53,7 @@ rf::Color bm_get_pixel(uint8_t* data, rf::BmFormat format, int stride_in_bytes, 
         rf::Color result{0, 0, 0, 0};
         call_with_format(format, [&](auto s) {
             PixelsReader<decltype(s)::value> rdr{ptr};
-            PixelColor<rf::BmFormat::BM_FORMAT_8888_ARGB> color = rdr.read();
+            PixelColor<rf::bm::FORMAT_8888_ARGB> color = rdr.read();
             result.set(
                 static_cast<uint8_t>(color.r.value),
                 static_cast<uint8_t>(color.g.value),

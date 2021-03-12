@@ -293,7 +293,7 @@ void player_do_patch()
     players_do_frame_hook.install();
 
     // Make sure scanner bitmap is a render target in player_allocate
-    write_mem<u8>(0x004A34BF + 1, rf::BM_FORMAT_RENDER_TARGET);
+    write_mem<u8>(0x004A34BF + 1, rf::bm::FORMAT_RENDER_TARGET);
 
     // Support disabling of damage screen flash effect
     player_do_damage_screen_flash_hook.install();

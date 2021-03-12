@@ -28,15 +28,15 @@ void __fastcall UiButton_create(rf::UiButton& this_, int, const char *normal_bm,
     this_.x = x;
     this_.y = y;
     if (*normal_bm) {
-        this_.bg_bitmap = rf::bm_load(normal_bm, -1, false);
+        this_.bg_bitmap = rf::bm::load(normal_bm, -1, false);
         rf::gr::tcache_add_ref(this_.bg_bitmap);
-        rf::bm_get_dimensions(this_.bg_bitmap, &this_.w, &this_.h);
+        rf::bm::get_dimensions(this_.bg_bitmap, &this_.w, &this_.h);
     }
     if (*selected_bm) {
-        this_.selected_bitmap = rf::bm_load(selected_bm, -1, false);
+        this_.selected_bitmap = rf::bm::load(selected_bm, -1, false);
         rf::gr::tcache_add_ref(this_.selected_bitmap);
         if (this_.bg_bitmap < 0) {
-            rf::bm_get_dimensions(this_.selected_bitmap, &this_.w, &this_.h);
+            rf::bm::get_dimensions(this_.selected_bitmap, &this_.w, &this_.h);
         }
     }
     this_.text = strdup(text);

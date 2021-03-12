@@ -47,7 +47,7 @@ int draw_scoreboard_header(int x, int y, int w, rf::NetGameType game_type, bool 
     int cur_y = y;
     if (!dry_run) {
         rf::gr::set_color(0xFF, 0xFF, 0xFF, 0xFF);
-        static int score_rflogo_bm = rf::bm_load("score_rflogo.tga", -1, false);
+        static int score_rflogo_bm = rf::bm::load("score_rflogo.tga", -1, false);
         rf::gr::bitmap(score_rflogo_bm, x_center - 170, cur_y);
     }
     cur_y += 30;
@@ -93,10 +93,10 @@ int draw_scoreboard_header(int x, int y, int w, rf::NetGameType game_type, bool 
         if (!dry_run) {
             unsigned red_score = 0, blue_score = 0;
             if (game_type == rf::NG_TYPE_CTF) {
-                static int hud_flag_red_bm = rf::bm_load("hud_flag_red.tga", -1, true);
-                static int hud_flag_blue_bm = rf::bm_load("hud_flag_blue.tga", -1, true);
+                static int hud_flag_red_bm = rf::bm::load("hud_flag_red.tga", -1, true);
+                static int hud_flag_blue_bm = rf::bm::load("hud_flag_blue.tga", -1, true);
                 int flag_bm_w, flag_bm_h;
-                rf::bm_get_dimensions(hud_flag_red_bm, &flag_bm_w, &flag_bm_h);
+                rf::bm::get_dimensions(hud_flag_red_bm, &flag_bm_w, &flag_bm_h);
                 rf::gr::bitmap(hud_flag_red_bm, x + w * 2 / 6 - flag_bm_w / 2, cur_y);
                 rf::gr::bitmap(hud_flag_blue_bm, x + w * 4 / 6 - flag_bm_w / 2, cur_y);
                 red_score = rf::multi_ctf_get_red_team_score();
@@ -167,10 +167,10 @@ int draw_scoreboard_players(const std::vector<rf::Player*>& players, int x, int 
             else
                 rf::gr::set_color(0xFF, 0xFF, 0xFF, 0xFF);
 
-            static int green_bm = rf::bm_load("DF_green.tga", -1, true);
-            static int red_bm = rf::bm_load("DF_red.tga", -1, true);
-            static int hud_micro_flag_red_bm = rf::bm_load("hud_microflag_red.tga", -1, true);
-            static int hud_micro_flag_blue_bm = rf::bm_load("hud_microflag_blue.tga", -1, true);
+            static int green_bm = rf::bm::load("DF_green.tga", -1, true);
+            static int red_bm = rf::bm::load("DF_red.tga", -1, true);
+            static int hud_micro_flag_red_bm = rf::bm::load("hud_microflag_red.tga", -1, true);
+            static int hud_micro_flag_blue_bm = rf::bm::load("hud_microflag_blue.tga", -1, true);
 
             rf::Entity* entity = rf::entity_from_handle(player->entity_handle);
             int status_bm = entity ? green_bm : red_bm;

@@ -365,7 +365,7 @@ CodeInjection gr_d3d_set_texture_profile_patch{
         if (g_profile_frame) {
             unsigned bm_handle = regs.edi;
             int stage_id = (regs.ebx - 0x01E65308) / 0x18;
-            xlog::info("gr_d3d_set_texture %d 0x%X %s", stage_id, bm_handle, rf::bm_get_filename(bm_handle));
+            xlog::info("gr_d3d_set_texture %d 0x%X %s", stage_id, bm_handle, rf::bm::get_filename(bm_handle));
         }
     },
 };
@@ -447,7 +447,7 @@ FunHook<int(int, void*)> gr_d3d_create_vram_texture_with_mipmaps_hook{
     [](int bm_handle, void* tex) {
         int result = gr_d3d_create_vram_texture_with_mipmaps_hook.call_target(bm_handle, tex);
         if (result != 1) {
-            rf::bm_unlock(bm_handle);
+            rf::bm::unlock(bm_handle);
         }
         return result;
     },

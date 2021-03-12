@@ -25,7 +25,7 @@ FunHook<unsigned()> bink_init_device_info_hook{
 
         if (g_game_config.true_color_textures && g_game_config.res_bpp == 32) {
             static auto& bink_bm_pixel_fmt = addr_as_ref<uint32_t>(0x018871C0);
-            bink_bm_pixel_fmt = rf::BM_FORMAT_888_RGB;
+            bink_bm_pixel_fmt = rf::bm::FORMAT_888_RGB;
             bink_flags = BINKSURFACE32;
         }
 

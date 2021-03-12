@@ -54,7 +54,7 @@ CodeInjection jpeg_write_bitmap_overflow_fix2{
 int bm_load_if_exists(const char* name, int unk, bool generate_mipmaps)
 {
     if (rf::file_exists(name)) {
-        return rf::bm_load(name, unk, generate_mipmaps);
+        return rf::bm::load(name, unk, generate_mipmaps);
     }
     else {
         return -1;

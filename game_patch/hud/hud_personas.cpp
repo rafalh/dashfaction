@@ -21,7 +21,7 @@ void hud_personas_render(rf::Player* player)
     rf::hud_persona_alpha = 1.0f;
     rf::hud_persona_current_idx = 0;
     rf::hud_personas_info[rf::hud_persona_current_idx].image_bmh =
-        rf::bm_load(rf::hud_personas_info[rf::hud_persona_current_idx].image.c_str(), -1, false);
+        rf::bm::load(rf::hud_personas_info[rf::hud_persona_current_idx].image.c_str(), -1, false);
     std::strcpy(rf::hud_personas_info[rf::hud_persona_current_idx].message, "Test message! Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.");
 #endif
 

@@ -34,18 +34,18 @@ void monitor_refresh_all()
     }
 }
 
-CallHook<int(rf::BmFormat, int, int)> bm_create_user_bitmap_monitor_hook{
+CallHook<int(rf::bm::Format, int, int)> bm_create_user_bitmap_monitor_hook{
     0x00412547,
-    []([[ maybe_unused ]] rf::BmFormat pixel_fmt, int w, int h) {
-        return bm_create_user_bitmap_monitor_hook.call_target(rf::BM_FORMAT_RENDER_TARGET, w, h);
+    []([[ maybe_unused ]] rf::bm::Format pixel_fmt, int w, int h) {
+        return bm_create_user_bitmap_monitor_hook.call_target(rf::bm::FORMAT_RENDER_TARGET, w, h);
     },
 };
 
 void ensure_monitor_bitmap_is_dynamic(rf::Monitor& mon)
 {
-    if (rf::bm_get_format(mon.user_bitmap) == rf::BM_FORMAT_RENDER_TARGET) {
+    if (rf::bm::get_format(mon.user_bitmap) == rf::bm::FORMAT_RENDER_TARGET) {
         xlog::trace("Changing pixel format for monitor bitmap");
-        bm_change_format(mon.user_bitmap, rf::BM_FORMAT_888_RGB);
+        bm_change_format(mon.user_bitmap, rf::bm::FORMAT_888_RGB);
         bm_set_dynamic(mon.user_bitmap, true);
     }
 }
@@ -117,7 +117,7 @@ FunHook<void(rf::Monitor&)> monitor_update_static_hook{
         //ensure_monitor_bitmap_is_dynamic(mon);
         if (!(mon.flags & rf::MF_BM_RENDERED)) {
             // very good idea but needs more work on UVs...
-            auto hbm = rf::bm_load("gls_noise01.tga", -1, true);
+            auto hbm = rf::bm::load("gls_noise01.tga", -1, true);
             replace_monitor_screen_bitmap(mon, hbm);
             mon.flags |= rf::MF_BM_RENDERED;
         }

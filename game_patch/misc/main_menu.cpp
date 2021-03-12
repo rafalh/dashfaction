@@ -87,13 +87,13 @@ int load_easter_egg_image()
 
     constexpr int easter_egg_size = 128;
 
-    int hbm = rf::bm_create(rf::BM_FORMAT_8888_ARGB, easter_egg_size, easter_egg_size);
+    int hbm = rf::bm::create(rf::bm::FORMAT_8888_ARGB, easter_egg_size, easter_egg_size);
 
     rf::gr::LockInfo lock;
     if (!rf::gr::lock(hbm, 0, &lock, rf::gr::LOCK_WRITE_ONLY))
         return -1;
 
-    rf::bm_convert_format(lock.data, lock.format, res_data, rf::BM_FORMAT_8888_ARGB,
+    rf::bm::convert_format(lock.data, lock.format, res_data, rf::bm::FORMAT_8888_ARGB,
                         easter_egg_size * easter_egg_size);
     rf::gr::unlock(&lock);
 
@@ -109,7 +109,7 @@ CallHook<void()> main_menu_render_hook{
             if (img == -1)
                 return;
             int w, h;
-            rf::bm_get_dimensions(img, &w, &h);
+            rf::bm::get_dimensions(img, &w, &h);
             int anim_delta_time = GetTickCount() - g_egg_anim_start;
             int pos_x = (rf::gr::screen_width() - w) / 2;
             int pos_y = rf::gr::screen_height() - h;

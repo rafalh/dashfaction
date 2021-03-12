@@ -99,11 +99,11 @@ struct ChannelIndexTrait
     static constexpr unsigned index = INDEX;
 };
 
-template<rf::BmFormat PF>
+template<rf::bm::Format PF>
 struct PixelFormatTrait;
 
 template<>
-struct PixelFormatTrait<rf::BM_FORMAT_8888_ARGB>
+struct PixelFormatTrait<rf::bm::FORMAT_8888_ARGB>
 {
     using Pixel = uint32_t;
     using PaletteEntry = void;
@@ -115,7 +115,7 @@ struct PixelFormatTrait<rf::BM_FORMAT_8888_ARGB>
 };
 
 template<>
-struct PixelFormatTrait<rf::BM_FORMAT_888_RGB>
+struct PixelFormatTrait<rf::bm::FORMAT_888_RGB>
 {
     using Pixel = uint8_t[3];
     using PaletteEntry = void;
@@ -127,7 +127,7 @@ struct PixelFormatTrait<rf::BM_FORMAT_888_RGB>
 };
 
 template<>
-struct PixelFormatTrait<rf::BM_FORMAT_1555_ARGB>
+struct PixelFormatTrait<rf::bm::FORMAT_1555_ARGB>
 {
     using Pixel = uint16_t;
     using PaletteEntry = void;
@@ -139,7 +139,7 @@ struct PixelFormatTrait<rf::BM_FORMAT_1555_ARGB>
 };
 
 template<>
-struct PixelFormatTrait<rf::BM_FORMAT_565_RGB>
+struct PixelFormatTrait<rf::bm::FORMAT_565_RGB>
 {
     using Pixel = uint16_t;
     using PaletteEntry = void;
@@ -151,7 +151,7 @@ struct PixelFormatTrait<rf::BM_FORMAT_565_RGB>
 };
 
 template<>
-struct PixelFormatTrait<rf::BM_FORMAT_4444_ARGB>
+struct PixelFormatTrait<rf::bm::FORMAT_4444_ARGB>
 {
     using Pixel = uint16_t;
     using PaletteEntry = void;
@@ -163,7 +163,7 @@ struct PixelFormatTrait<rf::BM_FORMAT_4444_ARGB>
 };
 
 template<>
-struct PixelFormatTrait<rf::BM_FORMAT_8_ALPHA>
+struct PixelFormatTrait<rf::bm::FORMAT_8_ALPHA>
 {
     using Pixel = uint8_t;
     using PaletteEntry = void;
@@ -175,7 +175,7 @@ struct PixelFormatTrait<rf::BM_FORMAT_8_ALPHA>
 };
 
 template<>
-struct PixelFormatTrait<rf::BM_FORMAT_8_PALETTED>
+struct PixelFormatTrait<rf::bm::FORMAT_8_PALETTED>
 {
     using Pixel = uint8_t;
     using PaletteEntry = uint8_t[3];
@@ -187,7 +187,7 @@ struct PixelFormatTrait<rf::BM_FORMAT_8_PALETTED>
 };
 
 template<>
-struct PixelFormatTrait<rf::BM_FORMAT_888_BGR>
+struct PixelFormatTrait<rf::bm::FORMAT_888_BGR>
 {
     using Pixel = uint8_t[3];
     using PaletteEntry = void;
@@ -199,7 +199,7 @@ struct PixelFormatTrait<rf::BM_FORMAT_888_BGR>
 };
 
 template<>
-struct PixelFormatTrait<rf::BM_FORMAT_DXT1>
+struct PixelFormatTrait<rf::bm::FORMAT_DXT1>
 {
     using Pixel = void;
     using PaletteEntry = void;
@@ -217,7 +217,7 @@ struct PixelFormatTrait<rf::BM_FORMAT_DXT1>
 };
 
 template<>
-struct PixelFormatTrait<rf::BM_FORMAT_DXT3>
+struct PixelFormatTrait<rf::bm::FORMAT_DXT3>
 {
     using Pixel = void;
     using PaletteEntry = void;
@@ -236,7 +236,7 @@ struct PixelFormatTrait<rf::BM_FORMAT_DXT3>
 };
 
 template<>
-struct PixelFormatTrait<rf::BM_FORMAT_DXT5>
+struct PixelFormatTrait<rf::bm::FORMAT_DXT5>
 {
     using Pixel = void;
     using PaletteEntry = void;
@@ -255,7 +255,7 @@ struct PixelFormatTrait<rf::BM_FORMAT_DXT5>
     };
 };
 
-template<rf::BmFormat FMT>
+template<rf::bm::Format FMT>
 struct PixelColor
 {
     ColorChannel<PixelFormatTrait<FMT>::Alpha::bits> a;
@@ -263,7 +263,7 @@ struct PixelColor
     ColorChannel<PixelFormatTrait<FMT>::Green::bits> g;
     ColorChannel<PixelFormatTrait<FMT>::Blue::bits> b;
 
-    template<rf::BmFormat PF2>
+    template<rf::bm::Format PF2>
     operator PixelColor<PF2>() const
     {
         return PixelColor<PF2>{a, r, g, b};
@@ -306,7 +306,7 @@ ColorChannel<CH::bits> unpack_color_channel(T val)
     }
 }
 
-template<rf::BmFormat FMT>
+template<rf::bm::Format FMT>
 PixelColor<FMT> unpack_color(typename PixelFormatTrait<FMT>::Pixel value)
 {
     using PFT = PixelFormatTrait<FMT>;
@@ -318,26 +318,26 @@ PixelColor<FMT> unpack_color(typename PixelFormatTrait<FMT>::Pixel value)
     };
 }
 
-template<rf::BmFormat>
+template<rf::bm::Format>
 class BlockDecoder;
 
 template<>
-class BlockDecoder<rf::BM_FORMAT_DXT1>
+class BlockDecoder<rf::bm::FORMAT_DXT1>
 {
-    using PFT = PixelFormatTrait<rf::BM_FORMAT_DXT1>;
+    using PFT = PixelFormatTrait<rf::bm::FORMAT_DXT1>;
     using Block = PFT::Block;
     const Block* block_;
 
 public:
     BlockDecoder(const Block* block) : block_(block) {}
 
-    PixelColor<rf::BM_FORMAT_DXT1> decode(int x, int y)
+    PixelColor<rf::bm::FORMAT_DXT1> decode(int x, int y)
     {
         auto index = y * 4 + x;
         auto c0_u16 = block_->color[0];
         auto c1_u16 = block_->color[1];
-        auto c0 = unpack_color<rf::BM_FORMAT_565_RGB>(c0_u16);
-        auto c1 = unpack_color<rf::BM_FORMAT_565_RGB>(c1_u16);
+        auto c0 = unpack_color<rf::bm::FORMAT_565_RGB>(c0_u16);
+        auto c1 = unpack_color<rf::bm::FORMAT_565_RGB>(c1_u16);
         auto lut_val = (block_->lut >> (index * 2)) & 3;
         if (c0_u16 > c1_u16) {
             switch (lut_val) {
@@ -361,16 +361,16 @@ public:
 };
 
 template<>
-class BlockDecoder<rf::BM_FORMAT_DXT3>
+class BlockDecoder<rf::bm::FORMAT_DXT3>
 {
-    using PFT = PixelFormatTrait<rf::BM_FORMAT_DXT3>;
+    using PFT = PixelFormatTrait<rf::bm::FORMAT_DXT3>;
     using Block = PFT::Block;
     const Block* block_;
 
 public:
     BlockDecoder(const Block* block) : block_(block) {}
 
-    PixelColor<rf::BM_FORMAT_DXT3> decode(int x, int y)
+    PixelColor<rf::bm::FORMAT_DXT3> decode(int x, int y)
     {
         auto index = y * 4 + x;
         auto a = static_cast<int>((block_->alpha_lut >> (index * 4)) & 15);
@@ -379,10 +379,10 @@ public:
     }
 
 private:
-    PixelColor<rf::BM_FORMAT_565_RGB> decode_color(int index)
+    PixelColor<rf::bm::FORMAT_565_RGB> decode_color(int index)
     {
-        auto c0 = unpack_color<rf::BM_FORMAT_565_RGB>(block_->color[0]);
-        auto c1 = unpack_color<rf::BM_FORMAT_565_RGB>(block_->color[1]);
+        auto c0 = unpack_color<rf::bm::FORMAT_565_RGB>(block_->color[0]);
+        auto c1 = unpack_color<rf::bm::FORMAT_565_RGB>(block_->color[1]);
         auto lut_val = (block_->lut >> (index * 2)) & 3;
         switch (lut_val) {
             case 0: return c0;
@@ -396,16 +396,16 @@ private:
 };
 
 template<>
-class BlockDecoder<rf::BM_FORMAT_DXT5>
+class BlockDecoder<rf::bm::FORMAT_DXT5>
 {
-    using PFT = PixelFormatTrait<rf::BM_FORMAT_DXT5>;
+    using PFT = PixelFormatTrait<rf::bm::FORMAT_DXT5>;
     using Block = PFT::Block;
     const Block* block_;
 
 public:
     BlockDecoder(const Block* block) : block_(block) {}
 
-    PixelColor<rf::BM_FORMAT_DXT5> decode(int x, int y)
+    PixelColor<rf::bm::FORMAT_DXT5> decode(int x, int y)
     {
         auto index = y * 4 + x;
         auto a = decode_alpha(index);
@@ -450,10 +450,10 @@ private:
         return {};
     }
 
-    PixelColor<rf::BM_FORMAT_565_RGB> decode_color(int index)
+    PixelColor<rf::bm::FORMAT_565_RGB> decode_color(int index)
     {
-        auto c0 = unpack_color<rf::BM_FORMAT_565_RGB>(block_->color[0]);
-        auto c1 = unpack_color<rf::BM_FORMAT_565_RGB>(block_->color[1]);
+        auto c0 = unpack_color<rf::bm::FORMAT_565_RGB>(block_->color[0]);
+        auto c1 = unpack_color<rf::bm::FORMAT_565_RGB>(block_->color[1]);
         auto lut_val = (block_->lut >> (index * 2)) & 3;
         switch (lut_val) {
             case 0: return c0;
@@ -466,14 +466,14 @@ private:
     }
 };
 
-template<rf::BmFormat Fmt>
+template<rf::bm::Format Fmt>
 rf::Color decode_block_compressed_pixel_internal(const void* block, int x, int y)
 {
     using PFT = PixelFormatTrait<Fmt>;
     using Block = typename PFT::Block;
     auto ptr = reinterpret_cast<const Block*>(block);
     auto blk_dec = BlockDecoder<Fmt>{ptr};
-    PixelColor<rf::BmFormat::BM_FORMAT_8888_ARGB> color = blk_dec.decode(x, y);
+    PixelColor<rf::bm::FORMAT_8888_ARGB> color = blk_dec.decode(x, y);
     return {
         static_cast<uint8_t>(color.r.value),
         static_cast<uint8_t>(color.g.value),
@@ -482,22 +482,22 @@ rf::Color decode_block_compressed_pixel_internal(const void* block, int x, int y
     };
 }
 
-inline rf::Color decode_block_compressed_pixel(void* block, rf::BmFormat format, int x, int y)
+inline rf::Color decode_block_compressed_pixel(void* block, rf::bm::Format format, int x, int y)
 {
     switch (format) {
-        case rf::BM_FORMAT_DXT1:
-            return decode_block_compressed_pixel_internal<rf::BM_FORMAT_DXT1>(block, x, y);
-        case rf::BM_FORMAT_DXT3:
-            return decode_block_compressed_pixel_internal<rf::BM_FORMAT_DXT3>(block, x, y);
-        case rf::BM_FORMAT_DXT5:
-            return decode_block_compressed_pixel_internal<rf::BM_FORMAT_DXT5>(block, x, y);
+        case rf::bm::FORMAT_DXT1:
+            return decode_block_compressed_pixel_internal<rf::bm::FORMAT_DXT1>(block, x, y);
+        case rf::bm::FORMAT_DXT3:
+            return decode_block_compressed_pixel_internal<rf::bm::FORMAT_DXT3>(block, x, y);
+        case rf::bm::FORMAT_DXT5:
+            return decode_block_compressed_pixel_internal<rf::bm::FORMAT_DXT5>(block, x, y);
         // lets skip DXT2 and DXT4 for now because they are unpopular
         default:
             return rf::Color{0, 0, 0, 0};
     };
 }
 
-template<rf::BmFormat PF>
+template<rf::bm::Format PF>
 class PixelsReader
 {
     using PFT = PixelFormatTrait<PF>;
@@ -548,7 +548,7 @@ public:
     }
 };
 
-template<rf::BmFormat PF>
+template<rf::bm::Format PF>
 class PixelsWriter
 {
     using PFT = PixelFormatTrait<PF>;
@@ -594,7 +594,7 @@ public:
     }
 };
 
-template<rf::BmFormat SRC_FMT, rf::BmFormat DST_FMT>
+template<rf::bm::Format SRC_FMT, rf::bm::Format DST_FMT>
 class SurfacePixelFormatConverter
 {
     const uint8_t* src_ptr_;
@@ -652,39 +652,39 @@ public:
     }
 };
 
-template<rf::BmFormat FMT>
+template<rf::bm::Format FMT>
 struct PixelFormatHolder
 {
-    static constexpr rf::BmFormat value = FMT;
+    static constexpr rf::bm::Format value = FMT;
 };
 
 template<typename F>
-void call_with_format(rf::BmFormat format, F handler)
+void call_with_format(rf::bm::Format format, F handler)
 {
     switch (format) {
-        case rf::BM_FORMAT_8888_ARGB:
-            handler(PixelFormatHolder<rf::BM_FORMAT_8888_ARGB>());
+        case rf::bm::FORMAT_8888_ARGB:
+            handler(PixelFormatHolder<rf::bm::FORMAT_8888_ARGB>());
             return;
-        case rf::BM_FORMAT_888_RGB:
-            handler(PixelFormatHolder<rf::BM_FORMAT_888_RGB>());
+        case rf::bm::FORMAT_888_RGB:
+            handler(PixelFormatHolder<rf::bm::FORMAT_888_RGB>());
             return;
-        case rf::BM_FORMAT_565_RGB:
-            handler(PixelFormatHolder<rf::BM_FORMAT_565_RGB>());
+        case rf::bm::FORMAT_565_RGB:
+            handler(PixelFormatHolder<rf::bm::FORMAT_565_RGB>());
             return;
-        case rf::BM_FORMAT_4444_ARGB:
-            handler(PixelFormatHolder<rf::BM_FORMAT_4444_ARGB>());
+        case rf::bm::FORMAT_4444_ARGB:
+            handler(PixelFormatHolder<rf::bm::FORMAT_4444_ARGB>());
             return;
-        case rf::BM_FORMAT_1555_ARGB:
-            handler(PixelFormatHolder<rf::BM_FORMAT_1555_ARGB>());
+        case rf::bm::FORMAT_1555_ARGB:
+            handler(PixelFormatHolder<rf::bm::FORMAT_1555_ARGB>());
             return;
-        case rf::BM_FORMAT_8_ALPHA:
-            handler(PixelFormatHolder<rf::BM_FORMAT_8_ALPHA>());
+        case rf::bm::FORMAT_8_ALPHA:
+            handler(PixelFormatHolder<rf::bm::FORMAT_8_ALPHA>());
             return;
-        case rf::BM_FORMAT_8_PALETTED:
-            handler(PixelFormatHolder<rf::BM_FORMAT_8_PALETTED>());
+        case rf::bm::FORMAT_8_PALETTED:
+            handler(PixelFormatHolder<rf::bm::FORMAT_8_PALETTED>());
             return;
-        case rf::BM_FORMAT_888_BGR:
-            handler(PixelFormatHolder<rf::BM_FORMAT_888_BGR>());
+        case rf::bm::FORMAT_888_BGR:
+            handler(PixelFormatHolder<rf::bm::FORMAT_888_BGR>());
             return;
         default:
             throw std::runtime_error{"Unhandled pixel format"};

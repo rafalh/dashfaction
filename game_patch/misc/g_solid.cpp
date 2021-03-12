@@ -52,7 +52,7 @@ CodeInjection GSurface_calculate_lightmap_color_conv_patch{
         uint8_t* dst_data = &lock.data[dst_pixel_size * offset_x + offset_y * lock.stride_in_bytes];
         int height = surface->height;
         int src_pitch = 3 * src_width;
-        bool success = bm_convert_format(dst_data, lock.format, src_data, rf::BM_FORMAT_888_BGR,
+        bool success = bm_convert_format(dst_data, lock.format, src_data, rf::bm::FORMAT_888_BGR,
             src_width, height, lock.stride_in_bytes, src_pitch);
         if (!success)
             xlog::error("bm_convert_format failed for geomod (fmt %d)", lock.format);
@@ -83,7 +83,7 @@ CodeInjection GSurface_alloc_lightmap_color_conv_patch{
         int dst_pixel_size = bm_bytes_per_pixel(lock.format);
         uint8_t* dst_row_ptr = &lock.data[dst_pixel_size * offset_x + offset_y * lock.stride_in_bytes];
         int src_pitch = 3 * src_width;
-        bool success = bm_convert_format(dst_row_ptr, lock.format, src_data, rf::BM_FORMAT_888_BGR,
+        bool success = bm_convert_format(dst_row_ptr, lock.format, src_data, rf::bm::FORMAT_888_BGR,
                                                  src_width, height, lock.stride_in_bytes, src_pitch);
         if (!success)
             xlog::error("ConvertBitmapFormat failed for geomod2 (fmt %d)", lock.format);
@@ -227,7 +227,7 @@ CodeInjection level_load_lightmaps_color_conv_patch{
     #endif
 
         bool success = bm_convert_format(lock.data, lock.format, lightmap->buf,
-            rf::BM_FORMAT_888_BGR, lightmap->w, lightmap->h, lock.stride_in_bytes, 3 * lightmap->w, nullptr);
+            rf::bm::FORMAT_888_BGR, lightmap->w, lightmap->h, lock.stride_in_bytes, 3 * lightmap->w, nullptr);
         if (!success)
             xlog::error("ConvertBitmapFormat failed for lightmap (dest format %d)", lock.format);
 
@@ -392,7 +392,7 @@ void g_solid_do_patch()
     g_face_does_point_lie_in_face_crashfix.install();
 
     // fix pixel format for lightmaps
-    write_mem<u8>(0x004F5EB8 + 1, rf::BM_FORMAT_888_RGB);
+    write_mem<u8>(0x004F5EB8 + 1, rf::bm::FORMAT_888_RGB);
 
     // lightmaps format conversion
     level_load_lightmaps_color_conv_patch.install();

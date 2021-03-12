@@ -99,7 +99,7 @@ void gr_render_to_back_buffer()
 }
 
 #if !D3D_LOCKABLE_BACKBUFFER
-CallHook<rf::BmFormat(int, int, int, int, std::byte*)> gr_d3d_read_back_buffer_hook{
+CallHook<rf::bm::Format(int, int, int, int, std::byte*)> gr_d3d_read_back_buffer_hook{
     0x0050E015,
     [](int x, int y, int width, int height, std::byte* buffer) {
         rf::gr::d3d::flush_buffers();
@@ -108,19 +108,19 @@ CallHook<rf::BmFormat(int, int, int, int, std::byte*)> gr_d3d_read_back_buffer_h
         HRESULT hr = rf::gr::d3d::device->GetRenderTarget(&back_buffer);
         if (FAILED(hr)) {
             ERR_ONCE("IDirect3DDevice8::GetRenderTarget failed 0x%lX", hr);
-            return rf::BM_FORMAT_NONE;
+            return rf::bm::FORMAT_NONE;
         }
 
         D3DSURFACE_DESC desc;
         hr = back_buffer->GetDesc(&desc);
         if (FAILED(hr)) {
             ERR_ONCE("IDirect3DSurface8::GetDesc failed 0x%lX", hr);
-            return rf::BM_FORMAT_NONE;
+            return rf::bm::FORMAT_NONE;
         }
 
         // function is sometimes called with all parameters set to 0 to get backbuffer format
         xlog::info("gr_d3d_read_back_buffer_hook");
-        rf::BmFormat pixel_fmt = get_bm_format_from_d3d_format(desc.Format);
+        rf::bm::Format pixel_fmt = get_bm_format_from_d3d_format(desc.Format);
         if (width == 0 || height == 0) {
             return pixel_fmt;
         }
@@ -132,7 +132,7 @@ CallHook<rf::BmFormat(int, int, int, int, std::byte*)> gr_d3d_read_back_buffer_h
             hr = rf::gr::d3d::device->CreateImageSurface(desc.Width, desc.Height, desc.Format, &g_capture_tmp_surface);
             if (FAILED(hr)) {
                 ERR_ONCE("IDirect3DDevice8::CreateImageSurface failed 0x%lX", hr);
-                return rf::BM_FORMAT_NONE;
+                return rf::bm::FORMAT_NONE;
             }
         }
 
@@ -143,7 +143,7 @@ CallHook<rf::BmFormat(int, int, int, int, std::byte*)> gr_d3d_read_back_buffer_h
         hr = rf::gr::d3d::device->CopyRects(back_buffer, &src_rect, 1, g_capture_tmp_surface, &dst_pt);
         if (FAILED(hr)) {
             ERR_ONCE("IDirect3DDevice8::CopyRects failed 0x%lX", hr);
-            return rf::BM_FORMAT_NONE;
+            return rf::bm::FORMAT_NONE;
         }
 
         // Note: locking fragment of Render Target fails
@@ -151,7 +151,7 @@ CallHook<rf::BmFormat(int, int, int, int, std::byte*)> gr_d3d_read_back_buffer_h
         hr = g_capture_tmp_surface->LockRect(&locked_rect, nullptr, D3DLOCK_READONLY | D3DLOCK_NO_DIRTY_UPDATE);
         if (FAILED(hr)) {
             ERR_ONCE("IDirect3DSurface8::LockRect failed 0x%lX (%s)", hr, get_d3d_error_str(hr));
-            return rf::BM_FORMAT_NONE;
+            return rf::bm::FORMAT_NONE;
         }
 
         int bytes_per_pixel = bm_bytes_per_pixel(pixel_fmt);

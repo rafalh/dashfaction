@@ -7,66 +7,66 @@
 #include "../rf/crt.h"
 #include "bmpman.h"
 
-rf::BmFormat get_bm_format_from_dds_pixel_format(DDS_PIXELFORMAT& ddspf)
+rf::bm::Format get_bm_format_from_dds_pixel_format(DDS_PIXELFORMAT& ddspf)
 {
     if (ddspf.flags & DDS_RGB) {
         switch (ddspf.RGBBitCount) {
             case 32:
                 if (ddspf.ABitMask)
-                    return rf::BM_FORMAT_8888_ARGB;
+                    return rf::bm::FORMAT_8888_ARGB;
                 else
                     break;
             case 24:
-                return rf::BM_FORMAT_888_RGB;
+                return rf::bm::FORMAT_888_RGB;
             case 16:
                 if (ddspf.ABitMask == 0x8000)
-                    return rf::BM_FORMAT_1555_ARGB;
+                    return rf::bm::FORMAT_1555_ARGB;
                 else if (ddspf.ABitMask)
-                    return rf::BM_FORMAT_4444_ARGB;
+                    return rf::bm::FORMAT_4444_ARGB;
                 else
-                    return rf::BM_FORMAT_565_RGB;
+                    return rf::bm::FORMAT_565_RGB;
         }
     }
     else if (ddspf.flags & DDS_FOURCC) {
         switch (ddspf.fourCC) {
             case MAKEFOURCC('D', 'X', 'T', '1'):
-                return rf::BM_FORMAT_DXT1;
+                return rf::bm::FORMAT_DXT1;
             case MAKEFOURCC('D', 'X', 'T', '2'):
-                return rf::BM_FORMAT_DXT2;
+                return rf::bm::FORMAT_DXT2;
             case MAKEFOURCC('D', 'X', 'T', '3'):
-                return rf::BM_FORMAT_DXT3;
+                return rf::bm::FORMAT_DXT3;
             case MAKEFOURCC('D', 'X', 'T', '4'):
-                return rf::BM_FORMAT_DXT4;
+                return rf::bm::FORMAT_DXT4;
             case MAKEFOURCC('D', 'X', 'T', '5'):
-                return rf::BM_FORMAT_DXT5;
+                return rf::bm::FORMAT_DXT5;
         }
     }
     xlog::warn("Unsupported DDS pixel format");
-    return rf::BM_FORMAT_NONE;
+    return rf::bm::FORMAT_NONE;
 }
 
-rf::BmType read_dds_header(rf::File& file, int *width_out, int *height_out, rf::BmFormat *format_out,
+rf::bm::Type read_dds_header(rf::File& file, int *width_out, int *height_out, rf::bm::Format *format_out,
     int *num_levels_out)
 {
     auto magic = file.read<uint32_t>();
     if (magic != DDS_MAGIC) {
         xlog::warn("Invalid magic number in DDS file: %X", magic);
-        return rf::BM_TYPE_NONE;
+        return rf::bm::TYPE_NONE;
     }
     DDS_HEADER hdr;
     file.read(&hdr, sizeof(hdr));
     if (hdr.size != sizeof(DDS_HEADER)) {
         xlog::warn("Invalid header size in DDS file: %X", hdr.size);
-        return rf::BM_TYPE_NONE;
+        return rf::bm::TYPE_NONE;
     }
     auto format = get_bm_format_from_dds_pixel_format(hdr.ddspf);
-    if (format == rf::BM_FORMAT_NONE) {
-        return rf::BM_TYPE_NONE;
+    if (format == rf::bm::FORMAT_NONE) {
+        return rf::bm::TYPE_NONE;
     }
 
     if (!gr_is_texture_format_supported(format)) {
         xlog::warn("Unsupported by video card DDS pixel format: %X", format);
-        return rf::BM_TYPE_NONE;
+        return rf::bm::TYPE_NONE;
     }
 
     xlog::trace("Using DDS format 0x%X", format);
@@ -80,10 +80,10 @@ rf::BmType read_dds_header(rf::File& file, int *width_out, int *height_out, rf::
         *num_levels_out = hdr.mipMapCount;
         xlog::trace("DDS mipmaps %u (%ux%u)", hdr.mipMapCount, hdr.width, hdr.height);
     }
-    return rf::BM_TYPE_DDS;
+    return rf::bm::TYPE_DDS;
 }
 
-int lock_dds_bitmap(rf::BmBitmapEntry& bm_entry)
+int lock_dds_bitmap(rf::bm::BitmapEntry& bm_entry)
 {
     rf::File file;
     std::string filename_without_ext{get_filename_without_ext(bm_entry.name)};

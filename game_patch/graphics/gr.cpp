@@ -141,10 +141,10 @@ void gr_delete_texture(int bm_handle)
     }
 }
 
-bool gr_is_texture_format_supported(rf::BmFormat format)
+bool gr_is_texture_format_supported(rf::bm::Format format)
 {
     if (rf::gr::screen.mode == rf::gr::DIRECT3D) {
-        bool gr_d3d_is_texture_format_supported(rf::BmFormat);
+        bool gr_d3d_is_texture_format_supported(rf::bm::Format);
         return gr_d3d_is_texture_format_supported(format);
     }
     return false;
@@ -165,7 +165,7 @@ void gr_bitmap_scaled_float(int bitmap_handle, float x, float y, float w, float 
 
     rf::gr::set_texture(bitmap_handle, -1);
     int bm_w, bm_h;
-    rf::bm_get_dimensions(bitmap_handle, &bm_w, &bm_h);
+    rf::bm::get_dimensions(bitmap_handle, &bm_w, &bm_h);
 
     rf::gr::Vertex verts[4];
     rf::gr::Vertex* verts_ptrs[4] = {&verts[0], &verts[1], &verts[2], &verts[3]};

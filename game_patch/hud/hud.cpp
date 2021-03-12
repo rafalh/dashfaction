@@ -188,7 +188,7 @@ const ScaledBitmapInfo& hud_get_scaled_bitmap_info(int bmh)
     // Use bitmap with "_1" suffix instead of "_0" if it exists
     auto it = scaled_bm_cache.find(bmh);
     if (it == scaled_bm_cache.end()) {
-        std::string filename = rf::bm_get_filename(bmh);
+        std::string filename = rf::bm::get_filename(bmh);
         auto ext_pos = filename.rfind('.');
         if (ext_pos != std::string::npos) {
             if (ext_pos >= 2 && filename.compare(ext_pos - 2, 2, "_0") == 0) {
@@ -206,15 +206,15 @@ const ScaledBitmapInfo& hud_get_scaled_bitmap_info(int bmh)
         ScaledBitmapInfo scaled_bm_info;
         rf::File file;
         if (rf::file_exists(filename.c_str())) {
-            scaled_bm_info.bmh = rf::bm_load(filename.c_str(), -1, false);
+            scaled_bm_info.bmh = rf::bm::load(filename.c_str(), -1, false);
         }
         xlog::trace("loaded high res bm %s: %d", filename.c_str(), scaled_bm_info.bmh);
         if (scaled_bm_info.bmh != -1) {
             rf::gr::tcache_add_ref(scaled_bm_info.bmh);
             int bm_w, bm_h;
-            rf::bm_get_dimensions(bmh, &bm_w, &bm_h);
+            rf::bm::get_dimensions(bmh, &bm_w, &bm_h);
             int scaled_bm_w, scaled_bm_h;
-            rf::bm_get_dimensions(scaled_bm_info.bmh, &scaled_bm_w, &scaled_bm_h);
+            rf::bm::get_dimensions(scaled_bm_info.bmh, &scaled_bm_w, &scaled_bm_h);
             scaled_bm_info.scale = static_cast<float>(scaled_bm_w) / static_cast<float>(bm_w);
 
         }
@@ -245,7 +245,7 @@ void hud_scaled_bitmap(int bmh, int x, int y, float scale, rf::gr::Mode mode)
     else {
         // Get bitmap size and scale it
         int bm_w, bm_h;
-        rf::bm_get_dimensions(bmh, &bm_w, &bm_h);
+        rf::bm::get_dimensions(bmh, &bm_w, &bm_h);
         int dst_w = static_cast<int>(std::round(bm_w * scale));
         int dst_h = static_cast<int>(std::round(bm_h * scale));
         rf::gr::bitmap_scaled(bmh, x, y, dst_w, dst_h, 0, 0, bm_w, bm_h, false, false, mode);

@@ -71,22 +71,22 @@ public:
         xlog::debug("a_8_format %d", a_8_format_);
     }
 
-    D3DFORMAT select(rf::BmFormat bm_format)
+    D3DFORMAT select(rf::bm::Format bm_format)
     {
         switch (bm_format) {
-            case rf::BM_FORMAT_8_ALPHA:
+            case rf::bm::FORMAT_8_ALPHA:
                 return a_8_format_;
-            case rf::BM_FORMAT_8_PALETTED:
+            case rf::bm::FORMAT_8_PALETTED:
                 return rgb_888_format_;
-            case rf::BM_FORMAT_888_RGB:
+            case rf::bm::FORMAT_888_RGB:
                 return rgb_888_format_;
-            case rf::BM_FORMAT_565_RGB:
+            case rf::bm::FORMAT_565_RGB:
                 return rgb_565_format_;
-            case rf::BM_FORMAT_1555_ARGB:
+            case rf::bm::FORMAT_1555_ARGB:
                 return argb_1555_format_;
-            case rf::BM_FORMAT_8888_ARGB:
+            case rf::bm::FORMAT_8888_ARGB:
                 return rgba_8888_format_;
-            case rf::BM_FORMAT_4444_ARGB:
+            case rf::bm::FORMAT_4444_ARGB:
                 return argb_4444_format_;
             default:
                 return get_d3d_format_from_bm_format(bm_format);
@@ -96,11 +96,11 @@ public:
 D3DTextureFormatSelector g_texture_format_selector;
 
 using GrD3DSetTextureData_Type =
-    int(int, const uint8_t*, const uint8_t*, int, int, rf::BmFormat, rf::gr::d3d::TextureSection*, int, int, IDirect3DTexture8*);
+    int(int, const uint8_t*, const uint8_t*, int, int, rf::bm::Format, rf::gr::d3d::TextureSection*, int, int, IDirect3DTexture8*);
 FunHook<GrD3DSetTextureData_Type> gr_d3d_set_texture_data_hook{
     0x0055BA10,
     [](int level, const uint8_t* src_bits_ptr, const uint8_t* palette, int bm_w, int bm_h,
-        rf::BmFormat format, rf::gr::d3d::TextureSection* section, int tex_w, int tex_h, IDirect3DTexture8* texture) {
+        rf::bm::Format format, rf::gr::d3d::TextureSection* section, int tex_w, int tex_h, IDirect3DTexture8* texture) {
         xlog::trace("gr_d3d_set_texture_data_hook");
 
         D3DSURFACE_DESC desc;
@@ -161,14 +161,14 @@ FunHook<GrD3DSetTextureData_Type> gr_d3d_set_texture_data_hook{
     },
 };
 
-FunHook<int(rf::BmFormat, int, int, int, IDirect3DTexture8**)> gr_d3d_create_vram_texture_hook{
+FunHook<int(rf::bm::Format, int, int, int, IDirect3DTexture8**)> gr_d3d_create_vram_texture_hook{
     0x0055B970,
-    [](rf::BmFormat format, int width, int height, int levels, IDirect3DTexture8** texture_out) {
+    [](rf::bm::Format format, int width, int height, int levels, IDirect3DTexture8** texture_out) {
         xlog::trace("gr_d3d_create_vram_texture_hook");
         D3DFORMAT d3d_format;
         D3DPOOL d3d_pool = D3DPOOL_MANAGED;
         int usage = 0;
-        if (format == rf::BM_FORMAT_RENDER_TARGET) {
+        if (format == rf::bm::FORMAT_RENDER_TARGET) {
             xlog::trace("Creating render target texture");
             d3d_format = rf::gr::d3d::pp.BackBufferFormat;
             d3d_pool = D3DPOOL_DEFAULT;
@@ -202,7 +202,7 @@ CodeInjection gr_d3d_create_vram_texture_with_mipmaps_pitch_fix{
     0x0055B820,
     [](auto& regs) {
         auto stack_frame = regs.esp + 0x5C;
-        auto bm_format = addr_as_ref<rf::BmFormat>(stack_frame - 0x30);
+        auto bm_format = addr_as_ref<rf::bm::Format>(stack_frame - 0x30);
         auto& src_bits_ptr = regs.ecx;
         auto& num_total_vram_bytes = regs.ebp;
         int w = regs.esi;
@@ -255,12 +255,12 @@ int gr_d3d_create_texture(int bm_handle, rf::gr::d3d::Texture& tslot) {
     g_currently_creating_texture_for_bitmap = -1;
 
     if (result != 1) {
-        xlog::warn("Failed to load texture '%s'", rf::bm_get_filename(bm_handle));
+        xlog::warn("Failed to load texture '%s'", rf::bm::get_filename(bm_handle));
         // Note: callers of this function expects zero result on failure
         return 0;
     }
-    auto format = rf::bm_get_format(bm_handle);
-    if (format == rf::BM_FORMAT_RENDER_TARGET || (bm_is_dynamic(bm_handle) && gr_d3d_is_d3d8to9())) {
+    auto format = rf::bm::get_format(bm_handle);
+    if (format == rf::bm::FORMAT_RENDER_TARGET || (bm_is_dynamic(bm_handle) && gr_d3d_is_d3d8to9())) {
         g_default_pool_tslots.insert(&tslot);
     }
     return result;
@@ -285,7 +285,7 @@ FunHook<void(rf::gr::d3d::Texture&)> gr_d3d_free_texture_hook{
 
 bool gr_d3d_lock(int bm_handle, int section, rf::gr::LockInfo *lock) {
     xlog::trace("gr_d3d_lock");
-    auto& tslot = rf::gr::d3d::textures[rf::bm_handle_to_index_anim_aware(bm_handle)];
+    auto& tslot = rf::gr::d3d::textures[rf::bm::handle_to_index_anim_aware(bm_handle)];
     if (tslot.num_sections < 1 || tslot.bm_handle != bm_handle) {
         auto ret = gr_d3d_create_texture(bm_handle, tslot);
         if (ret != 1) {
@@ -330,7 +330,7 @@ static FunHook<bool(int, int, rf::gr::LockInfo *)> gr_d3d_lock_hook{0x0055CE00, 
 // FunHook<void(rf::gr::Mode, int, int)> gr_d3d_set_state_and_texture_hook{
 //     0x00550850,
 //     [](rf::gr::Mode mode, int bm0, int bm1) {
-//         auto bm0_filename = rf::bm_get_filename(bm0);
+//         auto bm0_filename = rf::bm::get_filename(bm0);
 //         if (bm0_filename && strstr(bm0_filename, "grate")) {
 //             // disable alpha-blending
 //             mode.set_alpha_blend(rf::ALPHA_BLEND_NONE);
@@ -339,7 +339,7 @@ static FunHook<bool(int, int, rf::gr::LockInfo *)> gr_d3d_lock_hook{0x0055CE00, 
 //     },
 // };
 
-bool gr_d3d_is_texture_format_supported(rf::BmFormat format)
+bool gr_d3d_is_texture_format_supported(rf::bm::Format format)
 {
     if (rf::gr::screen.mode != rf::gr::DIRECT3D) {
         return false;
@@ -390,7 +390,7 @@ void gr_d3d_texture_device_lost()
 
 void gr_d3d_delete_texture(int bm_handle)
 {
-    auto bm_index = rf::bm_handle_to_index_anim_aware(bm_handle);
+    auto bm_index = rf::bm::handle_to_index_anim_aware(bm_handle);
     auto& tslot = rf::gr::d3d::textures[bm_index];
     rf::gr::d3d::free_texture(tslot);
 }

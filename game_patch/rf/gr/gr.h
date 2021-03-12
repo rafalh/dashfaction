@@ -279,7 +279,7 @@ namespace rf::gr
     {
         int bm_handle;
         int section;
-        BmFormat format;
+        bm::Format format;
         uint8_t *data;
         int w;
         int h;

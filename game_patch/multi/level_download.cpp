@@ -513,9 +513,9 @@ void multi_level_download_do_frame()
     int scr_w = rf::gr::screen_width();
     int scr_h = rf::gr::screen_height();
 
-    static int bg_bm = rf::bm_load("demo-gameover.tga", -1, false);
+    static int bg_bm = rf::bm::load("demo-gameover.tga", -1, false);
     int bg_bm_w, bg_bm_h;
-    rf::bm_get_dimensions(bg_bm, &bg_bm_w, &bg_bm_h);
+    rf::bm::get_dimensions(bg_bm, &bg_bm_w, &bg_bm_h);
     rf::gr::set_color(255, 255, 255, 255);
     rf::gr::bitmap_scaled(bg_bm, 0, 0, scr_w, scr_h, 0, 0, bg_bm_w, bg_bm_h);
 
