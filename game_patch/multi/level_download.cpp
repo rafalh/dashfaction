@@ -437,7 +437,7 @@ public:
         if (operation.get_state() == LevelDownloadState::fetching_data) {
             auto now = std::chrono::system_clock::now();
             if (now - last_progress_print_ >= std::chrono::seconds{2}) {
-                rf::console_printf("Download progress: %.2f MB / %.2f MB",
+                rf::console::printf("Download progress: %.2f MB / %.2f MB",
                     operation.get_bytes_received() / 1000000.0f,
                     operation.get_level_info().size_in_bytes / 1000000.0f);
                 last_progress_print_ = now;
@@ -448,10 +448,10 @@ public:
     void on_finish(LevelDownloadOperation& operation, bool success) override
     {
         if (operation.get_state() == LevelDownloadState::not_found) {
-            rf::console_printf("Level has not been found in FactionFiles.com database!");
+            rf::console::printf("Level has not been found in FactionFiles.com database!");
         }
         else {
-            rf::console_printf("Level download %s", success ? "succeeded" : "failed");
+            rf::console::printf("Level download %s", success ? "succeeded" : "failed");
         }
     }
 };

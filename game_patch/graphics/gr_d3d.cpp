@@ -321,13 +321,13 @@ ConsoleCommand2 antialiasing_cmd{
     "antialiasing",
     []() {
         if (!g_game_config.msaa)
-            rf::console_printf("Anti-aliasing is not supported");
+            rf::console::printf("Anti-aliasing is not supported");
         else {
             DWORD enabled = 0;
             rf::gr::d3d::device->GetRenderState(D3DRS_MULTISAMPLEANTIALIAS, &enabled);
             enabled = !enabled;
             rf::gr::d3d::device->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, enabled);
-            rf::console_printf("Anti-aliasing is %s", enabled ? "enabled" : "disabled");
+            rf::console::printf("Anti-aliasing is %s", enabled ? "enabled" : "disabled");
         }
     },
     "Toggles anti-aliasing",
@@ -593,7 +593,7 @@ ConsoleCommand2 nearest_texture_filtering_cmd{
         g_game_config.nearest_texture_filtering = !g_game_config.nearest_texture_filtering;
         g_game_config.save();
         setup_texture_filtering();
-        rf::console_printf("Nearest texture filtering is %s", g_game_config.nearest_texture_filtering ? "enabled" : "disabled");
+        rf::console::printf("Nearest texture filtering is %s", g_game_config.nearest_texture_filtering ? "enabled" : "disabled");
     },
     "Toggle nearest texture filtering",
 };
@@ -644,7 +644,7 @@ ConsoleCommand2 lod_distance_scale_cmd{
         if (scale_opt.has_value()) {
             gr_lod_dist_scale = scale_opt.value();
         }
-        rf::console_printf("LOD distance scale: %.2f", gr_lod_dist_scale);
+        rf::console::printf("LOD distance scale: %.2f", gr_lod_dist_scale);
     },
     "Sets LOD distance scale factor",
 };

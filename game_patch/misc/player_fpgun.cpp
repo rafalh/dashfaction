@@ -119,7 +119,7 @@ ConsoleCommand2 fpgun_fov_scale_cmd{
             g_game_config.fpgun_fov_scale = std::clamp(scale_opt.value(), 0.1f, 1.5f);
             g_game_config.save();
         }
-        rf::console_printf("Fpgun FOV scale: %.4f", g_game_config.fpgun_fov_scale.value());
+        rf::console::printf("Fpgun FOV scale: %.4f", g_game_config.fpgun_fov_scale.value());
     },
 };
 

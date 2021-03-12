@@ -112,11 +112,11 @@ ConsoleCommand2 fov_cmd{
             }
             g_game_config.save();
         }
-        rf::console_printf("Horizontal FOV: %.2f", gr_scale_world_fov());
+        rf::console::printf("Horizontal FOV: %.2f", gr_scale_world_fov());
 
         auto& server_info_opt = get_df_server_info();
         if (server_info_opt && server_info_opt.value().max_fov) {
-            rf::console_printf("Server FOV limit: %.2f", server_info_opt.value().max_fov.value());
+            rf::console::printf("Server FOV limit: %.2f", server_info_opt.value().max_fov.value());
         }
     },
     "Sets horizontal FOV (field of view) in degrees. Use 0 to enable automatic FOV scaling.",

@@ -83,15 +83,15 @@ ConsoleCommand2 input_mode_cmd{
 
         if (g_game_config.direct_input) {
             if (!set_direct_input_enabled(g_game_config.direct_input)) {
-                rf::console_printf("Failed to initialize DirectInput");
+                rf::console::printf("Failed to initialize DirectInput");
             }
             else {
                 set_direct_input_enabled(rf::keep_mouse_centered);
-                rf::console_printf("DirectInput is enabled");
+                rf::console::printf("DirectInput is enabled");
             }
         }
         else
-            rf::console_printf("DirectInput is disabled");
+            rf::console::printf("DirectInput is disabled");
     },
     "Toggles input mode",
 };
@@ -104,7 +104,7 @@ ConsoleCommand2 ms_cmd{
             value = std::clamp(value, 0.0f, 1.0f);
             rf::local_player->settings.controls.mouse_sensitivity = value;
         }
-        rf::console_printf("Mouse sensitivity: %.4f", rf::local_player->settings.controls.mouse_sensitivity);
+        rf::console::printf("Mouse sensitivity: %.4f", rf::local_player->settings.controls.mouse_sensitivity);
     },
     "Sets mouse sensitivity",
     "ms <value>",
@@ -233,7 +233,7 @@ ConsoleCommand2 linear_pitch_cmd{
 
         g_game_config.linear_pitch = !g_game_config.linear_pitch;
         g_game_config.save();
-        rf::console_printf("Linear pitch is %s", g_game_config.linear_pitch ? "enabled" : "disabled");
+        rf::console::printf("Linear pitch is %s", g_game_config.linear_pitch ? "enabled" : "disabled");
     },
     "Toggles linear pitch angle",
 };

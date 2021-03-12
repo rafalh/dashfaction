@@ -6,43 +6,43 @@
 #include "string.h"
 #include "../gr/gr.h"
 
-namespace rf
+namespace rf::console
 {
-    typedef void(*ConsoleCommandFuncPtr)();
+    typedef void(*CommandFuncPtr)();
 
-    struct ConsoleCommand
+    struct Command
     {
         const char *name;
         const char *help;
-        ConsoleCommandFuncPtr func;
+        CommandFuncPtr func;
 
         inline static const auto init =
-            reinterpret_cast<void(__thiscall*)(ConsoleCommand* this_, const char* name, const char* help, ConsoleCommandFuncPtr func)>(
+            reinterpret_cast<void(__thiscall*)(Command* this_, const char* name, const char* help, CommandFuncPtr func)>(
                 0x00509A70);
     };
-    static_assert(sizeof(ConsoleCommand) == 0xC);
+    static_assert(sizeof(Command) == 0xC);
 
-    enum DcArgType
+    enum ArgType
     {
-        CONSOLE_ARG_NONE = 0x0001,
-        CONSOLE_ARG_STR = 0x0002,
-        CONSOLE_ARG_INT = 0x0008,
-        CONSOLE_ARG_FLOAT = 0x0010,
-        CONSOLE_ARG_HEX = 0x0020,
-        CONSOLE_ARG_TRUE = 0x0040,
-        CONSOLE_ARG_FALSE = 0x0080,
-        CONSOLE_ARG_PLUS = 0x0100,
-        CONSOLE_ARG_MINUS = 0x0200,
-        CONSOLE_ARG_COMMA = 0x0400,
-        CONSOLE_ARG_ANY = 0xFFFFFFFF,
+        ARG_NONE = 0x0001,
+        ARG_STR = 0x0002,
+        ARG_INT = 0x0008,
+        ARG_FLOAT = 0x0010,
+        ARG_HEX = 0x0020,
+        ARG_TRUE = 0x0040,
+        ARG_FALSE = 0x0080,
+        ARG_PLUS = 0x0100,
+        ARG_MINUS = 0x0200,
+        ARG_COMMA = 0x0400,
+        ARG_ANY = 0xFFFFFFFF,
     };
 
-    static auto& console_output = addr_as_ref<void(const char* text, const Color* color)>(0x00509EC0);
-    static auto& console_get_arg = addr_as_ref<void(unsigned type, bool preserve_case)>(0x0050AED0);
+    static auto& output = addr_as_ref<void(const char* text, const Color* color)>(0x00509EC0);
+    static auto& get_arg = addr_as_ref<void(unsigned type, bool preserve_case)>(0x0050AED0);
 
     // Note: console_printf is reimplemented to allow static validation of the format string
     PRINTF_FMT_ATTRIBUTE(1, 2)
-    inline void console_printf(const char* format, ...)
+    inline void printf(const char* format, ...)
     {
         String str;
         va_list args;
@@ -53,19 +53,19 @@ namespace rf
         va_start(args, format);
         std::vsnprintf(buf.get(), size, format, args);
         va_end(args);
-        console_output(buf.get(), nullptr);
+        output(buf.get(), nullptr);
     }
 
-    //static auto& console_commands = addr_as_ref<ConsoleCommand*[30]>(0x01775530);
-    static auto& console_num_commands = addr_as_ref<int>(0x0177567C);
+    //static auto& commands = addr_as_ref<ConsoleCommand*[30]>(0x01775530);
+    static auto& num_commands = addr_as_ref<int>(0x0177567C);
 
-    static auto& console_run = addr_as_ref<int>(0x01775110);
-    static auto& console_help = addr_as_ref<int>(0x01775224);
-    static auto& console_status = addr_as_ref<int>(0x01774D00);
-    static auto& console_arg_type = addr_as_ref<unsigned>(0x01774D04);
-    static auto& console_str_arg = addr_as_ref<char[256]>(0x0175462C);
-    static auto& console_int_arg = addr_as_ref<int>(0x01775220);
-    static auto& console_float_arg = addr_as_ref<float>(0x01754628);
-    static auto& console_cmd_line = addr_as_ref<char[256]>(0x01775330);
-    static auto& console_cmd_line_len = addr_as_ref<int>(0x0177568C);
+    static auto& run = addr_as_ref<int>(0x01775110);
+    static auto& help = addr_as_ref<int>(0x01775224);
+    static auto& status = addr_as_ref<int>(0x01774D00);
+    static auto& arg_type = addr_as_ref<unsigned>(0x01774D04);
+    static auto& str_arg = addr_as_ref<char[256]>(0x0175462C);
+    static auto& int_arg = addr_as_ref<int>(0x01775220);
+    static auto& float_arg = addr_as_ref<float>(0x01754628);
+    static auto& cmd_line = addr_as_ref<char[256]>(0x01775330);
+    static auto& cmd_line_len = addr_as_ref<int>(0x0177568C);
 }

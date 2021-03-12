@@ -157,7 +157,7 @@ ConsoleCommand2 bighud_cmd{
         g_game_config.big_hud = !g_game_config.big_hud;
         set_big_hud(g_game_config.big_hud);
         g_game_config.save();
-        rf::console_printf("Big HUD is %s", g_game_config.big_hud ? "enabled" : "disabled");
+        rf::console::printf("Big HUD is %s", g_game_config.big_hud ? "enabled" : "disabled");
     },
     "Toggle big HUD",
     "bighud",
@@ -171,7 +171,7 @@ ConsoleCommand2 hud_coords_cmd{
             rf::hud_coords[idx].x = x.value();
             rf::hud_coords[idx].y = y.value();
         }
-        rf::console_printf("HUD coords[%d]: <%d, %d>", idx, rf::hud_coords[idx].x, rf::hud_coords[idx].y);
+        rf::console::printf("HUD coords[%d]: <%d, %d>", idx, rf::hud_coords[idx].x, rf::hud_coords[idx].y);
 
     },
 };

@@ -45,7 +45,7 @@ void load_prev_level()
 bool validate_is_server()
 {
     if (!rf::is_server) {
-        rf::console_output("Command can be only executed on server", nullptr);
+        rf::console::output("Command can be only executed on server", nullptr);
         return false;
     }
     return true;
@@ -54,7 +54,7 @@ bool validate_is_server()
 bool validate_not_limbo()
 {
     if (rf::gameseq_get_state() != rf::GS_GAMEPLAY) {
-        rf::console_output("Command can not be used between rounds", nullptr);
+        rf::console::output("Command can not be used between rounds", nullptr);
         return false;
     }
     return true;
@@ -129,24 +129,24 @@ void process_delayed_kicks()
 void ban_cmd_handler_hook()
 {
     if (rf::is_multi && rf::is_server) {
-        if (rf::console_run) {
-            rf::console_get_arg(rf::CONSOLE_ARG_STR, true);
-            rf::Player* player = find_best_matching_player(rf::console_str_arg);
+        if (rf::console::run) {
+            rf::console::get_arg(rf::console::ARG_STR, true);
+            rf::Player* player = find_best_matching_player(rf::console::str_arg);
 
             if (player) {
                 if (player != rf::local_player) {
-                    rf::console_printf(rf::strings::banning_player, player->name.c_str());
+                    rf::console::printf(rf::strings::banning_player, player->name.c_str());
                     rf::multi_ban_ip(player->net_data->addr);
                     kick_player_delayed(player);
                 }
                 else
-                    rf::console_printf("You cannot ban yourself!");
+                    rf::console::printf("You cannot ban yourself!");
             }
         }
 
-        if (rf::console_help) {
-            rf::console_output(rf::strings::usage, nullptr);
-            rf::console_printf("     ban <%s>", rf::strings::player_name);
+        if (rf::console::help) {
+            rf::console::output(rf::strings::usage, nullptr);
+            rf::console::printf("     ban <%s>", rf::strings::player_name);
         }
     }
 }
@@ -154,23 +154,23 @@ void ban_cmd_handler_hook()
 void kick_cmd_handler_hook()
 {
     if (rf::is_multi && rf::is_server) {
-        if (rf::console_run) {
-            rf::console_get_arg(rf::CONSOLE_ARG_STR, 1);
-            rf::Player* player = find_best_matching_player(rf::console_str_arg);
+        if (rf::console::run) {
+            rf::console::get_arg(rf::console::ARG_STR, 1);
+            rf::Player* player = find_best_matching_player(rf::console::str_arg);
 
             if (player) {
                 if (player != rf::local_player) {
-                    rf::console_printf(rf::strings::kicking_player, player->name.c_str());
+                    rf::console::printf(rf::strings::kicking_player, player->name.c_str());
                     kick_player_delayed(player);
                 }
                 else
-                    rf::console_printf("You cannot kick yourself!");
+                    rf::console::printf("You cannot kick yourself!");
             }
         }
 
-        if (rf::console_help) {
-            rf::console_output(rf::strings::usage, nullptr);
-            rf::console_printf("     kick <%s>", rf::strings::player_name);
+        if (rf::console::help) {
+            rf::console::output(rf::strings::usage, nullptr);
+            rf::console::printf("     kick <%s>", rf::strings::player_name);
         }
     }
 }
@@ -181,7 +181,7 @@ ConsoleCommand2 unban_last_cmd{
         if (rf::is_multi && rf::is_server) {
             rf::BanlistEntry* entry = rf::banlist_last_entry;
             if (entry != &rf::banlist_null_entry) {
-                rf::console_printf("%s has been unbanned!", entry->ip_addr);
+                rf::console::printf("%s has been unbanned!", entry->ip_addr);
                 entry->next->prev = entry->prev;
                 entry->prev->next = entry->next;
                 rf::rf_free(entry);

@@ -346,7 +346,7 @@ ConsoleCommand2 profiler_cmd{
     []() {
 #ifdef NDEBUG
         if (rf::is_multi) {
-            rf::console_printf("Profiler cannot be used in multiplayer");
+            rf::console::printf("Profiler cannot be used in multiplayer");
             return;
         }
 #endif
@@ -365,7 +365,7 @@ ConsoleCommand2 profiler_log_cmd{
         else {
             profiler_log_init();
         }
-        rf::console_printf("Profiler log: %s", profiler_log_is_active() ? "enabled" : "disabled");
+        rf::console::printf("Profiler log: %s", profiler_log_is_active() ? "enabled" : "disabled");
     },
 };
 
@@ -374,7 +374,7 @@ ConsoleCommand2 profiler_print_cmd{
     []() {
         for (auto& p : g_profilers) {
             auto& stats = p->stats();
-            rf::console_printf("%s: avg %d avg_frame %d", p->get_name(),
+            rf::console::printf("%s: avg %d avg_frame %d", p->get_name(),
                 stats.last_times().avg(), stats.last_frames_summed_times().avg());
         }
     },
@@ -383,9 +383,9 @@ ConsoleCommand2 profiler_print_cmd{
 ConsoleCommand2 perf_dump_cmd{
     "d_perf_dump",
     []() {
-        rf::console_printf("Number of performance aggregators: %u", PerfAggregator::get_instances().size());
+        rf::console::printf("Number of performance aggregators: %u", PerfAggregator::get_instances().size());
         for (auto& ptr : PerfAggregator::get_instances()) {
-            rf::console_printf("%s: calls %u, duration %u us, avg %u us", ptr->get_name().c_str(),
+            rf::console::printf("%s: calls %u, duration %u us, avg %u us", ptr->get_name().c_str(),
                 ptr->get_calls(), ptr->get_total_duration_us(), ptr->get_avg_duration_us());
         }
     },

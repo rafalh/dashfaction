@@ -219,12 +219,12 @@ ConsoleCommand2 spectate_cmd{
     "spectate",
     [](std::optional<std::string> player_name) {
         if (!rf::is_multi) {
-            rf::console_output("Spectate mode is only supported in multiplayer game!", nullptr);
+            rf::console::output("Spectate mode is only supported in multiplayer game!", nullptr);
             return;
         }
 
         if (is_force_respawn()) {
-            rf::console_output("Spectate mode is disabled because of Force Respawn server option!", nullptr);
+            rf::console::output("Spectate mode is disabled because of Force Respawn server option!", nullptr);
             return;
         }
 

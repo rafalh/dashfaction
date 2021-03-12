@@ -160,7 +160,7 @@ protected:
             flush_startup_buf();
 
             rf::Color color = color_from_level(level);
-            rf::console_output(str.c_str(), &color);
+            rf::console::output(str.c_str(), &color);
         }
         else {
             m_startup_buf.push_back({str, level});
@@ -194,7 +194,7 @@ private:
     {
         for (auto& p : m_startup_buf) {
             rf::Color color = color_from_level(p.second);
-            rf::console_output(p.first.c_str(), &color);
+            rf::console::output(p.first.c_str(), &color);
         }
         m_startup_buf.clear();
     }

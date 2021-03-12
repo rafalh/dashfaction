@@ -18,7 +18,7 @@
 // ConsoleDrawClientConsole uses 200 bytes long buffer for: "] ", user input and '\0'
 constexpr int max_cmd_line_len = 200 - 2 - 1;
 
-rf::ConsoleCommand* g_commands_buffer[CMD_LIMIT];
+rf::console::Command* g_commands_buffer[CMD_LIMIT];
 
 rf::Player* find_best_matching_player(const char* name)
 {
@@ -40,9 +40,9 @@ rf::Player* find_best_matching_player(const char* name)
     if (num_found == 1)
         return found_player;
     else if (num_found > 1)
-        rf::console_printf("Found %d players matching '%s'!", num_found, name);
+        rf::console::printf("Found %d players matching '%s'!", num_found, name);
     else
-        rf::console_printf("Cannot find player matching '%s'", name);
+        rf::console::printf("Cannot find player matching '%s'", name);
     return nullptr;
 }
 
@@ -78,21 +78,21 @@ CodeInjection console_run_cmd_call_handler_patch{
 CallHook<void(char*, int)> console_process_kbd_get_text_from_clipboard_hook{
     0x0050A2FD,
     [](char *buf, int max_len) {
-        max_len = std::min(max_len, max_cmd_line_len - rf::console_cmd_line_len);
+        max_len = std::min(max_len, max_cmd_line_len - rf::console::cmd_line_len);
         console_process_kbd_get_text_from_clipboard_hook.call_target(buf, max_len);
     },
 };
 
-void console_register_command(rf::ConsoleCommand* cmd)
+void console_register_command(rf::console::Command* cmd)
 {
-    if (rf::console_num_commands < CMD_LIMIT)
-        rf::ConsoleCommand::init(cmd, cmd->name, cmd->help, cmd->func);
+    if (rf::console::num_commands < CMD_LIMIT)
+        rf::console::Command::init(cmd, cmd->name, cmd->help, cmd->func);
     else
         assert(false);
 }
 
 static FunHook<void(const char*, const rf::Color*)> console_output_hook{
-    reinterpret_cast<uintptr_t>(rf::console_output),
+    reinterpret_cast<uintptr_t>(rf::console::output),
     [](const char* text, const rf::Color* color) {
         if (win32_console_is_enabled()) {
             win32_console_output(text, color);
@@ -130,8 +130,8 @@ static CallHook<void(char)> console_put_char_new_line_hook{
 void console_clear_input()
 {
     static auto& console_history_current_index = addr_as_ref<int>(0x01775690);
-    rf::console_cmd_line[0] = '\0';
-    rf::console_cmd_line_len = 0;
+    rf::console::cmd_line[0] = '\0';
+    rf::console::cmd_line_len = 0;
     console_history_current_index = 0;
 }
 
@@ -151,7 +151,7 @@ static CodeInjection console_handle_input_history_injection{
         static auto& console_history = addr_as_ref<char[8][256]>(0x017744F4);
         static auto& console_history_max_index = addr_as_ref<int>(0x005A4030);
         if (console_history_max_index >= 0 &&
-            std::strcmp(console_history[console_history_max_index], rf::console_cmd_line) == 0) {
+            std::strcmp(console_history[console_history_max_index], rf::console::cmd_line) == 0) {
             // Command was repeated - do not add it to the history
             console_clear_input();
             regs.eip = 0x0050A35C;
@@ -182,7 +182,7 @@ void console_apply_patches()
     gameseq_process_hook.install();
 
     // Change limit of commands
-    assert(rf::console_num_commands == 0);
+    assert(rf::console::num_commands == 0);
     write_mem_ptr(0x005099AC + 1, g_commands_buffer);
     write_mem_ptr(0x00509A8A + 1, g_commands_buffer);
     write_mem_ptr(0x00509AB0 + 3, g_commands_buffer);

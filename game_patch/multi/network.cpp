@@ -932,7 +932,7 @@ void send_chat_line_packet(const char* msg, rf::Player* target, rf::Player* send
     packet_msg[255] = 0;
     if (target == nullptr && rf::is_server) {
         rf::multi_io_send_reliable_to_all(buf, packet.header.size + sizeof(packet.header), 0);
-        rf::console_printf("Server: %s", msg);
+        rf::console::printf("Server: %s", msg);
     }
     else {
         rf::multi_io_send_reliable(target, buf, packet.header.size + sizeof(packet.header), 0);
@@ -964,7 +964,7 @@ ConsoleCommand2 update_rate_cmd{
                 g_update_rate = std::clamp(update_rate.value(), 12, 60);
                 if (g_update_rate > 30) {
                     static rf::Color yellow{255, 255, 0, 255};
-                    rf::console_output(
+                    rf::console::output(
                         "Server update rate greater than 30 is not recommended. It can cause jitter for clients with "
                         "default update rate and break hit registration for clients with high ping.", &yellow);
                 }
@@ -974,7 +974,7 @@ ConsoleCommand2 update_rate_cmd{
                 g_update_rate = std::clamp(update_rate.value(), 20, 60);
             }
         }
-        rf::console_printf("Update rate per second: %d", g_update_rate);
+        rf::console::printf("Update rate per second: %d", g_update_rate);
     },
 };
 

@@ -45,8 +45,8 @@ static void print_cmd_input_line()
     CONSOLE_SCREEN_BUFFER_INFO scr_buf_info;
     GetConsoleScreenBufferInfo(output_handle, &scr_buf_info);
     WriteConsoleA(output_handle, "] ", 2, nullptr, nullptr);
-    unsigned offset = std::max(0, rf::console_cmd_line_len - scr_buf_info.dwSize.X + 3);
-    WriteConsoleA(output_handle, rf::console_cmd_line + offset, rf::console_cmd_line_len - offset, nullptr, nullptr);
+    unsigned offset = std::max(0, rf::console::cmd_line_len - scr_buf_info.dwSize.X + 3);
+    WriteConsoleA(output_handle, rf::console::cmd_line + offset, rf::console::cmd_line_len - offset, nullptr, nullptr);
     win32_console_input_line_printed = true;
 }
 
@@ -167,11 +167,11 @@ void win32_console_new_line()
 
 void win32_console_update()
 {
-    static char prev_cmd_line[sizeof(rf::console_cmd_line)];
-    if (std::strncmp(rf::console_cmd_line, prev_cmd_line, std::size(prev_cmd_line)) != 0 || !win32_console_input_line_printed) {
+    static char prev_cmd_line[sizeof(rf::console::cmd_line)];
+    if (std::strncmp(rf::console::cmd_line, prev_cmd_line, std::size(prev_cmd_line)) != 0 || !win32_console_input_line_printed) {
         reset_console_cursor_column(true);
         print_cmd_input_line();
-        std::strcpy(prev_cmd_line, rf::console_cmd_line);
+        std::strcpy(prev_cmd_line, rf::console::cmd_line);
     }
 }
 

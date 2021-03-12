@@ -6,18 +6,18 @@
 #include <patch_common/FunHook.h>
 #include <cstring>
 
-void console_show_cmd_help(rf::ConsoleCommand* cmd)
+void console_show_cmd_help(rf::console::Command* cmd)
 {
-    rf::console_run = 0;
-    rf::console_help = 1;
-    rf::console_status = 0;
-    auto handler = reinterpret_cast<void(__thiscall*)(rf::ConsoleCommand*)>(cmd->func);
+    rf::console::run = 0;
+    rf::console::help = 1;
+    rf::console::status = 0;
+    auto handler = reinterpret_cast<void(__thiscall*)(rf::console::Command*)>(cmd->func);
     handler(cmd);
 }
 
 int console_auto_complete_get_component(int offset, std::string& result)
 {
-    const char *begin = rf::console_cmd_line + offset, *end = nullptr, *next;
+    const char *begin = rf::console::cmd_line + offset, *end = nullptr, *next;
     if (begin[0] == '"') {
         ++begin;
         end = strchr(begin, '"');
@@ -27,35 +27,35 @@ int console_auto_complete_get_component(int offset, std::string& result)
         end = next = strchr(begin, ' ');
 
     if (!end)
-        end = rf::console_cmd_line + rf::console_cmd_line_len;
+        end = rf::console::cmd_line + rf::console::cmd_line_len;
 
     size_t len = end - begin;
     result.assign(begin, len);
 
-    return next ? next + 1 - rf::console_cmd_line : -1;
+    return next ? next + 1 - rf::console::cmd_line : -1;
 }
 
 void console_auto_complete_put_component(int offset, const std::string& component, bool finished)
 {
     bool quote = component.find(' ') != std::string::npos;
-    int max_len = std::size(rf::console_cmd_line);
+    int max_len = std::size(rf::console::cmd_line);
     int len;
     if (quote) {
-        len = snprintf(rf::console_cmd_line + offset, max_len - offset, "\"%s\"", component.c_str());
+        len = snprintf(rf::console::cmd_line + offset, max_len - offset, "\"%s\"", component.c_str());
     }
     else {
-        len = snprintf(rf::console_cmd_line + offset, max_len - offset, "%s", component.c_str());
+        len = snprintf(rf::console::cmd_line + offset, max_len - offset, "%s", component.c_str());
     }
-    rf::console_cmd_line_len = offset + len;
+    rf::console::cmd_line_len = offset + len;
     if (finished)
-        rf::console_cmd_line_len += snprintf(rf::console_cmd_line + rf::console_cmd_line_len, max_len - rf::console_cmd_line_len, " ");
+        rf::console::cmd_line_len += snprintf(rf::console::cmd_line + rf::console::cmd_line_len, max_len - rf::console::cmd_line_len, " ");
 }
 
 template<typename T, typename F>
 void console_auto_complete_print_suggestions(T& suggestions, F mapping_fun)
 {
     for (auto& item : suggestions) {
-        rf::console_printf("%s\n", mapping_fun(item));
+        rf::console::printf("%s\n", mapping_fun(item));
     }
 }
 
@@ -147,9 +147,9 @@ void console_auto_complete_command(int offset)
     bool first = true;
     std::string common_prefix;
 
-    std::vector<rf::ConsoleCommand*> matching_cmds;
-    for (int i = 0; i < rf::console_num_commands; ++i) {
-        rf::ConsoleCommand* cmd = g_commands_buffer[i];
+    std::vector<rf::console::Command*> matching_cmds;
+    for (int i = 0; i < rf::console::num_commands; ++i) {
+        rf::console::Command* cmd = g_commands_buffer[i];
         if (!strnicmp(cmd->name, cmd_name.c_str(), cmd_name.size()) &&
             (next_offset == -1 || !cmd->name[cmd_name.size()])) {
             matching_cmds.push_back(cmd);
@@ -174,9 +174,9 @@ void console_auto_complete_command(int offset)
     else if (matching_cmds.size() > 1) {
         for (auto* cmd : matching_cmds) {
             if (cmd->help)
-                rf::console_printf("%s - %s", cmd->name, cmd->help);
+                rf::console::printf("%s - %s", cmd->name, cmd->help);
             else
-                rf::console_printf("%s", cmd->name);
+                rf::console::printf("%s", cmd->name);
         }
         console_auto_complete_put_component(offset, common_prefix, false);
     }

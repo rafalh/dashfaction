@@ -351,7 +351,7 @@ ConsoleCommand2 max_decals_cmd{
             g_max_decals = std::clamp(max_decals.value(), 128, 512);
             decal_patch_limit(g_max_decals);
         }
-        rf::console_printf("Max decals: %d", g_max_decals);
+        rf::console::printf("Max decals: %d", g_max_decals);
     },
 };
 

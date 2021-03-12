@@ -102,7 +102,7 @@ ConsoleCommand2 max_fps_cmd{
             rf::frametime_min = 1.0f / new_limit;
         }
         else
-            rf::console_printf("Maximal FPS: %.1f", 1.0f / rf::frametime_min);
+            rf::console::printf("Maximal FPS: %.1f", 1.0f / rf::frametime_min);
     },
     "Sets maximal FPS",
     "maxfps <limit>",

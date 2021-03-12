@@ -15,7 +15,7 @@ ConsoleCommand2 vli_cmd{
     []() {
         g_game_config.glares = !g_game_config.glares;
         g_game_config.save();
-        rf::console_printf("Volumetric lightining is %s.", g_game_config.glares ? "enabled" : "disabled");
+        rf::console::printf("Volumetric lightining is %s.", g_game_config.glares ? "enabled" : "disabled");
     },
     "Toggles volumetric lightining",
 };
@@ -28,7 +28,7 @@ ConsoleCommand2 player_count_cmd{
 
         auto player_list = SinglyLinkedList{rf::player_list};
         auto player_count = std::distance(player_list.begin(), player_list.end());
-        rf::console_printf("Player count: %d\n", player_count);
+        rf::console::printf("Player count: %d\n", player_count);
     },
     "Get player count",
 };
@@ -38,7 +38,7 @@ ConsoleCommand2 find_level_cmd{
     [](std::string pattern) {
         vpackfile_find_matching_files(StringMatcher().infix(pattern).suffix(".rfl"), [](const char* name) {
             // Print all matching filenames
-            rf::console_printf("%s\n", name);
+            rf::console::printf("%s\n", name);
         });
     },
     "Find a level by a filename fragment",
@@ -50,7 +50,7 @@ DcCommandAlias find_map_cmd{
     find_level_cmd,
 };
 
-auto& level_cmd = addr_as_ref<rf::ConsoleCommand>(0x00637078);
+auto& level_cmd = addr_as_ref<rf::console::Command>(0x00637078);
 DcCommandAlias map_cmd{
     "map",
     level_cmd,
@@ -58,9 +58,9 @@ DcCommandAlias map_cmd{
 
 static void register_builtin_command(const char* name, const char* description, uintptr_t addr)
 {
-    static std::vector<std::unique_ptr<rf::ConsoleCommand>> builtin_commands;
-    auto cmd = std::make_unique<rf::ConsoleCommand>();
-    rf::ConsoleCommand::init(cmd.get(), name, description, reinterpret_cast<rf::ConsoleCommandFuncPtr>(addr));
+    static std::vector<std::unique_ptr<rf::console::Command>> builtin_commands;
+    auto cmd = std::make_unique<rf::console::Command>();
+    rf::console::Command::init(cmd.get(), name, description, reinterpret_cast<rf::console::CommandFuncPtr>(addr));
     builtin_commands.push_back(std::move(cmd));
 }
 
