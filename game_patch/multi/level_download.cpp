@@ -585,8 +585,8 @@ void multi_level_download_do_frame()
             rf::gr::string(info_x, y, time_left_str.c_str(), medium_font);
         }
 
-        int w = 360 * rf::ui_scale_x;
-        int h = 12 * rf::ui_scale_x;
+        int w = 360 * rf::ui::scale_x;
+        int h = 12 * rf::ui::scale_x;
         int x = (rf::gr::screen_width() - w) / 2;
         int y = rf::gr::screen_height() * 4 / 5;
         float progress = static_cast<float>(bytes_received) / static_cast<float>(info.size_in_bytes);

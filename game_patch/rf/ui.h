@@ -3,12 +3,12 @@
 #include <patch_common/MemUtils.h>
 #include "gr/gr_font.h"
 
-namespace rf
+namespace rf::ui
 {
-    struct UiGadget
+    struct Gadget
     {
         void **vtbl;
-        UiGadget *parent;
+        Gadget *parent;
         bool highlighted;
         bool enabled;
         int x;
@@ -29,9 +29,9 @@ namespace rf
             return AddrCaller{0x00456A00}.this_call<int>(this);
         }
     };
-    static_assert(sizeof(UiGadget) == 0x28);
+    static_assert(sizeof(Gadget) == 0x28);
 
-    struct UiButton : UiGadget
+    struct Button : Gadget
     {
         int bg_bitmap;
         int selected_bitmap;
@@ -48,9 +48,9 @@ namespace rf
         int text_height;
 #endif
     };
-    static_assert(sizeof(UiButton) == 0x44);
+    static_assert(sizeof(Button) == 0x44);
 
-    struct UiLabel : UiGadget
+    struct Label : Gadget
     {
         Color clr;
         int bitmap;
@@ -65,17 +65,17 @@ namespace rf
 #endif
         int text_height;
     };
-    static_assert(sizeof(UiLabel) == 0x40);
+    static_assert(sizeof(Label) == 0x40);
 
-    struct UiInputBox : UiLabel
+    struct InputBox : Label
     {
         char text[32];
         int max_text_width;
         int font;
     };
-    static_assert(sizeof(UiInputBox) == 0x68);
+    static_assert(sizeof(InputBox) == 0x68);
 
-    struct UiCycler : UiGadget
+    struct Cycler : Gadget
     {
         static constexpr int max_items = 16;
         int item_text_bitmaps[max_items];
@@ -91,24 +91,24 @@ namespace rf
         int num_items;
         int current_item;
     };
-    static_assert(sizeof(UiCycler) == 0x170);
+    static_assert(sizeof(Cycler) == 0x170);
 
-    static auto& ui_popup_message = addr_as_ref<void(const char *title, const char *text, void(*callback)(), bool input)>(0x004560B0);
-    using UiDialogCallbackPtr = void (*)();
-    static auto& ui_popup_custom =
+    static auto& popup_message = addr_as_ref<void(const char *title, const char *text, void(*callback)(), bool input)>(0x004560B0);
+    using PopupCallbackPtr = void (*)();
+    static auto& popup_custom =
         addr_as_ref<void(const char *title, const char *text, int num_btns, const char *choices[],
-                       UiDialogCallbackPtr choices_callbacks[], int default_choice, int keys[])>(0x004562A0);
-    static auto& ui_popup_abort = addr_as_ref<void()>(0x004559C0);
-    static auto& ui_popup_set_text = addr_as_ref<void(const char *text)>(0x00455A50);
+                       PopupCallbackPtr choices_callbacks[], int default_choice, int keys[])>(0x004562A0);
+    static auto& popup_abort = addr_as_ref<void()>(0x004559C0);
+    static auto& popup_set_text = addr_as_ref<void(const char *text)>(0x00455A50);
 
-    static auto& ui_get_gadget_from_pos = addr_as_ref<int(int x, int y, UiGadget * const gadgets[], int num_gadgets)>(0x00442ED0);
-    static auto& ui_update_input_box_cursor = addr_as_ref<void()>(0x00456960);
+    static auto& get_gadget_from_pos = addr_as_ref<int(int x, int y, Gadget * const gadgets[], int num_gadgets)>(0x00442ED0);
+    static auto& update_input_box_cursor = addr_as_ref<void()>(0x00456960);
 
-    static auto& ui_scale_x = addr_as_ref<float>(0x00598FB8);
-    static auto& ui_scale_y = addr_as_ref<float>(0x00598FBC);
-    static auto& ui_input_box_cursor_visible = addr_as_ref<bool>(0x00642DC8);
-    static auto& ui_large_font = addr_as_ref<int>(0x0063C05C);
-    static auto& ui_medium_font_0 = addr_as_ref<int>(0x0063C060);
-    static auto& ui_medium_font_1 = addr_as_ref<int>(0x0063C064);
-    static auto& ui_small_font = addr_as_ref<int>(0x0063C068);
+    static auto& scale_x = addr_as_ref<float>(0x00598FB8);
+    static auto& scale_y = addr_as_ref<float>(0x00598FBC);
+    static auto& input_box_cursor_visible = addr_as_ref<bool>(0x00642DC8);
+    static auto& large_font = addr_as_ref<int>(0x0063C05C);
+    static auto& medium_font_0 = addr_as_ref<int>(0x0063C060);
+    static auto& medium_font_1 = addr_as_ref<int>(0x0063C064);
+    static auto& small_font = addr_as_ref<int>(0x0063C068);
 }

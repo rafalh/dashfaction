@@ -26,20 +26,20 @@ int g_egg_anim_start;
 
 namespace rf
 {
-    static auto& menu_version_label = addr_as_ref<UiGadget>(0x0063C088);
+    static auto& menu_version_label = addr_as_ref<ui::Gadget>(0x0063C088);
 }
 
 // Note: fastcall is used because MSVC does not allow free thiscall functions
-using UiLabel_Create2_Type = void __fastcall(rf::UiGadget*, int, rf::UiGadget*, int, int, int, int, const char*, int);
+using UiLabel_Create2_Type = void __fastcall(rf::ui::Gadget*, int, rf::ui::Gadget*, int, int, int, int, const char*, int);
 extern CallHook<UiLabel_Create2_Type> UiLabel_create2_version_label_hook;
-void __fastcall UiLabel_create2_version_label(rf::UiGadget* self, int edx, rf::UiGadget* parent, int x, int y, int w,
+void __fastcall UiLabel_create2_version_label(rf::ui::Gadget* self, int edx, rf::ui::Gadget* parent, int x, int y, int w,
                                              int h, const char* text, int font_id)
 {
     text = PRODUCT_NAME_VERSION;
     rf::gr::get_string_size(&w, &h, text, -1, font_id);
 #if SHARP_UI_TEXT
-    w = static_cast<int>(w / rf::ui_scale_x);
-    h = static_cast<int>(h / rf::ui_scale_y);
+    w = static_cast<int>(w / rf::ui::scale_x);
+    h = static_cast<int>(h / rf::ui::scale_y);
 #endif
     x = 430 - w;
     w += 5;
@@ -55,8 +55,8 @@ CallHook<void()> main_menu_process_mouse_hook{
         if (rf::mouse_was_button_pressed(0)) {
             int x, y, z;
             rf::mouse_get_pos(x, y, z);
-            rf::UiGadget* gadgets_to_check[1] = {&rf::menu_version_label};
-            int matched = rf::ui_get_gadget_from_pos(x, y, gadgets_to_check, std::size(gadgets_to_check));
+            rf::ui::Gadget* gadgets_to_check[1] = {&rf::menu_version_label};
+            int matched = rf::ui::get_gadget_from_pos(x, y, gadgets_to_check, std::size(gadgets_to_check));
             if (matched == 0) {
                 xlog::trace("Version clicked");
                 ++g_version_click_counter;
@@ -183,7 +183,7 @@ CodeInjection multi_servers_on_list_click_injection{
         // Because of that mouse click coordinate must be scaled from screen resolution to UI resolution before
         // comparision.
         int rel_y = regs.edi;
-        rel_y = static_cast<int>(static_cast<float>(rel_y) / rf::ui_scale_x);
+        rel_y = static_cast<int>(static_cast<float>(rel_y) / rf::ui::scale_x);
         regs.edi = rel_y;
     },
 };

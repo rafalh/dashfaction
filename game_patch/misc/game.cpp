@@ -64,7 +64,7 @@ int bm_load_if_exists(const char* name, int unk, bool generate_mipmaps)
 CallHook<void(int, int, int, rf::gr::Mode)> game_render_cursor_gr_bitmap_hook{
     0x004354E4,
     [](int bm_handle, int x, int y, rf::gr::Mode mode) {
-        if (rf::ui_scale_y >= 2.0f) {
+        if (rf::ui::scale_y >= 2.0f) {
             static int cursor_1_bmh = bm_load_if_exists("cursor_1.tga", -1, false);
             if (cursor_1_bmh != -1) {
                 bm_handle = cursor_1_bmh;
