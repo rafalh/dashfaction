@@ -649,6 +649,15 @@ ConsoleCommand2 lod_distance_scale_cmd{
     "Sets LOD distance scale factor",
 };
 
+ConsoleCommand2 pow2_tex_cmd{
+    "pow2_tex",
+    []() {
+        rf::gr::d3d::p2t = !rf::gr::d3d::p2t;
+        rf::console::printf("Power of 2 textures: %s", rf::gr::d3d::p2t ? "on" : "off");
+    },
+    "Forces usage of power of two textures. It may fix UV mappings in old levels. Onyl levels loaded after usage of this command are affected.",
+};
+
 bool gr_d3d_is_d3d8to9()
 {
     if (rf::gr::screen.mode != rf::gr::DIRECT3D) {
@@ -801,6 +810,7 @@ void gr_d3d_apply_patch()
     antialiasing_cmd.register_cmd();
     nearest_texture_filtering_cmd.register_cmd();
     lod_distance_scale_cmd.register_cmd();
+    pow2_tex_cmd.register_cmd();
 #ifdef DEBUG
     profile_frame_cmd.register_cmd();
 #endif

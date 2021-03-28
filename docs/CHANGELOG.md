@@ -9,6 +9,7 @@ Version 1.6.2 (not released yet)
 - Display proper server name in the scoreboard when joining by link
 - Level auto-downloader has new UI and does its job without leaving the server
 - Use SSL for communication with FactionFiles in level auto-downloader
+- Add `pow2_tex` command for forcing usage of power of two textures
 
 Version 1.6.1 (released 2021-02-20)
 -----------------------------------
