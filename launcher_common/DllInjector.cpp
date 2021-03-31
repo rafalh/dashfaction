@@ -1,3 +1,4 @@
+#include <xlog/xlog.h>
 #include "DllInjector.h"
 
 static FARPROC get_load_library_fun_ptr()
@@ -55,7 +56,7 @@ DWORD DllInjector::load_library_remote(const char* dll_path, int timeout)
     RemoteMemoryPtr remote_dll_path = str_dup_remote(m_process, dll_path);
     FARPROC load_library_ptr = get_load_library_fun_ptr();
 
-    std::printf("Injecting DLL: %s\n", dll_path);
+    xlog::info("Injecting DLL: %s\n", dll_path);
     DWORD remote_lib = run_remote_fun(load_library_ptr, remote_dll_path, timeout);
     if (!remote_lib)
         THROW_EXCEPTION("remote LoadLibrary failed");

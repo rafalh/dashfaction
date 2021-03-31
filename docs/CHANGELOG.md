@@ -10,6 +10,7 @@ Version 1.6.2 (not released yet)
 - Level auto-downloader has new UI and does its job without leaving the server
 - Use SSL for communication with FactionFiles in level auto-downloader
 - Add `pow2_tex` command for forcing usage of power of two textures
+- Add support for redirecting dedicated server standard output stream to a file in win32-console mode
 
 Version 1.6.1 (released 2021-02-20)
 -----------------------------------

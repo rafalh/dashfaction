@@ -153,7 +153,7 @@ void PatchedAppLauncher::setup_startup_info(_STARTUPINFOA& startup_info)
     ZeroMemory(&startup_info, sizeof(startup_info));
     startup_info.cb = sizeof(startup_info);
 
-    if (is_no_gui_mode()) {
+    if (GetFileType(GetStdHandle(STD_OUTPUT_HANDLE))) {
         // Redirect std handles - fixes nohup logging
         startup_info.dwFlags |= STARTF_USESTDHANDLES;
         startup_info.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
