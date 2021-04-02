@@ -7,21 +7,29 @@
 #include "../multi/multi.h"
 #include <common/utils/list-utils.h>
 #include <cstddef>
+#include <cstring>
 #include <sstream>
 #include <xlog/xlog.h>
 
 void process_pf_player_announce_packet(const void* data, size_t len, [[ maybe_unused ]] const rf::NetAddr& addr)
 {
     // Client-side packet
-    if (rf::is_server)
+    if (rf::is_server) {
         return;
+    }
 
-    if (len < sizeof(pf_player_announce_packet))
+    pf_player_announce_packet in_packet;
+    if (len < sizeof(in_packet)) {
+        xlog::trace("Invalid length in PF player_announce packet");
         return;
+    }
 
-    auto& in_packet = *reinterpret_cast<const pf_player_announce_packet*>(data);
-    if (in_packet.version != 2)
+    std::memcpy(&in_packet, data, sizeof(in_packet));
+
+    if (in_packet.version != 2) {
+        xlog::trace("Invalid version in PF player_announce packet");
         return;
+    }
 
     xlog::trace("PF player_announce packet: player %u is_pure %d", in_packet.player_id, in_packet.is_pure);
 
@@ -37,30 +45,43 @@ void process_pf_player_announce_packet(const void* data, size_t len, [[ maybe_un
 void process_pf_player_stats_packet(const void* data, size_t len, [[ maybe_unused ]] const rf::NetAddr& addr)
 {
     // Client-side packet
-    if (rf::is_server)
+    if (rf::is_server) {
         return;
+    }
 
-    if (len < sizeof(pf_player_stats_packet))
+    pf_player_stats_packet in_packet;
+    if (len < sizeof(in_packet)) {
+        xlog::trace("Invalid length in PF player_stats packet");
         return;
+    }
 
-    auto& in_packet = *reinterpret_cast<const pf_player_stats_packet*>(data);
+    std::memcpy(&in_packet, data, sizeof(in_packet));
 
-    if (in_packet.version != 2)
+    if (in_packet.version != 2) {
+        xlog::trace("Invalid version in PF player_stats packet");
         return;
+    }
+
+    if (len < sizeof(in_packet) + in_packet.player_count * sizeof(pf_player_stats_packet::player_stats)) {
+        xlog::trace("Invalid length in pf_player_stats packet");
+        return;
+    }
 
     xlog::trace("PF player_stats packet (count %d)", in_packet.player_count);
 
-    auto players_stats = reinterpret_cast<const pf_player_stats_packet::player_stats*>(&in_packet + 1);
+    auto player_stats_ptr = reinterpret_cast<const std::byte*>(data) + sizeof(in_packet);
     for (int i = 0; i < in_packet.player_count; ++i) {
-        auto& player_data = players_stats[i];
-        auto player = rf::multi_find_player_by_id(player_data.player_id);
+        pf_player_stats_packet::player_stats in_stats;
+        std::memcpy(&in_stats, player_stats_ptr, sizeof(in_stats));
+        player_stats_ptr += sizeof(in_stats);
+        auto player = rf::multi_find_player_by_id(in_stats.player_id);
         if (player) {
             auto& stats = *reinterpret_cast<PlayerStatsNew*>(player->stats);
-            stats.num_kills = player_data.kills;
-            stats.num_deaths = player_data.deaths;
+            stats.num_kills = in_stats.kills;
+            stats.num_deaths = in_stats.deaths;
         }
         else {
-            xlog::warn("PF player_stats packet: player %u not found", player_data.player_id);
+            xlog::warn("PF player_stats packet: player %u not found", in_stats.player_id);
         }
     }
 }
@@ -81,23 +102,27 @@ void process_pf_players_request_packet([[ maybe_unused ]] const void* data, [[ m
     }
     auto players_str = ss.str();
 
-    auto packet_buf = std::make_unique<std::byte[]>(sizeof(pf_players_packet) + players_str.size());
-    auto& response = *reinterpret_cast<pf_players_packet*>(packet_buf.get());
-    response.hdr.type = static_cast<uint8_t>(pf_packet_type::players);
-    response.hdr.size = static_cast<uint16_t>(sizeof(pf_players_packet) + players_str.size() - sizeof(rf_packet_header));
-    response.version = 1;
-    response.show_ip = 0;
-    std::copy(players_str.begin(), players_str.end(), reinterpret_cast<char*>(packet_buf.get() + sizeof(pf_players_packet)));
+    pf_players_packet response_fixed_part;
+    response_fixed_part.hdr.type = static_cast<uint8_t>(pf_packet_type::players);
+    response_fixed_part.hdr.size = static_cast<uint16_t>(sizeof(pf_players_packet) + players_str.size() - sizeof(rf_packet_header));
+    response_fixed_part.version = 1;
+    response_fixed_part.show_ip = 0;
 
-    rf::net_send(addr, &response, sizeof(response.hdr) + response.hdr.size);
+    auto response_size = sizeof(response_fixed_part) + players_str.size();
+    auto response_buf = std::make_unique<std::byte[]>(response_size);
+    std::memcpy(response_buf.get(), &response_fixed_part, sizeof(response_fixed_part));
+    std::memcpy(response_buf.get() + sizeof(response_fixed_part), players_str.data(), players_str.size());
+    rf::net_send(addr, response_buf.get(), response_size);
 }
 
 void process_pf_packet(const void* data, int len, const rf::NetAddr& addr, [[maybe_unused]] const rf::Player* player)
 {
-    if (len < static_cast<int>(sizeof(rf_packet_header)))
+    rf_packet_header header;
+    if (len < static_cast<int>(sizeof(header))) {
         return;
+    }
 
-    auto& header = *reinterpret_cast<const rf_packet_header*>(data);
+    std::memcpy(&header, data, sizeof(header));
     auto packet_type = static_cast<pf_packet_type>(header.type);
 
     switch (packet_type)
