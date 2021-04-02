@@ -40,7 +40,7 @@ void process_pf_player_stats_packet(const void* data, size_t len, [[ maybe_unuse
     if (rf::is_server)
         return;
 
-    if (len < sizeof(pf_player_announce_packet))
+    if (len < sizeof(pf_player_stats_packet))
         return;
 
     auto& in_packet = *reinterpret_cast<const pf_player_stats_packet*>(data);
