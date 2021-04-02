@@ -96,10 +96,10 @@ public:
 D3DTextureFormatSelector g_texture_format_selector;
 
 using GrD3DSetTextureData_Type =
-    int(int, const uint8_t*, const uint8_t*, int, int, rf::bm::Format, rf::gr::d3d::TextureSection*, int, int, IDirect3DTexture8*);
+    int(int, const std::byte*, const uint8_t*, int, int, rf::bm::Format, rf::gr::d3d::TextureSection*, int, int, IDirect3DTexture8*);
 FunHook<GrD3DSetTextureData_Type> gr_d3d_set_texture_data_hook{
     0x0055BA10,
-    [](int level, const uint8_t* src_bits_ptr, const uint8_t* palette, int bm_w, int bm_h,
+    [](int level, const std::byte* src_bits_ptr, const uint8_t* palette, int bm_w, int bm_h,
         rf::bm::Format format, rf::gr::d3d::TextureSection* section, int tex_w, int tex_h, IDirect3DTexture8* texture) {
         xlog::trace("gr_d3d_set_texture_data_hook");
 
@@ -131,8 +131,8 @@ FunHook<GrD3DSetTextureData_Type> gr_d3d_set_texture_data_hook{
             auto src_pitch = bm_calculate_pitch(bm_w, format);
             auto num_src_rows = bm_calculate_rows(bm_h, format);
 
-            auto src_ptr = reinterpret_cast<const std::byte*>(src_bits_ptr);
-            auto dst_ptr = reinterpret_cast<std::byte*>(locked_rect.pBits);
+            auto src_ptr = src_bits_ptr;
+            auto dst_ptr = static_cast<std::byte*>(locked_rect.pBits);
 
             src_ptr += src_pitch * bm_calculate_rows(section->y, format);
             src_ptr += bm_calculate_pitch(section->x, format);
@@ -315,7 +315,7 @@ bool gr_d3d_lock(int bm_handle, int section, rf::gr::LockInfo *lock) {
         return false;
     }
 
-    lock->data = reinterpret_cast<rf::ubyte*>(locked_rect.pBits);
+    lock->data = static_cast<rf::ubyte*>(locked_rect.pBits);
     lock->stride_in_bytes = locked_rect.Pitch;
     lock->w = desc.Width;
     lock->h = desc.Height;

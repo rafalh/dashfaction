@@ -48,11 +48,11 @@ std::string get_real_os_version()
     BOOL ret = VerQueryValueA(ver.get(), "\\", &block, &block_size);
     if (!ret || block_size < sizeof(VS_FIXEDFILEINFO))
         THROW_WIN32_ERROR("VerQueryValueA returned unknown block");
-    VS_FIXEDFILEINFO* file_info = reinterpret_cast<VS_FIXEDFILEINFO*>(block);
+    VS_FIXEDFILEINFO* file_info = static_cast<VS_FIXEDFILEINFO*>(block);
 
-    return string_format("%d.%d.%d",                            //
-                        HIWORD(file_info->dwProductVersionMS), //
-                        LOWORD(file_info->dwProductVersionMS), //
+    return string_format("%d.%d.%d",
+                        HIWORD(file_info->dwProductVersionMS),
+                        LOWORD(file_info->dwProductVersionMS),
                         HIWORD(file_info->dwProductVersionLS));
 }
 

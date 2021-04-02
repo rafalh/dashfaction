@@ -315,7 +315,7 @@ GrNewFont::GrNewFont(std::string_view name) :
         throw std::runtime_error{"failed to load font"};
     }
 
-    auto bitmap_bits = reinterpret_cast<unsigned char*>(lock.data);
+    auto bitmap_bits = lock.data;
     glyphs_.reserve(unicode_code_points.size());
 
     for (auto codepoint : unicode_code_points) {

@@ -210,18 +210,18 @@ namespace rf
 
     struct EntityControlData
     {
-        int field_860;
-        Vector3 rot_yaw;
-        Vector3 rot_yaw_delta;
-        Vector3 rot_pitch;
-        Vector3 rot_pitch_delta;
-        Vector3 field_894;
-        Vector3 field_8a0;
-        int field_8ac;
+        int field_0;
+        Vector3 phb;
+        Vector3 delta_phb;
+        Vector3 eye_phb;
+        Vector3 delta_eye_phb;
+        Vector3 automobile_eye_phb;
+        Vector3 local_vel;
+        int standing_on_obj_handle;
         int field_8b0;
-        float camera_shake_dist;
-        float camera_shake_time;
-        Timestamp camera_shake_timestamp;
+        float shake_max_amplitude;
+        float shake_duration;
+        Timestamp shake_timestamp;
     };
     static_assert(sizeof(EntityControlData) == 0x60);
 

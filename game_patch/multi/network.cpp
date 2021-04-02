@@ -652,7 +652,7 @@ std::pair<std::unique_ptr<std::byte[]>, size_t> extend_packet(const std::byte* d
     std::memcpy(new_data.get() + sizeof(header), data + sizeof(header), len - sizeof(header));
 
     // Append extension data
-    std::memcpy(new_data.get() + len, reinterpret_cast<const std::byte*>(&ext_data), sizeof(ext_data));
+    std::memcpy(new_data.get() + len, &ext_data, sizeof(ext_data));
 
     return {std::move(new_data), len + sizeof(ext_data)};
 }
@@ -926,7 +926,7 @@ void send_chat_line_packet(const char* msg, rf::Player* target, rf::Player* send
     packet.header.size = static_cast<uint16_t>(sizeof(packet) - sizeof(packet.header) + std::strlen(msg) + 1);
     packet.player_id = sender ? sender->net_data->player_id : 0xFF;
     packet.is_team_msg = is_team_msg;
-    std::memcpy(buf, reinterpret_cast<rf::ubyte*>(&packet), sizeof(packet));
+    std::memcpy(buf, &packet, sizeof(packet));
     char* packet_msg = reinterpret_cast<char*>(buf + sizeof(packet));
     std::strncpy(packet_msg, msg, 255);
     packet_msg[255] = 0;

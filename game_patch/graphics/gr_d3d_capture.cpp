@@ -156,7 +156,7 @@ CallHook<rf::bm::Format(int, int, int, int, std::byte*)> gr_d3d_read_back_buffer
 
         int bytes_per_pixel = bm_bytes_per_pixel(pixel_fmt);
         std::byte* src_ptr =
-            reinterpret_cast<std::byte*>(locked_rect.pBits) + y * locked_rect.Pitch + x * bytes_per_pixel;
+            static_cast<std::byte*>(locked_rect.pBits) + y * locked_rect.Pitch + x * bytes_per_pixel;
         std::byte* dst_ptr = buffer;
 
         for (int i = 0; i < height; ++i) {

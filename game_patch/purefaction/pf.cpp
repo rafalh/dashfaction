@@ -69,14 +69,14 @@ void process_pf_player_stats_packet(const void* data, size_t len, [[ maybe_unuse
 
     xlog::trace("PF player_stats packet (count %d)", in_packet.player_count);
 
-    auto player_stats_ptr = reinterpret_cast<const std::byte*>(data) + sizeof(in_packet);
+    auto player_stats_ptr = static_cast<const std::byte*>(data) + sizeof(in_packet);
     for (int i = 0; i < in_packet.player_count; ++i) {
         pf_player_stats_packet::player_stats in_stats;
         std::memcpy(&in_stats, player_stats_ptr, sizeof(in_stats));
         player_stats_ptr += sizeof(in_stats);
         auto player = rf::multi_find_player_by_id(in_stats.player_id);
         if (player) {
-            auto& stats = *reinterpret_cast<PlayerStatsNew*>(player->stats);
+            auto& stats = *static_cast<PlayerStatsNew*>(player->stats);
             stats.num_kills = in_stats.kills;
             stats.num_deaths = in_stats.deaths;
         }

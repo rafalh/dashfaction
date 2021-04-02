@@ -241,7 +241,7 @@ CodeInjection gr_d3d_init_load_library_injection{
         xlog::info("Loading d3d8to9.dll: %s", d3d8to9_path.c_str());
         auto d3d8to9_module = LoadLibraryA(d3d8to9_path.c_str());
         if (d3d8to9_module) {
-            regs.eax = reinterpret_cast<int32_t>(d3d8to9_module);
+            regs.eax = d3d8to9_module;
             regs.eip = 0x004EC519;
         }
     },

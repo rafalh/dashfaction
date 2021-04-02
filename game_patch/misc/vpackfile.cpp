@@ -127,7 +127,7 @@ static uint32_t vpackfile_process_header(rf::VPackfile* packfile, const void* ra
         uint32_t total_size;
     };
     constexpr unsigned VPP_SIG = 0x51890ACE;
-    auto& hdr = *reinterpret_cast<const VppHeader*>(raw_header);
+    auto& hdr = *static_cast<const VppHeader*>(raw_header);
     packfile->num_files = hdr.num_files;
     packfile->file_size = hdr.total_size;
     if (hdr.sig != VPP_SIG || hdr.unk < 1u)
@@ -335,7 +335,7 @@ static int vpackfile_add_entries_new(rf::VPackfile* packfile, const void* block,
         char name[60];
         uint32_t size;
     };
-    auto record = reinterpret_cast<const VppFileInfo*>(block);
+    auto record = static_cast<const VppFileInfo*>(block);
 
     for (unsigned i = 0; i < num_files; ++i) {
         auto file_name = record->name;

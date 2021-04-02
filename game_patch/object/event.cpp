@@ -101,7 +101,7 @@ void __fastcall liquid_depth_update_apply_all_GRoom_reset_liquid(rf::GRoom* room
     while (objp != &rf::object_list) {
         if (objp->room == room) {
             if (objp->type == rf::OT_ENTITY) {
-                auto ep = reinterpret_cast<rf::Entity*>(objp);
+                auto ep = static_cast<rf::Entity*>(objp);
                 rf::entity_update_liquid_status(ep);
                 bool is_in_liquid = ep->obj_flags & rf::OF_IN_LIQUID;
                 // check if entity doesn't have 'swim' flag

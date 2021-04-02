@@ -92,7 +92,7 @@ void console_register_command(rf::console::Command* cmd)
 }
 
 static FunHook<void(const char*, const rf::Color*)> console_output_hook{
-    reinterpret_cast<uintptr_t>(rf::console::output),
+    &rf::console::output,
     [](const char* text, const rf::Color* color) {
         if (win32_console_is_enabled()) {
             win32_console_output(text, color);

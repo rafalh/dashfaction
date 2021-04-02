@@ -196,7 +196,7 @@ const char* get_obj_type_name(rf::Object& obj)
 const char* get_obj_class_name(rf::Object& obj)
 {
     if (obj.type == rf::OT_ENTITY)
-        return reinterpret_cast<rf::Entity&>(obj).info->name.c_str();
+        return static_cast<rf::Entity&>(obj).info->name.c_str();
     else
         return "-";
 }
@@ -274,7 +274,7 @@ void render_obj_debug_ui()
 
     rf::Vector3 cam_pos = rf::camera_get_pos(rf::local_player->cam);
 
-    auto entity = object->type == rf::OT_ENTITY ? reinterpret_cast<rf::Entity*>(object) : nullptr;
+    auto entity = object->type == rf::OT_ENTITY ? static_cast<rf::Entity*>(object) : nullptr;
 
     dbg_hud.print("name", object->name.c_str());
     dbg_hud.printf("uid", "%d", object->uid);

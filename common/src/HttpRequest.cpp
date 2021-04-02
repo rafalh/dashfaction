@@ -126,7 +126,7 @@ void HttpRequest::write(const void* data, size_t len)
             THROW_WIN32_ERROR();
         if (!written)
             THROW_EXCEPTION("Unable to write %lu request body bytes", len);
-        data = reinterpret_cast<const char*>(data) + written;
+        data = static_cast<const std::byte*>(data) + written;
         len -= written;
     }
 }

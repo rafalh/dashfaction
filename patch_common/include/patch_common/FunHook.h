@@ -42,6 +42,10 @@ public:
         FunHookImpl(target_fun_addr, reinterpret_cast<void*>(hook_fun_ptr))
     {}
 
+    FunHook(FunType* target_fun_addr, FunType* hook_fun_ptr) :
+        FunHookImpl(reinterpret_cast<uintptr_t>(target_fun_addr), reinterpret_cast<void*>(hook_fun_ptr))
+    {}
+
     R call_target(A... a) const
     {
         auto trampoline_ptr = reinterpret_cast<FunType*>(m_trampoline_ptr);
@@ -60,6 +64,10 @@ public:
         FunHookImpl(target_fun_addr, reinterpret_cast<void*>(hook_fun_ptr))
     {}
 
+    FunHook(FunType* target_fun_addr, FunType* hook_fun_ptr) :
+        FunHookImpl(reinterpret_cast<uintptr_t>(target_fun_addr), reinterpret_cast<void*>(hook_fun_ptr))
+    {}
+
     R call_target(A... a) const
     {
         auto trampoline_ptr = reinterpret_cast<FunType*>(m_trampoline_ptr);
@@ -76,6 +84,10 @@ private:
 public:
     FunHook(uintptr_t target_fun_addr, FunType* hook_fun_ptr) :
         FunHookImpl(target_fun_addr, reinterpret_cast<void*>(hook_fun_ptr))
+    {}
+
+    FunHook(FunType* target_fun_addr, FunType* hook_fun_ptr) :
+        FunHookImpl(reinterpret_cast<uintptr_t>(target_fun_addr), reinterpret_cast<void*>(hook_fun_ptr))
     {}
 
     R call_target(A... a) const

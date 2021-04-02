@@ -78,12 +78,7 @@ FunHook<void(rf::Monitor&)> monitor_update_static_hook{
                 for (int x = 0; x < lock.w; ++x) {
                     bool white = generate_static_noise();
                     // support 32-bit textures
-                    if (pixel_size == 4) {
-                        *reinterpret_cast<int32_t*>(ptr) = white ? 0 : -1;
-                    }
-                    else {
-                        *reinterpret_cast<int16_t*>(ptr) = white ? 0 : -1;
-                    }
+                    std::memset(ptr, white ? 0xFF : 0, pixel_size);
                     ptr += pixel_size;
                 }
             }

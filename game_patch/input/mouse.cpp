@@ -9,6 +9,7 @@
 #include "../rf/gr/gr.h"
 #include "../rf/multi.h"
 #include "../rf/player.h"
+#include "../rf/entity.h"
 #include "../main/main.h"
 
 bool set_direct_input_enabled(bool enabled)
@@ -198,8 +199,9 @@ CodeInjection linear_pitch_patch{
         if (!g_game_config.linear_pitch)
             return;
         // Non-linear pitch value and delta from RF
-        float& current_yaw = *reinterpret_cast<float*>(regs.esi + 0x868);
-        float& current_pitch_non_lin = *reinterpret_cast<float*>(regs.esi + 0x87C);
+        rf::Entity* entity = regs.esi;
+        float current_yaw = entity->control_data.phb.y;
+        float current_pitch_non_lin = entity->control_data.eye_phb.x;
         float& pitch_delta = *reinterpret_cast<float*>(regs.esp + 0x44 - 0x34);
         float& yaw_delta = *reinterpret_cast<float*>(regs.esp + 0x44 + 0x4);
         if (pitch_delta == 0)

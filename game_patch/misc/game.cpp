@@ -38,7 +38,7 @@ CodeInjection jpeg_write_bitmap_overflow_fix1{
     0x0055A066,
     [](auto& regs) {
         g_screenshot_scanlines_buf = std::make_unique<byte* []>(rf::gr::screen.max_h);
-        regs.ecx = reinterpret_cast<int32_t>(g_screenshot_scanlines_buf.get());
+        regs.ecx = g_screenshot_scanlines_buf.get();
         regs.eip = 0x0055A06D;
     },
 };
@@ -46,7 +46,7 @@ CodeInjection jpeg_write_bitmap_overflow_fix1{
 CodeInjection jpeg_write_bitmap_overflow_fix2{
     0x0055A0DF,
     [](auto& regs) {
-        regs.eax = reinterpret_cast<int32_t>(g_screenshot_scanlines_buf.get());
+        regs.eax = g_screenshot_scanlines_buf.get();
         regs.eip = 0x0055A0E6;
     },
 };

@@ -410,7 +410,7 @@ ConsoleCommand2 profile_frame_cmd{
             gr_d3d_set_state_profile_patch.install();
             gr_d3d_set_texture_profile_patch.install();
             gr_d3d_flip_profile_patch.install();
-            auto d3d_dev_vtbl = *reinterpret_cast<uintptr_t**>(rf::gr::d3d::device);
+            auto d3d_dev_vtbl = *reinterpret_cast<void***>(rf::gr::d3d::device);
             D3D_DrawIndexedPrimitive_profile_patch.set_addr(d3d_dev_vtbl[0x11C / 4]); // DrawIndexedPrimitive
             D3D_DrawIndexedPrimitive_profile_patch.install();
             patches_installed = true;
@@ -605,7 +605,7 @@ CodeInjection gr_d3d_init_load_library_injection{
         xlog::info("Loading d3d8to9.dll: %s", d3d8to9_path.c_str());
         auto d3d8to9_module = LoadLibraryA(d3d8to9_path.c_str());
         if (d3d8to9_module) {
-            regs.eax = reinterpret_cast<int32_t>(d3d8to9_module);
+            regs.eax = d3d8to9_module;
             regs.eip = 0x005459B9;
         }
     },

@@ -110,7 +110,7 @@ CodeInjection key_name_in_options_patch{
         static char buf[32];
         int key = regs.edx;
         get_key_name(key, buf, std::size(buf));
-        regs.edi = reinterpret_cast<int>(buf);
+        regs.edi = buf;
         regs.eip = 0x0045032F;
     },
 };

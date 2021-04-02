@@ -197,6 +197,11 @@ public:
         m_addr = addr;
     }
 
+    void set_addr(void* addr)
+    {
+        m_addr = reinterpret_cast<uintptr_t>(addr);
+    }
+
 protected:
     virtual void emit_code(AsmWriter& asm_writter, void* trampoline) = 0;
 };

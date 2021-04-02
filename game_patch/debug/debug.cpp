@@ -43,7 +43,7 @@ FunHook<void*(size_t, bool)> nh_malloc_hook{
             xlog::trace("Allocation of %u bytes failed!", size);
             return nullptr;
         }
-        auto bytes = reinterpret_cast<std::byte*>(ptr);
+        auto bytes = static_cast<std::byte*>(ptr);
         *reinterpret_cast<size_t*>(bytes) = size;
         *reinterpret_cast<uint32_t*>(bytes + 4) = BOUND_MARKER;
         *reinterpret_cast<uint32_t*>(bytes + 8 + size) = BOUND_MARKER;
@@ -60,7 +60,7 @@ FunHook<void(void*)> free_hook{
         if (!ptr) {
             return;
         }
-        auto bytes = reinterpret_cast<std::byte*>(ptr);
+        auto bytes = static_cast<std::byte*>(ptr);
         bytes -= 8;
         auto size = *reinterpret_cast<size_t*>(bytes);
         auto front_marker = *reinterpret_cast<size_t*>(bytes + 4);
@@ -79,7 +79,7 @@ FunHook<void(void*)> free_hook{
 FunHook<void*(void*, size_t)> realloc_hook{
     0x00578873,
     [](void* ptr, size_t size) {
-        auto bytes = reinterpret_cast<std::byte*>(ptr);
+        auto bytes = static_cast<std::byte*>(ptr);
         bytes -= 8;
         auto old_size = *reinterpret_cast<size_t*>(bytes);
         g_current_heap_usage -= old_size;
@@ -97,7 +97,7 @@ FunHook<size_t(void*)> msize_hook{
     0x00578BA2,
     [](void* ptr) {
         xlog::trace("msize %p", ptr);
-        ptr = reinterpret_cast<std::byte*>(ptr) - 8;
+        ptr = static_cast<std::byte*>(ptr) - 8;
         return msize_hook.call_target(ptr) - 12;
     },
 };
@@ -118,7 +118,7 @@ ConsoleCommand2 mem_stats_cmd{
 CodeInjection VArray_Ptr__get_out_of_bounds_check{
     0x0040A480,
     [](auto& regs) {
-        int size = *reinterpret_cast<int*>(regs.ecx);
+        int size = *static_cast<int*>(regs.ecx);
         int index = *reinterpret_cast<int*>(regs.esp + 4);
         if (index < 0 || index >= size) {
             ERR("VArray out of bounds access! index %d size %d", index, size);
