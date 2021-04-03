@@ -1003,6 +1003,24 @@ CodeInjection obj_interp_too_fast_fix{
     },
 };
 
+CodeInjection send_state_info_injection{
+    0x0048186F,
+    [](auto& regs) {
+        rf::Player* player = regs.edi;
+        trigger_send_state_info(player);
+    },
+};
+
+FunHook<void(rf::Player*)> send_players_packet_hook{
+    0x00481C70,
+    [](rf::Player *player) {
+        send_players_packet_hook.call_target(player);
+#if MASK_AS_PF
+        pf_process_new_player(player);
+#endif
+    },
+};
+
 void network_init()
 {
     // process_game_packets hook (not reliable only)
@@ -1126,6 +1144,12 @@ void network_init()
 
     // Fix object interpolation playing too fast causing a possible jitter
     obj_interp_too_fast_fix.install();
+
+    // Send trigger_activate packets for late joiners
+    send_state_info_injection.install();
+
+    // Send more packets after reliable connection has been established
+    send_players_packet_hook.install();
 
     // Use spawnpoint team property in TeamDM game (PF compatible)
     write_mem<u8>(0x00470395 + 4, 0); // change cmp argument: CTF -> DM

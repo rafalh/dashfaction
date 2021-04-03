@@ -7,4 +7,5 @@ namespace rf
     struct NetAddr;
 }
 
-void process_pf_packet(const void* data, int len, const rf::NetAddr& addr, const rf::Player* player);
+void process_pf_packet(const void* data, int len, const rf::NetAddr& addr, rf::Player* player);
+void pf_process_new_player(rf::Player* player);

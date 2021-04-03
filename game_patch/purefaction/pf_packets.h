@@ -16,6 +16,16 @@ enum class pf_packet_type : uint8_t
     players = 0xA1,
 };
 
+enum class pf_pure_status : uint8_t
+{
+    none = 0,
+    blue = 1,
+    gold = 2,
+    fail = 3,
+    old_pure = 4,
+    rfsb = 5,
+};
+
 struct rf_packet_header
 {
     uint8_t type; // see pf_packet_type
@@ -44,6 +54,8 @@ struct pf_player_stats_packet
 #endif
 };
 
+constexpr uint8_t pf_player_stats_packet_version = 2;
+
 struct pf_player_announce_packet
 {
     rf_packet_header hdr; // announce_player
@@ -51,6 +63,8 @@ struct pf_player_announce_packet
     uint8_t player_id;
     uint8_t is_pure; // 0 non-pure, 1 pure (public), 2 pure (match), 3 check failed, 4 unused, 5 rfsb
 };
+
+constexpr uint8_t pf_announce_player_packet_version = 2;
 
 struct pf_players_packet
 {
@@ -68,6 +82,8 @@ struct pf_players_packet
     player_info players[];
 #endif
 };
+
+constexpr uint8_t pf_players_packet_version = 1;
 
 constexpr uint32_t pf_game_info_signature = 0xEFBEADDE;
 constexpr uint16_t pf_game_info_version = 0x030DF;

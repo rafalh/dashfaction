@@ -84,21 +84,13 @@ CodeInjection trigger_check_activation_patch{
     },
 };
 
-void activate_triggers_for_late_joiners(rf::Player* player)
+void trigger_send_state_info(rf::Player* player)
 {
     for (auto trigger_uid : g_triggers_uids_for_late_joiners) {
         xlog::debug("Activating trigger %d for late joiner %s", trigger_uid, player->name.c_str());
         send_trigger_activate_packet(player, trigger_uid, -1);
     }
 }
-
-CodeInjection send_state_info_injection{
-    0x0048186F,
-    [](auto& regs) {
-        rf::Player* player = regs.edi;
-        activate_triggers_for_late_joiners(player);
-    },
-};
 
 FunHook<void()> trigger_level_init{
     0x004BF730,
@@ -116,9 +108,6 @@ void trigger_apply_patches()
 
     // Client-side trigger flag handling
     trigger_check_activation_patch.install();
-
-    // Send trigger_activate packets for late joiners
-    send_state_info_injection.install();
 
     // level init hook
     trigger_level_init.install();

@@ -11,6 +11,8 @@ Version 1.6.2 (not released yet)
 - Use SSL for communication with FactionFiles in level auto-downloader
 - Add `pow2_tex` command for forcing usage of power of two textures
 - Add support for redirecting dedicated server standard output stream to a file in win32-console mode
+- Add server-side part of Pure Faction client verification
+- Send Kills/Deaths statistics to players joining an already started gameplay
 
 Version 1.6.1 (released 2021-02-20)
 -----------------------------------
