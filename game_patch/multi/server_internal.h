@@ -45,6 +45,7 @@ struct ServerAdditionalConfig
     bool upnp_enabled = true;
     std::optional<int> force_player_character;
     std::optional<float> max_fov;
+    bool require_verified_client = false;
 };
 
 extern ServerAdditionalConfig g_additional_server_config;

@@ -152,6 +152,9 @@ Configuration example:
     $DF Default Player Weapon: "rail_gun"
         // Ammo given on respawn (by default 3 * clip size)
         +Initial Ammo: 1000
+    // If true only non-custom (officially released) builds of Dash Faction and Pure Faction clients will be allowed
+    // to play. Enable it to prevent cheaters from playing. It is disabled by default.
+    $DF Require Verified Client: false
     // If true and server is using a mod (-mod command line argument) then client is required to use the same mod
     // Can be disabled to allow publicly available modded servers
     $DF Require Client Mod: true

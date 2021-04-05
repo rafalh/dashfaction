@@ -25,6 +25,7 @@
 #include "../rf/os/os.h"
 #include "../rf/os/timer.h"
 #include "../rf/level.h"
+#include "../purefaction/pf.h"
 
 const char* g_rcon_cmd_whitelist[] = {
     "kick",
@@ -104,6 +105,10 @@ void load_additional_server_config(rf::Parser& parser)
                 weapon_cls.max_ammo_multi = std::max<int>(weapon_cls.max_ammo_multi, ammo);
             }
         }
+    }
+
+    if (parser.parse_optional("$DF Require Verified Client:")) {
+        g_additional_server_config.require_verified_client = parser.parse_bool();
     }
 
     if (parser.parse_optional("$DF Require Client Mod:")) {
@@ -457,6 +462,16 @@ FunHook<void(rf::Player*)> multi_spawn_player_server_side_hook{
     [](rf::Player* player) {
         if (g_additional_server_config.force_player_character) {
             player->settings.multi_character = g_additional_server_config.force_player_character.value();
+        }
+        if (g_additional_server_config.require_verified_client) {
+            bool verified = false; //pf_is_player_verified(player);
+            if (!verified) {
+                send_chat_line_packet(
+                    "Sorry! Your spawn request was rejected because verification of your client software failed. "
+                    "Please use the latest officially released version of Dash Faction. You can get it from dashfaction.com.",
+                    player);
+                return;
+            }
         }
         multi_spawn_player_server_side_hook.call_target(player);
     },

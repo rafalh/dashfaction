@@ -180,6 +180,10 @@ static void process_pf_players_request_packet([[ maybe_unused ]] const void* dat
 
 void process_pf_packet(const void* data, int len, const rf::NetAddr& addr, rf::Player* player)
 {
+    if (pf_ac_process_packet(data, len, addr, player)) {
+        return;
+    }
+
     rf_packet_header header;
     if (len < static_cast<int>(sizeof(header))) {
         return;
@@ -190,22 +194,6 @@ void process_pf_packet(const void* data, int len, const rf::NetAddr& addr, rf::P
 
     switch (packet_type)
     {
-        case pf_packet_type::server_hash:
-            process_pf_server_hash_packet(data, len, addr);
-            break;
-
-        case pf_packet_type::client_hash:
-            process_pf_client_hash_packet(data, len, addr, player);
-            break;
-
-        case pf_packet_type::request_cheat_check:
-            process_pf_request_cheat_check_packet(data, len, addr);
-            break;
-
-        case pf_packet_type::client_cheat_check:
-            process_pf_client_cheat_check_packet(data, len, player);
-            break;
-
         case pf_packet_type::announce_player:
             process_pf_player_announce_packet(data, len, addr);
             break;
@@ -227,13 +215,13 @@ void process_pf_packet(const void* data, int len, const rf::NetAddr& addr, rf::P
 void pf_player_init([[ maybe_unused ]] rf::Player* player)
 {
     assert(rf::is_server);
-    //send_pf_server_hash_packet(player);
+    pf_ac_init_player(player);
 }
 
 void pf_player_level_load(rf::Player* player)
 {
     assert(rf::is_server);
-    send_pf_server_hash_packet(player);
+    pf_ac_verify_player(player);
 }
 
 void pf_player_verified(rf::Player* player, pf_pure_status pure_status)
@@ -241,4 +229,10 @@ void pf_player_verified(rf::Player* player, pf_pure_status pure_status)
     assert(rf::is_server);
     send_pf_announce_player_packet(player, pure_status);
     send_pf_player_stats_packet(player);
+}
+
+bool pf_is_player_verified(rf::Player* player)
+{
+    pf_pure_status status = pf_ac_get_pure_status(player);
+    return status != pf_pure_status::none;
 }
