@@ -463,6 +463,7 @@ FunHook<void(rf::Player*)> multi_spawn_player_server_side_hook{
         if (g_additional_server_config.force_player_character) {
             player->settings.multi_character = g_additional_server_config.force_player_character.value();
         }
+#ifdef HAS_PF
         if (g_additional_server_config.require_verified_client) {
             bool verified = pf_is_player_verified(player);
             if (!verified) {
@@ -473,6 +474,7 @@ FunHook<void(rf::Player*)> multi_spawn_player_server_side_hook{
                 return;
             }
         }
+#endif // HAS_PF
         multi_spawn_player_server_side_hook.call_target(player);
     },
 };
