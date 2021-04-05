@@ -1008,6 +1008,9 @@ CodeInjection send_state_info_injection{
     [](auto& regs) {
         rf::Player* player = regs.edi;
         trigger_send_state_info(player);
+#if MASK_AS_PF
+        pf_player_level_load(player);
+#endif
     },
 };
 
@@ -1016,7 +1019,7 @@ FunHook<void(rf::Player*)> send_players_packet_hook{
     [](rf::Player *player) {
         send_players_packet_hook.call_target(player);
 #if MASK_AS_PF
-        pf_process_new_player(player);
+        pf_player_init(player);
 #endif
     },
 };

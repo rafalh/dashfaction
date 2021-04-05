@@ -165,7 +165,7 @@ namespace rf
         GFaceVertex *edge_loop;
         GRoom *which_room;
         GBBox *which_bbox;
-        DecalPoly *decal_poly;
+        DecalPoly *decal_list;
         short unk_cache_index;
         GFace* next[FACE_LIST_NUM];
     };

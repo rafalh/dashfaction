@@ -1,15 +1,15 @@
-#include <cassert>
-#include <common/config/BuildConfig.h>
-#include "pf.h"
-#include "pf_packets.h"
-#include "pf_secret.h"
-#include "../rf/multi.h"
-#include "../multi/multi.h"
-#include <common/utils/list-utils.h>
 #include <cstddef>
 #include <cstring>
 #include <sstream>
+#include <cassert>
+#include <common/config/BuildConfig.h>
+#include <common/utils/list-utils.h>
 #include <xlog/xlog.h>
+#include "../rf/multi.h"
+#include "../multi/multi.h"
+#include "pf.h"
+#include "pf_packets.h"
+#include "pf_secret.h"
 
 static void send_pf_announce_player_packet(rf::Player* player, pf_pure_status pure_status)
 {
@@ -224,7 +224,13 @@ void process_pf_packet(const void* data, int len, const rf::NetAddr& addr, rf::P
     }
 }
 
-void pf_process_new_player(rf::Player* player)
+void pf_player_init([[ maybe_unused ]] rf::Player* player)
+{
+    assert(rf::is_server);
+    //send_pf_server_hash_packet(player);
+}
+
+void pf_player_level_load(rf::Player* player)
 {
     assert(rf::is_server);
     send_pf_server_hash_packet(player);

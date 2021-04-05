@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstring>
 #include <common/utils/string-utils.h>
 
 namespace rf
@@ -74,6 +75,19 @@ namespace rf
         String& operator=(const char* other)
         {
             return AddrCaller{0x004FFA80}.this_call<String&>(this, other);
+        }
+
+        bool operator==(const String& other) const
+        {
+            return std::strcmp(
+                m_pod.buf ? m_pod.buf : "",
+                other.m_pod.buf ? other.m_pod.buf : ""
+            ) == 0;
+        }
+
+        bool operator==(const char* other) const
+        {
+            return std::strcmp(m_pod.buf ? m_pod.buf : "", other) == 0;
         }
 
         const char *c_str() const
