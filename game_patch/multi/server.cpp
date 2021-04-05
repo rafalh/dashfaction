@@ -464,7 +464,7 @@ FunHook<void(rf::Player*)> multi_spawn_player_server_side_hook{
             player->settings.multi_character = g_additional_server_config.force_player_character.value();
         }
         if (g_additional_server_config.require_verified_client) {
-            bool verified = false; //pf_is_player_verified(player);
+            bool verified = pf_is_player_verified(player);
             if (!verified) {
                 send_chat_line_packet(
                     "Sorry! Your spawn request was rejected because verification of your client software failed. "
