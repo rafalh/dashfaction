@@ -58,8 +58,20 @@ public:
         out << "Unhandled exception\n";
         write_current_time(out);
         if (exc_rec.ExceptionCode == STATUS_ACCESS_VIOLATION && exc_rec.NumberParameters >= 2) {
-            auto prefix = exc_rec.ExceptionInformation[0] ? "Write to" : "Read from";
-            out << prefix << StringFormat(" location %08X caused an access violation.\n", exc_rec.ExceptionInformation[1]);
+            const char* prefix = nullptr;
+            if (exc_rec.ExceptionInformation[0] == 0) {
+                prefix = "Read from";
+            }
+            else if (exc_rec.ExceptionInformation[0] == 1) {
+                prefix = "Write to";
+            }
+            else if (exc_rec.ExceptionInformation[0] == 8) {
+                prefix = "Execution of";
+            }
+            if (prefix) {
+                auto addr = exc_rec.ExceptionInformation[1];
+                out << prefix << StringFormat(" location %08X caused an access violation.\n", addr);
+            }
         }
         out << std::endl;
         write_exception_info(out, exc_rec);
