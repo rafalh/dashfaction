@@ -29,7 +29,7 @@ enum class pf_pure_status : uint8_t
 struct rf_packet_header
 {
     uint8_t type; // see pf_packet_type
-    uint16_t size; // size of data without header
+    uint16_t size; // size of data without header (PF usually includes header size here)
 };
 
 struct pf_player_stats_packet
@@ -51,6 +51,7 @@ struct pf_player_stats_packet
     };
 #ifdef PSEUDOCODE
     player_stats players[];
+    uint8_t reserved[3]; // PF bug workaround (PF expects size field to include header size)
 #endif
 };
 
@@ -62,6 +63,7 @@ struct pf_player_announce_packet
     uint8_t version; // current version is 2
     uint8_t player_id;
     uint8_t is_pure; // 0 non-pure, 1 pure (public), 2 pure (match), 3 check failed, 4 unused, 5 rfsb
+    uint8_t reserved[3]; // PF bug workaround (PF expects size field to include header size)
 };
 
 constexpr uint8_t pf_announce_player_packet_version = 2;
@@ -80,6 +82,7 @@ struct pf_players_packet
         char name[];
     };
     player_info players[];
+    uint8_t reserved[3]; // PF bug workaround (PF expects size field to include header size)
 #endif
 };
 

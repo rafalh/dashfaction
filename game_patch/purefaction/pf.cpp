@@ -11,6 +11,21 @@
 #include "pf_packets.h"
 #include "pf_secret.h"
 
+void pf_send_reliable_packet(rf::Player* player, const void* data, int len)
+{
+#if 1 // reliable
+    // PF improperly handles custom packets if they are not the first ones in a reliable packets container so flush
+    // buffer before sending
+    rf::multi_io_send_buffered_reliable_packets(player);
+    // Buffer data in a reliable packet
+    rf::multi_io_send_reliable(player, data, len, 0);
+    // RF stops reading reliable packets after encountering the first unknown type so flush buffer after sending
+    rf::multi_io_send_buffered_reliable_packets(player);
+#else // unreliable
+    rf::net_send(player->net_data->addr, data, len);
+#endif
+}
+
 static void send_pf_announce_player_packet(rf::Player* player, pf_pure_status pure_status)
 {
     // Send: server -> client
@@ -18,14 +33,15 @@ static void send_pf_announce_player_packet(rf::Player* player, pf_pure_status pu
 
     pf_player_announce_packet announce_packet;
     announce_packet.hdr.type = static_cast<uint8_t>(pf_packet_type::announce_player);
-    announce_packet.hdr.size = sizeof(announce_packet); // should not include header size (PF bug)
+    announce_packet.hdr.size = sizeof(announce_packet) - sizeof(announce_packet.hdr);
     announce_packet.version = pf_announce_player_packet_version;
     announce_packet.player_id = player->net_data->player_id;
     announce_packet.is_pure = static_cast<uint8_t>(pure_status);
+    std::memset(&announce_packet.reserved, 0, sizeof(announce_packet.reserved));
 
     auto player_list = SinglyLinkedList(rf::player_list);
     for (auto& other_player : player_list) {
-        rf::net_send(other_player.net_data->addr, &announce_packet, sizeof(announce_packet));
+        pf_send_reliable_packet(&other_player, &announce_packet, sizeof(announce_packet));
     }
 }
 
@@ -65,20 +81,20 @@ static void send_pf_player_stats_packet(rf::Player* player)
     // Send: server -> client
     assert(rf::is_server);
 
-    std::byte packet_buf[512];
+    std::byte packet_buf[rf::max_packet_size];
     pf_player_stats_packet stats_packet;
     stats_packet.hdr.type = static_cast<uint8_t>(pf_packet_type::player_stats);
-    stats_packet.hdr.size = sizeof(stats_packet); // should not include header size (PF bug)
+    stats_packet.hdr.size = sizeof(stats_packet) - sizeof(stats_packet.hdr);
     stats_packet.version = pf_player_stats_packet_version;
     stats_packet.player_count = 0;
 
-    std::stringstream ss;
+    size_t packet_len = sizeof(stats_packet);
     auto player_list = SinglyLinkedList{rf::player_list};
     for (auto& current_player : player_list) {
         auto& player_stats = *static_cast<PlayerStatsNew*>(current_player.stats);
         pf_player_stats_packet::player_stats out_stats;
         out_stats.player_id = current_player.net_data->player_id;
-        out_stats.is_pure = 0;
+        out_stats.is_pure = static_cast<uint8_t>(pf_ac_get_pure_status(&current_player));
         out_stats.accuracy = 0;
         out_stats.streak_max = 0;
         out_stats.streak_current = 0;
@@ -86,23 +102,26 @@ static void send_pf_player_stats_packet(rf::Player* player)
         out_stats.deaths = player_stats.num_deaths;
         out_stats.team_kills = 0;
         ++stats_packet.player_count;
-        stats_packet.hdr.size += sizeof(out_stats);
-        ss.write(reinterpret_cast<char*>(&out_stats), sizeof(out_stats));
+        if (packet_len + sizeof(out_stats) > sizeof(packet_buf)) {
+            // One packet should be enough for 32 players (13 bytes * 32 players = 416 bytes)
+            // Handling more data would require sending multiple packets to avoid building one big UDP datagram
+            // that crosses 512 bytes limit that is usually used as maximal datagram size.
+            xlog::warn("PF player_stats packet is too big: %d. Skipping some players...", packet_len);
+            break;
+        }
+        std::memcpy(packet_buf + packet_len, &out_stats, sizeof(out_stats));
+        packet_len += sizeof(out_stats);
     }
 
-    auto stats_str = ss.str();
-    int packet_len = sizeof(stats_packet) + stats_str.size();
-    if (static_cast<size_t>(packet_len) > sizeof(packet_buf)) {
-        // One packet should be enough for 32 players (13 bytes * 32 players = 416 bytes)
-        // Handling more data would require sending multiple packets to avoid building one big UDP datagram
-        // that would cross 512 bytes limit that is usually used as maximal datagram size
-        xlog::error("PF player_stats packet is too big: %d", packet_len);
-        return;
+    // add reserved bytes at the end
+    if (packet_len + 3 <= sizeof(packet_buf)) {
+        std::memset(packet_buf + packet_len, 0, 3);
+        packet_len += 3;
     }
 
+    stats_packet.hdr.size = packet_len - sizeof(stats_packet.hdr);
     std::memcpy(packet_buf, &stats_packet, sizeof(stats_packet));
-    std::memcpy(packet_buf + sizeof(stats_packet), stats_str.data(), stats_str.size());
-    rf::net_send(player->net_data->addr, packet_buf, packet_len);
+    pf_send_reliable_packet(player, packet_buf, packet_len);
 }
 
 static void process_pf_player_stats_packet(const void* data, size_t len, [[ maybe_unused ]] const rf::NetAddr& addr)
@@ -158,35 +177,38 @@ static void process_pf_players_request_packet([[ maybe_unused ]] const void* dat
         return;
     }
 
-    std::stringstream ss;
-    auto player_list = SinglyLinkedList(rf::player_list);
-    for (auto& player : player_list) {
-        ss.write(player.name.c_str(), player.name.size() + 1);
-    }
-    auto players_str = ss.str();
-
     pf_players_packet players_packet;
     players_packet.hdr.type = static_cast<uint8_t>(pf_packet_type::players);
-    players_packet.hdr.size = static_cast<uint16_t>(sizeof(pf_players_packet) + players_str.size() - sizeof(rf_packet_header));
     players_packet.version = 1;
     players_packet.show_ip = 0;
 
-    auto response_size = sizeof(players_packet) + players_str.size();
-    auto response_buf = std::make_unique<std::byte[]>(response_size);
-    std::memcpy(response_buf.get(), &players_packet, sizeof(players_packet));
-    std::memcpy(response_buf.get() + sizeof(players_packet), players_str.data(), players_str.size());
-    rf::net_send(addr, response_buf.get(), response_size);
+    std::byte packet_buf[rf::max_packet_size];
+    int packet_len = sizeof(players_packet);
+    auto player_list = SinglyLinkedList(rf::player_list);
+    for (auto& player : player_list) {
+        int name_len = player.name.size();
+        if (packet_len + name_len + 1 > static_cast<int>(sizeof(packet_buf))) {
+            xlog::warn("PF players packet is too big! Skipping some players...");
+            break;
+        }
+        std::memcpy(packet_buf + packet_len, player.name.c_str(), name_len + 1);
+        packet_len += name_len + 1;
+    }
+
+    players_packet.hdr.size = packet_len - sizeof(players_packet.hdr);
+    std::memcpy(packet_buf, &players_packet, sizeof(players_packet));
+    rf::net_send(addr, packet_buf, packet_len);
 }
 
-void process_pf_packet(const void* data, int len, const rf::NetAddr& addr, rf::Player* player)
+bool pf_process_packet(const void* data, int len, const rf::NetAddr& addr, rf::Player* player)
 {
     if (pf_ac_process_packet(data, len, addr, player)) {
-        return;
+        return true;
     }
 
     rf_packet_header header;
     if (len < static_cast<int>(sizeof(header))) {
-        return;
+        return false;
     }
 
     std::memcpy(&header, data, sizeof(header));
@@ -202,14 +224,30 @@ void process_pf_packet(const void* data, int len, const rf::NetAddr& addr, rf::P
             process_pf_player_stats_packet(data, len, addr);
             break;
 
-        case pf_packet_type::players_request:
-            process_pf_players_request_packet(data, len, addr);
-            break;
-
         default:
             // ignore
-            break;
+            return false;
     }
+    return true;
+}
+
+bool pf_process_raw_unreliable_packet(const void* data, int len, const rf::NetAddr& addr)
+{
+    rf_packet_header header;
+    if (len < static_cast<int>(sizeof(header))) {
+        return false;
+    }
+
+    std::memcpy(&header, data, sizeof(header));
+    auto packet_type = static_cast<pf_packet_type>(header.type);
+
+    if (packet_type == pf_packet_type::players_request) {
+        // Note: this packet can be sent by clients that do not join the server (e.g. online server browser)
+        // Because of that it must be handled here and not in pf_process_packet
+        process_pf_players_request_packet(data, len, addr);
+        return true;
+    }
+    return false;
 }
 
 void pf_player_init([[ maybe_unused ]] rf::Player* player)

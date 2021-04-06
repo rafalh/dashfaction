@@ -146,12 +146,15 @@ namespace rf
         BanlistEntry* prev;
     };
 
+    constexpr size_t max_packet_size = 512;
+
     static auto& multi_get_game_type = addr_as_ref<NetGameType()>(0x00470770);
     static auto& multi_io_send = addr_as_ref<void(Player *player, const void *packet, int len)>(0x00479370);
     static auto& multi_io_send_reliable =
-        addr_as_ref<void(Player *player, const uint8_t *data, int len, int a4)>(0x00479480);
+        addr_as_ref<void(Player *player, const void *data, int len, int not_limbo)>(0x00479480);
     static auto& multi_io_send_reliable_to_all =
-        addr_as_ref<void(const uint8_t *data, int len, int a4)>(0x004795A0);
+        addr_as_ref<void(const void *data, int len, int a4)>(0x004795A0);
+    static auto& multi_io_send_buffered_reliable_packets = addr_as_ref<void(Player *pp)>(0x004796C0);
     static auto& multi_find_player_by_addr = addr_as_ref<Player*(const NetAddr& addr)>(0x00484850);
     static auto& multi_find_player_by_id = addr_as_ref<Player*(uint8_t id)>(0x00484890);
     static auto& multi_ctf_get_red_team_score = addr_as_ref<uint8_t()>(0x00475020);

@@ -61,17 +61,6 @@ int g_update_rate = 30;
 
 typedef void MultiIoPacketHandler(char* data, const rf::NetAddr& addr);
 
-CallHook<void(const void*, size_t, const rf::NetAddr&, rf::Player*)> process_unreliable_game_packets_hook{
-    0x00479244,
-    [](const void* data, size_t len, const rf::NetAddr& addr, rf::Player* player) {
-        rf::multi_io_process_packets(data, len, addr, player);
-
-#if MASK_AS_PF
-        process_pf_packet(data, len, addr, player);
-#endif
-    },
-};
-
 class BufferOverflowPatch
 {
 private:
@@ -1024,11 +1013,56 @@ FunHook<void(rf::Player*)> send_players_packet_hook{
     },
 };
 
+extern FunHook<void __fastcall(void*, int, int, bool, int)> multi_io_stats_add_hook;
+
+void __fastcall multi_io_stats_add_new(void *this_, int edx, int size, bool is_send, int packet_type)
+{
+    // Fix memory corruption when sending/processing packets with non-standard type
+    if (packet_type < 56) {
+        multi_io_stats_add_hook.call_target(this_, edx, size, is_send, packet_type);
+    }
+}
+
+FunHook<void __fastcall(void*, int, int, bool, int)> multi_io_stats_add_hook{0x0047CAC0, multi_io_stats_add_new};
+
+static void process_custom_packet(void* data, int len, const rf::NetAddr& addr, rf::Player* player)
+{
+#if MASK_AS_PF
+    pf_process_packet(data, len, addr, player);
+#endif
+}
+
+CodeInjection multi_io_process_packets_injection{
+    0x0047918D,
+    [](auto& regs) {
+        int packet_type = regs.esi;
+        if (packet_type > 0x37) {
+            auto stack_frame = regs.esp + 0x1C;
+            std::byte* data = regs.ecx;
+            int offset = regs.ebp;
+            int len = regs.edi;
+            auto& addr = *addr_as_ref<rf::NetAddr*>(stack_frame + 0xC);
+            auto player = addr_as_ref<rf::Player*>(stack_frame + 0x10);
+            process_custom_packet(data + offset, len, addr, player);
+            regs.eip = 0x00479194;
+        }
+    },
+};
+
+CallHook<void(const void*, size_t, const rf::NetAddr&, rf::Player*)> process_unreliable_game_packets_hook{
+    0x00479244,
+    [](const void* data, size_t len, const rf::NetAddr& addr, rf::Player* player) {
+#if MASK_AS_PF
+        if (pf_process_raw_unreliable_packet(data, len, addr)) {
+            return;
+        }
+#endif
+        rf::multi_io_process_packets(data, len, addr, player);
+    },
+};
+
 void network_init()
 {
-    // process_game_packets hook (not reliable only)
-    process_unreliable_game_packets_hook.install();
-
     // Improve simultaneous ping
     rf::simultaneous_ping = 32;
 
@@ -1165,4 +1199,10 @@ void network_init()
     // connect at the same time. Unpatched game assigns newly connected reliable sockets to a player with the same
     // IP address that the reliable socket uses. This change ensures that the port is also compared.
     write_mem<i8>(0x0046E8DA + 1, 1);
+
+    // Support custom packet types
+    AsmWriter{0x0047916D}.nop(2);
+    multi_io_process_packets_injection.install();
+    multi_io_stats_add_hook.install();
+    process_unreliable_game_packets_hook.install();
 }
