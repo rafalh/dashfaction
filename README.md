@@ -168,6 +168,8 @@ Configuration example:
     $DF Force Player Character: "enviro_parker"
     // Maximal horizontal FOV that clients can use for level rendering (unlimited by default)
     //$DF Max FOV: 125
+    // If enabled a private message with player statistics is sent after each round.
+    //$DF Send Player Stats Message: true
 
 
 License

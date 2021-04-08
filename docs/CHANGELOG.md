@@ -14,6 +14,7 @@ Version 1.6.2 (not released yet)
 - Add server-side part of Pure Faction client verification
 - Add `$DF Require Verified Client` option in dedicated server config
 - Send Kills/Deaths statistics to players joining an already started gameplay
+- Send player statistics (kills, deaths, accuracy) in private message after round ends in Dash Faction server
 
 Version 1.6.1 (released 2021-02-20)
 -----------------------------------

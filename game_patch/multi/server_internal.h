@@ -46,6 +46,7 @@ struct ServerAdditionalConfig
     std::optional<int> force_player_character;
     std::optional<float> max_fov;
     bool require_verified_client = false;
+    bool stats_message_enabled = true;
 };
 
 extern ServerAdditionalConfig g_additional_server_config;

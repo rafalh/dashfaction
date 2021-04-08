@@ -4,6 +4,7 @@
 #include "../rf/player.h"
 #include "../rf/multi.h"
 #include "../rf/geometry.h"
+#include "../rf/collide.h"
 #include "debug_internal.h"
 
 std::optional<float> g_target_rotate_speed;
@@ -44,27 +45,16 @@ rf::Object* FindClosestObject()
 
 rf::Object* find_object_in_reticle()
 {
-    struct LevelCollisionOut
-    {
-        rf::Vector3 hit_point;
-        float distance;
-        int obj_handle;
-        void* face;
-    };
-    auto& CollideLineSegmentLevel =
-        addr_as_ref<bool(rf::Vector3& p0, rf::Vector3& p1, rf::Object *ignore1, rf::Object *ignore2,
-        LevelCollisionOut *out, float collision_radius, char use_mesh_collide, float bbox_size_factor)>(0x0049C690);
-
     if (!rf::local_player->cam)
         return nullptr;
-    LevelCollisionOut col_info;
+    rf::LevelCollisionOut col_info;
     col_info.face = 0;
     col_info.obj_handle = -1;
     rf::Vector3 p0 = rf::camera_get_pos(rf::local_player->cam);
     rf::Matrix3 orient = rf::camera_get_orient(rf::local_player->cam);
     rf::Vector3 p1 = p0 + orient.fvec * 100.0f;
     rf::Entity* entity = rf::entity_from_handle(rf::local_player->entity_handle);
-    bool hit = CollideLineSegmentLevel(p0, p1, entity, nullptr, &col_info, 0.0f, false, 1.0f);
+    bool hit = rf::collide_linesegment_level_for_multi(p0, p1, entity, nullptr, &col_info, 0.0f, false, 1.0f);
     if (hit && col_info.obj_handle != -1)
         return rf::obj_from_handle(col_info.obj_handle);
     else

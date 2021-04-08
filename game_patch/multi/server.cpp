@@ -25,6 +25,7 @@
 #include "../rf/os/os.h"
 #include "../rf/os/timer.h"
 #include "../rf/level.h"
+#include "../rf/collide.h"
 #include "../purefaction/pf.h"
 
 const char* g_rcon_cmd_whitelist[] = {
@@ -146,6 +147,10 @@ void load_additional_server_config(rf::Parser& parser)
         }
     }
 
+    if (parser.parse_optional("$DF Send Player Stats Message:")) {
+        g_additional_server_config.stats_message_enabled = parser.parse_bool();
+    }
+
     if (!parser.parse_optional("$Name:") && !parser.parse_optional("#End")) {
         parser.error("end of server configuration");
     }
@@ -245,6 +250,19 @@ CodeInjection process_obj_update_set_pos_injection{
     },
 };
 
+static void send_private_message_with_stats(rf::Player* player)
+{
+    auto stats = static_cast<PlayerStatsNew*>(player->stats);
+    int accuracy = static_cast<int>(stats->calc_accuracy() * 100.0f);
+    auto str = string_format(
+        "PLAYER STATS\n"
+        "Kills: %d - Deaths: %d - Max Streak: %d\n"
+        "Accuracy: %d%% (%d/%d) - Damage Given: %.0f - Damage Taken: %.0f",
+        stats->num_kills, stats->num_deaths, stats->max_streak,
+        accuracy, stats->num_shots_hit, stats->num_shots_fired, stats->damage_given, stats->damage_received);
+    send_chat_line_packet(str.c_str(), player);
+}
+
 bool handle_server_chat_command(std::string_view server_command, rf::Player* sender)
 {
     auto [cmd_name, cmd_arg] = strip_by_space(server_command);
@@ -264,6 +282,9 @@ bool handle_server_chat_command(std::string_view server_command, rf::Player* sen
     }
     else if (cmd_name == "load") {
         handle_load_command(sender, cmd_arg);
+    }
+    else if (cmd_name == "stats") {
+        send_private_message_with_stats(sender);
     }
     else {
         return false;
@@ -332,21 +353,30 @@ FunHook<float(rf::Entity*, float, int, int, int)> entity_damage_hook{
     [](rf::Entity* damaged_ep, float damage, int killer_handle, int damage_type, int killer_uid) {
         auto damaged_player = rf::player_from_entity_handle(damaged_ep->handle);
         auto killer_player = rf::player_from_entity_handle(killer_handle);
-        if (rf::is_server) {
-            if (damaged_player && killer_player && damaged_player != killer_player) {
-                damage *= g_additional_server_config.player_damage_modifier;
-                if (damage == 0.0f) {
-                    return 0.0f;
-                }
+        bool is_pvp_damage = damaged_player && killer_player && damaged_player != killer_player;
+        if (rf::is_server && is_pvp_damage) {
+            damage *= g_additional_server_config.player_damage_modifier;
+            if (damage == 0.0f) {
+                return 0.0f;
             }
         }
 
-        float dmg = entity_damage_hook.call_target(damaged_ep, damage, killer_handle, damage_type, killer_uid);
-        if (rf::is_server && g_additional_server_config.hit_sounds.enabled && killer_player && damaged_player != killer_player) {
-            send_hit_sound_packet(killer_player);
+        float real_damage = entity_damage_hook.call_target(damaged_ep, damage, killer_handle, damage_type, killer_uid);
+
+        if (rf::is_server && is_pvp_damage && real_damage > 0.0f) {
+
+            auto killer_player_stats = static_cast<PlayerStatsNew*>(killer_player->stats);
+            killer_player_stats->add_damage_given(real_damage);
+
+            auto damaged_player_stats = static_cast<PlayerStatsNew*>(damaged_player->stats);
+            damaged_player_stats->add_damage_received(real_damage);
+
+            if (g_additional_server_config.hit_sounds.enabled) {
+                send_hit_sound_packet(killer_player);
+            }
         }
 
-        return dmg;
+        return real_damage;
     },
 };
 
@@ -479,6 +509,36 @@ FunHook<void(rf::Player*)> multi_spawn_player_server_side_hook{
     },
 };
 
+FunHook<int(rf::LevelCollisionOut*, rf::Weapon*)> multi_lag_comp_handle_hit_hook{
+    0x0046F380,
+    [](rf::LevelCollisionOut *col_info, rf::Weapon *wp) {
+        auto attacker_ep = rf::entity_from_handle(wp->parent_handle);
+        auto hit_ep = rf::entity_from_handle(col_info->obj_handle);
+        if (rf::is_server && attacker_ep && hit_ep) {
+            auto attacker_pp = rf::player_from_entity_handle(attacker_ep->handle);
+            if (attacker_pp && attacker_pp->stats && rf::obj_is_player(hit_ep)) {
+                auto stats = static_cast<PlayerStatsNew*>(attacker_pp->stats);
+                stats->inc_shots_hit();
+                xlog::trace("hit a_ep %p wp %p h_ep %p", attacker_ep, wp, hit_ep);
+            }
+        }
+        return multi_lag_comp_handle_hit_hook.call_target(col_info, wp);
+    },
+};
+
+FunHook<void(rf::Entity*, rf::Weapon*)> multi_lag_comp_weapon_fire_hook{
+    0x0046F7E0,
+    [](rf::Entity *ep, rf::Weapon *wp) {
+        multi_lag_comp_weapon_fire_hook.call_target(ep, wp);
+        auto pp = rf::player_from_entity_handle(ep->handle);
+        if (pp && pp->stats) {
+            auto stats = static_cast<PlayerStatsNew*>(pp->stats);
+            stats->inc_shots_fired();
+            xlog::trace("fired a_ep %p wp %p", ep, wp);
+        }
+    },
+};
+
 void server_init()
 {
     // Override rcon command whitelist
@@ -535,6 +595,12 @@ void server_init()
 
     // Support forcing player character
     multi_spawn_player_server_side_hook.install();
+
+    // Hook lag compensation functions to calculate accuracy only for weapons with bullets
+    // Note: weapons with bullets (projectiles) are created twice server-side so hooking weapon_create would
+    // be problematic (PF went this way and its accuracy stat is broken)
+    multi_lag_comp_handle_hit_hook.install();
+    multi_lag_comp_weapon_fire_hook.install();
 }
 
 void server_do_frame()
@@ -554,6 +620,9 @@ void server_on_limbo_state_enter()
         auto& pdata = get_player_additional_data(&player);
         pdata.saves.clear();
         pdata.last_teleport_timestamp.invalidate();
+        if (g_additional_server_config.stats_message_enabled) {
+            send_private_message_with_stats(&player);
+        }
     }
 }
 

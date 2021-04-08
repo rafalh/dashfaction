@@ -17,8 +17,7 @@ void player_fpgun_on_player_death(rf::Player* pp);
 void multi_kill_init_player(rf::Player* player)
 {
     auto stats = static_cast<PlayerStatsNew*>(player->stats);
-    stats->num_kills = 0;
-    stats->num_deaths = 0;
+    stats->clear();
 }
 
 FunHook<void()> multi_level_init_hook{
@@ -111,16 +110,17 @@ void on_player_kill(rf::Player* killed_player, rf::Player* killer_player)
     }
 
     auto killed_stats = static_cast<PlayerStatsNew*>(killed_player->stats);
-    ++killed_stats->num_deaths;
+    killed_stats->inc_deaths();
 
     if (killer_player) {
         auto killer_stats = static_cast<PlayerStatsNew*>(killer_player->stats);
         if (killer_player != killed_player) {
             rf::player_add_score(killer_player, 1);
-            ++killer_stats->num_kills;
+            killer_stats->inc_kills();
         }
-        else
+        else {
             rf::player_add_score(killer_player, -1);
+        }
     }
 }
 

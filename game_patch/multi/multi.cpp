@@ -62,7 +62,9 @@ FunHook<void()> multi_limbo_init{
     0x0047C280,
     []() {
         multi_limbo_init.call_target();
-        server_on_limbo_state_enter();
+        if (rf::is_server) {
+            server_on_limbo_state_enter();
+        }
     },
 };
 
