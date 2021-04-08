@@ -45,7 +45,7 @@ namespace rf
 
     static auto& main_wnd = addr_as_ref<HWND>(0x01B0D748);
     static auto& is_main_wnd_active = addr_as_ref<bool>(0x01B0D750);
-    static auto& close_app_req = addr_as_ref<bool>(0x01B0D758);
+    static auto& close_app_req = addr_as_ref<int>(0x01B0D758);
     static auto& console_redraw_counter = addr_as_ref<uint32_t>(0x01775698);
 
     static auto& lan_only_cmd_line_param = addr_as_ref<CmdLineParam>(0x0063F608);

@@ -61,8 +61,7 @@ static void print_cmd_input_line()
 static BOOL WINAPI console_ctrl_handler([[maybe_unused]] DWORD ctrl_type)
 {
     xlog::info("Quiting after Console CTRL");
-    static auto& close = addr_as_ref<int32_t>(0x01B0D758);
-    close = 1;
+    rf::close_app_req = 1;
     return TRUE;
 }
 

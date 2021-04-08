@@ -3,7 +3,7 @@
 #include "../rf/multi.h"
 #include "../rf/gameseq.h"
 #include "../rf/level.h"
-#include "../rf/player.h"
+#include "../rf/player/player.h"
 #include "../rf/crt.h"
 #include <patch_common/AsmWriter.h>
 #include <patch_common/CallHook.h>
@@ -13,8 +13,7 @@ std::vector<int> g_players_to_kick;
 
 void extend_round_time(int minutes)
 {
-    auto& level_time = addr_as_ref<float>(0x006460F0);
-    level_time -= minutes * 60.0f;
+    rf::level.time -= minutes * 60.0f;
 }
 
 void restart_current_level()

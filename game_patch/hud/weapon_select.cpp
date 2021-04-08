@@ -1,7 +1,7 @@
 #include "hud_internal.h"
 #include "hud.h"
 #include "../rf/hud.h"
-#include "../rf/player.h"
+#include "../rf/player/player.h"
 #include "../rf/entity.h"
 #include "../rf/gr/gr.h"
 #include "../rf/gr/gr_font.h"

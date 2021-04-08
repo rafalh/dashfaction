@@ -13,7 +13,7 @@
 #include "../os/console.h"
 #include "../main/main.h"
 #include "../rf/gr/gr.h"
-#include "../rf/player.h"
+#include "../rf/player/player.h"
 #include "../rf/multi.h"
 #include "../rf/gameseq.h"
 #include "../rf/os/os.h"

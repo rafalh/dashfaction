@@ -276,6 +276,7 @@ namespace rf
     static auto& remote_charge_weapon_type = addr_as_ref<int>(0x0087210C);
     static auto& machine_pistol_weapon_type = addr_as_ref<int>(0x0085CCD8);
     static auto& machine_pistol_special_weapon_type = addr_as_ref<int>(0x0085CD00);
+    static auto& assault_rifle_weapon_type = addr_as_ref<int>(0x00872470);
     static auto& hide_enemy_bullets = addr_as_ref<bool>(0x005A24D0);
 
     static auto& weapon_lookup_type = addr_as_ref<int(const char*)>(0x004C81F0);

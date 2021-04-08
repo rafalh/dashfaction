@@ -1,7 +1,7 @@
 #pragma once
 
 #include <optional>
-#include "../rf/player.h"
+#include "../rf/player/player.h"
 
 struct PlayerStatsNew : rf::PlayerLevelStats
 {

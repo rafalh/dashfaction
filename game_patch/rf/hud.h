@@ -142,4 +142,6 @@ namespace rf
     static auto& hud_render_weapon_cycle = addr_as_ref<bool>(0x007C7640);
     static auto& hud_weapon_display_off_foley_snd = addr_as_ref<int>(0x007C75D0);
     static auto& hud_weapon_cycle_current_idx = addr_as_ref<int>(0x007C71A8);
+
+    static auto& hud_do_frame = addr_as_ref<void(Player*)>(0x00437B80);
 }

@@ -59,7 +59,7 @@ LRESULT WINAPI wnd_proc(HWND wnd_handle, UINT msg, WPARAM w_param, LPARAM l_para
     case WM_QUIT:
     case WM_CLOSE:
     case WM_DESTROY:
-        rf::close_app_req = true;
+        rf::close_app_req = 1;
         break;
 
     case WM_PAINT:

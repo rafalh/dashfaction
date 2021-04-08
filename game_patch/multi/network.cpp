@@ -25,7 +25,7 @@
 #include "../main/main.h"
 #include "../rf/multi.h"
 #include "../rf/misc.h"
-#include "../rf/player.h"
+#include "../rf/player/player.h"
 #include "../rf/weapon.h"
 #include "../rf/entity.h"
 #include "../rf/os/console.h"
@@ -46,16 +46,6 @@
 #ifndef NET_IFINDEX_UNSPECIFIED
 #define NET_IFINDEX_UNSPECIFIED 0
 #endif
-
-namespace rf
-{
-static const auto multi_is_connecting_to_server = addr_as_ref<uint8_t(const rf::NetAddr& addr)>(0x0044AD80);
-
-static auto& simultaneous_ping = addr_as_ref<uint32_t>(0x00599CD8);
-
-typedef void MultiIoProcessPackets_Type(const void* data, size_t len, const NetAddr& addr, Player* player);
-static auto& multi_io_process_packets = addr_as_ref<MultiIoProcessPackets_Type>(0x004790D0);
-} // namespace rf
 
 int g_update_rate = 30;
 
@@ -609,8 +599,7 @@ CallHook<int(void*, int, int, rf::NetAddr&, int)> net_get_tracker_hook{
     0x00482ED4,
     [](void* data, int a2, int a3, rf::NetAddr& addr, int super_type) {
         int res = net_get_tracker_hook.call_target(data, a2, a3, addr, super_type);
-        auto& tracker_addr = addr_as_ref<rf::NetAddr>(0x006FC550);
-        if (res != -1 && addr != tracker_addr)
+        if (res != -1 && addr != rf::tracker_addr)
             res = -1;
         return res;
     },
@@ -744,8 +733,7 @@ CodeInjection process_join_accept_send_game_info_req_injection{
         // using old fav entry with outdated name
         rf::NetAddr* server_addr = regs.edi;
         xlog::trace("Sending game_info_req to %x:%d", server_addr->ip_addr, server_addr->port);
-        auto send_game_info_req_packet = addr_as_ref<void(const rf::NetAddr& addr)>(0x0047B450);
-        send_game_info_req_packet(*server_addr);
+        rf::send_game_info_req_packet(*server_addr);
     },
 };
 

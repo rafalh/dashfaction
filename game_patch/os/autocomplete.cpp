@@ -2,7 +2,7 @@
 #include "../main/main.h"
 #include "../misc/player.h"
 #include "../misc/vpackfile.h"
-#include "../rf/player.h"
+#include "../rf/player/player.h"
 #include <patch_common/FunHook.h>
 #include <cstring>
 

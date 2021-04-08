@@ -176,14 +176,34 @@ namespace rf
     static auto& multi_find_character = addr_as_ref<int(const char *name)>(0x00476270);
     static auto& multi_chat_print = addr_as_ref<void(String::Pod text, ChatMsgColor color, String::Pod prefix)>(0x004785A0);
     static auto& multi_chat_say = addr_as_ref<void(const char *msg, bool is_team_msg)>(0x00444150);
+    static auto& multi_is_connecting_to_server = addr_as_ref<uint8_t(const NetAddr& addr)>(0x0044AD80);
+    typedef void MultiIoProcessPackets_Type(const void* data, size_t len, const NetAddr& addr, Player* player);
+    static auto& multi_io_process_packets = addr_as_ref<MultiIoProcessPackets_Type>(0x004790D0);
+    static auto& multi_kill_local_player = addr_as_ref<void()>(0x004757A0);
+    static auto& send_game_info_req_packet = addr_as_ref<void(const NetAddr& addr)>(0x0047B450);
 
     static auto& netgame = addr_as_ref<NetGameInfo>(0x0064EC28);
     static auto& is_multi = addr_as_ref<bool>(0x0064ECB9);
     static auto& is_server = addr_as_ref<bool>(0x0064ECBA);
     static auto& is_dedicated_server = addr_as_ref<bool>(0x0064ECBB);
+    static auto& simultaneous_ping = addr_as_ref<uint32_t>(0x00599CD8);
     static auto& banlist_first_entry = addr_as_ref<BanlistEntry*>(0x0064EC20);
     static auto& banlist_last_entry = addr_as_ref<BanlistEntry*>(0x0064EC24);
     static auto& banlist_null_entry = addr_as_ref<BanlistEntry>(0x0064EC08);
+    static auto& tracker_addr = addr_as_ref<NetAddr>(0x006FC550);
+
+    enum ChatSayType {
+        CHAT_SAY_GLOBAL = 0,
+        CHAT_SAY_TEAM = 1,
+    };
+
+    static auto& multi_chat_say_handle_key = addr_as_ref<void(int key)>(0x00444620);
+    static auto& multi_chat_is_say_visible = addr_as_ref<bool()>(0x00444AC0);
+    static auto& multi_chat_say_render = addr_as_ref<void()>(0x00444790);
+    static auto& multi_chat_say_show = addr_as_ref<void(ChatSayType type)>(0x00444A80);
+    static auto& multi_hud_render_chat = addr_as_ref<void()>(0x004773D0);
+    static auto& game_poll = addr_as_ref<void(void(*key_callback)(int k))>(0x004353C0);
+    static auto& scoreboard_render_internal = addr_as_ref<void(bool netgame_scoreboard)>(0x00470880);
 
     constexpr int multi_max_player_id = 256;
 }

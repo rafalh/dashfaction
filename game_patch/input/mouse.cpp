@@ -8,7 +8,7 @@
 #include "../rf/os/os.h"
 #include "../rf/gr/gr.h"
 #include "../rf/multi.h"
-#include "../rf/player.h"
+#include "../rf/player/player.h"
 #include "../rf/entity.h"
 #include "../main/main.h"
 

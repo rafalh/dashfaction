@@ -2,7 +2,7 @@
 #include "console.h"
 #include "../main/main.h"
 #include "../rf/multi.h"
-#include "../rf/player.h"
+#include "../rf/player/player.h"
 #include "../misc/misc.h"
 #include "../misc/vpackfile.h"
 #include <common/utils/list-utils.h>

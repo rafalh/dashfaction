@@ -32,8 +32,13 @@ set(SRCS
     rf/sound/sound_ds.h
     rf/file/file.h
     rf/file/packfile.h
+    rf/player/player.h
+    rf/player/player_fpgun.h
+    rf/player/control_config.h
+    rf/player/camera.h
     rf/ai.h
     rf/bmpman.h
+    rf/cutscene.h
     rf/clutter.h
     rf/corpse.h
     rf/entity.h
@@ -47,7 +52,6 @@ set(SRCS
     rf/object.h
     rf/parse.h
     rf/physics.h
-    rf/player.h
     rf/trigger.h
     rf/vmesh.h
     rf/weapon.h

@@ -3,7 +3,8 @@
 #include <patch_common/CallHook.h>
 #include <patch_common/AsmWriter.h>
 #include <common/config/BuildConfig.h>
-#include "../rf/player.h"
+#include "../rf/player/player.h"
+#include "../rf/player/camera.h"
 #include "../rf/sound/sound.h"
 #include "../rf/vmesh.h"
 #include "../rf/weapon.h"
@@ -14,10 +15,10 @@
 
 static std::vector<int> g_fpgun_sounds;
 
-static FunHook<void(rf::Player*)> player_fpgun_update_state_hook{
+static FunHook<void(rf::Player*)> player_fpgun_update_state_anim_hook{
     0x004AA3A0,
     [](rf::Player* player) {
-        player_fpgun_update_state_hook.call_target(player);
+        player_fpgun_update_state_anim_hook.call_target(player);
         if (player != rf::local_player) {
             rf::Entity* entity = rf::entity_from_handle(player->entity_handle);
             if (entity) {
@@ -30,8 +31,8 @@ static FunHook<void(rf::Player*)> player_fpgun_update_state_hook{
                     state = rf::WS_IDLE;
                 else if (horz_speed_pow2 > 0.2f)
                     state = rf::WS_RUN;
-                if (!rf::player_fpgun_has_state(player, state))
-                    rf::player_fpgun_set_state(player, state);
+                if (!rf::player_fpgun_is_in_state_anim(player, state))
+                    rf::player_fpgun_set_next_state_anim(player, state);
             }
         }
     },
@@ -46,7 +47,7 @@ static FunHook<void(rf::Player*)> player_fpgun_render_ir_hook{
     },
 };
 
-static CodeInjection player_fpgun_play_action_anim_injection{
+static CodeInjection player_fpgun_play_anim_injection{
     0x004A947B,
     [](auto& regs) {
         if (regs.eax >= 0) {
@@ -127,24 +128,24 @@ void player_fpgun_do_patch()
 {
 #if SPECTATE_MODE_SHOW_WEAPON
     AsmWriter(0x004AB1B8).nop(6); // player_fpgun_render
-    AsmWriter(0x004AA23E).nop(6); // player_fpgun_setup_mesh
+    AsmWriter(0x004AA23E).nop(6); // player_fpgun_set_state
     AsmWriter(0x004AE0DF).nop(2); // player_fpgun_get_vmesh_handle
 
-    AsmWriter(0x004A938F).nop(6);               // player_fpgun_play_action_anim
-    write_mem<u8>(0x004A952C, asm_opcodes::jmp_rel_short); // player_fpgun_has_state
-    AsmWriter(0x004AA56D).nop(6);               // player_fpgun_set_state
+    AsmWriter(0x004A938F).nop(6);               // player_fpgun_play_anim
+    write_mem<u8>(0x004A952C, asm_opcodes::jmp_rel_short); // player_fpgun_is_in_state_anim
+    AsmWriter(0x004AA56D).nop(6);               // player_fpgun_set_next_state_anim
     AsmWriter(0x004AA6E7).nop(6);               // player_fpgun_process
-    AsmWriter(0x004AE384).nop(6);               // player_fpgun_prepare_weapon
+    AsmWriter(0x004AE384).nop(6);               // player_fpgun_page_in
     write_mem<u8>(0x004ACE2C, asm_opcodes::jmp_rel_short); // player_fpgun_get_zoom
 
-    player_fpgun_update_state_hook.install();
+    player_fpgun_update_state_anim_hook.install();
 
     // Render IR for player that is currently being shown by camera - needed for spectate mode
     player_fpgun_render_ir_hook.install();
 #endif // SPECTATE_MODE_SHOW_WEAPON
 
     // Update fpgun 3D sounds positions
-    player_fpgun_play_action_anim_injection.install();
+    player_fpgun_play_anim_injection.install();
 
     // Faster IR and Railgun scanner bitmap update
     railgun_scanner_start_render_to_texture.install();

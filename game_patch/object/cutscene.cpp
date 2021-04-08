@@ -4,40 +4,41 @@
 #include <algorithm>
 #include <xlog/xlog.h>
 #include "../os/console.h"
-#include "../rf/player.h"
+#include "../rf/player/player.h"
 #include "../rf/gr/gr.h"
 #include "../rf/gr/gr_font.h"
 #include "../rf/hud.h"
-#include "../rf/misc.h"
+#include "../rf/cutscene.h"
+#include "../rf/player/camera.h"
+#include "../rf/os/frametime.h"
+#include "../rf/os/timer.h"
 #include "../main/main.h"
 #include "../sound/sound.h"
 
 static constexpr rf::ControlConfigAction default_skip_cutscene_ctrl = rf::CC_ACTION_MP_STATS;
 
-rf::String get_game_ctrl_bind_name(int game_ctrl)
+static rf::String get_action_bind_name(int action)
 {
-    auto get_key_name = addr_as_ref<int(rf::String *out, int key)>(0x0043D930);
-    auto get_mouse_button_name = addr_as_ref<int(rf::String *out, int mouse_btn)>(0x0043D970);
-    auto ctrl_config = rf::local_player->settings.controls.bindings[game_ctrl];
+    auto& config_item = rf::local_player->settings.controls.bindings[action];
     rf::String name;
-    if (ctrl_config.scan_codes[0] >= 0) {
-        get_key_name(&name, ctrl_config.scan_codes[0]);
+    if (config_item.scan_codes[0] >= 0) {
+        rf::control_config_get_key_name(&name, config_item.scan_codes[0]);
     }
-    else if (ctrl_config.mouse_btn_id >= 0) {
-        get_mouse_button_name(&name, ctrl_config.mouse_btn_id);
+    else if (config_item.mouse_btn_id >= 0) {
+        rf::control_config_get_mouse_button_name(&name, config_item.mouse_btn_id);
     }
     else {
-        return rf::String::format("?");
+        name = "?";
     }
     return name;
 }
 
-void render_skip_cutscene_hint_text(rf::ControlConfigAction action)
+static void render_skip_cutscene_hint_text(rf::ControlConfigAction action)
 {
     if (rf::hud_disabled) {
         return;
     }
-    auto bind_name = get_game_ctrl_bind_name(action);
+    auto bind_name = get_action_bind_name(action);
     auto& action_name = rf::local_player->settings.controls.bindings[action].name;
     rf::gr::set_color(255, 255, 255, 255);
     auto msg = rf::String::format("Press %s (%s) to skip the cutscene", action_name.c_str(), bind_name.c_str());
@@ -60,21 +61,12 @@ FunHook<void(bool)> cutscene_do_frame_hook{
             render_skip_cutscene_hint_text(skip_cutscene_ctrl);
         }
         else {
-            auto& timer_add_delta_time = addr_as_ref<int(int delta_ms)>(0x004FA2D0);
-
-            auto& timer_base = addr_as_ref<int64_t>(0x01751BF8);
-            auto& timer_freq = addr_as_ref<int32_t>(0x01751C04);
-            auto& frame_time = addr_as_ref<float>(0x005A4014);
-            auto& num_shots = struct_field_ref<int>(rf::active_cutscene, 4);
-            auto& current_shot_idx = struct_field_ref<int>(rf::active_cutscene, 0x808);
-            auto& current_shot_timer = struct_field_ref<rf::Timestamp>(rf::active_cutscene, 0x810);
-
             disable_sound_before_cutscene_skip();
 
             while (rf::cutscene_is_active()) {
-                int shot_time_left_ms = current_shot_timer.time_until();
+                int shot_time_left_ms = rf::active_cutscene->next_stage_timestamp.time_until();
 
-                if (current_shot_idx == num_shots - 1) {
+                if (rf::active_cutscene->current_script_index == rf::active_cutscene->num_cam_scripts - 1) {
                     // run last half second with a speed of 10 FPS so all events get properly processed before
                     // going back to normal gameplay
                     if (shot_time_left_ms > 500)
@@ -82,9 +74,9 @@ FunHook<void(bool)> cutscene_do_frame_hook{
                     else
                         shot_time_left_ms = std::min(shot_time_left_ms, 100);
                 }
-                timer_add_delta_time(shot_time_left_ms);
-                frame_time = shot_time_left_ms / 1000.0f;
-                timer_base -= static_cast<int64_t>(shot_time_left_ms) * timer_freq / 1000;
+                rf::timer_add_delta_time(shot_time_left_ms);
+                rf::frametime = shot_time_left_ms / 1000.0f;
+                rf::timer_base -= static_cast<int64_t>(shot_time_left_ms) * rf::timer_freq / 1000;
                 cutscene_do_frame_hook.call_target(dlg_open);
             }
 
@@ -110,8 +102,7 @@ ConsoleCommand2 skip_cutscene_bind_cmd{
             g_game_config.skip_cutscene_ctrl = -1;
         }
         else {
-            auto ConfigFindControlByName = addr_as_ref<int(rf::PlayerSettings&, const char*)>(0x0043D9F0);
-            int ctrl = ConfigFindControlByName(rf::local_player->settings, bind_name.c_str());
+            int ctrl = rf::control_config_find_action_by_name(&rf::local_player->settings, bind_name.c_str());
             if (ctrl == -1) {
                 rf::console::printf("Cannot find control: %s", bind_name.c_str());
             }
@@ -129,11 +120,9 @@ ConsoleCommand2 skip_cutscene_bind_cmd{
 CodeInjection cutscene_shot_sync_fix{
     0x0045B43B,
     [](auto& regs) {
-        auto& current_shot_idx = struct_field_ref<int>(rf::active_cutscene, 0x808);
-        auto& current_shot_timer = struct_field_ref<rf::Timestamp>(rf::active_cutscene, 0x810);
-        if (current_shot_idx > 1) {
+        if (rf::active_cutscene->current_script_index > 1) {
             // decrease time for next shot using current shot timer value
-            int shot_time_left_ms = current_shot_timer.time_until();
+            int shot_time_left_ms = rf::active_cutscene->next_stage_timestamp.time_until();
             if (shot_time_left_ms > 0 || shot_time_left_ms < -100)
                 xlog::warn("invalid shot_time_left_ms %d", shot_time_left_ms);
             regs.eax += shot_time_left_ms;

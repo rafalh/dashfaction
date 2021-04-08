@@ -1,24 +1,23 @@
 #include <windows.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/AsmWriter.h>
+#include "../rf/os/timer.h"
 
 static LARGE_INTEGER g_qpc_frequency;
 
 FunHook<int(int)> timer_get_hook{
     0x00504AB0,
     [](int scale) {
-        static auto& timer_base = addr_as_ref<LARGE_INTEGER>(0x01751BF8);
-        static auto& timer_last_value = addr_as_ref<LARGE_INTEGER>(0x01751BD0);
         // get QPC current value
         LARGE_INTEGER current_qpc_value;
         QueryPerformanceCounter(&current_qpc_value);
         // make sure time never goes backward
-        if (current_qpc_value.QuadPart < timer_last_value.QuadPart) {
-            current_qpc_value = timer_last_value;
+        if (current_qpc_value.QuadPart < rf::timer_last_value) {
+            current_qpc_value.QuadPart = rf::timer_last_value;
         }
-        timer_last_value = current_qpc_value;
+        rf::timer_last_value = current_qpc_value.QuadPart;
         // Make sure we count from game start
-        current_qpc_value.QuadPart -= timer_base.QuadPart;
+        current_qpc_value.QuadPart -= rf::timer_base;
         // Multiply with unit scale (eg. ms/us) before division
         current_qpc_value.QuadPart *= scale;
         // Divide by frequency using 64 bits and then cast to 32 bits

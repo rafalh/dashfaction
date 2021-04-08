@@ -1,10 +1,11 @@
 #include "../os/console.h"
 #include "../rf/object.h"
 #include "../rf/entity.h"
-#include "../rf/player.h"
+#include "../rf/player/player.h"
 #include "../rf/multi.h"
 #include "../rf/geometry.h"
 #include "../rf/collide.h"
+#include "../rf/player/camera.h"
 #include "debug_internal.h"
 
 std::optional<float> g_target_rotate_speed;

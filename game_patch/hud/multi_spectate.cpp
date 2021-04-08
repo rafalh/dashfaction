@@ -3,14 +3,14 @@
 #include "multi_scoreboard.h"
 #include "../os/console.h"
 #include "../rf/entity.h"
-#include "../rf/player.h"
+#include "../rf/player/player.h"
 #include "../rf/multi.h"
 #include "../rf/gameseq.h"
 #include "../rf/weapon.h"
 #include "../rf/gr/gr.h"
 #include "../rf/gr/gr_font.h"
 #include "../rf/hud.h"
-#include "../rf/misc.h"
+#include "../rf/player/camera.h"
 #include "../main/main.h"
 #include <common/config/BuildConfig.h>
 #include <xlog/xlog.h>
@@ -85,7 +85,7 @@ void multi_spectate_set_target_player(rf::Player* player)
     rf::Entity* entity = rf::entity_from_handle(player->entity_handle);
     if (entity) {
         // make sure weapon mesh is loaded now
-        rf::player_fpgun_setup_mesh(player, entity->ai.current_primary_weapon);
+        rf::player_fpgun_set_state(player, entity->ai.current_primary_weapon);
         xlog::trace("FpgunMesh %p", player->weapon_mesh_handle);
 
         // Hide target player from camera
@@ -277,10 +277,10 @@ static void player_render_fpgun_new(rf::Player* player)
         rf::local_player->fpgun_data.zoom_factor = g_spectate_mode_target->fpgun_data.zoom_factor;
 
         rf::player_fpgun_process(g_spectate_mode_target);
-        rf::player_fpgun_render(g_spectate_mode_target);
+        rf::player_render_fpgun(g_spectate_mode_target);
     }
     else
-        rf::player_fpgun_render(player);
+        rf::player_render_fpgun(player);
 }
 
 CallHook<float(rf::Player*)> gameplay_render_frame_player_fpgun_get_zoom_hook{

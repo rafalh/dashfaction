@@ -2,7 +2,7 @@
 #include <map>
 #include <set>
 #include <ctime>
-#include "../rf/player.h"
+#include "../rf/player/player.h"
 #include "../rf/multi.h"
 #include "../rf/gameseq.h"
 #include "../rf/misc.h"
@@ -246,8 +246,7 @@ struct VoteLevel : public Vote
     void on_accepted() override
     {
         send_chat_line_packet("\xA6 Vote passed: changing level", nullptr);
-        auto& multi_change_level = addr_as_ref<bool(const char* filename)>(0x0047BF50);
-        multi_change_level(m_level_name.c_str());
+        rf::multi_change_level(m_level_name.c_str());
     }
 
     bool is_allowed_in_limbo_state() override

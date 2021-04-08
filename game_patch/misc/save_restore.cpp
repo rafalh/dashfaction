@@ -84,9 +84,9 @@ FunHook<void(int, int*)> sr_add_handle_for_delayed_resolution_hook{
 FunHook<void(rf::Object*)> remember_level_transition_objects_meshes_hook{
     0x004B5660,
     [](rf::Object *obj) {
-        auto& num_level_load_taken_objs = addr_as_ref<int>(0x00856058);
+        auto& num_level_transition_objects = addr_as_ref<int>(0x00856058);
         // Note: uid -999 belongs to local player entity and it must be preserved
-        if (num_level_load_taken_objs < 23 || obj->uid == -999) {
+        if (num_level_transition_objects < 23 || obj->uid == -999) {
             remember_level_transition_objects_meshes_hook.call_target(obj);
         }
         else {
@@ -99,7 +99,8 @@ FunHook<void(rf::Object*)> remember_level_transition_objects_meshes_hook{
 CodeInjection quick_save_mem_leak_fix{
     0x004B603F,
     []() {
-        addr_as_ref<bool>(0x00856054) = true;
+        auto& saved_label_inited = addr_as_ref<bool>(0x00856054);
+        saved_label_inited = true;
     },
 };
 

@@ -4,7 +4,7 @@
 #include <patch_common/AsmWriter.h>
 #include "multi.h"
 #include "../os/console.h"
-#include "../rf/player.h"
+#include "../rf/player/player.h"
 #include "../rf/entity.h"
 #include "../rf/localize.h"
 #include "../rf/multi.h"

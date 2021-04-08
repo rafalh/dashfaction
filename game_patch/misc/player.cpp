@@ -1,9 +1,12 @@
 #include "player.h"
-#include "../rf/player.h"
+#include "../rf/player/player.h"
+#include "../rf/player/camera.h"
 #include "../rf/entity.h"
 #include "../rf/multi.h"
 #include "../rf/sound/sound.h"
 #include "../rf/bmpman.h"
+#include "../rf/weapon.h"
+#include "../rf/hud.h"
 #include "../os/console.h"
 #include "../main/main.h"
 #include "../multi/multi.h"
@@ -83,8 +86,7 @@ bool should_swap_weapon_alt_fire(rf::Player* player)
         return false;
     }
 
-    static auto& assault_rifle_cls_id = addr_as_ref<int>(0x00872470);
-    return entity->ai.current_primary_weapon == assault_rifle_cls_id;
+    return entity->ai.current_primary_weapon == rf::assault_rifle_weapon_type;
 }
 
 bool is_player_weapon_on(rf::Player* player, bool alt_fire) {
@@ -225,8 +227,7 @@ FunHook<void()> players_do_frame_hook{
     []() {
         players_do_frame_hook.call_target();
         if (multi_spectate_is_spectating()) {
-            static auto hud_do_frame = addr_as_ref<void(rf::Player*)>(0x00437B80);
-            hud_do_frame(multi_spectate_get_target_player());
+            rf::hud_do_frame(multi_spectate_get_target_player());
         }
     },
 };

@@ -126,9 +126,9 @@ CallHook<void __fastcall (rf::GRoom* room, int edx, rf::GSolid* geo)> liquid_dep
 CallHook<int(rf::AiPathInfo*)> ai_path_release_on_load_level_event_crash_fix{
     0x004BBD99,
     [](rf::AiPathInfo* pathp) {
-        // Clear GNavNode pointers before level load
-        struct_field_ref<void*>(pathp, 0x114) = nullptr;
-        struct_field_ref<void*>(pathp, 0x118) = nullptr;
+        // Clear GPathNode pointers before level load
+        pathp->adjacent_node1 = nullptr;
+        pathp->adjacent_node2 = nullptr;
         return ai_path_release_on_load_level_event_crash_fix.call_target(pathp);
     },
 };

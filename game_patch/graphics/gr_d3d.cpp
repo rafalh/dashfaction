@@ -14,7 +14,7 @@
 #include "../rf/gr/gr_direct3d.h"
 #include "../rf/os/os.h"
 #include "../rf/multi.h"
-#include "../rf/player.h"
+#include "../rf/player/player.h"
 #include "../main/main.h"
 #include "../os/console.h"
 #include "gr.h"

@@ -202,9 +202,8 @@ CodeInjection sort_clutter_patch{
         }
         std::string_view mesh_name_sv = mesh_name;
 
-        auto& clutter_list = addr_as_ref<rf::Clutter>(0x005C9360);
-        auto current = clutter_list.next;
-        while (current != &clutter_list) {
+        auto current = rf::clutter_list.next;
+        while (current != &rf::clutter_list) {
             auto current_anim_mesh = current->vmesh;
             auto current_mesh_name = current_anim_mesh ? rf::vmesh_get_name(current_anim_mesh) : nullptr;
             if (current_mesh_name && mesh_name_sv == current_mesh_name) {

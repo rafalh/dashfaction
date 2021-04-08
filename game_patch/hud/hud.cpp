@@ -13,7 +13,7 @@
 #include "../rf/multi.h"
 #include "../rf/file/file.h"
 #include "../rf/entity.h"
-#include "../rf/player.h"
+#include "../rf/player/player.h"
 #include "../rf/weapon.h"
 #include "../rf/gameseq.h"
 #include "multi_spectate.h"

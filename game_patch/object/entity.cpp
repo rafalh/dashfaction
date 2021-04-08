@@ -4,7 +4,7 @@
 #include <patch_common/AsmWriter.h>
 #include "../rf/entity.h"
 #include "../rf/corpse.h"
-#include "../rf/player.h"
+#include "../rf/player/player.h"
 #include "../rf/particle_emitter.h"
 #include "../rf/os/frametime.h"
 #include "../main/main.h"

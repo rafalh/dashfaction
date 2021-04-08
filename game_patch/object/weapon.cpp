@@ -3,7 +3,7 @@
 #include <patch_common/CodeInjection.h>
 #include <patch_common/ShortTypes.h>
 #include <xlog/xlog.h>
-#include "../rf/player.h"
+#include "../rf/player/player.h"
 #include "../rf/weapon.h"
 #include "../rf/entity.h"
 #include "../rf/multi.h"

@@ -1,6 +1,12 @@
 #pragma once
 
-#include "../rf/player.h"
+#include "../rf/player/control_config.h"
+
+namespace rf
+{
+    struct Player;
+    struct Entity;
+}
 
 void multi_spectate_set_target_player(rf::Player* player);
 rf::Player* multi_spectate_get_target_player();

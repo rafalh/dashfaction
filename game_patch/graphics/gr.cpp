@@ -16,7 +16,7 @@
 #include "../main/main.h"
 #include "../multi/multi.h"
 #include "../rf/gr/gr.h"
-#include "../rf/player.h"
+#include "../rf/player/player.h"
 #include "../rf/multi.h"
 #include "../rf/os/os.h"
 #include "../rf/item.h"

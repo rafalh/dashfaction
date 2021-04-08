@@ -28,21 +28,6 @@
 #include "../rf/gameseq.h"
 #include "../hud/hud.h"
 
-namespace rf
-{
-    enum ChatSayType {
-        CHAT_SAY_GLOBAL = 0,
-        CHAT_SAY_TEAM = 1,
-    };
-    static auto& multi_chat_say_handle_key = addr_as_ref<void(int key)>(0x00444620);
-    static auto& multi_chat_is_say_visible = addr_as_ref<bool()>(0x00444AC0);
-    static auto& multi_chat_say_render = addr_as_ref<void()>(0x00444790);
-    static auto& multi_chat_say_show = addr_as_ref<void(ChatSayType type)>(0x00444A80);
-    static auto& multi_hud_render_chat = addr_as_ref<void()>(0x004773D0);
-    static auto& game_poll = addr_as_ref<void(void(*key_callback)(rf::Key k))>(0x004353C0);
-    static auto& scoreboard_render_internal = addr_as_ref<void(bool netgame_scoreboard)>(0x00470880);
-}
-
 static bool is_vpp_filename(const char* filename)
 {
     return string_ends_with_ignore_case(filename, ".vpp");
@@ -493,7 +478,7 @@ void render_progress_bar(int x, int y, int w, int h, float progress)
     }
 }
 
-void multi_level_download_handle_input(rf::Key key)
+void multi_level_download_handle_input(int key)
 {
     if (!key) {
         return;

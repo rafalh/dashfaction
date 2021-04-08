@@ -7,7 +7,7 @@
 #include "../rf/clutter.h"
 #include "../rf/gr/gr.h"
 #include "../rf/bmpman.h"
-#include "../rf/player.h"
+#include "../rf/player/player.h"
 #include "../main/main.h"
 #include "../graphics/gr.h"
 #include "../bmpman/bmpman.h"
@@ -150,8 +150,7 @@ FunHook<void(rf::Monitor&)> monitor_update_off_hook{
 CodeInjection render_corpse_in_monitor_patch{
     0x00412905,
     []() {
-        auto player_render_held_corpse = addr_as_ref<void(rf::Player* player)>(0x004A2B90);
-        player_render_held_corpse(rf::local_player);
+        rf::player_render_held_corpse(rf::local_player);
     },
 };
 

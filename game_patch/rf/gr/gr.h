@@ -324,6 +324,7 @@ namespace rf::gr
     static auto& get_clip = addr_as_ref<void(int* x, int* y, int* w, int* h)>(0x0050CD80);
     static auto& page_in = addr_as_ref<int(int bm_handle)>(0x0050CE00);
     static auto& tcache_add_ref = addr_as_ref<void(int bm_handle)>(0x0050E850);
+    static auto& tcache_remove_ref = addr_as_ref<void(int bm_handle)>(0x0050E870);
     static auto& close = addr_as_ref<void()>(0x0050CBE0);
     static auto& set_texture = addr_as_ref<void (int bitmap_handle, int bitmap_handle2)>(0x0050D060);
     static auto& tmapper = addr_as_ref<void (int nv, Vertex **verts, TMapperFlags vertex_attributes, Mode mode)>(0x0050DF80);

@@ -2,7 +2,7 @@
 #include "hud.h"
 #include "../rf/hud.h"
 #include "../rf/entity.h"
-#include "../rf/player.h"
+#include "../rf/player/player.h"
 #include "../rf/gameseq.h"
 #include "../rf/sound/sound.h"
 #include "../rf/gr/gr_font.h"

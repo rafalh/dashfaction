@@ -68,4 +68,7 @@ namespace rf::console
     static auto& float_arg = addr_as_ref<float>(0x01754628);
     static auto& cmd_line = addr_as_ref<char[256]>(0x01775330);
     static auto& cmd_line_len = addr_as_ref<int>(0x0177568C);
+    static auto& history_current_index = addr_as_ref<int>(0x01775690);
+    static auto& history = addr_as_ref<char[8][256]>(0x017744F4);
+    static auto& history_max_index = addr_as_ref<int>(0x005A4030);
 }

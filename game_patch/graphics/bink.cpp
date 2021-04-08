@@ -43,10 +43,8 @@ CodeInjection bink_set_sound_system_injection{
 CallHook<void(int)> play_bik_file_vram_leak_fix{
     0x00520C79,
     [](int hbm) {
-        auto gr_tcache_add_ref = addr_as_ref<void(int hbm)>(0x0050E850);
-        auto gr_tcache_remove_ref = addr_as_ref<void(int hbm)>(0x0050E870);
-        gr_tcache_add_ref(hbm);
-        gr_tcache_remove_ref(hbm);
+        rf::gr::tcache_add_ref(hbm);
+        rf::gr::tcache_remove_ref(hbm);
         play_bik_file_vram_leak_fix.call_target(hbm);
     },
 };

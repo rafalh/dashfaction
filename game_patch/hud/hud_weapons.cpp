@@ -5,7 +5,7 @@
 #include "../rf/entity.h"
 #include "../rf/weapon.h"
 #include "../rf/gr/gr_font.h"
-#include "../rf/player.h"
+#include "../rf/player/player.h"
 #include "../rf/multi.h"
 #include "../main/main.h"
 #include "../os/console.h"
