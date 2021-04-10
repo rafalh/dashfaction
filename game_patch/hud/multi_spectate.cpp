@@ -392,7 +392,7 @@ void multi_spectate_render()
     int scr_w = rf::gr::screen_width();
     int scr_h = rf::gr::screen_height();
 
-    if (!g_spectate_mode_enabled && false) {
+    if (!g_spectate_mode_enabled) {
         if (rf::player_is_dead(rf::local_player)) {
             rf::gr::set_color(0xFF, 0xFF, 0xFF, 0xC0);
             int y = scr_h - (g_game_config.big_hud ? 140 : 100);
