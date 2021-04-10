@@ -103,10 +103,6 @@ CodeInjection after_frame_render_hook{
     0x004B2DC2,
     []() {
         // Draw on top (after scene)
-
-        if (rf::is_multi)
-            multi_spectate_render();
-
         frametime_render_ui();
         multi_render_level_download_progress();
 #if !defined(NDEBUG) && defined(HAS_EXPERIMENTAL)

@@ -261,7 +261,7 @@ ConsoleCommand2 spectate_cmd{
 
 #if SPECTATE_MODE_SHOW_WEAPON
 
-static void player_render_fpgun_new(rf::Player* player)
+static void player_render_new(rf::Player* player)
 {
     if (g_spectate_mode_enabled) {
         rf::Entity* entity = rf::entity_from_handle(g_spectate_mode_target->entity_handle);
@@ -285,10 +285,10 @@ static void player_render_fpgun_new(rf::Player* player)
         rf::local_player->fpgun_data.zoom_factor = g_spectate_mode_target->fpgun_data.zoom_factor;
 
         rf::player_fpgun_process(g_spectate_mode_target);
-        rf::player_render_fpgun(g_spectate_mode_target);
+        rf::player_render(g_spectate_mode_target);
     }
     else
-        rf::player_render_fpgun(player);
+        rf::player_render(player);
 }
 
 CallHook<float(rf::Player*)> gameplay_render_frame_player_fpgun_get_zoom_hook{
@@ -315,7 +315,7 @@ void multi_spectate_appy_patch()
 
 #if SPECTATE_MODE_SHOW_WEAPON
 
-    AsmWriter(0x0043285D).call(player_render_fpgun_new);
+    AsmWriter(0x0043285D).call(player_render_new);
     gameplay_render_frame_player_fpgun_get_zoom_hook.install();
 
     write_mem_ptr(0x0048857E + 2, &g_spectate_mode_target); // obj_mark_all_for_room
@@ -378,20 +378,19 @@ void multi_spectate_render()
     int medium_font = hud_get_default_font();
     int medium_font_h = rf::gr::get_font_height(medium_font);
 
-    int hints_x = 20;
-    int hints_y = g_game_config.big_hud ? 350 : 200;
-    int hints_line_spacing = medium_font_h + 3;
+    int scr_w = rf::gr::screen_width();
+    int scr_h = rf::gr::screen_height();
+
     if (!g_spectate_mode_enabled) {
         if (rf::player_is_dead(rf::local_player)) {
-            rf::gr::set_color(0xFF, 0xFF, 0xFF, 0xFF);
-            rf::gr::string(hints_x, hints_y, "Press JUMP key to enter Spectate Mode", medium_font);
+            rf::gr::set_color(0xFF, 0xFF, 0xFF, 0xC0);
+            int y = scr_h - (g_game_config.big_hud ? 140 : 100);
+            rf::gr::string(10, y, "Press Jump to enter Spectate Mode", medium_font);
         }
         return;
     }
 
-    int scr_w = rf::gr::screen_width();
-    int scr_h = rf::gr::screen_height();
-
+    int hints_line_spacing = medium_font_h;
     int title_x = scr_w / 2;
     int title_y = g_game_config.big_hud ? 250 : 150;
     rf::Color white_clr{255, 255, 255, 255};
@@ -400,12 +399,21 @@ void multi_spectate_render()
         rf::gr::string_aligned(rf::gr::ALIGN_CENTER, x, y, "SPECTATE MODE", large_font);
     });
 
-    rf::gr::set_color(0xFF, 0xFF, 0xFF, 0xFF);
-    rf::gr::string(hints_x, hints_y, "Press JUMP key to exit Spectate Mode", medium_font);
-    hints_y += hints_line_spacing;
-    rf::gr::string(hints_x, hints_y, "Press PRIMARY ATTACK key to switch to the next player", medium_font);
-    hints_y += hints_line_spacing;
-    rf::gr::string(hints_x, hints_y, "Press SECONDARY ATTACK key to switch to the previous player", medium_font);
+    int hints_y = scr_h - (g_game_config.big_hud ? 200 : 120);
+    int hints_left_x = g_game_config.big_hud ? 110 : 60;
+    int hints_right_x = g_game_config.big_hud ? 130 : 70;
+    const char* hints[][2] = {
+        {"Fire", "Next Player"},
+        {"Alt. Fire", "Previous Player"},
+        {"Jump", "Exit Spectate Mode"},
+    };
+    for (auto& hint : hints) {
+        rf::gr::set_color(0xFF, 0xFF, 0xFF, 0xC0);
+        rf::gr::string_aligned(rf::gr::ALIGN_RIGHT, hints_left_x, hints_y, hint[0], medium_font);
+        rf::gr::set_color(0xFF, 0xFF, 0xFF, 0x80);
+        rf::gr::string(hints_right_x, hints_y, hint[1], medium_font);
+        hints_y += hints_line_spacing;
+    }
 
     const int bar_w = g_game_config.big_hud ? 800 : 500;
     const int bar_h = 50;

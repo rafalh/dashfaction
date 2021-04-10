@@ -164,7 +164,7 @@ namespace rf
     static auto& player_add_score = addr_as_ref<void(Player *player, int delta)>(0x004A7460);
     static auto& player_get_ai = addr_as_ref<AiInfo*(Player *player)>(0x004A3260);
     static auto& player_get_weapon_total_ammo = addr_as_ref<int(Player *player, int weapon_type)>(0x004A3280);
-    static auto& player_render_fpgun = addr_as_ref<void(Player*)>(0x004A2B30);
+    static auto& player_render = addr_as_ref<void(Player*)>(0x004A2B30);
     static auto& player_render_held_corpse = addr_as_ref<void(Player* player)>(0x004A2B90);
     static auto& player_do_frame = addr_as_ref<void(Player*)>(0x004A2700);
 }

@@ -361,8 +361,12 @@ CallHook hud_msg_render_gr_get_font_height_hook{
 
 void hud_render_00437BC0()
 {
-    if (!rf::is_multi || !rf::local_player)
+    if (!rf::is_multi || !rf::local_player) {
         return;
+    }
+
+    // Render spectate mode UI under scoreboard
+    multi_spectate_render();
 
     auto& cc = rf::local_player->settings.controls;
     bool scoreboard_control_pressed = rf::control_config_check_pressed(&cc, rf::CC_ACTION_MP_STATS, nullptr);
