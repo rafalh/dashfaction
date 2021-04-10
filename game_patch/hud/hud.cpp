@@ -281,6 +281,16 @@ std::string hud_fit_string(std::string_view str, int max_w, int* str_w_out, int 
     return result;
 }
 
+const char* hud_get_small_font_name(bool big)
+{
+    if (big) {
+        return "regularfont.ttf:14";
+    }
+    else {
+        return "rfpc-small.vf";
+    }
+}
+
 const char* hud_get_default_font_name(bool big)
 {
     if (big) {
@@ -298,6 +308,24 @@ const char* hud_get_bold_font_name(bool big)
     }
     else {
         return "rfpc-large.vf";
+    }
+}
+
+int hud_get_small_font()
+{
+    if (g_game_config.big_hud) {
+        static int font = -2;
+        if (font == -2) {
+            font = rf::gr::load_font(hud_get_small_font_name(true));
+        }
+        return font;
+    }
+    else {
+        static int font = -2;
+        if (font == -2) {
+            font = rf::gr::load_font(hud_get_small_font_name(false));
+        }
+        return font;
     }
 }
 

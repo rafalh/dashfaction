@@ -392,7 +392,7 @@ void multi_spectate_render()
     int scr_w = rf::gr::screen_width();
     int scr_h = rf::gr::screen_height();
 
-    if (!g_spectate_mode_enabled) {
+    if (!g_spectate_mode_enabled && false) {
         if (rf::player_is_dead(rf::local_player)) {
             rf::gr::set_color(0xFF, 0xFF, 0xFF, 0xC0);
             int y = scr_h - (g_game_config.big_hud ? 140 : 100);
@@ -428,16 +428,21 @@ void multi_spectate_render()
         }
     }
 
-    const int bar_w = g_game_config.big_hud ? 800 : 500;
-    const int bar_h = 50;
+    int small_font = hud_get_small_font();
+    int small_font_h = rf::gr::get_font_height(small_font);
+
+    int padding_y = 2;
+    const int bar_w = g_game_config.big_hud ? 500 : 300;
+    const int bar_h = small_font_h + large_font_h + 2 * padding_y;
     int bar_x = (scr_w - bar_w) / 2;
-    int bar_y = scr_h - 100;
-    rf::gr::set_color(0, 0, 0x00, 0x60);
+    int bar_y = scr_h - (g_game_config.big_hud ? 15 : 10) - bar_h;
+    rf::gr::set_color(0, 0, 0x00, 150);
     rf::gr::rect(bar_x, bar_y, bar_w, bar_h);
 
-    rf::gr::set_color(0xFF, 0xFF, 0, 0x80);
-    auto str = string_format("Spectating: %s", g_spectate_mode_target->name.c_str());
-    rf::gr::string_aligned(rf::gr::ALIGN_CENTER, bar_x + bar_w / 2, bar_y + bar_h / 2 - large_font_h / 2, str.c_str(), large_font);
+    rf::gr::set_color(0xFF, 0xFF, 0xFF, 0xFF);
+    rf::gr::string_aligned(rf::gr::ALIGN_CENTER, bar_x + bar_w / 2, bar_y + padding_y, "Spectating:", small_font);
+    rf::gr::set_color(0xFF, 0x88, 0x22, 0xFF);
+    rf::gr::string_aligned(rf::gr::ALIGN_CENTER, bar_x + bar_w / 2, bar_y + padding_y + small_font_h, g_spectate_mode_target->name, large_font);
 
     rf::Entity* entity = rf::entity_from_handle(g_spectate_mode_target->entity_handle);
     if (!entity) {
