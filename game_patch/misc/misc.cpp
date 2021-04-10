@@ -461,6 +461,10 @@ void misc_init()
     write_mem<char>(0x00512389 + 2, '\1');
     write_mem<char>(0x005123B6 + 2, '\1');
 
+    // Do not render the level twice when Message Log is open (GS_MESSAGE_LOG game state is marked as transparent)
+    AsmWriter{0x0045514E}.nop(5);
+    AsmWriter{0x0045515B}.nop(5);
+
     // Apply patches from other files
     apply_main_menu_patches();
     apply_save_restore_patches();

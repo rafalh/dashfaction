@@ -17,6 +17,7 @@ Version 1.6.2 (not released yet)
 - Send player statistics (kills, deaths, accuracy) in private message after round ends in Dash Faction server
 - Update fpgun skin when switching players in spectate mode
 - Update spectate mode UI
+- Do not render the level twice when Message Log is open
 
 Version 1.6.1 (released 2021-02-20)
 -----------------------------------
