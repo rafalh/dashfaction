@@ -13,6 +13,7 @@ namespace rf
     struct ParticleEmitter;
     struct EntityFireInfo;
     struct ClimbRegion;
+    struct Glare;
 
     enum EntityFlags
     {
@@ -234,6 +235,12 @@ namespace rf
     };
     static_assert(sizeof(EntityAnim) == 0x10);
 
+    struct EntityInterfacePoint
+    {
+        int tag_handle;
+        int leech_handle;
+    };
+    static_assert(sizeof(EntityInterfacePoint) == 0x8);
 
     struct Entity : Object
     {
@@ -272,10 +279,14 @@ namespace rf
         float max_vel;
         EntitySpeed current_speed;
         int max_speed_scale;
-        VArray<> interface_points;
-        VArray<> thruster_fx_handles;
+        VArray<EntityInterfacePoint> interface_points;
+        VArray<VMesh*> thruster_fx_handles;
         EntityAnim state_anims[23];
-        EntityAnim action_anims[145];
+        EntityAnim action_anims[45];
+        EntityAnim default_state_anims[23];
+        EntityAnim default_action_anims[45];
+        EntityAnim *state_weapon_anims[64];
+        EntityAnim *action_weapon_anims[64];
         int last_idle_anim_index_maybe_unused;
         int last_cust_anim_index_maybe_unused;
         Timestamp primary_muzzle_timestamp;
@@ -314,10 +325,10 @@ namespace rf
         int voice_handle;
         int last_voice_anim_index;
         float speech_duration;
-        Timestamp unk_timer140c;
+        Timestamp play_next_speech_anim;
         VMesh *helmet_v3d_handle;
         Timestamp next_splash_allowed;
-        VArray<> glares;
+        VArray<Glare*> glares;
         int tracer_countdown;
         int weapon_custom_mode_bitmap;
         int weapon_silencer_bitfield;
@@ -329,17 +340,17 @@ namespace rf
         int jeep_gun_tag;
         Timestamp pain_sound_ok_timestamp;
         int hand_clutter_handles[2];
-        float time;
+        float time_since_spine_bend;
         int field_1468;
-        int entity_masako_in_fighter_hobj;
-        int field_1470;
+        int masako_in_fighter_entity_handle;
+        int driller_max_geomods;
         Color ambient_color;
-        int sub_hit_sound;
-        int field_147c;
+        int sub_hit_sound_instance;
+        int bot_index;
         int mp_character_id;
-        int light_1484;
+        int powerup_light_handle;
         int field_1488;
-        VMesh *respawn_vfx;
+        VMesh *respawn_vfx_handle;
         Timestamp field_1490;
     };
     static_assert(sizeof(Entity) == 0x1494);
