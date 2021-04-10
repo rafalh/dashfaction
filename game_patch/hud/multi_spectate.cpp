@@ -24,6 +24,7 @@ static rf::Player* g_spectate_mode_target;
 static rf::Camera* g_old_target_camera = nullptr;
 static bool g_spectate_mode_enabled = false;
 static bool g_spawned_in_current_level = false;
+static bool g_spectate_mode_minimal_ui = false;
 
 void player_fpgun_set_player(rf::Player* pp);
 
@@ -259,6 +260,15 @@ ConsoleCommand2 spectate_cmd{
     "spectate [<player_name>]",
 };
 
+static ConsoleCommand2 spectate_mode_minimal_ui_cmd{
+    "spectate_mode_minimal_ui",
+    []() {
+        g_spectate_mode_minimal_ui = !g_spectate_mode_minimal_ui;
+        rf::console::printf("Spectate mode minimal UI is %s", g_spectate_mode_minimal_ui ? "enabled" : "disabled");
+    },
+    "Toggles spectate mode minimal UI",
+};
+
 #if SPECTATE_MODE_SHOW_WEAPON
 
 static void player_render_new(rf::Player* player)
@@ -310,6 +320,7 @@ void multi_spectate_appy_patch()
     render_reticle_hook.install();
 
     spectate_cmd.register_cmd();
+    spectate_mode_minimal_ui_cmd.register_cmd();
 
     // Note: HUD rendering doesn't make sense because life and armor isn't synced
 
@@ -390,29 +401,31 @@ void multi_spectate_render()
         return;
     }
 
-    int hints_line_spacing = medium_font_h;
-    int title_x = scr_w / 2;
-    int title_y = g_game_config.big_hud ? 250 : 150;
     rf::Color white_clr{255, 255, 255, 255};
     rf::Color shadow_clr{0, 0, 0, 128};
-    draw_with_shadow(title_x, title_y, 2, 2, white_clr, shadow_clr, [=](int x, int y) {
-        rf::gr::string_aligned(rf::gr::ALIGN_CENTER, x, y, "SPECTATE MODE", large_font);
-    });
 
-    int hints_y = scr_h - (g_game_config.big_hud ? 200 : 120);
-    int hints_left_x = g_game_config.big_hud ? 110 : 60;
-    int hints_right_x = g_game_config.big_hud ? 130 : 70;
-    const char* hints[][2] = {
-        {"Fire", "Next Player"},
-        {"Alt. Fire", "Previous Player"},
-        {"Jump", "Exit Spectate Mode"},
-    };
-    for (auto& hint : hints) {
-        rf::gr::set_color(0xFF, 0xFF, 0xFF, 0xC0);
-        rf::gr::string_aligned(rf::gr::ALIGN_RIGHT, hints_left_x, hints_y, hint[0], medium_font);
-        rf::gr::set_color(0xFF, 0xFF, 0xFF, 0x80);
-        rf::gr::string(hints_right_x, hints_y, hint[1], medium_font);
-        hints_y += hints_line_spacing;
+    if (!g_spectate_mode_minimal_ui) {
+        int title_x = scr_w / 2;
+        int title_y = g_game_config.big_hud ? 250 : 150;
+        draw_with_shadow(title_x, title_y, 2, 2, white_clr, shadow_clr, [=](int x, int y) {
+            rf::gr::string_aligned(rf::gr::ALIGN_CENTER, x, y, "SPECTATE MODE", large_font);
+        });
+
+        int hints_y = scr_h - (g_game_config.big_hud ? 200 : 120);
+        int hints_left_x = g_game_config.big_hud ? 110 : 60;
+        int hints_right_x = g_game_config.big_hud ? 130 : 70;
+        const char* hints[][2] = {
+            {"Fire", "Next Player"},
+            {"Alt. Fire", "Previous Player"},
+            {"Jump", "Exit Spectate Mode"},
+        };
+        for (auto& hint : hints) {
+            rf::gr::set_color(0xFF, 0xFF, 0xFF, 0xC0);
+            rf::gr::string_aligned(rf::gr::ALIGN_RIGHT, hints_left_x, hints_y, hint[0], medium_font);
+            rf::gr::set_color(0xFF, 0xFF, 0xFF, 0x80);
+            rf::gr::string(hints_right_x, hints_y, hint[1], medium_font);
+            hints_y += medium_font_h;
+        }
     }
 
     const int bar_w = g_game_config.big_hud ? 800 : 500;
