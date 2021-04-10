@@ -248,5 +248,7 @@ void player_fpgun_do_patch()
     player_fpgun_render_gr_setup_3d_hook.install();
     fpgun_fov_scale_cmd.register_cmd();
 
+#ifndef NDEBUG
     reload_fpgun_cmd.register_cmd();
+#endif
 }
