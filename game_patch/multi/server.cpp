@@ -526,18 +526,41 @@ static float get_weapon_shot_stats_delta(rf::Weapon* wp)
     return 1.0f / num_projectiles;
 }
 
+static bool multi_is_team_game_type()
+{
+    return rf::multi_get_game_type() != rf::NG_TYPE_DM;
+}
+
+static void maybe_increment_weapon_hits_stat(int hit_obj_handle, rf::Weapon *wp)
+{
+    auto attacker_ep = rf::entity_from_handle(wp->parent_handle);
+    if (!attacker_ep) {
+        return;
+    }
+
+    auto hit_ep = rf::entity_from_handle(hit_obj_handle);
+    if (!hit_ep) {
+        return;
+    }
+
+    auto attacker_pp = rf::player_from_entity_handle(attacker_ep->handle);
+    auto hit_pp = rf::player_from_entity_handle(hit_ep->handle);
+    if (!attacker_pp || !hit_pp) {
+        return;
+    }
+
+    if (!multi_is_team_game_type() || attacker_pp->team == hit_pp->team) {
+        auto stats = static_cast<PlayerStatsNew*>(attacker_pp->stats);
+        stats->add_shots_hit(get_weapon_shot_stats_delta(wp));
+        xlog::trace("hit a_ep %p wp %p h_ep %p", attacker_ep, wp, hit_ep);
+    }
+}
+
 FunHook<int(rf::LevelCollisionOut*, rf::Weapon*)> multi_lag_comp_handle_hit_hook{
     0x0046F380,
     [](rf::LevelCollisionOut *col_info, rf::Weapon *wp) {
-        auto attacker_ep = rf::entity_from_handle(wp->parent_handle);
-        auto hit_ep = rf::entity_from_handle(col_info->obj_handle);
-        if (rf::is_server && attacker_ep && hit_ep) {
-            auto attacker_pp = rf::player_from_entity_handle(attacker_ep->handle);
-            if (attacker_pp && attacker_pp->stats && rf::obj_is_player(hit_ep)) {
-                auto stats = static_cast<PlayerStatsNew*>(attacker_pp->stats);
-                stats->add_shots_hit(get_weapon_shot_stats_delta(wp));
-                xlog::trace("hit a_ep %p wp %p h_ep %p", attacker_ep, wp, hit_ep);
-            }
+        if (rf::is_server) {
+            maybe_increment_weapon_hits_stat(col_info->obj_handle, wp);
         }
         return multi_lag_comp_handle_hit_hook.call_target(col_info, wp);
     },
