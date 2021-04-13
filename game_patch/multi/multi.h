@@ -9,8 +9,8 @@ struct PlayerStatsNew : rf::PlayerLevelStats
     unsigned short num_deaths;
     unsigned short current_streak;
     unsigned short max_streak;
-    unsigned int num_shots_hit;
-    unsigned int num_shots_fired;
+    float num_shots_hit;
+    float num_shots_fired;
     float damage_received;
     float damage_given;
 
@@ -27,14 +27,16 @@ struct PlayerStatsNew : rf::PlayerLevelStats
         current_streak = 0;
     }
 
-    void inc_shots_hit()
+    void add_shots_hit(float add)
     {
-        ++num_shots_hit;
+        // Weapons with multiple projectiles (shotgun) use fractional values
+        num_shots_hit += add;
     }
 
-    void inc_shots_fired()
+    void add_shots_fired(float add)
     {
-        ++num_shots_fired;
+        // Weapons with multiple projectiles (shotgun) use fractional values
+        num_shots_fired += add;
     }
 
     void add_damage_received(float damage)
@@ -50,7 +52,7 @@ struct PlayerStatsNew : rf::PlayerLevelStats
     float calc_accuracy() const
     {
         if (num_shots_fired > 0) {
-            return static_cast<float>(num_shots_hit) / num_shots_fired;
+            return num_shots_hit / num_shots_fired;
         }
         return 0;
     }
@@ -59,8 +61,8 @@ struct PlayerStatsNew : rf::PlayerLevelStats
     {
         num_kills = 0;
         num_deaths = 0;
-        num_shots_hit = 0;
-        num_shots_fired = 0;
+        num_shots_hit = 0.0f;
+        num_shots_fired = 0.0f;
         current_streak = 0;
         max_streak = 0;
         damage_received = 0;

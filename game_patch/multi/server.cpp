@@ -263,9 +263,10 @@ static void send_private_message_with_stats(rf::Player* player)
     auto str = string_format(
         "PLAYER STATS\n"
         "Kills: %d - Deaths: %d - Max Streak: %d\n"
-        "Accuracy: %d%% (%d/%d) - Damage Given: %.0f - Damage Taken: %.0f",
+        "Accuracy: %d%% (%.0f/%.0f) - Damage Given: %.0f - Damage Taken: %.0f",
         stats->num_kills, stats->num_deaths, stats->max_streak,
-        accuracy, stats->num_shots_hit, stats->num_shots_fired, stats->damage_given, stats->damage_received);
+        accuracy, stats->num_shots_hit, stats->num_shots_fired,
+        stats->damage_given, stats->damage_received);
     send_chat_line_packet(str.c_str(), player);
 }
 
@@ -515,6 +516,16 @@ FunHook<void(rf::Player*)> multi_spawn_player_server_side_hook{
     },
 };
 
+static float get_weapon_shot_stats_delta(rf::Weapon* wp)
+{
+    int num_projectiles = wp->info->num_projectiles;
+    auto parent_ep = rf::entity_from_handle(wp->parent_handle);
+    if (parent_ep && parent_ep->entity_flags2 & 0x1000) { // EF2_SHOTGUN_DOUBLE_BULLET_UNK
+        num_projectiles *= 2;
+    }
+    return 1.0f / num_projectiles;
+}
+
 FunHook<int(rf::LevelCollisionOut*, rf::Weapon*)> multi_lag_comp_handle_hit_hook{
     0x0046F380,
     [](rf::LevelCollisionOut *col_info, rf::Weapon *wp) {
@@ -524,7 +535,7 @@ FunHook<int(rf::LevelCollisionOut*, rf::Weapon*)> multi_lag_comp_handle_hit_hook
             auto attacker_pp = rf::player_from_entity_handle(attacker_ep->handle);
             if (attacker_pp && attacker_pp->stats && rf::obj_is_player(hit_ep)) {
                 auto stats = static_cast<PlayerStatsNew*>(attacker_pp->stats);
-                stats->inc_shots_hit();
+                stats->add_shots_hit(get_weapon_shot_stats_delta(wp));
                 xlog::trace("hit a_ep %p wp %p h_ep %p", attacker_ep, wp, hit_ep);
             }
         }
@@ -539,7 +550,7 @@ FunHook<void(rf::Entity*, rf::Weapon*)> multi_lag_comp_weapon_fire_hook{
         auto pp = rf::player_from_entity_handle(ep->handle);
         if (pp && pp->stats) {
             auto stats = static_cast<PlayerStatsNew*>(pp->stats);
-            stats->inc_shots_fired();
+            stats->add_shots_fired(get_weapon_shot_stats_delta(wp));
             xlog::trace("fired a_ep %p wp %p", ep, wp);
         }
     },
