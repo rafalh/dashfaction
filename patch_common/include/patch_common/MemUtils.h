@@ -10,6 +10,7 @@ struct TypeIdentity
 
 void write_mem(unsigned addr, const void* data, unsigned size);
 void unprotect_mem(void* ptr, unsigned len);
+size_t get_instruction_len(void* ptr);
 
 template<typename T>
 void write_mem(uintptr_t addr, typename TypeIdentity<T>::type value)

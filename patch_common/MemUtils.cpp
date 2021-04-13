@@ -21,3 +21,10 @@ void unprotect_mem(void* ptr, unsigned len)
         xlog::warn("VirtualProtect failed: addr %p size %x error %lu", ptr, len, GetLastError());
     }
 }
+
+extern "C" size_t subhook_disasm(void *src, int32_t *reloc_op_offset);
+
+size_t get_instruction_len(void* ptr)
+{
+    return subhook_disasm(ptr, nullptr);
+}

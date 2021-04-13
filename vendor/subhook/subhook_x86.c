@@ -93,7 +93,7 @@ struct subhook_jmp64 {
 
 void subhook_unk_opcode_handler(uint8_t *opcode);
 
-static size_t subhook_disasm(void *src, int32_t *reloc_op_offset) {
+size_t subhook_disasm(void *src, int32_t *reloc_op_offset) {
   enum flags {
     MODRM      = 1,
     PLUS_R     = 1 << 1,
