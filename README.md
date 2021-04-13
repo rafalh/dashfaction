@@ -170,6 +170,8 @@ Configuration example:
     //$DF Max FOV: 125
     // If enabled a private message with player statistics is sent after each round.
     //$DF Send Player Stats Message: true
+    // Send a chat message to players when they join the server ($PLAYER is replaced by player name)
+    //$DF Welcome Message: "Hello $PLAYER!"
 
 
 License

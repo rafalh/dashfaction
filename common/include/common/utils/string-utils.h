@@ -90,6 +90,21 @@ inline bool string_contains_ignore_case(std::string_view str, std::string_view i
     return it != str.end();
 }
 
+inline std::string string_replace(const std::string_view& str, const std::string_view& search, const std::string_view& replacement)
+{
+    std::size_t pos = 0;
+    std::string result{str};
+    while (true) {
+        pos = result.find(search, pos);
+        if (pos == std::string::npos) {
+            break;
+        }
+        result.replace(pos, search.size(), replacement);
+        pos += replacement.size();
+    }
+    return result;
+}
+
 struct StringMatcher
 {
 private:

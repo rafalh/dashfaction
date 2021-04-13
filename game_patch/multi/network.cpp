@@ -998,6 +998,9 @@ FunHook<void(rf::Player*)> send_players_packet_hook{
 #if MASK_AS_PF
         pf_player_init(player);
 #endif
+        if (rf::is_server) {
+            server_reliable_socket_ready(player);
+        }
     },
 };
 

@@ -151,6 +151,12 @@ void load_additional_server_config(rf::Parser& parser)
         g_additional_server_config.stats_message_enabled = parser.parse_bool();
     }
 
+    if (parser.parse_optional("$DF Welcome Message:")) {
+        rf::String welcome_message;
+        parser.parse_string(&welcome_message);
+        g_additional_server_config.welcome_message = welcome_message.c_str();
+    }
+
     if (!parser.parse_optional("$Name:") && !parser.parse_optional("#End")) {
         parser.error("end of server configuration");
     }
@@ -538,6 +544,14 @@ FunHook<void(rf::Entity*, rf::Weapon*)> multi_lag_comp_weapon_fire_hook{
         }
     },
 };
+
+void server_reliable_socket_ready(rf::Player* player)
+{
+    if (!g_additional_server_config.welcome_message.empty()) {
+        auto msg = string_replace(g_additional_server_config.welcome_message, "$PLAYER", player->name.c_str());
+        send_chat_line_packet(msg.c_str(), player);
+    }
+}
 
 void server_init()
 {

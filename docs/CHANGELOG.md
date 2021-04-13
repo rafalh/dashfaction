@@ -19,6 +19,7 @@ Version 1.6.2 (not released yet)
 - Update spectate mode UI
 - Do not render the level twice when Message Log is open
 - Add `spectate_mode_minimal_ui` command for disabling most of spectate mode texts
+- Add welcome message function for dedicated servers
 
 Version 1.6.1 (released 2021-02-20)
 -----------------------------------

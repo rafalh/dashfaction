@@ -47,6 +47,7 @@ struct ServerAdditionalConfig
     std::optional<float> max_fov;
     bool require_verified_client = false;
     bool stats_message_enabled = true;
+    std::string welcome_message;
 };
 
 extern ServerAdditionalConfig g_additional_server_config;
