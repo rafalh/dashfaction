@@ -549,7 +549,7 @@ static void maybe_increment_weapon_hits_stat(int hit_obj_handle, rf::Weapon *wp)
         return;
     }
 
-    if (!multi_is_team_game_type() || attacker_pp->team == hit_pp->team) {
+    if (!multi_is_team_game_type() || attacker_pp->team != hit_pp->team) {
         auto stats = static_cast<PlayerStatsNew*>(attacker_pp->stats);
         stats->add_shots_hit(get_weapon_shot_stats_delta(wp));
         xlog::trace("hit a_ep %p wp %p h_ep %p", attacker_ep, wp, hit_ep);
