@@ -399,6 +399,16 @@ CodeInjection CDedLevel_CloneObject_injection{
     },
 };
 
+CodeInjection CDedEvent_Copy_injection{
+    0x0045146D,
+    [](auto& regs) {
+        void* src_event = regs.edi;
+        void* dst_event = regs.esi;
+        // copy bool2 field
+        struct_field_ref<bool>(dst_event, 0xB1) = struct_field_ref<bool>(src_event, 0xB1);
+    },
+};
+
 extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
 {
     InitLogging();
@@ -517,6 +527,9 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
 
     // Fix copying cutscene path node
     CDedLevel_CloneObject_injection.install();
+
+    // Fix copying bool2 field in events
+    CDedEvent_Copy_injection.install();
 
     // Remove uid limit (50k) by removing cmp and jge instructions in FindBiggestUid function
     AsmWriter{0x004844AC, 0x004844B3}.nop();

@@ -25,6 +25,7 @@ Version 1.6.2 (not released yet)
 - Change editor hotkey for lightmap+lighting calculation to Ctrl+Shift+L because old hotkey was conflicting with
   other function
 - Fix handling conflicting Activated By property when editing multiple triggers in editor
+- Fix copying bool properties in some events
 
 Version 1.6.1 (released 2021-02-20)
 -----------------------------------
