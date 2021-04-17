@@ -43,14 +43,14 @@ static FunHook<int()> multi_tdm_get_blue_team_score_hook{
 };
 
 static FunHook<void()> multi_tdm_increase_red_score_hook{
-    0x00482920,
+    0x00482910,
     []() {
         ++multi_tdm_red_score;
     },
 };
 
 static FunHook<void()> multi_tdm_increase_blue_score_hook{
-    0x00482910,
+    0x00482920,
     []() {
         ++multi_tdm_blue_score;
     },
