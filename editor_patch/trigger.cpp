@@ -1,7 +1,10 @@
+
+#include <string>
 #include <windowsx.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
-#include <string>
+#include <patch_common/AsmWriter.h>
+#include <xlog/xlog.h>
 #include "mfc_types.h"
 #include "resources.h"
 #include "vtypes.h"
@@ -94,7 +97,16 @@ void __fastcall CTriggerPropsDialog_DoDataExchange_new(CWnd* this_, int, CDataEx
     }
 }
 
-#include <xlog/xlog.h>
+
+const char* activated_by_names[] = {
+    "Players Only",
+    "All Objects",
+    "Linked Objects",
+    "AI Only",
+    "Player Vehicle Only",
+    "Geomods",
+    "Undefined",
+};
 
 CodeInjection CDedLevel_OpenTriggerProperties_injection{
     0x00405100,
@@ -113,8 +125,16 @@ CodeInjection CDedLevel_OpenTriggerProperties_injection{
         // Set Script Name to empty string if selected triggers have different script names
         auto& trigger_script_name = struct_field_ref<rf::String>(current_trigger, 0x44);
         auto& dialog_script_name = struct_field_ref<CString>(trigger_dialog, 0x2F0);
-        if (std::strcmp(trigger_script_name.buf, dialog_script_name.m_pchData) != 0) {
-            dialog_script_name.m_pchData[0] = '\0';
+        if (dialog_script_name != trigger_script_name) {
+            dialog_script_name = "";
+        }
+
+        // Set Activated By to empty string if selected triggers have different configs
+        auto& activate_by_names = addr_as_ref<const char*[6]>(0x0057A910);
+        auto& trigger_activated_by = struct_field_ref<uint8_t>(current_trigger, 0xB8);
+        auto& dialog_activated_by = struct_field_ref<CString>(trigger_dialog, 0x340);
+        if (dialog_activated_by != activate_by_names[trigger_activated_by]) {
+            dialog_activated_by = "Undefined";
         }
     },
 };
@@ -126,4 +146,10 @@ void ApplyTriggerPatches()
 
     // Fix changing properties of multiple triggers if their shape differs
     CDedLevel_OpenTriggerProperties_injection.install();
+
+    // Add Undefined to Activated By names and use it if multiple triggers were selected with conflicting
+    // Activated By property
+    write_mem_ptr(0x00471F5A + 1, activated_by_names);
+    write_mem_ptr(0x00471F6C + 2, activated_by_names + std::size(activated_by_names));
+    AsmWriter{0x004057C7}.nop(7);
 }

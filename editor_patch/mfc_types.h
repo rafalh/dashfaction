@@ -16,6 +16,26 @@ struct CDataExchange
 struct CString
 {
     LPTSTR m_pchData;
+
+    void operator=(const char* s)
+    {
+        AddrCaller{0x0052FBDC}.this_call(this, s);
+    }
+
+    operator const char*() const
+    {
+        return m_pchData;
+    }
+
+    bool operator==(const char* s) const
+    {
+        return std::strcmp(m_pchData, s) == 0;
+    }
+
+    bool operator!=(const char* s) const
+    {
+        return !(*this == s);
+    }
 };
 
 inline HWND WndToHandle(CWnd* wnd)
