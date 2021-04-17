@@ -158,7 +158,7 @@ Configuration example:
     // 1 - player must use non-custom build of Dash Faction 1.7+ or Pure Faction (unpatched clients are disallowed)
     // 2 - essential game parameters must match (blue P symbol in Pure Faction)
     // 3 - client-side mods are disallowed (gold P symbol in Pure Faction)
-    //$DF Anitcheat Level: 0
+    //$DF Anticheat Level: 0
     // If true and server is using a mod (-mod command line argument) then client is required to use the same mod
     // Can be disabled to allow publicly available modded servers
     $DF Require Client Mod: true
