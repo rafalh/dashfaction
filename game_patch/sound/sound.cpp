@@ -334,7 +334,9 @@ void snd_update_ambient_sounds(const rf::Vector3& camera_pos)
             float distance = (camera_pos - ambient_snd.pos).len();
             auto& sound = rf::sounds[ambient_snd.handle];
             bool in_range = distance <= sound.max_range;
-            if (in_range) {
+            // Note: when ambient sound is muted its volume is set to 0 (events can mute/unmute ambient sounds)
+            // When it's muted destroy it so it can be recreated when unmuted and start playing from the beggining
+            if (in_range && ambient_snd.volume > 0.0f) {
                 float vol_scale = ambient_snd.volume * rf::snd_group_volume[rf::SOUND_GROUP_EFFECTS] * g_game_config.level_sound_volume;
                 if (ambient_snd.sig < 0) {
                     bool is_looping = rf::sounds[ambient_snd.handle].is_looping;
@@ -344,7 +346,7 @@ void snd_update_ambient_sounds(const rf::Vector3& camera_pos)
                 float volume = rf::snd_pc_calc_volume_3d(ambient_snd.handle, ambient_snd.pos, vol_scale);
                 rf::snd_pc_set_volume(ambient_snd.sig, volume);
             }
-            else if (ambient_snd.sig >= 0 && !in_range) {
+            else if (ambient_snd.sig >= 0) {
                 rf::snd_pc_stop(ambient_snd.sig);
                 ambient_snd.sig = -1;
             }
