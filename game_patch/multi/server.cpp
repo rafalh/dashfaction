@@ -496,6 +496,7 @@ CodeInjection multi_on_new_player_injection{
 
 static bool check_player_ac_status(rf::Player* player)
 {
+#ifdef HAS_PF
     if (g_additional_server_config.anticheat_level > 0) {
         bool verified = pf_is_player_verified(player);
         if (!verified) {
@@ -517,6 +518,7 @@ static bool check_player_ac_status(rf::Player* player)
             return false;
         }
     }
+#endif // HAS_PF
     return true;
 }
 
@@ -526,11 +528,9 @@ FunHook<void(rf::Player*)> multi_spawn_player_server_side_hook{
         if (g_additional_server_config.force_player_character) {
             player->settings.multi_character = g_additional_server_config.force_player_character.value();
         }
-#ifdef HAS_PF
         if (!check_player_ac_status(player)) {
             return;
         }
-#endif // HAS_PF
         multi_spawn_player_server_side_hook.call_target(player);
     },
 };
