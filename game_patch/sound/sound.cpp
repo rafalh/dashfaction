@@ -76,7 +76,7 @@ static int snd_get_free_instance()
         }
         if (!rf::snd_pc_is_playing(instance.sig)) {
             rf::snd_pc_stop(instance.sig);
-            rf::snd_clear_instance(&instance);
+            rf::snd_init_instance(&instance);
             return i;
         }
     }
@@ -106,8 +106,8 @@ void disable_sound_before_cutscene_skip()
         g_cutscene_bg_sound_sig = -1;
     }
 
-    rf::snd_pause_all(true);
-    rf::snd_destroy_all_paused();
+    rf::snd_pause(true);
+    rf::snd_stop_all_paused();
     rf::sound_enabled = false;
 }
 
@@ -192,7 +192,7 @@ int snd_pc_play_3d_new(int handle, const rf::Vector3& pos, float vol_scale, bool
     if (!rf::sound_pc_inited || handle == -1) {
         return -1;
     }
-    int sid = rf::snd_pc_load(handle, false, false);
+    int sid = rf::snd_pc_load_hint(handle, false, false);
     if (sid == -1) {
         return -1;
     }
