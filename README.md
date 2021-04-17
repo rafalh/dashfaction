@@ -152,9 +152,13 @@ Configuration example:
     $DF Default Player Weapon: "rail_gun"
         // Ammo given on respawn (by default 3 * clip size)
         +Initial Ammo: 1000
-    // If true only non-custom (officially released) builds of Dash Faction and Pure Faction clients will be allowed
-    // to play. Enable it to prevent cheaters from playing. It is disabled by default.
-    $DF Require Verified Client: false
+    // Anti-cheat level determines how many checks the player must pass to be allowed to spawn. Higher levels include
+    // checks from lower levels. Default level is 0. Supported levels:
+    // 0 - everyone can play
+    // 1 - player must use non-custom build of Dash Faction 1.7+ or Pure Faction (unpatched clients are disallowed)
+    // 2 - essential game parameters must match (blue P symbol in Pure Faction)
+    // 3 - client-side mods are disallowed (gold P symbol in Pure Faction)
+    //$DF Anitcheat Level: 0
     // If true and server is using a mod (-mod command line argument) then client is required to use the same mod
     // Can be disabled to allow publicly available modded servers
     $DF Require Client Mod: true

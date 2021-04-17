@@ -274,3 +274,14 @@ bool pf_is_player_verified(rf::Player* player)
     pf_pure_status status = pf_ac_get_pure_status(player);
     return status != pf_pure_status::none;
 }
+
+int pf_get_player_ac_level(rf::Player* player)
+{
+    pf_pure_status status = pf_ac_get_pure_status(player);
+    switch (status) {
+        case pf_pure_status::blue: return 2;
+        case pf_pure_status::gold: return 3;
+        case pf_pure_status::fail: return 1;
+        default: return 0;
+    }
+}

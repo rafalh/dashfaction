@@ -45,7 +45,7 @@ struct ServerAdditionalConfig
     bool upnp_enabled = true;
     std::optional<int> force_player_character;
     std::optional<float> max_fov;
-    bool require_verified_client = false;
+    int anticheat_level = 0;
     bool stats_message_enabled = true;
     std::string welcome_message;
 };

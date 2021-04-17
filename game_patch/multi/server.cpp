@@ -108,8 +108,8 @@ void load_additional_server_config(rf::Parser& parser)
         }
     }
 
-    if (parser.parse_optional("$DF Require Verified Client:")) {
-        g_additional_server_config.require_verified_client = parser.parse_bool();
+    if (parser.parse_optional("$DF Anticheat Level:")) {
+        g_additional_server_config.anticheat_level = parser.parse_int();
     }
 
     if (parser.parse_optional("$DF Require Client Mod:")) {
@@ -494,6 +494,32 @@ CodeInjection multi_on_new_player_injection{
     },
 };
 
+static bool check_player_ac_status(rf::Player* player)
+{
+    if (g_additional_server_config.anticheat_level > 0) {
+        bool verified = pf_is_player_verified(player);
+        if (!verified) {
+            send_chat_line_packet(
+                "Sorry! Your spawn request was rejected because verification of your client software failed. "
+                "Please use the latest officially released version of Dash Faction. You can get it from dashfaction.com.",
+                player);
+            return false;
+        }
+
+        int ac_level = pf_get_player_ac_level(player);
+        if (ac_level < g_additional_server_config.anticheat_level) {
+            auto msg = string_format(
+                "Sorry! Your spawn request was rejected because your client did not pass anti-cheat verification (your level %d, required %d). "
+                "Please make sure you do not have any mods installed and that your client software is up to date.",
+                ac_level, g_additional_server_config.anticheat_level
+            );
+            send_chat_line_packet(msg.c_str(), player);
+            return false;
+        }
+    }
+    return true;
+}
+
 FunHook<void(rf::Player*)> multi_spawn_player_server_side_hook{
     0x00480820,
     [](rf::Player* player) {
@@ -501,15 +527,8 @@ FunHook<void(rf::Player*)> multi_spawn_player_server_side_hook{
             player->settings.multi_character = g_additional_server_config.force_player_character.value();
         }
 #ifdef HAS_PF
-        if (g_additional_server_config.require_verified_client) {
-            bool verified = pf_is_player_verified(player);
-            if (!verified) {
-                send_chat_line_packet(
-                    "Sorry! Your spawn request was rejected because verification of your client software failed. "
-                    "Please use the latest officially released version of Dash Faction. You can get it from dashfaction.com.",
-                    player);
-                return;
-            }
+        if (!check_player_ac_status(player)) {
+            return;
         }
 #endif // HAS_PF
         multi_spawn_player_server_side_hook.call_target(player);
