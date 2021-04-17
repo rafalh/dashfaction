@@ -140,7 +140,7 @@ IDR_MAIN_FRAME MENU
         MENUITEM "Calculate Lighting\tShift+L", 32837
         MENUITEM SEPARATOR
         MENUITEM "Calculate Maps and Light (no shadows)", 32889
-        MENUITEM "Calculate Maps and Light\tCtrl+L", ID_CALCULATE_MAPS_AND_LIGHT
+        MENUITEM "Calculate Maps and Light\tCtrl+Shift+L", ID_CALCULATE_MAPS_AND_LIGHT
         MENUITEM SEPARATOR
         MENUITEM "Rebuild with hole lines", 32898
         MENUITEM "Check for holes", 32896
@@ -222,7 +222,7 @@ IDR_MAIN_FRAME ACCELERATORS
 
     // New accelerators
     "S",        ID_CREATE_LEVEL_PACKFILE, VIRTKEY, CONTROL, SHIFT
-    "L",        ID_CALCULATE_MAPS_AND_LIGHT, VIRTKEY, CONTROL
+    "L",        ID_CALCULATE_MAPS_AND_LIGHT, VIRTKEY, CONTROL, SHIFT
 }
 
 // VERSIONINFO

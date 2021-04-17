@@ -22,6 +22,8 @@ Version 1.6.2 (not released yet)
 - Add welcome message function for dedicated servers
 - Fix 3D sounds ignoring master volume during first frame after creation if EAX is enabled
 - Fix restarting muted ambient sounds
+- Change editor hotkey for lightmap+lighting calculation to Ctrl+Shift+L because old hotkey was conflicting with
+  other function
 
 Version 1.6.1 (released 2021-02-20)
 -----------------------------------
