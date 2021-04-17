@@ -183,6 +183,44 @@ FunHook<int(int, int, float, float)> snd_play_hook{
     },
 };
 
+int snd_pc_play_3d_new(int handle, const rf::Vector3& pos, float vol_scale, bool looping, const rf::Vector3& vel = rf::zero_vector)
+{
+    // Original function has some flaws:
+    // * it does not have vol_scale and vel parameters
+    // * it mutes sounds below volume=0.05 (snd_pc_play does not do that)
+    // * sounds.tbl volume is used (snd_update_sounds ignores it for 3D sounds)
+    if (!rf::sound_pc_inited || handle == -1) {
+        return -1;
+    }
+    int sid = rf::snd_pc_load(handle, false, false);
+    if (sid == -1) {
+        return -1;
+    }
+    float pan, volume_2d;
+    rf::snd_calculate_2d_from_3d_info(handle, pos, &pan, &volume_2d, vol_scale);
+    if (rf::sound_backend == rf::SOUND_BACKEND_DS) {
+        if (rf::snd_pc_is_ds3d_enabled()) {
+            // use a calculated volume scale that takes distance into account because we do not use
+            // Direct Sound 3D distance attenuation model
+            return rf::snd_ds_play_3d(sid, pos, vel,
+                rf::sounds[handle].min_range,
+                rf::sounds[handle].max_range,
+                volume_2d,
+                looping,
+                0.0f);
+        }
+        else {
+            float pan = rf::snd_pc_calculate_pan(pos);
+            if (looping)
+                return rf::snd_pc_play_looping(handle, volume_2d, pan, 0.0, true);
+            else
+                return rf::snd_pc_play(handle, volume_2d, pan, 0.0f, true);
+        }
+    }
+    return -1;
+}
+
+
 FunHook<int(int, const rf::Vector3&, float, const rf::Vector3&, int)> snd_play_3d_hook{
     0x005056A0,
     [](int handle, const rf::Vector3& pos, float volume, const rf::Vector3&, int group) {
@@ -208,7 +246,7 @@ FunHook<int(int, const rf::Vector3&, float, const rf::Vector3&, int)> snd_play_3
         auto& instance = rf::sound_instances[instance_index];
         int sig;
         if (rf::ds3d_enabled) {
-            sig = rf::snd_pc_play_3d(handle, pos, looping, 0.0f);
+            sig = snd_pc_play_3d_new(handle, pos, vol_scale, looping);
         }
         else if (looping) {
             sig = rf::snd_pc_play_looping(handle, vol_scale, pan, 0.0f, true);
@@ -271,17 +309,6 @@ FunHook<void(int, const rf::Vector3&, const rf::Vector3&, float)> snd_change_3d_
     },
 };
 
-CodeInjection snd_pc_play_3d_injection{
-    0x0054423A,
-    [](auto& regs) {
-        auto stack_frame = regs.esp + 0x20;
-        // use a calculated volume scale that takes distance into account because we do not use
-        // Direct Sound 3D distance attenuation model
-        auto& volume = addr_as_ref<float>(stack_frame + 0x8);
-        regs.edx = volume;
-    },
-};
-
 void snd_update_sound_instances([[ maybe_unused ]] const rf::Vector3& camera_pos)
 {
     // Update sound volume of all instances because we do not use Direct Sound 3D distance attenuation model
@@ -308,14 +335,14 @@ void snd_update_ambient_sounds(const rf::Vector3& camera_pos)
             auto& sound = rf::sounds[ambient_snd.handle];
             bool in_range = distance <= sound.max_range;
             if (in_range) {
+                float vol_scale = ambient_snd.volume * rf::snd_group_volume[rf::SOUND_GROUP_EFFECTS] * g_game_config.level_sound_volume;
                 if (ambient_snd.sig < 0) {
                     bool is_looping = rf::sounds[ambient_snd.handle].is_looping;
-                    ambient_snd.sig = rf::snd_pc_play_3d(ambient_snd.handle, ambient_snd.pos, is_looping, 0);
+                    ambient_snd.sig = snd_pc_play_3d_new(ambient_snd.handle, ambient_snd.pos, vol_scale, is_looping);
                 }
                 // Update volume even for non-looping sounds unlike original code
-                float volume = rf::snd_pc_calc_volume_3d(ambient_snd.handle, ambient_snd.pos, ambient_snd.volume);
-                float vol_scale = volume * g_game_config.level_sound_volume * rf::snd_group_volume[rf::SOUND_GROUP_EFFECTS];
-                rf::snd_pc_set_volume(ambient_snd.sig, vol_scale);
+                float volume = rf::snd_pc_calc_volume_3d(ambient_snd.handle, ambient_snd.pos, vol_scale);
+                rf::snd_pc_set_volume(ambient_snd.sig, volume);
             }
             else if (ambient_snd.sig >= 0 && !in_range) {
                 rf::snd_pc_stop(ambient_snd.sig);
@@ -413,7 +440,6 @@ void apply_sound_patches()
     // Properly update DirectSound 3D sounds
     snd_change_3d_hook.install();
     snd_update_sounds_hook.install();
-    snd_pc_play_3d_injection.install();
 
     // Apply patch for DirectSound specific code
     snd_ds_apply_patch();

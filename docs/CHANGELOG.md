@@ -20,6 +20,7 @@ Version 1.6.2 (not released yet)
 - Do not render the level twice when Message Log is open
 - Add `spectate_mode_minimal_ui` command for disabling most of spectate mode texts
 - Add welcome message function for dedicated servers
+- Fix 3D sounds ignoring master volume during first frame after creation if EAX is enabled
 
 Version 1.6.1 (released 2021-02-20)
 -----------------------------------

@@ -75,6 +75,8 @@ namespace rf
     static auto& sound_listener_pos = addr_as_ref<Vector3>(0x01754160);
     static auto& sound_listener_rvec = addr_as_ref<Vector3>(0x01753C28);
 
+    static auto& sound_pc_inited = addr_as_ref<bool>(0x01CFC5D0);
+
     static auto snd_load_hint = addr_as_ref<int(int handle)>(0x005054D0);
     static auto snd_play = addr_as_ref<int(int handle, int group, float pan, float volume)>(0x00505560);
     static auto snd_play_3d = addr_as_ref<int(int handle, const Vector3& pos, float vol_scale, const Vector3& unused, int group)>(0x005056A0);
@@ -97,4 +99,7 @@ namespace rf
     static auto snd_pc_get_duration = addr_as_ref<float(int handle)>(0x00544760);
     static auto snd_pc_change_listener = addr_as_ref<void(const Vector3& pos, const Vector3& vel, const Matrix3& orient)>(0x00543480);
     static auto snd_pc_calc_volume_3d = addr_as_ref<float(int handle, const Vector3& pos, float vol_scale)>(0x00543C20);
+    static auto snd_pc_load = addr_as_ref<int(int handle, bool skip_data_loading, bool is_bluebeard_btz)>(0x00543760);
+    static auto snd_pc_is_ds3d_enabled = addr_as_ref<bool()>(0x00544750);
+    static auto snd_pc_calculate_pan = addr_as_ref<float(const Vector3& pos)>(0x00543EA0);
 }
