@@ -176,5 +176,6 @@ void apply_save_restore_patches()
     quick_load_hook.install();
 
     // Fix memory corruption when transitioning to 5th level in a sequence and the level has no entry in ponr.tbl
-    AsmWriter{0x004B3CAF, 0x004B3CB2}.xor_(asm_regs::ebx, asm_regs::ebx);
+    AsmWriter{0x004B3CAF, 0x004B3CB2}.xor_(asm_regs::ebx, asm_regs::ebx);  // save
+    AsmWriter{0x004B5374, 0x004B5377}.xor_(asm_regs::edx, asm_regs::edx);  // transition
 }
