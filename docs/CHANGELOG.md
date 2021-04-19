@@ -28,6 +28,7 @@ Version 1.6.2 (not released yet)
 - Fix copying bool properties in some events
 - Fix move sound not being muted if entity is created hidden
 - Fix console being rendered in wrong place on endgame screen
+- Fix memory corruption when transitioning to 5th level in a sequence and the level has no entry in ponr.tbl
 
 Version 1.6.1 (released 2021-02-20)
 -----------------------------------
@@ -87,7 +88,6 @@ Version 1.6.1-beta (released 2021-01-29)
 - Add missing `consolebutton2A.tga` texture which is used by "Console Button02" clutter object
 - Fix chat input box rendering in big HUD mode when a very long message is being entered
 - Improve scope weapons zoom in spectate mode
-- Fix memory corruption when transitioning to 5th level in a sequence and the level has no entry in ponr.tbl
 
 Version 1.6.0 (released 2021-01-07)
 -----------------------------------
