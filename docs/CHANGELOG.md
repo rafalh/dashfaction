@@ -26,6 +26,7 @@ Version 1.6.2 (not released yet)
   other function
 - Fix handling conflicting Activated By property when editing multiple triggers in editor
 - Fix copying bool properties in some events
+- Fix move sound not being muted if entity is created hidden
 
 Version 1.6.1 (released 2021-02-20)
 -----------------------------------

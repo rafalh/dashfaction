@@ -7,6 +7,7 @@
 #include "../rf/player/player.h"
 #include "../rf/particle_emitter.h"
 #include "../rf/os/frametime.h"
+#include "../rf/sound/sound.h"
 #include "../main/main.h"
 
 rf::Timestamp g_player_jump_timestamp;
@@ -112,6 +113,17 @@ CallHook<bool(const rf::Vector3&, const rf::Vector3&, rf::PhysicsData*, rf::PCol
     },
 };
 
+CodeInjection entity_process_post_hidden_injection{
+    0x0041E4C8,
+    [](auto& regs) {
+        rf::Entity* ep = regs.esi;
+        // Make sure move sound is muted
+        if (ep->move_sound_handle != -1) {
+            rf::snd_change_3d(ep->move_sound_handle, ep->pos, rf::zero_vector, 0.0f);
+        }
+    },
+};
+
 void entity_do_patch()
 {
     // Fix player being stuck to ground when jumping, especially when FPS is greater than 200
@@ -147,4 +159,7 @@ void entity_do_patch()
     // Use local_player variable for weapon shell distance calculation instead of local_player_entity
     // in entity_eject_shell. Fixed debris pool being exhausted when local player is dead.
     AsmWriter(0x0042A223, 0x0042A232).mov(asm_regs::ecx, {&rf::local_player});
+
+    // Fix move sound not being muted if entity is created hidden (example: jeep in L18S3)
+    entity_process_post_hidden_injection.install();
 }
