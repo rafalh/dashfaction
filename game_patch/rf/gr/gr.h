@@ -322,6 +322,7 @@ namespace rf::gr
     static auto& unlock = addr_as_ref<void(LockInfo* lock)>(0x0050E310);
     static auto& set_clip = addr_as_ref<void(int x, int y, int w, int h)>(0x0050CC60);
     static auto& get_clip = addr_as_ref<void(int* x, int* y, int* w, int* h)>(0x0050CD80);
+    static auto& reset_clip = addr_as_ref<void()>(0x0050CDD0);
     static auto& page_in = addr_as_ref<int(int bm_handle)>(0x0050CE00);
     static auto& tcache_add_ref = addr_as_ref<void(int bm_handle)>(0x0050E850);
     static auto& tcache_remove_ref = addr_as_ref<void(int bm_handle)>(0x0050E870);

@@ -115,6 +115,18 @@ static FunHook<void()> console_draw_server_hook{
     },
 };
 
+static FunHook<void()> console_draw_client_hook{
+    0x0050ABE0,
+    []() {
+        // Make sure clip window is reset before drawing
+        // Fixes console rendering in endgame state
+        rf::gr::reset_clip();
+
+        console_draw_client_hook.call_target();
+    },
+};
+
+
 static CallHook<void(char)> console_put_char_new_line_hook{
     0x0050A081,
     [](char c) {
@@ -210,6 +222,9 @@ void console_apply_patches()
 
     // Improve history handling
     console_handle_input_history_injection.install();
+
+    // Reset clip window before rendering console
+    console_draw_client_hook.install();
 
     console_commands_apply_patches();
     console_auto_complete_apply_patches();
