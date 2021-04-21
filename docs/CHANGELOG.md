@@ -29,6 +29,7 @@ Version 1.6.2 (not released yet)
 - Fix move sound not being muted if entity is created hidden
 - Fix console being rendered in wrong place on endgame screen
 - Fix memory corruption when transitioning to 5th level in a sequence and the level has no entry in ponr.tbl
+- Fix music being unstoppable by events after entering the game menu
 
 Version 1.6.1 (released 2021-02-20)
 -----------------------------------

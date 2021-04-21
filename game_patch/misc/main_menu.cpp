@@ -10,6 +10,7 @@
 #include "../rf/input.h"
 #include "../rf/file/file.h"
 #include "../rf/multi.h"
+#include "../rf/sound/sound.h"
 #include "../main/main.h"
 #include "../graphics/gr.h"
 
@@ -21,12 +22,14 @@ constexpr int EGG_ANIM_IDLE_TIME = 3000;
 
 constexpr double PI = 3.14159265358979323846;
 
-int g_version_click_counter = 0;
-int g_egg_anim_start;
+static int g_version_click_counter = 0;
+static int g_egg_anim_start;
+static int g_game_music_sig_to_restore = -1;
 
 namespace rf
 {
     static auto& menu_version_label = addr_as_ref<ui::Gadget>(0x0063C088);
+    static auto& main_menu_music_sig = addr_as_ref<int>(0x005990F8);
 }
 
 // Note: fastcall is used because MSVC does not allow free thiscall functions
@@ -188,6 +191,32 @@ CodeInjection multi_servers_on_list_click_injection{
     },
 };
 
+CodeInjection main_menu_set_music_injection{
+    0x0044323C,
+    []() {
+        g_game_music_sig_to_restore = rf::snd_music_sig;
+    },
+};
+
+FunHook<void()> main_menu_stop_music_hook{
+    0x00443E90,
+    []() {
+        if (rf::snd_music_sig == rf::main_menu_music_sig) {
+            main_menu_stop_music_hook.call_target();
+            // Restore old sig in music sig variable so game can keep track of it (and stop it when needed)
+            rf::snd_music_sig = g_game_music_sig_to_restore;
+        }
+        else if (g_game_music_sig_to_restore != -1) {
+            // Music changed when the menu was open - stop the old music
+            // Note: In Single Player RF pauses the world when entering the menu so it should not happen
+            //       In Multi Player on the other hand level scripts are still executing in the background and nothing stops
+            //       them from playing new sounds/music. Would be cool to fix it one day...
+            rf::snd_pc_stop(g_game_music_sig_to_restore);
+            g_game_music_sig_to_restore = -1;
+        }
+    },
+};
+
 void apply_main_menu_patches()
 {
     // Version in Main Menu
@@ -209,4 +238,8 @@ void apply_main_menu_patches()
 
     // Fix clicking fav checkbox in server list
     multi_servers_on_list_click_injection.install();
+
+    // Fix music being unstoppable after opening the menu
+    main_menu_set_music_injection.install();
+    main_menu_stop_music_hook.install();
 }

@@ -74,6 +74,7 @@ namespace rf
     static auto& ambient_sounds = addr_as_ref<AmbientSound[25]>(0x01754170);
     static auto& sound_listener_pos = addr_as_ref<Vector3>(0x01754160);
     static auto& sound_listener_rvec = addr_as_ref<Vector3>(0x01753C28);
+    static auto& snd_music_sig = addr_as_ref<int>(0x017543D0);
 
     static auto& sound_pc_inited = addr_as_ref<bool>(0x01CFC5D0);
 
