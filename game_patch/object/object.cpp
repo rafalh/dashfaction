@@ -8,6 +8,7 @@
 #include "../rf/item.h"
 #include "../rf/clutter.h"
 #include "../rf/multi.h"
+#include "../rf/level.h"
 #include "object.h"
 #include "object_private.h"
 
@@ -228,6 +229,25 @@ CodeInjection sort_clutter_patch{
     },
 };
 
+FunHook<rf::VMesh*(rf::Object*, const char*, rf::VMeshType)> obj_create_mesh_hook{
+    0x00489FE0,
+    [](rf::Object* objp, const char* name, rf::VMeshType type) {
+        auto mesh = obj_create_mesh_hook.call_target(objp, name, type);
+        if (mesh && (rf::level.flags & rf::LEVEL_LOADED) != 0) {
+            obj_mesh_lighting_maybe_update(objp);
+        }
+        return mesh;
+    },
+};
+
+FunHook<void(rf::Object*)> obj_delete_mesh_hook{
+    0x00489FC0,
+    [](rf::Object* objp) {
+        obj_delete_mesh_hook.call_target(objp);
+        obj_mesh_lighting_free_one(objp);
+    },
+};
+
 void object_do_patch()
 {
     // Log error when object cannot be created
@@ -275,6 +295,10 @@ void object_do_patch()
     // Sort objects by anim mesh name to improve rendering performance
     sort_items_patch.install();
     sort_clutter_patch.install();
+
+    // Calculate lighting when object mesh is changed
+    obj_create_mesh_hook.install();
+    obj_delete_mesh_hook.install();
 
     // Other files
     entity_do_patch();

@@ -76,6 +76,10 @@ namespace rf
     };
     static_assert(sizeof(LevelInfo) == 0x154);
 
+    enum LevelFlags {
+        LEVEL_LOADED = 1,
+    };
+
     static auto& add_liquid_depth_update =
         addr_as_ref<void(GRoom* room, float target_liquid_depth, float duration)>(0x0045E640);
     static auto& level_room_from_uid = addr_as_ref<GRoom*(int uid)>(0x0045E7C0);

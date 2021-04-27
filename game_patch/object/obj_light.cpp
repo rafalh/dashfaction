@@ -6,6 +6,7 @@
 #include "../rf/item.h"
 #include "../rf/clutter.h"
 #include "../rf/gr/gr.h"
+#include "../rf/multi.h"
 #include "../rf/crt.h"
 #include "../os/console.h"
 #include "../main/main.h"
@@ -20,11 +21,40 @@ void obj_mesh_lighting_alloc_one(rf::Object *objp)
     objp->mesh_lighting_data = rf::rf_malloc(size);
 }
 
+void obj_mesh_lighting_free_one(rf::Object *objp)
+{
+    if (objp->mesh_lighting_data) {
+        rf::rf_free(objp->mesh_lighting_data);
+        objp->mesh_lighting_data = nullptr;
+    }
+}
+
 void obj_mesh_lighting_update_one(rf::Object *objp)
 {
     gr_light_use_static(true);
     rf::vmesh_update_lighting_data(objp->vmesh, objp->room, objp->pos, objp->orient, objp->mesh_lighting_data);
     gr_light_use_static(false);
+}
+
+static bool obj_should_be_lit(rf::Object *objp)
+{
+    if (!g_game_config.mesh_static_lighting) {
+        return false;
+    }
+    if (!objp->vmesh || rf::vmesh_get_type(objp->vmesh) != rf::MESH_TYPE_STATIC) {
+        return false;
+    }
+    // Clutter object always use static lighting
+    // Items does only in single-player. In multi-player they spins so static lighting make less sense
+    return objp->type == rf::OT_CLUTTER || (objp->type == rf::OT_ITEM && !rf::is_multi);
+}
+
+void obj_mesh_lighting_maybe_update(rf::Object *objp)
+{
+    if (!objp->mesh_lighting_data && obj_should_be_lit(objp)) {
+        obj_mesh_lighting_alloc_one(objp);
+        obj_mesh_lighting_update_one(objp);
+    }
 }
 
 FunHook<void()> obj_light_calculate_hook{
@@ -85,17 +115,6 @@ FunHook<void()> obj_light_free_hook{
     },
 };
 
-FunHook<void(rf::Object*)> obj_delete_mesh_hook{
-    0x00489FC0,
-    [](rf::Object* objp) {
-        obj_delete_mesh_hook.call_target(objp);
-        if (objp->mesh_lighting_data) {
-            rf::rf_free(objp->mesh_lighting_data);
-            objp->mesh_lighting_data = nullptr;
-        }
-    },
-};
-
 void recalc_mesh_static_lighting()
 {
     rf::obj_light_free();
@@ -120,7 +139,6 @@ void obj_light_apply_patch()
     obj_light_calculate_hook.install();
     obj_light_alloc_hook.install();
     obj_light_free_hook.install();
-    obj_delete_mesh_hook.install();
 
     // Fix invalid vertex offset in mesh lighting calculation
     write_mem<int8_t>(0x005042F0 + 2, sizeof(rf::Vector3));

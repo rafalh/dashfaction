@@ -30,6 +30,7 @@ Version 1.6.2 (not released yet)
 - Fix console being rendered in wrong place on endgame screen
 - Fix memory corruption when transitioning to 5th level in a sequence and the level has no entry in ponr.tbl
 - Fix music being unstoppable by events after entering the game menu
+- Calculate mesh static lighting when object mesh is switched to corpse
 
 Version 1.6.1 (released 2021-02-20)
 -----------------------------------

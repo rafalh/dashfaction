@@ -9,7 +9,6 @@
 #include "../rf/event.h"
 #include "../rf/entity.h"
 #include "../rf/level.h"
-#include "../object/object.h"
 
 CodeInjection switch_model_event_custom_mesh_patch{
     0x004BB921,
@@ -36,7 +35,6 @@ CodeInjection switch_model_event_obj_lighting_and_physics_fix{
     0x004BB940,
     [](auto& regs) {
         rf::Object* obj = regs.edi;
-        obj->mesh_lighting_data = nullptr;
         // Fix physics
         if (obj->vmesh) {
             rf::ObjectCreateInfo oci;
@@ -57,12 +55,6 @@ CodeInjection switch_model_event_obj_lighting_and_physics_fix{
             }
             rf::physics_delete_object(&obj->p_data);
             rf::physics_create_object(&obj->p_data, &oci);
-
-            if (obj->type == rf::OT_CLUTTER) {
-                // Note: ObjDeleteMesh frees mesh_lighting_data
-                obj_mesh_lighting_alloc_one(obj);
-                obj_mesh_lighting_update_one(obj);
-            }
         }
     },
 };
