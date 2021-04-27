@@ -86,7 +86,7 @@ static unsigned hash_file(const char* Filename)
 
 static GameLang detect_installed_game_lang()
 {
-    std::array lang_codes{"en", "gr", "fr"};
+    std::array lang_codes{"gr", "fr", "en"};
 
     for (unsigned i = 0; i < lang_codes.size(); ++i) {
         auto full_path = string_format("%smaps_%s.vpp", rf::root_path, lang_codes[i]);
