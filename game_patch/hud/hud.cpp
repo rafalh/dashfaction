@@ -172,7 +172,6 @@ ConsoleCommand2 hud_coords_cmd{
             rf::hud_coords[idx].y = y.value();
         }
         rf::console::printf("HUD coords[%d]: <%d, %d>", idx, rf::hud_coords[idx].x, rf::hud_coords[idx].y);
-
     },
 };
 #endif
