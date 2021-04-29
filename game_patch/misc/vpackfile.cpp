@@ -93,12 +93,13 @@ static GameLang detect_installed_game_lang()
     };
 
     for (auto& p : langs) {
-        auto full_path = string_format("%smaps_%s.vpp", rf::root_path, p.second);
+        auto [lang_id, lang_code] = p;
+        auto full_path = string_format("%smaps_%s.vpp", rf::root_path, lang_code);
         BOOL exists = PathFileExistsA(full_path.c_str());
         xlog::info("Checking file %s: %s", full_path.c_str(), exists ? "found" : "not found");
         if (exists) {
-            xlog::info("Detected game language: %s", p.second);
-            return p.first;
+            xlog::info("Detected game language: %s", lang_code);
+            return lang_id;
         }
     }
     xlog::warn("Cannot detect game language");
