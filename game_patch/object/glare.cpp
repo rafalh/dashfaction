@@ -30,7 +30,7 @@ static bool glare_collide_object(rf::Glare* glare, rf::Object* obj, const rf::Ve
     }
 
     // Skip local entity vehicle
-    if (rf::entity_is_attached_to_vehicle(rf::local_player_entity) && obj->handle == rf::local_player_entity->host_handle) {
+    if (rf::entity_in_vehicle(rf::local_player_entity) && obj->handle == rf::local_player_entity->host_handle) {
         return false;
     }
 

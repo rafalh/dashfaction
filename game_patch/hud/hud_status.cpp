@@ -32,10 +32,10 @@ FunHook<void(rf::Player*)> hud_status_render_hook{
         // Note: 2x scale does not look good because bigfont is not exactly 2x version of smallfont
         float scale = 1.875f;
 
-        if (rf::entity_is_attached_to_vehicle(entity)) {
+        if (rf::entity_in_vehicle(entity)) {
             rf::hud_draw_damage_indicators(player);
             auto vehicle = rf::entity_from_handle(entity->host_handle);
-            if (rf::entity_is_jeep_driver(entity) || rf::entity_is_jeep_shooter(entity)) {
+            if (rf::entity_is_jeep_driver(entity) || rf::entity_is_jeep_gunner(entity)) {
                 rf::gr::set_color(255, 255, 255, 120);
                 auto [jeep_x, jeep_y] = hud_scale_coords(rf::hud_coords[rf::hud_jeep], scale);
                 hud_scaled_bitmap(rf::hud_health_jeep_bmh, jeep_x, jeep_y, scale);
@@ -89,7 +89,7 @@ FunHook<void(rf::Player*)> hud_status_render_hook{
 
             rf::hud_draw_damage_indicators(player);
 
-            if (rf::entity_is_holding_body(entity)) {
+            if (rf::entity_is_carrying_corpse(entity)) {
                 rf::gr::set_color(255, 255, 255, 255);
                 static const rf::gr::Mode state{
                     rf::gr::TEXTURE_SOURCE_WRAP,
