@@ -81,7 +81,7 @@ Root: HKCR; Subkey: "rf\shell\open\command"; ValueType: "string"; ValueData: """
 Root: HKCR; Subkey: ".rfl"; ValueType: "string"; ValueData: "DashFactionLevelEditor"; Flags: uninsdeletekey; Tasks: rflassoc
 Root: HKCR; Subkey: "DashFactionLevelEditor"; ValueType: "string"; ValueData: "Dash Faction Level Editor"; Flags: uninsdeletekey; Tasks: rflassoc
 ;Root: HKCR; Subkey: "DashFactionLevelEditor\DefaultIcon"; ValueType: "string"; ValueData: "{app}\DashFactionLauncher.exe,0"; Tasks: rflassoc
-Root: HKCR; Subkey: "DashFactionLevelEditor\shell\open\command"; ValueType: "string"; ValueData: """{app}\DashFactionLauncher.exe"" -editor -level %1"; Tasks: rflassoc
+Root: HKCR; Subkey: "DashFactionLevelEditor\shell\open\command"; ValueType: "string"; ValueData: """{app}\DashFactionLauncher.exe"" -editor -level ""%1"""; Tasks: rflassoc
 
 
 [CustomMessages]

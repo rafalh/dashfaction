@@ -33,6 +33,7 @@ Version 1.6.2 (not released yet)
 - Calculate mesh static lighting when object mesh is switched to corpse
 - Make sure GR/FR game localizations have priority over EN files in case someone messed his RF directory
 - Fix persona messages being displayed too low in Big HUD mode in vehicles
+- Fix rfl file extension association with Dash Editor not working properly for filenames containing space characters
 
 Version 1.6.1 (released 2021-02-20)
 -----------------------------------
