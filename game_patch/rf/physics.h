@@ -15,7 +15,7 @@ namespace rf
         Vector3 hit_normal;
         float hit_time;
         int material;
-        int inv_mass;
+        float inv_mass;
         Vector3 vel;
         int obj_handle;
         int bitmap_handle;
