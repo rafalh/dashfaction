@@ -1,14 +1,19 @@
-#include "hud_internal.h"
-#include "../hud/hud.h"
-#include "../rf/hud.h"
-#include "../rf/gr/gr.h"
-#include "../rf/gr/gr_font.h"
 #include <patch_common/FunHook.h>
 #include <patch_common/AsmOpcodes.h>
 #include <patch_common/AsmWriter.h>
 #include <patch_common/CodeInjection.h>
+#include "../rf/hud.h"
+#include "../rf/gr/gr.h"
+#include "../rf/gr/gr_font.h"
+#include "../rf/multi.h"
+#include "../rf/player/player.h"
+#include "../hud/hud.h"
+#include "../os/console.h"
+#include "../misc/player.h"
+#include "hud_internal.h"
 
 bool g_big_chatbox = false;
+bool g_all_players_muted = false;
 
 constexpr int chat_msg_max_len = 224;
 constexpr int chatbox_border_alpha = 0x30; // default is 77
@@ -181,6 +186,52 @@ void multi_hud_render_chat_inputbox(rf::String::Pod label_pod, rf::String::Pod m
 
 FunHook<void(rf::String::Pod, rf::String::Pod)> multi_hud_render_chat_inputbox_hook{0x00478CA0, multi_hud_render_chat_inputbox};
 
+static bool is_muted_player(rf::Player *pp)
+{
+    if (g_all_players_muted) {
+        return true;
+    }
+    auto& pdata = get_player_additional_data(pp);
+    return pdata.is_muted;
+}
+
+CodeInjection process_chat_line_packet_injection{
+    0x00444948,
+    [](auto& regs) {
+        rf::Player* pp = regs.eax;
+        const char* message = regs.ecx;
+        int mode = regs.edx;
+        if (is_muted_player(pp)) {
+            // Messages from muted players only show up in the console
+            const char *team_str = mode == 1 ? rf::strings::team : "";
+            rf::console::printf("%s%s (MUTED): %s", pp->name.c_str(), team_str, message);
+            regs.eip = 0x00444958;
+        }
+    },
+};
+
+ConsoleCommand2 mute_all_players_cmd{
+    "mute_all_players",
+    []() {
+        g_all_players_muted = !g_all_players_muted;
+        rf::console::printf("All players are %s", g_all_players_muted ? "muted" : "unmuted");
+    },
+    "Mutes all players in multiplayer chat",
+};
+
+ConsoleCommand2 mute_player_cmd{
+    "mute_player",
+    [](std::string player_name) {
+        auto pp = find_best_matching_player(player_name.c_str());
+        if (pp) {
+            auto& pdata = get_player_additional_data(pp);
+            pdata.is_muted = !pdata.is_muted;
+            rf::console::printf("Player %s is %s", pp->name.c_str(), pdata.is_muted ? "muted" : "unmuted");
+        }
+    },
+    "Mutes a single player in multiplayer chat",
+};
+
 void multi_hud_chat_apply_patches()
 {
     // Fix game beeping every frame if chat input buffer is full
@@ -192,9 +243,15 @@ void multi_hud_chat_apply_patches()
     // Add chat message limit for say/teamsay commands
     multi_chat_say_accept_hook.install();
 
+    // Big HUD support
     multi_hud_render_chat_hook.install();
     multi_hud_add_chat_line_max_width_injection.install();
     multi_hud_render_chat_inputbox_hook.install();
+
+    // Muting support
+    process_chat_line_packet_injection.install();
+    mute_all_players_cmd.register_cmd();
+    mute_player_cmd.register_cmd();
 }
 
 void multi_hud_chat_set_big(bool is_big)

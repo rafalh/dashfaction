@@ -20,6 +20,7 @@ namespace rf
         static const auto &semi_auto = array[780];
         static const auto &heavy = array[781];
         static const auto &explosive = array[782];
+        static const auto &team = array[833];
         static const auto &player_name = array[835];
         static const auto &exiting_game = array[884];
         static const auto &usage = array[886];

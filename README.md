@@ -52,6 +52,8 @@ Client commands:
 * `swap_assault_rifle_controls` - swaps primary and alternate fire controls for Assault Rifle weapon
 * `show_enemy_bullets` - toggles visibility of enemy bullets in multiplayer
 * `kill_messages` - toggles printing of kill messages in the chatbox and the game console
+* `mute_all_players` - toggles processing of chat messages from other players
+* `mute_player` - toggles processing of chat messages from a specific player
 
 Server commands:
 * `unban_last` - unbans last banned player

@@ -34,6 +34,7 @@ Version 1.6.2 (not released yet)
 - Make sure GR/FR game localizations have priority over EN files in case someone messed his RF directory
 - Fix persona messages being displayed too low in Big HUD mode in vehicles
 - Fix rfl file extension association with Dash Editor not working properly for filenames containing space characters
+- Add `mute_all_players` and `mute_player` commands for hiding chat messages from specific players
 
 Version 1.6.1 (released 2021-02-20)
 -----------------------------------

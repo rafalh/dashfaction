@@ -21,6 +21,7 @@ struct PlayerNetGameSaveData
 struct PlayerAdditionalData
 {
     bool is_browser = false;
+    bool is_muted = false;
     int last_hitsound_sent_ms = 0;
     std::map<std::string, PlayerNetGameSaveData> saves;
     rf::Vector3 last_teleport_pos;
