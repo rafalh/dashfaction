@@ -1,7 +1,7 @@
 DashFaction Changelog
 =====================
 
-Version 1.6.2 (not released yet)
+Version 1.7.0 (not released yet)
 --------------------------------
 - Change maximal value of Max Kills dedicated server config to 999
 - Support Team DM scores above 255
