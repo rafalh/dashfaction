@@ -118,6 +118,7 @@ set(SRCS
     object/object.h
     object/object_private.h
     object/entity.cpp
+    object/item.cpp
     object/event.cpp
     object/trigger.cpp
     object/weapon.cpp

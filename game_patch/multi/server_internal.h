@@ -48,6 +48,7 @@ struct ServerAdditionalConfig
     int anticheat_level = 0;
     bool stats_message_enabled = true;
     std::string welcome_message;
+    bool weapon_items_give_full_ammo = false;
 };
 
 extern ServerAdditionalConfig g_additional_server_config;

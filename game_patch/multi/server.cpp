@@ -91,6 +91,10 @@ void load_additional_server_config(rf::Parser& parser)
         g_additional_server_config.item_replacements.insert({old_item.c_str(), new_item.c_str()});
     }
 
+    if (parser.parse_optional("$DF Weapon Items Give Full Ammo:")) {
+        g_additional_server_config.weapon_items_give_full_ammo = parser.parse_bool();
+    }
+
     if (parser.parse_optional("$DF Default Player Weapon:")) {
         rf::String default_weapon;
         parser.parse_string(&default_weapon);
@@ -696,6 +700,11 @@ void server_on_limbo_state_enter()
 bool server_is_saving_enabled()
 {
     return g_additional_server_config.saving_enabled;
+}
+
+bool server_weapon_items_give_full_ammo()
+{
+    return g_additional_server_config.weapon_items_give_full_ammo;
 }
 
 const ServerAdditionalConfig& server_get_df_config()

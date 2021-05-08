@@ -5,7 +5,6 @@
 #include <patch_common/StaticBufferResizePatch.h>
 #include <xlog/xlog.h>
 #include "../rf/object.h"
-#include "../rf/item.h"
 #include "../rf/clutter.h"
 #include "../rf/multi.h"
 #include "../rf/level.h"
@@ -146,51 +145,6 @@ CallHook<void*(size_t)> GPool_allocate_new_hook{
     },
 };
 
-CodeInjection sort_items_patch{
-    0x004593AC,
-    [](auto& regs) {
-        rf::Item* item = regs.esi;
-        auto vmesh = item->vmesh;
-        auto mesh_name = vmesh ? rf::vmesh_get_name(vmesh) : nullptr;
-        if (!mesh_name) {
-            // Sometimes on level change some objects can stay and have only vmesh destroyed
-            return;
-        }
-        std::string_view mesh_name_sv = mesh_name;
-
-        // HACKFIX: enable alpha sorting for Invulnerability Powerup and Riot Shield
-        // Note: material used for alpha-blending is flare_blue1.tga - it uses non-alpha texture
-        // so information about alpha-blending cannot be taken from material alone - it must be read from VFX
-        static const char* force_alpha_mesh_names[] = {
-            "powerup_invuln.vfx",
-            "Weapon_RiotShield.V3D",
-        };
-        for (auto alpha_mesh_name : force_alpha_mesh_names) {
-            if (mesh_name_sv == alpha_mesh_name) {
-                item->obj_flags |= rf::OF_HAS_ALPHA;
-                break;
-            }
-        }
-
-        rf::Item* current = rf::item_list.next;
-        while (current != &rf::item_list) {
-            auto current_anim_mesh = current->vmesh;
-            auto current_mesh_name = current_anim_mesh ? rf::vmesh_get_name(current_anim_mesh) : nullptr;
-            if (current_mesh_name && mesh_name_sv == current_mesh_name) {
-                break;
-            }
-            current = current->next;
-        }
-        item->next = current;
-        item->prev = current->prev;
-        item->next->prev = item;
-        item->prev->next = item;
-        // Set up needed registers
-        regs.ecx = regs.esp + 0xC0 - 0xB0; // create_info
-        regs.eip = 0x004593D1;
-    },
-};
-
 CodeInjection sort_clutter_patch{
     0x004109D4,
     [](auto& regs) {
@@ -292,8 +246,7 @@ void object_do_patch()
     // Zero memory allocated from GPool dynamically
     GPool_allocate_new_hook.install();
 
-    // Sort objects by anim mesh name to improve rendering performance
-    sort_items_patch.install();
+    // Sort objects by mesh name to improve rendering performance
     sort_clutter_patch.install();
 
     // Calculate lighting when object mesh is changed
@@ -302,6 +255,7 @@ void object_do_patch()
 
     // Other files
     entity_do_patch();
+    item_do_patch();
     cutscene_apply_patches();
     apply_event_patches();
     glare_patches_patches();

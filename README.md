@@ -150,6 +150,8 @@ Configuration example:
         +Rate Limit: 10
     // Replace all "Shotgun" items with "rail gun" items when loading RFLs
     $DF Item Replacement: "Shotgun" "rail gun"
+    // If enabled players are given full ammo when picking up weapon items, can be useful with Weapons Stay standard option
+    $DF Weapon Items Give Full Ammo: false
     // Replace default player weapon class
     $DF Default Player Weapon: "rail_gun"
         // Ammo given on respawn (by default 3 * clip size)

@@ -270,12 +270,13 @@ namespace rf
     };
 
     static auto& weapon_types = addr_as_ref<WeaponInfo[64]>(0x0085CD08);
+    static auto& remote_charge_det_weapon_type = addr_as_ref<int>(0x0085CCE0);
+    static auto& machine_pistol_special_weapon_type = addr_as_ref<int>(0x0085CD00);
+    static auto& machine_pistol_weapon_type = addr_as_ref<int>(0x0085CCD8);
     static auto& num_weapon_types = addr_as_ref<int>(0x00872448);
     static auto& riot_stick_weapon_type = addr_as_ref<int>(0x00872468);
-    static auto& remote_charge_det_weapon_type = addr_as_ref<int>(0x0085CCE0);
     static auto& remote_charge_weapon_type = addr_as_ref<int>(0x0087210C);
-    static auto& machine_pistol_weapon_type = addr_as_ref<int>(0x0085CCD8);
-    static auto& machine_pistol_special_weapon_type = addr_as_ref<int>(0x0085CD00);
+    static auto& shoulder_cannon_weapon_type = addr_as_ref<int>(0x0087244C);
     static auto& assault_rifle_weapon_type = addr_as_ref<int>(0x00872470);
     static auto& hide_enemy_bullets = addr_as_ref<bool>(0x005A24D0);
 
@@ -287,6 +288,4 @@ namespace rf
     static auto& weapon_is_melee = addr_as_ref<bool(int weapon_type)>(0x004C91B0);
     static auto& weapon_uses_clip = addr_as_ref<bool(int weapon_type)>(0x004C86E0);
     static auto& weapon_get_fire_wait_ms = addr_as_ref<int __cdecl(int weapon_type, bool alt_fire)>(0x004C8710);
-
-    static auto& player_make_weapon_current_selection = addr_as_ref<void(Player *player, int weapon_type)>(0x004A4980);
 }
