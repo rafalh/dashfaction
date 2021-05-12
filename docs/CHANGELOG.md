@@ -36,6 +36,7 @@ Version 1.7.0 (not released yet)
 - Fix rfl file extension association with Dash Editor not working properly for filenames containing space characters
 - Add `mute_all_players` and `mute_player` commands for hiding chat messages from specific players
 - Add server config option to give max ammo to the player when a weapon item is picked up
+- Append dedicated server config name to the log file name so logs from multiple servers won't mix
 
 Version 1.6.1 (released 2021-02-20)
 -----------------------------------

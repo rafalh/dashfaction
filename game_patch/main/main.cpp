@@ -196,11 +196,41 @@ private:
     }
 };
 
+static std::string& get_log_file_path_name()
+{
+    static std::string log_file_path_name;
+    if (log_file_path_name.empty()) {
+        std::string dedicated_server_name;
+        int argc;
+        LPWSTR* argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+        for (int i = 1; i < argc; ++i) {
+            if (!std::wcscmp(argv[i], L"-dedicated") && i + 1 < argc) {
+                LPWSTR next_arg = argv[i + 1];
+                dedicated_server_name.resize(std::wcslen(next_arg));
+                std::wcstombs(dedicated_server_name.data(), next_arg, dedicated_server_name.size());
+            }
+        }
+        LocalFree(argv);
+
+        if (!dedicated_server_name.empty()) {
+            log_file_path_name = "logs/DashFaction-dedicated-";
+            log_file_path_name += dedicated_server_name;
+            log_file_path_name += ".log";
+        }
+        else {
+            log_file_path_name = "logs/DashFaction.log";
+        }
+    }
+    return log_file_path_name;
+}
+
 void init_logging()
 {
+    auto& log_file_path_name = get_log_file_path_name();
+
     CreateDirectoryA("logs", nullptr);
     xlog::LoggerConfig::get()
-        .add_appender<xlog::FileAppender>("logs/DashFaction.log", false, false)
+        .add_appender<xlog::FileAppender>(log_file_path_name.c_str(), false, false)
         // .add_appender<xlog::ConsoleAppender>()
         // .add_appender<xlog::Win32Appender>()
         .add_appender<RfConsoleLogAppender>();
@@ -256,10 +286,11 @@ void init_crash_handler()
 {
     char current_dir[MAX_PATH] = ".";
     GetCurrentDirectoryA(std::size(current_dir), current_dir);
+    auto& log_file_path_name = get_log_file_path_name();
 
     CrashHandlerConfig config;
     config.this_module_handle = g_hmodule;
-    std::snprintf(config.log_file, std::size(config.log_file), "%s\\logs\\DashFaction.log", current_dir);
+    std::snprintf(config.log_file, std::size(config.log_file), "%s\\%s", current_dir, log_file_path_name.c_str());
     std::snprintf(config.output_dir, std::size(config.output_dir), "%s\\logs", current_dir);
     std::snprintf(config.app_name, std::size(config.app_name), "DashFaction");
     config.add_known_module("RF");
