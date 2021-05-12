@@ -11,11 +11,8 @@ std::string xlog::SimpleFormatter::format(xlog::Level level, const std::string& 
 
     if (include_time_) {
         char time_buf[16] = "";
-        auto now = (GetTickCount() - start_ticks) / 1000;
-        unsigned h = (now / 3600) % 24;
-        unsigned m = (now / 60) % 60;
-        unsigned s = now % 60;
-        std::sprintf(time_buf, "[%02u:%02u:%02u] ", h, m, s);
+        auto ticks = (GetTickCount() - start_ticks) / 1000.0f;
+        std::sprintf(time_buf, "[%7.2f] ", ticks);
         buf += time_buf;
     }
 
