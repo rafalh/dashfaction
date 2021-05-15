@@ -22,10 +22,10 @@ public:
     LogStream& operator=(const LogStream&) = delete; // assignment operator
     LogStream& operator=(LogStream&& other) = delete; // move assignment
 
-    ~LogStream()
+    ~LogStream() override
     {
         if (level_ <= logger_level_) {
-            for (auto& appender : LoggerConfig::get().get_appenders()) {
+            for (const auto& appender : LoggerConfig::get().get_appenders()) {
                 appender->append(level_, logger_name_, str());
             }
         }

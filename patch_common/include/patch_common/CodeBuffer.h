@@ -9,7 +9,7 @@ public:
     CodeBuffer(const CodeBuffer& other) = delete;
     ~CodeBuffer();
 
-    void* get() const
+    [[nodiscard]] void* get() const
     {
         return m_ptr;
     }

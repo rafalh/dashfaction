@@ -43,7 +43,7 @@ namespace rf
     static auto& vpackfile_set_loading_user_maps = addr_as_ref<void(bool loading_user_maps)>(0x0052BB50);
 
     static auto& vpackfile_calc_file_name_checksum = addr_as_ref<uint32_t(const char* file_name)>(0x0052BE70);
-    typedef uint32_t VPackfileAddEntries_Type(VPackfile* packfile, const void* buf, unsigned num_files_in_block,
+    using VPackfileAddEntries_Type = uint32_t(VPackfile* packfile, const void* buf, unsigned num_files_in_block,
                                               unsigned* num_added);
     static auto& vpackfile_add_entries = addr_as_ref<VPackfileAddEntries_Type>(0x0052BD40);
 

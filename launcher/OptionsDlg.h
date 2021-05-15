@@ -33,7 +33,6 @@ private:
     void OnColorDepthChange();
     void OnWindowModeChange();
 
-private:
     VideoDeviceInfoProvider m_video_info;
     std::vector<unsigned> m_multi_sample_types;
     CToolTip m_tool_tip;

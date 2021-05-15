@@ -14,7 +14,7 @@ class LoggerConfig
 public:
     LoggerConfig();
 
-    static LoggerConfig& get()
+    [[nodiscard]] static LoggerConfig& get()
     {
         static LoggerConfig conf;
         return conf;
@@ -33,7 +33,7 @@ public:
         return *this;
     }
 
-    const std::vector<std::unique_ptr<Appender>>& get_appenders() const
+    [[nodiscard]] const std::vector<std::unique_ptr<Appender>>& get_appenders() const
     {
         return appenders_;
     }
@@ -43,7 +43,7 @@ public:
         root_name_ = root_name;
     }
 
-    const std::string& get_root_name() const
+    [[nodiscard]] const std::string& get_root_name() const
     {
         return root_name_;
     }
@@ -53,7 +53,7 @@ public:
         default_level_ = level;
     }
 
-    Level get_default_level() const
+    [[nodiscard]] Level get_default_level() const
     {
         return default_level_;
     }

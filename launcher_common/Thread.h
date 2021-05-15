@@ -10,7 +10,7 @@ private:
     Win32Handle m_handle;
 
 public:
-    Thread() {}
+    Thread() = default;
     Thread(Win32Handle&& handle) : m_handle(std::move(handle)) {}
 
     void suspend()
@@ -31,8 +31,7 @@ public:
         if (wait_result != WAIT_OBJECT_0) {
             if (wait_result == WAIT_TIMEOUT)
                 THROW_EXCEPTION("timeout");
-            else
-                THROW_WIN32_ERROR();
+            THROW_WIN32_ERROR();
         }
     }
 
@@ -42,7 +41,7 @@ public:
             THROW_WIN32_ERROR();
     }
 
-    DWORD get_exit_code() const
+    [[nodiscard]] DWORD get_exit_code() const
     {
         DWORD exit_code;
         if (!GetExitCodeThread(m_handle, &exit_code))
@@ -55,7 +54,7 @@ public:
         return m_handle != nullptr;
     }
 
-    const Win32Handle& get_handle() const
+    [[nodiscard]] const Win32Handle& get_handle() const
     {
         return m_handle;
     }

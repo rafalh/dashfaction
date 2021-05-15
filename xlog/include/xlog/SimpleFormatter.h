@@ -15,7 +15,7 @@ namespace xlog
             include_time_(include_time), include_level_(include_level), include_logger_name_(include_logger_name)
         {}
 
-        virtual std::string format(Level level, const std::string& logger_name, std::string_view message) override;
-        virtual std::string vformat(Level level, const std::string& logger_name, const char* format, std::va_list args) override;
+        std::string format(Level level, const std::string& logger_name, std::string_view message) override;
+        std::string vformat(Level level, const std::string& logger_name, const char* format, std::va_list args) override;
     };
 }

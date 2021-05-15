@@ -9,7 +9,7 @@ namespace rf
         Vector3 normal;
         float offset;
 
-        float distance_to_point(const Vector3& pt) const
+        [[nodiscard]] float distance_to_point(const Vector3& pt) const
         {
             return pt.dot_prod(normal) + offset;
         }

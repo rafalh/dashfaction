@@ -7,8 +7,7 @@ private:
     T *m_ptr = nullptr;
 
 public:
-    ComPtr()
-    {}
+    ComPtr() = default;
 
     ComPtr(const ComPtr& other) :
         m_ptr(other.m_ptr)
@@ -24,10 +23,12 @@ public:
 
     ComPtr& operator=(const ComPtr& other)
     {
-        release();
-        m_ptr = other.m_ptr;
-        if (m_ptr)
-            m_ptr->AddRef();
+        if (&other != this) {
+            release();
+            m_ptr = other.m_ptr;
+            if (m_ptr)
+                m_ptr->AddRef();
+        }
         return *this;
     }
 

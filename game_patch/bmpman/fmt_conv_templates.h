@@ -373,7 +373,7 @@ public:
     PixelColor<rf::bm::FORMAT_DXT3> decode(int x, int y)
     {
         auto index = y * 4 + x;
-        auto a = static_cast<int>((block_->alpha_lut >> (index * 4)) & 15);
+        ColorChannel<4> a{static_cast<int>((block_->alpha_lut >> (index * 4)) & 15)};
         auto c = decode_color(index);
         return {a, c.r, c.g, c.b};
     }
@@ -414,7 +414,7 @@ public:
     }
 
 private:
-    int decode_alpha(int index)
+    ColorChannel<8> decode_alpha(int index)
     {
         auto a0 = block_->alpha[0];
         auto a1 = block_->alpha[1];
@@ -424,26 +424,26 @@ private:
         auto lut_val = (alpha_lut_64 >> (index * 3)) & 7;
         if (a0 > a1) {
             switch (lut_val) {
-                case 0: return a0;
-                case 1: return a1;
-                case 2: return (6 * a0 + 1 * a1) / 7;
-                case 3: return (5 * a0 + 2 * a1) / 7;
-                case 4: return (4 * a0 + 3 * a1) / 7;
-                case 5: return (3 * a0 + 4 * a1) / 7;
-                case 6: return (2 * a0 + 5 * a1) / 7;
-                case 7: return (1 * a0 + 6 * a1) / 7;
+                case 0: return {a0};
+                case 1: return {a1};
+                case 2: return {(6 * a0 + 1 * a1) / 7};
+                case 3: return {(5 * a0 + 2 * a1) / 7};
+                case 4: return {(4 * a0 + 3 * a1) / 7};
+                case 5: return {(3 * a0 + 4 * a1) / 7};
+                case 6: return {(2 * a0 + 5 * a1) / 7};
+                case 7: return {(1 * a0 + 6 * a1) / 7};
             }
         }
         else {
             switch (lut_val) {
-                case 0: return a0;
-                case 1: return a1;
-                case 2: return (4 * a0 + 1 * a1) / 5;
-                case 3: return (3 * a0 + 2 * a1) / 5;
-                case 4: return (2 * a0 + 3 * a1) / 5;
-                case 5: return (1 * a0 + 4 * a1) / 5;
-                case 6: return 0;
-                case 7: return 255;
+                case 0: return {a0};
+                case 1: return {a1};
+                case 2: return {(4 * a0 + 1 * a1) / 5};
+                case 3: return {(3 * a0 + 2 * a1) / 5};
+                case 4: return {(2 * a0 + 3 * a1) / 5};
+                case 5: return {(1 * a0 + 4 * a1) / 5};
+                case 6: return {0};
+                case 7: return {255};
             }
         }
         // unreachable...

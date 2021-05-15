@@ -32,7 +32,7 @@ public:
 
         auto call_offset = addr_as_ref<intptr_t>(m_addr + 1);
         int call_op_size = 1 + sizeof(uintptr_t);
-        auto call_addr = reinterpret_cast<void*>(m_addr + call_op_size + call_offset);
+        auto* call_addr = reinterpret_cast<void*>(m_addr + call_op_size + call_offset);
 
         using namespace asm_regs;
         AsmWriter{m_enter_code}

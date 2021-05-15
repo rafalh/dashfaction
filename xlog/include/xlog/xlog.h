@@ -121,7 +121,7 @@ namespace xlog
 
     inline void flush()
     {
-        for (auto& appender : LoggerConfig::get().get_appenders()) {
+        for (const auto& appender : LoggerConfig::get().get_appenders()) {
             appender->flush();
         }
     }

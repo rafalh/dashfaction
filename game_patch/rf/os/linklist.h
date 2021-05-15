@@ -81,52 +81,52 @@ namespace rf
             }
         };
 
-        T* first()
+        [[nodiscard]] T* first()
         {
             return head;
         }
 
-        const T* first() const
+        [[nodiscard]] const T* first() const
         {
             return head;
         }
 
-        T* next(T* elem)
+        [[nodiscard]] T* next(T* elem)
         {
             return elem->next[I];
         }
 
-        const T* next(const T* elem) const
+        [[nodiscard]] const T* next(const T* elem) const
         {
             return elem->next[I];
         }
 
-        int size() const
+        [[nodiscard]] int size() const
         {
             return num_elements;
         }
 
-        bool empty() const
+        [[nodiscard]] bool empty() const
         {
             return num_elements == 0;
         }
 
-        Iterator begin()
+        [[nodiscard]] Iterator begin()
         {
             return Iterator{head};
         }
 
-        Iterator begin() const
+        [[nodiscard]] Iterator begin() const
         {
             return ConstIterator{head};
         }
 
-        Iterator end()
+        [[nodiscard]] Iterator end()
         {
             return Iterator{nullptr};
         }
 
-        Iterator end() const
+        [[nodiscard]] Iterator end() const
         {
             return ConstIterator{nullptr};
         }

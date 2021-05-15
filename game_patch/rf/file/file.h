@@ -42,12 +42,12 @@ namespace rf
             AddrCaller{0x005242A0}.this_call(this);
         }
 
-        bool check_version(int min_ver) const
+        [[nodiscard]] bool check_version(int min_ver) const
         {
             return AddrCaller{0x00523990}.this_call<bool>(this, min_ver);
         }
 
-        int error() const
+        [[nodiscard]] int error() const
         {
             return AddrCaller{0x00524530}.this_call<bool>(this);
         }
@@ -57,12 +57,12 @@ namespace rf
             return AddrCaller{0x00524400}.this_call<int>(this, pos, origin);
         }
 
-        int tell() const
+        [[nodiscard]] int tell() const
         {
             return AddrCaller{0x005244E0}.this_call<int>(this);
         }
 
-        int size(const char *filename = nullptr, int a3 = 9999999) const
+        [[nodiscard]] int size(const char *filename = nullptr, int a3 = 9999999) const
         {
             return AddrCaller{0x00524370}.this_call<int>(this, filename, a3);
         }

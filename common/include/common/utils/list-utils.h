@@ -14,12 +14,12 @@ public:
         T* first;
 
     public:
-        typedef Iterator self_type;
-        typedef T value_type;
-        typedef T& reference;
-        typedef T* pointer;
-        typedef std::forward_iterator_tag iterator_category;
-        typedef int difference_type;
+        using self_type = Iterator;
+        using value_type = T;
+        using reference = T&;
+        using pointer = T*;
+        using iterator_category = std::forward_iterator_tag;
+        using difference_type = int;
 
         Iterator(pointer first) :
             current(first), first(first)
@@ -34,7 +34,7 @@ public:
             return *this;
         }
 
-        self_type operator++(int junk)
+        self_type operator++([[maybe_unused]] int junk)
         {
             self_type copy = *this;
             ++copy;
@@ -87,12 +87,12 @@ public:
         T* current;
 
     public:
-        typedef Iterator self_type;
-        typedef T value_type;
-        typedef T& reference;
-        typedef T* pointer;
-        typedef std::forward_iterator_tag iterator_category;
-        typedef int difference_type;
+        using self_type = Iterator;
+        using value_type = T;
+        using reference = T&;
+        using pointer = T*;
+        using iterator_category = std::forward_iterator_tag;
+        using difference_type = int;
 
         Iterator(pointer current) :
             current(current)
@@ -110,7 +110,7 @@ public:
             return *this;
         }
 
-        self_type operator++(int junk)
+        self_type operator++([[maybe_unused]] int junk)
         {
             self_type copy = *this;
             ++copy;

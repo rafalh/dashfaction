@@ -67,7 +67,7 @@ public:
     }
 
 private:
-    void print_internal(int x, int y, const char* str)
+    static void print_internal(int x, int y, const char* str)
     {
         rf::gr::set_color(0, 0, 0, 255);
         rf::gr::string(x + 1, y + 1, str);

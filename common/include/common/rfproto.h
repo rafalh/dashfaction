@@ -11,10 +11,9 @@
 // Note: This file assumes a little-endian binary representation of integers and IEEE 754 compatible representation of
 //       floating point numbers.
 
-#ifndef _RFPROTO_H
-#define _RFPROTO_H
+#pragma once
 
-#include <stdint.h>
+#include <cstdint>
 
 #ifdef _MSC_VER
 #pragma warning(disable : 4200) // nonstandard extension used : zero-sized array in struct/union
@@ -915,5 +914,3 @@ union RF_TrackerPacket
 };
 
 #pragma pack(pop)
-
-#endif // _RFPROTO_H

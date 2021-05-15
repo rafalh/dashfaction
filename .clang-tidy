@@ -14,6 +14,7 @@ Checks: >
 
   bugprone-*,
   -bugprone-narrowing-conversions,
+  -bugprone-macro-parentheses,
 
   readability-*,
   -readability-magic-numbers,
@@ -24,5 +25,4 @@ Checks: >
   -readability-use-anyofallof,
   -readability-isolate-declaration,
 
-#HeaderFilterRegex: '^((?!/vendor/).)*$'
-#HeaderFilterRegex: '^abc*$'
+HeaderFilterRegex: '/(common|crash_handler|crash_handler_stub|editor_patch|game_patch|launcher|launcher_common|patch_common|xlog)/'

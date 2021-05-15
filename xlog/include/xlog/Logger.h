@@ -15,8 +15,8 @@ namespace xlog
         Level level_;
 
     public:
-        Logger(const std::string& name, Level level = Level::trace) :
-            name_(name), level_(level)
+        Logger(std::string name, Level level = Level::trace) :
+            name_(std::move(name)), level_(level)
         {}
 
         static Logger& root()
@@ -36,7 +36,7 @@ namespace xlog
         void vlog(Level level, const char* format, va_list args)
         {
             if (level <= level_) {
-                for (auto& appender : LoggerConfig::get().get_appenders()) {
+                for (const auto& appender : LoggerConfig::get().get_appenders()) {
                     appender->vappend(level, name_, format, args);
                 }
             }
@@ -120,7 +120,7 @@ namespace xlog
         }
 
 #ifdef XLOG_STREAMS
-        auto trace()
+        auto trace() // NOLINT(readability-convert-member-functions-to-static)
         {
 #ifndef XLOG_DISCARD_TRACE
             return log(Level::trace);
@@ -130,7 +130,7 @@ namespace xlog
         }
 #endif
 
-        const std::string& name() const
+        [[nodiscard]] const std::string& name() const
         {
             return name_;
         }

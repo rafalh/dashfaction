@@ -10,7 +10,6 @@ class MainDlg : public CDialog
 {
 public:
     MainDlg();
-    ~MainDlg() = default;
 
 protected:
     BOOL OnInitDialog() override;

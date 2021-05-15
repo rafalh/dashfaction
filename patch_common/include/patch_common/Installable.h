@@ -3,6 +3,6 @@
 class Installable
 {
 public:
-    virtual ~Installable() {}
+    virtual ~Installable() = default;
     virtual void install() = 0;
 };

@@ -6,16 +6,16 @@
 #include <optional>
 #include <vector>
 
-struct _STARTUPINFOA;
+struct _STARTUPINFOA; // NOLINT(bugprone-reserved-identifier)
 
 class FileNotFoundException : public std::runtime_error
 {
 public:
-    FileNotFoundException(const std::string& file_name) :
-        std::runtime_error("file not found"), m_file_name(file_name)
+    FileNotFoundException(std::string file_name) :
+        std::runtime_error("file not found"), m_file_name(std::move(file_name))
     {}
 
-    const std::string& get_file_name() const
+    [[nodiscard]] const std::string& get_file_name() const
     {
         return m_file_name;
     }
@@ -27,16 +27,16 @@ private:
 class FileHashVerificationException : public std::runtime_error
 {
 public:
-    FileHashVerificationException(const std::string& file_name, const std::string& sha1) :
-        std::runtime_error("file hash sum verification failed"), m_file_name(file_name), m_sha1(sha1)
+    FileHashVerificationException(std::string file_name, std::string sha1) :
+        std::runtime_error("file hash sum verification failed"), m_file_name(std::move(file_name)), m_sha1(std::move(sha1))
     {}
 
-    const std::string& get_file_name() const
+    [[nodiscard]] const std::string& get_file_name() const
     {
         return m_file_name;
     }
 
-    const std::string& get_sha1() const
+    [[nodiscard]] const std::string& get_sha1() const
     {
         return m_sha1;
     }

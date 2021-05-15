@@ -11,7 +11,7 @@ class LauncherApp : public CWinApp
     LauncherCommandLineInfo m_cmd_line_info;
 
 public:
-    virtual BOOL InitInstance() override;
+    BOOL InitInstance() override;
 
     bool LaunchGame(HWND hwnd, const char* mod_name = nullptr);
     bool LaunchEditor(HWND hwnd, const char* mod_name = nullptr);

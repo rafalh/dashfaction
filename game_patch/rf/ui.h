@@ -19,12 +19,12 @@ namespace rf::ui
         void(*on_click)();
         void(*on_mouse_btn_down)();
 
-        int get_absolute_x() const
+        [[nodiscard]] int get_absolute_x() const
         {
             return AddrCaller{0x004569E0}.this_call<int>(this);
         }
 
-        int get_absolute_y() const
+        [[nodiscard]] int get_absolute_y() const
         {
             return AddrCaller{0x00456A00}.this_call<int>(this);
         }

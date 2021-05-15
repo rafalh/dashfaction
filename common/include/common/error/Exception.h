@@ -31,15 +31,13 @@ public:
         va_start(args, format);
         int pos = 0;
         pos += std::vsnprintf(buf.get() + pos, size - pos, format, args);
-        pos += std::snprintf(buf.get() + pos, size - pos, " in %s:%u", loc.file, loc.line);
+        std::snprintf(buf.get() + pos, size - pos, " in %s:%u", loc.file, loc.line);
         va_end(args);
 
         m_what = buf.get();
     }
 
-    ~Exception() throw() {}
-
-    const char* what() const throw()
+    [[nodiscard]] const char* what() const noexcept override
     {
         return m_what.c_str();
     }

@@ -15,7 +15,7 @@ class Logger;
 class Appender
 {
 public:
-    Appender() : formatter_(new SimpleFormatter()), level_(Level::trace)
+    Appender() : formatter_(new SimpleFormatter())
     {}
 
     void append(Level level, const std::string& logger_name, std::string_view message)
@@ -46,14 +46,14 @@ public:
     }
 
     virtual void flush() {}
-    virtual ~Appender() {}
+    virtual ~Appender() = default;
 
 protected:
     virtual void append(Level level, const std::string& formatted_message) = 0;
 
 private:
     std::unique_ptr<Formatter> formatter_;
-    Level level_;
+    Level level_ = Level::trace;
 };
 
 }

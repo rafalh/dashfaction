@@ -4,13 +4,13 @@
 
 #ifdef __GNUC__
 
-#define _ASM_STR_INTERNAL(...) #__VA_ARGS__
+#define ASM_STR_INTERNAL(...) #__VA_ARGS__
 #define ASM_FUNC(name, ...) extern "C" int name(); \
     __asm__ ( \
     ".text\r\n" \
     "_" #name ":\r\n" \
     ".intel_syntax noprefix\r\n" \
-    _ASM_STR_INTERNAL(__VA_ARGS__) "\r\n" \
+    ASM_STR_INTERNAL(__VA_ARGS__) "\r\n" \
     ".att_syntax\r\n");
 
 #define ASM_I ;

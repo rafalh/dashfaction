@@ -6,12 +6,10 @@
 class Win32Handle
 {
 private:
-    HANDLE m_handle;
+    HANDLE m_handle = nullptr;
 
 public:
-    Win32Handle() :
-        m_handle(nullptr)
-    {}
+    Win32Handle() = default;
 
     Win32Handle(HANDLE handle) :
         m_handle(handle)

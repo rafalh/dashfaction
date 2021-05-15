@@ -17,11 +17,11 @@ struct PerfAggregator
 public:
     static PerfAggregator& create(std::string&& name)
     {
-        instances_.push_back(std::move(std::make_unique<PerfAggregator>(std::move(name))));
+        instances_.push_back(std::make_unique<PerfAggregator>(std::move(name)));
         return *instances_.back().get();
     }
 
-    static const std::vector<std::unique_ptr<PerfAggregator>>& get_instances()
+    [[nodiscard]] static const std::vector<std::unique_ptr<PerfAggregator>>& get_instances()
     {
         return instances_;
     }
@@ -32,22 +32,22 @@ public:
         total_duration_us_ += duration;
     }
 
-    const std::string& get_name() const
+    [[nodiscard]] const std::string& get_name() const
     {
         return name_;
     }
 
-    unsigned get_calls() const
+    [[nodiscard]] unsigned get_calls() const
     {
         return num_calls_;
     }
 
-    unsigned get_total_duration_us() const
+    [[nodiscard]] unsigned get_total_duration_us() const
     {
         return total_duration_us_;
     }
 
-    unsigned get_avg_duration_us() const
+    [[nodiscard]] unsigned get_avg_duration_us() const
     {
         return total_duration_us_ / num_calls_;
     }

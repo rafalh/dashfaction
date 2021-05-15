@@ -168,7 +168,7 @@ public:
         write_value(name, u.u32);
     }
 
-    bool is_open() const
+    [[nodiscard]] bool is_open() const
     {
         return m_open;
     }

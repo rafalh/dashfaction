@@ -30,7 +30,7 @@ inline void write_mem(unsigned addr, const void* data, unsigned size, unsigned n
 template<typename T>
 inline void write_mem_ptr(unsigned addr, T* value)
 {
-    write_mem(addr, &value, sizeof(value));
+    write_mem(addr, &value, sizeof(T*));
 }
 
 template<typename T>

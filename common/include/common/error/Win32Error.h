@@ -22,12 +22,12 @@ public:
         m_what += "\n" + error_desc;
     }
 
-    const char* what() const throw()
+    [[nodiscard]] const char* what() const noexcept override
     {
         return m_what.c_str();
     }
 
-    DWORD error() const
+    [[nodiscard]] DWORD error() const
     {
         return m_error;
     }
@@ -40,7 +40,7 @@ private:
 
 #define S(x) #x
 #define S_(x) S(x)
-#define S__LINE__ S_(__LINE__)
+#define S_LINE S_(__LINE__)
 
 // Macro for throwing error together with location
-#define THROW_WIN32_ERROR(...) throw Win32Error(__FILE__ ":" S__LINE__ " " __VA_ARGS__)
+#define THROW_WIN32_ERROR(...) throw Win32Error(__FILE__ ":" S_LINE " " __VA_ARGS__)

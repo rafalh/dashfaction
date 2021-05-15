@@ -49,10 +49,10 @@ private:
     Win32Handle m_handle;
 
 public:
-    Process() {}
+    Process() = default;
     Process(Win32Handle&& handle) : m_handle(std::move(handle)) {}
 
-    RemoteMemoryPtr alloc_mem(size_t size)
+    [[nodiscard]] RemoteMemoryPtr alloc_mem(size_t size)
     {
         void* remote_ptr = VirtualAllocEx(m_handle, nullptr, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
         if (!remote_ptr)
@@ -76,10 +76,10 @@ public:
     {
         DWORD wait_result = WaitForSingleObject(m_handle, timeout);
         if (wait_result != WAIT_OBJECT_0) {
-            if (wait_result == WAIT_TIMEOUT)
+            if (wait_result == WAIT_TIMEOUT) {
                 THROW_EXCEPTION("timeout");
-            else
-                THROW_WIN32_ERROR();
+            }
+            THROW_WIN32_ERROR();
         }
     }
 
@@ -104,7 +104,7 @@ public:
         return m_handle != nullptr;
     }
 
-    const Win32Handle& get_handle() const
+    [[nodiscard]] const Win32Handle& get_handle() const
     {
         return m_handle;
     }

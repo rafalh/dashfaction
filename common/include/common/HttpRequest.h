@@ -8,12 +8,10 @@
 class InternetHandle
 {
 private:
-    HINTERNET m_handle;
+    HINTERNET m_handle = nullptr;
 
 public:
-    InternetHandle() :
-        m_handle(nullptr)
-    {}
+    InternetHandle() = default;
 
     ~InternetHandle()
     {

@@ -386,10 +386,10 @@ public:
 
     AsmWriter& jmp(uint32_t addr)
     {
-        if (std::abs(static_cast<int>(addr - (m_addr + 0x2))) < 127)
+        if (std::abs(static_cast<int>(addr - (m_addr + 0x2))) < 127) {
             return jmp_short(addr);
-        else
-            return jmp_long(addr);
+        }
+        return jmp_long(addr);
     }
 
     template<typename T>

@@ -6,10 +6,10 @@
 struct CrashHandlerConfig
 {
     HMODULE this_module_handle = nullptr;
-    char output_dir[MAX_PATH] = {0};
-    char log_file[MAX_PATH] = {0};
-    char app_name[256] = {0};
-    char known_modules[8][32] = {0};
+    char output_dir[MAX_PATH] = {};
+    char log_file[MAX_PATH] = {};
+    char app_name[256] = {};
+    char known_modules[8][32] = {};
     int num_known_modules = 0;
 
     void add_known_module(const char* module_name)

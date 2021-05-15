@@ -12,7 +12,7 @@ private:
 
 public:
     CfgVar(T default_value, std::function<T(T)> assign_callback = default_assign_callback) :
-        value_(default_value), assign_callback_(assign_callback)
+        value_(std::move(default_value)), assign_callback_(std::move(assign_callback))
     {}
 
     operator T() const
@@ -32,17 +32,17 @@ public:
         return value_;
     }
 
-    const T* operator->() const
+    [[nodiscard]] const T* operator->() const
     {
         return &value_;
     }
 
-    const T* operator&() const
+    [[nodiscard]] const T* operator&() const
     {
         return &value_;
     }
 
-    const T& value() const
+    [[nodiscard]] const T& value() const
     {
         return value_;
     }
@@ -67,7 +67,7 @@ public:
         return true;
     }
 
-    bool is_dirty() const
+    [[nodiscard]] bool is_dirty() const
     {
         return dirty_;
     }

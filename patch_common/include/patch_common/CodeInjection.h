@@ -25,7 +25,7 @@ public:
         template<typename U>
         U operator=(U value)
         {
-            static_assert(sizeof(T) == sizeof(U));
+            static_assert(sizeof(T) == sizeof(U)); // NOLINT(bugprone-sizeof-expression)
             static_assert(!std::is_null_pointer_v<U>);
             std::memcpy(&this->value, &value, sizeof(T));
             return value;
@@ -34,7 +34,7 @@ public:
         template<typename U>
         operator U() const
         {
-            static_assert(sizeof(T) == sizeof(U));
+            static_assert(sizeof(T) == sizeof(U)); // NOLINT(bugprone-sizeof-expression)
             static_assert(!std::is_null_pointer_v<U>);
             U tmp;
             std::memcpy(&tmp, &this->value, sizeof(T));
@@ -113,22 +113,22 @@ public:
     };
 
     #define X86_GP_REG_X_UNION(letter) \
-    union                        \
-    {                            \
-        Reg<int32_t> e##letter##x;    \
-        Reg<int16_t> letter##x;       \
-        struct                   \
-        {                        \
-            Reg<int8_t> letter##l;    \
-            Reg<int8_t> letter##h;    \
-        };                       \
+    union                              \
+    {                                  \
+        Reg<int32_t> e##letter##x;     \
+        Reg<int16_t> letter##x;        \
+        struct                         \
+        {                              \
+            Reg<int8_t> letter##l;     \
+            Reg<int8_t> letter##h;     \
+        };                             \
     }
     #define X86_GP_REG_UNION(name) \
-    union                 \
-    {                     \
-        Reg<int32_t> e##name;  \
-        Reg<int16_t> name;     \
-        Reg<int8_t> name##l;   \
+    union                          \
+    {                              \
+        Reg<int32_t> e##name;      \
+        Reg<int16_t> name;  /* NOLINT(bugprone-macro-parentheses) */ \
+        Reg<int8_t> name##l;       \
     }
 
     struct FlagsReg
@@ -188,7 +188,6 @@ public:
     #undef X86_GP_REG_UNION
 
     BaseCodeInjection(uintptr_t addr) : m_addr(addr), m_code_buf(256) {}
-    virtual ~BaseCodeInjection() {}
 
     void install() override;
 
@@ -213,7 +212,7 @@ class CodeInjection2;
 class BaseCodeInjectionWithRegsAccess : public BaseCodeInjection
 {
 protected:
-    typedef void *WrapperPtr;
+    using WrapperPtr = void*;
 
     WrapperPtr m_wrapper_ptr;
 
@@ -248,7 +247,7 @@ private:
 class BaseCodeInjectionWithoutRegsAccess : public BaseCodeInjection
 {
 protected:
-    typedef void *WrapperPtr;
+    using WrapperPtr = void*;
 
     WrapperPtr m_wrapper_ptr;
 

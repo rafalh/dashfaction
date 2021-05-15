@@ -35,7 +35,7 @@ public:
                 else if (arg == "-dedicated") {
                     has_dedicated_arg = true;
                 }
-                m_pass_through_args.push_back(std::string{arg});
+                m_pass_through_args.emplace_back(arg);
             }
         }
         if (!m_game && !m_editor && (has_level_arg || has_dedicated_arg)) {
@@ -43,27 +43,27 @@ public:
         }
     }
 
-    bool HasGameFlag() const
+    [[nodiscard]] bool HasGameFlag() const
     {
         return m_game;
     }
 
-    bool HasEditorFlag() const
+    [[nodiscard]] bool HasEditorFlag() const
     {
         return m_editor;
     }
 
-    bool HasHelpFlag() const
+    [[nodiscard]] bool HasHelpFlag() const
     {
         return m_help;
     }
 
-    std::optional<std::string> GetExePath() const
+    [[nodiscard]] std::optional<std::string> GetExePath() const
     {
         return m_exe_path;
     }
 
-    const std::vector<std::string>& GetPassThroughArgs() const
+    [[nodiscard]] const std::vector<std::string>& GetPassThroughArgs() const
     {
         return m_pass_through_args;
     }

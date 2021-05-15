@@ -35,7 +35,7 @@ template<class R, class... A>
 class FunHook<R __cdecl(A...)> : public FunHookImpl
 {
 private:
-    typedef R __cdecl FunType(A...);
+    using FunType = R __cdecl(A...);
 
 public:
     FunHook(uintptr_t target_fun_addr, FunType* hook_fun_ptr) :
@@ -46,7 +46,7 @@ public:
         FunHookImpl(reinterpret_cast<uintptr_t>(target_fun_addr), reinterpret_cast<void*>(hook_fun_ptr))
     {}
 
-    R call_target(A... a) const
+    R call_target(A... a) const // NOLINT(modernize-use-nodiscard)
     {
         auto trampoline_ptr = reinterpret_cast<FunType*>(m_trampoline_ptr);
         return trampoline_ptr(a...);
@@ -57,7 +57,7 @@ template<class R, class... A>
 class FunHook<R __fastcall(A...)> : public FunHookImpl
 {
 private:
-    typedef R __fastcall FunType(A...);
+    using FunType = R __fastcall(A...);
 
 public:
     FunHook(uintptr_t target_fun_addr, FunType* hook_fun_ptr) :
@@ -79,7 +79,7 @@ template<class R, class... A>
 class FunHook<R __stdcall(A...)> : public FunHookImpl
 {
 private:
-    typedef R __stdcall FunType(A...);
+    using FunType = R __stdcall(A...);
 
 public:
     FunHook(uintptr_t target_fun_addr, FunType* hook_fun_ptr) :

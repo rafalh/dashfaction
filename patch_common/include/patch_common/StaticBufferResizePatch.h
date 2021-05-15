@@ -22,6 +22,8 @@ public:
     };
 
 private:
+    static constexpr size_t element_size = sizeof(T); // NOLINT(bugprone-sizeof-expression)
+
     uintptr_t buf_addr_;
     size_t old_num_elements_;
     size_t new_num_elements_;
@@ -47,12 +49,14 @@ public:
     void install() override
     {
         constexpr int max_offset = 6;
+        size_t old_buf_size = old_num_elements_ * element_size;
+        size_t new_buf_size = new_num_elements_ * element_size;
         if (!new_buf_) {
             // Alloc owned buffer
             // Note: raw memory is used here because it is expected the patched program will call constructors
-            new_buf_owned_ = std::make_unique<std::byte[]>(new_num_elements_ * sizeof(T));
+            new_buf_owned_ = std::make_unique<std::byte[]>(new_buf_size);
             // zero new buffer (as if it was global variable and part of BSS section)
-            std::memset(new_buf_owned_.get(), 0, sizeof(T) * new_num_elements_);
+            std::memset(new_buf_owned_.get(), 0, new_buf_size);
             new_buf_ = reinterpret_cast<T*>(new_buf_owned_.get());
         }
 
@@ -61,18 +65,18 @@ public:
             int offset;
             for (offset = 0; offset <= max_offset; ++offset) {
                 auto addr = ref.addr + offset;
-                auto ptr = reinterpret_cast<void*>(addr);
+                auto* ptr = reinterpret_cast<void*>(addr);
                 uintptr_t remap_begin_addr;
                 intptr_t remap_new_addr;
                 if (ref.is_end_ref) {
-                    remap_begin_addr = buf_addr_ + sizeof(T) * old_num_elements_;
-                    remap_new_addr = reinterpret_cast<intptr_t>(new_buf_) + sizeof(T) * new_num_elements_ ;
+                    remap_begin_addr = buf_addr_ + old_buf_size;
+                    remap_new_addr = reinterpret_cast<intptr_t>(new_buf_) + new_buf_size;
                 }
                 else {
                     remap_begin_addr = buf_addr_;
                     remap_new_addr = reinterpret_cast<intptr_t>(new_buf_);
                 }
-                uintptr_t remap_end_addr = remap_begin_addr + sizeof(T);
+                uintptr_t remap_end_addr = remap_begin_addr + element_size;
                 uintptr_t data;
                 std::memcpy(&data, ptr, sizeof(data));
                 if (data >= remap_begin_addr && data < remap_end_addr) {
@@ -87,7 +91,7 @@ public:
         }
     }
 
-    T* get_buffer() const
+    [[nodiscard]] T* get_buffer() const
     {
         return new_buf_;
     }
