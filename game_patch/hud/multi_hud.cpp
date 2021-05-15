@@ -68,7 +68,7 @@ void hud_render_team_scores()
         rf::gr::set_color(53, 207, 22, 255);
         rf::Player* red_flag_player = g_debug_team_scores_hud ? rf::local_player : rf::multi_ctf_get_red_flag_player();
         if (red_flag_player) {
-            const char* name = g_debug_team_scores_hud ? "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii" : red_flag_player->name;
+            const char* name = g_debug_team_scores_hud ? "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii" : red_flag_player->name.c_str();
             std::string fitting_name = hud_fit_string(name, max_miniflag_label_w, nullptr, font_id);
             rf::gr::string(miniflag_label_x, red_miniflag_label_y, fitting_name.c_str(), font_id);
 
@@ -86,7 +86,7 @@ void hud_render_team_scores()
         rf::gr::set_color(53, 207, 22, 255);
         rf::Player* blue_flag_player = rf::multi_ctf_get_blue_flag_player();
         if (blue_flag_player) {
-            const char* name = g_debug_team_scores_hud ? "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii" : blue_flag_player->name;
+            const char* name = g_debug_team_scores_hud ? "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii" : blue_flag_player->name.c_str();
             std::string fitting_name = hud_fit_string(name, max_miniflag_label_w, nullptr, font_id);
             rf::gr::string(miniflag_label_x, blue_miniflag_label_y, fitting_name.c_str(), font_id);
 
