@@ -107,16 +107,16 @@ namespace rf
 
         [[nodiscard]] String substr(int begin, int end) const
         {
-            String str_out;
-            AddrCaller{0x004FF590}.this_call<String*>(this, &str_out, begin, end);
-            return str_out;
+            Pod result;
+            AddrCaller{0x004FF590}.this_call<String*>(this, &result, begin, end);
+            return {result};
         }
 
         [[nodiscard]] static String concat(const String& first, const String& second)
         {
-            String str_out;
-            AddrCaller{0x004FFB50}.c_call<String*>(&str_out, &first, &second);
-            return str_out;
+            Pod result;
+            AddrCaller{0x004FFB50}.c_call<String*>(&result, &first, &second);
+            return {result};
         }
 
         PRINTF_FMT_ATTRIBUTE(1, 2)
@@ -128,12 +128,13 @@ namespace rf
             int len = std::vsnprintf(nullptr, 0, format, args);
             va_end(args);
             int buf_size = len + 1;
-            str.m_pod.max_len = len;
-            str.m_pod.buf = string_alloc(buf_size);
+            Pod result;
+            result.max_len = len;
+            result.buf = string_alloc(buf_size);
             va_start(args, format);
-            std::vsnprintf(str.m_pod.buf, buf_size, format, args);
+            std::vsnprintf(result.buf, buf_size, format, args);
             va_end(args);
-            return str;
+            return {result};
         }
     };
     static_assert(sizeof(String) == 8);
