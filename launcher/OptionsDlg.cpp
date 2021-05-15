@@ -22,7 +22,7 @@ BOOL OptionsDlg::OnInitDialog()
         m_conf.load();
     }
     catch (std::exception &e) {
-        MessageBoxA(e.what(), NULL, MB_ICONERROR | MB_OK);
+        MessageBoxA(e.what(), nullptr, MB_ICONERROR | MB_OK);
     }
 
     SetDlgItemTextA(IDC_EXE_PATH_EDIT, m_conf.game_executable_path->c_str());
@@ -334,7 +334,7 @@ void OptionsDlg::OnBnClickedOk()
         m_conf.save();
     }
     catch (std::exception &e) {
-        MessageBoxA(e.what(), NULL, MB_ICONERROR | MB_OK);
+        MessageBoxA(e.what(), nullptr, MB_ICONERROR | MB_OK);
     }
 }
 

@@ -25,8 +25,6 @@ static auto& fit_scoreboard_string = addr_as_ref<String* (String* result, String
 
 constexpr float ENTER_ANIM_MS = 100.0f;
 constexpr float LEAVE_ANIM_MS = 100.0f;
-constexpr float HALF_ENTER_ANIM_MS = ENTER_ANIM_MS / 2.0f;
-constexpr float HALF_LEAVE_ANIM_MS = LEAVE_ANIM_MS / 2.0f;
 
 static bool g_scoreboard_force_hide = false;
 static bool g_scoreboard_visible = false;
@@ -202,7 +200,7 @@ int draw_scoreboard_players(const std::vector<rf::Player*>& players, int x, int 
             auto score_str = std::to_string(score);
             rf::gr::string(score_x, y, score_str.c_str());
 
-            auto kills_deaths_str = string_format("%hd/%hd", num_kills, num_deaths);
+            auto kills_deaths_str = string_format("%d/%d", num_kills, num_deaths);
             rf::gr::string(kd_x, y, kills_deaths_str.c_str());
 
             if (game_type == rf::NG_TYPE_CTF) {

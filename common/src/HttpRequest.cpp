@@ -46,7 +46,7 @@ static ParsedUrl parse_http_url(std::string_view url)
 
 HttpSession::HttpSession(const char* user_agent)
 {
-    m_inet = {InternetOpenA(user_agent, INTERNET_OPEN_TYPE_PRECONFIG, nullptr, nullptr, 0)};
+    m_inet = InternetOpenA(user_agent, INTERNET_OPEN_TYPE_PRECONFIG, nullptr, nullptr, 0);
     if (!m_inet)
         THROW_WIN32_ERROR();
 }
@@ -78,7 +78,7 @@ HttpRequest::HttpRequest(std::string_view url, const char* method, HttpSession& 
 
     HINTERNET inet = session.get_internet_handle();
     int port = parsed_url.ssl ? INTERNET_DEFAULT_HTTPS_PORT : INTERNET_DEFAULT_HTTP_PORT;
-    m_conn = {InternetConnectA(inet, parsed_url.host.c_str(), port, nullptr, nullptr, INTERNET_SERVICE_HTTP, 0, 0)};
+    m_conn = InternetConnectA(inet, parsed_url.host.c_str(), port, nullptr, nullptr, INTERNET_SERVICE_HTTP, 0, 0);
     if (!m_conn) {
         THROW_WIN32_ERROR();
     }
@@ -87,8 +87,7 @@ HttpRequest::HttpRequest(std::string_view url, const char* method, HttpSession& 
     if (parsed_url.ssl)
         flags |= INTERNET_FLAG_SECURE;
 
-    m_req = {HttpOpenRequestA(m_conn, method, parsed_url.resource.c_str(), "HTTP/1.0", nullptr, nullptr,
-                              flags, 0)};
+    m_req = HttpOpenRequestA(m_conn, method, parsed_url.resource.c_str(), "HTTP/1.0", nullptr, nullptr, flags, 0);
     if (!m_req) {
         THROW_WIN32_ERROR();
     }

@@ -36,7 +36,8 @@ void InjectingProcessLauncher::wait_for_process_initialization(uintptr_t entry_p
     m_thread.resume();
     // Wait untill main thread reaches the entry point
     CONTEXT context;
-    for (int i = 0; i < timeout / 50; ++i) {
+    DWORD start_ticks = GetTickCount();
+    do {
         Sleep(50);
         context.ContextFlags = CONTEXT_CONTROL;
         try {
@@ -50,7 +51,7 @@ void InjectingProcessLauncher::wait_for_process_initialization(uintptr_t entry_p
 
         if (context.Eip == entry_point)
             break;
-    }
+    } while (static_cast<int>(GetTickCount() - start_ticks) < timeout);
     if (context.Eip != entry_point)
         THROW_EXCEPTION("timeout");
     // Suspend main thread

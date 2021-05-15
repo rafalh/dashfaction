@@ -86,7 +86,7 @@ static std::vector<std::string> unzip(const char* path, const char* output_dir,
             file.close();
             unzCloseCurrentFile(archive);
 
-            extracted_files.push_back(file_name);
+            extracted_files.emplace_back(file_name);
         }
 
         if (i + 1 < global_info.number_entry) {
@@ -141,7 +141,7 @@ static std::vector<std::string> unrar(const char* path, const char* output_dir,
             xlog::trace("Unpacking %s", header_data.FileName);
             code = RARProcessFile(archive_handle, RAR_EXTRACT, const_cast<char*>(output_dir), nullptr);
             if (code == 0) {
-                extracted_files.push_back(header_data.FileName);
+                extracted_files.emplace_back(header_data.FileName);
             }
         }
         else {
@@ -182,7 +182,8 @@ public:
     };
 
     LevelDownloadWorker(std::string level_filename, std::shared_ptr<SharedData> shared_data) :
-        level_filename_{level_filename}, shared_data_{shared_data}
+        level_filename_{std::move(level_filename)},
+        shared_data_{std::move(shared_data)}
     {}
 
     std::vector<std::string> operator()();
@@ -266,7 +267,7 @@ class LevelDownloadOperation
 public:
     struct Listener
     {
-        virtual ~Listener() {}
+        virtual ~Listener() = default;
         virtual void on_progress([[ maybe_unused ]] LevelDownloadOperation& operation) {}
         virtual void on_finish([[ maybe_unused ]] LevelDownloadOperation& operation, [[ maybe_unused ]] bool success) {}
     };
@@ -289,28 +290,28 @@ public:
         shared_data_->abort_flag = true;
     }
 
-    LevelDownloadState get_state() const
+    [[nodiscard]] LevelDownloadState get_state() const
     {
         return shared_data_->state;
     }
 
-    const FactionFilesClient::LevelInfo& get_level_info() const
+    [[nodiscard]] const FactionFilesClient::LevelInfo& get_level_info() const
     {
         // check state before calling this method
         return shared_data_->level_info.value();
     }
 
-    float get_bytes_per_sec() const
+    [[nodiscard]] float get_bytes_per_sec() const
     {
         return shared_data_->bytes_per_sec;
     }
 
-    unsigned get_bytes_received() const
+    [[nodiscard]] unsigned get_bytes_received() const
     {
         return shared_data_->bytes_received;
     }
 
-    bool in_progress() const
+    [[nodiscard]] bool in_progress() const
     {
         return future_.valid();
     }
@@ -393,7 +394,7 @@ public:
         return operation_.emplace(level_filename, std::move(listener));
     }
 
-    const std::optional<LevelDownloadOperation>& get_operation() const
+    [[nodiscard]] const std::optional<LevelDownloadOperation>& get_operation() const
     {
         return operation_;
     }

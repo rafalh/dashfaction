@@ -129,9 +129,7 @@ WatchDogTimer::WatchDogTimer(unsigned timeout_ms) : m_impl(new WatchDogTimer::Im
 {
 }
 
-WatchDogTimer::~WatchDogTimer()
-{
-}
+WatchDogTimer::~WatchDogTimer() = default;
 
 void WatchDogTimer::start()
 {

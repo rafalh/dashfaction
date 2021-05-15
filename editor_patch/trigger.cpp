@@ -42,7 +42,7 @@ public:
         char script_name[256];
         GetDlgItemTextA(hwnd_, IDC_TRIGGER_SCRIPT_NAME, script_name, sizeof(script_name));
         if (script_name[0] == TRIGGER_PF_FLAGS_PREFIX) {
-            uint8_t pf_flags = static_cast<uint8_t>(script_name[1]);
+            auto pf_flags = static_cast<uint8_t>(script_name[1]);
             is_solo_ = pf_flags & TRIGGER_SOLO;
             is_clientside_ = pf_flags & TRIGGER_CLIENT_SIDE;
             is_teleport_ = pf_flags & TRIGGER_TELEPORT;

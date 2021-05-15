@@ -132,7 +132,7 @@ void weapon_select_render()
             }
             if (weapon_icon_bitmaps[weapon_type] == -1) {
                 auto weapon_icon = rf::weapon_types[weapon_type].weapon_select_icon_filename.c_str();
-                weapon_icon_bitmaps[weapon_type] = rf::bm::load(weapon_icon, -1, 1);
+                weapon_icon_bitmaps[weapon_type] = rf::bm::load(weapon_icon, -1, false);
             }
 
             int weapon_icon_y = weapon_icons_start_y + weapon_icon_delta_y * idx;

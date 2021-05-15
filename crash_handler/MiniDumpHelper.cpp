@@ -25,12 +25,12 @@ bool MiniDumpHelper::is_data_section_needed(const WCHAR* module_name)
 BOOL CALLBACK MiniDumpHelper::mini_dump_callback(PVOID param, const PMINIDUMP_CALLBACK_INPUT input,
                                                  PMINIDUMP_CALLBACK_OUTPUT output)
 {
-    MiniDumpHelper* that = reinterpret_cast<MiniDumpHelper*>(param);
+    auto that = reinterpret_cast<MiniDumpHelper*>(param);
 
     BOOL ret = FALSE;
 
     // Check parameters
-    if (input == 0 || output == 0)
+    if (!input || !output)
         return FALSE;
 
     // Process the callbacks

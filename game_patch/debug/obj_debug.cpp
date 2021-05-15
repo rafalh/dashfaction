@@ -49,7 +49,7 @@ rf::Object* find_object_in_reticle()
     if (!rf::local_player->cam)
         return nullptr;
     rf::LevelCollisionOut col_info;
-    col_info.face = 0;
+    col_info.face = nullptr;
     col_info.obj_handle = -1;
     rf::Vector3 p0 = rf::camera_get_pos(rf::local_player->cam);
     rf::Matrix3 orient = rf::camera_get_orient(rf::local_player->cam);

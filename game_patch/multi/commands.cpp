@@ -154,7 +154,7 @@ void kick_cmd_handler_hook()
 {
     if (rf::is_multi && rf::is_server) {
         if (rf::console::run) {
-            rf::console::get_arg(rf::console::ARG_STR, 1);
+            rf::console::get_arg(rf::console::ARG_STR, true);
             rf::Player* player = find_best_matching_player(rf::console::str_arg);
 
             if (player) {

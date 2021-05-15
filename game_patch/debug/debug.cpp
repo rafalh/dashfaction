@@ -16,7 +16,9 @@
 #define PACKET_LOSS_RATE 10 // every n packet is lost
 #endif // NDEBUG
 
+#if MEMORY_TRACKING
 constexpr uint32_t BOUND_MARKER = 0xDEADBEEF;
+#endif
 
 int g_num_heap_allocs = 0;
 size_t g_current_heap_usage = 0;

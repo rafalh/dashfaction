@@ -19,10 +19,6 @@ MainDlg::MainDlg() : CDialog(IDD_MAIN)
 {
 }
 
-MainDlg::~MainDlg()
-{
-}
-
 BOOL MainDlg::OnInitDialog()
 {
     CDialog::OnInitDialog();
@@ -37,7 +33,7 @@ BOOL MainDlg::OnInitDialog()
     AttachItem(IDC_UPDATE_STATUS, m_update_status);
 
     // Set header bitmap
-    HBITMAP hbm = (HBITMAP)GetApp()->LoadImage(MAKEINTRESOURCE(IDB_HEADER), IMAGE_BITMAP, 0, 0, 0);
+    auto hbm = static_cast<HBITMAP>(GetApp()->LoadImage(MAKEINTRESOURCE(IDB_HEADER), IMAGE_BITMAP, 0, 0, 0));
     m_picture.SetBitmap(hbm);
 
 
@@ -120,7 +116,7 @@ void MainDlg::RefreshModSelector()
     std::string mods_dir = game_dir + "\\mods\\*";
     WIN32_FIND_DATA fi;
 
-    HANDLE hfind = FindFirstFileExA(mods_dir.c_str(), FindExInfoBasic, &fi, FindExSearchLimitToDirectories, NULL, 0);
+    HANDLE hfind = FindFirstFileExA(mods_dir.c_str(), FindExInfoBasic, &fi, FindExSearchLimitToDirectories, nullptr, 0);
     if (hfind != INVALID_HANDLE_VALUE) {
         do {
             bool is_dir = fi.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
@@ -157,7 +153,7 @@ LRESULT MainDlg::OnUpdateCheck(WPARAM wparam, LPARAM lparam)
         int result = MessageBoxA(chk_result.message.c_str(), "Dash Faction update is available!",
                                   MB_OKCANCEL | MB_ICONEXCLAMATION);
         if (result == IDOK) {
-            auto exec_ret = ShellExecuteA(*this, "open", chk_result.url.c_str(), NULL, NULL, SW_SHOW);
+            auto exec_ret = ShellExecuteA(*this, "open", chk_result.url.c_str(), nullptr, nullptr, SW_SHOW);
             if (reinterpret_cast<int>(exec_ret) <= 32) {
                 xlog::error("ShellExecuteA failed %p", exec_ret);
             }
@@ -179,7 +175,7 @@ void MainDlg::OnBnClickedOptionsBtn()
     }
     catch (std::exception& e) {
         std::string msg = generate_message_for_exception(e);
-        MessageBoxA(msg.c_str(), NULL, MB_ICONERROR | MB_OK);
+        MessageBoxA(msg.c_str(), nullptr, MB_ICONERROR | MB_OK);
     }
 }
 
@@ -200,7 +196,7 @@ void MainDlg::OnBnClickedEditorBtn()
 void MainDlg::OnSupportLinkClick()
 {
     xlog::info("Opening support channel");
-    auto ret = ShellExecuteA(*this, "open", "https://discord.gg/bC2WzvJ", NULL, NULL, SW_SHOW);
+    auto ret = ShellExecuteA(*this, "open", "https://discord.gg/bC2WzvJ", nullptr, nullptr, SW_SHOW);
     if (reinterpret_cast<int>(ret) <= 32) {
         xlog::error("ShellExecuteA failed %p", ret);
     }

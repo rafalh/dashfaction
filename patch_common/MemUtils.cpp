@@ -11,7 +11,7 @@ void write_mem(unsigned addr, const void* data, unsigned size)
         xlog::warn("VirtualProtect failed: addr %x size %x error %lu", addr, size, GetLastError());
     }
     std::memcpy(reinterpret_cast<void*>(addr), data, size);
-    VirtualProtect(reinterpret_cast<void*>(addr), size, old_protect, NULL);
+    VirtualProtect(reinterpret_cast<void*>(addr), size, old_protect, nullptr);
 }
 
 void unprotect_mem(void* ptr, unsigned len)

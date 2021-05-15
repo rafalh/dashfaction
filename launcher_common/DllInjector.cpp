@@ -73,7 +73,7 @@ HMODULE DllInjector::inject_dll(const char* dll_filename, const char* init_fun_n
         // Load DLL in target process
         DWORD remote_lib = load_library_remote(dll_filename, timeout);
         // Calculate address of Init function in remote process
-        FARPROC init_fun_remote_ptr = reinterpret_cast<FARPROC>(remote_lib + init_fun_offset);
+        auto init_fun_remote_ptr = reinterpret_cast<FARPROC>(remote_lib + init_fun_offset);
         // Run Init function in remote process
         DWORD exit_code = run_remote_fun(init_fun_remote_ptr, nullptr, timeout);
         if (!exit_code)

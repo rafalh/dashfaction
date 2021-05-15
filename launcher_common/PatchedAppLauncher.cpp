@@ -41,7 +41,7 @@ std::string PatchedAppLauncher::get_patch_dll_path()
         GetProcAddress(kernel32_module, "GetFinalPathNameByHandleA")));
     // Make sure path is pointing to an actual module and not a symlink
     if (GetFinalPathNameByHandleA_ptr) {
-        auto file_handle = CreateFileA(buf.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+        auto file_handle = CreateFileA(buf.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, 0, nullptr);
         if (file_handle != INVALID_HANDLE_VALUE) {
             buf.resize(MAX_PATH);
 
@@ -187,7 +187,7 @@ std::string PatchedAppLauncher::build_cmd_line(const std::string& app_path)
     std::vector<std::string> all_args;
     all_args.push_back(app_path);
     if (!m_mod_name.empty()) {
-        all_args.push_back("-mod");
+        all_args.emplace_back("-mod");
         all_args.push_back(m_mod_name);
         if (m_mod_name.find(' ') != std::string::npos) {
             MessageBoxA(nullptr, "Mods with space in the name are not supported", nullptr, MB_OK | MB_ICONWARNING);

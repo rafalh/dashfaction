@@ -5,8 +5,6 @@ set(SRCS
     InjectingProcessLauncher.h
     PatchedAppLauncher.cpp
     Process.h
-    sha1.cpp
-    sha1.h
     Thread.h
     UpdateChecker.cpp
     VideoDeviceInfoProvider.cpp
@@ -32,4 +30,4 @@ target_include_directories(LauncherCommon
     ${CMAKE_CURRENT_SOURCE_DIR}/include/launcher_common
 )
 
-target_link_libraries(LauncherCommon Common Xlog)
+target_link_libraries(LauncherCommon Common Xlog sha1)

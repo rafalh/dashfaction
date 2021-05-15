@@ -29,7 +29,7 @@ void handle_url_param()
     }
 
     auto url = get_url_cmd_line_param().get_arg();
-    std::regex e("^rf://([\\w\\.-]+):(\\d+)/?(?:\\?password=(.*))?$");
+    std::regex e{R"(^rf://([\w\.-]+):(\d+)/?(?:\?password=(.*))?$)"};
     std::cmatch cm;
     if (!std::regex_match(url, cm, e)) {
         xlog::warn("Unsupported URL: %s", url);

@@ -1,0 +1,21 @@
+---
+Checks: >
+  clang-analyzer-*,
+  -clang-analyzer-security.insecureAPI.strcpy,
+
+  modernize-*,
+  -modernize-use-trailing-return-type,
+  -modernize-avoid-c-arrays,
+  -modernize-avoid-bind,
+
+  portability-*,
+
+#  bugprone-*,
+
+#  cppcoreguidelines-*,
+
+#   readability-*,
+#   -readability-magic-numbers
+
+#HeaderFilterRegex: '^((?!/vendor/).)*$'
+#HeaderFilterRegex: '^abc*$'

@@ -116,6 +116,11 @@ void gr_copy_water_bitmap(rf::gr::LockInfo& src_lock, rf::gr::LockInfo& dst_lock
     try {
         call_with_format(src_lock.format, [=](auto s) {
             call_with_format(dst_lock.format, [=](auto d) {
+                if constexpr (decltype(s)::value == rf::bm::FORMAT_8_PALETTED
+                    || decltype(d)::value == rf::bm::FORMAT_8_PALETTED) {
+                    assert(false);
+                    return;
+                }
                 uint8_t* dst_row_ptr = dst_lock.data;
                 for (int y = 0; y < dst_lock.h; ++y) {
                     auto& byte_1370f90 = addr_as_ref<uint8_t[256]>(0x1370F90);

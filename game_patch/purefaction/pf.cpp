@@ -69,7 +69,7 @@ static void process_pf_player_announce_packet(const void* data, size_t len, [[ m
 
     if (announce_packet.player_id == rf::local_player->net_data->player_id) {
         static const char* pf_verification_status_names[] = { "none", "blue", "gold", "red" };
-        auto pf_verification_status =
+        const auto* pf_verification_status =
             announce_packet.is_pure < std::size(pf_verification_status_names)
             ? pf_verification_status_names[announce_packet.is_pure] : "unknown";
         xlog::info("PF Verification Status: %s (%u)", pf_verification_status, announce_packet.is_pure);
@@ -156,7 +156,7 @@ static void process_pf_player_stats_packet(const void* data, size_t len, [[ mayb
         pf_player_stats_packet::player_stats in_stats;
         std::memcpy(&in_stats, player_stats_ptr, sizeof(in_stats));
         player_stats_ptr += sizeof(in_stats);
-        auto player = rf::multi_find_player_by_id(in_stats.player_id);
+        auto* player = rf::multi_find_player_by_id(in_stats.player_id);
         if (player) {
             auto& stats = *static_cast<PlayerStatsNew*>(player->stats);
             stats.num_kills = in_stats.kills;

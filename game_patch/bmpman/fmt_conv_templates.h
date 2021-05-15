@@ -658,7 +658,7 @@ struct PixelFormatHolder
     static constexpr rf::bm::Format value = FMT;
 };
 
-template<typename F>
+template<typename F, bool HandlePaletted = true>
 void call_with_format(rf::bm::Format format, F handler)
 {
     switch (format) {
@@ -681,7 +681,11 @@ void call_with_format(rf::bm::Format format, F handler)
             handler(PixelFormatHolder<rf::bm::FORMAT_8_ALPHA>());
             return;
         case rf::bm::FORMAT_8_PALETTED:
-            handler(PixelFormatHolder<rf::bm::FORMAT_8_PALETTED>());
+            if constexpr (HandlePaletted) {
+                handler(PixelFormatHolder<rf::bm::FORMAT_8_PALETTED>());
+            } else {
+                throw std::runtime_error{"Unexpected paletted pixel format"};
+            }
             return;
         case rf::bm::FORMAT_888_BGR:
             handler(PixelFormatHolder<rf::bm::FORMAT_888_BGR>());

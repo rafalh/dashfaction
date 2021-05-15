@@ -7,13 +7,13 @@
 
 #include <d3d9.h>
 
-typedef IDirect3D9*(__stdcall *PDIRECT3DCREATE9)(UINT SDKVersion);
+using PDIRECT3DCREATE9 = IDirect3D9*(__stdcall *)(UINT SDKVersion);
 
 #else // USE_D3D9
 
 #include <d3d8.h>
 
-typedef IDirect3D8*(__stdcall *PDIRECT3DCREATE8)(UINT SDKVersion);
+using PDIRECT3DCREATE8 = IDirect3D8*(__stdcall *)(UINT SDKVersion);
 
 #endif // USE_D3D9
 
@@ -38,7 +38,7 @@ VideoDeviceInfoProvider::VideoDeviceInfoProvider()
     if (!m_lib)
         THROW_WIN32_ERROR("Failed to load d3d9.dll");
 
-    PDIRECT3DCREATE9 Direct3DCreate9 = reinterpret_cast<PDIRECT3DCREATE9>(reinterpret_cast<void(*)()>(
+    auto Direct3DCreate9 = reinterpret_cast<PDIRECT3DCREATE9>(reinterpret_cast<void(*)()>(
         GetProcAddress(m_lib, "Direct3DCreate9")));
     if (!Direct3DCreate9)
         THROW_WIN32_ERROR("Failed to load get Direct3DCreate9 function address");
@@ -67,7 +67,7 @@ std::vector<std::string> VideoDeviceInfoProvider::get_adapters()
 #endif
         auto hr = m_d3d->GetAdapterIdentifier(i, 0, &adapter_identifier);
         if (SUCCEEDED(hr)) {
-            adapters.push_back(adapter_identifier.Description);
+            adapters.emplace_back(adapter_identifier.Description);
         }
         else {
             xlog::error("GetAdapterIdentifier failed %lx", hr);

@@ -24,7 +24,7 @@ private:
     std::set<rf::Player*> remaining_players;
 
 public:
-    virtual ~Vote() {}
+    virtual ~Vote() = default;
 
     bool start(std::string_view arg, rf::Player* source)
     {
@@ -63,7 +63,7 @@ public:
         return check_for_early_vote_finish();
     }
 
-    virtual bool is_allowed_in_limbo_state()
+    [[nodiscard]] virtual bool is_allowed_in_limbo_state() const
     {
         return true;
     }
@@ -107,8 +107,8 @@ public:
     }
 
 protected:
-    virtual std::string get_title() = 0;
-    virtual const VoteConfig& get_config() const = 0;
+    [[nodiscard]] virtual std::string get_title() const = 0;
+    [[nodiscard]] virtual const VoteConfig& get_config() const = 0;
 
     virtual bool process_vote_arg([[maybe_unused]] std::string_view arg, [[maybe_unused]] rf::Player* source)
     {
@@ -120,7 +120,7 @@ protected:
         send_chat_line_packet("\xA6 Vote passed!", nullptr);
     }
 
-    virtual void OnRejected()
+    virtual void on_rejected()
     {
         send_chat_line_packet("\xA6 Vote failed!", nullptr);
     }
@@ -142,7 +142,7 @@ protected:
             on_accepted();
         }
         else {
-            OnRejected();
+            on_rejected();
         }
     }
 
@@ -173,7 +173,7 @@ struct VoteKick : public Vote
         return true;
     }
 
-    std::string get_title() override
+    [[nodiscard]] std::string get_title() const override
     {
         return string_format("KICK PLAYER '%s'", m_target_player->name.c_str());
     }
@@ -192,7 +192,7 @@ struct VoteKick : public Vote
         return Vote::on_player_leave(player);
     }
 
-    const VoteConfig& get_config() const override
+    [[nodiscard]] const VoteConfig& get_config() const override
     {
         return g_additional_server_config.vote_kick;
     }
@@ -202,7 +202,7 @@ struct VoteExtend : public Vote
 {
     rf::Player* m_target_player;
 
-    std::string get_title() override
+    [[nodiscard]] std::string get_title() const override
     {
         return "EXTEND ROUND BY 5 MINUTES";
     }
@@ -213,12 +213,12 @@ struct VoteExtend : public Vote
         extend_round_time(5);
     }
 
-    bool is_allowed_in_limbo_state() override
+    [[nodiscard]] bool is_allowed_in_limbo_state() const override
     {
         return false;
     }
 
-    const VoteConfig& get_config() const override
+    [[nodiscard]] const VoteConfig& get_config() const override
     {
         return g_additional_server_config.vote_extend;
     }
@@ -238,7 +238,7 @@ struct VoteLevel : public Vote
         return true;
     }
 
-    std::string get_title() override
+    [[nodiscard]] std::string get_title() const override
     {
         return string_format("LOAD LEVEL '%s'", m_level_name.c_str());
     }
@@ -249,12 +249,12 @@ struct VoteLevel : public Vote
         rf::multi_change_level(m_level_name.c_str());
     }
 
-    bool is_allowed_in_limbo_state() override
+    [[nodiscard]] bool is_allowed_in_limbo_state() const override
     {
         return false;
     }
 
-    const VoteConfig& get_config() const override
+    [[nodiscard]] const VoteConfig& get_config() const override
     {
         return g_additional_server_config.vote_level;
     }
@@ -262,7 +262,7 @@ struct VoteLevel : public Vote
 
 struct VoteRestart : public Vote
 {
-    std::string get_title() override
+    [[nodiscard]] std::string get_title() const override
     {
         return "RESTART LEVEL";
     }
@@ -273,12 +273,12 @@ struct VoteRestart : public Vote
         restart_current_level();
     }
 
-    bool is_allowed_in_limbo_state() override
+    [[nodiscard]] bool is_allowed_in_limbo_state() const override
     {
         return false;
     }
 
-    const VoteConfig& get_config() const override
+    [[nodiscard]] const VoteConfig& get_config() const override
     {
         return g_additional_server_config.vote_restart;
     }
@@ -286,7 +286,7 @@ struct VoteRestart : public Vote
 
 struct VoteNext : public Vote
 {
-    std::string get_title() override
+    [[nodiscard]] std::string get_title() const override
     {
         return "LOAD NEXT LEVEL";
     }
@@ -297,12 +297,12 @@ struct VoteNext : public Vote
         load_next_level();
     }
 
-    bool is_allowed_in_limbo_state() override
+    [[nodiscard]] bool is_allowed_in_limbo_state() const override
     {
         return false;
     }
 
-    const VoteConfig& get_config() const override
+    [[nodiscard]] const VoteConfig& get_config() const override
     {
         return g_additional_server_config.vote_next;
     }
@@ -310,7 +310,7 @@ struct VoteNext : public Vote
 
 struct VotePrevious : public Vote
 {
-    std::string get_title() override
+    [[nodiscard]] std::string get_title() const override
     {
         return "LOAD PREV LEVEL";
     }
@@ -321,12 +321,12 @@ struct VotePrevious : public Vote
         load_prev_level();
     }
 
-    bool is_allowed_in_limbo_state() override
+    [[nodiscard]] bool is_allowed_in_limbo_state() const override
     {
         return false;
     }
 
-    const VoteConfig& get_config() const override
+    [[nodiscard]] const VoteConfig& get_config() const override
     {
         return g_additional_server_config.vote_previous;
     }

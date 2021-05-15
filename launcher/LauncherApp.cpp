@@ -26,7 +26,7 @@ BOOL LauncherApp::InitInstance()
 
     if (m_cmd_line_info.HasHelpFlag()) {
         // Note: we can't use stdio console API in win32 application
-        Message(NULL,
+        Message(nullptr,
             "Usage: DashFactionLauncher [-game] [-level name] [-editor] args...\n"
             "-game        Starts game immediately\n"
             "-level name  Starts game immediately and loads specified level\n"
@@ -168,8 +168,10 @@ bool LauncherApp::LaunchGame(HWND hwnd, const char* mod_name)
             << "replace your RF.exe file with original 1.20 NA RF.exe available on FactionFiles.com.\n"
             << "Click OK to open download page.";
         std::string str = ss.str();
-        if (Message(hwnd, str.c_str(), nullptr, MB_OKCANCEL | MB_ICONERROR) == IDOK)
-            ShellExecuteA(hwnd, "open", "https://www.factionfiles.com/ff.php?action=file&id=517545", NULL, NULL, SW_SHOW);
+        if (Message(hwnd, str.c_str(), nullptr, MB_OKCANCEL | MB_ICONERROR) == IDOK) {
+            ShellExecuteA(hwnd, "open", "https://www.factionfiles.com/ff.php?action=file&id=517545", nullptr, nullptr,
+                SW_SHOW);
+        }
     }
     catch (std::exception &e) {
         std::string msg = generate_message_for_exception(e);

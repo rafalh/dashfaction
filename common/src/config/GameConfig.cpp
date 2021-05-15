@@ -3,11 +3,11 @@
 #include <shlwapi.h>
 #include <algorithm>
 
-const char rf_key_name[] = "SOFTWARE\\Volition\\Red Faction";
+const char rf_key_name[] = R"(SOFTWARE\Volition\Red Faction)";
 const char df_subkey_name[] = "Dash Faction";
 
 const char GameConfig::default_rf_tracker[] = "rfgt.factionfiles.com";
-const char fallback_executable_path[] = "C:\\games\\RedFaction\\rf.exe";
+const char fallback_executable_path[] = R"(C:\games\RedFaction\rf.exe)";
 
 bool GameConfig::load() try
 {
@@ -76,7 +76,7 @@ bool GameConfig::detect_game_path()
         if (Wow64Process) {
             reg_sam |= KEY_WOW64_64KEY;
         }
-        RegKey reg_key(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Steam App 20530", reg_sam);
+        RegKey reg_key(HKEY_LOCAL_MACHINE, R"(SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 20530)", reg_sam);
         if (reg_key.read_value("InstallLocation", &install_path))
         {
             game_executable_path = install_path + "\\RF.exe";

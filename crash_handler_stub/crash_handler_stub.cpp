@@ -2,7 +2,7 @@
 #include "crash_handler_stub/custom_exceptions.h"
 #include <xlog/xlog.h>
 #include <windows.h>
-#include <signal.h>
+#include <csignal>
 #include <cwchar>
 
 static WCHAR g_module_path[MAX_PATH];

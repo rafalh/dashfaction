@@ -97,7 +97,7 @@ void win32_console_init()
     win32_console_output_handle = GetStdHandle(STD_OUTPUT_HANDLE);
 
     char buf[256];
-    if (GetFinalPathNameByHandleA(win32_console_output_handle, buf, _countof(buf), 0) == 0) {
+    if (GetFinalPathNameByHandleA(win32_console_output_handle, buf, std::size(buf), 0) == 0) {
         std::sprintf(buf, "(error %lu)", GetLastError());
     }
     xlog::info("Standard output info: path_name %s, file_type: %ld, handle %p",
@@ -134,7 +134,7 @@ static void write_console_output(std::string_view str)
 {
     HANDLE output_handle = win32_console_output_handle;
     if (!win32_console_is_output_redirected) {
-        WriteConsoleA(output_handle, str.data(), str.size(), NULL, NULL);
+        WriteConsoleA(output_handle, str.data(), str.size(), nullptr, nullptr);
     }
     else {
         // Convert LF to CRLF
@@ -143,7 +143,7 @@ static void write_console_output(std::string_view str)
         while (true) {
             size_t end_pos = str.find('\n', start_pos);
             if (end_pos == std::string_view::npos) {
-                WriteFile(output_handle, str.data() + start_pos, str.size() - start_pos, &bytes_written, NULL);
+                WriteFile(output_handle, str.data() + start_pos, str.size() - start_pos, &bytes_written, nullptr);
                 break;
             }
 
@@ -152,9 +152,9 @@ static void write_console_output(std::string_view str)
                 --end_pos;
             }
             if (end_pos - start_pos > 0) {
-                WriteFile(output_handle, str.data() + start_pos, end_pos - start_pos, &bytes_written, NULL);
+                WriteFile(output_handle, str.data() + start_pos, end_pos - start_pos, &bytes_written, nullptr);
             }
-            WriteFile(output_handle, "\r\n", 2, &bytes_written, NULL);
+            WriteFile(output_handle, "\r\n", 2, &bytes_written, nullptr);
             start_pos = next_pos;
         }
     }

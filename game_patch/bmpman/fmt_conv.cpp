@@ -51,7 +51,11 @@ rf::Color bm_get_pixel(uint8_t* data, rf::bm::Format format, int stride_in_bytes
     else {
         auto ptr = data + y * stride_in_bytes + x * bm_bytes_per_pixel(format);
         rf::Color result{0, 0, 0, 0};
-        call_with_format(format, [&](auto s) {
+        auto lambda = [&](auto s) {
+            if constexpr (decltype(s)::value == rf::bm::FORMAT_8_PALETTED) {
+                assert(false);
+                return;
+            }
             PixelsReader<decltype(s)::value> rdr{ptr};
             PixelColor<rf::bm::FORMAT_8888_ARGB> color = rdr.read();
             result.set(
@@ -60,7 +64,8 @@ rf::Color bm_get_pixel(uint8_t* data, rf::bm::Format format, int stride_in_bytes
                 static_cast<uint8_t>(color.b.value),
                 static_cast<uint8_t>(color.a.value)
             );
-        });
+        };
+        call_with_format(format, lambda);
         return result;
     }
 }

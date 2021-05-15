@@ -116,7 +116,7 @@ FunHook<int(rf::String&, rf::String&, char*)> level_load_hook{
     0x0045C540,
     [](rf::String& level_filename, rf::String& save_filename, char* error) {
         xlog::info("Loading level: %s", level_filename.c_str());
-        if (save_filename.size() > 0)
+        if (!save_filename.empty())
             xlog::info("Restoring game from save file: %s", save_filename.c_str());
         int ret = level_load_hook.call_target(level_filename, save_filename, error);
         if (ret != 0)
@@ -149,7 +149,7 @@ public:
     }
 
 protected:
-    virtual void append([[maybe_unused]] xlog::Level level, const std::string& str) override
+    void append([[maybe_unused]] xlog::Level level, const std::string& str) override
     {
         static auto& console_inited = addr_as_ref<bool>(0x01775680);
         if (console_inited) {
@@ -159,11 +159,11 @@ protected:
             rf::console::output(str.c_str(), &color);
         }
         else {
-            m_startup_buf.push_back({str, level});
+            m_startup_buf.emplace_back(str, level);
         }
     }
 
-    virtual void flush() override
+    void flush() override
     {
         static auto& console_inited = addr_as_ref<bool>(0x01775680);
         if (console_inited) {
@@ -172,7 +172,7 @@ protected:
     }
 
 private:
-    rf::Color color_from_level(xlog::Level level) const
+    [[nodiscard]] rf::Color color_from_level(xlog::Level level) const
     {
         switch (level) {
             case xlog::Level::error:

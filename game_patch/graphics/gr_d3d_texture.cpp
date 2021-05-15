@@ -118,7 +118,7 @@ FunHook<GrD3DSetTextureData_Type> gr_d3d_set_texture_data_hook{
         }
 
         D3DLOCKED_RECT locked_rect;
-        hr = texture->LockRect(level, &locked_rect, 0, 0);
+        hr = texture->LockRect(level, &locked_rect, nullptr, 0);
         if (FAILED(hr)) {
             xlog::error("LockRect failed");
             return -1;

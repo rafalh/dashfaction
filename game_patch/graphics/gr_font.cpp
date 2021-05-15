@@ -31,8 +31,8 @@ class TextureAtlasPacker {
 public:
     void add(int w, int h, T userdata);
     void pack();
-    std::pair<int, int> get_size() const;
-    std::pair<int, int> get_pos(T userdata) const;
+    [[nodiscard]] std::pair<int, int> get_size() const;
+    [[nodiscard]] std::pair<int, int> get_pos(T userdata) const;
 
 private:
     struct Item
@@ -57,12 +57,12 @@ public:
     void draw_aligned(rf::gr::TextAlignment align, int x, int y, std::string_view text, rf::gr::Mode state) const;
     void get_size(int* w, int* h, std::string_view text) const;
 
-    const std::string& get_name() const
+    [[nodiscard]] const std::string& get_name() const
     {
         return name_;
     }
 
-    int get_height() const
+    [[nodiscard]] int get_height() const
     {
         return height_;
     }

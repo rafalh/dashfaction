@@ -36,7 +36,7 @@ public:
         count_ = 0;
     }
 
-    std::optional<T> min() const
+    [[nodiscard]] std::optional<T> min() const
     {
         if (count_ > 0) {
             return {min_};
@@ -44,7 +44,7 @@ public:
         return {};
     }
 
-    std::optional<T> max() const
+    [[nodiscard]] std::optional<T> max() const
     {
         if (count_ > 0) {
             return {max_};
@@ -52,12 +52,12 @@ public:
         return {};
     }
 
-    T sum() const
+    [[nodiscard]] T sum() const
     {
         return sum_;
     }
 
-    std::optional<T> avg() const
+    [[nodiscard]] std::optional<T> avg() const
     {
         if (count_ > 0) {
             return sum_ / count_;
@@ -65,7 +65,7 @@ public:
         return {};
     }
 
-    int count() const
+    [[nodiscard]] int count() const
     {
         return count_;
     }
@@ -87,7 +87,7 @@ public:
         current_ = (current_ + 1) % N;
     }
 
-    T min() const
+    [[nodiscard]] T min() const
     {
         T min_value = std::numeric_limits<T>::max();
         for (auto value : slots_) {
@@ -96,7 +96,7 @@ public:
         return min_value;
     }
 
-    T max() const
+    [[nodiscard]] T max() const
     {
         T max_value = std::numeric_limits<T>::min();
         for (auto value : slots_) {
@@ -105,7 +105,7 @@ public:
         return max_value;
     }
 
-    T avg() const
+    [[nodiscard]] T avg() const
     {
         T value_sum = 0;
         for (auto value : slots_) {
@@ -137,17 +137,17 @@ public:
         current_frame_times_.reset();
     }
 
-    const auto& current_frame_times() const
+    [[nodiscard]] const auto& current_frame_times() const
     {
         return current_frame_times_;
     }
 
-    const auto& last_times() const
+    [[nodiscard]] const auto& last_times() const
     {
         return last_times_;
     }
 
-    const auto& last_frames_summed_times() const
+    [[nodiscard]] const auto& last_frames_summed_times() const
     {
         return last_frames_summed_times_;
     }
@@ -164,9 +164,9 @@ public:
     BaseProfiler(const char* name) :
         m_name(name)
     {}
-    virtual ~BaseProfiler() {}
+    virtual ~BaseProfiler() = default;
 
-    const char* get_name() const
+    [[nodiscard]] const char* get_name() const
     {
         return m_name;
     }
@@ -178,7 +178,7 @@ public:
         m_stats.next_frame();
     }
 
-    ProfilerStats& stats()
+    [[nodiscard]] ProfilerStats& stats()
     {
         return m_stats;
     }
@@ -227,12 +227,12 @@ public:
     {
     }
 
-    uintptr_t get_addr() const
+    [[nodiscard]] uintptr_t get_addr() const
     {
         return m_addr;
     }
 
-    virtual void install() override
+    void install() override
     {
         m_enter_inject->install();
         m_leave_inject->install();
@@ -270,7 +270,7 @@ public:
     {
     }
 
-    virtual void install() override
+    void install() override
     {
         m_fun_hook->install();
     }

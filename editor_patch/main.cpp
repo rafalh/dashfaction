@@ -40,7 +40,7 @@ void OpenLevel(const char* level_path)
 {
     void* doc_manager = *reinterpret_cast<void**>(g_editor_app + 0x80);
     void** doc_manager_vtbl = *reinterpret_cast<void***>(doc_manager);
-    typedef int(__thiscall * CDocManager_OpenDocumentFile_Ptr)(void* this_, LPCSTR path);
+    using CDocManager_OpenDocumentFile_Ptr = int(__thiscall*)(void* this_, LPCSTR path);
     auto DocManager_OpenDocumentFile = reinterpret_cast<CDocManager_OpenDocumentFile_Ptr>(doc_manager_vtbl[7]);
     DocManager_OpenDocumentFile(doc_manager, level_path);
 }

@@ -49,7 +49,7 @@
 
 int g_update_rate = 30;
 
-typedef void MultiIoPacketHandler(char* data, const rf::NetAddr& addr);
+using MultiIoPacketHandler = void(char* data, const rf::NetAddr& addr);
 
 class BufferOverflowPatch
 {
@@ -800,14 +800,14 @@ bool try_to_auto_forward_port(int port)
     }
     log.info("Local IP address: %s", local_ip_addr_opt.value().c_str());
 
-    HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
+    HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
     if (FAILED(hr)) {
         log.warn("CoInitializeEx failed: hr %lx", hr);
         return false;
     }
 
     ComPtr<IUPnPNAT> nat;
-    hr = CoCreateInstance(__uuidof(UPnPNAT), NULL, CLSCTX_ALL, __uuidof(IUPnPNAT), reinterpret_cast<void**>(&nat));
+    hr = CoCreateInstance(__uuidof(UPnPNAT), nullptr, CLSCTX_ALL, __uuidof(IUPnPNAT), reinterpret_cast<void**>(&nat));
     if (FAILED(hr)) {
         log.warn("CoCreateInstance IUPnPNAT failed: hr %lx", hr);
         return false;

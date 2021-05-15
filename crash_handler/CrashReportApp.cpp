@@ -158,7 +158,7 @@ void CrashReportApp::SendReport() try
     char buf[4096];
     while (!file.eof()) {
         file.read(buf, sizeof(buf));
-        size_t num = static_cast<size_t>(file.gcount());
+        auto num = static_cast<size_t>(file.gcount());
         req.write(buf, num);
     }
     req.send();
