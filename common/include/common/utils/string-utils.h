@@ -83,7 +83,7 @@ inline bool string_contains(std::string_view str, std::string_view infix)
 
 inline bool string_contains_ignore_case(std::string_view str, std::string_view infix)
 {
-    const char* it = std::search(str.begin(), str.end(),
+    std::string_view::iterator it = std::search(str.begin(), str.end(),
         infix.begin(), infix.end(),  [](unsigned char a, unsigned char b) {
         return std::tolower(a) == std::tolower(b);
     });
