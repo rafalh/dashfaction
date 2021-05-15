@@ -152,7 +152,7 @@ void multi_hud_render_chat_inputbox(rf::String::Pod label_pod, rf::String::Pod m
     int cursor_h = g_big_chatbox ? 2 : 1;
     int max_msg_w = content_w - cursor_w - 7 - label_w;
     while (msg_w > max_msg_w) {
-        msg_shortened.substr(&msg_shortened, 1, -1);
+        msg_shortened = msg_shortened.substr(1, -1);
         rf::gr::get_string_size(&msg_w, &msg_h, msg_shortened.c_str(), -1, chatbox_font);
     }
 
@@ -162,8 +162,7 @@ void multi_hud_render_chat_inputbox(rf::String::Pod label_pod, rf::String::Pod m
     rf::gr::set_color(0, 0, 0, rf::scoreboard_visible ? 255 : chatbox_bg_alpha);
     rf::gr::rect(input_box_x + border, input_box_y + border, content_w, input_box_content_h);
 
-    rf::String label_and_msg;
-    rf::String::concat(&label_and_msg, label, msg_shortened);
+    rf::String label_and_msg = rf::String::concat(label, msg_shortened);
     int text_x = input_box_x + border + 4;
     int text_y = input_box_y + border + (g_big_chatbox ? 2 : 1);
     rf::gr::set_color(53, 207, 22, 255);
@@ -222,7 +221,7 @@ ConsoleCommand2 mute_all_players_cmd{
 ConsoleCommand2 mute_player_cmd{
     "mute_player",
     [](std::string player_name) {
-        auto pp = find_best_matching_player(player_name.c_str());
+        rf::Player* pp = find_best_matching_player(player_name.c_str());
         if (pp) {
             auto& pdata = get_player_additional_data(pp);
             pdata.is_muted = !pdata.is_muted;

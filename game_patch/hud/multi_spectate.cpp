@@ -174,12 +174,12 @@ bool multi_spectate_execute_action(rf::ControlConfigAction action, bool was_pres
                 spectate_next_player(true);
             return true; // dont allow spawn
         }
-        else if (action == rf::CC_ACTION_SECONDARY_ATTACK || action == rf::CC_ACTION_SLIDE_LEFT) {
+        if (action == rf::CC_ACTION_SECONDARY_ATTACK || action == rf::CC_ACTION_SLIDE_LEFT) {
             if (was_pressed)
                 spectate_next_player(false);
             return true;
         }
-        else if (action == rf::CC_ACTION_JUMP) {
+        if (action == rf::CC_ACTION_JUMP) {
             if (was_pressed)
                 multi_spectate_leave();
             return true;
@@ -307,9 +307,7 @@ CallHook<float(rf::Player*)> gameplay_render_frame_player_fpgun_get_zoom_hook{
         if (g_spectate_mode_enabled) {
             return gameplay_render_frame_player_fpgun_get_zoom_hook.call_target(g_spectate_mode_target);
         }
-        else {
-            return gameplay_render_frame_player_fpgun_get_zoom_hook.call_target(pp);
-        }
+        return gameplay_render_frame_player_fpgun_get_zoom_hook.call_target(pp);
     },
 };
 
@@ -353,7 +351,7 @@ void multi_spectate_player_create_entity_post(rf::Player* player, rf::Entity* en
         entity->local_player = player;
         // When entering limbo state the game changes camera mode to fixed
         // Make sure we are in first person mode when target entity spawns
-        auto cam = rf::local_player->cam;
+        rf::Camera* cam = rf::local_player->cam;
         if (cam->mode != rf::CAMERA_FIRST_PERSON) {
             rf::camera_enter_first_person(cam);
         }

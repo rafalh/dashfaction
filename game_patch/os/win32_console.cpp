@@ -215,7 +215,7 @@ void win32_console_output(const char* text, [[maybe_unused]] const rf::Color* co
         pos = end_pos;
     }
 
-    if (text_sv.size() > 0 && text_sv[text_sv.size() - 1] != '\n') {
+    if (!text_sv.empty() && text_sv[text_sv.size() - 1] != '\n') {
         write_console_output("\n");
     }
 

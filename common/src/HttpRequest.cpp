@@ -154,10 +154,10 @@ void HttpRequest::send(std::string_view body)
     }
 }
 
-size_t HttpRequest::read(void* buffer, size_t buffer_size)
+size_t HttpRequest::read(void* buf, size_t buf_size)
 {
     DWORD read;
-    if (!InternetReadFile(m_req, buffer, buffer_size, &read))
+    if (!InternetReadFile(m_req, buf, buf_size, &read))
         THROW_WIN32_ERROR();
     return read;
 }

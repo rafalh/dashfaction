@@ -37,9 +37,10 @@ rf::Player* find_best_matching_player(const char* name)
         ++num_found;
     });
 
-    if (num_found == 1)
+    if (num_found == 1) {
         return found_player;
-    else if (num_found > 1)
+    }
+    if (num_found > 1)
         rf::console::printf("Found %d players matching '%s'!", num_found, name);
     else
         rf::console::printf("Cannot find player matching '%s'", name);

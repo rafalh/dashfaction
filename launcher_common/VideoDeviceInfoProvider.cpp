@@ -90,7 +90,7 @@ std::set<VideoDeviceInfoProvider::Resolution> VideoDeviceInfoProvider::get_resol
 #endif
         if (hr == D3DERR_INVALIDCALL)
             break;
-        else if (FAILED(hr))
+        if (FAILED(hr))
             THROW_EXCEPTION("EnumAdapterModes failed: %lx", hr);
 
         if (d3d_display_mode.Format != format)

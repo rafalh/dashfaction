@@ -55,7 +55,7 @@ FunHook<void(rf::Player*)> player_destroy_hook{
 FunHook<rf::Entity*(rf::Player*, int, const rf::Vector3*, const rf::Matrix3*, int)> player_create_entity_hook{
     0x004A4130,
     [](rf::Player* pp, int entity_type, const rf::Vector3* pos, const rf::Matrix3* orient, int multi_entity_index) {
-        auto ep = player_create_entity_hook.call_target(pp, entity_type, pos, orient, multi_entity_index);
+        rf::Entity* ep = player_create_entity_hook.call_target(pp, entity_type, pos, orient, multi_entity_index);
         if (ep) {
             multi_spectate_player_create_entity_post(pp, ep);
         }
@@ -75,13 +75,13 @@ bool should_swap_weapon_alt_fire(rf::Player* player)
         return false;
     }
 
-    auto entity = rf::entity_from_handle(player->entity_handle);
+    auto* entity = rf::entity_from_handle(player->entity_handle);
     if (!entity) {
         return false;
     }
 
     // Check if local entity is attached to a parent (vehicle or torret)
-    auto parent = rf::entity_from_handle(entity->host_handle);
+    auto* parent = rf::entity_from_handle(entity->host_handle);
     if (parent) {
         return false;
     }
@@ -93,7 +93,7 @@ bool is_player_weapon_on(rf::Player* player, bool alt_fire) {
     if (!player) {
         player = rf::local_player;
     }
-    auto entity = rf::entity_from_handle(player->entity_handle);
+    auto* entity = rf::entity_from_handle(player->entity_handle);
     bool is_continous_fire = rf::entity_weapon_is_on(entity->handle, entity->ai.current_primary_weapon);
     bool is_alt_fire_flag_set = (entity->ai.ai_flags & rf::AIF_ALT_FIRE) != 0;
     if (should_swap_weapon_alt_fire(player)) {
@@ -153,7 +153,7 @@ FunHook<void(rf::Player*, int)> player_make_weapon_current_selection_hook{
     0x004A4980,
     [](rf::Player* player, int weapon_type) {
         player_make_weapon_current_selection_hook.call_target(player, weapon_type);
-        auto entity = rf::entity_from_handle(player->entity_handle);
+        rf::Entity* entity = rf::entity_from_handle(player->entity_handle);
         if (entity && rf::is_multi) {
             // Reset impact delay timers when switching weapon (except in SP because of speedrunners)
             entity->ai.create_weapon_delay_timestamps[0].invalidate();
@@ -200,10 +200,10 @@ FunHook<bool(rf::Player*)> player_is_local_hook{
 
 bool player_is_dead_and_not_spectating(rf::Player* player)
 {
-    if (multi_spectate_is_spectating())
+    if (multi_spectate_is_spectating()) {
         return false;
-    else
-        return rf::player_is_dead(player);
+    }
+    return rf::player_is_dead(player);
 }
 
 CallHook player_is_dead_red_bars_hook{0x00432A52, player_is_dead_and_not_spectating};
@@ -212,10 +212,10 @@ CallHook player_is_dead_scoreboard2_hook{0x00437C25, player_is_dead_and_not_spec
 
 static bool player_is_dying_and_not_spectating(rf::Player* player)
 {
-    if (multi_spectate_is_spectating())
+    if (multi_spectate_is_spectating()) {
         return false;
-    else
-        return rf::player_is_dying(player);
+    }
+    return rf::player_is_dying(player);
 }
 
 CallHook player_is_dying_red_bars_hook{0x00432A5F, player_is_dying_and_not_spectating};

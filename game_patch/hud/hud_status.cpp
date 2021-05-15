@@ -19,7 +19,7 @@ FunHook<void(rf::Player*)> hud_status_render_hook{
             return;
         }
 
-        auto entity = rf::entity_from_handle(player->entity_handle);
+        rf::Entity* entity = rf::entity_from_handle(player->entity_handle);
         if (!entity) {
             return;
         }
@@ -34,7 +34,7 @@ FunHook<void(rf::Player*)> hud_status_render_hook{
 
         if (rf::entity_in_vehicle(entity)) {
             rf::hud_draw_damage_indicators(player);
-            auto vehicle = rf::entity_from_handle(entity->host_handle);
+            rf::Entity* vehicle = rf::entity_from_handle(entity->host_handle);
             if (rf::entity_is_jeep_driver(entity) || rf::entity_is_jeep_gunner(entity)) {
                 rf::gr::set_color(255, 255, 255, 120);
                 auto [jeep_x, jeep_y] = hud_scale_coords(rf::hud_coords[rf::hud_jeep], scale);

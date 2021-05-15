@@ -16,7 +16,7 @@ void player_fpgun_on_player_death(rf::Player* pp);
 
 void multi_kill_init_player(rf::Player* player)
 {
-    auto stats = static_cast<PlayerStatsNew*>(player->stats);
+    auto* stats = static_cast<PlayerStatsNew*>(player->stats);
     stats->clear();
 }
 
@@ -69,7 +69,7 @@ void print_kill_message(rf::Player* killed_player, rf::Player* killer_player)
                 weapon_name = weapon_cls.display_name.c_str();
             }
 
-            auto killer_name = killer_player->name.c_str();
+            const char* killer_name = killer_player->name.c_str();
             if (weapon_name)
                 msg = rf::String::format("%s%s (%s)!", mui_msg, killer_name, weapon_name);
             else
@@ -109,11 +109,11 @@ void on_player_kill(rf::Player* killed_player, rf::Player* killer_player)
         print_kill_message(killed_player, killer_player);
     }
 
-    auto killed_stats = static_cast<PlayerStatsNew*>(killed_player->stats);
+    auto* killed_stats = static_cast<PlayerStatsNew*>(killed_player->stats);
     killed_stats->inc_deaths();
 
     if (killer_player) {
-        auto killer_stats = static_cast<PlayerStatsNew*>(killer_player->stats);
+        auto* killer_stats = static_cast<PlayerStatsNew*>(killer_player->stats);
         if (killer_player != killed_player) {
             rf::player_add_score(killer_player, 1);
             killer_stats->inc_kills();

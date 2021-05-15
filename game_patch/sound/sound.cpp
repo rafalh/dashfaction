@@ -196,7 +196,8 @@ int snd_pc_play_3d_new(int handle, const rf::Vector3& pos, float vol_scale, bool
     if (sid == -1) {
         return -1;
     }
-    float pan, volume_2d;
+    float pan;
+    float volume_2d;
     rf::snd_calculate_2d_from_3d_info(handle, pos, &pan, &volume_2d, vol_scale);
     if (rf::sound_backend == rf::SOUND_BACKEND_DS) {
         if (rf::snd_pc_is_ds3d_enabled()) {
@@ -209,13 +210,10 @@ int snd_pc_play_3d_new(int handle, const rf::Vector3& pos, float vol_scale, bool
                 looping,
                 0.0f);
         }
-        else {
-            float pan = rf::snd_pc_calculate_pan(pos);
-            if (looping)
-                return rf::snd_pc_play_looping(handle, volume_2d, pan, 0.0, true);
-            else
-                return rf::snd_pc_play(handle, volume_2d, pan, 0.0f, true);
-        }
+        float pan = rf::snd_pc_calculate_pan(pos);
+        if (looping)
+            return rf::snd_pc_play_looping(handle, volume_2d, pan, 0.0, true);
+        return rf::snd_pc_play(handle, volume_2d, pan, 0.0f, true);
     }
     return -1;
 }
@@ -234,7 +232,8 @@ FunHook<int(int, const rf::Vector3&, float, const rf::Vector3&, int)> snd_play_3
             return -1;
         }
 
-        float base_volume, pan;
+        float base_volume;
+        float pan;
         rf::snd_calculate_2d_from_3d_info(handle, pos, &pan, &base_volume, volume);
         float vol_scale = base_volume * rf::snd_group_volume[group];
         bool looping = rf::sounds[handle].is_looping;

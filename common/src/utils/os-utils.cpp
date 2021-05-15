@@ -48,7 +48,7 @@ std::string get_real_os_version()
     BOOL ret = VerQueryValueA(ver.get(), "\\", &block, &block_size);
     if (!ret || block_size < sizeof(VS_FIXEDFILEINFO))
         THROW_WIN32_ERROR("VerQueryValueA returned unknown block");
-    auto file_info = static_cast<VS_FIXEDFILEINFO*>(block);
+    auto* file_info = static_cast<VS_FIXEDFILEINFO*>(block);
 
     return string_format("%d.%d.%d",
                         HIWORD(file_info->dwProductVersionMS),
@@ -58,13 +58,13 @@ std::string get_real_os_version()
 
 std::optional<std::string> get_wine_version()
 {
-    auto ntdll_handle = GetModuleHandleA("ntdll.dll");
+    HMODULE ntdll_handle = GetModuleHandleA("ntdll.dll");
     // Note: double cast is needed to fix cast-function-type GCC warning
-    auto wine_get_version = reinterpret_cast<const char*(*)()>(reinterpret_cast<void(*)()>(
+    auto* wine_get_version = reinterpret_cast<const char*(*)()>(reinterpret_cast<void(*)()>(
         GetProcAddress(ntdll_handle, "wine_get_version")));
     if (!wine_get_version)
         return {};
-    auto ver = wine_get_version();
+    const char* ver = wine_get_version();
     return {ver};
 }
 

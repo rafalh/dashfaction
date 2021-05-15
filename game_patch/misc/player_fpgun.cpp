@@ -86,7 +86,7 @@ void player_fpgun_reload_meshes(bool force)
     if (g_fpgun_main_player->settings.multi_character != fpgun_meshes_current_mp_character || fpgun_team != fpgun_meshes_current_team || force) {
         rf::player_fpgun_delete_meshes();
         rf::player_fpgun_load_meshes();
-        auto entity = rf::entity_from_handle(g_fpgun_main_player->entity_handle);
+        auto* entity = rf::entity_from_handle(g_fpgun_main_player->entity_handle);
         if (entity) {
             auto weapon_type = entity->ai.current_primary_weapon;
             rf::player_fpgun_set_state(g_fpgun_main_player, weapon_type);

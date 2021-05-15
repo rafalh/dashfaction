@@ -36,12 +36,12 @@ std::string PatchedAppLauncher::get_patch_dll_path()
 
     // Get GetFinalPathNameByHandleA function address dynamically in order to support Windows XP
     using GetFinalPathNameByHandleA_Type = decltype(GetFinalPathNameByHandleA);
-    auto kernel32_module = GetModuleHandleA("kernel32");
-    auto GetFinalPathNameByHandleA_ptr = reinterpret_cast<GetFinalPathNameByHandleA_Type*>(reinterpret_cast<void(*)()>(
+    HMODULE kernel32_module = GetModuleHandleA("kernel32");
+    auto* GetFinalPathNameByHandleA_ptr = reinterpret_cast<GetFinalPathNameByHandleA_Type*>(reinterpret_cast<void(*)()>(
         GetProcAddress(kernel32_module, "GetFinalPathNameByHandleA")));
     // Make sure path is pointing to an actual module and not a symlink
     if (GetFinalPathNameByHandleA_ptr) {
-        auto file_handle = CreateFileA(buf.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, 0, nullptr);
+        HANDLE file_handle = CreateFileA(buf.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, 0, nullptr);
         if (file_handle != INVALID_HANDLE_VALUE) {
             buf.resize(MAX_PATH);
 
@@ -72,9 +72,7 @@ std::string PatchedAppLauncher::get_app_path()
     if (m_forced_app_exe_path) {
         return m_forced_app_exe_path.value();
     }
-    else {
-        return get_default_app_path();
-    }
+    return get_default_app_path();
 }
 
 void PatchedAppLauncher::launch()

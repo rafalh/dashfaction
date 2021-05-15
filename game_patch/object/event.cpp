@@ -65,7 +65,7 @@ struct EventSetLiquidDepthHook : rf::Event
     float duration;
 };
 
-void __fastcall EventSetLiquidDepth__turn_on_new(EventSetLiquidDepthHook* this_)
+void __fastcall EventSetLiquidDepth_turn_on_new(EventSetLiquidDepthHook* this_)
 {
     xlog::info("Processing Set_Liquid_Depth event: uid %d depth %.2f duration %.2f", this_->uid, this_->depth, this_->duration);
     if (this_->links.size() == 0) {
@@ -74,7 +74,7 @@ void __fastcall EventSetLiquidDepth__turn_on_new(EventSetLiquidDepthHook* this_)
     }
     else {
         for (auto room_uid : this_->links) {
-            auto room = rf::level_room_from_uid(room_uid);
+            rf::GRoom* room = rf::level_room_from_uid(room_uid);
             xlog::trace("link %d %p", room_uid, room);
             if (room) {
                 rf::add_liquid_depth_update(room, this_->depth, this_->duration);
@@ -89,11 +89,11 @@ void __fastcall liquid_depth_update_apply_all_GRoom_reset_liquid(rf::GRoom* room
     liquid_depth_update_apply_all_GRoom_reset_liquid_hook.call_target(room, edx, solid);
 
     // check objects in room if they are in water
-    auto objp = rf::object_list.next_obj;
+    auto* objp = rf::object_list.next_obj;
     while (objp != &rf::object_list) {
         if (objp->room == room) {
             if (objp->type == rf::OT_ENTITY) {
-                auto ep = static_cast<rf::Entity*>(objp);
+                auto* ep = static_cast<rf::Entity*>(objp);
                 rf::entity_update_liquid_status(ep);
                 bool is_in_liquid = ep->obj_flags & rf::OF_IN_LIQUID;
                 // check if entity doesn't have 'swim' flag
@@ -132,8 +132,8 @@ FunHook<void()> event_level_init_post_hook{
         if (string_equals_ignore_case(rf::level.filename, "L5S2.rfl")) {
             // HACKFIX: make Set_Liquid_Depth events properties in lava control room more sensible
             xlog::trace("Changing Set_Liquid_Depth events in this level...");
-            auto event1 = static_cast<EventSetLiquidDepthHook*>(rf::event_lookup_from_uid(3940));
-            auto event2 = static_cast<EventSetLiquidDepthHook*>(rf::event_lookup_from_uid(4132));
+            auto* event1 = static_cast<EventSetLiquidDepthHook*>(rf::event_lookup_from_uid(3940));
+            auto* event2 = static_cast<EventSetLiquidDepthHook*>(rf::event_lookup_from_uid(4132));
             if (event1 && event2 && event1->duration == 0.15f && event2->duration == 0.15f) {
                 event1->duration = 1.5f;
                 event2->duration = 1.5f;
@@ -144,7 +144,7 @@ FunHook<void()> event_level_init_post_hook{
             xlog::trace("Fixing Submarine exploding bug...");
             int uids[] = {4679, 4680};
             for (int uid : uids) {
-                auto event = rf::event_lookup_from_uid(uid);
+                auto* event = rf::event_lookup_from_uid(uid);
                 if (event && event->delay_seconds == 1.5f) {
                     event->delay_seconds += 1.5f;
                 }
@@ -160,7 +160,7 @@ void apply_event_patches()
     switch_model_event_obj_lighting_and_physics_fix.install();
 
     // Fix Set_Liquid_Depth event
-    AsmWriter(0x004BCBE0).jmp(&EventSetLiquidDepth__turn_on_new);
+    AsmWriter(0x004BCBE0).jmp(&EventSetLiquidDepth_turn_on_new);
     liquid_depth_update_apply_all_GRoom_reset_liquid_hook.install();
 
     // Fix crash after level change (Load_Level event) caused by GNavNode pointers in AiPathInfo not being cleared for entities

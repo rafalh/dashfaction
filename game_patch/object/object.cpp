@@ -14,11 +14,11 @@
 FunHook<rf::Object*(int, int, int, rf::ObjectCreateInfo*, int, rf::GRoom*)> obj_create_hook{
     0x00486DA0,
     [](int type, int sub_type, int parent, rf::ObjectCreateInfo* create_info, int flags, rf::GRoom* room) {
-        auto obj = obj_create_hook.call_target(type, sub_type, parent, create_info, flags, room);
-        if (!obj) {
+        rf::Object* objp = obj_create_hook.call_target(type, sub_type, parent, create_info, flags, room);
+        if (!objp) {
             xlog::info("Failed to create object (type %d)", type);
         }
-        return obj;
+        return objp;
     },
 };
 
@@ -71,7 +71,7 @@ CodeInjection obj_create_find_slot_patch{
 
         static int low_index_hint = 0;
         static int high_index_hint = old_obj_limit;
-        auto objects = obj_ptr_array_resize_patch.get_buffer();
+        rf::Object** objects = obj_ptr_array_resize_patch.get_buffer();
 
         int index_hint, min_index, max_index;
         bool use_low_index;
@@ -149,18 +149,18 @@ CodeInjection sort_clutter_patch{
     0x004109D4,
     [](auto& regs) {
         rf::Clutter* clutter = regs.esi;
-        auto vmesh = clutter->vmesh;
-        auto mesh_name = vmesh ? rf::vmesh_get_name(vmesh) : nullptr;
+        rf::VMesh* vmesh = clutter->vmesh;
+        const char* mesh_name = vmesh ? rf::vmesh_get_name(vmesh) : nullptr;
         if (!mesh_name) {
             // Sometimes on level change some objects can stay and have only vmesh destroyed
             return;
         }
         std::string_view mesh_name_sv = mesh_name;
 
-        auto current = rf::clutter_list.next;
+        rf::Clutter* current = rf::clutter_list.next;
         while (current != &rf::clutter_list) {
-            auto current_anim_mesh = current->vmesh;
-            auto current_mesh_name = current_anim_mesh ? rf::vmesh_get_name(current_anim_mesh) : nullptr;
+            rf::VMesh* current_anim_mesh = current->vmesh;
+            const char* current_mesh_name = current_anim_mesh ? rf::vmesh_get_name(current_anim_mesh) : nullptr;
             if (current_mesh_name && mesh_name_sv == current_mesh_name) {
                 break;
             }
@@ -186,7 +186,7 @@ CodeInjection sort_clutter_patch{
 FunHook<rf::VMesh*(rf::Object*, const char*, rf::VMeshType)> obj_create_mesh_hook{
     0x00489FE0,
     [](rf::Object* objp, const char* name, rf::VMeshType type) {
-        auto mesh = obj_create_mesh_hook.call_target(objp, name, type);
+        rf::VMesh* mesh = obj_create_mesh_hook.call_target(objp, name, type);
         if (mesh && (rf::level.flags & rf::LEVEL_LOADED) != 0) {
             obj_mesh_lighting_maybe_update(objp);
         }

@@ -69,7 +69,7 @@ bool gr_render_to_texture(int bmh)
         return false;
     }
 
-    auto depth_stencil = get_cached_depth_stencil_surface();
+    IDirect3DSurface8* depth_stencil = get_cached_depth_stencil_surface();
     hr = rf::gr::d3d::device->SetRenderTarget(tex_surface, depth_stencil);
     if (FAILED(hr)) {
         ERR_ONCE("IDirect3DDevice8::SetRenderTarget failed 0x%lX", hr);

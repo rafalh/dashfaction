@@ -73,7 +73,7 @@ float gr_scale_world_fov(float horizontal_fov = 90.0f)
         horizontal_fov = gr_scale_fov_hor_plus(horizontal_fov);
     }
 
-    auto& server_info_opt = get_df_server_info();
+    const auto& server_info_opt = get_df_server_info();
     if (server_info_opt && server_info_opt.value().max_fov) {
         horizontal_fov = std::min(horizontal_fov, server_info_opt.value().max_fov.value());
     }
@@ -114,7 +114,7 @@ ConsoleCommand2 fov_cmd{
         }
         rf::console::printf("Horizontal FOV: %.2f", gr_scale_world_fov());
 
-        auto& server_info_opt = get_df_server_info();
+        const auto& server_info_opt = get_df_server_info();
         if (server_info_opt && server_info_opt.value().max_fov) {
             rf::console::printf("Server FOV limit: %.2f", server_info_opt.value().max_fov.value());
         }

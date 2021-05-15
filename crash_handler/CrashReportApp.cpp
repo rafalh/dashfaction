@@ -62,8 +62,8 @@ void CrashReportApp::ArchiveReport(const char* crash_dump_filename, const char* 
     ZipHelper zip(archive_path_name.c_str());
     zip.add_file(crash_dump_filename, "minidump.dmp");
     zip.add_file(exc_info_filename, "exception.txt");
-    auto log_file_name = "app.log";
-    auto last_slash_ptr = std::strrchr(m_config.log_file, '\\');
+    const char* log_file_name = "app.log";
+    const char* last_slash_ptr = std::strrchr(m_config.log_file, '\\');
     if (last_slash_ptr) {
         log_file_name = last_slash_ptr + 1;
     }
@@ -101,11 +101,11 @@ std::string CrashReportApp::GetArchivedReportFilePath() const
 
 void CrashReportApp::PrepareReport(const CommandLineInfo& cmd_line_info) try
 {
-    auto exception_ptrs = cmd_line_info.GetExceptionPtrs();
-    auto process_handle = cmd_line_info.GetProcessHandle();
+    auto* exception_ptrs = cmd_line_info.GetExceptionPtrs();
+    HANDLE process_handle = cmd_line_info.GetProcessHandle();
     auto thread_id = cmd_line_info.GetThreadId();
-    auto event = cmd_line_info.GetEvent();
-    auto config_ptr = cmd_line_info.GetCrashHandlerConfigPtr();
+    HANDLE event = cmd_line_info.GetEvent();
+    auto* config_ptr = cmd_line_info.GetCrashHandlerConfigPtr();
 
     ReadProcessMemory(process_handle, config_ptr, &m_config, sizeof(CrashHandlerConfig), nullptr);
 
@@ -140,7 +140,7 @@ catch (...) {
     std::throw_with_nested(std::runtime_error("failed to prepare crash report"));
 }
 
-void CrashReportApp::SendReport() try
+void CrashReportApp::SendReport() const try
 {
     auto file_path = GetArchivedReportFilePath();
     std::ifstream file(file_path, std::ios_base::in | std::ios_base::binary);
@@ -169,19 +169,17 @@ catch (...) {
 
 int CrashReportApp::Message(HWND hwnd, const char *text, const char *title, int flags)
 {
-    if (GetSystemMetrics(SM_CMONITORS) > 0)
+    if (GetSystemMetrics(SM_CMONITORS) > 0) {
         return MessageBoxA(hwnd, text, title, flags);
-    else
-    {
-        auto prefix = "";
-        if (title)
-            prefix = title;
-        else if (flags & MB_ICONERROR)
-            prefix = "Error: ";
-        else if (flags & MB_ICONWARNING)
-            prefix = "Warning: ";
-
-        fprintf(stderr, "%s%s", prefix, text);
-        return -1;
     }
+    const char* prefix = "";
+    if (title)
+        prefix = title;
+    else if (flags & MB_ICONERROR)
+        prefix = "Error: ";
+    else if (flags & MB_ICONWARNING)
+        prefix = "Warning: ";
+
+    std::fprintf(stderr, "%s%s", prefix, text);
+    return -1;
 }

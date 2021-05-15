@@ -78,7 +78,7 @@ CallHook<void()> frametime_calculate_hook{
         }
         else {
             // Check if editor is the foreground window
-            auto foreground_wnd = GetForegroundWindow();
+            HWND foreground_wnd = GetForegroundWindow();
             bool editor_is_in_foreground = GetWindowThreadProcessId(foreground_wnd, nullptr) == GetCurrentThreadId();
             // when editor is in background limit to 4 FPS
             if (!editor_is_in_foreground) {
@@ -239,7 +239,7 @@ CodeInjection gr_d3d_init_load_library_injection{
         extern HMODULE g_module;
         auto d3d8to9_path = get_module_dir(g_module) + "\\d3d8to9.dll";
         xlog::info("Loading d3d8to9.dll: %s", d3d8to9_path.c_str());
-        auto d3d8to9_module = LoadLibraryA(d3d8to9_path.c_str());
+        HMODULE d3d8to9_module = LoadLibraryA(d3d8to9_path.c_str());
         if (d3d8to9_module) {
             regs.eax = d3d8to9_module;
             regs.eip = 0x004EC519;

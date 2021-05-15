@@ -3,12 +3,12 @@
 #include <patch_common/MemUtils.h>
 #include <memory>
 #include <common/utils/string-utils.h>
-#include "string.h"
+#include "string.h" // NOLINT(modernize-deprecated-headers)
 #include "../gr/gr.h"
 
 namespace rf::console
 {
-    typedef void(*CommandFuncPtr)();
+    using CommandFuncPtr = void(*)();
 
     struct Command
     {

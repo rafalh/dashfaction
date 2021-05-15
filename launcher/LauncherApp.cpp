@@ -130,7 +130,7 @@ bool LauncherApp::LaunchGame(HWND hwnd, const char* mod_name)
                 ShellExecuteA(hwnd, "open", download_url.c_str(), nullptr, nullptr, SW_SHOW);
                 return false;
             }
-            else if (result == IDCANCEL) {
+            if (result == IDCANCEL) {
                 return false;
             }
         }
@@ -215,7 +215,5 @@ int LauncherApp::Message(HWND hwnd, const char *text, const char *title, int fla
         std::fprintf(stderr, "%s: %s", title ? title : "Error", text);
         return -1;
     }
-    else {
-        return MessageBoxA(hwnd, text, title, flags);
-    }
+    return MessageBoxA(hwnd, text, title, flags);
 }

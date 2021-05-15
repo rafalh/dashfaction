@@ -11,42 +11,42 @@ namespace rf
         T *elements = nullptr;
 
     public:
-        int size() const
+        [[nodiscard]] int size() const
         {
             return num;
         }
 
-        T& operator[](int index)
+        [[nodiscard]] T& operator[](int index)
         {
             return elements[index];
         }
 
-        const T& operator[](int index) const
+        [[nodiscard]] const T& operator[](int index) const
         {
             return elements[index];
         }
 
-        T& get(int index) const
+        [[nodiscard]] T& get(int index) const
         {
             return elements[index];
         }
 
-        T* begin()
+        [[nodiscard]] T* begin()
         {
             return &elements[0];
         }
 
-        const T* begin() const
+        [[nodiscard]] const T* begin() const
         {
             return &elements[0];
         }
 
-        T* end()
+        [[nodiscard]] T* end()
         {
             return &elements[num];
         }
 
-        const T* end() const
+        [[nodiscard]] const T* end() const
         {
             return &elements[num];
         }
@@ -62,42 +62,42 @@ namespace rf
         T elements[N];
 
     public:
-        int size() const
+        [[nodiscard]] int size() const
         {
             return num;
         }
 
-        T& operator[](int index)
+        [[nodiscard]] T& operator[](int index)
         {
             return elements[index];
         }
 
-        const T& operator[](int index) const
+        [[nodiscard]] const T& operator[](int index) const
         {
             return elements[index];
         }
 
-        T& get(int index) const
+        [[nodiscard]] T& get(int index) const
         {
             return elements[index];
         }
 
-        T* begin()
+        [[nodiscard]] T* begin()
         {
             return &elements[0];
         }
 
-        const T* begin() const
+        [[nodiscard]] const T* begin() const
         {
             return &elements[0];
         }
 
-        T* end()
+        [[nodiscard]] T* end()
         {
             return &elements[num];
         }
 
-        const T* end() const
+        [[nodiscard]] const T* end() const
         {
             return &elements[num];
         }

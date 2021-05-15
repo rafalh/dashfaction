@@ -32,7 +32,7 @@ namespace rf
         Timestamp inside_timestamp;
         int attached_to_uid;
         int use_clutter_uid;
-        char team;
+        ubyte trigger_team;
     };
     static_assert(sizeof(Trigger) == 0x30C);
 }

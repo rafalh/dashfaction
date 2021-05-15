@@ -76,7 +76,7 @@ CallHook<void(rf::Entity&)> entity_make_run_after_climbing_patch{
 FunHook<void(rf::EntityFireInfo&, int)> entity_fire_switch_parent_to_corpse_hook{
     0x0042F510,
     [](rf::EntityFireInfo& fire_info, int corpse_handle) {
-        auto corpse = rf::corpse_from_handle(corpse_handle);
+        rf::Corpse* corpse = rf::corpse_from_handle(corpse_handle);
         fire_info.parent_hobj = corpse_handle;
         rf::entity_fire_init_bones(&fire_info, corpse);
         for (auto& emitter_ptr : fire_info.emitters) {

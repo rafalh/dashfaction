@@ -123,20 +123,20 @@ namespace rf::gr
         static constexpr int zbt_shift = 20;
         static constexpr int ft_shift = 25;
 
-        int value;
+        int value = 0;
 
     public:
-        constexpr Mode() : value(0) {}
+        constexpr Mode() = default;
         constexpr Mode(TextureSource ts, ColorSource cs, AlphaSource as, AlphaBlend ab, ZbufferType zbt, FogType ft) :
             value((ts << ts_shift) | (cs << cs_shift) | (as << as_shift) | (ab << ab_shift) | (zbt << zbt_shift) | (ft << ft_shift))
         {}
 
-        bool operator==(const Mode& other) const
+        [[nodiscard]] bool operator==(const Mode& other) const
         {
             return value == other.value;
         }
 
-        bool operator!=(const Mode& other) const
+        [[nodiscard]] bool operator!=(const Mode& other) const
         {
             return value != other.value;
         }
@@ -146,32 +146,32 @@ namespace rf::gr
             return value;
         }
 
-        inline TextureSource get_texture_source()
+        [[nodiscard]] inline TextureSource get_texture_source() const
         {
             return static_cast<TextureSource>((value >> ts_shift) & mask);
         }
 
-        inline ColorSource get_color_source() const
+        [[nodiscard]] inline ColorSource get_color_source() const
         {
             return static_cast<ColorSource>((value >> cs_shift) & mask);
         }
 
-        inline AlphaSource get_alpha_source() const
+        [[nodiscard]] inline AlphaSource get_alpha_source() const
         {
             return static_cast<AlphaSource>((value >> as_shift) & mask);
         }
 
-        inline AlphaBlend get_alpha_blend() const
+        [[nodiscard]] inline AlphaBlend get_alpha_blend() const
         {
             return static_cast<AlphaBlend>((value >> ab_shift) & mask);
         }
 
-        inline ZbufferType get_zbuffer_type() const
+        [[nodiscard]] inline ZbufferType get_zbuffer_type() const
         {
             return static_cast<ZbufferType>((value >> zbt_shift) & mask);
         }
 
-        inline FogType get_fog_type() const
+        [[nodiscard]] inline FogType get_fog_type() const
         {
             return static_cast<FogType>((value >> ft_shift) & mask);
         }

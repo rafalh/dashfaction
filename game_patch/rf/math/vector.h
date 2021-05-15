@@ -59,35 +59,35 @@ namespace rf
             return (*this += -scalar);
         }
 
-        Vector3 operator+(const Vector3& other) const
+        [[nodiscard]] Vector3 operator+(const Vector3& other) const
         {
             Vector3 tmp = *this;
             tmp += other;
             return tmp;
         }
 
-        Vector3 operator-(const Vector3& other) const
+        [[nodiscard]] Vector3 operator-(const Vector3& other) const
         {
             Vector3 tmp = *this;
             tmp -= other;
             return tmp;
         }
 
-        Vector3 operator+(float scalar) const
+        [[nodiscard]] Vector3 operator+(float scalar) const
         {
             Vector3 tmp = *this;
             tmp += scalar;
             return tmp;
         }
 
-        Vector3 operator-(float scalar) const
+        [[nodiscard]] Vector3 operator-(float scalar) const
         {
             Vector3 tmp = *this;
             tmp -= scalar;
             return tmp;
         }
 
-        Vector3 operator*(float scale) const
+        [[nodiscard]] Vector3 operator*(float scale) const
         {
             return {x * scale, y * scale, z * scale};
         }
@@ -99,17 +99,17 @@ namespace rf
             z = 0.0f;
         }
 
-        float dot_prod(const Vector3& other) const
+        [[nodiscard]] float dot_prod(const Vector3& other) const
         {
             return other.x * x + other.y * y + other.z * z;
         }
 
-        float len() const
+        [[nodiscard]] float len() const
         {
             return std::sqrt(len_sq());
         }
 
-        float len_sq() const
+        [[nodiscard]] float len_sq() const
         {
             return x * x + y * y + z * z;
         }

@@ -315,7 +315,7 @@ GrNewFont::GrNewFont(std::string_view name) :
         throw std::runtime_error{"failed to load font"};
     }
 
-    auto bitmap_bits = lock.data;
+    auto* bitmap_bits = lock.data;
     glyphs_.reserve(unicode_code_points.size());
 
     for (auto codepoint : unicode_code_points) {
@@ -344,7 +344,7 @@ GrNewFont::GrNewFont(std::string_view name) :
         glyph_info.y = -slot->bitmap_top;
 
         int pixel_size = bm_bytes_per_pixel(lock.format);
-        auto dst_ptr = bitmap_bits + glyph_bm_y * lock.stride_in_bytes + glyph_bm_x * pixel_size;
+        auto* dst_ptr = bitmap_bits + glyph_bm_y * lock.stride_in_bytes + glyph_bm_x * pixel_size;
         bm_convert_format(dst_ptr, lock.format, bitmap.buffer, rf::bm::FORMAT_8_ALPHA, bitmap.width, bitmap.rows, lock.stride_in_bytes, bitmap.pitch);
 
         glyphs_.push_back(glyph_info);
@@ -370,7 +370,7 @@ void GrNewFont::draw(int x, int y, std::string_view text, rf::gr::Mode state) co
         else {
             auto glyph_idx = char_map_[static_cast<unsigned char>(ch)];
             if (glyph_idx != -1) {
-                auto& glyph_info = glyphs_[glyph_idx];
+                const auto& glyph_info = glyphs_[glyph_idx];
                 if (glyph_info.bm_w) {
                     //rf::gr::rect(pen_x + glyph_info.x, pen_y + glyph_info.y, glyph_info.bm_w, glyph_info.bm_h);
                     rf::gr::bitmap_ex(bitmap_, pen_x + glyph_info.x, pen_y + glyph_info.y, glyph_info.bm_w, glyph_info.bm_h, glyph_info.bm_x, glyph_info.bm_y, state);
@@ -422,7 +422,7 @@ void GrNewFont::get_size(int* w, int* h, std::string_view text) const
         else {
             auto glyph_idx = char_map_[static_cast<unsigned char>(ch)];
             if (glyph_idx != -1) {
-                auto& glyph_info = glyphs_[glyph_idx];
+                const auto& glyph_info = glyphs_[glyph_idx];
                 cur_line_w += glyph_info.advance_x;
             }
         }
@@ -462,25 +462,23 @@ FunHook<int(const char*, int)> gr_load_font_hook{
         if (string_ends_with(name, ".vf")) {
             return gr_load_font_hook.call_target(name, reserved);
         }
-        else if (rf::is_dedicated_server) {
+        if (rf::is_dedicated_server) {
            return -1;
         }
-        else {
-            for (unsigned i = 0; i < g_fonts.size(); ++i) {
-                auto& font = g_fonts[i];
-                if (font.get_name() == name) {
-                    return static_cast<int>(i | ttf_font_flag);
-                }
+        for (unsigned i = 0; i < g_fonts.size(); ++i) {
+            auto& font = g_fonts[i];
+            if (font.get_name() == name) {
+                return static_cast<int>(i | ttf_font_flag);
             }
-            try {
-                GrNewFont font{name};
-                g_fonts.push_back(font);
-                return static_cast<int>((g_fonts.size() - 1) | ttf_font_flag);
-            }
-            catch (std::exception& e) {
-                xlog::error("Failed to load font %s: %s", name, e.what());
-                return -1;
-            }
+        }
+        try {
+            GrNewFont font{name};
+            g_fonts.push_back(font);
+            return static_cast<int>((g_fonts.size() - 1) | ttf_font_flag);
+        }
+        catch (std::exception& e) {
+            xlog::error("Failed to load font %s: %s", name, e.what());
+            return -1;
         }
     },
 };
@@ -507,9 +505,7 @@ FunHook<int(int)> gr_get_font_height_hook{
             auto& font = g_fonts[font_num & ~ttf_font_flag];
             return font.get_height();
         }
-        else {
-            return gr_get_font_height_hook.call_target(font_num);
-        }
+        return gr_get_font_height_hook.call_target(font_num);
     },
 };
 

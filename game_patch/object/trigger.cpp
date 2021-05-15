@@ -38,9 +38,9 @@ FunHook<void(rf::Trigger*, int32_t, bool)> trigger_activate_hook{
     0x004C0220,
     [](rf::Trigger* trigger, int32_t h_entity, bool skip_movers) {
         // Check team
-        auto player = rf::player_from_entity_handle(h_entity);
-        auto trigger_name = trigger->name.c_str();
-        if (player && trigger->team != -1 && trigger->team != player->team) {
+        rf::Player* player = rf::player_from_entity_handle(h_entity);
+        const char* trigger_name = trigger->name.c_str();
+        if (player && trigger->trigger_team != 0xFF && trigger->trigger_team != player->team) {
             // rf::console::printf("Trigger team does not match: %d vs %d (%s)", trigger->team, Player->blue_team,
             // trigger_name);
             return;
@@ -55,9 +55,7 @@ FunHook<void(rf::Trigger*, int32_t, bool)> trigger_activate_hook{
                 send_trigger_activate_packet(player, trigger->uid, h_entity);
                 return;
             }
-            else {
-                g_trigger_solo_player = player;
-            }
+            g_trigger_solo_player = player;
         }
 
         // Resets times set to 1 enabled late joiners support in Pure Faction
@@ -76,7 +74,7 @@ CodeInjection trigger_check_activation_patch{
     0x004BFC7D,
     [](auto& regs) {
         rf::Trigger* trigger = regs.eax;
-        auto trigger_name = trigger->name.c_str();
+        const char* trigger_name = trigger->name.c_str();
         uint8_t ext_flags = trigger_name[0] == TRIGGER_PF_FLAGS_PREFIX ? trigger_name[1] : 0;
         bool is_client_side = (ext_flags & TRIGGER_CLIENT_SIDE) != 0;
         if (is_client_side)

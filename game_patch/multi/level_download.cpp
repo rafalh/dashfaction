@@ -52,7 +52,8 @@ static std::vector<std::string> unzip(const char* path, const char* output_dir,
     }
 
     std::vector<std::string> extracted_files;
-    char buf[4096], file_name[MAX_PATH];
+    char buf[4096];
+    char file_name[MAX_PATH];
     unz_file_info file_info;
     for (unsigned long i = 0; i < global_info.number_entry; i++) {
         code = unzGetCurrentFileInfo(archive, &file_info, file_name, sizeof(file_name), nullptr, 0, nullptr, 0);
@@ -193,7 +194,7 @@ private:
     std::shared_ptr<SharedData> shared_data_;
 
     void download_archive(int ticket_id, const char* temp_filename);
-    std::vector<std::string> extract_archive(const char* temp_filename);
+    static std::vector<std::string> extract_archive(const char* temp_filename);
 };
 
 void LevelDownloadWorker::download_archive(int ticket_id, const char* temp_filename)
@@ -323,10 +324,7 @@ public:
         }
         using namespace std::chrono_literals;
         std::future_status status = future_.wait_for(0ms);
-        if (status != std::future_status::ready) {
-            return false;
-        }
-        return true;
+        return status == std::future_status::ready;
     }
 
 private:
@@ -341,10 +339,10 @@ private:
         }
     }
 
-    void load_packfiles(const std::vector<std::string>& packfiles)
+    static void load_packfiles(const std::vector<std::string>& packfiles)
     {
         rf::vpackfile_set_loading_user_maps(true);
-        for (auto& filename : packfiles) {
+        for (const auto& filename : packfiles) {
             if (!rf::vpackfile_add(filename.c_str(), "user_maps\\multi\\")) {
                 xlog::error("vpackfile_add failed - %s", filename.c_str());
             }
@@ -484,7 +482,7 @@ void multi_level_download_handle_input(int key)
     if (!key) {
         return;
     }
-    else if (rf::multi_chat_is_say_visible()) {
+    if (rf::multi_chat_is_say_visible()) {
         rf::multi_chat_say_handle_key(key);
     }
     else if (key == rf::KEY_ESC) {
@@ -507,7 +505,7 @@ void multi_level_download_do_frame()
 
     rf::multi_hud_render_chat();
 
-    auto ccp = &rf::local_player->settings.controls;
+    rf::ControlConfig* ccp = &rf::local_player->settings.controls;
     bool just_pressed;
     if (rf::control_config_check_pressed(ccp, rf::CC_ACTION_CHAT, &just_pressed)) {
         rf::multi_chat_say_show(rf::CHAT_SAY_GLOBAL);
@@ -533,7 +531,7 @@ void multi_level_download_do_frame()
         return;
     }
 
-    auto& operation = operation_opt.value();
+    const auto& operation = operation_opt.value();
     auto state = operation.get_state();
     if (state == LevelDownloadState::fetching_info) {
         rf::gr::string_aligned(rf::gr::ALIGN_CENTER, center_x, y, "Getting level info...", medium_font);
@@ -588,10 +586,7 @@ void multi_level_download_do_frame()
 static bool next_level_exists()
 {
     rf::File file;
-    if (file.open(rf::level.next_level_filename) == 0) {
-        return true;
-    }
-    return false;
+    return file.open(rf::level.next_level_filename) == 0;
 }
 
 CallHook<void(rf::GameState, bool)> process_leave_limbo_packet_gameseq_set_next_state_hook{

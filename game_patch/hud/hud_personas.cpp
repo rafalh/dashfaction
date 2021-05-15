@@ -17,7 +17,7 @@ bool g_big_hud_persona = false;
 
 static bool hud_personas_is_bottom(rf::Entity* ep)
 {
-    auto parent = rf::entity_from_handle(ep->host_handle);
+    rf::Entity* parent = rf::entity_from_handle(ep->host_handle);
     if (!parent) {
         return false;
     }
@@ -49,7 +49,7 @@ void hud_personas_render(rf::Player* player)
     if (rf::hud_persona_current_idx == -1 || !rf::gameseq_in_gameplay()) {
         return;
     }
-    auto entity = rf::entity_from_handle(player->entity_handle);
+    rf::Entity* entity = rf::entity_from_handle(player->entity_handle);
     if (!entity) {
         return;
     }
@@ -114,7 +114,7 @@ void hud_personas_render(rf::Player* player)
     rf::gr::set_color(rf::hud_msg_color);
     rf::gr::set_alpha(static_cast<int>(rf::hud_msg_color.alpha * rf::hud_persona_alpha));
     const char* display_name;
-    if (hud_persona.display_name.size() == 0) {
+    if (hud_persona.display_name.empty()) {
         display_name = hud_persona.name.c_str();
     }
     else {
@@ -131,7 +131,8 @@ void hud_personas_render(rf::Player* player)
     int max_text_x = box_x + box_w - box_border - 8;
     int max_text_w = max_text_x - text_x; // rf::hud_coords[hud_persona_message_box_text_area_width].x
     constexpr int max_lines = 8;
-    int len_array[max_lines], offset_array[max_lines];
+    int len_array[max_lines];
+    int offset_array[max_lines];
     int num_lines = rf::gr::split_str(len_array, offset_array, hud_persona.message,
         max_text_w, max_lines, 0, hud_persona_font);
     rf::gr::set_color(rf::hud_default_color);

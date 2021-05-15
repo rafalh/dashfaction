@@ -32,7 +32,7 @@ static auto& log_wnd_append = addr_as_ref<int(void* self, const char* format, ..
 
 HWND GetMainFrameHandle()
 {
-    auto main_frame = struct_field_ref<CWnd*>(g_editor_app, 0xC8);
+    auto* main_frame = struct_field_ref<CWnd*>(g_editor_app, 0xC8);
     return WndToHandle(main_frame);
 }
 
@@ -147,10 +147,10 @@ using wnd_set_text_type = int __fastcall(void*, void*, const char*);
 extern CallHook<wnd_set_text_type> log_append_wnd_set_text_hook;
 int __fastcall log_append_wnd_set_text_new(void* self, void* edx, const char* str)
 {
-    if (g_skip_wnd_set_text)
+    if (g_skip_wnd_set_text) {
         return std::strlen(str);
-    else
-        return log_append_wnd_set_text_hook.call_target(self, edx, str);
+    }
+    return log_append_wnd_set_text_hook.call_target(self, edx, str);
 }
 CallHook<wnd_set_text_type> log_append_wnd_set_text_hook{0x004449C6, log_append_wnd_set_text_new};
 
@@ -162,7 +162,7 @@ void __fastcall group_mode_handle_selection_new(void* self)
     group_mode_handle_selection_hook.call_target(self);
     g_skip_wnd_set_text = false;
     // TODO: print
-    auto log_view = *reinterpret_cast<void**>(g_log_view + 692);
+    auto* log_view = *reinterpret_cast<void**>(g_log_view + 692);
     log_wnd_append(log_view, "");
 }
 FunHook<group_mode_handle_selection_type> group_mode_handle_selection_hook{0x00423460, group_mode_handle_selection_new};
@@ -175,7 +175,7 @@ void __fastcall brush_mode_handle_selection_new(void* self)
     brush_mode_handle_selection_hook.call_target(self);
     g_skip_wnd_set_text = false;
     // TODO: print
-    auto log_view = *reinterpret_cast<void**>(g_log_view + 692);
+    auto* log_view = *reinterpret_cast<void**>(g_log_view + 692);
     log_wnd_append(log_view, "");
 
 }
@@ -227,7 +227,7 @@ static auto RedrawEditorAfterModification = addr_as_ref<int __cdecl()>(0x0048356
 
 void* GetLevelFromMainFrame(CWnd* main_frame)
 {
-    auto doc = struct_field_ref<void*>(main_frame, 0xD0);
+    auto* doc = struct_field_ref<void*>(main_frame, 0xD0);
     return &struct_field_ref<int>(doc, 0x60);
 }
 

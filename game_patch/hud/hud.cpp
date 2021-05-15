@@ -25,12 +25,10 @@ int hud_transform_value(int val, int old_max, int new_max)
     if (val < old_max / 3) {
         return val;
     }
-    else if (val < old_max * 2 / 3) {
+    if (val < old_max * 2 / 3) {
         return val - old_max / 2 + new_max / 2;
     }
-    else {
-        return val - old_max + new_max;
-    }
+    return val - old_max + new_max;
 }
 
 int hud_scale_value(int val, int max, float scale)
@@ -38,12 +36,10 @@ int hud_scale_value(int val, int max, float scale)
     if (val < max / 3) {
         return static_cast<int>(std::round(val * scale));
     }
-    else if (val < max * 2 / 3) {
+    if (val < max * 2 / 3) {
         return static_cast<int>(std::round(max / 2.0f + (val - max / 2.0f) * scale));
     }
-    else {
-        return static_cast<int>(std::round(max + (val - max) * scale));
-    }
+    return static_cast<int>(std::round(max + (val - max) * scale));
 }
 
 rf::HudPoint hud_scale_coords(rf::HudPoint pt, float scale)
@@ -285,9 +281,7 @@ const char* hud_get_small_font_name(bool big)
     if (big) {
         return "regularfont.ttf:14";
     }
-    else {
-        return "rfpc-small.vf";
-    }
+    return "rfpc-small.vf";
 }
 
 const char* hud_get_default_font_name(bool big)
@@ -295,9 +289,7 @@ const char* hud_get_default_font_name(bool big)
     if (big) {
         return "regularfont.ttf:17";
     }
-    else {
-        return "rfpc-medium.vf";
-    }
+    return "rfpc-medium.vf";
 }
 
 const char* hud_get_bold_font_name(bool big)
@@ -305,9 +297,7 @@ const char* hud_get_bold_font_name(bool big)
     if (big) {
         return "boldfont.ttf:26";
     }
-    else {
-        return "rfpc-large.vf";
-    }
+    return "rfpc-large.vf";
 }
 
 int hud_get_small_font()
@@ -319,13 +309,11 @@ int hud_get_small_font()
         }
         return font;
     }
-    else {
-        static int font = -2;
-        if (font == -2) {
-            font = rf::gr::load_font(hud_get_small_font_name(false));
-        }
-        return font;
+    static int font = -2;
+    if (font == -2) {
+        font = rf::gr::load_font(hud_get_small_font_name(false));
     }
+    return font;
 }
 
 int hud_get_default_font()
@@ -337,13 +325,11 @@ int hud_get_default_font()
         }
         return font;
     }
-    else {
-        static int font = -2;
-        if (font == -2) {
-            font = rf::gr::load_font(hud_get_default_font_name(false));
-        }
-        return font;
+    static int font = -2;
+    if (font == -2) {
+        font = rf::gr::load_font(hud_get_default_font_name(false));
     }
+    return font;
 }
 
 int hud_get_large_font()
@@ -358,13 +344,11 @@ int hud_get_large_font()
         }
         return font;
     }
-    else {
-        static int font = -2;
-        if (font == -2) {
-            font = rf::gr::load_font(hud_get_bold_font_name(false));
-        }
-        return font;
+    static int font = -2;
+    if (font == -2) {
+        font = rf::gr::load_font(hud_get_bold_font_name(false));
     }
+    return font;
 }
 
 FunHook<void()> hud_init_hook{

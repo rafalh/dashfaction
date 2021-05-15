@@ -77,7 +77,7 @@ namespace rf
             return AddrCaller{0x004FFA80}.this_call<String&>(this, other);
         }
 
-        bool operator==(const String& other) const
+        [[nodiscard]] bool operator==(const String& other) const
         {
             return std::strcmp(
                 m_pod.buf ? m_pod.buf : "",
@@ -85,34 +85,38 @@ namespace rf
             ) == 0;
         }
 
-        bool operator==(const char* other) const
+        [[nodiscard]] bool operator==(const char* other) const
         {
             return std::strcmp(m_pod.buf ? m_pod.buf : "", other) == 0;
         }
 
-        const char *c_str() const
+        [[nodiscard]] const char *c_str() const
         {
             return AddrCaller{0x004FF480}.this_call<const char*>(this);
         }
 
-        int size() const
+        [[nodiscard]] int size() const
         {
             return AddrCaller{0x004FF490}.this_call<int>(this);
         }
 
-        bool empty() const
+        [[nodiscard]] bool empty() const
         {
             return size() == 0;
         }
 
-        String* substr(String *str_out, int begin, int end) const
+        [[nodiscard]] String substr(int begin, int end) const
         {
-            return AddrCaller{0x004FF590}.this_call<String*>(this, str_out, begin, end);
+            String str_out;
+            AddrCaller{0x004FF590}.this_call<String*>(this, &str_out, begin, end);
+            return str_out;
         }
 
-        static String* concat(String *str_out, const String& first, const String& second)
+        [[nodiscard]] static String concat(const String& first, const String& second)
         {
-            return AddrCaller{0x004FFB50}.c_call<String*>(str_out, &first, &second);
+            String str_out;
+            AddrCaller{0x004FFB50}.c_call<String*>(&str_out, &first, &second);
+            return str_out;
         }
 
         PRINTF_FMT_ATTRIBUTE(1, 2)

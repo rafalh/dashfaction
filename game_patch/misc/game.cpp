@@ -56,9 +56,7 @@ int bm_load_if_exists(const char* name, int unk, bool generate_mipmaps)
     if (rf::file_exists(name)) {
         return rf::bm::load(name, unk, generate_mipmaps);
     }
-    else {
-        return -1;
-    }
+    return -1;
 }
 
 CallHook<void(int, int, int, rf::gr::Mode)> game_render_cursor_gr_bitmap_hook{

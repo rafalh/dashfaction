@@ -126,15 +126,13 @@ FunHook<rf::bm::Format(int, void**, void**)> bm_lock_hook{
             *palette_out = bm_entry.locked_palette;
             return bm_entry.format;
         }
-        else {
-            auto pixel_fmt = bm_lock_hook.call_target(bmh, pixels_out, palette_out);
-            if (pixel_fmt == rf::bm::FORMAT_NONE) {
-                *pixels_out = nullptr;
-                *palette_out = nullptr;
-                xlog::warn("bm_lock failed");
-            }
-            return pixel_fmt;
+        auto pixel_fmt = bm_lock_hook.call_target(bmh, pixels_out, palette_out);
+        if (pixel_fmt == rf::bm::FORMAT_NONE) {
+            *pixels_out = nullptr;
+            *palette_out = nullptr;
+            xlog::warn("bm_lock failed");
         }
+        return pixel_fmt;
     },
 };
 

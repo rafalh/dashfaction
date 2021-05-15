@@ -177,7 +177,7 @@ namespace rf
     static auto& multi_chat_print = addr_as_ref<void(String::Pod text, ChatMsgColor color, String::Pod prefix)>(0x004785A0);
     static auto& multi_chat_say = addr_as_ref<void(const char *msg, bool is_team_msg)>(0x00444150);
     static auto& multi_is_connecting_to_server = addr_as_ref<uint8_t(const NetAddr& addr)>(0x0044AD80);
-    typedef void MultiIoProcessPackets_Type(const void* data, size_t len, const NetAddr& addr, Player* player);
+    using MultiIoProcessPackets_Type = void(const void* data, size_t len, const NetAddr& addr, Player* player);
     static auto& multi_io_process_packets = addr_as_ref<MultiIoProcessPackets_Type>(0x004790D0);
     static auto& multi_kill_local_player = addr_as_ref<void()>(0x004757A0);
     static auto& send_game_info_req_packet = addr_as_ref<void(const NetAddr& addr)>(0x0047B450);

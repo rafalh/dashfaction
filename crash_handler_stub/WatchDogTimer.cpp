@@ -65,7 +65,7 @@ public:
         m_last_reset_time = std::chrono::steady_clock::now();
     }
 
-    bool is_running()
+    [[nodiscard]] bool is_running() const
     {
         return m_running;
     }

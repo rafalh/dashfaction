@@ -220,7 +220,7 @@ FunHook UiInputBox_render_hook{0x004570E0, UiInputBox_render};
 
 void __fastcall UiCycler_add_item(rf::ui::Cycler& this_, int, const char *text, int font)
 {
-    if (this_.num_items < this_.max_items) {
+    if (this_.num_items < rf::ui::Cycler::max_items) {
         this_.items_text[this_.num_items] = strdup(text);
         this_.items_font[this_.num_items] = font;
         ++this_.num_items;
@@ -243,11 +243,11 @@ void __fastcall UiCycler_render(rf::ui::Cycler& this_)
     int x = static_cast<int>(this_.get_absolute_x() * rf::ui::scale_x);
     int y = static_cast<int>(this_.get_absolute_y() * rf::ui::scale_y);
 
-    auto text = this_.items_text[this_.current_item];
-    auto font = this_.items_font[this_.current_item];
-    auto font_h = rf::gr::get_font_height(font);
-    auto text_x = x + static_cast<int>(this_.w * rf::ui::scale_x / 2);
-    auto text_y = y + static_cast<int>((this_.h * rf::ui::scale_y - font_h) / 2);
+    const char* text = this_.items_text[this_.current_item];
+    int font = this_.items_font[this_.current_item];
+    int font_h = rf::gr::get_font_height(font);
+    int text_x = x + static_cast<int>(this_.w * rf::ui::scale_x / 2);
+    int text_y = y + static_cast<int>((this_.h * rf::ui::scale_y - font_h) / 2);
     rf::gr::string_aligned(rf::gr::ALIGN_CENTER, text_x, text_y, text, font);
 
     debug_ui_layout(this_);
@@ -296,9 +296,7 @@ bool __fastcall UiInputBox_process_key_new(void *this_, int edx, rf::Key key)
         }
         return true;
     }
-    else {
-        return UiInputBox_process_key_hook.call_target(this_, edx, key);
-    }
+    return UiInputBox_process_key_hook.call_target(this_, edx, key);
 }
 FunHook<bool __fastcall(void *this_, int edx, rf::Key key)> UiInputBox_process_key_hook{
     0x00457300,

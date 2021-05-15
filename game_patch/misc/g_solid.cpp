@@ -157,11 +157,12 @@ CodeInjection g_proctex_update_water_patch{
         regs.eip = 0x004E6B68;
 
         auto& proctex = *static_cast<rf::GProceduralTexture*>(regs.esi);
-        rf::gr::LockInfo base_bm_lock, user_bm_lock;
+        rf::gr::LockInfo base_bm_lock;
         if (!rf::gr::lock(proctex.base_bm_handle, 0, &base_bm_lock, rf::gr::LOCK_READ_ONLY)) {
             return;
         }
         bm_set_dynamic(proctex.user_bm_handle, true);
+        rf::gr::LockInfo user_bm_lock;
         if (!rf::gr::lock(proctex.user_bm_handle, 0, &user_bm_lock, rf::gr::LOCK_WRITE_ONLY)) {
             rf::gr::unlock(&base_bm_lock);
             return;

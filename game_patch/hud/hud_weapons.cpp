@@ -41,9 +41,11 @@ CallHook<void(int, int, int, rf::gr::Mode)> render_reticle_gr_bitmap_hook{
     [](int bm_handle, int x, int y, rf::gr::Mode mode) {
         float base_scale = g_game_config.big_hud ? 2.0f : 1.0f;
         float scale = base_scale * g_game_config.reticle_scale;
+        int clip_w = rf::gr::clip_width();
+        int clip_h = rf::gr::clip_height();
 
-        x = static_cast<int>((x - rf::gr::clip_width() / 2) * scale) + rf::gr::clip_width() / 2;
-        y = static_cast<int>((y - rf::gr::clip_height() / 2) * scale) + rf::gr::clip_height() / 2;
+        x = static_cast<int>((x - clip_w / 2.0F) * scale + clip_w / 2.0F);
+        y = static_cast<int>((y - clip_h / 2.0F) * scale + clip_h / 2.0F);
 
         hud_scaled_bitmap(bm_handle, x, y, scale, mode);
     },
@@ -99,7 +101,7 @@ bool hud_weapons_is_double_ammo()
     if (rf::is_multi) {
         return false;
     }
-    auto entity = rf::entity_from_handle(rf::local_player->entity_handle);
+    rf::Entity* entity = rf::entity_from_handle(rf::local_player->entity_handle);
     if (!entity) {
         return false;
     }

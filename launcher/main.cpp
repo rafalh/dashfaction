@@ -40,7 +40,7 @@ int APIENTRY WinMain(HINSTANCE, HINSTANCE, LPSTR, int) try
     LauncherApp app;
 
     // Run the application
-    return app.Run();
+    return app.Run(); // NOLINT(clang-analyzer-core.StackAddressEscape)
 }
 // catch all unhandled std::exception types
 catch (const std::exception& e) {

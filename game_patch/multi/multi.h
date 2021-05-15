@@ -49,7 +49,7 @@ struct PlayerStatsNew : rf::PlayerLevelStats
         damage_given += damage;
     }
 
-    float calc_accuracy() const
+    [[nodiscard]] float calc_accuracy() const
     {
         if (num_shots_fired > 0) {
             return num_shots_hit / num_shots_fired;

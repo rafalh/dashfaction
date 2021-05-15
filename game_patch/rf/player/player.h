@@ -88,7 +88,7 @@ namespace rf
         TEAM_BLUE = 1,
     };
 
-    typedef int PlayerFlags;
+    using PlayerFlags = int;
 
     struct PlayerViewport
     {

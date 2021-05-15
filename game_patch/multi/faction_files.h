@@ -16,7 +16,7 @@ public:
     };
 
     FactionFilesClient();
-    std::optional<LevelInfo> find_map(const char* filename);
+    std::optional<LevelInfo> find_map(const char* file_name);
     void download_map(const char* tmp_filename, int ticket_id,
         std::function<bool(unsigned bytes_received, std::chrono::milliseconds duration)> callback);
 

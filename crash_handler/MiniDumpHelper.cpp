@@ -25,9 +25,7 @@ bool MiniDumpHelper::is_data_section_needed(const WCHAR* module_name)
 BOOL CALLBACK MiniDumpHelper::mini_dump_callback(PVOID param, const PMINIDUMP_CALLBACK_INPUT input,
                                                  PMINIDUMP_CALLBACK_OUTPUT output)
 {
-    auto that = reinterpret_cast<MiniDumpHelper*>(param);
-
-    BOOL ret = FALSE;
+    auto* that = reinterpret_cast<MiniDumpHelper*>(param);
 
     // Check parameters
     if (!input || !output)
@@ -35,17 +33,16 @@ BOOL CALLBACK MiniDumpHelper::mini_dump_callback(PVOID param, const PMINIDUMP_CA
 
     // Process the callbacks
     switch (input->CallbackType) {
-    case IncludeModuleCallback: {
+    case IncludeModuleCallback:
+    case IncludeThreadCallback:
+    case ThreadCallback:
+    case ThreadExCallback:
         // Include the module into the dump
-        ret = TRUE;
-    } break;
-
-    case IncludeThreadCallback: {
         // Include the thread into the dump
-        ret = TRUE;
-    } break;
+        // Include all thread information into the minidump
+        return TRUE;
 
-    case ModuleCallback: {
+    case ModuleCallback:
         // Are data sections available for this module ?
         if (output->ModuleWriteFlags & ModuleWriteDataSeg) {
             // Yes, they are, but do we need them?
@@ -54,30 +51,17 @@ BOOL CALLBACK MiniDumpHelper::mini_dump_callback(PVOID param, const PMINIDUMP_CA
                 output->ModuleWriteFlags &= (~ModuleWriteDataSeg);
             }
         }
+        return TRUE;
 
-        ret = TRUE;
-    } break;
-
-    case ThreadCallback: {
-        // Include all thread information into the minidump
-        ret = TRUE;
-    } break;
-
-    case ThreadExCallback: {
-        // Include this information
-        ret = TRUE;
-    } break;
-
-    case MemoryCallback: {
+    case MemoryCallback:
         // We do not include any information here -> return FALSE
-        ret = FALSE;
-    } break;
+        return FALSE;
 
     case CancelCallback:
         break;
     }
 
-    return ret;
+    return FALSE;
 }
 
 bool MiniDumpHelper::write_dump(const char* path, PEXCEPTION_POINTERS exception_pointers, HANDLE process,

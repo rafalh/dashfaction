@@ -3,7 +3,7 @@
 
 static HANDLE get_code_heap()
 {
-    static auto heap = HeapCreate(HEAP_CREATE_ENABLE_EXECUTE, 0, 0);
+    static HANDLE heap = HeapCreate(HEAP_CREATE_ENABLE_EXECUTE, 0, 0);
     return heap;
 }
 

@@ -45,27 +45,24 @@ rf::Color bm_get_pixel(uint8_t* data, rf::bm::Format format, int stride_in_bytes
         constexpr int block_w = 4;
         constexpr int block_h = 4;
         auto bytes_per_block = bm_get_bytes_per_compressed_block(format);
-        auto block = data + (y / block_h) * stride_in_bytes + x / block_w * bytes_per_block;
+        auto* block = data + (y / block_h) * stride_in_bytes + x / block_w * bytes_per_block;
         return decode_block_compressed_pixel(block, format, x % block_w, y % block_h);
     }
-    else {
-        auto ptr = data + y * stride_in_bytes + x * bm_bytes_per_pixel(format);
-        rf::Color result{0, 0, 0, 0};
-        auto lambda = [&](auto s) {
-            if constexpr (decltype(s)::value == rf::bm::FORMAT_8_PALETTED) {
-                assert(false);
-                return;
-            }
-            PixelsReader<decltype(s)::value> rdr{ptr};
-            PixelColor<rf::bm::FORMAT_8888_ARGB> color = rdr.read();
-            result.set(
-                static_cast<uint8_t>(color.r.value),
-                static_cast<uint8_t>(color.g.value),
-                static_cast<uint8_t>(color.b.value),
-                static_cast<uint8_t>(color.a.value)
-            );
-        };
-        call_with_format(format, lambda);
-        return result;
-    }
+    auto* ptr = data + y * stride_in_bytes + x * bm_bytes_per_pixel(format);
+    rf::Color result{0, 0, 0, 0};
+    call_with_format(format, [&](auto s) {
+        if constexpr (decltype(s)::value == rf::bm::FORMAT_8_PALETTED) {
+            assert(false);
+            return;
+        }
+        PixelsReader<decltype(s)::value> rdr{ptr};
+        PixelColor<rf::bm::FORMAT_8888_ARGB> color = rdr.read();
+        result.set(
+            static_cast<uint8_t>(color.r.value),
+            static_cast<uint8_t>(color.g.value),
+            static_cast<uint8_t>(color.b.value),
+            static_cast<uint8_t>(color.a.value)
+        );
+    });
+    return result;
 }

@@ -17,14 +17,17 @@ void console_show_cmd_help(rf::console::Command* cmd)
 
 int console_auto_complete_get_component(int offset, std::string& result)
 {
-    const char *begin = rf::console::cmd_line + offset, *end = nullptr, *next;
+    const char *begin = rf::console::cmd_line + offset;
+    const char *end = nullptr;
+    const char *next;
+
     if (begin[0] == '"') {
         ++begin;
-        end = strchr(begin, '"');
-        next = end ? strchr(end, ' ') : nullptr;
+        end = std::strchr(begin, '"');
+        next = end ? std::strchr(end, ' ') : nullptr;
     }
     else
-        end = next = strchr(begin, ' ');
+        end = next = std::strchr(begin, ' ');
 
     if (!end)
         end = rf::console::cmd_line + rf::console::cmd_line_len;
@@ -96,8 +99,8 @@ void console_auto_complete_level(int offset)
     std::string common_prefix;
     std::vector<std::string> matches;
     vpackfile_find_matching_files(StringMatcher().prefix(level_name).suffix(".rfl"), [&](const char* name) {
-        auto ext = strrchr(name, '.');
-        auto name_len = ext ? ext - name : strlen(name);
+        auto* ext = std::strrchr(name, '.');
+        auto name_len = ext ? ext - name : std::strlen(name);
         std::string name_without_ext(name, name_len);
         matches.push_back(name_without_ext);
         console_auto_complete_update_common_prefix(common_prefix, name_without_ext, first);
@@ -115,7 +118,7 @@ void console_auto_complete_player(int offset)
 {
     std::string player_name;
     console_auto_complete_get_component(offset, player_name);
-    if (player_name.size() < 1)
+    if (player_name.empty())
         return;
 
     bool first = true;
@@ -162,9 +165,7 @@ void console_auto_complete_command(int offset)
             console_auto_complete_level(next_offset);
         else if (!stricmp(cmd_name.c_str(), "kick") || !stricmp(cmd_name.c_str(), "ban"))
             console_auto_complete_player(next_offset);
-        else if (!stricmp(cmd_name.c_str(), "rcon"))
-            console_auto_complete_command(next_offset);
-        else if (!stricmp(cmd_name.c_str(), "help"))
+        else if (!stricmp(cmd_name.c_str(), "rcon") || !stricmp(cmd_name.c_str(), "help"))
             console_auto_complete_command(next_offset);
         else if (matching_cmds.size() != 1)
             return;

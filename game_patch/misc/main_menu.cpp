@@ -151,13 +151,13 @@ static_assert(sizeof(ServerListEntry) == 0x6C, "invalid size");
 FunHook<int(const int&, const int&)> server_list_cmp_func_hook{
     0x0044A6D0,
     [](const int& index1, const int& index2) {
-        auto server_list = addr_as_ref<ServerListEntry*>(0x0063F62C);
+        auto* server_list = addr_as_ref<ServerListEntry*>(0x0063F62C);
         bool has_ping1 = server_list[index1].ping >= 0;
         bool has_ping2 = server_list[index2].ping >= 0;
-        if (has_ping1 != has_ping2)
+        if (has_ping1 != has_ping2) {
             return has_ping1 ? -1 : 1;
-        else
-            return server_list_cmp_func_hook.call_target(index1, index2);
+        }
+        return server_list_cmp_func_hook.call_target(index1, index2);
     },
 };
 

@@ -3,7 +3,7 @@
 #include <xlog/Win32Appender.h>
 #include <windows.h>
 
-void xlog::Win32Appender::append([[maybe_unused]] xlog::Level lvl, const std::string& str)
+void xlog::Win32Appender::append([[maybe_unused]] xlog::Level level, const std::string& formatted_message)
 {
-    OutputDebugStringA(str.c_str());
+    OutputDebugStringA(formatted_message.c_str());
 }

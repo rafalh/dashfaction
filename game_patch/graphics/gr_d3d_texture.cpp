@@ -77,7 +77,6 @@ public:
             case rf::bm::FORMAT_8_ALPHA:
                 return a_8_format_;
             case rf::bm::FORMAT_8_PALETTED:
-                return rgb_888_format_;
             case rf::bm::FORMAT_888_RGB:
                 return rgb_888_format_;
             case rf::bm::FORMAT_565_RGB:
@@ -131,8 +130,8 @@ FunHook<GrD3DSetTextureData_Type> gr_d3d_set_texture_data_hook{
             auto src_pitch = bm_calculate_pitch(bm_w, format);
             auto num_src_rows = bm_calculate_rows(bm_h, format);
 
-            auto src_ptr = src_bits_ptr;
-            auto dst_ptr = static_cast<std::byte*>(locked_rect.pBits);
+            const auto* src_ptr = src_bits_ptr;
+            auto* dst_ptr = static_cast<std::byte*>(locked_rect.pBits);
 
             src_ptr += src_pitch * bm_calculate_rows(section->y, format);
             src_ptr += bm_calculate_pitch(section->x, format);
@@ -234,8 +233,8 @@ FunHook<void(int, float, float, rf::Color*)> gr_d3d_get_texel_hook{
             if (v < 0.0f) {
                 v += 1.0f;
             }
-            int x = static_cast<int>(u * lock.w + 0.5f);
-            int y = static_cast<int>(v * lock.h + 0.5f);
+            int x = std::lround(u * lock.w);
+            int y = std::lround(v * lock.h);
             *out_color = bm_get_pixel(lock.data, lock.format, lock.stride_in_bytes, x, y);
 
 
@@ -293,7 +292,7 @@ bool gr_d3d_lock(int bm_handle, int section, rf::gr::LockInfo *lock) {
         }
     }
     D3DLOCKED_RECT locked_rect;
-    auto d3d_texture = tslot.sections[section].d3d_texture;
+    IDirect3DTexture8* d3d_texture = tslot.sections[section].d3d_texture;
     DWORD lock_flags = 0;
     if (lock->mode == rf::gr::LOCK_READ_ONLY) {
         lock_flags = D3DLOCK_READONLY;
@@ -345,17 +344,14 @@ bool gr_d3d_is_texture_format_supported(rf::bm::Format format)
         return false;
     }
 
-    auto d3d_fmt = get_d3d_format_from_bm_format(format);
+    D3DFORMAT d3d_fmt = get_d3d_format_from_bm_format(format);
     if (d3d_fmt == D3DFMT_UNKNOWN) {
         return false;
     }
 
-    auto hr = rf::gr::d3d::d3d->CheckDeviceFormat(rf::gr::d3d::adapter_idx, D3DDEVTYPE_HAL, rf::gr::d3d::pp.BackBufferFormat, 0,
-        D3DRTYPE_TEXTURE, d3d_fmt);
-    if (FAILED(hr)) {
-        return false;
-    }
-    return true;
+    HRESULT hr = rf::gr::d3d::d3d->CheckDeviceFormat(rf::gr::d3d::adapter_idx, D3DDEVTYPE_HAL,
+        rf::gr::d3d::pp.BackBufferFormat, 0, D3DRTYPE_TEXTURE, d3d_fmt);
+    return SUCCEEDED(hr);
 }
 
 void gr_d3d_texture_apply_patch()
@@ -382,7 +378,7 @@ void gr_d3d_texture_apply_patch()
 
 void gr_d3d_texture_device_lost()
 {
-    for (auto tslot : g_default_pool_tslots) {
+    for (auto* tslot : g_default_pool_tslots) {
         gr_d3d_free_texture_hook.call_target(*tslot);
     }
     g_default_pool_tslots.clear();

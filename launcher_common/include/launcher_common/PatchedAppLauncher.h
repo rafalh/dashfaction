@@ -90,7 +90,7 @@ protected:
 
 private:
     void verify_before_launch();
-    void setup_startup_info(_STARTUPINFOA& startup_info);
+    static void setup_startup_info(_STARTUPINFOA& startup_info);
     std::string build_cmd_line(const std::string& app_path);
 
     std::optional<std::string> m_forced_app_exe_path;

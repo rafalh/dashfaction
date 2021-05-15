@@ -23,18 +23,18 @@ namespace rf
             AddrCaller{0x00523690}.this_call(this, name, help, has_argument);
         }
 
-        bool found() const
+        [[nodiscard]] bool found() const
         {
             return name_found;
         }
 
-        const char* get_arg() const
+        [[nodiscard]] const char* get_arg() const
         {
             return arg;
         }
     };
 
-    typedef void(*MsgHandlerPtr)(UINT, WPARAM, LPARAM);
+    using MsgHandlerPtr = void(*)(UINT, WPARAM, LPARAM);
     static auto& os_add_msg_handler = addr_as_ref<void(MsgHandlerPtr)>(0x00524AE0);
     static auto& os_foreground = addr_as_ref<bool()>(0x00524AD0);
     static auto& os_poll = addr_as_ref<void()>(0x00524B60);

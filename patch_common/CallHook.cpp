@@ -17,7 +17,7 @@ void CallHookImpl::install()
 
             intptr_t call_offset = *reinterpret_cast<intptr_t*>(addr + 1);
             int call_op_size = 1 + sizeof(uintptr_t);
-            auto call_addr = reinterpret_cast<void*>(addr + call_op_size + call_offset);
+            auto* call_addr = reinterpret_cast<void*>(addr + call_op_size + call_offset);
             if (!m_target_fun_ptr) {
                 m_target_fun_ptr = call_addr;
             }

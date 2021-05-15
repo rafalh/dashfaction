@@ -132,7 +132,7 @@ static uint32_t vpackfile_process_header(rf::VPackfile* packfile, const void* ra
         uint32_t total_size;
     };
     constexpr unsigned VPP_SIG = 0x51890ACE;
-    auto& hdr = *static_cast<const VppHeader*>(raw_header);
+    const auto& hdr = *static_cast<const VppHeader*>(raw_header);
     packfile->num_files = hdr.num_files;
     packfile->file_size = hdr.total_size;
     if (hdr.sig != VPP_SIG || hdr.unk < 1u)
@@ -340,10 +340,10 @@ static int vpackfile_add_entries_new(rf::VPackfile* packfile, const void* block,
         char name[60];
         uint32_t size;
     };
-    auto record = static_cast<const VppFileInfo*>(block);
+    const auto* record = static_cast<const VppFileInfo*>(block);
 
     for (unsigned i = 0; i < num_files; ++i) {
-        auto file_name = record->name;
+        const char* file_name = record->name;
         rf::VPackfileEntry& entry = packfile->files[num_added_files];
 
         // Note: we can't use string pool from RF because it's too small
@@ -390,20 +390,20 @@ CodeInjection vpackfile_open_check_seek_result_injection{
 static void load_dashfaction_vpp()
 {
     // Load DashFaction specific packfile
-    auto df_vpp_dir = get_module_dir(g_hmodule);
-    auto df_vpp_base_name = "dashfaction.vpp";
+    std::string df_vpp_dir = get_module_dir(g_hmodule);
+    const char* df_vpp_base_name = "dashfaction.vpp";
     if (!PathFileExistsA((df_vpp_dir + df_vpp_base_name).c_str())) {
         // try to remove 3 path components (build/(Debug|Release)/bin)
         auto pos = df_vpp_dir.rfind('\\');
-        if (pos != df_vpp_dir.npos) {
+        if (pos != std::string::npos) {
             df_vpp_dir.resize(pos);
         }
         pos = df_vpp_dir.rfind('\\');
-        if (pos != df_vpp_dir.npos) {
+        if (pos != std::string::npos) {
             df_vpp_dir.resize(pos);
         }
         pos = df_vpp_dir.rfind('\\');
-        if (pos != df_vpp_dir.npos) {
+        if (pos != std::string::npos) {
             df_vpp_dir.resize(pos);
         }
     }
@@ -416,7 +416,7 @@ static void load_dashfaction_vpp()
 ConsoleCommand2 which_packfile_cmd{
     "which_packfile",
     [](std::string filename) {
-        auto entry = vpackfile_find_new(filename.c_str());
+        auto* entry = vpackfile_find_new(filename.c_str());
         if (entry) {
             rf::console::printf("%s", entry->parent->path);
         }

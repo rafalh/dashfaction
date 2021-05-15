@@ -28,7 +28,7 @@ void handle_url_param()
         return;
     }
 
-    auto url = get_url_cmd_line_param().get_arg();
+    const char* url = get_url_cmd_line_param().get_arg();
     std::regex e{R"(^rf://([\w\.-]+):(\d+)/?(?:\?password=(.*))?$)"};
     std::cmatch cm;
     if (!std::regex_match(url, cm, e)) {
@@ -40,7 +40,7 @@ void handle_url_param()
     auto port = static_cast<uint16_t>(std::stoi(cm[2].str()));
     auto password = cm[3].str();
 
-    auto hp = gethostbyname(host_name.c_str());
+    hostent* hp = gethostbyname(host_name.c_str());
     if (!hp) {
         xlog::warn("URL host lookup failed");
         return;
@@ -149,7 +149,7 @@ FunHook<void(rf::Player*, rf::Entity*, int)> multi_select_weapon_server_side_hoo
 
 void multi_reload_weapon_server_side(rf::Player* pp, int weapon_type)
 {
-    auto ep = rf::entity_from_handle(pp->entity_handle);
+    rf::Entity* ep = rf::entity_from_handle(pp->entity_handle);
     if (!ep) {
         // Entity is dead
     }
@@ -227,11 +227,8 @@ bool weapon_uses_ammo(int weapon_type, bool alt_fire)
     if (rf::weapon_is_riot_stick(weapon_type) && alt_fire) {
         return true;
     }
-    auto info = &rf::weapon_types[weapon_type];
-    if (info->flags & rf::WTF_MELEE) {
-        return false;
-    }
-    return true;
+    rf::WeaponInfo* winfo = &rf::weapon_types[weapon_type];
+    return !(winfo->flags & rf::WTF_MELEE);
 }
 
 bool is_entity_out_of_ammo(rf::Entity *entity, int weapon_type, bool alt_fire)
@@ -239,15 +236,13 @@ bool is_entity_out_of_ammo(rf::Entity *entity, int weapon_type, bool alt_fire)
     if (!weapon_uses_ammo(weapon_type, alt_fire)) {
         return false;
     }
-    auto info = &rf::weapon_types[weapon_type];
-    if (info->clip_size == 0) {
-        auto ammo = entity->ai.ammo[info->ammo_type];
+    rf::WeaponInfo* winfo = &rf::weapon_types[weapon_type];
+    if (winfo->clip_size == 0) {
+        auto ammo = entity->ai.ammo[winfo->ammo_type];
         return ammo == 0;
     }
-    else {
-        auto clip_ammo = entity->ai.clip_ammo[weapon_type];
-        return clip_ammo == 0;
-    }
+    auto clip_ammo = entity->ai.clip_ammo[weapon_type];
+    return clip_ammo == 0;
 }
 
 std::pair<bool, float> multi_is_cps_above_limit(rf::Player* pp, float max_cps)
@@ -274,13 +269,11 @@ float multi_get_max_cps(int weapon_type, bool alt_fire)
         // most people cannot do much more than 10 clicks per second so 20 should be safe
         return 20.0f;
     }
-    else {
-        int fire_wait_ms = rf::weapon_get_fire_wait_ms(weapon_type, alt_fire);
-        float fire_wait_secs = fire_wait_ms / 1000.0f;
-        float fire_rate = 1.0f / fire_wait_secs;
-        // allow 10% more to make sure we do not skip any legit packets
-        return fire_rate * 1.1f;
-    }
+    int fire_wait_ms = rf::weapon_get_fire_wait_ms(weapon_type, alt_fire);
+    float fire_wait_secs = fire_wait_ms / 1000.0f;
+    float fire_rate = 1.0f / fire_wait_secs;
+    // allow 10% more to make sure we do not skip any legit packets
+    return fire_rate * 1.1f;
 }
 
 bool multi_check_cps(rf::Player* pp, int weapon_type, bool alt_fire)
@@ -296,7 +289,7 @@ bool multi_check_cps(rf::Player* pp, int weapon_type, bool alt_fire)
 
 bool multi_is_weapon_fire_allowed_server_side(rf::Entity *ep, int weapon_type, bool alt_fire)
 {
-    auto pp = rf::player_from_entity_handle(ep->handle);
+    rf::Player* pp = rf::player_from_entity_handle(ep->handle);
     if (ep->ai.current_primary_weapon != weapon_type) {
         xlog::debug("Player %s attempted to fire unselected weapon %d", pp->name.c_str(), weapon_type);
     }

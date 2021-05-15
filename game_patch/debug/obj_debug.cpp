@@ -21,13 +21,13 @@ auto& target_obj_handle = addr_as_ref<int>(0x007C7190);
 
 }
 
-rf::Object* FindClosestObject()
+rf::Object* find_closest_object()
 {
     if (!rf::local_player->cam)
         return nullptr;
     rf::Vector3 cam_pos = rf::camera_get_pos(rf::local_player->cam);
     rf::Matrix3 cam_orient = rf::camera_get_orient(rf::local_player->cam);
-    auto obj = rf::object_list.next_obj;
+    rf::Object* obj = rf::object_list.next_obj;
     rf::Object* best_obj = nullptr;
     float best_dist = 100.0f; // max dist
     rf::Vector3 fw = cam_orient.fvec;
@@ -58,8 +58,7 @@ rf::Object* find_object_in_reticle()
     bool hit = rf::collide_linesegment_level_for_multi(p0, p1, entity, nullptr, &col_info, 0.0f, false, 1.0f);
     if (hit && col_info.obj_handle != -1)
         return rf::obj_from_handle(col_info.obj_handle);
-    else
-        return nullptr;
+    return nullptr;
 }
 
 ConsoleCommand2 dbg_target_uid_cmd{
@@ -78,7 +77,7 @@ ConsoleCommand2 dbg_target_uid_cmd{
         else {
             rf::target_obj_handle = rf::local_player->entity_handle;
         }
-        auto obj = rf::obj_from_handle(rf::target_obj_handle);
+        rf::Object* obj = rf::obj_from_handle(rf::target_obj_handle);
         if (obj)
             rf::console::printf("Target object: uid %d, name '%s'", obj->uid, obj->name.c_str());
         else
@@ -89,7 +88,7 @@ ConsoleCommand2 dbg_target_uid_cmd{
 ConsoleCommand2 dbg_target_closest_cmd{
     "d_target_closest",
     []() {
-        auto obj = FindClosestObject();
+        rf::Object* obj = find_closest_object();
         rf::target_obj_handle = obj ? obj->handle : 0;
         if (obj)
             rf::console::printf("Target object: uid %d, name '%s'", obj->uid, obj->name.c_str());
@@ -101,7 +100,7 @@ ConsoleCommand2 dbg_target_closest_cmd{
 ConsoleCommand2 dbg_target_reticle_cmd{
     "d_target_reticle",
     []() {
-        auto obj = find_object_in_reticle();
+        rf::Object* obj = find_object_in_reticle();
         rf::target_obj_handle = obj ? obj->handle : 0;
         if (obj)
             rf::console::printf("Target object: uid %d, name '%s'", obj->uid, obj->name.c_str());
@@ -113,7 +112,7 @@ ConsoleCommand2 dbg_target_reticle_cmd{
 ConsoleCommand2 dbg_entity_state_cmd{
     "d_entity_state",
     [](std::optional<int> state_opt) {
-        auto entity = rf::entity_from_handle(rf::target_obj_handle);
+        rf::Entity* entity = rf::entity_from_handle(rf::target_obj_handle);
         if (!entity) {
             return;
         }
@@ -132,7 +131,7 @@ ConsoleCommand2 dbg_entity_state_cmd{
 ConsoleCommand2 dbg_entity_action_cmd{
     "d_entity_action",
     [](std::optional<int> action_opt) {
-        auto entity = rf::entity_from_handle(rf::target_obj_handle);
+        rf::Entity* entity = rf::entity_from_handle(rf::target_obj_handle);
         if (!entity) {
             return;
         }
@@ -188,8 +187,7 @@ const char* get_obj_class_name(rf::Object& obj)
 {
     if (obj.type == rf::OT_ENTITY)
         return static_cast<rf::Entity&>(obj).info->name.c_str();
-    else
-        return "-";
+    return "-";
 }
 
 const char* get_ai_mode_name(rf::AiMode ai_mode)
@@ -252,7 +250,7 @@ void register_obj_debug_commands()
 
 void render_obj_debug_ui()
 {
-    auto object = rf::obj_from_handle(rf::target_obj_handle);
+    rf::Object* object = rf::obj_from_handle(rf::target_obj_handle);
     if (!object) {
         return;
     }
@@ -265,7 +263,7 @@ void render_obj_debug_ui()
 
     rf::Vector3 cam_pos = rf::camera_get_pos(rf::local_player->cam);
 
-    auto entity = object->type == rf::OT_ENTITY ? static_cast<rf::Entity*>(object) : nullptr;
+    auto* entity = object->type == rf::OT_ENTITY ? static_cast<rf::Entity*>(object) : nullptr;
 
     dbg_hud.print("name", object->name.c_str());
     dbg_hud.printf("uid", "%d", object->uid);
@@ -286,13 +284,13 @@ void render_obj_debug_ui()
             dbg_hud.print("submode", "NONE");
         dbg_hud.print("style", get_ai_attack_style_name(entity->ai.attack_style));
         dbg_hud.print("friend", get_friendliness_name(object->friendliness));
-        auto target_obj = rf::obj_from_handle(entity->ai.target_handle);
+        rf::Object* target_obj = rf::obj_from_handle(entity->ai.target_handle);
         dbg_hud.print("target", target_obj ? target_obj->name.c_str() : "none");
         dbg_hud.printf("accel", "%.1f", entity->info->acceleration);
         dbg_hud.printf("mvmode", "%s", rf::move_mode_names[entity->move_mode->mode]);
         dbg_hud.print("deaf", (entity->ai.ai_flags & rf::AIF_DEAF) ? "yes" : "no");
         dbg_hud.print("pos", object->pos);
-        auto feet = object->pos;
+        rf::Vector3 feet = object->pos;
         feet.y = object->p_data.bbox_min.y;
         dbg_hud.print("feet", feet);
         dbg_hud.print("state", rf::entity_state_names[entity->current_state_anim]);

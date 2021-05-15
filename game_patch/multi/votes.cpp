@@ -96,7 +96,7 @@ public:
             send_chat_line_packet("\xA6 Vote timed out!", nullptr);
             return false;
         }
-        else if (passed_time_sec >= vote_config.time_limit_seconds / 2 && !reminder_sent) {
+        if (passed_time_sec >= vote_config.time_limit_seconds / 2 && !reminder_sent) {
             // Send reminder to player who did not vote yet
             for (rf::Player* player : remaining_players) {
                 send_chat_line_packet("\xA6 Send message \"/vote yes\" or \"/vote no\" to vote.", player);
@@ -152,7 +152,7 @@ protected:
             finish_vote(true);
             return false;
         }
-        else if (num_votes_no > num_votes_yes + static_cast<int>(remaining_players.size())) {
+        if (num_votes_no > num_votes_yes + static_cast<int>(remaining_players.size())) {
             finish_vote(false);
             return false;
         }
@@ -168,9 +168,7 @@ struct VoteKick : public Vote
     {
         std::string player_name{arg};
         m_target_player = find_best_matching_player(player_name.c_str());
-        if (!m_target_player)
-            return false;
-        return true;
+        return m_target_player != nullptr;
     }
 
     [[nodiscard]] std::string get_title() const override

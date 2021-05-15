@@ -90,7 +90,7 @@ void weapon_select_render()
     int weapon_icon_delta_y = weapon_icon_h + 1; // 35
 
     int num_drawn_weapons_per_category[4] = {0};
-    auto ai_info = rf::player_get_ai(rf::local_player);
+    rf::AiInfo* ai_info = rf::player_get_ai(rf::local_player);
     for (auto& pref_id : rf::local_player->weapon_prefs) {
         rf::WeaponCycle* cycle_entry = nullptr;
         for (auto& entry : rf::hud_weapon_cycle) {
@@ -131,7 +131,7 @@ void weapon_select_render()
                 weapon_icon_bitmaps_initialized = true;
             }
             if (weapon_icon_bitmaps[weapon_type] == -1) {
-                auto weapon_icon = rf::weapon_types[weapon_type].weapon_select_icon_filename.c_str();
+                const char* weapon_icon = rf::weapon_types[weapon_type].weapon_select_icon_filename.c_str();
                 weapon_icon_bitmaps[weapon_type] = rf::bm::load(weapon_icon, -1, false);
             }
 
@@ -147,7 +147,7 @@ void weapon_select_render()
     }
     rf::gr::set_color(15, 242, 2, 255);
     auto& weapon_info = rf::weapon_types[selected_cycle_entry.weapon_type];
-    auto display_name = weapon_info.display_name.c_str();
+    const char* display_name = weapon_info.display_name.c_str();
     int num_weapons_for_current_type = num_drawn_weapons_per_category[selected_cycle_entry.category];
     int weapon_name_y = weapon_icons_start_y + weapon_icon_delta_y * (num_weapons_for_current_type + 1);
     rf::gr::string_aligned(rf::gr::ALIGN_CENTER, center_x, weapon_name_y, display_name, font_num);

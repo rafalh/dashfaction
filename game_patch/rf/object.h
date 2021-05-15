@@ -71,7 +71,7 @@ namespace rf
         String name;
         int uid;
         ObjectType type;
-        int team;
+        ubyte team;
         int handle;
         int parent_handle;
         float life;

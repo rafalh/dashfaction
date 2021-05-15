@@ -155,7 +155,7 @@ FunHook<bool(rf::Glare* glare, const rf::Vector3& eye_pos)> glare_is_in_view_hoo
         }
 
         if (glare->last_covering_objh != -1) {
-            auto obj = rf::obj_from_handle(glare->last_covering_objh);
+            auto* obj = rf::obj_from_handle(glare->last_covering_objh);
             if (obj && glare_collide_object(glare, obj, eye_pos)) {
                 return false;
             }
@@ -169,15 +169,15 @@ FunHook<bool(rf::Glare* glare, const rf::Vector3& eye_pos)> glare_is_in_view_hoo
             return false;
         }
 
-        for (auto mbp : g_mover_brushes_to_check) {
+        for (auto* mbp : g_mover_brushes_to_check) {
             if (glare_collide_mover_brush(glare, mbp, eye_pos)) {
                 glare->last_covering_mover_brush = mbp;
                 return false;
             }
         }
-        for (auto obj_ptr : g_objects_to_check) {
-            if (glare_collide_object(glare, obj_ptr, eye_pos)) {
-                glare->last_covering_objh = obj_ptr->handle;
+        for (auto* objp : g_objects_to_check) {
+            if (glare_collide_object(glare, objp, eye_pos)) {
+                glare->last_covering_objh = objp->handle;
                 return false;
             }
         }

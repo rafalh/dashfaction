@@ -85,7 +85,8 @@ void load_additional_server_config(rf::Parser& parser)
     }
 
     while (parser.parse_optional("$DF Item Replacement:")) {
-        rf::String old_item, new_item;
+        rf::String old_item;
+        rf::String new_item;
         parser.parse_string(&old_item);
         parser.parse_string(&new_item);
         g_additional_server_config.item_replacements.insert({old_item.c_str(), new_item.c_str()});
@@ -183,10 +184,10 @@ CodeInjection dedicated_server_load_config_patch{
 std::pair<std::string_view, std::string_view> strip_by_space(std::string_view str)
 {
     auto space_pos = str.find(' ');
-    if (space_pos == std::string_view::npos)
+    if (space_pos == std::string_view::npos) {
         return {str, {}};
-    else
-        return {str.substr(0, space_pos), str.substr(space_pos + 1)};
+    }
+    return {str.substr(0, space_pos), str.substr(space_pos + 1)};
 }
 
 void handle_next_map_command(rf::Player* player)
@@ -199,7 +200,7 @@ void handle_next_map_command(rf::Player* player)
 void handle_save_command(rf::Player* player, std::string_view save_name)
 {
     auto& pdata = get_player_additional_data(player);
-    auto entity = rf::entity_from_handle(player->entity_handle);
+    rf::Entity* entity = rf::entity_from_handle(player->entity_handle);
     if (entity && g_additional_server_config.saving_enabled) {
         PlayerNetGameSaveData save_data;
         save_data.pos = entity->pos;
@@ -212,7 +213,7 @@ void handle_save_command(rf::Player* player, std::string_view save_name)
 void handle_load_command(rf::Player* player, std::string_view save_name)
 {
     auto& pdata = get_player_additional_data(player);
-    auto entity = rf::entity_from_handle(player->entity_handle);
+    rf::Entity* entity = rf::entity_from_handle(player->entity_handle);
     if (entity && g_additional_server_config.saving_enabled && !rf::entity_is_dying(entity)) {
         auto it = pdata.saves.find(std::string{save_name});
         if (it != pdata.saves.end()) {
@@ -262,7 +263,7 @@ CodeInjection process_obj_update_set_pos_injection{
 
 static void send_private_message_with_stats(rf::Player* player)
 {
-    auto stats = static_cast<PlayerStatsNew*>(player->stats);
+    auto* stats = static_cast<PlayerStatsNew*>(player->stats);
     int accuracy = static_cast<int>(stats->calc_accuracy() * 100.0f);
     auto str = string_format(
         "PLAYER STATS\n"
@@ -314,10 +315,9 @@ bool check_server_chat_command(const char* msg, rf::Player* sender)
     auto [cmd, rest] = strip_by_space(msg);
     if (cmd == "server")
         return handle_server_chat_command(rest, sender);
-    else if (cmd == "vote")
+    if (cmd == "vote")
         return handle_server_chat_command(msg, sender);
-    else
-        return false;
+    return false;
 }
 
 CodeInjection spawn_protection_duration_patch{
@@ -362,8 +362,8 @@ void send_hit_sound_packet(rf::Player* target)
 FunHook<float(rf::Entity*, float, int, int, int)> entity_damage_hook{
     0x0041A350,
     [](rf::Entity* damaged_ep, float damage, int killer_handle, int damage_type, int killer_uid) {
-        auto damaged_player = rf::player_from_entity_handle(damaged_ep->handle);
-        auto killer_player = rf::player_from_entity_handle(killer_handle);
+        rf::Player* damaged_player = rf::player_from_entity_handle(damaged_ep->handle);
+        rf::Player* killer_player = rf::player_from_entity_handle(killer_handle);
         bool is_pvp_damage = damaged_player && killer_player && damaged_player != killer_player;
         if (rf::is_server && is_pvp_damage) {
             damage *= g_additional_server_config.player_damage_modifier;
@@ -376,10 +376,10 @@ FunHook<float(rf::Entity*, float, int, int, int)> entity_damage_hook{
 
         if (rf::is_server && is_pvp_damage && real_damage > 0.0f) {
 
-            auto killer_player_stats = static_cast<PlayerStatsNew*>(killer_player->stats);
+            auto* killer_player_stats = static_cast<PlayerStatsNew*>(killer_player->stats);
             killer_player_stats->add_damage_given(real_damage);
 
-            auto damaged_player_stats = static_cast<PlayerStatsNew*>(damaged_player->stats);
+            auto* damaged_player_stats = static_cast<PlayerStatsNew*>(damaged_player->stats);
             damaged_player_stats->add_damage_received(real_damage);
 
             if (g_additional_server_config.hit_sounds.enabled) {
@@ -430,9 +430,7 @@ FunHook<bool (const char*, int)> multi_is_level_matching_game_type_hook{
         if (ng_type == RF_GT_CTF) {
             return string_starts_with_ignore_case(filename, "ctf") || string_starts_with_ignore_case(filename, "pctf");
         }
-        else {
-            return string_starts_with_ignore_case(filename, "dm") || string_starts_with_ignore_case(filename, "pdm");
-        }
+        return string_starts_with_ignore_case(filename, "dm") || string_starts_with_ignore_case(filename, "pdm");
     },
 };
 
@@ -542,7 +540,7 @@ FunHook<void(rf::Player*)> multi_spawn_player_server_side_hook{
 static float get_weapon_shot_stats_delta(rf::Weapon* wp)
 {
     int num_projectiles = wp->info->num_projectiles;
-    auto parent_ep = rf::entity_from_handle(wp->parent_handle);
+    rf::Entity* parent_ep = rf::entity_from_handle(wp->parent_handle);
     if (parent_ep && parent_ep->entity_flags2 & 0x1000) { // EF2_SHOTGUN_DOUBLE_BULLET_UNK
         num_projectiles *= 2;
     }
@@ -556,24 +554,24 @@ static bool multi_is_team_game_type()
 
 static void maybe_increment_weapon_hits_stat(int hit_obj_handle, rf::Weapon *wp)
 {
-    auto attacker_ep = rf::entity_from_handle(wp->parent_handle);
+    rf::Entity* attacker_ep = rf::entity_from_handle(wp->parent_handle);
     if (!attacker_ep) {
         return;
     }
 
-    auto hit_ep = rf::entity_from_handle(hit_obj_handle);
+    rf::Entity* hit_ep = rf::entity_from_handle(hit_obj_handle);
     if (!hit_ep) {
         return;
     }
 
-    auto attacker_pp = rf::player_from_entity_handle(attacker_ep->handle);
-    auto hit_pp = rf::player_from_entity_handle(hit_ep->handle);
+    rf::Player* attacker_pp = rf::player_from_entity_handle(attacker_ep->handle);
+    rf::Player* hit_pp = rf::player_from_entity_handle(hit_ep->handle);
     if (!attacker_pp || !hit_pp) {
         return;
     }
 
     if (!multi_is_team_game_type() || attacker_pp->team != hit_pp->team) {
-        auto stats = static_cast<PlayerStatsNew*>(attacker_pp->stats);
+        auto* stats = static_cast<PlayerStatsNew*>(attacker_pp->stats);
         stats->add_shots_hit(get_weapon_shot_stats_delta(wp));
         xlog::trace("hit a_ep %p wp %p h_ep %p", attacker_ep, wp, hit_ep);
     }
@@ -593,9 +591,9 @@ FunHook<void(rf::Entity*, rf::Weapon*)> multi_lag_comp_weapon_fire_hook{
     0x0046F7E0,
     [](rf::Entity *ep, rf::Weapon *wp) {
         multi_lag_comp_weapon_fire_hook.call_target(ep, wp);
-        auto pp = rf::player_from_entity_handle(ep->handle);
+        rf::Player* pp = rf::player_from_entity_handle(ep->handle);
         if (pp && pp->stats) {
-            auto stats = static_cast<PlayerStatsNew*>(pp->stats);
+            auto* stats = static_cast<PlayerStatsNew*>(pp->stats);
             stats->add_shots_fired(get_weapon_shot_stats_delta(wp));
             xlog::trace("fired a_ep %p wp %p", ep, wp);
         }

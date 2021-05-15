@@ -23,7 +23,7 @@ inline xlog::Level parse_level(const char* str)
 
 xlog::LoggerConfig::LoggerConfig()
 {
-    auto level_name = std::getenv("XLOG_LEVEL");
+    const char* level_name = std::getenv("XLOG_LEVEL");
     if (level_name) {
         default_level_ = parse_level(level_name);
     }

@@ -92,7 +92,7 @@ public:
     }
 
 private:
-    void movsb_handler(BaseCodeInjection::Regs& regs)
+    void movsb_handler(BaseCodeInjection::Regs& regs) const
     {
         char* dst_ptr = regs.edi;
         char* src_ptr = regs.esi;
@@ -291,7 +291,7 @@ FunHook<MultiIoPacketHandler> process_game_info_packet_hook{
 
         // If this packet is from the server that we are connected to, use game_info for the netgame name
         // Useful for joining using protocol handler because when we join we do not have the server name available yet
-        auto server_name = data + 1;
+        const char* server_name = data + 1;
         if (addr == rf::netgame.server_addr) {
             rf::netgame.name = server_name;
         }
@@ -449,7 +449,7 @@ FunHook<MultiIoPacketHandler> process_reload_request_packet_hook{
         if (!rf::is_server) {
             return;
         }
-        auto pp = rf::multi_find_player_by_addr(addr);
+        rf::Player* pp = rf::multi_find_player_by_addr(addr);
         int weapon_type;
         std::memcpy(&weapon_type, data, sizeof(weapon_type));
         if (pp) {
@@ -463,7 +463,7 @@ CodeInjection process_obj_update_check_flags_injection{
         0x0047E058,
         [](auto& regs) {
             auto stack_frame = regs.esp + 0x9C;
-            auto pp = addr_as_ref<rf::Player*>(stack_frame - 0x6C);
+            rf::Player* pp = addr_as_ref<rf::Player*>(stack_frame - 0x6C);
             int flags = regs.ebx;
             rf::Entity* ep = regs.edi;
             bool valid = true;
@@ -491,7 +491,7 @@ CodeInjection process_obj_update_weapon_fire_injection{
         rf::Entity* entity = regs.edi;
         int flags = regs.ebx;
         auto stack_frame = regs.esp + 0x9C;
-        auto pp = addr_as_ref<rf::Player*>(stack_frame - 0x6C); // null client-side
+        auto* pp = addr_as_ref<rf::Player*>(stack_frame - 0x6C); // null client-side
 
         constexpr int ouf_fire = 0x40;
         constexpr int ouf_alt_fire = 0x10;
@@ -777,7 +777,7 @@ std::optional<std::string> determine_local_ip_address()
     }
     for (unsigned i = 0; i < ip_table->dwNumEntries; ++i) {
         auto& row = ip_table->table[i];
-        auto addr_bytes = reinterpret_cast<uint8_t*>(&row.dwAddr);
+        auto* addr_bytes = reinterpret_cast<uint8_t*>(&row.dwAddr);
         auto addr_str = string_format("%d.%d.%d.%d", addr_bytes[0], addr_bytes[1], addr_bytes[2], addr_bytes[3]);
         xlog::debug("IpAddrTable: dwIndex %lu dwAddr %s", row.dwIndex, addr_str.c_str());
         if (row.dwIndex == default_route_if_index) {
@@ -839,9 +839,9 @@ bool try_to_auto_forward_port(int port)
 
     wchar_t ip_addr_wide_str[256];
     mbstowcs(ip_addr_wide_str, local_ip_addr_opt.value().c_str(), std::size(ip_addr_wide_str));
-    auto proto = SysAllocString(L"UDP");
-    auto desc = SysAllocString(L"Red Faction");
-    auto internal_client = SysAllocString(ip_addr_wide_str);
+    auto* proto = SysAllocString(L"UDP");
+    auto* desc = SysAllocString(L"Red Faction");
+    auto* internal_client = SysAllocString(ip_addr_wide_str);
     ComPtr<IStaticPortMapping> mapping;
     hr = collection->Add(port, proto, port, internal_client, TRUE, desc, &mapping);
     SysFreeString(proto);

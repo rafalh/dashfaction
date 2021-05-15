@@ -157,7 +157,7 @@ int draw_scoreboard_players(const std::vector<rf::Player*>& players, int x, int 
     rf::Player* blue_flag_player = rf::multi_ctf_get_blue_flag_player();
 
     // Draw the list
-    for (const auto player : players) {
+    for (rf::Player* player : players) {
         if (!dry_run) {
             bool is_local_player = player == rf::player_list;
             if (is_local_player)
@@ -189,7 +189,7 @@ int draw_scoreboard_players(const std::vector<rf::Player*>& players, int x, int 
             int caps = 999;
             int ping = 9999;
 #else
-            auto stats = static_cast<PlayerStatsNew*>(player->stats);
+            auto* stats = static_cast<PlayerStatsNew*>(player->stats);
             int score = stats->score;
             int num_kills = stats->num_kills;
             int num_deaths = stats->num_deaths;
@@ -262,7 +262,9 @@ void draw_scoreboard_internal_new(bool draw)
 #endif
 
     // Animation
-    float anim_progress = 1.0f, progress_w = 1.0f, progress_h = 1.0f;
+    float anim_progress = 1.0f;
+    float progress_w = 1.0f;
+    float progress_h = 1.0f;
     if (g_game_config.scoreboard_anim) {
         unsigned anim_delta = rf::timer_get(1000) - g_anim_ticks;
         if (g_enter_anim)

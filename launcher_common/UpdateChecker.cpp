@@ -9,7 +9,7 @@
 
 #define UPDATE_CHECK_ENDPOINT_URL "https://ravin.tk/api/rf/dashfaction/checkupdate.php"
 
-UpdateChecker::CheckResult UpdateChecker::check()
+UpdateChecker::CheckResult UpdateChecker::check() // NOLINT(readability-convert-member-functions-to-static)
 {
     HttpSession session{"DashFaction"};
     std::string url = UPDATE_CHECK_ENDPOINT_URL "?version=" VERSION_STR;

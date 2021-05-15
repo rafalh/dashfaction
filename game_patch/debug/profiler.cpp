@@ -178,7 +178,7 @@ public:
         m_stats.next_frame();
     }
 
-    [[nodiscard]] ProfilerStats& stats()
+    [[nodiscard]] const ProfilerStats& stats() const
     {
         return m_stats;
     }
@@ -319,7 +319,7 @@ void profiler_log_dump()
     }
     g_profiler_log << rf::frametime << ';';
     for (auto& p : g_profilers) {
-        auto& stats = p->stats();
+        const auto& stats = p->stats();
         g_profiler_log
             << stats.last_frames_summed_times().avg() << ';'
             << stats.current_frame_times().count() << ';'
@@ -372,8 +372,8 @@ ConsoleCommand2 profiler_log_cmd{
 ConsoleCommand2 profiler_print_cmd{
     "d_profiler_print",
     []() {
-        for (auto& p : g_profilers) {
-            auto& stats = p->stats();
+        for (const auto& p : g_profilers) {
+            const auto& stats = p->stats();
             rf::console::printf("%s: avg %d avg_frame %d", p->get_name(),
                 stats.last_times().avg(), stats.last_frames_summed_times().avg());
         }
@@ -384,7 +384,7 @@ ConsoleCommand2 perf_dump_cmd{
     "d_perf_dump",
     []() {
         rf::console::printf("Number of performance aggregators: %u", PerfAggregator::get_instances().size());
-        for (auto& ptr : PerfAggregator::get_instances()) {
+        for (const auto& ptr : PerfAggregator::get_instances()) {
             rf::console::printf("%s: calls %u, duration %u us, avg %u us", ptr->get_name().c_str(),
                 ptr->get_calls(), ptr->get_total_duration_us(), ptr->get_avg_duration_us());
         }
@@ -500,7 +500,7 @@ void profiler_draw_ui()
         DebugNameValueBox dbg_box{10, 220};
         dbg_box.section("Profilers:");
         for (auto& p : g_profilers) {
-            auto& stats = p->stats();
+            const auto& stats = p->stats();
             if (stats.current_frame_times().count() > 1) {
                 dbg_box.printf(p->get_name(), "%d us (%d calls, single %d us)", stats.last_frames_summed_times().avg(),
                     stats.current_frame_times().count(), stats.last_times().avg());

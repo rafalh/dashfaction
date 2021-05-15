@@ -89,7 +89,7 @@ protected:
     static void __thiscall static_handler(rf::console::Command* cmd)
     {
         // Note: this cast actually changes the offset taking into account the vtbl existance
-        auto cmd2 = static_cast<BaseCommand*>(cmd);
+        auto* cmd2 = static_cast<BaseCommand*>(cmd);
         cmd2->handler();
     }
 

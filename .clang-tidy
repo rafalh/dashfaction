@@ -2,6 +2,8 @@
 Checks: >
   clang-analyzer-*,
   -clang-analyzer-security.insecureAPI.strcpy,
+  -clang-analyzer-optin.cplusplus.VirtualCall,
+  -clang-diagnostic-unused-private-field,
 
   modernize-*,
   -modernize-use-trailing-return-type,
@@ -10,12 +12,17 @@ Checks: >
 
   portability-*,
 
-#  bugprone-*,
+  bugprone-*,
+  -bugprone-narrowing-conversions,
 
-#  cppcoreguidelines-*,
-
-#   readability-*,
-#   -readability-magic-numbers
+  readability-*,
+  -readability-magic-numbers,
+  -readability-braces-around-statements,
+  -readability-implicit-bool-conversion,
+  -readability-uppercase-literal-suffix,
+  -readability-named-parameter,
+  -readability-use-anyofallof,
+  -readability-isolate-declaration,
 
 #HeaderFilterRegex: '^((?!/vendor/).)*$'
 #HeaderFilterRegex: '^abc*$'

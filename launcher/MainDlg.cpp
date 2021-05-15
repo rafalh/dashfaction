@@ -33,7 +33,7 @@ BOOL MainDlg::OnInitDialog()
     AttachItem(IDC_UPDATE_STATUS, m_update_status);
 
     // Set header bitmap
-    auto hbm = static_cast<HBITMAP>(GetApp()->LoadImage(MAKEINTRESOURCE(IDB_HEADER), IMAGE_BITMAP, 0, 0, 0));
+    auto* hbm = static_cast<HBITMAP>(GetApp()->LoadImage(MAKEINTRESOURCE(IDB_HEADER), IMAGE_BITMAP, 0, 0, 0));
     m_picture.SetBitmap(hbm);
 
 
@@ -153,7 +153,7 @@ LRESULT MainDlg::OnUpdateCheck(WPARAM wparam, LPARAM lparam)
         int result = MessageBoxA(chk_result.message.c_str(), "Dash Faction update is available!",
                                   MB_OKCANCEL | MB_ICONEXCLAMATION);
         if (result == IDOK) {
-            auto exec_ret = ShellExecuteA(*this, "open", chk_result.url.c_str(), nullptr, nullptr, SW_SHOW);
+            HINSTANCE exec_ret = ShellExecuteA(*this, "open", chk_result.url.c_str(), nullptr, nullptr, SW_SHOW);
             if (reinterpret_cast<int>(exec_ret) <= 32) {
                 xlog::error("ShellExecuteA failed %p", exec_ret);
             }
@@ -196,7 +196,7 @@ void MainDlg::OnBnClickedEditorBtn()
 void MainDlg::OnSupportLinkClick()
 {
     xlog::info("Opening support channel");
-    auto ret = ShellExecuteA(*this, "open", "https://discord.gg/bC2WzvJ", nullptr, nullptr, SW_SHOW);
+    HINSTANCE ret = ShellExecuteA(*this, "open", "https://discord.gg/bC2WzvJ", nullptr, nullptr, SW_SHOW);
     if (reinterpret_cast<int>(ret) <= 32) {
         xlog::error("ShellExecuteA failed %p", ret);
     }

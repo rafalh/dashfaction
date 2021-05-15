@@ -35,7 +35,7 @@ BOOL MainDlg::OnInitDialog()
     AttachItem(IDC_HEADER_PIC, m_picture);
 
     // Set header bitmap
-    auto hbm = static_cast<HBITMAP>(GetApp()->LoadImage(MAKEINTRESOURCE(IDB_HDR_PIC), IMAGE_BITMAP, 0, 0, 0));
+    auto* hbm = static_cast<HBITMAP>(GetApp()->LoadImage(MAKEINTRESOURCE(IDB_HDR_PIC), IMAGE_BITMAP, 0, 0, 0));
     m_picture.SetBitmap(hbm);
 
     return TRUE; // return TRUE unless you set the focus to a control
@@ -45,7 +45,7 @@ INT_PTR MainDlg::DialogProc(UINT msg, WPARAM wparam, LPARAM lparam)
 {
     if (msg == WM_CTLCOLORSTATIC) {
         // Make header background white
-        auto ctrl = reinterpret_cast<HWND>(lparam);
+        auto* ctrl = reinterpret_cast<HWND>(lparam);
         if (ctrl == GetDlgItem(IDC_HEADER_BACKGROUND) || ctrl == GetDlgItem(IDC_HEADER_TEXT))
             return (INT_PTR)GetSysColorBrush(COLOR_WINDOW);
     }
@@ -74,7 +74,7 @@ LRESULT MainDlg::OnNotify([[ maybe_unused ]] WPARAM wparam, LPARAM lparam)
 void MainDlg::OpenArchivedReport()
 {
     auto archived_report_path = GetCrashReportApp()->GetArchivedReportFilePath();
-    auto ret = ShellExecuteA(GetHwnd(), nullptr, archived_report_path.c_str(), nullptr, nullptr, SW_SHOW);
+    auto* ret = ShellExecuteA(GetHwnd(), nullptr, archived_report_path.c_str(), nullptr, nullptr, SW_SHOW);
     if (reinterpret_cast<int>(ret) <= 32) {
         // ShellExecuteA failed - fallback to opening the directory
         CString args;
