@@ -323,14 +323,31 @@ FunHook<MultiIoPacketHandler> process_new_player_packet_hook{
     },
 };
 
+static void verify_player_id_in_packet(char* player_id_ptr, const rf::NetAddr& addr, const char* packet_name)
+{
+    if (!rf::is_server) {
+        // Only server-side checking makes sense because client receives all packets from the server address
+        return;
+    }
+    rf::Player* src_player = rf::multi_find_player_by_addr(addr);
+    if (!src_player) {
+        // should not happen except for join/game_info packets (protected in rf::multi_io_process_packets)
+        assert(false);
+        return;
+    }
+    rf::ubyte real_player_id = src_player->net_data->player_id;
+    if (static_cast<rf::ubyte>(*player_id_ptr) != real_player_id) {
+        xlog::warn("Wrong player ID in %s packet from %s (expected %02X but got %02X)",
+            packet_name, src_player->name.c_str(), real_player_id, *player_id_ptr);
+        *player_id_ptr = real_player_id; // fix player ID
+    }
+}
+
 FunHook<MultiIoPacketHandler> process_left_game_packet_hook{
     0x0047BBC0,
     [](char* data, const rf::NetAddr& addr) {
         // server-side and client-side
-        if (rf::is_server) {
-            rf::Player* src_player = rf::multi_find_player_by_addr(addr);
-            data[0] = src_player->net_data->player_id; // fix player ID
-        }
+        verify_player_id_in_packet(&data[0], addr, "left_game");
         process_left_game_packet_hook.call_target(data, addr);
     },
 };
@@ -340,6 +357,8 @@ FunHook<MultiIoPacketHandler> process_chat_line_packet_hook{
     [](char* data, const rf::NetAddr& addr) {
         // server-side and client-side
         if (rf::is_server) {
+            verify_player_id_in_packet(&data[0], addr, "chat_line");
+
             rf::Player* src_player = rf::multi_find_player_by_addr(addr);
             if (!src_player)
                 return; // shouldnt happen (protected in rf::multi_io_process_packets)
@@ -347,8 +366,6 @@ FunHook<MultiIoPacketHandler> process_chat_line_packet_hook{
             char* msg = data + 2;
             if (check_server_chat_command(msg, src_player))
                 return;
-
-            data[0] = src_player->net_data->player_id; // fix player ID
         }
         process_chat_line_packet_hook.call_target(data, addr);
     },
@@ -358,12 +375,7 @@ FunHook<MultiIoPacketHandler> process_name_change_packet_hook{
     0x0046EAE0,
     [](char* data, const rf::NetAddr& addr) {
         // server-side and client-side
-        if (rf::is_server) {
-            rf::Player* src_player = rf::multi_find_player_by_addr(addr);
-            if (!src_player)
-                return;                               // shouldnt happen (protected in rf::multi_io_process_packets)
-            data[0] = src_player->net_data->player_id; // fix player ID
-        }
+        verify_player_id_in_packet(&data[0], addr, "name_change");
         process_name_change_packet_hook.call_target(data, addr);
     },
 };
@@ -373,11 +385,7 @@ FunHook<MultiIoPacketHandler> process_team_change_packet_hook{
     [](char* data, const rf::NetAddr& addr) {
         // server-side and client-side
         if (rf::is_server) {
-            rf::Player* src_player = rf::multi_find_player_by_addr(addr);
-            if (!src_player)
-                return; // shouldnt happen (protected in rf::multi_io_process_packets)
-
-            data[0] = src_player->net_data->player_id;  // fix player ID
+            verify_player_id_in_packet(&data[0], addr, "team_change");
             data[1] = std::clamp(data[1], '\0', '\1'); // team validation (fixes "green team")
         }
         process_team_change_packet_hook.call_target(data, addr);
@@ -388,12 +396,7 @@ FunHook<MultiIoPacketHandler> process_rate_change_packet_hook{
     0x004807B0,
     [](char* data, const rf::NetAddr& addr) {
         // server-side and client-side?
-        if (rf::is_server) {
-            rf::Player* src_player = rf::multi_find_player_by_addr(addr);
-            if (!src_player)
-                return;                               // shouldnt happen (protected in rf::multi_io_process_packets)
-            data[0] = src_player->net_data->player_id; // fix player ID
-        }
+        verify_player_id_in_packet(&data[0], addr, "rate_change");
         process_rate_change_packet_hook.call_target(data, addr);
     },
 };
