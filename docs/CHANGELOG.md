@@ -38,6 +38,7 @@ Version 1.7.0 (not released yet)
 - Add server config option to give max ammo to the player when a weapon item is picked up
 - Append dedicated server config name to the log file name so logs from multiple servers won't mix
 - Change log entry time format
+- Fix clients randomly losing connection to the server (RF bug)
 
 Version 1.6.1 (released 2021-02-20)
 -----------------------------------

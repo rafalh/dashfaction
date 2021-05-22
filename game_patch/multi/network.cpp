@@ -1055,6 +1055,14 @@ CallHook<void(const void*, size_t, const rf::NetAddr&, rf::Player*)> process_unr
     },
 };
 
+CodeInjection net_rel_work_injection{
+    0x005291F7,
+    [](auto& regs) {
+        // Clear rsocket variable before processing next packet
+        regs.ebp = 0;
+    },
+};
+
 void network_init()
 {
     // Improve simultaneous ping
@@ -1199,4 +1207,9 @@ void network_init()
     multi_io_process_packets_injection.install();
     multi_io_stats_add_hook.install();
     process_unreliable_game_packets_hook.install();
+
+    // Fix rejecting reliable packets from non-connected clients
+    // Fixes players randomly losing connection to the server when some player sends double left game packets
+    // when leaving because of missing level file
+    net_rel_work_injection.install();
 }
