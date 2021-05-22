@@ -39,6 +39,7 @@ Version 1.7.0 (not released yet)
 - Append dedicated server config name to the log file name so logs from multiple servers won't mix
 - Change log entry time format
 - Fix clients randomly losing connection to the server (RF bug)
+- Fix 2D sound regression when EAX is enabled
 
 Version 1.6.1 (released 2021-02-20)
 -----------------------------------

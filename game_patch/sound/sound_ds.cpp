@@ -256,9 +256,6 @@ void snd_ds_apply_patch()
     // Do not use DSPROPSETID_VoiceManager because it is not implemented by dsoal
     write_mem<i8>(0x00521597 + 4, 0);
 
-    // do not set DS3DMODE_DISABLE on 3D buffers in snd_ds_play
-    write_mem<u8>(0x005225D1, asm_opcodes::jmp_rel_short);
-
     // Log information about used sound API
     snd_ds_init_device_leave_injection.install();
 
