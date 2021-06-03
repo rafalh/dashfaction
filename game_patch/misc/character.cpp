@@ -12,7 +12,7 @@ static std::unordered_map<std::string, std::unique_ptr<rf::Skeleton>> skeletons;
 static FunHook<rf::Skeleton*(const char*)> skeleton_find_hook{
     0x00539BE0,
     [](const char *filename) {
-        std::string key{string_to_lower(get_filename_without_ext(filename))};
+        std::string key = string_to_lower(get_filename_without_ext(filename));
         auto it = skeletons.find(key);
         if (it != skeletons.end() && !it->second->mvf_filename[0]) {
             it = skeletons.end();
@@ -43,6 +43,8 @@ static FunHook<void()> skeleton_close_hook{
             auto& skeleton = p.second;
             if (skeleton->internally_allocated && skeleton->animation_data) {
                 rf::rf_free(skeleton->animation_data);
+                skeleton->animation_data = nullptr;
+                skeleton->mvf_filename[0] = '\0';
             }
         }
     },
