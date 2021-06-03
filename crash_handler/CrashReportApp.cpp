@@ -63,7 +63,10 @@ void CrashReportApp::ArchiveReport(const char* crash_dump_filename, const char* 
     zip.add_file(crash_dump_filename, "minidump.dmp");
     zip.add_file(exc_info_filename, "exception.txt");
     const char* log_file_name = "app.log";
-    const char* last_slash_ptr = std::strrchr(m_config.log_file, '\\');
+    const char* last_slash_ptr = std::max(
+        std::strrchr(m_config.log_file, '\\'),
+        std::strrchr(m_config.log_file, '/')
+    );
     if (last_slash_ptr) {
         log_file_name = last_slash_ptr + 1;
     }

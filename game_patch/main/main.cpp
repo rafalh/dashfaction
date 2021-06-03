@@ -213,12 +213,12 @@ static std::string& get_log_file_path_name()
         LocalFree(argv);
 
         if (!dedicated_server_name.empty()) {
-            log_file_path_name = "logs/DashFaction-dedicated-";
+            log_file_path_name = "logs\\DashFaction-dedicated-";
             log_file_path_name += dedicated_server_name;
             log_file_path_name += ".log";
         }
         else {
-            log_file_path_name = "logs/DashFaction.log";
+            log_file_path_name = "logs\\DashFaction.log";
         }
     }
     return log_file_path_name;
