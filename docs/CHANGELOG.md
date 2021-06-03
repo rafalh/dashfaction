@@ -41,6 +41,8 @@ Version 1.7.0 (not released yet)
 - Fix clients randomly losing connection to the server (RF bug)
 - Fix 2D sound regression when EAX is enabled
 - Remove limit of loaded skeletons (*.rfa) - fixes crash when loading L1S1 and then pdm-deathmatch-run-v2
+- Remove memory corruption when too many skeletons/animations are added to a single character
+- Optimize skeleton unlinking when character is destroyed
 
 Version 1.6.1 (released 2021-02-20)
 -----------------------------------

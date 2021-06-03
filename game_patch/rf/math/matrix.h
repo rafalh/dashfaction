@@ -18,5 +18,11 @@ namespace rf
     };
     static_assert(sizeof(Matrix3) == 0x24);
 
+    struct Matrix43
+    {
+        Matrix3 orient;
+        Vector3 origin;
+    };
+
     static auto& identity_matrix = addr_as_ref<Matrix3>(0x0173C388);
 }

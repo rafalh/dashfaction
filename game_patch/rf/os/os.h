@@ -49,4 +49,7 @@ namespace rf
     static auto& console_redraw_counter = addr_as_ref<uint32_t>(0x01775698);
 
     static auto& lan_only_cmd_line_param = addr_as_ref<CmdLineParam>(0x0063F608);
+
+    static auto& debug_error = addr_as_ref<void __cdecl(const char *filename, int line, const char *text)>(0x0050BA90);
+    #define RF_DEBUG_ERROR(text) rf::debug_error(__FILE__, __LINE__, text)
 }

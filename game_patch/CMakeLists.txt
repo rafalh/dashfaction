@@ -54,6 +54,7 @@ set(SRCS
     rf/parse.h
     rf/physics.h
     rf/trigger.h
+    rf/v3d.h
     rf/vmesh.h
     rf/weapon.h
     bmpman/dds.cpp
