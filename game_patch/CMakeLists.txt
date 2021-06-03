@@ -38,6 +38,7 @@ set(SRCS
     rf/player/camera.h
     rf/ai.h
     rf/bmpman.h
+    rf/character.h
     rf/cutscene.h
     rf/clutter.h
     rf/corpse.h
@@ -128,6 +129,7 @@ set(SRCS
     object/monitor.cpp
     object/particle.cpp
     object/obj_light.cpp
+    misc/character.cpp
     misc/high_fps.cpp
     misc/high_fps.h
     misc/misc.cpp

@@ -31,6 +31,7 @@ void g_solid_do_patch();
 void camera_do_patch();
 void ui_apply_patch();
 void game_apply_patch();
+void character_apply_patch();
 
 struct JoinMpGameData
 {
@@ -476,4 +477,5 @@ void misc_init()
     camera_do_patch();
     ui_apply_patch();
     game_apply_patch();
+    character_apply_patch();
 }

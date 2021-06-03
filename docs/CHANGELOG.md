@@ -40,6 +40,7 @@ Version 1.7.0 (not released yet)
 - Change log entry time format
 - Fix clients randomly losing connection to the server (RF bug)
 - Fix 2D sound regression when EAX is enabled
+- Remove limit of loaded skeletons (*.rfa) - fixes crash when loading L1S1 and then pdm-deathmatch-run-v2
 
 Version 1.6.1 (released 2021-02-20)
 -----------------------------------

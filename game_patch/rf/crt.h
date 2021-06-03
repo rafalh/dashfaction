@@ -1,5 +1,7 @@
 #pragma once
 
+#include <patch_common/MemUtils.h>
+
 namespace rf
 {
     // RF stdlib functions are not compatible with GCC
