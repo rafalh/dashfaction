@@ -14,9 +14,6 @@ static FunHook<rf::Skeleton*(const char*)> skeleton_find_hook{
     [](const char *filename) {
         std::string key = string_to_lower(get_filename_without_ext(filename));
         auto it = skeletons.find(key);
-        if (it != skeletons.end() && !it->second->mvf_filename[0]) {
-            it = skeletons.end();
-        }
         if (it == skeletons.end()) {
             auto p = skeletons.insert({key, std::make_unique<rf::Skeleton>()});
             it = p.first;
@@ -26,6 +23,21 @@ static FunHook<rf::Skeleton*(const char*)> skeleton_find_hook{
             xlog::trace("Allocated skeleton: %s (total %u)", filename, skeletons.size());
         }
         return it->second.get();
+    },
+};
+
+static FunHook<void(rf::Skeleton*, bool)> skeleton_unlink_base_hook{
+    0x00539D20,
+    [](rf::Skeleton* sp, bool force_unload) {
+        if (force_unload) {
+            xlog::trace("Unloading skeleton: %s (total %u)", sp->mvf_filename, skeletons.size());
+            if (sp->internally_allocated && sp->animation_data) {
+                rf::rf_free(sp->animation_data);
+            }
+            std::string key = string_to_lower(get_filename_without_ext(sp->mvf_filename));
+            skeletons.erase(key);
+            // Note: skeleton is deallocated here
+        }
     },
 };
 
@@ -53,6 +65,7 @@ static FunHook<void()> skeleton_close_hook{
 void character_apply_patch()
 {
     skeleton_find_hook.install();
+    skeleton_unlink_base_hook.install();
     skeleton_init_hook.install();
     skeleton_close_hook.install();
 }
