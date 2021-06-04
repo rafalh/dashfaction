@@ -4,12 +4,15 @@
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
 #include <common/utils/string-utils.h>
+#include <common/utils/mem-pool.h>
 #include <xlog/xlog.h>
 #include "../rf/character.h"
 #include "../rf/crt.h"
 #include "../rf/os/os.h"
 
-static std::unordered_map<std::string, std::unique_ptr<rf::Skeleton>> skeletons;
+using SkeletonPool = MemPool<rf::Skeleton, 800>;
+static SkeletonPool skeleton_pool;
+static std::unordered_map<std::string, SkeletonPool::Pointer> skeletons;
 
 static void skeleton_cleanup_one(rf::Skeleton* sp)
 {
@@ -25,7 +28,7 @@ static FunHook<rf::Skeleton*(const char*)> skeleton_find_hook{
         std::string key = string_to_lower(get_filename_without_ext(filename));
         auto it = skeletons.find(key);
         if (it == skeletons.end()) {
-            auto p = skeletons.insert({key, std::make_unique<rf::Skeleton>()});
+            auto p = skeletons.insert({key, skeleton_pool.alloc()});
             it = p.first;
             auto& skeleton = it->second;
             std::strncpy(skeleton->mvf_filename, filename, std::size(skeleton->mvf_filename) - 1);
