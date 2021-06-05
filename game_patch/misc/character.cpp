@@ -82,7 +82,7 @@ static FunHook<void()> skeleton_close_hook{
     },
 };
 
-void skeleton_flush()
+static void skeleton_flush()
 {
     auto it = skeletons.begin();
     while (it != skeletons.end()) {
@@ -140,7 +140,7 @@ static CodeInjection character_delete_character_injection{
     },
 };
 
-FunHook<void()> character_level_init_hook{
+static FunHook<void()> character_level_init_hook{
     0x0051D980,
     []() {
         character_level_init_hook.call_target();
