@@ -11,6 +11,7 @@
 #include "../rf/file/file.h"
 #include "../rf/multi.h"
 #include "../rf/sound/sound.h"
+#include "../rf/os/frametime.h"
 #include "../main/main.h"
 #include "../graphics/gr.h"
 
@@ -160,7 +161,6 @@ FunHook<int(const int&, const int&)> server_list_cmp_func_hook{
         return server_list_cmp_func_hook.call_target(index1, index2);
     },
 };
-
 
 CodeInjection menu_draw_background_injection{
     0x00442D5C,

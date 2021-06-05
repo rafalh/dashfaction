@@ -43,6 +43,7 @@ Version 1.7.0 (not released yet)
 - Remove limit of loaded skeletons (*.rfa) - fixes crash when loading L1S1 and then pdm-deathmatch-run-v2
 - Remove memory corruption when too many skeletons/animations are added to a single character
 - Optimize skeleton unlinking when character is destroyed
+- Fix rendering menu background if its height is lower than 480 (for example AQuest Speedrun Edition mod)
 
 Version 1.6.1 (released 2021-02-20)
 -----------------------------------

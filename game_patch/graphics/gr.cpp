@@ -167,6 +167,13 @@ void gr_bitmap_scaled_float(int bitmap_handle, float x, float y, float w, float 
     int bm_w, bm_h;
     rf::bm::get_dimensions(bitmap_handle, &bm_w, &bm_h);
 
+    // For some reason original implementation do not allow UVs > 1
+    sw = std::min(sw, bm_w - sx);
+    sh = std::min(sh, bm_h - sy);
+    if (sw <= 0.0f || sh <= 0.0f) {
+        return;
+    }
+
     rf::gr::Vertex verts[4];
     rf::gr::Vertex* verts_ptrs[4] = {&verts[0], &verts[1], &verts[2], &verts[3]};
     float sx_left = rf::gr::screen.offset_x + x - 0.5f;
