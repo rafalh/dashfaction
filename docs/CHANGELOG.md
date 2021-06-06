@@ -1,8 +1,8 @@
 DashFaction Changelog
 =====================
 
-Version 1.7.0 (not released yet)
---------------------------------
+Version 1.7.0 (released 2021-06-05)
+-----------------------------------
 - Change maximal value of Max Kills dedicated server config to 999
 - Support Team DM scores above 255
 - Added additional textures from base game to level editor texture browser (contribution from Goober)
