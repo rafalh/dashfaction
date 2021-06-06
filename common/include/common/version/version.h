@@ -17,7 +17,7 @@
 #define PRODUCT_NAME           "Dash Faction"
 #define VERSION_MAJOR          1
 #define VERSION_MINOR          7
-#define VERSION_PATCH          0
+#define VERSION_PATCH          1
 #define VERSION_TYPE           VERSION_TYPE_DEV
 #define VERSION_TYPE_REVISION  1
 
