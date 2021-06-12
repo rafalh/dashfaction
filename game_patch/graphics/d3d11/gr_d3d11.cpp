@@ -101,7 +101,7 @@ void D3D11Renderer::init_back_buffer()
 {
     // Get a pointer to the back buffer
     ComPtr<ID3D11Texture2D> back_buffer;
-    HRESULT hr = swap_chain_->GetBuffer(0, IID_ID3D11Texture2D, (LPVOID*)&back_buffer);
+    HRESULT hr = swap_chain_->GetBuffer(0, IID_ID3D11Texture2D, reinterpret_cast<LPVOID*>(&back_buffer));
     check_hr(hr, "GetBuffer");
 
     // Create a render-target view
@@ -142,7 +142,8 @@ void D3D11Renderer::init_vertex_shader()
     int size = file.size();
     auto shader_data = std::make_unique<std::byte[]>(size);
     int bytes_read = file.read(shader_data.get(), size);
-    xlog::info("Vertex shader size %d file size %d first byte %02x", bytes_read, size, (ubyte)shader_data.get()[0]);
+    xlog::info("Vertex shader size %d file size %d first byte %02x", bytes_read, size,
+        static_cast<ubyte>(shader_data.get()[0]));
     HRESULT hr = device_->CreateVertexShader(shader_data.get(), size, nullptr, &vertex_shader_);
     check_hr(hr, "CreateVertexShader");
 
