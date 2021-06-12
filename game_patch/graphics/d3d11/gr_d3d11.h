@@ -148,6 +148,7 @@ public:
     int lock(int bm_handle, int section, rf::gr::LockInfo *lock, int mode);
     void unlock(rf::gr::LockInfo *lock);
     void tmapper(int nv, rf::gr::Vertex **vertices, int tmap_flags, rf::gr::Mode mode);
+    HRESULT get_device_removed_reason();
 
 private:
     void init_device(HWND hwnd, HMODULE d3d11_lib);
@@ -172,9 +173,9 @@ private:
 
 static inline void check_hr(HRESULT hr, const char* fun)
 {
+    void gr_d3d11_error(HRESULT hr, const char* fun);
     if (FAILED(hr)) {
-        xlog::error("%s failed: %lx", fun, hr);
-        RF_DEBUG_ERROR("D3D11 subsystem fatal error");
+        gr_d3d11_error(hr, fun);
     }
 }
 

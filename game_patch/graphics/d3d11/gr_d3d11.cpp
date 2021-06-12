@@ -68,6 +68,10 @@ void D3D11Renderer::init_device(HWND hwnd, HMODULE d3d11_lib)
     // };
 
     DWORD flags = 0;
+//#ifndef NDEBUG
+    // Requires Windows 10 SDK
+    //flags |= D3D11_CREATE_DEVICE_DEBUG;
+//#endif
     D3D_FEATURE_LEVEL feature_level_supported;
     HRESULT hr = pD3D11CreateDeviceAndSwapChain(
         nullptr,
@@ -85,7 +89,10 @@ void D3D11Renderer::init_device(HWND hwnd, HMODULE d3d11_lib)
         &feature_level_supported,
         &context_
     );
-    check_hr(hr, "pD3D11CreateDeviceAndSwapChain");
+    check_hr(hr, "D3D11CreateDeviceAndSwapChain");
+
+    void gr_d3d11_init_error(ID3D11Device* device);
+    gr_d3d11_init_error(device_);
 
     xlog::info("D3D11 feature level: 0x%x", feature_level_supported);
 }
@@ -308,6 +315,11 @@ void D3D11Renderer::tmapper(int nv, rf::gr::Vertex **vertices, int tmap_flags, r
     batch_manager_->tmapper(nv, vertices, tmap_flags, mode);
 }
 
+HRESULT D3D11Renderer::get_device_removed_reason()
+{
+    return device_ ? device_->GetDeviceRemovedReason() : E_FAIL;
+}
+
 void gr_d3d11_msg_handler(UINT msg, WPARAM w_param, LPARAM l_param)
 {
     switch (msg) {
@@ -380,6 +392,11 @@ int gr_d3d11_lock(int bm_handle, int section, gr::LockInfo *lock, int mode)
 void gr_d3d11_unlock(gr::LockInfo *lock)
 {
     d3d11_renderer->unlock(lock);
+}
+
+HRESULT gr_d3d11_get_device_removed_reason()
+{
+    return d3d11_renderer ? d3d11_renderer->get_device_removed_reason() : E_FAIL;
 }
 
 void gr_d3d11_apply_patch()

@@ -76,6 +76,7 @@ set(SRCS
     graphics/d3d11/gr_d3d11_texture.cpp
     graphics/d3d11/gr_d3d11_batch.cpp
     graphics/d3d11/gr_d3d11_context.cpp
+    graphics/d3d11/gr_d3d11_error.cpp
     input/input.h
     input/mouse.cpp
     input/key.cpp
