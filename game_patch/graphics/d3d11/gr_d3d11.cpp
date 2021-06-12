@@ -34,87 +34,112 @@ struct PixelShaderConstantBuffer
 
 // constexpr ubyte GR_DIRECT3D11 = 0x7A;
 
-ComPtr<ID3D11Device> d3d11_device;
-ComPtr<IDXGISwapChain> d3d11_swap_chain;
-ComPtr<ID3D11DeviceContext> d3d11_context;
-ComPtr<ID3D11RenderTargetView> d3d11_back_buffer_view;
-ComPtr<ID3D11DepthStencilView> d3d11_depth_stencil_buffer_view;
-ComPtr<ID3D11Buffer> d3d11_dynamic_vb;
-ComPtr<ID3D11Buffer> d3d11_dynamic_ib;
-ComPtr<ID3D11Buffer> d3d11_ps_cbuffer;
-ComPtr<ID3D11VertexShader> d3d11_vertex_shader;
-ComPtr<ID3D11PixelShader> d3d11_pixel_shader;
-ComPtr<ID3D11InputLayout> d3d11_input_layout;
-std::unordered_map<int, ComPtr<ID3D11ShaderResourceView>> d3d11_texture_cache;
-std::unordered_map<int, ComPtr<ID3D11SamplerState>> d3d11_sampler_state_cache;
-std::unordered_map<int, ComPtr<ID3D11BlendState>> d3d11_blend_state_cache;
-std::unordered_map<int, ComPtr<ID3D11DepthStencilState>> d3d11_depth_stencil_state_cache;
-HMODULE d3d11_lib;
-GpuVertex* d3d11_mapped_vb;
-ushort* d3d11_mapped_ib;
-D3D11_PRIMITIVE_TOPOLOGY d3d11_batch_primitive_topology;
-int d3d11_batch_current_vertex = 0;
-int d3d11_batch_start_index = 0;
-int d3d11_batch_current_index = 0;
-int d3d11_batch_textures[2] = { -1, -1 };
-gr::Mode d3d11_batch_mode{
-    gr::TEXTURE_SOURCE_NONE,
-    gr::COLOR_SOURCE_VERTEX,
-    gr::ALPHA_SOURCE_VERTEX,
-    gr::ALPHA_BLEND_NONE,
-    gr::ZBUFFER_TYPE_NONE,
-    gr::FOG_ALLOWED,
+class D3D11Renderer
+{
+public:
+    D3D11Renderer(HWND hwnd, HMODULE d3d11_lib);
+    ~D3D11Renderer();
+    void window_active();
+    void window_inactive();
+    void set_mode(gr::Mode mode);
+    void set_texture(int slot, int bm_handle);
+    void tmapper(int nv, gr::Vertex **vertices, int tmap_flags, gr::Mode mode);
+    void bitmap(int bitmap_handle, int x, int y, int w, int h, int sx, int sy, int sw, int sh, bool flip_x, bool flip_y, gr::Mode mode);
+    void clear();
+    void zbuffer_clear();
+    void set_clip();
+    void flip();
+    int lock(int bm_handle, int section, gr::LockInfo *lock, int mode);
+    void unlock(gr::LockInfo *lock);
+
+private:
+    void init_device(HWND hwnd, HMODULE d3d11_lib);
+    void init_back_buffer();
+    void init_depth_stencil_buffer();
+    void create_dynamic_vb();
+    void create_dynamic_ib();
+    void init_constant_buffer();
+    void init_vertex_shader();
+    void init_pixel_shader();
+    void init_rasterizer_state();
+    void map_dynamic_buffers(bool vb_full, bool ib_full);
+    void unmap_dynamic_buffers();
+    int pack_color(int r, int g, int b, int a);
+    DXGI_FORMAT get_dxgi_format(bm::Format fmt);
+    ComPtr<ID3D11ShaderResourceView> create_texture(bm::Format fmt, int w, int h, ubyte* bits, ubyte* pal);
+    ComPtr<ID3D11ShaderResourceView> create_texture(int bm_handle);
+    ID3D11ShaderResourceView* lookup_texture(int bm_handle);
+    ID3D11SamplerState* lookup_sampler_state(gr::Mode mode, int slot);
+    ID3D11BlendState* lookup_blend_state(gr::Mode mode);
+    ID3D11DepthStencilState* lookup_depth_stencil_state(gr::Mode mode);
+    void batch_flush();
+
+    ComPtr<ID3D11Device> device_;
+    ComPtr<IDXGISwapChain> swap_chain_;
+    ComPtr<ID3D11DeviceContext> context_;
+    ComPtr<ID3D11RenderTargetView> back_buffer_view_;
+    ComPtr<ID3D11DepthStencilView> depth_stencil_buffer_view_;
+    ComPtr<ID3D11Buffer> dynamic_vb_;
+    ComPtr<ID3D11Buffer> dynamic_ib_;
+    ComPtr<ID3D11Buffer> ps_cbuffer_;
+    ComPtr<ID3D11VertexShader> vertex_shader_;
+    ComPtr<ID3D11PixelShader> pixel_shader_;
+    ComPtr<ID3D11InputLayout> input_layout_;
+    std::unordered_map<int, ComPtr<ID3D11ShaderResourceView>> texture_cache_;
+    std::unordered_map<int, ComPtr<ID3D11SamplerState>> sampler_state_cache_;
+    std::unordered_map<int, ComPtr<ID3D11BlendState>> blend_state_cache_;
+    std::unordered_map<int, ComPtr<ID3D11DepthStencilState>> depth_stencil_state_cache_;
+    GpuVertex* mapped_vb_;
+    ushort* mapped_ib_;
+    D3D11_PRIMITIVE_TOPOLOGY batch_primitive_topology_;
+    int batch_current_vertex_ = 0;
+    int batch_start_index_ = 0;
+    int batch_current_index_ = 0;
+    int batch_textures_[2] = { -1, -1 };
+    gr::Mode batch_mode_{
+        gr::TEXTURE_SOURCE_NONE,
+        gr::COLOR_SOURCE_VERTEX,
+        gr::ALPHA_SOURCE_VERTEX,
+        gr::ALPHA_BLEND_NONE,
+        gr::ZBUFFER_TYPE_NONE,
+        gr::FOG_ALLOWED,
+    };
 };
+
+static HMODULE d3d11_lib;
+static std::optional<D3D11Renderer> d3d11_renderer;
 
 constexpr int d3d11_batch_max_vertex = 6000;
 constexpr int d3d11_batch_max_index = 10000;
 constexpr float d3d11_zm = 1 / 1700.0f;
 
-void check_hr(HRESULT hr, const char* fun)
+static void check_hr(HRESULT hr, const char* fun)
 {
-    void gr_d3d11_close();
     if (FAILED(hr)) {
         xlog::error("%s failed: %lx", fun, hr);
-        //abort();
-        gr_d3d11_close();
-        ExitProcess(1);
+        RF_DEBUG_ERROR("D3D11 subsystem fatal error");
     }
 }
 
-void gr_d3d11_window_active()
+void D3D11Renderer::window_active()
 {
     if (gr::screen.window_mode == gr::FULLSCREEN) {
         xlog::warn("gr_d3d11_window_active SetFullscreenState");
-        HRESULT hr = d3d11_swap_chain->SetFullscreenState(TRUE, nullptr);
+        HRESULT hr = swap_chain_->SetFullscreenState(TRUE, nullptr);
         check_hr(hr, "SetFullscreenState");
     }
 }
 
-void gr_d3d11_window_inactive()
+void D3D11Renderer::window_inactive()
 {
     if (gr::screen.window_mode == gr::FULLSCREEN) {
         xlog::warn("gr_d3d11_window_inactive SetFullscreenState");
-        HRESULT hr = d3d11_swap_chain->SetFullscreenState(FALSE, nullptr);
+        HRESULT hr = swap_chain_->SetFullscreenState(FALSE, nullptr);
         check_hr(hr, "SetFullscreenState");
     }
 }
 
-void gr_d3d11_msg_handler(UINT msg, WPARAM w_param, LPARAM l_param)
-{
-    switch (msg) {
-    case WM_ACTIVATEAPP:
-        if (w_param) {
-            xlog::warn("active %x %lx", w_param, l_param);
-            gr_d3d11_window_active();
-        }
-        else {
-            xlog::warn("inactive %x %lx", w_param, l_param);
-            gr_d3d11_window_inactive();
-        }
-    }
-}
-
-static void gr_d3d11_init_device(HWND hwnd)
+void D3D11Renderer::init_device(HWND hwnd, HMODULE d3d11_lib)
 {
     DXGI_SWAP_CHAIN_DESC sd;
     ZeroMemory(&sd, sizeof(sd));
@@ -132,12 +157,6 @@ static void gr_d3d11_init_device(HWND hwnd)
     sd.Windowed = gr::screen.window_mode == gr::WINDOWED;
     sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
     sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
-
-    d3d11_lib = LoadLibraryW(L"d3d11.dll");
-    if (!d3d11_lib) {
-        xlog::error("Failed to load d3d11.dll");
-        abort();
-    }
 
     auto pD3D11CreateDeviceAndSwapChain = reinterpret_cast<PFN_D3D11_CREATE_DEVICE_AND_SWAP_CHAIN>(
         reinterpret_cast<void(*)()>(GetProcAddress(d3d11_lib, "D3D11CreateDeviceAndSwapChain")));
@@ -169,29 +188,29 @@ static void gr_d3d11_init_device(HWND hwnd)
         0,
         D3D11_SDK_VERSION,
         &sd,
-        &d3d11_swap_chain,
-        &d3d11_device,
+        &swap_chain_,
+        &device_,
         &feature_level_supported,
-        &d3d11_context
+        &context_
     );
     check_hr(hr, "pD3D11CreateDeviceAndSwapChain");
 
     xlog::info("D3D11 feature level: 0x%x", feature_level_supported);
 }
 
-static void gr_d3d11_init_back_buffer()
+void D3D11Renderer::init_back_buffer()
 {
     // Get a pointer to the back buffer
     ComPtr<ID3D11Texture2D> back_buffer;
-    HRESULT hr = d3d11_swap_chain->GetBuffer(0, IID_ID3D11Texture2D, (LPVOID*)&back_buffer);
+    HRESULT hr = swap_chain_->GetBuffer(0, IID_ID3D11Texture2D, (LPVOID*)&back_buffer);
     check_hr(hr, "GetBuffer");
 
     // Create a render-target view
-    hr = d3d11_device->CreateRenderTargetView(back_buffer, NULL, &d3d11_back_buffer_view);
+    hr = device_->CreateRenderTargetView(back_buffer, NULL, &back_buffer_view_);
     check_hr(hr, "CreateRenderTargetView");
 }
 
-static void gr_d3d11_init_depth_stencil_buffer()
+void D3D11Renderer::init_depth_stencil_buffer()
 {
     D3D11_TEXTURE2D_DESC depth_stencil_desc;
     ZeroMemory(&depth_stencil_desc, sizeof(depth_stencil_desc));
@@ -207,14 +226,14 @@ static void gr_d3d11_init_depth_stencil_buffer()
     depth_stencil_desc.CPUAccessFlags = 0;
     depth_stencil_desc.MiscFlags = 0;
     ComPtr<ID3D11Texture2D> depth_stencil;
-    HRESULT hr = d3d11_device->CreateTexture2D(&depth_stencil_desc, nullptr, &depth_stencil);
+    HRESULT hr = device_->CreateTexture2D(&depth_stencil_desc, nullptr, &depth_stencil);
     check_hr(hr, "CreateTexture2D");
 
-    hr = d3d11_device->CreateDepthStencilView(depth_stencil, nullptr, &d3d11_depth_stencil_buffer_view);
+    hr = device_->CreateDepthStencilView(depth_stencil, nullptr, &depth_stencil_buffer_view_);
     check_hr(hr, "CreateDepthStencilView");
 }
 
-static void gr_d3d11_create_dynamic_vb()
+void D3D11Renderer::create_dynamic_vb()
 {
     // Fill in a buffer description.
     D3D11_BUFFER_DESC buffer_desc;
@@ -227,11 +246,11 @@ static void gr_d3d11_create_dynamic_vb()
     buffer_desc.StructureByteStride = 0;
 
     // Create the vertex buffer.
-    HRESULT hr = d3d11_device->CreateBuffer(&buffer_desc, nullptr, &d3d11_dynamic_vb);
+    HRESULT hr = device_->CreateBuffer(&buffer_desc, nullptr, &dynamic_vb_);
     check_hr(hr, "CreateBuffer");
 }
 
-static void gr_d3d11_create_dynamic_ib()
+void D3D11Renderer::create_dynamic_ib()
 {
     // Fill in a buffer description.
     D3D11_BUFFER_DESC buffer_desc;
@@ -244,11 +263,11 @@ static void gr_d3d11_create_dynamic_ib()
     buffer_desc.StructureByteStride = 0;
 
     // Create the vertex buffer.
-    HRESULT hr = d3d11_device->CreateBuffer(&buffer_desc, nullptr, &d3d11_dynamic_ib);
+    HRESULT hr = device_->CreateBuffer(&buffer_desc, nullptr, &dynamic_ib_);
     check_hr(hr, "CreateBuffer");
 }
 
-static void gr_d3d11_init_constant_buffer()
+void D3D11Renderer::init_constant_buffer()
 {
     D3D11_BUFFER_DESC buffer_desc;
     ZeroMemory(&buffer_desc, sizeof(buffer_desc));
@@ -266,14 +285,14 @@ static void gr_d3d11_init_constant_buffer()
     subres_data.SysMemPitch = 0;
     subres_data.SysMemSlicePitch = 0;
 
-    HRESULT hr = d3d11_device->CreateBuffer(&buffer_desc, &subres_data, &d3d11_ps_cbuffer);
+    HRESULT hr = device_->CreateBuffer(&buffer_desc, &subres_data, &ps_cbuffer_);
     check_hr(hr, "CreateBuffer");
 
-    ID3D11Buffer* ps_cbuffers[] = { d3d11_ps_cbuffer };
-    d3d11_context->PSSetConstantBuffers(0, std::size(ps_cbuffers), ps_cbuffers);
+    ID3D11Buffer* ps_cbuffers[] = { ps_cbuffer_ };
+    context_->PSSetConstantBuffers(0, std::size(ps_cbuffers), ps_cbuffers);
 }
 
-static void gr_d3d11_init_vertex_shader()
+void D3D11Renderer::init_vertex_shader()
 {
     rf::File file;
     if (file.open("default_vs.bin") != 0) {
@@ -284,7 +303,7 @@ static void gr_d3d11_init_vertex_shader()
     auto shader_data = std::make_unique<std::byte[]>(size);
     int bytes_read = file.read(shader_data.get(), size);
     xlog::info("Vertex shader size %d file size %d first byte %02x", bytes_read, size, (ubyte)shader_data.get()[0]);
-    HRESULT hr = d3d11_device->CreateVertexShader(shader_data.get(), size, nullptr, &d3d11_vertex_shader);
+    HRESULT hr = device_->CreateVertexShader(shader_data.get(), size, nullptr, &vertex_shader_);
     check_hr(hr, "CreateVertexShader");
 
     D3D11_INPUT_ELEMENT_DESC desc[] = {
@@ -295,20 +314,20 @@ static void gr_d3d11_init_vertex_shader()
         { "COLOR", 0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
     };
     xlog::info("layout size %d", std::size(desc));
-    hr = d3d11_device->CreateInputLayout(
+    hr = device_->CreateInputLayout(
         desc,
         std::size(desc),
         shader_data.get(),
         size,
-        &d3d11_input_layout
+        &input_layout_
     );
     check_hr(hr, "CreateInputLayout");
 
-    d3d11_context->IASetInputLayout(d3d11_input_layout);
-    d3d11_context->VSSetShader(d3d11_vertex_shader, nullptr, 0);
+    context_->IASetInputLayout(input_layout_);
+    context_->VSSetShader(vertex_shader_, nullptr, 0);
 }
 
-static void gr_d3d11_init_pixel_shader()
+void D3D11Renderer::init_pixel_shader()
 {
     rf::File file;
     if (file.open("default_ps.bin") != 0) {
@@ -318,80 +337,60 @@ static void gr_d3d11_init_pixel_shader()
     int size = file.size();
     auto shader_data = std::make_unique<std::byte[]>(size);
     file.read(shader_data.get(), size);
-    HRESULT hr = d3d11_device->CreatePixelShader(shader_data.get(), size, nullptr, &d3d11_pixel_shader);
+    HRESULT hr = device_->CreatePixelShader(shader_data.get(), size, nullptr, &pixel_shader_);
     check_hr(hr, "CreatePixelShader");
 
-    d3d11_context->PSSetShader(d3d11_pixel_shader, nullptr, 0);
+    context_->PSSetShader(pixel_shader_, nullptr, 0);
 }
 
-static void gr_d3d11_init_rasterizer_state()
+void D3D11Renderer::init_rasterizer_state()
 {
     CD3D11_RASTERIZER_DESC desc{CD3D11_DEFAULT{}};
     desc.CullMode = D3D11_CULL_NONE;
     ComPtr<ID3D11RasterizerState> rasterizer_state;
-    HRESULT hr = d3d11_device->CreateRasterizerState(&desc, &rasterizer_state);
+    HRESULT hr = device_->CreateRasterizerState(&desc, &rasterizer_state);
     check_hr(hr, "CreateRasterizerState");
-    d3d11_context->RSSetState(rasterizer_state);
+    context_->RSSetState(rasterizer_state);
 }
 
-void gr_d3d11_init(HWND hwnd)
+D3D11Renderer::D3D11Renderer(HWND hwnd, HMODULE d3d11_lib)
 {
-    xlog::info("gr_d3d11_init");
-
-    gr_d3d11_init_device(hwnd);
-    gr_d3d11_init_back_buffer();
-    gr_d3d11_init_depth_stencil_buffer();
-    gr_d3d11_init_rasterizer_state();
-    gr_d3d11_init_vertex_shader();
-    gr_d3d11_init_pixel_shader();
-    gr_d3d11_create_dynamic_vb();
-    gr_d3d11_create_dynamic_ib();
-    gr_d3d11_init_constant_buffer();
-    os_add_msg_handler(gr_d3d11_msg_handler);
+    init_device(hwnd, d3d11_lib);
+    init_back_buffer();
+    init_depth_stencil_buffer();
+    init_rasterizer_state();
+    init_vertex_shader();
+    init_pixel_shader();
+    create_dynamic_vb();
+    create_dynamic_ib();
+    init_constant_buffer();
 
     // Bind the view
-    ID3D11RenderTargetView* render_targets[] = { d3d11_back_buffer_view };
-    d3d11_context->OMSetRenderTargets(std::size(render_targets), render_targets, d3d11_depth_stencil_buffer_view);
+    ID3D11RenderTargetView* render_targets[] = { back_buffer_view_ };
+    context_->OMSetRenderTargets(std::size(render_targets), render_targets, depth_stencil_buffer_view_);
 
     // TODO: move
     UINT stride = sizeof(GpuVertex);
     UINT offset = 0;
-    ID3D11Buffer* vertex_buffers[] = { d3d11_dynamic_vb };
-    d3d11_context->IASetVertexBuffers(0, std::size(vertex_buffers), vertex_buffers, &stride, &offset);
-    d3d11_context->IASetIndexBuffer(d3d11_dynamic_ib, DXGI_FORMAT_R16_UINT, 0);
+    ID3D11Buffer* vertex_buffers[] = { dynamic_vb_ };
+    context_->IASetVertexBuffers(0, std::size(vertex_buffers), vertex_buffers, &stride, &offset);
+    context_->IASetIndexBuffer(dynamic_ib_, DXGI_FORMAT_R16_UINT, 0);
 
     //gr::screen.mode = GR_DIRECT3D11;
     gr::screen.depthbuffer_type = gr::DEPTHBUFFER_Z;
 }
 
-void gr_d3d11_close()
+D3D11Renderer::~D3D11Renderer()
 {
-    xlog::info("gr_d3d11_close");
-    if (d3d11_context) {
-        d3d11_context->ClearState();
+    if (context_) {
+        context_->ClearState();
     }
-    d3d11_texture_cache.clear();
-    d3d11_sampler_state_cache.clear();
-    d3d11_blend_state_cache.clear();
-    d3d11_depth_stencil_state_cache.clear();
-    d3d11_dynamic_vb.release();
-    d3d11_dynamic_ib.release();
-    d3d11_ps_cbuffer.release();
-    d3d11_input_layout.release();
-    d3d11_vertex_shader.release();
-    d3d11_pixel_shader.release();
-    d3d11_back_buffer_view.release();
-    d3d11_depth_stencil_buffer_view.release();
     if (gr::screen.window_mode == gr::FULLSCREEN) {
-        d3d11_swap_chain->SetFullscreenState(FALSE, nullptr);
+        swap_chain_->SetFullscreenState(FALSE, nullptr);
     }
-    d3d11_swap_chain.release();
-    d3d11_context.release();
-    d3d11_device.release();
-    FreeLibrary(d3d11_lib);
 }
 
-static void gr_d3d11_map_dynamic_buffers(bool vb_full, bool ib_full)
+void D3D11Renderer::map_dynamic_buffers(bool vb_full, bool ib_full)
 {
     D3D11_MAPPED_SUBRESOURCE mapped_vb;
     D3D11_MAPPED_SUBRESOURCE mapped_ib;
@@ -399,36 +398,36 @@ static void gr_d3d11_map_dynamic_buffers(bool vb_full, bool ib_full)
     ZeroMemory(&mapped_ib, sizeof(D3D11_MAPPED_SUBRESOURCE));
     auto vb_map_type = vb_full ? D3D11_MAP_WRITE_DISCARD : D3D11_MAP_WRITE_NO_OVERWRITE;
     auto ib_map_type = ib_full ? D3D11_MAP_WRITE_DISCARD : D3D11_MAP_WRITE_NO_OVERWRITE;
-    HRESULT hr = d3d11_context->Map(d3d11_dynamic_vb, 0, vb_map_type, 0, &mapped_vb);
+    HRESULT hr = context_->Map(dynamic_vb_, 0, vb_map_type, 0, &mapped_vb);
     check_hr(hr, "Map VB");
-    hr = d3d11_context->Map(d3d11_dynamic_ib, 0, ib_map_type, 0, &mapped_ib);
+    hr = context_->Map(dynamic_ib_, 0, ib_map_type, 0, &mapped_ib);
     check_hr(hr, "Map IB");
-    d3d11_mapped_vb = reinterpret_cast<GpuVertex*>(mapped_vb.pData);
-    d3d11_mapped_ib = reinterpret_cast<ushort*>(mapped_ib.pData);
+    mapped_vb_ = reinterpret_cast<GpuVertex*>(mapped_vb.pData);
+    mapped_ib_ = reinterpret_cast<ushort*>(mapped_ib.pData);
     if (vb_full) {
-        d3d11_batch_current_vertex = 0;
+        batch_current_vertex_ = 0;
     }
     if (ib_full) {
-        d3d11_batch_current_index = 0;
-        d3d11_batch_start_index = 0;
+        batch_current_index_ = 0;
+        batch_start_index_ = 0;
     }
 }
 
-static void gr_d3d11_unmap_dynamic_buffers()
+void D3D11Renderer::unmap_dynamic_buffers()
 {
-    d3d11_context->Unmap(d3d11_dynamic_vb, 0);
-    d3d11_context->Unmap(d3d11_dynamic_ib, 0);
-    d3d11_mapped_vb = nullptr;
-    d3d11_mapped_ib = nullptr;
+    context_->Unmap(dynamic_vb_, 0);
+    context_->Unmap(dynamic_ib_, 0);
+    mapped_vb_ = nullptr;
+    mapped_ib_ = nullptr;
 }
 
-static inline int pack_color(int r, int g, int b, int a)
+inline int D3D11Renderer::pack_color(int r, int g, int b, int a)
 {
     // assume little endian
     return (a << 24) | (b << 16) | (g << 8) | r;
 }
 
-static DXGI_FORMAT get_dxgi_format(bm::Format fmt)
+DXGI_FORMAT D3D11Renderer::get_dxgi_format(bm::Format fmt)
 {
     switch (fmt) {
         case bm::FORMAT_565_RGB: return DXGI_FORMAT_B5G6R5_UNORM;
@@ -442,7 +441,7 @@ static DXGI_FORMAT get_dxgi_format(bm::Format fmt)
     }
 }
 
-static ComPtr<ID3D11ShaderResourceView> gr_d3d11_create_texture(bm::Format fmt, int w, int h, ubyte* bits, ubyte* pal)
+ComPtr<ID3D11ShaderResourceView> D3D11Renderer::create_texture(bm::Format fmt, int w, int h, ubyte* bits, ubyte* pal)
 {
     D3D11_TEXTURE2D_DESC desc;
     ZeroMemory(&desc, sizeof(desc));
@@ -476,17 +475,17 @@ static ComPtr<ID3D11ShaderResourceView> gr_d3d11_create_texture(bm::Format fmt, 
     }
 
     ComPtr<ID3D11Texture2D> texture;
-    HRESULT hr = d3d11_device->CreateTexture2D(&desc, &subres_data, &texture);
+    HRESULT hr = device_->CreateTexture2D(&desc, &subres_data, &texture);
     check_hr(hr, "CreateTexture2D");
 
     ComPtr<ID3D11ShaderResourceView> texture_view;
-    hr = d3d11_device->CreateShaderResourceView(texture, nullptr, &texture_view);
+    hr = device_->CreateShaderResourceView(texture, nullptr, &texture_view);
     check_hr(hr, "CreateShaderResourceView");
 
     return texture_view;
 }
 
-static ComPtr<ID3D11ShaderResourceView> gr_d3d11_create_texture(int bm_handle)
+ComPtr<ID3D11ShaderResourceView> D3D11Renderer::create_texture(int bm_handle)
 {
     xlog::info("Creating texture %s format %d", bm::get_filename(bm_handle), bm::get_format(bm_handle));
 
@@ -501,29 +500,29 @@ static ComPtr<ID3D11ShaderResourceView> gr_d3d11_create_texture(int bm_handle)
         return {};
     }
 
-    auto texture_view = gr_d3d11_create_texture(fmt, w, h, bm_bits, bm_pal);
+    auto texture_view = create_texture(fmt, w, h, bm_bits, bm_pal);
 
     bm::unlock(bm_handle);
 
     return texture_view;
 }
 
-static ID3D11ShaderResourceView* gr_d3d11_lookup_texture(int bm_handle)
+ID3D11ShaderResourceView* D3D11Renderer::lookup_texture(int bm_handle)
 {
     if (bm_handle < 0) {
         return nullptr;
     }
-    const auto& it = d3d11_texture_cache.find(bm_handle);
-    if (it != d3d11_texture_cache.end()) {
+    const auto& it = texture_cache_.find(bm_handle);
+    if (it != texture_cache_.end()) {
         return it->second;
     }
 
-    ComPtr<ID3D11ShaderResourceView> texture_view = gr_d3d11_create_texture(bm_handle);
-    d3d11_texture_cache.insert({bm_handle, texture_view});
+    ComPtr<ID3D11ShaderResourceView> texture_view = create_texture(bm_handle);
+    texture_cache_.insert({bm_handle, texture_view});
     return texture_view;
 }
 
-ID3D11SamplerState* gr_d3d11_lookup_sampler_state(gr::Mode mode, int slot)
+ID3D11SamplerState* D3D11Renderer::lookup_sampler_state(gr::Mode mode, int slot)
 {
     auto ts = mode.get_texture_source();
     if (ts == gr::TEXTURE_SOURCE_NONE) {
@@ -535,8 +534,8 @@ ID3D11SamplerState* gr_d3d11_lookup_sampler_state(gr::Mode mode, int slot)
     }
 
     int cache_key = static_cast<int>(ts);
-    const auto& it = d3d11_sampler_state_cache.find(cache_key);
-    if (it != d3d11_sampler_state_cache.end()) {
+    const auto& it = sampler_state_cache_.find(cache_key);
+    if (it != sampler_state_cache_.end()) {
         return it->second;
     }
 
@@ -573,20 +572,20 @@ ID3D11SamplerState* gr_d3d11_lookup_sampler_state(gr::Mode mode, int slot)
     }
 
     ComPtr<ID3D11SamplerState> sampler_state;
-    HRESULT hr = d3d11_device->CreateSamplerState(&desc, &sampler_state);
+    HRESULT hr = device_->CreateSamplerState(&desc, &sampler_state);
     check_hr(hr, "CreateSamplerState");
 
-    d3d11_sampler_state_cache.insert({cache_key, sampler_state});
+    sampler_state_cache_.insert({cache_key, sampler_state});
     return sampler_state;
 }
 
-ID3D11BlendState* gr_d3d11_lookup_blend_state(gr::Mode mode)
+ID3D11BlendState* D3D11Renderer::lookup_blend_state(gr::Mode mode)
 {
     auto ab = mode.get_alpha_blend();
     int cache_key = static_cast<int>(ab);
 
-    const auto& it = d3d11_blend_state_cache.find(cache_key);
-    if (it != d3d11_blend_state_cache.end()) {
+    const auto& it = blend_state_cache_.find(cache_key);
+    if (it != blend_state_cache_.end()) {
         return it->second;
     }
     CD3D11_BLEND_DESC desc{CD3D11_DEFAULT()};
@@ -641,20 +640,20 @@ ID3D11BlendState* gr_d3d11_lookup_blend_state(gr::Mode mode)
     }
 
     ComPtr<ID3D11BlendState> blend_state;
-    HRESULT hr = d3d11_device->CreateBlendState(&desc, &blend_state);
+    HRESULT hr = device_->CreateBlendState(&desc, &blend_state);
     check_hr(hr, "CreateBlendState");
 
-    d3d11_blend_state_cache.insert({cache_key, blend_state});
+    blend_state_cache_.insert({cache_key, blend_state});
     return blend_state;
 }
 
-static ID3D11DepthStencilState* gr_d3d11_lookup_depth_stencil_state(gr::Mode mode)
+ID3D11DepthStencilState* D3D11Renderer::lookup_depth_stencil_state(gr::Mode mode)
 {
     auto zbt = mode.get_zbuffer_type();
     int cache_key = static_cast<int>(zbt) | (static_cast<int>(gr::screen.depthbuffer_type) << 8);
 
-    const auto& it = d3d11_depth_stencil_state_cache.find(cache_key);
-    if (it != d3d11_depth_stencil_state_cache.end()) {
+    const auto& it = depth_stencil_state_cache_.find(cache_key);
+    if (it != depth_stencil_state_cache_.end()) {
         return it->second;
     }
     CD3D11_DEPTH_STENCIL_DESC desc{CD3D11_DEFAULT()};
@@ -692,17 +691,17 @@ static ID3D11DepthStencilState* gr_d3d11_lookup_depth_stencil_state(gr::Mode mod
     }
 
     ComPtr<ID3D11DepthStencilState> depth_stencil_state;
-    HRESULT hr = d3d11_device->CreateDepthStencilState(&desc, &depth_stencil_state);
+    HRESULT hr = device_->CreateDepthStencilState(&desc, &depth_stencil_state);
     check_hr(hr, "CreateDepthStencilState");
 
-    d3d11_depth_stencil_state_cache.insert({cache_key, depth_stencil_state});
+    depth_stencil_state_cache_.insert({cache_key, depth_stencil_state});
     return depth_stencil_state;
 }
 
-void gr_d3d11_set_mode(gr::Mode mode)
+void D3D11Renderer::set_mode(gr::Mode mode)
 {
     D3D11_MAPPED_SUBRESOURCE mapped_cbuffer;
-    HRESULT hr = d3d11_context->Map(d3d11_ps_cbuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_cbuffer);
+    HRESULT hr = context_->Map(ps_cbuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_cbuffer);
     check_hr(hr, "Map");
 
     PixelShaderConstantBuffer& ps_data = *reinterpret_cast<PixelShaderConstantBuffer*>(mapped_cbuffer.pData);
@@ -711,52 +710,52 @@ void gr_d3d11_set_mode(gr::Mode mode)
     ps_data.as = mode.get_alpha_source();
     bool alpha_test = mode.get_zbuffer_type() == gr::ZBUFFER_TYPE_FULL_ALPHA_TEST;
     ps_data.alpha_test = alpha_test ? 1.0f : 0.0f;
-    d3d11_context->Unmap(d3d11_ps_cbuffer, 0);
+    context_->Unmap(ps_cbuffer_, 0);
 
     ID3D11SamplerState* sampler_states[] = {
-        gr_d3d11_lookup_sampler_state(mode, 0),
-        gr_d3d11_lookup_sampler_state(mode, 1),
+        lookup_sampler_state(mode, 0),
+        lookup_sampler_state(mode, 1),
     };
-    d3d11_context->PSSetSamplers(0, std::size(sampler_states), sampler_states);
+    context_->PSSetSamplers(0, std::size(sampler_states), sampler_states);
 
-    ID3D11BlendState* blend_state = gr_d3d11_lookup_blend_state(mode);
-    d3d11_context->OMSetBlendState(blend_state, nullptr, 0xffffffff);
+    ID3D11BlendState* blend_state = lookup_blend_state(mode);
+    context_->OMSetBlendState(blend_state, nullptr, 0xffffffff);
 
-    ID3D11DepthStencilState* depth_stencil_state = gr_d3d11_lookup_depth_stencil_state(mode);
-    d3d11_context->OMSetDepthStencilState(depth_stencil_state, 0);
+    ID3D11DepthStencilState* depth_stencil_state = lookup_depth_stencil_state(mode);
+    context_->OMSetDepthStencilState(depth_stencil_state, 0);
 
     // if (get_texture_source(mode) == TEXTURE_SOURCE_NONE) {
     //     gr::screen.current_bitmap = -1;
     // }
 }
 
-void gr_d3d11_set_texture(int slot, int bm_handle)
+void D3D11Renderer::set_texture(int slot, int bm_handle)
 {
-    ID3D11ShaderResourceView* shader_resources[] = { gr_d3d11_lookup_texture(bm_handle) };
-    d3d11_context->PSSetShaderResources(slot, std::size(shader_resources), shader_resources);
+    ID3D11ShaderResourceView* shader_resources[] = { lookup_texture(bm_handle) };
+    context_->PSSetShaderResources(slot, std::size(shader_resources), shader_resources);
 }
 
-void gr_d3d11_batch_flush()
+void D3D11Renderer::batch_flush()
 {
-    int num_index = d3d11_batch_current_index - d3d11_batch_start_index;
+    int num_index = batch_current_index_ - batch_start_index_;
     if (num_index == 0) {
         return;
     }
 
-    if (d3d11_mapped_vb) {
-        gr_d3d11_unmap_dynamic_buffers();
+    if (mapped_vb_) {
+        unmap_dynamic_buffers();
     }
 
-    d3d11_context->IASetPrimitiveTopology(d3d11_batch_primitive_topology);
-    gr_d3d11_set_mode(d3d11_batch_mode);
-    gr_d3d11_set_texture(0, d3d11_batch_textures[0]);
-    gr_d3d11_set_texture(1, d3d11_batch_textures[1]);
+    context_->IASetPrimitiveTopology(batch_primitive_topology_);
+    set_mode(batch_mode_);
+    set_texture(0, batch_textures_[0]);
+    set_texture(1, batch_textures_[1]);
 
-    d3d11_context->DrawIndexed(num_index, d3d11_batch_start_index, 0);
-    d3d11_batch_start_index = d3d11_batch_current_index;
+    context_->DrawIndexed(num_index, batch_start_index_, 0);
+    batch_start_index_ = batch_current_index_;
 }
 
-void gr_d3d11_tmapper(int nv, gr::Vertex **vertices, int tmap_flags, gr::Mode mode)
+void D3D11Renderer::tmapper(int nv, gr::Vertex **vertices, int tmap_flags, gr::Mode mode)
 {
     if (mode.get_zbuffer_type() == gr::ZBUFFER_TYPE_FULL) {
         //xlog::info("gr_d3d11_tmapper nv %d sx %f sy %f sw %f", nv, vertices[0]->sx, vertices[0]->sy, vertices[0]->sw);
@@ -771,20 +770,20 @@ void gr_d3d11_tmapper(int nv, gr::Vertex **vertices, int tmap_flags, gr::Mode mo
         xlog::error("too many vertices/indices in gr_d3d11_tmapper");
         return;
     }
-    bool vb_full = d3d11_batch_current_vertex + nv >= d3d11_batch_max_vertex;
-    bool ib_full = d3d11_batch_current_index + num_index > d3d11_batch_max_index;
-    bool mode_changed = d3d11_batch_mode != mode;
-    bool texture_changed = d3d11_batch_textures[0] != gr::screen.current_texture_1 || d3d11_batch_textures[1] != gr::screen.current_texture_2;
-    bool topology_changed = d3d11_batch_primitive_topology != D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+    bool vb_full = batch_current_vertex_ + nv >= d3d11_batch_max_vertex;
+    bool ib_full = batch_current_index_ + num_index > d3d11_batch_max_index;
+    bool mode_changed = batch_mode_ != mode;
+    bool texture_changed = batch_textures_[0] != gr::screen.current_texture_1 || batch_textures_[1] != gr::screen.current_texture_2;
+    bool topology_changed = batch_primitive_topology_ != D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
     if (vb_full || ib_full || topology_changed || mode_changed || texture_changed) {
-        gr_d3d11_batch_flush();
-        d3d11_batch_mode = mode;
-        d3d11_batch_textures[0] = gr::screen.current_texture_1;
-        d3d11_batch_textures[1] = gr::screen.current_texture_2;
-        d3d11_batch_primitive_topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+        batch_flush();
+        batch_mode_ = mode;
+        batch_textures_[0] = gr::screen.current_texture_1;
+        batch_textures_[1] = gr::screen.current_texture_2;
+        batch_primitive_topology_ = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
     }
-    if (!d3d11_mapped_vb) {
-        gr_d3d11_map_dynamic_buffers(vb_full, ib_full);
+    if (!mapped_vb_) {
+        map_dynamic_buffers(vb_full, ib_full);
     }
 
     int r = 255, g = 255, b = 255, a = 255;
@@ -796,10 +795,10 @@ void gr_d3d11_tmapper(int nv, gr::Vertex **vertices, int tmap_flags, gr::Mode mo
     if (!(tmap_flags & gr::TMAP_FLAG_ALPHA)) {
         a = gr::screen.current_color.alpha;
     }
-    int vert0 = d3d11_batch_current_vertex;
+    int vert0 = batch_current_vertex_;
     for (int i = 0; i < nv; ++i) {
         auto& in_vert = *vertices[i];
-        auto& out_vert = d3d11_mapped_vb[d3d11_batch_current_vertex];
+        auto& out_vert = mapped_vb_[batch_current_vertex_];
         out_vert.x = (in_vert.sx - gr::screen.offset_x) / gr::screen.clip_width * 2.0f - 1.0f;
         out_vert.y = (in_vert.sy - gr::screen.offset_y) / gr::screen.clip_height * -2.0f + 1.0f;
         out_vert.z = in_vert.sw * d3d11_zm;
@@ -819,15 +818,15 @@ void gr_d3d11_tmapper(int nv, gr::Vertex **vertices, int tmap_flags, gr::Mode mo
         //xlog::info("vert[%d]: pos <%.2f %.2f %.2f> uv <%.2f %.2f>", i, out_vert.x, out_vert.y, in_vert.sw, out_vert.u0, out_vert.v0);
 
         if (i >= 2) {
-            d3d11_mapped_ib[d3d11_batch_current_index++] = vert0;
-            d3d11_mapped_ib[d3d11_batch_current_index++] = d3d11_batch_current_vertex - 1;
-            d3d11_mapped_ib[d3d11_batch_current_index++] = d3d11_batch_current_vertex;
+            mapped_ib_[batch_current_index_++] = vert0;
+            mapped_ib_[batch_current_index_++] = batch_current_vertex_ - 1;
+            mapped_ib_[batch_current_index_++] = batch_current_vertex_;
         }
-        ++d3d11_batch_current_vertex;
+        ++batch_current_vertex_;
     }
 }
 
-void gr_d3d11_bitmap(int bitmap_handle, int x, int y, int w, int h, int sx, int sy, int sw, int sh, bool flip_x, bool flip_y, gr::Mode mode)
+void D3D11Renderer::bitmap(int bitmap_handle, int x, int y, int w, int h, int sx, int sy, int sw, int sh, bool flip_x, bool flip_y, gr::Mode mode)
 {
     //xlog::info("gr_d3d11_bitmap");
     //gr_d3d11_set_texture(0, bitmap_handle);
@@ -869,10 +868,10 @@ void gr_d3d11_bitmap(int bitmap_handle, int x, int y, int w, int h, int sx, int 
     verts[3].sw = 0.0f;
     verts[3].u1 = u_left;
     verts[3].v1 = v_bottom;
-    gr_d3d11_tmapper(std::size(verts_ptrs), verts_ptrs, 0, mode);
+    tmapper(std::size(verts_ptrs), verts_ptrs, 0, mode);
 }
 
-void gr_d3d11_clear()
+void D3D11Renderer::clear()
 {
     float clear_color[4] = {
         gr::screen.current_color.red / 255.0f,
@@ -880,20 +879,20 @@ void gr_d3d11_clear()
         gr::screen.current_color.blue / 255.0f,
         1.0f,
     };
-    d3d11_context->ClearRenderTargetView(d3d11_back_buffer_view, clear_color);
+    context_->ClearRenderTargetView(back_buffer_view_, clear_color);
 }
 
-void gr_d3d11_zbuffer_clear()
+void D3D11Renderer::zbuffer_clear()
 {
     if (gr::screen.depthbuffer_type != gr::DEPTHBUFFER_NONE) {
         float depth = gr::screen.depthbuffer_type == gr::DEPTHBUFFER_Z ? 0.0f : 1.0f;
-        d3d11_context->ClearDepthStencilView(d3d11_depth_stencil_buffer_view, D3D11_CLEAR_DEPTH, depth, 0);
+        context_->ClearDepthStencilView(depth_stencil_buffer_view_, D3D11_CLEAR_DEPTH, depth, 0);
     }
 }
 
-void gr_d3d11_set_clip()
+void D3D11Renderer::set_clip()
 {
-    gr_d3d11_batch_flush();
+    batch_flush();
     D3D11_VIEWPORT vp;
     vp.TopLeftX = gr::screen.clip_left + gr::screen.offset_x;
     vp.TopLeftY = gr::screen.clip_top + gr::screen.offset_y;
@@ -901,18 +900,18 @@ void gr_d3d11_set_clip()
     vp.Height = gr::screen.clip_height;
     vp.MinDepth = 0.0f;
     vp.MaxDepth = 1.0f;
-    d3d11_context->RSSetViewports(1, &vp);
+    context_->RSSetViewports(1, &vp);
 }
 
-void gr_d3d11_flip()
+void D3D11Renderer::flip()
 {
     //xlog::info("gr_d3d11_flip");
-    gr_d3d11_batch_flush();
-    HRESULT hr = d3d11_swap_chain->Present(0, 0);
+    batch_flush();
+    HRESULT hr = swap_chain_->Present(0, 0);
     check_hr(hr, "Present");
 }
 
-int gr_d3d11_lock(int bm_handle, int section, gr::LockInfo *lock, int mode)
+int D3D11Renderer::lock(int bm_handle, int section, gr::LockInfo *lock, int mode)
 {
     if (section != 0 || mode == gr::LOCK_READ_ONLY) {
         return 0;
@@ -931,13 +930,87 @@ int gr_d3d11_lock(int bm_handle, int section, gr::LockInfo *lock, int mode)
     return 1;
 }
 
-void gr_d3d11_unlock(gr::LockInfo *lock)
+void D3D11Renderer::unlock(gr::LockInfo *lock)
 {
     //xlog::info("unlocking bm %d format %d size %dx%d data %p", lock->bm_handle, lock->format, lock->w, lock->h, lock->data);
-    auto texture_view = gr_d3d11_create_texture(lock->format, lock->w, lock->h, lock->data, nullptr);
+    auto texture_view = create_texture(lock->format, lock->w, lock->h, lock->data, nullptr);
     delete[] lock->data;
     lock->data = nullptr;
-    d3d11_texture_cache.insert({lock->bm_handle, texture_view});
+    texture_cache_.insert({lock->bm_handle, texture_view});
+}
+
+void gr_d3d11_msg_handler(UINT msg, WPARAM w_param, LPARAM l_param)
+{
+    switch (msg) {
+    case WM_ACTIVATEAPP:
+        if (w_param) {
+            xlog::warn("active %x %lx", w_param, l_param);
+            d3d11_renderer->window_active();
+        }
+        else {
+            xlog::warn("inactive %x %lx", w_param, l_param);
+            d3d11_renderer->window_inactive();
+        }
+    }
+}
+
+void gr_d3d11_flip()
+{
+    d3d11_renderer->flip();
+}
+
+void gr_d3d11_close()
+{
+    xlog::info("gr_d3d11_close");
+    d3d11_renderer.reset();
+    FreeLibrary(d3d11_lib);
+}
+
+void gr_d3d11_init(HWND hwnd)
+{
+    xlog::info("gr_d3d11_init");
+    d3d11_lib = LoadLibraryW(L"d3d11.dll");
+    if (!d3d11_lib) {
+        RF_DEBUG_ERROR("Failed to load d3d11.dll");
+    }
+
+    d3d11_renderer.emplace(hwnd, d3d11_lib);
+    os_add_msg_handler(gr_d3d11_msg_handler);
+}
+
+void gr_d3d11_clear()
+{
+    d3d11_renderer->clear();
+}
+
+void gr_d3d11_bitmap(int bitmap_handle, int x, int y, int w, int h, int sx, int sy, int sw, int sh, bool flip_x, bool flip_y, gr::Mode mode)
+{
+    d3d11_renderer->bitmap(bitmap_handle, x, y, w, h, sx, sy, sw, sh, flip_x, flip_y, mode);
+}
+
+void gr_d3d11_set_clip()
+{
+    d3d11_renderer->set_clip();
+}
+
+void gr_d3d11_zbuffer_clear()
+{
+    d3d11_renderer->zbuffer_clear();
+}
+
+void gr_d3d11_tmapper(int nv, gr::Vertex **vertices, int tmap_flags, gr::Mode mode)
+{
+    d3d11_renderer->tmapper(nv, vertices, tmap_flags, mode);
+}
+
+int gr_d3d11_lock(int bm_handle, int section, gr::LockInfo *lock, int mode)
+{
+    return d3d11_renderer->lock(bm_handle, section, lock, mode);
+}
+
+void gr_d3d11_unlock(gr::LockInfo *lock)
+{
+    d3d11_renderer->unlock(lock);
 }
 
 void gr_d3d11_apply_patch()
