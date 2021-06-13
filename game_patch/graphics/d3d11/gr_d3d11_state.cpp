@@ -16,7 +16,7 @@ ID3D11RasterizerState* D3D11StateManager::get_rasterizer_state()
 void D3D11StateManager::init_rasterizer_state()
 {
     CD3D11_RASTERIZER_DESC desc{CD3D11_DEFAULT{}};
-    desc.CullMode = D3D11_CULL_NONE;
+    desc.CullMode = D3D11_CULL_BACK;
     HRESULT hr = device_->CreateRasterizerState(&desc, &rasterizer_state_);
     check_hr(hr, "CreateRasterizerState");
 }
@@ -25,7 +25,8 @@ ID3D11SamplerState* D3D11StateManager::lookup_sampler_state(gr::Mode mode, int s
 {
     auto ts = mode.get_texture_source();
     if (ts == gr::TEXTURE_SOURCE_NONE) {
-        return nullptr;
+        // we are binding a dummy white textures
+        ts = gr::TEXTURE_SOURCE_CLAMP;
     }
 
     if (slot == 1) {

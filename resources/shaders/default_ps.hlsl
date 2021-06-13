@@ -1,27 +1,3 @@
-#define TEXTURE_SOURCE_NONE                   0
-#define TEXTURE_SOURCE_WRAP                   1
-#define TEXTURE_SOURCE_CLAMP                  2
-#define TEXTURE_SOURCE_CLAMP_NO_FILTERING     3
-#define TEXTURE_SOURCE_CLAMP_1_WRAP_0         4
-#define TEXTURE_SOURCE_CLAMP_1_WRAP_0_MOD2X   5
-#define TEXTURE_SOURCE_CLAMP_1_CLAMP_0        6
-#define TEXTURE_SOURCE_BUMPENV_MAP            7
-#define TEXTURE_SOURCE_MT_U_WRAP_V_CLAMP      8
-#define TEXTURE_SOURCE_MT_U_CLAMP_V_WRAP      9
-#define TEXTURE_SOURCE_MT_WRAP_TRILIN        10
-#define TEXTURE_SOURCE_MT_CLAMP_TRILIN       11
-
-#define COLOR_SOURCE_VERTEX                   0
-#define COLOR_SOURCE_TEXTURE                  1
-#define COLOR_SOURCE_VERTEX_TIMES_TEXTURE     2
-#define COLOR_SOURCE_VERTEX_PLUS_TEXTURE      3
-#define COLOR_SOURCE_VERTEX_TIMES_TEXTURE_2X  4
-
-#define ALPHA_SOURCE_VERTEX                0
-#define ALPHA_SOURCE_VERTEX_NONDARKENING   1
-#define ALPHA_SOURCE_TEXTURE               2
-#define ALPHA_SOURCE_VERTEX_TIMES_TEXTURE  3
-
 struct VsOutput
 {
     float4 pos : SV_POSITION;
@@ -48,6 +24,8 @@ SamplerState samp1;
 
 float4 main(VsOutput input) : SV_TARGET
 {
+    //return tex0.Sample(samp0, input.uv0);
+
     float4 tex0_color = tex0.Sample(samp0, input.uv0);
     float4 target = input.color * vcolor_mul.xxxy + vcolor_mul_inv.xxxy;
     target *= (tex0_color * tex0_mul.xxxy) + tex0_mul_inv.xxxy;

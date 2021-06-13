@@ -99,34 +99,7 @@ void D3D11BatchManager::flush()
 
 static std::array<int, 2> get_textures_for_mode(gr::Mode mode)
 {
-    std::array<int, 2> textures;
-    switch (mode.get_texture_source()) {
-        case rf::gr::TEXTURE_SOURCE_NONE:
-            textures[0] = -1;
-            textures[1] = -1;
-            break;
-        case rf::gr::TEXTURE_SOURCE_WRAP:
-        case rf::gr::TEXTURE_SOURCE_CLAMP:
-        case rf::gr::TEXTURE_SOURCE_CLAMP_NO_FILTERING:
-        case rf::gr::TEXTURE_SOURCE_CLAMP_1_WRAP_0:
-        case rf::gr::TEXTURE_SOURCE_CLAMP_1_WRAP_0_MOD2X:
-        case rf::gr::TEXTURE_SOURCE_CLAMP_1_CLAMP_0:
-        case rf::gr::TEXTURE_SOURCE_BUMPENV_MAP:
-            textures[0] = gr::screen.current_texture_1;
-            textures[1] = -1;
-            break;
-        case rf::gr::TEXTURE_SOURCE_MT_U_WRAP_V_CLAMP:
-        case rf::gr::TEXTURE_SOURCE_MT_U_CLAMP_V_WRAP:
-        case rf::gr::TEXTURE_SOURCE_MT_WRAP_TRILIN:
-        case rf::gr::TEXTURE_SOURCE_MT_CLAMP_TRILIN:
-            textures[0] = gr::screen.current_texture_1;
-            textures[1] = gr::screen.current_texture_2;
-            break;
-        default:
-            textures[0] = -1;
-            textures[1] = -1;
-    }
-    return textures;
+    return gr_d3d11_normalize_texture_handles_for_mode(mode, {gr::screen.current_texture_1, gr::screen.current_texture_2});
 }
 
 void D3D11BatchManager::tmapper(int nv, gr::Vertex **vertices, int tmap_flags, gr::Mode mode)

@@ -4,12 +4,15 @@
 
 using namespace rf;
 
+std::array<std::array<float, 4>, 4> gr_d3d11_build_identity_matrix();
+
 D3D11RenderContext::D3D11RenderContext(ComPtr<ID3D11Device> device, ComPtr<ID3D11DeviceContext> context, D3D11StateManager& state_manager, D3D11TextureManager& texture_manager) :
     device_{std::move(device)}, context_{std::move(context)},
     state_manager_{state_manager}, texture_manager_{texture_manager}
 {
     context_->RSSetState(state_manager_.get_rasterizer_state());
-    init_constant_buffer();
+    init_ps_cbuffer();
+    init_vs_cbuffer();
 
     white_bm_ = rf::bm::create(rf::bm::FORMAT_888_RGB, 1, 1);
     assert(white_bm_ != -1);
@@ -20,7 +23,7 @@ D3D11RenderContext::D3D11RenderContext(ComPtr<ID3D11Device> device, ComPtr<ID3D1
     }
 }
 
-void D3D11RenderContext::init_constant_buffer()
+void D3D11RenderContext::init_ps_cbuffer()
 {
     D3D11_BUFFER_DESC buffer_desc;
     ZeroMemory(&buffer_desc, sizeof(buffer_desc));
@@ -43,6 +46,34 @@ void D3D11RenderContext::init_constant_buffer()
 
     ID3D11Buffer* ps_cbuffers[] = { ps_cbuffer_ };
     context_->PSSetConstantBuffers(0, std::size(ps_cbuffers), ps_cbuffers);
+}
+
+void D3D11RenderContext::init_vs_cbuffer()
+{
+    D3D11_BUFFER_DESC buffer_desc;
+    ZeroMemory(&buffer_desc, sizeof(buffer_desc));
+    buffer_desc.Usage            = D3D11_USAGE_DYNAMIC;
+    buffer_desc.ByteWidth        = sizeof(VertexShaderUniforms);
+    buffer_desc.BindFlags        = D3D11_BIND_CONSTANT_BUFFER;
+    buffer_desc.CPUAccessFlags   = D3D11_CPU_ACCESS_WRITE;
+    buffer_desc.MiscFlags        = 0;
+    buffer_desc.StructureByteStride = 0;
+
+    VertexShaderUniforms data;
+    std::memset(&data, 0, sizeof(data));
+    data.model_mat = gr_d3d11_build_identity_matrix();
+    data.view_mat = gr_d3d11_build_identity_matrix();
+    data.proj_mat = gr_d3d11_build_identity_matrix();
+    D3D11_SUBRESOURCE_DATA subres_data;
+    subres_data.pSysMem = &data;
+    subres_data.SysMemPitch = 0;
+    subres_data.SysMemSlicePitch = 0;
+
+    HRESULT hr = device_->CreateBuffer(&buffer_desc, &subres_data, &vs_cbuffer_);
+    check_hr(hr, "CreateBuffer");
+
+    ID3D11Buffer* vs_cbuffers[] = { vs_cbuffer_ };
+    context_->VSSetConstantBuffers(0, std::size(vs_cbuffers), vs_cbuffers);
 }
 
 void D3D11RenderContext::set_mode(gr::Mode mode)
@@ -93,7 +124,8 @@ void D3D11RenderContext::set_mode(gr::Mode mode)
     }
 
     float output_mul_rgb = 1.0f;
-    if (mode.get_texture_source() == rf::gr::TEXTURE_SOURCE_CLAMP_1_WRAP_0_MOD2X) {
+    if (mode.get_texture_source() == rf::gr::TEXTURE_SOURCE_CLAMP_1_WRAP_0_MOD2X ||
+        mode.get_texture_source() == rf::gr::TEXTURE_SOURCE_CLAMP_1_WRAP_0) {
         output_mul_rgb = 2.0f;
     }
 
@@ -127,6 +159,23 @@ void D3D11RenderContext::set_mode(gr::Mode mode)
     context_->OMSetDepthStencilState(depth_stencil_state, 0);
 }
 
+void D3D11RenderContext::set_mode_and_textures(rf::gr::Mode mode, int bm_handle1, int bm_handle2)
+{
+    set_mode(mode);
+    auto textures = gr_d3d11_normalize_texture_handles_for_mode(mode, {bm_handle1, bm_handle2});
+    set_texture(0, textures[0]);
+    set_texture(1, textures[1]);
+}
+
+void D3D11RenderContext::update_vs_uniforms(const VertexShaderUniforms& data)
+{
+    D3D11_MAPPED_SUBRESOURCE mapped_cbuffer;
+    HRESULT hr = context_->Map(vs_cbuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_cbuffer);
+    check_hr(hr, "Map");
+    std::memcpy(mapped_cbuffer.pData, &data, sizeof(data));
+    context_->Unmap(vs_cbuffer_, 0);
+}
+
 void D3D11RenderContext::set_texture(int slot, int bm_handle)
 {
     if (bm_handle == -1) {
@@ -144,3 +193,17 @@ void D3D11RenderContext::set_render_target(
     ID3D11RenderTargetView* render_targets[] = { back_buffer_view };
     context_->OMSetRenderTargets(std::size(render_targets), render_targets, depth_stencil_buffer_view);
 }
+
+void D3D11RenderContext::set_vertex_buffer(ID3D11Buffer* vb)
+{
+    UINT stride = sizeof(GpuVertex);
+    UINT offset = 0;
+    ID3D11Buffer* vertex_buffers[] = { vb };
+    context_->IASetVertexBuffers(0, std::size(vertex_buffers), vertex_buffers, &stride, &offset);
+}
+
+void D3D11RenderContext::set_index_buffer(ID3D11Buffer* ib)
+{
+    context_->IASetIndexBuffer(ib, DXGI_FORMAT_R16_UINT, 0);
+}
+

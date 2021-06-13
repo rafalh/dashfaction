@@ -77,6 +77,8 @@ set(SRCS
     graphics/d3d11/gr_d3d11_batch.cpp
     graphics/d3d11/gr_d3d11_context.cpp
     graphics/d3d11/gr_d3d11_error.cpp
+    graphics/d3d11/gr_d3d11_transform.cpp
+    graphics/d3d11/gr_d3d11_solid.cpp
     input/input.h
     input/mouse.cpp
     input/key.cpp

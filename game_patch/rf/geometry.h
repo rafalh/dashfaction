@@ -49,6 +49,31 @@ namespace rf
         FACE_LIST_NUM = 3,
     };
 
+    enum GFaceFlags
+    {
+        FACE_SHOW_SKY = 1,
+        FACE_LIQUID = 0x4,
+        FACE_SEE_THRU = 0x40,
+        FACE_INVISIBLE = 0x2000,
+    };
+
+    enum DecalFlags
+    {
+        DF_NEVER_DESTROY = 0x1,
+        DF_SKIP_ORIENT_SETUP = 0x2,
+        DF_RANDOM_ORIENT = 0x4,
+        DF_LEVEL_DECAL = 0x8,
+        DF_SELF_ILLUMINATED = 0x20,
+        DF_TILING_U = 0x40,
+        DF_TILING_V = 0x80,
+        DF_FROM_WEAPON = 0x100,
+        DF_GEOMOD = 0x200,
+        DF_NEVER_SKIP_FADE_OUT = 0x400,
+        DF_LIQUID = 0x8000000,
+        DF_FADING_OUT = 0x40000000,
+        DF_DESTROY_NOW = 0x80000000,
+    };
+
     struct GSolid
     {
         GBBox *bbox;

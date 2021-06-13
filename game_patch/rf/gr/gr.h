@@ -308,6 +308,8 @@ namespace rf::gr
 
     static auto& view_matrix = addr_as_ref<Matrix3>(0x018186C8);
     static auto& view_pos = addr_as_ref<Vector3>(0x01818690);
+    static auto& eye_pos = addr_as_ref<Vector3>(0x01818680);
+    static auto& eye_matrix = addr_as_ref<Matrix3>(0x01818A00);
     static auto& light_matrix = addr_as_ref<Matrix3>(0x01818A38);
     static auto& light_base = addr_as_ref<Vector3>(0x01818A28);
     static auto& matrix_scale = addr_as_ref<Vector3>(0x01818B48);
@@ -335,6 +337,11 @@ namespace rf::gr
     static auto& set_texture = addr_as_ref<void (int bitmap_handle, int bitmap_handle2)>(0x0050D060);
     static auto& tmapper = addr_as_ref<void (int nv, Vertex **verts, TMapperFlags vertex_attributes, Mode mode)>(0x0050DF80);
     static auto& lighting_enabled = addr_as_ref<bool()>(0x004DB8B0);
+    static auto& cull_bounding_box = addr_as_ref<bool (const Vector3& mn, const Vector3& mx)>(0x00518750);
+    static auto& poly = addr_as_ref<bool (int num, Vertex **vertices, TMapperFlags vertex_attributes, Mode mode, bool constant_sw, float sw)>(0x005159A0);
+    static auto& rotate_vertex = addr_as_ref<ubyte (Vertex *vertex_out, const Vector3& vec_in)>(0x00518360);
+    static auto& world_poly = addr_as_ref<bool (int bm_handle, int n_verts, const Vector3* verts, const Vector2* uvs, Mode mode, const Color& color)>(0x00517110);
+    static auto& project_vertex = addr_as_ref<ubyte (Vertex *p)>(0x00518440);
 
     inline void set_color(ubyte r, ubyte g, ubyte b, ubyte a = screen.current_color.alpha)
     {

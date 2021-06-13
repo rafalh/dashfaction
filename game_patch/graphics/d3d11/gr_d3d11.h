@@ -10,6 +10,13 @@
 constexpr float d3d11_zm = 1 / 1700.0f;
 // constexpr ubyte GR_DIRECT3D11 = 0x7A;
 
+namespace rf
+{
+    struct GRoom;
+    struct GSolid;
+    struct GDecal;
+}
+
 struct GpuVertex
 {
     float x;
@@ -21,6 +28,13 @@ struct GpuVertex
     float u1;
     float v1;
     int diffuse;
+};
+
+struct VertexShaderUniforms
+{
+    std::array<std::array<float, 4>, 4> model_mat;
+    std::array<std::array<float, 4>, 4> view_mat;
+    std::array<std::array<float, 4>, 4> proj_mat;
 };
 
 struct PixelShaderConstantBuffer
@@ -119,22 +133,120 @@ public:
         D3D11StateManager& state_manager,
         D3D11TextureManager& texture_manager
     );
+    void set_mode_and_textures(rf::gr::Mode mode, int bm_handle1, int bm_handle2);
     void set_mode(rf::gr::Mode mode);
     void set_texture(int slot, int bm_handle);
     void set_render_target(
         const ComPtr<ID3D11RenderTargetView>& back_buffer_view,
         const ComPtr<ID3D11DepthStencilView>& depth_stencil_buffer_view
     );
+    void update_vs_uniforms(const VertexShaderUniforms& uniforms);
+    void set_vertex_buffer(ID3D11Buffer* vb);
+    void set_index_buffer(ID3D11Buffer* ib);
+
+    ID3D11DeviceContext* device_context()
+    {
+        return context_;
+    }
 
 private:
-    void init_constant_buffer();
+    void init_ps_cbuffer();
+    void init_vs_cbuffer();
 
     ComPtr<ID3D11Device> device_;
     ComPtr<ID3D11DeviceContext> context_;
     D3D11StateManager& state_manager_;
     D3D11TextureManager& texture_manager_;
+    ComPtr<ID3D11Buffer> vs_cbuffer_;
     ComPtr<ID3D11Buffer> ps_cbuffer_;
     int white_bm_;
+};
+
+class GRenderCacheBuilder;
+enum class FaceRenderType { opaque, alpha, liquid };
+
+class GRenderCache
+{
+public:
+    GRenderCache(const GRenderCacheBuilder& builder, rf::gr::Mode mode, ID3D11Device* device);
+    void render(FaceRenderType what, D3D11RenderContext& context);
+
+private:
+    // struct GpuVertex
+    // {
+    //     float x;
+    //     float y;
+    //     float z;
+    //     int diffuse;
+    //     float u0;
+    //     float v0;
+    //     float u1;
+    //     float v1;
+    // };
+
+    struct Batch
+    {
+        int min_index;
+        int start_index;
+        int num_verts;
+        int num_tris;
+        int texture_1;
+        int texture_2;
+        float u_pan_speed;
+        float v_pan_speed;
+        rf::gr::Mode mode;
+    };
+
+    std::vector<Batch> opaque_batches_;
+    std::vector<Batch> alpha_batches_;
+    std::vector<Batch> liquid_batches_;
+    ComPtr<ID3D11Buffer> vb_;
+    ComPtr<ID3D11Buffer> ib_;
+};
+
+class RoomRenderCache
+{
+public:
+    RoomRenderCache(rf::GSolid* solid, rf::GRoom* room, ID3D11Device* device);
+    void render(FaceRenderType render_type, ID3D11Device* device, D3D11RenderContext& context);
+    rf::GRoom* room() const;
+
+private:
+    char padding_[0x20];
+    int state_ = 0; // modified by the game engine during geomod operation
+    rf::GRoom* room_;
+    rf::GSolid* solid_;
+    std::optional<GRenderCache> cache_;
+
+    void update(ID3D11Device* device);
+    bool invalid() const;
+};
+
+class D3D11SolidRenderer
+{
+public:
+    D3D11SolidRenderer(ComPtr<ID3D11Device> device, ComPtr<ID3D11DeviceContext> context, D3D11RenderContext& render_context);
+    void render_solid(rf::GSolid* solid, rf::GRoom** rooms, int num_rooms);
+    void render_movable_solid(rf::GSolid* solid, const rf::Vector3& pos, const rf::Matrix3& orient);
+    void render_sky_room(rf::GRoom *room);
+    void render_alpha_detail(rf::GRoom *room, rf::GSolid *solid);
+    void render_room_liquid_surface(rf::GSolid* solid, rf::GRoom* room);
+    void clear_cache();
+
+private:
+    void before_render(const rf::Vector3& pos, const rf::Matrix3& orient, bool is_skyroom);
+    void after_render();
+    void render_room_faces(rf::GSolid* solid, rf::GRoom* room, FaceRenderType render_type);
+    void render_detail(rf::GSolid* solid, rf::GRoom* room, bool alpha);
+    void render_dynamic_decals(rf::GRoom** rooms, int num_rooms);
+    void render_dynamic_decal(rf::GDecal* decal, rf::GRoom* room);
+
+    ComPtr<ID3D11Device> device_;
+    ComPtr<ID3D11DeviceContext> context_;
+    D3D11RenderContext& render_context_;
+    std::vector<std::unique_ptr<RoomRenderCache>> room_cache_;
+    std::vector<std::unique_ptr<GRenderCache>> mover_render_cache_;
+    std::vector<std::unique_ptr<GRenderCache>> detail_render_cache_;
 };
 
 class D3D11Renderer
@@ -154,6 +266,12 @@ public:
     void unlock(rf::gr::LockInfo *lock);
     void tmapper(int nv, rf::gr::Vertex **vertices, int tmap_flags, rf::gr::Mode mode);
     HRESULT get_device_removed_reason();
+    void render_solid(rf::GSolid* solid, rf::GRoom** rooms, int num_rooms);
+    void render_movable_solid(rf::GSolid* solid, const rf::Vector3& pos, const rf::Matrix3& orient);
+    void render_alpha_detail_room(rf::GRoom *room, rf::GSolid *solid);
+    void render_sky_room(rf::GRoom *room);
+    void render_room_liquid_surface(rf::GSolid* solid, rf::GRoom* room);
+    void clear_solid_cache();
 
 private:
     void init_device(HWND hwnd, HMODULE d3d11_lib);
@@ -174,6 +292,7 @@ private:
     std::optional<D3D11TextureManager> texture_manager_;
     std::optional<D3D11BatchManager> batch_manager_;
     std::optional<D3D11RenderContext> render_context_;
+    std::optional<D3D11SolidRenderer> solid_renderer_;
 };
 
 static inline void check_hr(HRESULT hr, const char* fun)
@@ -188,4 +307,26 @@ static inline int pack_color(int r, int g, int b, int a)
 {
     // assume little endian
     return (a << 24) | (b << 16) | (g << 8) | r;
+}
+
+static inline std::array<int, 2> gr_d3d11_normalize_texture_handles_for_mode(rf::gr::Mode mode, const std::array<int, 2>& textures)
+{
+    switch (mode.get_texture_source()) {
+        case rf::gr::TEXTURE_SOURCE_NONE:
+            return {-1, -1};
+        case rf::gr::TEXTURE_SOURCE_WRAP:
+        case rf::gr::TEXTURE_SOURCE_CLAMP:
+        case rf::gr::TEXTURE_SOURCE_CLAMP_NO_FILTERING:
+            return {textures[0], -1};
+        case rf::gr::TEXTURE_SOURCE_CLAMP_1_WRAP_0:
+        case rf::gr::TEXTURE_SOURCE_CLAMP_1_WRAP_0_MOD2X:
+        case rf::gr::TEXTURE_SOURCE_CLAMP_1_CLAMP_0:
+        case rf::gr::TEXTURE_SOURCE_MT_U_WRAP_V_CLAMP:
+        case rf::gr::TEXTURE_SOURCE_MT_U_CLAMP_V_WRAP:
+        case rf::gr::TEXTURE_SOURCE_MT_WRAP_TRILIN:
+        case rf::gr::TEXTURE_SOURCE_MT_CLAMP_TRILIN:
+            return textures;
+        default:
+            return {-1, -1};
+    }
 }
