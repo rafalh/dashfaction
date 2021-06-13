@@ -97,31 +97,56 @@ void D3D11BatchManager::flush()
     start_index_ = current_index_;
 }
 
+static std::array<int, 2> get_textures_for_mode(gr::Mode mode)
+{
+    std::array<int, 2> textures;
+    switch (mode.get_texture_source()) {
+        case rf::gr::TEXTURE_SOURCE_NONE:
+            textures[0] = -1;
+            textures[1] = -1;
+            break;
+        case rf::gr::TEXTURE_SOURCE_WRAP:
+        case rf::gr::TEXTURE_SOURCE_CLAMP:
+        case rf::gr::TEXTURE_SOURCE_CLAMP_NO_FILTERING:
+        case rf::gr::TEXTURE_SOURCE_CLAMP_1_WRAP_0:
+        case rf::gr::TEXTURE_SOURCE_CLAMP_1_WRAP_0_MOD2X:
+        case rf::gr::TEXTURE_SOURCE_CLAMP_1_CLAMP_0:
+        case rf::gr::TEXTURE_SOURCE_BUMPENV_MAP:
+            textures[0] = gr::screen.current_texture_1;
+            textures[1] = -1;
+            break;
+        case rf::gr::TEXTURE_SOURCE_MT_U_WRAP_V_CLAMP:
+        case rf::gr::TEXTURE_SOURCE_MT_U_CLAMP_V_WRAP:
+        case rf::gr::TEXTURE_SOURCE_MT_WRAP_TRILIN:
+        case rf::gr::TEXTURE_SOURCE_MT_CLAMP_TRILIN:
+            textures[0] = gr::screen.current_texture_1;
+            textures[1] = gr::screen.current_texture_2;
+            break;
+        default:
+            textures[0] = -1;
+            textures[1] = -1;
+    }
+    return textures;
+}
+
 void D3D11BatchManager::tmapper(int nv, gr::Vertex **vertices, int tmap_flags, gr::Mode mode)
 {
-    if (mode.get_zbuffer_type() == gr::ZBUFFER_TYPE_FULL) {
-        //xlog::info("gr_d3d11_tmapper nv %d sx %f sy %f sw %f", nv, vertices[0]->sx, vertices[0]->sy, vertices[0]->sw);
-        //mode.set_texture_source(TEXTURE_SOURCE_NONE);
-        //gr::screen.current_color.alpha = 255;
-    }
-    //
-    //gr_d3d11_set_mode(mode);
-
     int num_index = (nv - 2) * 3;
     if (nv > d3d11_batch_max_vertex || num_index > d3d11_batch_max_index) {
         xlog::error("too many vertices/indices in gr_d3d11_tmapper");
         return;
     }
+
+    std::array<int, 2> current_textures = get_textures_for_mode(mode);
     bool vb_full = current_vertex_ + nv >= d3d11_batch_max_vertex;
     bool ib_full = current_index_ + num_index > d3d11_batch_max_index;
     bool mode_changed = mode_ != mode;
-    bool texture_changed = textures_[0] != gr::screen.current_texture_1 || textures_[1] != gr::screen.current_texture_2;
+    bool texture_changed = textures_[0] != current_textures[0] || textures_[1] != current_textures[1];
     bool topology_changed = primitive_topology_ != D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
     if (vb_full || ib_full || topology_changed || mode_changed || texture_changed) {
         flush();
         mode_ = mode;
-        textures_[0] = gr::screen.current_texture_1;
-        textures_[1] = gr::screen.current_texture_2;
+        textures_ = current_textures;
         primitive_topology_ = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
     }
     if (!mapped_vb_) {

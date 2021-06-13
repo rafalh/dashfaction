@@ -25,10 +25,14 @@ struct GpuVertex
 
 struct PixelShaderConstantBuffer
 {
-    float ts;
-    float cs;
-    float as;
+    std::array<float, 2> vcolor_mul;
+    std::array<float, 2> vcolor_mul_inv;
+    std::array<float, 2> tex0_mul;
+    std::array<float, 2> tex0_mul_inv;
+    float tex0_add_rgb;
+    float output_mul_rgb;
     float alpha_test;
+    float pad[1];
 };
 
 class D3D11StateManager
@@ -95,7 +99,7 @@ private:
     int current_vertex_ = 0;
     int start_index_ = 0;
     int current_index_ = 0;
-    int textures_[2] = { -1, -1 };
+    std::array<int, 2> textures_ = { -1, -1 };
     rf::gr::Mode mode_{
         rf::gr::TEXTURE_SOURCE_NONE,
         rf::gr::COLOR_SOURCE_VERTEX,
@@ -130,6 +134,7 @@ private:
     D3D11StateManager& state_manager_;
     D3D11TextureManager& texture_manager_;
     ComPtr<ID3D11Buffer> ps_cbuffer_;
+    int white_bm_;
 };
 
 class D3D11Renderer
