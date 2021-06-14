@@ -278,10 +278,9 @@ GRenderCache::GRenderCache(const GRenderCacheBuilder& builder, gr::Mode mode, ID
     xlog::warn("created buffers");
 }
 
-static GrMatrix3 build_uv_pan_matrix(float u_pan_speed, float v_pan_speed)
+static GrMatrix3x3 build_uv_pan_matrix(float u_pan_speed, float v_pan_speed)
 {
     float delta_time = timer_get(1000) * 0.001f; // FIXME: paused game..
-    GrMatrix3 gr_d3d11_build_texture_matrix(float u, float v);
     return gr_d3d11_build_texture_matrix(u_pan_speed * delta_time, v_pan_speed * delta_time);
 }
 
@@ -300,7 +299,7 @@ void GRenderCache::render(FaceRenderType what, D3D11RenderContext& context)
     context.device_context()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     for (Batch& b : batches) {
         context.set_mode_and_textures(b.mode, b.texture_1, b.texture_2);
-        GrMatrix3 tex_transform = build_uv_pan_matrix(b.u_pan_speed, b.v_pan_speed);
+        GrMatrix3x3 tex_transform = build_uv_pan_matrix(b.u_pan_speed, b.v_pan_speed);
         context.set_texture_transform(tex_transform);
         //xlog::warn("DrawIndexed %d %d", b.num_tris * 3, b.start_index);
         context.device_context()->DrawIndexed(b.num_tris * 3, b.start_index, 0);

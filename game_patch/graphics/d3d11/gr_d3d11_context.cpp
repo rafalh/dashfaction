@@ -223,7 +223,7 @@ void D3D11RenderContext::set_index_buffer(ID3D11Buffer* ib)
     context_->IASetIndexBuffer(ib, DXGI_FORMAT_R16_UINT, 0);
 }
 
-void D3D11RenderContext::set_texture_transform(const GrMatrix3& transform)
+void D3D11RenderContext::set_texture_transform(const GrMatrix3x3& transform)
 {
     if (current_texture_transform_ == transform) {
         return;

@@ -72,13 +72,20 @@ set(SRCS
     graphics/gr_d3d_capture.cpp
     graphics/gr_d3d_gamma.cpp
     graphics/d3d11/gr_d3d11.cpp
+    graphics/d3d11/gr_d3d11.h
     graphics/d3d11/gr_d3d11_state.cpp
+    graphics/d3d11/gr_d3d11_state.h
     graphics/d3d11/gr_d3d11_texture.cpp
+    graphics/d3d11/gr_d3d11_texture.h
     graphics/d3d11/gr_d3d11_batch.cpp
+    graphics/d3d11/gr_d3d11_batch.h
     graphics/d3d11/gr_d3d11_context.cpp
+    graphics/d3d11/gr_d3d11_context.h
     graphics/d3d11/gr_d3d11_error.cpp
     graphics/d3d11/gr_d3d11_transform.cpp
+    graphics/d3d11/gr_d3d11_transform.h
     graphics/d3d11/gr_d3d11_solid.cpp
+    graphics/d3d11/gr_d3d11_solid.h
     input/input.h
     input/mouse.cpp
     input/key.cpp
