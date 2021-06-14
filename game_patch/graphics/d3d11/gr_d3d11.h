@@ -37,7 +37,12 @@ struct VertexShaderUniforms
     std::array<std::array<float, 4>, 4> proj_mat;
 };
 
-struct PixelShaderConstantBuffer
+struct TexCoordTransformUniform
+{
+    std::array<std::array<float, 4>, 3> mat;
+};
+
+struct PixelShaderUniforms
 {
     std::array<float, 2> vcolor_mul;
     std::array<float, 2> vcolor_mul_inv;
@@ -124,9 +129,14 @@ private:
     };
 };
 
+using GrMatrix3 = std::array<std::array<float, 3>, 3>;
+using GrMatrix4 = std::array<std::array<float, 4>, 4>;
+
 class D3D11RenderContext
 {
 public:
+    using TextureTransform = std::array<std::array<float, 3>, 3>;
+
     D3D11RenderContext(
         ComPtr<ID3D11Device> device,
         ComPtr<ID3D11DeviceContext> context,
@@ -143,6 +153,7 @@ public:
     void update_vs_uniforms(const VertexShaderUniforms& uniforms);
     void set_vertex_buffer(ID3D11Buffer* vb);
     void set_index_buffer(ID3D11Buffer* ib);
+    void set_texture_transform(const GrMatrix3& transform);
 
     ID3D11DeviceContext* device_context()
     {
@@ -159,7 +170,9 @@ private:
     D3D11TextureManager& texture_manager_;
     ComPtr<ID3D11Buffer> vs_cbuffer_;
     ComPtr<ID3D11Buffer> ps_cbuffer_;
+    ComPtr<ID3D11Buffer> texture_transform_cbuffer_;
     int white_bm_;
+    GrMatrix3 current_texture_transform_;
 };
 
 class GRenderCacheBuilder;
@@ -330,3 +343,13 @@ static inline std::array<int, 2> gr_d3d11_normalize_texture_handles_for_mode(rf:
             return {-1, -1};
     }
 }
+
+std::array<std::array<float, 4>, 4> gr_d3d11_build_identity_matrix();
+std::array<std::array<float, 3>, 3> gr_d3d11_build_identity_matrix3();
+std::array<std::array<float, 4>, 4> gr_d3d11_transpose_matrix(const std::array<std::array<float, 4>, 4>& in);
+std::array<std::array<float, 4>, 4> gr_d3d11_build_camera_view_matrix();
+std::array<std::array<float, 4>, 4> gr_d3d11_build_sky_room_view_matrix();
+std::array<std::array<float, 4>, 4> gr_d3d11_build_proj_matrix();
+std::array<std::array<float, 4>, 4> gr_d3d11_build_model_matrix(const rf::Vector3& pos, const rf::Matrix3& orient);
+std::array<std::array<float, 3>, 3> gr_d3d11_build_texture_matrix(float u, float v);
+std::array<std::array<float, 4>, 3> gr_d3d11_convert_to_4x3_matrix(const std::array<std::array<float, 3>, 3>& mat);

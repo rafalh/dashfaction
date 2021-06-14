@@ -86,19 +86,6 @@ void link_faces_to_texture_movers(GSolid* solid)
      }
 }
 
-void gr_d3d_set_uv_pan_speed([[maybe_unused]] float u_pan_speed, [[maybe_unused]] float v_pan_speed)
-{
-    // if (u_pan_speed == 0.0f && v_pan_speed == 0.0f) {
-    //     gr::d3d::device->SetTextureStageState(0, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_DISABLE);
-    // }
-    // else {
-    //     float delta_time = timer_get(1000) * 0.001f; // FIXME: paused game..
-    //     void gr_d3d_set_texture_transform(float u, float v);
-    //     gr_d3d_set_texture_transform(u_pan_speed * delta_time, v_pan_speed * delta_time);
-    //     gr::d3d::device->SetTextureStageState(0, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_COUNT2);
-    // }
-}
-
 class GRenderCacheBuilder
 {
 private:
@@ -291,6 +278,13 @@ GRenderCache::GRenderCache(const GRenderCacheBuilder& builder, gr::Mode mode, ID
     xlog::warn("created buffers");
 }
 
+static GrMatrix3 build_uv_pan_matrix(float u_pan_speed, float v_pan_speed)
+{
+    float delta_time = timer_get(1000) * 0.001f; // FIXME: paused game..
+    GrMatrix3 gr_d3d11_build_texture_matrix(float u, float v);
+    return gr_d3d11_build_texture_matrix(u_pan_speed * delta_time, v_pan_speed * delta_time);
+}
+
 void GRenderCache::render(FaceRenderType what, D3D11RenderContext& context)
 {
     auto& batches = what == FaceRenderType::alpha
@@ -306,7 +300,8 @@ void GRenderCache::render(FaceRenderType what, D3D11RenderContext& context)
     context.device_context()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     for (Batch& b : batches) {
         context.set_mode_and_textures(b.mode, b.texture_1, b.texture_2);
-        // gr_d3d_set_uv_pan_speed(b.u_pan_speed, b.v_pan_speed);
+        GrMatrix3 tex_transform = build_uv_pan_matrix(b.u_pan_speed, b.v_pan_speed);
+        context.set_texture_transform(tex_transform);
         //xlog::warn("DrawIndexed %d %d", b.num_tris * 3, b.start_index);
         context.device_context()->DrawIndexed(b.num_tris * 3, b.start_index, 0);
     }
@@ -618,22 +613,15 @@ void D3D11SolidRenderer::render_solid(rf::GSolid* solid, rf::GRoom** rooms, int 
 
 void D3D11SolidRenderer::before_render(const rf::Vector3& pos, const rf::Matrix3& orient, bool is_skyroom)
 {
-    std::array<std::array<float, 4>, 4> gr_d3d11_build_view_matrix();
-    std::array<std::array<float, 4>, 4> gr_d3d11_build_view_matrix_skybox();
-    std::array<std::array<float, 4>, 4> gr_d3d11_build_proj_matrix();
-    std::array<std::array<float, 4>, 4> gr_d3d11_build_model_matrix(const Vector3& pos, const Matrix3& orient);
-
     VertexShaderUniforms uniforms;
     uniforms.model_mat = gr_d3d11_build_model_matrix(pos, orient);
-    uniforms.view_mat = is_skyroom ? gr_d3d11_build_view_matrix_skybox() : gr_d3d11_build_view_matrix();
+    uniforms.view_mat = is_skyroom ? gr_d3d11_build_sky_room_view_matrix() : gr_d3d11_build_camera_view_matrix();
     uniforms.proj_mat = gr_d3d11_build_proj_matrix();
     render_context_.update_vs_uniforms(uniforms);
 }
 
 void D3D11SolidRenderer::after_render()
 {
-    std::array<std::array<float, 4>, 4> gr_d3d11_build_identity_matrix();
-
     VertexShaderUniforms uniforms;
     uniforms.proj_mat = uniforms.view_mat = uniforms.model_mat = gr_d3d11_build_identity_matrix();
     render_context_.update_vs_uniforms(uniforms);

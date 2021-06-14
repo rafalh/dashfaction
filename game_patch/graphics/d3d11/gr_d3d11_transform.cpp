@@ -19,6 +19,15 @@ std::array<std::array<float, 4>, 4> gr_d3d11_build_identity_matrix()
     }};
 }
 
+std::array<std::array<float, 3>, 3> gr_d3d11_build_identity_matrix3()
+{
+    return {{
+        {1.0f, 0.0f, 0.0f},
+        {0.0f, 1.0f, 0.0f},
+        {0.0f, 0.0f, 1.0f},
+    }};
+}
+
 std::array<std::array<float, 4>, 4> gr_d3d11_transpose_matrix(const std::array<std::array<float, 4>, 4>& in)
 {
     return {{
@@ -46,12 +55,12 @@ static std::array<std::array<float, 4>, 4> gr_d3d11_build_view_matrix(const rf::
     }};
 }
 
-std::array<std::array<float, 4>, 4> gr_d3d11_build_view_matrix()
+std::array<std::array<float, 4>, 4> gr_d3d11_build_camera_view_matrix()
 {
     return gr_d3d11_build_view_matrix(gr::eye_pos, gr::eye_matrix);
 }
 
-std::array<std::array<float, 4>, 4> gr_d3d11_build_view_matrix_skybox()
+std::array<std::array<float, 4>, 4> gr_d3d11_build_sky_room_view_matrix()
 {
     return gr_d3d11_build_view_matrix(g_sky_room_center, gr::eye_matrix);
 }
@@ -118,6 +127,15 @@ std::array<std::array<float, 3>, 3> gr_d3d11_build_texture_matrix(float u, float
     return {{
         {1.0f, 0.0f, 0.0f},
         {0.0f, 1.0f, 0.0f},
-        {u, v, 1.0f},
+        {u,    v,    1.0f},
+    }};
+}
+
+std::array<std::array<float, 4>, 3> gr_d3d11_convert_to_4x3_matrix(const std::array<std::array<float, 3>, 3>& mat)
+{
+    return {{
+        {mat[0][0], mat[0][1], mat[0][2], 0.0f},
+        {mat[1][0], mat[1][1], mat[1][2], 0.0f},
+        {mat[2][0], mat[2][1], mat[2][2], 0.0f},
     }};
 }

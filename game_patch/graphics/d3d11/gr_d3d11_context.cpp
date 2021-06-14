@@ -28,13 +28,13 @@ void D3D11RenderContext::init_ps_cbuffer()
     D3D11_BUFFER_DESC buffer_desc;
     ZeroMemory(&buffer_desc, sizeof(buffer_desc));
     buffer_desc.Usage            = D3D11_USAGE_DYNAMIC;
-    buffer_desc.ByteWidth        = sizeof(PixelShaderConstantBuffer);
+    buffer_desc.ByteWidth        = sizeof(PixelShaderUniforms);
     buffer_desc.BindFlags        = D3D11_BIND_CONSTANT_BUFFER;
     buffer_desc.CPUAccessFlags   = D3D11_CPU_ACCESS_WRITE;
     buffer_desc.MiscFlags        = 0;
     buffer_desc.StructureByteStride = 0;
 
-    PixelShaderConstantBuffer data;
+    PixelShaderUniforms data;
     std::memset(&data, 0, sizeof(data));
     D3D11_SUBRESOURCE_DATA subres_data;
     subres_data.pSysMem = &data;
@@ -64,6 +64,7 @@ void D3D11RenderContext::init_vs_cbuffer()
     data.model_mat = gr_d3d11_build_identity_matrix();
     data.view_mat = gr_d3d11_build_identity_matrix();
     data.proj_mat = gr_d3d11_build_identity_matrix();
+
     D3D11_SUBRESOURCE_DATA subres_data;
     subres_data.pSysMem = &data;
     subres_data.SysMemPitch = 0;
@@ -72,7 +73,22 @@ void D3D11RenderContext::init_vs_cbuffer()
     HRESULT hr = device_->CreateBuffer(&buffer_desc, &subres_data, &vs_cbuffer_);
     check_hr(hr, "CreateBuffer");
 
-    ID3D11Buffer* vs_cbuffers[] = { vs_cbuffer_ };
+    ZeroMemory(&buffer_desc, sizeof(buffer_desc));
+    buffer_desc.Usage            = D3D11_USAGE_DYNAMIC;
+    buffer_desc.ByteWidth        = sizeof(TexCoordTransformUniform);
+    buffer_desc.BindFlags        = D3D11_BIND_CONSTANT_BUFFER;
+    buffer_desc.CPUAccessFlags   = D3D11_CPU_ACCESS_WRITE;
+    buffer_desc.MiscFlags        = 0;
+    buffer_desc.StructureByteStride = 0;
+
+    TexCoordTransformUniform texture_transform_uniform;
+    current_texture_transform_ = gr_d3d11_build_identity_matrix3();
+    texture_transform_uniform.mat = gr_d3d11_convert_to_4x3_matrix(current_texture_transform_);
+    subres_data.pSysMem = &texture_transform_uniform;
+    hr = device_->CreateBuffer(&buffer_desc, &subres_data, &texture_transform_cbuffer_);
+    check_hr(hr, "CreateBuffer");
+
+    ID3D11Buffer* vs_cbuffers[] = { vs_cbuffer_, texture_transform_cbuffer_ };
     context_->VSSetConstantBuffers(0, std::size(vs_cbuffers), vs_cbuffers);
 }
 
@@ -131,7 +147,7 @@ void D3D11RenderContext::set_mode(gr::Mode mode)
 
     float alpha_test = mode.get_zbuffer_type() == gr::ZBUFFER_TYPE_FULL_ALPHA_TEST ? 1.0f : 0.0f;
 
-    PixelShaderConstantBuffer ps_data;
+    PixelShaderUniforms ps_data;
     ps_data.vcolor_mul = {vcolor_rgb_mul, vcolor_a_mul};
     ps_data.vcolor_mul_inv = {1.0f - vcolor_rgb_mul, 1.0f - vcolor_a_mul};
     ps_data.tex0_mul = {tex0_rgb_mul, tex0_a_mul};
@@ -207,3 +223,17 @@ void D3D11RenderContext::set_index_buffer(ID3D11Buffer* ib)
     context_->IASetIndexBuffer(ib, DXGI_FORMAT_R16_UINT, 0);
 }
 
+void D3D11RenderContext::set_texture_transform(const GrMatrix3& transform)
+{
+    if (current_texture_transform_ == transform) {
+        return;
+    }
+    current_texture_transform_ = transform;
+    TexCoordTransformUniform uniforms;
+    uniforms.mat = gr_d3d11_convert_to_4x3_matrix(transform);
+    D3D11_MAPPED_SUBRESOURCE mapped_cbuffer;
+    HRESULT hr = context_->Map(texture_transform_cbuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_cbuffer);
+    check_hr(hr, "Map");
+    std::memcpy(mapped_cbuffer.pData, &uniforms, sizeof(uniforms));
+    context_->Unmap(texture_transform_cbuffer_, 0);
+}
