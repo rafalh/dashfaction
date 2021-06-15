@@ -151,6 +151,10 @@ void multi_hud_render_chat_inputbox(rf::String::Pod label_pod, rf::String::Pod m
     int cursor_w = g_big_chatbox ? 10 : 5;
     int cursor_h = g_big_chatbox ? 2 : 1;
     int max_msg_w = content_w - cursor_w - 7 - label_w;
+    if (max_msg_w <= 0) {
+        // Can happen with big HUD + very low resolution
+        return;
+    }
     while (msg_w > max_msg_w) {
         msg_shortened = msg_shortened.substr(1, -1);
         rf::gr::get_string_size(&msg_w, &msg_h, msg_shortened.c_str(), -1, chatbox_font);

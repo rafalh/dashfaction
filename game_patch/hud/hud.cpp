@@ -128,6 +128,11 @@ void set_big_countdown_counter(bool is_big)
     rf::hud_coords[rf::hud_countdown_timer] = hud_scale_coords(rf::hud_coords[rf::hud_countdown_timer], scale);
 }
 
+static bool is_screen_resolution_too_low_for_big_hud()
+{
+    return rf::gr::screen_width() < 1024 || rf::gr::screen_height() < 768;
+}
+
 void set_big_hud(bool is_big)
 {
     hud_status_set_big(is_big);
@@ -150,6 +155,10 @@ void set_big_hud(bool is_big)
 ConsoleCommand2 bighud_cmd{
     "bighud",
     []() {
+        if (!g_game_config.big_hud && is_screen_resolution_too_low_for_big_hud()) {
+            rf::console::printf("Screen resolution is too low for big HUD!");
+            return;
+        }
         g_game_config.big_hud = !g_game_config.big_hud;
         set_big_hud(g_game_config.big_hud);
         g_game_config.save();
@@ -357,7 +366,9 @@ FunHook<void()> hud_init_hook{
         hud_init_hook.call_target();
         // Init big HUD
         if (!rf::is_dedicated_server) {
-            set_big_hud(g_game_config.big_hud);
+            if (!g_game_config.big_hud || !is_screen_resolution_too_low_for_big_hud()) {
+                set_big_hud(g_game_config.big_hud);
+            }
         }
     },
 };

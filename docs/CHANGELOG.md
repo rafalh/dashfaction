@@ -1,6 +1,10 @@
 DashFaction Changelog
 =====================
 
+Version 1.7.1 (not released yet)
+--------------------------------
+- Disable big HUD for resolutions lower than 1024x768 to prevent crashes
+
 Version 1.7.0 (released 2021-06-05)
 -----------------------------------
 - Change maximal value of Max Kills dedicated server config to 999
