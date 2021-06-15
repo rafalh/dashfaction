@@ -586,7 +586,7 @@ void multi_level_download_do_frame()
 static bool next_level_exists()
 {
     rf::File file;
-    return file.open(rf::level.next_level_filename) == 0;
+    return file.find(rf::level.next_level_filename);
 }
 
 CallHook<void(rf::GameState, bool)> process_leave_limbo_packet_gameseq_set_next_state_hook{

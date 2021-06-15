@@ -37,6 +37,11 @@ namespace rf
             return AddrCaller{0x00524190}.this_call<int>(this, filename, mode, path_id);
         }
 
+        bool find(const char* filename, int path_id = 9999999)
+        {
+            return AddrCaller{0x00523CE0}.this_call<bool>(this, filename, path_id);
+        }
+
         void close()
         {
             AddrCaller{0x005242A0}.this_call(this);
