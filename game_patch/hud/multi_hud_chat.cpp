@@ -255,6 +255,9 @@ void multi_hud_chat_apply_patches()
     process_chat_line_packet_injection.install();
     mute_all_players_cmd.register_cmd();
     mute_player_cmd.register_cmd();
+
+    // Do not strip '%' characters from chat messages
+    write_mem<u8>(0x004785FD, asm_opcodes::jmp_rel_short);
 }
 
 void multi_hud_chat_set_big(bool is_big)

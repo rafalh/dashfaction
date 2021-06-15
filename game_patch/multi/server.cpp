@@ -626,9 +626,6 @@ void server_init()
     // Hit sounds
     entity_damage_hook.install();
 
-    // Do not strip '%' characters from chat messages
-    write_mem<u8>(0x004785FD, asm_opcodes::jmp_rel_short);
-
     // Item replacements
     item_lookup_type_hook.install();
 
