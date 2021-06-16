@@ -39,10 +39,8 @@ private:
 
     struct Batch
     {
-        int min_index;
         int start_index;
-        int num_verts;
-        int num_tris;
+        int num_indices;
         int texture_1;
         int texture_2;
         float u_pan_speed;

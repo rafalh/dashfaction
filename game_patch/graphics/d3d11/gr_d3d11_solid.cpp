@@ -141,10 +141,8 @@ GRenderCache::GRenderCache(const GRenderCacheBuilder& builder, gr::Mode mode, ID
         auto& key = e.first;
         auto& faces = e.second;
         Batch batch;
-        batch.min_index = vb_ptr - vb_data.data();
         batch.start_index = ib_ptr - ib_data.data();
-        batch.num_verts = 0;
-        batch.num_tris = 0;
+        batch.num_indices = 0;
         FaceRenderType render_type = std::get<0>(key);
         batch.texture_1 = std::get<1>(key);
         batch.texture_2 = std::get<2>(key);
@@ -178,9 +176,8 @@ GRenderCache::GRenderCache(const GRenderCacheBuilder& builder, gr::Mode mode, ID
                     *(ib_ptr++) = face_start_index;
                     *(ib_ptr++) = face_start_index + fvert_index - 1;
                     *(ib_ptr++) = face_start_index + fvert_index;
-                    ++batch.num_tris;
+                    batch.num_indices += 3;
                 }
-                ++batch.num_verts;
                 ++fvert_index;
 
                 fvert = fvert->next;
@@ -203,10 +200,8 @@ GRenderCache::GRenderCache(const GRenderCacheBuilder& builder, gr::Mode mode, ID
         auto& key = e.first;
         auto& dps = e.second;
         Batch batch;
-        batch.min_index = vb_ptr - vb_data.data();
         batch.start_index = ib_ptr - ib_data.data();
-        batch.num_verts = 0;
-        batch.num_tris = 0;
+        batch.num_indices = 0;
         batch.texture_1 = std::get<0>(key);
         batch.texture_2 = std::get<1>(key);
         batch.mode = std::get<2>(key);
@@ -230,9 +225,8 @@ GRenderCache::GRenderCache(const GRenderCacheBuilder& builder, gr::Mode mode, ID
                     *(ib_ptr++) = face_start_index;
                     *(ib_ptr++) = face_start_index + fvert_index - 1;
                     *(ib_ptr++) = face_start_index + fvert_index;
-                    ++batch.num_tris;
+                    batch.num_indices += 3;
                 }
-                ++batch.num_verts;
                 ++fvert_index;
 
                 fvert = fvert->next;
@@ -301,8 +295,8 @@ void GRenderCache::render(FaceRenderType what, D3D11RenderContext& context)
         context.set_mode_and_textures(b.mode, b.texture_1, b.texture_2);
         GrMatrix3x3 tex_transform = build_uv_pan_matrix(b.u_pan_speed, b.v_pan_speed);
         context.set_texture_transform(tex_transform);
-        //xlog::warn("DrawIndexed %d %d", b.num_tris * 3, b.start_index);
-        context.device_context()->DrawIndexed(b.num_tris * 3, b.start_index, 0);
+        //xlog::warn("DrawIndexed %d %d", b.num_indices, b.start_index);
+        context.device_context()->DrawIndexed(b.num_indices, b.start_index, 0);
     }
 }
 
