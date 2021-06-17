@@ -1,14 +1,20 @@
 #include <cassert>
 #include <cstring>
 #include "gr_d3d11.h"
+#include "gr_d3d11_context.h"
+#include "gr_d3d11_texture.h"
+#include "gr_d3d11_state.h"
+#include "gr_d3d11_shader.h"
 
 using namespace rf;
 
 std::array<std::array<float, 4>, 4> gr_d3d11_build_identity_matrix();
 
-D3D11RenderContext::D3D11RenderContext(ComPtr<ID3D11Device> device, ComPtr<ID3D11DeviceContext> context, D3D11StateManager& state_manager, D3D11TextureManager& texture_manager) :
+D3D11RenderContext::D3D11RenderContext(
+    ComPtr<ID3D11Device> device, ComPtr<ID3D11DeviceContext> context,
+    D3D11StateManager& state_manager, D3D11ShaderManager& shader_manager, D3D11TextureManager& texture_manager) :
     device_{std::move(device)}, context_{std::move(context)},
-    state_manager_{state_manager}, texture_manager_{texture_manager}
+    state_manager_{state_manager}, shader_manager_{shader_manager}, texture_manager_{texture_manager}
 {
     context_->RSSetState(state_manager_.get_rasterizer_state());
     init_ps_cbuffer();
@@ -211,19 +217,6 @@ void D3D11RenderContext::set_render_target(
     context_->OMSetRenderTargets(std::size(render_targets), render_targets, depth_stencil_buffer_view);
 }
 
-void D3D11RenderContext::set_vertex_buffer(ID3D11Buffer* vb)
-{
-    UINT stride = sizeof(GpuVertex);
-    UINT offset = 0;
-    ID3D11Buffer* vertex_buffers[] = { vb };
-    context_->IASetVertexBuffers(0, std::size(vertex_buffers), vertex_buffers, &stride, &offset);
-}
-
-void D3D11RenderContext::set_index_buffer(ID3D11Buffer* ib)
-{
-    context_->IASetIndexBuffer(ib, DXGI_FORMAT_R16_UINT, 0);
-}
-
 void D3D11RenderContext::set_texture_transform(const GrMatrix3x3& transform)
 {
     if (current_texture_transform_ == transform) {
@@ -243,4 +236,14 @@ void D3D11RenderContext::bind_vs_cbuffer(int index, ID3D11Buffer* cbuffer)
 {
     ID3D11Buffer* vs_cbuffers[] = { cbuffer };
     context_->VSSetConstantBuffers(index, std::size(vs_cbuffers), vs_cbuffers);
+}
+
+void D3D11RenderContext::bind_default_shaders()
+{
+    shader_manager_.bind_default_shaders(*this);
+}
+
+void D3D11RenderContext::bind_character_shaders()
+{
+    shader_manager_.bind_character_shaders(*this);
 }

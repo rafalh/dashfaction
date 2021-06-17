@@ -21,8 +21,6 @@ public:
         mesh_(mesh)
     {}
 
-    void render(const rf::MeshRenderParams& params, D3D11RenderContext& render_context);
-
     rf::VifMesh* get_mesh() const
     {
         return mesh_;
@@ -36,6 +34,9 @@ protected:
         int texture_index;
         rf::gr::Mode mode;
     };
+
+    void draw(const rf::MeshRenderParams& params, D3D11RenderContext& render_context);
+    const int* get_tex_handles(const rf::MeshRenderParams& params);
 
     rf::VifMesh* mesh_;
     std::vector<Batch> batches_;

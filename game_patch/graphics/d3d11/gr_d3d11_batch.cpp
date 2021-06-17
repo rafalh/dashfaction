@@ -1,4 +1,6 @@
 #include "gr_d3d11.h"
+#include "gr_d3d11_batch.h"
+#include "gr_d3d11_context.h"
 
 using namespace rf;
 
@@ -88,7 +90,9 @@ void D3D11BatchManager::flush()
         unmap_dynamic_buffers();
     }
 
-    context_->IASetPrimitiveTopology(primitive_topology_);
+    bind_resources();
+
+    render_context_.set_primitive_topology(primitive_topology_);
     render_context_.set_mode(mode_);
     render_context_.set_texture(0, textures_[0]);
     render_context_.set_texture(1, textures_[1]);
@@ -166,11 +170,9 @@ void D3D11BatchManager::tmapper(int nv, gr::Vertex **vertices, int tmap_flags, g
     }
 }
 
-void D3D11BatchManager::bind_buffers()
+void D3D11BatchManager::bind_resources()
 {
-    UINT stride = sizeof(GpuVertex);
-    UINT offset = 0;
-    ID3D11Buffer* vertex_buffers[] = { dynamic_vb_ };
-    context_->IASetVertexBuffers(0, std::size(vertex_buffers), vertex_buffers, &stride, &offset);
-    context_->IASetIndexBuffer(dynamic_ib_, DXGI_FORMAT_R16_UINT, 0);
+    render_context_.set_vertex_buffer(dynamic_vb_, sizeof(GpuVertex));
+    render_context_.set_index_buffer(dynamic_ib_);
+    render_context_.bind_default_shaders();
 }

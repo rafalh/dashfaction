@@ -16,6 +16,8 @@
 #include "../../rf/os/timer.h"
 #include "../../os/console.h"
 #include "gr_d3d11.h"
+#include "gr_d3d11_solid.h"
+#include "gr_d3d11_context.h"
 
 using namespace rf;
 
@@ -259,9 +261,10 @@ void GRenderCache::render(FaceRenderType what, D3D11RenderContext& context)
         return;
     }
 
-    context.set_vertex_buffer(vb_);
+    context.bind_default_shaders();
+    context.set_vertex_buffer(vb_, sizeof(GpuVertex));
     context.set_index_buffer(ib_);
-    context.device_context()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    context.set_primitive_topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     for (Batch& b : batches) {
         context.set_mode_and_textures(b.mode, b.texture_1, b.texture_2);
         GrMatrix3x3 tex_transform = build_uv_pan_matrix(b.u_pan_speed, b.v_pan_speed);

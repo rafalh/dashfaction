@@ -1,4 +1,5 @@
 #include "gr_d3d11.h"
+#include "gr_d3d11_state.h"
 
 using namespace rf;
 

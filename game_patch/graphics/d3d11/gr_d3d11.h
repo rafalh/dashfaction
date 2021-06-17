@@ -7,15 +7,26 @@
 #include "../../rf/gr/gr.h"
 #include "../../rf/os/os.h"
 #include "gr_d3d11_transform.h"
-#include "gr_d3d11_state.h"
-#include "gr_d3d11_context.h"
-#include "gr_d3d11_texture.h"
-#include "gr_d3d11_batch.h"
-#include "gr_d3d11_solid.h"
-#include "gr_d3d11_mesh.h"
+
+namespace rf
+{
+    struct GSolid;
+    struct GRoom;
+    struct VifMesh;
+    struct MeshRenderParams;
+    struct CharacterInstance;
+}
 
 constexpr float d3d11_zm = 1 / 1700.0f;
 // constexpr ubyte GR_DIRECT3D11 = 0x7A;
+
+class D3D11StateManager;
+class D3D11ShaderManager;
+class D3D11TextureManager;
+class D3D11BatchManager;
+class D3D11RenderContext;
+class D3D11SolidRenderer;
+class D3D11MeshRenderer;
 
 class D3D11Renderer
 {
@@ -47,28 +58,19 @@ private:
     void init_device(HWND hwnd, HMODULE d3d11_lib);
     void init_back_buffer();
     void init_depth_stencil_buffer();
-    void init_vertex_shader();
-    void init_pixel_shader();
-    void init_character_shaders();
-    std::pair<ComPtr<ID3D11VertexShader>, ComPtr<ID3D11InputLayout>> load_vertex_shader(const char* filename, const D3D11_INPUT_ELEMENT_DESC input_elements[], std::size_t num_input_elements);
-    ComPtr<ID3D11PixelShader> load_pixel_shader(const char* filename);
 
     ComPtr<ID3D11Device> device_;
     ComPtr<IDXGISwapChain> swap_chain_;
     ComPtr<ID3D11DeviceContext> context_;
     ComPtr<ID3D11RenderTargetView> back_buffer_view_;
     ComPtr<ID3D11DepthStencilView> depth_stencil_buffer_view_;
-    ComPtr<ID3D11VertexShader> vertex_shader_;
-    ComPtr<ID3D11VertexShader> character_vertex_shader_;
-    ComPtr<ID3D11PixelShader> pixel_shader_;
-    ComPtr<ID3D11InputLayout> input_layout_;
-    ComPtr<ID3D11InputLayout> character_input_layout_;
-    std::optional<D3D11StateManager> state_manager_;
-    std::optional<D3D11TextureManager> texture_manager_;
-    std::optional<D3D11BatchManager> batch_manager_;
-    std::optional<D3D11RenderContext> render_context_;
-    std::optional<D3D11SolidRenderer> solid_renderer_;
-    std::optional<D3D11MeshRenderer> mesh_renderer_;
+    std::unique_ptr<D3D11StateManager> state_manager_;
+    std::unique_ptr<D3D11ShaderManager> shader_manager_;
+    std::unique_ptr<D3D11TextureManager> texture_manager_;
+    std::unique_ptr<D3D11BatchManager> batch_manager_;
+    std::unique_ptr<D3D11RenderContext> render_context_;
+    std::unique_ptr<D3D11SolidRenderer> solid_renderer_;
+    std::unique_ptr<D3D11MeshRenderer> mesh_renderer_;
 };
 
 static inline void check_hr(HRESULT hr, const char* fun)

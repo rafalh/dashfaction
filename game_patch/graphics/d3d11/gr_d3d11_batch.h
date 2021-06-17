@@ -14,13 +14,13 @@ public:
     D3D11BatchManager(ComPtr<ID3D11Device> device, ComPtr<ID3D11DeviceContext> context, D3D11RenderContext& render_context);
     void tmapper(int nv, rf::gr::Vertex **vertices, int tmap_flags, rf::gr::Mode mode);
     void flush();
-    void bind_buffers();
 
 private:
     void create_dynamic_vb();
     void create_dynamic_ib();
     void map_dynamic_buffers(bool vb_full, bool ib_full);
     void unmap_dynamic_buffers();
+    void bind_resources();
 
     ComPtr<ID3D11Device> device_;
     ComPtr<ID3D11DeviceContext> context_;
