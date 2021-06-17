@@ -79,6 +79,35 @@ namespace rf
     };
     static_assert(sizeof(Character) == 0x1A58);
 
+    struct CharacterInstance
+    {
+        Matrix43 bone_transforms_combined[50];
+        Matrix43 bone_transforms_final[50];
+        Vector3 root_offset;
+        bool fast_anim;
+        int num_active_anims;
+        CiAnimInfo active_anims[16];
+        CiBoneInfo bone_info[50];
+        int field_1CF4;
+        short iteration_counter;
+        int animation_to_freeze_index;
+        int animation_alone_index;
+        float cyclic_percent;
+        Vector3 field_1D08;
+        int field_1D14;
+        int field_1D18;
+        int field_1D1C;
+        Vector3 field_1D20;
+        Vector3 field_1D2C;
+        Vector3 field_1D38;
+        bool state_trigger_elapsed[2];
+        int dominant_state_index;
+        bool holding_last_action_frame;
+        Character *base_character;
+        CharacterInstance *next;
+        CharacterInstance *prev;
+    };
+
     static auto& skeleton_link_base = addr_as_ref<Skeleton *__cdecl(const char *filename)>(0x00539D00);
     static auto& skeleton_unlink_base = addr_as_ref<void __cdecl(Skeleton *s, bool force_unload)>(0x00539D20);
     static auto& skeleton_page_in = addr_as_ref<bool __cdecl(const char *filename, void *data_block)>(0x0053A980);

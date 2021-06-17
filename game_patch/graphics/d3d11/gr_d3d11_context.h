@@ -12,7 +12,6 @@ struct GpuVertex
     float x;
     float y;
     float z;
-    // float w;
     float u0;
     float v0;
     float u1;
@@ -20,7 +19,7 @@ struct GpuVertex
     int diffuse;
 };
 
-struct VertexShaderUniforms
+struct CameraUniforms
 {
     std::array<std::array<float, 4>, 4> model_mat;
     std::array<std::array<float, 4>, 4> view_mat;
@@ -60,14 +59,20 @@ public:
         const ComPtr<ID3D11RenderTargetView>& back_buffer_view,
         const ComPtr<ID3D11DepthStencilView>& depth_stencil_buffer_view
     );
-    void update_vs_uniforms(const VertexShaderUniforms& uniforms);
+    void update_camera_uniforms(const CameraUniforms& uniforms);
     void set_vertex_buffer(ID3D11Buffer* vb);
     void set_index_buffer(ID3D11Buffer* ib);
     void set_texture_transform(const GrMatrix3x3& transform);
+    void bind_vs_cbuffer(int index, ID3D11Buffer* cbuffer);
 
     ID3D11DeviceContext* device_context()
     {
         return context_;
+    }
+
+    const CameraUniforms& camera_uniforms()
+    {
+        return camera_uniforms_;
     }
 
 private:
@@ -83,4 +88,5 @@ private:
     ComPtr<ID3D11Buffer> texture_transform_cbuffer_;
     int white_bm_;
     GrMatrix3x3 current_texture_transform_;
+    CameraUniforms camera_uniforms_;
 };

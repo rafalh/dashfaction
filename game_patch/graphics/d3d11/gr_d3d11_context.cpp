@@ -53,13 +53,13 @@ void D3D11RenderContext::init_vs_cbuffer()
     D3D11_BUFFER_DESC buffer_desc;
     ZeroMemory(&buffer_desc, sizeof(buffer_desc));
     buffer_desc.Usage            = D3D11_USAGE_DYNAMIC;
-    buffer_desc.ByteWidth        = sizeof(VertexShaderUniforms);
+    buffer_desc.ByteWidth        = sizeof(CameraUniforms);
     buffer_desc.BindFlags        = D3D11_BIND_CONSTANT_BUFFER;
     buffer_desc.CPUAccessFlags   = D3D11_CPU_ACCESS_WRITE;
     buffer_desc.MiscFlags        = 0;
     buffer_desc.StructureByteStride = 0;
 
-    VertexShaderUniforms data;
+    CameraUniforms data;
     std::memset(&data, 0, sizeof(data));
     data.model_mat = gr_d3d11_build_identity_matrix();
     data.view_mat = gr_d3d11_build_identity_matrix();
@@ -183,12 +183,13 @@ void D3D11RenderContext::set_mode_and_textures(rf::gr::Mode mode, int bm_handle1
     set_texture(1, textures[1]);
 }
 
-void D3D11RenderContext::update_vs_uniforms(const VertexShaderUniforms& data)
+void D3D11RenderContext::update_camera_uniforms(const CameraUniforms& uniforms)
 {
+    camera_uniforms_ = uniforms;
     D3D11_MAPPED_SUBRESOURCE mapped_cbuffer;
     HRESULT hr = context_->Map(vs_cbuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_cbuffer);
     check_hr(hr, "Map");
-    std::memcpy(mapped_cbuffer.pData, &data, sizeof(data));
+    std::memcpy(mapped_cbuffer.pData, &camera_uniforms_, sizeof(camera_uniforms_));
     context_->Unmap(vs_cbuffer_, 0);
 }
 
@@ -236,4 +237,10 @@ void D3D11RenderContext::set_texture_transform(const GrMatrix3x3& transform)
     check_hr(hr, "Map");
     std::memcpy(mapped_cbuffer.pData, &uniforms, sizeof(uniforms));
     context_->Unmap(texture_transform_cbuffer_, 0);
+}
+
+void D3D11RenderContext::bind_vs_cbuffer(int index, ID3D11Buffer* cbuffer)
+{
+    ID3D11Buffer* vs_cbuffers[] = { cbuffer };
+    context_->VSSetConstantBuffers(index, std::size(vs_cbuffers), vs_cbuffers);
 }

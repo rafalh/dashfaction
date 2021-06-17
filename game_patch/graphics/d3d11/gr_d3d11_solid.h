@@ -53,6 +53,19 @@ private:
     std::vector<Batch> liquid_batches_;
     ComPtr<ID3D11Buffer> vb_;
     ComPtr<ID3D11Buffer> ib_;
+
+    std::vector<Batch>& get_batches(FaceRenderType render_type)
+    {
+        if (render_type == FaceRenderType::alpha) {
+            return alpha_batches_;
+        }
+        else if (render_type == FaceRenderType::liquid) {
+            return liquid_batches_;
+        }
+        else {
+            return opaque_batches_;
+        }
+    }
 };
 
 class RoomRenderCache

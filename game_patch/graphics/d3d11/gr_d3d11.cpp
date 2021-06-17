@@ -5,6 +5,7 @@
 #include "../../rf/gr/gr.h"
 #include "../../rf/file/file.h"
 #include "../../rf/os/os.h"
+#include "../../rf/v3d.h"
 #include "../../bmpman/bmpman.h"
 #include "gr_d3d11.h"
 
@@ -133,21 +134,53 @@ void D3D11Renderer::init_depth_stencil_buffer()
     check_hr(hr, "CreateDepthStencilView");
 }
 
-void D3D11Renderer::init_vertex_shader()
+std::pair<ComPtr<ID3D11VertexShader>, ComPtr<ID3D11InputLayout>> D3D11Renderer::load_vertex_shader(const char* filename, const D3D11_INPUT_ELEMENT_DESC input_elements[], std::size_t num_input_elements)
 {
     rf::File file;
-    if (file.open("default_vs.bin") != 0) {
-        xlog::error("Cannot open vertex shader file");
-        return;
+    if (file.open(filename) != 0) {
+        xlog::error("Cannot open vertex shader file %s", filename);
+        return {{}, {}};
     }
     int size = file.size();
     auto shader_data = std::make_unique<std::byte[]>(size);
     int bytes_read = file.read(shader_data.get(), size);
     xlog::info("Vertex shader size %d file size %d first byte %02x", bytes_read, size,
         static_cast<ubyte>(shader_data.get()[0]));
-    HRESULT hr = device_->CreateVertexShader(shader_data.get(), size, nullptr, &vertex_shader_);
+    ComPtr<ID3D11VertexShader> vertex_shader;
+    HRESULT hr = device_->CreateVertexShader(shader_data.get(), size, nullptr, &vertex_shader);
     check_hr(hr, "CreateVertexShader");
 
+    ComPtr<ID3D11InputLayout> input_layout;
+    hr = device_->CreateInputLayout(
+        input_elements,
+        num_input_elements,
+        shader_data.get(),
+        size,
+        &input_layout
+    );
+    check_hr(hr, "CreateInputLayout");
+
+    return {std::move(vertex_shader), std::move(input_layout)};
+}
+
+ComPtr<ID3D11PixelShader> D3D11Renderer::load_pixel_shader(const char* filename)
+{
+    rf::File file;
+    if (file.open(filename) != 0) {
+        xlog::error("Cannot open pixel shader file");
+        return {};
+    }
+    int size = file.size();
+    auto shader_data = std::make_unique<std::byte[]>(size);
+    file.read(shader_data.get(), size);
+    ComPtr<ID3D11PixelShader> pixel_shader;
+    HRESULT hr = device_->CreatePixelShader(shader_data.get(), size, nullptr, &pixel_shader);
+    check_hr(hr, "CreatePixelShader");
+    return pixel_shader;
+}
+
+void D3D11Renderer::init_vertex_shader()
+{
     D3D11_INPUT_ELEMENT_DESC desc[] = {
         { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
         // { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
@@ -155,33 +188,34 @@ void D3D11Renderer::init_vertex_shader()
         { "TEXCOORD", 1, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
         { "COLOR", 0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
     };
-    xlog::info("layout size %d", std::size(desc));
-    hr = device_->CreateInputLayout(
-        desc,
-        std::size(desc),
-        shader_data.get(),
-        size,
-        &input_layout_
-    );
-    check_hr(hr, "CreateInputLayout");
+    auto p = load_vertex_shader("default_vs.bin", desc, std::size(desc));
+    vertex_shader_ = std::move(p.first);
+    input_layout_ = std::move(p.second);
 
     context_->IASetInputLayout(input_layout_);
     context_->VSSetShader(vertex_shader_, nullptr, 0);
+
+    init_character_shaders();
+}
+
+void D3D11Renderer::init_character_shaders()
+{
+    D3D11_INPUT_ELEMENT_DESC desc[] = {
+        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        // { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "COLOR", 0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "COLOR", 1, DXGI_FORMAT_R8G8B8A8_UNORM, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "COLOR", 2, DXGI_FORMAT_R8G8B8A8_UNORM, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    };
+    auto p = load_vertex_shader("character_vs.bin", desc, std::size(desc));
+    character_vertex_shader_ = std::move(p.first);
+    character_input_layout_ = std::move(p.second);
 }
 
 void D3D11Renderer::init_pixel_shader()
 {
-    rf::File file;
-    if (file.open("default_ps.bin") != 0) {
-        xlog::error("Cannot open pixel shader file");
-        return;
-    }
-    int size = file.size();
-    auto shader_data = std::make_unique<std::byte[]>(size);
-    file.read(shader_data.get(), size);
-    HRESULT hr = device_->CreatePixelShader(shader_data.get(), size, nullptr, &pixel_shader_);
-    check_hr(hr, "CreatePixelShader");
-
+    pixel_shader_ = load_pixel_shader("default_ps.bin");
     context_->PSSetShader(pixel_shader_, nullptr, 0);
 }
 
@@ -200,6 +234,7 @@ D3D11Renderer::D3D11Renderer(HWND hwnd, HMODULE d3d11_lib)
     render_context_->set_render_target(back_buffer_view_, depth_stencil_buffer_view_);
     batch_manager_.emplace(device_, context_, render_context_.value());
     solid_renderer_.emplace(device_, context_, render_context_.value());
+    mesh_renderer_.emplace(device_, render_context_.value());
 
     //gr::screen.mode = GR_DIRECT3D11;
     gr::screen.depthbuffer_type = gr::DEPTHBUFFER_Z;
@@ -358,6 +393,24 @@ void D3D11Renderer::clear_solid_cache()
     solid_renderer_->clear_cache();
 }
 
+void D3D11Renderer::render_v3d_vif(rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::MeshRenderParams& params)
+{
+    batch_manager_->flush();
+    mesh_renderer_->render_v3d_vif(mesh, pos, orient, params);
+    batch_manager_->bind_buffers();
+}
+
+void D3D11Renderer::render_character_vif(rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::CharacterInstance *ci, const rf::MeshRenderParams& params)
+{
+    batch_manager_->flush();
+    context_->IASetInputLayout(character_input_layout_);
+    context_->VSSetShader(character_vertex_shader_, nullptr, 0);
+    mesh_renderer_->render_character_vif(mesh, pos, orient, ci, params);
+    context_->IASetInputLayout(input_layout_);
+    context_->VSSetShader(vertex_shader_, nullptr, 0);
+    batch_manager_->bind_buffers();
+}
+
 HRESULT D3D11Renderer::get_device_removed_reason()
 {
     return device_ ? device_->GetDeviceRemovedReason() : E_FAIL;
@@ -456,6 +509,20 @@ void gr_d3d11_render_sky_room(GRoom *room)
 {
     d3d11_renderer->render_sky_room(room);
 }
+
+void gr_d3d11_render_v3d_vif([[maybe_unused]] VifLodMesh *lod_mesh, VifMesh *mesh, const Vector3& pos, const Matrix3& orient, [[maybe_unused]] int lod_index, [[maybe_unused]] const MeshRenderParams& params)
+{
+    d3d11_renderer->render_v3d_vif(mesh, pos, orient, params);
+}
+
+void gr_d3d11_render_character_vif([[maybe_unused]] VifLodMesh *lod_mesh, VifMesh *mesh, const Vector3& pos, const Matrix3& orient, const CharacterInstance *ci, [[maybe_unused]] int lod_index, [[maybe_unused]] const MeshRenderParams& params)
+{
+    d3d11_renderer->render_character_vif(mesh, pos, orient, ci, params);
+}
+
+// void gr_d3d11_render_lod_vif(rf::VifLodMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, rf::CharacterInstance *ci, rf::MeshRenderParams *params)
+// {
+// }
 
 HRESULT gr_d3d11_get_device_removed_reason()
 {
@@ -576,6 +643,11 @@ void gr_d3d11_apply_patch()
     AsmWriter{0x0055D190}.ret(); // gr_d3d_texture_remove_ref
     AsmWriter{0x0055F5E0}.jmp(gr_d3d11_render_solid); // gr_d3d_render_static_solid
     AsmWriter{0x00561650}.ret(); // gr_d3d_render_face_list
-    AsmWriter{0x0052FA40}.ret(); // gr_d3d_render_vif_mesh
+    //AsmWriter{0x0052FA40}.jmp(gr_d3d11_render_lod_vif); // gr_d3d_render_vif_mesh
+    AsmWriter{0x0052DE10}.jmp(gr_d3d11_render_v3d_vif); // gr_d3d_render_v3d_vif
+    AsmWriter{0x0052E9E0}.jmp(gr_d3d11_render_character_vif); // gr_d3d_render_character_vif
     AsmWriter{0x004D34D0}.jmp(gr_d3d11_render_alpha_detail_room); // room_render_alpha_detail
+
+    write_mem<int8_t>(0x00569884 + 1, sizeof(rf::VifMesh));
+    write_mem<int8_t>(0x00569732 + 1, sizeof(rf::VifLodMesh));
 }

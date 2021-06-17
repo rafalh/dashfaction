@@ -1,5 +1,11 @@
 #pragma once
 
+#include "math/plane.h"
+#include "math/quaternion.h"
+#include "gr/gr.h"
+
+class BaseMeshRenderCache;
+
 namespace rf
 {
     struct V3dMesh;
@@ -31,4 +37,93 @@ namespace rf
         int flags;
     };
     static_assert(sizeof(V3d) == 0x90);
+
+    struct WeightIndexArray
+    {
+        ubyte weights[4];
+        ubyte indices[4];
+    };
+
+    struct VifFace
+    {
+        ushort vindex1;
+        ushort vindex2;
+        ushort vindex3;
+        ushort flags;
+    };
+
+    struct VifChunk
+    {
+        gr::Mode mode;
+        Vector3 *vecs;
+        Vector3 *norms;
+        Vector2 *uvs;
+        Plane *face_planes;
+        VifFace *faces;
+        short *same_vertex_offsets;
+        WeightIndexArray *wi;
+        int texture_idx;
+        short *morph_vertices_map;
+        ushort num_vecs;
+        ushort num_faces;
+        ushort vecs_alloc;
+        ushort faces_alloc;
+        ushort uvs_alloc;
+        ushort wi_alloc;
+        ushort same_vertex_offsets_alloc;
+    };
+
+    struct VifPropPoint
+    {
+        char name[68];
+        Quaternion orient;
+        Vector3 pos;
+        int parent_index;
+    };
+
+    struct VifMesh
+    {
+        int data_block_size;
+        void *data_block;
+        VifChunk *chunks;
+        ushort num_chunks;
+        VifPropPoint *prop_points;
+        int num_prop_points;
+        ubyte tex_ids[7];
+        int tex_handles[7];
+        int num_textures_handles;
+        int flags;
+        int num_vertices;
+        int unk_field_from_v3d_file;
+        BaseMeshRenderCache* render_cache;
+    };
+
+    constexpr int VIF_MESH_RENDER_CACHED = 0x10000000; // DF only
+    constexpr int VIF_FACE_DOUBLE_SIDED = 0x20;
+
+    struct VifLodMesh
+    {
+        int num_lods;
+        VifMesh *lods[3];
+        float lod_distances[3];
+        Vector3 center;
+        float radius;
+        Vector3 bbox_min;
+        Vector3 bbox_max;
+    };
+
+    struct MeshRenderParams
+    {
+        int flags;
+        int lod_level;
+        int alpha;
+        gr::Color self_illum; // unused
+        int *alt_tex;
+        float field_14_unk_fire;
+        gr::Color field_18;
+        ubyte *vertex_colors;
+        int powerup_bitmaps[2];
+        gr::Color ambient_color;
+        Matrix3 orient;
+    };
 }

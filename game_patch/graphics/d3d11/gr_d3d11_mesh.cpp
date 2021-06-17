@@ -1,65 +1,27 @@
 #include <memory>
+#include <cstring>
 #include <windows.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/ComPtr.h>
 #include <xlog/xlog.h>
-#include "../rf/gr/gr.h"
-#include "../rf/math/quaternion.h"
-#include "../rf/v3d.h"
-#include "../rf/character.h"
+#include "../../rf/gr/gr.h"
+#include "../../rf/math/quaternion.h"
+#include "../../rf/v3d.h"
+#include "../../rf/character.h"
 #include "gr_d3d11.h"
 
 using namespace rf;
 
-class BaseMeshRenderCache
-{
-public:
-    virtual ~BaseMeshRenderCache() {}
-    BaseMeshRenderCache(VifMesh* mesh, size_t vertex_stride) :
-        mesh_(mesh), vertex_stride_(vertex_stride)
-    {}
-
-    void render(const MeshRenderParams& params);
-
-    VifMesh* get_mesh() const
-    {
-        return mesh_;
-    }
-
-protected:
-    struct Batch
-    {
-        int min_index;
-        int start_index;
-        int num_verts;
-        int num_tris;
-        int texture_index;
-        gr::Mode mode;
-    };
-
-    VifMesh* mesh_;
-    size_t vertex_stride_;
-    std::vector<Batch> batches_;
-    ComPtr<ID3D11Buffer> vb_;
-    ComPtr<ID3D11Buffer> ib_;
-
-    void create_buffers(DWORD fvf);
-};
-
 class MeshRenderCache : public BaseMeshRenderCache
 {
 public:
-    MeshRenderCache(VifMesh* mesh);
-
-private:
-    void update_buffers();
+    MeshRenderCache(VifMesh* mesh, ID3D11Device* device);
 };
-
 class CharacterMeshRenderCache : public BaseMeshRenderCache
 {
 public:
-    CharacterMeshRenderCache(VifMesh* mesh);
-    void render(const Vector3& pos, const Matrix3& orient, const CharacterInstance* ci, const MeshRenderParams& params);
+    CharacterMeshRenderCache(VifMesh* mesh, ID3D11Device* device, const CharacterInstance *ci);
+    void render(const Vector3& pos, const Matrix3& orient, const CharacterInstance* ci, const MeshRenderParams& params, D3D11RenderContext& render_context);
 
 private:
     struct GpuVertex
@@ -67,321 +29,281 @@ private:
         float x;
         float y;
         float z;
-        float weight[4];
-        DWORD matrix_indices;
-        int diffuse;
         float u0;
         float v0;
+        int diffuse;
+        rf::ubyte weights[4];
+        rf::ubyte indices[4];
     };
-    // FIXME: static_assert(sizeof(GpuVertex) == 32);
 
-    void update_buffers();
+    struct MatricesUniforms
+    {
+        GrMatrix4x4 matrices[50];
+    };
+
+    ComPtr<ID3D11Buffer> matrices_cbuffer_;
+
+    void update_matrices_buffer(const CharacterInstance* ci, D3D11RenderContext& render_context);
 };
 
-void BaseMeshRenderCache::create_buffers(DWORD fvf)
+void BaseMeshRenderCache::render(const MeshRenderParams& params, D3D11RenderContext& render_context)
 {
-    // int num_verts = 0;
-    // int num_inds = 0;
-    // for (int i = 0; i < mesh_->num_chunks; ++i) {
-    //     auto& chunk = mesh_->chunks[i];
+    int* tex_handles = mesh_->tex_handles;
+    if (params.alt_tex) {
+        tex_handles = params.alt_tex;
+    }
+    //xlog::warn("render mesh flags %x", params.flags);
 
-    //     int num_double_sided_faces = 0;
-    //     for (int face_index = 0; face_index < chunk.num_faces; ++face_index) {
-    //         auto& face = chunk.faces[face_index];
-    //         if (face.flags & VIF_FACE_DOUBLE_SIDED) {
-    //             ++num_double_sided_faces;
-    //         }
-    //     }
-
-    //     if (num_double_sided_faces > 0) {
-    //         xlog::warn("Double sided faces: %d", num_double_sided_faces);
-    //     }
-
-    //     Batch b;
-    //     b.num_verts = chunk.num_vecs;
-    //     b.num_tris = chunk.num_faces + num_double_sided_faces;
-    //     b.min_index = num_verts;
-    //     b.start_index = num_inds;
-    //     b.texture_index = chunk.texture_idx;
-    //     b.mode = chunk.mode;
-    //     batches_.push_back(b);
-
-    //     num_verts += chunk.num_vecs;
-    //     num_inds += (chunk.num_faces + num_double_sided_faces) * 3;
-    // }
-    // xlog::warn("Creating mesh render buffer - verts %d inds %d", num_verts, num_inds);
-
-    // HRESULT hr;
-    // DWORD usage = D3DUSAGE_WRITEONLY;
-    // hr = gr::d3d::device->CreateVertexBuffer(num_verts * vertex_stride_, usage, fvf, D3DPOOL_MANAGED, &vb_);
-    // check_hr(hr, "CreateVertexBuffer");
-    // hr = gr::d3d::device->CreateIndexBuffer(num_inds * sizeof(ushort), usage, D3DFMT_INDEX16, D3DPOOL_MANAGED, &ib_);
-    // check_hr(hr, "CreateIndexBuffer");
-}
-
-void BaseMeshRenderCache::render(const MeshRenderParams& params)
-{
-    // int* tex_handles = mesh_->tex_handles;
-    // if (params.alt_tex) {
-    //     tex_handles = params.alt_tex;
-    // }
-    // //xlog::warn("render mesh flags %x", params.flags);
-    // HRESULT hr;
-    // hr = gr::d3d::device->SetStreamSource(0, vb_, vertex_stride_);
-    // check_hr(hr, "SetStreamSource");
-    // hr = gr::d3d::device->SetIndices(ib_, 0);
-    // check_hr(hr, "SetIndices");
-    // for (auto& b : batches_) {
-    //     int texture = tex_handles[b.texture_index];
-    //     gr::d3d::set_state_and_texture(b.mode, texture, -1);
-    //     gr::d3d::device->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, b.min_index, b.num_verts, b.start_index, b.num_tris);
-    // }
+    render_context.set_vertex_buffer(vb_);
+    render_context.set_index_buffer(ib_);
+    for (auto& b : batches_) {
+        int texture = tex_handles[b.texture_index];
+        render_context.set_mode_and_textures(b.mode, texture, -1);
+        render_context.device_context()->DrawIndexed(b.num_indices, b.start_index, 0);
+    }
     // TODO: params.alpha
 }
 
-MeshRenderCache::MeshRenderCache(VifMesh* mesh) :
-    BaseMeshRenderCache(mesh, sizeof(GpuVertex))
+MeshRenderCache::MeshRenderCache(VifMesh* mesh, ID3D11Device* device) :
+    BaseMeshRenderCache(mesh)
 {
-    create_buffers(fvf);
-    update_buffers();
+    std::size_t num_verts = 0;
+    std::size_t num_inds = 0;
+    for (int chunk_index = 0; chunk_index < mesh_->num_chunks; ++chunk_index) {
+        auto& chunk = mesh_->chunks[chunk_index];
+        num_verts += chunk.num_vecs;
+        // Note: we may reserve too little if mesh uses double sided faces but it is fine
+        num_inds += chunk.num_faces * 3;
+    }
+
+    std::vector<GpuVertex> gpu_verts;
+    std::vector<rf::ushort> gpu_inds;
+    gpu_verts.reserve(num_verts);
+    gpu_inds.reserve(num_inds);
+    batches_.reserve(mesh_->num_chunks);
+
+    for (int chunk_index = 0; chunk_index < mesh_->num_chunks; ++chunk_index) {
+        auto& chunk = mesh_->chunks[chunk_index];
+
+        Batch& b = batches_.emplace_back();
+        b.start_index = gpu_inds.size();
+        b.texture_index = chunk.texture_idx;
+        b.mode = chunk.mode;
+
+        int chunk_start_index = gpu_verts.size();
+        for (int vert_index = 0; vert_index < chunk.num_vecs; ++vert_index) {
+            auto& gpu_vert = gpu_verts.emplace_back();
+            gpu_vert.x = chunk.vecs[vert_index].x;
+            gpu_vert.y = chunk.vecs[vert_index].y;
+            gpu_vert.z = chunk.vecs[vert_index].z;
+            gpu_vert.u0 = chunk.uvs[vert_index].x;
+            gpu_vert.v0 = chunk.uvs[vert_index].y;
+            gpu_vert.diffuse = 0xFFFFFFFF;
+        }
+        for (int face_index = 0; face_index < chunk.num_faces; ++face_index) {
+            auto& face = chunk.faces[face_index];
+            gpu_inds.emplace_back(chunk_start_index + face.vindex1);
+            gpu_inds.emplace_back(chunk_start_index + face.vindex2);
+            gpu_inds.emplace_back(chunk_start_index + face.vindex3);
+            if (face.flags & VIF_FACE_DOUBLE_SIDED) {
+                gpu_inds.emplace_back(chunk_start_index + face.vindex1);
+                gpu_inds.emplace_back(chunk_start_index + face.vindex3);
+                gpu_inds.emplace_back(chunk_start_index + face.vindex2);
+            }
+        }
+
+        b.num_indices = gpu_inds.size() - b.start_index;
+    }
+    xlog::warn("Creating mesh render buffer - verts %d inds %d", gpu_verts.size(), gpu_inds.size());
+
+    CD3D11_BUFFER_DESC vb_desc{
+        sizeof(gpu_verts[0]) * gpu_verts.size(),
+        D3D11_BIND_VERTEX_BUFFER,
+        D3D11_USAGE_IMMUTABLE,
+    };
+    D3D11_SUBRESOURCE_DATA vb_subres_data{gpu_verts.data(), 0, 0};
+    HRESULT hr = device->CreateBuffer(&vb_desc, &vb_subres_data, &vb_);
+    check_hr(hr, "CreateBuffer");
+
+    CD3D11_BUFFER_DESC ib_desc{
+        sizeof(gpu_inds[0]) * gpu_inds.size(),
+        D3D11_BIND_INDEX_BUFFER,
+        D3D11_USAGE_IMMUTABLE,
+    };
+    D3D11_SUBRESOURCE_DATA ib_subres_data{gpu_inds.data(), 0, 0};
+    hr = device->CreateBuffer(&ib_desc, &ib_subres_data, &ib_);
+    check_hr(hr, "CreateBuffer");
 }
 
-void MeshRenderCache::update_buffers()
+CharacterMeshRenderCache::CharacterMeshRenderCache(VifMesh* mesh, ID3D11Device* device, const CharacterInstance *ci) :
+    BaseMeshRenderCache(mesh)
 {
-    // batches_.reserve(mesh_->num_chunks);
+    std::size_t num_verts = 0;
+    std::size_t num_inds = 0;
+    for (int chunk_index = 0; chunk_index < mesh_->num_chunks; ++chunk_index) {
+        auto& chunk = mesh_->chunks[chunk_index];
+        num_verts += chunk.num_vecs;
+        // Note: we may reserve too little if mesh uses double sided faces but it is fine
+        num_inds += chunk.num_faces * 3;
+    }
 
-    // HRESULT hr;
-    // GpuVertex* vb_data;
-    // ushort* ib_data;
-    // hr = vb_->Lock(0, 0, reinterpret_cast<BYTE**>(&vb_data), 0);
-    // check_hr(hr, "Lock");
-    // hr = ib_->Lock(0, 0, reinterpret_cast<BYTE**>(&ib_data), 0);
-    // check_hr(hr, "Lock");
+    std::vector<GpuVertex> gpu_verts;
+    std::vector<rf::ushort> gpu_inds;
+    gpu_verts.reserve(num_verts);
+    gpu_inds.reserve(num_inds);
+    batches_.reserve(mesh_->num_chunks);
 
-    // int vb_pos = 0;
-    // int ib_pos = 0;
+    for (int chunk_index = 0; chunk_index < mesh_->num_chunks; ++chunk_index) {
+        auto& chunk = mesh_->chunks[chunk_index];
 
-    // for (int chunk_index = 0; chunk_index < mesh_->num_chunks; ++chunk_index) {
-    //     auto& chunk = mesh_->chunks[chunk_index];
-    //     int chunk_start_index = vb_pos;
-    //     for (int vert_index = 0; vert_index < chunk.num_vecs; ++vert_index) {
-    //         auto& d3d_vert = vb_data[vb_pos++];
-    //         d3d_vert.x = chunk.vecs[vert_index].x;
-    //         d3d_vert.y = chunk.vecs[vert_index].y;
-    //         d3d_vert.z = chunk.vecs[vert_index].z;
-    //         d3d_vert.u0 = chunk.uvs[vert_index].x;
-    //         d3d_vert.v0 = chunk.uvs[vert_index].y;
-    //         d3d_vert.diffuse = 0xFFFFFFFF;
-    //     }
-    //     for (int face_index = 0; face_index < chunk.num_faces; ++face_index) {
-    //         auto& face = chunk.faces[face_index];
-    //         ib_data[ib_pos++] = chunk_start_index + face.vindex1;
-    //         ib_data[ib_pos++] = chunk_start_index + face.vindex2;
-    //         ib_data[ib_pos++] = chunk_start_index + face.vindex3;
-    //         if (face.flags & VIF_FACE_DOUBLE_SIDED) {
-    //             ib_data[ib_pos++] = chunk_start_index + face.vindex1;
-    //             ib_data[ib_pos++] = chunk_start_index + face.vindex3;
-    //             ib_data[ib_pos++] = chunk_start_index + face.vindex2;
-    //         }
-    //     }
-    // }
+        Batch& b = batches_.emplace_back();
+        b.start_index = gpu_inds.size();
+        b.texture_index = chunk.texture_idx;
+        b.mode = chunk.mode;
 
-    // hr = vb_->Unlock();
-    // check_hr(hr, "Unlock");
-    // hr = ib_->Unlock();
-    // check_hr(hr, "Unlock");
+        int chunk_start_index = gpu_verts.size();
+        for (int vert_index = 0; vert_index < chunk.num_vecs; ++vert_index) {
+            auto& gpu_vert = gpu_verts.emplace_back();
+            gpu_vert.x = chunk.vecs[vert_index].x;
+            gpu_vert.y = chunk.vecs[vert_index].y;
+            gpu_vert.z = chunk.vecs[vert_index].z;
+            gpu_vert.u0 = chunk.uvs[vert_index].x;
+            gpu_vert.v0 = chunk.uvs[vert_index].y;
+            gpu_vert.diffuse = 0xFFFFFFFF;
+            if (chunk.wi) {
+                for (int i = 0; i < 4; ++i) {
+                    gpu_vert.weights[i] = chunk.wi[vert_index].weights[i];
+                    gpu_vert.indices[i] = chunk.wi[vert_index].indices[i];
+                    if (gpu_vert.indices[i] >= 50) {
+                        gpu_vert.indices[i] = 49;
+                    }
+                }
+            }
+        }
+        for (int face_index = 0; face_index < chunk.num_faces; ++face_index) {
+            auto& face = chunk.faces[face_index];
+            gpu_inds.emplace_back(chunk_start_index + face.vindex1);
+            gpu_inds.emplace_back(chunk_start_index + face.vindex2);
+            gpu_inds.emplace_back(chunk_start_index + face.vindex3);
+            if (face.flags & VIF_FACE_DOUBLE_SIDED) {
+                gpu_inds.emplace_back(chunk_start_index + face.vindex1);
+                gpu_inds.emplace_back(chunk_start_index + face.vindex3);
+                gpu_inds.emplace_back(chunk_start_index + face.vindex2);
+            }
+        }
+
+        b.num_indices = gpu_inds.size() - b.start_index;
+    }
+    xlog::warn("Creating mesh render buffer - verts %d inds %d", gpu_verts.size(), gpu_inds.size());
+
+    CD3D11_BUFFER_DESC vb_desc{
+        sizeof(gpu_verts[0]) * gpu_verts.size(),
+        D3D11_BIND_VERTEX_BUFFER,
+        D3D11_USAGE_IMMUTABLE,
+    };
+    D3D11_SUBRESOURCE_DATA vb_subres_data{gpu_verts.data(), 0, 0};
+    HRESULT hr = device->CreateBuffer(&vb_desc, &vb_subres_data, &vb_);
+    check_hr(hr, "CreateBuffer(character vertex buffer)");
+
+    CD3D11_BUFFER_DESC ib_desc{
+        sizeof(gpu_inds[0]) * gpu_inds.size(),
+        D3D11_BIND_INDEX_BUFFER,
+        D3D11_USAGE_IMMUTABLE,
+    };
+    D3D11_SUBRESOURCE_DATA ib_subres_data{gpu_inds.data(), 0, 0};
+    hr = device->CreateBuffer(&ib_desc, &ib_subres_data, &ib_);
+    check_hr(hr, "CreateBuffer(character index buffer)");
+
+    CD3D11_BUFFER_DESC matrices_buffer_desc{
+        sizeof(MatricesUniforms),
+        D3D11_BIND_CONSTANT_BUFFER,
+        D3D11_USAGE_DYNAMIC,
+        D3D11_CPU_ACCESS_WRITE,
+    };
+    hr = device->CreateBuffer(&matrices_buffer_desc, nullptr, &matrices_cbuffer_);
+    check_hr(hr, "CreateBuffer(character constant buffer)");
 }
 
-CharacterMeshRenderCache::CharacterMeshRenderCache(VifMesh* mesh) :
-    BaseMeshRenderCache(mesh, sizeof(GpuVertex))
+static GrMatrix4x4 convert_bone_matrix(const Matrix43& mat)
 {
-    create_buffers(fvf);
-    update_buffers();
+    return {{
+        {mat.orient.rvec.x, mat.orient.uvec.x, mat.orient.fvec.x, mat.origin.x},
+        {mat.orient.rvec.y, mat.orient.uvec.y, mat.orient.fvec.y, mat.origin.y},
+        {mat.orient.rvec.z, mat.orient.uvec.z, mat.orient.fvec.z, mat.origin.z},
+        {0, 0, 0, 1.0f},
+    }};
 }
 
-void CharacterMeshRenderCache::update_buffers()
+void CharacterMeshRenderCache::render(const Vector3& pos, const Matrix3& orient, const CharacterInstance* ci, const MeshRenderParams& params, D3D11RenderContext& render_context)
 {
-    // batches_.reserve(mesh_->num_chunks);
-
-    // HRESULT hr;
-    // GpuVertex* vb_data;
-    // ushort* ib_data;
-    // hr = vb_->Lock(0, 0, reinterpret_cast<BYTE**>(&vb_data), 0);
-    // check_hr(hr, "Lock");
-    // hr = ib_->Lock(0, 0, reinterpret_cast<BYTE**>(&ib_data), 0);
-    // check_hr(hr, "Lock");
-
-    // int vb_pos = 0;
-    // int ib_pos = 0;
-
-    // for (int chunk_index = 0; chunk_index < mesh_->num_chunks; ++chunk_index) {
-    //     auto& chunk = mesh_->chunks[chunk_index];
-    //     int chunk_start_index = vb_pos;
-    //     for (int vert_index = 0; vert_index < chunk.num_vecs; ++vert_index) {
-    //         auto& d3d_vert = vb_data[vb_pos++];
-    //         d3d_vert.x = chunk.vecs[vert_index].x;
-    //         d3d_vert.y = chunk.vecs[vert_index].y;
-    //         d3d_vert.z = chunk.vecs[vert_index].z;
-    //         if (chunk.wi) {
-    //             d3d_vert.matrix_indices = 0;
-    //             for (int i = 0; i < 4; ++i) {
-    //                 d3d_vert.weight[i] = chunk.wi[vert_index].weights[i] / 255.0f;
-    //                 d3d_vert.matrix_indices |= chunk.wi[vert_index].indices[i] << (i * 8);
-    //             }
-    //         }
-    //         d3d_vert.matrix_indices = 0;
-    //         d3d_vert.u0 = chunk.uvs[vert_index].x;
-    //         d3d_vert.v0 = chunk.uvs[vert_index].y;
-    //         d3d_vert.diffuse = 0xFFFFFFFF;
-    //     }
-    //     for (int face_index = 0; face_index < chunk.num_faces; ++face_index) {
-    //         auto& face = chunk.faces[face_index];
-    //         ib_data[ib_pos++] = chunk_start_index + face.vindex1;
-    //         ib_data[ib_pos++] = chunk_start_index + face.vindex2;
-    //         ib_data[ib_pos++] = chunk_start_index + face.vindex3;
-    //         if (face.flags & VIF_FACE_DOUBLE_SIDED) {
-    //             ib_data[ib_pos++] = chunk_start_index + face.vindex1;
-    //             ib_data[ib_pos++] = chunk_start_index + face.vindex3;
-    //             ib_data[ib_pos++] = chunk_start_index + face.vindex2;
-    //         }
-    //     }
-    // }
-
-    // hr = vb_->Unlock();
-    // check_hr(hr, "Unlock");
-    // hr = ib_->Unlock();
-    // check_hr(hr, "Unlock");
+    update_matrices_buffer(ci, render_context);
+    render_context.bind_vs_cbuffer(2, matrices_cbuffer_);
+    BaseMeshRenderCache::render(params, render_context);
+    render_context.bind_vs_cbuffer(2, nullptr);
 }
 
-// static D3DMATRIX build_d3d_matrix(const Matrix43& mat)
-// {
-//     D3DMATRIX d3d_mat;
-//     d3d_mat._11 = mat.orient.rvec.x;
-//     d3d_mat._12 = mat.orient.uvec.x;
-//     d3d_mat._13 = mat.orient.fvec.x;
-//     d3d_mat._14 = 0.0f;
-//     d3d_mat._21 = mat.orient.rvec.y;
-//     d3d_mat._22 = mat.orient.uvec.y;
-//     d3d_mat._23 = mat.orient.fvec.y;
-//     d3d_mat._24 = 0.0f;
-//     d3d_mat._31 = mat.orient.rvec.z;
-//     d3d_mat._32 = mat.orient.uvec.z;
-//     d3d_mat._33 = mat.orient.fvec.z;
-//     d3d_mat._34 = 0.0f;
-//     d3d_mat._41 = mat.origin.x;
-//     d3d_mat._42 = mat.origin.y;
-//     d3d_mat._43 = mat.origin.z;
-//     d3d_mat._44 = 1.0f;
-//     return d3d_mat;
-// }
-
-void CharacterMeshRenderCache::render(const Vector3& pos, const Matrix3& orient, const CharacterInstance* ci, const MeshRenderParams& params)
+void CharacterMeshRenderCache::update_matrices_buffer(const CharacterInstance* ci, D3D11RenderContext& render_context)
 {
-    // Matrix43 world_mat = {orient, pos};
-    // gr::d3d::device->SetRenderState(D3DRS_VERTEXBLEND, D3DVBF_3WEIGHTS);
-    // gr::d3d::device->SetRenderState(D3DRS_INDEXEDVERTEXBLENDENABLE, TRUE);
-    // for (int i = 0; i < ci->base_character->num_bones; ++i) {
-    //     auto bone_mat = ci->bone_transforms_final[i];
-    //     D3DMATRIX d3d_bone_world_mat = build_d3d_matrix(bone_mat * world_mat);
-    //     gr::d3d::device->SetTransform(D3DTS_WORLDMATRIX(i), &d3d_bone_world_mat);
-    // }
-    // BaseMeshRenderCache::render(params);
-    // gr::d3d::device->SetRenderState(D3DRS_VERTEXBLEND, D3DVBF_DISABLE);
-    // gr::d3d::device->SetRenderState(D3DRS_INDEXEDVERTEXBLENDENABLE, FALSE);
+    MatricesUniforms uniforms;
+    for (int i = 0; i < ci->base_character->num_bones; ++i) {
+        const Matrix43& bone_mat = ci->bone_transforms_final[i];
+        uniforms.matrices[i] = gr_d3d11_transpose_matrix(convert_bone_matrix(bone_mat));
+    }
+
+    D3D11_MAPPED_SUBRESOURCE mapped_cb;
+    HRESULT hr = render_context.device_context()->Map(matrices_cbuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_cb);
+    check_hr(hr, "Map character cbuffer");
+    std::memcpy(mapped_cb.pData, &uniforms, sizeof(uniforms));
+    render_context.device_context()->Unmap(matrices_cbuffer_, 0);
 }
 
-static std::vector<std::unique_ptr<BaseMeshRenderCache>> all_mesh_render_caches;
-
-void gr_d3d_render_v3d_vif([[maybe_unused]] VifLodMesh *lod_mesh, VifMesh *mesh, const Vector3& pos, const Matrix3& orient, [[maybe_unused]] int lod_index, [[maybe_unused]] const MeshRenderParams& params)
+D3D11MeshRenderer::D3D11MeshRenderer(ComPtr<ID3D11Device> device, D3D11RenderContext& render_context) :
+    device_{std::move(device)}, render_context_{render_context}
 {
-    // gr::d3d::flush_buffers();
-    // gr::d3d::in_optimized_drawing_proc = true;
-
-    // HRESULT hr = gr::d3d::device->SetVertexShader(MeshRenderCache::fvf);
-    // check_hr(hr, "SetVertexShader");
-    // gr::d3d::device->SetRenderState(D3DRS_CLIPPING, TRUE);
-    // gr::d3d::device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
-    // gr::d3d::device->SetRenderState(D3DRS_LIGHTING, FALSE);
-
-    // gr_d3d_setup_proj_transform();
-    // gr_d3d_setup_view_transform();
-    // gr_d3d_set_world_transform(pos, orient.copy_transpose());
-
-    // if ((mesh->flags & VIF_MESH_RENDER_CACHED) == 0) {
-    //     all_mesh_render_caches.push_back(std::make_unique<MeshRenderCache>(mesh));
-    //     mesh->render_cache = all_mesh_render_caches.back().get();;
-    //     mesh->flags |= VIF_MESH_RENDER_CACHED;
-    // }
-    // mesh->render_cache->render(params);
-
-    // // Restore state
-    // hr = gr::d3d::device->SetStreamSource(0, gr::d3d::vertex_buffer, 0x28);
-    // check_hr(hr, "SetStreamSource");
-    // hr = gr::d3d::device->SetIndices(gr::d3d::index_buffer, 0);
-    // check_hr(hr, "SetIndices");
-    // hr = gr::d3d::device->SetVertexShader(D3DFVF_XYZRHW|D3DFVF_DIFFUSE|D3DFVF_TEX2|D3DFVF_SPECULAR);
-    // check_hr(hr, "SetVertexShader");
-    // gr::d3d::device->SetRenderState(D3DRS_CLIPPING, FALSE);
-    // gr::d3d::device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-    // gr::d3d::in_optimized_drawing_proc = false;
 }
 
-void gr_d3d_render_character_vif([[maybe_unused]] VifLodMesh *lod_mesh, VifMesh *mesh, const Vector3& pos, const Matrix3& orient, const CharacterInstance *ci, [[maybe_unused]] int lod_index, [[maybe_unused]] const MeshRenderParams& params)
+D3D11MeshRenderer::~D3D11MeshRenderer()
 {
-    // gr::d3d::flush_buffers();
-    // gr::d3d::in_optimized_drawing_proc = true;
-
-    // HRESULT hr = gr::d3d::device->SetVertexShader(CharacterMeshRenderCache::fvf);
-    // check_hr(hr, "SetVertexShader");
-    // gr::d3d::device->SetRenderState(D3DRS_CLIPPING, TRUE);
-    // gr::d3d::device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
-    // gr::d3d::device->SetRenderState(D3DRS_LIGHTING, FALSE);
-
-    // gr_d3d_setup_proj_transform();
-    // gr_d3d_setup_view_transform();
-    // gr_d3d_set_world_transform(pos, orient.copy_transpose());
-
-    // if ((mesh->flags & VIF_MESH_RENDER_CACHED) == 0) {
-    //     all_mesh_render_caches.emplace_back(static_cast<BaseMeshRenderCache*>(new CharacterMeshRenderCache(mesh)));
-    //     mesh->render_cache = all_mesh_render_caches.back().get();
-    //     mesh->flags |= VIF_MESH_RENDER_CACHED;
-    // }
-    // static_cast<CharacterMeshRenderCache*>(mesh->render_cache)->render(pos, orient, ci, params);
-
-    // // Restore state
-    // hr = gr::d3d::device->SetStreamSource(0, gr::d3d::vertex_buffer, 0x28);
-    // check_hr(hr, "SetStreamSource");
-    // hr = gr::d3d::device->SetIndices(gr::d3d::index_buffer, 0);
-    // check_hr(hr, "SetIndices");
-    // hr = gr::d3d::device->SetVertexShader(D3DFVF_XYZRHW|D3DFVF_DIFFUSE|D3DFVF_TEX2|D3DFVF_SPECULAR);
-    // check_hr(hr, "SetVertexShader");
-    // gr::d3d::device->SetRenderState(D3DRS_CLIPPING, FALSE);
-    // gr::d3d::device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-    // gr::d3d::in_optimized_drawing_proc = false;
-}
-
-static FunHook gr_d3d_render_v3d_vif_hook{0x0052DE10, gr_d3d_render_v3d_vif};
-static FunHook gr_d3d_render_character_vif_hook{0x0052E9E0, gr_d3d_render_character_vif};
-
-void gr_d3d_mesh_apply_patch()
-{
-    gr_d3d_render_v3d_vif_hook.install();
-    // Wine doesnt support indexed blend matrices... See https://bugs.winehq.org/show_bug.cgi?id=39057
-    //gr_d3d_render_character_vif_hook.install();
-    write_mem<int8_t>(0x00569884 + 1, sizeof(VifMesh));
-    write_mem<int8_t>(0x00569732 + 1, sizeof(VifLodMesh));
-}
-
-void gr_d3d_mesh_init()
-{
-    // xlog::warn("D3D MaxVertexBlendMatrices %lu", gr::d3d::device_caps.MaxVertexBlendMatrices);
-    // xlog::warn("D3D MaxVertexBlendMatrixIndex %lu", gr::d3d::device_caps.MaxVertexBlendMatrixIndex);
-}
-
-void gr_d3d_mesh_close()
-{
-    for (auto& cache : all_mesh_render_caches) {
+    for (auto& cache : render_caches_) {
         cache->get_mesh()->flags &= ~VIF_MESH_RENDER_CACHED;
     }
-    all_mesh_render_caches.clear();
+    render_caches_.clear();
+}
+
+void D3D11MeshRenderer::render_v3d_vif(rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::MeshRenderParams& params)
+{
+    CameraUniforms uniforms;
+    uniforms.model_mat = gr_d3d11_build_model_matrix(pos, orient.copy_transpose());
+    uniforms.view_mat = gr_d3d11_build_camera_view_matrix();
+    uniforms.proj_mat = gr_d3d11_build_proj_matrix();
+    render_context_.update_camera_uniforms(uniforms);
+
+    if ((mesh->flags & VIF_MESH_RENDER_CACHED) == 0) {
+        render_caches_.push_back(std::make_unique<MeshRenderCache>(mesh, device_));
+        mesh->render_cache = render_caches_.back().get();
+        mesh->flags |= VIF_MESH_RENDER_CACHED;
+    }
+    mesh->render_cache->render(params, render_context_);
+
+    uniforms.model_mat = uniforms.view_mat = uniforms.proj_mat = gr_d3d11_build_identity_matrix();
+    render_context_.update_camera_uniforms(uniforms);
+}
+
+void D3D11MeshRenderer::render_character_vif(rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::CharacterInstance *ci, const rf::MeshRenderParams& params)
+{
+    CameraUniforms uniforms;
+    uniforms.model_mat = gr_d3d11_build_model_matrix(pos, orient.copy_transpose());
+    uniforms.view_mat = gr_d3d11_build_camera_view_matrix();
+    uniforms.proj_mat = gr_d3d11_build_proj_matrix();
+    render_context_.update_camera_uniforms(uniforms);
+
+    if ((mesh->flags & VIF_MESH_RENDER_CACHED) == 0) {
+        render_caches_.push_back(std::make_unique<CharacterMeshRenderCache>(mesh, device_, ci));
+        mesh->render_cache = render_caches_.back().get();
+        mesh->flags |= VIF_MESH_RENDER_CACHED;
+    }
+    reinterpret_cast<CharacterMeshRenderCache*>(mesh->render_cache)->render(pos, orient, ci, params, render_context_);
+
+    uniforms.model_mat = uniforms.view_mat = uniforms.proj_mat = gr_d3d11_build_identity_matrix();
+    render_context_.update_camera_uniforms(uniforms);
 }

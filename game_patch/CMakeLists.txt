@@ -86,6 +86,8 @@ set(SRCS
     graphics/d3d11/gr_d3d11_transform.h
     graphics/d3d11/gr_d3d11_solid.cpp
     graphics/d3d11/gr_d3d11_solid.h
+    graphics/d3d11/gr_d3d11_mesh.cpp
+    graphics/d3d11/gr_d3d11_mesh.h
     input/input.h
     input/mouse.cpp
     input/key.cpp

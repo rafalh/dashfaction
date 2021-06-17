@@ -129,21 +129,16 @@ GRenderCache::GRenderCache(const GRenderCacheBuilder& builder, gr::Mode mode, ID
 
     std::vector<GpuVertex> vb_data;
     std::vector<ushort> ib_data;
-    vb_data.resize(builder.num_verts_);
-    ib_data.resize(builder.num_inds_);
-
-#if 1
+    vb_data.reserve(builder.num_verts_);
+    ib_data.reserve(builder.num_inds_);
     opaque_batches_.reserve(builder.batched_faces_.size());
 
-    auto vb_ptr = vb_data.data();
-    auto ib_ptr = ib_data.data();
     for (auto& e : builder.batched_faces_) {
         auto& key = e.first;
         auto& faces = e.second;
-        Batch batch;
-        batch.start_index = ib_ptr - ib_data.data();
-        batch.num_indices = 0;
         FaceRenderType render_type = std::get<0>(key);
+        Batch& batch = get_batches(render_type).emplace_back();
+        batch.start_index = ib_data.size();
         batch.texture_1 = std::get<1>(key);
         batch.texture_2 = std::get<2>(key);
         batch.u_pan_speed = std::get<3>(key);
@@ -159,24 +154,23 @@ GRenderCache::GRenderCache(const GRenderCacheBuilder& builder, gr::Mode mode, ID
         }
         for (GFace* face : faces) {
             auto fvert = face->edge_loop;
-            auto face_start_index = vb_ptr - vb_data.data();
+            auto face_start_index = vb_data.size();
             int fvert_index = 0;
             while (fvert) {
-                vb_ptr->x = fvert->vertex->pos.x;
-                vb_ptr->y = fvert->vertex->pos.y;
-                vb_ptr->z = fvert->vertex->pos.z;
-                vb_ptr->u0 = fvert->texture_u;
-                vb_ptr->v0 = fvert->texture_v;
-                vb_ptr->u1 = fvert->lightmap_u;
-                vb_ptr->v1 = fvert->lightmap_v;
-                vb_ptr->diffuse = 0xFFFFFFFF;
-                ++vb_ptr;
+                auto& gpu_vert = vb_data.emplace_back();
+                gpu_vert.x = fvert->vertex->pos.x;
+                gpu_vert.y = fvert->vertex->pos.y;
+                gpu_vert.z = fvert->vertex->pos.z;
+                gpu_vert.u0 = fvert->texture_u;
+                gpu_vert.v0 = fvert->texture_v;
+                gpu_vert.u1 = fvert->lightmap_u;
+                gpu_vert.v1 = fvert->lightmap_v;
+                gpu_vert.diffuse = 0xFFFFFFFF;
 
                 if (fvert_index >= 2) {
-                    *(ib_ptr++) = face_start_index;
-                    *(ib_ptr++) = face_start_index + fvert_index - 1;
-                    *(ib_ptr++) = face_start_index + fvert_index;
-                    batch.num_indices += 3;
+                    ib_data.emplace_back(face_start_index);
+                    ib_data.emplace_back(face_start_index + fvert_index - 1);
+                    ib_data.emplace_back(face_start_index + fvert_index);
                 }
                 ++fvert_index;
 
@@ -186,46 +180,36 @@ GRenderCache::GRenderCache(const GRenderCacheBuilder& builder, gr::Mode mode, ID
                 }
             }
         }
-        if (render_type == FaceRenderType::alpha) {
-            alpha_batches_.push_back(batch);
-        }
-        else if (render_type == FaceRenderType::liquid) {
-            liquid_batches_.push_back(batch);
-        }
-        else {
-            opaque_batches_.push_back(batch);
-        }
+        batch.num_indices = ib_data.size() - batch.start_index;
     }
     for (auto& e : builder.batched_decal_polys_) {
         auto& key = e.first;
         auto& dps = e.second;
-        Batch batch;
-        batch.start_index = ib_ptr - ib_data.data();
-        batch.num_indices = 0;
+        Batch& batch = opaque_batches_.emplace_back();
+        batch.start_index = ib_data.size();
         batch.texture_1 = std::get<0>(key);
         batch.texture_2 = std::get<1>(key);
         batch.mode = std::get<2>(key);
         for (DecalPoly* dp : dps) {
             auto face = dp->face;
             auto fvert = face->edge_loop;
-            auto face_start_index = vb_ptr - vb_data.data();
+            auto face_start_index = vb_data.size();
             int fvert_index = 0;
             while (fvert) {
-                vb_ptr->x = fvert->vertex->pos.x;
-                vb_ptr->y = fvert->vertex->pos.y;
-                vb_ptr->z = fvert->vertex->pos.z;
-                vb_ptr->u0 = dp->uvs[fvert_index].x;
-                vb_ptr->v0 = dp->uvs[fvert_index].y;
-                vb_ptr->u1 = fvert->lightmap_u;
-                vb_ptr->v1 = fvert->lightmap_v;
-                vb_ptr->diffuse = 0xFFFFFFFF;
-                ++vb_ptr;
+                auto& gpu_vert = vb_data.emplace_back();
+                gpu_vert.x = fvert->vertex->pos.x;
+                gpu_vert.y = fvert->vertex->pos.y;
+                gpu_vert.z = fvert->vertex->pos.z;
+                gpu_vert.u0 = dp->uvs[fvert_index].x;
+                gpu_vert.v0 = dp->uvs[fvert_index].y;
+                gpu_vert.u1 = fvert->lightmap_u;
+                gpu_vert.v1 = fvert->lightmap_v;
+                gpu_vert.diffuse = 0xFFFFFFFF;
 
                 if (fvert_index >= 2) {
-                    *(ib_ptr++) = face_start_index;
-                    *(ib_ptr++) = face_start_index + fvert_index - 1;
-                    *(ib_ptr++) = face_start_index + fvert_index;
-                    batch.num_indices += 3;
+                    ib_data.emplace_back(face_start_index);
+                    ib_data.emplace_back(face_start_index + fvert_index - 1);
+                    ib_data.emplace_back(face_start_index + fvert_index);
                 }
                 ++fvert_index;
 
@@ -235,37 +219,24 @@ GRenderCache::GRenderCache(const GRenderCacheBuilder& builder, gr::Mode mode, ID
                 }
             }
         }
-        opaque_batches_.push_back(batch);
+        batch.num_indices = ib_data.size() - batch.start_index;
     }
-    assert(vb_ptr == vb_data.data() + builder.num_verts_);
-    assert(ib_ptr == ib_data.data() + builder.num_inds_);
-#endif
 
-    D3D11_BUFFER_DESC vb_desc;
-    ZeroMemory(&vb_desc, sizeof(vb_desc));
-    vb_desc.Usage            = D3D11_USAGE_IMMUTABLE;
-    vb_desc.ByteWidth        = sizeof(GpuVertex) * builder.num_verts_;
-    vb_desc.BindFlags        = D3D11_BIND_VERTEX_BUFFER;
-    vb_desc.CPUAccessFlags   = 0;
-    vb_desc.MiscFlags        = 0;
-    vb_desc.StructureByteStride = 0;
-    D3D11_SUBRESOURCE_DATA vb_subres_data;
-    ZeroMemory(&vb_subres_data, sizeof(vb_subres_data));
-    vb_subres_data.pSysMem = vb_data.data();
+    CD3D11_BUFFER_DESC vb_desc{
+        sizeof(GpuVertex) * builder.num_verts_,
+        D3D11_BIND_VERTEX_BUFFER,
+        D3D11_USAGE_IMMUTABLE,
+    };
+    D3D11_SUBRESOURCE_DATA vb_subres_data{vb_data.data(), 0, 0};
     HRESULT hr = device->CreateBuffer(&vb_desc, &vb_subres_data, &vb_);
     check_hr(hr, "CreateBuffer");
 
-    D3D11_BUFFER_DESC ib_desc;
-    ZeroMemory(&ib_desc, sizeof(ib_desc));
-    ib_desc.Usage            = D3D11_USAGE_IMMUTABLE;
-    ib_desc.ByteWidth        = sizeof(rf::ushort) * builder.num_inds_;
-    ib_desc.BindFlags        = D3D11_BIND_INDEX_BUFFER;
-    ib_desc.CPUAccessFlags   = 0;
-    ib_desc.MiscFlags        = 0;
-    ib_desc.StructureByteStride = 0;
-    D3D11_SUBRESOURCE_DATA ib_subres_data;
-    ZeroMemory(&ib_subres_data, sizeof(ib_subres_data));
-    ib_subres_data.pSysMem = ib_data.data();
+    CD3D11_BUFFER_DESC ib_desc{
+        sizeof(rf::ushort) * builder.num_inds_,
+        D3D11_BIND_INDEX_BUFFER,
+        D3D11_USAGE_IMMUTABLE,
+    };
+    D3D11_SUBRESOURCE_DATA ib_subres_data{ib_data.data(), 0, 0};
     hr = device->CreateBuffer(&ib_desc, &ib_subres_data, &ib_);
     check_hr(hr, "CreateBuffer");
 
@@ -606,16 +577,16 @@ void D3D11SolidRenderer::render_solid(rf::GSolid* solid, rf::GRoom** rooms, int 
 
 void D3D11SolidRenderer::before_render(const rf::Vector3& pos, const rf::Matrix3& orient, bool is_skyroom)
 {
-    VertexShaderUniforms uniforms;
+    CameraUniforms uniforms;
     uniforms.model_mat = gr_d3d11_build_model_matrix(pos, orient);
     uniforms.view_mat = is_skyroom ? gr_d3d11_build_sky_room_view_matrix() : gr_d3d11_build_camera_view_matrix();
     uniforms.proj_mat = gr_d3d11_build_proj_matrix();
-    render_context_.update_vs_uniforms(uniforms);
+    render_context_.update_camera_uniforms(uniforms);
 }
 
 void D3D11SolidRenderer::after_render()
 {
-    VertexShaderUniforms uniforms;
+    CameraUniforms uniforms;
     uniforms.proj_mat = uniforms.view_mat = uniforms.model_mat = gr_d3d11_build_identity_matrix();
-    render_context_.update_vs_uniforms(uniforms);
+    render_context_.update_camera_uniforms(uniforms);
 }
