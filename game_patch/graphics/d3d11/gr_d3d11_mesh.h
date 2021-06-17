@@ -4,7 +4,6 @@
 #include <d3d11.h>
 #include <patch_common/ComPtr.h>
 
-class D3D11RenderContext;
 namespace rf
 {
     struct VifLodMesh;
@@ -13,47 +12,52 @@ namespace rf
     struct CharacterInstance;
 }
 
-class BaseMeshRenderCache
+namespace df::gr::d3d11
 {
-public:
-    virtual ~BaseMeshRenderCache() {}
-    BaseMeshRenderCache(rf::VifMesh* mesh) :
-        mesh_(mesh)
-    {}
+    class RenderContext;
 
-    rf::VifMesh* get_mesh() const
+    class BaseMeshRenderCache
     {
-        return mesh_;
-    }
+    public:
+        virtual ~BaseMeshRenderCache() {}
+        BaseMeshRenderCache(rf::VifMesh* mesh) :
+            mesh_(mesh)
+        {}
 
-protected:
-    struct Batch
-    {
-        int start_index;
-        int num_indices;
-        int texture_index;
-        rf::gr::Mode mode;
+        rf::VifMesh* get_mesh() const
+        {
+            return mesh_;
+        }
+
+    protected:
+        struct Batch
+        {
+            int start_index;
+            int num_indices;
+            int texture_index;
+            rf::gr::Mode mode;
+        };
+
+        void draw(const rf::MeshRenderParams& params, RenderContext& render_context);
+        const int* get_tex_handles(const rf::MeshRenderParams& params);
+
+        rf::VifMesh* mesh_;
+        std::vector<Batch> batches_;
+        ComPtr<ID3D11Buffer> vb_;
+        ComPtr<ID3D11Buffer> ib_;
     };
 
-    void draw(const rf::MeshRenderParams& params, D3D11RenderContext& render_context);
-    const int* get_tex_handles(const rf::MeshRenderParams& params);
+    class MeshRenderer
+    {
+    public:
+        MeshRenderer(ComPtr<ID3D11Device> device, RenderContext& render_context);
+        ~MeshRenderer();
+        void render_v3d_vif(rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::MeshRenderParams& params);
+        void render_character_vif(rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::CharacterInstance *ci, const rf::MeshRenderParams& params);
 
-    rf::VifMesh* mesh_;
-    std::vector<Batch> batches_;
-    ComPtr<ID3D11Buffer> vb_;
-    ComPtr<ID3D11Buffer> ib_;
-};
-
-class D3D11MeshRenderer
-{
-public:
-    D3D11MeshRenderer(ComPtr<ID3D11Device> device, D3D11RenderContext& render_context);
-    ~D3D11MeshRenderer();
-    void render_v3d_vif(rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::MeshRenderParams& params);
-    void render_character_vif(rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::CharacterInstance *ci, const rf::MeshRenderParams& params);
-
-private:
-    ComPtr<ID3D11Device> device_;
-    D3D11RenderContext& render_context_;
-    std::vector<std::unique_ptr<BaseMeshRenderCache>> render_caches_;
-};
+    private:
+        ComPtr<ID3D11Device> device_;
+        RenderContext& render_context_;
+        std::vector<std::unique_ptr<BaseMeshRenderCache>> render_caches_;
+    };
+}

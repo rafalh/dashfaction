@@ -4,8 +4,6 @@
 #include "math/quaternion.h"
 #include "gr/gr.h"
 
-class BaseMeshRenderCache;
-
 namespace rf
 {
     struct V3dMesh;
@@ -95,7 +93,9 @@ namespace rf
         int flags;
         int num_vertices;
         int unk_field_from_v3d_file;
-        BaseMeshRenderCache* render_cache;
+#ifdef DASH_FACTION
+        void *render_cache;
+#endif
     };
 
     constexpr int VIF_MESH_RENDER_CACHED = 0x10000000; // DF only

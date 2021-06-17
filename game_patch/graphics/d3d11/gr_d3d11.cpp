@@ -17,309 +17,317 @@
 
 using namespace rf;
 
-static HMODULE d3d11_lib;
-static std::optional<D3D11Renderer> d3d11_renderer;
-
-void D3D11Renderer::window_active()
+namespace df::gr::d3d11
 {
-    if (gr::screen.window_mode == gr::FULLSCREEN) {
-        xlog::warn("gr_d3d11_window_active SetFullscreenState");
-        HRESULT hr = swap_chain_->SetFullscreenState(TRUE, nullptr);
-        check_hr(hr, "SetFullscreenState");
-    }
-}
+    static HMODULE d3d11_lib;
+    static std::optional<Renderer> renderer;
 
-void D3D11Renderer::window_inactive()
-{
-    if (gr::screen.window_mode == gr::FULLSCREEN) {
-        xlog::warn("gr_d3d11_window_inactive SetFullscreenState");
-        HRESULT hr = swap_chain_->SetFullscreenState(FALSE, nullptr);
-        check_hr(hr, "SetFullscreenState");
-    }
-}
-
-void D3D11Renderer::init_device(HWND hwnd, HMODULE d3d11_lib)
-{
-    DXGI_SWAP_CHAIN_DESC sd;
-    ZeroMemory(&sd, sizeof(sd));
-    sd.BufferCount = gr::screen.window_mode == gr::FULLSCREEN ? 2 : 1;
-    sd.BufferDesc.Width = gr::screen.max_w;
-    sd.BufferDesc.Height = gr::screen.max_h;
-    sd.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-    // sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    //sd.BufferDesc.RefreshRate.Numerator = 60;
-    sd.BufferDesc.RefreshRate.Numerator = 0;
-    sd.BufferDesc.RefreshRate.Denominator = 1;
-    sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    sd.OutputWindow = hwnd;
-    sd.SampleDesc.Count = 1;
-    sd.SampleDesc.Quality = 0;
-    sd.Windowed = gr::screen.window_mode == gr::WINDOWED;
-    sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
-    sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
-
-    auto pD3D11CreateDeviceAndSwapChain = reinterpret_cast<PFN_D3D11_CREATE_DEVICE_AND_SWAP_CHAIN>(
-        reinterpret_cast<void(*)()>(GetProcAddress(d3d11_lib, "D3D11CreateDeviceAndSwapChain")));
-    if (!pD3D11CreateDeviceAndSwapChain) {
-        xlog::error("Failed to find D3D11CreateDeviceAndSwapChain procedure");
-        abort();
+    void Renderer::window_active()
+    {
+        if (rf::gr::screen.window_mode == gr::FULLSCREEN) {
+            xlog::warn("gr_d3d11_window_active SetFullscreenState");
+            HRESULT hr = swap_chain_->SetFullscreenState(TRUE, nullptr);
+            check_hr(hr, "SetFullscreenState");
+        }
     }
 
-    // D3D_FEATURE_LEVEL feature_levels[] = {
-    //     D3D_FEATURE_LEVEL_9_1,
-    //     D3D_FEATURE_LEVEL_9_2,
-    //     D3D_FEATURE_LEVEL_9_3,
-    //     D3D_FEATURE_LEVEL_10_0,
-    //     D3D_FEATURE_LEVEL_10_1,
-    //     D3D_FEATURE_LEVEL_11_0,
-    //     D3D_FEATURE_LEVEL_11_1
-    // };
-
-    DWORD flags = 0;
-//#ifndef NDEBUG
-    // Requires Windows 10 SDK
-    //flags |= D3D11_CREATE_DEVICE_DEBUG;
-//#endif
-    D3D_FEATURE_LEVEL feature_level_supported;
-    HRESULT hr = pD3D11CreateDeviceAndSwapChain(
-        nullptr,
-        D3D_DRIVER_TYPE_HARDWARE,
-        nullptr,
-        flags,
-        // feature_levels,
-        // std::size(feature_levels),
-        nullptr,
-        0,
-        D3D11_SDK_VERSION,
-        &sd,
-        &swap_chain_,
-        &device_,
-        &feature_level_supported,
-        &context_
-    );
-    check_hr(hr, "D3D11CreateDeviceAndSwapChain");
-
-    void gr_d3d11_init_error(ID3D11Device* device);
-    gr_d3d11_init_error(device_);
-
-    xlog::info("D3D11 feature level: 0x%x", feature_level_supported);
-}
-
-void D3D11Renderer::init_back_buffer()
-{
-    // Get a pointer to the back buffer
-    ComPtr<ID3D11Texture2D> back_buffer;
-    HRESULT hr = swap_chain_->GetBuffer(0, IID_ID3D11Texture2D, reinterpret_cast<LPVOID*>(&back_buffer));
-    check_hr(hr, "GetBuffer");
-
-    // Create a render-target view
-    hr = device_->CreateRenderTargetView(back_buffer, NULL, &back_buffer_view_);
-    check_hr(hr, "CreateRenderTargetView");
-}
-
-void D3D11Renderer::init_depth_stencil_buffer()
-{
-    D3D11_TEXTURE2D_DESC depth_stencil_desc;
-    ZeroMemory(&depth_stencil_desc, sizeof(depth_stencil_desc));
-    depth_stencil_desc.Width = gr::screen.max_w;
-    depth_stencil_desc.Height = gr::screen.max_h;
-    depth_stencil_desc.MipLevels = 1;
-    depth_stencil_desc.ArraySize = 1;
-    depth_stencil_desc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-    depth_stencil_desc.SampleDesc.Count = 1;
-    depth_stencil_desc.SampleDesc.Quality = 0;
-    depth_stencil_desc.Usage = D3D11_USAGE_DEFAULT;
-    depth_stencil_desc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-    depth_stencil_desc.CPUAccessFlags = 0;
-    depth_stencil_desc.MiscFlags = 0;
-    ComPtr<ID3D11Texture2D> depth_stencil;
-    HRESULT hr = device_->CreateTexture2D(&depth_stencil_desc, nullptr, &depth_stencil);
-    check_hr(hr, "CreateTexture2D");
-
-    hr = device_->CreateDepthStencilView(depth_stencil, nullptr, &depth_stencil_buffer_view_);
-    check_hr(hr, "CreateDepthStencilView");
-}
-
-D3D11Renderer::D3D11Renderer(HWND hwnd, HMODULE d3d11_lib)
-{
-    init_device(hwnd, d3d11_lib);
-    init_back_buffer();
-    init_depth_stencil_buffer();
-
-    state_manager_ = std::make_unique<D3D11StateManager>(device_);
-    shader_manager_ = std::make_unique<D3D11ShaderManager>(device_);
-    texture_manager_ = std::make_unique<D3D11TextureManager>(device_);
-    render_context_ = std::make_unique<D3D11RenderContext>(device_, context_, *state_manager_, *shader_manager_, *texture_manager_);
-    batch_manager_ = std::make_unique<D3D11BatchManager>(device_, context_, *render_context_);
-    solid_renderer_ = std::make_unique<D3D11SolidRenderer>(device_, context_, *render_context_);
-    mesh_renderer_ = std::make_unique<D3D11MeshRenderer>(device_, *render_context_);
-
-    render_context_->set_render_target(back_buffer_view_, depth_stencil_buffer_view_);
-
-    //gr::screen.mode = GR_DIRECT3D11;
-    gr::screen.depthbuffer_type = gr::DEPTHBUFFER_Z;
-}
-
-D3D11Renderer::~D3D11Renderer()
-{
-    if (context_) {
-        context_->ClearState();
+    void Renderer::window_inactive()
+    {
+        if (rf::gr::screen.window_mode == gr::FULLSCREEN) {
+            xlog::warn("gr_d3d11_window_inactive SetFullscreenState");
+            HRESULT hr = swap_chain_->SetFullscreenState(FALSE, nullptr);
+            check_hr(hr, "SetFullscreenState");
+        }
     }
-    if (gr::screen.window_mode == gr::FULLSCREEN) {
-        swap_chain_->SetFullscreenState(FALSE, nullptr);
+
+    void Renderer::init_device(HWND hwnd, HMODULE d3d11_lib)
+    {
+        DXGI_SWAP_CHAIN_DESC sd;
+        ZeroMemory(&sd, sizeof(sd));
+        sd.BufferCount = rf::gr::screen.window_mode == gr::FULLSCREEN ? 2 : 1;
+        sd.BufferDesc.Width = rf::gr::screen.max_w;
+        sd.BufferDesc.Height = rf::gr::screen.max_h;
+        sd.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+        // sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        //sd.BufferDesc.RefreshRate.Numerator = 60;
+        sd.BufferDesc.RefreshRate.Numerator = 0;
+        sd.BufferDesc.RefreshRate.Denominator = 1;
+        sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+        sd.OutputWindow = hwnd;
+        sd.SampleDesc.Count = 1;
+        sd.SampleDesc.Quality = 0;
+        sd.Windowed = rf::gr::screen.window_mode == rf::gr::WINDOWED;
+        sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+        sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+
+        auto pD3D11CreateDeviceAndSwapChain = reinterpret_cast<PFN_D3D11_CREATE_DEVICE_AND_SWAP_CHAIN>(
+            reinterpret_cast<void(*)()>(GetProcAddress(d3d11_lib, "D3D11CreateDeviceAndSwapChain")));
+        if (!pD3D11CreateDeviceAndSwapChain) {
+            xlog::error("Failed to find D3D11CreateDeviceAndSwapChain procedure");
+            abort();
+        }
+
+        // D3D_FEATURE_LEVEL feature_levels[] = {
+        //     D3D_FEATURE_LEVEL_9_1,
+        //     D3D_FEATURE_LEVEL_9_2,
+        //     D3D_FEATURE_LEVEL_9_3,
+        //     D3D_FEATURE_LEVEL_10_0,
+        //     D3D_FEATURE_LEVEL_10_1,
+        //     D3D_FEATURE_LEVEL_11_0,
+        //     D3D_FEATURE_LEVEL_11_1
+        // };
+
+        DWORD flags = 0;
+    //#ifndef NDEBUG
+        // Requires Windows 10 SDK
+        //flags |= D3D11_CREATE_DEVICE_DEBUG;
+    //#endif
+        D3D_FEATURE_LEVEL feature_level_supported;
+        HRESULT hr = pD3D11CreateDeviceAndSwapChain(
+            nullptr,
+            D3D_DRIVER_TYPE_HARDWARE,
+            nullptr,
+            flags,
+            // feature_levels,
+            // std::size(feature_levels),
+            nullptr,
+            0,
+            D3D11_SDK_VERSION,
+            &sd,
+            &swap_chain_,
+            &device_,
+            &feature_level_supported,
+            &context_
+        );
+        check_hr(hr, "D3D11CreateDeviceAndSwapChain");
+
+        void init_error(ID3D11Device* device);
+        init_error(device_);
+
+        xlog::info("D3D11 feature level: 0x%x", feature_level_supported);
     }
-}
 
-void D3D11Renderer::bitmap(int bitmap_handle, int x, int y, int w, int h, int sx, int sy, int sw, int sh, bool flip_x, bool flip_y, gr::Mode mode)
-{
-    //xlog::info("gr_d3d11_bitmap");
-    //gr_d3d11_set_texture(0, bitmap_handle);
-    gr::screen.current_texture_1 = bitmap_handle;
-    int bm_w, bm_h;
-    bm::get_dimensions(bitmap_handle, &bm_w, &bm_h);
-    gr::Vertex verts[4];
-    gr::Vertex* verts_ptrs[] = {
-        &verts[0],
-        &verts[1],
-        &verts[2],
-        &verts[3],
-    };
-    float sx_left = gr::screen.offset_x + x;
-    float sx_right = gr::screen.offset_x + x + w;
-    float sy_top = gr::screen.offset_y + y;
-    float sy_bottom = gr::screen.offset_y + y + h;
-    float u_left = static_cast<float>(sx) / bm_w * (flip_x ? -1.0f : 1.0f);
-    float u_right = static_cast<float>(sx + sw) / bm_w * (flip_x ? -1.0f : 1.0f);
-    float v_top = static_cast<float>(sy) / bm_h * (flip_y ? -1.0f : 1.0f);
-    float v_bottom = static_cast<float>(sy + sh) / bm_h * (flip_y ? -1.0f : 1.0f);
-    verts[0].sx = sx_left;
-    verts[0].sy = sy_top;
-    verts[0].sw = 0.0f;
-    verts[0].u1 = u_left;
-    verts[0].v1 = v_top;
-    verts[1].sx = sx_right;
-    verts[1].sy = sy_top;
-    verts[1].sw = 0.0f;
-    verts[1].u1 = u_right;
-    verts[1].v1 = v_top;
-    verts[2].sx = sx_right;
-    verts[2].sy = sy_bottom;
-    verts[2].sw = 0.0f;
-    verts[2].u1 = u_right;
-    verts[2].v1 = v_bottom;
-    verts[3].sx = sx_left;
-    verts[3].sy = sy_bottom;
-    verts[3].sw = 0.0f;
-    verts[3].u1 = u_left;
-    verts[3].v1 = v_bottom;
-    batch_manager_->tmapper(std::size(verts_ptrs), verts_ptrs, 0, mode);
-}
+    void Renderer::init_back_buffer()
+    {
+        // Get a pointer to the back buffer
+        ComPtr<ID3D11Texture2D> back_buffer;
+        HRESULT hr = swap_chain_->GetBuffer(0, IID_ID3D11Texture2D, reinterpret_cast<LPVOID*>(&back_buffer));
+        check_hr(hr, "GetBuffer");
 
-void D3D11Renderer::clear()
-{
-    float clear_color[4] = {
-        gr::screen.current_color.red / 255.0f,
-        gr::screen.current_color.green / 255.0f,
-        gr::screen.current_color.blue / 255.0f,
-        1.0f,
-    };
-    context_->ClearRenderTargetView(back_buffer_view_, clear_color);
-}
-
-void D3D11Renderer::zbuffer_clear()
-{
-    if (gr::screen.depthbuffer_type != gr::DEPTHBUFFER_NONE) {
-        float depth = gr::screen.depthbuffer_type == gr::DEPTHBUFFER_Z ? 0.0f : 1.0f;
-        context_->ClearDepthStencilView(depth_stencil_buffer_view_, D3D11_CLEAR_DEPTH, depth, 0);
+        // Create a render-target view
+        hr = device_->CreateRenderTargetView(back_buffer, NULL, &back_buffer_view_);
+        check_hr(hr, "CreateRenderTargetView");
     }
-}
 
-void D3D11Renderer::set_clip()
-{
-    batch_manager_->flush();
-    D3D11_VIEWPORT vp;
-    vp.TopLeftX = gr::screen.clip_left + gr::screen.offset_x;
-    vp.TopLeftY = gr::screen.clip_top + gr::screen.offset_y;
-    vp.Width = gr::screen.clip_width;
-    vp.Height = gr::screen.clip_height;
-    vp.MinDepth = 0.0f;
-    vp.MaxDepth = 1.0f;
-    context_->RSSetViewports(1, &vp);
-}
+    void Renderer::init_depth_stencil_buffer()
+    {
+        D3D11_TEXTURE2D_DESC depth_stencil_desc;
+        ZeroMemory(&depth_stencil_desc, sizeof(depth_stencil_desc));
+        depth_stencil_desc.Width = rf::gr::screen.max_w;
+        depth_stencil_desc.Height = rf::gr::screen.max_h;
+        depth_stencil_desc.MipLevels = 1;
+        depth_stencil_desc.ArraySize = 1;
+        depth_stencil_desc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+        depth_stencil_desc.SampleDesc.Count = 1;
+        depth_stencil_desc.SampleDesc.Quality = 0;
+        depth_stencil_desc.Usage = D3D11_USAGE_DEFAULT;
+        depth_stencil_desc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+        depth_stencil_desc.CPUAccessFlags = 0;
+        depth_stencil_desc.MiscFlags = 0;
+        ComPtr<ID3D11Texture2D> depth_stencil;
+        HRESULT hr = device_->CreateTexture2D(&depth_stencil_desc, nullptr, &depth_stencil);
+        check_hr(hr, "CreateTexture2D");
 
-void D3D11Renderer::flip()
-{
-    //xlog::info("gr_d3d11_flip");
-    batch_manager_->flush();
-    HRESULT hr = swap_chain_->Present(0, 0);
-    check_hr(hr, "Present");
-}
+        hr = device_->CreateDepthStencilView(depth_stencil, nullptr, &depth_stencil_buffer_view_);
+        check_hr(hr, "CreateDepthStencilView");
+    }
 
-int D3D11Renderer::lock(int bm_handle, int section, rf::gr::LockInfo *lock, int mode)
-{
-    return texture_manager_->lock(bm_handle, section, lock, mode);
-}
+    Renderer::Renderer(HWND hwnd, HMODULE d3d11_lib)
+    {
+        init_device(hwnd, d3d11_lib);
+        init_back_buffer();
+        init_depth_stencil_buffer();
 
-void D3D11Renderer::unlock(rf::gr::LockInfo *lock)
-{
-    texture_manager_->unlock(lock);
-}
+        state_manager_ = std::make_unique<StateManager>(device_);
+        shader_manager_ = std::make_unique<ShaderManager>(device_);
+        texture_manager_ = std::make_unique<TextureManager>(device_);
+        render_context_ = std::make_unique<RenderContext>(device_, context_, *state_manager_, *shader_manager_, *texture_manager_);
+        batch_manager_ = std::make_unique<BatchManager>(device_, context_, *render_context_);
+        solid_renderer_ = std::make_unique<SolidRenderer>(device_, context_, *render_context_);
+        mesh_renderer_ = std::make_unique<MeshRenderer>(device_, *render_context_);
 
-void D3D11Renderer::tmapper(int nv, rf::gr::Vertex **vertices, int tmap_flags, rf::gr::Mode mode)
-{
-    batch_manager_->tmapper(nv, vertices, tmap_flags, mode);
-}
+        render_context_->set_render_target(back_buffer_view_, depth_stencil_buffer_view_);
 
-void D3D11Renderer::render_solid(rf::GSolid* solid, rf::GRoom** rooms, int num_rooms)
-{
-    batch_manager_->flush();
-    solid_renderer_->render_solid(solid, rooms, num_rooms);
-}
+        //gr::screen.mode = GR_DIRECT3D11;
+        gr::screen.depthbuffer_type = gr::DEPTHBUFFER_Z;
+    }
 
-void D3D11Renderer::render_movable_solid(rf::GSolid* solid, const rf::Vector3& pos, const rf::Matrix3& orient)
-{
-    batch_manager_->flush();
-    solid_renderer_->render_movable_solid(solid, pos, orient);
-}
+    Renderer::~Renderer()
+    {
+        if (context_) {
+            context_->ClearState();
+        }
+        if (gr::screen.window_mode == gr::FULLSCREEN) {
+            swap_chain_->SetFullscreenState(FALSE, nullptr);
+        }
+    }
 
-void D3D11Renderer::render_alpha_detail_room(rf::GRoom *room, rf::GSolid *solid)
-{
-    batch_manager_->flush();
-    solid_renderer_->render_alpha_detail(room, solid);
-}
+    void Renderer::bitmap(int bitmap_handle, int x, int y, int w, int h, int sx, int sy, int sw, int sh, bool flip_x, bool flip_y, gr::Mode mode)
+    {
+        //xlog::info("gr_d3d11_bitmap");
+        //gr_d3d11_set_texture(0, bitmap_handle);
+        gr::screen.current_texture_1 = bitmap_handle;
+        int bm_w, bm_h;
+        bm::get_dimensions(bitmap_handle, &bm_w, &bm_h);
+        gr::Vertex verts[4];
+        gr::Vertex* verts_ptrs[] = {
+            &verts[0],
+            &verts[1],
+            &verts[2],
+            &verts[3],
+        };
+        float sx_left = gr::screen.offset_x + x;
+        float sx_right = gr::screen.offset_x + x + w;
+        float sy_top = gr::screen.offset_y + y;
+        float sy_bottom = gr::screen.offset_y + y + h;
+        float u_left = static_cast<float>(sx) / bm_w * (flip_x ? -1.0f : 1.0f);
+        float u_right = static_cast<float>(sx + sw) / bm_w * (flip_x ? -1.0f : 1.0f);
+        float v_top = static_cast<float>(sy) / bm_h * (flip_y ? -1.0f : 1.0f);
+        float v_bottom = static_cast<float>(sy + sh) / bm_h * (flip_y ? -1.0f : 1.0f);
+        verts[0].sx = sx_left;
+        verts[0].sy = sy_top;
+        verts[0].sw = 0.0f;
+        verts[0].u1 = u_left;
+        verts[0].v1 = v_top;
+        verts[1].sx = sx_right;
+        verts[1].sy = sy_top;
+        verts[1].sw = 0.0f;
+        verts[1].u1 = u_right;
+        verts[1].v1 = v_top;
+        verts[2].sx = sx_right;
+        verts[2].sy = sy_bottom;
+        verts[2].sw = 0.0f;
+        verts[2].u1 = u_right;
+        verts[2].v1 = v_bottom;
+        verts[3].sx = sx_left;
+        verts[3].sy = sy_bottom;
+        verts[3].sw = 0.0f;
+        verts[3].u1 = u_left;
+        verts[3].v1 = v_bottom;
+        batch_manager_->tmapper(std::size(verts_ptrs), verts_ptrs, 0, mode);
+    }
 
-void D3D11Renderer::render_sky_room(rf::GRoom *room)
-{
-    batch_manager_->flush();
-    solid_renderer_->render_sky_room(room);
-}
+    void Renderer::clear()
+    {
+        float clear_color[4] = {
+            gr::screen.current_color.red / 255.0f,
+            gr::screen.current_color.green / 255.0f,
+            gr::screen.current_color.blue / 255.0f,
+            1.0f,
+        };
+        context_->ClearRenderTargetView(back_buffer_view_, clear_color);
+    }
 
-void D3D11Renderer::render_room_liquid_surface(rf::GSolid* solid, rf::GRoom* room)
-{
-    batch_manager_->flush();
-    solid_renderer_->render_room_liquid_surface(solid, room);
-}
+    void Renderer::zbuffer_clear()
+    {
+        if (gr::screen.depthbuffer_type != gr::DEPTHBUFFER_NONE) {
+            float depth = gr::screen.depthbuffer_type == gr::DEPTHBUFFER_Z ? 0.0f : 1.0f;
+            context_->ClearDepthStencilView(depth_stencil_buffer_view_, D3D11_CLEAR_DEPTH, depth, 0);
+        }
+    }
 
-void D3D11Renderer::clear_solid_cache()
-{
-    solid_renderer_->clear_cache();
-}
+    void Renderer::set_clip()
+    {
+        batch_manager_->flush();
+        D3D11_VIEWPORT vp;
+        vp.TopLeftX = gr::screen.clip_left + gr::screen.offset_x;
+        vp.TopLeftY = gr::screen.clip_top + gr::screen.offset_y;
+        vp.Width = gr::screen.clip_width;
+        vp.Height = gr::screen.clip_height;
+        vp.MinDepth = 0.0f;
+        vp.MaxDepth = 1.0f;
+        context_->RSSetViewports(1, &vp);
+    }
 
-void D3D11Renderer::render_v3d_vif(rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::MeshRenderParams& params)
-{
-    batch_manager_->flush();
-    mesh_renderer_->render_v3d_vif(mesh, pos, orient, params);
-}
+    void Renderer::flip()
+    {
+        //xlog::info("gr_d3d11_flip");
+        batch_manager_->flush();
+        HRESULT hr = swap_chain_->Present(0, 0);
+        check_hr(hr, "Present");
+    }
 
-void D3D11Renderer::render_character_vif(rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::CharacterInstance *ci, const rf::MeshRenderParams& params)
-{
-    batch_manager_->flush();
-    mesh_renderer_->render_character_vif(mesh, pos, orient, ci, params);
-}
+    int Renderer::lock(int bm_handle, int section, rf::gr::LockInfo *lock, int mode)
+    {
+        return texture_manager_->lock(bm_handle, section, lock, mode);
+    }
 
-HRESULT D3D11Renderer::get_device_removed_reason()
-{
-    return device_ ? device_->GetDeviceRemovedReason() : E_FAIL;
+    void Renderer::unlock(rf::gr::LockInfo *lock)
+    {
+        texture_manager_->unlock(lock);
+    }
+
+    void Renderer::tmapper(int nv, rf::gr::Vertex **vertices, int tmap_flags, rf::gr::Mode mode)
+    {
+        batch_manager_->tmapper(nv, vertices, tmap_flags, mode);
+    }
+
+    void Renderer::render_solid(rf::GSolid* solid, rf::GRoom** rooms, int num_rooms)
+    {
+        batch_manager_->flush();
+        solid_renderer_->render_solid(solid, rooms, num_rooms);
+    }
+
+    void Renderer::render_movable_solid(rf::GSolid* solid, const rf::Vector3& pos, const rf::Matrix3& orient)
+    {
+        batch_manager_->flush();
+        solid_renderer_->render_movable_solid(solid, pos, orient);
+    }
+
+    void Renderer::render_alpha_detail_room(rf::GRoom *room, rf::GSolid *solid)
+    {
+        batch_manager_->flush();
+        solid_renderer_->render_alpha_detail(room, solid);
+    }
+
+    void Renderer::render_sky_room(rf::GRoom *room)
+    {
+        batch_manager_->flush();
+        solid_renderer_->render_sky_room(room);
+    }
+
+    void Renderer::render_room_liquid_surface(rf::GSolid* solid, rf::GRoom* room)
+    {
+        batch_manager_->flush();
+        solid_renderer_->render_room_liquid_surface(solid, room);
+    }
+
+    void Renderer::clear_solid_cache()
+    {
+        solid_renderer_->clear_cache();
+    }
+
+    void Renderer::render_v3d_vif(rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::MeshRenderParams& params)
+    {
+        batch_manager_->flush();
+        mesh_renderer_->render_v3d_vif(mesh, pos, orient, params);
+    }
+
+    void Renderer::render_character_vif(rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::CharacterInstance *ci, const rf::MeshRenderParams& params)
+    {
+        batch_manager_->flush();
+        mesh_renderer_->render_character_vif(mesh, pos, orient, ci, params);
+    }
+
+    HRESULT Renderer::get_device_removed_reason()
+    {
+        return device_ ? device_->GetDeviceRemovedReason() : E_FAIL;
+    }
+
+    HRESULT get_device_removed_reason()
+    {
+        return renderer ? renderer->get_device_removed_reason() : E_FAIL;
+    }
 }
 
 void gr_d3d11_msg_handler(UINT msg, WPARAM w_param, LPARAM l_param)
@@ -328,112 +336,107 @@ void gr_d3d11_msg_handler(UINT msg, WPARAM w_param, LPARAM l_param)
     case WM_ACTIVATEAPP:
         if (w_param) {
             xlog::warn("active %x %lx", w_param, l_param);
-            d3d11_renderer->window_active();
+            df::gr::d3d11::renderer->window_active();
         }
         else {
             xlog::warn("inactive %x %lx", w_param, l_param);
-            d3d11_renderer->window_inactive();
+            df::gr::d3d11::renderer->window_inactive();
         }
     }
 }
 
 void gr_d3d11_flip()
 {
-    d3d11_renderer->flip();
+    df::gr::d3d11::renderer->flip();
 }
 
 void gr_d3d11_close()
 {
     xlog::info("gr_d3d11_close");
-    d3d11_renderer.reset();
-    FreeLibrary(d3d11_lib);
+    df::gr::d3d11::renderer.reset();
+    FreeLibrary(df::gr::d3d11::d3d11_lib);
 }
 
 void gr_d3d11_init(HWND hwnd)
 {
     xlog::info("gr_d3d11_init");
-    d3d11_lib = LoadLibraryW(L"d3d11.dll");
-    if (!d3d11_lib) {
+    df::gr::d3d11::d3d11_lib = LoadLibraryW(L"d3d11.dll");
+    if (!df::gr::d3d11::d3d11_lib) {
         RF_DEBUG_ERROR("Failed to load d3d11.dll");
     }
 
-    d3d11_renderer.emplace(hwnd, d3d11_lib);
+    df::gr::d3d11::renderer.emplace(hwnd, df::gr::d3d11::d3d11_lib);
     os_add_msg_handler(gr_d3d11_msg_handler);
 }
 
 void gr_d3d11_clear()
 {
-    d3d11_renderer->clear();
+    df::gr::d3d11::renderer->clear();
 }
 
 void gr_d3d11_bitmap(int bitmap_handle, int x, int y, int w, int h, int sx, int sy, int sw, int sh, bool flip_x, bool flip_y, gr::Mode mode)
 {
-    d3d11_renderer->bitmap(bitmap_handle, x, y, w, h, sx, sy, sw, sh, flip_x, flip_y, mode);
+    df::gr::d3d11::renderer->bitmap(bitmap_handle, x, y, w, h, sx, sy, sw, sh, flip_x, flip_y, mode);
 }
 
 void gr_d3d11_set_clip()
 {
-    d3d11_renderer->set_clip();
+    df::gr::d3d11::renderer->set_clip();
 }
 
 void gr_d3d11_zbuffer_clear()
 {
-    d3d11_renderer->zbuffer_clear();
+    df::gr::d3d11::renderer->zbuffer_clear();
 }
 
 void gr_d3d11_tmapper(int nv, gr::Vertex **vertices, int tmap_flags, gr::Mode mode)
 {
-    d3d11_renderer->tmapper(nv, vertices, tmap_flags, mode);
+    df::gr::d3d11::renderer->tmapper(nv, vertices, tmap_flags, mode);
 }
 
 int gr_d3d11_lock(int bm_handle, int section, gr::LockInfo *lock, int mode)
 {
-    return d3d11_renderer->lock(bm_handle, section, lock, mode);
+    return df::gr::d3d11::renderer->lock(bm_handle, section, lock, mode);
 }
 
 void gr_d3d11_unlock(gr::LockInfo *lock)
 {
-    d3d11_renderer->unlock(lock);
+    df::gr::d3d11::renderer->unlock(lock);
 }
 
 void gr_d3d11_render_solid(rf::GSolid* solid, rf::GRoom** rooms, int num_rooms)
 {
-    d3d11_renderer->render_solid(solid, rooms, num_rooms);
+    df::gr::d3d11::renderer->render_solid(solid, rooms, num_rooms);
 }
 
 void gr_d3d11_render_movable_solid(GSolid* solid, const Vector3& pos, const Matrix3& orient)
 {
-    d3d11_renderer->render_movable_solid(solid, pos, orient);
+    df::gr::d3d11::renderer->render_movable_solid(solid, pos, orient);
 }
 
 void gr_d3d11_render_alpha_detail_room(GRoom *room, GSolid *solid)
 {
-    d3d11_renderer->render_alpha_detail_room(room, solid);
+    df::gr::d3d11::renderer->render_alpha_detail_room(room, solid);
 }
 
 void gr_d3d11_render_sky_room(GRoom *room)
 {
-    d3d11_renderer->render_sky_room(room);
+    df::gr::d3d11::renderer->render_sky_room(room);
 }
 
 void gr_d3d11_render_v3d_vif([[maybe_unused]] VifLodMesh *lod_mesh, VifMesh *mesh, const Vector3& pos, const Matrix3& orient, [[maybe_unused]] int lod_index, [[maybe_unused]] const MeshRenderParams& params)
 {
-    d3d11_renderer->render_v3d_vif(mesh, pos, orient, params);
+    df::gr::d3d11::renderer->render_v3d_vif(mesh, pos, orient, params);
 }
 
 void gr_d3d11_render_character_vif([[maybe_unused]] VifLodMesh *lod_mesh, VifMesh *mesh, const Vector3& pos, const Matrix3& orient, const CharacterInstance *ci, [[maybe_unused]] int lod_index, [[maybe_unused]] const MeshRenderParams& params)
 {
-    d3d11_renderer->render_character_vif(mesh, pos, orient, ci, params);
+    df::gr::d3d11::renderer->render_character_vif(mesh, pos, orient, ci, params);
 }
 
 // void gr_d3d11_render_lod_vif(rf::VifLodMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, rf::CharacterInstance *ci, rf::MeshRenderParams *params)
 // {
 // }
-
-HRESULT gr_d3d11_get_device_removed_reason()
-{
-    return d3d11_renderer ? d3d11_renderer->get_device_removed_reason() : E_FAIL;
-}
 
 void gr_d3d11_set_fog()
 {
@@ -450,15 +453,15 @@ void gr_d3d11_set_fog()
 
 void gr_d3d11_clear_solid_render_cache()
 {
-    d3d11_renderer->clear_solid_cache();
+    df::gr::d3d11::renderer->clear_solid_cache();
 }
 
-CodeInjection g_render_room_objects_render_liquid_injection{
+static CodeInjection g_render_room_objects_render_liquid_injection{
     0x004D4106,
     [](auto& regs) {
         GRoom* room = regs.edi;
         GSolid* solid = regs.ebx;
-        d3d11_renderer->render_room_liquid_surface(solid, room);
+        df::gr::d3d11::renderer->render_room_liquid_surface(solid, room);
         regs.eip = 0x004D414F;
     },
 };
