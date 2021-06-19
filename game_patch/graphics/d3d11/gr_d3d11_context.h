@@ -29,11 +29,13 @@ namespace df::gr::d3d11
         std::array<std::array<float, 4>, 4> view_mat;
         std::array<std::array<float, 4>, 4> proj_mat;
     };
+    static_assert(sizeof(CameraUniforms) % 16 == 0);
 
     struct TexCoordTransformUniform
     {
         std::array<std::array<float, 4>, 3> mat;
     };
+    static_assert(sizeof(TexCoordTransformUniform) % 16 == 0);
 
     struct PixelShaderUniforms
     {
@@ -44,8 +46,11 @@ namespace df::gr::d3d11
         float tex0_add_rgb;
         float output_mul_rgb;
         float alpha_test;
+        float fog_far;
+        std::array<float, 3> fog_color;
         float pad[1];
     };
+    static_assert(sizeof(PixelShaderUniforms) % 16 == 0);
 
     class RenderContext
     {

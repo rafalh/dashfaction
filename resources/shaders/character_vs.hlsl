@@ -25,6 +25,7 @@ struct VsOutput
     float2 uv0 : TEXCOORD0;
     float2 uv1 : TEXCOORD1;
     float4 color : COLOR;
+    float  depth : TEXCOORD2;
 };
 
 VsOutput main(VsInput input)
@@ -36,9 +37,11 @@ VsOutput main(VsInput input)
         mul(matrices[input.indices[1] * 255.0f], pos_h) * input.weights[1] +
         mul(matrices[input.indices[2] * 255.0f], pos_h) * input.weights[2] +
         mul(matrices[input.indices[3] * 255.0f], pos_h) * input.weights[3];
-    output.pos = mul(proj_mat, mul(view_mat, mul(model_mat, transformed)));
+    float4 view_pos = mul(view_mat, mul(model_mat, transformed));
+    output.pos = mul(proj_mat, view_pos);
     output.uv0 = input.uv0;
     output.uv1 = float2(0, 0);
     output.color = input.color;
+    output.depth = view_pos.z;
     return output;
 }

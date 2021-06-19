@@ -163,6 +163,18 @@ namespace df::gr::d3d11
         ps_data.tex0_add_rgb = tex0_rgb_add;
         ps_data.output_mul_rgb = output_mul_rgb;
         ps_data.alpha_test = alpha_test ? 1.0f : 0.0f;
+        if (mode.get_fog_type() == gr::FOG_NOT_ALLOWED || !gr::screen.fog_mode) {
+            ps_data.fog_far = std::numeric_limits<float>::infinity();
+            ps_data.fog_color = {0.0f, 0.0f, 0.0f};
+        }
+        else {
+            ps_data.fog_far = gr::screen.fog_far;
+            ps_data.fog_color = {
+                static_cast<float>(gr::screen.fog_color.red) / 255.0f,
+                static_cast<float>(gr::screen.fog_color.green) / 255.0f,
+                static_cast<float>(gr::screen.fog_color.blue) / 255.0f,
+            };
+        }
 
         D3D11_MAPPED_SUBRESOURCE mapped_cbuffer;
         HRESULT hr = context_->Map(ps_cbuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_cbuffer);
