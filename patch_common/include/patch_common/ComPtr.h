@@ -12,8 +12,15 @@ public:
     ComPtr(const ComPtr& other) :
         m_ptr(other.m_ptr)
     {
-        if (m_ptr)
+        if (m_ptr) {
             m_ptr->AddRef();
+        }
+    }
+
+    ComPtr(ComPtr&& other) :
+        m_ptr(other.m_ptr)
+    {
+        other.m_ptr = nullptr;
     }
 
     ~ComPtr()
@@ -23,11 +30,22 @@ public:
 
     ComPtr& operator=(const ComPtr& other)
     {
-        if (&other != this) {
+        if (&other.m_ptr != &m_ptr) {
             release();
             m_ptr = other.m_ptr;
-            if (m_ptr)
+            if (m_ptr) {
                 m_ptr->AddRef();
+            }
+        }
+        return *this;
+    }
+
+    ComPtr& operator=(ComPtr&& other)
+    {
+        if (&other.m_ptr != &m_ptr) {
+            release();
+            m_ptr = other.m_ptr;
+            other.m_ptr = nullptr;
         }
         return *this;
     }
@@ -50,8 +68,9 @@ public:
 
     void release()
     {
-        if (m_ptr)
+        if (m_ptr) {
             m_ptr->Release();
+        }
         m_ptr = nullptr;
     }
 };
