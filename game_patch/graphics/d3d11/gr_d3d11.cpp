@@ -150,7 +150,7 @@ namespace df::gr::d3d11
 
         state_manager_ = std::make_unique<StateManager>(device_);
         shader_manager_ = std::make_unique<ShaderManager>(device_);
-        texture_manager_ = std::make_unique<TextureManager>(device_);
+        texture_manager_ = std::make_unique<TextureManager>(device_, context_);
         render_context_ = std::make_unique<RenderContext>(device_, context_, *state_manager_, *shader_manager_, *texture_manager_);
         batch_manager_ = std::make_unique<BatchManager>(device_, context_, *render_context_);
         solid_renderer_ = std::make_unique<SolidRenderer>(device_, context_, *render_context_);
@@ -257,7 +257,7 @@ namespace df::gr::d3d11
         check_hr(hr, "Present");
     }
 
-    int Renderer::lock(int bm_handle, int section, rf::gr::LockInfo *lock, int mode)
+    bool Renderer::lock(int bm_handle, int section, rf::gr::LockInfo *lock, gr::LockMode mode)
     {
         return texture_manager_->lock(bm_handle, section, lock, mode);
     }
@@ -265,6 +265,11 @@ namespace df::gr::d3d11
     void Renderer::unlock(rf::gr::LockInfo *lock)
     {
         texture_manager_->unlock(lock);
+    }
+
+    void Renderer::get_texel(int bm_handle, float u, float v, rf::gr::Color *clr)
+    {
+        texture_manager_->get_texel(bm_handle, u, v, clr);
     }
 
     void Renderer::tmapper(int nv, rf::gr::Vertex **vertices, int tmap_flags, rf::gr::Mode mode)
@@ -394,7 +399,7 @@ void gr_d3d11_tmapper(int nv, gr::Vertex **vertices, int tmap_flags, gr::Mode mo
     df::gr::d3d11::renderer->tmapper(nv, vertices, tmap_flags, mode);
 }
 
-int gr_d3d11_lock(int bm_handle, int section, gr::LockInfo *lock, int mode)
+bool gr_d3d11_lock(int bm_handle, int section, gr::LockInfo *lock, gr::LockMode mode)
 {
     return df::gr::d3d11::renderer->lock(bm_handle, section, lock, mode);
 }
@@ -402,6 +407,11 @@ int gr_d3d11_lock(int bm_handle, int section, gr::LockInfo *lock, int mode)
 void gr_d3d11_unlock(gr::LockInfo *lock)
 {
     df::gr::d3d11::renderer->unlock(lock);
+}
+
+void gr_d3d11_get_texel(int bm_handle, float u, float v, rf::gr::Color *clr)
+{
+    df::gr::d3d11::renderer->get_texel(bm_handle, u, v, clr);
 }
 
 void gr_d3d11_render_solid(rf::GSolid* solid, rf::GRoom** rooms, int num_rooms)
@@ -547,7 +557,7 @@ void gr_d3d11_apply_patch()
     AsmWriter{0x0055CDC0}.ret(); // gr_d3d_mark_texture_dirty
     AsmWriter{0x0055CE00}.jmp(gr_d3d11_lock); // gr_d3d_lock
     AsmWriter{0x0055CF60}.jmp(gr_d3d11_unlock); // gr_d3d_unlock
-    AsmWriter{0x0055CFA0}.ret(); // gr_d3d_get_texel
+    AsmWriter{0x0055CFA0}.jmp(gr_d3d11_get_texel); // gr_d3d_get_texel
     AsmWriter{0x0055D160}.ret(); // gr_d3d_texture_add_ref
     AsmWriter{0x0055D190}.ret(); // gr_d3d_texture_remove_ref
     AsmWriter{0x0055F5E0}.jmp(gr_d3d11_render_solid); // gr_d3d_render_static_solid

@@ -48,8 +48,9 @@ namespace df::gr::d3d11
         void zbuffer_clear();
         void set_clip();
         void flip();
-        int lock(int bm_handle, int section, rf::gr::LockInfo *lock, int mode);
+        bool lock(int bm_handle, int section, rf::gr::LockInfo *lock, gr::LockMode mode);
         void unlock(rf::gr::LockInfo *lock);
+        void get_texel(int bm_handle, float u, float v, rf::gr::Color *clr);
         void tmapper(int nv, rf::gr::Vertex **vertices, int tmap_flags, rf::gr::Mode mode);
         HRESULT get_device_removed_reason();
         void render_solid(rf::GSolid* solid, rf::GRoom** rooms, int num_rooms);

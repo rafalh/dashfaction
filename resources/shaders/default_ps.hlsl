@@ -24,7 +24,7 @@ SamplerState samp1;
 
 float4 main(VsOutput input) : SV_TARGET
 {
-    //return tex0.Sample(samp0, input.uv0);
+    // return tex0.Sample(samp0, input.uv0);
 
     float4 tex0_color = tex0.Sample(samp0, input.uv0);
     float4 target = input.color * vcolor_mul.xxxy + vcolor_mul_inv.xxxy;
