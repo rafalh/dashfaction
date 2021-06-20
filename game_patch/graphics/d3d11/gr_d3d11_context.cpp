@@ -10,6 +10,44 @@ using namespace rf;
 
 namespace df::gr::d3d11
 {
+    struct alignas(16) ModelTransformBufferData
+    {
+        std::array<std::array<float, 4>, 4> model_mat;
+    };
+    static_assert(sizeof(ModelTransformBufferData) % 16 == 0);
+
+    struct alignas(16) ViewProjTransformBufferData
+    {
+        std::array<std::array<float, 4>, 4> view_mat;
+        std::array<std::array<float, 4>, 4> proj_mat;
+    };
+    static_assert(sizeof(ViewProjTransformBufferData) % 16 == 0);
+
+    struct alignas(16) TextureTransformBufferData
+    {
+        std::array<std::array<float, 4>, 3> mat;
+    };
+    static_assert(sizeof(TextureTransformBufferData) % 16 == 0);
+
+    struct alignas(16) RenderModeBufferData
+    {
+        std::array<float, 2> vcolor_mul;
+        std::array<float, 2> vcolor_mul_inv;
+        std::array<float, 2> tex0_mul;
+        std::array<float, 2> tex0_mul_inv;
+        float alpha_test;
+        float tex0_add_rgb;
+        float tex1_mul_rgb;
+        float tex1_mul_rgb_inv;
+        float tex1_add_rgb;
+        float output_add_rgb;
+        float fog_far;
+        float pad0;
+        std::array<float, 3> fog_color;
+        float pad1;
+    };
+    static_assert(sizeof(RenderModeBufferData) % 16 == 0);
+
     RenderContext::RenderContext(
         ComPtr<ID3D11Device> device, ComPtr<ID3D11DeviceContext> context,
         StateManager& state_manager, ShaderManager& shader_manager,
@@ -19,8 +57,8 @@ namespace df::gr::d3d11
         state_manager_{state_manager}, shader_manager_{shader_manager}, texture_manager_{texture_manager},
         current_uv_pan_{NAN, NAN}
     {
-        init_ps_cbuffer();
-        init_vs_cbuffer();
+        init_cbuffers();
+        bind_cbuffers();
 
         white_bm_ = rf::bm::create(rf::bm::FORMAT_888_RGB, 1, 1);
         assert(white_bm_ != -1);
@@ -33,69 +71,57 @@ namespace df::gr::d3d11
         set_uv_pan({0.0f, 0.0f});
     }
 
-    void RenderContext::init_ps_cbuffer()
+    void RenderContext::init_cbuffers()
     {
         D3D11_BUFFER_DESC buffer_desc;
         ZeroMemory(&buffer_desc, sizeof(buffer_desc));
-        buffer_desc.Usage            = D3D11_USAGE_DYNAMIC;
-        buffer_desc.ByteWidth        = sizeof(PixelShaderUniforms);
-        buffer_desc.BindFlags        = D3D11_BIND_CONSTANT_BUFFER;
-        buffer_desc.CPUAccessFlags   = D3D11_CPU_ACCESS_WRITE;
-        buffer_desc.MiscFlags        = 0;
-        buffer_desc.StructureByteStride = 0;
+        buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
+        buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+        buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+        HRESULT hr;
+        D3D11_SUBRESOURCE_DATA subres_data{nullptr, 0, 0};
 
-        PixelShaderUniforms data;
-        std::memset(&data, 0, sizeof(data));
-        D3D11_SUBRESOURCE_DATA subres_data;
-        subres_data.pSysMem = &data;
-        subres_data.SysMemPitch = 0;
-        subres_data.SysMemSlicePitch = 0;
+        ModelTransformBufferData model_transform_data;
+        model_transform_data.model_mat = build_identity_matrix();
+        subres_data.pSysMem = &model_transform_data;
 
-        HRESULT hr = device_->CreateBuffer(&buffer_desc, &subres_data, &ps_cbuffer_);
+        buffer_desc.ByteWidth = sizeof(model_transform_data);
+        hr = device_->CreateBuffer(&buffer_desc, &subres_data, &model_transform_2d_cbuffer_);
+        check_hr(hr, "CreateBuffer");
+        hr = device_->CreateBuffer(&buffer_desc, &subres_data, &model_transform_3d_cbuffer_);
         check_hr(hr, "CreateBuffer");
 
-        ID3D11Buffer* ps_cbuffers[] = { ps_cbuffer_ };
-        context_->PSSetConstantBuffers(0, std::size(ps_cbuffers), ps_cbuffers);
-    }
+        ViewProjTransformBufferData view_proj_transform_data;
+        view_proj_transform_data.view_mat = build_identity_matrix();
+        view_proj_transform_data.proj_mat = build_identity_matrix();
+        subres_data.pSysMem = &view_proj_transform_data;
 
-    void RenderContext::init_vs_cbuffer()
-    {
-        D3D11_BUFFER_DESC buffer_desc;
-        ZeroMemory(&buffer_desc, sizeof(buffer_desc));
-        buffer_desc.Usage            = D3D11_USAGE_DYNAMIC;
-        buffer_desc.ByteWidth        = sizeof(CameraUniforms);
-        buffer_desc.BindFlags        = D3D11_BIND_CONSTANT_BUFFER;
-        buffer_desc.CPUAccessFlags   = D3D11_CPU_ACCESS_WRITE;
-        buffer_desc.MiscFlags        = 0;
-        buffer_desc.StructureByteStride = 0;
-
-        CameraUniforms data;
-        std::memset(&data, 0, sizeof(data));
-        data.model_mat = build_identity_matrix();
-        data.view_mat = build_identity_matrix();
-        data.proj_mat = build_identity_matrix();
-
-        D3D11_SUBRESOURCE_DATA subres_data;
-        subres_data.pSysMem = &data;
-        subres_data.SysMemPitch = 0;
-        subres_data.SysMemSlicePitch = 0;
-
-        HRESULT hr = device_->CreateBuffer(&buffer_desc, &subres_data, &vs_cbuffer_);
+        buffer_desc.ByteWidth = sizeof(view_proj_transform_data);
+        hr = device_->CreateBuffer(&buffer_desc, &subres_data, &view_proj_transform_2d_cbuffer_);
+        check_hr(hr, "CreateBuffer");
+        hr = device_->CreateBuffer(&buffer_desc, &subres_data, &view_proj_transform_3d_cbuffer_);
         check_hr(hr, "CreateBuffer");
 
-        ZeroMemory(&buffer_desc, sizeof(buffer_desc));
-        buffer_desc.Usage            = D3D11_USAGE_DYNAMIC;
-        buffer_desc.ByteWidth        = sizeof(TexCoordTransformUniform);
-        buffer_desc.BindFlags        = D3D11_BIND_CONSTANT_BUFFER;
-        buffer_desc.CPUAccessFlags   = D3D11_CPU_ACCESS_WRITE;
-        buffer_desc.MiscFlags        = 0;
-        buffer_desc.StructureByteStride = 0;
-
+        buffer_desc.ByteWidth = sizeof(TextureTransformBufferData);
         hr = device_->CreateBuffer(&buffer_desc, nullptr, &texture_transform_cbuffer_);
         check_hr(hr, "CreateBuffer");
 
-        ID3D11Buffer* vs_cbuffers[] = { vs_cbuffer_, texture_transform_cbuffer_ };
+        buffer_desc.ByteWidth = sizeof(RenderModeBufferData);
+        hr = device_->CreateBuffer(&buffer_desc, nullptr, &render_mode_cbuffer_);
+        check_hr(hr, "CreateBuffer");
+    }
+
+    void RenderContext::bind_cbuffers()
+    {
+        ID3D11Buffer* vs_cbuffers[] = {
+            model_transform_2d_cbuffer_,
+            view_proj_transform_2d_cbuffer_,
+            texture_transform_cbuffer_,
+        };
         context_->VSSetConstantBuffers(0, std::size(vs_cbuffers), vs_cbuffers);
+
+        ID3D11Buffer* ps_cbuffers[] = { render_mode_cbuffer_ };
+        context_->PSSetConstantBuffers(0, std::size(ps_cbuffers), ps_cbuffers);
     }
 
     void RenderContext::change_mode(gr::Mode mode, bool has_tex1)
@@ -436,7 +462,7 @@ namespace df::gr::d3d11
 
         bool alpha_test = mode.get_zbuffer_type() == gr::ZBUFFER_TYPE_FULL_ALPHA_TEST;
 
-        PixelShaderUniforms ps_data;
+        RenderModeBufferData ps_data;
         ps_data.vcolor_mul = {vcolor_mul_rgb, vcolor_mul_a};
         ps_data.vcolor_mul_inv = {vcolor_mul_rgb ? 0.0f : 1.0f, vcolor_mul_a ? 0.0f : 1.0f};
         ps_data.tex0_mul = {tex0_mul_rgb, tex0_mul_a};
@@ -461,10 +487,10 @@ namespace df::gr::d3d11
         }
 
         D3D11_MAPPED_SUBRESOURCE mapped_cbuffer;
-        HRESULT hr = context_->Map(ps_cbuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_cbuffer);
+        HRESULT hr = context_->Map(render_mode_cbuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_cbuffer);
         check_hr(hr, "Map");
         std::memcpy(mapped_cbuffer.pData, &ps_data, sizeof(ps_data));
-        context_->Unmap(ps_cbuffer_, 0);
+        context_->Unmap(render_mode_cbuffer_, 0);
 
         ID3D11SamplerState* sampler_states[] = {
             state_manager_.lookup_sampler_state(mode, 0),
@@ -479,18 +505,9 @@ namespace df::gr::d3d11
         context_->OMSetDepthStencilState(depth_stencil_state, 0);
     }
 
-    void RenderContext::update_camera_uniforms(const CameraUniforms& uniforms)
+    void RenderContext::bind_texture(int slot)
     {
-        camera_uniforms_ = uniforms;
-        D3D11_MAPPED_SUBRESOURCE mapped_cbuffer;
-        HRESULT hr = context_->Map(vs_cbuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_cbuffer);
-        check_hr(hr, "Map");
-        std::memcpy(mapped_cbuffer.pData, &camera_uniforms_, sizeof(camera_uniforms_));
-        context_->Unmap(vs_cbuffer_, 0);
-    }
-
-    void RenderContext::change_texture(int slot, int tex_handle)
-    {
+        int tex_handle = current_tex_handles_[slot];
         if (tex_handle == -1) {
             tex_handle = white_bm_;
         }
@@ -508,14 +525,58 @@ namespace df::gr::d3d11
         context_->OMSetRenderTargets(std::size(render_targets), render_targets, depth_stencil_view);
     }
 
+    void RenderContext::update_vertex_transform_type()
+    {
+        if (current_vertex_transform_type_ == VertexTransformType::_2d) {
+            ID3D11Buffer* vs_cbuffers[] = {
+                model_transform_2d_cbuffer_,
+                view_proj_transform_2d_cbuffer_,
+            };
+            context_->VSSetConstantBuffers(0, std::size(vs_cbuffers), vs_cbuffers);
+        }
+        else {
+            ID3D11Buffer* vs_cbuffers[] = {
+                model_transform_3d_cbuffer_,
+                view_proj_transform_3d_cbuffer_,
+            };
+            context_->VSSetConstantBuffers(0, std::size(vs_cbuffers), vs_cbuffers);
+        }
+    }
+
+    void RenderContext::update_model_transform_3d()
+    {
+        ModelTransformBufferData data;
+        data.model_mat = build_model_matrix(current_model_pos_, current_model_orient_.copy_transpose());
+
+        D3D11_MAPPED_SUBRESOURCE mapped_cbuffer;
+        HRESULT hr = context_->Map(model_transform_3d_cbuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_cbuffer);
+        check_hr(hr, "Map");
+        std::memcpy(mapped_cbuffer.pData, &data, sizeof(data));
+        context_->Unmap(model_transform_3d_cbuffer_, 0);
+    }
+
+    void RenderContext::update_view_proj_transform_3d()
+    {
+        ViewProjTransformBufferData data;
+        data.view_mat = build_camera_view_matrix();
+        data.proj_mat = build_proj_matrix();
+
+        D3D11_MAPPED_SUBRESOURCE mapped_cbuffer;
+        HRESULT hr = context_->Map(view_proj_transform_3d_cbuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_cbuffer);
+        check_hr(hr, "Map");
+        std::memcpy(mapped_cbuffer.pData, &data, sizeof(data));
+        context_->Unmap(view_proj_transform_3d_cbuffer_, 0);
+    }
+
     void RenderContext::update_texture_transform()
     {
-        TexCoordTransformUniform uniforms;
-        uniforms.mat = convert_to_4x3_matrix(build_texture_matrix(current_uv_pan_.x, current_uv_pan_.y));
+        TextureTransformBufferData data;
+        data.mat = convert_to_4x3_matrix(build_texture_matrix(current_uv_pan_.x, current_uv_pan_.y));
+
         D3D11_MAPPED_SUBRESOURCE mapped_cbuffer;
         HRESULT hr = context_->Map(texture_transform_cbuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_cbuffer);
         check_hr(hr, "Map");
-        std::memcpy(mapped_cbuffer.pData, &uniforms, sizeof(uniforms));
+        std::memcpy(mapped_cbuffer.pData, &data, sizeof(data));
         context_->Unmap(texture_transform_cbuffer_, 0);
     }
 
@@ -525,14 +586,14 @@ namespace df::gr::d3d11
         context_->VSSetConstantBuffers(index, std::size(vs_cbuffers), vs_cbuffers);
     }
 
-    void RenderContext::bind_default_shaders()
+    void RenderContext::bind_shader_program()
     {
-        shader_manager_.bind_default_shaders(*this);
-    }
-
-    void RenderContext::bind_character_shaders()
-    {
-        shader_manager_.bind_character_shaders(*this);
+        if (current_shader_program_ == ShaderProgram::character) {
+            shader_manager_.bind_character_shaders(*this);
+        }
+        else {
+            shader_manager_.bind_default_shaders(*this);
+        }
     }
 
     void RenderContext::clear()
@@ -568,7 +629,7 @@ namespace df::gr::d3d11
         context_->RSSetViewports(1, &vp);
     }
 
-    void RenderContext::update_rasterizer_state()
+    void RenderContext::bind_rasterizer_state()
     {
         ID3D11RasterizerState* rasterizer_state = state_manager_.lookup_rasterizer_state(current_cull_mode_);
         context_->RSSetState(rasterizer_state);

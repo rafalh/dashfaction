@@ -18,12 +18,12 @@ namespace df::gr::d3d11
     class RenderContext;
     class GRenderCacheBuilder;
 
-    enum class FaceRenderType { opaque, alpha, liquid };
+    enum class FaceRenderType { opaque, alpha, liquid, sky };
 
     class GRenderCache
     {
     public:
-        GRenderCache(const GRenderCacheBuilder& builder, rf::gr::Mode mode, ID3D11Device* device);
+        GRenderCache(const GRenderCacheBuilder& builder, ID3D11Device* device);
         void render(FaceRenderType what, RenderContext& context);
 
     private:
@@ -53,6 +53,7 @@ namespace df::gr::d3d11
         std::vector<Batch> opaque_batches_;
         std::vector<Batch> alpha_batches_;
         std::vector<Batch> liquid_batches_;
+        std::vector<Batch> sky_batches_;
         ComPtr<ID3D11Buffer> vb_;
         ComPtr<ID3D11Buffer> ib_;
 
@@ -63,6 +64,9 @@ namespace df::gr::d3d11
             }
             else if (render_type == FaceRenderType::liquid) {
                 return liquid_batches_;
+            }
+            else if (render_type == FaceRenderType::sky) {
+                return sky_batches_;
             }
             else {
                 return opaque_batches_;

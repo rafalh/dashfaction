@@ -57,7 +57,7 @@ namespace df::gr::d3d11
         void unlock(rf::gr::LockInfo *lock);
         void get_texel(int bm_handle, float u, float v, rf::gr::Color *clr);
         void tmapper(int nv, const rf::gr::Vertex **vertices, int vertex_attributes, rf::gr::Mode mode);
-        HRESULT get_device_removed_reason();
+        void setup_3d();
         void render_solid(rf::GSolid* solid, rf::GRoom** rooms, int num_rooms);
         void render_movable_solid(rf::GSolid* solid, const rf::Vector3& pos, const rf::Matrix3& orient);
         void render_alpha_detail_room(rf::GRoom *room, rf::GSolid *solid);
@@ -67,6 +67,7 @@ namespace df::gr::d3d11
         void render_v3d_vif(rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::MeshRenderParams& params);
         void render_character_vif(rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::CharacterInstance *ci, const rf::MeshRenderParams& params);
         void fog_set();
+        HRESULT get_device_removed_reason();
 
     private:
         void init_device(HWND hwnd, HMODULE d3d11_lib);

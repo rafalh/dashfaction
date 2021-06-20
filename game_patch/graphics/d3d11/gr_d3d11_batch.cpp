@@ -174,6 +174,8 @@ namespace df::gr::d3d11
     {
         render_context_.set_vertex_buffer(dynamic_vb_, sizeof(GpuVertex));
         render_context_.set_index_buffer(dynamic_ib_);
-        render_context_.bind_default_shaders();
+        render_context_.set_shader_program(ShaderProgram::standard);
+        render_context_.set_vertex_transform_type(VertexTransformType::_2d);
+
     }
 }

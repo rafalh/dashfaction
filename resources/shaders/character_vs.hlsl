@@ -7,14 +7,23 @@ struct VsInput
     float4 indices : COLOR2;
 };
 
-cbuffer VsConstantBuffer : register(b0)
+cbuffer ModelTransformBuffer : register(b0)
 {
     float4x4 model_mat;
+};
+
+cbuffer ViewProjTransformBuffer : register(b1)
+{
     float4x4 view_mat;
     float4x4 proj_mat;
 };
 
-cbuffer BoneMatricesConstantBuffer : register(b2)
+cbuffer TextureTransformBuffer : register(b2)
+{
+    float3x4 texture_mat;
+};
+
+cbuffer BoneMatricesConstantBuffer : register(b3)
 {
     float4x4 matrices[50];
 };

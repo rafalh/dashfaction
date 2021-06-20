@@ -287,6 +287,11 @@ namespace df::gr::d3d11
         batch_manager_->add_vertices(nv, vertices, vertex_attributes, tex_handles, mode);
     }
 
+    void Renderer::setup_3d()
+    {
+        render_context_->update_view_proj_transform_3d();
+    }
+
     void Renderer::render_solid(rf::GSolid* solid, rf::GRoom** rooms, int num_rooms)
     {
         batch_manager_->flush();
@@ -508,9 +513,18 @@ static CodeInjection g_render_room_objects_render_liquid_injection{
     },
 };
 
+static CodeInjection gr_d3d_setup_3d_injection{
+    0x005473E4,
+    []() {
+        df::gr::d3d11::renderer->setup_3d();
+    },
+};
+
 void gr_d3d11_apply_patch()
 {
     g_render_room_objects_render_liquid_injection.install();
+    gr_d3d_setup_3d_injection.install();
+
     AsmWriter{0x004F0B90}.jmp(gr_d3d11_clear_solid_render_cache); // geo_cache_clear
 
     // AsmWriter{0x00545960}.jmp(gr_d3d11_init);
@@ -599,6 +613,7 @@ void gr_d3d11_apply_patch()
     AsmWriter{0x0052E9E0}.jmp(gr_d3d11_render_character_vif); // gr_d3d_render_character_vif
     AsmWriter{0x004D34D0}.jmp(gr_d3d11_render_alpha_detail_room); // room_render_alpha_detail
 
+    // Change size of standard structures
     write_mem<int8_t>(0x00569884 + 1, sizeof(rf::VifMesh));
     write_mem<int8_t>(0x00569732 + 1, sizeof(rf::VifLodMesh));
 }

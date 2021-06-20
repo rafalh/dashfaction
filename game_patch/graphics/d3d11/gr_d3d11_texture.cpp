@@ -132,6 +132,7 @@ namespace df::gr::d3d11
     {
         xlog::info("Flushing texture cache");
         if (force) {
+            xlog::info("Flushing all textures");
             texture_cache_.clear();
         }
         else {
@@ -142,7 +143,7 @@ namespace df::gr::d3d11
                     --texture.save_cache_count;
                 }
                 else if (texture.ref_count <= 0) {
-                    xlog::trace("Flushing texture: handle %d filename %s", texture.bm_handle, bm::get_filename(texture.bm_handle));
+                    xlog::warn("Flushing texture: handle %d filename %s", texture.bm_handle, bm::get_filename(texture.bm_handle));
                     it = texture_cache_.erase(it);
                     continue;
                 }
@@ -169,6 +170,7 @@ namespace df::gr::d3d11
             assert(texture.ref_count > 0);
             --texture.ref_count;
             if (texture.ref_count <= 0) {
+                xlog::warn("Flushing texture after ref removal: handle %d filename %s", texture.bm_handle, bm::get_filename(texture.bm_handle));
                 texture_cache_.erase(it);
             }
         }

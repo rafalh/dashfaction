@@ -35,6 +35,8 @@ namespace df::gr::d3d11
     static auto& gr_solid_alpha_mode = addr_as_ref<gr::Mode>(0x0180832C);
     static auto& geo_cache_rooms = addr_as_ref<GRoom*[256]>(0x01375DB4);
     static auto& geo_cache_num_rooms = addr_as_ref<int>(0x013761B8);
+    static auto& sky_room_center = addr_as_ref<Vector3>(0x0088FB10);
+    static auto& sky_room_offset = addr_as_ref<rf::Vector3>(0x0087BB00);
 
     static auto& set_currently_rendered_room = addr_as_ref<void (GRoom *room)>(0x004D3350);
 
@@ -56,28 +58,40 @@ namespace df::gr::d3d11
         gr::FOG_ALLOWED,
     };
 
-    inline bool should_render_face(GFace* face)
+    static inline bool should_render_face(GFace* face)
     {
         return face->attributes.portal_id == 0 && !(face->attributes.flags & (FACE_INVISIBLE|FACE_SHOW_SKY));
     }
 
-    static gr::Mode determine_decal_mode(GDecal* decal)
+    static inline gr::Mode determine_decal_mode(GDecal* decal)
     {
         if (decal->flags & DF_SELF_ILLUMINATED) {
             return gr_decal_self_illuminated_mode;
         }
-        else if (decal->flags & DF_TILING_U) {
+        if (decal->flags & DF_TILING_U) {
             return gr_decal_tiling_u_mode;
         }
-        else if (decal->flags & DF_TILING_V) {
+        if (decal->flags & DF_TILING_V) {
             return gr_decal_tiling_v_mode;
         }
-        else {
-            return gr_decal_mode;
-        }
+        return gr_decal_mode;
     }
 
-    void link_faces_to_texture_movers(GSolid* solid)
+    static inline gr::Mode determine_face_mode(FaceRenderType render_type, bool has_lightmap)
+    {
+        if (render_type == FaceRenderType::sky) {
+            return sky_room_mode;
+        }
+        if (render_type == FaceRenderType::opaque) {
+            return gr_solid_mode;
+        }
+        if (has_lightmap) {
+            return gr_solid_alpha_mode;
+        }
+        return alpha_detail_fullbright_mode;
+    }
+
+    static void link_faces_to_texture_movers(GSolid* solid)
     {
         // Note: this is normally done by geo_cache_prepare
         for (GFace& face : solid->face_list) {
@@ -104,8 +118,8 @@ namespace df::gr::d3d11
     public:
         void add_solid(GSolid* solid);
         void add_room(GRoom* room, GSolid* solid);
-        void add_face(GFace* face, GSolid* solid);
-        GRenderCache build(gr::Mode mode, ID3D11Device* device);
+        void add_face(GFace* face, GSolid* solid, bool is_sky);
+        GRenderCache build(ID3D11Device* device);
 
         int get_num_verts() const
         {
@@ -125,7 +139,7 @@ namespace df::gr::d3d11
         friend class GRenderCache;
     };
 
-    GRenderCache::GRenderCache(const GRenderCacheBuilder& builder, gr::Mode mode, ID3D11Device* device)
+    GRenderCache::GRenderCache(const GRenderCacheBuilder& builder, ID3D11Device* device)
     {
         if (builder.num_verts_ == 0 || builder.num_inds_ == 0) {
             return;
@@ -147,15 +161,7 @@ namespace df::gr::d3d11
             batch.texture_2 = std::get<2>(key);
             batch.u_pan_speed = std::get<3>(key);
             batch.v_pan_speed = std::get<4>(key);
-            if (render_type == FaceRenderType::opaque) {
-                batch.mode = mode;
-            }
-            else if (batch.texture_2 != -1) {
-                batch.mode = gr_solid_alpha_mode;
-            }
-            else {
-                batch.mode = alpha_detail_fullbright_mode;
-            }
+            batch.mode = determine_face_mode(render_type, batch.texture_2 != -1);
             for (GFace* face : faces) {
                 auto fvert = face->edge_loop;
                 auto face_start_index = vb_data.size();
@@ -247,11 +253,9 @@ namespace df::gr::d3d11
         xlog::trace("created render cache geometry buffers");
     }
 
-    void GRenderCache::render(FaceRenderType what, RenderContext& context)
+    void GRenderCache::render(FaceRenderType what, RenderContext& render_context)
     {
-        auto& batches = what == FaceRenderType::alpha
-            ? alpha_batches_
-            : (what == FaceRenderType::liquid ? liquid_batches_ : opaque_batches_);
+        auto& batches = get_batches(what);
 
         if (batches.empty()) {
             return;
@@ -259,24 +263,24 @@ namespace df::gr::d3d11
 
         float delta_time = timer_get(1000) * 0.001f; // FIXME: paused game..
 
-        context.bind_default_shaders();
-        context.set_vertex_buffer(vb_, sizeof(GpuVertex));
-        context.set_index_buffer(ib_);
-        context.set_cull_mode(D3D11_CULL_BACK);
-        context.set_primitive_topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        render_context.set_shader_program(ShaderProgram::standard);
+        render_context.set_vertex_buffer(vb_, sizeof(GpuVertex));
+        render_context.set_index_buffer(ib_);
+        render_context.set_cull_mode(D3D11_CULL_BACK);
+        render_context.set_primitive_topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         for (Batch& b : batches) {
-            context.set_mode_and_textures(b.mode, b.texture_1, b.texture_2);
+            render_context.set_mode_and_textures(b.mode, b.texture_1, b.texture_2);
             Vector2 uv_pan{b.u_pan_speed * delta_time, b.v_pan_speed * delta_time};
-            context.set_uv_pan(uv_pan);
+            render_context.set_uv_pan(uv_pan);
             //xlog::warn("DrawIndexed %d %d", b.num_indices, b.start_index);
-            context.device_context()->DrawIndexed(b.num_indices, b.start_index, 0);
+            render_context.device_context()->DrawIndexed(b.num_indices, b.start_index, 0);
         }
     }
 
     void GRenderCacheBuilder::add_solid(GSolid* solid)
     {
         for (GFace& face : solid->face_list) {
-            add_face(&face, solid);
+            add_face(&face, solid, false);
         }
     }
 
@@ -284,12 +288,15 @@ namespace df::gr::d3d11
     {
         link_faces_to_texture_movers(solid);
         for (GFace& face : room->face_list) {
-            add_face(&face, solid);
+            add_face(&face, solid, room->is_sky);
         }
     }
 
-    FaceRenderType determine_face_render_type(GFace* face)
+    FaceRenderType determine_face_render_type(GFace* face, bool is_sky)
     {
+        if (is_sky) {
+            return FaceRenderType::sky;
+        }
         if (face->attributes.flags & FACE_LIQUID) {
             return FaceRenderType::liquid;
         }
@@ -299,12 +306,12 @@ namespace df::gr::d3d11
         return FaceRenderType::opaque;
     }
 
-    void GRenderCacheBuilder::add_face(GFace* face, GSolid* solid)
+    void GRenderCacheBuilder::add_face(GFace* face, GSolid* solid, bool is_sky)
     {
         if (!should_render_face(face)) {
             return;
         }
-        FaceRenderType render_type = determine_face_render_type(face);
+        FaceRenderType render_type = determine_face_render_type(face, is_sky);
         int face_tex = face->attributes.bitmap_id;
         int lightmap_tex = -1;
         if (face->attributes.surface_index >= 0) {
@@ -340,9 +347,9 @@ namespace df::gr::d3d11
         num_inds_ += (1 + num_dp) * (num_fverts - 2) * 3;
     }
 
-    GRenderCache GRenderCacheBuilder::build(gr::Mode mode, ID3D11Device* device)
+    GRenderCache GRenderCacheBuilder::build(ID3D11Device* device)
     {
-        return GRenderCache(*this, mode, device);
+        return GRenderCache(*this, device);
     }
 
     inline GRoom* RoomRenderCache::room() const
@@ -379,8 +386,7 @@ namespace df::gr::d3d11
         xlog::info("Creating render cache for room %d - verts %d inds %d batches %d", room_->room_index,
             builder.get_num_verts(), builder.get_num_inds(), builder.get_num_batches());
 
-        gr::Mode mode = room_->is_sky ? sky_room_mode : gr_solid_mode;
-        cache_ = std::optional{builder.build(mode, device)};
+        cache_ = std::optional{builder.build(device)};
 
         state_ = 0;
     }
@@ -466,19 +472,20 @@ namespace df::gr::d3d11
         cache->render(render_type, device_, render_context_);
     }
 
-    void SolidRenderer::render_detail([[maybe_unused]] rf::GSolid* solid, [[maybe_unused]] GRoom* room, [[maybe_unused]] bool alpha)
+    void SolidRenderer::render_detail(rf::GSolid* solid, GRoom* room, bool alpha)
     {
         auto cache = reinterpret_cast<GRenderCache*>(room->geo_cache);
         if (!cache) {
             //xlog::warn("Creating render cache for detail room %d", room->room_index);
             GRenderCacheBuilder builder;
             builder.add_room(room, solid);
-            detail_render_cache_.push_back(std::make_unique<GRenderCache>(builder.build(gr_solid_mode, device_)));
+            detail_render_cache_.push_back(std::make_unique<GRenderCache>(builder.build(device_)));
             cache = detail_render_cache_.back().get();
             room->geo_cache = reinterpret_cast<GCache*>(cache);
         }
 
-        cache->render(alpha ? FaceRenderType::alpha : FaceRenderType::opaque, render_context_);
+        FaceRenderType render_type = alpha ? FaceRenderType::alpha : FaceRenderType::opaque;
+        cache->render(render_type, render_context_);
     }
 
     void SolidRenderer::clear_cache()
@@ -496,9 +503,8 @@ namespace df::gr::d3d11
     void SolidRenderer::render_sky_room(GRoom *room)
     {
         //xlog::warn("Rendering skybox...");
-        before_render(rf::zero_vector, rf::identity_matrix, true);
-        render_room_faces(rf::level.geometry, room, FaceRenderType::opaque);
-        after_render();
+        before_render(sky_room_offset, rf::identity_matrix, true);
+        render_room_faces(rf::level.geometry, room, FaceRenderType::sky);
     }
 
     void SolidRenderer::render_movable_solid(GSolid* solid, const Vector3& pos, const Matrix3& orient)
@@ -508,15 +514,14 @@ namespace df::gr::d3d11
             GRenderCacheBuilder cache_builder;
             link_faces_to_texture_movers(solid);
             cache_builder.add_solid(solid);
-            GRenderCache cache = cache_builder.build(gr_solid_mode, device_);
+            GRenderCache cache = cache_builder.build(device_);
             // TODO: make sure field_370 is not used by the game...
             mover_render_cache_.emplace_back(new GRenderCache{cache});
             solid->field_370 = reinterpret_cast<int>(mover_render_cache_.back().get());
         }
         auto cache = reinterpret_cast<GRenderCache*>(solid->field_370);
-        before_render(pos, orient.copy_transpose(), false);
+        before_render(pos, orient, false);
         cache->render(FaceRenderType::opaque, render_context_);
-        after_render();
     }
 
     void SolidRenderer::render_alpha_detail(GRoom *room, GSolid *solid)
@@ -530,14 +535,12 @@ namespace df::gr::d3d11
         }
         before_render(rf::zero_vector, rf::identity_matrix, false);
         render_detail(solid, room, true);
-        after_render();
     }
 
     void SolidRenderer::render_room_liquid_surface(GSolid* solid, GRoom* room)
     {
         before_render(rf::zero_vector, rf::identity_matrix, false);
         render_room_faces(solid, room, FaceRenderType::liquid);
-        after_render();
     }
 
     SolidRenderer::SolidRenderer(ComPtr<ID3D11Device> device, ComPtr<ID3D11DeviceContext> context, RenderContext& render_context) :
@@ -566,28 +569,14 @@ namespace df::gr::d3d11
         }
         set_currently_rendered_room(nullptr);
 
-        // Restore state
-        after_render();
-
         if (decals_enabled) {
             render_dynamic_decals(rooms, num_rooms);
-            //gr::d3d::flush_buffers();
         }
     }
 
     void SolidRenderer::before_render(const rf::Vector3& pos, const rf::Matrix3& orient, bool is_skyroom)
     {
-        CameraUniforms uniforms;
-        uniforms.model_mat = build_model_matrix(pos, orient);
-        uniforms.view_mat = is_skyroom ? build_sky_room_view_matrix() : build_camera_view_matrix();
-        uniforms.proj_mat = build_proj_matrix();
-        render_context_.update_camera_uniforms(uniforms);
-    }
-
-    void SolidRenderer::after_render()
-    {
-        CameraUniforms uniforms;
-        uniforms.proj_mat = uniforms.view_mat = uniforms.model_mat = build_identity_matrix();
-        render_context_.update_camera_uniforms(uniforms);
+        render_context_.set_model_transform(pos, orient);
+        render_context_.set_vertex_transform_type(is_skyroom ? VertexTransformType::sky_room : VertexTransformType::_3d);
     }
 }

@@ -20,7 +20,7 @@ namespace df::gr::d3d11
     {
     public:
         MeshRenderCache(VifMesh* mesh, ID3D11Device* device);
-        void render(const rf::MeshRenderParams& params, RenderContext& render_context);
+        void render(const Vector3& pos, const Matrix3& orient, const rf::MeshRenderParams& params, RenderContext& render_context);
     };
     class CharacterMeshRenderCache : public BaseMeshRenderCache
     {
@@ -41,7 +41,7 @@ namespace df::gr::d3d11
             rf::ubyte indices[4];
         };
 
-        struct alignas(16) MatricesUniforms
+        struct alignas(16) BoneTransformsBufferData
         {
             GrMatrix4x4 matrices[50];
         };
@@ -131,7 +131,7 @@ namespace df::gr::d3d11
         };
         D3D11_SUBRESOURCE_DATA vb_subres_data{gpu_verts.data(), 0, 0};
         HRESULT hr = device->CreateBuffer(&vb_desc, &vb_subres_data, &vb_);
-        check_hr(hr, "CreateBuffer");
+        check_hr(hr, "CreateBuffer (static mesh vertex buffer)");
 
         CD3D11_BUFFER_DESC ib_desc{
             sizeof(gpu_inds[0]) * gpu_inds.size(),
@@ -140,14 +140,15 @@ namespace df::gr::d3d11
         };
         D3D11_SUBRESOURCE_DATA ib_subres_data{gpu_inds.data(), 0, 0};
         hr = device->CreateBuffer(&ib_desc, &ib_subres_data, &ib_);
-        check_hr(hr, "CreateBuffer");
+        check_hr(hr, "CreateBuffer (static mesh index buffer)");
     }
 
-    void MeshRenderCache::render(const MeshRenderParams& params, RenderContext& render_context)
+    void MeshRenderCache::render(const Vector3& pos, const Matrix3& orient, const MeshRenderParams& params, RenderContext& render_context)
     {
         //xlog::warn("render mesh flags %x", params.flags);
-
-        render_context.bind_default_shaders();
+        render_context.set_shader_program(ShaderProgram::standard);
+        render_context.set_model_transform(pos, orient);
+        render_context.set_vertex_transform_type(VertexTransformType::_3d);
         render_context.set_vertex_buffer(vb_, sizeof(GpuVertex));
         render_context.set_index_buffer(ib_);
         draw(params, render_context);
@@ -223,7 +224,7 @@ namespace df::gr::d3d11
         };
         D3D11_SUBRESOURCE_DATA vb_subres_data{gpu_verts.data(), 0, 0};
         HRESULT hr = device->CreateBuffer(&vb_desc, &vb_subres_data, &vb_);
-        check_hr(hr, "CreateBuffer(character vertex buffer)");
+        check_hr(hr, "CreateBuffer (character vertex buffer)");
 
         CD3D11_BUFFER_DESC ib_desc{
             sizeof(gpu_inds[0]) * gpu_inds.size(),
@@ -232,16 +233,16 @@ namespace df::gr::d3d11
         };
         D3D11_SUBRESOURCE_DATA ib_subres_data{gpu_inds.data(), 0, 0};
         hr = device->CreateBuffer(&ib_desc, &ib_subres_data, &ib_);
-        check_hr(hr, "CreateBuffer(character index buffer)");
+        check_hr(hr, "CreateBuffer (character index buffer)");
 
         CD3D11_BUFFER_DESC matrices_buffer_desc{
-            sizeof(MatricesUniforms),
+            sizeof(BoneTransformsBufferData),
             D3D11_BIND_CONSTANT_BUFFER,
             D3D11_USAGE_DYNAMIC,
             D3D11_CPU_ACCESS_WRITE,
         };
         hr = device->CreateBuffer(&matrices_buffer_desc, nullptr, &matrices_cbuffer_);
-        check_hr(hr, "CreateBuffer(character constant buffer)");
+        check_hr(hr, "CreateBuffer (character constant buffer)");
     }
 
     static GrMatrix4x4 convert_bone_matrix(const Matrix43& mat)
@@ -257,26 +258,28 @@ namespace df::gr::d3d11
     void CharacterMeshRenderCache::render(const Vector3& pos, const Matrix3& orient, const CharacterInstance* ci, const MeshRenderParams& params, RenderContext& render_context)
     {
         update_matrices_buffer(ci, render_context);
-        render_context.bind_character_shaders();
-        render_context.bind_vs_cbuffer(2, matrices_cbuffer_);
+        render_context.set_shader_program(ShaderProgram::character);
+        render_context.set_model_transform(pos, orient);
+        render_context.set_vertex_transform_type(VertexTransformType::_3d);
+        render_context.bind_vs_cbuffer(3, matrices_cbuffer_);
         render_context.set_vertex_buffer(vb_, sizeof(GpuVertex));
         render_context.set_index_buffer(ib_);
         draw(params, render_context);
-        render_context.bind_vs_cbuffer(2, nullptr);
+        render_context.bind_vs_cbuffer(3, nullptr);
     }
 
     void CharacterMeshRenderCache::update_matrices_buffer(const CharacterInstance* ci, RenderContext& render_context)
     {
-        MatricesUniforms uniforms;
+        BoneTransformsBufferData data;
         for (int i = 0; i < ci->base_character->num_bones; ++i) {
             const Matrix43& bone_mat = ci->bone_transforms_final[i];
-            uniforms.matrices[i] = transpose_matrix(convert_bone_matrix(bone_mat));
+            data.matrices[i] = transpose_matrix(convert_bone_matrix(bone_mat));
         }
 
         D3D11_MAPPED_SUBRESOURCE mapped_cb;
         HRESULT hr = render_context.device_context()->Map(matrices_cbuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_cb);
         check_hr(hr, "Map character cbuffer");
-        std::memcpy(mapped_cb.pData, &uniforms, sizeof(uniforms));
+        std::memcpy(mapped_cb.pData, &data, sizeof(data));
         render_context.device_context()->Unmap(matrices_cbuffer_, 0);
     }
 
@@ -295,39 +298,21 @@ namespace df::gr::d3d11
 
     void MeshRenderer::render_v3d_vif(rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::MeshRenderParams& params)
     {
-        CameraUniforms uniforms;
-        uniforms.model_mat = build_model_matrix(pos, orient.copy_transpose());
-        uniforms.view_mat = build_camera_view_matrix();
-        uniforms.proj_mat = build_proj_matrix();
-        render_context_.update_camera_uniforms(uniforms);
-
         if ((mesh->flags & VIF_MESH_RENDER_CACHED) == 0) {
             render_caches_.push_back(std::make_unique<MeshRenderCache>(mesh, device_));
             mesh->render_cache = render_caches_.back().get();
             mesh->flags |= VIF_MESH_RENDER_CACHED;
         }
-        reinterpret_cast<MeshRenderCache*>(mesh->render_cache)->render(params, render_context_);
-
-        uniforms.model_mat = uniforms.view_mat = uniforms.proj_mat = build_identity_matrix();
-        render_context_.update_camera_uniforms(uniforms);
+        reinterpret_cast<MeshRenderCache*>(mesh->render_cache)->render(pos, orient, params, render_context_);
     }
 
     void MeshRenderer::render_character_vif(rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::CharacterInstance *ci, const rf::MeshRenderParams& params)
     {
-        CameraUniforms uniforms;
-        uniforms.model_mat = build_model_matrix(pos, orient.copy_transpose());
-        uniforms.view_mat = build_camera_view_matrix();
-        uniforms.proj_mat = build_proj_matrix();
-        render_context_.update_camera_uniforms(uniforms);
-
         if ((mesh->flags & VIF_MESH_RENDER_CACHED) == 0) {
             render_caches_.push_back(std::make_unique<CharacterMeshRenderCache>(mesh, device_));
             mesh->render_cache = render_caches_.back().get();
             mesh->flags |= VIF_MESH_RENDER_CACHED;
         }
         reinterpret_cast<CharacterMeshRenderCache*>(mesh->render_cache)->render(pos, orient, ci, params, render_context_);
-
-        uniforms.model_mat = uniforms.view_mat = uniforms.proj_mat = build_identity_matrix();
-        render_context_.update_camera_uniforms(uniforms);
     }
 }

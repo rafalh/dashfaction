@@ -14,6 +14,16 @@ namespace rf
         Vector3() = default;
         Vector3(float x, float y, float z) : x(x), y(y), z(z) {}
 
+        bool operator==(const Vector3& other) const
+        {
+            return x == other.x && y == other.y && z == other.z;
+        }
+
+        bool operator!=(const Vector3& other) const
+        {
+            return !(*this == other);
+        }
+
         Vector3& operator+=(const Vector3& other)
         {
             x += other.x;

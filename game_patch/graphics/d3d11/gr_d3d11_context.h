@@ -23,38 +23,17 @@ namespace df::gr::d3d11
         int diffuse;
     };
 
-    struct alignas(16) CameraUniforms
-    {
-        std::array<std::array<float, 4>, 4> model_mat;
-        std::array<std::array<float, 4>, 4> view_mat;
-        std::array<std::array<float, 4>, 4> proj_mat;
+    enum class ShaderProgram {
+        standard,
+        character,
     };
-    static_assert(sizeof(CameraUniforms) % 16 == 0);
 
-    struct alignas(16) TexCoordTransformUniform
-    {
-        std::array<std::array<float, 4>, 3> mat;
+    enum class VertexTransformType {
+        none,
+        _2d,
+        _3d,
+        sky_room,
     };
-    static_assert(sizeof(TexCoordTransformUniform) % 16 == 0);
-
-    struct alignas(16) PixelShaderUniforms
-    {
-        std::array<float, 2> vcolor_mul;
-        std::array<float, 2> vcolor_mul_inv;
-        std::array<float, 2> tex0_mul;
-        std::array<float, 2> tex0_mul_inv;
-        float alpha_test;
-        float tex0_add_rgb;
-        float tex1_mul_rgb;
-        float tex1_mul_rgb_inv;
-        float tex1_add_rgb;
-        float output_add_rgb;
-        float fog_far;
-        float pad0;
-        std::array<float, 3> fog_color;
-        float pad1;
-    };
-    static_assert(sizeof(PixelShaderUniforms) % 16 == 0);
 
     class RenderContext
     {
@@ -76,15 +55,20 @@ namespace df::gr::d3d11
             set_texture(1, tex_handle1);
         }
 
+        void set_shader_program(ShaderProgram shader_program)
+        {
+            if (current_shader_program_ != shader_program) {
+                current_shader_program_ = shader_program;
+            }
+            bind_shader_program();
+        }
+
         void set_render_target(ID3D11RenderTargetView* render_target_view, ID3D11DepthStencilView* depth_stencil_view);
-        void update_camera_uniforms(const CameraUniforms& uniforms);
-        void set_texture_transform(const GrMatrix3x3& transform);
         void bind_vs_cbuffer(int index, ID3D11Buffer* cbuffer);
-        void bind_default_shaders();
-        void bind_character_shaders();
         void clear();
         void zbuffer_clear();
         void set_clip();
+        void update_view_proj_transform_3d();
 
         void fog_set()
         {
@@ -96,11 +80,6 @@ namespace df::gr::d3d11
         ID3D11DeviceContext* device_context()
         {
             return context_;
-        }
-
-        const CameraUniforms& camera_uniforms()
-        {
-            return camera_uniforms_;
         }
 
         void set_vertex_buffer(ID3D11Buffer* vertex_buffer, UINT stride)
@@ -157,7 +136,24 @@ namespace df::gr::d3d11
         {
             if (current_cull_mode_ != cull_mode) {
                 current_cull_mode_ = cull_mode;
-                update_rasterizer_state();
+                bind_rasterizer_state();
+            }
+        }
+
+        void set_vertex_transform_type(VertexTransformType vertex_transform_type)
+        {
+            if (current_vertex_transform_type_ != vertex_transform_type) {
+                current_vertex_transform_type_ = vertex_transform_type;
+                update_vertex_transform_type();
+            }
+        }
+
+        void set_model_transform(const rf::Vector3& pos, const rf::Matrix3& orient)
+        {
+            if (current_model_pos_ != pos || current_model_orient_ != orient) {
+                current_model_pos_ = pos;
+                current_model_orient_ = orient;
+                update_model_transform_3d();
             }
         }
 
@@ -170,11 +166,14 @@ namespace df::gr::d3d11
         }
 
     private:
-        void init_ps_cbuffer();
-        void init_vs_cbuffer();
+        void init_cbuffers();
+        void bind_cbuffers();
+        void bind_shader_program();
+        void bind_rasterizer_state();
+        void bind_texture(int slot);
         void change_mode(gr::Mode mode, bool has_tex1);
-        void update_rasterizer_state();
-        void change_texture(int slot, int tex_handle);
+        void update_vertex_transform_type();
+        void update_model_transform_3d();
         void update_texture_transform();
 
         void set_mode(gr::Mode mode, bool has_tex1)
@@ -192,7 +191,7 @@ namespace df::gr::d3d11
                 return;
             }
             current_tex_handles_[slot] = tex_handle;
-            change_texture(slot, tex_handle);
+            bind_texture(slot);
         }
 
         ComPtr<ID3D11Device> device_;
@@ -200,11 +199,13 @@ namespace df::gr::d3d11
         StateManager& state_manager_;
         ShaderManager& shader_manager_;
         TextureManager& texture_manager_;
-        ComPtr<ID3D11Buffer> vs_cbuffer_;
-        ComPtr<ID3D11Buffer> ps_cbuffer_;
+        ComPtr<ID3D11Buffer> model_transform_2d_cbuffer_;
+        ComPtr<ID3D11Buffer> model_transform_3d_cbuffer_;
+        ComPtr<ID3D11Buffer> view_proj_transform_2d_cbuffer_;
+        ComPtr<ID3D11Buffer> view_proj_transform_3d_cbuffer_;
         ComPtr<ID3D11Buffer> texture_transform_cbuffer_;
+        ComPtr<ID3D11Buffer> render_mode_cbuffer_;
         int white_bm_ = -1;
-        CameraUniforms camera_uniforms_;
 
         ID3D11RenderTargetView* render_target_view_ = nullptr;
         ID3D11DepthStencilView* depth_stencil_view_ = nullptr;
@@ -218,5 +219,9 @@ namespace df::gr::d3d11
         std::array<int, 2> current_tex_handles_ = {-1, -1};
         D3D11_CULL_MODE current_cull_mode_ = D3D11_CULL_NONE;
         rf::Vector2 current_uv_pan_;
+        ShaderProgram current_shader_program_ = ShaderProgram::standard;
+        VertexTransformType current_vertex_transform_type_ = VertexTransformType::none;
+        rf::Vector3 current_model_pos_;
+        rf::Matrix3 current_model_orient_;
     };
 }
