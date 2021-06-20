@@ -176,8 +176,8 @@ bool gr_is_texture_format_supported(rf::bm::Format format)
 bool gr_render_to_texture(int bmh)
 {
 #if USE_D3D11
-    (void) bmh;
-    return false;
+    bool gr_d3d11_render_to_texture(int bmh);
+    return gr_d3d11_render_to_texture(bmh);
 #else
     if (rf::gr::screen.mode == rf::gr::DIRECT3D) {
         bool gr_d3d_render_to_texture(int bmh);
@@ -188,7 +188,10 @@ bool gr_render_to_texture(int bmh)
 
 void gr_render_to_back_buffer()
 {
-#if !USE_D3D11
+#if USE_D3D11
+    void gr_d3d11_render_to_back_buffer();
+    gr_d3d11_render_to_back_buffer();
+#else
     if (rf::gr::screen.mode == rf::GR_DIRECT3D) {
         bool gr_d3d_render_to_back_buffer();
         gr_d3d_render_to_back_buffer();

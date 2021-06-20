@@ -13,7 +13,7 @@ namespace df::gr::d3d11
         texture_cache_.reserve(512);
     }
 
-    TextureManager::Texture TextureManager::create_texture(int bm_handle, bm::Format fmt, int w, int h, ubyte* bits, ubyte* pal)
+    TextureManager::Texture TextureManager::create_cpu_texture(int bm_handle, bm::Format fmt, int w, int h, ubyte* bits, ubyte* pal)
     {
         CD3D11_TEXTURE2D_DESC desc{
             get_dxgi_format(fmt),
@@ -59,8 +59,28 @@ namespace df::gr::d3d11
         ComPtr<ID3D11Texture2D> cpu_texture;
         HRESULT hr = device_->CreateTexture2D(&desc, subres_data_ptr, &cpu_texture);
         check_hr(hr, "CreateTexture2D cpu");
-
         return {bm_handle, desc.Format, cpu_texture};
+    }
+
+    TextureManager::Texture TextureManager::create_render_target(int bm_handle, int w, int h)
+    {
+        CD3D11_TEXTURE2D_DESC desc{
+            DXGI_FORMAT_R8G8B8A8_UNORM,
+            static_cast<UINT>(w),
+            static_cast<UINT>(h),
+            1, // arraySize
+            1, // mipLevels
+            D3D11_BIND_RENDER_TARGET|D3D11_BIND_SHADER_RESOURCE,
+        };
+        ComPtr<ID3D11Texture2D> gpu_texture;
+        HRESULT hr = device_->CreateTexture2D(&desc, nullptr, &gpu_texture);
+        check_hr(hr, "CreateTexture2D render target");
+
+        ComPtr<ID3D11RenderTargetView> render_target_view;
+        hr = device_->CreateRenderTargetView(gpu_texture, nullptr, &render_target_view);
+        check_hr(hr, "CreateRenderTargetView");
+
+        return {bm_handle, desc.Format, std::move(gpu_texture), std::move(render_target_view)};
     }
 
     TextureManager::Texture TextureManager::load_texture(int bm_handle)
@@ -74,26 +94,34 @@ namespace df::gr::d3d11
             return {};
         }
 
+        if (bm::get_format(bm_handle) == bm::FORMAT_RENDER_TARGET) {
+            xlog::info("Creating render target");
+            return create_render_target(bm_handle, w, h);
+        }
+
         if (bm::get_type(bm_handle) == bm::TYPE_USER) {
-            xlog::trace("Creating user bitmap");
+            xlog::trace("Creating user bitmap texture");
             auto fmt = bm::get_format(bm_handle);
-            auto texture = create_texture(bm_handle, fmt, w, h, nullptr, nullptr);
+            auto texture = create_cpu_texture(bm_handle, fmt, w, h, nullptr, nullptr);
             return texture;
         }
 
         ubyte* bm_bits = nullptr;
         ubyte* bm_pal = nullptr;
+        xlog::trace("Locking bitmap");
         auto fmt = bm::lock(bm_handle, &bm_bits, &bm_pal);
         if (fmt == bm::FORMAT_NONE || bm_bits == nullptr || bm_pal != nullptr) {
             xlog::warn("Bitmap lock failed or unsupported bitmap");
             return {};
         }
 
-        xlog::trace("Bitmap locked");
-        auto texture = create_texture(bm_handle, fmt, w, h, bm_bits, bm_pal);
+        xlog::trace("Creating normal texture");
+        auto texture = create_cpu_texture(bm_handle, fmt, w, h, bm_bits, bm_pal);
 
+        xlog::trace("Unlocking bitmap");
         bm::unlock(bm_handle);
 
+        xlog::trace("Texture created");
         return texture;
     }
 
@@ -117,7 +145,16 @@ namespace df::gr::d3d11
         if (!texture.texture_view) {
             xlog::trace("Creating GPU texture for %s", bm::get_filename(bm_handle));
         }
-        return texture.get_or_create_view(device_, device_context_);
+        return texture.get_or_create_texture_view(device_, device_context_);
+    }
+
+    ID3D11RenderTargetView* TextureManager::lookup_render_target(int bm_handle)
+    {
+        if (bm_handle < 0) {
+            return nullptr;
+        }
+        Texture& texture = get_or_load_texture(bm_handle);
+        return texture.render_target_view;
     }
 
     void TextureManager::save_cache()
@@ -232,6 +269,10 @@ namespace df::gr::d3d11
         }
 
         Texture& texture = get_or_load_texture(bm_handle);
+        if (!texture.cpu_texture) {
+            xlog::warn("Attempted to lock texture without cpu resource %d", texture.bm_handle);
+            return false;
+        }
 
         D3D11_TEXTURE2D_DESC desc;
         texture.cpu_texture->GetDesc(&desc);
@@ -285,30 +326,32 @@ namespace df::gr::d3d11
 
     void TextureManager::Texture::init_gpu_texture(ID3D11Device* device, ID3D11DeviceContext* device_context)
     {
-        if (!cpu_texture) {
-            xlog::warn("CPU texture missing!");
-            return;
+        if (!gpu_texture) {
+            if (!cpu_texture) {
+                xlog::warn("Both GPU and CPU textures are missing");
+                return;
+            }
+
+            D3D11_TEXTURE2D_DESC cpu_desc;
+            cpu_texture->GetDesc(&cpu_desc);
+
+            CD3D11_TEXTURE2D_DESC desc{
+                cpu_desc.Format,
+                cpu_desc.Width,
+                cpu_desc.Height,
+                1, // arraySize
+                1, // mipLevels
+            };
+            HRESULT hr = device->CreateTexture2D(&desc, nullptr, &gpu_texture);
+            check_hr(hr, "CreateTexture2D gpu");
+            gpu_texture->GetDesc(&desc);
+
+            // Copy only first level
+            // TODO: mapmaps?
+            device_context->CopySubresourceRegion(gpu_texture, 0, 0, 0, 0, cpu_texture, 0, nullptr);
         }
 
-        D3D11_TEXTURE2D_DESC cpu_desc;
-        cpu_texture->GetDesc(&cpu_desc);
-
-        CD3D11_TEXTURE2D_DESC desc{
-            cpu_desc.Format,
-            cpu_desc.Width,
-            cpu_desc.Height,
-            1, // arraySize
-            1, // mipLevels
-        };
-        HRESULT hr = device->CreateTexture2D(&desc, nullptr, &gpu_texture);
-        check_hr(hr, "CreateTexture2D gpu");
-        gpu_texture->GetDesc(&desc);
-
-        // Copy only first level
-        // TODO: mapmaps?
-        device_context->CopySubresourceRegion(gpu_texture, 0, 0, 0, 0, cpu_texture, 0, nullptr);
-
-        hr = device->CreateShaderResourceView(gpu_texture, nullptr, &texture_view);
+        HRESULT hr = device->CreateShaderResourceView(gpu_texture, nullptr, &texture_view);
         check_hr(hr, "CreateShaderResourceView");
 
         xlog::trace("Created GPU texture");
