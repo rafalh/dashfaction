@@ -102,6 +102,19 @@ namespace df::gr::d3d11
 
     void RenderContext::set_mode_and_textures(rf::gr::Mode mode, int tex_handle0, int tex_handle1)
     {
+        std::array<int, 2> tex_handles = normalize_texture_handles_for_mode(mode, {tex_handle0, tex_handle1});
+        bool has_tex1 = tex_handles[1] != -1;
+        set_mode(mode, has_tex1);
+        set_textures(tex_handles);
+    }
+
+    void RenderContext::set_mode(gr::Mode mode, bool has_tex1)
+    {
+        if (current_mode_ && current_mode_.value() == mode) {
+            return;
+        }
+        current_mode_.emplace(mode);
+
         float vcolor_mul_rgb = 0.0f;
         float vcolor_mul_a = 0.0f;
         float tex0_mul_rgb = 0.0f;
@@ -110,14 +123,11 @@ namespace df::gr::d3d11
         float tex1_mul_rgb = 0.0f;
         float tex1_add_rgb = 0.0f;
         float output_add_rgb = 0.0f;
-
         gr::ColorSource cs = mode.get_color_source();
         gr::AlphaSource as = mode.get_alpha_source();
 
         switch (mode.get_texture_source()) {
             case gr::TEXTURE_SOURCE_NONE: // no texture, used for rects, etc
-                tex_handle0 = -1;
-                tex_handle1 = -1;
                 vcolor_mul_rgb = 1.0f;
                 vcolor_mul_a = 1.0f;
                 // gr_d3d_set_texture(0, -1, 0, 0, 0, 0);
@@ -129,7 +139,6 @@ namespace df::gr::d3d11
                 // SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);
                 break;
             case gr::TEXTURE_SOURCE_WRAP: // used by 3D graphics without lightmaps, e.g. skybox, weapon, reticle
-                tex_handle1 = -1;
                 // if (cs == gr::COLOR_SOURCE_VERTEX_PLUS_TEXTURE) {
                 //     SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_ADD);
                 // }
@@ -184,7 +193,6 @@ namespace df::gr::d3d11
                 break;
 
             case gr::TEXTURE_SOURCE_CLAMP: // decal? used mostly by UI
-                tex_handle1 = -1;
                 // if (cs == gr::COLOR_SOURCE_VERTEX_PLUS_TEXTURE) {
                 //     SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_ADD);
                 // }
@@ -228,7 +236,6 @@ namespace df::gr::d3d11
                 break;
 
             case gr::TEXTURE_SOURCE_CLAMP_NO_FILTERING: // used by text in UI
-                tex_handle1 = -1;
                 // if (cs == gr::COLOR_SOURCE_VERTEX_PLUS_TEXTURE)
                 //     SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_ADD);
                 // else
@@ -280,7 +287,7 @@ namespace df::gr::d3d11
                 // }
                 tex0_mul_rgb = 1.0f;
                 tex0_mul_a = 1.0f;
-                if (tex_handle1 != -1) {
+                if (has_tex1) {
                     tex1_mul_rgb = 2.0f;
                 }
                 break;
@@ -485,8 +492,6 @@ namespace df::gr::d3d11
 
         ID3D11DepthStencilState* depth_stencil_state = state_manager_.lookup_depth_stencil_state(mode);
         context_->OMSetDepthStencilState(depth_stencil_state, 0);
-
-        set_textures(tex_handle0, tex_handle1);
     }
 
     void RenderContext::update_camera_uniforms(const CameraUniforms& uniforms)
@@ -499,19 +504,20 @@ namespace df::gr::d3d11
         context_->Unmap(vs_cbuffer_, 0);
     }
 
-    void RenderContext::set_textures(int tex_handle0, int tex_handle1)
+    void RenderContext::set_texture(int slot, int tex_handle)
     {
-        if (tex_handle0 == -1) {
-            tex_handle0 = white_bm_;
+        if (current_tex_handles_[slot] == tex_handle) {
+            return;
         }
-        if (tex_handle1 == -1) {
-            tex_handle1 = white_bm_;
+        current_tex_handles_[slot] = tex_handle;
+
+        if (tex_handle == -1) {
+            tex_handle = white_bm_;
         }
         ID3D11ShaderResourceView* shader_resources[] = {
-            texture_manager_.lookup_texture(tex_handle0),
-            texture_manager_.lookup_texture(tex_handle1),
+            texture_manager_.lookup_texture(tex_handle),
         };
-        context_->PSSetShaderResources(0, std::size(shader_resources), shader_resources);
+        context_->PSSetShaderResources(slot, std::size(shader_resources), shader_resources);
     }
 
     void RenderContext::set_render_target(ID3D11RenderTargetView* render_target_view, ID3D11DepthStencilView* depth_stencil_view)

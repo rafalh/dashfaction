@@ -61,6 +61,7 @@ namespace df::gr::d3d11
         void clear_solid_cache();
         void render_v3d_vif(rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::MeshRenderParams& params);
         void render_character_vif(rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::CharacterInstance *ci, const rf::MeshRenderParams& params);
+        void fog_set();
 
     private:
         void init_device(HWND hwnd, HMODULE d3d11_lib);

@@ -77,6 +77,13 @@ namespace df::gr::d3d11
         void zbuffer_clear();
         void set_clip();
 
+        void fog_set()
+        {
+            if (current_mode_ && current_mode_.value().get_fog_type() != rf::gr::FOG_NOT_ALLOWED) {
+                current_mode_.reset();
+            }
+        }
+
         ID3D11DeviceContext* device_context()
         {
             return context_;
@@ -140,7 +147,14 @@ namespace df::gr::d3d11
     private:
         void init_ps_cbuffer();
         void init_vs_cbuffer();
-        void set_textures(int tex_handle0, int tex_handle1);
+        void set_mode(gr::Mode mode, bool has_tex1);
+        void set_texture(int slot, int tex_handle);
+
+        void set_textures(const std::array<int, 2>& tex_handles)
+        {
+            set_texture(0, tex_handles[0]);
+            set_texture(1, tex_handles[1]);
+        }
 
         ComPtr<ID3D11Device> device_;
         ComPtr<ID3D11DeviceContext> context_;
@@ -162,5 +176,7 @@ namespace df::gr::d3d11
         ID3D11VertexShader* current_vertex_shader_ = nullptr;
         ID3D11PixelShader* current_pixel_shader_ = nullptr;
         D3D11_PRIMITIVE_TOPOLOGY current_primitive_topology_ = D3D11_PRIMITIVE_TOPOLOGY_UNDEFINED;
+        std::optional<gr::Mode> current_mode_;
+        std::array<int, 2> current_tex_handles_ = {-1, -1};
     };
 }

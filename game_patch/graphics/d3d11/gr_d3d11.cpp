@@ -308,6 +308,11 @@ namespace df::gr::d3d11
         mesh_renderer_->render_character_vif(mesh, pos, orient, ci, params);
     }
 
+    void Renderer::fog_set()
+    {
+        render_context_->fog_set();
+    }
+
     HRESULT Renderer::get_device_removed_reason()
     {
         return device_ ? device_->GetDeviceRemovedReason() : E_FAIL;
@@ -432,17 +437,9 @@ void gr_d3d11_render_character_vif([[maybe_unused]] VifLodMesh *lod_mesh, VifMes
 // {
 // }
 
-void gr_d3d11_set_fog()
+void gr_d3d11_fog_set()
 {
-    // if (gr::screen.fog_mode) {
-    //     DWORD fog_color = (gr::screen.fog_color.alpha << 24) | (gr::screen.fog_color.red << 16) | (gr::screen.fog_color.green << 8) | gr::screen.fog_color.blue;
-    //     DWORD fog_start, fog_end;
-    //     std::memcpy(&fog_start, &gr::screen.fog_near, sizeof(fog_start));
-    //     std::memcpy(&fog_end, &gr::screen.fog_far, sizeof(fog_end));
-    // }
-    // else {
-        // TODO: disable fog
-    // }
+    df::gr::d3d11::renderer->fog_set();
 }
 
 void gr_d3d11_clear_solid_render_cache()
@@ -482,7 +479,7 @@ void gr_d3d11_apply_patch()
     AsmWriter{0x00545230}.jmp(gr_d3d11_close); // gr_d3d_close
     AsmWriter{0x00545960}.jmp(gr_d3d11_init); // gr_d3d_init
     AsmWriter{0x00546730}.ret(); // gr_d3d_read_backbuffer
-    AsmWriter{0x005468C0}.jmp(gr_d3d11_set_fog); // gr_d3d_set_fog
+    AsmWriter{0x005468C0}.jmp(gr_d3d11_fog_set); // gr_d3d_fog_set
     AsmWriter{0x00546A00}.mov(al, 1).ret(); // gr_d3d_is_mode_supported
     //AsmWriter{0x00546A40}.ret(); // gr_d3d_setup_frustum
     //AsmWriter{0x00546F60}.ret(); // gr_d3d_change_frustum
