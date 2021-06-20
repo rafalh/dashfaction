@@ -23,7 +23,7 @@ namespace df::gr::d3d11
         int diffuse;
     };
 
-    struct CameraUniforms
+    struct alignas(16) CameraUniforms
     {
         std::array<std::array<float, 4>, 4> model_mat;
         std::array<std::array<float, 4>, 4> view_mat;
@@ -31,24 +31,28 @@ namespace df::gr::d3d11
     };
     static_assert(sizeof(CameraUniforms) % 16 == 0);
 
-    struct TexCoordTransformUniform
+    struct alignas(16) TexCoordTransformUniform
     {
         std::array<std::array<float, 4>, 3> mat;
     };
     static_assert(sizeof(TexCoordTransformUniform) % 16 == 0);
 
-    struct PixelShaderUniforms
+    struct alignas(16) PixelShaderUniforms
     {
         std::array<float, 2> vcolor_mul;
         std::array<float, 2> vcolor_mul_inv;
         std::array<float, 2> tex0_mul;
         std::array<float, 2> tex0_mul_inv;
-        float tex0_add_rgb;
-        float output_mul_rgb;
         float alpha_test;
+        float tex0_add_rgb;
+        float tex1_mul_rgb;
+        float tex1_mul_rgb_inv;
+        float tex1_add_rgb;
+        float output_add_rgb;
         float fog_far;
+        float pad0;
         std::array<float, 3> fog_color;
-        float pad[1];
+        float pad1;
     };
     static_assert(sizeof(PixelShaderUniforms) % 16 == 0);
 
@@ -62,9 +66,7 @@ namespace df::gr::d3d11
             ShaderManager& shader_manager,
             TextureManager& texture_manager
         );
-        void set_mode_and_textures(rf::gr::Mode mode, int bm_handle1, int bm_handle2);
-        void set_mode(rf::gr::Mode mode);
-        void set_texture(int slot, int bm_handle);
+        void set_mode_and_textures(rf::gr::Mode mode, int tex_handle0, int tex_handle1);
         void set_render_target(
             const ComPtr<ID3D11RenderTargetView>& back_buffer_view,
             const ComPtr<ID3D11DepthStencilView>& depth_stencil_buffer_view
@@ -138,6 +140,7 @@ namespace df::gr::d3d11
     private:
         void init_ps_cbuffer();
         void init_vs_cbuffer();
+        void set_textures(int tex_handle0, int tex_handle1);
 
         ComPtr<ID3D11Device> device_;
         ComPtr<ID3D11DeviceContext> context_;

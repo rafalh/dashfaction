@@ -95,9 +95,7 @@ namespace df::gr::d3d11
         bind_resources();
 
         render_context_.set_primitive_topology(primitive_topology_);
-        render_context_.set_mode(mode_);
-        render_context_.set_texture(0, textures_[0]);
-        render_context_.set_texture(1, textures_[1]);
+        render_context_.set_mode_and_textures(mode_, textures_[0], textures_[1]);
 
         context_->DrawIndexed(num_index, start_index_, 0);
         start_index_ = current_index_;

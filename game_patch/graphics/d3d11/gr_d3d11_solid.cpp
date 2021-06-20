@@ -244,7 +244,7 @@ namespace df::gr::d3d11
         hr = device->CreateBuffer(&ib_desc, &ib_subres_data, &ib_);
         check_hr(hr, "CreateBuffer");
 
-        xlog::warn("created buffers");
+        xlog::trace("created render cache geometry buffers");
     }
 
     static GrMatrix3x3 build_uv_pan_matrix(float u_pan_speed, float v_pan_speed)
@@ -379,7 +379,7 @@ namespace df::gr::d3d11
             return;
         }
 
-        xlog::warn("Creating render cache for room %d - verts %d inds %d batches %d", room_->room_index,
+        xlog::info("Creating render cache for room %d - verts %d inds %d batches %d", room_->room_index,
             builder.get_num_verts(), builder.get_num_inds(), builder.get_num_batches());
 
         gr::Mode mode = room_->is_sky ? sky_room_mode : gr_solid_mode;
@@ -391,7 +391,7 @@ namespace df::gr::d3d11
     void RoomRenderCache::render(FaceRenderType render_type, ID3D11Device* device, RenderContext& context)
     {
         if (invalid()) {
-            xlog::warn("Room render cache invalidated!");
+            xlog::info("Room render cache invalidated!");
             cache_.reset();
             update(device);
         }
@@ -459,7 +459,7 @@ namespace df::gr::d3d11
     {
         auto cache = reinterpret_cast<RoomRenderCache*>(room->geo_cache);
         if (!cache) {
-            xlog::warn("Creating render cache for room %d", room->room_index);
+            xlog::info("Creating render cache for room %d", room->room_index);
             room_cache_.push_back(std::make_unique<RoomRenderCache>(solid, room, device_));
             cache = room_cache_.back().get();
             room->geo_cache = reinterpret_cast<GCache*>(cache);
@@ -486,7 +486,7 @@ namespace df::gr::d3d11
 
     void SolidRenderer::clear_cache()
     {
-        xlog::warn("Room render cache clear");
+        xlog::info("Room render cache clear");
         for (auto& ptr : room_cache_) {
             ptr->room()->geo_cache = nullptr;
         }
@@ -507,7 +507,7 @@ namespace df::gr::d3d11
     void SolidRenderer::render_movable_solid(GSolid* solid, const Vector3& pos, const Matrix3& orient)
     {
         if (!solid->field_370) {
-            xlog::warn("Creating render cache for a mover");
+            xlog::info("Creating render cache for a mover");
             GRenderCacheBuilder cache_builder;
             link_faces_to_texture_movers(solid);
             cache_builder.add_solid(solid);
@@ -572,12 +572,10 @@ namespace df::gr::d3d11
         // Restore state
         after_render();
 
-
-
-        // if (decals_enabled) {
-        //     render_dynamic_decals(rooms, num_rooms);
-        //     gr::d3d::flush_buffers();
-        // }
+        if (decals_enabled) {
+            render_dynamic_decals(rooms, num_rooms);
+            //gr::d3d::flush_buffers();
+        }
     }
 
     void SolidRenderer::before_render(const rf::Vector3& pos, const rf::Matrix3& orient, bool is_skyroom)

@@ -41,7 +41,7 @@ namespace df::gr::d3d11
             rf::ubyte indices[4];
         };
 
-        struct MatricesUniforms
+        struct alignas(16) MatricesUniforms
         {
             GrMatrix4x4 matrices[50];
         };
@@ -120,7 +120,7 @@ namespace df::gr::d3d11
 
             b.num_indices = gpu_inds.size() - b.start_index;
         }
-        xlog::warn("Creating mesh render buffer - verts %d inds %d", gpu_verts.size(), gpu_inds.size());
+        xlog::info("Creating mesh geometry buffers: verts %d inds %d", gpu_verts.size(), gpu_inds.size());
 
         CD3D11_BUFFER_DESC vb_desc{
             sizeof(gpu_verts[0]) * gpu_verts.size(),

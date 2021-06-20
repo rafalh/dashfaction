@@ -100,69 +100,361 @@ namespace df::gr::d3d11
         context_->VSSetConstantBuffers(0, std::size(vs_cbuffers), vs_cbuffers);
     }
 
-    void RenderContext::set_mode(gr::Mode mode)
+    void RenderContext::set_mode_and_textures(rf::gr::Mode mode, int tex_handle0, int tex_handle1)
     {
-        float vcolor_rgb_mul = 0.0f;
-        float tex0_rgb_mul = 0.0f;
-        float tex0_rgb_add = 0.0f;
-        switch (mode.get_color_source()) {
-            case rf::gr::COLOR_SOURCE_VERTEX:
-                vcolor_rgb_mul = 1.0f;
-                tex0_rgb_mul = 0.0f;
-                tex0_rgb_add = 0.0f;
+        float vcolor_mul_rgb = 0.0f;
+        float vcolor_mul_a = 0.0f;
+        float tex0_mul_rgb = 0.0f;
+        float tex0_mul_a = 0.0f;
+        float tex0_add_rgb = 0.0f;
+        float tex1_mul_rgb = 0.0f;
+        float tex1_add_rgb = 0.0f;
+        float output_add_rgb = 0.0f;
+
+        gr::ColorSource cs = mode.get_color_source();
+        gr::AlphaSource as = mode.get_alpha_source();
+
+        switch (mode.get_texture_source()) {
+            case gr::TEXTURE_SOURCE_NONE: // no texture, used for rects, etc
+                tex_handle0 = -1;
+                tex_handle1 = -1;
+                vcolor_mul_rgb = 1.0f;
+                vcolor_mul_a = 1.0f;
+                // gr_d3d_set_texture(0, -1, 0, 0, 0, 0);
+                // gr_d3d_set_texture(1, -1, 0, 0, 0, 0);
+                // SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
+                // SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_DIFFUSE);
+                // SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
+                // SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_DIFFUSE);
+                // SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);
                 break;
-            case rf::gr::COLOR_SOURCE_TEXTURE:
-                vcolor_rgb_mul = 0.0f;
-                tex0_rgb_mul = 1.0f;
-                tex0_rgb_add = 0.0f;
+            case gr::TEXTURE_SOURCE_WRAP: // used by 3D graphics without lightmaps, e.g. skybox, weapon, reticle
+                tex_handle1 = -1;
+                // if (cs == gr::COLOR_SOURCE_VERTEX_PLUS_TEXTURE) {
+                //     SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_ADD);
+                // }
+                // else if (cs == gr::COLOR_SOURCE_VERTEX_TIMES_TEXTURE_2X) {
+                //     SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE2X);
+                // }
+                // else if (cs == gr::COLOR_SOURCE_VERTEX_TIMES_TEXTURE) {
+                //     SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+                // }
+                // else {
+                //     SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
+                // }
+                // SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+                // SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+                // if (as == gr::ALPHA_SOURCE_VERTEX_TIMES_TEXTURE) {
+                //     SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+                // }
+                // else if (as == gr::ALPHA_SOURCE_TEXTURE) {
+                //     SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1); // D3DTA_TEXTURE
+                // }
+                // else if (as == gr::ALPHA_SOURCE_VERTEX) {
+                //     SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG2); // D3DTA_DIFFUSE
+                // }
+                // SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+                // SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
+                // SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);
+                if (cs == gr::COLOR_SOURCE_VERTEX_PLUS_TEXTURE) {
+                    vcolor_mul_rgb = 1.0f;
+                    tex0_add_rgb = 1.0f;
+                }
+                else if (cs == gr::COLOR_SOURCE_VERTEX_TIMES_TEXTURE_2X) {
+                    vcolor_mul_rgb = 1.0f;
+                    tex0_mul_rgb = 2.0f;
+                }
+                else if (cs == gr::COLOR_SOURCE_VERTEX_TIMES_TEXTURE) {
+                    vcolor_mul_rgb = 1.0f;
+                    tex0_mul_rgb = 1.0f;
+                }
+                else {
+                    tex0_mul_rgb = 1.0f;
+                }
+                if (as == gr::ALPHA_SOURCE_VERTEX_TIMES_TEXTURE) {
+                    vcolor_mul_a = 1.0f;
+                    tex0_mul_a = 1.0f;
+                }
+                else if (as == gr::ALPHA_SOURCE_TEXTURE) {
+                    tex0_mul_a = 1.0f;
+                }
+                else if (as == gr::ALPHA_SOURCE_VERTEX) {vcolor_mul_a = 1.0f;
+                    vcolor_mul_a = 1.0f;
+                }
                 break;
-            case rf::gr::COLOR_SOURCE_VERTEX_TIMES_TEXTURE:
-            case rf::gr::COLOR_SOURCE_VERTEX_TIMES_TEXTURE_2X:
-                vcolor_rgb_mul = 1.0f;
-                tex0_rgb_mul = 1.0f;
-                tex0_rgb_add = 0.0f;
+
+            case gr::TEXTURE_SOURCE_CLAMP: // decal? used mostly by UI
+                tex_handle1 = -1;
+                // if (cs == gr::COLOR_SOURCE_VERTEX_PLUS_TEXTURE) {
+                //     SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_ADD);
+                // }
+                // else if (cs == gr::COLOR_SOURCE_VERTEX_TIMES_TEXTURE_2X) {
+                //     SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE2X);
+                // }
+                // else if (cs == gr::COLOR_SOURCE_VERTEX_TIMES_TEXTURE) {
+                //     SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+                // }
+                // else {
+                //     SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
+                // }
+                // SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+                // SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+                // if (as == gr::ALPHA_SOURCE_VERTEX_TIMES_TEXTURE)
+                //     SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+                // else
+                //     SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1); // D3DTA_TEXTURE
+                // SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+                // SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
+                // SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);
+                if (cs == gr::COLOR_SOURCE_VERTEX_PLUS_TEXTURE) {
+                    vcolor_mul_rgb = 1.0f;
+                    tex0_add_rgb = 1.0f;
+                }
+                else if (cs == gr::COLOR_SOURCE_VERTEX_TIMES_TEXTURE_2X) {
+                    vcolor_mul_rgb = 1.0f;
+                    tex0_mul_rgb = 2.0f;
+                }
+                else if (cs == gr::COLOR_SOURCE_VERTEX_TIMES_TEXTURE) {
+                    vcolor_mul_rgb = 1.0f;
+                    tex0_mul_rgb = 1.0f;
+                }
+                else {
+                    tex0_mul_rgb = 1.0f;
+                }
+                if (as == gr::ALPHA_SOURCE_VERTEX_TIMES_TEXTURE) {
+                    vcolor_mul_a = 1.0f;
+                }
+                tex0_mul_a = 1.0f;
                 break;
-            case rf::gr::COLOR_SOURCE_VERTEX_PLUS_TEXTURE:
-                vcolor_rgb_mul = 1.0f;
-                tex0_rgb_mul = 0.0f;
-                tex0_rgb_add = 1.0f;
+
+            case gr::TEXTURE_SOURCE_CLAMP_NO_FILTERING: // used by text in UI
+                tex_handle1 = -1;
+                // if (cs == gr::COLOR_SOURCE_VERTEX_PLUS_TEXTURE)
+                //     SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_ADD);
+                // else
+                //     SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE); //cs = gr::COLOR_SOURCE_VERTEX_TIMES_TEXTURE;
+                // SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+                // SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+                // SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+                // SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+                // SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
+                // SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);
+                vcolor_mul_rgb = 1.0f;
+                vcolor_mul_a = 1.0f;
+                tex0_mul_a = 1.0f;
+                if (cs == gr::COLOR_SOURCE_VERTEX_PLUS_TEXTURE) {
+                    tex0_add_rgb = 1.0f;
+                }
+                else {
+                    tex0_mul_rgb = 1.0f;
+                }
+                break;
+
+            case gr::TEXTURE_SOURCE_CLAMP_1_WRAP_0:
+                // RF PC handles it as TEXTURE_SOURCE_CLAMP_1_WRAP_0_MOD2X if mod2x is supported (assume it is
+                // supported in D3D11)
+            case gr::TEXTURE_SOURCE_CLAMP_1_WRAP_0_MOD2X: // used by static geometry
+                // if (cs == gr::COLOR_SOURCE_VERTEX_TIMES_TEXTURE)
+                //     SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+                // else
+                //     SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
+                // SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+                // SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+                // if (as == gr::ALPHA_SOURCE_VERTEX_TIMES_TEXTURE)
+                //     SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+                // else
+                //     SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1); // D3DTA_TEXTURE
+                // SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+                // SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
+                // SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_MODULATE2X);
+                // SetTextureStageState(1, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+                // SetTextureStageState(1, D3DTSS_COLORARG2, D3DTA_CURRENT);
+                // SetTextureStageState(1, D3DTSS_ALPHAOP, D3DTOP_SELECTARG2); // D3DTA_CURRENT
+                // SetTextureStageState(1, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+                // SetTextureStageState(1, D3DTSS_ALPHAARG2, D3DTA_CURRENT);
+                // if (cs == gr::COLOR_SOURCE_VERTEX_TIMES_TEXTURE) {
+                //     vcolor_mul_rgb = 1.0f;
+                // }
+                // if (as == gr::ALPHA_SOURCE_VERTEX_TIMES_TEXTURE) {
+                //     vcolor_mul_a = 1.0f;
+                // }
+                tex0_mul_rgb = 1.0f;
+                tex0_mul_a = 1.0f;
+                if (tex_handle1 != -1) {
+                    tex1_mul_rgb = 2.0f;
+                }
+                break;
+
+            case gr::TEXTURE_SOURCE_CLAMP_1_CLAMP_0: // used by static geometry
+                // SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
+                // SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+                // SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+                // if (as == gr::ALPHA_SOURCE_VERTEX_TIMES_TEXTURE) {
+                //     SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+                // }
+                // else if (as == gr::ALPHA_SOURCE_VERTEX) {
+                //     SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG2); // D3DTA_DIFFUSE
+                // }
+                // else if (as == gr::ALPHA_SOURCE_TEXTURE) {
+                //     SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1); // D3DTA_TEXTURE
+                // }
+                // SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+                // SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
+                // if (cs == gr::COLOR_SOURCE_VERTEX_PLUS_TEXTURE)
+                //     SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_ADD);
+                // else
+                //     //cs = gr::COLOR_SOURCE_VERTEX_TIMES_TEXTURE_2X;???
+                //     SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_MODULATE2X);
+                // SetTextureStageState(1, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+                // SetTextureStageState(1, D3DTSS_COLORARG2, D3DTA_CURRENT);
+                // SetTextureStageState(1, D3DTSS_ALPHAOP, D3DTOP_SELECTARG2); // D3DTA_CURRENT
+                // SetTextureStageState(1, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+                // SetTextureStageState(1, D3DTSS_ALPHAARG2, D3DTA_CURRENT);
+                vcolor_mul_rgb = 0.0f;
+                tex0_mul_rgb = 1.0f;
+                if (as == gr::ALPHA_SOURCE_VERTEX_TIMES_TEXTURE) {
+                    vcolor_mul_a = tex0_mul_a = 1.0f;
+                }
+                else if (as == gr::ALPHA_SOURCE_VERTEX) {
+                    vcolor_mul_a = 1.0f;
+                }
+                else if (as == gr::ALPHA_SOURCE_TEXTURE) {
+                    tex0_mul_a = 1.0f;
+                }
+                if (cs == gr::COLOR_SOURCE_VERTEX_PLUS_TEXTURE) {
+                    tex1_add_rgb = 1.0f;
+                }
+                else {
+                    tex1_mul_rgb = 2.0f;
+                }
+                break;
+
+            case gr::TEXTURE_SOURCE_MT_U_WRAP_V_CLAMP: // used by static geometry, e.g. decals with U tiling
+                // if (cs == gr::COLOR_SOURCE_VERTEX_TIMES_TEXTURE)
+                //     SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+                // else
+                //     SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
+                // SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+                // SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+                // if (as == gr::ALPHA_SOURCE_VERTEX_TIMES_TEXTURE)
+                //     SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+                // else
+                //     SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1); // D3DTA_TEXTURE
+                // SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+                // SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
+                // SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_MODULATE2X);
+                // SetTextureStageState(1, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+                // SetTextureStageState(1, D3DTSS_COLORARG2, D3DTA_CURRENT);
+                // SetTextureStageState(1, D3DTSS_ALPHAOP, D3DTOP_SELECTARG2); // D3DTA_CURRENT
+                // SetTextureStageState(1, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+                // SetTextureStageState(1, D3DTSS_ALPHAARG2, D3DTA_CURRENT);
+                if (cs == gr::COLOR_SOURCE_VERTEX_TIMES_TEXTURE) {
+                    vcolor_mul_rgb = 1.0f;
+                }
+                if (as == gr::ALPHA_SOURCE_VERTEX_TIMES_TEXTURE) {
+                    vcolor_mul_a = 1.0f;
+                }
+                tex0_mul_rgb = 1.0f;
+                tex0_mul_a = 1.0f;
+                tex1_mul_rgb = 2.0f;
+                break;
+
+            case gr::TEXTURE_SOURCE_MT_U_CLAMP_V_WRAP: // used by static geometry, e.g. decals with V tiling
+                // if (cs == gr::COLOR_SOURCE_VERTEX_TIMES_TEXTURE)
+                //     SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+                // else
+                //     SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
+                // SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+                // SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+                // if (as == gr::ALPHA_SOURCE_VERTEX_TIMES_TEXTURE)
+                //     SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+                // else
+                //     SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1); // D3DTA_TEXTURE
+                // SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+                // SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
+                // SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_MODULATE2X);
+                // SetTextureStageState(1, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+                // SetTextureStageState(1, D3DTSS_COLORARG2, D3DTA_CURRENT);
+                // SetTextureStageState(1, D3DTSS_ALPHAOP, D3DTOP_SELECTARG2); // D3DTA_CURRENT
+                // SetTextureStageState(1, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+                // SetTextureStageState(1, D3DTSS_ALPHAARG2, D3DTA_CURRENT);
+                if (cs == gr::COLOR_SOURCE_VERTEX_TIMES_TEXTURE) {
+                    vcolor_mul_rgb = 1.0f;
+                }
+                if (as == gr::ALPHA_SOURCE_VERTEX_TIMES_TEXTURE) {
+                    vcolor_mul_a = 1.0f;
+                }
+                tex0_mul_rgb = 1.0f;
+                tex0_mul_a = 1.0f;
+                tex1_mul_rgb = 2.0f;
+                break;
+
+            case gr::TEXTURE_SOURCE_MT_WRAP_TRILIN:
+                // if (cs == gr::COLOR_SOURCE_VERTEX_TIMES_TEXTURE)
+                //     SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+                // else
+                //     SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
+                // SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+                // SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+                // if (as == gr::ALPHA_SOURCE_VERTEX_TIMES_TEXTURE)
+                //     SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+                // else
+                //     SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1); // D3DTA_TEXTURE
+                // SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+                // SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
+                // SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_ADDSIGNED); // D3DTOP_ADDSIGNED?
+                // SetTextureStageState(1, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+                // SetTextureStageState(1, D3DTSS_COLORARG2, D3DTA_CURRENT);
+                // SetTextureStageState(1, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1); // D3DTA_CURRENT
+                // SetTextureStageState(1, D3DTSS_ALPHAARG1, D3DTA_CURRENT);
+                if (cs == gr::COLOR_SOURCE_VERTEX_TIMES_TEXTURE) {
+                    vcolor_mul_rgb = 1.0f;
+                }
+                if (as == gr::ALPHA_SOURCE_VERTEX_TIMES_TEXTURE) {
+                    vcolor_mul_a = 1.0f;
+                }
+                tex0_mul_rgb = 1.0f;
+                tex0_mul_a = 1.0f;
+                tex1_add_rgb = 1.0f;
+                output_add_rgb = -0.5f;
+                break;
+
+            case gr::TEXTURE_SOURCE_MT_CLAMP_TRILIN:
+                // SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+                // SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+                // SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+                // SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+                // SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+                // SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
+                // SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_MODULATE2X);
+                // SetTextureStageState(1, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+                // SetTextureStageState(1, D3DTSS_COLORARG2, D3DTA_CURRENT);
+                // SetTextureStageState(1, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1); // D3DTA_CURRENT
+                // SetTextureStageState(1, D3DTSS_ALPHAARG1, D3DTA_CURRENT);
+                vcolor_mul_rgb = 1.0f;
+                vcolor_mul_a = 1.0f;
+                tex0_mul_rgb = 1.0f;
+                tex0_mul_a = 1.0f;
+                tex1_mul_rgb = 2.0f;
+                break;
+
+            default:
                 break;
         }
 
-        float vcolor_a_mul = 0.0f;
-        float tex0_a_mul = 0.0f;
-        switch (mode.get_alpha_source()) {
-            case rf::gr::ALPHA_SOURCE_VERTEX:
-            case rf::gr::ALPHA_SOURCE_VERTEX_NONDARKENING:
-                vcolor_a_mul = 1.0f;
-                tex0_a_mul = 0.0f;
-                break;
-            case rf::gr::ALPHA_SOURCE_TEXTURE:
-                vcolor_a_mul = 0.0f;
-                tex0_a_mul = 1.0f;
-                break;
-            case rf::gr::ALPHA_SOURCE_VERTEX_TIMES_TEXTURE:
-                vcolor_a_mul = 1.0f;
-                tex0_a_mul = 1.0f;
-                break;
-        }
-
-        float output_mul_rgb = 1.0f;
-        if (mode.get_texture_source() == rf::gr::TEXTURE_SOURCE_CLAMP_1_WRAP_0_MOD2X ||
-            mode.get_texture_source() == rf::gr::TEXTURE_SOURCE_CLAMP_1_WRAP_0) {
-            output_mul_rgb = 2.0f;
-        }
-
-        float alpha_test = mode.get_zbuffer_type() == gr::ZBUFFER_TYPE_FULL_ALPHA_TEST ? 1.0f : 0.0f;
+        bool alpha_test = mode.get_zbuffer_type() == gr::ZBUFFER_TYPE_FULL_ALPHA_TEST;
 
         PixelShaderUniforms ps_data;
-        ps_data.vcolor_mul = {vcolor_rgb_mul, vcolor_a_mul};
-        ps_data.vcolor_mul_inv = {1.0f - vcolor_rgb_mul, 1.0f - vcolor_a_mul};
-        ps_data.tex0_mul = {tex0_rgb_mul, tex0_a_mul};
-        ps_data.tex0_mul_inv = {1.0f - tex0_rgb_mul, 1.0f - tex0_a_mul};
-        ps_data.tex0_add_rgb = tex0_rgb_add;
-        ps_data.output_mul_rgb = output_mul_rgb;
-        ps_data.alpha_test = alpha_test ? 1.0f : 0.0f;
+        ps_data.vcolor_mul = {vcolor_mul_rgb, vcolor_mul_a};
+        ps_data.vcolor_mul_inv = {vcolor_mul_rgb ? 0.0f : 1.0f, vcolor_mul_a ? 0.0f : 1.0f};
+        ps_data.tex0_mul = {tex0_mul_rgb, tex0_mul_a};
+        ps_data.tex0_mul_inv = {tex0_mul_rgb ? 0.0f : 1.0f, tex0_mul_a ? 0.0f : 1.0f};
+        ps_data.tex0_add_rgb = tex0_add_rgb;
+        ps_data.tex1_mul_rgb = tex1_mul_rgb;
+        ps_data.tex1_mul_rgb_inv = tex1_mul_rgb ? 0.0f : 1.0f;
+        ps_data.tex1_add_rgb = tex1_add_rgb;
+        ps_data.output_add_rgb = output_add_rgb;
+        ps_data.alpha_test = alpha_test ? 0.1f : 0.0f;
         if (mode.get_fog_type() == gr::FOG_NOT_ALLOWED || !gr::screen.fog_mode) {
             ps_data.fog_far = std::numeric_limits<float>::infinity();
             ps_data.fog_color = {0.0f, 0.0f, 0.0f};
@@ -193,14 +485,8 @@ namespace df::gr::d3d11
 
         ID3D11DepthStencilState* depth_stencil_state = state_manager_.lookup_depth_stencil_state(mode);
         context_->OMSetDepthStencilState(depth_stencil_state, 0);
-    }
 
-    void RenderContext::set_mode_and_textures(rf::gr::Mode mode, int bm_handle1, int bm_handle2)
-    {
-        set_mode(mode);
-        auto textures = normalize_texture_handles_for_mode(mode, {bm_handle1, bm_handle2});
-        set_texture(0, textures[0]);
-        set_texture(1, textures[1]);
+        set_textures(tex_handle0, tex_handle1);
     }
 
     void RenderContext::update_camera_uniforms(const CameraUniforms& uniforms)
@@ -213,13 +499,19 @@ namespace df::gr::d3d11
         context_->Unmap(vs_cbuffer_, 0);
     }
 
-    void RenderContext::set_texture(int slot, int bm_handle)
+    void RenderContext::set_textures(int tex_handle0, int tex_handle1)
     {
-        if (bm_handle == -1) {
-            bm_handle = white_bm_;
+        if (tex_handle0 == -1) {
+            tex_handle0 = white_bm_;
         }
-        ID3D11ShaderResourceView* shader_resources[] = { texture_manager_.lookup_texture(bm_handle) };
-        context_->PSSetShaderResources(slot, std::size(shader_resources), shader_resources);
+        if (tex_handle1 == -1) {
+            tex_handle1 = white_bm_;
+        }
+        ID3D11ShaderResourceView* shader_resources[] = {
+            texture_manager_.lookup_texture(tex_handle0),
+            texture_manager_.lookup_texture(tex_handle1),
+        };
+        context_->PSSetShaderResources(0, std::size(shader_resources), shader_resources);
     }
 
     void RenderContext::set_render_target(

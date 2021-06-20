@@ -94,7 +94,12 @@ namespace rf
         VArray<GVertex*> sel_vertices;
         VArray<GFace*> sel_faces;
         VArray<GFace*> last_sel_faces;
+#ifdef DASH_FACTION
+        VArray<GDecal*> decals;
+        int padding[126];
+#else
         FArray<GDecal*, 128> decals;
+#endif
         VArray<GTextureMover*> texture_movers;
         GNodeNetwork nodes;
         ubyte cubes[64];
@@ -142,7 +147,12 @@ namespace rf
         int last_frame_rendered_alpha;
         float life;
         bool is_invincible;
+#ifdef DASH_FACTION
+        VArray<GDecal*> decals;
+        int padding[46];
+#else
         FArray<GDecal*, 48> decals;
+#endif
         bool visited_this_frame;
         bool visited_this_search;
         int render_depth;
