@@ -247,12 +247,6 @@ namespace df::gr::d3d11
         xlog::trace("created render cache geometry buffers");
     }
 
-    static GrMatrix3x3 build_uv_pan_matrix(float u_pan_speed, float v_pan_speed)
-    {
-        float delta_time = timer_get(1000) * 0.001f; // FIXME: paused game..
-        return build_texture_matrix(u_pan_speed * delta_time, v_pan_speed * delta_time);
-    }
-
     void GRenderCache::render(FaceRenderType what, RenderContext& context)
     {
         auto& batches = what == FaceRenderType::alpha
@@ -263,14 +257,17 @@ namespace df::gr::d3d11
             return;
         }
 
+        float delta_time = timer_get(1000) * 0.001f; // FIXME: paused game..
+
         context.bind_default_shaders();
         context.set_vertex_buffer(vb_, sizeof(GpuVertex));
         context.set_index_buffer(ib_);
+        context.set_cull_mode(D3D11_CULL_BACK);
         context.set_primitive_topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         for (Batch& b : batches) {
             context.set_mode_and_textures(b.mode, b.texture_1, b.texture_2);
-            GrMatrix3x3 tex_transform = build_uv_pan_matrix(b.u_pan_speed, b.v_pan_speed);
-            context.set_texture_transform(tex_transform);
+            Vector2 uv_pan{b.u_pan_speed * delta_time, b.v_pan_speed * delta_time};
+            context.set_uv_pan(uv_pan);
             //xlog::warn("DrawIndexed %d %d", b.num_indices, b.start_index);
             context.device_context()->DrawIndexed(b.num_indices, b.start_index, 0);
         }

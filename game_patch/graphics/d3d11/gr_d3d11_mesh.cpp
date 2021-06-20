@@ -62,6 +62,8 @@ namespace df::gr::d3d11
     void BaseMeshRenderCache::draw(const MeshRenderParams& params, RenderContext& render_context)
     {
         const int* tex_handles = get_tex_handles(params);
+        render_context.set_cull_mode(D3D11_CULL_BACK);
+        render_context.set_uv_pan(rf::vec2_zero_vector);
         render_context.set_primitive_topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         for (auto& b : batches_) {
             int texture = tex_handles[b.texture_index];

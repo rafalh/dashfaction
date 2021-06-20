@@ -134,5 +134,17 @@ namespace rf
     {
         float x = 0.0f;
         float y = 0.0f;
+
+        bool operator==(const Vector2& other) const
+        {
+            return x == other.x && y == other.y;
+        }
+
+        bool operator!=(const Vector2& other) const
+        {
+            return !(*this == other);
+        }
     };
+
+    static auto& vec2_zero_vector = addr_as_ref<Vector2>(0x0173C370);
 }

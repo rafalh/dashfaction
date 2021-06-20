@@ -1,3 +1,4 @@
+#include <cassert>
 #include "gr_d3d11.h"
 #include "gr_d3d11_batch.h"
 #include "gr_d3d11_context.h"
@@ -64,6 +65,8 @@ namespace df::gr::d3d11
         check_hr(hr, "Map IB");
         mapped_vb_ = reinterpret_cast<GpuVertex*>(mapped_vb.pData);
         mapped_ib_ = reinterpret_cast<ushort*>(mapped_ib.pData);
+        assert(mapped_vb_);
+        assert(mapped_ib_);
         if (vb_full) {
             current_vertex_ = 0;
         }
@@ -96,6 +99,8 @@ namespace df::gr::d3d11
 
         render_context_.set_primitive_topology(primitive_topology_);
         render_context_.set_mode_and_textures(mode_, textures_[0], textures_[1]);
+        render_context_.set_cull_mode(D3D11_CULL_NONE);
+        render_context_.set_uv_pan(rf::vec2_zero_vector);
 
         context_->DrawIndexed(num_index, start_index_, 0);
         start_index_ = current_index_;

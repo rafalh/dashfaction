@@ -8,20 +8,22 @@ namespace df::gr::d3d11
     StateManager::StateManager(ComPtr<ID3D11Device> device) :
         device_{std::move(device)}
     {
-        init_rasterizer_state();
     }
 
-    ID3D11RasterizerState* StateManager::get_rasterizer_state()
+    ID3D11RasterizerState* StateManager::lookup_rasterizer_state(D3D11_CULL_MODE cull_mode)
     {
-        return rasterizer_state_;
-    }
+        auto it = rasterizer_state_cache_.find(cull_mode);
+        if (it != rasterizer_state_cache_.end()) {
+            return it->second;
+        }
 
-    void StateManager::init_rasterizer_state()
-    {
         CD3D11_RASTERIZER_DESC desc{CD3D11_DEFAULT{}};
-        desc.CullMode = D3D11_CULL_BACK;
-        HRESULT hr = device_->CreateRasterizerState(&desc, &rasterizer_state_);
+        desc.CullMode = cull_mode;
+        ComPtr<ID3D11RasterizerState> rasterizer_state;
+        HRESULT hr = device_->CreateRasterizerState(&desc, &rasterizer_state);
         check_hr(hr, "CreateRasterizerState");
+        rasterizer_state_cache_.insert({cull_mode, rasterizer_state});
+        return rasterizer_state;
     }
 
     ID3D11SamplerState* StateManager::lookup_sampler_state(gr::Mode mode, int slot)

@@ -157,6 +157,7 @@ namespace df::gr::d3d11
         mesh_renderer_ = std::make_unique<MeshRenderer>(device_, *render_context_);
 
         render_context_->set_render_target(back_buffer_view_, depth_stencil_buffer_view_);
+        render_context_->set_cull_mode(D3D11_CULL_BACK);
 
         //gr::screen.mode = GR_DIRECT3D11;
         gr::screen.depthbuffer_type = gr::DEPTHBUFFER_Z;

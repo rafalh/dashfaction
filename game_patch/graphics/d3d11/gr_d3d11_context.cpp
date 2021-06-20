@@ -16,9 +16,9 @@ namespace df::gr::d3d11
         TextureManager& texture_manager
     ) :
         device_{std::move(device)}, context_{std::move(context)},
-        state_manager_{state_manager}, shader_manager_{shader_manager}, texture_manager_{texture_manager}
+        state_manager_{state_manager}, shader_manager_{shader_manager}, texture_manager_{texture_manager},
+        current_uv_pan_{NAN, NAN}
     {
-        context_->RSSetState(state_manager_.get_rasterizer_state());
         init_ps_cbuffer();
         init_vs_cbuffer();
 
@@ -29,6 +29,8 @@ namespace df::gr::d3d11
             std::memset(lock.data, 0xFF, lock.stride_in_bytes * lock.h);
             rf::gr::unlock(&lock);
         }
+
+        set_uv_pan({0.0f, 0.0f});
     }
 
     void RenderContext::init_ps_cbuffer()
@@ -89,32 +91,15 @@ namespace df::gr::d3d11
         buffer_desc.MiscFlags        = 0;
         buffer_desc.StructureByteStride = 0;
 
-        TexCoordTransformUniform texture_transform_uniform;
-        current_texture_transform_ = build_identity_matrix3();
-        texture_transform_uniform.mat = convert_to_4x3_matrix(current_texture_transform_);
-        subres_data.pSysMem = &texture_transform_uniform;
-        hr = device_->CreateBuffer(&buffer_desc, &subres_data, &texture_transform_cbuffer_);
+        hr = device_->CreateBuffer(&buffer_desc, nullptr, &texture_transform_cbuffer_);
         check_hr(hr, "CreateBuffer");
 
         ID3D11Buffer* vs_cbuffers[] = { vs_cbuffer_, texture_transform_cbuffer_ };
         context_->VSSetConstantBuffers(0, std::size(vs_cbuffers), vs_cbuffers);
     }
 
-    void RenderContext::set_mode_and_textures(rf::gr::Mode mode, int tex_handle0, int tex_handle1)
+    void RenderContext::change_mode(gr::Mode mode, bool has_tex1)
     {
-        std::array<int, 2> tex_handles = normalize_texture_handles_for_mode(mode, {tex_handle0, tex_handle1});
-        bool has_tex1 = tex_handles[1] != -1;
-        set_mode(mode, has_tex1);
-        set_textures(tex_handles);
-    }
-
-    void RenderContext::set_mode(gr::Mode mode, bool has_tex1)
-    {
-        if (current_mode_ && current_mode_.value() == mode) {
-            return;
-        }
-        current_mode_.emplace(mode);
-
         float vcolor_mul_rgb = 0.0f;
         float vcolor_mul_a = 0.0f;
         float tex0_mul_rgb = 0.0f;
@@ -504,13 +489,8 @@ namespace df::gr::d3d11
         context_->Unmap(vs_cbuffer_, 0);
     }
 
-    void RenderContext::set_texture(int slot, int tex_handle)
+    void RenderContext::change_texture(int slot, int tex_handle)
     {
-        if (current_tex_handles_[slot] == tex_handle) {
-            return;
-        }
-        current_tex_handles_[slot] = tex_handle;
-
         if (tex_handle == -1) {
             tex_handle = white_bm_;
         }
@@ -528,14 +508,10 @@ namespace df::gr::d3d11
         context_->OMSetRenderTargets(std::size(render_targets), render_targets, depth_stencil_view);
     }
 
-    void RenderContext::set_texture_transform(const GrMatrix3x3& transform)
+    void RenderContext::update_texture_transform()
     {
-        if (current_texture_transform_ == transform) {
-            return;
-        }
-        current_texture_transform_ = transform;
         TexCoordTransformUniform uniforms;
-        uniforms.mat = convert_to_4x3_matrix(transform);
+        uniforms.mat = convert_to_4x3_matrix(build_texture_matrix(current_uv_pan_.x, current_uv_pan_.y));
         D3D11_MAPPED_SUBRESOURCE mapped_cbuffer;
         HRESULT hr = context_->Map(texture_transform_cbuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_cbuffer);
         check_hr(hr, "Map");
@@ -590,5 +566,11 @@ namespace df::gr::d3d11
         vp.MinDepth = 0.0f;
         vp.MaxDepth = 1.0f;
         context_->RSSetViewports(1, &vp);
+    }
+
+    void RenderContext::update_rasterizer_state()
+    {
+        ID3D11RasterizerState* rasterizer_state = state_manager_.lookup_rasterizer_state(current_cull_mode_);
+        context_->RSSetState(rasterizer_state);
     }
 }
