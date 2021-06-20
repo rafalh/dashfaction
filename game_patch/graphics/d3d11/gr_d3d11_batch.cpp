@@ -101,12 +101,7 @@ namespace df::gr::d3d11
         start_index_ = current_index_;
     }
 
-    static std::array<int, 2> get_textures_for_mode(gr::Mode mode)
-    {
-        return normalize_texture_handles_for_mode(mode, {gr::screen.current_texture_1, gr::screen.current_texture_2});
-    }
-
-    void BatchManager::tmapper(int nv, gr::Vertex **vertices, int tmap_flags, gr::Mode mode)
+    void BatchManager::add_vertices(int nv, const gr::Vertex **vertices, int vertex_attributes, const std::array<int, 2>& tex_handles, gr::Mode mode)
     {
         int num_index = (nv - 2) * 3;
         if (nv > batch_max_vertex || num_index > batch_max_index) {
@@ -114,16 +109,16 @@ namespace df::gr::d3d11
             return;
         }
 
-        std::array<int, 2> current_textures = get_textures_for_mode(mode);
+        std::array<int, 2> normalized_tex_handles = normalize_texture_handles_for_mode(mode, tex_handles);
         bool vb_full = current_vertex_ + nv >= batch_max_vertex;
         bool ib_full = current_index_ + num_index > batch_max_index;
         bool mode_changed = mode_ != mode;
-        bool texture_changed = textures_[0] != current_textures[0] || textures_[1] != current_textures[1];
+        bool texture_changed = textures_ != normalized_tex_handles;
         bool topology_changed = primitive_topology_ != D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
         if (vb_full || ib_full || topology_changed || mode_changed || texture_changed) {
             flush();
             mode_ = mode;
-            textures_ = current_textures;
+            textures_ = normalized_tex_handles;
             primitive_topology_ = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
         }
         if (!mapped_vb_) {
@@ -131,12 +126,12 @@ namespace df::gr::d3d11
         }
 
         int r = 255, g = 255, b = 255, a = 255;
-        if (!(tmap_flags & gr::TMAP_FLAG_RGB)) {
+        if (!(vertex_attributes & gr::TMAP_FLAG_RGB)) {
             r = gr::screen.current_color.red;
             g = gr::screen.current_color.green;
             b = gr::screen.current_color.blue;
         }
-        if (!(tmap_flags & gr::TMAP_FLAG_ALPHA)) {
+        if (!(vertex_attributes & gr::TMAP_FLAG_ALPHA)) {
             a = gr::screen.current_color.alpha;
         }
         int vert0 = current_vertex_;
@@ -146,12 +141,12 @@ namespace df::gr::d3d11
             out_vert.x = (in_vert.sx - gr::screen.offset_x) / gr::screen.clip_width * 2.0f - 1.0f;
             out_vert.y = (in_vert.sy - gr::screen.offset_y) / gr::screen.clip_height * -2.0f + 1.0f;
             out_vert.z = in_vert.sw * d3d11_zm;
-            if (tmap_flags & gr::TMAP_FLAG_RGB) {
+            if (vertex_attributes & gr::TMAP_FLAG_RGB) {
                 r = in_vert.r;
                 g = in_vert.g;
                 b = in_vert.b;
             }
-            if (tmap_flags & gr::TMAP_FLAG_ALPHA) {
+            if (vertex_attributes & gr::TMAP_FLAG_ALPHA) {
                 a = in_vert.a;
             }
             out_vert.diffuse = pack_color(r, g, b, a);

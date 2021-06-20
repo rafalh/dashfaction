@@ -174,13 +174,11 @@ namespace df::gr::d3d11
 
     void Renderer::bitmap(int bitmap_handle, int x, int y, int w, int h, int sx, int sy, int sw, int sh, bool flip_x, bool flip_y, gr::Mode mode)
     {
-        //xlog::info("gr_d3d11_bitmap");
-        //gr_d3d11_set_texture(0, bitmap_handle);
-        gr::screen.current_texture_1 = bitmap_handle;
+        // xlog::info("gr_d3d11_bitmap");
         int bm_w, bm_h;
         bm::get_dimensions(bitmap_handle, &bm_w, &bm_h);
         gr::Vertex verts[4];
-        gr::Vertex* verts_ptrs[] = {
+        const gr::Vertex* verts_ptrs[] = {
             &verts[0],
             &verts[1],
             &verts[2],
@@ -214,7 +212,8 @@ namespace df::gr::d3d11
         verts[3].sw = 0.0f;
         verts[3].u1 = u_left;
         verts[3].v1 = v_bottom;
-        batch_manager_->tmapper(std::size(verts_ptrs), verts_ptrs, 0, mode);
+        std::array<int, 2> tex_handles{bitmap_handle, -1};
+        batch_manager_->add_vertices(std::size(verts_ptrs), verts_ptrs, 0, tex_handles, mode);
     }
 
     void Renderer::page_in(int bm_handle)
@@ -281,9 +280,10 @@ namespace df::gr::d3d11
         texture_manager_->get_texel(bm_handle, u, v, clr);
     }
 
-    void Renderer::tmapper(int nv, rf::gr::Vertex **vertices, int tmap_flags, rf::gr::Mode mode)
+    void Renderer::tmapper(int nv, const rf::gr::Vertex **vertices, int vertex_attributes, rf::gr::Mode mode)
     {
-        batch_manager_->tmapper(nv, vertices, tmap_flags, mode);
+        std::array<int, 2> tex_handles{gr::screen.current_texture_1, gr::screen.current_texture_2};
+        batch_manager_->add_vertices(nv, vertices, vertex_attributes, tex_handles, mode);
     }
 
     void Renderer::render_solid(rf::GSolid* solid, rf::GRoom** rooms, int num_rooms)
@@ -413,9 +413,9 @@ void gr_d3d11_zbuffer_clear()
     df::gr::d3d11::renderer->zbuffer_clear();
 }
 
-void gr_d3d11_tmapper(int nv, gr::Vertex **vertices, int tmap_flags, gr::Mode mode)
+void gr_d3d11_tmapper(int nv, const gr::Vertex **vertices, int vertex_attributes, gr::Mode mode)
 {
-    df::gr::d3d11::renderer->tmapper(nv, vertices, tmap_flags, mode);
+    df::gr::d3d11::renderer->tmapper(nv, vertices, vertex_attributes, mode);
 }
 
 void gr_d3d11_texture_save_cache()
