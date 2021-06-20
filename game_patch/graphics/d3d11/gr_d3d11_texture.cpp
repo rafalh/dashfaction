@@ -13,7 +13,7 @@ namespace df::gr::d3d11
         texture_cache_.reserve(512);
     }
 
-    TextureManager::Texture TextureManager::create_texture(bm::Format fmt, int w, int h, ubyte* bits, ubyte* pal)
+    TextureManager::Texture TextureManager::create_texture(int bm_handle, bm::Format fmt, int w, int h, ubyte* bits, ubyte* pal)
     {
         CD3D11_TEXTURE2D_DESC desc{
             get_dxgi_format(fmt),
@@ -60,7 +60,7 @@ namespace df::gr::d3d11
         HRESULT hr = device_->CreateTexture2D(&desc, subres_data_ptr, &cpu_texture);
         check_hr(hr, "CreateTexture2D cpu");
 
-        return {desc.Format, cpu_texture};
+        return {bm_handle, desc.Format, cpu_texture};
     }
 
     TextureManager::Texture TextureManager::load_texture(int bm_handle)
@@ -77,7 +77,7 @@ namespace df::gr::d3d11
         if (bm::get_type(bm_handle) == bm::TYPE_USER) {
             xlog::trace("Creating user bitmap");
             auto fmt = bm::get_format(bm_handle);
-            auto texture = create_texture(fmt, w, h, nullptr, nullptr);
+            auto texture = create_texture(bm_handle, fmt, w, h, nullptr, nullptr);
             return texture;
         }
 
@@ -90,7 +90,7 @@ namespace df::gr::d3d11
         }
 
         xlog::trace("Bitmap locked");
-        auto texture = create_texture(fmt, w, h, bm_bits, bm_pal);
+        auto texture = create_texture(bm_handle, fmt, w, h, bm_bits, bm_pal);
 
         bm::unlock(bm_handle);
 
@@ -99,7 +99,7 @@ namespace df::gr::d3d11
 
     TextureManager::Texture& TextureManager::get_or_load_texture(int bm_handle)
     {
-        const auto& it = texture_cache_.find(bm_handle);
+        auto it = texture_cache_.find(bm_handle);
         if (it != texture_cache_.end()) {
             return it->second;
         }
@@ -118,6 +118,60 @@ namespace df::gr::d3d11
             xlog::trace("Creating GPU texture for %s", bm::get_filename(bm_handle));
         }
         return texture.get_or_create_view(device_, device_context_);
+    }
+
+    void TextureManager::save_cache()
+    {
+        for (auto& e : texture_cache_) {
+            Texture& texture = e.second;
+            ++texture.save_cache_count;
+        }
+    }
+
+    void TextureManager::flush_cache(bool force)
+    {
+        xlog::info("Flushing texture cache");
+        if (force) {
+            texture_cache_.clear();
+        }
+        else {
+            auto it = texture_cache_.begin();
+            while (it != texture_cache_.end()) {
+                Texture& texture = it->second;
+                if (texture.save_cache_count > 0) {
+                    --texture.save_cache_count;
+                }
+                else if (texture.ref_count <= 0) {
+                    xlog::trace("Flushing texture: handle %d filename %s", texture.bm_handle, bm::get_filename(texture.bm_handle));
+                    it = texture_cache_.erase(it);
+                    continue;
+                }
+                ++it;
+            }
+        }
+    }
+
+    void TextureManager::add_ref(int bm_handle)
+    {
+        page_in(bm_handle);
+        auto it = texture_cache_.find(bm_handle);
+        if (it != texture_cache_.end()) {
+            Texture& texture = it->second;
+            ++texture.ref_count;
+        }
+    }
+
+    void TextureManager::remove_ref(int bm_handle)
+    {
+        auto it = texture_cache_.find(bm_handle);
+        if (it != texture_cache_.end()) {
+            Texture& texture = it->second;
+            assert(texture.ref_count > 0);
+            --texture.ref_count;
+            if (texture.ref_count <= 0) {
+                texture_cache_.erase(it);
+            }
+        }
     }
 
     DXGI_FORMAT TextureManager::get_dxgi_format(bm::Format fmt)

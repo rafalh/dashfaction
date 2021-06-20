@@ -217,6 +217,11 @@ namespace df::gr::d3d11
         batch_manager_->tmapper(std::size(verts_ptrs), verts_ptrs, 0, mode);
     }
 
+    void Renderer::page_in(int bm_handle)
+    {
+        texture_manager_->page_in(bm_handle);
+    }
+
     void Renderer::clear()
     {
         render_context_->clear();
@@ -239,6 +244,26 @@ namespace df::gr::d3d11
         batch_manager_->flush();
         HRESULT hr = swap_chain_->Present(0, 0);
         check_hr(hr, "Present");
+    }
+
+    void Renderer::texture_save_cache()
+    {
+        texture_manager_->save_cache();
+    }
+
+    void Renderer::texture_flush_cache(bool force)
+    {
+        texture_manager_->flush_cache(force);
+    }
+
+    void Renderer::texture_add_ref(int bm_handle)
+    {
+        texture_manager_->add_ref(bm_handle);
+    }
+
+    void Renderer::texture_remove_ref(int bm_handle)
+    {
+        texture_manager_->remove_ref(bm_handle);
     }
 
     bool Renderer::lock(int bm_handle, int section, rf::gr::LockInfo *lock, gr::LockMode mode)
@@ -363,6 +388,11 @@ void gr_d3d11_init(HWND hwnd)
     os_add_msg_handler(gr_d3d11_msg_handler);
 }
 
+void gr_d3d11_page_in(int bm_handle)
+{
+    df::gr::d3d11::renderer->page_in(bm_handle);
+}
+
 void gr_d3d11_clear()
 {
     df::gr::d3d11::renderer->clear();
@@ -388,6 +418,16 @@ void gr_d3d11_tmapper(int nv, gr::Vertex **vertices, int tmap_flags, gr::Mode mo
     df::gr::d3d11::renderer->tmapper(nv, vertices, tmap_flags, mode);
 }
 
+void gr_d3d11_texture_save_cache()
+{
+    df::gr::d3d11::renderer->texture_save_cache();
+}
+
+void gr_d3d11_texture_flush_cache(bool force)
+{
+    df::gr::d3d11::renderer->texture_flush_cache(force);
+}
+
 bool gr_d3d11_lock(int bm_handle, int section, gr::LockInfo *lock, gr::LockMode mode)
 {
     return df::gr::d3d11::renderer->lock(bm_handle, section, lock, mode);
@@ -401,6 +441,16 @@ void gr_d3d11_unlock(gr::LockInfo *lock)
 void gr_d3d11_get_texel(int bm_handle, float u, float v, rf::gr::Color *clr)
 {
     df::gr::d3d11::renderer->get_texel(bm_handle, u, v, clr);
+}
+
+void gr_d3d11_texture_add_ref(int bm_handle)
+{
+    df::gr::d3d11::renderer->texture_add_ref(bm_handle);
+}
+
+void gr_d3d11_texture_remove_ref(int bm_handle)
+{
+    df::gr::d3d11::renderer->texture_remove_ref(bm_handle);
 }
 
 void gr_d3d11_render_solid(rf::GSolid* solid, rf::GRoom** rooms, int num_rooms)
@@ -493,7 +543,7 @@ void gr_d3d11_apply_patch()
     //AsmWriter{0x005479D0}.ret(); // gr_d3d_screen_coords_from_world_coords
     AsmWriter{0x00547A60}.ret(); // gr_d3d_update_gamma_ramp
     AsmWriter{0x00547AC0}.ret(); // gr_d3d_set_texture_mip_filter
-    AsmWriter{0x00550820}.ret(); // gr_d3d_page_in
+    AsmWriter{0x00550820}.jmp(gr_d3d11_page_in); // gr_d3d_page_in
     AsmWriter{0x005508C0}.jmp(gr_d3d11_clear); // gr_d3d_clear
     AsmWriter{0x00550980}.jmp(gr_d3d11_zbuffer_clear); // gr_d3d_zbuffer_clear
     AsmWriter{0x00550A30}.jmp(gr_d3d11_set_clip); // gr_d3d_set_clip
@@ -533,14 +583,14 @@ void gr_d3d11_apply_patch()
     //AsmWriter{0x00558E30}.ret(); // gr_d3d_3d_bitmap_stretched_square - uses gr_d3d_world_poly
     //AsmWriter{0x005590F0}.ret(); // gr_d3d_rod - uses gr_d3d_world_poly
     AsmWriter{0x005596C0}.ret(); // gr_d3d_render_face_list_colored
-    AsmWriter{0x0055B520}.ret(); // gr_d3d_texture_save_cache
-    AsmWriter{0x0055B550}.ret(); // gr_d3d_texture_flush_cache
+    AsmWriter{0x0055B520}.jmp(gr_d3d11_texture_save_cache); // gr_d3d_texture_save_cache
+    AsmWriter{0x0055B550}.jmp(gr_d3d11_texture_flush_cache); // gr_d3d_texture_flush_cache
     AsmWriter{0x0055CDC0}.ret(); // gr_d3d_mark_texture_dirty
     AsmWriter{0x0055CE00}.jmp(gr_d3d11_lock); // gr_d3d_lock
     AsmWriter{0x0055CF60}.jmp(gr_d3d11_unlock); // gr_d3d_unlock
     AsmWriter{0x0055CFA0}.jmp(gr_d3d11_get_texel); // gr_d3d_get_texel
-    AsmWriter{0x0055D160}.ret(); // gr_d3d_texture_add_ref
-    AsmWriter{0x0055D190}.ret(); // gr_d3d_texture_remove_ref
+    AsmWriter{0x0055D160}.jmp(gr_d3d11_texture_add_ref); // gr_d3d_texture_add_ref
+    AsmWriter{0x0055D190}.jmp(gr_d3d11_texture_remove_ref); // gr_d3d_texture_remove_ref
     AsmWriter{0x0055F5E0}.jmp(gr_d3d11_render_solid); // gr_d3d_render_static_solid
     AsmWriter{0x00561650}.ret(); // gr_d3d_render_face_list
     //AsmWriter{0x0052FA40}.jmp(gr_d3d11_render_lod_vif); // gr_d3d_render_vif_mesh

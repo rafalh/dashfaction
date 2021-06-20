@@ -44,10 +44,15 @@ namespace df::gr::d3d11
         void window_inactive();
 
         void bitmap(int bitmap_handle, int x, int y, int w, int h, int sx, int sy, int sw, int sh, bool flip_x, bool flip_y, rf::gr::Mode mode);
+        void page_in(int bm_handle);
         void clear();
         void zbuffer_clear();
         void set_clip();
         void flip();
+        void texture_save_cache();
+        void texture_flush_cache(bool force);
+        void texture_add_ref(int bm_handle);
+        void texture_remove_ref(int bm_handle);
         bool lock(int bm_handle, int section, rf::gr::LockInfo *lock, gr::LockMode mode);
         void unlock(rf::gr::LockInfo *lock);
         void get_texel(int bm_handle, float u, float v, rf::gr::Color *clr);

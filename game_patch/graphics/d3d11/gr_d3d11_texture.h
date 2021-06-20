@@ -12,16 +12,25 @@ namespace df::gr::d3d11
         TextureManager(ComPtr<ID3D11Device> device, ComPtr<ID3D11DeviceContext> device_context);
 
         ID3D11ShaderResourceView* lookup_texture(int bm_handle);
+        void save_cache();
+        void flush_cache(bool force);
+        void add_ref(int bm_handle);
+        void remove_ref(int bm_handle);
         bool lock(int bm_handle, int section, rf::gr::LockInfo *lock, gr::LockMode mode);
         void unlock(rf::gr::LockInfo *lock);
         void get_texel(int bm_handle, float u, float v, rf::gr::Color *clr);
+
+        void page_in(int bm_handle)
+        {
+            lookup_texture(bm_handle);
+        }
 
     private:
         struct Texture
         {
             Texture() {}
-            Texture(DXGI_FORMAT format, ComPtr<ID3D11Texture2D> cpu_texture) :
-                format{format}, cpu_texture{cpu_texture}
+            Texture(int bm_handle, DXGI_FORMAT format, ComPtr<ID3D11Texture2D> cpu_texture) :
+                bm_handle{bm_handle}, format{format}, cpu_texture{cpu_texture}
             {}
 
             ID3D11ShaderResourceView* get_or_create_view(ID3D11Device* device, ID3D11DeviceContext* device_context)
@@ -32,15 +41,18 @@ namespace df::gr::d3d11
                 return texture_view;
             }
 
+            int bm_handle = -1;
             DXGI_FORMAT format = DXGI_FORMAT_UNKNOWN;
             ComPtr<ID3D11Texture2D> cpu_texture;
             ComPtr<ID3D11Texture2D> gpu_texture;
             ComPtr<ID3D11ShaderResourceView> texture_view;
+            short save_cache_count = 0;
+            short ref_count = 0;
 
             void init_gpu_texture(ID3D11Device* device, ID3D11DeviceContext* device_context);
         };
 
-        Texture create_texture(rf::bm::Format fmt, int w, int h, rf::ubyte* bits, rf::ubyte* pal);
+        Texture create_texture(int bm_handle, rf::bm::Format fmt, int w, int h, rf::ubyte* bits, rf::ubyte* pal);
         Texture load_texture(int bm_handle);
         Texture& get_or_load_texture(int bm_handle);
         static DXGI_FORMAT get_dxgi_format(rf::bm::Format fmt);
