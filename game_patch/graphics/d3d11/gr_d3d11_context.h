@@ -67,15 +67,15 @@ namespace df::gr::d3d11
             TextureManager& texture_manager
         );
         void set_mode_and_textures(rf::gr::Mode mode, int tex_handle0, int tex_handle1);
-        void set_render_target(
-            const ComPtr<ID3D11RenderTargetView>& back_buffer_view,
-            const ComPtr<ID3D11DepthStencilView>& depth_stencil_buffer_view
-        );
+        void set_render_target(ID3D11RenderTargetView* render_target_view, ID3D11DepthStencilView* depth_stencil_view);
         void update_camera_uniforms(const CameraUniforms& uniforms);
         void set_texture_transform(const GrMatrix3x3& transform);
         void bind_vs_cbuffer(int index, ID3D11Buffer* cbuffer);
         void bind_default_shaders();
         void bind_character_shaders();
+        void clear();
+        void zbuffer_clear();
+        void set_clip();
 
         ID3D11DeviceContext* device_context()
         {
@@ -154,6 +154,8 @@ namespace df::gr::d3d11
         GrMatrix3x3 current_texture_transform_;
         CameraUniforms camera_uniforms_;
 
+        ID3D11RenderTargetView* render_target_view_ = nullptr;
+        ID3D11DepthStencilView* depth_stencil_view_ = nullptr;
         ID3D11Buffer* current_vertex_buffer_ = nullptr;
         ID3D11Buffer* current_index_buffer_ = nullptr;
         ID3D11InputLayout* current_input_layout_ = nullptr;

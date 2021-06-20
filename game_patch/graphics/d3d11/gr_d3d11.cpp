@@ -219,34 +219,18 @@ namespace df::gr::d3d11
 
     void Renderer::clear()
     {
-        float clear_color[4] = {
-            gr::screen.current_color.red / 255.0f,
-            gr::screen.current_color.green / 255.0f,
-            gr::screen.current_color.blue / 255.0f,
-            1.0f,
-        };
-        context_->ClearRenderTargetView(back_buffer_view_, clear_color);
+        render_context_->clear();
     }
 
     void Renderer::zbuffer_clear()
     {
-        if (gr::screen.depthbuffer_type != gr::DEPTHBUFFER_NONE) {
-            float depth = gr::screen.depthbuffer_type == gr::DEPTHBUFFER_Z ? 0.0f : 1.0f;
-            context_->ClearDepthStencilView(depth_stencil_buffer_view_, D3D11_CLEAR_DEPTH, depth, 0);
-        }
+        render_context_->zbuffer_clear();
     }
 
     void Renderer::set_clip()
     {
         batch_manager_->flush();
-        D3D11_VIEWPORT vp;
-        vp.TopLeftX = gr::screen.clip_left + gr::screen.offset_x;
-        vp.TopLeftY = gr::screen.clip_top + gr::screen.offset_y;
-        vp.Width = gr::screen.clip_width;
-        vp.Height = gr::screen.clip_height;
-        vp.MinDepth = 0.0f;
-        vp.MaxDepth = 1.0f;
-        context_->RSSetViewports(1, &vp);
+        render_context_->set_clip();
     }
 
     void Renderer::flip()

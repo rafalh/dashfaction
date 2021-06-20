@@ -514,13 +514,12 @@ namespace df::gr::d3d11
         context_->PSSetShaderResources(0, std::size(shader_resources), shader_resources);
     }
 
-    void RenderContext::set_render_target(
-        const ComPtr<ID3D11RenderTargetView>& back_buffer_view,
-        const ComPtr<ID3D11DepthStencilView>& depth_stencil_buffer_view
-    )
+    void RenderContext::set_render_target(ID3D11RenderTargetView* render_target_view, ID3D11DepthStencilView* depth_stencil_view)
     {
-        ID3D11RenderTargetView* render_targets[] = { back_buffer_view };
-        context_->OMSetRenderTargets(std::size(render_targets), render_targets, depth_stencil_buffer_view);
+        render_target_view_ = render_target_view;
+        depth_stencil_view_ = depth_stencil_view;
+        ID3D11RenderTargetView* render_targets[] = { render_target_view };
+        context_->OMSetRenderTargets(std::size(render_targets), render_targets, depth_stencil_view);
     }
 
     void RenderContext::set_texture_transform(const GrMatrix3x3& transform)
@@ -552,5 +551,38 @@ namespace df::gr::d3d11
     void RenderContext::bind_character_shaders()
     {
         shader_manager_.bind_character_shaders(*this);
+    }
+
+    void RenderContext::clear()
+    {
+        if (render_target_view_) {
+            float clear_color[4] = {
+                gr::screen.current_color.red / 255.0f,
+                gr::screen.current_color.green / 255.0f,
+                gr::screen.current_color.blue / 255.0f,
+                1.0f,
+            };
+            context_->ClearRenderTargetView(render_target_view_, clear_color);
+        }
+    }
+
+    void RenderContext::zbuffer_clear()
+    {
+        if (gr::screen.depthbuffer_type != gr::DEPTHBUFFER_NONE && depth_stencil_view_) {
+            float depth = gr::screen.depthbuffer_type == gr::DEPTHBUFFER_Z ? 0.0f : 1.0f;
+            context_->ClearDepthStencilView(depth_stencil_view_, D3D11_CLEAR_DEPTH, depth, 0);
+        }
+    }
+
+    void RenderContext::set_clip()
+    {
+        D3D11_VIEWPORT vp;
+        vp.TopLeftX = gr::screen.clip_left + gr::screen.offset_x;
+        vp.TopLeftY = gr::screen.clip_top + gr::screen.offset_y;
+        vp.Width = gr::screen.clip_width;
+        vp.Height = gr::screen.clip_height;
+        vp.MinDepth = 0.0f;
+        vp.MaxDepth = 1.0f;
+        context_->RSSetViewports(1, &vp);
     }
 }
