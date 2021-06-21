@@ -13,7 +13,7 @@
 
 
 // LauncherApp initialization
-BOOL LauncherApp::InitInstance()
+int LauncherApp::Run()
 {
 	// InitCommonControlsEx() is required on Windows XP if an application
 	// manifest specifies use of ComCtl32.dll version 6 or later to enable
@@ -34,7 +34,7 @@ BOOL LauncherApp::InitInstance()
             "-exepath     Override patched executable file location\n"
             "args...      Additional arguments passed to game or editor\n",
             "Dash Faction Launcher Help", MB_OK | MB_ICONINFORMATION);
-        return FALSE;
+        return 0;
     }
 
     // Migrate Dash Faction config from old version
@@ -47,12 +47,12 @@ BOOL LauncherApp::InitInstance()
     // Launch game or editor based on command line flag
     if (m_cmd_line_info.HasGameFlag()) {
         LaunchGame(nullptr, nullptr);
-        return FALSE;
+        return 0;
     }
 
     if (m_cmd_line_info.HasEditorFlag()) {
         LaunchEditor(nullptr, nullptr);
-        return FALSE;
+        return 0;
     }
 
     // Show main dialog
@@ -60,10 +60,8 @@ BOOL LauncherApp::InitInstance()
 	MainDlg dlg;
 	dlg.DoModal();
 
-	// Since the dialog has been closed, return FALSE so that we exit the
-	//  application, rather than start the application's message pump.
     xlog::info("Closing the launcher");
-	return FALSE;
+	return 0;
 }
 
 void LauncherApp::MigrateConfig()

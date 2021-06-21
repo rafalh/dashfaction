@@ -12,11 +12,11 @@
 #include <windows.h>
 #include <fstream>
 
-BOOL CrashReportApp::InitInstance()
+int CrashReportApp::Run()
 {
     CommandLineInfo cmd_line_info;
     if (!cmd_line_info.Parse())
-        return FALSE;
+        return 1;
 
     // InitCommonControlsEx() is required on Windows XP if an application
     // manifest specifies use of ComCtl32.dll version 6 or later to enable
@@ -48,9 +48,7 @@ BOOL CrashReportApp::InitInstance()
                 MB_ICONINFORMATION | MB_OK | MB_SETFOREGROUND | MB_TASKMODAL);
     }
 
-    // Since the dialog has been closed, return FALSE so that we exit the
-    //  application, rather than start the application's message pump.
-    return FALSE;
+    return 0;
 }
 
 void CrashReportApp::ArchiveReport(const char* crash_dump_filename, const char* exc_info_filename) try

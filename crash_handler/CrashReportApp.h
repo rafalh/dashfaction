@@ -8,7 +8,7 @@ class CommandLineInfo;
 class CrashReportApp : public CWinApp
 {
 public:
-    virtual BOOL InitInstance() override;
+    virtual int Run() override;
     std::string GetArchivedReportFilePath() const;
 
 private:
