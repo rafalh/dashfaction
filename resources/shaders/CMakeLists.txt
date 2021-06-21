@@ -1,6 +1,6 @@
 
 if (CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
-    set(SHADER_COMPILER ${CMAKE_BINARY_DIR}/bin/shader_compiler.exe)
+    set(SHADER_COMPILER shader_compiler)
 else()
     set(SHADER_COMPILER wine ${CMAKE_BINARY_DIR}/bin/shader_compiler.exe)
 endif()

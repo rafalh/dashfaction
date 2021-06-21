@@ -101,7 +101,6 @@ namespace df::gr::d3d11
         );
         check_hr(hr, "D3D11CreateDeviceAndSwapChain");
 
-        void init_error(ID3D11Device* device);
         init_error(device_);
 
         xlog::info("D3D11 feature level: 0x%x", feature_level_supported);
@@ -111,7 +110,7 @@ namespace df::gr::d3d11
     {
         // Get a pointer to the back buffer
         ComPtr<ID3D11Texture2D> back_buffer;
-        HRESULT hr = swap_chain_->GetBuffer(0, IID_ID3D11Texture2D, reinterpret_cast<LPVOID*>(&back_buffer));
+        HRESULT hr = swap_chain_->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<LPVOID*>(&back_buffer));
         check_hr(hr, "GetBuffer");
 
         // Create a render-target view
@@ -185,10 +184,10 @@ namespace df::gr::d3d11
             &verts[2],
             &verts[3],
         };
-        float sx_left = gr::screen.offset_x + x;
-        float sx_right = gr::screen.offset_x + x + w;
-        float sy_top = gr::screen.offset_y + y;
-        float sy_bottom = gr::screen.offset_y + y + h;
+        float sx_left = static_cast<float>(gr::screen.offset_x + x);
+        float sx_right = static_cast<float>(gr::screen.offset_x + x + w);
+        float sy_top = static_cast<float>(gr::screen.offset_y + y);
+        float sy_bottom = static_cast<float>(gr::screen.offset_y + y + h);
         float u_left = static_cast<float>(sx) / bm_w * (flip_x ? -1.0f : 1.0f);
         float u_right = static_cast<float>(sx + sw) / bm_w * (flip_x ? -1.0f : 1.0f);
         float v_top = static_cast<float>(sy) / bm_h * (flip_y ? -1.0f : 1.0f);

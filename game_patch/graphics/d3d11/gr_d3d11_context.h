@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <d3d11.h>
 #include <patch_common/ComPtr.h>
 #include "gr_d3d11_transform.h"

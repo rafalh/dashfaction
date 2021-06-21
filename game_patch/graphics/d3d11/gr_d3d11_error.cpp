@@ -69,7 +69,6 @@ namespace df::gr::d3d11
         std::string error_desc = get_win32_error_description(hr);
         xlog::error("%s failed: %lx (%s)\n%s", fun, hr, code_name, error_desc.c_str());
         if (hr == DXGI_ERROR_DEVICE_REMOVED) {
-            HRESULT get_device_removed_reason();
             hr = get_device_removed_reason();
             code_name = get_hresult_code_name(hr);
             xlog::error("Device removed reason: %lx %s", hr, code_name);

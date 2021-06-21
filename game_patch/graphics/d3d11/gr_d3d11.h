@@ -91,9 +91,12 @@ namespace df::gr::d3d11
         std::unique_ptr<MeshRenderer> mesh_renderer_;
     };
 
+    HRESULT get_device_removed_reason();
+    void init_error(ID3D11Device* device);
+    void fatal_error(HRESULT hr, const char* fun);
+
     static inline void check_hr(HRESULT hr, const char* fun)
     {
-        void fatal_error(HRESULT hr, const char* fun);
         if (FAILED(hr)) {
             fatal_error(hr, fun);
         }

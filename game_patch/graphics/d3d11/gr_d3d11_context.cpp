@@ -620,10 +620,10 @@ namespace df::gr::d3d11
     void RenderContext::set_clip()
     {
         D3D11_VIEWPORT vp;
-        vp.TopLeftX = gr::screen.clip_left + gr::screen.offset_x;
-        vp.TopLeftY = gr::screen.clip_top + gr::screen.offset_y;
-        vp.Width = gr::screen.clip_width;
-        vp.Height = gr::screen.clip_height;
+        vp.TopLeftX = static_cast<float>(gr::screen.clip_left + gr::screen.offset_x);
+        vp.TopLeftY = static_cast<float>(gr::screen.clip_top + gr::screen.offset_y);
+        vp.Width = static_cast<float>(gr::screen.clip_width);
+        vp.Height = static_cast<float>(gr::screen.clip_height);
         vp.MinDepth = 0.0f;
         vp.MaxDepth = 1.0f;
         context_->RSSetViewports(1, &vp);

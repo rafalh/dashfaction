@@ -9,7 +9,7 @@ namespace df::gr::d3d11
 {
 
     struct GpuVertex;
-    struct RenderContext;
+    class RenderContext;
 
     class BatchManager
     {

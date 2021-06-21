@@ -164,7 +164,7 @@ namespace df::gr::d3d11
             batch.mode = determine_face_mode(render_type, batch.texture_2 != -1);
             for (GFace* face : faces) {
                 auto fvert = face->edge_loop;
-                auto face_start_index = vb_data.size();
+                auto face_start_index = static_cast<ushort>(vb_data.size());
                 int fvert_index = 0;
                 while (fvert) {
                     auto& gpu_vert = vb_data.emplace_back();
@@ -203,7 +203,7 @@ namespace df::gr::d3d11
             for (DecalPoly* dp : dps) {
                 auto face = dp->face;
                 auto fvert = face->edge_loop;
-                auto face_start_index = vb_data.size();
+                auto face_start_index = static_cast<ushort>(vb_data.size());
                 int fvert_index = 0;
                 while (fvert) {
                     auto& gpu_vert = vb_data.emplace_back();
