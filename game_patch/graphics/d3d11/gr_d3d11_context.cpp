@@ -55,7 +55,9 @@ namespace df::gr::d3d11
     ) :
         device_{std::move(device)}, context_{std::move(context)},
         state_manager_{state_manager}, shader_manager_{shader_manager}, texture_manager_{texture_manager},
-        current_uv_pan_{NAN, NAN}
+        current_uv_pan_{NAN, NAN},
+        current_model_pos_{NAN, NAN, NAN},
+        current_model_orient_{{NAN, NAN, NAN}, {NAN, NAN, NAN}, {NAN, NAN, NAN}}
     {
         init_cbuffers();
         bind_cbuffers();
@@ -592,7 +594,7 @@ namespace df::gr::d3d11
         if (current_shader_program_ == ShaderProgram::character) {
             shader_manager_.bind_character_shaders(*this);
         }
-        else {
+        else if (current_shader_program_ == ShaderProgram::standard) {
             shader_manager_.bind_default_shaders(*this);
         }
     }

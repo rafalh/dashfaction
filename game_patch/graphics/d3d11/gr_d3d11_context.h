@@ -25,6 +25,7 @@ namespace df::gr::d3d11
     };
 
     enum class ShaderProgram {
+        none,
         standard,
         character,
     };
@@ -60,8 +61,8 @@ namespace df::gr::d3d11
         {
             if (current_shader_program_ != shader_program) {
                 current_shader_program_ = shader_program;
+                bind_shader_program();
             }
-            bind_shader_program();
         }
 
         void set_render_target(ID3D11RenderTargetView* render_target_view, ID3D11DepthStencilView* depth_stencil_view);
@@ -220,7 +221,7 @@ namespace df::gr::d3d11
         std::array<int, 2> current_tex_handles_ = {-1, -1};
         D3D11_CULL_MODE current_cull_mode_ = D3D11_CULL_NONE;
         rf::Vector2 current_uv_pan_;
-        ShaderProgram current_shader_program_ = ShaderProgram::standard;
+        ShaderProgram current_shader_program_ = ShaderProgram::none;
         VertexTransformType current_vertex_transform_type_ = VertexTransformType::none;
         rf::Vector3 current_model_pos_;
         rf::Matrix3 current_model_orient_;
