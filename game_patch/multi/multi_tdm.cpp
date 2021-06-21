@@ -112,7 +112,7 @@ void multi_tdm_apply_patch()
     // multi_limbo_init
     AsmWriter{0x0047C300, 0x0047C302}.mov(ebx, eax); // mov bl, al
     AsmWriter{0x0047C307, 0x0047C309}.cmp(eax, ebx); // cmp al, bl
-    AsmWriter{0x0047C318, 0x0047C309}.mov(ebx, eax); // mov bl, al
+    AsmWriter{0x0047C318, 0x0047C31A}.mov(ebx, eax); // mov bl, al
     AsmWriter{0x0047C34B, 0x0047C34D}.mov(ebx, eax); // mov bl, al
     AsmWriter{0x0047C352, 0x0047C354}.cmp(eax, ebx); // cmp al, bl
     // Note: multi_hud_render_scoreboard_old (0x00478150) is not used
