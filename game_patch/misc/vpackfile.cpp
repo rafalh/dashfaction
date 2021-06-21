@@ -393,18 +393,15 @@ static void load_dashfaction_vpp()
     std::string df_vpp_dir = get_module_dir(g_hmodule);
     const char* df_vpp_base_name = "dashfaction.vpp";
     if (!PathFileExistsA((df_vpp_dir + df_vpp_base_name).c_str())) {
-        // try to remove 3 path components (build/(Debug|Release)/bin)
+        // Remove trailing slash
+        if (df_vpp_dir.back() == '\\') {
+            df_vpp_dir.pop_back();
+        }
+        // Remove the last component from the path leaving the trailing slash
+        // This is needed to allow running/debugging from MSVC
         auto pos = df_vpp_dir.rfind('\\');
         if (pos != std::string::npos) {
-            df_vpp_dir.resize(pos);
-        }
-        pos = df_vpp_dir.rfind('\\');
-        if (pos != std::string::npos) {
-            df_vpp_dir.resize(pos);
-        }
-        pos = df_vpp_dir.rfind('\\');
-        if (pos != std::string::npos) {
-            df_vpp_dir.resize(pos);
+            df_vpp_dir.resize(pos + 1);
         }
     }
     xlog::info("Loading %s from directory: %s", df_vpp_base_name, df_vpp_dir.c_str());
