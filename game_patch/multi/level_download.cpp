@@ -221,7 +221,7 @@ std::vector<std::string> LevelDownloadWorker::extract_archive(const char* temp_f
     try {
         packfiles = unzip(temp_filename, output_dir.c_str(), is_vpp_filename);
     }
-    catch (const std::exception& e) {
+    catch (const std::exception&) {
         packfiles = unrar(temp_filename, output_dir.c_str(), is_vpp_filename);
     }
 
@@ -564,13 +564,13 @@ void multi_level_download_do_frame()
 
         if (bytes_per_sec > 0) {
             int remaining_size = info.size_in_bytes - bytes_received;
-            int secs_left = remaining_size / bytes_per_sec;
+            int secs_left = static_cast<int>(remaining_size / bytes_per_sec);
             auto time_left_str = std::to_string(secs_left) + " seconds left";
             rf::gr::string(info_x, y, time_left_str.c_str(), medium_font);
         }
 
-        int w = 360 * rf::ui::scale_x;
-        int h = 12 * rf::ui::scale_x;
+        int w = static_cast<int>(360 * rf::ui::scale_x);
+        int h = static_cast<int>(12 * rf::ui::scale_x);
         int x = (rf::gr::screen_width() - w) / 2;
         int y = rf::gr::screen_height() * 4 / 5;
         float progress = static_cast<float>(bytes_received) / static_cast<float>(info.size_in_bytes);
