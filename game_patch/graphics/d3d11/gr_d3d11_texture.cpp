@@ -251,7 +251,9 @@ namespace df::gr::d3d11
             case gr::LOCK_WRITE_ONLY:
                 return D3D11_MAP_WRITE;
             default:
-                assert(false);
+                // FIXME: it is not initialized... Perhaps it was handled by legacy renderer code...
+                xlog::warn("Invalid lock mode: %d", mode);
+                //assert(false);
                 return D3D11_MAP_READ_WRITE;
         }
     }

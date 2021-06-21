@@ -291,7 +291,8 @@ namespace df::gr::d3d11
     MeshRenderer::~MeshRenderer()
     {
         for (auto& cache : render_caches_) {
-            cache->get_mesh()->flags &= ~VIF_MESH_RENDER_CACHED;
+            // FIXME: read after free?
+            //cache->get_mesh()->flags &= ~VIF_MESH_RENDER_CACHED;
         }
         render_caches_.clear();
     }

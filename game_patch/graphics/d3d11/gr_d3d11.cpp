@@ -58,7 +58,7 @@ namespace df::gr::d3d11
         sd.SampleDesc.Quality = 0;
         sd.Windowed = rf::gr::screen.window_mode == rf::gr::WINDOWED;
         sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
-        sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+        sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD; // FIXME: consider switching to DXGI_SWAP_EFFECT_FLIP_*
 
         auto pD3D11CreateDeviceAndSwapChain = reinterpret_cast<PFN_D3D11_CREATE_DEVICE_AND_SWAP_CHAIN>(
             reinterpret_cast<void(*)()>(GetProcAddress(d3d11_lib, "D3D11CreateDeviceAndSwapChain")));
@@ -543,7 +543,9 @@ void gr_d3d11_render_to_back_buffer()
 
 void gr_d3d11_clear_solid_render_cache()
 {
-    df::gr::d3d11::renderer->clear_solid_cache();
+    if (df::gr::d3d11::renderer) {
+        df::gr::d3d11::renderer->clear_solid_cache();
+    }
 }
 
 void gr_d3d11_flush()

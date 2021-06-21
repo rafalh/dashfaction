@@ -62,11 +62,12 @@ namespace df::gr::d3d11
 
         white_bm_ = rf::bm::create(rf::bm::FORMAT_888_RGB, 1, 1);
         assert(white_bm_ != -1);
-        rf::gr::LockInfo lock;
+        // FIXME: renderer constructor is still in the callstack - code below is really dangerous!!!
+        /*rf::gr::LockInfo lock;
         if (rf::gr::lock(white_bm_, 0, &lock, rf::gr::LOCK_WRITE_ONLY)) {
             std::memset(lock.data, 0xFF, lock.stride_in_bytes * lock.h);
             rf::gr::unlock(&lock);
-        }
+        }*/
 
         set_uv_pan({0.0f, 0.0f});
     }
