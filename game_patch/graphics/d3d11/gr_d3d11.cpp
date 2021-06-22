@@ -265,9 +265,9 @@ namespace df::gr::d3d11
         texture_manager_->remove_ref(bm_handle);
     }
 
-    bool Renderer::lock(int bm_handle, int section, rf::gr::LockInfo *lock, gr::LockMode mode)
+    bool Renderer::lock(int bm_handle, int section, rf::gr::LockInfo *lock)
     {
-        return texture_manager_->lock(bm_handle, section, lock, mode);
+        return texture_manager_->lock(bm_handle, section, lock);
     }
 
     void Renderer::unlock(rf::gr::LockInfo *lock)
@@ -467,9 +467,9 @@ void gr_d3d11_texture_flush_cache(bool force)
     df::gr::d3d11::renderer->texture_flush_cache(force);
 }
 
-bool gr_d3d11_lock(int bm_handle, int section, gr::LockInfo *lock, gr::LockMode mode)
+bool gr_d3d11_lock(int bm_handle, int section, gr::LockInfo *lock)
 {
-    return df::gr::d3d11::renderer->lock(bm_handle, section, lock, mode);
+    return df::gr::d3d11::renderer->lock(bm_handle, section, lock);
 }
 
 void gr_d3d11_unlock(gr::LockInfo *lock)

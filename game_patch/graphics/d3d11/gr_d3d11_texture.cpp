@@ -251,14 +251,13 @@ namespace df::gr::d3d11
             case gr::LOCK_WRITE_ONLY:
                 return D3D11_MAP_WRITE;
             default:
-                // FIXME: it is not initialized... Perhaps it was handled by legacy renderer code...
                 xlog::warn("Invalid lock mode: %d", mode);
-                //assert(false);
+                assert(false);
                 return D3D11_MAP_READ_WRITE;
         }
     }
 
-    bool TextureManager::lock(int bm_handle, int section, gr::LockInfo *lock, gr::LockMode mode)
+    bool TextureManager::lock(int bm_handle, int section, gr::LockInfo *lock)
     {
         if (section != 0) {
             return false;
@@ -280,7 +279,7 @@ namespace df::gr::d3d11
         texture.cpu_texture->GetDesc(&desc);
 
         D3D11_MAPPED_SUBRESOURCE mapped_texture;
-        D3D11_MAP map_type = convert_lock_mode_to_map_type(mode);
+        D3D11_MAP map_type = convert_lock_mode_to_map_type(lock->mode);
         HRESULT hr = device_context_->Map(texture.cpu_texture, 0, map_type, 0, &mapped_texture);
         check_hr(hr, "Map texture");
 
@@ -291,7 +290,7 @@ namespace df::gr::d3d11
         lock->w = w;
         lock->h = h;
         lock->stride_in_bytes = mapped_texture.RowPitch;
-        lock->mode = mode;
+        // Note: lock->mode is set by gr_lock
         xlog::trace("locked texture: handle %d format %d size %dx%d data %p", lock->bm_handle, lock->format, lock->w, lock->h, lock->data);
         return true;
     }
