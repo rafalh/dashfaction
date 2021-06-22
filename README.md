@@ -72,9 +72,11 @@ Dash Faction is compatible with Red Faction 1.20 North America (NA).
 If your game version is 1.00 or 1.10 you have to update it to 1.20 first.
 If your edition is not NA or you are using Steam version, you have to replace RF.exe file with one from
 1.20 NA version (it can be found on FactionFiles.com). Launcher will ask you to do it if it detects
-unsupported EXE file.
+unsupported EXE file. Dash Faction official installer does all required changes to the installation automatically.
 
-Application should work on Windows XP SP3 and newer (tested mostly on Windows 10).
+Supported operating systems: Windows 7 and newer.
+
+Dash Faction also works on Linux when launched through Wine. Latest Ubuntu LTS and latest version of vanilla Wine from stable branch is recommended.
 
 Usage
 -----
