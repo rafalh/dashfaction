@@ -180,20 +180,18 @@ namespace df::gr::d3d11
 
         void set_mode(gr::Mode mode, bool has_tex1)
         {
-            if (current_mode_ && current_mode_.value() == mode) {
-                return;
+            if (!current_mode_ || current_mode_.value() != mode) {
+                current_mode_.emplace(mode);
+                change_mode(mode, has_tex1);
             }
-            current_mode_.emplace(mode);
-            change_mode(mode, has_tex1);
         }
 
         void set_texture(int slot, int tex_handle)
         {
-            if (current_tex_handles_[slot] == tex_handle) {
-                return;
+            if (current_tex_handles_[slot] != tex_handle) {
+                current_tex_handles_[slot] = tex_handle;
+                bind_texture(slot);
             }
-            current_tex_handles_[slot] = tex_handle;
-            bind_texture(slot);
         }
 
         ComPtr<ID3D11Device> device_;

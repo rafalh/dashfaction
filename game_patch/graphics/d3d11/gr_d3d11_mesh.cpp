@@ -293,18 +293,15 @@ namespace df::gr::d3d11
 
     MeshRenderer::~MeshRenderer()
     {
-        for (auto& cache : render_caches_) {
-            // FIXME: read after free?
-            //cache->get_mesh()->flags &= ~VIF_MESH_RENDER_CACHED;
-        }
+        // Note: meshes are already destroyed here
         render_caches_.clear();
     }
 
     void MeshRenderer::render_v3d_vif(rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::MeshRenderParams& params)
     {
         if ((mesh->flags & VIF_MESH_RENDER_CACHED) == 0) {
-            render_caches_.push_back(std::make_unique<MeshRenderCache>(mesh, device_));
-            mesh->render_cache = render_caches_.back().get();
+            auto p = render_caches_.insert_or_assign(mesh, std::make_unique<MeshRenderCache>(mesh, device_));
+            mesh->render_cache = p.first->second.get();
             mesh->flags |= VIF_MESH_RENDER_CACHED;
         }
         reinterpret_cast<MeshRenderCache*>(mesh->render_cache)->render(pos, orient, params, render_context_);
@@ -313,10 +310,17 @@ namespace df::gr::d3d11
     void MeshRenderer::render_character_vif(rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::CharacterInstance *ci, const rf::MeshRenderParams& params)
     {
         if ((mesh->flags & VIF_MESH_RENDER_CACHED) == 0) {
-            render_caches_.push_back(std::make_unique<CharacterMeshRenderCache>(mesh, device_));
-            mesh->render_cache = render_caches_.back().get();
+            auto p = render_caches_.insert_or_assign(mesh, std::make_unique<CharacterMeshRenderCache>(mesh, device_));
+            mesh->render_cache = p.first->second.get();
             mesh->flags |= VIF_MESH_RENDER_CACHED;
         }
         reinterpret_cast<CharacterMeshRenderCache*>(mesh->render_cache)->render(pos, orient, ci, params, render_context_);
+    }
+
+    void MeshRenderer::clear_vif_cache(rf::VifMesh *mesh)
+    {
+        if (mesh->flags & VIF_MESH_RENDER_CACHED) {
+            render_caches_.erase(mesh);
+        }
     }
 }

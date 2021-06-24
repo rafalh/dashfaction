@@ -1,6 +1,7 @@
 #include <cassert>
 #include <patch_common/AsmWriter.h>
 #include <patch_common/CodeInjection.h>
+#include <patch_common/FunHook.h>
 #include <xlog/xlog.h>
 #include "../../rf/gr/gr.h"
 #include "../../rf/os/os.h"
@@ -362,6 +363,11 @@ namespace df::gr::d3d11
         mesh_renderer_->render_character_vif(mesh, pos, orient, ci, params);
     }
 
+    void Renderer::clear_vif_cache(rf::VifMesh *mesh)
+    {
+        mesh_renderer_->clear_vif_cache(mesh);
+    }
+
     void Renderer::fog_set()
     {
         render_context_->fog_set();
@@ -572,10 +578,21 @@ static CodeInjection gr_d3d_setup_3d_injection{
     },
 };
 
+static FunHook<void(VifMesh*)> v3d_delete_vif_mesh_hook{
+    0x00569610,
+    [](VifMesh* mesh) {
+        if (df::gr::d3d11::renderer) {
+            df::gr::d3d11::renderer->clear_vif_cache(mesh);
+        }
+        v3d_delete_vif_mesh_hook.call_target(mesh);
+    },
+};
+
 void gr_d3d11_apply_patch()
 {
     g_render_room_objects_render_liquid_injection.install();
     gr_d3d_setup_3d_injection.install();
+    v3d_delete_vif_mesh_hook.install();
 
     AsmWriter{0x004F0B90}.jmp(gr_d3d11_clear_solid_render_cache); // geo_cache_clear
 

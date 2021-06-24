@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vector>
+#include <unordered_map>
 #include <d3d11.h>
 #include <patch_common/ComPtr.h>
 
@@ -54,10 +54,11 @@ namespace df::gr::d3d11
         ~MeshRenderer();
         void render_v3d_vif(rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::MeshRenderParams& params);
         void render_character_vif(rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::CharacterInstance *ci, const rf::MeshRenderParams& params);
+        void clear_vif_cache(rf::VifMesh *mesh);
 
     private:
         ComPtr<ID3D11Device> device_;
         RenderContext& render_context_;
-        std::vector<std::unique_ptr<BaseMeshRenderCache>> render_caches_;
+        std::unordered_map<rf::VifMesh*, std::unique_ptr<BaseMeshRenderCache>> render_caches_;
     };
 }
