@@ -189,10 +189,10 @@ namespace df::gr::d3d11
         float sx_right = static_cast<float>(gr::screen.offset_x + x + w);
         float sy_top = static_cast<float>(gr::screen.offset_y + y);
         float sy_bottom = static_cast<float>(gr::screen.offset_y + y + h);
-        float u_left = static_cast<float>(sx) / bm_w * (flip_x ? -1.0f : 1.0f);
-        float u_right = static_cast<float>(sx + sw) / bm_w * (flip_x ? -1.0f : 1.0f);
-        float v_top = static_cast<float>(sy) / bm_h * (flip_y ? -1.0f : 1.0f);
-        float v_bottom = static_cast<float>(sy + sh) / bm_h * (flip_y ? -1.0f : 1.0f);
+        float u_left = static_cast<float>(sx + (flip_x ? sw : 0)) / bm_w;
+        float u_right = static_cast<float>(sx + (flip_x ? 0 : sw)) / bm_w;
+        float v_top = static_cast<float>(sy + (flip_y ? sh : 0)) / bm_h;
+        float v_bottom = static_cast<float>(sy + (flip_y ? 0 : sh)) / bm_h;
         verts[0].sx = sx_left;
         verts[0].sy = sy_top;
         verts[0].sw = 0.0f;
@@ -588,11 +588,21 @@ static FunHook<void(VifMesh*)> v3d_delete_vif_mesh_hook{
     },
 };
 
+// FIXME: perhaps change original code? also this code is duplicated in gr_d3d.cpp
+static FunHook<void(int, int, int, int, int)> gr_capture_back_buffer_hook{
+    0x0050E4F0,
+    []([[maybe_unused]] int x, [[maybe_unused]] int y, [[maybe_unused]] int width, [[maybe_unused]] int height, [[maybe_unused]] int bm_handle) {
+        // assume we are rendering to texture
+        gr_d3d11_flush();
+    },
+};
+
 void gr_d3d11_apply_patch()
 {
     g_render_room_objects_render_liquid_injection.install();
     gr_d3d_setup_3d_injection.install();
     v3d_delete_vif_mesh_hook.install();
+    gr_capture_back_buffer_hook.install();
 
     AsmWriter{0x004F0B90}.jmp(gr_d3d11_clear_solid_render_cache); // geo_cache_clear
 
