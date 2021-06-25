@@ -31,8 +31,8 @@ namespace df::gr::d3d11
 
     struct alignas(16) RenderModeBufferData
     {
-        std::array<float, 2> vcolor_mul;
-        std::array<float, 2> vcolor_mul_inv;
+        std::array<float, 4> vcolor_mul;
+        std::array<float, 4> vcolor_mul_inv;
         std::array<float, 2> tex0_mul;
         std::array<float, 2> tex0_mul_inv;
         float alpha_test;
@@ -466,8 +466,18 @@ namespace df::gr::d3d11
         bool alpha_test = mode.get_zbuffer_type() == gr::ZBUFFER_TYPE_FULL_ALPHA_TEST;
 
         RenderModeBufferData ps_data;
-        ps_data.vcolor_mul = {vcolor_mul_rgb, vcolor_mul_a};
-        ps_data.vcolor_mul_inv = {vcolor_mul_rgb ? 0.0f : 1.0f, vcolor_mul_a ? 0.0f : 1.0f};
+        ps_data.vcolor_mul = {
+            vcolor_mul_rgb * current_color_.red / 255.0f,
+            vcolor_mul_rgb * current_color_.green / 255.0f,
+            vcolor_mul_rgb * current_color_.blue / 255.0f,
+            vcolor_mul_a * current_color_.alpha / 255.0f,
+        };
+        ps_data.vcolor_mul_inv = {
+            vcolor_mul_rgb ? 0.0f : 1.0f,
+            vcolor_mul_rgb ? 0.0f : 1.0f,
+            vcolor_mul_rgb ? 0.0f : 1.0f,
+            vcolor_mul_a ? 0.0f : 1.0f,
+        };
         ps_data.tex0_mul = {tex0_mul_rgb, tex0_mul_a};
         ps_data.tex0_mul_inv = {tex0_mul_rgb ? 0.0f : 1.0f, tex0_mul_a ? 0.0f : 1.0f};
         ps_data.tex0_add_rgb = tex0_add_rgb;

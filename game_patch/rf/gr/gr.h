@@ -25,6 +25,16 @@ namespace rf::gr
             this->blue = b;
             this->alpha = a;
         }
+
+        bool operator==(const Color& other) const
+        {
+            return red == other.red && green == other.green && blue == other.blue;
+        }
+
+        bool operator!=(const Color& other) const
+        {
+            return !(*this == other);
+        }
     };
 
     struct BaseVertex

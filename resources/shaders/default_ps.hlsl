@@ -9,8 +9,8 @@ struct VsOutput
 
 cbuffer PsConstantBuffer : register(b0)
 {
-    float2 vcolor_mul;
-    float2 vcolor_mul_inv;
+    float4 vcolor_mul;
+    float4 vcolor_mul_inv;
     float2 tex0_mul;
     float2 tex0_mul_inv;
     float alpha_test;
@@ -32,7 +32,7 @@ float4 main(VsOutput input) : SV_TARGET
 {
     // return tex0.Sample(samp0, input.uv0);
     float4 tex0_color = tex0.Sample(samp0, input.uv0);
-    float4 target = input.color * vcolor_mul.xxxy + vcolor_mul_inv.xxxy;
+    float4 target = input.color * vcolor_mul.rgba + vcolor_mul_inv.rgba;
     target *= tex0_color * tex0_mul.xxxy + tex0_mul_inv.xxxy;
 
     clip(target.a - alpha_test);

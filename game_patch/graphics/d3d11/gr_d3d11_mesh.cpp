@@ -65,9 +65,39 @@ namespace df::gr::d3d11
         render_context.set_cull_mode(D3D11_CULL_BACK);
         render_context.set_uv_pan(rf::vec2_zero_vector);
         render_context.set_primitive_topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+        std::optional<gr::Mode> forced_mode;
+        if (params.flags & 1) {
+            // used by rail gun scanner for heat overlays
+            forced_mode.emplace(
+                TEXTURE_SOURCE_NONE,
+                COLOR_SOURCE_VERTEX,
+                ALPHA_SOURCE_VERTEX,
+                ALPHA_BLEND_ALPHA,
+                ZBUFFER_TYPE_FULL,
+                FOG_ALLOWED
+            );
+        }
+        else if (params.flags & 8) {
+            // used by rocket launcher scanner together with flag 1 so this code block seems unused
+            forced_mode.emplace(
+                TEXTURE_SOURCE_NONE,
+                COLOR_SOURCE_VERTEX,
+                ALPHA_SOURCE_VERTEX,
+                ALPHA_BLEND_ALPHA_ADDITIVE,
+                ZBUFFER_TYPE_NONE,
+                FOG_ALLOWED
+            );
+        }
+        rf::ubyte alpha = static_cast<ubyte>(params.alpha);
+        rf::Color color{255, 255, 255, 255};
+        if ((params.flags & 2) && (params.flags & 9)) {
+            color.set(params.self_illum.red, params.self_illum.green, params.self_illum.blue, alpha);
+        }
+
         for (auto& b : batches_) {
             int texture = tex_handles[b.texture_index];
-            render_context.set_mode_and_textures(b.mode, texture, -1);
+            render_context.set_mode_and_textures(forced_mode.value_or(b.mode), texture, -1, color);
             render_context.device_context()->DrawIndexed(b.num_indices, b.start_index, 0);
         }
     }

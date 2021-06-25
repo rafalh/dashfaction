@@ -48,11 +48,11 @@ namespace df::gr::d3d11
             TextureManager& texture_manager
         );
 
-        void set_mode_and_textures(rf::gr::Mode mode, int tex_handle0, int tex_handle1)
+        void set_mode_and_textures(rf::gr::Mode mode, int tex_handle0, int tex_handle1, rf::Color color = {255, 255, 255})
         {
             std::array<int, 2> tex_handles = normalize_texture_handles_for_mode(mode, {tex_handle0, tex_handle1});
             bool has_tex1 = tex_handles[1] != -1;
-            set_mode(mode, has_tex1);
+            set_mode(mode, has_tex1, color);
             set_texture(0, tex_handle0);
             set_texture(1, tex_handle1);
         }
@@ -178,10 +178,11 @@ namespace df::gr::d3d11
         void update_model_transform_3d();
         void update_texture_transform();
 
-        void set_mode(gr::Mode mode, bool has_tex1)
+        void set_mode(gr::Mode mode, bool has_tex1, rf::Color color)
         {
-            if (!current_mode_ || current_mode_.value() != mode) {
+            if (!current_mode_ || current_mode_.value() != mode || current_color_ != color) {
                 current_mode_.emplace(mode);
+                current_color_ = color;
                 change_mode(mode, has_tex1);
             }
         }
@@ -217,6 +218,7 @@ namespace df::gr::d3d11
         D3D11_PRIMITIVE_TOPOLOGY current_primitive_topology_ = D3D11_PRIMITIVE_TOPOLOGY_UNDEFINED;
         std::optional<gr::Mode> current_mode_;
         std::array<int, 2> current_tex_handles_ = {-1, -1};
+        rf::Color current_color_{255, 255, 255};
         D3D11_CULL_MODE current_cull_mode_ = D3D11_CULL_NONE;
         rf::Vector2 current_uv_pan_;
         ShaderProgram current_shader_program_ = ShaderProgram::none;
