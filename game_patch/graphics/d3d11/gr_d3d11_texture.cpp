@@ -127,12 +127,14 @@ namespace df::gr::d3d11
 
     TextureManager::Texture& TextureManager::get_or_load_texture(int bm_handle)
     {
-        auto it = texture_cache_.find(bm_handle);
+        // Note: bm_index will change for each animation frame but bm_handle will stay the same
+        int bm_index = rf::bm::get_cache_slot(bm_handle);
+        auto it = texture_cache_.find(bm_index);
         if (it != texture_cache_.end()) {
             return it->second;
         }
 
-        auto insert_result = texture_cache_.insert({bm_handle, std::move(load_texture(bm_handle))});
+        auto insert_result = texture_cache_.insert({bm_index, std::move(load_texture(bm_handle))});
         return insert_result.first->second;
     }
 
