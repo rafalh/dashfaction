@@ -15,8 +15,9 @@ namespace df::gr::d3d11
 
     TextureManager::Texture TextureManager::create_cpu_texture(int bm_handle, bm::Format fmt, int w, int h, ubyte* bits, ubyte* pal)
     {
+        auto [dxgi_format, supported_fmt] = get_supported_texture_format(fmt);
         CD3D11_TEXTURE2D_DESC desc{
-            get_dxgi_format(fmt),
+            dxgi_format,
             static_cast<UINT>(w),
             static_cast<UINT>(h),
             1, // arraySize
@@ -27,23 +28,17 @@ namespace df::gr::d3d11
         };
         // TODO: mapmaps?
 
-        bm::Format gpu_fmt = fmt;
-        if (desc.Format == DXGI_FORMAT_UNKNOWN) {
-            desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-            gpu_fmt = bm::FORMAT_8888_ARGB;
-        }
-
         D3D11_SUBRESOURCE_DATA subres_data{nullptr, 0, 0};
         std::unique_ptr<ubyte[]> converted_bits;
         D3D11_SUBRESOURCE_DATA* subres_data_ptr = nullptr;
         if (bits) {
-            if (gpu_fmt != fmt) {
-                xlog::trace("Converting texture %d -> %d", fmt, gpu_fmt);
+            if (supported_fmt != fmt) {
+                xlog::trace("Converting texture %d -> %d", fmt, supported_fmt);
                 converted_bits = std::make_unique<ubyte[]>(w * h * 4);
-                ::bm_convert_format(converted_bits.get(), gpu_fmt, bits, fmt, w, h,
-                    w * bm_bytes_per_pixel(gpu_fmt), w * bm_bytes_per_pixel(fmt), pal);
+                ::bm_convert_format(converted_bits.get(), supported_fmt, bits, fmt, w, h,
+                    w * bm_bytes_per_pixel(supported_fmt), w * bm_bytes_per_pixel(fmt), pal);
                 subres_data.pSysMem = converted_bits.get();
-                subres_data.SysMemPitch = w * bm_bytes_per_pixel(gpu_fmt);
+                subres_data.SysMemPitch = w * bm_bytes_per_pixel(supported_fmt);
             }
             else {
                 xlog::trace("Creating texture without conversion: format %d", fmt);
@@ -94,14 +89,14 @@ namespace df::gr::d3d11
             return {};
         }
 
-        if (bm::get_format(bm_handle) == bm::FORMAT_RENDER_TARGET) {
+        bm::Format fmt = bm::get_format(bm_handle);
+        if (fmt == bm::FORMAT_RENDER_TARGET) {
             xlog::info("Creating render target: handle %d", bm_handle);
             return create_render_target(bm_handle, w, h);
         }
 
         if (bm::get_type(bm_handle) == bm::TYPE_USER) {
             xlog::trace("Creating user bitmap texture: handle %d", bm_handle);
-            auto fmt = bm::get_format(bm_handle);
             auto texture = create_cpu_texture(bm_handle, fmt, w, h, nullptr, nullptr);
             return texture;
         }
@@ -109,7 +104,7 @@ namespace df::gr::d3d11
         ubyte* bm_bits = nullptr;
         ubyte* bm_pal = nullptr;
         xlog::trace("Locking bitmap");
-        auto fmt = bm::lock(bm_handle, &bm_bits, &bm_pal);
+        fmt = bm::lock(bm_handle, &bm_bits, &bm_pal);
         if (fmt == bm::FORMAT_NONE || bm_bits == nullptr || bm_pal != nullptr) {
             xlog::warn("Bitmap lock failed or unsupported bitmap");
             return {};
@@ -182,7 +177,7 @@ namespace df::gr::d3d11
                     --texture.save_cache_count;
                 }
                 else if (texture.ref_count <= 0) {
-                    xlog::warn("Flushing texture: handle %d filename %s", texture.bm_handle, bm::get_filename(texture.bm_handle));
+                    xlog::trace("Flushing texture: handle %d", texture.bm_handle);
                     it = texture_cache_.erase(it);
                     continue;
                 }
@@ -211,7 +206,7 @@ namespace df::gr::d3d11
             assert(texture.ref_count > 0);
             --texture.ref_count;
             if (texture.ref_count <= 0) {
-                xlog::warn("Flushing texture after ref removal: handle %d filename %s", texture.bm_handle, bm::get_filename(texture.bm_handle));
+                xlog::trace("Flushing texture after ref removal: handle %d", texture.bm_handle);
                 texture_cache_.erase(it);
             }
         }
@@ -223,18 +218,54 @@ namespace df::gr::d3d11
         texture_cache_.erase(bm_index);
     }
 
-    DXGI_FORMAT TextureManager::get_dxgi_format(bm::Format fmt)
+    std::pair<DXGI_FORMAT, bm::Format> TextureManager::determine_supported_texture_format(bm::Format fmt)
     {
+        std::vector<std::pair<DXGI_FORMAT, bm::Format>> candidates;
         switch (fmt) {
-            case bm::FORMAT_565_RGB: return DXGI_FORMAT_B5G6R5_UNORM;
-            //case bm::FORMAT_1555_ARGB: return DXGI_FORMAT_B5G5R5A1_UNORM; // does not work in Win7 in VirtualBox
-            //case bm::FORMAT_4444_ARGB: return DXGI_FORMAT_B4G4R4A4_UNORM; // does not work in Win7 in VirtualBox
-            case bm::FORMAT_8888_ARGB: return DXGI_FORMAT_B8G8R8A8_UNORM;
-            case bm::FORMAT_DXT1: return DXGI_FORMAT_BC1_UNORM;
-            case bm::FORMAT_DXT3: return DXGI_FORMAT_BC2_UNORM;
-            case bm::FORMAT_DXT5: return DXGI_FORMAT_BC3_UNORM;
-            default: return DXGI_FORMAT_UNKNOWN;
+            case bm::FORMAT_565_RGB:
+                candidates.emplace_back(DXGI_FORMAT_B5G6R5_UNORM, bm::FORMAT_565_RGB);
+                candidates.emplace_back(DXGI_FORMAT_B8G8R8X8_UNORM, bm::FORMAT_8888_ARGB);
+                break;
+            case bm::FORMAT_1555_ARGB:
+                candidates.emplace_back(DXGI_FORMAT_B5G5R5A1_UNORM, bm::FORMAT_1555_ARGB);
+                candidates.emplace_back(DXGI_FORMAT_B8G8R8A8_UNORM, bm::FORMAT_8888_ARGB);
+                break;
+            case bm::FORMAT_4444_ARGB:
+                candidates.emplace_back(DXGI_FORMAT_B4G4R4A4_UNORM, bm::FORMAT_4444_ARGB);
+                candidates.emplace_back(DXGI_FORMAT_B8G8R8A8_UNORM, bm::FORMAT_8888_ARGB);
+                break;
+            // Formats below should always be supported
+            case bm::FORMAT_888_RGB: return {DXGI_FORMAT_B8G8R8X8_UNORM, bm::FORMAT_8888_ARGB};
+            case bm::FORMAT_8888_ARGB: return {DXGI_FORMAT_B8G8R8A8_UNORM, fmt};
+            case bm::FORMAT_DXT1: return {DXGI_FORMAT_BC1_UNORM, fmt};
+            case bm::FORMAT_DXT3: return {DXGI_FORMAT_BC2_UNORM, fmt};
+            case bm::FORMAT_DXT5: return {DXGI_FORMAT_BC3_UNORM, fmt};
+            // Other formats
+            default: return {DXGI_FORMAT_B8G8R8A8_UNORM, bm::FORMAT_8888_ARGB};
         }
+
+        unsigned format_support = 0;
+        for (auto& p: candidates) {
+            HRESULT hr = device_->CheckFormatSupport(p.first, &format_support);
+            check_hr(hr, "CheckFormatSupport");
+            if (format_support & D3D11_FORMAT_SUPPORT_TEXTURE2D) {
+                return p;
+            }
+        }
+        // We shouldn't get here (last candidate should always be supported)
+        assert(false);
+        return {DXGI_FORMAT_B8G8R8A8_UNORM, bm::FORMAT_8888_ARGB};
+    }
+
+    std::pair<DXGI_FORMAT, bm::Format> TextureManager::get_supported_texture_format(rf::bm::Format fmt)
+    {
+        auto it = supported_texture_format_cache_.find(fmt);
+        if (it != supported_texture_format_cache_.end()) {
+            return it->second;
+        }
+        std::pair<DXGI_FORMAT, bm::Format> p = determine_supported_texture_format(fmt);
+        supported_texture_format_cache_.insert({fmt, p});
+        return p;
     }
 
     rf::bm::Format TextureManager::get_bm_format(DXGI_FORMAT dxgi_fmt)
@@ -244,6 +275,7 @@ namespace df::gr::d3d11
             case DXGI_FORMAT_B5G5R5A1_UNORM: return bm::FORMAT_1555_ARGB;
             case DXGI_FORMAT_B4G4R4A4_UNORM: return bm::FORMAT_4444_ARGB;
             case DXGI_FORMAT_B8G8R8A8_UNORM: return bm::FORMAT_8888_ARGB;
+            case DXGI_FORMAT_B8G8R8X8_UNORM: return bm::FORMAT_8888_ARGB;
             case DXGI_FORMAT_BC1_UNORM: return bm::FORMAT_DXT1;
             case DXGI_FORMAT_BC2_UNORM: return bm::FORMAT_DXT3;
             case DXGI_FORMAT_BC3_UNORM: return bm::FORMAT_DXT5;

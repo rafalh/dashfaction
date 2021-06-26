@@ -63,12 +63,15 @@ namespace df::gr::d3d11
         Texture create_render_target(int bm_handle, int w, int h);
         Texture load_texture(int bm_handle);
         Texture& get_or_load_texture(int bm_handle);
-        static DXGI_FORMAT get_dxgi_format(rf::bm::Format fmt);
+        std::pair<DXGI_FORMAT, rf::bm::Format> determine_supported_texture_format(rf::bm::Format fmt);
+        std::pair<DXGI_FORMAT, rf::bm::Format> get_supported_texture_format(rf::bm::Format fmt);
         static rf::bm::Format get_bm_format(DXGI_FORMAT dxgi_fmt);
 
         ComPtr<ID3D11Device> device_;
         ComPtr<ID3D11DeviceContext> device_context_;
         std::unordered_map<int, Texture> texture_cache_;
         ComPtr<ID3D11Texture2D> back_buffer_staging_texture_;
+        std::unordered_map<rf::bm::Format, std::pair<DXGI_FORMAT, rf::bm::Format>> supported_texture_format_cache_;
+
     };
 }
