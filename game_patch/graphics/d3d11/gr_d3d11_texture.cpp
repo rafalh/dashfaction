@@ -13,7 +13,7 @@ namespace df::gr::d3d11
         texture_cache_.reserve(512);
     }
 
-    TextureManager::Texture TextureManager::create_cpu_texture(int bm_handle, bm::Format fmt, int w, int h, ubyte* bits, ubyte* pal)
+    TextureManager::Texture TextureManager::create_texture(int bm_handle, bm::Format fmt, int w, int h, ubyte* bits, ubyte* pal, bool staging)
     {
         auto [dxgi_format, supported_fmt] = get_supported_texture_format(fmt);
         CD3D11_TEXTURE2D_DESC desc{
@@ -22,9 +22,9 @@ namespace df::gr::d3d11
             static_cast<UINT>(h),
             1, // arraySize
             1, // mipLevels
-            0, // bindFlags
-            D3D11_USAGE_STAGING,
-            D3D11_CPU_ACCESS_READ|D3D11_CPU_ACCESS_WRITE,
+            staging ? 0u : static_cast<UINT>(D3D11_BIND_SHADER_RESOURCE),
+            staging ? D3D11_USAGE_STAGING : D3D11_USAGE_DEFAULT,
+            staging ? D3D11_CPU_ACCESS_READ|D3D11_CPU_ACCESS_WRITE : 0u,
         };
         // TODO: mapmaps?
 
@@ -51,10 +51,18 @@ namespace df::gr::d3d11
             xlog::trace("Creating uninitialized texture");
         }
 
-        ComPtr<ID3D11Texture2D> cpu_texture;
-        HRESULT hr = device_->CreateTexture2D(&desc, subres_data_ptr, &cpu_texture);
+        ComPtr<ID3D11Texture2D> d3d_texture;
+        HRESULT hr = device_->CreateTexture2D(&desc, subres_data_ptr, &d3d_texture);
         check_hr(hr, "CreateTexture2D cpu");
-        return {bm_handle, desc.Format, cpu_texture};
+
+        if (staging) {
+            return {bm_handle, desc.Format, d3d_texture};
+        }
+        else {
+            Texture texture{bm_handle, desc.Format, {}};
+            texture.gpu_texture = d3d_texture;
+            return texture;
+        }
     }
 
     TextureManager::Texture TextureManager::create_render_target(int bm_handle, int w, int h)
@@ -78,7 +86,7 @@ namespace df::gr::d3d11
         return {bm_handle, desc.Format, std::move(gpu_texture), std::move(render_target_view)};
     }
 
-    TextureManager::Texture TextureManager::load_texture(int bm_handle)
+    TextureManager::Texture TextureManager::load_texture(int bm_handle, bool staging)
     {
         xlog::info("Creating texture for bitmap %s handle %d format %d", bm::get_filename(bm_handle), bm_handle, bm::get_format(bm_handle));
 
@@ -97,7 +105,7 @@ namespace df::gr::d3d11
 
         if (bm::get_type(bm_handle) == bm::TYPE_USER) {
             xlog::trace("Creating user bitmap texture: handle %d", bm_handle);
-            auto texture = create_cpu_texture(bm_handle, fmt, w, h, nullptr, nullptr);
+            auto texture = create_texture(bm_handle, fmt, w, h, nullptr, nullptr, staging);
             return texture;
         }
 
@@ -111,7 +119,7 @@ namespace df::gr::d3d11
         }
 
         xlog::trace("Creating normal texture: handle %d", bm_handle);
-        auto texture = create_cpu_texture(bm_handle, fmt, w, h, bm_bits, bm_pal);
+        auto texture = create_texture(bm_handle, fmt, w, h, bm_bits, bm_pal, staging);
 
         xlog::trace("Unlocking bitmap");
         bm::unlock(bm_handle);
@@ -120,7 +128,7 @@ namespace df::gr::d3d11
         return texture;
     }
 
-    TextureManager::Texture& TextureManager::get_or_load_texture(int bm_handle)
+    TextureManager::Texture& TextureManager::get_or_load_texture(int bm_handle, bool staging)
     {
         // Note: bm_index will change for each animation frame but bm_handle will stay the same
         int bm_index = rf::bm::get_cache_slot(bm_handle);
@@ -129,7 +137,7 @@ namespace df::gr::d3d11
             return it->second;
         }
 
-        auto insert_result = texture_cache_.insert({bm_index, std::move(load_texture(bm_handle))});
+        auto insert_result = texture_cache_.insert({bm_index, std::move(load_texture(bm_handle, staging))});
         return insert_result.first->second;
     }
 
@@ -138,7 +146,7 @@ namespace df::gr::d3d11
         if (bm_handle < 0) {
             return nullptr;
         }
-        Texture& texture = get_or_load_texture(bm_handle);
+        Texture& texture = get_or_load_texture(bm_handle, false);
         if (!texture.texture_view) {
             xlog::trace("Creating GPU texture for %s", bm::get_filename(bm_handle));
         }
@@ -150,7 +158,7 @@ namespace df::gr::d3d11
         if (bm_handle < 0) {
             return nullptr;
         }
-        Texture& texture = get_or_load_texture(bm_handle);
+        Texture& texture = get_or_load_texture(bm_handle, false);
         return texture.render_target_view;
     }
 
@@ -311,18 +319,20 @@ namespace df::gr::d3d11
             return false;
         }
 
-        Texture& texture = get_or_load_texture(bm_handle);
-        if (!texture.cpu_texture) {
-            xlog::warn("Attempted to lock texture without cpu resource %d", texture.bm_handle);
+        Texture& texture = get_or_load_texture(bm_handle, true);
+        ID3D11Texture2D* staging_texture = texture.get_or_create_staging_texture(device_, device_context_,
+            lock->mode != gr::LOCK_WRITE_ONLY);
+        if (!staging_texture) {
+            xlog::warn("Attempted to lock texture without staging resource %d", texture.bm_handle);
             return false;
         }
 
         D3D11_TEXTURE2D_DESC desc;
-        texture.cpu_texture->GetDesc(&desc);
+        staging_texture->GetDesc(&desc);
 
         D3D11_MAPPED_SUBRESOURCE mapped_texture;
         D3D11_MAP map_type = convert_lock_mode_to_map_type(lock->mode);
-        HRESULT hr = device_context_->Map(texture.cpu_texture, 0, map_type, 0, &mapped_texture);
+        HRESULT hr = device_context_->Map(staging_texture, 0, map_type, 0, &mapped_texture);
         check_hr(hr, "Map texture");
 
         lock->bm_handle = bm_handle;
@@ -340,10 +350,12 @@ namespace df::gr::d3d11
     void TextureManager::unlock(gr::LockInfo *lock)
     {
         xlog::trace("unlocking texture: handle %d format %d size %dx%d data %p", lock->bm_handle, lock->format, lock->w, lock->h, lock->data);
-        Texture& texture = get_or_load_texture(lock->bm_handle);
-        device_context_->Unmap(texture.cpu_texture, 0);
-        if (lock->mode != rf::gr::LOCK_READ_ONLY && texture.gpu_texture) {
-            device_context_->CopySubresourceRegion(texture.gpu_texture, 0, 0, 0, 0, texture.cpu_texture, 0, nullptr);
+        Texture& texture = get_or_load_texture(lock->bm_handle, true);
+        if (texture.cpu_texture) {
+            device_context_->Unmap(texture.cpu_texture, 0);
+            if (lock->mode != rf::gr::LOCK_READ_ONLY && texture.gpu_texture) {
+                device_context_->CopySubresourceRegion(texture.gpu_texture, 0, 0, 0, 0, texture.cpu_texture, 0, nullptr);
+            }
         }
     }
 
@@ -382,22 +394,49 @@ namespace df::gr::d3d11
                 cpu_desc.Format,
                 cpu_desc.Width,
                 cpu_desc.Height,
-                1, // arraySize
-                1, // mipLevels
+                cpu_desc.ArraySize,
+                cpu_desc.MipLevels,
             };
             HRESULT hr = device->CreateTexture2D(&desc, nullptr, &gpu_texture);
             check_hr(hr, "CreateTexture2D gpu");
-            gpu_texture->GetDesc(&desc);
 
             // Copy only first level
             // TODO: mapmaps?
-            device_context->CopySubresourceRegion(gpu_texture, 0, 0, 0, 0, cpu_texture, 0, nullptr);
+            device_context->CopyResource(gpu_texture, cpu_texture);
         }
 
         HRESULT hr = device->CreateShaderResourceView(gpu_texture, nullptr, &texture_view);
         check_hr(hr, "CreateShaderResourceView");
 
         xlog::trace("Created GPU texture");
+    }
+
+    void TextureManager::Texture::init_cpu_texture(ID3D11Device* device, ID3D11DeviceContext* device_context, bool copy_from_gpu)
+    {
+        if (!gpu_texture) {
+            xlog::warn("Both GPU and CPU textures are missing");
+            return;
+        }
+
+        D3D11_TEXTURE2D_DESC gpu_desc;
+        gpu_texture->GetDesc(&gpu_desc);
+
+        CD3D11_TEXTURE2D_DESC desc{
+            gpu_desc.Format,
+            gpu_desc.Width,
+            gpu_desc.Height,
+            gpu_desc.ArraySize,
+            gpu_desc.MipLevels,
+            0u,
+            D3D11_USAGE_STAGING,
+            D3D11_CPU_ACCESS_READ|D3D11_CPU_ACCESS_WRITE,
+        };
+        HRESULT hr = device->CreateTexture2D(&desc, nullptr, &cpu_texture);
+        check_hr(hr, "CreateTexture2D staging");
+
+        if (copy_from_gpu) {
+            device_context->CopyResource(cpu_texture, gpu_texture);
+        }
     }
 
     rf::bm::Format TextureManager::read_back_buffer(ID3D11Texture2D* back_buffer, int x, int y, int w, int h, rf::ubyte* data)

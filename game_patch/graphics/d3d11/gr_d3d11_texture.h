@@ -47,6 +47,14 @@ namespace df::gr::d3d11
                 return texture_view;
             }
 
+            ID3D11Texture2D* get_or_create_staging_texture(ID3D11Device* device, ID3D11DeviceContext* device_context, bool copy_from_gpu)
+            {
+                if (!cpu_texture) {
+                    init_cpu_texture(device, device_context, copy_from_gpu);
+                }
+                return cpu_texture;
+            }
+
             int bm_handle = -1;
             DXGI_FORMAT format = DXGI_FORMAT_UNKNOWN;
             ComPtr<ID3D11Texture2D> cpu_texture;
@@ -57,12 +65,13 @@ namespace df::gr::d3d11
             short ref_count = 0;
 
             void init_gpu_texture(ID3D11Device* device, ID3D11DeviceContext* device_context);
+            void init_cpu_texture(ID3D11Device* device, ID3D11DeviceContext* device_context, bool copy_from_gpu);
         };
 
-        Texture create_cpu_texture(int bm_handle, rf::bm::Format fmt, int w, int h, rf::ubyte* bits, rf::ubyte* pal);
+        Texture create_texture(int bm_handle, rf::bm::Format fmt, int w, int h, rf::ubyte* bits, rf::ubyte* pal, bool staging);
         Texture create_render_target(int bm_handle, int w, int h);
-        Texture load_texture(int bm_handle);
-        Texture& get_or_load_texture(int bm_handle);
+        Texture load_texture(int bm_handle, bool staging);
+        Texture& get_or_load_texture(int bm_handle, bool staging);
         std::pair<DXGI_FORMAT, rf::bm::Format> determine_supported_texture_format(rf::bm::Format fmt);
         std::pair<DXGI_FORMAT, rf::bm::Format> get_supported_texture_format(rf::bm::Format fmt);
         static rf::bm::Format get_bm_format(DXGI_FORMAT dxgi_fmt);
