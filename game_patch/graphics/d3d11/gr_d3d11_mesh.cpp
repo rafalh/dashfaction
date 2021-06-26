@@ -96,9 +96,41 @@ namespace df::gr::d3d11
         }
 
         for (auto& b : batches_) {
+            // ccrunch tool chunkifies mesh and inits render mode flags
+            // 0x110C21 is used for materials with additive blending (except admin_poshlight01.v3d):
+            // - TEXTURE_SOURCE_WRAP
+            // - COLOR_SOURCE_TEXTURE
+            // - ALPHA_SOURCE_VERTEX_TIMES_TEXTURE
+            // - ALPHA_BLEND_ALPHA_ADDITIVE
+            // - ZBUFFER_TYPE_READ
+            // - FOG_ALLOWED
+            // 0x518C41 is used for other materials:
+            // - TEXTURE_SOURCE_WRAP
+            // - COLOR_SOURCE_VERTEX_TIMES_TEXTURE
+            // - ALPHA_SOURCE_VERTEX_TIMES_TEXTURE
+            // - ALPHA_BLEND_ALPHA
+            // - ZBUFFER_TYPE_FULL_ALPHA_TEST
+            // - FOG_ALLOWED
+            // This information may be useful for simplifying shaders
             int texture = tex_handles[b.texture_index];
             render_context.set_mode_and_textures(forced_mode.value_or(b.mode), texture, -1, color);
             render_context.device_context()->DrawIndexed(b.num_indices, b.start_index, 0);
+            if (params.powerup_bitmaps[0] != -1) {
+                gr::Mode powerup_mode{
+                    gr::TEXTURE_SOURCE_CLAMP,
+                    gr::COLOR_SOURCE_TEXTURE,
+                    gr::ALPHA_SOURCE_TEXTURE,
+                    gr::ALPHA_BLEND_ALPHA_ADDITIVE,
+                    gr::ZBUFFER_TYPE_READ,
+                    gr::FOG_NOT_ALLOWED,
+                };
+                render_context.set_mode_and_textures(powerup_mode, params.powerup_bitmaps[0], -1, color);
+                render_context.device_context()->DrawIndexed(b.num_indices, b.start_index, 0);
+                if (params.powerup_bitmaps[0] != -1) {
+                    render_context.set_mode_and_textures(powerup_mode, params.powerup_bitmaps[0], -1, color);
+                    render_context.device_context()->DrawIndexed(b.num_indices, b.start_index, 0);
+                }
+            }
         }
     }
 
