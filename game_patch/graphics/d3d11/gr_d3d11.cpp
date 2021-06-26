@@ -110,12 +110,11 @@ namespace df::gr::d3d11
     void Renderer::init_back_buffer()
     {
         // Get a pointer to the back buffer
-        ComPtr<ID3D11Texture2D> back_buffer;
-        HRESULT hr = swap_chain_->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<LPVOID*>(&back_buffer));
+        HRESULT hr = swap_chain_->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<LPVOID*>(&back_buffer_));
         check_hr(hr, "GetBuffer");
 
         // Create a render-target view
-        hr = device_->CreateRenderTargetView(back_buffer, NULL, &back_buffer_view_);
+        hr = device_->CreateRenderTargetView(back_buffer_, NULL, &back_buffer_view_);
         check_hr(hr, "CreateRenderTargetView");
     }
 
@@ -302,13 +301,10 @@ namespace df::gr::d3d11
         return true;
     }
 
-    bm::Format Renderer::read_back_buffer([[maybe_unused]] int x, [[maybe_unused]] int y, int w, int h, void *data)
+    bm::Format Renderer::read_back_buffer([[maybe_unused]] int x, [[maybe_unused]] int y, int w, int h, rf::ubyte *data)
     {
-        if (data) {
-            // TODO
-            std::memset(data, 0, w * h * 4);
-        }
-        return bm::FORMAT_8888_ARGB;
+        batch_manager_->flush();
+        return texture_manager_->read_back_buffer(back_buffer_, x, y, w, h, data);
     }
 
     void Renderer::setup_3d()
@@ -428,7 +424,7 @@ void gr_d3d11_init(HWND hwnd)
     os_add_msg_handler(gr_d3d11_msg_handler);
 }
 
-bm::Format gr_d3d11_read_back_buffer(int x, int y, int w, int h, void *data)
+bm::Format gr_d3d11_read_back_buffer(int x, int y, int w, int h, rf::ubyte *data)
 {
     return df::gr::d3d11::renderer->read_back_buffer(x, y, w, h, data);
 }

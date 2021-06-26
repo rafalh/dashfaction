@@ -359,4 +359,47 @@ namespace df::gr::d3d11
 
         xlog::trace("Created GPU texture");
     }
+
+    rf::bm::Format TextureManager::read_back_buffer(ID3D11Texture2D* back_buffer, int x, int y, int w, int h, rf::ubyte* data)
+    {
+        D3D11_TEXTURE2D_DESC gpu_desc;
+        back_buffer->GetDesc(&gpu_desc);
+        bm::Format bm_format = get_bm_format(gpu_desc.Format);
+        if (data) {
+            // TODO: use ResolveSubresource if multi-sampling is enabled
+            if (!back_buffer_staging_texture_) {
+                CD3D11_TEXTURE2D_DESC cpu_desc{
+                    gpu_desc.Format,
+                    gpu_desc.Width,
+                    gpu_desc.Height,
+                    1, // arraySize
+                    1, // mipLevels
+                    0, // bindFlags
+                    D3D11_USAGE_STAGING,
+                    D3D11_CPU_ACCESS_READ,
+                };
+                HRESULT hr = device_->CreateTexture2D(&cpu_desc, nullptr, &back_buffer_staging_texture_);
+                check_hr(hr, "CreateTexture2D back buffer staging texture");
+            }
+            device_context_->CopySubresourceRegion(back_buffer_staging_texture_, 0, 0, 0, 0, back_buffer, 0, nullptr);
+            D3D11_MAPPED_SUBRESOURCE mapped_res;
+            HRESULT hr = device_context_->Map(back_buffer_staging_texture_, 0, D3D11_MAP_READ, 0, &mapped_res);
+            check_hr(hr, "Map back buffer staging texture");
+            ubyte* src_ptr = reinterpret_cast<ubyte*>(mapped_res.pData);
+            ubyte* dst_ptr = data;
+
+            src_ptr += y * mapped_res.RowPitch;
+            int bytes_per_pixel = bm_bytes_per_pixel(bm_format);
+            int rows_left = h;
+            while (rows_left > 0) {
+                int bytes_to_copy = w * bytes_per_pixel;
+                std::memcpy(dst_ptr, src_ptr + x * bytes_per_pixel, bytes_to_copy);
+                dst_ptr += bytes_to_copy;
+                src_ptr += mapped_res.RowPitch;
+                --rows_left;
+            }
+            device_context_->Unmap(back_buffer_staging_texture_, 0);
+        }
+        return bm_format;
+    }
 }

@@ -20,6 +20,7 @@ namespace df::gr::d3d11
         bool lock(int bm_handle, int section, rf::gr::LockInfo *lock);
         void unlock(rf::gr::LockInfo *lock);
         void get_texel(int bm_handle, float u, float v, rf::gr::Color *clr);
+        rf::bm::Format read_back_buffer(ID3D11Texture2D* back_buffer, int x, int y, int w, int h, rf::ubyte* data);
 
         void page_in(int bm_handle)
         {
@@ -67,5 +68,6 @@ namespace df::gr::d3d11
         ComPtr<ID3D11Device> device_;
         ComPtr<ID3D11DeviceContext> device_context_;
         std::unordered_map<int, Texture> texture_cache_;
+        ComPtr<ID3D11Texture2D> back_buffer_staging_texture_;
     };
 }

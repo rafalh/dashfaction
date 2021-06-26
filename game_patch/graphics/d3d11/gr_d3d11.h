@@ -57,7 +57,7 @@ namespace df::gr::d3d11
         void unlock(rf::gr::LockInfo *lock);
         void get_texel(int bm_handle, float u, float v, rf::gr::Color *clr);
         bool render_to_texture(int bm_handle);
-        rf::bm::Format read_back_buffer(int x, int y, int w, int h, void *data);
+        rf::bm::Format read_back_buffer(int x, int y, int w, int h, rf::ubyte *data);
         void tmapper(int nv, const rf::gr::Vertex **vertices, int vertex_attributes, rf::gr::Mode mode);
         void setup_3d();
         void render_solid(rf::GSolid* solid, rf::GRoom** rooms, int num_rooms);
@@ -81,6 +81,7 @@ namespace df::gr::d3d11
         ComPtr<ID3D11Device> device_;
         ComPtr<IDXGISwapChain> swap_chain_;
         ComPtr<ID3D11DeviceContext> context_;
+        ComPtr<ID3D11Texture2D> back_buffer_;
         ComPtr<ID3D11RenderTargetView> back_buffer_view_;
         ComPtr<ID3D11DepthStencilView> depth_stencil_buffer_view_;
         std::unique_ptr<StateManager> state_manager_;
