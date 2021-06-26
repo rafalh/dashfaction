@@ -265,6 +265,11 @@ namespace df::gr::d3d11
         texture_manager_->remove_ref(bm_handle);
     }
 
+    void Renderer::texture_remove(int bm_handle)
+    {
+        texture_manager_->remove(bm_handle);
+    }
+
     bool Renderer::lock(int bm_handle, int section, rf::gr::LockInfo *lock)
     {
         return texture_manager_->lock(bm_handle, section, lock);
@@ -555,6 +560,11 @@ void gr_d3d11_flush()
     if (gr::screen.mode != 0) {
         df::gr::d3d11::renderer->flush();
     }
+}
+
+void gr_d3d11_delete_texture(int bm_handle)
+{
+    df::gr::d3d11::renderer->texture_remove(bm_handle);
 }
 
 static CodeInjection g_render_room_objects_render_liquid_injection{

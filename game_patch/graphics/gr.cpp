@@ -151,7 +151,8 @@ CallHook<void(int, rf::gr::Vertex**, int, rf::gr::Mode)> gr_rect_gr_tmapper_hook
 void gr_delete_texture(int bm_handle)
 {
 #if USE_D3D11
-    (void) bm_handle;
+    void gr_d3d11_delete_texture(int bm_handle);
+    gr_d3d11_delete_texture(bm_handle);
 #else
     if (rf::gr::screen.mode == rf::gr::DIRECT3D) {
         gr_d3d_delete_texture(bm_handle);

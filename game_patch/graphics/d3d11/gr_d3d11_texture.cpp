@@ -90,17 +90,17 @@ namespace df::gr::d3d11
         int w = 0, h = 0;
         bm::get_dimensions(bm_handle, &w, &h);
         if (w <= 0 || h <= 0) {
-            xlog::warn("Bad bitmap dimensions");
+            xlog::warn("Bad bitmap dimensions: handle %d", bm_handle);
             return {};
         }
 
         if (bm::get_format(bm_handle) == bm::FORMAT_RENDER_TARGET) {
-            xlog::info("Creating render target");
+            xlog::info("Creating render target: handle %d", bm_handle);
             return create_render_target(bm_handle, w, h);
         }
 
         if (bm::get_type(bm_handle) == bm::TYPE_USER) {
-            xlog::trace("Creating user bitmap texture");
+            xlog::trace("Creating user bitmap texture: handle %d", bm_handle);
             auto fmt = bm::get_format(bm_handle);
             auto texture = create_cpu_texture(bm_handle, fmt, w, h, nullptr, nullptr);
             return texture;
@@ -115,7 +115,7 @@ namespace df::gr::d3d11
             return {};
         }
 
-        xlog::trace("Creating normal texture");
+        xlog::trace("Creating normal texture: handle %d", bm_handle);
         auto texture = create_cpu_texture(bm_handle, fmt, w, h, bm_bits, bm_pal);
 
         xlog::trace("Unlocking bitmap");
@@ -194,7 +194,8 @@ namespace df::gr::d3d11
     void TextureManager::add_ref(int bm_handle)
     {
         page_in(bm_handle);
-        auto it = texture_cache_.find(bm_handle);
+        int bm_index = rf::bm::get_cache_slot(bm_handle);
+        auto it = texture_cache_.find(bm_index);
         if (it != texture_cache_.end()) {
             Texture& texture = it->second;
             ++texture.ref_count;
@@ -203,7 +204,8 @@ namespace df::gr::d3d11
 
     void TextureManager::remove_ref(int bm_handle)
     {
-        auto it = texture_cache_.find(bm_handle);
+        int bm_index = rf::bm::get_cache_slot(bm_handle);
+        auto it = texture_cache_.find(bm_index);
         if (it != texture_cache_.end()) {
             Texture& texture = it->second;
             assert(texture.ref_count > 0);
@@ -213,6 +215,12 @@ namespace df::gr::d3d11
                 texture_cache_.erase(it);
             }
         }
+    }
+
+    void TextureManager::remove(int bm_handle)
+    {
+        int bm_index = rf::bm::get_cache_slot(bm_handle);
+        texture_cache_.erase(bm_index);
     }
 
     DXGI_FORMAT TextureManager::get_dxgi_format(bm::Format fmt)

@@ -53,6 +53,7 @@ namespace df::gr::d3d11
         void texture_flush_cache(bool force);
         void texture_add_ref(int bm_handle);
         void texture_remove_ref(int bm_handle);
+        void texture_remove(int bm_handle);
         bool lock(int bm_handle, int section, rf::gr::LockInfo *lock);
         void unlock(rf::gr::LockInfo *lock);
         void get_texel(int bm_handle, float u, float v, rf::gr::Color *clr);
