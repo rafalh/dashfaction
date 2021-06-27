@@ -62,7 +62,6 @@ namespace df::gr::d3d11
     void BaseMeshRenderCache::draw(const MeshRenderParams& params, RenderContext& render_context)
     {
         const int* tex_handles = get_tex_handles(params);
-        render_context.set_cull_mode(D3D11_CULL_BACK);
         render_context.set_uv_pan(rf::vec2_zero_vector);
         render_context.set_primitive_topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -112,6 +111,7 @@ namespace df::gr::d3d11
             // - ZBUFFER_TYPE_FULL_ALPHA_TEST
             // - FOG_ALLOWED
             // This information may be useful for simplifying shaders
+            render_context.set_cull_mode(b.double_sided ? D3D11_CULL_NONE : D3D11_CULL_BACK);
             int texture = tex_handles[b.texture_index];
             render_context.set_mode_and_textures(forced_mode.value_or(b.mode), texture, -1, color);
             render_context.device_context()->DrawIndexed(b.num_indices, b.start_index, 0);
@@ -132,6 +132,19 @@ namespace df::gr::d3d11
                 }
             }
         }
+    }
+
+    static bool is_vif_chunk_double_sided(const VifChunk& chunk)
+    {
+        for (int face_index = 0; face_index < chunk.num_faces; ++face_index) {
+            auto& face = chunk.faces[face_index];
+            // If any face belonging to a chunk is not double sided mark the chunk as not double sided and
+            // duplicate individual faces that have double sided flag
+            if (!(face.flags & VIF_FACE_DOUBLE_SIDED)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     MeshRenderCache::MeshRenderCache(VifMesh* mesh, ID3D11Device* device) :
@@ -159,6 +172,7 @@ namespace df::gr::d3d11
             b.start_index = gpu_inds.size();
             b.texture_index = chunk.texture_idx;
             b.mode = chunk.mode;
+            b.double_sided = is_vif_chunk_double_sided(chunk);
 
             int chunk_start_index = gpu_verts.size();
             for (int vert_index = 0; vert_index < chunk.num_vecs; ++vert_index) {
@@ -175,7 +189,7 @@ namespace df::gr::d3d11
                 gpu_inds.emplace_back(chunk_start_index + face.vindex1);
                 gpu_inds.emplace_back(chunk_start_index + face.vindex2);
                 gpu_inds.emplace_back(chunk_start_index + face.vindex3);
-                if (face.flags & VIF_FACE_DOUBLE_SIDED) {
+                if ((face.flags & VIF_FACE_DOUBLE_SIDED) && !b.double_sided) {
                     gpu_inds.emplace_back(chunk_start_index + face.vindex1);
                     gpu_inds.emplace_back(chunk_start_index + face.vindex3);
                     gpu_inds.emplace_back(chunk_start_index + face.vindex2);
@@ -243,6 +257,7 @@ namespace df::gr::d3d11
             b.start_index = gpu_inds.size();
             b.texture_index = chunk.texture_idx;
             b.mode = chunk.mode;
+            b.double_sided = is_vif_chunk_double_sided(chunk);
 
             int chunk_start_index = gpu_verts.size();
             for (int vert_index = 0; vert_index < chunk.num_vecs; ++vert_index) {
@@ -268,7 +283,7 @@ namespace df::gr::d3d11
                 gpu_inds.emplace_back(chunk_start_index + face.vindex1);
                 gpu_inds.emplace_back(chunk_start_index + face.vindex2);
                 gpu_inds.emplace_back(chunk_start_index + face.vindex3);
-                if (face.flags & VIF_FACE_DOUBLE_SIDED) {
+                if ((face.flags & VIF_FACE_DOUBLE_SIDED) && !b.double_sided) {
                     gpu_inds.emplace_back(chunk_start_index + face.vindex1);
                     gpu_inds.emplace_back(chunk_start_index + face.vindex3);
                     gpu_inds.emplace_back(chunk_start_index + face.vindex2);

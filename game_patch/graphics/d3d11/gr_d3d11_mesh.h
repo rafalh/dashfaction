@@ -36,6 +36,7 @@ namespace df::gr::d3d11
             int num_indices;
             int texture_index;
             rf::gr::Mode mode;
+            bool double_sided = false;
         };
 
         void draw(const rf::MeshRenderParams& params, RenderContext& render_context);
