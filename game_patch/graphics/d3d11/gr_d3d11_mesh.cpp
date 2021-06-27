@@ -128,8 +128,8 @@ namespace df::gr::d3d11
                 };
                 render_context.set_mode_and_textures(powerup_mode, params.powerup_bitmaps[0], -1, color);
                 render_context.device_context()->DrawIndexed(b.num_indices, b.start_index, 0);
-                if (params.powerup_bitmaps[0] != -1) {
-                    render_context.set_mode_and_textures(powerup_mode, params.powerup_bitmaps[0], -1, color);
+                if (params.powerup_bitmaps[1] != -1) {
+                    render_context.set_mode_and_textures(powerup_mode, params.powerup_bitmaps[1], -1, color);
                     render_context.device_context()->DrawIndexed(b.num_indices, b.start_index, 0);
                 }
             }
