@@ -98,18 +98,20 @@ namespace rf
 #endif
     };
 
-    constexpr int VIF_MESH_RENDER_CACHED = 0x10000000; // DF only
     constexpr int VIF_FACE_DOUBLE_SIDED = 0x20;
 
     struct VifLodMesh
     {
-        int num_lods;
-        VifMesh *lods[3];
-        float lod_distances[3];
+        int num_levels;
+        VifMesh *meshes[3];
+        float distances[3];
         Vector3 center;
         float radius;
         Vector3 bbox_min;
         Vector3 bbox_max;
+#ifdef DASH_FACTION
+        void *render_cache;
+#endif
     };
 
     struct MeshRenderParams

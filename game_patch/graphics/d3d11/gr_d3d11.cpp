@@ -352,21 +352,21 @@ namespace df::gr::d3d11
         solid_renderer_->clear_cache();
     }
 
-    void Renderer::render_v3d_vif(rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::MeshRenderParams& params)
+    void Renderer::render_v3d_vif(rf::VifLodMesh *lod_mesh, rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::MeshRenderParams& params)
     {
         batch_manager_->flush();
-        mesh_renderer_->render_v3d_vif(mesh, pos, orient, params);
+        mesh_renderer_->render_v3d_vif(lod_mesh, mesh, pos, orient, params);
     }
 
-    void Renderer::render_character_vif(rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::CharacterInstance *ci, const rf::MeshRenderParams& params)
+    void Renderer::render_character_vif(rf::VifLodMesh *lod_mesh, rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::CharacterInstance *ci, const rf::MeshRenderParams& params)
     {
         batch_manager_->flush();
-        mesh_renderer_->render_character_vif(mesh, pos, orient, ci, params);
+        mesh_renderer_->render_character_vif(lod_mesh, mesh, pos, orient, ci, params);
     }
 
-    void Renderer::clear_vif_cache(rf::VifMesh *mesh)
+    void Renderer::clear_vif_cache(rf::VifLodMesh *lod_mesh)
     {
-        mesh_renderer_->clear_vif_cache(mesh);
+        mesh_renderer_->clear_vif_cache(lod_mesh);
     }
 
     void Renderer::fog_set()
@@ -519,19 +519,15 @@ void gr_d3d11_render_sky_room(GRoom *room)
     df::gr::d3d11::renderer->render_sky_room(room);
 }
 
-void gr_d3d11_render_v3d_vif([[maybe_unused]] VifLodMesh *lod_mesh, VifMesh *mesh, const Vector3& pos, const Matrix3& orient, [[maybe_unused]] int lod_index, [[maybe_unused]] const MeshRenderParams& params)
+void gr_d3d11_render_v3d_vif(VifLodMesh *lod_mesh, VifMesh *mesh, const Vector3& pos, const Matrix3& orient, [[maybe_unused]] int lod_index, [[maybe_unused]] const MeshRenderParams& params)
 {
-    df::gr::d3d11::renderer->render_v3d_vif(mesh, pos, orient, params);
+    df::gr::d3d11::renderer->render_v3d_vif(lod_mesh, mesh, pos, orient, params);
 }
 
-void gr_d3d11_render_character_vif([[maybe_unused]] VifLodMesh *lod_mesh, VifMesh *mesh, const Vector3& pos, const Matrix3& orient, const CharacterInstance *ci, [[maybe_unused]] int lod_index, [[maybe_unused]] const MeshRenderParams& params)
+void gr_d3d11_render_character_vif(VifLodMesh *lod_mesh, VifMesh *mesh, const Vector3& pos, const Matrix3& orient, const CharacterInstance *ci, [[maybe_unused]] int lod_index, [[maybe_unused]] const MeshRenderParams& params)
 {
-    df::gr::d3d11::renderer->render_character_vif(mesh, pos, orient, ci, params);
+    df::gr::d3d11::renderer->render_character_vif(lod_mesh, mesh, pos, orient, ci, params);
 }
-
-// void gr_d3d11_render_lod_vif(rf::VifLodMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, rf::CharacterInstance *ci, rf::MeshRenderParams *params)
-// {
-// }
 
 void gr_d3d11_fog_set()
 {
@@ -584,16 +580,6 @@ static CodeInjection gr_d3d_setup_3d_injection{
     },
 };
 
-static FunHook<void(VifMesh*)> v3d_delete_vif_mesh_hook{
-    0x00569610,
-    [](VifMesh* mesh) {
-        if (df::gr::d3d11::renderer) {
-            df::gr::d3d11::renderer->clear_vif_cache(mesh);
-        }
-        v3d_delete_vif_mesh_hook.call_target(mesh);
-    },
-};
-
 // FIXME: perhaps change original code? also this code is duplicated in gr_d3d.cpp
 static FunHook<void(int, int, int, int, int)> gr_capture_back_buffer_hook{
     0x0050E4F0,
@@ -603,12 +589,31 @@ static FunHook<void(int, int, int, int, int)> gr_capture_back_buffer_hook{
     },
 };
 
+static CodeInjection vif_lod_mesh_ctor_injection{
+    0x00569D00,
+    [](auto& regs) {
+        VifLodMesh* lod_mesh = regs.ecx;
+        lod_mesh->render_cache = nullptr;
+    },
+};
+
+static CodeInjection vif_lod_mesh_dtor_injection{
+    0x005695D0,
+    [](auto& regs) {
+        VifLodMesh* lod_mesh = regs.ecx;
+        if (df::gr::d3d11::renderer) {
+            df::gr::d3d11::renderer->clear_vif_cache(lod_mesh);
+        }
+    },
+};
+
 void gr_d3d11_apply_patch()
 {
     g_render_room_objects_render_liquid_injection.install();
     gr_d3d_setup_3d_injection.install();
-    v3d_delete_vif_mesh_hook.install();
     gr_capture_back_buffer_hook.install();
+    vif_lod_mesh_ctor_injection.install();
+    vif_lod_mesh_dtor_injection.install();
 
     AsmWriter{0x004F0B90}.jmp(gr_d3d11_clear_solid_render_cache); // geo_cache_clear
 

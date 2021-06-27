@@ -20,13 +20,13 @@ namespace df::gr::d3d11
     {
     public:
         virtual ~BaseMeshRenderCache() {}
-        BaseMeshRenderCache(rf::VifMesh* mesh) :
-            mesh_(mesh)
+        BaseMeshRenderCache(rf::VifLodMesh* lod_mesh) :
+            lod_mesh_(lod_mesh)
         {}
 
-        rf::VifMesh* get_mesh() const
+        rf::VifLodMesh* get_lod_mesh() const
         {
-            return mesh_;
+            return lod_mesh_;
         }
 
     protected:
@@ -39,11 +39,17 @@ namespace df::gr::d3d11
             bool double_sided = false;
         };
 
-        void draw(const rf::MeshRenderParams& params, RenderContext& render_context);
-        const int* get_tex_handles(const rf::MeshRenderParams& params);
+        struct Mesh
+        {
+            std::vector<Batch> batches;
+        };
 
-        rf::VifMesh* mesh_;
-        std::vector<Batch> batches_;
+        void draw(const rf::MeshRenderParams& params, int lod_index, RenderContext& render_context);
+        const int* get_tex_handles(const rf::MeshRenderParams& params, int lod_index);
+
+        rf::VifLodMesh* lod_mesh_;
+
+        std::vector<Mesh> meshes_;
         ComPtr<ID3D11Buffer> vb_;
         ComPtr<ID3D11Buffer> ib_;
     };
@@ -53,13 +59,13 @@ namespace df::gr::d3d11
     public:
         MeshRenderer(ComPtr<ID3D11Device> device, RenderContext& render_context);
         ~MeshRenderer();
-        void render_v3d_vif(rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::MeshRenderParams& params);
-        void render_character_vif(rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::CharacterInstance *ci, const rf::MeshRenderParams& params);
-        void clear_vif_cache(rf::VifMesh *mesh);
+        void render_v3d_vif(rf::VifLodMesh *lod_mesh, rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::MeshRenderParams& params);
+        void render_character_vif(rf::VifLodMesh *lod_mesh, rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::CharacterInstance *ci, const rf::MeshRenderParams& params);
+        void clear_vif_cache(rf::VifLodMesh *lod_mesh);
 
     private:
         ComPtr<ID3D11Device> device_;
         RenderContext& render_context_;
-        std::unordered_map<rf::VifMesh*, std::unique_ptr<BaseMeshRenderCache>> render_caches_;
+        std::unordered_map<rf::VifLodMesh*, std::unique_ptr<BaseMeshRenderCache>> render_caches_;
     };
 }
