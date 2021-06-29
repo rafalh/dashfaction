@@ -293,6 +293,7 @@ namespace df::gr::d3d11
 
     bool Renderer::set_render_target(int bm_handle)
     {
+        batch_manager_->flush();
         if (bm_handle != -1) {
             ID3D11RenderTargetView* render_target_view = texture_manager_->lookup_render_target(bm_handle);
             if (!render_target_view) {
@@ -575,15 +576,6 @@ static CodeInjection gr_d3d_setup_3d_injection{
     },
 };
 
-// FIXME: perhaps change original code? also this code is duplicated in gr_d3d.cpp
-static FunHook<void(int, int, int, int, int)> gr_capture_back_buffer_hook{
-    0x0050E4F0,
-    []([[maybe_unused]] int x, [[maybe_unused]] int y, [[maybe_unused]] int width, [[maybe_unused]] int height, [[maybe_unused]] int bm_handle) {
-        // assume we are rendering to texture
-        gr_d3d11_flush();
-    },
-};
-
 static CodeInjection vif_lod_mesh_ctor_injection{
     0x00569D00,
     [](auto& regs) {
@@ -606,7 +598,6 @@ void gr_d3d11_apply_patch()
 {
     g_render_room_objects_render_liquid_injection.install();
     gr_d3d_setup_3d_injection.install();
-    gr_capture_back_buffer_hook.install();
     vif_lod_mesh_ctor_injection.install();
     vif_lod_mesh_dtor_injection.install();
 

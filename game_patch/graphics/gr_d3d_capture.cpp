@@ -38,6 +38,10 @@ IDirect3DSurface8* get_cached_depth_stencil_surface()
 
 bool gr_d3d_set_render_target(int bmh)
 {
+    if (rf::gr::d3d::buffers_locked) {
+        rf::gr::d3d::flush_buffers();
+    }
+
     if (bmh == -1) {
         if (!g_render_to_texture_active) {
             return true;
@@ -171,20 +175,6 @@ CallHook<rf::bm::Format(int, int, int, int, std::byte*)> gr_d3d_read_back_buffer
 };
 #endif // D3D_LOCKABLE_BACKBUFFER
 
-FunHook<void(int, int, int, int, int)> gr_capture_back_buffer_hook{
-    0x0050E4F0,
-    [](int x, int y, int width, int height, int bm_handle) {
-        if (g_render_to_texture_active) {
-            // Nothing to do because we render directly to texture
-            if (rf::gr::screen.mode == rf::gr::DIRECT3D) {
-                rf::gr::d3d::flush_buffers();
-            }
-        } else {
-            gr_capture_back_buffer_hook.call_target(x, y, width, height, bm_handle);
-        }
-    },
-};
-
 void gr_d3d_capture_device_lost()
 {
     g_depth_stencil_surface.release();
@@ -203,8 +193,4 @@ void gr_d3d_capture_apply_patch()
     // Override default because IDirect3DSurface8::LockRect fails on multisampled back-buffer
     gr_d3d_read_back_buffer_hook.install();
 #endif
-
-    // Use fast gr_capture_back_buffer implementation which uses Render To Texture approach (copies backbuffer to
-    // texture without copying from VRAM to RAM)
-    gr_capture_back_buffer_hook.install();
 }

@@ -2,6 +2,7 @@
 #include <patch_common/FunHook.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/CodeInjection.h>
+#include <patch_common/AsmWriter.h>
 #include <xlog/xlog.h>
 #include <common/utils/list-utils.h>
 #include "../rf/clutter.h"
@@ -169,6 +170,7 @@ void monitor_do_patch()
 
     // Use render to texture approach for monitors
     monitor_update_from_camera_begin_render_to_texture.install();
+    AsmWriter{0x00412964}.nop(5);
 
     // Render held corpse in monitor
     render_corpse_in_monitor_patch.install();
