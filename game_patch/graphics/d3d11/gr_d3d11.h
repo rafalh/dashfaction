@@ -58,7 +58,7 @@ namespace df::gr::d3d11
         bool lock(int bm_handle, int section, rf::gr::LockInfo *lock);
         void unlock(rf::gr::LockInfo *lock);
         void get_texel(int bm_handle, float u, float v, rf::gr::Color *clr);
-        bool render_to_texture(int bm_handle);
+        bool set_render_target(int bm_handle);
         rf::bm::Format read_back_buffer(int x, int y, int w, int h, rf::ubyte *data);
         void tmapper(int nv, const rf::gr::Vertex **vertices, int vertex_attributes, rf::gr::Mode mode);
         void setup_3d();

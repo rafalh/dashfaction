@@ -291,7 +291,7 @@ namespace df::gr::d3d11
         batch_manager_->add_vertices(nv, vertices, vertex_attributes, tex_handles, mode);
     }
 
-    bool Renderer::render_to_texture(int bm_handle)
+    bool Renderer::set_render_target(int bm_handle)
     {
         if (bm_handle != -1) {
             ID3D11RenderTargetView* render_target_view = texture_manager_->lookup_render_target(bm_handle);
@@ -534,14 +534,9 @@ void gr_d3d11_fog_set()
     df::gr::d3d11::renderer->fog_set();
 }
 
-bool gr_d3d11_render_to_texture(int bm_handle)
+bool gr_d3d11_set_render_target(int bm_handle)
 {
-    return df::gr::d3d11::renderer->render_to_texture(bm_handle);
-}
-
-void gr_d3d11_render_to_back_buffer()
-{
-    df::gr::d3d11::renderer->render_to_texture(-1);
+    return df::gr::d3d11::renderer->set_render_target(bm_handle);
 }
 
 void gr_d3d11_clear_solid_render_cache()

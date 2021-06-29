@@ -174,30 +174,17 @@ bool gr_is_texture_format_supported(rf::bm::Format format)
 #endif
 }
 
-bool gr_render_to_texture(int bmh)
+bool gr_set_render_target(int bm_handle)
 {
-#if USE_D3D11
-    bool gr_d3d11_render_to_texture(int bmh);
-    return gr_d3d11_render_to_texture(bmh);
-#else
     if (rf::gr::screen.mode == rf::gr::DIRECT3D) {
-        bool gr_d3d_render_to_texture(int bmh);
-        return gr_d3d_render_to_texture(bmh);
-    }
-#endif
-}
-
-void gr_render_to_back_buffer()
-{
 #if USE_D3D11
-    void gr_d3d11_render_to_back_buffer();
-    gr_d3d11_render_to_back_buffer();
+    bool gr_d3d11_set_render_target(int bm_handle);
+    return gr_d3d11_set_render_target(bm_handle);
 #else
-    if (rf::gr::screen.mode == rf::GR_DIRECT3D) {
-        bool gr_d3d_render_to_back_buffer();
-        gr_d3d_render_to_back_buffer();
-    }
+    bool gr_d3d_set_render_target(int bm_handle);
+    return gr_d3d_set_render_target(bm_handle);
 #endif
+    }
 }
 
 void gr_bitmap_scaled_float(int bitmap_handle, float x, float y, float w, float h,

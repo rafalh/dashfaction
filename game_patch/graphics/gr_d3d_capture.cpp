@@ -36,8 +36,22 @@ IDirect3DSurface8* get_cached_depth_stencil_surface()
     return g_depth_stencil_surface;
 }
 
-bool gr_d3d_render_to_texture(int bmh)
+bool gr_d3d_set_render_target(int bmh)
 {
+    if (bmh == -1) {
+        if (!g_render_to_texture_active) {
+            return true;
+        }
+        auto hr = rf::gr::d3d::device->SetRenderTarget(g_orig_render_target, g_orig_depth_stencil_surface);
+        if (FAILED(hr)) {
+            ERR_ONCE("IDirect3DDevice8::SetRenderTarget failed 0x%lX", hr);
+        }
+        g_orig_render_target.release();
+        g_orig_depth_stencil_surface.release();
+        g_render_to_texture_active = false;
+        return true;
+    }
+
     // Note: texture reference counter is not increased here so ComPtr is not used
     IDirect3DTexture8* d3d_tex = rf::gr::d3d::get_texture(bmh);
     if (!d3d_tex) {
@@ -82,20 +96,6 @@ bool gr_d3d_render_to_texture(int bmh)
         g_render_to_texture_active = true;
     }
     return true;
-}
-
-void gr_d3d_render_to_back_buffer()
-{
-    if (!g_render_to_texture_active) {
-        return;
-    }
-    auto hr = rf::gr::d3d::device->SetRenderTarget(g_orig_render_target, g_orig_depth_stencil_surface);
-    if (FAILED(hr)) {
-        ERR_ONCE("IDirect3DDevice8::SetRenderTarget failed 0x%lX", hr);
-    }
-    g_orig_render_target.release();
-    g_orig_depth_stencil_surface.release();
-    g_render_to_texture_active = false;
 }
 
 #if !D3D_LOCKABLE_BACKBUFFER
