@@ -2,6 +2,8 @@
 #include "gr_d3d11.h"
 #include "gr_d3d11_batch.h"
 #include "gr_d3d11_context.h"
+#define NO_D3D8
+#include "../../rf/gr/gr_direct3d.h"
 
 using namespace rf;
 
@@ -145,7 +147,7 @@ namespace df::gr::d3d11
             auto& out_vert = mapped_vb_[current_vertex_];
             out_vert.x = (in_vert.sx - gr::screen.offset_x) / gr::screen.clip_width * 2.0f - 1.0f;
             out_vert.y = (in_vert.sy - gr::screen.offset_y) / gr::screen.clip_height * -2.0f + 1.0f;
-            out_vert.z = in_vert.sw * d3d11_zm;
+            out_vert.z = in_vert.sw * gr::d3d::zm;
             if (vertex_attributes & gr::TMAP_FLAG_RGB) {
                 r = in_vert.r;
                 g = in_vert.g;

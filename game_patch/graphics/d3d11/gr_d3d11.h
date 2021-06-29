@@ -25,7 +25,6 @@ namespace df::gr
 
 namespace df::gr::d3d11
 {
-    constexpr float d3d11_zm = 1 / 1700.0f;
     // constexpr ubyte GR_DIRECT3D11 = 0x7A;
 
     class StateManager;
