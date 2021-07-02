@@ -68,7 +68,7 @@ namespace df::gr::d3d11
             void init_cpu_texture(ID3D11Device* device, ID3D11DeviceContext* device_context, bool copy_from_gpu);
         };
 
-        Texture create_texture(int bm_handle, rf::bm::Format fmt, int w, int h, rf::ubyte* bits, rf::ubyte* pal, bool staging);
+        Texture create_texture(int bm_handle, rf::bm::Format fmt, int w, int h, rf::ubyte* bits, rf::ubyte* pal, int mip_levels, bool staging);
         Texture create_render_target(int bm_handle, int w, int h);
         Texture load_texture(int bm_handle, bool staging);
         Texture& get_or_load_texture(int bm_handle, bool staging);

@@ -86,6 +86,7 @@ namespace rf::bm
     static auto& get_format = addr_as_ref<Format(int bm_handle)>(0x005106F0);
     static auto& get_type = addr_as_ref<Type(int bm_handle)>(0x0050F350);
     static auto& get_cache_slot = addr_as_ref<int(int bm_handle)>(0x0050F440);
+    static auto& get_mipmap_info = addr_as_ref<void(int bm_handle, int *w, int *h, int *num_pixels, int *mip_levels)>(0x00510680);
     static auto& lock = addr_as_ref<Format(int handle, ubyte **data, ubyte **pal)>(0x00510780);
     static auto& unlock = addr_as_ref<void(int)>(0x00511700);
 

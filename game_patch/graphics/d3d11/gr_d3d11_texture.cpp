@@ -13,7 +13,7 @@ namespace df::gr::d3d11
         texture_cache_.reserve(512);
     }
 
-    TextureManager::Texture TextureManager::create_texture(int bm_handle, bm::Format fmt, int w, int h, ubyte* bits, ubyte* pal, bool staging)
+    TextureManager::Texture TextureManager::create_texture(int bm_handle, bm::Format fmt, int w, int h, ubyte* bits, ubyte* pal, int mip_levels, bool staging)
     {
         auto [dxgi_format, supported_fmt] = get_supported_texture_format(fmt);
         CD3D11_TEXTURE2D_DESC desc{
@@ -21,37 +21,45 @@ namespace df::gr::d3d11
             static_cast<UINT>(w),
             static_cast<UINT>(h),
             1, // arraySize
-            1, // mipLevels
+            static_cast<UINT>(mip_levels),
             staging ? 0u : static_cast<UINT>(D3D11_BIND_SHADER_RESOURCE),
             staging ? D3D11_USAGE_STAGING : D3D11_USAGE_DEFAULT,
             staging ? D3D11_CPU_ACCESS_READ|D3D11_CPU_ACCESS_WRITE : 0u,
         };
-        // TODO: mapmaps?
 
-        D3D11_SUBRESOURCE_DATA subres_data{nullptr, 0, 0};
-        std::unique_ptr<ubyte[]> converted_bits;
-        D3D11_SUBRESOURCE_DATA* subres_data_ptr = nullptr;
+        std::vector<std::unique_ptr<ubyte[]>> converted_bits_vec;
+        std::vector<D3D11_SUBRESOURCE_DATA> subres_data_vec;
         if (bits) {
-            if (supported_fmt != fmt) {
-                xlog::trace("Converting texture %d -> %d", fmt, supported_fmt);
-                converted_bits = std::make_unique<ubyte[]>(w * h * 4);
-                ::bm_convert_format(converted_bits.get(), supported_fmt, bits, fmt, w, h,
-                    w * bm_bytes_per_pixel(supported_fmt), w * bm_bytes_per_pixel(fmt), pal);
-                subres_data.pSysMem = converted_bits.get();
-                subres_data.SysMemPitch = w * bm_bytes_per_pixel(supported_fmt);
+            for (int i = 0; i < mip_levels; ++i) {
+                int pitch = w * bm_bytes_per_pixel(fmt);
+                subres_data_vec.emplace_back();
+                D3D11_SUBRESOURCE_DATA& subres_data = subres_data_vec.back();
+                if (supported_fmt != fmt) {
+                    xlog::trace("Converting texture %d -> %d", fmt, supported_fmt);
+                    int converted_pitch = w * bm_bytes_per_pixel(supported_fmt);
+                    converted_bits_vec.push_back(std::make_unique<ubyte[]>(converted_pitch * h));
+                    ubyte* converted_bits = converted_bits_vec.back().get();
+                    ::bm_convert_format(converted_bits, supported_fmt, bits, fmt, w, h,
+                        converted_pitch, pitch, pal);
+                    subres_data.pSysMem = converted_bits;
+                    subres_data.SysMemPitch = converted_pitch;
+                }
+                else {
+                    xlog::trace("Creating texture without conversion: format %d", fmt);
+                    subres_data.pSysMem = bits;
+                    subres_data.SysMemPitch = pitch;
+                }
+                bits += pitch * h;
+                w /= 2;
+                h /= 2;
             }
-            else {
-                xlog::trace("Creating texture without conversion: format %d", fmt);
-                subres_data.pSysMem = bits;
-                subres_data.SysMemPitch = w * bm_bytes_per_pixel(fmt);
-            }
-            subres_data_ptr = &subres_data;
         }
         else {
             xlog::trace("Creating uninitialized texture");
         }
 
         ComPtr<ID3D11Texture2D> d3d_texture;
+        D3D11_SUBRESOURCE_DATA* subres_data_ptr = subres_data_vec.empty() ? nullptr : subres_data_vec.data();
         HRESULT hr = device_->CreateTexture2D(&desc, subres_data_ptr, &d3d_texture);
         check_hr(hr, "CreateTexture2D cpu");
 
@@ -90,8 +98,8 @@ namespace df::gr::d3d11
     {
         xlog::info("Creating texture for bitmap %s handle %d format %d", bm::get_filename(bm_handle), bm_handle, bm::get_format(bm_handle));
 
-        int w = 0, h = 0;
-        bm::get_dimensions(bm_handle, &w, &h);
+        int w, h, num_pixels, mip_levels;
+        bm::get_mipmap_info(bm_handle, &w, &h, &num_pixels, &mip_levels);
         if (w <= 0 || h <= 0) {
             xlog::warn("Bad bitmap dimensions: handle %d", bm_handle);
             return {};
@@ -105,7 +113,7 @@ namespace df::gr::d3d11
 
         if (bm::get_type(bm_handle) == bm::TYPE_USER) {
             xlog::trace("Creating user bitmap texture: handle %d", bm_handle);
-            auto texture = create_texture(bm_handle, fmt, w, h, nullptr, nullptr, staging);
+            auto texture = create_texture(bm_handle, fmt, w, h, nullptr, nullptr, 1, staging);
             return texture;
         }
 
@@ -119,7 +127,7 @@ namespace df::gr::d3d11
         }
 
         xlog::trace("Creating normal texture: handle %d", bm_handle);
-        auto texture = create_texture(bm_handle, fmt, w, h, bm_bits, bm_pal, staging);
+        auto texture = create_texture(bm_handle, fmt, w, h, bm_bits, bm_pal, mip_levels, staging);
 
         xlog::trace("Unlocking bitmap");
         bm::unlock(bm_handle);
