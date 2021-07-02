@@ -160,6 +160,10 @@ namespace df::gr::d3d11
 
         //gr::screen.mode = GR_DIRECT3D11;
         gr::screen.depthbuffer_type = gr::DEPTHBUFFER_Z;
+
+        // Disable software vertex clipping
+        auto& gr_needs_software_clipping = addr_as_ref<bool>(0x005A445A);
+        gr_needs_software_clipping = false;
     }
 
     Renderer::~Renderer()
@@ -194,22 +198,22 @@ namespace df::gr::d3d11
         float v_bottom = static_cast<float>(sy + (flip_y ? 0 : sh)) / bm_h;
         verts[0].sx = sx_left;
         verts[0].sy = sy_top;
-        verts[0].sw = 0.0f;
+        verts[0].sw = 1.0f;
         verts[0].u1 = u_left;
         verts[0].v1 = v_top;
         verts[1].sx = sx_right;
         verts[1].sy = sy_top;
-        verts[1].sw = 0.0f;
+        verts[1].sw = 1.0f;
         verts[1].u1 = u_right;
         verts[1].v1 = v_top;
         verts[2].sx = sx_right;
         verts[2].sy = sy_bottom;
-        verts[2].sw = 0.0f;
+        verts[2].sw = 1.0f;
         verts[2].u1 = u_right;
         verts[2].v1 = v_bottom;
         verts[3].sx = sx_left;
         verts[3].sy = sy_bottom;
-        verts[3].sw = 0.0f;
+        verts[3].sw = 1.0f;
         verts[3].u1 = u_left;
         verts[3].v1 = v_bottom;
         std::array<int, 2> tex_handles{bitmap_handle, -1};

@@ -23,11 +23,24 @@ namespace df::gr::d3d11
         float v1;
         int diffuse;
     };
+    struct GpuTransformedVertex
+    {
+        float x;
+        float y;
+        float z;
+        float w;
+        float u0;
+        float v0;
+        float u1;
+        float v1;
+        int diffuse;
+    };
 
     enum class ShaderProgram {
         none,
         standard,
         character,
+        transformed,
     };
 
     enum class VertexTransformType {
@@ -136,8 +149,9 @@ namespace df::gr::d3d11
 
         void set_cull_mode(D3D11_CULL_MODE cull_mode)
         {
-            if (current_cull_mode_ != cull_mode) {
+            if (current_cull_mode_ != cull_mode || zbias_changed_) {
                 current_cull_mode_ = cull_mode;
+                zbias_changed_ = false;
                 bind_rasterizer_state();
             }
         }
@@ -165,6 +179,12 @@ namespace df::gr::d3d11
                 current_uv_pan_ = uv_pan;
                 update_texture_transform();
             }
+        }
+
+        void set_zbias(int zbias)
+        {
+            zbias_ = zbias;
+            zbias_changed_ = true;
         }
 
     private:
@@ -225,5 +245,7 @@ namespace df::gr::d3d11
         VertexTransformType current_vertex_transform_type_ = VertexTransformType::none;
         rf::Vector3 current_model_pos_;
         rf::Matrix3 current_model_orient_;
+        int zbias_ = 0;
+        bool zbias_changed_ = true;
     };
 }

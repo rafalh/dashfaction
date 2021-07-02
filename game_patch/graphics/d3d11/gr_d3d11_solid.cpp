@@ -21,6 +21,8 @@
 
 using namespace rf;
 
+void gr_d3d11_flush();
+
 namespace df::gr::d3d11
 {
     class RoomRenderCache;
@@ -424,7 +426,8 @@ namespace df::gr::d3d11
         while (dp) {
             bool dp_room_matches = !room || dp->face->which_room == room || dp->face->which_room->room_to_render_with == room;
             if (dp_room_matches && should_render_face(dp->face) && dp->face->plane.distance_to_point(gr::eye_pos) > 0.0) {
-                for (int i = 0; i < dp->nv; ++i) {
+                int nv = dp->nv;
+                for (int i = 0; i < nv; ++i) {
                     verts[i] = dp->verts[i].pos;
                     uvs[i] = dp->verts[i].uv;
                 }
@@ -440,9 +443,8 @@ namespace df::gr::d3d11
 
     void SolidRenderer::render_dynamic_decals(rf::GRoom** rooms, int num_rooms)
     {
-        int num_rendered_decals = 0;
-        // TODO: try using D3D11_RASTERIZER_DESC::DepthBias
-        // gr::d3d::zbias = gr::matrix_scale.z * 0.025f;
+        render_context_.set_zbias(100);
+
         for (int i = 0; i < num_rooms; ++i) {
             auto room = rooms[i];
             if (gr::cull_bounding_box(room->bbox_min, room->bbox_max)) {
@@ -451,11 +453,11 @@ namespace df::gr::d3d11
             for (auto decal : room->decals) {
                 if (!(decal->flags & DF_LEVEL_DECAL) && !gr::cull_bounding_box(decal->bb_min, decal->bb_max)) {
                     render_dynamic_decal(decal, room);
-                    ++num_rendered_decals;
                 }
             }
         }
-        // gr::d3d::zbias = 0.0f;
+        gr_d3d11_flush();
+        render_context_.set_zbias(0);
     }
 
     void SolidRenderer::render_room_faces(rf::GSolid* solid, rf::GRoom* room, FaceRenderType render_type)

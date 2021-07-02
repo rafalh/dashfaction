@@ -25,7 +25,7 @@ namespace df::gr::d3d11
         D3D11_BUFFER_DESC buffer_desc;
         ZeroMemory(&buffer_desc, sizeof(buffer_desc));
         buffer_desc.Usage            = D3D11_USAGE_DYNAMIC;
-        buffer_desc.ByteWidth        = sizeof(GpuVertex) * batch_max_vertex;
+        buffer_desc.ByteWidth        = sizeof(GpuTransformedVertex) * batch_max_vertex;
         buffer_desc.BindFlags        = D3D11_BIND_VERTEX_BUFFER;
         buffer_desc.CPUAccessFlags   = D3D11_CPU_ACCESS_WRITE;
         buffer_desc.MiscFlags        = 0;
@@ -65,7 +65,7 @@ namespace df::gr::d3d11
         check_hr(hr, "Map VB");
         hr = context_->Map(dynamic_ib_, 0, ib_map_type, 0, &mapped_ib);
         check_hr(hr, "Map IB");
-        mapped_vb_ = reinterpret_cast<GpuVertex*>(mapped_vb.pData);
+        mapped_vb_ = reinterpret_cast<GpuTransformedVertex*>(mapped_vb.pData);
         mapped_ib_ = reinterpret_cast<ushort*>(mapped_ib.pData);
         assert(mapped_vb_);
         assert(mapped_ib_);
@@ -141,13 +141,17 @@ namespace df::gr::d3d11
         if (!(vertex_attributes & gr::TMAP_FLAG_ALPHA)) {
             a = gr::screen.current_color.alpha;
         }
+        // Note: gr_matrix_scale is zero before first gr_setup_3d call
+        float matrix_scale_z = gr::matrix_scale.z ? gr::matrix_scale.z : 1.0f;
         int vert0 = current_vertex_;
         for (int i = 0; i < nv; ++i) {
-            auto& in_vert = *vertices[i];
-            auto& out_vert = mapped_vb_[current_vertex_];
+            const gr::Vertex& in_vert = *vertices[i];
+            GpuTransformedVertex& out_vert = mapped_vb_[current_vertex_];
             out_vert.x = (in_vert.sx - gr::screen.offset_x) / gr::screen.clip_width * 2.0f - 1.0f;
             out_vert.y = (in_vert.sy - gr::screen.offset_y) / gr::screen.clip_height * -2.0f + 1.0f;
             out_vert.z = in_vert.sw * gr::d3d::zm;
+            // Set w to depth in camera space (needed for 3D rendering)
+            out_vert.w = 1.0f / in_vert.sw / matrix_scale_z;
             if (vertex_attributes & gr::TMAP_FLAG_RGB) {
                 r = in_vert.r;
                 g = in_vert.g;
@@ -174,10 +178,9 @@ namespace df::gr::d3d11
 
     void BatchManager::bind_resources()
     {
-        render_context_.set_vertex_buffer(dynamic_vb_, sizeof(GpuVertex));
+        render_context_.set_vertex_buffer(dynamic_vb_, sizeof(GpuTransformedVertex));
         render_context_.set_index_buffer(dynamic_ib_);
-        render_context_.set_shader_program(ShaderProgram::standard);
+        render_context_.set_shader_program(ShaderProgram::transformed);
         render_context_.set_vertex_transform_type(VertexTransformType::_2d);
-
     }
 }

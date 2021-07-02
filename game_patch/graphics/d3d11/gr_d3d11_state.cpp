@@ -10,19 +10,20 @@ namespace df::gr::d3d11
     {
     }
 
-    ID3D11RasterizerState* StateManager::lookup_rasterizer_state(D3D11_CULL_MODE cull_mode)
+    ID3D11RasterizerState* StateManager::lookup_rasterizer_state(D3D11_CULL_MODE cull_mode, int depth_bias)
     {
-        auto it = rasterizer_state_cache_.find(cull_mode);
+        auto it = rasterizer_state_cache_.find({cull_mode, depth_bias});
         if (it != rasterizer_state_cache_.end()) {
             return it->second;
         }
 
         CD3D11_RASTERIZER_DESC desc{CD3D11_DEFAULT{}};
         desc.CullMode = cull_mode;
+        desc.DepthBias = depth_bias;
         ComPtr<ID3D11RasterizerState> rasterizer_state;
         HRESULT hr = device_->CreateRasterizerState(&desc, &rasterizer_state);
         check_hr(hr, "CreateRasterizerState");
-        rasterizer_state_cache_.insert({cull_mode, rasterizer_state});
+        rasterizer_state_cache_.insert({{cull_mode, depth_bias}, rasterizer_state});
         return rasterizer_state;
     }
 

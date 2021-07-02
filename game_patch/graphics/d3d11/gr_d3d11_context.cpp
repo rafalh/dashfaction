@@ -607,6 +607,9 @@ namespace df::gr::d3d11
         else if (current_shader_program_ == ShaderProgram::standard) {
             shader_manager_.bind_default_shaders(*this);
         }
+        else if (current_shader_program_ == ShaderProgram::transformed) {
+            shader_manager_.bind_transformed_shaders(*this);
+        }
     }
 
     void RenderContext::clear()
@@ -644,7 +647,7 @@ namespace df::gr::d3d11
 
     void RenderContext::bind_rasterizer_state()
     {
-        ID3D11RasterizerState* rasterizer_state = state_manager_.lookup_rasterizer_state(current_cull_mode_);
+        ID3D11RasterizerState* rasterizer_state = state_manager_.lookup_rasterizer_state(current_cull_mode_, zbias_);
         context_->RSSetState(rasterizer_state);
     }
 }

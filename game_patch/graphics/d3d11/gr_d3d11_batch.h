@@ -8,7 +8,7 @@
 namespace df::gr::d3d11
 {
 
-    struct GpuVertex;
+    struct GpuTransformedVertex;
     class RenderContext;
 
     class BatchManager
@@ -30,7 +30,7 @@ namespace df::gr::d3d11
         RenderContext& render_context_;
         ComPtr<ID3D11Buffer> dynamic_vb_;
         ComPtr<ID3D11Buffer> dynamic_ib_;
-        GpuVertex* mapped_vb_ = nullptr;
+        GpuTransformedVertex* mapped_vb_ = nullptr;
         rf::ushort* mapped_ib_ = nullptr;
         D3D11_PRIMITIVE_TOPOLOGY primitive_topology_ = D3D11_PRIMITIVE_TOPOLOGY_UNDEFINED;
         int current_vertex_ = 0;
