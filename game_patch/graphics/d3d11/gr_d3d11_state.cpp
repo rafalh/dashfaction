@@ -21,6 +21,9 @@ namespace df::gr::d3d11
         CD3D11_RASTERIZER_DESC desc{CD3D11_DEFAULT{}};
         desc.CullMode = cull_mode;
         desc.DepthBias = depth_bias;
+        if (g_game_config.msaa) {
+            desc.MultisampleEnable = TRUE;
+        }
         ComPtr<ID3D11RasterizerState> rasterizer_state;
         HRESULT hr = device_->CreateRasterizerState(&desc, &rasterizer_state);
         check_hr(hr, "CreateRasterizerState");

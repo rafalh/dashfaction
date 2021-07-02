@@ -7,6 +7,7 @@
 #include "../../rf/os/os.h"
 #include "../../rf/v3d.h"
 #include "../../bmpman/bmpman.h"
+#include "../../main/main.h"
 #include "gr_d3d11.h"
 #include "gr_d3d11_context.h"
 #include "gr_d3d11_shader.h"
@@ -49,13 +50,11 @@ namespace df::gr::d3d11
         sd.BufferDesc.Width = rf::gr::screen.max_w;
         sd.BufferDesc.Height = rf::gr::screen.max_h;
         sd.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-        // sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        //sd.BufferDesc.RefreshRate.Numerator = 60;
         sd.BufferDesc.RefreshRate.Numerator = 0;
         sd.BufferDesc.RefreshRate.Denominator = 1;
         sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
         sd.OutputWindow = hwnd;
-        sd.SampleDesc.Count = 1;
+        sd.SampleDesc.Count = std::max(g_game_config.msaa.value(), 1u);
         sd.SampleDesc.Quality = 0;
         sd.Windowed = rf::gr::screen.window_mode == rf::gr::WINDOWED;
         sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
@@ -114,7 +113,10 @@ namespace df::gr::d3d11
         check_hr(hr, "GetBuffer");
 
         // Create a render-target view
-        hr = device_->CreateRenderTargetView(back_buffer_, NULL, &back_buffer_view_);
+        CD3D11_RENDER_TARGET_VIEW_DESC view_desc{
+            g_game_config.msaa ? D3D11_RTV_DIMENSION_TEXTURE2DMS : D3D11_RTV_DIMENSION_TEXTURE2D,
+        };
+        hr = device_->CreateRenderTargetView(back_buffer_, &view_desc, &back_buffer_view_);
         check_hr(hr, "CreateRenderTargetView");
     }
 
@@ -127,7 +129,7 @@ namespace df::gr::d3d11
         depth_stencil_desc.MipLevels = 1;
         depth_stencil_desc.ArraySize = 1;
         depth_stencil_desc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-        depth_stencil_desc.SampleDesc.Count = 1;
+        depth_stencil_desc.SampleDesc.Count = std::max(g_game_config.msaa.value(), 1u);
         depth_stencil_desc.SampleDesc.Quality = 0;
         depth_stencil_desc.Usage = D3D11_USAGE_DEFAULT;
         depth_stencil_desc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
@@ -137,7 +139,10 @@ namespace df::gr::d3d11
         HRESULT hr = device_->CreateTexture2D(&depth_stencil_desc, nullptr, &depth_stencil);
         check_hr(hr, "CreateTexture2D");
 
-        hr = device_->CreateDepthStencilView(depth_stencil, nullptr, &depth_stencil_buffer_view_);
+        D3D11_DEPTH_STENCIL_VIEW_DESC view_desc;
+        ZeroMemory(&view_desc, sizeof(view_desc));
+        view_desc.ViewDimension = g_game_config.msaa ? D3D11_DSV_DIMENSION_TEXTURE2DMS : D3D11_DSV_DIMENSION_TEXTURE2D;
+        hr = device_->CreateDepthStencilView(depth_stencil, &view_desc, &depth_stencil_buffer_view_);
         check_hr(hr, "CreateDepthStencilView");
     }
 
