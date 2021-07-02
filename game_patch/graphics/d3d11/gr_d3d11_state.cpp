@@ -1,5 +1,6 @@
 #include "gr_d3d11.h"
 #include "gr_d3d11_state.h"
+#include "../../main/main.h"
 
 using namespace rf;
 
@@ -75,6 +76,11 @@ namespace df::gr::d3d11
                 break;
             default:
                 break;
+        }
+
+        if (g_game_config.anisotropic_filtering) {
+            desc.Filter = D3D11_FILTER_ANISOTROPIC;
+            desc.MaxAnisotropy = 16;
         }
 
         ComPtr<ID3D11SamplerState> sampler_state;
