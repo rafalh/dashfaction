@@ -1,4 +1,5 @@
 #include <cassert>
+#include <dxgi1_4.h>
 #include <patch_common/AsmWriter.h>
 #include <patch_common/CodeInjection.h>
 #include <patch_common/FunHook.h>
@@ -21,6 +22,8 @@ using namespace rf;
 
 namespace df::gr::d3d11
 {
+    constexpr DXGI_FORMAT back_buffer_format = DXGI_FORMAT_B8G8R8A8_UNORM;
+
     static HMODULE d3d11_lib;
     static std::optional<Renderer> renderer;
 
@@ -42,28 +45,12 @@ namespace df::gr::d3d11
         }
     }
 
-    void Renderer::init_device(HWND hwnd, HMODULE d3d11_lib)
+    void Renderer::init_device(HMODULE d3d11_lib)
     {
-        DXGI_SWAP_CHAIN_DESC sd;
-        ZeroMemory(&sd, sizeof(sd));
-        sd.BufferCount = rf::gr::screen.window_mode == gr::FULLSCREEN ? 2 : 1;
-        sd.BufferDesc.Width = rf::gr::screen.max_w;
-        sd.BufferDesc.Height = rf::gr::screen.max_h;
-        sd.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-        sd.BufferDesc.RefreshRate.Numerator = 0;
-        sd.BufferDesc.RefreshRate.Denominator = 1;
-        sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-        sd.OutputWindow = hwnd;
-        sd.SampleDesc.Count = std::max(g_game_config.msaa.value(), 1u);
-        sd.SampleDesc.Quality = 0;
-        sd.Windowed = rf::gr::screen.window_mode == rf::gr::WINDOWED;
-        sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
-        sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD; // FIXME: consider switching to DXGI_SWAP_EFFECT_FLIP_*
-
-        auto pD3D11CreateDeviceAndSwapChain = reinterpret_cast<PFN_D3D11_CREATE_DEVICE_AND_SWAP_CHAIN>(
-            reinterpret_cast<void(*)()>(GetProcAddress(d3d11_lib, "D3D11CreateDeviceAndSwapChain")));
-        if (!pD3D11CreateDeviceAndSwapChain) {
-            xlog::error("Failed to find D3D11CreateDeviceAndSwapChain procedure");
+        auto pD3D11CreateDevice = reinterpret_cast<PFN_D3D11_CREATE_DEVICE>(
+            reinterpret_cast<void(*)()>(GetProcAddress(d3d11_lib, "D3D11CreateDevice")));
+        if (!pD3D11CreateDevice) {
+            xlog::error("Failed to find D3D11CreateDevice procedure");
             abort();
         }
 
@@ -83,7 +70,7 @@ namespace df::gr::d3d11
         //flags |= D3D11_CREATE_DEVICE_DEBUG;
     //#endif
         D3D_FEATURE_LEVEL feature_level_supported;
-        HRESULT hr = pD3D11CreateDeviceAndSwapChain(
+        HRESULT hr = pD3D11CreateDevice(
             nullptr,
             D3D_DRIVER_TYPE_HARDWARE,
             nullptr,
@@ -93,8 +80,6 @@ namespace df::gr::d3d11
             nullptr,
             0,
             D3D11_SDK_VERSION,
-            &sd,
-            &swap_chain_,
             &device_,
             &feature_level_supported,
             &context_
@@ -106,6 +91,80 @@ namespace df::gr::d3d11
         xlog::info("D3D11 feature level: 0x%x", feature_level_supported);
     }
 
+    void Renderer::init_swap_chain(HWND hwnd)
+    {
+        ComPtr<IDXGIDevice> dxgi_device;
+        HRESULT hr = device_->QueryInterface(&dxgi_device);
+        check_hr(hr, "QueryInterface IDXGIDevice");
+
+        ComPtr<IDXGIAdapter> dxgi_adapter;
+        hr = dxgi_device->GetAdapter(&dxgi_adapter);
+        check_hr(hr, "GetAdapter");
+
+        ComPtr<IDXGIFactory> dxgi_factory;
+        hr = dxgi_adapter->GetParent(__uuidof(IDXGIFactory), reinterpret_cast<void**>(&dxgi_factory));
+        check_hr(hr, "GetParent");
+
+        ComPtr<IDXGIFactory2> dxgi_factory2;
+        ComPtr<IDXGIFactory3> dxgi_factory3;
+        ComPtr<IDXGIFactory4> dxgi_factory4;
+        dxgi_factory->QueryInterface(&dxgi_factory2);
+        dxgi_factory->QueryInterface(&dxgi_factory3);
+        dxgi_factory->QueryInterface(&dxgi_factory4);
+
+        if (dxgi_factory2) {
+            DXGI_SWAP_CHAIN_DESC1 sc_desc1;
+            ZeroMemory(&sc_desc1, sizeof(sc_desc1));
+            sc_desc1.Width = rf::gr::screen.max_w;
+            sc_desc1.Height = rf::gr::screen.max_h;
+            sc_desc1.Format = back_buffer_format;
+            // Note: flip modes do not support multi-sampling so always use one sample for backbuffer
+            // When MSAA is enabled we will create a separate render target with multi-sampling enabled
+            sc_desc1.SampleDesc.Count = 1;
+            sc_desc1.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+            sc_desc1.BufferCount = 2;
+            if (dxgi_factory4) {
+                sc_desc1.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+            }
+            else if (dxgi_factory3) {
+                sc_desc1.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
+            }
+            else {
+                sc_desc1.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+            }
+            xlog::info("D3D11 swap effect: %d", sc_desc1.SwapEffect);
+            sc_desc1.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+
+            DXGI_SWAP_CHAIN_FULLSCREEN_DESC sc_fs_desc;
+            ZeroMemory(&sc_fs_desc, sizeof(sc_fs_desc));
+            sc_fs_desc.Windowed = rf::gr::screen.window_mode == rf::gr::WINDOWED;
+
+            ComPtr<IDXGISwapChain1> swap_chain1;
+            hr = dxgi_factory2->CreateSwapChainForHwnd(device_, hwnd, &sc_desc1, &sc_fs_desc, nullptr, &swap_chain1);
+            check_hr(hr, "CreateSwapChainForHwnd");
+            swap_chain1->QueryInterface(&swap_chain_);
+        }
+        else {
+            DXGI_SWAP_CHAIN_DESC sd;
+            ZeroMemory(&sd, sizeof(sd));
+            sd.BufferCount = rf::gr::screen.window_mode == gr::FULLSCREEN ? 2 : 1;
+            sd.BufferDesc.Width = rf::gr::screen.max_w;
+            sd.BufferDesc.Height = rf::gr::screen.max_h;
+            sd.BufferDesc.Format = back_buffer_format;
+            sd.BufferDesc.RefreshRate.Numerator = 0;
+            sd.BufferDesc.RefreshRate.Denominator = 1;
+            sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+            sd.OutputWindow = hwnd;
+            sd.SampleDesc.Count = 1;
+            sd.SampleDesc.Quality = 0;
+            sd.Windowed = rf::gr::screen.window_mode == rf::gr::WINDOWED;
+            sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+
+            hr = dxgi_factory->CreateSwapChain(device_, &sd, &swap_chain_);
+            check_hr(hr, "CreateSwapChain");
+        }
+    }
+
     void Renderer::init_back_buffer()
     {
         // Get a pointer to the back buffer
@@ -113,11 +172,23 @@ namespace df::gr::d3d11
         check_hr(hr, "GetBuffer");
 
         // Create a render-target view
-        CD3D11_RENDER_TARGET_VIEW_DESC view_desc{
-            g_game_config.msaa ? D3D11_RTV_DIMENSION_TEXTURE2DMS : D3D11_RTV_DIMENSION_TEXTURE2D,
-        };
-        hr = device_->CreateRenderTargetView(back_buffer_, &view_desc, &back_buffer_view_);
-        check_hr(hr, "CreateRenderTargetView");
+        if (g_game_config.msaa) {
+            D3D11_TEXTURE2D_DESC desc;
+            back_buffer_->GetDesc(&desc);
+            desc.SampleDesc.Count = g_game_config.msaa;
+            hr = device_->CreateTexture2D(&desc, nullptr, &msaa_render_target_);
+            check_hr(hr, "CreateTexture2D");
+            default_render_target_ = msaa_render_target_;
+
+            CD3D11_RENDER_TARGET_VIEW_DESC view_desc{D3D11_RTV_DIMENSION_TEXTURE2DMS};
+            hr = device_->CreateRenderTargetView(default_render_target_, &view_desc, &default_render_target_view_);
+            check_hr(hr, "CreateRenderTargetView");
+        }
+        else {
+            default_render_target_ = back_buffer_;
+            hr = device_->CreateRenderTargetView(default_render_target_, nullptr, &default_render_target_view_);
+            check_hr(hr, "CreateRenderTargetView");
+        }
     }
 
     void Renderer::init_depth_stencil_buffer()
@@ -142,13 +213,14 @@ namespace df::gr::d3d11
         D3D11_DEPTH_STENCIL_VIEW_DESC view_desc;
         ZeroMemory(&view_desc, sizeof(view_desc));
         view_desc.ViewDimension = g_game_config.msaa ? D3D11_DSV_DIMENSION_TEXTURE2DMS : D3D11_DSV_DIMENSION_TEXTURE2D;
-        hr = device_->CreateDepthStencilView(depth_stencil, &view_desc, &depth_stencil_buffer_view_);
+        hr = device_->CreateDepthStencilView(depth_stencil, &view_desc, &depth_stencil_view_);
         check_hr(hr, "CreateDepthStencilView");
     }
 
     Renderer::Renderer(HWND hwnd, HMODULE d3d11_lib)
     {
-        init_device(hwnd, d3d11_lib);
+        init_device(d3d11_lib);
+        init_swap_chain(hwnd);
         init_back_buffer();
         init_depth_stencil_buffer();
 
@@ -160,7 +232,7 @@ namespace df::gr::d3d11
         solid_renderer_ = std::make_unique<SolidRenderer>(device_, context_, *render_context_);
         mesh_renderer_ = std::make_unique<MeshRenderer>(device_, *render_context_);
 
-        render_context_->set_render_target(back_buffer_view_, depth_stencil_buffer_view_);
+        render_context_->set_render_target(default_render_target_view_, depth_stencil_view_);
         render_context_->set_cull_mode(D3D11_CULL_BACK);
 
         //gr::screen.mode = GR_DIRECT3D11;
@@ -181,11 +253,11 @@ namespace df::gr::d3d11
         }
     }
 
-    void Renderer::bitmap(int bitmap_handle, int x, int y, int w, int h, int sx, int sy, int sw, int sh, bool flip_x, bool flip_y, gr::Mode mode)
+    void Renderer::bitmap(int bm_handle, int x, int y, int w, int h, int sx, int sy, int sw, int sh, bool flip_x, bool flip_y, gr::Mode mode)
     {
         // xlog::info("gr_d3d11_bitmap");
         int bm_w, bm_h;
-        bm::get_dimensions(bitmap_handle, &bm_w, &bm_h);
+        bm::get_dimensions(bm_handle, &bm_w, &bm_h);
         gr::Vertex verts[4];
         const gr::Vertex* verts_ptrs[] = {
             &verts[0],
@@ -221,7 +293,7 @@ namespace df::gr::d3d11
         verts[3].sw = 1.0f;
         verts[3].u1 = u_left;
         verts[3].v1 = v_bottom;
-        std::array<int, 2> tex_handles{bitmap_handle, -1};
+        std::array<int, 2> tex_handles{bm_handle, -1};
         batch_manager_->add_vertices(std::size(verts_ptrs), verts_ptrs, 0, tex_handles, mode);
     }
 
@@ -250,6 +322,9 @@ namespace df::gr::d3d11
     {
         //xlog::info("gr_d3d11_flip");
         batch_manager_->flush();
+        if (msaa_render_target_) {
+            context_->ResolveSubresource(back_buffer_, 0, msaa_render_target_, 0, back_buffer_format);
+        }
         HRESULT hr = swap_chain_->Present(0, 0);
         check_hr(hr, "Present");
     }
@@ -308,10 +383,10 @@ namespace df::gr::d3d11
             if (!render_target_view) {
                 return false;
             }
-            render_context_->set_render_target(render_target_view, depth_stencil_buffer_view_);
+            render_context_->set_render_target(render_target_view, depth_stencil_view_);
         }
         else {
-            render_context_->set_render_target(back_buffer_view_, depth_stencil_buffer_view_);
+            render_context_->set_render_target(default_render_target_view_, depth_stencil_view_);
         }
         return true;
     }

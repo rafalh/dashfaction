@@ -43,7 +43,7 @@ namespace df::gr::d3d11
         void window_active();
         void window_inactive();
 
-        void bitmap(int bitmap_handle, int x, int y, int w, int h, int sx, int sy, int sw, int sh, bool flip_x, bool flip_y, rf::gr::Mode mode);
+        void bitmap(int bm_handle, int x, int y, int w, int h, int sx, int sy, int sw, int sh, bool flip_x, bool flip_y, rf::gr::Mode mode);
         void page_in(int bm_handle);
         void clear();
         void zbuffer_clear();
@@ -75,7 +75,8 @@ namespace df::gr::d3d11
         HRESULT get_device_removed_reason();
 
     private:
-        void init_device(HWND hwnd, HMODULE d3d11_lib);
+        void init_device(HMODULE d3d11_lib);
+        void init_swap_chain(HWND hwnd);
         void init_back_buffer();
         void init_depth_stencil_buffer();
 
@@ -83,8 +84,10 @@ namespace df::gr::d3d11
         ComPtr<IDXGISwapChain> swap_chain_;
         ComPtr<ID3D11DeviceContext> context_;
         ComPtr<ID3D11Texture2D> back_buffer_;
-        ComPtr<ID3D11RenderTargetView> back_buffer_view_;
-        ComPtr<ID3D11DepthStencilView> depth_stencil_buffer_view_;
+        ComPtr<ID3D11Texture2D> msaa_render_target_;
+        ComPtr<ID3D11Texture2D> default_render_target_;
+        ComPtr<ID3D11RenderTargetView> default_render_target_view_;
+        ComPtr<ID3D11DepthStencilView> depth_stencil_view_;
         std::unique_ptr<StateManager> state_manager_;
         std::unique_ptr<ShaderManager> shader_manager_;
         std::unique_ptr<TextureManager> texture_manager_;
