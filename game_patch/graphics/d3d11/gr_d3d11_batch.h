@@ -4,6 +4,7 @@
 #include <d3d11.h>
 #include <patch_common/ComPtr.h>
 #include "../../rf/gr/gr.h"
+#include "gr_d3d11_shader.h"
 
 namespace df::gr::d3d11
 {
@@ -14,7 +15,7 @@ namespace df::gr::d3d11
     class BatchManager
     {
     public:
-        BatchManager(ComPtr<ID3D11Device> device, ComPtr<ID3D11DeviceContext> context, RenderContext& render_context);
+        BatchManager(ComPtr<ID3D11Device> device, ShaderManager& shader_manager, RenderContext& render_context);
         void add_vertices(int nv, const rf::gr::Vertex **vertices, int vertex_attributes, const std::array<int, 2>& tex_handles, rf::gr::Mode mode);
         void flush();
 
@@ -45,5 +46,7 @@ namespace df::gr::d3d11
             rf::gr::ZBUFFER_TYPE_NONE,
             rf::gr::FOG_ALLOWED,
         };
+        VertexShaderAndLayout vertex_shader_;
+        ComPtr<ID3D11PixelShader> pixel_shader_;
     };
 }

@@ -18,7 +18,7 @@ cbuffer ViewProjTransformBuffer : register(b1)
     float4x4 proj_mat;
 };
 
-cbuffer BoneMatricesConstantBuffer : register(b3)
+cbuffer CharacterBuffer : register(b3)
 {
     float4x3 matrices[50];
 };

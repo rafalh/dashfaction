@@ -17,7 +17,7 @@ cbuffer ViewProjTransformBuffer : register(b1)
     float4x4 proj_mat;
 };
 
-cbuffer TextureTransformBuffer : register(b2)
+cbuffer UvOffsetBuffer : register(b2)
 {
     float2 uv_offset;
 };

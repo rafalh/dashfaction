@@ -5,6 +5,7 @@
 #include <memory>
 #include <d3d11.h>
 #include <patch_common/ComPtr.h>
+#include "gr_d3d11_shader.h"
 
 namespace rf
 {
@@ -27,18 +28,6 @@ namespace df::gr::d3d11
         void render(FaceRenderType what, RenderContext& context);
 
     private:
-        // struct GpuVertex
-        // {
-        //     float x;
-        //     float y;
-        //     float z;
-        //     int diffuse;
-        //     float u0;
-        //     float v0;
-        //     float u1;
-        //     float v1;
-        // };
-
         struct Batch
         {
             int start_index;
@@ -95,7 +84,7 @@ namespace df::gr::d3d11
     class SolidRenderer
     {
     public:
-        SolidRenderer(ComPtr<ID3D11Device> device, ComPtr<ID3D11DeviceContext> context, RenderContext& render_context);
+        SolidRenderer(ComPtr<ID3D11Device> device, ShaderManager& shader_manager, RenderContext& render_context);
         void render_solid(rf::GSolid* solid, rf::GRoom** rooms, int num_rooms);
         void render_movable_solid(rf::GSolid* solid, const rf::Vector3& pos, const rf::Matrix3& orient);
         void render_sky_room(rf::GRoom *room);
@@ -104,7 +93,7 @@ namespace df::gr::d3d11
         void clear_cache();
 
     private:
-        void before_render(const rf::Vector3& pos, const rf::Matrix3& orient, bool is_skyroom);
+        void before_render(const rf::Vector3& pos, const rf::Matrix3& orient);
         void after_render();
         void render_room_faces(rf::GSolid* solid, rf::GRoom* room, FaceRenderType render_type);
         void render_detail(rf::GSolid* solid, rf::GRoom* room, bool alpha);
@@ -113,6 +102,8 @@ namespace df::gr::d3d11
 
         ComPtr<ID3D11Device> device_;
         ComPtr<ID3D11DeviceContext> context_;
+        VertexShaderAndLayout vertex_shader_;
+        ComPtr<ID3D11PixelShader> pixel_shader_;
         RenderContext& render_context_;
         std::vector<std::unique_ptr<RoomRenderCache>> room_cache_;
         std::vector<std::unique_ptr<GRenderCache>> mover_render_cache_;

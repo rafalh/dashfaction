@@ -83,8 +83,8 @@ add_packfile(dashfaction.vpp
     meshes/coffeesmokedtbl2.v3m
     meshes/coffeesmokedtblAlt.v3m
 
-    ${CMAKE_BINARY_DIR}/shaders/default_vs.bin
-    ${CMAKE_BINARY_DIR}/shaders/default_ps.bin
+    ${CMAKE_BINARY_DIR}/shaders/standard_vs.bin
+    ${CMAKE_BINARY_DIR}/shaders/standard_ps.bin
     ${CMAKE_BINARY_DIR}/shaders/character_vs.bin
     ${CMAKE_BINARY_DIR}/shaders/transformed_vs.bin
 )

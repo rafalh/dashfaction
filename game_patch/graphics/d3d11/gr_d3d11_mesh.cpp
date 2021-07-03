@@ -12,6 +12,7 @@
 #include "gr_d3d11.h"
 #include "gr_d3d11_mesh.h"
 #include "gr_d3d11_context.h"
+#include "gr_d3d11_shader.h"
 
 using namespace rf;
 
@@ -31,18 +32,6 @@ namespace df::gr::d3d11
         void render(const Vector3& pos, const Matrix3& orient, const CharacterInstance* ci, const MeshRenderParams& params, int lod_index, RenderContext& render_context);
 
     private:
-        struct GpuVertex
-        {
-            float x;
-            float y;
-            float z;
-            float u0;
-            float v0;
-            int diffuse;
-            rf::ubyte weights[4];
-            rf::ubyte indices[4];
-        };
-
         struct alignas(16) BoneTransformsBufferData
         {
             GpuMatrix4x3 matrices[50];
@@ -184,7 +173,7 @@ namespace df::gr::d3d11
 
                 int chunk_start_index = gpu_verts.size();
                 for (int vert_index = 0; vert_index < chunk.num_vecs; ++vert_index) {
-                    auto& gpu_vert = gpu_verts.emplace_back();
+                    GpuVertex& gpu_vert = gpu_verts.emplace_back();
                     gpu_vert.x = chunk.vecs[vert_index].x;
                     gpu_vert.y = chunk.vecs[vert_index].y;
                     gpu_vert.z = chunk.vecs[vert_index].z;
@@ -231,9 +220,7 @@ namespace df::gr::d3d11
     void MeshRenderCache::render(const Vector3& pos, const Matrix3& orient, const MeshRenderParams& params, int lod_index, RenderContext& render_context)
     {
         //xlog::warn("render mesh flags %x", params.flags);
-        render_context.set_shader_program(ShaderProgram::standard);
         render_context.set_model_transform(pos, orient);
-        render_context.set_vertex_transform_type(VertexTransformType::_3d);
         render_context.set_vertex_buffer(vb_, sizeof(GpuVertex));
         render_context.set_index_buffer(ib_);
         draw(params, lod_index, render_context);
@@ -256,7 +243,7 @@ namespace df::gr::d3d11
             }
         }
 
-        std::vector<GpuVertex> gpu_verts;
+        std::vector<GpuCharacterVertex> gpu_verts;
         std::vector<rf::ushort> gpu_inds;
         gpu_verts.reserve(num_verts);
         gpu_inds.reserve(num_inds);
@@ -277,7 +264,7 @@ namespace df::gr::d3d11
 
                 int chunk_start_index = gpu_verts.size();
                 for (int vert_index = 0; vert_index < chunk.num_vecs; ++vert_index) {
-                    auto& gpu_vert = gpu_verts.emplace_back();
+                    GpuCharacterVertex& gpu_vert = gpu_verts.emplace_back();
                     gpu_vert.x = chunk.vecs[vert_index].x;
                     gpu_vert.y = chunk.vecs[vert_index].y;
                     gpu_vert.z = chunk.vecs[vert_index].z;
@@ -351,11 +338,9 @@ namespace df::gr::d3d11
     void CharacterMeshRenderCache::render(const Vector3& pos, const Matrix3& orient, const CharacterInstance* ci, const MeshRenderParams& params, int lod_index, RenderContext& render_context)
     {
         update_matrices_buffer(ci, render_context);
-        render_context.set_shader_program(ShaderProgram::character);
         render_context.set_model_transform(pos, orient);
-        render_context.set_vertex_transform_type(VertexTransformType::_3d);
         render_context.bind_vs_cbuffer(3, matrices_cbuffer_);
-        render_context.set_vertex_buffer(vb_, sizeof(GpuVertex));
+        render_context.set_vertex_buffer(vb_, sizeof(GpuCharacterVertex));
         render_context.set_index_buffer(ib_);
         draw(params, lod_index, render_context);
         render_context.bind_vs_cbuffer(3, nullptr);
@@ -379,9 +364,12 @@ namespace df::gr::d3d11
         render_context.device_context()->Unmap(matrices_cbuffer_, 0);
     }
 
-    MeshRenderer::MeshRenderer(ComPtr<ID3D11Device> device, RenderContext& render_context) :
+    MeshRenderer::MeshRenderer(ComPtr<ID3D11Device> device, ShaderManager& shader_manager, RenderContext& render_context) :
         device_{std::move(device)}, render_context_{render_context}
     {
+        standard_vertex_shader_ = shader_manager.get_vertex_shader(VertexShaderId::standard);
+        character_vertex_shader_ = shader_manager.get_vertex_shader(VertexShaderId::character);
+        pixel_shader_ = shader_manager.get_pixel_shader(PixelShaderId::standard);
     }
 
     MeshRenderer::~MeshRenderer()
@@ -407,6 +395,10 @@ namespace df::gr::d3d11
             auto p = render_caches_.insert_or_assign(lod_mesh, std::make_unique<MeshRenderCache>(lod_mesh, device_));
             lod_mesh->render_cache = p.first->second.get();
         }
+
+        render_context_.set_vertex_shader(standard_vertex_shader_);
+        render_context_.set_pixel_shader(pixel_shader_);
+
         int lod_index = get_vif_mesh_lod_index(lod_mesh, mesh);
         auto render_cache = reinterpret_cast<MeshRenderCache*>(lod_mesh->render_cache);
         render_cache->render(pos, orient, params, lod_index, render_context_);
@@ -418,6 +410,10 @@ namespace df::gr::d3d11
             auto p = render_caches_.insert_or_assign(lod_mesh, std::make_unique<CharacterMeshRenderCache>(lod_mesh, device_));
             lod_mesh->render_cache = p.first->second.get();
         }
+
+        render_context_.set_vertex_shader(character_vertex_shader_);
+        render_context_.set_pixel_shader(pixel_shader_);
+
         int lod_index = get_vif_mesh_lod_index(lod_mesh, mesh);
         auto render_cache = reinterpret_cast<CharacterMeshRenderCache*>(lod_mesh->render_cache);
         render_cache->render(pos, orient, ci, params, lod_index, render_context_);

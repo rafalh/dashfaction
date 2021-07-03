@@ -24,11 +24,11 @@ namespace df::gr::d3d11
     };
     static_assert(sizeof(ViewProjTransformBufferData) % 16 == 0);
 
-    struct alignas(16) TextureTransformBufferData
+    struct alignas(16) UvOffsetBufferData
     {
         std::array<float, 2> uv_offset;
     };
-    static_assert(sizeof(TextureTransformBufferData) % 16 == 0);
+    static_assert(sizeof(UvOffsetBufferData) % 16 == 0);
 
     struct alignas(16) RenderModeBufferData
     {
@@ -90,9 +90,7 @@ namespace df::gr::d3d11
         subres_data.pSysMem = &model_transform_data;
 
         buffer_desc.ByteWidth = sizeof(model_transform_data);
-        hr = device_->CreateBuffer(&buffer_desc, &subres_data, &model_transform_2d_cbuffer_);
-        check_hr(hr, "CreateBuffer");
-        hr = device_->CreateBuffer(&buffer_desc, &subres_data, &model_transform_3d_cbuffer_);
+        hr = device_->CreateBuffer(&buffer_desc, &subres_data, &model_transform_cbuffer_);
         check_hr(hr, "CreateBuffer");
 
         ViewProjTransformBufferData view_proj_transform_data;
@@ -101,13 +99,11 @@ namespace df::gr::d3d11
         subres_data.pSysMem = &view_proj_transform_data;
 
         buffer_desc.ByteWidth = sizeof(view_proj_transform_data);
-        hr = device_->CreateBuffer(&buffer_desc, &subres_data, &view_proj_transform_2d_cbuffer_);
-        check_hr(hr, "CreateBuffer");
-        hr = device_->CreateBuffer(&buffer_desc, &subres_data, &view_proj_transform_3d_cbuffer_);
+        hr = device_->CreateBuffer(&buffer_desc, &subres_data, &view_proj_transform_cbuffer_);
         check_hr(hr, "CreateBuffer");
 
-        buffer_desc.ByteWidth = sizeof(TextureTransformBufferData);
-        hr = device_->CreateBuffer(&buffer_desc, nullptr, &texture_transform_cbuffer_);
+        buffer_desc.ByteWidth = sizeof(UvOffsetBufferData);
+        hr = device_->CreateBuffer(&buffer_desc, nullptr, &uv_offset_cbuffer_);
         check_hr(hr, "CreateBuffer");
 
         buffer_desc.ByteWidth = sizeof(RenderModeBufferData);
@@ -118,9 +114,9 @@ namespace df::gr::d3d11
     void RenderContext::bind_cbuffers()
     {
         ID3D11Buffer* vs_cbuffers[] = {
-            model_transform_2d_cbuffer_,
-            view_proj_transform_2d_cbuffer_,
-            texture_transform_cbuffer_,
+            model_transform_cbuffer_,
+            view_proj_transform_cbuffer_,
+            uv_offset_cbuffer_,
         };
         context_->VSSetConstantBuffers(0, std::size(vs_cbuffers), vs_cbuffers);
 
@@ -539,78 +535,47 @@ namespace df::gr::d3d11
         context_->OMSetRenderTargets(std::size(render_targets), render_targets, depth_stencil_view);
     }
 
-    void RenderContext::update_vertex_transform_type()
-    {
-        if (current_vertex_transform_type_ == VertexTransformType::_2d) {
-            ID3D11Buffer* vs_cbuffers[] = {
-                model_transform_2d_cbuffer_,
-                view_proj_transform_2d_cbuffer_,
-            };
-            context_->VSSetConstantBuffers(0, std::size(vs_cbuffers), vs_cbuffers);
-        }
-        else {
-            ID3D11Buffer* vs_cbuffers[] = {
-                model_transform_3d_cbuffer_,
-                view_proj_transform_3d_cbuffer_,
-            };
-            context_->VSSetConstantBuffers(0, std::size(vs_cbuffers), vs_cbuffers);
-        }
-    }
-
-    void RenderContext::update_model_transform_3d()
+    void RenderContext::update_model_transform()
     {
         ModelTransformBufferData data;
         data.world_mat = build_world_matrix(current_model_pos_, current_model_orient_);
 
         D3D11_MAPPED_SUBRESOURCE mapped_cbuffer;
-        HRESULT hr = context_->Map(model_transform_3d_cbuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_cbuffer);
+        HRESULT hr = context_->Map(model_transform_cbuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_cbuffer);
         check_hr(hr, "Map");
         std::memcpy(mapped_cbuffer.pData, &data, sizeof(data));
-        context_->Unmap(model_transform_3d_cbuffer_, 0);
+        context_->Unmap(model_transform_cbuffer_, 0);
     }
 
-    void RenderContext::update_view_proj_transform_3d()
+    void RenderContext::update_view_proj_transform()
     {
         ViewProjTransformBufferData data;
         data.view_mat = build_view_matrix(rf::gr::eye_pos, rf::gr::eye_matrix);
         data.proj_mat = build_proj_matrix();
 
         D3D11_MAPPED_SUBRESOURCE mapped_cbuffer;
-        HRESULT hr = context_->Map(view_proj_transform_3d_cbuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_cbuffer);
+        HRESULT hr = context_->Map(view_proj_transform_cbuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_cbuffer);
         check_hr(hr, "Map");
         std::memcpy(mapped_cbuffer.pData, &data, sizeof(data));
-        context_->Unmap(view_proj_transform_3d_cbuffer_, 0);
+        context_->Unmap(view_proj_transform_cbuffer_, 0);
     }
 
     void RenderContext::update_texture_transform()
     {
-        TextureTransformBufferData data;
+        UvOffsetBufferData data;
         data.uv_offset = {current_uv_pan_.x, current_uv_pan_.y};
 
         D3D11_MAPPED_SUBRESOURCE mapped_cbuffer;
-        HRESULT hr = context_->Map(texture_transform_cbuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_cbuffer);
+        HRESULT hr = context_->Map(uv_offset_cbuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_cbuffer);
         check_hr(hr, "Map");
         std::memcpy(mapped_cbuffer.pData, &data, sizeof(data));
-        context_->Unmap(texture_transform_cbuffer_, 0);
+        context_->Unmap(uv_offset_cbuffer_, 0);
     }
 
     void RenderContext::bind_vs_cbuffer(int index, ID3D11Buffer* cbuffer)
     {
         ID3D11Buffer* vs_cbuffers[] = { cbuffer };
         context_->VSSetConstantBuffers(index, std::size(vs_cbuffers), vs_cbuffers);
-    }
-
-    void RenderContext::bind_shader_program()
-    {
-        if (current_shader_program_ == ShaderProgram::character) {
-            shader_manager_.bind_character_shaders(*this);
-        }
-        else if (current_shader_program_ == ShaderProgram::standard) {
-            shader_manager_.bind_default_shaders(*this);
-        }
-        else if (current_shader_program_ == ShaderProgram::transformed) {
-            shader_manager_.bind_transformed_shaders(*this);
-        }
     }
 
     void RenderContext::clear()

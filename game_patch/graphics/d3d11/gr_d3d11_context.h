@@ -4,6 +4,8 @@
 #include <d3d11.h>
 #include <patch_common/ComPtr.h>
 #include "gr_d3d11_transform.h"
+#include "gr_d3d11_vertex.h"
+#include "gr_d3d11_shader.h"
 
 namespace df::gr::d3d11
 {
@@ -11,44 +13,6 @@ namespace df::gr::d3d11
     class StateManager;
     class ShaderManager;
     class TextureManager;
-
-    struct GpuVertex
-    {
-        float x;
-        float y;
-        float z;
-        float u0;
-        float v0;
-        float u1;
-        float v1;
-        int diffuse;
-    };
-    struct GpuTransformedVertex
-    {
-        float x;
-        float y;
-        float z;
-        float w;
-        float u0;
-        float v0;
-        float u1;
-        float v1;
-        int diffuse;
-    };
-
-    enum class ShaderProgram {
-        none,
-        standard,
-        character,
-        transformed,
-    };
-
-    enum class VertexTransformType {
-        none,
-        _2d,
-        _3d,
-        sky_room,
-    };
 
     class RenderContext
     {
@@ -70,20 +34,12 @@ namespace df::gr::d3d11
             set_texture(1, tex_handle1);
         }
 
-        void set_shader_program(ShaderProgram shader_program)
-        {
-            if (current_shader_program_ != shader_program) {
-                current_shader_program_ = shader_program;
-                bind_shader_program();
-            }
-        }
-
         void set_render_target(ID3D11RenderTargetView* render_target_view, ID3D11DepthStencilView* depth_stencil_view);
         void bind_vs_cbuffer(int index, ID3D11Buffer* cbuffer);
         void clear();
         void zbuffer_clear();
         void set_clip();
-        void update_view_proj_transform_3d();
+        void update_view_proj_transform();
 
         void fog_set()
         {
@@ -139,6 +95,12 @@ namespace df::gr::d3d11
             }
         }
 
+        void set_vertex_shader(const VertexShaderAndLayout& vertex_shader_and_layout)
+        {
+            set_input_layout(vertex_shader_and_layout.input_layout);
+            set_vertex_shader(vertex_shader_and_layout.vertex_shader);
+        }
+
         void set_pixel_shader(ID3D11PixelShader* pixel_shader)
         {
             if (current_pixel_shader_ != pixel_shader) {
@@ -156,20 +118,12 @@ namespace df::gr::d3d11
             }
         }
 
-        void set_vertex_transform_type(VertexTransformType vertex_transform_type)
-        {
-            if (current_vertex_transform_type_ != vertex_transform_type) {
-                current_vertex_transform_type_ = vertex_transform_type;
-                update_vertex_transform_type();
-            }
-        }
-
         void set_model_transform(const rf::Vector3& pos, const rf::Matrix3& orient)
         {
             if (current_model_pos_ != pos || current_model_orient_ != orient) {
                 current_model_pos_ = pos;
                 current_model_orient_ = orient;
-                update_model_transform_3d();
+                update_model_transform();
             }
         }
 
@@ -195,7 +149,7 @@ namespace df::gr::d3d11
         void bind_texture(int slot);
         void change_mode(gr::Mode mode, bool has_tex1);
         void update_vertex_transform_type();
-        void update_model_transform_3d();
+        void update_model_transform();
         void update_texture_transform();
 
         void set_mode(gr::Mode mode, bool has_tex1, rf::Color color)
@@ -220,11 +174,9 @@ namespace df::gr::d3d11
         StateManager& state_manager_;
         ShaderManager& shader_manager_;
         TextureManager& texture_manager_;
-        ComPtr<ID3D11Buffer> model_transform_2d_cbuffer_;
-        ComPtr<ID3D11Buffer> model_transform_3d_cbuffer_;
-        ComPtr<ID3D11Buffer> view_proj_transform_2d_cbuffer_;
-        ComPtr<ID3D11Buffer> view_proj_transform_3d_cbuffer_;
-        ComPtr<ID3D11Buffer> texture_transform_cbuffer_;
+        ComPtr<ID3D11Buffer> model_transform_cbuffer_;
+        ComPtr<ID3D11Buffer> view_proj_transform_cbuffer_;
+        ComPtr<ID3D11Buffer> uv_offset_cbuffer_;
         ComPtr<ID3D11Buffer> render_mode_cbuffer_;
         int white_bm_ = -1;
 
@@ -241,8 +193,6 @@ namespace df::gr::d3d11
         rf::Color current_color_{255, 255, 255};
         D3D11_CULL_MODE current_cull_mode_ = D3D11_CULL_NONE;
         rf::Vector2 current_uv_pan_;
-        ShaderProgram current_shader_program_ = ShaderProgram::none;
-        VertexTransformType current_vertex_transform_type_ = VertexTransformType::none;
         rf::Vector3 current_model_pos_;
         rf::Matrix3 current_model_orient_;
         int zbias_ = 0;

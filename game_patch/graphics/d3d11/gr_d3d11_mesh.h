@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <d3d11.h>
 #include <patch_common/ComPtr.h>
+#include "gr_d3d11_shader.h"
 
 namespace rf
 {
@@ -48,7 +49,6 @@ namespace df::gr::d3d11
         const int* get_tex_handles(const rf::MeshRenderParams& params, int lod_index);
 
         rf::VifLodMesh* lod_mesh_;
-
         std::vector<Mesh> meshes_;
         ComPtr<ID3D11Buffer> vb_;
         ComPtr<ID3D11Buffer> ib_;
@@ -57,7 +57,7 @@ namespace df::gr::d3d11
     class MeshRenderer
     {
     public:
-        MeshRenderer(ComPtr<ID3D11Device> device, RenderContext& render_context);
+        MeshRenderer(ComPtr<ID3D11Device> device, ShaderManager& shader_manager, RenderContext& render_context);
         ~MeshRenderer();
         void render_v3d_vif(rf::VifLodMesh *lod_mesh, rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::MeshRenderParams& params);
         void render_character_vif(rf::VifLodMesh *lod_mesh, rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::CharacterInstance *ci, const rf::MeshRenderParams& params);
@@ -67,5 +67,8 @@ namespace df::gr::d3d11
         ComPtr<ID3D11Device> device_;
         RenderContext& render_context_;
         std::unordered_map<rf::VifLodMesh*, std::unique_ptr<BaseMeshRenderCache>> render_caches_;
+        VertexShaderAndLayout standard_vertex_shader_;
+        VertexShaderAndLayout character_vertex_shader_;
+        ComPtr<ID3D11PixelShader> pixel_shader_;
     };
 }

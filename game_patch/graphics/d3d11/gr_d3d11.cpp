@@ -228,9 +228,9 @@ namespace df::gr::d3d11
         shader_manager_ = std::make_unique<ShaderManager>(device_);
         texture_manager_ = std::make_unique<TextureManager>(device_, context_);
         render_context_ = std::make_unique<RenderContext>(device_, context_, *state_manager_, *shader_manager_, *texture_manager_);
-        batch_manager_ = std::make_unique<BatchManager>(device_, context_, *render_context_);
-        solid_renderer_ = std::make_unique<SolidRenderer>(device_, context_, *render_context_);
-        mesh_renderer_ = std::make_unique<MeshRenderer>(device_, *render_context_);
+        batch_manager_ = std::make_unique<BatchManager>(device_, *shader_manager_, *render_context_);
+        solid_renderer_ = std::make_unique<SolidRenderer>(device_, *shader_manager_, *render_context_);
+        mesh_renderer_ = std::make_unique<MeshRenderer>(device_, *shader_manager_, *render_context_);
 
         render_context_->set_render_target(default_render_target_view_, depth_stencil_view_);
         render_context_->set_cull_mode(D3D11_CULL_BACK);
@@ -400,7 +400,7 @@ namespace df::gr::d3d11
 
     void Renderer::setup_3d()
     {
-        render_context_->update_view_proj_transform_3d();
+        render_context_->update_view_proj_transform();
     }
 
     void Renderer::render_solid(rf::GSolid* solid, rf::GRoom** rooms, int num_rooms)
@@ -597,7 +597,9 @@ void gr_d3d11_render_movable_solid(GSolid* solid, const Vector3& pos, const Matr
 
 void gr_d3d11_render_alpha_detail_room(GRoom *room, GSolid *solid)
 {
-    df::gr::d3d11::renderer->render_alpha_detail_room(room, solid);
+    if (df::gr::d3d11::renderer) {
+        df::gr::d3d11::renderer->render_alpha_detail_room(room, solid);
+    }
 }
 
 void gr_d3d11_render_sky_room(GRoom *room)

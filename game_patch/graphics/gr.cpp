@@ -185,6 +185,9 @@ bool gr_set_render_target(int bm_handle)
     return gr_d3d_set_render_target(bm_handle);
 #endif
     }
+    else {
+        return false;
+    }
 }
 
 void gr_bitmap_scaled_float(int bitmap_handle, float x, float y, float w, float h,

@@ -17,6 +17,7 @@
 #include "../../os/console.h"
 #include "gr_d3d11.h"
 #include "gr_d3d11_solid.h"
+#include "gr_d3d11_shader.h"
 #include "gr_d3d11_context.h"
 
 using namespace rf;
@@ -265,7 +266,6 @@ namespace df::gr::d3d11
 
         float delta_time = timer_get(1000) * 0.001f; // FIXME: paused game..
 
-        render_context.set_shader_program(ShaderProgram::standard);
         render_context.set_vertex_buffer(vb_, sizeof(GpuVertex));
         render_context.set_index_buffer(ib_);
         render_context.set_cull_mode(D3D11_CULL_BACK);
@@ -406,6 +406,14 @@ namespace df::gr::d3d11
         }
     }
 
+    SolidRenderer::SolidRenderer(ComPtr<ID3D11Device> device, ShaderManager& shader_manager,
+        RenderContext& render_context) :
+        device_{std::move(device)}, context_{render_context.device_context()}, render_context_(render_context)
+    {
+        vertex_shader_ = shader_manager.get_vertex_shader(VertexShaderId::standard);
+        pixel_shader_ = shader_manager.get_pixel_shader(PixelShaderId::standard);
+    }
+
     static gr::Mode dynamic_decal_mode{
         gr::TEXTURE_SOURCE_CLAMP,
         gr::COLOR_SOURCE_VERTEX,
@@ -505,7 +513,7 @@ namespace df::gr::d3d11
     void SolidRenderer::render_sky_room(GRoom *room)
     {
         //xlog::warn("Rendering skybox...");
-        before_render(sky_room_offset, rf::identity_matrix, true);
+        before_render(sky_room_offset, rf::identity_matrix);
         render_room_faces(rf::level.geometry, room, FaceRenderType::sky);
     }
 
@@ -522,37 +530,29 @@ namespace df::gr::d3d11
             solid->field_370 = reinterpret_cast<int>(mover_render_cache_.back().get());
         }
         auto cache = reinterpret_cast<GRenderCache*>(solid->field_370);
-        before_render(pos, orient, false);
+        before_render(pos, orient);
         cache->render(FaceRenderType::opaque, render_context_);
     }
 
     void SolidRenderer::render_alpha_detail(GRoom *room, GSolid *solid)
     {
-        if (gr::screen.mode != gr::DIRECT3D) {
-            return;
-        }
         if (room->face_list.empty()) {
             // Happens when glass is killed
             return;
         }
-        before_render(rf::zero_vector, rf::identity_matrix, false);
+        before_render(rf::zero_vector, rf::identity_matrix);
         render_detail(solid, room, true);
     }
 
     void SolidRenderer::render_room_liquid_surface(GSolid* solid, GRoom* room)
     {
-        before_render(rf::zero_vector, rf::identity_matrix, false);
+        before_render(rf::zero_vector, rf::identity_matrix);
         render_room_faces(solid, room, FaceRenderType::liquid);
-    }
-
-    SolidRenderer::SolidRenderer(ComPtr<ID3D11Device> device, ComPtr<ID3D11DeviceContext> context, RenderContext& render_context) :
-        device_{std::move(device)}, context_{std::move(context)}, render_context_(render_context)
-    {
     }
 
     void SolidRenderer::render_solid(rf::GSolid* solid, rf::GRoom** rooms, int num_rooms)
     {
-        before_render(rf::zero_vector, rf::identity_matrix, false);
+        before_render(rf::zero_vector, rf::identity_matrix);
 
         for (int i = 0; i < num_rooms; ++i) {
             auto room = rooms[i];
@@ -576,9 +576,10 @@ namespace df::gr::d3d11
         }
     }
 
-    void SolidRenderer::before_render(const rf::Vector3& pos, const rf::Matrix3& orient, bool is_skyroom)
+    void SolidRenderer::before_render(const rf::Vector3& pos, const rf::Matrix3& orient)
     {
+        render_context_.set_vertex_shader(vertex_shader_);
+        render_context_.set_pixel_shader(pixel_shader_);
         render_context_.set_model_transform(pos, orient);
-        render_context_.set_vertex_transform_type(is_skyroom ? VertexTransformType::sky_room : VertexTransformType::_3d);
     }
 }
