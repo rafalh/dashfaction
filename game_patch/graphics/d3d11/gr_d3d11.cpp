@@ -325,7 +325,8 @@ namespace df::gr::d3d11
         if (msaa_render_target_) {
             context_->ResolveSubresource(back_buffer_, 0, msaa_render_target_, 0, back_buffer_format);
         }
-        HRESULT hr = swap_chain_->Present(0, 0);
+        UINT sync_interval = g_game_config.vsync ? 1 : 0;
+        HRESULT hr = swap_chain_->Present(sync_interval, 0);
         check_hr(hr, "Present");
     }
 
