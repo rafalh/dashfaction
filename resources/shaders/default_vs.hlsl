@@ -8,18 +8,18 @@ struct VsInput
 
 cbuffer ModelTransformBuffer : register(b0)
 {
-    float4x4 model_mat;
+    float4x3 world_mat;
 };
 
 cbuffer ViewProjTransformBuffer : register(b1)
 {
-    float4x4 view_mat;
+    float4x3 view_mat;
     float4x4 proj_mat;
 };
 
 cbuffer TextureTransformBuffer : register(b2)
 {
-    float3x4 texture_mat;
+    float2 uv_offset;
 };
 
 struct VsOutput
@@ -34,9 +34,10 @@ struct VsOutput
 VsOutput main(VsInput input)
 {
     VsOutput output;
-    float4 view_pos = mul(view_mat, mul(model_mat, float4(input.pos.xyz, 1.0f)));
-    output.pos = mul(proj_mat, view_pos);
-    output.uv0 = mul(texture_mat, float4(input.uv0, 1.0f, 0.0f)).xy;
+    float3 world_pos = mul(float4(input.pos.xyz, 1), world_mat);
+    float3 view_pos = mul(float4(world_pos, 1), view_mat);
+    output.pos = mul(float4(view_pos, 1), proj_mat);
+    output.uv0 = input.uv0 + uv_offset;
     output.uv1 = input.uv1;
     output.color = input.color;
     output.depth = view_pos.z;

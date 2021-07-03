@@ -45,7 +45,7 @@ namespace df::gr::d3d11
 
         struct alignas(16) BoneTransformsBufferData
         {
-            GrMatrix4x4 matrices[50];
+            GpuMatrix4x3 matrices[50];
         };
 
         ComPtr<ID3D11Buffer> matrices_cbuffer_;
@@ -339,13 +339,12 @@ namespace df::gr::d3d11
         check_hr(hr, "CreateBuffer (character constant buffer)");
     }
 
-    static GrMatrix4x4 convert_bone_matrix(const Matrix43& mat)
+    static inline GpuMatrix4x3 convert_bone_matrix(const Matrix43& mat)
     {
         return {{
             {mat.orient.rvec.x, mat.orient.uvec.x, mat.orient.fvec.x, mat.origin.x},
             {mat.orient.rvec.y, mat.orient.uvec.y, mat.orient.fvec.y, mat.origin.y},
             {mat.orient.rvec.z, mat.orient.uvec.z, mat.orient.fvec.z, mat.origin.z},
-            {0, 0, 0, 1.0f},
         }};
     }
 
@@ -370,7 +369,7 @@ namespace df::gr::d3d11
         std::memset(&data, 0, sizeof(data));
         for (int i = 0; i < ci->base_character->num_bones; ++i) {
             const Matrix43& bone_mat = ci->bone_transforms_final[i];
-            data.matrices[i] = transpose_matrix(convert_bone_matrix(bone_mat));
+            data.matrices[i] = convert_bone_matrix(bone_mat);
         }
 
         D3D11_MAPPED_SUBRESOURCE mapped_cb;

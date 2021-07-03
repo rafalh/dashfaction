@@ -12,20 +12,21 @@ namespace df::gr::d3d11
 {
     struct alignas(16) ModelTransformBufferData
     {
-        std::array<std::array<float, 4>, 4> model_mat;
+        // model to world
+        GpuMatrix4x3 world_mat;
     };
     static_assert(sizeof(ModelTransformBufferData) % 16 == 0);
 
     struct alignas(16) ViewProjTransformBufferData
     {
-        std::array<std::array<float, 4>, 4> view_mat;
-        std::array<std::array<float, 4>, 4> proj_mat;
+        GpuMatrix4x3 view_mat;
+        GpuMatrix4x4 proj_mat;
     };
     static_assert(sizeof(ViewProjTransformBufferData) % 16 == 0);
 
     struct alignas(16) TextureTransformBufferData
     {
-        std::array<std::array<float, 4>, 3> mat;
+        std::array<float, 2> uv_offset;
     };
     static_assert(sizeof(TextureTransformBufferData) % 16 == 0);
 
@@ -85,7 +86,7 @@ namespace df::gr::d3d11
         D3D11_SUBRESOURCE_DATA subres_data{nullptr, 0, 0};
 
         ModelTransformBufferData model_transform_data;
-        model_transform_data.model_mat = build_identity_matrix();
+        model_transform_data.world_mat = build_identity_matrix43();
         subres_data.pSysMem = &model_transform_data;
 
         buffer_desc.ByteWidth = sizeof(model_transform_data);
@@ -95,7 +96,7 @@ namespace df::gr::d3d11
         check_hr(hr, "CreateBuffer");
 
         ViewProjTransformBufferData view_proj_transform_data;
-        view_proj_transform_data.view_mat = build_identity_matrix();
+        view_proj_transform_data.view_mat = build_identity_matrix43();
         view_proj_transform_data.proj_mat = build_identity_matrix();
         subres_data.pSysMem = &view_proj_transform_data;
 
@@ -559,7 +560,7 @@ namespace df::gr::d3d11
     void RenderContext::update_model_transform_3d()
     {
         ModelTransformBufferData data;
-        data.model_mat = build_model_matrix(current_model_pos_, current_model_orient_.copy_transpose());
+        data.world_mat = build_world_matrix(current_model_pos_, current_model_orient_);
 
         D3D11_MAPPED_SUBRESOURCE mapped_cbuffer;
         HRESULT hr = context_->Map(model_transform_3d_cbuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_cbuffer);
@@ -571,7 +572,7 @@ namespace df::gr::d3d11
     void RenderContext::update_view_proj_transform_3d()
     {
         ViewProjTransformBufferData data;
-        data.view_mat = build_camera_view_matrix();
+        data.view_mat = build_view_matrix(rf::gr::eye_pos, rf::gr::eye_matrix);
         data.proj_mat = build_proj_matrix();
 
         D3D11_MAPPED_SUBRESOURCE mapped_cbuffer;
@@ -584,7 +585,7 @@ namespace df::gr::d3d11
     void RenderContext::update_texture_transform()
     {
         TextureTransformBufferData data;
-        data.mat = convert_to_4x3_matrix(build_texture_matrix(current_uv_pan_.x, current_uv_pan_.y));
+        data.uv_offset = {current_uv_pan_.x, current_uv_pan_.y};
 
         D3D11_MAPPED_SUBRESOURCE mapped_cbuffer;
         HRESULT hr = context_->Map(texture_transform_cbuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_cbuffer);
