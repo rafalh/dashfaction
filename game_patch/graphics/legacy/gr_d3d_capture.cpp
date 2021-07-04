@@ -8,11 +8,11 @@
 #include <patch_common/FunHook.h>
 #include <patch_common/AsmWriter.h>
 #include <patch_common/ComPtr.h>
-#include "../rf/gr/gr.h"
-#include "../rf/gr/gr_direct3d.h"
-#include "../main/main.h"
-#include "../bmpman/bmpman.h"
-#include "gr_internal.h"
+#include "../../rf/gr/gr.h"
+#include "../../rf/gr/gr_direct3d.h"
+#include "../../main/main.h"
+#include "../../bmpman/bmpman.h"
+#include "../gr_internal.h"
 #include "gr_d3d_internal.h"
 
 static ComPtr<IDirect3DSurface8> g_capture_tmp_surface;

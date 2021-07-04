@@ -9,16 +9,17 @@
 #include <common/config/BuildConfig.h>
 #include <xlog/xlog.h>
 #include <common/utils/os-utils.h>
-#include "../rf/gr/gr.h"
-#include "../rf/gr/gr_font.h"
-#include "../rf/gr/gr_direct3d.h"
-#include "../rf/os/os.h"
-#include "../rf/multi.h"
-#include "../rf/player/player.h"
-#include "../main/main.h"
-#include "../os/console.h"
-#include "gr.h"
-#include "gr_internal.h"
+#include "../../rf/gr/gr.h"
+#include "../../rf/gr/gr_font.h"
+#include "../../rf/gr/gr_direct3d.h"
+#include "../../rf/os/os.h"
+#include "../../rf/multi.h"
+#include "../../rf/player/player.h"
+#include "../../main/main.h"
+#include "../../os/console.h"
+#include "../gr.h"
+#include "../gr_internal.h"
+#include "gr_d3d_internal.h"
 
 static float g_gr_clipped_geom_offset_x = -0.5;
 static float g_gr_clipped_geom_offset_y = -0.5;

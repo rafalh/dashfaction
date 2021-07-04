@@ -3,7 +3,12 @@
 #include <windows.h>
 #include <d3d8.h>
 #include <xlog/xlog.h>
-#include "../rf/bmpman.h"
+#include "../../rf/bmpman.h"
+
+void gr_d3d_gamma_reset();
+void gr_d3d_texture_device_lost();
+void gr_d3d_texture_init();
+bool gr_d3d_is_d3d8to9();
 
 inline D3DFORMAT get_d3d_format_from_bm_format(rf::bm::Format format)
 {

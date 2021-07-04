@@ -67,10 +67,11 @@ set(SRCS
     graphics/gr.cpp
     graphics/gr.h
     graphics/gr_light.cpp
-    graphics/gr_d3d.cpp
-    graphics/gr_d3d_texture.cpp
-    graphics/gr_d3d_capture.cpp
-    graphics/gr_d3d_gamma.cpp
+    graphics/legacy/gr_d3d.cpp
+    graphics/legacy/gr_d3d_texture.cpp
+    graphics/legacy/gr_d3d_capture.cpp
+    graphics/legacy/gr_d3d_gamma.cpp
+    graphics/legacy/gr_d3d_internal.h
     graphics/d3d11/gr_d3d11.cpp
     graphics/d3d11/gr_d3d11.h
     graphics/d3d11/gr_d3d11_state.cpp

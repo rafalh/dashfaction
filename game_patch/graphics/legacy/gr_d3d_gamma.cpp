@@ -1,11 +1,11 @@
 #include <windows.h>
 #include <d3d8.h>
-#include "gr.h"
-#include "../rf/os/os.h"
-#include "../rf/gr/gr.h"
-#include "../rf/gr/gr_direct3d.h"
 #include <xlog/xlog.h>
 #include <patch_common/AsmWriter.h>
+#include "../gr.h"
+#include "../../rf/os/os.h"
+#include "../../rf/gr/gr.h"
+#include "../../rf/gr/gr_direct3d.h"
 
 #ifndef D3DSGR_NO_CALIBRATION
 #define D3DSGR_NO_CALIBRATION 0x0

@@ -10,8 +10,6 @@
 #include <patch_common/CodeInjection.h>
 #include <patch_common/ShortTypes.h>
 #include <patch_common/AsmWriter.h>
-#include "gr.h"
-#include "gr_internal.h"
 #include "../os/console.h"
 #include "../main/main.h"
 #include "../multi/multi.h"
@@ -21,6 +19,9 @@
 #include "../rf/os/os.h"
 #include "../rf/item.h"
 #include "../rf/clutter.h"
+#include "gr.h"
+#include "gr_internal.h"
+#include "legacy/gr_d3d.h"
 
 namespace df::gr::d3d11
 {
@@ -171,7 +172,6 @@ bool gr_is_texture_format_supported(rf::bm::Format format)
             return true;
         }
         else {
-            bool gr_d3d_is_texture_format_supported(rf::bm::Format);
             return gr_d3d_is_texture_format_supported(format);
         }
     }
@@ -185,7 +185,7 @@ bool gr_set_render_target(int bm_handle)
             return df::gr::d3d11::set_render_target(bm_handle);
         }
         else {
-            bool gr_d3d_set_render_target(int bm_handle);
+
             return gr_d3d_set_render_target(bm_handle);
         }
     }
