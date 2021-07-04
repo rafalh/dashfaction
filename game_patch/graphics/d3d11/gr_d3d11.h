@@ -108,10 +108,10 @@ namespace df::gr::d3d11
         }
     }
 
-    static inline int pack_color(int r, int g, int b, int a)
+    static inline int pack_color(const rf::Color& color)
     {
         // assume little endian
-        return (a << 24) | (b << 16) | (g << 8) | r;
+        return (color.alpha << 24) | (color.blue << 16) | (color.green << 8) | color.red;
     }
 
     static inline std::array<int, 2> normalize_texture_handles_for_mode(rf::gr::Mode mode, const std::array<int, 2>& textures)

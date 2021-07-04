@@ -91,6 +91,7 @@ set(SRCS
     graphics/d3d11/gr_d3d11_mesh.cpp
     graphics/d3d11/gr_d3d11_mesh.h
     graphics/d3d11/gr_d3d11_vertex.h
+    graphics/d3d11/gr_d3d11_buffer.h
     input/input.h
     input/mouse.cpp
     input/key.cpp

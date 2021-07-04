@@ -1,14 +1,15 @@
 #pragma once
 
+#include <cassert>
 #include <array>
 #include <d3d11.h>
 #include <patch_common/ComPtr.h>
 #include "../../rf/gr/gr.h"
 #include "gr_d3d11_shader.h"
+#include "gr_d3d11_buffer.h"
 
 namespace df::gr::d3d11
 {
-
     struct GpuTransformedVertex;
     class RenderContext;
 
@@ -20,23 +21,11 @@ namespace df::gr::d3d11
         void flush();
 
     private:
-        void create_dynamic_vb();
-        void create_dynamic_ib();
-        void map_dynamic_buffers(bool vb_full, bool ib_full);
-        void unmap_dynamic_buffers();
-        void bind_resources();
-
         ComPtr<ID3D11Device> device_;
-        ComPtr<ID3D11DeviceContext> context_;
         RenderContext& render_context_;
-        ComPtr<ID3D11Buffer> dynamic_vb_;
-        ComPtr<ID3D11Buffer> dynamic_ib_;
-        GpuTransformedVertex* mapped_vb_ = nullptr;
-        rf::ushort* mapped_ib_ = nullptr;
+        RingBuffer<GpuTransformedVertex> vertex_ring_buffer_;
+        RingBuffer<rf::ushort> index_ring_buffer_;
         D3D11_PRIMITIVE_TOPOLOGY primitive_topology_ = D3D11_PRIMITIVE_TOPOLOGY_UNDEFINED;
-        int current_vertex_ = 0;
-        int start_index_ = 0;
-        int current_index_ = 0;
         std::array<int, 2> textures_ = { -1, -1 };
         rf::gr::Mode mode_{
             rf::gr::TEXTURE_SOURCE_NONE,
