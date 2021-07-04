@@ -624,7 +624,7 @@ namespace df::gr::d3d11
 
     struct LightsBufferData
     {
-        static constexpr int max_point_lights = 4;
+        static constexpr int max_point_lights = 8;
 
         struct PointLight
         {

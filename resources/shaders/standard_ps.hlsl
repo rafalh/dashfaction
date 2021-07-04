@@ -29,10 +29,13 @@ struct PointLight {
     float radius;
     float3 color;
 };
+
+#define MAX_POINT_LIGHTS 8
+
 cbuffer LightsBuffer : register(b1)
 {
     float4 ambient_light;
-    PointLight point_lights[4];
+    PointLight point_lights[MAX_POINT_LIGHTS];
 };
 
 Texture2D tex0;
@@ -51,7 +54,7 @@ float4 main(VsOutput input) : SV_TARGET
     target.rgb += tex0_color.rgb * tex0_add_rgb;
 
     float3 light_color = tex1.Sample(samp1, input.uv1).rgb;
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < MAX_POINT_LIGHTS; ++i) {
         float3 light_vec = point_lights[i].pos - input.world_pos_and_depth.xyz;
         float3 light_dir = normalize(light_vec);
         float dist = length(light_vec);
