@@ -72,6 +72,7 @@ namespace df::gr::d3d11
         template<typename T>
         T get_proc_address(const char* name) const
         {
+            static_assert(std::is_pointer_v<T>);
             return reinterpret_cast<T>(reinterpret_cast<void(*)()>(GetProcAddress(handle_, name)));
         }
 

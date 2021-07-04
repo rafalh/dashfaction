@@ -61,7 +61,10 @@ namespace df::gr::d3d11
         ComPtr<ID3D11Texture2D> d3d_texture;
         D3D11_SUBRESOURCE_DATA* subres_data_ptr = subres_data_vec.empty() ? nullptr : subres_data_vec.data();
         HRESULT hr = device_->CreateTexture2D(&desc, subres_data_ptr, &d3d_texture);
-        check_hr(hr, "CreateTexture2D cpu");
+        if (FAILED(hr)) {
+            xlog::info("Texture desc: format %d size %dx%d, mip levels %d", desc.Format, desc.Width, desc.Height, desc.MipLevels);
+        }
+        check_hr(hr, "CreateTexture2D standard texture");
 
         if (staging) {
             return {bm_handle, desc.Format, d3d_texture};
@@ -101,8 +104,16 @@ namespace df::gr::d3d11
         int w, h, num_pixels, mip_levels;
         bm::get_mipmap_info(bm_handle, &w, &h, &num_pixels, &mip_levels);
         if (w <= 0 || h <= 0) {
-            xlog::warn("Bad bitmap dimensions: handle %d", bm_handle);
+            xlog::warn("Bad bitmap dimensions: handle %d filename %s dimensions %dx%d", bm_handle, bm::get_filename(bm_handle), w, h);
             return {};
+        }
+
+        // D3D11 expects number of mip levels to depend on the shorter dimension and RF uses longer dimension so
+        // in case of non-squere textures there is a conflict
+        int max_mip_levels = 1 + std::floor(std::log2(std::min(w, h)));
+        if (mip_levels > max_mip_levels) {
+            xlog::trace("Bad number of mip levels for %dx%d texture: expected %d but got %d", w, h, max_mip_levels, mip_levels);
+            mip_levels = max_mip_levels;
         }
 
         bm::Format fmt = bm::get_format(bm_handle);

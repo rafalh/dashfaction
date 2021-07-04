@@ -169,17 +169,17 @@ namespace df::gr::d3d11
             back_buffer_->GetDesc(&desc);
             desc.SampleDesc.Count = g_game_config.msaa;
             hr = device_->CreateTexture2D(&desc, nullptr, &msaa_render_target_);
-            check_hr(hr, "CreateTexture2D");
+            check_hr(hr, "CreateTexture2D msaa render target");
             default_render_target_ = msaa_render_target_;
 
             CD3D11_RENDER_TARGET_VIEW_DESC view_desc{D3D11_RTV_DIMENSION_TEXTURE2DMS};
             hr = device_->CreateRenderTargetView(default_render_target_, &view_desc, &default_render_target_view_);
-            check_hr(hr, "CreateRenderTargetView");
+            check_hr(hr, "CreateRenderTargetView msaa render target");
         }
         else {
             default_render_target_ = back_buffer_;
             hr = device_->CreateRenderTargetView(default_render_target_, nullptr, &default_render_target_view_);
-            check_hr(hr, "CreateRenderTargetView");
+            check_hr(hr, "CreateRenderTargetView back buffer");
         }
     }
 
@@ -200,7 +200,7 @@ namespace df::gr::d3d11
         depth_stencil_desc.MiscFlags = 0;
         ComPtr<ID3D11Texture2D> depth_stencil;
         HRESULT hr = device_->CreateTexture2D(&depth_stencil_desc, nullptr, &depth_stencil);
-        check_hr(hr, "CreateTexture2D");
+        check_hr(hr, "CreateTexture2D depth stencil");
 
         D3D11_DEPTH_STENCIL_VIEW_DESC view_desc;
         ZeroMemory(&view_desc, sizeof(view_desc));
