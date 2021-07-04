@@ -96,7 +96,7 @@ namespace df::gr::d3d11
 
     TextureManager::Texture TextureManager::load_texture(int bm_handle, bool staging)
     {
-        xlog::info("Creating texture for bitmap %s handle %d format %d", bm::get_filename(bm_handle), bm_handle, bm::get_format(bm_handle));
+        xlog::trace("Creating texture for bitmap %s handle %d format %d", bm::get_filename(bm_handle), bm_handle, bm::get_format(bm_handle));
 
         int w, h, num_pixels, mip_levels;
         bm::get_mipmap_info(bm_handle, &w, &h, &num_pixels, &mip_levels);
@@ -180,9 +180,8 @@ namespace df::gr::d3d11
 
     void TextureManager::flush_cache(bool force)
     {
-        xlog::info("Flushing texture cache");
+        xlog::trace("Flushing texture cache");
         if (force) {
-            xlog::info("Flushing all textures");
             texture_cache_.clear();
         }
         else {
