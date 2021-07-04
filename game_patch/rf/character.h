@@ -22,6 +22,16 @@ namespace rf
         int base_usage_count = 0;
         int instance_usage_count = 0;
         void *animation_data = nullptr;
+
+        bool has_morph_vertices() const
+        {
+            return AddrCaller{0x0053A820}.this_call<bool>(this);
+        }
+
+        void morph(rf::Vector3 *morphed_vecs, int num_vecs, int time, short *orig_vecs_map, int num_orig_vecs) const
+        {
+            AddrCaller{0x0053A370}.this_call(this, morphed_vecs, num_vecs, time, orig_vecs_map, num_orig_vecs);
+        }
     };
     static_assert(sizeof(Skeleton) == 0x7C);
 

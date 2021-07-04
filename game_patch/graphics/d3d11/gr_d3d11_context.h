@@ -53,13 +53,14 @@ namespace df::gr::d3d11
             return context_;
         }
 
-        void set_vertex_buffer(ID3D11Buffer* vertex_buffer, UINT stride)
+        void set_vertex_buffer(ID3D11Buffer* vertex_buffer, UINT stride, UINT slot = 0)
         {
-            if (current_vertex_buffer_ != vertex_buffer) {
-                current_vertex_buffer_ = vertex_buffer;
-                UINT offset = 0;
+            assert(slot < vertex_buffer_slots);
+            if (current_vertex_buffers_[slot] != vertex_buffer) {
+                current_vertex_buffers_[slot] = vertex_buffer;
+                UINT offsets[] = { 0 };
                 ID3D11Buffer* vertex_buffers[] = { vertex_buffer };
-                context_->IASetVertexBuffers(0, std::size(vertex_buffers), vertex_buffers, &stride, &offset);
+                context_->IASetVertexBuffers(slot, std::size(vertex_buffers), vertex_buffers, &stride, offsets);
             }
         }
 
@@ -169,6 +170,8 @@ namespace df::gr::d3d11
             }
         }
 
+        static constexpr int vertex_buffer_slots = 2;
+
         ComPtr<ID3D11Device> device_;
         ComPtr<ID3D11DeviceContext> context_;
         StateManager& state_manager_;
@@ -182,7 +185,7 @@ namespace df::gr::d3d11
 
         ID3D11RenderTargetView* render_target_view_ = nullptr;
         ID3D11DepthStencilView* depth_stencil_view_ = nullptr;
-        ID3D11Buffer* current_vertex_buffer_ = nullptr;
+        ID3D11Buffer* current_vertex_buffers_[vertex_buffer_slots] = {};
         ID3D11Buffer* current_index_buffer_ = nullptr;
         ID3D11InputLayout* current_input_layout_ = nullptr;
         ID3D11VertexShader* current_vertex_shader_ = nullptr;

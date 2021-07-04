@@ -35,6 +35,7 @@ namespace df::gr::d3d11
         {
             int start_index;
             int num_indices;
+            int base_vertex = 0;
             int texture_index;
             rf::gr::Mode mode;
             bool double_sided = false;
@@ -50,8 +51,6 @@ namespace df::gr::d3d11
 
         rf::VifLodMesh* lod_mesh_;
         std::vector<Mesh> meshes_;
-        ComPtr<ID3D11Buffer> vb_;
-        ComPtr<ID3D11Buffer> ib_;
     };
 
     class MeshRenderer

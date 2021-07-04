@@ -61,7 +61,7 @@ namespace rf
         short *same_vertex_offsets;
         WeightIndexArray *wi;
         int texture_idx;
-        short *morph_vertices_map;
+        short *orig_map;
         ushort num_vecs;
         ushort num_faces;
         ushort vecs_alloc;
@@ -91,7 +91,7 @@ namespace rf
         int tex_handles[7];
         int num_textures_handles;
         int flags;
-        int num_vertices;
+        int num_original_vecs;
         int unk_field_from_v3d_file;
 #ifdef DASH_FACTION
         void *render_cache;
