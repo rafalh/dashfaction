@@ -5,6 +5,8 @@ namespace df::gr::d3d11
 {
     #define GR_D3D11_ERROR_CASE(hr) case hr: return #hr;
 
+    static ID3D11Device* g_device;
+
     static const char* get_hresult_code_name(HRESULT hr)
     {
         switch (hr) {
@@ -50,6 +52,7 @@ namespace df::gr::d3d11
 
     void init_error(ID3D11Device* device)
     {
+        g_device = device;
         ComPtr<ID3D11Debug> debug;
         if (SUCCEEDED(device->QueryInterface(__uuidof(ID3D11Debug), (void**)&debug))) {
 
@@ -69,7 +72,7 @@ namespace df::gr::d3d11
         std::string error_desc = get_win32_error_description(hr);
         xlog::error("%s failed: %lx (%s)\n%s", fun, hr, code_name, error_desc.c_str());
         if (hr == DXGI_ERROR_DEVICE_REMOVED) {
-            hr = get_device_removed_reason();
+            hr = g_device->GetDeviceRemovedReason();
             code_name = get_hresult_code_name(hr);
             xlog::error("Device removed reason: %lx %s", hr, code_name);
         }

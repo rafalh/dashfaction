@@ -24,6 +24,12 @@
 
 #define USE_D3D11 1
 
+namespace df::gr::d3d11
+{
+    void delete_texture(int bm_handle);
+    bool set_render_target(int bm_handle);
+}
+
 CodeInjection gr_init_stretched_window_injection{
     0x0050C464,
     [](auto& regs) {
@@ -150,14 +156,13 @@ CallHook<void(int, rf::gr::Vertex**, int, rf::gr::Mode)> gr_rect_gr_tmapper_hook
 
 void gr_delete_texture(int bm_handle)
 {
-#if USE_D3D11
-    void gr_d3d11_delete_texture(int bm_handle);
-    gr_d3d11_delete_texture(bm_handle);
-#else
     if (rf::gr::screen.mode == rf::gr::DIRECT3D) {
+#if USE_D3D11
+        df::gr::d3d11::delete_texture(bm_handle);
+#else
         gr_d3d_delete_texture(bm_handle);
-    }
 #endif
+    }
 }
 
 bool gr_is_texture_format_supported(rf::bm::Format format)
@@ -178,11 +183,10 @@ bool gr_set_render_target(int bm_handle)
 {
     if (rf::gr::screen.mode == rf::gr::DIRECT3D) {
 #if USE_D3D11
-    bool gr_d3d11_set_render_target(int bm_handle);
-    return gr_d3d11_set_render_target(bm_handle);
+        return df::gr::d3d11::set_render_target(bm_handle);
 #else
-    bool gr_d3d_set_render_target(int bm_handle);
-    return gr_d3d_set_render_target(bm_handle);
+        bool gr_d3d_set_render_target(int bm_handle);
+        return gr_d3d_set_render_target(bm_handle);
 #endif
     }
     else {

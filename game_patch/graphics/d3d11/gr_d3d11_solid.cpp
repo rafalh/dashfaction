@@ -22,12 +22,12 @@
 
 using namespace rf;
 
-void gr_d3d11_flush();
-
 namespace df::gr::d3d11
 {
     class RoomRenderCache;
     class GRenderCache;
+
+    void flush();
 
     static auto& decals_enabled = addr_as_ref<bool>(0x005A4458);
     static auto& gr_decal_self_illuminated_mode = addr_as_ref<gr::Mode>(0x01818340);
@@ -464,7 +464,7 @@ namespace df::gr::d3d11
                 }
             }
         }
-        gr_d3d11_flush();
+        gr::d3d11::flush();
         render_context_.set_zbias(0);
     }
 

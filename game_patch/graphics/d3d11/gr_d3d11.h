@@ -35,10 +35,54 @@ namespace df::gr::d3d11
     class SolidRenderer;
     class MeshRenderer;
 
+    class DynamicLinkLibrary
+    {
+    public:
+        DynamicLinkLibrary(const wchar_t* filename)
+        {
+            handle_ = LoadLibraryW(filename);
+        }
+
+        DynamicLinkLibrary(const DynamicLinkLibrary& other) = delete;
+
+        DynamicLinkLibrary(DynamicLinkLibrary&& other) noexcept
+            : handle_(std::exchange(other.handle_, nullptr))
+        {}
+
+        ~DynamicLinkLibrary()
+        {
+            if (handle_) {
+                FreeLibrary(handle_);
+            }
+        }
+
+        DynamicLinkLibrary& operator=(const DynamicLinkLibrary& other) = delete;
+
+        DynamicLinkLibrary& operator=(DynamicLinkLibrary&& other) noexcept
+        {
+            std::swap(handle_, other.handle_);
+            return *this;
+        }
+
+        operator bool() const
+        {
+            return handle_ != nullptr;
+        }
+
+        template<typename T>
+        T get_proc_address(const char* name) const
+        {
+            return reinterpret_cast<T>(reinterpret_cast<void(*)()>(GetProcAddress(handle_, name)));
+        }
+
+    private:
+        HMODULE handle_;
+    };
+
     class Renderer
     {
     public:
-        Renderer(HWND hwnd, HMODULE d3d11_lib);
+        Renderer(HWND hwnd);
         ~Renderer();
         void window_active();
         void window_inactive();
@@ -74,14 +118,14 @@ namespace df::gr::d3d11
         void clear_vif_cache(rf::VifLodMesh *lod_mesh);
         void fog_set();
         void flush();
-        HRESULT get_device_removed_reason();
 
     private:
-        void init_device(HMODULE d3d11_lib);
+        void init_device();
         void init_swap_chain(HWND hwnd);
         void init_back_buffer();
         void init_depth_stencil_buffer();
 
+        DynamicLinkLibrary d3d11_lib_;
         ComPtr<ID3D11Device> device_;
         ComPtr<IDXGISwapChain> swap_chain_;
         ComPtr<ID3D11DeviceContext> context_;
@@ -99,7 +143,6 @@ namespace df::gr::d3d11
         std::unique_ptr<MeshRenderer> mesh_renderer_;
     };
 
-    HRESULT get_device_removed_reason();
     void init_error(ID3D11Device* device);
     void fatal_error(HRESULT hr, const char* fun);
 

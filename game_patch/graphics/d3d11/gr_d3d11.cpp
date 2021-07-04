@@ -1,11 +1,7 @@
 #include <cassert>
 #include <dxgi1_4.h>
-#include <patch_common/AsmWriter.h>
-#include <patch_common/CodeInjection.h>
-#include <patch_common/FunHook.h>
 #include <xlog/xlog.h>
 #include "../../rf/gr/gr.h"
-#include "../../rf/os/os.h"
 #include "../../rf/v3d.h"
 #include "../../bmpman/bmpman.h"
 #include "../../main/main.h"
@@ -23,9 +19,6 @@ using namespace rf;
 namespace df::gr::d3d11
 {
     constexpr DXGI_FORMAT back_buffer_format = DXGI_FORMAT_B8G8R8A8_UNORM;
-
-    static HMODULE d3d11_lib;
-    static std::optional<Renderer> renderer;
 
     void Renderer::window_active()
     {
@@ -45,10 +38,9 @@ namespace df::gr::d3d11
         }
     }
 
-    void Renderer::init_device(HMODULE d3d11_lib)
+    void Renderer::init_device()
     {
-        auto pD3D11CreateDevice = reinterpret_cast<PFN_D3D11_CREATE_DEVICE>(
-            reinterpret_cast<void(*)()>(GetProcAddress(d3d11_lib, "D3D11CreateDevice")));
+        auto pD3D11CreateDevice = d3d11_lib_.get_proc_address<PFN_D3D11_CREATE_DEVICE>("D3D11CreateDevice");
         if (!pD3D11CreateDevice) {
             xlog::error("Failed to find D3D11CreateDevice procedure");
             abort();
@@ -217,9 +209,12 @@ namespace df::gr::d3d11
         check_hr(hr, "CreateDepthStencilView");
     }
 
-    Renderer::Renderer(HWND hwnd, HMODULE d3d11_lib)
+    Renderer::Renderer(HWND hwnd) : d3d11_lib_{L"d3d11.dll"}
     {
-        init_device(d3d11_lib);
+        if (!d3d11_lib_) {
+            RF_DEBUG_ERROR("Failed to load d3d11.dll");
+        }
+        init_device();
         init_swap_chain(hwnd);
         init_back_buffer();
         init_depth_stencil_buffer();
@@ -482,333 +477,4 @@ namespace df::gr::d3d11
     {
         batch_manager_->flush();
     }
-
-    HRESULT Renderer::get_device_removed_reason()
-    {
-        return device_ ? device_->GetDeviceRemovedReason() : E_FAIL;
-    }
-
-    HRESULT get_device_removed_reason()
-    {
-        return renderer ? renderer->get_device_removed_reason() : E_FAIL;
-    }
-}
-
-void gr_d3d11_msg_handler(UINT msg, WPARAM w_param, LPARAM l_param)
-{
-    switch (msg) {
-    case WM_ACTIVATEAPP:
-        if (w_param) {
-            xlog::warn("active %x %lx", w_param, l_param);
-            df::gr::d3d11::renderer->window_active();
-        }
-        else {
-            xlog::warn("inactive %x %lx", w_param, l_param);
-            df::gr::d3d11::renderer->window_inactive();
-        }
-    }
-}
-
-void gr_d3d11_flip()
-{
-    df::gr::d3d11::renderer->flip();
-}
-
-void gr_d3d11_close()
-{
-    xlog::info("gr_d3d11_close");
-    df::gr::d3d11::renderer.reset();
-    FreeLibrary(df::gr::d3d11::d3d11_lib);
-}
-
-void gr_d3d11_init(HWND hwnd)
-{
-    xlog::info("gr_d3d11_init");
-    df::gr::d3d11::d3d11_lib = LoadLibraryW(L"d3d11.dll");
-    if (!df::gr::d3d11::d3d11_lib) {
-        RF_DEBUG_ERROR("Failed to load d3d11.dll");
-    }
-
-    df::gr::d3d11::renderer.emplace(hwnd, df::gr::d3d11::d3d11_lib);
-    os_add_msg_handler(gr_d3d11_msg_handler);
-}
-
-bm::Format gr_d3d11_read_back_buffer(int x, int y, int w, int h, rf::ubyte *data)
-{
-    return df::gr::d3d11::renderer->read_back_buffer(x, y, w, h, data);
-}
-
-void gr_d3d11_page_in(int bm_handle)
-{
-    df::gr::d3d11::renderer->page_in(bm_handle);
-}
-
-void gr_d3d11_clear()
-{
-    df::gr::d3d11::renderer->clear();
-}
-
-void gr_d3d11_bitmap(int bitmap_handle, int x, int y, int w, int h, int sx, int sy, int sw, int sh, bool flip_x, bool flip_y, gr::Mode mode)
-{
-    df::gr::d3d11::renderer->bitmap(bitmap_handle, x, y, w, h, sx, sy, sw, sh, flip_x, flip_y, mode);
-}
-
-void gr_d3d11_set_clip()
-{
-    df::gr::d3d11::renderer->set_clip();
-}
-
-void gr_d3d11_zbuffer_clear()
-{
-    df::gr::d3d11::renderer->zbuffer_clear();
-}
-
-void gr_d3d11_tmapper(int nv, const gr::Vertex **vertices, int vertex_attributes, gr::Mode mode)
-{
-    df::gr::d3d11::renderer->tmapper(nv, vertices, vertex_attributes, mode);
-}
-
-void gr_d3d11_line(float x1, float y1, float x2, float y2, gr::Mode mode)
-{
-    df::gr::d3d11::renderer->line(x1, y1, x2, y2, mode);
-}
-
-void gr_d3d11_line_3d(const gr::Vertex& v0, const gr::Vertex& v1, gr::Mode mode)
-{
-    df::gr::d3d11::renderer->line(v0, v1, mode);
-}
-
-void gr_d3d11_texture_save_cache()
-{
-    df::gr::d3d11::renderer->texture_save_cache();
-}
-
-void gr_d3d11_texture_flush_cache(bool force)
-{
-    df::gr::d3d11::renderer->texture_flush_cache(force);
-}
-
-bool gr_d3d11_lock(int bm_handle, int section, gr::LockInfo *lock)
-{
-    return df::gr::d3d11::renderer->lock(bm_handle, section, lock);
-}
-
-void gr_d3d11_unlock(gr::LockInfo *lock)
-{
-    df::gr::d3d11::renderer->unlock(lock);
-}
-
-void gr_d3d11_get_texel(int bm_handle, float u, float v, rf::gr::Color *clr)
-{
-    df::gr::d3d11::renderer->get_texel(bm_handle, u, v, clr);
-}
-
-void gr_d3d11_texture_add_ref(int bm_handle)
-{
-    df::gr::d3d11::renderer->texture_add_ref(bm_handle);
-}
-
-void gr_d3d11_texture_remove_ref(int bm_handle)
-{
-    df::gr::d3d11::renderer->texture_remove_ref(bm_handle);
-}
-
-void gr_d3d11_render_solid(rf::GSolid* solid, rf::GRoom** rooms, int num_rooms)
-{
-    df::gr::d3d11::renderer->render_solid(solid, rooms, num_rooms);
-}
-
-void gr_d3d11_render_movable_solid(GSolid* solid, const Vector3& pos, const Matrix3& orient)
-{
-    df::gr::d3d11::renderer->render_movable_solid(solid, pos, orient);
-}
-
-void gr_d3d11_render_alpha_detail_room(GRoom *room, GSolid *solid)
-{
-    if (df::gr::d3d11::renderer) {
-        df::gr::d3d11::renderer->render_alpha_detail_room(room, solid);
-    }
-}
-
-void gr_d3d11_render_sky_room(GRoom *room)
-{
-    df::gr::d3d11::renderer->render_sky_room(room);
-}
-
-void gr_d3d11_render_v3d_vif(VifLodMesh *lod_mesh, VifMesh *mesh, const Vector3& pos, const Matrix3& orient, [[maybe_unused]] int lod_index, [[maybe_unused]] const MeshRenderParams& params)
-{
-    df::gr::d3d11::renderer->render_v3d_vif(lod_mesh, mesh, pos, orient, params);
-}
-
-void gr_d3d11_render_character_vif(VifLodMesh *lod_mesh, VifMesh *mesh, const Vector3& pos, const Matrix3& orient, const CharacterInstance *ci, [[maybe_unused]] int lod_index, [[maybe_unused]] const MeshRenderParams& params)
-{
-    df::gr::d3d11::renderer->render_character_vif(lod_mesh, mesh, pos, orient, ci, params);
-}
-
-void gr_d3d11_fog_set()
-{
-    df::gr::d3d11::renderer->fog_set();
-}
-
-bool gr_d3d11_set_render_target(int bm_handle)
-{
-    return df::gr::d3d11::renderer->set_render_target(bm_handle);
-}
-
-void gr_d3d11_clear_solid_render_cache()
-{
-    if (df::gr::d3d11::renderer) {
-        df::gr::d3d11::renderer->clear_solid_cache();
-    }
-}
-
-void gr_d3d11_flush()
-{
-    if (gr::screen.mode != 0) {
-        df::gr::d3d11::renderer->flush();
-    }
-}
-
-void gr_d3d11_delete_texture(int bm_handle)
-{
-    df::gr::d3d11::renderer->texture_remove(bm_handle);
-}
-
-static CodeInjection g_render_room_objects_render_liquid_injection{
-    0x004D4106,
-    [](auto& regs) {
-        GRoom* room = regs.edi;
-        GSolid* solid = regs.ebx;
-        df::gr::d3d11::renderer->render_room_liquid_surface(solid, room);
-        regs.eip = 0x004D414F;
-    },
-};
-
-static CodeInjection gr_d3d_setup_3d_injection{
-    0x005473E4,
-    []() {
-        df::gr::d3d11::renderer->setup_3d();
-    },
-};
-
-static CodeInjection vif_lod_mesh_ctor_injection{
-    0x00569D00,
-    [](auto& regs) {
-        VifLodMesh* lod_mesh = regs.ecx;
-        lod_mesh->render_cache = nullptr;
-    },
-};
-
-static CodeInjection vif_lod_mesh_dtor_injection{
-    0x005695D0,
-    [](auto& regs) {
-        VifLodMesh* lod_mesh = regs.ecx;
-        if (df::gr::d3d11::renderer) {
-            df::gr::d3d11::renderer->clear_vif_cache(lod_mesh);
-        }
-    },
-};
-
-void gr_d3d11_apply_patch()
-{
-    g_render_room_objects_render_liquid_injection.install();
-    gr_d3d_setup_3d_injection.install();
-    vif_lod_mesh_ctor_injection.install();
-    vif_lod_mesh_dtor_injection.install();
-
-    AsmWriter{0x004F0B90}.jmp(gr_d3d11_clear_solid_render_cache); // geo_cache_clear
-
-    // AsmWriter{0x00545960}.jmp(gr_d3d11_init);
-
-    // write_mem<ubyte>(0x0050CBE0 + 6, GR_DIRECT3D11);
-    // AsmWriter{0x0050CBE9}.call(gr_d3d11_close);
-
-    // write_mem<ubyte>(0x0050CE2A + 6, GR_DIRECT3D11);
-    // AsmWriter{0x0050CE33}.jmp(gr_d3d11_flip);
-
-    // write_mem<ubyte>(0x0050DF80 + 6, GR_DIRECT3D11);
-    // AsmWriter{0x0050DF9D}.call(gr_d3d11_tmapper);
-
-    // Use renderer agnostic code in Bink rendering
-    AsmWriter{0x00520ADA}.jmp(0x00520B24);
-
-    using namespace asm_regs;
-    AsmWriter{0x00544FC0}.jmp(gr_d3d11_flip); // gr_d3d_flip
-    AsmWriter{0x00545230}.jmp(gr_d3d11_close); // gr_d3d_close
-    AsmWriter{0x00545960}.jmp(gr_d3d11_init); // gr_d3d_init
-    AsmWriter{0x00546730}.jmp(gr_d3d11_read_back_buffer); // gr_d3d_read_backbuffer
-    AsmWriter{0x005468C0}.jmp(gr_d3d11_fog_set); // gr_d3d_fog_set
-    AsmWriter{0x00546A00}.mov(al, 1).ret(); // gr_d3d_is_mode_supported
-    //AsmWriter{0x00546A40}.ret(); // gr_d3d_setup_frustum
-    //AsmWriter{0x00546F60}.ret(); // gr_d3d_change_frustum
-    //AsmWriter{0x00547150}.ret(); // gr_d3d_setup_3d
-    //AsmWriter{0x005473F0}.ret(); // gr_d3d_start_instance
-    //AsmWriter{0x00547540}.ret(); // gr_d3d_stop_instance
-    //AsmWriter{0x005477A0}.ret(); // gr_d3d_project_vertex
-    //AsmWriter{0x005478F0}.ret(); // gr_d3d_is_normal_facing
-    //AsmWriter{0x00547960}.ret(); // gr_d3d_is_normal_facing_plane
-    //AsmWriter{0x005479B0}.ret(); // gr_d3d_get_apparent_distance_from_camera
-    //AsmWriter{0x005479D0}.ret(); // gr_d3d_screen_coords_from_world_coords
-    AsmWriter{0x00547A60}.ret(); // gr_d3d_update_gamma_ramp
-    AsmWriter{0x00547AC0}.ret(); // gr_d3d_set_texture_mip_filter
-    AsmWriter{0x00550820}.jmp(gr_d3d11_page_in); // gr_d3d_page_in
-    AsmWriter{0x005508C0}.jmp(gr_d3d11_clear); // gr_d3d_clear
-    AsmWriter{0x00550980}.jmp(gr_d3d11_zbuffer_clear); // gr_d3d_zbuffer_clear
-    AsmWriter{0x00550A30}.jmp(gr_d3d11_set_clip); // gr_d3d_set_clip
-    AsmWriter{0x00550AA0}.jmp(gr_d3d11_bitmap); // gr_d3d_bitmap
-    AsmWriter{0x00551450}.ret(); // gr_d3d_flush_after_color_change
-    AsmWriter{0x00551460}.jmp(gr_d3d11_line); // gr_d3d_line
-    AsmWriter{0x00551900}.jmp(gr_d3d11_tmapper); // gr_d3d_tmapper
-    AsmWriter{0x005536C0}.jmp(gr_d3d11_render_sky_room);
-    AsmWriter{0x00553C60}.jmp(gr_d3d11_render_movable_solid); // gr_d3d_render_movable_solid - uses gr_d3d_render_face_list
-    //AsmWriter{0x00553EE0}.ret(); // gr_d3d_vfx - uses gr_poly
-    //AsmWriter{0x00554BF0}.ret(); // gr_d3d_vfx_facing - uses gr_d3d_3d_bitmap_angle, gr_d3d_render_volumetric_light
-    //AsmWriter{0x00555080}.ret(); // gr_d3d_vfx_glow - uses gr_d3d_3d_bitmap_angle
-    //AsmWriter{0x00555100}.ret(); // gr_d3d_line_vertex
-    AsmWriter{0x005516E0}.jmp(gr_d3d11_line_3d); // gr_d3d_line_vertex_internal
-    //AsmWriter{0x005551E0}.ret(); // gr_d3d_line_vec - uses gr_d3d_line_vertex
-    //AsmWriter{0x00555790}.ret(); // gr_d3d_3d_bitmap - uses gr_poly
-    //AsmWriter{0x00555AC0}.ret(); // gr_d3d_3d_bitmap_angle - uses gr_poly
-    //AsmWriter{0x00555B20}.ret(); // gr_d3d_3d_bitmap_angle_wh - uses gr_poly
-    //AsmWriter{0x00555B80}.ret(); // gr_d3d_render_volumetric_light - uses gr_poly
-    //AsmWriter{0x00555DC0}.ret(); // gr_d3d_laser - uses gr_tmapper
-    //AsmWriter{0x005563F0}.ret(); // gr_d3d_cylinder - uses gr_line
-    //AsmWriter{0x005565D0}.ret(); // gr_d3d_cone - uses gr_line
-    //AsmWriter{0x005566E0}.ret(); // gr_d3d_sphere - uses gr_line
-    //AsmWriter{0x00556AB0}.ret(); // gr_d3d_chain - uses gr_poly
-    //AsmWriter{0x00556F50}.ret(); // gr_d3d_line_directed - uses gr_line_vertex
-    //AsmWriter{0x005571F0}.ret(); // gr_d3d_line_arrow - uses gr_line_vertex
-    //AsmWriter{0x00557460}.ret(); // gr_d3d_render_particle_sys_particle - uses gr_poly, gr_3d_bitmap_angle
-    //AsmWriter{0x00557D40}.ret(); // gr_d3d_render_bolts - uses gr_poly, gr_line
-    //AsmWriter{0x00558320}.ret(); // gr_d3d_render_geomod_debris - uses gr_poly
-    //AsmWriter{0x00558450}.ret(); // gr_d3d_render_glass_shard - uses gr_poly
-    AsmWriter{0x00558550}.ret(); // gr_d3d_render_face_wireframe
-    //AsmWriter{0x005585F0}.ret(); // gr_d3d_render_weapon_tracer - uses gr_poly
-    //AsmWriter{0x005587C0}.ret(); // gr_d3d_poly - uses gr_d3d_tmapper
-    AsmWriter{0x00558920}.ret(); // gr_d3d_render_geometry_wireframe
-    AsmWriter{0x00558960}.ret(); // gr_d3d_render_geometry_in_editor
-    AsmWriter{0x00558C40}.ret(); // gr_d3d_render_sel_face_in_editor
-    //AsmWriter{0x00558D40}.ret(); // gr_d3d_world_poly - uses gr_d3d_poly
-    //AsmWriter{0x00558E30}.ret(); // gr_d3d_3d_bitmap_stretched_square - uses gr_d3d_world_poly
-    //AsmWriter{0x005590F0}.ret(); // gr_d3d_rod - uses gr_d3d_world_poly
-    AsmWriter{0x005596C0}.ret(); // gr_d3d_render_face_list_colored
-    AsmWriter{0x0055B520}.jmp(gr_d3d11_texture_save_cache); // gr_d3d_texture_save_cache
-    AsmWriter{0x0055B550}.jmp(gr_d3d11_texture_flush_cache); // gr_d3d_texture_flush_cache
-    AsmWriter{0x0055CDC0}.ret(); // gr_d3d_mark_texture_dirty
-    AsmWriter{0x0055CE00}.jmp(gr_d3d11_lock); // gr_d3d_lock
-    AsmWriter{0x0055CF60}.jmp(gr_d3d11_unlock); // gr_d3d_unlock
-    AsmWriter{0x0055CFA0}.jmp(gr_d3d11_get_texel); // gr_d3d_get_texel
-    AsmWriter{0x0055D160}.jmp(gr_d3d11_texture_add_ref); // gr_d3d_texture_add_ref
-    AsmWriter{0x0055D190}.jmp(gr_d3d11_texture_remove_ref); // gr_d3d_texture_remove_ref
-    AsmWriter{0x0055F5E0}.jmp(gr_d3d11_render_solid); // gr_d3d_render_static_solid
-    AsmWriter{0x00561650}.ret(); // gr_d3d_render_face_list
-    //AsmWriter{0x0052FA40}.jmp(gr_d3d11_render_lod_vif); // gr_d3d_render_vif_mesh
-    AsmWriter{0x0052DE10}.jmp(gr_d3d11_render_v3d_vif); // gr_d3d_render_v3d_vif
-    AsmWriter{0x0052E9E0}.jmp(gr_d3d11_render_character_vif); // gr_d3d_render_character_vif
-    AsmWriter{0x004D34D0}.jmp(gr_d3d11_render_alpha_detail_room); // room_render_alpha_detail
-    AsmWriter{0x0050E150}.jmp(gr_d3d11_flush);
-
-    // Change size of standard structures
-    write_mem<int8_t>(0x00569884 + 1, sizeof(rf::VifMesh));
-    write_mem<int8_t>(0x00569732 + 1, sizeof(rf::VifLodMesh));
 }
