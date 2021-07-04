@@ -14,6 +14,20 @@ namespace df::gr::d3d11
     class ShaderManager;
     class TextureManager;
 
+    class LightsBuffer
+    {
+    public:
+        LightsBuffer(ID3D11Device* device);
+        void update(ID3D11DeviceContext* device_context);
+        ID3D11Buffer* get_buffer() const
+        {
+            return buffer_;
+        }
+
+    private:
+        ComPtr<ID3D11Buffer> buffer_;
+    };
+
     class RenderContext
     {
     public:
@@ -142,6 +156,11 @@ namespace df::gr::d3d11
             zbias_changed_ = true;
         }
 
+        void update_lights()
+        {
+            lights_buffer_.update(context_);
+        }
+
     private:
         void init_cbuffers();
         void bind_cbuffers();
@@ -200,5 +219,6 @@ namespace df::gr::d3d11
         rf::Matrix3 current_model_orient_;
         int zbias_ = 0;
         bool zbias_changed_ = true;
+        LightsBuffer lights_buffer_;
     };
 }

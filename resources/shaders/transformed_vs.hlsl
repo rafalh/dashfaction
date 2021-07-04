@@ -1,18 +1,19 @@
 struct VsInput
 {
     float4 pos : POSITIONT;
+    float4 color : COLOR;
     float2 uv0 : TEXCOORD0;
     float2 uv1 : TEXCOORD1;
-    float4 color : COLOR;
 };
 
 struct VsOutput
 {
     float4 pos : SV_POSITION;
+    float3 norm : NORMAL;
+    float4 color : COLOR;
     float2 uv0 : TEXCOORD0;
     float2 uv1 : TEXCOORD1;
-    float4 color : COLOR;
-    float depth : TEXCOORD2;
+    float4 world_pos_and_depth : TEXCOORD2;
 };
 
 VsOutput main(VsInput input)
@@ -21,9 +22,10 @@ VsOutput main(VsInput input)
     float w = input.pos.w;
     output.pos.xyz = input.pos.xyz * w;
     output.pos.w = w;
+    output.norm = float3(0, 0, 0); // dummy normal
     output.uv0 = input.uv0;
     output.uv1 = input.uv1;
     output.color = input.color;
-    output.depth = w;
+    output.world_pos_and_depth = float4(0, 0, 0, w);
     return output;
 }

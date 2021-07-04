@@ -1,5 +1,6 @@
 #include <cassert>
 #include <cstring>
+#include "../../rf/gr/gr_light.h"
 #include "gr_d3d11.h"
 #include "gr_d3d11_context.h"
 #include "gr_d3d11_texture.h"
@@ -58,7 +59,8 @@ namespace df::gr::d3d11
         state_manager_{state_manager}, shader_manager_{shader_manager}, texture_manager_{texture_manager},
         current_uv_pan_{NAN, NAN},
         current_model_pos_{NAN, NAN, NAN},
-        current_model_orient_{{NAN, NAN, NAN}, {NAN, NAN, NAN}, {NAN, NAN, NAN}}
+        current_model_orient_{{NAN, NAN, NAN}, {NAN, NAN, NAN}, {NAN, NAN, NAN}},
+        lights_buffer_{device_}
     {
         init_cbuffers();
         bind_cbuffers();
@@ -120,7 +122,10 @@ namespace df::gr::d3d11
         };
         context_->VSSetConstantBuffers(0, std::size(vs_cbuffers), vs_cbuffers);
 
-        ID3D11Buffer* ps_cbuffers[] = { render_mode_cbuffer_ };
+        ID3D11Buffer* ps_cbuffers[] = {
+            render_mode_cbuffer_,
+            lights_buffer_.get_buffer(),
+        };
         context_->PSSetConstantBuffers(0, std::size(ps_cbuffers), ps_cbuffers);
     }
 
@@ -615,5 +620,62 @@ namespace df::gr::d3d11
     {
         ID3D11RasterizerState* rasterizer_state = state_manager_.lookup_rasterizer_state(current_cull_mode_, zbias_);
         context_->RSSetState(rasterizer_state);
+    }
+
+    struct LightsBufferData
+    {
+        static constexpr int max_point_lights = 4;
+
+        struct PointLight
+        {
+            std::array<float, 3> pos;
+            float radius;
+            std::array<float, 4> color;
+        };
+
+        std::array<float, 3> ambient_light;
+        float padding;
+        PointLight point_lights[max_point_lights];
+    };
+
+    LightsBuffer::LightsBuffer(ID3D11Device* device)
+    {
+        CD3D11_BUFFER_DESC desc{
+            sizeof(LightsBufferData),
+            D3D11_BIND_CONSTANT_BUFFER,
+            D3D11_USAGE_DYNAMIC,
+            D3D11_CPU_ACCESS_WRITE,
+        };
+        HRESULT hr = device->CreateBuffer(&desc, nullptr, &buffer_);
+        check_hr(hr, "CreateBuffer");
+    }
+
+    void LightsBuffer::update(ID3D11DeviceContext* device_context)
+    {
+        D3D11_MAPPED_SUBRESOURCE mapped_subres;
+        HRESULT hr = device_context->Map(buffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_subres);
+        check_hr(hr, "CreateBuffer");
+
+        LightsBufferData data;
+        std::memset(&data, 0, sizeof(data));
+        for (int i = 0; i < std::min(rf::gr::num_relevant_lights, LightsBufferData::max_point_lights); ++i) {
+            LightsBufferData::PointLight& gpu_light = data.point_lights[i];
+            // Make sure radius is never 0 because we divide by it
+            gpu_light.radius = 0.0001f;
+        }
+
+        rf::gr::light_get_ambient(&data.ambient_light[0], &data.ambient_light[1], &data.ambient_light[2]);
+
+        for (int i = 0; i < std::min(rf::gr::num_relevant_lights, LightsBufferData::max_point_lights); ++i) {
+            rf::gr::Light* light = rf::gr::relevant_lights[i];
+            LightsBufferData::PointLight& gpu_light = data.point_lights[i];
+            gpu_light.pos = {light->vec.x, light->vec.y, light->vec.z};
+            gpu_light.color = {light->r, light->g, light->b, 1.0f};
+            gpu_light.radius = light->rad_2;
+        }
+
+        std::memcpy(mapped_subres.pData, &data, sizeof(data));
+
+        device_context->Unmap(buffer_, 0);
     }
 }

@@ -13,6 +13,8 @@ namespace df::gr::d3d11
         transformed,
     };
 
+    using float3 = std::array<float, 3>;
+
     template<VertexLayout L>
     struct VertexLayoutTrait
     {
@@ -24,12 +26,14 @@ namespace df::gr::d3d11
         float x;
         float y;
         float z;
+        float3 norm;
+        int diffuse;
         float u0;
         float v0;
         float u1;
         float v1;
-        int diffuse;
     };
+    static_assert(sizeof(GpuVertex) == 44);
 
     template<>
     inline
@@ -38,9 +42,10 @@ namespace df::gr::d3d11
     {
         return {
             { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+            { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+            { "COLOR", 0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
             { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
             { "TEXCOORD", 1, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-            { "COLOR", 0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
         };
     }
 
@@ -50,15 +55,18 @@ namespace df::gr::d3d11
         float y;
         float z;
     };
+    static_assert(sizeof(GpuCharacterVertex0) == 12);
 
     struct GpuCharacterVertex1
     {
+        float3 norm;
         float u0;
         float v0;
         int diffuse;
         unsigned char weights[4];
         unsigned char indices[4];
     };
+    static_assert(sizeof(GpuCharacterVertex1) == 32);
 
     template<>
     inline
@@ -67,6 +75,7 @@ namespace df::gr::d3d11
     {
         return {
             { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+            { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
             { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
             { "COLOR", 0, DXGI_FORMAT_R8G8B8A8_UNORM, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
             { "COLOR", 1, DXGI_FORMAT_R8G8B8A8_UNORM, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
@@ -80,12 +89,13 @@ namespace df::gr::d3d11
         float y;
         float z;
         float w;
+        int diffuse;
         float u0;
         float v0;
         float u1;
         float v1;
-        int diffuse;
     };
+    static_assert(sizeof(GpuTransformedVertex) == 36);
 
     template<>
     inline
@@ -94,9 +104,9 @@ namespace df::gr::d3d11
     {
         return {
             { "POSITIONT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+            { "COLOR", 0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
             { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
             { "TEXCOORD", 1, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-            { "COLOR", 0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
         };
     }
 

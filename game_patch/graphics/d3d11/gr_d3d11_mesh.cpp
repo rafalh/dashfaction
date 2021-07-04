@@ -164,6 +164,11 @@ namespace df::gr::d3d11
                     gpu_vert.x = chunk.vecs[vert_index].x;
                     gpu_vert.y = chunk.vecs[vert_index].y;
                     gpu_vert.z = chunk.vecs[vert_index].z;
+                    gpu_vert.norm = {
+                        chunk.norms[vert_index].x,
+                        chunk.norms[vert_index].y,
+                        chunk.norms[vert_index].z,
+                    };
                     gpu_vert.u0 = chunk.uvs[vert_index].x;
                     gpu_vert.v0 = chunk.uvs[vert_index].y;
                     gpu_vert.diffuse = 0xFFFFFFFF;
@@ -278,9 +283,14 @@ namespace df::gr::d3d11
                     gpu_vert_0.x = chunk.vecs[vert_index].x;
                     gpu_vert_0.y = chunk.vecs[vert_index].y;
                     gpu_vert_0.z = chunk.vecs[vert_index].z;
+                    gpu_vert_1.norm = {
+                        chunk.norms[vert_index].x,
+                        chunk.norms[vert_index].y,
+                        chunk.norms[vert_index].z,
+                    };
+                    gpu_vert_1.diffuse = 0xFFFFFFFF;
                     gpu_vert_1.u0 = chunk.uvs[vert_index].x;
                     gpu_vert_1.v0 = chunk.uvs[vert_index].y;
-                    gpu_vert_1.diffuse = 0xFFFFFFFF;
                     if (chunk.wi) {
                         for (int i = 0; i < 4; ++i) {
                             gpu_vert_1.weights[i] = chunk.wi[vert_index].weights[i];

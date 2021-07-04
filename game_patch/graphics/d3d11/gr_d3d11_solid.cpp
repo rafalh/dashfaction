@@ -11,6 +11,7 @@
 #include <xlog/xlog.h>
 #include "../../rf/geometry.h"
 #include "../../rf/gr/gr.h"
+#include "../../rf/gr/gr_light.h"
 #include "../../rf/gr/gr_direct3d.h"
 #include "../../rf/level.h"
 #include "../../rf/os/timer.h"
@@ -174,11 +175,16 @@ namespace df::gr::d3d11
                     gpu_vert.x = fvert->vertex->pos.x;
                     gpu_vert.y = fvert->vertex->pos.y;
                     gpu_vert.z = fvert->vertex->pos.z;
+                    gpu_vert.norm = {
+                        face->plane.normal.x,
+                        face->plane.normal.y,
+                        face->plane.normal.z,
+                    };
+                    gpu_vert.diffuse = 0xFFFFFFFF;
                     gpu_vert.u0 = fvert->texture_u;
                     gpu_vert.v0 = fvert->texture_v;
                     gpu_vert.u1 = fvert->lightmap_u;
                     gpu_vert.v1 = fvert->lightmap_v;
-                    gpu_vert.diffuse = 0xFFFFFFFF;
 
                     if (fvert_index >= 2) {
                         ib_data.emplace_back(face_start_index);
@@ -213,11 +219,16 @@ namespace df::gr::d3d11
                     gpu_vert.x = fvert->vertex->pos.x;
                     gpu_vert.y = fvert->vertex->pos.y;
                     gpu_vert.z = fvert->vertex->pos.z;
+                    gpu_vert.norm = {
+                        face->plane.normal.x,
+                        face->plane.normal.y,
+                        face->plane.normal.z,
+                    };
+                    gpu_vert.diffuse = 0xFFFFFFFF;
                     gpu_vert.u0 = dp->uvs[fvert_index].x;
                     gpu_vert.v0 = dp->uvs[fvert_index].y;
                     gpu_vert.u1 = fvert->lightmap_u;
                     gpu_vert.v1 = fvert->lightmap_v;
-                    gpu_vert.diffuse = 0xFFFFFFFF;
 
                     if (fvert_index >= 2) {
                         ib_data.emplace_back(face_start_index);
@@ -552,6 +563,9 @@ namespace df::gr::d3d11
 
     void SolidRenderer::render_solid(rf::GSolid* solid, rf::GRoom** rooms, int num_rooms)
     {
+        rf::gr::light_filter_set_solid(solid, 1, 0);
+        render_context_.update_lights();
+
         before_render(rf::zero_vector, rf::identity_matrix);
 
         for (int i = 0; i < num_rooms; ++i) {
@@ -574,6 +588,9 @@ namespace df::gr::d3d11
         if (decals_enabled) {
             render_dynamic_decals(rooms, num_rooms);
         }
+
+        rf::gr::light_filter_reset();
+        render_context_.update_lights();
     }
 
     void SolidRenderer::before_render(const rf::Vector3& pos, const rf::Matrix3& orient)
