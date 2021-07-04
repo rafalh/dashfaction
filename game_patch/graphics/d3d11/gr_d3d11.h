@@ -60,6 +60,8 @@ namespace df::gr::d3d11
         bool set_render_target(int bm_handle);
         rf::bm::Format read_back_buffer(int x, int y, int w, int h, rf::ubyte *data);
         void tmapper(int nv, const rf::gr::Vertex **vertices, int vertex_attributes, rf::gr::Mode mode);
+        void line(const rf::gr::Vertex& v0, const rf::gr::Vertex& v1, rf::gr::Mode mode);
+        void line(float x1, float y1, float x2, float y2, rf::gr::Mode mode);
         void setup_3d();
         void render_solid(rf::GSolid* solid, rf::GRoom** rooms, int num_rooms);
         void render_movable_solid(rf::GSolid* solid, const rf::Vector3& pos, const rf::Matrix3& orient);

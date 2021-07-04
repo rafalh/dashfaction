@@ -25,11 +25,11 @@ namespace df::gr::d3d11
 
     void BatchManager::flush()
     {
-        vertex_ring_buffer_.submit();
-        auto [start_index, num_index] = index_ring_buffer_.submit();
-        if (num_index == 0) {
+        auto [start_vertex, num_vertex] = vertex_ring_buffer_.submit();
+        if (num_vertex == 0) {
             return;
         }
+        auto [start_index, num_index] = index_ring_buffer_.submit();
 
         render_context_.set_vertex_buffer(vertex_ring_buffer_.get_buffer(), sizeof(GpuTransformedVertex));
         render_context_.set_index_buffer(index_ring_buffer_.get_buffer());
@@ -43,7 +43,7 @@ namespace df::gr::d3d11
         render_context_.device_context()->DrawIndexed(num_index, start_index, 0);
     }
 
-    void BatchManager::add_vertices(int nv, const gr::Vertex **vertices, int vertex_attributes, const std::array<int, 2>& tex_handles, gr::Mode mode)
+    void BatchManager::add_poly(int nv, const gr::Vertex **vertices, int vertex_attributes, const std::array<int, 2>& tex_handles, gr::Mode mode)
     {
         int num_index = (nv - 2) * 3;
         if (nv > batch_max_vertex || num_index > batch_max_index) {
@@ -52,16 +52,13 @@ namespace df::gr::d3d11
         }
 
         std::array<int, 2> normalized_tex_handles = normalize_texture_handles_for_mode(mode, tex_handles);
-        bool vb_full = vertex_ring_buffer_.is_full(nv);
-        bool ib_full = index_ring_buffer_.is_full(num_index);
-        bool mode_changed = mode_ != mode;
-        bool texture_changed = textures_ != normalized_tex_handles;
-        bool topology_changed = primitive_topology_ != D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-        if (vb_full || ib_full || topology_changed || mode_changed || texture_changed) {
+
+        set_primitive_topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        set_mode(mode);
+        set_textures(normalized_tex_handles);
+
+        if (vertex_ring_buffer_.is_full(nv) || index_ring_buffer_.is_full(num_index)) {
             flush();
-            mode_ = mode;
-            textures_ = normalized_tex_handles;
-            primitive_topology_ = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
         }
 
         auto [gpu_verts, base_vertex] = vertex_ring_buffer_.alloc(nv);
@@ -106,6 +103,33 @@ namespace df::gr::d3d11
                 *(gpu_ind_ptr++) = base_vertex + i - 1;
                 *(gpu_ind_ptr++) = base_vertex + i;
             }
+        }
+    }
+
+    void BatchManager::add_line(const gr::Vertex **vertices, rf::gr::Mode mode)
+    {
+        set_primitive_topology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
+        set_mode(mode);
+        if (vertex_ring_buffer_.is_full(2) || index_ring_buffer_.is_full(2)) {
+            flush();
+        }
+
+        auto [gpu_verts, base_vertex] = vertex_ring_buffer_.alloc(2);
+        auto [gpu_ind_ptr, base_index] = index_ring_buffer_.alloc(2);
+
+        // Note: gr_matrix_scale is zero before first gr_setup_3d call
+        float matrix_scale_z = gr::matrix_scale.z ? gr::matrix_scale.z : 1.0f;
+        for (int i = 0; i < 2; ++i) {
+            const gr::Vertex& in_vert = *vertices[i];
+            GpuTransformedVertex& out_vert = gpu_verts[i];
+            out_vert.x = (in_vert.sx - gr::screen.offset_x) / gr::screen.clip_width * 2.0f - 1.0f;
+            out_vert.y = (in_vert.sy - gr::screen.offset_y) / gr::screen.clip_height * -2.0f + 1.0f;
+            out_vert.z = in_vert.sw * gr::zm;
+            // Set w to depth in camera space (needed for 3D rendering)
+            out_vert.w = 1.0f / in_vert.sw / matrix_scale_z;
+            out_vert.diffuse = pack_color(gr::screen.current_color);
+            *(gpu_ind_ptr++) = base_vertex;
+            *(gpu_ind_ptr++) = base_vertex + 1;
         }
     }
 }

@@ -294,7 +294,7 @@ namespace df::gr::d3d11
         verts[3].u1 = u_left;
         verts[3].v1 = v_bottom;
         std::array<int, 2> tex_handles{bm_handle, -1};
-        batch_manager_->add_vertices(std::size(verts_ptrs), verts_ptrs, 0, tex_handles, mode);
+        batch_manager_->add_poly(std::size(verts_ptrs), verts_ptrs, 0, tex_handles, mode);
     }
 
     void Renderer::page_in(int bm_handle)
@@ -373,7 +373,25 @@ namespace df::gr::d3d11
     void Renderer::tmapper(int nv, const rf::gr::Vertex **vertices, int vertex_attributes, rf::gr::Mode mode)
     {
         std::array<int, 2> tex_handles{gr::screen.current_texture_1, gr::screen.current_texture_2};
-        batch_manager_->add_vertices(nv, vertices, vertex_attributes, tex_handles, mode);
+        batch_manager_->add_poly(nv, vertices, vertex_attributes, tex_handles, mode);
+    }
+
+    void Renderer::line(const rf::gr::Vertex& v0, const rf::gr::Vertex& v1, rf::gr::Mode mode)
+    {
+        const rf::gr::Vertex* vertices[] = {&v0, &v1};
+        batch_manager_->add_line(vertices, mode);
+    }
+
+    void Renderer::line(float x1, float y1, float x2, float y2, rf::gr::Mode mode)
+    {
+        rf::gr::Vertex verts[2];
+        verts[0].sx = x1;
+        verts[0].sy = y1;
+        verts[0].sw = 1.0f;
+        verts[1].sx = x2;
+        verts[1].sy = y2;
+        verts[1].sw = 1.0f;
+        line(verts[0], verts[1], mode);
     }
 
     bool Renderer::set_render_target(int bm_handle)
@@ -548,6 +566,16 @@ void gr_d3d11_zbuffer_clear()
 void gr_d3d11_tmapper(int nv, const gr::Vertex **vertices, int vertex_attributes, gr::Mode mode)
 {
     df::gr::d3d11::renderer->tmapper(nv, vertices, vertex_attributes, mode);
+}
+
+void gr_d3d11_line(float x1, float y1, float x2, float y2, gr::Mode mode)
+{
+    df::gr::d3d11::renderer->line(x1, y1, x2, y2, mode);
+}
+
+void gr_d3d11_line_3d(const gr::Vertex& v0, const gr::Vertex& v1, gr::Mode mode)
+{
+    df::gr::d3d11::renderer->line(v0, v1, mode);
 }
 
 void gr_d3d11_texture_save_cache()
@@ -729,14 +757,15 @@ void gr_d3d11_apply_patch()
     AsmWriter{0x00550A30}.jmp(gr_d3d11_set_clip); // gr_d3d_set_clip
     AsmWriter{0x00550AA0}.jmp(gr_d3d11_bitmap); // gr_d3d_bitmap
     AsmWriter{0x00551450}.ret(); // gr_d3d_flush_after_color_change
-    AsmWriter{0x00551460}.ret(); // gr_d3d_line
+    AsmWriter{0x00551460}.jmp(gr_d3d11_line); // gr_d3d_line
     AsmWriter{0x00551900}.jmp(gr_d3d11_tmapper); // gr_d3d_tmapper
     AsmWriter{0x005536C0}.jmp(gr_d3d11_render_sky_room);
     AsmWriter{0x00553C60}.jmp(gr_d3d11_render_movable_solid); // gr_d3d_render_movable_solid - uses gr_d3d_render_face_list
     //AsmWriter{0x00553EE0}.ret(); // gr_d3d_vfx - uses gr_poly
     //AsmWriter{0x00554BF0}.ret(); // gr_d3d_vfx_facing - uses gr_d3d_3d_bitmap_angle, gr_d3d_render_volumetric_light
     //AsmWriter{0x00555080}.ret(); // gr_d3d_vfx_glow - uses gr_d3d_3d_bitmap_angle
-    AsmWriter{0x00555100}.ret(); // gr_d3d_line_vertex
+    //AsmWriter{0x00555100}.ret(); // gr_d3d_line_vertex
+    AsmWriter{0x005516E0}.jmp(gr_d3d11_line_3d); // gr_d3d_line_vertex_internal
     //AsmWriter{0x005551E0}.ret(); // gr_d3d_line_vec - uses gr_d3d_line_vertex
     //AsmWriter{0x00555790}.ret(); // gr_d3d_3d_bitmap - uses gr_poly
     //AsmWriter{0x00555AC0}.ret(); // gr_d3d_3d_bitmap_angle - uses gr_poly
