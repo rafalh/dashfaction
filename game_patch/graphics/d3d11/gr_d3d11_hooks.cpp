@@ -244,9 +244,6 @@ void gr_d3d11_apply_patch()
     // write_mem<ubyte>(0x0050DF80 + 6, GR_DIRECT3D11);
     // AsmWriter{0x0050DF9D}.call(tmapper);
 
-    // Use renderer agnostic code in Bink rendering
-    AsmWriter{0x00520ADA}.jmp(0x00520B24);
-
     using namespace asm_regs;
     AsmWriter{0x00544FC0}.jmp(flip); // gr_d3d_flip
     AsmWriter{0x00545230}.jmp(close); // gr_d3d_close

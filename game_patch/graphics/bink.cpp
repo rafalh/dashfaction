@@ -1,6 +1,7 @@
 #include <patch_common/FunHook.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/CodeInjection.h>
+#include <patch_common/AsmWriter.h>
 #include "../main/main.h"
 #include "../rf/gr/gr.h"
 #include "../rf/sound/sound_ds.h"
@@ -68,4 +69,9 @@ void bink_apply_patch()
 
     // Fix PlayBikFile texture leak
     play_bik_file_vram_leak_fix.install();
+
+    // Use renderer agnostic code in Bink rendering
+    if (g_game_config.renderer != GameConfig::Renderer::legacy) {
+        AsmWriter{0x00520ADA}.jmp(0x00520B24);
+    }
 }

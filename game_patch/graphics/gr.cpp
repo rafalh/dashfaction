@@ -299,10 +299,10 @@ void gr_apply_patch()
 
         // Gamma related code
         gr_d3d_gamma_apply_patch();
-
-        // Bink Video patch
-        bink_apply_patch();
     }
+
+    // Bink Video patch
+    bink_apply_patch();
 
     // Do not flush drawing buffers in gr_set_color
     write_mem<u8>(0x0050CFEB, asm_opcodes::jmp_rel_short);
