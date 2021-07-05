@@ -143,6 +143,7 @@ namespace df::gr::d3d11
         std::unique_ptr<RenderContext> render_context_;
         std::unique_ptr<SolidRenderer> solid_renderer_;
         std::unique_ptr<MeshRenderer> mesh_renderer_;
+        int render_target_bm_handle_ = -1;
     };
 
     void init_error(ID3D11Device* device);

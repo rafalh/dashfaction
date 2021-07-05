@@ -2,6 +2,7 @@
 #include "gr_d3d11.h"
 #include "gr_d3d11_texture.h"
 #include "../../bmpman/bmpman.h"
+#include "../../main/main.h"
 
 using namespace rf;
 
@@ -78,23 +79,44 @@ namespace df::gr::d3d11
 
     TextureManager::Texture TextureManager::create_render_target(int bm_handle, int w, int h)
     {
-        CD3D11_TEXTURE2D_DESC desc{
+        ComPtr<ID3D11Texture2D> gpu_ss_texture;
+        ComPtr<ID3D11Texture2D> gpu_ms_texture;
+        ComPtr<ID3D11RenderTargetView> render_target_view;
+        HRESULT hr;
+
+        CD3D11_TEXTURE2D_DESC tex_desc{
             DXGI_FORMAT_R8G8B8A8_UNORM,
             static_cast<UINT>(w),
             static_cast<UINT>(h),
             1, // arraySize
             1, // mipLevels
-            D3D11_BIND_RENDER_TARGET|D3D11_BIND_SHADER_RESOURCE,
         };
-        ComPtr<ID3D11Texture2D> gpu_texture;
-        HRESULT hr = device_->CreateTexture2D(&desc, nullptr, &gpu_texture);
-        check_hr(hr, "CreateTexture2D render target");
 
-        ComPtr<ID3D11RenderTargetView> render_target_view;
-        hr = device_->CreateRenderTargetView(gpu_texture, nullptr, &render_target_view);
-        check_hr(hr, "CreateRenderTargetView");
+        if (g_game_config.msaa) {
+            tex_desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+            hr = device_->CreateTexture2D(&tex_desc, nullptr, &gpu_ss_texture);
+            check_hr(hr, "CreateTexture2D render target SS");
 
-        return {bm_handle, desc.Format, std::move(gpu_texture), std::move(render_target_view)};
+            tex_desc.BindFlags = D3D11_BIND_RENDER_TARGET;
+            tex_desc.SampleDesc.Count = g_game_config.msaa.value();
+            hr = device_->CreateTexture2D(&tex_desc, nullptr, &gpu_ms_texture);
+            check_hr(hr, "CreateTexture2D render target MS");
+
+            hr = device_->CreateRenderTargetView(gpu_ms_texture, nullptr, &render_target_view);
+            check_hr(hr, "CreateRenderTargetView");
+        }
+        else {
+            tex_desc.BindFlags = D3D11_BIND_RENDER_TARGET|D3D11_BIND_SHADER_RESOURCE;
+            hr = device_->CreateTexture2D(&tex_desc, nullptr, &gpu_ss_texture);
+            check_hr(hr, "CreateTexture2D render target");
+
+            hr = device_->CreateRenderTargetView(gpu_ss_texture, nullptr, &render_target_view);
+            check_hr(hr, "CreateRenderTargetView");
+        }
+
+        Texture texture{bm_handle, tex_desc.Format, std::move(gpu_ss_texture), std::move(render_target_view)};
+        texture.gpu_ms_texture = std::move(gpu_ms_texture);
+        return texture;
     }
 
     TextureManager::Texture TextureManager::load_texture(int bm_handle, bool staging)
@@ -166,9 +188,6 @@ namespace df::gr::d3d11
             return nullptr;
         }
         Texture& texture = get_or_load_texture(bm_handle, false);
-        if (!texture.texture_view) {
-            xlog::trace("Creating GPU texture for %s", bm::get_filename(bm_handle));
-        }
         return texture.get_or_create_texture_view(device_, device_context_);
     }
 
@@ -179,6 +198,17 @@ namespace df::gr::d3d11
         }
         Texture& texture = get_or_load_texture(bm_handle, false);
         return texture.render_target_view;
+    }
+
+    void TextureManager::finish_render_target(int bm_handle)
+    {
+        if (bm_handle < 0) {
+            return;
+        }
+        Texture& texture = get_or_load_texture(bm_handle, false);
+        if (texture.gpu_ms_texture && texture.gpu_texture) {
+            device_context_->ResolveSubresource(texture.gpu_texture, 0, texture.gpu_ms_texture, 0, texture.format);
+        }
     }
 
     void TextureManager::save_cache()
@@ -397,35 +427,41 @@ namespace df::gr::d3d11
         clr->set(255, 255, 255, 255);
     }
 
-    void TextureManager::Texture::init_gpu_texture(ID3D11Device* device, ID3D11DeviceContext* device_context)
+    void TextureManager::Texture::init_shader_resource_view(ID3D11Device* device, ID3D11DeviceContext* device_context)
     {
         if (!gpu_texture) {
-            if (!cpu_texture) {
-                xlog::warn("Both GPU and CPU textures are missing");
-                return;
-            }
-
-            D3D11_TEXTURE2D_DESC cpu_desc;
-            cpu_texture->GetDesc(&cpu_desc);
-
-            CD3D11_TEXTURE2D_DESC desc{
-                cpu_desc.Format,
-                cpu_desc.Width,
-                cpu_desc.Height,
-                cpu_desc.ArraySize,
-                cpu_desc.MipLevels,
-            };
-            HRESULT hr = device->CreateTexture2D(&desc, nullptr, &gpu_texture);
-            check_hr(hr, "CreateTexture2D gpu");
-
-            // Copy only first level
-            // TODO: mapmaps?
-            device_context->CopyResource(gpu_texture, cpu_texture);
+            init_gpu_texture(device, device_context);
         }
 
-        HRESULT hr = device->CreateShaderResourceView(gpu_texture, nullptr, &texture_view);
+        HRESULT hr = device->CreateShaderResourceView(gpu_texture, nullptr, &shader_resource_view);
         check_hr(hr, "CreateShaderResourceView");
+    }
 
+    void TextureManager::Texture::init_gpu_texture(ID3D11Device* device, ID3D11DeviceContext* device_context)
+    {
+        xlog::trace("Creating GPU texture for %s", bm::get_filename(bm_handle));
+
+        if (!cpu_texture) {
+            xlog::warn("Both GPU and CPU textures are missing");
+            return;
+        }
+
+        D3D11_TEXTURE2D_DESC cpu_desc;
+        cpu_texture->GetDesc(&cpu_desc);
+
+        CD3D11_TEXTURE2D_DESC desc{
+            cpu_desc.Format,
+            cpu_desc.Width,
+            cpu_desc.Height,
+            cpu_desc.ArraySize,
+            cpu_desc.MipLevels,
+        };
+        HRESULT hr = device->CreateTexture2D(&desc, nullptr, &gpu_texture);
+        check_hr(hr, "CreateTexture2D gpu");
+
+        // Copy only first level
+        // TODO: mapmaps?
+        device_context->CopyResource(gpu_texture, cpu_texture);
         xlog::trace("Created GPU texture");
     }
 

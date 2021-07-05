@@ -13,6 +13,7 @@ namespace df::gr::d3d11
 
         ID3D11ShaderResourceView* lookup_texture(int bm_handle);
         ID3D11RenderTargetView* lookup_render_target(int bm_handle);
+        void finish_render_target(int bm_handle);
         void save_cache();
         void flush_cache(bool force);
         void add_ref(int bm_handle);
@@ -41,10 +42,10 @@ namespace df::gr::d3d11
 
             ID3D11ShaderResourceView* get_or_create_texture_view(ID3D11Device* device, ID3D11DeviceContext* device_context)
             {
-                if (!texture_view) {
-                    init_gpu_texture(device, device_context);
+                if (!shader_resource_view) {
+                    init_shader_resource_view(device, device_context);
                 }
-                return texture_view;
+                return shader_resource_view;
             }
 
             ID3D11Texture2D* get_or_create_staging_texture(ID3D11Device* device, ID3D11DeviceContext* device_context, bool copy_from_gpu)
@@ -59,11 +60,13 @@ namespace df::gr::d3d11
             DXGI_FORMAT format = DXGI_FORMAT_UNKNOWN;
             ComPtr<ID3D11Texture2D> cpu_texture;
             ComPtr<ID3D11Texture2D> gpu_texture;
+            ComPtr<ID3D11Texture2D> gpu_ms_texture;
             ComPtr<ID3D11RenderTargetView> render_target_view;
-            ComPtr<ID3D11ShaderResourceView> texture_view;
+            ComPtr<ID3D11ShaderResourceView> shader_resource_view;
             short save_cache_count = 0;
             short ref_count = 0;
 
+            void init_shader_resource_view(ID3D11Device* device, ID3D11DeviceContext* device_context);
             void init_gpu_texture(ID3D11Device* device, ID3D11DeviceContext* device_context);
             void init_cpu_texture(ID3D11Device* device, ID3D11DeviceContext* device_context, bool copy_from_gpu);
         };

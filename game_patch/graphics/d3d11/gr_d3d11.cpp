@@ -252,8 +252,7 @@ namespace df::gr::d3d11
         depth_stencil_desc.SampleDesc.Quality = 0;
         depth_stencil_desc.Usage = D3D11_USAGE_DEFAULT;
         depth_stencil_desc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-        depth_stencil_desc.CPUAccessFlags = 0;
-        depth_stencil_desc.MiscFlags = 0;
+
         ComPtr<ID3D11Texture2D> depth_stencil;
         HRESULT hr = device_->CreateTexture2D(&depth_stencil_desc, nullptr, &depth_stencil);
         check_hr(hr, "CreateTexture2D depth stencil");
@@ -261,6 +260,7 @@ namespace df::gr::d3d11
         D3D11_DEPTH_STENCIL_VIEW_DESC view_desc;
         ZeroMemory(&view_desc, sizeof(view_desc));
         view_desc.ViewDimension = g_game_config.msaa ? D3D11_DSV_DIMENSION_TEXTURE2DMS : D3D11_DSV_DIMENSION_TEXTURE2D;
+
         hr = device_->CreateDepthStencilView(depth_stencil, &view_desc, &depth_stencil_view_);
         check_hr(hr, "CreateDepthStencilView");
     }
@@ -421,6 +421,10 @@ namespace df::gr::d3d11
         else {
             render_context_->set_render_target(default_render_target_view_, depth_stencil_view_);
         }
+        if (render_target_bm_handle_ != -1) {
+            texture_manager_->finish_render_target(render_target_bm_handle_);
+        }
+        render_target_bm_handle_ = bm_handle;
         return true;
     }
 
