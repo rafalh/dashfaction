@@ -188,7 +188,7 @@ namespace df::gr::d3d11
                 b.num_indices = gpu_inds.size() - b.start_index;
             }
         }
-        xlog::info("Creating mesh geometry buffers: verts %d inds %d", gpu_verts.size(), gpu_inds.size());
+        xlog::debug("Creating mesh geometry buffers: verts %d inds %d", gpu_verts.size(), gpu_inds.size());
 
         CD3D11_BUFFER_DESC vb_desc{
             sizeof(gpu_verts[0]) * gpu_verts.size(),
@@ -316,7 +316,7 @@ namespace df::gr::d3d11
                 b.num_indices = gpu_inds.size() - b.start_index;
             }
         }
-        xlog::warn("Creating mesh render buffer - verts %d inds %d", gpu_verts_0.size(), gpu_inds.size());
+        xlog::debug("Creating mesh render buffer - verts %d inds %d", gpu_verts_0.size(), gpu_inds.size());
 
         CD3D11_BUFFER_DESC vb_0_desc{
             sizeof(gpu_verts_0[0]) * gpu_verts_0.size(),

@@ -27,8 +27,10 @@ namespace df::gr::d3d11
         }
         int size = file.size();
         auto shader_data = std::make_unique<std::byte[]>(size);
-        int bytes_read = file.read(shader_data.get(), size);
-        xlog::info("Loading vertex shader %s size %d file size %d", filename, bytes_read, size);
+        [[maybe_unused]] int bytes_read = file.read(shader_data.get(), size);
+        assert(bytes_read == size);
+
+        xlog::debug("Loading vertex shader %s size %d", filename, size);
         ComPtr<ID3D11VertexShader> vertex_shader;
         HRESULT hr = device_->CreateVertexShader(shader_data.get(), size, nullptr, &vertex_shader);
         check_hr(hr, "CreateVertexShader");
@@ -55,7 +57,10 @@ namespace df::gr::d3d11
         }
         int size = file.size();
         auto shader_data = std::make_unique<std::byte[]>(size);
-        file.read(shader_data.get(), size);
+        [[maybe_unused]] int bytes_read = file.read(shader_data.get(), size);
+        assert(bytes_read == size);
+
+        xlog::debug("Loading pixel shader %s size %d", filename, size);
         ComPtr<ID3D11PixelShader> pixel_shader;
         HRESULT hr = device_->CreatePixelShader(shader_data.get(), size, nullptr, &pixel_shader);
         check_hr(hr, "CreatePixelShader");

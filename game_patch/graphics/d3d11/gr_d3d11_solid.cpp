@@ -391,11 +391,11 @@ namespace df::gr::d3d11
 
         if (builder.get_num_batches() == 0) {
             state_ = 0;
-            xlog::warn("Skipping empty room %d", room_->room_index);
+            xlog::debug("Skipping empty room %d", room_->room_index);
             return;
         }
 
-        xlog::info("Creating render cache for room %d - verts %d inds %d batches %d", room_->room_index,
+        xlog::debug("Creating render cache for room %d - verts %d inds %d batches %d", room_->room_index,
             builder.get_num_verts(), builder.get_num_inds(), builder.get_num_batches());
 
         cache_ = std::optional{builder.build(device)};
@@ -406,7 +406,7 @@ namespace df::gr::d3d11
     void RoomRenderCache::render(FaceRenderType render_type, ID3D11Device* device, RenderContext& context)
     {
         if (invalid()) {
-            xlog::info("Room render cache invalidated!");
+            xlog::debug("Room render cache invalidated!");
             cache_.reset();
             update(device);
         }
@@ -482,7 +482,7 @@ namespace df::gr::d3d11
     {
         auto cache = reinterpret_cast<RoomRenderCache*>(room->geo_cache);
         if (!cache) {
-            xlog::info("Creating render cache for room %d", room->room_index);
+            xlog::debug("Creating render cache for room %d", room->room_index);
             room_cache_.push_back(std::make_unique<RoomRenderCache>(solid, room, device_));
             cache = room_cache_.back().get();
             room->geo_cache = reinterpret_cast<GCache*>(cache);
@@ -496,7 +496,7 @@ namespace df::gr::d3d11
     {
         auto cache = reinterpret_cast<GRenderCache*>(room->geo_cache);
         if (!cache) {
-            //xlog::warn("Creating render cache for detail room %d", room->room_index);
+            xlog::debug("Creating render cache for detail room %d", room->room_index);
             GRenderCacheBuilder builder;
             builder.add_room(room, solid);
             detail_render_cache_.push_back(std::make_unique<GRenderCache>(builder.build(device_)));
@@ -510,7 +510,7 @@ namespace df::gr::d3d11
 
     void SolidRenderer::clear_cache()
     {
-        xlog::info("Room render cache clear");
+        xlog::debug("Room render cache clear");
         for (auto& ptr : room_cache_) {
             ptr->room()->geo_cache = nullptr;
         }
@@ -530,7 +530,7 @@ namespace df::gr::d3d11
     void SolidRenderer::render_movable_solid(GSolid* solid, const Vector3& pos, const Matrix3& orient)
     {
         if (!solid->field_370) {
-            xlog::info("Creating render cache for a mover");
+            xlog::debug("Creating render cache for a mover");
             GRenderCacheBuilder cache_builder;
             link_faces_to_texture_movers(solid);
             cache_builder.add_solid(solid);
