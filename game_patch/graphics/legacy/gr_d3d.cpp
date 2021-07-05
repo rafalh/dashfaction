@@ -299,24 +299,19 @@ CodeInjection switch_d3d_mode_patch{
     },
 };
 
-ConsoleCommand2 fullscreen_cmd{
-    "fullscreen",
-    []() {
+void gr_d3d_update_window_mode()
+{
+    if (rf::gr::screen.window_mode == rf::gr::FULLSCREEN) {
         rf::gr::d3d::pp.Windowed = false;
         rf::gr::d3d::pp.FullScreen_PresentationInterval =
             g_game_config.vsync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
-        g_reset_device_req = true;
-    },
-};
-
-ConsoleCommand2 windowed_cmd{
-    "windowed",
-    []() {
+    }
+    else {
         rf::gr::d3d::pp.Windowed = true;
         rf::gr::d3d::pp.FullScreen_PresentationInterval = 0;
-        g_reset_device_req = true;
-    },
-};
+    }
+    g_reset_device_req = true;
+}
 
 ConsoleCommand2 antialiasing_cmd{
     "antialiasing",
@@ -796,8 +791,6 @@ void gr_d3d_apply_patch()
     gr_d3d_close_injection.install();
 
     // Commands
-    fullscreen_cmd.register_cmd();
-    windowed_cmd.register_cmd();
     antialiasing_cmd.register_cmd();
     nearest_texture_filtering_cmd.register_cmd();
     lod_distance_scale_cmd.register_cmd();

@@ -36,7 +36,7 @@ namespace df::gr::d3d11
         texture_manager_ = std::make_unique<TextureManager>(device_, context_);
         render_context_ = std::make_unique<RenderContext>(device_, context_, *state_manager_, *shader_manager_, *texture_manager_);
         batch_manager_ = std::make_unique<BatchManager>(device_, *shader_manager_, *render_context_);
-        solid_renderer_ = std::make_unique<SolidRenderer>(device_, *shader_manager_, *render_context_);
+        solid_renderer_ = std::make_unique<SolidRenderer>(device_, *shader_manager_, *batch_manager_, *render_context_);
         mesh_renderer_ = std::make_unique<MeshRenderer>(device_, *shader_manager_, *render_context_);
 
         render_context_->set_render_target(default_render_target_view_, depth_stencil_view_);

@@ -20,6 +20,7 @@
 #include "gr_d3d11_solid.h"
 #include "gr_d3d11_shader.h"
 #include "gr_d3d11_context.h"
+#include "gr_d3d11_batch.h"
 
 using namespace rf;
 
@@ -27,8 +28,6 @@ namespace df::gr::d3d11
 {
     class RoomRenderCache;
     class GRenderCache;
-
-    void flush();
 
     static auto& decals_enabled = addr_as_ref<bool>(0x005A4458);
     static auto& gr_decal_self_illuminated_mode = addr_as_ref<gr::Mode>(0x01818340);
@@ -417,9 +416,9 @@ namespace df::gr::d3d11
         }
     }
 
-    SolidRenderer::SolidRenderer(ComPtr<ID3D11Device> device, ShaderManager& shader_manager,
+    SolidRenderer::SolidRenderer(ComPtr<ID3D11Device> device, ShaderManager& shader_manager, BatchManager& batch_manager,
         RenderContext& render_context) :
-        device_{std::move(device)}, context_{render_context.device_context()}, render_context_(render_context)
+        device_{std::move(device)}, context_{render_context.device_context()}, batch_manager_{batch_manager}, render_context_(render_context)
     {
         vertex_shader_ = shader_manager.get_vertex_shader(VertexShaderId::standard);
         pixel_shader_ = shader_manager.get_pixel_shader(PixelShaderId::standard);
@@ -475,7 +474,7 @@ namespace df::gr::d3d11
                 }
             }
         }
-        gr::d3d11::flush();
+        batch_manager_.flush();
         render_context_.set_zbias(0);
     }
 

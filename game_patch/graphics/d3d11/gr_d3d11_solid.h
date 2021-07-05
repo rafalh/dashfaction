@@ -16,6 +16,7 @@ namespace rf
 
 namespace df::gr::d3d11
 {
+    class BatchManager;
     class RenderContext;
     class GRenderCacheBuilder;
 
@@ -84,7 +85,7 @@ namespace df::gr::d3d11
     class SolidRenderer
     {
     public:
-        SolidRenderer(ComPtr<ID3D11Device> device, ShaderManager& shader_manager, RenderContext& render_context);
+        SolidRenderer(ComPtr<ID3D11Device> device, ShaderManager& shader_manager, BatchManager& batch_manager, RenderContext& render_context);
         void render_solid(rf::GSolid* solid, rf::GRoom** rooms, int num_rooms);
         void render_movable_solid(rf::GSolid* solid, const rf::Vector3& pos, const rf::Matrix3& orient);
         void render_sky_room(rf::GRoom *room);
@@ -104,6 +105,7 @@ namespace df::gr::d3d11
         ComPtr<ID3D11DeviceContext> context_;
         VertexShaderAndLayout vertex_shader_;
         ComPtr<ID3D11PixelShader> pixel_shader_;
+        BatchManager& batch_manager_;
         RenderContext& render_context_;
         std::vector<std::unique_ptr<RoomRenderCache>> room_cache_;
         std::vector<std::unique_ptr<GRenderCache>> mover_render_cache_;

@@ -174,16 +174,14 @@ namespace df::gr::d3d11
         }
     }
 
-    void flush()
-    {
-        if (rf::gr::screen.mode != 0) {
-            renderer->flush();
-        }
-    }
-
     void delete_texture(int bm_handle)
     {
         renderer->texture_remove(bm_handle);
+    }
+
+    void update_window_mode()
+    {
+        renderer->set_fullscreen_state(rf::gr::screen.window_mode == rf::gr::FULLSCREEN);
     }
 
     static CodeInjection g_render_room_objects_render_liquid_injection{
@@ -318,7 +316,6 @@ void gr_d3d11_apply_patch()
     AsmWriter{0x0052DE10}.jmp(render_v3d_vif); // gr_d3d_render_v3d_vif
     AsmWriter{0x0052E9E0}.jmp(render_character_vif); // gr_d3d_render_character_vif
     AsmWriter{0x004D34D0}.jmp(render_alpha_detail_room); // room_render_alpha_detail
-    AsmWriter{0x0050E150}.jmp(flush);
 
     // Change size of standard structures
     write_mem<int8_t>(0x00569884 + 1, sizeof(rf::VifMesh));

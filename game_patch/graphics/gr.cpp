@@ -27,6 +27,7 @@ namespace df::gr::d3d11
 {
     void delete_texture(int bm_handle);
     bool set_render_target(int bm_handle);
+    void update_window_mode();
 }
 
 CodeInjection gr_init_stretched_window_injection{
@@ -253,6 +254,32 @@ void gr_bitmap_scaled_float(int bitmap_handle, float x, float y, float w, float 
     rf::gr::tmapper(std::size(verts_ptrs), verts_ptrs, rf::gr::TMAP_FLAG_TEXTURED, mode);
 }
 
+void gr_set_window_mode(rf::gr::WindowMode window_mode)
+{
+    rf::gr::screen.window_mode = window_mode;
+    if (g_game_config.renderer == GameConfig::Renderer::legacy) {
+        gr_d3d_update_window_mode();
+    }
+    else {
+        df::gr::d3d11::update_window_mode();
+    }
+}
+
+ConsoleCommand2 fullscreen_cmd{
+    "fullscreen",
+    []() {
+        gr_set_window_mode(rf::gr::FULLSCREEN);
+
+    },
+};
+
+ConsoleCommand2 windowed_cmd{
+    "windowed",
+    []() {
+        gr_set_window_mode(rf::gr::WINDOWED);
+    },
+};
+
 void gr_apply_patch()
 {
     if (g_game_config.wnd_mode != GameConfig::FULLSCREEN) {
@@ -324,4 +351,6 @@ void gr_apply_patch()
     // Commands
     fov_cmd.register_cmd();
     gamma_cmd.register_cmd();
+    fullscreen_cmd.register_cmd();
+    windowed_cmd.register_cmd();
 }
