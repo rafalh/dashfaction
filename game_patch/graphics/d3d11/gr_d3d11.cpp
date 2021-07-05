@@ -323,6 +323,8 @@ namespace df::gr::d3d11
         UINT sync_interval = g_game_config.vsync ? 1 : 0;
         HRESULT hr = swap_chain_->Present(sync_interval, 0);
         check_hr(hr, "Present");
+        // Flip swap effect clears render target after Present call
+        render_context_->set_render_target(default_render_target_view_, depth_stencil_view_);
     }
 
     void Renderer::texture_save_cache()
