@@ -100,6 +100,11 @@ namespace df::gr::d3d11
         renderer->texture_flush_cache(force);
     }
 
+    void texture_mark_dirty(int bm_handle)
+    {
+        renderer->texture_mark_dirty(bm_handle);
+    }
+
     bool lock(int bm_handle, int section, rf::gr::LockInfo *lock)
     {
         return renderer->lock(bm_handle, section, lock);
@@ -176,7 +181,7 @@ namespace df::gr::d3d11
 
     void delete_texture(int bm_handle)
     {
-        renderer->texture_remove(bm_handle);
+        renderer->texture_mark_dirty(bm_handle);
     }
 
     void update_window_mode()
@@ -304,7 +309,7 @@ void gr_d3d11_apply_patch()
     AsmWriter{0x005596C0}.ret(); // gr_d3d_render_face_list_colored
     AsmWriter{0x0055B520}.jmp(texture_save_cache); // gr_d3d_texture_save_cache
     AsmWriter{0x0055B550}.jmp(texture_flush_cache); // gr_d3d_texture_flush_cache
-    AsmWriter{0x0055CDC0}.ret(); // gr_d3d_mark_texture_dirty
+    AsmWriter{0x0055CDC0}.jmp(texture_mark_dirty); // gr_d3d_texture_mark_dirty
     AsmWriter{0x0055CE00}.jmp(lock); // gr_d3d_lock
     AsmWriter{0x0055CF60}.jmp(unlock); // gr_d3d_unlock
     AsmWriter{0x0055CFA0}.jmp(get_texel); // gr_d3d_get_texel

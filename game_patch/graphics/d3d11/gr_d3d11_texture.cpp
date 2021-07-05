@@ -238,7 +238,7 @@ namespace df::gr::d3d11
         }
     }
 
-    void TextureManager::remove(int bm_handle)
+    void TextureManager::mark_dirty(int bm_handle)
     {
         int bm_index = rf::bm::get_cache_slot(bm_handle);
         texture_cache_.erase(bm_index);

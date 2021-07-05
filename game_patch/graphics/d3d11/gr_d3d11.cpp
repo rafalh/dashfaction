@@ -354,6 +354,11 @@ namespace df::gr::d3d11
         texture_manager_->flush_cache(force);
     }
 
+    void Renderer::texture_mark_dirty(int bm_handle)
+    {
+        texture_manager_->mark_dirty(bm_handle);
+    }
+
     void Renderer::texture_add_ref(int bm_handle)
     {
         texture_manager_->add_ref(bm_handle);
@@ -362,11 +367,6 @@ namespace df::gr::d3d11
     void Renderer::texture_remove_ref(int bm_handle)
     {
         texture_manager_->remove_ref(bm_handle);
-    }
-
-    void Renderer::texture_remove(int bm_handle)
-    {
-        texture_manager_->remove(bm_handle);
     }
 
     bool Renderer::lock(int bm_handle, int section, rf::gr::LockInfo *lock)

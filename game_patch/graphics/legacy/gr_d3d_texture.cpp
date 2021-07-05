@@ -354,6 +354,17 @@ bool gr_d3d_is_texture_format_supported(rf::bm::Format format)
     return SUCCEEDED(hr);
 }
 
+static FunHook<void(int)> gr_d3d_mark_texture_dirty_hook{
+    0x0055CDC0,
+    [](int bm_handle) {
+        gr_d3d_mark_texture_dirty_hook.call_target(bm_handle);
+        // Release texture object immediately after this call instead of waiting for the next bitmap handle usage
+        auto bm_index = rf::bm::get_cache_slot(bm_handle);
+        auto& tslot = rf::gr::d3d::textures[bm_index];
+        rf::gr::d3d::free_texture(tslot);
+    },
+};
+
 void gr_d3d_texture_apply_patch()
 {
     gr_d3d_set_texture_data_hook.install();
@@ -364,6 +375,7 @@ void gr_d3d_texture_apply_patch()
     gr_d3d_free_texture_hook.install();
     //gr_d3d_set_state_and_texture_hook.install();
     gr_d3d_lock_hook.install();
+    gr_d3d_mark_texture_dirty_hook.install();
 
     // True Color textures (is it used?)
     if (g_game_config.res_bpp == 32 && g_game_config.true_color_textures) {
@@ -382,13 +394,6 @@ void gr_d3d_texture_device_lost()
         gr_d3d_free_texture_hook.call_target(*tslot);
     }
     g_default_pool_tslots.clear();
-}
-
-void gr_d3d_delete_texture(int bm_handle)
-{
-    auto bm_index = rf::bm::get_cache_slot(bm_handle);
-    auto& tslot = rf::gr::d3d::textures[bm_index];
-    rf::gr::d3d::free_texture(tslot);
 }
 
 void gr_d3d_texture_init()

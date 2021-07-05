@@ -25,10 +25,11 @@
 
 namespace df::gr::d3d11
 {
-    void delete_texture(int bm_handle);
     bool set_render_target(int bm_handle);
     void update_window_mode();
 }
+
+float gr_lod_dist_scale = 1.0f;
 
 CodeInjection gr_init_stretched_window_injection{
     0x0050C464,
@@ -154,18 +155,6 @@ CallHook<void(int, rf::gr::Vertex**, int, rf::gr::Mode)> gr_rect_gr_tmapper_hook
     },
 };
 
-void gr_delete_texture(int bm_handle)
-{
-    if (rf::gr::screen.mode == rf::gr::DIRECT3D) {
-        if (g_game_config.renderer == GameConfig::Renderer::d3d11) {
-            df::gr::d3d11::delete_texture(bm_handle);
-        }
-        else {
-            gr_d3d_delete_texture(bm_handle);
-        }
-    }
-}
-
 bool gr_is_texture_format_supported(rf::bm::Format format)
 {
     if (rf::gr::screen.mode == rf::gr::DIRECT3D) {
@@ -186,13 +175,10 @@ bool gr_set_render_target(int bm_handle)
             return df::gr::d3d11::set_render_target(bm_handle);
         }
         else {
-
             return gr_d3d_set_render_target(bm_handle);
         }
     }
-    else {
-        return false;
-    }
+    return false;
 }
 
 void gr_bitmap_scaled_float(int bitmap_handle, float x, float y, float w, float h,
@@ -256,12 +242,23 @@ void gr_bitmap_scaled_float(int bitmap_handle, float x, float y, float w, float 
 
 void gr_set_window_mode(rf::gr::WindowMode window_mode)
 {
-    rf::gr::screen.window_mode = window_mode;
-    if (g_game_config.renderer == GameConfig::Renderer::legacy) {
-        gr_d3d_update_window_mode();
+    if (rf::gr::screen.mode == rf::gr::DIRECT3D) {
+        rf::gr::screen.window_mode = window_mode;
+        if (g_game_config.renderer == GameConfig::Renderer::legacy) {
+            gr_d3d_update_window_mode();
+        }
+        else {
+            df::gr::d3d11::update_window_mode();
+        }
     }
-    else {
-        df::gr::d3d11::update_window_mode();
+}
+
+void gr_update_texture_filtering()
+{
+    if (rf::gr::screen.mode == rf::gr::DIRECT3D) {
+        if (g_game_config.renderer == GameConfig::Renderer::legacy) {
+            gr_d3d_update_texture_filtering();
+        }
     }
 }
 
@@ -269,7 +266,6 @@ ConsoleCommand2 fullscreen_cmd{
     "fullscreen",
     []() {
         gr_set_window_mode(rf::gr::FULLSCREEN);
-
     },
 };
 
@@ -278,6 +274,28 @@ ConsoleCommand2 windowed_cmd{
     []() {
         gr_set_window_mode(rf::gr::WINDOWED);
     },
+};
+
+ConsoleCommand2 nearest_texture_filtering_cmd{
+    "nearest_texture_filtering",
+    []() {
+        g_game_config.nearest_texture_filtering = !g_game_config.nearest_texture_filtering;
+        g_game_config.save();
+        gr_update_texture_filtering();
+        rf::console::printf("Nearest texture filtering is %s", g_game_config.nearest_texture_filtering ? "enabled" : "disabled");
+    },
+    "Toggle nearest texture filtering",
+};
+
+ConsoleCommand2 lod_distance_scale_cmd{
+    "lod_distance_scale",
+    [](std::optional<float> scale_opt) {
+        if (scale_opt.has_value()) {
+            gr_lod_dist_scale = scale_opt.value();
+        }
+        rf::console::printf("LOD distance scale: %.2f", gr_lod_dist_scale);
+    },
+    "Sets LOD distance scale factor",
 };
 
 void gr_apply_patch()
@@ -353,4 +371,6 @@ void gr_apply_patch()
     gamma_cmd.register_cmd();
     fullscreen_cmd.register_cmd();
     windowed_cmd.register_cmd();
+    nearest_texture_filtering_cmd.register_cmd();
+    lod_distance_scale_cmd.register_cmd();
 }

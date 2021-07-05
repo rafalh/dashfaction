@@ -324,6 +324,8 @@ namespace rf::gr
     static auto& light_base = addr_as_ref<Vector3>(0x01818A28);
     static auto& matrix_scale = addr_as_ref<Vector3>(0x01818B48);
     static auto& one_over_matrix_scale_z = addr_as_ref<float>(0x01818A60);
+    static auto& projection_xadd = addr_as_ref<float>(0x01818B54);
+    static auto& projection_yadd = addr_as_ref<float>(0x01818B5C);
 
     static auto& screen_width = addr_as_ref<int()>(0x0050C640);
     static auto& screen_height = addr_as_ref<int()>(0x0050C650);
@@ -340,6 +342,7 @@ namespace rf::gr
     static auto& get_clip = addr_as_ref<void(int* x, int* y, int* w, int* h)>(0x0050CD80);
     static auto& reset_clip = addr_as_ref<void()>(0x0050CDD0);
     static auto& page_in = addr_as_ref<int(int bm_handle)>(0x0050CE00);
+    static auto& mark_texture_dirty = addr_as_ref<int(int bm_handle)>(0x0050D080);
     static auto& tcache_add_ref = addr_as_ref<void(int bm_handle)>(0x0050E850);
     static auto& tcache_remove_ref = addr_as_ref<void(int bm_handle)>(0x0050E870);
     static auto& close = addr_as_ref<void()>(0x0050CBE0);

@@ -17,7 +17,7 @@ namespace df::gr::d3d11
         void flush_cache(bool force);
         void add_ref(int bm_handle);
         void remove_ref(int bm_handle);
-        void remove(int bm_handle);
+        void mark_dirty(int bm_handle);
         bool lock(int bm_handle, int section, rf::gr::LockInfo *lock);
         void unlock(rf::gr::LockInfo *lock);
         void get_texel(int bm_handle, float u, float v, rf::gr::Color *clr);

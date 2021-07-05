@@ -21,12 +21,10 @@
 #include "../gr_internal.h"
 #include "gr_d3d_internal.h"
 
+void monitor_refresh_all();
+
 static float g_gr_clipped_geom_offset_x = -0.5;
 static float g_gr_clipped_geom_offset_y = -0.5;
-static float gr_lod_dist_scale = 1.0f;
-
-void gr_d3d_capture_device_lost();
-void gr_d3d_capture_close();
 
 static void set_texture_min_mag_filter_in_code(D3DTEXTUREFILTERTYPE filter_type0, D3DTEXTUREFILTERTYPE filter_type1)
 {
@@ -67,10 +65,8 @@ FunHook<void(rf::Matrix3&, rf::Vector3&, float, bool, bool)> gr_d3d_setup_3d_hoo
         // Half pixel offset
         g_gr_clipped_geom_offset_x = rf::gr::screen.offset_x - 0.5f;
         g_gr_clipped_geom_offset_y = rf::gr::screen.offset_y - 0.5f;
-        auto& gr_viewport_center_x = addr_as_ref<float>(0x01818B54);
-        auto& gr_viewport_center_y = addr_as_ref<float>(0x01818B5C);
-        gr_viewport_center_x -= 0.5f; // viewport center x
-        gr_viewport_center_y -= 0.5f; // viewport center y
+        rf::gr::projection_xadd -= 0.5f; // viewport center x
+        rf::gr::projection_yadd -= 0.5f; // viewport center y
         if (z_scale) {
             constexpr float pi = 3.141592f;
             rf::gr::d3d::zm = 1 / 1700.0f;
@@ -194,8 +190,7 @@ CodeInjection update_pp_hook{
 #endif
 
         // Use glorad detail map on all cards (multi-texturing support is required)
-        auto& use_glorad_detail_map = addr_as_ref<bool>(0x01CFCBCC);
-        use_glorad_detail_map = true;
+        rf::gr::d3d::use_glorad_detail_map = true;
 
         // Override depth format to avoid card specific hackfixes that makes it different on Nvidia and AMD
         rf::gr::d3d::pp.AutoDepthStencilFormat = determine_depth_buffer_format(rf::gr::d3d::pp.BackBufferFormat);
@@ -243,7 +238,7 @@ CodeInjection d3d_index_buffer_usage_patch{
 
 #endif // D3D_HW_VERTEX_PROCESSING
 
-void setup_texture_filtering()
+void gr_d3d_update_texture_filtering()
 {
     if (g_game_config.nearest_texture_filtering) {
         // use linear filtering for lightmaps because otherwise it looks bad
@@ -419,7 +414,7 @@ ConsoleCommand2 profile_frame_cmd{
 CodeInjection gr_d3d_init_device_injection{
     0x00546368,
     []() {
-        setup_texture_filtering();
+        gr_d3d_update_texture_filtering();
         if (rf::gr::d3d::device_caps.MaxAnisotropy > 0 && g_game_config.anisotropic_filtering && !rf::is_dedicated_server) {
             DWORD anisotropy_level = setup_max_anisotropy();
             xlog::info("Anisotropic Filtering enabled (level: %lu)", anisotropy_level);
@@ -572,17 +567,6 @@ FunHook<void(int*, void*, int, int, int, rf::gr::Mode, int)> gr_d3d_queue_triang
     },
 };
 
-ConsoleCommand2 nearest_texture_filtering_cmd{
-    "nearest_texture_filtering",
-    []() {
-        g_game_config.nearest_texture_filtering = !g_game_config.nearest_texture_filtering;
-        g_game_config.save();
-        setup_texture_filtering();
-        rf::console::printf("Nearest texture filtering is %s", g_game_config.nearest_texture_filtering ? "enabled" : "disabled");
-    },
-    "Toggle nearest texture filtering",
-};
-
 CodeInjection gr_d3d_init_load_library_injection{
     0x005459AE,
     [](auto& regs) {
@@ -621,17 +605,6 @@ FunHook<float(const rf::Vector3&)> gr_get_apparent_distance_from_camera_hook{
     [](const rf::Vector3& pos) {
         return gr_get_apparent_distance_from_camera_hook.call_target(pos) / gr_lod_dist_scale;
     },
-};
-
-ConsoleCommand2 lod_distance_scale_cmd{
-    "lod_distance_scale",
-    [](std::optional<float> scale_opt) {
-        if (scale_opt.has_value()) {
-            gr_lod_dist_scale = scale_opt.value();
-        }
-        rf::console::printf("LOD distance scale: %.2f", gr_lod_dist_scale);
-    },
-    "Sets LOD distance scale factor",
 };
 
 ConsoleCommand2 pow2_tex_cmd{
@@ -792,8 +765,6 @@ void gr_d3d_apply_patch()
 
     // Commands
     antialiasing_cmd.register_cmd();
-    nearest_texture_filtering_cmd.register_cmd();
-    lod_distance_scale_cmd.register_cmd();
     pow2_tex_cmd.register_cmd();
 #ifdef DEBUG
     profile_frame_cmd.register_cmd();
