@@ -18,24 +18,80 @@ using namespace rf;
 
 namespace df::gr::d3d11
 {
-    constexpr DXGI_FORMAT back_buffer_format = DXGI_FORMAT_B8G8R8A8_UNORM;
+    constexpr DXGI_FORMAT swap_chain_format = DXGI_FORMAT_B8G8R8A8_UNORM;
+    constexpr UINT swap_chain_flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+
+    Renderer::Renderer(HWND hwnd) : hwnd_{hwnd}, d3d11_lib_{L"d3d11.dll"}
+    {
+        if (!d3d11_lib_) {
+            RF_DEBUG_ERROR("Failed to load d3d11.dll");
+        }
+        init_device();
+        init_swap_chain(hwnd);
+        init_back_buffer();
+        init_depth_stencil_buffer();
+
+        state_manager_ = std::make_unique<StateManager>(device_);
+        shader_manager_ = std::make_unique<ShaderManager>(device_);
+        texture_manager_ = std::make_unique<TextureManager>(device_, context_);
+        render_context_ = std::make_unique<RenderContext>(device_, context_, *state_manager_, *shader_manager_, *texture_manager_);
+        batch_manager_ = std::make_unique<BatchManager>(device_, *shader_manager_, *render_context_);
+        solid_renderer_ = std::make_unique<SolidRenderer>(device_, *shader_manager_, *render_context_);
+        mesh_renderer_ = std::make_unique<MeshRenderer>(device_, *shader_manager_, *render_context_);
+
+        render_context_->set_render_target(default_render_target_view_, depth_stencil_view_);
+        render_context_->set_cull_mode(D3D11_CULL_BACK);
+
+        //gr::screen.mode = GR_DIRECT3D11;
+        gr::screen.depthbuffer_type = gr::DEPTHBUFFER_Z;
+
+        // Disable software vertex clipping
+        auto& gr_needs_software_clipping = addr_as_ref<bool>(0x005A445A);
+        gr_needs_software_clipping = false;
+    }
+
+    Renderer::~Renderer()
+    {
+        if (context_) {
+            context_->ClearState();
+        }
+        if (gr::screen.window_mode == gr::FULLSCREEN) {
+            swap_chain_->SetFullscreenState(FALSE, nullptr);
+        }
+    }
 
     void Renderer::window_active()
     {
         if (rf::gr::screen.window_mode == gr::FULLSCREEN) {
-            xlog::warn("gr_d3d11_window_active SetFullscreenState");
-            HRESULT hr = swap_chain_->SetFullscreenState(TRUE, nullptr);
-            check_hr(hr, "SetFullscreenState");
+            xlog::warn("Entering full screen");
+            ShowWindow(hwnd_, SW_RESTORE);
+            set_fullscreen_state(true);
         }
     }
 
     void Renderer::window_inactive()
     {
         if (rf::gr::screen.window_mode == gr::FULLSCREEN) {
-            xlog::warn("gr_d3d11_window_inactive SetFullscreenState");
-            HRESULT hr = swap_chain_->SetFullscreenState(FALSE, nullptr);
-            check_hr(hr, "SetFullscreenState");
+            xlog::info("Exiting full screen");
+            set_fullscreen_state(false);
+            ShowWindow(hwnd_, SW_MINIMIZE);
         }
+    }
+
+    void Renderer::set_fullscreen_state(bool fullscreen)
+    {
+        HRESULT hr = swap_chain_->SetFullscreenState(fullscreen, nullptr);
+        check_hr(hr, "SetFullscreenState");
+        // unref swapchain resources before calling ResizeBuffers
+        context_->OMSetRenderTargets(0, nullptr, nullptr);
+        back_buffer_.release();
+        default_render_target_.release();
+        default_render_target_view_.release();
+        hr = swap_chain_->ResizeBuffers(0, gr::screen.max_w, gr::screen.max_h, DXGI_FORMAT_UNKNOWN, swap_chain_flags);
+        check_hr(hr, "ResizeBuffers");
+        // get back buffer from the swap chain after it has been resized
+        init_back_buffer();
+        render_context_->set_render_target(default_render_target_view_, depth_stencil_view_);
     }
 
     void Renderer::init_device()
@@ -109,7 +165,7 @@ namespace df::gr::d3d11
             ZeroMemory(&sc_desc1, sizeof(sc_desc1));
             sc_desc1.Width = rf::gr::screen.max_w;
             sc_desc1.Height = rf::gr::screen.max_h;
-            sc_desc1.Format = back_buffer_format;
+            sc_desc1.Format = swap_chain_format;
             // Note: flip modes do not support multi-sampling so always use one sample for backbuffer
             // When MSAA is enabled we will create a separate render target with multi-sampling enabled
             sc_desc1.SampleDesc.Count = 1;
@@ -142,7 +198,7 @@ namespace df::gr::d3d11
             sd.BufferCount = rf::gr::screen.window_mode == gr::FULLSCREEN ? 2 : 1;
             sd.BufferDesc.Width = rf::gr::screen.max_w;
             sd.BufferDesc.Height = rf::gr::screen.max_h;
-            sd.BufferDesc.Format = back_buffer_format;
+            sd.BufferDesc.Format = swap_chain_format;
             sd.BufferDesc.RefreshRate.Numerator = 0;
             sd.BufferDesc.RefreshRate.Denominator = 1;
             sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
@@ -207,45 +263,6 @@ namespace df::gr::d3d11
         view_desc.ViewDimension = g_game_config.msaa ? D3D11_DSV_DIMENSION_TEXTURE2DMS : D3D11_DSV_DIMENSION_TEXTURE2D;
         hr = device_->CreateDepthStencilView(depth_stencil, &view_desc, &depth_stencil_view_);
         check_hr(hr, "CreateDepthStencilView");
-    }
-
-    Renderer::Renderer(HWND hwnd) : d3d11_lib_{L"d3d11.dll"}
-    {
-        if (!d3d11_lib_) {
-            RF_DEBUG_ERROR("Failed to load d3d11.dll");
-        }
-        init_device();
-        init_swap_chain(hwnd);
-        init_back_buffer();
-        init_depth_stencil_buffer();
-
-        state_manager_ = std::make_unique<StateManager>(device_);
-        shader_manager_ = std::make_unique<ShaderManager>(device_);
-        texture_manager_ = std::make_unique<TextureManager>(device_, context_);
-        render_context_ = std::make_unique<RenderContext>(device_, context_, *state_manager_, *shader_manager_, *texture_manager_);
-        batch_manager_ = std::make_unique<BatchManager>(device_, *shader_manager_, *render_context_);
-        solid_renderer_ = std::make_unique<SolidRenderer>(device_, *shader_manager_, *render_context_);
-        mesh_renderer_ = std::make_unique<MeshRenderer>(device_, *shader_manager_, *render_context_);
-
-        render_context_->set_render_target(default_render_target_view_, depth_stencil_view_);
-        render_context_->set_cull_mode(D3D11_CULL_BACK);
-
-        //gr::screen.mode = GR_DIRECT3D11;
-        gr::screen.depthbuffer_type = gr::DEPTHBUFFER_Z;
-
-        // Disable software vertex clipping
-        auto& gr_needs_software_clipping = addr_as_ref<bool>(0x005A445A);
-        gr_needs_software_clipping = false;
-    }
-
-    Renderer::~Renderer()
-    {
-        if (context_) {
-            context_->ClearState();
-        }
-        if (gr::screen.window_mode == gr::FULLSCREEN) {
-            swap_chain_->SetFullscreenState(FALSE, nullptr);
-        }
     }
 
     void Renderer::bitmap(int bm_handle, int x, int y, int w, int h, int sx, int sy, int sw, int sh, bool flip_x, bool flip_y, gr::Mode mode)
@@ -318,7 +335,7 @@ namespace df::gr::d3d11
         //xlog::info("gr_d3d11_flip");
         batch_manager_->flush();
         if (msaa_render_target_) {
-            context_->ResolveSubresource(back_buffer_, 0, msaa_render_target_, 0, back_buffer_format);
+            context_->ResolveSubresource(back_buffer_, 0, msaa_render_target_, 0, swap_chain_format);
         }
         UINT sync_interval = g_game_config.vsync ? 1 : 0;
         HRESULT hr = swap_chain_->Present(sync_interval, 0);

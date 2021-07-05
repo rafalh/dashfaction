@@ -87,7 +87,7 @@ namespace df::gr::d3d11
         ~Renderer();
         void window_active();
         void window_inactive();
-
+        void set_fullscreen_state(bool fullscreen);
         void bitmap(int bm_handle, int x, int y, int w, int h, int sx, int sy, int sw, int sh, bool flip_x, bool flip_y, rf::gr::Mode mode);
         void page_in(int bm_handle);
         void clear();
@@ -126,6 +126,7 @@ namespace df::gr::d3d11
         void init_back_buffer();
         void init_depth_stencil_buffer();
 
+        HWND hwnd_;
         DynamicLinkLibrary d3d11_lib_;
         ComPtr<ID3D11Device> device_;
         ComPtr<IDXGISwapChain> swap_chain_;
