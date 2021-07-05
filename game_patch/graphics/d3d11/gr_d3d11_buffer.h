@@ -20,8 +20,9 @@ namespace df::gr::d3d11
             buffer_desc.BindFlags        = bind_flags;
             buffer_desc.CPUAccessFlags   = D3D11_CPU_ACCESS_WRITE;
 
-            HRESULT hr = device_->CreateBuffer(&buffer_desc, nullptr, &buffer_);
-            check_hr(hr, "CreateBuffer");
+            DF_GR_D3D11_CHECK_HR(
+                device_->CreateBuffer(&buffer_desc, nullptr, &buffer_)
+            );
         }
 
         ~RingBuffer()
@@ -36,8 +37,9 @@ namespace df::gr::d3d11
             if (!mapped_data_) {
                 D3D11_MAP map_type = buffer_full ? D3D11_MAP_WRITE_DISCARD : D3D11_MAP_WRITE_NO_OVERWRITE;
                 D3D11_MAPPED_SUBRESOURCE mapped_subres;
-                HRESULT hr = device_context_->Map(buffer_, 0, map_type, 0, &mapped_subres);
-                check_hr(hr, "Map");
+                DF_GR_D3D11_CHECK_HR(
+                    device_context_->Map(buffer_, 0, map_type, 0, &mapped_subres)
+                );
                 mapped_data_ = reinterpret_cast<T*>(mapped_subres.pData);
                 if (buffer_full) {
                     start_pos_ = current_pos_ = 0;

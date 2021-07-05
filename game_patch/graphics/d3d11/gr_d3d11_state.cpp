@@ -25,8 +25,10 @@ namespace df::gr::d3d11
             desc.MultisampleEnable = TRUE;
         }
         ComPtr<ID3D11RasterizerState> rasterizer_state;
-        HRESULT hr = device_->CreateRasterizerState(&desc, &rasterizer_state);
-        check_hr(hr, "CreateRasterizerState");
+        check_hr(
+            device_->CreateRasterizerState(&desc, &rasterizer_state),
+            [=]() { xlog::error("Failed to create rasterizer state %d %d", cull_mode, depth_bias); }
+        );
         rasterizer_state_cache_.insert({{cull_mode, depth_bias}, rasterizer_state});
         return rasterizer_state;
     }
@@ -90,8 +92,10 @@ namespace df::gr::d3d11
         }
 
         ComPtr<ID3D11SamplerState> sampler_state;
-        HRESULT hr = device_->CreateSamplerState(&desc, &sampler_state);
-        check_hr(hr, "CreateSamplerState");
+        check_hr(
+            device_->CreateSamplerState(&desc, &sampler_state),
+            [=]() { xlog::error("Failed to create sampler state %d", cache_key); }
+        );
 
         sampler_state_cache_.insert({cache_key, sampler_state});
         return sampler_state;
@@ -158,8 +162,10 @@ namespace df::gr::d3d11
         }
 
         ComPtr<ID3D11BlendState> blend_state;
-        HRESULT hr = device_->CreateBlendState(&desc, &blend_state);
-        check_hr(hr, "CreateBlendState");
+        check_hr(
+            device_->CreateBlendState(&desc, &blend_state),
+            [=]() { xlog::error("Failed to create blend state %d", cache_key); }
+        );
 
         blend_state_cache_.insert({cache_key, blend_state});
         return blend_state;
@@ -209,8 +215,11 @@ namespace df::gr::d3d11
         }
 
         ComPtr<ID3D11DepthStencilState> depth_stencil_state;
-        HRESULT hr = device_->CreateDepthStencilState(&desc, &depth_stencil_state);
-        check_hr(hr, "CreateDepthStencilState");
+
+        check_hr(
+            device_->CreateDepthStencilState(&desc, &depth_stencil_state),
+            [=]() { xlog::warn("Failed to create depth stencil state %d", cache_key); }
+        );
 
         depth_stencil_state_cache_.insert({cache_key, depth_stencil_state});
         return depth_stencil_state;

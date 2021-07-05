@@ -147,14 +147,23 @@ namespace df::gr::d3d11
     };
 
     void init_error(ID3D11Device* device);
-    void fatal_error(HRESULT hr, const char* fun);
+    void fatal_error(HRESULT hr);
 
-    static inline void check_hr(HRESULT hr, const char* fun)
+    template<typename T>
+    static inline void check_hr(HRESULT hr, T what)
     {
         if (FAILED(hr)) {
-            fatal_error(hr, fun);
+            if constexpr (std::is_pointer_v<T>) {
+                xlog::error("D3D11 API returned error: %s", what);
+            }
+            else {
+                what();
+            }
+            fatal_error(hr);
         }
     }
+
+    #define DF_GR_D3D11_CHECK_HR(code) { auto func_name = __func__; check_hr(code, [=]() { xlog::error("D3D11 call failed: %s (function %s in line %d)", #code, func_name, __LINE__); }); }
 
     static inline int pack_color(const rf::Color& color)
     {

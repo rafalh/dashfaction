@@ -84,7 +84,6 @@ namespace df::gr::d3d11
         buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
         buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
         buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-        HRESULT hr;
         D3D11_SUBRESOURCE_DATA subres_data{nullptr, 0, 0};
 
         ModelTransformBufferData model_transform_data;
@@ -92,8 +91,9 @@ namespace df::gr::d3d11
         subres_data.pSysMem = &model_transform_data;
 
         buffer_desc.ByteWidth = sizeof(model_transform_data);
-        hr = device_->CreateBuffer(&buffer_desc, &subres_data, &model_transform_cbuffer_);
-        check_hr(hr, "CreateBuffer");
+        DF_GR_D3D11_CHECK_HR(
+            device_->CreateBuffer(&buffer_desc, &subres_data, &model_transform_cbuffer_)
+        );
 
         ViewProjTransformBufferData view_proj_transform_data;
         view_proj_transform_data.view_mat = build_identity_matrix43();
@@ -101,16 +101,19 @@ namespace df::gr::d3d11
         subres_data.pSysMem = &view_proj_transform_data;
 
         buffer_desc.ByteWidth = sizeof(view_proj_transform_data);
-        hr = device_->CreateBuffer(&buffer_desc, &subres_data, &view_proj_transform_cbuffer_);
-        check_hr(hr, "CreateBuffer");
+        DF_GR_D3D11_CHECK_HR(
+            device_->CreateBuffer(&buffer_desc, &subres_data, &view_proj_transform_cbuffer_)
+        );
 
         buffer_desc.ByteWidth = sizeof(UvOffsetBufferData);
-        hr = device_->CreateBuffer(&buffer_desc, nullptr, &uv_offset_cbuffer_);
-        check_hr(hr, "CreateBuffer");
+        DF_GR_D3D11_CHECK_HR(
+            device_->CreateBuffer(&buffer_desc, nullptr, &uv_offset_cbuffer_)
+        );
 
         buffer_desc.ByteWidth = sizeof(RenderModeBufferData);
-        hr = device_->CreateBuffer(&buffer_desc, nullptr, &render_mode_cbuffer_);
-        check_hr(hr, "CreateBuffer");
+        DF_GR_D3D11_CHECK_HR(
+            device_->CreateBuffer(&buffer_desc, nullptr, &render_mode_cbuffer_)
+        );
     }
 
     void RenderContext::bind_cbuffers()
@@ -502,8 +505,9 @@ namespace df::gr::d3d11
         }
 
         D3D11_MAPPED_SUBRESOURCE mapped_cbuffer;
-        HRESULT hr = context_->Map(render_mode_cbuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_cbuffer);
-        check_hr(hr, "Map");
+        DF_GR_D3D11_CHECK_HR(
+            context_->Map(render_mode_cbuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_cbuffer)
+        );
         std::memcpy(mapped_cbuffer.pData, &ps_data, sizeof(ps_data));
         context_->Unmap(render_mode_cbuffer_, 0);
 
@@ -546,8 +550,9 @@ namespace df::gr::d3d11
         data.world_mat = build_world_matrix(current_model_pos_, current_model_orient_);
 
         D3D11_MAPPED_SUBRESOURCE mapped_cbuffer;
-        HRESULT hr = context_->Map(model_transform_cbuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_cbuffer);
-        check_hr(hr, "Map");
+        DF_GR_D3D11_CHECK_HR(
+            context_->Map(model_transform_cbuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_cbuffer)
+        );
         std::memcpy(mapped_cbuffer.pData, &data, sizeof(data));
         context_->Unmap(model_transform_cbuffer_, 0);
     }
@@ -559,8 +564,9 @@ namespace df::gr::d3d11
         data.proj_mat = build_proj_matrix();
 
         D3D11_MAPPED_SUBRESOURCE mapped_cbuffer;
-        HRESULT hr = context_->Map(view_proj_transform_cbuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_cbuffer);
-        check_hr(hr, "Map");
+        DF_GR_D3D11_CHECK_HR(
+            context_->Map(view_proj_transform_cbuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_cbuffer)
+        );
         std::memcpy(mapped_cbuffer.pData, &data, sizeof(data));
         context_->Unmap(view_proj_transform_cbuffer_, 0);
     }
@@ -571,8 +577,9 @@ namespace df::gr::d3d11
         data.uv_offset = {current_uv_pan_.x, current_uv_pan_.y};
 
         D3D11_MAPPED_SUBRESOURCE mapped_cbuffer;
-        HRESULT hr = context_->Map(uv_offset_cbuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_cbuffer);
-        check_hr(hr, "Map");
+        DF_GR_D3D11_CHECK_HR(
+            context_->Map(uv_offset_cbuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_cbuffer)
+        );
         std::memcpy(mapped_cbuffer.pData, &data, sizeof(data));
         context_->Unmap(uv_offset_cbuffer_, 0);
     }
@@ -646,15 +653,15 @@ namespace df::gr::d3d11
             D3D11_USAGE_DYNAMIC,
             D3D11_CPU_ACCESS_WRITE,
         };
-        HRESULT hr = device->CreateBuffer(&desc, nullptr, &buffer_);
-        check_hr(hr, "CreateBuffer");
+        DF_GR_D3D11_CHECK_HR(device->CreateBuffer(&desc, nullptr, &buffer_));
     }
 
     void LightsBuffer::update(ID3D11DeviceContext* device_context)
     {
         D3D11_MAPPED_SUBRESOURCE mapped_subres;
-        HRESULT hr = device_context->Map(buffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_subres);
-        check_hr(hr, "CreateBuffer");
+        DF_GR_D3D11_CHECK_HR(
+            device_context->Map(buffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_subres)
+        );
 
         LightsBufferData data;
         std::memset(&data, 0, sizeof(data));

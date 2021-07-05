@@ -196,8 +196,9 @@ namespace df::gr::d3d11
             D3D11_USAGE_IMMUTABLE,
         };
         D3D11_SUBRESOURCE_DATA vb_subres_data{gpu_verts.data(), 0, 0};
-        HRESULT hr = device->CreateBuffer(&vb_desc, &vb_subres_data, &vertex_buffer_);
-        check_hr(hr, "CreateBuffer (static mesh vertex buffer)");
+        DF_GR_D3D11_CHECK_HR(
+            device->CreateBuffer(&vb_desc, &vb_subres_data, &vertex_buffer_)
+        );
 
         CD3D11_BUFFER_DESC ib_desc{
             sizeof(gpu_inds[0]) * gpu_inds.size(),
@@ -205,8 +206,9 @@ namespace df::gr::d3d11
             D3D11_USAGE_IMMUTABLE,
         };
         D3D11_SUBRESOURCE_DATA ib_subres_data{gpu_inds.data(), 0, 0};
-        hr = device->CreateBuffer(&ib_desc, &ib_subres_data, &index_buffer_);
-        check_hr(hr, "CreateBuffer (static mesh index buffer)");
+        DF_GR_D3D11_CHECK_HR(
+            device->CreateBuffer(&ib_desc, &ib_subres_data, &index_buffer_)
+        );
     }
 
     void MeshRenderCache::render(const Vector3& pos, const Matrix3& orient, const MeshRenderParams& params, int lod_index, RenderContext& render_context)
@@ -324,8 +326,9 @@ namespace df::gr::d3d11
             D3D11_USAGE_IMMUTABLE,
         };
         D3D11_SUBRESOURCE_DATA vb_0_subres_data{gpu_verts_0.data(), 0, 0};
-        HRESULT hr = device->CreateBuffer(&vb_0_desc, &vb_0_subres_data, &vertex_buffer_0_);
-        check_hr(hr, "CreateBuffer (character vertex buffer 0)");
+        DF_GR_D3D11_CHECK_HR(
+            device->CreateBuffer(&vb_0_desc, &vb_0_subres_data, &vertex_buffer_0_)
+        );
 
         CD3D11_BUFFER_DESC vb_1_desc{
             sizeof(gpu_verts_1[1]) * gpu_verts_1.size(),
@@ -333,8 +336,9 @@ namespace df::gr::d3d11
             D3D11_USAGE_IMMUTABLE,
         };
         D3D11_SUBRESOURCE_DATA vb_1_subres_data{gpu_verts_1.data(), 0, 0};
-        hr = device->CreateBuffer(&vb_1_desc, &vb_1_subres_data, &vertex_buffer_1_);
-        check_hr(hr, "CreateBuffer (character vertex buffer 1)");
+        DF_GR_D3D11_CHECK_HR(
+            device->CreateBuffer(&vb_1_desc, &vb_1_subres_data, &vertex_buffer_1_)
+        );
 
         CD3D11_BUFFER_DESC ib_desc{
             sizeof(gpu_inds[0]) * gpu_inds.size(),
@@ -342,8 +346,9 @@ namespace df::gr::d3d11
             D3D11_USAGE_IMMUTABLE,
         };
         D3D11_SUBRESOURCE_DATA ib_subres_data{gpu_inds.data(), 0, 0};
-        hr = device->CreateBuffer(&ib_desc, &ib_subres_data, &index_buffer_);
-        check_hr(hr, "CreateBuffer (character index buffer)");
+        DF_GR_D3D11_CHECK_HR(
+            device->CreateBuffer(&ib_desc, &ib_subres_data, &index_buffer_)
+        );
 
         CD3D11_BUFFER_DESC matrices_buffer_desc{
             sizeof(BoneTransformsBufferData),
@@ -351,8 +356,9 @@ namespace df::gr::d3d11
             D3D11_USAGE_DYNAMIC,
             D3D11_CPU_ACCESS_WRITE,
         };
-        hr = device->CreateBuffer(&matrices_buffer_desc, nullptr, &matrices_cbuffer_);
-        check_hr(hr, "CreateBuffer (character constant buffer)");
+        DF_GR_D3D11_CHECK_HR(
+            device->CreateBuffer(&matrices_buffer_desc, nullptr, &matrices_cbuffer_)
+        );
     }
 
     static inline GpuMatrix4x3 convert_bone_matrix(const Matrix43& mat)
@@ -381,13 +387,15 @@ namespace df::gr::d3d11
             };
             ComPtr<ID3D11Device> device;
             render_context.device_context()->GetDevice(&device);
-            HRESULT hr = device->CreateBuffer(&morphed_vb_0_desc, nullptr, &morphed_vertex_buffer_0_);
-            check_hr(hr, "CreateBuffer (character mesh morph vertex buffer)");
+            DF_GR_D3D11_CHECK_HR(
+                device->CreateBuffer(&morphed_vb_0_desc, nullptr, &morphed_vertex_buffer_0_)
+            );
         }
 
         D3D11_MAPPED_SUBRESOURCE mapped_vb;
-        HRESULT hr = render_context.device_context()->Map(morphed_vertex_buffer_0_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_vb);
-        check_hr(hr, "Map character mesh morphed vertex buffer");
+        DF_GR_D3D11_CHECK_HR(
+            render_context.device_context()->Map(morphed_vertex_buffer_0_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_vb)
+        );
 
         for (int chunk_index = 0; chunk_index < mesh->num_chunks; ++chunk_index) {
             int base_vertex = meshes_[0].batches[chunk_index].base_vertex;
@@ -441,8 +449,9 @@ namespace df::gr::d3d11
         }
 
         D3D11_MAPPED_SUBRESOURCE mapped_cb;
-        HRESULT hr = render_context.device_context()->Map(matrices_cbuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_cb);
-        check_hr(hr, "Map character cbuffer");
+        DF_GR_D3D11_CHECK_HR(
+            render_context.device_context()->Map(matrices_cbuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_cb)
+        );
         std::memcpy(mapped_cb.pData, &data, sizeof(data));
         render_context.device_context()->Unmap(matrices_cbuffer_, 0);
     }

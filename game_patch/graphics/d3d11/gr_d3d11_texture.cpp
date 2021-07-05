@@ -61,11 +61,10 @@ namespace df::gr::d3d11
 
         ComPtr<ID3D11Texture2D> d3d_texture;
         D3D11_SUBRESOURCE_DATA* subres_data_ptr = subres_data_vec.empty() ? nullptr : subres_data_vec.data();
-        HRESULT hr = device_->CreateTexture2D(&desc, subres_data_ptr, &d3d_texture);
-        if (FAILED(hr)) {
-            xlog::info("Texture desc: format %d size %dx%d, mip levels %d", desc.Format, desc.Width, desc.Height, desc.MipLevels);
-        }
-        check_hr(hr, "CreateTexture2D standard texture");
+        check_hr(
+            device_->CreateTexture2D(&desc, subres_data_ptr, &d3d_texture),
+            [&]() { xlog::error("Failed to create texture: format %d dimensions %dx%d, mip levels %d", desc.Format, desc.Width, desc.Height, desc.MipLevels); }
+        );
 
         if (staging) {
             return {bm_handle, desc.Format, d3d_texture};
@@ -82,7 +81,6 @@ namespace df::gr::d3d11
         ComPtr<ID3D11Texture2D> gpu_ss_texture;
         ComPtr<ID3D11Texture2D> gpu_ms_texture;
         ComPtr<ID3D11RenderTargetView> render_target_view;
-        HRESULT hr;
 
         CD3D11_TEXTURE2D_DESC tex_desc{
             DXGI_FORMAT_R8G8B8A8_UNORM,
@@ -94,24 +92,29 @@ namespace df::gr::d3d11
 
         if (g_game_config.msaa) {
             tex_desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-            hr = device_->CreateTexture2D(&tex_desc, nullptr, &gpu_ss_texture);
-            check_hr(hr, "CreateTexture2D render target SS");
+            DF_GR_D3D11_CHECK_HR(
+                device_->CreateTexture2D(&tex_desc, nullptr, &gpu_ss_texture)
+            );
 
             tex_desc.BindFlags = D3D11_BIND_RENDER_TARGET;
             tex_desc.SampleDesc.Count = g_game_config.msaa.value();
-            hr = device_->CreateTexture2D(&tex_desc, nullptr, &gpu_ms_texture);
-            check_hr(hr, "CreateTexture2D render target MS");
+            DF_GR_D3D11_CHECK_HR(
+                device_->CreateTexture2D(&tex_desc, nullptr, &gpu_ms_texture)
+            );
 
-            hr = device_->CreateRenderTargetView(gpu_ms_texture, nullptr, &render_target_view);
-            check_hr(hr, "CreateRenderTargetView");
+            DF_GR_D3D11_CHECK_HR(
+                device_->CreateRenderTargetView(gpu_ms_texture, nullptr, &render_target_view)
+            );
         }
         else {
             tex_desc.BindFlags = D3D11_BIND_RENDER_TARGET|D3D11_BIND_SHADER_RESOURCE;
-            hr = device_->CreateTexture2D(&tex_desc, nullptr, &gpu_ss_texture);
-            check_hr(hr, "CreateTexture2D render target");
+            DF_GR_D3D11_CHECK_HR(
+                device_->CreateTexture2D(&tex_desc, nullptr, &gpu_ss_texture)
+            );
 
-            hr = device_->CreateRenderTargetView(gpu_ss_texture, nullptr, &render_target_view);
-            check_hr(hr, "CreateRenderTargetView");
+            DF_GR_D3D11_CHECK_HR(
+                device_->CreateRenderTargetView(gpu_ss_texture, nullptr, &render_target_view)
+            );
         }
 
         Texture texture{bm_handle, tex_desc.Format, std::move(gpu_ss_texture), std::move(render_target_view)};
@@ -302,8 +305,9 @@ namespace df::gr::d3d11
 
         unsigned format_support = 0;
         for (auto& p: candidates) {
-            HRESULT hr = device_->CheckFormatSupport(p.first, &format_support);
-            check_hr(hr, "CheckFormatSupport");
+            DF_GR_D3D11_CHECK_HR(
+                device_->CheckFormatSupport(p.first, &format_support)
+            );
             if (format_support & D3D11_FORMAT_SUPPORT_TEXTURE2D) {
                 return p;
             }
@@ -380,8 +384,9 @@ namespace df::gr::d3d11
 
         D3D11_MAPPED_SUBRESOURCE mapped_texture;
         D3D11_MAP map_type = convert_lock_mode_to_map_type(lock->mode);
-        HRESULT hr = device_context_->Map(staging_texture, 0, map_type, 0, &mapped_texture);
-        check_hr(hr, "Map texture");
+        DF_GR_D3D11_CHECK_HR(
+            device_context_->Map(staging_texture, 0, map_type, 0, &mapped_texture)
+        );
 
         lock->bm_handle = bm_handle;
         lock->section = section;
@@ -417,8 +422,9 @@ namespace df::gr::d3d11
         if (it != texture_cache_.end()) {
             Texture& texture = it->second;
             D3D11_MAPPED_SUBRESOURCE mapped_texture;
-            HRESULT hr = device_context_->Map(texture.cpu_texture, 0, D3D11_MAP_READ, 0, &mapped_texture);
-            check_hr(hr, "Map texture");
+            DF_GR_D3D11_CHECK_HR(
+                device_context_->Map(texture.cpu_texture, 0, D3D11_MAP_READ, 0, &mapped_texture)
+            );
 
             // TODO: convert color
 
@@ -433,8 +439,9 @@ namespace df::gr::d3d11
             init_gpu_texture(device, device_context);
         }
 
-        HRESULT hr = device->CreateShaderResourceView(gpu_texture, nullptr, &shader_resource_view);
-        check_hr(hr, "CreateShaderResourceView");
+        DF_GR_D3D11_CHECK_HR(
+            device->CreateShaderResourceView(gpu_texture, nullptr, &shader_resource_view)
+        );
     }
 
     void TextureManager::Texture::init_gpu_texture(ID3D11Device* device, ID3D11DeviceContext* device_context)
@@ -456,8 +463,9 @@ namespace df::gr::d3d11
             cpu_desc.ArraySize,
             cpu_desc.MipLevels,
         };
-        HRESULT hr = device->CreateTexture2D(&desc, nullptr, &gpu_texture);
-        check_hr(hr, "CreateTexture2D gpu");
+        DF_GR_D3D11_CHECK_HR(
+            device->CreateTexture2D(&desc, nullptr, &gpu_texture)
+        );
 
         // Copy only first level
         // TODO: mapmaps?
@@ -485,8 +493,9 @@ namespace df::gr::d3d11
             D3D11_USAGE_STAGING,
             D3D11_CPU_ACCESS_READ|D3D11_CPU_ACCESS_WRITE,
         };
-        HRESULT hr = device->CreateTexture2D(&desc, nullptr, &cpu_texture);
-        check_hr(hr, "CreateTexture2D staging");
+        DF_GR_D3D11_CHECK_HR(
+            device->CreateTexture2D(&desc, nullptr, &cpu_texture)
+        );
 
         if (copy_from_gpu) {
             device_context->CopyResource(cpu_texture, gpu_texture);
@@ -511,13 +520,15 @@ namespace df::gr::d3d11
                     D3D11_USAGE_STAGING,
                     D3D11_CPU_ACCESS_READ,
                 };
-                HRESULT hr = device_->CreateTexture2D(&cpu_desc, nullptr, &back_buffer_staging_texture_);
-                check_hr(hr, "CreateTexture2D back buffer staging texture");
+                DF_GR_D3D11_CHECK_HR(
+                    device_->CreateTexture2D(&cpu_desc, nullptr, &back_buffer_staging_texture_)
+                );
             }
             device_context_->CopySubresourceRegion(back_buffer_staging_texture_, 0, 0, 0, 0, back_buffer, 0, nullptr);
             D3D11_MAPPED_SUBRESOURCE mapped_res;
-            HRESULT hr = device_context_->Map(back_buffer_staging_texture_, 0, D3D11_MAP_READ, 0, &mapped_res);
-            check_hr(hr, "Map back buffer staging texture");
+            DF_GR_D3D11_CHECK_HR(
+                device_context_->Map(back_buffer_staging_texture_, 0, D3D11_MAP_READ, 0, &mapped_res)
+            );
             ubyte* src_ptr = reinterpret_cast<ubyte*>(mapped_res.pData);
             ubyte* dst_ptr = data;
 

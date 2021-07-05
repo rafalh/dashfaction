@@ -32,18 +32,20 @@ namespace df::gr::d3d11
 
         xlog::debug("Loading vertex shader %s size %d", filename, size);
         ComPtr<ID3D11VertexShader> vertex_shader;
-        HRESULT hr = device_->CreateVertexShader(shader_data.get(), size, nullptr, &vertex_shader);
-        check_hr(hr, "CreateVertexShader");
+        DF_GR_D3D11_CHECK_HR(
+            device_->CreateVertexShader(shader_data.get(), size, nullptr, &vertex_shader)
+        );
 
         ComPtr<ID3D11InputLayout> input_layout;
-        hr = device_->CreateInputLayout(
-            input_elements,
-            num_input_elements,
-            shader_data.get(),
-            size,
-            &input_layout
+        DF_GR_D3D11_CHECK_HR(
+            device_->CreateInputLayout(
+                input_elements,
+                num_input_elements,
+                shader_data.get(),
+                size,
+                &input_layout
+            )
         );
-        check_hr(hr, "CreateInputLayout");
 
         return {std::move(vertex_shader), std::move(input_layout)};
     }
@@ -62,8 +64,9 @@ namespace df::gr::d3d11
 
         xlog::debug("Loading pixel shader %s size %d", filename, size);
         ComPtr<ID3D11PixelShader> pixel_shader;
-        HRESULT hr = device_->CreatePixelShader(shader_data.get(), size, nullptr, &pixel_shader);
-        check_hr(hr, "CreatePixelShader");
+        DF_GR_D3D11_CHECK_HR(
+            device_->CreatePixelShader(shader_data.get(), size, nullptr, &pixel_shader)
+        );
         return pixel_shader;
     }
 }

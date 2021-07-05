@@ -251,8 +251,9 @@ namespace df::gr::d3d11
             D3D11_USAGE_IMMUTABLE,
         };
         D3D11_SUBRESOURCE_DATA vb_subres_data{vb_data.data(), 0, 0};
-        HRESULT hr = device->CreateBuffer(&vb_desc, &vb_subres_data, &vb_);
-        check_hr(hr, "CreateBuffer");
+        DF_GR_D3D11_CHECK_HR(
+            device->CreateBuffer(&vb_desc, &vb_subres_data, &vb_)
+        );
 
         CD3D11_BUFFER_DESC ib_desc{
             sizeof(rf::ushort) * builder.num_inds_,
@@ -260,8 +261,9 @@ namespace df::gr::d3d11
             D3D11_USAGE_IMMUTABLE,
         };
         D3D11_SUBRESOURCE_DATA ib_subres_data{ib_data.data(), 0, 0};
-        hr = device->CreateBuffer(&ib_desc, &ib_subres_data, &ib_);
-        check_hr(hr, "CreateBuffer");
+        DF_GR_D3D11_CHECK_HR(
+            device->CreateBuffer(&ib_desc, &ib_subres_data, &ib_)
+        );
 
         xlog::trace("created render cache geometry buffers");
     }
