@@ -294,10 +294,28 @@ namespace df::gr::d3d11
         float sx_right = static_cast<float>(gr::screen.offset_x + x + w);
         float sy_top = static_cast<float>(gr::screen.offset_y + y);
         float sy_bottom = static_cast<float>(gr::screen.offset_y + y + h);
-        float u_left = static_cast<float>(sx + (flip_x ? sw : 0)) / bm_w;
-        float u_right = static_cast<float>(sx + (flip_x ? 0 : sw)) / bm_w;
-        float v_top = static_cast<float>(sy + (flip_y ? sh : 0)) / bm_h;
-        float v_bottom = static_cast<float>(sy + (flip_y ? 0 : sh)) / bm_h;
+        float u_left = static_cast<float>(sx) / static_cast<float>(bm_w);
+        float u_right = static_cast<float>(sx + sw) / static_cast<float>(bm_w);
+        float v_top = static_cast<float>(sy) / static_cast<float>(bm_h);
+        float v_bottom = static_cast<float>(sy + sh) / static_cast<float>(bm_h);
+
+        // Make sure wrapped texel is not used in case of scaling with filtering enabled
+        if (w != sw) {
+            u_left += 0.5f / bm_w;
+            u_right -= 0.5f / bm_w;
+        }
+        if (h != sh) {
+            v_top += 0.5f / bm_h;
+            v_bottom -= 0.5f / bm_h;
+        }
+
+        if (flip_x) {
+            std::swap(u_left, u_right);
+        }
+        if (flip_y) {
+            std::swap(v_top, v_bottom);
+        }
+
         verts[0].sx = sx_left;
         verts[0].sy = sy_top;
         verts[0].sw = 1.0f;

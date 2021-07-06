@@ -371,9 +371,9 @@ namespace rf::gr
         AddrCaller{0x0050D770}.c_call(x0, y0, x1, y1, mode);
     }
 
-    inline void rect(int x, int y, int cx, int cy, Mode mode = rect_mode)
+    inline void rect(int x, int y, int w, int h, Mode mode = rect_mode)
     {
-        AddrCaller{0x0050DBE0}.c_call(x, y, cx, cy, mode);
+        AddrCaller{0x0050DBE0}.c_call(x, y, w, h, mode);
     }
 
     inline void bitmap(int bm_handle, int x, int y, Mode mode = bitmap_wrap_mode)
