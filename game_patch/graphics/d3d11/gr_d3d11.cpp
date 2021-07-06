@@ -445,6 +445,9 @@ namespace df::gr::d3d11
     bm::Format Renderer::read_back_buffer([[maybe_unused]] int x, [[maybe_unused]] int y, int w, int h, rf::ubyte *data)
     {
         batch_manager_->flush();
+        if (msaa_render_target_) {
+            context_->ResolveSubresource(back_buffer_, 0, msaa_render_target_, 0, swap_chain_format);
+        }
         return texture_manager_->read_back_buffer(back_buffer_, x, y, w, h, data);
     }
 
