@@ -62,7 +62,7 @@ void __fastcall UiButton_render(rf::ui::Button& this_)
 
     if (this_.bg_bitmap >= 0) {
         rf::gr::set_color(255, 255, 255, 255);
-        rf::gr::bitmap_scaled(this_.bg_bitmap, x, y, w, h, 0, 0, this_.w, this_.h);
+        rf::gr::bitmap_scaled(this_.bg_bitmap, x, y, w, h, 0, 0, this_.w, this_.h, false, false, rf::gr::bitmap_clamp_mode);
     }
 
     if (!this_.enabled) {
