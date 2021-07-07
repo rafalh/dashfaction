@@ -196,7 +196,7 @@ namespace df::gr::d3d11
             DF_GR_D3D11_CHECK_HR(
                 dxgi_factory2->CreateSwapChainForHwnd(device_, hwnd, &sc_desc1, &sc_fs_desc, nullptr, &swap_chain1)
             );
-            swap_chain1->QueryInterface(&swap_chain_);
+            DF_GR_D3D11_CHECK_HR(swap_chain1->QueryInterface(&swap_chain_));
         }
         else {
             DXGI_SWAP_CHAIN_DESC sd;
@@ -347,11 +347,13 @@ namespace df::gr::d3d11
 
     void Renderer::clear()
     {
+        batch_manager_->flush();
         render_context_->clear();
     }
 
     void Renderer::zbuffer_clear()
     {
+        batch_manager_->flush();
         render_context_->zbuffer_clear();
     }
 
@@ -528,6 +530,7 @@ namespace df::gr::d3d11
 
     void Renderer::fog_set()
     {
+        batch_manager_->flush();
         render_context_->fog_set();
     }
 
