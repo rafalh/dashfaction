@@ -88,7 +88,7 @@ namespace df::gr::d3d11
         if (render_type == FaceRenderType::opaque) {
             return gr_solid_mode;
         }
-        if (has_lightmap) {
+        if (render_type == FaceRenderType::alpha && has_lightmap) {
             return gr_solid_alpha_mode;
         }
         return alpha_detail_fullbright_mode;
