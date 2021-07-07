@@ -43,6 +43,8 @@ VsOutput main(VsInput input)
         mul(pos_h, matrices[input.indices[1] * 255.0f]) * input.weights[1] +
         mul(pos_h, matrices[input.indices[2] * 255.0f]) * input.weights[2] +
         mul(pos_h, matrices[input.indices[3] * 255.0f]) * input.weights[3];
+    // Reimplement RF bug (dividing bone weight by 256) to fix some animations (especially in cutscenes)
+    model_pos *= 255.0f / 256.0f;
     float3 world_pos = mul(float4(model_pos, 1), world_mat);
     float3 view_pos = mul(float4(world_pos, 1), view_mat);
     output.pos = mul(float4(view_pos, 1), proj_mat);

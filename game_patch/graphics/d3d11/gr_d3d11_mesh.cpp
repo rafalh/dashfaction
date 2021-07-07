@@ -280,23 +280,28 @@ namespace df::gr::d3d11
                 b.double_sided = is_vif_chunk_double_sided(chunk);
 
                 for (int vert_index = 0; vert_index < chunk.num_vecs; ++vert_index) {
+                    int pos_vert_index = vert_index;
+                    int pos_vert_offset = chunk.same_vertex_offsets[vert_index];
+                    if (pos_vert_offset > 0) {
+                        pos_vert_index -= pos_vert_offset;
+                    }
                     GpuCharacterVertex0& gpu_vert_0 = gpu_verts_0.emplace_back();
                     GpuCharacterVertex1& gpu_vert_1 = gpu_verts_1.emplace_back();
-                    gpu_vert_0.x = chunk.vecs[vert_index].x;
-                    gpu_vert_0.y = chunk.vecs[vert_index].y;
-                    gpu_vert_0.z = chunk.vecs[vert_index].z;
+                    gpu_vert_0.x = chunk.vecs[pos_vert_index].x;
+                    gpu_vert_0.y = chunk.vecs[pos_vert_index].y;
+                    gpu_vert_0.z = chunk.vecs[pos_vert_index].z;
                     gpu_vert_1.norm = {
-                        chunk.norms[vert_index].x,
-                        chunk.norms[vert_index].y,
-                        chunk.norms[vert_index].z,
+                        chunk.norms[pos_vert_index].x,
+                        chunk.norms[pos_vert_index].y,
+                        chunk.norms[pos_vert_index].z,
                     };
                     gpu_vert_1.diffuse = 0xFFFFFFFF;
                     gpu_vert_1.u0 = chunk.uvs[vert_index].x;
                     gpu_vert_1.v0 = chunk.uvs[vert_index].y;
                     if (chunk.wi) {
                         for (int i = 0; i < 4; ++i) {
-                            gpu_vert_1.weights[i] = chunk.wi[vert_index].weights[i];
-                            gpu_vert_1.indices[i] = chunk.wi[vert_index].indices[i];
+                            gpu_vert_1.weights[i] = chunk.wi[pos_vert_index].weights[i];
+                            gpu_vert_1.indices[i] = chunk.wi[pos_vert_index].indices[i];
                             if (gpu_vert_1.indices[i] >= 50) {
                                 gpu_vert_1.indices[i] = 49;
                             }
@@ -403,6 +408,12 @@ namespace df::gr::d3d11
             rf::VifChunk& chunk = mesh->chunks[chunk_index];
             std::vector<Vector3> morphed_vecs(chunk.vecs, chunk.vecs + chunk.num_vecs);
             skeleton->morph(morphed_vecs.data(), chunk.num_vecs, time, chunk.orig_map, mesh->num_original_vecs);
+            for (int vert_index = 0; vert_index < chunk.num_vecs; ++vert_index) {
+                int pos_vert_offset = chunk.same_vertex_offsets[vert_index];
+                if (pos_vert_offset > 0) {
+                    morphed_vecs[vert_index] = morphed_vecs[vert_index - pos_vert_offset];
+                }
+            }
             std::memcpy(gpu_vecs, morphed_vecs.data(), chunk.num_vecs * sizeof(rf::Vector3));
             gpu_vecs += chunk.num_vecs;
         }
