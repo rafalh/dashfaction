@@ -544,6 +544,7 @@ namespace df::gr::d3d11
         auto cache = reinterpret_cast<GRenderCache*>(solid->field_370);
         before_render(pos, orient);
         cache->render(FaceRenderType::opaque, render_context_);
+        cache->render(FaceRenderType::alpha, render_context_);
     }
 
     void SolidRenderer::render_alpha_detail(GRoom *room, GSolid *solid)
