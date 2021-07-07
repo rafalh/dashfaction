@@ -157,7 +157,7 @@ namespace df::gr::d3d11
         ubyte* bm_pal = nullptr;
         xlog::trace("Locking bitmap");
         fmt = bm::lock(bm_handle, &bm_bits, &bm_pal);
-        if (fmt == bm::FORMAT_NONE || bm_bits == nullptr || bm_pal != nullptr) {
+        if (fmt == bm::FORMAT_NONE || bm_bits == nullptr) {
             xlog::warn("Bitmap lock failed or unsupported bitmap");
             return {};
         }
@@ -281,6 +281,7 @@ namespace df::gr::d3d11
     {
         std::vector<std::pair<DXGI_FORMAT, bm::Format>> candidates;
         switch (fmt) {
+            case bm::FORMAT_8_PALETTED: return {DXGI_FORMAT_B8G8R8X8_UNORM, bm::FORMAT_8888_ARGB};
             case bm::FORMAT_565_RGB:
                 candidates.emplace_back(DXGI_FORMAT_B5G6R5_UNORM, bm::FORMAT_565_RGB);
                 candidates.emplace_back(DXGI_FORMAT_B8G8R8X8_UNORM, bm::FORMAT_8888_ARGB);
