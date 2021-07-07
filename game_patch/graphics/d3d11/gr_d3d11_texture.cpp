@@ -32,12 +32,13 @@ namespace df::gr::d3d11
         std::vector<D3D11_SUBRESOURCE_DATA> subres_data_vec;
         if (bits) {
             for (int i = 0; i < mip_levels; ++i) {
-                int pitch = w * bm_bytes_per_pixel(fmt);
+                int pitch = bm_calculate_pitch(w, fmt);
+                auto rows = bm_calculate_rows(h, fmt);
                 subres_data_vec.emplace_back();
                 D3D11_SUBRESOURCE_DATA& subres_data = subres_data_vec.back();
                 if (supported_fmt != fmt) {
                     xlog::trace("Converting texture %d -> %d", fmt, supported_fmt);
-                    int converted_pitch = w * bm_bytes_per_pixel(supported_fmt);
+                    int converted_pitch = bm_calculate_pitch(w, supported_fmt);
                     converted_bits_vec.push_back(std::make_unique<ubyte[]>(converted_pitch * h));
                     ubyte* converted_bits = converted_bits_vec.back().get();
                     ::bm_convert_format(converted_bits, supported_fmt, bits, fmt, w, h,
@@ -50,7 +51,7 @@ namespace df::gr::d3d11
                     subres_data.pSysMem = bits;
                     subres_data.SysMemPitch = pitch;
                 }
-                bits += pitch * h;
+                bits += pitch * rows;
                 w /= 2;
                 h /= 2;
             }
