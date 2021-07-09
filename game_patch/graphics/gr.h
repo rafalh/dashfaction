@@ -19,5 +19,3 @@ void gr_font_run_with_default(int font_id, F fun)
     fun();
     gr_font_set_default(old_font);
 }
-
-extern float gr_lod_dist_scale;

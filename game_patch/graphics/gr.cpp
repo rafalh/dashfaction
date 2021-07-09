@@ -155,6 +155,13 @@ CallHook<void(int, rf::gr::Vertex**, int, rf::gr::Mode)> gr_rect_gr_tmapper_hook
     },
 };
 
+FunHook<float(const rf::Vector3&)> gr_get_apparent_distance_from_camera_hook{
+    0x005182F0,
+    [](const rf::Vector3& pos) {
+        return gr_get_apparent_distance_from_camera_hook.call_target(pos) / gr_lod_dist_scale;
+    },
+};
+
 bool gr_is_texture_format_supported(rf::bm::Format format)
 {
     if (rf::gr::screen.mode == rf::gr::DIRECT3D) {
@@ -365,6 +372,15 @@ void gr_apply_patch()
     // Fixes performance issues caused by gr::sceen::fog_far_scaled being initialized to inf
     rf::gr::matrix_scale.set(1.0f, 1.0f, 1.0f);
     rf::gr::one_over_matrix_scale_z = 1.0f;
+
+    // Increase mesh details
+    gr_get_apparent_distance_from_camera_hook.install();
+    if (g_game_config.disable_lod_models) {
+        // Do not scale LOD distance for character in multi (gr_d3d_render_lod_vif)
+        AsmWriter{0x0052FAED, 0x0052FAFB}.nop();
+        // Change default LOD scale
+        gr_lod_dist_scale = 10.0f;
+    }
 
     // Commands
     fov_cmd.register_cmd();
