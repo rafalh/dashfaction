@@ -592,6 +592,7 @@ namespace df::gr::d3d11
 
     void RenderContext::clear()
     {
+        // Note: original code clears clip rect only but it is not trivial in D3D11
         if (render_target_view_) {
             float clear_color[4] = {
                 gr::screen.current_color.red / 255.0f,
@@ -605,6 +606,7 @@ namespace df::gr::d3d11
 
     void RenderContext::zbuffer_clear()
     {
+        // Note: original code clears clip rect only but it is not trivial in D3D11
         if (gr::screen.depthbuffer_type != gr::DEPTHBUFFER_NONE && depth_stencil_view_) {
             float depth = gr::screen.depthbuffer_type == gr::DEPTHBUFFER_Z ? 0.0f : 1.0f;
             context_->ClearDepthStencilView(depth_stencil_view_, D3D11_CLEAR_DEPTH, depth, 0);
@@ -641,7 +643,7 @@ namespace df::gr::d3d11
         };
 
         std::array<float, 3> ambient_light;
-        float padding;
+        float num_point_lights;
         PointLight point_lights[max_point_lights];
     };
 
@@ -673,7 +675,10 @@ namespace df::gr::d3d11
 
         rf::gr::light_get_ambient(&data.ambient_light[0], &data.ambient_light[1], &data.ambient_light[2]);
 
-        for (int i = 0; i < std::min(rf::gr::num_relevant_lights, LightsBufferData::max_point_lights); ++i) {
+        int num_point_lights = std::min(rf::gr::num_relevant_lights, LightsBufferData::max_point_lights);
+        data.num_point_lights = num_point_lights;
+
+        for (int i = 0; i < num_point_lights; ++i) {
             rf::gr::Light* light = rf::gr::relevant_lights[i];
             LightsBufferData::PointLight& gpu_light = data.point_lights[i];
             gpu_light.pos = {light->vec.x, light->vec.y, light->vec.z};

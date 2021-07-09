@@ -34,7 +34,8 @@ struct PointLight {
 
 cbuffer LightsBuffer : register(b1)
 {
-    float4 ambient_light;
+    float3 ambient_light;
+    float num_point_lights;
     PointLight point_lights[MAX_POINT_LIGHTS];
 };
 
@@ -54,7 +55,7 @@ float4 main(VsOutput input) : SV_TARGET
     target.rgb += tex0_color.rgb * tex0_add_rgb;
 
     float3 light_color = tex1.Sample(samp1, input.uv1).rgb;
-    for (int i = 0; i < MAX_POINT_LIGHTS; ++i) {
+    for (int i = 0; i < num_point_lights; ++i) {
         float3 light_vec = point_lights[i].pos - input.world_pos_and_depth.xyz;
         float3 light_dir = normalize(light_vec);
         float dist = length(light_vec);
