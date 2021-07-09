@@ -14,6 +14,74 @@ namespace df::gr::d3d11
     class ShaderManager;
     class TextureManager;
 
+    class ModelTransformBuffer
+    {
+    public:
+        ModelTransformBuffer(ID3D11Device* device);
+
+        void update(const rf::Vector3& pos, const rf::Matrix3& orient, ID3D11DeviceContext* device_context)
+        {
+            if (current_model_pos_ != pos || current_model_orient_ != orient) {
+                current_model_pos_ = pos;
+                current_model_orient_ = orient;
+                update_buffer(device_context);
+            }
+        }
+
+        ID3D11Buffer* get_buffer() const
+        {
+            return buffer_;
+        }
+
+    private:
+        void update_buffer(ID3D11DeviceContext* device_context);
+
+        ComPtr<ID3D11Buffer> buffer_;
+        rf::Vector3 current_model_pos_;
+        rf::Matrix3 current_model_orient_;
+    };
+
+    class ViewProjTransformBuffer
+    {
+    public:
+        ViewProjTransformBuffer(ID3D11Device* device);
+
+        void update(ID3D11DeviceContext* device_context);
+
+        ID3D11Buffer* get_buffer() const
+        {
+            return buffer_;
+        }
+
+    private:
+        ComPtr<ID3D11Buffer> buffer_;
+    };
+
+    class UvOffsetBuffer
+    {
+    public:
+        UvOffsetBuffer(ID3D11Device* device);
+
+        void update(const rf::Vector2& uv_offset, ID3D11DeviceContext* device_context)
+        {
+            if (current_uv_offset_ != uv_offset) {
+                current_uv_offset_ = uv_offset;
+                update_buffer(device_context);
+            }
+        }
+
+        ID3D11Buffer* get_buffer() const
+        {
+            return buffer_;
+        }
+
+    private:
+        void update_buffer(ID3D11DeviceContext* device_context);
+
+        ComPtr<ID3D11Buffer> buffer_;
+        rf::Vector2 current_uv_offset_;
+    };
+
     class LightsBuffer
     {
     public:
@@ -28,12 +96,46 @@ namespace df::gr::d3d11
         ComPtr<ID3D11Buffer> buffer_;
     };
 
+    class RenderModeBuffer
+    {
+    public:
+        RenderModeBuffer(ID3D11Device* device);
+
+        void update(gr::Mode mode, bool has_tex1, rf::Color color, ID3D11DeviceContext* device_context)
+        {
+            if (!current_mode_ || current_mode_.value() != mode || current_color_ != color) {
+                current_mode_.emplace(mode);
+                current_color_ = color;
+                update_buffer(has_tex1, device_context);
+            }
+        }
+
+        ID3D11Buffer* get_buffer() const
+        {
+            return buffer_;
+        }
+
+        void handle_fog_change()
+        {
+            if (current_mode_ && current_mode_.value().get_fog_type() != rf::gr::FOG_NOT_ALLOWED) {
+                current_mode_.reset();
+            }
+        }
+
+    private:
+        void update_buffer(bool has_tex1, ID3D11DeviceContext* device_context);
+
+        ComPtr<ID3D11Buffer> buffer_;
+        std::optional<gr::Mode> current_mode_;
+        rf::Color current_color_{255, 255, 255};
+    };
+
     class RenderContext
     {
     public:
         RenderContext(
             ComPtr<ID3D11Device> device,
-            ComPtr<ID3D11DeviceContext> context,
+            ComPtr<ID3D11DeviceContext> device_context,
             StateManager& state_manager,
             ShaderManager& shader_manager,
             TextureManager& texture_manager
@@ -48,23 +150,37 @@ namespace df::gr::d3d11
             set_texture(1, tex_handle1);
         }
 
-        void set_render_target(ID3D11RenderTargetView* render_target_view, ID3D11DepthStencilView* depth_stencil_view);
-        void bind_vs_cbuffer(int index, ID3D11Buffer* cbuffer);
+        void set_render_target(ID3D11RenderTargetView* render_target_view, ID3D11DepthStencilView* depth_stencil_view)
+        {
+            render_target_view_ = render_target_view;
+            depth_stencil_view_ = depth_stencil_view;
+            ID3D11RenderTargetView* render_targets[] = { render_target_view };
+            device_context_->OMSetRenderTargets(std::size(render_targets), render_targets, depth_stencil_view);
+        }
+
+        void bind_vs_cbuffer(int index, ID3D11Buffer* cbuffer)
+        {
+            ID3D11Buffer* vs_cbuffers[] = { cbuffer };
+            device_context_->VSSetConstantBuffers(index, std::size(vs_cbuffers), vs_cbuffers);
+        }
+
         void clear();
         void zbuffer_clear();
         void set_clip();
-        void update_view_proj_transform();
+
+        void update_view_proj_transform()
+        {
+            view_proj_transform_cbuffer_.update(device_context_);
+        }
 
         void fog_set()
         {
-            if (current_mode_ && current_mode_.value().get_fog_type() != rf::gr::FOG_NOT_ALLOWED) {
-                current_mode_.reset();
-            }
+            render_mode_cbuffer_.handle_fog_change();
         }
 
         ID3D11DeviceContext* device_context()
         {
-            return context_;
+            return device_context_;
         }
 
         void set_vertex_buffer(ID3D11Buffer* vertex_buffer, UINT stride, UINT slot = 0)
@@ -74,7 +190,7 @@ namespace df::gr::d3d11
                 current_vertex_buffers_[slot] = vertex_buffer;
                 UINT offsets[] = { 0 };
                 ID3D11Buffer* vertex_buffers[] = { vertex_buffer };
-                context_->IASetVertexBuffers(slot, std::size(vertex_buffers), vertex_buffers, &stride, offsets);
+                device_context_->IASetVertexBuffers(slot, std::size(vertex_buffers), vertex_buffers, &stride, offsets);
             }
         }
 
@@ -82,7 +198,7 @@ namespace df::gr::d3d11
         {
             if (index_buffer != current_index_buffer_) {
                 current_index_buffer_ = index_buffer;
-                context_->IASetIndexBuffer(index_buffer, DXGI_FORMAT_R16_UINT, 0);
+                device_context_->IASetIndexBuffer(index_buffer, DXGI_FORMAT_R16_UINT, 0);
             }
         }
 
@@ -90,7 +206,7 @@ namespace df::gr::d3d11
         {
             if (current_primitive_topology_ != primitive_topology) {
                 current_primitive_topology_ = primitive_topology;
-                context_->IASetPrimitiveTopology(primitive_topology);
+                device_context_->IASetPrimitiveTopology(primitive_topology);
             }
         }
 
@@ -98,7 +214,7 @@ namespace df::gr::d3d11
         {
             if (current_input_layout_ != input_layout) {
                 current_input_layout_ = input_layout;
-                context_->IASetInputLayout(input_layout);
+                device_context_->IASetInputLayout(input_layout);
             }
         }
 
@@ -106,7 +222,7 @@ namespace df::gr::d3d11
         {
             if (current_vertex_shader_ != vertex_shader) {
                 current_vertex_shader_ = vertex_shader;
-                context_->VSSetShader(vertex_shader, nullptr, 0);
+                device_context_->VSSetShader(vertex_shader, nullptr, 0);
             }
         }
 
@@ -120,7 +236,7 @@ namespace df::gr::d3d11
         {
             if (current_pixel_shader_ != pixel_shader) {
                 current_pixel_shader_ = pixel_shader;
-                context_->PSSetShader(pixel_shader, nullptr, 0);
+                device_context_->PSSetShader(pixel_shader, nullptr, 0);
             }
         }
 
@@ -135,19 +251,12 @@ namespace df::gr::d3d11
 
         void set_model_transform(const rf::Vector3& pos, const rf::Matrix3& orient)
         {
-            if (current_model_pos_ != pos || current_model_orient_ != orient) {
-                current_model_pos_ = pos;
-                current_model_orient_ = orient;
-                update_model_transform();
-            }
+            model_transform_cbuffer_.update(pos, orient, device_context_);
         }
 
-        void set_uv_pan(const rf::Vector2& uv_pan)
+        void set_uv_offset(const rf::Vector2& uv_offset)
         {
-            if (current_uv_pan_ != uv_pan) {
-                current_uv_pan_ = uv_pan;
-                update_texture_transform();
-            }
+            uv_offset_cbuffer_.update(uv_offset, device_context_);
         }
 
         void set_zbias(int zbias)
@@ -158,26 +267,33 @@ namespace df::gr::d3d11
 
         void update_lights()
         {
-            lights_buffer_.update(context_);
+            lights_buffer_.update(device_context_);
         }
 
     private:
-        void init_cbuffers();
         void bind_cbuffers();
         void bind_shader_program();
         void bind_rasterizer_state();
         void bind_texture(int slot);
-        void change_mode(gr::Mode mode, bool has_tex1);
-        void update_vertex_transform_type();
-        void update_model_transform();
         void update_texture_transform();
+        void set_sampler_state(gr::TextureSource ts);
+        void set_blend_state(gr::AlphaBlend ab);
+        void set_depth_stencil_state(gr::ZbufferType zbt);
 
         void set_mode(gr::Mode mode, bool has_tex1, rf::Color color)
         {
-            if (!current_mode_ || current_mode_.value() != mode || current_color_ != color) {
+            render_mode_cbuffer_.update(mode, has_tex1, color, device_context_);
+            if (!current_mode_ || current_mode_.value() != mode) {
+                if (!current_mode_ || current_mode_.value().get_texture_source() != mode.get_texture_source()) {
+                    set_sampler_state(mode.get_texture_source());
+                }
+                if (!current_mode_ || current_mode_.value().get_alpha_blend() != mode.get_alpha_blend()) {
+                    set_blend_state(mode.get_alpha_blend());
+                }
+                if (!current_mode_ || current_mode_.value().get_zbuffer_type() != mode.get_zbuffer_type()) {
+                    set_depth_stencil_state(mode.get_zbuffer_type());
+                }
                 current_mode_.emplace(mode);
-                current_color_ = color;
-                change_mode(mode, has_tex1);
             }
         }
 
@@ -192,14 +308,15 @@ namespace df::gr::d3d11
         static constexpr int vertex_buffer_slots = 2;
 
         ComPtr<ID3D11Device> device_;
-        ComPtr<ID3D11DeviceContext> context_;
+        ComPtr<ID3D11DeviceContext> device_context_;
         StateManager& state_manager_;
         ShaderManager& shader_manager_;
         TextureManager& texture_manager_;
-        ComPtr<ID3D11Buffer> model_transform_cbuffer_;
-        ComPtr<ID3D11Buffer> view_proj_transform_cbuffer_;
-        ComPtr<ID3D11Buffer> uv_offset_cbuffer_;
-        ComPtr<ID3D11Buffer> render_mode_cbuffer_;
+        ModelTransformBuffer model_transform_cbuffer_;
+        ViewProjTransformBuffer view_proj_transform_cbuffer_;
+        UvOffsetBuffer uv_offset_cbuffer_;
+        LightsBuffer lights_buffer_;
+        RenderModeBuffer render_mode_cbuffer_;
         int white_bm_ = -1;
 
         ID3D11RenderTargetView* render_target_view_ = nullptr;
@@ -210,15 +327,10 @@ namespace df::gr::d3d11
         ID3D11VertexShader* current_vertex_shader_ = nullptr;
         ID3D11PixelShader* current_pixel_shader_ = nullptr;
         D3D11_PRIMITIVE_TOPOLOGY current_primitive_topology_ = D3D11_PRIMITIVE_TOPOLOGY_UNDEFINED;
-        std::optional<gr::Mode> current_mode_;
         std::array<int, 2> current_tex_handles_ = {-1, -1};
-        rf::Color current_color_{255, 255, 255};
         D3D11_CULL_MODE current_cull_mode_ = D3D11_CULL_NONE;
-        rf::Vector2 current_uv_pan_;
-        rf::Vector3 current_model_pos_;
-        rf::Matrix3 current_model_orient_;
+        std::optional<gr::Mode> current_mode_;
         int zbias_ = 0;
         bool zbias_changed_ = true;
-        LightsBuffer lights_buffer_;
     };
 }

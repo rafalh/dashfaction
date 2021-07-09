@@ -38,7 +38,7 @@ namespace df::gr::d3d11
         render_context_.set_primitive_topology(primitive_topology_);
         render_context_.set_mode_and_textures(mode_, textures_[0], textures_[1]);
         render_context_.set_cull_mode(D3D11_CULL_NONE);
-        render_context_.set_uv_pan(rf::vec2_zero_vector);
+        render_context_.set_uv_offset(rf::vec2_zero_vector);
 
         render_context_.device_context()->DrawIndexed(num_index, start_index, 0);
     }

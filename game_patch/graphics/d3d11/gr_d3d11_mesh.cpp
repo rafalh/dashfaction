@@ -29,7 +29,7 @@ namespace df::gr::d3d11
     void BaseMeshRenderCache::draw(const MeshRenderParams& params, int lod_index, RenderContext& render_context)
     {
         const int* tex_handles = get_tex_handles(params, lod_index);
-        render_context.set_uv_pan(rf::vec2_zero_vector);
+        render_context.set_uv_offset(rf::vec2_zero_vector);
         render_context.set_primitive_topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
         std::optional<gr::Mode> forced_mode;
@@ -220,6 +220,68 @@ namespace df::gr::d3d11
         draw(params, lod_index, render_context);
     }
 
+    struct alignas(16) BoneTransformsBufferData
+    {
+        GpuMatrix4x3 matrices[50];
+    };
+
+    class CharacterConstantBuffer
+    {
+    public:
+        CharacterConstantBuffer(ID3D11Device* device);
+        void update(const CharacterInstance* ci, ID3D11DeviceContext* device_context);
+
+        ID3D11Buffer* get_buffer()
+        {
+            return buffer_;
+        }
+
+    private:
+        ComPtr<ID3D11Buffer> buffer_;
+    };
+
+    CharacterConstantBuffer::CharacterConstantBuffer(ID3D11Device* device)
+    {
+        CD3D11_BUFFER_DESC buffer_desc{
+            sizeof(BoneTransformsBufferData),
+            D3D11_BIND_CONSTANT_BUFFER,
+            D3D11_USAGE_DYNAMIC,
+            D3D11_CPU_ACCESS_WRITE,
+        };
+        DF_GR_D3D11_CHECK_HR(
+            device->CreateBuffer(&buffer_desc, nullptr, &buffer_)
+        );
+    }
+
+    static inline GpuMatrix4x3 convert_bone_matrix(const Matrix43& mat)
+    {
+        return {{
+            {mat.orient.rvec.x, mat.orient.uvec.x, mat.orient.fvec.x, mat.origin.x},
+            {mat.orient.rvec.y, mat.orient.uvec.y, mat.orient.fvec.y, mat.origin.y},
+            {mat.orient.rvec.z, mat.orient.uvec.z, mat.orient.fvec.z, mat.origin.z},
+        }};
+    }
+
+    void CharacterConstantBuffer::update(const CharacterInstance* ci, ID3D11DeviceContext* device_context)
+    {
+        BoneTransformsBufferData data;
+        // Note: if some matrices that are unused by skeleton are referenced by vertices and not get initialized
+        //       bad things can happen even if weight is zero (e.g. in case of NaNs)
+        std::memset(&data, 0, sizeof(data));
+        for (int i = 0; i < ci->base_character->num_bones; ++i) {
+            const Matrix43& bone_mat = ci->bone_transforms_final[i];
+            data.matrices[i] = convert_bone_matrix(bone_mat);
+        }
+
+        D3D11_MAPPED_SUBRESOURCE mapped_subres;
+        DF_GR_D3D11_CHECK_HR(
+            device_context->Map(buffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_subres)
+        );
+        std::memcpy(mapped_subres.pData, &data, sizeof(data));
+        device_context->Unmap(buffer_, 0);
+    }
+
+
     class CharacterMeshRenderCache : public BaseMeshRenderCache
     {
     public:
@@ -228,22 +290,15 @@ namespace df::gr::d3d11
         void update_morphed_vertices_buffer(rf::Skeleton* skeleton, int time, RenderContext& render_context);
 
     private:
-        struct alignas(16) BoneTransformsBufferData
-        {
-            GpuMatrix4x3 matrices[50];
-        };
-
         ComPtr<ID3D11Buffer> vertex_buffer_0_;
         ComPtr<ID3D11Buffer> vertex_buffer_1_;
         ComPtr<ID3D11Buffer> morphed_vertex_buffer_0_;
         ComPtr<ID3D11Buffer> index_buffer_;
-        ComPtr<ID3D11Buffer> matrices_cbuffer_;
-
-        void update_matrices_buffer(const CharacterInstance* ci, RenderContext& render_context);
+        CharacterConstantBuffer character_cbuffer_;
     };
 
     CharacterMeshRenderCache::CharacterMeshRenderCache(VifLodMesh* lod_mesh, ID3D11Device* device) :
-        BaseMeshRenderCache(lod_mesh)
+        BaseMeshRenderCache(lod_mesh), character_cbuffer_{device}
     {
         std::size_t num_verts = 0;
         std::size_t num_inds = 0;
@@ -354,25 +409,6 @@ namespace df::gr::d3d11
         DF_GR_D3D11_CHECK_HR(
             device->CreateBuffer(&ib_desc, &ib_subres_data, &index_buffer_)
         );
-
-        CD3D11_BUFFER_DESC matrices_buffer_desc{
-            sizeof(BoneTransformsBufferData),
-            D3D11_BIND_CONSTANT_BUFFER,
-            D3D11_USAGE_DYNAMIC,
-            D3D11_CPU_ACCESS_WRITE,
-        };
-        DF_GR_D3D11_CHECK_HR(
-            device->CreateBuffer(&matrices_buffer_desc, nullptr, &matrices_cbuffer_)
-        );
-    }
-
-    static inline GpuMatrix4x3 convert_bone_matrix(const Matrix43& mat)
-    {
-        return {{
-            {mat.orient.rvec.x, mat.orient.uvec.x, mat.orient.fvec.x, mat.origin.x},
-            {mat.orient.rvec.y, mat.orient.uvec.y, mat.orient.fvec.y, mat.origin.y},
-            {mat.orient.rvec.z, mat.orient.uvec.z, mat.orient.fvec.z, mat.origin.z},
-        }};
     }
 
     void CharacterMeshRenderCache::update_morphed_vertices_buffer(rf::Skeleton* skeleton, int time, RenderContext& render_context)
@@ -436,9 +472,9 @@ namespace df::gr::d3d11
             }
         }
 
-        update_matrices_buffer(ci, render_context);
+        character_cbuffer_.update(ci, render_context.device_context());
         render_context.set_model_transform(pos, orient);
-        render_context.bind_vs_cbuffer(3, matrices_cbuffer_);
+        render_context.bind_vs_cbuffer(3, character_cbuffer_.get_buffer());
 
         ID3D11Buffer* vertex_buffer_0 = morphed ? morphed_vertex_buffer_0_ : vertex_buffer_0_;
         render_context.set_vertex_buffer(vertex_buffer_0, sizeof(GpuCharacterVertex0), 0);
@@ -446,25 +482,6 @@ namespace df::gr::d3d11
         render_context.set_index_buffer(index_buffer_);
         draw(params, lod_index, render_context);
         render_context.bind_vs_cbuffer(3, nullptr);
-    }
-
-    void CharacterMeshRenderCache::update_matrices_buffer(const CharacterInstance* ci, RenderContext& render_context)
-    {
-        BoneTransformsBufferData data;
-        // Note: if some matrices that are unused by skeleton are referenced by vertices and not get initialized
-        //       bad things can happen even if weight is zero (e.g. in case of NaNs)
-        std::memset(&data, 0, sizeof(data));
-        for (int i = 0; i < ci->base_character->num_bones; ++i) {
-            const Matrix43& bone_mat = ci->bone_transforms_final[i];
-            data.matrices[i] = convert_bone_matrix(bone_mat);
-        }
-
-        D3D11_MAPPED_SUBRESOURCE mapped_cb;
-        DF_GR_D3D11_CHECK_HR(
-            render_context.device_context()->Map(matrices_cbuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_cb)
-        );
-        std::memcpy(mapped_cb.pData, &data, sizeof(data));
-        render_context.device_context()->Unmap(matrices_cbuffer_, 0);
     }
 
     MeshRenderer::MeshRenderer(ComPtr<ID3D11Device> device, ShaderManager& shader_manager, RenderContext& render_context) :

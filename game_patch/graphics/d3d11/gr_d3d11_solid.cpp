@@ -285,7 +285,7 @@ namespace df::gr::d3d11
         for (Batch& b : batches) {
             render_context.set_mode_and_textures(b.mode, b.texture_1, b.texture_2);
             Vector2 uv_pan{b.u_pan_speed * delta_time, b.v_pan_speed * delta_time};
-            render_context.set_uv_pan(uv_pan);
+            render_context.set_uv_offset(uv_pan);
             //xlog::warn("DrawIndexed %d %d", b.num_indices, b.start_index);
             render_context.device_context()->DrawIndexed(b.num_indices, b.start_index, 0);
         }

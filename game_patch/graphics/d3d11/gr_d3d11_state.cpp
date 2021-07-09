@@ -33,9 +33,8 @@ namespace df::gr::d3d11
         return rasterizer_state;
     }
 
-    ID3D11SamplerState* StateManager::lookup_sampler_state(gr::Mode mode, int slot)
+    ID3D11SamplerState* StateManager::lookup_sampler_state(rf::gr::TextureSource ts, int slot)
     {
-        auto ts = mode.get_texture_source();
         if (ts == gr::TEXTURE_SOURCE_NONE) {
             // we are binding a dummy white textures
             ts = gr::TEXTURE_SOURCE_CLAMP;
@@ -101,9 +100,8 @@ namespace df::gr::d3d11
         return sampler_state;
     }
 
-    ID3D11BlendState* StateManager::lookup_blend_state(gr::Mode mode)
+    ID3D11BlendState* StateManager::lookup_blend_state(gr::AlphaBlend ab)
     {
-        auto ab = mode.get_alpha_blend();
         int cache_key = static_cast<int>(ab);
 
         const auto& it = blend_state_cache_.find(cache_key);
@@ -171,9 +169,8 @@ namespace df::gr::d3d11
         return blend_state;
     }
 
-    ID3D11DepthStencilState* StateManager::lookup_depth_stencil_state(gr::Mode mode)
+    ID3D11DepthStencilState* StateManager::lookup_depth_stencil_state(gr::ZbufferType zbt)
     {
-        auto zbt = mode.get_zbuffer_type();
         int cache_key = static_cast<int>(zbt) | (static_cast<int>(gr::screen.depthbuffer_type) << 8);
 
         const auto& it = depth_stencil_state_cache_.find(cache_key);
