@@ -13,10 +13,10 @@ namespace df::gr::d3d11
     struct GpuTransformedVertex;
     class RenderContext;
 
-    class BatchManager
+    class DynamicGeometryRenderer
     {
     public:
-        BatchManager(ComPtr<ID3D11Device> device, ShaderManager& shader_manager, RenderContext& render_context);
+        DynamicGeometryRenderer(ComPtr<ID3D11Device> device, ShaderManager& shader_manager, RenderContext& render_context);
         void add_poly(int nv, const rf::gr::Vertex **vertices, int vertex_attributes, const std::array<int, 2>& tex_handles, rf::gr::Mode mode);
         void add_line(const gr::Vertex **vertices, rf::gr::Mode mode);
         void flush();

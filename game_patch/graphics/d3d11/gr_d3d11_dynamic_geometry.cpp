@@ -1,6 +1,6 @@
 #include <cassert>
 #include "gr_d3d11.h"
-#include "gr_d3d11_batch.h"
+#include "gr_d3d11_dynamic_geometry.h"
 #include "gr_d3d11_shader.h"
 #include "gr_d3d11_context.h"
 #include "../../rf/os/frametime.h"
@@ -14,7 +14,7 @@ namespace df::gr::d3d11
     constexpr int batch_max_vertex = 6000;
     constexpr int batch_max_index = 10000;
 
-    BatchManager::BatchManager(ComPtr<ID3D11Device> device, ShaderManager& shader_manager, RenderContext& render_context) :
+    DynamicGeometryRenderer::DynamicGeometryRenderer(ComPtr<ID3D11Device> device, ShaderManager& shader_manager, RenderContext& render_context) :
         device_{device}, render_context_(render_context),
         vertex_ring_buffer_{batch_max_vertex, D3D11_BIND_VERTEX_BUFFER, device_, render_context.device_context()},
         index_ring_buffer_{batch_max_index, D3D11_BIND_INDEX_BUFFER, device_, render_context.device_context()}
@@ -23,7 +23,7 @@ namespace df::gr::d3d11
         pixel_shader_ = shader_manager.get_pixel_shader(PixelShaderId::standard);
     }
 
-    void BatchManager::flush()
+    void DynamicGeometryRenderer::flush()
     {
         auto [start_vertex, num_vertex] = vertex_ring_buffer_.submit();
         if (num_vertex == 0) {
@@ -43,7 +43,7 @@ namespace df::gr::d3d11
         render_context_.device_context()->DrawIndexed(num_index, start_index, 0);
     }
 
-    void BatchManager::add_poly(int nv, const gr::Vertex **vertices, int vertex_attributes, const std::array<int, 2>& tex_handles, gr::Mode mode)
+    void DynamicGeometryRenderer::add_poly(int nv, const gr::Vertex **vertices, int vertex_attributes, const std::array<int, 2>& tex_handles, gr::Mode mode)
     {
         int num_index = (nv - 2) * 3;
         if (nv > batch_max_vertex || num_index > batch_max_index) {
@@ -106,7 +106,7 @@ namespace df::gr::d3d11
         }
     }
 
-    void BatchManager::add_line(const gr::Vertex **vertices, rf::gr::Mode mode)
+    void DynamicGeometryRenderer::add_line(const gr::Vertex **vertices, rf::gr::Mode mode)
     {
         set_primitive_topology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
         set_mode(mode);

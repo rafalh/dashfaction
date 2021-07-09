@@ -10,7 +10,7 @@
 #include "gr_d3d11_shader.h"
 #include "gr_d3d11_texture.h"
 #include "gr_d3d11_state.h"
-#include "gr_d3d11_batch.h"
+#include "gr_d3d11_dynamic_geometry.h"
 #include "gr_d3d11_solid.h"
 #include "gr_d3d11_mesh.h"
 
@@ -35,8 +35,8 @@ namespace df::gr::d3d11
         shader_manager_ = std::make_unique<ShaderManager>(device_);
         texture_manager_ = std::make_unique<TextureManager>(device_, context_);
         render_context_ = std::make_unique<RenderContext>(device_, context_, *state_manager_, *shader_manager_, *texture_manager_);
-        batch_manager_ = std::make_unique<BatchManager>(device_, *shader_manager_, *render_context_);
-        solid_renderer_ = std::make_unique<SolidRenderer>(device_, *shader_manager_, *batch_manager_, *render_context_);
+        dyn_geo_renderer_ = std::make_unique<DynamicGeometryRenderer>(device_, *shader_manager_, *render_context_);
+        solid_renderer_ = std::make_unique<SolidRenderer>(device_, *shader_manager_, *dyn_geo_renderer_, *render_context_);
         mesh_renderer_ = std::make_unique<MeshRenderer>(device_, *shader_manager_, *render_context_);
 
         render_context_->set_render_target(default_render_target_view_, depth_stencil_view_);
@@ -337,7 +337,7 @@ namespace df::gr::d3d11
         verts[3].u1 = u_left;
         verts[3].v1 = v_bottom;
         std::array<int, 2> tex_handles{bm_handle, -1};
-        batch_manager_->add_poly(std::size(verts_ptrs), verts_ptrs, 0, tex_handles, mode);
+        dyn_geo_renderer_->add_poly(std::size(verts_ptrs), verts_ptrs, 0, tex_handles, mode);
     }
 
     void Renderer::page_in(int bm_handle)
@@ -347,26 +347,25 @@ namespace df::gr::d3d11
 
     void Renderer::clear()
     {
-        batch_manager_->flush();
+        dyn_geo_renderer_->flush();
         render_context_->clear();
     }
 
     void Renderer::zbuffer_clear()
     {
-        batch_manager_->flush();
+        dyn_geo_renderer_->flush();
         render_context_->zbuffer_clear();
     }
 
     void Renderer::set_clip()
     {
-        batch_manager_->flush();
+        dyn_geo_renderer_->flush();
         render_context_->set_clip();
     }
 
     void Renderer::flip()
     {
-        //xlog::info("gr_d3d11_flip");
-        batch_manager_->flush();
+        dyn_geo_renderer_->flush();
         if (msaa_render_target_) {
             context_->ResolveSubresource(back_buffer_, 0, msaa_render_target_, 0, swap_chain_format);
         }
@@ -421,13 +420,13 @@ namespace df::gr::d3d11
     void Renderer::tmapper(int nv, const rf::gr::Vertex **vertices, int vertex_attributes, rf::gr::Mode mode)
     {
         std::array<int, 2> tex_handles{gr::screen.current_texture_1, gr::screen.current_texture_2};
-        batch_manager_->add_poly(nv, vertices, vertex_attributes, tex_handles, mode);
+        dyn_geo_renderer_->add_poly(nv, vertices, vertex_attributes, tex_handles, mode);
     }
 
     void Renderer::line(const rf::gr::Vertex& v0, const rf::gr::Vertex& v1, rf::gr::Mode mode)
     {
         const rf::gr::Vertex* vertices[] = {&v0, &v1};
-        batch_manager_->add_line(vertices, mode);
+        dyn_geo_renderer_->add_line(vertices, mode);
     }
 
     void Renderer::line(float x1, float y1, float x2, float y2, rf::gr::Mode mode)
@@ -444,7 +443,7 @@ namespace df::gr::d3d11
 
     bool Renderer::set_render_target(int bm_handle)
     {
-        batch_manager_->flush();
+        dyn_geo_renderer_->flush();
         if (bm_handle != -1) {
             ID3D11RenderTargetView* render_target_view = texture_manager_->lookup_render_target(bm_handle);
             if (!render_target_view) {
@@ -464,7 +463,7 @@ namespace df::gr::d3d11
 
     bm::Format Renderer::read_back_buffer([[maybe_unused]] int x, [[maybe_unused]] int y, int w, int h, rf::ubyte *data)
     {
-        batch_manager_->flush();
+        dyn_geo_renderer_->flush();
         if (msaa_render_target_) {
             context_->ResolveSubresource(back_buffer_, 0, msaa_render_target_, 0, swap_chain_format);
         }
@@ -478,31 +477,31 @@ namespace df::gr::d3d11
 
     void Renderer::render_solid(rf::GSolid* solid, rf::GRoom** rooms, int num_rooms)
     {
-        batch_manager_->flush();
+        dyn_geo_renderer_->flush();
         solid_renderer_->render_solid(solid, rooms, num_rooms);
     }
 
     void Renderer::render_movable_solid(rf::GSolid* solid, const rf::Vector3& pos, const rf::Matrix3& orient)
     {
-        batch_manager_->flush();
+        dyn_geo_renderer_->flush();
         solid_renderer_->render_movable_solid(solid, pos, orient);
     }
 
     void Renderer::render_alpha_detail_room(rf::GRoom *room, rf::GSolid *solid)
     {
-        batch_manager_->flush();
+        dyn_geo_renderer_->flush();
         solid_renderer_->render_alpha_detail(room, solid);
     }
 
     void Renderer::render_sky_room(rf::GRoom *room)
     {
-        batch_manager_->flush();
+        dyn_geo_renderer_->flush();
         solid_renderer_->render_sky_room(room);
     }
 
     void Renderer::render_room_liquid_surface(rf::GSolid* solid, rf::GRoom* room)
     {
-        batch_manager_->flush();
+        dyn_geo_renderer_->flush();
         solid_renderer_->render_room_liquid_surface(solid, room);
     }
 
@@ -513,13 +512,13 @@ namespace df::gr::d3d11
 
     void Renderer::render_v3d_vif(rf::VifLodMesh *lod_mesh, rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::MeshRenderParams& params)
     {
-        batch_manager_->flush();
+        dyn_geo_renderer_->flush();
         mesh_renderer_->render_v3d_vif(lod_mesh, mesh, pos, orient, params);
     }
 
     void Renderer::render_character_vif(rf::VifLodMesh *lod_mesh, rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::CharacterInstance *ci, const rf::MeshRenderParams& params)
     {
-        batch_manager_->flush();
+        dyn_geo_renderer_->flush();
         mesh_renderer_->render_character_vif(lod_mesh, mesh, pos, orient, ci, params);
     }
 
@@ -530,12 +529,12 @@ namespace df::gr::d3d11
 
     void Renderer::fog_set()
     {
-        batch_manager_->flush();
+        dyn_geo_renderer_->flush();
         render_context_->fog_set();
     }
 
     void Renderer::flush()
     {
-        batch_manager_->flush();
+        dyn_geo_renderer_->flush();
     }
 }

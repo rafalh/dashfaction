@@ -25,12 +25,10 @@ namespace df::gr
 
 namespace df::gr::d3d11
 {
-    // constexpr ubyte GR_DIRECT3D11 = 0x7A;
-
     class StateManager;
     class ShaderManager;
     class TextureManager;
-    class BatchManager;
+    class DynamicGeometryRenderer;
     class RenderContext;
     class SolidRenderer;
     class MeshRenderer;
@@ -139,7 +137,7 @@ namespace df::gr::d3d11
         std::unique_ptr<StateManager> state_manager_;
         std::unique_ptr<ShaderManager> shader_manager_;
         std::unique_ptr<TextureManager> texture_manager_;
-        std::unique_ptr<BatchManager> batch_manager_;
+        std::unique_ptr<DynamicGeometryRenderer> dyn_geo_renderer_;
         std::unique_ptr<RenderContext> render_context_;
         std::unique_ptr<SolidRenderer> solid_renderer_;
         std::unique_ptr<MeshRenderer> mesh_renderer_;

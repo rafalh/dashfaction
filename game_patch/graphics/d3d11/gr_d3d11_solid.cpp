@@ -20,7 +20,7 @@
 #include "gr_d3d11_solid.h"
 #include "gr_d3d11_shader.h"
 #include "gr_d3d11_context.h"
-#include "gr_d3d11_batch.h"
+#include "gr_d3d11_dynamic_geometry.h"
 
 using namespace rf;
 
@@ -418,9 +418,9 @@ namespace df::gr::d3d11
         }
     }
 
-    SolidRenderer::SolidRenderer(ComPtr<ID3D11Device> device, ShaderManager& shader_manager, BatchManager& batch_manager,
+    SolidRenderer::SolidRenderer(ComPtr<ID3D11Device> device, ShaderManager& shader_manager, DynamicGeometryRenderer& dyn_geo_renderer,
         RenderContext& render_context) :
-        device_{std::move(device)}, context_{render_context.device_context()}, batch_manager_{batch_manager}, render_context_(render_context)
+        device_{std::move(device)}, context_{render_context.device_context()}, dyn_geo_renderer_{dyn_geo_renderer}, render_context_(render_context)
     {
         vertex_shader_ = shader_manager.get_vertex_shader(VertexShaderId::standard);
         pixel_shader_ = shader_manager.get_pixel_shader(PixelShaderId::standard);
@@ -476,7 +476,7 @@ namespace df::gr::d3d11
                 }
             }
         }
-        batch_manager_.flush();
+        dyn_geo_renderer_.flush();
         render_context_.set_zbias(0);
     }
 

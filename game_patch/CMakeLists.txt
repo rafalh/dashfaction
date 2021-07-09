@@ -78,8 +78,8 @@ set(SRCS
     graphics/d3d11/gr_d3d11_state.h
     graphics/d3d11/gr_d3d11_texture.cpp
     graphics/d3d11/gr_d3d11_texture.h
-    graphics/d3d11/gr_d3d11_batch.cpp
-    graphics/d3d11/gr_d3d11_batch.h
+    graphics/d3d11/gr_d3d11_dynamic_geometry.cpp
+    graphics/d3d11/gr_d3d11_dynamic_geometry.h
     graphics/d3d11/gr_d3d11_context.cpp
     graphics/d3d11/gr_d3d11_context.h
     graphics/d3d11/gr_d3d11_shader.cpp
