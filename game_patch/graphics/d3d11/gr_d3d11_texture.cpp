@@ -420,19 +420,31 @@ namespace df::gr::d3d11
         [[maybe_unused]] float v,
         rf::gr::Color *clr)
     {
-        const auto& it = texture_cache_.find(bm_handle);
-        if (it != texture_cache_.end()) {
-            Texture& texture = it->second;
-            D3D11_MAPPED_SUBRESOURCE mapped_texture;
-            DF_GR_D3D11_CHECK_HR(
-                device_context_->Map(texture.cpu_texture, 0, D3D11_MAP_READ, 0, &mapped_texture)
-            );
+        // This function is only used when shooting at a texture with alpha
+        // Note: original function has out of bounds error - it reads color for 16bpp and 32bpp (two addresses)
+        // before actually checking the format
+        rf::gr::LockInfo lock_info;
+        lock_info.mode = rf::gr::LOCK_READ_ONLY;
+        if (lock(bm_handle, 0, &lock_info)) {
+            // Make sure u and v are in [0, 1] range
+            // Assume wrap addressing mode
+            u = std::fmod(u, 1.0f);
+            v = std::fmod(v, 1.0f);
+            if (u < 0.0f) {
+                u += 1.0f;
+            }
+            if (v < 0.0f) {
+                v += 1.0f;
+            }
+            int x = std::lround(u * lock_info.w);
+            int y = std::lround(v * lock_info.h);
+            *clr = bm_get_pixel(lock_info.data, lock_info.format, lock_info.stride_in_bytes, x, y);
 
-            // TODO: convert color
-
-            device_context_->Unmap(texture.cpu_texture, 0);
+            unlock(&lock_info);
         }
-        clr->set(255, 255, 255, 255);
+        else {
+            clr->set(255, 255, 255, 255);
+        }
     }
 
     void TextureManager::Texture::init_shader_resource_view(ID3D11Device* device, ID3D11DeviceContext* device_context)
