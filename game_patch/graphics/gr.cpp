@@ -216,10 +216,18 @@ void gr_bitmap_scaled_float(int bitmap_handle, float x, float y, float w, float 
 
     rf::gr::Vertex verts[4];
     rf::gr::Vertex* verts_ptrs[4] = {&verts[0], &verts[1], &verts[2], &verts[3]};
-    float sx_left = rf::gr::screen.offset_x + x - 0.5f;
-    float sx_right = rf::gr::screen.offset_x + x + w - 0.5f;
-    float sy_top = rf::gr::screen.offset_y + y - 0.5f;
-    float sy_bottom = rf::gr::screen.offset_y + y + h - 0.5f;
+    float sx_left = rf::gr::screen.offset_x + x;
+    float sx_right = rf::gr::screen.offset_x + x + w;
+    float sy_top = rf::gr::screen.offset_y + y;
+    float sy_bottom = rf::gr::screen.offset_y + y + h;
+
+    if (g_game_config.renderer == GameConfig::Renderer::legacy) {
+        sx_left -= 0.5f;
+        sx_right -= 0.5f;
+        sy_top -= 0.5f;
+        sy_bottom -= 0.5f;
+    }
+
     float u_left = sx / bm_w * (flip_x ? -1.0f : 1.0f);
     float u_right = (sx + sw) / bm_w * (flip_x ? -1.0f : 1.0f);
     float v_top = sy / bm_h * (flip_y ? -1.0f : 1.0f);
