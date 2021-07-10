@@ -465,7 +465,7 @@ namespace df::gr::d3d11
 
     void SolidRenderer::render_dynamic_decals(rf::GRoom** rooms, int num_rooms)
     {
-        render_context_.set_zbias(100);
+        render_context_.set_zbias(1000);
 
         for (int i = 0; i < num_rooms; ++i) {
             auto room = rooms[i];
