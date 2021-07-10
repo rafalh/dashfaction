@@ -530,13 +530,17 @@ namespace df::gr::d3d11
     void SolidRenderer::clear_cache()
     {
         xlog::debug("Room render cache clear");
-        for (auto& ptr : room_cache_) {
-            ptr->room()->geo_cache = nullptr;
+
+        if (rf::level.geometry) {
+            for (rf::GRoom* room: rf::level.geometry->all_rooms) {
+                room->geo_cache = nullptr;
+            }
         }
+
         room_cache_.clear();
+        detail_render_cache_.clear();
+        mover_render_cache_.clear();
         geo_cache_num_rooms = 0;
-        // Do not destroy details cache here without resetting their GRoom::geo_cache pointers
-        // It is called after geomod, maybe we could avoid destroying all caches in such case...
     }
 
     void SolidRenderer::render_sky_room(GRoom *room)
@@ -549,18 +553,18 @@ namespace df::gr::d3d11
     void SolidRenderer::render_movable_solid(GSolid* solid, const Vector3& pos, const Matrix3& orient)
     {
         xlog::trace("Rendering movable solid %p", solid);
-        if (!solid->field_370) {
+        auto it = mover_render_cache_.find(solid);
+        if (it == mover_render_cache_.end()) {
             xlog::debug("Creating render cache for a mover %p", solid);
             GRenderCacheBuilder cache_builder;
             link_faces_to_texture_movers(solid);
             cache_builder.add_solid(solid);
             GRenderCache cache = cache_builder.build(device_);
-            // TODO: make sure field_370 is not used by the game...
-            mover_render_cache_.emplace_back(new GRenderCache{cache});
-            solid->field_370 = reinterpret_cast<int>(mover_render_cache_.back().get());
+            auto p = mover_render_cache_.emplace(std::make_pair(solid, std::make_unique<GRenderCache>(cache)));
+            it = p.first;
         }
         before_render(pos, orient);
-        auto cache = reinterpret_cast<GRenderCache*>(solid->field_370);
+        auto cache = it->second.get();
         cache->render(FaceRenderType::opaque, render_context_);
         cache->render(FaceRenderType::alpha, render_context_);
         if (decals_enabled) {

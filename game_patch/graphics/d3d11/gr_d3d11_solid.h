@@ -109,7 +109,7 @@ namespace df::gr::d3d11
         DynamicGeometryRenderer& dyn_geo_renderer_;
         RenderContext& render_context_;
         std::vector<std::unique_ptr<RoomRenderCache>> room_cache_;
-        std::vector<std::unique_ptr<GRenderCache>> mover_render_cache_;
         std::vector<std::unique_ptr<GRenderCache>> detail_render_cache_;
+        std::unordered_map<rf::GSolid*, std::unique_ptr<GRenderCache>> mover_render_cache_;
     };
 }
