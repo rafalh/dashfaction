@@ -63,7 +63,7 @@ namespace df::gr::d3d11
     void Renderer::window_active()
     {
         if (rf::gr::screen.window_mode == gr::FULLSCREEN) {
-            xlog::warn("Entering full screen");
+            xlog::info("Entering full screen");
             ShowWindow(hwnd_, SW_RESTORE);
             set_fullscreen_state(true);
         }
