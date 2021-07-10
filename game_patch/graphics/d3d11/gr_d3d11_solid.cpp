@@ -532,9 +532,9 @@ namespace df::gr::d3d11
             ptr->room()->geo_cache = nullptr;
         }
         room_cache_.clear();
-        mover_render_cache_.clear();
-        detail_render_cache_.clear();
         geo_cache_num_rooms = 0;
+        // Do not destroy details cache here without resetting their GRoom::geo_cache pointers
+        // It is called after geomod, maybe we could avoid destroying all caches in such case...
     }
 
     void SolidRenderer::render_sky_room(GRoom *room)
