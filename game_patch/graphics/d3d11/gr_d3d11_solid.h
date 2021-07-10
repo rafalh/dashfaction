@@ -99,6 +99,7 @@ namespace df::gr::d3d11
         void render_room_faces(rf::GSolid* solid, rf::GRoom* room, FaceRenderType render_type);
         void render_detail(rf::GSolid* solid, rf::GRoom* room, bool alpha);
         void render_dynamic_decals(rf::GRoom** rooms, int num_rooms);
+        void render_movable_solid_dynamic_decals(rf::GSolid* solid, const rf::Vector3& pos, const rf::Matrix3& orient);
         void render_dynamic_decal(rf::GDecal* decal, rf::GRoom* room);
 
         ComPtr<ID3D11Device> device_;

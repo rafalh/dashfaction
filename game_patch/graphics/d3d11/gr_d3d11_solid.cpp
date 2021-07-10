@@ -480,6 +480,21 @@ namespace df::gr::d3d11
         render_context_.set_zbias(0);
     }
 
+    void SolidRenderer::render_movable_solid_dynamic_decals(rf::GSolid* solid, const rf::Vector3& pos, const rf::Matrix3& orient)
+    {
+        render_context_.set_zbias(100);
+        gr::start_instance(pos, orient);
+        for (auto decal : solid->decals) {
+            if (decal->flags & DF_LEVEL_DECAL) {
+                continue;
+            }
+            render_dynamic_decal(decal, nullptr);
+        }
+        dyn_geo_renderer_.flush();
+        gr::stop_instance();
+        render_context_.set_zbias(0);
+    }
+
     void SolidRenderer::render_room_faces(rf::GSolid* solid, rf::GRoom* room, FaceRenderType render_type)
     {
         auto cache = reinterpret_cast<RoomRenderCache*>(room->geo_cache);
@@ -524,7 +539,6 @@ namespace df::gr::d3d11
 
     void SolidRenderer::render_sky_room(GRoom *room)
     {
-        //xlog::warn("Rendering skybox...");
         before_render(sky_room_offset, rf::identity_matrix);
         render_room_faces(rf::level.geometry, room, FaceRenderType::sky);
     }
@@ -545,6 +559,9 @@ namespace df::gr::d3d11
         before_render(pos, orient);
         cache->render(FaceRenderType::opaque, render_context_);
         cache->render(FaceRenderType::alpha, render_context_);
+        if (decals_enabled) {
+            render_movable_solid_dynamic_decals(solid, pos, orient);
+        }
     }
 
     void SolidRenderer::render_alpha_detail(GRoom *room, GSolid *solid)
