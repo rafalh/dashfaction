@@ -453,9 +453,11 @@ namespace df::gr::d3d11
             init_gpu_texture(device, device_context);
         }
 
-        DF_GR_D3D11_CHECK_HR(
-            device->CreateShaderResourceView(gpu_texture, nullptr, &shader_resource_view)
-        );
+        if (gpu_texture) {
+            DF_GR_D3D11_CHECK_HR(
+                device->CreateShaderResourceView(gpu_texture, nullptr, &shader_resource_view)
+            );
+        }
     }
 
     void TextureManager::Texture::init_gpu_texture(ID3D11Device* device, ID3D11DeviceContext* device_context)
