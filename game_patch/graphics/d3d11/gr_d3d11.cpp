@@ -42,7 +42,6 @@ namespace df::gr::d3d11
         render_context_->set_render_target(default_render_target_view_, depth_stencil_view_);
         render_context_->set_cull_mode(D3D11_CULL_BACK);
 
-        //gr::screen.mode = GR_DIRECT3D11;
         gr::screen.depthbuffer_type = gr::DEPTHBUFFER_Z;
 
         // Disable software vertex clipping
@@ -280,7 +279,7 @@ namespace df::gr::d3d11
 
     void Renderer::bitmap(int bm_handle, int x, int y, int w, int h, int sx, int sy, int sw, int sh, bool flip_x, bool flip_y, gr::Mode mode)
     {
-        // xlog::info("gr_d3d11_bitmap");
+        xlog::trace("Drawing bitmap");
         int bm_w, bm_h;
         bm::get_dimensions(bm_handle, &bm_w, &bm_h);
         gr::Vertex verts[4];

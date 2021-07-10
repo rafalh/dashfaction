@@ -234,19 +234,9 @@ void gr_d3d11_apply_patch()
     vif_lod_mesh_ctor_injection.install();
     vif_lod_mesh_dtor_injection.install();
 
+    // Do not use built-in render cache
     AsmWriter{0x004F0B90}.jmp(clear_solid_render_cache); // g_render_cache_clear
     AsmWriter{0x004F0B20}.ret(); // g_render_cache_init
-
-    // AsmWriter{0x00545960}.jmp(init);
-
-    // write_mem<ubyte>(0x0050CBE0 + 6, GR_DIRECT3D11);
-    // AsmWriter{0x0050CBE9}.call(close);
-
-    // write_mem<ubyte>(0x0050CE2A + 6, GR_DIRECT3D11);
-    // AsmWriter{0x0050CE33}.jmp(flip);
-
-    // write_mem<ubyte>(0x0050DF80 + 6, GR_DIRECT3D11);
-    // AsmWriter{0x0050DF9D}.call(tmapper);
 
     using namespace asm_regs;
     AsmWriter{0x00544FC0}.jmp(flip); // gr_d3d_flip
