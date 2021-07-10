@@ -234,7 +234,8 @@ void gr_d3d11_apply_patch()
     vif_lod_mesh_ctor_injection.install();
     vif_lod_mesh_dtor_injection.install();
 
-    AsmWriter{0x004F0B90}.jmp(clear_solid_render_cache); // geo_cache_clear
+    AsmWriter{0x004F0B90}.jmp(clear_solid_render_cache); // g_render_cache_clear
+    AsmWriter{0x004F0B20}.ret(); // g_render_cache_init
 
     // AsmWriter{0x00545960}.jmp(init);
 
