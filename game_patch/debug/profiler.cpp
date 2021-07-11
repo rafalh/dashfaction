@@ -509,6 +509,7 @@ void profiler_draw_ui()
                 dbg_box.printf(p->get_name(), "%d us", stats.last_frames_summed_times().avg());
             }
         }
+        dbg_box.render();
     }
 }
 

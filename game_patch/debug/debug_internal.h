@@ -1,79 +1,153 @@
 #pragma once
 
-#include <string>
-#include <common/utils/string-utils.h>
+#include <cstring>
+#include <cstdio>
+#include <cstdarg>
 #include "../rf/gr/gr_font.h"
+
+template<std::size_t N>
+class StringBuffer
+{
+public:
+    void append(char c)
+    {
+        if (pos_ + 1 < N) {
+            buf_[pos_++] = c;
+            buf_[pos_] = '\0';
+        }
+    }
+
+    void append(const char* str)
+    {
+        std::size_t len = std::strlen(str);
+        if (pos_ + len < N) {
+            std::memcpy(&buf_[pos_], str, len);
+            pos_ += len;
+            buf_[pos_] = '\0';
+        }
+    }
+
+    void vappendf(const char* format, va_list args)
+    {
+        std::size_t n = std::vsnprintf(buf_ + pos_, N - pos_, format, args);
+        pos_ += std::min(n, N - pos_ - 1);
+    }
+
+    const char* get() const
+    {
+        return buf_;
+    }
+
+private:
+    char buf_[N] = "";
+    unsigned pos_ = 0;
+};
 
 class DebugNameValueBox
 {
-    int name_x;
-    int value_x;
-    int initial_y;
-    int current_y;
-
 public:
-    DebugNameValueBox(int x, int y, int name_column_width = -1) :
-        name_x(x), value_x(x + name_column_width), initial_y(y), current_y(y)
-    {
-        value_x = name_column_width > 0 ? name_x + name_column_width : -1;
-    }
+    DebugNameValueBox(int x, int y) :
+        x_(x), y_(y)
+    {}
 
     void section(const char* name)
     {
-        if (current_y > initial_y) {
-            current_y += 5;
-        }
-        print_internal(name_x, current_y, name);
-        current_y += rf::gr::get_font_height(-1) + 2;
+        buffer_.append(name);
+        buffer_.append('\n');
     }
 
     void print(const char* name, const char* val)
     {
-        bool two_column_layout = value_x > 0;
-        if (two_column_layout) {
-            print_internal(name_x, current_y, name);
-            print_internal(value_x, current_y, val);
-        }
-        else {
-            std::string buf;
-            buf.assign(name);
-            buf.append(": ");
-            buf.append(val);
-            print_internal(name_x, current_y, buf.c_str());
-        }
+        buffer_.append(name);
+        buffer_.append(": ");
+        buffer_.append(val);
+        buffer_.append('\n');
+    }
 
-        current_y += rf::gr::get_font_height(-1) + 2;
+    void printf(const char* name, const char* format, ...)
+    {
+        std::va_list args;
+        va_start(args, format);
+        buffer_.append(name);
+        buffer_.append(": ");
+        buffer_.vappendf(format, args);
+        buffer_.append('\n');
+        va_end(args);
     }
 
     void print(const char* name, const rf::Vector3& val)
     {
-        auto str = string_format("< %.2f, %.2f, %.2f >", val.x, val.y, val.z);
-        print(name, str.c_str());
+        printf(name, "< %.2f, %.2f, %.2f >", val.x, val.y, val.z);
     }
 
-    void printf(const char* name, const char* fmt, ...)
+    void render()
     {
-        char buffer[256];
-        va_list args;
-        va_start(args, fmt);
-        vsprintf(buffer, fmt, args);
-        va_end(args);
-        print(name, buffer);
-    }
-
-    void reset()
-    {
-        current_y = initial_y;
+        rf::gr::set_color(0, 0, 0, 255);
+        rf::gr::string(x_ + 1, y_ + 1, buffer_.get());
+        rf::gr::set_color(255, 255, 255, 255);
+        rf::gr::string(x_, y_, buffer_.get());
     }
 
 private:
-    static void print_internal(int x, int y, const char* str)
+    int x_;
+    int y_;
+    StringBuffer<2048> buffer_;
+};
+
+class DebugNameValueBoxTwoColumns
+{
+public:
+    DebugNameValueBoxTwoColumns(int x, int y, int name_column_width) :
+        name_x_(x), value_x_(x + name_column_width), y_(y)
+    {}
+
+    void section(const char* name)
+    {
+        name_buffer_.append(name);
+        name_buffer_.append('\n');
+        value_buffer_.append('\n');
+    }
+
+    void print(const char* name, const char* val)
+    {
+        name_buffer_.append(name);
+        name_buffer_.append('\n');
+        value_buffer_.append(val);
+        value_buffer_.append('\n');
+    }
+
+    void printf(const char* name, const char* format, ...)
+    {
+        std::va_list args;
+        va_start(args, format);
+        name_buffer_.append(name);
+        name_buffer_.append('\n');
+        value_buffer_.vappendf(format, args);
+        value_buffer_.append('\n');
+        va_end(args);
+    }
+
+    void print(const char* name, const rf::Vector3& val)
+    {
+        printf(name, "< %.2f, %.2f, %.2f >", val.x, val.y, val.z);
+    }
+
+    void render()
     {
         rf::gr::set_color(0, 0, 0, 255);
-        rf::gr::string(x + 1, y + 1, str);
+        rf::gr::string(name_x_ + 1, y_ + 1, name_buffer_.get());
+        rf::gr::string(value_x_ + 1, y_ + 1, value_buffer_.get());
         rf::gr::set_color(255, 255, 255, 255);
-        rf::gr::string(x, y, str);
+        rf::gr::string(name_x_, y_, name_buffer_.get());
+        rf::gr::string(value_x_, y_, value_buffer_.get());
     }
+
+private:
+    int name_x_;
+    int value_x_;
+    int y_;
+    StringBuffer<2048> name_buffer_;
+    StringBuffer<2048> value_buffer_;
 };
 
 void debug_cmd_init();
