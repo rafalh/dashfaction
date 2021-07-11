@@ -1,12 +1,22 @@
-#include <common/config/GameConfig.h>
-#include <common/config/RegKey.h>
 #include <shlwapi.h>
 #include <algorithm>
+#include <common/config/GameConfig.h>
+#include <common/config/RegKey.h>
+#include <common/version/version.h>
 
 const char rf_key_name[] = R"(SOFTWARE\Volition\Red Faction)";
 const char df_subkey_name[] = "Dash Faction";
 
 const char GameConfig::default_rf_tracker[] = "rfgt.factionfiles.com";
+
+#if VERSION_TYPE == VERSION_TYPE_DEV
+unsigned GameConfig::min_fps_limit = 1u;
+unsigned GameConfig::max_fps_limit = 10000u;
+#else
+unsigned GameConfig::min_fps_limit = 10u;
+unsigned GameConfig::max_fps_limit = 240u;
+#endif
+
 const char fallback_executable_path[] = R"(C:\games\RedFaction\rf.exe)";
 
 bool GameConfig::load() try
