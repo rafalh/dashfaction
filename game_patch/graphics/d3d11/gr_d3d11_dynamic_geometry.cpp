@@ -31,6 +31,9 @@ namespace df::gr::d3d11
         }
         auto [start_index, num_index] = index_ring_buffer_.submit();
 
+        xlog::trace("Drawing dynamic geometry num_vertex %d num_index %d texture %s",
+            num_vertex, num_index, rf::bm::get_filename(textures_[0]));
+
         render_context_.set_vertex_buffer(vertex_ring_buffer_.get_buffer(), sizeof(GpuTransformedVertex));
         render_context_.set_index_buffer(index_ring_buffer_.get_buffer());
         render_context_.set_vertex_shader(vertex_shader_);
@@ -47,7 +50,7 @@ namespace df::gr::d3d11
     {
         int num_index = (nv - 2) * 3;
         if (nv > batch_max_vertex || num_index > batch_max_index) {
-            xlog::error("too many vertices/indices in gr_d3d11_tmapper");
+            xlog::error("too many vertices/indices needed in dynamic geometry renderer");
             return;
         }
 
@@ -131,5 +134,70 @@ namespace df::gr::d3d11
             *(gpu_ind_ptr++) = base_vertex;
             *(gpu_ind_ptr++) = base_vertex + 1;
         }
+    }
+
+    void DynamicGeometryRenderer::bitmap(int bm_handle, int x, int y, int w, int h, int sx, int sy, int sw, int sh, bool flip_x, bool flip_y, gr::Mode mode)
+    {
+        xlog::trace("Drawing bitmap");
+        int bm_w, bm_h;
+        bm::get_dimensions(bm_handle, &bm_w, &bm_h);
+
+        float sx_left = static_cast<float>(x) / gr::screen.clip_width * 2.0f - 1.0f;
+        float sx_right = static_cast<float>(x + w) / gr::screen.clip_width * 2.0f - 1.0f;
+        float sy_top = static_cast<float>(y) / gr::screen.clip_height * -2.0f + 1.0f;
+        float sy_bottom = static_cast<float>(y + h) / gr::screen.clip_height * -2.0f + 1.0f;
+        float u_left = static_cast<float>(sx) / static_cast<float>(bm_w);
+        float u_right = static_cast<float>(sx + sw) / static_cast<float>(bm_w);
+        float v_top = static_cast<float>(sy) / static_cast<float>(bm_h);
+        float v_bottom = static_cast<float>(sy + sh) / static_cast<float>(bm_h);
+
+        // Make sure wrapped texel is not used in case of scaling with filtering enabled
+        if (w != sw) {
+            u_left += 0.5f / bm_w;
+            u_right -= 0.5f / bm_w;
+        }
+        if (h != sh) {
+            v_top += 0.5f / bm_h;
+            v_bottom -= 0.5f / bm_h;
+        }
+
+        if (flip_x) {
+            std::swap(u_left, u_right);
+        }
+        if (flip_y) {
+            std::swap(v_top, v_bottom);
+        }
+
+        constexpr int nv = 4;
+        constexpr int num_index = 6;
+
+        set_primitive_topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        set_mode(mode);
+        set_textures({bm_handle, -1});
+
+        if (vertex_ring_buffer_.is_full(nv) || index_ring_buffer_.is_full(num_index)) {
+            flush();
+        }
+
+        auto [gpu_verts, base_vertex] = vertex_ring_buffer_.alloc(nv);
+        auto [gpu_ind_ptr, base_index] = index_ring_buffer_.alloc(num_index);
+        int diffuse = pack_color(gr::screen.current_color);
+
+        for (int i = 0; i < nv; ++i) {
+            GpuTransformedVertex& gpu_vert = gpu_verts[i];
+            gpu_vert.x = (i == 0 || i == 3) ? sx_left : sx_right;
+            gpu_vert.y = (i == 0 || i == 1) ? sy_top : sy_bottom;
+            gpu_vert.z = 1.0f;
+            gpu_vert.w = 1.0f;
+            gpu_vert.diffuse = diffuse;
+            gpu_vert.u0 = (i == 0 || i == 3) ? u_left : u_right;
+            gpu_vert.v0 = (i == 0 || i == 1) ? v_top : v_bottom;
+        }
+        *(gpu_ind_ptr++) = base_vertex;
+        *(gpu_ind_ptr++) = base_vertex + 1;
+        *(gpu_ind_ptr++) = base_vertex + 2;
+        *(gpu_ind_ptr++) = base_vertex;
+        *(gpu_ind_ptr++) = base_vertex + 2;
+        *(gpu_ind_ptr++) = base_vertex + 3;
     }
 }

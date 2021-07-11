@@ -3,6 +3,7 @@
 #include <xlog/xlog.h>
 #include "../../rf/gr/gr.h"
 #include "../../rf/v3d.h"
+#include "../../rf/os/frametime.h"
 #include "../../bmpman/bmpman.h"
 #include "../../main/main.h"
 #include "gr_d3d11.h"
@@ -279,64 +280,7 @@ namespace df::gr::d3d11
 
     void Renderer::bitmap(int bm_handle, int x, int y, int w, int h, int sx, int sy, int sw, int sh, bool flip_x, bool flip_y, gr::Mode mode)
     {
-        xlog::trace("Drawing bitmap");
-        int bm_w, bm_h;
-        bm::get_dimensions(bm_handle, &bm_w, &bm_h);
-        gr::Vertex verts[4];
-        const gr::Vertex* verts_ptrs[] = {
-            &verts[0],
-            &verts[1],
-            &verts[2],
-            &verts[3],
-        };
-        float sx_left = static_cast<float>(gr::screen.offset_x + x);
-        float sx_right = static_cast<float>(gr::screen.offset_x + x + w);
-        float sy_top = static_cast<float>(gr::screen.offset_y + y);
-        float sy_bottom = static_cast<float>(gr::screen.offset_y + y + h);
-        float u_left = static_cast<float>(sx) / static_cast<float>(bm_w);
-        float u_right = static_cast<float>(sx + sw) / static_cast<float>(bm_w);
-        float v_top = static_cast<float>(sy) / static_cast<float>(bm_h);
-        float v_bottom = static_cast<float>(sy + sh) / static_cast<float>(bm_h);
-
-        // Make sure wrapped texel is not used in case of scaling with filtering enabled
-        if (w != sw) {
-            u_left += 0.5f / bm_w;
-            u_right -= 0.5f / bm_w;
-        }
-        if (h != sh) {
-            v_top += 0.5f / bm_h;
-            v_bottom -= 0.5f / bm_h;
-        }
-
-        if (flip_x) {
-            std::swap(u_left, u_right);
-        }
-        if (flip_y) {
-            std::swap(v_top, v_bottom);
-        }
-
-        verts[0].sx = sx_left;
-        verts[0].sy = sy_top;
-        verts[0].sw = 1.0f;
-        verts[0].u1 = u_left;
-        verts[0].v1 = v_top;
-        verts[1].sx = sx_right;
-        verts[1].sy = sy_top;
-        verts[1].sw = 1.0f;
-        verts[1].u1 = u_right;
-        verts[1].v1 = v_top;
-        verts[2].sx = sx_right;
-        verts[2].sy = sy_bottom;
-        verts[2].sw = 1.0f;
-        verts[2].u1 = u_right;
-        verts[2].v1 = v_bottom;
-        verts[3].sx = sx_left;
-        verts[3].sy = sy_bottom;
-        verts[3].sw = 1.0f;
-        verts[3].u1 = u_left;
-        verts[3].v1 = v_bottom;
-        std::array<int, 2> tex_handles{bm_handle, -1};
-        dyn_geo_renderer_->add_poly(std::size(verts_ptrs), verts_ptrs, 0, tex_handles, mode);
+        dyn_geo_renderer_->bitmap(bm_handle, x, y, w, h, sx, sy, sw, sh, flip_x, flip_y, mode);
     }
 
     void Renderer::page_in(int bm_handle)
@@ -368,6 +312,7 @@ namespace df::gr::d3d11
         if (msaa_render_target_) {
             context_->ResolveSubresource(back_buffer_, 0, msaa_render_target_, 0, swap_chain_format);
         }
+        xlog::trace("Presenting frame %d", rf::frame_count);
         UINT sync_interval = g_game_config.vsync ? 1 : 0;
         DF_GR_D3D11_CHECK_HR(
             swap_chain_->Present(sync_interval, 0)
