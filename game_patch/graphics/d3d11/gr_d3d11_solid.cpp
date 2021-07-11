@@ -447,7 +447,7 @@ namespace df::gr::d3d11
         auto dp = decal->poly_list;
         while (dp) {
             bool dp_room_matches = !room || dp->face->which_room == room || dp->face->which_room->room_to_render_with == room;
-            if (dp_room_matches && should_render_face(dp->face) && dp->face->plane.distance_to_point(gr::eye_pos) > 0.0) {
+            if (dp_room_matches && should_render_face(dp->face) && dp->face->plane.distance_to_point(gr::view_pos) > 0.0) {
                 int nv = dp->nv;
                 for (int i = 0; i < nv; ++i) {
                     verts[i] = dp->verts[i].pos;
