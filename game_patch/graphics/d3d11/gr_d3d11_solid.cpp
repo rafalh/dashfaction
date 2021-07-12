@@ -43,12 +43,21 @@ namespace df::gr::d3d11
 
     static auto& set_currently_rendered_room = addr_as_ref<void (GRoom *room)>(0x004D3350);
 
-    static gr::Mode sky_room_mode{
+    static gr::Mode sky_room_opaque_mode{
+        gr::TEXTURE_SOURCE_WRAP,
+        gr::COLOR_SOURCE_TEXTURE,
+        gr::ALPHA_SOURCE_TEXTURE,
+        gr::ALPHA_BLEND_NONE,
+        gr::ZBUFFER_TYPE_FULL,
+        gr::FOG_NOT_ALLOWED,
+    };
+
+    static gr::Mode sky_room_alpha_mode{
         gr::TEXTURE_SOURCE_WRAP,
         gr::COLOR_SOURCE_TEXTURE,
         gr::ALPHA_SOURCE_TEXTURE,
         gr::ALPHA_BLEND_ALPHA,
-        gr::ZBUFFER_TYPE_FULL,
+        gr::ZBUFFER_TYPE_READ,
         gr::FOG_NOT_ALLOWED,
     };
 
@@ -80,10 +89,13 @@ namespace df::gr::d3d11
         return gr_decal_mode;
     }
 
-    static inline gr::Mode determine_face_mode(FaceRenderType render_type, bool has_lightmap)
+    static inline gr::Mode determine_face_mode(FaceRenderType render_type, bool has_lightmap, bool is_sky)
     {
-        if (render_type == FaceRenderType::sky) {
-            return sky_room_mode;
+        if (is_sky) {
+            if (render_type == FaceRenderType::opaque) {
+                return sky_room_opaque_mode;
+            }
+            return sky_room_alpha_mode;
         }
         if (render_type == FaceRenderType::opaque) {
             return gr_solid_mode;
@@ -117,11 +129,12 @@ namespace df::gr::d3d11
         int num_inds_ = 0;
         std::map<FaceBatchKey, std::vector<GFace*>> batched_faces_;
         std::map<DecalPolyBatchKey, std::vector<DecalPoly*>> batched_decal_polys_;
+        bool is_sky_ = false;
 
     public:
         void add_solid(GSolid* solid);
         void add_room(GRoom* room, GSolid* solid);
-        void add_face(GFace* face, GSolid* solid, bool is_sky);
+        void add_face(GFace* face, GSolid* solid);
         GRenderCache build(ID3D11Device* device);
 
         int get_num_verts() const
@@ -164,7 +177,7 @@ namespace df::gr::d3d11
             batch.texture_2 = std::get<2>(key);
             batch.u_pan_speed = std::get<3>(key);
             batch.v_pan_speed = std::get<4>(key);
-            batch.mode = determine_face_mode(render_type, batch.texture_2 != -1);
+            batch.mode = determine_face_mode(render_type, batch.texture_2 != -1, builder.is_sky_);
             for (GFace* face : faces) {
                 auto fvert = face->edge_loop;
                 auto face_start_index = static_cast<ushort>(vb_data.size());
@@ -296,7 +309,7 @@ namespace df::gr::d3d11
     void GRenderCacheBuilder::add_solid(GSolid* solid)
     {
         for (GFace& face : solid->face_list) {
-            add_face(&face, solid, false);
+            add_face(&face, solid);
         }
     }
 
@@ -304,15 +317,19 @@ namespace df::gr::d3d11
     {
         link_faces_to_texture_movers(solid);
         for (GFace& face : room->face_list) {
-            add_face(&face, solid, room->is_sky);
+            add_face(&face, solid);
+        }
+        if (room->is_sky) {
+            is_sky_ = true;
+            for (GRoom* detail_room : room->detail_rooms) {
+                add_room(detail_room, solid);
+            }
+            // TODO: sort
         }
     }
 
-    FaceRenderType determine_face_render_type(GFace* face, bool is_sky)
+    FaceRenderType determine_face_render_type(GFace* face)
     {
-        if (is_sky) {
-            return FaceRenderType::sky;
-        }
         if (face->attributes.flags & FACE_LIQUID) {
             return FaceRenderType::liquid;
         }
@@ -322,12 +339,12 @@ namespace df::gr::d3d11
         return FaceRenderType::opaque;
     }
 
-    void GRenderCacheBuilder::add_face(GFace* face, GSolid* solid, bool is_sky)
+    void GRenderCacheBuilder::add_face(GFace* face, GSolid* solid)
     {
         if (!should_render_face(face)) {
             return;
         }
-        FaceRenderType render_type = determine_face_render_type(face, is_sky);
+        FaceRenderType render_type = determine_face_render_type(face);
         int face_tex = face->attributes.bitmap_id;
         int lightmap_tex = -1;
         if (face->attributes.surface_index >= 0) {
@@ -547,7 +564,8 @@ namespace df::gr::d3d11
     {
         xlog::trace("Rendering sky room %d cache %p", room->room_index, room->geo_cache);
         before_render(sky_room_offset, rf::identity_matrix);
-        render_room_faces(rf::level.geometry, room, FaceRenderType::sky);
+        render_room_faces(rf::level.geometry, room, FaceRenderType::opaque);
+        render_room_faces(rf::level.geometry, room, FaceRenderType::alpha);
     }
 
     void SolidRenderer::render_movable_solid(GSolid* solid, const Vector3& pos, const Matrix3& orient)
