@@ -43,17 +43,12 @@ namespace df::gr::d3d11
                 ZBUFFER_TYPE_FULL,
                 FOG_ALLOWED
             );
+            static int null_tex_handles[7] = {-1, -1, -1, -1, -1, -1, -1};
+            tex_handles = null_tex_handles;
         }
         else if (params.flags & 8) {
             // used by rocket launcher scanner together with flag 1 so this code block seems unused
-            forced_mode.emplace(
-                TEXTURE_SOURCE_NONE,
-                COLOR_SOURCE_VERTEX,
-                ALPHA_SOURCE_VERTEX,
-                ALPHA_BLEND_ALPHA_ADDITIVE,
-                ZBUFFER_TYPE_NONE,
-                FOG_ALLOWED
-            );
+            assert(false);
         }
         rf::ubyte alpha = static_cast<ubyte>(params.alpha);
         rf::Color color{255, 255, 255, 255};

@@ -46,6 +46,22 @@ namespace df::gr::d3d11
         render_context_.device_context()->DrawIndexed(num_index, start_index, 0);
     }
 
+    static inline bool mode_uses_vertex_color(gr::Mode mode)
+    {
+        if (mode.get_texture_source() == gr::TEXTURE_SOURCE_NONE) {
+            return true;
+        }
+        return mode.get_color_source() != gr::COLOR_SOURCE_TEXTURE;
+    }
+
+    static inline bool mode_uses_vertex_alpha(gr::Mode mode)
+    {
+        if (mode.get_texture_source() == gr::TEXTURE_SOURCE_NONE) {
+            return true;
+        }
+        return mode.get_alpha_source() != gr::ALPHA_SOURCE_TEXTURE;
+    }
+
     void DynamicGeometryRenderer::add_poly(int nv, const gr::Vertex **vertices, int vertex_attributes, const std::array<int, 2>& tex_handles, gr::Mode mode)
     {
         int num_index = (nv - 2) * 3;
@@ -67,13 +83,15 @@ namespace df::gr::d3d11
         auto [gpu_verts, base_vertex] = vertex_ring_buffer_.alloc(nv);
         auto [gpu_ind_ptr, base_index] = index_ring_buffer_.alloc(num_index);
 
+        bool use_vert_color = mode_uses_vertex_color(mode);
+        bool use_vert_alpha = mode_uses_vertex_alpha(mode);
         rf::Color color{255, 255, 255, 255};
-        if (!(vertex_attributes & gr::TMAP_FLAG_RGB)) {
+        if (use_vert_color && !(vertex_attributes & gr::TMAP_FLAG_RGB)) {
             color.red = gr::screen.current_color.red;
             color.green = gr::screen.current_color.green;
             color.blue = gr::screen.current_color.blue;
         }
-        if (!(vertex_attributes & gr::TMAP_FLAG_ALPHA)) {
+        if (use_vert_alpha && !(vertex_attributes & gr::TMAP_FLAG_ALPHA)) {
             color.alpha = gr::screen.current_color.alpha;
         }
         // Note: gr_matrix_scale is zero before first gr_setup_3d call
@@ -86,12 +104,12 @@ namespace df::gr::d3d11
             out_vert.z = in_vert.sw * gr::d3d::zm;
             // Set w to depth in camera space (needed for 3D rendering)
             out_vert.w = 1.0f / in_vert.sw / matrix_scale_z;
-            if (vertex_attributes & gr::TMAP_FLAG_RGB) {
+            if (use_vert_color && (vertex_attributes & gr::TMAP_FLAG_RGB)) {
                 color.red = in_vert.r;
                 color.green = in_vert.g;
                 color.blue = in_vert.b;
             }
-            if (vertex_attributes & gr::TMAP_FLAG_ALPHA) {
+            if (use_vert_alpha && (vertex_attributes & gr::TMAP_FLAG_ALPHA)) {
                 color.alpha = in_vert.a;
             }
             out_vert.diffuse = pack_color(color);
