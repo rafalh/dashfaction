@@ -123,7 +123,7 @@ namespace df::gr::d3d11
     {
     private:
         using FaceBatchKey = std::tuple<FaceRenderType, int, int, float, float>;
-        using DecalPolyBatchKey = std::tuple<int, int, gr::Mode>;
+        using DecalPolyBatchKey = std::tuple<FaceRenderType, int, int, gr::Mode>;
 
         int num_verts_ = 0;
         int num_inds_ = 0;
@@ -216,11 +216,12 @@ namespace df::gr::d3d11
         for (auto& e : builder.batched_decal_polys_) {
             auto& key = e.first;
             auto& dps = e.second;
-            Batch& batch = opaque_batches_.emplace_back();
+            FaceRenderType render_type = std::get<0>(key);
+            Batch& batch = get_batches(render_type).emplace_back();
             batch.start_index = ib_data.size();
-            batch.texture_1 = std::get<0>(key);
-            batch.texture_2 = std::get<1>(key);
-            batch.mode = std::get<2>(key);
+            batch.texture_1 = std::get<1>(key);
+            batch.texture_2 = std::get<2>(key);
+            batch.mode = std::get<3>(key);
             for (DecalPoly* dp : dps) {
                 auto face = dp->face;
                 auto fvert = face->edge_loop;
@@ -351,10 +352,10 @@ namespace df::gr::d3d11
             GSurface* surface = solid->surfaces[face->attributes.surface_index];
             lightmap_tex = surface->lightmap->bm_handle;
         }
-        auto texture_mover = face->attributes.texture_mover;
+        GTextureMover* texture_mover = face->attributes.texture_mover;
         float u_pan_speed = texture_mover ? texture_mover->u_pan_speed : 0.0f;
         float v_pan_speed = texture_mover ? texture_mover->v_pan_speed : 0.0f;
-        auto key = std::make_tuple(render_type, face_tex, lightmap_tex, u_pan_speed, v_pan_speed);
+        FaceBatchKey key = std::make_tuple(render_type, face_tex, lightmap_tex, u_pan_speed, v_pan_speed);
         batched_faces_[key].push_back(face);
         auto fvert = face->edge_loop;
         int num_fverts = 0;
@@ -370,7 +371,7 @@ namespace df::gr::d3d11
         while (dp) {
             if (dp->my_decal->flags & DF_LEVEL_DECAL) {
                 auto mode = determine_decal_mode(dp->my_decal);
-                auto dp_key = std::make_tuple(dp->my_decal->bitmap_id, lightmap_tex, mode);
+                DecalPolyBatchKey dp_key = std::make_tuple(render_type, dp->my_decal->bitmap_id, lightmap_tex, mode);
                 batched_decal_polys_[dp_key].push_back(dp);
                 ++num_dp;
             }
