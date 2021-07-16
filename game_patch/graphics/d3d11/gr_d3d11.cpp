@@ -369,20 +369,12 @@ namespace df::gr::d3d11
 
     void Renderer::line(const rf::gr::Vertex& v0, const rf::gr::Vertex& v1, rf::gr::Mode mode)
     {
-        const rf::gr::Vertex* vertices[] = {&v0, &v1};
-        dyn_geo_renderer_->add_line(vertices, mode);
+        dyn_geo_renderer_->line_3d(v0, v1, mode);
     }
 
     void Renderer::line(float x1, float y1, float x2, float y2, rf::gr::Mode mode)
     {
-        rf::gr::Vertex verts[2];
-        verts[0].sx = x1;
-        verts[0].sy = y1;
-        verts[0].sw = 1.0f;
-        verts[1].sx = x2;
-        verts[1].sy = y2;
-        verts[1].sw = 1.0f;
-        line(verts[0], verts[1], mode);
+        dyn_geo_renderer_->line_2d(x1, y1, x2, y2, mode);
     }
 
     bool Renderer::set_render_target(int bm_handle)

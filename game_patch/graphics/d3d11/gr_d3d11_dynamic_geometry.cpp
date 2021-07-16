@@ -20,7 +20,8 @@ namespace df::gr::d3d11
         index_ring_buffer_{batch_max_index, D3D11_BIND_INDEX_BUFFER, device_, render_context.device_context()}
     {
         vertex_shader_ = shader_manager.get_vertex_shader(VertexShaderId::transformed);
-        pixel_shader_ = shader_manager.get_pixel_shader(PixelShaderId::standard);
+        std_pixel_shader_ = shader_manager.get_pixel_shader(PixelShaderId::standard);
+        ui_pixel_shader_ = shader_manager.get_pixel_shader(PixelShaderId::ui);
     }
 
     void DynamicGeometryRenderer::flush()
@@ -75,6 +76,7 @@ namespace df::gr::d3d11
         set_primitive_topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         set_mode(mode);
         set_textures(normalized_tex_handles);
+        set_pixel_shader(std_pixel_shader_);
 
         if (vertex_ring_buffer_.is_full(nv) || index_ring_buffer_.is_full(num_index)) {
             flush();
@@ -127,10 +129,12 @@ namespace df::gr::d3d11
         }
     }
 
-    void DynamicGeometryRenderer::add_line(const gr::Vertex **vertices, rf::gr::Mode mode)
+    void DynamicGeometryRenderer::line(const gr::Vertex **vertices, rf::gr::Mode mode, bool is_3d)
     {
         set_primitive_topology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
         set_mode(mode);
+        set_textures({-1, -1});
+        set_pixel_shader(is_3d ? std_pixel_shader_ : ui_pixel_shader_);
         if (vertex_ring_buffer_.is_full(2) || index_ring_buffer_.is_full(2)) {
             flush();
         }
@@ -152,6 +156,25 @@ namespace df::gr::d3d11
             *(gpu_ind_ptr++) = base_vertex;
             *(gpu_ind_ptr++) = base_vertex + 1;
         }
+    }
+
+    void DynamicGeometryRenderer::line_3d(const rf::gr::Vertex& v0, const rf::gr::Vertex& v1, rf::gr::Mode mode)
+    {
+        const rf::gr::Vertex* verts_ptrs[] = {&v0, &v1};
+        line(verts_ptrs, mode, true);
+    }
+
+    void DynamicGeometryRenderer::line_2d(float x1, float y1, float x2, float y2, rf::gr::Mode mode)
+    {
+        rf::gr::Vertex verts[2];
+        verts[0].sx = x1;
+        verts[0].sy = y1;
+        verts[0].sw = 1.0f;
+        verts[1].sx = x2;
+        verts[1].sy = y2;
+        verts[1].sw = 1.0f;
+        const rf::gr::Vertex* verts_ptrs[] = {&verts[0], &verts[1]};
+        line(verts_ptrs, mode, false);
     }
 
     void DynamicGeometryRenderer::bitmap(int bm_handle, int x, int y, int w, int h, int sx, int sy, int sw, int sh, bool flip_x, bool flip_y, gr::Mode mode)
@@ -192,6 +215,7 @@ namespace df::gr::d3d11
         set_primitive_topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         set_mode(mode);
         set_textures({bm_handle, -1});
+        set_pixel_shader(ui_pixel_shader_);
 
         if (vertex_ring_buffer_.is_full(nv) || index_ring_buffer_.is_full(num_index)) {
             flush();
