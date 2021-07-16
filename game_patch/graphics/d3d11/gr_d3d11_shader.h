@@ -26,6 +26,7 @@ namespace df::gr::d3d11
     enum class PixelShaderId
     {
         standard,
+        ui,
     };
 
     inline const char* get_vertex_shader_filename(VertexShaderId vertex_shader_id)
@@ -61,6 +62,8 @@ namespace df::gr::d3d11
         switch (pixel_shader_id) {
             case PixelShaderId::standard:
                 return "standard_ps.bin";
+            case PixelShaderId::ui:
+                return "ui_ps.bin";
             default:
                 return nullptr;
         }

@@ -17,6 +17,8 @@ function(add_shader TARGET_NAME SRC_FILE TARGET_LEVEL)
 endfunction()
 
 add_shader(standard_vs standard_vs.hlsl vs_4_0_level_9_3)
-add_shader(standard_ps standard_ps.hlsl ps_4_0_level_9_3)
 add_shader(character_vs character_vs.hlsl vs_4_0_level_9_3)
 add_shader(transformed_vs transformed_vs.hlsl vs_4_0_level_9_3)
+
+add_shader(standard_ps standard_ps.hlsl ps_4_0_level_9_3)
+add_shader(ui_ps ui_ps.hlsl ps_4_0_level_9_3)

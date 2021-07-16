@@ -84,9 +84,10 @@ add_packfile(dashfaction.vpp
     meshes/coffeesmokedtblAlt.v3m
 
     ${CMAKE_BINARY_DIR}/shaders/standard_vs.bin
-    ${CMAKE_BINARY_DIR}/shaders/standard_ps.bin
     ${CMAKE_BINARY_DIR}/shaders/character_vs.bin
     ${CMAKE_BINARY_DIR}/shaders/transformed_vs.bin
+    ${CMAKE_BINARY_DIR}/shaders/standard_ps.bin
+    ${CMAKE_BINARY_DIR}/shaders/ui_ps.bin
 )
 
 # Copy licensing-info.txt
