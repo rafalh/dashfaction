@@ -97,8 +97,6 @@ namespace df::gr::d3d11
             out_vert.diffuse = pack_color(color);
             out_vert.u0 = in_vert.u1;
             out_vert.v0 = in_vert.v1;
-            // out_vert.u1 = in_vert.u2;
-            // out_vert.v1 = in_vert.v2;
             //xlog::info("vert[%d]: pos <%.2f %.2f %.2f> uv <%.2f %.2f>", i, out_vert.x, out_vert.y, in_vert.sw, out_vert.u0, out_vert.v0);
 
             if (i >= 2) {

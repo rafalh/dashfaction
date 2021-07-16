@@ -12,6 +12,9 @@ namespace df::gr::d3d11
         device_{std::move(device)}, device_context_{std::move(device_context)}
     {
         texture_cache_.reserve(512);
+        white_texture_view_ = create_solid_color_texture(1.0f, 1.0f, 1.0f, 1.0f);
+        gray_texture_view_ = create_solid_color_texture(0.5f, 0.5f, 0.5f, 1.0f);
+        black_texture_view_ = create_solid_color_texture(0.0f, 0.0f, 0.0f, 1.0f);
     }
 
     TextureManager::Texture TextureManager::create_texture(int bm_handle, bm::Format fmt, int w, int h, ubyte* bits, ubyte* pal, int mip_levels, bool staging)
@@ -445,6 +448,26 @@ namespace df::gr::d3d11
         else {
             clr->set(255, 255, 255, 255);
         }
+    }
+
+    ComPtr<ID3D11ShaderResourceView> TextureManager::create_solid_color_texture(float r, float g, float b, float a)
+    {
+        CD3D11_TEXTURE2D_DESC desc{
+            DXGI_FORMAT_R32G32B32A32_FLOAT,
+            1, // width
+            1, // height
+        };
+        float data[] = {r, g, b, a};
+        D3D11_SUBRESOURCE_DATA subres_data{&data, 0, 0};
+        ComPtr<ID3D11Texture2D> gpu_texture;
+        DF_GR_D3D11_CHECK_HR(
+            device_->CreateTexture2D(&desc, &subres_data, &gpu_texture)
+        );
+        ComPtr<ID3D11ShaderResourceView> shader_resource_view;
+        DF_GR_D3D11_CHECK_HR(
+            device_->CreateShaderResourceView(gpu_texture, nullptr, &shader_resource_view)
+        );
+        return shader_resource_view;
     }
 
     void TextureManager::Texture::init_shader_resource_view(ID3D11Device* device, ID3D11DeviceContext* device_context)

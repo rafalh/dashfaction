@@ -25,16 +25,6 @@ namespace df::gr::d3d11
         render_mode_cbuffer_{device_}
     {
         bind_cbuffers();
-
-        white_bm_ = rf::bm::create(rf::bm::FORMAT_888_RGB, 1, 1);
-        assert(white_bm_ != -1);
-        rf::gr::LockInfo lock_info;
-        lock_info.mode = rf::gr::LOCK_WRITE_ONLY;
-        if (texture_manager.lock(white_bm_, 0, &lock_info)) {
-            std::memset(lock_info.data, 0xFF, lock_info.stride_in_bytes * lock_info.h);
-            texture_manager.unlock(&lock_info);
-        }
-
         set_uv_offset({0.0f, 0.0f});
     }
 
@@ -76,12 +66,17 @@ namespace df::gr::d3d11
     void RenderContext::bind_texture(int slot)
     {
         int tex_handle = current_tex_handles_[slot];
-        if (tex_handle == -1) {
-            tex_handle = white_bm_;
+        ID3D11ShaderResourceView* texture_view;
+        if (tex_handle != -1) {
+            texture_view = texture_manager_.lookup_texture(tex_handle);
         }
-        ID3D11ShaderResourceView* shader_resources[] = {
-            texture_manager_.lookup_texture(tex_handle),
-        };
+        else if (slot == 0) {
+            texture_view = texture_manager_.get_white_texture();
+        }
+        else {
+            texture_view = texture_manager_.get_gray_texture();
+        }
+        ID3D11ShaderResourceView* shader_resources[] = {texture_view};
         device_context_->PSSetShaderResources(slot, std::size(shader_resources), shader_resources);
     }
 
@@ -290,12 +285,8 @@ namespace df::gr::d3d11
         std::array<float, 2> tex0_mul_inv;
         float alpha_test;
         float tex0_add_rgb;
-        float tex1_mul_rgb;
-        float tex1_mul_rgb_inv;
-        float tex1_add_rgb;
         float output_add_rgb;
         float fog_far;
-        float pad0;
         std::array<float, 3> fog_color;
         float pad1;
     };
@@ -312,15 +303,13 @@ namespace df::gr::d3d11
         DF_GR_D3D11_CHECK_HR(device->CreateBuffer(&desc, nullptr, &buffer_));
     }
 
-    void RenderModeBuffer::update_buffer(bool has_tex1, ID3D11DeviceContext* device_context)
+    void RenderModeBuffer::update_buffer(ID3D11DeviceContext* device_context)
     {
         float vcolor_mul_rgb = 0.0f;
         float vcolor_mul_a = 0.0f;
         float tex0_mul_rgb = 0.0f;
         float tex0_mul_a = 0.0f;
         float tex0_add_rgb = 0.0f;
-        float tex1_mul_rgb = 0.0f;
-        float tex1_add_rgb = 0.0f;
         float output_add_rgb = 0.0f;
 
         gr::Mode mode = current_mode_.value();
@@ -489,9 +478,6 @@ namespace df::gr::d3d11
                 // }
                 tex0_mul_rgb = 1.0f;
                 tex0_mul_a = 1.0f;
-                if (has_tex1) {
-                    tex1_mul_rgb = 2.0f;
-                }
                 break;
 
             case gr::TEXTURE_SOURCE_CLAMP_1_CLAMP_0: // used by static geometry
@@ -530,12 +516,6 @@ namespace df::gr::d3d11
                 else if (as == gr::ALPHA_SOURCE_TEXTURE) {
                     tex0_mul_a = 1.0f;
                 }
-                if (cs == gr::COLOR_SOURCE_VERTEX_PLUS_TEXTURE) {
-                    tex1_add_rgb = 1.0f;
-                }
-                else {
-                    tex1_mul_rgb = 2.0f;
-                }
                 break;
 
             case gr::TEXTURE_SOURCE_MT_U_WRAP_V_CLAMP: // used by static geometry, e.g. decals with U tiling
@@ -565,7 +545,6 @@ namespace df::gr::d3d11
                 }
                 tex0_mul_rgb = 1.0f;
                 tex0_mul_a = 1.0f;
-                tex1_mul_rgb = 2.0f;
                 break;
 
             case gr::TEXTURE_SOURCE_MT_U_CLAMP_V_WRAP: // used by static geometry, e.g. decals with V tiling
@@ -595,59 +574,10 @@ namespace df::gr::d3d11
                 }
                 tex0_mul_rgb = 1.0f;
                 tex0_mul_a = 1.0f;
-                tex1_mul_rgb = 2.0f;
-                break;
-
-            case gr::TEXTURE_SOURCE_MT_WRAP_TRILIN:
-                // if (cs == gr::COLOR_SOURCE_VERTEX_TIMES_TEXTURE)
-                //     SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
-                // else
-                //     SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
-                // SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-                // SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
-                // if (as == gr::ALPHA_SOURCE_VERTEX_TIMES_TEXTURE)
-                //     SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
-                // else
-                //     SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1); // D3DTA_TEXTURE
-                // SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
-                // SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
-                // SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_ADDSIGNED); // D3DTOP_ADDSIGNED?
-                // SetTextureStageState(1, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-                // SetTextureStageState(1, D3DTSS_COLORARG2, D3DTA_CURRENT);
-                // SetTextureStageState(1, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1); // D3DTA_CURRENT
-                // SetTextureStageState(1, D3DTSS_ALPHAARG1, D3DTA_CURRENT);
-                if (cs == gr::COLOR_SOURCE_VERTEX_TIMES_TEXTURE) {
-                    vcolor_mul_rgb = 1.0f;
-                }
-                if (as == gr::ALPHA_SOURCE_VERTEX_TIMES_TEXTURE) {
-                    vcolor_mul_a = 1.0f;
-                }
-                tex0_mul_rgb = 1.0f;
-                tex0_mul_a = 1.0f;
-                tex1_add_rgb = 1.0f;
-                output_add_rgb = -0.5f;
-                break;
-
-            case gr::TEXTURE_SOURCE_MT_CLAMP_TRILIN:
-                // SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
-                // SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-                // SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
-                // SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
-                // SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
-                // SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
-                // SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_MODULATE2X);
-                // SetTextureStageState(1, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-                // SetTextureStageState(1, D3DTSS_COLORARG2, D3DTA_CURRENT);
-                // SetTextureStageState(1, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1); // D3DTA_CURRENT
-                // SetTextureStageState(1, D3DTSS_ALPHAARG1, D3DTA_CURRENT);
-                vcolor_mul_rgb = 1.0f;
-                vcolor_mul_a = 1.0f;
-                tex0_mul_rgb = 1.0f;
-                tex0_mul_a = 1.0f;
-                tex1_mul_rgb = 2.0f;
                 break;
 
             default:
+                assert(false);
                 break;
         }
 
@@ -669,9 +599,6 @@ namespace df::gr::d3d11
         ps_data.tex0_mul = {tex0_mul_rgb, tex0_mul_a};
         ps_data.tex0_mul_inv = {tex0_mul_rgb ? 0.0f : 1.0f, tex0_mul_a ? 0.0f : 1.0f};
         ps_data.tex0_add_rgb = tex0_add_rgb;
-        ps_data.tex1_mul_rgb = tex1_mul_rgb;
-        ps_data.tex1_mul_rgb_inv = tex1_mul_rgb ? 0.0f : 1.0f;
-        ps_data.tex1_add_rgb = tex1_add_rgb;
         ps_data.output_add_rgb = output_add_rgb;
         ps_data.alpha_test = alpha_test ? 0.1f : 0.0f;
         if (mode.get_fog_type() == gr::FOG_NOT_ALLOWED || !gr::screen.fog_mode) {

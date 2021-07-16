@@ -16,9 +16,6 @@ cbuffer RenderModeBuffer : register(b0)
     float2 tex0_mul_inv;
     float alpha_test;
     float tex0_add_rgb;
-    float tex1_mul_rgb;
-    float tex1_mul_rgb_inv;
-    float tex1_add_rgb;
     float output_add_rgb;
     float fog_far;
     float3 fog_color;
@@ -54,7 +51,7 @@ float4 main(VsOutput input) : SV_TARGET
 
     target.rgb += tex0_color.rgb * tex0_add_rgb;
 
-    float3 light_color = tex1.Sample(samp1, input.uv1).rgb;
+    float3 light_color = 2 * tex1.Sample(samp1, input.uv1).rgb;
     for (int i = 0; i < num_point_lights; ++i) {
         float3 light_vec = point_lights[i].pos - input.world_pos_and_depth.xyz;
         float3 light_dir = normalize(light_vec);
@@ -63,11 +60,10 @@ float4 main(VsOutput input) : SV_TARGET
         float intensity = (1 - atten) * saturate(dot(input.norm, light_dir));
         light_color += point_lights[i].color * intensity;
     }
-    light_color = saturate(light_color);
 
-    target.rgb *= light_color * tex1_mul_rgb + tex1_mul_rgb_inv;
-    target.rgb += light_color * tex1_add_rgb;
+    target.rgb *= light_color;
     target.rgb += output_add_rgb;
+    target.rgb = saturate(target.rgb);
 
     float fog = saturate(input.world_pos_and_depth.w / fog_far);
     target.rgb = fog * fog_color + (1 - fog) * target.rgb;

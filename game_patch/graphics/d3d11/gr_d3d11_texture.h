@@ -23,6 +23,22 @@ namespace df::gr::d3d11
         void unlock(rf::gr::LockInfo *lock);
         void get_texel(int bm_handle, float u, float v, rf::gr::Color *clr);
         rf::bm::Format read_back_buffer(ID3D11Texture2D* back_buffer, int x, int y, int w, int h, rf::ubyte* data);
+        ComPtr<ID3D11ShaderResourceView> create_solid_color_texture(float r, float g, float b, float a);
+
+        ID3D11ShaderResourceView* get_white_texture()
+        {
+            return white_texture_view_;
+        }
+
+        ID3D11ShaderResourceView* get_gray_texture()
+        {
+            return gray_texture_view_;
+        }
+
+        ID3D11ShaderResourceView* get_black_texture()
+        {
+            return black_texture_view_;
+        }
 
         void page_in(int bm_handle)
         {
@@ -84,6 +100,9 @@ namespace df::gr::d3d11
         std::unordered_map<int, Texture> texture_cache_;
         ComPtr<ID3D11Texture2D> back_buffer_staging_texture_;
         std::unordered_map<rf::bm::Format, std::pair<DXGI_FORMAT, rf::bm::Format>> supported_texture_format_cache_;
+        ComPtr<ID3D11ShaderResourceView> white_texture_view_;
+        ComPtr<ID3D11ShaderResourceView> gray_texture_view_;
+        ComPtr<ID3D11ShaderResourceView> black_texture_view_;
 
     };
 }

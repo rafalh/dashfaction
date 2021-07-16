@@ -101,12 +101,12 @@ namespace df::gr::d3d11
     public:
         RenderModeBuffer(ID3D11Device* device);
 
-        void update(gr::Mode mode, bool has_tex1, rf::Color color, ID3D11DeviceContext* device_context)
+        void update(gr::Mode mode, rf::Color color, ID3D11DeviceContext* device_context)
         {
             if (!current_mode_ || current_mode_.value() != mode || current_color_ != color) {
                 current_mode_.emplace(mode);
                 current_color_ = color;
-                update_buffer(has_tex1, device_context);
+                update_buffer(device_context);
             }
         }
 
@@ -123,7 +123,7 @@ namespace df::gr::d3d11
         }
 
     private:
-        void update_buffer(bool has_tex1, ID3D11DeviceContext* device_context);
+        void update_buffer(ID3D11DeviceContext* device_context);
 
         ComPtr<ID3D11Buffer> buffer_;
         std::optional<gr::Mode> current_mode_;
@@ -144,10 +144,9 @@ namespace df::gr::d3d11
         void set_mode_and_textures(rf::gr::Mode mode, int tex_handle0, int tex_handle1, rf::Color color = {255, 255, 255})
         {
             std::array<int, 2> tex_handles = normalize_texture_handles_for_mode(mode, {tex_handle0, tex_handle1});
-            bool has_tex1 = tex_handles[1] != -1;
-            set_mode(mode, has_tex1, color);
-            set_texture(0, tex_handle0);
-            set_texture(1, tex_handle1);
+            set_mode(mode, color);
+            set_texture(0, tex_handles[0]);
+            set_texture(1, tex_handles[1]);
         }
 
         void set_render_target(ID3D11RenderTargetView* render_target_view, ID3D11DepthStencilView* depth_stencil_view)
@@ -280,9 +279,9 @@ namespace df::gr::d3d11
         void set_blend_state(gr::AlphaBlend ab);
         void set_depth_stencil_state(gr::ZbufferType zbt);
 
-        void set_mode(gr::Mode mode, bool has_tex1, rf::Color color)
+        void set_mode(gr::Mode mode, rf::Color color)
         {
-            render_mode_cbuffer_.update(mode, has_tex1, color, device_context_);
+            render_mode_cbuffer_.update(mode, color, device_context_);
             if (!current_mode_ || current_mode_.value() != mode) {
                 if (!current_mode_ || current_mode_.value().get_texture_source() != mode.get_texture_source()) {
                     set_sampler_state(mode.get_texture_source());
@@ -317,7 +316,6 @@ namespace df::gr::d3d11
         UvOffsetBuffer uv_offset_cbuffer_;
         LightsBuffer lights_buffer_;
         RenderModeBuffer render_mode_cbuffer_;
-        int white_bm_ = -1;
 
         ID3D11RenderTargetView* render_target_view_ = nullptr;
         ID3D11DepthStencilView* depth_stencil_view_ = nullptr;
@@ -327,7 +325,7 @@ namespace df::gr::d3d11
         ID3D11VertexShader* current_vertex_shader_ = nullptr;
         ID3D11PixelShader* current_pixel_shader_ = nullptr;
         D3D11_PRIMITIVE_TOPOLOGY current_primitive_topology_ = D3D11_PRIMITIVE_TOPOLOGY_UNDEFINED;
-        std::array<int, 2> current_tex_handles_ = {-1, -1};
+        std::array<int, 2> current_tex_handles_ = {-2, -2};
         D3D11_CULL_MODE current_cull_mode_ = D3D11_CULL_NONE;
         std::optional<gr::Mode> current_mode_;
         int zbias_ = 0;
