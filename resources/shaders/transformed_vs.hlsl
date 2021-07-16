@@ -19,8 +19,7 @@ VsOutput main(VsInput input)
 {
     VsOutput output;
     float w = input.pos.w;
-    output.pos.xyz = input.pos.xyz * w;
-    output.pos.w = w;
+    output.pos = input.pos;
     output.norm = float3(0, 0, 0); // dummy normal
     output.uv0 = input.uv0;
     output.uv1 = float2(0, 0);

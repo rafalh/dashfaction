@@ -99,11 +99,13 @@ namespace df::gr::d3d11
         for (int i = 0; i < nv; ++i) {
             const gr::Vertex& in_vert = *vertices[i];
             GpuTransformedVertex& out_vert = gpu_verts[i];
-            out_vert.x = (in_vert.sx - gr::screen.offset_x) / gr::screen.clip_width * 2.0f - 1.0f;
-            out_vert.y = (in_vert.sy - gr::screen.offset_y) / gr::screen.clip_height * -2.0f + 1.0f;
-            out_vert.z = in_vert.sw * gr::d3d::zm;
             // Set w to depth in camera space (needed for 3D rendering)
-            out_vert.w = 1.0f / in_vert.sw / matrix_scale_z;
+            float w = 1.0f / in_vert.sw / matrix_scale_z;
+            out_vert.x = ((in_vert.sx - gr::screen.offset_x) / gr::screen.clip_width * 2.0f - 1.0f) * w;
+            out_vert.y = ((in_vert.sy - gr::screen.offset_y) / gr::screen.clip_height * -2.0f + 1.0f) * w;
+            out_vert.z = in_vert.sw * gr::d3d::zm * w;
+            out_vert.w = w;
+
             if (use_vert_color && (vertex_attributes & gr::TMAP_FLAG_RGB)) {
                 color.red = in_vert.r;
                 color.green = in_vert.g;
@@ -143,7 +145,7 @@ namespace df::gr::d3d11
             GpuTransformedVertex& out_vert = gpu_verts[i];
             out_vert.x = (in_vert.sx - gr::screen.offset_x) / gr::screen.clip_width * 2.0f - 1.0f;
             out_vert.y = (in_vert.sy - gr::screen.offset_y) / gr::screen.clip_height * -2.0f + 1.0f;
-            out_vert.z = in_vert.sw * gr::zm;
+            out_vert.z = in_vert.sw * gr::d3d::zm;
             // Set w to depth in camera space (needed for 3D rendering)
             out_vert.w = 1.0f / in_vert.sw / matrix_scale_z;
             out_vert.diffuse = pack_color(gr::screen.current_color);
