@@ -25,35 +25,40 @@ namespace df::gr::d3d11
         void flush();
 
     private:
-        void set_primitive_topology(D3D11_PRIMITIVE_TOPOLOGY primitive_topology)
-        {
-            if (primitive_topology_ != primitive_topology) {
-                flush();
-                primitive_topology_ = primitive_topology;
-            }
-        }
 
-        void set_mode(rf::gr::Mode mode)
+        struct State
         {
-            if (mode_ != mode) {
-                flush();
-                mode_ = mode;
-            }
-        }
+            D3D11_PRIMITIVE_TOPOLOGY primitive_topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+            std::array<int, 2> textures = { -1, -1 };
+            rf::gr::Mode mode{
+                rf::gr::TEXTURE_SOURCE_NONE,
+                rf::gr::COLOR_SOURCE_VERTEX,
+                rf::gr::ALPHA_SOURCE_VERTEX,
+                rf::gr::ALPHA_BLEND_NONE,
+                rf::gr::ZBUFFER_TYPE_NONE,
+                rf::gr::FOG_ALLOWED,
+            };
+            ID3D11PixelShader* pixel_shader = nullptr;
 
-        void set_textures(std::array<int, 2> textures)
-        {
-            if (textures_ != textures) {
-                flush();
-                textures_ = textures;
+            bool operator==(const State& other) const
+            {
+                return primitive_topology == other.primitive_topology &&
+                    textures == other.textures &&
+                    mode == other.mode &&
+                    pixel_shader == other.pixel_shader;
             }
-        }
 
-        void set_pixel_shader(ID3D11PixelShader* pixel_shader)
+            bool operator!=(const State& other) const
+            {
+                return !(*this == other);
+            }
+        };
+
+        void setup(int num_vert, int num_ind, const State& state)
         {
-            if (pixel_shader_ != pixel_shader) {
+            if (state_ != state || vertex_ring_buffer_.is_full(num_vert) || index_ring_buffer_.is_full(num_ind)) {
                 flush();
-                pixel_shader_ = pixel_shader;
+                state_ = state;
             }
         }
 
@@ -61,19 +66,9 @@ namespace df::gr::d3d11
         RenderContext& render_context_;
         RingBuffer<GpuTransformedVertex> vertex_ring_buffer_;
         RingBuffer<rf::ushort> index_ring_buffer_;
-        D3D11_PRIMITIVE_TOPOLOGY primitive_topology_ = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-        std::array<int, 2> textures_ = { -1, -1 };
-        rf::gr::Mode mode_{
-            rf::gr::TEXTURE_SOURCE_NONE,
-            rf::gr::COLOR_SOURCE_VERTEX,
-            rf::gr::ALPHA_SOURCE_VERTEX,
-            rf::gr::ALPHA_BLEND_NONE,
-            rf::gr::ZBUFFER_TYPE_NONE,
-            rf::gr::FOG_ALLOWED,
-        };
-        ID3D11PixelShader* pixel_shader_ = nullptr;
         VertexShaderAndLayout vertex_shader_;
         ComPtr<ID3D11PixelShader> std_pixel_shader_;
         ComPtr<ID3D11PixelShader> ui_pixel_shader_;
+        State state_;
     };
 }

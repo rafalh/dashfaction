@@ -33,14 +33,14 @@ namespace df::gr::d3d11
         auto [start_index, num_index] = index_ring_buffer_.submit();
 
         xlog::trace("Drawing dynamic geometry num_vertex %d num_index %d texture %s",
-            num_vertex, num_index, rf::bm::get_filename(textures_[0]));
+            num_vertex, num_index, rf::bm::get_filename(state_.textures[0]));
 
         render_context_.set_vertex_buffer(vertex_ring_buffer_.get_buffer(), sizeof(GpuTransformedVertex));
         render_context_.set_index_buffer(index_ring_buffer_.get_buffer());
         render_context_.set_vertex_shader(vertex_shader_);
-        render_context_.set_pixel_shader(pixel_shader_);
-        render_context_.set_primitive_topology(primitive_topology_);
-        render_context_.set_mode_and_textures(mode_, textures_[0], textures_[1]);
+        render_context_.set_pixel_shader(state_.pixel_shader);
+        render_context_.set_primitive_topology(state_.primitive_topology);
+        render_context_.set_mode_and_textures(state_.mode, state_.textures[0], state_.textures[1]);
         render_context_.set_cull_mode(D3D11_CULL_NONE);
         render_context_.set_uv_offset(rf::vec2_zero_vector);
 
@@ -73,14 +73,14 @@ namespace df::gr::d3d11
 
         std::array<int, 2> normalized_tex_handles = normalize_texture_handles_for_mode(mode, tex_handles);
 
-        set_primitive_topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-        set_mode(mode);
-        set_textures(normalized_tex_handles);
-        set_pixel_shader(std_pixel_shader_);
+        State new_state{
+            D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST,
+            normalized_tex_handles,
+            mode,
+            std_pixel_shader_,
+        };
 
-        if (vertex_ring_buffer_.is_full(nv) || index_ring_buffer_.is_full(num_index)) {
-            flush();
-        }
+        setup(nv, num_index, new_state);
 
         auto [gpu_verts, base_vertex] = vertex_ring_buffer_.alloc(nv);
         auto [gpu_ind_ptr, base_index] = index_ring_buffer_.alloc(num_index);
@@ -131,13 +131,13 @@ namespace df::gr::d3d11
 
     void DynamicGeometryRenderer::line(const gr::Vertex **vertices, rf::gr::Mode mode, bool is_3d)
     {
-        set_primitive_topology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
-        set_mode(mode);
-        set_textures({-1, -1});
-        set_pixel_shader(is_3d ? std_pixel_shader_ : ui_pixel_shader_);
-        if (vertex_ring_buffer_.is_full(2) || index_ring_buffer_.is_full(2)) {
-            flush();
-        }
+        State new_state{
+            D3D11_PRIMITIVE_TOPOLOGY_LINELIST,
+            {-1, -1},
+            mode,
+            is_3d ? std_pixel_shader_ : ui_pixel_shader_,
+        };
+        setup(2, 2, new_state);
 
         auto [gpu_verts, base_vertex] = vertex_ring_buffer_.alloc(2);
         auto [gpu_ind_ptr, base_index] = index_ring_buffer_.alloc(2);
@@ -209,23 +209,22 @@ namespace df::gr::d3d11
             std::swap(v_top, v_bottom);
         }
 
-        constexpr int nv = 4;
-        constexpr int num_index = 6;
+        constexpr int num_vert = 4;
+        constexpr int num_ind = 6;
 
-        set_primitive_topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-        set_mode(mode);
-        set_textures({bm_handle, -1});
-        set_pixel_shader(ui_pixel_shader_);
+        State new_state{
+            D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST,
+            {bm_handle, -1},
+            mode,
+            ui_pixel_shader_,
+        };
+        setup(num_vert, num_ind, new_state);
 
-        if (vertex_ring_buffer_.is_full(nv) || index_ring_buffer_.is_full(num_index)) {
-            flush();
-        }
-
-        auto [gpu_verts, base_vertex] = vertex_ring_buffer_.alloc(nv);
-        auto [gpu_ind_ptr, base_index] = index_ring_buffer_.alloc(num_index);
+        auto [gpu_verts, base_vertex] = vertex_ring_buffer_.alloc(num_vert);
+        auto [gpu_ind_ptr, base_index] = index_ring_buffer_.alloc(num_ind);
         int diffuse = pack_color(gr::screen.current_color);
 
-        for (int i = 0; i < nv; ++i) {
+        for (int i = 0; i < num_vert; ++i) {
             GpuTransformedVertex& gpu_vert = gpu_verts[i];
             gpu_vert.x = (i == 0 || i == 3) ? sx_left : sx_right;
             gpu_vert.y = (i == 0 || i == 1) ? sy_top : sy_bottom;
