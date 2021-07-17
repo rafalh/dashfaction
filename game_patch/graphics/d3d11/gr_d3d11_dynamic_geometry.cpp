@@ -172,20 +172,20 @@ namespace df::gr::d3d11
         line(verts_ptrs, mode, false);
     }
 
-    void DynamicGeometryRenderer::bitmap(int bm_handle, int x, int y, int w, int h, int sx, int sy, int sw, int sh, bool flip_x, bool flip_y, gr::Mode mode)
+    void DynamicGeometryRenderer::bitmap(int bm_handle, float x, float y, float w, float h, float sx, float sy, float sw, float sh, bool flip_x, bool flip_y, gr::Mode mode)
     {
         xlog::trace("Drawing bitmap");
         int bm_w, bm_h;
         bm::get_dimensions(bm_handle, &bm_w, &bm_h);
 
-        float sx_left = static_cast<float>(x) / gr::screen.clip_width * 2.0f - 1.0f;
-        float sx_right = static_cast<float>(x + w) / gr::screen.clip_width * 2.0f - 1.0f;
-        float sy_top = static_cast<float>(y) / gr::screen.clip_height * -2.0f + 1.0f;
-        float sy_bottom = static_cast<float>(y + h) / gr::screen.clip_height * -2.0f + 1.0f;
-        float u_left = static_cast<float>(sx) / static_cast<float>(bm_w);
-        float u_right = static_cast<float>(sx + sw) / static_cast<float>(bm_w);
-        float v_top = static_cast<float>(sy) / static_cast<float>(bm_h);
-        float v_bottom = static_cast<float>(sy + sh) / static_cast<float>(bm_h);
+        float sx_left = x / gr::screen.clip_width * 2.0f - 1.0f;
+        float sx_right = (x + w) / gr::screen.clip_width * 2.0f - 1.0f;
+        float sy_top = y / gr::screen.clip_height * -2.0f + 1.0f;
+        float sy_bottom = (y + h) / gr::screen.clip_height * -2.0f + 1.0f;
+        float u_left = sx / bm_w;
+        float u_right = (sx + sw) / bm_w;
+        float v_top = sy / bm_h;
+        float v_bottom = (sy + sh) / bm_h;
 
         // Make sure wrapped texel is not used in case of scaling with filtering enabled
         if (w != sw) {

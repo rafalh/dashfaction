@@ -625,6 +625,69 @@ bool gr_d3d_is_d3d8to9()
     return is_d3d9;
 }
 
+void gr_d3d_bitmap_float(int bitmap_handle, float x, float y, float w, float h,
+                         float sx, float sy, float sw, float sh, bool flip_x, bool flip_y, rf::gr::Mode mode)
+{
+    auto& gr_d3d_get_num_texture_sections = addr_as_ref<int(int bm_handle)>(0x0055CA60);
+    if (gr_d3d_get_num_texture_sections(bitmap_handle) != 1) {
+        // If bitmap is sectioned fall back to the old implementation...
+        rf::gr::bitmap_scaled(bitmap_handle,
+            static_cast<int>(x), static_cast<int>(y), static_cast<int>(w), static_cast<int>(h),
+            static_cast<int>(sx), static_cast<int>(sy), static_cast<int>(sw), static_cast<int>(sh),
+            flip_x, flip_y, mode);
+        return;
+    }
+
+    rf::gr::set_texture(bitmap_handle, -1);
+    int bm_w, bm_h;
+    rf::bm::get_dimensions(bitmap_handle, &bm_w, &bm_h);
+
+    // For some reason original implementation do not allow UVs > 1
+    sw = std::min(sw, bm_w - sx);
+    sh = std::min(sh, bm_h - sy);
+    if (sw <= 0.0f || sh <= 0.0f) {
+        return;
+    }
+
+    rf::gr::Vertex verts[4];
+    rf::gr::Vertex* verts_ptrs[4] = {&verts[0], &verts[1], &verts[2], &verts[3]};
+    float sx_left = rf::gr::screen.offset_x + x;
+    float sx_right = rf::gr::screen.offset_x + x + w;
+    float sy_top = rf::gr::screen.offset_y + y;
+    float sy_bottom = rf::gr::screen.offset_y + y + h;
+
+    sx_left -= 0.5f;
+    sx_right -= 0.5f;
+    sy_top -= 0.5f;
+    sy_bottom -= 0.5f;
+
+    float u_left = sx / bm_w * (flip_x ? -1.0f : 1.0f);
+    float u_right = (sx + sw) / bm_w * (flip_x ? -1.0f : 1.0f);
+    float v_top = sy / bm_h * (flip_y ? -1.0f : 1.0f);
+    float v_bottom = (sy + sh) / bm_h * (flip_y ? -1.0f : 1.0f);
+    verts[0].sx = sx_left;
+    verts[0].sy = sy_top;
+    verts[0].sw = 1.0f;
+    verts[0].u1 = u_left;
+    verts[0].v1 = v_top;
+    verts[1].sx = sx_right;
+    verts[1].sy = sy_top;
+    verts[1].sw = 1.0f;
+    verts[1].u1 = u_right;
+    verts[1].v1 = v_top;
+    verts[2].sx = sx_right;
+    verts[2].sy = sy_bottom;
+    verts[2].sw = 1.0f;
+    verts[2].u1 = u_right;
+    verts[2].v1 = v_bottom;
+    verts[3].sx = sx_left;
+    verts[3].sy = sy_bottom;
+    verts[3].sw = 1.0f;
+    verts[3].u1 = u_left;
+    verts[3].v1 = v_bottom;
+    rf::gr::tmapper(std::size(verts_ptrs), verts_ptrs, rf::gr::TMAP_FLAG_TEXTURED, mode);
+}
+
 void gr_d3d_apply_patch()
 {
     // Fix for "At least 8 MB of available video memory"

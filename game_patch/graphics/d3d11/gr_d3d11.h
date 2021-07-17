@@ -87,6 +87,7 @@ namespace df::gr::d3d11
         void window_inactive();
         void set_fullscreen_state(bool fullscreen);
         void bitmap(int bm_handle, int x, int y, int w, int h, int sx, int sy, int sw, int sh, bool flip_x, bool flip_y, rf::gr::Mode mode);
+        void bitmap(int bm_handle, float x, float y, float w, float h, float sx, float sy, float sw, float sh, bool flip_x, bool flip_y, rf::gr::Mode mode);
         void page_in(int bm_handle);
         void clear();
         void zbuffer_clear();
