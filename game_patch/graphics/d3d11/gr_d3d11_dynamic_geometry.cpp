@@ -65,6 +65,20 @@ namespace df::gr::d3d11
         return mode.get_alpha_source() != gr::ALPHA_SOURCE_TEXTURE;
     }
 
+    static inline rf::Color get_vertex_color_from_screen(gr::Mode mode)
+    {
+        rf::Color color{255, 255, 255, 255};
+        if (mode_uses_vertex_color(mode)) {
+            color.red = gr::screen.current_color.red;
+            color.green = gr::screen.current_color.green;
+            color.blue = gr::screen.current_color.blue;
+        }
+        if (mode_uses_vertex_alpha(mode)) {
+            color.alpha = gr::screen.current_color.alpha;
+        }
+        return color;
+    }
+
     void DynamicGeometryRenderer::add_poly(int nv, const gr::Vertex **vertices, int vertex_attributes, const std::array<int, 2>& tex_handles, gr::Mode mode)
     {
         int num_index = (nv - 2) * 3;
@@ -139,6 +153,9 @@ namespace df::gr::d3d11
         };
         auto [gpu_verts, gpu_ind_ptr, base_vertex] = setup(num_verts, num_inds, new_state);
 
+        rf::Color color = get_vertex_color_from_screen(mode);
+        int diffuse = pack_color(color);
+
         // Note: gr_matrix_scale is zero before first gr_setup_3d call
         float matrix_scale_z = gr::matrix_scale.z ? gr::matrix_scale.z : 1.0f;
         for (int i = 0; i < num_verts; ++i) {
@@ -149,7 +166,7 @@ namespace df::gr::d3d11
             out_vert.z = in_vert.sw * gr::d3d::zm;
             // Set w to depth in camera space (needed for 3D rendering)
             out_vert.w = 1.0f / in_vert.sw / matrix_scale_z;
-            out_vert.diffuse = pack_color(gr::screen.current_color);
+            out_vert.diffuse = diffuse;
         }
         *(gpu_ind_ptr++) = base_vertex;
         *(gpu_ind_ptr++) = base_vertex + 1;
@@ -217,7 +234,8 @@ namespace df::gr::d3d11
         };
         auto [gpu_verts, gpu_ind_ptr, base_vertex] = setup(num_verts, num_inds, new_state);
 
-        int diffuse = pack_color(gr::screen.current_color);
+        rf::Color color = get_vertex_color_from_screen(mode);
+        int diffuse = pack_color(color);
 
         for (int i = 0; i < num_verts; ++i) {
             GpuTransformedVertex& gpu_vert = gpu_verts[i];
