@@ -79,11 +79,7 @@ namespace df::gr::d3d11
             mode,
             std_pixel_shader_,
         };
-
-        setup(nv, num_index, new_state);
-
-        auto [gpu_verts, base_vertex] = vertex_ring_buffer_.alloc(nv);
-        auto [gpu_ind_ptr, base_index] = index_ring_buffer_.alloc(num_index);
+        auto [gpu_verts, gpu_ind_ptr, base_vertex] = setup(nv, num_index, new_state);
 
         bool use_vert_color = mode_uses_vertex_color(mode);
         bool use_vert_alpha = mode_uses_vertex_alpha(mode);
@@ -131,20 +127,19 @@ namespace df::gr::d3d11
 
     void DynamicGeometryRenderer::line(const gr::Vertex **vertices, rf::gr::Mode mode, bool is_3d)
     {
+        constexpr int num_verts = 2;
+        constexpr int num_inds = 2;
         State new_state{
             D3D11_PRIMITIVE_TOPOLOGY_LINELIST,
             {-1, -1},
             mode,
             is_3d ? std_pixel_shader_ : ui_pixel_shader_,
         };
-        setup(2, 2, new_state);
-
-        auto [gpu_verts, base_vertex] = vertex_ring_buffer_.alloc(2);
-        auto [gpu_ind_ptr, base_index] = index_ring_buffer_.alloc(2);
+        auto [gpu_verts, gpu_ind_ptr, base_vertex] = setup(num_verts, num_inds, new_state);
 
         // Note: gr_matrix_scale is zero before first gr_setup_3d call
         float matrix_scale_z = gr::matrix_scale.z ? gr::matrix_scale.z : 1.0f;
-        for (int i = 0; i < 2; ++i) {
+        for (int i = 0; i < num_verts; ++i) {
             const gr::Vertex& in_vert = *vertices[i];
             GpuTransformedVertex& out_vert = gpu_verts[i];
             out_vert.x = (in_vert.sx - gr::screen.offset_x) / gr::screen.clip_width * 2.0f - 1.0f;
@@ -209,8 +204,8 @@ namespace df::gr::d3d11
             std::swap(v_top, v_bottom);
         }
 
-        constexpr int num_vert = 4;
-        constexpr int num_ind = 6;
+        constexpr int num_verts = 4;
+        constexpr int num_inds = 6;
 
         State new_state{
             D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST,
@@ -218,13 +213,11 @@ namespace df::gr::d3d11
             mode,
             ui_pixel_shader_,
         };
-        setup(num_vert, num_ind, new_state);
+        auto [gpu_verts, gpu_ind_ptr, base_vertex] = setup(num_verts, num_inds, new_state);
 
-        auto [gpu_verts, base_vertex] = vertex_ring_buffer_.alloc(num_vert);
-        auto [gpu_ind_ptr, base_index] = index_ring_buffer_.alloc(num_ind);
         int diffuse = pack_color(gr::screen.current_color);
 
-        for (int i = 0; i < num_vert; ++i) {
+        for (int i = 0; i < num_verts; ++i) {
             GpuTransformedVertex& gpu_vert = gpu_verts[i];
             gpu_vert.x = (i == 0 || i == 3) ? sx_left : sx_right;
             gpu_vert.y = (i == 0 || i == 1) ? sy_top : sy_bottom;
