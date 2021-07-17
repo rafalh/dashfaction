@@ -153,9 +153,9 @@ namespace df::gr::d3d11
             // Set w to depth in camera space (needed for 3D rendering)
             out_vert.w = 1.0f / in_vert.sw / matrix_scale_z;
             out_vert.diffuse = pack_color(gr::screen.current_color);
-            *(gpu_ind_ptr++) = base_vertex;
-            *(gpu_ind_ptr++) = base_vertex + 1;
         }
+        *(gpu_ind_ptr++) = base_vertex;
+        *(gpu_ind_ptr++) = base_vertex + 1;
     }
 
     void DynamicGeometryRenderer::line_3d(const rf::gr::Vertex& v0, const rf::gr::Vertex& v1, rf::gr::Mode mode)
