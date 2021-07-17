@@ -63,23 +63,6 @@ namespace df::gr::d3d11
         device_context_->OMSetDepthStencilState(depth_stencil_state, 0);
     }
 
-    void RenderContext::bind_texture(int slot)
-    {
-        int tex_handle = current_tex_handles_[slot];
-        ID3D11ShaderResourceView* texture_view;
-        if (tex_handle != -1) {
-            texture_view = texture_manager_.lookup_texture(tex_handle);
-        }
-        else if (slot == 0) {
-            texture_view = texture_manager_.get_white_texture();
-        }
-        else {
-            texture_view = texture_manager_.get_gray_texture();
-        }
-        ID3D11ShaderResourceView* shader_resources[] = {texture_view};
-        device_context_->PSSetShaderResources(slot, std::size(shader_resources), shader_resources);
-    }
-
     void RenderContext::clear()
     {
         // Note: original code clears clip rect only but it is not trivial in D3D11

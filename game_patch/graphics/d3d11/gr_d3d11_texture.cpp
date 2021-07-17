@@ -176,37 +176,6 @@ namespace df::gr::d3d11
         return texture;
     }
 
-    TextureManager::Texture& TextureManager::get_or_load_texture(int bm_handle, bool staging)
-    {
-        // Note: bm_index will change for each animation frame but bm_handle will stay the same
-        int bm_index = rf::bm::get_cache_slot(bm_handle);
-        auto it = texture_cache_.find(bm_index);
-        if (it != texture_cache_.end()) {
-            return it->second;
-        }
-
-        auto insert_result = texture_cache_.insert({bm_index, std::move(load_texture(bm_handle, staging))});
-        return insert_result.first->second;
-    }
-
-    ID3D11ShaderResourceView* TextureManager::lookup_texture(int bm_handle)
-    {
-        if (bm_handle < 0) {
-            return nullptr;
-        }
-        Texture& texture = get_or_load_texture(bm_handle, false);
-        return texture.get_or_create_texture_view(device_, device_context_);
-    }
-
-    ID3D11RenderTargetView* TextureManager::lookup_render_target(int bm_handle)
-    {
-        if (bm_handle < 0) {
-            return nullptr;
-        }
-        Texture& texture = get_or_load_texture(bm_handle, false);
-        return texture.render_target_view;
-    }
-
     void TextureManager::finish_render_target(int bm_handle)
     {
         if (bm_handle < 0) {

@@ -11,45 +11,25 @@ namespace df::gr::d3d11
     {
     }
 
-    ID3D11RasterizerState* StateManager::lookup_rasterizer_state(D3D11_CULL_MODE cull_mode, int depth_bias)
+    ComPtr<ID3D11RasterizerState> StateManager::create_rasterizer_state(D3D11_CULL_MODE cull_mode, int depth_bias)
     {
-        auto it = rasterizer_state_cache_.find({cull_mode, depth_bias});
-        if (it != rasterizer_state_cache_.end()) {
-            return it->second;
-        }
-
         CD3D11_RASTERIZER_DESC desc{CD3D11_DEFAULT{}};
         desc.CullMode = cull_mode;
         desc.DepthBias = depth_bias;
         if (g_game_config.msaa) {
             desc.MultisampleEnable = TRUE;
         }
+
         ComPtr<ID3D11RasterizerState> rasterizer_state;
         check_hr(
             device_->CreateRasterizerState(&desc, &rasterizer_state),
             [=]() { xlog::error("Failed to create rasterizer state %d %d", cull_mode, depth_bias); }
         );
-        rasterizer_state_cache_.insert({{cull_mode, depth_bias}, rasterizer_state});
         return rasterizer_state;
     }
 
-    ID3D11SamplerState* StateManager::lookup_sampler_state(rf::gr::TextureSource ts, int slot)
+    ComPtr<ID3D11SamplerState> StateManager::create_sampler_state(rf::gr::TextureSource ts)
     {
-        if (ts == gr::TEXTURE_SOURCE_NONE) {
-            // we are binding a dummy white textures
-            ts = gr::TEXTURE_SOURCE_CLAMP;
-        }
-
-        if (slot == 1) {
-            ts = gr::TEXTURE_SOURCE_CLAMP;
-        }
-
-        int cache_key = static_cast<int>(ts);
-        const auto& it = sampler_state_cache_.find(cache_key);
-        if (it != sampler_state_cache_.end()) {
-            return it->second;
-        }
-
         CD3D11_SAMPLER_DESC desc{CD3D11_DEFAULT()};
         switch (ts) {
             case gr::TEXTURE_SOURCE_WRAP:
@@ -93,21 +73,13 @@ namespace df::gr::d3d11
         ComPtr<ID3D11SamplerState> sampler_state;
         check_hr(
             device_->CreateSamplerState(&desc, &sampler_state),
-            [=]() { xlog::error("Failed to create sampler state %d", cache_key); }
+            [=]() { xlog::error("Failed to create sampler state %d", ts); }
         );
-
-        sampler_state_cache_.insert({cache_key, sampler_state});
         return sampler_state;
     }
 
-    ID3D11BlendState* StateManager::lookup_blend_state(gr::AlphaBlend ab)
+    ComPtr<ID3D11BlendState> StateManager::create_blend_state(gr::AlphaBlend ab)
     {
-        int cache_key = static_cast<int>(ab);
-
-        const auto& it = blend_state_cache_.find(cache_key);
-        if (it != blend_state_cache_.end()) {
-            return it->second;
-        }
         CD3D11_BLEND_DESC desc{CD3D11_DEFAULT()};
 
         switch (ab) {
@@ -162,21 +134,13 @@ namespace df::gr::d3d11
         ComPtr<ID3D11BlendState> blend_state;
         check_hr(
             device_->CreateBlendState(&desc, &blend_state),
-            [=]() { xlog::error("Failed to create blend state %d", cache_key); }
+            [=]() { xlog::error("Failed to create blend state %d", ab); }
         );
-
-        blend_state_cache_.insert({cache_key, blend_state});
         return blend_state;
     }
 
-    ID3D11DepthStencilState* StateManager::lookup_depth_stencil_state(gr::ZbufferType zbt)
+    ComPtr<ID3D11DepthStencilState> StateManager::create_depth_stencil_state(gr::ZbufferType zbt)
     {
-        int cache_key = static_cast<int>(zbt) | (static_cast<int>(gr::screen.depthbuffer_type) << 8);
-
-        const auto& it = depth_stencil_state_cache_.find(cache_key);
-        if (it != depth_stencil_state_cache_.end()) {
-            return it->second;
-        }
         CD3D11_DEPTH_STENCIL_DESC desc{CD3D11_DEFAULT()};
 
         if (gr::screen.depthbuffer_type == gr::DEPTHBUFFER_Z) {
@@ -215,10 +179,8 @@ namespace df::gr::d3d11
 
         check_hr(
             device_->CreateDepthStencilState(&desc, &depth_stencil_state),
-            [=]() { xlog::warn("Failed to create depth stencil state %d", cache_key); }
+            [=]() { xlog::warn("Failed to create depth stencil state %d", zbt); }
         );
-
-        depth_stencil_state_cache_.insert({cache_key, depth_stencil_state});
         return depth_stencil_state;
     }
 }

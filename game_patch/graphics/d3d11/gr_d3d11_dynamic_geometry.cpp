@@ -40,7 +40,9 @@ namespace df::gr::d3d11
         render_context_.set_vertex_shader(vertex_shader_);
         render_context_.set_pixel_shader(state_.pixel_shader);
         render_context_.set_primitive_topology(state_.primitive_topology);
-        render_context_.set_mode_and_textures(state_.mode, state_.textures[0], state_.textures[1]);
+        std::array<int, 2> textures = normalize_texture_handles_for_mode(state_.mode, {state_.textures});
+        render_context_.set_mode(state_.mode);
+        render_context_.set_textures(textures[0], textures[1]);
         render_context_.set_cull_mode(D3D11_CULL_NONE);
         render_context_.set_uv_offset(rf::vec2_zero_vector);
 

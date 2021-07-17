@@ -75,7 +75,8 @@ namespace df::gr::d3d11
             // This information may be useful for simplifying shaders
             render_context.set_cull_mode(b.double_sided ? D3D11_CULL_NONE : D3D11_CULL_BACK);
             int texture = tex_handles[b.texture_index];
-            render_context.set_mode_and_textures(forced_mode.value_or(b.mode), texture, -1, color);
+            render_context.set_mode(forced_mode.value_or(b.mode), color);
+            render_context.set_textures(texture, -1);
             render_context.device_context()->DrawIndexed(b.num_indices, b.start_index, b.base_vertex);
             if (params.powerup_bitmaps[0] != -1) {
                 gr::Mode powerup_mode{
@@ -86,10 +87,11 @@ namespace df::gr::d3d11
                     gr::ZBUFFER_TYPE_READ,
                     gr::FOG_NOT_ALLOWED,
                 };
-                render_context.set_mode_and_textures(powerup_mode, params.powerup_bitmaps[0], -1, color);
+                render_context.set_mode(powerup_mode, color);
+                render_context.set_textures(params.powerup_bitmaps[0], -1);
                 render_context.device_context()->DrawIndexed(b.num_indices, b.start_index, b.base_vertex);
                 if (params.powerup_bitmaps[1] != -1) {
-                    render_context.set_mode_and_textures(powerup_mode, params.powerup_bitmaps[1], -1, color);
+                    render_context.set_textures(params.powerup_bitmaps[1], -1);
                     render_context.device_context()->DrawIndexed(b.num_indices, b.start_index, b.base_vertex);
                 }
             }

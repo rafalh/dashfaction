@@ -299,7 +299,8 @@ namespace df::gr::d3d11
         render_context.set_cull_mode(D3D11_CULL_BACK);
         render_context.set_primitive_topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         for (Batch& b : batches) {
-            render_context.set_mode_and_textures(b.mode, b.texture_1, b.texture_2);
+            render_context.set_mode(b.mode);
+            render_context.set_textures(b.texture_1, b.texture_2);
             Vector2 uv_pan{b.u_pan_speed * delta_time, b.v_pan_speed * delta_time};
             render_context.set_uv_offset(uv_pan);
             //xlog::warn("DrawIndexed %d %d", b.num_indices, b.start_index);
@@ -370,8 +371,9 @@ namespace df::gr::d3d11
         int num_dp = 0;
         while (dp) {
             if (dp->my_decal->flags & DF_LEVEL_DECAL) {
-                auto mode = determine_decal_mode(dp->my_decal);
-                DecalPolyBatchKey dp_key = std::make_tuple(render_type, dp->my_decal->bitmap_id, lightmap_tex, mode);
+                rf::gr::Mode mode = determine_decal_mode(dp->my_decal);
+                std::array<int, 2> textures = normalize_texture_handles_for_mode(mode, {dp->my_decal->bitmap_id, lightmap_tex});
+                DecalPolyBatchKey dp_key = std::make_tuple(render_type, textures[0], textures[1], mode);
                 batched_decal_polys_[dp_key].push_back(dp);
                 ++num_dp;
             }

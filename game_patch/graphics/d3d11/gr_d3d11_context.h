@@ -6,6 +6,8 @@
 #include "gr_d3d11_transform.h"
 #include "gr_d3d11_vertex.h"
 #include "gr_d3d11_shader.h"
+#include "gr_d3d11_texture.h"
+#include "gr_d3d11_state.h"
 
 namespace df::gr::d3d11
 {
@@ -142,12 +144,34 @@ namespace df::gr::d3d11
             TextureManager& texture_manager
         );
 
-        void set_mode_and_textures(rf::gr::Mode mode, int tex_handle0, int tex_handle1, rf::Color color = {255, 255, 255})
+        void set_textures(int tex_handle0, int tex_handle1 = -1)
         {
-            std::array<int, 2> tex_handles = normalize_texture_handles_for_mode(mode, {tex_handle0, tex_handle1});
-            set_mode(mode, color);
-            set_texture(0, tex_handles[0]);
-            set_texture(1, tex_handles[1]);
+            if (current_tex_handles_[0] != tex_handle0 || current_tex_handles_[1] != tex_handle1) {
+                current_tex_handles_[0] = tex_handle0;
+                current_tex_handles_[1] = tex_handle1;
+                ID3D11ShaderResourceView* shader_resources[] = {
+                    get_diffuse_texture_view(tex_handle0),
+                    get_lightmap_texture_view(tex_handle1),
+                };
+                device_context_->PSSetShaderResources(0, std::size(shader_resources), shader_resources);
+            }
+        }
+
+        void set_mode(gr::Mode mode, rf::Color color = {255, 255, 255, 255})
+        {
+            render_mode_cbuffer_.update(mode, color, device_context_);
+            if (!current_mode_ || current_mode_.value() != mode) {
+                if (!current_mode_ || current_mode_.value().get_texture_source() != mode.get_texture_source()) {
+                    set_sampler_state(mode.get_texture_source());
+                }
+                if (!current_mode_ || current_mode_.value().get_alpha_blend() != mode.get_alpha_blend()) {
+                    set_blend_state(mode.get_alpha_blend());
+                }
+                if (!current_mode_ || current_mode_.value().get_zbuffer_type() != mode.get_zbuffer_type()) {
+                    set_depth_stencil_state(mode.get_zbuffer_type());
+                }
+                current_mode_.emplace(mode);
+            }
         }
 
         void set_render_target(ID3D11RenderTargetView* render_target_view, ID3D11DepthStencilView* depth_stencil_view)
@@ -273,35 +297,25 @@ namespace df::gr::d3d11
     private:
         void bind_cbuffers();
         void bind_rasterizer_state();
-        void bind_texture(int slot);
         void update_texture_transform();
         void set_sampler_state(gr::TextureSource ts);
         void set_blend_state(gr::AlphaBlend ab);
         void set_depth_stencil_state(gr::ZbufferType zbt);
 
-        void set_mode(gr::Mode mode, rf::Color color)
+        ID3D11ShaderResourceView* get_diffuse_texture_view(int tex_handle)
         {
-            render_mode_cbuffer_.update(mode, color, device_context_);
-            if (!current_mode_ || current_mode_.value() != mode) {
-                if (!current_mode_ || current_mode_.value().get_texture_source() != mode.get_texture_source()) {
-                    set_sampler_state(mode.get_texture_source());
-                }
-                if (!current_mode_ || current_mode_.value().get_alpha_blend() != mode.get_alpha_blend()) {
-                    set_blend_state(mode.get_alpha_blend());
-                }
-                if (!current_mode_ || current_mode_.value().get_zbuffer_type() != mode.get_zbuffer_type()) {
-                    set_depth_stencil_state(mode.get_zbuffer_type());
-                }
-                current_mode_.emplace(mode);
+            if (tex_handle != -1) {
+                return texture_manager_.lookup_texture(tex_handle);
             }
+            return texture_manager_.get_white_texture();
         }
 
-        void set_texture(int slot, int tex_handle)
+        ID3D11ShaderResourceView* get_lightmap_texture_view(int tex_handle)
         {
-            if (current_tex_handles_[slot] != tex_handle) {
-                current_tex_handles_[slot] = tex_handle;
-                bind_texture(slot);
+            if (tex_handle != -1) {
+                return texture_manager_.lookup_texture(tex_handle);
             }
+            return texture_manager_.get_gray_texture();
         }
 
         static constexpr int vertex_buffer_slots = 2;

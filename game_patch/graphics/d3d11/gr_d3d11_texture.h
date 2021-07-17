@@ -11,8 +11,24 @@ namespace df::gr::d3d11
     public:
         TextureManager(ComPtr<ID3D11Device> device, ComPtr<ID3D11DeviceContext> device_context);
 
-        ID3D11ShaderResourceView* lookup_texture(int bm_handle);
-        ID3D11RenderTargetView* lookup_render_target(int bm_handle);
+        ID3D11ShaderResourceView* lookup_texture(int bm_handle)
+        {
+            if (bm_handle < 0) {
+                return nullptr;
+            }
+            Texture& texture = get_or_load_texture(bm_handle, false);
+            return texture.get_or_create_texture_view(device_, device_context_);
+        }
+
+        ID3D11RenderTargetView* lookup_render_target(int bm_handle)
+        {
+            if (bm_handle < 0) {
+                return nullptr;
+            }
+            Texture& texture = get_or_load_texture(bm_handle, false);
+            return texture.render_target_view;
+        }
+
         void finish_render_target(int bm_handle);
         void save_cache();
         void flush_cache(bool force);
@@ -87,10 +103,22 @@ namespace df::gr::d3d11
             void init_cpu_texture(ID3D11Device* device, ID3D11DeviceContext* device_context, bool copy_from_gpu);
         };
 
+        Texture& get_or_load_texture(int bm_handle, bool staging)
+        {
+            // Note: bm_index will change for each animation frame but bm_handle will stay the same
+            int bm_index = rf::bm::get_cache_slot(bm_handle);
+            auto it = texture_cache_.find(bm_index);
+            if (it != texture_cache_.end()) {
+                return it->second;
+            }
+
+            auto insert_result = texture_cache_.emplace(bm_index, load_texture(bm_handle, staging));
+            return insert_result.first->second;
+        }
+
         Texture create_texture(int bm_handle, rf::bm::Format fmt, int w, int h, rf::ubyte* bits, rf::ubyte* pal, int mip_levels, bool staging);
         Texture create_render_target(int bm_handle, int w, int h);
         Texture load_texture(int bm_handle, bool staging);
-        Texture& get_or_load_texture(int bm_handle, bool staging);
         std::pair<DXGI_FORMAT, rf::bm::Format> determine_supported_texture_format(rf::bm::Format fmt);
         std::pair<DXGI_FORMAT, rf::bm::Format> get_supported_texture_format(rf::bm::Format fmt);
         static rf::bm::Format get_bm_format(DXGI_FORMAT dxgi_fmt);
