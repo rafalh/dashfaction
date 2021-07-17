@@ -25,7 +25,6 @@ namespace df::gr::d3d11
         void flush();
 
     private:
-
         struct State
         {
             D3D11_PRIMITIVE_TOPOLOGY primitive_topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;

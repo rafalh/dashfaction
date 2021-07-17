@@ -440,7 +440,8 @@ namespace df::gr::d3d11
         }
     }
 
-    SolidRenderer::SolidRenderer(ComPtr<ID3D11Device> device, ShaderManager& shader_manager, DynamicGeometryRenderer& dyn_geo_renderer,
+    SolidRenderer::SolidRenderer(ComPtr<ID3D11Device> device, ShaderManager& shader_manager,
+        [[maybe_unused]] StateManager& state_manager, DynamicGeometryRenderer& dyn_geo_renderer,
         RenderContext& render_context) :
         device_{std::move(device)}, context_{render_context.device_context()}, dyn_geo_renderer_{dyn_geo_renderer}, render_context_(render_context)
     {

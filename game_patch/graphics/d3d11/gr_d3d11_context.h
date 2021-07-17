@@ -144,6 +144,11 @@ namespace df::gr::d3d11
             TextureManager& texture_manager
         );
 
+        ID3D11DeviceContext* device_context() const
+        {
+            return device_context_;
+        }
+
         void set_textures(int tex_handle0, int tex_handle1 = -1)
         {
             if (current_tex_handles_[0] != tex_handle0 || current_tex_handles_[1] != tex_handle1) {
@@ -162,15 +167,55 @@ namespace df::gr::d3d11
             render_mode_cbuffer_.update(mode, color, device_context_);
             if (!current_mode_ || current_mode_.value() != mode) {
                 if (!current_mode_ || current_mode_.value().get_texture_source() != mode.get_texture_source()) {
-                    set_sampler_state(mode.get_texture_source());
+                    std::array<ID3D11SamplerState*, 2> sampler_states = {
+                        state_manager_.lookup_sampler_state(mode.get_texture_source(), 0),
+                        state_manager_.lookup_sampler_state(mode.get_texture_source(), 1),
+                    };
+                    set_sampler_states(sampler_states);
                 }
                 if (!current_mode_ || current_mode_.value().get_alpha_blend() != mode.get_alpha_blend()) {
-                    set_blend_state(mode.get_alpha_blend());
+                    ID3D11BlendState* blend_state =
+                        state_manager_.lookup_blend_state(mode.get_alpha_blend());
+                    set_blend_state(blend_state);
                 }
                 if (!current_mode_ || current_mode_.value().get_zbuffer_type() != mode.get_zbuffer_type()) {
-                    set_depth_stencil_state(mode.get_zbuffer_type());
+                    ID3D11DepthStencilState* depth_stencil_state =
+                        state_manager_.lookup_depth_stencil_state(mode.get_zbuffer_type());
+                    set_depth_stencil_state(depth_stencil_state);
                 }
                 current_mode_.emplace(mode);
+            }
+        }
+
+        void set_sampler_states(std::array<ID3D11SamplerState*, 2> sampler_states)
+        {
+            if (current_sampler_states_ != sampler_states) {
+                current_sampler_states_ = sampler_states;
+                device_context_->PSSetSamplers(0, sampler_states.size(), sampler_states.data());
+            }
+        }
+
+        void set_blend_state(ID3D11BlendState* blend_state)
+        {
+            if (current_blend_state_ != blend_state) {
+                current_blend_state_ = blend_state;
+                device_context_->OMSetBlendState(blend_state, nullptr, 0xffffffff);
+            }
+        }
+
+        void set_depth_stencil_state(ID3D11DepthStencilState* depth_stencil_state)
+        {
+            if (current_depth_stencil_state_ != depth_stencil_state) {
+                current_depth_stencil_state_ = depth_stencil_state;
+                device_context_->OMSetDepthStencilState(depth_stencil_state, 0);
+            }
+        }
+
+        void set_rasterizer_state(ID3D11RasterizerState* rasterizer_state)
+        {
+            if (current_rasterizer_state_ != rasterizer_state) {
+                current_rasterizer_state_ = rasterizer_state;
+                device_context_->RSSetState(rasterizer_state);
             }
         }
 
@@ -200,11 +245,6 @@ namespace df::gr::d3d11
         void fog_set()
         {
             render_mode_cbuffer_.handle_fog_change();
-        }
-
-        ID3D11DeviceContext* device_context()
-        {
-            return device_context_;
         }
 
         void set_vertex_buffer(ID3D11Buffer* vertex_buffer, UINT stride, UINT slot = 0)
@@ -269,7 +309,7 @@ namespace df::gr::d3d11
             if (current_cull_mode_ != cull_mode || zbias_changed_) {
                 current_cull_mode_ = cull_mode;
                 zbias_changed_ = false;
-                bind_rasterizer_state();
+                set_rasterizer_state(state_manager_.lookup_rasterizer_state(current_cull_mode_, zbias_));
             }
         }
 
@@ -296,11 +336,6 @@ namespace df::gr::d3d11
 
     private:
         void bind_cbuffers();
-        void bind_rasterizer_state();
-        void update_texture_transform();
-        void set_sampler_state(gr::TextureSource ts);
-        void set_blend_state(gr::AlphaBlend ab);
-        void set_depth_stencil_state(gr::ZbufferType zbt);
 
         ID3D11ShaderResourceView* get_diffuse_texture_view(int tex_handle)
         {
@@ -342,6 +377,10 @@ namespace df::gr::d3d11
         std::array<int, 2> current_tex_handles_ = {-2, -2};
         D3D11_CULL_MODE current_cull_mode_ = D3D11_CULL_NONE;
         std::optional<gr::Mode> current_mode_;
+        std::array<ID3D11SamplerState*, 2> current_sampler_states_ = {nullptr, nullptr};
+        ID3D11BlendState* current_blend_state_ = nullptr;
+        ID3D11DepthStencilState* current_depth_stencil_state_ = nullptr;
+        ID3D11RasterizerState* current_rasterizer_state_ = nullptr;
         int zbias_ = 0;
         bool zbias_changed_ = true;
     };

@@ -15,6 +15,7 @@ namespace rf
 
 namespace df::gr::d3d11
 {
+    class StateManager;
     class RenderContext;
 
     class BaseMeshRenderCache
@@ -56,7 +57,7 @@ namespace df::gr::d3d11
     class MeshRenderer
     {
     public:
-        MeshRenderer(ComPtr<ID3D11Device> device, ShaderManager& shader_manager, RenderContext& render_context);
+        MeshRenderer(ComPtr<ID3D11Device> device, ShaderManager& shader_manager, StateManager& state_manager, RenderContext& render_context);
         ~MeshRenderer();
         void render_v3d_vif(rf::VifLodMesh *lod_mesh, rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::MeshRenderParams& params);
         void render_character_vif(rf::VifLodMesh *lod_mesh, rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::CharacterInstance *ci, const rf::MeshRenderParams& params);

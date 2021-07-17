@@ -481,7 +481,8 @@ namespace df::gr::d3d11
         render_context.bind_vs_cbuffer(3, nullptr);
     }
 
-    MeshRenderer::MeshRenderer(ComPtr<ID3D11Device> device, ShaderManager& shader_manager, RenderContext& render_context) :
+    MeshRenderer::MeshRenderer(ComPtr<ID3D11Device> device, ShaderManager& shader_manager,
+        [[maybe_unused]] StateManager& state_manager, RenderContext& render_context) :
         device_{std::move(device)}, render_context_{render_context}
     {
         standard_vertex_shader_ = shader_manager.get_vertex_shader(VertexShaderId::standard);

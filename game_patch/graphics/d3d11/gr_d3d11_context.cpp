@@ -44,25 +44,6 @@ namespace df::gr::d3d11
         device_context_->PSSetConstantBuffers(0, std::size(ps_cbuffers), ps_cbuffers);
     }
 
-    void RenderContext::set_sampler_state(gr::TextureSource ts)
-    {
-        ID3D11SamplerState* sampler_states[] = {
-            state_manager_.lookup_sampler_state(ts, 0),
-            state_manager_.lookup_sampler_state(ts, 1),
-        };
-        device_context_->PSSetSamplers(0, std::size(sampler_states), sampler_states);
-    }
-
-    void RenderContext::set_blend_state(gr::AlphaBlend ab) {
-        ID3D11BlendState* blend_state = state_manager_.lookup_blend_state(ab);
-        device_context_->OMSetBlendState(blend_state, nullptr, 0xffffffff);
-    }
-
-    void RenderContext::set_depth_stencil_state(gr::ZbufferType zbt) {
-        ID3D11DepthStencilState* depth_stencil_state = state_manager_.lookup_depth_stencil_state(zbt);
-        device_context_->OMSetDepthStencilState(depth_stencil_state, 0);
-    }
-
     void RenderContext::clear()
     {
         // Note: original code clears clip rect only but it is not trivial in D3D11
@@ -96,12 +77,6 @@ namespace df::gr::d3d11
         vp.MinDepth = 0.0f;
         vp.MaxDepth = 1.0f;
         device_context_->RSSetViewports(1, &vp);
-    }
-
-    void RenderContext::bind_rasterizer_state()
-    {
-        ID3D11RasterizerState* rasterizer_state = state_manager_.lookup_rasterizer_state(current_cull_mode_, zbias_);
-        device_context_->RSSetState(rasterizer_state);
     }
 
     struct alignas(16) ModelTransformBufferData

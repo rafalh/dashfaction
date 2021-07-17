@@ -16,6 +16,7 @@ namespace rf
 
 namespace df::gr::d3d11
 {
+    class StateManager;
     class DynamicGeometryRenderer;
     class RenderContext;
     class GRenderCacheBuilder;
@@ -81,7 +82,7 @@ namespace df::gr::d3d11
     class SolidRenderer
     {
     public:
-        SolidRenderer(ComPtr<ID3D11Device> device, ShaderManager& shader_manager, DynamicGeometryRenderer& dyn_geo_renderer, RenderContext& render_context);
+        SolidRenderer(ComPtr<ID3D11Device> device, ShaderManager& shader_manager, StateManager& state_manager, DynamicGeometryRenderer& dyn_geo_renderer, RenderContext& render_context);
         void render_solid(rf::GSolid* solid, rf::GRoom** rooms, int num_rooms);
         void render_movable_solid(rf::GSolid* solid, const rf::Vector3& pos, const rf::Matrix3& orient);
         void render_sky_room(rf::GRoom *room);
