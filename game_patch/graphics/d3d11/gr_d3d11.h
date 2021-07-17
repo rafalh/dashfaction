@@ -103,8 +103,8 @@ namespace df::gr::d3d11
         bool set_render_target(int bm_handle);
         rf::bm::Format read_back_buffer(int x, int y, int w, int h, rf::ubyte *data);
         void tmapper(int nv, const rf::gr::Vertex **vertices, int vertex_attributes, rf::gr::Mode mode);
-        void line(const rf::gr::Vertex& v0, const rf::gr::Vertex& v1, rf::gr::Mode mode);
-        void line(float x1, float y1, float x2, float y2, rf::gr::Mode mode);
+        void line_3d(const rf::gr::Vertex& v0, const rf::gr::Vertex& v1, rf::gr::Mode mode);
+        void line_2d(float x1, float y1, float x2, float y2, rf::gr::Mode mode);
         void setup_3d();
         void render_solid(rf::GSolid* solid, rf::GRoom** rooms, int num_rooms);
         void render_movable_solid(rf::GSolid* solid, const rf::Vector3& pos, const rf::Matrix3& orient);
@@ -116,7 +116,6 @@ namespace df::gr::d3d11
         void render_character_vif(rf::VifLodMesh *lod_mesh, rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::CharacterInstance *ci, const rf::MeshRenderParams& params);
         void clear_vif_cache(rf::VifLodMesh *lod_mesh);
         void fog_set();
-        void flush();
 
     private:
         void init_device();
@@ -178,16 +177,8 @@ namespace df::gr::d3d11
             case rf::gr::TEXTURE_SOURCE_CLAMP:
             case rf::gr::TEXTURE_SOURCE_CLAMP_NO_FILTERING:
                 return {textures[0], -1};
-            case rf::gr::TEXTURE_SOURCE_CLAMP_1_WRAP_0:
-            case rf::gr::TEXTURE_SOURCE_CLAMP_1_WRAP_0_MOD2X:
-            case rf::gr::TEXTURE_SOURCE_CLAMP_1_CLAMP_0:
-            case rf::gr::TEXTURE_SOURCE_MT_U_WRAP_V_CLAMP:
-            case rf::gr::TEXTURE_SOURCE_MT_U_CLAMP_V_WRAP:
-            case rf::gr::TEXTURE_SOURCE_MT_WRAP_TRILIN:
-            case rf::gr::TEXTURE_SOURCE_MT_CLAMP_TRILIN:
-                return textures;
             default:
-                return {-1, -1};
+                return textures;
         }
     }
 }

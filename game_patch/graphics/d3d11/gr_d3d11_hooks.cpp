@@ -82,12 +82,12 @@ namespace df::gr::d3d11
 
     void line(float x1, float y1, float x2, float y2, rf::gr::Mode mode)
     {
-        renderer->line(x1, y1, x2, y2, mode);
+        renderer->line_2d(x1, y1, x2, y2, mode);
     }
 
     void line_3d(const rf::gr::Vertex& v0, const rf::gr::Vertex& v1, rf::gr::Mode mode)
     {
-        renderer->line(v0, v1, mode);
+        renderer->line_3d(v0, v1, mode);
     }
 
     void texture_save_cache()

@@ -31,15 +31,15 @@ namespace df::gr::d3d11
     void RenderContext::bind_cbuffers()
     {
         ID3D11Buffer* vs_cbuffers[] = {
-            model_transform_cbuffer_.get_buffer(),
-            view_proj_transform_cbuffer_.get_buffer(),
-            uv_offset_cbuffer_.get_buffer(),
+            model_transform_cbuffer_,
+            view_proj_transform_cbuffer_,
+            uv_offset_cbuffer_,
         };
         device_context_->VSSetConstantBuffers(0, std::size(vs_cbuffers), vs_cbuffers);
 
         ID3D11Buffer* ps_cbuffers[] = {
-            render_mode_cbuffer_.get_buffer(),
-            lights_buffer_.get_buffer(),
+            render_mode_cbuffer_,
+            lights_buffer_,
         };
         device_context_->PSSetConstantBuffers(0, std::size(ps_cbuffers), ps_cbuffers);
     }
@@ -146,11 +146,11 @@ namespace df::gr::d3d11
         ModelTransformBufferData data;
         data.world_mat = build_world_matrix(current_model_pos_, current_model_orient_);
 
-        D3D11_MAPPED_SUBRESOURCE mapped_cbuffer;
+        D3D11_MAPPED_SUBRESOURCE mapped_subres;
         DF_GR_D3D11_CHECK_HR(
-            device_context->Map(buffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_cbuffer)
+            device_context->Map(buffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_subres)
         );
-        std::memcpy(mapped_cbuffer.pData, &data, sizeof(data));
+        std::memcpy(mapped_subres.pData, &data, sizeof(data));
         device_context->Unmap(buffer_, 0);
     }
 

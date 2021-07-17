@@ -220,13 +220,13 @@ namespace df::gr::d3d11
         GpuMatrix4x3 matrices[50];
     };
 
-    class CharacterConstantBuffer
+    class BoneTransformsBuffer
     {
     public:
-        CharacterConstantBuffer(ID3D11Device* device);
+        BoneTransformsBuffer(ID3D11Device* device);
         void update(const CharacterInstance* ci, ID3D11DeviceContext* device_context);
 
-        ID3D11Buffer* get_buffer()
+        operator ID3D11Buffer*() const
         {
             return buffer_;
         }
@@ -235,7 +235,7 @@ namespace df::gr::d3d11
         ComPtr<ID3D11Buffer> buffer_;
     };
 
-    CharacterConstantBuffer::CharacterConstantBuffer(ID3D11Device* device)
+    BoneTransformsBuffer::BoneTransformsBuffer(ID3D11Device* device)
     {
         CD3D11_BUFFER_DESC buffer_desc{
             sizeof(BoneTransformsBufferData),
@@ -257,7 +257,7 @@ namespace df::gr::d3d11
         }};
     }
 
-    void CharacterConstantBuffer::update(const CharacterInstance* ci, ID3D11DeviceContext* device_context)
+    void BoneTransformsBuffer::update(const CharacterInstance* ci, ID3D11DeviceContext* device_context)
     {
         BoneTransformsBufferData data;
         // Note: if some matrices that are unused by skeleton are referenced by vertices and not get initialized
@@ -289,11 +289,11 @@ namespace df::gr::d3d11
         ComPtr<ID3D11Buffer> vertex_buffer_1_;
         ComPtr<ID3D11Buffer> morphed_vertex_buffer_0_;
         ComPtr<ID3D11Buffer> index_buffer_;
-        CharacterConstantBuffer character_cbuffer_;
+        BoneTransformsBuffer bone_transforms_buffer_;
     };
 
     CharacterMeshRenderCache::CharacterMeshRenderCache(VifLodMesh* lod_mesh, ID3D11Device* device) :
-        BaseMeshRenderCache(lod_mesh), character_cbuffer_{device}
+        BaseMeshRenderCache(lod_mesh), bone_transforms_buffer_{device}
     {
         std::size_t num_verts = 0;
         std::size_t num_inds = 0;
@@ -467,9 +467,9 @@ namespace df::gr::d3d11
             }
         }
 
-        character_cbuffer_.update(ci, render_context.device_context());
+        bone_transforms_buffer_.update(ci, render_context.device_context());
         render_context.set_model_transform(pos, orient);
-        render_context.bind_vs_cbuffer(3, character_cbuffer_.get_buffer());
+        render_context.bind_vs_cbuffer(3, bone_transforms_buffer_);
 
         ID3D11Buffer* vertex_buffer_0 = morphed ? morphed_vertex_buffer_0_ : vertex_buffer_0_;
         render_context.set_vertex_buffer(vertex_buffer_0, sizeof(GpuCharacterVertex0), 0);

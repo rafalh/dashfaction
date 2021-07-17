@@ -367,12 +367,12 @@ namespace df::gr::d3d11
         dyn_geo_renderer_->add_poly(nv, vertices, vertex_attributes, tex_handles, mode);
     }
 
-    void Renderer::line(const rf::gr::Vertex& v0, const rf::gr::Vertex& v1, rf::gr::Mode mode)
+    void Renderer::line_3d(const rf::gr::Vertex& v0, const rf::gr::Vertex& v1, rf::gr::Mode mode)
     {
         dyn_geo_renderer_->line_3d(v0, v1, mode);
     }
 
-    void Renderer::line(float x1, float y1, float x2, float y2, rf::gr::Mode mode)
+    void Renderer::line_2d(float x1, float y1, float x2, float y2, rf::gr::Mode mode)
     {
         dyn_geo_renderer_->line_2d(x1, y1, x2, y2, mode);
     }
@@ -467,10 +467,5 @@ namespace df::gr::d3d11
     {
         dyn_geo_renderer_->flush();
         render_context_->fog_set();
-    }
-
-    void Renderer::flush()
-    {
-        dyn_geo_renderer_->flush();
     }
 }

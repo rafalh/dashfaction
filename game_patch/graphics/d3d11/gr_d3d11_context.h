@@ -28,7 +28,7 @@ namespace df::gr::d3d11
             }
         }
 
-        ID3D11Buffer* get_buffer() const
+        operator ID3D11Buffer*() const
         {
             return buffer_;
         }
@@ -48,7 +48,7 @@ namespace df::gr::d3d11
 
         void update(ID3D11DeviceContext* device_context);
 
-        ID3D11Buffer* get_buffer() const
+        operator ID3D11Buffer*() const
         {
             return buffer_;
         }
@@ -70,7 +70,7 @@ namespace df::gr::d3d11
             }
         }
 
-        ID3D11Buffer* get_buffer() const
+        operator ID3D11Buffer*() const
         {
             return buffer_;
         }
@@ -87,7 +87,8 @@ namespace df::gr::d3d11
     public:
         LightsBuffer(ID3D11Device* device);
         void update(ID3D11DeviceContext* device_context);
-        ID3D11Buffer* get_buffer() const
+
+        operator ID3D11Buffer*() const
         {
             return buffer_;
         }
@@ -110,7 +111,7 @@ namespace df::gr::d3d11
             }
         }
 
-        ID3D11Buffer* get_buffer() const
+        operator ID3D11Buffer*() const
         {
             return buffer_;
         }
@@ -271,7 +272,6 @@ namespace df::gr::d3d11
 
     private:
         void bind_cbuffers();
-        void bind_shader_program();
         void bind_rasterizer_state();
         void bind_texture(int slot);
         void update_texture_transform();
