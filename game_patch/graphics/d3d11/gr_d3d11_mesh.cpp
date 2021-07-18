@@ -18,86 +18,6 @@ using namespace rf;
 
 namespace df::gr::d3d11
 {
-    const int* BaseMeshRenderCache::get_tex_handles(const MeshRenderParams& params, int lod_index)
-    {
-        if (params.alt_tex) {
-            return params.alt_tex;
-        }
-        return lod_mesh_->meshes[lod_index]->tex_handles;
-    }
-
-    void BaseMeshRenderCache::draw(const MeshRenderParams& params, int lod_index, RenderContext& render_context)
-    {
-        const int* tex_handles = get_tex_handles(params, lod_index);
-        render_context.set_uv_offset(rf::vec2_zero_vector);
-        render_context.set_primitive_topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-        std::optional<gr::Mode> forced_mode;
-        if (params.flags & 1) {
-            // used by rail gun scanner for heat overlays
-            forced_mode.emplace(
-                TEXTURE_SOURCE_NONE,
-                COLOR_SOURCE_VERTEX,
-                ALPHA_SOURCE_VERTEX,
-                ALPHA_BLEND_ALPHA,
-                ZBUFFER_TYPE_FULL,
-                FOG_ALLOWED
-            );
-            static int null_tex_handles[7] = {-1, -1, -1, -1, -1, -1, -1};
-            tex_handles = null_tex_handles;
-        }
-        else if (params.flags & 8) {
-            // used by rocket launcher scanner together with flag 1 so this code block seems unused
-            assert(false);
-        }
-        rf::ubyte alpha = static_cast<ubyte>(params.alpha);
-        rf::Color color{255, 255, 255, 255};
-        if ((params.flags & 2) && (params.flags & 9)) {
-            color.set(params.self_illum.red, params.self_illum.green, params.self_illum.blue, alpha);
-        }
-
-        for (auto& b : meshes_[lod_index].batches) {
-            // ccrunch tool chunkifies mesh and inits render mode flags
-            // 0x110C21 is used for materials with additive blending (except admin_poshlight01.v3d):
-            // - TEXTURE_SOURCE_WRAP
-            // - COLOR_SOURCE_TEXTURE
-            // - ALPHA_SOURCE_VERTEX_TIMES_TEXTURE
-            // - ALPHA_BLEND_ALPHA_ADDITIVE
-            // - ZBUFFER_TYPE_READ
-            // - FOG_ALLOWED
-            // 0x518C41 is used for other materials:
-            // - TEXTURE_SOURCE_WRAP
-            // - COLOR_SOURCE_VERTEX_TIMES_TEXTURE
-            // - ALPHA_SOURCE_VERTEX_TIMES_TEXTURE
-            // - ALPHA_BLEND_ALPHA
-            // - ZBUFFER_TYPE_FULL_ALPHA_TEST
-            // - FOG_ALLOWED
-            // This information may be useful for simplifying shaders
-            render_context.set_cull_mode(b.double_sided ? D3D11_CULL_NONE : D3D11_CULL_BACK);
-            int texture = tex_handles[b.texture_index];
-            render_context.set_mode(forced_mode.value_or(b.mode), color);
-            render_context.set_textures(texture, -1);
-            render_context.device_context()->DrawIndexed(b.num_indices, b.start_index, b.base_vertex);
-            if (params.powerup_bitmaps[0] != -1) {
-                gr::Mode powerup_mode{
-                    gr::TEXTURE_SOURCE_CLAMP,
-                    gr::COLOR_SOURCE_TEXTURE,
-                    gr::ALPHA_SOURCE_TEXTURE,
-                    gr::ALPHA_BLEND_ALPHA_ADDITIVE,
-                    gr::ZBUFFER_TYPE_READ,
-                    gr::FOG_NOT_ALLOWED,
-                };
-                render_context.set_mode(powerup_mode, color);
-                render_context.set_textures(params.powerup_bitmaps[0], -1);
-                render_context.device_context()->DrawIndexed(b.num_indices, b.start_index, b.base_vertex);
-                if (params.powerup_bitmaps[1] != -1) {
-                    render_context.set_textures(params.powerup_bitmaps[1], -1);
-                    render_context.device_context()->DrawIndexed(b.num_indices, b.start_index, b.base_vertex);
-                }
-            }
-        }
-    }
-
     static bool is_vif_chunk_double_sided(const VifChunk& chunk)
     {
         for (int face_index = 0; face_index < chunk.num_faces; ++face_index) {
@@ -115,7 +35,12 @@ namespace df::gr::d3d11
     {
     public:
         MeshRenderCache(VifLodMesh* lod_mesh, ID3D11Device* device);
-        void render(const Vector3& pos, const Matrix3& orient, const rf::MeshRenderParams& params, int lod_index, RenderContext& render_context);
+
+        void bind_buffers(RenderContext& render_context)
+        {
+            render_context.set_vertex_buffer(vertex_buffer_, sizeof(GpuVertex));
+            render_context.set_index_buffer(index_buffer_);
+        }
 
     private:
         ComPtr<ID3D11Buffer> vertex_buffer_;
@@ -208,15 +133,6 @@ namespace df::gr::d3d11
         );
     }
 
-    void MeshRenderCache::render(const Vector3& pos, const Matrix3& orient, const MeshRenderParams& params, int lod_index, RenderContext& render_context)
-    {
-        //xlog::warn("render mesh flags %x", params.flags);
-        render_context.set_model_transform(pos, orient);
-        render_context.set_vertex_buffer(vertex_buffer_, sizeof(GpuVertex));
-        render_context.set_index_buffer(index_buffer_);
-        draw(params, lod_index, render_context);
-    }
-
     struct alignas(16) BoneTransformsBufferData
     {
         GpuMatrix4x3 matrices[50];
@@ -283,7 +199,22 @@ namespace df::gr::d3d11
     {
     public:
         CharacterMeshRenderCache(VifLodMesh* lod_mesh, ID3D11Device* device);
-        void render(const Vector3& pos, const Matrix3& orient, const CharacterInstance* ci, const MeshRenderParams& params, int lod_index, RenderContext& render_context);
+
+        void bind_buffers(RenderContext& render_context, bool morphed)
+        {
+            render_context.bind_vs_cbuffer(3, bone_transforms_buffer_);
+
+            ID3D11Buffer* vertex_buffer_0 = morphed ? morphed_vertex_buffer_0_ : vertex_buffer_0_;
+            render_context.set_vertex_buffer(vertex_buffer_0, sizeof(GpuCharacterVertex0), 0);
+            render_context.set_vertex_buffer(vertex_buffer_1_, sizeof(GpuCharacterVertex1), 1);
+            render_context.set_index_buffer(index_buffer_);
+        }
+
+        void update_bone_transforms_buffer(const CharacterInstance* ci, RenderContext& render_context)
+        {
+            bone_transforms_buffer_.update(ci, render_context.device_context());
+        }
+
         void update_morphed_vertices_buffer(rf::Skeleton* skeleton, int time, RenderContext& render_context);
 
     private:
@@ -453,34 +384,6 @@ namespace df::gr::d3d11
         render_context.device_context()->Unmap(morphed_vertex_buffer_0_, 0);
     }
 
-    void CharacterMeshRenderCache::render(const Vector3& pos, const Matrix3& orient, const CharacterInstance* ci, const MeshRenderParams& params, int lod_index, RenderContext& render_context)
-    {
-        bool morphed = false;
-        // Note: morphing data exists only for the most detailed LOD
-        if (lod_index == 0) {
-            for (int i = 0; i < ci->num_active_anims; ++i) {
-                const rf::CiAnimInfo& anim_info = ci->active_anims[i];
-                rf::Skeleton* skeleton = ci->base_character->animations[anim_info.anim_index];
-                if (skeleton->has_morph_vertices()) {
-                    morphed = true;
-                    update_morphed_vertices_buffer(skeleton, anim_info.cur_time, render_context);
-                    break;
-                }
-            }
-        }
-
-        bone_transforms_buffer_.update(ci, render_context.device_context());
-        render_context.set_model_transform(pos, orient);
-        render_context.bind_vs_cbuffer(3, bone_transforms_buffer_);
-
-        ID3D11Buffer* vertex_buffer_0 = morphed ? morphed_vertex_buffer_0_ : vertex_buffer_0_;
-        render_context.set_vertex_buffer(vertex_buffer_0, sizeof(GpuCharacterVertex0), 0);
-        render_context.set_vertex_buffer(vertex_buffer_1_, sizeof(GpuCharacterVertex1), 1);
-        render_context.set_index_buffer(index_buffer_);
-        draw(params, lod_index, render_context);
-        render_context.bind_vs_cbuffer(3, nullptr);
-    }
-
     MeshRenderer::MeshRenderer(ComPtr<ID3D11Device> device, ShaderManager& shader_manager,
         [[maybe_unused]] StateManager& state_manager, RenderContext& render_context) :
         device_{std::move(device)}, render_context_{render_context}
@@ -507,7 +410,7 @@ namespace df::gr::d3d11
         return 0;
     }
 
-    void MeshRenderer::render_v3d_vif([[maybe_unused]] rf::VifLodMesh *lod_mesh, rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::MeshRenderParams& params)
+    void MeshRenderer::render_v3d_vif(rf::VifLodMesh *lod_mesh, rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::MeshRenderParams& params)
     {
         if (!lod_mesh->render_cache) {
             auto p = render_caches_.insert_or_assign(lod_mesh, std::make_unique<MeshRenderCache>(lod_mesh, device_));
@@ -516,29 +419,136 @@ namespace df::gr::d3d11
 
         render_context_.set_vertex_shader(standard_vertex_shader_);
         render_context_.set_pixel_shader(pixel_shader_);
+        render_context_.set_model_transform(pos, orient);
 
         int lod_index = get_vif_mesh_lod_index(lod_mesh, mesh);
         auto render_cache = reinterpret_cast<MeshRenderCache*>(lod_mesh->render_cache);
-        render_cache->render(pos, orient, params, lod_index, render_context_);
+        render_cache->bind_buffers(render_context_);
+        draw_cached_mesh(lod_mesh, *render_cache, params, lod_index);
     }
 
-    void MeshRenderer::render_character_vif([[maybe_unused]] rf::VifLodMesh *lod_mesh, rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::CharacterInstance *ci, const rf::MeshRenderParams& params)
+    void MeshRenderer::render_character_vif(rf::VifLodMesh *lod_mesh, rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::CharacterInstance *ci, const rf::MeshRenderParams& params)
     {
         if (!lod_mesh->render_cache) {
             auto p = render_caches_.insert_or_assign(lod_mesh, std::make_unique<CharacterMeshRenderCache>(lod_mesh, device_));
             lod_mesh->render_cache = p.first->second.get();
         }
+        auto render_cache = reinterpret_cast<CharacterMeshRenderCache*>(lod_mesh->render_cache);
 
         render_context_.set_vertex_shader(character_vertex_shader_);
         render_context_.set_pixel_shader(pixel_shader_);
+        render_context_.set_model_transform(pos, orient);
 
         int lod_index = get_vif_mesh_lod_index(lod_mesh, mesh);
-        auto render_cache = reinterpret_cast<CharacterMeshRenderCache*>(lod_mesh->render_cache);
-        render_cache->render(pos, orient, ci, params, lod_index, render_context_);
+        bool morphed = false;
+        // Note: morphing data exists only for the most detailed LOD
+        if (lod_index == 0) {
+            for (int i = 0; i < ci->num_active_anims; ++i) {
+                const rf::CiAnimInfo& anim_info = ci->active_anims[i];
+                rf::Skeleton* skeleton = ci->base_character->animations[anim_info.anim_index];
+                if (skeleton->has_morph_vertices()) {
+                    morphed = true;
+                    render_cache->update_morphed_vertices_buffer(skeleton, anim_info.cur_time, render_context_);
+                    break;
+                }
+            }
+        }
+        render_cache->update_bone_transforms_buffer(ci, render_context_);
+        render_cache->bind_buffers(render_context_, morphed);
+        draw_cached_mesh(lod_mesh, *render_cache, params, lod_index);
+        //render_context_.bind_vs_cbuffer(3, nullptr);
     }
 
     void MeshRenderer::clear_vif_cache(rf::VifLodMesh *lod_mesh)
     {
         render_caches_.erase(lod_mesh);
+    }
+
+    static inline const int* get_tex_handles(rf::VifLodMesh* lod_mesh, const MeshRenderParams& params, int lod_index)
+    {
+        if (params.alt_tex) {
+            return params.alt_tex;
+        }
+        return lod_mesh->meshes[lod_index]->tex_handles;
+    }
+
+    void MeshRenderer::draw_cached_mesh(rf::VifLodMesh *lod_mesh, const BaseMeshRenderCache& cache, const MeshRenderParams& params, int lod_index)
+    {
+        const int* tex_handles = get_tex_handles(lod_mesh, params, lod_index);
+        render_context_.set_uv_offset(rf::vec2_zero_vector);
+        render_context_.set_primitive_topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+        std::optional<gr::Mode> forced_mode;
+        if (params.flags & 1) {
+            // used by rail gun scanner for heat overlays
+            forced_mode.emplace(
+                TEXTURE_SOURCE_NONE,
+                COLOR_SOURCE_VERTEX,
+                ALPHA_SOURCE_VERTEX,
+                ALPHA_BLEND_ALPHA,
+                ZBUFFER_TYPE_FULL,
+                FOG_ALLOWED
+            );
+            static int null_tex_handles[7] = {-1, -1, -1, -1, -1, -1, -1};
+            tex_handles = null_tex_handles;
+        }
+        else if (params.flags & 8) {
+            // used by rocket launcher scanner together with flag 1 so this code block seems unused
+            assert(false);
+        }
+        rf::ubyte alpha = static_cast<ubyte>(params.alpha);
+        rf::Color color{255, 255, 255, 255};
+        if ((params.flags & 2) && (params.flags & 9)) {
+            color.set(params.self_illum.red, params.self_illum.green, params.self_illum.blue, alpha);
+        }
+
+        auto& batches = cache.get_batches(lod_index);
+
+        for (auto& b : batches) {
+            // ccrunch tool chunkifies mesh and inits render mode flags
+            // 0x110C21 is used for materials with additive blending (except admin_poshlight01.v3d):
+            // - TEXTURE_SOURCE_WRAP
+            // - COLOR_SOURCE_TEXTURE
+            // - ALPHA_SOURCE_VERTEX_TIMES_TEXTURE
+            // - ALPHA_BLEND_ALPHA_ADDITIVE
+            // - ZBUFFER_TYPE_READ
+            // - FOG_ALLOWED
+            // 0x518C41 is used for other materials:
+            // - TEXTURE_SOURCE_WRAP
+            // - COLOR_SOURCE_VERTEX_TIMES_TEXTURE
+            // - ALPHA_SOURCE_VERTEX_TIMES_TEXTURE
+            // - ALPHA_BLEND_ALPHA
+            // - ZBUFFER_TYPE_FULL_ALPHA_TEST
+            // - FOG_ALLOWED
+            // This information may be useful for simplifying shaders
+            render_context_.set_cull_mode(b.double_sided ? D3D11_CULL_NONE : D3D11_CULL_BACK);
+            int texture = tex_handles[b.texture_index];
+            render_context_.set_mode(forced_mode.value_or(b.mode), color);
+            render_context_.set_textures(texture, -1);
+            render_context_.device_context()->DrawIndexed(b.num_indices, b.start_index, b.base_vertex);
+        }
+        if (params.powerup_bitmaps[0] != -1) {
+            gr::Mode powerup_mode{
+                gr::TEXTURE_SOURCE_CLAMP,
+                gr::COLOR_SOURCE_TEXTURE,
+                gr::ALPHA_SOURCE_TEXTURE,
+                gr::ALPHA_BLEND_ALPHA_ADDITIVE,
+                gr::ZBUFFER_TYPE_READ,
+                gr::FOG_NOT_ALLOWED,
+            };
+            render_context_.set_mode(powerup_mode, color);
+            render_context_.set_textures(params.powerup_bitmaps[0], -1);
+            for (auto& b : batches) {
+                render_context_.set_cull_mode(b.double_sided ? D3D11_CULL_NONE : D3D11_CULL_BACK);
+                render_context_.device_context()->DrawIndexed(b.num_indices, b.start_index, b.base_vertex);
+            }
+            if (params.powerup_bitmaps[1] != -1) {
+                render_context_.set_textures(params.powerup_bitmaps[1], -1);
+                for (auto& b : batches) {
+                    render_context_.set_cull_mode(b.double_sided ? D3D11_CULL_NONE : D3D11_CULL_BACK);
+                    render_context_.device_context()->DrawIndexed(b.num_indices, b.start_index, b.base_vertex);
+                }
+            }
+        }
     }
 }

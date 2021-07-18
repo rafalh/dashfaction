@@ -21,17 +21,6 @@ namespace df::gr::d3d11
     class BaseMeshRenderCache
     {
     public:
-        virtual ~BaseMeshRenderCache() {}
-        BaseMeshRenderCache(rf::VifLodMesh* lod_mesh) :
-            lod_mesh_(lod_mesh)
-        {}
-
-        rf::VifLodMesh* get_lod_mesh() const
-        {
-            return lod_mesh_;
-        }
-
-    protected:
         struct Batch
         {
             int start_index;
@@ -42,13 +31,21 @@ namespace df::gr::d3d11
             bool double_sided = false;
         };
 
+        virtual ~BaseMeshRenderCache() {}
+        BaseMeshRenderCache(rf::VifLodMesh* lod_mesh) :
+            lod_mesh_(lod_mesh)
+        {}
+
+        const std::vector<Batch>& get_batches(int lod_level) const
+        {
+            return meshes_[lod_level].batches;
+        }
+
+    protected:
         struct Mesh
         {
             std::vector<Batch> batches;
         };
-
-        void draw(const rf::MeshRenderParams& params, int lod_index, RenderContext& render_context);
-        const int* get_tex_handles(const rf::MeshRenderParams& params, int lod_index);
 
         rf::VifLodMesh* lod_mesh_;
         std::vector<Mesh> meshes_;
@@ -64,6 +61,8 @@ namespace df::gr::d3d11
         void clear_vif_cache(rf::VifLodMesh *lod_mesh);
 
     private:
+        void draw_cached_mesh(rf::VifLodMesh *lod_mesh, const BaseMeshRenderCache& render_cache, const rf::MeshRenderParams& params, int lod_index);
+
         ComPtr<ID3D11Device> device_;
         RenderContext& render_context_;
         std::unordered_map<rf::VifLodMesh*, std::unique_ptr<BaseMeshRenderCache>> render_caches_;
