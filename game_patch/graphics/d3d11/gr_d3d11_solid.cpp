@@ -468,63 +468,86 @@ namespace df::gr::d3d11
         gr::FOG_ALLOWED,
     };
 
-    void SolidRenderer::render_dynamic_decal(GDecal* decal, GRoom* room)
+    static void render_face_dynamic_decals(GFace* face)
     {
-        constexpr int MAX_DECAL_POLY_VERTICES = 25;
-        Vector3 verts[MAX_DECAL_POLY_VERTICES];
-        Vector2 uvs[MAX_DECAL_POLY_VERTICES];
-        Color color{255, 255, 255, decal->alpha};
+        constexpr int max_decal_poly_vertices = 25;
+        Vector3 verts[max_decal_poly_vertices];
+        Vector2 uvs[max_decal_poly_vertices];
 
-        auto dp = decal->poly_list;
+        auto dp = face->decal_list;
         while (dp) {
-            bool dp_room_matches = !room || dp->face->which_room == room || dp->face->which_room->room_to_render_with == room;
-            if (dp_room_matches && should_render_face(dp->face) && dp->face->plane.distance_to_point(gr::view_pos) > 0.0) {
+            GDecal* decal = dp->my_decal;
+            if (!(decal->flags & DF_LEVEL_DECAL)) {
                 int nv = dp->nv;
                 for (int i = 0; i < nv; ++i) {
                     verts[i] = dp->verts[i].pos;
                     uvs[i] = dp->verts[i].uv;
                 }
+                Color color{255, 255, 255, decal->alpha};
+                // TODO: lightmap_uv
                 gr::world_poly(decal->bitmap_id, dp->nv, verts, uvs, dynamic_decal_mode, color);
             }
-
-            dp = dp->next;
-            if (dp == decal->poly_list) {
-                break;
-            }
+            dp = dp->next_for_face;
         }
     }
 
     void SolidRenderer::render_dynamic_decals(rf::GRoom** rooms, int num_rooms)
     {
-        render_context_.set_zbias(1000);
+        before_render_decals();
 
         for (int i = 0; i < num_rooms; ++i) {
-            auto room = rooms[i];
-            if (gr::cull_bounding_box(room->bbox_min, room->bbox_max)) {
-                continue;
+            GRoom* room = rooms[i];
+            for (GFace& face: room->face_list) {
+                if (should_render_face(&face) && !(face.attributes.flags & rf::FACE_SEE_THRU)) {
+                    render_face_dynamic_decals(&face);
+                }
             }
-            for (auto decal : room->decals) {
-                if (!(decal->flags & DF_LEVEL_DECAL) && !gr::cull_bounding_box(decal->bb_min, decal->bb_max)) {
-                    render_dynamic_decal(decal, room);
+            for (GRoom* detail_room : room->detail_rooms) {
+                if (detail_room->room_to_render_with == room) {
+                    for (GFace& face: detail_room->face_list) {
+                        if (should_render_face(&face) && !(face.attributes.flags & rf::FACE_SEE_THRU)) {
+                            render_face_dynamic_decals(&face);
+                        }
+                    }
                 }
             }
         }
-        dyn_geo_renderer_.flush();
-        render_context_.set_zbias(0);
+        after_render_decals();
+    }
+
+    void SolidRenderer::render_alpha_detail_dynamic_decals(rf::GRoom* detail_room)
+    {
+        before_render_decals();
+        for (GFace& face: detail_room->face_list) {
+            if (should_render_face(&face) && (face.attributes.flags & rf::FACE_SEE_THRU) != 0) {
+                render_face_dynamic_decals(&face); // problem!
+            }
+        }
+        after_render_decals();
     }
 
     void SolidRenderer::render_movable_solid_dynamic_decals(rf::GSolid* solid, const rf::Vector3& pos, const rf::Matrix3& orient)
     {
-        render_context_.set_zbias(100);
         gr::start_instance(pos, orient);
-        for (auto decal : solid->decals) {
-            if (decal->flags & DF_LEVEL_DECAL) {
-                continue;
+        before_render_decals();
+        for (GFace& face: solid->face_list) {
+            if (should_render_face(&face)) {
+                render_face_dynamic_decals(&face);
             }
-            render_dynamic_decal(decal, nullptr);
         }
-        dyn_geo_renderer_.flush();
+        after_render_decals();
         gr::stop_instance();
+    }
+
+    void SolidRenderer::before_render_decals()
+    {
+        constexpr int decal_zbias = 1000;
+        render_context_.set_zbias(decal_zbias);
+    }
+
+    void SolidRenderer::after_render_decals()
+    {
+        dyn_geo_renderer_.flush();
         render_context_.set_zbias(0);
     }
 
@@ -553,7 +576,6 @@ namespace df::gr::d3d11
             cache = detail_render_cache_.back().get();
             room->geo_cache = reinterpret_cast<GCache*>(cache);
         }
-
         FaceRenderType render_type = alpha ? FaceRenderType::alpha : FaceRenderType::opaque;
         cache->render(render_type, render_context_);
     }
@@ -613,6 +635,9 @@ namespace df::gr::d3d11
         }
         before_render(rf::zero_vector, rf::identity_matrix);
         render_detail(solid, room, true);
+        if (decals_enabled) {
+            render_alpha_detail_dynamic_decals(room);
+        }
     }
 
     void SolidRenderer::render_room_liquid_surface(GSolid* solid, GRoom* room)
@@ -638,9 +663,9 @@ namespace df::gr::d3d11
 
             render_room_faces(solid, room, FaceRenderType::opaque);
 
-            for (GRoom* subroom : room->detail_rooms) {
-                if (subroom->room_to_render_with == room && !gr::cull_bounding_box(subroom->bbox_min, subroom->bbox_max)) {
-                    render_detail(solid, subroom, false);
+            for (GRoom* detail_room : room->detail_rooms) {
+                if (detail_room->room_to_render_with == room && !gr::cull_bounding_box(detail_room->bbox_min, detail_room->bbox_max)) {
+                    render_detail(solid, detail_room, false);
                 }
             }
         }

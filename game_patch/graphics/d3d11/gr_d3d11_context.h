@@ -325,8 +325,10 @@ namespace df::gr::d3d11
 
         void set_zbias(int zbias)
         {
-            zbias_ = zbias;
-            zbias_changed_ = true;
+            if (zbias_ != zbias) {
+                zbias_ = zbias;
+                zbias_changed_ = true;
+            }
         }
 
         void update_lights()
