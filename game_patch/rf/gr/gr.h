@@ -251,7 +251,7 @@ namespace rf::gr
         float tint_g;
         float tint_b;
         bool sync_to_retrace;
-        float zbias;
+        int zbias;
         Depthbuffer depthbuffer_type;
     };
     static_assert(sizeof(Screen) == 0x90);
