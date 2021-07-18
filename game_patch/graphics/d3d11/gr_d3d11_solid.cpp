@@ -155,6 +155,22 @@ namespace df::gr::d3d11
         friend class GRenderCache;
     };
 
+    Vector3 calculate_face_vertex_normal(GFaceVertex* fvert, GFace* face)
+    {
+        Vector3 normal = face->plane.normal;
+        bool normalize = false;
+        for (GFace* adj_face : fvert->vertex->adjacent_faces) {
+            if (adj_face != face && (adj_face->attributes.group_id & face->attributes.group_id) != 0) {
+                normal += adj_face->plane.normal;
+                normalize = true;
+            }
+        }
+        if (normalize) {
+            normal.normalize();
+        }
+        return normal;
+    }
+
     GRenderCache::GRenderCache(const GRenderCacheBuilder& builder, ID3D11Device* device)
     {
         if (builder.num_verts_ == 0 || builder.num_inds_ == 0) {
@@ -187,11 +203,8 @@ namespace df::gr::d3d11
                     gpu_vert.x = fvert->vertex->pos.x;
                     gpu_vert.y = fvert->vertex->pos.y;
                     gpu_vert.z = fvert->vertex->pos.z;
-                    gpu_vert.norm = {
-                        face->plane.normal.x,
-                        face->plane.normal.y,
-                        face->plane.normal.z,
-                    };
+                    Vector3 normal = calculate_face_vertex_normal(fvert, face);
+                    gpu_vert.norm = {normal.x, normal.y, normal.z};
                     gpu_vert.diffuse = 0xFFFFFFFF;
                     gpu_vert.u0 = fvert->texture_u;
                     gpu_vert.v0 = fvert->texture_v;
@@ -232,11 +245,8 @@ namespace df::gr::d3d11
                     gpu_vert.x = fvert->vertex->pos.x;
                     gpu_vert.y = fvert->vertex->pos.y;
                     gpu_vert.z = fvert->vertex->pos.z;
-                    gpu_vert.norm = {
-                        face->plane.normal.x,
-                        face->plane.normal.y,
-                        face->plane.normal.z,
-                    };
+                    Vector3 normal = calculate_face_vertex_normal(fvert, face);
+                    gpu_vert.norm = {normal.x, normal.y, normal.z};
                     gpu_vert.diffuse = 0xFFFFFFFF;
                     gpu_vert.u0 = dp->uvs[fvert_index].x;
                     gpu_vert.v0 = dp->uvs[fvert_index].y;
