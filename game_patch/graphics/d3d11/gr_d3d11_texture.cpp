@@ -139,7 +139,7 @@ namespace df::gr::d3d11
 
         // D3D11 expects number of mip levels to depend on the shorter dimension and RF uses longer dimension so
         // in case of non-squere textures there is a conflict
-        int max_mip_levels = 1 + std::floor(std::log2(std::min(w, h)));
+        int max_mip_levels = 1 + static_cast<int>(std::floor(std::log2(std::min(w, h))));
         if (mip_levels > max_mip_levels) {
             xlog::trace("Bad number of mip levels for %dx%d texture: expected %d but got %d", w, h, max_mip_levels, mip_levels);
             mip_levels = max_mip_levels;
@@ -427,7 +427,7 @@ namespace df::gr::d3d11
             1, // height
         };
         float data[] = {r, g, b, a};
-        D3D11_SUBRESOURCE_DATA subres_data{&data, 0, 0};
+        D3D11_SUBRESOURCE_DATA subres_data{&data, sizeof(data), 0};
         ComPtr<ID3D11Texture2D> gpu_texture;
         DF_GR_D3D11_CHECK_HR(
             device_->CreateTexture2D(&desc, &subres_data, &gpu_texture)
