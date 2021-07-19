@@ -72,7 +72,9 @@ namespace df::gr::d3d11
 
     static inline bool should_render_face(GFace* face)
     {
-        return face->attributes.portal_id == 0 && !(face->attributes.flags & (FACE_INVISIBLE|FACE_SHOW_SKY));
+        return !face->attributes.is_portal() &&
+            !face->attributes.is_invisible() &&
+            !face->attributes.is_show_sky();
     }
 
     static inline gr::Mode determine_decal_mode(GDecal* decal)
@@ -342,10 +344,10 @@ namespace df::gr::d3d11
 
     FaceRenderType determine_face_render_type(GFace* face)
     {
-        if (face->attributes.flags & FACE_LIQUID) {
+        if (face->attributes.is_liquid()) {
             return FaceRenderType::liquid;
         }
-        if (face->attributes.flags & FACE_SEE_THRU) {
+        if (face->attributes.is_see_thru()) {
             return FaceRenderType::alpha;
         }
         return FaceRenderType::opaque;
@@ -498,14 +500,14 @@ namespace df::gr::d3d11
         for (int i = 0; i < num_rooms; ++i) {
             GRoom* room = rooms[i];
             for (GFace& face: room->face_list) {
-                if (should_render_face(&face) && !(face.attributes.flags & rf::FACE_SEE_THRU)) {
+                if (should_render_face(&face) && !face.attributes.is_see_thru()) {
                     render_face_dynamic_decals(&face);
                 }
             }
             for (GRoom* detail_room : room->detail_rooms) {
                 if (detail_room->room_to_render_with == room) {
                     for (GFace& face: detail_room->face_list) {
-                        if (should_render_face(&face) && !(face.attributes.flags & rf::FACE_SEE_THRU)) {
+                        if (should_render_face(&face) && !face.attributes.is_see_thru()) {
                             render_face_dynamic_decals(&face);
                         }
                     }
@@ -519,8 +521,8 @@ namespace df::gr::d3d11
     {
         before_render_decals();
         for (GFace& face: detail_room->face_list) {
-            if (should_render_face(&face) && (face.attributes.flags & rf::FACE_SEE_THRU) != 0) {
-                render_face_dynamic_decals(&face); // problem!
+            if (should_render_face(&face) && face.attributes.is_see_thru()) {
+                render_face_dynamic_decals(&face);
             }
         }
         after_render_decals();

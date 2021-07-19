@@ -191,6 +191,31 @@ namespace rf
         short surface_index;
         int face_id;
         int smoothing_groups; // bitfield of smoothing groups
+
+        bool is_show_sky() const
+        {
+            return (flags & FACE_SHOW_SKY) != 0;
+        }
+
+        bool is_liquid() const
+        {
+            return (flags & FACE_LIQUID) != 0;
+        }
+
+        bool is_see_thru() const
+        {
+            return (flags & FACE_SEE_THRU) != 0;
+        }
+
+        bool is_invisible() const
+        {
+            return (flags & FACE_INVISIBLE) != 0;
+        }
+
+        bool is_portal() const
+        {
+            return portal_id > 0;
+        }
     };
     static_assert(sizeof(GFaceAttributes) == 0x18);
 
