@@ -220,7 +220,7 @@ namespace df::gr::d3d11
         rf::gr::light_get_ambient(&data.ambient_light[0], &data.ambient_light[1], &data.ambient_light[2]);
 
         int num_point_lights = std::min(rf::gr::num_relevant_lights, LightsBufferData::max_point_lights);
-        data.num_point_lights = num_point_lights;
+        data.num_point_lights = static_cast<float>(num_point_lights);
 
         for (int i = 0; i < num_point_lights; ++i) {
             rf::gr::Light* light = rf::gr::relevant_lights[i];
