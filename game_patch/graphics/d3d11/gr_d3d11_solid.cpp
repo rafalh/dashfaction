@@ -121,10 +121,125 @@ namespace df::gr::d3d11
         }
     }
 
+    class SolidGeometryBuffers
+    {
+    public:
+        SolidGeometryBuffers(const std::vector<GpuVertex>& vb_data, const std::vector<ushort>& ib_data, ID3D11Device* device);
+
+        void bind_buffers(RenderContext& render_context)
+        {
+            render_context.set_vertex_buffer(vertex_buffer_, sizeof(GpuVertex));
+            render_context.set_index_buffer(index_buffer_);
+        }
+
+    private:
+        ComPtr<ID3D11Buffer> vertex_buffer_;
+        ComPtr<ID3D11Buffer> index_buffer_;
+    };
+
+    SolidGeometryBuffers::SolidGeometryBuffers(const std::vector<GpuVertex>& vb_data, const std::vector<ushort>& ib_data, ID3D11Device* device)
+    {
+        if (vb_data.empty() || ib_data.empty()) {
+            return;
+        }
+
+        CD3D11_BUFFER_DESC vb_desc{
+            sizeof(vb_data[0]) * vb_data.size(),
+            D3D11_BIND_VERTEX_BUFFER,
+            D3D11_USAGE_IMMUTABLE,
+        };
+        D3D11_SUBRESOURCE_DATA vb_subres_data{vb_data.data(), 0, 0};
+        DF_GR_D3D11_CHECK_HR(
+            device->CreateBuffer(&vb_desc, &vb_subres_data, &vertex_buffer_)
+        );
+
+        CD3D11_BUFFER_DESC ib_desc{
+            sizeof(ib_data[0]) * ib_data.size(),
+            D3D11_BIND_INDEX_BUFFER,
+            D3D11_USAGE_IMMUTABLE,
+        };
+        D3D11_SUBRESOURCE_DATA ib_subres_data{ib_data.data(), 0, 0};
+        DF_GR_D3D11_CHECK_HR(
+            device->CreateBuffer(&ib_desc, &ib_subres_data, &index_buffer_)
+        );
+    }
+
+    struct SolidBatch
+    {
+        int start_index;
+        int num_indices;
+        int texture_1;
+        int texture_2;
+        float u_pan_speed;
+        float v_pan_speed;
+        rf::gr::Mode mode;
+    };
+
+    class SolidBatches
+    {
+    public:
+        std::vector<SolidBatch>& get_batches(FaceRenderType render_type)
+        {
+            if (render_type == FaceRenderType::alpha) {
+                return alpha_batches_;
+            }
+            else if (render_type == FaceRenderType::liquid) {
+                return liquid_batches_;
+            }
+            else {
+                return opaque_batches_;
+            }
+        }
+
+    private:
+        std::vector<SolidBatch> opaque_batches_;
+        std::vector<SolidBatch> alpha_batches_;
+        std::vector<SolidBatch> liquid_batches_;
+    };
+
+    class GRenderCache
+    {
+    public:
+        GRenderCache(SolidBatches batches, SolidGeometryBuffers geometry_buffers) :
+            batches_{batches}, geometry_buffers_{geometry_buffers}
+        {}
+
+        void render(FaceRenderType what, RenderContext& context);
+
+    private:
+        SolidBatches batches_;
+        SolidGeometryBuffers geometry_buffers_;
+    };
+
+    void GRenderCache::render(FaceRenderType what, RenderContext& render_context)
+    {
+        auto& batches = batches_.get_batches(what);
+
+        if (batches.empty()) {
+            return;
+        }
+
+        float delta_time = timer_get(1000) * 0.001f; // FIXME: paused game..
+
+        geometry_buffers_.bind_buffers(render_context);
+        render_context.set_cull_mode(D3D11_CULL_BACK);
+        render_context.set_primitive_topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        for (SolidBatch& b : batches) {
+            render_context.set_mode(b.mode);
+            render_context.set_textures(b.texture_1, b.texture_2);
+            Vector2 uv_pan{b.u_pan_speed * delta_time, b.v_pan_speed * delta_time};
+            render_context.set_uv_offset(uv_pan);
+            //xlog::warn("DrawIndexed %d %d", b.num_indices, b.start_index);
+            render_context.device_context()->DrawIndexed(b.num_indices, b.start_index, 0);
+        }
+    }
+
     class GRenderCacheBuilder
     {
     private:
+        // render_type, texture_1, texture_2, u_pan_speed, v_pan_speed
         using FaceBatchKey = std::tuple<FaceRenderType, int, int, float, float>;
+        // render_type, texture_1, texture_2, mode
         using DecalPolyBatchKey = std::tuple<FaceRenderType, int, int, gr::Mode>;
 
         int num_verts_ = 0;
@@ -157,7 +272,7 @@ namespace df::gr::d3d11
         friend class GRenderCache;
     };
 
-    Vector3 calculate_face_vertex_normal(GFaceVertex* fvert, GFace* face)
+    static Vector3 calculate_face_vertex_normal(GFaceVertex* fvert, GFace* face)
     {
         Vector3 normal = face->plane.normal;
         bool normalize = false;
@@ -171,153 +286,6 @@ namespace df::gr::d3d11
             normal.normalize();
         }
         return normal;
-    }
-
-    GRenderCache::GRenderCache(const GRenderCacheBuilder& builder, ID3D11Device* device)
-    {
-        if (builder.num_verts_ == 0 || builder.num_inds_ == 0) {
-            return;
-        }
-
-        std::vector<GpuVertex> vb_data;
-        std::vector<ushort> ib_data;
-        vb_data.reserve(builder.num_verts_);
-        ib_data.reserve(builder.num_inds_);
-        opaque_batches_.reserve(builder.batched_faces_.size());
-
-        for (auto& e : builder.batched_faces_) {
-            auto& key = e.first;
-            auto& faces = e.second;
-            FaceRenderType render_type = std::get<0>(key);
-            Batch& batch = get_batches(render_type).emplace_back();
-            batch.start_index = ib_data.size();
-            batch.texture_1 = std::get<1>(key);
-            batch.texture_2 = std::get<2>(key);
-            batch.u_pan_speed = std::get<3>(key);
-            batch.v_pan_speed = std::get<4>(key);
-            batch.mode = determine_face_mode(render_type, batch.texture_2 != -1, builder.is_sky_);
-            for (GFace* face : faces) {
-                auto fvert = face->edge_loop;
-                auto face_start_index = static_cast<ushort>(vb_data.size());
-                int fvert_index = 0;
-                while (fvert) {
-                    auto& gpu_vert = vb_data.emplace_back();
-                    gpu_vert.x = fvert->vertex->pos.x;
-                    gpu_vert.y = fvert->vertex->pos.y;
-                    gpu_vert.z = fvert->vertex->pos.z;
-                    Vector3 normal = calculate_face_vertex_normal(fvert, face);
-                    gpu_vert.norm = {normal.x, normal.y, normal.z};
-                    gpu_vert.diffuse = 0xFFFFFFFF;
-                    gpu_vert.u0 = fvert->texture_u;
-                    gpu_vert.v0 = fvert->texture_v;
-                    gpu_vert.u1 = fvert->lightmap_u;
-                    gpu_vert.v1 = fvert->lightmap_v;
-
-                    if (fvert_index >= 2) {
-                        ib_data.emplace_back(face_start_index);
-                        ib_data.emplace_back(face_start_index + fvert_index - 1);
-                        ib_data.emplace_back(face_start_index + fvert_index);
-                    }
-                    ++fvert_index;
-
-                    fvert = fvert->next;
-                    if (fvert == face->edge_loop) {
-                        break;
-                    }
-                }
-            }
-            batch.num_indices = ib_data.size() - batch.start_index;
-        }
-        for (auto& e : builder.batched_decal_polys_) {
-            auto& key = e.first;
-            auto& dps = e.second;
-            FaceRenderType render_type = std::get<0>(key);
-            Batch& batch = get_batches(render_type).emplace_back();
-            batch.start_index = ib_data.size();
-            batch.texture_1 = std::get<1>(key);
-            batch.texture_2 = std::get<2>(key);
-            batch.mode = std::get<3>(key);
-            for (DecalPoly* dp : dps) {
-                auto face = dp->face;
-                auto fvert = face->edge_loop;
-                auto face_start_index = static_cast<ushort>(vb_data.size());
-                int fvert_index = 0;
-                while (fvert) {
-                    auto& gpu_vert = vb_data.emplace_back();
-                    gpu_vert.x = fvert->vertex->pos.x;
-                    gpu_vert.y = fvert->vertex->pos.y;
-                    gpu_vert.z = fvert->vertex->pos.z;
-                    Vector3 normal = calculate_face_vertex_normal(fvert, face);
-                    gpu_vert.norm = {normal.x, normal.y, normal.z};
-                    gpu_vert.diffuse = 0xFFFFFFFF;
-                    gpu_vert.u0 = dp->uvs[fvert_index].x;
-                    gpu_vert.v0 = dp->uvs[fvert_index].y;
-                    gpu_vert.u1 = fvert->lightmap_u;
-                    gpu_vert.v1 = fvert->lightmap_v;
-
-                    if (fvert_index >= 2) {
-                        ib_data.emplace_back(face_start_index);
-                        ib_data.emplace_back(face_start_index + fvert_index - 1);
-                        ib_data.emplace_back(face_start_index + fvert_index);
-                    }
-                    ++fvert_index;
-
-                    fvert = fvert->next;
-                    if (fvert == face->edge_loop) {
-                        break;
-                    }
-                }
-            }
-            batch.num_indices = ib_data.size() - batch.start_index;
-        }
-
-        assert(static_cast<int>(vb_data.size()) == builder.num_verts_);
-        CD3D11_BUFFER_DESC vb_desc{
-            sizeof(vb_data[0]) * vb_data.size(),
-            D3D11_BIND_VERTEX_BUFFER,
-            D3D11_USAGE_IMMUTABLE,
-        };
-        D3D11_SUBRESOURCE_DATA vb_subres_data{vb_data.data(), 0, 0};
-        DF_GR_D3D11_CHECK_HR(
-            device->CreateBuffer(&vb_desc, &vb_subres_data, &vb_)
-        );
-
-        assert(static_cast<int>(ib_data.size()) == builder.num_inds_);
-        CD3D11_BUFFER_DESC ib_desc{
-            sizeof(ib_data[0]) * ib_data.size(),
-            D3D11_BIND_INDEX_BUFFER,
-            D3D11_USAGE_IMMUTABLE,
-        };
-        D3D11_SUBRESOURCE_DATA ib_subres_data{ib_data.data(), 0, 0};
-        DF_GR_D3D11_CHECK_HR(
-            device->CreateBuffer(&ib_desc, &ib_subres_data, &ib_)
-        );
-
-        xlog::debug("created render cache geometry buffers %p %p", vb_.get(), ib_.get());
-    }
-
-    void GRenderCache::render(FaceRenderType what, RenderContext& render_context)
-    {
-        auto& batches = get_batches(what);
-
-        if (batches.empty()) {
-            return;
-        }
-
-        float delta_time = timer_get(1000) * 0.001f; // FIXME: paused game..
-
-        render_context.set_vertex_buffer(vb_, sizeof(GpuVertex));
-        render_context.set_index_buffer(ib_);
-        render_context.set_cull_mode(D3D11_CULL_BACK);
-        render_context.set_primitive_topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-        for (Batch& b : batches) {
-            render_context.set_mode(b.mode);
-            render_context.set_textures(b.texture_1, b.texture_2);
-            Vector2 uv_pan{b.u_pan_speed * delta_time, b.v_pan_speed * delta_time};
-            render_context.set_uv_offset(uv_pan);
-            //xlog::warn("DrawIndexed %d %d", b.num_indices, b.start_index);
-            render_context.device_context()->DrawIndexed(b.num_indices, b.start_index, 0);
-        }
     }
 
     void GRenderCacheBuilder::add_solid(GSolid* solid)
@@ -342,7 +310,7 @@ namespace df::gr::d3d11
         }
     }
 
-    FaceRenderType determine_face_render_type(GFace* face)
+    static inline FaceRenderType determine_face_render_type(GFace* face)
     {
         if (face->attributes.is_liquid()) {
             return FaceRenderType::liquid;
@@ -397,13 +365,124 @@ namespace df::gr::d3d11
 
     GRenderCache GRenderCacheBuilder::build(ID3D11Device* device)
     {
-        return GRenderCache(*this, device);
+        SolidBatches batches;
+        std::vector<GpuVertex> vb_data;
+        std::vector<ushort> ib_data;
+        vb_data.reserve(num_verts_);
+        ib_data.reserve(num_inds_);
+
+        for (auto& e : batched_faces_) {
+            const GRenderCacheBuilder::FaceBatchKey& key = e.first;
+            auto& faces = e.second;
+            auto [render_type, texture_1, texture_2, u_pan_speed, v_pan_speed] = key;
+            SolidBatch& batch = batches.get_batches(render_type).emplace_back();
+            batch.start_index = ib_data.size();
+            batch.texture_1 = texture_1;
+            batch.texture_2 = texture_2;
+            batch.u_pan_speed = u_pan_speed;
+            batch.v_pan_speed = v_pan_speed;
+            batch.mode = determine_face_mode(render_type, texture_2 != -1, is_sky_);
+            for (GFace* face : faces) {
+                auto fvert = face->edge_loop;
+                auto face_start_index = static_cast<ushort>(vb_data.size());
+                int fvert_index = 0;
+                while (fvert) {
+                    auto& gpu_vert = vb_data.emplace_back();
+                    gpu_vert.x = fvert->vertex->pos.x;
+                    gpu_vert.y = fvert->vertex->pos.y;
+                    gpu_vert.z = fvert->vertex->pos.z;
+                    Vector3 normal = calculate_face_vertex_normal(fvert, face);
+                    gpu_vert.norm = {normal.x, normal.y, normal.z};
+                    gpu_vert.diffuse = 0xFFFFFFFF;
+                    gpu_vert.u0 = fvert->texture_u;
+                    gpu_vert.v0 = fvert->texture_v;
+                    gpu_vert.u1 = fvert->lightmap_u;
+                    gpu_vert.v1 = fvert->lightmap_v;
+
+                    if (fvert_index >= 2) {
+                        ib_data.emplace_back(face_start_index);
+                        ib_data.emplace_back(face_start_index + fvert_index - 1);
+                        ib_data.emplace_back(face_start_index + fvert_index);
+                    }
+                    ++fvert_index;
+
+                    fvert = fvert->next;
+                    if (fvert == face->edge_loop) {
+                        break;
+                    }
+                }
+            }
+            batch.num_indices = ib_data.size() - batch.start_index;
+        }
+        for (auto& e : batched_decal_polys_) {
+            const GRenderCacheBuilder::DecalPolyBatchKey& key = e.first;
+            auto& dps = e.second;
+            auto [render_type, texture_1, texture_2, mode] = key;
+            SolidBatch& batch = batches.get_batches(render_type).emplace_back();
+            batch.start_index = ib_data.size();
+            batch.texture_1 = texture_1;
+            batch.texture_2 = texture_2;
+            batch.mode = mode;
+            for (DecalPoly* dp : dps) {
+                auto face = dp->face;
+                auto fvert = face->edge_loop;
+                auto face_start_index = static_cast<ushort>(vb_data.size());
+                int fvert_index = 0;
+                while (fvert) {
+                    auto& gpu_vert = vb_data.emplace_back();
+                    gpu_vert.x = fvert->vertex->pos.x;
+                    gpu_vert.y = fvert->vertex->pos.y;
+                    gpu_vert.z = fvert->vertex->pos.z;
+                    Vector3 normal = calculate_face_vertex_normal(fvert, face);
+                    gpu_vert.norm = {normal.x, normal.y, normal.z};
+                    gpu_vert.diffuse = 0xFFFFFFFF;
+                    gpu_vert.u0 = dp->uvs[fvert_index].x;
+                    gpu_vert.v0 = dp->uvs[fvert_index].y;
+                    gpu_vert.u1 = fvert->lightmap_u;
+                    gpu_vert.v1 = fvert->lightmap_v;
+
+                    if (fvert_index >= 2) {
+                        ib_data.emplace_back(face_start_index);
+                        ib_data.emplace_back(face_start_index + fvert_index - 1);
+                        ib_data.emplace_back(face_start_index + fvert_index);
+                    }
+                    ++fvert_index;
+
+                    fvert = fvert->next;
+                    if (fvert == face->edge_loop) {
+                        break;
+                    }
+                }
+            }
+            batch.num_indices = ib_data.size() - batch.start_index;
+        }
+
+        SolidGeometryBuffers geometry_buffers{vb_data, ib_data, device};
+        return GRenderCache{batches, geometry_buffers};
     }
 
-    inline GRoom* RoomRenderCache::room() const
+    class RoomRenderCache
     {
-        return room_;
-    }
+    public:
+        RoomRenderCache(rf::GSolid* solid, rf::GRoom* room, ID3D11Device* device);
+        ~RoomRenderCache() {}
+        void render(FaceRenderType render_type, ID3D11Device* device, RenderContext& context);
+
+        rf::GRoom* room() const
+        {
+            return room_;
+        }
+
+    private:
+        char padding_[0x20];
+        int state_ = 0; // modified by the game engine during geomod operation
+        rf::GRoom* room_;
+        rf::GSolid* solid_;
+        std::optional<GRenderCache> cache_;
+
+        void update(ID3D11Device* device);
+        bool invalid() const;
+    };
 
     inline bool RoomRenderCache::invalid() const
     {
@@ -460,6 +539,9 @@ namespace df::gr::d3d11
         vertex_shader_ = shader_manager.get_vertex_shader(VertexShaderId::standard);
         pixel_shader_ = shader_manager.get_pixel_shader(PixelShaderId::standard);
     }
+
+    SolidRenderer::~SolidRenderer()
+    {}
 
     static gr::Mode dynamic_decal_mode{
         gr::TEXTURE_SOURCE_CLAMP,

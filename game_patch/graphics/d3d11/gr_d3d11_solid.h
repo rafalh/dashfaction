@@ -20,69 +20,16 @@ namespace df::gr::d3d11
     class DynamicGeometryRenderer;
     class RenderContext;
     class GRenderCacheBuilder;
+    class RoomRenderCache;
+    class GRenderCache;
 
     enum class FaceRenderType { opaque, alpha, liquid };
-
-    class GRenderCache
-    {
-    public:
-        GRenderCache(const GRenderCacheBuilder& builder, ID3D11Device* device);
-        void render(FaceRenderType what, RenderContext& context);
-
-    private:
-        struct Batch
-        {
-            int start_index;
-            int num_indices;
-            int texture_1;
-            int texture_2;
-            float u_pan_speed;
-            float v_pan_speed;
-            rf::gr::Mode mode;
-        };
-
-        std::vector<Batch> opaque_batches_;
-        std::vector<Batch> alpha_batches_;
-        std::vector<Batch> liquid_batches_;
-        ComPtr<ID3D11Buffer> vb_;
-        ComPtr<ID3D11Buffer> ib_;
-
-        std::vector<Batch>& get_batches(FaceRenderType render_type)
-        {
-            if (render_type == FaceRenderType::alpha) {
-                return alpha_batches_;
-            }
-            else if (render_type == FaceRenderType::liquid) {
-                return liquid_batches_;
-            }
-            else {
-                return opaque_batches_;
-            }
-        }
-    };
-
-    class RoomRenderCache
-    {
-    public:
-        RoomRenderCache(rf::GSolid* solid, rf::GRoom* room, ID3D11Device* device);
-        void render(FaceRenderType render_type, ID3D11Device* device, RenderContext& context);
-        rf::GRoom* room() const;
-
-    private:
-        char padding_[0x20];
-        int state_ = 0; // modified by the game engine during geomod operation
-        rf::GRoom* room_;
-        rf::GSolid* solid_;
-        std::optional<GRenderCache> cache_;
-
-        void update(ID3D11Device* device);
-        bool invalid() const;
-    };
 
     class SolidRenderer
     {
     public:
         SolidRenderer(ComPtr<ID3D11Device> device, ShaderManager& shader_manager, StateManager& state_manager, DynamicGeometryRenderer& dyn_geo_renderer, RenderContext& render_context);
+        ~SolidRenderer();
         void render_solid(rf::GSolid* solid, rf::GRoom** rooms, int num_rooms);
         void render_movable_solid(rf::GSolid* solid, const rf::Vector3& pos, const rf::Matrix3& orient);
         void render_sky_room(rf::GRoom *room);
