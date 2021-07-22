@@ -3,7 +3,7 @@ struct VsInput
     float3 pos : POSITION;
     float3 norm : NORMAL;
     float4 color : COLOR;
-    float2 uv0 : TEXCOORD0;
+    float4 uv0 : TEXCOORD0;
     float2 uv1 : TEXCOORD1;
 };
 
@@ -18,9 +18,9 @@ cbuffer ViewProjTransformBuffer : register(b1)
     float4x4 proj_mat;
 };
 
-cbuffer UvOffsetBuffer : register(b2)
+cbuffer PerFrameBuffer : register(b2)
 {
-    float2 uv_offset;
+    float time;
 };
 
 struct VsOutput
@@ -40,7 +40,7 @@ VsOutput main(VsInput input)
     float3 view_pos = mul(float4(world_pos, 1), view_mat);
     output.pos = mul(float4(view_pos, 1), proj_mat);
     output.norm = input.norm;
-    output.uv0 = input.uv0 + uv_offset;
+    output.uv0 = input.uv0.xy + input.uv0.zw * time;
     output.uv1 = input.uv1;
     output.color = input.color;
     output.world_pos_and_depth = float4(world_pos, view_pos.z);

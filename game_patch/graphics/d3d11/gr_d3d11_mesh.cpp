@@ -91,9 +91,13 @@ namespace df::gr::d3d11
                         chunk.norms[vert_index].y,
                         chunk.norms[vert_index].z,
                     };
+                    gpu_vert.diffuse = 0xFFFFFFFF;
                     gpu_vert.u0 = chunk.uvs[vert_index].x;
                     gpu_vert.v0 = chunk.uvs[vert_index].y;
-                    gpu_vert.diffuse = 0xFFFFFFFF;
+                    gpu_vert.u0_pan_speed = 0.0f;
+                    gpu_vert.v0_pan_speed = 0.0f;
+                    gpu_vert.u1 = 0.0f;
+                    gpu_vert.v1 = 0.0f;
                 }
                 for (int face_index = 0; face_index < chunk.num_faces; ++face_index) {
                     auto& face = chunk.faces[face_index];
@@ -475,7 +479,6 @@ namespace df::gr::d3d11
     void MeshRenderer::draw_cached_mesh(rf::VifLodMesh *lod_mesh, const BaseMeshRenderCache& cache, const MeshRenderParams& params, int lod_index)
     {
         const int* tex_handles = get_tex_handles(lod_mesh, params, lod_index);
-        render_context_.set_uv_offset(rf::vec2_zero_vector);
         render_context_.set_primitive_topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
         std::optional<gr::Mode> forced_mode;

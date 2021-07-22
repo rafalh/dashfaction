@@ -1,6 +1,7 @@
 #include <cassert>
 #include <cstring>
 #include "../../rf/gr/gr_light.h"
+#include "../../rf/os/timer.h"
 #include "gr_d3d11.h"
 #include "gr_d3d11_context.h"
 #include "gr_d3d11_texture.h"
@@ -20,12 +21,11 @@ namespace df::gr::d3d11
         state_manager_{state_manager}, shader_manager_{shader_manager}, texture_manager_{texture_manager},
         model_transform_cbuffer_{device_},
         view_proj_transform_cbuffer_{device_},
-        uv_offset_cbuffer_{device_},
         lights_buffer_{device_},
-        render_mode_cbuffer_{device_}
+        render_mode_cbuffer_{device_},
+        per_frame_buffer_{device_}
     {
         bind_cbuffers();
-        set_uv_offset({0.0f, 0.0f});
     }
 
     void RenderContext::bind_cbuffers()
@@ -33,7 +33,8 @@ namespace df::gr::d3d11
         ID3D11Buffer* vs_cbuffers[] = {
             model_transform_cbuffer_,
             view_proj_transform_cbuffer_,
-            uv_offset_cbuffer_,
+            per_frame_buffer_,
+            nullptr,
         };
         device_context_->VSSetConstantBuffers(0, std::size(vs_cbuffers), vs_cbuffers);
 
@@ -144,17 +145,16 @@ namespace df::gr::d3d11
         device_context->Unmap(buffer_, 0);
     }
 
-    struct alignas(16) UvOffsetBufferData
+    struct alignas(16) PerFrameBufferData
     {
-        std::array<float, 2> uv_offset;
+        float time;
     };
-    static_assert(sizeof(UvOffsetBufferData) % 16 == 0);
+    static_assert(sizeof(PerFrameBufferData) % 16 == 0);
 
-    UvOffsetBuffer::UvOffsetBuffer(ID3D11Device* device) :
-        current_uv_offset_{NAN, NAN}
+    PerFrameBuffer::PerFrameBuffer(ID3D11Device* device)
     {
         CD3D11_BUFFER_DESC desc{
-            sizeof(UvOffsetBufferData),
+            sizeof(PerFrameBufferData),
             D3D11_BIND_CONSTANT_BUFFER,
             D3D11_USAGE_DYNAMIC,
             D3D11_CPU_ACCESS_WRITE,
@@ -162,10 +162,10 @@ namespace df::gr::d3d11
         DF_GR_D3D11_CHECK_HR(device->CreateBuffer(&desc, nullptr, &buffer_));
     }
 
-    void UvOffsetBuffer::update_buffer(ID3D11DeviceContext* device_context)
+    void PerFrameBuffer::update(ID3D11DeviceContext* device_context)
     {
-        UvOffsetBufferData data;
-        data.uv_offset = {current_uv_offset_.x, current_uv_offset_.y};
+        PerFrameBufferData data;
+        data.time = timer_get_milliseconds() / 1000.0f; // FIXME: paused game?
 
         D3D11_MAPPED_SUBRESOURCE mapped_subres;
         DF_GR_D3D11_CHECK_HR(

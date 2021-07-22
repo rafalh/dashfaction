@@ -171,8 +171,6 @@ namespace df::gr::d3d11
         int num_indices;
         int texture_1;
         int texture_2;
-        float u_pan_speed;
-        float v_pan_speed;
         rf::gr::Mode mode;
     };
 
@@ -220,16 +218,12 @@ namespace df::gr::d3d11
             return;
         }
 
-        float delta_time = timer_get(1000) * 0.001f; // FIXME: paused game..
-
         geometry_buffers_.bind_buffers(render_context);
         render_context.set_cull_mode(D3D11_CULL_BACK);
         render_context.set_primitive_topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         for (SolidBatch& b : batches) {
             render_context.set_mode(b.mode);
             render_context.set_textures(b.texture_1, b.texture_2);
-            Vector2 uv_pan{b.u_pan_speed * delta_time, b.v_pan_speed * delta_time};
-            render_context.set_uv_offset(uv_pan);
             //xlog::warn("DrawIndexed %d %d", b.num_indices, b.start_index);
             render_context.device_context()->DrawIndexed(b.num_indices, b.start_index, 0);
         }
@@ -238,8 +232,8 @@ namespace df::gr::d3d11
     class GRenderCacheBuilder
     {
     private:
-        // render_type, texture_1, texture_2, u_pan_speed, v_pan_speed
-        using FaceBatchKey = std::tuple<FaceRenderType, int, int, float, float>;
+        // render_type, texture_1, texture_2
+        using FaceBatchKey = std::tuple<FaceRenderType, int, int>;
         // render_type, texture_1, texture_2, mode
         using DecalPolyBatchKey = std::tuple<FaceRenderType, int, int, gr::Mode>;
 
@@ -335,10 +329,7 @@ namespace df::gr::d3d11
             GSurface* surface = solid->surfaces[face->attributes.surface_index];
             lightmap_tex = surface->lightmap->bm_handle;
         }
-        GTextureMover* texture_mover = face->attributes.texture_mover;
-        float u_pan_speed = texture_mover ? texture_mover->u_pan_speed : 0.0f;
-        float v_pan_speed = texture_mover ? texture_mover->v_pan_speed : 0.0f;
-        FaceBatchKey key = std::make_tuple(render_type, face_tex, lightmap_tex, u_pan_speed, v_pan_speed);
+        FaceBatchKey key = std::make_tuple(render_type, face_tex, lightmap_tex);
         batched_faces_[key].push_back(face);
         auto fvert = face->edge_loop;
         int num_fverts = 0;
@@ -376,16 +367,20 @@ namespace df::gr::d3d11
         for (auto& e : batched_faces_) {
             const GRenderCacheBuilder::FaceBatchKey& key = e.first;
             auto& faces = e.second;
-            auto [render_type, texture_1, texture_2, u_pan_speed, v_pan_speed] = key;
+            auto [render_type, texture_1, texture_2] = key;
             SolidBatch& batch = batches.get_batches(render_type).emplace_back();
             batch.start_index = ib_data.size();
             batch.texture_1 = texture_1;
             batch.texture_2 = texture_2;
-            batch.u_pan_speed = u_pan_speed;
-            batch.v_pan_speed = v_pan_speed;
             batch.mode = determine_face_mode(render_type, texture_2 != -1, is_sky_);
             for (GFace* face : faces) {
                 auto fvert = face->edge_loop;
+                if (face->attributes.group_id > -0x1000 && face->attributes.group_id < 0x1000 && face->attributes.group_id != 0) {
+                    xlog::warn("bad face %p flags %x group_id %d", face, face->attributes.flags, face->attributes.group_id);
+                }
+                GTextureMover* texture_mover = face->attributes.texture_mover;
+                float u_pan_speed = texture_mover ? texture_mover->u_pan_speed : 0.0f;
+                float v_pan_speed = texture_mover ? texture_mover->v_pan_speed : 0.0f;
                 auto face_start_index = static_cast<ushort>(vb_data.size());
                 int fvert_index = 0;
                 while (fvert) {
@@ -400,6 +395,8 @@ namespace df::gr::d3d11
                     gpu_vert.v0 = fvert->texture_v;
                     gpu_vert.u1 = fvert->lightmap_u;
                     gpu_vert.v1 = fvert->lightmap_v;
+                    gpu_vert.u0_pan_speed = u_pan_speed;
+                    gpu_vert.v0_pan_speed = v_pan_speed;
 
                     if (fvert_index >= 2) {
                         ib_data.emplace_back(face_start_index);
@@ -440,6 +437,8 @@ namespace df::gr::d3d11
                     gpu_vert.diffuse = 0xFFFFFFFF;
                     gpu_vert.u0 = dp->uvs[fvert_index].x;
                     gpu_vert.v0 = dp->uvs[fvert_index].y;
+                    gpu_vert.u0_pan_speed = 0.0f;
+                    gpu_vert.v0_pan_speed = 0.0f;
                     gpu_vert.u1 = fvert->lightmap_u;
                     gpu_vert.v1 = fvert->lightmap_v;
 

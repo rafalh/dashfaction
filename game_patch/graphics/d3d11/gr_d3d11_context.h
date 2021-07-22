@@ -59,31 +59,6 @@ namespace df::gr::d3d11
         ComPtr<ID3D11Buffer> buffer_;
     };
 
-    class UvOffsetBuffer
-    {
-    public:
-        UvOffsetBuffer(ID3D11Device* device);
-
-        void update(const rf::Vector2& uv_offset, ID3D11DeviceContext* device_context)
-        {
-            if (current_uv_offset_ != uv_offset) {
-                current_uv_offset_ = uv_offset;
-                update_buffer(device_context);
-            }
-        }
-
-        operator ID3D11Buffer*() const
-        {
-            return buffer_;
-        }
-
-    private:
-        void update_buffer(ID3D11DeviceContext* device_context);
-
-        ComPtr<ID3D11Buffer> buffer_;
-        rf::Vector2 current_uv_offset_;
-    };
-
     class LightsBuffer
     {
     public:
@@ -137,6 +112,21 @@ namespace df::gr::d3d11
         bool current_fog_allowed_ = false;
         bool force_update_ = true;
         rf::Color current_color_{255, 255, 255};
+    };
+
+    class PerFrameBuffer
+    {
+    public:
+        PerFrameBuffer(ID3D11Device* device);
+        void update(ID3D11DeviceContext* device_context);
+
+        operator ID3D11Buffer*() const
+        {
+            return buffer_;
+        }
+
+    private:
+        ComPtr<ID3D11Buffer> buffer_;
     };
 
     class RenderContext
@@ -246,6 +236,7 @@ namespace df::gr::d3d11
         void update_view_proj_transform()
         {
             view_proj_transform_cbuffer_.update(device_context_);
+            per_frame_buffer_.update(device_context_);
         }
 
         void fog_set()
@@ -324,11 +315,6 @@ namespace df::gr::d3d11
             model_transform_cbuffer_.update(pos, orient, device_context_);
         }
 
-        void set_uv_offset(const rf::Vector2& uv_offset)
-        {
-            uv_offset_cbuffer_.update(uv_offset, device_context_);
-        }
-
         void set_zbias(int zbias)
         {
             if (zbias_ != zbias) {
@@ -370,9 +356,9 @@ namespace df::gr::d3d11
         TextureManager& texture_manager_;
         ModelTransformBuffer model_transform_cbuffer_;
         ViewProjTransformBuffer view_proj_transform_cbuffer_;
-        UvOffsetBuffer uv_offset_cbuffer_;
         LightsBuffer lights_buffer_;
         RenderModeBuffer render_mode_cbuffer_;
+        PerFrameBuffer per_frame_buffer_;
 
         ID3D11RenderTargetView* render_target_view_ = nullptr;
         ID3D11DepthStencilView* depth_stencil_view_ = nullptr;

@@ -44,7 +44,6 @@ namespace df::gr::d3d11
         render_context_.set_mode(state_.mode);
         render_context_.set_textures(textures[0], textures[1]);
         render_context_.set_cull_mode(D3D11_CULL_NONE);
-        render_context_.set_uv_offset(rf::vec2_zero_vector);
 
         render_context_.device_context()->DrawIndexed(num_index, start_index, 0);
     }
