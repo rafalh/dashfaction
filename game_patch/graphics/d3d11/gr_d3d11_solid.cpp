@@ -108,10 +108,11 @@ namespace df::gr::d3d11
         return alpha_detail_fullbright_mode;
     }
 
-    static void link_faces_to_texture_movers(GSolid* solid)
+    template<int N>
+    inline void link_faces_to_texture_movers(VList<GFace, N>& face_list, GSolid* solid)
     {
         // Note: this is normally done by geo_cache_prepare
-        for (GFace& face : solid->face_list) {
+        for (GFace& face : face_list) {
             face.attributes.texture_mover = nullptr;
         }
         for (GTextureMover* texture_mover : solid->texture_movers) {
@@ -290,6 +291,7 @@ namespace df::gr::d3d11
 
     void GRenderCacheBuilder::add_solid(GSolid* solid)
     {
+        link_faces_to_texture_movers(solid->face_list, solid);
         for (GFace& face : solid->face_list) {
             add_face(&face, solid);
         }
@@ -297,7 +299,7 @@ namespace df::gr::d3d11
 
     void GRenderCacheBuilder::add_room(GRoom* room, GSolid* solid)
     {
-        link_faces_to_texture_movers(solid);
+        link_faces_to_texture_movers(room->face_list, solid);
         for (GFace& face : room->face_list) {
             add_face(&face, solid);
         }
@@ -695,7 +697,6 @@ namespace df::gr::d3d11
         if (it == mover_render_cache_.end()) {
             xlog::debug("Creating render cache for a mover %p", solid);
             GRenderCacheBuilder cache_builder;
-            link_faces_to_texture_movers(solid);
             cache_builder.add_solid(solid);
             GRenderCache cache = cache_builder.build(device_);
             auto p = mover_render_cache_.emplace(std::make_pair(solid, std::make_unique<GRenderCache>(cache)));
