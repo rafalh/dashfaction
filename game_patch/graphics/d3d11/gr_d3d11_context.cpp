@@ -259,25 +259,21 @@ namespace df::gr::d3d11
 
     void RenderModeBuffer::update_buffer(ID3D11DeviceContext* device_context)
     {
-        gr::Mode mode = current_mode_.value();
-
-        bool alpha_test = mode.get_zbuffer_type() == gr::ZBUFFER_TYPE_FULL_ALPHA_TEST;
-
-        RenderModeBufferData ps_data;
-        ps_data.current_color = {
+        RenderModeBufferData data;
+        data.current_color = {
             current_color_.red / 255.0f,
             current_color_.green / 255.0f,
             current_color_.blue / 255.0f,
             current_color_.alpha / 255.0f,
         };
-        ps_data.alpha_test = alpha_test ? 0.1f : 0.0f;
-        if (mode.get_fog_type() == gr::FOG_NOT_ALLOWED || !gr::screen.fog_mode) {
-            ps_data.fog_far = std::numeric_limits<float>::infinity();
-            ps_data.fog_color = {0.0f, 0.0f, 0.0f};
+        data.alpha_test = current_alpha_test_ ? 0.1f : 0.0f;
+        if (!current_fog_allowed_ || !gr::screen.fog_mode) {
+            data.fog_far = std::numeric_limits<float>::infinity();
+            data.fog_color = {0.0f, 0.0f, 0.0f};
         }
         else {
-            ps_data.fog_far = gr::screen.fog_far;
-            ps_data.fog_color = {
+            data.fog_far = gr::screen.fog_far;
+            data.fog_color = {
                 static_cast<float>(gr::screen.fog_color.red) / 255.0f,
                 static_cast<float>(gr::screen.fog_color.green) / 255.0f,
                 static_cast<float>(gr::screen.fog_color.blue) / 255.0f,
@@ -288,7 +284,7 @@ namespace df::gr::d3d11
         DF_GR_D3D11_CHECK_HR(
             device_context->Map(buffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_subres)
         );
-        std::memcpy(mapped_subres.pData, &ps_data, sizeof(ps_data));
+        std::memcpy(mapped_subres.pData, &data, sizeof(data));
         device_context->Unmap(buffer_, 0);
     }
 }

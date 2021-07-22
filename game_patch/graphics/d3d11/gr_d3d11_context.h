@@ -106,9 +106,13 @@ namespace df::gr::d3d11
 
         void update(gr::Mode mode, rf::Color color, ID3D11DeviceContext* device_context)
         {
-            if (!current_mode_ || current_mode_.value() != mode || current_color_ != color) {
-                current_mode_.emplace(mode);
+            bool alpha_test = mode.get_zbuffer_type() == gr::ZBUFFER_TYPE_FULL_ALPHA_TEST;
+            bool fog_allowed = mode.get_fog_type() != gr::FOG_NOT_ALLOWED;
+            if (force_update_ || current_alpha_test_ != alpha_test || current_fog_allowed_ != fog_allowed || current_color_ != color) {
+                current_alpha_test_ = alpha_test;
+                current_fog_allowed_ = fog_allowed;
                 current_color_ = color;
+                force_update_ = false;
                 update_buffer(device_context);
             }
         }
@@ -120,8 +124,8 @@ namespace df::gr::d3d11
 
         void handle_fog_change()
         {
-            if (current_mode_ && current_mode_.value().get_fog_type() != rf::gr::FOG_NOT_ALLOWED) {
-                current_mode_.reset();
+            if (current_fog_allowed_) {
+                force_update_ = true;
             }
         }
 
@@ -129,7 +133,9 @@ namespace df::gr::d3d11
         void update_buffer(ID3D11DeviceContext* device_context);
 
         ComPtr<ID3D11Buffer> buffer_;
-        std::optional<gr::Mode> current_mode_;
+        bool current_alpha_test_ = false;
+        bool current_fog_allowed_ = false;
+        bool force_update_ = true;
         rf::Color current_color_{255, 255, 255};
     };
 
