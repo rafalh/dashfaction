@@ -4,6 +4,7 @@
 #include "../../rf/gr/gr.h"
 #include "../../rf/os/os.h"
 #include "../../rf/v3d.h"
+#include "../../rf/character.h"
 #include "../../bmpman/bmpman.h"
 #include "../../main/main.h"
 #include "gr_d3d11.h"
@@ -228,6 +229,26 @@ namespace df::gr::d3d11
             }
         },
     };
+
+    static CodeInjection v3d_page_in_injection{
+        0x0053C1B9,
+        [](auto& regs) {
+            rf::V3d* v3d = regs.ecx;
+            if (renderer && v3d->num_meshes > 0) {
+                renderer->page_in_v3d_mesh(v3d->meshes[0].vu);
+            }
+        },
+    };
+
+    static CodeInjection character_instance_page_in_injection{
+        0x0051C4C0,
+        [](auto& regs) {
+            rf::CharacterInstance* ci = regs.ecx;
+            if (renderer) {
+                renderer->page_in_character_mesh(ci->base_character->character_meshes[0].mesh->vu);
+            }
+        },
+    };
 }
 
 void gr_d3d11_apply_patch()
@@ -238,6 +259,8 @@ void gr_d3d11_apply_patch()
     gr_d3d_setup_3d_injection.install();
     vif_lod_mesh_ctor_injection.install();
     vif_lod_mesh_dtor_injection.install();
+    v3d_page_in_injection.install();
+    character_instance_page_in_injection.install();
 
     // Do not use built-in render cache
     AsmWriter{0x004F0B90}.jmp(clear_solid_render_cache); // g_render_cache_clear

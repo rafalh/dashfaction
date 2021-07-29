@@ -116,6 +116,8 @@ namespace df::gr::d3d11
         void render_v3d_vif(rf::VifLodMesh *lod_mesh, rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::MeshRenderParams& params);
         void render_character_vif(rf::VifLodMesh *lod_mesh, rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::CharacterInstance *ci, const rf::MeshRenderParams& params);
         void clear_vif_cache(rf::VifLodMesh *lod_mesh);
+        void page_in_v3d_mesh(rf::VifLodMesh* lod_mesh);
+        void page_in_character_mesh(rf::VifLodMesh* lod_mesh);
         void fog_set();
 
     private:

@@ -476,4 +476,14 @@ namespace df::gr::d3d11
         dyn_geo_renderer_->flush();
         render_context_->fog_set();
     }
+
+    void Renderer::page_in_v3d_mesh(rf::VifLodMesh* lod_mesh)
+    {
+        mesh_renderer_->page_in_v3d_mesh(lod_mesh);
+    }
+
+    void Renderer::page_in_character_mesh(rf::VifLodMesh* lod_mesh)
+    {
+        mesh_renderer_->page_in_character_mesh(lod_mesh);
+    }
 }

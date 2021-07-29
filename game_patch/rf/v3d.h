@@ -10,6 +10,7 @@ namespace rf
     struct LodMesh;
     struct V3DCSphere;
     struct MaterialClass;
+    struct VifLodMesh;
 
     struct V3d
     {
@@ -35,6 +36,16 @@ namespace rf
         int flags;
     };
     static_assert(sizeof(V3d) == 0x90);
+
+    struct V3dMesh
+    {
+        char name[65];
+        char parent_name[65];
+        int num_materials;
+        MaterialClass *materials;
+        VifLodMesh *vu;
+    };
+    static_assert(sizeof(V3dMesh) == 0x90);
 
     struct WeightIndexArray
     {

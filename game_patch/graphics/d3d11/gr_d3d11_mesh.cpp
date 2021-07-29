@@ -416,10 +416,7 @@ namespace df::gr::d3d11
 
     void MeshRenderer::render_v3d_vif(rf::VifLodMesh *lod_mesh, rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::MeshRenderParams& params)
     {
-        if (!lod_mesh->render_cache) {
-            auto p = render_caches_.insert_or_assign(lod_mesh, std::make_unique<MeshRenderCache>(lod_mesh, device_));
-            lod_mesh->render_cache = p.first->second.get();
-        }
+        page_in_v3d_mesh(lod_mesh);
 
         render_context_.set_vertex_shader(standard_vertex_shader_);
         render_context_.set_pixel_shader(pixel_shader_);
@@ -433,10 +430,7 @@ namespace df::gr::d3d11
 
     void MeshRenderer::render_character_vif(rf::VifLodMesh *lod_mesh, rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::CharacterInstance *ci, const rf::MeshRenderParams& params)
     {
-        if (!lod_mesh->render_cache) {
-            auto p = render_caches_.insert_or_assign(lod_mesh, std::make_unique<CharacterMeshRenderCache>(lod_mesh, device_));
-            lod_mesh->render_cache = p.first->second.get();
-        }
+        page_in_character_mesh(lod_mesh);
         auto render_cache = reinterpret_cast<CharacterMeshRenderCache*>(lod_mesh->render_cache);
 
         render_context_.set_vertex_shader(character_vertex_shader_);
@@ -553,6 +547,22 @@ namespace df::gr::d3d11
                     device_context->DrawIndexed(b.num_indices, b.start_index, b.base_vertex);
                 }
             }
+        }
+    }
+
+    void MeshRenderer::page_in_v3d_mesh(rf::VifLodMesh* lod_mesh)
+    {
+        if (!lod_mesh->render_cache) {
+            auto p = render_caches_.insert_or_assign(lod_mesh, std::make_unique<MeshRenderCache>(lod_mesh, device_));
+            lod_mesh->render_cache = p.first->second.get();
+        }
+    }
+
+    void MeshRenderer::page_in_character_mesh(rf::VifLodMesh* lod_mesh)
+    {
+        if (!lod_mesh->render_cache) {
+            auto p = render_caches_.insert_or_assign(lod_mesh, std::make_unique<CharacterMeshRenderCache>(lod_mesh, device_));
+            lod_mesh->render_cache = p.first->second.get();
         }
     }
 }
