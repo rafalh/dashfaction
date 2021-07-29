@@ -486,4 +486,14 @@ namespace df::gr::d3d11
     {
         mesh_renderer_->page_in_character_mesh(lod_mesh);
     }
+
+    void Renderer::page_in_solid(rf::GSolid* solid)
+    {
+        solid_renderer_->page_in_solid(solid);
+    }
+
+    void Renderer::page_in_movable_solid(rf::GSolid* solid)
+    {
+        solid_renderer_->page_in_movable_solid(solid);
+    }
 }

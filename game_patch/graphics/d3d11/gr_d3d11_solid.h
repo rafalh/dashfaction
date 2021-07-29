@@ -36,6 +36,12 @@ namespace df::gr::d3d11
         void render_alpha_detail(rf::GRoom *room, rf::GSolid *solid);
         void render_room_liquid_surface(rf::GSolid* solid, rf::GRoom* room);
         void clear_cache();
+        void page_in_solid(rf::GSolid* solid);
+
+        void page_in_movable_solid(rf::GSolid* solid)
+        {
+            get_or_create_movable_solid_cache(solid);
+        }
 
     private:
         void before_render(const rf::Vector3& pos, const rf::Matrix3& orient);
@@ -47,6 +53,9 @@ namespace df::gr::d3d11
         void render_movable_solid_dynamic_decals(rf::GSolid* solid, const rf::Vector3& pos, const rf::Matrix3& orient);
         void before_render_decals();
         void after_render_decals();
+        RoomRenderCache* get_or_create_normal_room_cache(rf::GSolid* solid, rf::GRoom* room);
+        GRenderCache* get_or_create_detail_room_cache(rf::GSolid* solid, rf::GRoom* room);
+        GRenderCache* get_or_create_movable_solid_cache(rf::GSolid* solid);
 
         ComPtr<ID3D11Device> device_;
         ComPtr<ID3D11DeviceContext> context_;

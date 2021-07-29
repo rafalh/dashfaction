@@ -638,6 +638,12 @@ namespace df::gr::d3d11
 
     void SolidRenderer::render_room_faces(rf::GSolid* solid, rf::GRoom* room, FaceRenderType render_type)
     {
+        auto cache = get_or_create_normal_room_cache(solid, room);
+        cache->render(render_type, device_, render_context_);
+    }
+
+    RoomRenderCache* SolidRenderer::get_or_create_normal_room_cache(rf::GSolid* solid, rf::GRoom* room)
+    {
         auto cache = reinterpret_cast<RoomRenderCache*>(room->geo_cache);
         if (!cache) {
             xlog::debug("Creating render cache for room %d", room->room_index);
@@ -646,11 +652,17 @@ namespace df::gr::d3d11
             room->geo_cache = reinterpret_cast<GCache*>(cache);
             geo_cache_rooms[geo_cache_num_rooms++] = room;
         }
-
-        cache->render(render_type, device_, render_context_);
+        return cache;
     }
 
     void SolidRenderer::render_detail(rf::GSolid* solid, GRoom* room, bool alpha)
+    {
+        GRenderCache* cache = get_or_create_detail_room_cache(solid, room);
+        FaceRenderType render_type = alpha ? FaceRenderType::alpha : FaceRenderType::opaque;
+        cache->render(render_type, render_context_);
+    }
+
+    GRenderCache* SolidRenderer::get_or_create_detail_room_cache(rf::GSolid* solid, rf::GRoom* room)
     {
         auto cache = reinterpret_cast<GRenderCache*>(room->geo_cache);
         if (!cache) {
@@ -661,8 +673,7 @@ namespace df::gr::d3d11
             cache = detail_render_cache_.back().get();
             room->geo_cache = reinterpret_cast<GCache*>(cache);
         }
-        FaceRenderType render_type = alpha ? FaceRenderType::alpha : FaceRenderType::opaque;
-        cache->render(render_type, render_context_);
+        return cache;
     }
 
     void SolidRenderer::clear_cache()
@@ -692,6 +703,17 @@ namespace df::gr::d3d11
     void SolidRenderer::render_movable_solid(GSolid* solid, const Vector3& pos, const Matrix3& orient)
     {
         xlog::trace("Rendering movable solid %p", solid);
+        GRenderCache* cache = get_or_create_movable_solid_cache(solid);
+        before_render(pos, orient);
+        cache->render(FaceRenderType::opaque, render_context_);
+        cache->render(FaceRenderType::alpha, render_context_);
+        if (decals_enabled) {
+            render_movable_solid_dynamic_decals(solid, pos, orient);
+        }
+    }
+
+    GRenderCache* SolidRenderer::get_or_create_movable_solid_cache(rf::GSolid* solid)
+    {
         auto it = mover_render_cache_.find(solid);
         if (it == mover_render_cache_.end()) {
             xlog::debug("Creating render cache for a mover %p", solid);
@@ -701,13 +723,7 @@ namespace df::gr::d3d11
             auto p = mover_render_cache_.emplace(std::make_pair(solid, std::make_unique<GRenderCache>(cache)));
             it = p.first;
         }
-        before_render(pos, orient);
-        auto cache = it->second.get();
-        cache->render(FaceRenderType::opaque, render_context_);
-        cache->render(FaceRenderType::alpha, render_context_);
-        if (decals_enabled) {
-            render_movable_solid_dynamic_decals(solid, pos, orient);
-        }
+        return it->second.get();
     }
 
     void SolidRenderer::render_alpha_detail(GRoom *room, GSolid *solid)
@@ -768,5 +784,15 @@ namespace df::gr::d3d11
         render_context_.set_vertex_shader(vertex_shader_);
         render_context_.set_pixel_shader(pixel_shader_);
         render_context_.set_model_transform(pos, orient);
+    }
+
+    void SolidRenderer::page_in_solid(rf::GSolid* solid)
+    {
+        for (rf::GRoom* room: solid->cached_normal_room_list) {
+            get_or_create_normal_room_cache(solid, room);
+        }
+        for (rf::GRoom* room: solid->cached_detail_room_list) {
+            get_or_create_detail_room_cache(solid, room);
+        }
     }
 }

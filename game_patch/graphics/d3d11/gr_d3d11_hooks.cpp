@@ -1,10 +1,13 @@
 #include <patch_common/AsmWriter.h>
 #include <patch_common/CodeInjection.h>
 #include <patch_common/FunHook.h>
+#include <common/utils/list-utils.h>
 #include "../../rf/gr/gr.h"
 #include "../../rf/os/os.h"
 #include "../../rf/v3d.h"
 #include "../../rf/character.h"
+#include "../../rf/level.h"
+#include "../../rf/mover.h"
 #include "../../bmpman/bmpman.h"
 #include "../../main/main.h"
 #include "gr_d3d11.h"
@@ -249,6 +252,18 @@ namespace df::gr::d3d11
             }
         },
     };
+
+    static CodeInjection level_page_in_injection{
+        0x0045CC20,
+        []() {
+            if (renderer) {
+                renderer->page_in_solid(rf::level.geometry);
+                for (rf::MoverBrush& mb : DoublyLinkedList{rf::mover_brush_list}) {
+                    renderer->page_in_movable_solid(mb.geometry);
+                }
+            }
+        },
+    };
 }
 
 void gr_d3d11_apply_patch()
@@ -261,6 +276,7 @@ void gr_d3d11_apply_patch()
     vif_lod_mesh_dtor_injection.install();
     v3d_page_in_injection.install();
     character_instance_page_in_injection.install();
+    level_page_in_injection.install();
 
     // Do not use built-in render cache
     AsmWriter{0x004F0B90}.jmp(clear_solid_render_cache); // g_render_cache_clear
