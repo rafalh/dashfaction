@@ -327,6 +327,8 @@ namespace df::gr::d3d11
         );
         // Flip swap effect clears render target after Present call
         render_context_->set_render_target(default_render_target_view_, depth_stencil_view_);
+        // Note: it would be better to call update_per_frame_constants after frametime_calculate
+        render_context_->update_per_frame_constants();
     }
 
     void Renderer::texture_save_cache()

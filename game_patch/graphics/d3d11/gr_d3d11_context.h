@@ -236,6 +236,10 @@ namespace df::gr::d3d11
         void update_view_proj_transform()
         {
             view_proj_transform_cbuffer_.update(device_context_);
+        }
+
+        void update_per_frame_constants()
+        {
             per_frame_buffer_.update(device_context_);
         }
 
