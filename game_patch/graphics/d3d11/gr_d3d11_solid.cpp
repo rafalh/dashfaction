@@ -167,11 +167,14 @@ namespace df::gr::d3d11
 
     struct SolidBatch
     {
+        SolidBatch(int start_index, int num_indices, int base_vertex, std::array<int, 2> textures, rf::gr::Mode mode) :
+            start_index{start_index}, num_indices{num_indices}, base_vertex{base_vertex}, textures{textures}, mode{mode}
+        {}
+
         int start_index;
         int num_indices;
         int base_vertex = 0;
-        int texture_1;
-        int texture_2;
+        std::array<int, 2> textures;
         rf::gr::Mode mode;
     };
 
@@ -224,7 +227,7 @@ namespace df::gr::d3d11
         render_context.set_primitive_topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         for (SolidBatch& b : batches) {
             render_context.set_mode(b.mode);
-            render_context.set_textures(b.texture_1, b.texture_2);
+            render_context.set_textures(b.textures[0], b.textures[1]);
             //xlog::warn("DrawIndexed %d %d", b.num_indices, b.start_index);
             render_context.draw_indexed(b.num_indices, b.start_index, b.base_vertex);
         }
@@ -369,12 +372,9 @@ namespace df::gr::d3d11
             const GRenderCacheBuilder::FaceBatchKey& key = e.first;
             auto& faces = e.second;
             auto [render_type, texture_1, texture_2] = key;
-            SolidBatch& batch = batches.get_batches(render_type).emplace_back();
-            batch.start_index = ib_data.size();
-            batch.base_vertex = vb_data.size();
-            batch.texture_1 = texture_1;
-            batch.texture_2 = texture_2;
-            batch.mode = determine_face_mode(render_type, texture_2 != -1, is_sky_);
+            std::size_t start_index = ib_data.size();
+            std::size_t base_vertex = vb_data.size();
+
             for (GFace* face : faces) {
                 auto fvert = face->edge_loop;
                 if (face->attributes.group_id > -0x1000 && face->attributes.group_id < 0x1000 && face->attributes.group_id != 0) {
@@ -383,7 +383,7 @@ namespace df::gr::d3d11
                 GTextureMover* texture_mover = face->attributes.texture_mover;
                 float u_pan_speed = texture_mover ? texture_mover->u_pan_speed : 0.0f;
                 float v_pan_speed = texture_mover ? texture_mover->v_pan_speed : 0.0f;
-                auto face_start_index = static_cast<ushort>(vb_data.size() - batch.base_vertex);
+                auto face_start_index = static_cast<ushort>(vb_data.size() - base_vertex);
                 int fvert_index = 0;
                 while (fvert) {
                     auto& gpu_vert = vb_data.emplace_back();
@@ -413,22 +413,23 @@ namespace df::gr::d3d11
                     }
                 }
             }
-            batch.num_indices = ib_data.size() - batch.start_index;
+            std::size_t num_indices = ib_data.size() - start_index;
+            std::array<int, 2> textures = {texture_1, texture_2};
+            gr::Mode mode = determine_face_mode(render_type, texture_2 != -1, is_sky_);
+            batches.get_batches(render_type).emplace_back(
+                start_index, num_indices, base_vertex, textures, mode
+            );
         }
         for (auto& e : batched_decal_polys_) {
             const GRenderCacheBuilder::DecalPolyBatchKey& key = e.first;
             auto& dps = e.second;
             auto [render_type, texture_1, texture_2, mode] = key;
-            SolidBatch& batch = batches.get_batches(render_type).emplace_back();
-            batch.start_index = ib_data.size();
-            batch.base_vertex = vb_data.size();
-            batch.texture_1 = texture_1;
-            batch.texture_2 = texture_2;
-            batch.mode = mode;
+            std::size_t start_index = ib_data.size();
+            std::size_t base_vertex = vb_data.size();
             for (DecalPoly* dp : dps) {
                 auto face = dp->face;
                 auto fvert = face->edge_loop;
-                auto face_start_index = static_cast<ushort>(vb_data.size() - batch.base_vertex);
+                auto face_start_index = static_cast<ushort>(vb_data.size() - base_vertex);
                 int fvert_index = 0;
                 while (fvert) {
                     auto& gpu_vert = vb_data.emplace_back();
@@ -458,7 +459,11 @@ namespace df::gr::d3d11
                     }
                 }
             }
-            batch.num_indices = ib_data.size() - batch.start_index;
+            int num_indices = ib_data.size() - start_index;
+            std::array<int, 2> textures = {texture_1, texture_2};
+            batches.get_batches(render_type).emplace_back(
+                start_index, num_indices, base_vertex, textures, mode
+            );
         }
 
         SolidGeometryBuffers geometry_buffers{vb_data, ib_data, device};

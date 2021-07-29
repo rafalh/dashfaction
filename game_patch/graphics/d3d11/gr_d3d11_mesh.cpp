@@ -73,13 +73,9 @@ namespace df::gr::d3d11
             meshes_[lod_index].batches.reserve(mesh->num_chunks);
             for (int chunk_index = 0; chunk_index < mesh->num_chunks; ++chunk_index) {
                 rf::VifChunk& chunk = mesh->chunks[chunk_index];
-
-                Batch& b = meshes_[lod_index].batches.emplace_back();
-                b.start_index = gpu_inds.size();
-                b.texture_index = chunk.texture_idx;
-                b.mode = chunk.mode;
-                b.double_sided = is_vif_chunk_double_sided(chunk);
-                b.base_vertex = gpu_verts.size();
+                std::size_t start_index = gpu_inds.size();
+                std::size_t base_vertex = gpu_verts.size();
+                bool double_sided = is_vif_chunk_double_sided(chunk);
 
                 for (int vert_index = 0; vert_index < chunk.num_vecs; ++vert_index) {
                     GpuVertex& gpu_vert = gpu_verts.emplace_back();
@@ -104,14 +100,17 @@ namespace df::gr::d3d11
                     gpu_inds.emplace_back(face.vindex1);
                     gpu_inds.emplace_back(face.vindex2);
                     gpu_inds.emplace_back(face.vindex3);
-                    if ((face.flags & VIF_FACE_DOUBLE_SIDED) && !b.double_sided) {
+                    if ((face.flags & VIF_FACE_DOUBLE_SIDED) && !double_sided) {
                         gpu_inds.emplace_back(face.vindex1);
                         gpu_inds.emplace_back(face.vindex3);
                         gpu_inds.emplace_back(face.vindex2);
                     }
                 }
 
-                b.num_indices = gpu_inds.size() - b.start_index;
+                int num_indices = gpu_inds.size() - start_index;
+                meshes_[lod_index].batches.emplace_back(
+                    start_index, num_indices, base_vertex,
+                    chunk.texture_idx, chunk.mode, double_sided);
             }
         }
         xlog::debug("Creating mesh geometry buffers: verts %d inds %d", gpu_verts.size(), gpu_inds.size());
@@ -259,12 +258,9 @@ namespace df::gr::d3d11
             for (int chunk_index = 0; chunk_index < mesh->num_chunks; ++chunk_index) {
                 rf::VifChunk& chunk = mesh->chunks[chunk_index];
 
-                Batch& b = meshes_[lod_index].batches.emplace_back();
-                b.start_index = gpu_inds.size();
-                b.base_vertex = gpu_verts_0.size();
-                b.texture_index = chunk.texture_idx;
-                b.mode = chunk.mode;
-                b.double_sided = is_vif_chunk_double_sided(chunk);
+                std::size_t start_index = gpu_inds.size();
+                std::size_t base_vertex = gpu_verts_0.size();
+                bool double_sided = is_vif_chunk_double_sided(chunk);
 
                 for (int vert_index = 0; vert_index < chunk.num_vecs; ++vert_index) {
                     int pos_vert_index = vert_index;
@@ -300,14 +296,17 @@ namespace df::gr::d3d11
                     gpu_inds.emplace_back(face.vindex1);
                     gpu_inds.emplace_back(face.vindex2);
                     gpu_inds.emplace_back(face.vindex3);
-                    if ((face.flags & VIF_FACE_DOUBLE_SIDED) && !b.double_sided) {
+                    if ((face.flags & VIF_FACE_DOUBLE_SIDED) && !double_sided) {
                         gpu_inds.emplace_back(face.vindex1);
                         gpu_inds.emplace_back(face.vindex3);
                         gpu_inds.emplace_back(face.vindex2);
                     }
                 }
 
-                b.num_indices = gpu_inds.size() - b.start_index;
+                int num_indices = gpu_inds.size() - start_index;
+                meshes_[lod_index].batches.emplace_back(
+                    start_index, num_indices, base_vertex,
+                    chunk.texture_idx, chunk.mode, double_sided);
             }
         }
         xlog::debug("Creating mesh render buffer - verts %d inds %d", gpu_verts_0.size(), gpu_inds.size());

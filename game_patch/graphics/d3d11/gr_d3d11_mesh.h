@@ -23,6 +23,11 @@ namespace df::gr::d3d11
     public:
         struct Batch
         {
+            Batch(int start_index, int num_indices, int base_vertex, int texture_index, rf::gr::Mode mode, bool double_sided) :
+                start_index{start_index}, num_indices{num_indices}, base_vertex{base_vertex},
+                texture_index{texture_index}, mode{mode}, double_sided{double_sided}
+            {}
+
             int start_index;
             int num_indices;
             int base_vertex = 0;
