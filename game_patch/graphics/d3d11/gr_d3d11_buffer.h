@@ -30,7 +30,7 @@ namespace df::gr::d3d11
             submit();
         }
 
-        std::pair<T*, int> alloc(int size)
+        T* alloc(int size)
         {
             bool buffer_full = is_full(size);
             assert(!mapped_data_ || !buffer_full);
@@ -47,9 +47,8 @@ namespace df::gr::d3d11
             }
 
             T* allocated_data = mapped_data_ + current_pos_;
-            int allocated_pos = current_pos_;
             current_pos_ += size;
-            return {allocated_data, allocated_pos};
+            return allocated_data;
         }
 
         std::pair<int, int> submit()
@@ -71,6 +70,11 @@ namespace df::gr::d3d11
         ID3D11Buffer* get_buffer() const
         {
             return buffer_;
+        }
+
+        int get_pos() const
+        {
+            return current_pos_ - start_pos_;
         }
 
     private:

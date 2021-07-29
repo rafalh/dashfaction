@@ -45,7 +45,7 @@ namespace df::gr::d3d11
         render_context_.set_textures(textures[0], textures[1]);
         render_context_.set_cull_mode(D3D11_CULL_NONE);
 
-        render_context_.device_context()->DrawIndexed(num_index, start_index, 0);
+        render_context_.device_context()->DrawIndexed(num_index, start_index, start_vertex);
     }
 
     static inline bool mode_uses_vertex_color(gr::Mode mode)

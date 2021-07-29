@@ -169,6 +169,7 @@ namespace df::gr::d3d11
     {
         int start_index;
         int num_indices;
+        int base_vertex = 0;
         int texture_1;
         int texture_2;
         rf::gr::Mode mode;
@@ -225,7 +226,7 @@ namespace df::gr::d3d11
             render_context.set_mode(b.mode);
             render_context.set_textures(b.texture_1, b.texture_2);
             //xlog::warn("DrawIndexed %d %d", b.num_indices, b.start_index);
-            render_context.device_context()->DrawIndexed(b.num_indices, b.start_index, 0);
+            render_context.device_context()->DrawIndexed(b.num_indices, b.start_index, b.base_vertex);
         }
     }
 
@@ -370,6 +371,7 @@ namespace df::gr::d3d11
             auto [render_type, texture_1, texture_2] = key;
             SolidBatch& batch = batches.get_batches(render_type).emplace_back();
             batch.start_index = ib_data.size();
+            batch.base_vertex = vb_data.size();
             batch.texture_1 = texture_1;
             batch.texture_2 = texture_2;
             batch.mode = determine_face_mode(render_type, texture_2 != -1, is_sky_);
@@ -381,7 +383,7 @@ namespace df::gr::d3d11
                 GTextureMover* texture_mover = face->attributes.texture_mover;
                 float u_pan_speed = texture_mover ? texture_mover->u_pan_speed : 0.0f;
                 float v_pan_speed = texture_mover ? texture_mover->v_pan_speed : 0.0f;
-                auto face_start_index = static_cast<ushort>(vb_data.size());
+                auto face_start_index = static_cast<ushort>(vb_data.size() - batch.base_vertex);
                 int fvert_index = 0;
                 while (fvert) {
                     auto& gpu_vert = vb_data.emplace_back();
@@ -419,13 +421,14 @@ namespace df::gr::d3d11
             auto [render_type, texture_1, texture_2, mode] = key;
             SolidBatch& batch = batches.get_batches(render_type).emplace_back();
             batch.start_index = ib_data.size();
+            batch.base_vertex = vb_data.size();
             batch.texture_1 = texture_1;
             batch.texture_2 = texture_2;
             batch.mode = mode;
             for (DecalPoly* dp : dps) {
                 auto face = dp->face;
                 auto fvert = face->edge_loop;
-                auto face_start_index = static_cast<ushort>(vb_data.size());
+                auto face_start_index = static_cast<ushort>(vb_data.size() - batch.base_vertex);
                 int fvert_index = 0;
                 while (fvert) {
                     auto& gpu_vert = vb_data.emplace_back();

@@ -53,14 +53,15 @@ namespace df::gr::d3d11
             }
         };
 
-        std::tuple<GpuTransformedVertex*, rf::ushort*, int> setup(int num_vert, int num_ind, const State& state)
+        std::tuple<GpuTransformedVertex*, rf::ushort*, rf::ushort> setup(int num_vert, int num_ind, const State& state)
         {
             if (state_ != state || vertex_ring_buffer_.is_full(num_vert) || index_ring_buffer_.is_full(num_ind)) {
                 flush();
                 state_ = state;
             }
-            auto [gpu_verts, base_vertex] = vertex_ring_buffer_.alloc(num_vert);
-            auto [gpu_inds, base_index] = index_ring_buffer_.alloc(num_ind);
+            auto base_vertex = static_cast<rf::ushort>(vertex_ring_buffer_.get_pos());
+            auto gpu_verts = vertex_ring_buffer_.alloc(num_vert);
+            auto gpu_inds = index_ring_buffer_.alloc(num_ind);
             return {gpu_verts, gpu_inds, base_vertex};
         }
 

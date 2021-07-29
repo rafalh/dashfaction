@@ -79,8 +79,8 @@ namespace df::gr::d3d11
                 b.texture_index = chunk.texture_idx;
                 b.mode = chunk.mode;
                 b.double_sided = is_vif_chunk_double_sided(chunk);
+                b.base_vertex = gpu_verts.size();
 
-                int chunk_start_index = gpu_verts.size();
                 for (int vert_index = 0; vert_index < chunk.num_vecs; ++vert_index) {
                     GpuVertex& gpu_vert = gpu_verts.emplace_back();
                     gpu_vert.x = chunk.vecs[vert_index].x;
@@ -101,13 +101,13 @@ namespace df::gr::d3d11
                 }
                 for (int face_index = 0; face_index < chunk.num_faces; ++face_index) {
                     auto& face = chunk.faces[face_index];
-                    gpu_inds.emplace_back(chunk_start_index + face.vindex1);
-                    gpu_inds.emplace_back(chunk_start_index + face.vindex2);
-                    gpu_inds.emplace_back(chunk_start_index + face.vindex3);
+                    gpu_inds.emplace_back(face.vindex1);
+                    gpu_inds.emplace_back(face.vindex2);
+                    gpu_inds.emplace_back(face.vindex3);
                     if ((face.flags & VIF_FACE_DOUBLE_SIDED) && !b.double_sided) {
-                        gpu_inds.emplace_back(chunk_start_index + face.vindex1);
-                        gpu_inds.emplace_back(chunk_start_index + face.vindex3);
-                        gpu_inds.emplace_back(chunk_start_index + face.vindex2);
+                        gpu_inds.emplace_back(face.vindex1);
+                        gpu_inds.emplace_back(face.vindex3);
+                        gpu_inds.emplace_back(face.vindex2);
                     }
                 }
 
