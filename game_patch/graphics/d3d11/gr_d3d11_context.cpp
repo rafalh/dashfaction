@@ -1,7 +1,7 @@
 #include <cassert>
 #include <cstring>
 #include "../../rf/gr/gr_light.h"
-#include "../../rf/os/timer.h"
+#include "../../rf/os/frametime.h"
 #include "gr_d3d11.h"
 #include "gr_d3d11_context.h"
 #include "gr_d3d11_texture.h"
@@ -165,7 +165,7 @@ namespace df::gr::d3d11
     void PerFrameBuffer::update(ID3D11DeviceContext* device_context)
     {
         PerFrameBufferData data;
-        data.time = timer_get_milliseconds() / 1000.0f; // FIXME: paused game?
+        data.time = rf::frametime_total_milliseconds / 1000.0f;
 
         D3D11_MAPPED_SUBRESOURCE mapped_subres;
         DF_GR_D3D11_CHECK_HR(
