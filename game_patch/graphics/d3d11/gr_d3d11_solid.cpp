@@ -226,7 +226,7 @@ namespace df::gr::d3d11
             render_context.set_mode(b.mode);
             render_context.set_textures(b.texture_1, b.texture_2);
             //xlog::warn("DrawIndexed %d %d", b.num_indices, b.start_index);
-            render_context.device_context()->DrawIndexed(b.num_indices, b.start_index, b.base_vertex);
+            render_context.draw_indexed(b.num_indices, b.start_index, b.base_vertex);
         }
     }
 

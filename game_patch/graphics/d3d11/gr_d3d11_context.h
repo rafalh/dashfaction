@@ -328,6 +328,11 @@ namespace df::gr::d3d11
             lights_buffer_.update(device_context_);
         }
 
+        void draw_indexed(int index_count, int index_start_location, int base_vertex_location)
+        {
+            device_context_->DrawIndexed(index_count, index_start_location, base_vertex_location);
+        }
+
     private:
         void bind_cbuffers();
 
