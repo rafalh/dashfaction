@@ -506,6 +506,7 @@ namespace df::gr::d3d11
         }
 
         auto& batches = cache.get_batches(lod_index);
+        ID3D11DeviceContext* device_context = render_context_.device_context();
 
         for (auto& b : batches) {
             // ccrunch tool chunkifies mesh and inits render mode flags
@@ -528,7 +529,7 @@ namespace df::gr::d3d11
             int texture = tex_handles[b.texture_index];
             render_context_.set_mode(forced_mode.value_or(b.mode), color);
             render_context_.set_textures(texture, -1);
-            render_context_.device_context()->DrawIndexed(b.num_indices, b.start_index, b.base_vertex);
+            device_context->DrawIndexed(b.num_indices, b.start_index, b.base_vertex);
         }
         if (params.powerup_bitmaps[0] != -1) {
             gr::Mode powerup_mode{
@@ -539,17 +540,17 @@ namespace df::gr::d3d11
                 gr::ZBUFFER_TYPE_READ,
                 gr::FOG_NOT_ALLOWED,
             };
-            render_context_.set_mode(powerup_mode, color);
+            render_context_.set_mode(powerup_mode);
             render_context_.set_textures(params.powerup_bitmaps[0], -1);
             for (auto& b : batches) {
                 render_context_.set_cull_mode(b.double_sided ? D3D11_CULL_NONE : D3D11_CULL_BACK);
-                render_context_.device_context()->DrawIndexed(b.num_indices, b.start_index, b.base_vertex);
+                device_context->DrawIndexed(b.num_indices, b.start_index, b.base_vertex);
             }
             if (params.powerup_bitmaps[1] != -1) {
                 render_context_.set_textures(params.powerup_bitmaps[1], -1);
                 for (auto& b : batches) {
                     render_context_.set_cull_mode(b.double_sided ? D3D11_CULL_NONE : D3D11_CULL_BACK);
-                    render_context_.device_context()->DrawIndexed(b.num_indices, b.start_index, b.base_vertex);
+                    device_context->DrawIndexed(b.num_indices, b.start_index, b.base_vertex);
                 }
             }
         }
