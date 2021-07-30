@@ -4,6 +4,11 @@
 #include <string_view>
 #include <fstream>
 
+// Needed by MinGW
+#ifndef D3D_COMPILE_STANDARD_FILE_INCLUDE
+#define D3D_COMPILE_STANDARD_FILE_INCLUDE ((ID3DInclude*)(UINT_PTR)1)
+#endif
+
 int main(int argc, char* argv[])
 {
     if (argc <= 1) {
@@ -86,6 +91,7 @@ int main(int argc, char* argv[])
     hlsl_filename_w.resize(num);
     ID3DBlob* shader_bytecode = nullptr;
     ID3DBlob* errors = nullptr;
+    // D3DCompileFromFile is not available in d3dcompiler_43
     // HRESULT hr = D3DCompileFromFile(
     //     hlsl_filename_w.c_str(),
     //     macros.data(),
@@ -105,7 +111,7 @@ int main(int argc, char* argv[])
         hlsl_code.size(),
         hlsl_filename.c_str(),
         macros.data(),
-        nullptr,
+        D3D_COMPILE_STANDARD_FILE_INCLUDE,
         entrypoint.c_str(),
         target.c_str(),
         flags1,
