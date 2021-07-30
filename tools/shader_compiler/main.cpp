@@ -132,6 +132,6 @@ int main(int argc, char* argv[])
     std::fstream output_file{output_filename.c_str(), std::ios_base::out | std::ios_base::binary};
     output_file.write(static_cast<char*>(shader_data), shader_size);
     shader_bytecode->Release();
-    printf("Shader byte code size: %d\n", shader_size);
+    printf("Shader byte code size: %ld\n", shader_size);
     return 0;
 }
