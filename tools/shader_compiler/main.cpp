@@ -19,6 +19,7 @@ int main(int argc, char* argv[])
             "-e entrypoint  sets shader main function\n"
             "-t target      sets shader target (e.g. vs_2_0)\n"
             "-Dname=value   adds macro-definition\n"
+            "-O[123]        sets optimization level\n"
         );
         return 1;
     }
