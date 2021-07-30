@@ -223,8 +223,6 @@ namespace df::gr::d3d11
         }
 
         geometry_buffers_.bind_buffers(render_context);
-        render_context.set_cull_mode(D3D11_CULL_BACK);
-        render_context.set_primitive_topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         for (SolidBatch& b : batches) {
             render_context.set_mode(b.mode);
             render_context.set_textures(b.textures[0], b.textures[1]);
@@ -377,9 +375,6 @@ namespace df::gr::d3d11
 
             for (GFace* face : faces) {
                 auto fvert = face->edge_loop;
-                if (face->attributes.group_id > -0x1000 && face->attributes.group_id < 0x1000 && face->attributes.group_id != 0) {
-                    xlog::warn("bad face %p flags %x group_id %d", face, face->attributes.flags, face->attributes.group_id);
-                }
                 GTextureMover* texture_mover = face->attributes.texture_mover;
                 float u_pan_speed = texture_mover ? texture_mover->u_pan_speed : 0.0f;
                 float v_pan_speed = texture_mover ? texture_mover->v_pan_speed : 0.0f;
@@ -765,9 +760,6 @@ namespace df::gr::d3d11
         for (int i = 0; i < num_rooms; ++i) {
             auto room = rooms[i];
             set_currently_rendered_room(room);
-            if (gr::cull_bounding_box(room->bbox_min, room->bbox_max)) {
-                continue;
-            }
 
             render_room_faces(solid, room, FaceRenderType::opaque);
 
@@ -792,6 +784,8 @@ namespace df::gr::d3d11
         render_context_.set_vertex_shader(vertex_shader_);
         render_context_.set_pixel_shader(pixel_shader_);
         render_context_.set_model_transform(pos, orient);
+        render_context_.set_cull_mode(D3D11_CULL_BACK);
+        render_context_.set_primitive_topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     }
 
     void SolidRenderer::page_in_solid(rf::GSolid* solid)

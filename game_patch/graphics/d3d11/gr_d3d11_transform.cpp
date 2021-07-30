@@ -9,48 +9,6 @@ using namespace rf;
 
 namespace df::gr::d3d11
 {
-    GpuMatrix4x4 build_identity_matrix()
-    {
-        return {{
-            {1.0f, 0.0f, 0.0f, 0.0f},
-            {0.0f, 1.0f, 0.0f, 0.0f},
-            {0.0f, 0.0f, 1.0f, 0.0f},
-            {0.0f, 0.0f, 0.0f, 1.0f},
-        }};
-    }
-
-    GpuMatrix4x3 build_identity_matrix43()
-    {
-        return {{
-            {1.0f, 0.0f, 0.0f, 0.0f},
-            {0.0f, 1.0f, 0.0f, 0.0f},
-            {0.0f, 0.0f, 1.0f, 0.0f},
-        }};
-    }
-
-    GpuMatrix4x3 build_world_matrix(const Vector3& pos, const Matrix3& orient)
-    {
-        return {{
-            {orient.rvec.x, orient.uvec.x, orient.fvec.x, pos.x},
-            {orient.rvec.y, orient.uvec.y, orient.fvec.y, pos.y},
-            {orient.rvec.z, orient.uvec.z, orient.fvec.z, pos.z},
-        }};
-    }
-
-    GpuMatrix4x3 build_view_matrix(const rf::Vector3& pos, const rf::Matrix3& orient)
-    {
-        rf::Vector3 translation{
-            -(pos.x * orient.rvec.x + pos.y * orient.rvec.y + pos.z * orient.rvec.z),
-            -(pos.x * orient.uvec.x + pos.y * orient.uvec.y + pos.z * orient.uvec.z),
-            -(pos.x * orient.fvec.x + pos.y * orient.fvec.y + pos.z * orient.fvec.z),
-        };
-        return {{
-            {orient.rvec.x, orient.rvec.y, orient.rvec.z, translation.x},
-            {orient.uvec.x, orient.uvec.y, orient.uvec.z, translation.y},
-            {orient.fvec.x, orient.fvec.y, orient.fvec.z, translation.z},
-        }};
-    }
-
     GpuMatrix4x4 build_proj_matrix()
     {
         // FIXME: this projection matrix is non-standard. See:
