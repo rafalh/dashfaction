@@ -337,6 +337,9 @@ void gr_apply_patch()
         gr_lod_dist_scale = 10.0f;
     }
 
+    // Fix gr_rect_border not drawing left border
+    AsmWriter{0x0050DF2D}.push(asm_regs::ebp).push(asm_regs::ebx);
+
     // Commands
     fov_cmd.register_cmd();
     gamma_cmd.register_cmd();

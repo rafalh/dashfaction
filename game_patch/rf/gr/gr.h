@@ -378,6 +378,11 @@ namespace rf::gr
         AddrCaller{0x0050DBE0}.c_call(x, y, w, h, mode);
     }
 
+    inline void rect_border(int x, int y, int w, int h)
+    {
+        AddrCaller{0x0050DD80}.c_call(x, y, w, h);
+    }
+
     inline void bitmap(int bm_handle, int x, int y, Mode mode = bitmap_wrap_mode)
     {
         AddrCaller{0x0050D2A0}.c_call(bm_handle, x, y, mode);
