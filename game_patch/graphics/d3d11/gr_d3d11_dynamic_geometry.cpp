@@ -161,9 +161,10 @@ namespace df::gr::d3d11
             GpuTransformedVertex& out_vert = gpu_verts[i];
             out_vert.x = (in_vert.sx - gr::screen.offset_x) / gr::screen.clip_width * 2.0f - 1.0f;
             out_vert.y = (in_vert.sy - gr::screen.offset_y) / gr::screen.clip_height * -2.0f + 1.0f;
-            out_vert.z = in_vert.sw * gr::d3d::zm;
+            float w = is_3d ? 1.0f / in_vert.sw / matrix_scale_z : 1.0f;
+            out_vert.z = in_vert.sw * gr::d3d::zm * w;
             // Set w to depth in camera space (needed for 3D rendering)
-            out_vert.w = 1.0f / in_vert.sw / matrix_scale_z;
+            out_vert.w = w;
             out_vert.diffuse = diffuse;
         }
         *(gpu_ind_ptr++) = base_vertex;
