@@ -162,6 +162,23 @@ size_t HttpRequest::read(void* buf, size_t buf_size)
     return read;
 }
 
+std::optional<std::string> HttpRequest::get_header(std::string_view name)
+{
+    DWORD index = 0;
+    std::string buf{name};
+    buf.resize(1024);
+
+    DWORD buf_len = buf.size();
+    if (!HttpQueryInfoA(m_req, HTTP_QUERY_CUSTOM, buf.data(), &buf_len, &index)) {
+        if (GetLastError() == ERROR_HTTP_HEADER_NOT_FOUND) {
+            return {};
+        }
+        THROW_WIN32_ERROR();
+    }
+    buf.resize(buf_len);
+    return {buf};
+}
+
 static bool is_uri_reserved_char(char c)
 {
     // encode the same characters as encodeURIComponent JS function

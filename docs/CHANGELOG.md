@@ -45,6 +45,7 @@ Version 1.7.1 (not released yet)
 - Add game installation path autofill for German GOG RF to setup program
 - Remove unnecessary "Unknown tables.vpp version" error from setup program (the launcher already displays an error for mismatched tables.vpp files)
 - Fix possible OOB write in waypoint list read code
+- Add server verification in update checker using Ed25519 signature
 
 Version 1.7.0 (released 2021-06-05)
 -----------------------------------

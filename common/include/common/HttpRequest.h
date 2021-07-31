@@ -1,9 +1,10 @@
 #pragma once
 
 #include <string>
+#include <utility>
+#include <optional>
 #include <windows.h>
 #include <wininet.h>
-#include <utility>
 
 class InternetHandle
 {
@@ -91,6 +92,7 @@ public:
 
     void send(std::string_view body = "");
     size_t read(void* buf, size_t buf_size);
+    std::optional<std::string> get_header(std::string_view name);
 };
 
 std::string encode_uri_component(std::string_view value);

@@ -6,8 +6,30 @@
 #include <thread>
 #include <mutex>
 #include <optional>
+#include <ed25519.h>
+#include <base64.h>
 
 #define UPDATE_CHECK_ENDPOINT_URL "https://dashfactionapi.rafalh.dev/update"
+
+static unsigned char signature_public_key[] = {
+    0x44, 0xCB, 0x46, 0xDC, 0xD6, 0xC7, 0xDB, 0xA0, 0x49, 0x60, 0xB5, 0x42, 0x1E, 0x14, 0xA1, 0xBD,
+    0x68, 0x3D, 0xC3, 0xE7, 0x29, 0x67, 0x17, 0xE3, 0x2F, 0xAD, 0xA1, 0x71, 0x33, 0x13, 0x4C, 0x7C,
+};
+
+static bool verify_signature(const std::optional<std::string>& sig_hdr_opt, std::string_view response_body, const std::string& challenge)
+{
+    std::string sig_hdr = sig_hdr_opt.value();
+    std::string sig = base64_decode(sig_hdr);
+    std::string msg{response_body};
+    msg += challenge;
+    int result = ed25519_verify(
+        reinterpret_cast<const unsigned char*>(sig.data()),
+        reinterpret_cast<const unsigned char*>(msg.data()),
+        msg.size(),
+        signature_public_key
+    );
+    return result != 0;
+}
 
 UpdateChecker::CheckResult UpdateChecker::check() // NOLINT(readability-convert-member-functions-to-static)
 {
@@ -17,6 +39,13 @@ UpdateChecker::CheckResult UpdateChecker::check() // NOLINT(readability-convert-
     auto os_ver = get_real_os_version();
     url += "&os=";
     url += encode_uri_component(os_ver);
+    unsigned char random_bytes[32];
+    if (ed25519_create_seed(random_bytes) != 0) {
+        throw std::runtime_error{"Cannot generate random seed"};
+    }
+    std::string challenge = base64_encode(random_bytes, 32, true);
+    url += "&signature-input=";
+    url += encode_uri_component(challenge);
 
     auto wine_ver_opt = get_wine_version();
     if (wine_ver_opt) {
@@ -30,6 +59,11 @@ UpdateChecker::CheckResult UpdateChecker::check() // NOLINT(readability-convert-
     char buf[4096];
     size_t bytes_read = req.read(buf, sizeof(buf) - 1);
     std::string_view response{buf, bytes_read};
+
+    std::optional<std::string> sig_hdr_opt = req.get_header("X-Signature");
+    if (!verify_signature(sig_hdr_opt, response, challenge)) {
+        throw std::runtime_error{"Invalid signature"};
+    }
 
     UpdateChecker::CheckResult result;
     if (!response.empty()) {
