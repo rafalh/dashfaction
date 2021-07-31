@@ -759,17 +759,17 @@ namespace df::gr::d3d11
 
         for (int i = 0; i < num_rooms; ++i) {
             auto room = rooms[i];
-            set_currently_rendered_room(room);
 
             render_room_faces(solid, room, FaceRenderType::opaque);
 
+            // Note: calling set_currently_rendered_room could improve culling here but it breaks some levels
+            // if a detail brush is contained in multiple normal rooms
             for (GRoom* detail_room : room->detail_rooms) {
                 if (detail_room->room_to_render_with == room && !gr::cull_bounding_box(detail_room->bbox_min, detail_room->bbox_max)) {
                     render_detail(solid, detail_room, false);
                 }
             }
         }
-        set_currently_rendered_room(nullptr);
 
         if (decals_enabled) {
             render_dynamic_decals(rooms, num_rooms);
