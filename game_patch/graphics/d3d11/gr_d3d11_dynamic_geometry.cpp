@@ -180,11 +180,11 @@ namespace df::gr::d3d11
     void DynamicGeometryRenderer::line_2d(float x1, float y1, float x2, float y2, rf::gr::Mode mode)
     {
         rf::gr::Vertex verts[2];
-        verts[0].sx = x1;
-        verts[0].sy = y1;
+        verts[0].sx = x1 + 0.5f;
+        verts[0].sy = y1 + 0.5f;
         verts[0].sw = 1.0f;
-        verts[1].sx = x2;
-        verts[1].sy = y2;
+        verts[1].sx = x2 + 0.5f;
+        verts[1].sy = y2 + 0.5f;
         verts[1].sw = 1.0f;
         const rf::gr::Vertex* verts_ptrs[] = {&verts[0], &verts[1]};
         line(verts_ptrs, mode, false);
