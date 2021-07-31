@@ -5,14 +5,17 @@
 #include "../rf/geometry.h"
 #include "../rf/mover.h"
 #include "../rf/gr/gr.h"
+#include "../rf/gr/gr_font.h"
 #include "../rf/os/frametime.h"
+#include "../rf/gameseq.h"
 #include "../os/console.h"
 #include "../bmpman/bmpman.h"
 #include "../bmpman/fmt_conv_templates.h"
 
 constexpr auto reference_fps = 30.0f;
 constexpr auto reference_frametime = 1.0f / reference_fps;
-int g_max_decals = 512;
+static int g_max_decals = 512;
+static bool g_show_room_clip_wnd = false;
 
 FunHook<int(rf::GSolid*, rf::GRoom*)> geo_cache_prepare_room_hook{
     0x004F0C00,
@@ -375,6 +378,37 @@ ConsoleCommand2 max_decals_cmd{
     },
 };
 
+static void render_rooms_clip_wnds()
+{
+    rf::GRoom** rooms;
+    int num_rooms;
+    rf::g_get_room_render_list(&rooms, &num_rooms);
+    rf::gr::set_color(255, 255, 255, 255);
+    for (int i = 0; i < num_rooms; ++i) {
+        rf::GRoom* room = rooms[i];
+        char buf[256];
+        std::snprintf(buf, sizeof(buf), "room %d", room->room_index);
+        rf::gr::string(room->clip_wnd.left, room->clip_wnd.top, buf);
+        rf::gr::rect_border(room->clip_wnd.left, room->clip_wnd.top,
+            room->clip_wnd.right - room->clip_wnd.left, room->clip_wnd.bot - room->clip_wnd.top);
+    }
+}
+
+static ConsoleCommand2 dbg_room_clip_wnd_cmd{
+    "dbg_room_clip_wnd",
+    []() {
+        g_show_room_clip_wnd = !g_show_room_clip_wnd;
+        rf::console::printf("Show room clip windows: %d", g_show_room_clip_wnd);
+    },
+};
+
+void g_solid_render_ui()
+{
+    if (g_show_room_clip_wnd && rf::gameseq_in_gameplay()) {
+        render_rooms_clip_wnds();
+    }
+}
+
 void g_solid_do_patch()
 {
     // Buffer overflows in solid_read
@@ -433,4 +467,5 @@ void g_solid_do_patch()
 
     // Commands
     max_decals_cmd.register_cmd();
+    dbg_room_clip_wnd_cmd.register_cmd();
 }

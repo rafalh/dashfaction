@@ -131,6 +131,7 @@ CodeInjection after_frame_render_hook{
             experimental_render();
 #endif
             debug_render_ui();
+            g_solid_render_ui();
         }
     },
 };
