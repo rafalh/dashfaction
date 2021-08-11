@@ -26,6 +26,7 @@
 #include "../rf/gameseq.h"
 #include "../rf/level.h"
 #include "../rf/gameseq.h"
+#include "../rf/misc.h"
 #include "../hud/hud.h"
 
 static bool is_vpp_filename(const char* filename)
@@ -624,22 +625,38 @@ CodeInjection join_failed_injection{
     },
 };
 
+static void do_download_level(std::string filename, bool force)
+{
+    if (filename.rfind('.') == std::string::npos) {
+        filename += ".rfl";
+    }
+    if (LevelDownloadManager::instance().get_operation()) {
+        xlog::error("Level download is already in progress!");
+    }
+    else {
+        if (!force && rf::get_file_checksum(filename.c_str())) {
+            xlog::error("Level already exists on disk! Use download_level_force to download anyway.");
+            return;
+        }
+        LevelDownloadManager::instance().start(filename.c_str(),
+            std::make_unique<ConsoleReportingDownloadListener>());
+    }
+}
+
 ConsoleCommand2 download_level_cmd{
     "download_level",
     [](std::string filename) {
-        if (filename.rfind('.') == std::string::npos) {
-            filename += ".rfl";
-        }
-        if (LevelDownloadManager::instance().get_operation()) {
-            xlog::error("Level download is already in progress!");
-        }
-        else {
-            LevelDownloadManager::instance().start(filename.c_str(),
-                std::make_unique<ConsoleReportingDownloadListener>());
-        }
+        do_download_level(filename, false);
     },
     "Downloads level from FactionFiles.com",
     "download_level <rfl_name>",
+};
+
+ConsoleCommand2 download_level_force_cmd{
+    "download_level_force",
+    [](std::string filename) {
+        do_download_level(filename, true);
+    },
 };
 
 void level_download_do_patch()
@@ -652,6 +669,7 @@ void level_download_do_patch()
 void level_download_init()
 {
     download_level_cmd.register_cmd();
+    download_level_force_cmd.register_cmd();
 }
 
 void multi_render_level_download_progress()
