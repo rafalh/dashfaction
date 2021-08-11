@@ -176,6 +176,33 @@ CodeInjection player_fpgun_render_main_player_entity_injection{
     },
 };
 
+ConsoleCommand2 fpgun_ar_ammo_blend{
+    "fpgun_ar_ammo_blend",
+    [](int red, int green, int blue) {
+        red = std::clamp(red, 0, 255);
+        green = std::clamp(green, 0, 255);
+        blue = std::clamp(blue, 0, 255);
+        g_game_config.fpgun_ar_ammo_blend = 0xFF000000 | (blue << 16) | (green << 8) | red;
+        g_game_config.save();
+    },
+    "Sets the color used to blend the Assault Rifle's first person ammo counter",
+    "fpgun_ar_ammo_blend <red> <green> <blue> (0-255)",
+};
+
+CodeInjection fpgun_ar_ammo_blend_injection{
+    0x004ABC03,
+    [](auto& regs) {
+        rf::gr::set_color(
+            g_game_config.fpgun_ar_ammo_blend & 0xFF,
+            (g_game_config.fpgun_ar_ammo_blend >> 8) & 0xFF,
+            (g_game_config.fpgun_ar_ammo_blend >> 16) & 0xFF,
+            (g_game_config.fpgun_ar_ammo_blend >> 24) & 0xFF
+        );
+        regs.eip = 0x004ABC08;
+    }
+};
+
+
 void player_fpgun_do_patch()
 {
 #if SPECTATE_MODE_SHOW_WEAPON
@@ -247,6 +274,10 @@ void player_fpgun_do_patch()
     // Allow customizing fpgun fov
     player_fpgun_render_gr_setup_3d_hook.install();
     fpgun_fov_scale_cmd.register_cmd();
+
+    // Allow customizing assault rifle fpgun ammo counter color
+    fpgun_ar_ammo_blend_injection.install();
+    fpgun_ar_ammo_blend.register_cmd();
 
 #ifndef NDEBUG
     reload_fpgun_cmd.register_cmd();

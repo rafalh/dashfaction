@@ -52,6 +52,8 @@ struct GameConfig
 
     CfgVar<float> fpgun_fov_scale{1.0f, [](auto val) { return std::clamp(val, 0.1f, 1.5f); }};
 
+    CfgVar<unsigned int> fpgun_ar_ammo_blend = 0xFF0000FF; // RGBA. not using Color because of saving in registry
+
     // Multiplayer
     static const char default_rf_tracker[];
     CfgVar<std::string> tracker{default_rf_tracker};
