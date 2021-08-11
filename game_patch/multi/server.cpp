@@ -668,6 +668,9 @@ void server_init()
     // be problematic (PF went this way and its accuracy stat is broken)
     multi_lag_comp_handle_hit_hook.install();
     multi_lag_comp_weapon_fire_hook.install();
+
+    // Set lower bound of server max players clamp range to 1 (instead of 2)
+    write_mem<i8>(0x0046DD4F + 1, 1);
 }
 
 void server_do_frame()
