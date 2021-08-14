@@ -22,6 +22,7 @@ private:
     bool reminder_sent = false;
     std::map<rf::Player*, bool> players_who_voted;
     std::set<rf::Player*> remaining_players;
+    rf::Player* owner;
 
 public:
     virtual ~Vote() = default;
@@ -31,6 +32,8 @@ public:
         if (!process_vote_arg(arg, source)) {
             return false;
         }
+
+        owner = source;
 
         send_vote_starting_msg(source);
 
@@ -105,6 +108,19 @@ public:
         }
         return true;
     }
+
+    bool try_cancel_vote(rf::Player* source)
+    {
+        if (owner != source) {
+            send_chat_line_packet("You cannot cancel a vote you didn't start!", source);
+            return false;
+        }
+
+        send_chat_line_packet("\xA6 Vote canceled!", nullptr);
+        return true;
+    }
+
+
 
 protected:
     [[nodiscard]] virtual std::string get_title() const = 0;
@@ -391,6 +407,18 @@ public:
         }
     }
 
+    void try_cancel_vote(rf::Player* source)
+    {
+        if (!active_vote) {
+            send_chat_line_packet("No vote in progress!", source);
+            return;
+        }
+
+        if (active_vote.value()->try_cancel_vote(source)) {
+            active_vote.reset();
+        }
+    }
+
     void do_frame()
     {
         if (!active_vote)
@@ -425,6 +453,8 @@ void handle_vote_command(std::string_view vote_name, std::string_view vote_arg, 
         g_vote_mgr.add_player_vote(true, sender);
     else if (vote_name == "no" || vote_name == "n")
         g_vote_mgr.add_player_vote(false, sender);
+    else if (vote_name == "cancel")
+        g_vote_mgr.try_cancel_vote(sender);
     else
         send_chat_line_packet("Unrecognized vote type!", sender);
 }
