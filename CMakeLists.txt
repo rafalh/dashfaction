@@ -1,4 +1,5 @@
-cmake_minimum_required(VERSION 3.13)
+# CMake 3.15 is required for CMAKE_MSVC_RUNTIME_LIBRARY.  
+cmake_minimum_required(VERSION 3.15)
 project(DashFaction)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
@@ -43,13 +44,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 if(MSVC)
     add_compile_options(/Zc:threadSafeInit-)
     add_compile_options(/arch:IA32)
-    # Static linked CRT
-    add_compile_options(
-        "$<$<CONFIG:Debug>:/MTd>"
-        "$<$<CONFIG:RelWithDebInfo>:/MT>"
-        "$<$<CONFIG:Release>:/MT>"
-        "$<$<CONFIG:MinSizeRel>:/MT>"
-    )
+    # Statically link Microsoft's CRT.
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
 # FIXME
