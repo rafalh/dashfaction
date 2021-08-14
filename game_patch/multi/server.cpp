@@ -281,7 +281,7 @@ bool handle_server_chat_command(std::string_view server_command, rf::Player* sen
     auto [cmd_name, cmd_arg] = strip_by_space(server_command);
 
     if (cmd_name == "info") {
-        send_chat_line_packet("Server powered by Dash Faction", sender);
+        send_chat_line_packet(string_format("Server powered by Dash Faction %s (build date: %s %s)", VERSION_STR, __DATE__, __TIME__).c_str(), sender);
     }
     else if (cmd_name == "vote") {
         auto [vote_name, vote_arg] = strip_by_space(cmd_arg);
