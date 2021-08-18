@@ -14,6 +14,8 @@
 #include <xlog/FileAppender.h>
 #include <xlog/Win32Appender.h>
 #include <xlog/xlog.h>
+#include <psapi.h> 
+#include <tlhelp32.h>
 #include "main.h"
 #include "../os/console.h"
 #include "../os/os.h"
@@ -304,6 +306,56 @@ extern "C" void subhook_unk_opcode_handler(uint8_t* opcode)
     xlog::error("SubHook unknown opcode 0x%X at 0x%p", *opcode, opcode);
 }
 
+DWORD get_pid_by_filename(std::string_view filename) {
+    HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (snapshot == INVALID_HANDLE_VALUE) {
+        return 0;
+    }
+
+    PROCESSENTRY32 process{sizeof(process)};
+    Process32First(snapshot, &process);
+
+    do {
+        if (process.szExeFile == filename) {
+            CloseHandle(snapshot);
+            return process.th32ProcessID;
+        }
+    } while (Process32Next(snapshot, &process));
+
+    CloseHandle(snapshot);
+    return 0;
+}
+
+void suspend_process(DWORD pid) {
+    using _NtSuspendProcess = LONG NTAPI (IN HANDLE ProcessHandle);
+    _NtSuspendProcess* NtSuspendProcess = reinterpret_cast<_NtSuspendProcess*>(
+        GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtSuspendProcess")
+    );
+
+    if (!NtSuspendProcess) {
+        return;
+    }
+
+    HANDLE handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+    NtSuspendProcess(handle);
+    CloseHandle(handle);
+}
+
+void resume_process(DWORD pid) {
+    using _NtResumeProcess = LONG NTAPI (IN HANDLE ProcessHandle);
+    _NtResumeProcess* NtResumeProcess = reinterpret_cast<_NtResumeProcess*>(
+        GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtResumeProcess")
+    );
+
+    if (!NtResumeProcess) {
+        return;
+    }
+
+    HANDLE handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+    NtResumeProcess(handle);
+    CloseHandle(handle);
+}
+
 extern "C" DWORD __declspec(dllexport) Init([[maybe_unused]] void* unused)
 {
     DWORD start_ticks = GetTickCount();
@@ -351,6 +403,26 @@ extern "C" DWORD __declspec(dllexport) Init([[maybe_unused]] void* unused)
     debug_apply_patches();
 
     xlog::info("Installing hooks took %lu ms", GetTickCount() - start_ticks);
+
+    // Suspend f.lux; otherwise f.lux will sometimes override calls to SetDeviceGammaRamp.
+    static DWORD flux_pid = get_pid_by_filename("flux.exe");
+    if (flux_pid && !rf::is_dedicated_server) {
+        HANDLE handle = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, flux_pid);
+
+        char flux_path[MAX_PATH];
+        if (GetModuleFileNameExA(handle, nullptr, flux_path, MAX_PATH) && 
+            string_contains(flux_path, R"(AppData\Local\FluxSoftware\Flux)")) {                   
+            // Required, if we crashed.
+            resume_process(flux_pid);
+
+            suspend_process(flux_pid);
+            std::atexit([] {
+                resume_process(flux_pid);
+            });
+        }
+
+        CloseHandle(handle);
+    }
 
     return 1; // success
 }
