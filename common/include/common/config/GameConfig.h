@@ -78,6 +78,7 @@ struct GameConfig
     CfgVar<float> level_sound_volume = 1.0f;
     CfgVar<std::string> dash_faction_version{""};
     CfgVar<bool> swap_assault_rifle_controls = false;
+    CfgVar<bool> swap_grenade_controls = false;
     CfgVar<bool> glares = true;
     CfgVar<bool> show_enemy_bullets = true;
     CfgVar<bool> linear_pitch = false;
