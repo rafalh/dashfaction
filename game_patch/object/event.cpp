@@ -9,6 +9,7 @@
 #include "../rf/event.h"
 #include "../rf/entity.h"
 #include "../rf/level.h"
+#include "../rf/multi.h"
 
 CodeInjection switch_model_event_custom_mesh_patch{
     0x004BB921,
@@ -153,6 +154,16 @@ FunHook<void()> event_level_init_post_hook{
     },
 };
 
+extern FunHook<void __fastcall(rf::Event *)> EventMessage__turn_on_hook;
+void __fastcall EventMessage__turn_on_new(rf::Event *this_)
+{
+    if (!rf::is_dedicated_server) EventMessage__turn_on_hook.call_target(this_);
+}
+FunHook<void __fastcall(rf::Event *this_)> EventMessage__turn_on_hook{
+    0x004BB210,
+    EventMessage__turn_on_new,
+};
+
 void apply_event_patches()
 {
     // Allow custom mesh (not used in clutter.tbl or items.tbl) in Switch_Model event
@@ -166,6 +177,9 @@ void apply_event_patches()
     // Fix crash after level change (Load_Level event) caused by GNavNode pointers in AiPathInfo not being cleared for entities
     // being taken from the previous level
     ai_path_release_on_load_level_event_crash_fix.install();
+
+    // Fix Message event crash on dedicated server
+    EventMessage__turn_on_hook.install();
 
     event_level_init_post_hook.install();
 }
