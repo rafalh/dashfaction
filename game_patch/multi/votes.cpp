@@ -436,6 +436,7 @@ void handle_vote_command(std::string_view vote_name, std::string_view vote_arg, 
 {
     if (get_player_additional_data(sender).is_browser) {
         send_chat_line_packet("Browsers are not allowed to vote!", sender);
+        return;
     }
     if (vote_name == "kick")
         g_vote_mgr.StartVote<VoteKick>(vote_arg, sender);
