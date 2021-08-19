@@ -30,6 +30,7 @@ See [CHANGELOG file](docs/CHANGELOG.md) for a detailed list of all features.
 You can also check out [examples of graphical improvements compared to the base game](docs/graphics_comparison).
 
 Client commands:
+* `. cmd_name_fragment` - Find a console variable or command
 * `maxfps value` - sets maximal FPS
 * `hud` - shows and hides HUD
 * `bighud` - toggles HUD between big and normal size

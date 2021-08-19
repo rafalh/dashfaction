@@ -10,8 +10,8 @@
 #include <patch_common/CallHook.h>
 #include <patch_common/AsmWriter.h>
 
-ConsoleCommand2 con_find_cmd{
-    "con_find",
+ConsoleCommand2 dot_cmd{
+    ".",
     [](std::string pattern) {
         for (i32 i = 0; i < rf::console::num_commands; ++i) {
             rf::console::Command* cmd = g_commands_buffer[i];
@@ -21,7 +21,7 @@ ConsoleCommand2 con_find_cmd{
         }
     },
     "Find a console variable or command",
-    "con_find <query>",
+    ". <query>",
 };
 
 ConsoleCommand2 vli_cmd{
@@ -163,7 +163,7 @@ void console_commands_init()
 #endif // DEBUG
 
     // Custom Dash Faction commands
-    con_find_cmd.register_cmd();
+    dot_cmd.register_cmd();
     vli_cmd.register_cmd();
     player_count_cmd.register_cmd();
     find_level_cmd.register_cmd();
