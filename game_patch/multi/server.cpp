@@ -333,7 +333,7 @@ CodeInjection detect_browser_player_patch{
     [](auto& regs) {
         rf::Player* player = regs.esi;
         int conn_rate = regs.eax;
-        if (conn_rate == 1) {
+        if (conn_rate == 1 || conn_rate == 256) {
             auto& pdata = get_player_additional_data(player);
             pdata.is_browser = true;
         }
