@@ -34,8 +34,10 @@
 #include "../rf/geometry.h"
 #include "../rf/level.h"
 #include "../misc/misc.h"
+#include "../misc/player.h"
 #include "../object/object.h"
 #include <common/utils/enum-bitwise-operators.h>
+#include <common/utils/list-utils.h>
 #include "../os/console.h"
 
 #if MASK_AS_PF
@@ -1063,6 +1065,19 @@ CodeInjection net_rel_work_injection{
     },
 };
 
+CallHook<int()> game_info_num_players_hook{
+    0x0047B141,
+    []() {
+        int player_count = 0;
+        auto player_list = SinglyLinkedList{rf::player_list};
+        for (auto& current_player : player_list) {
+            if (get_player_additional_data(&current_player).is_browser) continue;
+            player_count++;
+        }
+        return player_count;
+    },
+};
+
 void network_init()
 {
     // Improve simultaneous ping
@@ -1212,4 +1227,7 @@ void network_init()
     // Fixes players randomly losing connection to the server when some player sends double left game packets
     // when leaving because of missing level file
     net_rel_work_injection.install();
+
+    // Ignore browsers when calculating player count for info requests
+    game_info_num_players_hook.install();
 }
