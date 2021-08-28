@@ -71,10 +71,6 @@ FunHook<rf::Entity*(rf::Player*, int, const rf::Vector3*, const rf::Matrix3*, in
 
 bool should_swap_weapon_alt_fire(rf::Player* player)
 {
-    if (!g_game_config.swap_assault_rifle_controls) {
-        return false;
-    }
-
     auto* entity = rf::entity_from_handle(player->entity_handle);
     if (!entity) {
         return false;
@@ -86,7 +82,13 @@ bool should_swap_weapon_alt_fire(rf::Player* player)
         return false;
     }
 
-    return entity->ai.current_primary_weapon == rf::assault_rifle_weapon_type;
+    if (g_game_config.swap_assault_rifle_controls && entity->ai.current_primary_weapon == rf::assault_rifle_weapon_type)
+        return true;
+
+    if (g_game_config.swap_grenade_controls && entity->ai.current_primary_weapon == rf::grenade_weapon_type)
+        return true;
+
+    return false;
 }
 
 bool is_player_weapon_on(rf::Player* player, bool alt_fire) {
@@ -147,6 +149,17 @@ ConsoleCommand2 swap_assault_rifle_controls_cmd{
                      g_game_config.swap_assault_rifle_controls ? "enabled" : "disabled");
     },
     "Swap Assault Rifle controls",
+};
+
+ConsoleCommand2 swap_grenade_controls_cmd{
+    "swap_grenade_controls",
+    []() {
+        g_game_config.swap_grenade_controls = !g_game_config.swap_grenade_controls;
+        g_game_config.save();
+        rf::console::printf("Swap grenade controls: %s",
+                     g_game_config.swap_grenade_controls ? "enabled" : "disabled");
+    },
+    "Swap grenade controls",
 };
 
 FunHook<void(rf::Player*, int)> player_make_weapon_current_selection_hook{
@@ -262,6 +275,7 @@ void player_do_patch()
     stop_continous_primary_fire_patch.install();
     stop_continous_alternate_fire_patch.install();
     swap_assault_rifle_controls_cmd.register_cmd();
+    swap_grenade_controls_cmd.register_cmd();
 
     // Reset impact delay timers when switching weapon to avoid delayed fire after switching
     player_make_weapon_current_selection_hook.install();

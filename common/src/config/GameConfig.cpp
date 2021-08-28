@@ -158,6 +158,7 @@ bool GameConfig::visit_vars(T&& visitor, bool is_save)
     result &= visitor(dash_faction_key, "Allow Overwriting Game Files", allow_overwrite_game_files);
     result &= visitor(dash_faction_key, "Version", dash_faction_version);
     result &= visitor(dash_faction_key, "Swap Assault Rifle Controls", swap_assault_rifle_controls);
+    result &= visitor(dash_faction_key, "Swap Grenade Controls", swap_grenade_controls);
     result &= visitor(dash_faction_key, "Glares", glares);
     result &= visitor(dash_faction_key, "Linear Pitch", linear_pitch);
     result &= visitor(dash_faction_key, "Show Enemy Bullets", show_enemy_bullets);

@@ -50,6 +50,7 @@ Client commands:
 * `skip_cutscene_bind control` - sets binding for cutscene skip action
 * `levelsounds` - sets volume scale for level ambient sounds
 * `swap_assault_rifle_controls` - swaps primary and alternate fire controls for Assault Rifle weapon
+* `swap_grenade_controls` - swaps primary and alternate fire controls for Grenades weapon
 * `show_enemy_bullets` - toggles visibility of enemy bullets in multiplayer
 * `kill_messages` - toggles printing of kill messages in the chatbox and the game console
 * `mute_all_players` - toggles processing of chat messages from other players
