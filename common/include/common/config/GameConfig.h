@@ -35,7 +35,7 @@ struct GameConfig
     CfgVar<unsigned> geometry_cache_size{32, [](auto val) { return std::clamp(val, 2u, 32u); }};
 
     static constexpr unsigned min_fps_limit = 10u;
-    static constexpr unsigned max_fps_limit = 240u;
+    static constexpr unsigned max_fps_limit = 9999u;
     CfgVar<unsigned> max_fps{60, [](auto val) { return std::clamp(val, min_fps_limit, max_fps_limit); }};
     CfgVar<unsigned> server_max_fps{60, [](auto val) { return std::clamp(val, min_fps_limit, max_fps_limit); }};
 
