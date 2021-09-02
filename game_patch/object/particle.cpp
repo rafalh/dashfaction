@@ -43,8 +43,20 @@ FunHook<void(int, rf::ParticleCreateInfo&, rf::GRoom*, rf::Vector3*, int, rf::Pa
     },
 };
 
+CodeInjection particle_should_take_damage_injection{
+    0x00494DE9, 
+    [] (auto& regs) {
+        if (rf::is_dedicated_server) {
+            regs.eip = 0x00494DF8;
+        }
+    }
+};
+
 void particle_do_patch()
 {
+    // Fix particle damage on dedicated servers, e.g., flame thrower.
+    particle_should_take_damage_injection.install();
+
     // Skip broken code that was supposed to skip particle emulation when particle emitter is in non-rendered room
     // RF code is broken here because level emitters have object handle set to 0 and other emitters are not added to
     // the searched list
