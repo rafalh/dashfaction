@@ -13,6 +13,7 @@
 #include "server.h"
 #include "server_internal.h"
 #include "multi.h"
+#include "custom_packets.h"
 #include "../os/console.h"
 #include "../misc/player.h"
 #include "../main/main.h"
@@ -383,7 +384,13 @@ FunHook<float(rf::Entity*, float, int, int, int)> entity_damage_hook{
             auto* damaged_player_stats = static_cast<PlayerStatsNew*>(damaged_player->stats);
             damaged_player_stats->add_damage_received(real_damage);
 
-            if (g_additional_server_config.hit_sounds.enabled) {
+            auto& pdata = get_player_additional_data(killer_player);
+            if (pdata.multi_hitsounds) { 
+                 if (pdata.multi_hitsounds == 2) {
+                    custom_packets::send_hitsound_packet(killer_player);
+                }
+            }
+            else if (g_additional_server_config.hit_sounds.enabled) {
                 send_hit_sound_packet(killer_player);
             }
         }
