@@ -337,10 +337,11 @@ static void verify_player_id_in_packet(char* player_id_ptr, const rf::NetAddr& a
         assert(false);
         return;
     }
+    rf::ubyte received_player_id = static_cast<rf::ubyte>(*player_id_ptr);
     rf::ubyte real_player_id = src_player->net_data->player_id;
-    if (static_cast<rf::ubyte>(*player_id_ptr) != real_player_id) {
+    if (received_player_id != real_player_id) {
         xlog::warn("Wrong player ID in %s packet from %s (expected %02X but got %02X)",
-            packet_name, src_player->name.c_str(), real_player_id, *player_id_ptr);
+            packet_name, src_player->name.c_str(), real_player_id, received_player_id);
         *player_id_ptr = real_player_id; // fix player ID
     }
 }
@@ -902,6 +903,9 @@ const std::optional<DashFactionServerInfo>& get_df_server_info()
 
 void send_chat_line_packet(const char* msg, rf::Player* target, rf::Player* sender, bool is_team_msg)
 {
+    if (!rf::is_server && sender == nullptr) {
+        sender = rf::local_player;
+    }
     rf::ubyte buf[512];
     RF_ChatLinePacket packet;
     packet.header.type = RF_GPT_CHAT_LINE;
