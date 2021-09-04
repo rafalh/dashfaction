@@ -7,7 +7,7 @@
 #include <mutex>
 #include <optional>
 
-#define UPDATE_CHECK_ENDPOINT_URL "https://ravin.tk/api/rf/dashfaction/checkupdate.php"
+#define UPDATE_CHECK_ENDPOINT_URL "https://dashfactionapi.rafalh.dev/update"
 
 UpdateChecker::CheckResult UpdateChecker::check() // NOLINT(readability-convert-member-functions-to-static)
 {
