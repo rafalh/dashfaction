@@ -82,6 +82,8 @@ struct GameConfig
     CfgVar<bool> glares = true;
     CfgVar<bool> show_enemy_bullets = true;
     CfgVar<bool> linear_pitch = false;
+    CfgVar<bool> multi_hitsounds = true;
+    CfgVar<bool> multi_hitsounds_legacy_mode = true;
 
     bool load();
     void save();

@@ -22,6 +22,7 @@
 #include "multi.h"
 #include "server.h"
 #include "server_internal.h"
+#include "custom_packets.h"
 #include "../main/main.h"
 #include "../rf/multi.h"
 #include "../rf/misc.h"
@@ -740,6 +741,7 @@ CodeInjection process_join_accept_send_game_info_req_injection{
         rf::NetAddr* server_addr = regs.edi;
         xlog::trace("Sending game_info_req to %x:%d", server_addr->ip_addr, server_addr->port);
         rf::send_game_info_req_packet(*server_addr);
+        custom_packets::send_configure_hitsounds_packet(rf::local_player);
     },
 };
 
@@ -1025,13 +1027,6 @@ void __fastcall multi_io_stats_add_new(void *this_, int edx, int size, bool is_s
 
 FunHook<void __fastcall(void*, int, int, bool, int)> multi_io_stats_add_hook{0x0047CAC0, multi_io_stats_add_new};
 
-static void process_custom_packet(void* data, int len, const rf::NetAddr& addr, rf::Player* player)
-{
-#if MASK_AS_PF
-    pf_process_packet(data, len, addr, player);
-#endif
-}
-
 CodeInjection multi_io_process_packets_injection{
     0x0047918D,
     [](auto& regs) {
@@ -1043,7 +1038,13 @@ CodeInjection multi_io_process_packets_injection{
             int len = regs.edi;
             auto& addr = *addr_as_ref<rf::NetAddr*>(stack_frame + 0xC);
             auto player = addr_as_ref<rf::Player*>(stack_frame + 0x10);
-            process_custom_packet(data + offset, len, addr, player);
+            #ifdef HAS_PF
+            if (!pf_process_packet(data, len, addr, player)) {
+                custom_packets::process_packet(data + offset, len, addr, player);
+            }
+            #else
+            custom_packets::process_packet(data + offset, len, addr, player);
+            #endif
             regs.eip = 0x00479194;
         }
     },
@@ -1082,8 +1083,45 @@ CallHook<int()> game_info_num_players_hook{
     },
 };
 
+ConsoleCommand2 multi_hitsounds_cmd{
+    "multi_hitsounds",
+    [] (std::optional<std::string> arg) { 
+        if (!rf::is_server) {
+            if (g_game_config.multi_hitsounds_legacy_mode) {
+                rf::console::printf("You need to disable multi_hitsounds_legacy_mode");
+                return; 
+            }
+            if (arg.value_or("") != "?") {
+                g_game_config.multi_hitsounds = !g_game_config.multi_hitsounds;
+                g_game_config.save();
+                custom_packets::send_configure_hitsounds_packet(rf::local_player);
+            }
+            rf::console::printf("multi_hitsounds is %s", g_game_config.multi_hitsounds ? "enabled" : "disabled");
+        }   
+    },
+    "Toggle hitsounds; applies to compatible servers",
+};
+
+ConsoleCommand2 multi_hitsounds_legacy_mode_cmd{
+    "multi_hitsounds_legacy_mode",
+    [] (std::optional<std::string> arg) {  
+        if (!rf::is_server) {
+            if (arg.value_or("") != "?") {
+                g_game_config.multi_hitsounds_legacy_mode = !g_game_config.multi_hitsounds_legacy_mode;
+                g_game_config.save();
+                custom_packets::send_configure_hitsounds_packet(rf::local_player);
+            }  
+            rf::console::printf("multi_hitsounds_legacy_mode is %s", g_game_config.multi_hitsounds_legacy_mode ? "enabled" : "disabled");
+        }
+    },
+    "Toggle legacy mode for hitsounds; applies to compatible servers",
+};
+
 void network_init()
 {
+    multi_hitsounds_cmd.register_cmd();
+    multi_hitsounds_legacy_mode_cmd.register_cmd();
+
     // Improve simultaneous ping
     rf::simultaneous_ping = 32;
 

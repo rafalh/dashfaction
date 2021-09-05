@@ -100,6 +100,8 @@ set(SRCS
     multi/multi.cpp
     multi/kill.cpp
     multi/network.cpp
+    multi/custom_packets.cpp
+    multi/custom_packets.h
     multi/level_download.cpp
     multi/server.h
     multi/server.cpp
