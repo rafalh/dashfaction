@@ -7,6 +7,19 @@ Version 1.7.1 (not released yet)
 - Fix "Wrong player ID" warnings when multiplayer quick save/load is used (client-side fix)
 - Restructure Options window
 - Add option to disable beep sound when new player joins multiplayer game and window is not focused
+- Ignore browsers when calculating player count for info requests
+- Fix Message event crash on dedicated server
+- Prevent browsers from voting
+- Add `swap_grenade_controls` command
+- Don't overwrite existing levels in `download_level` command
+- Add `download_level_force` command that overwrites existing levels
+- Allow the person who started a vote to cancel it
+- Allow setting max players server setting to 1
+- Change launcher window title
+- Allow autocomplete for `map` command
+- Add version and date to `/info` server chat command
+- Enable `map` command in RCON
+- Change update checker URL
 
 Version 1.7.0 (released 2021-06-05)
 -----------------------------------
