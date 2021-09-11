@@ -21,7 +21,7 @@ private:
     void InitToolTip();
     void UpdateAdapterCombo();
     void UpdateResolutionCombo();
-    void UpdateColorDepthRadioButtons();
+    void UpdateColorDepthCombo();
     void UpdateMsaaCombo();
     void UpdateAnisotropyCheckbox();
     void OnBnClickedOk();
@@ -39,6 +39,8 @@ private:
     GameConfig m_conf;
     CComboBox m_adapter_combo;
     CComboBox m_res_combo;
+    CComboBox m_color_depth_combo;
+    CComboBox m_wnd_mode_combo;
     CComboBox m_msaa_combo;
     CComboBox m_lang_combo;
 };

@@ -12,9 +12,7 @@
 #define IDC_EDITOR_BTN                  1000
 #define IDC_OPTIONS_BTN                 1001
 #define IDC_RESOLUTIONS_COMBO           1002
-#define IDC_FULL_SCREEN_RADIO           1003
-#define IDC_WINDOWED_RADIO              1004
-#define IDC_STRETCHED_RADIO             1005
+#define IDC_WND_MODE_COMBO              1003
 #define IDC_TRACKER_EDIT                1006
 #define IDC_VSYNC_CHECK                 1007
 #define IDC_EAX_SOUND_CHECK             1008
@@ -28,8 +26,7 @@
 #define IDC_EXE_PATH_EDIT               1016
 #define IDC_EXE_BROWSE                  1017
 #define IDC_RESET_TRACKER_BTN           1018
-#define IDC_32BIT_RADIO                 1019
-#define IDC_16BIT_RADIO                 1020
+#define IDC_COLOR_DEPTH_COMBO           1019
 #define IDC_UPDATE_STATUS               1021
 #define IDC_FAST_START_CHECK            1022
 #define IDC_FPS_COUNTER_CHECK           1023
@@ -55,6 +52,10 @@
 #define IDC_RATE_EDIT                   1043
 #define IDC_ADAPTER_COMBO               1044
 #define IDC_BIG_HUD_CHECK               1045
+#define IDC_SWAP_ASSAULT_RIFLE_CONTROLS 1046
+#define IDC_SWAP_GRENADE_CONTROLS       1047
+#define IDC_PLAYER_JOIN_BEEP_CHECK      1048
+#define IDC_MESH_STATIC_LIGHTING_CHECK  1049
 
 // Next default values for new objects
 //
@@ -62,7 +63,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        105
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1046
+#define _APS_NEXT_CONTROL_VALUE         1050
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

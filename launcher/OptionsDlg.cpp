@@ -15,8 +15,20 @@ BOOL OptionsDlg::OnInitDialog()
     // Attach controls
     AttachItem(IDC_ADAPTER_COMBO, m_adapter_combo);
     AttachItem(IDC_RESOLUTIONS_COMBO, m_res_combo);
+    AttachItem(IDC_COLOR_DEPTH_COMBO, m_color_depth_combo);
+    AttachItem(IDC_WND_MODE_COMBO, m_wnd_mode_combo);
     AttachItem(IDC_MSAA_COMBO, m_msaa_combo);
     AttachItem(IDC_LANG_COMBO, m_lang_combo);
+
+    // Populate combo boxes with static content
+    m_wnd_mode_combo.AddString("Exclusive Fullscreen");
+    m_wnd_mode_combo.AddString("Windowed");
+    m_wnd_mode_combo.AddString("Borderless Window");
+
+    m_lang_combo.AddString("Auto");
+    m_lang_combo.AddString("English");
+    m_lang_combo.AddString("German");
+    m_lang_combo.AddString("French");
 
     try {
         m_conf.load();
@@ -27,28 +39,33 @@ BOOL OptionsDlg::OnInitDialog()
 
     SetDlgItemTextA(IDC_EXE_PATH_EDIT, m_conf.game_executable_path->c_str());
 
+    // Display
     UpdateAdapterCombo();
-    UpdateColorDepthRadioButtons(); // should be before resolution
+    UpdateColorDepthCombo(); // should be before resolution
     UpdateResolutionCombo();
-    UpdateMsaaCombo();
-
-    CheckDlgButton(IDC_FULL_SCREEN_RADIO, m_conf.wnd_mode == GameConfig::FULLSCREEN ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(IDC_WINDOWED_RADIO, m_conf.wnd_mode == GameConfig::WINDOWED ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(IDC_STRETCHED_RADIO, m_conf.wnd_mode == GameConfig::STRETCHED ? BST_CHECKED : BST_UNCHECKED);
+    m_wnd_mode_combo.SetCurSel(static_cast<int>(m_conf.wnd_mode));
     CheckDlgButton(IDC_VSYNC_CHECK, m_conf.vsync ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(IDC_FAST_ANIMS_CHECK, m_conf.fast_anims ? BST_CHECKED : BST_UNCHECKED);
     SetDlgItemInt(IDC_RENDERING_CACHE_EDIT, m_conf.geometry_cache_size, false);
     SetDlgItemInt(IDC_MAX_FPS_EDIT, m_conf.max_fps, false);
 
+    // Graphics
+    UpdateMsaaCombo();
     UpdateAnisotropyCheckbox();
-
+    CheckDlgButton(IDC_FAST_ANIMS_CHECK, m_conf.fast_anims ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_DISABLE_LOD_CHECK, m_conf.disable_lod_models ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(IDC_FPS_COUNTER_CHECK, m_conf.fps_counter ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_HIGH_SCANNER_RES_CHECK, m_conf.high_scanner_res ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_HIGH_MON_RES_CHECK, m_conf.high_monitor_res ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_TRUE_COLOR_TEXTURES_CHECK, m_conf.true_color_textures ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(IDC_BIG_HUD_CHECK, m_conf.big_hud ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(IDC_MESH_STATIC_LIGHTING_CHECK, m_conf.mesh_static_lighting ? BST_CHECKED : BST_UNCHECKED);
 
+    // Audio
+    CheckDlgButton(IDC_EAX_SOUND_CHECK, m_conf.eax_sound ? BST_CHECKED : BST_UNCHECKED);
+    if (m_conf.level_sound_volume == 1.0f)
+        CheckDlgButton(IDC_LEVEL_SOUNDS_CHECK, BST_CHECKED);
+    else
+        CheckDlgButton(IDC_LEVEL_SOUNDS_CHECK, m_conf.level_sound_volume == 0.0f ? BST_UNCHECKED : BST_INDETERMINATE);
+
+    // Multiplayer
     SetDlgItemTextA(IDC_TRACKER_EDIT, m_conf.tracker->c_str());
     CheckDlgButton(IDC_FORCE_PORT_CHECK, m_conf.force_port != 0);
     if (m_conf.force_port)
@@ -57,26 +74,26 @@ BOOL OptionsDlg::OnInitDialog()
         GetDlgItem(IDC_PORT_EDIT).EnableWindow(FALSE);
     SetDlgItemInt(IDC_RATE_EDIT, m_conf.update_rate, false);
 
+    // Input
     CheckDlgButton(IDC_DIRECT_INPUT_CHECK, m_conf.direct_input ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(IDC_EAX_SOUND_CHECK, m_conf.eax_sound ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(IDC_FAST_START_CHECK, m_conf.fast_start ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(IDC_LINEAR_PITCH_CHECK, m_conf.linear_pitch ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(IDC_SWAP_ASSAULT_RIFLE_CONTROLS, m_conf.swap_assault_rifle_controls ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(IDC_SWAP_GRENADE_CONTROLS, m_conf.swap_grenade_controls ? BST_CHECKED : BST_UNCHECKED);
+
+    // Interface
+    CheckDlgButton(IDC_BIG_HUD_CHECK, m_conf.big_hud ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(IDC_FPS_COUNTER_CHECK, m_conf.fps_counter ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_SCOREBOARD_ANIM_CHECK, m_conf.scoreboard_anim);
-    if (m_conf.level_sound_volume == 1.0f)
-        CheckDlgButton(IDC_LEVEL_SOUNDS_CHECK, BST_CHECKED);
-    else
-        CheckDlgButton(IDC_LEVEL_SOUNDS_CHECK, m_conf.level_sound_volume == 0.0f ? BST_UNCHECKED : BST_INDETERMINATE);
+    m_lang_combo.SetCurSel(m_conf.language + 1);
+
+    // Misc
+    CheckDlgButton(IDC_FAST_START_CHECK, m_conf.fast_start ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_ALLOW_OVERWRITE_GAME_CHECK, m_conf.allow_overwrite_game_files ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_KEEP_LAUNCHER_OPEN_CHECK, m_conf.keep_launcher_open ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(IDC_LINEAR_PITCH_CHECK, m_conf.linear_pitch ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_REDUCED_SPEED_IN_BG_CHECK, m_conf.reduced_speed_in_background ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(IDC_PLAYER_JOIN_BEEP_CHECK, m_conf.player_join_beep ? BST_CHECKED : BST_UNCHECKED);
 
     InitToolTip();
-
-    m_lang_combo.AddString("Auto");
-    m_lang_combo.AddString("English");
-    m_lang_combo.AddString("German");
-    m_lang_combo.AddString("French");
-    m_lang_combo.SetCurSel(m_conf.language + 1);
 
     return TRUE;
 }
@@ -130,12 +147,11 @@ void OptionsDlg::UpdateResolutionCombo()
     }
 }
 
-void OptionsDlg::UpdateColorDepthRadioButtons()
+void OptionsDlg::UpdateColorDepthCombo()
 {
     bool has_16bpp_modes = !m_video_info.get_resolutions(m_conf.selected_video_card, D3DFMT_R5G6B5).empty();
     bool has_32bpp_modes = !m_video_info.get_resolutions(m_conf.selected_video_card, D3DFMT_X8R8G8B8).empty();
-    GetDlgItem(IDC_16BIT_RADIO).EnableWindow(has_16bpp_modes);
-    GetDlgItem(IDC_32BIT_RADIO).EnableWindow(has_32bpp_modes);
+
     if (!has_16bpp_modes) {
         m_conf.res_bpp = 32;
         m_conf.res_backbuffer_format = D3DFMT_X8R8G8B8;
@@ -144,8 +160,15 @@ void OptionsDlg::UpdateColorDepthRadioButtons()
         m_conf.res_bpp = 16;
         m_conf.res_backbuffer_format = D3DFMT_R5G6B5;
     }
-    CheckDlgButton(IDC_32BIT_RADIO, m_conf.res_bpp == 32 ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(IDC_16BIT_RADIO, m_conf.res_bpp == 16 ? BST_CHECKED : BST_UNCHECKED);
+    int index_32 = -1;
+    int index_16 = -1;
+    if (has_32bpp_modes) {
+        index_32 = m_color_depth_combo.AddString("32 bit");
+    }
+    if (has_16bpp_modes) {
+        index_16 = m_color_depth_combo.AddString("16 bit");
+    }
+    m_color_depth_combo.SetCurSel(m_conf.res_bpp == 16 ? index_16 : index_32);
 }
 
 void OptionsDlg::UpdateMsaaCombo()
@@ -194,28 +217,43 @@ void OptionsDlg::InitToolTip()
 {
     m_tool_tip.Create(*this);
 
-    m_tool_tip.AddTool(GetDlgItem(IDC_RESOLUTIONS_COMBO), "Please select resolution from provided dropdown list - custom resolution is supposed to work in Windowed/Stretched mode only");
-    m_tool_tip.AddTool(GetDlgItem(IDC_STRETCHED_RADIO), "Full Screen Windowed - reduced performance but faster to switch to other window");
+    m_tool_tip.AddTool(GetDlgItem(IDC_EXE_PATH_EDIT), "Path to RF.exe file in Red Faction directory");
+
+    // Display
+    m_tool_tip.AddTool(GetDlgItem(IDC_RESOLUTIONS_COMBO), "Please select resolution from provided dropdown list - custom resolution is supposed to work in Windowed/Borderless mode only");
     m_tool_tip.AddTool(GetDlgItem(IDC_VSYNC_CHECK), "Enable vertical synchronization (should limit FPS to monitor refresh rate - usually 60)");
     m_tool_tip.AddTool(GetDlgItem(IDC_MAX_FPS_EDIT), "FPS limit - maximal value is 240 - high FPS can trigger minor bugs in game");
+
+    // Graphics
     m_tool_tip.AddTool(GetDlgItem(IDC_FAST_ANIMS_CHECK), "Reduce animation smoothness for far models");
     m_tool_tip.AddTool(GetDlgItem(IDC_DISABLE_LOD_CHECK), "Use more detailed LOD models for objects in the distance");
     m_tool_tip.AddTool(GetDlgItem(IDC_ANISOTROPIC_CHECK), "Improve far textures quality");
-    m_tool_tip.AddTool(GetDlgItem(IDC_FPS_COUNTER_CHECK), "Enable FPS counter in right-top corner of the screen");
     m_tool_tip.AddTool(GetDlgItem(IDC_HIGH_SCANNER_RES_CHECK), "Increase scanner resolution (used by Rail Gun, Rocket Launcher and Fusion Launcher)");
     m_tool_tip.AddTool(GetDlgItem(IDC_HIGH_MON_RES_CHECK), "Increase monitors and mirrors resolution");
     m_tool_tip.AddTool(GetDlgItem(IDC_TRUE_COLOR_TEXTURES_CHECK), "Increase texture color depth - especially visible for lightmaps and shadows");
-    m_tool_tip.AddTool(GetDlgItem(IDC_BIG_HUD_CHECK), "Make HUD bigger in the game");
+
+    // Audio
+    m_tool_tip.AddTool(GetDlgItem(IDC_LEVEL_SOUNDS_CHECK), "Enable/disable Play Sound and Ambient Sound objects in level. You can also specify volume multiplier by using levelsounds command in game.");
+    m_tool_tip.AddTool(GetDlgItem(IDC_EAX_SOUND_CHECK), "Enable/disable 3D sound and EAX extension if supported");
+
+    // Multiplayer
     m_tool_tip.AddTool(GetDlgItem(IDC_TRACKER_EDIT), "Hostname of tracker used to find avaliable Multiplayer servers");
     m_tool_tip.AddTool(GetDlgItem(IDC_RATE_EDIT), "Internet connection speed in bytes/s (default value - 200000 - should work fine for all modern setups)");
-    m_tool_tip.AddTool(GetDlgItem(IDC_FAST_START_CHECK), "Skip game intro videos and go straight to Main Menu");
-    m_tool_tip.AddTool(GetDlgItem(IDC_DIRECT_INPUT_CHECK), "Use DirectInput for mouse input handling");
     m_tool_tip.AddTool(GetDlgItem(IDC_FORCE_PORT_CHECK), "If not checked automatic port is used");
+
+    // Input
+    m_tool_tip.AddTool(GetDlgItem(IDC_DIRECT_INPUT_CHECK), "Use DirectInput for mouse input handling");
+    m_tool_tip.AddTool(GetDlgItem(IDC_LINEAR_PITCH_CHECK), "Stop mouse movement from slowing down when looking up and down");
+
+    // Interface
+    m_tool_tip.AddTool(GetDlgItem(IDC_BIG_HUD_CHECK), "Make HUD bigger in the game");
     m_tool_tip.AddTool(GetDlgItem(IDC_SCOREBOARD_ANIM_CHECK), "Scoreboard open/close animations");
-    m_tool_tip.AddTool(GetDlgItem(IDC_LEVEL_SOUNDS_CHECK), "Enable/disable Play Sound and Ambient Sound objects in level. You can also specify volume multiplier by using levelsounds command in game.");
+    m_tool_tip.AddTool(GetDlgItem(IDC_FPS_COUNTER_CHECK), "Enable FPS counter in right-top corner of the screen");
+
+    // Misc
+    m_tool_tip.AddTool(GetDlgItem(IDC_FAST_START_CHECK), "Skip game intro videos and go straight to Main Menu");
     m_tool_tip.AddTool(GetDlgItem(IDC_ALLOW_OVERWRITE_GAME_CHECK), "Enable this if you want to modify game content by putting mods into user_maps folder. Can have side effect of level packfiles modyfing common textures/sounds.");
     m_tool_tip.AddTool(GetDlgItem(IDC_KEEP_LAUNCHER_OPEN_CHECK), "Keep launcher window open after game or editor launch");
-    m_tool_tip.AddTool(GetDlgItem(IDC_LINEAR_PITCH_CHECK), "Stop mouse movement from slowing down when looking up and down");
 }
 
 void OptionsDlg::OnOK()
@@ -239,15 +277,6 @@ BOOL OptionsDlg::OnCommand(WPARAM wparam, LPARAM lparam)
     case IDC_FORCE_PORT_CHECK:
         OnForcePortClick();
         return TRUE;
-    case IDC_16BIT_RADIO:
-    case IDC_32BIT_RADIO:
-        OnColorDepthChange();
-        return TRUE;
-    case IDC_FULL_SCREEN_RADIO:
-    case IDC_WINDOWED_RADIO:
-    case IDC_STRETCHED_RADIO:
-        OnWindowModeChange();
-        return TRUE;
     }
 
     return FALSE;
@@ -264,6 +293,12 @@ LRESULT OptionsDlg::OnNotify([[ maybe_unused ]] WPARAM wparam, LPARAM lparam)
         else if (nmhdr.idFrom == IDC_RESOLUTIONS_COMBO) {
             OnResolutionChange();
         }
+        else if (nmhdr.idFrom == IDC_WND_MODE_COMBO) {
+            OnWindowModeChange();
+        }
+        else if (nmhdr.idFrom == IDC_COLOR_DEPTH_COMBO) {
+            OnColorDepthChange();
+        }
         break;
     }
     return 0;
@@ -271,64 +306,66 @@ LRESULT OptionsDlg::OnNotify([[ maybe_unused ]] WPARAM wparam, LPARAM lparam)
 
 void OptionsDlg::OnBnClickedOk()
 {
-    CString str;
+    m_conf.game_executable_path = GetDlgItemTextA(IDC_EXE_PATH_EDIT).GetString();
 
-    str = GetDlgItemTextA(IDC_EXE_PATH_EDIT);
-    m_conf.game_executable_path = str.GetString();
-
+    // Display
     m_conf.selected_video_card = m_adapter_combo.GetCurSel();
 
-    str = GetDlgItemTextA(IDC_RESOLUTIONS_COMBO);
-    char *ptr = (char*)(const char *)str;
-    const char *widthStr = strtok(ptr, "x");
-    const char *heightStr = strtok(nullptr, "x");
-    if (widthStr && heightStr) {
-        m_conf.res_width = atoi(widthStr);
-        m_conf.res_height = atoi(heightStr);
+    CString resolution_str = GetDlgItemTextA(IDC_RESOLUTIONS_COMBO);
+    char *ptr = const_cast<char*>(resolution_str.c_str());
+    const char *width_str = strtok(ptr, "x");
+    const char *height_str = strtok(nullptr, "x");
+    if (width_str && height_str) {
+        m_conf.res_width = atoi(width_str);
+        m_conf.res_height = atoi(height_str);
     }
 
-    m_conf.res_bpp = IsDlgButtonChecked(IDC_16BIT_RADIO) == BST_CHECKED ? 16 : 32;
+    m_conf.res_bpp = m_color_depth_combo.GetWindowTextA() == "32 bit" ? 32 : 16;
     m_conf.res_backbuffer_format = m_conf.res_bpp == 16 ? D3DFMT_R5G6B5 : D3DFMT_X8R8G8B8;
-
-    if (IsDlgButtonChecked(IDC_FULL_SCREEN_RADIO) == BST_CHECKED)
-        m_conf.wnd_mode = GameConfig::FULLSCREEN;
-    if (IsDlgButtonChecked(IDC_WINDOWED_RADIO) == BST_CHECKED)
-        m_conf.wnd_mode = GameConfig::WINDOWED;
-    if (IsDlgButtonChecked(IDC_STRETCHED_RADIO) == BST_CHECKED)
-        m_conf.wnd_mode = GameConfig::STRETCHED;
-
+    m_conf.wnd_mode = static_cast<GameConfig::WndMode>(m_wnd_mode_combo.GetCurSel());
     m_conf.vsync = (IsDlgButtonChecked(IDC_VSYNC_CHECK) == BST_CHECKED);
-    m_conf.fast_anims = (IsDlgButtonChecked(IDC_FAST_ANIMS_CHECK) == BST_CHECKED);
     m_conf.geometry_cache_size = GetDlgItemInt(IDC_RENDERING_CACHE_EDIT, false);
     m_conf.max_fps = GetDlgItemInt(IDC_MAX_FPS_EDIT, false);
 
+    // Graphics
+    m_conf.fast_anims = (IsDlgButtonChecked(IDC_FAST_ANIMS_CHECK) == BST_CHECKED);
     m_conf.msaa = m_multi_sample_types[m_msaa_combo.GetCurSel()];
-
     m_conf.anisotropic_filtering = (IsDlgButtonChecked(IDC_ANISOTROPIC_CHECK) == BST_CHECKED);
     m_conf.disable_lod_models = (IsDlgButtonChecked(IDC_DISABLE_LOD_CHECK) == BST_CHECKED);
-    m_conf.fps_counter = (IsDlgButtonChecked(IDC_FPS_COUNTER_CHECK) == BST_CHECKED);
     m_conf.high_scanner_res = (IsDlgButtonChecked(IDC_HIGH_SCANNER_RES_CHECK) == BST_CHECKED);
     m_conf.high_monitor_res = (IsDlgButtonChecked(IDC_HIGH_MON_RES_CHECK) == BST_CHECKED);
     m_conf.true_color_textures = (IsDlgButtonChecked(IDC_TRUE_COLOR_TEXTURES_CHECK) == BST_CHECKED);
-    m_conf.big_hud = (IsDlgButtonChecked(IDC_BIG_HUD_CHECK) == BST_CHECKED);
+    m_conf.mesh_static_lighting = (IsDlgButtonChecked(IDC_MESH_STATIC_LIGHTING_CHECK) == BST_CHECKED);
 
-    str = GetDlgItemTextA(IDC_TRACKER_EDIT);
-    m_conf.tracker = str.GetString();
+    // Audio
+    m_conf.eax_sound = (IsDlgButtonChecked(IDC_EAX_SOUND_CHECK) == BST_CHECKED);
+    if (IsDlgButtonChecked(IDC_LEVEL_SOUNDS_CHECK) != BST_INDETERMINATE)
+        m_conf.level_sound_volume = (IsDlgButtonChecked(IDC_LEVEL_SOUNDS_CHECK) == BST_CHECKED ? 1.0f : 0.0f);
+
+    // Multiplayer
+    m_conf.tracker = GetDlgItemTextA(IDC_TRACKER_EDIT).c_str();
     bool force_port = IsDlgButtonChecked(IDC_FORCE_PORT_CHECK) == BST_CHECKED;
     m_conf.force_port = force_port ? GetDlgItemInt(IDC_PORT_EDIT, false) : 0;
     m_conf.update_rate = GetDlgItemInt(IDC_RATE_EDIT, false);
 
+    // Input
     m_conf.direct_input = (IsDlgButtonChecked(IDC_DIRECT_INPUT_CHECK) == BST_CHECKED);
-    m_conf.eax_sound = (IsDlgButtonChecked(IDC_EAX_SOUND_CHECK) == BST_CHECKED);
-    m_conf.fast_start = (IsDlgButtonChecked(IDC_FAST_START_CHECK) == BST_CHECKED);
+    m_conf.linear_pitch = (IsDlgButtonChecked(IDC_LINEAR_PITCH_CHECK) == BST_CHECKED);
+    m_conf.swap_assault_rifle_controls = (IsDlgButtonChecked(IDC_SWAP_ASSAULT_RIFLE_CONTROLS) == BST_CHECKED);
+    m_conf.swap_grenade_controls = (IsDlgButtonChecked(IDC_SWAP_GRENADE_CONTROLS) == BST_CHECKED);
+
+    // Interface
+    m_conf.big_hud = (IsDlgButtonChecked(IDC_BIG_HUD_CHECK) == BST_CHECKED);
     m_conf.scoreboard_anim = (IsDlgButtonChecked(IDC_SCOREBOARD_ANIM_CHECK) == BST_CHECKED);
-    if (IsDlgButtonChecked(IDC_LEVEL_SOUNDS_CHECK) != BST_INDETERMINATE)
-        m_conf.level_sound_volume = (IsDlgButtonChecked(IDC_LEVEL_SOUNDS_CHECK) == BST_CHECKED ? 1.0f : 0.0f);
+    m_conf.language = m_lang_combo.GetCurSel() - 1;
+    m_conf.fps_counter = (IsDlgButtonChecked(IDC_FPS_COUNTER_CHECK) == BST_CHECKED);
+
+    // Misc
+    m_conf.fast_start = (IsDlgButtonChecked(IDC_FAST_START_CHECK) == BST_CHECKED);
     m_conf.allow_overwrite_game_files = (IsDlgButtonChecked(IDC_ALLOW_OVERWRITE_GAME_CHECK) == BST_CHECKED);
     m_conf.keep_launcher_open = (IsDlgButtonChecked(IDC_KEEP_LAUNCHER_OPEN_CHECK) == BST_CHECKED);
-    m_conf.linear_pitch = (IsDlgButtonChecked(IDC_LINEAR_PITCH_CHECK) == BST_CHECKED);
     m_conf.reduced_speed_in_background = (IsDlgButtonChecked(IDC_REDUCED_SPEED_IN_BG_CHECK) == BST_CHECKED);
-    m_conf.language = m_lang_combo.GetCurSel() - 1;
+    m_conf.player_join_beep = (IsDlgButtonChecked(IDC_PLAYER_JOIN_BEEP_CHECK) == BST_CHECKED);
 
     try {
         m_conf.save();
@@ -364,7 +401,7 @@ void OptionsDlg::OnAdapterChange()
 {
     m_conf.selected_video_card = m_adapter_combo.GetCurSel();
     UpdateResolutionCombo();
-    UpdateColorDepthRadioButtons();
+    UpdateColorDepthCombo();
     UpdateMsaaCombo();
     UpdateAnisotropyCheckbox();
 }
@@ -376,7 +413,7 @@ void OptionsDlg::OnResolutionChange()
 
 void OptionsDlg::OnColorDepthChange()
 {
-    m_conf.res_bpp = IsDlgButtonChecked(IDC_16BIT_RADIO) == BST_CHECKED ? 16 : 32;
+    m_conf.res_bpp = m_color_depth_combo.GetWindowTextA() == "32 bit" ? 32 : 16;
     m_conf.res_backbuffer_format = m_conf.res_bpp == 16 ? D3DFMT_R5G6B5 : D3DFMT_X8R8G8B8;
     UpdateResolutionCombo();
     UpdateMsaaCombo();
@@ -384,11 +421,6 @@ void OptionsDlg::OnColorDepthChange()
 
 void OptionsDlg::OnWindowModeChange()
 {
-    if (IsDlgButtonChecked(IDC_FULL_SCREEN_RADIO) == BST_CHECKED)
-        m_conf.wnd_mode = GameConfig::FULLSCREEN;
-    else if (IsDlgButtonChecked(IDC_WINDOWED_RADIO) == BST_CHECKED)
-        m_conf.wnd_mode = GameConfig::WINDOWED;
-    else if (IsDlgButtonChecked(IDC_STRETCHED_RADIO) == BST_CHECKED)
-        m_conf.wnd_mode = GameConfig::STRETCHED;
+    m_conf.wnd_mode = static_cast<GameConfig::WndMode>(m_wnd_mode_combo.GetCurSel());
     UpdateMsaaCombo();
 }
