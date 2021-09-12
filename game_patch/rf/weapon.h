@@ -61,8 +61,8 @@ namespace rf
         int clip_size_single;
         int clip_size_multi;
         int clip_size;
-        float clip_reload_time;
-        float clip_drain_time;
+        float clip_reload_time_secs;
+        float clip_drain_time_secs;
         int bitmap;
         int trail_emitter;
         float head_radius;

@@ -284,7 +284,7 @@ FunHook<void(rf::gr::d3d::Texture&)> gr_d3d_free_texture_hook{
 
 bool gr_d3d_lock(int bm_handle, int section, rf::gr::LockInfo *lock) {
     xlog::trace("gr_d3d_lock");
-    auto& tslot = rf::gr::d3d::textures[rf::bm::handle_to_index_anim_aware(bm_handle)];
+    auto& tslot = rf::gr::d3d::textures[rf::bm::get_cache_slot(bm_handle)];
     if (tslot.num_sections < 1 || tslot.bm_handle != bm_handle) {
         auto ret = gr_d3d_create_texture(bm_handle, tslot);
         if (ret != 1) {
@@ -386,7 +386,7 @@ void gr_d3d_texture_device_lost()
 
 void gr_d3d_delete_texture(int bm_handle)
 {
-    auto bm_index = rf::bm::handle_to_index_anim_aware(bm_handle);
+    auto bm_index = rf::bm::get_cache_slot(bm_handle);
     auto& tslot = rf::gr::d3d::textures[bm_index];
     rf::gr::d3d::free_texture(tslot);
 }
