@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 DashFaction Changelog
 =====================
 
@@ -28,7 +27,6 @@ Version 1.7.0 (released 2021-06-05)
 - Change maximal value of Max Kills dedicated server config to 999
 - Support Team DM scores above 255
 - Added additional textures from base game to level editor texture browser (contribution from Goober)
-<<<<<<< HEAD
 - Display proper server name in the scoreboard when joining by link
 - Level auto-downloader has new UI and does its job without leaving the server
 - Use SSL for communication with FactionFiles in level auto-downloader
@@ -67,8 +65,6 @@ Version 1.7.0 (released 2021-06-05)
 - Remove memory corruption when too many skeletons/animations are added to a single character
 - Optimize skeleton unlinking when character is destroyed
 - Fix rendering menu background if its height is lower than 480 (for example AQuest Speedrun Edition mod)
-=======
->>>>>>> 16aa7cb (Updated maps_df.txt to list additional stock game textures in texture browser for level designers)
 
 Version 1.6.1 (released 2021-02-20)
 -----------------------------------
@@ -545,5 +541,3 @@ Version 0.51
 ------------
 
 - first public release
-=======
->>>>>>> 83c516e (Attempt to fix)
