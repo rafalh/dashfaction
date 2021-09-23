@@ -1,6 +1,10 @@
-# CMake 3.15 is required for CMAKE_MSVC_RUNTIME_LIBRARY.  
+# CMake 3.15 is required for CMAKE_MSVC_RUNTIME_LIBRARY.
 cmake_minimum_required(VERSION 3.15)
 project(DashFaction)
+
+if(NOT "${CMAKE_SIZEOF_VOID_P}" STREQUAL "4")
+    message(FATAL_ERROR "Only x86 (32 bit) platform is supported!")
+endif()
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 include(cotire)
