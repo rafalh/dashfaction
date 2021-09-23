@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 DashFaction Changelog
 =====================
 
@@ -543,3 +544,5 @@ Version 0.51
 ------------
 
 - first public release
+=======
+>>>>>>> 83c516e (Attempt to fix)
