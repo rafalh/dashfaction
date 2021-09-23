@@ -63,8 +63,8 @@ void frametime_render_ui()
     frametime_render_graph();
 }
 
-ConsoleCommand2 showfps_cmd{
-    "showfps",
+ConsoleCommand2 fps_counter_cmd{
+    "fps_counter",
     []() {
         g_game_config.fps_counter = !g_game_config.fps_counter;
         frametime_render_fps_counter;
@@ -72,7 +72,7 @@ ConsoleCommand2 showfps_cmd{
         rf::console::printf("FPS counter display is %s", g_game_config.fps_counter ? "enabled" : "disabled");
     },
     "Toggle FPS counter",
-    "showfps",
+    "fps_counter",
 };
 
 CallHook<void(int)> frametime_calculate_sleep_hook{
@@ -140,5 +140,5 @@ void frametime_apply_patch()
     // Commands
     max_fps_cmd.register_cmd();
     frametime_graph_cmd.register_cmd();
-    showfps_cmd.register_cmd();
+    fps_counter_cmd.register_cmd();
 }

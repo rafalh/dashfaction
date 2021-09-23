@@ -17,6 +17,7 @@ ipch
 
 # Visual Studio Code
 .vscode
+CMakeSettings.json
 
 # Non-Open Source PF support code
 /game_patch/purefaction/*secret*
