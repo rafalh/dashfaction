@@ -21,6 +21,7 @@ Version 1.7.1 (not released yet)
 - Add version and date to `/info` server chat command
 - Enable `map` command in RCON
 - Change update checker URL
+- Add `showfps` command
 
 Version 1.7.0 (released 2021-06-05)
 -----------------------------------
