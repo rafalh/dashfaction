@@ -153,6 +153,10 @@ void load_additional_server_config(rf::Parser& parser)
         }
     }
 
+    if (parser.parse_optional("$DF Allow Client Render Modes:")) {
+        g_additional_server_config.allow_client_render_modes = parser.parse_bool();
+    }
+
     if (parser.parse_optional("$DF Send Player Stats Message:")) {
         g_additional_server_config.stats_message_enabled = parser.parse_bool();
     }

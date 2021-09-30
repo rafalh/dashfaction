@@ -1,4 +1,5 @@
 #include "debug_internal.h"
+#include "../multi/multi.h"
 #include "../rf/multi.h"
 #include "../rf/geometry.h"
 #include "../os/console.h"
@@ -56,6 +57,11 @@ ConsoleCommand2 debug_cmd{
 #ifdef NDEBUG
                 if (!dbg_flag.allow_multi && rf::is_multi) {
                     rf::console::printf("This command is disabled in multiplayer!");
+                    return;
+                }
+                const auto& server_info_opt = get_df_server_info();
+                if (server_info_opt && !(server_info_opt.value().allow_client_render_modes)) {
+                    rf::console::printf("Server has not allowed this command!");
                     return;
                 }
 #endif

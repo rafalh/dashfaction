@@ -76,6 +76,7 @@ struct DashFactionServerInfo
     uint8_t version_minor = 0;
     bool saving_enabled = false;
     std::optional<float> max_fov;
+    bool allow_client_render_modes = false;
 };
 
 void multi_render_level_download_progress();

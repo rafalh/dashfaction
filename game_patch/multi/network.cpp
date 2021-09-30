@@ -669,9 +669,11 @@ struct DashFactionJoinAcceptPacketExt
         none           = 0,
         saving_enabled = 1,
         max_fov        = 2,
+        render_modes   = 3,
     } flags = Flags::none;
 
     float max_fov;
+    bool render_modes;
 
 };
 template<>
@@ -698,6 +700,10 @@ CallHook<int(const rf::NetAddr*, std::byte*, size_t)> send_join_accept_packet_ho
             ext_data.flags |= DashFactionJoinAcceptPacketExt::Flags::max_fov;
             ext_data.max_fov = server_get_df_config().max_fov.value();
         }
+        if (server_get_df_config().allow_client_render_modes) {
+            ext_data.flags |= DashFactionJoinAcceptPacketExt::Flags::render_modes;
+            ext_data.render_modes = server_get_df_config().allow_client_render_modes;
+        }
         auto [new_data, new_len] = extend_packet(data, len, ext_data);
         return send_join_accept_packet_hook.call_target(addr, new_data.get(), new_len);
     },
@@ -723,6 +729,9 @@ CodeInjection process_join_accept_injection{
             constexpr float default_fov = 90.0f;
             if (!!(ext_data.flags & DashFactionJoinAcceptPacketExt::Flags::max_fov) && ext_data.max_fov >= default_fov) {
                 server_info.max_fov = ext_data.max_fov;
+            }
+            if (!!(ext_data.flags & DashFactionJoinAcceptPacketExt::Flags::render_modes)) {
+                server_info.allow_client_render_modes = ext_data.render_modes;
             }
             g_df_server_info = std::optional{server_info};
         }
