@@ -669,7 +669,7 @@ struct DashFactionJoinAcceptPacketExt
         none           = 0,
         saving_enabled = 1,
         max_fov        = 2,
-        render_modes   = 3,
+        render_modes   = 4,
     } flags = Flags::none;
 
     float max_fov;
