@@ -60,7 +60,7 @@ ConsoleCommand2 debug_cmd{
                     return;
                 }
                 const auto& server_info_opt = get_df_server_info();
-                if (server_info_opt && !(server_info_opt.value().allow_client_render_modes)) {
+                if ((!server_info_opt)||(server_info_opt && !(server_info_opt.value().allow_client_render_modes))) {
                     rf::console::printf("Server has not allowed this command!");
                     return;
                 }
