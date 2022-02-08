@@ -67,7 +67,6 @@ ConsoleCommand2 fps_counter_cmd{
     "fps_counter",
     []() {
         g_game_config.fps_counter = !g_game_config.fps_counter;
-        frametime_render_fps_counter;
         g_game_config.save();
         rf::console::printf("FPS counter display is %s", g_game_config.fps_counter ? "enabled" : "disabled");
     },
