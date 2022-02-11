@@ -59,8 +59,8 @@ CodeInjection CEditorApp_InitInstance_additional_file_paths_injection{
     []() {
         // Load v3m files from more localizations instead of only VPP packfiles
         auto file_add_path = addr_as_ref<int(const char *path, const char *exts, bool cd)>(0x004C3950);
-        file_add_path("red\\meshes", ".v3m", false);
-        file_add_path("user_maps\\meshes", ".v3m", false);
+        file_add_path("red\\meshes", ".v3m .vfx", false);
+        file_add_path("user_maps\\meshes", ".v3m .vfx", false);
     },
 };
 
