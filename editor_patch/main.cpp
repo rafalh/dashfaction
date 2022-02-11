@@ -46,9 +46,10 @@ void OpenLevel(const char* level_path)
 }
 
 CodeInjection CMainFrame_PreCreateWindow_injection{
-    0x00447134,
+    0x0044713C,
     [](auto& regs) {
         auto& cs = addr_as_ref<CREATESTRUCTA>(regs.eax);
+        cs.style |= WS_MAXIMIZEBOX|WS_THICKFRAME;
         cs.dwExStyle |= WS_EX_ACCEPTFILES;
     },
 };

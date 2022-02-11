@@ -21,6 +21,7 @@ Version 1.7.1 (not released yet)
 - Enable `map` command in RCON
 - Change update checker URL
 - Add `fps_counter` command
+- Make editor window resizeable
 
 Version 1.7.0 (released 2021-06-05)
 -----------------------------------
