@@ -22,6 +22,7 @@ Version 1.7.1 (not released yet)
 - Change update checker URL
 - Add `fps_counter` command
 - Make editor window resizeable
+- Add `debug_event_msg` command that allows to track event messages in console
 
 Version 1.7.0 (released 2021-06-05)
 -----------------------------------

@@ -10,6 +10,10 @@
 #include "../rf/entity.h"
 #include "../rf/level.h"
 #include "../rf/multi.h"
+#include "../rf/os/console.h"
+#include "../os/console.h"
+
+bool event_debug_enabled;
 
 CodeInjection switch_model_event_custom_mesh_patch{
     0x004BB921,
@@ -164,6 +168,48 @@ FunHook<void __fastcall(rf::Event *this_)> EventMessage__turn_on_hook{
     EventMessage__turn_on_new,
 };
 
+CodeInjection event_activate_injection{
+    0x004B8BF4,
+    [](auto& regs) {
+        if (event_debug_enabled) {
+            rf::Event* event = regs.esi;
+            bool on = addr_as_ref<bool>(regs.esp + 0xC + 0xC);
+            rf::console::printf("Processing %s message in event %d '%s'",
+            on ? "ON" : "OFF", event->uid, event->name.c_str());
+        }
+    },
+};
+
+CodeInjection event_activate_injection2{
+    0x004B8BE3,
+    [](auto& regs) {
+        if (event_debug_enabled) {
+            rf::Event* event = regs.esi;
+            bool on = regs.cl;
+            rf::console::printf("Delaying %s message in event %d '%s'",
+                on ? "ON" : "OFF", event->uid, event->name.c_str());
+        }
+    },
+};
+
+CodeInjection event_process_injection{
+    0x004B8CF5,
+    [](auto& regs) {
+        if (event_debug_enabled) {
+            rf::Event* event = regs.esi;
+            rf::console::printf("Processing %s message in event %d '%s' (delayed)",
+                event->delayed_msg ? "ON" : "OFF", event->uid, event->name.c_str());
+        }
+    },
+};
+
+ConsoleCommand2 debug_event_msg_cmd{
+    "debug_event_msg",
+    []() {
+        event_debug_enabled = !event_debug_enabled;
+    }
+};
+
 void apply_event_patches()
 {
     // Allow custom mesh (not used in clutter.tbl or items.tbl) in Switch_Model event
@@ -181,5 +227,14 @@ void apply_event_patches()
     // Fix Message event crash on dedicated server
     EventMessage__turn_on_hook.install();
 
+    // Level specific event fixes
     event_level_init_post_hook.install();
+
+    // Debug event messages
+    event_activate_injection.install();
+    event_activate_injection2.install();
+    event_process_injection.install();
+
+    // Register commands
+    debug_event_msg_cmd.register_cmd();
 }
