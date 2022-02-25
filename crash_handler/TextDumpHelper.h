@@ -349,19 +349,27 @@ private:
             return;
         }
 
-        int col = 0;
-        size_t dwords_read = bytes_read / sizeof(uint32_t);
-        for (unsigned i = 0; i < dwords_read; ++i) {
-            if (col == 0) {
-                out << StringFormat("%08X: ", addr + i * 4);
-            }
-
-            out << StringFormat("%08X", buf[i]);
-            col = (col + 1) % 8;
-            bool is_new_line = col == 0 || i + 1 == dwords_read;
-            out << (is_new_line ? '\n' : ' ');
-        }
+        hex_dump(buf.get(), bytes_read / sizeof(uint32_t), addr, out);
         out << std::endl;
+    }
+
+    void hex_dump(uint32_t* data, size_t num_dwords, uintptr_t base_addr, std::ostream& out)
+    {
+        constexpr size_t num_cols = 8;
+        for (unsigned i = 0; i < num_dwords; i += num_cols) {
+            out << StringFormat("%08X:", base_addr + i * 4);
+            for (size_t j = 0; j < num_cols && i + j < num_dwords; ++j) {
+                out << StringFormat(" %08X", data[i + j]);
+            }
+            out << "  ";
+            for (size_t j = 0; j < num_cols && i + j < num_dwords; ++j) {
+                const char* as_chars = reinterpret_cast<const char*>(&data[i + j]);
+                for (size_t k = 0; k < 4; ++k) {
+                    out << StringFormat("%c", std::isprint(as_chars[k]) ? as_chars[k] : '.');
+                }
+            }
+            out << '\n';
+        }
     }
 
     void fetch_modules(HANDLE process)
