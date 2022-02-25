@@ -102,7 +102,8 @@ static int __fastcall character_load_animation(rf::Character *this_, int, const 
 {
     rf::Skeleton* sp = rf::skeleton_link_base(anim_filename);
     if (!sp) {
-        RF_DEBUG_ERROR("Couldn't load skeleton!");
+        xlog::error("Couldn't load skeleton %s!", anim_filename);
+        return (this_->num_anims > 0 ? 0 : -1);
     }
     for (int i = 0; i < this_->num_anims; ++i) {
         if (this_->animations[i] == sp && this_->anim_is_state[i] == is_state) {
@@ -115,7 +116,9 @@ static int __fastcall character_load_animation(rf::Character *this_, int, const 
     // Animation not found - check if we can add it
     if (this_->num_anims >= static_cast<int>(std::size(this_->animations))) {
         // Protect from buffer overflow
-        RF_DEBUG_ERROR("Too many animations!");
+        xlog::error("Cannot add animation '%s' to character '%s' because there is no free slot!", anim_filename, this_->name);
+        rf::skeleton_unlink_base(sp, false);
+        return 0;
     }
     // Add animation skeleton
     int anim_index = this_->num_anims++;

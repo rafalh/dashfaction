@@ -23,6 +23,9 @@ Version 1.7.1 (not released yet)
 - Add `fps_counter` command
 - Make editor window resizeable
 - Add `debug_event_msg` command that allows to track event messages in console
+- Do not panic when character animation cannot be loaded, instead fall back to the first animation - fixes
+  "Too many animations" errors occuring in specific conditions in some run maps (note that this problem was
+  not occuring in the stock game because it allowed memory corruption to happen)
 
 Version 1.7.0 (released 2021-06-05)
 -----------------------------------
