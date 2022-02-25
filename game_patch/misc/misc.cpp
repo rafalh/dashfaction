@@ -52,6 +52,14 @@ CodeInjection critical_error_hide_main_wnd_patch{
     },
 };
 
+CodeInjection critical_error_log_injection{
+    0x0050BAE8,
+    [](auto& regs) {
+        const char* text = regs.ecx;
+        xlog::error("Critical error:\n%s", text);
+    },
+};
+
 CodeInjection level_read_data_check_restore_status_patch{
     0x00461195,
     [](auto& regs) {
@@ -409,6 +417,9 @@ void misc_init()
 
     // Hide main window when displaying critical error message box
     critical_error_hide_main_wnd_patch.install();
+
+    // Log critical error message
+    critical_error_log_injection.install();
 
     // Fix crash when skipping cutscene after robot kill in L7S4
     mover_rotating_keyframe_oob_crashfix.install();

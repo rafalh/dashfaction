@@ -26,6 +26,7 @@ Version 1.7.1 (not released yet)
 - Do not panic when character animation cannot be loaded, instead fall back to the first animation - fixes
   "Too many animations" errors occuring in specific conditions in some run maps (note that this problem was
   not occuring in the stock game because it allowed memory corruption to happen)
+- Log critical error message
 
 Version 1.7.0 (released 2021-06-05)
 -----------------------------------
