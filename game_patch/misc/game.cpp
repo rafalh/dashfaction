@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <ctime>
 #include <patch_common/CodeInjection.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CallHook.h>
@@ -9,27 +10,73 @@
 #include "../rf/gr/gr.h"
 #include "../rf/ui.h"
 #include "../rf/gameseq.h"
+#include "../rf/level.h"
 #include "../multi/multi.h"
 
-const char screenshot_dir_name[] = "screenshots";
-static int screenshot_path_id = -1;
 static std::unique_ptr<byte* []> g_screenshot_scanlines_buf;
 
-void game_init_screenshot_dir()
+static std::optional<std::string> get_screenshots_dir()
 {
-    auto full_path = string_format("%s\\%s", rf::root_path, screenshot_dir_name);
+    auto full_path = string_format("%s\\screenshots", rf::root_path);
+    if (full_path.size() > rf::max_path_len - 20) {
+        xlog::error("Screenshots directory path is too long!");
+        return {};
+    }
     if (CreateDirectoryA(full_path.c_str(), nullptr))
         xlog::info("Created screenshots directory");
-    else if (GetLastError() != ERROR_ALREADY_EXISTS)
+    else if (GetLastError() != ERROR_ALREADY_EXISTS) {
         xlog::error("Failed to create screenshots directory %lu", GetLastError());
-    screenshot_path_id = rf::file_add_path(screenshot_dir_name, "", true);
+        return {};
+    }
+    return {full_path};
 }
 
-CodeInjection game_print_screen_injection{
+FunHook<void(char*)> game_print_screen_hook{
     0x004366E0,
-    []() {
-        if (screenshot_path_id == -1) {
-            game_init_screenshot_dir();
+    [](char *filename_used) {
+        static auto& pending_screenshot_filename = addr_as_ref<char[256]>(0x00636F14);
+        static auto& dump_tga = addr_as_ref<bool>(0x0063708C);
+        static auto& screenshot_pending = addr_as_ref<char>(0x00637085);
+
+        auto now = std::time(nullptr);
+        auto* tm = std::localtime(&now);
+        char time_str[32];
+        std::strftime(time_str, sizeof(time_str), "%Y%m%d_%H%M%S", tm);
+        auto level_filename = std::string{get_filename_without_ext(rf::level.filename.c_str())};
+        auto* dot_ext = dump_tga ? ".tga" : ".jpg";
+        auto screenshots_dir = get_screenshots_dir();
+        if (!screenshots_dir) {
+            return;
+        }
+        int counter = 1;
+        rf::File file;
+
+        while (true) {
+            if (counter == 1) {
+                // Don't include the counter here
+                std::snprintf(pending_screenshot_filename, sizeof(pending_screenshot_filename) - 4,
+                    "%s\\%s_%s", screenshots_dir.value().c_str(), time_str, level_filename.c_str());
+            } else {
+                // Filename conflict - include a counter
+                std::snprintf(pending_screenshot_filename, sizeof(pending_screenshot_filename) - 4,
+                    "%s\\%s_%d_%s", screenshots_dir.value().c_str(), time_str, counter, level_filename.c_str());
+            }
+            auto filename_with_ext = std::string{pending_screenshot_filename} + dot_ext;
+            bool exists = file.find(filename_with_ext.c_str());
+            if (!exists) {
+                break;
+            }
+            counter++;
+            if (counter == 1000) {
+                xlog::error("Cannot find a free filename for a screenshot");
+                return;
+            }
+        }
+
+        screenshot_pending = true;
+
+        if (filename_used) {
+            std::strcpy(filename_used, pending_screenshot_filename);
         }
     },
 };
@@ -118,9 +165,8 @@ static FunHook<void(rf::GameState, bool)> rf_do_state_hook{
 
 void game_apply_patch()
 {
-    // Override screenshot directory
-    write_mem_ptr(0x004367CA + 2, &screenshot_path_id);
-    game_print_screen_injection.install();
+    // Override screenshot filename and directory
+    game_print_screen_hook.install();
 
     // Fix buffer overflow in screenshot to JPG conversion code
     jpeg_write_bitmap_overflow_fix1.install();

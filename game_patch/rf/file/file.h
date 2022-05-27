@@ -5,6 +5,8 @@
 
 namespace rf
 {
+    constexpr std::size_t max_path_len = 256;
+
     class File
     {
         using SelfType = File;
@@ -95,5 +97,7 @@ namespace rf
     static auto& file_add_path = addr_as_ref<int(const char *dir, const char *ext_list, bool unknown)>(0x00514070);
     static auto& file_exists = addr_as_ref<bool(const char *filename)>(0x00544680);
 
-    static auto& root_path = addr_as_ref<char[256]>(0x018060E8);
+    static auto& root_path = addr_as_ref<char[max_path_len]>(0x018060E8);
+
+
 }
