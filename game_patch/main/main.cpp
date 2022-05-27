@@ -278,7 +278,7 @@ void load_config()
     // Load config
     try {
         if (!g_game_config.load())
-            xlog::error("Configuration has not been found in registry!");
+            xlog::warn("Configuration has not been found in registry!");
     }
     catch (std::exception& e) {
         xlog::error("Failed to load configuration: %s", e.what());
