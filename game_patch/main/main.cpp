@@ -34,6 +34,7 @@
 #include "../rf/multi.h"
 #include "../rf/level.h"
 #include "../rf/os/os.h"
+#include "../rf/save_restore.h"
 
 #ifdef HAS_EXPERIMENTAL
 #include "../experimental/experimental.h"
@@ -133,6 +134,14 @@ FunHook<void(bool)> level_init_post_hook{
     [](bool transition) {
         level_init_post_hook.call_target(transition);
         xlog::info("Level loaded: %s%s", rf::level.filename.c_str(), transition ? " (transition)" : "");
+
+        if (transition && g_game_config.autosave) {
+            xlog::info("Performing autosave");
+            auto save_filename = std::string{rf::sr::savegame_path} + "/autosave.svl";
+            if (!rf::sr::save_game(save_filename.c_str(), rf::local_player)) {
+                xlog::error("Autosave failed");
+            }
+        }
     },
 };
 

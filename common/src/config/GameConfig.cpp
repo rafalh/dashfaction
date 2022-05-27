@@ -171,6 +171,7 @@ bool GameConfig::visit_vars(T&& visitor, bool is_save)
     result &= visitor(dash_faction_key, "Reticle Scale", reticle_scale);
     result &= visitor(dash_faction_key, "Mesh Static Lighting", mesh_static_lighting);
     result &= visitor(dash_faction_key, "Player Join Beep", player_join_beep);
+    result &= visitor(dash_faction_key, "Autosave", autosave);
 
     return result;
 }

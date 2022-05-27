@@ -27,6 +27,7 @@ Version 1.7.1 (not released yet)
   "Too many animations" errors occuring in specific conditions in some run maps (note that this problem was
   not occuring in the stock game because it allowed memory corruption to happen)
 - Log critical error message
+- Add autosave after a level transition
 
 Version 1.7.0 (released 2021-06-05)
 -----------------------------------
