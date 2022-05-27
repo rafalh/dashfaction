@@ -3,6 +3,7 @@ DashFaction Changelog
 
 Version 1.7.1 (not released yet)
 --------------------------------
+- Add autosave after a level transition
 - Disable big HUD for resolutions lower than 1024x768 to prevent crashes
 - Fix "Wrong player ID" warnings when multiplayer quick save/load is used (client-side fix)
 - Restructure Options window
@@ -20,6 +21,9 @@ Version 1.7.1 (not released yet)
 - Add version and date to `/info` server chat command
 - Enable `map` command in RCON
 - Change update checker URL
+- Fix particle damage on dedicated servers
+- Add `con_find` command to make finding commands easier
+- Fix blurry fonts in the launcher on HiDPI monitors
 - Add `fps_counter` command
 - Make editor window resizeable
 - Add `debug_event_msg` command that allows to track event messages in console
@@ -27,7 +31,6 @@ Version 1.7.1 (not released yet)
   "Too many animations" errors occuring in specific conditions in some run maps (note that this problem was
   not occuring in the stock game because it allowed memory corruption to happen)
 - Log critical error message
-- Add autosave after a level transition
 - Do not show glock with silencer in 3rd person view if current primary weapon is not a glock (RF bug)
 
 Version 1.7.0 (released 2021-06-05)
