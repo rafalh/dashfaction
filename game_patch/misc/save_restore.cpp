@@ -6,12 +6,13 @@
 #include "../rf/object.h"
 #include "../rf/entity.h"
 #include "../rf/multi.h"
+#include "../rf/save_restore.h"
 #include "../multi/multi.h"
 
 FunHook<void()> do_quick_save_hook{
     0x004B5E20,
     []() {
-        if (rf::can_save())
+        if (rf::sr::can_save_now())
             do_quick_save_hook.call_target();
     },
 };

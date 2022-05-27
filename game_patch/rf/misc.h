@@ -41,6 +41,4 @@ namespace rf
         char field_1871F;
     };
     static_assert(sizeof(LevelSaveData) == 0x18720);
-
-    static auto& can_save = addr_as_ref<bool()>(0x004B61A0);
 }
