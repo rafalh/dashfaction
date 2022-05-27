@@ -28,6 +28,7 @@ Version 1.7.1 (not released yet)
   not occuring in the stock game because it allowed memory corruption to happen)
 - Log critical error message
 - Add autosave after a level transition
+- Do not show glock with silencer in 3rd person view if current primary weapon is not a glock (RF bug)
 
 Version 1.7.0 (released 2021-06-05)
 -----------------------------------

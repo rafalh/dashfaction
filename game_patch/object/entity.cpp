@@ -4,6 +4,7 @@
 #include <patch_common/AsmWriter.h>
 #include "../rf/entity.h"
 #include "../rf/corpse.h"
+#include "../rf/weapon.h"
 #include "../rf/player/player.h"
 #include "../rf/particle_emitter.h"
 #include "../rf/os/frametime.h"
@@ -124,6 +125,16 @@ CodeInjection entity_process_post_hidden_injection{
     },
 };
 
+CodeInjection entity_render_weapon_in_hands_silencer_visibility_injection{
+    0x00421D39,
+    [](auto& regs) {
+        rf::Entity* ep = regs.esi;
+        if (!rf::weapon_is_glock(ep->ai.current_primary_weapon)) {
+            regs.eip = 0x00421D3F;
+        }
+    },
+};
+
 void entity_do_patch()
 {
     // Fix player being stuck to ground when jumping, especially when FPS is greater than 200
@@ -162,4 +173,7 @@ void entity_do_patch()
 
     // Fix move sound not being muted if entity is created hidden (example: jeep in L18S3)
     entity_process_post_hidden_injection.install();
+
+    // Do not show glock with silencer in 3rd person view if current primary weapon is not a glock
+    entity_render_weapon_in_hands_silencer_visibility_injection.install();
 }
