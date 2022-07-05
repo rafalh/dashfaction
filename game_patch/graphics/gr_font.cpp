@@ -511,7 +511,7 @@ FunHook<int(int)> gr_get_font_height_hook{
     },
 };
 
-FunHook<void(int, int, const char*, int, rf::gr::Mode)> gr_string_hook{
+FunHook<int(int, int, const char*, int, rf::gr::Mode)> gr_string_hook{
     0x0051FEB0,
     [](int x, int y, const char *text, int font_num, rf::gr::Mode mode) {
         if (font_num == -1) {
@@ -519,10 +519,10 @@ FunHook<void(int, int, const char*, int, rf::gr::Mode)> gr_string_hook{
         }
         if (font_num & ttf_font_flag) {
             auto& font = g_fonts[font_num & ~ttf_font_flag];
-            font.draw(x, y, text, mode);
+            return font.draw(x, y, text, mode);
         }
         else {
-            gr_string_hook.call_target(x, y, text, font_num, mode);
+            return gr_string_hook.call_target(x, y, text, font_num, mode);
         }
     },
 };
