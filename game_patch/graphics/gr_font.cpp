@@ -53,8 +53,8 @@ class GrNewFont
 {
 public:
     GrNewFont(std::string_view name);
-    void draw(int x, int y, std::string_view text, rf::gr::Mode state) const;
-    void draw_aligned(rf::gr::TextAlignment align, int x, int y, std::string_view text, rf::gr::Mode state) const;
+    int draw(int x, int y, std::string_view text, rf::gr::Mode state) const;
+    int draw_aligned(rf::gr::TextAlignment align, int x, int y, std::string_view text, rf::gr::Mode state) const;
     void get_size(int* w, int* h, std::string_view text) const;
 
     [[nodiscard]] const std::string& get_name() const
@@ -354,11 +354,10 @@ GrNewFont::GrNewFont(std::string_view name) :
     rf::gr::tcache_add_ref(bitmap_);
 }
 
-void GrNewFont::draw(int x, int y, std::string_view text, rf::gr::Mode state) const
+int GrNewFont::draw(int x, int y, std::string_view text, rf::gr::Mode state) const
 {
     if (x == rf::gr::center_x) {
-        draw_aligned(rf::gr::ALIGN_CENTER, rf::gr::screen.clip_width / 2, y, text, state);
-        return;
+        return draw_aligned(rf::gr::ALIGN_CENTER, rf::gr::screen.clip_width / 2, y, text, state);
     }
     int pen_x = x;
     int pen_y = y + baseline_y_;
@@ -379,10 +378,12 @@ void GrNewFont::draw(int x, int y, std::string_view text, rf::gr::Mode state) co
             }
         }
     }
+    return pen_x;
 }
 
-void GrNewFont::draw_aligned(rf::gr::TextAlignment alignment, int x, int y, std::string_view text, rf::gr::Mode state) const
+int GrNewFont::draw_aligned(rf::gr::TextAlignment alignment, int x, int y, std::string_view text, rf::gr::Mode state) const
 {
+    int result = x;
     size_t cur_pos = 0;
     while (cur_pos < text.size()) {
         auto line_end_pos = text.find('\n', cur_pos);
@@ -403,9 +404,10 @@ void GrNewFont::draw_aligned(rf::gr::TextAlignment alignment, int x, int y, std:
         else if (alignment == rf::gr::ALIGN_RIGHT) {
             line_x -= w;
         }
-        draw(line_x, y, line, state);
+        result = draw(line_x, y, line, state);
         y += line_spacing_;
     }
+    return result;
 }
 
 void GrNewFont::get_size(int* w, int* h, std::string_view text) const
