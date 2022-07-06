@@ -379,6 +379,10 @@ void GrNewFont::draw(int x, int y, std::string_view text, rf::gr::Mode state) co
             }
         }
     }
+    int& Current_string_x = addr_as_ref<int>(0x018871AC);
+    int& Current_string_y = addr_as_ref<int>(0x018871B0);
+    Current_string_x = pen_x;
+    Current_string_y = y;
 }
 
 void GrNewFont::draw_aligned(rf::gr::TextAlignment alignment, int x, int y, std::string_view text, rf::gr::Mode state) const
