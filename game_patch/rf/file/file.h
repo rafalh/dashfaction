@@ -24,6 +24,9 @@ namespace rf
         static constexpr uint mode_write = 2;
         static constexpr uint mode_text = 0x80000000;
 
+        static constexpr uint default_path_id = 9999999;
+
+
         File()
         {
             AddrCaller{0x00523940}.this_call(this);
@@ -34,12 +37,12 @@ namespace rf
             AddrCaller{0x00523960}.this_call(this);
         }
 
-        int open(const char* filename, int mode = mode_read, int path_id = 9999999)
+        int open(const char* filename, int mode = mode_read, int path_id = default_path_id)
         {
             return AddrCaller{0x00524190}.this_call<int>(this, filename, mode, path_id);
         }
 
-        bool find(const char* filename, int path_id = 9999999)
+        bool find(const char* filename, int path_id = default_path_id)
         {
             return AddrCaller{0x00523CE0}.this_call<bool>(this, filename, path_id);
         }
@@ -69,7 +72,7 @@ namespace rf
             return AddrCaller{0x005244E0}.this_call<int>(this);
         }
 
-        [[nodiscard]] int size(const char *filename = nullptr, int a3 = 9999999) const
+        [[nodiscard]] int size(const char *filename = nullptr, int a3 = default_path_id) const
         {
             return AddrCaller{0x00524370}.this_call<int>(this, filename, a3);
         }
@@ -94,7 +97,7 @@ namespace rf
     };
 
     static auto& file_get_ext = addr_as_ref<char*(const char *path)>(0x005143F0);
-    static auto& file_add_path = addr_as_ref<int(const char *dir, const char *ext_list, bool unknown)>(0x00514070);
+    static auto& file_add_path = addr_as_ref<int(const char *path, const char *exts, bool search_on_cd)>(0x00514070);
     static auto& file_exists = addr_as_ref<bool(const char *filename)>(0x00544680);
 
     static auto& root_path = addr_as_ref<char[max_path_len]>(0x018060E8);

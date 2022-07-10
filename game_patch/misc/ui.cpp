@@ -5,6 +5,7 @@
 #include <common/utils/string-utils.h>
 #include "../rf/ui.h"
 #include "../rf/input.h"
+#include "../rf/misc.h"
 #include "../rf/os/os.h"
 
 #define DEBUG_UI_LAYOUT 0
@@ -262,13 +263,28 @@ CallHook<void(int*, int*, const char*, int, int, char, int)> popup_set_text_gr_s
     },
 };
 
+static bool is_any_font_modded()
+{
+    auto rfpc_large_checksum = rf::get_file_checksum("rfpc-large.vf");
+    auto rfpc_medium_checksum = rf::get_file_checksum("rfpc-medium.vf");
+    auto rfpc_small_checksum = rf::get_file_checksum("rfpc-small.vf");
+    bool rfpc_large_modded = rfpc_large_checksum != 0x5E7DC24Au;
+    bool rfpc_medium_modded = rfpc_medium_checksum != 0x19E7184Cu;
+    bool rfpc_small_modded = rfpc_small_checksum != 0xAABA52E6u;
+    bool any_font_modded = rfpc_large_modded || rfpc_medium_modded || rfpc_small_modded;
+    if (any_font_modded) {
+        xlog::info("Detected modded fonts: %d %d %d", rfpc_large_modded, rfpc_medium_modded, rfpc_small_modded);
+    }
+    return any_font_modded;
+}
+
 FunHook<void()> menu_init_hook{
     0x00442BB0,
     []() {
         menu_init_hook.call_target();
 #if SHARP_UI_TEXT
         xlog::info("UI scale: %.4f %.4f", rf::ui::scale_x, rf::ui::scale_y);
-        if (rf::ui::scale_y > 1.0f) {
+        if (rf::ui::scale_y > 1.0f && !is_any_font_modded()) {
             int large_font_size = std::min(128, static_cast<int>(std::round(rf::ui::scale_y * 14.5f))); // 32
             int medium_font_size = std::min(128, static_cast<int>(std::round(rf::ui::scale_y * 9.0f))); // 20
             int small_font_size = std::min(128, static_cast<int>(std::round(rf::ui::scale_y * 7.5f))); // 16
@@ -326,4 +342,13 @@ void ui_apply_patch()
 
     // Handle CTRL+V in input boxes
     UiInputBox_process_key_hook.install();
+}
+
+void ui_get_string_size(int* w, int* h, const char* s, int s_len, int font_num)
+{
+    rf::gr::get_string_size(w, h, s, s_len, font_num);
+#if SHARP_UI_TEXT
+    *w = static_cast<int>(*w / rf::ui::scale_x);
+    *h = static_cast<int>(*h / rf::ui::scale_y);
+#endif
 }

@@ -14,8 +14,7 @@
 #include "../rf/os/frametime.h"
 #include "../main/main.h"
 #include "../graphics/gr.h"
-
-#define SHARP_UI_TEXT 1
+#include "misc.h"
 
 constexpr int EGG_ANIM_ENTER_TIME = 2000;
 constexpr int EGG_ANIM_LEAVE_TIME = 2000;
@@ -40,11 +39,7 @@ void __fastcall UiLabel_create2_version_label(rf::ui::Gadget* self, int edx, rf:
                                              int h, const char* text, int font_id)
 {
     text = PRODUCT_NAME_VERSION;
-    rf::gr::get_string_size(&w, &h, text, -1, font_id);
-#if SHARP_UI_TEXT
-    w = static_cast<int>(w / rf::ui::scale_x);
-    h = static_cast<int>(h / rf::ui::scale_y);
-#endif
+    ui_get_string_size(&w, &h, text, -1, font_id);
     x = 430 - w;
     w += 5;
     h += 2;
