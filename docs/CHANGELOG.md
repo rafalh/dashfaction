@@ -33,6 +33,7 @@ Version 1.7.1 (not released yet)
 - Log critical error message
 - Do not show glock with silencer in 3rd person view if current primary weapon is not a glock (RF bug)
 - Change screenshot filename template (it now includes date, time and level filename)
+- Fix multiple out-of-bounds writes in save game code (fixes crash when saving the game in some custom levels)
 
 Version 1.7.0 (released 2021-06-05)
 -----------------------------------
