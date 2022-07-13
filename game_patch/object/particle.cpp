@@ -44,12 +44,21 @@ FunHook<void(int, rf::ParticleCreateInfo&, rf::GRoom*, rf::Vector3*, int, rf::Pa
 };
 
 CodeInjection particle_should_take_damage_injection{
-    0x00494DE9, 
+    0x00494DE9,
     [] (auto& regs) {
         if (rf::is_dedicated_server) {
             regs.eip = 0x00494DF8;
         }
     }
+};
+
+CodeInjection particle_move_all_update_world_pos_fix{
+    0x004964AE,
+    [](auto& regs) {
+        rf::ParticleEmitter* emitter = regs.esi;
+        rf::Vector3 dir;
+        emitter->get_pos_and_dir(&emitter->world_pos, &dir);
+    },
 };
 
 void particle_do_patch()
@@ -71,4 +80,7 @@ void particle_do_patch()
 
     // Do not create not damaging particles on a dedicated server
     particle_create_hook.install();
+
+    // Fix cull radius calculation for particle emitters attached to objects
+    particle_move_all_update_world_pos_fix.install();
 }
