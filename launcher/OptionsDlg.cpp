@@ -223,7 +223,7 @@ void OptionsDlg::InitToolTip()
     // Display
     m_tool_tip.AddTool(GetDlgItem(IDC_RESOLUTIONS_COMBO), "Please select resolution from provided dropdown list - custom resolution is supposed to work in Windowed/Borderless mode only");
     m_tool_tip.AddTool(GetDlgItem(IDC_VSYNC_CHECK), "Enable vertical synchronization (should limit FPS to monitor refresh rate - usually 60)");
-    m_tool_tip.AddTool(GetDlgItem(IDC_MAX_FPS_EDIT), "FPS limit - maximal value is 240 - high FPS can trigger minor bugs in game");
+    m_tool_tip.AddTool(GetDlgItem(IDC_MAX_FPS_EDIT), "FPS limit - high FPS can trigger minor bugs in game");
 
     // Graphics
     m_tool_tip.AddTool(GetDlgItem(IDC_FAST_ANIMS_CHECK), "Reduce animation smoothness for far models");
