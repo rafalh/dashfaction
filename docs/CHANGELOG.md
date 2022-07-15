@@ -3,6 +3,7 @@ DashFaction Changelog
 
 Version 1.7.1 (not released yet)
 --------------------------------
+- Unlock fps limit.
 - Add autosave after a level transition
 - Disable big HUD for resolutions lower than 1024x768 to prevent crashes
 - Fix "Wrong player ID" warnings when multiplayer quick save/load is used (client-side fix)
