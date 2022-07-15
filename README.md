@@ -18,7 +18,7 @@ Features:
 * information about killer's weapon in chat
 * option to disable level ambient sounds
 * ui.vpp cheats prevention
-* multiple fixes for high FPS (it is currently limited to 240), especially fix for the infamous sub exploding bug
+* multiple fixes for high FPS, especially fix for the infamous sub exploding bug
 * country-specific edition support (properly handles game directory structure for German and French edition)
 * improved game performance
 * votes support for dedicated servers
