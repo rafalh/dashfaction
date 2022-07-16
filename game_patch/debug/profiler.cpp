@@ -461,7 +461,7 @@ void profiler_init()
     add_profiler<CallProfiler>(0x00488C89, "          glare");
     add_profiler<CallProfiler>(0x0048D7D5, "        bolt emitter");
     add_profiler<FunProfiler>(0x004D33D0, "       details");
-    add_profiler<AddrRangeProfiler>(0x00494B90, 0x00494D3C, "      particles");
+    add_profiler<AddrRangeProfiler>(0x00494B90, 0x00494D3A, "      particles"); // CRASH
 
     //add_profiler<AddrRangeProfiler>(0x004D34AB, 0x004D34B1, "      any render handler");
     //add_profiler<CallProfiler>(0x004D3499, "      prepare lights");
