@@ -37,6 +37,7 @@ Version 1.7.1 (not released yet)
 - Do not use TTF fonts in game menu if VF fonts are modded (should fix some unofficial game localizations)
 - Change transparency sorting alghoritm to fix flamethrower particles rendering in rooms with liquid and/or
   semi-transparent details
+- Optimize finding a new room for moving objects
 
 Version 1.7.0 (released 2021-06-05)
 -----------------------------------

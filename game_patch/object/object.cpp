@@ -8,6 +8,8 @@
 #include "../rf/clutter.h"
 #include "../rf/multi.h"
 #include "../rf/level.h"
+#include "../rf/geometry.h"
+#include "../rf/math/ix.h"
 #include "object.h"
 #include "object_private.h"
 
@@ -202,6 +204,19 @@ FunHook<void(rf::Object*)> obj_delete_mesh_hook{
     },
 };
 
+CodeInjection object_find_room_optimization{
+    0x0048A1C9,
+    [](auto& regs) {
+        rf::Object* obj = regs.esi;
+        // Check if object is in room bounding box to handle leaving room by a hole
+        if (obj->room && rf::ix_point_in_box(obj->pos, obj->room->bbox_min, obj->room->bbox_max)) {
+            // Pass original room to GSolid::find_new_room so it can execute a faster code path
+            addr_as_ref<rf::GRoom*>(regs.esp) = obj->room; // orig_room
+            addr_as_ref<rf::Vector3*>(regs.esp + 4) = &obj->correct_pos; // orig_pos
+        }
+    },
+};
+
 void object_do_patch()
 {
     // Log error when object cannot be created
@@ -252,6 +267,9 @@ void object_do_patch()
     // Calculate lighting when object mesh is changed
     obj_create_mesh_hook.install();
     obj_delete_mesh_hook.install();
+
+    // Optimize Object::find_room function
+    object_find_room_optimization.install();
 
     // Other files
     entity_do_patch();
