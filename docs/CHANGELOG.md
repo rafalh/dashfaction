@@ -35,6 +35,8 @@ Version 1.7.1 (not released yet)
 - Change screenshot filename template (it now includes date, time and level filename)
 - Fix multiple out-of-bounds writes in save game code (fixes crash when saving the game in some custom levels)
 - Do not use TTF fonts in game menu if VF fonts are modded (should fix some unofficial game localizations)
+- Change transparency sorting alghoritm to fix flamethrower particles rendering in rooms with liquid and/or
+  semi-transparent details
 
 Version 1.7.0 (released 2021-06-05)
 -----------------------------------
