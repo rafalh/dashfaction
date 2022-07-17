@@ -32,7 +32,7 @@ Name: "rfproto"; Description: "Register rf:// protocol handler"; GroupDescriptio
 Name: "rflassoc"; Description: "Associate .rfl file extension with Dash Faction Level Editor"; GroupDescription: "Other options:"
 Name: "fftracker"; Description: "Set rfgt.factionfiles.com as the multiplayer tracker"; GroupDescription: "Other options:"
 Name: "patchgame"; Description: "Install needed game patches"; GroupDescription: "Other options:"; Check: "PatchGameTaskCheck"
-Name: "replacerflauncher"; Description: "Replace the Red Faction launcher with a link to the Dash Faction launcher (allows Dash Faction to be lauched from Steam)"; GroupDescription: "Other options:"; Flags: unchecked
+Name: "replacerflauncher"; Description: "Replace the Red Faction launcher with a link to the Dash Faction launcher (allows Dash Faction to be launched from Steam)"; GroupDescription: "Other options:"; Flags: unchecked
 Name: "redvisualstyles"; Description: "Enable Windows Visual Styles for the level editor (experimental)"; GroupDescription: "Other options:"; Flags: unchecked
 
 [Files]
