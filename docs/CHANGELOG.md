@@ -38,6 +38,10 @@ Version 1.7.1 (not released yet)
 - Change transparency sorting alghoritm to fix flamethrower particles rendering in rooms with liquid and/or
   semi-transparent details
 - Optimize finding a new room for moving objects
+- Allow start menu shortcut to be skipped in installer
+- Fix unrecognized tables.vpp version error in installer when installing Dash with 1.00 NA version of the game
+- Simplify installation name in Windows control panel (no longer includes "version [version]")
+- Add icons for installer and control panel entry
 
 Version 1.7.0 (released 2021-06-05)
 -----------------------------------
