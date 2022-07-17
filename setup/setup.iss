@@ -91,8 +91,8 @@ Root: HKCR; Subkey: "DashFactionLevelEditor\shell\open\command"; ValueType: "str
 [CustomMessages]
 RFExeLocation=Please specify the location of RF.exe from the Red Faction installation directory:
 GameNeedsPatches=The detected Red Faction version is not directly supported by Dash Faction. Setup will install all the needed patches automatically.%n%nPatches that will be installed:%n
-UnkGameExeVersion=Unknown RF.exe version (SHA1 = %1). Dash Faction will not function correctly.%nFind help at https://redfaction.help and https://redfaction.chat (Discord).%n%nDo you want to ignore this error and continue?
-UnkTablesVppVersion=Unknown tables.vpp version (SHA1 = %1). Multiplayer will not function correctly.%nFind help at https://redfaction.help and https://redfaction.chat (Discord).%n%nDo you want to ignore this error and continue?
+UnkGameExeVersion=Unknown RF.exe version (SHA1 = %1). Dash Faction will not function correctly.%nFind help at https://redfaction.help and https://discord.gg/factionfiles%n%nDo you want to ignore this error and continue?
+UnkTablesVppVersion=Unknown tables.vpp version (SHA1 = %1). Multiplayer will not function correctly.%nFind help at https://redfaction.help and https://discord.gg/factionfiles%n%nDo you want to ignore this error and continue?
 
 [Code]
 type
