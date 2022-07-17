@@ -10,9 +10,9 @@ AppName=Dash Faction
 AppVerName=Dash Faction
 AppVersion={#AppVer}
 AppPublisher=rafalh
-AppPublisherURL=https://ravin.tk/
-AppSupportURL=https://ravin.tk/
-AppUpdatesURL=https://ravin.tk/
+AppPublisherURL=https://rafalh.dev/
+AppSupportURL=https://rafalh.dev/
+AppUpdatesURL=https://rafalh.dev/
 SetupIconFile="..\launcher\res\DF.ico"
 UninstallDisplayIcon="{app}\DashFactionLauncher.exe"
 DefaultDirName={pf}\Dash Faction
@@ -369,7 +369,7 @@ begin
         if not CreateSymbolicLinkA(GetGameDir('RedFaction.exe'), ExpandConstant('{app}\DashFactionLauncher.exe'), 0) then
         begin
             Log('CreateSymbolicLink failed');
-            MsgBox('Failed to replace Red Faction launcher by a symbolic link to Dash Faction launcher.', mbError, MB_OK);
+            MsgBox('Failed to replace Red Faction launcher with a symbolic link to Dash Faction launcher.', mbError, MB_OK);
         end;
     end;
 end;
