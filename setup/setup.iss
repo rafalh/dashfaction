@@ -27,12 +27,12 @@ ChangesAssociations=yes
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
-Name: "quicklaunchicon"; Description: "Create a start menu shortcut"; GroupDescription: "{cm:AdditionalIcons}"
+Name: "quicklaunchicon"; Description: "Create a Start menu shortcut"; GroupDescription: "{cm:AdditionalIcons}"
 Name: "rfproto"; Description: "Register rf:// protocol handler"; GroupDescription: "Other options:"
 Name: "rflassoc"; Description: "Associate .rfl file extension with Dash Faction Level Editor"; GroupDescription: "Other options:"
-Name: "fftracker"; Description: "Set rfgt.factionfiles.com as multiplayer tracker"; GroupDescription: "Other options:"
+Name: "fftracker"; Description: "Set rfgt.factionfiles.com as the multiplayer tracker"; GroupDescription: "Other options:"
 Name: "patchgame"; Description: "Install needed game patches"; GroupDescription: "Other options:"; Check: "PatchGameTaskCheck"
-Name: "replacerflauncher"; Description: "Replace Red Faction launcher with a link to Dash Faction launcher (allows starting Dash Faction from Steam client)"; GroupDescription: "Other options:"; Flags: unchecked
+Name: "replacerflauncher"; Description: "Replace the Red Faction launcher with a link to the Dash Faction launcher (allows Dash Faction to be lauched from Steam)"; GroupDescription: "Other options:"; Flags: unchecked
 Name: "redvisualstyles"; Description: "Enable Windows Visual Styles for the level editor (experimental)"; GroupDescription: "Other options:"; Flags: unchecked
 
 [Files]
@@ -89,10 +89,10 @@ Root: HKCR; Subkey: "DashFactionLevelEditor\shell\open\command"; ValueType: "str
 
 
 [CustomMessages]
-RFExeLocation=Please specify location of RF.exe file from Red Faction installation directory:
-GameNeedsPatches=Detected Red Faction version is not directly supported by Dash Faction. Setup program will install all the needed patches automatically.%n%nPatches that will be installed:%n
-UnkGameExeVersion=Unknown RF.exe version (SHA1 = %1). Dash Faction will not function correctly.%nFind help at http://redfaction.help and http://redfaction.chat (Discord).%n%nDo you want to ignore this error and continue?
-UnkTablesVppVersion=Unknown tables.vpp version (SHA1 = %1). Multiplayer will not function correctly.%nFind help at http://redfaction.help and http://redfaction.chat (Discord).%n%nDo you want to ignore this error and continue?
+RFExeLocation=Please specify the location of RF.exe from the Red Faction installation directory:
+GameNeedsPatches=The detected Red Faction version is not directly supported by Dash Faction. Setup will install all the needed patches automatically.%n%nPatches that will be installed:%n
+UnkGameExeVersion=Unknown RF.exe version (SHA1 = %1). Dash Faction will not function correctly.%nFind help at https://redfaction.help and https://redfaction.chat (Discord).%n%nDo you want to ignore this error and continue?
+UnkTablesVppVersion=Unknown tables.vpp version (SHA1 = %1). Multiplayer will not function correctly.%nFind help at https://redfaction.help and https://redfaction.chat (Discord).%n%nDo you want to ignore this error and continue?
 
 [Code]
 type
@@ -139,12 +139,12 @@ end;
 
 procedure AddBSDiffPatch(DisplayName: String; FileName: String; SrcFile: String; DestFile: String);
 begin
-    SetLength(Patches, Length(Patches) + 1);
-    Patches[Length(Patches) - 1].DisplayName := DisplayName;
-    Patches[Length(Patches) - 1].FileName := FileName;
-    Patches[Length(Patches) - 1].PatchType := BSDiff;
-    Patches[Length(Patches) - 1].SrcFile := SrcFile;
-    Patches[Length(Patches) - 1].DestFile := DestFile;
+    SetArrayLength(Patches, GetArrayLength(Patches) + 1);
+    Patches[GetArrayLength(Patches) - 1].DisplayName := DisplayName;
+    Patches[GetArrayLength(Patches) - 1].FileName := FileName;
+    Patches[GetArrayLength(Patches) - 1].PatchType := BSDiff;
+    Patches[GetArrayLength(Patches) - 1].SrcFile := SrcFile;
+    Patches[GetArrayLength(Patches) - 1].DestFile := DestFile;
     PatchesDisplayNames.Add(DisplayName);
 end;
 
@@ -156,16 +156,16 @@ end;
 
 procedure AddRTPatch(DisplayName: String; FileName: String);
 begin
-    SetLength(Patches, Length(Patches) + 1);
-    Patches[Length(Patches) - 1].DisplayName := DisplayName;
-    Patches[Length(Patches) - 1].FileName := FileName;
-    Patches[Length(Patches) - 1].PatchType := RTPatch;
+    SetArrayLength(Patches, GetArrayLength(Patches) + 1);
+    Patches[GetArrayLength(Patches) - 1].DisplayName := DisplayName;
+    Patches[GetArrayLength(Patches) - 1].FileName := FileName;
+    Patches[GetArrayLength(Patches) - 1].PatchType := RTPatch;
     PatchesDisplayNames.Add(DisplayName);
 end;
 
 procedure ResetPatchList();
 begin
-    SetLength(Patches, 0);
+    SetArrayLength(Patches, 0);
     GameExeFileNameAfterPatches := '';
     PatchesDisplayNames := TStringList.Create;
 end;
@@ -249,7 +249,7 @@ begin
     else
     begin
         Result := DetermineNeededPatches(SelectGameExePage.Values[0]);
-        if Result and (Length(Patches) > 0) then
+        if Result and (GetArrayLength(Patches) > 0) then
             Result := MsgBox(ExpandConstant('{cm:GameNeedsPatches}') + PatchesDisplayNames.Text, mbInformation, MB_OKCANCEL) = IDOK;
     end;
 end;
@@ -280,7 +280,7 @@ end;
 
 procedure CreateSelectGameExePage();
 begin
-    SelectGameExePage := CreateInputFilePage(wpSelectDir, 'Select RF.exe', 'Select Red Faction executable file', '');
+    SelectGameExePage := CreateInputFilePage(wpSelectDir, 'Select RF.exe', 'Select the Red Faction executable file', '');
     SelectGameExePage.Add(ExpandConstant('{cm:RFExeLocation}'), 'Executable files|*.exe|All files|*.*', '.exe');
     SelectGameExePage.Values[0] := DetectGameExecutablePath;
     SelectGameExePage.OnNextButtonClick := @SelectGameExePageOnNextButtonClick;
@@ -346,10 +346,10 @@ procedure ApplyPatches;
 var
     i: Integer;
 begin
-    if IsTaskSelected('patchgame') and (Length(Patches) > 0) then
+    if IsTaskSelected('patchgame') and (GetArrayLength(Patches) > 0) then
     begin
         Log('Applying patches...');
-        for i := 0 to Length(Patches) - 1 do
+        for i := 0 to GetArrayLength(Patches) - 1 do
             if not ApplyPatch(Patches[i]) then
                 break;
         Log('Finished applying patches.');
@@ -369,7 +369,7 @@ begin
         if not CreateSymbolicLinkA(GetGameDir('RedFaction.exe'), ExpandConstant('{app}\DashFactionLauncher.exe'), 0) then
         begin
             Log('CreateSymbolicLink failed');
-            MsgBox('Failed to replace Red Faction launcher with a symbolic link to Dash Faction launcher.', mbError, MB_OK);
+            MsgBox('Failed to replace the Red Faction launcher with a symbolic link to the Dash Faction launcher.', mbError, MB_OK);
         end;
     end;
 end;
@@ -378,7 +378,7 @@ end;
 
 function PatchGameTaskCheck(): Boolean;
 begin
-    Result := Length(Patches) > 0;
+    Result := GetArrayLength(Patches) > 0;
 end;
 
 // Event functions
