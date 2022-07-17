@@ -3,29 +3,29 @@ Dash Faction
 
 About
 -----
-Dash Faction is Red Faction game modification designed to fix original game bugs, improve compatibility with modern
+Dash Faction is a Red Faction game modification designed to fix original game bugs, improve compatibility with modern
 hardware and software, extend functionality and improve graphics quality and engine performance.
 
 Features:
-* levels auto-downloader (uses factionfiles.com just like Pure Faction)
+* level auto-downloader (uses factionfiles.com just like Pure Faction)
 * spectate mode (first person or free camera)
 * wide-screen support
 * windowed and stretched display mode
-* better graphics quality (anti-aliasing, higher textures color depth, anisotropic filtering, higher scanner view and mirrors resolution, LOD models improvements and more)
+* better graphics quality (anti-aliasing, higher texture color depth, anisotropic filtering, higher scanner view and mirror resolution, LOD model improvements and more)
 * improved security (enabled Data Execution Prevention, multiple Buffer Overflows fixes)
 * removed/raised multiple game limits
 * improved Scoreboard with Kills/Deaths column
 * information about killer's weapon in chat
 * option to disable level ambient sounds
 * ui.vpp cheats prevention
-* multiple fixes for high FPS (it is currently limited to 240), especially fix for the infamous sub exploding bug
+* multiple fixes for high FPS (it is currently limited to 240), especially a fix for the infamous submarine exploding bug
 * country-specific edition support (properly handles game directory structure for German and French edition)
 * improved game performance
-* votes support for dedicated servers
-* hit-sounds support for dedicated servers
+* voting support for dedicated servers
+* hit-sound support for dedicated servers
 * other usability and stability fixes
 
-See [CHANGELOG file](docs/CHANGELOG.md) for a detailed list of all features.
+See the [CHANGELOG file](docs/CHANGELOG.md) for a detailed list of all features.
 
 You can also check out [examples of graphical improvements compared to the base game](docs/graphics_comparison).
 
@@ -72,9 +72,9 @@ Compatibility
 -------------
 Dash Faction is compatible with Red Faction 1.20 North America (NA).
 If your game version is 1.00 or 1.10 you have to update it to 1.20 first.
-If your edition is not NA or you are using Steam version, you have to replace RF.exe file with one from
+If your edition is not NA or you are using Steam version, you have to replace RF.exe file with one from the
 1.20 NA version (it can be found on FactionFiles.com). Launcher will ask you to do it if it detects
-unsupported EXE file. Dash Faction official installer does all required changes to the installation automatically.
+unsupported EXE file. THe Dash Faction installer does all required changes to the installation automatically.
 
 Supported operating systems: Windows 7 and newer.
 
@@ -94,7 +94,7 @@ Usage
 Advanced usage
 --------------
 You can provide additional command line arguments to `DashFactionLauncher.exe` application. They are always forwarded
-to the Red Faction process. For example to start a dedicated server use `-dedicated` argument just like in the original
+to the Red Faction process. For example, to start a dedicated server use the `-dedicated` argument just like in the original
 game.
 
 Dash Faction specific arguments:
@@ -120,7 +120,7 @@ launcher main window).
 
 Additional server configuration
 -------------------------------
-Dedicated server specific settings are configured in `dedicated_server.txt` file.
+Dedicated server specific settings are configured in the `dedicated_server.txt` file.
 Dash Faction specific configuration must be placed below the level list (`$Level` keys) and must appear in the order
 provided in this description.
 
@@ -188,11 +188,11 @@ Configuration example:
 
 License
 -------
-Most of Dash Faction source code is licensed under Mozilla Public License 2.0. It is available in the GitHub repository.
+Most of the Dash Faction source code is licensed under Mozilla Public License 2.0. It is available in the GitHub repository.
 See [LICENSE.txt](LICENSE.txt).
 
 Only Pure Faction anti-cheat support code is not open source because it would make PF anti-cheat features basically useless.
-It consists of few files in *game_patch/purefaction* directory. It is going to be linked statically during a release process
-of Dash Faction by owner of the project.
+It consists of few files in the *game_patch/purefaction* directory. It is going to be linked statically during a release process
+of Dash Faction by the owner of the project.
 
-Dash Faction uses some open source libraries. Their licenses can be found in *licenses* directory.
+Dash Faction uses some open source libraries. Their licenses can be found in the *licenses* directory.
