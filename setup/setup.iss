@@ -24,11 +24,12 @@ ChangesAssociations=yes
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
+Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 Name: "rfproto"; Description: "Register rf:// protocol handler"; GroupDescription: "Other options:"
 Name: "rflassoc"; Description: "Associate .rfl file extension with Dash Faction Level Editor"; GroupDescription: "Other options:"
 Name: "fftracker"; Description: "Set rfgt.factionfiles.com as multiplayer tracker"; GroupDescription: "Other options:"
 Name: "patchgame"; Description: "Install needed game patches"; GroupDescription: "Other options:"; Check: "PatchGameTaskCheck"
-Name: "replacerflauncher"; Description: "Replace Red Faction launcher by a link to Dash Faction launcher (allows starting Dash Faction from Steam client)"; GroupDescription: "Other options:"; Flags: unchecked
+Name: "replacerflauncher"; Description: "Replace Red Faction launcher with a link to Dash Faction launcher (allows starting Dash Faction from Steam client)"; GroupDescription: "Other options:"; Flags: unchecked
 Name: "redvisualstyles"; Description: "Enable Windows Visual Styles for the level editor (experimental)"; GroupDescription: "Other options:"; Flags: unchecked
 
 [Files]
@@ -63,7 +64,7 @@ Name: "{code:GetGameDir}\screenshots"; Permissions: users-modify
 Name: "{code:GetGameDir}\logs"; Permissions: users-modify
 
 [Icons]
-Name: "{group}\Dash Faction"; Filename: "{app}\DashFactionLauncher.exe"
+Name: "{group}\Dash Faction"; Filename: "{app}\DashFactionLauncher.exe"; Tasks: quicklaunchicon
 Name: "{commondesktop}\Dash Faction"; Filename: "{app}\DashFactionLauncher.exe"; Tasks: desktopicon
 
 [Run]
@@ -216,7 +217,10 @@ begin
     TablesVppSHA1 := GetSHA1OfFile(ExtractFileDir(GameExePath) + '\tables.vpp');
     case TablesVppSHA1 of
         'ded5e1b5932f47044ba760699d5931fda6bdc8ba':
-            // 1.20 NA - this is directly supported version
+            // 1.10/1.20 NA - this is directly supported version
+            begin end;
+        '2541f5565517ea38dfb9645d432eb3d11a15ac35':
+            // 1.00 NA
             begin end;
         '672ba832f7133b93d576f84d971331597d93fce6':
             AddBSDiffPatch('1.21 GR GOG -> 1.20 NA (tables.vpp patch)', 'tables-gog-gr.vpp.mbsdiff', 'tables.vpp', 'tables.vpp');
