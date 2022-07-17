@@ -247,6 +247,25 @@ CodeInjection gr_d3d_init_load_library_injection{
     },
 };
 
+FunHook<void(HWND)> gr_d3d_set_viewport_wnd_hook{
+    0x004EB840,
+    [](HWND hwnd) {
+        // Original code:
+        // * sets broken offset and clip size in gr_screen
+        // * configures viewport using off by one window size
+        // * reconfigures D3D matrices for no reason (they are unchanged)
+        // * resets clipping rect and viewport short after (0x004B8E2B)
+        // Rewrite it keeping only the parts that works properly and makes sense
+        // Note: In all places where this code is called clip rect is manually changed after the call
+        auto& gr_d3d_hwnd = addr_as_ref<HWND>(0x0183B950);
+        auto& gr_d3d_wnd_client_rect = addr_as_ref<RECT>(0x0183B798);
+        auto& gr_d3d_flush_buffer = addr_as_ref<void()>(0x004E99D0);
+        gr_d3d_flush_buffer();
+        gr_d3d_hwnd = hwnd;
+        GetClientRect(hwnd, &gr_d3d_wnd_client_rect);
+    },
+};
+
 void ApplyGraphicsPatches()
 {
 #if D3D_HW_VERTEX_PROCESSING
@@ -289,4 +308,7 @@ void ApplyGraphicsPatches()
 
     // Use d3d8to9 instead of d3d8
     gr_d3d_init_load_library_injection.install();
+
+    // Fix setting viewport window
+    gr_d3d_set_viewport_wnd_hook.install();
 }
