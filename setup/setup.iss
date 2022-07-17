@@ -7,6 +7,7 @@
 [Setup]
 AppId={{BDD60DE7-9374-463C-8E74-8227EB03E28F}
 AppName=Dash Faction
+AppVerName=Dash Faction
 AppVersion={#AppVer}
 AppPublisher=rafalh
 AppPublisherURL=https://ravin.tk/
