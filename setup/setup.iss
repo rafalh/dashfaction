@@ -374,6 +374,23 @@ begin
     end;
 end;
 
+procedure RestoreRedFactionLauncher;
+var 
+   GamePath: String;
+begin
+    // Use the registry entry to find the game directory
+    RegQueryStringValue(HKCU, 'Software\Volition\Red Faction\Dash Faction', 'Executable Path', GamePath);
+    GamePath := ExtractFileDir(GamePath) + '\';
+    if FileExists(GamePath + 'RedFaction.exe.bak') then
+    begin
+        if FileExists(GamePath + 'RedFaction.exe') then
+        begin
+            DeleteFile(GamePath + 'RedFaction.exe');
+        end;
+        RenameFile(GamePath + 'RedFaction.exe.bak', GamePath + 'RedFaction.exe');
+    end;
+end;
+
 // Check functions
 
 function PatchGameTaskCheck(): Boolean;
@@ -394,5 +411,13 @@ begin
     begin
         ApplyPatches;
         ReplaceRedFactionLauncher;
+    end;
+end;
+
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+begin
+    if CurUninstallStep = usPostUninstall then
+    begin
+        RestoreRedFactionLauncher;
     end;
 end;
