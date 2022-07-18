@@ -13,7 +13,6 @@ AppPublisher=rafalh
 AppPublisherURL=https://rafalh.dev/
 AppSupportURL=https://rafalh.dev/
 AppUpdatesURL=https://rafalh.dev/
-SetupIconFile="..\launcher\res\DF.ico"
 UninstallDisplayIcon="{app}\DashFactionLauncher.exe"
 DefaultDirName={pf}\Dash Faction
 DefaultGroupName=Dash Faction
