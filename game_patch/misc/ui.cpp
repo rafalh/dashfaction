@@ -268,12 +268,17 @@ static bool is_any_font_modded()
     auto rfpc_large_checksum = rf::get_file_checksum("rfpc-large.vf");
     auto rfpc_medium_checksum = rf::get_file_checksum("rfpc-medium.vf");
     auto rfpc_small_checksum = rf::get_file_checksum("rfpc-small.vf");
-    bool rfpc_large_modded = rfpc_large_checksum != 0x5E7DC24Au;
+    // Note: rfpc-large differs between Steam and CD game distributions
+    bool rfpc_large_modded = rfpc_large_checksum != 0x5E7DC24Au && rfpc_large_checksum != 0xEB80AD63u;
     bool rfpc_medium_modded = rfpc_medium_checksum != 0x19E7184Cu;
     bool rfpc_small_modded = rfpc_small_checksum != 0xAABA52E6u;
     bool any_font_modded = rfpc_large_modded || rfpc_medium_modded || rfpc_small_modded;
     if (any_font_modded) {
-        xlog::info("Detected modded fonts: %d %d %d", rfpc_large_modded, rfpc_medium_modded, rfpc_small_modded);
+        xlog::info("Detected modded fonts: rfpc-large %d (%08X) rfpc-medium %d (%08X) rfpc-small %d (%08X)",
+            rfpc_large_modded, rfpc_large_checksum,
+            rfpc_medium_modded, rfpc_medium_checksum,
+            rfpc_small_modded, rfpc_small_checksum
+        );
     }
     return any_font_modded;
 }
