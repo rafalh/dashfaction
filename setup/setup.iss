@@ -7,12 +7,12 @@
 [Setup]
 AppId={{BDD60DE7-9374-463C-8E74-8227EB03E28F}
 AppName=Dash Faction
-AppVerName=Dash Faction
 AppVersion={#AppVer}
 AppPublisher=rafalh
 AppPublisherURL=https://rafalh.dev/
 AppSupportURL=https://rafalh.dev/
 AppUpdatesURL=https://rafalh.dev/
+UninstallDisplayName=Dash Faction
 UninstallDisplayIcon="{app}\DashFactionLauncher.exe"
 DefaultDirName={pf}\Dash Faction
 DefaultGroupName=Dash Faction
