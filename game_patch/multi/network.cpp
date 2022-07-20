@@ -1025,7 +1025,8 @@ void __fastcall multi_io_stats_add_new(void *this_, int edx, int size, bool is_s
 
 FunHook<void __fastcall(void*, int, int, bool, int)> multi_io_stats_add_hook{0x0047CAC0, multi_io_stats_add_new};
 
-static void process_custom_packet(void* data, int len, const rf::NetAddr& addr, rf::Player* player)
+static void process_custom_packet([[maybe_unused]] void* data, [[maybe_unused]] int len,
+                                  [[maybe_unused]] const rf::NetAddr& addr, [[maybe_unused]] rf::Player* player)
 {
 #if MASK_AS_PF
     pf_process_packet(data, len, addr, player);

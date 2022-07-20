@@ -497,7 +497,7 @@ CodeInjection multi_on_new_player_injection{
     },
 };
 
-static bool check_player_ac_status(rf::Player* player)
+static bool check_player_ac_status([[maybe_unused]] rf::Player* player)
 {
 #ifdef HAS_PF
     if (g_additional_server_config.anticheat_level > 0) {
