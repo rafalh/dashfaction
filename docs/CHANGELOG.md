@@ -35,14 +35,15 @@ Version 1.7.1 (not released yet)
 - Change screenshot filename template (it now includes date, time and level filename)
 - Fix multiple out-of-bounds writes in save game code (fixes crash when saving the game in some custom levels)
 - Do not use TTF fonts in game menu if VF fonts are modded (should fix some unofficial game localizations)
-- Change transparency sorting alghoritm to fix flamethrower particles rendering in rooms with liquid and/or
+- Change transparency sorting algorithm to fix flamethrower particles rendering in rooms with liquid and/or
   semi-transparent details
 - Optimize finding a new room for moving objects
-- Allow start menu shortcut to be skipped in installer
-- Fix unrecognized tables.vpp version error in installer when installing Dash with 1.00 NA version of the game
+- Allow start menu shortcut to be skipped in setup program
 - Simplify installation name in Windows control panel (no longer includes "version [version]")
 - Add icon for control panel entry
 - Restore original Red Faction Launcher on uninstall if replaced with Dash Faction Launcher link
+- Add game installation path autofill for German GOG RF to setup program
+- Remove unnecessary "Unknown tables.vpp version" error from setup program (the launcher already displays an error for mismatched tables.vpp files)
 
 Version 1.7.0 (released 2021-06-05)
 -----------------------------------
