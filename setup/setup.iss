@@ -13,7 +13,7 @@ AppPublisherURL=https://rafalh.dev/
 AppSupportURL=https://rafalh.dev/
 AppUpdatesURL=https://rafalh.dev/
 UninstallDisplayName=Dash Faction
-UninstallDisplayIcon="{app}\DashFactionLauncher.exe"
+UninstallDisplayIcon={app}\DashFactionLauncher.exe
 DefaultDirName={pf}\Dash Faction
 DefaultGroupName=Dash Faction
 InfoBeforeFile={#SrcRootDir}\README.md
@@ -23,15 +23,16 @@ SolidCompression=yes
 OutputDir=build
 SetupLogging=yes
 ChangesAssociations=yes
+AllowNoIcons=yes
+AllowRootDirectory=yes
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
-Name: "quicklaunchicon"; Description: "Create a Start menu shortcut"; GroupDescription: "{cm:AdditionalIcons}"
 Name: "rfproto"; Description: "Register rf:// protocol handler"; GroupDescription: "Other options:"
 Name: "rflassoc"; Description: "Associate .rfl file extension with Dash Faction Level Editor"; GroupDescription: "Other options:"
-Name: "fftracker"; Description: "Set rfgt.factionfiles.com as the multiplayer tracker"; GroupDescription: "Other options:"
-Name: "patchgame"; Description: "Install needed game patches"; GroupDescription: "Other options:"; Check: "PatchGameTaskCheck"
-Name: "replacerflauncher"; Description: "Replace the Red Faction launcher with a link to the Dash Faction launcher (allows Dash Faction to be launched from Steam)"; GroupDescription: "Other options:"; Flags: unchecked
+Name: "fftracker"; Description: "Set the multiplayer tracker to rfgt.factionfiles.com"; GroupDescription: "Other options:"
+Name: "patchgame"; Description: "Install required game patches"; GroupDescription: "Other options:"; Check: "PatchGameTaskCheck"
+Name: "replacerflauncher"; Description: "Replace the Red Faction launcher with the Dash Faction launcher (allows Dash Faction to be opened through Red Faction on Steam)"; GroupDescription: "Other options:"; Flags: unchecked
 Name: "redvisualstyles"; Description: "Enable Windows Visual Styles for the level editor (experimental)"; GroupDescription: "Other options:"; Flags: unchecked
 
 [Files]
@@ -66,11 +67,11 @@ Name: "{code:GetGameDir}\screenshots"; Permissions: users-modify
 Name: "{code:GetGameDir}\logs"; Permissions: users-modify
 
 [Icons]
-Name: "{group}\Dash Faction"; Filename: "{app}\DashFactionLauncher.exe"; Tasks: quicklaunchicon
+Name: "{group}\Dash Faction"; Filename: "{app}\DashFactionLauncher.exe"
 Name: "{commondesktop}\Dash Faction"; Filename: "{app}\DashFactionLauncher.exe"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\DashFactionLauncher.exe"; Description: "{cm:LaunchProgram,Dash Faction}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\DashFactionLauncher.exe"; Description: "{cm:LaunchProgram,Dash Faction}"; Flags: nowait postinstall skipifsilent 
 
 [Registry]
 Root: HKCU; Subkey: "Software\Volition\Red Faction\Dash Faction"; ValueType: "string"; ValueName: "Executable Path"; ValueData: "{code:GetFinalGameExePath}"
@@ -86,12 +87,10 @@ Root: HKCR; Subkey: "DashFactionLevelEditor"; ValueType: "string"; ValueData: "D
 ;Root: HKCR; Subkey: "DashFactionLevelEditor\DefaultIcon"; ValueType: "string"; ValueData: "{app}\DashFactionLauncher.exe,0"; Tasks: rflassoc
 Root: HKCR; Subkey: "DashFactionLevelEditor\shell\open\command"; ValueType: "string"; ValueData: """{app}\DashFactionLauncher.exe"" -editor -level ""%1"""; Tasks: rflassoc
 
-
 [CustomMessages]
-RFExeLocation=Please specify the location of RF.exe from the Red Faction installation directory:
-GameNeedsPatches=The detected Red Faction version is not directly supported by Dash Faction. Setup will install all the needed patches automatically.%n%nPatches that will be installed:%n
-UnkGameExeVersion=Unknown RF.exe version (SHA1 = %1). Dash Faction will not function correctly.%nFind help at https://redfaction.help and https://discord.gg/factionfiles%n%nDo you want to ignore this error and continue?
-UnkTablesVppVersion=Unknown tables.vpp version (SHA1 = %1). Multiplayer will not function correctly.%nFind help at https://redfaction.help and https://discord.gg/factionfiles%n%nDo you want to ignore this error and continue?
+RFExeLocation=Setup will attempt to locate the RF.exe file automatically.%n%nTo continue, click Next. To select a different file, click Browse.
+GameNeedsPatches=The installed version of Red Faction is not directly supported by Dash Faction. Setup will install the required patches automatically.%n%nPatches that will be installed:%n
+UnkGameExeVersion=Unknown RF.exe version (SHA1 = %1). Dash Faction will not function correctly.%nPlease visit https://discord.gg/factionfiles or https://redfaction.help for help.%n%nDo you want to ignore this error and continue?
 
 [Code]
 type
@@ -218,21 +217,8 @@ begin
     // tables.vpp patching
     TablesVppSHA1 := GetSHA1OfFile(ExtractFileDir(GameExePath) + '\tables.vpp');
     case TablesVppSHA1 of
-        'ded5e1b5932f47044ba760699d5931fda6bdc8ba':
-            // 1.10/1.20 NA - this is directly supported version
-            begin end;
-        '2541f5565517ea38dfb9645d432eb3d11a15ac35':
-            // 1.00 NA
-            begin end;
         '672ba832f7133b93d576f84d971331597d93fce6':
             AddBSDiffPatch('1.21 GR GOG -> 1.20 NA (tables.vpp patch)', 'tables-gog-gr.vpp.mbsdiff', 'tables.vpp', 'tables.vpp');
-        else
-        begin
-            // Unknown version
-            Log('Unknown tables.vpp SHA1: ' + TablesVppSHA1);
-            if Result and (MsgBox(ExpandConstant('{cm:UnkTablesVppVersion,' + TablesVppSHA1 + '}'), mbError, MB_YESNO) = IDNO) then
-                Result := False;
-        end;
     end;
     if not Result then
         ResetPatchList;
@@ -242,7 +228,7 @@ function SelectGameExePageOnNextButtonClick(Sender: TWizardPage): Boolean;
 begin
     if not FileExists(SelectGameExePage.Values[0]) then
     begin
-        MsgBox('Specified file does not exist!', mbError, MB_OK);
+        MsgBox('The selected file does not exist!', mbError, MB_OK);
         Result := False;
     end
     else
@@ -272,15 +258,18 @@ begin
     else if RegQueryStringValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\GOG.com\GOGREDFACTION', 'PATH', Result) then
         // GOG
         Result := Result + 'RF.exe'
+    else if RegQueryStringValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\GOG.com\Games\1207660623', 'PATH', Result) then
+        // GR GOG
+        Result := Result + '\RF.exe'
     else
         // Fallback
-        Result := 'C:\games\RedFaction\RF.exe';
+        Result := ExpandConstant('{sd}\games\RedFaction\RF.exe');
 end;
 
 procedure CreateSelectGameExePage();
 begin
-    SelectGameExePage := CreateInputFilePage(wpSelectDir, 'Select RF.exe', 'Select the Red Faction executable file', '');
-    SelectGameExePage.Add(ExpandConstant('{cm:RFExeLocation}'), 'Executable files|*.exe|All files|*.*', '.exe');
+    SelectGameExePage := CreateInputFilePage(wpSelectDir, 'Select RF.exe', 'This file can be found in the Red Faction installation folder.', ExpandConstant('{cm:RFExeLocation}'));
+    SelectGameExePage.Add('', 'Executable files|*.exe|All files|*.*', '.exe');
     SelectGameExePage.Values[0] := DetectGameExecutablePath;
     SelectGameExePage.OnNextButtonClick := @SelectGameExePageOnNextButtonClick;
 end;
@@ -357,7 +346,7 @@ end;
 
 procedure ReplaceRedFactionLauncher;
 begin
-    if IsTaskSelected('replacerflauncher') then
+    if WizardIsTaskSelected('replacerflauncher') then
     begin
         // Create a backup (if it does not exist already)
         Log('Creating RedFaction.exe backup: ' + GetGameDir('RedFaction.exe.bak'));
@@ -374,19 +363,26 @@ begin
 end;
 
 procedure RestoreRedFactionLauncher;
-var 
+var
+   UninsTaskStr: String;
    GamePath: String;
 begin
-    // Use the registry entry to find the game directory
-    RegQueryStringValue(HKCU, 'Software\Volition\Red Faction\Dash Faction', 'Executable Path', GamePath);
-    GamePath := ExtractFileDir(GamePath) + '\';
-    if FileExists(GamePath + 'RedFaction.exe.bak') then
+    RegQueryStringValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\' + 
+    ExpandConstant('{#SetupSetting("AppId")}') + '_is1', 'Inno Setup: Selected Tasks', UninsTaskStr);
+    if Pos('replacerflauncher', UninsTaskStr) <> 0 then
     begin
-        if FileExists(GamePath + 'RedFaction.exe') then
+        // Use the registry entry to find the game directory
+        RegQueryStringValue(HKEY_CURRENT_USER, 'Software\Volition\Red Faction\Dash Faction', 'Executable Path', GamePath);
+        GamePath := ExtractFileDir(GamePath) + '\';
+        if FileExists(GamePath + 'RedFaction.exe.bak') then
         begin
-            DeleteFile(GamePath + 'RedFaction.exe');
+            if FileExists(GamePath + 'RedFaction.exe') then
+            begin
+                DeleteFile(GamePath + 'RedFaction.exe');
+            end;
+            RenameFile(GamePath + 'RedFaction.exe.bak', GamePath + 'RedFaction.exe');
+            Log('Successfully restored Red Faction launcher.');
         end;
-        RenameFile(GamePath + 'RedFaction.exe.bak', GamePath + 'RedFaction.exe');
     end;
 end;
 
@@ -415,8 +411,9 @@ end;
 
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 begin
-    if CurUninstallStep = usPostUninstall then
-    begin
+    if CurUninstallStep = usUninstall then
+    // Must be done before uninstallation to fetch uninstall registry key
+    begin 
         RestoreRedFactionLauncher;
     end;
 end;
