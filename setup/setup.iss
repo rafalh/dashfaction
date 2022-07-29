@@ -24,7 +24,6 @@ OutputDir=build
 SetupLogging=yes
 ChangesAssociations=yes
 AllowNoIcons=yes
-AllowRootDirectory=yes
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
@@ -269,7 +268,7 @@ end;
 procedure CreateSelectGameExePage();
 begin
     SelectGameExePage := CreateInputFilePage(wpSelectDir, 'Select RF.exe', 'This file can be found in the Red Faction installation folder.', ExpandConstant('{cm:RFExeLocation}'));
-    SelectGameExePage.Add('', 'Executable files|*.exe|All files|*.*', '.exe');
+    SelectGameExePage.Add('RF.exe file:', 'Executable files|*.exe|All files|*.*', '.exe');
     SelectGameExePage.Values[0] := DetectGameExecutablePath;
     SelectGameExePage.OnNextButtonClick := @SelectGameExePageOnNextButtonClick;
 end;
