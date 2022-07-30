@@ -44,6 +44,7 @@ Version 1.7.1 (not released yet)
 - Restore original Red Faction Launcher on uninstall if replaced with Dash Faction Launcher link
 - Add game installation path autofill for German GOG RF to setup program
 - Remove unnecessary "Unknown tables.vpp version" error from setup program (the launcher already displays an error for mismatched tables.vpp files)
+- Fix possible OOB write in waypoint list read code
 
 Version 1.7.0 (released 2021-06-05)
 -----------------------------------

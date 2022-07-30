@@ -2,6 +2,7 @@
 #include <patch_common/FunHook.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/AsmWriter.h>
+#include <xlog/xlog.h>
 #include "../rf/entity.h"
 #include "../rf/corpse.h"
 #include "../rf/weapon.h"
@@ -135,6 +136,36 @@ CodeInjection entity_render_weapon_in_hands_silencer_visibility_injection{
     },
 };
 
+CodeInjection waypoints_read_lists_oob_fix{
+    0x00468E55,
+    [](auto& regs) {
+        constexpr int max_waypoint_lists = 32;
+        int index = regs.eax;
+        int num_lists = regs.ecx;
+        if (index >= max_waypoint_lists && index < num_lists) {
+            xlog::error("Too many waypoint lists: %d/%d, ignoring list %d", num_lists, max_waypoint_lists, index);
+            // skip EBP update to fix OOB write
+            regs.eip = 0x00468E5B;
+        }
+    },
+};
+
+CodeInjection waypoints_read_nodes_oob_fix{
+    0x00468DB1,
+    [](auto& regs) {
+        constexpr int max_waypoint_list_nodes = 128;
+        int node_index = regs.eax + 1;
+        int num_nodes = *static_cast<int*>(regs.ebp);
+        if (node_index >= max_waypoint_list_nodes && node_index < num_nodes) {
+            xlog::error("Too many waypoint list nodes: %d/%d, ignoring node %d", num_nodes, max_waypoint_list_nodes, node_index);
+            // Set EAX and ECX based on skipped instructions but do not update EBX to fix OOB write
+            regs.eax = node_index;
+            regs.ecx = num_nodes;
+            regs.eip = 0x00468DB8;
+        }
+    },
+};
+
 void entity_do_patch()
 {
     // Fix player being stuck to ground when jumping, especially when FPS is greater than 200
@@ -176,4 +207,8 @@ void entity_do_patch()
 
     // Do not show glock with silencer in 3rd person view if current primary weapon is not a glock
     entity_render_weapon_in_hands_silencer_visibility_injection.install();
+
+    // Fix OOB writes in waypoint list read code
+    waypoints_read_lists_oob_fix.install();
+    waypoints_read_nodes_oob_fix.install();
 }
