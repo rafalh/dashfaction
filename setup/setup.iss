@@ -71,10 +71,10 @@ Name: "{commondesktop}\Dash Faction"; Filename: "{app}\DashFactionLauncher.exe";
 
 [Run]
 Filename: "{app}\DashFactionLauncher.exe"; Description: "{cm:LaunchProgram,Dash Faction}"; Flags: nowait postinstall skipifsilent
+Filename: "REG"; Parameters: "ADD ""HKCU\Software\Volition\Red Faction\Dash Faction"" /v ""Executable Path"" /d ""{code:GetFinalGameExePath}"" /f"; Flags: runhidden runasoriginaluser
+Filename: "REG"; Parameters: "ADD ""HKCU\Software\Volition\Red Faction"" /v GameTracker /d rfgt.factionfiles.com /f"; Flags: runhidden runasoriginaluser; Tasks: fftracker
 
 [Registry]
-Root: HKCU; Subkey: "Software\Volition\Red Faction\Dash Faction"; ValueType: "string"; ValueName: "Executable Path"; ValueData: "{code:GetFinalGameExePath}"
-Root: HKCU; Subkey: "Software\Volition\Red Faction"; ValueType: "string"; ValueName: "GameTracker"; ValueData: "rfgt.factionfiles.com"; Tasks: fftracker
 ; rf:// protocol
 Root: HKCR; Subkey: "rf"; ValueType: "string"; ValueData: "URL:Red Faction Protocol"; Flags: uninsdeletekey; Tasks: rfproto
 Root: HKCR; Subkey: "rf"; ValueType: "string"; ValueName: "URL Protocol"; ValueData: ""; Tasks: rfproto
