@@ -212,7 +212,7 @@ begin
         begin
             // Unknown version
             Log('Unknown RF.exe SHA1: ' + GameExeSHA1);
-            if Result and (MsgBox(ExpandConstant('{cm:UnkGameExeVersion,' + GameExeSHA1 + '}'), mbError, MB_YESNO) = IDNO) then
+            if Result and (MsgBox(ExpandConstant('{cm:UnkGameExeVersion,' + GameExeSHA1 + '}'), mbError, MB_YESNO + MB_DEFBUTTON2) = IDNO) then
                 Result := False;
         end;
     end;
