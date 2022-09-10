@@ -186,6 +186,11 @@ Configuration example:
     //$DF Welcome Message: "Hello $PLAYER!"
 
 
+Building
+--------
+
+Information about building Dash Faction from source code can be found in [docs/BUILDING.md](docs/BUILDING.md).
+
 License
 -------
 Most of the Dash Faction source code is licensed under Mozilla Public License 2.0. It is available in the GitHub repository.
