@@ -170,6 +170,7 @@ end;
 function DetermineNeededPatches(GameExePath: String): Boolean;
 var
     GameExeSHA1: String;
+    TablesVppPath: String;
     TablesVppSHA1: String;
 begin
     ResetPatchList;
@@ -214,11 +215,18 @@ begin
         end;
     end;
     // tables.vpp patching
-    TablesVppSHA1 := GetSHA1OfFile(ExtractFileDir(GameExePath) + '\tables.vpp');
-    case TablesVppSHA1 of
-        '672ba832f7133b93d576f84d971331597d93fce6':
-            AddBSDiffPatch('1.21 GR GOG -> 1.20 NA (tables.vpp patch)', 'tables-gog-gr.vpp.mbsdiff', 'tables.vpp', 'tables.vpp');
-    end;
+    TablesVppPath := ExtractFileDir(GameExePath) + '\tables.vpp';
+    if FileExists(TablesVppPath) then
+    begin
+        TablesVppSHA1 := GetSHA1OfFile(TablesVppPath);
+        case TablesVppSHA1 of
+            '672ba832f7133b93d576f84d971331597d93fce6':
+                AddBSDiffPatch('1.21 GR GOG -> 1.20 NA (tables.vpp patch)', 'tables-gog-gr.vpp.mbsdiff', 'tables.vpp', 'tables.vpp');
+        end;
+    end
+    else
+        MsgBox('tables.vpp file was not found in the specified location! Your game directory may be corrupted.', mbError, MB_OK);
+
     if not Result then
         ResetPatchList;
 end;
