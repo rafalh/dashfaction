@@ -384,9 +384,13 @@ Chris "Goober" Parsons:
 * HUD textures for the big mode
 * symbol glyphs in ttf fonts
 * launcher header
+* code contribution
 
 natalie <webmistress@natalie.ee>:
 * code contributions
 
 is-this-c:
 * code contributions
+
+MyStyle:
+* setup code improvements
