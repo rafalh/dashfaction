@@ -87,9 +87,9 @@ Root: HKCR; Subkey: "DashFactionLevelEditor"; ValueType: "string"; ValueData: "D
 Root: HKCR; Subkey: "DashFactionLevelEditor\shell\open\command"; ValueType: "string"; ValueData: """{app}\DashFactionLauncher.exe"" -editor -level ""%1"""; Tasks: rflassoc
 
 [CustomMessages]
-RFExeLocation=Setup will attempt to locate the RF.exe file automatically.%n%nTo continue, click Next. To select a different file, click Browse.
+RFExeLocation=Setup will attempt to locate the RF.exe file automatically but it may fail to do so in some environments so please make sure the location is correct.%n%nTo continue, click Next. To select a different file, click Browse.
 GameNeedsPatches=The installed version of Red Faction is not directly supported by Dash Faction. Setup will install the required patches automatically.%n%nPatches that will be installed:%n
-UnkGameExeVersion=Unknown RF.exe version (SHA1 = %1). Dash Faction will not function correctly.%nPlease visit https://discord.gg/factionfiles or https://redfaction.help for help.%n%nDo you want to ignore this error and continue?
+UnkGameExeVersion=RF.exe file is not recognized.%nPlease make sure the provided path points to the correct file (RF.exe). If you ignore this error Dash Faction will most likely not launch at all.%nYou can find more help on:%n* https://discord.gg/factionfiles%n* https://redfaction.help%n%nTechnical details:%nSHA1 = %1%n%nDo you want to ignore this error and continue?
 
 [Code]
 type
@@ -225,7 +225,7 @@ begin
         end;
     end
     else
-        MsgBox('tables.vpp file was not found in the specified location! Your game directory may be corrupted.', mbError, MB_OK);
+        MsgBox('tables.vpp file was not found in the specified location! Your game directory may be corrupt.', mbError, MB_OK);
 
     if not Result then
         ResetPatchList;
@@ -235,7 +235,7 @@ function SelectGameExePageOnNextButtonClick(Sender: TWizardPage): Boolean;
 begin
     if not FileExists(SelectGameExePage.Values[0]) then
     begin
-        MsgBox('The selected file does not exist!', mbError, MB_OK);
+        MsgBox('The selected RF.exe file does not exist!', mbError, MB_OK);
         Result := False;
     end
     else
@@ -275,8 +275,8 @@ end;
 
 procedure CreateSelectGameExePage();
 begin
-    SelectGameExePage := CreateInputFilePage(wpSelectDir, 'Select RF.exe', 'This file can be found in the Red Faction installation folder.', ExpandConstant('{cm:RFExeLocation}'));
-    SelectGameExePage.Add('RF.exe file:', 'Executable files|*.exe|All files|*.*', '.exe');
+    SelectGameExePage := CreateInputFilePage(wpSelectDir, 'Select RF.exe location', 'This file can be found in the Red Faction installation folder.', ExpandConstant('{cm:RFExeLocation}'));
+    SelectGameExePage.Add('Location of RF.exe:', 'Executable files|*.exe|All files|*.*', '.exe');
     SelectGameExePage.Values[0] := DetectGameExecutablePath;
     SelectGameExePage.OnNextButtonClick := @SelectGameExePageOnNextButtonClick;
 end;
