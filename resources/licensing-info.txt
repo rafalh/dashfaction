@@ -4,6 +4,8 @@
 
 Homepage: https://github.com/rafalh/DashFaction
 
+Dash Faction is developed by Rafalh and contributors listed below.
+
 Most of Dash Faction source code is licensed under Mozilla Public License 2.0.
 Only Pure Faction anti-cheat support code is not open source because it would
 make PF anti-cheat features basically useless. It consists of few files in
@@ -15,6 +17,25 @@ directory of Dash Faction.
 
 Dash Faction uses third-party open source components. Their licenses can be
 found below.
+
+###############################################################################
+## Contributors
+###############################################################################
+
+Chris "Goober" Parsons:
+* HUD textures for the big mode
+* symbol glyphs in ttf fonts
+* launcher header
+* code contribution
+
+natalie <webmistress@natalie.ee>:
+* code contributions
+
+is-this-c:
+* code contributions
+
+MyStyle:
+* setup code improvements
 
 ###############################################################################
 ## subhook
@@ -375,22 +396,3 @@ freely, subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 
 René Nyffenegger rene.nyffenegger@adp-gmbh.ch
-
-###############################################################################
-## Contributors
-###############################################################################
-
-Chris "Goober" Parsons:
-* HUD textures for the big mode
-* symbol glyphs in ttf fonts
-* launcher header
-* code contribution
-
-natalie <webmistress@natalie.ee>:
-* code contributions
-
-is-this-c:
-* code contributions
-
-MyStyle:
-* setup code improvements
