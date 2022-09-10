@@ -21,9 +21,11 @@ OutputBaseFilename=DashFaction-{#AppVer}-setup
 Compression=lzma2/max
 SolidCompression=yes
 OutputDir=build
+SetupIconFile=compiler:SetupClassicIcon.ico
 SetupLogging=yes
 ChangesAssociations=yes
 AllowNoIcons=yes
+WizardStyle=modern
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
