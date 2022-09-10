@@ -411,7 +411,7 @@ procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 begin
     if CurUninstallStep = usUninstall then
     // Must be done before uninstallation to fetch uninstall registry key
-    begin 
+    begin
         RestoreRedFactionLauncher;
     end;
 end;
