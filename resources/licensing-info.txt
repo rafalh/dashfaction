@@ -2,25 +2,25 @@
 ## Dash Faction
 ###############################################################################
 
-Homepage: https://github.com/rafalh/DashFaction
+Homepage: https://github.com/rafalh/dashfaction
 
 Dash Faction is developed by Rafalh and contributors listed below.
 
-Most of Dash Faction source code is licensed under Mozilla Public License 2.0.
-Only Pure Faction anti-cheat support code is not open source because it would
-make PF anti-cheat features basically useless. It consists of few files in
-game_patch/purefaction directory. It is going to be linked statically during a
-release process of Dash Faction by owner of the project.
+The Dash Faction source code is available on GitHub and licensed under Mozilla 
+Public License 2.0. See the LICENSE.txt file located in the root directory of 
+Dash Faction.
 
-You can find Mozilla Public License 2.0 full text in LICENSE.txt file in root
-directory of Dash Faction.
+Only the Pure Faction anti-cheat support code is closed-source, because 
+exposing it would make its features practically pointless. It consists of some 
+files in the 'game_patch/purefaction' directory. It is statically linked 
+during each Dash Faction release process by the owner of the project.
 
-Dash Faction uses third-party open source components. Their licenses can be
-found below.
+Dash Faction uses some open-source third-party components. Their licenses can 
+be found below.
 
-###############################################################################
-## Contributors
-###############################################################################
+---------------------------------
+Contributors
+---------------------------------
 
 Chris "Goober" Parsons:
 * HUD textures for the big mode
@@ -34,7 +34,7 @@ natalie <webmistress@natalie.ee>:
 is-this-c:
 * code contributions
 
-MyStyle:
+Mystyle:
 * setup code improvements
 
 ###############################################################################
