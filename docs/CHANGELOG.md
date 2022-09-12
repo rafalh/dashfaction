@@ -47,6 +47,7 @@ Version 1.8.0 (not released yet)
 - Fix possible OOB write in waypoint list read code
 - Add server verification in update checker using Ed25519 signature
 - Fix opacity of Display_Fullscreen_Image being affected by previous drawing operations
+- Restore blackout from a save file if it was killing the player or ending the game
 
 Version 1.7.0 (released 2021-06-05)
 -----------------------------------

@@ -231,6 +231,18 @@ FunHook<void()> quick_load_hook{
     },
 };
 
+CodeInjection sr_load_player_inj{
+    0x004B4F9E,
+    []() {
+        // Restore blackout
+        // Note: if blackout had no checkboxes active (both flags clear) it is imposible to restore it
+        // because of save format limitation
+        if (rf::local_player->flags & (rf::PF_KILL_AFTER_BLACKOUT|rf::PF_END_LEVEL_AFTER_BLACKOUT)) {
+            rf::player_start_death_fade(rf::local_player, 1.5f, [](rf::Player*) {});
+        }
+    },
+};
+
 void apply_save_restore_patches()
 {
     // Dont overwrite player name and prefered weapons when loading saved game
@@ -275,4 +287,7 @@ void apply_save_restore_patches()
     // Fix memory corruption when transitioning to 5th level in a sequence and the level has no entry in ponr.tbl
     AsmWriter{0x004B3CAF, 0x004B3CB2}.xor_(asm_regs::ebx, asm_regs::ebx);  // save
     AsmWriter{0x004B5374, 0x004B5377}.xor_(asm_regs::edx, asm_regs::edx);  // transition
+
+    // Restore blackout when loading a save file
+    sr_load_player_inj.install();
 }
