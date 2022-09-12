@@ -1,5 +1,5 @@
 // VERSIONINFO
-#define VER_FILE_DESCRIPTION "Dash Faction crash handler"
+#define VER_FILE_DESCRIPTION "Dash Faction Crash Handler"
 #define VER_ORIGINAL_FILENAME "CrashHandler.exe"
 #define VER_FILETYPE 0x1L // VFT_APP
 #include <common/version/version.rc>

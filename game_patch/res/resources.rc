@@ -1,7 +1,8 @@
 100  RCDATA  "easter_egg.bin"
+#include <windows.h>
 
 // VERSIONINFO
-#define VER_FILE_DESCRIPTION "Dash Faction game patch"
+#define VER_FILE_DESCRIPTION "Dash Faction Game Patch"
 #define VER_ORIGINAL_FILENAME "DashFaction.dll"
 #define VER_FILETYPE 0x2L // VFT_DLL
 #include <common/version/version.rc>
