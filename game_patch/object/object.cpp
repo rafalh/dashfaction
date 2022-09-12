@@ -271,6 +271,10 @@ void object_do_patch()
     // Optimize Object::find_room function
     object_find_room_optimization.install();
 
+    // Allow creating entity objects out of level bounds
+    // Fixes loading a save game when player entity is out of bounds
+    AsmWriter{0x00486DE5, 0x00486DEE}.nop();
+
     // Other files
     entity_do_patch();
     item_do_patch();
