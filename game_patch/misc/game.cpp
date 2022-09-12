@@ -134,14 +134,14 @@ CodeInjection gameplay_render_frame_display_full_screen_image_injection{
     0x00432CAF,
     [](auto& regs) {
         // Change gr mode to one that uses alpha blending for Display_Fullscreen_Image event handling in
-        // gameplay_render_frame function
+        // gameplay_render_frame function. Also ignore current alpha (vertex color).
         static rf::gr::Mode mode{
             rf::gr::TEXTURE_SOURCE_WRAP,
             rf::gr::COLOR_SOURCE_TEXTURE,
-            rf::gr::ALPHA_SOURCE_VERTEX_TIMES_TEXTURE,
+            rf::gr::ALPHA_SOURCE_TEXTURE,
             rf::gr::ALPHA_BLEND_ALPHA,
             rf::gr::ZBUFFER_TYPE_NONE,
-            rf::gr::FOG_ALLOWED,
+            rf::gr::FOG_NOT_ALLOWED,
         };
         regs.edx = mode;
     },

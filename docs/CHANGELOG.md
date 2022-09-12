@@ -46,6 +46,7 @@ Version 1.7.1 (not released yet)
 - Remove unnecessary "Unknown tables.vpp version" error from setup program (the launcher already displays an error for mismatched tables.vpp files)
 - Fix possible OOB write in waypoint list read code
 - Add server verification in update checker using Ed25519 signature
+- Fix opacity of Display_Fullscreen_Image being affected by previous drawing operations
 
 Version 1.7.0 (released 2021-06-05)
 -----------------------------------
