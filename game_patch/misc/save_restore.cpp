@@ -226,6 +226,7 @@ FunHook<void()> sr_restore_level_transition_objects_meshes_hook{
                     break;
             }
         }
+        g_level_transition_objects.clear();
     },
 };
 
