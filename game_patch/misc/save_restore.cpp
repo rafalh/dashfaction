@@ -199,11 +199,12 @@ FunHook<void()> sr_restore_level_transition_objects_meshes_hook{
     0x004B56E0,
     []() {
         for (auto& lto : g_level_transition_objects) {
+            auto mesh_name = lto.mesh_name.c_str();
             auto obj = rf::obj_from_handle(lto.handle);
             if (!obj) {
+                xlog::warn("Cannot restore level transition object mesh: %s", mesh_name);
                 continue;
             }
-            auto mesh_name = lto.mesh_name.c_str();
             switch (obj->type)
             {
                 case rf::OT_ENTITY:
