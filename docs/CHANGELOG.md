@@ -1,7 +1,7 @@
 DashFaction Changelog
 =====================
 
-Version 1.7.1 (not released yet)
+Version 1.8.0 (not released yet)
 --------------------------------
 - Add autosave after a level transition
 - Disable big HUD for resolutions lower than 1024x768 to prevent crashes
