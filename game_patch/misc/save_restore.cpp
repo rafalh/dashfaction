@@ -5,9 +5,22 @@
 #include "../rf/misc.h"
 #include "../rf/object.h"
 #include "../rf/entity.h"
+#include "../rf/item.h"
+#include "../rf/clutter.h"
+#include "../rf/weapon.h"
+#include "../rf/corpse.h"
 #include "../rf/multi.h"
+#include "../rf/vmesh.h"
 #include "../rf/save_restore.h"
 #include "../multi/multi.h"
+
+struct LevelTransitionObject
+{
+    int handle;
+    std::string mesh_name;
+};
+
+static std::vector<LevelTransitionObject> g_level_transition_objects;
 
 FunHook<void()> do_quick_save_hook{
     0x004B5E20,
@@ -170,17 +183,48 @@ FunHook<void(int, int*)> sr_add_handle_for_delayed_resolution_hook{
     },
 };
 
-FunHook<void(rf::Object*)> remember_level_transition_objects_meshes_hook{
+FunHook<void(rf::Object*)> sr_store_level_transition_object_mesh_hook{
     0x004B5660,
     [](rf::Object *obj) {
-        auto& num_level_transition_objects = addr_as_ref<int>(0x00856058);
-        // Note: uid -999 belongs to local player entity and it must be preserved
-        if (num_level_transition_objects < 23 || obj->uid == -999) {
-            remember_level_transition_objects_meshes_hook.call_target(obj);
+        if (obj->vmesh) {
+            g_level_transition_objects.emplace_back(LevelTransitionObject{
+                obj->handle,
+                rf::vmesh_get_name(obj->vmesh),
+            });
         }
-        else {
-            xlog::warn("Cannot bring object %d to next level", obj->uid);
-            rf::obj_flag_dead(obj);
+    },
+};
+
+FunHook<void()> sr_restore_level_transition_objects_meshes_hook{
+    0x004B56E0,
+    []() {
+        for (auto& lto : g_level_transition_objects) {
+            auto obj = rf::obj_from_handle(lto.handle);
+            if (!obj) {
+                continue;
+            }
+            auto mesh_name = lto.mesh_name.c_str();
+            switch (obj->type)
+            {
+                case rf::OT_ENTITY:
+                    rf::entity_restore_mesh(static_cast<rf::Entity*>(obj), mesh_name);
+                    break;
+                case rf::OT_ITEM:
+                    rf::item_restore_mesh(static_cast<rf::Item*>(obj), mesh_name);
+                    break;
+                case rf::OT_WEAPON:
+                    rf::weapon_restore_mesh(static_cast<rf::Weapon*>(obj), mesh_name);
+                    break;
+                case rf::OT_CLUTTER:
+                    rf::clutter_restore_mesh(static_cast<rf::Clutter*>(obj), mesh_name);
+                    break;
+                case rf::OT_CORPSE:
+                    rf::corpse_restore_mesh(static_cast<rf::Corpse*>(obj), mesh_name);
+                    break;
+                default:
+                    rf::obj_flag_dead(obj);
+                    break;
+            }
         }
     },
 };
@@ -267,8 +311,12 @@ void apply_save_restore_patches()
     sr_serialize_decals_oob_fix.install();
     weapon_serialize_all_state_oob_fix.install();
 
-    // Fix buffer overflow during level load if there are more than 24 objects in current room
-    remember_level_transition_objects_meshes_hook.install();
+    // Reimplement restoring meshes for objects in level transition to fix:
+    // * buffer overflow during level load if there are more than 24 objects in current room
+    // * buffer overflow when mesh name is longer than 31 characters
+    // * use-after-free error if object was destroyed after it was stored for transition
+    sr_store_level_transition_object_mesh_hook.install();
+    sr_restore_level_transition_objects_meshes_hook.install();
 
     // Fix possible buffer overflow in sr_add_handle_for_delayed_resolution
     sr_add_handle_for_delayed_resolution_hook.install();

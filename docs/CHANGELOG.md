@@ -48,6 +48,9 @@ Version 1.8.0 (not released yet)
 - Add server verification in update checker using Ed25519 signature
 - Fix opacity of Display_Fullscreen_Image being affected by previous drawing operations
 - Restore blackout from a save file if it was killing the player or ending the game
+- Fix crash when skipping a cutscene that stared when blackout was in progress
+- Remove limit of restored objects during a level transition
+- Fix possible buffer overflow if transitioned object mesh name is longer than 31 characters
 
 Version 1.7.0 (released 2021-06-05)
 -----------------------------------

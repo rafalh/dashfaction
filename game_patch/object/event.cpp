@@ -10,6 +10,7 @@
 #include "../rf/entity.h"
 #include "../rf/level.h"
 #include "../rf/multi.h"
+#include "../rf/player/player.h"
 #include "../rf/os/console.h"
 #include "../os/console.h"
 
@@ -203,6 +204,16 @@ CodeInjection event_process_injection{
     },
 };
 
+CodeInjection event_load_level_turn_on_injection{
+    0x004BB9C9,
+    [](auto& regs) {
+        if (rf::local_player->flags & (rf::PF_KILL_AFTER_BLACKOUT|rf::PF_END_LEVEL_AFTER_BLACKOUT)) {
+            // Ignore level transition if the player was going to die or game was going to end after a blackout effect
+            regs.eip = 0x004BBA71;
+        }
+    }
+};
+
 ConsoleCommand2 debug_event_msg_cmd{
     "debug_event_msg",
     []() {
@@ -234,6 +245,9 @@ void apply_event_patches()
     event_activate_injection.install();
     event_activate_injection2.install();
     event_process_injection.install();
+
+    // Do not load next level if blackout is in progress
+    event_load_level_turn_on_injection.install();
 
     // Register commands
     debug_event_msg_cmd.register_cmd();
