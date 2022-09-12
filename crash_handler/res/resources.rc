@@ -68,5 +68,3 @@ FONT 8, "Ms Shell Dlg"
     LTEXT           "Operation is in progress... Please wait.", IDC_TITLE, 8, 8, 126, 9, SS_LEFT, WS_EX_LEFT
     CONTROL         "", IDC_PROGRESS_BAR, PROGRESS_CLASS, 0, 8, 24, 168, 14, WS_EX_LEFT
 }
-
-#include "resources2.rc"
