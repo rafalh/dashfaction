@@ -53,6 +53,7 @@ Version 1.8.0 (not released yet)
 - Fix possible buffer overflow if transitioned object mesh name is longer than 31 characters
 - Change default FPS limit to 120 to comply with the stock game
 - Fix loading a save game when player entity is out of level bounds
+- Fix possible freeze when burning entity is destroyed
 
 Version 1.7.0 (released 2021-06-05)
 -----------------------------------

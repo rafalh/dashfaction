@@ -172,6 +172,21 @@ CodeInjection waypoints_read_nodes_oob_fix{
     },
 };
 
+CodeInjection entity_fire_update_all_freeze_fix{
+    0x0042EF31,
+    [](auto& regs) {
+        void* fire = regs.esi;
+        void* next_fire = regs.ebp;
+        if (fire == next_fire) {
+            // only one object was on the list and it got deleted so exit the loop
+            regs.eip = 0x0042F2AF;
+        } else {
+            // go to the next object
+            regs.esi = next_fire;
+        }
+    },
+};
+
 void entity_do_patch()
 {
     // Fix player being stuck to ground when jumping, especially when FPS is greater than 200
@@ -217,4 +232,7 @@ void entity_do_patch()
     // Fix OOB writes in waypoint list read code
     waypoints_read_lists_oob_fix.install();
     waypoints_read_nodes_oob_fix.install();
+
+    // Fix possible freeze when burning entity is destroyed
+    entity_fire_update_all_freeze_fix.install();
 }
