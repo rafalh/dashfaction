@@ -22,7 +22,7 @@ Version 1.8.0 (not released yet)
 - Enable `map` command in RCON
 - Change update checker URL
 - Fix particle damage on dedicated servers
-- Add `con_find` command to make finding commands easier
+- Add `.` command to make finding commands easier
 - Fix blurry fonts in the launcher on HiDPI monitors
 - Add `fps_counter` command
 - Make editor window resizeable
