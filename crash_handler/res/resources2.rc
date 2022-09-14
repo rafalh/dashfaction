@@ -1,7 +1,5 @@
 #include <windows.h>
 
-LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-
 // VERSIONINFO
 #define VER_FILE_DESCRIPTION "Dash Faction Crash Handler"
 #define VER_ORIGINAL_FILENAME "CrashHandler.exe"
