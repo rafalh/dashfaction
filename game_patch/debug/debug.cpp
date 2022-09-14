@@ -46,7 +46,7 @@ FunHook<void*(size_t, bool)> nh_malloc_hook{
             return nullptr;
         }
         auto bytes = static_cast<std::byte*>(ptr);
-        *reinterpret_cast<size_t*>(bytes) = size;
+        *reinterpret_cast<uint32_t*>(bytes) = size;
         *reinterpret_cast<uint32_t*>(bytes + 4) = BOUND_MARKER;
         *reinterpret_cast<uint32_t*>(bytes + 8 + size) = BOUND_MARKER;
         auto result = bytes + 8;
@@ -64,9 +64,9 @@ FunHook<void(void*)> free_hook{
         }
         auto bytes = static_cast<std::byte*>(ptr);
         bytes -= 8;
-        auto size = *reinterpret_cast<size_t*>(bytes);
-        auto front_marker = *reinterpret_cast<size_t*>(bytes + 4);
-        auto tail_marker = *reinterpret_cast<size_t*>(bytes + 8 + size);
+        auto size = *reinterpret_cast<uint32_t*>(bytes);
+        auto front_marker = *reinterpret_cast<uint32_t*>(bytes + 4);
+        auto tail_marker = *reinterpret_cast<uint32_t*>(bytes + 8 + size);
         g_current_heap_usage -= size;
         if (front_marker != BOUND_MARKER) {
             xlog::warn("Memory corruption detected: front marker %x", front_marker);
@@ -74,6 +74,8 @@ FunHook<void(void*)> free_hook{
         if (tail_marker != BOUND_MARKER) {
             xlog::warn("Memory corruption detected: tail marker %x", tail_marker);
         }
+        // Overwrite old data to make detecting use-after-free errors easier
+        std::memset(bytes + 8, 0xCC, size);
         free_hook.call_target(bytes);
     },
 };
