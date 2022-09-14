@@ -49,6 +49,8 @@ FunHook<void*(size_t, bool)> nh_malloc_hook{
         *reinterpret_cast<uint32_t*>(bytes) = size;
         *reinterpret_cast<uint32_t*>(bytes + 4) = BOUND_MARKER;
         *reinterpret_cast<uint32_t*>(bytes + 8 + size) = BOUND_MARKER;
+        // Overwrite old data to make detecting use-after-free errors easier
+        std::memset(bytes + 8, 0xCC, size);
         auto result = bytes + 8;
         xlog::trace("nh_malloc %x -> %p", size, result);
         return result;
