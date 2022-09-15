@@ -31,45 +31,45 @@ See the [CHANGELOG file](docs/CHANGELOG.md) for a detailed list of all features.
 You can also check out [examples of graphical improvements compared to the base game](docs/graphics_comparison).
 
 Client commands:
-* `. cmd_name_fragment` - Find a console variable or command
-* `maxfps value` - sets maximal FPS
-* `hud` - shows and hides HUD
-* `bighud` - toggles HUD between big and normal size
-* `spectate [player]` - starts spectate mode (first person or free camera)
-* `inputmode` - switches between default and DirectInput mouse input handling
-* `ms value` - mouse sensitivity
-* `vli` - toggles volumetric lightining
-* `fullscreen` - enters fullscreen mode
-* `windowed` - enters windowed mode
-* `antialiasing` - toggles anti-aliasting
-* `nearest_texture_filtering` - toggles nearest neighbor texture filtering
-* `damage_screen_flash` - toggles screen flash effect when player is getting hit
-* `mesh_static_lighting` - toggles static lighting for clutters and items
-* `reticle_scale scale` - sets reticle scale
-* `findlevel rfl_name_fragment` - finds level using rfl name fragment
-* `download_level rfl_name` - downloads level from FactionFiles.com
-* `linear_pitch` - toggles linear pitch angle
-* `skip_cutscene_bind control` - sets binding for cutscene skip action
-* `levelsounds` - sets volume scale for level ambient sounds
-* `swap_assault_rifle_controls` - swaps primary and alternate fire controls for Assault Rifle weapon
-* `swap_grenade_controls` - swaps primary and alternate fire controls for Grenades weapon
-* `show_enemy_bullets` - toggles visibility of enemy bullets in multiplayer
-* `kill_messages` - toggles printing of kill messages in the chatbox and the game console
-* `mute_all_players` - toggles processing of chat messages from other players
-* `mute_player` - toggles processing of chat messages from a specific player
-* `fps_counter` - toggles FPS counter
-* `debug_event_msg` - toggles tracking of event messages in console
+* `. cmd_name_fragment` - find a console variable or command
+* `maxfps value` - set maximal FPS
+* `hud` - show and hides HUD
+* `bighud` - toggle HUD between big and normal size
+* `spectate [player]` - start spectate mode (first person or free camera)
+* `inputmode` - switch between default and DirectInput mouse input handling
+* `ms value` - set mouse sensitivity
+* `vli` - toggle volumetric lightining
+* `fullscreen` - enter fullscreen mode
+* `windowed` - enter windowed mode
+* `antialiasing` - toggle anti-aliasting
+* `nearest_texture_filtering` - toggle nearest neighbor texture filtering
+* `damage_screen_flash` - toggle screen flash effect when player is getting hit
+* `mesh_static_lighting` - toggle static lighting for clutters and items
+* `reticle_scale scale` - set reticle scale
+* `findlevel rfl_name_fragment` - find level using rfl name fragment
+* `download_level rfl_name` - download level from FactionFiles.com
+* `linear_pitch` - toggle linear pitch angle
+* `skip_cutscene_bind control` - set binding for cutscene skip action
+* `levelsounds` - set volume scale for level ambient sounds
+* `swap_assault_rifle_controls` - swap primary and alternate fire controls for Assault Rifle weapon
+* `swap_grenade_controls` - swap primary and alternate fire controls for Grenades weapon
+* `show_enemy_bullets` - toggle visibility of enemy bullets in multiplayer
+* `kill_messages` - toggle printing of kill messages in the chatbox and the game console
+* `mute_all_players` - toggle processing of chat messages from other players
+* `mute_player` - toggle processing of chat messages from a specific player
+* `fps_counter` - toggle FPS counter
+* `debug_event_msg` - toggle tracking of event messages in console
 
 Server commands:
-* `unban_last` - unbans last banned player
+* `unban_last` - unban last banned player
 * `map_ext` - extend round
 * `map_rest` - restart current level
 * `map_next` - load next level
 * `map_prev` - load previous level
-* `kill_limit value` - sets kill limit
-* `time_limit value` - sets time limit
-* `geomod_limit value` - sets geomod limit
-* `capture_limit value` - sets capture limit
+* `kill_limit value` - set kill limit
+* `time_limit value` - set time limit
+* `geomod_limit value` - set geomod limit
+* `capture_limit value` - set capture limit
 
 Compatibility
 -------------
