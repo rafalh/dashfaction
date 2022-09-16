@@ -1,8 +1,8 @@
 DashFaction Changelog
 =====================
 
-Version 1.8.0 (not released yet)
---------------------------------
+Version 1.8.0 (released 2022-09-17)
+-----------------------------------
 - Add autosave after a level transition
 - Disable big HUD for resolutions lower than 1024x768 to prevent crashes
 - Fix "Wrong player ID" warnings when multiplayer quick save/load is used (client-side fix)
