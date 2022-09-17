@@ -1,9 +1,10 @@
-DashFaction Changelog
-=====================
+Dash Faction Changelog
+======================
 
 Version 1.8.1 (not released yet)
 --------------------------------
 - Fix possible crash when alt-tabbing in fullscreen mode before game is fully initialized
+- Add German GOG RF installation detection to the launcher
 
 Version 1.8.0 (released 2022-09-17)
 -----------------------------------
