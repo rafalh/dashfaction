@@ -103,6 +103,18 @@ bool GameConfig::detect_game_path()
         // ignore
     }
 
+    // GOG (German)
+    try {
+        RegKey reg_key(HKEY_LOCAL_MACHINE, "SOFTWARE\\GOG.com\\Games\\1207660623", KEY_READ);
+        if (reg_key.read_value("PATH", &install_path)) {
+            game_executable_path = install_path + "\\RF.exe";
+            return true;
+        }
+    }
+    catch (...) {
+        // ignore
+    }
+
     char current_dir[MAX_PATH];
     GetCurrentDirectoryA(sizeof(current_dir), current_dir);
     std::string full_path = std::string(current_dir) + "\\RF.exe";
