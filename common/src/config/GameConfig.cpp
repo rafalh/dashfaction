@@ -106,7 +106,8 @@ bool GameConfig::detect_game_path()
     // GOG (German)
     try {
         RegKey reg_key(HKEY_LOCAL_MACHINE, "SOFTWARE\\GOG.com\\Games\\1207660623", KEY_READ);
-        if (reg_key.read_value("PATH", &install_path)) {
+        if (reg_key.read_value("PATH", &install_path))
+        {
             game_executable_path = install_path + "\\RF.exe";
             return true;
         }
