@@ -1,6 +1,10 @@
 DashFaction Changelog
 =====================
 
+Version 1.8.1 (not released yet)
+--------------------------------
+- Fix possible crash when alt-tabbing in fullscreen mode before game is fully initialized
+
 Version 1.8.0 (released 2022-09-17)
 -----------------------------------
 - Add autosave after a level transition

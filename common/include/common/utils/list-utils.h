@@ -143,7 +143,8 @@ public:
 
     Iterator begin()
     {
-        return Iterator(m_list.next);
+        auto next = m_list.next ? m_list.next : &m_list;
+        return Iterator(next);
     }
 
     Iterator end()

@@ -616,7 +616,7 @@ CodeInjection gr_d3d_device_lost_injection{
     []() {
         void monitor_refresh_all();
 
-        xlog::trace("D3D device lost");
+        xlog::info("D3D device lost");
         gr_d3d_capture_device_lost();
         gr_d3d_texture_device_lost();
         monitor_refresh_all();
