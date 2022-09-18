@@ -264,15 +264,12 @@ begin
     else if RegQueryStringValue(NativeHKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 20530', 'InstallLocation', Result) then
         // Steam
         Result := Result + '\RF.exe'
-    else if RegQueryStringValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\GOG.com\GOGREDFACTION', 'PATH', Result) then
+    else if RegQueryStringValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\Nordic Games\Red Faction', 'INSTALL_DIR', Result) then
         // GOG
-        Result := Result + 'RF.exe'
-    else if RegQueryStringValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\GOG.com\Games\1207660623', 'PATH', Result) then
-        // GR GOG
         Result := Result + '\RF.exe'
     else
         // Fallback
-        Result := ExpandConstant('{sd}\games\RedFaction\RF.exe');
+        Result := ExpandConstant('C:\games\RedFaction\RF.exe');
 end;
 
 procedure CreateSelectGameExePage();
