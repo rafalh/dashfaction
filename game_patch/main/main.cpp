@@ -137,7 +137,7 @@ FunHook<void(bool)> level_init_post_hook{
 
         if (transition && g_game_config.autosave && rf::sr::can_save_now()) {
             xlog::info("Performing autosave");
-            auto save_filename = std::string{rf::sr::savegame_path} + "/autosave.svl";
+            auto save_filename = std::string{rf::sr::savegame_path} + "autosave.svl";
             if (!rf::sr::save_game(save_filename.c_str(), rf::local_player)) {
                 xlog::error("Autosave failed");
             }
