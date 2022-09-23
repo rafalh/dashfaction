@@ -119,7 +119,6 @@ CallHook<rf::bm::Format(int, int, int, int, std::byte*)> gr_d3d_read_back_buffer
         }
 
         // function is sometimes called with all parameters set to 0 to get backbuffer format
-        xlog::info("gr_d3d_read_back_buffer_hook");
         rf::bm::Format pixel_fmt = get_bm_format_from_d3d_format(desc.Format);
         if (width == 0 || height == 0) {
             return pixel_fmt;
