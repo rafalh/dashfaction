@@ -61,13 +61,14 @@ FunHook<void(bool)> cutscene_do_frame_hook{
             render_skip_cutscene_hint_text(skip_cutscene_ctrl);
         }
         else {
+            xlog::info("Skipping cutscene...");
             disable_sound_before_cutscene_skip();
 
             while (rf::cutscene_is_active()) {
                 int shot_time_left_ms = rf::active_cutscene->next_stage_timestamp.time_until();
 
                 if (rf::active_cutscene->current_script_index == rf::active_cutscene->num_cam_scripts - 1) {
-                    // run last half second with a speed of 10 FPS so all events get properly processed before
+                    // run last half second of last shot emulating 10 FPS so all events get properly processed before
                     // going back to normal gameplay
                     if (shot_time_left_ms > 500)
                         shot_time_left_ms -= 500;
@@ -81,6 +82,7 @@ FunHook<void(bool)> cutscene_do_frame_hook{
             }
 
             enable_sound_after_cutscene_skip();
+            xlog::info("Finished skipping cutscene");
         }
     },
 };
