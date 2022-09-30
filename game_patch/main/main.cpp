@@ -35,6 +35,7 @@
 #include "../rf/level.h"
 #include "../rf/os/os.h"
 #include "../rf/save_restore.h"
+#include "../rf/gameseq.h"
 
 #ifdef HAS_EXPERIMENTAL
 #include "../experimental/experimental.h"
@@ -77,6 +78,24 @@ CodeInjection cleanup_game_hook{
     },
 };
 
+static void maybe_autosave()
+{
+    static int pending_autosave = 0;
+    if (rf::gameseq_get_state() == rf::GS_LEVEL_TRANSITION && g_game_config.autosave) {
+        pending_autosave = 5; // wait 5 frames for the game state to fully stabilize
+    }
+    if (pending_autosave > 0) {
+        pending_autosave--;
+        if (pending_autosave == 0 && rf::sr::can_save_now() && rf::gameseq_get_state() != rf::GS_BOMB_DEFUSE) {
+            xlog::info("Performing autosave");
+            auto save_filename = std::string{rf::sr::savegame_path} + "autosave.svl";
+            if (!rf::sr::save_game(save_filename.c_str(), rf::local_player)) {
+                xlog::error("Autosave failed");
+            }
+        }
+    }
+}
+
 FunHook<int()> rf_do_frame_hook{
     0x004B2D90,
     []() {
@@ -85,6 +104,7 @@ FunHook<int()> rf_do_frame_hook{
         high_fps_update();
         server_do_frame();
         int result = rf_do_frame_hook.call_target();
+        maybe_autosave();
         debug_do_frame_post();
         return result;
     },
@@ -134,14 +154,6 @@ FunHook<void(bool)> level_init_post_hook{
     [](bool transition) {
         level_init_post_hook.call_target(transition);
         xlog::info("Level loaded: %s%s", rf::level.filename.c_str(), transition ? " (transition)" : "");
-
-        if (transition && g_game_config.autosave && rf::sr::can_save_now()) {
-            xlog::info("Performing autosave");
-            auto save_filename = std::string{rf::sr::savegame_path} + "autosave.svl";
-            if (!rf::sr::save_game(save_filename.c_str(), rf::local_player)) {
-                xlog::error("Autosave failed");
-            }
-        }
     },
 };
 
