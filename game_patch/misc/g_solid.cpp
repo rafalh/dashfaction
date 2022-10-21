@@ -422,7 +422,6 @@ void g_solid_do_patch()
     AsmWriter{0x004D3F64, 0x004D3F6F}.nop();
     AsmWriter{0x004D3FB6, 0x004D3FC1}.nop();
     write_mem<u8>(0x004D3F3F, asm_opcodes::jmp_rel_short);
-    write_mem<u8>(0x004D3F91, asm_opcodes::jmp_rel_short);
 
     // Commands
     max_decals_cmd.register_cmd();
