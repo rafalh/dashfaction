@@ -3,6 +3,7 @@ Dash Faction Changelog
 
 Version 1.8.1 (not released yet)
 --------------------------------
+- Fix alpha sorting regression bug on detail brushes
 - Fix possible crash when alt-tabbing in fullscreen mode before game is fully initialized
 - Simplify installation detection in setup and launcher
 - Fix writing corrupted save files when autosaving some levels
