@@ -74,9 +74,9 @@ ConsoleCommand2 fps_counter_cmd{
     "fps_counter",
 };
 
-CallHook<void(int)> frametime_calculate_sleep_hook{
+CallHook<void(float)> frametime_calculate_sleep_hook{
     0x005095B4,
-    [](int ms) {
+    [](float ms) {
         --ms;
         if (ms > 0) {
             frametime_calculate_sleep_hook.call_target(ms);
@@ -97,11 +97,11 @@ FunHook<void()> frametime_reset_hook{
 
 ConsoleCommand2 max_fps_cmd{
     "maxfps",
-    [](std::optional<int> limit_opt) {
+    [](std::optional<float> limit_opt) {
         if (limit_opt) {
-            int new_limit = limit_opt.value();
+            float new_limit = limit_opt.value();
 #if VERSION_TYPE != VERSION_TYPE_DEV
-            new_limit = std::clamp<int>(new_limit, GameConfig::min_fps_limit, GameConfig::max_fps_limit);
+            new_limit = std::clamp<float>(new_limit, GameConfig::min_fps_limit, GameConfig::max_fps_limit);
 #endif
             if (rf::is_dedicated_server) {
                 g_game_config.server_max_fps = new_limit;
