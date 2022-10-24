@@ -97,11 +97,11 @@ FunHook<void()> frametime_reset_hook{
 
 ConsoleCommand2 max_fps_cmd{
     "maxfps",
-    [](std::optional<float> limit_opt) {
+    [](std::optional<int> limit_opt) {
         if (limit_opt) {
-            float new_limit = limit_opt.value();
+            int new_limit = limit_opt.value();
 #if VERSION_TYPE != VERSION_TYPE_DEV
-            new_limit = std::clamp<float>(new_limit, GameConfig::min_fps_limit, GameConfig::max_fps_limit);
+            new_limit = std::clamp<int>(new_limit, GameConfig::min_fps_limit, GameConfig::max_fps_limit);
 #endif
             if (rf::is_dedicated_server) {
                 g_game_config.server_max_fps = new_limit;
