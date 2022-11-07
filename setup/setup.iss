@@ -260,7 +260,7 @@ begin
         // Dash Faction options - nothing to do
     else if RegQueryStringValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\Volition\Red Faction', 'InstallPath', Result) then
         // Install from CD
-        Result := Result + '\RF.exe'
+        Result := Result + 'RF.exe'
     else if RegQueryStringValue(NativeHKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 20530', 'InstallLocation', Result) then
         // Steam
         Result := Result + '\RF.exe'
