@@ -195,7 +195,11 @@ begin
             AddGameExeBSDiffPatch('1.21 -> 1.20 NA (RF.exe patch)', 'RF-1.21.exe.mbsdiff');
         '23b93a5e72c9f31b3d365ce5feffc9f35ae1ab96':
             AddRTPatch('1.10 NA -> 1.20 NA (official patch)', 'rf120_na.rtp');
-        // TODO: add 1.10 GR
+        'a03f976e7f7dfa99178af32681ba4ca6b1e3d765':
+        begin
+            AddRTPatch('1.10 GR -> 1.20 GR (official patch)', 'rf120_gr.rtp');
+            AddGameExeBSDiffPatch('1.20 GR -> 1.20 NA (RF.exe patch)', 'RF-1.20-gr.exe.mbsdiff');
+        end;
         '73d53d62ec6ded94d8989ca238e37a452b881929':
         begin
             AddRTPatch('1.10 FR -> 1.20 FR (official patch)', 'rf120_fr.rtp');
