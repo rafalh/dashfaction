@@ -276,7 +276,7 @@ begin
         Result := Result + '\RF.exe'
     else
         // Fallback
-        Result := ExpandConstant('C:\games\RedFaction\RF.exe');
+        Result := 'C:\games\RedFaction\RF.exe';
 end;
 
 procedure CreateSelectGameExePage();
