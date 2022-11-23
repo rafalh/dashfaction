@@ -31,7 +31,6 @@ WizardStyle=modern
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 Name: "rfproto"; Description: "Register rf:// protocol handler"; GroupDescription: "Other options:"
 Name: "rflassoc"; Description: "Associate .rfl file extension with Dash Faction Level Editor"; GroupDescription: "Other options:"
-Name: "fftracker"; Description: "Set the multiplayer tracker to rfgt.factionfiles.com"; GroupDescription: "Other options:"
 Name: "patchgame"; Description: "Install required game patches"; GroupDescription: "Other options:"; Check: "PatchGameTaskCheck"
 Name: "replacerflauncher"; Description: "Replace the Red Faction launcher with the Dash Faction launcher (allows Dash Faction to be opened through Red Faction on Steam)"; GroupDescription: "Other options:"; Flags: unchecked
 Name: "redvisualstyles"; Description: "Enable Windows Visual Styles for the level editor (experimental)"; GroupDescription: "Other options:"; Flags: unchecked
@@ -74,7 +73,6 @@ Name: "{commondesktop}\Dash Faction"; Filename: "{app}\DashFactionLauncher.exe";
 [Run]
 Filename: "{app}\DashFactionLauncher.exe"; Description: "{cm:LaunchProgram,Dash Faction}"; Flags: nowait postinstall skipifsilent
 Filename: "REG"; Parameters: "ADD ""HKCU\Software\Volition\Red Faction\Dash Faction"" /v ""Executable Path"" /d ""{code:GetFinalGameExePath}"" /f"; Flags: runhidden runasoriginaluser
-Filename: "REG"; Parameters: "ADD ""HKCU\Software\Volition\Red Faction"" /v GameTracker /d rfgt.factionfiles.com /f"; Flags: runhidden runasoriginaluser; Tasks: fftracker
 
 [Registry]
 ; rf:// protocol
