@@ -261,7 +261,7 @@ begin
         Result := Result + '\RF.exe'
     else if RegQueryStringValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\GOG.com\Games\1207660623', 'PATH', Result) then
         // GOG
-        Result := Result + 'RF.exe'
+        Result := Result + '\RF.exe'
     else if RegQueryStringValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\GOG.com\GOGREDFACTION', 'PATH', Result) then
         // GOG (old)
         Result := Result + 'RF.exe'
