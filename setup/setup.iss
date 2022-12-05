@@ -108,19 +108,9 @@ var
     PatchesDisplayNames: TStringList;
     GameExeFileNameAfterPatches: String;
 
-function GetUserProvidedGameExePath(Param: String): String;
-begin
-    Result := SelectGameExePage.Values[0];
-end;
-
-function IsTaskSelected(TaskName: String): Boolean;
-begin
-    Result := Pos(TaskName, WizardSelectedTasks(false)) > 0;
-end;
-
 function GetFinalGameExePath(Param: String): String;
 begin
-    if IsTaskSelected('patchgame') and (GameExeFileNameAfterPatches <> '') then
+    if WizardIsTaskSelected('patchgame') and (GameExeFileNameAfterPatches <> '') then
         Result := ExtractFileDir(SelectGameExePage.Values[0]) + '\' + GameExeFileNameAfterPatches
     else
         Result := SelectGameExePage.Values[0];
@@ -146,8 +136,8 @@ end;
 
 procedure AddGameExeBSDiffPatch(DisplayName: String; PatchFileName: String);
 begin
-    AddBSDiffPatch(DisplayName, PatchFileName, ExtractFileName(SelectGameExePage.Values[0]), 'RF_120na.exe');
     GameExeFileNameAfterPatches := 'RF_120na.exe';
+    AddBSDiffPatch(DisplayName, PatchFileName, ExtractFileName(SelectGameExePage.Values[0]), GameExeFileNameAfterPatches);
 end;
 
 procedure AddRTPatch(DisplayName: String; FileName: String);
@@ -217,7 +207,6 @@ begin
         else
         begin
             // Unknown version
-            Log('Unknown RF.exe SHA1: ' + GameExeSHA1);
             if Result and (MsgBox(ExpandConstant('{cm:UnkGameExeVersion,' + GameExeSHA1 + '}'), mbError, MB_YESNO + MB_DEFBUTTON2) = IDNO) then
                 Result := False;
         end;
@@ -346,7 +335,7 @@ procedure ApplyPatches;
 var
     i: Integer;
 begin
-    if IsTaskSelected('patchgame') and (GetArrayLength(Patches) > 0) then
+    if WizardIsTaskSelected('patchgame') and (GetArrayLength(Patches) > 0) then
     begin
         Log('Applying patches...');
         for i := 0 to GetArrayLength(Patches) - 1 do
@@ -368,7 +357,6 @@ begin
         Log('Creating RedFaction.exe symlink: ' + GetGameDir('RedFaction.exe'));
         if not CreateSymbolicLinkA(GetGameDir('RedFaction.exe'), ExpandConstant('{app}\DashFactionLauncher.exe'), 0) then
         begin
-            Log('CreateSymbolicLink failed');
             MsgBox('Failed to replace the Red Faction launcher with a symbolic link to the Dash Faction launcher.', mbError, MB_OK);
         end;
     end;
