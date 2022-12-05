@@ -4,8 +4,9 @@ Dash Faction Changelog
 Version 1.8.1 (not released yet)
 --------------------------------
 - Fix possible crash when alt-tabbing in fullscreen mode before game is fully initialized
-- Simplify installation detection in setup and launcher
 - Fix writing corrupted save files when autosaving some levels
+- Add 1.10 GR and FR game detection to setup program
+- Clean up setup program code
 
 Version 1.8.0 (released 2022-09-17)
 -----------------------------------
