@@ -30,10 +30,10 @@ WizardStyle=modern
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 Name: "rfproto"; Description: "Register rf:// protocol handler"; GroupDescription: "Other options:"
-Name: "rflassoc"; Description: "Associate .rfl file extension with Dash Faction Level Editor"; GroupDescription: "Other options:"
-Name: "patchgame"; Description: "Install required game patches"; GroupDescription: "Other options:"; Check: "PatchGameTaskCheck"
-Name: "replacerflauncher"; Description: "Replace the Red Faction launcher with the Dash Faction launcher (allows Dash Faction to be opened through Red Faction on Steam)"; GroupDescription: "Other options:"; Flags: unchecked
-Name: "redvisualstyles"; Description: "Enable Windows Visual Styles for the level editor (experimental)"; GroupDescription: "Other options:"; Flags: unchecked
+Name: "rflassoc"; Description: "Associate the .rfl file extension with the level editor"; GroupDescription: "Other options:"
+Name: "patchgame"; Description: "Install necessary game patches"; GroupDescription: "Other options:"; Check: "PatchGameTaskCheck"
+Name: "replacerflauncher"; Description: "Replace the game launcher with the Dash Faction launcher (enables Steam support)"; GroupDescription: "Other options:"; Flags: unchecked
+Name: "redvisualstyles"; Description: "Enable Windows visual styles for the level editor (experimental)"; GroupDescription: "Other options:"; Flags: unchecked
 
 [Files]
 Source: "{#BinDir}\DashFactionLauncher.exe"; DestDir: "{app}"; Flags: ignoreversion
@@ -86,9 +86,9 @@ Root: HKCR; Subkey: "DashFactionLevelEditor"; ValueType: "string"; ValueData: "D
 Root: HKCR; Subkey: "DashFactionLevelEditor\shell\open\command"; ValueType: "string"; ValueData: """{app}\DashFactionLauncher.exe"" -editor -level ""%1"""; Tasks: rflassoc
 
 [CustomMessages]
-RFExeLocation=Setup will attempt to locate the RF.exe file automatically but it may fail to do so in some environments so please make sure the location is correct.%n%nTo continue, click Next. To select a different file, click Browse.
-GameNeedsPatches=The installed version of Red Faction is not directly supported by Dash Faction. Setup will install the required patches automatically.%n%nPatches that will be installed:%n
-UnkGameExeVersion=RF.exe file is not recognized.%nPlease make sure the provided path points to the correct file (RF.exe). If you ignore this error Dash Faction will most likely not launch at all.%nYou can find more help on:%n* https://discord.gg/factionfiles%n* https://redfaction.help%n%nTechnical details:%nSHA1 = %1%n%nDo you want to ignore this error and continue?
+RFExeLocation=Setup will attempt to locate RF.exe automatically. Make sure the location is correct, then click Next.
+GameNeedsPatches=Your game version is not directly compatible with Dash Faction. To resolve this, setup will apply the following patches:%n%n
+UnkGameExeVersion=The file at the selected location is not recognized.%nPlease make sure the location of RF.exe is correct. If you ignore this error, Dash Faction may not function correctly.%n%nYou can find help at:%n- https://discord.gg/factionfiles%n- https://redfaction.help%n%nTechnical details:%nSHA1 = %1%n%nIgnore this error and continue?
 
 [Code]
 type
@@ -173,36 +173,36 @@ begin
         '4140f7619b6427c170542c66178b47bd48795a99':
             begin end;
         'ddbb3e4fa89301eca9f0f547c93a18c18b4bc2ff':
-            AddGameExeBSDiffPatch('1.20 GR -> 1.20 NA (RF.exe patch)', 'RF-1.20-gr.exe.mbsdiff');
+            AddGameExeBSDiffPatch('1.20 GR --> 1.20 NA (RF.exe patch)', 'RF-1.20-gr.exe.mbsdiff');
         '911e3c2d767e56b7b2d5e07ffe07372c82b9dd9d':
-            AddGameExeBSDiffPatch('1.20 FR -> 1.20 NA (RF.exe patch)', 'RF-1.20-fr.exe.mbsdiff');
+            AddGameExeBSDiffPatch('1.20 FR --> 1.20 NA (RF.exe patch)', 'RF-1.20-fr.exe.mbsdiff');
         'abc97f3599caf50f540865a80e34c3feb76767a0':
-            AddGameExeBSDiffPatch('1.21 with Steam Wrapper -> 1.20 NA (RF.exe patch)', 'RF-1.21-steam.exe.mbsdiff');
+            AddGameExeBSDiffPatch('1.21 Steam --> 1.20 NA (RF.exe patch)', 'RF-1.21-steam.exe.mbsdiff');
         'd3e42d1d24ad730b28d3e562042bd2c8cf2ab64f':
-            AddGameExeBSDiffPatch('1.21 -> 1.20 NA (RF.exe patch)', 'RF-1.21.exe.mbsdiff');
+            AddGameExeBSDiffPatch('1.21 --> 1.20 NA (RF.exe patch)', 'RF-1.21.exe.mbsdiff');
         '23b93a5e72c9f31b3d365ce5feffc9f35ae1ab96':
-            AddRTPatch('1.10 NA -> 1.20 NA (official patch)', 'rf120_na.rtp');
+            AddRTPatch('1.10 NA --> 1.20 NA (official patch)', 'rf120_na.rtp');
         'a03f976e7f7dfa99178af32681ba4ca6b1e3d765':
         begin
-            AddRTPatch('1.10 GR -> 1.20 GR (official patch)', 'rf120_gr.rtp');
-            AddGameExeBSDiffPatch('1.20 GR -> 1.20 NA (RF.exe patch)', 'RF-1.20-gr.exe.mbsdiff');
+            AddRTPatch('1.10 GR --> 1.20 GR (official patch)', 'rf120_gr.rtp');
+            AddGameExeBSDiffPatch('1.20 GR --> 1.20 NA (RF.exe patch)', 'RF-1.20-gr.exe.mbsdiff');
         end;
         '73d53d62ec6ded94d8989ca238e37a452b881929':
         begin
-            AddRTPatch('1.10 FR -> 1.20 FR (official patch)', 'rf120_fr.rtp');
-            AddGameExeBSDiffPatch('1.20 FR -> 1.20 NA (RF.exe patch)', 'RF-1.20-fr.exe.mbsdiff');
+            AddRTPatch('1.10 FR --> 1.20 FR (official patch)', 'rf120_fr.rtp');
+            AddGameExeBSDiffPatch('1.20 FR --> 1.20 NA (RF.exe patch)', 'RF-1.20-fr.exe.mbsdiff');
         end;
         '640526799fed170ce110c71e1bcf0b23b063d1da':
-            AddRTPatch('1.00 NA -> 1.20 NA (official patch)', 'rf120_na.rtp');
+            AddRTPatch('1.00 NA --> 1.20 NA (official patch)', 'rf120_na.rtp');
         '2c11d549787f6af655c37e8ef2c53293d02dbfbc':
         begin
-            AddRTPatch('1.00 GR -> 1.20 GR (official patch)', 'rf120_gr.rtp');
-            AddGameExeBSDiffPatch('1.20 GR -> 1.20 NA (RF.exe patch)', 'RF-1.20-gr.exe.mbsdiff');
+            AddRTPatch('1.00 GR --> 1.20 GR (official patch)', 'rf120_gr.rtp');
+            AddGameExeBSDiffPatch('1.20 GR --> 1.20 NA (RF.exe patch)', 'RF-1.20-gr.exe.mbsdiff');
         end;
         'fc6d877d5b423c004886e1f73bfbe72ad4d55e2d':
         begin
-            AddRTPatch('1.00 FR -> 1.20 FR (official patch)', 'rf120_fr.rtp');
-            AddGameExeBSDiffPatch('1.20 FR -> 1.20 NA (RF.exe patch)', 'RF-1.20-fr.exe.mbsdiff');
+            AddRTPatch('1.00 FR --> 1.20 FR (official patch)', 'rf120_fr.rtp');
+            AddGameExeBSDiffPatch('1.20 FR --> 1.20 NA (RF.exe patch)', 'RF-1.20-fr.exe.mbsdiff');
         end;
         else
         begin
@@ -218,11 +218,11 @@ begin
         TablesVppSHA1 := GetSHA1OfFile(TablesVppPath);
         case TablesVppSHA1 of
             '672ba832f7133b93d576f84d971331597d93fce6':
-                AddBSDiffPatch('1.21 GR GOG -> 1.20 NA (tables.vpp patch)', 'tables-gog-gr.vpp.mbsdiff', 'tables.vpp', 'tables.vpp');
+                AddBSDiffPatch('1.21 GR GOG --> 1.20 NA (tables.vpp patch)', 'tables-gog-gr.vpp.mbsdiff', 'tables.vpp', 'tables.vpp');
         end;
     end
     else
-        MsgBox('tables.vpp file was not found in the specified location! Your game directory may be corrupt.', mbError, MB_OK);
+        MsgBox('tables.vpp was not found in the game folder! Your Red Faction installation may be corrupt.', mbError, MB_OK);
 
     if not Result then
         ResetPatchList;
@@ -232,7 +232,7 @@ function SelectGameExePageOnNextButtonClick(Sender: TWizardPage): Boolean;
 begin
     if not FileExists(SelectGameExePage.Values[0]) then
     begin
-        MsgBox('The selected RF.exe file does not exist!', mbError, MB_OK);
+        MsgBox('RF.exe does not exist at the selected location!', mbError, MB_OK);
         Result := False;
     end
     else
@@ -269,7 +269,7 @@ end;
 
 procedure CreateSelectGameExePage();
 begin
-    SelectGameExePage := CreateInputFilePage(wpSelectDir, 'Select RF.exe location', 'This file can be found in the Red Faction installation folder.', ExpandConstant('{cm:RFExeLocation}'));
+    SelectGameExePage := CreateInputFilePage(wpSelectDir, 'Select RF.exe Location', 'This file can be found in your Red Faction game folder.', ExpandConstant('{cm:RFExeLocation}'));
     SelectGameExePage.Add('Location of RF.exe:', 'Executable files|*.exe|All files|*.*', '.exe');
     SelectGameExePage.Values[0] := DetectGameExecutablePath;
     SelectGameExePage.OnNextButtonClick := @SelectGameExePageOnNextButtonClick;
@@ -357,7 +357,7 @@ begin
         Log('Creating RedFaction.exe symlink: ' + GetGameDir('RedFaction.exe'));
         if not CreateSymbolicLinkA(GetGameDir('RedFaction.exe'), ExpandConstant('{app}\DashFactionLauncher.exe'), 0) then
         begin
-            MsgBox('Failed to replace the Red Faction launcher with a symbolic link to the Dash Faction launcher.', mbError, MB_OK);
+            MsgBox('Failed to create a symbolic link to the Dash Faction launcher.', mbError, MB_OK);
         end;
     end;
 end;
