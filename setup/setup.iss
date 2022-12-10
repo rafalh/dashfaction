@@ -14,7 +14,7 @@ AppSupportURL=https://rafalh.dev/
 AppUpdatesURL=https://rafalh.dev/
 UninstallDisplayName=Dash Faction
 UninstallDisplayIcon={app}\DashFactionLauncher.exe
-DefaultDirName={commonpf}\Dash Faction
+DefaultDirName={autopf}\Dash Faction
 DefaultGroupName=Dash Faction
 DisableWelcomePage=no
 OutputBaseFilename=DashFaction-{#AppVer}-setup
@@ -67,7 +67,7 @@ Name: "{code:GetGameDir}\logs"; Permissions: users-modify
 
 [Icons]
 Name: "{group}\Dash Faction"; Filename: "{app}\DashFactionLauncher.exe"
-Name: "{commondesktop}\Dash Faction"; Filename: "{app}\DashFactionLauncher.exe"; Tasks: desktopicon
+Name: "{autodesktop}\Dash Faction"; Filename: "{app}\DashFactionLauncher.exe"; Tasks: desktopicon
 
 [Run]
 Filename: "{app}\DashFactionLauncher.exe"; Description: "{cm:LaunchProgram,Dash Faction}"; Flags: nowait postinstall skipifsilent
