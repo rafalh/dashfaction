@@ -31,8 +31,8 @@ WizardStyle=modern
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 Name: "rfproto"; Description: "Register rf:// protocol handler"; GroupDescription: "Other options:"
 Name: "rflassoc"; Description: "Associate the .rfl file extension with the level editor"; GroupDescription: "Other options:"
-Name: "patchgame"; Description: "Install necessary game patches"; GroupDescription: "Other options:"; Check: "PatchGameTaskCheck"
-Name: "replacerflauncher"; Description: "Replace the game launcher with the Dash Faction launcher (enables Steam support)"; GroupDescription: "Other options:"; Flags: unchecked
+Name: "patchgame"; Description: "Install necessary Red Faction patches"; GroupDescription: "Other options:"; Check: "PatchGameTaskCheck"
+Name: "replacerflauncher"; Description: "Replace the Red Faction launcher with the Dash Faction launcher (enables Steam support)"; GroupDescription: "Other options:"; Flags: unchecked
 Name: "redvisualstyles"; Description: "Enable Windows visual styles for the level editor (experimental)"; GroupDescription: "Other options:"; Flags: unchecked
 
 [Files]
@@ -87,7 +87,7 @@ Root: HKCR; Subkey: "DashFactionLevelEditor\shell\open\command"; ValueType: "str
 
 [CustomMessages]
 RFExeLocation=Setup will attempt to locate RF.exe automatically. Make sure the location is correct, then click Next.
-GameNeedsPatches=Your game version is not directly compatible with Dash Faction. To resolve this, setup will apply the following patches:%n%n
+GameNeedsPatches=Your Red Faction game version is not directly compatible with Dash Faction. To resolve this, setup will apply the following patches:%n%n
 UnkGameExeVersion=The file at the selected location is not recognized.%nPlease make sure the location of RF.exe is correct. If you ignore this error, Dash Faction may not function correctly.%n%nYou can find help at:%n- https://discord.gg/factionfiles%n- https://redfaction.help%n%nTechnical details:%nSHA1 = %1%n%nIgnore this error and continue?
 
 [Code]
