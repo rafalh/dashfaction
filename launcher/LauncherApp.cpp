@@ -37,9 +37,6 @@ int LauncherApp::Run()
         return 0;
     }
 
-    // Migrate Dash Faction config from old version
-    MigrateConfig();
-
     // Disable elevation (UAC)
     SetEnvironmentVariableA("__COMPAT_LAYER", "RunAsInvoker");
 
@@ -62,23 +59,6 @@ int LauncherApp::Run()
 
     xlog::info("Closing the launcher");
 	return 0;
-}
-
-void LauncherApp::MigrateConfig()
-{
-    try {
-        GameConfig config;
-        if (config.load() && config.dash_faction_version.value() != VERSION_STR) {
-            xlog::info("Migrating config");
-            if (config.tracker.value() == "rf.thqmultiplay.net" && config.dash_faction_version->empty()) // < 1.1.0
-                config.tracker = GameConfig::default_rf_tracker;
-            config.dash_faction_version = VERSION_STR;
-            config.save();
-        }
-    }
-    catch (std::exception&) {
-        // ignore
-    }
 }
 
 bool LauncherApp::LaunchGame(HWND hwnd, const char* mod_name)
