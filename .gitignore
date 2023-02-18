@@ -1,6 +1,7 @@
 /dist
 /build*
 /research
+/out
 
 # Visual Studio
 *.sln
@@ -19,7 +20,7 @@ ipch
 .vscode
 CMakeSettings.json
 
-# Non-Open Source PF support code
+# Closed-source Pure Faction anti-cheat support code
 /game_patch/purefaction/*secret*
 
 # Experimental code
