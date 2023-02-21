@@ -134,7 +134,7 @@ WatchDogTimer::~WatchDogTimer()
     if (is_running()) {
         stop();
     }
-};
+}
 
 void WatchDogTimer::start()
 {
