@@ -444,6 +444,9 @@ void apply_sound_patches()
 
     // Apply patch for DirectSound specific code
     snd_ds_apply_patch();
+
+    // eax_ks_property_set should not call Release, since it is a weak pointer.
+    AsmWriter{0x00527EE0, 0x00527EE4}.nop();
 }
 
 void register_sound_commands()
