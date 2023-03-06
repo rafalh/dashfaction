@@ -8,7 +8,6 @@ Version 1.8.1 (not released yet)
 - Fix writing corrupted save files when autosaving some levels
 - Add German and French RF 1.10 detection to setup
 - Text improvements to setup
-- Remove multiplayer tracker option from setup (the launcher handles this)
 - Don't copy over the changelog during setup
 
 Version 1.8.0 (released 2022-09-17)
