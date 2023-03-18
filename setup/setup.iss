@@ -31,7 +31,7 @@ WizardStyle=modern
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 Name: "rfproto"; Description: "Register rf:// protocol handler (enables multiplayer click-to-join)"; GroupDescription: "Other options:"
 Name: "rflassoc"; Description: "Associate the .rfl file extension with the Dash Faction level editor"; GroupDescription: "Other options:"
-Name: "fftracker"; Description: "Use the FactionFiles eRFGT2 multiplayer tracker (rfgt.factionfiles.com)"; GroupDescription: "Other options:"
+Name: "fftracker"; Description: "Use the FactionFiles multiplayer tracker (rfgt.factionfiles.com; community standard)"; GroupDescription: "Other options:"
 Name: "patchgame"; Description: "Install necessary Red Faction patches"; GroupDescription: "Other options:"; Check: "PatchGameTaskCheck"
 Name: "replacerflauncher"; Description: "Replace the Red Faction launcher with the Dash Faction launcher (enables Steam support)"; GroupDescription: "Other options:"; Flags: unchecked
 Name: "redvisualstyles"; Description: "Enable Windows visual styles for the level editor (experimental)"; GroupDescription: "Other options:"; Flags: unchecked
