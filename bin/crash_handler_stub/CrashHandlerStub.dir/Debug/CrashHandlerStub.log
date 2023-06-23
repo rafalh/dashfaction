@@ -1,0 +1,5 @@
+﻿  Building Custom Rule C:/Users/Paul/source/repos/dashfaction/crash_handler_stub/CMakeLists.txt
+  crash_handler_stub.cpp
+  WatchDogTimer.cpp
+  Generating Code...
+  CrashHandlerStub.vcxproj -> C:\Users\Paul\source\repos\dashfaction\bin\crash_handler_stub\Debug\CrashHandlerStub.lib

@@ -1,0 +1,15 @@
+﻿  Building Custom Rule C:/Users/Paul/source/repos/dashfaction/vendor/d3d8to9/CMakeLists.txt
+  d3d8to9.cpp
+  d3d8to9_base.cpp
+  d3d8to9_device.cpp
+  d3d8to9_index_buffer.cpp
+  d3d8to9_surface.cpp
+  d3d8to9_swap_chain.cpp
+  d3d8to9_texture.cpp
+  d3d8to9_vertex_buffer.cpp
+  d3d8to9_volume.cpp
+  d3d8types.cpp
+  interface_query.cpp
+  Generating Code...
+     Creating library C:/Users/Paul/source/repos/dashfaction/bin/vendor/d3d8to9/Debug/d3d8to9.lib and object C:/Users/Paul/source/repos/dashfaction/bin/vendor/d3d8to9/Debug/d3d8to9.exp
+  d3d8to9.vcxproj -> C:\Users\Paul\source\repos\dashfaction\bin\bin\Debug\d3d8to9.dll

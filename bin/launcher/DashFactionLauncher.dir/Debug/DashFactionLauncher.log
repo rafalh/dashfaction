@@ -1,0 +1,9 @@
+﻿  Building Custom Rule C:/Users/Paul/source/repos/dashfaction/launcher/CMakeLists.txt
+  AboutDlg.cpp
+  LauncherApp.cpp
+  main.cpp
+  MainDlg.cpp
+  OptionsDlg.cpp
+  stdafx.cpp
+  Generating Code...
+  DashFactionLauncher.vcxproj -> C:\Users\Paul\source\repos\dashfaction\bin\bin\Debug\DashFactionLauncher.exe

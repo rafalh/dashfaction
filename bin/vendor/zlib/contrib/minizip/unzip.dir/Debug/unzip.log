@@ -1,0 +1,5 @@
+﻿  Building Custom Rule C:/Users/Paul/source/repos/dashfaction/vendor/zlib/contrib/minizip/CMakeLists.txt
+  unzip.c
+  ioapi.c
+  Generating Code...
+  unzip.vcxproj -> C:\Users\Paul\source\repos\dashfaction\bin\vendor\zlib\contrib\minizip\Debug\unzip.lib

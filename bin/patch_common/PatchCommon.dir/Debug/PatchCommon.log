@@ -1,0 +1,8 @@
+﻿  Building Custom Rule C:/Users/Paul/source/repos/dashfaction/patch_common/CMakeLists.txt
+  CallHook.cpp
+  CodeBuffer.cpp
+  CodeInjection.cpp
+  FunHook.cpp
+  MemUtils.cpp
+  Generating Code...
+  PatchCommon.vcxproj -> C:\Users\Paul\source\repos\dashfaction\bin\patch_common\Debug\PatchCommon.lib

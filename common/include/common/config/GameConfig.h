@@ -88,6 +88,7 @@ struct GameConfig
     CfgVar<bool> reduced_speed_in_background = false;
     CfgVar<bool> player_join_beep = false;
     CfgVar<bool> autosave = true;
+    CfgVar<bool> derandomize_bomb = false;
 
     // Internal
     CfgVar<std::string> dash_faction_version{""};

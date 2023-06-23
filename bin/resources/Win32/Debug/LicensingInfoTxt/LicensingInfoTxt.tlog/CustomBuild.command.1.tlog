@@ -1,0 +1,28 @@
+^C:\USERS\PAUL\SOURCE\REPOS\DASHFACTION\RESOURCES\LICENSING-INFO.TXT
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/Paul/source/repos/dashfaction/resources/licensing-info.txt C:/Users/Paul/source/repos/dashfaction/bin/bin/licensing-info.txt
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\PAUL\SOURCE\REPOS\DASHFACTION\BIN\CMAKEFILES\8F21793F73A8BB1FF2DA30F2F6EBF686\LICENSINGINFOTXT.RULE
+setlocal
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\PAUL\SOURCE\REPOS\DASHFACTION\RESOURCES\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/Paul/source/repos/dashfaction -BC:/Users/Paul/source/repos/dashfaction/bin --check-stamp-file C:/Users/Paul/source/repos/dashfaction/bin/resources/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

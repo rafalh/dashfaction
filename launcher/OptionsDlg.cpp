@@ -93,6 +93,7 @@ BOOL OptionsDlg::OnInitDialog()
     CheckDlgButton(IDC_REDUCED_SPEED_IN_BG_CHECK, m_conf.reduced_speed_in_background ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_PLAYER_JOIN_BEEP_CHECK, m_conf.player_join_beep ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_AUTOSAVE_CHECK, m_conf.autosave ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(IDC_DERANDOMIZE_BOMB, m_conf.derandomize_bomb ? BST_CHECKED : BST_UNCHECKED);
 
     InitToolTip();
 
@@ -256,6 +257,7 @@ void OptionsDlg::InitToolTip()
     m_tool_tip.AddTool(GetDlgItem(IDC_ALLOW_OVERWRITE_GAME_CHECK), "Enable this if you want to modify game content by putting mods into user_maps folder. Can have side effect of level packfiles modyfing common textures/sounds.");
     m_tool_tip.AddTool(GetDlgItem(IDC_KEEP_LAUNCHER_OPEN_CHECK), "Keep launcher window open after game or editor launch");
     m_tool_tip.AddTool(GetDlgItem(IDC_AUTOSAVE_CHECK), "Automatically save the game after a level transition");
+    m_tool_tip.AddTool(GetDlgItem(IDC_DERANDOMIZE_BOMB), "Enables a static solution to the bomb which persists across retries. Recommended for first time players");
 }
 
 void OptionsDlg::OnOK()
@@ -369,6 +371,7 @@ void OptionsDlg::OnBnClickedOk()
     m_conf.reduced_speed_in_background = (IsDlgButtonChecked(IDC_REDUCED_SPEED_IN_BG_CHECK) == BST_CHECKED);
     m_conf.player_join_beep = (IsDlgButtonChecked(IDC_PLAYER_JOIN_BEEP_CHECK) == BST_CHECKED);
     m_conf.autosave = (IsDlgButtonChecked(IDC_AUTOSAVE_CHECK) == BST_CHECKED);
+    m_conf.derandomize_bomb = (IsDlgButtonChecked(IDC_DERANDOMIZE_BOMB) == BST_CHECKED);
 
     try {
         m_conf.save();

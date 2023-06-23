@@ -1,0 +1,10 @@
+^C:\USERS\PAUL\SOURCE\REPOS\DASHFACTION\BIN\CMAKEFILES\A8BEEF0A91097C0ABF9564F1180E6829\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/Paul/source/repos/dashfaction -BC:/Users/Paul/source/repos/dashfaction/bin --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file C:/Users/Paul/source/repos/dashfaction/bin/DashFaction.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

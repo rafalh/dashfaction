@@ -1,0 +1,56 @@
+﻿  Building Custom Rule C:/Users/Paul/source/repos/dashfaction/vendor/unrar/CMakeLists.txt
+  rarpch.cpp
+  rar.cpp
+  strlist.cpp
+  strfn.cpp
+  pathfn.cpp
+  smallfn.cpp
+  global.cpp
+  file.cpp
+  filefn.cpp
+  filcreat.cpp
+  archive.cpp
+  arcread.cpp
+  unicode.cpp
+  system.cpp
+  isnt.cpp
+  crypt.cpp
+  crc.cpp
+  rawread.cpp
+  encname.cpp
+  resource.cpp
+  Generating Code...
+  Compiling...
+  match.cpp
+  timefn.cpp
+  rdwrfn.cpp
+  consio.cpp
+  options.cpp
+  errhnd.cpp
+  rarvm.cpp
+  secpassword.cpp
+  rijndael.cpp
+  getbits.cpp
+  sha1.cpp
+  sha256.cpp
+  blake2s.cpp
+  hash.cpp
+  extinfo.cpp
+  extract.cpp
+  volume.cpp
+  list.cpp
+  find.cpp
+  unpack.cpp
+  Generating Code...
+  Compiling...
+  headers.cpp
+  threadpool.cpp
+  rs16.cpp
+  cmddata.cpp
+  ui.cpp
+  filestr.cpp
+  scantree.cpp
+  dll.cpp
+  qopen.cpp
+  Generating Code...
+  unrar.vcxproj -> C:\Users\Paul\source\repos\dashfaction\bin\vendor\unrar\Debug\unrar.lib

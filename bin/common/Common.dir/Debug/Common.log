@@ -1,0 +1,7 @@
+﻿  Building Custom Rule C:/Users/Paul/source/repos/dashfaction/common/CMakeLists.txt
+  HttpRequest.cpp
+  GameConfig.cpp
+  d3d-error.cpp
+  os-utils.cpp
+  Generating Code...
+  Common.vcxproj -> C:\Users\Paul\source\repos\dashfaction\bin\common\Debug\Common.lib

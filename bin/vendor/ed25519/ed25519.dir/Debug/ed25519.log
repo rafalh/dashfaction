@@ -1,0 +1,13 @@
+﻿  Building Custom Rule C:/Users/Paul/source/repos/dashfaction/vendor/ed25519/CMakeLists.txt
+  sign.c
+  ge.c
+  fe.c
+  sha512.c
+  seed.c
+  key_exchange.c
+  add_scalar.c
+  verify.c
+  keypair.c
+  sc.c
+  Generating Code...
+  ed25519.vcxproj -> C:\Users\Paul\source\repos\dashfaction\bin\vendor\ed25519\Debug\ed25519.lib

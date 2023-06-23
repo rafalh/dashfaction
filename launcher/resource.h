@@ -57,6 +57,7 @@
 #define IDC_PLAYER_JOIN_BEEP_CHECK      1048
 #define IDC_MESH_STATIC_LIGHTING_CHECK  1049
 #define IDC_AUTOSAVE_CHECK              1050
+#define IDC_DERANDOMIZE_BOMB            1052
 
 // Next default values for new objects
 //

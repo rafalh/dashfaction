@@ -1,0 +1,7 @@
+﻿  Building Custom Rule C:/Users/Paul/source/repos/dashfaction/crash_handler/CMakeLists.txt
+  main.cpp
+  CrashReportApp.cpp
+  MainDlg.cpp
+  MiniDumpHelper.cpp
+  Generating Code...
+  CrashHandler.vcxproj -> C:\Users\Paul\source\repos\dashfaction\bin\bin\Debug\CrashHandler.exe
