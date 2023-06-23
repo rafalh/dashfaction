@@ -1,8 +1,0 @@
-﻿  Building Custom Rule C:/Users/Paul/source/repos/dashfaction/launcher_common/CMakeLists.txt
-  DllInjector.cpp
-  InjectingProcessLauncher.cpp
-  PatchedAppLauncher.cpp
-  UpdateChecker.cpp
-  VideoDeviceInfoProvider.cpp
-  Generating Code...
-  LauncherCommon.vcxproj -> C:\Users\Paul\source\repos\dashfaction\bin\launcher_common\Debug\LauncherCommon.lib

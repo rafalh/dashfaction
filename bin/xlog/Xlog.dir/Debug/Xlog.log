@@ -1,7 +1,0 @@
-﻿  Building Custom Rule C:/Users/Paul/source/repos/dashfaction/xlog/CMakeLists.txt
-  LoggerConfig.cpp
-  FileAppender.cpp
-  SimpleFormatter.cpp
-  Win32Appender.cpp
-  Generating Code...
-  Xlog.vcxproj -> C:\Users\Paul\source\repos\dashfaction\bin\xlog\Debug\Xlog.lib

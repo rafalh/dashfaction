@@ -1,7 +1,0 @@
-﻿  Building Custom Rule C:/Users/Paul/source/repos/dashfaction/editor_patch/CMakeLists.txt
-  graphics.cpp
-  main.cpp
-  trigger.cpp
-  Generating Code...
-     Creating library C:/Users/Paul/source/repos/dashfaction/bin/editor_patch/Debug/DashEditor.lib and object C:/Users/Paul/source/repos/dashfaction/bin/editor_patch/Debug/DashEditor.exp
-  DashEditor.vcxproj -> C:\Users\Paul\source\repos\dashfaction\bin\bin\Debug\DashEditor.dll

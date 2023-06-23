@@ -1,6 +1,0 @@
-﻿  Building Custom Rule C:/Users/Paul/source/repos/dashfaction/vendor/subhook/CMakeLists.txt
-  subhook.c
-  subhook_x86.c
-  subhook_windows.c
-  Generating Code...
-  subhook.vcxproj -> C:\Users\Paul\source\repos\dashfaction\bin\vendor\subhook\Debug\subhook.lib
