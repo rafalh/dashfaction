@@ -298,6 +298,7 @@ namespace rf::gr
     static auto& screen = addr_as_ref<Screen>(0x017C7BC0);
     static auto& gamma_ramp = addr_as_ref<uint32_t[256]>(0x017C7C68);
     static auto& default_wfar = addr_as_ref<float>(0x00596140);
+    static auto& gamma = addr_as_ref<float>(0x005A445C);
 
     static auto& bitmap_clamp_mode = addr_as_ref<Mode>(0x017756BC);
     static auto& rect_mode = addr_as_ref<Mode>(0x017756C0);
@@ -327,6 +328,7 @@ namespace rf::gr
     static auto& tcache_add_ref = addr_as_ref<void(int bm_handle)>(0x0050E850);
     static auto& tcache_remove_ref = addr_as_ref<void(int bm_handle)>(0x0050E870);
     static auto& close = addr_as_ref<void()>(0x0050CBE0);
+    static auto& set_gamma = addr_as_ref<void(float)>(0x0050CE70);
     static auto& set_texture = addr_as_ref<void (int bitmap_handle, int bitmap_handle2)>(0x0050D060);
     static auto& tmapper = addr_as_ref<void (int nv, Vertex **verts, TMapperFlags vertex_attributes, Mode mode)>(0x0050DF80);
     static auto& lighting_enabled = addr_as_ref<bool()>(0x004DB8B0);

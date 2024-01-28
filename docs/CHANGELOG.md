@@ -9,6 +9,7 @@ Version 1.8.1 (not released yet)
 - Add German and French RF 1.10 detection to setup
 - Text improvements to setup
 - Don't copy over the changelog during setup
+- Add `gamma` command
 
 Version 1.8.0 (released 2022-09-17)
 -----------------------------------
