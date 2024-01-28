@@ -420,25 +420,14 @@ ConsoleCommand2 profile_frame_cmd{
 
 #endif // DEBUG
 
-CodeInjection after_gr_init_hook{
-    0x0050C5CD,
+CodeInjection gr_d3d_init_device_injection{
+    0x00546368,
     []() {
         setup_texture_filtering();
         if (rf::gr::d3d::device_caps.MaxAnisotropy > 0 && g_game_config.anisotropic_filtering && !rf::is_dedicated_server) {
             DWORD anisotropy_level = setup_max_anisotropy();
             xlog::info("Anisotropic Filtering enabled (level: %lu)", anisotropy_level);
         }
-
-        // Change font for Time Left text
-        static int time_left_font = rf::gr::load_font("rfpc-large.vf");
-        if (time_left_font >= 0) {
-            write_mem<i8>(0x00477157 + 1, time_left_font);
-            write_mem<i8>(0x0047715F + 2, 21);
-            write_mem<i32>(0x00477168 + 1, 154);
-        }
-
-        // Fix performance issues caused by this field being initialized to inf
-        rf::gr::screen.fog_far_scaled = 255.0f / rf::gr::screen.fog_far;
     },
 };
 
@@ -770,7 +759,8 @@ void gr_d3d_apply_patch()
     // Support switching D3D present parameters in gr_d3d_flip to support fullscreen/windowed commands
     switch_d3d_mode_patch.install();
 
-    after_gr_init_hook.install();
+    // Init filtering state after device is created
+    gr_d3d_init_device_injection.install();
 
     // Fix memory leak if texture cannot be created
     gr_d3d_create_vram_texture_with_mipmaps_hook.install();

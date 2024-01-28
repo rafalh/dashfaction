@@ -171,11 +171,27 @@ FunHook<void()> render_level_info_hook{
     },
 };
 
+FunHook<void()> multi_hud_init_hook{
+    0x00476AD0,
+    []() {
+        // Change font for Time Left text
+        static int time_left_font = rf::gr::load_font("rfpc-large.vf");
+        if (time_left_font >= 0) {
+            write_mem<i8>(0x00477157 + 1, time_left_font);
+        }
+    },
+};
+
 void multi_hud_apply_patches()
 {
     AsmWriter{0x00477790}.jmp(hud_render_team_scores);
     hud_render_power_ups_gr_bitmap_hook.install();
     render_level_info_hook.install();
+    multi_hud_init_hook.install();
+
+    // Change position of Time Left text
+    write_mem<i8>(0x0047715F + 2, 21);
+    write_mem<i32>(0x00477168 + 1, 154);
 }
 
 void multi_hud_set_big(bool is_big)

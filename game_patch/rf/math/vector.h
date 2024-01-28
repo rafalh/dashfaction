@@ -99,6 +99,13 @@ namespace rf
             z = 0.0f;
         }
 
+        void set(float x, float y, float z)
+        {
+            this->x = x;
+            this->y = y;
+            this->z = z;
+        }
+
         [[nodiscard]] float dot_prod(const Vector3& other) const
         {
             return other.x * x + other.y * y + other.z * z;

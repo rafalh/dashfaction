@@ -276,6 +276,11 @@ void gr_apply_patch()
     // Use gr_clear instead of gr_rect for faster drawing of the fog background
     AsmWriter(0x00431F99).call(0x0050CDF0);
 
+    // Fix possible divisions by zero
+    // Fixes performance issues caused by gr::sceen::fog_far_scaled being initialized to inf
+    rf::gr::matrix_scale.set(1.0f, 1.0f, 1.0f);
+    rf::gr::one_over_matrix_scale_z = 1.0f;
+
     // Commands
     fov_cmd.register_cmd();
     gamma_cmd.register_cmd();
