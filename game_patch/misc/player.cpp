@@ -12,6 +12,7 @@
 #include "../multi/multi.h"
 #include "../hud/multi_spectate.h"
 #include <common/utils/list-utils.h>
+#include <common/utils/string-utils.h>
 #include <common/config/GameConfig.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CallHook.h>
@@ -264,6 +265,20 @@ ConsoleCommand2 damage_screen_flash_cmd{
     "Toggle damage screen flash effect",
 };
 
+CallHook<void(rf::VMesh*, rf::Vector3*, rf::Matrix3*, void*)> player_cockpit_vmesh_render_hook{
+    0x004A7907,
+    [](rf::VMesh *vmesh, rf::Vector3 *pos, rf::Matrix3 *orient, void *params) {
+        rf::Matrix3 new_orient = *orient;
+
+        if (string_equals_ignore_case(rf::vmesh_get_name(vmesh), "driller01.vfx")) {
+            float m = static_cast<float>(rf::gr::screen_width()) / static_cast<float>(rf::gr::screen_height()) / (4.0 / 3.0);
+            new_orient.rvec *= m;
+        }
+
+        player_cockpit_vmesh_render_hook.call_target(vmesh, pos, &new_orient, params);
+    }
+};
+
 void player_do_patch()
 {
     // general hooks
@@ -312,6 +327,9 @@ void player_do_patch()
 
     // Support disabling of damage screen flash effect
     player_do_damage_screen_flash_hook.install();
+
+    // Stretch driller cockpit when using a wide-screen
+    player_cockpit_vmesh_render_hook.install();
 
     // Commands
     damage_screen_flash_cmd.register_cmd();
