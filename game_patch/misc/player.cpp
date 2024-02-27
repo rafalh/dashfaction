@@ -7,6 +7,7 @@
 #include "../rf/bmpman.h"
 #include "../rf/weapon.h"
 #include "../rf/hud.h"
+#include "../rf/input.h"
 #include "../os/console.h"
 #include "../main/main.h"
 #include "../multi/multi.h"
@@ -330,6 +331,9 @@ void player_do_patch()
 
     // Stretch driller cockpit when using a wide-screen
     player_cockpit_vmesh_render_hook.install();
+
+    // Change default 'Use' key to E
+    write_mem<u8>(0x0043D0A3 + 1, rf::KEY_E);
 
     // Commands
     damage_screen_flash_cmd.register_cmd();
