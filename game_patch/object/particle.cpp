@@ -52,12 +52,26 @@ CodeInjection particle_should_take_damage_injection{
     }
 };
 
-CodeInjection particle_move_all_update_world_pos_fix{
-    0x004964AE,
+CodeInjection particle_emitter_update_cull_radius_injection{
+    0x00497E13,
     [](auto& regs) {
         rf::ParticleEmitter* emitter = regs.esi;
-        rf::Vector3 dir;
-        emitter->get_pos_and_dir(&emitter->world_pos, &dir);
+        rf::Vector3 pos, dir;
+        emitter->get_pos_and_dir(&pos, &dir);
+
+        rf::Particle *p = emitter->particle_list.next;
+        float max_dist_sq = 0.0f;
+        float max_pradius = 0.0;
+
+        while (p != &emitter->particle_list) {
+            float dist_sq = (p->pos - pos).len_sq();
+            max_dist_sq = std::max(max_dist_sq, dist_sq);
+            max_pradius = std::max(max_pradius, p->radius);
+            p = p->next;
+        }
+
+        emitter->cull_radius = std::sqrt(max_dist_sq) + max_pradius;
+        regs.eip = 0x00497E2E;
     },
 };
 
@@ -81,6 +95,6 @@ void particle_do_patch()
     // Do not create not damaging particles on a dedicated server
     particle_create_hook.install();
 
-    // Fix cull radius calculation for particle emitters attached to objects
-    particle_move_all_update_world_pos_fix.install();
+    // Fix cull radius calculation for particle emitters
+    particle_emitter_update_cull_radius_injection.install();
 }

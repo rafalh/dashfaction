@@ -14,6 +14,7 @@ Version 1.8.1 (not released yet)
 - Change default 'Use' key to E
 - Fix "Play (camera)" editor button for level filenames with spaces
 - Fix a patch for a possible buffer overflow in "Play" editor button caused by a long filepath
+- Fix cull radius for particle emitters with growing particles
 
 Version 1.8.0 (released 2022-09-17)
 -----------------------------------
