@@ -371,7 +371,7 @@ CodeInjection vpackfile_init_injection{
 };
 
 CodeInjection CMainFrame_OnPlayLevelCmd_skip_level_dir_injection{
-    0x00447AC4,
+    0x004479AD,
     [](auto& regs) {
         char* level_pathname = regs.eax;
         regs.eax = std::strrchr(level_pathname, '\\') + 1;

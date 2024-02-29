@@ -13,6 +13,7 @@ Version 1.8.1 (not released yet)
 - Fix holes in driller cockpit on a widescreen display
 - Change default 'Use' key to E
 - Fix "Play (camera)" editor button for level filenames with spaces
+- Fix a patch for a possible buffer overflow in "Play" editor button caused by a long filepath
 
 Version 1.8.0 (released 2022-09-17)
 -----------------------------------
