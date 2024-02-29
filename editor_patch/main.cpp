@@ -22,13 +22,26 @@
 
 #define LAUNCHER_FILENAME "DashFactionLauncher.exe"
 
+constexpr size_t max_texture_name_len = 31;
+
 HMODULE g_module;
 bool g_skip_wnd_set_text = false;
 
-static auto& g_log_view = addr_as_ref<std::byte*>(0x006F9E68);
 static const auto g_editor_app = reinterpret_cast<std::byte*>(0x006F9DA0);
+static auto& g_main_frame = addr_as_ref<std::byte*>(0x006F9E68);
 
-static auto& log_wnd_append = addr_as_ref<int(void* self, const char* format, ...)>(0x00444980);
+static auto& LogDlg_Append = addr_as_ref<int(void* self, const char* format, ...)>(0x00444980);
+
+
+void *GetMainFrame()
+{
+    return struct_field_ref<void*>(g_editor_app, 0xC8);
+}
+
+void *GetLogDlg()
+{
+    return struct_field_ref<void*>(GetMainFrame(), 692);
+}
 
 HWND GetMainFrameHandle()
 {
@@ -163,8 +176,7 @@ void __fastcall group_mode_handle_selection_new(void* self)
     group_mode_handle_selection_hook.call_target(self);
     g_skip_wnd_set_text = false;
     // TODO: print
-    auto* log_view = *reinterpret_cast<void**>(g_log_view + 692);
-    log_wnd_append(log_view, "");
+    LogDlg_Append(GetLogDlg(), "");
 }
 FunHook<group_mode_handle_selection_type> group_mode_handle_selection_hook{0x00423460, group_mode_handle_selection_new};
 
@@ -176,8 +188,7 @@ void __fastcall brush_mode_handle_selection_new(void* self)
     brush_mode_handle_selection_hook.call_target(self);
     g_skip_wnd_set_text = false;
     // TODO: print
-    auto* log_view = *reinterpret_cast<void**>(g_log_view + 692);
-    log_wnd_append(log_view, "");
+    LogDlg_Append(GetLogDlg(), "");
 
 }
 FunHook<brush_mode_handle_selection_type> brush_mode_handle_selection_hook{0x0043F430, brush_mode_handle_selection_new};
@@ -410,6 +421,28 @@ CodeInjection CDedEvent_Copy_injection{
     },
 };
 
+CodeInjection texture_name_buffer_overflow_injection1{
+    0x00445297,
+    [](auto &regs) {
+        const char *filename = regs.esi;
+        if (std::strlen(filename) > max_texture_name_len) {
+            LogDlg_Append(GetLogDlg(), "Texture name too long: %s\n", filename);
+            regs.eip = 0x00445273;
+        }
+    },
+};
+
+CodeInjection texture_name_buffer_overflow_injection2{
+    0x004703EC,
+    [](auto &regs) {
+        const char *filename = regs.ebp;
+        if (std::strlen(filename) > max_texture_name_len) {
+            LogDlg_Append(GetLogDlg(), "Texture name too long: %s\n", filename);
+            regs.eip = 0x0047047F;
+        }
+    },
+};
+
 extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
 {
     InitLogging();
@@ -534,6 +567,10 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
 
     // Remove uid limit (50k) by removing cmp and jge instructions in FindBiggestUid function
     AsmWriter{0x004844AC, 0x004844B3}.nop();
+
+    // Ignore textures with filename longer than 31 characters to avoid buffer overflow errors
+    texture_name_buffer_overflow_injection1.install();
+    texture_name_buffer_overflow_injection2.install();
 
     return 1; // success
 }
