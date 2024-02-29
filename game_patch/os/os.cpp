@@ -4,8 +4,10 @@
 #include "../rf/os/os.h"
 #include "../rf/multi.h"
 #include "../rf/input.h"
+#include "../rf/crt.h"
 #include "../main/main.h"
 #include "win32_console.h"
+#include <xlog/xlog.h>
 
 const char* get_win_msg_name(UINT msg);
 
@@ -96,6 +98,37 @@ static FunHook<void()> os_close_hook{
     },
 };
 
+static FunHook<void(char*, bool)> os_parse_params_hook{
+    0x00523320,
+    [](char *cmdline, bool skip_first) {
+        std::string buf;
+        bool quote = false;
+        while (true) {
+            char c = *cmdline;
+            ++cmdline;
+
+            if ((!quote && c == ' ') || c == '\0') {
+                if (skip_first) {
+                    skip_first = false;
+                } else {
+                    rf::CmdArg &cmd_arg = rf::cmdline_args[rf::cmdline_num_args++];
+                    cmd_arg.arg = static_cast<char*>(rf::operator_new(buf.size() + 1));
+                    std::strcpy(cmd_arg.arg, buf.c_str());
+                    cmd_arg.is_done = false;
+                }
+                buf.clear();
+                if (!c) {
+                    break;
+                }
+            } else if (c == '"') {
+                quote = !quote;
+            } else {
+                buf += c;
+            }
+        }
+    },
+};
+
 void os_apply_patch()
 {
     // Process messages in the same thread as DX processing (alternative: D3DCREATE_MULTITHREADED)
@@ -112,6 +145,9 @@ void os_apply_patch()
     // Hooks for win32 console support
     os_init_window_server_hook.install();
     os_close_hook.install();
+
+    // Fix quotes support in cmdline parsing
+    os_parse_params_hook.install();
 
     // Apply patches from other files in 'os' dir
     void frametime_apply_patch();

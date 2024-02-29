@@ -262,6 +262,8 @@ void init_logging()
     char time_str[256];
     std::strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", tm);
     xlog::info("Current UTC time: %s", time_str);
+
+    xlog::info("Command line: %s", GetCommandLineA());
 }
 
 void log_system_info()

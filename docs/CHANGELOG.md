@@ -12,6 +12,7 @@ Version 1.8.1 (not released yet)
 - Add `gamma` command
 - Fix holes in driller cockpit on a widescreen display
 - Change default 'Use' key to E
+- Fix "Play (camera)" editor button for level filenames with spaces
 
 Version 1.8.0 (released 2022-09-17)
 -----------------------------------
