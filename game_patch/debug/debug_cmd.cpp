@@ -15,6 +15,7 @@ struct DebugFlagDesc
 
 bool g_dbg_geometry_rendering_stats = false;
 bool g_dbg_static_lights = false;
+bool g_dbg_particle_emitters = false;
 
 DebugFlagDesc g_debug_flags[] = {
     {addr_as_ref<bool>(0x0062F3AA), "thruster"},
@@ -30,6 +31,7 @@ DebugFlagDesc g_debug_flags[] = {
     {addr_as_ref<bool>(0x0062FE20), "perf"},
     {addr_as_ref<bool>(0x0062FE21), "perfbar"},
     {addr_as_ref<bool>(0x0064E39C), "waypoint"},
+    {g_dbg_particle_emitters, "particle_emitter"},
     // network meter in left-top corner
     {addr_as_ref<bool>(0x006FED24), "network", false, true},
     {addr_as_ref<bool>(0x007B2758), "particlestats"},
@@ -92,10 +94,13 @@ void debug_cmd_render()
 {
     const auto dbg_waypoints = addr_as_ref<void()>(0x00468F00);
     const auto dbg_internal_lights = addr_as_ref<void()>(0x004DB830);
+    const auto dbg_particle_emitters = addr_as_ref<void()>(0x00497E40);
 
     dbg_waypoints();
     if (g_dbg_static_lights)
         dbg_internal_lights();
+    if (g_dbg_particle_emitters)
+        dbg_particle_emitters();
 }
 
 void debug_cmd_render_ui()
