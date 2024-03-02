@@ -3,6 +3,7 @@
 #include <patch_common/AsmWriter.h>
 #include <xlog/xlog.h>
 #include "../rf/geometry.h"
+#include "../rf/mover.h"
 #include "../rf/gr/gr.h"
 #include "../rf/os/frametime.h"
 #include "../os/console.h"
@@ -241,6 +242,19 @@ CodeInjection level_load_lightmaps_color_conv_patch{
     },
 };
 
+CodeInjection shadow_render_one_injection{
+    0x004CB195,
+    [](auto& regs) {
+        void* svol = regs.eax;
+        auto& bbox_min = struct_field_ref<rf::Vector3>(svol, 0xE4);
+        auto& bbox_max = struct_field_ref<rf::Vector3>(svol, 0xF0);
+        rf::MoverBrush *mb = regs.esi;
+        if (!rf::bbox_intersect(bbox_min, bbox_max, mb->p_data.bbox_min, mb->p_data.bbox_max)) {
+            regs.eip = 0x004CB1DA;
+        }
+    },
+};
+
 void* __fastcall decals_farray_ctor(void* that)
 {
     return AddrCaller{0x004D3120}.this_call<void*>(that, 64);
@@ -402,6 +416,9 @@ void g_solid_do_patch()
 
     // lightmaps format conversion
     level_load_lightmaps_color_conv_patch.install();
+
+    // When rendering shadows check mover's bounding box before processing its faces
+    shadow_render_one_injection.install();
 
     // Change decals limit
     decal_patch_limit(512);

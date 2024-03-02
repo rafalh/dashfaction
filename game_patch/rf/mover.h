@@ -13,6 +13,6 @@ namespace rf
         GSolid *geometry;
     };
 
-    auto& mover_brush_list = addr_as_ref<MoverBrush>(0x0064E6E0);
+    static auto& mover_brush_list = addr_as_ref<MoverBrush>(0x0064E6E0);
 }
 

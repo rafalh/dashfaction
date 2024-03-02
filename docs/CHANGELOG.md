@@ -16,6 +16,7 @@ Version 1.8.1 (not released yet)
 - Fix a patch for a possible buffer overflow in "Play" editor button caused by a long filepath
 - Fix cull radius for particle emitters with growing particles
 - Skip textures with too long names (32+ characters) in editor to avoid buffer overflow
+- Speed up shadows rendering in levels with multiple detailed movers
 
 Version 1.8.0 (released 2022-09-17)
 -----------------------------------
