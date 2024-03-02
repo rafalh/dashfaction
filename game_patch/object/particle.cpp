@@ -1,6 +1,7 @@
 #include <patch_common/FunHook.h>
 #include <patch_common/AsmOpcodes.h>
 #include <patch_common/CodeInjection.h>
+#include <patch_common/AsmWriter.h>
 #include <xlog/xlog.h>
 #include "../rf/particle_emitter.h"
 #include "../rf/geometry.h"
@@ -53,7 +54,7 @@ CodeInjection particle_should_take_damage_injection{
 };
 
 CodeInjection particle_emitter_update_cull_radius_injection{
-    0x00497E13,
+    0x00497E08,
     [](auto& regs) {
         rf::ParticleEmitter* emitter = regs.esi;
         rf::Vector3 pos, dir;
@@ -97,4 +98,5 @@ void particle_do_patch()
 
     // Fix cull radius calculation for particle emitters
     particle_emitter_update_cull_radius_injection.install();
+    AsmWriter{0x00495216}.jmp(0x0049525B);
 }
