@@ -7,5 +7,5 @@
 #endif
 
 #define CRASHHANDLER_WEBSVC_ENABLED 1
-#define CRASHHANDLER_WEBSVC_URL "https://ravin.tk/api/rf/dashfaction/crashreport.php"
+#define CRASHHANDLER_WEBSVC_URL "https://dashfactionapi.rafalh.dev/crash-report"
 #define CRASHHANDLER_WEBSVC_AGENT "DashFaction"
