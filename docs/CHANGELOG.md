@@ -18,6 +18,7 @@ Version 1.8.1 (not released yet)
 - Skip textures with too long names (32+ characters) in editor to avoid buffer overflow
 - Speed up shadows rendering in levels with multiple detailed movers
 - Add `debug particle_emitter` subcommand (shows emitter cull radius)
+- Fix crash reporter URL
 
 Version 1.8.0 (released 2022-09-17)
 -----------------------------------
@@ -72,7 +73,6 @@ Version 1.8.0 (released 2022-09-17)
 - Change default FPS limit to 120 to comply with the stock game
 - Fix loading a save game when player entity is out of level bounds
 - Fix possible freeze when burning entity is destroyed
-- Fix crash reporter URL
 
 Version 1.7.0 (released 2021-06-05)
 -----------------------------------
