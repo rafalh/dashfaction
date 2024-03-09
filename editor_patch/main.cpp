@@ -572,6 +572,17 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     texture_name_buffer_overflow_injection1.install();
     texture_name_buffer_overflow_injection2.install();
 
+    // Increase face limit in g_boolean_find_all_pairs
+    static void *found_faces_a[0x10000];
+    static void *found_faces_b[0x10000];
+    write_mem_ptr(0x004A7290+3, found_faces_a);
+    write_mem_ptr(0x004A7158+1, found_faces_a);
+    write_mem_ptr(0x004A72E5+4, found_faces_a);
+    write_mem_ptr(0x004A717D+1, found_faces_b);
+    write_mem_ptr(0x004A71A6+1, found_faces_b);
+    write_mem_ptr(0x004A72A2+3, found_faces_b);
+    write_mem_ptr(0x004A72F9+1, found_faces_b);
+
     return 1; // success
 }
 
