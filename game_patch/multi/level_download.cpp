@@ -385,11 +385,15 @@ class LevelDownloadManager
 public:
     void abort()
     {
-        operation_.reset();
+        if (operation_) {
+            xlog::info("Aborting level download");
+            operation_.reset();
+        }
     }
 
     LevelDownloadOperation& start(const char* level_filename, std::unique_ptr<LevelDownloadOperation::Listener>&& listener)
     {
+        xlog::info("Starting level download: %s", level_filename);
         return operation_.emplace(level_filename, std::move(listener));
     }
 
@@ -590,9 +594,26 @@ static bool next_level_exists()
     return file.find(rf::level.next_level_filename);
 }
 
+CallHook<void(rf::GameState, bool)> process_enter_limbo_packet_gameseq_set_next_state_hook{
+    0x0047C091,
+    [](rf::GameState state, bool force) {
+        xlog::trace("Enter limbo");
+        if (rf::gameseq_get_state() == rf::GS_MULTI_LEVEL_DOWNLOAD) {
+            // Level changes before we finish downloading the previous one
+            // Do not enter the limbo game state because it would crash the game if there is currently no level loaded
+            // Instead stay in the level download state until we get the leave limbo packet and download the correct level
+            LevelDownloadManager::instance().abort();
+        }
+        else {
+            process_enter_limbo_packet_gameseq_set_next_state_hook.call_target(state, force);
+        }
+    },
+};
+
 CallHook<void(rf::GameState, bool)> process_leave_limbo_packet_gameseq_set_next_state_hook{
     0x0047C24F,
     [](rf::GameState state, bool force) {
+        xlog::trace("Leave limbo - next level: %s", rf::level.next_level_filename.c_str());
         if (!next_level_exists()) {
             rf::gameseq_set_state(rf::GS_MULTI_LEVEL_DOWNLOAD, false);
             LevelDownloadManager::instance().start(rf::level.next_level_filename,
@@ -663,6 +684,7 @@ void level_download_do_patch()
 {
     join_failed_injection.install();
     game_new_game_gameseq_set_next_state_hook.install();
+    process_enter_limbo_packet_gameseq_set_next_state_hook.install();
     process_leave_limbo_packet_gameseq_set_next_state_hook.install();
 }
 
