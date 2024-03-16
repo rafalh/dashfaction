@@ -447,6 +447,9 @@ void apply_sound_patches()
 
     // eax_ks_property_set should not call Release, since it is a weak pointer.
     AsmWriter{0x00527EE0, 0x00527EE4}.nop();
+
+    // Change default volume to 0.5
+    write_mem<float>(0x00506192 + 1, 0.5f);
 }
 
 void register_sound_commands()
