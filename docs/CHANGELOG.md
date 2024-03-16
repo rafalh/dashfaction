@@ -24,6 +24,7 @@ Version 1.8.1 (not released yet)
 - Adjust letterbox effects in cutscenes and after death for wide screens
 - Add support for bik files (Bink videos) in mods
 - Hide player riot shield third person model in cutscenes
+- Fix player third person weapon model animations after loading the game from a save file
 
 Version 1.8.0 (released 2022-09-17)
 -----------------------------------

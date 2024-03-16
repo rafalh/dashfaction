@@ -280,6 +280,15 @@ CallHook<void(rf::VMesh*, rf::Vector3*, rf::Matrix3*, void*)> player_cockpit_vme
     }
 };
 
+CodeInjection sr_load_player_weapon_anims_injection{
+    0x004B4F9E,
+    [](auto& regs) {
+        rf::Entity *ep = regs.ebp;
+        static auto& entity_update_weapon_animations = addr_as_ref<void(void*, int)>(0x0042AB20);
+        entity_update_weapon_animations(ep, ep->ai.current_primary_weapon);
+    },
+};
+
 void player_do_patch()
 {
     // general hooks
@@ -331,6 +340,10 @@ void player_do_patch()
 
     // Stretch driller cockpit when using a wide-screen
     player_cockpit_vmesh_render_hook.install();
+
+    // Load correct third person weapon animations when restoring the game from a save file
+    // Fixes mirror reflections and view from third person camera
+    sr_load_player_weapon_anims_injection.install();
 
     // Change default 'Use' key to E
     write_mem<u8>(0x0043D0A3 + 1, rf::KEY_E);
