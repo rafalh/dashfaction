@@ -187,6 +187,20 @@ CodeInjection entity_fire_update_all_freeze_fix{
     },
 };
 
+CodeInjection entity_process_pre_hide_riot_shield_injection{
+    0x0041DAFF,
+    [](auto& regs) {
+        rf::Entity* ep = regs.esi;
+        int hidden = regs.eax;
+        if (hidden) {
+            auto shield = rf::obj_from_handle(ep->riot_shield_handle);
+            if (shield) {
+                rf::obj_hide(shield);
+            }
+        }
+    },
+};
+
 void entity_do_patch()
 {
     // Fix player being stuck to ground when jumping, especially when FPS is greater than 200
@@ -235,4 +249,7 @@ void entity_do_patch()
 
     // Fix possible freeze when burning entity is destroyed
     entity_fire_update_all_freeze_fix.install();
+
+    // Hide riot shield third person model if entity is hidden (e.g. in cutscenes)
+    entity_process_pre_hide_riot_shield_injection.install();
 }

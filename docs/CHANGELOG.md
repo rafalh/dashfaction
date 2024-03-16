@@ -23,6 +23,7 @@ Version 1.8.1 (not released yet)
 - Fix various issues when server switches to a new level before player finishes downloading the previous one
 - Adjust letterbox effects in cutscenes and after death for wide screens
 - Add support for bik files (Bink videos) in mods
+- Hide player riot shield third person model in cutscenes
 
 Version 1.8.0 (released 2022-09-17)
 -----------------------------------
