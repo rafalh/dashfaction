@@ -477,6 +477,9 @@ void misc_init()
     AsmWriter{0x0045514E}.nop(5);
     AsmWriter{0x0045515B}.nop(5);
 
+    // Add support for Bink videos in mods
+    write_mem_ptr(0x004B174A + 1, ".vpp .bik");
+
     // Apply patches from other files
     apply_main_menu_patches();
     apply_save_restore_patches();
