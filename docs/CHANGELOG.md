@@ -20,6 +20,7 @@ Version 1.8.1 (not released yet)
 - Add `debug particle_emitter` subcommand (shows emitter cull radius)
 - Fix crash reporter URL
 - Fix buffer-overflow when importing mesh with more than 8000 faces in the editor
+- Fix various issues when server switches to a new level before player finishes downloading the previous one
 
 Version 1.8.0 (released 2022-09-17)
 -----------------------------------
