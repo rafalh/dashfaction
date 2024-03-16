@@ -44,5 +44,5 @@ namespace rf
 
     static auto& active_cutscene = addr_as_ref<Cutscene*>(0x00645320);
 
-    static auto& cutscene_is_active = addr_as_ref<bool()>(0x0045BE80);
+    static auto& cutscene_is_playing = addr_as_ref<bool()>(0x0045BE80);
 }

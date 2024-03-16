@@ -64,7 +64,7 @@ FunHook<void(bool)> cutscene_do_frame_hook{
             xlog::info("Skipping cutscene...");
             disable_sound_before_cutscene_skip();
 
-            while (rf::cutscene_is_active()) {
+            while (rf::cutscene_is_playing()) {
                 int shot_time_left_ms = rf::active_cutscene->next_stage_timestamp.time_until();
 
                 if (rf::active_cutscene->current_script_index == rf::active_cutscene->num_cam_scripts - 1) {

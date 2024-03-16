@@ -11,6 +11,7 @@
 #include "../rf/ui.h"
 #include "../rf/gameseq.h"
 #include "../rf/level.h"
+#include "../rf/cutscene.h"
 #include "../multi/multi.h"
 
 static std::unique_ptr<byte* []> g_screenshot_scanlines_buf;
@@ -163,6 +164,26 @@ static FunHook<void(rf::GameState, bool)> rf_do_state_hook{
     },
 };
 
+int letterbox_clip_height()
+{
+    // return std::min(9 * rf::gr::screen_width() / 16, rf::gr::screen_height() * 91 / 100);
+    return rf::gr::screen_height() * 3 / 4;
+}
+
+CodeInjection gameplay_render_frame_cutscene_letterbox_injection{
+    0x00431B30,
+    [](auto& regs) {
+        regs.esi = letterbox_clip_height();
+    },
+};
+
+CodeInjection gameplay_render_frame_death_letterbox_injection{
+    0x00432A82,
+    [](auto& regs) {
+        regs.edi = letterbox_clip_height();
+    },
+};
+
 void game_apply_patch()
 {
     // Override screenshot filename and directory
@@ -180,6 +201,10 @@ void game_apply_patch()
 
     // States support
     rf_do_state_hook.install();
+
+    // Adjust letterbox effects for wide screens
+    gameplay_render_frame_cutscene_letterbox_injection.install();
+    gameplay_render_frame_death_letterbox_injection.install();
 
     // Commands
     screenshot_cmd.register_cmd();
