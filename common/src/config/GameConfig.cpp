@@ -1,5 +1,6 @@
 #include <common/config/GameConfig.h>
 #include <common/config/RegKey.h>
+#include <common/version/version.h>
 #include <shlwapi.h>
 #include <algorithm>
 
@@ -20,6 +21,14 @@ bool GameConfig::load() try
 
     if (game_executable_path.value().empty() && !detect_game_path()) {
         game_executable_path = fallback_executable_path;
+    }
+
+    if (tracker.value() == "rf.thqmultiplay.net") {
+        if (dash_faction_version.value().empty() || dash_faction_version.value() != VERSION_STR) {
+            // Replace legacy tracker with the FactionFiles one if the tracker is unconfigured or the Dash version is different
+            tracker = default_rf_tracker;
+            dash_faction_version = VERSION_STR;
+        }
     }
 
     if (update_rate == 0) {
