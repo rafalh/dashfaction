@@ -1,16 +1,17 @@
-#include <patch_common/CallHook.h>
-#include <patch_common/FunHook.h>
-#include <patch_common/AsmWriter.h>
-#include <common/version/version.h>
-#include "console.h"
+#include "../rf/os/frametime.h"
+#include "../hud/hud.h"
+#include "../main/main.h"
+#include "../rf/gameseq.h"
 #include "../rf/gr/gr.h"
 #include "../rf/gr/gr_font.h"
-#include "../rf/multi.h"
-#include "../rf/gameseq.h"
 #include "../rf/hud.h"
-#include "../rf/os/frametime.h"
-#include "../main/main.h"
-#include "../hud/hud.h"
+#include "../rf/level.h"
+#include "../rf/multi.h"
+#include "console.h"
+#include <common/version/version.h>
+#include <patch_common/AsmWriter.h>
+#include <patch_common/CallHook.h>
+#include <patch_common/FunHook.h>
 
 static float g_frametime_history[1024];
 static int g_frametime_history_index = 0;
@@ -57,11 +58,36 @@ static void frametime_render_fps_counter()
     }
 }
 
+static void frametime_render_bomb_derandomized()
+{
+    // This only actually needs to be displayed on L20S3 but you can't access
+    // the level.filename at this point in code (as this is drawn even when no
+    // level loaded e.g. on load screens etc.), and having it always showing helps
+    // prevent splicing for speedruns etc
+    if (g_game_config.derandomize_bomb) {
+        auto text = string_format("No Bomb RNG", "null");
+        rf::gr::set_color(0, 255, 0, 255);
+        int x = rf::gr::screen_width() - (g_game_config.big_hud ? 180 : 105);
+        int y = g_game_config.fps_counter ? 20 : 10;
+        if (rf::gameseq_in_gameplay()) {
+            y = g_game_config.big_hud ? 120 : 70;
+            if (hud_weapons_is_double_ammo()) {
+                y += g_game_config.big_hud ? 80 : 40;
+            }
+        }
+
+        int font_id = hud_get_default_font();
+        rf::gr::string(x, y, text.c_str(), font_id);
+    }
+}
+
 void frametime_render_ui()
 {
     frametime_render_fps_counter();
     frametime_render_graph();
+    frametime_render_bomb_derandomized();
 }
+
 
 ConsoleCommand2 fps_counter_cmd{
     "fps_counter",
@@ -90,7 +116,8 @@ FunHook<void()> frametime_reset_hook{
         frametime_reset_hook.call_target();
 
         // Set initial FPS limit
-        unsigned max_fps = rf::is_dedicated_server ? g_game_config.server_max_fps.value() : g_game_config.max_fps.value();
+        unsigned max_fps =
+            rf::is_dedicated_server ? g_game_config.server_max_fps.value() : g_game_config.max_fps.value();
         rf::frametime_min = 1.0f / static_cast<float>(max_fps);
     },
 };
@@ -121,9 +148,7 @@ ConsoleCommand2 max_fps_cmd{
 
 ConsoleCommand2 frametime_graph_cmd{
     "frametime_graph",
-    []() {
-        g_show_frametime_graph = !g_show_frametime_graph;
-    },
+    []() { g_show_frametime_graph = !g_show_frametime_graph; },
 };
 
 void frametime_apply_patch()

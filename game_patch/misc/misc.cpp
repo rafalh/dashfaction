@@ -1,25 +1,25 @@
-#include <windows.h>
-#include <common/version/version.h>
+#include "misc.h"
+#include "../main/main.h"
+#include "../object/object.h"
+#include "../os/console.h"
+#include "../rf/gameseq.h"
+#include "../rf/gr/gr.h"
+#include "../rf/misc.h"
+#include "../rf/multi.h"
+#include "../rf/os/os.h"
+#include "../rf/player/player.h"
+#include "../rf/vmesh.h"
+#include "../sound/sound.h"
 #include <common/config/BuildConfig.h>
-#include <xlog/xlog.h>
+#include <common/version/version.h>
+#include <cstring>
 #include <patch_common/AsmOpcodes.h>
 #include <patch_common/AsmWriter.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/CodeInjection.h>
 #include <patch_common/FunHook.h>
-#include <cstring>
-#include "misc.h"
-#include "../sound/sound.h"
-#include "../os/console.h"
-#include "../main/main.h"
-#include "../rf/gr/gr.h"
-#include "../rf/player/player.h"
-#include "../rf/multi.h"
-#include "../rf/gameseq.h"
-#include "../rf/os/os.h"
-#include "../rf/misc.h"
-#include "../rf/vmesh.h"
-#include "../object/object.h"
+#include <windows.h>
+#include <xlog/xlog.h>
 
 void apply_main_menu_patches();
 void apply_save_restore_patches();
@@ -79,6 +79,26 @@ CodeInjection level_read_data_check_restore_status_patch{
     },
 };
 
+CodeInjection derandomize_bomb{
+    0x0043b4c7,
+    [](auto& regs) {
+        write_mem<i32>(0x0063914C, 1);
+        write_mem<i32>(0x0063914C + 4, 1);
+        write_mem<i32>(0x0063914C + 8, 3);
+        write_mem<i32>(0x0063914C + 12, 2);
+
+        write_mem<i32>(0x006390D8, 3);
+        write_mem<i32>(0x006390D8 + 4, 2);
+        write_mem<i32>(0x006390D8 + 8, 1);
+        write_mem<i32>(0x006390D8 + 12, 0);
+        write_mem<i32>(0x006390D8 + 16, 0);
+        write_mem<i32>(0x006390D8 + 20, 2);
+        write_mem<i32>(0x006390D8 + 24, 1);
+
+        regs.eip = 0x0043b632;
+    },
+};
+
 void set_jump_to_multi_server_list(bool jump)
 {
     g_jump_to_multi_server_list = jump;
@@ -93,7 +113,9 @@ void start_join_multi_game_sequence(const rf::NetAddr& addr, const std::string& 
 bool multi_join_game(const rf::NetAddr& addr, const std::string& password)
 {
     auto multi_set_current_server_addr = addr_as_ref<void(const rf::NetAddr& addr)>(0x0044B380);
-    auto send_join_req_packet = addr_as_ref<void(const rf::NetAddr& addr, rf::String::Pod name, rf::String::Pod password, int max_rate)>(0x0047AA40);
+    auto send_join_req_packet =
+        addr_as_ref<void(const rf::NetAddr& addr, rf::String::Pod name, rf::String::Pod password, int max_rate)>(
+            0x0047AA40);
 
     if (rf::gameseq_get_state() != rf::GS_MULTI_SERVER_LIST) {
         return false;
@@ -110,10 +132,11 @@ FunHook<void(int, int)> rf_init_state_hook{
     0x004B1AC0,
     [](int state, int old_state) {
         rf_init_state_hook.call_target(state, old_state);
-        xlog::trace("state %d old_state %d g_jump_to_multi_server_list %d", state, old_state, g_jump_to_multi_server_list);
+        xlog::trace("state %d old_state %d g_jump_to_multi_server_list %d", state, old_state,
+                    g_jump_to_multi_server_list);
 
-        bool exiting_game = state == rf::GS_MAIN_MENU &&
-            (old_state == rf::GS_END_GAME || old_state == rf::GS_NEW_LEVEL);
+        bool exiting_game =
+            state == rf::GS_MAIN_MENU && (old_state == rf::GS_END_GAME || old_state == rf::GS_NEW_LEVEL);
         if (exiting_game && g_in_mp_game) {
             g_in_mp_game = false;
             g_jump_to_multi_server_list = true;
@@ -164,24 +187,18 @@ FunHook<void()> multi_after_players_packet_hook{
     },
 };
 
-CodeInjection mover_rotating_keyframe_oob_crashfix{
-    0x0046A559,
-    [](auto& regs) {
-        float& unk_time = *reinterpret_cast<float*>(regs.esi + 0x308);
-        unk_time = 0;
-        regs.eip = 0x0046A89D;
-    }
-};
+CodeInjection mover_rotating_keyframe_oob_crashfix{0x0046A559, [](auto& regs) {
+                                                       float& unk_time = *reinterpret_cast<float*>(regs.esi + 0x308);
+                                                       unk_time = 0;
+                                                       regs.eip = 0x0046A89D;
+                                                   }};
 
-CodeInjection parser_xstr_oob_fix{
-    0x0051212E,
-    [](auto& regs) {
-        if (regs.edi >= 1000) {
-            xlog::warn("XSTR index is out of bounds: %d!", static_cast<int>(regs.edi));
-            regs.edi = -1;
-        }
-    }
-};
+CodeInjection parser_xstr_oob_fix{0x0051212E, [](auto& regs) {
+                                      if (regs.edi >= 1000) {
+                                          xlog::warn("XSTR index is out of bounds: %d!", static_cast<int>(regs.edi));
+                                          regs.edi = -1;
+                                      }
+                                  }};
 
 CodeInjection ammo_tbl_buffer_overflow_fix{
     0x004C218E,
@@ -311,7 +328,8 @@ CodeInjection glass_shard_level_init_fix{
     },
 };
 
-int debug_print_hook(char* buf, const char *fmt, ...) {
+int debug_print_hook(char* buf, const char* fmt, ...)
+{
     va_list vl;
     va_start(vl, fmt);
     int ret = vsprintf(buf, fmt, vl);
@@ -322,7 +340,7 @@ int debug_print_hook(char* buf, const char *fmt, ...) {
 
 CallHook<int(char*, const char*)> skeleton_pagein_debug_print_patch{
     0x0053AA73,
-    reinterpret_cast<int(*)(char*, const char*)>(debug_print_hook),
+    reinterpret_cast<int (*)(char*, const char*)>(debug_print_hook),
 };
 
 CodeInjection level_load_items_crash_fix{
@@ -360,20 +378,21 @@ CodeInjection explosion_crash_fix{
     },
 };
 
-CallHook<void(rf::Vector3*, float, float, float, float, bool, int, int)> level_read_geometry_header_light_add_directional_hook{
-    0x004619E1,
-    [](rf::Vector3 *dir, float intensity, float r, float g, float b, bool is_dynamic, int casts_shadow, int dropoff_type) {
-        if (rf::gr::lighting_enabled()) {
-            level_read_geometry_header_light_add_directional_hook.call_target(dir, intensity, r, g, b, is_dynamic, casts_shadow, dropoff_type);
-        }
-    },
-};
+CallHook<void(rf::Vector3*, float, float, float, float, bool, int, int)>
+    level_read_geometry_header_light_add_directional_hook{
+        0x004619E1,
+        [](rf::Vector3* dir, float intensity, float r, float g, float b, bool is_dynamic, int casts_shadow,
+           int dropoff_type) {
+            if (rf::gr::lighting_enabled()) {
+                level_read_geometry_header_light_add_directional_hook.call_target(dir, intensity, r, g, b, is_dynamic,
+                                                                                  casts_shadow, dropoff_type);
+            }
+        },
+    };
 
 CodeInjection vfile_read_stack_corruption_fix{
     0x0052D0E0,
-    [](auto& regs) {
-        regs.esi = regs.eax;
-    },
+    [](auto& regs) { regs.esi = regs.eax; },
 };
 
 void misc_init()
@@ -465,6 +484,10 @@ void misc_init()
 
     // Fix stack corruption when packfile has lower size than expected
     vfile_read_stack_corruption_fix.install();
+
+    if (g_game_config.derandomize_bomb) {
+        derandomize_bomb.install();
+    }
 
     // Improve parse error message
     // For some reason RF replaces all characters with code lower than 0x20 (space) by character with code 0x16 (SYN)
