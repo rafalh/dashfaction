@@ -559,14 +559,14 @@ namespace df::gr::d3d11
     static void render_face_dynamic_decals(GFace* face)
     {
         constexpr int max_decal_poly_vertices = 25;
-        Vector3 verts[max_decal_poly_vertices];
-        Vector2 uvs[max_decal_poly_vertices];
+        static Vector3 verts[max_decal_poly_vertices];
+        static Vector2 uvs[max_decal_poly_vertices];
 
         auto dp = face->decal_list;
         while (dp) {
             GDecal* decal = dp->my_decal;
             if (!(decal->flags & DF_LEVEL_DECAL)) {
-                int nv = dp->nv;
+                int nv = std::min(dp->nv, max_decal_poly_vertices);
                 for (int i = 0; i < nv; ++i) {
                     verts[i] = dp->verts[i].pos;
                     uvs[i] = dp->verts[i].uv;
