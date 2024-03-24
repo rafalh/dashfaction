@@ -333,10 +333,8 @@ namespace df::gr::d3d11
                 D3D11_USAGE_DYNAMIC,
                 D3D11_CPU_ACCESS_WRITE,
             };
-            ComPtr<ID3D11Device> device;
-            render_context.device_context()->GetDevice(&device);
             DF_GR_D3D11_CHECK_HR(
-                device->CreateBuffer(&morphed_vb_0_desc, nullptr, &morphed_vertex_buffer_0_)
+                render_context.device()->CreateBuffer(&morphed_vb_0_desc, nullptr, &morphed_vertex_buffer_0_)
             );
         }
 
