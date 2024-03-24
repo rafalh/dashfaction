@@ -264,6 +264,15 @@ namespace df::gr::d3d11
             }
         },
     };
+
+    static CodeInjection level_page_out_injection{
+        0x0045CB83,
+        []() {
+            if (renderer) {
+                renderer->flush_caches();
+            }
+        },
+    };
 }
 
 void gr_d3d11_apply_patch()
@@ -277,6 +286,7 @@ void gr_d3d11_apply_patch()
     v3d_page_in_injection.install();
     character_instance_page_in_injection.install();
     level_page_in_injection.install();
+    level_page_out_injection.install();
 
     // Do not use built-in render cache
     AsmWriter{0x004F0B90}.jmp(clear_solid_render_cache); // g_render_cache_clear

@@ -121,6 +121,7 @@ namespace df::gr::d3d11
         void page_in_character_mesh(rf::VifLodMesh* lod_mesh);
         void page_in_solid(rf::GSolid* solid);
         void page_in_movable_solid(rf::GSolid* solid);
+        void flush_caches();
 
     private:
         void init_device();

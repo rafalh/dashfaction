@@ -140,6 +140,11 @@ namespace df::gr::d3d11
             TextureManager& texture_manager
         );
 
+        ID3D11Device* device() const
+        {
+            return device_;
+        }
+
         ID3D11DeviceContext* device_context() const
         {
             return device_context_;

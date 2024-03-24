@@ -498,4 +498,10 @@ namespace df::gr::d3d11
     {
         solid_renderer_->page_in_movable_solid(solid);
     }
+
+    void Renderer::flush_caches()
+    {
+        mesh_renderer_->flush_caches();
+    }
+
 }

@@ -18,6 +18,9 @@ using namespace rf;
 
 namespace df::gr::d3d11
 {
+    constexpr unsigned initial_vb_size = 6000;
+    constexpr unsigned initial_ib_size = 10000;
+
     static bool is_vif_chunk_double_sided(const VifChunk& chunk)
     {
         for (int face_index = 0; face_index < chunk.num_faces; ++face_index) {
@@ -34,20 +37,10 @@ namespace df::gr::d3d11
     class MeshRenderCache : public BaseMeshRenderCache
     {
     public:
-        MeshRenderCache(VifLodMesh* lod_mesh, ID3D11Device* device);
-
-        void bind_buffers(RenderContext& render_context)
-        {
-            render_context.set_vertex_buffer(vertex_buffer_, sizeof(GpuVertex));
-            render_context.set_index_buffer(index_buffer_);
-        }
-
-    private:
-        ComPtr<ID3D11Buffer> vertex_buffer_;
-        ComPtr<ID3D11Buffer> index_buffer_;
+        MeshRenderCache(VifLodMesh* lod_mesh, BufferWrapper& vertex_buffer, BufferWrapper& index_buffer, RenderContext& render_context);
     };
 
-    MeshRenderCache::MeshRenderCache(VifLodMesh* lod_mesh, ID3D11Device* device) :
+    MeshRenderCache::MeshRenderCache(VifLodMesh* lod_mesh, BufferWrapper& vertex_buffer, BufferWrapper& index_buffer, RenderContext& render_context) :
         BaseMeshRenderCache(lod_mesh)
     {
         std::size_t num_verts = 0;
@@ -74,7 +67,7 @@ namespace df::gr::d3d11
             for (int chunk_index = 0; chunk_index < mesh->num_chunks; ++chunk_index) {
                 rf::VifChunk& chunk = mesh->chunks[chunk_index];
                 std::size_t start_index = gpu_inds.size();
-                std::size_t base_vertex = gpu_verts.size();
+                std::size_t base_vertex = vertex_buffer.size() + gpu_verts.size();
                 bool double_sided = is_vif_chunk_double_sided(chunk);
 
                 for (int vert_index = 0; vert_index < chunk.num_vecs; ++vert_index) {
@@ -109,31 +102,14 @@ namespace df::gr::d3d11
 
                 int num_indices = gpu_inds.size() - start_index;
                 meshes_[lod_index].batches.emplace_back(
-                    start_index, num_indices, base_vertex,
+                    index_buffer.size() + start_index, num_indices, base_vertex,
                     chunk.texture_idx, chunk.mode, double_sided);
             }
         }
         xlog::debug("Creating mesh geometry buffers: verts %d inds %d", gpu_verts.size(), gpu_inds.size());
 
-        CD3D11_BUFFER_DESC vb_desc{
-            sizeof(gpu_verts[0]) * gpu_verts.size(),
-            D3D11_BIND_VERTEX_BUFFER,
-            D3D11_USAGE_IMMUTABLE,
-        };
-        D3D11_SUBRESOURCE_DATA vb_subres_data{gpu_verts.data(), 0, 0};
-        DF_GR_D3D11_CHECK_HR(
-            device->CreateBuffer(&vb_desc, &vb_subres_data, &vertex_buffer_)
-        );
-
-        CD3D11_BUFFER_DESC ib_desc{
-            sizeof(gpu_inds[0]) * gpu_inds.size(),
-            D3D11_BIND_INDEX_BUFFER,
-            D3D11_USAGE_IMMUTABLE,
-        };
-        D3D11_SUBRESOURCE_DATA ib_subres_data{gpu_inds.data(), 0, 0};
-        DF_GR_D3D11_CHECK_HR(
-            device->CreateBuffer(&ib_desc, &ib_subres_data, &index_buffer_)
-        );
+        vertex_buffer.write(gpu_verts.data(), gpu_verts.size(), render_context);
+        index_buffer.write(gpu_inds.data(), gpu_inds.size(), render_context);
     }
 
     struct alignas(16) BoneTransformsBufferData
@@ -389,7 +365,9 @@ namespace df::gr::d3d11
 
     MeshRenderer::MeshRenderer(ComPtr<ID3D11Device> device, ShaderManager& shader_manager,
         [[maybe_unused]] StateManager& state_manager, RenderContext& render_context) :
-        device_{std::move(device)}, render_context_{render_context}
+        device_{std::move(device)}, render_context_{render_context},
+        v3d_vb_{initial_vb_size, sizeof(GpuVertex), D3D11_BIND_VERTEX_BUFFER, device_},
+        v3d_ib_{initial_ib_size, sizeof(rf::ushort), D3D11_BIND_INDEX_BUFFER, device_}
     {
         standard_vertex_shader_ = shader_manager.get_vertex_shader(VertexShaderId::standard);
         character_vertex_shader_ = shader_manager.get_vertex_shader(VertexShaderId::character);
@@ -409,9 +387,10 @@ namespace df::gr::d3d11
         render_context_.set_vertex_shader(standard_vertex_shader_);
         render_context_.set_pixel_shader(pixel_shader_);
         render_context_.set_model_transform(pos, orient);
+        render_context_.set_vertex_buffer(v3d_vb_.buffer(), sizeof(GpuVertex));
+        render_context_.set_index_buffer(v3d_ib_.buffer());
 
         auto render_cache = reinterpret_cast<MeshRenderCache*>(lod_mesh->render_cache);
-        render_cache->bind_buffers(render_context_);
         draw_cached_mesh(lod_mesh, *render_cache, params, lod_index);
     }
 
@@ -440,7 +419,6 @@ namespace df::gr::d3d11
         render_cache->update_bone_transforms_buffer(ci, render_context_);
         render_cache->bind_buffers(render_context_, morphed);
         draw_cached_mesh(lod_mesh, *render_cache, params, lod_index);
-        //render_context_.bind_vs_cbuffer(3, nullptr);
     }
 
     void MeshRenderer::clear_vif_cache(rf::VifLodMesh *lod_mesh)
@@ -538,7 +516,7 @@ namespace df::gr::d3d11
     void MeshRenderer::page_in_v3d_mesh(rf::VifLodMesh* lod_mesh)
     {
         if (!lod_mesh->render_cache) {
-            auto p = render_caches_.insert_or_assign(lod_mesh, std::make_unique<MeshRenderCache>(lod_mesh, device_));
+            auto p = render_caches_.insert_or_assign(lod_mesh, std::make_unique<MeshRenderCache>(lod_mesh, v3d_vb_, v3d_ib_, render_context_));
             lod_mesh->render_cache = p.first->second.get();
         }
     }
@@ -549,5 +527,64 @@ namespace df::gr::d3d11
             auto p = render_caches_.insert_or_assign(lod_mesh, std::make_unique<CharacterMeshRenderCache>(lod_mesh, device_));
             lod_mesh->render_cache = p.first->second.get();
         }
+    }
+
+    void MeshRenderer::flush_caches()
+    {
+        for (auto& it : render_caches_) {
+            it.first->render_cache = nullptr;
+        }
+        render_caches_.clear();
+
+        v3d_vb_.clear();
+        v3d_ib_.clear();
+    }
+
+    BufferWrapper::BufferWrapper(unsigned initial_capacity, unsigned el_size, D3D11_BIND_FLAG bind_flag, ID3D11Device* device) :
+        bind_flag_(bind_flag), capacity_(initial_capacity), el_size_(el_size)
+    {
+        create_buffer(device);
+    }
+
+    void BufferWrapper::create_buffer(ID3D11Device* device)
+    {
+        CD3D11_BUFFER_DESC desc{
+            el_size_ * capacity_,
+            bind_flag_,
+            D3D11_USAGE_DEFAULT,
+        };
+        DF_GR_D3D11_CHECK_HR(
+            device->CreateBuffer(&desc, nullptr, &buffer_)
+        );
+    }
+
+    void BufferWrapper::write(void* data, unsigned n, RenderContext& render_context)
+    {
+        if (size_ + n > capacity_) {
+            unsigned new_cap = std::max(capacity_ * 2, size_ + n);
+            xlog::info("Reallocating mesh buffer: %u", new_cap);
+            reserve(new_cap, render_context);
+        }
+
+        unsigned offset = size_ * el_size_;
+        unsigned bytes_to_write = n * el_size_;
+        D3D11_BOX box{offset, 0, 0, offset + bytes_to_write, 1, 1};
+        render_context.device_context()->UpdateSubresource(buffer_, 0, &box, data, bytes_to_write, bytes_to_write);
+        size_ += n;
+    }
+
+    void BufferWrapper::reserve(unsigned n, RenderContext& render_context)
+    {
+        if (n <= capacity_) {
+            return;
+        }
+        capacity_ = n;
+
+        ComPtr<ID3D11Buffer> old_buffer = std::move(buffer_);
+
+        create_buffer(render_context.device());
+
+        D3D11_BOX box{0, 0, 0, size_ * el_size_, 1, 1};
+        render_context.device_context()->CopySubresourceRegion(buffer_, 0, 0, 0, 0, old_buffer, 0, &box);
     }
 }

@@ -56,6 +56,39 @@ namespace df::gr::d3d11
         std::vector<Mesh> meshes_;
     };
 
+
+    class BufferWrapper
+    {
+    public:
+        BufferWrapper(unsigned initial_capacity, unsigned el_size, D3D11_BIND_FLAG bind_flag, ID3D11Device* device);
+        void write(void* data, unsigned n, RenderContext& render_context);
+        void reserve(unsigned n, RenderContext& render_context);
+
+        void clear()
+        {
+            size_ = 0;
+        }
+
+        unsigned size() const
+        {
+            return size_;
+        }
+
+        ID3D11Buffer* buffer()
+        {
+            return buffer_;
+        }
+
+    private:
+        ComPtr<ID3D11Buffer> buffer_;
+        unsigned size_ = 0;
+        D3D11_BIND_FLAG bind_flag_;
+        unsigned capacity_;
+        unsigned el_size_;
+
+        void create_buffer(ID3D11Device* device);
+    };
+
     class MeshRenderer
     {
     public:
@@ -66,6 +99,7 @@ namespace df::gr::d3d11
         void clear_vif_cache(rf::VifLodMesh *lod_mesh);
         void page_in_v3d_mesh(rf::VifLodMesh* lod_mesh);
         void page_in_character_mesh(rf::VifLodMesh* lod_mesh);
+        void flush_caches();
 
     private:
         void draw_cached_mesh(rf::VifLodMesh *lod_mesh, const BaseMeshRenderCache& render_cache, const rf::MeshRenderParams& params, int lod_index);
@@ -76,5 +110,7 @@ namespace df::gr::d3d11
         VertexShaderAndLayout standard_vertex_shader_;
         VertexShaderAndLayout character_vertex_shader_;
         ComPtr<ID3D11PixelShader> pixel_shader_;
+        BufferWrapper v3d_vb_;
+        BufferWrapper v3d_ib_;
     };
 }
