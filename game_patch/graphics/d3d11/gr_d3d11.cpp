@@ -456,16 +456,16 @@ namespace df::gr::d3d11
         solid_renderer_->clear_cache();
     }
 
-    void Renderer::render_v3d_vif(rf::VifLodMesh *lod_mesh, rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::MeshRenderParams& params)
+    void Renderer::render_v3d_vif(rf::VifLodMesh *lod_mesh, int lod_index, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::MeshRenderParams& params)
     {
         dyn_geo_renderer_->flush();
-        mesh_renderer_->render_v3d_vif(lod_mesh, mesh, pos, orient, params);
+        mesh_renderer_->render_v3d_vif(lod_mesh, lod_index, pos, orient, params);
     }
 
-    void Renderer::render_character_vif(rf::VifLodMesh *lod_mesh, rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::CharacterInstance *ci, const rf::MeshRenderParams& params)
+    void Renderer::render_character_vif(rf::VifLodMesh *lod_mesh, int lod_index, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::CharacterInstance *ci, const rf::MeshRenderParams& params)
     {
         dyn_geo_renderer_->flush();
-        mesh_renderer_->render_character_vif(lod_mesh, mesh, pos, orient, ci, params);
+        mesh_renderer_->render_character_vif(lod_mesh, lod_index, pos, orient, ci, params);
     }
 
     void Renderer::clear_vif_cache(rf::VifLodMesh *lod_mesh)

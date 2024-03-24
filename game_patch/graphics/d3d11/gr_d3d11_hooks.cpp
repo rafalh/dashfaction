@@ -161,14 +161,14 @@ namespace df::gr::d3d11
         renderer->render_sky_room(room);
     }
 
-    void render_v3d_vif(rf::VifLodMesh *lod_mesh, rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, [[maybe_unused]] int lod_index, const rf::MeshRenderParams& params)
+    void render_v3d_vif(rf::VifLodMesh *lod_mesh, [[maybe_unused]] rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, int lod_index, const rf::MeshRenderParams& params)
     {
-        renderer->render_v3d_vif(lod_mesh, mesh, pos, orient, params);
+        renderer->render_v3d_vif(lod_mesh, lod_index, pos, orient, params);
     }
 
-    void render_character_vif(rf::VifLodMesh *lod_mesh, rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::CharacterInstance *ci, [[maybe_unused]] int lod_index, const rf::MeshRenderParams& params)
+    void render_character_vif(rf::VifLodMesh *lod_mesh, [[maybe_unused]] rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::CharacterInstance *ci, int lod_index, const rf::MeshRenderParams& params)
     {
-        renderer->render_character_vif(lod_mesh, mesh, pos, orient, ci, params);
+        renderer->render_character_vif(lod_mesh, lod_index, pos, orient, ci, params);
     }
 
     void fog_set()

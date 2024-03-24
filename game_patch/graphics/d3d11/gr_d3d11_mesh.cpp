@@ -402,18 +402,7 @@ namespace df::gr::d3d11
         render_caches_.clear();
     }
 
-    static inline int get_vif_mesh_lod_index(rf::VifLodMesh *lod_mesh, rf::VifMesh *mesh)
-    {
-        for (int i = 0; i < lod_mesh->num_levels; ++i) {
-            if (lod_mesh->meshes[i] == mesh) {
-                return i;
-            }
-        }
-        assert(false);
-        return 0;
-    }
-
-    void MeshRenderer::render_v3d_vif(rf::VifLodMesh *lod_mesh, rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::MeshRenderParams& params)
+    void MeshRenderer::render_v3d_vif(rf::VifLodMesh *lod_mesh, int lod_index, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::MeshRenderParams& params)
     {
         page_in_v3d_mesh(lod_mesh);
 
@@ -421,13 +410,12 @@ namespace df::gr::d3d11
         render_context_.set_pixel_shader(pixel_shader_);
         render_context_.set_model_transform(pos, orient);
 
-        int lod_index = get_vif_mesh_lod_index(lod_mesh, mesh);
         auto render_cache = reinterpret_cast<MeshRenderCache*>(lod_mesh->render_cache);
         render_cache->bind_buffers(render_context_);
         draw_cached_mesh(lod_mesh, *render_cache, params, lod_index);
     }
 
-    void MeshRenderer::render_character_vif(rf::VifLodMesh *lod_mesh, rf::VifMesh *mesh, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::CharacterInstance *ci, const rf::MeshRenderParams& params)
+    void MeshRenderer::render_character_vif(rf::VifLodMesh *lod_mesh, int lod_index, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::CharacterInstance *ci, const rf::MeshRenderParams& params)
     {
         page_in_character_mesh(lod_mesh);
         auto render_cache = reinterpret_cast<CharacterMeshRenderCache*>(lod_mesh->render_cache);
@@ -436,7 +424,6 @@ namespace df::gr::d3d11
         render_context_.set_pixel_shader(pixel_shader_);
         render_context_.set_model_transform(pos, orient);
 
-        int lod_index = get_vif_mesh_lod_index(lod_mesh, mesh);
         bool morphed = false;
         // Note: morphing data exists only for the most detailed LOD
         if (lod_index == 0) {
