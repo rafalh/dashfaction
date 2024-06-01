@@ -9,6 +9,13 @@
 #define IDD_OPTIONS                     102
 #define IDB_HEADER                      103
 #define IDD_ABOUT                       104
+#define IDD_OPTIONS_DISPLAY             105
+#define IDD_OPTIONS_GRAPHICS            106
+#define IDD_OPTIONS_MISC                107
+#define IDD_OPTIONS_AUDIO               108
+#define IDD_OPTIONS_MULTIPLAYER         109
+#define IDD_OPTIONS_INPUT               110
+#define IDD_OPTIONS_INTERFACE           111
 #define IDC_EDITOR_BTN                  1000
 #define IDC_OPTIONS_BTN                 1001
 #define IDC_RESOLUTIONS_COMBO           1002
@@ -57,14 +64,21 @@
 #define IDC_PLAYER_JOIN_BEEP_CHECK      1048
 #define IDC_MESH_STATIC_LIGHTING_CHECK  1049
 #define IDC_AUTOSAVE_CHECK              1050
+#define IDC_GRAPHICS_OPTIONS_BOX        1051
+#define IDC_DISPLAY_OPTIONS_BOX         1052
+#define IDC_MISC_OPTIONS_BOX            1053
+#define IDC_AUDIO_OPTIONS_BOX           1054
+#define IDC_MULTIPLAYER_OPTIONS_BOX     1055
+#define IDC_INPUT_OPTIONS_BOX           1056
+#define IDC_INTERFACE_OPTIONS_BOX       1057
 
 // Next default values for new objects
 //
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        105
+#define _APS_NEXT_RESOURCE_VALUE        112
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1051
+#define _APS_NEXT_CONTROL_VALUE         1058
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
