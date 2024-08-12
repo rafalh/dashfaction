@@ -138,11 +138,13 @@ namespace xlog
 #define INFO(...) xlog::info(__VA_ARGS__)
 #define TRACE(...) xlog::trace(__VA_ARGS__)
 
-#define LOG_ONCE(lvl, ...) do { \
-    static bool skip = false; \
-    if (!skip) \
-        lvl(__VA_ARGS__); \
-        skip = true; \
+#define LOG_ONCE(lvl, ...) \
+    do { \
+        static bool skip = false; \
+        if (!skip) {\
+            lvl(__VA_ARGS__); \
+            skip = true; \
+        } \
     } while (false)
 #define ERR_ONCE(...) LOG_ONCE(xlog::error, __VA_ARGS__)
 #define WARN_ONCE(...) LOG_ONCE(xlog::warn, __VA_ARGS__)

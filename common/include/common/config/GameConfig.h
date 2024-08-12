@@ -3,6 +3,7 @@
 #include <string>
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <common/config/CfgVar.h>
 
 template<typename T>

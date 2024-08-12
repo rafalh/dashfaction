@@ -1,5 +1,6 @@
 #pragma once
 
+#include <utility>
 #include <windows.h>
 #include <common/error/Win32Error.h>
 

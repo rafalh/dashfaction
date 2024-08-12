@@ -5,6 +5,7 @@
 #include <patch_common/ShortTypes.h>
 #include <cassert>
 #include <optional>
+#include <utility>
 
 class AsmReg
 {

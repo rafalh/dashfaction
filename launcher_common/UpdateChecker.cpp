@@ -6,6 +6,7 @@
 #include <thread>
 #include <mutex>
 #include <optional>
+#include <stdexcept>
 #include <ed25519.h>
 #include <base64.h>
 
