@@ -14,7 +14,7 @@ jobs:
     - name: Install packages
       run: sudo apt-get install mingw-w64 ninja-build
 
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Create Build Environment
       run: cmake -E make_directory ${{github.workspace}}/build
@@ -31,7 +31,7 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Create Build Environment
       run: cmake -E make_directory ${{github.workspace}}/build
