@@ -27,6 +27,7 @@ Version 1.8.1 (not released yet)
 - Fix player third person weapon model animations after loading the game from a save file
 - Change default volume to 0.5
 - Log a warning when sound file cannot be find
+- Add Ogg Vorbis audio format support
 
 Version 1.8.0 (released 2022-09-17)
 -----------------------------------
