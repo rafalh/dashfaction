@@ -400,6 +400,25 @@ FunHook<void(const rf::Vector3&, const rf::Vector3&, const rf::Matrix3&)> snd_up
     },
 };
 
+FunHook<bool(const char*)> snd_pc_file_exists_hook{
+    0x00544680,
+    [](const char *filename) {
+        bool exists = snd_pc_file_exists_hook.call_target(filename);
+
+        if (!exists) {
+            // For some reason built-in maps often use spaces in place of sound filename (their way to disable a sound?)
+            // To reduce spam ignore space-only filenames and avoid logging the same filename multiple times in a row
+            bool has_only_spaces = std::string_view{filename}.find_first_not_of(" ") == std::string_view::npos;
+            static std::string last_file_not_found;
+            if (!has_only_spaces && filename != last_file_not_found) {
+                xlog::warn("Sound file not found: %s", filename);
+                last_file_not_found = filename;
+            }
+        }
+        return exists;
+    }
+};
+
 void snd_ds_apply_patch();
 
 void apply_sound_patches()
@@ -450,6 +469,9 @@ void apply_sound_patches()
 
     // Change default volume to 0.5
     write_mem<float>(0x00506192 + 1, 0.5f);
+
+    // Log when sound file cannot be found
+    snd_pc_file_exists_hook.install();
 }
 
 void register_sound_commands()

@@ -98,9 +98,6 @@ namespace rf
 
     static auto& file_get_ext = addr_as_ref<char*(const char *path)>(0x005143F0);
     static auto& file_add_path = addr_as_ref<int(const char *path, const char *exts, bool search_on_cd)>(0x00514070);
-    static auto& file_exists = addr_as_ref<bool(const char *filename)>(0x00544680);
 
     static auto& root_path = addr_as_ref<char[max_path_len]>(0x018060E8);
-
-
 }

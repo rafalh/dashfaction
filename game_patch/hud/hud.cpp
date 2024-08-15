@@ -209,7 +209,7 @@ const ScaledBitmapInfo& hud_get_scaled_bitmap_info(int bmh)
         xlog::trace("loading high res bm %s", filename.c_str());
         ScaledBitmapInfo scaled_bm_info;
         rf::File file;
-        if (rf::file_exists(filename.c_str())) {
+        if (rf::File{}.find(filename.c_str())) {
             scaled_bm_info.bmh = rf::bm::load(filename.c_str(), -1, false);
         }
         xlog::trace("loaded high res bm %s: %d", filename.c_str(), scaled_bm_info.bmh);
