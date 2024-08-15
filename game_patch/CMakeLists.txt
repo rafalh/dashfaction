@@ -175,7 +175,6 @@ target_include_directories(DashFaction PRIVATE
     ${CMAKE_SOURCE_DIR}/vendor/stb
     ${CMAKE_SOURCE_DIR}/vendor/freetype/include
     ${CMAKE_SOURCE_DIR}/vendor/dds
-    ${CMAKE_SOURCE_DIR}/vendor/stb
 )
 
 if(NOT MSVC)
@@ -210,5 +209,6 @@ target_link_libraries(DashFaction
     iphlpapi
     ws2_32
     freetype
+    stb_vorbis
 )
 
