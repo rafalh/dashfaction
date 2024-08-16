@@ -28,6 +28,7 @@ Version 1.8.1 (not released yet)
 - Change default volume to 0.5
 - Log a warning when sound file cannot be find
 - Add Ogg Vorbis audio format support
+- Shorten the wait between levels when the server is empty
 
 Version 1.8.0 (released 2022-09-17)
 -----------------------------------

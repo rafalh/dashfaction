@@ -609,6 +609,16 @@ void server_reliable_socket_ready(rf::Player* player)
     }
 }
 
+CodeInjection multi_limbo_init_injection{
+    0x0047C286,
+    [](auto& regs) {
+        if (!rf::player_list) {
+            xlog::trace("Wait between levels shortened because server is empty");
+            addr_as_ref<int>(regs.esp) = 100;
+        }
+    },
+};
+
 void server_init()
 {
     // Override rcon command whitelist
@@ -671,6 +681,9 @@ void server_init()
 
     // Set lower bound of server max players clamp range to 1 (instead of 2)
     write_mem<i8>(0x0046DD4F + 1, 1);
+
+    // Reduce limbo duration if server is empty
+    multi_limbo_init_injection.install();
 }
 
 void server_do_frame()
