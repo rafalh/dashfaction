@@ -1,11 +1,12 @@
 #include <vector>
 #include <fstream>
 #include <charconv>
-#include <xlog/xlog.h>
-#include <cassert>
-#include <winsock2.h>
-#include <patch_common/FunHook.h>
 #include <sstream>
+#include <winsock2.h>
+#include <xlog/xlog.h>
+#include <patch_common/FunHook.h>
+#include <common/utils/string-utils.h>
+
 #include "../rf/multi.h"
 #include "multi.h"
 
@@ -127,7 +128,7 @@ public:
         while (f) {
             std::getline(f, line);
             // Ignore empty lines and comments
-            if (line.empty() || (line.size() > 2 && line[0] == '/' && line[1] == '/')) {
+            if (line.empty() || string_starts_with(line, "#") || string_starts_with(line, "//")) {
                 continue;
             }
             add(line);
