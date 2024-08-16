@@ -122,7 +122,6 @@ class Banlist
 public:
     void load()
     {
-        xlog::warn("loading banlist");
         std::ifstream f("banlist.txt");
         std::string line;
         while (f) {
@@ -247,11 +246,12 @@ std::optional<std::string> multi_ban_unban_last()
     return {};
 }
 
+#ifndef NDEBUG
+
 #define ok(expr) if (!(expr)) xlog::error("Test failed: %s", #expr)
 
-void test_parsing()
+static void test_parsing()
 {
-    xlog::warn("TEST!");
     try {
         ok(IpRange::parse("192.168.17.3") == IpRange(0xC0A81103, 0xFFFFFFFF));
         ok(IpRange::parse("192.168.17.*") == IpRange(0xC0A81100, 0xFFFFFF00));
@@ -267,6 +267,8 @@ void test_parsing()
     }
 }
 
+#endif
+
 void multi_ban_apply_patch()
 {
     multi_ban_init_hook.install();
@@ -276,5 +278,7 @@ void multi_ban_apply_patch()
     multi_ban_add_hook.install();
     multi_ban_add2_hook.install();
 
+#ifdef DEBUG
     test_parsing();
+#endif
 }
