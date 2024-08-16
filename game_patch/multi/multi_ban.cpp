@@ -126,7 +126,6 @@ public:
         std::string line;
         while (f) {
             std::getline(f, line);
-            xlog::warn("  %s", line.c_str());
             // Ignore empty lines and comments
             if (line.empty() || (line.size() > 2 && line[0] == '/' && line[1] == '/')) {
                 continue;
