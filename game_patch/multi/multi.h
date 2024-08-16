@@ -86,3 +86,5 @@ void send_chat_line_packet(const char* msg, rf::Player* target, rf::Player* send
 const std::optional<DashFactionServerInfo>& get_df_server_info();
 void multi_level_download_do_frame();
 void multi_level_download_abort();
+void multi_ban_apply_patch();
+std::optional<std::string> multi_ban_unban_last();

@@ -5,6 +5,7 @@
 #include "../rf/level.h"
 #include "../rf/player/player.h"
 #include "../rf/crt.h"
+#include "multi.h"
 #include <patch_common/AsmWriter.h>
 #include <patch_common/CallHook.h>
 #include <vector>
@@ -178,12 +179,9 @@ ConsoleCommand2 unban_last_cmd{
     "unban_last",
     []() {
         if (rf::is_multi && rf::is_server) {
-            rf::BanlistEntry* entry = rf::banlist_last_entry;
-            if (entry != &rf::banlist_null_entry) {
-                rf::console::printf("%s has been unbanned!", entry->ip_addr);
-                entry->next->prev = entry->prev;
-                entry->prev->next = entry->next;
-                rf::rf_free(entry);
+            auto opt = multi_ban_unban_last();
+            if (opt) {
+                rf::console::printf("%s has been unbanned!", opt.value().c_str());
             }
         }
     },

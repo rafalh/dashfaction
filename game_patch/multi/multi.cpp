@@ -352,6 +352,7 @@ void multi_do_patch()
     multi_tdm_apply_patch();
 
     level_download_init();
+    multi_ban_apply_patch();
 
     // Init cmd line param
     get_url_cmd_line_param();

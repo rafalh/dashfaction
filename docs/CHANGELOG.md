@@ -29,6 +29,7 @@ Version 1.8.1 (not released yet)
 - Log a warning when sound file cannot be find
 - Add Ogg Vorbis audio format support
 - Shorten the wait between levels when the server is empty
+- Support CIDR IP ranges in banlist (should help with banning VPNs)
 
 Version 1.8.0 (released 2022-09-17)
 -----------------------------------
