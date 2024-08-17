@@ -232,28 +232,35 @@ FunHook<int(int, const rf::Vector3&, float, const rf::Vector3&, int)> snd_play_3
             return -1;
         }
 
-        float base_volume;
-        float pan;
-        rf::snd_calculate_2d_from_3d_info(handle, pos, &pan, &base_volume, volume);
-        float vol_scale = base_volume * rf::snd_group_volume[group];
+
         bool looping = rf::sounds[handle].is_looping;
         int instance_index = snd_get_free_instance();
         if (instance_index < 0) {
             return -1;
         }
 
+        float base_volume_2d;
+        float pan;
+        rf::snd_calculate_2d_from_3d_info(handle, pos, &pan, &base_volume_2d, volume);
+        // xlog::warn("snd_play_3d vol %.2f", vol_scale);
         auto& instance = rf::sound_instances[instance_index];
         int sig;
         if (rf::ds3d_enabled) {
+            // Note that snd_pc_play_3d_new calls snd_calculate_2d_from_3d_info on its own
+            // so use volume here instead of base_volume_2d
+            float vol_scale = volume * rf::snd_group_volume[group];
             sig = snd_pc_play_3d_new(handle, pos, vol_scale, looping);
         }
-        else if (looping) {
-            sig = rf::snd_pc_play_looping(handle, vol_scale, pan, 0.0f, true);
-        }
         else {
-            sig = rf::snd_pc_play(handle, vol_scale, pan, 0.0f, true);
+            float vol_scale = base_volume_2d * rf::snd_group_volume[group];
+            if (looping) {
+                sig = rf::snd_pc_play_looping(handle, vol_scale, pan, 0.0f, true);
+            }
+            else {
+                sig = rf::snd_pc_play(handle, vol_scale, pan, 0.0f, true);
+            }
         }
-        xlog::trace("snd_play_3d handle %d pos <%.2f %.2f %.2f> vol %.2f sig %d", handle, pos.x, pos.y, pos.z, vol_scale, sig);
+        xlog::trace("snd_play_3d handle %d pos <%.2f %.2f %.2f> vol %.2f sig %d", handle, pos.x, pos.y, pos.z, volume, sig);
         if (sig < 0) {
             return -1;
         }
@@ -261,7 +268,7 @@ FunHook<int(int, const rf::Vector3&, float, const rf::Vector3&, int)> snd_play_3
         instance.sig = sig;
         instance.handle = handle;
         instance.group = group;
-        instance.base_volume = base_volume;
+        instance.base_volume = base_volume_2d;
         instance.pan = pan;
         instance.is_3d_sound = true;
         instance.pos = pos;
