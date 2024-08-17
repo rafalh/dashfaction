@@ -32,6 +32,7 @@ Version 1.8.1 (not released yet)
 - Support CIDR IP ranges in banlist (should help with banning VPNs)
 - Fix alpha sorting regression in level L5S3 (and possibly others)
 - Add more info to `level_info` command and add `map_info` alias
+- Fix ambient sound panning when EAX is disabled
 
 Version 1.8.0 (released 2022-09-17)
 -----------------------------------

@@ -344,6 +344,10 @@ void snd_update_ambient_sounds(const rf::Vector3& camera_pos)
                 // Update volume even for non-looping sounds unlike original code
                 float volume = rf::snd_pc_calc_volume_3d(ambient_snd.handle, ambient_snd.pos, vol_scale);
                 rf::snd_pc_set_volume(ambient_snd.sig, volume);
+                if (!rf::ds3d_enabled) {
+                    float pan = rf::snd_pc_calculate_pan(ambient_snd.pos);
+                    rf::snd_pc_set_pan(ambient_snd.sig, pan);
+                }
             }
             else if (ambient_snd.sig >= 0) {
                 rf::snd_pc_stop(ambient_snd.sig);
