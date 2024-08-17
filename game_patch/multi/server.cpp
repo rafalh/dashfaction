@@ -75,6 +75,15 @@ void load_additional_server_config(rf::Parser& parser)
     if (parser.parse_optional("$DF Spawn Protection Duration:")) {
         g_additional_server_config.spawn_protection_duration_ms = parser.parse_uint();
     }
+
+    if (parser.parse_optional("$DF Spawn Life:")) {
+        g_additional_server_config.spawn_life = {parser.parse_float()};
+    }
+
+    if (parser.parse_optional("$DF Spawn Armor:")) {
+        g_additional_server_config.spawn_armor = {parser.parse_float()};
+    }
+
     if (parser.parse_optional("$DF Hitsounds:")) {
         g_additional_server_config.hit_sounds.enabled = parser.parse_bool();
         if (parser.parse_optional("+Sound ID:")) {
@@ -534,7 +543,18 @@ FunHook<void(rf::Player*)> multi_spawn_player_server_side_hook{
         if (!check_player_ac_status(player)) {
             return;
         }
+
         multi_spawn_player_server_side_hook.call_target(player);
+
+        rf::Entity* ep = rf::entity_from_handle(player->entity_handle);
+        if (ep) {
+            if (g_additional_server_config.spawn_life) {
+                ep->life = g_additional_server_config.spawn_life.value();
+            }
+            if (g_additional_server_config.spawn_armor) {
+                ep->armor = g_additional_server_config.spawn_armor.value();
+            }
+        }
     },
 };
 

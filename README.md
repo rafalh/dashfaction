@@ -152,6 +152,10 @@ Configuration example:
     $DF Vote Previous: true
     // Duration of player invulnerability after respawn in ms (default is the same as in stock RF - 1500)
     $DF Spawn Protection Duration: 1500
+    // Initial player life (health) after spawn
+    $DF Spawn Life: 100
+    // Initial player armor after spawn
+    $DF Spawn Armor: 0
     // Enable hit-sounds
     $DF Hitsounds: true
         // Sound used for hit notification
