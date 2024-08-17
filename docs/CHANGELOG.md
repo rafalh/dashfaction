@@ -30,6 +30,7 @@ Version 1.8.1 (not released yet)
 - Add Ogg Vorbis audio format support
 - Shorten the wait between levels when the server is empty
 - Support CIDR IP ranges in banlist (should help with banning VPNs)
+- Fix alpha sorting regression in level L5S3 (and possibly others)
 
 Version 1.8.0 (released 2022-09-17)
 -----------------------------------

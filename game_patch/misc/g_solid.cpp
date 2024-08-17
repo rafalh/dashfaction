@@ -430,16 +430,6 @@ void g_solid_do_patch()
     // are not taken into account.
     AsmWriter{0x004D4409}.jmp(0x004D44B1);
     AsmWriter{0x004D44C7}.nop(2);
-    // Use pivot point instead of approximation of the lowest point to determine if object is under liquid
-    // surface when rendering semi-transparent objects. The lowest point of the object was in most cases
-    // improperly approximated and it resulted in objects being rendered as under liquid surface when in
-    // reality they were above the surface. For example flamethrower particles were often rendered as under water.
-    AsmWriter{0x004D3E41, 0x004D3E4C}.nop();
-    AsmWriter{0x004D3EA4, 0x004D3EAF}.nop();
-    AsmWriter{0x004D3F64, 0x004D3F6F}.nop();
-    AsmWriter{0x004D3FB6, 0x004D3FC1}.nop();
-    write_mem<u8>(0x004D3F3F, asm_opcodes::jmp_rel_short);
-    write_mem<u8>(0x004D3F91, asm_opcodes::jmp_rel_short);
 
     // Commands
     max_decals_cmd.register_cmd();
