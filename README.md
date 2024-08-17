@@ -153,7 +153,7 @@ Configuration example:
     // Duration of player invulnerability after respawn in ms (default is the same as in stock RF - 1500)
     $DF Spawn Protection Duration: 1500
     // Initial player life (health) after spawn
-    $DF Spawn Life: 100
+    $DF Spawn Health: 100
     // Initial player armor after spawn
     $DF Spawn Armor: 0
     // Enable hit-sounds
