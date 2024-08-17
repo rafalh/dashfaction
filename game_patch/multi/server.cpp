@@ -76,7 +76,7 @@ void load_additional_server_config(rf::Parser& parser)
         g_additional_server_config.spawn_protection_duration_ms = parser.parse_uint();
     }
 
-    if (parser.parse_optional("$DF Spawn Life:")) {
+    if (parser.parse_optional("$DF Spawn Health:")) {
         g_additional_server_config.spawn_life = {parser.parse_float()};
     }
 
@@ -170,6 +170,24 @@ void load_additional_server_config(rf::Parser& parser)
         rf::String welcome_message;
         parser.parse_string(&welcome_message);
         g_additional_server_config.welcome_message = welcome_message.c_str();
+    }
+
+    if (parser.parse_optional("$DF Kill Reward:")) {
+        if (parser.parse_optional("+Effective Health:")) {
+            g_additional_server_config.kill_reward_effective_health = {parser.parse_float()};
+        }
+        if (parser.parse_optional("+Health:")) {
+            g_additional_server_config.kill_reward_health = {parser.parse_float()};
+        }
+        if (parser.parse_optional("+Armor:")) {
+            g_additional_server_config.kill_reward_armor = {parser.parse_float()};
+        }
+        if (parser.parse_optional("+Health Is Super:")) {
+            g_additional_server_config.kill_reward_health_super = {parser.parse_bool()};
+        }
+        if (parser.parse_optional("+Armor Is Super:")) {
+            g_additional_server_config.kill_reward_armor_super = {parser.parse_bool()};
+        }
     }
 
     if (!parser.parse_optional("$Name:") && !parser.parse_optional("#End")) {

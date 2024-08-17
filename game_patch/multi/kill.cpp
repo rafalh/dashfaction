@@ -9,6 +9,7 @@
 #include "../rf/localize.h"
 #include "../rf/multi.h"
 #include "../rf/weapon.h"
+#include "server_internal.h"
 
 bool kill_messages = true;
 
@@ -103,6 +104,32 @@ void print_kill_message(rf::Player* killed_player, rf::Player* killer_player)
     rf::multi_chat_print(msg, color_id, prefix);
 }
 
+void multi_apply_kill_reward(rf::Player* player)
+{
+    rf::Entity* ep = rf::entity_from_handle(player->entity_handle);
+    if (!ep) {
+        return;
+    }
+
+    const auto& conf = server_get_df_config();
+
+    float max_life = conf.kill_reward_health_super ? 200.0f : ep->info->max_life;
+    float max_armor = conf.kill_reward_armor_super ? 200.0f : ep->info->max_armor;
+
+    if (conf.kill_reward_health > 0.0f) {
+        ep->life = std::min(ep->life + conf.kill_reward_health, max_life);
+    }
+    if (conf.kill_reward_armor > 0.0f) {
+        ep->armor = std::min(ep->armor + conf.kill_reward_armor, max_armor);
+    }
+    if (conf.kill_reward_effective_health > 0.0f) {
+        float life_to_add = std::min(conf.kill_reward_effective_health, max_life - ep->life);
+        float armor_to_add = std::min((conf.kill_reward_effective_health - life_to_add) / 2, max_armor - ep->life);
+        ep->life += life_to_add;
+        ep->armor += armor_to_add;
+    }
+}
+
 void on_player_kill(rf::Player* killed_player, rf::Player* killer_player)
 {
     if (kill_messages) {
@@ -121,6 +148,8 @@ void on_player_kill(rf::Player* killed_player, rf::Player* killer_player)
         else {
             rf::player_add_score(killer_player, -1);
         }
+
+        multi_apply_kill_reward(killer_player);
     }
 }
 

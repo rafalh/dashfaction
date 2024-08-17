@@ -194,6 +194,18 @@ Configuration example:
     //$DF Send Player Stats Message: true
     // Send a chat message to players when they join the server ($PLAYER is replaced by player name)
     //$DF Welcome Message: "Hello $PLAYER!"
+    // Reward a player for a successful kill
+    $DF Kill Reward:
+    // Increase player health or armor if health is full (armor delta is halved)
+    +Effective Health: 0
+    // Increase player health
+    +Health: 0
+    // Increase player armor
+    +Armor: 0
+    // Limit health reward to 200 instead of 100
+    +Health Is Super:
+    // Limit armor reward to 200 instead of 100
+    +Armor Is Super:
 
 
 Building

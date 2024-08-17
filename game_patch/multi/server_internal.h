@@ -51,6 +51,11 @@ struct ServerAdditionalConfig
     bool stats_message_enabled = true;
     std::string welcome_message;
     bool weapon_items_give_full_ammo = false;
+    float kill_reward_health = 0.0f;
+    float kill_reward_armor = 0.0f;
+    float kill_reward_effective_health = 0.0f;
+    bool kill_reward_health_super = false;
+    bool kill_reward_armor_super = false;
 };
 
 extern ServerAdditionalConfig g_additional_server_config;
