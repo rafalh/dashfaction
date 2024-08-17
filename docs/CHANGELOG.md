@@ -34,6 +34,7 @@ Version 1.8.1 (not released yet)
 - Add more info to `level_info` command and add `map_info` alias
 - Fix ambient sound panning when EAX is disabled
 - Fix quiet 3D sounds being often skipped when EAX is enabled, e.g. first miner in L1S1 (DF bug)
+- Allow saving in training levels
 
 Version 1.8.0 (released 2022-09-17)
 -----------------------------------

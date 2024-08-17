@@ -340,4 +340,7 @@ void apply_save_restore_patches()
 
     // Restore blackout when loading a save file
     sr_load_player_inj.install();
+
+    // Allow saving in training levels
+    AsmWriter{0x004B61F1}.nop(2);
 }
