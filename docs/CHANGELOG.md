@@ -36,6 +36,7 @@ Version 1.8.1 (not released yet)
 - Fix quiet 3D sounds being often skipped when EAX is enabled, e.g. first miner in L1S1 (DF bug)
 - Allow saving in training levels
 - Fix final level time left count-down in multi using wrong font (DF bug)
+- Add Spawn Life/Armor settings for dedicated servers
 
 Version 1.8.0 (released 2022-09-17)
 -----------------------------------
