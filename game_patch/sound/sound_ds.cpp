@@ -106,7 +106,8 @@ static int ds_get_free_channel_new(int sid, float volume, bool is_looping)
     float duration = rf::snd_ds_estimate_duration(sid);
     int max_channels = static_cast<int>(std::size(rf::ds_channels));
     if (!is_looping && duration < 10.0f) {
-        float normalized_volume = volume / rf::snd_group_volume[rf::SOUND_GROUP_EFFECTS];
+        float effects_volume = rf::snd_group_volume[rf::SOUND_GROUP_EFFECTS];
+        float normalized_volume = effects_volume > 0.001f ? volume / effects_volume : 0.0f;
         if (normalized_volume < 0.1f) {
             xlog::trace("sound %d channel priority 1", sid);
             max_channels = max_channels / 4;
