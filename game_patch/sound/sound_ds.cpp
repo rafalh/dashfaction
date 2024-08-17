@@ -109,15 +109,15 @@ static int ds_get_free_channel_new(int sid, float volume, bool is_looping)
         float normalized_volume = volume / rf::snd_group_volume[rf::SOUND_GROUP_EFFECTS];
         if (normalized_volume < 0.1f) {
             xlog::trace("sound %d channel priority 1", sid);
-            max_channels /= 8;
+            max_channels = max_channels / 4;
         }
         else if (normalized_volume < 0.2f) {
             xlog::trace("sound %d channel priority 2", sid);
-            max_channels /= 4;
+            max_channels = max_channels * 2 / 4;
         }
         else if (normalized_volume < 0.5f) {
             xlog::trace("sound %d channel priority 3", sid);
-            max_channels /= 2;
+            max_channels = max_channels * 3 / 4;
         }
         else {
             xlog::trace("sound %d channel priority 4", sid);
