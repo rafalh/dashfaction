@@ -179,6 +179,7 @@ FunHook<void()> multi_hud_init_hook{
         if (time_left_font >= 0) {
             write_mem<i8>(0x00477157 + 1, time_left_font);
         }
+        multi_hud_init_hook.call_target();
     },
 };
 
