@@ -3,6 +3,7 @@
 #include "../main/main.h"
 #include "../rf/multi.h"
 #include "../rf/player/player.h"
+#include "../rf/level.h"
 #include "../misc/misc.h"
 #include "../misc/vpackfile.h"
 #include <common/utils/list-utils.h>
@@ -15,7 +16,7 @@ ConsoleCommand2 dot_cmd{
     [](std::string pattern) {
         for (i32 i = 0; i < rf::console::num_commands; ++i) {
             rf::console::Command* cmd = g_commands_buffer[i];
-            if (string_contains_ignore_case(cmd->name, pattern)) {         
+            if (string_contains_ignore_case(cmd->name, pattern)) {
                 rf::console::printf(cmd->name);
             }
         }
@@ -70,6 +71,26 @@ DcCommandAlias map_cmd{
     level_cmd,
 };
 
+ConsoleCommand2 level_info_cmd{
+    "level_info",
+    []() {
+        if (rf::level.flags & rf::LEVEL_LOADED) {
+            rf::console::printf("Filename: %s", rf::level.filename.c_str());
+            rf::console::printf("Name: %s", rf::level.name.c_str());
+            rf::console::printf("Author: %s", rf::level.author.c_str());
+            rf::console::printf("Date: %s", rf::level.level_date.c_str());
+        } else {
+            rf::console::printf("No level loaded!");
+        }
+    },
+    "Shows information about the current level",
+};
+
+DcCommandAlias map_info_cmd{
+    "map_info",
+    level_info_cmd,
+};
+
 static void register_builtin_command(const char* name, const char* description, uintptr_t addr)
 {
     static std::vector<std::unique_ptr<rf::console::Command>> builtin_commands;
@@ -98,7 +119,7 @@ void console_commands_init()
     register_builtin_command("sound", "Toggle sound", 0x00434590);
     register_builtin_command("difficulty", "Set game difficulty", 0x00434EB0);
     // register_builtin_command("ms", "Set mouse sensitivity", 0x0043CE90);
-    register_builtin_command("level_info", "Show level info", 0x0045C210);
+    // register_builtin_command("level_info", "Show level info", 0x0045C210);
     register_builtin_command("verify_level", "Verify level", 0x0045E1F0);
     register_builtin_command("player_names", "Toggle player names on HUD", 0x0046CB80);
     register_builtin_command("clients_count", "Show number of connected clients", 0x0046CD10);
@@ -169,4 +190,6 @@ void console_commands_init()
     find_level_cmd.register_cmd();
     find_map_cmd.register_cmd();
     map_cmd.register_cmd();
+    level_info_cmd.register_cmd();
+    map_info_cmd.register_cmd();
 }

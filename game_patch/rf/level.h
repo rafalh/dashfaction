@@ -49,14 +49,14 @@ namespace rf
         float distance_fog_near_clip;
         float distance_fog_far_clip;
         float old_distance_fog_far_clip;
-        char has_mirrored_faces;
-        char has_skyroom;
+        bool has_mirrored_faces;
+        bool has_skyroom;
         char skybox_rotation_axis;
         float skybox_rotation_velocity;
         float skybox_current_rotation;
         Matrix3 skybox_current_orientation;
         Matrix3 skybox_inverse_orientation;
-        int checksum;
+        unsigned checksum;
         String next_level_filename;
         bool hard_level_break;
         VArray<ParticleEmitter*> pemitters;
