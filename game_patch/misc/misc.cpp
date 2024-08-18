@@ -19,6 +19,7 @@
 #include "../rf/os/os.h"
 #include "../rf/misc.h"
 #include "../rf/vmesh.h"
+#include "../rf/file/file.h"
 #include "../object/object.h"
 
 void apply_main_menu_patches();
@@ -376,6 +377,17 @@ CodeInjection vfile_read_stack_corruption_fix{
     },
 };
 
+CodeInjection game_set_file_paths_injection{
+    0x004B1810,
+    []() {
+        if (rf::mod_param.found()) {
+            std::string mod_dir = "mods\\";
+            mod_dir += rf::mod_param.get_arg();
+            rf::file_add_path(mod_dir.c_str(), ".bik", false);
+        }
+    },
+};
+
 void misc_init()
 {
     // Window title (client and server)
@@ -478,7 +490,7 @@ void misc_init()
     AsmWriter{0x0045515B}.nop(5);
 
     // Add support for Bink videos in mods
-    write_mem_ptr(0x004B174A + 1, ".vpp .bik");
+    game_set_file_paths_injection.install();
 
     // Apply patches from other files
     apply_main_menu_patches();
