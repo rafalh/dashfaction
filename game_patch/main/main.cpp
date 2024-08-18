@@ -123,13 +123,15 @@ CodeInjection after_level_render_hook{
 CodeInjection after_frame_render_hook{
     0x004B2DC2,
     []() {
-        // Draw on top (after scene)
-        frametime_render_ui();
-        multi_render_level_download_progress();
+        if (!rf::is_dedicated_server) {
+            // Draw on top (after scene)
+            frametime_render_ui();
+            multi_render_level_download_progress();
 #if !defined(NDEBUG) && defined(HAS_EXPERIMENTAL)
-        experimental_render();
+            experimental_render();
 #endif
-        debug_render_ui();
+            debug_render_ui();
+        }
     },
 };
 

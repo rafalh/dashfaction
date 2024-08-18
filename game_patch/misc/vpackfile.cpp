@@ -18,6 +18,7 @@
 #include "../rf/file/file.h"
 #include "../rf/file/packfile.h"
 #include "../rf/crt.h"
+#include "../rf/multi.h"
 #include "../os/console.h"
 
 #define CHECK_PACKFILE_CHECKSUM 0 // slow (1 second on SSD on first load after boot)
@@ -443,22 +444,26 @@ static void vpackfile_init_new()
     g_loopup_table.reserve(10000);
 
     if (get_installed_game_lang() == LANG_GR) {
-        rf::vpackfile_add("audiog.vpp", nullptr);
-        rf::vpackfile_add("maps_gr.vpp", nullptr);
-        rf::vpackfile_add("levels1g.vpp", nullptr);
-        rf::vpackfile_add("levels2g.vpp", nullptr);
-        rf::vpackfile_add("levels3g.vpp", nullptr);
+        if (!rf::is_dedicated_server) {
+            rf::vpackfile_add("audiog.vpp", nullptr);
+            rf::vpackfile_add("maps_gr.vpp", nullptr);
+            rf::vpackfile_add("levels1g.vpp", nullptr);
+            rf::vpackfile_add("levels2g.vpp", nullptr);
+            rf::vpackfile_add("levels3g.vpp", nullptr);
+        }
         rf::vpackfile_add("ltables.vpp", nullptr);
     }
     else if (get_installed_game_lang() == LANG_FR) {
-        rf::vpackfile_add("audiof.vpp", nullptr);
-        rf::vpackfile_add("maps_fr.vpp", nullptr);
-        rf::vpackfile_add("levels1f.vpp", nullptr);
-        rf::vpackfile_add("levels2f.vpp", nullptr);
-        rf::vpackfile_add("levels3f.vpp", nullptr);
+        if (!rf::is_dedicated_server) {
+            rf::vpackfile_add("audiof.vpp", nullptr);
+            rf::vpackfile_add("maps_fr.vpp", nullptr);
+            rf::vpackfile_add("levels1f.vpp", nullptr);
+            rf::vpackfile_add("levels2f.vpp", nullptr);
+            rf::vpackfile_add("levels3f.vpp", nullptr);
+        }
         rf::vpackfile_add("ltables.vpp", nullptr);
     }
-    else {
+    else if (!rf::is_dedicated_server) {
         rf::vpackfile_add("audio.vpp", nullptr);
         rf::vpackfile_add("maps_en.vpp", nullptr);
         rf::vpackfile_add("levels1.vpp", nullptr);
@@ -468,15 +473,19 @@ static void vpackfile_init_new()
     rf::vpackfile_add("levelsm.vpp", nullptr);
     // rf::vpackfile_add("levelseb.vpp", nullptr);
     // rf::vpackfile_add("levelsbg.vpp", nullptr);
-    rf::vpackfile_add("maps1.vpp", nullptr);
-    rf::vpackfile_add("maps2.vpp", nullptr);
-    rf::vpackfile_add("maps3.vpp", nullptr);
-    rf::vpackfile_add("maps4.vpp", nullptr);
+    if (!rf::is_dedicated_server) {
+        rf::vpackfile_add("maps1.vpp", nullptr);
+        rf::vpackfile_add("maps2.vpp", nullptr);
+        rf::vpackfile_add("maps3.vpp", nullptr);
+        rf::vpackfile_add("maps4.vpp", nullptr);
+    }
     rf::vpackfile_add("meshes.vpp", nullptr);
     rf::vpackfile_add("motions.vpp", nullptr);
-    rf::vpackfile_add("music.vpp", nullptr);
-    rf::vpackfile_add("ui.vpp", nullptr);
-    load_dashfaction_vpp();
+    if (!rf::is_dedicated_server) {
+        rf::vpackfile_add("music.vpp", nullptr);
+        rf::vpackfile_add("ui.vpp", nullptr);
+        load_dashfaction_vpp();
+    }
     rf::vpackfile_add("tables.vpp", nullptr);
     addr_as_ref<int>(0x01BDB218) = 1;          // VPackfilesLoaded
     addr_as_ref<uint32_t>(0x01BDB210) = 10000; // NumFilesInVfs
@@ -499,8 +508,10 @@ static void vpackfile_init_new()
         write_mem_ptr(0x004B082B + 1, "localized_strings.tbl");
     }
 
-    // Allow modded strings.tbl in ui.vpp
-    force_file_from_packfile("strings.tbl", "ui.vpp");
+    if (!rf::is_dedicated_server) {
+        // Allow modded strings.tbl in ui.vpp
+        force_file_from_packfile("strings.tbl", "ui.vpp");
+    }
 
     xlog::info("Packfiles initialization took %lums", GetTickCount() - start_ticks);
     xlog::info("Packfile name collisions: %d", g_num_name_collisions);

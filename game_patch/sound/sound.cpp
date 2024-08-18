@@ -430,6 +430,16 @@ FunHook<bool(const char*)> snd_pc_file_exists_hook{
     }
 };
 
+FunHook<int(const char*, float, float, float)> snd_get_handle_hook{
+    0x005054B0,
+    [](const char* filename, float min_range, float base_volume, float rolloff) {
+        if (!rf::sound_enabled) {
+            return -1;
+        }
+        return snd_get_handle_hook.call_target(filename, min_range, base_volume, rolloff);
+    },
+};
+
 void snd_ds_apply_patch();
 
 void apply_sound_patches()
@@ -483,6 +493,9 @@ void apply_sound_patches()
 
     // Log when sound file cannot be found
     snd_pc_file_exists_hook.install();
+
+    // Do not update sounds array in dedicated server mode
+    snd_get_handle_hook.install();
 }
 
 void register_sound_commands()
