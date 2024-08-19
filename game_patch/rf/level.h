@@ -85,4 +85,6 @@ namespace rf
     static auto& level_room_from_uid = addr_as_ref<GRoom*(int uid)>(0x0045E7C0);
 
     static auto& level = addr_as_ref<LevelInfo>(0x00645FD8);
+    static auto& level_filename_to_load = addr_as_ref<String>(0x00646140);
+
 }

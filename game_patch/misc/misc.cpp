@@ -19,6 +19,7 @@
 #include "../rf/os/os.h"
 #include "../rf/misc.h"
 #include "../rf/vmesh.h"
+#include "../rf/level.h"
 #include "../rf/file/file.h"
 #include "../object/object.h"
 
@@ -388,6 +389,13 @@ CodeInjection game_set_file_paths_injection{
     },
 };
 
+CallHook level_init_pre_console_output_hook{
+    0x00435ABB,
+    []() {
+        rf::console::printf("-- Level Initializing: %s --", rf::level_filename_to_load.c_str());
+    },
+};
+
 void misc_init()
 {
     // Window title (client and server)
@@ -491,6 +499,9 @@ void misc_init()
 
     // Add support for Bink videos in mods
     game_set_file_paths_injection.install();
+
+    // Add level name to "-- Level Initializing --" message
+    level_init_pre_console_output_hook.install();
 
     // Apply patches from other files
     apply_main_menu_patches();

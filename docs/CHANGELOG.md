@@ -39,6 +39,7 @@ Version 1.8.1 (not released yet)
 - Add Spawn Health/Armor settings for dedicated servers
 - Add Kill Reward settings for dedicated servers
 - Do not load unnecessary VPPs in dedicated server mode
+- Add level filename to "Level Initializing" console message
 
 Version 1.8.0 (released 2022-09-17)
 -----------------------------------
