@@ -106,6 +106,7 @@ FunHook<int()> rf_do_frame_hook{
         int result = rf_do_frame_hook.call_target();
         maybe_autosave();
         debug_do_frame_post();
+        multi_level_download_update();
         return result;
     },
 };
@@ -126,7 +127,6 @@ CodeInjection after_frame_render_hook{
         if (!rf::is_dedicated_server) {
             // Draw on top (after scene)
             frametime_render_ui();
-            multi_render_level_download_progress();
 #if !defined(NDEBUG) && defined(HAS_EXPERIMENTAL)
             experimental_render();
 #endif

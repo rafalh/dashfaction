@@ -78,7 +78,7 @@ struct DashFactionServerInfo
     std::optional<float> max_fov;
 };
 
-void multi_render_level_download_progress();
+void multi_level_download_update();
 void multi_do_patch();
 void multi_after_full_game_init();
 void multi_init_player(rf::Player* player);

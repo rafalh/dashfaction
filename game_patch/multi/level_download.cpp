@@ -694,7 +694,7 @@ void level_download_init()
     download_level_force_cmd.register_cmd();
 }
 
-void multi_render_level_download_progress()
+void multi_level_download_update()
 {
     LevelDownloadManager::instance().process();
 }
