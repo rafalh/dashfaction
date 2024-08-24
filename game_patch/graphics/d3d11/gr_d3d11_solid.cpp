@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <map>
 #include <memory>
-#include <patch_common/ComPtr.h>
+#include <common/ComPtr.h>
 #include <xlog/xlog.h>
 #include "../../rf/geometry.h"
 #include "../../rf/gr/gr.h"

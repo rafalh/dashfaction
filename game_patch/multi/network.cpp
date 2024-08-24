@@ -18,7 +18,7 @@
 #include <patch_common/CodeInjection.h>
 #include <patch_common/AsmWriter.h>
 #include <patch_common/ShortTypes.h>
-#include <patch_common/ComPtr.h>
+#include <common/ComPtr.h>
 #include "multi.h"
 #include "server.h"
 #include "server_internal.h"

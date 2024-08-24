@@ -1,7 +1,7 @@
 #pragma once
 
 #include <d3d11.h>
-#include <patch_common/ComPtr.h>
+#include <common/ComPtr.h>
 #include "gr_d3d11.h"
 
 namespace df::gr::d3d11

@@ -3,7 +3,7 @@
 #include <cassert>
 #include <array>
 #include <d3d11.h>
-#include <patch_common/ComPtr.h>
+#include <common/ComPtr.h>
 #include "../../rf/gr/gr.h"
 #include "gr_d3d11_shader.h"
 #include "gr_d3d11_buffer.h"

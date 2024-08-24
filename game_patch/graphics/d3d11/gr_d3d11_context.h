@@ -2,7 +2,7 @@
 
 #include <optional>
 #include <d3d11.h>
-#include <patch_common/ComPtr.h>
+#include <common/ComPtr.h>
 #include "gr_d3d11_transform.h"
 #include "gr_d3d11_vertex.h"
 #include "gr_d3d11_shader.h"

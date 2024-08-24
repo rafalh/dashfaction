@@ -7,7 +7,7 @@
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/AsmWriter.h>
-#include <patch_common/ComPtr.h>
+#include <common/ComPtr.h>
 #include "../../rf/gr/gr.h"
 #include "../../rf/gr/gr_direct3d.h"
 #include "../../main/main.h"

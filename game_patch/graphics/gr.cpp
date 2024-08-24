@@ -4,7 +4,7 @@
 #include <common/utils/list-utils.h>
 #include <common/utils/os-utils.h>
 #include <common/config/BuildConfig.h>
-#include <patch_common/ComPtr.h>
+#include <common/ComPtr.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>

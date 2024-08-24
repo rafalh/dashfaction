@@ -4,7 +4,7 @@
 #include <patch_common/CallHook.h>
 #include <patch_common/CodeInjection.h>
 #include <patch_common/AsmWriter.h>
-#include <patch_common/ComPtr.h>
+#include <common/ComPtr.h>
 #include <common/error/d3d-error.h>
 #include <common/config/BuildConfig.h>
 #include <xlog/xlog.h>

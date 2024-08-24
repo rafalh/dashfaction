@@ -3,6 +3,7 @@
 #include "VideoDeviceInfoProvider.h"
 #include <common/error/Exception.h>
 #include <common/error/Win32Error.h>
+#include <common/ComPtr.h>
 #include <xlog/xlog.h>
 #include <dxgi.h>
 
@@ -71,7 +72,7 @@ std::vector<std::string> VideoDeviceInfoProviderD3D11::get_adapters()
     std::vector<std::string> adapters;
     unsigned adapter_idx = 0;
     while (true) {
-        IDXGIAdapter* adapter;
+        ComPtr<IDXGIAdapter> adapter;
         HRESULT hr = m_factory->EnumAdapters(adapter_idx++, &adapter);
         if (FAILED(hr)) {
             if (hr != DXGI_ERROR_NOT_FOUND) {
@@ -89,7 +90,6 @@ std::vector<std::string> VideoDeviceInfoProviderD3D11::get_adapters()
         char name[std::size(desc.Description)];
         WideCharToMultiByte(CP_ACP, 0, desc.Description, -1, name, sizeof(name), nullptr, nullptr);
         adapters.emplace_back(name);
-        adapter->Release();
     }
     return adapters;
 }
@@ -98,7 +98,7 @@ std::set<VideoDeviceInfoProvider::Resolution> VideoDeviceInfoProviderD3D11::get_
     unsigned adapter,
     unsigned format
 ) {
-    IDXGIAdapter* dxgi_adapter = nullptr;
+    ComPtr<IDXGIAdapter> dxgi_adapter = nullptr;
     HRESULT hr = m_factory->EnumAdapters(adapter, &dxgi_adapter);
     if (FAILED(hr)) {
         xlog::error("EnumAdapters failed: %lx", hr);
@@ -107,11 +107,10 @@ std::set<VideoDeviceInfoProvider::Resolution> VideoDeviceInfoProviderD3D11::get_
 
     std::set<Resolution> result;
 
-    IDXGIOutput* dxgi_output = nullptr;
+    ComPtr<IDXGIOutput> dxgi_output;
     hr = dxgi_adapter->EnumOutputs(0, &dxgi_output); // FIXME: what about other outputs?
     if (FAILED(hr)) {
         xlog::error("EnumOutputs failed: %lx", hr);
-        dxgi_adapter->Release();
         return {};
     }
 
@@ -132,9 +131,6 @@ std::set<VideoDeviceInfoProvider::Resolution> VideoDeviceInfoProviderD3D11::get_
         result.insert({desc.Width, desc.Height});
     }
 
-    dxgi_output->Release();
-    dxgi_adapter->Release();
-
     return result;
 }
 
@@ -142,14 +138,14 @@ std::set<unsigned> VideoDeviceInfoProviderD3D11::get_multisample_types(
     unsigned adapter, unsigned format, [[maybe_unused]] bool windowed
 ) {
 
-    IDXGIAdapter* dxgi_adapter = nullptr;
+    ComPtr<IDXGIAdapter> dxgi_adapter = nullptr;
     HRESULT hr = m_factory->EnumAdapters(adapter, &dxgi_adapter);
     if (FAILED(hr)) {
         xlog::error("EnumAdapters failed: %lx", hr);
         return {};
     }
 
-    ID3D11Device* d3d11_device = nullptr;
+    ComPtr<ID3D11Device> d3d11_device = nullptr;
     hr = m_D3D11CreateDevice(dxgi_adapter, D3D_DRIVER_TYPE_HARDWARE, nullptr, 0, nullptr, 0, D3D11_SDK_VERSION, &d3d11_device, nullptr, nullptr);
     if (FAILED(hr)) {
         xlog::error("D3D11CreateDevice failed: %lx", hr);
@@ -163,8 +159,6 @@ std::set<unsigned> VideoDeviceInfoProviderD3D11::get_multisample_types(
         if (SUCCEEDED(hr))
             result.insert(i);
     }
-    d3d11_device->Release();
-    dxgi_adapter->Release();
     return result;
 }
 
