@@ -38,10 +38,12 @@ struct GameConfig
 
     enum class Renderer
     {
-        legacy = 0,
-        d3d11 = 1,
+        // separate values for d3d8/d3d9?
+        d3d8 = 0,
+        d3d9 = 1,
+        d3d11 = 2,
     };
-    CfgVar<Renderer> renderer = Renderer::legacy;
+    CfgVar<Renderer> renderer = Renderer::d3d9;
 
     // Graphics
     CfgVar<bool> fast_anims = false;

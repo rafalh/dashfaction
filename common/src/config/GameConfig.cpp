@@ -198,6 +198,7 @@ bool is_valid_enum_value<GameConfig::WndMode>(int value)
 template<>
 bool is_valid_enum_value<GameConfig::Renderer>(int value)
 {
-    return value == static_cast<int>(GameConfig::Renderer::legacy)
+    return value == static_cast<int>(GameConfig::Renderer::d3d8)
+        || value == static_cast<int>(GameConfig::Renderer::d3d9)
         || value == static_cast<int>(GameConfig::Renderer::d3d11);
 }

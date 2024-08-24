@@ -193,11 +193,11 @@ void gr_bitmap_scaled_float(int bitmap_handle, float x, float y, float w, float 
                             float sx, float sy, float sw, float sh, bool flip_x, bool flip_y, rf::gr::Mode mode)
 {
     if (rf::gr::screen.mode == rf::gr::DIRECT3D) {
-        if (g_game_config.renderer == GameConfig::Renderer::legacy) {
-            gr_d3d_bitmap_float(bitmap_handle, x, y, w, h, sx, sy, sw, sh, flip_x, flip_y, mode);
+        if (g_game_config.renderer == GameConfig::Renderer::d3d11) {
+            df::gr::d3d11::bitmap_float(bitmap_handle, x, y, w, h, sx, sy, sw, sh, flip_x, flip_y, mode);
         }
         else {
-            df::gr::d3d11::bitmap_float(bitmap_handle, x, y, w, h, sx, sy, sw, sh, flip_x, flip_y, mode);
+            gr_d3d_bitmap_float(bitmap_handle, x, y, w, h, sx, sy, sw, sh, flip_x, flip_y, mode);
         }
     }
 }
@@ -206,11 +206,11 @@ void gr_set_window_mode(rf::gr::WindowMode window_mode)
 {
     if (rf::gr::screen.mode == rf::gr::DIRECT3D) {
         rf::gr::screen.window_mode = window_mode;
-        if (g_game_config.renderer == GameConfig::Renderer::legacy) {
-            gr_d3d_update_window_mode();
+        if (g_game_config.renderer == GameConfig::Renderer::d3d11) {
+            df::gr::d3d11::update_window_mode();
         }
         else {
-            df::gr::d3d11::update_window_mode();
+            gr_d3d_update_window_mode();
         }
     }
 }
@@ -218,7 +218,7 @@ void gr_set_window_mode(rf::gr::WindowMode window_mode)
 void gr_update_texture_filtering()
 {
     if (rf::gr::screen.mode == rf::gr::DIRECT3D) {
-        if (g_game_config.renderer == GameConfig::Renderer::legacy) {
+        if (g_game_config.renderer != GameConfig::Renderer::d3d11) {
             gr_d3d_update_texture_filtering();
         }
     }
