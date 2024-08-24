@@ -20,7 +20,7 @@ public:
 
 protected:
     BOOL OnInitDialog() override;
-    LRESULT OnNotify(WPARAM wparam, LPARAM lparam) override;
+    BOOL OnCommand(WPARAM wparam, LPARAM lparam) override;
 
 private:
     void InitToolTip();
