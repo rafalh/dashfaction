@@ -33,6 +33,7 @@ private:
     OptionsGraphicsDlg& m_graphics_dlg;
     std::vector<unsigned> m_multi_sample_types;
     CToolTip m_tool_tip;
+    CComboBox m_renderer_combo;
     CComboBox m_adapter_combo;
     CComboBox m_res_combo;
     CComboBox m_color_depth_combo;

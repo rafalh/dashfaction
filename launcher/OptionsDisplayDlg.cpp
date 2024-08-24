@@ -14,17 +14,22 @@ OptionsDisplayDlg::OptionsDisplayDlg(GameConfig& conf, VideoDeviceInfoProvider& 
 BOOL OptionsDisplayDlg::OnInitDialog()
 {
     // Attach controls
+    AttachItem(IDC_RENDERER_COMBO, m_renderer_combo);
     AttachItem(IDC_ADAPTER_COMBO, m_adapter_combo);
     AttachItem(IDC_RESOLUTIONS_COMBO, m_res_combo);
     AttachItem(IDC_COLOR_DEPTH_COMBO, m_color_depth_combo);
     AttachItem(IDC_WND_MODE_COMBO, m_wnd_mode_combo);
 
     // Populate combo boxes with static content
+    m_renderer_combo.AddString("Direct3D 9 (recommended)");
+    m_renderer_combo.AddString("Direct3D 11 (experimental)");
+
     m_wnd_mode_combo.AddString("Exclusive Fullscreen");
     m_wnd_mode_combo.AddString("Windowed");
     m_wnd_mode_combo.AddString("Borderless Window");
 
     // Display
+    m_renderer_combo.SetCurSel(static_cast<int>(m_conf.renderer.value()));
     UpdateAdapterCombo();
     UpdateColorDepthCombo(); // should be before resolution
     UpdateResolutionCombo();
@@ -41,6 +46,9 @@ BOOL OptionsDisplayDlg::OnInitDialog()
 void OptionsDisplayDlg::InitToolTip()
 {
     m_tool_tip.Create(*this);
+    m_tool_tip.AddTool(GetDlgItem(IDC_RENDERER_COMBO), "Graphics API used for rendering");
+    m_tool_tip.AddTool(GetDlgItem(IDC_ADAPTER_COMBO), "Graphics card/adapter used for rendering");
+    m_tool_tip.AddTool(GetDlgItem(IDC_RENDERING_CACHE_EDIT), "RAM allocated for level geometry rendering, max 32 MB");
     m_tool_tip.AddTool(GetDlgItem(IDC_RESOLUTIONS_COMBO), "Please select resolution from provided dropdown list - custom resolution is supposed to work in Windowed/Borderless mode only");
     m_tool_tip.AddTool(GetDlgItem(IDC_VSYNC_CHECK), "Enable vertical synchronization (should limit FPS to monitor refresh rate - usually 60)");
     m_tool_tip.AddTool(GetDlgItem(IDC_MAX_FPS_EDIT), "FPS limit - maximal value is 240 - high FPS can trigger minor bugs in game");
@@ -139,6 +147,7 @@ BOOL OptionsDisplayDlg::OnCommand(WPARAM wparam, [[ maybe_unused ]] LPARAM lpara
 
 void OptionsDisplayDlg::OnSave()
 {
+    m_conf.renderer = static_cast<GameConfig::Renderer>(m_renderer_combo.GetCurSel());
     m_conf.selected_video_card = m_adapter_combo.GetCurSel();
 
     CString resolution_str = GetDlgItemTextA(IDC_RESOLUTIONS_COMBO);
