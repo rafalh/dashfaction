@@ -36,6 +36,13 @@ struct GameConfig
     CfgVar<unsigned> max_fps{120, [](auto val) { return std::clamp(val, min_fps_limit, max_fps_limit); }};
     CfgVar<unsigned> server_max_fps{120, [](auto val) { return std::clamp(val, min_fps_limit, max_fps_limit); }};
 
+    enum class Renderer
+    {
+        legacy = 0,
+        d3d11 = 1,
+    };
+    CfgVar<Renderer> renderer = Renderer::legacy;
+
     // Graphics
     CfgVar<bool> fast_anims = false;
     CfgVar<bool> disable_lod_models = true;

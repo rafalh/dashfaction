@@ -148,6 +148,7 @@ bool GameConfig::visit_vars(T&& visitor, bool is_save)
     result &= visitor(dash_faction_key, "High Scanner Resolution", high_scanner_res);
     result &= visitor(dash_faction_key, "High Monitor Resolution", high_monitor_res);
     result &= visitor(dash_faction_key, "True Color Textures", true_color_textures);
+    result &= visitor(dash_faction_key, "Renderer", renderer);
     result &= visitor(dash_faction_key, "Horizontal FOV", horz_fov);
     result &= visitor(dash_faction_key, "Fpgun FOV Scale", fpgun_fov_scale);
     result &= visitor(dash_faction_key, "Executable Path", game_executable_path);
@@ -182,4 +183,11 @@ bool is_valid_enum_value<GameConfig::WndMode>(int value)
     return value == GameConfig::FULLSCREEN
         || value == GameConfig::WINDOWED
         || value == GameConfig::STRETCHED;
+}
+
+template<>
+bool is_valid_enum_value<GameConfig::Renderer>(int value)
+{
+    return value == static_cast<int>(GameConfig::Renderer::legacy)
+        || value == static_cast<int>(GameConfig::Renderer::d3d11);
 }

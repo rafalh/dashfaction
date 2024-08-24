@@ -22,8 +22,6 @@
 #include "../rf/item.h"
 #include "../rf/clutter.h"
 
-#define USE_D3D11 1
-
 namespace df::gr::d3d11
 {
     void delete_texture(int bm_handle);
@@ -157,37 +155,39 @@ CallHook<void(int, rf::gr::Vertex**, int, rf::gr::Mode)> gr_rect_gr_tmapper_hook
 void gr_delete_texture(int bm_handle)
 {
     if (rf::gr::screen.mode == rf::gr::DIRECT3D) {
-#if USE_D3D11
-        df::gr::d3d11::delete_texture(bm_handle);
-#else
-        gr_d3d_delete_texture(bm_handle);
-#endif
+        if (g_game_config.renderer == GameConfig::Renderer::d3d11) {
+            df::gr::d3d11::delete_texture(bm_handle);
+        }
+        else {
+            gr_d3d_delete_texture(bm_handle);
+        }
     }
 }
 
 bool gr_is_texture_format_supported(rf::bm::Format format)
 {
-#if USE_D3D11
-    (void) format;
-    return true;
-#else
     if (rf::gr::screen.mode == rf::gr::DIRECT3D) {
-        bool gr_d3d_is_texture_format_supported(rf::bm::Format);
-        return gr_d3d_is_texture_format_supported(format);
+        if (g_game_config.renderer == GameConfig::Renderer::d3d11) {
+            return true;
+        }
+        else {
+            bool gr_d3d_is_texture_format_supported(rf::bm::Format);
+            return gr_d3d_is_texture_format_supported(format);
+        }
     }
     return false;
-#endif
 }
 
 bool gr_set_render_target(int bm_handle)
 {
     if (rf::gr::screen.mode == rf::gr::DIRECT3D) {
-#if USE_D3D11
-        return df::gr::d3d11::set_render_target(bm_handle);
-#else
-        bool gr_d3d_set_render_target(int bm_handle);
-        return gr_d3d_set_render_target(bm_handle);
-#endif
+        if (g_game_config.renderer == GameConfig::Renderer::d3d11) {
+            return df::gr::d3d11::set_render_target(bm_handle);
+        }
+        else {
+            bool gr_d3d_set_render_target(int bm_handle);
+            return gr_d3d_set_render_target(bm_handle);
+        }
     }
     else {
         return false;
@@ -197,17 +197,17 @@ bool gr_set_render_target(int bm_handle)
 void gr_bitmap_scaled_float(int bitmap_handle, float x, float y, float w, float h,
                             float sx, float sy, float sw, float sh, bool flip_x, bool flip_y, rf::gr::Mode mode)
 {
-#if !USE_D3D11
-    auto& gr_d3d_get_num_texture_sections = addr_as_ref<int(int bitmap_handle)>(0x0055CA60);
-    if (rf::gr::screen.mode == rf::gr::DIRECT3D && gr_d3d_get_num_texture_sections(bitmap_handle) != 1) {
-        // If bitmap is sectioned fall back to the old implementation...
-        rf::gr::bitmap_scaled(bitmap_handle,
-            static_cast<int>(x), static_cast<int>(y), static_cast<int>(w), static_cast<int>(h),
-            static_cast<int>(sx), static_cast<int>(sy), static_cast<int>(sw), static_cast<int>(sh),
-            flip_x, flip_y, mode);
-        return;
+    if (g_game_config.renderer == GameConfig::Renderer::legacy) {
+        auto& gr_d3d_get_num_texture_sections = addr_as_ref<int(int bm_handle)>(0x0055CA60);
+        if (rf::gr::screen.mode == rf::gr::DIRECT3D && gr_d3d_get_num_texture_sections(bitmap_handle) != 1) {
+            // If bitmap is sectioned fall back to the old implementation...
+            rf::gr::bitmap_scaled(bitmap_handle,
+                static_cast<int>(x), static_cast<int>(y), static_cast<int>(w), static_cast<int>(h),
+                static_cast<int>(sx), static_cast<int>(sy), static_cast<int>(sw), static_cast<int>(sh),
+                flip_x, flip_y, mode);
+            return;
+        }
     }
-#endif
 
     rf::gr::set_texture(bitmap_handle, -1);
     int bm_w, bm_h;
@@ -283,25 +283,26 @@ void gr_apply_patch()
     // Lights
     gr_light_apply_patch();
 
-#if USE_D3D11
-    void gr_d3d11_apply_patch();
-    gr_d3d11_apply_patch();
-#else
-    // D3D generic patches
-    gr_d3d_apply_patch();
+    if (g_game_config.renderer == GameConfig::Renderer::d3d11) {
+        void gr_d3d11_apply_patch();
+        gr_d3d11_apply_patch();
+    }
+    else {
+        // D3D generic patches
+        gr_d3d_apply_patch();
 
-    // D3D texture handling
-    gr_d3d_texture_apply_patch();
+        // D3D texture handling
+        gr_d3d_texture_apply_patch();
 
-    // Back-buffer capture or render to texture related code
-    gr_d3d_capture_apply_patch();
+        // Back-buffer capture or render to texture related code
+        gr_d3d_capture_apply_patch();
 
-    // Gamma related code
-    gr_d3d_gamma_apply_patch();
+        // Gamma related code
+        gr_d3d_gamma_apply_patch();
 
-    // Bink Video patch
-    bink_apply_patch();
-#endif
+        // Bink Video patch
+        bink_apply_patch();
+    }
 
     // Do not flush drawing buffers in gr_set_color
     write_mem<u8>(0x0050CFEB, asm_opcodes::jmp_rel_short);
