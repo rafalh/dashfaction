@@ -5,8 +5,8 @@
 #include <wxx_dialog.h>
 #include <wxx_commondlg.h>
 
-OptionsGraphicsDlg::OptionsGraphicsDlg(GameConfig& conf, VideoDeviceInfoProvider& video_info)
-	: CDialog(IDD_OPTIONS_GRAPHICS), m_conf(conf), m_video_info(video_info)
+OptionsGraphicsDlg::OptionsGraphicsDlg(GameConfig& conf)
+	: CDialog(IDD_OPTIONS_GRAPHICS), m_conf(conf), m_video_info(nullptr)
 {
 }
 
@@ -47,8 +47,7 @@ void OptionsGraphicsDlg::UpdateMsaaCombo()
     m_multi_sample_types.push_back(0);
     try {
         BOOL windowed = m_conf.wnd_mode != GameConfig::FULLSCREEN;
-        auto format = static_cast<D3DFORMAT>(m_conf.res_backbuffer_format.value());
-        auto multi_sample_types = m_video_info.get_multisample_types(m_conf.selected_video_card, format, windowed);
+        auto multi_sample_types = m_video_info->get_multisample_types(m_conf.selected_video_card, m_conf.res_backbuffer_format, windowed);
         for (auto msaa : multi_sample_types) {
             char buf[16];
             sprintf(buf, "MSAAx%u", msaa);
@@ -68,7 +67,7 @@ void OptionsGraphicsDlg::UpdateAnisotropyCheckbox()
 {
     bool anisotropy_supported = false;
     try {
-        anisotropy_supported = m_video_info.has_anisotropy_support(m_conf.selected_video_card);
+        anisotropy_supported = m_video_info->has_anisotropy_support(m_conf.selected_video_card);
     }
     catch (std::exception &e) {
         xlog::error("Cannot check anisotropy support: %s", e.what());
@@ -102,6 +101,13 @@ void OptionsGraphicsDlg::OnSave()
     m_conf.high_monitor_res = (IsDlgButtonChecked(IDC_HIGH_MON_RES_CHECK) == BST_CHECKED);
     m_conf.true_color_textures = (IsDlgButtonChecked(IDC_TRUE_COLOR_TEXTURES_CHECK) == BST_CHECKED);
     m_conf.mesh_static_lighting = (IsDlgButtonChecked(IDC_MESH_STATIC_LIGHTING_CHECK) == BST_CHECKED);
+}
+
+void OptionsGraphicsDlg::OnRendererChange(VideoDeviceInfoProvider* video_info)
+{
+    m_video_info = video_info;
+    UpdateMsaaCombo();
+    UpdateAnisotropyCheckbox();
 }
 
 void OptionsGraphicsDlg::OnAdapterChange()

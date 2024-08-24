@@ -6,13 +6,18 @@
 #include <wxx_dialog.h>
 #include <wxx_commondlg.h>
 
-OptionsDisplayDlg::OptionsDisplayDlg(GameConfig& conf, VideoDeviceInfoProvider& video_info, OptionsGraphicsDlg& graphics_dlg)
-	: CDialog(IDD_OPTIONS_DISPLAY), m_conf(conf), m_video_info(video_info), m_graphics_dlg(graphics_dlg)
+OptionsDisplayDlg::OptionsDisplayDlg(GameConfig& conf, OptionsGraphicsDlg& graphics_dlg) :
+    CDialog(IDD_OPTIONS_DISPLAY),
+    m_conf(conf),
+    m_graphics_dlg(graphics_dlg)
 {
 }
 
 BOOL OptionsDisplayDlg::OnInitDialog()
 {
+    m_video_info = create_device_info_provider(m_conf.renderer);
+    m_graphics_dlg.SetVideoInfo(m_video_info.get());
+
     // Attach controls
     AttachItem(IDC_RENDERER_COMBO, m_renderer_combo);
     AttachItem(IDC_ADAPTER_COMBO, m_adapter_combo);
@@ -60,7 +65,7 @@ void OptionsDisplayDlg::UpdateAdapterCombo()
     m_adapter_combo.ResetContent();
     int selected_idx = -1;
     try {
-        auto adapters = m_video_info.get_adapters();
+        auto adapters = m_video_info->get_adapters();
         for (const auto &adapter : adapters) {
             int idx = m_adapter_combo.AddString(adapter.c_str());
             if (idx < 0)
@@ -82,8 +87,8 @@ void OptionsDisplayDlg::UpdateResolutionCombo()
     int selected_res = -1;
     m_res_combo.ResetContent();
     try {
-        auto format = m_conf.res_bpp == 32 ? D3DFMT_X8R8G8B8 : D3DFMT_R5G6B5;
-        auto resolutions = m_video_info.get_resolutions(m_conf.selected_video_card, format);
+        auto format = m_video_info->get_format_from_bpp(m_conf.res_bpp);
+        auto resolutions = m_video_info->get_resolutions(m_conf.selected_video_card, format);
         for (const auto &res : resolutions) {
             buf.Format("%dx%d", res.width, res.height);
             int pos = m_res_combo.AddString(buf);
@@ -106,16 +111,18 @@ void OptionsDisplayDlg::UpdateResolutionCombo()
 
 void OptionsDisplayDlg::UpdateColorDepthCombo()
 {
-    bool has_16bpp_modes = !m_video_info.get_resolutions(m_conf.selected_video_card, D3DFMT_R5G6B5).empty();
-    bool has_32bpp_modes = !m_video_info.get_resolutions(m_conf.selected_video_card, D3DFMT_X8R8G8B8).empty();
+    auto format_32 = m_video_info->get_format_from_bpp(32);
+    auto format_16 = m_video_info->get_format_from_bpp(16);
+    bool has_16bpp_modes = !m_video_info->get_resolutions(m_conf.selected_video_card, format_16).empty();
+    bool has_32bpp_modes = !m_video_info->get_resolutions(m_conf.selected_video_card, format_32).empty();
 
     if (!has_16bpp_modes) {
         m_conf.res_bpp = 32;
-        m_conf.res_backbuffer_format = D3DFMT_X8R8G8B8;
+        m_conf.res_backbuffer_format = format_32;
     }
     if (!has_32bpp_modes) {
         m_conf.res_bpp = 16;
-        m_conf.res_backbuffer_format = D3DFMT_R5G6B5;
+        m_conf.res_backbuffer_format = format_16;
     }
     int index_32 = -1;
     int index_16 = -1;
@@ -132,6 +139,9 @@ BOOL OptionsDisplayDlg::OnCommand(WPARAM wparam, [[ maybe_unused ]] LPARAM lpara
 {
     if (HIWORD(wparam) == CBN_SELCHANGE) {
         switch (LOWORD(wparam)) {
+            case IDC_RENDERER_COMBO:
+                OnRendererChange();
+                break;
             case IDC_ADAPTER_COMBO:
                 OnAdapterChange();
                 break;
@@ -161,11 +171,21 @@ void OptionsDisplayDlg::OnSave()
     }
 
     m_conf.res_bpp = m_color_depth_combo.GetWindowTextA() == "32 bit" ? 32 : 16;
-    m_conf.res_backbuffer_format = m_conf.res_bpp == 16 ? D3DFMT_R5G6B5 : D3DFMT_X8R8G8B8;
+    m_conf.res_backbuffer_format = m_video_info->get_format_from_bpp(m_conf.res_bpp);
     m_conf.wnd_mode = static_cast<GameConfig::WndMode>(m_wnd_mode_combo.GetCurSel());
     m_conf.vsync = (IsDlgButtonChecked(IDC_VSYNC_CHECK) == BST_CHECKED);
     m_conf.geometry_cache_size = GetDlgItemInt(IDC_RENDERING_CACHE_EDIT, false);
     m_conf.max_fps = GetDlgItemInt(IDC_MAX_FPS_EDIT, false);
+}
+
+void OptionsDisplayDlg::OnRendererChange()
+{
+    m_conf.renderer = static_cast<GameConfig::Renderer>(m_renderer_combo.GetCurSel());
+    m_video_info = create_device_info_provider(m_conf.renderer);
+
+    UpdateAdapterCombo();
+    OnAdapterChange();
+    m_graphics_dlg.OnRendererChange(m_video_info.get());
 }
 
 void OptionsDisplayDlg::OnAdapterChange()
@@ -179,7 +199,7 @@ void OptionsDisplayDlg::OnAdapterChange()
 void OptionsDisplayDlg::OnColorDepthChange()
 {
     m_conf.res_bpp = m_color_depth_combo.GetWindowTextA() == "32 bit" ? 32 : 16;
-    m_conf.res_backbuffer_format = m_conf.res_bpp == 16 ? D3DFMT_R5G6B5 : D3DFMT_X8R8G8B8;
+    m_conf.res_backbuffer_format = m_video_info->get_format_from_bpp(m_conf.res_bpp);
     UpdateResolutionCombo();
     m_graphics_dlg.OnColorDepthChange();
 }
