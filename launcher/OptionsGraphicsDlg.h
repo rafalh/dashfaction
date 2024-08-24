@@ -11,7 +11,7 @@ class OptionsGraphicsDlg : public CDialog
 public:
     OptionsGraphicsDlg(GameConfig& conf);
     void OnSave();
-    void OnRendererChange(VideoDeviceInfoProvider* video_info);
+    void OnRendererChange();
     void OnAdapterChange();
     void OnColorDepthChange();
     void OnWindowModeChange();

@@ -9,6 +9,7 @@ set(SRCS
     UpdateChecker.cpp
     VideoDeviceInfoProviderD3D8.cpp
     VideoDeviceInfoProviderD3D9.cpp
+    VideoDeviceInfoProviderD3D11.cpp
     Win32Handle.h
     include/launcher_common/PatchedAppLauncher.h
     include/launcher_common/UpdateChecker.h

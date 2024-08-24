@@ -92,7 +92,7 @@ std::set<VideoDeviceInfoProvider::Resolution> VideoDeviceInfoProviderD3D9::get_r
 std::set<unsigned> VideoDeviceInfoProviderD3D9::get_multisample_types(unsigned adapter, unsigned format, bool windowed)
 {
     std::set<unsigned> result;
-    for (unsigned i = 2; i < 16; ++i) {
+    for (unsigned i = 2; i <= 16; ++i) {
         HRESULT hr = m_d3d->CheckDeviceMultiSampleType(adapter, D3DDEVTYPE_HAL, static_cast<D3DFORMAT>(format), windowed,
             static_cast<D3DMULTISAMPLE_TYPE>(i), nullptr);
         if (SUCCEEDED(hr))

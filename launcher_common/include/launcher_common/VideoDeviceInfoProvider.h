@@ -39,8 +39,7 @@ inline std::unique_ptr<VideoDeviceInfoProvider> create_device_info_provider(Game
         case GameConfig::Renderer::d3d9:
             return create_d3d9_device_info_provider();
         case GameConfig::Renderer::d3d11:
-            // TODO: implement dedicated provider
-            return create_d3d9_device_info_provider();
+            return create_d3d11_device_info_provider();
         default:
             return {};
     }

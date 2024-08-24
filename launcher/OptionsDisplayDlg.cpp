@@ -15,7 +15,12 @@ OptionsDisplayDlg::OptionsDisplayDlg(GameConfig& conf, OptionsGraphicsDlg& graph
 
 BOOL OptionsDisplayDlg::OnInitDialog()
 {
-    m_video_info = create_device_info_provider(m_conf.renderer);
+    try {
+        m_video_info = create_device_info_provider(m_conf.renderer);
+    }
+    catch (const std::exception& e) {
+        MessageBox(e.what(), nullptr, MB_OK);
+    }
     m_graphics_dlg.SetVideoInfo(m_video_info.get());
 
     // Attach controls
@@ -63,6 +68,9 @@ void OptionsDisplayDlg::InitToolTip()
 void OptionsDisplayDlg::UpdateAdapterCombo()
 {
     m_adapter_combo.ResetContent();
+    if (!m_video_info) {
+        return;
+    }
     int selected_idx = -1;
     try {
         auto adapters = m_video_info->get_adapters();
@@ -86,6 +94,9 @@ void OptionsDisplayDlg::UpdateResolutionCombo()
     CString buf;
     int selected_res = -1;
     m_res_combo.ResetContent();
+    if (!m_video_info) {
+        return;
+    }
     try {
         auto format = m_video_info->get_format_from_bpp(m_conf.res_bpp);
         auto resolutions = m_video_info->get_resolutions(m_conf.selected_video_card, format);
@@ -111,6 +122,10 @@ void OptionsDisplayDlg::UpdateResolutionCombo()
 
 void OptionsDisplayDlg::UpdateColorDepthCombo()
 {
+    m_color_depth_combo.ResetContent();
+    if (!m_video_info) {
+        return;
+    }
     auto format_32 = m_video_info->get_format_from_bpp(32);
     auto format_16 = m_video_info->get_format_from_bpp(16);
     bool has_16bpp_modes = !m_video_info->get_resolutions(m_conf.selected_video_card, format_16).empty();
@@ -170,8 +185,10 @@ void OptionsDisplayDlg::OnSave()
         m_conf.res_height = atoi(height_str);
     }
 
-    m_conf.res_bpp = m_color_depth_combo.GetWindowTextA() == "32 bit" ? 32 : 16;
-    m_conf.res_backbuffer_format = m_video_info->get_format_from_bpp(m_conf.res_bpp);
+    if (m_video_info) {
+        m_conf.res_bpp = m_color_depth_combo.GetWindowTextA() == "32 bit" ? 32 : 16;
+        m_conf.res_backbuffer_format = m_video_info->get_format_from_bpp(m_conf.res_bpp);
+    }
     m_conf.wnd_mode = static_cast<GameConfig::WndMode>(m_wnd_mode_combo.GetCurSel());
     m_conf.vsync = (IsDlgButtonChecked(IDC_VSYNC_CHECK) == BST_CHECKED);
     m_conf.geometry_cache_size = GetDlgItemInt(IDC_RENDERING_CACHE_EDIT, false);
@@ -181,11 +198,21 @@ void OptionsDisplayDlg::OnSave()
 void OptionsDisplayDlg::OnRendererChange()
 {
     m_conf.renderer = static_cast<GameConfig::Renderer>(m_renderer_combo.GetCurSel());
-    m_video_info = create_device_info_provider(m_conf.renderer);
+    try {
+        m_video_info = create_device_info_provider(m_conf.renderer);
+    }
+    catch (const std::exception& e) {
+        MessageBox(e.what(), nullptr, MB_OK);
+    }
+    m_graphics_dlg.SetVideoInfo(m_video_info.get());
 
+    if (m_video_info) {
+        m_conf.res_backbuffer_format = m_video_info->get_format_from_bpp(m_conf.res_bpp);
+    }
     UpdateAdapterCombo();
-    OnAdapterChange();
-    m_graphics_dlg.OnRendererChange(m_video_info.get());
+    UpdateResolutionCombo();
+    UpdateColorDepthCombo();
+    m_graphics_dlg.OnRendererChange();
 }
 
 void OptionsDisplayDlg::OnAdapterChange()
@@ -198,6 +225,9 @@ void OptionsDisplayDlg::OnAdapterChange()
 
 void OptionsDisplayDlg::OnColorDepthChange()
 {
+    if (!m_video_info) {
+        return;
+    }
     m_conf.res_bpp = m_color_depth_combo.GetWindowTextA() == "32 bit" ? 32 : 16;
     m_conf.res_backbuffer_format = m_video_info->get_format_from_bpp(m_conf.res_bpp);
     UpdateResolutionCombo();

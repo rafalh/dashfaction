@@ -43,6 +43,11 @@ void OptionsGraphicsDlg::UpdateMsaaCombo()
 {
     m_msaa_combo.ResetContent();
     m_msaa_combo.AddString("Disabled");
+
+    if (!m_video_info) {
+        return;
+    }
+
     int selected_msaa = 0;
     m_multi_sample_types.push_back(0);
     try {
@@ -67,7 +72,9 @@ void OptionsGraphicsDlg::UpdateAnisotropyCheckbox()
 {
     bool anisotropy_supported = false;
     try {
-        anisotropy_supported = m_video_info->has_anisotropy_support(m_conf.selected_video_card);
+        if (m_video_info) {
+            anisotropy_supported = m_video_info->has_anisotropy_support(m_conf.selected_video_card);
+        }
     }
     catch (std::exception &e) {
         xlog::error("Cannot check anisotropy support: %s", e.what());
@@ -103,9 +110,8 @@ void OptionsGraphicsDlg::OnSave()
     m_conf.mesh_static_lighting = (IsDlgButtonChecked(IDC_MESH_STATIC_LIGHTING_CHECK) == BST_CHECKED);
 }
 
-void OptionsGraphicsDlg::OnRendererChange(VideoDeviceInfoProvider* video_info)
+void OptionsGraphicsDlg::OnRendererChange()
 {
-    m_video_info = video_info;
     UpdateMsaaCombo();
     UpdateAnisotropyCheckbox();
 }
