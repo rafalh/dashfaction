@@ -11,7 +11,7 @@ namespace df::gr::d3d11
     {
     }
 
-    ComPtr<ID3D11RasterizerState> StateManager::create_rasterizer_state(D3D11_CULL_MODE cull_mode, int depth_bias)
+    ComPtr<ID3D11RasterizerState> StateManager::create_rasterizer_state(D3D11_CULL_MODE cull_mode, int depth_bias, bool depth_clip_enable)
     {
         CD3D11_RASTERIZER_DESC desc{CD3D11_DEFAULT{}};
         desc.CullMode = cull_mode;
@@ -19,6 +19,7 @@ namespace df::gr::d3d11
         if (g_game_config.msaa) {
             desc.MultisampleEnable = TRUE;
         }
+        desc.DepthClipEnable = depth_clip_enable;
 
         ComPtr<ID3D11RasterizerState> rasterizer_state;
         check_hr(

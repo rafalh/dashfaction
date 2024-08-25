@@ -65,6 +65,8 @@ namespace df::gr::d3d11
             return {gpu_verts, gpu_inds, base_vertex};
         }
 
+        std::array<float, 4> convert_pos(const rf::gr::Vertex& v, bool is_3d);
+
         ComPtr<ID3D11Device> device_;
         RenderContext& render_context_;
         RingBuffer<GpuTransformedVertex> vertex_ring_buffer_;

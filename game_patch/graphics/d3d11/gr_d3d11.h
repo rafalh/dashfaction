@@ -93,6 +93,7 @@ namespace df::gr::d3d11
         void clear();
         void zbuffer_clear();
         void set_clip();
+        void set_far_clip(bool enabled);
         void flip();
         void texture_save_cache();
         void texture_flush_cache(bool force);
@@ -107,7 +108,9 @@ namespace df::gr::d3d11
         void tmapper(int nv, const rf::gr::Vertex **vertices, int vertex_attributes, rf::gr::Mode mode);
         void line_3d(const rf::gr::Vertex& v0, const rf::gr::Vertex& v1, rf::gr::Mode mode);
         void line_2d(float x1, float y1, float x2, float y2, rf::gr::Mode mode);
-        void setup_3d();
+        bool poly(int nv, rf::gr::Vertex** vertices, int vertex_attributes, rf::gr::Mode mode, bool constant_sw, float sw);
+        void project_vertex(rf::gr::Vertex* v);
+        void setup_3d(Projection proj);
         void render_solid(rf::GSolid* solid, rf::GRoom** rooms, int num_rooms);
         void render_movable_solid(rf::GSolid* solid, const rf::Vector3& pos, const rf::Matrix3& orient);
         void render_alpha_detail_room(rf::GRoom *room, rf::GSolid *solid);
@@ -123,6 +126,7 @@ namespace df::gr::d3d11
         void page_in_solid(rf::GSolid* solid);
         void page_in_movable_solid(rf::GSolid* solid);
         void flush_caches();
+        float z_far() const;
 
     private:
         void init_device();

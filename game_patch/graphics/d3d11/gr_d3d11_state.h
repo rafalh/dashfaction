@@ -12,15 +12,15 @@ namespace df::gr::d3d11
     public:
         StateManager(ComPtr<ID3D11Device> device);
 
-        ID3D11RasterizerState* lookup_rasterizer_state(D3D11_CULL_MODE cull_mode, int depth_bias = 0)
+        ID3D11RasterizerState* lookup_rasterizer_state(D3D11_CULL_MODE cull_mode, int depth_bias = 0, bool depth_clip_enable = true)
         {
-            auto key = std::make_tuple(cull_mode, depth_bias);
+            auto key = std::make_tuple(cull_mode, depth_bias, depth_clip_enable);
             auto it = rasterizer_state_cache_.find(key);
             if (it != rasterizer_state_cache_.end()) {
                 return it->second;
             }
-            auto rasterizer_state = create_rasterizer_state(cull_mode, depth_bias);
-            auto p = rasterizer_state_cache_.emplace(key, create_rasterizer_state(cull_mode, depth_bias));
+            auto rasterizer_state = create_rasterizer_state(cull_mode, depth_bias, depth_clip_enable);
+            auto p = rasterizer_state_cache_.emplace(key, create_rasterizer_state(cull_mode, depth_bias, depth_clip_enable));
             return p.first->second;
         }
 
@@ -70,7 +70,7 @@ namespace df::gr::d3d11
         }
 
     private:
-        ComPtr<ID3D11RasterizerState> create_rasterizer_state(D3D11_CULL_MODE cull_mode, int depth_bias);
+        ComPtr<ID3D11RasterizerState> create_rasterizer_state(D3D11_CULL_MODE cull_mode, int depth_bias, bool depth_clip_enable);
         ComPtr<ID3D11SamplerState> create_sampler_state(rf::gr::TextureSource ts);
         ComPtr<ID3D11BlendState> create_blend_state(rf::gr::AlphaBlend ab);
         ComPtr<ID3D11DepthStencilState> create_depth_stencil_state(gr::ZbufferType zbt);
@@ -79,6 +79,6 @@ namespace df::gr::d3d11
         std::unordered_map<int, ComPtr<ID3D11SamplerState>> sampler_state_cache_;
         std::unordered_map<int, ComPtr<ID3D11BlendState>> blend_state_cache_;
         std::unordered_map<int, ComPtr<ID3D11DepthStencilState>> depth_stencil_state_cache_;
-        std::map<std::tuple<D3D11_CULL_MODE, int>, ComPtr<ID3D11RasterizerState>> rasterizer_state_cache_;
+        std::map<std::tuple<D3D11_CULL_MODE, int, bool>, ComPtr<ID3D11RasterizerState>> rasterizer_state_cache_;
     };
 }

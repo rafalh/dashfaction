@@ -48,7 +48,7 @@ namespace df::gr::d3d11
     public:
         ViewProjTransformBuffer(ID3D11Device* device);
 
-        void update(ID3D11DeviceContext* device_context);
+        void update(const Projection& proj, ID3D11DeviceContext* device_context);
 
         operator ID3D11Buffer*() const
         {
@@ -238,9 +238,10 @@ namespace df::gr::d3d11
         void zbuffer_clear();
         void set_clip();
 
-        void update_view_proj_transform()
+        void update_view_proj_transform(Projection proj)
         {
-            view_proj_transform_cbuffer_.update(device_context_);
+            projection_ = proj;
+            view_proj_transform_cbuffer_.update(projection_, device_context_);
         }
 
         void update_per_frame_constants()
@@ -312,10 +313,11 @@ namespace df::gr::d3d11
 
         void set_cull_mode(D3D11_CULL_MODE cull_mode)
         {
-            if (current_cull_mode_ != cull_mode || zbias_changed_) {
+            if (current_cull_mode_ != cull_mode || zbias_changed_ || depth_clip_enabled_changed_) {
                 current_cull_mode_ = cull_mode;
                 zbias_changed_ = false;
-                set_rasterizer_state(state_manager_.lookup_rasterizer_state(current_cull_mode_, zbias_));
+                depth_clip_enabled_changed_ = false;
+                set_rasterizer_state(state_manager_.lookup_rasterizer_state(current_cull_mode_, zbias_, depth_clip_enabled_));
             }
         }
 
@@ -332,6 +334,14 @@ namespace df::gr::d3d11
             }
         }
 
+        void set_depth_clip_enabled(bool depth_clip_enabled)
+        {
+            if (depth_clip_enabled_ != depth_clip_enabled) {
+                depth_clip_enabled_ = depth_clip_enabled;
+                depth_clip_enabled_changed_ = true;
+            }
+        }
+
         void update_lights()
         {
             lights_buffer_.update(device_context_);
@@ -340,6 +350,11 @@ namespace df::gr::d3d11
         void draw_indexed(int index_count, int index_start_location, int base_vertex_location)
         {
             device_context_->DrawIndexed(index_count, index_start_location, base_vertex_location);
+        }
+
+        const Projection& projection() const
+        {
+            return projection_;
         }
 
     private:
@@ -391,5 +406,8 @@ namespace df::gr::d3d11
         ID3D11RasterizerState* current_rasterizer_state_ = nullptr;
         int zbias_ = 0;
         bool zbias_changed_ = true;
+        bool depth_clip_enabled_ = true;
+        bool depth_clip_enabled_changed_ = true;
+        Projection projection_;
     };
 }

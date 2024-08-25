@@ -306,6 +306,11 @@ namespace rf::gr
         TMAP_FLAG_ALPHA = 8,
     };
 
+    enum VertexFlags
+    {
+        VF_PROJECTED = 1,
+    };
+
     static auto& screen = addr_as_ref<Screen>(0x017C7BC0);
     static auto& gamma_ramp = addr_as_ref<uint32_t[256]>(0x017C7C68);
     static auto& default_wfar = addr_as_ref<float>(0x00596140);

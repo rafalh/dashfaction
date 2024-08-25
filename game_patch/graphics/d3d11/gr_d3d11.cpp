@@ -387,6 +387,45 @@ namespace df::gr::d3d11
         dyn_geo_renderer_->line_2d(x1, y1, x2, y2, mode);
     }
 
+    bool Renderer::poly(int nv, rf::gr::Vertex** vertices, int vertex_attributes, rf::gr::Mode mode, bool constant_sw, float sw)
+    {
+        rf::ubyte and_code = 0xFF;
+        for (int i = 0; i < nv; ++i) {
+            and_code &= vertices[i]->codes;
+        }
+        if (and_code) {
+            return false;
+        }
+        for (int i = 0; i < nv; ++i) {
+            auto v = vertices[i];
+            if (!(v->flags & rf::gr::VF_PROJECTED)) {
+                project_vertex(v);
+            }
+            if (constant_sw) {
+                float unscaled_z = sw / matrix_scale.z;
+                v->sw = render_context_->projection().project_z(unscaled_z);
+            }
+        }
+        tmapper(nv, const_cast<const rf::gr::Vertex**>(vertices), vertex_attributes, mode);
+        return true;
+    }
+
+    void Renderer::project_vertex(rf::gr::Vertex* v)
+    {
+        if (v->flags & rf::gr::VF_PROJECTED) {
+            return;
+        }
+
+        rf::Vector3 unscaled_world_pos = v->world_pos / matrix_scale;
+        auto& proj = render_context_->projection();
+        auto proj_pos = proj.project(unscaled_world_pos);
+        v->sx = screen.clip_width / 2.0f * (proj_pos.x + 1.0f) + screen.offset_x;
+        v->sy = screen.clip_height / 2.0f * (1.0f - proj_pos.y) + screen.offset_y;
+        v->sw = proj_pos.z;
+
+        v->flags |= rf::gr::VF_PROJECTED;
+    }
+
     bool Renderer::set_render_target(int bm_handle)
     {
         dyn_geo_renderer_->flush();
@@ -416,9 +455,14 @@ namespace df::gr::d3d11
         return texture_manager_->read_back_buffer(back_buffer_, x, y, w, h, data);
     }
 
-    void Renderer::setup_3d()
+    void Renderer::setup_3d(Projection proj)
     {
-        render_context_->update_view_proj_transform();
+        render_context_->update_view_proj_transform(proj);
+    }
+
+    void Renderer::set_far_clip(bool enabled)
+    {
+        render_context_->set_depth_clip_enabled(enabled);
     }
 
     void Renderer::render_solid(rf::GSolid* solid, rf::GRoom** rooms, int num_rooms)
@@ -504,4 +548,8 @@ namespace df::gr::d3d11
         mesh_renderer_->flush_caches();
     }
 
+    float Renderer::z_far() const
+    {
+        return render_context_->projection().z_far();
+    }
 }

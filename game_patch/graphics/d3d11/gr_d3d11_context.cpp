@@ -131,11 +131,11 @@ namespace df::gr::d3d11
         DF_GR_D3D11_CHECK_HR(device->CreateBuffer(&desc, nullptr, &buffer_));
     }
 
-    void ViewProjTransformBuffer::update(ID3D11DeviceContext* device_context)
+    void ViewProjTransformBuffer::update(const Projection& proj, ID3D11DeviceContext* device_context)
     {
         ViewProjTransformBufferData data;
         data.view_mat = build_view_matrix(rf::gr::eye_pos, rf::gr::eye_matrix);
-        data.proj_mat = build_proj_matrix();
+        data.proj_mat = proj.matrix();
 
         D3D11_MAPPED_SUBRESOURCE mapped_subres;
         DF_GR_D3D11_CHECK_HR(

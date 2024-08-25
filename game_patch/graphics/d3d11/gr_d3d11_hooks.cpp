@@ -198,6 +198,17 @@ namespace df::gr::d3d11
         renderer->set_fullscreen_state(rf::gr::screen.window_mode == rf::gr::FULLSCREEN);
     }
 
+    rf::ubyte project_vertex_new(Vertex* v)
+    {
+        renderer->project_vertex(v);
+        return v->flags;
+    }
+
+    bool poly(int nv, rf::gr::Vertex** vertices, int vertex_attributes, rf::gr::Mode mode, bool constant_sw, float sw)
+    {
+        return renderer->poly(nv, vertices, vertex_attributes, mode, constant_sw, sw);
+    }
+
     static CodeInjection g_render_room_objects_render_liquid_injection{
         0x004D4106,
         [](auto& regs) {
@@ -211,7 +222,27 @@ namespace df::gr::d3d11
     static CodeInjection gr_d3d_setup_3d_injection{
         0x005473E4,
         []() {
-            renderer->setup_3d();
+            float sx = matrix_scale.x / matrix_scale.z;
+            float sy = matrix_scale.y / matrix_scale.z;
+            static auto& zm = addr_as_ref<float>(0x005A7DD8);
+            float zn = 0.1f; // static near plane (RF uses: zm / matrix_scale.z)
+            zm = 1.0f; // let's not use zm at all to simplify software projections
+            float zf = rf::level.distance_fog_far_clip > 0.0f ? rf::level.distance_fog_far_clip : 1700.0f;
+            renderer->setup_3d(Projection{sx, sy, zn, zf});
+        },
+    };
+
+    static CodeInjection gr_d3d_setup_fustrum_injection{
+        0x00546A40,
+        []() {
+            // Glares and volumetric lights use doubled far clip plane
+            // To avoid using "user clip planes" disable depth clipping
+            // Frustum culling should be enough
+            static auto& use_far_clip = addr_as_ref<bool>(0x01818B65);
+            static auto& far_clip_dist = addr_as_ref<float>(0x01818B68);
+            float z_far = renderer->z_far();
+            bool depth_clip_enable = use_far_clip && far_clip_dist < z_far * 1.1f;
+            renderer->set_far_clip(depth_clip_enable);
         },
     };
 
@@ -281,6 +312,7 @@ void gr_d3d11_apply_patch()
 
     g_render_room_objects_render_liquid_injection.install();
     gr_d3d_setup_3d_injection.install();
+    gr_d3d_setup_fustrum_injection.install();
     vif_lod_mesh_ctor_injection.install();
     vif_lod_mesh_dtor_injection.install();
     v3d_page_in_injection.install();
@@ -304,7 +336,7 @@ void gr_d3d11_apply_patch()
     //AsmWriter{0x00547150}.ret(); // gr_d3d_setup_3d
     //AsmWriter{0x005473F0}.ret(); // gr_d3d_start_instance
     //AsmWriter{0x00547540}.ret(); // gr_d3d_stop_instance
-    //AsmWriter{0x005477A0}.ret(); // gr_d3d_project_vertex
+    AsmWriter{0x005477A0}.jmp(project_vertex_new); // gr_d3d_project_vertex
     //AsmWriter{0x005478F0}.ret(); // gr_d3d_is_normal_facing
     //AsmWriter{0x00547960}.ret(); // gr_d3d_is_normal_facing_plane
     //AsmWriter{0x005479B0}.ret(); // gr_d3d_get_apparent_distance_from_camera
@@ -344,7 +376,7 @@ void gr_d3d11_apply_patch()
     //AsmWriter{0x00558450}.ret(); // gr_d3d_render_glass_shard - uses gr_poly
     AsmWriter{0x00558550}.ret(); // gr_d3d_render_face_wireframe
     //AsmWriter{0x005585F0}.ret(); // gr_d3d_render_weapon_tracer - uses gr_poly
-    //AsmWriter{0x005587C0}.ret(); // gr_d3d_poly - uses gr_d3d_tmapper
+    AsmWriter{0x005587C0}.jmp(poly); // gr_d3d_poly
     AsmWriter{0x00558920}.ret(); // gr_d3d_render_geometry_wireframe
     AsmWriter{0x00558960}.ret(); // gr_d3d_render_geometry_in_editor
     AsmWriter{0x00558C40}.ret(); // gr_d3d_render_sel_face_in_editor

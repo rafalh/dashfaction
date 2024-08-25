@@ -4,8 +4,6 @@
 #include "gr_d3d11_shader.h"
 #include "gr_d3d11_context.h"
 #include "../../rf/os/frametime.h"
-#define NO_D3D8
-#include "../../rf/gr/gr_direct3d.h"
 
 using namespace rf;
 
@@ -77,6 +75,23 @@ namespace df::gr::d3d11
         return color;
     }
 
+    inline std::array<float, 4> DynamicGeometryRenderer::convert_pos(const gr::Vertex& v, bool is_3d)
+    {
+        Vector3 ndc{
+            ((v.sx - gr::screen.offset_x) / gr::screen.clip_width * 2.0f - 1.0f),
+            ((v.sy - gr::screen.offset_y) / gr::screen.clip_height * -2.0f + 1.0f),
+            v.sw,
+        };
+        // Set w to depth in camera space (needed for 3D rendering)
+        float w = is_3d ? render_context_.projection().unproject_z(v.sw) : 1.0f;
+        return {
+            ndc.x * w,
+            ndc.y * w,
+            ndc.z * w,
+            w,
+        };
+    }
+
     void DynamicGeometryRenderer::add_poly(int nv, const gr::Vertex **vertices, int vertex_attributes, const std::array<int, 2>& tex_handles, gr::Mode mode)
     {
         int num_index = (nv - 2) * 3;
@@ -106,16 +121,13 @@ namespace df::gr::d3d11
         if (use_vert_alpha && !(vertex_attributes & gr::TMAP_FLAG_ALPHA)) {
             color.alpha = gr::screen.current_color.alpha;
         }
-        // Note: gr_matrix_scale is zero before first gr_setup_3d call
-        float matrix_scale_z = gr::matrix_scale.z ? gr::matrix_scale.z : 1.0f;
         for (int i = 0; i < nv; ++i) {
             const gr::Vertex& in_vert = *vertices[i];
             GpuTransformedVertex& out_vert = gpu_verts[i];
-            // Set w to depth in camera space (needed for 3D rendering)
-            float w = 1.0f / in_vert.sw / matrix_scale_z;
-            out_vert.x = ((in_vert.sx - gr::screen.offset_x) / gr::screen.clip_width * 2.0f - 1.0f) * w;
-            out_vert.y = ((in_vert.sy - gr::screen.offset_y) / gr::screen.clip_height * -2.0f + 1.0f) * w;
-            out_vert.z = in_vert.sw * gr::d3d::zm * w;
+            auto [x, y, z, w] = convert_pos(in_vert, true);
+            out_vert.x = x;
+            out_vert.y = y;
+            out_vert.z = z;
             out_vert.w = w;
 
             if (use_vert_color && (vertex_attributes & gr::TMAP_FLAG_RGB)) {
@@ -154,16 +166,13 @@ namespace df::gr::d3d11
         rf::Color color = get_vertex_color_from_screen(mode);
         int diffuse = pack_color(color);
 
-        // Note: gr_matrix_scale is zero before first gr_setup_3d call
-        float matrix_scale_z = gr::matrix_scale.z ? gr::matrix_scale.z : 1.0f;
         for (int i = 0; i < num_verts; ++i) {
             const gr::Vertex& in_vert = *vertices[i];
             GpuTransformedVertex& out_vert = gpu_verts[i];
-            out_vert.x = (in_vert.sx - gr::screen.offset_x) / gr::screen.clip_width * 2.0f - 1.0f;
-            out_vert.y = (in_vert.sy - gr::screen.offset_y) / gr::screen.clip_height * -2.0f + 1.0f;
-            float w = is_3d ? 1.0f / in_vert.sw / matrix_scale_z : 1.0f;
-            out_vert.z = in_vert.sw * gr::d3d::zm * w;
-            // Set w to depth in camera space (needed for 3D rendering)
+            auto [x, y, z, w] = convert_pos(in_vert, is_3d);
+            out_vert.x = x;
+            out_vert.y = y;
+            out_vert.z = z;
             out_vert.w = w;
             out_vert.diffuse = diffuse;
         }

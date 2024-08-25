@@ -32,6 +32,22 @@ namespace rf
             return *this;
         }
 
+        Vector3& operator*=(const Vector3& other)
+        {
+            x *= other.x;
+            y *= other.y;
+            z *= other.z;
+            return *this;
+        }
+
+        Vector3& operator/=(const Vector3& other)
+        {
+            x /= other.x;
+            y /= other.y;
+            z /= other.z;
+            return *this;
+        }
+
         Vector3& operator+=(float scalar)
         {
             x += scalar;
@@ -80,6 +96,20 @@ namespace rf
         {
             Vector3 tmp = *this;
             tmp -= other;
+            return tmp;
+        }
+
+        [[nodiscard]] Vector3 operator*(const Vector3& other) const
+        {
+            Vector3 tmp = *this;
+            tmp *= other;
+            return tmp;
+        }
+
+        [[nodiscard]] Vector3 operator/(const Vector3& other) const
+        {
+            Vector3 tmp = *this;
+            tmp /= other;
             return tmp;
         }
 
