@@ -129,6 +129,7 @@ void console_commands_init()
     register_builtin_command("system_info", "Show system information", 0x00525A60);
     register_builtin_command("trilinear_filtering", "Toggle trilinear filtering", 0x0054F050);
     register_builtin_command("detail_textures", "Toggle detail textures", 0x0054F0B0);
+    register_builtin_command("toggle_crouch", nullptr, 0x00430C50);
 
 #ifdef DEBUG
     register_builtin_command("drop_fixed_cam", "Drop a fixed camera", 0x0040D220);
@@ -144,7 +145,6 @@ void console_commands_init()
     register_builtin_command("set_weapon", "set the current weapon for the targeted entity", 0x00418AA0);
     register_builtin_command("jump_height", "set the height the player can jump", 0x00418B80);
     register_builtin_command("fall_factor", nullptr, 0x004282F0);
-    register_builtin_command("toggle_crouch", nullptr, 0x00430C50);
     register_builtin_command("player_step", nullptr, 0x00433DB0);
     register_builtin_command("difficulty", nullptr, 0x00434EB0);
     register_builtin_command("mouse_cursor", "Sets the mouse cursor", 0x00435210);
