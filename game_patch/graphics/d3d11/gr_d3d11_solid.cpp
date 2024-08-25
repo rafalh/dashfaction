@@ -295,12 +295,14 @@ namespace df::gr::d3d11
 
     void GRenderCacheBuilder::add_room(GRoom* room, GSolid* solid)
     {
+        if (room->is_sky) {
+            is_sky_ = true;
+        }
         link_faces_to_texture_movers(room->face_list, solid);
         for (GFace& face : room->face_list) {
             add_face(&face, solid);
         }
         if (room->is_sky) {
-            is_sky_ = true;
             for (GRoom* detail_room : room->detail_rooms) {
                 add_room(detail_room, solid);
             }
@@ -327,7 +329,7 @@ namespace df::gr::d3d11
         FaceRenderType render_type = determine_face_render_type(face);
         int face_tex = face->attributes.bitmap_id;
         int lightmap_tex = -1;
-        if (face->attributes.surface_index >= 0) {
+        if (!is_sky_ && face->attributes.surface_index >= 0) {
             GSurface* surface = solid->surfaces[face->attributes.surface_index];
             lightmap_tex = surface->lightmap->bm_handle;
         }
