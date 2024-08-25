@@ -119,21 +119,20 @@ void OptionsDisplayDlg::UpdateColorDepthCombo()
     m_color_depth_combo.SetCurSel(m_conf.res_bpp == 16 ? index_16 : index_32);
 }
 
-LRESULT OptionsDisplayDlg::OnNotify([[ maybe_unused ]] WPARAM wparam, LPARAM lparam)
+BOOL OptionsDisplayDlg::OnCommand(WPARAM wparam, [[ maybe_unused ]] LPARAM lparam)
 {
-    auto& nmhdr = *reinterpret_cast<LPNMHDR>(lparam);
-    switch (nmhdr.code) {
-    case CBN_SELCHANGE:
-        if (nmhdr.idFrom == IDC_ADAPTER_COMBO) {
-            OnAdapterChange();
+    if (HIWORD(wparam) == CBN_SELCHANGE) {
+        switch (LOWORD(wparam)) {
+            case IDC_ADAPTER_COMBO:
+                OnAdapterChange();
+                break;
+            case IDC_WND_MODE_COMBO:
+                OnWindowModeChange();
+                break;
+            case IDC_COLOR_DEPTH_COMBO:
+                OnColorDepthChange();
+                break;
         }
-        else if (nmhdr.idFrom == IDC_WND_MODE_COMBO) {
-            OnWindowModeChange();
-        }
-        else if (nmhdr.idFrom == IDC_COLOR_DEPTH_COMBO) {
-            OnColorDepthChange();
-        }
-        break;
     }
     return 0;
 }
