@@ -40,6 +40,7 @@ Version 1.8.1 (not released yet)
 - Add Kill Reward settings for dedicated servers
 - Do not load unnecessary VPPs in dedicated server mode
 - Add level filename to "Level Initializing" console message
+- Add `toggle_crouch` command to allow players to switch between toggle crouch and hold crouch (default)
 
 Version 1.8.0 (released 2022-09-17)
 -----------------------------------
