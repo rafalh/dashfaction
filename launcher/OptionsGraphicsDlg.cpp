@@ -20,6 +20,7 @@ BOOL OptionsGraphicsDlg::OnInitDialog()
     UpdateAnisotropyCheckbox();
     CheckDlgButton(IDC_FAST_ANIMS_CHECK, m_conf.fast_anims ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_DISABLE_LOD_CHECK, m_conf.disable_lod_models ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(IDC_UNCLAMP_LIGHTMAPS_CHECK, m_conf.unclamp_lightmaps ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_HIGH_SCANNER_RES_CHECK, m_conf.high_scanner_res ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_HIGH_MON_RES_CHECK, m_conf.high_monitor_res ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_TRUE_COLOR_TEXTURES_CHECK, m_conf.true_color_textures ? BST_CHECKED : BST_UNCHECKED);
@@ -31,6 +32,7 @@ BOOL OptionsGraphicsDlg::OnInitDialog()
     UpdateAnisotropyCheckbox();
     CheckDlgButton(IDC_FAST_ANIMS_CHECK, m_conf.fast_anims ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_DISABLE_LOD_CHECK, m_conf.disable_lod_models ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(IDC_UNCLAMP_LIGHTMAPS_CHECK, m_conf.unclamp_lightmaps ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_HIGH_SCANNER_RES_CHECK, m_conf.high_scanner_res ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_HIGH_MON_RES_CHECK, m_conf.high_monitor_res ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_TRUE_COLOR_TEXTURES_CHECK, m_conf.true_color_textures ? BST_CHECKED : BST_UNCHECKED);
@@ -90,6 +92,7 @@ void OptionsGraphicsDlg::InitToolTip()
     m_tool_tip.AddTool(GetDlgItem(IDC_HIGH_SCANNER_RES_CHECK), "Increase scanner resolution (used by Rail Gun, Rocket Launcher and Fusion Launcher)");
     m_tool_tip.AddTool(GetDlgItem(IDC_HIGH_MON_RES_CHECK), "Increase monitors and mirrors resolution");
     m_tool_tip.AddTool(GetDlgItem(IDC_TRUE_COLOR_TEXTURES_CHECK), "Increase texture color depth - especially visible for lightmaps and shadows");
+    m_tool_tip.AddTool(GetDlgItem(IDC_UNCLAMP_LIGHTMAPS_CHECK), "Unclamp lightmap rendering colour range (allows for fully dark lighting on geometry)");
 }
 
 void OptionsGraphicsDlg::OnSave()
@@ -102,6 +105,7 @@ void OptionsGraphicsDlg::OnSave()
     m_conf.high_monitor_res = (IsDlgButtonChecked(IDC_HIGH_MON_RES_CHECK) == BST_CHECKED);
     m_conf.true_color_textures = (IsDlgButtonChecked(IDC_TRUE_COLOR_TEXTURES_CHECK) == BST_CHECKED);
     m_conf.mesh_static_lighting = (IsDlgButtonChecked(IDC_MESH_STATIC_LIGHTING_CHECK) == BST_CHECKED);
+    m_conf.unclamp_lightmaps = (IsDlgButtonChecked(IDC_UNCLAMP_LIGHTMAPS_CHECK) == BST_CHECKED);
 }
 
 void OptionsGraphicsDlg::OnAdapterChange()
