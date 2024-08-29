@@ -92,7 +92,7 @@ void OptionsGraphicsDlg::InitToolTip()
     m_tool_tip.AddTool(GetDlgItem(IDC_HIGH_SCANNER_RES_CHECK), "Increase scanner resolution (used by Rail Gun, Rocket Launcher and Fusion Launcher)");
     m_tool_tip.AddTool(GetDlgItem(IDC_HIGH_MON_RES_CHECK), "Increase monitors and mirrors resolution");
     m_tool_tip.AddTool(GetDlgItem(IDC_TRUE_COLOR_TEXTURES_CHECK), "Increase texture color depth - especially visible for lightmaps and shadows");
-    m_tool_tip.AddTool(GetDlgItem(IDC_UNCLAMP_LIGHTMAPS_CHECK), "Unclamp lightmap rendering colour range (allows for fully dark lighting on geometry)");
+    m_tool_tip.AddTool(GetDlgItem(IDC_UNCLAMP_LIGHTMAPS_CHECK), "Improve lighting by allowing lightmaps on level geometry to use the full range of available colors");
 }
 
 void OptionsGraphicsDlg::OnSave()
