@@ -124,7 +124,7 @@ void multi_apply_kill_reward(rf::Player* player)
     }
     if (conf.kill_reward_effective_health > 0.0f) {
         float life_to_add = std::min(conf.kill_reward_effective_health, max_life - ep->life);
-        float armor_to_add = std::min((conf.kill_reward_effective_health - life_to_add) / 2, max_armor - ep->life);
+        float armor_to_add = std::min((conf.kill_reward_effective_health - life_to_add) / 2, max_armor - ep->armor);
         ep->life += life_to_add;
         ep->armor += armor_to_add;
     }
