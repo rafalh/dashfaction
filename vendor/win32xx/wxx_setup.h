@@ -87,10 +87,10 @@
 #endif
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 
-#include <WinSock2.h>   // must include before windows.h
-#include <Windows.h>
-#include <CommCtrl.h>
-#include <Shlwapi.h>
+#include <winsock2.h>   // must include before windows.h
+#include <windows.h>
+#include <commctrl.h>
+#include <shlwapi.h>
 
 #include <cassert>
 #include <vector>
