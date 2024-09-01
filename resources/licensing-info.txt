@@ -169,15 +169,16 @@ Homepage: https://www.rarlab.com/
 ## win32++
 ###############################################################################
 
-Win32++   Version 8.7.0
-Release Date: 12th August 2019
+Win32++   Version 9.6.1
+Release Date: 29th July 2024
 
      David Nash
      email: dnash@bigpond.net.au
      url: https://sourceforge.net/projects/win32-framework
+          https://github.com/DavidNash2024/Win32xx
 
 
-Copyright (c) 2005-2019  David Nash
+Copyright (c) 2005-2024  David Nash
 
 Permission is hereby granted, free of charge, to
 any person obtaining a copy of this software and
@@ -305,7 +306,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ## FreeType
 ###############################################################################
 
-Portions of this software are copyright © 2020 The FreeType
+Portions of this software are copyright © 2024 The FreeType
 Project (www.freetype.org).  All rights reserved.
 
 ###############################################################################
