@@ -1,12 +1,13 @@
-// Win32++   Version 8.7.0
-// Release Date: 12th August 2019
+// Win32++   Version 9.6.1
+// Release Date: 29th July 2024
 //
 //      David Nash
 //      email: dnash@bigpond.net.au
 //      url: https://sourceforge.net/projects/win32-framework
+//           https://github.com/DavidNash2024/Win32xx
 //
 //
-// Copyright (c) 2005-2019  David Nash
+// Copyright (c) 2005-2024  David Nash
 //
 // Permission is hereby granted, free of charge, to
 // any person obtaining a copy of this software and
@@ -39,27 +40,13 @@
 #define _WIN32XX_MENUBAR_H_
 
 #include "wxx_wincore.h"
-#include "wxx_gdi.h"
-#include "wxx_controls.h"
 #include "wxx_toolbar.h"
-
-
-#ifndef WM_UNINITMENUPOPUP
-  #define WM_UNINITMENUPOPUP        0x0125
-#endif
-
-#ifndef WM_MENURBUTTONUP
-  #define WM_MENURBUTTONUP      0x0122
-#endif
 
 
 namespace Win32xx
 {
 
-    ////////////////////////////////////
-    // Declaration of the CMenuBar class
-    //
-
+    /////////////////////////////////////////////////////////////
     // The CMenuBar class provides a menu inside a rebar control.
     // CMenuBar inherits from CToolBar.
     class CMenuBar : public CToolBar
@@ -68,17 +55,16 @@ namespace Win32xx
     public:
         CMenuBar();
         virtual ~CMenuBar();
-        virtual void SetMenu(HMENU menu);
 
-        void DrawAllMDIButtons(CDC& drawDC);
-        CWnd* GetMDIClient() const;
-        CWnd* GetActiveMDIChild() const;
-        HMENU GetMenu() const {return m_topMenu;}
-        virtual LRESULT OnMenuChar(UINT msg, WPARAM wparam, LPARAM lparam);
-        virtual LRESULT OnSysCommand(UINT msg, WPARAM wparam, LPARAM lparam);
+        void    DrawAllMDIButtons(CDC& drawDC);
+        HMENU   GetBarMenu() const {return m_topMenu;}
+        BOOL    IsAltMode() const { return m_isAltMode; }
+        LRESULT MenuChar(UINT msg, WPARAM wparam, LPARAM lparam);
+        void    SetupMenuBar(HMENU menu);
+        LRESULT SysCommand(UINT msg, WPARAM wparam, LPARAM lparam);
 
     protected:
-        //Overridables
+        // Overridables
         virtual void OnAttach();
         virtual LRESULT OnDrawItem(UINT msg, WPARAM wparam, LPARAM lparam);
         virtual LRESULT OnExitMenuLoop(UINT msg, WPARAM wparam, LPARAM lparam);
@@ -88,10 +74,12 @@ namespace Win32xx
         virtual LRESULT OnLButtonDown(UINT msg, WPARAM wparam, LPARAM lparam);
         virtual LRESULT OnLButtonUp(UINT msg, WPARAM wparam, LPARAM lparam);
         virtual LRESULT OnMeasureItem(UINT msg, WPARAM wparam, LPARAM lparam);
+        virtual LRESULT OnMenuChar(UINT msg, WPARAM wparam, LPARAM lparam);
         virtual BOOL    OnMenuInput(UINT msg, WPARAM wparam, LPARAM lparam);
         virtual LRESULT OnMouseLeave(UINT msg, WPARAM wparam, LPARAM lparam);
         virtual LRESULT OnMouseMove(UINT msg, WPARAM wparam, LPARAM lparam);
         virtual LRESULT OnNotifyReflect(WPARAM wparam, LPARAM lparam);
+        virtual LRESULT OnSysCommand(UINT msg, WPARAM wparam, LPARAM lparam);
         virtual LRESULT OnSysKeyDown(UINT msg, WPARAM wparam, LPARAM lparam);
         virtual LRESULT OnSysKeyUp(UINT msg, WPARAM wparam, LPARAM lparam);
         virtual LRESULT OnTBNDropDown(LPNMTOOLBAR pNMTB);
@@ -100,22 +88,29 @@ namespace Win32xx
         virtual LRESULT OnWindowPosChanging(UINT msg, WPARAM wparam, LPARAM lparam);
         virtual void    PreCreate(CREATESTRUCT& cs);
         virtual void    PreRegisterClass(WNDCLASS& wc);
+        virtual BOOL    PreTranslateMessage(MSG& msg);
 
-        // Not intended to be overridden
+        // Not intended to be overridden.
         LRESULT WndProcDefault(UINT msg, WPARAM wparam, LPARAM lparam);
 
     private:
         CMenuBar(const CMenuBar&);              // Disable copy construction
-        CMenuBar& operator = (const CMenuBar&); // Disable assignment operator
+        CMenuBar& operator=(const CMenuBar&);   // Disable assignment operator
+
+        void Cancel() const;
         void DoAltKey(WORD keyCode);
-        void DrawMDIButton(CDC& drawDC, int button, UINT state);
+        void DrawMDIButton(CDC& drawDC, int button, UINT state) const;
         void ExitMenu();
+        CWnd* GetActiveMDIChild() const;
+        CWnd* GetMDIClient() const;
         void GrabFocus();
         BOOL IsMDIChildMaxed() const;
         BOOL IsMDIFrame() const;
         LRESULT OnPopupMenu();
+        void Press(int buttonID, BOOL press) const;
         void ReleaseFocus();
-        void SetHotItem(int nHot);
+        void StoreHotItem(int hotItem);
+        void UpdateMDIButtons(WPARAM wparam, LPARAM lparam) const;
         static LRESULT CALLBACK StaticMsgHook(int code, WPARAM wparam, LPARAM lparam);
 
         enum MDIButtonType
@@ -125,19 +120,19 @@ namespace Win32xx
             MDI_CLOSE = 2
         };
 
-        BOOL  m_isExitAfter;    // Exit after Popup menu ends
-        BOOL  m_isKeyMode;      // keyboard navigation mode
-        BOOL  m_isMenuActive;   // popup menu active
-        BOOL  m_isSelPopup;     // a popup (cascade) menu is selected
-        HMENU m_popupMenu;      // handle to the popup menu
-        HMENU m_selMenu;        // handle to the cascaded popup menu
-        HMENU m_topMenu;        // handle to the top level menu
-        HWND  m_prevFocus;      // handle to window which had focus
-        CRect m_mdiRect[3];     // array of CRect for MDI buttons
-        int   m_hotItem;        // hot item
-        int   m_mdiButton;      // the MDI button (MDIButtonType) pressed
-        CPoint m_oldMousePos;   // old Mouse position
-
+        CPoint m_oldMousePos;    // Old Mouse position
+        CRect m_mdiRect[3];      // Array of CRect for MDI buttons
+        HHOOK m_msgHook;         // Handle to the message hook
+        HMENU m_popupMenu;       // Handle to the popup menu
+        HMENU m_selectedMenu;    // Handle to the cascaded popup menu
+        HMENU m_topMenu;         // Handle to the top level menu
+        HWND  m_prevFocus;       // Handle to window that had focus
+        int   m_hotItem;         // Hot item
+        BOOL  m_isAltMode;       // Alt key toggled?
+        BOOL  m_isExitAfter;     // Is exit after Popup menu ends?
+        BOOL  m_isKeyMode;       // Is Keyboard navigation mode active?
+        BOOL  m_isMenuActive;    // Is popup menu active?
+        BOOL  m_isSelectedPopup; // Is a popup (cascade) menu is selected?
     };  // class CMenuBar
 
 }
@@ -152,34 +147,33 @@ namespace Win32xx
     // Definitions for the CMenuBar class
     //
 
-    inline CMenuBar::CMenuBar()
+    inline CMenuBar::CMenuBar() : m_msgHook(NULL), m_popupMenu(NULL), m_selectedMenu(NULL),
+        m_topMenu(NULL), m_prevFocus(NULL), m_hotItem(-1), m_isAltMode(FALSE), m_isExitAfter(FALSE),
+        m_isKeyMode(FALSE), m_isMenuActive(FALSE), m_isSelectedPopup(FALSE)
     {
-        m_isExitAfter   = FALSE;
-        m_topMenu      = NULL;
-        m_hotItem       = -1;
-        m_isSelPopup    = FALSE;
-        m_selMenu      = NULL;
-        m_isMenuActive  = FALSE;
-        m_isKeyMode     = FALSE;
-        m_prevFocus    = NULL;
-        m_mdiButton     = 0;
-        m_popupMenu    = 0;
     }
 
     inline CMenuBar::~CMenuBar()
     {
     }
 
-    //Handle key pressed with Alt held down
+    // Cancel certain modes, such as mouse capture.
+    inline void CMenuBar::Cancel() const
+    {
+        SendMessage(WM_CANCELMODE, 0, 0);
+    }
+
+    // Handle key pressed with Alt held down.
     inline void CMenuBar::DoAltKey(WORD keyCode)
     {
-        UINT item;
-        if (SendMessage(TB_MAPACCELERATOR, (WPARAM)keyCode, (LPARAM)&item))
+        TCHAR key = static_cast<TCHAR>(keyCode);
+        int item = MapAccelerator(key);
+        if (item >= 0)
         {
             GrabFocus();
             m_isKeyMode = TRUE;
-            SetHotItem(item);
-            m_isMenuActive = TRUE;
+            m_isAltMode = TRUE;
+            StoreHotItem(item);
             PostMessage(UWM_POPUPMENU, 0, 0);
         }
         else
@@ -194,8 +188,8 @@ namespace Win32xx
 
         if (IsMDIChildMaxed())
         {
-            int cx = GetSystemMetrics(SM_CXSMICON);
-            int cy = GetSystemMetrics(SM_CYSMICON);
+            int cx = ::GetSystemMetrics(SM_CXSMICON) * GetWindowDpi(*this) / GetWindowDpi(HWND_DESKTOP);
+            int cy = ::GetSystemMetrics(SM_CYSMICON) * GetWindowDpi(*this) / GetWindowDpi(HWND_DESKTOP);
             CRect rc = GetClientRect();
             int gap = 4;
             rc.right -= gap;
@@ -207,16 +201,16 @@ namespace Win32xx
                 int top = rc.bottom/2 - cy/2;
                 int right = rc.right - i*cx - gap*(i+1);
                 int bottom = rc.bottom/2 + cy/2;
-                ::SetRect(&m_mdiRect[2 - i], left, top, right, bottom);
+                VERIFY(::SetRect(&m_mdiRect[2 - i], left, top, right, bottom));
             }
 
-            // Hide the MDI button if it won't fit
+            // Hide the MDI button if it won't fit.
             for (int k = 0 ; k <= 2 ; ++k)
             {
 
                 if (m_mdiRect[k].left < GetMaxSize().cx)
                 {
-                    ::SetRectEmpty(&m_mdiRect[k]);
+                    VERIFY(::SetRectEmpty(&m_mdiRect[k]));
                 }
             }
 
@@ -227,102 +221,75 @@ namespace Win32xx
     }
 
     // Draws an individual MDI button.
-    inline void CMenuBar::DrawMDIButton(CDC& drawDC, int button, UINT state)
+    inline void CMenuBar::DrawMDIButton(CDC& drawDC, int button, UINT state) const
     {
         if (!IsRectEmpty(&m_mdiRect[button]))
         {
+            // Use the Marlett font to draw special characters.
+            CFont marlett;
+            marlett.CreatePointFont(100, _T("Marlett"));
+            drawDC.SetBkMode(TRANSPARENT);
+            LOGFONT lf = DpiScaleLogfont(marlett.GetLogFont(), 10);
+            drawDC.CreateFontIndirect(lf);
+
+            COLORREF grey(GetSysColor(COLOR_BTNFACE));
+            COLORREF black(RGB(0, 0, 0));
+            COLORREF white(RGB(255, 255, 255));
+
             switch (state)
             {
             case 0:
-                {
-                    // Draw a grey outline
-                drawDC.CreatePen(PS_SOLID, 1, GetSysColor(COLOR_BTNFACE));
-                drawDC.MoveTo(m_mdiRect[button].left, m_mdiRect[button].bottom);
-                drawDC.LineTo(m_mdiRect[button].right, m_mdiRect[button].bottom);
-                drawDC.LineTo(m_mdiRect[button].right, m_mdiRect[button].top);
-                drawDC.LineTo(m_mdiRect[button].left, m_mdiRect[button].top);
-                drawDC.LineTo(m_mdiRect[button].left, m_mdiRect[button].bottom);
-                }
+                // Draw a grey box for the normal button to erase other highlighting.
+                drawDC.SetTextColor(grey);
+                drawDC.TextOut(m_mdiRect[button].left, m_mdiRect[button].top, _T("\x63"), 1);
+                drawDC.TextOut(m_mdiRect[button].left, m_mdiRect[button].top, _T("\x64"), 1);
                 break;
             case 1:
-                {
-                    // Draw outline, white at top, black on bottom
-                drawDC.CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
-                drawDC.MoveTo(m_mdiRect[button].left, m_mdiRect[button].bottom);
-                drawDC.LineTo(m_mdiRect[button].right, m_mdiRect[button].bottom);
-                drawDC.LineTo(m_mdiRect[button].right, m_mdiRect[button].top);
-                drawDC.CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
-                drawDC.LineTo(m_mdiRect[button].left, m_mdiRect[button].top);
-                drawDC.LineTo(m_mdiRect[button].left, m_mdiRect[button].bottom);
-                }
-
+                // Draw popped up button, black on right and bottom.
+                drawDC.SetTextColor(white);
+                drawDC.TextOut(m_mdiRect[button].left, m_mdiRect[button].top, _T("\x63"), 1);
+                drawDC.SetTextColor(black);
+                drawDC.TextOut(m_mdiRect[button].left, m_mdiRect[button].top, _T("\x64"), 1);
                 break;
             case 2:
-                {
-                    // Draw outline, black on top, white on bottom
-                drawDC.CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
-                drawDC.MoveTo(m_mdiRect[button].left, m_mdiRect[button].bottom);
-                drawDC.LineTo(m_mdiRect[button].right, m_mdiRect[button].bottom);
-                drawDC.LineTo(m_mdiRect[button].right, m_mdiRect[button].top);
-                drawDC.CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
-                drawDC.LineTo(m_mdiRect[button].left, m_mdiRect[button].top);
-                drawDC.LineTo(m_mdiRect[button].left, m_mdiRect[button].bottom);
-                }
+                // Draw pressed button, black on left and top.
+                drawDC.SetTextColor(black);
+                drawDC.TextOut(m_mdiRect[button].left, m_mdiRect[button].top, _T("\x63"), 1);
+                drawDC.SetTextColor(white);
+                drawDC.TextOut(m_mdiRect[button].left, m_mdiRect[button].top, _T("\x64"), 1);
                 break;
             }
-
-            drawDC.CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
 
             switch (button)
             {
             case MDI_MIN:
-                // Manually Draw Minimise button
-                drawDC.MoveTo(m_mdiRect[0].left + 4, m_mdiRect[0].bottom -4);
-                drawDC.LineTo(m_mdiRect[0].right - 4, m_mdiRect[0].bottom - 4);
+            {
+                // Draw the minimize button.
+                CRect rc = m_mdiRect[0];
+                rc.OffsetRect(DpiScaleInt(1), 0);
 
-                drawDC.MoveTo(m_mdiRect[0].left + 4, m_mdiRect[0].bottom -5);
-                drawDC.LineTo(m_mdiRect[0].right - 4, m_mdiRect[0].bottom - 5);
+                drawDC.SetTextColor(black);
+                drawDC.TextOut(rc.left, rc.top, _T("\x30"), 1);
                 break;
+            }
             case MDI_RESTORE:
-                // Manually Draw Restore Button
-                drawDC.MoveTo(m_mdiRect[1].left + 3, m_mdiRect[1].top + 7);
-                drawDC.LineTo(m_mdiRect[1].left + 3, m_mdiRect[1].bottom -4);
-                drawDC.LineTo(m_mdiRect[1].right - 6, m_mdiRect[1].bottom -4);
-                drawDC.LineTo(m_mdiRect[1].right - 6, m_mdiRect[1].top + 7);
-                drawDC.LineTo(m_mdiRect[1].left + 3, m_mdiRect[1].top + 7);
+            {
+                // Draw the restore button.
+                CRect rc = m_mdiRect[1];
+                rc.OffsetRect(1, 0);
 
-                drawDC.MoveTo(m_mdiRect[1].left + 3, m_mdiRect[1].top + 8);
-                drawDC.LineTo(m_mdiRect[1].right - 6, m_mdiRect[1].top + 8);
-
-                drawDC.MoveTo(m_mdiRect[1].left + 5, m_mdiRect[1].top + 7);
-                drawDC.LineTo(m_mdiRect[1].left + 5, m_mdiRect[1].top + 4);
-                drawDC.LineTo(m_mdiRect[1].right - 4, m_mdiRect[1].top + 4);
-                drawDC.LineTo(m_mdiRect[1].right - 4, m_mdiRect[1].bottom -6);
-                drawDC.LineTo(m_mdiRect[1].right - 6, m_mdiRect[1].bottom -6);
-
-                drawDC.MoveTo(m_mdiRect[1].left + 5, m_mdiRect[1].top + 5);
-                drawDC.LineTo(m_mdiRect[1].right - 4, m_mdiRect[1].top + 5);
+                drawDC.SetTextColor(black);
+                drawDC.TextOut(rc.left, rc.top, _T("\x32"), 1);
                 break;
+            }
             case MDI_CLOSE:
-                // Manually Draw Close Button
-                drawDC.MoveTo(m_mdiRect[2].left + 4, m_mdiRect[2].top +5);
-                drawDC.LineTo(m_mdiRect[2].right - 4, m_mdiRect[2].bottom -3);
-
-                drawDC.MoveTo(m_mdiRect[2].left + 5, m_mdiRect[2].top +5);
-                drawDC.LineTo(m_mdiRect[2].right - 4, m_mdiRect[2].bottom -4);
-
-                drawDC.MoveTo(m_mdiRect[2].left + 4, m_mdiRect[2].top +6);
-                drawDC.LineTo(m_mdiRect[2].right - 5, m_mdiRect[2].bottom -3);
-
-                drawDC.MoveTo(m_mdiRect[2].right -5, m_mdiRect[2].top +5);
-                drawDC.LineTo(m_mdiRect[2].left + 3, m_mdiRect[2].bottom -3);
-
-                drawDC.MoveTo(m_mdiRect[2].right -5, m_mdiRect[2].top +6);
-                drawDC.LineTo(m_mdiRect[2].left + 4, m_mdiRect[2].bottom -3);
-
-                drawDC.MoveTo(m_mdiRect[2].right -6, m_mdiRect[2].top +5);
-                drawDC.LineTo(m_mdiRect[2].left + 3, m_mdiRect[2].bottom -4);
+            {
+                // Draw the close button (a Marlett "r" looks like "X").
+                drawDC.SetTextColor(black);
+                drawDC.TextOut(m_mdiRect[2].left, m_mdiRect[2].top, _T("\x72"), 1);
                 break;
+            }
+
             }
         }
     }
@@ -333,14 +300,14 @@ namespace Win32xx
         ReleaseFocus();
         m_isKeyMode = FALSE;
         m_isMenuActive = FALSE;
-        SendMessage(TB_PRESSBUTTON, m_hotItem, MAKELONG (FALSE, 0));
-        SetHotItem(-1);
+        Press(m_hotItem, FALSE);
+        StoreHotItem(-1);
 
         CPoint pt = GetCursorPos();
-        ScreenToClient(pt);
+        VERIFY(ScreenToClient(pt));
 
-        // Update mouse mouse position for hot tracking
-        SendMessage(WM_MOUSEMOVE, 0, (LPARAM)MAKELONG(pt.x, pt.y));
+        // Update mouse mouse position for hot tracking.
+        SendMessage(WM_MOUSEMOVE, 0, MAKELONG(pt.x, pt.y));
     }
 
     // Retrieves a pointer to the active MDI child if any.
@@ -356,19 +323,19 @@ namespace Win32xx
         return pMDIChild;
     }
 
-    // Retrieves a pointer to the MDIClient. Returns NULL if there 
-	// is no MDIClient.
+    // Retrieves a pointer to the MDIClient. Returns NULL if there
+    // is no MDIClient.
     inline CWnd* CMenuBar::GetMDIClient() const
     {
         CWnd* pMDIClient = NULL;
 
-		// We use GetAncestor to send our message to the frame.
-        HWND wnd = reinterpret_cast<HWND>(GetAncestor().SendMessage(UWM_GETFRAMEVIEW, 0, 0));
-        CWnd* pWnd = GetCWndPtr(wnd);
-        
-		// Only MDI frames have a MDIClient
-		if (pWnd && pWnd->GetClassName() == _T("MDIClient"))
-            pMDIClient = pWnd;
+        // Is the ancestor a CMDIFrame?
+        if (GetAncestor().SendMessage(UWM_GETCMDIFRAMET) != 0)
+        {
+            // Retrieve the window handle of the MDI frame's view.
+            HWND wnd = reinterpret_cast<HWND>(GetAncestor().SendMessage(UWM_GETFRAMEVIEW));
+            pMDIClient = GetCWndPtr(wnd);
+        }
 
         return pMDIClient;
     }
@@ -379,7 +346,7 @@ namespace Win32xx
         if (::GetFocus() != *this)
             m_prevFocus = ::SetFocus(*this);
         ::SetCapture(*this);
-        ::SetCursor(::LoadCursor(NULL, IDC_ARROW));
+        ::SetCursor(::LoadCursor(0, IDC_ARROW));
     }
 
     // Returns TRUE of the MDI child is maximized.
@@ -387,7 +354,10 @@ namespace Win32xx
     {
         BOOL isMaxed = FALSE;
         if (GetMDIClient())
-            GetMDIClient()->SendMessage(WM_MDIGETACTIVE, 0, (LPARAM)&isMaxed);
+        {
+            LPARAM lparam = reinterpret_cast<LPARAM>(&isMaxed);
+            GetMDIClient()->SendMessage(WM_MDIGETACTIVE, 0, lparam);
+        }
 
         return isMaxed;
     }
@@ -395,17 +365,21 @@ namespace Win32xx
     // Returns TRUE if the frame is a MDI frame.
     inline BOOL CMenuBar::IsMDIFrame() const
     {
-        return (GetMDIClient() != 0);
+        return static_cast<BOOL>(GetAncestor().SendMessage(UWM_GETCMDIFRAMET));
     }
 
     inline LRESULT CMenuBar::OnMenuChar(UINT msg, WPARAM wparam, LPARAM lparam)
     {
-        UNREFERENCED_PARAMETER(lparam);
-
+        TCHAR keyCode = static_cast<TCHAR>(LOWORD(wparam));
         if (!m_isMenuActive)
-            DoAltKey(LOWORD(wparam));
+            DoAltKey(keyCode);
 
         return FinalWindowProc(msg, wparam, lparam);
+    }
+
+    inline LRESULT CMenuBar::MenuChar(UINT msg, WPARAM wparam, LPARAM lparam)
+    {
+        return OnMenuChar(msg, wparam, lparam);
     }
 
     // Called when the window handle (HWND) is attached to this object.
@@ -418,7 +392,7 @@ namespace Win32xx
     // Forwards owner drawing to the frame.
     inline LRESULT CMenuBar::OnDrawItem(UINT, WPARAM wparam, LPARAM lparam)
     {
-		GetAncestor().SendMessage(WM_DRAWITEM, wparam, lparam);
+        GetAncestor().SendMessage(WM_DRAWITEM, wparam, lparam);
         return TRUE; // handled
     }
 
@@ -427,7 +401,7 @@ namespace Win32xx
     {
         if (m_isExitAfter)
             ExitMenu();
-		GetAncestor().SendMessage(WM_EXITMENULOOP, wparam, lparam);
+        GetAncestor().SendMessage(WM_EXITMENULOOP, wparam, lparam);
 
         return 0;
     }
@@ -435,52 +409,66 @@ namespace Win32xx
     // Called when a popup menu is created.
     inline LRESULT CMenuBar::OnInitMenuPopup(UINT, WPARAM wparam, LPARAM lparam)
     {
-		GetAncestor().SendMessage(WM_INITMENUPOPUP, wparam, lparam);
+        GetAncestor().SendMessage(WM_INITMENUPOPUP, wparam, lparam);
         return 0;
     }
 
     // Called when a key is pressed while the menubar has the mouse captured.
-    inline LRESULT CMenuBar::OnKeyDown(UINT msg, WPARAM wparam, LPARAM lparam)
+    inline LRESULT CMenuBar::OnKeyDown(UINT, WPARAM wparam, LPARAM)
     {
-        UNREFERENCED_PARAMETER(msg);
-        UNREFERENCED_PARAMETER(lparam);
+        int first = IsMDIChildMaxed() ? 1 : 0;
+        TCHAR keycode = static_cast<TCHAR>(wparam);
 
-        switch (wparam)
+        switch (keycode)
         {
         case VK_ESCAPE:
+            m_isAltMode = FALSE;
             ExitMenu();
             break;
 
         case VK_SPACE:
+            m_isAltMode = FALSE;
             ExitMenu();
             // Bring up the system menu
-            GetAncestor().PostMessage(WM_SYSCOMMAND, (WPARAM)SC_KEYMENU, (LPARAM)VK_SPACE);
+            GetAncestor().PostMessage(WM_SYSCOMMAND, SC_KEYMENU, VK_SPACE);
             break;
 
-        // Handle VK_DOWN,VK_UP and VK_RETURN together
+        // Handle VK_DOWN, and VK_UP together.
         case VK_DOWN:
         case VK_UP:
+            // Always use PostMessage for USER_POPUPMENU (not SendMessage).
+            PostMessage(UWM_POPUPMENU, 0, 0);
+            break;
         case VK_RETURN:
-            // Always use PostMessage for USER_POPUPMENU (not SendMessage)
+            m_isAltMode = FALSE;
+            // Always use PostMessage for USER_POPUPMENU (not SendMessage).
             PostMessage(UWM_POPUPMENU, 0, 0);
             break;
 
         case VK_LEFT:
-            // Move left to next topmenu item
-            (m_hotItem > 0)? SetHotItem(m_hotItem -1) : SetHotItem(GetButtonCount()-1);
+            // Move left to the next topmenu item.
+            if (m_hotItem > first)
+                StoreHotItem(m_hotItem -1);
+            else
+                StoreHotItem(GetButtonCount() -1);
+
             break;
 
         case VK_RIGHT:
-            // Move right to next topmenu item
-            (m_hotItem < GetButtonCount() -1)? SetHotItem(m_hotItem +1) : SetHotItem(0);
+            // Move right to the next topmenu item.
+            if (m_hotItem < GetButtonCount() -1)
+                StoreHotItem(m_hotItem +1);
+            else
+                StoreHotItem(first);
+
             break;
 
         default:
-            // Handle Accelerator keys with Alt toggled down
+            // Handle Accelerator keys with Alt toggled down.
             if (m_isKeyMode)
             {
-                UINT item;
-                if (SendMessage(TB_MAPACCELERATOR, wparam, (LPARAM)&item))
+                int item = MapAccelerator(keycode);
+                if (item >= 0)
                 {
                     m_hotItem = item;
                     PostMessage(UWM_POPUPMENU, 0, 0);
@@ -495,12 +483,9 @@ namespace Win32xx
     }
 
     // Called when the menu bar loses focus.
-    inline LRESULT CMenuBar::OnKillFocus(UINT msg, WPARAM wparam, LPARAM lparam)
+    inline LRESULT CMenuBar::OnKillFocus(UINT, WPARAM, LPARAM)
     {
-        UNREFERENCED_PARAMETER(msg);
-        UNREFERENCED_PARAMETER(wparam);
-        UNREFERENCED_PARAMETER(lparam);
-
+        m_isAltMode = FALSE;
         ExitMenu();
         return 0;
     }
@@ -508,37 +493,35 @@ namespace Win32xx
     // Called when the left mouse button is pressed.
     inline LRESULT CMenuBar::OnLButtonDown(UINT msg, WPARAM wparam, LPARAM lparam)
     {
-        UNREFERENCED_PARAMETER(msg);
+        ExitMenu();
 
-        // Do default processing first
-        CallWindowProc(GetPrevWindowProc(), WM_LBUTTONDOWN, wparam, lparam);
+        // Updates hot item with current mouse position.
+        FinalWindowProc(WM_MOUSEMOVE, wparam, lparam);
 
-        GrabFocus();
-        m_mdiButton = 0;
-        CPoint pt;
-
-        pt.x = GET_X_LPARAM(lparam);
-        pt.y = GET_Y_LPARAM(lparam);
+        // Do default processing first.
+        FinalWindowProc(msg, wparam, lparam);
 
         if (IsMDIFrame())
         {
             if (IsMDIChildMaxed())
             {
-                CClientDC MenuBarDC(*this);
-                m_mdiButton = -1;
+                int mdiButton = -1;
+                CPoint pt(lparam);
 
-                if (m_mdiRect[0].PtInRect(pt)) m_mdiButton = 0;
-                if (m_mdiRect[1].PtInRect(pt)) m_mdiButton = 1;
-                if (m_mdiRect[2].PtInRect(pt)) m_mdiButton = 2;
+                if (m_mdiRect[0].PtInRect(pt)) mdiButton = 0;
+                if (m_mdiRect[1].PtInRect(pt)) mdiButton = 1;
+                if (m_mdiRect[2].PtInRect(pt)) mdiButton = 2;
 
-                if (m_mdiButton >= 0)
+                // Draw the three MDI buttons.
+                if (mdiButton >= 0)
                 {
-                    DrawMDIButton(MenuBarDC, MDI_MIN,     (0 == m_mdiButton)? 2 : 0);
-                    DrawMDIButton(MenuBarDC, MDI_RESTORE, (1 == m_mdiButton)? 2 : 0);
-                    DrawMDIButton(MenuBarDC, MDI_CLOSE,   (2 == m_mdiButton)? 2 : 0);
+                    CClientDC MenuBarDC(*this);
+                    DrawMDIButton(MenuBarDC, MDI_MIN,     (mdiButton == 0) ? 2U : 0U);
+                    DrawMDIButton(MenuBarDC, MDI_RESTORE, (mdiButton == 1) ? 2U : 0U);
+                    DrawMDIButton(MenuBarDC, MDI_CLOSE,   (mdiButton == 2) ? 2U : 0U);
                 }
 
-                // Bring up the MDI Child window's system menu when the icon is pressed
+                // Bring up the MDI Child window's system menu when the icon is pressed.
                 if (HitTest() == 0)
                 {
                     m_hotItem = 0;
@@ -551,44 +534,38 @@ namespace Win32xx
     }
 
     // Called when a key is released.
-    inline LRESULT CMenuBar::OnLButtonUp(UINT msg, WPARAM wparam, LPARAM lparam)
+    inline LRESULT CMenuBar::OnLButtonUp(UINT, WPARAM, LPARAM)
     {
-        UNREFERENCED_PARAMETER(msg);
-        UNREFERENCED_PARAMETER(wparam);
-        UNREFERENCED_PARAMETER(lparam);
-
         if (IsMDIFrame())
         {
             CWnd* pMDIClient = GetMDIClient();
             CWnd* pMDIChild = GetActiveMDIChild();
             assert(pMDIClient);
 
-            if (pMDIChild && IsMDIChildMaxed())
+            if (pMDIChild && pMDIClient && IsMDIChildMaxed())
             {
                 CPoint pt = GetCursorPos();
-                ScreenToClient(pt);
+                VERIFY(ScreenToClient(pt));
 
-                // Process the MDI button action when the left mouse button is up
+                // Process the MDI button action when the left mouse button is up.
                 if (m_mdiRect[0].PtInRect(pt))
                 {
-                    if (MDI_MIN == m_mdiButton)
-                        pMDIChild->ShowWindow(SW_MINIMIZE);
+                     pMDIChild->ShowWindow(SW_MINIMIZE);
                 }
 
                 if (m_mdiRect[1].PtInRect(pt))
                 {
-                    if (MDI_RESTORE == m_mdiButton)
-                        pMDIClient->PostMessage(WM_MDIRESTORE, (WPARAM)(pMDIChild->GetHwnd()), 0);
+                    WPARAM wparam = reinterpret_cast<WPARAM>(pMDIChild->GetHwnd());
+                    pMDIClient->PostMessage(WM_MDIRESTORE, wparam, 0);
                 }
 
                 if (m_mdiRect[2].PtInRect(pt))
                 {
-                    if (MDI_CLOSE == m_mdiButton)
-                        pMDIChild->PostMessage(WM_SYSCOMMAND, (WPARAM)SC_CLOSE, 0);
+                    pMDIChild->PostMessage(WM_SYSCOMMAND, SC_CLOSE, 0);
                 }
             }
         }
-        m_mdiButton = 0;
+
         ExitMenu();
 
         return 0;
@@ -597,13 +574,15 @@ namespace Win32xx
     // Forwards the owner draw processing to the frame.
     inline LRESULT CMenuBar::OnMeasureItem(UINT msg, WPARAM wparam, LPARAM lparam)
     {
-		GetAncestor().SendMessage(msg, wparam, lparam);
+        GetAncestor().SendMessage(msg, wparam, lparam);
         return TRUE; // handled
     }
 
-    // When a popup menu is active, StaticMsgHook directs all menu messages here
+    // StaticMsgHook directs all menu messages here when a popup menu is active.
     inline BOOL CMenuBar::OnMenuInput(UINT msg, WPARAM wparam, LPARAM lparam)
     {
+        int first = (IsMDIChildMaxed() ? 1 : 0);
+
         switch(msg)
         {
         case WM_KEYDOWN:
@@ -612,49 +591,53 @@ namespace Win32xx
                 switch (wparam)
                 {
                 case VK_ESCAPE:
-                    // Use default processing if inside a Sub Menu
-                    if ((m_selMenu) &&(m_selMenu != m_popupMenu))
+                    // Use default processing if inside a Sub Menu.
+                    if ((m_selectedMenu) &&(m_selectedMenu != m_popupMenu))
                         return FALSE;
 
                     m_isMenuActive = FALSE;
                     m_isKeyMode = TRUE;
-                    SendMessage(WM_CANCELMODE, 0, 0);
-                    SendMessage(TB_PRESSBUTTON, (WPARAM)m_hotItem, (LPARAM)MAKELONG(FALSE, 0));
-                    SendMessage(TB_SETHOTITEM, (WPARAM)m_hotItem, 0);
+                    Cancel();
+                    Press(m_hotItem, FALSE);
+                    SetHotItem(m_hotItem);
                     ExitMenu();
                     break;
 
                 case VK_LEFT:
-                    // Use default processing if inside a Sub Menu
-                    if ((m_selMenu) &&(m_selMenu != m_popupMenu))
+                {
+                    // Use default processing if inside a Sub Menu.
+                    if ((m_selectedMenu) && (m_selectedMenu != m_popupMenu))
                         return FALSE;
 
-                    SendMessage(TB_PRESSBUTTON, (WPARAM)m_hotItem, (LPARAM)MAKELONG(FALSE, 0));
+                    Press(m_hotItem, FALSE);
 
-                    // Move left to next topmenu item
-                    (m_hotItem > 0)? --m_hotItem : m_hotItem = GetButtonCount()-1;
-                    SendMessage(WM_CANCELMODE, 0, 0);
+                    // Move left to the next topmenu item.
+                    m_hotItem = (m_hotItem > first) ? m_hotItem -1 : GetButtonCount() -1;
+                    Cancel();
 
-                    // Always use PostMessage for USER_POPUPMENU (not SendMessage)
+                    // Always use PostMessage for USER_POPUPMENU (not SendMessage).
                     PostMessage(UWM_POPUPMENU, 0, 0);
-                    PostMessage(WM_KEYDOWN, (WPARAM)VK_DOWN, 0);
+                    PostMessage(WM_KEYDOWN, VK_DOWN, 0);
                     break;
+                }
 
                 case VK_RIGHT:
-                    // Use default processing to open Sub Menu
-                    if (m_isSelPopup)
+                {
+                    // Use default processing to open Sub Menu.
+                    if (m_isSelectedPopup)
                         return FALSE;
 
-                    SendMessage(TB_PRESSBUTTON, (WPARAM)m_hotItem, (LPARAM)MAKELONG(FALSE, 0));
+                    Press(m_hotItem, FALSE);
 
-                    // Move right to next topmenu item
-                    (m_hotItem < GetButtonCount()-1)? ++m_hotItem : m_hotItem = 0;
-                    SendMessage(WM_CANCELMODE, 0, 0);
+                    // Move right to the next topmenu item.
+                    m_hotItem = (m_hotItem < GetButtonCount() -1) ? m_hotItem +1 : first;
+                    Cancel();
 
-                    // Always use PostMessage for USER_POPUPMENU (not SendMessage)
+                    // Always use PostMessage for USER_POPUPMENU (not SendMessage).
                     PostMessage(UWM_POPUPMENU, 0, 0);
-                    PostMessage(WM_KEYDOWN, (WPARAM)VK_DOWN, 0);
+                    PostMessage(WM_KEYDOWN, VK_DOWN, 0);
                     break;
+                }
 
                 case VK_RETURN:
                     m_isExitAfter = TRUE;
@@ -675,24 +658,27 @@ namespace Win32xx
                 m_isExitAfter = TRUE;
                 if (HitTest() >= 0)
                 {
-                    // Cancel popup when we hit a button a second time
-                    SendMessage(WM_CANCELMODE, 0, 0);
+                    // Cancel popup when we hit a button a second time.
+                    Cancel();
                     return TRUE;
                 }
             }
             return FALSE;
 
         case WM_LBUTTONDBLCLK:
-            // Perform default action for DblClick on MDI Maxed icon
+            // Perform default action for DblClick on MDI Maxed icon.
             if (IsMDIChildMaxed() && (0 == HitTest()))
             {
                 CWnd* pMDIChild = GetActiveMDIChild();
                 assert(pMDIChild);
-                CMenu childMenu = pMDIChild->GetSystemMenu(FALSE);
+                if (pMDIChild)
+                {
+                    CMenu childMenu = pMDIChild->GetSystemMenu(FALSE);
 
-                UINT id = childMenu.GetDefaultItem(FALSE, 0);
-                if (id)
-                    pMDIChild->PostMessage(WM_SYSCOMMAND, (WPARAM)id, 0);
+                    UINT id = childMenu.GetDefaultItem(FALSE, 0);
+                    if (id)
+                        pMDIChild->PostMessage(WM_SYSCOMMAND, static_cast<WPARAM>(id), 0);
+                }
             }
 
             m_isExitAfter = TRUE;
@@ -700,11 +686,11 @@ namespace Win32xx
 
         case WM_MENUSELECT:
             {
-                // store info about selected item
-                m_selMenu = reinterpret_cast<HMENU>(lparam);
-                m_isSelPopup = ((HIWORD(wparam) & MF_POPUP) != 0);
+                // Store info about selected item.
+                m_selectedMenu = reinterpret_cast<HMENU>(lparam);
+                m_isSelectedPopup = ((HIWORD(wparam) & MF_POPUP)) ? TRUE : FALSE;
 
-                // Reflect message back to the frame window
+                // Reflect message back to the frame window.
                 GetAncestor().SendMessage(WM_MENUSELECT, wparam, lparam);
             }
             return TRUE;
@@ -715,16 +701,16 @@ namespace Win32xx
                 pt.x = GET_X_LPARAM(lparam);
                 pt.y = GET_Y_LPARAM(lparam);
 
-                // Skip if mouse hasn't moved
+                // Skip if mouse hasn't moved.
                 if ((pt.x == m_oldMousePos.x) && (pt.y == m_oldMousePos.y))
                     return FALSE;
 
                 m_oldMousePos.x = pt.x;
                 m_oldMousePos.y = pt.y;
-                ScreenToClient(pt);
+                VERIFY(ScreenToClient(pt));
 
-                // Reflect messages back to the MenuBar for hot tracking
-                SendMessage(WM_MOUSEMOVE, 0, (LPARAM)MAKELPARAM(pt.x, pt.y));
+                // Reflect messages back to the MenuBar for hot tracking.
+                SendMessage(WM_MOUSEMOVE, 0, MAKELPARAM(pt.x, pt.y));
             }
             break;
 
@@ -753,63 +739,15 @@ namespace Win32xx
     // Called when the cursor moves.
     inline LRESULT CMenuBar::OnMouseMove(UINT msg, WPARAM wparam, LPARAM lparam)
     {
-        CPoint pt;
-        pt.x = GET_X_LPARAM(lparam);
-        pt.y = GET_Y_LPARAM(lparam);
-
-        if (IsMDIFrame())
-        {
-            if (IsMDIChildMaxed())
-            {
-                CClientDC MenuBarDC(*this);
-                int MDIButton = -1;
-                if (m_mdiRect[0].PtInRect(pt)) MDIButton = 0;
-                if (m_mdiRect[1].PtInRect(pt)) MDIButton = 1;
-                if (m_mdiRect[2].PtInRect(pt)) MDIButton = 2;
-
-                if (MK_LBUTTON == wparam)  // mouse moved with left mouse button is held down
-                {
-                    // toggle the MDI button image pressed/unpressed as required
-                    if (MDIButton >= 0)
-                    {
-                        DrawMDIButton(MenuBarDC, MDI_MIN,     ((0 == MDIButton) && (0 == m_mdiButton))? 2 : 0);
-                        DrawMDIButton(MenuBarDC, MDI_RESTORE, ((1 == MDIButton) && (1 == m_mdiButton))? 2 : 0);
-                        DrawMDIButton(MenuBarDC, MDI_CLOSE,   ((2 == MDIButton) && (2 == m_mdiButton))? 2 : 0);
-                    }
-                    else
-                    {
-                        DrawMDIButton(MenuBarDC, MDI_MIN,     0);
-                        DrawMDIButton(MenuBarDC, MDI_RESTORE, 0);
-                        DrawMDIButton(MenuBarDC, MDI_CLOSE,   0);
-                    }
-                }
-                else    // mouse moved without left mouse button held down
-                {
-                    if (MDIButton >= 0)
-                    {
-                        DrawMDIButton(MenuBarDC, MDI_MIN,     (0 == MDIButton)? 1 : 0);
-                        DrawMDIButton(MenuBarDC, MDI_RESTORE, (1 == MDIButton)? 1 : 0);
-                        DrawMDIButton(MenuBarDC, MDI_CLOSE,   (2 == MDIButton)? 1 : 0);
-                    }
-                    else
-                    {
-                        DrawMDIButton(MenuBarDC, MDI_MIN,     0);
-                        DrawMDIButton(MenuBarDC, MDI_RESTORE, 0);
-                        DrawMDIButton(MenuBarDC, MDI_CLOSE,   0);
-                    }
-                }
-            }
-        }
-
+        UpdateMDIButtons(wparam, lparam);
         return FinalWindowProc(msg, wparam, lparam);
     }
 
     // Process the menubar's notifications.
-    inline LRESULT CMenuBar::OnNotifyReflect(WPARAM wparam, LPARAM lparam)
+    inline LRESULT CMenuBar::OnNotifyReflect(WPARAM, LPARAM lparam)
     {
-        UNREFERENCED_PARAMETER(wparam);
-
-        switch (((LPNMHDR)lparam)->code)
+        LPNMHDR pHeader = reinterpret_cast<LPNMHDR>(lparam);
+        switch (pHeader->code)
         {
         case TBN_DROPDOWN:      return OnTBNDropDown((LPNMTOOLBAR) lparam);
         case TBN_HOTITEMCHANGE: return OnTBNHotItemChange((LPNMTBHOTITEM) lparam);
@@ -823,8 +761,8 @@ namespace Win32xx
     inline LRESULT CMenuBar::OnPopupMenu()
     {
         if (m_isKeyMode)
-            // Simulate a down arrow key press
-            PostMessage(WM_KEYDOWN, (WPARAM)VK_DOWN, 0);
+            // Simulate a down arrow key press.
+            PostMessage(WM_KEYDOWN, VK_DOWN, 0);
 
         m_isKeyMode = FALSE;
         m_isExitAfter = FALSE;
@@ -834,72 +772,81 @@ namespace Win32xx
         if (IsMDIChildMaxed())
             pMaxMDIChild = GetActiveMDIChild();
 
-        // Load the submenu
+        // Load the submenu.
         int maxedOffset = IsMDIChildMaxed()? 1:0;
         m_popupMenu = ::GetSubMenu(m_topMenu, m_hotItem - maxedOffset);
-        if (pMaxMDIChild && IsMDIChildMaxed() && (0 == m_hotItem) )
+        if (pMaxMDIChild && IsMDIChildMaxed() && (m_hotItem == 0) )
             m_popupMenu = pMaxMDIChild->GetSystemMenu(FALSE);
 
-        // Retrieve the bounding rectangle for the toolbar button
+        // Retrieve the bounding rectangle for the toolbar button.
         CRect rc = GetItemRect(m_hotItem);
 
-        // convert rectangle to desktop coordinates
-        ClientToScreen(rc);
+        // Convert rectangle to desktop coordinates.
+        VERIFY(ClientToScreen(rc));
 
-        // Position popup above toolbar if it won't fit below
+        // Position popup above toolbar if it won't fit below.
         TPMPARAMS tpm;
+        ZeroMemory(&tpm, sizeof(tpm));
         tpm.cbSize = sizeof(tpm);
         tpm.rcExclude = rc;
 
-        // Set the hot button
-        SendMessage(TB_SETHOTITEM, (WPARAM)m_hotItem, 0);
-        SendMessage(TB_PRESSBUTTON, (WPARAM)m_hotItem, (LPARAM)MAKELONG(TRUE, 0));
+        // Set the hot button.
+        SetHotItem(m_hotItem);
+        Press(m_hotItem, TRUE);
 
-        m_isSelPopup = FALSE;
-        m_selMenu = NULL;
+        m_isSelectedPopup = FALSE;
+        m_selectedMenu = NULL;
         m_isMenuActive = TRUE;
 
         // We hook mouse input to process mouse and keyboard input during
         //  the popup menu. Messages are sent to StaticMsgHook.
 
-        // Remove any remaining hook first
+        // Set the message hook.
         TLSData* pTLSData = GetApp()->GetTlsData();
         pTLSData->pMenuBar = this;
-        if (pTLSData->msgHook != NULL)
-            ::UnhookWindowsHookEx(pTLSData->msgHook);
+        m_msgHook = ::SetWindowsHookEx(WH_MSGFILTER, StaticMsgHook, NULL, ::GetCurrentThreadId());
 
-        // Hook messages about to be processed by the shortcut menu
-        pTLSData->msgHook = ::SetWindowsHookEx(WH_MSGFILTER, (HOOKPROC)StaticMsgHook, NULL, ::GetCurrentThreadId());
-
-        // Display the shortcut menu
-        BOOL IsRightToLeft = FALSE;
+        // Display the shortcut menu.
+        bool isRightToLeft = false;
 
 #if (WINVER >= 0x0500)
-        IsRightToLeft = ((GetAncestor().GetExStyle()) & WS_EX_LAYOUTRTL);
+        isRightToLeft = (((GetAncestor().GetExStyle()) & WS_EX_LAYOUTRTL)) != 0;
 #endif
 
-        int xPos = IsRightToLeft? rc.right : rc.left;
-        UINT id = ::TrackPopupMenuEx(m_popupMenu, TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_VERTICAL,
-            xPos, rc.bottom, *this, &tpm);
+        int xPos = isRightToLeft? rc.right : rc.left;
+        UINT id = static_cast<UINT>(::TrackPopupMenuEx(m_popupMenu, TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_VERTICAL,
+                                       xPos, rc.bottom, *this, &tpm));
 
-        // We get here once the TrackPopupMenuEx has ended
+        // We get here once the TrackPopupMenuEx has ended.
         m_isMenuActive = FALSE;
 
-        // Remove the message hook
-        ::UnhookWindowsHookEx(pTLSData->msgHook);
-        pTLSData->msgHook = NULL;
+        // Remove the message hook.
+        ::UnhookWindowsHookEx(m_msgHook);
+        pTLSData->pMenuBar = NULL;
 
-        // Process MDI Child system menu
+        // Process MDI Child system menu.
         if (IsMDIChildMaxed())
         {
             if (pMaxMDIChild && pMaxMDIChild->GetSystemMenu(FALSE) == m_popupMenu )
             {
                 if (id)
-                    pMaxMDIChild->SendMessage(WM_SYSCOMMAND, id, 0);
+                {
+                    WPARAM wparam = static_cast<WPARAM>(id);
+                    pMaxMDIChild->SendMessage(WM_SYSCOMMAND, wparam, 0);
+                }
             }
         }
 
-        // Re-establish Focus
+        SetHotItem(-1);
+
+        // Unpress any currently pressed buttons.
+        for (int i = 0; i < GetButtonCount(); ++i)
+        {
+            id = GetCommandID(i);
+            PressButton(id, FALSE);
+        }
+
+        // Re-establish Focus.
         if (m_isKeyMode)
             GrabFocus();
 
@@ -908,18 +855,22 @@ namespace Win32xx
 
     inline LRESULT CMenuBar::OnSysCommand(UINT msg, WPARAM wparam, LPARAM lparam)
     {
-        if (SC_KEYMENU == wparam)
+        // The "wparam & 0xFFF0" below is a requirement mentioned in the
+        // description of WM_SYSCOMMAND in the Windows API documentation.
+
+        if (SC_KEYMENU == (wparam & 0xFFF0))
         {
             if (lparam == 0)
             {
-                // Alt/F10 key toggled
+                // Alt/F10 key toggled.
                 GrabFocus();
                 m_isKeyMode = TRUE;
+                m_isAltMode = TRUE;
                 int maxedOffset = (IsMDIChildMaxed()? 1:0);
-                SetHotItem(maxedOffset);
+                StoreHotItem(maxedOffset);
             }
             else
-                // Handle key pressed with Alt held down
+                // Handle key pressed with Alt held down.
                 DoAltKey(static_cast<WORD>(lparam));
         }
 
@@ -928,32 +879,34 @@ namespace Win32xx
 
     inline LRESULT CMenuBar::OnSysKeyDown(UINT msg, WPARAM wparam, LPARAM lparam)
     {
-        UNREFERENCED_PARAMETER(lparam);
-
-        if ((VK_MENU == wparam) || (VK_F10 == wparam))
-            return 0;
-
-        return FinalWindowProc(msg, wparam, lparam);
-    }
-
-    inline LRESULT CMenuBar::OnSysKeyUp(UINT msg, WPARAM wparam, LPARAM lparam)
-    {
-        UNREFERENCED_PARAMETER(lparam);
-
-        if ((VK_MENU == wparam) || (VK_F10 == wparam))
+        if ((m_isKeyMode) && ((VK_MENU == wparam) || (VK_F10 == wparam)))
         {
-            ExitMenu();
+            StoreHotItem(-1);
             return 0;
         }
 
         return FinalWindowProc(msg, wparam, lparam);
     }
 
+    inline LRESULT CMenuBar::OnSysKeyUp(UINT msg, WPARAM wparam, LPARAM lparam)
+    {
+        ExitMenu();
+
+        if ((m_isKeyMode) && ((VK_MENU == wparam) || (VK_F10 == wparam)))
+        {
+            return 0;
+        }
+
+        m_isAltMode = FALSE;
+        RedrawWindow();
+        return FinalWindowProc(msg, wparam, lparam);
+    }
+
     inline LRESULT CMenuBar::OnTBNDropDown(LPNMTOOLBAR pNMTB)
     {
-        UNREFERENCED_PARAMETER(pNMTB);
+        m_hotItem = pNMTB->iItem;
 
-        // Always use PostMessage for USER_POPUPMENU (not SendMessage)
+        // Always use PostMessage for USER_POPUPMENU (not SendMessage).
         PostMessage(UWM_POPUPMENU, 0, 0);
 
         return 0;
@@ -964,7 +917,7 @@ namespace Win32xx
     inline LRESULT CMenuBar::OnTBNHotItemChange(LPNMTBHOTITEM pNMHI)
     {
         CPoint pt = GetCursorPos();
-        if (*this == ::WindowFromPoint(pt)) // MenuBar window must be on top
+        if (*this == ::WindowFromPoint(pt)) // MenuBar window must be on top.
         {
             DWORD flag = pNMHI->dwFlags;
             if ((flag & HICF_MOUSE) && !(flag & HICF_LEAVING))
@@ -972,21 +925,22 @@ namespace Win32xx
                 int button = HitTest();
                 if ((m_isMenuActive) && (button != m_hotItem))
                 {
-                    SendMessage(TB_PRESSBUTTON, (WPARAM)m_hotItem, (LPARAM)MAKELONG(FALSE, 0));
+                    Press(m_hotItem, FALSE);
                     m_hotItem = button;
-                    SendMessage(WM_CANCELMODE, 0, 0);
+                    Cancel();
 
-                    //Always use PostMessage for USER_POPUPMENU (not SendMessage)
+                    // Always use PostMessage for USER_POPUPMENU (not SendMessage).
                     PostMessage(UWM_POPUPMENU, 0, 0);
                 }
                 m_hotItem = button;
             }
 
-            // Handle escape from popup menu
+            // Handle escape from popup menu.
             if ((flag & HICF_LEAVING) && m_isKeyMode)
             {
                 m_hotItem = pNMHI->idOld;
-                PostMessage(TB_SETHOTITEM, (WPARAM)m_hotItem, 0);
+                WPARAM wparam = static_cast<WPARAM>(m_hotItem);
+                PostMessage(TB_SETHOTITEM, wparam, 0);
             }
         }
 
@@ -996,9 +950,6 @@ namespace Win32xx
     // Called when the menubar has been resized.
     inline LRESULT CMenuBar::OnWindowPosChanged(UINT msg, WPARAM wparam, LPARAM lparam)
     {
-        UNREFERENCED_PARAMETER(wparam);
-        UNREFERENCED_PARAMETER(lparam);
-
         InvalidateRect(m_mdiRect[0], TRUE);
         InvalidateRect(m_mdiRect[1], TRUE);
         InvalidateRect(m_mdiRect[2], TRUE);
@@ -1013,7 +964,7 @@ namespace Win32xx
 
     inline LRESULT CMenuBar::OnWindowPosChanging(UINT msg, WPARAM wparam, LPARAM lparam)
     {
-        // Bypass CToolBar::WndProcDefault for this message
+        // Bypass CToolBar::WndProcDefault for this message.
         return FinalWindowProc(msg, wparam, lparam);
     }
 
@@ -1029,92 +980,197 @@ namespace Win32xx
         wc.lpszClassName =  TOOLBARCLASSNAME;
     }
 
+    inline void CMenuBar::Press(int buttonID, BOOL press) const
+    {
+        PressButton(static_cast<UINT>(buttonID), press);
+    }
+
+    inline BOOL CMenuBar::PreTranslateMessage(MSG& msg)
+    {
+        // Discard mouse move messages unless over a button.
+        if (m_isKeyMode && msg.message == WM_MOUSEMOVE)
+        {
+            UpdateMDIButtons(msg.wParam, msg.lParam);
+            int first = (IsMDIChildMaxed() ? 1 : 0);
+            if (HitTest() < first)
+                return TRUE;
+        }
+
+        // Forward mouse left button down to the Ancestor window
+        // if pressed on it's non client area.
+        if (m_isKeyMode && msg.message == WM_LBUTTONDOWN)
+        {
+            CPoint screenPos = GetCursorPos();
+            CPoint clientPos = screenPos;
+            VERIFY(GetAncestor().ScreenToClient(clientPos));
+            CRect rcWindow = GetAncestor().GetWindowRect();
+            VERIFY(GetAncestor().ScreenToClient(rcWindow));
+            CRect rcClient = GetAncestor().GetClientRect();
+
+            if (rcWindow.PtInRect(clientPos) && !rcClient.PtInRect(clientPos))
+            {
+                ReleaseFocus();
+
+                // Pass the Left Mouse Click back up to the frame window (and update cursor).
+                LPARAM lparam = MAKELPARAM(screenPos.x, screenPos.y);
+                HWND frame = GetAncestor();
+                WPARAM wparam = static_cast<WPARAM>(::SendMessage(frame, WM_NCHITTEST, 0, lparam));
+                ::SendMessage(frame, WM_NCMOUSEMOVE, wparam, lparam);
+                ::SendMessage(frame, WM_SETCURSOR, reinterpret_cast<WPARAM>(frame),
+                              MAKELPARAM(wparam, WM_NCMOUSEMOVE));
+
+                ::SendMessage(frame, WM_NCLBUTTONDOWN, wparam, lparam);
+            }
+        }
+
+        return FALSE;
+    }
+
     // Releases mouse capture and returns keyboard focus.
     inline void CMenuBar::ReleaseFocus()
     {
         if (m_prevFocus)
             ::SetFocus(m_prevFocus);
 
-        m_prevFocus = NULL;
+        m_prevFocus = 0;
         ::ReleaseCapture();
     }
 
     // Set the menubar's (toolbar's) hot item.
-    inline void CMenuBar::SetHotItem(int hotItem)
+    inline void CMenuBar::StoreHotItem(int hotItem)
     {
         m_hotItem = hotItem;
-        SendMessage(TB_SETHOTITEM, (WPARAM)m_hotItem, 0);
+        SetHotItem(m_hotItem);
+        RedrawWindow();
     }
 
     // Builds the list of menubar (toolbar) buttons from the top level menu.
-    inline void CMenuBar::SetMenu(HMENU menu)
+    inline void CMenuBar::SetupMenuBar(HMENU menu)
     {
         assert(IsWindow());
 
         m_topMenu = menu;
         int maxedOffset = (IsMDIChildMaxed()? 1:0);
 
-        // Remove any existing buttons
-        while (SendMessage(TB_BUTTONCOUNT,  0, 0) > 0)
+        // Remove any existing buttons.
+        while (GetButtonCount() > 0)
         {
-            if (!SendMessage(TB_DELETEBUTTON, 0, 0))
+            if (!DeleteButton(0))
                 break;
         }
 
-        // Set the Bitmap size to zero
-        SendMessage(TB_SETBITMAPSIZE, 0, (LPARAM)MAKELPARAM(0, 0));
+        // Set the Bitmap size to zero.
+        SetBitmapSize(0, 0);
 
         if (IsMDIChildMaxed())
         {
-            // Create an extra button for the MDI child system menu
-            // Later we will custom draw the window icon over this button
+            // Create an extra button for the MDI child system menu.
+            // Later we will custom draw the window icon over this button.
             TBBUTTON tbb;
             ZeroMemory(&tbb, sizeof(tbb));
             tbb.fsState = TBSTATE_ENABLED;
             tbb.fsStyle = TBSTYLE_BUTTON | TBSTYLE_AUTOSIZE ;
             tbb.iString = reinterpret_cast<INT_PTR>(_T(" "));
-            SendMessage(TB_ADDBUTTONS, (WPARAM)1, (LPARAM)(&tbb));
+            AddButtons(1, &tbb);
             SetButtonText(0, _T("    "));
         }
 
         for (int i = 0 ; i < ::GetMenuItemCount(menu); ++i)
         {
-            // Assign the ToolBar Button struct
+            // Assign the ToolBar Button struct.
             TBBUTTON tbb;
             ZeroMemory(&tbb, sizeof(tbb));
-            tbb.idCommand = i  + maxedOffset;  // Each button needs a unique ID
+            tbb.idCommand = i  + maxedOffset;  // Each button needs a unique ID.
             tbb.fsState = TBSTATE_ENABLED;
             tbb.fsStyle = TBSTYLE_BUTTON | TBSTYLE_AUTOSIZE | TBSTYLE_DROPDOWN;
             tbb.iString = reinterpret_cast<INT_PTR>(_T(" "));
-            SendMessage(TB_ADDBUTTONS, (WPARAM)1, (LPARAM)&tbb);
+            AddButtons(1, &tbb);
 
-            // Add the menu title to the string table
-            std::vector<TCHAR> menuName( MAX_MENU_STRING+1, _T('\0') );
-            TCHAR* pMenuName = &menuName[0];
-            GetMenuString(menu, i, pMenuName, MAX_MENU_STRING, MF_BYPOSITION);
-            SetButtonText(i + maxedOffset, pMenuName);
+            // Add the menu title to the string table.
+            CString menuText;
+            GetMenuString(menu, static_cast<UINT>(i), menuText.GetBuffer(WXX_MAX_STRING_SIZE), WXX_MAX_STRING_SIZE, MF_BYPOSITION);
+            menuText.ReleaseBuffer();
+
+            // Add extra spaces to menuText for high DPI.
+            if (GetWindowDpi(*this) >= 150)
+                menuText = _T(" ") + menuText + _T(" ");
+
+            SetButtonText(static_cast<UINT>(i + maxedOffset), menuText);
         }
     }
 
     // This callback used to capture keyboard input while a popup menu is active.
     inline LRESULT CALLBACK CMenuBar::StaticMsgHook(int code, WPARAM wparam, LPARAM lparam)
     {
-        assert( GetApp() );
         MSG* pMsg = reinterpret_cast<MSG*>(lparam);
         TLSData* pTLSData = GetApp()->GetTlsData();
         assert(pTLSData);
         CMenuBar* pMenuBar = pTLSData->pMenuBar;
+        assert(dynamic_cast<CMenuBar*>(pMenuBar));
 
-        if (pMenuBar && (MSGF_MENU == code))
+        if (MSGF_MENU == code)
+            pMenuBar->OnMenuInput(pMsg->message, pMsg->wParam, pMsg->lParam);
+
+        // The HHOOK parameter in CallNextHookEx should be supplied for Win95, Win98 and WinME.
+        // The HHOOK parameter is ignored for Windows NT and above.
+        return ::CallNextHookEx(pMenuBar->m_msgHook, code, wparam, lparam);
+    }
+
+    inline LRESULT CMenuBar::SysCommand(UINT msg, WPARAM wparam, LPARAM lparam)
+    {
+        return OnSysCommand(msg, wparam, lparam);
+    }
+
+    // Updates the pressed state of the MDI Buttons.
+    inline void CMenuBar::UpdateMDIButtons(WPARAM wparam, LPARAM lparam) const
+    {
+        CPoint pt;
+        pt.x = GET_X_LPARAM(lparam);
+        pt.y = GET_Y_LPARAM(lparam);
+
+        if (IsMDIFrame())
         {
-            // process menu message
-            if (pMenuBar->OnMenuInput(pMsg->message, pMsg->wParam, pMsg->lParam))
+            if (IsMDIChildMaxed())
             {
-                return TRUE;
+                CClientDC MenuBarDC(*this);
+                int MDIButton = -1;
+                if (m_mdiRect[0].PtInRect(pt)) MDIButton = 0;
+                if (m_mdiRect[1].PtInRect(pt)) MDIButton = 1;
+                if (m_mdiRect[2].PtInRect(pt)) MDIButton = 2;
+
+                if (MK_LBUTTON == wparam)  // Mouse moved with left mouse button is held down.
+                {
+                    // Toggle the MDI button image pressed/unpressed as required.
+                    if (MDIButton >= 0)
+                    {
+                        DrawMDIButton(MenuBarDC, MDI_MIN,     (MDIButton == 0) ? 2U : 0U);
+                        DrawMDIButton(MenuBarDC, MDI_RESTORE, (MDIButton == 1) ? 2U : 0U);
+                        DrawMDIButton(MenuBarDC, MDI_CLOSE,   (MDIButton == 2) ? 2U : 0U);
+                    }
+                    else
+                    {
+                        DrawMDIButton(MenuBarDC, MDI_MIN, 0);
+                        DrawMDIButton(MenuBarDC, MDI_RESTORE, 0);
+                        DrawMDIButton(MenuBarDC, MDI_CLOSE, 0);
+                    }
+                }
+                else    // Mouse moved without left mouse button held down.
+                {
+                    if (MDIButton >= 0)
+                    {
+                        DrawMDIButton(MenuBarDC, MDI_MIN,     (MDIButton == 0) ? 1U : 0U);
+                        DrawMDIButton(MenuBarDC, MDI_RESTORE, (MDIButton == 1) ? 1U : 0U);
+                        DrawMDIButton(MenuBarDC, MDI_CLOSE,   (MDIButton == 2) ? 1U : 0U);
+                    }
+                    else
+                    {
+                        DrawMDIButton(MenuBarDC, MDI_MIN, 0);
+                        DrawMDIButton(MenuBarDC, MDI_RESTORE, 0);
+                        DrawMDIButton(MenuBarDC, MDI_CLOSE, 0);
+                    }
+                }
             }
         }
-
-        return CallNextHookEx(pTLSData->msgHook, code, wparam, lparam);
     }
 
     // Provides default message processing for the menubar.
@@ -1122,7 +1178,7 @@ namespace Win32xx
     {
         switch (msg)
         {
-        case WM_CHAR:               return 0;  // Discard these messages
+        case WM_CHAR:               return 0;  // Discard these messages.
         case WM_DRAWITEM:           return OnDrawItem(msg, wparam, lparam);
         case WM_EXITMENULOOP:       return OnExitMenuLoop(msg, wparam, lparam);
         case WM_INITMENUPOPUP:      return OnInitMenuPopup(msg, wparam, lparam);
@@ -1141,8 +1197,9 @@ namespace Win32xx
         case WM_UNINITMENUPOPUP:    return GetAncestor().SendMessage(msg, wparam, lparam);
         case WM_MENURBUTTONUP:      return GetAncestor().SendMessage(msg, wparam, lparam);
 
-        // Messages defined by Win32++
+        // Messages defined by Win32++.
         case UWM_POPUPMENU:         return OnPopupMenu();
+        case UWM_GETCMENUBAR:       return reinterpret_cast<LRESULT>(this);
 
         } // switch (msg)
 
