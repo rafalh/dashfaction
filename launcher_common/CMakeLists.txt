@@ -32,4 +32,4 @@ target_include_directories(LauncherCommon
     ${CMAKE_CURRENT_SOURCE_DIR}/include/launcher_common
 )
 
-target_link_libraries(LauncherCommon Common Xlog sha1 ed25519 base64)
+target_link_libraries(LauncherCommon windowscodecs Common Xlog sha1 ed25519 base64)

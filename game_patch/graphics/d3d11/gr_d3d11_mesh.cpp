@@ -538,7 +538,7 @@ namespace df::gr::d3d11
         v3d_ib_.clear();
     }
 
-    BufferWrapper::BufferWrapper(unsigned initial_capacity, unsigned el_size, D3D11_BIND_FLAG bind_flag, ID3D11Device* device) :
+    BufferWrapper::BufferWrapper(unsigned initial_capacity, unsigned el_size, UINT bind_flag, ID3D11Device* device) :
         bind_flag_(bind_flag), capacity_(initial_capacity), el_size_(el_size)
     {
         create_buffer(device);

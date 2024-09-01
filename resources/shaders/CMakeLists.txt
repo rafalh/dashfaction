@@ -7,6 +7,7 @@ endif()
 
 function(add_shader TARGET_NAME SRC_FILE TARGET_LEVEL)
     set(SHADER_OUTPUT ${CMAKE_BINARY_DIR}/shaders/${TARGET_NAME}.bin)
+    file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/shaders")
     add_custom_command(
         OUTPUT ${SHADER_OUTPUT}
         COMMAND ${SHADER_COMPILER} -O3 -t ${TARGET_LEVEL} ${CMAKE_CURRENT_SOURCE_DIR}/${SRC_FILE} -o ${SHADER_OUTPUT}

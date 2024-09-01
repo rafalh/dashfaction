@@ -60,7 +60,7 @@ namespace df::gr::d3d11
     class BufferWrapper
     {
     public:
-        BufferWrapper(unsigned initial_capacity, unsigned el_size, D3D11_BIND_FLAG bind_flag, ID3D11Device* device);
+        BufferWrapper(unsigned initial_capacity, unsigned el_size, UINT bind_flag, ID3D11Device* device);
         void write(void* data, unsigned n, RenderContext& render_context);
         void reserve(unsigned n, RenderContext& render_context);
 
@@ -82,7 +82,7 @@ namespace df::gr::d3d11
     private:
         ComPtr<ID3D11Buffer> buffer_;
         unsigned size_ = 0;
-        D3D11_BIND_FLAG bind_flag_;
+        UINT bind_flag_;
         unsigned capacity_;
         unsigned el_size_;
 

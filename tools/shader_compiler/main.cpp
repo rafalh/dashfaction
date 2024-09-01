@@ -137,6 +137,10 @@ int main(int argc, char* argv[])
     auto shader_size = shader_bytecode->GetBufferSize();
     auto shader_data = shader_bytecode->GetBufferPointer();
     std::fstream output_file{output_filename.c_str(), std::ios_base::out | std::ios_base::binary};
+    if (!output_file) {
+        printf("Failed to open output file: %s\n", output_filename.c_str());
+        return 1;
+    }
     output_file.write(static_cast<char*>(shader_data), shader_size);
     shader_bytecode->Release();
     printf("Shader byte code size: %ld\n", shader_size);
