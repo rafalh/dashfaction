@@ -1,8 +1,10 @@
 Dash Faction Changelog
 ======================
 
-Version 1.8.1 (not released yet)
+Version 1.9.0 (not released yet)
 --------------------------------
+- Added experimental D3D11 renderer
+- Added option to switch between D3D8, D3D9 and D3D11 renderer
 - Fix possible crash when alt-tabbing in fullscreen mode before game is fully initialized
 - Simplify installation detection in setup and launcher
 - Fix writing corrupted save files when autosaving some levels
