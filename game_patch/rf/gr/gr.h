@@ -330,7 +330,9 @@ namespace rf::gr
     static auto& matrix_scale = addr_as_ref<Vector3>(0x01818B48);
     static auto& one_over_matrix_scale_z = addr_as_ref<float>(0x01818A60);
     static auto& projection_xadd = addr_as_ref<float>(0x01818B54);
+    static auto& projection_xmul = addr_as_ref<float>(0x01818B58);
     static auto& projection_yadd = addr_as_ref<float>(0x01818B5C);
+    static auto& projection_ymul = addr_as_ref<float>(0x01818B60);
 
     static auto& screen_width = addr_as_ref<int()>(0x0050C640);
     static auto& screen_height = addr_as_ref<int()>(0x0050C650);

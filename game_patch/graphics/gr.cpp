@@ -145,17 +145,6 @@ ConsoleCommand2 gamma_cmd{
     "gamma [value]",
 };
 
-CallHook<void(int, rf::gr::Vertex**, int, rf::gr::Mode)> gr_rect_gr_tmapper_hook{
-    0x0050DD69,
-    [](int nv, rf::gr::Vertex** verts, int flags, rf::gr::Mode mode) {
-        for (int i = 0; i < nv; ++i) {
-            verts[i]->sx -= 0.5f;
-            verts[i]->sy -= 0.5f;
-        }
-        gr_rect_gr_tmapper_hook.call_target(nv, verts, flags, mode);
-    },
-};
-
 FunHook<float(const rf::Vector3&)> gr_get_apparent_distance_from_camera_hook{
     0x005182F0,
     [](const rf::Vector3& pos) {
@@ -273,16 +262,11 @@ void gr_apply_patch()
     gameplay_render_frame_fov_injection.install();
     gr_setup_3d_railgun_hook.install();
 
-#if 1
     // Fix rendering of right and bottom edges of viewport in gameplay_render_frame (part 1)
     write_mem<u8>(0x00431D9F, asm_opcodes::jmp_rel_short);
     write_mem<u8>(0x00431F6B, asm_opcodes::jmp_rel_short);
     write_mem<u8>(0x004328CF, asm_opcodes::jmp_rel_short);
     AsmWriter(0x0043298F).jmp(0x004329DC);
-
-    // Left and top viewport edge fix for MSAA (RF does similar thing in gr_d3d_bitmap)
-    gr_rect_gr_tmapper_hook.install();
-#endif
 
     // Fonts
     gr_font_apply_patch();

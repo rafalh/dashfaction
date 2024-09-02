@@ -23,9 +23,6 @@
 
 void monitor_refresh_all();
 
-static float g_gr_clipped_geom_offset_x = -0.5;
-static float g_gr_clipped_geom_offset_y = -0.5;
-
 static void set_texture_min_mag_filter_in_code(D3DTEXTUREFILTERTYPE filter_type0, D3DTEXTUREFILTERTYPE filter_type1)
 {
     // clang-format off
@@ -63,8 +60,6 @@ FunHook<void(rf::Matrix3&, rf::Vector3&, float, bool, bool)> gr_d3d_setup_3d_hoo
     [](rf::Matrix3& viewer_orient, rf::Vector3& viewer_pos, float horizontal_fov, bool zbuffer_flag, bool z_scale) {
         gr_d3d_setup_3d_hook.call_target(viewer_orient, viewer_pos, horizontal_fov, zbuffer_flag, z_scale);
         // Half pixel offset
-        g_gr_clipped_geom_offset_x = rf::gr::screen.offset_x - 0.5f;
-        g_gr_clipped_geom_offset_y = rf::gr::screen.offset_y - 0.5f;
         rf::gr::projection_xadd -= 0.5f; // viewport center x
         rf::gr::projection_yadd -= 0.5f; // viewport center y
         if (z_scale) {
@@ -83,6 +78,31 @@ FunHook<void(rf::Matrix3&, rf::Vector3&, float, bool, bool)> gr_d3d_setup_3d_hoo
                 rf::gr::d3d::zm /= vfov_div;
             }
         }
+    },
+};
+
+CodeInjection gr_d3d_tmapper_half_pixel_offset_patch{
+    0x00551ACD,
+    [](auto& regs) {
+        regs.ecx -= 0.5f;
+        regs.edx -= 0.5f;
+    },
+};
+
+CallHook<void(rf::gr::Vertex*)> gr_d3d_project_calls_fast_rendering_hook{
+    {
+        0x0052E6DB, // gr_d3d_render_v3d_vif
+        0x0052F74B, // gr_d3d_render_character_vif
+        0x005605F6, // gr_d3d_render_static_solid
+        0x0056109D, // gr_d3d_render_static_solid
+    },
+    [](rf::gr::Vertex* v) {
+        // Those functions normally use projection floats directly instead of calling gr_d3d_project
+        // The only exception is when geometry is clipped. Change it for consistency.
+        // This allows better structure of half pixel fix
+        v->sx = v->world_pos.x / v->world_pos.z * rf::gr::projection_xmul + rf::gr::projection_xadd;
+        v->sy = v->world_pos.y / v->world_pos.z * rf::gr::projection_ymul + rf::gr::projection_yadd;
+        v->sw = 1.0f / v->world_pos.z;
     },
 };
 
@@ -730,11 +750,9 @@ void gr_d3d_apply_patch()
     gr_d3d_zbuffer_clear_fix_rect.install();
 
     // Half pixel offset fix that resolves issues on the screen corner when MSAA is enabled
-    write_mem<u8>(0x005478C6, asm_opcodes::fadd);
-    write_mem<u8>(0x005478D7, asm_opcodes::fadd);
-    write_mem_ptr(0x005478C6 + 2, &g_gr_clipped_geom_offset_x);
-    write_mem_ptr(0x005478D7 + 2, &g_gr_clipped_geom_offset_y);
     gr_d3d_setup_3d_hook.install();
+    gr_d3d_tmapper_half_pixel_offset_patch.install();
+    gr_d3d_project_calls_fast_rendering_hook.install();
 
     // Always transfer entire framebuffer to entire window in Present call in gr_d3d_flip
     write_mem<u8>(0x00544FE6, asm_opcodes::jmp_rel_short);
