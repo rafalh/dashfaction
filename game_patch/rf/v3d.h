@@ -139,4 +139,11 @@ namespace rf
         gr::Color ambient_color;
         Matrix3 orient;
     };
+
+    enum MeshRenderFlags
+    {
+        MRF_SCANNER_1 = 1,
+        MRF_SCANNER_2 = 8,
+        MRF_AMBIENT_COLOR = 0x80,
+    };
 }

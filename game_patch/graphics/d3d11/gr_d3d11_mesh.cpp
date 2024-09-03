@@ -6,6 +6,7 @@
 #include <common/ComPtr.h>
 #include <xlog/xlog.h>
 #include "../../rf/gr/gr.h"
+#include "../../rf/gr/gr_light.h"
 #include "../../rf/math/quaternion.h"
 #include "../../rf/v3d.h"
 #include "../../rf/character.h"
@@ -438,7 +439,7 @@ namespace df::gr::d3d11
         render_context_.set_primitive_topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
         std::optional<gr::Mode> forced_mode;
-        bool ir_scanner = (params.flags & 1) != 0;
+        bool ir_scanner = (params.flags & MRF_SCANNER_1) != 0;
         if (ir_scanner) {
             // used by rail gun scanner for heat overlays
             forced_mode.emplace(
@@ -452,14 +453,29 @@ namespace df::gr::d3d11
             static int null_tex_handles[7] = {-1, -1, -1, -1, -1, -1, -1};
             tex_handles = null_tex_handles;
         }
-        else if (params.flags & 8) {
+        else if (params.flags & MRF_SCANNER_2) {
             // used by rocket launcher scanner together with flag 1 so this code block seems unused
             assert(false);
         }
         rf::ubyte alpha = static_cast<ubyte>(params.alpha);
-        rf::Color color{255, 255, 255, 255};
-        if ((params.flags & 2) && (params.flags & 9)) {
-            color.set(params.self_illum.red, params.self_illum.green, params.self_illum.blue, alpha);
+        rf::Color color{255, 255, 255, alpha};
+        if (!ir_scanner) {
+            if (params.flags & MRF_AMBIENT_COLOR) {
+                color = params.ambient_color;
+            } else {
+                float ambient_r, ambient_g, ambient_b;
+                light_get_ambient(&ambient_r, &ambient_g, &ambient_b);
+                color.set(
+                    static_cast<rf::ubyte>(ambient_r * 255.0f),
+                    static_cast<rf::ubyte>(ambient_g * 255.0f),
+                    static_cast<rf::ubyte>(ambient_b * 255.0f),
+                    alpha
+                );
+            }
+            // RF uses some hard-coded lights here but for now let's keep it simple
+            color.red += 40;
+            color.green += 40;
+            color.blue += 40;
         }
 
         auto& batches = cache.get_batches(lod_index);
