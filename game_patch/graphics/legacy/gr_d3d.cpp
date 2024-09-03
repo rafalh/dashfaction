@@ -681,11 +681,6 @@ void gr_d3d_bitmap_float(int bitmap_handle, float x, float y, float w, float h,
     float sy_top = rf::gr::screen.offset_y + y;
     float sy_bottom = rf::gr::screen.offset_y + y + h;
 
-    sx_left -= 0.5f;
-    sx_right -= 0.5f;
-    sy_top -= 0.5f;
-    sy_bottom -= 0.5f;
-
     float u_left = sx / bm_w * (flip_x ? -1.0f : 1.0f);
     float u_right = (sx + sw) / bm_w * (flip_x ? -1.0f : 1.0f);
     float v_top = sy / bm_h * (flip_y ? -1.0f : 1.0f);
