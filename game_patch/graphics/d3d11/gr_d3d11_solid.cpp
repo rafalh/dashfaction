@@ -329,7 +329,7 @@ namespace df::gr::d3d11
         FaceRenderType render_type = determine_face_render_type(face);
         int face_tex = face->attributes.bitmap_id;
         int lightmap_tex = -1;
-        if (!is_sky_ && face->attributes.surface_index >= 0) {
+        if (!is_sky_ && render_type != FaceRenderType::liquid && face->attributes.surface_index >= 0) {
             GSurface* surface = solid->surfaces[face->attributes.surface_index];
             lightmap_tex = surface->lightmap->bm_handle;
         }
