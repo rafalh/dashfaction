@@ -205,6 +205,13 @@ namespace df::gr::d3d11
         int bm_w, bm_h;
         bm::get_dimensions(bm_handle, &bm_w, &bm_h);
 
+        // For some reason original implementation do not allow UVs > 1
+        sw = std::min(sw, bm_w - sx);
+        sh = std::min(sh, bm_h - sy);
+        if (sw <= 0.0f || sh <= 0.0f) {
+            return;
+        }
+
         float sx_left = x / gr::screen.clip_width * 2.0f - 1.0f;
         float sx_right = (x + w) / gr::screen.clip_width * 2.0f - 1.0f;
         float sy_top = y / gr::screen.clip_height * -2.0f + 1.0f;
