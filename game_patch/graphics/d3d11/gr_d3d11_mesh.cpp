@@ -438,7 +438,8 @@ namespace df::gr::d3d11
         render_context_.set_primitive_topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
         std::optional<gr::Mode> forced_mode;
-        if (params.flags & 1) {
+        bool ir_scanner = (params.flags & 1) != 0;
+        if (ir_scanner) {
             // used by rail gun scanner for heat overlays
             forced_mode.emplace(
                 TEXTURE_SOURCE_NONE,
@@ -486,7 +487,7 @@ namespace df::gr::d3d11
             render_context_.set_textures(texture, -1);
             render_context_.draw_indexed(b.num_indices, b.start_index, b.base_vertex);
         }
-        if (params.powerup_bitmaps[0] != -1) {
+        if (params.powerup_bitmaps[0] != -1 && !ir_scanner) {
             gr::Mode powerup_mode{
                 gr::TEXTURE_SOURCE_CLAMP,
                 gr::COLOR_SOURCE_TEXTURE,
