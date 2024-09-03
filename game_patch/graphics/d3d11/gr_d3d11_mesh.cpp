@@ -460,18 +460,16 @@ namespace df::gr::d3d11
         rf::ubyte alpha = static_cast<ubyte>(params.alpha);
         rf::Color color{255, 255, 255, alpha};
         if (!ir_scanner) {
-            if (params.flags & MRF_AMBIENT_COLOR) {
-                color = params.ambient_color;
-            } else {
-                float ambient_r, ambient_g, ambient_b;
-                light_get_ambient(&ambient_r, &ambient_g, &ambient_b);
-                color.set(
-                    static_cast<rf::ubyte>(ambient_r * 255.0f),
-                    static_cast<rf::ubyte>(ambient_g * 255.0f),
-                    static_cast<rf::ubyte>(ambient_b * 255.0f),
-                    alpha
-                );
-            }
+            // Ignore ambient_color from params, it changes sharply and RF uses it only indirectly for
+            // its hard-coded lights
+            float ambient_r, ambient_g, ambient_b;
+            light_get_ambient(&ambient_r, &ambient_g, &ambient_b);
+            color.set(
+                static_cast<rf::ubyte>(ambient_r * 255.0f),
+                static_cast<rf::ubyte>(ambient_g * 255.0f),
+                static_cast<rf::ubyte>(ambient_b * 255.0f),
+                alpha
+            );
             // RF uses some hard-coded lights here but for now let's keep it simple
             color.red += 40;
             color.green += 40;
