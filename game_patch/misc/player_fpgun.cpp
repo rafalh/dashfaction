@@ -126,7 +126,7 @@ CodeInjection railgun_scanner_start_render_to_texture{
     0x004ADD0A,
     [](auto& regs) {
         rf::Player* player = regs.ebx;
-        gr_render_to_texture(player->ir_data.ir_bitmap_handle);
+        gr_set_render_target(player->ir_data.ir_bitmap_handle);
     },
 };
 
@@ -134,7 +134,7 @@ CodeInjection player_fpgun_render_ir_begin_render_to_texture{
     0x004AF0BC,
     [](auto& regs) {
         rf::Player* player = regs.esi;
-        gr_render_to_texture(player->ir_data.ir_bitmap_handle);
+        gr_set_render_target(player->ir_data.ir_bitmap_handle);
     },
 };
 
@@ -142,7 +142,7 @@ CodeInjection after_game_render_to_dynamic_textures{
     0x00431890,
     []() {
         // Render to back-buffer from this point
-        gr_render_to_back_buffer();
+        gr_set_render_target(-1);
     },
 };
 
@@ -209,10 +209,13 @@ void player_fpgun_do_patch()
     // Update fpgun 3D sounds positions
     player_fpgun_play_anim_injection.install();
 
-    // Faster IR and Railgun scanner bitmap update
+    // Use render target texture for IR and Railgun scanner bitmap update
     railgun_scanner_start_render_to_texture.install();
     player_fpgun_render_ir_begin_render_to_texture.install();
     after_game_render_to_dynamic_textures.install();
+    AsmWriter{0x004AE0BF}.nop(5);
+    AsmWriter{0x004AF7D7}.nop(5);
+    AsmWriter{0x004AF868}.nop(5);
 
     if (g_game_config.high_scanner_res) {
         // Improved Railgun Scanner resolution

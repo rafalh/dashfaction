@@ -196,7 +196,7 @@ void bm_change_format(int bm_handle, rf::bm::Format format)
     auto& bm = rf::bm::bitmaps[bm_idx];
     assert(bm.bm_type == rf::bm::TYPE_USER);
     if (bm.format != format) {
-        gr_delete_texture(bm_handle);
+        rf::gr::mark_texture_dirty(bm_handle);
         bm.format = format;
     }
 }

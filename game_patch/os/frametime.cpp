@@ -99,18 +99,15 @@ ConsoleCommand2 max_fps_cmd{
     "maxfps",
     [](std::optional<int> limit_opt) {
         if (limit_opt) {
-            int new_limit = limit_opt.value();
-#if VERSION_TYPE != VERSION_TYPE_DEV
-            new_limit = std::clamp<int>(new_limit, GameConfig::min_fps_limit, GameConfig::max_fps_limit);
-#endif
+            int limit = std::clamp<int>(limit_opt.value(), GameConfig::min_fps_limit, GameConfig::max_fps_limit);
             if (rf::is_dedicated_server) {
-                g_game_config.server_max_fps = new_limit;
+                g_game_config.server_max_fps = limit;
             }
             else {
-                g_game_config.max_fps = new_limit;
+                g_game_config.max_fps = limit;
             }
             g_game_config.save();
-            rf::frametime_min = 1.0f / new_limit;
+            rf::frametime_min = 1.0f / limit;
         }
         else
             rf::console::printf("Maximal FPS: %.1f", 1.0f / rf::frametime_min);

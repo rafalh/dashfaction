@@ -1,6 +1,7 @@
 set(SRCS
     include/common/HttpRequest.h
     include/common/rfproto.h
+    include/common/ComPtr.h
     include/common/config/BuildConfig.h
     include/common/config/CfgVar.h
     include/common/config/GameConfig.h

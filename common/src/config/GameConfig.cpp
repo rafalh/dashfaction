@@ -1,12 +1,22 @@
-#include <common/config/GameConfig.h>
-#include <common/config/RegKey.h>
 #include <shlwapi.h>
 #include <algorithm>
+#include <common/config/GameConfig.h>
+#include <common/config/RegKey.h>
+#include <common/version/version.h>
 
 const char rf_key_name[] = R"(SOFTWARE\Volition\Red Faction)";
 const char df_subkey_name[] = "Dash Faction";
 
 const char GameConfig::default_rf_tracker[] = "rfgt.factionfiles.com";
+
+#if VERSION_TYPE == VERSION_TYPE_DEV
+unsigned GameConfig::min_fps_limit = 1u;
+unsigned GameConfig::max_fps_limit = 10000u;
+#else
+unsigned GameConfig::min_fps_limit = 10u;
+unsigned GameConfig::max_fps_limit = 240u;
+#endif
+
 const char fallback_executable_path[] = R"(C:\games\RedFaction\rf.exe)";
 
 bool GameConfig::load() try
@@ -149,6 +159,7 @@ bool GameConfig::visit_vars(T&& visitor, bool is_save)
     result &= visitor(dash_faction_key, "High Monitor Resolution", high_monitor_res);
     result &= visitor(dash_faction_key, "True Color Textures", true_color_textures);
     result &= visitor(dash_faction_key, "Unclamp Lightmaps", unclamp_lightmaps);
+    result &= visitor(dash_faction_key, "Renderer", renderer);
     result &= visitor(dash_faction_key, "Horizontal FOV", horz_fov);
     result &= visitor(dash_faction_key, "Fpgun FOV Scale", fpgun_fov_scale);
     result &= visitor(dash_faction_key, "Executable Path", game_executable_path);
@@ -183,4 +194,12 @@ bool is_valid_enum_value<GameConfig::WndMode>(int value)
     return value == GameConfig::FULLSCREEN
         || value == GameConfig::WINDOWED
         || value == GameConfig::STRETCHED;
+}
+
+template<>
+bool is_valid_enum_value<GameConfig::Renderer>(int value)
+{
+    return value == static_cast<int>(GameConfig::Renderer::d3d8)
+        || value == static_cast<int>(GameConfig::Renderer::d3d9)
+        || value == static_cast<int>(GameConfig::Renderer::d3d11);
 }

@@ -7,7 +7,9 @@ set(SRCS
     Process.h
     Thread.h
     UpdateChecker.cpp
-    VideoDeviceInfoProvider.cpp
+    VideoDeviceInfoProviderD3D8.cpp
+    VideoDeviceInfoProviderD3D9.cpp
+    VideoDeviceInfoProviderD3D11.cpp
     Win32Handle.h
     include/launcher_common/PatchedAppLauncher.h
     include/launcher_common/UpdateChecker.h
@@ -30,4 +32,4 @@ target_include_directories(LauncherCommon
     ${CMAKE_CURRENT_SOURCE_DIR}/include/launcher_common
 )
 
-target_link_libraries(LauncherCommon Common Xlog sha1 ed25519 base64)
+target_link_libraries(LauncherCommon windowscodecs Common Xlog sha1 ed25519 base64)

@@ -1,11 +1,16 @@
 #pragma once
 
+#include "math/plane.h"
+#include "math/quaternion.h"
+#include "gr/gr.h"
+
 namespace rf
 {
     struct V3dMesh;
     struct LodMesh;
     struct V3DCSphere;
     struct MaterialClass;
+    struct VifLodMesh;
 
     struct V3d
     {
@@ -31,4 +36,114 @@ namespace rf
         int flags;
     };
     static_assert(sizeof(V3d) == 0x90);
+
+    struct V3dMesh
+    {
+        char name[65];
+        char parent_name[65];
+        int num_materials;
+        MaterialClass *materials;
+        VifLodMesh *vu;
+    };
+    static_assert(sizeof(V3dMesh) == 0x90);
+
+    struct WeightIndexArray
+    {
+        ubyte weights[4];
+        ubyte indices[4];
+    };
+
+    struct VifFace
+    {
+        ushort vindex1;
+        ushort vindex2;
+        ushort vindex3;
+        ushort flags;
+    };
+
+    struct VifChunk
+    {
+        gr::Mode mode;
+        Vector3 *vecs;
+        Vector3 *norms;
+        Vector2 *uvs;
+        Plane *face_planes;
+        VifFace *faces;
+        short *same_vertex_offsets;
+        WeightIndexArray *wi;
+        int texture_idx;
+        short *orig_map;
+        ushort num_vecs;
+        ushort num_faces;
+        ushort vecs_alloc;
+        ushort faces_alloc;
+        ushort uvs_alloc;
+        ushort wi_alloc;
+        ushort same_vertex_offsets_alloc;
+    };
+
+    struct VifPropPoint
+    {
+        char name[68];
+        Quaternion orient;
+        Vector3 pos;
+        int parent_index;
+    };
+
+    struct VifMesh
+    {
+        int data_block_size;
+        void *data_block;
+        VifChunk *chunks;
+        ushort num_chunks;
+        VifPropPoint *prop_points;
+        int num_prop_points;
+        ubyte tex_ids[7];
+        int tex_handles[7];
+        int num_textures_handles;
+        int flags;
+        int num_original_vecs;
+        int unk_field_from_v3d_file;
+#ifdef DASH_FACTION
+        void *render_cache;
+#endif
+    };
+
+    constexpr int VIF_FACE_DOUBLE_SIDED = 0x20;
+
+    struct VifLodMesh
+    {
+        int num_levels;
+        VifMesh *meshes[3];
+        float distances[3];
+        Vector3 center;
+        float radius;
+        Vector3 bbox_min;
+        Vector3 bbox_max;
+#ifdef DASH_FACTION
+        void *render_cache;
+#endif
+    };
+
+    struct MeshRenderParams
+    {
+        int flags;
+        int lod_level;
+        int alpha;
+        gr::Color self_illum; // unused
+        int *alt_tex;
+        float field_14_unk_fire;
+        gr::Color field_18;
+        ubyte *vertex_colors;
+        int powerup_bitmaps[2];
+        gr::Color ambient_color;
+        Matrix3 orient;
+    };
+
+    enum MeshRenderFlags
+    {
+        MRF_SCANNER_1 = 1,
+        MRF_SCANNER_2 = 8,
+        MRF_AMBIENT_COLOR = 0x80,
+    };
 }

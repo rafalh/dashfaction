@@ -67,10 +67,32 @@ set(SRCS
     graphics/gr.cpp
     graphics/gr.h
     graphics/gr_light.cpp
-    graphics/gr_d3d.cpp
-    graphics/gr_d3d_texture.cpp
-    graphics/gr_d3d_capture.cpp
-    graphics/gr_d3d_gamma.cpp
+    graphics/legacy/gr_d3d.cpp
+    graphics/legacy/gr_d3d_texture.cpp
+    graphics/legacy/gr_d3d_capture.cpp
+    graphics/legacy/gr_d3d_gamma.cpp
+    graphics/legacy/gr_d3d_internal.h
+    graphics/d3d11/gr_d3d11.cpp
+    graphics/d3d11/gr_d3d11.h
+    graphics/d3d11/gr_d3d11_state.cpp
+    graphics/d3d11/gr_d3d11_state.h
+    graphics/d3d11/gr_d3d11_texture.cpp
+    graphics/d3d11/gr_d3d11_texture.h
+    graphics/d3d11/gr_d3d11_dynamic_geometry.cpp
+    graphics/d3d11/gr_d3d11_dynamic_geometry.h
+    graphics/d3d11/gr_d3d11_context.cpp
+    graphics/d3d11/gr_d3d11_context.h
+    graphics/d3d11/gr_d3d11_shader.cpp
+    graphics/d3d11/gr_d3d11_shader.h
+    graphics/d3d11/gr_d3d11_error.cpp
+    graphics/d3d11/gr_d3d11_transform.h
+    graphics/d3d11/gr_d3d11_solid.cpp
+    graphics/d3d11/gr_d3d11_solid.h
+    graphics/d3d11/gr_d3d11_mesh.cpp
+    graphics/d3d11/gr_d3d11_mesh.h
+    graphics/d3d11/gr_d3d11_vertex.h
+    graphics/d3d11/gr_d3d11_buffer.h
+    graphics/d3d11/gr_d3d11_hooks.cpp
     input/input.h
     input/mouse.cpp
     input/key.cpp

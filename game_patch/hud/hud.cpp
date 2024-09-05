@@ -168,7 +168,7 @@ ConsoleCommand2 bighud_cmd{
     "bighud",
 };
 
-#ifdef DEBUG
+#ifndef NDEBUG
 ConsoleCommand2 hud_coords_cmd{
     "d_hud_coords",
     [](int idx, std::optional<int> x, std::optional<int> y) {

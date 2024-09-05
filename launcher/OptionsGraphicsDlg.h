@@ -9,11 +9,17 @@
 class OptionsGraphicsDlg : public CDialog
 {
 public:
-	OptionsGraphicsDlg(GameConfig& conf, VideoDeviceInfoProvider& video_info);
+    OptionsGraphicsDlg(GameConfig& conf);
     void OnSave();
+    void OnRendererChange();
     void OnAdapterChange();
     void OnColorDepthChange();
     void OnWindowModeChange();
+
+    void SetVideoInfo(VideoDeviceInfoProvider* video_info)
+    {
+        m_video_info = video_info;
+    }
 
 protected:
     BOOL OnInitDialog() override;
@@ -24,7 +30,7 @@ private:
     void UpdateAnisotropyCheckbox();
 
     GameConfig& m_conf;
-    VideoDeviceInfoProvider& m_video_info;
+    VideoDeviceInfoProvider* m_video_info;
     std::vector<unsigned> m_multi_sample_types;
     CToolTip m_tool_tip;
     CComboBox m_msaa_combo;

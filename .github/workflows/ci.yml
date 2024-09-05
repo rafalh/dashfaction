@@ -7,12 +7,15 @@ env:
 
 jobs:
   build-mingw:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
 
     - name: Install packages
-      run: sudo apt-get install mingw-w64 ninja-build
+      run: |
+        sudo dpkg --add-architecture i386
+        sudo apt-get update
+        sudo apt-get install --no-install-recommends g++-mingw-w64-i686-posix ninja-build wine32 wine
 
     - uses: actions/checkout@v4
 

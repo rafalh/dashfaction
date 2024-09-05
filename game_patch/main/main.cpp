@@ -131,6 +131,7 @@ CodeInjection after_frame_render_hook{
             experimental_render();
 #endif
             debug_render_ui();
+            g_solid_render_ui();
         }
     },
 };
@@ -253,7 +254,7 @@ void init_logging()
 
     CreateDirectoryA("logs", nullptr);
     xlog::LoggerConfig::get()
-        .add_appender<xlog::FileAppender>(log_file_path_name.c_str(), false, false)
+        .add_appender<xlog::FileAppender>(log_file_path_name.c_str(), false, true)
         // .add_appender<xlog::ConsoleAppender>()
         // .add_appender<xlog::Win32Appender>()
         .add_appender<RfConsoleLogAppender>();
