@@ -42,7 +42,7 @@ Version 1.9.0 (not released yet)
 - Add Kill Reward settings for dedicated servers
 - Do not load unnecessary VPPs in dedicated server mode
 - Add level filename to "Level Initializing" console message
-- Add "Full color range lights" option to enable rendering of lightmaps utilizing full color range
+- Display full color range lighting (unclamped lightmaps) for any levels made in the future (after Sept 8, 2024 at 00:00:00)
 
 Version 1.8.0 (released 2022-09-17)
 -----------------------------------

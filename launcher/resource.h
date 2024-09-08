@@ -34,7 +34,6 @@
 #define IDC_EXE_BROWSE                  1017
 #define IDC_RESET_TRACKER_BTN           1018
 #define IDC_COLOR_DEPTH_COMBO           1019
-#define IDC_UNCLAMP_LIGHTMAPS_CHECK     1020
 #define IDC_UPDATE_STATUS               1021
 #define IDC_FAST_START_CHECK            1022
 #define IDC_FPS_COUNTER_CHECK           1023

@@ -2,8 +2,8 @@
 #include <patch_common/CodeInjection.h>
 #include <patch_common/AsmWriter.h>
 #include <xlog/xlog.h>
-#include "../main/main.h"
 #include "../rf/geometry.h"
+#include "../rf/level.h"
 #include "../rf/mover.h"
 #include "../rf/gr/gr.h"
 #include "../rf/gr/gr_font.h"
@@ -231,7 +231,7 @@ CodeInjection level_load_lightmaps_color_conv_patch{
         rf::gr::LockInfo lock;
         if (!rf::gr::lock(lightmap->bm_handle, 0, &lock, rf::gr::LOCK_WRITE_ONLY))
             return;
-        if (!g_game_config.unclamp_lightmaps) // if unclamped lightmaps is off, cap minimal color channel value as stock RF does
+        if (rf::level.level_timestamp < 1725762600) // for maps made before Sept 8, 2024, cap minimal color channel value as stock RF does
             {
         for (int i = 0; i < lightmap->w * lightmap->h * 3; ++i)
             lightmap->buf[i] = std::max(lightmap->buf[i], (uint8_t)(4 << 3)); // 32

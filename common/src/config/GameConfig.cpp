@@ -158,7 +158,6 @@ bool GameConfig::visit_vars(T&& visitor, bool is_save)
     result &= visitor(dash_faction_key, "High Scanner Resolution", high_scanner_res);
     result &= visitor(dash_faction_key, "High Monitor Resolution", high_monitor_res);
     result &= visitor(dash_faction_key, "True Color Textures", true_color_textures);
-    result &= visitor(dash_faction_key, "Unclamp Lightmaps", unclamp_lightmaps);
     result &= visitor(dash_faction_key, "Renderer", renderer);
     result &= visitor(dash_faction_key, "Horizontal FOV", horz_fov);
     result &= visitor(dash_faction_key, "Fpgun FOV Scale", fpgun_fov_scale);

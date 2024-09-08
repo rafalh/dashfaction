@@ -48,7 +48,6 @@ struct GameConfig
     // Graphics
     CfgVar<bool> fast_anims = false;
     CfgVar<bool> disable_lod_models = true;
-    CfgVar<bool> unclamp_lightmaps = true;
     CfgVar<bool> anisotropic_filtering = true;
     CfgVar<bool> nearest_texture_filtering = false;
     CfgVar<unsigned> msaa = 0;
