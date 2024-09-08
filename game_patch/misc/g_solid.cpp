@@ -231,7 +231,8 @@ CodeInjection level_load_lightmaps_color_conv_patch{
         rf::gr::LockInfo lock;
         if (!rf::gr::lock(lightmap->bm_handle, 0, &lock, rf::gr::LOCK_WRITE_ONLY))
             return;
-        if (rf::level.level_timestamp < 1725762600) // for maps made before Sept 8, 2024, cap minimal color channel value as stock RF does
+        if (rf::level.level_timestamp < 1725753600) // for maps made before Sept 8, 2024, cap minimal color
+                                                               // channel value as stock RF does
             {
         for (int i = 0; i < lightmap->w * lightmap->h * 3; ++i)
             lightmap->buf[i] = std::max(lightmap->buf[i], (uint8_t)(4 << 3)); // 32
