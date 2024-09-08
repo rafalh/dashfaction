@@ -460,14 +460,14 @@ void gr_font_set_default(int font_id)
     g_default_font_id = font_id;
 }
 
-FunHook<int(const char*, int)> gr_load_font_hook{
+FunHook<int(const char*, int)> gr_init_font_hook{
     0x0051F6E0,
     [](const char *name, int reserved) {
-        if (string_ends_with(name, ".vf")) {
-            return gr_load_font_hook.call_target(name, reserved);
-        }
         if (rf::is_dedicated_server) {
            return -1;
+        }
+        if (string_ends_with(name, ".vf")) {
+            return gr_init_font_hook.call_target(name, reserved);
         }
         for (unsigned i = 0; i < g_fonts.size(); ++i) {
             auto& font = g_fonts[i];
@@ -552,6 +552,13 @@ FunHook<void(int*, int*, const char*, int, int)> gr_get_string_size_hook{
     },
 };
 
+CodeInjection gr_create_font_increment_number_injection{
+    0x0051F800,
+    []() {
+        rf::gr::num_fonts++;
+    },
+};
+
 void gr_font_apply_patch()
 {
     // Fix font texture leak
@@ -561,10 +568,15 @@ void gr_font_apply_patch()
     gr_load_font_internal_fix_texture_ref.install();
 
     // Support TrueType fonts
-    gr_load_font_hook.install();
+    gr_init_font_hook.install();
     gr_set_default_font_hook.install();
     gr_get_font_height_hook.install();
     gr_string_hook.install();
     gr_get_string_size_hook.install();
     init_freetype_lib();
+
+    // Do not increament number of loaded fonts before a successful load
+    // Fixes slots being exhausted if font cannot be loaded
+    gr_create_font_increment_number_injection.install();
+    AsmWriter{0x0051F7D8, 0x0051F7E3}.nop();
 }
