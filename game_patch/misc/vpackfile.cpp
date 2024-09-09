@@ -46,8 +46,11 @@ static bool g_is_overriding_disabled = false;
 
 const char* mod_file_allow_list[] = {
     "reticle_0.tga",
+    "reticle_1.tga",
     "scope_ret_0.tga",
+    "scope_ret_1.tga",
     "reticle_rocket_0.tga",
+    "reticle_rocket_1.tga",
 };
 
 static bool is_mod_file_in_whitelist(const char* Filename)
@@ -59,6 +62,26 @@ static bool is_mod_file_in_whitelist(const char* Filename)
 }
 
 #endif // MOD_FILE_WHITELIST
+
+// allow list of table files that can't be used for cheating, but for which modding in clientside mods has utility
+// Examples include translation packs (translated strings, endgame, etc.) and custom HUD mods that change coords of HUD elements
+const char* tbl_mod_allow_list[] = {
+    "strings.tbl",
+    "hud.tbl",
+    "hud_personas.tbl",
+    "personas.tbl",
+    "credits.tbl",
+    "endgame.tbl",
+    "ponr.tbl",
+};
+
+static bool is_tbl_file_in_allowlist(const char* Filename)
+{
+    for (unsigned i = 0; i < std::size(tbl_mod_allow_list); ++i)
+        if (!stricmp(tbl_mod_allow_list[i], Filename))
+            return true;
+    return false;
+}
 
 #if CHECK_PACKFILE_CHECKSUM
 
@@ -298,12 +321,16 @@ static bool is_lookup_table_entry_override_allowed(rf::VPackfileEntry* old_entry
         // Allow overriding by packfiles from game root and from mods
         return true;
     }
+    if (!old_entry->parent->is_user_maps && is_tbl_file_in_allowlist(new_entry->name)) {
+        // Allow overriding of tbl files from user_maps if they are on allow list
+        return true;
+    }
     if (!old_entry->parent->is_user_maps && !stricmp(rf::file_get_ext(new_entry->name), ".tbl")) {
-        // Always skip overriding tbl files from game by user_maps
+        // Skip overriding of all other tbl files from user_maps
         return false;
     }
 #ifdef MOD_FILE_WHITELIST
-    if (is_mod_file_in_whitelist(new_entry->file_name)) {
+    if (is_mod_file_in_whitelist(new_entry->name)) {
         // Always allow overriding for specific files
         return true;
     }
