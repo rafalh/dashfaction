@@ -200,8 +200,8 @@ FunHook multi_ban_shutdown_hook{
 
 FunHook multi_ban_is_banned_hook{
     0x0046D010,
-    [](const rf::NetAddr& addr) {
-        return Banlist::instance().is_banned(addr.ip_addr);
+    [](const rf::NetAddr& addr) -> int {
+        return Banlist::instance().is_banned(addr.ip_addr) ? 1 : 0;
     },
 };
 
