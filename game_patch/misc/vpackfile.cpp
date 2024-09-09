@@ -321,6 +321,9 @@ static bool is_lookup_table_entry_override_allowed(rf::VPackfileEntry* old_entry
         // Allow overriding by packfiles from game root and from mods
         return true;
     }
+    if (!g_game_config.allow_overwrite_game_files) {
+        return false;
+    }
     if (!old_entry->parent->is_user_maps && is_tbl_file_in_allowlist(new_entry->name)) {
         // Allow overriding of tbl files from user_maps if they are on allow list
         return true;
@@ -335,9 +338,6 @@ static bool is_lookup_table_entry_override_allowed(rf::VPackfileEntry* old_entry
         return true;
     }
 #endif
-    if (!g_game_config.allow_overwrite_game_files) {
-        return false;
-    }
     g_is_modded_game = true;
     return true;
 }
