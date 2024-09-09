@@ -45,8 +45,7 @@ static bool obj_should_be_lit(rf::Object *objp)
         return false;
     }
     // Clutter object always use static lighting
-    // Items does only in single-player. In multi-player they spins so static lighting make less sense
-    return objp->type == rf::OT_CLUTTER || (objp->type == rf::OT_ITEM && !rf::is_multi);
+    return objp->type == rf::OT_CLUTTER || objp->type == rf::OT_ITEM;
 }
 
 void obj_mesh_lighting_maybe_update(rf::Object *objp)
