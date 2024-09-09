@@ -125,8 +125,7 @@ public:
     {
         std::ifstream f("banlist.txt");
         std::string line;
-        while (f) {
-            std::getline(f, line);
+        while (std::getline(f, line)) {
             // Ignore empty lines and comments
             if (line.empty() || string_starts_with(line, "#") || string_starts_with(line, "//")) {
                 continue;
