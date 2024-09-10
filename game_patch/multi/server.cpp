@@ -127,6 +127,10 @@ void load_additional_server_config(rf::Parser& parser)
         g_additional_server_config.anticheat_level = parser.parse_int();
     }
 
+    if (parser.parse_optional("$DF Semi Auto Click Limit:")) {
+        g_additional_server_config.click_limiter_max_cps = parser.parse_float();
+    }
+
     if (parser.parse_optional("$DF Require Client Mod:")) {
         g_additional_server_config.require_client_mod = parser.parse_bool();
     }
