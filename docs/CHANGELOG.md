@@ -42,7 +42,7 @@ Version 1.9.0 (not released yet)
 - Add Kill Reward settings for dedicated servers
 - Do not load unnecessary VPPs in dedicated server mode
 - Add level filename to "Level Initializing" console message
-- Fixed some fire packets being wrongfully dropped by click limiter (DF bug)
+- Fix some fire packets being wrongfully dropped by click limiter (DF bug)
 - Add `$DF Semi Auto Click Limit` option in dedicated server config
 
 Version 1.8.0 (released 2022-09-17)

@@ -266,7 +266,6 @@ std::pair<bool, float> multi_is_cps_above_limit(rf::Player* pp, float max_cps, i
     }
     float avg_dt_secs = (now - last_weapon_fire[player_id][0]) / static_cast<float>(num_samples) / 1000.0f;
     float cps = 1.0f / avg_dt_secs;
-    xlog::debug("Current cps %f, based on current avg_dt_secs %f", cps, avg_dt_secs);
     if (cps > max_cps) {
         return {true, cps};
     }
