@@ -45,13 +45,21 @@ struct GameConfig
     };
     CfgVar<Renderer> renderer = Renderer::d3d9;
 
+    enum ClampMode
+    {
+        AUTOMATIC,
+        FULL,
+        LEGACYPC,
+        LEGACYPS2,
+    };
+    CfgVar<ClampMode> clamp_mode = AUTOMATIC;
+
     // Graphics
     CfgVar<bool> fast_anims = false;
     CfgVar<bool> disable_lod_models = true;
     CfgVar<bool> anisotropic_filtering = true;
     CfgVar<bool> nearest_texture_filtering = false;
     CfgVar<unsigned> msaa = 0;
-
 
     CfgVar<bool> high_scanner_res = true;
     CfgVar<bool> high_monitor_res = true;

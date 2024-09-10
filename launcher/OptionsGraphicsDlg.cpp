@@ -14,6 +14,13 @@ BOOL OptionsGraphicsDlg::OnInitDialog()
 {
     // Attach controls
     AttachItem(IDC_MSAA_COMBO, m_msaa_combo);
+    AttachItem(IDC_CLAMP_COMBO, m_clamp_combo);
+
+    m_clamp_combo.AddString("Automatic");
+    m_clamp_combo.AddString("Full");
+    m_clamp_combo.AddString("Legacy RF (PC)");
+    m_clamp_combo.AddString("Legacy RF (PS2)");
+    m_clamp_combo.SetCurSel(static_cast<int>(m_conf.clamp_mode));
 
     // Graphics
     UpdateMsaaCombo();
@@ -90,6 +97,7 @@ void OptionsGraphicsDlg::UpdateAnisotropyCheckbox()
 void OptionsGraphicsDlg::InitToolTip()
 {
     m_tool_tip.Create(*this);
+    m_tool_tip.AddTool(GetDlgItem(IDC_CLAMP_COMBO), "Clamp rendered color range for level lighting - automatic uses Legacy RF (PC) for levels made before Sept 8, 2024 and Full for levels made since");
     m_tool_tip.AddTool(GetDlgItem(IDC_FAST_ANIMS_CHECK), "Reduce animation smoothness for far models");
     m_tool_tip.AddTool(GetDlgItem(IDC_DISABLE_LOD_CHECK), "Use more detailed LOD models for objects in the distance");
     m_tool_tip.AddTool(GetDlgItem(IDC_ANISOTROPIC_CHECK), "Improve far textures quality");
@@ -102,6 +110,7 @@ void OptionsGraphicsDlg::OnSave()
 {
     m_conf.fast_anims = (IsDlgButtonChecked(IDC_FAST_ANIMS_CHECK) == BST_CHECKED);
     m_conf.msaa = m_multi_sample_types[m_msaa_combo.GetCurSel()];
+    m_conf.clamp_mode = static_cast<GameConfig::ClampMode>(m_clamp_combo.GetCurSel());
     m_conf.anisotropic_filtering = (IsDlgButtonChecked(IDC_ANISOTROPIC_CHECK) == BST_CHECKED);
     m_conf.disable_lod_models = (IsDlgButtonChecked(IDC_DISABLE_LOD_CHECK) == BST_CHECKED);
     m_conf.high_scanner_res = (IsDlgButtonChecked(IDC_HIGH_SCANNER_RES_CHECK) == BST_CHECKED);

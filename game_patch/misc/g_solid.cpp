@@ -2,6 +2,7 @@
 #include <patch_common/CodeInjection.h>
 #include <patch_common/AsmWriter.h>
 #include <xlog/xlog.h>
+#include "../main/main.h"
 #include "../rf/geometry.h"
 #include "../rf/level.h"
 #include "../rf/mover.h"
@@ -231,8 +232,37 @@ CodeInjection level_load_lightmaps_color_conv_patch{
         rf::gr::LockInfo lock;
         if (!rf::gr::lock(lightmap->bm_handle, 0, &lock, rf::gr::LOCK_WRITE_ONLY))
             return;
-        if (rf::level.level_timestamp < 1725753600) // for maps made before Sept 8, 2024, cap minimal color channel value as stock RF does
+        // Apply legacy rf ps2 lightmap clamping if player has forced it
+        if (g_game_config.clamp_mode == GameConfig::LEGACYPS2)
             {
+            xlog::debug("Applying Legacy RF (PS2) lightmap clamping");
+            for (int i = 0; i < lightmap->w * lightmap->h * 3; i += 3) {
+                uint8_t& r = lightmap->buf[i];
+                uint8_t& g = lightmap->buf[i + 1];
+                uint8_t& b = lightmap->buf[i + 2];
+                float sum = r + g + b;
+                if (0.57f < r / sum) {
+                    r = static_cast<uint8_t>(r * 0.75f);
+                    g = static_cast<uint8_t>(g * 0.88f);
+                    b = static_cast<uint8_t>(b * 0.88f);
+                }
+                if (0.57f < g / sum) {
+                    g = static_cast<uint8_t>(g * 0.87f);
+                }
+                if (0.57f < b / sum) {
+                    b = static_cast<uint8_t>(b * 0.87f);
+                }
+                if (190.0f < (r + g + b)) {
+                    r = static_cast<uint8_t>(r * 0.9f);
+                    g = static_cast<uint8_t>(g * 0.9f);
+                    b = static_cast<uint8_t>(b * 0.9f);
+                }
+            }
+        }
+        // Apply legacy rf pc lightmap clamping only if either player has forced it, or if player has selected automatic and the map was made prior to Sept 8, 2024 @ 00:00:00 UTC
+        else if (g_game_config.clamp_mode == GameConfig::LEGACYPC || (rf::level.level_timestamp < 1725753600 && g_game_config.clamp_mode == GameConfig::AUTOMATIC))
+            {
+            xlog::debug("Applying Legacy RF (PC) lightmap clamping");
         for (int i = 0; i < lightmap->w * lightmap->h * 3; ++i)
             lightmap->buf[i] = std::max(lightmap->buf[i], (uint8_t)(4 << 3)); // 32
         }

@@ -34,4 +34,5 @@ private:
     std::vector<unsigned> m_multi_sample_types;
     CToolTip m_tool_tip;
     CComboBox m_msaa_combo;
+    CComboBox m_clamp_combo;
 };

@@ -152,6 +152,7 @@ bool GameConfig::visit_vars(T&& visitor, bool is_save)
     result &= visitor(dash_faction_key, "Anisotropic Filtering", anisotropic_filtering);
     result &= visitor(dash_faction_key, "Nearest Texture Filtering", nearest_texture_filtering);
     result &= visitor(dash_faction_key, "MSAA", msaa);
+    result &= visitor(dash_faction_key, "Light Color Range", clamp_mode);
     result &= visitor(dash_faction_key, "FPS Counter", fps_counter);
     result &= visitor(dash_faction_key, "Max FPS", max_fps);
     result &= visitor(dash_faction_key, "Server Max FPS", server_max_fps);
@@ -193,6 +194,15 @@ bool is_valid_enum_value<GameConfig::WndMode>(int value)
     return value == GameConfig::FULLSCREEN
         || value == GameConfig::WINDOWED
         || value == GameConfig::STRETCHED;
+}
+
+template<>
+bool is_valid_enum_value<GameConfig::ClampMode>(int value)
+{
+    return value == GameConfig::AUTOMATIC
+        || value == GameConfig::FULL
+        || value == GameConfig::LEGACYPC
+        || value == GameConfig::LEGACYPS2;
 }
 
 template<>
