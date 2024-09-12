@@ -33,6 +33,7 @@ struct ServerAdditionalConfig
     VoteConfig vote_extend;
     VoteConfig vote_restart;
     VoteConfig vote_next;
+    VoteConfig vote_rand;
     VoteConfig vote_previous;
     int spawn_protection_duration_ms = 1500;
     std::optional<float> spawn_life;
@@ -68,6 +69,7 @@ void init_server_commands();
 void extend_round_time(int minutes);
 void restart_current_level();
 void load_next_level();
+void load_rand_level();
 void load_prev_level();
 void server_vote_on_limbo_state_enter();
 void process_delayed_kicks();

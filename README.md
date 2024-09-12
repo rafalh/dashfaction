@@ -148,6 +148,8 @@ Configuration example:
     $DF Vote Restart: true
     // Enable vote next
     $DF Vote Next: true
+    // Enable vote random
+    $DF Vote Random: true
     // Enable vote previous
     $DF Vote Previous: true
     // Duration of player invulnerability after respawn in ms (default is the same as in stock RF - 1500)

@@ -322,6 +322,30 @@ struct VoteNext : public Vote
     }
 };
 
+struct VoteRandom : public Vote
+{
+    [[nodiscard]] std::string get_title() const override
+    {
+        return "LOAD RANDOM LEVEL";
+    }
+
+    void on_accepted() override
+    {
+        send_chat_line_packet("\xA6 Vote passed: loading random level from rotation", nullptr);
+        load_rand_level();
+    }
+
+    [[nodiscard]] bool is_allowed_in_limbo_state() const override
+    {
+        return false;
+    }
+
+    [[nodiscard]] const VoteConfig& get_config() const override
+    {
+        return g_additional_server_config.vote_rand;
+    }
+};
+
 struct VotePrevious : public Vote
 {
     [[nodiscard]] std::string get_title() const override
@@ -448,6 +472,8 @@ void handle_vote_command(std::string_view vote_name, std::string_view vote_arg, 
         g_vote_mgr.StartVote<VoteRestart>(vote_arg, sender);
     else if (vote_name == "next")
         g_vote_mgr.StartVote<VoteNext>(vote_arg, sender);
+    else if (vote_name == "rand")
+        g_vote_mgr.StartVote<VoteRandom>(vote_arg, sender);
     else if (vote_name == "previous" || vote_name == "prev")
         g_vote_mgr.StartVote<VotePrevious>(vote_arg, sender);
     else if (vote_name == "yes" || vote_name == "y")

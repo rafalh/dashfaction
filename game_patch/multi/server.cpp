@@ -71,6 +71,7 @@ void load_additional_server_config(rf::Parser& parser)
     parse_vote_config("Vote Extend", g_additional_server_config.vote_extend, parser);
     parse_vote_config("Vote Restart", g_additional_server_config.vote_restart, parser);
     parse_vote_config("Vote Next", g_additional_server_config.vote_next, parser);
+    parse_vote_config("Vote Random", g_additional_server_config.vote_rand, parser);
     parse_vote_config("Vote Previous", g_additional_server_config.vote_previous, parser);
     if (parser.parse_optional("$DF Spawn Protection Duration:")) {
         g_additional_server_config.spawn_protection_duration_ms = parser.parse_uint();
