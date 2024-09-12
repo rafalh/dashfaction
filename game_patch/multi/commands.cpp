@@ -48,11 +48,11 @@ void load_rand_level()
 {
     std::srand(static_cast<unsigned int>(std::time(nullptr)));
     // select a random level index from the rotation, excluding the currently loaded level
-    int rand_level_index;
+    int rand_level_index = rf::netgame.current_level_index;
     int num_levels = rf::netgame.levels.size();
     do {
-        rand_level_index = std::rand() % num_levels;
-    } while (rand_level_index == rf::netgame.current_level_index);
+    rand_level_index = std::rand() % num_levels;
+    } while (rand_level_index == rf::netgame.current_level_index && rf::netgame.levels.size() > 1); // prevent infinite loop if rotation has only 1 map
     rf::netgame.current_level_index = rand_level_index;
     rf::multi_change_level(rf::netgame.levels[rf::netgame.current_level_index]);
 }

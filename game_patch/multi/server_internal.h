@@ -50,6 +50,7 @@ struct ServerAdditionalConfig
     std::optional<float> max_fov;
     int anticheat_level = 0;
     bool stats_message_enabled = true;
+    bool randomize_rotation = false;
     std::string welcome_message;
     bool weapon_items_give_full_ammo = false;
     float kill_reward_health = 0.0f;

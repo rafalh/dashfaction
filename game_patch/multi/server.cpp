@@ -9,6 +9,8 @@
 #include <xlog/xlog.h>
 #include <algorithm>
 #include <limits>
+#include <cstdlib>
+#include <ctime>
 #include <windows.h>
 #include "server.h"
 #include "server_internal.h"
@@ -166,6 +168,10 @@ void load_additional_server_config(rf::Parser& parser)
 
     if (parser.parse_optional("$DF Send Player Stats Message:")) {
         g_additional_server_config.stats_message_enabled = parser.parse_bool();
+    }
+
+    if (parser.parse_optional("$DF Randomize Rotation:")) {
+        g_additional_server_config.randomize_rotation = parser.parse_bool();
     }
 
     if (parser.parse_optional("$DF Welcome Message:")) {
@@ -659,6 +665,26 @@ CodeInjection multi_limbo_init_injection{
     },
 };
 
+CallHook<void(const char* filename)> multi_change_level_call_hook{
+    0x0046E89C,
+    [](const char* filename){
+        if (rf::is_dedicated_server && g_additional_server_config.randomize_rotation) {
+            std::srand(static_cast<unsigned int>(std::time(nullptr)));
+            // select a random level index from the rotation, excluding the currently loaded level
+            int rand_level_index = rf::netgame.current_level_index;
+            int num_levels = rf::netgame.levels.size();
+            do {
+                rand_level_index = std::rand() % num_levels;
+            } while (rand_level_index == rf::netgame.current_level_index && rf::netgame.levels.size() > 1); // prevent infinite loop if rotation has only 1 map
+            rf::netgame.current_level_index = rand_level_index;
+            const char* new_filename = rf::netgame.levels[rf::netgame.current_level_index];
+            multi_change_level_call_hook.call_target(new_filename);
+        }
+        else {
+            multi_change_level_call_hook.call_target(filename);
+        }
+    }};
+
 void server_init()
 {
     // Override rcon command whitelist
@@ -724,6 +750,9 @@ void server_init()
 
     // Reduce limbo duration if server is empty
     multi_limbo_init_injection.install();
+
+    // Handle the filename passed to multi_change_level at the end of a round (for randomize rotation)
+    multi_change_level_call_hook.install();
 }
 
 void server_do_frame()
