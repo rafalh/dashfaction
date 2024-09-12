@@ -37,6 +37,7 @@ const char* g_rcon_cmd_whitelist[] = {
     "map_ext",
     "map_rest",
     "map_next",
+    "map_rand",
     "map_prev",
 };
 

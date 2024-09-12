@@ -71,6 +71,7 @@ Name                     | Description
 `map_ext`                | extend round
 `map_rest`               | restart current level
 `map_next`               | load next level
+`map_next`               | load random level from rotation
 `map_prev`               | load previous level
 `kill_limit value`       | set kill limit
 `time_limit value`       | set time limit
