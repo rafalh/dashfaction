@@ -173,6 +173,10 @@ void load_additional_server_config(rf::Parser& parser)
         g_additional_server_config.randomize_rotation = parser.parse_bool();
     }
 
+    if (parser.parse_optional("$DF Dynamic Rotation:")) {
+        g_additional_server_config.dynamic_rotation = parser.parse_bool();
+    }
+
     if (parser.parse_optional("$DF Welcome Message:")) {
         rf::String welcome_message;
         parser.parse_string(&welcome_message);
@@ -691,6 +695,18 @@ CodeInjection multi_limbo_init_injection{
     },
 };
 
+CodeInjection multi_level_init_injection{
+    0x0046E450,
+    [](auto& regs) {
+        if (g_additional_server_config.dynamic_rotation && rf::netgame.current_level_index ==
+                    rf::netgame.levels.size() - 1 && rf::netgame.levels.size() > 1) {
+                // if this is the last level in the list and dynamic rotation is on, shuffle
+                xlog::debug("Reached end of level rotation, shuffling");
+                shuffle_level_array();
+            }    
+    },
+};
+
 CallHook<void(const char* filename)> multi_change_level_call_hook{
     {
         0x0046E89C,
@@ -698,7 +714,8 @@ CallHook<void(const char* filename)> multi_change_level_call_hook{
         0x0046E863,
     },
     [](const char* filename){
-        multi_change_level_call_hook.call_target(g_additional_server_config.randomize_rotation ? get_rand_level_filename() : filename);
+        multi_change_level_call_hook.call_target(g_additional_server_config.randomize_rotation
+            ? get_rand_level_filename() : filename);
     }
 };
 
@@ -767,6 +784,9 @@ void server_init()
 
     // Reduce limbo duration if server is empty
     multi_limbo_init_injection.install();
+
+    // Shuffle rotation when the last map in the list is loaded
+    multi_level_init_injection.install();
 
     // Handle the filename passed to multi_change_level at the end of a round (for randomize rotation)
     multi_change_level_call_hook.install();

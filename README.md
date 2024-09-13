@@ -188,8 +188,10 @@ Configuration example:
     $DF Player Damage Modifier: 1.0
     // Enable '/save' and '/load' chat commands (works for all clients) and quick save/load controls handling (works for Dash Faction 1.5.0+ clients). Option designed with run-maps in mind.
     $DF Saving Enabled: false
-    // Instead of loading levels in order, load a random level from the rotation after each round (only applies when round ends due to kill, cap, or time limit)
+    // Instead of loading levels in order, load a random level from the configured level list after each round (only applies when round ends due to kill, cap, or time limit)
     $DF Random Level Order: false
+    // When the level rotation finishes, shuffle the list of levels before starting the rotation again
+    $DF Dynamic Rotation: false
     // Enable Universal Plug-and-Play (enabled by default)
     $DF UPnP Enabled: true
     // Force all players to use the same character (check pc_multi.tbl for valid names)
