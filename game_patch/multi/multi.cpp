@@ -251,18 +251,18 @@ std::pair<bool, float> multi_is_cps_above_limit(rf::Player* pp, float max_cps, i
     constexpr int num_samples = 4;
     int player_id = pp->net_data->player_id;
     static int last_weapon_id[rf::multi_max_player_id];         // Keep a record of last weapon used
-    static bool last_weapon_fire_mode[rf::multi_max_player_id]; // Keep a record of last fire mode used
+    static bool last_weapon_is_alt_fire[rf::multi_max_player_id]; // Keep a record of last fire mode used
     static int last_weapon_fire[rf::multi_max_player_id][num_samples];
     int now = rf::timer_get(1000);
     // If the weapon or fire mode has changed, zero out the saved array of timestamps. Avoids dropping legit fire packets based on cps from other weapon/firemode
-    if (last_weapon_id[player_id] != weapon_type || last_weapon_fire_mode[player_id] != alt_fire) {
+    if (last_weapon_id[player_id] != weapon_type || last_weapon_is_alt_fire[player_id] != alt_fire) {
         xlog::debug("Player %i swapped weapon to %i", player_id, weapon_type);
         xlog::debug("Player %i swapped fire mode to %i", player_id, alt_fire);
         for (int i = 0; i < num_samples; ++i) {
             last_weapon_fire[player_id][i] = 0;
         }
         last_weapon_id[player_id] = weapon_type; // Update the last weapon used
-        last_weapon_fire_mode[player_id] = alt_fire; // Update the last fire mode used
+        last_weapon_is_alt_fire[player_id] = alt_fire; // Update the last fire mode used
     }
     float avg_dt_secs = (now - last_weapon_fire[player_id][0]) / static_cast<float>(num_samples) / 1000.0f;
     float cps = 1.0f / avg_dt_secs;
