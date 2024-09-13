@@ -472,7 +472,7 @@ void handle_vote_command(std::string_view vote_name, std::string_view vote_arg, 
         g_vote_mgr.StartVote<VoteRestart>(vote_arg, sender);
     else if (vote_name == "next")
         g_vote_mgr.StartVote<VoteNext>(vote_arg, sender);
-    else if (vote_name == "rand")
+    else if (vote_name == "random" || vote_name == "rand")
         g_vote_mgr.StartVote<VoteRandom>(vote_arg, sender);
     else if (vote_name == "previous" || vote_name == "prev")
         g_vote_mgr.StartVote<VotePrevious>(vote_arg, sender);
