@@ -246,23 +246,20 @@ bool is_entity_out_of_ammo(rf::Entity *entity, int weapon_type, bool alt_fire)
     return clip_ammo == 0;
 }
 
-std::pair<bool, float> multi_is_cps_above_limit(rf::Player* pp, float max_cps, int weapon_type, bool alt_fire)
+std::pair<bool, float> multi_is_cps_above_limit(rf::Player* pp, float max_cps, int weapon_type)
 {
     constexpr int num_samples = 4;
     int player_id = pp->net_data->player_id;
     static int last_weapon_id[rf::multi_max_player_id];         // Keep a record of last weapon used
-    static bool last_weapon_is_alt_fire[rf::multi_max_player_id]; // Keep a record of last fire mode used
     static int last_weapon_fire[rf::multi_max_player_id][num_samples];
     int now = rf::timer_get(1000);
-    // If the weapon or fire mode has changed, zero out the saved array of timestamps. Avoids dropping legit fire packets based on cps from other weapon/firemode
-    if (last_weapon_id[player_id] != weapon_type || last_weapon_is_alt_fire[player_id] != alt_fire) {
+    // If the weapon has changed, zero out the saved array of timestamps. Avoids dropping legit fire packets based on cps from other weapon
+    if (last_weapon_id[player_id] != weapon_type) {
         xlog::debug("Player %i swapped weapon to %i", player_id, weapon_type);
-        xlog::debug("Player %i swapped fire mode to %i", player_id, alt_fire);
         for (int i = 0; i < num_samples; ++i) {
             last_weapon_fire[player_id][i] = 0;
         }
         last_weapon_id[player_id] = weapon_type; // Update the last weapon used
-        last_weapon_is_alt_fire[player_id] = alt_fire; // Update the last fire mode used
     }
     float avg_dt_secs = (now - last_weapon_fire[player_id][0]) / static_cast<float>(num_samples) / 1000.0f;
     float cps = 1.0f / avg_dt_secs;
@@ -276,7 +273,7 @@ std::pair<bool, float> multi_is_cps_above_limit(rf::Player* pp, float max_cps, i
     return {false, cps};
 }
 
-float multi_get_max_cps(int weapon_type, bool alt_fire)
+float multi_get_max_cps(int weapon_type)
 {
     if (rf::weapon_is_semi_automatic(weapon_type)) {
         // since semi-auto weapons can be fired as quickly as click input, limit max allowed rate to value set by server, default 20/sec
@@ -284,21 +281,24 @@ float multi_get_max_cps(int weapon_type, bool alt_fire)
     }
     if (rf::weapon_is_riot_stick(weapon_type)) {
         // double (+ 10%) baton max fire rate to fix legit fire requests being dropped when holding primary fire
-        return 2.2f * (1.0f / ((rf::weapon_get_fire_wait_ms(weapon_type, alt_fire) / 1000.0f)));
+        // baton handling is WIP
+        return 2.2f * (1.0f / rf::weapon_get_fire_wait_ms(weapon_type, 0) / 1000.0f);
     }
-    int fire_wait_ms = rf::weapon_get_fire_wait_ms(weapon_type, alt_fire); // for most automatic weapons, using fire wait value in weapons.tbl is fine
+    // for most automatic weapons, using fire wait value in weapons.tbl is fine. Uses min fire wait across both primary and alt fire
+    int fire_wait_ms = std::min(rf::weapon_get_fire_wait_ms(weapon_type, 0),rf::weapon_get_fire_wait_ms(weapon_type, 1));
     float fire_wait_secs = fire_wait_ms / 1000.0f;
     float fire_rate = 1.0f / fire_wait_secs;
     // allow 10% more to make sure we do not skip any legit packets
+    xlog::warn("For fire request for weapon %i, max cps is %.2f", weapon_type, fire_rate*1.1f);
     return fire_rate * 1.1f;
 }
 
-bool multi_check_cps(rf::Player* pp, int weapon_type, bool alt_fire)
+bool multi_check_cps(rf::Player* pp, int weapon_type)
 {
-    float max_cps = multi_get_max_cps(weapon_type, alt_fire);
-    auto [above_limit, cps] = multi_is_cps_above_limit(pp, max_cps, weapon_type, alt_fire);
+    float max_cps = multi_get_max_cps(weapon_type);
+    auto [above_limit, cps] = multi_is_cps_above_limit(pp, max_cps, weapon_type);
     if (above_limit) {
-        xlog::debug("Cancelled fire request from player %s for weapon %i. They are shooting too fast: cps %.2f is greater than allowed %.2f",
+        xlog::warn("Cancelled fire request from player %s for weapon %i. They are shooting too fast: cps %.2f is greater than allowed %.2f",
             pp->name.c_str(), weapon_type, cps, max_cps);
     }
     return above_limit;
@@ -322,7 +322,7 @@ bool multi_is_weapon_fire_allowed_server_side(rf::Entity *ep, int weapon_type, b
     else if (rf::entity_is_reloading(ep)) {
         xlog::debug("Player %s attempted to fire weapon %d while reloading it", pp->name.c_str(), weapon_type);
     }
-    else if (!multi_check_cps(pp, weapon_type, alt_fire)) {
+    else if (!multi_check_cps(pp, weapon_type)) {
         return true;
     }
     return false;
