@@ -42,7 +42,9 @@ Version 1.9.0 (not released yet)
 - Add Kill Reward settings for dedicated servers
 - Do not load unnecessary VPPs in dedicated server mode
 - Add level filename to "Level Initializing" console message
-- Add `map_rand` command and `vote rand` - both initiate a level change to a random level on the rotation
+- Add `shuffle_maps` command to shuffle the order of levels on the server's rotation
+- Add `map_rand` command to change to a random level on the rotation
+- Add `vote rand` vote type to initiate a level change to a random level on the rotation
 - Add `$DF Random Level Order` option in dedicated server config
 
 Version 1.8.0 (released 2022-09-17)

@@ -102,6 +102,17 @@ ConsoleCommand2 map_next_cmd{
     "Load next level",
 };
 
+ConsoleCommand2 shuffle_level_list_cmd{
+    "shuffle_maps",
+    []() {
+        if (validate_is_server() && validate_not_limbo()) {
+            rf::multi_chat_say("\xA6 Shuffling level order", false);
+            shuffle_level_array();
+        }
+    },
+    "Shuffle the order of upcoming levels",
+};
+
 ConsoleCommand2 map_rand_cmd{
     "map_rand",
     []() {
@@ -211,6 +222,7 @@ void init_server_commands()
     map_rest_cmd.register_cmd();
     map_next_cmd.register_cmd();
     map_rand_cmd.register_cmd();
+    shuffle_level_list_cmd.register_cmd();
     map_prev_cmd.register_cmd();
 
     AsmWriter(0x0047B6F0).jmp(ban_cmd_handler_hook);

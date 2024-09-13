@@ -73,6 +73,7 @@ Name                     | Description
 `map_next`               | load next level
 `map_rand`               | load random level from rotation
 `map_prev`               | load previous level
+`shuffle_maps`           | shuffle the order of upcoming levels
 `kill_limit value`       | set kill limit
 `time_limit value`       | set time limit
 `geomod_limit value`     | set geomod limit
@@ -187,7 +188,7 @@ Configuration example:
     $DF Player Damage Modifier: 1.0
     // Enable '/save' and '/load' chat commands (works for all clients) and quick save/load controls handling (works for Dash Faction 1.5.0+ clients). Option designed with run-maps in mind.
     $DF Saving Enabled: false
-    // Randomize the order of levels in the server rotation (instead of loading them sequentially)
+    // Instead of loading levels in order, load a random level from the rotation after each round (only applies when round ends due to kill, cap, or time limit)
     $DF Random Level Order: false
     // Enable Universal Plug-and-Play (enabled by default)
     $DF UPnP Enabled: true

@@ -39,6 +39,7 @@ const char* g_rcon_cmd_whitelist[] = {
     "map_next",
     "map_rand",
     "map_prev",
+    "shuffle_maps",
 };
 
 ServerAdditionalConfig g_additional_server_config;
@@ -309,6 +310,11 @@ static void send_private_message_with_stats(rf::Player* player)
     send_chat_line_packet(str.c_str(), player);
 }
 
+void shuffle_level_array()
+{
+    for (std::size_t i = rf::netgame.levels.size() - 1; i > 0; --i) {std::swap(rf::netgame.levels[i], rf::netgame.levels[std::rand() % (i + 1)]);
+    }
+}
 
 const char* get_rand_level_filename()
 {
@@ -680,7 +686,8 @@ CallHook<void(const char* filename)> multi_change_level_call_hook{
     0x0046E89C,
     [](const char* filename){
         multi_change_level_call_hook.call_target(g_additional_server_config.randomize_rotation ? get_rand_level_filename() : filename);
-    }};
+    }
+};
 
 void server_init()
 {
