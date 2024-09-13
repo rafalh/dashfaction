@@ -39,7 +39,6 @@ const char* g_rcon_cmd_whitelist[] = {
     "map_next",
     "map_rand",
     "map_prev",
-    "shuffle_maps",
 };
 
 ServerAdditionalConfig g_additional_server_config;

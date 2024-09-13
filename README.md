@@ -73,7 +73,6 @@ Name                     | Description
 `map_next`               | load next level
 `map_rand`               | load random level from rotation
 `map_prev`               | load previous level
-`shuffle_maps`           | shuffle the order of upcoming levels
 `kill_limit value`       | set kill limit
 `time_limit value`       | set time limit
 `geomod_limit value`     | set geomod limit
