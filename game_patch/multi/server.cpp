@@ -9,8 +9,6 @@
 #include <xlog/xlog.h>
 #include <algorithm>
 #include <limits>
-#include <cstdlib>
-#include <ctime>
 #include <windows.h>
 #include "server.h"
 #include "server_internal.h"
@@ -170,7 +168,7 @@ void load_additional_server_config(rf::Parser& parser)
         g_additional_server_config.stats_message_enabled = parser.parse_bool();
     }
 
-    if (parser.parse_optional("$DF Randomize Rotation:")) {
+    if (parser.parse_optional("$DF Random Level Order:")) {
         g_additional_server_config.randomize_rotation = parser.parse_bool();
     }
 
@@ -309,6 +307,19 @@ static void send_private_message_with_stats(rf::Player* player)
         accuracy, stats->num_shots_hit, stats->num_shots_fired,
         stats->damage_given, stats->damage_received);
     send_chat_line_packet(str.c_str(), player);
+}
+
+
+const char* get_rand_level_filename()
+{
+    // select a random level index from the rotation, excluding the currently loaded level
+    int rand_level_index = rf::netgame.current_level_index;
+    int num_levels = rf::netgame.levels.size();
+    do {
+        rand_level_index = std::rand() % num_levels;
+    } while (rand_level_index == rf::netgame.current_level_index && rf::netgame.levels.size() > 1); // prevent infinite loop if rotation has only 1 map
+    rf::netgame.current_level_index = rand_level_index;
+    return rf::netgame.levels[rf::netgame.current_level_index];
 }
 
 bool handle_server_chat_command(std::string_view server_command, rf::Player* sender)
@@ -668,21 +679,7 @@ CodeInjection multi_limbo_init_injection{
 CallHook<void(const char* filename)> multi_change_level_call_hook{
     0x0046E89C,
     [](const char* filename){
-        if (rf::is_dedicated_server && g_additional_server_config.randomize_rotation) {
-            std::srand(static_cast<unsigned int>(std::time(nullptr)));
-            // select a random level index from the rotation, excluding the currently loaded level
-            int rand_level_index = rf::netgame.current_level_index;
-            int num_levels = rf::netgame.levels.size();
-            do {
-                rand_level_index = std::rand() % num_levels;
-            } while (rand_level_index == rf::netgame.current_level_index && rf::netgame.levels.size() > 1); // prevent infinite loop if rotation has only 1 map
-            rf::netgame.current_level_index = rand_level_index;
-            const char* new_filename = rf::netgame.levels[rf::netgame.current_level_index];
-            multi_change_level_call_hook.call_target(new_filename);
-        }
-        else {
-            multi_change_level_call_hook.call_target(filename);
-        }
+        multi_change_level_call_hook.call_target(g_additional_server_config.randomize_rotation ? get_rand_level_filename() : filename);
     }};
 
 void server_init()

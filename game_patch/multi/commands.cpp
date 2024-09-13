@@ -5,11 +5,10 @@
 #include "../rf/level.h"
 #include "../rf/player/player.h"
 #include "../rf/crt.h"
+#include "server.h"
 #include "multi.h"
 #include <patch_common/AsmWriter.h>
 #include <patch_common/CallHook.h>
-#include <cstdlib>
-#include <ctime>
 #include <vector>
 
 std::vector<int> g_players_to_kick;
@@ -46,15 +45,7 @@ void load_prev_level()
 
 void load_rand_level()
 {
-    std::srand(static_cast<unsigned int>(std::time(nullptr)));
-    // select a random level index from the rotation, excluding the currently loaded level
-    int rand_level_index = rf::netgame.current_level_index;
-    int num_levels = rf::netgame.levels.size();
-    do {
-    rand_level_index = std::rand() % num_levels;
-    } while (rand_level_index == rf::netgame.current_level_index && rf::netgame.levels.size() > 1); // prevent infinite loop if rotation has only 1 map
-    rf::netgame.current_level_index = rand_level_index;
-    rf::multi_change_level(rf::netgame.levels[rf::netgame.current_level_index]);
+    rf::multi_change_level(get_rand_level_filename());
 }
 
 bool validate_is_server()
