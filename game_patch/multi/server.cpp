@@ -321,14 +321,20 @@ void shuffle_level_array()
 
 const char* get_rand_level_filename()
 {
-    // select a random level index from the rotation, excluding the currently loaded level
-    int rand_level_index = rf::netgame.current_level_index;
     int num_levels = rf::netgame.levels.size();
-    do {
-        rand_level_index = std::rand() % num_levels;
-    } while (rand_level_index == rf::netgame.current_level_index && rf::netgame.levels.size() > 1);
-    // prevent infinite loop if rotation has only 1 map
-    return rf::netgame.levels[rand_level_index];
+    if (num_levels > 1) {
+        // select a random index in range, subtracting 1 to avoid the current level
+        int rand_level_index = std::rand() % (num_levels - 1);
+        if (rand_level_index >= rf::netgame.current_level_index) {
+            // avoid selecting the current level
+            rand_level_index++;
+        }
+        return rf::netgame.levels[rand_level_index];
+    }
+    else {
+        // nowhere else to go, we're staying here!
+        return rf::netgame.levels[rf::netgame.current_level_index];
+    }
 }
 
 bool handle_server_chat_command(std::string_view server_command, rf::Player* sender)
@@ -686,7 +692,11 @@ CodeInjection multi_limbo_init_injection{
 };
 
 CallHook<void(const char* filename)> multi_change_level_call_hook{
-    0x0046E89C,
+    {
+        0x0046E89C,
+        0x0046E82E,
+        0x0046E863,
+    },
     [](const char* filename){
         multi_change_level_call_hook.call_target(g_additional_server_config.randomize_rotation ? get_rand_level_filename() : filename);
     }
