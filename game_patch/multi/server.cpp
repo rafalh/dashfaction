@@ -326,9 +326,9 @@ const char* get_rand_level_filename()
     int num_levels = rf::netgame.levels.size();
     do {
         rand_level_index = std::rand() % num_levels;
-    } while (rand_level_index == rf::netgame.current_level_index && rf::netgame.levels.size() > 1); // prevent infinite loop if rotation has only 1 map
-    rf::netgame.current_level_index = rand_level_index;
-    return rf::netgame.levels[rf::netgame.current_level_index];
+    } while (rand_level_index == rf::netgame.current_level_index && rf::netgame.levels.size() > 1);
+    // prevent infinite loop if rotation has only 1 map
+    return rf::netgame.levels[rand_level_index];
 }
 
 bool handle_server_chat_command(std::string_view server_command, rf::Player* sender)
