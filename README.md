@@ -178,7 +178,7 @@ Configuration example:
     // 3 - client-side mods are disallowed (gold P symbol in Pure Faction)
     //$DF Anticheat Level: 0
     // Set click limit for semi-automatic weapons (pistol and precision rifle). Bullets fired quicker than this rate will be ignored. Can be used to lessen impact of autoclicker cheats.
-    $DF Semi Auto Click Limit: 20.0
+    $DF Semi Auto Click Rate Limit: 20.0
     // If true and server is using a mod (-mod command line argument) then client is required to use the same mod
     // Can be disabled to allow publicly available modded servers
     $DF Require Client Mod: true
