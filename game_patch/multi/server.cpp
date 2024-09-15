@@ -165,16 +165,16 @@ void load_additional_server_config(rf::Parser& parser)
         }
     }
 
-    if (parser.parse_optional("$DF Send Player Stats Message:")) {
-        g_additional_server_config.stats_message_enabled = parser.parse_bool();
-    }
-
     if (parser.parse_optional("$DF Random Level Order:")) {
         g_additional_server_config.randomize_rotation = parser.parse_bool();
     }
 
     if (parser.parse_optional("$DF Dynamic Rotation:")) {
         g_additional_server_config.dynamic_rotation = parser.parse_bool();
+    }
+
+    if (parser.parse_optional("$DF Send Player Stats Message:")) {
+        g_additional_server_config.stats_message_enabled = parser.parse_bool();
     }
 
     if (parser.parse_optional("$DF Welcome Message:")) {

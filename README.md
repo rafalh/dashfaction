@@ -187,16 +187,16 @@ Configuration example:
     $DF Player Damage Modifier: 1.0
     // Enable '/save' and '/load' chat commands (works for all clients) and quick save/load controls handling (works for Dash Faction 1.5.0+ clients). Option designed with run-maps in mind.
     $DF Saving Enabled: false
-    // Instead of loading levels in order, load a random level from the configured level list after each round (only applies when round ends due to kill, cap, or time limit)
-    $DF Random Level Order: false
-    // When the level rotation finishes, shuffle the list of levels before starting the rotation again
-    $DF Dynamic Rotation: false
     // Enable Universal Plug-and-Play (enabled by default)
     $DF UPnP Enabled: true
     // Force all players to use the same character (check pc_multi.tbl for valid names)
     $DF Force Player Character: "enviro_parker"
     // Maximal horizontal FOV that clients can use for level rendering (unlimited by default)
     //$DF Max FOV: 125
+    // Instead of loading levels in order, load a random level from the configured level list after each round (only applies when round ends due to kill, cap, or time limit)
+    $DF Random Level Order: false
+    // When the level rotation finishes, shuffle the list of levels before starting the rotation again
+    $DF Dynamic Rotation: false
     // If enabled a private message with player statistics is sent after each round.
     //$DF Send Player Stats Message: true
     // Send a chat message to players when they join the server ($PLAYER is replaced by player name)
