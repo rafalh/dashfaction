@@ -186,7 +186,6 @@ set_target_properties(DashFaction PROPERTIES
 )
 enable_warnings(DashFaction)
 setup_debug_info(DashFaction)
-#cotire(DashFaction)
 
 target_include_directories(DashFaction PRIVATE
     ${CMAKE_SOURCE_DIR}/vendor
@@ -205,7 +204,7 @@ if(NOT MSVC)
     target_include_directories(DashFaction PRIVATE ${CMAKE_SOURCE_DIR}/vendor/natupnp)
 endif()
 
-target_compile_definitions(DashFaction PRIVATE NOMINMAX BUILD_DLL)
+target_compile_definitions(DashFaction PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX BUILD_DLL)
 
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/purefaction/pf_secret.cpp")
     target_compile_definitions(DashFaction PRIVATE HAS_PF)

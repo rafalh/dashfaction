@@ -1,6 +1,8 @@
 #define XLOG_STREAMS 1
 
 #include <ctime>
+#include <windows.h>
+#include <shellapi.h>
 #include <common/config/GameConfig.h>
 #include <common/config/BuildConfig.h>
 #include <common/utils/os-utils.h>

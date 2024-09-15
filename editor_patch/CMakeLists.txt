@@ -18,7 +18,7 @@ set_target_properties(DashEditor PROPERTIES
 enable_warnings(DashEditor)
 setup_debug_info(DashEditor)
 
-target_compile_definitions(DashEditor PRIVATE NOMINMAX BUILD_DLL)
+target_compile_definitions(DashEditor PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX BUILD_DLL)
 
 target_include_directories(DashEditor PRIVATE
     ${CMAKE_SOURCE_DIR}/vendor/d3d8

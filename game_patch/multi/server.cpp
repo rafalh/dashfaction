@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <limits>
 #include <windows.h>
+#include <winsock2.h>
 #include "server.h"
 #include "server_internal.h"
 #include "multi.h"
