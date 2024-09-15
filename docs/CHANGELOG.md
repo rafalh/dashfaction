@@ -46,6 +46,7 @@ Version 1.9.0 (not released yet)
 - Add `vote rand` vote type to initiate a level change to a random level on the rotation
 - Add `$DF Random Level Order` option in dedicated server config
 - Add `$DF Dynamic Rotation` option in dedicated server config (shuffles rotation once complete)
+- Properly handle WM_PAINT in dedicated server, may improve performance (DF bug)
 
 Version 1.8.0 (released 2022-09-17)
 -----------------------------------
