@@ -28,7 +28,7 @@ namespace rf::gr
 
         bool operator==(const Color& other) const
         {
-            return red == other.red && green == other.green && blue == other.blue;
+            return red == other.red && green == other.green && blue == other.blue && alpha == other.alpha;
         }
 
         bool operator!=(const Color& other) const

@@ -44,6 +44,7 @@ Version 1.9.0 (not released yet)
 - Add level filename to "Level Initializing" console message
 - Add `Lighting Color Range` option to launcher, allows level lighting to use full range of available colors
 - Add `lighting_color_range` command
+- Properly handle WM_PAINT in dedicated server, may improve performance (DF bug)
 
 Version 1.8.0 (released 2022-09-17)
 -----------------------------------
