@@ -125,8 +125,7 @@ public:
     {
         std::ifstream f("banlist.txt");
         std::string line;
-        while (f) {
-            std::getline(f, line);
+        while (std::getline(f, line)) {
             // Ignore empty lines and comments
             if (line.empty() || string_starts_with(line, "#") || string_starts_with(line, "//")) {
                 continue;
@@ -201,8 +200,8 @@ FunHook multi_ban_shutdown_hook{
 
 FunHook multi_ban_is_banned_hook{
     0x0046D010,
-    [](const rf::NetAddr& addr) {
-        return Banlist::instance().is_banned(addr.ip_addr);
+    [](const rf::NetAddr& addr) -> int {
+        return Banlist::instance().is_banned(addr.ip_addr) ? 1 : 0;
     },
 };
 
