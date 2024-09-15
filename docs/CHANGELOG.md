@@ -44,6 +44,7 @@ Version 1.9.0 (not released yet)
 - Add level filename to "Level Initializing" console message
 - Fix some fire packets being wrongfully dropped by click limiter (DF bug)
 - Add `$DF Semi Auto Click Rate Limit` option in dedicated server config
+- Properly handle WM_PAINT in dedicated server, may improve performance (DF bug)
 
 Version 1.8.0 (released 2022-09-17)
 -----------------------------------

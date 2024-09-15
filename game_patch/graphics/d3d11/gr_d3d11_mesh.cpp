@@ -457,8 +457,7 @@ namespace df::gr::d3d11
             // used by rocket launcher scanner together with flag 1 so this code block seems unused
             assert(false);
         }
-        rf::ubyte alpha = static_cast<ubyte>(params.alpha);
-        rf::Color color{255, 255, 255, alpha};
+        rf::Color color{255, 255, 255};
         if (!ir_scanner) {
             // Ignore ambient_color from params, it changes sharply and RF uses it only indirectly for
             // its hard-coded lights
@@ -468,13 +467,16 @@ namespace df::gr::d3d11
                 static_cast<rf::ubyte>(ambient_r * 255.0f),
                 static_cast<rf::ubyte>(ambient_g * 255.0f),
                 static_cast<rf::ubyte>(ambient_b * 255.0f),
-                alpha
+                255
             );
             // RF uses some hard-coded lights here but for now let's keep it simple
             color.red += 40;
             color.green += 40;
             color.blue += 40;
+        } else {
+            color = params.self_illum;
         }
+        color.alpha = static_cast<ubyte>(params.alpha);
 
         auto& batches = cache.get_batches(lod_index);
 
