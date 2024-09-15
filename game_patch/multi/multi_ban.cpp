@@ -5,7 +5,6 @@
 #include <winsock2.h>
 #include <xlog/xlog.h>
 #include <patch_common/FunHook.h>
-#include <common/utils/string-utils.h>
 
 #include "../rf/multi.h"
 #include "multi.h"
@@ -124,7 +123,7 @@ public:
         std::string line;
         while (std::getline(f, line)) {
             // Ignore empty lines and comments
-            if (line.empty() || string_starts_with(line, "#") || string_starts_with(line, "//")) {
+            if (line.empty() || line.starts_with('#') || line.starts_with("//")) {
                 continue;
             }
             add(line);

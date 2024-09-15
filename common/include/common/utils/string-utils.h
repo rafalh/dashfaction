@@ -53,7 +53,7 @@ inline bool string_equals_ignore_case(std::string_view left, std::string_view ri
 
 inline bool string_starts_with(std::string_view str, std::string_view prefix)
 {
-    return str.substr(0, prefix.size()) == prefix;
+    return str.starts_with(prefix);
 }
 
 inline bool string_starts_with_ignore_case(std::string_view str, std::string_view prefix)
@@ -63,7 +63,7 @@ inline bool string_starts_with_ignore_case(std::string_view str, std::string_vie
 
 inline bool string_ends_with(std::string_view str, std::string_view suffix)
 {
-    return str.size() >= suffix.size() && str.substr(str.size() - suffix.size()) == suffix;
+    return str.ends_with(suffix);
 }
 
 inline bool string_ends_with_ignore_case(std::string_view str, std::string_view suffix)
