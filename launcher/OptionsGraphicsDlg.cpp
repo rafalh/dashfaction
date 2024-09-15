@@ -17,9 +17,8 @@ BOOL OptionsGraphicsDlg::OnInitDialog()
     AttachItem(IDC_CLAMP_COMBO, m_clamp_combo);
 
     m_clamp_combo.AddString("Automatic");
+    m_clamp_combo.AddString("Classic");
     m_clamp_combo.AddString("Full");
-    m_clamp_combo.AddString("Legacy RF (PC)");
-    m_clamp_combo.AddString("Legacy RF (PS2)");
     m_clamp_combo.SetCurSel(static_cast<int>(m_conf.clamp_mode));
 
     // Graphics
@@ -97,7 +96,7 @@ void OptionsGraphicsDlg::UpdateAnisotropyCheckbox()
 void OptionsGraphicsDlg::InitToolTip()
 {
     m_tool_tip.Create(*this);
-    m_tool_tip.AddTool(GetDlgItem(IDC_CLAMP_COMBO), "Clamp rendered color range for level lighting - automatic uses Legacy RF (PC) for levels made before Sept 8, 2024 and Full for levels made since");
+    m_tool_tip.AddTool(GetDlgItem(IDC_CLAMP_COMBO), "Enable full color range lighting for - Automatic: all community-made levels, Classic: all levels newer than 8/9/24, Full: all levels");
     m_tool_tip.AddTool(GetDlgItem(IDC_FAST_ANIMS_CHECK), "Reduce animation smoothness for far models");
     m_tool_tip.AddTool(GetDlgItem(IDC_DISABLE_LOD_CHECK), "Use more detailed LOD models for objects in the distance");
     m_tool_tip.AddTool(GetDlgItem(IDC_ANISOTROPIC_CHECK), "Improve far textures quality");

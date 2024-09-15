@@ -55,9 +55,8 @@ struct GameConfig
     enum ClampMode
     {
         AUTOMATIC,
+        CLASSIC,
         FULL,
-        LEGACYPC,
-        LEGACYPS2,
     };
     CfgVar<ClampMode> clamp_mode = AUTOMATIC;
 

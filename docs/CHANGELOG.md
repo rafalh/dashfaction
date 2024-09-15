@@ -42,7 +42,8 @@ Version 1.9.0 (not released yet)
 - Add Kill Reward settings for dedicated servers
 - Do not load unnecessary VPPs in dedicated server mode
 - Add level filename to "Level Initializing" console message
-- Add `Light Color Range` option to launcher - if automatic is selected, forces legacy pc-style clamping only for levels made before Sept 8, 2024 at 00:00:00
+- Add `Lighting Color Range` option to launcher, allows level lighting to use full range of available colors
+- Add `lighting_color_range` command
 
 Version 1.8.0 (released 2022-09-17)
 -----------------------------------
