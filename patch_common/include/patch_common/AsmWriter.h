@@ -17,10 +17,7 @@ public:
         reg_num(reg_num), size(size)
     {}
 
-    constexpr bool operator==(const AsmReg& other) const
-    {
-        return reg_num == other.reg_num && size == other.size;
-    }
+    constexpr bool operator==(const AsmReg& other) const = default;
 };
 
 struct AsmReg32 : public AsmReg

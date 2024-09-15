@@ -26,15 +26,7 @@ namespace rf::gr
             this->alpha = a;
         }
 
-        bool operator==(const Color& other) const
-        {
-            return red == other.red && green == other.green && blue == other.blue && alpha == other.alpha;
-        }
-
-        bool operator!=(const Color& other) const
-        {
-            return !(*this == other);
-        }
+        bool operator==(const Color& other) const = default;
     };
 
     struct BaseVertex
@@ -141,15 +133,7 @@ namespace rf::gr
             value((ts << ts_shift) | (cs << cs_shift) | (as << as_shift) | (ab << ab_shift) | (zbt << zbt_shift) | (ft << ft_shift))
         {}
 
-        [[nodiscard]] bool operator==(const Mode& other) const
-        {
-            return value == other.value;
-        }
-
-        [[nodiscard]] bool operator!=(const Mode& other) const
-        {
-            return value != other.value;
-        }
+        [[nodiscard]] bool operator==(const Mode& other) const = default;
 
         operator int() const
         {

@@ -1,5 +1,8 @@
 #pragma once
 
+#include <windows.h>
+#include <mmeapi.h>
+#include <mmiscapi.h>
 #include <dsound.h>
 #include <patch_common/MemUtils.h>
 #include "sound.h"

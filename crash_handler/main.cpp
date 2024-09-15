@@ -9,13 +9,6 @@ int APIENTRY WinMain(HINSTANCE, HINSTANCE, LPSTR, int) try
     // Run the application
     return app.Run(); // NOLINT(clang-analyzer-core.StackAddressEscape)
 }
-// catch all unhandled std::exception types
-catch (const std::exception& e) {
-    std::string msg = "Fatal error: ";
-    msg += generate_message_for_exception(e);
-    MessageBox(nullptr, msg.c_str(), nullptr, MB_ICONERROR | MB_OK);
-    return -1;
-}
 // catch all unhandled CException types
 catch (const Win32xx::CException &e)
 {
@@ -25,5 +18,12 @@ catch (const Win32xx::CException &e)
     auto msg = ss.str();
     MessageBox(nullptr, msg.c_str(), nullptr, MB_ICONERROR | MB_OK);
 
+    return -1;
+}
+// catch all unhandled std::exception types
+catch (const std::exception& e) {
+    std::string msg = "Fatal error: ";
+    msg += generate_message_for_exception(e);
+    MessageBox(nullptr, msg.c_str(), nullptr, MB_ICONERROR | MB_OK);
     return -1;
 }

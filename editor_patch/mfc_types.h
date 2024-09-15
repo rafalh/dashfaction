@@ -31,11 +31,6 @@ struct CString
     {
         return std::strcmp(m_pchData, s) == 0;
     }
-
-    bool operator!=(const char* s) const
-    {
-        return !(*this == s);
-    }
 };
 
 inline HWND WndToHandle(CWnd* wnd)

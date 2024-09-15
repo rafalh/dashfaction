@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <ctime>
+#include <cstddef>
 #include <patch_common/CodeInjection.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CallHook.h>
@@ -14,7 +15,7 @@
 #include "../rf/cutscene.h"
 #include "../multi/multi.h"
 
-static std::unique_ptr<byte* []> g_screenshot_scanlines_buf;
+static std::unique_ptr<std::byte* []> g_screenshot_scanlines_buf;
 
 static std::optional<std::string> get_screenshots_dir()
 {
@@ -85,7 +86,7 @@ FunHook<void(char*)> game_print_screen_hook{
 CodeInjection jpeg_write_bitmap_overflow_fix1{
     0x0055A066,
     [](auto& regs) {
-        g_screenshot_scanlines_buf = std::make_unique<byte* []>(rf::gr::screen.max_h);
+        g_screenshot_scanlines_buf = std::make_unique<std::byte* []>(rf::gr::screen.max_h);
         regs.ecx = g_screenshot_scanlines_buf.get();
         regs.eip = 0x0055A06D;
     },

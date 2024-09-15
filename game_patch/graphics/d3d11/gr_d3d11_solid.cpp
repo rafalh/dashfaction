@@ -2,7 +2,6 @@
 #undef NDEBUG
 
 #include <windows.h>
-#include <cassert>
 #include <vector>
 #include <unordered_map>
 #include <map>
@@ -12,9 +11,7 @@
 #include "../../rf/geometry.h"
 #include "../../rf/gr/gr.h"
 #include "../../rf/gr/gr_light.h"
-#include "../../rf/gr/gr_direct3d.h"
 #include "../../rf/level.h"
-#include "../../rf/os/timer.h"
 #include "../../os/console.h"
 #include "gr_d3d11.h"
 #include "gr_d3d11_solid.h"

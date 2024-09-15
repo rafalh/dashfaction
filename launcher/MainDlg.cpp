@@ -44,7 +44,8 @@ BOOL MainDlg::OnInitDialog()
     m_tool_tip.AddTool(m_mod_selector, "Select a game mod (you can download them from FactionFiles.com)");
 
 #ifdef NDEBUG
-    m_update_checker.check_async([=]() { PostMessageA(WM_UPDATE_CHECK, 0, 0); });
+    HWND hwnd = GetHwnd();
+    m_update_checker.check_async([=]() { ::PostMessageA(hwnd, WM_UPDATE_CHECK, 0, 0); });
 #endif
 
     return TRUE; // return TRUE  unless you set the focus to a control

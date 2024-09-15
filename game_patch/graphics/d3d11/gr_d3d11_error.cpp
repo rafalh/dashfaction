@@ -1,5 +1,6 @@
 #include <common/error/error-utils.h>
 #include "gr_d3d11.h"
+#include "../../rf/os/os.h"
 
 namespace df::gr::d3d11
 {

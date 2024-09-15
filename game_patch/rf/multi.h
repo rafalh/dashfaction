@@ -19,15 +19,7 @@ namespace rf
         uint32_t ip_addr;
         uint16_t port;
 
-        bool operator==(const NetAddr &other) const
-        {
-            return ip_addr == other.ip_addr && port == other.port;
-        }
-
-        bool operator!=(const NetAddr &other) const
-        {
-            return !(*this == other);
-        }
+        bool operator==(const NetAddr &other) const = default;
     };
     static_assert(sizeof(NetAddr) == 0x8);
 
