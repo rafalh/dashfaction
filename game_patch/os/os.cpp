@@ -71,9 +71,7 @@ LRESULT WINAPI wnd_proc(HWND wnd_handle, UINT msg, WPARAM w_param, LPARAM l_para
     case WM_PAINT:
         if (rf::is_dedicated_server)
             ++rf::console_redraw_counter;
-        else
-            return DefWindowProcA(wnd_handle, msg, w_param, l_param);
-        break;
+        return DefWindowProcA(wnd_handle, msg, w_param, l_param);
 
     default:
         return DefWindowProcA(wnd_handle, msg, w_param, l_param);
