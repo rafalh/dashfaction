@@ -23,10 +23,7 @@ public:
         mask_{mask}
     {}
 
-    bool operator==(const IpRange& other)
-    {
-        return ip_ == other.ip_ && mask_ == other.mask_;
-    }
+    bool operator==(const IpRange& other) const = default;
 
     bool matches(unsigned ip)
     {

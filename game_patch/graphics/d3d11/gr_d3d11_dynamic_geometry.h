@@ -39,18 +39,7 @@ namespace df::gr::d3d11
             };
             ID3D11PixelShader* pixel_shader = nullptr;
 
-            bool operator==(const State& other) const
-            {
-                return primitive_topology == other.primitive_topology &&
-                    textures == other.textures &&
-                    mode == other.mode &&
-                    pixel_shader == other.pixel_shader;
-            }
-
-            bool operator!=(const State& other) const
-            {
-                return !(*this == other);
-            }
+            bool operator==(const State& other) const = default;
         };
 
         std::tuple<GpuTransformedVertex*, rf::ushort*, rf::ushort> setup(int num_vert, int num_ind, const State& state)
