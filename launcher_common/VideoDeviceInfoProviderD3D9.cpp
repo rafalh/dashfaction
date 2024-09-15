@@ -3,13 +3,15 @@
 #include "VideoDeviceInfoProvider.h"
 #include <common/error/Exception.h>
 #include <common/error/Win32Error.h>
+#include <common/DynamicLinkLibrary.h>
+#include <common/ComPtr.h>
 #include <xlog/xlog.h>
 
 class VideoDeviceInfoProviderD3D9 : public VideoDeviceInfoProvider
 {
 public:
     VideoDeviceInfoProviderD3D9();
-    ~VideoDeviceInfoProviderD3D9() override;
+    ~VideoDeviceInfoProviderD3D9() override = default;
     std::vector<std::string> get_adapters() override;
     std::set<Resolution> get_resolutions(unsigned adapter, unsigned format) override;
     std::set<unsigned> get_multisample_types(unsigned adapter, unsigned format, bool windowed) override;
@@ -24,31 +26,23 @@ public:
     }
 
 private:
-    IDirect3D9* m_d3d;
-    HMODULE m_lib;
+    DynamicLinkLibrary m_lib;
+    ComPtr<IDirect3D9> m_d3d;
 };
 
-VideoDeviceInfoProviderD3D9::VideoDeviceInfoProviderD3D9()
+VideoDeviceInfoProviderD3D9::VideoDeviceInfoProviderD3D9() :
+    m_lib{L"d3d9.dll"}
 {
-    m_lib = LoadLibraryA("d3d9.dll");
     if (!m_lib)
         THROW_WIN32_ERROR("Failed to load d3d9.dll");
 
-    // Note: double cast is needed to fix cast-function-type GCC warning
-    auto pDirect3DCreate9 = reinterpret_cast<decltype(Direct3DCreate9)*>(reinterpret_cast<void(*)()>(
-        GetProcAddress(m_lib, "Direct3DCreate9")));
+    auto pDirect3DCreate9 = m_lib.get_proc_address<decltype(Direct3DCreate9)*>("Direct3DCreate9");
     if (!pDirect3DCreate9)
         THROW_WIN32_ERROR("Failed to load get Direct3DCreate9 function address");
 
     m_d3d = pDirect3DCreate9(D3D_SDK_VERSION);
     if (!m_d3d)
         THROW_EXCEPTION("Direct3DCreate9 failed");
-}
-
-VideoDeviceInfoProviderD3D9::~VideoDeviceInfoProviderD3D9()
-{
-    m_d3d->Release();
-    FreeLibrary(m_lib);
 }
 
 std::vector<std::string> VideoDeviceInfoProviderD3D9::get_adapters()

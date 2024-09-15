@@ -1,9 +1,9 @@
 #pragma once
 
 #include <unordered_map>
-#include <utility>
 #include <d3d11.h>
 #include <common/ComPtr.h>
+#include <common/DynamicLinkLibrary.h>
 #include <xlog/xlog.h>
 #include "../../rf/gr/gr.h"
 #include "../../rf/os/os.h"
@@ -33,51 +33,6 @@ namespace df::gr::d3d11
     class RenderContext;
     class SolidRenderer;
     class MeshRenderer;
-
-    class DynamicLinkLibrary
-    {
-    public:
-        DynamicLinkLibrary(const wchar_t* filename)
-        {
-            handle_ = LoadLibraryW(filename);
-        }
-
-        DynamicLinkLibrary(const DynamicLinkLibrary& other) = delete;
-
-        DynamicLinkLibrary(DynamicLinkLibrary&& other) noexcept
-            : handle_(std::exchange(other.handle_, nullptr))
-        {}
-
-        ~DynamicLinkLibrary()
-        {
-            if (handle_) {
-                FreeLibrary(handle_);
-            }
-        }
-
-        DynamicLinkLibrary& operator=(const DynamicLinkLibrary& other) = delete;
-
-        DynamicLinkLibrary& operator=(DynamicLinkLibrary&& other) noexcept
-        {
-            std::swap(handle_, other.handle_);
-            return *this;
-        }
-
-        operator bool() const
-        {
-            return handle_ != nullptr;
-        }
-
-        template<typename T>
-        T get_proc_address(const char* name) const
-        {
-            static_assert(std::is_pointer_v<T>);
-            return reinterpret_cast<T>(reinterpret_cast<void(*)()>(GetProcAddress(handle_, name)));
-        }
-
-    private:
-        HMODULE handle_;
-    };
 
     class Renderer
     {
