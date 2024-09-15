@@ -1,12 +1,10 @@
 #pragma once
 
-#include <unordered_map>
 #include <d3d11.h>
 #include <common/ComPtr.h>
 #include <common/DynamicLinkLibrary.h>
 #include <xlog/xlog.h>
 #include "../../rf/gr/gr.h"
-#include "../../rf/os/os.h"
 #include "gr_d3d11_transform.h"
 
 namespace rf

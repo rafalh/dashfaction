@@ -2,7 +2,6 @@
 #include <cstring>
 #include <cassert>
 #include <windows.h>
-#include <patch_common/FunHook.h>
 #include <common/ComPtr.h>
 #include <xlog/xlog.h>
 #include "../../rf/gr/gr.h"

@@ -4,6 +4,7 @@
 #include "../../rf/gr/gr.h"
 #include "../../rf/v3d.h"
 #include "../../rf/os/frametime.h"
+#include "../../rf/os/os.h"
 #include "../../bmpman/bmpman.h"
 #include "../../main/main.h"
 #include "gr_d3d11.h"

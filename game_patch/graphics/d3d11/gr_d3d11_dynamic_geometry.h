@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cassert>
 #include <array>
 #include <d3d11.h>
 #include <common/ComPtr.h>
