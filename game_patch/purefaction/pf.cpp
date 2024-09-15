@@ -9,7 +9,7 @@
 #include "../multi/multi.h"
 #include "pf.h"
 #include "pf_packets.h"
-#include "pf_secret.h"
+#include "pf_ac.h"
 
 void pf_send_reliable_packet(rf::Player* player, const void* data, int len)
 {

@@ -12,13 +12,15 @@
 #include <common/config/BuildConfig.h>
 #include <common/rfproto.h>
 #include <common/version/version.h>
+#include <common/utils/enum-bitwise-operators.h>
+#include <common/utils/list-utils.h>
+#include <common/ComPtr.h>
 #include <xlog/xlog.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
 #include <patch_common/AsmWriter.h>
 #include <patch_common/ShortTypes.h>
-#include <common/ComPtr.h>
 #include "multi.h"
 #include "server.h"
 #include "server_internal.h"
@@ -36,13 +38,8 @@
 #include "../misc/misc.h"
 #include "../misc/player.h"
 #include "../object/object.h"
-#include <common/utils/enum-bitwise-operators.h>
-#include <common/utils/list-utils.h>
 #include "../os/console.h"
-
-#if MASK_AS_PF
 #include "../purefaction/pf.h"
-#endif
 
 // NET_IFINDEX_UNSPECIFIED is not defined in MinGW headers
 #ifndef NET_IFINDEX_UNSPECIFIED
@@ -994,9 +991,7 @@ CodeInjection send_state_info_injection{
     [](auto& regs) {
         rf::Player* player = regs.edi;
         trigger_send_state_info(player);
-#if MASK_AS_PF
         pf_player_level_load(player);
-#endif
     },
 };
 
@@ -1004,9 +999,7 @@ FunHook<void(rf::Player*)> send_players_packet_hook{
     0x00481C70,
     [](rf::Player *player) {
         send_players_packet_hook.call_target(player);
-#if MASK_AS_PF
         pf_player_init(player);
-#endif
         if (rf::is_server) {
             server_reliable_socket_ready(player);
         }
@@ -1028,9 +1021,7 @@ FunHook<void __fastcall(void*, int, int, bool, int)> multi_io_stats_add_hook{0x0
 static void process_custom_packet([[maybe_unused]] void* data, [[maybe_unused]] int len,
                                   [[maybe_unused]] const rf::NetAddr& addr, [[maybe_unused]] rf::Player* player)
 {
-#if MASK_AS_PF
     pf_process_packet(data, len, addr, player);
-#endif
 }
 
 CodeInjection multi_io_process_packets_injection{
@@ -1053,11 +1044,9 @@ CodeInjection multi_io_process_packets_injection{
 CallHook<void(const void*, size_t, const rf::NetAddr&, rf::Player*)> process_unreliable_game_packets_hook{
     0x00479244,
     [](const void* data, size_t len, const rf::NetAddr& addr, rf::Player* player) {
-#if MASK_AS_PF
         if (pf_process_raw_unreliable_packet(data, len, addr)) {
             return;
         }
-#endif
         rf::multi_io_process_packets(data, len, addr, player);
     },
 };
