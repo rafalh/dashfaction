@@ -31,7 +31,7 @@ jobs:
 
     - name: Build
       working-directory: ${{github.workspace}}/build
-      run: cmake --build . --config $BUILD_TYPE -j $(nproc)
+      run: cmake --build . -j $(nproc)
 
   build-msvc:
     runs-on: windows-latest
@@ -47,7 +47,7 @@ jobs:
       working-directory: ${{github.workspace}}/build
       run: |
         call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
-        cmake .. -DCMAKE_BUILD_TYPE=%BUILD_TYPE% -A Win32
+        cmake .. -A Win32
 
     - name: Build
       shell: cmd
