@@ -164,22 +164,6 @@ public:
     }
 };
 
-PRINTF_FMT_ATTRIBUTE(1, 2)
-inline std::string string_format(const char* format, ...)
-{
-    std::va_list args;
-    va_start(args, format);
-    int size = vsnprintf(nullptr, 0, format, args) + 1; // Extra space for '\0'
-    va_end(args);
-    std::string str;
-    str.resize(size);
-    va_start(args, format);
-    vsnprintf(str.data(), size, format, args);
-    va_end(args);
-    str.resize(size - 1); // We don't want the '\0' inside
-    return str;
-}
-
 inline std::string_view get_filename_without_ext(std::string_view filename)
 {
     auto dot_pos = filename.rfind('.');

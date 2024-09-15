@@ -76,7 +76,7 @@ std::optional<FactionFilesClient::LevelInfo> FactionFilesClient::find_map(const 
 void FactionFilesClient::download_map(const char* tmp_filename, int ticket_id,
     std::function<bool(unsigned bytes_received, std::chrono::milliseconds duration)> callback)
 {
-    auto url = string_format("%s/downloadmap.php?ticketid=%u", level_download_base_url, ticket_id);
+    auto url = std::format("{}/downloadmap.php?ticketid={}", level_download_base_url, ticket_id);
     HttpRequest req{url, "GET", session_};
     req.send();
 

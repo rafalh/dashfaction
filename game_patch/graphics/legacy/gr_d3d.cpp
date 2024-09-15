@@ -1,3 +1,4 @@
+#include <format>
 #include <windows.h>
 #include <d3d8.h>
 #include <patch_common/FunHook.h>
@@ -112,7 +113,7 @@ CodeInjection gr_d3d_init_error_patch{
         auto hr = static_cast<HRESULT>(regs.eax);
         xlog::error("D3D CreateDevice failed (hr 0x%lX - %s)", hr, get_d3d_error_str(hr));
 
-        auto text = string_format("Failed to create Direct3D device object - error 0x%lX (%s).\n"
+        auto text = std::format("Failed to create Direct3D device object - error 0x{:X} ({}).\n"
                                  "A critical error has occurred and the program cannot continue.\n"
                                  "Press OK to exit the program",
                                  hr, get_d3d_error_str(hr));

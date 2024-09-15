@@ -6,6 +6,7 @@
 #include <xlog/Win32Appender.h>
 #include <xlog/ConsoleAppender.h>
 #include <crash_handler_stub.h>
+#include <format>
 
 void InitLogging()
 {
@@ -45,17 +46,14 @@ int APIENTRY WinMain(HINSTANCE, HINSTANCE, LPSTR, int) try
 // catch all unhandled CException types
 catch (const Win32xx::CException &e) {
     // Display the exception and quit
-    std::ostringstream ss;
-    ss << e.GetText() << "\nerror " << e.GetError() << ": " << e.GetErrorString();
-    auto msg = ss.str();
+    std::string msg = std::format("{}\nerror {}: {}", e.GetText(), e.GetError(), e.GetErrorString());
     MessageBox(nullptr, msg.c_str(), nullptr, MB_ICONERROR | MB_OK);
 
     return -1;
 }
 // catch all unhandled std::exception types
 catch (const std::exception& e) {
-    std::string msg = "Fatal error: ";
-    msg += generate_message_for_exception(e);
+    std::string msg = std::format("Fatal error: {}", generate_message_for_exception(e));
     MessageBox(nullptr, msg.c_str(), nullptr, MB_ICONERROR | MB_OK);
     return -1;
 }

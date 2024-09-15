@@ -9,6 +9,7 @@
 #include <patch_common/AsmWriter.h>
 #include <patch_common/CallHook.h>
 #include <vector>
+#include <format>
 
 std::vector<int> g_players_to_kick;
 
@@ -66,7 +67,7 @@ ConsoleCommand2 map_ext_cmd{
         if (validate_is_server() && validate_not_limbo()) {
             int minutes = minutes_opt.value_or(5);
             extend_round_time(minutes);
-            std::string msg = string_format("\xA6 Round extended by %d minutes", minutes);
+            std::string msg = std::format("\xA6 Round extended by {} minutes", minutes);
             rf::multi_chat_say(msg.c_str(), false);
         }
     },

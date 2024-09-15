@@ -1,10 +1,9 @@
 #include <common/utils/os-utils.h>
-#include <common/utils/string-utils.h>
 #include <xlog/xlog.h>
-#include <iomanip>
 #include <common/error/Exception.h>
 #include <common/error/Win32Error.h>
 #include <cstring>
+#include <format>
 
 #ifdef __GNUC__
 #ifndef __cpuid
@@ -21,7 +20,7 @@ std::string get_os_version()
     if (!GetVersionEx(&ver_info))
         THROW_WIN32_ERROR("GetVersionEx failed");
 
-    return string_format("%lu.%lu.%lu", ver_info.dwMajorVersion, ver_info.dwMinorVersion, ver_info.dwBuildNumber);
+    return std::format("{}.{}.{}", ver_info.dwMajorVersion, ver_info.dwMinorVersion, ver_info.dwBuildNumber);
 }
 
 std::string get_real_os_version()
@@ -50,7 +49,7 @@ std::string get_real_os_version()
         THROW_WIN32_ERROR("VerQueryValueA returned unknown block");
     auto* file_info = static_cast<VS_FIXEDFILEINFO*>(block);
 
-    return string_format("%d.%d.%d",
+    return std::format("{}.{}.{}",
                         HIWORD(file_info->dwProductVersionMS),
                         LOWORD(file_info->dwProductVersionMS),
                         HIWORD(file_info->dwProductVersionLS));
@@ -119,15 +118,12 @@ const char* get_process_elevation_type()
 std::string get_cpu_id()
 {
     int cpu_info[4] = {0};
-    std::stringstream ss;
 #ifndef __GNUC__
     __cpuid(cpu_info, 1);
 #else
     __cpuid(1, cpu_info[0], cpu_info[1], cpu_info[2], cpu_info[3]);
 #endif
-    ss << std::hex << std::uppercase << std::setfill('0') << std::setw(8) << cpu_info[0] << ' ' << cpu_info[1] << ' '
-       << cpu_info[2] << ' ' << cpu_info[3];
-    return ss.str();
+    return std::format("{:08X} {:08X} {:08X} {:08X}", cpu_info[0], cpu_info[1], cpu_info[2], cpu_info[3]);
 }
 
 std::string get_cpu_brand()

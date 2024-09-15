@@ -287,14 +287,12 @@ void CMainFrame_InvertSelection(CWnd* this_)
 
 BOOL __fastcall CMainFrame_OnCmdMsg(CWnd* this_, int, UINT nID, int nCode, void* pExtra, void* pHandlerInfo)
 {
-    char buf[256];
     constexpr int CN_COMMAND = 0;
 
     if (nCode == CN_COMMAND) {
         std::function<void()> handler;
         switch (nID) {
             case ID_WIKI_EDITING_MAIN_PAGE:
-                sprintf(buf, "ID_WIKI_EDITING_MAIN_PAGE %p", pHandlerInfo);
                 handler = std::bind(CMainFrame_OpenHelp, this_);
                 break;
             case ID_WIKI_HOTKEYS:

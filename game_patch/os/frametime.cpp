@@ -2,6 +2,7 @@
 #include <patch_common/FunHook.h>
 #include <patch_common/AsmWriter.h>
 #include <common/version/version.h>
+#include <format>
 #include "console.h"
 #include "../rf/gr/gr.h"
 #include "../rf/gr/gr_font.h"
@@ -41,7 +42,7 @@ static void frametime_render_graph()
 static void frametime_render_fps_counter()
 {
     if (g_game_config.fps_counter && !rf::hud_disabled) {
-        auto text = string_format("FPS: %.1f", rf::current_fps);
+        auto text = std::format("FPS: {:.1f}", rf::current_fps);
         rf::gr::set_color(0, 255, 0, 255);
         int x = rf::gr::screen_width() - (g_game_config.big_hud ? 165 : 90);
         int y = 10;

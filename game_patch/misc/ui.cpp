@@ -2,7 +2,7 @@
 #include <xlog/xlog.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CallHook.h>
-#include <common/utils/string-utils.h>
+#include <format>
 #include "../rf/ui.h"
 #include "../rf/input.h"
 #include "../rf/misc.h"
@@ -295,10 +295,10 @@ FunHook<void()> menu_init_hook{
             int small_font_size = std::min(128, static_cast<int>(std::round(rf::ui::scale_y * 7.5f))); // 16
             xlog::info("UI font sizes: %d %d %d", large_font_size, medium_font_size, small_font_size);
 
-            rf::ui::large_font = rf::gr::load_font(string_format("boldfont.ttf:%d", large_font_size).c_str());
-            rf::ui::medium_font_0 = rf::gr::load_font(string_format("regularfont.ttf:%d", medium_font_size).c_str());
+            rf::ui::large_font = rf::gr::load_font(std::format("boldfont.ttf:{}", large_font_size).c_str());
+            rf::ui::medium_font_0 = rf::gr::load_font(std::format("regularfont.ttf:{}", medium_font_size).c_str());
             rf::ui::medium_font_1 = rf::ui::medium_font_0;
-            rf::ui::small_font = rf::gr::load_font(string_format("regularfont.ttf:%d", small_font_size).c_str());
+            rf::ui::small_font = rf::gr::load_font(std::format("regularfont.ttf:{}", small_font_size).c_str());
         }
 #endif
     },

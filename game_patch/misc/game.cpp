@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <ctime>
 #include <cstddef>
+#include <format>
 #include <patch_common/CodeInjection.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CallHook.h>
@@ -19,7 +20,7 @@ static std::unique_ptr<std::byte* []> g_screenshot_scanlines_buf;
 
 static std::optional<std::string> get_screenshots_dir()
 {
-    auto full_path = string_format("%s\\screenshots", rf::root_path);
+    auto full_path = std::format("{}\\screenshots", rf::root_path);
     if (full_path.size() > rf::max_path_len - 20) {
         xlog::error("Screenshots directory path is too long!");
         return {};

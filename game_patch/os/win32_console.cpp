@@ -7,6 +7,7 @@
 #include <thread>
 #include <algorithm>
 #include <cstring>
+#include <format>
 #include "../rf/os/console.h"
 #include "../rf/multi.h"
 #include "../rf/input.h"
@@ -98,7 +99,8 @@ void win32_console_init()
 
     char buf[256];
     if (GetFinalPathNameByHandleA(win32_console_output_handle, buf, std::size(buf), 0) == 0) {
-        std::sprintf(buf, "(error %lu)", GetLastError());
+        char* ptr = std::format_to(buf, "(error {})", GetLastError());
+        *ptr = '\0';
     }
     xlog::info("Standard output info: path_name %s, file_type: %ld, handle %p",
         buf, GetFileType(win32_console_output_handle), win32_console_output_handle);

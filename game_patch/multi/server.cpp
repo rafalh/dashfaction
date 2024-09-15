@@ -9,6 +9,7 @@
 #include <xlog/xlog.h>
 #include <algorithm>
 #include <limits>
+#include <format>
 #include <windows.h>
 #include <winsock2.h>
 #include "server.h"
@@ -46,7 +47,7 @@ std::string g_prev_level;
 
 void parse_vote_config(const char* vote_name, VoteConfig& config, rf::Parser& parser)
 {
-    std::string vote_option_name = string_format("$DF %s:", vote_name);
+    std::string vote_option_name = std::format("$DF {}:", vote_name);
     if (parser.parse_optional(vote_option_name.c_str())) {
         config.enabled = parser.parse_bool();
         rf::console::printf("DF %s: %s", vote_name, config.enabled ? "true" : "false");
@@ -222,7 +223,7 @@ std::pair<std::string_view, std::string_view> strip_by_space(std::string_view st
 void handle_next_map_command(rf::Player* player)
 {
     int next_idx = (rf::netgame.current_level_index + 1) % rf::netgame.levels.size();
-    auto msg = string_format("Next level: %s", rf::netgame.levels[next_idx].c_str());
+    auto msg = std::format("Next level: {}", rf::netgame.levels[next_idx].c_str());
     send_chat_line_packet(msg.c_str(), player);
 }
 
@@ -294,10 +295,10 @@ static void send_private_message_with_stats(rf::Player* player)
 {
     auto* stats = static_cast<PlayerStatsNew*>(player->stats);
     int accuracy = static_cast<int>(stats->calc_accuracy() * 100.0f);
-    auto str = string_format(
+    auto str = std::format(
         "PLAYER STATS\n"
-        "Kills: %d - Deaths: %d - Max Streak: %d\n"
-        "Accuracy: %d%% (%.0f/%.0f) - Damage Given: %.0f - Damage Taken: %.0f",
+        "Kills: {} - Deaths: {} - Max Streak: {}\n"
+        "Accuracy: {}% ({:.0f}/{:.0f}) - Damage Given: {:.0f} - Damage Taken: {:.0f}",
         stats->num_kills, stats->num_deaths, stats->max_streak,
         accuracy, stats->num_shots_hit, stats->num_shots_fired,
         stats->damage_given, stats->damage_received);
@@ -309,7 +310,7 @@ bool handle_server_chat_command(std::string_view server_command, rf::Player* sen
     auto [cmd_name, cmd_arg] = strip_by_space(server_command);
 
     if (cmd_name == "info") {
-        send_chat_line_packet(string_format("Server powered by Dash Faction %s (build date: %s %s)", VERSION_STR, __DATE__, __TIME__).c_str(), sender);
+        send_chat_line_packet(std::format("Server powered by Dash Faction {} (build date: {} {})", VERSION_STR, __DATE__, __TIME__).c_str(), sender);
     }
     else if (cmd_name == "vote") {
         auto [vote_name, vote_arg] = strip_by_space(cmd_arg);
@@ -540,8 +541,8 @@ static bool check_player_ac_status([[maybe_unused]] rf::Player* player)
 
         int ac_level = pf_get_player_ac_level(player);
         if (ac_level < g_additional_server_config.anticheat_level) {
-            auto msg = string_format(
-                "Sorry! Your spawn request was rejected because your client did not pass anti-cheat verification (your level %d, required %d). "
+            auto msg = std::format(
+                "Sorry! Your spawn request was rejected because your client did not pass anti-cheat verification (your level {}, required {}). "
                 "Please make sure you do not have any mods installed and that your client software is up to date.",
                 ac_level, g_additional_server_config.anticheat_level
             );

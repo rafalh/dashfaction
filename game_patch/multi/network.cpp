@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cassert>
 #include <cstring>
+#include <format>
 #include <functional>
 #include <thread>
 #include <winsock2.h>
@@ -781,7 +782,7 @@ std::optional<std::string> determine_local_ip_address()
     for (unsigned i = 0; i < ip_table->dwNumEntries; ++i) {
         auto& row = ip_table->table[i];
         auto* addr_bytes = reinterpret_cast<uint8_t*>(&row.dwAddr);
-        auto addr_str = string_format("%d.%d.%d.%d", addr_bytes[0], addr_bytes[1], addr_bytes[2], addr_bytes[3]);
+        auto addr_str = std::format("{}.{}.{}.{}", addr_bytes[0], addr_bytes[1], addr_bytes[2], addr_bytes[3]);
         xlog::debug("IpAddrTable: dwIndex %lu dwAddr %s", row.dwIndex, addr_str.c_str());
         if (row.dwIndex == default_route_if_index) {
             return {addr_str};

@@ -8,6 +8,7 @@
 #include <patch_common/CodeInjection.h>
 #include <xlog/xlog.h>
 #include <fstream>
+#include <format>
 #include <array>
 #include <cctype>
 #include <cstring>
@@ -95,7 +96,7 @@ static GameLang detect_installed_game_lang()
 
     for (auto& p : langs) {
         auto [lang_id, lang_code] = p;
-        auto full_path = string_format("%smaps_%s.vpp", rf::root_path, lang_code);
+        auto full_path = std::format("{}maps_{}.vpp", rf::root_path, lang_code);
         BOOL exists = PathFileExistsA(full_path.c_str());
         xlog::info("Checking file %s: %s", full_path.c_str(), exists ? "found" : "not found");
         if (exists) {
@@ -147,9 +148,9 @@ static int vpackfile_add_new(const char* filename, const char* dir)
 
     std::string full_path;
     if (dir && !PathIsRelativeA(dir))
-        full_path = string_format("%s%s", dir, filename); // absolute path
+        full_path = std::format("{}{}", dir, filename); // absolute path
     else
-        full_path = string_format("%s%s%s", rf::root_path, dir ? dir : "", filename);
+        full_path = std::format("{}{}{}", rf::root_path, dir ? dir : "", filename);
 
     if (!filename || strlen(filename) > 0x1F || full_path.size() > 0x7F) {
         xlog::error("Packfile name or path too long: %s", full_path.c_str());

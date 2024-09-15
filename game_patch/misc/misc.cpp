@@ -316,7 +316,7 @@ CodeInjection glass_shard_level_init_fix{
 int debug_print_hook(char* buf, const char *fmt, ...) {
     va_list vl;
     va_start(vl, fmt);
-    int ret = vsprintf(buf, fmt, vl);
+    int ret = std::vsprintf(buf, fmt, vl);
     va_end(vl);
     xlog::warn("%s", buf);
     return ret;

@@ -1,9 +1,10 @@
 #include <stdexcept>
 #include <future>
+#include <fstream>
+#include <format>
 #include <windows.h>
 #include <unrar/dll.hpp>
 #include <unzip.h>
-#include <fstream>
 #include <xlog/xlog.h>
 #include <patch_common/CodeInjection.h>
 #include <patch_common/AsmWriter.h>
@@ -17,17 +18,16 @@
 #include "../rf/gr/gr.h"
 #include "../rf/gr/gr_font.h"
 #include "../rf/ui.h"
-#include "../misc/misc.h"
-#include "../os/console.h"
-#include "multi.h"
-#include "faction_files.h"
-
 #include "../rf/input.h"
 #include "../rf/gameseq.h"
 #include "../rf/level.h"
 #include "../rf/gameseq.h"
 #include "../rf/misc.h"
+#include "../misc/misc.h"
+#include "../os/console.h"
 #include "../hud/hud.h"
+#include "multi.h"
+#include "faction_files.h"
 
 static bool is_vpp_filename(const char* filename)
 {
@@ -65,7 +65,7 @@ static std::vector<std::string> unzip(const char* path, const char* output_dir,
 
         if (filename_filter(file_name)) {
             xlog::trace("Unpacking %s", file_name);
-            auto output_path = string_format("%s\\%s", output_dir, file_name);
+            auto output_path = std::format("{}\\{}", output_dir, file_name);
             std::ofstream file(output_path, std::ios_base::out | std::ios_base::binary);
             if (!file) {
                 xlog::error("Cannot open file: %s", output_path.c_str());
@@ -217,7 +217,7 @@ void LevelDownloadWorker::download_archive(int ticket_id, const char* temp_filen
 
 std::vector<std::string> LevelDownloadWorker::extract_archive(const char* temp_filename)
 {
-    auto output_dir = string_format("%suser_maps\\multi", rf::root_path);
+    auto output_dir = std::format("{}user_maps\\multi", rf::root_path);
     std::vector<std::string> packfiles;
     try {
         packfiles = unzip(temp_filename, output_dir.c_str(), is_vpp_filename);
@@ -561,7 +561,7 @@ void multi_level_download_do_frame()
         rf::gr::string(info_x, y, created_by_str.c_str(), medium_font);
         y += info_spacing;
 
-        rf::gr::string(info_x, y, string_format("%.2f MB / %.2f MB (%.2f MB/s)",
+        rf::gr::string(info_x, y, std::format("{:.2f} MB / {:.2f} MB ({:.2f} MB/s)",
             bytes_received / 1000.0f / 1000.0f,
             info.size_in_bytes / 1000.0f / 1000.0f,
             bytes_per_sec / 1000.0f / 1000.0f).c_str(), medium_font);
