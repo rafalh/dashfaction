@@ -3,7 +3,6 @@
 #include "gr_d3d11_dynamic_geometry.h"
 #include "gr_d3d11_shader.h"
 #include "gr_d3d11_context.h"
-#include "../../rf/os/frametime.h"
 
 using namespace rf;
 
@@ -30,7 +29,7 @@ namespace df::gr::d3d11
         }
         auto [start_index, num_index] = index_ring_buffer_.submit();
 
-        xlog::trace("Drawing dynamic geometry num_vertex %d num_index %d texture %s",
+        xlog::trace("Drawing dynamic geometry num_vertex {} num_index {} texture {}",
             num_vertex, num_index, rf::bm::get_filename(state_.textures[0]));
 
         render_context_.set_vertex_buffer(vertex_ring_buffer_.get_buffer(), sizeof(GpuTransformedVertex));
@@ -141,7 +140,7 @@ namespace df::gr::d3d11
             out_vert.diffuse = pack_color(color);
             out_vert.u0 = in_vert.u1;
             out_vert.v0 = in_vert.v1;
-            //xlog::info("vert[%d]: pos <%.2f %.2f %.2f> uv <%.2f %.2f>", i, out_vert.x, out_vert.y, in_vert.sw, out_vert.u0, out_vert.v0);
+            //xlog::info("vert[{}]: pos <{:.2f} {:.2f} {:.2f}> uv <{:.2f} {:.2f}>", i, out_vert.x, out_vert.y, in_vert.sw, out_vert.u0, out_vert.v0);
 
             if (i >= 2) {
                 *(gpu_ind_ptr++) = base_vertex;

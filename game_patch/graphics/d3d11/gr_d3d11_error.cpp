@@ -1,5 +1,6 @@
 #include <common/error/error-utils.h>
 #include "gr_d3d11.h"
+#include "../../rf/os/os.h"
 
 namespace df::gr::d3d11
 {
@@ -70,11 +71,11 @@ namespace df::gr::d3d11
     {
         const char* code_name = get_hresult_code_name(hr);
         std::string error_desc = get_win32_error_description(hr);
-        xlog::error("D3D11 result: %lx (%s)\n%s", hr, code_name, error_desc.c_str());
+        xlog::error("D3D11 result: {:x} ({})\n{}", hr, code_name, error_desc);
         if (hr == DXGI_ERROR_DEVICE_REMOVED) {
             hr = g_device->GetDeviceRemovedReason();
             code_name = get_hresult_code_name(hr);
-            xlog::error("Device removed reason: %lx %s", hr, code_name);
+            xlog::error("Device removed reason: {:x} {}", hr, code_name);
         }
         RF_DEBUG_ERROR("D3D11 subsystem fatal error");
     }

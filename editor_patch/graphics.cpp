@@ -109,7 +109,7 @@ CodeInjection gr_d3d_line_3d_patch_1{
             regs.eip = 0x004E1343;
         }
         else {
-            xlog::trace("Line drawing requires gr_d3d_prepare_buffers %d %d %d %d",
+            xlog::trace("Line drawing requires gr_d3d_prepare_buffers {} {} {} {}",
                  red::gr_d3d_buffers_locked, red::gr_d3d_primitive_type, red::gr_d3d_max_hw_vertex,
                  red::gr_d3d_max_hw_index + red::gr_d3d_num_indices);
         }
@@ -135,7 +135,7 @@ CodeInjection gr_d3d_line_2d_patch_1{
             regs.eip = 0x004E10C2;
         }
         else {
-            xlog::trace("Line drawing requires gr_d3d_prepare_buffers %d %d %d %d",
+            xlog::trace("Line drawing requires gr_d3d_prepare_buffers {} {} {} {}",
                  red::gr_d3d_buffers_locked, red::gr_d3d_primitive_type, red::gr_d3d_max_hw_vertex,
                  red::gr_d3d_max_hw_index + red::gr_d3d_num_indices);
         }
@@ -227,7 +227,7 @@ FunHook<void(red::Matrix3*, red::Vector3*, float, bool, bool)> gr_setup_3d_hook{
             horizontal_fov = h_fov_rad / pi * 180.0f;
             // Clamp the value to avoid artifacts when view is very stretched
             horizontal_fov = std::clamp(horizontal_fov, 60.0f, 120.0f);
-            //xlog::info("fov %f", horizontal_fov);
+            //xlog::info("fov {}", horizontal_fov);
         }
         gr_setup_3d_hook.call_target(viewer_orient, viewer_pos, horizontal_fov, zbuffer_flag, z_scale);
     },
@@ -238,7 +238,7 @@ CodeInjection gr_d3d_init_load_library_injection{
     [](auto& regs) {
         extern HMODULE g_module;
         auto d3d8to9_path = get_module_dir(g_module) + "\\d3d8to9.dll";
-        xlog::info("Loading d3d8to9.dll: %s", d3d8to9_path.c_str());
+        xlog::info("Loading d3d8to9.dll: {}", d3d8to9_path);
         HMODULE d3d8to9_module = LoadLibraryA(d3d8to9_path.c_str());
         if (d3d8to9_module) {
             regs.eax = d3d8to9_module;

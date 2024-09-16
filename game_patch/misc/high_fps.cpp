@@ -35,7 +35,7 @@ public:
         auto& state = self->m_state_map[key];
 
         if (state.num_calls_in_frame > 0 && state.last_val != value)
-            xlog::trace("Different ftol argument during a single frame in address 0x%X", self->m_ftol_call_addr);
+            xlog::trace("Different ftol argument during a single frame in address 0x{:x}", self->m_ftol_call_addr);
 
         value += state.remainder;
         long result = static_cast<long>(value);
@@ -152,8 +152,8 @@ void ftol_issues_detection_do_frame()
             if (is_fps_dependent && is_significant) {
                 bool is_new = g_ftol_issues.insert(p.first).second;
                 if (is_new)
-                    rf::console::printf("ftol issue detected: address %08X ratio %.2f estimated value %.4f", p.first - 5,
-                                 ratio, avg_high_fps);
+                    rf::console::print("ftol issue detected: address {:08X} ratio {:.2f} estimated value {:.4f}",
+                        p.first - 5, ratio, avg_high_fps);
             }
         }
 
@@ -185,7 +185,7 @@ ConsoleCommand2 detect_ftol_issues_cmd{
         else {
             g_ftol_issue_detection = false;
         }
-        rf::console::printf("ftol issues detection is %s", g_ftol_issue_detection ? "enabled" : "disabled");
+        rf::console::print("ftol issues detection is {}", g_ftol_issue_detection ? "enabled" : "disabled");
     },
     "detect_ftol_issues <fps>",
 };

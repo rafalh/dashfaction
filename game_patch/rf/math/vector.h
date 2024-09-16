@@ -14,15 +14,7 @@ namespace rf
         Vector3() = default;
         Vector3(float x, float y, float z) : x(x), y(y), z(z) {}
 
-        bool operator==(const Vector3& other) const
-        {
-            return x == other.x && y == other.y && z == other.z;
-        }
-
-        bool operator!=(const Vector3& other) const
-        {
-            return !(*this == other);
-        }
+        bool operator==(const Vector3& other) const = default;
 
         Vector3& operator+=(const Vector3& other)
         {
@@ -175,15 +167,7 @@ namespace rf
         float x = 0.0f;
         float y = 0.0f;
 
-        bool operator==(const Vector2& other) const
-        {
-            return x == other.x && y == other.y;
-        }
-
-        bool operator!=(const Vector2& other) const
-        {
-            return !(*this == other);
-        }
+        bool operator==(const Vector2& other) const = default;
     };
 
     static auto& vec2_zero_vector = addr_as_ref<Vector2>(0x0173C370);
