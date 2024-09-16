@@ -223,7 +223,7 @@ std::pair<std::string_view, std::string_view> strip_by_space(std::string_view st
 void handle_next_map_command(rf::Player* player)
 {
     int next_idx = (rf::netgame.current_level_index + 1) % rf::netgame.levels.size();
-    auto msg = std::format("Next level: {}", rf::netgame.levels[next_idx].c_str());
+    auto msg = std::format("Next level: {}", rf::netgame.levels[next_idx]);
     send_chat_line_packet(msg.c_str(), player);
 }
 

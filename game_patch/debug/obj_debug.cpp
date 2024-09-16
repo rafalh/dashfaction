@@ -79,7 +79,7 @@ ConsoleCommand2 dbg_target_uid_cmd{
         }
         rf::Object* obj = rf::obj_from_handle(rf::target_obj_handle);
         if (obj)
-            rf::console::print("Target object: uid {}, name '{}'", obj->uid, obj->name.c_str());
+            rf::console::print("Target object: uid {}, name '{}'", obj->uid, obj->name);
         else
             rf::console::print("Target object not found");
     },
@@ -91,7 +91,7 @@ ConsoleCommand2 dbg_target_closest_cmd{
         rf::Object* obj = find_closest_object();
         rf::target_obj_handle = obj ? obj->handle : 0;
         if (obj)
-            rf::console::print("Target object: uid {}, name '{}'", obj->uid, obj->name.c_str());
+            rf::console::print("Target object: uid {}, name '{}'", obj->uid, obj->name);
         else
             rf::console::print("Target object not found");
     },
@@ -103,7 +103,7 @@ ConsoleCommand2 dbg_target_reticle_cmd{
         rf::Object* obj = find_object_in_reticle();
         rf::target_obj_handle = obj ? obj->handle : 0;
         if (obj)
-            rf::console::print("Target object: uid {}, name '{}'", obj->uid, obj->name.c_str());
+            rf::console::print("Target object: uid {}, name '{}'", obj->uid, obj->name);
         else
             rf::console::print("Target object not found");
     },

@@ -174,7 +174,7 @@ static int vpackfile_add_new(const char* filename, const char* dir)
     }
 #endif // CHECK_PACKFILE_CHECKSUM
 
-    std::ifstream file(full_path.c_str(), std::ios_base::in | std::ios_base::binary);
+    std::ifstream file(full_path, std::ios_base::in | std::ios_base::binary);
     if (!file) {
         xlog::error("Failed to open packfile {}", full_path);
         return 0;

@@ -51,6 +51,11 @@ namespace rf
             return c_str();
         }
 
+        operator std::string() const
+        {
+            return {c_str()};
+        }
+
         operator Pod() const
         {
             // Make a copy

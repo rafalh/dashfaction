@@ -280,11 +280,11 @@ private:
     std::unique_ptr<Listener> listener_;
 
 public:
-    LevelDownloadOperation(const char* level_filename, std::unique_ptr<Listener>&& listener) :
+    LevelDownloadOperation(std::string level_filename, std::unique_ptr<Listener>&& listener) :
         listener_(std::move(listener))
     {
         shared_data_ = std::make_shared<LevelDownloadWorker::SharedData>();
-        future_ = std::async(std::launch::async, LevelDownloadWorker{level_filename, shared_data_});
+        future_ = std::async(std::launch::async, LevelDownloadWorker{std::move(level_filename), shared_data_});
     }
 
     ~LevelDownloadOperation()
@@ -391,10 +391,10 @@ public:
         }
     }
 
-    LevelDownloadOperation& start(const char* level_filename, std::unique_ptr<LevelDownloadOperation::Listener>&& listener)
+    LevelDownloadOperation& start(std::string level_filename, std::unique_ptr<LevelDownloadOperation::Listener>&& listener)
     {
         xlog::info("Starting level download: {}", level_filename);
-        return operation_.emplace(level_filename, std::move(listener));
+        return operation_.emplace(std::move(level_filename), std::move(listener));
     }
 
     [[nodiscard]] const std::optional<LevelDownloadOperation>& get_operation() const
@@ -659,7 +659,7 @@ static void do_download_level(std::string filename, bool force)
             xlog::error("Level already exists on disk! Use download_level_force to download anyway.");
             return;
         }
-        LevelDownloadManager::instance().start(filename.c_str(),
+        LevelDownloadManager::instance().start(filename,
             std::make_unique<ConsoleReportingDownloadListener>());
     }
 }

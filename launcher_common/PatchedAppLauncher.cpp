@@ -122,7 +122,7 @@ void PatchedAppLauncher::verify_before_launch()
 {
     std::string app_path = get_app_path();
     xlog::info("Verifying {} SHA1", app_path);
-    std::ifstream file(app_path.c_str(), std::fstream::in | std::fstream::binary);
+    std::ifstream file(app_path, std::fstream::in | std::fstream::binary);
     if (!file.is_open()) {
         throw FileNotFoundException(app_path);
     }
@@ -209,7 +209,7 @@ void PatchedAppLauncher::check_installation()
     std::string root_dir = get_dir_from_path(app_path);
 
     auto tables_vpp_path = root_dir + "\\tables.vpp";
-    std::ifstream file(tables_vpp_path.c_str(), std::fstream::in | std::fstream::binary);
+    std::ifstream file(tables_vpp_path, std::fstream::in | std::fstream::binary);
     if (!file.is_open()) {
         throw FileNotFoundException("tables.vpp");
     }

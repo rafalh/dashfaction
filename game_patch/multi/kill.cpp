@@ -63,18 +63,16 @@ void print_kill_message(rf::Player* killed_player, rf::Player* killer_player)
         else {
             mui_msg = null_to_empty(rf::strings::you_were_killed_by);
 
-            const char* weapon_name = nullptr;
+            auto& killer_name = killer_player->name;
             int killer_weapon_cls_id = killer_entity ? killer_entity->ai.current_primary_weapon : -1;
             if (killer_weapon_cls_id >= 0 && killer_weapon_cls_id < 64) {
                 auto& weapon_cls = rf::weapon_types[killer_weapon_cls_id];
-                weapon_name = weapon_cls.display_name.c_str();
-            }
-
-            const char* killer_name = killer_player->name.c_str();
-            if (weapon_name)
+                auto& weapon_name = weapon_cls.display_name;
                 msg = rf::String::format("{}{} ({})!", mui_msg, killer_name, weapon_name);
-            else
+            }
+            else {
                 msg = rf::String::format("{}{}!", mui_msg, killer_name);
+            }
         }
     }
     else if (killer_player == rf::local_player) {
