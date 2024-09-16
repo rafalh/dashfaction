@@ -1,9 +1,10 @@
 #include <stdexcept>
 #include <future>
+#include <fstream>
+#include <format>
 #include <windows.h>
 #include <unrar/dll.hpp>
 #include <unzip.h>
-#include <fstream>
 #include <xlog/xlog.h>
 #include <patch_common/CodeInjection.h>
 #include <patch_common/AsmWriter.h>
@@ -17,17 +18,16 @@
 #include "../rf/gr/gr.h"
 #include "../rf/gr/gr_font.h"
 #include "../rf/ui.h"
-#include "../misc/misc.h"
-#include "../os/console.h"
-#include "multi.h"
-#include "faction_files.h"
-
 #include "../rf/input.h"
 #include "../rf/gameseq.h"
 #include "../rf/level.h"
 #include "../rf/gameseq.h"
 #include "../rf/misc.h"
+#include "../misc/misc.h"
+#include "../os/console.h"
 #include "../hud/hud.h"
+#include "multi.h"
+#include "faction_files.h"
 
 static bool is_vpp_filename(const char* filename)
 {
@@ -40,7 +40,7 @@ static std::vector<std::string> unzip(const char* path, const char* output_dir,
     unzFile archive = unzOpen(path);
     if (!archive) {
 #ifdef DEBUG
-        xlog::error("unzOpen failed: %s", path);
+        xlog::error("unzOpen failed: {}", path);
 #endif
         throw std::runtime_error{"cannot open zip file"};
     }
@@ -48,7 +48,7 @@ static std::vector<std::string> unzip(const char* path, const char* output_dir,
     unz_global_info global_info;
     int code = unzGetGlobalInfo(archive, &global_info);
     if (code != UNZ_OK) {
-        xlog::error("unzGetGlobalInfo failed - error %d, path %s", code, path);
+        xlog::error("unzGetGlobalInfo failed - error {}, path {}", code, path);
         throw std::runtime_error{"cannot open zip file"};
     }
 
@@ -59,29 +59,29 @@ static std::vector<std::string> unzip(const char* path, const char* output_dir,
     for (unsigned long i = 0; i < global_info.number_entry; i++) {
         code = unzGetCurrentFileInfo(archive, &file_info, file_name, sizeof(file_name), nullptr, 0, nullptr, 0);
         if (code != UNZ_OK) {
-            xlog::error("unzGetCurrentFileInfo failed - error %d, path %s", code, path);
+            xlog::error("unzGetCurrentFileInfo failed - error {}, path {}", code, path);
             break;
         }
 
         if (filename_filter(file_name)) {
-            xlog::trace("Unpacking %s", file_name);
-            auto output_path = string_format("%s\\%s", output_dir, file_name);
+            xlog::trace("Unpacking {}", file_name);
+            auto output_path = std::format("{}\\{}", output_dir, file_name);
             std::ofstream file(output_path, std::ios_base::out | std::ios_base::binary);
             if (!file) {
-                xlog::error("Cannot open file: %s", output_path.c_str());
+                xlog::error("Cannot open file: {}", output_path);
                 break;
             }
 
             code = unzOpenCurrentFile(archive);
             if (code != UNZ_OK) {
-                xlog::error("unzOpenCurrentFile failed - error %d, path %s", code, path);
+                xlog::error("unzOpenCurrentFile failed - error {}, path {}", code, path);
                 break;
             }
 
             while ((code = unzReadCurrentFile(archive, buf, sizeof(buf))) > 0) file.write(buf, code);
 
             if (code < 0) {
-                xlog::error("unzReadCurrentFile failed - error %d, path %s", code, path);
+                xlog::error("unzReadCurrentFile failed - error {}, path {}", code, path);
                 break;
             }
 
@@ -94,7 +94,7 @@ static std::vector<std::string> unzip(const char* path, const char* output_dir,
         if (i + 1 < global_info.number_entry) {
             code = unzGoToNextFile(archive);
             if (code != UNZ_OK) {
-                xlog::error("unzGoToNextFile failed - error %d, path %s", code, path);
+                xlog::error("unzGoToNextFile failed - error {}, path {}", code, path);
                 break;
             }
         }
@@ -120,7 +120,7 @@ static std::vector<std::string> unrar(const char* path, const char* output_dir,
     HANDLE archive_handle = RAROpenArchiveEx(&open_archive_data);
 
     if (!archive_handle || open_archive_data.OpenResult != 0) {
-        xlog::error("RAROpenArchiveEx failed - result %d, path %s", open_archive_data.OpenResult, path);
+        xlog::error("RAROpenArchiveEx failed - result {}, path {}", open_archive_data.OpenResult, path);
         throw std::runtime_error{"cannot open rar file"};
     }
 
@@ -135,24 +135,24 @@ static std::vector<std::string> unrar(const char* path, const char* output_dir,
             break;
 
         if (code != 0) {
-            xlog::error("RARReadHeader failed - result %d, path %s", code, path);
+            xlog::error("RARReadHeader failed - result {}, path {}", code, path);
             break;
         }
 
         if (filename_filter(header_data.FileName)) {
-            xlog::trace("Unpacking %s", header_data.FileName);
+            xlog::trace("Unpacking {}", header_data.FileName);
             code = RARProcessFile(archive_handle, RAR_EXTRACT, const_cast<char*>(output_dir), nullptr);
             if (code == 0) {
                 extracted_files.emplace_back(header_data.FileName);
             }
         }
         else {
-            xlog::trace("Skipping %s", header_data.FileName);
+            xlog::trace("Skipping {}", header_data.FileName);
             code = RARProcessFile(archive_handle, RAR_SKIP, nullptr, nullptr);
         }
 
         if (code != 0) {
-            xlog::error("RARProcessFile failed - result %d, path %s", code, path);
+            xlog::error("RARProcessFile failed - result {}, path {}", code, path);
             break;
         }
     }
@@ -217,7 +217,7 @@ void LevelDownloadWorker::download_archive(int ticket_id, const char* temp_filen
 
 std::vector<std::string> LevelDownloadWorker::extract_archive(const char* temp_filename)
 {
-    auto output_dir = string_format("%suser_maps\\multi", rf::root_path);
+    auto output_dir = std::format("{}user_maps\\multi", rf::root_path);
     std::vector<std::string> packfiles;
     try {
         packfiles = unzip(temp_filename, output_dir.c_str(), is_vpp_filename);
@@ -239,7 +239,7 @@ std::vector<std::string> LevelDownloadWorker::operator()()
     FactionFilesClient ff_client;
     shared_data_->level_info = ff_client.find_map(level_filename_.c_str());
     if (!shared_data_->level_info) {
-        xlog::warn("Level not found: %s", level_filename_.c_str());
+        xlog::warn("Level not found: {}", level_filename_);
         shared_data_->state = LevelDownloadState::not_found;
         return {};
     }
@@ -280,11 +280,11 @@ private:
     std::unique_ptr<Listener> listener_;
 
 public:
-    LevelDownloadOperation(const char* level_filename, std::unique_ptr<Listener>&& listener) :
+    LevelDownloadOperation(std::string level_filename, std::unique_ptr<Listener>&& listener) :
         listener_(std::move(listener))
     {
         shared_data_ = std::make_shared<LevelDownloadWorker::SharedData>();
-        future_ = std::async(std::launch::async, LevelDownloadWorker{level_filename, shared_data_});
+        future_ = std::async(std::launch::async, LevelDownloadWorker{std::move(level_filename), shared_data_});
     }
 
     ~LevelDownloadOperation()
@@ -335,7 +335,7 @@ private:
             return future_.get();
         }
         catch (const std::exception& e) {
-            xlog::error("Level download failed: %s", e.what());
+            xlog::error("Level download failed: {}", e.what());
             return {};
         }
     }
@@ -345,7 +345,7 @@ private:
         rf::vpackfile_set_loading_user_maps(true);
         for (const auto& filename : packfiles) {
             if (!rf::vpackfile_add(filename.c_str(), "user_maps\\multi\\")) {
-                xlog::error("vpackfile_add failed - %s", filename.c_str());
+                xlog::error("vpackfile_add failed - {}", filename);
             }
         }
         rf::vpackfile_set_loading_user_maps(false);
@@ -391,10 +391,10 @@ public:
         }
     }
 
-    LevelDownloadOperation& start(const char* level_filename, std::unique_ptr<LevelDownloadOperation::Listener>&& listener)
+    LevelDownloadOperation& start(std::string level_filename, std::unique_ptr<LevelDownloadOperation::Listener>&& listener)
     {
-        xlog::info("Starting level download: %s", level_filename);
-        return operation_.emplace(level_filename, std::move(listener));
+        xlog::info("Starting level download: {}", level_filename);
+        return operation_.emplace(std::move(level_filename), std::move(listener));
     }
 
     [[nodiscard]] const std::optional<LevelDownloadOperation>& get_operation() const
@@ -426,7 +426,7 @@ public:
         if (operation.get_state() == LevelDownloadState::fetching_data) {
             auto now = std::chrono::system_clock::now();
             if (now - last_progress_print_ >= std::chrono::seconds{2}) {
-                rf::console::printf("Download progress: %.2f MB / %.2f MB",
+                rf::console::print("Download progress: {:.2f} MB / {:.2f} MB",
                     operation.get_bytes_received() / 1000000.0f,
                     operation.get_level_info().size_in_bytes / 1000000.0f);
                 last_progress_print_ = now;
@@ -437,10 +437,10 @@ public:
     void on_finish(LevelDownloadOperation& operation, bool success) override
     {
         if (operation.get_state() == LevelDownloadState::not_found) {
-            rf::console::printf("Level has not been found in FactionFiles.com database!");
+            rf::console::print("Level has not been found in FactionFiles.com database!");
         }
         else {
-            rf::console::printf("Level download %s", success ? "succeeded" : "failed");
+            rf::console::print("Level download {}", success ? "succeeded" : "failed");
         }
     }
 };
@@ -549,7 +549,7 @@ void multi_level_download_do_frame()
         unsigned bytes_received = operation.get_bytes_received();
         float bytes_per_sec = operation.get_bytes_per_sec();
 
-        auto level_name_str = std::string{"Level name: "} + info.name;
+        auto level_name_str = std::format("Level name: {}", info.name);
         int str_w, str_h;
         rf::gr::get_string_size(&str_w, &str_h, level_name_str.c_str(), -1, medium_font);
         int info_x = center_x - str_w / 2;
@@ -557,11 +557,11 @@ void multi_level_download_do_frame()
         rf::gr::string(info_x, y, level_name_str.c_str(), medium_font);
         y += info_spacing;
 
-        auto created_by_str = std::string{"Created by: "} + info.author;
+        auto created_by_str = std::format("Created by: {}", info.author);
         rf::gr::string(info_x, y, created_by_str.c_str(), medium_font);
         y += info_spacing;
 
-        rf::gr::string(info_x, y, string_format("%.2f MB / %.2f MB (%.2f MB/s)",
+        rf::gr::string(info_x, y, std::format("{:.2f} MB / {:.2f} MB ({:.2f} MB/s)",
             bytes_received / 1000.0f / 1000.0f,
             info.size_in_bytes / 1000.0f / 1000.0f,
             bytes_per_sec / 1000.0f / 1000.0f).c_str(), medium_font);
@@ -570,7 +570,7 @@ void multi_level_download_do_frame()
         if (bytes_per_sec > 0) {
             int remaining_size = info.size_in_bytes - bytes_received;
             int secs_left = static_cast<int>(remaining_size / bytes_per_sec);
-            auto time_left_str = std::to_string(secs_left) + " seconds left";
+            auto time_left_str = std::format("{} seconds left", secs_left);
             rf::gr::string(info_x, y, time_left_str.c_str(), medium_font);
         }
 
@@ -613,7 +613,7 @@ CallHook<void(rf::GameState, bool)> process_enter_limbo_packet_gameseq_set_next_
 CallHook<void(rf::GameState, bool)> process_leave_limbo_packet_gameseq_set_next_state_hook{
     0x0047C24F,
     [](rf::GameState state, bool force) {
-        xlog::trace("Leave limbo - next level: %s", rf::level.next_level_filename.c_str());
+        xlog::trace("Leave limbo - next level: {}", rf::level.next_level_filename);
         if (!next_level_exists()) {
             rf::gameseq_set_state(rf::GS_MULTI_LEVEL_DOWNLOAD, false);
             LevelDownloadManager::instance().start(rf::level.next_level_filename,
@@ -659,7 +659,7 @@ static void do_download_level(std::string filename, bool force)
             xlog::error("Level already exists on disk! Use download_level_force to download anyway.");
             return;
         }
-        LevelDownloadManager::instance().start(filename.c_str(),
+        LevelDownloadManager::instance().start(filename,
             std::make_unique<ConsoleReportingDownloadListener>());
     }
 }
@@ -694,7 +694,7 @@ void level_download_init()
     download_level_force_cmd.register_cmd();
 }
 
-void multi_render_level_download_progress()
+void multi_level_download_update()
 {
     LevelDownloadManager::instance().process();
 }

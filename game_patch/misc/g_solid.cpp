@@ -5,14 +5,17 @@
 #include "../rf/geometry.h"
 #include "../rf/mover.h"
 #include "../rf/gr/gr.h"
+#include "../rf/gr/gr_font.h"
 #include "../rf/os/frametime.h"
+#include "../rf/gameseq.h"
 #include "../os/console.h"
 #include "../bmpman/bmpman.h"
 #include "../bmpman/fmt_conv_templates.h"
 
 constexpr auto reference_fps = 30.0f;
 constexpr auto reference_frametime = 1.0f / reference_fps;
-int g_max_decals = 512;
+static int g_max_decals = 512;
+static bool g_show_room_clip_wnd = false;
 
 FunHook<int(rf::GSolid*, rf::GRoom*)> geo_cache_prepare_room_hook{
     0x004F0C00,
@@ -23,7 +26,7 @@ FunHook<int(rf::GSolid*, rf::GRoom*)> geo_cache_prepare_room_hook{
             if (num_verts > 8000) {
                 static int once = 0;
                 if (!(once++))
-                    xlog::warn("Not rendering room with %d vertices!", num_verts);
+                    xlog::warn("Not rendering room with {} vertices!", num_verts);
                 room->geo_cache = nullptr;
                 return -1;
             }
@@ -56,7 +59,7 @@ CodeInjection GSurface_calculate_lightmap_color_conv_patch{
         bool success = bm_convert_format(dst_data, lock.format, src_data, rf::bm::FORMAT_888_BGR,
             src_width, height, lock.stride_in_bytes, src_pitch);
         if (!success)
-            xlog::error("bm_convert_format failed for geomod (fmt %d)", lock.format);
+            xlog::error("bm_convert_format failed for geomod (fmt {})", static_cast<int>(lock.format));
         rf::gr::unlock(&lock);
     },
 };
@@ -87,7 +90,7 @@ CodeInjection GSurface_alloc_lightmap_color_conv_patch{
         bool success = bm_convert_format(dst_row_ptr, lock.format, src_data, rf::bm::FORMAT_888_BGR,
                                                  src_width, height, lock.stride_in_bytes, src_pitch);
         if (!success)
-            xlog::error("ConvertBitmapFormat failed for geomod2 (fmt %d)", lock.format);
+            xlog::error("ConvertBitmapFormat failed for geomod2 (fmt {})", static_cast<int>(lock.format));
         rf::gr::unlock(&lock);
     },
 };
@@ -147,7 +150,7 @@ void gr_copy_water_bitmap(rf::gr::LockInfo& src_lock, rf::gr::LockInfo& dst_lock
         });
     }
     catch (const std::exception& e) {
-        xlog::error("Pixel format conversion failed for liquid wave texture: %s", e.what());
+        xlog::error("Pixel format conversion failed for liquid wave texture: {}", e.what());
     }
 }
 
@@ -236,7 +239,7 @@ CodeInjection level_load_lightmaps_color_conv_patch{
         bool success = bm_convert_format(lock.data, lock.format, lightmap->buf,
             rf::bm::FORMAT_888_BGR, lightmap->w, lightmap->h, lock.stride_in_bytes, 3 * lightmap->w, nullptr);
         if (!success)
-            xlog::error("ConvertBitmapFormat failed for lightmap (dest format %d)", lock.format);
+            xlog::error("ConvertBitmapFormat failed for lightmap (dest format {})", static_cast<int>(lock.format));
 
         rf::gr::unlock(&lock);
     },
@@ -371,9 +374,40 @@ ConsoleCommand2 max_decals_cmd{
             g_max_decals = std::clamp(max_decals.value(), 128, 512);
             decal_patch_limit(g_max_decals);
         }
-        rf::console::printf("Max decals: %d", g_max_decals);
+        rf::console::print("Max decals: {}", g_max_decals);
     },
 };
+
+static void render_rooms_clip_wnds()
+{
+    rf::GRoom** rooms;
+    int num_rooms;
+    rf::g_get_room_render_list(&rooms, &num_rooms);
+    rf::gr::set_color(255, 255, 255, 255);
+    for (int i = 0; i < num_rooms; ++i) {
+        rf::GRoom* room = rooms[i];
+        char buf[256];
+        std::snprintf(buf, sizeof(buf), "room %d", room->room_index);
+        rf::gr::string(room->clip_wnd.left, room->clip_wnd.top, buf);
+        rf::gr::rect_border(room->clip_wnd.left, room->clip_wnd.top,
+            room->clip_wnd.right - room->clip_wnd.left, room->clip_wnd.bot - room->clip_wnd.top);
+    }
+}
+
+static ConsoleCommand2 dbg_room_clip_wnd_cmd{
+    "dbg_room_clip_wnd",
+    []() {
+        g_show_room_clip_wnd = !g_show_room_clip_wnd;
+        rf::console::print("Show room clip windows: {}", g_show_room_clip_wnd);
+    },
+};
+
+void g_solid_render_ui()
+{
+    if (g_show_room_clip_wnd && rf::gameseq_in_gameplay()) {
+        render_rooms_clip_wnds();
+    }
+}
 
 void g_solid_do_patch()
 {
@@ -433,4 +467,5 @@ void g_solid_do_patch()
 
     // Commands
     max_decals_cmd.register_cmd();
+    dbg_room_clip_wnd_cmd.register_cmd();
 }

@@ -1,12 +1,13 @@
-// Win32++   Version 8.7.0
-// Release Date: 12th August 2019
+// Win32++   Version 9.6.1
+// Release Date: 29th July 2024
 //
 //      David Nash
 //      email: dnash@bigpond.net.au
 //      url: https://sourceforge.net/projects/win32-framework
+//           https://github.com/DavidNash2024/Win32xx
 //
 //
-// Copyright (c) 2005-2019  David Nash
+// Copyright (c) 2005-2024  David Nash
 //
 // Permission is hereby granted, free of charge, to
 // any person obtaining a copy of this software and
@@ -76,12 +77,12 @@
 // Refer to the NetClient and NetServer samples for an example of how to use
 // this class to create event sockets for a TCP/UDP client & server.
 
-// To compile programs with CSocket, link with ws3_32.lib for Win32,
-// and ws2.lib for Windows CE. This class uses Winsock version 2, and
-// supports Windows 98 and above.
+// To compile programs with CSocket, link with ws2_32.lib. This class uses
+// Winsock version 2, and supports Windows 98 and above. Windows 95 systems
+// will need to install the "Windows Sockets 2.0 for Windows 95".
 
 // For a TCP server using event sockets, inherit a class from CSocket
-// and override OnAccept, OnDisconnect and OnRecieve. Create one instance
+// and override OnAccept, OnDisconnect and OnReceive. Create one instance
 // of this class and use it as a listening socket. The purpose of the
 // listening socket is to detect connections from clients and accept them.
 // For the listening socket, we do the following:
@@ -116,8 +117,7 @@
 //    "experimental" support, which can be enabled by entering "ipv6 install"
 //    at a command prompt.
 // * IPv6 is not supported by all compilers and development environments. In
-//    particular, it is not supported by Dev-C++ or Borland 5.5. A modern
-//    Platform SDK needs to be added to Visual Studio 6 for it to support IPv6.
+//    particular, it is not by Borland 5.5.
 // * IsIPV6Supported returns false if either the operating system or the
 //    development environment fails to support IPv6.
 //
@@ -126,30 +126,29 @@
 #ifndef _WIN32XX_SOCKET_H_
 #define _WIN32XX_SOCKET_H_
 
-// include exception handling, TRACE etc.
+// CSocket requires features from the Win32++ framework.
 #include "wxx_wincore.h"
+#include "wxx_thread.h"
 #include "wxx_mutex.h"
 
-// Work around a bugs in older versions of Visual Studio
-#ifdef _MSC_VER
-  #if _MSC_VER < 1500
-    // Skip loading wspiapi.h
-    #define _WSPIAPI_H_
-  #endif
+// Work around a bugs in older versions of Visual Studio.
+#if defined (_MSC_VER) && (_MSC_VER < 1500)  // < VS2008
+  // Skip loading wspiapi.h
+  #define _WSPIAPI_H_
 #endif
 
-#include <ws2tcpip.h>
-
-#define THREAD_TIMEOUT 100
+#include <WS2tcpip.h>
 
 
 namespace Win32xx
 {
+    const int THREAD_TIMEOUT = 100;
 
     typedef int  WINAPI GETADDRINFO(LPCSTR, LPCSTR, const struct addrinfo*, struct addrinfo**);
     typedef void WINAPI FREEADDRINFO(struct addrinfo*);
 
-    // The CSocket class represents a network socket. It can be used to create
+    /////////////////////////////////////////////////////////////
+    // CSocket manages a network socket. It can be used to create
     // network connections, and pass data over those connections.
     class CSocket
     {
@@ -158,35 +157,39 @@ namespace Win32xx
         virtual ~CSocket();
 
         // Operations
-        virtual void Accept(CSocket& rClientSock, struct sockaddr* addr, int* addrlen) const;
-        virtual int  Bind(LPCTSTR addr, UINT port) const;
-        virtual int  Bind(const struct sockaddr* name, int namelen) const;
-        virtual int  Connect(LPCTSTR addr, UINT port) const;
-        virtual int  Connect(const struct sockaddr* name, int namelen) const;
-        virtual bool Create( int family, int type, int protocol = IPPROTO_IP);
-        virtual void Disconnect();
-        virtual void FreeAddrInfo( struct addrinfo* ai ) const;
-        virtual int  GetAddrInfo( LPCTSTR nodename, LPCTSTR servname, const struct addrinfo* hints, struct addrinfo** res) const;
-        virtual CString GetErrorString() const;
-        virtual int  ioCtlSocket(long cmd, u_long* argp) const;
-        virtual bool IsIPV6Supported() const;
-        virtual int  Listen(int backlog = SOMAXCONN) const;
-        virtual int  Receive(char* buf, int len, int flags) const;
-        virtual int  ReceiveFrom(char* buf, int len, int flags, struct sockaddr* from, int* fromlen) const;
-        virtual int  Send(const char* buf, int len, int flags) const;
-        virtual int  SendTo(const char* send, int len, int flags, LPCTSTR addr, UINT port) const;
-        virtual int  SendTo(const char* buf, int len, int flags, const struct sockaddr* to, int tolen) const;
+        void Accept(CSocket& rClientSock, struct sockaddr* addr, int* addrlen) const;
+        int  Bind(LPCTSTR addr, UINT port) const;
+        int  Bind(const struct sockaddr* name, int namelen) const;
+        int  Connect(LPCTSTR addr, UINT port) const;
+        int  Connect(const struct sockaddr* name, int namelen) const;
+        bool Create( int family, int type, int protocol = IPPROTO_IP);
+        void Disconnect();
 
-        virtual int  StartAsync(HWND wnd, UINT message, long events);
-        virtual void StartEvents();
-        virtual void StopEvents();
+#ifdef GetAddrInfo
+        void FreeAddrInfo( struct addrinfo* ai ) const;
+        int  GetAddrInfo( LPCTSTR nodename, LPCTSTR servname, const struct addrinfo* hints, struct addrinfo** res) const;
+#endif
 
-        // Attributes
-        virtual int  GetPeerName(struct sockaddr* name, int* namelen) const;
-        virtual int  GetSockName(struct sockaddr* name, int* namelen) const;
+        CString GetErrorString() const;
+        int  ioCtlSocket(long cmd, u_long* argp) const;
+        bool IsIPV6Supported() const;
+        int  Listen(int backlog = SOMAXCONN) const;
+        int  Receive(char* buf, int len, int flags) const;
+        int  ReceiveFrom(char* buf, int len, int flags, struct sockaddr* from, int* fromlen) const;
+        int  Send(const char* buf, int len, int flags) const;
+        int  SendTo(const char* send, int len, int flags, LPCTSTR addr, UINT port) const;
+        int  SendTo(const char* buf, int len, int flags, const struct sockaddr* to, int tolen) const;
+
+        int  StartAsync(HWND wnd, UINT message, long events);
+        void StartEvents();
+        void StopEvents();
+
+        // Accessors and mutators
+        int  GetPeerName(struct sockaddr* name, int* namelen) const;
+        int  GetSockName(struct sockaddr* name, int* namelen) const;
         SOCKET& GetSocket() { return m_socket; }
-        virtual int  GetSockOpt(int level, int optname, char* optval, int* optlen) const;
-        virtual int  SetSockOpt(int level, int optname, const char* optval, int optlen) const;
+        int  GetSockOpt(int level, int optname, char* optval, int* optlen) const;
+        int  SetSockOpt(int level, int optname, const char* optval, int optlen) const;
 
         // Override these functions to monitor events
         virtual void OnAccept()     {}
@@ -203,17 +206,17 @@ namespace Win32xx
         operator SOCKET() const {return m_socket;}
 
     private:
-        CSocket(const CSocket&);                // Disable copy construction
-        CSocket& operator = (const CSocket&);   // Disable assignment operator
+        CSocket(const CSocket&);               // Disable copy construction.
+        CSocket& operator=(const CSocket&);    // Disable assignment operator.
         static UINT WINAPI EventThread(LPVOID pThis);
 
         SOCKET m_socket;
         HMODULE m_ws2_32;
-        Shared_Ptr<CWinThread> m_threadPtr;  // Smart pointer to the worker thread for the events
-        CEvent m_stopRequest;                // A manual reset event to signal the event thread should stop
+        WorkThreadPtr m_threadPtr;          // Smart pointer to the worker thread for the events.
+        CEvent m_stopRequest;               // A manual reset event to signal the event thread should stop.
 
-        GETADDRINFO* m_pfnGetAddrInfo;      // pointer for the getaddrinfo function
-        FREEADDRINFO* m_pfnFreeAddrInfo;    // pointer for the freeaddrinfo function
+        GETADDRINFO* m_pfnGetAddrInfo;      // Pointer for the getaddrinfo function.
+        FREEADDRINFO* m_pfnFreeAddrInfo;    // Pointer for the freeaddrinfo function.
     };
 }
 
@@ -224,40 +227,51 @@ namespace Win32xx
 
     inline CSocket::CSocket() : m_socket(INVALID_SOCKET), m_stopRequest(FALSE, TRUE)
     {
-        // Initialise the Windows Socket services
+        // Initialize the Windows Socket services.
         WSADATA wsaData;
 
         if (::WSAStartup(MAKEWORD(2,2), &wsaData) != 0)
-            throw CNotSupportedException(g_msgSocWSAStartup);
+            throw CNotSupportedException(GetApp()->MsgSocWSAStartup());
 
-        m_ws2_32 = LoadLibrary(_T("WS2_32.dll"));
-        if (m_ws2_32 == 0)
-            throw CNotSupportedException(g_msgSocWS2Dll);
+        m_ws2_32 = ::GetModuleHandle(_T("ws2_32.dll"));
+        if (m_ws2_32 == NULL)
+            throw CNotSupportedException(GetApp()->MsgSocWS2Dll());
 
-#ifdef _WIN32_WCE
-        m_pfnGetAddrInfo = reinterpret_cast<GETADDRINFO*>( GetProcAddress(m_ws2_32, L"getaddrinfo") );
-        m_pfnFreeAddrInfo = reinterpret_cast<FREEADDRINFO*>( GetProcAddress(m_ws2_32, L"freeaddrinfo") );
-#else
-        m_pfnGetAddrInfo = reinterpret_cast<GETADDRINFO*>( GetProcAddress(m_ws2_32, "getaddrinfo") );
-        m_pfnFreeAddrInfo = reinterpret_cast<FREEADDRINFO*>( GetProcAddress(m_ws2_32, "freeaddrinfo") );
-#endif
+        m_pfnGetAddrInfo = reinterpret_cast<GETADDRINFO*>(
+            reinterpret_cast<void*>(::GetProcAddress(m_ws2_32, "getaddrinfo")));
+        m_pfnFreeAddrInfo = reinterpret_cast<FREEADDRINFO*>(
+            reinterpret_cast<void*>(::GetProcAddress(m_ws2_32, "freeaddrinfo")));
 
-        m_threadPtr = new CWinThread(EventThread, this);
-
+        WorkThreadPtr threadPtr(new CWorkThread(EventThread, this));
+        m_threadPtr = threadPtr;
     }
-
 
     inline CSocket::~CSocket()
     {
-        Disconnect();
+        ::shutdown(m_socket, SD_BOTH);
+        // Ask the event thread to stop.
+        m_stopRequest.SetEvent();
+
+        // Wait for the event thread to stop.
+        while (WAIT_TIMEOUT == ::WaitForSingleObject(*m_threadPtr, THREAD_TIMEOUT * 10))
+        {
+            // Waiting for the event thread to signal the m_stopped event.
+
+            // Note: An excessive delay in processing any of the notification functions
+            // can cause us to get here.
+            TRACE("*** Error: Event Thread won't die ***\n");
+        }
+
+        m_stopRequest.ResetEvent();
+
+        ::closesocket(m_socket);
+        m_socket = INVALID_SOCKET;
 
         if (m_stopRequest.GetHandle())
-            CloseHandle(m_stopRequest);
+            ::CloseHandle(m_stopRequest);
 
-        // Terminate the  Windows Socket services
+        // Terminate the  Windows Socket services.
         ::WSACleanup();
-
-        ::FreeLibrary(m_ws2_32);
     }
 
     // The accept function permits an incoming connection attempt on the socket.
@@ -294,7 +308,7 @@ namespace Win32xx
                 return result;
             }
 
-            // Bind the IP address to the listening socket
+            // Bind the IP address to the listening socket.
             result =  ::bind( m_socket, AddrInfo->ai_addr, static_cast<int>(AddrInfo->ai_addrlen) );
             if (result == SOCKET_ERROR )
             {
@@ -302,7 +316,7 @@ namespace Win32xx
                 return result;
             }
 
-            // Free the address information allocated by GetAddrInfo
+            // Free the address information allocated by GetAddrInfo.
             FreeAddrInfo(AddrInfo);
 
 #endif
@@ -311,29 +325,24 @@ namespace Win32xx
         else
         {
             sockaddr_in clientService;
+            ZeroMemory(&clientService, sizeof(clientService));
             clientService.sin_family = AF_INET;
 
-#if !defined (InetPton)     //  can require NTDDI_VERSION >= NTDDI_VISTA
-  #ifdef _MSC_VER
-    #pragma warning ( push )
-    #pragma warning ( disable : 4996 )
-  #endif // _MSC_VER
+#ifdef _MSC_VER
+  #pragma warning ( push )
+  #pragma warning ( disable : 4996 )
+#endif // _MSC_VER
 
-            clientService.sin_addr.s_addr = inet_addr( TtoA(addr) );
+                clientService.sin_addr.s_addr = inet_addr(TtoA(addr));
 
-  #ifdef _MSC_VER
-    #pragma warning ( pop )
-  #endif // _MSC_VER
-#else
-
-            InetPton(AF_INET, addr, &clientService.sin_addr.s_addr);
-
-#endif // InetPton
+#ifdef _MSC_VER
+  #pragma warning ( pop )
+#endif // _MSC_VER
 
             clientService.sin_port = htons( static_cast<u_short>(port) );
 
             result = ::bind( m_socket, reinterpret_cast<SOCKADDR*>( &clientService), sizeof(clientService) );
-            if ( 0 != result)
+            if (result != 0)
                 TRACE("Bind failed\n");
         }
 
@@ -345,7 +354,7 @@ namespace Win32xx
     inline int CSocket::Bind(const struct sockaddr* name, int namelen) const
     {
         int result = ::bind (m_socket, name, namelen);
-        if ( 0 != result)
+        if (result != 0)
             TRACE("Bind failed\n");
         return result;
     }
@@ -359,7 +368,7 @@ namespace Win32xx
         if (IsIPV6Supported())
         {
 
-#ifdef GetAddrInfo  // Skip the following code block for older development environments
+#ifdef GetAddrInfo  // Skip the following code block for older development environments.
 
             ADDRINFO hints;
             ZeroMemory(&hints, sizeof(hints));
@@ -375,7 +384,7 @@ namespace Win32xx
                 return SOCKET_ERROR;
             }
 
-            // Bind the IP address to the listening socket
+            // Bind the IP address to the listening socket.
             result = Connect( AddrInfo->ai_addr, static_cast<int>(AddrInfo->ai_addrlen) );
             if (result == SOCKET_ERROR )
             {
@@ -383,7 +392,7 @@ namespace Win32xx
                 return result;
             }
 
-            // Free the address information allocated by GetAddrInfo
+            // Free the address information allocated by GetAddrInfo.
             FreeAddrInfo(AddrInfo);
 
 #endif
@@ -392,29 +401,24 @@ namespace Win32xx
         else
         {
             sockaddr_in clientService;
+            ZeroMemory(&clientService, sizeof(clientService));
             clientService.sin_family = AF_INET;
 
-#if !defined (InetPton)     //  can require NTDDI_VERSION >= NTDDI_VISTA
-  #ifdef _MSC_VER
-    #pragma warning ( push )
-    #pragma warning ( disable : 4996 )
-  #endif // _MSC_VER
+#ifdef _MSC_VER
+  #pragma warning ( push )
+  #pragma warning ( disable : 4996 )
+#endif // _MSC_VER
 
             clientService.sin_addr.s_addr = inet_addr( TtoA(addr) );
 
-  #ifdef _MSC_VER
-    #pragma warning ( pop )
-  #endif // _MSC_VER
-#else
-
-            InetPton(AF_INET, addr, &clientService.sin_addr.s_addr);
-
-#endif // InetPton
+#ifdef _MSC_VER
+  #pragma warning ( pop )
+#endif // _MSC_VER
 
             clientService.sin_port = htons( static_cast<u_short>(port) );
 
             result = ::connect( m_socket, reinterpret_cast<SOCKADDR*>( &clientService ), sizeof(clientService) );
-            if ( 0 != result)
+            if (result != 0)
                 TRACE("Connect failed\n");
         }
 
@@ -426,7 +430,7 @@ namespace Win32xx
     inline int CSocket::Connect(const struct sockaddr* name, int namelen) const
     {
         int result = ::connect( m_socket, name, namelen );
-        if ( 0 != result)
+        if (result != 0)
             TRACE("Connect failed\n");
 
         return result;
@@ -480,6 +484,7 @@ namespace Win32xx
         SOCKET& clientSocket = pSocket->m_socket;
 
         WSAEVENT allEvents[2];
+        ZeroMemory(&allEvents, sizeof(allEvents));
         allEvents[0] = ::WSACreateEvent();
         allEvents[1] = reinterpret_cast<WSAEVENT>(stopRequestEvent.GetHandle());  // cast supports Borland v5.5
         long events = FD_READ | FD_WRITE | FD_OOB | FD_ACCEPT | FD_CONNECT | FD_CLOSE;
@@ -494,7 +499,7 @@ namespace Win32xx
             return 0;
         }
 
-        // loop until the stop event is set
+        // Loop until the stop event is set.
         for (;;) // infinite loop
         {
             // Wait for a network event, or a request to stop
@@ -561,40 +566,35 @@ namespace Win32xx
         }
     }
 
+
+#ifdef GetAddrInfo
+
+    // Frees address resources allocated by the GetAddrInfo function.
+    inline void CSocket::FreeAddrInfo(struct addrinfo* ai) const
+    {
+        m_pfnFreeAddrInfo(ai);
+    }
+
     // Provides protocol-independent translation from host name to address.
     // Refer to getaddrinfo in the Windows API documentation for additional information.
     inline int CSocket::GetAddrInfo( LPCTSTR nodename, LPCTSTR servname, const struct addrinfo* hints, struct addrinfo** res) const
     {
-
-#ifdef GetAddrInfo
-
         return m_pfnGetAddrInfo(TtoA(nodename), TtoA(servname), hints, res);
-
-#else
-
-        UNREFERENCED_PARAMETER(nodename);
-        UNREFERENCED_PARAMETER(servname);
-        UNREFERENCED_PARAMETER(hints);
-        UNREFERENCED_PARAMETER(res);
-
-        return WSAVERNOTSUPPORTED;
+    }
 
 #endif
-
-    }
 
     // Returns a string containing the most recent network error.
     // Refer to WSAGetLastError in the Windows API documentation for additional information.
     inline CString CSocket::GetErrorString() const
     {
-        int errorCode = WSAGetLastError();
+        DWORD errorCode = static_cast<DWORD>(WSAGetLastError());
         LPTSTR message = NULL;
         CString errorMessage;
 
         FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS |
                       FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_MAX_WIDTH_MASK,
-                      NULL, errorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                      reinterpret_cast<LPTSTR>(&message), 1024, NULL);
+                      NULL, errorCode, 0, reinterpret_cast<LPTSTR>(&message), 1024, NULL);
 
         if (message)
         {
@@ -638,23 +638,6 @@ namespace Win32xx
         return result;
     }
 
-
-    // Frees address resources allocated by the GetAddrInfo function.
-    inline void CSocket::FreeAddrInfo( struct addrinfo* ai ) const
-    {
-
-#ifdef GetAddrInfo
-
-        m_pfnFreeAddrInfo(ai);
-
-#else
-
-        UNREFERENCED_PARAMETER(ai);
-
-#endif
-
-    }
-
     // Controls the I/O mode of the socket.
     // Refer to ioctlsocket in the Windows API documentation for additional information.
     inline int CSocket::ioCtlSocket(long cmd, u_long* argp) const
@@ -673,7 +656,7 @@ namespace Win32xx
 
 #ifdef GetAddrInfo
 
-        if (m_pfnGetAddrInfo != 0 && m_pfnFreeAddrInfo != 0)
+        if (m_pfnGetAddrInfo != NULL && m_pfnFreeAddrInfo != NULL)
             isIPV6Supported = TRUE;
 
 #endif
@@ -746,7 +729,7 @@ namespace Win32xx
         if (IsIPV6Supported())
         {
 
-#ifdef GetAddrInfo  // Skip the following code block for older development environments
+#ifdef GetAddrInfo  // Skip the following code block for older development environments.
 
             ADDRINFO hints;
             ZeroMemory(&hints, sizeof(hints));
@@ -772,7 +755,7 @@ namespace Win32xx
                 }
             }
 
-            // Free the address information allocated by GetAddrInfo
+            // Free the address information allocated by GetAddrInfo.
             FreeAddrInfo(addrInfo);
 
 #endif
@@ -781,24 +764,20 @@ namespace Win32xx
         else
         {
             sockaddr_in clientService;
+            ZeroMemory(&clientService, sizeof(clientService));
             clientService.sin_family = AF_INET;
 
-#if !defined (InetPton)     //  can require NTDDI_VERSION >= NTDDI_VISTA
-  #ifdef _MSC_VER
-    #pragma warning ( push )
-    #pragma warning ( disable : 4996 )
-  #endif // _MSC_VER
+#ifdef _MSC_VER
+  #pragma warning ( push )
+  #pragma warning ( disable : 4996 )
+#endif // _MSC_VER
 
             clientService.sin_addr.s_addr = inet_addr(TtoA(addr));
 
-  #ifdef _MSC_VER
-    #pragma warning ( pop )
-  #endif // _MSC_VER
-#else
+#ifdef _MSC_VER
+  #pragma warning ( pop )
+#endif // _MSC_VER
 
-            InetPton(AF_INET, addr, &clientService.sin_addr.s_addr);
-
-#endif  // InetPton
 
             clientService.sin_port = htons( static_cast<u_short>(port) );
 
@@ -859,15 +838,15 @@ namespace Win32xx
 
     }
 
-    // This function starts the thread which monitors the socket for events.
+    // This function starts the thread that monitors the socket for events.
     inline void CSocket::StartEvents()
     {
-        StopEvents();   // Ensure the thread isn't already running
+        StopEvents();   // Ensure the thread isn't already running.
 
         m_threadPtr->CreateThread();
     }
 
-    // Terminates the event thread gracefully (if possible)
+    // Terminates the event thread gracefully (if possible).
     inline void CSocket::StopEvents()
     {
         // Ask the event thread to stop

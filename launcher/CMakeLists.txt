@@ -36,7 +36,7 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRCS})
 
 add_executable(DashFactionLauncher WIN32 ${SRCS})
 
-target_compile_features(DashFactionLauncher PUBLIC cxx_std_17)
+target_compile_features(DashFactionLauncher PUBLIC cxx_std_20)
 set_target_properties(DashFactionLauncher PROPERTIES CXX_EXTENSIONS NO)
 enable_warnings(DashFactionLauncher)
 setup_debug_info(DashFactionLauncher)

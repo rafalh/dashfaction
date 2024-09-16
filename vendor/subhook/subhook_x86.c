@@ -155,7 +155,7 @@ SUBHOOK_EXPORT int SUBHOOK_API subhook_disasm(void *src, int *reloc_op_offset) {
     /* DEC r/m32         */ {0xFF, 1, MODRM | REG_OPCODE},
     /* DEC r32           */ {0x48, 0, PLUS_R},
     /* ENTER imm16, imm8 */ {0xC8, 0, IMM16 | IMM8},
-    /* FLD m32fp         */// {0xD9, 0, MODRM | REG_OPCODE},
+    /* FLD m32fp         */ {0xD9, 0, MODRM | REG_OPCODE},
     /* FLD m64fp         */ {0xDD, 0, MODRM | REG_OPCODE},
     /* FLD m80fp         */ {0xDB, 5, MODRM | REG_OPCODE},
     /* INT 3             */ {0xCC, 0, 0},

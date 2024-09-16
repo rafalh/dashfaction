@@ -11,28 +11,29 @@ class OptionsGraphicsDlg;
 class OptionsDisplayDlg : public CDialog
 {
 public:
-	OptionsDisplayDlg(GameConfig& conf, VideoDeviceInfoProvider& video_info, OptionsGraphicsDlg& graphics_dlg);
+	OptionsDisplayDlg(GameConfig& conf, OptionsGraphicsDlg& graphics_dlg);
     void OnSave();
-
-    void OnAdapterChange();
-    void OnColorDepthChange();
-    void OnWindowModeChange();
 
 protected:
     BOOL OnInitDialog() override;
-    LRESULT OnNotify(WPARAM wparam, LPARAM lparam) override;
+    BOOL OnCommand(WPARAM wparam, LPARAM lparam) override;
 
 private:
     void InitToolTip();
+    void OnRendererChange();
+    void OnAdapterChange();
+    void OnColorDepthChange();
+    void OnWindowModeChange();
     void UpdateAdapterCombo();
     void UpdateResolutionCombo();
     void UpdateColorDepthCombo();
 
     GameConfig& m_conf;
-    VideoDeviceInfoProvider& m_video_info;
+    std::unique_ptr<VideoDeviceInfoProvider> m_video_info;
     OptionsGraphicsDlg& m_graphics_dlg;
     std::vector<unsigned> m_multi_sample_types;
     CToolTip m_tool_tip;
+    CComboBox m_renderer_combo;
     CComboBox m_adapter_combo;
     CComboBox m_res_combo;
     CComboBox m_color_depth_combo;

@@ -41,9 +41,9 @@ rf::Player* find_best_matching_player(const char* name)
         return found_player;
     }
     if (num_found > 1)
-        rf::console::printf("Found %d players matching '%s'!", num_found, name);
+        rf::console::print("Found {} players matching '{}'!", num_found, name);
     else
-        rf::console::printf("Cannot find player matching '%s'", name);
+        rf::console::print("Cannot find player matching '{}'", name);
     return nullptr;
 }
 

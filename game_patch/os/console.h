@@ -162,7 +162,7 @@ private:
     {
         if (m_usage_text) {
             rf::console::output(rf::strings::usage, nullptr);
-            rf::console::printf("     %s", m_usage_text);
+            rf::console::print("     {}", m_usage_text);
         }
     }
 };

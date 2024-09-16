@@ -1,12 +1,13 @@
-// Win32++   Version 8.7.0
-// Release Date: 12th August 2019
+// Win32++   Version 9.6.1
+// Release Date: 29th July 2024
 //
 //      David Nash
 //      email: dnash@bigpond.net.au
 //      url: https://sourceforge.net/projects/win32-framework
+//           https://github.com/DavidNash2024/Win32xx
 //
 //
-// Copyright (c) 2005-2019  David Nash
+// Copyright (c) 2005-2024  David Nash
 //
 // Permission is hereby granted, free of charge, to
 // any person obtaining a copy of this software and
@@ -61,8 +62,9 @@ namespace Win32xx
     // Forward declaration
     class CBitmap;
 
+
     ///////////////////////////////////////
-    // The CImageList class which provides the functionality of image lists.
+    // The CImageList class that provides the functionality of image lists.
     // An image list is a collection of images of the same size, each of
     // which can be referred to by its index.
     class CImageList
@@ -74,24 +76,26 @@ namespace Win32xx
         CImageList();
         CImageList(HIMAGELIST images);
         CImageList(const CImageList& rhs);
-        CImageList& operator = (const CImageList& rhs);
-        void operator = (const HIMAGELIST rhs);
-        ~CImageList();
+        CImageList& operator=(const CImageList& rhs);
+        CImageList& operator=(HIMAGELIST rhs);
+        virtual ~CImageList();
 
-        //Initialization
+        // Initialization
         BOOL Create(int cx, int cy, UINT flags, int initial, int grow);
-        BOOL Create(UINT bitmapID, int cx, int grow, COLORREF mask);
-        BOOL Create(LPCTSTR pBitmapID, int cx, int grow, COLORREF mask);
+        BOOL Create(int bitmapID, int cx, int grow, COLORREF mask);
+        BOOL Create(LPCTSTR resourceName, int cx, int grow, COLORREF mask);
         BOOL Create(HIMAGELIST images);
-
-#ifndef _WIN32_WCE
         BOOL CreateDisabledImageList(HIMAGELIST normalImages);
-#endif
+        void CreateDragImage(HWND header, int index);
+        void CreateDragImage(HWND listView, int item, CPoint& pt);
+        void CreateDragImage(HWND treeView, HTREEITEM item);
 
-        //Operations
+        // Operations
+        int Add(HBITMAP bitmap) const;
         int Add(HBITMAP bitmap, HBITMAP mask) const;
         int Add(HBITMAP bitmap, COLORREF mask) const;
         int Add(HICON icon) const;
+        int AddIcon(UINT iconID) const;
         void Attach(HIMAGELIST images);
         BOOL BeginDrag(int image, CPoint hotSpot) const;
         BOOL Copy(int dst, int src, UINT flags /*= ILCF_MOVE*/) const;
@@ -112,7 +116,7 @@ namespace Win32xx
         int Replace(int image, HICON icon) const;
         BOOL Write(LPSTREAM pStream) const;
 
-        //Attributes
+        // Accessors and mutators
         COLORREF GetBkColor() const;
         HIMAGELIST GetDragImage(POINT* pPoint, POINT* pHotspot) const;
         HIMAGELIST GetHandle() const;
@@ -123,11 +127,12 @@ namespace Win32xx
         COLORREF SetBkColor(COLORREF bckgnd) const;
         BOOL SetDragCursorImage(int drag, int dxHotspot, int dyHotspot) const;
 
-        //Operators
+        // Operators
         operator HIMAGELIST () const;
 
     private:
         void AddToMap() const;
+        void Assign(HIMAGELIST images);
         void Release();
         BOOL RemoveFromMap() const;
 
@@ -154,15 +159,17 @@ namespace Win32xx
     //       Both objects manipulate the one HIMAGELIST.
     inline CImageList::CImageList(const CImageList& rhs)
     {
+        CThreadLock mapLock(GetApp()->m_gdiLock);
         m_pData = rhs.m_pData;
         InterlockedIncrement(&m_pData->count);
     }
 
     // Note: A copy of a CImageList is a clone of the original.
-    inline CImageList& CImageList::operator = (const CImageList& rhs)
+    inline CImageList& CImageList::operator=(const CImageList& rhs)
     {
         if (this != &rhs)
         {
+            CThreadLock mapLock(GetApp()->m_gdiLock);
             InterlockedIncrement(&rhs.m_pData->count);
             Release();
             m_pData = rhs.m_pData;
@@ -171,9 +178,10 @@ namespace Win32xx
         return *this;
     }
 
-    inline void CImageList::operator = (const HIMAGELIST rhs)
+    inline CImageList& CImageList::operator=(HIMAGELIST rhs)
     {
         Attach(rhs);
+        return *this;
     }
 
     inline CImageList::~CImageList()
@@ -181,41 +189,23 @@ namespace Win32xx
         Release();
     }
 
-    // Store the HIMAGELIST and CImageList pointer in the HIMAGELIST map
+    // Store the HIMAGELIST and CImageList pointer in the HIMAGELIST map.
     inline void CImageList::AddToMap() const
     {
-        assert( GetApp() );
         assert(m_pData->images);
-
         GetApp()->AddCImlData(m_pData->images, m_pData);
     }
 
-    inline BOOL CImageList::RemoveFromMap() const
+    // Adds an image or images to an image list.
+    // Refer to ImageList_Add in the Windows API documentation for more information.
+    inline int CImageList::Add(HBITMAP bitmap) const
     {
-        BOOL success = FALSE;
-
-        if ( GetApp() )
-        {
-            // Allocate an iterator for our CImageList data
-            std::map<HIMAGELIST, CIml_Data*, CompareHIMAGELIST>::iterator m;
-
-            CWinApp* pApp = GetApp();
-            CThreadLock mapLock(pApp->m_wndLock);
-            m = pApp->m_mapCImlData.find(m_pData->images);
-            if (m != pApp->m_mapCImlData.end())
-            {
-                // Erase the CImageList data entry from the map
-                pApp->m_mapCImlData.erase(m);
-                success = TRUE;
-            }
-
-        }
-
-        return success;
+        assert(m_pData);
+        assert(m_pData->images);
+        return ImageList_Add(m_pData->images, bitmap, 0);
     }
 
     // Adds an image or images to an image list, generating a mask from the specified bitmap.
-    // The mask parameter can be NULL.
     // Refer to ImageList_Add in the Windows API documentation for more information.
     inline int CImageList::Add(HBITMAP bitmap, HBITMAP mask) const
     {
@@ -233,7 +223,7 @@ namespace Win32xx
         return ImageList_AddMasked(m_pData->images, bitmap, mask);
     }
 
-    // Adds an Icon to the image list
+    // Adds an icon specified by its handle to the image list.
     // Refer to ImageList_ReplaceIcon in the Windows API documentation for more information.
     inline int CImageList::Add(HICON icon) const
     {
@@ -244,23 +234,32 @@ namespace Win32xx
         return ImageList_ReplaceIcon(m_pData->images, -1, icon);
     }
 
+    // Adds an icon specified by its resource ID to the image list.
+    // Refer to ImageList_ReplaceIcon in the Windows API documentation for more information.
+    inline int CImageList::AddIcon(UINT iconID) const
+    {
+        HICON icon = GetApp()->LoadIcon(iconID);
+        return Add(icon);
+    }
+
     // Attaches an existing ImageList to this CImageList.
     inline void CImageList::Attach(HIMAGELIST images)
     {
+        CThreadLock mapLock(GetApp()->m_wndLock);
         assert(m_pData);
 
         if (images != m_pData->images)
         {
-            // Release any existing ImageList
+            // Release any existing ImageList.
             if (m_pData->images)
             {
                 Release();
                 m_pData = new CIml_Data;
             }
 
-            if (images)
+            if (images != NULL)
             {
-                // Add the image list to this CImageList
+                // Add the image list to this CImageList.
                 CIml_Data* pCImlData = GetApp()->GetCImlData(images);
                 if (pCImlData)
                 {
@@ -275,6 +274,14 @@ namespace Win32xx
                 }
             }
         }
+    }
+
+    // Attach and own the specfied imagelist.
+    inline void CImageList::Assign(HIMAGELIST images)
+    {
+        CThreadLock mapLock(GetApp()->m_gdiLock);
+        Attach(images);
+        m_pData->isManagedHiml = true;
     }
 
     // Begins dragging an image.
@@ -314,13 +321,12 @@ namespace Win32xx
 
         HIMAGELIST images = ImageList_Create(cx, cy, flags, initial, grow);
 
-        if (images)
-        {
-            Attach(images);
-            m_pData->isManagedHiml = TRUE;
-        }
+        if (images == NULL)
+            throw CResourceException(GetApp()->MsgImageList());
 
-        return (images != 0 );
+        Assign(images);
+
+        return (images != NULL) ? TRUE : FALSE;
     }
 
     // Creates a new image list.
@@ -329,12 +335,12 @@ namespace Win32xx
     // crMask   The color used to generate a mask. Each pixel of this color in the specified bitmap is changed to black,
     //          and the corresponding bit in the mask is set to 1. If this parameter is the CLR_NONE value, no mask is generated.
     // Refer to ImageList_Create in the Windows API documentation for more information.
-    inline BOOL CImageList::Create(UINT bitmapID, int cx, int grow, COLORREF mask)
+    inline BOOL CImageList::Create(int bitmapID, int cx, int grow, COLORREF mask)
     {
         assert(m_pData);
 
-        LPCTSTR pBitmapName = MAKEINTRESOURCE (bitmapID);
-        return Create(pBitmapName, cx, grow, mask);
+        LPCTSTR bitmapName = MAKEINTRESOURCE (bitmapID);
+        return Create(bitmapName, cx, grow, mask);
     }
 
     // Creates a new image list.
@@ -344,19 +350,17 @@ namespace Win32xx
     // crMask   The color used to generate a mask. Each pixel of this color in the specified bitmap is changed to black,
     //          and the corresponding bit in the mask is set to 1. If this parameter is the CLR_NONE value, no mask is generated.
     // Refer to ImageList_LoadBitmap in the Windows API documentation for more information.
-    inline BOOL CImageList::Create(LPCTSTR pResourceName, int cx, int grow, COLORREF mask)
+    inline BOOL CImageList::Create(LPCTSTR resourceName, int cx, int grow, COLORREF mask)
     {
         assert(m_pData);
 
-        HIMAGELIST images = ImageList_LoadBitmap(GetApp()->GetInstanceHandle(), pResourceName, cx, grow, mask);
+        HIMAGELIST images = ImageList_LoadBitmap(GetApp()->GetResourceHandle(), resourceName, cx, grow, mask);
+        if (images == NULL)
+            throw CResourceException(GetApp()->MsgImageList());
 
-        if (images)
-        {
-            Attach(images);
-            m_pData->isManagedHiml = TRUE;
-        }
+        Assign(images);
 
-        return (images != 0 );
+        return (images != NULL) ? TRUE : FALSE;
     }
 
     // Creates a duplicate ImageList
@@ -364,34 +368,84 @@ namespace Win32xx
     inline BOOL CImageList::Create(HIMAGELIST images)
     {
         assert(m_pData);
+
         HIMAGELIST copyImages = ImageList_Duplicate(images);
+        if (copyImages == NULL)
+            throw CResourceException(GetApp()->MsgImageList());
 
-        if (copyImages)
-        {
-            Attach(copyImages);
-            m_pData->isManagedHiml = TRUE;
-        }
+        Assign(copyImages);
 
-        return (copyImages != 0 );
+        return (copyImages != NULL) ? TRUE : FALSE;
+    }
+
+    // Creates a transparent version of an item image within the header control.
+    // Refer to Header_CreateDragImage in the Windows API documentation for more information.
+    inline void CImageList::CreateDragImage(HWND header, int index)
+    {
+        assert(::IsWindow(header));
+        HIMAGELIST images = Header_CreateDragImage(header, index);
+
+        if (images == NULL)
+            throw CResourceException(GetApp()->MsgGdiImageList());
+
+        Assign(images);
+    }
+
+    // Creates a drag image list for the specified item.
+    // Refer to ListView_CreateDragImage in the Windows API documentation for more information.
+    inline void CImageList::CreateDragImage(HWND listView, int item, CPoint& pt)
+    {
+        assert(::IsWindow(listView));
+        HIMAGELIST images = ListView_CreateDragImage(listView, item, &pt);
+
+        if (images == NULL)
+            throw CResourceException(GetApp()->MsgGdiImageList());
+
+        Assign(images);
+    }
+
+    // Creates a dragging bitmap for the specified item in a tree-view control.
+    // It also creates an image list for the bitmap and adds the bitmap to the image list.
+    // Refer to TreeView_CreateDragImage in the Windows API documentation for more information.
+    inline void CImageList::CreateDragImage(HWND treeView, HTREEITEM item)
+    {
+        assert(::IsWindow(treeView));
+        HIMAGELIST images = TreeView_CreateDragImage(treeView, item);
+
+        if (images == NULL)
+            throw CResourceException(GetApp()->MsgGdiImageList());
+
+        Assign(images);
     }
 
     // Destroys an image list.
     inline void CImageList::DeleteImageList()
     {
+        CThreadLock mapLock(GetApp()->m_gdiLock);
         assert(m_pData);
-        if (m_pData->images != 0)
+
+        if (m_pData && m_pData->images != NULL)
         {
-            ImageList_Destroy(Detach());
+            RemoveFromMap();
+
+            ImageList_Destroy(m_pData->images);
+            m_pData->images = NULL;
+            m_pData->isManagedHiml = false;
         }
     }
 
     // Detaches the HIMAGELIST from all CImageList objects.
+    // Note: We rarely need to detach the HIMAGELIST from CImageList.
+    // The framework will delete the HIMAGELIST automatically if required.
     inline HIMAGELIST CImageList::Detach()
     {
+        CThreadLock mapLock(GetApp()->m_gdiLock);
         assert(m_pData);
+
         HIMAGELIST images = m_pData->images;
         RemoveFromMap();
-        m_pData->images = 0;
+        m_pData->images = NULL;
+        m_pData->isManagedHiml = false;
 
         if (m_pData->count > 0)
         {
@@ -482,7 +536,7 @@ namespace Win32xx
         assert(m_pData->images);
         ImageList_EndDrag();
     }
-    
+
     // Creates an icon or cursor based on an image and mask in an image list.
     // Refer to ImageList_ExtractIcon in the Windows API documentation for more information.
     inline HICON CImageList::ExtractIcon(int index) const
@@ -555,13 +609,10 @@ namespace Win32xx
     // Refer to ImageList_Read in the Windows API documentation for more information.
     inline void CImageList::Read(LPSTREAM pStream)
     {
-        assert(m_pData->images);
         HIMAGELIST images =  ImageList_Read(pStream);
-
         if (images)
         {
-            m_pData->isManagedHiml = TRUE;
-            Attach(images);
+            Assign(images);
         }
     }
 
@@ -571,6 +622,29 @@ namespace Win32xx
     {
         assert(m_pData->images);
         return ImageList_Remove(m_pData->images, image);
+    }
+
+    // Removes the HIMAGELIST and CImageList pointer from the HIMAGELIST map
+    inline BOOL CImageList::RemoveFromMap() const
+    {
+        BOOL success = FALSE;
+
+        if (CWinApp::SetnGetThis() != NULL)          // Is the CWinApp object still valid?
+        {
+            CThreadLock mapLock(GetApp()->m_wndLock);
+
+            // Find the CImageList data entry in the map.
+            std::map<HIMAGELIST, CIml_Data*, CompareHIMAGELIST>::iterator m;
+            m = GetApp()->m_mapCImlData.find(m_pData->images);
+            if (m != GetApp()->m_mapCImlData.end())
+            {
+                // Erase the CImageList data entry from the map
+                GetApp()->m_mapCImlData.erase(m);
+                success = TRUE;
+            }
+        }
+
+        return success;
     }
 
     // Replaces an image in an image list with a new image.
@@ -619,16 +693,21 @@ namespace Win32xx
     // Retrieves the image list's handle.
     inline CImageList::operator HIMAGELIST () const
     {
+        CThreadLock mapLock(GetApp()->m_gdiLock);
         return m_pData->images;
     }
 
+    // Decrements the reference count.
+    // Destroys m_pData if the reference count is zero.
     inline void CImageList::Release()
     {
+        if (CWinApp::SetnGetThis())
+            CThreadLock mapLock(GetApp()->m_gdiLock);
         assert(m_pData);
 
         if (InterlockedDecrement(&m_pData->count) == 0)
         {
-            if (m_pData->images != NULL)
+            if (m_pData->images != 0)
             {
                 if (m_pData->isManagedHiml)
                 {
@@ -639,17 +718,13 @@ namespace Win32xx
             }
 
             delete m_pData;
-            m_pData = 0;
+            m_pData = NULL;
         }
     }
-
-
-#ifndef _WIN32_WCE
 
     // Creates a gray scale image list from the specified color image list.
     inline BOOL CImageList::CreateDisabledImageList(HIMAGELIST normalImages)
     {
-        assert(NULL == m_pData->images);
         assert(normalImages);
 
         int count = ImageList_GetImageCount(normalImages);
@@ -658,43 +733,41 @@ namespace Win32xx
             int cx, cy;
             ImageList_GetIconSize(normalImages, &cx, &cy);
 
-            // Create the disabled ImageList
+            // Create the disabled ImageList.
             Create(cx, cy, ILC_COLOR24 | ILC_MASK, count, 0);
 
-            // Process each image in the ImageList
+            // Process each image in the ImageList.
             for (int i = 0 ; i < count; ++i)
             {
-                CClientDC DesktopDC(NULL);
-                CMemDC memDC(NULL);
-                memDC.CreateCompatibleBitmap(DesktopDC, cx, cx);
+                CClientDC desktopDC(HWND_DESKTOP);
+                CMemDC memDC(desktopDC);
+                memDC.CreateCompatibleBitmap(desktopDC, cx, cx);
                 CRect rc;
                 rc.SetRect(0, 0, cx, cx);
 
-                // Set the mask color to grey for the new ImageList
+                // Set the mask color to gray for the new ImageList
                 COLORREF mask = RGB(200, 200, 200);
-                if (GetDeviceCaps(DesktopDC, BITSPIXEL) < 24)
+                if (GetDeviceCaps(desktopDC, BITSPIXEL) < 24)
                 {
-                    HPALETTE hPal = reinterpret_cast<HPALETTE>(GetCurrentObject(DesktopDC, OBJ_PAL));
+                    HPALETTE hPal = static_cast<HPALETTE>(GetCurrentObject(desktopDC, OBJ_PAL));
                     UINT index = GetNearestPaletteIndex(hPal, mask);
                     if (index != CLR_INVALID)
                         mask = PALETTEINDEX(index);
                 }
                 memDC.SolidFill(mask, rc);
 
-                // Draw the image on the memory DC
+                // Draw the image on the memory DC.
                 ImageList_Draw(normalImages, i, memDC, 0, 0, ILD_NORMAL);
 
-                // Detach the bitmap so we can use it.
+                // Convert the bitmap to grayscale and add it to the imagelist.
                 CBitmap bitmap = memDC.DetachBitmap();
                 bitmap.ConvertToDisabled(mask);
                 Add(bitmap, mask);
             }
         }
 
-        return ( m_pData->images != 0 );
+        return (m_pData->images != NULL) ? TRUE : FALSE;
     }
-
-#endif
 
 }   // namespace Win32xx
 
