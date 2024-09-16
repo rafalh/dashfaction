@@ -91,7 +91,7 @@ void multi_spectate_set_target_player(rf::Player* player)
     if (entity) {
         // make sure weapon mesh is loaded now
         rf::player_fpgun_set_state(player, entity->ai.current_primary_weapon);
-        xlog::trace("FpgunMesh %p", player->weapon_mesh_handle);
+        xlog::trace("FpgunMesh {}", player->weapon_mesh_handle);
 
         // Hide target player from camera
         entity->local_player = player;
@@ -266,7 +266,7 @@ static ConsoleCommand2 spectate_mode_minimal_ui_cmd{
     "spectate_mode_minimal_ui",
     []() {
         g_spectate_mode_minimal_ui = !g_spectate_mode_minimal_ui;
-        rf::console::printf("Spectate mode minimal UI is %s", g_spectate_mode_minimal_ui ? "enabled" : "disabled");
+        rf::console::print("Spectate mode minimal UI is {}", g_spectate_mode_minimal_ui ? "enabled" : "disabled");
     },
     "Toggles spectate mode minimal UI",
 };

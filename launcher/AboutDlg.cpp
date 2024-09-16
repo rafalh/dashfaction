@@ -64,13 +64,13 @@ void AboutDlg::OpenLicensingInfo()
     wchar_t buf[MAX_PATH];
     DWORD result = GetModuleFileNameW(nullptr, buf, std::size(buf));
     if (!result) {
-        xlog::error("GetModuleFileNameW failed: %lu", GetLastError());
+        xlog::error("GetModuleFileNameW failed: {}", GetLastError());
         return;
     }
 
     std::wstring licensing_info_path = get_dir_from_path(buf) + L"\\licensing-info.txt";
     HINSTANCE exec_result = ShellExecuteW(*this, L"open", licensing_info_path.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
     if (reinterpret_cast<int>(exec_result) <= 32) {
-        xlog::error("ShellExecuteA failed %p", exec_result);
+        xlog::error("ShellExecuteA failed {}", static_cast<void*>(exec_result));
     }
 }

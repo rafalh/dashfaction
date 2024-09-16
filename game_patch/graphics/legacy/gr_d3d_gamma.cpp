@@ -37,14 +37,14 @@ static bool set_gamma_ramp_via_gdi(D3DGAMMARAMP* gamma_ramp)
     //HDC hdc = GetDC(rf::main_wnd);
     HDC hdc = CreateDCA("DISPLAY", nullptr, nullptr, nullptr);
     if (!hdc) {
-        xlog::warn("CreateDCA failed, error %lu", GetLastError());
+        xlog::warn("CreateDCA failed, error {}", GetLastError());
         return false;
     }
     int cmcap = GetDeviceCaps(hdc, COLORMGMTCAPS);
     if (cmcap != CM_GAMMA_RAMP) {
         static bool once = false;
         if (!once) {
-            xlog::warn("Display device does not support gamma ramps (cmcap %x)", cmcap);
+            xlog::warn("Display device does not support gamma ramps (cmcap {:x})", cmcap);
             once = true;
         }
         // try it anyway - Wine returns 0 here but SetDeviceGammaRamp actually work
@@ -56,7 +56,7 @@ static bool set_gamma_ramp_via_gdi(D3DGAMMARAMP* gamma_ramp)
 
     if (!result) {
         if (cmcap == CM_GAMMA_RAMP) {
-            xlog::info("SetDeviceGammaRamp failed, error %lu", GetLastError());
+            xlog::info("SetDeviceGammaRamp failed, error {}", GetLastError());
         }
         return false;
     }
@@ -103,7 +103,7 @@ static void gamma_msg_handler(UINT msg, WPARAM w_param, [[maybe_unused]] LPARAM 
     switch (msg) {
     case WM_ACTIVATE:
     case WM_ACTIVATEAPP:
-        xlog::trace("WM_ACTIVATE %x", w_param);
+        xlog::trace("WM_ACTIVATE {:x}", w_param);
         if (g_gamma_ramp_initialized) {
             if (w_param)
                 set_gamma_ramp(&g_gamma_ramp);

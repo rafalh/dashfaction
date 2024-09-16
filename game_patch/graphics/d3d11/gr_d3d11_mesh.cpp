@@ -2,7 +2,6 @@
 #include <cstring>
 #include <cassert>
 #include <windows.h>
-#include <patch_common/FunHook.h>
 #include <common/ComPtr.h>
 #include <xlog/xlog.h>
 #include "../../rf/gr/gr.h"
@@ -107,7 +106,7 @@ namespace df::gr::d3d11
                     chunk.texture_idx, chunk.mode, double_sided);
             }
         }
-        xlog::debug("Creating mesh geometry buffers: verts %d inds %d", gpu_verts.size(), gpu_inds.size());
+        xlog::debug("Creating mesh geometry buffers: verts {} inds {}", gpu_verts.size(), gpu_inds.size());
 
         vertex_buffer.write(gpu_verts.data(), gpu_verts.size(), render_context);
         index_buffer.write(gpu_inds.data(), gpu_inds.size(), render_context);
@@ -286,7 +285,7 @@ namespace df::gr::d3d11
                     chunk.texture_idx, chunk.mode, double_sided);
             }
         }
-        xlog::debug("Creating mesh render buffer - verts %d inds %d", gpu_verts_0.size(), gpu_inds.size());
+        xlog::debug("Creating mesh render buffer - verts {} inds {}", gpu_verts_0.size(), gpu_inds.size());
 
         CD3D11_BUFFER_DESC vb_0_desc{
             sizeof(gpu_verts_0[0]) * gpu_verts_0.size(),
@@ -457,8 +456,7 @@ namespace df::gr::d3d11
             // used by rocket launcher scanner together with flag 1 so this code block seems unused
             assert(false);
         }
-        rf::ubyte alpha = static_cast<ubyte>(params.alpha);
-        rf::Color color{255, 255, 255, alpha};
+        rf::Color color{255, 255, 255};
         if (!ir_scanner) {
             // Ignore ambient_color from params, it changes sharply and RF uses it only indirectly for
             // its hard-coded lights
@@ -468,13 +466,16 @@ namespace df::gr::d3d11
                 static_cast<rf::ubyte>(ambient_r * 255.0f),
                 static_cast<rf::ubyte>(ambient_g * 255.0f),
                 static_cast<rf::ubyte>(ambient_b * 255.0f),
-                alpha
+                255
             );
             // RF uses some hard-coded lights here but for now let's keep it simple
             color.red += 40;
             color.green += 40;
             color.blue += 40;
+        } else {
+            color = params.self_illum;
         }
+        color.alpha = static_cast<ubyte>(params.alpha);
 
         auto& batches = cache.get_batches(lod_index);
 
@@ -575,7 +576,7 @@ namespace df::gr::d3d11
     {
         if (size_ + n > capacity_) {
             unsigned new_cap = std::max(capacity_ * 2, size_ + n);
-            xlog::info("Reallocating mesh buffer: %u", new_cap);
+            xlog::info("Reallocating mesh buffer: {}", new_cap);
             reserve(new_cap, render_context);
         }
 

@@ -127,7 +127,7 @@ ConsoleCommand2 mesh_static_lighting_cmd{
         g_game_config.mesh_static_lighting = !g_game_config.mesh_static_lighting;
         g_game_config.save();
         recalc_mesh_static_lighting();
-        rf::console::printf("Mesh static lighting is %s", g_game_config.mesh_static_lighting ? "enabled" : "disabled");
+        rf::console::print("Mesh static lighting is {}", g_game_config.mesh_static_lighting ? "enabled" : "disabled");
     },
     "Toggle mesh static lighting calculation",
 };
