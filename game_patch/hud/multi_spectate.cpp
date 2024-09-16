@@ -204,6 +204,15 @@ bool multi_spectate_execute_action(rf::ControlConfigAction action, bool was_pres
     return false;
 }
 
+void multi_spectate_on_player_death(rf::Player* player, rf::Player* killer)
+{
+    if (g_spectate_mode_target == player) {
+        // when spectated player dies, follow the player who killed them
+        multi_spectate_set_target_player(killer);
+        return;
+    }
+}
+
 void multi_spectate_on_destroy_player(rf::Player* player)
 {
     if (player != rf::local_player) {
