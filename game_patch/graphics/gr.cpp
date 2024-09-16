@@ -1,6 +1,5 @@
 #include <algorithm>
 #include <common/error/d3d-error.h>
-#include <common/utils/string-utils.h>
 #include <common/utils/list-utils.h>
 #include <common/utils/os-utils.h>
 #include <common/config/BuildConfig.h>

@@ -1,4 +1,5 @@
 #include <cstring>
+#include <cassert>
 #include "gr_d3d11.h"
 #include "gr_d3d11_texture.h"
 #include "../../bmpman/bmpman.h"

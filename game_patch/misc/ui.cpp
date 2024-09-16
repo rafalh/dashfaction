@@ -3,6 +3,7 @@
 #include <patch_common/FunHook.h>
 #include <patch_common/CallHook.h>
 #include <format>
+#include <algorithm>
 #include "../rf/ui.h"
 #include "../rf/input.h"
 #include "../rf/misc.h"

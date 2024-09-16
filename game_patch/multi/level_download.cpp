@@ -549,7 +549,7 @@ void multi_level_download_do_frame()
         unsigned bytes_received = operation.get_bytes_received();
         float bytes_per_sec = operation.get_bytes_per_sec();
 
-        auto level_name_str = std::string{"Level name: "} + info.name;
+        auto level_name_str = std::format("Level name: {}", info.name);
         int str_w, str_h;
         rf::gr::get_string_size(&str_w, &str_h, level_name_str.c_str(), -1, medium_font);
         int info_x = center_x - str_w / 2;
@@ -557,7 +557,7 @@ void multi_level_download_do_frame()
         rf::gr::string(info_x, y, level_name_str.c_str(), medium_font);
         y += info_spacing;
 
-        auto created_by_str = std::string{"Created by: "} + info.author;
+        auto created_by_str = std::format("Created by: {}", info.author);
         rf::gr::string(info_x, y, created_by_str.c_str(), medium_font);
         y += info_spacing;
 
@@ -570,7 +570,7 @@ void multi_level_download_do_frame()
         if (bytes_per_sec > 0) {
             int remaining_size = info.size_in_bytes - bytes_received;
             int secs_left = static_cast<int>(remaining_size / bytes_per_sec);
-            auto time_left_str = std::to_string(secs_left) + " seconds left";
+            auto time_left_str = std::format("{} seconds left", secs_left);
             rf::gr::string(info_x, y, time_left_str.c_str(), medium_font);
         }
 

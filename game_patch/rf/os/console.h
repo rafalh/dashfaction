@@ -1,8 +1,8 @@
 #pragma once
 
+#include <common/utils/string-utils.h>
 #include <patch_common/MemUtils.h>
 #include <memory>
-#include <common/utils/string-utils.h>
 #include "string.h" // NOLINT(modernize-deprecated-headers)
 #include "../gr/gr.h"
 

@@ -13,7 +13,6 @@
 #include "../multi/multi.h"
 #include "../hud/multi_spectate.h"
 #include <common/utils/list-utils.h>
-#include <common/utils/string-utils.h>
 #include <common/config/GameConfig.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CallHook.h>

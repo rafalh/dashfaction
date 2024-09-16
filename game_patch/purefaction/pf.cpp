@@ -1,6 +1,5 @@
 #include <cstddef>
 #include <cstring>
-#include <sstream>
 #include <cassert>
 #include <common/config/BuildConfig.h>
 #include <common/utils/list-utils.h>

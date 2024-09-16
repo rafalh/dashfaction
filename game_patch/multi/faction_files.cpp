@@ -6,7 +6,6 @@
 #include <functional>
 #include <stdexcept>
 #include <xlog/xlog.h>
-#include <common/utils/string-utils.h>
 #include "faction_files.h"
 
 static const char level_download_agent_name[] = "Dash Faction";
@@ -55,7 +54,7 @@ std::optional<FactionFilesClient::LevelInfo> FactionFilesClient::parse_level_inf
 
 std::optional<FactionFilesClient::LevelInfo> FactionFilesClient::find_map(const char* file_name)
 {
-    auto url = std::string{level_download_base_url} + "/findmap.php?rflName=" + encode_uri_component(file_name);
+    auto url = std::format("{}/findmap.php?rflName={}", level_download_base_url, encode_uri_component(file_name));
 
     xlog::trace("Fetching level info: %s", file_name);
     HttpRequest req{url, "GET", session_};
