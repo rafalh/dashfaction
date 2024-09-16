@@ -1,5 +1,7 @@
 #include <windows.h>
 #include <ctime>
+#include <cstddef>
+#include <format>
 #include <patch_common/CodeInjection.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CallHook.h>
@@ -14,11 +16,11 @@
 #include "../rf/cutscene.h"
 #include "../multi/multi.h"
 
-static std::unique_ptr<byte* []> g_screenshot_scanlines_buf;
+static std::unique_ptr<std::byte* []> g_screenshot_scanlines_buf;
 
 static std::optional<std::string> get_screenshots_dir()
 {
-    auto full_path = string_format("%s\\screenshots", rf::root_path);
+    auto full_path = std::format("{}\\screenshots", rf::root_path);
     if (full_path.size() > rf::max_path_len - 20) {
         xlog::error("Screenshots directory path is too long!");
         return {};
@@ -26,7 +28,7 @@ static std::optional<std::string> get_screenshots_dir()
     if (CreateDirectoryA(full_path.c_str(), nullptr))
         xlog::info("Created screenshots directory");
     else if (GetLastError() != ERROR_ALREADY_EXISTS) {
-        xlog::error("Failed to create screenshots directory %lu", GetLastError());
+        xlog::error("Failed to create screenshots directory {}", GetLastError());
         return {};
     }
     return {full_path};
@@ -85,7 +87,7 @@ FunHook<void(char*)> game_print_screen_hook{
 CodeInjection jpeg_write_bitmap_overflow_fix1{
     0x0055A066,
     [](auto& regs) {
-        g_screenshot_scanlines_buf = std::make_unique<byte* []>(rf::gr::screen.max_h);
+        g_screenshot_scanlines_buf = std::make_unique<std::byte* []>(rf::gr::screen.max_h);
         regs.ecx = g_screenshot_scanlines_buf.get();
         regs.eip = 0x0055A06D;
     },
@@ -127,7 +129,7 @@ static ConsoleCommand2 screenshot_cmd{
 
         char buf[MAX_PATH];
         game_print_screen(buf);
-        rf::console::printf("Screenshot saved in %s", buf);
+        rf::console::print("Screenshot saved in {}", buf);
     },
 };
 

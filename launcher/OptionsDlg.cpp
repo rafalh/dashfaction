@@ -7,8 +7,8 @@
 
 OptionsDlg::OptionsDlg() :
     CDialog(IDD_OPTIONS),
-    m_display_dlg(m_conf, m_video_info, m_graphics_dlg),
-    m_graphics_dlg(m_conf, m_video_info),
+    m_display_dlg(m_conf, m_graphics_dlg),
+    m_graphics_dlg(m_conf),
     m_misc_dlg(m_conf),
     m_audio_dlg(m_conf),
     m_multiplayer_dlg(m_conf),

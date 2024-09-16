@@ -11,7 +11,7 @@ CMake by default selects Win64 target platform. Please change it manually to Win
 Linux
 -----
 
-Building on Ubuntu 22.04 based distribution is recommended.
+Building on Ubuntu 24.04 based distribution is recommended.
 Building on other Linux distributions should be possible but may require different/additional steps that are not
 covered by this instruction.
 

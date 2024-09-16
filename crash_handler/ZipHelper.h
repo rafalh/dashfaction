@@ -40,7 +40,7 @@ public:
 
         std::ifstream file(path, std::ios_base::in | std::ios_base::binary);
         if (!file)
-            THROW_EXCEPTION("cannot open %s", path);
+            THROW_EXCEPTION("cannot open {}", path);
 
         char buf[4096];
         while (!file.eof()) {

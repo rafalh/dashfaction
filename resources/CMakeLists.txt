@@ -5,14 +5,19 @@ else()
 endif()
 
 function(add_packfile packfile_name)
+
+    list(TRANSFORM ARGN REPLACE "([^:]*):.*" "\\1" OUTPUT_VARIABLE input_deps)
+    list(TRANSFORM ARGN REPLACE "[^:]*:(.*)" "\\1" OUTPUT_VARIABLE input_paths)
+
     add_custom_command(
         OUTPUT ${CMAKE_BINARY_DIR}/bin/${packfile_name}
-        COMMAND ${VPP_TOOL} -c ${CMAKE_BINARY_DIR}/bin/${packfile_name} ${ARGN}
-        DEPENDS ${ARGN}
+        COMMAND ${VPP_TOOL} -c ${CMAKE_BINARY_DIR}/bin/${packfile_name} ${input_paths}
+        DEPENDS ${input_deps}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     )
     add_custom_target(${packfile_name} ALL DEPENDS ${CMAKE_BINARY_DIR}/bin/${packfile_name})
 endfunction()
+
 
 add_packfile(dashfaction.vpp
     maps_df.txt
@@ -82,6 +87,12 @@ add_packfile(dashfaction.vpp
     meshes/Vat1.v3m
     meshes/coffeesmokedtbl2.v3m
     meshes/coffeesmokedtblAlt.v3m
+
+    standard_vs:${CMAKE_BINARY_DIR}/shaders/standard_vs.bin
+    character_vs:${CMAKE_BINARY_DIR}/shaders/character_vs.bin
+    transformed_vs:${CMAKE_BINARY_DIR}/shaders/transformed_vs.bin
+    standard_ps:${CMAKE_BINARY_DIR}/shaders/standard_ps.bin
+    ui_ps:${CMAKE_BINARY_DIR}/shaders/ui_ps.bin
 )
 
 # Copy licensing-info.txt
@@ -91,3 +102,5 @@ add_custom_command(
     MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/licensing-info.txt
 )
 add_custom_target(LicensingInfoTxt ALL DEPENDS ${CMAKE_BINARY_DIR}/bin/licensing-info.txt)
+
+add_subdirectory(shaders)

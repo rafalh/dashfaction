@@ -48,39 +48,37 @@ void print_kill_message(rf::Player* killed_player, rf::Player* killer_player)
     if (!killer_player) {
         color_id = rf::ChatMsgColor::default_;
         mui_msg = null_to_empty(rf::strings::was_killed_mysteriously);
-        msg = rf::String::format("%s%s", killed_player->name.c_str(), mui_msg);
+        msg = rf::String::format("{}{}", killed_player->name, mui_msg);
     }
     else if (killed_player == rf::local_player) {
         color_id = rf::ChatMsgColor::white_white;
         if (killer_player == killed_player) {
             mui_msg = null_to_empty(rf::strings::you_killed_yourself);
-            msg = rf::String::format("%s", mui_msg);
+            msg = rf::String::format("{}", mui_msg);
         }
         else if (killer_entity && killer_entity->ai.current_primary_weapon == rf::riot_stick_weapon_type) {
             mui_msg = null_to_empty(rf::strings::you_just_got_beat_down_by);
-            msg = rf::String::format("%s%s!", mui_msg, killer_player->name.c_str());
+            msg = rf::String::format("{}{}!", mui_msg, killer_player->name);
         }
         else {
             mui_msg = null_to_empty(rf::strings::you_were_killed_by);
 
-            const char* weapon_name = nullptr;
+            auto& killer_name = killer_player->name;
             int killer_weapon_cls_id = killer_entity ? killer_entity->ai.current_primary_weapon : -1;
             if (killer_weapon_cls_id >= 0 && killer_weapon_cls_id < 64) {
                 auto& weapon_cls = rf::weapon_types[killer_weapon_cls_id];
-                weapon_name = weapon_cls.display_name.c_str();
+                auto& weapon_name = weapon_cls.display_name;
+                msg = rf::String::format("{}{} ({})!", mui_msg, killer_name, weapon_name);
             }
-
-            const char* killer_name = killer_player->name.c_str();
-            if (weapon_name)
-                msg = rf::String::format("%s%s (%s)!", mui_msg, killer_name, weapon_name);
-            else
-                msg = rf::String::format("%s%s!", mui_msg, killer_name);
+            else {
+                msg = rf::String::format("{}{}!", mui_msg, killer_name);
+            }
         }
     }
     else if (killer_player == rf::local_player) {
         color_id = rf::ChatMsgColor::white_white;
         mui_msg = null_to_empty(rf::strings::you_killed);
-        msg = rf::String::format("%s%s!", mui_msg, killed_player->name.c_str());
+        msg = rf::String::format("{}{}!", mui_msg, killed_player->name);
     }
     else {
         color_id = rf::ChatMsgColor::default_;
@@ -89,14 +87,14 @@ void print_kill_message(rf::Player* killed_player, rf::Player* killer_player)
                 mui_msg = null_to_empty(rf::strings::was_killed_by_her_own_hand);
             else
                 mui_msg = null_to_empty(rf::strings::was_killed_by_his_own_hand);
-            msg = rf::String::format("%s%s", killed_player->name.c_str(), mui_msg);
+            msg = rf::String::format("{}{}", killed_player->name, mui_msg);
         }
         else {
             if (killer_entity && killer_entity->ai.current_primary_weapon == rf::riot_stick_weapon_type)
                 mui_msg = null_to_empty(rf::strings::got_beat_down_by);
             else
                 mui_msg = null_to_empty(rf::strings::was_killed_by);
-            msg = rf::String::format("%s%s%s", killed_player->name.c_str(), mui_msg, killer_player->name.c_str());
+            msg = rf::String::format("{}{}{}", killed_player->name, mui_msg, killer_player->name);
         }
     }
 
@@ -124,7 +122,7 @@ void multi_apply_kill_reward(rf::Player* player)
     }
     if (conf.kill_reward_effective_health > 0.0f) {
         float life_to_add = std::min(conf.kill_reward_effective_health, max_life - ep->life);
-        float armor_to_add = std::min((conf.kill_reward_effective_health - life_to_add) / 2, max_armor - ep->life);
+        float armor_to_add = std::min((conf.kill_reward_effective_health - life_to_add) / 2, max_armor - ep->armor);
         ep->life += life_to_add;
         ep->armor += armor_to_add;
     }

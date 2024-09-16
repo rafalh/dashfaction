@@ -27,7 +27,7 @@ size_t g_max_heap_usage = 0;
 FunHook<int(size_t)> callnewh_hook{
     0x0057A212,
     [](size_t size) {
-        xlog::error("Failed to allocate %u bytes", size);
+        xlog::error("Failed to allocate {} bytes", size);
         return callnewh_hook.call_target(size);
     },
 };
@@ -42,7 +42,7 @@ FunHook<void*(size_t, bool)> nh_malloc_hook{
         g_max_heap_usage = std::max(g_max_heap_usage, g_current_heap_usage);
         void* ptr = nh_malloc_hook.call_target(size + 12, unk);
         if (!ptr) {
-            xlog::trace("Allocation of %u bytes failed!", size);
+            xlog::trace("Allocation of {} bytes failed!", size);
             return nullptr;
         }
         auto bytes = static_cast<std::byte*>(ptr);
@@ -52,7 +52,7 @@ FunHook<void*(size_t, bool)> nh_malloc_hook{
         // Overwrite old data to make detecting use-after-free errors easier
         std::memset(bytes + 8, 0xCC, size);
         auto result = bytes + 8;
-        xlog::trace("nh_malloc %x -> %p", size, result);
+        xlog::trace("nh_malloc {:x} -> {}", size, result);
         return result;
     },
 };
@@ -60,7 +60,7 @@ FunHook<void*(size_t, bool)> nh_malloc_hook{
 FunHook<void(void*)> free_hook{
     0x00573C71,
     [](void* ptr) {
-        xlog::trace("free %p", ptr);
+        xlog::trace("free {}", ptr);
         if (!ptr) {
             return;
         }
@@ -71,10 +71,10 @@ FunHook<void(void*)> free_hook{
         auto tail_marker = *reinterpret_cast<uint32_t*>(bytes + 8 + size);
         g_current_heap_usage -= size;
         if (front_marker != BOUND_MARKER) {
-            xlog::warn("Memory corruption detected: front marker %x", front_marker);
+            xlog::warn("Memory corruption detected: front marker {:x}", front_marker);
         }
         if (tail_marker != BOUND_MARKER) {
-            xlog::warn("Memory corruption detected: tail marker %x", tail_marker);
+            xlog::warn("Memory corruption detected: tail marker {:x}", tail_marker);
         }
         // Overwrite old data to make detecting use-after-free errors easier
         std::memset(bytes + 8, 0xCC, size);
@@ -94,7 +94,7 @@ FunHook<void*(void*, size_t)> realloc_hook{
         auto out_ptr = realloc_hook.call_target(bytes, size + 12);
         auto out_bytes = reinterpret_cast<std::byte*>(out_ptr);
         out_ptr = out_bytes + 8;
-        xlog::trace("realloc %p %x -> %p", ptr, size, out_ptr);
+        xlog::trace("realloc {} {:x} -> {}", ptr, size, out_ptr);
         return out_ptr;
     },
 };
@@ -102,7 +102,7 @@ FunHook<void*(void*, size_t)> realloc_hook{
 FunHook<size_t(void*)> msize_hook{
     0x00578BA2,
     [](void* ptr) {
-        xlog::trace("msize %p", ptr);
+        xlog::trace("msize {}", ptr);
         ptr = static_cast<std::byte*>(ptr) - 8;
         return msize_hook.call_target(ptr) - 12;
     },
@@ -112,9 +112,9 @@ ConsoleCommand2 mem_stats_cmd{
     "d_mem_stats",
     []() {
         constexpr float mb_float = 1024.0f * 1024.0f;
-        rf::console::printf("Number of heap allocations: %d", g_num_heap_allocs);
-        rf::console::printf("Current heap usage: %.2f MB", g_current_heap_usage / mb_float);
-        rf::console::printf("Max heap usage: %.2f MB", g_max_heap_usage / mb_float);
+        rf::console::print("Number of heap allocations: {}", g_num_heap_allocs);
+        rf::console::print("Current heap usage: {.2f} MB", g_current_heap_usage / mb_float);
+        rf::console::print("Max heap usage: {:.2f} MB", g_max_heap_usage / mb_float);
     },
 };
 
@@ -127,7 +127,7 @@ CodeInjection VArray_Ptr__get_out_of_bounds_check{
         int size = *static_cast<int*>(regs.ecx);
         int index = *reinterpret_cast<int*>(regs.esp + 4);
         if (index < 0 || index >= size) {
-            ERR("VArray out of bounds access! index %d size %d", index, size);
+            xlog::error("VArray out of bounds access! index {} size {}", index, size);
         }
     },
 };

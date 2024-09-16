@@ -17,7 +17,7 @@ ConsoleCommand2 dot_cmd{
         for (i32 i = 0; i < rf::console::num_commands; ++i) {
             rf::console::Command* cmd = g_commands_buffer[i];
             if (string_contains_ignore_case(cmd->name, pattern)) {
-                rf::console::printf(cmd->name);
+                rf::console::print("{}", cmd->name);
             }
         }
     },
@@ -30,7 +30,7 @@ ConsoleCommand2 vli_cmd{
     []() {
         g_game_config.glares = !g_game_config.glares;
         g_game_config.save();
-        rf::console::printf("Volumetric lightining is %s.", g_game_config.glares ? "enabled" : "disabled");
+        rf::console::print("Volumetric lightining is {}.", g_game_config.glares ? "enabled" : "disabled");
     },
     "Toggles volumetric lightining",
 };
@@ -43,7 +43,7 @@ ConsoleCommand2 player_count_cmd{
 
         auto player_list = SinglyLinkedList{rf::player_list};
         auto player_count = std::distance(player_list.begin(), player_list.end());
-        rf::console::printf("Player count: %d\n", player_count);
+        rf::console::print("Player count: {}\n", player_count);
     },
     "Get player count",
 };
@@ -53,7 +53,7 @@ ConsoleCommand2 find_level_cmd{
     [](std::string pattern) {
         vpackfile_find_matching_files(StringMatcher().infix(pattern).suffix(".rfl"), [](const char* name) {
             // Print all matching filenames
-            rf::console::printf("%s\n", name);
+            rf::console::print("{}\n", name);
         });
     },
     "Find a level by a filename fragment",
@@ -75,12 +75,12 @@ ConsoleCommand2 level_info_cmd{
     "level_info",
     []() {
         if (rf::level.flags & rf::LEVEL_LOADED) {
-            rf::console::printf("Filename: %s", rf::level.filename.c_str());
-            rf::console::printf("Name: %s", rf::level.name.c_str());
-            rf::console::printf("Author: %s", rf::level.author.c_str());
-            rf::console::printf("Date: %s", rf::level.level_date.c_str());
+            rf::console::print("Filename: {}", rf::level.filename);
+            rf::console::print("Name: {}", rf::level.name);
+            rf::console::print("Author: {}", rf::level.author);
+            rf::console::print("Date: {}", rf::level.level_date);
         } else {
-            rf::console::printf("No level loaded!");
+            rf::console::print("No level loaded!");
         }
     },
     "Shows information about the current level",

@@ -69,7 +69,7 @@ ConsoleCommand2 dbg_target_uid_cmd{
             int uid = uid_opt.value();
             rf::Object* obj = rf::obj_lookup_from_uid(uid);
             if (!obj) {
-                rf::console::printf("UID not found!");
+                rf::console::print("UID not found!");
                 return;
             }
             rf::target_obj_handle = obj->handle;
@@ -79,9 +79,9 @@ ConsoleCommand2 dbg_target_uid_cmd{
         }
         rf::Object* obj = rf::obj_from_handle(rf::target_obj_handle);
         if (obj)
-            rf::console::printf("Target object: uid %d, name '%s'", obj->uid, obj->name.c_str());
+            rf::console::print("Target object: uid {}, name '{}'", obj->uid, obj->name);
         else
-            rf::console::printf("Target object not found");
+            rf::console::print("Target object not found");
     },
 };
 
@@ -91,9 +91,9 @@ ConsoleCommand2 dbg_target_closest_cmd{
         rf::Object* obj = find_closest_object();
         rf::target_obj_handle = obj ? obj->handle : 0;
         if (obj)
-            rf::console::printf("Target object: uid %d, name '%s'", obj->uid, obj->name.c_str());
+            rf::console::print("Target object: uid {}, name '{}'", obj->uid, obj->name);
         else
-            rf::console::printf("Target object not found");
+            rf::console::print("Target object not found");
     },
 };
 
@@ -103,9 +103,9 @@ ConsoleCommand2 dbg_target_reticle_cmd{
         rf::Object* obj = find_object_in_reticle();
         rf::target_obj_handle = obj ? obj->handle : 0;
         if (obj)
-            rf::console::printf("Target object: uid %d, name '%s'", obj->uid, obj->name.c_str());
+            rf::console::print("Target object: uid {}, name '{}'", obj->uid, obj->name);
         else
-            rf::console::printf("Target object not found");
+            rf::console::print("Target object not found");
     },
 };
 
@@ -123,7 +123,7 @@ ConsoleCommand2 dbg_entity_state_cmd{
         else if (state_opt.value() >= 0 && state_opt.value() < num_states) {
             entity->force_state_anim_index = state_opt.value();
         }
-        rf::console::printf("Entity state: %s (%d)", rf::entity_action_names[entity->force_state_anim_index].c_str(),
+        rf::console::print("Entity state: {} ({})", rf::entity_action_names[entity->force_state_anim_index],
             entity->force_state_anim_index);
     },
 };
@@ -146,7 +146,7 @@ ConsoleCommand2 dbg_entity_action_cmd{
         rf::vmesh_stop_all_actions(entity->vmesh);
         rf::entity_play_action_animation(entity, last_action, 1.0f, true, true);
 
-        rf::console::printf("Entity action: %s (%d)", rf::entity_action_names[last_action].c_str(), last_action);
+        rf::console::print("Entity action: {} ({})", rf::entity_action_names[last_action], last_action);
     },
 };
 
@@ -161,7 +161,7 @@ ConsoleCommand2 dbg_ai_pause_cmd{
     "d_ai_pause",
     []() {
         rf::ai_pause = !rf::ai_pause;
-        rf::console::printf("AI pause: %d", rf::ai_pause);
+        rf::console::print("AI pause: {}", rf::ai_pause);
     },
 };
 

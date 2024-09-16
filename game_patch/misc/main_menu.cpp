@@ -165,6 +165,7 @@ CodeInjection menu_draw_background_injection{
 
         rf::gr::set_color(255, 255, 255, 255);
         // Use function that accepts float sx
+        //for (int i = 0; i < 100; ++i)
         gr_bitmap_scaled_float(menu_background_bitmap, 0.0f, 0.0f,
             static_cast<float>(rf::gr::screen.max_w), static_cast<float>(rf::gr::screen.max_h),
             menu_background_x, 0.0f, 640.0f, 480.0f, false, false, rf::gr::bitmap_clamp_mode);

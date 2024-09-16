@@ -131,7 +131,7 @@ ConsoleCommand2 level_sounds_cmd{
             g_game_config.level_sound_volume = vol_scale;
             g_game_config.save();
         }
-        rf::console::printf("Level sound volume: %.1f", g_game_config.level_sound_volume.value());
+        rf::console::print("Level sound volume: {:.1f}", g_game_config.level_sound_volume.value());
     },
     "Sets level sounds volume scale",
     "levelsounds <volume>",
@@ -140,13 +140,13 @@ ConsoleCommand2 level_sounds_cmd{
 FunHook<int(int, int, float, float)> snd_play_hook{
     0x00505560,
     [](int handle, int group, float pan, float volume) {
-        xlog::trace("snd_play %d %d %.2f %.2f", handle, group, pan, volume);
+        xlog::trace("snd_play {} {} {:.2f} {:.2f}", handle, group, pan, volume);
 
         if (!rf::sound_enabled || handle < 0) {
             return -1;
         }
         if (rf::snd_load_hint(handle) != 0) {
-            xlog::warn("Failed to load sound %d", handle);
+            xlog::warn("Failed to load sound {}", handle);
             return -1;
         }
 
@@ -165,7 +165,7 @@ FunHook<int(int, int, float, float)> snd_play_hook{
         else {
             sig = rf::snd_pc_play(handle, vol_scale, pan, 0.0f, false);
         }
-        xlog::trace("snd_play handle %d vol %.2f sig %d", handle, vol_scale, sig);
+        xlog::trace("snd_play handle {} vol {:.2f} sig {}", handle, vol_scale, sig);
         if (sig < 0) {
             return -1;
         }
@@ -222,13 +222,13 @@ int snd_pc_play_3d_new(int handle, const rf::Vector3& pos, float vol_scale, bool
 FunHook<int(int, const rf::Vector3&, float, const rf::Vector3&, int)> snd_play_3d_hook{
     0x005056A0,
     [](int handle, const rf::Vector3& pos, float volume, const rf::Vector3&, int group) {
-        xlog::trace("snd_play_3d %d %.2f %d", handle, volume, group);
+        xlog::trace("snd_play_3d {} {:.2f} {}", handle, volume, group);
 
         if (!rf::sound_enabled || handle < 0) {
             return -1;
         }
         if (rf::snd_load_hint(handle) != 0) {
-            xlog::warn("Failed to load sound %d", handle);
+            xlog::warn("Failed to load sound {}", handle);
             return -1;
         }
 
@@ -242,7 +242,7 @@ FunHook<int(int, const rf::Vector3&, float, const rf::Vector3&, int)> snd_play_3
         float base_volume_2d;
         float pan;
         rf::snd_calculate_2d_from_3d_info(handle, pos, &pan, &base_volume_2d, volume);
-        // xlog::warn("snd_play_3d vol %.2f", vol_scale);
+        // xlog::warn("snd_play_3d vol {:.2f}", vol_scale);
         auto& instance = rf::sound_instances[instance_index];
         int sig;
         if (rf::ds3d_enabled) {
@@ -260,7 +260,7 @@ FunHook<int(int, const rf::Vector3&, float, const rf::Vector3&, int)> snd_play_3
                 sig = rf::snd_pc_play(handle, vol_scale, pan, 0.0f, true);
             }
         }
-        xlog::trace("snd_play_3d handle %d pos <%.2f %.2f %.2f> vol %.2f sig %d", handle, pos.x, pos.y, pos.z, volume, sig);
+        xlog::trace("snd_play_3d handle {} pos <{:.2f} {:.2f} {:.2f}> vol {:.2f} sig {}", handle, pos.x, pos.y, pos.z, volume, sig);
         if (sig < 0) {
             return -1;
         }
@@ -422,7 +422,7 @@ FunHook<bool(const char*)> snd_pc_file_exists_hook{
             bool has_only_spaces = std::string_view{filename}.find_first_not_of(" ") == std::string_view::npos;
             static std::string last_file_not_found;
             if (!has_only_spaces && filename != last_file_not_found) {
-                xlog::warn("Sound file not found: %s", filename);
+                xlog::warn("Sound file not found: {}", filename);
                 last_file_not_found = filename;
             }
         }

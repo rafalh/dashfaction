@@ -86,7 +86,7 @@ public:
                 }
             }
             if (offset == max_offset) {
-                xlog::warn("Invalid reference %x", ref.addr);
+                xlog::warn("Invalid reference {:x}", ref.addr);
             }
         }
     }
