@@ -205,7 +205,7 @@ bool multi_spectate_execute_action(rf::ControlConfigAction action, bool was_pres
     return false;
 }
 
-void multi_spectate_on_player_death(rf::Player* victim, rf::Player* killer)
+void multi_spectate_on_player_kill(rf::Player* victim, rf::Player* killer)
 {
     if (!g_spectate_mode_enabled) {
         return;

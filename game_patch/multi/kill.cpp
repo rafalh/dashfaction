@@ -152,7 +152,7 @@ void on_player_kill(rf::Player* killed_player, rf::Player* killer_player)
 
         multi_apply_kill_reward(killer_player);
 
-        multi_spectate_on_player_death(killed_player, killer_player);
+        multi_spectate_on_player_kill(killed_player, killer_player);
     }
 }
 
