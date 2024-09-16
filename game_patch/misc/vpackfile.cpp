@@ -8,6 +8,7 @@
 #include <patch_common/CodeInjection.h>
 #include <xlog/xlog.h>
 #include <fstream>
+#include <format>
 #include <array>
 #include <cctype>
 #include <cstring>
@@ -95,11 +96,11 @@ static GameLang detect_installed_game_lang()
 
     for (auto& p : langs) {
         auto [lang_id, lang_code] = p;
-        auto full_path = string_format("%smaps_%s.vpp", rf::root_path, lang_code);
+        auto full_path = std::format("{}maps_{}.vpp", rf::root_path, lang_code);
         BOOL exists = PathFileExistsA(full_path.c_str());
-        xlog::info("Checking file %s: %s", full_path.c_str(), exists ? "found" : "not found");
+        xlog::info("Checking file {}: {}", full_path, exists ? "found" : "not found");
         if (exists) {
-            xlog::info("Detected game language: %s", lang_code);
+            xlog::info("Detected game language: {}", lang_code);
             return lang_id;
         }
     }
@@ -143,16 +144,16 @@ static uint32_t vpackfile_process_header(rf::VPackfile* packfile, const void* ra
 
 static int vpackfile_add_new(const char* filename, const char* dir)
 {
-    xlog::trace("Load packfile %s %s", dir, filename);
+    xlog::trace("Load packfile {} {}", dir, filename);
 
     std::string full_path;
     if (dir && !PathIsRelativeA(dir))
-        full_path = string_format("%s%s", dir, filename); // absolute path
+        full_path = std::format("{}{}", dir, filename); // absolute path
     else
-        full_path = string_format("%s%s%s", rf::root_path, dir ? dir : "", filename);
+        full_path = std::format("{}{}{}", rf::root_path, dir ? dir : "", filename);
 
     if (!filename || strlen(filename) > 0x1F || full_path.size() > 0x7F) {
-        xlog::error("Packfile name or path too long: %s", full_path.c_str());
+        xlog::error("Packfile name or path too long: {}", full_path);
         return 0;
     }
 
@@ -166,16 +167,16 @@ static int vpackfile_add_new(const char* filename, const char* dir)
         if (it != GameFileChecksums.end()) {
             unsigned Checksum = hash_file(FullPath);
             if (Checksum != it->second) {
-                xlog::info("VPackfile %s has invalid checksum 0x%X", Filename, Checksum);
+                xlog::info("VPackfile {} has invalid checksum 0x{:x}", Filename, Checksum);
                 g_is_modded_game = true;
             }
         }
     }
 #endif // CHECK_PACKFILE_CHECKSUM
 
-    std::ifstream file(full_path.c_str(), std::ios_base::in | std::ios_base::binary);
+    std::ifstream file(full_path, std::ios_base::in | std::ios_base::binary);
     if (!file) {
-        xlog::error("Failed to open packfile %s", full_path.c_str());
+        xlog::error("Failed to open packfile {}", full_path);
         return 0;
     }
 
@@ -192,7 +193,7 @@ static int vpackfile_add_new(const char* filename, const char* dir)
     // Process file header
     char buf[0x800];
     if (!file.read(buf, sizeof(buf))) {
-        xlog::error("Failed to read VPP header: %s", filename);
+        xlog::error("Failed to read VPP header: {}", filename);
         return 0;
     }
     // Note: VPackfileProcessHeader returns number of files in packfile - result 0 is not always a true error
@@ -206,7 +207,7 @@ static int vpackfile_add_new(const char* filename, const char* dir)
     unsigned num_added = 0;
     for (unsigned i = 0; i < packfile->num_files; i += 32) {
         if (!file.read(buf, sizeof(buf))) {
-            xlog::error("Failed to read vpp %s", full_path.c_str());
+            xlog::error("Failed to read vpp {}", full_path);
             return 0;
         }
 
@@ -234,7 +235,7 @@ static rf::VPackfile* vpackfile_find_packfile(const char* filename)
             return packfile.get();
     }
 
-    xlog::error("VPackfile %s not found", filename);
+    xlog::error("VPackfile {} not found", filename);
     return nullptr;
 }
 
@@ -322,12 +323,12 @@ static void vpackfile_add_to_lookup_table(rf::VPackfileEntry* entry)
     if (!inserted) {
         ++g_num_name_collisions;
         if (is_lookup_table_entry_override_allowed(it->second, entry)) {
-            xlog::trace("Allowed overriding packfile file %s (old packfile %s, new packfile %s)", entry->name,
+            xlog::trace("Allowed overriding packfile file {} (old packfile {}, new packfile {})", entry->name,
                 it->second->parent->filename, entry->parent->filename);
             it->second = entry;
         }
         else {
-            xlog::trace("Denied overriding packfile file %s (old packfile %s, new packfile %s)", entry->name,
+            xlog::trace("Denied overriding packfile file {} (old packfile {}, new packfile {})", entry->name,
                 it->second->parent->filename, entry->parent->filename);
         }
     }
@@ -375,7 +376,7 @@ static rf::VPackfileEntry* vpackfile_find_new(const char* filename)
     if (it != g_loopup_table.end()) {
         return it->second;
     }
-    xlog::trace("Cannot find file %s", filename_str.c_str());
+    xlog::trace("Cannot find file {}", filename_str);
     return nullptr;
 }
 
@@ -405,9 +406,9 @@ static void load_dashfaction_vpp()
             df_vpp_dir.resize(pos + 1);
         }
     }
-    xlog::info("Loading %s from directory: %s", df_vpp_base_name, df_vpp_dir.c_str());
+    xlog::info("Loading {} from directory: {}", df_vpp_base_name, df_vpp_dir);
     if (!rf::vpackfile_add(df_vpp_base_name, df_vpp_dir.c_str())) {
-        xlog::error("Failed to load %s", df_vpp_base_name);
+        xlog::error("Failed to load {}", df_vpp_base_name);
     }
 }
 
@@ -416,10 +417,10 @@ ConsoleCommand2 which_packfile_cmd{
     [](std::string filename) {
         auto* entry = vpackfile_find_new(filename.c_str());
         if (entry) {
-            rf::console::printf("%s", entry->parent->path);
+            rf::console::print("{}", entry->parent->path);
         }
         else {
-            rf::console::printf("Cannot find %s!", filename.c_str());
+            rf::console::print("Cannot find {}!", filename);
         }
     },
     "Prints packfile path that the provided file is included in",
@@ -513,8 +514,8 @@ static void vpackfile_init_new()
         force_file_from_packfile("strings.tbl", "ui.vpp");
     }
 
-    xlog::info("Packfiles initialization took %lums", GetTickCount() - start_ticks);
-    xlog::info("Packfile name collisions: %d", g_num_name_collisions);
+    xlog::info("Packfiles initialization took {}ms", GetTickCount() - start_ticks);
+    xlog::info("Packfile name collisions: {}", g_num_name_collisions);
 
     if (g_is_modded_game)
         xlog::info("Modded game detected!");

@@ -1,5 +1,6 @@
 #include "CrashReportApp.h"
 #include <common/error/error-utils.h>
+#include <format>
 
 int APIENTRY WinMain(HINSTANCE, HINSTANCE, LPSTR, int) try
 {
@@ -13,17 +14,13 @@ int APIENTRY WinMain(HINSTANCE, HINSTANCE, LPSTR, int) try
 catch (const Win32xx::CException &e)
 {
     // Display the exception and quit
-    std::ostringstream ss;
-    ss << e.GetText() << "\nerror " << e.GetError() << ": " << e.GetErrorString();
-    auto msg = ss.str();
+    std::string msg = std::format("{}\nerror {}: {}", e.GetText(), e.GetError(), e.GetErrorString());
     MessageBox(nullptr, msg.c_str(), nullptr, MB_ICONERROR | MB_OK);
-
     return -1;
 }
 // catch all unhandled std::exception types
 catch (const std::exception& e) {
-    std::string msg = "Fatal error: ";
-    msg += generate_message_for_exception(e);
+    std::string msg = std::format("Fatal error: {}", generate_message_for_exception(e));
     MessageBox(nullptr, msg.c_str(), nullptr, MB_ICONERROR | MB_OK);
     return -1;
 }

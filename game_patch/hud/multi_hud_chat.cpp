@@ -207,7 +207,7 @@ CodeInjection process_chat_line_packet_injection{
         if (is_muted_player(pp)) {
             // Messages from muted players only show up in the console
             const char *team_str = mode == 1 ? rf::strings::team : "";
-            rf::console::printf("%s%s (MUTED): %s", pp->name.c_str(), team_str, message);
+            rf::console::print("{}{} (MUTED): {}", pp->name, team_str, message);
             regs.eip = 0x00444958;
         }
     },
@@ -217,7 +217,7 @@ ConsoleCommand2 mute_all_players_cmd{
     "mute_all_players",
     []() {
         g_all_players_muted = !g_all_players_muted;
-        rf::console::printf("All players are %s", g_all_players_muted ? "muted" : "unmuted");
+        rf::console::print("All players are {}", g_all_players_muted ? "muted" : "unmuted");
     },
     "Mutes all players in multiplayer chat",
 };
@@ -229,7 +229,7 @@ ConsoleCommand2 mute_player_cmd{
         if (pp) {
             auto& pdata = get_player_additional_data(pp);
             pdata.is_muted = !pdata.is_muted;
-            rf::console::printf("Player %s is %s", pp->name.c_str(), pdata.is_muted ? "muted" : "unmuted");
+            rf::console::print("Player {} is {}", pp->name, pdata.is_muted ? "muted" : "unmuted");
         }
     },
     "Mutes a single player in multiplayer chat",

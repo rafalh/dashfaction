@@ -112,7 +112,7 @@ ConsoleCommand2 show_enemy_bullets_cmd{
         g_game_config.show_enemy_bullets = !g_game_config.show_enemy_bullets;
         g_game_config.save();
         rf::hide_enemy_bullets = !g_game_config.show_enemy_bullets;
-        rf::console::printf("Enemy bullets are %s", g_game_config.show_enemy_bullets ? "enabled" : "disabled");
+        rf::console::print("Enemy bullets are {}", g_game_config.show_enemy_bullets ? "enabled" : "disabled");
     },
     "Toggles enemy bullets visibility",
 };
