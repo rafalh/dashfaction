@@ -43,6 +43,7 @@ Version 1.9.0 (not released yet)
 - Do not load unnecessary VPPs in dedicated server mode
 - Add level filename to "Level Initializing" console message
 - Properly handle WM_PAINT in dedicated server, may improve performance (DF bug)
+- Add `toggle_crouch` command to allow players to switch between toggle crouch and hold crouch (default)
 
 Version 1.8.0 (released 2022-09-17)
 -----------------------------------
