@@ -223,7 +223,7 @@ namespace df::gr::d3d11
         for (SolidBatch& b : batches) {
             render_context.set_mode(b.mode);
             render_context.set_textures(b.textures[0], b.textures[1]);
-            //xlog::warn("DrawIndexed %d %d", b.num_indices, b.start_index);
+            //xlog::warn("DrawIndexed {} {}", b.num_indices, b.start_index);
             render_context.draw_indexed(b.num_indices, b.start_index, b.base_vertex);
         }
     }
@@ -491,7 +491,7 @@ namespace df::gr::d3d11
     {
         static_assert(offsetof(RoomRenderCache, state_) == 0x20, "Bad state_ offset");
         if (state_ != 0) {
-            xlog::trace("room %d state %d", room_->room_index, state_);
+            xlog::trace("room {} state {}", room_->room_index, state_);
         }
         return state_ == 2;
     }
@@ -509,11 +509,11 @@ namespace df::gr::d3d11
 
         if (builder.get_num_batches() == 0) {
             state_ = 0;
-            xlog::debug("Skipping empty room %d", room_->room_index);
+            xlog::debug("Skipping empty room {}", room_->room_index);
             return;
         }
 
-        xlog::debug("Creating render cache for room %d - verts %d inds %d batches %d", room_->room_index,
+        xlog::debug("Creating render cache for room {} - verts {} inds {} batches {}", room_->room_index,
             builder.get_num_verts(), builder.get_num_inds(), builder.get_num_batches());
 
         cache_ = std::optional{builder.build(device)};
@@ -524,7 +524,7 @@ namespace df::gr::d3d11
     void RoomRenderCache::render(FaceRenderType render_type, ID3D11Device* device, RenderContext& context)
     {
         if (invalid()) {
-            xlog::debug("Room %d render cache invalidated!", room_->room_index);
+            xlog::debug("Room {} render cache invalidated!", room_->room_index);
             cache_.reset();
             update(device);
         }
@@ -648,7 +648,7 @@ namespace df::gr::d3d11
     {
         auto cache = reinterpret_cast<RoomRenderCache*>(room->geo_cache);
         if (!cache) {
-            xlog::debug("Creating render cache for room %d", room->room_index);
+            xlog::debug("Creating render cache for room {}", room->room_index);
             room_cache_.push_back(std::make_unique<RoomRenderCache>(solid, room, device_));
             cache = room_cache_.back().get();
             room->geo_cache = reinterpret_cast<GCache*>(cache);
@@ -668,7 +668,7 @@ namespace df::gr::d3d11
     {
         auto cache = reinterpret_cast<GRenderCache*>(room->geo_cache);
         if (!cache) {
-            xlog::debug("Creating render cache for detail room %d", room->room_index);
+            xlog::debug("Creating render cache for detail room {}", room->room_index);
             GRenderCacheBuilder builder;
             builder.add_room(room, solid);
             detail_render_cache_.push_back(std::make_unique<GRenderCache>(builder.build(device_)));
@@ -696,7 +696,7 @@ namespace df::gr::d3d11
 
     void SolidRenderer::render_sky_room(GRoom *room)
     {
-        xlog::trace("Rendering sky room %d cache %p", room->room_index, room->geo_cache);
+        xlog::trace("Rendering sky room {} cache {}", room->room_index, room->geo_cache);
         before_render(sky_room_offset, rf::identity_matrix);
         render_room_faces(rf::level.geometry, room, FaceRenderType::opaque);
         render_room_faces(rf::level.geometry, room, FaceRenderType::alpha);
@@ -704,7 +704,7 @@ namespace df::gr::d3d11
 
     void SolidRenderer::render_movable_solid(GSolid* solid, const Vector3& pos, const Matrix3& orient)
     {
-        xlog::trace("Rendering movable solid %p", solid);
+        xlog::trace("Rendering movable solid {}", solid);
         GRenderCache* cache = get_or_create_movable_solid_cache(solid);
         before_render(pos, orient);
         cache->render(FaceRenderType::opaque, render_context_);
@@ -718,7 +718,7 @@ namespace df::gr::d3d11
     {
         auto it = mover_render_cache_.find(solid);
         if (it == mover_render_cache_.end()) {
-            xlog::debug("Creating render cache for a mover %p", solid);
+            xlog::debug("Creating render cache for a mover {}", static_cast<void*>(solid));
             GRenderCacheBuilder cache_builder;
             cache_builder.add_solid(solid);
             GRenderCache cache = cache_builder.build(device_);
@@ -730,7 +730,7 @@ namespace df::gr::d3d11
 
     void SolidRenderer::render_alpha_detail(GRoom *room, GSolid *solid)
     {
-        xlog::trace("Rendering alpha detail room %d", room->room_index);
+        xlog::trace("Rendering alpha detail room {}", room->room_index);
         if (room->face_list.empty()) {
             // Happens when glass is killed
             return;

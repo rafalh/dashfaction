@@ -156,7 +156,7 @@ LRESULT MainDlg::OnUpdateCheck(WPARAM wparam, LPARAM lparam)
         if (result == IDOK) {
             HINSTANCE exec_ret = ShellExecuteA(*this, "open", chk_result.url.c_str(), nullptr, nullptr, SW_SHOW);
             if (reinterpret_cast<int>(exec_ret) <= 32) {
-                xlog::error("ShellExecuteA failed %p", exec_ret);
+                xlog::error("ShellExecuteA failed {}", static_cast<void*>(exec_ret));
             }
             EndDialog(0);
         }
@@ -199,7 +199,7 @@ void MainDlg::OnSupportLinkClick()
     xlog::info("Opening support channel");
     HINSTANCE ret = ShellExecuteA(*this, "open", "https://discord.gg/bC2WzvJ", nullptr, nullptr, SW_SHOW);
     if (reinterpret_cast<int>(ret) <= 32) {
-        xlog::error("ShellExecuteA failed %p", ret);
+        xlog::error("ShellExecuteA failed {}", static_cast<void*>(ret));
     }
 }
 

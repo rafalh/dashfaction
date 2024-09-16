@@ -2,6 +2,7 @@
 #include <map>
 #include <set>
 #include <ctime>
+#include <format>
 #include "../rf/player/player.h"
 #include "../rf/multi.h"
 #include "../rf/gameseq.h"
@@ -84,7 +85,7 @@ public:
                 num_votes_no++;
             remaining_players.erase(source);
             players_who_voted.insert({source, is_yes_vote});
-            auto msg = string_format("\xA6 Vote status:  Yes: %d  No: %d  Waiting: %d", num_votes_yes, num_votes_no, remaining_players.size());
+            auto msg = std::format("\xA6 Vote status:  Yes: {}  No: {}  Waiting: {}", num_votes_yes, num_votes_no, remaining_players.size());
             send_chat_line_packet(msg.c_str(), nullptr);
             return check_for_early_vote_finish();
         }
@@ -144,9 +145,9 @@ protected:
     void send_vote_starting_msg(rf::Player* source)
     {
         auto title = get_title();
-        auto msg = string_format(
+        auto msg = std::format(
             "\n=============== VOTE STARTING ===============\n"
-            "%s vote started by %s.\n"
+            "{} vote started by {}.\n"
             "Send message \"/vote yes\" or \"/vote no\" to participate.",
             title.c_str(), source->name.c_str());
         send_chat_line_packet(msg.c_str(), nullptr);
@@ -189,7 +190,7 @@ struct VoteKick : public Vote
 
     [[nodiscard]] std::string get_title() const override
     {
-        return string_format("KICK PLAYER '%s'", m_target_player->name.c_str());
+        return std::format("KICK PLAYER '{}'", m_target_player->name);
     }
 
     void on_accepted() override
@@ -244,7 +245,7 @@ struct VoteLevel : public Vote
 
     bool process_vote_arg([[maybe_unused]] std::string_view arg, rf::Player* source) override
     {
-        m_level_name = std::string{arg} + ".rfl";
+        m_level_name = std::format("{}.rfl", arg);
         if (!rf::get_file_checksum(m_level_name.c_str())) {
             send_chat_line_packet("Cannot find specified level!", source);
             return false;
@@ -254,7 +255,7 @@ struct VoteLevel : public Vote
 
     [[nodiscard]] std::string get_title() const override
     {
-        return string_format("LOAD LEVEL '%s'", m_level_name.c_str());
+        return std::format("LOAD LEVEL '{}'", m_level_name);
     }
 
     void on_accepted() override

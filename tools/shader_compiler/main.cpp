@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
     for (int i = 1; i < argc; ++i) {
         char* arg = argv[i];
         std::string_view arg_sv{arg};
-        if (arg_sv.substr(0, 2) == "-D") {
+        if (arg_sv.starts_with("-D")) {
             auto eq_pos = arg_sv.find("=", 2);
             if (eq_pos == std::string_view::npos) {
                 D3D_SHADER_MACRO macro = {arg + 2, nullptr};

@@ -65,14 +65,14 @@ std::vector<std::string> VideoDeviceInfoProviderD3D11::get_adapters()
         HRESULT hr = m_factory->EnumAdapters(adapter_idx++, &adapter);
         if (FAILED(hr)) {
             if (hr != DXGI_ERROR_NOT_FOUND) {
-                xlog::error("EnumAdapters failed: %lx", hr);
+                xlog::error("EnumAdapters failed: {:x}", hr);
             }
             break;
         }
         DXGI_ADAPTER_DESC desc;
         hr = adapter->GetDesc(&desc);
         if (FAILED(hr)) {
-            xlog::error("GetDesc failed: %lx", hr);
+            xlog::error("GetDesc failed: {:x}", hr);
             break;
         }
 
@@ -90,7 +90,7 @@ std::set<VideoDeviceInfoProvider::Resolution> VideoDeviceInfoProviderD3D11::get_
     ComPtr<IDXGIAdapter> dxgi_adapter = nullptr;
     HRESULT hr = m_factory->EnumAdapters(adapter, &dxgi_adapter);
     if (FAILED(hr)) {
-        xlog::error("EnumAdapters failed: %lx", hr);
+        xlog::error("EnumAdapters failed: {:x}", hr);
         return {};
     }
 
@@ -99,21 +99,21 @@ std::set<VideoDeviceInfoProvider::Resolution> VideoDeviceInfoProviderD3D11::get_
     ComPtr<IDXGIOutput> dxgi_output;
     hr = dxgi_adapter->EnumOutputs(0, &dxgi_output); // FIXME: what about other outputs?
     if (FAILED(hr)) {
-        xlog::error("EnumOutputs failed: %lx", hr);
+        xlog::error("EnumOutputs failed: {:x}", hr);
         return {};
     }
 
     unsigned mode_count = 0;
     hr = dxgi_output->GetDisplayModeList(static_cast<DXGI_FORMAT>(format), 0, &mode_count, nullptr);
     if (FAILED(hr)) {
-        xlog::error("GetDisplayModeList failed: %lx", hr);
+        xlog::error("GetDisplayModeList failed: {:x}", hr);
     }
 
     std::vector<DXGI_MODE_DESC> desc_vec;
     desc_vec.resize(mode_count);
     hr = dxgi_output->GetDisplayModeList(static_cast<DXGI_FORMAT>(format), 0, &mode_count, desc_vec.data());
     if (FAILED(hr)) {
-        xlog::error("GetDisplayModeList failed: %lx", hr);
+        xlog::error("GetDisplayModeList failed: {:x}", hr);
     }
 
     for (auto& desc : desc_vec) {
@@ -130,14 +130,14 @@ std::set<unsigned> VideoDeviceInfoProviderD3D11::get_multisample_types(
     ComPtr<IDXGIAdapter> dxgi_adapter;
     HRESULT hr = m_factory->EnumAdapters(adapter, &dxgi_adapter);
     if (FAILED(hr)) {
-        xlog::error("EnumAdapters failed: %lx", hr);
+        xlog::error("EnumAdapters failed: {:x}", hr);
         return {};
     }
 
     ComPtr<ID3D11Device> d3d11_device;
     hr = m_D3D11CreateDevice(dxgi_adapter, D3D_DRIVER_TYPE_HARDWARE, nullptr, 0, nullptr, 0, D3D11_SDK_VERSION, &d3d11_device, nullptr, nullptr);
     if (FAILED(hr)) {
-        xlog::error("D3D11CreateDevice failed: %lx", hr);
+        xlog::error("D3D11CreateDevice failed: {:x}", hr);
         return {};
     }
 

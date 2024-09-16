@@ -207,7 +207,7 @@ bool LauncherApp::LaunchEditor(HWND hwnd, const char* mod_name)
 int LauncherApp::Message(HWND hwnd, const char *text, const char *title, int flags)
 {
     WatchDogTimer::ScopedPause wdt_pause{m_watch_dog_timer};
-    xlog::info("%s: %s", title ? title : "Error", text);
+    xlog::info("{}: {}", title ? title : "Error", text);
     bool no_gui = GetSystemMetrics(SM_CMONITORS) == 0;
     if (no_gui) {
         std::fprintf(stderr, "%s: %s", title ? title : "Error", text);

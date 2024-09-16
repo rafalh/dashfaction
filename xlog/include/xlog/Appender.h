@@ -5,7 +5,6 @@
 #include <memory>
 #include <string>
 #include <string_view>
-#include <cstdarg>
 
 namespace xlog
 {
@@ -18,21 +17,24 @@ public:
     Appender() : formatter_(new SimpleFormatter())
     {}
 
-    void append(Level level, const std::string& logger_name, std::string_view message)
+    template<typename... Args>
+    void append(Level level, const std::string& logger_name, std::format_string<Args...> fmt, Args&&... args)
     {
         if (level <= level_) {
-            auto formatted = formatter_->format(level, logger_name, message);
+            auto formatted = formatter_->format(level, logger_name, fmt, std::forward<Args>(args)...);
             append(level, formatted);
         }
     }
 
-    void vappend(Level level, const std::string& logger_name, const char* format, std::va_list args)
+#ifdef XLOG_PRINTF
+    void vappendf(Level level, const std::string& logger_name, const char* fmt, std::va_list args)
     {
-        if (static_cast<int>(level) <= static_cast<int>(level_)) {
-            auto formatted = formatter_->vformat(level, logger_name, format, args);
+        if (level <= level_) {
+            auto formatted = formatter_->vformat(level, logger_name, fmt, args);
             append(level, formatted);
         }
     }
+#endif
 
     template<typename T, typename... A>
     void set_formatter(A... args)

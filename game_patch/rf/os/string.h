@@ -1,7 +1,8 @@
 #pragma once
 
 #include <cstring>
-#include <common/utils/string-utils.h>
+#include <format>
+#include <utility>
 
 namespace rf
 {
@@ -48,6 +49,11 @@ namespace rf
         operator const char*() const
         {
             return c_str();
+        }
+
+        operator std::string() const
+        {
+            return {c_str()};
         }
 
         operator Pod() const
@@ -119,23 +125,30 @@ namespace rf
             return {result};
         }
 
-        PRINTF_FMT_ATTRIBUTE(1, 2)
-        static inline String format(const char* format, ...)
+        template<typename... Args>
+        static inline String format(std::format_string<Args...> fmt, Args&&... args)
         {
-            String str;
-            va_list args;
-            va_start(args, format);
-            int len = std::vsnprintf(nullptr, 0, format, args);
-            va_end(args);
+            int len = std::formatted_size(fmt, std::forward<Args>(args)...);
             int buf_size = len + 1;
             Pod result;
             result.max_len = len;
             result.buf = string_alloc(buf_size);
-            va_start(args, format);
-            std::vsnprintf(result.buf, buf_size, format, args);
-            va_end(args);
+            std::format_to_n(result.buf, len, fmt, std::forward<Args>(args)...);
+            result.buf[len] = 0;
             return {result};
         }
     };
     static_assert(sizeof(String) == 8);
 }
+
+template <>
+struct std::formatter<rf::String> {
+    constexpr auto parse(std::format_parse_context& ctx) {
+        return ctx.begin();
+    }
+
+    auto format(const rf::String& s, std::format_context& ctx) const {
+        return std::format_to(ctx.out(), "{}", s.c_str());
+    }
+};
+

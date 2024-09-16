@@ -10,6 +10,7 @@
 #include <patch_common/AsmWriter.h>
 #include <patch_common/CallHook.h>
 #include <vector>
+#include <format>
 
 std::vector<int> g_players_to_kick;
 
@@ -72,7 +73,7 @@ ConsoleCommand2 map_ext_cmd{
         if (validate_is_server() && validate_not_limbo()) {
             int minutes = minutes_opt.value_or(5);
             extend_round_time(minutes);
-            std::string msg = string_format("\xA6 Round extended by %d minutes", minutes);
+            std::string msg = std::format("\xA6 Round extended by {} minutes", minutes);
             rf::multi_chat_say(msg.c_str(), false);
         }
     },
@@ -157,13 +158,13 @@ void ban_cmd_handler_hook()
                     kick_player_delayed(player);
                 }
                 else
-                    rf::console::printf("You cannot ban yourself!");
+                    rf::console::print("You cannot ban yourself!");
             }
         }
 
         if (rf::console::help) {
             rf::console::output(rf::strings::usage, nullptr);
-            rf::console::printf("     ban <%s>", rf::strings::player_name);
+            rf::console::print("     ban <{}>", rf::strings::player_name);
         }
     }
 }
@@ -181,13 +182,13 @@ void kick_cmd_handler_hook()
                     kick_player_delayed(player);
                 }
                 else
-                    rf::console::printf("You cannot kick yourself!");
+                    rf::console::print("You cannot kick yourself!");
             }
         }
 
         if (rf::console::help) {
             rf::console::output(rf::strings::usage, nullptr);
-            rf::console::printf("     kick <%s>", rf::strings::player_name);
+            rf::console::print("     kick <{}>", rf::strings::player_name);
         }
     }
 }
@@ -198,7 +199,7 @@ ConsoleCommand2 unban_last_cmd{
         if (rf::is_multi && rf::is_server) {
             auto opt = multi_ban_unban_last();
             if (opt) {
-                rf::console::printf("%s has been unbanned!", opt.value().c_str());
+                rf::console::print("{} has been unbanned!", opt.value());
             }
         }
     },

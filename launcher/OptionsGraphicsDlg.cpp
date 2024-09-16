@@ -1,6 +1,7 @@
 #include <wxx_wincore.h>
 #include "OptionsGraphicsDlg.h"
 #include "LauncherApp.h"
+#include <format>
 #include <xlog/xlog.h>
 #include <wxx_dialog.h>
 #include <wxx_commondlg.h>
@@ -54,16 +55,15 @@ void OptionsGraphicsDlg::UpdateMsaaCombo()
         BOOL windowed = m_conf.wnd_mode != GameConfig::FULLSCREEN;
         auto multi_sample_types = m_video_info->get_multisample_types(m_conf.selected_video_card, m_conf.res_backbuffer_format, windowed);
         for (auto msaa : multi_sample_types) {
-            char buf[16];
-            sprintf(buf, "MSAAx%u", msaa);
-            int idx = m_msaa_combo.AddString(buf);
+            auto s = std::format("MSAAx{}", msaa);
+            int idx = m_msaa_combo.AddString(s.c_str());
             if (m_conf.msaa == msaa)
                 selected_msaa = idx;
             m_multi_sample_types.push_back(msaa);
         }
     }
     catch (std::exception &e) {
-        xlog::error("Cannot check available MSAA modes: %s", e.what());
+        xlog::error("Cannot check available MSAA modes: {}", e.what());
     }
     m_msaa_combo.SetCurSel(selected_msaa);
 }
@@ -77,7 +77,7 @@ void OptionsGraphicsDlg::UpdateAnisotropyCheckbox()
         }
     }
     catch (std::exception &e) {
-        xlog::error("Cannot check anisotropy support: %s", e.what());
+        xlog::error("Cannot check anisotropy support: {}", e.what());
     }
     if (anisotropy_supported) {
         GetDlgItem(IDC_ANISOTROPIC_CHECK).EnableWindow(TRUE);

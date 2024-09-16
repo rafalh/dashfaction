@@ -22,7 +22,7 @@ namespace df::gr::d3d11
     {
         rf::File file;
         if (file.open(filename) != 0) {
-            xlog::error("Cannot open vertex shader file %s", filename);
+            xlog::error("Cannot open vertex shader file {}", filename);
             return {{}, {}};
         }
         int size = file.size();
@@ -30,7 +30,7 @@ namespace df::gr::d3d11
         [[maybe_unused]] int bytes_read = file.read(shader_data.get(), size);
         assert(bytes_read == size);
 
-        xlog::debug("Loading vertex shader %s size %d", filename, size);
+        xlog::debug("Loading vertex shader {} size {}", filename, size);
         ComPtr<ID3D11VertexShader> vertex_shader;
         DF_GR_D3D11_CHECK_HR(
             device_->CreateVertexShader(shader_data.get(), size, nullptr, &vertex_shader)
@@ -62,7 +62,7 @@ namespace df::gr::d3d11
         [[maybe_unused]] int bytes_read = file.read(shader_data.get(), size);
         assert(bytes_read == size);
 
-        xlog::debug("Loading pixel shader %s size %d", filename, size);
+        xlog::debug("Loading pixel shader {} size {}", filename, size);
         ComPtr<ID3D11PixelShader> pixel_shader;
         DF_GR_D3D11_CHECK_HR(
             device_->CreatePixelShader(shader_data.get(), size, nullptr, &pixel_shader)
