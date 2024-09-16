@@ -13,7 +13,6 @@
 #include "server_internal.h"
 
 bool kill_messages = true;
-static bool g_spectate_mode_follow_killer = false;
 
 void player_fpgun_on_player_death(rf::Player* pp);
 
@@ -153,10 +152,7 @@ void on_player_kill(rf::Player* killed_player, rf::Player* killer_player)
 
         multi_apply_kill_reward(killer_player);
 
-        // Spectate killer if follow killer is on and we weren't involved
-        if (g_spectate_mode_follow_killer && killed_player != rf::local_player && killer_player != rf::local_player) {
-            multi_spectate_on_player_death(killed_player, killer_player);
-        }
+        multi_spectate_on_player_death(killed_player, killer_player);
     }
 }
 
@@ -179,15 +175,6 @@ ConsoleCommand2 kill_messages_cmd{
     "Toggles printing of kill messages in the chatbox and the game console",
 };
 
-static ConsoleCommand2 spectate_mode_follow_killer_cmd{
-    "spectate_mode_follow_killer",
-    []() {
-        g_spectate_mode_follow_killer = !g_spectate_mode_follow_killer;
-        rf::console::printf("Follow killer mode is %s", g_spectate_mode_follow_killer ? "enabled" : "disabled");
-    },
-    "When a player you're spectating dies, automatically spectate their killer",
-};
-
 void multi_kill_do_patch()
 {
     // Player kill handling
@@ -208,7 +195,4 @@ void multi_kill_do_patch()
 
     // Allow disabling kill messages
     kill_messages_cmd.register_cmd();
-
-    // Toggle follow killer mode
-    spectate_mode_follow_killer_cmd.register_cmd();
 }
