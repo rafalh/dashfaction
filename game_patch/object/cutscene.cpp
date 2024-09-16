@@ -41,10 +41,10 @@ static void render_skip_cutscene_hint_text(rf::ControlConfigAction action)
     auto bind_name = get_action_bind_name(action);
     auto& action_name = rf::local_player->settings.controls.bindings[action].name;
     rf::gr::set_color(255, 255, 255, 255);
-    auto msg = rf::String::format("Press %s (%s) to skip the cutscene", action_name.c_str(), bind_name.c_str());
+    auto msg = std::format("Press {} ({}) to skip the cutscene", action_name, bind_name);
     auto x = rf::gr::screen_width() / 2;
     auto y = rf::gr::screen_height() - 30;
-    rf::gr::string_aligned(rf::gr::ALIGN_CENTER, x, y, msg);
+    rf::gr::string_aligned(rf::gr::ALIGN_CENTER, x, y, msg.c_str());
 }
 
 FunHook<void(bool)> cutscene_do_frame_hook{
@@ -106,12 +106,12 @@ ConsoleCommand2 skip_cutscene_bind_cmd{
         else {
             int ctrl = rf::control_config_find_action_by_name(&rf::local_player->settings, bind_name.c_str());
             if (ctrl == -1) {
-                rf::console::printf("Cannot find control: %s", bind_name.c_str());
+                rf::console::print("Cannot find control: {}", bind_name);
             }
             else {
                 g_game_config.skip_cutscene_ctrl = ctrl;
                 g_game_config.save();
-                rf::console::printf("Skip Cutscene bind changed to: %s", bind_name.c_str());
+                rf::console::print("Skip Cutscene bind changed to: {}", bind_name);
             }
         }
     },
@@ -126,7 +126,7 @@ CodeInjection cutscene_shot_sync_fix{
             // decrease time for next shot using current shot timer value
             int shot_time_left_ms = rf::active_cutscene->next_stage_timestamp.time_until();
             if (shot_time_left_ms > 0 || shot_time_left_ms < -100)
-                xlog::warn("invalid shot_time_left_ms %d", shot_time_left_ms);
+                xlog::warn("invalid shot_time_left_ms {}", shot_time_left_ms);
             regs.eax += shot_time_left_ms;
         }
     },

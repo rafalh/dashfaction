@@ -2,6 +2,7 @@
 #include "OptionsDisplayDlg.h"
 #include "OptionsGraphicsDlg.h"
 #include "LauncherApp.h"
+#include <format>
 #include <xlog/xlog.h>
 #include <wxx_dialog.h>
 #include <wxx_commondlg.h>
@@ -83,7 +84,7 @@ void OptionsDisplayDlg::UpdateAdapterCombo()
         }
     }
     catch (std::exception &e) {
-        xlog::error("Cannot get video adapters: %s", e.what());
+        xlog::error("Cannot get video adapters: {}", e.what());
     }
     if (selected_idx != -1)
         m_adapter_combo.SetCurSel(selected_idx);
@@ -109,14 +110,13 @@ void OptionsDisplayDlg::UpdateResolutionCombo()
     }
     catch (std::exception &e) {
         // Only 'Disabled' option available. Log error in console.
-        xlog::error("Cannot get available screen resolutions: %s", e.what());
+        xlog::error("Cannot get available screen resolutions: {}", e.what());
     }
     if (selected_res != -1)
         m_res_combo.SetCurSel(selected_res);
     else {
-        char buf[32];
-        sprintf(buf, "%dx%d", m_conf.res_width.value(), m_conf.res_height.value());
-        m_res_combo.SetWindowTextA(buf);
+        auto s = std::format("{}x{}", m_conf.res_width.value(), m_conf.res_height.value());
+        m_res_combo.SetWindowTextA(s.c_str());
     }
 }
 

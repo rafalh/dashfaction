@@ -1,8 +1,8 @@
 #include <windows.h>
 #include <psapi.h>
 #include <common/error/Win32Error.h>
-#include <ostream>
 #include <fstream>
+#include <format>
 #include <ctime>
 #include <cassert>
 #include <cstring>
@@ -11,19 +11,6 @@
 #include <optional>
 #include <cstddef>
 #include "ProcessMemoryCache.h"
-
-inline std::string StringFormat(const char* format, ...)
-{
-    va_list args;
-    va_start(args, format);
-    int size = vsnprintf(nullptr, 0, format, args) + 1;// Extra space for '\0'
-    va_end(args);
-    std::unique_ptr<char[]> buf(new char[size]);
-    va_start(args, format);
-    vsnprintf(buf.get(), size, format, args);
-    va_end(args);
-    return std::string(buf.get(), buf.get() + size - 1); // We don't want the '\0' inside
-}
 
 class TextDumpHelper {
 private:
@@ -70,7 +57,7 @@ public:
             }
             if (prefix) {
                 auto addr = exc_rec.ExceptionInformation[1];
-                out << prefix << StringFormat(" location %08X caused an access violation.\n", addr);
+                out << prefix << std::format(" location {:08X} caused an access violation.\n", addr);
             }
         }
         out << std::endl;
@@ -125,20 +112,20 @@ private:
     void write_exception_info(std::ostream& out, const EXCEPTION_RECORD& exc_rec)
     {
         out << "Exception Record:\n";
-        out << "  ExceptionCode = " << StringFormat("%08X", exc_rec.ExceptionCode) << "\n";
-        out << "  ExceptionFlags = " << StringFormat("%08X", exc_rec.ExceptionFlags) << "\n";
-        out << "  ExceptionAddress = " << StringFormat("%08X", exc_rec.ExceptionAddress) << "\n";
+        out << "  ExceptionCode = " << std::format("{:08X}", exc_rec.ExceptionCode) << "\n";
+        out << "  ExceptionFlags = " << std::format("{:08X}", exc_rec.ExceptionFlags) << "\n";
+        out << "  ExceptionAddress = " << std::format("{}", exc_rec.ExceptionAddress) << "\n";
         for (unsigned i = 0; i < exc_rec.NumberParameters; ++i)
-            out << "  ExceptionInformation[" << i << "] = " << StringFormat("%08X", exc_rec.ExceptionInformation[i]) << "\n";
+            out << "  ExceptionInformation[" << i << "] = " << std::format("{:08X}", exc_rec.ExceptionInformation[i]) << "\n";
         out << std::endl;
     }
 
     void write_context(std::ostream& out, const CONTEXT& ctx)
     {
         out << "Context:\n";
-        out << StringFormat("EIP=%08X EFLAGS=%08X\n", ctx.Eip, ctx.EFlags);
-        out << StringFormat("EAX=%08X EBX=%08X ECX=%08X EDX=%08X\n", ctx.Eax, ctx.Ebx, ctx.Ecx, ctx.Edx);
-        out << StringFormat("ESP=%08X EBP=%08X ESI=%08X EDI=%08X\n", ctx.Esp, ctx.Ebp, ctx.Esi, ctx.Edi);
+        out << std::format("EIP={:08X} EFLAGS={:08X}\n", ctx.Eip, ctx.EFlags);
+        out << std::format("EAX={:08X} EBX={:08X} ECX={:08X} EDX={:08X}\n", ctx.Eax, ctx.Ebx, ctx.Ecx, ctx.Edx);
+        out << std::format("ESP={:08X} EBP={:08X} ESI={:08X} EDI={:08X}\n", ctx.Esp, ctx.Ebp, ctx.Esi, ctx.Edi);
         out << std::endl;
     }
 
@@ -158,9 +145,9 @@ private:
     {
         out << "Memory map:\n";
         for (auto& mbi: m_memory_map) {
-            out << StringFormat("%08X: State %08X Protect %08X Type %08X RegionSize %08X\n",
+            out << std::format("{}: State {:08X} Protect {:08X} Type {:08X} RegionSize {:08X}\n",
                 mbi.BaseAddress, mbi.State, mbi.Protect, mbi.Type, mbi.RegionSize);
-            //out << StringFormat("  AllocBase %x AllocProtect %x\n", mbi.AllocationBase, mbi.AllocationProtect);
+            //out << std::format("  AllocBase {:x} AllocProtect {:x}\n", mbi.AllocationBase, mbi.AllocationProtect);
         }
         out << std::endl;
     }
@@ -357,15 +344,15 @@ private:
     {
         constexpr size_t num_cols = 8;
         for (unsigned i = 0; i < num_dwords; i += num_cols) {
-            out << StringFormat("%08X:", base_addr + i * 4);
+            out << std::format("{:08X}:", base_addr + i * 4);
             for (size_t j = 0; j < num_cols && i + j < num_dwords; ++j) {
-                out << StringFormat(" %08X", data[i + j]);
+                out << std::format(" {:08X}", data[i + j]);
             }
             out << "  ";
             for (size_t j = 0; j < num_cols && i + j < num_dwords; ++j) {
                 const char* as_chars = reinterpret_cast<const char*>(&data[i + j]);
                 for (size_t k = 0; k < 4; ++k) {
-                    out << StringFormat("%c", std::isprint(as_chars[k]) ? as_chars[k] : '.');
+                    out << (std::isprint(as_chars[k]) ? as_chars[k] : '.');
                 }
             }
             out << '\n';
@@ -403,21 +390,21 @@ private:
     {
         out << "Modules:\n";
         for (auto& mod_info : m_modules) {
-            out << StringFormat("%08X - %08X: %s\n", mod_info.start_addr, mod_info.end_addr, mod_info.path.c_str());
+            out << std::format("{:08X} - {:08X}: {}\n", mod_info.start_addr, mod_info.end_addr, mod_info.path);
         }
         out << std::endl;
     }
 
     std::string format_module_relative_address(uintptr_t addr)
     {
-        std::stringstream ss;
-        ss << StringFormat("%08X", addr);
+        std::string buf;
+        std::format_to(std::back_inserter(buf), "{:08X}", addr);
         for (auto& mod_info : m_modules) {
             if (addr >= mod_info.start_addr && addr < mod_info.end_addr) {
-                ss << StringFormat(" (%s+%X)", mod_info.name.c_str(), addr - mod_info.start_addr);
+                std::format_to(std::back_inserter(buf), " ({}+{:X})", mod_info.name, addr - mod_info.start_addr);
                 break;
             }
         }
-        return ss.str();
+        return buf;
     }
 };

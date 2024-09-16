@@ -9,7 +9,9 @@
 #include <xlog/xlog.h>
 #include <algorithm>
 #include <limits>
+#include <format>
 #include <windows.h>
+#include <winsock2.h>
 #include "server.h"
 #include "server_internal.h"
 #include "multi.h"
@@ -45,10 +47,10 @@ std::string g_prev_level;
 
 void parse_vote_config(const char* vote_name, VoteConfig& config, rf::Parser& parser)
 {
-    std::string vote_option_name = string_format("$DF %s:", vote_name);
+    std::string vote_option_name = std::format("$DF {}:", vote_name);
     if (parser.parse_optional(vote_option_name.c_str())) {
         config.enabled = parser.parse_bool();
-        rf::console::printf("DF %s: %s", vote_name, config.enabled ? "true" : "false");
+        rf::console::print("DF {}: {}", vote_name, config.enabled ? "true" : "false");
 
         // if (parser.ParseOptional("+Min Voters:")) {
         //     config.min_voters = parser.ParseUInt();
@@ -155,7 +157,7 @@ void load_additional_server_config(rf::Parser& parser)
             g_additional_server_config.force_player_character = {character_num};
         }
         else {
-            xlog::warn("Unknown character name in Force Player Character setting: %s", character_name.c_str());
+            xlog::warn("Unknown character name in Force Player Character setting: {}", character_name);
         }
     }
 
@@ -225,7 +227,7 @@ std::pair<std::string_view, std::string_view> strip_by_space(std::string_view st
 void handle_next_map_command(rf::Player* player)
 {
     int next_idx = (rf::netgame.current_level_index + 1) % rf::netgame.levels.size();
-    auto msg = string_format("Next level: %s", rf::netgame.levels[next_idx].c_str());
+    auto msg = std::format("Next level: {}", rf::netgame.levels[next_idx]);
     send_chat_line_packet(msg.c_str(), player);
 }
 
@@ -282,11 +284,11 @@ CodeInjection process_obj_update_set_pos_injection{
             float dist = (pos - pdata.last_teleport_pos).len();
             if (!pdata.last_teleport_timestamp.elapsed() && dist > 1.0f) {
                 // Ignore obj_update packets for some time after restoring the position
-                xlog::trace("ignoring obj_update after teleportation (distance %f)", dist);
+                xlog::trace("ignoring obj_update after teleportation (distance {})", dist);
                 regs.eip = 0x0047DFF6;
             }
             else {
-                xlog::trace("not ignoring obj_update anymore after teleportation (distance %f)", dist);
+                xlog::trace("not ignoring obj_update anymore after teleportation (distance {})", dist);
                 pdata.last_teleport_timestamp.invalidate();
             }
         }
@@ -297,10 +299,10 @@ static void send_private_message_with_stats(rf::Player* player)
 {
     auto* stats = static_cast<PlayerStatsNew*>(player->stats);
     int accuracy = static_cast<int>(stats->calc_accuracy() * 100.0f);
-    auto str = string_format(
+    auto str = std::format(
         "PLAYER STATS\n"
-        "Kills: %d - Deaths: %d - Max Streak: %d\n"
-        "Accuracy: %d%% (%.0f/%.0f) - Damage Given: %.0f - Damage Taken: %.0f",
+        "Kills: {} - Deaths: {} - Max Streak: {}\n"
+        "Accuracy: {}% ({:.0f}/{:.0f}) - Damage Given: {:.0f} - Damage Taken: {:.0f}",
         stats->num_kills, stats->num_deaths, stats->max_streak,
         accuracy, stats->num_shots_hit, stats->num_shots_fired,
         stats->damage_given, stats->damage_received);
@@ -312,7 +314,7 @@ bool handle_server_chat_command(std::string_view server_command, rf::Player* sen
     auto [cmd_name, cmd_arg] = strip_by_space(server_command);
 
     if (cmd_name == "info") {
-        send_chat_line_packet(string_format("Server powered by Dash Faction %s (build date: %s %s)", VERSION_STR, __DATE__, __TIME__).c_str(), sender);
+        send_chat_line_packet(std::format("Server powered by Dash Faction {} (build date: {} {})", VERSION_STR, __DATE__, __TIME__).c_str(), sender);
     }
     else if (cmd_name == "vote") {
         auto [vote_name, vote_arg] = strip_by_space(cmd_arg);
@@ -523,7 +525,7 @@ CodeInjection multi_on_new_player_injection{
         rf::Player* player = regs.esi;
         in_addr addr;
         addr.S_un.S_addr = ntohl(player->net_data->addr.ip_addr);
-        rf::console::printf("%s%s (%s)", player->name.c_str(),  rf::strings::has_joined, inet_ntoa(addr));
+        rf::console::print("{}{} ({})", player->name,  rf::strings::has_joined, inet_ntoa(addr));
         regs.eip = 0x0047B051;
     },
 };
@@ -543,8 +545,8 @@ static bool check_player_ac_status([[maybe_unused]] rf::Player* player)
 
         int ac_level = pf_get_player_ac_level(player);
         if (ac_level < g_additional_server_config.anticheat_level) {
-            auto msg = string_format(
-                "Sorry! Your spawn request was rejected because your client did not pass anti-cheat verification (your level %d, required %d). "
+            auto msg = std::format(
+                "Sorry! Your spawn request was rejected because your client did not pass anti-cheat verification (your level {}, required {}). "
                 "Please make sure you do not have any mods installed and that your client software is up to date.",
                 ac_level, g_additional_server_config.anticheat_level
             );
@@ -616,7 +618,7 @@ static void maybe_increment_weapon_hits_stat(int hit_obj_handle, rf::Weapon *wp)
     if (!multi_is_team_game_type() || attacker_pp->team != hit_pp->team) {
         auto* stats = static_cast<PlayerStatsNew*>(attacker_pp->stats);
         stats->add_shots_hit(get_weapon_shot_stats_delta(wp));
-        xlog::trace("hit a_ep %p wp %p h_ep %p", attacker_ep, wp, hit_ep);
+        xlog::trace("hit a_ep {} wp {} h_ep {}", attacker_ep, wp, hit_ep);
     }
 }
 
@@ -638,7 +640,7 @@ FunHook<void(rf::Entity*, rf::Weapon*)> multi_lag_comp_weapon_fire_hook{
         if (pp && pp->stats) {
             auto* stats = static_cast<PlayerStatsNew*>(pp->stats);
             stats->add_shots_fired(get_weapon_shot_stats_delta(wp));
-            xlog::trace("fired a_ep %p wp %p", ep, wp);
+            xlog::trace("fired a_ep {} wp {}", ep, wp);
         }
     },
 };

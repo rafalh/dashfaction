@@ -1,15 +1,16 @@
 file(GLOB EXPERIMENTAL_SRCS experimental/*.cpp experimental/*.h)
 
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/purefaction/pf_secret.cpp")
-    set(PF_SRCS
-        purefaction/pf.cpp
-        purefaction/pf.h
-        purefaction/pf_packets.h
+    set(PF_AC_SRCS
         purefaction/pf_secret_packets.h
         purefaction/pf_secret.cpp
-        purefaction/pf_secret.h
+    )
+else()
+    set(PF_AC_SRCS
+        purefaction/pf_ac_stubs.cpp
     )
 endif()
+
 
 set(SRCS
     main/main.cpp
@@ -172,21 +173,24 @@ set(SRCS
     sound/sound.h
     sound/sound_ds.cpp
     res/resources.rc
-    ${PF_SRCS}
+    purefaction/pf.cpp
+    purefaction/pf.h
+    purefaction/pf_ac.h
+    purefaction/pf_packets.h
+    ${PF_AC_SRCS}
     ${EXPERIMENTAL_SRCS}
 )
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRCS})
 
 add_library(DashFaction SHARED ${SRCS})
-target_compile_features(DashFaction PUBLIC cxx_std_17)
+target_compile_features(DashFaction PUBLIC cxx_std_20)
 set_target_properties(DashFaction PROPERTIES
     PREFIX ""
     CXX_EXTENSIONS NO
 )
 enable_warnings(DashFaction)
 setup_debug_info(DashFaction)
-#cotire(DashFaction)
 
 target_include_directories(DashFaction PRIVATE
     ${CMAKE_SOURCE_DIR}/vendor
@@ -205,11 +209,8 @@ if(NOT MSVC)
     target_include_directories(DashFaction PRIVATE ${CMAKE_SOURCE_DIR}/vendor/natupnp)
 endif()
 
-target_compile_definitions(DashFaction PRIVATE NOMINMAX BUILD_DLL)
+target_compile_definitions(DashFaction PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX BUILD_DLL)
 
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/purefaction/pf_secret.cpp")
-    target_compile_definitions(DashFaction PRIVATE HAS_PF)
-endif()
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/experimental/experimental.cpp")
     target_compile_definitions(DashFaction PRIVATE HAS_EXPERIMENTAL)
 endif()

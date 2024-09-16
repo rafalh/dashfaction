@@ -1,5 +1,6 @@
 #include <regex>
 #include <xlog/xlog.h>
+#include <winsock2.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
 #include "multi.h"
@@ -33,7 +34,7 @@ void handle_url_param()
     std::regex e{R"(^rf://([\w\.-]+):(\d+)/?(?:\?password=(.*))?$)"};
     std::cmatch cm;
     if (!std::regex_match(url, cm, e)) {
-        xlog::warn("Unsupported URL: %s", url);
+        xlog::warn("Unsupported URL: {}", url);
         return;
     }
 
@@ -52,7 +53,7 @@ void handle_url_param()
         return;
     }
 
-    rf::console::printf("Connecting to %s:%d...", host_name.c_str(), port);
+    rf::console::print("Connecting to {}:{}...", host_name, port);
     auto host = ntohl(reinterpret_cast<in_addr *>(hp->h_addr_list[0])->S_un.S_addr);
 
     rf::NetAddr addr{host, port};
@@ -130,15 +131,15 @@ FunHook<void(rf::Player*, rf::Entity*, int)> multi_select_weapon_server_side_hoo
             has_weapon = rf::ai_has_weapon(&ep->ai, weapon_type);
         }
         if (!has_weapon) {
-            xlog::debug("Player %s attempted to select an unpossesed weapon %d", pp->name.c_str(), weapon_type);
+            xlog::debug("Player {} attempted to select an unpossesed weapon {}", pp->name, weapon_type);
         }
         else if (multi_is_selecting_weapon(pp)) {
-            xlog::debug("Player %s attempted to select weapon %d while selecting weapon %d",
-                pp->name.c_str(), weapon_type, ep->ai.current_primary_weapon);
+            xlog::debug("Player {} attempted to select weapon {} while selecting weapon {}",
+                pp->name, weapon_type, ep->ai.current_primary_weapon);
         }
         else if (rf::entity_is_reloading(ep)) {
-            xlog::debug("Player %s attempted to select weapon %d while reloading weapon %d",
-                pp->name.c_str(), weapon_type, ep->ai.current_primary_weapon);
+            xlog::debug("Player {} attempted to select weapon {} while reloading weapon {}",
+                pp->name, weapon_type, ep->ai.current_primary_weapon);
         }
         else {
             rf::player_make_weapon_current_selection(pp, weapon_type);
@@ -155,13 +156,13 @@ void multi_reload_weapon_server_side(rf::Player* pp, int weapon_type)
         // Entity is dead
     }
     else if (ep->ai.current_primary_weapon != weapon_type) {
-        xlog::debug("Player %s attempted to reload unselected weapon %d", pp->name.c_str(), weapon_type);
+        xlog::debug("Player {} attempted to reload unselected weapon {}", pp->name, weapon_type);
     }
     else if (multi_is_selecting_weapon(pp)) {
-        xlog::debug("Player %s attempted to reload weapon %d while selecting it", pp->name.c_str(), weapon_type);
+        xlog::debug("Player {} attempted to reload weapon {} while selecting it", pp->name, weapon_type);
     }
     else if (rf::entity_is_reloading(ep)) {
-        xlog::debug("Player %s attempted to reload weapon %d while reloading it", pp->name.c_str(), weapon_type);
+        xlog::debug("Player {} attempted to reload weapon {} while reloading it", pp->name, weapon_type);
     }
     else {
         rf::entity_reload_current_primary(ep, false, false);
@@ -192,13 +193,13 @@ void multi_turn_weapon_on(rf::Entity* ep, rf::Player* pp, bool alt_fire)
     // Note: pp is always null client-side
     auto weapon_type = ep->ai.current_primary_weapon;
     if (!rf::weapon_is_on_off_weapon(weapon_type, alt_fire)) {
-        xlog::debug("Player %s attempted to turn on weapon %d which has no continous fire flag", ep->name.c_str(), weapon_type);
+        xlog::debug("Player {} attempted to turn on weapon {} which has no continous fire flag", ep->name, weapon_type);
     }
     else if (rf::is_server && multi_is_selecting_weapon(pp)) {
-        xlog::debug("Player %s attempted to turn on weapon %d while selecting it", ep->name.c_str(), weapon_type);
+        xlog::debug("Player {} attempted to turn on weapon {} while selecting it", ep->name, weapon_type);
     }
     else if (rf::is_server && rf::entity_is_reloading(ep)) {
-        xlog::debug("Player %s attempted to turn on weapon %d while reloading it", ep->name.c_str(), weapon_type);
+        xlog::debug("Player {} attempted to turn on weapon {} while reloading it", ep->name, weapon_type);
     }
     else {
         if (!rf::is_server) {
@@ -298,8 +299,8 @@ bool multi_check_cps(rf::Player* pp, int weapon_type)
     float max_cps = multi_get_max_cps(weapon_type);
     auto [above_limit, cps] = multi_is_cps_above_limit(pp, max_cps, weapon_type);
     if (above_limit) {
-        xlog::debug("Cancelled fire request from player %s for weapon %i. They are shooting too fast: cps %.2f is greater than allowed %.2f",
-            pp->name.c_str(), weapon_type, cps, max_cps);
+        xlog::info(""Cancelled fire request from player {} for weapon {}. They are shooting too fast: cps {:.2f} is greater than allowed {:.2f}",
+            pp->name, weapon_type, cps, max_cps);
     }
     return above_limit;
 }
@@ -308,19 +309,19 @@ bool multi_is_weapon_fire_allowed_server_side(rf::Entity *ep, int weapon_type, b
 {
     rf::Player* pp = rf::player_from_entity_handle(ep->handle);
     if (ep->ai.current_primary_weapon != weapon_type) {
-        xlog::debug("Player %s attempted to fire unselected weapon %d", pp->name.c_str(), weapon_type);
+        xlog::debug("Player {} attempted to fire unselected weapon {}", pp->name, weapon_type);
     }
     else if (is_entity_out_of_ammo(ep, weapon_type, alt_fire)) {
-        xlog::debug("Player %s attempted to fire weapon %d without ammunition", pp->name.c_str(), weapon_type);
+        xlog::debug("Player {} attempted to fire weapon {} without ammunition", pp->name, weapon_type);
     }
     else if (rf::weapon_is_on_off_weapon(weapon_type, alt_fire)) {
-        xlog::debug("Player %s attempted to fire a single bullet from on/off weapon %d", pp->name.c_str(), weapon_type);
+        xlog::debug("Player {} attempted to fire a single bullet from on/off weapon {}", pp->name, weapon_type);
     }
     else if (multi_is_selecting_weapon(pp)) {
-        xlog::debug("Player %s attempted to fire weapon %d while selecting it", pp->name.c_str(), weapon_type);
+        xlog::debug("Player {} attempted to fire weapon {} while selecting it", pp->name, weapon_type);
     }
     else if (rf::entity_is_reloading(ep)) {
-        xlog::debug("Player %s attempted to fire weapon %d while reloading it", pp->name.c_str(), weapon_type);
+        xlog::debug("Player {} attempted to fire weapon {} while reloading it", pp->name, weapon_type);
     }
     else if (!multi_check_cps(pp, weapon_type)) {
         return true;

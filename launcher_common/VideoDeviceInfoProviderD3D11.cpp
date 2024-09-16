@@ -3,6 +3,7 @@
 #include "VideoDeviceInfoProvider.h"
 #include <common/error/Exception.h>
 #include <common/error/Win32Error.h>
+#include <common/DynamicLinkLibrary.h>
 #include <common/ComPtr.h>
 #include <xlog/xlog.h>
 #include <dxgi.h>
@@ -11,7 +12,7 @@ class VideoDeviceInfoProviderD3D11 : public VideoDeviceInfoProvider
 {
 public:
     VideoDeviceInfoProviderD3D11();
-    ~VideoDeviceInfoProviderD3D11() override;
+    ~VideoDeviceInfoProviderD3D11() override = default;
     std::vector<std::string> get_adapters() override;
     std::set<Resolution> get_resolutions(unsigned adapter, unsigned format) override;
     std::set<unsigned> get_multisample_types(unsigned adapter, unsigned format, bool windowed) override;
@@ -27,21 +28,19 @@ public:
     }
 
 private:
-    IDXGIFactory* m_factory;
-    HMODULE m_dxgi_lib;
-    HMODULE m_d3d11_lib;
+    DynamicLinkLibrary m_dxgi_lib;
+    DynamicLinkLibrary m_d3d11_lib;
+    ComPtr<IDXGIFactory> m_factory;
     decltype(D3D11CreateDevice)* m_D3D11CreateDevice;
 };
 
-VideoDeviceInfoProviderD3D11::VideoDeviceInfoProviderD3D11()
+VideoDeviceInfoProviderD3D11::VideoDeviceInfoProviderD3D11() :
+    m_dxgi_lib{L"dxgi.dll"}, m_d3d11_lib{L"d3d11.dll"}
 {
-    m_dxgi_lib = LoadLibraryA("dxgi.dll");
     if (!m_dxgi_lib)
         THROW_WIN32_ERROR("Failed to load dxgi.dll");
 
-    // Note: double cast is needed to fix cast-function-type GCC warning
-    auto pCreateDXGIFactory = reinterpret_cast<decltype(CreateDXGIFactory)*>(reinterpret_cast<void(*)()>(
-        GetProcAddress(m_dxgi_lib, "CreateDXGIFactory")));
+    auto pCreateDXGIFactory = m_dxgi_lib.get_proc_address<decltype(CreateDXGIFactory)*>("CreateDXGIFactory");
     if (!pCreateDXGIFactory)
         THROW_WIN32_ERROR("Failed to load get CreateDXGIFactory function address");
 
@@ -49,22 +48,12 @@ VideoDeviceInfoProviderD3D11::VideoDeviceInfoProviderD3D11()
     if (FAILED(hr))
         THROW_EXCEPTION("CreateDXGIFactory failed");
 
-    m_d3d11_lib = LoadLibraryA("d3d11.dll");
     if (!m_d3d11_lib)
         THROW_WIN32_ERROR("Failed to load d3d11.dll");
 
-    // Note: double cast is needed to fix cast-function-type GCC warning
-    m_D3D11CreateDevice = reinterpret_cast<decltype(D3D11CreateDevice)*>(reinterpret_cast<void(*)()>(
-        GetProcAddress(m_d3d11_lib, "D3D11CreateDevice")));
+    m_D3D11CreateDevice = m_d3d11_lib.get_proc_address<decltype(D3D11CreateDevice)*>("D3D11CreateDevice");
     if (!m_D3D11CreateDevice)
         THROW_WIN32_ERROR("Failed to load get D3D11CreateDevice function address");
-}
-
-VideoDeviceInfoProviderD3D11::~VideoDeviceInfoProviderD3D11()
-{
-    m_factory->Release();
-    FreeLibrary(m_d3d11_lib);
-    FreeLibrary(m_dxgi_lib);
 }
 
 std::vector<std::string> VideoDeviceInfoProviderD3D11::get_adapters()
@@ -76,14 +65,14 @@ std::vector<std::string> VideoDeviceInfoProviderD3D11::get_adapters()
         HRESULT hr = m_factory->EnumAdapters(adapter_idx++, &adapter);
         if (FAILED(hr)) {
             if (hr != DXGI_ERROR_NOT_FOUND) {
-                xlog::error("EnumAdapters failed: %lx", hr);
+                xlog::error("EnumAdapters failed: {:x}", hr);
             }
             break;
         }
         DXGI_ADAPTER_DESC desc;
         hr = adapter->GetDesc(&desc);
         if (FAILED(hr)) {
-            xlog::error("GetDesc failed: %lx", hr);
+            xlog::error("GetDesc failed: {:x}", hr);
             break;
         }
 
@@ -101,7 +90,7 @@ std::set<VideoDeviceInfoProvider::Resolution> VideoDeviceInfoProviderD3D11::get_
     ComPtr<IDXGIAdapter> dxgi_adapter = nullptr;
     HRESULT hr = m_factory->EnumAdapters(adapter, &dxgi_adapter);
     if (FAILED(hr)) {
-        xlog::error("EnumAdapters failed: %lx", hr);
+        xlog::error("EnumAdapters failed: {:x}", hr);
         return {};
     }
 
@@ -110,21 +99,21 @@ std::set<VideoDeviceInfoProvider::Resolution> VideoDeviceInfoProviderD3D11::get_
     ComPtr<IDXGIOutput> dxgi_output;
     hr = dxgi_adapter->EnumOutputs(0, &dxgi_output); // FIXME: what about other outputs?
     if (FAILED(hr)) {
-        xlog::error("EnumOutputs failed: %lx", hr);
+        xlog::error("EnumOutputs failed: {:x}", hr);
         return {};
     }
 
     unsigned mode_count = 0;
     hr = dxgi_output->GetDisplayModeList(static_cast<DXGI_FORMAT>(format), 0, &mode_count, nullptr);
     if (FAILED(hr)) {
-        xlog::error("GetDisplayModeList failed: %lx", hr);
+        xlog::error("GetDisplayModeList failed: {:x}", hr);
     }
 
     std::vector<DXGI_MODE_DESC> desc_vec;
     desc_vec.resize(mode_count);
     hr = dxgi_output->GetDisplayModeList(static_cast<DXGI_FORMAT>(format), 0, &mode_count, desc_vec.data());
     if (FAILED(hr)) {
-        xlog::error("GetDisplayModeList failed: %lx", hr);
+        xlog::error("GetDisplayModeList failed: {:x}", hr);
     }
 
     for (auto& desc : desc_vec) {
@@ -138,17 +127,17 @@ std::set<unsigned> VideoDeviceInfoProviderD3D11::get_multisample_types(
     unsigned adapter, unsigned format, [[maybe_unused]] bool windowed
 ) {
 
-    ComPtr<IDXGIAdapter> dxgi_adapter = nullptr;
+    ComPtr<IDXGIAdapter> dxgi_adapter;
     HRESULT hr = m_factory->EnumAdapters(adapter, &dxgi_adapter);
     if (FAILED(hr)) {
-        xlog::error("EnumAdapters failed: %lx", hr);
+        xlog::error("EnumAdapters failed: {:x}", hr);
         return {};
     }
 
-    ComPtr<ID3D11Device> d3d11_device = nullptr;
+    ComPtr<ID3D11Device> d3d11_device;
     hr = m_D3D11CreateDevice(dxgi_adapter, D3D_DRIVER_TYPE_HARDWARE, nullptr, 0, nullptr, 0, D3D11_SDK_VERSION, &d3d11_device, nullptr, nullptr);
     if (FAILED(hr)) {
-        xlog::error("D3D11CreateDevice failed: %lx", hr);
+        xlog::error("D3D11CreateDevice failed: {:x}", hr);
         return {};
     }
 

@@ -16,7 +16,7 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRCS})
 
 add_executable(CrashHandler WIN32 ${SRCS})
 
-target_compile_features(CrashHandler PRIVATE cxx_std_17)
+target_compile_features(CrashHandler PRIVATE cxx_std_20)
 set_target_properties(CrashHandler PROPERTIES CXX_EXTENSIONS NO)
 enable_warnings(CrashHandler)
 setup_debug_info(CrashHandler)

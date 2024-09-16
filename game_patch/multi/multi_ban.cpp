@@ -5,7 +5,6 @@
 #include <winsock2.h>
 #include <xlog/xlog.h>
 #include <patch_common/FunHook.h>
-#include <common/utils/string-utils.h>
 
 #include "../rf/multi.h"
 #include "multi.h"
@@ -23,10 +22,7 @@ public:
         mask_{mask}
     {}
 
-    bool operator==(const IpRange& other)
-    {
-        return ip_ == other.ip_ && mask_ == other.mask_;
-    }
+    bool operator==(const IpRange& other) const = default;
 
     bool matches(unsigned ip)
     {
@@ -127,7 +123,7 @@ public:
         std::string line;
         while (std::getline(f, line)) {
             // Ignore empty lines and comments
-            if (line.empty() || string_starts_with(line, "#") || string_starts_with(line, "//")) {
+            if (line.empty() || line.starts_with('#') || line.starts_with("//")) {
                 continue;
             }
             add(line);
@@ -159,7 +155,7 @@ public:
             ip_ranges_.push_back(r);
             return true;
         } catch (const std::exception& e) {
-            xlog::error("Failed to parse banlist entry: %s", s.c_str());
+            xlog::error("Failed to parse banlist entry: {}", s);
             return false;
         }
     }
@@ -211,7 +207,7 @@ FunHook multi_ban_validate_ip_hook{
         try {
             IpRange::parse(s);
         } catch (const std::exception& e) {
-            xlog::error("Invalid IP range: %s", s);
+            xlog::error("Invalid IP range: {}", s);
             return 0;
         }
         return 1;
@@ -247,7 +243,7 @@ std::optional<std::string> multi_ban_unban_last()
 
 #ifndef NDEBUG
 
-#define ok(expr) if (!(expr)) xlog::error("Test failed: %s", #expr)
+#define ok(expr) if (!(expr)) xlog::error("Test failed: {}", #expr)
 
 static void test_parsing()
 {
@@ -262,7 +258,7 @@ static void test_parsing()
         ok(IpRange::parse("192.168.*.*").to_string() == "192.168.*.*");
         ok(IpRange::parse("192.168.17.17/28").to_string() == "192.168.17.16/28"); // normalized
     } catch (const std::exception& e) {
-        xlog::error("banlist test failed: %s", e.what());
+        xlog::error("banlist test failed: {}", e.what());
     }
 }
 

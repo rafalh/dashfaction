@@ -21,11 +21,11 @@ namespace df::gr::d3d11
         switch (msg) {
         case WM_ACTIVATEAPP:
             if (w_param) {
-                xlog::trace("active %x %lx", w_param, l_param);
+                xlog::trace("active {:x} {:x}", w_param, l_param);
                 renderer->window_active();
             }
             else {
-                xlog::trace("inactive %x %lx", w_param, l_param);
+                xlog::trace("inactive {:x} {:x}", w_param, l_param);
                 renderer->window_inactive();
             }
         }

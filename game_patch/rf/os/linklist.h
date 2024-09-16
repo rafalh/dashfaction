@@ -34,15 +34,7 @@ namespace rf
                 return copy;
             }
 
-            bool operator==(Iterator& other) const
-            {
-                return current_ == other.current_;
-            }
-
-            bool operator!=(Iterator& other) const
-            {
-                return current_ != other.current_;
-            }
+            bool operator==(const Iterator& other) const = default;
         };
 
         class ConstIterator
@@ -70,15 +62,7 @@ namespace rf
                 return copy;
             }
 
-            bool operator==(ConstIterator& other) const
-            {
-                return current_ == other.current_;
-            }
-
-            bool operator!=(ConstIterator& other) const
-            {
-                return current_ != other.current_;
-            }
+            bool operator==(const ConstIterator& other) const = default;
         };
 
         [[nodiscard]] T* first()
