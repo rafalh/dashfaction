@@ -235,7 +235,7 @@ ConsoleCommand2 playing_sounds_cmd{
                 DWORD status;
                 chnl.pdsb->GetStatus(&status);
                 auto& buf = rf::ds_buffers[chnl.buf_id];
-                rf::console::printf("Channel %d: filename %s flags %x status %lx", chnl_num, buf.filename, chnl.flags, status);
+                rf::console::print("Channel {}: filename {} flags {:x} status {:x}", chnl_num, buf.filename, chnl.flags, status);
             }
         }
     },

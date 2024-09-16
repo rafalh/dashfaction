@@ -121,11 +121,11 @@ ConsoleCommand2 fov_cmd{
             }
             g_game_config.save();
         }
-        rf::console::printf("Horizontal FOV: %.2f", gr_scale_world_fov());
+        rf::console::print("Horizontal FOV: {:.2f}", gr_scale_world_fov());
 
         const auto& server_info_opt = get_df_server_info();
         if (server_info_opt && server_info_opt.value().max_fov) {
-            rf::console::printf("Server FOV limit: %.2f", server_info_opt.value().max_fov.value());
+            rf::console::print("Server FOV limit: {:.2f}", server_info_opt.value().max_fov.value());
         }
     },
     "Sets horizontal FOV (field of view) in degrees. Use 0 to enable automatic FOV scaling.",
@@ -138,7 +138,7 @@ ConsoleCommand2 gamma_cmd{
         if (value_opt) {
             rf::gr::set_gamma(value_opt.value());
         }
-        rf::console::printf("Gamma: %.2f", rf::gr::gamma);
+        rf::console::print("Gamma: {:.2f}", rf::gr::gamma);
     },
     "Sets gamma.",
     "gamma [value]",
@@ -232,7 +232,7 @@ ConsoleCommand2 nearest_texture_filtering_cmd{
         g_game_config.nearest_texture_filtering = !g_game_config.nearest_texture_filtering;
         g_game_config.save();
         gr_update_texture_filtering();
-        rf::console::printf("Nearest texture filtering is %s", g_game_config.nearest_texture_filtering ? "enabled" : "disabled");
+        rf::console::print("Nearest texture filtering is {}", g_game_config.nearest_texture_filtering ? "enabled" : "disabled");
     },
     "Toggle nearest texture filtering",
 };
@@ -243,7 +243,7 @@ ConsoleCommand2 lod_distance_scale_cmd{
         if (scale_opt.has_value()) {
             gr_lod_dist_scale = scale_opt.value();
         }
-        rf::console::printf("LOD distance scale: %.2f", gr_lod_dist_scale);
+        rf::console::print("LOD distance scale: {:.2f}", gr_lod_dist_scale);
     },
     "Sets LOD distance scale factor",
 };

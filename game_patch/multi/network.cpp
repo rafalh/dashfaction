@@ -916,7 +916,7 @@ void send_chat_line_packet(const char* msg, rf::Player* target, rf::Player* send
     packet_msg[255] = 0;
     if (target == nullptr && rf::is_server) {
         rf::multi_io_send_reliable_to_all(buf, packet.header.size + sizeof(packet.header), 0);
-        rf::console::printf("Server: %s", msg);
+        rf::console::print("Server: {}", msg);
     }
     else {
         rf::multi_io_send_reliable(target, buf, packet.header.size + sizeof(packet.header), 0);
@@ -958,7 +958,7 @@ ConsoleCommand2 update_rate_cmd{
                 g_update_rate = std::clamp(update_rate.value(), 20, 60);
             }
         }
-        rf::console::printf("Update rate per second: %d", g_update_rate);
+        rf::console::print("Update rate per second: {}", g_update_rate);
     },
 };
 

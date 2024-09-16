@@ -333,13 +333,13 @@ ConsoleCommand2 antialiasing_cmd{
     "antialiasing",
     []() {
         if (!g_game_config.msaa)
-            rf::console::printf("Anti-aliasing is not supported");
+            rf::console::print("Anti-aliasing is not supported");
         else {
             DWORD enabled = 0;
             rf::gr::d3d::device->GetRenderState(D3DRS_MULTISAMPLEANTIALIAS, &enabled);
             enabled = !enabled;
             rf::gr::d3d::device->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, enabled);
-            rf::console::printf("Anti-aliasing is %s", enabled ? "enabled" : "disabled");
+            rf::console::print("Anti-aliasing is {}", enabled ? "enabled" : "disabled");
         }
     },
     "Toggles anti-aliasing",
@@ -630,7 +630,7 @@ ConsoleCommand2 pow2_tex_cmd{
     "pow2_tex",
     []() {
         rf::gr::d3d::p2t = !rf::gr::d3d::p2t;
-        rf::console::printf("Power of 2 textures: %s", rf::gr::d3d::p2t ? "on" : "off");
+        rf::console::print("Power of 2 textures: {}", rf::gr::d3d::p2t ? "on" : "off");
     },
     "Forces usage of power of two textures. It may fix UV mappings in old levels. Onyl levels loaded after usage of this command are affected.",
 };

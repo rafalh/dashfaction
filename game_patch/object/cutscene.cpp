@@ -106,12 +106,12 @@ ConsoleCommand2 skip_cutscene_bind_cmd{
         else {
             int ctrl = rf::control_config_find_action_by_name(&rf::local_player->settings, bind_name.c_str());
             if (ctrl == -1) {
-                rf::console::printf("Cannot find control: %s", bind_name.c_str());
+                rf::console::print("Cannot find control: {}", bind_name);
             }
             else {
                 g_game_config.skip_cutscene_ctrl = ctrl;
                 g_game_config.save();
-                rf::console::printf("Skip Cutscene bind changed to: %s", bind_name.c_str());
+                rf::console::print("Skip Cutscene bind changed to: {}", bind_name);
             }
         }
     },

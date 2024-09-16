@@ -41,7 +41,7 @@ FunHook<void(rf::Trigger*, int32_t, bool)> trigger_activate_hook{
         rf::Player* player = rf::player_from_entity_handle(h_entity);
         const char* trigger_name = trigger->name.c_str();
         if (player && trigger->trigger_team != 0xFF && trigger->trigger_team != player->team) {
-            // rf::console::printf("Trigger team does not match: %d vs %d (%s)", trigger->team, Player->blue_team,
+            // rf::console::print("Trigger team does not match: {} vs {} ({})", trigger->team, Player->blue_team,
             // trigger_name);
             return;
         }
@@ -50,7 +50,7 @@ FunHook<void(rf::Trigger*, int32_t, bool)> trigger_activate_hook{
         uint8_t ext_flags = trigger_name[0] == TRIGGER_PF_FLAGS_PREFIX ? trigger_name[1] : 0;
         bool is_solo_trigger = (ext_flags & (TRIGGER_SOLO | TRIGGER_TELEPORT)) != 0;
         if (rf::is_multi && rf::is_server && is_solo_trigger && player) {
-            // rf::console::printf("Solo/Teleport trigger activated %s", trigger_name);
+            // rf::console::print("Solo/Teleport trigger activated {}", trigger_name);
             if (player != rf::local_player) {
                 send_trigger_activate_packet(player, trigger->uid, h_entity);
                 return;
@@ -64,7 +64,7 @@ FunHook<void(rf::Trigger*, int32_t, bool)> trigger_activate_hook{
         }
 
         // Normal activation
-        // rf::console::printf("trigger normal activation %s %d", trigger_name, ext_flags);
+        // rf::console::print("trigger normal activation {} {}", trigger_name, ext_flags);
         trigger_activate_hook.call_target(trigger, h_entity, skip_movers);
         g_trigger_solo_player = nullptr;
     },

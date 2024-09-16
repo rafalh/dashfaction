@@ -69,7 +69,7 @@ ConsoleCommand2 fps_counter_cmd{
     []() {
         g_game_config.fps_counter = !g_game_config.fps_counter;
         g_game_config.save();
-        rf::console::printf("FPS counter display is %s", g_game_config.fps_counter ? "enabled" : "disabled");
+        rf::console::print("FPS counter display is {}", g_game_config.fps_counter ? "enabled" : "disabled");
     },
     "Toggle FPS counter",
     "fps_counter",
@@ -111,7 +111,7 @@ ConsoleCommand2 max_fps_cmd{
             rf::frametime_min = 1.0f / limit;
         }
         else
-            rf::console::printf("Maximal FPS: %.1f", 1.0f / rf::frametime_min);
+            rf::console::print("Maximal FPS: {:.1f}", 1.0f / rf::frametime_min);
     },
     "Sets maximal FPS",
     "maxfps <limit>",

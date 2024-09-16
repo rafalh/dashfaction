@@ -266,7 +266,7 @@ static ConsoleCommand2 spectate_mode_minimal_ui_cmd{
     "spectate_mode_minimal_ui",
     []() {
         g_spectate_mode_minimal_ui = !g_spectate_mode_minimal_ui;
-        rf::console::printf("Spectate mode minimal UI is %s", g_spectate_mode_minimal_ui ? "enabled" : "disabled");
+        rf::console::print("Spectate mode minimal UI is {}", g_spectate_mode_minimal_ui ? "enabled" : "disabled");
     },
     "Toggles spectate mode minimal UI",
 };

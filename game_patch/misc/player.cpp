@@ -146,7 +146,7 @@ ConsoleCommand2 swap_assault_rifle_controls_cmd{
     []() {
         g_game_config.swap_assault_rifle_controls = !g_game_config.swap_assault_rifle_controls;
         g_game_config.save();
-        rf::console::printf("Swap assault rifle controls: %s",
+        rf::console::print("Swap assault rifle controls: {}",
                      g_game_config.swap_assault_rifle_controls ? "enabled" : "disabled");
     },
     "Swap Assault Rifle controls",
@@ -157,7 +157,7 @@ ConsoleCommand2 swap_grenade_controls_cmd{
     []() {
         g_game_config.swap_grenade_controls = !g_game_config.swap_grenade_controls;
         g_game_config.save();
-        rf::console::printf("Swap grenade controls: %s",
+        rf::console::print("Swap grenade controls: {}",
                      g_game_config.swap_grenade_controls ? "enabled" : "disabled");
     },
     "Swap grenade controls",
@@ -260,7 +260,7 @@ ConsoleCommand2 damage_screen_flash_cmd{
     []() {
         g_game_config.damage_screen_flash = !g_game_config.damage_screen_flash;
         g_game_config.save();
-        rf::console::printf("Damage screen flash effect is %s", g_game_config.damage_screen_flash ? "enabled" : "disabled");
+        rf::console::print("Damage screen flash effect is {}", g_game_config.damage_screen_flash ? "enabled" : "disabled");
     },
     "Toggle damage screen flash effect",
 };

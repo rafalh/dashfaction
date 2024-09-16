@@ -374,7 +374,7 @@ ConsoleCommand2 max_decals_cmd{
             g_max_decals = std::clamp(max_decals.value(), 128, 512);
             decal_patch_limit(g_max_decals);
         }
-        rf::console::printf("Max decals: %d", g_max_decals);
+        rf::console::print("Max decals: {}", g_max_decals);
     },
 };
 
@@ -398,7 +398,7 @@ static ConsoleCommand2 dbg_room_clip_wnd_cmd{
     "dbg_room_clip_wnd",
     []() {
         g_show_room_clip_wnd = !g_show_room_clip_wnd;
-        rf::console::printf("Show room clip windows: %d", g_show_room_clip_wnd);
+        rf::console::print("Show room clip windows: {}", g_show_room_clip_wnd);
     },
 };
 

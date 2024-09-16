@@ -52,7 +52,7 @@ void handle_url_param()
         return;
     }
 
-    rf::console::printf("Connecting to %s:%d...", host_name.c_str(), port);
+    rf::console::print("Connecting to {}:{}...", host_name, port);
     auto host = ntohl(reinterpret_cast<in_addr *>(hp->h_addr_list[0])->S_un.S_addr);
 
     rf::NetAddr addr{host, port};

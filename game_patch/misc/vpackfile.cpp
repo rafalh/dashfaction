@@ -417,10 +417,10 @@ ConsoleCommand2 which_packfile_cmd{
     [](std::string filename) {
         auto* entry = vpackfile_find_new(filename.c_str());
         if (entry) {
-            rf::console::printf("%s", entry->parent->path);
+            rf::console::print("{}", entry->parent->path);
         }
         else {
-            rf::console::printf("Cannot find %s!", filename.c_str());
+            rf::console::print("Cannot find {}!", filename);
         }
     },
     "Prints packfile path that the provided file is included in",

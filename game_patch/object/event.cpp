@@ -175,8 +175,8 @@ CodeInjection event_activate_injection{
         if (event_debug_enabled) {
             rf::Event* event = regs.esi;
             bool on = addr_as_ref<bool>(regs.esp + 0xC + 0xC);
-            rf::console::printf("Processing %s message in event %d '%s'",
-            on ? "ON" : "OFF", event->uid, event->name.c_str());
+            rf::console::print("Processing {} message in event {} ({})",
+            on ? "ON" : "OFF", event->name, event->uid);
         }
     },
 };
@@ -187,8 +187,8 @@ CodeInjection event_activate_injection2{
         if (event_debug_enabled) {
             rf::Event* event = regs.esi;
             bool on = regs.cl;
-            rf::console::printf("Delaying %s message in event %d '%s'",
-                on ? "ON" : "OFF", event->uid, event->name.c_str());
+            rf::console::print("Delaying {} message in event {} ({})",
+                on ? "ON" : "OFF", event->name, event->uid);
         }
     },
 };
@@ -198,8 +198,8 @@ CodeInjection event_process_injection{
     [](auto& regs) {
         if (event_debug_enabled) {
             rf::Event* event = regs.esi;
-            rf::console::printf("Processing %s message in event %d '%s' (delayed)",
-                event->delayed_msg ? "ON" : "OFF", event->uid, event->name.c_str());
+            rf::console::print("Processing {} message in event {} ({}) (delayed)",
+                event->delayed_msg ? "ON" : "OFF", event->name, event->uid);
         }
     },
 };

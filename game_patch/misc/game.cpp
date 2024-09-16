@@ -129,7 +129,7 @@ static ConsoleCommand2 screenshot_cmd{
 
         char buf[MAX_PATH];
         game_print_screen(buf);
-        rf::console::printf("Screenshot saved in %s", buf);
+        rf::console::print("Screenshot saved in {}", buf);
     },
 };
 

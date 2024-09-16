@@ -3,6 +3,7 @@
 #include <common/utils/string-utils.h>
 #include <patch_common/MemUtils.h>
 #include <memory>
+#include <format>
 #include "string.h" // NOLINT(modernize-deprecated-headers)
 #include "../gr/gr.h"
 
@@ -54,6 +55,13 @@ namespace rf::console
         std::vsnprintf(buf.get(), size, format, args);
         va_end(args);
         output(buf.get(), nullptr);
+    }
+
+    template<typename... Args>
+    inline void print(std::format_string<Args...> fmt, Args&&... args)
+    {
+        std::string s = std::format(fmt, std::forward<Args>(args)...);
+        output(s.c_str(), nullptr);
     }
 
     //static auto& commands = addr_as_ref<ConsoleCommand*[30]>(0x01775530);

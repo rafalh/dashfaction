@@ -156,13 +156,13 @@ ConsoleCommand2 bighud_cmd{
     "bighud",
     []() {
         if (!g_game_config.big_hud && is_screen_resolution_too_low_for_big_hud()) {
-            rf::console::printf("Screen resolution is too low for big HUD!");
+            rf::console::print("Screen resolution is too low for big HUD!");
             return;
         }
         g_game_config.big_hud = !g_game_config.big_hud;
         set_big_hud(g_game_config.big_hud);
         g_game_config.save();
-        rf::console::printf("Big HUD is %s", g_game_config.big_hud ? "enabled" : "disabled");
+        rf::console::print("Big HUD is {}", g_game_config.big_hud ? "enabled" : "disabled");
     },
     "Toggle big HUD",
     "bighud",
@@ -176,7 +176,7 @@ ConsoleCommand2 hud_coords_cmd{
             rf::hud_coords[idx].x = x.value();
             rf::hud_coords[idx].y = y.value();
         }
-        rf::console::printf("HUD coords[%d]: <%d, %d>", idx, rf::hud_coords[idx].x, rf::hud_coords[idx].y);
+        rf::console::print("HUD coords[{}]: <{}, {}>", idx, rf::hud_coords[idx].x, rf::hud_coords[idx].y);
     },
 };
 #endif

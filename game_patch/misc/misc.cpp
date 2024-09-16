@@ -392,7 +392,7 @@ CodeInjection game_set_file_paths_injection{
 CallHook level_init_pre_console_output_hook{
     0x00435ABB,
     []() {
-        rf::console::printf("-- Level Initializing: %s --", rf::level_filename_to_load.c_str());
+        rf::console::print("-- Level Initializing: {} --", rf::level_filename_to_load);
     },
 };
 

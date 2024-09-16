@@ -50,7 +50,7 @@ void parse_vote_config(const char* vote_name, VoteConfig& config, rf::Parser& pa
     std::string vote_option_name = std::format("$DF {}:", vote_name);
     if (parser.parse_optional(vote_option_name.c_str())) {
         config.enabled = parser.parse_bool();
-        rf::console::printf("DF %s: %s", vote_name, config.enabled ? "true" : "false");
+        rf::console::print("DF {}: {}", vote_name, config.enabled ? "true" : "false");
 
         // if (parser.ParseOptional("+Min Voters:")) {
         //     config.min_voters = parser.ParseUInt();
@@ -521,7 +521,7 @@ CodeInjection multi_on_new_player_injection{
         rf::Player* player = regs.esi;
         in_addr addr;
         addr.S_un.S_addr = ntohl(player->net_data->addr.ip_addr);
-        rf::console::printf("%s%s (%s)", player->name.c_str(),  rf::strings::has_joined, inet_ntoa(addr));
+        rf::console::print("{}{} ({})", player->name,  rf::strings::has_joined, inet_ntoa(addr));
         regs.eip = 0x0047B051;
     },
 };
