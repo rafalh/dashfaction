@@ -205,16 +205,15 @@ bool multi_spectate_execute_action(rf::ControlConfigAction action, bool was_pres
     return false;
 }
 
-void multi_spectate_on_player_death(rf::Player* player, rf::Player* killer)
+void multi_spectate_on_player_death(rf::Player* victim, rf::Player* killer)
 {
-    // check follow killer cvar first
-    if (g_spectate_mode_follow_killer) {
-        if (player != rf::local_player && killer != rf::local_player && g_spectate_mode_target == player) {
-            // spectate killer if we were spectating victim
-            // avoid spectating ourselves if we somehow managed to kill the victim
-            multi_spectate_set_target_player(killer);
-            return;
-        }
+    if (!g_spectate_mode_enabled) {
+        return;
+    }
+    if (g_spectate_mode_follow_killer && g_spectate_mode_target == victim && killer != rf::local_player) {
+        // spectate killer if we were spectating victim
+        // avoid spectating ourselves if we somehow managed to kill the victim
+        multi_spectate_set_target_player(killer);
     }
 }
 
