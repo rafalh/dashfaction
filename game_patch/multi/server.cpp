@@ -153,7 +153,7 @@ void load_additional_server_config(rf::Parser& parser)
             g_additional_server_config.force_player_character = {character_num};
         }
         else {
-            xlog::warn("Unknown character name in Force Player Character setting: %s", character_name.c_str());
+            xlog::warn("Unknown character name in Force Player Character setting: {}", character_name);
         }
     }
 
@@ -280,11 +280,11 @@ CodeInjection process_obj_update_set_pos_injection{
             float dist = (pos - pdata.last_teleport_pos).len();
             if (!pdata.last_teleport_timestamp.elapsed() && dist > 1.0f) {
                 // Ignore obj_update packets for some time after restoring the position
-                xlog::trace("ignoring obj_update after teleportation (distance %f)", dist);
+                xlog::trace("ignoring obj_update after teleportation (distance {})", dist);
                 regs.eip = 0x0047DFF6;
             }
             else {
-                xlog::trace("not ignoring obj_update anymore after teleportation (distance %f)", dist);
+                xlog::trace("not ignoring obj_update anymore after teleportation (distance {})", dist);
                 pdata.last_teleport_timestamp.invalidate();
             }
         }
@@ -614,7 +614,7 @@ static void maybe_increment_weapon_hits_stat(int hit_obj_handle, rf::Weapon *wp)
     if (!multi_is_team_game_type() || attacker_pp->team != hit_pp->team) {
         auto* stats = static_cast<PlayerStatsNew*>(attacker_pp->stats);
         stats->add_shots_hit(get_weapon_shot_stats_delta(wp));
-        xlog::trace("hit a_ep %p wp %p h_ep %p", attacker_ep, wp, hit_ep);
+        xlog::trace("hit a_ep {} wp {} h_ep {}", attacker_ep, wp, hit_ep);
     }
 }
 
@@ -636,7 +636,7 @@ FunHook<void(rf::Entity*, rf::Weapon*)> multi_lag_comp_weapon_fire_hook{
         if (pp && pp->stats) {
             auto* stats = static_cast<PlayerStatsNew*>(pp->stats);
             stats->add_shots_fired(get_weapon_shot_stats_delta(wp));
-            xlog::trace("fired a_ep %p wp %p", ep, wp);
+            xlog::trace("fired a_ep {} wp {}", ep, wp);
         }
     },
 };

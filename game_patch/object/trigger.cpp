@@ -85,7 +85,7 @@ CodeInjection trigger_check_activation_patch{
 void trigger_send_state_info(rf::Player* player)
 {
     for (auto trigger_uid : g_triggers_uids_for_late_joiners) {
-        xlog::debug("Activating trigger %d for late joiner %s", trigger_uid, player->name.c_str());
+        xlog::debug("Activating trigger {} for late joiner {}", trigger_uid, player->name);
         send_trigger_activate_packet(player, trigger_uid, -1);
     }
 }

@@ -15,10 +15,10 @@ void InitLogging()
     CreateDirectoryA(df_data_dir, nullptr);
     auto log_file_path = df_data_dir + "\\DashFactionLauncher.log";
     xlog::LoggerConfig::get()
-        .add_appender<xlog::FileAppender>(log_file_path.c_str(), false)
+        .add_appender<xlog::FileAppender>(log_file_path.GetString(), false)
         .add_appender<xlog::ConsoleAppender>()
         .add_appender<xlog::Win32Appender>();
-    xlog::info("Dash Faction Launcher %s (%s %s)", VERSION_STR, __DATE__, __TIME__);
+    xlog::info("Dash Faction Launcher {} ({} {})", VERSION_STR, __DATE__, __TIME__);
 }
 
 void InitCrashHandler()

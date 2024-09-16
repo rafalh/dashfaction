@@ -73,7 +73,7 @@ struct EventSetLiquidDepthHook : rf::Event
 
 void __fastcall EventSetLiquidDepth_turn_on_new(EventSetLiquidDepthHook* this_)
 {
-    xlog::info("Processing Set_Liquid_Depth event: uid %d depth %.2f duration %.2f", this_->uid, this_->depth, this_->duration);
+    xlog::info("Processing Set_Liquid_Depth event: uid {} depth {:.2f} duration {:.2f}", this_->uid, this_->depth, this_->duration);
     if (this_->links.size() == 0) {
         xlog::trace("no links");
         rf::add_liquid_depth_update(this_->room, this_->depth, this_->duration);
@@ -81,7 +81,7 @@ void __fastcall EventSetLiquidDepth_turn_on_new(EventSetLiquidDepthHook* this_)
     else {
         for (auto room_uid : this_->links) {
             rf::GRoom* room = rf::level_room_from_uid(room_uid);
-            xlog::trace("link %d %p", room_uid, room);
+            xlog::trace("link {} {}", room_uid, room);
             if (room) {
                 rf::add_liquid_depth_update(room, this_->depth, this_->duration);
             }

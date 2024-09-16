@@ -220,7 +220,7 @@ CodeInjection linear_pitch_patch{
         float new_pitch_non_lin = non_linear_pitch_from_fw_vector(fvec_new);
         // Update non-linear pitch delta
         float new_pitch_delta = new_pitch_non_lin - current_pitch_non_lin;
-        xlog::trace("non-lin %f lin %f delta %f new %f", current_pitch_non_lin, current_pitch_lin, pitch_delta,
+        xlog::trace("non-lin {} lin {} delta {} new {}", current_pitch_non_lin, current_pitch_lin, pitch_delta,
               new_pitch_delta);
         pitch_delta = new_pitch_delta;
     },

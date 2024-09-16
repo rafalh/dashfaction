@@ -126,7 +126,7 @@ CodeInjection cutscene_shot_sync_fix{
             // decrease time for next shot using current shot timer value
             int shot_time_left_ms = rf::active_cutscene->next_stage_timestamp.time_until();
             if (shot_time_left_ms > 0 || shot_time_left_ms < -100)
-                xlog::warn("invalid shot_time_left_ms %d", shot_time_left_ms);
+                xlog::warn("invalid shot_time_left_ms {}", shot_time_left_ms);
             regs.eax += shot_time_left_ms;
         }
     },

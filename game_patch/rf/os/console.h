@@ -4,6 +4,7 @@
 #include <patch_common/MemUtils.h>
 #include <memory>
 #include <format>
+#include <cstdarg>
 #include "string.h" // NOLINT(modernize-deprecated-headers)
 #include "../gr/gr.h"
 

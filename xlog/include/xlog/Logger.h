@@ -25,22 +25,34 @@ namespace xlog
             return root_logger;
         }
 
-        void log(Level level, const char *format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(3, 4)
-        {
-            std::va_list args;
-            va_start(args, format);
-            vlog(level, format, args);
-            va_end(args);
-        }
-
-        void vlog(Level level, const char* format, va_list args)
+        template<typename... Args>
+        void log(Level level, std::format_string<Args...> fmt, Args&&... args)
         {
             if (level <= level_) {
                 for (const auto& appender : LoggerConfig::get().get_appenders()) {
-                    appender->vappend(level, name_, format, args);
+                    appender->append(level, name_, fmt, std::forward<Args>(args)...);
                 }
             }
         }
+
+#ifdef XLOG_PRINTF
+        void logf(Level level, const char *format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(3, 4)
+        {
+            std::va_list args;
+            va_start(args, format);
+            vlogf(level, format, args);
+            va_end(args);
+        }
+
+        void vlogf(Level level, const char* format, va_list args)
+        {
+            if (level <= level_) {
+                for (const auto& appender : LoggerConfig::get().get_appenders()) {
+                    appender->vappendf(level, name_, format, args);
+                }
+            }
+        }
+#endif
 
 #ifdef XLOG_STREAMS
         LogStream log(Level level)
@@ -49,13 +61,12 @@ namespace xlog
         }
 #endif
 
-        void error(const char *format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(2, 3)
+        template<typename... Args>
+        void error(std::format_string<Args...> fmt, Args&&... args)
         {
-            std::va_list args;
-            va_start(args, format);
-            vlog(Level::error, format, args);
-            va_end(args);
+            log(Level::error, fmt, std::forward<Args>(args)...);
         }
+
 
 #ifdef XLOG_STREAMS
         LogStream error()
@@ -64,12 +75,10 @@ namespace xlog
         }
 #endif
 
-        void warn(const char *format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(2, 3)
+        template<typename... Args>
+        void warn(std::format_string<Args...> fmt, Args&&... args)
         {
-            std::va_list args;
-            va_start(args, format);
-            vlog(Level::warn, format, args);
-            va_end(args);
+            log(Level::warn, fmt, std::forward<Args>(args)...);
         }
 
 #ifdef XLOG_STREAMS
@@ -79,12 +88,10 @@ namespace xlog
         }
 #endif
 
-        void info(const char *format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(2, 3)
+        template<typename... Args>
+        void info(std::format_string<Args...> fmt, Args&&... args)
         {
-            std::va_list args;
-            va_start(args, format);
-            vlog(Level::info, format, args);
-            va_end(args);
+            log(Level::info, fmt, std::forward<Args>(args)...);
         }
 
 #ifdef XLOG_STREAMS
@@ -94,12 +101,10 @@ namespace xlog
         }
 #endif
 
-        void debug(const char *format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(2, 3)
+        template<typename... Args>
+        void debug(std::format_string<Args...> fmt, Args&&... args)
         {
-            std::va_list args;
-            va_start(args, format);
-            vlog(Level::debug, format, args);
-            va_end(args);
+            log(Level::debug, fmt, std::forward<Args>(args)...);
         }
 
 #ifdef XLOG_STREAMS
@@ -109,13 +114,11 @@ namespace xlog
         }
 #endif
 
-        void trace([[ maybe_unused ]] const char *format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(2, 3)
+        template<typename... Args>
+        void trace(std::format_string<Args...> fmt, Args&&... args)
         {
 #ifndef XLOG_DISCARD_TRACE
-            std::va_list args;
-            va_start(args, format);
-            vlog(Level::trace, format, args);
-            va_end(args);
+            log(Level::trace, fmt, std::forward<Args>(args)...);
 #endif
         }
 

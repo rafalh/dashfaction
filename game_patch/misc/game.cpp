@@ -28,7 +28,7 @@ static std::optional<std::string> get_screenshots_dir()
     if (CreateDirectoryA(full_path.c_str(), nullptr))
         xlog::info("Created screenshots directory");
     else if (GetLastError() != ERROR_ALREADY_EXISTS) {
-        xlog::error("Failed to create screenshots directory %lu", GetLastError());
+        xlog::error("Failed to create screenshots directory {}", GetLastError());
         return {};
     }
     return {full_path};

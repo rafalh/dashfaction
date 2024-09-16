@@ -63,12 +63,12 @@ public:
             argb_4444_format_ = find_best_format({D3DFMT_A4R4G4B4, D3DFMT_A1R5G5B5});
             a_8_format_ = find_best_format({D3DFMT_A8, D3DFMT_A4R4G4B4, D3DFMT_A1R5G5B5});
         }
-        xlog::debug("rgb_888_format %d", rgb_888_format_);
-        xlog::debug("rgba_8888_format %d", rgba_8888_format_);
-        xlog::debug("rgb_565_format %d", rgb_565_format_);
-        xlog::debug("argb_1555_format %d", argb_1555_format_);
-        xlog::debug("argb_4444_format %d", argb_4444_format_);
-        xlog::debug("a_8_format %d", a_8_format_);
+        xlog::debug("rgb_888_format {}", static_cast<int>(rgb_888_format_));
+        xlog::debug("rgba_8888_format {}", static_cast<int>(rgba_8888_format_));
+        xlog::debug("rgb_565_format {}", static_cast<int>(rgb_565_format_));
+        xlog::debug("argb_1555_format {}", static_cast<int>(argb_1555_format_));
+        xlog::debug("argb_4444_format {}", static_cast<int>(argb_4444_format_));
+        xlog::debug("a_8_format {}", static_cast<int>(a_8_format_));
     }
 
     D3DFORMAT select(rf::bm::Format bm_format)
@@ -105,7 +105,7 @@ FunHook<GrD3DSetTextureData_Type> gr_d3d_set_texture_data_hook{
         D3DSURFACE_DESC desc;
         auto hr = texture->GetLevelDesc(level, &desc);
         if (FAILED(hr)) {
-            xlog::error("GetLevelDesc failed %lx", hr);
+            xlog::error("GetLevelDesc failed {:x}", hr);
             return -1;
         }
 
@@ -125,7 +125,7 @@ FunHook<GrD3DSetTextureData_Type> gr_d3d_set_texture_data_hook{
 
         bool success = true;
         if (bm_is_compressed_format(format)) {
-            xlog::trace("Writing texture in compressed format level %d src %p bm %dx%d tex %dx%d section %d %d",
+            xlog::trace("Writing texture in compressed format level {} src {} bm {}x{} tex {}x{} section {} {}",
                 level, src_bits_ptr, bm_w, bm_h, tex_w, tex_h, section->x, section->y);
             auto src_pitch = bm_calculate_pitch(bm_w, format);
             auto num_src_rows = bm_calculate_rows(bm_h, format);
@@ -151,7 +151,7 @@ FunHook<GrD3DSetTextureData_Type> gr_d3d_set_texture_data_hook{
                                                 src_bits_ptr, format, bm_w, bm_h, locked_rect.Pitch,
                                                 bm_pitch, palette);
             if (!success)
-                xlog::warn("Color conversion failed (format %d -> %d)", format, tex_pixel_fmt);
+                xlog::warn("Color conversion failed (format {} -> {})", static_cast<int>(format), static_cast<int>(tex_pixel_fmt));
         }
 
         texture->UnlockRect(level);
@@ -176,21 +176,21 @@ FunHook<int(rf::bm::Format, int, int, int, IDirect3DTexture8**)> gr_d3d_create_v
         else {
             d3d_format = g_texture_format_selector.select(format);
             if (d3d_format == D3DFMT_UNKNOWN) {
-                xlog::error("Failed to determine texture format for pixel format %u", d3d_format);
+                xlog::error("Failed to determine texture format for pixel format {}", static_cast<int>(d3d_format));
                 return -1;
             }
             assert(g_currently_creating_texture_for_bitmap != -1);
             if (bm_is_dynamic(g_currently_creating_texture_for_bitmap) && gr_d3d_is_d3d8to9()) {
                 d3d_pool = D3DPOOL_DEFAULT;
                 usage = D3DUSAGE_DYNAMIC;
-                xlog::info("Creating dynamic texture %dx%d", width, height);
+                xlog::info("Creating dynamic texture {}x{}", width, height);
             }
         }
 
-        xlog::trace("Creating texture bm_format 0x%X d3d_format 0x%X", format, d3d_format);
+        xlog::trace("Creating texture bm_format 0x{:x} d3d_format 0x{:x}", static_cast<int>(format), static_cast<int>(d3d_format));
         auto hr = rf::gr::d3d::device->CreateTexture(width, height, levels, usage, d3d_format, d3d_pool, texture_out);
         if (FAILED(hr)) {
-            xlog::error("Failed to create texture %dx%d in format %u", width, height, d3d_format);
+            xlog::error("Failed to create texture {}x{} in format {}", width, height, static_cast<int>(d3d_format));
             return -1;
         }
         return 0;
@@ -254,7 +254,7 @@ int gr_d3d_create_texture(int bm_handle, rf::gr::d3d::Texture& tslot) {
     g_currently_creating_texture_for_bitmap = -1;
 
     if (result != 1) {
-        xlog::warn("Failed to load texture '%s'", rf::bm::get_filename(bm_handle));
+        xlog::warn("Failed to load texture '{}'", rf::bm::get_filename(bm_handle));
         // Note: callers of this function expects zero result on failure
         return 0;
     }
@@ -302,7 +302,7 @@ bool gr_d3d_lock(int bm_handle, int section, rf::gr::LockInfo *lock) {
     }
     auto hr = d3d_texture->LockRect(0, &locked_rect, nullptr, lock_flags);
     if (FAILED(hr)) {
-        xlog::warn("gr_d3d_lock: IDirect3DTexture8::LockRect failed with result 0x%lx", hr);
+        xlog::warn("gr_d3d_lock: IDirect3DTexture8::LockRect failed with result 0x{:x}", hr);
         return false;
     }
 
@@ -310,7 +310,7 @@ bool gr_d3d_lock(int bm_handle, int section, rf::gr::LockInfo *lock) {
     D3DSURFACE_DESC desc;
     hr = d3d_texture->GetLevelDesc(0, &desc);
     if (FAILED(hr)) {
-        xlog::warn("gr_d3d_lock: IDirect3DTexture8::GetLevelDesc failed with result %lx", hr);
+        xlog::warn("gr_d3d_lock: IDirect3DTexture8::GetLevelDesc failed with result {:x}", hr);
         return false;
     }
 

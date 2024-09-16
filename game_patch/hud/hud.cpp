@@ -75,7 +75,7 @@ void hud_setup_positions(int width)
     int height = rf::gr::screen_height();
     rf::HudPoint* pos_data = nullptr;
 
-    xlog::trace("hud_setup_positionsHook(%d)", width);
+    xlog::trace("hud_setup_positionsHook({})", width);
 
     switch (width) {
     case 640:
@@ -206,13 +206,13 @@ const ScaledBitmapInfo& hud_get_scaled_bitmap_info(int bmh)
             }
         }
 
-        xlog::trace("loading high res bm %s", filename.c_str());
+        xlog::trace("loading high res bm {}", filename);
         ScaledBitmapInfo scaled_bm_info;
         rf::File file;
         if (rf::File{}.find(filename.c_str())) {
             scaled_bm_info.bmh = rf::bm::load(filename.c_str(), -1, false);
         }
-        xlog::trace("loaded high res bm %s: %d", filename.c_str(), scaled_bm_info.bmh);
+        xlog::trace("loaded high res bm {}: {}", filename, scaled_bm_info.bmh);
         if (scaled_bm_info.bmh != -1) {
             rf::gr::tcache_add_ref(scaled_bm_info.bmh);
             int bm_w, bm_h;

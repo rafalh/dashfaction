@@ -63,7 +63,7 @@ void OptionsGraphicsDlg::UpdateMsaaCombo()
         }
     }
     catch (std::exception &e) {
-        xlog::error("Cannot check available MSAA modes: %s", e.what());
+        xlog::error("Cannot check available MSAA modes: {}", e.what());
     }
     m_msaa_combo.SetCurSel(selected_msaa);
 }
@@ -77,7 +77,7 @@ void OptionsGraphicsDlg::UpdateAnisotropyCheckbox()
         }
     }
     catch (std::exception &e) {
-        xlog::error("Cannot check anisotropy support: %s", e.what());
+        xlog::error("Cannot check anisotropy support: {}", e.what());
     }
     if (anisotropy_supported) {
         GetDlgItem(IDC_ANISOTROPIC_CHECK).EnableWindow(TRUE);

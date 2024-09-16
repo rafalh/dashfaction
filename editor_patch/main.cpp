@@ -86,7 +86,7 @@ CodeInjection CEditorApp_InitInstance_open_level_injection{
         static auto& argc = addr_as_ref<int>(0x01DBF8E0);
         const char* level_param = nullptr;
         for (int i = 1; i < argc; ++i) {
-            xlog::trace("argv[%d] = %s", i, argv[i]);
+            xlog::trace("argv[{}] = {}", i, argv[i]);
             std::string_view arg = argv[i];
             if (arg == "-level") {
                 ++i;
@@ -369,7 +369,7 @@ void LoadDashEditorPackfile()
     std::string old_root_path = root_path;
     std::strncpy(root_path, df_dir.c_str(), sizeof(root_path) - 1);
     if (!vpackfile_add("dashfaction.vpp", nullptr)) {
-        xlog::error("Failed to load dashfaction.vpp from %s", df_dir.c_str());
+        xlog::error("Failed to load dashfaction.vpp from {}", df_dir);
     }
     std::strncpy(root_path, old_root_path.c_str(), sizeof(root_path) - 1);
 }
@@ -588,7 +588,7 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
 
 extern "C" void subhook_unk_opcode_handler(uint8_t* opcode)
 {
-    xlog::error("SubHook unknown opcode 0x%X at 0x%p", *opcode, opcode);
+    xlog::error("SubHook unknown opcode 0x{:x} at {}", *opcode, static_cast<void*>(opcode));
 }
 
 BOOL WINAPI DllMain(HINSTANCE instance, [[maybe_unused]] DWORD reason, [[maybe_unused]] LPVOID reserved)

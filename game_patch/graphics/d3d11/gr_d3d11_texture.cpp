@@ -41,7 +41,7 @@ namespace df::gr::d3d11
                 subres_data_vec.emplace_back();
                 D3D11_SUBRESOURCE_DATA& subres_data = subres_data_vec.back();
                 if (supported_fmt != fmt) {
-                    xlog::trace("Converting texture %d -> %d", fmt, supported_fmt);
+                    xlog::trace("Converting texture {} -> {}", fmt, supported_fmt);
                     int converted_pitch = bm_calculate_pitch(w, supported_fmt);
                     converted_bits_vec.push_back(std::make_unique<ubyte[]>(converted_pitch * h));
                     ubyte* converted_bits = converted_bits_vec.back().get();
@@ -51,7 +51,7 @@ namespace df::gr::d3d11
                     subres_data.SysMemPitch = converted_pitch;
                 }
                 else {
-                    xlog::trace("Creating texture without conversion: format %d", fmt);
+                    xlog::trace("Creating texture without conversion: format {}", fmt);
                     subres_data.pSysMem = bits;
                     subres_data.SysMemPitch = pitch;
                 }
@@ -68,7 +68,7 @@ namespace df::gr::d3d11
         D3D11_SUBRESOURCE_DATA* subres_data_ptr = subres_data_vec.empty() ? nullptr : subres_data_vec.data();
         check_hr(
             device_->CreateTexture2D(&desc, subres_data_ptr, &d3d_texture),
-            [&]() { xlog::error("Failed to create texture: format %d dimensions %dx%d, mip levels %d", desc.Format, desc.Width, desc.Height, desc.MipLevels); }
+            [&]() { xlog::error("Failed to create texture: format {} dimensions {}x{}, mip levels {}", static_cast<int>(desc.Format), desc.Width, desc.Height, desc.MipLevels); }
         );
 
         if (staging) {
@@ -129,12 +129,12 @@ namespace df::gr::d3d11
 
     TextureManager::Texture TextureManager::load_texture(int bm_handle, bool staging)
     {
-        xlog::trace("Creating texture for bitmap %s handle %d format %d", bm::get_filename(bm_handle), bm_handle, bm::get_format(bm_handle));
+        xlog::trace("Creating texture for bitmap {} handle {} format {}", bm::get_filename(bm_handle), bm_handle, bm::get_format(bm_handle));
 
         int w, h, num_pixels, mip_levels;
         bm::get_mipmap_info(bm_handle, &w, &h, &num_pixels, &mip_levels);
         if (w <= 0 || h <= 0) {
-            xlog::warn("Bad bitmap dimensions: handle %d filename %s dimensions %dx%d", bm_handle, bm::get_filename(bm_handle), w, h);
+            xlog::warn("Bad bitmap dimensions: handle {} filename {} dimensions {}x{}", bm_handle, bm::get_filename(bm_handle), w, h);
             return {};
         }
 
@@ -142,18 +142,18 @@ namespace df::gr::d3d11
         // in case of non-squere textures there is a conflict
         int max_mip_levels = 1 + static_cast<int>(std::floor(std::log2(std::min(w, h))));
         if (mip_levels > max_mip_levels) {
-            xlog::trace("Bad number of mip levels for %dx%d texture: expected %d but got %d", w, h, max_mip_levels, mip_levels);
+            xlog::trace("Bad number of mip levels for {}x{} texture: expected {} but got {}", w, h, max_mip_levels, mip_levels);
             mip_levels = max_mip_levels;
         }
 
         bm::Format fmt = bm::get_format(bm_handle);
         if (fmt == bm::FORMAT_RENDER_TARGET) {
-            xlog::info("Creating render target: handle %d", bm_handle);
+            xlog::info("Creating render target: handle {}", bm_handle);
             return create_render_target(bm_handle, w, h);
         }
 
         if (bm::get_type(bm_handle) == bm::TYPE_USER) {
-            xlog::trace("Creating user bitmap texture: handle %d", bm_handle);
+            xlog::trace("Creating user bitmap texture: handle {}", bm_handle);
             auto texture = create_texture(bm_handle, fmt, w, h, nullptr, nullptr, 1, staging);
             return texture;
         }
@@ -167,7 +167,7 @@ namespace df::gr::d3d11
             return {};
         }
 
-        xlog::trace("Creating normal texture: handle %d", bm_handle);
+        xlog::trace("Creating normal texture: handle {}", bm_handle);
         auto texture = create_texture(bm_handle, fmt, w, h, bm_bits, bm_pal, mip_levels, staging);
 
         xlog::trace("Unlocking bitmap");
@@ -210,7 +210,7 @@ namespace df::gr::d3d11
                     --texture.save_cache_count;
                 }
                 else if (texture.ref_count <= 0) {
-                    xlog::trace("Flushing texture: handle %d", texture.bm_handle);
+                    xlog::trace("Flushing texture: handle {}", texture.bm_handle);
                     it = texture_cache_.erase(it);
                     continue;
                 }
@@ -239,7 +239,7 @@ namespace df::gr::d3d11
             assert(texture.ref_count > 0);
             --texture.ref_count;
             if (texture.ref_count <= 0) {
-                xlog::trace("Flushing texture after ref removal: handle %d", texture.bm_handle);
+                xlog::trace("Flushing texture after ref removal: handle {}", texture.bm_handle);
                 texture_cache_.erase(it);
             }
         }
@@ -328,7 +328,7 @@ namespace df::gr::d3d11
             case gr::LOCK_WRITE_ONLY:
                 return D3D11_MAP_WRITE;
             default:
-                xlog::warn("Invalid lock mode: %d", mode);
+                xlog::warn("Invalid lock mode: {}", static_cast<int>(mode));
                 assert(false);
                 return D3D11_MAP_READ_WRITE;
         }
@@ -350,7 +350,7 @@ namespace df::gr::d3d11
         ID3D11Texture2D* staging_texture = texture.get_or_create_staging_texture(device_, device_context_,
             lock->mode != gr::LOCK_WRITE_ONLY);
         if (!staging_texture) {
-            xlog::warn("Attempted to lock texture without staging resource %d", texture.bm_handle);
+            xlog::warn("Attempted to lock texture without staging resource {}", texture.bm_handle);
             return false;
         }
 
@@ -371,13 +371,13 @@ namespace df::gr::d3d11
         lock->h = h;
         lock->stride_in_bytes = mapped_texture.RowPitch;
         // Note: lock->mode is set by gr_lock
-        xlog::trace("locked texture: handle %d format %d size %dx%d data %p", lock->bm_handle, lock->format, lock->w, lock->h, lock->data);
+        xlog::trace("locked texture: handle {} format {} size {}x{} data {}", lock->bm_handle, lock->format, lock->w, lock->h, lock->data);
         return true;
     }
 
     void TextureManager::unlock(gr::LockInfo *lock)
     {
-        xlog::trace("unlocking texture: handle %d format %d size %dx%d data %p", lock->bm_handle, lock->format, lock->w, lock->h, lock->data);
+        xlog::trace("unlocking texture: handle {} format {} size {}x{} data {}", lock->bm_handle, lock->format, lock->w, lock->h, lock->data);
         Texture& texture = get_or_load_texture(lock->bm_handle, true);
         if (texture.cpu_texture) {
             device_context_->Unmap(texture.cpu_texture, 0);
@@ -455,7 +455,7 @@ namespace df::gr::d3d11
 
     void TextureManager::Texture::init_gpu_texture(ID3D11Device* device, ID3D11DeviceContext* device_context)
     {
-        xlog::trace("Creating GPU texture for %s", bm::get_filename(bm_handle));
+        xlog::trace("Creating GPU texture for {}", bm::get_filename(bm_handle));
 
         if (!cpu_texture) {
             xlog::warn("Both GPU and CPU textures are missing");

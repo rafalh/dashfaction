@@ -34,7 +34,7 @@ template<typename T>
 void validate_save_file_num(T& value, T limit, const char* what)
 {
     if (value > limit) {
-        xlog::warn("Save file is corrupted: expected up to %d %s but got %d", limit, what, value);
+        xlog::warn("Save file is corrupted: expected up to {} {} but got {}", limit, what, value);
         value = limit;
     }
 }
@@ -87,7 +87,7 @@ CodeInjection entity_serialize_all_state_oob_fix{
         auto num_entities = addr_as_ref<int>(regs.esp + 0x78 - 0x64);
         auto num_dead_entities = addr_as_ref<int>(regs.esp + 0x78 - 0x60);
         if (num_entities >= rf::sr::MAX_ENTITIES || num_dead_entities >= rf::sr::MAX_ENTITIES) {
-            xlog::warn("Too many entities to save (limit: %d)", rf::sr::MAX_ENTITIES);
+            xlog::warn("Too many entities to save (limit: {})", rf::sr::MAX_ENTITIES);
             regs.eip = 0x0042BA0E;
         }
     },
@@ -98,7 +98,7 @@ CodeInjection item_serialize_all_state_oob_fix{
     [](auto& regs) {
         int num_items = regs.ebx;
         if (num_items >= rf::sr::MAX_ITEMS) {
-            xlog::warn("Too many items to save (limit: %d)", rf::sr::MAX_ITEMS);
+            xlog::warn("Too many items to save (limit: {})", rf::sr::MAX_ITEMS);
             regs.eip = 0x00459CF4;
         }
     },
@@ -109,7 +109,7 @@ CodeInjection clutter_serialize_all_state_oob_fix{
     [](auto& regs) {
         int num_clutters = regs.ebx;
         if (num_clutters >= rf::sr::MAX_CLUTTERS) {
-            xlog::warn("Too many clutters to save (limit: %d)", rf::sr::MAX_CLUTTERS);
+            xlog::warn("Too many clutters to save (limit: {})", rf::sr::MAX_CLUTTERS);
             regs.eip = 0x00411000;
         }
     },
@@ -120,7 +120,7 @@ CodeInjection corpse_serialize_all_state_oob_fix{
     [](auto& regs) {
         int num_corpses = regs.eax;
         if (num_corpses >= rf::sr::MAX_CORPSES) {
-            xlog::warn("Too many corpses to save (limit: %d)", rf::sr::MAX_CORPSES);
+            xlog::warn("Too many corpses to save (limit: {})", rf::sr::MAX_CORPSES);
             regs.eip = 0x00417849;
         }
     },
@@ -131,7 +131,7 @@ CodeInjection trigger_serialize_all_state_oob_fix{
     [](auto& regs) {
         int num_triggers = regs.ebx;
         if (num_triggers >= rf::sr::MAX_TRIGGERS) {
-            xlog::warn("Too many triggers to save (limit: %d)", rf::sr::MAX_TRIGGERS);
+            xlog::warn("Too many triggers to save (limit: {})", rf::sr::MAX_TRIGGERS);
             regs.eip = 0x004C0EC6;
         }
     },
@@ -142,7 +142,7 @@ CodeInjection mover_serialize_all_state_oob_fix{
     [](auto& regs) {
         int num_movers = regs.ebx;
         if (num_movers >= rf::sr::MAX_MOVERS) {
-            xlog::warn("Too many movers to save (limit: %d)", rf::sr::MAX_MOVERS);
+            xlog::warn("Too many movers to save (limit: {})", rf::sr::MAX_MOVERS);
             regs.eip = 0x0046B482;
         }
     },
@@ -153,7 +153,7 @@ CodeInjection sr_serialize_decals_oob_fix{
     [](auto& regs) {
         auto num_decals = addr_as_ref<int>(regs.esp + 0x34 - 0x24);
         if (num_decals >= rf::sr::MAX_DECALS) {
-            xlog::warn("Too many decals to save (limit: %d)", rf::sr::MAX_DECALS);
+            xlog::warn("Too many decals to save (limit: {})", rf::sr::MAX_DECALS);
             regs.eip = 0x004B4756;
         }
     },
@@ -164,7 +164,7 @@ CodeInjection weapon_serialize_all_state_oob_fix{
     [](auto& regs) {
         int num_weapons = regs.ebx;
         if (num_weapons >= rf::sr::MAX_WEAPONS) {
-            xlog::warn("Too many weapons to save (limit: %d)", rf::sr::MAX_WEAPONS);
+            xlog::warn("Too many weapons to save (limit: {})", rf::sr::MAX_WEAPONS);
             regs.eip = 0x004C8F0A;
         }
     },
@@ -202,7 +202,7 @@ FunHook<void()> sr_restore_level_transition_objects_meshes_hook{
             auto mesh_name = lto.mesh_name.c_str();
             auto obj = rf::obj_from_handle(lto.handle);
             if (!obj) {
-                xlog::warn("Cannot restore level transition object mesh: %s", mesh_name);
+                xlog::warn("Cannot restore level transition object mesh: {}", mesh_name);
                 continue;
             }
             switch (obj->type)

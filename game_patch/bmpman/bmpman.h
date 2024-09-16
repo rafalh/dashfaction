@@ -32,7 +32,7 @@ inline int bm_bytes_per_pixel(rf::bm::Format format)
     case rf::bm::FORMAT_8888_ARGB:
         return 4;
     default:
-        xlog::warn("Unknown format in bm_bytes_per_pixel: %d", format);
+        xlog::warn("Unknown format in bm_bytes_per_pixel: {}", static_cast<int>(format));
         return 2;
     }
 }
@@ -48,7 +48,7 @@ inline int bm_get_bytes_per_compressed_block(rf::bm::Format format)
         case rf::bm::FORMAT_DXT5:
             return 16;
         default:
-            xlog::error("Unsupported format in bm_get_bytes_per_compressed_block: %d", format);
+            xlog::error("Unsupported format in bm_get_bytes_per_compressed_block: {}", static_cast<int>(format));
             return 0;
     }
 }

@@ -58,7 +58,7 @@ CodeInjection critical_error_log_injection{
     0x0050BAE8,
     [](auto& regs) {
         const char* text = regs.ecx;
-        xlog::error("Critical error:\n%s", text);
+        xlog::error("Critical error:\n{}", text);
     },
 };
 
@@ -112,7 +112,7 @@ FunHook<void(int, int)> rf_init_state_hook{
     0x004B1AC0,
     [](int state, int old_state) {
         rf_init_state_hook.call_target(state, old_state);
-        xlog::trace("state %d old_state %d g_jump_to_multi_server_list %d", state, old_state, g_jump_to_multi_server_list);
+        xlog::trace("state {} old_state {} g_jump_to_multi_server_list {}", state, old_state, g_jump_to_multi_server_list);
 
         bool exiting_game = state == rf::GS_MAIN_MENU &&
             (old_state == rf::GS_END_GAME || old_state == rf::GS_NEW_LEVEL);
@@ -179,7 +179,7 @@ CodeInjection parser_xstr_oob_fix{
     0x0051212E,
     [](auto& regs) {
         if (regs.edi >= 1000) {
-            xlog::warn("XSTR index is out of bounds: %d!", static_cast<int>(regs.edi));
+            xlog::warn("XSTR index is out of bounds: {}!", static_cast<int>(regs.edi));
             regs.edi = -1;
         }
     }
@@ -191,7 +191,7 @@ CodeInjection ammo_tbl_buffer_overflow_fix{
         constexpr int max_ammo_types = 32;
         auto num_ammo_types = addr_as_ref<int>(0x0085C760);
         if (num_ammo_types == max_ammo_types) {
-            xlog::warn("ammo.tbl limit of %d definitions has been reached!", max_ammo_types);
+            xlog::warn("ammo.tbl limit of {} definitions has been reached!", max_ammo_types);
             regs.eip = 0x004C21B8;
         }
     },
@@ -202,7 +202,7 @@ CodeInjection clutter_tbl_buffer_overflow_fix{
     [](auto& regs) {
         constexpr int max_clutter_types = 450;
         if (regs.ecx == max_clutter_types) {
-            xlog::warn("clutter.tbl limit of %d definitions has been reached!", max_clutter_types);
+            xlog::warn("clutter.tbl limit of {} definitions has been reached!", max_clutter_types);
             regs.eip = 0x0040F4B0;
         }
     },
@@ -214,7 +214,7 @@ CodeInjection vclip_tbl_buffer_overflow_fix{
         constexpr int max_vclips = 64;
         auto num_vclips = addr_as_ref<int>(0x008568AC);
         if (num_vclips == max_vclips) {
-            xlog::warn("vclip.tbl limit of %d definitions has been reached!", max_vclips);
+            xlog::warn("vclip.tbl limit of {} definitions has been reached!", max_vclips);
             regs.eip = 0x004C1420;
         }
     },
@@ -226,7 +226,7 @@ CodeInjection items_tbl_buffer_overflow_fix{
         constexpr int max_item_types = 96;
         auto num_item_types = addr_as_ref<int>(0x00644EA0);
         if (num_item_types == max_item_types) {
-            xlog::warn("items.tbl limit of %d definitions has been reached!", max_item_types);
+            xlog::warn("items.tbl limit of {} definitions has been reached!", max_item_types);
             regs.eip = 0x00458AFB;
         }
     },
@@ -238,7 +238,7 @@ CodeInjection explosion_tbl_buffer_overflow_fix{
         constexpr int max_explosion_types = 12;
         auto num_explosion_types = addr_as_ref<int>(0x0075EC44);
         if (num_explosion_types == max_explosion_types) {
-            xlog::warn("explosion.tbl limit of %d definitions has been reached!", max_explosion_types);
+            xlog::warn("explosion.tbl limit of {} definitions has been reached!", max_explosion_types);
             regs.eip = 0x0048E112;
         }
     },
@@ -250,7 +250,7 @@ CodeInjection weapons_tbl_primary_buffer_overflow_fix{
         constexpr int max_weapon_types = 64;
         auto num_weapon_types = addr_as_ref<int>(0x00872448);
         if (num_weapon_types == max_weapon_types) {
-            xlog::warn("weapons.tbl limit of %d definitions has been reached!", max_weapon_types);
+            xlog::warn("weapons.tbl limit of {} definitions has been reached!", max_weapon_types);
             regs.eip = 0x004C68D9;
         }
     },
@@ -262,7 +262,7 @@ CodeInjection weapons_tbl_secondary_buffer_overflow_fix{
         constexpr int max_weapon_types = 64;
         auto num_weapon_types = addr_as_ref<int>(0x00872448);
         if (num_weapon_types == max_weapon_types) {
-            xlog::warn("weapons.tbl limit of %d definitions has been reached!", max_weapon_types);
+            xlog::warn("weapons.tbl limit of {} definitions has been reached!", max_weapon_types);
             regs.eip = 0x004C68D9;
         }
     },
@@ -274,7 +274,7 @@ CodeInjection pc_multi_tbl_buffer_overflow_fix{
         constexpr int max_multi_characters = 31;
         auto num_multi_characters = addr_as_ref<int>(0x006C9C60);
         if (num_multi_characters == max_multi_characters) {
-            xlog::warn("pc_multi.tbl limit of %d definitions has been reached!", max_multi_characters);
+            xlog::warn("pc_multi.tbl limit of {} definitions has been reached!", max_multi_characters);
             regs.eip = 0x0047621F;
         }
     },
@@ -286,7 +286,7 @@ CodeInjection emitters_tbl_buffer_overflow_fix{
         constexpr int max_emitter_types = 64;
         auto num_emitter_types = addr_as_ref<int>(0x006C9C60);
         if (num_emitter_types == max_emitter_types) {
-            xlog::warn("emitters.tbl limit of %d definitions has been reached!", max_emitter_types);
+            xlog::warn("emitters.tbl limit of {} definitions has been reached!", max_emitter_types);
             regs.eip = 0x00496F1A;
         }
     },
@@ -300,7 +300,7 @@ FunHook<void(const char*, int)> lcl_add_message_bof_fix{
             lcl_add_message_bof_fix.call_target(str, id);
         }
         else {
-            xlog::warn("strings.tbl index is out of bounds: %d", id);
+            xlog::warn("strings.tbl index is out of bounds: {}", id);
         }
     },
 };
@@ -318,7 +318,7 @@ int debug_print_hook(char* buf, const char *fmt, ...) {
     va_start(vl, fmt);
     int ret = std::vsprintf(buf, fmt, vl);
     va_end(vl);
-    xlog::warn("%s", buf);
+    xlog::warn("{}", buf);
     return ret;
 }
 

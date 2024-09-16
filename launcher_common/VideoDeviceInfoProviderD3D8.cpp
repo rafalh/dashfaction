@@ -56,7 +56,7 @@ std::vector<std::string> VideoDeviceInfoProviderD3D8::get_adapters()
             adapters.emplace_back(adapter_identifier.Description);
         }
         else {
-            xlog::error("GetAdapterIdentifier failed %lx", hr);
+            xlog::error("GetAdapterIdentifier failed {:x}", hr);
         }
     }
     return adapters;

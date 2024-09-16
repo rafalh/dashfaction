@@ -30,7 +30,7 @@ public:
         m_subhook.Install(reinterpret_cast<void*>(m_addr), m_enter_code.get());
         void* trampoline = m_subhook.GetTrampoline();
         if (!trampoline) {
-            xlog::error("trampoline is null for 0x%X", m_addr);
+            xlog::error("trampoline is null for 0x{:x}", m_addr);
             m_subhook.Remove();
             return;
         }

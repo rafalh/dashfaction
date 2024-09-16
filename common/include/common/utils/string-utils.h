@@ -5,7 +5,6 @@
 #include <vector>
 #include <algorithm>
 #include <iterator>
-#include <cstdarg>
 #include <cctype>
 
 #ifdef __GNUC__

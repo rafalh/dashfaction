@@ -155,7 +155,7 @@ public:
             ip_ranges_.push_back(r);
             return true;
         } catch (const std::exception& e) {
-            xlog::error("Failed to parse banlist entry: %s", s.c_str());
+            xlog::error("Failed to parse banlist entry: {}", s);
             return false;
         }
     }
@@ -207,7 +207,7 @@ FunHook multi_ban_validate_ip_hook{
         try {
             IpRange::parse(s);
         } catch (const std::exception& e) {
-            xlog::error("Invalid IP range: %s", s);
+            xlog::error("Invalid IP range: {}", s);
             return 0;
         }
         return 1;
@@ -243,7 +243,7 @@ std::optional<std::string> multi_ban_unban_last()
 
 #ifndef NDEBUG
 
-#define ok(expr) if (!(expr)) xlog::error("Test failed: %s", #expr)
+#define ok(expr) if (!(expr)) xlog::error("Test failed: {}", #expr)
 
 static void test_parsing()
 {
@@ -258,7 +258,7 @@ static void test_parsing()
         ok(IpRange::parse("192.168.*.*").to_string() == "192.168.*.*");
         ok(IpRange::parse("192.168.17.17/28").to_string() == "192.168.17.16/28"); // normalized
     } catch (const std::exception& e) {
-        xlog::error("banlist test failed: %s", e.what());
+        xlog::error("banlist test failed: {}", e.what());
     }
 }
 

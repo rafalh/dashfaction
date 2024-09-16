@@ -109,19 +109,19 @@ static int ds_get_free_channel_new(int sid, float volume, bool is_looping)
         float effects_volume = rf::snd_group_volume[rf::SOUND_GROUP_EFFECTS];
         float normalized_volume = effects_volume > 0.001f ? volume / effects_volume : 0.0f;
         if (normalized_volume < 0.1f) {
-            xlog::trace("sound %d channel priority 1", sid);
+            xlog::trace("sound {} channel priority 1", sid);
             max_channels = max_channels / 4;
         }
         else if (normalized_volume < 0.2f) {
-            xlog::trace("sound %d channel priority 2", sid);
+            xlog::trace("sound {} channel priority 2", sid);
             max_channels = max_channels * 2 / 4;
         }
         else if (normalized_volume < 0.5f) {
-            xlog::trace("sound %d channel priority 3", sid);
+            xlog::trace("sound {} channel priority 3", sid);
             max_channels = max_channels * 3 / 4;
         }
         else {
-            xlog::trace("sound %d channel priority 4", sid);
+            xlog::trace("sound {} channel priority 4", sid);
         }
     }
     for (int i = 0; i < max_channels; ++i) {
@@ -139,7 +139,7 @@ static int ds_get_free_channel_new(int sid, float volume, bool is_looping)
             return i;
         }
     }
-    xlog::trace("No free channel for sound %d", sid);
+    xlog::trace("No free channel for sound {}", sid);
     return -1;
 }
 
@@ -172,8 +172,8 @@ CodeInjection snd_ds_init_device_leave_injection{
     []() {
         auto& ds_use_ds3d = addr_as_ref<bool>(0x01AED340);
         auto& ds_use_eax = addr_as_ref<bool>(0x01AD751C);
-        xlog::info("DirectSound3D: %d", ds_use_ds3d);
-        xlog::info("EAX sound: %d", ds_use_eax);
+        xlog::info("DirectSound3D: {}", ds_use_ds3d);
+        xlog::info("EAX sound: {}", ds_use_eax);
     },
 };
 
@@ -251,29 +251,29 @@ FunHook<int(LPSTR, LONG, HMMIO*, WAVEFORMATEX**, WAVEFORMATEX**, LPMMCKINFO)> sn
     0x00563370,
     [](LPSTR filename, LONG offset, HMMIO* hmmio, WAVEFORMATEX **wfmt_orig, WAVEFORMATEX **wfmt_ds, LPMMCKINFO chunk_info) {
         char *sound_name = filename - 0x100;
-        xlog::trace("Loading sound: %s", sound_name);
+        xlog::trace("Loading sound: {}", sound_name);
         if (!strcmp(rf::file_get_ext(sound_name), ".ogg")) {
-            xlog::info("Loading Ogg Vorbis: %s", sound_name);
+            xlog::info("Loading Ogg Vorbis: {}", sound_name);
             int file_size = rf::File{}.size(sound_name);
             if (file_size <= 0) {
-                xlog::error("Cannot get file size: %s", filename);
+                xlog::error("Cannot get file size: {}", filename);
                 return -1;
             }
             FILE *file = std::fopen(filename, "rb");
             if (!file) {
-                xlog::error("Failed to open: %s", filename);
+                xlog::error("Failed to open: {}", filename);
                 return -1;
             }
             std::fseek(file, offset, SEEK_SET);
             int err = 0;
             stb_vorbis* vorbis = stb_vorbis_open_file_section(file, 1, &err, NULL, file_size);
             if (!vorbis) {
-                xlog::error("Failed to load Ogg Vorbis: %d", err);
+                xlog::error("Failed to load Ogg Vorbis: {}", err);
                 return -1;
             }
 
             stb_vorbis_info info = stb_vorbis_get_info(vorbis);
-            xlog::info("Ogg Vorbis info: channels %d, sample rate %d", info.channels, info.sample_rate);
+            xlog::info("Ogg Vorbis info: channels {}, sample rate {}", info.channels, info.sample_rate);
 
             *wfmt_orig = reinterpret_cast<WAVEFORMATEX*>(rf::rf_malloc(sizeof(WAVEFORMATEX)));
             *wfmt_ds = reinterpret_cast<WAVEFORMATEX*>(rf::rf_malloc(sizeof(WAVEFORMATEX)));
@@ -321,7 +321,7 @@ FunHook<int(HMMIO, unsigned, BYTE*, MMCKINFO*, int*)> snd_mmio_read_chunk_hook{
             stb_vorbis_info info = stb_vorbis_get_info(wrapper->vorbis);
             int samples_read = stb_vorbis_get_samples_short_interleaved(wrapper->vorbis, info.channels, reinterpret_cast<short*>(buf), buf_size / 2);
             *bytes_read = samples_read * info.channels * sizeof(short);
-            xlog::info("Ogg Vorbis: read %d samples", samples_read);
+            xlog::info("Ogg Vorbis: read {} samples", samples_read);
             return 0;
         }
         return snd_mmio_read_chunk_hook.call_target(wrapper->hmmio, buf_size, buf, mmcki, bytes_read);

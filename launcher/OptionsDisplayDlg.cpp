@@ -84,7 +84,7 @@ void OptionsDisplayDlg::UpdateAdapterCombo()
         }
     }
     catch (std::exception &e) {
-        xlog::error("Cannot get video adapters: %s", e.what());
+        xlog::error("Cannot get video adapters: {}", e.what());
     }
     if (selected_idx != -1)
         m_adapter_combo.SetCurSel(selected_idx);
@@ -110,7 +110,7 @@ void OptionsDisplayDlg::UpdateResolutionCombo()
     }
     catch (std::exception &e) {
         // Only 'Disabled' option available. Log error in console.
-        xlog::error("Cannot get available screen resolutions: %s", e.what());
+        xlog::error("Cannot get available screen resolutions: {}", e.what());
     }
     if (selected_res != -1)
         m_res_combo.SetCurSel(selected_res);

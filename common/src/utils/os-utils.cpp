@@ -123,7 +123,11 @@ std::string get_cpu_id()
 #else
     __cpuid(1, cpu_info[0], cpu_info[1], cpu_info[2], cpu_info[3]);
 #endif
-    return std::format("{:08X} {:08X} {:08X} {:08X}", cpu_info[0], cpu_info[1], cpu_info[2], cpu_info[3]);
+    return std::format("{:08X} {:08X} {:08X} {:08X}",
+        static_cast<unsigned>(cpu_info[0]),
+        static_cast<unsigned>(cpu_info[1]),
+        static_cast<unsigned>(cpu_info[2]),
+        static_cast<unsigned>(cpu_info[3]));
 }
 
 std::string get_cpu_brand()
@@ -163,7 +167,7 @@ std::string get_module_pathname(HMODULE module)
     for (int i = 0; i < max_attempts; ++i) {
         auto num_copied = GetModuleFileNameA(module, buf.data(), buf.size());
         if (num_copied == 0) {
-            xlog::error("GetModuleFileNameA failed (%lu)", GetLastError());
+            xlog::error("GetModuleFileNameA failed ({})", GetLastError());
             return {};
         }
         if (num_copied < buf.size()) {
@@ -172,7 +176,7 @@ std::string get_module_pathname(HMODULE module)
         }
         buf.resize(buf.size() * 2);
     }
-    xlog::error("GetModuleFileNameA is misbehaving or pathname is longer than %u...", buf.size());
+    xlog::error("GetModuleFileNameA is misbehaving or pathname is longer than {}...", buf.size());
     return {};
 }
 

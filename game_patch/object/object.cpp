@@ -18,7 +18,7 @@ FunHook<rf::Object*(int, int, int, rf::ObjectCreateInfo*, int, rf::GRoom*)> obj_
     [](int type, int sub_type, int parent, rf::ObjectCreateInfo* create_info, int flags, rf::GRoom* room) {
         rf::Object* objp = obj_create_hook.call_target(type, sub_type, parent, create_info, flags, room);
         if (!objp) {
-            xlog::info("Failed to create object (type %d)", type);
+            xlog::info("Failed to create object (type {})", type);
         }
         return objp;
     },
@@ -106,7 +106,7 @@ CodeInjection obj_create_find_slot_patch{
         }
 
         // success: current index is free
-        xlog::trace("Using index %d for object type %d", index, obj_type);
+        xlog::trace("Using index {} for object type {}", index, obj_type);
         index_hint = index + 1;
         if (index_hint > max_index) {
             index_hint = min_index;

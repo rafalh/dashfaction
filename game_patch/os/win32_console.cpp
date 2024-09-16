@@ -102,12 +102,12 @@ void win32_console_init()
         char* ptr = std::format_to(buf, "(error {})", GetLastError());
         *ptr = '\0';
     }
-    xlog::info("Standard output info: path_name %s, file_type: %ld, handle %p",
+    xlog::info("Standard output info: path_name {}, file_type: {}, handle {}",
         buf, GetFileType(win32_console_output_handle), win32_console_output_handle);
 
     if (!GetFileType(win32_console_output_handle)) {
         if (!AllocConsole()) {
-            xlog::warn("AllocConsole failed, error %lu", GetLastError());
+            xlog::warn("AllocConsole failed, error {}", GetLastError());
         }
         win32_console_input_handle = GetStdHandle(STD_INPUT_HANDLE);
         win32_console_output_handle = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -115,7 +115,7 @@ void win32_console_init()
         std::freopen("CONOUT$", "w", stdout);
         std::freopen("CONOUT$", "w", stderr);
         std::freopen("CONIN$", "r", stdin);
-        xlog::info("Allocated new console, standard output: file_type %ld, handle %p",
+        xlog::info("Allocated new console, standard output: file_type {}, handle {}",
             GetFileType(win32_console_output_handle), win32_console_output_handle);
     }
 
@@ -204,7 +204,7 @@ void win32_console_output(const char* text, [[maybe_unused]] const rf::Color* co
             attr = white_attr;
         else {
             if (!color.empty())
-                xlog::error("unknown color %s", color.c_str());
+                xlog::error("unknown color {}", color);
             attr = gray_attr;
         }
 

@@ -50,13 +50,13 @@ rf::bm::Type read_dds_header(rf::File& file, int *width_out, int *height_out, rf
 {
     auto magic = file.read<uint32_t>();
     if (magic != DDS_MAGIC) {
-        xlog::warn("Invalid magic number in DDS file: %X", magic);
+        xlog::warn("Invalid magic number in DDS file: {:x}", magic);
         return rf::bm::TYPE_NONE;
     }
     DDS_HEADER hdr;
     file.read(&hdr, sizeof(hdr));
     if (hdr.size != sizeof(DDS_HEADER)) {
-        xlog::warn("Invalid header size in DDS file: %X", hdr.size);
+        xlog::warn("Invalid header size in DDS file: {:x}", hdr.size);
         return rf::bm::TYPE_NONE;
     }
     auto format = get_bm_format_from_dds_pixel_format(hdr.ddspf);
@@ -65,11 +65,11 @@ rf::bm::Type read_dds_header(rf::File& file, int *width_out, int *height_out, rf
     }
 
     if (!gr_is_texture_format_supported(format)) {
-        xlog::warn("Unsupported by video card DDS pixel format: %X", format);
+        xlog::warn("Unsupported by video card DDS pixel format: {:x}", static_cast<int>(format));
         return rf::bm::TYPE_NONE;
     }
 
-    xlog::trace("Using DDS format 0x%X", format);
+    xlog::trace("Using DDS format 0x{:x}", format);
 
     *width_out = hdr.width;
     *height_out = hdr.height;
@@ -78,7 +78,7 @@ rf::bm::Type read_dds_header(rf::File& file, int *width_out, int *height_out, rf
     *num_levels_out = 1;
     if (hdr.flags & DDS_HEADER_FLAGS_MIPMAP) {
         *num_levels_out = hdr.mipMapCount;
-        xlog::trace("DDS mipmaps %u (%ux%u)", hdr.mipMapCount, hdr.width, hdr.height);
+        xlog::trace("DDS mipmaps {} ({}x{})", hdr.mipMapCount, hdr.width, hdr.height);
     }
     return rf::bm::TYPE_DDS;
 }
@@ -89,15 +89,15 @@ int lock_dds_bitmap(rf::bm::BitmapEntry& bm_entry)
     std::string filename_without_ext{get_filename_without_ext(bm_entry.name)};
     auto dds_filename = filename_without_ext + ".dds";
 
-    xlog::trace("Locking DDS: %s", dds_filename.c_str());
+    xlog::trace("Locking DDS: {}", dds_filename);
     if (file.open(dds_filename.c_str()) != 0) {
-        xlog::error("failed to open DDS file: %s", dds_filename.c_str());
+        xlog::error("failed to open DDS file: {}", dds_filename);
         return -1;
     }
 
     auto magic = file.read<uint32_t>();
     if (magic != DDS_MAGIC) {
-        xlog::error("Invalid magic number in %s: %x", dds_filename.c_str(), magic);
+        xlog::error("Invalid magic number in {}: {:x}", dds_filename, magic);
         return -1;
     }
     DDS_HEADER hdr;
@@ -133,7 +133,7 @@ int lock_dds_bitmap(rf::bm::BitmapEntry& bm_entry)
     bm_entry.locked_data = rf::rf_malloc(num_total_bytes);
     file.read(bm_entry.locked_data, num_total_bytes);
     if (file.error()) {
-        xlog::error("Unexpected EOF when reading %s", dds_filename.c_str());
+        xlog::error("Unexpected EOF when reading {}", dds_filename);
         return -1;
     }
     return 0;

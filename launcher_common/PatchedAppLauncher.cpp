@@ -63,7 +63,7 @@ std::string PatchedAppLauncher::get_patch_dll_path()
     }
 
     std::string dir = get_dir_from_path(buf);
-    xlog::info("Determined Dash Faction directory: %s", dir.c_str());
+    xlog::info("Determined Dash Faction directory: {}", dir);
     return dir + "\\" + m_patch_dll_name;
 }
 
@@ -86,12 +86,12 @@ void PatchedAppLauncher::launch()
 
     std::string cmd_line = build_cmd_line(app_path);
 
-    xlog::info("Starting the process: %s", app_path.c_str());
+    xlog::info("Starting the process: {}", app_path);
     try {
         InjectingProcessLauncher proc_launcher{app_path.c_str(), work_dir.c_str(), cmd_line.c_str(), si, INIT_TIMEOUT};
 
         std::string patch_dll_path = get_patch_dll_path();
-        xlog::info("Injecting %s", patch_dll_path.c_str());
+        xlog::info("Injecting {}", patch_dll_path);
         proc_launcher.inject_dll(patch_dll_path.c_str(), "Init", INIT_TIMEOUT);
 
         xlog::info("Resuming app main thread");
@@ -121,7 +121,7 @@ void PatchedAppLauncher::launch()
 void PatchedAppLauncher::verify_before_launch()
 {
     std::string app_path = get_app_path();
-    xlog::info("Verifying %s SHA1", app_path.c_str());
+    xlog::info("Verifying {} SHA1", app_path);
     std::ifstream file(app_path.c_str(), std::fstream::in | std::fstream::binary);
     if (!file.is_open()) {
         throw FileNotFoundException(app_path);
