@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <windows.h>
+#include <common/DynamicLinkLibrary.h>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -18,7 +19,7 @@ typedef decltype(&MiniDumpWriteDump) MiniDumpWriteDump_Type;
 class MiniDumpHelper
 {
 private:
-    HMODULE m_dbghelp_lib = nullptr;
+    DynamicLinkLibrary m_dbghelp_lib;
     MiniDumpWriteDump_Type m_MiniDumpWriteDump = nullptr;
     std::vector<std::wstring> m_known_modules;
     int m_info_level = 0;

@@ -1,12 +1,13 @@
-// Win32++   Version 8.7.0
-// Release Date: 12th August 2019
+// Win32++   Version 9.6.1
+// Release Date: 29th July 2024
 //
 //      David Nash
 //      email: dnash@bigpond.net.au
 //      url: https://sourceforge.net/projects/win32-framework
+//           https://github.com/DavidNash2024/Win32xx
 //
 //
-// Copyright (c) 2005-2019  David Nash
+// Copyright (c) 2005-2024  David Nash
 //
 // Permission is hereby granted, free of charge, to
 // any person obtaining a copy of this software and
@@ -51,7 +52,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 // The CDockFrame class adds support for docking to a Single Document Interface
-// (SDI) frame. CDockFrame inherits from CFrameT<Docker>. CDockFrame has access
+// (SDI) frame. CDockFrame inherits from CFrameT<CDocker>. CDockFrame has access
 // to the public and protected functions defined by CFrameT and CDocker, as well
 // as those defined by CWnd.
 //
@@ -73,45 +74,48 @@ namespace Win32xx
     class CDockFrame : public CFrameT<CDocker>
     {
     public:
-        CDockFrame() {}
+        CDockFrame() : m_isDpiChanging(false) {}
         virtual ~CDockFrame() {}
-        virtual CWnd& GetView() const       { return CDocker::GetView(); }
-        virtual void SetView(CWnd& wndView) { CDocker::SetView(wndView); }
 
     protected:
         virtual LRESULT OnActivate(UINT msg, WPARAM wparam, LPARAM lparam);
-        virtual int OnCreate(CREATESTRUCT& cs);
-        virtual void OnDestroy();
+        virtual int     OnCreate(CREATESTRUCT& cs);
+        virtual void    OnDestroy();
         virtual LRESULT OnDockActivated(UINT msg, WPARAM wparam, LPARAM lparam);
         virtual LRESULT OnDockDestroyed(UINT msg, WPARAM wparam, LPARAM lparam);
+        virtual LRESULT OnDpiChanged(UINT msg, WPARAM wparam, LPARAM lparam);
+        virtual LRESULT OnGetDpiScaledSize(UINT msg, WPARAM wparam, LPARAM lparam);
         virtual LRESULT OnMouseActivate(UINT msg, WPARAM wparam, LPARAM lparam);
         virtual LRESULT OnNotify(WPARAM wparam, LPARAM lparam);
         virtual LRESULT OnSysColorChange(UINT msg, WPARAM wparam, LPARAM lparam);
-        virtual void RecalcViewLayout();
+        virtual void    RecalcViewLayout();
         virtual LRESULT WndProcDefault(UINT msg, WPARAM wparam, LPARAM lparam);
 
     private:
         CDockFrame(const CDockFrame&);              // Disable copy construction
-        CDockFrame& operator = (const CDockFrame&); // Disable assignment operator
+        CDockFrame& operator=(const CDockFrame&);   // Disable assignment operator
+        bool m_isDpiChanging;
     };
 
 
-    /////////////////////////////////////////
-    // Provides a Multiple Document Interface (MDI) frame with docking
+    //////////////////////////////////////////////////////////////////
+    // Provides a frame that supports the Multiple Document Interface
+    // (MDI) and docking. It also manages the creation and position
+    // of child windows, such as the menubar, toolbar, and statusbar.
     class CMDIDockFrame : public CMDIFrameT<CDockFrame>
     {
     public:
         CMDIDockFrame();
         virtual ~CMDIDockFrame() {}
 
-        virtual CWnd& GetMDIClient() const      { return m_dockMDIClient; }
-        virtual CDocker::CDockClient& GetDockClient() const { return m_dockMDIClient; }
-
     protected:
         virtual int OnCreate(CREATESTRUCT& cs);
 
     private:
-        mutable CMDIClient<CDocker::CDockClient> m_dockMDIClient;   // MDIClient for docking
+        CMDIDockFrame(const CMDIDockFrame&);                // Disable copy construction
+        CMDIDockFrame& operator=(const CMDIDockFrame&);     // Disable assignment operator
+
+        CMDIClient<CDocker::CDockClient> m_dockMDIClient;   // Both a DockClient and MDIClient
     };
 
 }
@@ -139,9 +143,9 @@ namespace Win32xx
     {
         GetDockClient().Create(GetHwnd());
         GetView().Create(GetDockClient());
-        
-        // Set the caption height based on text height
-        SetCaptionHeight( MAX(20, GetTextHeight() + 5) );
+
+        // Set the caption height based on text height.
+        SetDefaultCaptionHeight();
         return CFrameT<CDocker>::OnCreate(cs);
     }
 
@@ -164,13 +168,35 @@ namespace Win32xx
         return CDocker::OnDockDestroyed(msg, wparam, lparam);
     }
 
+    // Called when the effective dots per inch (dpi) for a window has changed.
+    // This occurs when:
+    //  - The window is moved to a new monitor that has a different DPI.
+    //  - The DPI of the monitor displaying the window changes.
+    inline LRESULT CDockFrame::OnDpiChanged(UINT msg, WPARAM wparam, LPARAM lparam)
+    {
+        CFrameT<CDocker>::OnDpiChanged(msg, wparam, lparam);
+        SetDefaultCaptionHeight();
+        DpiUpdateDockerSizes();
+        m_isDpiChanging = false;
+
+        return 0;
+    }
+
+    // Called when the DPI is about to change.
+    inline LRESULT CDockFrame::OnGetDpiScaledSize(UINT, WPARAM, LPARAM)
+    {
+        m_isDpiChanging = true;
+        return 0;
+    }
+
+    // Called when the cursor is in an inactive window and the user presses a mouse button.
     inline LRESULT CDockFrame::OnMouseActivate(UINT msg, WPARAM wparam, LPARAM lparam)
     {
         return CDocker::OnMouseActivate(msg, wparam, lparam);
     }
 
-    inline LRESULT CDockFrame::OnNotify(WPARAM wparam, LPARAM lparam)
     // Called when a notification from a child window (WM_NOTIFY) is received.
+    inline LRESULT CDockFrame::OnNotify(WPARAM wparam, LPARAM lparam)
     {
         LRESULT result = CFrameT<CDocker>::OnNotify(wparam, lparam);
         if (result == 0)
@@ -189,7 +215,9 @@ namespace Win32xx
     // Repositions the view window
     inline void CDockFrame::RecalcViewLayout()
     {
-        RecalcDockLayout();
+        // Skip RecalcDockLayout during DPI changes.
+        if (!m_isDpiChanging)
+            RecalcDockLayout();
     }
 
     // Process the frame's window messages.
@@ -198,15 +226,17 @@ namespace Win32xx
         switch (msg)
         {
         case WM_ACTIVATE:           return OnActivate(msg, wparam, lparam);
+        case WM_GETDPISCALEDSIZE:   return OnGetDpiScaledSize(msg, wparam, lparam);
+        case WM_DPICHANGED:         return OnDpiChanged(msg, wparam, lparam);
         case WM_MOUSEACTIVATE:      return OnMouseActivate(msg, wparam, lparam);
+        case WM_SIZE:               return OnSize(msg, wparam, lparam);
         case WM_SYSCOLORCHANGE:     return OnSysColorChange(msg, wparam, lparam);
 
         // Messages defined by Win32++
         case UWM_DOCKACTIVATE:      return OnDockActivated(msg, wparam, lparam);
         case UWM_DOCKDESTROYED:     return OnDockDestroyed(msg, wparam, lparam);
         case UWM_GETCDOCKER:        return reinterpret_cast<LRESULT>(this);
-
-        } // switch msg
+        }
 
         return CFrameT<CDocker>::WndProcDefault(msg, wparam, lparam);
     }
@@ -218,16 +248,19 @@ namespace Win32xx
     // Constructor.
     inline CMDIDockFrame::CMDIDockFrame()
     {
-        // The view window for a CMDIDockFrame is the MDI Client
-        SetView(GetMDIClient());
-        GetDockClient().SetDocker(this);
+        // Assign m_dockMDIClient as this MDI frame's MDI client.
+        SetMDIClient(m_dockMDIClient);
+
+        // Assign m_dockMDIClient as this docker's dock client.
+        SetDockClient(m_dockMDIClient);
     }
 
-    // Called when the frame window is created
+    // Called when the frame window is created.
     inline int CMDIDockFrame::OnCreate(CREATESTRUCT& cs)
     {
         return CFrameT<CDocker>::OnCreate(cs);
     }
+
 
 } // namespace Win32xx
 

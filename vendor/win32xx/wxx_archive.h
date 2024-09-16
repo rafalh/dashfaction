@@ -1,12 +1,13 @@
-// Win32++   Version 8.7.0
-// Release Date: 12th August 2019
+// Win32++   Version 9.6.1
+// Release Date: 29th July 2024
 //
 //      David Nash
 //      email: dnash@bigpond.net.au
 //      url: https://sourceforge.net/projects/win32-framework
+//           https://github.com/DavidNash2024/Win32xx
 //
 //
-// Copyright (c) 2005-2019  David Nash
+// Copyright (c) 2005-2024  David Nash
 //
 // Permission is hereby granted, free of charge, to
 // any person obtaining a copy of this software and
@@ -38,7 +39,7 @@
 ////////////////////////////////////////////////////////
 // Acknowledgement:
 //
-// The original author of CArchive is:
+// Developed from code originally provided by:
 //
 //      Robert C. Tausworthe
 //      email: robert.c.tausworthe@ieee.org
@@ -77,7 +78,6 @@
 
 namespace Win32xx
 {
-
     // An object used for serialization that can hold any type of data.
     // Specify a pointer to the data, and the size of the data in bytes.
     struct ArchiveObject
@@ -95,7 +95,8 @@ namespace Win32xx
     //  ar << ao; or ar >> ao;
 
 
-    // The CArchive serializes data to and from a file archive.
+    //////////////////////////////////////////////////////////////
+    // CArchive serializes data to and from a file archive.
     // CArchive uses the >> and << operator overloads to serialize
     // the various data types to the archive.
     class CArchive
@@ -106,23 +107,23 @@ namespace Win32xx
 
         // construction and  destruction
         CArchive(CFile& file, Mode mode);
-        CArchive(LPCTSTR pFileName, Mode mode);
-        ~CArchive();
+        CArchive(LPCTSTR fileName, Mode mode);
+        virtual ~CArchive();
 
         // method members
         const CFile&    GetFile();
-        UINT    GetObjectSchema();
+        UINT    GetObjectSchema() const;
         bool    IsLoading() const;
         bool    IsStoring() const;
-        void    Read(void* pBuf, UINT size);
-        LPTSTR  ReadString(LPTSTR pString, UINT max);
-        LPSTR   ReadStringA(LPSTR pString, UINT max);
-        LPWSTR  ReadStringW(LPWSTR pString, UINT max);
+        void    Read(void* buffer, UINT size);
+        LPTSTR  ReadString(LPTSTR string, UINT max);
+        LPSTR   ReadStringA(LPSTR string, UINT max);
+        LPWSTR  ReadStringW(LPWSTR string, UINT max);
         void    SetObjectSchema(UINT schema);
-        void    Write(const void* pBuf, UINT size);
-        void    WriteString(LPCTSTR pString);
-        void    WriteStringA(LPCSTR pString);
-        void    WriteStringW(LPCWSTR pString);
+        void    Write(const void* buffer, UINT size);
+        void    WriteString(LPCTSTR string);
+        void    WriteStringA(LPCSTR string);
+        void    WriteStringW(LPCWSTR string);
 
         // insertion operations
         CArchive& operator<<(BYTE by);
@@ -147,7 +148,7 @@ namespace Win32xx
         CArchive& operator<<(const ArchiveObject& ao);
         CArchive& operator<<(const CObject& object);
 #if !defined (_MSC_VER) ||  ( _MSC_VER > 1310 )
-        // wchar_t is not an a built-in type on older MS compilers
+        // wchar_t is not an a built-in type on older MS compilers.
         CArchive& operator<<(wchar_t ch);
 #endif
 
@@ -174,14 +175,14 @@ namespace Win32xx
         CArchive& operator>>(ArchiveObject& ao);
         CArchive& operator>>(CObject& object);
 #if !defined (_MSC_VER) ||  ( _MSC_VER > 1310 )
-        // wchar_t is not an a built-in type on older MS compilers
+        // wchar_t is not an a built-in type on older MS compilers.
         CArchive& operator>>(wchar_t& ch);
 #endif
 
 
     private:
         CArchive(const CArchive&);              // Disable copy construction
-        CArchive& operator = (const CArchive&); // Disable assignment operator
+        CArchive& operator=(const CArchive&);   // Disable assignment operator
 
         // private data members
         CFile*  m_pFile;            // archive file FILE
@@ -190,16 +191,21 @@ namespace Win32xx
         bool    m_isFileManaged;    // delete the CFile pointer in destructor;
     };
 
-
 } // namespace Win32xx
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 namespace Win32xx
 {
+
+#if defined (_MSC_VER) && (_MSC_VER >= 1920) // >= VS2019
+#pragma warning ( push )
+#pragma warning ( disable : 26812 )          // enum type is unscoped.
+#endif // (_MSC_VER) && (_MSC_VER >= 1920)
+
     // Constructs a CArchive object.
     // The specified file must already be open for loading or storing.
-    inline CArchive::CArchive(CFile& file, Mode mode) : m_schema(static_cast<UINT>(-1)), m_isFileManaged(false)
+    inline CArchive::CArchive(CFile& file, CArchive::Mode mode) : m_schema(static_cast<UINT>(-1)), m_isFileManaged(false)
     {
         m_pFile = &file;
 
@@ -216,7 +222,7 @@ namespace Win32xx
     // Constructs a CArchive object.
     // A file with the specified name is created for storing (if required), and
     // also opened. A failure to open the file will throw an exception.
-    inline CArchive::CArchive(LPCTSTR pFileName, Mode mode) : m_pFile(0), m_schema(static_cast<UINT>(-1))
+    inline CArchive::CArchive(LPCTSTR fileName, Mode mode) : m_pFile(0), m_schema(static_cast<UINT>(-1))
     {
         m_isFileManaged = true;
 
@@ -224,14 +230,14 @@ namespace Win32xx
         {
             if (mode == load)
             {
-                // Open the archive for loading
-                m_pFile = new CFile(pFileName, CFile::modeRead);
+                // Open the archive for loading.
+                m_pFile = new CFile(fileName, CFile::modeRead);
                 m_isStoring = false;
             }
             else
             {
-                // Open the archive for storing. Creates file if required
-                m_pFile = new CFile(pFileName, CFile::modeCreate);
+                // Open the archive for storing. Creates file if required.
+                m_pFile = new CFile(fileName, CFile::modeCreate);
                 m_isStoring = true;
             }
         }
@@ -239,7 +245,7 @@ namespace Win32xx
         catch(...)
         {
             delete m_pFile;
-            throw; // Rethrow the exception
+            throw; // Rethrow the exception.
         }
     }
 
@@ -247,10 +253,10 @@ namespace Win32xx
     {
         if (m_pFile)
         {
-            // if the file is open
+            // Test if the file is open.
             if (m_pFile->GetHandle())
             {
-                // flush if in write mode
+                // Flush if in write mode.
                 if (IsStoring())
                     m_pFile->Flush();
 
@@ -275,7 +281,7 @@ namespace Win32xx
     // the format of the archived data for special handling when there
     // are several versions of the serialized data to be accommodated
     // by the application.
-    inline UINT CArchive::GetObjectSchema()
+    inline UINT CArchive::GetObjectSchema() const
     {
         return m_schema;
     }
@@ -294,15 +300,19 @@ namespace Win32xx
         return m_isStoring;
     }
 
-    // Reads size bytes from the open archive file into the given lpBuf.
+    // Reads size bytes from the open archive file into the given buffer.
     // Throws an exception if not successful.
-    inline void CArchive::Read(void* pBuf, UINT size)
+    inline void CArchive::Read(void* buffer, UINT size)
     {
-        // read, simply and  in binary mode, the size into the lpBuf
+        // read, simply and  in binary mode, the size into the buffer
         assert(m_pFile);
-        UINT nBytes = m_pFile->Read(pBuf, size);
-        if (nBytes != size)
-            throw CFileException(m_pFile->GetFilePath(), g_msgArReadFail);
+
+        if (m_pFile)
+        {
+            UINT nBytes = m_pFile->Read(buffer, size);
+            if (nBytes != size)
+                throw CFileException(m_pFile->GetFilePath(), GetApp()->MsgArReadFail());
+        }
     }
 
     // Records the archived data schema number.  This acts as a version number
@@ -314,13 +324,13 @@ namespace Win32xx
         m_schema = schema;
     }
 
-    // Writes size characters of from the lpBuf into the open archive file.
+    // Writes size characters of from the buffer into the open archive file.
     // Throws an exception if unsuccessful.
-    inline void CArchive::Write(const void* pBuf, UINT size)
+    inline void CArchive::Write(const void* buffer, UINT size)
     {
-        // write size characters in lpBuf to the  file
+        // write size characters in buffer to the  file
         assert(m_pFile);
-        m_pFile->Write(pBuf, size);
+        m_pFile->Write(buffer, size);
     }
 
     // Writes the BYTE b into the archive file.
@@ -369,7 +379,7 @@ namespace Win32xx
         return *this;
     }
 
-    // Writes the DWORD dw into the archive file. 
+    // Writes the DWORD dw into the archive file.
     // Throws an exception if an error occurs.
     inline CArchive& CArchive::operator<<(DWORD dw)
     {
@@ -387,7 +397,7 @@ namespace Win32xx
         return *this;
     }
 
-    // Writes the double d into the archive file. 
+    // Writes the double d into the archive file.
     // Throws an exception if an error occurs.
     inline CArchive& CArchive::operator<<(double d)
     {
@@ -396,7 +406,7 @@ namespace Win32xx
         return *this;
     }
 
-    // Writes the int i into the archive file. 
+    // Writes the int i into the archive file.
     // Throws an exception if an error occurs.
     inline CArchive& CArchive::operator<<(int i)
     {
@@ -405,7 +415,7 @@ namespace Win32xx
         return *this;
     }
 
-    // Writes the short s into the archive file. 
+    // Writes the short s into the archive file.
     // Throws an exception if an error occurs.
     inline CArchive& CArchive::operator<<(short s)
     {
@@ -423,10 +433,10 @@ namespace Win32xx
         return *this;
     }
 
-// wchar_t is not an a built-in type on older MS compilers
+// wchar_t is not an a built-in type on older MS compilers.
 #if !defined (_MSC_VER) ||  ( _MSC_VER > 1310 )
 
-    // Writes the wchar_t ch into the archive file. 
+    // Writes the wchar_t ch into the archive file.
     // Throws an exception if an error occurs.
     inline CArchive& CArchive::operator<<(wchar_t ch)
     {
@@ -437,7 +447,7 @@ namespace Win32xx
 
 #endif
 
-    // Writes the unsigned u into the archive file. 
+    // Writes the unsigned u into the archive file.
     // Throws an exception if an error occurs.
     inline CArchive& CArchive::operator<<(unsigned u)
     {
@@ -446,7 +456,7 @@ namespace Win32xx
         return *this;
     }
 
-    // Writes the bool b into the archive file. 
+    // Writes the bool b into the archive file.
     // Throws an exception if an error occurs.
     inline CArchive& CArchive::operator<<(bool b)
     {
@@ -460,10 +470,10 @@ namespace Win32xx
     // Throws an exception if an error occurs.
     inline CArchive& CArchive::operator<<(const CStringA& string)
     {
-        UINT chars = string.GetLength();
+        int chars = string.GetLength();
         bool isUnicode = false;
 
-        // Store the Unicode state and number of characters in the archive
+        // Store the Unicode state and number of characters in the archive.
         *this << isUnicode;
         *this << chars;
 
@@ -476,10 +486,10 @@ namespace Win32xx
     // Throws an exception if an error occurs.
     inline CArchive& CArchive::operator<<(const CStringW& string)
     {
-        UINT chars = string.GetLength();
+        int chars = string.GetLength();
         bool isUnicode = true;
 
-        // Store the Unicode state and number of characters in the archive
+        // Store the Unicode state and number of characters in the archive.
         *this << isUnicode;
         *this << chars;
 
@@ -492,10 +502,10 @@ namespace Win32xx
     // Throws an exception if an error occurs.
     inline CArchive& CArchive::operator<<(const CString& string)
     {
-        UINT chars = string.GetLength();
+        int chars = string.GetLength();
         bool isUnicode = (sizeof(TCHAR) == sizeof(WCHAR));
 
-        // Store the Unicode state and number of characters in the archive
+        // Store the Unicode state and number of characters in the archive.
         *this << isUnicode;
         *this << chars;
 
@@ -509,31 +519,31 @@ namespace Win32xx
     {
         UINT size = sizeof(pt);
 
-        // Write() throws exception upon error
+        // Write() throws exception upon error.
         Write(&size, sizeof(size));
         Write(&pt, size);
         return *this;
     }
 
-    // Writes the RECT rc into the archive file. 
+    // Writes the RECT rc into the archive file.
     // Throws an exception if an error occurs.
     inline CArchive& CArchive::operator<<(const RECT& rc)
     {
         UINT size = sizeof(rc);
 
-        // Write() throws exception upon error
+        // Write() throws exception upon error.
         Write(&size, sizeof(size));
         Write(&rc, size);
         return *this;
     }
 
-    // Writes the SIZE sz into the archive file. 
+    // Writes the SIZE sz into the archive file.
     // Throws an exception if an error occurs.
     inline CArchive& CArchive::operator<<(const SIZE& sz)
     {
         UINT size = sizeof(sz);
 
-        // Write() throws exception upon error
+        // Write() throws exception upon error.
         Write(&size, sizeof(size));
         Write(&sz, size);
         return *this;
@@ -545,12 +555,12 @@ namespace Win32xx
     {
         Write(&ao.m_size, sizeof(ao.m_size));
 
-        // Write() throws exception upon error
+        // Write() throws exception upon error.
         Write(ao.m_pData, ao.m_size);
         return *this;
     }
 
-    // Reads a BYTE from the archive and stores it in b.  
+    // Reads a BYTE from the archive and stores it in b.
     // Throws an exception if an error occurs.
     inline CArchive& CArchive::operator>>(BYTE& b)
     {
@@ -568,7 +578,7 @@ namespace Win32xx
         return *this;
     }
 
-    // Reads a LONG from the archive and stores it in l.  
+    // Reads a LONG from the archive and stores it in l.
     // Throws an exception if an error occurs.
     inline CArchive& CArchive::operator>>(LONG& l)
     {
@@ -577,7 +587,7 @@ namespace Win32xx
         return *this;
     }
 
-    // Reads a LONGLONG from the archive and stores it in ll.  
+    // Reads a LONGLONG from the archive and stores it in ll.
     // Throws an exception if an error occurs.
     inline CArchive& CArchive::operator>>(LONGLONG& ll)
     {
@@ -586,7 +596,7 @@ namespace Win32xx
         return *this;
     }
 
-    // Reads a ULONGLONG from the archive and stores it in ull.  
+    // Reads a ULONGLONG from the archive and stores it in ull.
     // Throws an exception if an error occurs.
     inline CArchive& CArchive::operator>>(ULONGLONG& ull)
     {
@@ -595,7 +605,7 @@ namespace Win32xx
         return *this;
     }
 
-    // Reads a DWORD from the archive and stores it in dw.  
+    // Reads a DWORD from the archive and stores it in dw.
     // Throws an exception if an error occurs.
     inline CArchive& CArchive::operator>>(DWORD& dw)
     {
@@ -622,7 +632,7 @@ namespace Win32xx
         return *this;
     }
 
-    // Reads an int from the archive and stores it in i.  
+    // Reads an int from the archive and stores it in i.
     // Throws an exception if an error occurs.
     inline CArchive& CArchive::operator>>(int& i)
     {
@@ -631,7 +641,7 @@ namespace Win32xx
         return *this;
     }
 
-    // Reads a short from the archive and stores it in i.  
+    // Reads a short from the archive and stores it in i.
     // Throws an exception if an error occurs.
     inline CArchive& CArchive::operator>>(short& i)
     {
@@ -652,7 +662,7 @@ namespace Win32xx
 // wchar_t is not an a built-in type on older MS compilers
 #if !defined (_MSC_VER) ||  ( _MSC_VER > 1310 )
 
-    // Reads a wchar_t from the archive and stores it in ch.  
+    // Reads a wchar_t from the archive and stores it in ch.
     // Throws an exception if an error occurs.
     inline CArchive& CArchive::operator>>(wchar_t& ch)
 
@@ -664,7 +674,7 @@ namespace Win32xx
 
 #endif
 
-    // Reads an unsigned int from the archive and stores it in u. 
+    // Reads an unsigned int from the archive and stores it in u.
     // Throws an exception if an error occurs.
     inline CArchive& CArchive::operator>>(unsigned& u)
     {
@@ -689,14 +699,15 @@ namespace Win32xx
         bool isUnicode;
         int chars;
 
-        // Retrieve the Unicode state and number of characters from the archive
+        // Retrieve the Unicode state and number of characters from the archive.
         *this >> isUnicode;
         *this >> chars;
+        assert(chars >= 0);
 
         if (isUnicode)
-            throw CFileException(m_pFile->GetFilePath(), g_msgArNotCStringA);
+            throw CFileException(m_pFile->GetFilePath(), GetApp()->MsgArNotCStringA());
 
-        Read(string.GetBuffer(chars), chars);
+        Read(string.GetBuffer(chars), static_cast<UINT>(chars));
         string.ReleaseBuffer(chars);
 
         return *this;
@@ -709,63 +720,65 @@ namespace Win32xx
         bool isUnicode;
         int chars;
 
-        // Retrieve the Unicode state and number of characters from the archive
+        // Retrieve the Unicode state and number of characters from the archive.
         *this >> isUnicode;
         *this >> chars;
+        assert(chars >= 0);
 
         if (!isUnicode)
-            throw CFileException(m_pFile->GetFilePath(), g_msgArNotCStringW);
+            throw CFileException(m_pFile->GetFilePath(), GetApp()->MsgArNotCStringW());
 
-        Read(string.GetBuffer(chars), chars * 2);
+        Read(string.GetBuffer(chars), static_cast<UINT>(chars) * 2);
         string.ReleaseBuffer(chars);
 
         return *this;
     }
 
-    // Reads a CString from the archive and stores it in string. 
+    // Reads a CString from the archive and stores it in string.
     // Throws an exception if an error occurs.
     inline CArchive& CArchive::operator>>(CString& string)
     {
         bool isUnicode;
         int chars;
 
-        // Retrieve the Unicode state and number of characters from the archive
+        // Retrieve the Unicode state and number of characters from the archive.
         *this >> isUnicode;
         *this >> chars;
+        assert(chars >= 0);
 
         if (isUnicode)
         {
-            // use a vector to create our WCHAR array
+            // Use a vector to create our WCHAR array.
             std::vector<WCHAR> vWChar(size_t(chars) + 1, L'\0');
             WCHAR* buf = &vWChar.front();
 
-            Read(buf, chars*2);
+            Read(buf, static_cast<UINT>(chars)*2);
 
 #ifdef UNICODE
             memcpy(string.GetBuffer(chars), buf, size_t(chars)*2);
 #else
-            // Convert the archive string from Wide to Ansi
-            WideCharToMultiByte(CP_ACP, 0, buf, chars, string.GetBuffer(chars), chars, NULL,NULL);
+            // Convert the archive string from Wide to Ansi.
+            WideCharToMultiByte(CP_ACP, 0, buf, chars, string.GetBuffer(chars), chars, NULL, NULL);
 #endif
 
             string.ReleaseBuffer(chars);
         }
         else
         {
-            // use a vector to create our char array
+            // Use a vector to create our char array.
             std::vector<char> vChar(size_t(chars) + 1, '\0');
             char* buf = &vChar.front();
 
-            Read(buf, int(chars));
+            Read(buf, static_cast<UINT>(chars));
 
 #ifdef UNICODE
-            // Convert the archive string from Ansi to Wide
+            // Convert the archive string from Ansi to Wide.
             MultiByteToWideChar(CP_ACP, 0, buf, chars, string.GetBuffer(chars), int(chars));
 #else
             memcpy(string.GetBuffer(chars), buf, chars);
 #endif
 
-            string.ReleaseBuffer(int(chars));
+            string.ReleaseBuffer(chars);
         }
 
         return *this;
@@ -780,7 +793,7 @@ namespace Win32xx
         return *this;
     }
 
-    // Reads a RECT from the archive and stores it in rc.  
+    // Reads a RECT from the archive and stores it in rc.
     // Throws an exception if an error occurs.
     inline CArchive& CArchive::operator>>(RECT& rc)
     {
@@ -807,7 +820,7 @@ namespace Win32xx
         Read(&size, sizeof(size));
         if (size != ao.m_size)
         {
-            throw CFileException(m_pFile->GetFilePath(), g_msgArReadFail);
+            throw CFileException(m_pFile->GetFilePath(), GetApp()->MsgArReadFail());
         }
 
         Read(ao.m_pData, ao.m_size);
@@ -822,7 +835,7 @@ namespace Win32xx
         return *this;
     }
 
-    // Reads a CObject from the archive. 
+    // Reads a CObject from the archive.
     // Throws an exception if an error occurs.
     inline CArchive& CArchive::operator>>(CObject& object)
     {
@@ -830,96 +843,101 @@ namespace Win32xx
         return *this;
     }
 
-    // The size (in characters) of the pString array must be nMax or greater.
-    // Reads at most nMax-1 TCHAR characters from the archive and stores it
-    // in pString. Strings read from the archive are converted from ANSI
+    // The size (in characters) of the string array must be max or greater.
+    // Reads at most max-1 TCHAR characters from the archive and stores it
+    // in a string. Strings read from the archive are converted from ANSI
     // or Unicode to TCHAR if required, and are NULL terminated.
     // Throws an exception if an error occurs.
-    inline LPTSTR CArchive::ReadString(LPTSTR pString, UINT max)
+    inline LPTSTR CArchive::ReadString(LPTSTR string, UINT max)
     {
         assert (max > 0);
 
         CString str;
         *this >> str;
-        StrCopy(pString, str.c_str(), max);
-        return pString;
+        StrCopy(string, str.c_str(), max);
+        return string;
     }
 
-    // The size (in characters) of the pString array must be nMax or greater.
-    // Reads at most nMax-1 TCHAR characters from the archive and store it
-    // in pString. Strings read from the archive are converted from ANSI
+    // The size (in characters) of the string array must be max or greater.
+    // Reads at most max-1 TCHAR characters from the archive and store it
+    // in a string. Strings read from the archive are converted from ANSI
     // or Unicode to TCHAR if required, and are NULL terminated.
     // Throws an exception if an error occurs.
-    inline LPSTR CArchive::ReadStringA(LPSTR pString, UINT max)
+    inline LPSTR CArchive::ReadStringA(LPSTR string, UINT max)
     {
         assert (max > 0);
 
         CStringA str;
         *this >> str;
-        StrCopyA(pString, str.c_str(), max);
-        return pString;
+        StrCopyA(string, str.c_str(), max);
+        return string;
     }
 
-    // The size (in characters) of the pString array must be nMax or greater.
-    // Reads at most nMax-1 TCHAR characters from the archive and store it
-    // in pString. Strings read from the archive are converted from ANSI
+    // The size (in characters) of the string array must be max or greater.
+    // Reads at most max-1 TCHAR characters from the archive and store it
+    // in a string. Strings read from the archive are converted from ANSI
     // or Unicode to TCHAR if required, and are NULL terminated.
     // Throws an exception if an error occurs.
-    inline LPWSTR CArchive::ReadStringW(LPWSTR pString, UINT max)
+    inline LPWSTR CArchive::ReadStringW(LPWSTR string, UINT max)
     {
         assert (max > 0);
 
         CStringW str;
         *this >> str;
-        StrCopyW(pString, str.c_str(), max);
-        return pString;
+        StrCopyW(string, str.c_str(), max);
+        return string;
     }
 
     // Writes the LPCTSTR string into the archive file.
     // The string must be null terminated.
     // Throws an exception if an error occurs.
-    inline void CArchive::WriteString(LPCTSTR pString)
+    inline void CArchive::WriteString(LPCTSTR string)
     {
-        int chars = lstrlen(pString);
+        int chars = lstrlen(string);
         bool isUnicode = (sizeof(TCHAR) == sizeof(WCHAR));
 
         // Store the Unicode state and number of characters in the archive
         *this << isUnicode;
         *this << chars;
 
-        Write(pString, chars*sizeof(TCHAR));
+        Write(string, chars*sizeof(TCHAR));
     }
 
     // Writes the LPCSTR string into the archive file.
     // The string must be null terminated.
     // Throws an exception if an error occurs.
-    inline void CArchive::WriteStringA(LPCSTR pString)
+    inline void CArchive::WriteStringA(LPCSTR string)
     {
-        int chars = lstrlenA(pString);
+        int chars = lstrlenA(string);
         bool isUnicode = false;
 
         // Store the Unicode state and number of characters in the archive
         *this << isUnicode;
         *this << chars;
 
-        Write(pString, chars*sizeof(CHAR));
+        Write(string, chars*sizeof(CHAR));
     }
 
     // Writes the LPCWSTR string into the archive file.
     // The string must be null terminated.
     // Throws an exception if an error occurs.
-    inline void CArchive::WriteStringW(LPCWSTR pString)
+    inline void CArchive::WriteStringW(LPCWSTR string)
     {
-        int chars = lstrlenW(pString);
+        int chars = lstrlenW(string);
         bool isUnicode = true;
 
         // Store the Unicode state and number of characters in the archive
         *this << isUnicode;
         *this << chars;
 
-        Write(pString, chars*sizeof(WCHAR));
+        Write(string, chars*sizeof(WCHAR));
     }
 
+#if defined (_MSC_VER) && (_MSC_VER >= 1920)       // >= VS2019
+#pragma warning ( pop )  // ( disable : 26812 )    enum type is unscoped.
+#endif // (_MSC_VER) && (_MSC_VER >= 1920)
+
 } // namespace Win32xx
+
 
 #endif // _WIN32XX_ARCHIVE_H_

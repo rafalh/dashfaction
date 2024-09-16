@@ -4,7 +4,7 @@
  *
  *   FreeType PFR glyph loader (body).
  *
- * Copyright (C) 2002-2020 by
+ * Copyright (C) 2002-2024 by
  * David Turner, Robert Wilhelm, and Werner Lemberg.
  *
  * This file is part of the FreeType project, and may only be used,
@@ -19,7 +19,7 @@
 #include "pfrgload.h"
 #include "pfrsbit.h"
 #include "pfrload.h"            /* for macro definitions */
-#include FT_INTERNAL_DEBUG_H
+#include <freetype/internal/ftdebug.h>
 
 #include "pfrerror.h"
 
@@ -42,8 +42,7 @@
   {
     FT_ZERO( glyph );
 
-    glyph->loader     = loader;
-    glyph->path_begun = 0;
+    glyph->loader = loader;
 
     FT_GlyphLoader_Rewind( loader );
   }
@@ -109,7 +108,7 @@
 
     /* don't add empty contours */
     if ( last >= first )
-      outline->contours[outline->n_contours++] = (short)last;
+      outline->contours[outline->n_contours++] = (FT_UShort)last;
 
     glyph->path_begun = 0;
   }
@@ -179,8 +178,8 @@
     error = FT_GLYPHLOADER_CHECK_POINTS( loader, 3, 0 );
     if ( !error )
     {
-      FT_Vector*  vec = outline->points         + outline->n_points;
-      FT_Byte*    tag = (FT_Byte*)outline->tags + outline->n_points;
+      FT_Vector*  vec = outline->points + outline->n_points;
+      FT_Byte*    tag = outline->tags   + outline->n_points;
 
 
       vec[0] = *control1;
@@ -190,7 +189,7 @@
       tag[1] = FT_CURVE_TAG_CUBIC;
       tag[2] = FT_CURVE_TAG_ON;
 
-      outline->n_points = (FT_Short)( outline->n_points + 3 );
+      outline->n_points += 3;
     }
 
   Exit:
@@ -409,7 +408,7 @@
           break;
 
         case 6:                            /* horizontal to vertical curve */
-          FT_TRACE6(( "- hv curve " ));
+          FT_TRACE6(( "- hv curve" ));
           args_format = 0xB8E;
           args_count  = 3;
           break;
@@ -451,7 +450,7 @@
           case 1:                           /* 16-bit absolute value */
             PFR_CHECK( 2 );
             cur->x = PFR_NEXT_SHORT( p );
-            FT_TRACE7(( " x.%d", cur->x ));
+            FT_TRACE7(( " x.%ld", cur->x ));
             break;
 
           case 2:                           /* 8-bit delta */
@@ -481,7 +480,7 @@
           case 1:                           /* 16-bit absolute value */
             PFR_CHECK( 2 );
             cur->y = PFR_NEXT_SHORT( p );
-            FT_TRACE7(( " y.%d", cur->y ));
+            FT_TRACE7(( " y.%ld", cur->y ));
             break;
 
           case 2:                           /* 8-bit delta */
@@ -561,8 +560,7 @@
                            FT_Byte*   limit )
   {
     FT_Error        error  = FT_Err_Ok;
-    FT_GlyphLoader  loader = glyph->loader;
-    FT_Memory       memory = loader->memory;
+    FT_Memory       memory = glyph->loader->memory;
     PFR_SubGlyph    subglyph;
     FT_UInt         flags, i, count, org_count;
     FT_Int          x_pos, y_pos;

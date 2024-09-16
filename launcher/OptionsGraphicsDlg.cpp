@@ -1,12 +1,13 @@
 #include <wxx_wincore.h>
 #include "OptionsGraphicsDlg.h"
 #include "LauncherApp.h"
+#include <format>
 #include <xlog/xlog.h>
 #include <wxx_dialog.h>
 #include <wxx_commondlg.h>
 
-OptionsGraphicsDlg::OptionsGraphicsDlg(GameConfig& conf, VideoDeviceInfoProvider& video_info)
-	: CDialog(IDD_OPTIONS_GRAPHICS), m_conf(conf), m_video_info(video_info)
+OptionsGraphicsDlg::OptionsGraphicsDlg(GameConfig& conf)
+	: CDialog(IDD_OPTIONS_GRAPHICS), m_conf(conf), m_video_info(nullptr)
 {
 }
 
@@ -43,23 +44,26 @@ void OptionsGraphicsDlg::UpdateMsaaCombo()
 {
     m_msaa_combo.ResetContent();
     m_msaa_combo.AddString("Disabled");
+
+    if (!m_video_info) {
+        return;
+    }
+
     int selected_msaa = 0;
     m_multi_sample_types.push_back(0);
     try {
         BOOL windowed = m_conf.wnd_mode != GameConfig::FULLSCREEN;
-        auto format = static_cast<D3DFORMAT>(m_conf.res_backbuffer_format.value());
-        auto multi_sample_types = m_video_info.get_multisample_types(m_conf.selected_video_card, format, windowed);
+        auto multi_sample_types = m_video_info->get_multisample_types(m_conf.selected_video_card, m_conf.res_backbuffer_format, windowed);
         for (auto msaa : multi_sample_types) {
-            char buf[16];
-            sprintf(buf, "MSAAx%u", msaa);
-            int idx = m_msaa_combo.AddString(buf);
+            auto s = std::format("MSAAx{}", msaa);
+            int idx = m_msaa_combo.AddString(s.c_str());
             if (m_conf.msaa == msaa)
                 selected_msaa = idx;
             m_multi_sample_types.push_back(msaa);
         }
     }
     catch (std::exception &e) {
-        xlog::error("Cannot check available MSAA modes: %s", e.what());
+        xlog::error("Cannot check available MSAA modes: {}", e.what());
     }
     m_msaa_combo.SetCurSel(selected_msaa);
 }
@@ -68,10 +72,12 @@ void OptionsGraphicsDlg::UpdateAnisotropyCheckbox()
 {
     bool anisotropy_supported = false;
     try {
-        anisotropy_supported = m_video_info.has_anisotropy_support(m_conf.selected_video_card);
+        if (m_video_info) {
+            anisotropy_supported = m_video_info->has_anisotropy_support(m_conf.selected_video_card);
+        }
     }
     catch (std::exception &e) {
-        xlog::error("Cannot check anisotropy support: %s", e.what());
+        xlog::error("Cannot check anisotropy support: {}", e.what());
     }
     if (anisotropy_supported) {
         GetDlgItem(IDC_ANISOTROPIC_CHECK).EnableWindow(TRUE);
@@ -102,6 +108,12 @@ void OptionsGraphicsDlg::OnSave()
     m_conf.high_monitor_res = (IsDlgButtonChecked(IDC_HIGH_MON_RES_CHECK) == BST_CHECKED);
     m_conf.true_color_textures = (IsDlgButtonChecked(IDC_TRUE_COLOR_TEXTURES_CHECK) == BST_CHECKED);
     m_conf.mesh_static_lighting = (IsDlgButtonChecked(IDC_MESH_STATIC_LIGHTING_CHECK) == BST_CHECKED);
+}
+
+void OptionsGraphicsDlg::OnRendererChange()
+{
+    UpdateMsaaCombo();
+    UpdateAnisotropyCheckbox();
 }
 
 void OptionsGraphicsDlg::OnAdapterChange()

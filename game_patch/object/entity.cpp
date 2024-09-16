@@ -144,7 +144,7 @@ CodeInjection waypoints_read_lists_oob_fix{
         int index = regs.eax;
         int num_lists = regs.ecx;
         if (index >= max_waypoint_lists && index < num_lists) {
-            xlog::error("Too many waypoint lists (limit is %d)! Overwritting the last list.", max_waypoint_lists);
+            xlog::error("Too many waypoint lists (limit is {})! Overwritting the last list.", max_waypoint_lists);
             // reduce count by one and keep index unchanged
             --num_waypoint_lists;
             regs.ecx = num_waypoint_lists;
@@ -161,7 +161,7 @@ CodeInjection waypoints_read_nodes_oob_fix{
         int node_index = regs.eax + 1;
         int& num_nodes = *static_cast<int*>(regs.ebp);
         if (node_index >= max_waypoint_list_nodes && node_index < num_nodes) {
-            xlog::error("Too many waypoint list nodes (limit is %d)! Overwritting the last endpoint.", max_waypoint_list_nodes);
+            xlog::error("Too many waypoint list nodes (limit is {})! Overwritting the last endpoint.", max_waypoint_list_nodes);
             // reduce count by one and keep node index unchanged
             --num_nodes;
             // Set EAX and ECX based on skipped instructions but do not update EBX to fix OOB write

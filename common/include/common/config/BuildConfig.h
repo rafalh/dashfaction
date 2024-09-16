@@ -1,11 +1,5 @@
 #pragma once
 
-#ifdef HAS_PF
- #define MASK_AS_PF 1
-#else
- #define MASK_AS_PF 0
-#endif
-
 #define NO_CD_FIX 1
 #define SPECTATE_MODE_SHOW_WEAPON 1
 #define D3D_SWAP_DISCARD 1 // needed for MSAA

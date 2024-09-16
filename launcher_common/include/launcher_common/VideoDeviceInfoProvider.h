@@ -3,18 +3,8 @@
 #include <set>
 #include <vector>
 #include <string>
-#include <windows.h>
-
-#define USE_D3D9 1
-
-// Only include D3D header if one has not been included before (fix for afx.h including d3d9 and DF using d3d8)
-#if USE_D3D9
-#include <d3d9.h>
-#elif !defined(DIRECT3D_VERSION)
-#include <d3d8.h>
-#else
-struct IDirect3D8;
-#endif
+#include <memory>
+#include <common/config/GameConfig.h>
 
 class VideoDeviceInfoProvider
 {
@@ -22,24 +12,35 @@ public:
     struct Resolution
     {
         unsigned width, height;
+
         bool operator<(const Resolution& other) const
         {
             return width * height < other.width * other.height;
         }
     };
 
-    VideoDeviceInfoProvider();
-    ~VideoDeviceInfoProvider();
-    std::vector<std::string> get_adapters();
-    std::set<Resolution> get_resolutions(unsigned adapter, D3DFORMAT format);
-    std::set<D3DMULTISAMPLE_TYPE> get_multisample_types(unsigned adapter, D3DFORMAT format, BOOL windowed);
-    bool has_anisotropy_support(unsigned adapter);
-
-private:
-#if USE_D3D9
-    IDirect3D9* m_d3d;
-#else
-    IDirect3D8* m_d3d;
-#endif
-    HMODULE m_lib;
+    virtual ~VideoDeviceInfoProvider() = default;
+    virtual std::vector<std::string> get_adapters() = 0;
+    virtual unsigned get_format_from_bpp(unsigned bpp) = 0;
+    virtual std::set<Resolution> get_resolutions(unsigned adapter, unsigned format) = 0;
+    virtual std::set<unsigned> get_multisample_types(unsigned adapter, unsigned format, bool windowed) = 0;
+    virtual bool has_anisotropy_support(unsigned adapter) = 0;
 };
+
+std::unique_ptr<VideoDeviceInfoProvider> create_d3d8_device_info_provider();
+std::unique_ptr<VideoDeviceInfoProvider> create_d3d9_device_info_provider();
+std::unique_ptr<VideoDeviceInfoProvider> create_d3d11_device_info_provider();
+
+inline std::unique_ptr<VideoDeviceInfoProvider> create_device_info_provider(GameConfig::Renderer renderer)
+{
+    switch (renderer) {
+        case GameConfig::Renderer::d3d8:
+            return create_d3d8_device_info_provider();
+        case GameConfig::Renderer::d3d9:
+            return create_d3d9_device_info_provider();
+        case GameConfig::Renderer::d3d11:
+            return create_d3d11_device_info_provider();
+        default:
+            return {};
+    }
+}

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <launcher_common/VideoDeviceInfoProvider.h>
 #include <common/config/GameConfig.h>
 #include <wxx_wincore.h>
 #include <wxx_dialog.h>
@@ -32,7 +31,6 @@ private:
     void OnForcePortClick();
     void InitNestedDialog(CDialog& dlg, int placeholder_id);
 
-    VideoDeviceInfoProvider m_video_info;
     CToolTip m_tool_tip;
     GameConfig m_conf;
     OptionsDisplayDlg m_display_dlg;

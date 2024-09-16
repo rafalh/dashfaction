@@ -1,6 +1,7 @@
 set(SRCS
     include/common/HttpRequest.h
     include/common/rfproto.h
+    include/common/ComPtr.h
     include/common/config/BuildConfig.h
     include/common/config/CfgVar.h
     include/common/config/GameConfig.h
@@ -27,7 +28,7 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRCS})
 
 add_library(Common STATIC ${SRCS})
 
-target_compile_features(Common PUBLIC cxx_std_17)
+target_compile_features(Common PUBLIC cxx_std_20)
 set_target_properties(Common PROPERTIES CXX_EXTENSIONS NO)
 enable_warnings(Common)
 
