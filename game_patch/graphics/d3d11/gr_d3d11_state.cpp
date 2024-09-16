@@ -24,7 +24,7 @@ namespace df::gr::d3d11
         ComPtr<ID3D11RasterizerState> rasterizer_state;
         check_hr(
             device_->CreateRasterizerState(&desc, &rasterizer_state),
-            [=]() { xlog::error("Failed to create rasterizer state %d %d", cull_mode, depth_bias); }
+            [=]() { xlog::error("Failed to create rasterizer state {} {}", static_cast<int>(cull_mode), depth_bias); }
         );
         return rasterizer_state;
     }
@@ -74,7 +74,7 @@ namespace df::gr::d3d11
         ComPtr<ID3D11SamplerState> sampler_state;
         check_hr(
             device_->CreateSamplerState(&desc, &sampler_state),
-            [=]() { xlog::error("Failed to create sampler state %d", ts); }
+            [=]() { xlog::error("Failed to create sampler state {}", static_cast<int>(ts)); }
         );
         return sampler_state;
     }
@@ -135,7 +135,7 @@ namespace df::gr::d3d11
         ComPtr<ID3D11BlendState> blend_state;
         check_hr(
             device_->CreateBlendState(&desc, &blend_state),
-            [=]() { xlog::error("Failed to create blend state %d", ab); }
+            [=]() { xlog::error("Failed to create blend state {}", static_cast<int>(ab)); }
         );
         return blend_state;
     }
@@ -180,7 +180,7 @@ namespace df::gr::d3d11
 
         check_hr(
             device_->CreateDepthStencilState(&desc, &depth_stencil_state),
-            [=]() { xlog::warn("Failed to create depth stencil state %d", zbt); }
+            [=]() { xlog::warn("Failed to create depth stencil state {}", static_cast<int>(zbt)); }
         );
         return depth_stencil_state;
     }

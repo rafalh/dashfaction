@@ -2,7 +2,8 @@
 #include <xlog/xlog.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CallHook.h>
-#include <common/utils/string-utils.h>
+#include <format>
+#include <algorithm>
 #include "../rf/ui.h"
 #include "../rf/input.h"
 #include "../rf/misc.h"
@@ -274,7 +275,7 @@ static bool is_any_font_modded()
     bool rfpc_small_modded = rfpc_small_checksum != 0xAABA52E6u;
     bool any_font_modded = rfpc_large_modded || rfpc_medium_modded || rfpc_small_modded;
     if (any_font_modded) {
-        xlog::info("Detected modded fonts: rfpc-large %d (%08X) rfpc-medium %d (%08X) rfpc-small %d (%08X)",
+        xlog::info("Detected modded fonts: rfpc-large {} ({:08X}) rfpc-medium {} ({:08X}) rfpc-small {} ({:08X})",
             rfpc_large_modded, rfpc_large_checksum,
             rfpc_medium_modded, rfpc_medium_checksum,
             rfpc_small_modded, rfpc_small_checksum
@@ -288,17 +289,17 @@ FunHook<void()> menu_init_hook{
     []() {
         menu_init_hook.call_target();
 #if SHARP_UI_TEXT
-        xlog::info("UI scale: %.4f %.4f", rf::ui::scale_x, rf::ui::scale_y);
+        xlog::info("UI scale: {:.4f} {:.4f}", rf::ui::scale_x, rf::ui::scale_y);
         if (rf::ui::scale_y > 1.0f && !is_any_font_modded()) {
             int large_font_size = std::min(128, static_cast<int>(std::round(rf::ui::scale_y * 14.5f))); // 32
             int medium_font_size = std::min(128, static_cast<int>(std::round(rf::ui::scale_y * 9.0f))); // 20
             int small_font_size = std::min(128, static_cast<int>(std::round(rf::ui::scale_y * 7.5f))); // 16
-            xlog::info("UI font sizes: %d %d %d", large_font_size, medium_font_size, small_font_size);
+            xlog::info("UI font sizes: {} {} {}", large_font_size, medium_font_size, small_font_size);
 
-            rf::ui::large_font = rf::gr::load_font(string_format("boldfont.ttf:%d", large_font_size).c_str());
-            rf::ui::medium_font_0 = rf::gr::load_font(string_format("regularfont.ttf:%d", medium_font_size).c_str());
+            rf::ui::large_font = rf::gr::load_font(std::format("boldfont.ttf:{}", large_font_size).c_str());
+            rf::ui::medium_font_0 = rf::gr::load_font(std::format("regularfont.ttf:{}", medium_font_size).c_str());
             rf::ui::medium_font_1 = rf::ui::medium_font_0;
-            rf::ui::small_font = rf::gr::load_font(string_format("regularfont.ttf:%d", small_font_size).c_str());
+            rf::ui::small_font = rf::gr::load_font(std::format("regularfont.ttf:{}", small_font_size).c_str());
         }
 #endif
     },

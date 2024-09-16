@@ -73,7 +73,7 @@ struct EventSetLiquidDepthHook : rf::Event
 
 void __fastcall EventSetLiquidDepth_turn_on_new(EventSetLiquidDepthHook* this_)
 {
-    xlog::info("Processing Set_Liquid_Depth event: uid %d depth %.2f duration %.2f", this_->uid, this_->depth, this_->duration);
+    xlog::info("Processing Set_Liquid_Depth event: uid {} depth {:.2f} duration {:.2f}", this_->uid, this_->depth, this_->duration);
     if (this_->links.size() == 0) {
         xlog::trace("no links");
         rf::add_liquid_depth_update(this_->room, this_->depth, this_->duration);
@@ -81,7 +81,7 @@ void __fastcall EventSetLiquidDepth_turn_on_new(EventSetLiquidDepthHook* this_)
     else {
         for (auto room_uid : this_->links) {
             rf::GRoom* room = rf::level_room_from_uid(room_uid);
-            xlog::trace("link %d %p", room_uid, room);
+            xlog::trace("link {} {}", room_uid, room);
             if (room) {
                 rf::add_liquid_depth_update(room, this_->depth, this_->duration);
             }
@@ -175,8 +175,8 @@ CodeInjection event_activate_injection{
         if (event_debug_enabled) {
             rf::Event* event = regs.esi;
             bool on = addr_as_ref<bool>(regs.esp + 0xC + 0xC);
-            rf::console::printf("Processing %s message in event %d '%s'",
-            on ? "ON" : "OFF", event->uid, event->name.c_str());
+            rf::console::print("Processing {} message in event {} ({})",
+            on ? "ON" : "OFF", event->name, event->uid);
         }
     },
 };
@@ -187,8 +187,8 @@ CodeInjection event_activate_injection2{
         if (event_debug_enabled) {
             rf::Event* event = regs.esi;
             bool on = regs.cl;
-            rf::console::printf("Delaying %s message in event %d '%s'",
-                on ? "ON" : "OFF", event->uid, event->name.c_str());
+            rf::console::print("Delaying {} message in event {} ({})",
+                on ? "ON" : "OFF", event->name, event->uid);
         }
     },
 };
@@ -198,8 +198,8 @@ CodeInjection event_process_injection{
     [](auto& regs) {
         if (event_debug_enabled) {
             rf::Event* event = regs.esi;
-            rf::console::printf("Processing %s message in event %d '%s' (delayed)",
-                event->delayed_msg ? "ON" : "OFF", event->uid, event->name.c_str());
+            rf::console::print("Processing {} message in event {} ({}) (delayed)",
+                event->delayed_msg ? "ON" : "OFF", event->name, event->uid);
         }
     },
 };

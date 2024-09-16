@@ -139,7 +139,7 @@ namespace df::gr::d3d11
 
         init_error(device_);
 
-        xlog::info("D3D11 feature level: 0x%x", feature_level_supported);
+        xlog::info("D3D11 feature level: 0x{:x}", static_cast<int>(feature_level_supported));
     }
 
     void Renderer::init_swap_chain(HWND hwnd)
@@ -186,7 +186,7 @@ namespace df::gr::d3d11
             else {
                 sc_desc1.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
             }
-            xlog::info("D3D11 swap effect: %d", sc_desc1.SwapEffect);
+            xlog::info("D3D11 swap effect: {}", static_cast<int>(sc_desc1.SwapEffect));
             sc_desc1.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
             DXGI_SWAP_CHAIN_FULLSCREEN_DESC sc_fs_desc;
@@ -321,7 +321,7 @@ namespace df::gr::d3d11
         if (msaa_render_target_) {
             context_->ResolveSubresource(back_buffer_, 0, msaa_render_target_, 0, swap_chain_format);
         }
-        xlog::trace("Presenting frame %d", rf::frame_count);
+        xlog::trace("Presenting frame {}", rf::frame_count);
         UINT sync_interval = g_game_config.vsync ? 1 : 0;
         DF_GR_D3D11_CHECK_HR(
             swap_chain_->Present(sync_interval, 0)

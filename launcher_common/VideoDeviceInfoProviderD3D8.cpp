@@ -56,7 +56,7 @@ std::vector<std::string> VideoDeviceInfoProviderD3D8::get_adapters()
             adapters.emplace_back(adapter_identifier.Description);
         }
         else {
-            xlog::error("GetAdapterIdentifier failed %lx", hr);
+            xlog::error("GetAdapterIdentifier failed {:x}", hr);
         }
     }
     return adapters;
@@ -72,7 +72,7 @@ std::set<VideoDeviceInfoProvider::Resolution> VideoDeviceInfoProviderD3D8::get_r
         if (hr == D3DERR_INVALIDCALL)
             break;
         if (FAILED(hr))
-            THROW_EXCEPTION("EnumAdapterModes failed: %lx", hr);
+            THROW_EXCEPTION("EnumAdapterModes failed: {:x}", hr);
 
         if (d3d_display_mode.Format != format)
             continue;
@@ -100,7 +100,7 @@ bool VideoDeviceInfoProviderD3D8::has_anisotropy_support(unsigned adapter)
     D3DCAPS8 caps;
     HRESULT hr = m_d3d->GetDeviceCaps(adapter, D3DDEVTYPE_HAL, &caps);
     if (FAILED(hr))
-        THROW_EXCEPTION("GetDeviceCaps failed, hresult %lx", hr);
+        THROW_EXCEPTION("GetDeviceCaps failed, hresult {:x}", hr);
 
     bool anisotropy_cap = (caps.RasterCaps & D3DPRASTERCAPS_ANISOTROPY) != 0;
     return anisotropy_cap && caps.MaxAnisotropy > 0;

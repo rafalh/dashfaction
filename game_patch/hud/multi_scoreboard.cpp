@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <format>
 #include <common/utils/list-utils.h>
 #include <patch_common/FunHook.h>
 #include "multi_scoreboard.h"
@@ -70,8 +71,7 @@ int draw_scoreboard_header(int x, int y, int w, rf::NetGameType game_type, bool 
     // Draw level
     if (!dry_run) {
         rf::gr::set_color(0xB0, 0xB0, 0xB0, 0xFF);
-        auto level_info = rf::String::format("%s (%s) by %s", rf::level.name.c_str(), rf::level.filename.c_str(),
-                                            rf::level.author.c_str());
+        auto level_info = rf::String::format("{} ({}) by {}", rf::level.name, rf::level.filename, rf::level.author);
         rf::String level_info_stripped;
         rf::fit_scoreboard_string(&level_info_stripped, level_info, w - 20); // Note: this destroys input string
         rf::gr::string_aligned(rf::gr::ALIGN_CENTER, x_center, cur_y, level_info_stripped);
@@ -82,7 +82,7 @@ int draw_scoreboard_header(int x, int y, int w, rf::NetGameType game_type, bool 
     if (!dry_run) {
         char ip_addr_buf[64];
         rf::net_addr_to_string(ip_addr_buf, sizeof(ip_addr_buf), rf::netgame.server_addr);
-        auto server_info = rf::String::format("%s (%s)", rf::netgame.name.c_str(), ip_addr_buf);
+        auto server_info = rf::String::format("{} ({})", rf::netgame.name, ip_addr_buf);
         rf::String server_info_stripped;
         rf::fit_scoreboard_string(&server_info_stripped, server_info, w - 20); // Note: this destroys input string
         rf::gr::string_aligned(rf::gr::ALIGN_CENTER, x_center, cur_y, server_info_stripped);
@@ -203,7 +203,7 @@ int draw_scoreboard_players(const std::vector<rf::Player*>& players, int x, int 
             auto score_str = std::to_string(score);
             rf::gr::string(score_x, y, score_str.c_str());
 
-            auto kills_deaths_str = string_format("%d/%d", num_kills, num_deaths);
+            auto kills_deaths_str = std::format("{}/{}", num_kills, num_deaths);
             rf::gr::string(kd_x, y, kills_deaths_str.c_str());
 
             if (game_type == rf::NG_TYPE_CTF) {
