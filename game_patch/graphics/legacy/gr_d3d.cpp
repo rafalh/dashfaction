@@ -1,3 +1,4 @@
+#include <format>
 #include <windows.h>
 #include <d3d8.h>
 #include <patch_common/FunHook.h>
@@ -110,9 +111,9 @@ CodeInjection gr_d3d_init_error_patch{
     0x00545CBD,
     [](auto& regs) {
         auto hr = static_cast<HRESULT>(regs.eax);
-        xlog::error("D3D CreateDevice failed (hr 0x%lX - %s)", hr, get_d3d_error_str(hr));
+        xlog::error("D3D CreateDevice failed (hr 0x{:x} - {})", hr, get_d3d_error_str(hr));
 
-        auto text = string_format("Failed to create Direct3D device object - error 0x%lX (%s).\n"
+        auto text = std::format("Failed to create Direct3D device object - error 0x{:X} ({}).\n"
                                  "A critical error has occurred and the program cannot continue.\n"
                                  "Press OK to exit the program",
                                  hr, get_d3d_error_str(hr));
@@ -120,13 +121,13 @@ CodeInjection gr_d3d_init_error_patch{
         hr = rf::gr::d3d::d3d->CheckDeviceType(rf::gr::d3d::adapter_idx, D3DDEVTYPE_HAL, rf::gr::d3d::pp.BackBufferFormat,
             rf::gr::d3d::pp.BackBufferFormat, rf::gr::d3d::pp.Windowed);
         if (FAILED(hr)) {
-            xlog::error("CheckDeviceType for format %d failed: %lX", rf::gr::d3d::pp.BackBufferFormat, hr);
+            xlog::error("CheckDeviceType for format {} failed: {:x}", static_cast<unsigned>(rf::gr::d3d::pp.BackBufferFormat), hr);
         }
 
         hr = rf::gr::d3d::d3d->CheckDeviceFormat(rf::gr::d3d::adapter_idx, D3DDEVTYPE_HAL, rf::gr::d3d::pp.BackBufferFormat,
             D3DUSAGE_DEPTHSTENCIL, D3DRTYPE_SURFACE, rf::gr::d3d::pp.AutoDepthStencilFormat);
         if (FAILED(hr)) {
-            xlog::error("CheckDeviceFormat for depth-stencil format %d failed: %lX", rf::gr::d3d::pp.AutoDepthStencilFormat, hr);
+            xlog::error("CheckDeviceFormat for depth-stencil format {} failed: {:x}", static_cast<unsigned>(rf::gr::d3d::pp.AutoDepthStencilFormat), hr);
         }
 
         if (!(rf::gr::d3d::device_caps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT)) {
@@ -138,7 +139,7 @@ CodeInjection gr_d3d_init_error_patch{
         D3DDISPLAYMODE mode;
         for (unsigned i = 0; i < num_modes; ++i) {
             rf::gr::d3d::d3d->EnumAdapterModes(rf::gr::d3d::adapter_idx, i, &mode);
-            xlog::info("- %ux%u (format %u refresh rate %u)", mode.Width, mode.Height, mode.Format, mode.RefreshRate);
+            xlog::info("- {}x{} (format {} refresh rate {})", mode.Width, mode.Height, static_cast<int>(mode.Format), mode.RefreshRate);
         }
 
         ShowWindow(rf::main_wnd, SW_HIDE);
@@ -165,7 +166,7 @@ D3DFORMAT determine_depth_buffer_format(D3DFORMAT adapter_format)
                                                     D3DRTYPE_SURFACE, depth_fmt)) &&
             SUCCEEDED(rf::gr::d3d::d3d->CheckDepthStencilMatch(rf::gr::d3d::adapter_idx, D3DDEVTYPE_HAL, adapter_format, adapter_format,
                                                          depth_fmt))) {
-            xlog::info("Selected D3D depth format: %u", depth_fmt);
+            xlog::info("Selected D3D depth format: {}", static_cast<int>(depth_fmt));
             return depth_fmt;
         }
     }
@@ -180,11 +181,11 @@ CodeInjection update_pp_hook{
             xlog::info("d3d8to9 detected");
         }
 
-        xlog::info("Back Buffer format: %u", rf::gr::d3d::pp.BackBufferFormat);
-        xlog::info("Back Buffer dimensions: %ux%u", rf::gr::d3d::pp.BackBufferWidth, rf::gr::d3d::pp.BackBufferHeight);
-        xlog::info("D3D Device Caps: %lX", rf::gr::d3d::device_caps.DevCaps);
-        xlog::info("D3D Raster Caps: %lX", rf::gr::d3d::device_caps.RasterCaps);
-        xlog::info("Max texture size: %ldx%ld", rf::gr::d3d::device_caps.MaxTextureWidth, rf::gr::d3d::device_caps.MaxTextureHeight);
+        xlog::info("Back Buffer format: {}", static_cast<int>(rf::gr::d3d::pp.BackBufferFormat));
+        xlog::info("Back Buffer dimensions: {}x{}", rf::gr::d3d::pp.BackBufferWidth, rf::gr::d3d::pp.BackBufferHeight);
+        xlog::info("D3D Device Caps: {:x}", rf::gr::d3d::device_caps.DevCaps);
+        xlog::info("D3D Raster Caps: {:x}", rf::gr::d3d::device_caps.RasterCaps);
+        xlog::info("Max texture size: {}x{}", rf::gr::d3d::device_caps.MaxTextureWidth, rf::gr::d3d::device_caps.MaxTextureHeight);
 
         if (g_game_config.msaa) {
             // Make sure selected MSAA mode is available
@@ -192,11 +193,11 @@ CodeInjection update_pp_hook{
             HRESULT hr = rf::gr::d3d::d3d->CheckDeviceMultiSampleType(rf::gr::d3d::adapter_idx, D3DDEVTYPE_HAL, rf::gr::d3d::pp.BackBufferFormat,
                                                                 rf::gr::d3d::pp.Windowed, multi_sample_type);
             if (SUCCEEDED(hr)) {
-                xlog::info("Enabling Anti-Aliasing (%ux MSAA)...", g_game_config.msaa.value());
+                xlog::info("Enabling Anti-Aliasing ({}x MSAA)...", g_game_config.msaa.value());
                 rf::gr::d3d::pp.MultiSampleType = multi_sample_type;
             }
             else {
-                xlog::warn("MSAA not supported (0x%lx)...", hr);
+                xlog::warn("MSAA not supported (0x{:x})...", hr);
                 g_game_config.msaa = D3DMULTISAMPLE_NONE;
             }
         }
@@ -332,13 +333,13 @@ ConsoleCommand2 antialiasing_cmd{
     "antialiasing",
     []() {
         if (!g_game_config.msaa)
-            rf::console::printf("Anti-aliasing is not supported");
+            rf::console::print("Anti-aliasing is not supported");
         else {
             DWORD enabled = 0;
             rf::gr::d3d::device->GetRenderState(D3DRS_MULTISAMPLEANTIALIAS, &enabled);
             enabled = !enabled;
             rf::gr::d3d::device->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, enabled);
-            rf::console::printf("Anti-aliasing is %s", enabled ? "enabled" : "disabled");
+            rf::console::print("Anti-aliasing is {}", enabled ? "enabled" : "disabled");
         }
     },
     "Toggles anti-aliasing",
@@ -365,7 +366,7 @@ CodeInjection gr_d3d_set_state_profile_patch{
                 desc = " (line)";
             else if (mode == rf::gr::bitmap_clamp_mode)
                 desc = " (bitmap)";
-            xlog::info("gr_d3d_set_state 0x%X%s", static_cast<int>(mode), desc);
+            xlog::info("gr_d3d_set_state 0x{:x}{}", static_cast<int>(mode), desc);
         }
     },
 };
@@ -376,7 +377,7 @@ CodeInjection gr_d3d_set_texture_profile_patch{
         if (g_profile_frame) {
             unsigned bm_handle = regs.edi;
             int stage_id = (regs.ebx - 0x01E65308) / 0x18;
-            xlog::info("gr_d3d_set_texture %d 0x%X %s", stage_id, bm_handle, rf::bm::get_filename(bm_handle));
+            xlog::info("gr_d3d_set_texture {} 0x{:x} {}", stage_id, bm_handle, rf::bm::get_filename(bm_handle));
         }
     },
 };
@@ -391,7 +392,7 @@ CodeInjection D3D_DrawIndexedPrimitive_profile_patch{
             auto num_vertices = addr_as_ref<unsigned>(regs.esp + 16);
             auto start_index = addr_as_ref<unsigned>(regs.esp + 20);
             auto prim_count = addr_as_ref<unsigned>(regs.esp + 24);
-            xlog::info("DrawIndexedPrimitive %d %d %u %u %u", prim_type, min_index, num_vertices, start_index, prim_count);
+            xlog::info("DrawIndexedPrimitive {} {} {} {} {}", prim_type, min_index, num_vertices, start_index, prim_count);
             ++g_num_draw_calls;
         }
     },
@@ -403,7 +404,7 @@ FunHook<void()> gr_d3d_flip_profile_patch{
         gr_d3d_flip_profile_patch.call_target();
 
         if (g_profile_frame) {
-            xlog::info("Total draw calls: %d", g_num_draw_calls);
+            xlog::info("Total draw calls: {}", g_num_draw_calls);
         }
         g_profile_frame = g_profile_frame_req;
         g_profile_frame_req = false;
@@ -437,7 +438,7 @@ CodeInjection gr_d3d_init_device_injection{
         gr_d3d_update_texture_filtering();
         if (rf::gr::d3d::device_caps.MaxAnisotropy > 0 && g_game_config.anisotropic_filtering && !rf::is_dedicated_server) {
             DWORD anisotropy_level = setup_max_anisotropy();
-            xlog::info("Anisotropic Filtering enabled (level: %lu)", anisotropy_level);
+            xlog::info("Anisotropic Filtering enabled (level: {})", anisotropy_level);
         }
     },
 };
@@ -457,7 +458,7 @@ CodeInjection gr_d3d_create_texture_fail_hook{
     0x0055B9FD,
     [](auto& regs) {
         auto hr = static_cast<HRESULT>(regs.eax);
-        xlog::warn("Failed to alloc texture - HRESULT 0x%lX %s", hr, get_d3d_error_str(hr));
+        xlog::warn("Failed to alloc texture - HRESULT 0x{:x} {}", hr, get_d3d_error_str(hr));
     },
 };
 
@@ -501,7 +502,7 @@ CodeInjection gr_d3d_line_patch_1{
             regs.eip = 0x00551482;
         }
         else {
-            xlog::trace("Line drawing requires gr_d3d_prepare_buffers %d %d %d %d",
+            xlog::trace("Line drawing requires gr_d3d_prepare_buffers {} {} {} {}",
                  rf::gr::d3d::buffers_locked, rf::gr::d3d::primitive_type, rf::gr::d3d::max_hw_vertex,
                  rf::gr::d3d::max_hw_index + rf::gr::d3d::num_indices);
         }
@@ -527,7 +528,7 @@ CodeInjection gr_d3d_line_vertex_internal_patch_1{
             regs.eip = 0x00551703;
         }
         else {
-            xlog::trace("Line drawing requires gr_d3d_prepare_buffers %d %d %d %d",
+            xlog::trace("Line drawing requires gr_d3d_prepare_buffers {} {} {} {}",
                  rf::gr::d3d::buffers_locked, rf::gr::d3d::primitive_type, rf::gr::d3d::max_hw_vertex,
                  rf::gr::d3d::max_hw_index + rf::gr::d3d::num_indices);
         }
@@ -592,13 +593,13 @@ CodeInjection gr_d3d_init_load_library_injection{
     [](auto& regs) {
         if (g_game_config.renderer == GameConfig::Renderer::d3d9) {
             auto d3d8to9_path = get_module_dir(g_hmodule) + "\\d3d8to9.dll";
-            xlog::info("Loading d3d8to9.dll: %s", d3d8to9_path.c_str());
+            xlog::info("Loading d3d8to9.dll: {}", d3d8to9_path);
             HMODULE d3d8to9_module = LoadLibraryA(d3d8to9_path.c_str());
             if (d3d8to9_module) {
                 regs.eax = d3d8to9_module;
                 regs.eip = 0x005459B9;
             } else {
-                xlog::warn("Failed to load d3d8to9.dll (error %lu)", GetLastError());
+                xlog::warn("Failed to load d3d8to9.dll (error {})", GetLastError());
                 g_game_config.renderer = GameConfig::Renderer::d3d8;
             }
         }
@@ -629,7 +630,7 @@ ConsoleCommand2 pow2_tex_cmd{
     "pow2_tex",
     []() {
         rf::gr::d3d::p2t = !rf::gr::d3d::p2t;
-        rf::console::printf("Power of 2 textures: %s", rf::gr::d3d::p2t ? "on" : "off");
+        rf::console::print("Power of 2 textures: {}", rf::gr::d3d::p2t ? "on" : "off");
     },
     "Forces usage of power of two textures. It may fix UV mappings in old levels. Only affects levels loaded after usage of this command.",
 };

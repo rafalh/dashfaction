@@ -11,15 +11,7 @@ namespace rf
         Vector3 uvec;
         Vector3 fvec;
 
-        bool operator==(const Matrix3& other) const
-        {
-            return rvec == other.rvec && uvec == other.uvec && fvec == other.fvec;
-        }
-
-        bool operator!=(const Matrix3& other) const
-        {
-            return !(*this == other);
-        }
+        bool operator==(const Matrix3& other) const = default;
 
         void make_identity()
         {
@@ -40,15 +32,7 @@ namespace rf
         Matrix3 orient;
         Vector3 origin;
 
-        bool operator==(const Matrix43& other) const
-        {
-            return orient == other.orient && origin == other.origin;
-        }
-
-        bool operator!=(const Matrix43& other) const
-        {
-            return !(*this == other);
-        }
+        bool operator==(const Matrix43& other) const = default;
 
         Matrix43 operator*(const Matrix43& other) const
         {

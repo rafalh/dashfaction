@@ -2,7 +2,6 @@
 #include <cstring>
 #include <cassert>
 #include <windows.h>
-#include <patch_common/FunHook.h>
 #include <common/ComPtr.h>
 #include <xlog/xlog.h>
 #include "../../rf/gr/gr.h"
@@ -107,7 +106,7 @@ namespace df::gr::d3d11
                     chunk.texture_idx, chunk.mode, double_sided);
             }
         }
-        xlog::debug("Creating mesh geometry buffers: verts %d inds %d", gpu_verts.size(), gpu_inds.size());
+        xlog::debug("Creating mesh geometry buffers: verts {} inds {}", gpu_verts.size(), gpu_inds.size());
 
         vertex_buffer.write(gpu_verts.data(), gpu_verts.size(), render_context);
         index_buffer.write(gpu_inds.data(), gpu_inds.size(), render_context);
@@ -286,7 +285,7 @@ namespace df::gr::d3d11
                     chunk.texture_idx, chunk.mode, double_sided);
             }
         }
-        xlog::debug("Creating mesh render buffer - verts %d inds %d", gpu_verts_0.size(), gpu_inds.size());
+        xlog::debug("Creating mesh render buffer - verts {} inds {}", gpu_verts_0.size(), gpu_inds.size());
 
         CD3D11_BUFFER_DESC vb_0_desc{
             sizeof(gpu_verts_0[0]) * gpu_verts_0.size(),
@@ -577,7 +576,7 @@ namespace df::gr::d3d11
     {
         if (size_ + n > capacity_) {
             unsigned new_cap = std::max(capacity_ * 2, size_ + n);
-            xlog::info("Reallocating mesh buffer: %u", new_cap);
+            xlog::info("Reallocating mesh buffer: {}", new_cap);
             reserve(new_cap, render_context);
         }
 

@@ -46,11 +46,6 @@ public:
             return current == rhs.current;
         }
 
-        bool operator!=(const self_type& rhs) const
-        {
-            return !(*this == rhs);
-        }
-
         reference operator*() const
         {
             return *current;
@@ -117,15 +112,7 @@ public:
             return copy;
         }
 
-        bool operator==(const self_type& rhs) const
-        {
-            return current == rhs.current;
-        }
-
-        bool operator!=(const self_type& rhs) const
-        {
-            return !(*this == rhs);
-        }
+        bool operator==(const self_type& rhs) const = default;
 
         reference operator*() const
         {

@@ -26,7 +26,7 @@ public:
     {
         auto opcode = addr_as_ref<uint8_t>(m_addr);
         if (opcode != asm_opcodes::call_rel_long) {
-            xlog::error("not a call at 0x%X", m_addr);
+            xlog::error("not a call at 0x{:x}", m_addr);
             return;
         }
 

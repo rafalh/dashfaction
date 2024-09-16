@@ -3,13 +3,15 @@
 #include "VideoDeviceInfoProvider.h"
 #include <common/error/Exception.h>
 #include <common/error/Win32Error.h>
+#include <common/DynamicLinkLibrary.h>
+#include <common/ComPtr.h>
 #include <xlog/xlog.h>
 
 class VideoDeviceInfoProviderD3D8 : public VideoDeviceInfoProvider
 {
 public:
     VideoDeviceInfoProviderD3D8();
-    ~VideoDeviceInfoProviderD3D8() override;
+    ~VideoDeviceInfoProviderD3D8() override = default;
     std::vector<std::string> get_adapters() override;
     std::set<Resolution> get_resolutions(unsigned adapter, unsigned format) override;
     std::set<unsigned> get_multisample_types(unsigned adapter, unsigned format, bool windowed) override;
@@ -24,31 +26,23 @@ public:
     }
 
 private:
-    IDirect3D8* m_d3d;
-    HMODULE m_lib;
+    DynamicLinkLibrary m_lib;
+    ComPtr<IDirect3D8> m_d3d;
 };
 
-VideoDeviceInfoProviderD3D8::VideoDeviceInfoProviderD3D8()
+VideoDeviceInfoProviderD3D8::VideoDeviceInfoProviderD3D8() :
+    m_lib{L"d3d8.dll"}
 {
-    m_lib = LoadLibraryA("d3d8.dll");
     if (!m_lib)
         THROW_WIN32_ERROR("Failed to load d3d8.dll");
 
-    // Note: double cast is needed to fix cast-function-type GCC warning
-    auto pDirect3DCreate8 = reinterpret_cast<decltype(Direct3DCreate8)*>(reinterpret_cast<void(*)()>(
-        GetProcAddress(m_lib, "Direct3DCreate8")));
+    auto pDirect3DCreate8 = m_lib.get_proc_address<decltype(Direct3DCreate8)*>("Direct3DCreate8");
     if (!pDirect3DCreate8)
         THROW_WIN32_ERROR("Failed to load get Direct3DCreate8 function address");
 
     m_d3d = pDirect3DCreate8(D3D_SDK_VERSION);
     if (!m_d3d)
         THROW_EXCEPTION("Direct3DCreate8 failed");
-}
-
-VideoDeviceInfoProviderD3D8::~VideoDeviceInfoProviderD3D8()
-{
-    m_d3d->Release();
-    FreeLibrary(m_lib);
 }
 
 std::vector<std::string> VideoDeviceInfoProviderD3D8::get_adapters()
@@ -62,7 +56,7 @@ std::vector<std::string> VideoDeviceInfoProviderD3D8::get_adapters()
             adapters.emplace_back(adapter_identifier.Description);
         }
         else {
-            xlog::error("GetAdapterIdentifier failed %lx", hr);
+            xlog::error("GetAdapterIdentifier failed {:x}", hr);
         }
     }
     return adapters;
@@ -78,7 +72,7 @@ std::set<VideoDeviceInfoProvider::Resolution> VideoDeviceInfoProviderD3D8::get_r
         if (hr == D3DERR_INVALIDCALL)
             break;
         if (FAILED(hr))
-            THROW_EXCEPTION("EnumAdapterModes failed: %lx", hr);
+            THROW_EXCEPTION("EnumAdapterModes failed: {:x}", hr);
 
         if (d3d_display_mode.Format != format)
             continue;
@@ -106,7 +100,7 @@ bool VideoDeviceInfoProviderD3D8::has_anisotropy_support(unsigned adapter)
     D3DCAPS8 caps;
     HRESULT hr = m_d3d->GetDeviceCaps(adapter, D3DDEVTYPE_HAL, &caps);
     if (FAILED(hr))
-        THROW_EXCEPTION("GetDeviceCaps failed, hresult %lx", hr);
+        THROW_EXCEPTION("GetDeviceCaps failed, hresult {:x}", hr);
 
     bool anisotropy_cap = (caps.RasterCaps & D3DPRASTERCAPS_ANISOTROPY) != 0;
     return anisotropy_cap && caps.MaxAnisotropy > 0;

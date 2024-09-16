@@ -34,7 +34,7 @@ bool bm_convert_format(void* dst_bits_ptr, rf::bm::Format dst_fmt, const void* s
         return true;
     }
     catch (const std::exception& e) {
-        xlog::error("Pixel format conversion failed (%d -> %d): %s", src_fmt, dst_fmt, e.what());
+        xlog::error("Pixel format conversion failed ({} -> {}): {}", static_cast<int>(src_fmt), static_cast<int>(dst_fmt), e.what());
         return false;
     }
 }

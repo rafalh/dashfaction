@@ -3,6 +3,7 @@
 #include <cstring>
 #include <cstdio>
 #include <cstdarg>
+#include <algorithm>
 #include "../rf/gr/gr_font.h"
 
 template<std::size_t N>

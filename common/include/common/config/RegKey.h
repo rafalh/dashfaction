@@ -1,6 +1,7 @@
 #pragma once
 
 #include <utility>
+#include <cstdint>
 #include <windows.h>
 #include <common/error/Win32Error.h>
 
