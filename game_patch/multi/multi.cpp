@@ -290,7 +290,7 @@ float multi_get_max_cps(int weapon_type)
     float fire_wait_secs = fire_wait_ms / 1000.0f;
     float fire_rate = 1.0f / fire_wait_secs;
     // allow 10% more to make sure we do not skip any legit packets
-    xlog::debug("For fire request for weapon %i, max cps is %.2f", weapon_type, fire_rate*1.1f);
+    xlog::debug("For fire request for weapon {}, max cps is {:.2f}", weapon_type, fire_rate*1.1f);
     return fire_rate * 1.1f;
 }
 
@@ -299,7 +299,7 @@ bool multi_check_cps(rf::Player* pp, int weapon_type)
     float max_cps = multi_get_max_cps(weapon_type);
     auto [above_limit, cps] = multi_is_cps_above_limit(pp, max_cps, weapon_type);
     if (above_limit) {
-        xlog::info(""Cancelled fire request from player {} for weapon {}. They are shooting too fast: cps {:.2f} is greater than allowed {:.2f}",
+        xlog::info("Cancelled fire request from player {} for weapon {}. They are shooting too fast: cps {:.2f} is greater than allowed {:.2f}",
             pp->name, weapon_type, cps, max_cps);
     }
     return above_limit;
