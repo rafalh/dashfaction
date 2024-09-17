@@ -55,7 +55,7 @@ int draw_scoreboard_header(int x, int y, int w, rf::NetGameType game_type, bool 
     if (!dry_run) {
         int num_players = rf::multi_num_players();
         std::string player_count_str =
-            " WITH " + std::to_string(num_players) + (num_players > 1 ? " PLAYERS" : " PLAYER");
+            " | " + std::to_string(num_players) + (num_players > 1 ? " PLAYERS" : " PLAYER");
 
         std::string game_type_name = (game_type == rf::NG_TYPE_DM)    ? rf::strings::deathmatch
                                      : (game_type == rf::NG_TYPE_CTF) ? rf::strings::capture_the_flag
