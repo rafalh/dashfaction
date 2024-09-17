@@ -113,7 +113,7 @@ ConsoleCommand2 mem_stats_cmd{
     []() {
         constexpr float mb_float = 1024.0f * 1024.0f;
         rf::console::print("Number of heap allocations: {}", g_num_heap_allocs);
-        rf::console::print("Current heap usage: {.2f} MB", g_current_heap_usage / mb_float);
+        rf::console::print("Current heap usage: {:.2f} MB", g_current_heap_usage / mb_float);
         rf::console::print("Max heap usage: {:.2f} MB", g_max_heap_usage / mb_float);
     },
 };
