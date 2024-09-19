@@ -16,10 +16,12 @@
 #include <shlwapi.h>
 #include "vpackfile.h"
 #include "../main/main.h"
+#include "../misc/misc.h"
 #include "../rf/file/file.h"
 #include "../rf/file/packfile.h"
 #include "../rf/crt.h"
 #include "../rf/multi.h"
+#include "../rf/os/os.h"
 #include "../os/console.h"
 
 #define CHECK_PACKFILE_CHECKSUM 0 // slow (1 second on SSD on first load after boot)
@@ -76,11 +78,28 @@ const char* tbl_mod_allow_list[] = {
     "ponr.tbl",
 };
 
+static bool is_tbl_file(const char* Filename)
+{
+    if (stricmp(rf::file_get_ext(Filename), ".tbl") == 0) {
+        return true;
+    }
+    return false;
+}
+
 static bool is_tbl_file_in_allowlist(const char* Filename)
 {
     for (unsigned i = 0; i < std::size(tbl_mod_allow_list); ++i)
-        if (!stricmp(tbl_mod_allow_list[i], Filename))
+        if (is_tbl_file(Filename) && !stricmp(tbl_mod_allow_list[i], Filename))
             return true;
+    return false;
+}
+
+static bool is_tbl_file_a_hud_messages_file(const char* Filename)
+{
+    // check if the input file ends with "_text.tbl"
+    if (strlen(Filename) >= 9 && stricmp(Filename + strlen(Filename) - 9, "_text.tbl") == 0) {
+        return true;
+    }
     return false;
 }
 
@@ -202,6 +221,7 @@ static int vpackfile_add_new(const char* filename, const char* dir)
         xlog::error("Failed to open packfile {}", full_path);
         return 0;
     }
+    xlog::info("Opened packfile {}", full_path);
 
     auto packfile = std::make_unique<rf::VPackfile>();
     std::strncpy(packfile->filename, filename, sizeof(packfile->filename) - 1);
@@ -210,8 +230,13 @@ static int vpackfile_add_new(const char* filename, const char* dir)
     packfile->path[sizeof(packfile->path) - 1] = '\0';
     packfile->field_a0 = 0;
     packfile->num_files = 0;
-    // this is set to true for user_maps
-    packfile->is_user_maps = rf::vpackfile_loading_user_maps;
+    // packfile->is_user_maps = rf::vpackfile_loading_user_maps; // this is set to true for user_maps
+    // check for is_user_maps based on dir (like is_client_mods) instead of 0x01BDB21C
+    packfile->is_user_maps = (dir && (stricmp(dir, "user_maps\\multi\\") == 0 || stricmp(dir, "user_maps\\single\\") == 0));
+    packfile->is_client_mods = (dir && stricmp(dir, "client_mods\\") == 0);
+
+    xlog::debug("Packfile {} is from {}user_maps, {}client_mods", filename, packfile->is_user_maps ? "" : "NOT ",
+               packfile->is_client_mods ? "" : "NOT ");
 
     // Process file header
     char buf[0x800];
@@ -314,31 +339,62 @@ static int vpackfile_build_file_list_new(const char* ext_filter, char*& filename
 
 static bool is_lookup_table_entry_override_allowed(rf::VPackfileEntry* old_entry, rf::VPackfileEntry* new_entry)
 {
+    // dirs are loaded in this order: base game, user_maps, client_mods, mods
     if (g_is_overriding_disabled) {
         // Don't allow overriding files after game is initialized because it can lead to crashes
         return false;
     }
-    if (!new_entry->parent->is_user_maps) {
-        // Allow overriding by packfiles from game root and from mods
+    // Allow overriding by packfiles from game root and from mods (not user_maps or client_mods)
+    else if (!new_entry->parent->is_user_maps && !new_entry->parent->is_client_mods) {
         return true;
     }
 #ifdef MOD_FILE_WHITELIST
-    if (is_mod_file_in_whitelist(new_entry->name)) {
+    else if (is_mod_file_in_whitelist(new_entry->name)) {
         // Always allow overriding for specific files
         return true;
     }
 #endif
-    if (!g_game_config.allow_overwrite_game_files) {
-        return false;
-    }
-    if (!old_entry->parent->is_user_maps && is_tbl_file_in_allowlist(new_entry->name)) {
-        // Allow overriding of tbl files from user_maps if they are on allow list
+    // Process if in client_mods
+    else if (new_entry->parent->is_client_mods) {
+        if (is_tbl_file_in_allowlist(new_entry->name) || is_tbl_file_a_hud_messages_file(new_entry->name)) {
+            // allow overriding of tbl files from client_mods if they are on allow list or are _text.tbl
+            g_is_modded_game = true; // goober todo: confirm what this is used for. If anticheat, can remove from here
+            return true;
+        }
+        else if (is_tbl_file(new_entry->name)) {
+            // deny all other tbl overrides
+            return false;
+        }
+        g_is_modded_game = true;
         return true;
     }
-    if (!old_entry->parent->is_user_maps && !stricmp(rf::file_get_ext(new_entry->name), ".tbl")) {
-        // Skip overriding of all other tbl files from user_maps
-        return false;
+    // Process if in user_maps
+    else if (new_entry->parent->is_user_maps) {
+        if (old_entry->parent->is_user_maps) {
+            // allow files from user_maps to override other files in user_maps, even if the switch is off
+            // files from user_maps can't override files from client_mods because client_mods is parsed later
+            return true;
+        }
+        else if (!g_game_config.allow_overwrite_game_files)
+        {
+            // if the switch is off, no overwriting with files from user_maps, except for other files in user_maps
+            return false;
+        }
+        else if (is_tbl_file_in_allowlist(new_entry->name) || is_tbl_file_a_hud_messages_file(new_entry->name))
+        {
+            // allow overriding of tbl files from user_maps if they are on allow list or are _text.tbl
+            g_is_modded_game = true; // goober todo: confirm what this is used for. If anticheat, can remove from here
+            return true;
+        }
+        else if (is_tbl_file(new_entry->name))
+        {
+            // deny all other tbl overrides
+            return false;
+        }
+        g_is_modded_game = true;
+        return true;
     }
+    // resolve warning by having a default option, even though there should be no way to hit it
     g_is_modded_game = true;
     return true;
 }
@@ -556,6 +612,47 @@ static void vpackfile_cleanup_new()
     g_packfiles.clear();
 }
 
+static void load_vpp_files_from_directory(const char* files, const char* directory)
+{
+    WIN32_FIND_DATA find_file_data;
+    HANDLE hFind = FindFirstFile(files, &find_file_data);
+
+     if (hFind != INVALID_HANDLE_VALUE) {
+        do {
+            if (!(find_file_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+                // Call vpackfile_add_new function directly
+                if (vpackfile_add_new(find_file_data.cFileName, directory) == 0) {
+                    xlog::warn("Failed to load additional VPP file: {}", find_file_data.cFileName);
+                }
+            }
+        } while (FindNextFile(hFind, &find_file_data) != 0);
+        FindClose(hFind);
+    }
+    else {
+        xlog::info("No VPP files found in {}.", directory);
+    }
+}
+
+static void load_additional_packfiles_new()
+{
+    // load VPP files from user_maps\single and user_maps\multi first
+    load_vpp_files_from_directory("user_maps\\single\\*.vpp", "user_maps\\single\\");
+    load_vpp_files_from_directory("user_maps\\multi\\*.vpp", "user_maps\\multi\\");
+
+    // then load VPP files from client_mods
+    load_vpp_files_from_directory("client_mods\\*.vpp", "client_mods\\");
+
+    // lastly load VPP files from the loaded TC mod if applicable
+    if (tc_mod_is_loaded()) {
+        std::string mod_name = rf::mod_param.get_arg();
+        std::string mod_dir = "mods\\" + mod_name + "\\";
+        std::string mod_file = mod_dir + "*.vpp";
+        xlog::info("Loading packfiles from mod: {}.", mod_name);
+        //rf::game_add_path(mod_dir.c_str(), ".vpp");
+        load_vpp_files_from_directory(mod_file.c_str(), mod_dir.c_str());
+    }
+}
+
 void vpackfile_apply_patches()
 {
     // VPackfile handling implemetation getting rid of all limits
@@ -566,6 +663,7 @@ void vpackfile_apply_patches()
     AsmWriter(0x0052C220).jmp(vpackfile_find_new);
     AsmWriter(0x0052BB60).jmp(vpackfile_init_new);
     AsmWriter(0x0052BC80).jmp(vpackfile_cleanup_new);
+    AsmWriter(0x004B15E0).jmp(load_additional_packfiles_new);
 
     // Don't return success from vpackfile_open if offset points out of file contents
     vpackfile_open_check_seek_result_injection.install();

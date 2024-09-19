@@ -154,7 +154,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_VISIBLE | DS_CONTROL
 FONT 8, "MS Shell Dlg"
 BEGIN
     AUTOCHECKBOX    "Fast Start",IDC_FAST_START_CHECK,0,0,66,10
-    AUTOCHECKBOX    "Allow overriding game files by packages in user_maps",IDC_ALLOW_OVERWRITE_GAME_CHECK,0,12,260,10
+    AUTOCHECKBOX    "Allow clientside mods to be loaded from user_maps",IDC_ALLOW_OVERWRITE_GAME_CHECK,0,12,260,10
     AUTOCHECKBOX    "Run game at reduced speed when window doesn't have focus",IDC_REDUCED_SPEED_IN_BG_CHECK,0,24,260,10
     AUTOCHECKBOX    "Beep when another player joins multiplayer game and window doesn't have focus",
                     IDC_PLAYER_JOIN_BEEP_CHECK,0,36,260,18,BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP | BS_TOP

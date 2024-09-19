@@ -45,6 +45,11 @@ bool g_in_mp_game = false;
 bool g_jump_to_multi_server_list = false;
 std::optional<JoinMpGameData> g_join_mp_game_seq_data;
 
+bool tc_mod_is_loaded()
+{
+    return rf::mod_param.found();
+}
+
 CodeInjection critical_error_hide_main_wnd_patch{
     0x0050BA90,
     []() {
@@ -381,7 +386,7 @@ CodeInjection vfile_read_stack_corruption_fix{
 CodeInjection game_set_file_paths_injection{
     0x004B1810,
     []() {
-        if (rf::mod_param.found()) {
+        if (tc_mod_is_loaded()) {
             std::string mod_dir = "mods\\";
             mod_dir += rf::mod_param.get_arg();
             rf::file_add_path(mod_dir.c_str(), ".bik", false);

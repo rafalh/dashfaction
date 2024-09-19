@@ -25,7 +25,7 @@ void OptionsMiscDlg::InitToolTip()
 {
     m_tool_tip.Create(*this);
     m_tool_tip.AddTool(GetDlgItem(IDC_FAST_START_CHECK), "Skip game intro videos and go straight to Main Menu");
-    m_tool_tip.AddTool(GetDlgItem(IDC_ALLOW_OVERWRITE_GAME_CHECK), "Enable this if you want to modify game content by putting mods into user_maps folder. Can have side effect of level packfiles modyfing common textures/sounds.");
+    m_tool_tip.AddTool(GetDlgItem(IDC_ALLOW_OVERWRITE_GAME_CHECK), "Allows files in user_maps folders to override core game files. When left disabled, only files in client_mods can do this. Enabling this can unintentionally mean stock game assets get replaced by installed levels.");
     m_tool_tip.AddTool(GetDlgItem(IDC_AUTOSAVE_CHECK), "Automatically save the game after a level transition");
 }
 
