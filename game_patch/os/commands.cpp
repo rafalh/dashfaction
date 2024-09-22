@@ -80,6 +80,8 @@ ConsoleCommand2 level_info_cmd{
             rf::console::print("Name: {}", rf::level.name);
             rf::console::print("Author: {}", rf::level.author);
             rf::console::print("Date: {}", rf::level.level_date);
+            std::string version_text = (rf::level.version < 200) ? "Official" : "Non-Official";
+            rf::console::print("RFL Version: {} ({})", version_text, rf::level.version);
         } else {
             rf::console::print("No level loaded!");
         }
@@ -96,10 +98,6 @@ ConsoleCommand2 version_cmd{
     "version",
     []() {
         rf::console::print("Dash Faction {} (build date: {} {})", VERSION_STR, __DATE__, __TIME__);
-        if (rf::level.flags & rf::LEVEL_LOADED) {
-            rf::console::print("Level: {} (file version: {}, save date: {})",
-                rf::level.filename, rf::level.version, rf::level.level_date);
-        }
     },
     "Display version info",
 };
