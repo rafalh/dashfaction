@@ -3,7 +3,6 @@
 #include <patch_common/CodeInjection.h>
 #include <common/version/version.h>
 #include <xlog/xlog.h>
-#include <cstring>
 #include "../rf/ui.h"
 #include "../rf/gr/gr.h"
 #include "../rf/gr/gr_font.h"
