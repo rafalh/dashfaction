@@ -12,6 +12,7 @@
 #include "../rf/multi.h"
 #include "../rf/sound/sound.h"
 #include "../rf/os/frametime.h"
+#include "../rf/os/os.h"
 #include "../main/main.h"
 #include "../graphics/gr.h"
 #include "misc.h"
@@ -38,7 +39,11 @@ extern CallHook<UiLabel_Create2_Type> UiLabel_create2_version_label_hook;
 void __fastcall UiLabel_create2_version_label(rf::ui::Gadget* self, int edx, rf::ui::Gadget* parent, int x, int y, int w,
                                              int h, const char* text, int font_id)
 {
-    text = PRODUCT_NAME_VERSION;
+    std::string version_text = rf::mod_param.found()
+                                   ? std::string("DF ") + VERSION_STR + " | Mod: " + std::string(rf::mod_param.get_arg())
+                                   : std::string(PRODUCT_NAME_VERSION);
+
+    text = version_text.c_str();
     ui_get_string_size(&w, &h, text, -1, font_id);
     x = 430 - w;
     w += 5;
