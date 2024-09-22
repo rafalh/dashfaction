@@ -2,7 +2,6 @@
 
 #include <vector>
 #include <memory>
-#include <cstdlib>
 #include <cstddef>
 #include <cstring>
 #include <patch_common/MemUtils.h>
