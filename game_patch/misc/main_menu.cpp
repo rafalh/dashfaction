@@ -38,11 +38,10 @@ extern CallHook<UiLabel_Create2_Type> UiLabel_create2_version_label_hook;
 void __fastcall UiLabel_create2_version_label(rf::ui::Gadget* self, int edx, rf::ui::Gadget* parent, int x, int y, int w,
                                              int h, const char* text, int font_id)
 {
-    std::string version_text = rf::mod_param.found()
-        ? std::string("DF ") + VERSION_STR + " | " + std::string(rf::mod_param.get_arg())
-        : std::string(PRODUCT_NAME_VERSION);
-
-    text = version_text.c_str();
+    const char* version_text = rf::mod_param.found()
+        ? ("DF " + std::string(VERSION_STR) + " | " + rf::mod_param.get_arg()).c_str()
+        : PRODUCT_NAME_VERSION;
+    text = version_text;
     ui_get_string_size(&w, &h, text, -1, font_id);
     x = 430 - w;
     w += 5;
