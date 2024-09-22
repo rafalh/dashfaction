@@ -68,36 +68,37 @@ static bool is_mod_file_in_whitelist(const char* Filename)
 
 // allow list of table files that can't be used for cheating, but for which modding in clientside mods has utility
 // Examples include translation packs (translated strings, endgame, etc.) and custom HUD mods that change coords of HUD elements
-const char* tbl_mod_allow_list[] = {
+constexpr std::array<std::string_view, 7> tbl_mod_allow_list = {
     "strings.tbl",
     "hud.tbl",
     "hud_personas.tbl",
     "personas.tbl",
     "credits.tbl",
     "endgame.tbl",
-    "ponr.tbl",
+    "ponr.tbl"
 };
 
-static bool is_tbl_file(const char* Filename)
+static bool is_tbl_file(const char* filename)
 {
-    if (stricmp(rf::file_get_ext(Filename), ".tbl") == 0) {
+    // confirm we're working with a tbl file
+    if (stricmp(rf::file_get_ext(filename), ".tbl") == 0) {
         return true;
     }
     return false;
 }
 
-static bool is_tbl_file_in_allowlist(const char* Filename)
+static bool is_tbl_file_in_allowlist(const char* filename)
 {
-    for (unsigned i = 0; i < std::size(tbl_mod_allow_list); ++i)
-        if (is_tbl_file(Filename) && !stricmp(tbl_mod_allow_list[i], Filename))
-            return true;
-    return false;
+    // compare the input file against the tbl file allowlist
+    return is_tbl_file(filename) && std::ranges::any_of(tbl_mod_allow_list, [filename](std::string_view allowed_tbl) {
+               return stricmp(allowed_tbl.data(), filename) == 0;
+           });
 }
 
-static bool is_tbl_file_a_hud_messages_file(const char* Filename)
+static bool is_tbl_file_a_hud_messages_file(const char* filename)
 {
     // check if the input file ends with "_text.tbl"
-    if (strlen(Filename) >= 9 && stricmp(Filename + strlen(Filename) - 9, "_text.tbl") == 0) {
+    if (strlen(filename) >= 9 && stricmp(filename + strlen(filename) - 9, "_text.tbl") == 0) {
         return true;
     }
     return false;
