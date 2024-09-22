@@ -39,8 +39,8 @@ void __fastcall UiLabel_create2_version_label(rf::ui::Gadget* self, int edx, rf:
                                              int h, const char* text, int font_id)
 {
     std::string version_text = rf::mod_param.found()
-                                   ? std::string("DF ") + VERSION_STR + " | Mod: " + std::string(rf::mod_param.get_arg())
-                                   : std::string(PRODUCT_NAME_VERSION);
+        ? std::string("DF ") + VERSION_STR + " | " + std::string(rf::mod_param.get_arg())
+        : std::string(PRODUCT_NAME_VERSION);
 
     text = version_text.c_str();
     ui_get_string_size(&w, &h, text, -1, font_id);
