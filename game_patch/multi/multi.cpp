@@ -294,6 +294,12 @@ float multi_get_max_cps(int weapon_type)
     return fire_rate * 1.1f;
 }
 
+void send_private_message_for_cancelled_shot(rf::Player* player, const std::string& reason)
+{
+    auto message = std::format("Shot cancelled! {}", reason);
+    send_chat_line_packet(message.c_str(), player);
+}
+
 bool multi_check_cps(rf::Player* pp, int weapon_type)
 {
     float max_cps = multi_get_max_cps(weapon_type);
@@ -301,6 +307,10 @@ bool multi_check_cps(rf::Player* pp, int weapon_type)
     if (above_limit) {
         xlog::info("Cancelled fire request from player {} for weapon {}. They are shooting too fast: cps {:.2f} is greater than allowed {:.2f}",
             pp->name, weapon_type, cps, max_cps);
+
+        // inform the player
+        send_private_message_for_cancelled_shot(pp, std::format("You are shooting too quickly. Your CPS: {:.2f}, Max CPS: {:.2f}.",
+            cps, max_cps));
     }
     return above_limit;
 }
@@ -310,18 +320,23 @@ bool multi_is_weapon_fire_allowed_server_side(rf::Entity *ep, int weapon_type, b
     rf::Player* pp = rf::player_from_entity_handle(ep->handle);
     if (ep->ai.current_primary_weapon != weapon_type) {
         xlog::debug("Player {} attempted to fire unselected weapon {}", pp->name, weapon_type);
+        send_private_message_for_cancelled_shot(pp, "You attempted to fire an unselected weapon.");
     }
     else if (is_entity_out_of_ammo(ep, weapon_type, alt_fire)) {
         xlog::debug("Player {} attempted to fire weapon {} without ammunition", pp->name, weapon_type);
+        send_private_message_for_cancelled_shot(pp, "You attempted to fire without ammo.");
     }
     else if (rf::weapon_is_on_off_weapon(weapon_type, alt_fire)) {
         xlog::debug("Player {} attempted to fire a single bullet from on/off weapon {}", pp->name, weapon_type);
+        send_private_message_for_cancelled_shot(pp, "You attempted to fire a single shot from an automatic weapon.");
     }
     else if (multi_is_selecting_weapon(pp)) {
         xlog::debug("Player {} attempted to fire weapon {} while selecting it", pp->name, weapon_type);
+        send_private_message_for_cancelled_shot(pp, "You attempted to fire while selecting a weapon.");
     }
     else if (rf::entity_is_reloading(ep)) {
         xlog::debug("Player {} attempted to fire weapon {} while reloading it", pp->name, weapon_type);
+        send_private_message_for_cancelled_shot(pp, "You attempted to fire while reloading.");
     }
     else if (!multi_check_cps(pp, weapon_type)) {
         return true;
