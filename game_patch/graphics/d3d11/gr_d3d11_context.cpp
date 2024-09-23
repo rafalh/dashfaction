@@ -164,7 +164,7 @@ namespace df::gr::d3d11
 
     void PerFrameBuffer::update(ID3D11DeviceContext* device_context)
     {
-        PerFrameBufferData data;
+        PerFrameBufferData data{};
         data.time = rf::frametime_total_milliseconds / 1000.0f;
 
         D3D11_MAPPED_SUBRESOURCE mapped_subres;
@@ -209,8 +209,7 @@ namespace df::gr::d3d11
             device_context->Map(buffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_subres)
         );
 
-        LightsBufferData data;
-        std::memset(&data, 0, sizeof(data));
+        LightsBufferData data{};
         for (int i = 0; i < std::min(rf::gr::num_relevant_lights, LightsBufferData::max_point_lights); ++i) {
             LightsBufferData::PointLight& gpu_light = data.point_lights[i];
             // Make sure radius is never 0 because we divide by it
@@ -259,7 +258,7 @@ namespace df::gr::d3d11
 
     void RenderModeBuffer::update_buffer(ID3D11DeviceContext* device_context)
     {
-        RenderModeBufferData data;
+        RenderModeBufferData data{};
         data.current_color = {
             current_color_.red / 255.0f,
             current_color_.green / 255.0f,
