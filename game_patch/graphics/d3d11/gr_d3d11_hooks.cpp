@@ -2,6 +2,7 @@
 #include <patch_common/CodeInjection.h>
 #include <patch_common/FunHook.h>
 #include <common/utils/list-utils.h>
+#include <float.h>
 #include "../../rf/gr/gr.h"
 #include "../../rf/os/os.h"
 #include "../../rf/v3d.h"
@@ -47,6 +48,12 @@ namespace df::gr::d3d11
         xlog::info("Initializing D3D11");
         renderer.emplace(hwnd);
         rf::os_add_msg_handler(msg_handler);
+
+        // Switch FPU to single-precision mode for backward compatibility
+        // Direct3D 8/9 does it automatically unless D3DCREATE_FPU_PRESERVE flag is used,
+        // but Direct3D 11 no longer does it.
+        // It is needed to keep old checksums in AC
+        _controlfp(_PC_24, _MCW_PC);
     }
 
     rf::bm::Format read_back_buffer(int x, int y, int w, int h, rf::ubyte *data)
