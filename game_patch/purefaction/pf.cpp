@@ -30,13 +30,12 @@ static void send_pf_announce_player_packet(rf::Player* player, pf_pure_status pu
     // Send: server -> client
     assert(rf::is_server);
 
-    pf_player_announce_packet announce_packet;
+    pf_player_announce_packet announce_packet{};
     announce_packet.hdr.type = static_cast<uint8_t>(pf_packet_type::announce_player);
     announce_packet.hdr.size = sizeof(announce_packet) - sizeof(announce_packet.hdr);
     announce_packet.version = pf_announce_player_packet_version;
     announce_packet.player_id = player->net_data->player_id;
     announce_packet.is_pure = static_cast<uint8_t>(pure_status);
-    std::memset(&announce_packet.reserved, 0, sizeof(announce_packet.reserved));
 
     auto player_list = SinglyLinkedList(rf::player_list);
     for (auto& other_player : player_list) {

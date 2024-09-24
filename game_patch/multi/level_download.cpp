@@ -110,8 +110,7 @@ static std::vector<std::string> unrar(const char* path, const char* output_dir,
 {
     char cmt_buf[16384];
 
-    RAROpenArchiveDataEx open_archive_data;
-    memset(&open_archive_data, 0, sizeof(open_archive_data));
+    RAROpenArchiveDataEx open_archive_data{};
     open_archive_data.ArcName = const_cast<char*>(path);
     open_archive_data.CmtBuf = cmt_buf;
     open_archive_data.CmtBufSize = sizeof(cmt_buf);
@@ -125,9 +124,8 @@ static std::vector<std::string> unrar(const char* path, const char* output_dir,
     }
 
     std::vector<std::string> extracted_files;
-    struct RARHeaderData header_data;
+    struct RARHeaderData header_data{};
     header_data.CmtBuf = nullptr;
-    memset(&open_archive_data.Reserved, 0, sizeof(open_archive_data.Reserved));
 
     while (true) {
         int code = RARReadHeader(archive_handle, &header_data);

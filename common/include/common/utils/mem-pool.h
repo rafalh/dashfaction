@@ -2,7 +2,6 @@
 
 #include <vector>
 #include <memory>
-#include <xlog/xlog.h>
 
 template <typename T, size_t N>
 class MemPool
