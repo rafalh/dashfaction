@@ -296,7 +296,7 @@ float multi_get_max_cps(int weapon_type)
 
 void send_private_message_for_cancelled_shot(rf::Player* player, const std::string& reason)
 {
-    auto message = std::format("Shot cancelled! {}", reason);
+    auto message = std::format("\xA6 Shot canceled! {}", reason);
     send_chat_line_packet(message.c_str(), player);
 }
 
@@ -305,11 +305,11 @@ bool multi_check_cps(rf::Player* pp, int weapon_type)
     float max_cps = multi_get_max_cps(weapon_type);
     auto [above_limit, cps] = multi_is_cps_above_limit(pp, max_cps, weapon_type);
     if (above_limit) {
-        xlog::info("Cancelled fire request from player {} for weapon {}. They are shooting too fast: cps {:.2f} is greater than allowed {:.2f}",
+        xlog::info("Canceled fire request from player {} for weapon {}. They are shooting too fast: cps {:.2f} is greater than allowed {:.2f}",
             pp->name, weapon_type, cps, max_cps);
 
         // inform the player
-        send_private_message_for_cancelled_shot(pp, std::format("You are shooting too quickly. Your CPS: {:.2f}, Max CPS: {:.2f}.",
+        send_private_message_for_cancelled_shot(pp, std::format("You are shooting too fast. Your CPS: {:.2f}, Max CPS: {:.2f}.",
             cps, max_cps));
     }
     return above_limit;
