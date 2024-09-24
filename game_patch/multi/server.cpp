@@ -225,11 +225,86 @@ void load_additional_server_config(rf::Parser& parser)
     }
 }
 
+// memory addresses for weapon stay exemption indexes
+constexpr std::pair<bool WeaponStayExemptionConfig::*, uintptr_t> weapon_exemptions[] = {
+    {&WeaponStayExemptionConfig::rocket_launcher, 0x00872458},
+    {&WeaponStayExemptionConfig::heavy_machine_gun, 0x00872460},
+    {&WeaponStayExemptionConfig::sniper_rifle, 0x00872440},
+    {&WeaponStayExemptionConfig::assault_rifle, 0x00872470},
+    {&WeaponStayExemptionConfig::machine_pistol, 0x0085CCD8},
+    {&WeaponStayExemptionConfig::shotgun, 0x00872108},
+    {&WeaponStayExemptionConfig::scope_assault_rifle, 0x0087245C},
+    {&WeaponStayExemptionConfig::rail_gun, 0x00872124}};
+
+// declare optional vector for weapon stay exemptions
+std::optional<std::vector<uintptr_t>> weapon_stay_exempt_indexes;
+
+// Consolidate weapon stay exemption logic for both injections
+void handle_weapon_stay_exemption(BaseCodeInjection::Regs& regs, uintptr_t jump_address)
+{
+    if (!weapon_stay_exempt_indexes) {
+        return; // no exemptions if the optional vector is not populated
+    }
+    for (const auto& index_addr : *weapon_stay_exempt_indexes) {
+        int weapon_index = *reinterpret_cast<int*>(index_addr);
+        if (regs.eax == weapon_index) {
+            regs.eip = jump_address;
+            return;
+        }
+    }
+}
+
+// Weapon stay exemption part 1: remove item when it is picked up and start respawn timer
+CodeInjection weapon_stay_remove_instance_injection{
+    0x0045982E, [](BaseCodeInjection::Regs& regs) { handle_weapon_stay_exemption(regs, 0x00459865); }};
+
+// Weapon stay exemption part 2: allow picking up item by a player who already did (after it respawns)
+CodeInjection weapon_stay_allow_pickup_injection{
+    0x004596B4, [](BaseCodeInjection::Regs& regs) { handle_weapon_stay_exemption(regs, 0x004596CD); }};
+
+void initialize_weapon_stay_exemptions()
+{
+    const auto& config = g_additional_server_config.weapon_stay_exemptions;
+    if (!config.enabled) {
+        xlog::warn("Weapon stay exemptions are not enabled.");
+        return;
+    }
+
+    // Populate weapon stay exemption indexes
+    weapon_stay_exempt_indexes = std::vector<uintptr_t>{};
+    std::string exempted_weapons_log;
+
+    for (const auto& [config_member, index_addr] : weapon_exemptions) {
+        // Add debug logs to see which weapons are being checked
+        bool is_exempt = config.*config_member;
+        xlog::warn("Checking weapon at address: {}. Exempt: {}", index_addr, is_exempt);
+
+        if (is_exempt) {
+            weapon_stay_exempt_indexes->push_back(index_addr);
+            exempted_weapons_log += std::to_string(index_addr) + " "; // Log as decimal
+        }
+    }
+
+    if (!weapon_stay_exempt_indexes->empty()) {
+        xlog::warn("Injected weapon stay exemptions: {}", exempted_weapons_log);
+    }
+    else {
+        xlog::warn("No weapon exemptions applied.");
+    }
+
+    // injections
+    weapon_stay_remove_instance_injection.install();
+    weapon_stay_allow_pickup_injection.install();
+}
+
 CodeInjection dedicated_server_load_config_patch{
     0x0046E216,
     [](auto& regs) {
         auto& parser = *reinterpret_cast<rf::Parser*>(regs.esp - 4 + 0x4C0 - 0x470);
         load_additional_server_config(parser);
+
+        // Init weapon stay exemptions after loading additional config
+        initialize_weapon_stay_exemptions();
 
         // Insert server name in window title when hosting dedicated server
         std::string wnd_name;
@@ -687,79 +762,6 @@ CodeInjection multi_limbo_init_injection{
     },
 };
 
-// memory addresses for weapon stay exemption indexes
-constexpr std::pair<bool WeaponStayExemptionConfig::*, uintptr_t> weapon_exemptions[] = {
-    {&WeaponStayExemptionConfig::rocket_launcher, 0x00872458},
-    {&WeaponStayExemptionConfig::heavy_machine_gun, 0x00872460},
-    {&WeaponStayExemptionConfig::sniper_rifle, 0x00872440},
-    {&WeaponStayExemptionConfig::assault_rifle, 0x00872470},
-    {&WeaponStayExemptionConfig::machine_pistol, 0x0085CCD8},
-    {&WeaponStayExemptionConfig::shotgun, 0x00872108},
-    {&WeaponStayExemptionConfig::scope_assault_rifle, 0x0087245C},
-    {&WeaponStayExemptionConfig::rail_gun, 0x00872124}
-};
-
-// declare optional vector for weapon stay exemptions
-std::optional<std::vector<uintptr_t>> weapon_stay_exempt_indexes;
-
-// Consolidate weapon stay exemption logic for both injections
-void handle_weapon_stay_exemption(BaseCodeInjection::Regs& regs, uintptr_t jump_address)
-{
-    if (!weapon_stay_exempt_indexes) {
-        return; // no exemptions if the optional vector is not populated
-    }
-    for (const auto& index_addr : *weapon_stay_exempt_indexes) {
-        int weapon_index = *reinterpret_cast<int*>(index_addr);
-        if (regs.eax == weapon_index) {
-            regs.eip = jump_address;
-            return;
-        }
-    }
-}
-
-// Weapon stay exemption part 1: remove item when it is picked up and start respawn timer
-CodeInjection weapon_stay_remove_instance_injection{
-    0x0045982E, [](BaseCodeInjection::Regs& regs) { handle_weapon_stay_exemption(regs, 0x00459865); }};
-
-// Weapon stay exemption part 2: allow picking up item by a player who already did (after it respawns)
-CodeInjection weapon_stay_allow_pickup_injection{
-    0x004596B4, [](BaseCodeInjection::Regs& regs) { handle_weapon_stay_exemption(regs, 0x004596CD); }};
-
-void initialize_weapon_stay_exemptions()
-{
-    const auto& config = g_additional_server_config.weapon_stay_exemptions;
-    if (!config.enabled) {
-        xlog::debug("Weapon stay exemptions are not enabled.");
-        return;
-    }
-
-    // Populate weapon stay exemption indexes
-    weapon_stay_exempt_indexes = std::vector<uintptr_t>{};
-    std::string exempted_weapons_log;
-
-    for (const auto& [config_member, index_addr] : weapon_exemptions) {
-        // Add debug logs to see which weapons are being checked
-        bool is_exempt = config.*config_member;
-        xlog::debug("Checking weapon at address: {}. Exempt: {}", index_addr, is_exempt);
-
-        if (is_exempt) {
-            weapon_stay_exempt_indexes->push_back(index_addr);
-            exempted_weapons_log += std::to_string(index_addr) + " "; // Log as decimal
-        }
-    }
-
-    if (!weapon_stay_exempt_indexes->empty()) {
-        xlog::debug("Injected weapon stay exemptions: {}", exempted_weapons_log);
-    }
-    else {
-        xlog::debug("No weapon exemptions applied.");
-    }
-
-    // injections
-    weapon_stay_remove_instance_injection.install();
-    weapon_stay_allow_pickup_injection.install();
-}
-
 void server_init()
 {
     // Override rcon command whitelist
@@ -825,9 +827,6 @@ void server_init()
 
     // Reduce limbo duration if server is empty
     multi_limbo_init_injection.install();
-
-    // Weapon stay exemptions
-    initialize_weapon_stay_exemptions();
 }
 
 void server_do_frame()

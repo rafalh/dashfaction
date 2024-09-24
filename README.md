@@ -162,6 +162,16 @@ Configuration example:
         +Sound ID: 29
         // max sound packets per second - keep it low to save bandwidth
         +Rate Limit: 10
+    // If Weapon Stay is on, set some specific weapon pickups to be exempt (act as if it were not on) for balancing
+    $DF Weapon Stay Exemptions: false
+        +Rocket Launcher: false
+        +Heavy Machine Gun: false
+        +Sniper Rifle: false
+        +Assault Rifle: false
+        +Submachine Gun: false
+        +Shotgun: false
+        +Precision Rifle: false
+        +Rail Driver: false
     // Replace all "Shotgun" items with "rail gun" items when loading RFLs
     $DF Item Replacement: "Shotgun" "rail gun"
     // If enabled players are given full ammo when picking up weapon items, can be useful with the Weapons Stay standard option
