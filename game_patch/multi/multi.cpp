@@ -309,7 +309,7 @@ bool multi_check_cps(rf::Player* pp, int weapon_type)
             pp->name, weapon_type, cps, max_cps);
 
         // inform the player
-        send_private_message_for_cancelled_shot(pp, std::format("You are shooting too fast. Your CPS: {:.2f}, Max CPS: {:.2f}.",
+        send_private_message_for_cancelled_shot(pp, std::format("You are shooting too fast. Your fire rate: {:.1f}, Server maximum: {:.1f}",
             cps, max_cps));
     }
     return above_limit;
