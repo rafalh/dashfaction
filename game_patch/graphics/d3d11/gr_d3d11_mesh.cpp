@@ -156,10 +156,10 @@ namespace df::gr::d3d11
 
     void BoneTransformsBuffer::update(const CharacterInstance* ci, ID3D11DeviceContext* device_context)
     {
-        BoneTransformsBufferData data;
         // Note: if some matrices that are unused by skeleton are referenced by vertices and not get initialized
         //       bad things can happen even if weight is zero (e.g. in case of NaNs)
-        std::memset(&data, 0, sizeof(data));
+        BoneTransformsBufferData data{};
+
         for (int i = 0; i < ci->base_character->num_bones; ++i) {
             const Matrix43& bone_mat = ci->bone_transforms_final[i];
             data.matrices[i] = convert_bone_matrix(bone_mat);
