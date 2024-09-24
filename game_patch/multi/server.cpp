@@ -294,26 +294,16 @@ void initialize_weapon_stay_exemptions()
         return;
     }
 
-    // Populate weapon stay exemption indexes
+    // Populate weapon stay exemption array
     weapon_stay_exempt_indexes = std::vector<uintptr_t>{};
-    std::string exempted_weapons_log;
-
     for (const auto& [config_member, index_addr] : weapon_exemptions) {
         // Add debug logs to see which weapons are being checked
         bool is_exempt = config.*config_member;
-        xlog::debug("Checking weapon at address: {}. Exempt: {}", index_addr, is_exempt);
+        xlog::debug("Checking weapon at address: {}. Is exempt? {}", index_addr, is_exempt);
 
         if (is_exempt) {
             weapon_stay_exempt_indexes->push_back(index_addr);
-            exempted_weapons_log += std::to_string(index_addr) + " "; // Log as decimal
         }
-    }
-
-    if (!weapon_stay_exempt_indexes->empty()) {
-        xlog::debug("Injected weapon stay exemptions: {}", exempted_weapons_log);
-    }
-    else {
-        xlog::debug("No weapon exemptions applied.");
     }
 
     // injections
