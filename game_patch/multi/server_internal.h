@@ -26,6 +26,19 @@ struct HitSoundsConfig
     int rate_limit = 10;
 };
 
+struct WeaponStayExemptionConfig
+{
+    bool enabled = false;
+    bool rocket_launcher = false;
+    bool heavy_machine_gun = false;
+    bool sniper_rifle = false;
+    bool assault_rifle = false;
+    bool machine_pistol = false;
+    bool shotgun = false;
+    bool scope_assault_rifle = false;
+    bool rail_gun = false;
+};
+
 struct ServerAdditionalConfig
 {
     VoteConfig vote_kick;
@@ -38,6 +51,7 @@ struct ServerAdditionalConfig
     std::optional<float> spawn_life;
     std::optional<float> spawn_armor;
     HitSoundsConfig hit_sounds;
+    WeaponStayExemptionConfig weapon_stay_exemptions;
     std::map<std::string, std::string> item_replacements;
     std::string default_player_weapon;
     std::optional<int> default_player_weapon_ammo;
