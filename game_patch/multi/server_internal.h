@@ -36,6 +36,12 @@ struct WeaponStayExemptionConfig
     bool machine_pistol = false;
     bool shotgun = false;
     bool scope_assault_rifle = false;
+    bool grenade = false;
+    bool remote_charge = false;
+    bool handgun = false;
+    bool flamethrower = false;
+    bool riot_stick = false;
+    bool riot_shield = false;
     bool rail_gun = false;
 };
 

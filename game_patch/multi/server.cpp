@@ -98,11 +98,23 @@ void load_additional_server_config(rf::Parser& parser)
 
     if (parser.parse_optional("$DF Weapon Stay Exemptions:")) {
         g_additional_server_config.weapon_stay_exemptions.enabled = parser.parse_bool();
-        if (parser.parse_optional("+Rocket Launcher:")) {
-            g_additional_server_config.weapon_stay_exemptions.rocket_launcher = parser.parse_bool();
+        if (parser.parse_optional("+Flamethrower:")) {
+            g_additional_server_config.weapon_stay_exemptions.flamethrower = parser.parse_bool();
         }
-        if (parser.parse_optional("+Heavy Machine Gun:")) {
-            g_additional_server_config.weapon_stay_exemptions.heavy_machine_gun = parser.parse_bool();
+        if (parser.parse_optional("+Control Baton:")) {
+            g_additional_server_config.weapon_stay_exemptions.riot_stick = parser.parse_bool();
+        }
+        if (parser.parse_optional("+Riot Shield:")) {
+            g_additional_server_config.weapon_stay_exemptions.riot_shield = parser.parse_bool();
+        }
+        if (parser.parse_optional("+Pistol:")) {
+            g_additional_server_config.weapon_stay_exemptions.handgun = parser.parse_bool();
+        }
+        if (parser.parse_optional("+Shotgun:")) {
+            g_additional_server_config.weapon_stay_exemptions.shotgun = parser.parse_bool();
+        }
+        if (parser.parse_optional("+Submachine Gun:")) {
+            g_additional_server_config.weapon_stay_exemptions.machine_pistol = parser.parse_bool();
         }
         if (parser.parse_optional("+Sniper Rifle:")) {
             g_additional_server_config.weapon_stay_exemptions.sniper_rifle = parser.parse_bool();
@@ -110,17 +122,23 @@ void load_additional_server_config(rf::Parser& parser)
         if (parser.parse_optional("+Assault Rifle:")) {
             g_additional_server_config.weapon_stay_exemptions.assault_rifle = parser.parse_bool();
         }
-        if (parser.parse_optional("+Submachine Gun:")) {
-            g_additional_server_config.weapon_stay_exemptions.machine_pistol = parser.parse_bool();
-        }
-        if (parser.parse_optional("+Shotgun:")) {
-            g_additional_server_config.weapon_stay_exemptions.shotgun = parser.parse_bool();
+        if (parser.parse_optional("+Heavy Machine Gun:")) {
+            g_additional_server_config.weapon_stay_exemptions.heavy_machine_gun = parser.parse_bool();
         }
         if (parser.parse_optional("+Precision Rifle:")) {
             g_additional_server_config.weapon_stay_exemptions.scope_assault_rifle = parser.parse_bool();
         }
         if (parser.parse_optional("+Rail Driver:")) {
             g_additional_server_config.weapon_stay_exemptions.rail_gun = parser.parse_bool();
+        }
+        if (parser.parse_optional("+Rocket Launcher:")) {
+            g_additional_server_config.weapon_stay_exemptions.rocket_launcher = parser.parse_bool();
+        }
+        if (parser.parse_optional("+Grenade:")) {
+            g_additional_server_config.weapon_stay_exemptions.grenade = parser.parse_bool();
+        }
+        if (parser.parse_optional("+Remote Charges:")) {
+            g_additional_server_config.weapon_stay_exemptions.remote_charge = parser.parse_bool();
         }
     }
 
@@ -234,6 +252,12 @@ constexpr std::pair<bool WeaponStayExemptionConfig::*, uintptr_t> weapon_exempti
     {&WeaponStayExemptionConfig::machine_pistol, 0x0085CCD8},
     {&WeaponStayExemptionConfig::shotgun, 0x00872108},
     {&WeaponStayExemptionConfig::scope_assault_rifle, 0x0087245C},
+    {&WeaponStayExemptionConfig::grenade, 0x00872118},
+    {&WeaponStayExemptionConfig::remote_charge, 0x0087210C},
+    {&WeaponStayExemptionConfig::handgun, 0x00872114},
+    {&WeaponStayExemptionConfig::flamethrower, 0x0087243C},
+    {&WeaponStayExemptionConfig::riot_stick, 0x00872468},
+    {&WeaponStayExemptionConfig::riot_shield, 0x0085CCE4},
     {&WeaponStayExemptionConfig::rail_gun, 0x00872124}};
 
 // declare optional vector for weapon stay exemptions
@@ -266,7 +290,7 @@ void initialize_weapon_stay_exemptions()
 {
     const auto& config = g_additional_server_config.weapon_stay_exemptions;
     if (!config.enabled) {
-        xlog::warn("Weapon stay exemptions are not enabled.");
+        xlog::debug("Weapon stay exemptions are not enabled.");
         return;
     }
 
@@ -277,7 +301,7 @@ void initialize_weapon_stay_exemptions()
     for (const auto& [config_member, index_addr] : weapon_exemptions) {
         // Add debug logs to see which weapons are being checked
         bool is_exempt = config.*config_member;
-        xlog::warn("Checking weapon at address: {}. Exempt: {}", index_addr, is_exempt);
+        xlog::debug("Checking weapon at address: {}. Exempt: {}", index_addr, is_exempt);
 
         if (is_exempt) {
             weapon_stay_exempt_indexes->push_back(index_addr);
@@ -286,10 +310,10 @@ void initialize_weapon_stay_exemptions()
     }
 
     if (!weapon_stay_exempt_indexes->empty()) {
-        xlog::warn("Injected weapon stay exemptions: {}", exempted_weapons_log);
+        xlog::debug("Injected weapon stay exemptions: {}", exempted_weapons_log);
     }
     else {
-        xlog::warn("No weapon exemptions applied.");
+        xlog::debug("No weapon exemptions applied.");
     }
 
     // injections
