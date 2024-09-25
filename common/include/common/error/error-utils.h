@@ -1,8 +1,8 @@
 #pragma once
 
 #include <windows.h>
-#include <ostream>
-#include <sstream>
+#include <string>
+#include <exception>
 
 inline std::string get_win32_error_description(DWORD error)
 {
@@ -29,19 +29,23 @@ inline std::string get_win32_error_description(DWORD error)
     return message;
 }
 
-inline void print_exception(const std::exception& e, std::ostream& stream, int level = 0)
+inline void print_exception(const std::exception& e, std::string& buf, int level = 0)
 {
-    stream << std::string(level, ' ') << e.what() << '\n';
+    for (int i = 0; i < level; ++i) {
+        buf += ' ';
+    }
+    buf += e.what();
+    buf += '\n';
     try {
         std::rethrow_if_nested(e);
     } catch(const std::exception& e) {
-        print_exception(e, stream, level + 1);
+        print_exception(e, buf, level + 1);
     } catch(...) {}
 }
 
 inline std::string generate_message_for_exception(const std::exception& e)
 {
-    std::stringstream ss;
-    print_exception(e, ss);
-    return ss.str();
+    std::string buf;
+    print_exception(e, buf);
+    return buf;
 }
