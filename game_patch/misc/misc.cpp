@@ -406,8 +406,11 @@ CallHook level_init_pre_console_output_hook{
 CodeInjection all_table_files_loaded_injection{
     0x004B249E, 
     []() {
-        // Load the dashoptions.tbl file and configure the options
-        dashopt::load_dashoptions_config();
+        // after all other tbl files have been loaded, load dashoptions.tbl and parse it
+        // only if a TC mod is loaded
+        if (rf::mod_param.found()) {
+            dashopt::load_dashoptions_config();
+        }
     }
 };
 

@@ -1,44 +1,44 @@
 #pragma once
 
-#include <functional>
-#include <map>
+#include <array>
 #include <optional>
 #include <string>
+#include <type_traits>
 
-// Enumeration for supported option types
-enum class OptionType
+enum class DashOptionID
 {
-    String,
-    Float,
-    Integer
+    ScoreboardLogo,
+    _optioncount // dummy option for determining total num of options
 };
 
-// Structure to hold each configuration option with its expected type and value
-struct ConfigOption
+// convert enum to its underlying type
+constexpr std::size_t to_index(DashOptionID option_id)
 {
-    OptionType type;
-    std::optional<std::string> string_value;
-    std::optional<float> float_value;
-    std::optional<int> int_value;
+    return static_cast<std::size_t>(option_id);
+}
+
+// total number of options in DashOptionID
+constexpr std::size_t option_count = to_index(DashOptionID::_optioncount) + 1;
+
+struct DashOptionsConfig
+{
+    //std::optional<float> float_something; // template for float
+    //std::optional<int> int_something; // template for int
+    std::optional<std::string> scoreboard_logo;
+
+    // track options that are loaded
+    std::array<bool, option_count> options_loaded = {};
+
+    // check if specific option is loaded
+    bool is_option_loaded(DashOptionID option_id) const
+    {
+        return options_loaded[to_index(option_id)];
+    }
 };
 
-// Namespace to encapsulate dash options parsing logic
+extern DashOptionsConfig g_dash_options_config;
+
 namespace dashopt
 {
-// Open file function
-bool open_file(const std::string& file_path);
-
-// Close file function
-void close_file();
-
-// Parse function that iterates through the file and parses each option
-void parse();
-
-// Add option handler for each configuration option
-void add_option_handler(const std::string& option_name, OptionType type,
-                        std::function<void(const ConfigOption&)> handler);
-
-// Load DashOptions configuration and register handlers
 void load_dashoptions_config();
-
-} // namespace dashopt
+}
