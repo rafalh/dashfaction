@@ -1,4 +1,9 @@
 #include "dashoptions.h"
+#include <patch_common/CallHook.h>
+#include <patch_common/FunHook.h>
+#include <patch_common/CodeInjection.h>
+#include <patch_common/ShortTypes.h>
+#include <patch_common/AsmWriter.h>
 #include "../rf/file/file.h"
 #include <algorithm>
 #include <memory>
@@ -45,6 +50,21 @@ std::optional<std::string> extract_quoted_value(const std::string& value)
     return trimmed_value;
 }
 
+void disable_mod_playercfg_patch()
+{
+    if (g_dash_options_config.use_stock_game_players_config) {
+        // set mod to not make its own players.cfg but instead use the stock game one
+        AsmWriter(0x004A8F99).jmp(0x004A9010);
+        AsmWriter(0x004A8DCC).jmp(0x004A8E53);
+    }
+}
+
+void apply_dashoptions_patches()
+{
+    xlog::warn("Applying Dash Options patches");
+    disable_mod_playercfg_patch();
+}
+
 // consolidated processing for options
 template<typename T>
 void set_option(DashOptionID option_id, std::optional<T>& option_field, const std::string& option_value)
@@ -67,6 +87,10 @@ void set_option(DashOptionID option_id, std::optional<T>& option_field, const st
         else if constexpr (std::is_same_v<T, int>) {
             option_field = std::stoi(option_value);
         }
+        else if constexpr (std::is_same_v<T, bool>) { // handle bools with every reasonable capitalization
+            option_field =
+                (option_value == "1" || option_value == "true" || option_value == "True" || option_value == "TRUE");
+        }
         // mark option as loaded
         mark_option_loaded(option_id);
         xlog::warn("Parsed value has been saved: {}", option_field.value());
@@ -83,6 +107,9 @@ void process_dashoption_line(const std::string& option_name, const std::string& 
 
     if (option_name == "$Scoreboard Logo") {
         set_option(DashOptionID::ScoreboardLogo, g_dash_options_config.scoreboard_logo, option_value);
+    }
+    if (option_name == "$Use Base Game Players Config") {
+        set_option(DashOptionID::UseStockPlayersConfig, g_dash_options_config.use_stock_game_players_config, option_value);
     }
     else {
         xlog::warn("Ignoring unsupported option: {}", option_name);
@@ -106,6 +133,9 @@ void close_file()
         xlog::warn("Closing file.");
         dashoptions_file->close();
         dashoptions_file.reset();
+
+        // after parsing is done, apply patches
+        apply_dashoptions_patches();
     }
 }
 

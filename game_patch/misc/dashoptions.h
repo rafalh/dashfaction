@@ -8,6 +8,7 @@
 enum class DashOptionID
 {
     ScoreboardLogo,
+    UseStockPlayersConfig,
     _optioncount // dummy option for determining total num of options
 };
 
@@ -25,6 +26,7 @@ struct DashOptionsConfig
     //std::optional<float> float_something; // template for float
     //std::optional<int> int_something; // template for int
     std::optional<std::string> scoreboard_logo;
+    std::optional<bool> use_stock_game_players_config;
 
     // track options that are loaded
     std::array<bool, option_count> options_loaded = {};
