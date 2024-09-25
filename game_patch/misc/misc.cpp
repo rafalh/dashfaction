@@ -8,6 +8,11 @@
 #include <patch_common/CodeInjection.h>
 #include <patch_common/FunHook.h>
 #include <cstring>
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <algorithm>
+#include <sstream>
 #include "misc.h"
 #include "../sound/sound.h"
 #include "../os/console.h"
@@ -18,6 +23,7 @@
 #include "../rf/gameseq.h"
 #include "../rf/os/os.h"
 #include "../rf/misc.h"
+#include "../rf/parse.h"
 #include "../rf/vmesh.h"
 #include "../rf/level.h"
 #include "../rf/file/file.h"
@@ -396,6 +402,93 @@ CallHook level_init_pre_console_output_hook{
     },
 };
 
+std::string trim(const std::string& str) {
+    auto start = str.begin();
+    while (start != str.end() && std::isspace(*start)) {
+        start++;
+    }
+
+    auto end = str.end();
+    do {
+        end--;
+    } while (std::distance(start, end) > 0 && std::isspace(*end));
+
+    return std::string(start, end + 1);
+}
+
+// Class to encapsulate file reading and parsing logic
+class DashOptionsParser {
+public:
+    DashOptionsParser(const std::string& file_path) : file_path(file_path) {}
+
+    bool open_file() {
+        if (dashoptions_file.open(file_path.c_str()) != 0) {
+            xlog::error("Failed to open {}", file_path);
+            return false;
+        }
+        xlog::warn("Successfully opened {}", file_path);
+        return true;
+    }
+
+    void close_file() {
+        dashoptions_file.close();
+    }
+
+    bool read_next_line(std::string& line) {
+        char buffer[256];  // Adjust buffer size as needed
+        int bytes_read = dashoptions_file.read(buffer, sizeof(buffer) - 1);
+        if (bytes_read <= 0) {
+            return false;
+        }
+
+        buffer[bytes_read] = '\0';  // Null-terminate the buffer
+        line = std::string(buffer);
+        line = trim(line);
+        return true;
+    }
+
+    void parse() {
+        std::string line;
+        while (read_next_line(line)) {
+            // Check if the line starts with the $Print directive
+            if (line.rfind("$Print:", 0) == 0) {
+                // Extract the value after $Print:
+                std::string print_value = line.substr(7);  // Skip "$Print:"
+                print_value = trim(print_value);           // Trim any extra spaces
+
+                // Remove quotes if present
+                if (print_value.front() == '"' && print_value.back() == '"') {
+                    print_value = print_value.substr(1, print_value.size() - 2);
+                }
+
+                // Log the value using xlog
+                xlog::warn("Dash Options - Print: {}", print_value);
+            }
+        }
+    }
+
+private:
+    std::string file_path;
+    rf::File dashoptions_file;
+};
+
+// Code injection block where the parsing logic is used
+CodeInjection all_table_files_loaded_injection{
+    0x004B249E, 
+    []() {
+        DashOptionsParser parser("dashoptions.tbl");
+
+        // Open the file using the game's file system
+        if (parser.open_file()) {
+            // Parse the file if opened successfully
+            parser.parse();
+
+            // Close the file when done
+            parser.close_file();
+        }
+    }
+};
+
 void misc_init()
 {
     // Window title (client and server)
@@ -502,6 +595,9 @@ void misc_init()
 
     // Add level name to "-- Level Initializing --" message
     level_init_pre_console_output_hook.install();
+
+    // Load dashoptionstbl
+    all_table_files_loaded_injection.install();
 
     // Apply patches from other files
     apply_main_menu_patches();
