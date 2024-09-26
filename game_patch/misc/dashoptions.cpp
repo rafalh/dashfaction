@@ -183,6 +183,15 @@ CallHook<int(const char*, int, bool)> ice_geo_crater_bm_load_hook {
     }
 };
 
+// replace first level filename for use from new game menu
+CallHook<void(const char*)> first_load_level_hook{
+    0x00443B15, [](const char* level_name) {
+        std::string original_level_name{level_name};
+        std::string new_level_name = g_dash_options_config.first_level_filename.value_or(original_level_name);
+        first_load_level_hook.call_target(new_level_name.c_str());
+    }
+};
+
 // replace training level filename for use from new game menu
 CallHook<void(const char*)> training_load_level_hook{
     0x00443A85,
@@ -190,7 +199,8 @@ CallHook<void(const char*)> training_load_level_hook{
         std::string original_level_name{level_name};
         std::string new_level_name = g_dash_options_config.training_level_filename.value_or(original_level_name);
         training_load_level_hook.call_target(new_level_name.c_str());
-    }};
+    }
+};
 
 void apply_dashoptions_patches()
 {
@@ -198,8 +208,7 @@ void apply_dashoptions_patches()
     // avoid unnecessary hooks by hooking only if corresponding options are specified
 
     // apply UseStockPlayersConfig
-    if (g_dash_options_config.is_option_loaded(DashOptionID::UseStockPlayersConfig) &&
-            g_dash_options_config.use_stock_game_players_config) {
+    if (g_dash_options_config.use_stock_game_players_config.value_or(false)) {
         // set mod to not make its own players.cfg but instead use the stock game one
         AsmWriter(0x004A8F99).jmp(0x004A9010);
         AsmWriter(0x004A8DCC).jmp(0x004A8E53);
@@ -230,20 +239,23 @@ void apply_dashoptions_patches()
         ice_geo_crater_bm_load_hook.install();
     }
 
+    // first level filename from new game menu
+    if (g_dash_options_config.is_option_loaded(DashOptionID::FirstLevelFilename)) {
+        first_load_level_hook.install();
+    }
+
     // training level filename from new game menu
     if (g_dash_options_config.is_option_loaded(DashOptionID::TrainingLevelFilename)) {
         training_load_level_hook.install();
     }
 
     // disable multiplayer button
-    if (g_dash_options_config.is_option_loaded(DashOptionID::DisableMultiplayerButton) &&
-        g_dash_options_config.disable_multiplayer_button) {
+    if (g_dash_options_config.disable_multiplayer_button.value_or(false)) {
         AsmWriter(0x0044391F).nop(5); // multi
     }
 
-    // disable single player buttons
-    if (g_dash_options_config.is_option_loaded(DashOptionID::DisableSingleplayerButtons) &&
-        g_dash_options_config.disable_singleplayer_buttons) {
+    // disable singleplayer buttons
+    if (g_dash_options_config.disable_singleplayer_buttons.value_or(false)) {
         AsmWriter(0x00443906).nop(5); // save
         AsmWriter(0x004438ED).nop(5); // load
         AsmWriter(0x004438D4).nop(5); // new game
@@ -324,6 +336,10 @@ void process_dashoption_line(const std::string& option_name, const std::string& 
     else if (option_name == "$Ice Geomod Texture") {
         set_option(DashOptionID::GeomodTexture_Ice,
             g_dash_options_config.geomodtexture_ice, option_value);
+    }
+    else if (option_name == "$First Level Filename") {
+        set_option(DashOptionID::FirstLevelFilename,
+            g_dash_options_config.first_level_filename, option_value);
     }
     else if (option_name == "$Training Level Filename") {
         set_option(DashOptionID::TrainingLevelFilename,

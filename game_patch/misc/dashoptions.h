@@ -15,6 +15,7 @@ enum class DashOptionID
     GeomodEmitter_Default,
     GeomodEmitter_Driller,
     GeomodTexture_Ice,
+    FirstLevelFilename,
     TrainingLevelFilename,
     DisableMultiplayerButton,
     DisableSingleplayerButtons,
@@ -44,6 +45,7 @@ struct DashOptionsConfig
     std::optional<std::string> geomodemitter_default;
     std::optional<std::string> geomodemitter_driller;
     std::optional<std::string> geomodtexture_ice;
+    std::optional<std::string> first_level_filename;
     std::optional<std::string> training_level_filename;
     std::optional<bool> disable_multiplayer_button;
     std::optional<bool> disable_singleplayer_buttons;
