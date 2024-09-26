@@ -12,6 +12,12 @@ enum class DashOptionID
     GeomodMesh_DrillerDouble,
     GeomodMesh_DrillerSingle,
     GeomodMesh_APC,
+    GeomodEmitter_Default,
+    GeomodEmitter_Driller,
+    GeomodTexture_Ice,
+    TrainingLevelFilename,
+    DisableMultiplayerButton,
+    DisableSingleplayerButtons,
     UseStockPlayersConfig,
     AssaultRifleAmmoColor,
     _optioncount // dummy option for determining total num of options
@@ -35,6 +41,12 @@ struct DashOptionsConfig
     std::optional<std::string> geomodmesh_driller_double;
     std::optional<std::string> geomodmesh_driller_single;
     std::optional<std::string> geomodmesh_apc;
+    std::optional<std::string> geomodemitter_default;
+    std::optional<std::string> geomodemitter_driller;
+    std::optional<std::string> geomodtexture_ice;
+    std::optional<std::string> training_level_filename;
+    std::optional<bool> disable_multiplayer_button;
+    std::optional<bool> disable_singleplayer_buttons;
     std::optional<bool> use_stock_game_players_config;
     std::optional<uint32_t> ar_ammo_color;
 

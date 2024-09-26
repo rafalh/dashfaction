@@ -6,6 +6,7 @@
 #include <patch_common/AsmWriter.h>
 #include "../rf/file/file.h"
 #include "../rf/gr/gr.h"
+#include "../rf/geometry.h"
 #include "../rf/misc.h"
 #include <algorithm>
 #include <memory>
@@ -52,68 +53,56 @@ std::optional<std::string> extract_quoted_value(const std::string& value)
     return trimmed_value;
 }
 
-void disable_mod_playercfg_patch()
-{
-    if (g_dash_options_config.use_stock_game_players_config) {
-        // set mod to not make its own players.cfg but instead use the stock game one
-        AsmWriter(0x004A8F99).jmp(0x004A9010);
-        AsmWriter(0x004A8DCC).jmp(0x004A8E53);
-    }
-}
-
 CodeInjection fpgun_ar_ammo_digit_color_injection{
     0x004ABC03,
     [](auto& regs) {
-        if (g_dash_options_config.is_option_loaded(DashOptionID::AssaultRifleAmmoColor)) {
-            uint32_t color = g_dash_options_config.ar_ammo_color.value();
-            rf::gr::set_color((color >> 24) & 0xFF, // r
-                              (color >> 16) & 0xFF, // g
-                              (color >> 8) & 0xFF,  // b 
-                              color & 0xFF          // a
-            );
-        }         
+        uint32_t color = g_dash_options_config.ar_ammo_color.value();
+        rf::gr::set_color((color >> 24) & 0xFF, // r
+                            (color >> 16) & 0xFF, // g
+                            (color >> 8) & 0xFF,  // b 
+                            color & 0xFF);        // a              
         regs.eip = 0x004ABC08;
     }
 };
 
-// set default geo mesh
+// consolidated logic for handling geo mesh changes
+int handle_geomod_shape_create(const char* filename, const std::optional<std::string>& config_value,
+                               CallHook<int(const char*)>& hook)
+{
+    std::string original_filename{filename};
+    std::string modded_filename = config_value.value_or(original_filename);
+    return hook.call_target(modded_filename.c_str());
+}
+
+// Set default geo mesh
 CallHook<int(const char*)> default_geomod_shape_create_hook{
-    0x004374CF,
-    [](const char* filename) -> int {
-        std::string original_filename{filename};
-        // set value, default to the original one if its somehow missing
-        std::string modded_filename = g_dash_options_config.geomodmesh_default.value_or(original_filename);
-        return default_geomod_shape_create_hook.call_target(modded_filename.c_str());
+    0x004374CF, [](const char* filename) -> int {
+        return handle_geomod_shape_create(filename,
+            g_dash_options_config.geomodmesh_default, default_geomod_shape_create_hook);
     }
 };
 
-// set driller double geo mesh
+// Set driller double geo mesh
 CallHook<int(const char*)> driller_double_geomod_shape_create_hook{
     0x004374D9, [](const char* filename) -> int {
-        std::string original_filename{filename};
-        // set value, default to the original one if its somehow missing
-        std::string modded_filename = g_dash_options_config.geomodmesh_driller_double.value_or(original_filename);
-        return driller_double_geomod_shape_create_hook.call_target(modded_filename.c_str());
+        return handle_geomod_shape_create(filename,
+            g_dash_options_config.geomodmesh_driller_double, driller_double_geomod_shape_create_hook);
     }
 };
 
-// set driller single geo mesh
+// Set driller single geo mesh
 CallHook<int(const char*)> driller_single_geomod_shape_create_hook{
     0x004374E3, [](const char* filename) -> int {
-        std::string original_filename{filename};
-        // set value, default to the original one if its somehow missing
-        std::string modded_filename = g_dash_options_config.geomodmesh_driller_single.value_or(original_filename);
-        return driller_single_geomod_shape_create_hook.call_target(modded_filename.c_str());
+        return handle_geomod_shape_create(filename,
+            g_dash_options_config.geomodmesh_driller_single, driller_single_geomod_shape_create_hook);
     }
 };
 
-// set apc geo mesh
+// Set apc geo mesh
 CallHook<int(const char*)> apc_geomod_shape_create_hook{
     0x004374ED, [](const char* filename) -> int {
-        std::string original_filename{filename};
-        // set value, default to the original one if its somehow missing
-        std::string modded_filename = g_dash_options_config.geomodmesh_apc.value_or(original_filename);
-        return apc_geomod_shape_create_hook.call_target(modded_filename.c_str());
+        return handle_geomod_shape_create(filename,
+            g_dash_options_config.geomodmesh_apc, apc_geomod_shape_create_hook);
     }
 };
 
@@ -124,7 +113,8 @@ void apply_geomod_mesh_patch()
         {{DashOptionID::GeomodMesh_Default, [] { default_geomod_shape_create_hook.install(); }},
          {DashOptionID::GeomodMesh_DrillerDouble, [] { driller_double_geomod_shape_create_hook.install(); }},
          {DashOptionID::GeomodMesh_DrillerSingle, [] { driller_single_geomod_shape_create_hook.install(); }},
-         {DashOptionID::GeomodMesh_APC, [] { apc_geomod_shape_create_hook.install(); }}}};
+         {DashOptionID::GeomodMesh_APC, [] { apc_geomod_shape_create_hook.install(); }}
+        }};
 
     bool any_option_loaded = false;
 
@@ -143,14 +133,121 @@ void apply_geomod_mesh_patch()
     }
 }
 
+// consolidated logic for handling geomod smoke emitter overrides
+int handle_geomod_emitter_change(const char* emitter_name,
+    const std::optional<std::string>& new_emitter_name_opt, CallHook<int(const char*)>& hook) {
+    std::string original_emitter_name{emitter_name};
+    std::string new_emitter_name = new_emitter_name_opt.value_or(original_emitter_name);
+    return hook.call_target(new_emitter_name.c_str());
+}
+
+// Override default geomod smoke emitter
+CallHook<int(const char*)> default_geomod_emitter_get_index_hook{
+    0x00437150, [](const char* emitter_name) -> int {
+        return handle_geomod_emitter_change(emitter_name,
+            g_dash_options_config.geomodemitter_default, default_geomod_emitter_get_index_hook);
+    }
+};
+
+// Override driller geomod smoke emitter
+CallHook<int(const char*)> driller_geomod_emitter_get_index_hook{
+    0x0043715F, [](const char* emitter_name) -> int {
+        return handle_geomod_emitter_change(emitter_name,
+            g_dash_options_config.geomodemitter_driller, driller_geomod_emitter_get_index_hook);
+    }
+};
+
+// geomod crater texture PPM broken currently and disabled, need to fix
+CallHook<void(rf::GSolid*, float)> geomod_set_autotexture_ppm_hook{
+    0x00466BD4,
+    [](rf::GSolid* this_ptr, float ppm) {
+        xlog::info("Original PPM: {}", ppm);
+
+        float custom_ppm = 24.0f;
+        xlog::info("Modified PPM: {}", custom_ppm);
+
+        geomod_set_autotexture_ppm_hook.call_target(this_ptr, custom_ppm);
+    }
+};
+
+// replace ice geomod region texture
+CallHook<int(const char*, int, bool)> ice_geo_crater_bm_load_hook {
+    {
+        0x004673B5, // chunks
+        0x00466BEF, // crater
+    },
+    [](const char* filename, int path_id, bool generate_mipmaps) -> int {
+        std::string original_filename{filename};
+        std::string new_filename = g_dash_options_config.geomodtexture_ice.value_or(original_filename);
+        return ice_geo_crater_bm_load_hook.call_target(new_filename.c_str(), path_id, generate_mipmaps);
+    }
+};
+
+// replace training level filename for use from new game menu
+CallHook<void(const char*)> training_load_level_hook{
+    0x00443A85,
+    [](const char* level_name) {
+        std::string original_level_name{level_name};
+        std::string new_level_name = g_dash_options_config.training_level_filename.value_or(original_level_name);
+        training_load_level_hook.call_target(new_level_name.c_str());
+    }};
+
 void apply_dashoptions_patches()
 {
     xlog::warn("Applying Dash Options patches");
-    disable_mod_playercfg_patch();
-    fpgun_ar_ammo_digit_color_injection.install();
+    // avoid unnecessary hooks by hooking only if corresponding options are specified
+
+    // apply UseStockPlayersConfig
+    if (g_dash_options_config.is_option_loaded(DashOptionID::UseStockPlayersConfig) &&
+            g_dash_options_config.use_stock_game_players_config) {
+        // set mod to not make its own players.cfg but instead use the stock game one
+        AsmWriter(0x004A8F99).jmp(0x004A9010);
+        AsmWriter(0x004A8DCC).jmp(0x004A8E53);
+    }
+
+    // apply AR ammo counter coloring
+    if (g_dash_options_config.is_option_loaded(DashOptionID::AssaultRifleAmmoColor)) {
+        fpgun_ar_ammo_digit_color_injection.install();        
+    }         
+
+    // whether should apply is determined in helper function
     apply_geomod_mesh_patch();
-    // dont init geo meshes at the start, thought was needed but not
-    //AsmWriter(0x004B229F).nop(5);
+
+    // apply default geomod smoke emitter
+    if (g_dash_options_config.is_option_loaded(DashOptionID::GeomodEmitter_Default)) {
+        default_geomod_emitter_get_index_hook.install();
+    }
+
+    // apply driller geomod smoke emitter
+    if (g_dash_options_config.is_option_loaded(DashOptionID::GeomodEmitter_Driller)) {
+        driller_geomod_emitter_get_index_hook.install();
+    }    
+
+    // broken currently, need to fix
+    //geomod_set_autotexture_ppm_hook.install();
+
+    if (g_dash_options_config.is_option_loaded(DashOptionID::GeomodTexture_Ice)) {
+        ice_geo_crater_bm_load_hook.install();
+    }
+
+    // training level filename from new game menu
+    if (g_dash_options_config.is_option_loaded(DashOptionID::TrainingLevelFilename)) {
+        training_load_level_hook.install();
+    }
+
+    // disable multiplayer button
+    if (g_dash_options_config.is_option_loaded(DashOptionID::DisableMultiplayerButton) &&
+        g_dash_options_config.disable_multiplayer_button) {
+        AsmWriter(0x0044391F).nop(5); // multi
+    }
+
+    // disable single player buttons
+    if (g_dash_options_config.is_option_loaded(DashOptionID::DisableSingleplayerButtons) &&
+        g_dash_options_config.disable_singleplayer_buttons) {
+        AsmWriter(0x00443906).nop(5); // save
+        AsmWriter(0x004438ED).nop(5); // load
+        AsmWriter(0x004438D4).nop(5); // new game
+    }
 }
 
 template<typename T>
@@ -215,6 +312,30 @@ void process_dashoption_line(const std::string& option_name, const std::string& 
     else if (option_name == "$APC Geomod Mesh") {
         set_option(DashOptionID::GeomodMesh_APC,
             g_dash_options_config.geomodmesh_apc, option_value);
+    }
+    else if (option_name == "$Default Geomod Smoke Emitter") {
+        set_option(DashOptionID::GeomodEmitter_Default,
+            g_dash_options_config.geomodemitter_default, option_value);
+    }
+    else if (option_name == "$Driller Geomod Smoke Emitter") {
+        set_option(DashOptionID::GeomodEmitter_Driller,
+            g_dash_options_config.geomodemitter_driller, option_value);
+    }
+    else if (option_name == "$Ice Geomod Texture") {
+        set_option(DashOptionID::GeomodTexture_Ice,
+            g_dash_options_config.geomodtexture_ice, option_value);
+    }
+    else if (option_name == "$Training Level Filename") {
+        set_option(DashOptionID::TrainingLevelFilename,
+            g_dash_options_config.training_level_filename, option_value);
+    }
+    else if (option_name == "$Disable Multiplayer Button") {
+        set_option(DashOptionID::DisableMultiplayerButton,
+            g_dash_options_config.disable_multiplayer_button, option_value);
+    }
+    else if (option_name == "$Disable Singleplayer Buttons") {
+        set_option(DashOptionID::DisableSingleplayerButtons,
+            g_dash_options_config.disable_singleplayer_buttons, option_value);
     }
     else if (option_name == "$Use Base Game Players Config") {
         set_option(DashOptionID::UseStockPlayersConfig,
