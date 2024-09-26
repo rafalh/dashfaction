@@ -6,6 +6,7 @@
 #include <patch_common/AsmWriter.h>
 #include "../rf/file/file.h"
 #include "../rf/gr/gr.h"
+#include "../rf/misc.h"
 #include <algorithm>
 #include <memory>
 #include <sstream>
@@ -75,14 +76,83 @@ CodeInjection fpgun_ar_ammo_digit_color_injection{
     }
 };
 
+// set default geo mesh
+CallHook<int(const char*)> default_geomod_shape_create_hook{
+    0x004374CF,
+    [](const char* filename) -> int {
+        std::string original_filename{filename};
+        // set value, default to the original one if its somehow missing
+        std::string modded_filename = g_dash_options_config.geomodmesh_default.value_or(original_filename);
+        return default_geomod_shape_create_hook.call_target(modded_filename.c_str());
+    }
+};
+
+// set driller double geo mesh
+CallHook<int(const char*)> driller_double_geomod_shape_create_hook{
+    0x004374D9, [](const char* filename) -> int {
+        std::string original_filename{filename};
+        // set value, default to the original one if its somehow missing
+        std::string modded_filename = g_dash_options_config.geomodmesh_driller_double.value_or(original_filename);
+        return driller_double_geomod_shape_create_hook.call_target(modded_filename.c_str());
+    }
+};
+
+// set driller single geo mesh
+CallHook<int(const char*)> driller_single_geomod_shape_create_hook{
+    0x004374E3, [](const char* filename) -> int {
+        std::string original_filename{filename};
+        // set value, default to the original one if its somehow missing
+        std::string modded_filename = g_dash_options_config.geomodmesh_driller_single.value_or(original_filename);
+        return driller_single_geomod_shape_create_hook.call_target(modded_filename.c_str());
+    }
+};
+
+// set apc geo mesh
+CallHook<int(const char*)> apc_geomod_shape_create_hook{
+    0x004374ED, [](const char* filename) -> int {
+        std::string original_filename{filename};
+        // set value, default to the original one if its somehow missing
+        std::string modded_filename = g_dash_options_config.geomodmesh_apc.value_or(original_filename);
+        return apc_geomod_shape_create_hook.call_target(modded_filename.c_str());
+    }
+};
+
+void apply_geomod_mesh_patch()
+{
+    // array of geomod mesh options
+    std::array<std::pair<DashOptionID, void (*)()>, 4> geomod_mesh_hooks = {
+        {{DashOptionID::GeomodMesh_Default, [] { default_geomod_shape_create_hook.install(); }},
+         {DashOptionID::GeomodMesh_DrillerDouble, [] { driller_double_geomod_shape_create_hook.install(); }},
+         {DashOptionID::GeomodMesh_DrillerSingle, [] { driller_single_geomod_shape_create_hook.install(); }},
+         {DashOptionID::GeomodMesh_APC, [] { apc_geomod_shape_create_hook.install(); }}}};
+
+    bool any_option_loaded = false;
+
+    // install only the hooks for the ones that were set
+    for (const auto& [option_id, install_fn] : geomod_mesh_hooks) {
+        if (g_dash_options_config.is_option_loaded(option_id)) {
+            install_fn();
+            any_option_loaded = true;
+        }
+    }
+
+    // if any one was set, apply the necessary patches
+    if (any_option_loaded) {
+        AsmWriter(0x00437543).call(0x004ECED0); // Replace the call to load v3d instead of embedded
+        rf::geomod_shape_init();                // Reinitialize geomod shapes
+    }
+}
+
 void apply_dashoptions_patches()
 {
     xlog::warn("Applying Dash Options patches");
     disable_mod_playercfg_patch();
     fpgun_ar_ammo_digit_color_injection.install();
+    apply_geomod_mesh_patch();
+    // dont init geo meshes at the start, thought was needed but not
+    //AsmWriter(0x004B229F).nop(5);
 }
 
-// consolidated processing for options
 template<typename T>
 void set_option(DashOptionID option_id, std::optional<T>& option_field, const std::string& option_value)
 {
@@ -127,13 +197,32 @@ void process_dashoption_line(const std::string& option_name, const std::string& 
     xlog::warn("Found an option! Attempting to process {} with value {}", option_name, option_value);
 
     if (option_name == "$Scoreboard Logo") {
-        set_option(DashOptionID::ScoreboardLogo, g_dash_options_config.scoreboard_logo, option_value);
+        set_option(DashOptionID::ScoreboardLogo,
+            g_dash_options_config.scoreboard_logo, option_value);
     }
-    if (option_name == "$Use Base Game Players Config") {
-        set_option(DashOptionID::UseStockPlayersConfig, g_dash_options_config.use_stock_game_players_config, option_value);
+    else if (option_name == "$Default Geomod Mesh") {
+        set_option(DashOptionID::GeomodMesh_Default,
+            g_dash_options_config.geomodmesh_default, option_value);
     }
-    if (option_name == "$Assault Rifle Ammo Counter Color") {
-        set_option(DashOptionID::AssaultRifleAmmoColor, g_dash_options_config.ar_ammo_color, option_value);
+    else if (option_name == "$Driller Double Geomod Mesh") {
+        set_option(DashOptionID::GeomodMesh_DrillerDouble,
+            g_dash_options_config.geomodmesh_driller_double, option_value);
+    }
+    else if (option_name == "$Driller Single Geomod Mesh") {
+        set_option(DashOptionID::GeomodMesh_DrillerSingle,
+            g_dash_options_config.geomodmesh_driller_single, option_value);
+    }
+    else if (option_name == "$APC Geomod Mesh") {
+        set_option(DashOptionID::GeomodMesh_APC,
+            g_dash_options_config.geomodmesh_apc, option_value);
+    }
+    else if (option_name == "$Use Base Game Players Config") {
+        set_option(DashOptionID::UseStockPlayersConfig,
+            g_dash_options_config.use_stock_game_players_config, option_value);
+    }
+    else if (option_name == "$Assault Rifle Ammo Counter Color") {
+        set_option(DashOptionID::AssaultRifleAmmoColor,
+            g_dash_options_config.ar_ammo_color, option_value);
     }
     else {
         xlog::warn("Ignoring unsupported option: {}", option_name);
@@ -165,24 +254,28 @@ void close_file()
 
 void parse()
 {
-    std::string line, full_line;
-    char buffer[256];
+    std::string line;
     bool in_options_section = false; // track section, eventually this should be enum and support multiple sections
 
     xlog::warn("Start parsing dashoptions.tbl");
 
-    while (int bytes_read = dashoptions_file->read(buffer, sizeof(buffer) - 1)) {
+    while (true) {
+        std::string buffer(2048, '\0'); // handle lines up to 2048 bytes, should be plenty
+        int bytes_read = dashoptions_file->read(&buffer[0], buffer.size() - 1);
+
         if (bytes_read <= 0) {
             xlog::warn("End of file or read error in dashoptions.tbl.");
             break;
         }
 
-        buffer[bytes_read] = '\0';
+        buffer.resize(bytes_read); // trim unused space if fewer bytes were read
         std::istringstream file_stream(buffer);
+
         while (std::getline(file_stream, line)) {
             line = trim(line);
             xlog::warn("Parsing line: '{}'", line);
 
+            // could be expanded to support multiple sections
             if (line == "#General") {
                 xlog::warn("Entering General section");
                 in_options_section = true;
@@ -191,28 +284,29 @@ void parse()
             else if (line == "#End") {
                 xlog::warn("Exiting General section");
                 in_options_section = false;
-                break; // stop parsing after reaching the end
+                break; // stop, reached the end of section
             }
 
-            // do not parse anything outside the options section
+            // skip anything outside the options section
             if (!in_options_section) {
                 xlog::warn("Skipping line outside of General section");
                 continue;
             }
 
-            // Skip empty lines and comments
+            // skip empty lines and comments
             if (line.empty() || line.find("//") == 0) {
-                xlog::warn("Skipping line because it's empty or a comment");
+                xlog::warn("Skipping empty or comment line");
                 continue;
             }
 
-            // Parse options
+            // valid option lines start with $ and contain delimiter :
+            if (line[0] != '$' || line.find(':') == std::string::npos) {
+                xlog::warn("Skipping malformed line: '{}'", line);
+                continue;
+            }
+
+            // parse valid options lines
             auto delimiter_pos = line.find(':');
-            if (delimiter_pos == std::string::npos) {
-                xlog::warn("Skipping malformed line: {}", line);
-                continue;
-            }
-
             std::string option_name = trim(line.substr(0, delimiter_pos));
             std::string option_value = trim(line.substr(delimiter_pos + 1));
 
@@ -220,7 +314,6 @@ void parse()
         }
     }
 }
-
 
 void load_dashoptions_config()
 {

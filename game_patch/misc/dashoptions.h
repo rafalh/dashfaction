@@ -8,6 +8,10 @@
 enum class DashOptionID
 {
     ScoreboardLogo,
+    GeomodMesh_Default,
+    GeomodMesh_DrillerDouble,
+    GeomodMesh_DrillerSingle,
+    GeomodMesh_APC,
     UseStockPlayersConfig,
     AssaultRifleAmmoColor,
     _optioncount // dummy option for determining total num of options
@@ -27,6 +31,10 @@ struct DashOptionsConfig
     //std::optional<float> float_something; // template for float
     //std::optional<int> int_something; // template for int
     std::optional<std::string> scoreboard_logo;
+    std::optional<std::string> geomodmesh_default;
+    std::optional<std::string> geomodmesh_driller_double;
+    std::optional<std::string> geomodmesh_driller_single;
+    std::optional<std::string> geomodmesh_apc;
     std::optional<bool> use_stock_game_players_config;
     std::optional<uint32_t> ar_ammo_color;
 

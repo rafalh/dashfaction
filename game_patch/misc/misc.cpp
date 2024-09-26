@@ -409,7 +409,7 @@ CodeInjection all_table_files_loaded_injection{
         // after all other tbl files have been loaded, load dashoptions.tbl and parse it
         // only if a TC mod is loaded
         if (rf::mod_param.found()) {
-            dashopt::load_dashoptions_config();
+            dashopt::load_dashoptions_config();            
         }
     }
 };
