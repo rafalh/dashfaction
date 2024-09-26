@@ -6,11 +6,16 @@
 #include <patch_common/AsmWriter.h>
 #include "../rf/file/file.h"
 #include "../rf/gr/gr.h"
+#include "../rf/sound/sound.h"
 #include "../rf/geometry.h"
 #include "../rf/misc.h"
 #include <algorithm>
 #include <memory>
 #include <sstream>
+#include <string>
+#include <stdexcept>
+#include <windows.h>
+#include <shellapi.h>
 #include <xlog/xlog.h>
 
 DashOptionsConfig g_dash_options_config;
@@ -51,6 +56,24 @@ std::optional<std::string> extract_quoted_value(const std::string& value)
     // if not wrapped in quotes, assume valid
     xlog::warn("String value is not enclosed in quotes, accepting it anyway: '{}'", trimmed_value);
     return trimmed_value;
+}
+
+void open_url(const std::string& url)
+{
+    try {
+        if (url.empty()) {
+            xlog::error("URL is empty");
+            return;
+        }
+        xlog::info("Opening URL: {}", url);
+        HINSTANCE result = ShellExecuteA(nullptr, "open", url.c_str(), nullptr, nullptr, SW_SHOW);
+        if (reinterpret_cast<int>(result) <= 32) {
+            xlog::error("Failed to open URL. Error code: {}", reinterpret_cast<int>(result));
+        }
+    }
+    catch (const std::exception& ex) {
+        xlog::error("Exception occurred while trying to open URL: {}", ex.what());
+    }
 }
 
 CodeInjection fpgun_ar_ammo_digit_color_injection{
@@ -183,24 +206,69 @@ CallHook<int(const char*, int, bool)> ice_geo_crater_bm_load_hook {
     }
 };
 
-// replace first level filename for use from new game menu
+// Consolidated logic for handling level filename overrides
+inline void handle_level_name_change(const char* level_name, 
+    const std::optional<std::string>& new_level_name_opt, CallHook<void(const char*)>& hook) {
+    std::string new_level_name = new_level_name_opt.value_or(level_name);
+    hook.call_target(new_level_name.c_str());
+}
+
+// Override first level filename for new game menu
 CallHook<void(const char*)> first_load_level_hook{
     0x00443B15, [](const char* level_name) {
-        std::string original_level_name{level_name};
-        std::string new_level_name = g_dash_options_config.first_level_filename.value_or(original_level_name);
-        first_load_level_hook.call_target(new_level_name.c_str());
+        handle_level_name_change(level_name, g_dash_options_config.first_level_filename, first_load_level_hook);
     }
 };
 
-// replace training level filename for use from new game menu
+// Override training level filename for new game menu
 CallHook<void(const char*)> training_load_level_hook{
-    0x00443A85,
-    [](const char* level_name) {
-        std::string original_level_name{level_name};
-        std::string new_level_name = g_dash_options_config.training_level_filename.value_or(original_level_name);
-        training_load_level_hook.call_target(new_level_name.c_str());
+    0x00443A85, [](const char* level_name) {
+        handle_level_name_change(level_name, g_dash_options_config.training_level_filename, training_load_level_hook);
     }
 };
+
+// Implement demo_extras_summoner_trailer_click using FunHook
+FunHook<void(int, int)> extras_summoner_trailer_click_hook{
+    0x0043EC80, [](int x, int y) {
+        xlog::warn("Summoner trailer button clicked");
+        int action = g_dash_options_config.sumtrailer_button_action.value_or(0);
+        switch (action) {
+        case 1:
+            // open URL
+            if (g_dash_options_config.sumtrailer_button_url) {
+                const std::string& url = *g_dash_options_config.sumtrailer_button_url;
+                open_url(url);
+            }
+            break;
+        case 2:
+            // disable button
+            break;
+        default:
+            // play bink video, is case 0 but also default
+            std::string trailer_path = g_dash_options_config.sumtrailer_button_bik_filename.value_or("sumtrailer.bik");
+            xlog::warn("Playing BIK file: {}", trailer_path);
+            rf::snd_pause(true);
+            rf::bink_play(trailer_path.c_str());
+            rf::snd_pause(false);
+            break;
+        }
+    }
+};
+
+void handle_summoner_trailer_button()
+{
+    if (int action = g_dash_options_config.sumtrailer_button_action.value_or(-1); action != -1) {
+        xlog::warn("Action ID: {}", g_dash_options_config.sumtrailer_button_action.value_or(-1));
+        if (action == 3) {
+            // action 3 means remove the button
+            AsmWriter(0x0043EE14).nop(5);
+        }
+        else {
+            // otherwise, install the hook
+            extras_summoner_trailer_click_hook.install();
+        }
+    }
+}
 
 void apply_dashoptions_patches()
 {
@@ -260,6 +328,11 @@ void apply_dashoptions_patches()
         AsmWriter(0x004438ED).nop(5); // load
         AsmWriter(0x004438D4).nop(5); // new game
     }
+
+    // customize behaviour of Summoner Trailer button
+    if (g_dash_options_config.is_option_loaded(DashOptionID::SumTrailerButtonAction)) {
+        handle_summoner_trailer_button();
+    }
 }
 
 template<typename T>
@@ -305,6 +378,7 @@ void process_dashoption_line(const std::string& option_name, const std::string& 
 {
     xlog::warn("Found an option! Attempting to process {} with value {}", option_name, option_value);
 
+    //core options
     if (option_name == "$Scoreboard Logo") {
         set_option(DashOptionID::ScoreboardLogo,
             g_dash_options_config.scoreboard_logo, option_value);
@@ -361,6 +435,25 @@ void process_dashoption_line(const std::string& option_name, const std::string& 
         set_option(DashOptionID::AssaultRifleAmmoColor,
             g_dash_options_config.ar_ammo_color, option_value);
     }
+    else if (option_name == "$Summoner Trailer Button Action") {
+        set_option(DashOptionID::SumTrailerButtonAction,
+            g_dash_options_config.sumtrailer_button_action, option_value);
+        // 0 = play_bik (default), 1 = open_url, 2 = disable, 3 = remove
+    }
+
+    //extended options
+    else if (option_name == "+Summoner Trailer Button URL" &&
+        g_dash_options_config.is_option_loaded(DashOptionID::SumTrailerButtonAction)) {
+        set_option(DashOptionID::SumTrailerButtonURL,
+            g_dash_options_config.sumtrailer_button_url, option_value);
+    }
+    else if (option_name == "+Summoner Trailer Button Bink Filename" &&
+        g_dash_options_config.is_option_loaded(DashOptionID::SumTrailerButtonAction)) {
+        set_option(DashOptionID::SumTrailerButtonBikFile,
+            g_dash_options_config.sumtrailer_button_bik_filename, option_value);
+    }
+
+    //unknown option
     else {
         xlog::warn("Ignoring unsupported option: {}", option_name);
     }
@@ -436,8 +529,8 @@ void parse()
                 continue;
             }
 
-            // valid option lines start with $ and contain delimiter :
-            if (line[0] != '$' || line.find(':') == std::string::npos) {
+            // valid option lines start with $ or + and contain a delimiter :
+            if ((line[0] != '$' && line[0] != '+') || line.find(':') == std::string::npos) {
                 xlog::warn("Skipping malformed line: '{}'", line);
                 continue;
             }

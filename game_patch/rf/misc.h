@@ -13,4 +13,5 @@ namespace rf
     static auto& geomod_shape_init = addr_as_ref<void()>(0x004374C0);
     static auto& geomod_shape_create = addr_as_ref<int(const char*)>(0x00437500);
     static auto& geomod_shape_shutdown = addr_as_ref<void()>(0x00437460);
+    static auto& bink_play = addr_as_ref<char*(const char* filename)>(0x00520A90);
     }
