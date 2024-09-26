@@ -36,6 +36,7 @@ add_packfile(dashfaction.vpp
     images/ammo_bar_power_1.tga
     images/ammo_signal_green_1.tga
     images/ammo_signal_red_1.tga
+    images/assault_digits.vbm
     images/bullet_icon_1.tga
     images/bullet_icon_50cal_1.tga
     images/bullet_icon_556_1.tga

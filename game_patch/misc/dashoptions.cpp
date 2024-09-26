@@ -5,6 +5,7 @@
 #include <patch_common/ShortTypes.h>
 #include <patch_common/AsmWriter.h>
 #include "../rf/file/file.h"
+#include "../rf/gr/gr.h"
 #include <algorithm>
 #include <memory>
 #include <sstream>
@@ -59,10 +60,26 @@ void disable_mod_playercfg_patch()
     }
 }
 
+CodeInjection fpgun_ar_ammo_digit_color_injection{
+    0x004ABC03,
+    [](auto& regs) {
+        if (g_dash_options_config.is_option_loaded(DashOptionID::AssaultRifleAmmoColor)) {
+            uint32_t color = g_dash_options_config.ar_ammo_color.value();
+            rf::gr::set_color((color >> 24) & 0xFF, // r
+                              (color >> 16) & 0xFF, // g
+                              (color >> 8) & 0xFF,  // b 
+                              color & 0xFF          // a
+            );
+        }         
+        regs.eip = 0x004ABC08;
+    }
+};
+
 void apply_dashoptions_patches()
 {
     xlog::warn("Applying Dash Options patches");
     disable_mod_playercfg_patch();
+    fpgun_ar_ammo_digit_color_injection.install();
 }
 
 // consolidated processing for options
@@ -80,6 +97,10 @@ void set_option(DashOptionID option_id, std::optional<T>& option_field, const st
                 xlog::warn("Invalid string format: {}", option_value);
                 return;
             }
+        }
+        else if constexpr (std::is_same_v<T, uint32_t>) { // handle color values
+            option_field = static_cast<uint32_t>(
+                std::stoul(extract_quoted_value(option_value).value_or(option_value), nullptr, 16));
         }
         else if constexpr (std::is_same_v<T, float>) {
             option_field = std::stof(option_value);
@@ -110,6 +131,9 @@ void process_dashoption_line(const std::string& option_name, const std::string& 
     }
     if (option_name == "$Use Base Game Players Config") {
         set_option(DashOptionID::UseStockPlayersConfig, g_dash_options_config.use_stock_game_players_config, option_value);
+    }
+    if (option_name == "$Assault Rifle Ammo Counter Color") {
+        set_option(DashOptionID::AssaultRifleAmmoColor, g_dash_options_config.ar_ammo_color, option_value);
     }
     else {
         xlog::warn("Ignoring unsupported option: {}", option_name);
