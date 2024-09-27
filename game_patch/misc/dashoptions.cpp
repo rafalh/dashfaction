@@ -14,6 +14,7 @@
 #include <sstream>
 #include <string>
 #include <stdexcept>
+#include <unordered_map>
 #include <windows.h>
 #include <shellapi.h>
 #include <xlog/xlog.h>
@@ -340,19 +341,12 @@ void set_option(DashOptionID option_id, std::optional<T>& option_field, const st
 {
     try {
         if constexpr (std::is_same_v<T, std::string>) {
-            // strip quotes for strings
-            if (auto quoted_value = extract_quoted_value(option_value)) {
-                option_field = quoted_value.value();
-                xlog::warn("Successfully extracted string: {}", quoted_value.value());
-            }
-            else {
-                xlog::warn("Invalid string format: {}", option_value);
-                return;
-            }
+            // extract quoted string
+            option_field = extract_quoted_value(option_value).value_or(option_value);
         }
-        else if constexpr (std::is_same_v<T, uint32_t>) { // handle color values
-            option_field = static_cast<uint32_t>(
-                std::stoul(extract_quoted_value(option_value).value_or(option_value), nullptr, 16));
+        else if constexpr (std::is_same_v<T, uint32_t>) {
+            // parse hex color values
+            option_field = std::stoul(option_value, nullptr, 0);
         }
         else if constexpr (std::is_same_v<T, float>) {
             option_field = std::stof(option_value);
@@ -360,10 +354,12 @@ void set_option(DashOptionID option_id, std::optional<T>& option_field, const st
         else if constexpr (std::is_same_v<T, int>) {
             option_field = std::stoi(option_value);
         }
-        else if constexpr (std::is_same_v<T, bool>) { // handle bools with every reasonable capitalization
+        else if constexpr (std::is_same_v<T, bool>) {
+            // accept every reasonable representation of "true" for a boolean
             option_field =
                 (option_value == "1" || option_value == "true" || option_value == "True" || option_value == "TRUE");
         }
+
         // mark option as loaded
         mark_option_loaded(option_id);
         xlog::warn("Parsed value has been saved: {}", option_field.value());
@@ -376,84 +372,84 @@ void set_option(DashOptionID option_id, std::optional<T>& option_field, const st
 // identify custom options and parse where found
 void process_dashoption_line(const std::string& option_name, const std::string& option_value)
 {
-    xlog::warn("Found an option! Attempting to process {} with value {}", option_name, option_value);
+    static const std::unordered_map<std::string, DashOptionID> option_map = {
+        {"$Scoreboard Logo", DashOptionID::ScoreboardLogo},
+        {"$Default Geomod Mesh", DashOptionID::GeomodMesh_Default},
+        {"$Driller Double Geomod Mesh", DashOptionID::GeomodMesh_DrillerDouble},
+        {"$Driller Single Geomod Mesh", DashOptionID::GeomodMesh_DrillerSingle},
+        {"$APC Geomod Mesh", DashOptionID::GeomodMesh_APC},
+        {"$Default Geomod Smoke Emitter", DashOptionID::GeomodEmitter_Default},
+        {"$Driller Geomod Smoke Emitter", DashOptionID::GeomodEmitter_Driller},
+        {"$Ice Geomod Texture", DashOptionID::GeomodTexture_Ice},
+        {"$First Level Filename", DashOptionID::FirstLevelFilename},
+        {"$Training Level Filename", DashOptionID::TrainingLevelFilename},
+        {"$Disable Multiplayer Button", DashOptionID::DisableMultiplayerButton},
+        {"$Disable Singleplayer Buttons", DashOptionID::DisableSingleplayerButtons},
+        {"$Use Base Game Players Config", DashOptionID::UseStockPlayersConfig},
+        {"$Assault Rifle Ammo Counter Color", DashOptionID::AssaultRifleAmmoColor},
+        {"$Summoner Trailer Button Action", DashOptionID::SumTrailerButtonAction},
+        {"+Summoner Trailer Button URL", DashOptionID::SumTrailerButtonURL},
+        {"+Summoner Trailer Button Bink Filename", DashOptionID::SumTrailerButtonBikFile}};
 
-    //core options
-    if (option_name == "$Scoreboard Logo") {
-        set_option(DashOptionID::ScoreboardLogo,
-            g_dash_options_config.scoreboard_logo, option_value);
+    // save option values for options that are found
+    auto it = option_map.find(option_name);
+    if (it != option_map.end()) {
+        switch (it->second) {
+        case DashOptionID::ScoreboardLogo:
+            set_option(it->second, g_dash_options_config.scoreboard_logo, option_value);
+            break;
+        case DashOptionID::GeomodMesh_Default:
+            set_option(it->second, g_dash_options_config.geomodmesh_default, option_value);
+            break;
+        case DashOptionID::GeomodMesh_DrillerDouble:
+            set_option(it->second, g_dash_options_config.geomodmesh_driller_double, option_value);
+            break;
+        case DashOptionID::GeomodMesh_DrillerSingle:
+            set_option(it->second, g_dash_options_config.geomodmesh_driller_single, option_value);
+            break;
+        case DashOptionID::GeomodMesh_APC:
+            set_option(it->second, g_dash_options_config.geomodmesh_apc, option_value);
+            break;
+        case DashOptionID::GeomodEmitter_Default:
+            set_option(it->second, g_dash_options_config.geomodemitter_default, option_value);
+            break;
+        case DashOptionID::GeomodEmitter_Driller:
+            set_option(it->second, g_dash_options_config.geomodemitter_driller, option_value);
+            break;
+        case DashOptionID::GeomodTexture_Ice:
+            set_option(it->second, g_dash_options_config.geomodtexture_ice, option_value);
+            break;
+        case DashOptionID::FirstLevelFilename:
+            set_option(it->second, g_dash_options_config.first_level_filename, option_value);
+            break;
+        case DashOptionID::TrainingLevelFilename:
+            set_option(it->second, g_dash_options_config.training_level_filename, option_value);
+            break;
+        case DashOptionID::DisableMultiplayerButton:
+            set_option(it->second, g_dash_options_config.disable_multiplayer_button, option_value);
+            break;
+        case DashOptionID::DisableSingleplayerButtons:
+            set_option(it->second, g_dash_options_config.disable_singleplayer_buttons, option_value);
+            break;
+        case DashOptionID::UseStockPlayersConfig:
+            set_option(it->second, g_dash_options_config.use_stock_game_players_config, option_value);
+            break;
+        case DashOptionID::AssaultRifleAmmoColor:
+            set_option(it->second, g_dash_options_config.ar_ammo_color, option_value);
+            break;
+        case DashOptionID::SumTrailerButtonAction:
+            set_option(it->second, g_dash_options_config.sumtrailer_button_action, option_value);
+            break;
+        case DashOptionID::SumTrailerButtonURL:
+            set_option(it->second, g_dash_options_config.sumtrailer_button_url, option_value);
+            break;
+        case DashOptionID::SumTrailerButtonBikFile:
+            set_option(it->second, g_dash_options_config.sumtrailer_button_bik_filename, option_value);
+            break;
+        default:
+            xlog::warn("Unrecognized DashOptionID: {}", it->first);
+        }
     }
-    else if (option_name == "$Default Geomod Mesh") {
-        set_option(DashOptionID::GeomodMesh_Default,
-            g_dash_options_config.geomodmesh_default, option_value);
-    }
-    else if (option_name == "$Driller Double Geomod Mesh") {
-        set_option(DashOptionID::GeomodMesh_DrillerDouble,
-            g_dash_options_config.geomodmesh_driller_double, option_value);
-    }
-    else if (option_name == "$Driller Single Geomod Mesh") {
-        set_option(DashOptionID::GeomodMesh_DrillerSingle,
-            g_dash_options_config.geomodmesh_driller_single, option_value);
-    }
-    else if (option_name == "$APC Geomod Mesh") {
-        set_option(DashOptionID::GeomodMesh_APC,
-            g_dash_options_config.geomodmesh_apc, option_value);
-    }
-    else if (option_name == "$Default Geomod Smoke Emitter") {
-        set_option(DashOptionID::GeomodEmitter_Default,
-            g_dash_options_config.geomodemitter_default, option_value);
-    }
-    else if (option_name == "$Driller Geomod Smoke Emitter") {
-        set_option(DashOptionID::GeomodEmitter_Driller,
-            g_dash_options_config.geomodemitter_driller, option_value);
-    }
-    else if (option_name == "$Ice Geomod Texture") {
-        set_option(DashOptionID::GeomodTexture_Ice,
-            g_dash_options_config.geomodtexture_ice, option_value);
-    }
-    else if (option_name == "$First Level Filename") {
-        set_option(DashOptionID::FirstLevelFilename,
-            g_dash_options_config.first_level_filename, option_value);
-    }
-    else if (option_name == "$Training Level Filename") {
-        set_option(DashOptionID::TrainingLevelFilename,
-            g_dash_options_config.training_level_filename, option_value);
-    }
-    else if (option_name == "$Disable Multiplayer Button") {
-        set_option(DashOptionID::DisableMultiplayerButton,
-            g_dash_options_config.disable_multiplayer_button, option_value);
-    }
-    else if (option_name == "$Disable Singleplayer Buttons") {
-        set_option(DashOptionID::DisableSingleplayerButtons,
-            g_dash_options_config.disable_singleplayer_buttons, option_value);
-    }
-    else if (option_name == "$Use Base Game Players Config") {
-        set_option(DashOptionID::UseStockPlayersConfig,
-            g_dash_options_config.use_stock_game_players_config, option_value);
-    }
-    else if (option_name == "$Assault Rifle Ammo Counter Color") {
-        set_option(DashOptionID::AssaultRifleAmmoColor,
-            g_dash_options_config.ar_ammo_color, option_value);
-    }
-    else if (option_name == "$Summoner Trailer Button Action") {
-        set_option(DashOptionID::SumTrailerButtonAction,
-            g_dash_options_config.sumtrailer_button_action, option_value);
-        // 0 = play_bik (default), 1 = open_url, 2 = disable, 3 = remove
-    }
-
-    //extended options
-    else if (option_name == "+Summoner Trailer Button URL" &&
-        g_dash_options_config.is_option_loaded(DashOptionID::SumTrailerButtonAction)) {
-        set_option(DashOptionID::SumTrailerButtonURL,
-            g_dash_options_config.sumtrailer_button_url, option_value);
-    }
-    else if (option_name == "+Summoner Trailer Button Bink Filename" &&
-        g_dash_options_config.is_option_loaded(DashOptionID::SumTrailerButtonAction)) {
-        set_option(DashOptionID::SumTrailerButtonBikFile,
-            g_dash_options_config.sumtrailer_button_bik_filename, option_value);
-    }
-
-    //unknown option
     else {
         xlog::warn("Ignoring unsupported option: {}", option_name);
     }
