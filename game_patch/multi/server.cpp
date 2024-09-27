@@ -166,10 +166,6 @@ void load_additional_server_config(rf::Parser& parser)
         }
     }
 
-    if (parser.parse_optional("$DF Random Level Order:")) {
-        g_additional_server_config.randomize_rotation = parser.parse_bool();
-    }
-
     if (parser.parse_optional("$DF Dynamic Rotation:")) {
         g_additional_server_config.dynamic_rotation = parser.parse_bool();
     }
@@ -212,6 +208,11 @@ CodeInjection dedicated_server_load_config_patch{
     [](auto& regs) {
         auto& parser = *reinterpret_cast<rf::Parser*>(regs.esp - 4 + 0x4C0 - 0x470);
         load_additional_server_config(parser);
+
+        // if dynamic rotation is on, shuffle rotation on server launch
+        if (g_additional_server_config.dynamic_rotation) {
+            shuffle_level_array();
+        }
 
         // Insert server name in window title when hosting dedicated server
         std::string wnd_name;
@@ -319,27 +320,30 @@ void shuffle_level_array()
 {
     std::size_t n = rf::netgame.levels.size();
     for (std::size_t i = n - 1; i > 0; --i) {
-        std::size_t j = std::rand() % (i + 1);
+        std::size_t j = dist(rng) % (i + 1);
         std::swap(rf::netgame.levels[i], rf::netgame.levels[j]);
     }
+    xlog::info("Shuffled level rotation");
 }
 
 const char* get_rand_level_filename()
 {
     int num_levels = rf::netgame.levels.size();
+
     if (num_levels > 1) {
-        // select a random index in range, subtracting 1 to avoid the current level
-        int rand_level_index = std::rand() % (num_levels - 1);
+        std::uniform_int_distribution<int> dist(0, num_levels - 2);
+        int rand_level_index = dist(rng);
+
+        // avoid selecting the current level
         if (rand_level_index >= rf::netgame.current_level_index) {
-            // avoid selecting the current level
             rand_level_index++;
         }
-        return rf::netgame.levels[rand_level_index];
+
+        return rf::netgame.levels[rand_level_index].c_str();
     }
-    else {
-        // nowhere else to go, we're staying here!
-        return rf::netgame.levels[rf::netgame.current_level_index];
-    }
+
+    // nowhere else to go, we're staying here!
+    return rf::netgame.levels[rf::netgame.current_level_index].c_str();
 }
 
 bool handle_server_chat_command(std::string_view server_command, rf::Player* sender)
@@ -702,22 +706,10 @@ CodeInjection multi_level_init_injection{
         if (g_additional_server_config.dynamic_rotation && rf::netgame.current_level_index ==
                     rf::netgame.levels.size() - 1 && rf::netgame.levels.size() > 1) {
                 // if this is the last level in the list and dynamic rotation is on, shuffle
-                xlog::debug("Reached end of level rotation, shuffling");
+                xlog::info("Reached end of level rotation, shuffling");
                 shuffle_level_array();
             }    
     },
-};
-
-CallHook<void(const char* filename)> multi_change_level_call_hook{
-    {
-        0x0046E89C,
-        0x0046E82E,
-        0x0046E863,
-    },
-    [](const char* filename){
-        multi_change_level_call_hook.call_target(g_additional_server_config.randomize_rotation
-            ? get_rand_level_filename() : filename);
-    }
 };
 
 void server_init()
@@ -788,9 +780,6 @@ void server_init()
 
     // Shuffle rotation when the last map in the list is loaded
     multi_level_init_injection.install();
-
-    // Handle the filename passed to multi_change_level at the end of a round (for randomize rotation)
-    multi_change_level_call_hook.install();
 }
 
 void server_do_frame()
