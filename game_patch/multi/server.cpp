@@ -318,11 +318,7 @@ static void send_private_message_with_stats(rf::Player* player)
 
 void shuffle_level_array()
 {
-    std::size_t n = rf::netgame.levels.size();
-    for (std::size_t i = n - 1; i > 0; --i) {
-        std::size_t j = dist(rng) % (i + 1);
-        std::swap(rf::netgame.levels[i], rf::netgame.levels[j]);
-    }
+    std::shuffle(rf::netgame.levels.begin(), rf::netgame.levels.end(), rng);
     xlog::info("Shuffled level rotation");
 }
 
