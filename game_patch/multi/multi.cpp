@@ -320,7 +320,8 @@ bool multi_is_weapon_fire_allowed_server_side(rf::Entity *ep, int weapon_type, b
     rf::Player* pp = rf::player_from_entity_handle(ep->handle);
     if (ep->ai.current_primary_weapon != weapon_type) {
         xlog::debug("Player {} attempted to fire unselected weapon {}", pp->name, weapon_type);
-        send_private_message_for_cancelled_shot(pp, "You attempted to fire an unselected weapon.");
+        // causes spam if player fires immediately when they die
+        //send_private_message_for_cancelled_shot(pp, "You attempted to fire an unselected weapon.");
     }
     else if (is_entity_out_of_ammo(ep, weapon_type, alt_fire)) {
         xlog::debug("Player {} attempted to fire weapon {} without ammunition", pp->name, weapon_type);
@@ -336,7 +337,9 @@ bool multi_is_weapon_fire_allowed_server_side(rf::Entity *ep, int weapon_type, b
     }
     else if (rf::entity_is_reloading(ep)) {
         xlog::debug("Player {} attempted to fire weapon {} while reloading it", pp->name, weapon_type);
-        send_private_message_for_cancelled_shot(pp, "You attempted to fire while reloading.");
+        // a bug causes shotgun shots to be cancelled shortly after reloading
+        // needs to be fixed but for right now reducing chat spam by removing the notification
+        //send_private_message_for_cancelled_shot(pp, "You attempted to fire while reloading.");
     }
     else if (!multi_check_cps(pp, weapon_type)) {
         return true;
