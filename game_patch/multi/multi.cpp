@@ -248,7 +248,7 @@ bool is_entity_out_of_ammo(rf::Entity *entity, int weapon_type, bool alt_fire)
 }
 void send_private_message_for_cancelled_shot(rf::Player* player, const std::string& reason)
 {
-    auto message = std::format("\xA6 Shot canceled! {}", reason);
+    auto message = std::format("\xA6 Shot canceled: {}", reason);
     send_chat_line_packet(message.c_str(), player);
 }
 
@@ -279,12 +279,12 @@ bool multi_is_player_firing_too_fast(rf::Player* pp, int weapon_type)
         );
     }
 
-    // Convert fire wait to CPS and apply a 10% buffer for auto weapons
-    float fire_wait_secs = fire_wait_ms / 1000.0f;
-    float max_cps =
-        (rf::weapon_is_semi_automatic(weapon_type)) ? 1.0f / fire_wait_secs : (1.0f / fire_wait_secs) * 1.1f;
-
-    float min_fire_wait = 1000.0f / max_cps; // Minimum time between shots in ms
+    // apply a 10% buffer for auto weapons
+    if (!rf::weapon_is_semi_automatic(weapon_type))
+    {
+        fire_wait_ms = static_cast<int>(fire_wait_ms * 0.9f); // 10% faster allowed
+        
+    }
 
     // reset if weapon changed
     if (last_weapon_id[player_id] != weapon_type) {
@@ -293,16 +293,18 @@ bool multi_is_player_firing_too_fast(rf::Player* pp, int weapon_type)
         last_weapon_id[player_id] = weapon_type;
     }
 
-    // check if the time since the last shot is less than the minimum wait time
-    if ((now - last_weapon_fire[player_id]) < min_fire_wait) {
-        float cps = 1000.0f / (now - last_weapon_fire[player_id]);
+ // Check if the time since the last shot is less than the minimum wait time
+        int time_since_last_shot = now - last_weapon_fire[player_id];
 
-        xlog::warn("Canceled fire request from player {} for weapon {}. They are shooting too fast: CPS {:.2f} is "
-                   "greater than allowed {:.2f}",
-                   pp->name, weapon_type, cps, max_cps);
+    if (time_since_last_shot < fire_wait_ms)
+        {
+            // xlog::warn("Canceled fire request from player {} for weapon {}. They are shooting too fast: Time since
+            // last shot {}ms is less than allowed {}ms",
+            //           pp->name, weapon_type, time_since_last_shot, fire_wait_ms);
 
         send_private_message_for_cancelled_shot(
-            pp, std::format("You are firing too fast! Your rate: {:.1f}, server maximum: {:.1f}", cps, max_cps));
+            pp, std::format("too fast! Time between shots: {}ms, server minimum: {}ms",
+                time_since_last_shot, fire_wait_ms));
 
         return true; // max rate exceeded, cancel fire request
     }
