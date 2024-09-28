@@ -26,6 +26,17 @@ struct HitSoundsConfig
     int rate_limit = 10;
 };
 
+struct CriticalHitsConfig
+{
+    bool enabled = false;
+    int sound_id = 35;
+    int sound_id_damaged = 55;
+    int rate_limit = 10;
+    float critical_modifier = 3.0f;
+    float base_chance = 0.1f;
+    bool dynamic_scale = false;
+};
+
 struct ServerAdditionalConfig
 {
     VoteConfig vote_kick;
@@ -38,6 +49,7 @@ struct ServerAdditionalConfig
     std::optional<float> spawn_life;
     std::optional<float> spawn_armor;
     HitSoundsConfig hit_sounds;
+    CriticalHitsConfig critical_hits;
     std::map<std::string, std::string> item_replacements;
     std::string default_player_weapon;
     std::optional<int> default_player_weapon_ammo;

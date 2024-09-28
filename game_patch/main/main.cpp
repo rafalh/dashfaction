@@ -78,6 +78,16 @@ CodeInjection cleanup_game_hook{
     },
 };
 
+std::mt19937 rng;
+std::uniform_int_distribution<std::size_t> dist;
+
+void initialize_random_generator()
+{
+    // seed rng with the current time
+    auto seed = std::chrono::steady_clock::now().time_since_epoch().count();
+    rng.seed(static_cast<unsigned long>(seed));
+}
+
 static void maybe_autosave()
 {
     static int pending_autosave = 0;
@@ -337,6 +347,9 @@ extern "C" DWORD __declspec(dllexport) Init([[maybe_unused]] void* unused)
     // Init logging and crash dump support first
     init_logging();
     init_crash_handler();
+
+    // Init random number generator
+    initialize_random_generator();
 
     // Enable Data Execution Prevention
     if (!SetProcessDEPPolicy(PROCESS_DEP_ENABLE))

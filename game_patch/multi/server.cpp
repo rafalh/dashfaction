@@ -96,6 +96,28 @@ void load_additional_server_config(rf::Parser& parser)
         }
     }
 
+    if (parser.parse_optional("$DF Critical Hits:")) {
+        g_additional_server_config.critical_hits.enabled = parser.parse_bool();
+        if (parser.parse_optional("+Attacker Sound ID:")) {
+            g_additional_server_config.critical_hits.sound_id = parser.parse_uint();
+        }
+        if (parser.parse_optional("+Victim Sound ID:")) {
+            g_additional_server_config.critical_hits.sound_id_damaged = parser.parse_uint();
+        }
+        if (parser.parse_optional("+Rate Limit:")) {
+            g_additional_server_config.critical_hits.rate_limit = parser.parse_uint();
+        }
+        if (parser.parse_optional("+Critical Damage Modifier:")) {
+            g_additional_server_config.critical_hits.critical_modifier = parser.parse_float();
+        }
+        if (parser.parse_optional("+Percent Chance:")) {
+            g_additional_server_config.critical_hits.base_chance = parser.parse_float();
+        }
+        if (parser.parse_optional("+Dynamic Chance:")) {
+            g_additional_server_config.critical_hits.dynamic_scale = parser.parse_bool();
+        }
+    }
+
     while (parser.parse_optional("$DF Item Replacement:")) {
         rf::String old_item;
         rf::String new_item;
@@ -389,6 +411,33 @@ void send_hit_sound_packet(rf::Player* target)
     rf::multi_io_send(target, &packet, sizeof(packet));
 }
 
+void send_critical_hit_packet(rf::Player* target, bool is_damaged_player)
+{
+    // rate limiting
+    int now = rf::timer_get(1000);
+    auto& pdata = get_player_additional_data(target);
+    if (now - pdata.last_critsound_sent_ms < 1000 / g_additional_server_config.critical_hits.rate_limit) {
+        return;
+    }
+    pdata.last_critsound_sent_ms = now;
+
+    // Send sound packet
+    RF_SoundPacket packet;
+    packet.header.type = RF_GPT_SOUND;
+    packet.header.size = sizeof(packet) - sizeof(packet.header);
+
+    if (is_damaged_player) {
+        packet.sound_id = g_additional_server_config.critical_hits.sound_id_damaged; // Use the damaged sound ID
+    }
+    else {
+        packet.sound_id = g_additional_server_config.critical_hits.sound_id; // Use the default sound ID
+    }
+
+    // FIXME: it does not work on RF 1.21
+    packet.pos.x = packet.pos.y = packet.pos.z = std::numeric_limits<float>::quiet_NaN();
+    rf::multi_io_send(target, &packet, sizeof(packet));
+}
+
 FunHook<float(rf::Entity*, float, int, int, int)> entity_damage_hook{
     0x0041A350,
     [](rf::Entity* damaged_ep, float damage, int killer_handle, int damage_type, int killer_uid) {
@@ -399,6 +448,45 @@ FunHook<float(rf::Entity*, float, int, int, int)> entity_damage_hook{
             damage *= g_additional_server_config.player_damage_modifier;
             if (damage == 0.0f) {
                 return 0.0f;
+            }
+        }
+
+        // Critical hit logic
+        if (g_additional_server_config.critical_hits.enabled) {
+            float base_chance = g_additional_server_config.critical_hits.base_chance;
+            float additional_chance = 0.0f;
+
+            // Check if dynamic scaling of critical chance is enabled
+            if (g_additional_server_config.critical_hits.dynamic_scale) {
+                // Get the current kill streak of the killer player
+                auto* killer_player_stats = static_cast<PlayerStatsNew*>(killer_player->stats);
+                int current_streak = killer_player_stats->current_streak;
+
+                // Dynamic scaling: For streaks of 6 or more, the additional chance is 0.1f
+                if (current_streak >= 6) {
+                    additional_chance = 0.1f;
+                }
+                else if (current_streak > 0) {
+                    // Gradually scale chance based on streak (optional, you can change this if needed)
+                    additional_chance = (0.1f / 6.0f) * current_streak;
+                }
+            }
+
+            // Final critical hit chance is base_chance + additional_chance
+            float critical_hit_chance = base_chance + additional_chance;
+
+            // Generate a random float between 0.0f and 1.0f
+            float random_value = static_cast<float>(dist(rng)) / static_cast<float>(dist.max());
+
+            // If the random value is less than critical_hit_chance, we have a critical hit
+            if (random_value < critical_hit_chance) {
+                // Scale the damage by the critical modifier
+                damage *= g_additional_server_config.critical_hits.critical_modifier;
+
+                send_critical_hit_packet(killer_player, 0);
+                send_critical_hit_packet(damaged_player, 1);
+                //auto message = std::format("\xA6 Critical hit!");
+                //send_chat_line_packet(message.c_str(), killer_player);
             }
         }
 
