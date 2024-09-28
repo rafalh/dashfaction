@@ -34,7 +34,7 @@ struct CriticalHitsConfig
     int rate_limit = 10;
     float critical_modifier = 3.0f;
     float base_chance = 0.1f;
-    bool dynamic_scale = false;
+    bool dynamic_scale = true;
 };
 
 struct ServerAdditionalConfig
