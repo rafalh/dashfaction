@@ -30,7 +30,7 @@ struct CriticalHitsConfig
 {
     bool enabled = false;
     int sound_id = 35;
-    int sound_id_damaged = 55;
+    int sound_id_damaged = 47;
     int rate_limit = 10;
     float critical_modifier = 3.0f;
     float base_chance = 0.1f;
