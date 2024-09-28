@@ -129,8 +129,8 @@ void load_additional_server_config(rf::Parser& parser)
         g_additional_server_config.anticheat_level = parser.parse_int();
     }
 
-    if (parser.parse_optional("$DF Semi Auto Click Rate Limit:")) {
-        g_additional_server_config.click_limiter_max_cps = parser.parse_float();
+    if (parser.parse_optional("$DF Semi Auto Minimum Fire Wait:")) {
+        g_additional_server_config.click_limiter_fire_wait = parser.parse_int();
     }
 
     if (parser.parse_optional("$DF Require Client Mod:")) {

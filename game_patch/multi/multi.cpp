@@ -246,73 +246,70 @@ bool is_entity_out_of_ammo(rf::Entity *entity, int weapon_type, bool alt_fire)
     auto clip_ammo = entity->ai.clip_ammo[weapon_type];
     return clip_ammo == 0;
 }
-
-std::pair<bool, float> multi_is_cps_above_limit(rf::Player* pp, float max_cps, int weapon_type)
-{
-    // don't consider melee weapons to be above max_cps
-    if (rf::weapon_is_melee(weapon_type)) {
-        return {false, 0.0f};
-    }
-    constexpr int num_samples = 4;
-    int player_id = pp->net_data->player_id;
-    static int last_weapon_id[rf::multi_max_player_id];         // Keep a record of last weapon used
-    static int last_weapon_fire[rf::multi_max_player_id][num_samples];
-    int now = rf::timer_get(1000);
-    // If the weapon has changed, zero out the saved array of timestamps. Avoids dropping legit fire packets based on cps from other weapon
-    if (last_weapon_id[player_id] != weapon_type) {
-        xlog::debug("Player %i swapped weapon to %i", player_id, weapon_type);
-        for (int i = 0; i < num_samples; ++i) {
-            last_weapon_fire[player_id][i] = 0;
-        }
-        last_weapon_id[player_id] = weapon_type; // Update the last weapon used
-    }
-    float avg_dt_secs = (now - last_weapon_fire[player_id][0]) / static_cast<float>(num_samples) / 1000.0f;
-    float cps = 1.0f / avg_dt_secs;
-    if (cps > max_cps) {
-        return {true, cps};
-    }
-    for (int i = 0; i < num_samples - 1; ++i) {
-        last_weapon_fire[player_id][i] = last_weapon_fire[player_id][i + 1];
-    }
-    last_weapon_fire[player_id][num_samples - 1] = now;
-    return {false, cps};
-}
-
-float multi_get_max_cps(int weapon_type)
-{
-    if (rf::weapon_is_semi_automatic(weapon_type)) {
-        // since semi-auto weapons can be fired as quickly as click input, limit max allowed rate to value set by server, default 20/sec
-        return g_additional_server_config.click_limiter_max_cps;
-    }
-    // for automatic weapons, using fire wait value in weapons.tbl is fine
-    // use min fire wait across both primary and alt fire to get around issues switching fire mode quickly
-    int fire_wait_ms = std::min(rf::weapon_get_fire_wait_ms(weapon_type, 0),rf::weapon_get_fire_wait_ms(weapon_type, 1));
-    float fire_wait_secs = fire_wait_ms / 1000.0f;
-    float fire_rate = 1.0f / fire_wait_secs;
-    // allow 10% more to make sure we do not skip any legit packets
-    xlog::debug("For fire request for weapon {}, max cps is {:.2f}", weapon_type, fire_rate*1.1f);
-    return fire_rate * 1.1f;
-}
-
 void send_private_message_for_cancelled_shot(rf::Player* player, const std::string& reason)
 {
     auto message = std::format("\xA6 Shot canceled! {}", reason);
     send_chat_line_packet(message.c_str(), player);
 }
 
-bool multi_check_cps(rf::Player* pp, int weapon_type)
+bool multi_is_player_firing_too_fast(rf::Player* pp, int weapon_type)
 {
-    float max_cps = multi_get_max_cps(weapon_type);
-    auto [above_limit, cps] = multi_is_cps_above_limit(pp, max_cps, weapon_type);
-    if (above_limit) {
-        xlog::info("Canceled fire request from player {} for weapon {}. They are shooting too fast: cps {:.2f} is greater than allowed {:.2f}",
-            pp->name, weapon_type, cps, max_cps);
-
-        // inform the player
-        send_private_message_for_cancelled_shot(pp, std::format("You are shooting too fast. Your fire rate: {:.1f}, server maximum: {:.1f}",
-            cps, max_cps));
+    // do not consider melee weapons for click limiter
+    if (rf::weapon_is_melee(weapon_type)) {
+        return false;
     }
-    return above_limit;
+
+    int player_id = pp->net_data->player_id;
+    int now = rf::timer_get(1000); // current time in milliseconds
+
+    static std::vector<int> last_weapon_id(rf::multi_max_player_id, 0);   // Track last weapon used per player
+    static std::vector<int> last_weapon_fire(rf::multi_max_player_id, 0); // Track last shot time per player
+
+    // Determine the fire wait in milliseconds based on weapon type
+    int fire_wait_ms = 0;
+
+    if (rf::weapon_is_semi_automatic(weapon_type)) {
+        // For semi-auto weapons, use the server's fire wait setting
+        fire_wait_ms = g_additional_server_config.click_limiter_fire_wait;
+    }
+    else {
+        // For automatic weapons, use the minimum fire wait in the weapons table
+        fire_wait_ms = std::min(rf::weapon_get_fire_wait_ms(weapon_type, 0), // Primary fire wait
+                                rf::weapon_get_fire_wait_ms(weapon_type, 1)  // Alternate fire wait
+        );
+    }
+
+    // Convert fire wait to CPS and apply a 10% buffer for auto weapons
+    float fire_wait_secs = fire_wait_ms / 1000.0f;
+    float max_cps =
+        (rf::weapon_is_semi_automatic(weapon_type)) ? 1.0f / fire_wait_secs : (1.0f / fire_wait_secs) * 1.1f;
+
+    float min_fire_wait = 1000.0f / max_cps; // Minimum time between shots in ms
+
+    // reset if weapon changed
+    if (last_weapon_id[player_id] != weapon_type) {
+        xlog::debug("Player {} swapped weapon to {}", player_id, weapon_type);
+        last_weapon_fire[player_id] = 0;
+        last_weapon_id[player_id] = weapon_type;
+    }
+
+    // check if the time since the last shot is less than the minimum wait time
+    if ((now - last_weapon_fire[player_id]) < min_fire_wait) {
+        float cps = 1000.0f / (now - last_weapon_fire[player_id]);
+
+        xlog::warn("Canceled fire request from player {} for weapon {}. They are shooting too fast: CPS {:.2f} is "
+                   "greater than allowed {:.2f}",
+                   pp->name, weapon_type, cps, max_cps);
+
+        send_private_message_for_cancelled_shot(
+            pp, std::format("You are firing too fast! Your rate: {:.1f}, server maximum: {:.1f}", cps, max_cps));
+
+        return true; // max rate exceeded, cancel fire request
+    }
+
+    // allow shot, update last fire timestamp
+    last_weapon_fire[player_id] = now;
+    return false; // Fire request is allowed
 }
 
 bool multi_is_weapon_fire_allowed_server_side(rf::Entity *ep, int weapon_type, bool alt_fire)
@@ -341,7 +338,7 @@ bool multi_is_weapon_fire_allowed_server_side(rf::Entity *ep, int weapon_type, b
         // needs to be fixed but for right now reducing chat spam by removing the notification
         //send_private_message_for_cancelled_shot(pp, "You attempted to fire while reloading.");
     }
-    else if (!multi_check_cps(pp, weapon_type)) {
+    else if (!multi_is_player_firing_too_fast(pp, weapon_type)) {
         return true;
     }
     return false;

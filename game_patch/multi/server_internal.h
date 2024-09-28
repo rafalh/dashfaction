@@ -48,7 +48,7 @@ struct ServerAdditionalConfig
     std::optional<int> force_player_character;
     std::optional<float> max_fov;
     int anticheat_level = 0;
-    float click_limiter_max_cps = 20.0f;
+    int click_limiter_fire_wait = 50;
     bool stats_message_enabled = true;
     std::string welcome_message;
     bool weapon_items_give_full_ammo = false;
