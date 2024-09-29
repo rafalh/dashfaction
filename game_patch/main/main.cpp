@@ -338,8 +338,7 @@ std::optional<DWORD> find_pid(std::string_view filename) {
         return std::nullopt;
     }
 
-    PROCESSENTRY32 process{};
-    process.dwSize = sizeof(process);
+    PROCESSENTRY32 process{.dwSize = sizeof(process)};
     if (!Process32First(snapshot, &process)) {
         return std::nullopt;
     }
@@ -355,22 +354,11 @@ std::optional<DWORD> find_pid(std::string_view filename) {
     return std::nullopt;
 }
 
-void freeze_flux() {
-    std::optional<DWORD> pid = find_pid("flux.exe"); 
-    if (!pid.has_value()) {
-        return;
-    }
-    HANDLE handle = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid.value());
-    if (!handle) {
-        return;
-    }
-    if (std::array<CHAR, MAX_PATH> path{}; 
-        GetModuleFileNameExA(handle, nullptr, path.data(), static_cast<DWORD>(path.size()))
-        && string_ends_with(path.data(), R"(AppData\Local\FluxSoftware\Flux\flux.exe)")) {
+void suspend_flux() {
+    if (std::optional<DWORD> pid = find_pid("flux.exe"); pid.has_value()) {
         DebugActiveProcess(pid.value());
         DebugSetProcessKillOnExit(FALSE);
     }
-    CloseHandle(handle);
 }
 
 extern "C" DWORD __declspec(dllexport) Init([[maybe_unused]] void* unused)
@@ -421,9 +409,9 @@ extern "C" DWORD __declspec(dllexport) Init([[maybe_unused]] void* unused)
 
     xlog::info("Installing hooks took {} ms", GetTickCount() - start_ticks);
 
-    // Freeze f.lux, so we are in control of gamma instead of f.lux.
+    // Suspend f.lux, so we are in control of gamma instead of f.lux.
     if (rf::is_client()) {
-        freeze_flux();
+        suspend_flux();
     }
 
     return 1; // success
