@@ -332,53 +332,44 @@ extern "C" void subhook_unk_opcode_handler(uint8_t* opcode)
     xlog::error("SubHook unknown opcode 0x{:x} at {}", *opcode, static_cast<void*>(opcode));
 }
 
-DWORD get_pid_by_filename(std::string_view filename) {
+std::optional<DWORD> find_pid(std::string_view filename) {
     HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (snapshot == INVALID_HANDLE_VALUE) {
-        return 0;
+        return std::nullopt;
     }
 
-    PROCESSENTRY32 process{sizeof(process)};
-    Process32First(snapshot, &process);
-
+    PROCESSENTRY32 process{};
+    process.dwSize = sizeof(process);
+    if (!Process32First(snapshot, &process)) {
+        return std::nullopt;
+    }
+    
     do {
         if (process.szExeFile == filename) {
             CloseHandle(snapshot);
-            return process.th32ProcessID;
+            return std::optional{process.th32ProcessID};
         }
     } while (Process32Next(snapshot, &process));
 
     CloseHandle(snapshot);
-    return 0;
+    return std::nullopt;
 }
 
-void suspend_process(DWORD pid) {
-    using _NtSuspendProcess = LONG NTAPI (IN HANDLE ProcessHandle);
-    _NtSuspendProcess* NtSuspendProcess = reinterpret_cast<_NtSuspendProcess*>(
-        GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtSuspendProcess")
-    );
-
-    if (!NtSuspendProcess) {
+void freeze_flux() {
+    std::optional<DWORD> pid = find_pid("flux.exe"); 
+    if (!pid.has_value()) {
         return;
     }
-
-    HANDLE handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
-    NtSuspendProcess(handle);
-    CloseHandle(handle);
-}
-
-void resume_process(DWORD pid) {
-    using _NtResumeProcess = LONG NTAPI (IN HANDLE ProcessHandle);
-    _NtResumeProcess* NtResumeProcess = reinterpret_cast<_NtResumeProcess*>(
-        GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtResumeProcess")
-    );
-
-    if (!NtResumeProcess) {
+    HANDLE handle = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid.value());
+    if (!handle) {
         return;
     }
-
-    HANDLE handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
-    NtResumeProcess(handle);
+    if (std::array<CHAR, MAX_PATH> path{}; 
+        GetModuleFileNameExA(handle, nullptr, path.data(), static_cast<DWORD>(path.size()))
+        && string_ends_with(path.data(), R"(AppData\Local\FluxSoftware\Flux\flux.exe)")) {
+        DebugActiveProcess(pid.value());
+        DebugSetProcessKillOnExit(FALSE);
+    }
     CloseHandle(handle);
 }
 
@@ -430,24 +421,9 @@ extern "C" DWORD __declspec(dllexport) Init([[maybe_unused]] void* unused)
 
     xlog::info("Installing hooks took {} ms", GetTickCount() - start_ticks);
 
-    // Suspend f.lux; otherwise f.lux will sometimes override calls to SetDeviceGammaRamp.
-    static DWORD flux_pid = get_pid_by_filename("flux.exe");
-    if (flux_pid && !rf::is_dedicated_server) {
-        HANDLE handle = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, flux_pid);
-
-        char flux_path[MAX_PATH];
-        if (GetModuleFileNameExA(handle, nullptr, flux_path, MAX_PATH) && 
-            string_contains(flux_path, R"(AppData\Local\FluxSoftware\Flux)")) {                   
-            // Required, if we crashed.
-            resume_process(flux_pid);
-
-            suspend_process(flux_pid);
-            std::atexit([] {
-                resume_process(flux_pid);
-            });
-        }
-
-        CloseHandle(handle);
+    // Freeze f.lux, so we are in control of gamma instead of f.lux.
+    if (rf::is_client()) {
+        freeze_flux();
     }
 
     return 1; // success
