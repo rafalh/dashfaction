@@ -1,7 +1,11 @@
 #pragma once
 
 #include <optional>
+#include <deque>
+#include <utility>
+#include "server_internal.h"
 #include "../rf/player/player.h"
+#include "../rf/os/timer.h"
 
 struct PlayerStatsNew : rf::PlayerLevelStats
 {
@@ -13,6 +17,7 @@ struct PlayerStatsNew : rf::PlayerLevelStats
     float num_shots_fired;
     float damage_received;
     float damage_given;
+    std::deque<std::pair<int, float>> damage_log; // track damage events during current life
 
     void inc_kills()
     {
@@ -25,6 +30,7 @@ struct PlayerStatsNew : rf::PlayerLevelStats
     {
         ++num_deaths;
         current_streak = 0;
+        damage_log.clear();
     }
 
     void add_shots_hit(float add)
@@ -47,6 +53,7 @@ struct PlayerStatsNew : rf::PlayerLevelStats
     void add_damage_given(float damage)
     {
         damage_given += damage;
+        update_damage_log(damage);
     }
 
     [[nodiscard]] float calc_accuracy() const
@@ -67,6 +74,33 @@ struct PlayerStatsNew : rf::PlayerLevelStats
         max_streak = 0;
         damage_received = 0;
         damage_given = 0;
+        damage_log.clear();
+    }
+
+    // track damage events during current life
+    void update_damage_log(float damage)
+    {
+        int current_time = rf::timer_get(1000);
+        damage_log.emplace_back(current_time, damage);
+
+        // Remove entries older than 20 seconds
+        /* while (!damage_log.empty() && (current_time - damage_log.front().first) > 20000) {
+            damage_log.pop_front();
+        }*/
+    }
+
+    // return total damage for the past X ms
+    [[nodiscard]] float get_recent_damage() const
+    {
+        float total_damage = 0.0f;
+        int current_time = rf::timer_get(1000);
+
+        for (const auto& entry : damage_log) {
+            if ((current_time - entry.first) <= g_additional_server_config.critical_hits.dynamic_history_ms) {
+                total_damage += entry.second;
+            }
+        }
+        return total_damage;
     }
 };
 

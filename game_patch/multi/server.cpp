@@ -110,11 +110,17 @@ void load_additional_server_config(rf::Parser& parser)
         if (parser.parse_optional("+Critical Damage Modifier:")) {
             g_additional_server_config.critical_hits.critical_modifier = parser.parse_float();
         }
-        if (parser.parse_optional("+Percent Chance:")) {
+        if (parser.parse_optional("+Base Chance Percent:")) {
             g_additional_server_config.critical_hits.base_chance = parser.parse_float();
         }
-        if (parser.parse_optional("+Dynamic Chance:")) {
+        if (parser.parse_optional("+Use Dynamic Chance Bonus:")) {
             g_additional_server_config.critical_hits.dynamic_scale = parser.parse_bool();
+        }
+        if (parser.parse_optional("+Dynamic Chance History:")) {
+            g_additional_server_config.critical_hits.dynamic_history_ms = parser.parse_int();
+        }
+        if (parser.parse_optional("+Dynamic Chance Damage Ceiling:")) {
+            g_additional_server_config.critical_hits.dynamic_damage_for_max_bonus = parser.parse_float();
         }
     }
 
@@ -451,42 +457,29 @@ FunHook<float(rf::Entity*, float, int, int, int)> entity_damage_hook{
             }
         }
 
-        // Critical hit logic
+        // Critical hits
         if (rf::is_server && g_additional_server_config.critical_hits.enabled && is_pvp_damage && damage > 0.0f) {
             float base_chance = g_additional_server_config.critical_hits.base_chance;
-            float additional_chance = 0.0f;
+            float bonus_chance = 0.0f;
 
-            // Check if dynamic scaling of critical chance is enabled
-            if (g_additional_server_config.critical_hits.dynamic_scale) {
-                // Get the current kill streak of the killer player
-                auto* killer_player_stats = static_cast<PlayerStatsNew*>(killer_player->stats);
-                int current_streak = killer_player_stats->current_streak;
+            float recent_damage =
+                static_cast<PlayerStatsNew*>(killer_player->stats)->get_recent_damage();
 
-                // Dynamic scaling: For streaks of 6 or more, the additional chance is 0.1f
-                if (current_streak >= 6) {
-                    additional_chance = 0.1f;
-                }
-                else if (current_streak > 0) {
-                    // Gradually scale chance based on streak (optional, you can change this if needed)
-                    additional_chance = (0.1f / 6.0f) * current_streak;
-                }
-            }
+            // if damage >= 1000, they get the full 10% bonus
+            bonus_chance = 0.1f * std::min(recent_damage /
+                g_additional_server_config.critical_hits.dynamic_damage_for_max_bonus, 1.0f);
 
-            // Final critical hit chance is base_chance + additional_chance
-            float critical_hit_chance = base_chance + additional_chance;
+            float critical_hit_chance = base_chance + bonus_chance;
+            xlog::debug("Critical hit chance: {:.2f}", critical_hit_chance);
 
-            // Generate a random float between 0.0f and 1.0f
+            // Check if the random roll is a critical hit
             float random_value = static_cast<float>(dist(rng)) / static_cast<float>(dist.max());
-
-            // If the random value is less than critical_hit_chance, we have a critical hit
             if (random_value < critical_hit_chance) {
-                // Scale the damage by the critical modifier
+                // Apply critical hit modifier
                 damage *= g_additional_server_config.critical_hits.critical_modifier;
-
+                xlog::debug("Crit! Dealt damage: {:.2f}", damage);
                 send_critical_hit_packet(killer_player, 0);
-                send_critical_hit_packet(damaged_player, 1);
-                //auto message = std::format("\xA6 Critical hit!");
-                //send_chat_line_packet(message.c_str(), killer_player);
+                //send_critical_hit_packet(damaged_player, 1); // inform damaged player
             }
         }
 

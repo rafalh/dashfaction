@@ -35,6 +35,8 @@ struct CriticalHitsConfig
     float critical_modifier = 3.0f;
     float base_chance = 0.1f;
     bool dynamic_scale = true;
+    int dynamic_history_ms = 20000;
+    float dynamic_damage_for_max_bonus = 1200.0f;
 };
 
 struct ServerAdditionalConfig
