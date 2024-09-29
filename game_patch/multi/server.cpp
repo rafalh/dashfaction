@@ -104,9 +104,9 @@ void load_additional_server_config(rf::Parser& parser)
         if (parser.parse_optional("+Rate Limit:")) {
             g_additional_server_config.critical_hits.rate_limit = parser.parse_uint();
         }
-        if (parser.parse_optional("+Critical Damage Modifier:")) {
-            g_additional_server_config.critical_hits.critical_modifier = parser.parse_float();
-        }
+        //if (parser.parse_optional("+Critical Damage Modifier:")) {
+        //    g_additional_server_config.critical_hits.critical_modifier = parser.parse_float();
+        //}
         if (parser.parse_optional("+Base Chance Percent:")) {
             g_additional_server_config.critical_hits.base_chance = parser.parse_float();
         }
@@ -468,10 +468,12 @@ FunHook<float(rf::Entity*, float, int, int, int)> entity_damage_hook{
             float random_value = static_cast<float>(dist(rng)) / static_cast<float>(dist.max());
             if (random_value < critical_hit_chance) {
                 // Apply critical hit modifier
-                damage *= g_additional_server_config.critical_hits.critical_modifier;
-                xlog::debug("Crit! Dealt damage: {:.2f}", damage);
+                //damage *= g_additional_server_config.critical_hits.critical_modifier;
+                damage *= (!rf::multi_powerup_has_player(killer_player, 1)) ? 4.0f : 1.0f; // hack, todo get amp bonus
+                //xlog::debug("Crit! Dealt damage: {:.2f}", damage);
+                rf::multi_powerup_add(killer_player, 1, 1500);
                 send_critical_hit_packet(killer_player);
-                //auto message = std::format("\xA6 You got a critcal shot on {}", damaged_player->name);
+                  //auto message = std::format("\xA6 You got a critcal shot on {}", damaged_player->name);
                 //send_chat_line_packet(message.c_str(), killer_player);
             }
         }
