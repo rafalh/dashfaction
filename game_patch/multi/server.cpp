@@ -462,7 +462,7 @@ FunHook<float(rf::Entity*, float, int, int, int)> entity_damage_hook{
                 1.0f);
 
             float critical_hit_chance = base_chance + bonus_chance;
-            xlog::warn("Critical hit chance: {:.2f}", critical_hit_chance);
+            xlog::debug("Critical hit chance: {:.2f}", critical_hit_chance);
 
             // check if the random roll is a critical hit
             float random_value = static_cast<float>(dist(rng)) / static_cast<float>(dist.max());
@@ -471,8 +471,8 @@ FunHook<float(rf::Entity*, float, int, int, int)> entity_damage_hook{
                 damage *= g_additional_server_config.critical_hits.critical_modifier;
                 xlog::debug("Crit! Dealt damage: {:.2f}", damage);
                 send_critical_hit_packet(killer_player);
-                auto message = std::format("\xA6 You got a critcal shot on {}", damaged_player->name);
-                send_chat_line_packet(message.c_str(), killer_player);
+                //auto message = std::format("\xA6 You got a critcal shot on {}", damaged_player->name);
+                //send_chat_line_packet(message.c_str(), killer_player);
             }
         }
 
