@@ -452,7 +452,7 @@ FunHook<float(rf::Entity*, float, int, int, int)> entity_damage_hook{
         }
 
         // Critical hit logic
-        if (g_additional_server_config.critical_hits.enabled) {
+        if (rf::is_server && g_additional_server_config.critical_hits.enabled && is_pvp_damage && damage > 0.0f) {
             float base_chance = g_additional_server_config.critical_hits.base_chance;
             float additional_chance = 0.0f;
 
