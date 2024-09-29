@@ -14,7 +14,6 @@
 #include <xlog/FileAppender.h>
 #include <xlog/Win32Appender.h>
 #include <xlog/xlog.h>
-#include <psapi.h> 
 #include <tlhelp32.h>
 #include "main.h"
 #include "../os/console.h"
