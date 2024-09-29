@@ -1,4 +1,5 @@
 #include "MiniDumpHelper.h"
+#include <format>
 
 #define CRASHHANDLER_ERR(msg) MessageBox(nullptr, TEXT(msg), 0, MB_ICONERROR | MB_OK | MB_SETFOREGROUND | MB_TASKMODAL)
 
@@ -75,9 +76,8 @@ bool MiniDumpHelper::write_dump(const char* path, PEXCEPTION_POINTERS exception_
                         nullptr);
 
     if (INVALID_HANDLE_VALUE == file) {
-        char buf[256];
-        sprintf(buf, "Error %lu! CreateFile failed when writing a Minidump.", GetLastError());
-        CRASHHANDLER_ERR(buf);
+        std::string s = std::format("Error {}! CreateFile failed when writing a Minidump.", GetLastError());
+        CRASHHANDLER_ERR(s.c_str());
         return false;
     }
 
@@ -119,27 +119,23 @@ bool MiniDumpHelper::write_dump(const char* path, PEXCEPTION_POINTERS exception_
     auto process_id = GetProcessId(process);
     BOOL result = m_MiniDumpWriteDump(process, process_id, file, dump_type, &exc_info, nullptr, callback_info_ptr);
     if (!result) {
-        char buf[256];
-        sprintf(buf, "MiniDumpWriteDump %lu %lu %p failed with error %lu", process_id, thread_id, file, GetLastError());
-        CRASHHANDLER_ERR(buf); // ERROR_INVALID_PARAMETER?
+        std::string s = std::format("MiniDumpWriteDump {} {} {} failed with error {}", process_id, thread_id, file, GetLastError());
+        CRASHHANDLER_ERR(s.c_str()); // ERROR_INVALID_PARAMETER?
     }
 
     CloseHandle(file);
     return result != FALSE;
 }
 
-MiniDumpHelper::MiniDumpHelper()
+MiniDumpHelper::MiniDumpHelper() :
+    m_dbghelp_lib{L"Dbghelp.dll"}
 {
-    m_dbghelp_lib = LoadLibraryW(L"Dbghelp.dll");
     if (m_dbghelp_lib) {
-        // Note: double cast is needed to fix cast-function-type GCC warning
-        m_MiniDumpWriteDump = reinterpret_cast<MiniDumpWriteDump_Type>(reinterpret_cast<void(*)()>(
-            GetProcAddress(m_dbghelp_lib, "MiniDumpWriteDump")));
+        m_MiniDumpWriteDump = m_dbghelp_lib.get_proc_address<MiniDumpWriteDump_Type>("MiniDumpWriteDump");
     }
 }
 
 MiniDumpHelper::~MiniDumpHelper()
 {
-    FreeLibrary(m_dbghelp_lib);
     m_MiniDumpWriteDump = nullptr;
 }

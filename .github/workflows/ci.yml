@@ -7,14 +7,17 @@ env:
 
 jobs:
   build-mingw:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
 
     steps:
 
     - name: Install packages
-      run: sudo apt-get install mingw-w64 ninja-build
+      run: |
+        sudo dpkg --add-architecture i386
+        sudo apt-get update
+        sudo apt-get install --no-install-recommends g++-mingw-w64-i686-posix ninja-build wine32 wine
 
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Create Build Environment
       run: cmake -E make_directory ${{github.workspace}}/build
@@ -23,15 +26,18 @@ jobs:
       working-directory: ${{github.workspace}}/build
       run: cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_TOOLCHAIN_FILE=../cmake/mingw-ubuntu.cmake
 
+    - name: Print nproc
+      run: nproc
+
     - name: Build
       working-directory: ${{github.workspace}}/build
-      run: cmake --build . --config $BUILD_TYPE -- -j2
+      run: cmake --build . -j $(nproc)
 
   build-msvc:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Create Build Environment
       run: cmake -E make_directory ${{github.workspace}}/build
@@ -39,11 +45,9 @@ jobs:
     - name: Configure CMake
       shell: cmd
       working-directory: ${{github.workspace}}/build
-      run: |
-        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
-        cmake .. -DCMAKE_BUILD_TYPE=%BUILD_TYPE% -A Win32
+      run: cmake .. -A Win32
 
     - name: Build
       shell: cmd
       working-directory: ${{github.workspace}}/build
-      run: cmake --build . --config %BUILD_TYPE%
+      run: cmake --build . --config %BUILD_TYPE% -j 4

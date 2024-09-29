@@ -30,8 +30,7 @@ public:
 
     void add_file(const char* path, const char* name_in_zip)
     {
-        zip_fileinfo zfi;
-        memset(&zfi, 0, sizeof(zfi));
+        zip_fileinfo zfi{};
         get_file_time(path, &zfi.tmz_date, &zfi.dosDate);
 
         int err = zipOpenNewFileInZip(m_zf, name_in_zip, &zfi, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_DEFAULT_COMPRESSION);
@@ -40,7 +39,7 @@ public:
 
         std::ifstream file(path, std::ios_base::in | std::ios_base::binary);
         if (!file)
-            THROW_EXCEPTION("cannot open %s", path);
+            THROW_EXCEPTION("cannot open {}", path);
 
         char buf[4096];
         while (!file.eof()) {
@@ -56,8 +55,7 @@ public:
 
     void add_file(const char* name_in_zip, std::string_view content)
     {
-        zip_fileinfo zfi;
-        memset(&zfi, 0, sizeof(zfi));
+        zip_fileinfo zfi{};
 
         int err = zipOpenNewFileInZip(m_zf, name_in_zip, &zfi, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_DEFAULT_COMPRESSION);
         if (err != ZIP_OK)

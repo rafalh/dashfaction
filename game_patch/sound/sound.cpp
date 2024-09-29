@@ -131,7 +131,7 @@ ConsoleCommand2 level_sounds_cmd{
             g_game_config.level_sound_volume = vol_scale;
             g_game_config.save();
         }
-        rf::console::printf("Level sound volume: %.1f", g_game_config.level_sound_volume.value());
+        rf::console::print("Level sound volume: {:.1f}", g_game_config.level_sound_volume.value());
     },
     "Sets level sounds volume scale",
     "levelsounds <volume>",
@@ -140,13 +140,13 @@ ConsoleCommand2 level_sounds_cmd{
 FunHook<int(int, int, float, float)> snd_play_hook{
     0x00505560,
     [](int handle, int group, float pan, float volume) {
-        xlog::trace("snd_play %d %d %.2f %.2f", handle, group, pan, volume);
+        xlog::trace("snd_play {} {} {:.2f} {:.2f}", handle, group, pan, volume);
 
         if (!rf::sound_enabled || handle < 0) {
             return -1;
         }
         if (rf::snd_load_hint(handle) != 0) {
-            xlog::warn("Failed to load sound %d", handle);
+            xlog::warn("Failed to load sound {}", handle);
             return -1;
         }
 
@@ -165,7 +165,7 @@ FunHook<int(int, int, float, float)> snd_play_hook{
         else {
             sig = rf::snd_pc_play(handle, vol_scale, pan, 0.0f, false);
         }
-        xlog::trace("snd_play handle %d vol %.2f sig %d", handle, vol_scale, sig);
+        xlog::trace("snd_play handle {} vol {:.2f} sig {}", handle, vol_scale, sig);
         if (sig < 0) {
             return -1;
         }
@@ -222,38 +222,45 @@ int snd_pc_play_3d_new(int handle, const rf::Vector3& pos, float vol_scale, bool
 FunHook<int(int, const rf::Vector3&, float, const rf::Vector3&, int)> snd_play_3d_hook{
     0x005056A0,
     [](int handle, const rf::Vector3& pos, float volume, const rf::Vector3&, int group) {
-        xlog::trace("snd_play_3d %d %.2f %d", handle, volume, group);
+        xlog::trace("snd_play_3d {} {:.2f} {}", handle, volume, group);
 
         if (!rf::sound_enabled || handle < 0) {
             return -1;
         }
         if (rf::snd_load_hint(handle) != 0) {
-            xlog::warn("Failed to load sound %d", handle);
+            xlog::warn("Failed to load sound {}", handle);
             return -1;
         }
 
-        float base_volume;
-        float pan;
-        rf::snd_calculate_2d_from_3d_info(handle, pos, &pan, &base_volume, volume);
-        float vol_scale = base_volume * rf::snd_group_volume[group];
+
         bool looping = rf::sounds[handle].is_looping;
         int instance_index = snd_get_free_instance();
         if (instance_index < 0) {
             return -1;
         }
 
+        float base_volume_2d;
+        float pan;
+        rf::snd_calculate_2d_from_3d_info(handle, pos, &pan, &base_volume_2d, volume);
+        // xlog::warn("snd_play_3d vol {:.2f}", vol_scale);
         auto& instance = rf::sound_instances[instance_index];
         int sig;
         if (rf::ds3d_enabled) {
+            // Note that snd_pc_play_3d_new calls snd_calculate_2d_from_3d_info on its own
+            // so use volume here instead of base_volume_2d
+            float vol_scale = volume * rf::snd_group_volume[group];
             sig = snd_pc_play_3d_new(handle, pos, vol_scale, looping);
         }
-        else if (looping) {
-            sig = rf::snd_pc_play_looping(handle, vol_scale, pan, 0.0f, true);
-        }
         else {
-            sig = rf::snd_pc_play(handle, vol_scale, pan, 0.0f, true);
+            float vol_scale = base_volume_2d * rf::snd_group_volume[group];
+            if (looping) {
+                sig = rf::snd_pc_play_looping(handle, vol_scale, pan, 0.0f, true);
+            }
+            else {
+                sig = rf::snd_pc_play(handle, vol_scale, pan, 0.0f, true);
+            }
         }
-        xlog::trace("snd_play_3d handle %d pos <%.2f %.2f %.2f> vol %.2f sig %d", handle, pos.x, pos.y, pos.z, vol_scale, sig);
+        xlog::trace("snd_play_3d handle {} pos <{:.2f} {:.2f} {:.2f}> vol {:.2f} sig {}", handle, pos.x, pos.y, pos.z, volume, sig);
         if (sig < 0) {
             return -1;
         }
@@ -261,7 +268,7 @@ FunHook<int(int, const rf::Vector3&, float, const rf::Vector3&, int)> snd_play_3
         instance.sig = sig;
         instance.handle = handle;
         instance.group = group;
-        instance.base_volume = base_volume;
+        instance.base_volume = base_volume_2d;
         instance.pan = pan;
         instance.is_3d_sound = true;
         instance.pos = pos;
@@ -344,6 +351,10 @@ void snd_update_ambient_sounds(const rf::Vector3& camera_pos)
                 // Update volume even for non-looping sounds unlike original code
                 float volume = rf::snd_pc_calc_volume_3d(ambient_snd.handle, ambient_snd.pos, vol_scale);
                 rf::snd_pc_set_volume(ambient_snd.sig, volume);
+                if (!rf::ds3d_enabled) {
+                    float pan = rf::snd_pc_calculate_pan(ambient_snd.pos);
+                    rf::snd_pc_set_pan(ambient_snd.sig, pan);
+                }
             }
             else if (ambient_snd.sig >= 0) {
                 rf::snd_pc_stop(ambient_snd.sig);
@@ -400,6 +411,35 @@ FunHook<void(const rf::Vector3&, const rf::Vector3&, const rf::Matrix3&)> snd_up
     },
 };
 
+FunHook<bool(const char*)> snd_pc_file_exists_hook{
+    0x00544680,
+    [](const char *filename) {
+        bool exists = snd_pc_file_exists_hook.call_target(filename);
+
+        if (!exists) {
+            // For some reason built-in maps often use spaces in place of sound filename (their way to disable a sound?)
+            // To reduce spam ignore space-only filenames and avoid logging the same filename multiple times in a row
+            bool has_only_spaces = std::string_view{filename}.find_first_not_of(" ") == std::string_view::npos;
+            static std::string last_file_not_found;
+            if (!has_only_spaces && filename != last_file_not_found) {
+                xlog::warn("Sound file not found: {}", filename);
+                last_file_not_found = filename;
+            }
+        }
+        return exists;
+    }
+};
+
+FunHook<int(const char*, float, float, float)> snd_get_handle_hook{
+    0x005054B0,
+    [](const char* filename, float min_range, float base_volume, float rolloff) {
+        if (!rf::sound_enabled) {
+            return -1;
+        }
+        return snd_get_handle_hook.call_target(filename, min_range, base_volume, rolloff);
+    },
+};
+
 void snd_ds_apply_patch();
 
 void apply_sound_patches()
@@ -444,6 +484,18 @@ void apply_sound_patches()
 
     // Apply patch for DirectSound specific code
     snd_ds_apply_patch();
+
+    // eax_ks_property_set should not call Release, since it is a weak pointer.
+    AsmWriter{0x00527EE0, 0x00527EE4}.nop();
+
+    // Change default volume to 0.5
+    write_mem<float>(0x00506192 + 1, 0.5f);
+
+    // Log when sound file cannot be found
+    snd_pc_file_exists_hook.install();
+
+    // Do not update sounds array in dedicated server mode
+    snd_get_handle_hook.install();
 }
 
 void register_sound_commands()

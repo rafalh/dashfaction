@@ -2,6 +2,7 @@
 #include <patch_common/FunHook.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/CodeInjection.h>
+#include <patch_common/AsmWriter.h>
 #include <xlog/xlog.h>
 #include <common/utils/list-utils.h>
 #include "../rf/clutter.h"
@@ -69,6 +70,9 @@ FunHook<void(rf::Monitor&)> monitor_update_static_hook{
     [](rf::Monitor& mon) {
         // No longer use render target texture
         ensure_monitor_bitmap_is_dynamic(mon);
+        // make sure alpha component in 32-bit formats is set to 255
+        rf::ubyte black[4] = {0, 0, 0, 255};
+        rf::ubyte white[4] = {255, 255, 255, 255};
         // Use custom noise generation algohritm because the default one is not uniform enough in high resolution
         rf::gr::LockInfo lock;
         if (rf::gr::lock(mon.user_bitmap, 0, &lock, rf::gr::LOCK_WRITE_ONLY)) {
@@ -76,9 +80,9 @@ FunHook<void(rf::Monitor&)> monitor_update_static_hook{
             for (int y = 0; y < lock.h; ++y) {
                 auto* ptr = lock.data + y * lock.stride_in_bytes;
                 for (int x = 0; x < lock.w; ++x) {
-                    bool white = generate_static_noise();
+                    bool is_white = generate_static_noise();
                     // support 32-bit textures
-                    std::memset(ptr, white ? 0xFF : 0, pixel_size);
+                    std::memcpy(ptr, is_white ? white : black, pixel_size);
                     ptr += pixel_size;
                 }
             }
@@ -125,7 +129,7 @@ CodeInjection monitor_update_from_camera_begin_render_to_texture{
     0x00412860,
     [](auto& regs) {
         rf::Monitor* mon = regs.edi;
-        gr_render_to_texture(mon->user_bitmap);
+        gr_set_render_target(mon->user_bitmap);
     },
 };
 
@@ -166,6 +170,7 @@ void monitor_do_patch()
 
     // Use render to texture approach for monitors
     monitor_update_from_camera_begin_render_to_texture.install();
+    AsmWriter{0x00412964}.nop(5);
 
     // Render held corpse in monitor
     render_corpse_in_monitor_patch.install();

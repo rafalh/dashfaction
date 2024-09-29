@@ -30,7 +30,7 @@ public:
                 m_process.terminate(1);
         }
         catch (const std::exception& e) {
-            xlog::error("%s", e.what());
+            xlog::error("{}", e.what());
         }
     }
 

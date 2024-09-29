@@ -25,6 +25,8 @@ namespace rf::gr
             this->blue = b;
             this->alpha = a;
         }
+
+        bool operator==(const Color& other) const = default;
     };
 
     struct BaseVertex
@@ -131,15 +133,7 @@ namespace rf::gr
             value((ts << ts_shift) | (cs << cs_shift) | (as << as_shift) | (ab << ab_shift) | (zbt << zbt_shift) | (ft << ft_shift))
         {}
 
-        [[nodiscard]] bool operator==(const Mode& other) const
-        {
-            return value == other.value;
-        }
-
-        [[nodiscard]] bool operator!=(const Mode& other) const
-        {
-            return value != other.value;
-        }
+        [[nodiscard]] bool operator==(const Mode& other) const = default;
 
         operator int() const
         {
@@ -251,7 +245,7 @@ namespace rf::gr
         float tint_g;
         float tint_b;
         bool sync_to_retrace;
-        float zbias;
+        int zbias;
         Depthbuffer depthbuffer_type;
     };
     static_assert(sizeof(Screen) == 0x90);
@@ -291,13 +285,20 @@ namespace rf::gr
     enum TMapperFlags
     {
         TMAP_FLAG_TEXTURED = 1,
+        TMAP_FLAG_TEXTURED_2 = 2,
         TMAP_FLAG_RGB = 4,
         TMAP_FLAG_ALPHA = 8,
+    };
+
+    enum VertexFlags
+    {
+        VF_PROJECTED = 1,
     };
 
     static auto& screen = addr_as_ref<Screen>(0x017C7BC0);
     static auto& gamma_ramp = addr_as_ref<uint32_t[256]>(0x017C7C68);
     static auto& default_wfar = addr_as_ref<float>(0x00596140);
+    static auto& gamma = addr_as_ref<float>(0x005A445C);
 
     static auto& bitmap_clamp_mode = addr_as_ref<Mode>(0x017756BC);
     static auto& rect_mode = addr_as_ref<Mode>(0x017756C0);
@@ -306,8 +307,16 @@ namespace rf::gr
 
     static auto& view_matrix = addr_as_ref<Matrix3>(0x018186C8);
     static auto& view_pos = addr_as_ref<Vector3>(0x01818690);
+    static auto& eye_pos = addr_as_ref<Vector3>(0x01818680);
+    static auto& eye_matrix = addr_as_ref<Matrix3>(0x01818A00);
     static auto& light_matrix = addr_as_ref<Matrix3>(0x01818A38);
     static auto& light_base = addr_as_ref<Vector3>(0x01818A28);
+    static auto& matrix_scale = addr_as_ref<Vector3>(0x01818B48);
+    static auto& one_over_matrix_scale_z = addr_as_ref<float>(0x01818A60);
+    static auto& projection_xadd = addr_as_ref<float>(0x01818B54);
+    static auto& projection_xmul = addr_as_ref<float>(0x01818B58);
+    static auto& projection_yadd = addr_as_ref<float>(0x01818B5C);
+    static auto& projection_ymul = addr_as_ref<float>(0x01818B60);
 
     static auto& screen_width = addr_as_ref<int()>(0x0050C640);
     static auto& screen_height = addr_as_ref<int()>(0x0050C650);
@@ -324,12 +333,21 @@ namespace rf::gr
     static auto& get_clip = addr_as_ref<void(int* x, int* y, int* w, int* h)>(0x0050CD80);
     static auto& reset_clip = addr_as_ref<void()>(0x0050CDD0);
     static auto& page_in = addr_as_ref<int(int bm_handle)>(0x0050CE00);
+    static auto& mark_texture_dirty = addr_as_ref<int(int bm_handle)>(0x0050D080);
     static auto& tcache_add_ref = addr_as_ref<void(int bm_handle)>(0x0050E850);
     static auto& tcache_remove_ref = addr_as_ref<void(int bm_handle)>(0x0050E870);
     static auto& close = addr_as_ref<void()>(0x0050CBE0);
+    static auto& set_gamma = addr_as_ref<void(float)>(0x0050CE70);
     static auto& set_texture = addr_as_ref<void (int bitmap_handle, int bitmap_handle2)>(0x0050D060);
     static auto& tmapper = addr_as_ref<void (int nv, Vertex **verts, TMapperFlags vertex_attributes, Mode mode)>(0x0050DF80);
     static auto& lighting_enabled = addr_as_ref<bool()>(0x004DB8B0);
+    static auto& cull_bounding_box = addr_as_ref<bool (const Vector3& mn, const Vector3& mx)>(0x00518750);
+    static auto& poly = addr_as_ref<bool (int num, Vertex **vertices, TMapperFlags vertex_attributes, Mode mode, bool constant_sw, float sw)>(0x005159A0);
+    static auto& rotate_vertex = addr_as_ref<ubyte (Vertex *vertex_out, const Vector3& vec_in)>(0x00518360);
+    static auto& world_poly = addr_as_ref<bool (int bm_handle, int n_verts, const Vector3* verts, const Vector2* uvs, Mode mode, const Color& color)>(0x00517110);
+    static auto& start_instance = addr_as_ref<void(const Vector3& pos, const Matrix3& orient)>(0x00517F00);
+    static auto& stop_instance = addr_as_ref<void()>(0x00517F20);
+    static auto& project_vertex = addr_as_ref<ubyte (Vertex *p)>(0x00518440);
 
     inline void set_color(ubyte r, ubyte g, ubyte b, ubyte a = screen.current_color.alpha)
     {
@@ -346,9 +364,14 @@ namespace rf::gr
         AddrCaller{0x0050D770}.c_call(x0, y0, x1, y1, mode);
     }
 
-    inline void rect(int x, int y, int cx, int cy, Mode mode = rect_mode)
+    inline void rect(int x, int y, int w, int h, Mode mode = rect_mode)
     {
-        AddrCaller{0x0050DBE0}.c_call(x, y, cx, cy, mode);
+        AddrCaller{0x0050DBE0}.c_call(x, y, w, h, mode);
+    }
+
+    inline void rect_border(int x, int y, int w, int h)
+    {
+        AddrCaller{0x0050DD80}.c_call(x, y, w, h);
     }
 
     inline void bitmap(int bm_handle, int x, int y, Mode mode = bitmap_wrap_mode)

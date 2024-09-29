@@ -6,7 +6,6 @@
 #include <functional>
 #include <stdexcept>
 #include <xlog/xlog.h>
-#include <common/utils/string-utils.h>
 #include "faction_files.h"
 
 static const char level_download_agent_name[] = "Dash Faction";
@@ -27,7 +26,7 @@ std::optional<FactionFilesClient::LevelInfo> FactionFilesClient::parse_level_inf
     std::getline(ss, temp);
     if (temp != "found") {
         if (temp != "notfound") {
-            xlog::warn("Invalid FactionFiles response: %s", buf);
+            xlog::warn("Invalid FactionFiles response: {}", buf);
         }
         // not found
         return {};
@@ -55,9 +54,9 @@ std::optional<FactionFilesClient::LevelInfo> FactionFilesClient::parse_level_inf
 
 std::optional<FactionFilesClient::LevelInfo> FactionFilesClient::find_map(const char* file_name)
 {
-    auto url = std::string{level_download_base_url} + "/findmap.php?rflName=" + encode_uri_component(file_name);
+    auto url = std::format("{}/findmap.php?rflName={}", level_download_base_url, encode_uri_component(file_name));
 
-    xlog::trace("Fetching level info: %s", file_name);
+    xlog::trace("Fetching level info: {}", file_name);
     HttpRequest req{url, "GET", session_};
     req.send();
 
@@ -68,7 +67,7 @@ std::optional<FactionFilesClient::LevelInfo> FactionFilesClient::find_map(const 
     }
 
     buf[num_bytes_read] = '\0';
-    xlog::debug("FactionFiles response: %s", buf);
+    xlog::debug("FactionFiles response: {}", buf);
 
     return parse_level_info(buf);
 }
@@ -76,13 +75,13 @@ std::optional<FactionFilesClient::LevelInfo> FactionFilesClient::find_map(const 
 void FactionFilesClient::download_map(const char* tmp_filename, int ticket_id,
     std::function<bool(unsigned bytes_received, std::chrono::milliseconds duration)> callback)
 {
-    auto url = string_format("%s/downloadmap.php?ticketid=%u", level_download_base_url, ticket_id);
+    auto url = std::format("{}/downloadmap.php?ticketid={}", level_download_base_url, ticket_id);
     HttpRequest req{url, "GET", session_};
     req.send();
 
     std::ofstream tmp_file(tmp_filename, std::ios_base::out | std::ios_base::binary);
     if (!tmp_file) {
-        xlog::error("Cannot open file: %s", tmp_filename);
+        xlog::error("Cannot open file: {}", tmp_filename);
         throw std::runtime_error("cannot open file");
     }
 

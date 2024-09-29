@@ -2,6 +2,7 @@
 #include <map>
 #include <set>
 #include <ctime>
+#include <format>
 #include "../rf/player/player.h"
 #include "../rf/multi.h"
 #include "../rf/gameseq.h"
@@ -22,6 +23,7 @@ private:
     bool reminder_sent = false;
     std::map<rf::Player*, bool> players_who_voted;
     std::set<rf::Player*> remaining_players;
+    rf::Player* owner;
 
 public:
     virtual ~Vote() = default;
@@ -31,6 +33,8 @@ public:
         if (!process_vote_arg(arg, source)) {
             return false;
         }
+
+        owner = source;
 
         send_vote_starting_msg(source);
 
@@ -81,7 +85,7 @@ public:
                 num_votes_no++;
             remaining_players.erase(source);
             players_who_voted.insert({source, is_yes_vote});
-            auto msg = string_format("\xA6 Vote status:  Yes: %d  No: %d  Waiting: %d", num_votes_yes, num_votes_no, remaining_players.size());
+            auto msg = std::format("\xA6 Vote status:  Yes: {}  No: {}  Waiting: {}", num_votes_yes, num_votes_no, remaining_players.size());
             send_chat_line_packet(msg.c_str(), nullptr);
             return check_for_early_vote_finish();
         }
@@ -106,6 +110,19 @@ public:
         return true;
     }
 
+    bool try_cancel_vote(rf::Player* source)
+    {
+        if (owner != source) {
+            send_chat_line_packet("You cannot cancel a vote you didn't start!", source);
+            return false;
+        }
+
+        send_chat_line_packet("\xA6 Vote canceled!", nullptr);
+        return true;
+    }
+
+
+
 protected:
     [[nodiscard]] virtual std::string get_title() const = 0;
     [[nodiscard]] virtual const VoteConfig& get_config() const = 0;
@@ -128,9 +145,9 @@ protected:
     void send_vote_starting_msg(rf::Player* source)
     {
         auto title = get_title();
-        auto msg = string_format(
+        auto msg = std::format(
             "\n=============== VOTE STARTING ===============\n"
-            "%s vote started by %s.\n"
+            "{} vote started by {}.\n"
             "Send message \"/vote yes\" or \"/vote no\" to participate.",
             title.c_str(), source->name.c_str());
         send_chat_line_packet(msg.c_str(), nullptr);
@@ -173,7 +190,7 @@ struct VoteKick : public Vote
 
     [[nodiscard]] std::string get_title() const override
     {
-        return string_format("KICK PLAYER '%s'", m_target_player->name.c_str());
+        return std::format("KICK PLAYER '{}'", m_target_player->name);
     }
 
     void on_accepted() override
@@ -228,7 +245,7 @@ struct VoteLevel : public Vote
 
     bool process_vote_arg([[maybe_unused]] std::string_view arg, rf::Player* source) override
     {
-        m_level_name = std::string{arg} + ".rfl";
+        m_level_name = std::format("{}.rfl", arg);
         if (!rf::get_file_checksum(m_level_name.c_str())) {
             send_chat_line_packet("Cannot find specified level!", source);
             return false;
@@ -238,7 +255,7 @@ struct VoteLevel : public Vote
 
     [[nodiscard]] std::string get_title() const override
     {
-        return string_format("LOAD LEVEL '%s'", m_level_name.c_str());
+        return std::format("LOAD LEVEL '{}'", m_level_name);
     }
 
     void on_accepted() override
@@ -391,6 +408,18 @@ public:
         }
     }
 
+    void try_cancel_vote(rf::Player* source)
+    {
+        if (!active_vote) {
+            send_chat_line_packet("No vote in progress!", source);
+            return;
+        }
+
+        if (active_vote.value()->try_cancel_vote(source)) {
+            active_vote.reset();
+        }
+    }
+
     void do_frame()
     {
         if (!active_vote)
@@ -408,6 +437,7 @@ void handle_vote_command(std::string_view vote_name, std::string_view vote_arg, 
 {
     if (get_player_additional_data(sender).is_browser) {
         send_chat_line_packet("Browsers are not allowed to vote!", sender);
+        return;
     }
     if (vote_name == "kick")
         g_vote_mgr.StartVote<VoteKick>(vote_arg, sender);
@@ -425,6 +455,8 @@ void handle_vote_command(std::string_view vote_name, std::string_view vote_arg, 
         g_vote_mgr.add_player_vote(true, sender);
     else if (vote_name == "no" || vote_name == "n")
         g_vote_mgr.add_player_vote(false, sender);
+    else if (vote_name == "cancel")
+        g_vote_mgr.try_cancel_vote(sender);
     else
         send_chat_line_packet("Unrecognized vote type!", sender);
 }

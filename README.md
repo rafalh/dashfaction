@@ -3,96 +3,107 @@ Dash Faction
 
 About
 -----
-Dash Faction is Red Faction game modification designed to fix original game bugs, improve compatibility with modern
-hardware and software, extend functionality and improve graphics quality and engine performance.
+Dash Faction is a Red Faction game modification designed to fix original game bugs, improve compatibility with modern
+hardware and software, extend functionality, and improve graphical quality and engine performance.
 
 Features:
-* levels auto-downloader (uses factionfiles.com just like Pure Faction)
-* spectate mode (first person or free camera)
-* wide-screen support
-* windowed and stretched display mode
-* better graphics quality (anti-aliasing, higher textures color depth, anisotropic filtering, higher scanner view and mirrors resolution, LOD models improvements and more)
-* improved security (enabled Data Execution Prevention, multiple Buffer Overflows fixes)
-* removed/raised multiple game limits
-* improved Scoreboard with Kills/Deaths column
-* information about killer's weapon in chat
-* option to disable level ambient sounds
-* ui.vpp cheats prevention
-* multiple fixes for high FPS (it is currently limited to 240), especially fix for the infamous sub exploding bug
-* country-specific edition support (properly handles game directory structure for German and French edition)
-* improved game performance
-* votes support for dedicated servers
-* hit-sounds support for dedicated servers
-* other usability and stability fixes
+* Multiplayer level auto-downloader (uses https://autodl.factionfiles.com just like Pure Faction)
+* Spectate mode (first person or free camera)
+* Widescreen support
+* Windowed and borderless display modes
+* Autosaving support for singleplayer
+* Better graphical quality (anti-aliasing, higher texture color depth, anisotropic filtering, higher scanner view and mirror resolutions, LOD model improvements and more)
+* Improved security (enabled Data Execution Prevention, multiple buffer overflow fixes)
+* Multiple game limits raised/removed
+* Improved scoreboard with Kills/Deaths column
+* Information about killer's weapon displayed in chat
+* Option to disable level ambient sounds
+* `ui.vpp` cheating prevention
+* Multiple fixes for high FPS (currently limited to 240), especially the infamous exploding submarine bug
+* Country-specific edition support (properly handles game directory structure for German and French editions)
+* Improved game performance
+* Voting support for dedicated servers
+* Hit-sound support for dedicated servers
+* Other usability and stability enhancements
 
-See [CHANGELOG file](docs/CHANGELOG.md) for a detailed list of all features.
+See the [CHANGELOG file](docs/CHANGELOG.md) for a detailed list of all features.
 
 You can also check out [examples of graphical improvements compared to the base game](docs/graphics_comparison).
 
-Client commands:
-* `maxfps value` - sets maximal FPS
-* `hud` - shows and hides HUD
-* `bighud` - toggles HUD between big and normal size
-* `spectate [player]` - starts spectate mode (first person or free camera)
-* `inputmode` - switches between default and DirectInput mouse input handling
-* `ms value` - mouse sensitivity
-* `vli` - toggles volumetric lightining
-* `fullscreen` - enters fullscreen mode
-* `windowed` - enters windowed mode
-* `antialiasing` - toggles anti-aliasting
-* `nearest_texture_filtering` - toggles nearest neighbor texture filtering
-* `damage_screen_flash` - toggles screen flash effect when player is getting hit
-* `mesh_static_lighting` - toggles static lighting for clutters and items
-* `reticle_scale scale` - sets reticle scale
-* `findlevel rfl_name_fragment` - finds level using rfl name fragment
-* `download_level rfl_name` - downloads level from FactionFiles.com
-* `linear_pitch` - toggles linear pitch angle
-* `skip_cutscene_bind control` - sets binding for cutscene skip action
-* `levelsounds` - sets volume scale for level ambient sounds
-* `swap_assault_rifle_controls` - swaps primary and alternate fire controls for Assault Rifle weapon
-* `show_enemy_bullets` - toggles visibility of enemy bullets in multiplayer
-* `kill_messages` - toggles printing of kill messages in the chatbox and the game console
-* `mute_all_players` - toggles processing of chat messages from other players
-* `mute_player` - toggles processing of chat messages from a specific player
+### Client commands
 
-Server commands:
-* `unban_last` - unbans last banned player
-* `map_ext` - extend round
-* `map_rest` - restart current level
-* `map_next` - load next level
-* `map_prev` - load previous level
-* `kill_limit value` - sets kill limit
-* `time_limit value` - sets time limit
-* `geomod_limit value` - sets geomod limit
-* `capture_limit value` - sets capture limit
+Name                          | Description
+----------------------------- | --------------------------------------------
+`. cmd_name_fragment`         | find a console variable or command
+`maxfps value`                | set maximal FPS
+`hud`                         | show and hides HUD
+`bighud`                      | toggle HUD between big and normal size
+`spectate [player]`           | start spectate mode (first person or free camera)
+`inputmode`                   | switch between default and DirectInput mouse input handling
+`ms value`                    | set mouse sensitivity
+`vli`                         | toggle volumetric lightining
+`fullscreen`                  | enter fullscreen mode
+`windowed`                    | enter windowed mode
+`antialiasing`                | toggle anti-aliasting
+`nearest_texture_filtering`   | toggle nearest neighbor texture filtering
+`damage_screen_flash`         | toggle screen flash effect when player is getting hit
+`mesh_static_lighting`        | toggle static lighting for clutters and items
+`reticle_scale scale`         | set reticle scale
+`findlevel rfl_name_fragment` | find level using rfl name fragment
+`download_level rfl_name`     | download level from FactionFiles.com
+`linear_pitch`                | toggle linear pitch angle
+`skip_cutscene_bind control`  | set binding for cutscene skip action
+`levelsounds`                 | set volume scale for level ambient sounds
+`swap_assault_rifle_controls` | swap primary and alternate fire controls for Assault Rifle weapon
+`swap_grenade_controls`       | swap primary and alternate fire controls for Grenades weapon
+`show_enemy_bullets`          | toggle visibility of enemy bullets in multiplayer
+`kill_messages`               | toggle printing of kill messages in the chatbox and the game console
+`mute_all_players`            | toggle processing of chat messages from other players
+`mute_player`                 | toggle processing of chat messages from a specific player
+`fps_counter`                 | toggle FPS counter
+`debug_event_msg`             | toggle tracking of event messages in console
+
+### Server commands
+
+Name                     | Description
+------------------------ | --------------------------------------------
+`unban_last`             | unban last banned player
+`map_ext`                | extend round
+`map_rest`               | restart current level
+`map_next`               | load next level
+`map_prev`               | load previous level
+`kill_limit value`       | set kill limit
+`time_limit value`       | set time limit
+`geomod_limit value`     | set geomod limit
+`capture_limit value`    | set capture limit
 
 Compatibility
 -------------
 Dash Faction is compatible with Red Faction 1.20 North America (NA).
 If your game version is 1.00 or 1.10 you have to update it to 1.20 first.
-If your edition is not NA or you are using Steam version, you have to replace RF.exe file with one from
-1.20 NA version (it can be found on FactionFiles.com). Launcher will ask you to do it if it detects
-unsupported EXE file. Dash Faction official installer does all required changes to the installation automatically.
+If your edition is not NA or you are using the Steam/GOG version, you have to replace RF.exe with one from the
+1.20 NA version (it can be found on https://www.factionfiles.com). The launcher will ask you to do it if it detects
+an unsupported executable. The Dash Faction installer does all required changes to the installation automatically.
 
 Supported operating systems: Windows 7 and newer.
 
-Dash Faction also works on Linux when launched through Wine. Latest Ubuntu LTS and latest version of vanilla Wine from stable branch is recommended.
+Dash Faction also works on Linux when launched through Wine. The latest Ubuntu LTS and vanilla Wine from the latest stable branch are recommended.
 
 Usage
 -----
-1. Unpack Dash Faction files to some folder (there is no requirement to put it in the Red Faction folder).
+1. Unpack the Dash Faction files to any folder (there is no requirement to put it in the Red Faction folder).
 
 2. Run `DashFactionLauncher.exe`.
 
-3. When running launcher for the first time select "Options" button and check if everything is OK (especially make sure
-   game executable path is valid).
+3. When running the launcher for the first time, select the "Options" button and adjust the settings to your preference. Make sure the
+   game executable path is valid.
 
-4. Close options and click "Launch Game" button to start Dash Faction.
+4. Close the options window and click the "Launch Game" button to start Dash Faction.
 
 Advanced usage
 --------------
-You can provide additional command line arguments to `DashFactionLauncher.exe` application. They are always forwarded
-to the Red Faction process. For example to start a dedicated server use `-dedicated` argument just like in the original
+You can provide additional command line arguments to the `DashFactionLauncher.exe` application, and they will be forwarded
+to the Red Faction process. For example, to start a dedicated server use the `-dedicated` argument just like in the original
 game.
 
 Dash Faction specific arguments:
@@ -100,25 +111,22 @@ Dash Faction specific arguments:
 * `-game` - launch the game immediately without displaying the launcher window
 * `-editor` - launch the level editor immediately without displaying the launcher window
 * `-win32-console` - use a native Win32 console in the dedicated server mode
-* `-exe-path` - override the launched executable file path (RF.exe or RED.exe) - useful for running multiple dedicated
-  servers using separate RF directories
+* `-exe-path` - override the launched executable file path (RF.exe or RED.exe) - useful for running multiple dedicated servers using separate RF directories
 
 Problems
 --------
-If your anti-virus software detects Dash Faction as a malicious program add it to a whitelist or try to disable
-reputation based heuristics in the anti-virus options. It can help because some anti-virus programs flags new
-not popular files as danger just because they are not popular among users.
-If you do not trust this Dash Faction author you can review its code and compile it yourself - keep in mind it is
+If your antivirus software detects Dash Faction as a malicious program, add it to a whitelist or try to disable
+reputation-based heuristics in the antivirus options. It may help as some antivirus programs flag new files as malicious just because they are not widely used.
+If you do not trust the author of Dash Faction, you can review its code and compile it yourself - keep in mind it is
 open-source software.
 
-During video capture in OBS please disable MSAA in Options - it does not perform well together.
+During video capture in OBS, please disable MSAA in Options - they do not perform well together.
 
-In case of problems you can ask for help on Faction Files Discord server (click Discord Support Channel button in
-launcher main window).
+If you experience any other problems, you can ask for help in the Faction Files Discord server at https://discord.gg/factionfiles.
 
 Additional server configuration
 -------------------------------
-Dedicated server specific settings are configured in `dedicated_server.txt` file.
+Dedicated server specific settings are configured in the `dedicated_server.txt` file.
 Dash Faction specific configuration must be placed below the level list (`$Level` keys) and must appear in the order
 provided in this description.
 
@@ -144,6 +152,10 @@ Configuration example:
     $DF Vote Previous: true
     // Duration of player invulnerability after respawn in ms (default is the same as in stock RF - 1500)
     $DF Spawn Protection Duration: 1500
+    // Initial player life (health) after spawn
+    $DF Spawn Health: 100
+    // Initial player armor after spawn
+    $DF Spawn Armor: 0
     // Enable hit-sounds
     $DF Hitsounds: true
         // Sound used for hit notification
@@ -152,7 +164,7 @@ Configuration example:
         +Rate Limit: 10
     // Replace all "Shotgun" items with "rail gun" items when loading RFLs
     $DF Item Replacement: "Shotgun" "rail gun"
-    // If enabled players are given full ammo when picking up weapon items, can be useful with Weapons Stay standard option
+    // If enabled players are given full ammo when picking up weapon items, can be useful with the Weapons Stay standard option
     $DF Weapon Items Give Full Ammo: false
     // Replace default player weapon class
     $DF Default Player Weapon: "rail_gun"
@@ -182,15 +194,32 @@ Configuration example:
     //$DF Send Player Stats Message: true
     // Send a chat message to players when they join the server ($PLAYER is replaced by player name)
     //$DF Welcome Message: "Hello $PLAYER!"
+    // Reward a player for a successful kill
+    $DF Kill Reward:
+    // Increase player health or armor if health is full (armor delta is halved)
+    +Effective Health: 0
+    // Increase player health
+    +Health: 0
+    // Increase player armor
+    +Armor: 0
+    // Limit health reward to 200 instead of 100
+    +Health Is Super:
+    // Limit armor reward to 200 instead of 100
+    +Armor Is Super:
 
+
+Building
+--------
+
+Information about building Dash Faction from source code can be found in [docs/BUILDING.md](docs/BUILDING.md).
 
 License
 -------
-Most of Dash Faction source code is licensed under Mozilla Public License 2.0. It is available in the GitHub repository.
+Most of the Dash Faction source code is licensed under Mozilla Public License 2.0. It is available in the GitHub repository.
 See [LICENSE.txt](LICENSE.txt).
 
-Only Pure Faction anti-cheat support code is not open source because it would make PF anti-cheat features basically useless.
-It consists of few files in *game_patch/purefaction* directory. It is going to be linked statically during a release process
-of Dash Faction by owner of the project.
+Only the Pure Faction anti-cheat support code is not open-sourced, because it would make PF anti-cheat features basically useless.
+It consists of a few files in the *game_patch/purefaction* directory. It is linked statically during a release process
+of Dash Faction by the owner of the project.
 
-Dash Faction uses some open source libraries. Their licenses can be found in *licenses* directory.
+Dash Faction uses some open-source libraries. Their licenses can be found in the *licenses* directory.

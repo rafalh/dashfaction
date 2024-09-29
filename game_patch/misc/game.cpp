@@ -1,4 +1,7 @@
 #include <windows.h>
+#include <ctime>
+#include <cstddef>
+#include <format>
 #include <patch_common/CodeInjection.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CallHook.h>
@@ -9,27 +12,74 @@
 #include "../rf/gr/gr.h"
 #include "../rf/ui.h"
 #include "../rf/gameseq.h"
+#include "../rf/level.h"
+#include "../rf/cutscene.h"
 #include "../multi/multi.h"
 
-const char screenshot_dir_name[] = "screenshots";
-static int screenshot_path_id = -1;
-static std::unique_ptr<byte* []> g_screenshot_scanlines_buf;
+static std::unique_ptr<std::byte* []> g_screenshot_scanlines_buf;
 
-void game_init_screenshot_dir()
+static std::optional<std::string> get_screenshots_dir()
 {
-    auto full_path = string_format("%s\\%s", rf::root_path, screenshot_dir_name);
+    auto full_path = std::format("{}\\screenshots", rf::root_path);
+    if (full_path.size() > rf::max_path_len - 20) {
+        xlog::error("Screenshots directory path is too long!");
+        return {};
+    }
     if (CreateDirectoryA(full_path.c_str(), nullptr))
         xlog::info("Created screenshots directory");
-    else if (GetLastError() != ERROR_ALREADY_EXISTS)
-        xlog::error("Failed to create screenshots directory %lu", GetLastError());
-    screenshot_path_id = rf::file_add_path(screenshot_dir_name, "", true);
+    else if (GetLastError() != ERROR_ALREADY_EXISTS) {
+        xlog::error("Failed to create screenshots directory {}", GetLastError());
+        return {};
+    }
+    return {full_path};
 }
 
-CodeInjection game_print_screen_injection{
+FunHook<void(char*)> game_print_screen_hook{
     0x004366E0,
-    []() {
-        if (screenshot_path_id == -1) {
-            game_init_screenshot_dir();
+    [](char *filename_used) {
+        static auto& pending_screenshot_filename = addr_as_ref<char[256]>(0x00636F14);
+        static auto& dump_tga = addr_as_ref<bool>(0x0063708C);
+        static auto& screenshot_pending = addr_as_ref<char>(0x00637085);
+
+        auto now = std::time(nullptr);
+        auto* tm = std::localtime(&now);
+        char time_str[32];
+        std::strftime(time_str, sizeof(time_str), "%Y%m%d_%H%M%S", tm);
+        auto level_filename = std::string{get_filename_without_ext(rf::level.filename.c_str())};
+        auto* dot_ext = dump_tga ? ".tga" : ".jpg";
+        auto screenshots_dir = get_screenshots_dir();
+        if (!screenshots_dir) {
+            return;
+        }
+        int counter = 1;
+        rf::File file;
+
+        while (true) {
+            if (counter == 1) {
+                // Don't include the counter here
+                std::snprintf(pending_screenshot_filename, sizeof(pending_screenshot_filename) - 4,
+                    "%s\\%s_%s", screenshots_dir.value().c_str(), time_str, level_filename.c_str());
+            } else {
+                // Filename conflict - include a counter
+                std::snprintf(pending_screenshot_filename, sizeof(pending_screenshot_filename) - 4,
+                    "%s\\%s_%d_%s", screenshots_dir.value().c_str(), time_str, counter, level_filename.c_str());
+            }
+            auto filename_with_ext = std::string{pending_screenshot_filename} + dot_ext;
+            bool exists = file.find(filename_with_ext.c_str());
+            if (!exists) {
+                break;
+            }
+            counter++;
+            if (counter == 1000) {
+                xlog::error("Cannot find a free filename for a screenshot");
+                return;
+            }
+        }
+
+        screenshot_pending = true;
+
+        if (filename_used) {
+            std::strcpy(filename_used, pending_screenshot_filename);
         }
     },
 };
@@ -37,7 +87,7 @@ CodeInjection game_print_screen_injection{
 CodeInjection jpeg_write_bitmap_overflow_fix1{
     0x0055A066,
     [](auto& regs) {
-        g_screenshot_scanlines_buf = std::make_unique<byte* []>(rf::gr::screen.max_h);
+        g_screenshot_scanlines_buf = std::make_unique<std::byte* []>(rf::gr::screen.max_h);
         regs.ecx = g_screenshot_scanlines_buf.get();
         regs.eip = 0x0055A06D;
     },
@@ -53,7 +103,7 @@ CodeInjection jpeg_write_bitmap_overflow_fix2{
 
 int bm_load_if_exists(const char* name, int unk, bool generate_mipmaps)
 {
-    if (rf::file_exists(name)) {
+    if (rf::File{}.find(name)) {
         return rf::bm::load(name, unk, generate_mipmaps);
     }
     return -1;
@@ -79,7 +129,7 @@ static ConsoleCommand2 screenshot_cmd{
 
         char buf[MAX_PATH];
         game_print_screen(buf);
-        rf::console::printf("Screenshot saved in %s", buf);
+        rf::console::print("Screenshot saved in {}", buf);
     },
 };
 
@@ -87,14 +137,14 @@ CodeInjection gameplay_render_frame_display_full_screen_image_injection{
     0x00432CAF,
     [](auto& regs) {
         // Change gr mode to one that uses alpha blending for Display_Fullscreen_Image event handling in
-        // gameplay_render_frame function
+        // gameplay_render_frame function. Also ignore current alpha (vertex color).
         static rf::gr::Mode mode{
             rf::gr::TEXTURE_SOURCE_WRAP,
             rf::gr::COLOR_SOURCE_TEXTURE,
-            rf::gr::ALPHA_SOURCE_VERTEX_TIMES_TEXTURE,
+            rf::gr::ALPHA_SOURCE_TEXTURE,
             rf::gr::ALPHA_BLEND_ALPHA,
             rf::gr::ZBUFFER_TYPE_NONE,
-            rf::gr::FOG_ALLOWED,
+            rf::gr::FOG_NOT_ALLOWED,
         };
         regs.edx = mode;
     },
@@ -116,11 +166,30 @@ static FunHook<void(rf::GameState, bool)> rf_do_state_hook{
     },
 };
 
+int letterbox_clip_height()
+{
+    // return std::min(9 * rf::gr::screen_width() / 16, rf::gr::screen_height() * 91 / 100);
+    return rf::gr::screen_height() * 3 / 4;
+}
+
+CodeInjection gameplay_render_frame_cutscene_letterbox_injection{
+    0x00431B30,
+    [](auto& regs) {
+        regs.esi = letterbox_clip_height();
+    },
+};
+
+CodeInjection gameplay_render_frame_death_letterbox_injection{
+    0x00432A82,
+    [](auto& regs) {
+        regs.edi = letterbox_clip_height();
+    },
+};
+
 void game_apply_patch()
 {
-    // Override screenshot directory
-    write_mem_ptr(0x004367CA + 2, &screenshot_path_id);
-    game_print_screen_injection.install();
+    // Override screenshot filename and directory
+    game_print_screen_hook.install();
 
     // Fix buffer overflow in screenshot to JPG conversion code
     jpeg_write_bitmap_overflow_fix1.install();
@@ -134,6 +203,10 @@ void game_apply_patch()
 
     // States support
     rf_do_state_hook.install();
+
+    // Adjust letterbox effects for wide screens
+    gameplay_render_frame_cutscene_letterbox_injection.install();
+    gameplay_render_frame_death_letterbox_injection.install();
 
     // Commands
     screenshot_cmd.register_cmd();

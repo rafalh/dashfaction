@@ -58,7 +58,7 @@ template<typename T, typename F>
 void console_auto_complete_print_suggestions(T& suggestions, F mapping_fun)
 {
     for (auto& item : suggestions) {
-        rf::console::printf("%s\n", mapping_fun(item));
+        rf::console::print("{}\n", mapping_fun(item));
     }
 }
 
@@ -175,9 +175,9 @@ void console_auto_complete_command(int offset)
     else if (matching_cmds.size() > 1) {
         for (auto* cmd : matching_cmds) {
             if (cmd->help)
-                rf::console::printf("%s - %s", cmd->name, cmd->help);
+                rf::console::print("{} - {}", cmd->name, cmd->help);
             else
-                rf::console::printf("%s", cmd->name);
+                rf::console::print("{}", cmd->name);
         }
         console_auto_complete_put_component(offset, common_prefix, false);
     }

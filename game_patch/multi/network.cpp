@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cassert>
 #include <cstring>
+#include <format>
 #include <functional>
 #include <thread>
 #include <winsock2.h>
@@ -12,13 +13,15 @@
 #include <common/config/BuildConfig.h>
 #include <common/rfproto.h>
 #include <common/version/version.h>
+#include <common/utils/enum-bitwise-operators.h>
+#include <common/utils/list-utils.h>
+#include <common/ComPtr.h>
 #include <xlog/xlog.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
 #include <patch_common/AsmWriter.h>
 #include <patch_common/ShortTypes.h>
-#include <patch_common/ComPtr.h>
 #include "multi.h"
 #include "server.h"
 #include "server_internal.h"
@@ -34,13 +37,10 @@
 #include "../rf/geometry.h"
 #include "../rf/level.h"
 #include "../misc/misc.h"
+#include "../misc/player.h"
 #include "../object/object.h"
-#include <common/utils/enum-bitwise-operators.h>
 #include "../os/console.h"
-
-#if MASK_AS_PF
 #include "../purefaction/pf.h"
-#endif
 
 // NET_IFINDEX_UNSPECIFIED is not defined in MinGW headers
 #ifndef NET_IFINDEX_UNSPECIFIED
@@ -275,11 +275,11 @@ CodeInjection process_game_packet_whitelist_filter{
             allowed = std::find(whitelist.begin(), whitelist.end(), packet_type) != whitelist.end();
         }
         if (!allowed) {
-            xlog::warn("Ignoring packet 0x%X", packet_type);
+            xlog::warn("Ignoring packet 0x{:x}", packet_type);
             regs.eip = 0x00479194;
         }
         else {
-            xlog::trace("Processing packet 0x%X", packet_type);
+            xlog::trace("Processing packet 0x{:x}", packet_type);
         }
     },
 };
@@ -317,7 +317,7 @@ FunHook<MultiIoPacketHandler> process_join_deny_packet_hook{
 FunHook<MultiIoPacketHandler> process_new_player_packet_hook{
     0x0047A580,
     [](char* data, const rf::NetAddr& addr) {
-        if (GetForegroundWindow() != rf::main_wnd)
+        if (GetForegroundWindow() != rf::main_wnd && g_game_config.player_join_beep)
             Beep(750, 300);
         process_new_player_packet_hook.call_target(data, addr);
     },
@@ -335,10 +335,11 @@ static void verify_player_id_in_packet(char* player_id_ptr, const rf::NetAddr& a
         assert(false);
         return;
     }
+    rf::ubyte received_player_id = static_cast<rf::ubyte>(*player_id_ptr);
     rf::ubyte real_player_id = src_player->net_data->player_id;
-    if (static_cast<rf::ubyte>(*player_id_ptr) != real_player_id) {
-        xlog::warn("Wrong player ID in %s packet from %s (expected %02X but got %02X)",
-            packet_name, src_player->name.c_str(), real_player_id, *player_id_ptr);
+    if (received_player_id != real_player_id) {
+        xlog::warn("Wrong player ID in {} packet from {} (expected {:02X} but got {:02X})",
+            packet_name, src_player->name.c_str(), real_player_id, received_player_id);
         *player_id_ptr = real_player_id; // fix player ID
     }
 }
@@ -438,7 +439,7 @@ FunHook<MultiIoPacketHandler> process_reload_packet_hook{
                 rf::weapon_types[weapon_type].clip_size = clip_ammo;
             if (rf::weapon_types[weapon_type].max_ammo < ammo)
                 rf::weapon_types[weapon_type].max_ammo = ammo;
-            xlog::trace("process_reload_packet weapon_type %d clip_ammo %d ammo %d", weapon_type, clip_ammo, ammo);
+            xlog::trace("process_reload_packet weapon_type {} clip_ammo {} ammo {}", weapon_type, clip_ammo, ammo);
 
             // Call original handler
             process_reload_packet_hook.call_target(data, addr);
@@ -473,12 +474,12 @@ CodeInjection process_obj_update_check_flags_injection{
             if (rf::is_server) {
                 // server-side
                 if (ep && ep->handle != pp->entity_handle) {
-                    xlog::trace("Invalid obj_update entity %x %x %s", ep->handle, pp->entity_handle,
+                    xlog::trace("Invalid obj_update entity {:x} {:x} {}", ep->handle, pp->entity_handle,
                         pp->name.c_str());
                     valid = false;
                 }
                 else if (flags & (0x4 | 0x20 | 0x80)) { // OUF_WEAPON_TYPE | OUF_HEALTH_ARMOR | OUF_ARMOR_STATE
-                    xlog::info("Invalid obj_update flags %x", flags);
+                    xlog::info("Invalid obj_update flags {:x}", flags);
                     valid = false;
                 }
             }
@@ -708,12 +709,12 @@ CodeInjection process_join_accept_injection{
         DashFactionJoinAcceptPacketExt ext_data;
         std::copy(packet + ext_offset, packet + ext_offset + sizeof(DashFactionJoinAcceptPacketExt),
             reinterpret_cast<std::byte*>(&ext_data));
-        xlog::debug("Checking for join_accept DF extension: %08X", ext_data.df_signature);
+        xlog::debug("Checking for join_accept DF extension: {:08X}", ext_data.df_signature);
         if (ext_data.df_signature == DASH_FACTION_SIGNATURE) {
             DashFactionServerInfo server_info;
             server_info.version_major = ext_data.version_major;
             server_info.version_minor = ext_data.version_minor;
-            xlog::debug("Got DF server info: %d %d %d", ext_data.version_major, ext_data.version_minor,
+            xlog::debug("Got DF server info: {} {} {}", ext_data.version_major, ext_data.version_minor,
                 static_cast<int>(ext_data.flags));
             server_info.saving_enabled = !!(ext_data.flags & DashFactionJoinAcceptPacketExt::Flags::saving_enabled);
 
@@ -735,7 +736,7 @@ CodeInjection process_join_accept_send_game_info_req_injection{
         // Force game_info update in case we were joining using protocol handler (server list not fully refreshed) or
         // using old fav entry with outdated name
         rf::NetAddr* server_addr = regs.edi;
-        xlog::trace("Sending game_info_req to %x:%d", server_addr->ip_addr, server_addr->port);
+        xlog::trace("Sending game_info_req to {:x}:{}", server_addr->ip_addr, server_addr->port);
         rf::send_game_info_req_packet(*server_addr);
     },
 };
@@ -758,7 +759,7 @@ std::optional<std::string> determine_local_ip_address()
         auto& row = forward_table->table[i];
         if (row.dwForwardDest == 0) {
             // Default route to gateway
-            xlog::debug("Found default route: IfIndex %lu", row.dwForwardIfIndex);
+            xlog::debug("Found default route: IfIndex {}", row.dwForwardIfIndex);
             default_route_if_index = row.dwForwardIfIndex;
             break;
         }
@@ -781,38 +782,38 @@ std::optional<std::string> determine_local_ip_address()
     for (unsigned i = 0; i < ip_table->dwNumEntries; ++i) {
         auto& row = ip_table->table[i];
         auto* addr_bytes = reinterpret_cast<uint8_t*>(&row.dwAddr);
-        auto addr_str = string_format("%d.%d.%d.%d", addr_bytes[0], addr_bytes[1], addr_bytes[2], addr_bytes[3]);
-        xlog::debug("IpAddrTable: dwIndex %lu dwAddr %s", row.dwIndex, addr_str.c_str());
+        auto addr_str = std::format("{}.{}.{}.{}", addr_bytes[0], addr_bytes[1], addr_bytes[2], addr_bytes[3]);
+        xlog::debug("IpAddrTable: dwIndex {} dwAddr {}", row.dwIndex, addr_str);
         if (row.dwIndex == default_route_if_index) {
             return {addr_str};
         }
     }
-    xlog::debug("Interface %lu not found", default_route_if_index);
+    xlog::debug("Interface {} not found", default_route_if_index);
     return {};
 }
 
 bool try_to_auto_forward_port(int port)
 {
     xlog::Logger log{"UPnP"};
-    log.info("Configuring UPnP port forwarding (port %d)", port);
+    log.info("Configuring UPnP port forwarding (port {})", port);
 
     auto local_ip_addr_opt = determine_local_ip_address();
     if (!local_ip_addr_opt) {
         log.warn("Cannot determine local IP address");
         return false;
     }
-    log.info("Local IP address: %s", local_ip_addr_opt.value().c_str());
+    log.info("Local IP address: {}", local_ip_addr_opt.value().c_str());
 
     HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
     if (FAILED(hr)) {
-        log.warn("CoInitializeEx failed: hr %lx", hr);
+        log.warn("CoInitializeEx failed: hr {:x}", hr);
         return false;
     }
 
     ComPtr<IUPnPNAT> nat;
     hr = CoCreateInstance(__uuidof(UPnPNAT), nullptr, CLSCTX_ALL, __uuidof(IUPnPNAT), reinterpret_cast<void**>(&nat));
     if (FAILED(hr)) {
-        log.warn("CoCreateInstance IUPnPNAT failed: hr %lx", hr);
+        log.warn("CoCreateInstance IUPnPNAT failed: hr {:x}", hr);
         return false;
     }
 
@@ -821,7 +822,7 @@ bool try_to_auto_forward_port(int port)
     while (true) {
         hr = nat->get_StaticPortMappingCollection(&collection);
         if (FAILED(hr)) {
-            log.warn("IUPnPNAT::get_StaticPortMappingCollection failed: hr %lx", hr);
+            log.warn("IUPnPNAT::get_StaticPortMappingCollection failed: hr {:x}", hr);
             return false;
         }
         if (collection) {
@@ -831,14 +832,14 @@ bool try_to_auto_forward_port(int port)
         // get_StaticPortMappingCollection sometimes sets collection to nullptr and returns success
         // It may return a proper collecion pointer after few seconds. See UltraVNC code:
         // https://github.com/veyon/ultravnc/blob/master/uvnc_settings2/uvnc_settings/upnp.cpp
-        log.info("IUPnPNAT::get_StaticPortMappingCollection returned hr %lx, collection %p", hr, &*collection);
+        log.info("IUPnPNAT::get_StaticPortMappingCollection returned hr {:x}, collection {}", hr, static_cast<void*>(&*collection));
         ++attempt_num;
         if (attempt_num == 10) {
             return false;
         }
         Sleep(1000);
     }
-    log.info("Got NAT port mapping table after %d tries", attempt_num);
+    log.info("Got NAT port mapping table after {} tries", attempt_num);
 
     wchar_t ip_addr_wide_str[256];
     mbstowcs(ip_addr_wide_str, local_ip_addr_opt.value().c_str(), std::size(ip_addr_wide_str));
@@ -851,10 +852,10 @@ bool try_to_auto_forward_port(int port)
     SysFreeString(desc);
     SysFreeString(internal_client);
     if (FAILED(hr)) {
-        log.warn("IStaticPortMappingCollection::Add failed: hr %lx", hr);
+        log.warn("IStaticPortMappingCollection::Add failed: hr {:x}", hr);
         return false;
     }
-    log.info("Successfully added UPnP port forwarding (port %d)", port);
+    log.info("Successfully added UPnP port forwarding (port {})", port);
     return true;
 }
 
@@ -900,6 +901,9 @@ const std::optional<DashFactionServerInfo>& get_df_server_info()
 
 void send_chat_line_packet(const char* msg, rf::Player* target, rf::Player* sender, bool is_team_msg)
 {
+    if (!rf::is_server && sender == nullptr) {
+        sender = rf::local_player;
+    }
     rf::ubyte buf[512];
     RF_ChatLinePacket packet;
     packet.header.type = RF_GPT_CHAT_LINE;
@@ -912,7 +916,7 @@ void send_chat_line_packet(const char* msg, rf::Player* target, rf::Player* send
     packet_msg[255] = 0;
     if (target == nullptr && rf::is_server) {
         rf::multi_io_send_reliable_to_all(buf, packet.header.size + sizeof(packet.header), 0);
-        rf::console::printf("Server: %s", msg);
+        rf::console::print("Server: {}", msg);
     }
     else {
         rf::multi_io_send_reliable(target, buf, packet.header.size + sizeof(packet.header), 0);
@@ -954,7 +958,7 @@ ConsoleCommand2 update_rate_cmd{
                 g_update_rate = std::clamp(update_rate.value(), 20, 60);
             }
         }
-        rf::console::printf("Update rate per second: %d", g_update_rate);
+        rf::console::print("Update rate per second: {}", g_update_rate);
     },
 };
 
@@ -988,9 +992,7 @@ CodeInjection send_state_info_injection{
     [](auto& regs) {
         rf::Player* player = regs.edi;
         trigger_send_state_info(player);
-#if MASK_AS_PF
         pf_player_level_load(player);
-#endif
     },
 };
 
@@ -998,9 +1000,7 @@ FunHook<void(rf::Player*)> send_players_packet_hook{
     0x00481C70,
     [](rf::Player *player) {
         send_players_packet_hook.call_target(player);
-#if MASK_AS_PF
         pf_player_init(player);
-#endif
         if (rf::is_server) {
             server_reliable_socket_ready(player);
         }
@@ -1019,11 +1019,10 @@ void __fastcall multi_io_stats_add_new(void *this_, int edx, int size, bool is_s
 
 FunHook<void __fastcall(void*, int, int, bool, int)> multi_io_stats_add_hook{0x0047CAC0, multi_io_stats_add_new};
 
-static void process_custom_packet(void* data, int len, const rf::NetAddr& addr, rf::Player* player)
+static void process_custom_packet([[maybe_unused]] void* data, [[maybe_unused]] int len,
+                                  [[maybe_unused]] const rf::NetAddr& addr, [[maybe_unused]] rf::Player* player)
 {
-#if MASK_AS_PF
     pf_process_packet(data, len, addr, player);
-#endif
 }
 
 CodeInjection multi_io_process_packets_injection{
@@ -1046,11 +1045,9 @@ CodeInjection multi_io_process_packets_injection{
 CallHook<void(const void*, size_t, const rf::NetAddr&, rf::Player*)> process_unreliable_game_packets_hook{
     0x00479244,
     [](const void* data, size_t len, const rf::NetAddr& addr, rf::Player* player) {
-#if MASK_AS_PF
         if (pf_process_raw_unreliable_packet(data, len, addr)) {
             return;
         }
-#endif
         rf::multi_io_process_packets(data, len, addr, player);
     },
 };
@@ -1060,6 +1057,19 @@ CodeInjection net_rel_work_injection{
     [](auto& regs) {
         // Clear rsocket variable before processing next packet
         regs.ebp = 0;
+    },
+};
+
+CallHook<int()> game_info_num_players_hook{
+    0x0047B141,
+    []() {
+        int player_count = 0;
+        auto player_list = SinglyLinkedList{rf::player_list};
+        for (auto& current_player : player_list) {
+            if (get_player_additional_data(&current_player).is_browser) continue;
+            player_count++;
+        }
+        return player_count;
     },
 };
 
@@ -1212,4 +1222,7 @@ void network_init()
     // Fixes players randomly losing connection to the server when some player sends double left game packets
     // when leaving because of missing level file
     net_rel_work_injection.install();
+
+    // Ignore browsers when calculating player count for info requests
+    game_info_num_players_hook.install();
 }

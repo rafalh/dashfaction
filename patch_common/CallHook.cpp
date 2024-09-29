@@ -11,7 +11,7 @@ void CallHookImpl::install()
         for (auto addr : m_call_op_addr_vec) {
             uint8_t opcode = *reinterpret_cast<uint8_t*>(addr);
             if (opcode != asm_opcodes::call_rel_long) {
-                xlog::error("not a call at 0x%X", addr);
+                xlog::error("not a call at 0x{:x}", addr);
                 return;
             }
 
@@ -22,7 +22,7 @@ void CallHookImpl::install()
                 m_target_fun_ptr = call_addr;
             }
             else if (call_addr != m_target_fun_ptr) {
-                xlog::error("call target function differs at 0x%X", addr);
+                xlog::error("call target function differs at 0x{:x}", addr);
             }
 
             intptr_t new_offset = reinterpret_cast<intptr_t>(m_hook_fun_ptr) - addr - call_op_size;

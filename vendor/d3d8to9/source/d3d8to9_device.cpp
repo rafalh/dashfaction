@@ -49,9 +49,20 @@ ULONG STDMETHODCALLTYPE Direct3DDevice8::AddRef()
 {
 	return ProxyInterface->AddRef();
 }
+
 ULONG STDMETHODCALLTYPE Direct3DDevice8::Release()
 {
 	ULONG LastRefCount = ProxyInterface->Release();
+
+	// Shaders are destroyed alongside the device that created them in D3D8 but not in D3D9
+	// so we Release all the shaders when the device releases to mirror that behaviour
+	if (LastRefCount !=0 && LastRefCount == (VertexShaderAndDeclarationCount + PixelShaderHandles.size()))
+	{
+		ProxyInterface->AddRef();
+		ReleaseShaders();
+		LastRefCount = ProxyInterface->Release();
+		assert(LastRefCount == 0);
+	}
 
 	if (LastRefCount == 0)
 		delete this;
@@ -661,7 +672,22 @@ HRESULT STDMETHODCALLTYPE Direct3DDevice8::GetMaterial(D3DMATERIAL8 *pMaterial)
 }
 HRESULT STDMETHODCALLTYPE Direct3DDevice8::SetLight(DWORD Index, const D3DLIGHT8 *pLight)
 {
-	return ProxyInterface->SetLight(Index, pLight);
+	if (pLight == nullptr)
+		return D3DERR_INVALIDCALL;
+
+	D3DLIGHT8 Light = *pLight;
+
+	// Make spot light work more like it did in Direct3D 8
+	if (Light.Type == D3DLIGHTTYPE::D3DLIGHT_SPOT)
+	{
+		// Theta must be in the range from 0 through the value specified by Phi
+		if (Light.Theta <= Light.Phi)
+		{
+			Light.Theta /= 1.75f;
+		}
+	}
+
+	return ProxyInterface->SetLight(Index, &Light);
 }
 HRESULT STDMETHODCALLTYPE Direct3DDevice8::GetLight(DWORD Index, D3DLIGHT8 *pLight)
 {
@@ -713,7 +739,7 @@ HRESULT STDMETHODCALLTYPE Direct3DDevice8::SetRenderState(D3DRENDERSTATETYPE Sta
 		return hr;
 	case D3DRS_ZBIAS:
 		Biased = static_cast<FLOAT>(Value) * -0.000005f;
-		memcpy(&Value, &Biased, sizeof(Value));
+		Value = *reinterpret_cast<const DWORD *>(&Biased);
 		State = D3DRS_DEPTHBIAS;
 	default:
 		return ProxyInterface->SetRenderState(State, Value);
@@ -738,7 +764,7 @@ HRESULT STDMETHODCALLTYPE Direct3DDevice8::GetRenderState(D3DRENDERSTATETYPE Sta
 		return ProxyInterface->GetRenderState(D3DRS_ANTIALIASEDLINEENABLE, pValue);
 	case D3DRS_ZBIAS:
 		hr = ProxyInterface->GetRenderState(D3DRS_DEPTHBIAS, pValue);
-		*pValue = static_cast<DWORD>(*reinterpret_cast<const FLOAT *>(pValue) * -500000.0f);
+		*pValue = static_cast<DWORD>(*reinterpret_cast<const FLOAT*>(pValue) * -200000.0f);
 		return hr;
 	case D3DRS_SOFTWAREVERTEXPROCESSING:
 		*pValue = ProxyInterface->GetSoftwareVertexProcessing();
@@ -908,6 +934,8 @@ HRESULT STDMETHODCALLTYPE Direct3DDevice8::SetTextureStageState(DWORD Stage, D3D
 	case D3DTSS_BORDERCOLOR:
 		return ProxyInterface->SetSamplerState(Stage, D3DSAMP_BORDERCOLOR, Value);
 	case D3DTSS_MAGFILTER:
+		if (Value == D3DTEXF_FLATCUBIC || Value == D3DTEXF_GAUSSIANCUBIC)
+			Value = D3DTEXF_LINEAR;
 		return ProxyInterface->SetSamplerState(Stage, D3DSAMP_MAGFILTER, Value);
 	case D3DTSS_MINFILTER:
 		return ProxyInterface->SetSamplerState(Stage, D3DSAMP_MINFILTER, Value);
@@ -970,22 +998,26 @@ HRESULT STDMETHODCALLTYPE Direct3DDevice8::GetCurrentTexturePalette(UINT *pPalet
 HRESULT STDMETHODCALLTYPE Direct3DDevice8::DrawPrimitive(D3DPRIMITIVETYPE PrimitiveType, UINT StartVertex, UINT PrimitiveCount)
 {
 	ApplyClipPlanes();
-	return ProxyInterface->DrawPrimitive(PrimitiveType, StartVertex, PrimitiveCount);
+	ProxyInterface->DrawPrimitive(PrimitiveType, StartVertex, PrimitiveCount);
+	return D3D_OK;
 }
 HRESULT STDMETHODCALLTYPE Direct3DDevice8::DrawIndexedPrimitive(D3DPRIMITIVETYPE PrimitiveType, UINT MinIndex, UINT NumVertices, UINT StartIndex, UINT PrimitiveCount)
 {
 	ApplyClipPlanes();
-	return ProxyInterface->DrawIndexedPrimitive(PrimitiveType, CurrentBaseVertexIndex, MinIndex, NumVertices, StartIndex, PrimitiveCount);
+	ProxyInterface->DrawIndexedPrimitive(PrimitiveType, CurrentBaseVertexIndex, MinIndex, NumVertices, StartIndex, PrimitiveCount);
+	return D3D_OK;
 }
 HRESULT STDMETHODCALLTYPE Direct3DDevice8::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT PrimitiveCount, const void *pVertexStreamZeroData, UINT VertexStreamZeroStride)
 {
 	ApplyClipPlanes();
-	return ProxyInterface->DrawPrimitiveUP(PrimitiveType, PrimitiveCount, pVertexStreamZeroData, VertexStreamZeroStride);
+	ProxyInterface->DrawPrimitiveUP(PrimitiveType, PrimitiveCount, pVertexStreamZeroData, VertexStreamZeroStride);
+	return D3D_OK;
 }
 HRESULT STDMETHODCALLTYPE Direct3DDevice8::DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT MinVertexIndex, UINT NumVertexIndices, UINT PrimitiveCount, const void *pIndexData, D3DFORMAT IndexDataFormat, const void *pVertexStreamZeroData, UINT VertexStreamZeroStride)
 {
 	ApplyClipPlanes();
-	return ProxyInterface->DrawIndexedPrimitiveUP(PrimitiveType, MinVertexIndex, NumVertexIndices, PrimitiveCount, pIndexData, IndexDataFormat, pVertexStreamZeroData, VertexStreamZeroStride);
+	ProxyInterface->DrawIndexedPrimitiveUP(PrimitiveType, MinVertexIndex, NumVertexIndices, PrimitiveCount, pIndexData, IndexDataFormat, pVertexStreamZeroData, VertexStreamZeroStride);
+	return D3D_OK;
 }
 HRESULT STDMETHODCALLTYPE Direct3DDevice8::ProcessVertices(UINT SrcStartIndex, UINT DestIndex, UINT VertexCount, IDirect3DVertexBuffer8 *pDestBuffer, DWORD Flags)
 {
@@ -1400,6 +1432,7 @@ HRESULT STDMETHODCALLTYPE Direct3DDevice8::CreateVertexShader(const DWORD *pDecl
 		ShaderInfo = new VertexShaderInfo();
 
 		hr = ProxyInterface->CreateVertexShader(static_cast<const DWORD *>(Assembly->GetBufferPointer()), &ShaderInfo->Shader);
+		VertexShaderAndDeclarationCount++;
 
 		Assembly->Release();
 	}
@@ -1417,19 +1450,28 @@ HRESULT STDMETHODCALLTYPE Direct3DDevice8::CreateVertexShader(const DWORD *pDecl
 
 		if (SUCCEEDED(hr))
 		{
+			// Store the shader handle before it's bit-manipulated
+			
+			
 			// Since 'Shader' is at least 8 byte aligned, we can safely shift it to right and end up not overwriting the top bit
 			assert((reinterpret_cast<DWORD>(ShaderInfo) & 1) == 0);
 			const DWORD ShaderMagic = reinterpret_cast<DWORD>(ShaderInfo) >> 1;
 
 			*pHandle = ShaderMagic | 0x80000000;
+
+			VertexShaderHandles.insert(*pHandle);
+			VertexShaderAndDeclarationCount++;
 		}
 		else
 		{
 #ifndef D3D8TO9NOLOG
 			LOG << "> 'IDirect3DDevice9::CreateVertexDeclaration' failed with error code " << std::hex << hr << std::dec << "!" << std::endl;
 #endif
-			if (ShaderInfo->Shader != nullptr)
+			if (ShaderInfo->Shader != nullptr) 
+			{
 				ShaderInfo->Shader->Release();
+				VertexShaderAndDeclarationCount--;
+			}
 		}
 	}
 	else
@@ -1490,16 +1532,24 @@ HRESULT STDMETHODCALLTYPE Direct3DDevice8::DeleteVertexShader(DWORD Handle)
 	if ((Handle & 0x80000000) == 0)
 		return D3DERR_INVALIDCALL;
 
+	VertexShaderHandles.erase(Handle);
+
 	if (CurrentVertexShaderHandle == Handle)
 		SetVertexShader(0);
 
 	const DWORD HandleMagic = Handle << 1;
 	VertexShaderInfo *const ShaderInfo = reinterpret_cast<VertexShaderInfo *>(HandleMagic);
 
-	if (ShaderInfo->Shader != nullptr)
+	if (ShaderInfo->Shader != nullptr) 
+	{
 		ShaderInfo->Shader->Release();
+		VertexShaderAndDeclarationCount--;
+	}
 	if (ShaderInfo->Declaration != nullptr)
+	{
 		ShaderInfo->Declaration->Release();
+		VertexShaderAndDeclarationCount--;
+	}
 
 	delete ShaderInfo;
 
@@ -1961,20 +2011,29 @@ HRESULT STDMETHODCALLTYPE Direct3DDevice8::CreatePixelShader(const DWORD *pFunct
 		NewSourceCode.insert(PhasePosition, "    phase\n");
 
 		// If no errors were encountered then check if code assembles
-		if (!ConvertError)
+		if (!ConvertError && D3DXAssembleShader != nullptr)
 		{
 			// Test if ps_1_4 assembles
 			if (SUCCEEDED(D3DXAssembleShader(NewSourceCode.data(), static_cast<UINT>(NewSourceCode.size()), nullptr, nullptr, 0, &Assembly, &ErrorBuffer)))
 			{
 				SourceCode = NewSourceCode;
+				Assembly->Release();
+				Assembly = nullptr;
 			}
 			else
 			{
 #ifndef D3D8TO9NOLOG
 				LOG << "> Failed to convert shader to ps_1_4" << std::endl;
 				LOG << "> Dumping translated shader assembly:" << std::endl << std::endl << NewSourceCode << std::endl;
-				LOG << "> Failed to reassemble shader:" << std::endl << std::endl << static_cast<const char *>(ErrorBuffer->GetBufferPointer()) << std::endl;
 #endif
+				if (ErrorBuffer != nullptr)
+				{
+#ifndef D3D8TO9NOLOG
+					LOG << "> Failed to reassemble shader:" << std::endl << std::endl << static_cast<const char*>(ErrorBuffer->GetBufferPointer()) << std::endl;
+#endif
+					ErrorBuffer->Release();
+					ErrorBuffer = nullptr;
+				}
 			}
 		}
 	}
@@ -2030,11 +2089,17 @@ HRESULT STDMETHODCALLTYPE Direct3DDevice8::CreatePixelShader(const DWORD *pFunct
 
 	hr = ProxyInterface->CreatePixelShader(static_cast<const DWORD *>(Assembly->GetBufferPointer()), reinterpret_cast<IDirect3DPixelShader9 **>(pHandle));
 
+	Assembly->Release();
+
 	if (FAILED(hr))
 	{
 #ifndef D3D8TO9NOLOG
 		LOG << "> 'IDirect3DDevice9::CreatePixelShader' failed with error code " << std::hex << hr << std::dec << "!" << std::endl;
 #endif
+	}
+	else
+	{
+		PixelShaderHandles.insert(*pHandle);
 	}
 
 	return hr;
@@ -2063,6 +2128,8 @@ HRESULT STDMETHODCALLTYPE Direct3DDevice8::DeletePixelShader(DWORD Handle)
 		SetPixelShader(0);
 
 	reinterpret_cast<IDirect3DPixelShader9 *>(Handle)->Release();
+
+	PixelShaderHandles.erase(Handle);
 
 	return D3D_OK;
 }
@@ -2114,4 +2181,19 @@ void Direct3DDevice8::ApplyClipPlanes()
 
 		index++;
 	}
+}
+
+void Direct3DDevice8::ReleaseShaders()
+{
+	for (auto Handle : PixelShaderHandles)
+	{
+		DeletePixelShader(Handle);
+	}
+	PixelShaderHandles.clear();
+	for (auto Handle : VertexShaderHandles)
+	{
+		DeleteVertexShader(Handle);
+	}
+	VertexShaderHandles.clear();
+	VertexShaderAndDeclarationCount = 0;
 }

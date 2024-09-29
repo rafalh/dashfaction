@@ -46,6 +46,7 @@ namespace rf
 
     static auto& gameseq_set_state = addr_as_ref<void(GameState state, bool force)>(0x00434190);
     static auto& gameseq_get_state = addr_as_ref<GameState()>(0x00434200);
+    static auto& gameseq_get_pending_state = addr_as_ref<GameState()>(0x00434220);
     static auto& gameseq_in_gameplay = addr_as_ref<bool()>(0x00434460);
     static auto& gameseq_push_state = addr_as_ref<void(GameState state, bool transparent, bool pause_beneath)>(0x00434410);
     static auto& gameseq_process_deferred_change = addr_as_ref<GameState()>(0x00434310);

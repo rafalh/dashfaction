@@ -2,8 +2,10 @@
 #include <patch_common/FunHook.h>
 #include <patch_common/CallHook.h>
 #include <patch_common/AsmWriter.h>
+#include <xlog/xlog.h>
 #include "../rf/entity.h"
 #include "../rf/corpse.h"
+#include "../rf/weapon.h"
 #include "../rf/player/player.h"
 #include "../rf/particle_emitter.h"
 #include "../rf/os/frametime.h"
@@ -124,6 +126,81 @@ CodeInjection entity_process_post_hidden_injection{
     },
 };
 
+CodeInjection entity_render_weapon_in_hands_silencer_visibility_injection{
+    0x00421D39,
+    [](auto& regs) {
+        rf::Entity* ep = regs.esi;
+        if (!rf::weapon_is_glock(ep->ai.current_primary_weapon)) {
+            regs.eip = 0x00421D3F;
+        }
+    },
+};
+
+CodeInjection waypoints_read_lists_oob_fix{
+    0x00468E54,
+    [](auto& regs) {
+        constexpr int max_waypoint_lists = 32;
+        int& num_waypoint_lists = addr_as_ref<int>(0x0064E398);
+        int index = regs.eax;
+        int num_lists = regs.ecx;
+        if (index >= max_waypoint_lists && index < num_lists) {
+            xlog::error("Too many waypoint lists (limit is {})! Overwritting the last list.", max_waypoint_lists);
+            // reduce count by one and keep index unchanged
+            --num_waypoint_lists;
+            regs.ecx = num_waypoint_lists;
+            // skip EBP update to fix OOB write
+            regs.eip = 0x00468E5B;
+        }
+    },
+};
+
+CodeInjection waypoints_read_nodes_oob_fix{
+    0x00468DB1,
+    [](auto& regs) {
+        constexpr int max_waypoint_list_nodes = 128;
+        int node_index = regs.eax + 1;
+        int& num_nodes = *static_cast<int*>(regs.ebp);
+        if (node_index >= max_waypoint_list_nodes && node_index < num_nodes) {
+            xlog::error("Too many waypoint list nodes (limit is {})! Overwritting the last endpoint.", max_waypoint_list_nodes);
+            // reduce count by one and keep node index unchanged
+            --num_nodes;
+            // Set EAX and ECX based on skipped instructions but do not update EBX to fix OOB write
+            regs.eax = node_index - 1;
+            regs.ecx = num_nodes;
+            regs.eip = 0x00468DB8;
+        }
+    },
+};
+
+CodeInjection entity_fire_update_all_freeze_fix{
+    0x0042EF31,
+    [](auto& regs) {
+        void* fire = regs.esi;
+        void* next_fire = regs.ebp;
+        if (fire == next_fire) {
+            // only one object was on the list and it got deleted so exit the loop
+            regs.eip = 0x0042F2AF;
+        } else {
+            // go to the next object
+            regs.esi = next_fire;
+        }
+    },
+};
+
+CodeInjection entity_process_pre_hide_riot_shield_injection{
+    0x0041DAFF,
+    [](auto& regs) {
+        rf::Entity* ep = regs.esi;
+        int hidden = regs.eax;
+        if (hidden) {
+            auto shield = rf::obj_from_handle(ep->riot_shield_handle);
+            if (shield) {
+                rf::obj_hide(shield);
+            }
+        }
+    },
+};
+
 void entity_do_patch()
 {
     // Fix player being stuck to ground when jumping, especially when FPS is greater than 200
@@ -162,4 +239,17 @@ void entity_do_patch()
 
     // Fix move sound not being muted if entity is created hidden (example: jeep in L18S3)
     entity_process_post_hidden_injection.install();
+
+    // Do not show glock with silencer in 3rd person view if current primary weapon is not a glock
+    entity_render_weapon_in_hands_silencer_visibility_injection.install();
+
+    // Fix OOB writes in waypoint list read code
+    waypoints_read_lists_oob_fix.install();
+    waypoints_read_nodes_oob_fix.install();
+
+    // Fix possible freeze when burning entity is destroyed
+    entity_fire_update_all_freeze_fix.install();
+
+    // Hide riot shield third person model if entity is hidden (e.g. in cutscenes)
+    entity_process_pre_hide_riot_shield_injection.install();
 }

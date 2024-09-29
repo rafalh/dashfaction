@@ -31,6 +31,7 @@ namespace rf
     static_assert(sizeof(Corpse) == 0x318);
 
     static auto& corpse_from_handle = addr_as_ref<Corpse*(int handle)>(0x004174C0);
+    static auto& corpse_restore_mesh = addr_as_ref<void(Corpse *cp, const char *mesh_name)>(0x00417530);
 
     static auto& corpse_list = addr_as_ref<Corpse>(0x005CABB8);
 }

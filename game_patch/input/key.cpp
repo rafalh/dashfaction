@@ -68,7 +68,7 @@ FunHook<int(int16_t)> key_to_ascii_hook{
         }
         ansi_char = static_cast<char>(unicode_chars[0]);
 #endif
-        xlog::trace("vk %X (%c) char %c", vk, vk, ansi_char);
+        xlog::trace("vk {:x} ({}) char {}", vk, vk, ansi_char);
         return static_cast<int>(ansi_char);
     },
 };
@@ -82,11 +82,11 @@ int get_key_name(int key, char* buf, size_t buf_len)
     // Note: it seems broken on Wine with non-US layout (most likely broken MAPVK_VSC_TO_VK_EX mapping is responsible)
     int ret = GetKeyNameTextA(lparam, buf, buf_len);
     if (ret <= 0) {
-        WARN_ONCE("GetKeyNameTextA failed for 0x%X", key);
+        WARN_ONCE("GetKeyNameTextA failed for 0x{:X}", key);
         buf[0] = '\0';
     }
     else {
-        xlog::trace("key 0x%X name %s", key, buf);
+        xlog::trace("key 0x{:x} name {}", key, buf);
     }
     return ret;
 }

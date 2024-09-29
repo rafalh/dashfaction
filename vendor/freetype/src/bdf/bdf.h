@@ -30,10 +30,9 @@
  * Based on bdf.h,v 1.16 2000/03/16 20:08:51 mleisher
  */
 
-#include <ft2build.h>
-#include FT_INTERNAL_OBJECTS_H
-#include FT_INTERNAL_STREAM_H
-#include FT_INTERNAL_HASH_H
+#include <freetype/internal/ftobjs.h>
+#include <freetype/internal/ftstream.h>
+#include <freetype/internal/fthash.h>
 
 
 FT_BEGIN_HEADER
@@ -239,10 +238,6 @@ FT_BEGIN_HEADER
 
   FT_LOCAL( void )
   bdf_free_font( bdf_font_t*  font );
-
-  FT_LOCAL( bdf_property_t * )
-  bdf_get_property( char*        name,
-                    bdf_font_t*  font );
 
   FT_LOCAL( bdf_property_t * )
   bdf_get_font_property( bdf_font_t*  font,

@@ -2,6 +2,7 @@
 #include <patch_common/FunHook.h>
 #include <patch_common/AsmWriter.h>
 #include <common/version/version.h>
+#include <format>
 #include "console.h"
 #include "../rf/gr/gr.h"
 #include "../rf/gr/gr_font.h"
@@ -41,7 +42,7 @@ static void frametime_render_graph()
 static void frametime_render_fps_counter()
 {
     if (g_game_config.fps_counter && !rf::hud_disabled) {
-        auto text = string_format("FPS: %.1f", rf::current_fps);
+        auto text = std::format("FPS: {:.1f}", rf::current_fps);
         rf::gr::set_color(0, 255, 0, 255);
         int x = rf::gr::screen_width() - (g_game_config.big_hud ? 165 : 90);
         int y = 10;
@@ -62,6 +63,17 @@ void frametime_render_ui()
     frametime_render_fps_counter();
     frametime_render_graph();
 }
+
+ConsoleCommand2 fps_counter_cmd{
+    "fps_counter",
+    []() {
+        g_game_config.fps_counter = !g_game_config.fps_counter;
+        g_game_config.save();
+        rf::console::print("FPS counter display is {}", g_game_config.fps_counter ? "enabled" : "disabled");
+    },
+    "Toggle FPS counter",
+    "fps_counter",
+};
 
 CallHook<void(int)> frametime_calculate_sleep_hook{
     0x005095B4,
@@ -88,21 +100,18 @@ ConsoleCommand2 max_fps_cmd{
     "maxfps",
     [](std::optional<int> limit_opt) {
         if (limit_opt) {
-            int new_limit = limit_opt.value();
-#if VERSION_TYPE != VERSION_TYPE_DEV
-            new_limit = std::clamp<int>(new_limit, GameConfig::min_fps_limit, GameConfig::max_fps_limit);
-#endif
+            int limit = std::clamp<int>(limit_opt.value(), GameConfig::min_fps_limit, GameConfig::max_fps_limit);
             if (rf::is_dedicated_server) {
-                g_game_config.server_max_fps = new_limit;
+                g_game_config.server_max_fps = limit;
             }
             else {
-                g_game_config.max_fps = new_limit;
+                g_game_config.max_fps = limit;
             }
             g_game_config.save();
-            rf::frametime_min = 1.0f / new_limit;
+            rf::frametime_min = 1.0f / limit;
         }
         else
-            rf::console::printf("Maximal FPS: %.1f", 1.0f / rf::frametime_min);
+            rf::console::print("Maximal FPS: {:.1f}", 1.0f / rf::frametime_min);
     },
     "Sets maximal FPS",
     "maxfps <limit>",
@@ -128,4 +137,5 @@ void frametime_apply_patch()
     // Commands
     max_fps_cmd.register_cmd();
     frametime_graph_cmd.register_cmd();
+    fps_counter_cmd.register_cmd();
 }

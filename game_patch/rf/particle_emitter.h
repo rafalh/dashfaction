@@ -9,6 +9,7 @@ namespace rf
 
 struct GRoom;
 struct ParticleEmitter;
+struct Object;
 
 enum ParticleEmitterFlags
 {
@@ -79,29 +80,29 @@ struct Particle
 {
     Particle *next;
     Particle *prev;
-    int parent_hobj;
+    int parent_handle;
     Vector3 pos;
-    Vector3 velocity;
-    float current_life_time;
-    Color particle_clr;
-    Color particle_clr_dest;
-    Color particle_clr2;
-    float life_secs;
-    float p_radius;
+    Vector3 vel;
+    float age;
+    Color clr;
+    Color clr_dest;
+    Color clr_current;
+    float max_life_seconds;
+    float radius;
     float growth_rate;
     float acceleration;
     float gravity;
-    int bitmap;
-    short word_4C;
-    short particle_flags2;
-    unsigned char pool_id;
-    float unk_orient;
-    int particle_flags;
-    int field_5C;
-    void (*unk_callback)(Vector3 *hit_pos, const Vector3 *vel, Vector3 *normal, float *, int *is_liquid, int *hit_obj_uid);
+    int first_frame_bitmap;
+    short num_frames;
+    short flags2;
+    char pool_id;
+    float bitmap_orient;
+    int flags;
+    int age_pct_to_finish_vbm;
+    void (*hit_callback)(Vector3 *hit_pos, const Vector3 *vel, Vector3 *normal, float *, int *is_liquid, int *hit_obj_uid);
     GRoom *room;
     ParticleEmitter *emitter;
-    Vector3 prev_pos;
+    Vector3 last_pos;
 };
 static_assert(sizeof(Particle) == 0x78);
 
@@ -125,8 +126,8 @@ struct ParticleEmitter
     GRoom *room;
     ParticleCreateInfo pci;
     float cull_radius;
-    float field_A0;
-    Vector3 field_A4;
+    float max_particle_dist_sq;
+    Vector3 world_pos;
     Particle particle_list;
     float on_time;
     float on_time_variance;
@@ -140,6 +141,11 @@ struct ParticleEmitter
     ParticleEmitter *prev;
     ParticleEmitter *next_entity_emitter;
     Timestamp spawn_timer;
+
+    Object* get_pos_and_dir(Vector3 *pos, Vector3 *dir)
+    {
+        return AddrCaller{0x00496BC0}.this_call<Object*>(this, pos, dir);
+    }
 };
 static_assert(sizeof(ParticleEmitter) == 0x158);
 

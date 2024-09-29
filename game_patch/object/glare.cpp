@@ -35,7 +35,7 @@ static bool glare_collide_object(rf::Glare* glare, rf::Object* obj, const rf::Ve
     }
 
     rf::Vector3 hit_pt;
-    if (rf::cutscene_is_active() && obj->type == rf::OT_ENTITY) {
+    if (rf::cutscene_is_playing() && obj->type == rf::OT_ENTITY) {
         // Fix glares/coronas being visible through characters during cutscenes
         rf::Vector3 root_bone_pos;
         rf::obj_find_root_bone_pos(static_cast<rf::Entity*>(obj), root_bone_pos);

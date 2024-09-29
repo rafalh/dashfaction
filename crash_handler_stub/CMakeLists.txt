@@ -10,7 +10,7 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRCS})
 
 add_library(CrashHandlerStub STATIC ${SRCS})
 
-target_compile_features(CrashHandlerStub PUBLIC cxx_std_17)
+target_compile_features(CrashHandlerStub PUBLIC cxx_std_20)
 set_target_properties(CrashHandlerStub PROPERTIES CXX_EXTENSIONS NO)
 enable_warnings(CrashHandlerStub)
 

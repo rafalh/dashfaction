@@ -4,11 +4,16 @@
 #include <patch_common/AsmWriter.h>
 #include <xlog/xlog.h>
 #include <cassert>
-#include <cstring>
 #include "../rf/object.h"
 #include "../rf/event.h"
 #include "../rf/entity.h"
 #include "../rf/level.h"
+#include "../rf/multi.h"
+#include "../rf/player/player.h"
+#include "../rf/os/console.h"
+#include "../os/console.h"
+
+bool event_debug_enabled;
 
 CodeInjection switch_model_event_custom_mesh_patch{
     0x004BB921,
@@ -67,7 +72,7 @@ struct EventSetLiquidDepthHook : rf::Event
 
 void __fastcall EventSetLiquidDepth_turn_on_new(EventSetLiquidDepthHook* this_)
 {
-    xlog::info("Processing Set_Liquid_Depth event: uid %d depth %.2f duration %.2f", this_->uid, this_->depth, this_->duration);
+    xlog::info("Processing Set_Liquid_Depth event: uid {} depth {:.2f} duration {:.2f}", this_->uid, this_->depth, this_->duration);
     if (this_->links.size() == 0) {
         xlog::trace("no links");
         rf::add_liquid_depth_update(this_->room, this_->depth, this_->duration);
@@ -75,7 +80,7 @@ void __fastcall EventSetLiquidDepth_turn_on_new(EventSetLiquidDepthHook* this_)
     else {
         for (auto room_uid : this_->links) {
             rf::GRoom* room = rf::level_room_from_uid(room_uid);
-            xlog::trace("link %d %p", room_uid, room);
+            xlog::trace("link {} {}", room_uid, room);
             if (room) {
                 rf::add_liquid_depth_update(room, this_->depth, this_->duration);
             }
@@ -153,6 +158,68 @@ FunHook<void()> event_level_init_post_hook{
     },
 };
 
+extern FunHook<void __fastcall(rf::Event *)> EventMessage__turn_on_hook;
+void __fastcall EventMessage__turn_on_new(rf::Event *this_)
+{
+    if (!rf::is_dedicated_server) EventMessage__turn_on_hook.call_target(this_);
+}
+FunHook<void __fastcall(rf::Event *this_)> EventMessage__turn_on_hook{
+    0x004BB210,
+    EventMessage__turn_on_new,
+};
+
+CodeInjection event_activate_injection{
+    0x004B8BF4,
+    [](auto& regs) {
+        if (event_debug_enabled) {
+            rf::Event* event = regs.esi;
+            bool on = addr_as_ref<bool>(regs.esp + 0xC + 0xC);
+            rf::console::print("Processing {} message in event {} ({})",
+            on ? "ON" : "OFF", event->name, event->uid);
+        }
+    },
+};
+
+CodeInjection event_activate_injection2{
+    0x004B8BE3,
+    [](auto& regs) {
+        if (event_debug_enabled) {
+            rf::Event* event = regs.esi;
+            bool on = regs.cl;
+            rf::console::print("Delaying {} message in event {} ({})",
+                on ? "ON" : "OFF", event->name, event->uid);
+        }
+    },
+};
+
+CodeInjection event_process_injection{
+    0x004B8CF5,
+    [](auto& regs) {
+        if (event_debug_enabled) {
+            rf::Event* event = regs.esi;
+            rf::console::print("Processing {} message in event {} ({}) (delayed)",
+                event->delayed_msg ? "ON" : "OFF", event->name, event->uid);
+        }
+    },
+};
+
+CodeInjection event_load_level_turn_on_injection{
+    0x004BB9C9,
+    [](auto& regs) {
+        if (rf::local_player->flags & (rf::PF_KILL_AFTER_BLACKOUT|rf::PF_END_LEVEL_AFTER_BLACKOUT)) {
+            // Ignore level transition if the player was going to die or game was going to end after a blackout effect
+            regs.eip = 0x004BBA71;
+        }
+    }
+};
+
+ConsoleCommand2 debug_event_msg_cmd{
+    "debug_event_msg",
+    []() {
+        event_debug_enabled = !event_debug_enabled;
+    }
+};
+
 void apply_event_patches()
 {
     // Allow custom mesh (not used in clutter.tbl or items.tbl) in Switch_Model event
@@ -167,5 +234,20 @@ void apply_event_patches()
     // being taken from the previous level
     ai_path_release_on_load_level_event_crash_fix.install();
 
+    // Fix Message event crash on dedicated server
+    EventMessage__turn_on_hook.install();
+
+    // Level specific event fixes
     event_level_init_post_hook.install();
+
+    // Debug event messages
+    event_activate_injection.install();
+    event_activate_injection2.install();
+    event_process_injection.install();
+
+    // Do not load next level if blackout is in progress
+    event_load_level_turn_on_injection.install();
+
+    // Register commands
+    debug_event_msg_cmd.register_cmd();
 }

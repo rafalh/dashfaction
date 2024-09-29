@@ -1,11 +1,14 @@
 #include <windows.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/AsmWriter.h>
+#include <xlog/xlog.h>
 #include "../rf/os/os.h"
 #include "../rf/multi.h"
 #include "../rf/input.h"
+#include "../rf/crt.h"
 #include "../main/main.h"
 #include "win32_console.h"
+#include <xlog/xlog.h>
 
 const char* get_win_msg_name(UINT msg);
 
@@ -20,7 +23,7 @@ FunHook<void()> os_poll_hook{
                 break;
             TranslateMessage(&msg);
             DispatchMessageA(&msg);
-            // xlog::info("msg %u\n", msg.message);
+            // xlog::info("msg {}\n", msg.message);
         }
 
         if (win32_console_is_enabled()) {
@@ -31,7 +34,11 @@ FunHook<void()> os_poll_hook{
 
 LRESULT WINAPI wnd_proc(HWND wnd_handle, UINT msg, WPARAM w_param, LPARAM l_param)
 {
-    // xlog::trace("%08x: msg %s %x %x", GetTickCount(), get_win_msg_name(msg), w_param, l_param);
+    // xlog::trace("{:08x}: msg {} {:x} {:x}", GetTickCount(), get_win_msg_name(msg), w_param, l_param);
+    if (rf::main_wnd && wnd_handle != rf::main_wnd) {
+        xlog::warn("Got unknown window in the window procedure: hwnd {} msg {}",
+            static_cast<void*>(wnd_handle), msg);
+    }
 
     for (int i = 0; i < rf::num_msg_handlers; ++i) {
         rf::msg_handlers[i](msg, w_param, l_param);
@@ -54,7 +61,7 @@ LRESULT WINAPI wnd_proc(HWND wnd_handle, UINT msg, WPARAM w_param, LPARAM l_para
         }
 
         rf::is_main_wnd_active = w_param;
-        return DefWindowProcA(wnd_handle, msg, w_param, l_param);
+        return 0; //DefWindowProcA(wnd_handle, msg, w_param, l_param);
 
     case WM_QUIT:
     case WM_CLOSE:
@@ -65,9 +72,7 @@ LRESULT WINAPI wnd_proc(HWND wnd_handle, UINT msg, WPARAM w_param, LPARAM l_para
     case WM_PAINT:
         if (rf::is_dedicated_server)
             ++rf::console_redraw_counter;
-        else
-            return DefWindowProcA(wnd_handle, msg, w_param, l_param);
-        break;
+        return DefWindowProcA(wnd_handle, msg, w_param, l_param);
 
     default:
         return DefWindowProcA(wnd_handle, msg, w_param, l_param);
@@ -96,6 +101,37 @@ static FunHook<void()> os_close_hook{
     },
 };
 
+static FunHook<void(char*, bool)> os_parse_params_hook{
+    0x00523320,
+    [](char *cmdline, bool skip_first) {
+        std::string buf;
+        bool quote = false;
+        while (true) {
+            char c = *cmdline;
+            ++cmdline;
+
+            if ((!quote && c == ' ') || c == '\0') {
+                if (skip_first) {
+                    skip_first = false;
+                } else {
+                    rf::CmdArg &cmd_arg = rf::cmdline_args[rf::cmdline_num_args++];
+                    cmd_arg.arg = static_cast<char*>(rf::operator_new(buf.size() + 1));
+                    std::strcpy(cmd_arg.arg, buf.c_str());
+                    cmd_arg.is_done = false;
+                }
+                buf.clear();
+                if (!c) {
+                    break;
+                }
+            } else if (c == '"') {
+                quote = !quote;
+            } else {
+                buf += c;
+            }
+        }
+    },
+};
+
 void os_apply_patch()
 {
     // Process messages in the same thread as DX processing (alternative: D3DCREATE_MULTITHREADED)
@@ -112,6 +148,9 @@ void os_apply_patch()
     // Hooks for win32 console support
     os_init_window_server_hook.install();
     os_close_hook.install();
+
+    // Fix quotes support in cmdline parsing
+    os_parse_params_hook.install();
 
     // Apply patches from other files in 'os' dir
     void frametime_apply_patch();

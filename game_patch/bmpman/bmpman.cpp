@@ -32,7 +32,7 @@ int bm_calculate_pitch(int w, rf::bm::Format format)
             // 4x4 pixels per block, 128 bits per block
             return (w + 3) / 4 * 128 / 8;
         default:
-            xlog::warn("Unknown format %d in bm_calculate_pitch", format);
+            xlog::warn("Unknown format {} in bm_calculate_pitch", static_cast<int>(format));
             return -1;
     }
 }
@@ -89,17 +89,17 @@ bm_read_header_hook{
         std::string filename_without_ext{get_filename_without_ext(filename)};
         auto dds_filename = filename_without_ext + ".dds";
         if (dds_file.open(dds_filename.c_str()) == 0) {
-            xlog::trace("Loading %s", dds_filename.c_str());
+            xlog::trace("Loading {}", dds_filename);
             auto bm_type = read_dds_header(dds_file, width_out, height_out, pixel_fmt_out, num_levels_out);
             if (bm_type != rf::bm::TYPE_NONE) {
                 return bm_type;
             }
         }
 
-        xlog::trace("Loading bitmap header for '%s'", filename);
+        xlog::trace("Loading bitmap header for '{}'", filename);
         auto bm_type = bm_read_header_hook.call_target(filename, width_out, height_out, pixel_fmt_out, num_levels_out,
             num_levels_external_mips_out, num_frames_out, fps_out, total_bytes_m2v_out, vbm_ver_out, a11);
-        xlog::trace("Bitmap header for '%s': type %d size %dx%d pixel_fmt %d levels %d frames %d",
+        xlog::trace("Bitmap header for '{}': type {} size {}x{} pixel_fmt {} levels {} frames {}",
             filename, bm_type, *width_out, *height_out, *pixel_fmt_out, *num_levels_out, *num_frames_out);
 
         // Sanity checks
@@ -109,7 +109,7 @@ bm_read_header_hook{
         }
 
         if (bm_type == rf::bm::TYPE_NONE) {
-            xlog::warn("Failed load bitmap header for '%s'", filename);
+            xlog::warn("Failed load bitmap header for '{}'", filename);
         }
 
         return bm_type;
@@ -119,7 +119,7 @@ bm_read_header_hook{
 FunHook<rf::bm::Format(int, void**, void**)> bm_lock_hook{
     0x00510780,
     [](int bmh, void** pixels_out, void** palette_out) {
-        auto& bm_entry = rf::bm::bitmaps[rf::bm::handle_to_index_anim_aware(bmh)];
+        auto& bm_entry = rf::bm::bitmaps[rf::bm::get_cache_slot(bmh)];
         if (bm_entry.bm_type == rf::bm::TYPE_DDS) {
             lock_dds_bitmap(bm_entry);
             *pixels_out = bm_entry.locked_data;
@@ -172,7 +172,7 @@ CodeInjection load_tga_alloc_fail_fix{
             unsigned bpp = regs.esi;
             auto num_total_pixels = addr_as_ref<size_t>(regs.ebp + 0x30);
             auto num_bytes = num_total_pixels * bpp;
-            xlog::warn("Failed to allocate buffer for a bitmap: %d bytes!", num_bytes);
+            xlog::warn("Failed to allocate buffer for a bitmap: {} bytes!", num_bytes);
             regs.eip = 0x00510944;
         }
     },
@@ -180,23 +180,23 @@ CodeInjection load_tga_alloc_fail_fix{
 
 void bm_set_dynamic(int bm_handle, bool dynamic)
 {
-    int bm_index = rf::bm::handle_to_index_anim_aware(bm_handle);
+    int bm_index = rf::bm::get_cache_slot(bm_handle);
     rf::bm::bitmaps[bm_index].dynamic = dynamic;
 }
 
 bool bm_is_dynamic(int bm_handle)
 {
-    int bm_index = rf::bm::handle_to_index_anim_aware(bm_handle);
+    int bm_index = rf::bm::get_cache_slot(bm_handle);
     return rf::bm::bitmaps[bm_index].dynamic;
 }
 
 void bm_change_format(int bm_handle, rf::bm::Format format)
 {
-    int bm_idx = rf::bm::handle_to_index_anim_aware(bm_handle);
+    int bm_idx = rf::bm::get_cache_slot(bm_handle);
     auto& bm = rf::bm::bitmaps[bm_idx];
     assert(bm.bm_type == rf::bm::TYPE_USER);
     if (bm.format != format) {
-        gr_delete_texture(bm_handle);
+        rf::gr::mark_texture_dirty(bm_handle);
         bm.format = format;
     }
 }

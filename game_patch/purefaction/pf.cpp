@@ -1,6 +1,5 @@
 #include <cstddef>
 #include <cstring>
-#include <sstream>
 #include <cassert>
 #include <common/config/BuildConfig.h>
 #include <common/utils/list-utils.h>
@@ -9,7 +8,7 @@
 #include "../multi/multi.h"
 #include "pf.h"
 #include "pf_packets.h"
-#include "pf_secret.h"
+#include "pf_ac.h"
 
 void pf_send_reliable_packet(rf::Player* player, const void* data, int len)
 {
@@ -31,13 +30,12 @@ static void send_pf_announce_player_packet(rf::Player* player, pf_pure_status pu
     // Send: server -> client
     assert(rf::is_server);
 
-    pf_player_announce_packet announce_packet;
+    pf_player_announce_packet announce_packet{};
     announce_packet.hdr.type = static_cast<uint8_t>(pf_packet_type::announce_player);
     announce_packet.hdr.size = sizeof(announce_packet) - sizeof(announce_packet.hdr);
     announce_packet.version = pf_announce_player_packet_version;
     announce_packet.player_id = player->net_data->player_id;
     announce_packet.is_pure = static_cast<uint8_t>(pure_status);
-    std::memset(&announce_packet.reserved, 0, sizeof(announce_packet.reserved));
 
     auto player_list = SinglyLinkedList(rf::player_list);
     for (auto& other_player : player_list) {
@@ -65,14 +63,14 @@ static void process_pf_player_announce_packet(const void* data, size_t len, [[ m
         return;
     }
 
-    xlog::trace("PF player_announce packet: player %u is_pure %d", announce_packet.player_id, announce_packet.is_pure);
+    xlog::trace("PF player_announce packet: player {} is_pure {}", announce_packet.player_id, announce_packet.is_pure);
 
     if (announce_packet.player_id == rf::local_player->net_data->player_id) {
         static const char* pf_verification_status_names[] = { "none", "blue", "gold", "red" };
         const auto* pf_verification_status =
             announce_packet.is_pure < std::size(pf_verification_status_names)
             ? pf_verification_status_names[announce_packet.is_pure] : "unknown";
-        xlog::info("PF Verification Status: %s (%u)", pf_verification_status, announce_packet.is_pure);
+        xlog::info("PF Verification Status: {} ({})", pf_verification_status, announce_packet.is_pure);
     }
 }
 
@@ -106,7 +104,7 @@ static void send_pf_player_stats_packet(rf::Player* player)
             // One packet should be enough for 32 players (13 bytes * 32 players = 416 bytes)
             // Handling more data would require sending multiple packets to avoid building one big UDP datagram
             // that crosses 512 bytes limit that is usually used as maximal datagram size.
-            xlog::warn("PF player_stats packet is too big: %d. Skipping some players...", packet_len);
+            xlog::warn("PF player_stats packet is too big: {}. Skipping some players...", packet_len);
             break;
         }
         std::memcpy(packet_buf + packet_len, &out_stats, sizeof(out_stats));
@@ -149,7 +147,7 @@ static void process_pf_player_stats_packet(const void* data, size_t len, [[ mayb
         return;
     }
 
-    xlog::trace("PF player_stats packet (count %d)", stats_packet.player_count);
+    xlog::trace("PF player_stats packet (count {})", stats_packet.player_count);
 
     const std::byte* player_stats_ptr = static_cast<const std::byte*>(data) + sizeof(stats_packet);
     for (int i = 0; i < stats_packet.player_count; ++i) {
@@ -163,7 +161,7 @@ static void process_pf_player_stats_packet(const void* data, size_t len, [[ mayb
             stats.num_deaths = in_stats.deaths;
         }
         else {
-            xlog::warn("PF player_stats packet: player %u not found", in_stats.player_id);
+            xlog::warn("PF player_stats packet: player {} not found", in_stats.player_id);
         }
     }
 }

@@ -1,6 +1,6 @@
-#define XLOG_STREAMS 1
-
 #include <ctime>
+#include <windows.h>
+#include <shellapi.h>
 #include <common/config/GameConfig.h>
 #include <common/config/BuildConfig.h>
 #include <common/utils/os-utils.h>
@@ -36,6 +36,8 @@
 #include "../rf/multi.h"
 #include "../rf/level.h"
 #include "../rf/os/os.h"
+#include "../rf/save_restore.h"
+#include "../rf/gameseq.h"
 
 #ifdef HAS_EXPERIMENTAL
 #include "../experimental/experimental.h"
@@ -51,7 +53,7 @@ CallHook<void()> rf_init_hook{
         xlog::info("Initializing game...");
         rf_init_hook.call_target();
         vpackfile_disable_overriding();
-        xlog::info("Game initialized (%lu ms).", GetTickCount() - start_ticks);
+        xlog::info("Game initialized ({} ms).", GetTickCount() - start_ticks);
     },
 };
 
@@ -78,6 +80,24 @@ CodeInjection cleanup_game_hook{
     },
 };
 
+static void maybe_autosave()
+{
+    static int pending_autosave = 0;
+    if (rf::gameseq_get_state() == rf::GS_LEVEL_TRANSITION && g_game_config.autosave) {
+        pending_autosave = 5; // wait 5 frames for the game state to fully stabilize
+    }
+    if (pending_autosave > 0) {
+        pending_autosave--;
+        if (pending_autosave == 0 && rf::sr::can_save_now() && rf::gameseq_get_state() != rf::GS_BOMB_DEFUSE) {
+            xlog::info("Performing autosave");
+            auto save_filename = std::string{rf::sr::savegame_path} + "autosave.svl";
+            if (!rf::sr::save_game(save_filename.c_str(), rf::local_player)) {
+                xlog::error("Autosave failed");
+            }
+        }
+    }
+}
+
 FunHook<int()> rf_do_frame_hook{
     0x004B2D90,
     []() {
@@ -86,7 +106,9 @@ FunHook<int()> rf_do_frame_hook{
         high_fps_update();
         server_do_frame();
         int result = rf_do_frame_hook.call_target();
+        maybe_autosave();
         debug_do_frame_post();
+        multi_level_download_update();
         return result;
     },
 };
@@ -104,25 +126,27 @@ CodeInjection after_level_render_hook{
 CodeInjection after_frame_render_hook{
     0x004B2DC2,
     []() {
-        // Draw on top (after scene)
-        frametime_render_ui();
-        multi_render_level_download_progress();
+        if (!rf::is_dedicated_server) {
+            // Draw on top (after scene)
+            frametime_render_ui();
 #if !defined(NDEBUG) && defined(HAS_EXPERIMENTAL)
-        experimental_render();
+            experimental_render();
 #endif
-        debug_render_ui();
+            debug_render_ui();
+            g_solid_render_ui();
+        }
     },
 };
 
 FunHook<int(rf::String&, rf::String&, char*)> level_load_hook{
     0x0045C540,
     [](rf::String& level_filename, rf::String& save_filename, char* error) {
-        xlog::info("Loading level: %s", level_filename.c_str());
+        xlog::info("Loading level: {}", level_filename);
         if (!save_filename.empty())
-            xlog::info("Restoring game from save file: %s", save_filename.c_str());
+            xlog::info("Restoring game from save file: {}", save_filename);
         int ret = level_load_hook.call_target(level_filename, save_filename, error);
         if (ret != 0)
-            xlog::warn("Loading failed: %s", error);
+            xlog::warn("Loading failed: {}", error);
         else {
             multi_spectate_level_init();
         }
@@ -134,7 +158,7 @@ FunHook<void(bool)> level_init_post_hook{
     0x00435DF0,
     [](bool transition) {
         level_init_post_hook.call_target(transition);
-        xlog::info("Level loaded: %s%s", rf::level.filename.c_str(), transition ? " (transition)" : "");
+        xlog::info("Level loaded: {}{}", rf::level.filename, transition ? " (transition)" : "");
     },
 };
 
@@ -232,37 +256,39 @@ void init_logging()
 
     CreateDirectoryA("logs", nullptr);
     xlog::LoggerConfig::get()
-        .add_appender<xlog::FileAppender>(log_file_path_name.c_str(), false, false)
+        .add_appender<xlog::FileAppender>(log_file_path_name, false, true)
         // .add_appender<xlog::ConsoleAppender>()
         // .add_appender<xlog::Win32Appender>()
         .add_appender<RfConsoleLogAppender>();
-    xlog::info("Dash Faction %s (build date: %s %s)", VERSION_STR, __DATE__, __TIME__);
+    xlog::info("Dash Faction {} (build date: {} {})", VERSION_STR, __DATE__, __TIME__);
 
     auto now = std::time(nullptr);
     auto* tm = std::gmtime(&now);
     char time_str[256];
     std::strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", tm);
-    xlog::info("Current UTC time: %s", time_str);
+    xlog::info("Current UTC time: {}", time_str);
+
+    xlog::info("Command line: {}", GetCommandLineA());
 }
 
 void log_system_info()
 {
     try {
-        xlog::info() << "Real system version: " << get_real_os_version();
-        xlog::info() << "Emulated system version: " << get_os_version();
+        xlog::info("Real system version: {}", get_real_os_version());
+        xlog::info("Emulated system version: {}", get_os_version());
         auto wine_ver = get_wine_version();
         if (wine_ver)
-            xlog::info() << "Running on Wine: " << wine_ver.value();
+            xlog::info("Running on Wine: {}", wine_ver.value());
 
-        xlog::info("Running as %s (elevation type: %s)", is_current_user_admin() ? "admin" : "user", get_process_elevation_type());
-        xlog::info() << "CPU Brand: " << get_cpu_brand();
-        xlog::info() << "CPU ID: " << get_cpu_id();
+        xlog::info("Running as {} (elevation type: {})", is_current_user_admin() ? "admin" : "user", get_process_elevation_type());
+        xlog::info("CPU Brand: {}", get_cpu_brand());
+        xlog::info("CPU ID: {}", get_cpu_id());
         LARGE_INTEGER qpc_freq;
         QueryPerformanceFrequency(&qpc_freq);
-        xlog::info("QPC Frequency: %08lX %08lX", static_cast<DWORD>(qpc_freq.HighPart), qpc_freq.LowPart);
+        xlog::info("QPC Frequency: {:08X} {:08X}", static_cast<DWORD>(qpc_freq.HighPart), qpc_freq.LowPart);
     }
     catch (std::exception& e) {
-        xlog::error("Failed to read system info: %s", e.what());
+        xlog::error("Failed to read system info: {}", e.what());
     }
 }
 
@@ -271,17 +297,17 @@ void load_config()
     // Load config
     try {
         if (!g_game_config.load())
-            xlog::error("Configuration has not been found in registry!");
+            xlog::warn("Configuration has not been found in registry!");
     }
     catch (std::exception& e) {
-        xlog::error("Failed to load configuration: %s", e.what());
+        xlog::error("Failed to load configuration: {}", e.what());
     }
 
     // Log information from config
-    xlog::info("Resolution: %dx%dx%d", g_game_config.res_width.value(), g_game_config.res_height.value(), g_game_config.res_bpp.value());
-    xlog::info("Window Mode: %d", static_cast<int>(g_game_config.wnd_mode.value()));
-    xlog::info("Max FPS: %u", g_game_config.max_fps.value());
-    xlog::info("Allow Overwriting Game Files: %d", g_game_config.allow_overwrite_game_files.value());
+    xlog::info("Resolution: {}x{}x{}", g_game_config.res_width.value(), g_game_config.res_height.value(), g_game_config.res_bpp.value());
+    xlog::info("Window Mode: {}", static_cast<int>(g_game_config.wnd_mode.value()));
+    xlog::info("Max FPS: {}", g_game_config.max_fps.value());
+    xlog::info("Allow Overwriting Game Files: {}", g_game_config.allow_overwrite_game_files.value());
 }
 
 void init_crash_handler()
@@ -303,7 +329,7 @@ void init_crash_handler()
 
 extern "C" void subhook_unk_opcode_handler(uint8_t* opcode)
 {
-    xlog::error("SubHook unknown opcode 0x%X at 0x%p", *opcode, opcode);
+    xlog::error("SubHook unknown opcode 0x{:x} at {}", *opcode, static_cast<void*>(opcode));
 }
 
 DWORD get_pid_by_filename(std::string_view filename) {
@@ -366,7 +392,7 @@ extern "C" DWORD __declspec(dllexport) Init([[maybe_unused]] void* unused)
 
     // Enable Data Execution Prevention
     if (!SetProcessDEPPolicy(PROCESS_DEP_ENABLE))
-        xlog::warn("SetProcessDEPPolicy failed (error %ld)", GetLastError());
+        xlog::warn("SetProcessDEPPolicy failed (error {})", GetLastError());
 
     log_system_info();
     load_config();
@@ -402,7 +428,7 @@ extern "C" DWORD __declspec(dllexport) Init([[maybe_unused]] void* unused)
 #endif
     debug_apply_patches();
 
-    xlog::info("Installing hooks took %lu ms", GetTickCount() - start_ticks);
+    xlog::info("Installing hooks took {} ms", GetTickCount() - start_ticks);
 
     // Suspend f.lux; otherwise f.lux will sometimes override calls to SetDeviceGammaRamp.
     static DWORD flux_pid = get_pid_by_filename("flux.exe");

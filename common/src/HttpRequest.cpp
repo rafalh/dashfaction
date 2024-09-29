@@ -2,7 +2,7 @@
 #include <common/error/Win32Error.h>
 #include <string>
 #include <string_view>
-#include <sstream>
+#include <format>
 #include <cassert>
 #include <cctype>
 
@@ -19,11 +19,11 @@ static ParsedUrl parse_http_url(std::string_view url)
     std::string_view http = "http://";
     std::string_view https = "https://";
     size_t host_pos = 0;
-    if (url.substr(0, https.size()) == https) {
+    if (url.starts_with(https)) {
         result.ssl = true;
         host_pos = https.size();
     }
-    else if (url.substr(0, http.size()) == http) {
+    else if (url.starts_with(http)) {
         result.ssl = false;
         host_pos = http.size();
     }
@@ -95,9 +95,7 @@ HttpRequest::HttpRequest(std::string_view url, const char* method, HttpSession& 
 
 void HttpRequest::add_header(std::string_view name, std::string_view value)
 {
-    std::stringstream sstream;
-    sstream << name << ": " << value << "\r\n";
-    auto str = sstream.str();
+    auto str = std::format("{}: {}", name, value);
     add_raw_headers(str);
 }
 
@@ -124,7 +122,7 @@ void HttpRequest::write(const void* data, size_t len)
         if (!InternetWriteFile(m_req, data, len, &written))
             THROW_WIN32_ERROR();
         if (!written)
-            THROW_EXCEPTION("Unable to write %lu request body bytes", len);
+            THROW_EXCEPTION("Unable to write {} request body bytes", len);
         data = static_cast<const std::byte*>(data) + written;
         len -= written;
     }
@@ -150,7 +148,7 @@ void HttpRequest::send(std::string_view body)
     }
 
     if (status_code != 200) {
-        throw std::runtime_error(std::string("Invalid HTTP status code: ") + std::to_string(status_code));
+        throw std::runtime_error(std::format("Invalid HTTP status code: {}", status_code));
     }
 }
 
@@ -160,6 +158,23 @@ size_t HttpRequest::read(void* buf, size_t buf_size)
     if (!InternetReadFile(m_req, buf, buf_size, &read))
         THROW_WIN32_ERROR();
     return read;
+}
+
+std::optional<std::string> HttpRequest::get_header(std::string_view name)
+{
+    DWORD index = 0;
+    std::string buf{name};
+    buf.resize(1024);
+
+    DWORD buf_len = buf.size();
+    if (!HttpQueryInfoA(m_req, HTTP_QUERY_CUSTOM, buf.data(), &buf_len, &index)) {
+        if (GetLastError() == ERROR_HTTP_HEADER_NOT_FOUND) {
+            return {};
+        }
+        THROW_WIN32_ERROR();
+    }
+    buf.resize(buf_len);
+    return {buf};
 }
 
 static bool is_uri_reserved_char(char c)
@@ -183,13 +198,11 @@ static bool is_uri_reserved_char(char c)
 
 std::string encode_uri_component(std::string_view value)
 {
-    char buf[8];
     std::string result;
     result.reserve(value.size());
     for (char c : value) {
         if (is_uri_reserved_char(c)) {
-            sprintf(buf, "%%%02X", static_cast<unsigned char>(c));
-            result += buf;
+            std::format_to(std::back_inserter(result), "%{:02X}", static_cast<unsigned char>(c));
         } else {
             result += c;
         }

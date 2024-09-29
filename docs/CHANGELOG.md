@@ -1,9 +1,102 @@
-DashFaction Changelog
-=====================
+Dash Faction Changelog
+======================
 
-Version 1.7.1 (not released yet)
+Version 1.9.0 (not released yet)
 --------------------------------
+- Added experimental D3D11 renderer
+- Added option to switch between D3D8, D3D9 and D3D11 renderer
+- Fix possible crash when alt-tabbing in fullscreen mode before game is fully initialized
+- Simplify installation detection in setup and launcher
+- Fix writing corrupted save files when autosaving some levels
+- Add German and French RF 1.10 detection to setup
+- Text improvements to setup
+- Don't copy over the changelog during setup
+- Add `gamma` command
+- Fix holes in driller cockpit on a widescreen display
+- Change default 'Use' key to E
+- Fix "Play (camera)" editor button for level filenames with spaces
+- Fix a patch for a possible buffer overflow in "Play" editor button caused by a long filepath
+- Fix cull radius for particle emitters with growing particles
+- Skip textures with too long names (32+ characters) in editor to avoid buffer overflow
+- Speed up shadows rendering in levels with multiple detailed movers
+- Add `debug particle_emitter` subcommand (shows emitter cull radius)
+- Fix crash reporter URL
+- Fix buffer-overflow when importing mesh with more than 8000 faces in the editor
+- Fix various issues when server switches to a new level before player finishes downloading the previous one
+- Adjust letterbox effects in cutscenes and after death for wide screens
+- Add support for bik files (Bink videos) in mods
+- Hide player riot shield third person model in cutscenes
+- Fix player third person weapon model animations after loading the game from a save file
+- Change default volume to 0.5
+- Log a warning when sound file cannot be find
+- Add Ogg Vorbis audio format support
+- Shorten the wait between levels when the server is empty
+- Support CIDR IP ranges in banlist (should help with banning VPNs)
+- Fix alpha sorting regression in level L5S3 (and possibly others)
+- Add more info to `level_info` command and add `map_info` alias
+- Fix ambient sound panning when EAX is disabled
+- Fix quiet 3D sounds being often skipped when EAX is enabled, e.g. first miner in L1S1 (DF bug)
+- Allow saving in training levels
+- Fix final level time left count-down in multi using wrong font (DF bug)
+- Add Spawn Health/Armor settings for dedicated servers
+- Add Kill Reward settings for dedicated servers
+- Do not load unnecessary VPPs in dedicated server mode
+- Add level filename to "Level Initializing" console message
+- Properly handle WM_PAINT in dedicated server, may improve performance (DF bug)
+
+Version 1.8.0 (released 2022-09-17)
+-----------------------------------
+- Add autosave after a level transition
 - Disable big HUD for resolutions lower than 1024x768 to prevent crashes
+- Fix "Wrong player ID" warnings when multiplayer quick save/load is used (client-side fix)
+- Restructure Options window
+- Add option to disable beep sound when new player joins multiplayer game and window is not focused
+- Ignore browsers when calculating player count for info requests
+- Fix Message event crash on dedicated server
+- Prevent browsers from voting
+- Add `swap_grenade_controls` command
+- Don't overwrite existing levels in `download_level` command
+- Add `download_level_force` command that overwrites existing levels
+- Allow the person who started a vote to cancel it
+- Allow setting max players server setting to 1
+- Change launcher window title
+- Allow autocomplete for `map` command
+- Add version and date to `/info` server chat command
+- Enable `map` command in RCON
+- Change update checker URL
+- Fix particle damage on dedicated servers
+- Add `.` command to make finding commands easier
+- Fix blurry fonts in the launcher on HiDPI monitors
+- Add `fps_counter` command
+- Make editor window resizeable
+- Add `debug_event_msg` command that allows to track event messages in console
+- Do not panic when character animation cannot be loaded, instead fall back to the first animation - fixes
+  "Too many animations" errors occuring in specific conditions in some run maps (note that this problem was
+  not occuring in the stock game because it allowed memory corruption to happen)
+- Log critical error message
+- Do not show glock with silencer in 3rd person view if current primary weapon is not a glock (RF bug)
+- Change screenshot filename template (it now includes date, time and level filename)
+- Fix multiple out-of-bounds writes in save game code (fixes crash when saving the game in some custom levels)
+- Do not use TTF fonts in game menu if VF fonts are modded (should fix some unofficial game localizations)
+- Change transparency sorting algorithm to fix flamethrower particles rendering in rooms with liquid and/or
+  semi-transparent details
+- Optimize finding a new room for moving objects
+- Allow start menu shortcut to be skipped in setup program
+- Simplify installation name in Windows control panel (no longer includes "version [version]")
+- Add icon for control panel entry
+- Restore original Red Faction Launcher on uninstall if replaced with Dash Faction Launcher link
+- Add game installation path autofill for German GOG RF to setup program
+- Remove unnecessary "Unknown tables.vpp version" error from setup program (the launcher already displays an error for mismatched tables.vpp files)
+- Fix possible OOB write in waypoint list read code
+- Add server verification in update checker using Ed25519 signature
+- Fix opacity of Display_Fullscreen_Image being affected by previous drawing operations
+- Restore blackout from a save file if it was killing the player or ending the game
+- Fix crash when skipping a cutscene that stared when blackout was in progress
+- Remove limit of restored objects during a level transition
+- Fix possible buffer overflow if transitioned object mesh name is longer than 31 characters
+- Change default FPS limit to 120 to comply with the stock game
+- Fix loading a save game when player entity is out of level bounds
+- Fix possible freeze when burning entity is destroyed
 
 Version 1.7.0 (released 2021-06-05)
 -----------------------------------
