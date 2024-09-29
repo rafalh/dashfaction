@@ -3,6 +3,7 @@
 #include <optional>
 #include <deque>
 #include <utility>
+#include <xlog/xlog.h>
 #include "server_internal.h"
 #include "../rf/player/player.h"
 #include "../rf/os/timer.h"
@@ -81,26 +82,34 @@ struct PlayerStatsNew : rf::PlayerLevelStats
     void update_damage_log(float damage)
     {
         int current_time = rf::timer_get(1000);
-        damage_log.emplace_back(current_time, damage);
 
-        // Remove entries older than 20 seconds
-        /* while (!damage_log.empty() && (current_time - damage_log.front().first) > 20000) {
+        while (!damage_log.empty() &&
+            (current_time - damage_log.front().first) > g_additional_server_config.critical_hits.dynamic_history_ms)
+        {
             damage_log.pop_front();
-        }*/
+        }
+
+        damage_log.emplace_back(current_time, damage);
     }
 
     // return total damage for the past X ms
     [[nodiscard]] float get_recent_damage() const
     {
-        float total_damage = 0.0f;
-        int current_time = rf::timer_get(1000);
+        if (!damage_log.empty()) {
+            float total_damage = 0.0f;
+            int current_time = rf::timer_get(1000);
 
-        for (const auto& entry : damage_log) {
-            if ((current_time - entry.first) <= g_additional_server_config.critical_hits.dynamic_history_ms) {
-                total_damage += entry.second;
+            for (const auto& entry : damage_log) {
+                if ((current_time - entry.first) <= g_additional_server_config.critical_hits.dynamic_history_ms) {
+                    total_damage += entry.second;
+                }
             }
+            return total_damage;
         }
-        return total_damage;
+        else {
+            xlog::debug("Damage log is empty, skipping recent damage calculations.");
+            return 0.0f;
+        }
     }
 };
 

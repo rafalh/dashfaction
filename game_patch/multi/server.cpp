@@ -101,9 +101,9 @@ void load_additional_server_config(rf::Parser& parser)
         if (parser.parse_optional("+Attacker Sound ID:")) {
             g_additional_server_config.critical_hits.sound_id = parser.parse_uint();
         }
-        if (parser.parse_optional("+Victim Sound ID:")) {
+        /* if (parser.parse_optional("+Victim Sound ID:")) {
             g_additional_server_config.critical_hits.sound_id_damaged = parser.parse_uint();
-        }
+        }*/
         if (parser.parse_optional("+Rate Limit:")) {
             g_additional_server_config.critical_hits.rate_limit = parser.parse_uint();
         }
@@ -417,7 +417,7 @@ void send_hit_sound_packet(rf::Player* target)
     rf::multi_io_send(target, &packet, sizeof(packet));
 }
 
-void send_critical_hit_packet(rf::Player* target, bool is_damaged_player)
+void send_critical_hit_packet(rf::Player* target)
 {
     // rate limiting
     int now = rf::timer_get(1000);
@@ -431,14 +431,7 @@ void send_critical_hit_packet(rf::Player* target, bool is_damaged_player)
     RF_SoundPacket packet;
     packet.header.type = RF_GPT_SOUND;
     packet.header.size = sizeof(packet) - sizeof(packet.header);
-
-    if (is_damaged_player) {
-        packet.sound_id = g_additional_server_config.critical_hits.sound_id_damaged; // Use the damaged sound ID
-    }
-    else {
-        packet.sound_id = g_additional_server_config.critical_hits.sound_id; // Use the default sound ID
-    }
-
+    packet.sound_id = g_additional_server_config.critical_hits.sound_id;
     // FIXME: it does not work on RF 1.21
     packet.pos.x = packet.pos.y = packet.pos.z = std::numeric_limits<float>::quiet_NaN();
     rf::multi_io_send(target, &packet, sizeof(packet));
@@ -461,9 +454,12 @@ FunHook<float(rf::Entity*, float, int, int, int)> entity_damage_hook{
         if (rf::is_server && g_additional_server_config.critical_hits.enabled && is_pvp_damage && damage > 0.0f) {
             float base_chance = g_additional_server_config.critical_hits.base_chance;
             float bonus_chance = 0.0f;
+            float recent_damage = 0.0f;
 
-            float recent_damage =
-                static_cast<PlayerStatsNew*>(killer_player->stats)->get_recent_damage();
+            if (killer_player && killer_player->stats) {
+                auto* killer_stats = static_cast<PlayerStatsNew*>(killer_player->stats);
+                recent_damage = killer_stats->get_recent_damage();
+            }
 
             // if damage >= 1000, they get the full 10% bonus
             bonus_chance = 0.1f * std::min(recent_damage /
@@ -472,14 +468,13 @@ FunHook<float(rf::Entity*, float, int, int, int)> entity_damage_hook{
             float critical_hit_chance = base_chance + bonus_chance;
             xlog::debug("Critical hit chance: {:.2f}", critical_hit_chance);
 
-            // Check if the random roll is a critical hit
+            // check if the random roll is a critical hit
             float random_value = static_cast<float>(dist(rng)) / static_cast<float>(dist.max());
             if (random_value < critical_hit_chance) {
                 // Apply critical hit modifier
                 damage *= g_additional_server_config.critical_hits.critical_modifier;
                 xlog::debug("Crit! Dealt damage: {:.2f}", damage);
-                send_critical_hit_packet(killer_player, 0);
-                //send_critical_hit_packet(damaged_player, 1); // inform damaged player
+                send_critical_hit_packet(killer_player);
             }
         }
 
