@@ -3,6 +3,7 @@
 #include "../main/main.h"
 #include "../rf/multi.h"
 #include "../rf/player/player.h"
+#include "../rf/level.h"
 #include "../misc/misc.h"
 #include "../misc/vpackfile.h"
 #include <common/utils/list-utils.h>
@@ -15,8 +16,8 @@ ConsoleCommand2 dot_cmd{
     [](std::string pattern) {
         for (i32 i = 0; i < rf::console::num_commands; ++i) {
             rf::console::Command* cmd = g_commands_buffer[i];
-            if (string_contains_ignore_case(cmd->name, pattern)) {         
-                rf::console::printf(cmd->name);
+            if (string_contains_ignore_case(cmd->name, pattern)) {
+                rf::console::print("{}", cmd->name);
             }
         }
     },
@@ -29,7 +30,7 @@ ConsoleCommand2 vli_cmd{
     []() {
         g_game_config.glares = !g_game_config.glares;
         g_game_config.save();
-        rf::console::printf("Volumetric lightining is %s.", g_game_config.glares ? "enabled" : "disabled");
+        rf::console::print("Volumetric lightining is {}.", g_game_config.glares ? "enabled" : "disabled");
     },
     "Toggles volumetric lightining",
 };
@@ -42,7 +43,7 @@ ConsoleCommand2 player_count_cmd{
 
         auto player_list = SinglyLinkedList{rf::player_list};
         auto player_count = std::distance(player_list.begin(), player_list.end());
-        rf::console::printf("Player count: %d\n", player_count);
+        rf::console::print("Player count: {}\n", player_count);
     },
     "Get player count",
 };
@@ -52,7 +53,7 @@ ConsoleCommand2 find_level_cmd{
     [](std::string pattern) {
         vpackfile_find_matching_files(StringMatcher().infix(pattern).suffix(".rfl"), [](const char* name) {
             // Print all matching filenames
-            rf::console::printf("%s\n", name);
+            rf::console::print("{}\n", name);
         });
     },
     "Find a level by a filename fragment",
@@ -68,6 +69,26 @@ auto& level_cmd = addr_as_ref<rf::console::Command>(0x00637078);
 DcCommandAlias map_cmd{
     "map",
     level_cmd,
+};
+
+ConsoleCommand2 level_info_cmd{
+    "level_info",
+    []() {
+        if (rf::level.flags & rf::LEVEL_LOADED) {
+            rf::console::print("Filename: {}", rf::level.filename);
+            rf::console::print("Name: {}", rf::level.name);
+            rf::console::print("Author: {}", rf::level.author);
+            rf::console::print("Date: {}", rf::level.level_date);
+        } else {
+            rf::console::print("No level loaded!");
+        }
+    },
+    "Shows information about the current level",
+};
+
+DcCommandAlias map_info_cmd{
+    "map_info",
+    level_info_cmd,
 };
 
 static void register_builtin_command(const char* name, const char* description, uintptr_t addr)
@@ -98,7 +119,7 @@ void console_commands_init()
     register_builtin_command("sound", "Toggle sound", 0x00434590);
     register_builtin_command("difficulty", "Set game difficulty", 0x00434EB0);
     // register_builtin_command("ms", "Set mouse sensitivity", 0x0043CE90);
-    register_builtin_command("level_info", "Show level info", 0x0045C210);
+    // register_builtin_command("level_info", "Show level info", 0x0045C210);
     register_builtin_command("verify_level", "Verify level", 0x0045E1F0);
     register_builtin_command("player_names", "Toggle player names on HUD", 0x0046CB80);
     register_builtin_command("clients_count", "Show number of connected clients", 0x0046CD10);
@@ -169,4 +190,6 @@ void console_commands_init()
     find_level_cmd.register_cmd();
     find_map_cmd.register_cmd();
     map_cmd.register_cmd();
+    level_info_cmd.register_cmd();
+    map_info_cmd.register_cmd();
 }

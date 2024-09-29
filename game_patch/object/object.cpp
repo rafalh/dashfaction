@@ -8,6 +8,8 @@
 #include "../rf/clutter.h"
 #include "../rf/multi.h"
 #include "../rf/level.h"
+#include "../rf/geometry.h"
+#include "../rf/math/ix.h"
 #include "object.h"
 #include "object_private.h"
 
@@ -16,7 +18,7 @@ FunHook<rf::Object*(int, int, int, rf::ObjectCreateInfo*, int, rf::GRoom*)> obj_
     [](int type, int sub_type, int parent, rf::ObjectCreateInfo* create_info, int flags, rf::GRoom* room) {
         rf::Object* objp = obj_create_hook.call_target(type, sub_type, parent, create_info, flags, room);
         if (!objp) {
-            xlog::info("Failed to create object (type %d)", type);
+            xlog::info("Failed to create object (type {})", type);
         }
         return objp;
     },
@@ -104,7 +106,7 @@ CodeInjection obj_create_find_slot_patch{
         }
 
         // success: current index is free
-        xlog::trace("Using index %d for object type %d", index, obj_type);
+        xlog::trace("Using index {} for object type {}", index, obj_type);
         index_hint = index + 1;
         if (index_hint > max_index) {
             index_hint = min_index;
@@ -202,6 +204,19 @@ FunHook<void(rf::Object*)> obj_delete_mesh_hook{
     },
 };
 
+CodeInjection object_find_room_optimization{
+    0x0048A1C9,
+    [](auto& regs) {
+        rf::Object* obj = regs.esi;
+        // Check if object is in room bounding box to handle leaving room by a hole
+        if (obj->room && rf::ix_point_in_box(obj->pos, obj->room->bbox_min, obj->room->bbox_max)) {
+            // Pass original room to GSolid::find_new_room so it can execute a faster code path
+            addr_as_ref<rf::GRoom*>(regs.esp) = obj->room; // orig_room
+            addr_as_ref<rf::Vector3*>(regs.esp + 4) = &obj->correct_pos; // orig_pos
+        }
+    },
+};
+
 void object_do_patch()
 {
     // Log error when object cannot be created
@@ -252,6 +267,13 @@ void object_do_patch()
     // Calculate lighting when object mesh is changed
     obj_create_mesh_hook.install();
     obj_delete_mesh_hook.install();
+
+    // Optimize Object::find_room function
+    object_find_room_optimization.install();
+
+    // Allow creating entity objects out of level bounds
+    // Fixes loading a save game when player entity is out of bounds
+    AsmWriter{0x00486DE5, 0x00486DEE}.nop();
 
     // Other files
     entity_do_patch();

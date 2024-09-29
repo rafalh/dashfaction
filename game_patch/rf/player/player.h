@@ -88,8 +88,6 @@ namespace rf
         TEAM_BLUE = 1,
     };
 
-    using PlayerFlags = int;
-
     struct PlayerViewport
     {
         int clip_x;
@@ -99,12 +97,18 @@ namespace rf
         float fov_h;
     };
 
+    enum PlayerFlags
+    {
+        PF_KILL_AFTER_BLACKOUT = 0x200,
+        PF_END_LEVEL_AFTER_BLACKOUT = 0x1000,
+    };
+
     struct Player
     {
         struct Player *next;
         struct Player *prev;
         String name;
-        PlayerFlags flags;
+        unsigned flags;
         int entity_handle;
         int entity_type;
         Vector3 spew_pos;
@@ -168,4 +172,5 @@ namespace rf
     static auto& player_render_held_corpse = addr_as_ref<void(Player* player)>(0x004A2B90);
     static auto& player_do_frame = addr_as_ref<void(Player*)>(0x004A2700);
     static auto& player_make_weapon_current_selection = addr_as_ref<void(Player *player, int weapon_type)>(0x004A4980);
+    static auto& player_start_death_fade = addr_as_ref<void(Player *pp, float time_sec, void (*callback)(Player *))>(0x004A73E0);
 }

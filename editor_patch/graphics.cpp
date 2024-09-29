@@ -109,7 +109,7 @@ CodeInjection gr_d3d_line_3d_patch_1{
             regs.eip = 0x004E1343;
         }
         else {
-            xlog::trace("Line drawing requires gr_d3d_prepare_buffers %d %d %d %d",
+            xlog::trace("Line drawing requires gr_d3d_prepare_buffers {} {} {} {}",
                  red::gr_d3d_buffers_locked, red::gr_d3d_primitive_type, red::gr_d3d_max_hw_vertex,
                  red::gr_d3d_max_hw_index + red::gr_d3d_num_indices);
         }
@@ -135,7 +135,7 @@ CodeInjection gr_d3d_line_2d_patch_1{
             regs.eip = 0x004E10C2;
         }
         else {
-            xlog::trace("Line drawing requires gr_d3d_prepare_buffers %d %d %d %d",
+            xlog::trace("Line drawing requires gr_d3d_prepare_buffers {} {} {} {}",
                  red::gr_d3d_buffers_locked, red::gr_d3d_primitive_type, red::gr_d3d_max_hw_vertex,
                  red::gr_d3d_max_hw_index + red::gr_d3d_num_indices);
         }
@@ -227,7 +227,7 @@ FunHook<void(red::Matrix3*, red::Vector3*, float, bool, bool)> gr_setup_3d_hook{
             horizontal_fov = h_fov_rad / pi * 180.0f;
             // Clamp the value to avoid artifacts when view is very stretched
             horizontal_fov = std::clamp(horizontal_fov, 60.0f, 120.0f);
-            //xlog::info("fov %f", horizontal_fov);
+            //xlog::info("fov {}", horizontal_fov);
         }
         gr_setup_3d_hook.call_target(viewer_orient, viewer_pos, horizontal_fov, zbuffer_flag, z_scale);
     },
@@ -238,12 +238,31 @@ CodeInjection gr_d3d_init_load_library_injection{
     [](auto& regs) {
         extern HMODULE g_module;
         auto d3d8to9_path = get_module_dir(g_module) + "\\d3d8to9.dll";
-        xlog::info("Loading d3d8to9.dll: %s", d3d8to9_path.c_str());
+        xlog::info("Loading d3d8to9.dll: {}", d3d8to9_path);
         HMODULE d3d8to9_module = LoadLibraryA(d3d8to9_path.c_str());
         if (d3d8to9_module) {
             regs.eax = d3d8to9_module;
             regs.eip = 0x004EC519;
         }
+    },
+};
+
+FunHook<void(HWND)> gr_d3d_set_viewport_wnd_hook{
+    0x004EB840,
+    [](HWND hwnd) {
+        // Original code:
+        // * sets broken offset and clip size in gr_screen
+        // * configures viewport using off by one window size
+        // * reconfigures D3D matrices for no reason (they are unchanged)
+        // * resets clipping rect and viewport short after (0x004B8E2B)
+        // Rewrite it keeping only the parts that works properly and makes sense
+        // Note: In all places where this code is called clip rect is manually changed after the call
+        auto& gr_d3d_hwnd = addr_as_ref<HWND>(0x0183B950);
+        auto& gr_d3d_wnd_client_rect = addr_as_ref<RECT>(0x0183B798);
+        auto& gr_d3d_flush_buffer = addr_as_ref<void()>(0x004E99D0);
+        gr_d3d_flush_buffer();
+        gr_d3d_hwnd = hwnd;
+        GetClientRect(hwnd, &gr_d3d_wnd_client_rect);
     },
 };
 
@@ -289,4 +308,7 @@ void ApplyGraphicsPatches()
 
     // Use d3d8to9 instead of d3d8
     gr_d3d_init_load_library_injection.install();
+
+    // Fix setting viewport window
+    gr_d3d_set_viewport_wnd_hook.install();
 }

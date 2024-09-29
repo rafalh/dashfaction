@@ -15,6 +15,7 @@ struct DebugFlagDesc
 
 bool g_dbg_geometry_rendering_stats = false;
 bool g_dbg_static_lights = false;
+bool g_dbg_particle_emitters = false;
 
 DebugFlagDesc g_debug_flags[] = {
     {addr_as_ref<bool>(0x0062F3AA), "thruster"},
@@ -30,6 +31,7 @@ DebugFlagDesc g_debug_flags[] = {
     {addr_as_ref<bool>(0x0062FE20), "perf"},
     {addr_as_ref<bool>(0x0062FE21), "perfbar"},
     {addr_as_ref<bool>(0x0064E39C), "waypoint"},
+    {g_dbg_particle_emitters, "particle_emitter"},
     // network meter in left-top corner
     {addr_as_ref<bool>(0x006FED24), "network", false, true},
     {addr_as_ref<bool>(0x007B2758), "particlestats"},
@@ -55,12 +57,12 @@ ConsoleCommand2 debug_cmd{
             if (type == dbg_flag.name) {
 #ifdef NDEBUG
                 if (!dbg_flag.allow_multi && rf::is_multi) {
-                    rf::console::printf("This command is disabled in multiplayer!");
+                    rf::console::print("This command is disabled in multiplayer!");
                     return;
                 }
 #endif
                 dbg_flag.ref = !dbg_flag.ref;
-                rf::console::printf("Debug flag '%s' is %s", dbg_flag.name, dbg_flag.ref ? "enabled" : "disabled");
+                rf::console::print("Debug flag '{}' is {}", dbg_flag.name, dbg_flag.ref ? "enabled" : "disabled");
                 if (dbg_flag.clear_geometry_cache) {
                     rf::g_cache_clear();
                 }
@@ -68,7 +70,7 @@ ConsoleCommand2 debug_cmd{
             }
         }
 
-        rf::console::printf("Invalid debug flag: %s", type.c_str());
+        rf::console::print("Invalid debug flag: {}", type);
     },
     nullptr,
     "debug [thruster | light | light2 | push_climb_reg | geo_reg | glass | mover | ignite | movemode | perf |\n"
@@ -92,10 +94,13 @@ void debug_cmd_render()
 {
     const auto dbg_waypoints = addr_as_ref<void()>(0x00468F00);
     const auto dbg_internal_lights = addr_as_ref<void()>(0x004DB830);
+    const auto dbg_particle_emitters = addr_as_ref<void()>(0x00497E40);
 
     dbg_waypoints();
     if (g_dbg_static_lights)
         dbg_internal_lights();
+    if (g_dbg_particle_emitters)
+        dbg_particle_emitters();
 }
 
 void debug_cmd_render_ui()

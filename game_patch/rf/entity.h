@@ -424,6 +424,7 @@ namespace rf
     static auto& entity_reload_current_primary = addr_as_ref<bool __cdecl(Entity *entity, bool no_sound, bool is_reload_packet)>(0x00425280);
     static auto& entity_turn_weapon_on = addr_as_ref<void __cdecl(int entity_handle, int weapon_type, bool alt_fire)>(0x0041A870);
     static auto& entity_turn_weapon_off = addr_as_ref<void __cdecl(int entity_handle, int weapon_type)>(0x0041AE70);
+    static auto& entity_restore_mesh = addr_as_ref<void(Entity *ep, const char *mesh_name)>(0x0042C570);
 
     static auto& entity_list = addr_as_ref<Entity>(0x005CB060);
     static auto& local_player_entity = addr_as_ref<Entity*>(0x005CB054);

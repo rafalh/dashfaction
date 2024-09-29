@@ -11,20 +11,31 @@
 #define XLOG_DISCARD_TRACE
 #endif
 
-#include <cstdarg>
 #include <xlog/Level.h>
 #include <xlog/Logger.h>
 
+#ifdef XLOG_PRINTF
+#include <cstdarg>
+#endif
+
 namespace xlog
 {
+    template<typename... Args>
+    inline void log(Level level, std::format_string<Args...> fmt, Args&&... args)
+    {
+        Logger::root().log(level, fmt, std::forward<Args>(args)...);
+    }
+
+#ifdef XLOG_PRINTF
     inline void log(Level level, const char *format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(2, 3);
     inline void log(Level level, const char *format, ...)
     {
         std::va_list args;
         va_start(args, format);
-        Logger::root().vlog(level, format, args);
+        Logger::root().vlogf(level, format, args);
         va_end(args);
     }
+#endif
 
 #ifdef XLOG_STREAMS
     inline LogStream log(Level level)
@@ -33,14 +44,22 @@ namespace xlog
     }
 #endif
 
-    inline void error(const char *format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(1, 2);
-    inline void error(const char *format, ...)
+    template<typename... Args>
+    inline void error(std::format_string<Args...> fmt, Args&&... args)
+    {
+        Logger::root().log(Level::error, fmt, std::forward<Args>(args)...);
+    }
+
+#ifdef XLOG_PRINTF
+    inline void errorf(const char *format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(1, 2);
+    inline void errorf(const char *format, ...)
     {
         std::va_list args;
         va_start(args, format);
-        Logger::root().vlog(Level::error, format, args);
+        Logger::root().vlogf(Level::error, format, args);
         va_end(args);
     }
+#endif
 
 #ifdef XLOG_STREAMS
     inline auto error()
@@ -49,14 +68,22 @@ namespace xlog
     }
 #endif
 
-    inline void warn(const char *format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(1, 2);
-    inline void warn(const char *format, ...)
+    template<typename... Args>
+    inline void warn(std::format_string<Args...> fmt, Args&&... args)
+    {
+        Logger::root().log(Level::warn, fmt, std::forward<Args>(args)...);
+    }
+
+#ifdef XLOG_PRINTF
+    inline void warnf(const char *format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(1, 2);
+    inline void warnf(const char *format, ...)
     {
         std::va_list args;
         va_start(args, format);
-        Logger::root().vlog(Level::warn, format, args);
+        Logger::root().vlogf(Level::warn, format, args);
         va_end(args);
     }
+#endif
 
 #ifdef XLOG_STREAMS
     inline auto warn()
@@ -65,14 +92,22 @@ namespace xlog
     }
 #endif
 
-    inline void info(const char *format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(1, 2);
-    inline void info(const char *format, ...)
+    template<typename... Args>
+    inline void info(std::format_string<Args...> fmt, Args&&... args)
+    {
+        Logger::root().log(Level::info, fmt, std::forward<Args>(args)...);
+    }
+
+#ifdef XLOG_PRINTF
+    inline void infof(const char *format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(1, 2);
+    inline void infof(const char *format, ...)
     {
         std::va_list args;
         va_start(args, format);
-        Logger::root().vlog(Level::info, format, args);
+        Logger::root().vlogf(Level::info, format, args);
         va_end(args);
     }
+#endif
 
 #ifdef XLOG_STREAMS
     inline auto info()
@@ -81,14 +116,22 @@ namespace xlog
     }
 #endif
 
-    inline void debug(const char *format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(1, 2);
-    inline void debug(const char *format, ...)
+    template<typename... Args>
+    inline void debug(std::format_string<Args...> fmt, Args&&... args)
+    {
+        Logger::root().log(Level::debug, fmt, std::forward<Args>(args)...);
+    }
+
+#ifdef XLOG_PRINTF
+    inline void debugf(const char *format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(1, 2);
+    inline void debugf(const char *format, ...)
     {
         std::va_list args;
         va_start(args, format);
-        Logger::root().vlog(Level::debug, format, args);
+        Logger::root().vlogf(Level::debug, format, args);
         va_end(args);
     }
+#endif
 
 #ifdef XLOG_STREAMS
     inline auto debug()
@@ -97,19 +140,36 @@ namespace xlog
     }
 #endif
 
-    inline void trace(const char *format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(1, 2);
+    template<typename... Args>
+    inline void tracef(const char *format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(1, 2);
 #ifndef XLOG_DISCARD_TRACE
-    inline void trace(const char *format, ...)
+    template<typename... Args>
+    inline void trace(std::format_string<Args...> fmt, Args&&... args)
+    {
+        Logger::root().log(Level::trace, fmt, std::forward<Args>(args)...);
+    }
+
+#ifdef XLOG_PRINTF
+    inline void tracef(const char *format, ...)
     {
         std::va_list args;
         va_start(args, format);
-        Logger::root().vlog(Level::trace, format, args);
+        Logger::root().vlogf(Level::trace, format, args);
         va_end(args);
     }
+#endif
+
 #else
     inline void trace([[ maybe_unused ]] const char *format, ...)
     {
     }
+
+#ifdef XLOG_PRINTF
+    inline void tracef([[ maybe_unused ]] const char *format, ...)
+    {
+    }
+#endif
+
 #endif
 
 #ifdef XLOG_STREAMS
@@ -138,15 +198,17 @@ namespace xlog
 #define INFO(...) xlog::info(__VA_ARGS__)
 #define TRACE(...) xlog::trace(__VA_ARGS__)
 
-#define LOG_ONCE(lvl, ...) do { \
-    static bool skip = false; \
-    if (!skip) \
-        lvl(__VA_ARGS__); \
-        skip = true; \
+#define LOG_ONCE(lvl, ...) \
+    do { \
+        static bool skip = false; \
+        if (!skip) {\
+            lvl(__VA_ARGS__); \
+            skip = true; \
+        } \
     } while (false)
 #define ERR_ONCE(...) LOG_ONCE(xlog::error, __VA_ARGS__)
 #define WARN_ONCE(...) LOG_ONCE(xlog::warn, __VA_ARGS__)
 #define INFO_ONCE(...) LOG_ONCE(xlog::info, __VA_ARGS__)
-#define TRACE_ONCE(...) LOG_ONCE(xlog::trace, __VA_ARGS__)
+#define TRACE_ONCE(...) LOG_ONCE(xlog::tracef, __VA_ARGS__)
 
 #endif // XLOG_NO_MACROS

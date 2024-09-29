@@ -1,5 +1,5 @@
 // VERSIONINFO
-#define VER_FILE_DESCRIPTION "Dash Faction launcher"
+#define VER_FILE_DESCRIPTION "Dash Faction Launcher"
 #define VER_ORIGINAL_FILENAME "DashFactionLauncher.exe"
 #define VER_FILETYPE 0x1L // VFT_APP
 #include <common/version/version.rc>

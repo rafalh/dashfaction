@@ -2,9 +2,11 @@
 #include <xlog/xlog.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CallHook.h>
-#include <common/utils/string-utils.h>
+#include <format>
+#include <algorithm>
 #include "../rf/ui.h"
 #include "../rf/input.h"
+#include "../rf/misc.h"
 #include "../rf/os/os.h"
 
 #define DEBUG_UI_LAYOUT 0
@@ -61,7 +63,7 @@ void __fastcall UiButton_render(rf::ui::Button& this_)
 
     if (this_.bg_bitmap >= 0) {
         rf::gr::set_color(255, 255, 255, 255);
-        rf::gr::bitmap_scaled(this_.bg_bitmap, x, y, w, h, 0, 0, this_.w, this_.h);
+        rf::gr::bitmap_scaled(this_.bg_bitmap, x, y, w, h, 0, 0, this_.w, this_.h, false, false, rf::gr::bitmap_clamp_mode);
     }
 
     if (!this_.enabled) {
@@ -262,22 +264,42 @@ CallHook<void(int*, int*, const char*, int, int, char, int)> popup_set_text_gr_s
     },
 };
 
+static bool is_any_font_modded()
+{
+    auto rfpc_large_checksum = rf::get_file_checksum("rfpc-large.vf");
+    auto rfpc_medium_checksum = rf::get_file_checksum("rfpc-medium.vf");
+    auto rfpc_small_checksum = rf::get_file_checksum("rfpc-small.vf");
+    // Note: rfpc-large differs between Steam and CD game distributions
+    bool rfpc_large_modded = rfpc_large_checksum != 0x5E7DC24Au && rfpc_large_checksum != 0xEB80AD63u;
+    bool rfpc_medium_modded = rfpc_medium_checksum != 0x19E7184Cu;
+    bool rfpc_small_modded = rfpc_small_checksum != 0xAABA52E6u;
+    bool any_font_modded = rfpc_large_modded || rfpc_medium_modded || rfpc_small_modded;
+    if (any_font_modded) {
+        xlog::info("Detected modded fonts: rfpc-large {} ({:08X}) rfpc-medium {} ({:08X}) rfpc-small {} ({:08X})",
+            rfpc_large_modded, rfpc_large_checksum,
+            rfpc_medium_modded, rfpc_medium_checksum,
+            rfpc_small_modded, rfpc_small_checksum
+        );
+    }
+    return any_font_modded;
+}
+
 FunHook<void()> menu_init_hook{
     0x00442BB0,
     []() {
         menu_init_hook.call_target();
 #if SHARP_UI_TEXT
-        xlog::info("UI scale: %.4f %.4f", rf::ui::scale_x, rf::ui::scale_y);
-        if (rf::ui::scale_y > 1.0f) {
+        xlog::info("UI scale: {:.4f} {:.4f}", rf::ui::scale_x, rf::ui::scale_y);
+        if (rf::ui::scale_y > 1.0f && !is_any_font_modded()) {
             int large_font_size = std::min(128, static_cast<int>(std::round(rf::ui::scale_y * 14.5f))); // 32
             int medium_font_size = std::min(128, static_cast<int>(std::round(rf::ui::scale_y * 9.0f))); // 20
             int small_font_size = std::min(128, static_cast<int>(std::round(rf::ui::scale_y * 7.5f))); // 16
-            xlog::info("UI font sizes: %d %d %d", large_font_size, medium_font_size, small_font_size);
+            xlog::info("UI font sizes: {} {} {}", large_font_size, medium_font_size, small_font_size);
 
-            rf::ui::large_font = rf::gr::load_font(string_format("boldfont.ttf:%d", large_font_size).c_str());
-            rf::ui::medium_font_0 = rf::gr::load_font(string_format("regularfont.ttf:%d", medium_font_size).c_str());
+            rf::ui::large_font = rf::gr::load_font(std::format("boldfont.ttf:{}", large_font_size).c_str());
+            rf::ui::medium_font_0 = rf::gr::load_font(std::format("regularfont.ttf:{}", medium_font_size).c_str());
             rf::ui::medium_font_1 = rf::ui::medium_font_0;
-            rf::ui::small_font = rf::gr::load_font(string_format("regularfont.ttf:%d", small_font_size).c_str());
+            rf::ui::small_font = rf::gr::load_font(std::format("regularfont.ttf:{}", small_font_size).c_str());
         }
 #endif
     },
@@ -326,4 +348,13 @@ void ui_apply_patch()
 
     // Handle CTRL+V in input boxes
     UiInputBox_process_key_hook.install();
+}
+
+void ui_get_string_size(int* w, int* h, const char* s, int s_len, int font_num)
+{
+    rf::gr::get_string_size(w, h, s, s_len, font_num);
+#if SHARP_UI_TEXT
+    *w = static_cast<int>(*w / rf::ui::scale_x);
+    *h = static_cast<int>(*h / rf::ui::scale_y);
+#endif
 }

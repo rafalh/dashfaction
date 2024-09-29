@@ -114,7 +114,7 @@ static bool load_file_into_buffer(const char* name, std::vector<unsigned char>& 
 {
     rf::File file;
     if (file.open(name) != 0) {
-        xlog::error("Failed to open file %s", name);
+        xlog::error("Failed to open file {}", name);
         return false;
     }
     auto len = file.size();
@@ -147,7 +147,7 @@ template<typename T>
 inline void TextureAtlasPacker<T>::pack()
 {
     update_size();
-    xlog::trace("Texture atlas usage: %.2f", total_pixels_ * 100.0f / (atlas_size_.first * atlas_size_.second));
+    xlog::trace("Texture atlas usage: {:.2f}", total_pixels_ * 100.0f / (atlas_size_.first * atlas_size_.second));
     // Sort by area (from largest to smallest)
     std::sort(items_.begin(), items_.end(), [](Item& a, Item& b) {
         return a.area > b.area;
@@ -218,32 +218,32 @@ GrNewFont::GrNewFont(std::string_view name) :
 {
     auto [filename, size_x, size_y, digits_only] = parse_font_name(name);
     std::vector<unsigned char> buffer;
-    xlog::trace("Loading font %s size %d", filename.c_str(), size_y);
+    xlog::trace("Loading font {} size {}", filename, size_y);
     if (!load_file_into_buffer(filename.c_str(), buffer)) {
-        xlog::error("load_file_into_buffer failed for %s", filename.c_str());
+        xlog::error("load_file_into_buffer failed for {}", filename);
         throw std::runtime_error{"failed to load font"};
     }
 
     FT_Face face;
     FT_Error error = FT_New_Memory_Face(g_freetype_lib, buffer.data(), buffer.size(), 0, &face);
     if (error) {
-        xlog::error("FT_New_Memory_Face failed: %d", error);
+        xlog::error("FT_New_Memory_Face failed: {}", error);
         throw std::runtime_error{"failed to load font"};
     }
 
     error = FT_Set_Pixel_Sizes(face, size_x, size_y);
     if (error) {
-        xlog::error("FT_Set_Pixel_Sizes failed: %d", error);
+        xlog::error("FT_Set_Pixel_Sizes failed: {}", error);
         throw std::runtime_error{"failed to load font"};
     }
 
-    xlog::trace("raw height %d ascender %d descender %d", face->height, face->ascender, face->descender);
-    xlog::trace("scaled height %ld ascender %ld descender %ld", face->size->metrics.height / 64,
+    xlog::trace("raw height {} ascender {} descender {}", face->height, face->ascender, face->descender);
+    xlog::trace("scaled height {} ascender {} descender {}", face->size->metrics.height / 64,
         face->size->metrics.ascender / 64, face->size->metrics.descender / 64);
     line_spacing_ = face->size->metrics.height / 64;
     height_ = line_spacing_; //(face->size->metrics.ascender - face->size->metrics.descender) / 64;
     baseline_y_ = face->size->metrics.ascender / 64;
-    xlog::trace("line_spacing %d height %d baseline_y %d", line_spacing_, height_, baseline_y_);
+    xlog::trace("line_spacing {} height {} baseline_y {}", line_spacing_, height_, baseline_y_);
 
     // Prepare lookup table for translating Windows 1252 characters (encoding used by RF) into Unicode codepoints
 
@@ -293,7 +293,7 @@ GrNewFont::GrNewFont(std::string_view name) :
     for (auto codepoint : unicode_code_points) {
         error = FT_Load_Char(face, codepoint, FT_LOAD_BITMAP_METRICS_ONLY);
         if (error) {
-            xlog::error("FT_Load_Char failed: %d", error);
+            xlog::error("FT_Load_Char failed: {}", error);
             continue;
         }
         FT_GlyphSlot slot = face->glyph;
@@ -303,7 +303,7 @@ GrNewFont::GrNewFont(std::string_view name) :
     atlas_packer.pack();
     auto [atlas_w, atlas_h] = atlas_packer.get_size();
 
-    xlog::trace("Creating font texture atlas %dx%d", atlas_w, atlas_h);
+    xlog::trace("Creating font texture atlas {}x{}", atlas_w, atlas_h);
     bitmap_ = rf::bm::create(rf::bm::FORMAT_8888_ARGB, atlas_w, atlas_h);
     if (bitmap_ == -1) {
         xlog::error("bm_create failed for font texture");
@@ -321,7 +321,7 @@ GrNewFont::GrNewFont(std::string_view name) :
     for (auto codepoint : unicode_code_points) {
         error = FT_Load_Char(face, codepoint, FT_LOAD_RENDER);
         if (error) {
-            xlog::error("FT_Load_Char failed: %d", error);
+            xlog::error("FT_Load_Char failed: {}", error);
             continue;
         }
         FT_GlyphSlot slot = face->glyph;
@@ -331,7 +331,7 @@ GrNewFont::GrNewFont(std::string_view name) :
 
         auto [glyph_bm_x, glyph_bm_y] = atlas_packer.get_pos(codepoint);
 
-        xlog::trace("glyph %x bitmap x %d y %d w %d h %d left %d top %d advance %ld", codepoint, glyph_bm_x, glyph_bm_y,
+        xlog::trace("glyph {:x} bitmap x {} y {} w {} h {} left {} top {} advance {}", codepoint, glyph_bm_x, glyph_bm_y,
             glyph_bm_w, glyph_bm_h, slot->bitmap_left, slot->bitmap_top, slot->advance.x >> 6);
 
         GlyphInfo glyph_info;
@@ -379,6 +379,10 @@ void GrNewFont::draw(int x, int y, std::string_view text, rf::gr::Mode state) co
             }
         }
     }
+    int& current_string_x = addr_as_ref<int>(0x018871AC);
+    int& current_string_y = addr_as_ref<int>(0x018871B0);
+    current_string_x = pen_x;
+    current_string_y = y;
 }
 
 void GrNewFont::draw_aligned(rf::gr::TextAlignment alignment, int x, int y, std::string_view text, rf::gr::Mode state) const
@@ -442,7 +446,7 @@ void init_freetype_lib()
 {
     FT_Error error = FT_Init_FreeType(&g_freetype_lib);
     if (error) {
-        xlog::error("FT_Init_FreeType failed: %d", error);
+        xlog::error("FT_Init_FreeType failed: {}", error);
     }
 }
 
@@ -456,14 +460,14 @@ void gr_font_set_default(int font_id)
     g_default_font_id = font_id;
 }
 
-FunHook<int(const char*, int)> gr_load_font_hook{
+FunHook<int(const char*, int)> gr_init_font_hook{
     0x0051F6E0,
     [](const char *name, int reserved) {
-        if (string_ends_with(name, ".vf")) {
-            return gr_load_font_hook.call_target(name, reserved);
-        }
         if (rf::is_dedicated_server) {
            return -1;
+        }
+        if (string_ends_with(name, ".vf")) {
+            return gr_init_font_hook.call_target(name, reserved);
         }
         for (unsigned i = 0; i < g_fonts.size(); ++i) {
             auto& font = g_fonts[i];
@@ -477,7 +481,7 @@ FunHook<int(const char*, int)> gr_load_font_hook{
             return static_cast<int>((g_fonts.size() - 1) | ttf_font_flag);
         }
         catch (std::exception& e) {
-            xlog::error("Failed to load font %s: %s", name, e.what());
+            xlog::error("Failed to load font {}: {}", name, e.what());
             return -1;
         }
     },
@@ -548,6 +552,13 @@ FunHook<void(int*, int*, const char*, int, int)> gr_get_string_size_hook{
     },
 };
 
+CodeInjection gr_create_font_increment_number_injection{
+    0x0051F800,
+    []() {
+        rf::gr::num_fonts++;
+    },
+};
+
 void gr_font_apply_patch()
 {
     // Fix font texture leak
@@ -557,10 +568,15 @@ void gr_font_apply_patch()
     gr_load_font_internal_fix_texture_ref.install();
 
     // Support TrueType fonts
-    gr_load_font_hook.install();
+    gr_init_font_hook.install();
     gr_set_default_font_hook.install();
     gr_get_font_height_hook.install();
     gr_string_hook.install();
     gr_get_string_size_hook.install();
     init_freetype_lib();
+
+    // Do not increament number of loaded fonts before a successful load
+    // Fixes slots being exhausted if font cannot be loaded
+    gr_create_font_increment_number_injection.install();
+    AsmWriter{0x0051F7D8, 0x0051F7E3}.nop();
 }

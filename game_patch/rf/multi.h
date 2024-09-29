@@ -19,15 +19,7 @@ namespace rf
         uint32_t ip_addr;
         uint16_t port;
 
-        bool operator==(const NetAddr &other) const
-        {
-            return ip_addr == other.ip_addr && port == other.port;
-        }
-
-        bool operator!=(const NetAddr &other) const
-        {
-            return !(*this == other);
-        }
+        bool operator==(const NetAddr &other) const = default;
     };
     static_assert(sizeof(NetAddr) == 0x8);
 
@@ -139,13 +131,6 @@ namespace rf
         default_ = 5,
     };
 
-    struct BanlistEntry
-    {
-        char ip_addr[24];
-        BanlistEntry* next;
-        BanlistEntry* prev;
-    };
-
     constexpr size_t max_packet_size = 512;
 
     static auto& multi_get_game_type = addr_as_ref<NetGameType()>(0x00470770);
@@ -188,9 +173,6 @@ namespace rf
     static auto& is_server = addr_as_ref<bool>(0x0064ECBA);
     static auto& is_dedicated_server = addr_as_ref<bool>(0x0064ECBB);
     static auto& simultaneous_ping = addr_as_ref<uint32_t>(0x00599CD8);
-    static auto& banlist_first_entry = addr_as_ref<BanlistEntry*>(0x0064EC20);
-    static auto& banlist_last_entry = addr_as_ref<BanlistEntry*>(0x0064EC24);
-    static auto& banlist_null_entry = addr_as_ref<BanlistEntry>(0x0064EC08);
     static auto& tracker_addr = addr_as_ref<NetAddr>(0x006FC550);
 
     enum ChatSayType {

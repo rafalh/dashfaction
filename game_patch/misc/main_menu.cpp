@@ -3,7 +3,6 @@
 #include <patch_common/CodeInjection.h>
 #include <common/version/version.h>
 #include <xlog/xlog.h>
-#include <cstring>
 #include "../rf/ui.h"
 #include "../rf/gr/gr.h"
 #include "../rf/gr/gr_font.h"
@@ -14,8 +13,7 @@
 #include "../rf/os/frametime.h"
 #include "../main/main.h"
 #include "../graphics/gr.h"
-
-#define SHARP_UI_TEXT 1
+#include "misc.h"
 
 constexpr int EGG_ANIM_ENTER_TIME = 2000;
 constexpr int EGG_ANIM_LEAVE_TIME = 2000;
@@ -40,11 +38,7 @@ void __fastcall UiLabel_create2_version_label(rf::ui::Gadget* self, int edx, rf:
                                              int h, const char* text, int font_id)
 {
     text = PRODUCT_NAME_VERSION;
-    rf::gr::get_string_size(&w, &h, text, -1, font_id);
-#if SHARP_UI_TEXT
-    w = static_cast<int>(w / rf::ui::scale_x);
-    h = static_cast<int>(h / rf::ui::scale_y);
-#endif
+    ui_get_string_size(&w, &h, text, -1, font_id);
     x = 430 - w;
     w += 5;
     h += 2;
@@ -170,6 +164,7 @@ CodeInjection menu_draw_background_injection{
 
         rf::gr::set_color(255, 255, 255, 255);
         // Use function that accepts float sx
+        //for (int i = 0; i < 100; ++i)
         gr_bitmap_scaled_float(menu_background_bitmap, 0.0f, 0.0f,
             static_cast<float>(rf::gr::screen.max_w), static_cast<float>(rf::gr::screen.max_h),
             menu_background_x, 0.0f, 640.0f, 480.0f, false, false, rf::gr::bitmap_clamp_mode);

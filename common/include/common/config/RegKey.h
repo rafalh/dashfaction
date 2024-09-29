@@ -1,5 +1,7 @@
 #pragma once
 
+#include <utility>
+#include <cstdint>
 #include <windows.h>
 #include <common/error/Win32Error.h>
 
@@ -166,6 +168,12 @@ public:
         } u;
         u.f = value;
         write_value(name, u.u32);
+    }
+
+    template<typename T, typename = std::enable_if_t<std::is_enum_v<T>>>
+    void write_value(const char* name, T value)
+    {
+        write_value(name, static_cast<int>(value));
     }
 
     [[nodiscard]] bool is_open() const

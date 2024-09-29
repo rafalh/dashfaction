@@ -2,7 +2,6 @@
 
 #include <vector>
 #include <memory>
-#include <cstdlib>
 #include <cstddef>
 #include <cstring>
 #include <patch_common/MemUtils.h>
@@ -54,9 +53,8 @@ public:
         if (!new_buf_) {
             // Alloc owned buffer
             // Note: raw memory is used here because it is expected the patched program will call constructors
+            // Note: std::make_unique uses value-initialization so buffer is zero-initialized (just like global variables)
             new_buf_owned_ = std::make_unique<std::byte[]>(new_buf_size);
-            // zero new buffer (as if it was global variable and part of BSS section)
-            std::memset(new_buf_owned_.get(), 0, new_buf_size);
             new_buf_ = reinterpret_cast<T*>(new_buf_owned_.get());
         }
 
@@ -86,7 +84,7 @@ public:
                 }
             }
             if (offset == max_offset) {
-                xlog::warn("Invalid reference %x", ref.addr);
+                xlog::warn("Invalid reference {:x}", ref.addr);
             }
         }
     }

@@ -7,7 +7,6 @@ if(NOT "${CMAKE_SIZEOF_VOID_P}" STREQUAL "4")
 endif()
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
-include(cotire)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -91,3 +90,4 @@ add_subdirectory(xlog)
 add_subdirectory(crash_handler)
 add_subdirectory(crash_handler_stub)
 add_subdirectory(resources)
+add_subdirectory(tools)

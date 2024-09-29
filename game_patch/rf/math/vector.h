@@ -14,11 +14,29 @@ namespace rf
         Vector3() = default;
         Vector3(float x, float y, float z) : x(x), y(y), z(z) {}
 
+        bool operator==(const Vector3& other) const = default;
+
         Vector3& operator+=(const Vector3& other)
         {
             x += other.x;
             y += other.y;
             z += other.z;
+            return *this;
+        }
+
+        Vector3& operator*=(const Vector3& other)
+        {
+            x *= other.x;
+            y *= other.y;
+            z *= other.z;
+            return *this;
+        }
+
+        Vector3& operator/=(const Vector3& other)
+        {
+            x /= other.x;
+            y /= other.y;
+            z /= other.z;
             return *this;
         }
 
@@ -73,6 +91,20 @@ namespace rf
             return tmp;
         }
 
+        [[nodiscard]] Vector3 operator*(const Vector3& other) const
+        {
+            Vector3 tmp = *this;
+            tmp *= other;
+            return tmp;
+        }
+
+        [[nodiscard]] Vector3 operator/(const Vector3& other) const
+        {
+            Vector3 tmp = *this;
+            tmp /= other;
+            return tmp;
+        }
+
         [[nodiscard]] Vector3 operator+(float scalar) const
         {
             Vector3 tmp = *this;
@@ -97,6 +129,13 @@ namespace rf
             x = 0.0f;
             y = 0.0f;
             z = 0.0f;
+        }
+
+        void set(float x, float y, float z)
+        {
+            this->x = x;
+            this->y = y;
+            this->z = z;
         }
 
         [[nodiscard]] float dot_prod(const Vector3& other) const
@@ -127,5 +166,9 @@ namespace rf
     {
         float x = 0.0f;
         float y = 0.0f;
+
+        bool operator==(const Vector2& other) const = default;
     };
+
+    static auto& vec2_zero_vector = addr_as_ref<Vector2>(0x0173C370);
 }

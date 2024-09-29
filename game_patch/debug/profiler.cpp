@@ -346,7 +346,7 @@ ConsoleCommand2 profiler_cmd{
     []() {
 #ifdef NDEBUG
         if (rf::is_multi) {
-            rf::console::printf("Profiler cannot be used in multiplayer");
+            rf::console::print("Profiler cannot be used in multiplayer");
             return;
         }
 #endif
@@ -365,7 +365,7 @@ ConsoleCommand2 profiler_log_cmd{
         else {
             profiler_log_init();
         }
-        rf::console::printf("Profiler log: %s", profiler_log_is_active() ? "enabled" : "disabled");
+        rf::console::print("Profiler log: {}", profiler_log_is_active() ? "enabled" : "disabled");
     },
 };
 
@@ -374,7 +374,7 @@ ConsoleCommand2 profiler_print_cmd{
     []() {
         for (const auto& p : g_profilers) {
             const auto& stats = p->stats();
-            rf::console::printf("%s: avg %d avg_frame %d", p->get_name(),
+            rf::console::print("{}: avg {} avg_frame {}", p->get_name(),
                 stats.last_times().avg(), stats.last_frames_summed_times().avg());
         }
     },
@@ -383,9 +383,9 @@ ConsoleCommand2 profiler_print_cmd{
 ConsoleCommand2 perf_dump_cmd{
     "d_perf_dump",
     []() {
-        rf::console::printf("Number of performance aggregators: %u", PerfAggregator::get_instances().size());
+        rf::console::print("Number of performance aggregators: {}", PerfAggregator::get_instances().size());
         for (const auto& ptr : PerfAggregator::get_instances()) {
-            rf::console::printf("%s: calls %u, duration %u us, avg %u us", ptr->get_name().c_str(),
+            rf::console::print("{}: calls {}, duration {} us, avg {} us", ptr->get_name(),
                 ptr->get_calls(), ptr->get_total_duration_us(), ptr->get_avg_duration_us());
         }
     },
@@ -461,7 +461,7 @@ void profiler_init()
     add_profiler<CallProfiler>(0x00488C89, "          glare");
     add_profiler<CallProfiler>(0x0048D7D5, "        bolt emitter");
     add_profiler<FunProfiler>(0x004D33D0, "       details");
-    add_profiler<AddrRangeProfiler>(0x00494B90, 0x00494D3C, "      particles");
+    add_profiler<AddrRangeProfiler>(0x00494B90, 0x00494D3A, "      particles"); // CRASH
 
     //add_profiler<AddrRangeProfiler>(0x004D34AB, 0x004D34B1, "      any render handler");
     //add_profiler<CallProfiler>(0x004D3499, "      prepare lights");
@@ -509,6 +509,7 @@ void profiler_draw_ui()
                 dbg_box.printf(p->get_name(), "%d us", stats.last_frames_summed_times().avg());
             }
         }
+        dbg_box.render();
     }
 }
 

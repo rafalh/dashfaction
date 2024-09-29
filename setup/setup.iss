@@ -2,34 +2,39 @@
 #define SrcRootDir ".."
 #define BinDir "..\build\Release\bin"
 #define PatchesDir "patches\output"
-#define AppVer "1.7.1-dev"
+#define AppVer "1.8.1-dev"
 
 [Setup]
 AppId={{BDD60DE7-9374-463C-8E74-8227EB03E28F}
 AppName=Dash Faction
 AppVersion={#AppVer}
 AppPublisher=rafalh
-AppPublisherURL=https://ravin.tk/
-AppSupportURL=https://ravin.tk/
-AppUpdatesURL=https://ravin.tk/
-DefaultDirName={pf}\Dash Faction
+AppPublisherURL=https://rafalh.dev/
+AppSupportURL=https://rafalh.dev/
+AppUpdatesURL=https://rafalh.dev/
+UninstallDisplayName=Dash Faction
+UninstallDisplayIcon={app}\DashFactionLauncher.exe
+DefaultDirName={autopf}\Dash Faction
 DefaultGroupName=Dash Faction
-InfoBeforeFile={#SrcRootDir}\README.md
+DisableWelcomePage=no
 OutputBaseFilename=DashFaction-{#AppVer}-setup
 Compression=lzma2/max
 SolidCompression=yes
 OutputDir=build
+SetupIconFile=compiler:SetupClassicIcon.ico
 SetupLogging=yes
 ChangesAssociations=yes
+AllowNoIcons=yes
+WizardStyle=modern
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
-Name: "rfproto"; Description: "Register rf:// protocol handler"; GroupDescription: "Other options:"
-Name: "rflassoc"; Description: "Associate .rfl file extension with Dash Faction Level Editor"; GroupDescription: "Other options:"
-Name: "fftracker"; Description: "Set rfgt.factionfiles.com as multiplayer tracker"; GroupDescription: "Other options:"
-Name: "patchgame"; Description: "Install needed game patches"; GroupDescription: "Other options:"; Check: "PatchGameTaskCheck"
-Name: "replacerflauncher"; Description: "Replace Red Faction launcher by a link to Dash Faction launcher (allows starting Dash Faction from Steam client)"; GroupDescription: "Other options:"; Flags: unchecked
-Name: "redvisualstyles"; Description: "Enable Windows Visual Styles for the level editor (experimental)"; GroupDescription: "Other options:"; Flags: unchecked
+Name: "rfproto"; Description: "Register rf:// protocol handler (enables multiplayer click-to-join)"; GroupDescription: "Other options:"
+Name: "rflassoc"; Description: "Associate the .rfl file extension with the Dash Faction level editor"; GroupDescription: "Other options:"
+Name: "fftracker"; Description: "Use the FactionFiles multiplayer tracker (rfgt.factionfiles.com; community standard)"; GroupDescription: "Other options:"
+Name: "patchgame"; Description: "Install necessary Red Faction patches"; GroupDescription: "Other options:"; Check: "PatchGameTaskCheck"
+Name: "replacerflauncher"; Description: "Replace the Red Faction launcher with the Dash Faction launcher (enables Steam support)"; GroupDescription: "Other options:"; Flags: unchecked
+Name: "redvisualstyles"; Description: "Enable Windows visual styles for the level editor (experimental)"; GroupDescription: "Other options:"; Flags: unchecked
 
 [Files]
 Source: "{#BinDir}\DashFactionLauncher.exe"; DestDir: "{app}"; Flags: ignoreversion
@@ -40,7 +45,6 @@ Source: "{#BinDir}\d3d8to9.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#BinDir}\dashfaction.vpp"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SrcRootDir}\resources\licensing-info.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SrcRootDir}\LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#SrcRootDir}\docs\CHANGELOG.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SrcRootDir}\resources\RED.exe.manifest"; DestDir: "{code:GetGameDir}"; Flags: ignoreversion; Tasks: redvisualstyles
 ; RTPatch patches (extracted from official 1.20 patches)
 Source: "{#PatchesDir}\patchw32.dll"; Flags: dontcopy
@@ -64,14 +68,14 @@ Name: "{code:GetGameDir}\logs"; Permissions: users-modify
 
 [Icons]
 Name: "{group}\Dash Faction"; Filename: "{app}\DashFactionLauncher.exe"
-Name: "{commondesktop}\Dash Faction"; Filename: "{app}\DashFactionLauncher.exe"; Tasks: desktopicon
+Name: "{autodesktop}\Dash Faction"; Filename: "{app}\DashFactionLauncher.exe"; Tasks: desktopicon
 
 [Run]
 Filename: "{app}\DashFactionLauncher.exe"; Description: "{cm:LaunchProgram,Dash Faction}"; Flags: nowait postinstall skipifsilent
+Filename: "REG"; Parameters: "ADD ""HKCU\Software\Volition\Red Faction\Dash Faction"" /v ""Executable Path"" /d ""{code:GetFinalGameExePath}"" /f"; Flags: runhidden runasoriginaluser
+Filename: "REG"; Parameters: "ADD ""HKCU\Software\Volition\Red Faction"" /v GameTracker /d rfgt.factionfiles.com /f"; Flags: runhidden runasoriginaluser; Tasks: fftracker
 
 [Registry]
-Root: HKCU; Subkey: "Software\Volition\Red Faction\Dash Faction"; ValueType: "string"; ValueName: "Executable Path"; ValueData: "{code:GetFinalGameExePath}"
-Root: HKCU; Subkey: "Software\Volition\Red Faction"; ValueType: "string"; ValueName: "GameTracker"; ValueData: "rfgt.factionfiles.com"; Tasks: fftracker
 ; rf:// protocol
 Root: HKCR; Subkey: "rf"; ValueType: "string"; ValueData: "URL:Red Faction Protocol"; Flags: uninsdeletekey; Tasks: rfproto
 Root: HKCR; Subkey: "rf"; ValueType: "string"; ValueName: "URL Protocol"; ValueData: ""; Tasks: rfproto
@@ -83,12 +87,10 @@ Root: HKCR; Subkey: "DashFactionLevelEditor"; ValueType: "string"; ValueData: "D
 ;Root: HKCR; Subkey: "DashFactionLevelEditor\DefaultIcon"; ValueType: "string"; ValueData: "{app}\DashFactionLauncher.exe,0"; Tasks: rflassoc
 Root: HKCR; Subkey: "DashFactionLevelEditor\shell\open\command"; ValueType: "string"; ValueData: """{app}\DashFactionLauncher.exe"" -editor -level ""%1"""; Tasks: rflassoc
 
-
 [CustomMessages]
-RFExeLocation=Please specify location of RF.exe file from Red Faction installation directory:
-GameNeedsPatches=Detected Red Faction version is not directly supported by Dash Faction. Setup program will install all the needed patches automatically.%n%nPatches that will be installed:%n
-UnkGameExeVersion=Unknown RF.exe version (SHA1 = %1). Dash Faction will not function correctly.%nFind help at http://redfaction.help and http://redfaction.chat (Discord).%n%nDo you want to ignore this error and continue?
-UnkTablesVppVersion=Unknown tables.vpp version (SHA1 = %1). Multiplayer will not function correctly.%nFind help at http://redfaction.help and http://redfaction.chat (Discord).%n%nDo you want to ignore this error and continue?
+RFExeLocation=Setup will attempt to locate RF.exe automatically. Make sure the location is correct, then click Next.
+GameNeedsPatches=Your Red Faction game version is not directly compatible with Dash Faction. To resolve this, setup will apply the following patches:%n%n
+UnkGameExeVersion=The file at the selected location is not recognized.%nPlease make sure the location of RF.exe is correct. If you ignore this error, Dash Faction may not function correctly.%n%nYou can find help at:%n- https://discord.gg/factionfiles%n- https://redfaction.help%n%nTechnical details:%nSHA1 = %1%n%nIgnore this error and continue?
 
 [Code]
 type
@@ -108,19 +110,9 @@ var
     PatchesDisplayNames: TStringList;
     GameExeFileNameAfterPatches: String;
 
-function GetUserProvidedGameExePath(Param: String): String;
-begin
-    Result := SelectGameExePage.Values[0];
-end;
-
-function IsTaskSelected(TaskName: String): Boolean;
-begin
-    Result := Pos(TaskName, WizardSelectedTasks(false)) > 0;
-end;
-
 function GetFinalGameExePath(Param: String): String;
 begin
-    if IsTaskSelected('patchgame') and (GameExeFileNameAfterPatches <> '') then
+    if WizardIsTaskSelected('patchgame') and (GameExeFileNameAfterPatches <> '') then
         Result := ExtractFileDir(SelectGameExePage.Values[0]) + '\' + GameExeFileNameAfterPatches
     else
         Result := SelectGameExePage.Values[0];
@@ -135,33 +127,33 @@ end;
 
 procedure AddBSDiffPatch(DisplayName: String; FileName: String; SrcFile: String; DestFile: String);
 begin
-    SetLength(Patches, Length(Patches) + 1);
-    Patches[Length(Patches) - 1].DisplayName := DisplayName;
-    Patches[Length(Patches) - 1].FileName := FileName;
-    Patches[Length(Patches) - 1].PatchType := BSDiff;
-    Patches[Length(Patches) - 1].SrcFile := SrcFile;
-    Patches[Length(Patches) - 1].DestFile := DestFile;
+    SetArrayLength(Patches, GetArrayLength(Patches) + 1);
+    Patches[GetArrayLength(Patches) - 1].DisplayName := DisplayName;
+    Patches[GetArrayLength(Patches) - 1].FileName := FileName;
+    Patches[GetArrayLength(Patches) - 1].PatchType := BSDiff;
+    Patches[GetArrayLength(Patches) - 1].SrcFile := SrcFile;
+    Patches[GetArrayLength(Patches) - 1].DestFile := DestFile;
     PatchesDisplayNames.Add(DisplayName);
 end;
 
 procedure AddGameExeBSDiffPatch(DisplayName: String; PatchFileName: String);
 begin
-    AddBSDiffPatch(DisplayName, PatchFileName, ExtractFileName(SelectGameExePage.Values[0]), 'RF_120na.exe');
     GameExeFileNameAfterPatches := 'RF_120na.exe';
+    AddBSDiffPatch(DisplayName, PatchFileName, ExtractFileName(SelectGameExePage.Values[0]), GameExeFileNameAfterPatches);
 end;
 
 procedure AddRTPatch(DisplayName: String; FileName: String);
 begin
-    SetLength(Patches, Length(Patches) + 1);
-    Patches[Length(Patches) - 1].DisplayName := DisplayName;
-    Patches[Length(Patches) - 1].FileName := FileName;
-    Patches[Length(Patches) - 1].PatchType := RTPatch;
+    SetArrayLength(Patches, GetArrayLength(Patches) + 1);
+    Patches[GetArrayLength(Patches) - 1].DisplayName := DisplayName;
+    Patches[GetArrayLength(Patches) - 1].FileName := FileName;
+    Patches[GetArrayLength(Patches) - 1].PatchType := RTPatch;
     PatchesDisplayNames.Add(DisplayName);
 end;
 
 procedure ResetPatchList();
 begin
-    SetLength(Patches, 0);
+    SetArrayLength(Patches, 0);
     GameExeFileNameAfterPatches := '';
     PatchesDisplayNames := TStringList.Create;
 end;
@@ -169,6 +161,7 @@ end;
 function DetermineNeededPatches(GameExePath: String): Boolean;
 var
     GameExeSHA1: String;
+    TablesVppPath: String;
     TablesVppSHA1: String;
 begin
     ResetPatchList;
@@ -182,52 +175,57 @@ begin
         '4140f7619b6427c170542c66178b47bd48795a99':
             begin end;
         'ddbb3e4fa89301eca9f0f547c93a18c18b4bc2ff':
-            AddGameExeBSDiffPatch('1.20 GR -> 1.20 NA (RF.exe patch)', 'RF-1.20-gr.exe.mbsdiff');
+            AddGameExeBSDiffPatch('1.20 GR --> 1.20 NA (RF.exe patch)', 'RF-1.20-gr.exe.mbsdiff');
         '911e3c2d767e56b7b2d5e07ffe07372c82b9dd9d':
-            AddGameExeBSDiffPatch('1.20 FR -> 1.20 NA (RF.exe patch)', 'RF-1.20-fr.exe.mbsdiff');
+            AddGameExeBSDiffPatch('1.20 FR --> 1.20 NA (RF.exe patch)', 'RF-1.20-fr.exe.mbsdiff');
         'abc97f3599caf50f540865a80e34c3feb76767a0':
-            AddGameExeBSDiffPatch('1.21 with Steam Wrapper -> 1.20 NA (RF.exe patch)', 'RF-1.21-steam.exe.mbsdiff');
+            AddGameExeBSDiffPatch('1.21 Steam --> 1.20 NA (RF.exe patch)', 'RF-1.21-steam.exe.mbsdiff');
         'd3e42d1d24ad730b28d3e562042bd2c8cf2ab64f':
-            AddGameExeBSDiffPatch('1.21 -> 1.20 NA (RF.exe patch)', 'RF-1.21.exe.mbsdiff');
+            AddGameExeBSDiffPatch('1.21 --> 1.20 NA (RF.exe patch)', 'RF-1.21.exe.mbsdiff');
         '23b93a5e72c9f31b3d365ce5feffc9f35ae1ab96':
-            AddRTPatch('1.10 NA -> 1.20 NA (official patch)', 'rf120_na.rtp');
-        // TODO: add 1.10 GR and 1.10 FR
+            AddRTPatch('1.10 NA --> 1.20 NA (official patch)', 'rf120_na.rtp');
+        'a03f976e7f7dfa99178af32681ba4ca6b1e3d765':
+        begin
+            AddRTPatch('1.10 GR --> 1.20 GR (official patch)', 'rf120_gr.rtp');
+            AddGameExeBSDiffPatch('1.20 GR --> 1.20 NA (RF.exe patch)', 'RF-1.20-gr.exe.mbsdiff');
+        end;
+        '73d53d62ec6ded94d8989ca238e37a452b881929':
+        begin
+            AddRTPatch('1.10 FR --> 1.20 FR (official patch)', 'rf120_fr.rtp');
+            AddGameExeBSDiffPatch('1.20 FR --> 1.20 NA (RF.exe patch)', 'RF-1.20-fr.exe.mbsdiff');
+        end;
         '640526799fed170ce110c71e1bcf0b23b063d1da':
-            AddRTPatch('1.00 NA -> 1.20 NA (official patch)', 'rf120_na.rtp');
+            AddRTPatch('1.00 NA --> 1.20 NA (official patch)', 'rf120_na.rtp');
         '2c11d549787f6af655c37e8ef2c53293d02dbfbc':
         begin
-            AddRTPatch('1.00 GR -> 1.20 GR (official patch)', 'rf120_gr.rtp');
-            AddGameExeBSDiffPatch('1.20 GR -> 1.20 NA (RF.exe patch)', 'RF-1.20-gr.exe.mbsdiff');
+            AddRTPatch('1.00 GR --> 1.20 GR (official patch)', 'rf120_gr.rtp');
+            AddGameExeBSDiffPatch('1.20 GR --> 1.20 NA (RF.exe patch)', 'RF-1.20-gr.exe.mbsdiff');
         end;
         'fc6d877d5b423c004886e1f73bfbe72ad4d55e2d':
         begin
-            AddRTPatch('1.00 FR -> 1.20 FR (official patch)', 'rf120_fr.rtp');
-            AddGameExeBSDiffPatch('1.20 FR -> 1.20 NA (RF.exe patch)', 'RF-1.20-fr.exe.mbsdiff');
+            AddRTPatch('1.00 FR --> 1.20 FR (official patch)', 'rf120_fr.rtp');
+            AddGameExeBSDiffPatch('1.20 FR --> 1.20 NA (RF.exe patch)', 'RF-1.20-fr.exe.mbsdiff');
         end;
         else
         begin
             // Unknown version
-            Log('Unknown RF.exe SHA1: ' + GameExeSHA1);
-            if Result and (MsgBox(ExpandConstant('{cm:UnkGameExeVersion,' + GameExeSHA1 + '}'), mbError, MB_YESNO) = IDNO) then
+            if Result and (MsgBox(ExpandConstant('{cm:UnkGameExeVersion,' + GameExeSHA1 + '}'), mbError, MB_YESNO + MB_DEFBUTTON2) = IDNO) then
                 Result := False;
         end;
     end;
     // tables.vpp patching
-    TablesVppSHA1 := GetSHA1OfFile(ExtractFileDir(GameExePath) + '\tables.vpp');
-    case TablesVppSHA1 of
-        'ded5e1b5932f47044ba760699d5931fda6bdc8ba':
-            // 1.20 NA - this is directly supported version
-            begin end;
-        '672ba832f7133b93d576f84d971331597d93fce6':
-            AddBSDiffPatch('1.21 GR GOG -> 1.20 NA (tables.vpp patch)', 'tables-gog-gr.vpp.mbsdiff', 'tables.vpp', 'tables.vpp');
-        else
-        begin
-            // Unknown version
-            Log('Unknown tables.vpp SHA1: ' + TablesVppSHA1);
-            if Result and (MsgBox(ExpandConstant('{cm:UnkTablesVppVersion,' + TablesVppSHA1 + '}'), mbError, MB_YESNO) = IDNO) then
-                Result := False;
+    TablesVppPath := ExtractFileDir(GameExePath) + '\tables.vpp';
+    if FileExists(TablesVppPath) then
+    begin
+        TablesVppSHA1 := GetSHA1OfFile(TablesVppPath);
+        case TablesVppSHA1 of
+            '672ba832f7133b93d576f84d971331597d93fce6':
+                AddBSDiffPatch('1.21 GR GOG --> 1.20 NA (tables.vpp patch)', 'tables-gog-gr.vpp.mbsdiff', 'tables.vpp', 'tables.vpp');
         end;
-    end;
+    end
+    else
+        MsgBox('tables.vpp was not found in the game folder! Your Red Faction installation may be corrupt.', mbError, MB_OK);
+
     if not Result then
         ResetPatchList;
 end;
@@ -236,13 +234,13 @@ function SelectGameExePageOnNextButtonClick(Sender: TWizardPage): Boolean;
 begin
     if not FileExists(SelectGameExePage.Values[0]) then
     begin
-        MsgBox('Specified file does not exist!', mbError, MB_OK);
+        MsgBox('RF.exe does not exist at the selected location!', mbError, MB_OK);
         Result := False;
     end
     else
     begin
         Result := DetermineNeededPatches(SelectGameExePage.Values[0]);
-        if Result and (Length(Patches) > 0) then
+        if Result and (GetArrayLength(Patches) > 0) then
             Result := MsgBox(ExpandConstant('{cm:GameNeedsPatches}') + PatchesDisplayNames.Text, mbInformation, MB_OKCANCEL) = IDOK;
     end;
 end;
@@ -259,13 +257,13 @@ begin
         // Dash Faction options - nothing to do
     else if RegQueryStringValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\Volition\Red Faction', 'InstallPath', Result) then
         // Install from CD
-        Result := Result + '\RF.exe'
+        Result := Result + 'RF.exe'
     else if RegQueryStringValue(NativeHKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 20530', 'InstallLocation', Result) then
         // Steam
         Result := Result + '\RF.exe'
-    else if RegQueryStringValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\GOG.com\GOGREDFACTION', 'PATH', Result) then
+    else if RegQueryStringValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\Nordic Games\Red Faction', 'INSTALL_DIR', Result) then
         // GOG
-        Result := Result + 'RF.exe'
+        Result := Result + '\RF.exe'
     else
         // Fallback
         Result := 'C:\games\RedFaction\RF.exe';
@@ -273,8 +271,8 @@ end;
 
 procedure CreateSelectGameExePage();
 begin
-    SelectGameExePage := CreateInputFilePage(wpSelectDir, 'Select RF.exe', 'Select Red Faction executable file', '');
-    SelectGameExePage.Add(ExpandConstant('{cm:RFExeLocation}'), 'Executable files|*.exe|All files|*.*', '.exe');
+    SelectGameExePage := CreateInputFilePage(wpSelectDir, 'Select RF.exe Location', 'This file can be found in your Red Faction game folder.', ExpandConstant('{cm:RFExeLocation}'));
+    SelectGameExePage.Add('Location of RF.exe:', 'Executable files|*.exe|All files|*.*', '.exe');
     SelectGameExePage.Values[0] := DetectGameExecutablePath;
     SelectGameExePage.OnNextButtonClick := @SelectGameExePageOnNextButtonClick;
 end;
@@ -339,10 +337,10 @@ procedure ApplyPatches;
 var
     i: Integer;
 begin
-    if IsTaskSelected('patchgame') and (Length(Patches) > 0) then
+    if WizardIsTaskSelected('patchgame') and (GetArrayLength(Patches) > 0) then
     begin
         Log('Applying patches...');
-        for i := 0 to Length(Patches) - 1 do
+        for i := 0 to GetArrayLength(Patches) - 1 do
             if not ApplyPatch(Patches[i]) then
                 break;
         Log('Finished applying patches.');
@@ -351,7 +349,7 @@ end;
 
 procedure ReplaceRedFactionLauncher;
 begin
-    if IsTaskSelected('replacerflauncher') then
+    if WizardIsTaskSelected('replacerflauncher') then
     begin
         // Create a backup (if it does not exist already)
         Log('Creating RedFaction.exe backup: ' + GetGameDir('RedFaction.exe.bak'));
@@ -361,8 +359,30 @@ begin
         Log('Creating RedFaction.exe symlink: ' + GetGameDir('RedFaction.exe'));
         if not CreateSymbolicLinkA(GetGameDir('RedFaction.exe'), ExpandConstant('{app}\DashFactionLauncher.exe'), 0) then
         begin
-            Log('CreateSymbolicLink failed');
-            MsgBox('Failed to replace Red Faction launcher by a symbolic link to Dash Faction launcher.', mbError, MB_OK);
+            MsgBox('Failed to create a symbolic link to the Dash Faction launcher.', mbError, MB_OK);
+        end;
+    end;
+end;
+
+procedure RestoreRedFactionLauncher;
+var
+   UninsTaskStr: String;
+   GamePath: String;
+begin
+    RegQueryStringValue(HKEY_LOCAL_MACHINE, ExpandConstant('SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{#SetupSetting("AppId")}_is1'), 'Inno Setup: Selected Tasks', UninsTaskStr);
+    if Pos('replacerflauncher', UninsTaskStr) <> 0 then
+    begin
+        // Use the registry entry to find the game directory
+        RegQueryStringValue(HKEY_CURRENT_USER, 'Software\Volition\Red Faction\Dash Faction', 'Executable Path', GamePath);
+        GamePath := ExtractFileDir(GamePath) + '\';
+        if FileExists(GamePath + 'RedFaction.exe.bak') then
+        begin
+            if FileExists(GamePath + 'RedFaction.exe') then
+            begin
+                DeleteFile(GamePath + 'RedFaction.exe');
+            end;
+            RenameFile(GamePath + 'RedFaction.exe.bak', GamePath + 'RedFaction.exe');
+            Log('Successfully restored Red Faction launcher.');
         end;
     end;
 end;
@@ -371,7 +391,7 @@ end;
 
 function PatchGameTaskCheck(): Boolean;
 begin
-    Result := Length(Patches) > 0;
+    Result := GetArrayLength(Patches) > 0;
 end;
 
 // Event functions
@@ -387,5 +407,14 @@ begin
     begin
         ApplyPatches;
         ReplaceRedFactionLauncher;
+    end;
+end;
+
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+begin
+    if CurUninstallStep = usUninstall then
+    // Must be done before uninstallation to fetch uninstall registry key
+    begin
+        RestoreRedFactionLauncher;
     end;
 end;

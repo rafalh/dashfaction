@@ -548,6 +548,12 @@ public:
     }
 };
 
+// Silence bogus stringop-overflow warnings in GCC 10 (they seem to be fixed in GCC 11)
+#if defined(__GNUC__) &&  __GNUC__ == 10
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-overflow"
+#endif
+
 template<rf::bm::Format PF>
 class PixelsWriter
 {
@@ -593,6 +599,10 @@ public:
         }
     }
 };
+
+#if defined(__GNUC__) &&  __GNUC__ == 10
+#pragma GCC diagnostic pop
+#endif
 
 template<rf::bm::Format SRC_FMT, rf::bm::Format DST_FMT>
 class SurfacePixelFormatConverter
@@ -651,6 +661,7 @@ public:
 #endif
     }
 };
+
 
 template<rf::bm::Format FMT>
 struct PixelFormatHolder

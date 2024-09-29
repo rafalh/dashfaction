@@ -7,6 +7,7 @@
 #include "../rf/bmpman.h"
 #include "../rf/weapon.h"
 #include "../rf/hud.h"
+#include "../rf/input.h"
 #include "../os/console.h"
 #include "../main/main.h"
 #include "../multi/multi.h"
@@ -145,7 +146,7 @@ ConsoleCommand2 swap_assault_rifle_controls_cmd{
     []() {
         g_game_config.swap_assault_rifle_controls = !g_game_config.swap_assault_rifle_controls;
         g_game_config.save();
-        rf::console::printf("Swap assault rifle controls: %s",
+        rf::console::print("Swap assault rifle controls: {}",
                      g_game_config.swap_assault_rifle_controls ? "enabled" : "disabled");
     },
     "Swap Assault Rifle controls",
@@ -156,7 +157,7 @@ ConsoleCommand2 swap_grenade_controls_cmd{
     []() {
         g_game_config.swap_grenade_controls = !g_game_config.swap_grenade_controls;
         g_game_config.save();
-        rf::console::printf("Swap grenade controls: %s",
+        rf::console::print("Swap grenade controls: {}",
                      g_game_config.swap_grenade_controls ? "enabled" : "disabled");
     },
     "Swap grenade controls",
@@ -259,9 +260,32 @@ ConsoleCommand2 damage_screen_flash_cmd{
     []() {
         g_game_config.damage_screen_flash = !g_game_config.damage_screen_flash;
         g_game_config.save();
-        rf::console::printf("Damage screen flash effect is %s", g_game_config.damage_screen_flash ? "enabled" : "disabled");
+        rf::console::print("Damage screen flash effect is {}", g_game_config.damage_screen_flash ? "enabled" : "disabled");
     },
     "Toggle damage screen flash effect",
+};
+
+CallHook<void(rf::VMesh*, rf::Vector3*, rf::Matrix3*, void*)> player_cockpit_vmesh_render_hook{
+    0x004A7907,
+    [](rf::VMesh *vmesh, rf::Vector3 *pos, rf::Matrix3 *orient, void *params) {
+        rf::Matrix3 new_orient = *orient;
+
+        if (string_equals_ignore_case(rf::vmesh_get_name(vmesh), "driller01.vfx")) {
+            float m = static_cast<float>(rf::gr::screen_width()) / static_cast<float>(rf::gr::screen_height()) / (4.0 / 3.0);
+            new_orient.rvec *= m;
+        }
+
+        player_cockpit_vmesh_render_hook.call_target(vmesh, pos, &new_orient, params);
+    }
+};
+
+CodeInjection sr_load_player_weapon_anims_injection{
+    0x004B4F9E,
+    [](auto& regs) {
+        rf::Entity *ep = regs.ebp;
+        static auto& entity_update_weapon_animations = addr_as_ref<void(void*, int)>(0x0042AB20);
+        entity_update_weapon_animations(ep, ep->ai.current_primary_weapon);
+    },
 };
 
 void player_do_patch()
@@ -312,6 +336,16 @@ void player_do_patch()
 
     // Support disabling of damage screen flash effect
     player_do_damage_screen_flash_hook.install();
+
+    // Stretch driller cockpit when using a wide-screen
+    player_cockpit_vmesh_render_hook.install();
+
+    // Load correct third person weapon animations when restoring the game from a save file
+    // Fixes mirror reflections and view from third person camera
+    sr_load_player_weapon_anims_injection.install();
+
+    // Change default 'Use' key to E
+    write_mem<u8>(0x0043D0A3 + 1, rf::KEY_E);
 
     // Commands
     damage_screen_flash_cmd.register_cmd();

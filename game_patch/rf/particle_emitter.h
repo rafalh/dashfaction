@@ -9,6 +9,7 @@ namespace rf
 
 struct GRoom;
 struct ParticleEmitter;
+struct Object;
 
 enum ParticleEmitterFlags
 {
@@ -125,8 +126,8 @@ struct ParticleEmitter
     GRoom *room;
     ParticleCreateInfo pci;
     float cull_radius;
-    float field_A0;
-    Vector3 field_A4;
+    float max_particle_dist_sq;
+    Vector3 world_pos;
     Particle particle_list;
     float on_time;
     float on_time_variance;
@@ -140,6 +141,11 @@ struct ParticleEmitter
     ParticleEmitter *prev;
     ParticleEmitter *next_entity_emitter;
     Timestamp spawn_timer;
+
+    Object* get_pos_and_dir(Vector3 *pos, Vector3 *dir)
+    {
+        return AddrCaller{0x00496BC0}.this_call<Object*>(this, pos, dir);
+    }
 };
 static_assert(sizeof(ParticleEmitter) == 0x158);
 

@@ -49,6 +49,31 @@ namespace rf
         FACE_LIST_NUM = 3,
     };
 
+    enum GFaceFlags
+    {
+        FACE_SHOW_SKY = 1,
+        FACE_LIQUID = 0x4,
+        FACE_SEE_THRU = 0x40,
+        FACE_INVISIBLE = 0x2000,
+    };
+
+    enum DecalFlags
+    {
+        DF_NEVER_DESTROY = 0x1,
+        DF_SKIP_ORIENT_SETUP = 0x2,
+        DF_RANDOM_ORIENT = 0x4,
+        DF_LEVEL_DECAL = 0x8,
+        DF_SELF_ILLUMINATED = 0x20,
+        DF_TILING_U = 0x40,
+        DF_TILING_V = 0x80,
+        DF_FROM_WEAPON = 0x100,
+        DF_GEOMOD = 0x200,
+        DF_NEVER_SKIP_FADE_OUT = 0x400,
+        DF_LIQUID = 0x8000000,
+        DF_FADING_OUT = 0x40000000,
+        DF_DESTROY_NOW = 0x80000000,
+    };
+
     struct GSolid
     {
         GBBox *bbox;
@@ -69,7 +94,12 @@ namespace rf
         VArray<GVertex*> sel_vertices;
         VArray<GFace*> sel_faces;
         VArray<GFace*> last_sel_faces;
+#ifdef DASH_FACTION
+        VArray<GDecal*> decals;
+        int padding[126];
+#else
         FArray<GDecal*, 128> decals;
+#endif
         VArray<GTextureMover*> texture_movers;
         GNodeNetwork nodes;
         ubyte cubes[64];
@@ -117,7 +147,12 @@ namespace rf
         int last_frame_rendered_alpha;
         float life;
         bool is_invincible;
+#ifdef DASH_FACTION
+        VArray<GDecal*> decals;
+        int padding[46];
+#else
         FArray<GDecal*, 48> decals;
+#endif
         bool visited_this_frame;
         bool visited_this_search;
         int render_depth;
@@ -156,6 +191,31 @@ namespace rf
         short surface_index;
         int face_id;
         int smoothing_groups; // bitfield of smoothing groups
+
+        bool is_show_sky() const
+        {
+            return (flags & FACE_SHOW_SKY) != 0;
+        }
+
+        bool is_liquid() const
+        {
+            return (flags & FACE_LIQUID) != 0;
+        }
+
+        bool is_see_thru() const
+        {
+            return (flags & FACE_SEE_THRU) != 0;
+        }
+
+        bool is_invisible() const
+        {
+            return (flags & FACE_INVISIBLE) != 0;
+        }
+
+        bool is_portal() const
+        {
+            return portal_id > 0;
+        }
     };
     static_assert(sizeof(GFaceAttributes) == 0x18);
 
@@ -375,5 +435,26 @@ namespace rf
     };
     static_assert(sizeof(GProceduralTexture) == 0x38);
 
+    struct GPortalObject
+    {
+        unsigned int id;
+        Vector3 pos;
+        float radius;
+        bool has_alpha;
+        bool did_draw;
+        bool is_behind_brush;
+        bool lights_enabled;
+        bool use_static_lights;
+        Plane *object_plane;
+        Vector3 *bbox_min;
+        Vector3 *bbox_max;
+        float z_value;
+        void (*render_function)(int, GSolid *);
+    };
+    static_assert(sizeof(GPortalObject) == 0x30);
+
     static auto& g_cache_clear = addr_as_ref<void()>(0x004F0B90);
+    static auto& g_get_room_render_list = addr_as_ref<void(GRoom ***rooms, int *num_rooms)>(0x004D3330);
+
+    static auto& bbox_intersect = addr_as_ref<bool(const Vector3& bbox1_min, const Vector3& bbox1_max, const Vector3& bbox2_min, const Vector3& bbox2_max)>(0x0046C340);
 }

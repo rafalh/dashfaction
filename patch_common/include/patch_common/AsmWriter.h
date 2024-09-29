@@ -5,6 +5,7 @@
 #include <patch_common/ShortTypes.h>
 #include <cassert>
 #include <optional>
+#include <utility>
 
 class AsmReg
 {
@@ -16,10 +17,7 @@ public:
         reg_num(reg_num), size(size)
     {}
 
-    constexpr bool operator==(const AsmReg& other) const
-    {
-        return reg_num == other.reg_num && size == other.size;
-    }
+    constexpr bool operator==(const AsmReg& other) const = default;
 };
 
 struct AsmReg32 : public AsmReg
@@ -440,7 +438,19 @@ public:
     }
 
     template<typename T>
+    AsmWriter& fld(const AsmRegMem& dst_rm);
+
+    template<typename T>
     AsmWriter& fstp(const AsmRegMem& dst_rm);
+
+    template<typename T>
+    AsmWriter& fadd(const AsmRegMem& src_rm);
+
+    template<typename T>
+    AsmWriter& fsub(const AsmRegMem& src_rm);
+
+    template<typename T>
+    AsmWriter& fmul(const AsmRegMem& src_rm);
 
 private:
     uintptr_t m_addr, m_end_addr;
@@ -500,9 +510,57 @@ private:
 };
 
 template<>
+inline AsmWriter& AsmWriter::fld<float>(const AsmRegMem& src_rm)
+{
+    write<u8>(0xD9);
+    write_mod_rm(src_rm, 0);
+    return *this;
+}
+
+template<>
+inline AsmWriter& AsmWriter::fld<double>(const AsmRegMem& src_rm)
+{
+    write<u8>(0xDD);
+    write_mod_rm(src_rm, 0);
+    return *this;
+}
+
+template<>
+inline AsmWriter& AsmWriter::fstp<float>(const AsmRegMem& dst_rm)
+{
+    write<u8>(0xD9);
+    write_mod_rm(dst_rm, 3);
+    return *this;
+}
+
+template<>
 inline AsmWriter& AsmWriter::fstp<double>(const AsmRegMem& dst_rm)
 {
     write<u8>(0xDD);
     write_mod_rm(dst_rm, 3);
+    return *this;
+}
+
+template<>
+inline AsmWriter& AsmWriter::fadd<float>(const AsmRegMem& src_rm)
+{
+    write<u8>(0xD8);
+    write_mod_rm(src_rm, 0);
+    return *this;
+}
+
+template<>
+inline AsmWriter& AsmWriter::fsub<float>(const AsmRegMem& src_rm)
+{
+    write<u8>(0xD8);
+    write_mod_rm(src_rm, 4);
+    return *this;
+}
+
+template<>
+inline AsmWriter& AsmWriter::fmul<float>(const AsmRegMem& src_rm)
+{
+    write<u8>(0xD8);
+    write_mod_rm(src_rm, 1);
     return *this;
 }

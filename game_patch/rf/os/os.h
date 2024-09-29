@@ -34,6 +34,12 @@ namespace rf
         }
     };
 
+    struct CmdArg
+    {
+        char *arg;
+        bool is_done;
+    };
+
     using MsgHandlerPtr = void(*)(UINT, WPARAM, LPARAM);
     static auto& os_add_msg_handler = addr_as_ref<void(MsgHandlerPtr)>(0x00524AE0);
     static auto& os_foreground = addr_as_ref<bool()>(0x00524AD0);
@@ -49,6 +55,10 @@ namespace rf
     static auto& console_redraw_counter = addr_as_ref<uint32_t>(0x01775698);
 
     static auto& lan_only_cmd_line_param = addr_as_ref<CmdLineParam>(0x0063F608);
+    static auto& mod_param = addr_as_ref<CmdLineParam>(0x007D9528);
+
+    static auto& cmdline_args = addr_as_ref<CmdArg[50]>(0x01AED368);
+    static auto& cmdline_num_args = addr_as_ref<int>(0x01AED514);
 
     static auto& debug_error = addr_as_ref<void __cdecl(const char *filename, int line, const char *text)>(0x0050BA90);
     #define RF_DEBUG_ERROR(text) rf::debug_error(__FILE__, __LINE__, text)

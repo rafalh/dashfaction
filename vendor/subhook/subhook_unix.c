@@ -1,4 +1,5 @@
-/* Copyright (c) 2012-2015 Zeex
+/*
+ * Copyright (c) 2012-2018 Zeex
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,26 +27,59 @@
 #include <stddef.h>
 #include <unistd.h>
 #include <sys/mman.h>
+#include "subhook.h"
+#ifdef SUBHOOK_APPLE
+#include <mach/mach.h>
+#endif
 
-void *subhook_unprotect(void *address, size_t size) {
+
+#define SUBHOOK_CODE_PROTECT_FLAGS (PROT_READ | PROT_WRITE | PROT_EXEC)
+
+int subhook_unprotect(void *address, size_t size) {
   long pagesize;
 
   pagesize = sysconf(_SC_PAGESIZE);
-  address = (void *)((long)address & ~(pagesize - 1));
+  void *aligned_address = (void *)((long)address & ~(pagesize - 1));
 
-  if (mprotect(address, size, PROT_READ | PROT_WRITE | PROT_EXEC) != 0) {
-    return NULL;
+  // Fix up the length - since we rounded the start address off, if a jump is right at the
+  // end of a page we could need to unprotect both.
+  void *end = address + size;
+  size_t new_size = end - aligned_address;
+
+  int error = mprotect(aligned_address, new_size, SUBHOOK_CODE_PROTECT_FLAGS);
+#ifdef SUBHOOK_APPLE
+  if (-1 == error)
+    {
+        /* If mprotect fails, try to use VM_PROT_COPY with vm_protect. */
+        kern_return_t kret = vm_protect(mach_task_self(), (unsigned long)aligned_address, new_size, 0, SUBHOOK_CODE_PROTECT_FLAGS | VM_PROT_COPY);
+        if (kret != KERN_SUCCESS)
+        {
+            error = -1;	
+        }
+        error = 0;
+    }				
+#endif
+  return error;
+}
+
+void *subhook_alloc_code(size_t size) {
+  void *address;
+
+  address = mmap(NULL,
+                 size,
+                 SUBHOOK_CODE_PROTECT_FLAGS,
+                 #if defined MAP_32BIT && !defined __APPLE__
+                   MAP_32BIT |
+                 #endif
+                 MAP_PRIVATE | MAP_ANONYMOUS,
+                 -1,
+                 0);
+  return address == MAP_FAILED ? NULL : address;
+}
+
+int subhook_free_code(void *address, size_t size) {
+  if (address == NULL) {
+    return 0;
   }
-
-  return address;
-}
-
-void *subhook_alloc_trampoline(size_t size)
-{
-  return calloc(1, size);
-}
-
-void subhook_free_trampoline(void *ptr)
-{
-  return free(ptr);
+  return munmap(address, size);
 }

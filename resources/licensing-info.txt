@@ -2,19 +2,40 @@
 ## Dash Faction
 ###############################################################################
 
-Homepage: https://github.com/rafalh/DashFaction
+Homepage: https://github.com/rafalh/dashfaction
 
-Most of Dash Faction source code is licensed under Mozilla Public License 2.0.
-Only Pure Faction anti-cheat support code is not open source because it would
-make PF anti-cheat features basically useless. It consists of few files in
-game_patch/purefaction directory. It is going to be linked statically during a
-release process of Dash Faction by owner of the project.
+Dash Faction is developed by Rafalh and contributors listed below.
 
-You can find Mozilla Public License 2.0 full text in LICENSE.txt file in root
-directory of Dash Faction.
+The Dash Faction source code is available on GitHub and licensed under Mozilla
+Public License 2.0. See the LICENSE.txt file located in the root directory of
+Dash Faction.
 
-Dash Faction uses third-party open source components. Their licenses can be
-found below.
+Only the Pure Faction anti-cheat support code is closed-source, because
+exposing it would make its features practically pointless. It consists of some
+files in the 'game_patch/purefaction' directory. It is statically linked
+during each Dash Faction release process by the owner of the project.
+
+Dash Faction uses some open-source third-party components. Their licenses can
+be found below.
+
+---------------------------------
+Contributors
+---------------------------------
+
+Chris "Goober" Parsons:
+* HUD textures for the big mode
+* symbol glyphs in ttf fonts
+* launcher header
+* code contribution
+
+natalie <webmistress@natalie.ee>:
+* code contributions
+
+is-this-c:
+* code contributions
+
+Mystyle:
+* setup code improvements
 
 ###############################################################################
 ## subhook
@@ -52,7 +73,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 Homepage: https://www.zlib.net/
 
- (C) 1995-2017 Jean-loup Gailly and Mark Adler
+ (C) 1995-2022 Jean-loup Gailly and Mark Adler
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -148,15 +169,16 @@ Homepage: https://www.rarlab.com/
 ## win32++
 ###############################################################################
 
-Win32++   Version 8.7.0
-Release Date: 12th August 2019
+Win32++   Version 9.6.1
+Release Date: 29th July 2024
 
      David Nash
      email: dnash@bigpond.net.au
      url: https://sourceforge.net/projects/win32-framework
+          https://github.com/DavidNash2024/Win32xx
 
 
-Copyright (c) 2005-2019  David Nash
+Copyright (c) 2005-2024  David Nash
 
 Permission is hereby granted, free of charge, to
 any person obtaining a copy of this software and
@@ -284,7 +306,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ## FreeType
 ###############################################################################
 
-Portions of this software are copyright © 2020 The FreeType
+Portions of this software are copyright © 2024 The FreeType
 Project (www.freetype.org).  All rights reserved.
 
 ###############################################################################
@@ -326,16 +348,52 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ###############################################################################
-## Contributors
+## ed25519
 ###############################################################################
 
-Chris "Goober" Parsons:
-* HUD textures for the big mode
-* symbol glyphs in ttf fonts
-* launcher header
+Source code: https://github.com/orlp/ed25519
 
-natalie <webmistress@natalie.ee>:
-* code contributions
+Copyright (c) 2015 Orson Peters <orsonpeters@gmail.com>
 
-is-this-c:
-* code contributions
+This software is provided 'as-is', without any express or implied warranty. In no event will the
+authors be held liable for any damages arising from the use of this software.
+
+Permission is granted to anyone to use this software for any purpose, including commercial
+applications, and to alter it and redistribute it freely, subject to the following restrictions:
+
+1. The origin of this software must not be misrepresented; you must not claim that you wrote the
+   original software. If you use this software in a product, an acknowledgment in the product
+   documentation would be appreciated but is not required.
+
+2. Altered source versions must be plainly marked as such, and must not be misrepresented as
+   being the original software.
+
+3. This notice may not be removed or altered from any source distribution.
+
+###############################################################################
+## base64
+###############################################################################
+
+Source code: https://renenyffenegger.ch/notes/development/Base64/Encoding-and-decoding-base-64-with-cpp/
+
+Copyright (C) 2004-2017, 2020, 2021 René Nyffenegger
+
+This source code is provided 'as-is', without any express or implied
+warranty. In no event will the author be held liable for any damages
+arising from the use of this software.
+
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute it
+freely, subject to the following restrictions:
+
+1. The origin of this source code must not be misrepresented; you must not
+   claim that you wrote the original source code. If you use this source code
+   in a product, an acknowledgment in the product documentation would be
+   appreciated but is not required.
+
+2. Altered source versions must be plainly marked as such, and must not be
+   misrepresented as being the original source code.
+
+3. This notice may not be removed or altered from any source distribution.
+
+René Nyffenegger rene.nyffenegger@adp-gmbh.ch

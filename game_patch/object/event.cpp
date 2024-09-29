@@ -4,12 +4,12 @@
 #include <patch_common/AsmWriter.h>
 #include <xlog/xlog.h>
 #include <cassert>
-#include <cstring>
 #include "../rf/object.h"
 #include "../rf/event.h"
 #include "../rf/entity.h"
 #include "../rf/level.h"
 #include "../rf/multi.h"
+#include "../rf/player/player.h"
 #include "../rf/os/console.h"
 #include "../os/console.h"
 
@@ -72,7 +72,7 @@ struct EventSetLiquidDepthHook : rf::Event
 
 void __fastcall EventSetLiquidDepth_turn_on_new(EventSetLiquidDepthHook* this_)
 {
-    xlog::info("Processing Set_Liquid_Depth event: uid %d depth %.2f duration %.2f", this_->uid, this_->depth, this_->duration);
+    xlog::info("Processing Set_Liquid_Depth event: uid {} depth {:.2f} duration {:.2f}", this_->uid, this_->depth, this_->duration);
     if (this_->links.size() == 0) {
         xlog::trace("no links");
         rf::add_liquid_depth_update(this_->room, this_->depth, this_->duration);
@@ -80,7 +80,7 @@ void __fastcall EventSetLiquidDepth_turn_on_new(EventSetLiquidDepthHook* this_)
     else {
         for (auto room_uid : this_->links) {
             rf::GRoom* room = rf::level_room_from_uid(room_uid);
-            xlog::trace("link %d %p", room_uid, room);
+            xlog::trace("link {} {}", room_uid, room);
             if (room) {
                 rf::add_liquid_depth_update(room, this_->depth, this_->duration);
             }
@@ -174,8 +174,8 @@ CodeInjection event_activate_injection{
         if (event_debug_enabled) {
             rf::Event* event = regs.esi;
             bool on = addr_as_ref<bool>(regs.esp + 0xC + 0xC);
-            rf::console::printf("Processing %s message in event %d '%s'",
-            on ? "ON" : "OFF", event->uid, event->name.c_str());
+            rf::console::print("Processing {} message in event {} ({})",
+            on ? "ON" : "OFF", event->name, event->uid);
         }
     },
 };
@@ -186,8 +186,8 @@ CodeInjection event_activate_injection2{
         if (event_debug_enabled) {
             rf::Event* event = regs.esi;
             bool on = regs.cl;
-            rf::console::printf("Delaying %s message in event %d '%s'",
-                on ? "ON" : "OFF", event->uid, event->name.c_str());
+            rf::console::print("Delaying {} message in event {} ({})",
+                on ? "ON" : "OFF", event->name, event->uid);
         }
     },
 };
@@ -197,10 +197,20 @@ CodeInjection event_process_injection{
     [](auto& regs) {
         if (event_debug_enabled) {
             rf::Event* event = regs.esi;
-            rf::console::printf("Processing %s message in event %d '%s' (delayed)",
-                event->delayed_msg ? "ON" : "OFF", event->uid, event->name.c_str());
+            rf::console::print("Processing {} message in event {} ({}) (delayed)",
+                event->delayed_msg ? "ON" : "OFF", event->name, event->uid);
         }
     },
+};
+
+CodeInjection event_load_level_turn_on_injection{
+    0x004BB9C9,
+    [](auto& regs) {
+        if (rf::local_player->flags & (rf::PF_KILL_AFTER_BLACKOUT|rf::PF_END_LEVEL_AFTER_BLACKOUT)) {
+            // Ignore level transition if the player was going to die or game was going to end after a blackout effect
+            regs.eip = 0x004BBA71;
+        }
+    }
 };
 
 ConsoleCommand2 debug_event_msg_cmd{
@@ -234,6 +244,9 @@ void apply_event_patches()
     event_activate_injection.install();
     event_activate_injection2.install();
     event_process_injection.install();
+
+    // Do not load next level if blackout is in progress
+    event_load_level_turn_on_injection.install();
 
     // Register commands
     debug_event_msg_cmd.register_cmd();
