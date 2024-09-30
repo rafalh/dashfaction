@@ -399,6 +399,7 @@ namespace rf
     };
 
     static auto& entity_from_handle = addr_as_ref<Entity*(int handle)>(0x00426FC0);
+    static auto& entity_lookup_type = addr_as_ref<int(const char* name)>(0x004251C0);
     static auto& entity_create =
         addr_as_ref<Entity*(int entity_type, const char* name, int parent_handle, const Vector3& pos,
         const Matrix3& orient, int create_flags, int mp_character)>(0x00422360);
