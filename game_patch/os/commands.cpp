@@ -104,8 +104,6 @@ ConsoleCommand2 pcollide_cmd{
         else {
             rf::local_player->collides_with_world = !rf::local_player->collides_with_world;
             rf::console::print("Player collision with the world is set to {}", rf::local_player->collides_with_world);
-            //int test = rf::entity_lookup_type("ghjkf");
-            //rf::console::print("Entity {}", test);
         }
     },
     "Toggles player collision with the world",
@@ -120,7 +118,6 @@ void reset_restricted_cmds_on_init_multi()
     }
 }
 
-// restrict risky commands unless debug build
 void restrict_mp_command(FunHook<void()>& hook)
 {
     if (rf::is_multi) {
@@ -149,6 +146,7 @@ void console_commands_apply_patches()
     // Allow 'level' command outside of multiplayer game
     AsmWriter(0x00434FEC, 0x00434FF2).nop();
 
+    // restrict risky commands in mp unless debug build
 #ifdef NDEBUG
     drop_clutter_hook.install();
     drop_entity_hook.install();
