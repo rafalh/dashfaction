@@ -318,28 +318,28 @@ static void send_private_message_with_stats(rf::Player* player)
 
 void shuffle_level_array()
 {
-    std::shuffle(rf::netgame.levels.begin(), rf::netgame.levels.end(), rng);
+    std::ranges::shuffle(rf::netgame.levels, rng);
     xlog::info("Shuffled level rotation");
 }
 
 const char* get_rand_level_filename()
 {
-    int num_levels = rf::netgame.levels.size();
+    std::size_t num_levels = rf::netgame.levels.size();
 
-    if (num_levels > 1) {
-        std::uniform_int_distribution<int> dist(0, num_levels - 2);
-        int rand_level_index = dist(rng);
-
-        // avoid selecting the current level
-        if (rand_level_index >= rf::netgame.current_level_index) {
-            rand_level_index++;
-        }
-
-        return rf::netgame.levels[rand_level_index].c_str();
+    if (num_levels <= 1) {
+        // nowhere else to go, we're staying here!
+        return rf::netgame.levels[rf::netgame.current_level_index].c_str();
     }
 
-    // nowhere else to go, we're staying here!
-    return rf::netgame.levels[rf::netgame.current_level_index].c_str();
+    std::uniform_int_distribution<std::size_t> dist(0, num_levels - 2);
+    std::size_t rand_level_index = dist(rng);
+
+    // Avoid selecting the current level
+    if (rand_level_index >= rf::netgame.current_level_index) {
+        rand_level_index++;
+    }
+
+    return rf::netgame.levels[rand_level_index].c_str();
 }
 
 bool handle_server_chat_command(std::string_view server_command, rf::Player* sender)
