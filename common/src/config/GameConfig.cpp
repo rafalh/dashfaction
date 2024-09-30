@@ -166,6 +166,8 @@ bool GameConfig::visit_vars(T&& visitor, bool is_save)
     result &= visitor(dash_faction_key, "Fast Start", fast_start);
     result &= visitor(dash_faction_key, "Scoreboard Animations", scoreboard_anim);
     result &= visitor(dash_faction_key, "Level Sound Volume", level_sound_volume);
+    result &= visitor(dash_faction_key, "Scope Sensitivity Modifier", scope_sensitivity_modifier);
+    result &= visitor(dash_faction_key, "Scanner Sensitivity Modifier", scanner_sensitivity_modifier);
     result &= visitor(dash_faction_key, "Allow Overwriting Game Files", allow_overwrite_game_files);
     result &= visitor(dash_faction_key, "Version", dash_faction_version);
     result &= visitor(dash_faction_key, "Swap Assault Rifle Controls", swap_assault_rifle_controls);

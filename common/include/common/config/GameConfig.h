@@ -68,6 +68,8 @@ struct GameConfig
 
     // Audio
     CfgVar<float> level_sound_volume = 1.0f;
+    CfgVar<float> scope_sensitivity_modifier = 1.0f;
+    CfgVar<float> scanner_sensitivity_modifier = 1.0f;
     CfgVar<bool> eax_sound = true;
 
     // Multiplayer
