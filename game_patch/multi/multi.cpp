@@ -74,8 +74,8 @@ CodeInjection multi_start_injection{
     []() {
         void debug_multi_init();
         debug_multi_init();
-        void turn_pcollide_on_init_multi();
-        turn_pcollide_on_init_multi();
+        void reset_restricted_cmds_on_init_multi();
+        reset_restricted_cmds_on_init_multi();
     },
 };
 

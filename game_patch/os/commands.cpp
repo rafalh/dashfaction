@@ -111,35 +111,10 @@ ConsoleCommand2 pcollide_cmd{
     "Toggles player collision with the world",
 };
 
-ConsoleCommand2 body_cmd{
-    "body",
-    [](const char* entity_name) {
-        if (rf::is_multi) {
-            rf::console::print("That command can't be used in multiplayer.");
-            return;
-        }
-        else if (entity_name == "?") {
-            rf::console::print("Current player entity type is {}", rf::local_player->entity_type);
-        }
-        else {
-            rf::console::print("Current entity type: {}", rf::local_player->entity_type);
-            int new_ent_type = rf::entity_lookup_type(entity_name);
-            if (new_ent_type > -1) {
-                rf::local_player->entity_type = new_ent_type;
-                rf::console::print("Setting player entity type to {} ({})", new_ent_type, new_ent_type);
-            }
-            else {
-                rf::console::print("Invalid entity type specified.");
-            }
-        }
-    },
-    "Sets player entity type to the specified type",
-};
-
-void turn_pcollide_on_init_multi()
+void reset_restricted_cmds_on_init_multi()
 {
-    // ensure player is colliding with world when loading multi
-    if (rf::local_player && !rf::local_player->collides_with_world) {
+    // ensure player collides with the world (pcollide = true)
+    if (rf::local_player && !rf::local_player->collides_with_world) {        
         rf::console::print("Player collision with the world is set to true.");
         rf::local_player->collides_with_world = true;
     }
@@ -160,7 +135,6 @@ FunHook<void()> drop_entity_hook{0x00418740, []() { restrict_mp_command(drop_ent
 FunHook<void()> drop_item_hook{0x00458530, []() { restrict_mp_command(drop_item_hook); }};
 //FunHook<void()> pcollide_hook{0x004A0F60, []() { restrict_mp_command(pcollide_hook); }};
 FunHook<void()> teleport_hook{0x004A0FC0, []() { restrict_mp_command(teleport_hook); }};
-//FunHook<void()> body_hook{0x004A11C0, []() { restrict_mp_command(body_hook); }};
 
 static void register_builtin_command(const char* name, const char* description, uintptr_t addr)
 {
@@ -182,7 +156,6 @@ void console_commands_apply_patches()
     drop_item_hook.install();
     //pcollide_hook.install();
     teleport_hook.install();
-    //body_hook.install();
 #endif
 }
 
@@ -212,12 +185,12 @@ void console_commands_init()
     register_builtin_command("detail_textures", "Toggle detail textures", 0x0054F0B0);
 
     // risky commands, restricted in MP unless debug build
-    register_builtin_command("drop_clutter", "Drop any clutter", 0x0040F0A0);
-    register_builtin_command("drop_entity", "Drop any entity", 0x00418740);
-    register_builtin_command("drop_item", "Drop any item", 0x00458530);
-    //register_builtin_command("pcollide", "Toggle if player collides with the world", 0x004A0F60);
-    register_builtin_command("teleport", "Teleport to an x,y,z", 0x004A0FC0);
-    //register_builtin_command("body", "Set player entity type", 0x004A11C0);
+    register_builtin_command("drop_clutter", "Spawn a clutter object by class name", 0x0040F0A0);
+    register_builtin_command("drop_entity", "Spawn an entity by class name", 0x00418740);
+    register_builtin_command("drop_item", "Spawn an item by class name", 0x00458530);
+    // register_builtin_command("pcollide", "Toggle if player collides with the world", 0x004A0F60);
+    register_builtin_command("teleport", "Teleport player to specific coordinates (format: X Y Z)", 0x004A0FC0);
+
 
 #ifdef DEBUG
     register_builtin_command("drop_fixed_cam", "Drop a fixed camera", 0x0040D220);
@@ -233,7 +206,6 @@ void console_commands_init()
     register_builtin_command("fall_factor", nullptr, 0x004282F0);
     register_builtin_command("toggle_crouch", nullptr, 0x00430C50);
     register_builtin_command("player_step", nullptr, 0x00433DB0);
-    register_builtin_command("difficulty", nullptr, 0x00434EB0);
     register_builtin_command("mouse_cursor", "Sets the mouse cursor", 0x00435210);
     register_builtin_command("fogme", "Fog everything", 0x004352E0);
     register_builtin_command("mouse_look", nullptr, 0x0043CF30);
@@ -243,6 +215,7 @@ void console_commands_init()
     register_builtin_command("splitscreen_swap", "Swap splitscreen players", 0x00480AB0);
     register_builtin_command("splitscreen_bot_test", "Start a splitscreen game in mk_circuits3.rfl", 0x00480AE0);
     register_builtin_command("max_plankton", "set the max number of plankton bits", 0x00497FC0);
+    register_builtin_command("body", "Set player entity type", 0x004A11C0);
     register_builtin_command("invulnerable", "Make self invulnerable", 0x004A12A0);
     register_builtin_command("freelook", "Toggle between freelook and first person", 0x004A1340);
     register_builtin_command("hide_target", "Hide current target, unhide if already hidden", 0x004A13D0);
@@ -268,7 +241,6 @@ void console_commands_init()
 
     // Custom Dash Faction commands
     pcollide_cmd.register_cmd();
-    body_cmd.register_cmd();
     dot_cmd.register_cmd();
     vli_cmd.register_cmd();
     player_count_cmd.register_cmd();
