@@ -2,7 +2,6 @@
 #include "console.h"
 #include "../main/main.h"
 #include "../rf/multi.h"
-//#include "../rf/entity.h"
 #include "../rf/player/player.h"
 #include "../rf/level.h"
 #include "../misc/misc.h"
@@ -11,7 +10,6 @@
 #include <algorithm>
 #include <patch_common/FunHook.h>
 #include <patch_common/CallHook.h>
-//#include <patch_common/CodeInjection.h>
 #include <patch_common/AsmWriter.h>
 
 ConsoleCommand2 dot_cmd{
