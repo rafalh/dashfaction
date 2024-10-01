@@ -43,6 +43,7 @@ Version 1.9.0 (not released yet)
 - Do not load unnecessary VPPs in dedicated server mode
 - Add level filename to "Level Initializing" console message
 - Properly handle WM_PAINT in dedicated server, may improve performance (DF bug)
+- Enable commands `drop_clutter`, `drop_entity`, `drop_item`, `teleport`, `pcollide` in single player
 
 Version 1.8.0 (released 2022-09-17)
 -----------------------------------
