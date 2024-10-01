@@ -527,6 +527,7 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
         "maps3.txt",
         "maps4.txt",
         "maps_df.txt",
+        nullptr,
     };
     write_mem_ptr(0x0041B813 + 1, maps_files_names);
     write_mem_ptr(0x0041B824 + 1, maps_files_names);
