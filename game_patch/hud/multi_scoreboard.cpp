@@ -53,14 +53,17 @@ int draw_scoreboard_header(int x, int y, int w, rf::NetGameType game_type, bool 
 
     // Draw Game Type name
     if (!dry_run) {
-        const char* game_type_name;
-        if (game_type == rf::NG_TYPE_DM)
-            game_type_name = rf::strings::deathmatch;
-        else if (game_type == rf::NG_TYPE_CTF)
-            game_type_name = rf::strings::capture_the_flag;
-        else
-            game_type_name = rf::strings::team_deathmatch;
-        rf::gr::string_aligned(rf::gr::ALIGN_CENTER, x_center, cur_y, game_type_name);
+        int num_players = rf::multi_num_players();
+        std::string player_count_str =
+            " | " + std::to_string(num_players) + (num_players > 1 ? " PLAYERS" : " PLAYER");
+
+        std::string game_type_name = (game_type == rf::NG_TYPE_DM)    ? rf::strings::deathmatch
+                                     : (game_type == rf::NG_TYPE_CTF) ? rf::strings::capture_the_flag
+                                                                      : rf::strings::team_deathmatch;
+
+        game_type_name += player_count_str;
+
+        rf::gr::string_aligned(rf::gr::ALIGN_CENTER, x_center, cur_y, game_type_name.c_str());
     }
     int font_h = rf::gr::get_font_height(-1);
     cur_y += font_h + 8;
