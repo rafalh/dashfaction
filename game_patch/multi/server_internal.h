@@ -31,7 +31,7 @@ struct CriticalHitsConfig
     bool enabled = false;
     int sound_id = 35;
     int rate_limit = 10;
-    //float critical_modifier = 3.0f;
+    int reward_duration = 1500;
     float base_chance = 0.1f;
     bool dynamic_scale = true;
     float dynamic_damage_for_max_bonus = 1200.0f;
