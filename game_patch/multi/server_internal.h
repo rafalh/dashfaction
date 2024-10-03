@@ -4,6 +4,9 @@
 #include <string>
 #include <map>
 #include <optional>
+#include <vector>
+#include "../rf/math/vector.h"
+#include "../rf/math/matrix.h"
 
 // Forward declarations
 namespace rf
@@ -24,6 +27,17 @@ struct HitSoundsConfig
     bool enabled = true;
     int sound_id = 29;
     int rate_limit = 10;
+};
+
+struct RespawnPoint
+{
+    std::string name;
+    uint8_t team;
+    rf::Vector3 position;
+    rf::Matrix3 orientation;
+    bool redTeam;
+    bool blueTeam;
+    bool bot;
 };
 
 struct ServerAdditionalConfig

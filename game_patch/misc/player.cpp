@@ -12,6 +12,7 @@
 #include "../main/main.h"
 #include "../multi/multi.h"
 #include "../hud/multi_spectate.h"
+#include <xlog/xlog.h>
 #include <common/utils/list-utils.h>
 #include <common/config/GameConfig.h>
 #include <patch_common/FunHook.h>
