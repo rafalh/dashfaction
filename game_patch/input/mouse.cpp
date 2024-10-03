@@ -117,11 +117,8 @@ float scanner_sensitivity_factor = 1.0f;
 
 void patch_scope_and_scanner_sensitivity()
 {
-    AsmWriter scope_writer(0x004309B1);
-    scope_writer.fmul<float>(AsmRegMem(&scope_sensitivity_factor));
-
-    AsmWriter scanner_writer(0x004309DE);
-    scanner_writer.fmul<float>(AsmRegMem(&scanner_sensitivity_factor));
+    AsmWriter{0x004309B1}.fmul<float>(AsmRegMem(&scope_sensitivity_factor));
+    AsmWriter{0x004309DE}.fmul<float>(AsmRegMem(&scanner_sensitivity_factor));
 }
 
 void update_scope_sensitivity()
