@@ -2,7 +2,9 @@
 #include <patch_common/CodeInjection.h>
 #include <patch_common/AsmWriter.h>
 #include <xlog/xlog.h>
+#include "../main/main.h"
 #include "../rf/geometry.h"
+#include "../rf/level.h"
 #include "../rf/mover.h"
 #include "../rf/gr/gr.h"
 #include "../rf/gr/gr_font.h"
@@ -230,11 +232,19 @@ CodeInjection level_load_lightmaps_color_conv_patch{
         rf::gr::LockInfo lock;
         if (!rf::gr::lock(lightmap->bm_handle, 0, &lock, rf::gr::LOCK_WRITE_ONLY))
             return;
+        // apply clamp to Volition maps. Most Volition rfls ver = 180, community-made rfl all = 200
+        if (g_game_config.clamp_mode == GameConfig::AUTOMATIC && rf::level.version < 200) {
+            xlog::debug("Applying lightmap clamping to official Volition map");
+            for (int i = 0; i < lightmap->w * lightmap->h * 3; ++i)
+                lightmap->buf[i] = std::max(lightmap->buf[i], (uint8_t)(4 << 3)); // 32
+        }
 
-    #if 1 // cap minimal color channel value as RF does
-        for (int i = 0; i < lightmap->w * lightmap->h * 3; ++i)
-            lightmap->buf[i] = std::max(lightmap->buf[i], (uint8_t)(4 << 3)); // 32
-    #endif
+        // apply clamp to maps made before Sept 8, 2024 @ 00:00:00 UTC
+        else if (g_game_config.clamp_mode == GameConfig::CLASSIC && rf::level.level_timestamp < 1725753600) {
+            xlog::debug("Applying lightmap clamping to map made before 8/9/24");
+            for (int i = 0; i < lightmap->w * lightmap->h * 3; ++i)
+                lightmap->buf[i] = std::max(lightmap->buf[i], (uint8_t)(4 << 3)); // 32
+        }
 
         bool success = bm_convert_format(lock.data, lock.format, lightmap->buf,
             rf::bm::FORMAT_888_BGR, lightmap->w, lightmap->h, lock.stride_in_bytes, 3 * lightmap->w, nullptr);
@@ -243,6 +253,31 @@ CodeInjection level_load_lightmaps_color_conv_patch{
 
         rf::gr::unlock(&lock);
     },
+};
+
+ConsoleCommand2 lighting_color_range_cmd{
+    "lighting_color_range", [] (std::optional<std::string> range_arg)
+    {
+        GameConfig::ClampMode new_mode;
+        if (range_arg == "automatic" || range_arg == "auto" || range_arg == "0") {
+            new_mode = GameConfig::ClampMode::AUTOMATIC;
+        }
+        else if (range_arg == "classic" || range_arg == "1") {
+            new_mode = GameConfig::ClampMode::CLASSIC;
+        }
+        else if (range_arg == "full" || range_arg == "2") {
+            new_mode = GameConfig::ClampMode::FULL;
+        }
+        else {
+            rf::console::printf("Invalid option. Valid options are auto, classic, full");
+            return;
+        }
+        g_game_config.clamp_mode = new_mode;
+        g_game_config.save();
+        rf::console::printf("Lighting color range set to %s", range_arg.value().c_str());
+    },
+    "Set lighting color range. Valid options are auto, classic, full. Only affects levels loaded after usage of this command.",
+    "lighting_color_range [option]",
 };
 
 CodeInjection shadow_render_one_injection{
@@ -468,4 +503,5 @@ void g_solid_do_patch()
     // Commands
     max_decals_cmd.register_cmd();
     dbg_room_clip_wnd_cmd.register_cmd();
+    lighting_color_range_cmd.register_cmd();
 }

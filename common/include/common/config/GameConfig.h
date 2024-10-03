@@ -52,6 +52,13 @@ struct GameConfig
     CfgVar<bool> nearest_texture_filtering = false;
     CfgVar<unsigned> msaa = 0;
 
+    enum ClampMode
+    {
+        AUTOMATIC,
+        CLASSIC,
+        FULL,
+    };
+    CfgVar<ClampMode> clamp_mode = AUTOMATIC;
 
     CfgVar<bool> high_scanner_res = true;
     CfgVar<bool> high_monitor_res = true;
