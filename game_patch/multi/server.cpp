@@ -572,6 +572,7 @@ static bool check_player_ac_status([[maybe_unused]] rf::Player* player)
     return true;
 }
 
+// add a new spawn point
 FunHook<void(const char*, uint8_t, const rf::Vector3*, rf::Matrix3*, bool, bool, bool)> multi_respawn_create_point_hook{
     0x00470190,
     [](const char* name, uint8_t team, const rf::Vector3* pos, rf::Matrix3* orient, bool RedTeam, bool blue_team,
@@ -596,60 +597,14 @@ FunHook<void(const char*, uint8_t, const rf::Vector3*, rf::Matrix3*, bool, bool,
             if (pos) {
                 xlog::warn("Position: ({}, {}, {})", pos->x, pos->y, pos->z);
             }
+            xlog::warn("num points: {}", rf::multi_respawn_num_points);
         }
         else {
             // if random spawns is off, maintain stock behaviour
             multi_respawn_create_point_hook.call_target(name, team, pos, orient, RedTeam, blue_team, bot);
         }
-
-        xlog::warn("num points: {}", rf::multi_respawn_num_points);
     }
 };
-
-// only called when random spawns is turned on
-std::pair<std::size_t, std::shared_ptr<RespawnPoint>> select_respawn_point(int team, int last_index)
-{
-    if (respawn_points.empty()) {
-        xlog::warn("No respawn points available!");
-        return {-1, nullptr};
-    }
-
-    if (multi_is_team_game_type()) {
-        std::size_t team_count = 0;
-        std::optional<std::size_t> selected_team_index;
-
-        // count valid team-specific spawn points
-        for (std::size_t i = 0; i < respawn_points.size(); ++i) {
-            const auto& spawn_point = respawn_points[i];
-
-            // confirm the spawn point matches the player's team
-            if ((team == 0 && spawn_point->redTeam) || (team == 1 && spawn_point->blueTeam)) {
-                ++team_count;
-                // randomly decide whether to select this one
-                if (!selected_team_index || (rng() % team_count == 0)) {
-                    selected_team_index = i;
-                }
-            }
-        }
-
-        // if we found a valid team spawn point
-        if (selected_team_index) {
-            xlog::warn("Randomly selected team-specific spawn point index: {}", *selected_team_index);
-            return {*selected_team_index, respawn_points[*selected_team_index]};
-        }
-
-        // if we didn't find a valid team spawn point
-        xlog::warn("No team-specific spawn point available.");
-    }
-
-    // randomly select from the full pool of spawns
-    std::uniform_int_distribution<std::size_t> random_range(0, respawn_points.size() - 1);
-    std::size_t random_index = random_range(rng);
-
-    xlog::warn("Randomly selected spawn point index from full pool: {}", random_index);
-
-    return {random_index, respawn_points[random_index]};
-}
 
 // only called if random spawns is turned on
 std::shared_ptr<RespawnPoint> select_respawn_point_new(rf::Player* pp)
@@ -802,77 +757,49 @@ std::shared_ptr<RespawnPoint> select_respawn_point_new(rf::Player* pp)
     return {respawn_points[random_index]};
 }
 
-
-
-
-
-
-
-
-
-// decide which spawn point the player will spawn at (maybe working? not sure if dtaa type is right)
-FunHook<void(rf::Vector3*, rf::Matrix3*, rf::Player*)> multi_respawn_get_next_point_hook{
-    // Address of the function (replace with actual address)
-    0x00470300, [](rf::Vector3* pos, rf::Matrix3* orient, rf::Player* pp) {
-        // Print information for debugging
-        xlog::warn("next spawn point func called");
-
-                // Log the position if pos is not null
-        /* if (pos) {
-            xlog::warn("Position: x = {}, y = {}, z = {}", pos->x, pos->y, pos->z);
-        }
-        else {
-            xlog::warn("Position pointer is null.");
-        }
-
-        // Log some player information (assuming Player has name, ID, and team attributes)
-        if (pp) {
-            xlog::warn("Player Name: {}", pp->name);
-            xlog::warn("Player Team: {}", pp->team);
-        }
-        else {
-            xlog::warn("Player pointer is null.");
-        }*/
-        
-        // Call the original function if needed
-        //multi_respawn_get_next_point_hook.call_target(pos, orient, pp);
-
-        //xlog::warn("num points: {}", rf::multi_respawn_num_points);
-    }
-};
-
 CallHook<rf::Entity*(rf::Player*, int, rf::Vector3*, rf::Matrix3*, int)> player_create_entity_hook{
     {
-        0x0048087D, // in spawn_player_server_side
-        0x00481422, //unsure if needed
-        0x0045C807  // in load_level
+        0x0048087D, // in spawn_player_server_side, used by servers
+        0x0045C807  // in load_level, used by single player and listen servers (initial spawn)
     },
      [](rf::Player* pp, int entity_type, rf::Vector3* pos, rf::Matrix3* orient, int mp_character) -> rf::Entity* {
-        // Log the original arguments for debugging purposes
         xlog::warn("Processing player_create_entity request. Player: {}, Team: {}, Entity Type: {}, MP Character: {}",
             pp->name, pp->team, entity_type, mp_character);
 
-        // don't change single player spawns
-        if (mp_character > -1) {
-            // get a spawn point
-            auto random_respawn = select_respawn_point_new(pp);
-            if (random_respawn) {
-                xlog::warn("Player will respawn at: {}. Position: ({}, {}, {})",
-                           random_respawn->name, random_respawn->position.x, random_respawn->position.y, random_respawn->position.z);
+        // in single player don't touch anything
+        if (mp_character == -1) {
+            return player_create_entity_hook.call_target(pp, entity_type, pos, orient, mp_character);
+        }
 
-                // Overwrite the position and orientation with the selected respawn point's values
-                *pos = random_respawn->position;
-                *orient = random_respawn->orientation;
+        // assume no valid spawn until proven otherwise
+        bool valid_respawn_found = false;
+
+        // do we have any spawn points?
+        if (rf::multi_respawn_num_points > 0) {
+            if (g_additional_server_config.random_spawns.enabled) {
+                // new spawn logic is enabled, try to find a valid respawn point
+                if (auto random_respawn = select_respawn_point_new(pp)) {
+                    xlog::warn("Spawning {} at ({}, {}, {})", pp->name, random_respawn->position.x,
+                               random_respawn->position.y, random_respawn->position.z);
+                    *pos = random_respawn->position;
+                    *orient = random_respawn->orientation;
+                    valid_respawn_found = true; // valid respawn was found using the new logic
+                }
             }
             else {
-                *pos = rf::level.player_start_pos;
-                *orient = rf::level.player_start_orient;
-
-                xlog::warn("No valid respawn points. Spawning at player start.");
+                // old logic has a spawn point for us
+                valid_respawn_found = true;
             }
-        }  
-        // Call the original function with all original arguments forwarded
-        return player_create_entity_hook.call_target(pp, entity_type, pos, orient, mp_character);
+        }
+
+        // use player start position if no spawn points were found
+        if (!valid_respawn_found) {
+            *pos = rf::level.player_start_pos;
+            *orient = rf::level.player_start_orient;
+            xlog::warn("No Multiplayer Respawn Points found. Spawning {} at the Player Start.", pp->name);
+        }
+
+        return player_create_entity_hook.call_target(pp, entity_type, pos, orient, mp_character);     
     }
 };
 
@@ -897,7 +824,6 @@ FunHook<void(rf::Player*)> multi_spawn_player_server_side_hook{
                 ep->armor = g_additional_server_config.spawn_armor.value();
             }
         }
-        //xlog::warn("num spawns: {}", rf::multi_respawn_num_points());        
     },
 };
 
@@ -1031,14 +957,9 @@ void server_init()
     multi_on_new_player_injection.install();
     AsmWriter(0x0047B061, 0x0047B064).add(asm_regs::esp, 0x14);
 
+    // Support new spawn logic
     multi_respawn_create_point_hook.install();
-    multi_respawn_get_next_point_hook.install();
     player_create_entity_hook.install();
-
-    // nop original get spawn point
-    AsmWriter(0x0048085B).nop(5);
-
-    AsmWriter(0x0045C78E).nop(5);
 
     // Support forcing player character
     multi_spawn_player_server_side_hook.install();
