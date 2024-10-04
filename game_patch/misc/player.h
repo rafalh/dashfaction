@@ -26,6 +26,7 @@ struct PlayerAdditionalData
     std::map<std::string, PlayerNetGameSaveData> saves;
     rf::Vector3 last_teleport_pos;
     rf::TimestampRealtime last_teleport_timestamp;
+    int last_spawn_point_index = -1;
 };
 
 void find_player(const StringMatcher& query, std::function<void(rf::Player*)> consumer);

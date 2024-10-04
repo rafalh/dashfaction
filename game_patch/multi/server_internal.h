@@ -29,6 +29,13 @@ struct HitSoundsConfig
     int rate_limit = 10;
 };
 
+struct NewSpawnLogicConfig
+{
+    bool enabled = true;
+    bool try_avoid_last = true;
+    bool try_avoid_enemies = true;
+};
+
 struct RespawnPoint
 {
     std::string name;
@@ -48,6 +55,7 @@ struct ServerAdditionalConfig
     VoteConfig vote_restart;
     VoteConfig vote_next;
     VoteConfig vote_previous;
+    NewSpawnLogicConfig random_spawns;
     int spawn_protection_duration_ms = 1500;
     std::optional<float> spawn_life;
     std::optional<float> spawn_armor;
