@@ -638,10 +638,62 @@ std::shared_ptr<RespawnPoint> select_respawn_point_new(rf::Player* pp)
     for (auto& player : player_list) {
         if (&player != pp && !rf::player_is_dead(&player)) {
             has_other_players = true;
-            if ((is_team_game && player.team != team) || (!is_team_game && &player != pp)) {
-                has_enemies = true; // There's at least one enemy
+            if ((is_team_game && player.team != team) || (!is_team_game)) {
+                has_enemies = true; // There's at least one enemy in deathmatch or different team
                 break;
             }
+        }
+    }
+
+    // If avoiding enemies and enemies are present, find the furthest spawn point from them
+    if (avoid_enemies && has_enemies) {
+        xlog::warn("Avoiding enemies enabled, searching for furthest spawn point from enemies.");
+        for (std::size_t i = 0; i < respawn_points.size(); ++i) {
+            const auto& spawn_point = respawn_points[i];
+            rf::Vector3 spawn_position = spawn_point->position;
+
+            float min_distance_to_enemy = std::numeric_limits<float>::max();
+
+            // Calculate distance to all enemies (all players in deathmatch)
+            for (auto& player : player_list) {
+                if ((is_team_game && player.team != team) || (!is_team_game && &player != pp)) {
+                    if (!rf::player_is_dead(&player)) {
+                        rf::Entity* entity = rf::entity_from_handle(player.entity_handle);
+                        if (entity) {
+                            float distance = (spawn_position - entity->pos).len();
+                            min_distance_to_enemy = std::min(min_distance_to_enemy, distance);
+                        }
+                    }
+                }
+            }
+
+            // Update furthest spawn point based on distance to enemies
+            if (min_distance_to_enemy > max_distance) {
+                if (avoid_last && i == last_index) {
+                    second_max_distance = max_distance;
+                    second_furthest_spawn_index = furthest_spawn_index;
+                    continue; // Skip if it's the last used spawn
+                }
+
+                second_max_distance = max_distance;
+                second_furthest_spawn_index = furthest_spawn_index;
+
+                max_distance = min_distance_to_enemy;
+                furthest_spawn_index = i;
+            }
+        }
+
+        // If we found a valid furthest spawn point, use it
+        if (furthest_spawn_index) {
+            if (avoid_last && *furthest_spawn_index == last_index && second_furthest_spawn_index) {
+                xlog::warn("Furthest spawn point is the last one used. Using the second furthest point: {}",
+                           *second_furthest_spawn_index);
+                pdata.last_spawn_point_index = *second_furthest_spawn_index;
+                return respawn_points[*second_furthest_spawn_index];
+            }
+
+            pdata.last_spawn_point_index = *furthest_spawn_index;
+            return respawn_points[*furthest_spawn_index];
         }
     }
 
@@ -662,86 +714,23 @@ std::shared_ptr<RespawnPoint> select_respawn_point_new(rf::Player* pp)
             xlog::warn("No team-specific spawn points available. Falling back to random selection.");
         }
         else {
-            // **Avoid enemies first** if enabled and enemies are present
-            if (avoid_enemies && has_enemies) {
-                // Calculate the furthest spawn point from enemies
-                for (std::size_t i : valid_team_spawns) {
-                    const auto& spawn_point = respawn_points[i];
-                    rf::Vector3 spawn_position = spawn_point->position;
-
-                    float min_distance_to_enemy = std::numeric_limits<float>::max();
-
-                    // Loop through all players and check if they are enemies
-                    for (auto& player : player_list) {
-                        if ((is_team_game && player.team != team) || (!is_team_game && &player != pp)) {
-                            // Consider enemies if the player is on another team (in team games) or anyone in deathmatch
-                            if (!rf::player_is_dead(&player)) {
-                                rf::Entity* entity = rf::entity_from_handle(player.entity_handle);
-                                if (entity) {
-                                    // Calculate the distance between the spawn point and the enemy player
-                                    float distance = (spawn_position - entity->pos).len();
-                                    min_distance_to_enemy = std::min(min_distance_to_enemy, distance);
-                                }
-                            }
-                        }
-                    }
-
-                    // Check if this spawn point is the furthest from any enemy player
-                    if (min_distance_to_enemy > max_distance) {
-                        // If it's the last spawn point used, remember it but don't select yet
-                        if (avoid_last && i == last_index) {
-                            second_max_distance = max_distance;
-                            second_furthest_spawn_index = furthest_spawn_index;
-                            continue; // Skip this spawn point if it's the last used
-                        }
-
-                        // Update the second furthest point before overwriting the furthest
-                        second_max_distance = max_distance;
-                        second_furthest_spawn_index = furthest_spawn_index;
-
-                        max_distance = min_distance_to_enemy;
-                        furthest_spawn_index = i;
-                    }
-                }
-
-                // If we found a valid spawn point furthest from enemies, use it
-                if (furthest_spawn_index) {
-                    xlog::warn("Selected team-specific spawn point furthest from enemies: {}", *furthest_spawn_index);
-
-                    // If the furthest is the last one used, use the next furthest if available
-                    if (avoid_last && *furthest_spawn_index == last_index && second_furthest_spawn_index) {
-                        xlog::warn("Furthest spawn point is the last one used. Using the second furthest point: {}",
-                                   *second_furthest_spawn_index);
-                        pdata.last_spawn_point_index = *second_furthest_spawn_index;
-                        return respawn_points[*second_furthest_spawn_index];
-                    }
-
-                    pdata.last_spawn_point_index = *furthest_spawn_index;
-                    return respawn_points[*furthest_spawn_index];
-                }
-            }
-
-            // **Avoid last**: Handle try_avoid_last for team game
-            if (avoid_last && valid_team_spawns.size() > 1 &&
-                std::find(valid_team_spawns.begin(), valid_team_spawns.end(), last_index) != valid_team_spawns.end()) {
+            // Avoid last spawn point if needed
+            if (avoid_last && valid_team_spawns.size() > 1) {
                 valid_team_spawns.erase(std::remove(valid_team_spawns.begin(), valid_team_spawns.end(), last_index),
                                         valid_team_spawns.end());
                 xlog::warn("Excluding last spawn point index: {} from selection.", last_index);
             }
 
             // Randomly select from the remaining valid team spawns
-            if (!valid_team_spawns.empty()) {
-                std::uniform_int_distribution<std::size_t> team_range(0, valid_team_spawns.size() - 1);
-                std::size_t random_team_index = valid_team_spawns[team_range(rng)];
+            std::uniform_int_distribution<std::size_t> team_range(0, valid_team_spawns.size() - 1);
+            std::size_t random_team_index = team_range(rng);
 
-                pdata.last_spawn_point_index = random_team_index;
-                xlog::warn("Randomly selected team-specific spawn point index: {}", random_team_index);
-                return {respawn_points[random_team_index]};
-            }
+            pdata.last_spawn_point_index = random_team_index;
+            return {respawn_points[random_team_index]};
         }
     }
 
-    // Handle non-team game or if no valid team-specific spawn points were found
+    // Non-team or fallback logic: random spawn point selection
     std::uniform_int_distribution<std::size_t> random_range(0, respawn_points.size() - 1);
     std::size_t random_index = random_range(rng);
 
@@ -751,11 +740,12 @@ std::shared_ptr<RespawnPoint> select_respawn_point_new(rf::Player* pp)
         random_index = (random_index + 1) % respawn_points.size();
     }
 
-    xlog::warn("Randomly selected spawn point index from full pool: {}", random_index);
     pdata.last_spawn_point_index = random_index;
-
+    xlog::warn("Randomly selected spawn point index from full pool: {}", random_index);
     return {respawn_points[random_index]};
 }
+
+
 
 CallHook<rf::Entity*(rf::Player*, int, rf::Vector3*, rf::Matrix3*, int)> player_create_entity_hook{
     {
