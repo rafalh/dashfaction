@@ -319,27 +319,37 @@ static void send_private_message_with_stats(rf::Player* player)
 void shuffle_level_array()
 {
     std::ranges::shuffle(rf::netgame.levels, rng);
-    xlog::info("Shuffled level rotation");
+    xlog::warn("Shuffled level rotation");
 }
 
 const char* get_rand_level_filename()
 {
     std::size_t num_levels = rf::netgame.levels.size();
 
+    // current_level_index keeps our position in rotation while we go somewhere else
+    const char* current_level_filename = rf::level_filename_to_load;
+
+    xlog::debug("Starting random selection process, current level is {}", current_level_filename);
+
     if (num_levels <= 1) {
         // nowhere else to go, we're staying here!
-        return rf::netgame.levels[rf::netgame.current_level_index].c_str();
+        xlog::debug("Map list has only 1 member, reloading current level {}", current_level_filename);
+        return current_level_filename;
     }
 
-    std::uniform_int_distribution<std::size_t> dist(0, num_levels - 2);
-    std::size_t rand_level_index = dist(rng);
+    std::uniform_int_distribution<std::size_t> dist_levels(0, num_levels - 1);
+    std::size_t rand_level_index = dist_levels(rng);
 
-    // Avoid selecting the current level
-    if (rand_level_index >= rf::netgame.current_level_index) {
-        rand_level_index++;
+    // keep rolling until we get something that's not the current level
+    while (rf::netgame.levels[rand_level_index] == current_level_filename) {
+        rand_level_index = dist_levels(rng);
     }
 
-    return rf::netgame.levels[rand_level_index].c_str();
+    const char* selected_level_filename = rf::netgame.levels[rand_level_index];
+
+    xlog::debug("Loading randomly selected level {}", selected_level_filename);
+
+    return selected_level_filename;
 }
 
 bool handle_server_chat_command(std::string_view server_command, rf::Player* sender)

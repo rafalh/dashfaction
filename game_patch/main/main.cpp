@@ -79,7 +79,6 @@ CodeInjection cleanup_game_hook{
 };
 
 std::mt19937 rng;
-std::uniform_int_distribution<std::size_t> dist;
 
 void initialize_random_generator()
 {
