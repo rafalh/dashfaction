@@ -115,22 +115,28 @@ ConsoleCommand2 ms_cmd{
 float scope_sensitivity_factor = 1.0f;
 float scanner_sensitivity_factor = 1.0f;
 
+constexpr float clamp_sensitivity_modifier(float modifier)
+{
+    constexpr const float min = 0.01f; // prevent division by zero in scope sens
+    constexpr const float max = 4.0f;
+    return std::clamp(modifier, min, max);
+}
+
 void patch_scope_and_scanner_sensitivity()
 {
-    AsmWriter{0x004309B1}.fmul<float>(AsmRegMem(&scope_sensitivity_factor));
-    AsmWriter{0x004309DE}.fmul<float>(AsmRegMem(&scanner_sensitivity_factor));
+    AsmWriter{0x004309B1}.fmul<float>(AsmRegMem{&scope_sensitivity_factor});
+    AsmWriter{0x004309DE}.fmul<float>(AsmRegMem{&scanner_sensitivity_factor});
 }
 
 void update_scope_sensitivity()
 {
-    // prevent division by zero if somehow the modifier gets set to 0
-    float modifier = std::clamp(static_cast<float>(g_game_config.scope_sensitivity_modifier), 0.01f, 4.0f);
+    float modifier = clamp_sensitivity_modifier(g_game_config.scope_sensitivity_modifier);
     scope_sensitivity_factor = rf::scope_sensitivity_constant * (1.0f / modifier);
 }
 
 void update_scanner_sensitivity()
 {
-    float modifier = std::clamp(static_cast<float>(g_game_config.scanner_sensitivity_modifier), 0.01f, 4.0f);
+    float modifier = clamp_sensitivity_modifier(g_game_config.scanner_sensitivity_modifier);
     scanner_sensitivity_factor = rf::scanner_sensitivity_constant * modifier;
 }
 
@@ -138,7 +144,7 @@ ConsoleCommand2 scope_sens_cmd{
     "scope_sensitivity_modifier",
     [](std::optional<float> value_opt) {
         if (value_opt) {
-            float value = std::clamp(value_opt.value(), 0.01f, 4.0f);
+            float value = clamp_sensitivity_modifier(value_opt.value());
             g_game_config.scope_sensitivity_modifier = value;
             g_game_config.save();
             update_scope_sensitivity();
@@ -158,7 +164,7 @@ ConsoleCommand2 scanner_sens_cmd{
     "scanner_sensitivity_modifier",
     [](std::optional<float> value_opt) {
         if (value_opt) {
-            float value = std::clamp(value_opt.value(), 0.01f, 4.0f);
+            float value = clamp_sensitivity_modifier(value_opt.value());
             g_game_config.scanner_sensitivity_modifier = value;
             g_game_config.save();
             update_scanner_sensitivity();
