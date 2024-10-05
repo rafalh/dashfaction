@@ -327,7 +327,7 @@ const char* get_rand_level_filename()
     std::size_t num_levels = rf::netgame.levels.size();
 
     // current_level_index keeps our position in rotation while we go somewhere else
-    rf::String filename = rf::level_filename_to_load;
+    const rf::String& filename = rf::level_filename_to_load;
 
     if (num_levels <= 1) {
         // nowhere else to go, we're staying here!
