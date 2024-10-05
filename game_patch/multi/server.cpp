@@ -606,7 +606,7 @@ FunHook<void(const char*, uint8_t, const rf::Vector3*, rf::Matrix3*, bool, bool,
     }
 };
 
-// only called if random spawns is turned on
+// new spawn point selection logic
 std::shared_ptr<RespawnPoint> select_respawn_point_new(rf::Player* pp)
 {
     if (respawn_points.empty()) {
@@ -617,13 +617,13 @@ std::shared_ptr<RespawnPoint> select_respawn_point_new(rf::Player* pp)
     auto& pdata = get_player_additional_data(pp);
     int team = pp->team;
     int last_index = pdata.last_spawn_point_index;
-    xlog::warn("Player is on team {}. Last index was {}", team, last_index);
-
     bool is_team_game = multi_is_team_game_type();
     bool avoid_last = g_additional_server_config.random_spawns.try_avoid_last;
     bool avoid_enemies = g_additional_server_config.random_spawns.try_avoid_enemies;
 
-    // Variables to store the furthest spawn point (if avoiding enemies)
+    xlog::warn("Giving {} a spawn. They are on team {}, and their last index was {}. We ARE {}avoiding last, and ARE {}avoiding enemies.", pp->name, team, last_index, (avoid_last ? "" : "NOT "), (avoid_enemies ? "" : "NOT "));
+
+    // vars to store the furthest spawn point
     std::optional<std::size_t> furthest_spawn_index;
     std::optional<std::size_t> second_furthest_spawn_index;
     float max_distance = 0.0f;
@@ -634,7 +634,7 @@ std::shared_ptr<RespawnPoint> select_respawn_point_new(rf::Player* pp)
     bool has_other_players = false;
     bool has_enemies = false;
 
-    // Check if there are any other players and whether they are enemies
+    // Check if any enemies are in the game
     for (auto& player : player_list) {
         if (&player != pp && !rf::player_is_dead(&player)) {
             has_other_players = true;
