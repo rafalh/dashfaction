@@ -144,15 +144,13 @@ ConsoleCommand2 scope_sens_cmd{
     "scope_sensitivity_modifier",
     [](std::optional<float> value_opt) {
         if (value_opt) {
-            float value = clamp_sensitivity_modifier(value_opt.value());
-            g_game_config.scope_sensitivity_modifier = value;
+            g_game_config.scope_sensitivity_modifier = value_opt.value();
             g_game_config.save();
             update_scope_sensitivity();
-            //rf::console::print("Scope sensitivity modifier set to {:.2f}", value);
         }
         else {
             rf::console::print("Scope sensitivity modifier: {:.2f}",
-                               static_cast<float>(g_game_config.scope_sensitivity_modifier));
+                static_cast<float>(clamp_sensitivity_modifier(g_game_config.scope_sensitivity_modifier)));
         }
 
     },
@@ -164,15 +162,14 @@ ConsoleCommand2 scanner_sens_cmd{
     "scanner_sensitivity_modifier",
     [](std::optional<float> value_opt) {
         if (value_opt) {
-            float value = clamp_sensitivity_modifier(value_opt.value());
-            g_game_config.scanner_sensitivity_modifier = value;
+            g_game_config.scanner_sensitivity_modifier = value_opt.value();
             g_game_config.save();
-            update_scanner_sensitivity();
-            //rf::console::print("Scanner sensitivity modifier set to {:.2f}", value);
+            update_scanner_sensitivity();            
         }
         else {
-            rf::console::print("Scanner sensitivity modifier: {:.2f}",
-                               static_cast<float>(g_game_config.scanner_sensitivity_modifier));
+            rf::console::print(
+                "Scanner sensitivity modifier: {:.2f}",
+                static_cast<float>(clamp_sensitivity_modifier(g_game_config.scanner_sensitivity_modifier)));
         }
     },
     "Sets mouse sensitivity modifier used while in a rail scanner.",
