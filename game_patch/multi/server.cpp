@@ -337,9 +337,9 @@ const char* get_rand_level_filename()
     std::uniform_int_distribution<std::size_t> dist_levels(0, num_levels - 1);
     std::size_t rand_level_index = dist_levels(rng);
 
-    // keep rolling until we get something that's not the current level
-    while (rf::netgame.levels[rand_level_index] == filename) {
-        rand_level_index = dist_levels(rng);
+    // avoid selecting current level
+    if (rf::netgame.levels[rand_level_index] == filename) {
+        rand_level_index = (rand_level_index + 1) % num_levels;
     }
 
     filename = rf::netgame.levels[rand_level_index];
