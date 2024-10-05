@@ -14,7 +14,7 @@
 #define VERSION_TYPE_RELEASE  4
 
 // Variables to be modified during the release process
-#define PRODUCT_NAME           "Dash Faction"
+#define PRODUCT_NAME           "Goob Faction"
 #define VERSION_MAJOR          1
 #define VERSION_MINOR          9
 #define VERSION_PATCH          0
