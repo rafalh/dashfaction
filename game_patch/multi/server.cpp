@@ -324,10 +324,10 @@ void shuffle_level_array()
 
 const char* get_rand_level_filename()
 {
-    std::size_t num_levels = rf::netgame.levels.size();
+    const std::size_t num_levels = rf::netgame.levels.size();
 
-    // current_level_index keeps our position in rotation while we go somewhere else
-    rf::String& filename = rf::level_filename_to_load;
+    // store current level filename
+    rf::String filename = rf::level_filename_to_load;
 
     if (num_levels <= 1) {
         // nowhere else to go, we're staying here!
@@ -337,7 +337,7 @@ const char* get_rand_level_filename()
     std::uniform_int_distribution<std::size_t> dist_levels(0, num_levels - 1);
     std::size_t rand_level_index = dist_levels(rng);
 
-    // avoid selecting current level
+    // avoid selecting current level filename (unless it appears more than once on map list)
     if (rf::netgame.levels[rand_level_index] == filename) {
         rand_level_index = (rand_level_index + 1) % num_levels;
     }
