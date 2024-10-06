@@ -1,6 +1,7 @@
 #include <cstddef>
 #include <cstring>
 #include <cassert>
+#include <array>
 #include <common/config/BuildConfig.h>
 #include <common/utils/list-utils.h>
 #include <xlog/xlog.h>
@@ -9,6 +10,7 @@
 #include "pf.h"
 #include "pf_packets.h"
 #include "pf_ac.h"
+#include "../misc/player.h"
 
 void pf_send_reliable_packet(rf::Player* player, const void* data, int len)
 {
@@ -35,7 +37,8 @@ static void send_pf_announce_player_packet(rf::Player* player, pf_pure_status pu
     announce_packet.hdr.size = sizeof(announce_packet) - sizeof(announce_packet.hdr);
     announce_packet.version = pf_announce_player_packet_version;
     announce_packet.player_id = player->net_data->player_id;
-    announce_packet.is_pure = static_cast<uint8_t>(pure_status);
+    announce_packet.is_pure = static_cast<uint8_t>(get_player_additional_data(player).is_browser
+        ? pf_pure_status::rfsb : pure_status);
 
     auto player_list = SinglyLinkedList(rf::player_list);
     for (auto& other_player : player_list) {
@@ -64,17 +67,25 @@ static void process_pf_player_announce_packet(const void* data, size_t len, [[ m
     }
 
     xlog::trace("PF player_announce packet: player {} is_pure {}", announce_packet.player_id, announce_packet.is_pure);
+    
+    if (rf::Player* player = rf::multi_find_player_by_id(announce_packet.player_id); player
+        && announce_packet.is_pure <= static_cast<uint8_t>(pf_pure_status::_last_variant)) {
+        get_player_additional_data(player).received_ac_status
+            = std::optional{static_cast<pf_pure_status>(announce_packet.is_pure)};
+    }
 
     if (announce_packet.player_id == rf::local_player->net_data->player_id) {
-        static const char* pf_verification_status_names[] = { "none", "blue", "gold", "red" };
-        const auto* pf_verification_status =
+        static constinit const std::array<std::string_view, 6> pf_verification_status_names{
+            {"none", "blue", "gold", "fail", "old_blue", "rfsb"}
+        };
+        const std::string_view pf_verification_status =
             announce_packet.is_pure < std::size(pf_verification_status_names)
             ? pf_verification_status_names[announce_packet.is_pure] : "unknown";
         xlog::info("PF Verification Status: {} ({})", pf_verification_status, announce_packet.is_pure);
     }
 }
 
-static void send_pf_player_stats_packet(rf::Player* player)
+void send_pf_player_stats_packet(rf::Player* player)
 {
     // Send: server -> client
     assert(rf::is_server);
@@ -92,10 +103,11 @@ static void send_pf_player_stats_packet(rf::Player* player)
         auto& player_stats = *static_cast<PlayerStatsNew*>(current_player.stats);
         pf_player_stats_packet::player_stats out_stats;
         out_stats.player_id = current_player.net_data->player_id;
-        out_stats.is_pure = static_cast<uint8_t>(pf_ac_get_pure_status(&current_player));
-        out_stats.accuracy = 0;
-        out_stats.streak_max = 0;
-        out_stats.streak_current = 0;
+        out_stats.is_pure = static_cast<uint8_t>(get_player_additional_data(&current_player).is_browser
+            ? pf_pure_status::rfsb : pf_ac_get_pure_status(&current_player));
+        out_stats.accuracy = static_cast<uint8_t>(player_stats.calc_accuracy() * 100.f);
+        out_stats.streak_max = player_stats.max_streak;
+        out_stats.streak_current = player_stats.current_streak;
         out_stats.kills = player_stats.num_kills;
         out_stats.deaths = player_stats.num_deaths;
         out_stats.team_kills = 0;
@@ -157,6 +169,10 @@ static void process_pf_player_stats_packet(const void* data, size_t len, [[ mayb
         auto* player = rf::multi_find_player_by_id(in_stats.player_id);
         if (player) {
             auto& stats = *static_cast<PlayerStatsNew*>(player->stats);
+            // Ignore `is_pure`.  Why is it in `player_stats`? 
+            stats.received_accuracy = std::optional{in_stats.accuracy};
+            stats.max_streak = in_stats.streak_max;
+            stats.current_streak = in_stats.streak_current;
             stats.num_kills = in_stats.kills;
             stats.num_deaths = in_stats.deaths;
         }
