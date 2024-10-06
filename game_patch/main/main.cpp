@@ -331,8 +331,8 @@ extern "C" void subhook_unk_opcode_handler(uint8_t* opcode)
     xlog::error("SubHook unknown opcode 0x{:x} at {}", *opcode, static_cast<void*>(opcode));
 }
 
-std::optional<DWORD> find_pid(std::string_view filename) {
-    HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+std::optional<DWORD> find_pid(const std::string_view filename) {
+    const HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (snapshot == INVALID_HANDLE_VALUE) {
         return std::nullopt;
     }
@@ -354,7 +354,7 @@ std::optional<DWORD> find_pid(std::string_view filename) {
 }
 
 void suspend_flux() {
-    if (std::optional<DWORD> pid = find_pid("flux.exe"); pid.has_value()) {
+    if (const std::optional<DWORD> pid = find_pid("flux.exe"); pid.has_value()) {
         DebugActiveProcess(pid.value());
         DebugSetProcessKillOnExit(FALSE);
     }
@@ -409,7 +409,7 @@ extern "C" DWORD __declspec(dllexport) Init([[maybe_unused]] void* unused)
     xlog::info("Installing hooks took {} ms", GetTickCount() - start_ticks);
 
     // Suspend f.lux, so we are in control of gamma instead of f.lux.
-    if (rf::is_client()) {
+    if (!rf::is_dedicated_server) {
         suspend_flux();
     }
 
