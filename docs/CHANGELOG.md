@@ -42,6 +42,9 @@ Version 1.9.0 (not released yet)
 - Add Kill Reward settings for dedicated servers
 - Do not load unnecessary VPPs in dedicated server mode
 - Add level filename to "Level Initializing" console message
+- Add `map_rand` command to change to a random level on the rotation
+- Add `vote rand` vote type to initiate a level change to a random level on the rotation
+- Add `$DF Dynamic Rotation` option in dedicated server config
 - Properly handle WM_PAINT in dedicated server, may improve performance (DF bug)
 
 Version 1.8.0 (released 2022-09-17)
