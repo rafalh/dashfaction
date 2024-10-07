@@ -44,6 +44,15 @@
 GameConfig g_game_config;
 HMODULE g_hmodule;
 
+std::mt19937 g_rng;
+
+void initialize_random_generator()
+{
+    // seed rng with the current time
+    auto seed = std::chrono::steady_clock::now().time_since_epoch().count();
+    g_rng.seed(static_cast<unsigned long>(seed));
+}
+
 CallHook<void()> rf_init_hook{
     0x004B27CD,
     []() {
@@ -77,16 +86,6 @@ CodeInjection cleanup_game_hook{
         debug_cleanup();
     },
 };
-
-std::mt19937 rng;
-std::uniform_int_distribution<std::size_t> dist;
-
-void initialize_random_generator()
-{
-    // seed rng with the current time
-    auto seed = std::chrono::steady_clock::now().time_since_epoch().count();
-    rng.seed(static_cast<unsigned long>(seed));
-}
 
 static void maybe_autosave()
 {
