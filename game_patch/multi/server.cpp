@@ -465,7 +465,8 @@ FunHook<float(rf::Entity*, float, int, int, int)> entity_damage_hook{
             xlog::debug("Critical hit chance: {:.2f}", critical_hit_chance);
 
             // check if the random roll is a critical hit
-            float random_value = static_cast<float>(dist(rng)) / static_cast<float>(dist.max());
+            std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+            float random_value = dist(g_rng);
             if (random_value < critical_hit_chance) {
                 // Apply critical hit modifier
                 //damage *= g_additional_server_config.critical_hits.critical_modifier;
