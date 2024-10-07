@@ -5,6 +5,7 @@
 #include <patch_common/CodeInjection.h>
 #include "multi.h"
 #include "multi_private.h"
+#include "server_internal.h"
 #include "../misc/misc.h"
 #include "../rf/os/os.h"
 #include "../rf/os/timer.h"
@@ -246,12 +247,25 @@ bool is_entity_out_of_ammo(rf::Entity *entity, int weapon_type, bool alt_fire)
     return clip_ammo == 0;
 }
 
-std::pair<bool, float> multi_is_cps_above_limit(rf::Player* pp, float max_cps)
+std::pair<bool, float> multi_is_cps_above_limit(rf::Player* pp, float max_cps, int weapon_type)
 {
+    // don't consider melee weapons to be above max_cps
+    if (rf::weapon_is_melee(weapon_type)) {
+        return {false, 0.0f};
+    }
     constexpr int num_samples = 4;
     int player_id = pp->net_data->player_id;
+    static int last_weapon_id[rf::multi_max_player_id];         // Keep a record of last weapon used
     static int last_weapon_fire[rf::multi_max_player_id][num_samples];
     int now = rf::timer_get(1000);
+    // If the weapon has changed, zero out the saved array of timestamps. Avoids dropping legit fire packets based on cps from other weapon
+    if (last_weapon_id[player_id] != weapon_type) {
+        xlog::debug("Player %i swapped weapon to %i", player_id, weapon_type);
+        for (int i = 0; i < num_samples; ++i) {
+            last_weapon_fire[player_id][i] = 0;
+        }
+        last_weapon_id[player_id] = weapon_type; // Update the last weapon used
+    }
     float avg_dt_secs = (now - last_weapon_fire[player_id][0]) / static_cast<float>(num_samples) / 1000.0f;
     float cps = 1.0f / avg_dt_secs;
     if (cps > max_cps) {
@@ -264,26 +278,39 @@ std::pair<bool, float> multi_is_cps_above_limit(rf::Player* pp, float max_cps)
     return {false, cps};
 }
 
-float multi_get_max_cps(int weapon_type, bool alt_fire)
+float multi_get_max_cps(int weapon_type)
 {
     if (rf::weapon_is_semi_automatic(weapon_type)) {
-        // most people cannot do much more than 10 clicks per second so 20 should be safe
-        return 20.0f;
+        // since semi-auto weapons can be fired as quickly as click input, limit max allowed rate to value set by server, default 20/sec
+        return g_additional_server_config.click_limiter_max_cps;
     }
-    int fire_wait_ms = rf::weapon_get_fire_wait_ms(weapon_type, alt_fire);
+    // for automatic weapons, using fire wait value in weapons.tbl is fine
+    // use min fire wait across both primary and alt fire to get around issues switching fire mode quickly
+    int fire_wait_ms = std::min(rf::weapon_get_fire_wait_ms(weapon_type, 0),rf::weapon_get_fire_wait_ms(weapon_type, 1));
     float fire_wait_secs = fire_wait_ms / 1000.0f;
     float fire_rate = 1.0f / fire_wait_secs;
     // allow 10% more to make sure we do not skip any legit packets
+    xlog::debug("For fire request for weapon {}, max cps is {:.2f}", weapon_type, fire_rate*1.1f);
     return fire_rate * 1.1f;
 }
 
-bool multi_check_cps(rf::Player* pp, int weapon_type, bool alt_fire)
+void send_private_message_for_cancelled_shot(rf::Player* player, const std::string& reason)
 {
-    float max_cps = multi_get_max_cps(weapon_type, alt_fire);
-    auto [above_limit, cps] = multi_is_cps_above_limit(pp, max_cps);
+    auto message = std::format("\xA6 Shot canceled! {}", reason);
+    send_chat_line_packet(message.c_str(), player);
+}
+
+bool multi_check_cps(rf::Player* pp, int weapon_type)
+{
+    float max_cps = multi_get_max_cps(weapon_type);
+    auto [above_limit, cps] = multi_is_cps_above_limit(pp, max_cps, weapon_type);
     if (above_limit) {
-        xlog::info("Player {} is shooting too fast: cps {:.2f} is greater than allowed {:.2f}",
-            pp->name, cps, max_cps);
+        xlog::info("Canceled fire request from player {} for weapon {}. They are shooting too fast: cps {:.2f} is greater than allowed {:.2f}",
+            pp->name, weapon_type, cps, max_cps);
+
+        // inform the player
+        send_private_message_for_cancelled_shot(pp, std::format("You are shooting too fast. Your fire rate: {:.1f}, server maximum: {:.1f}",
+            cps, max_cps));
     }
     return above_limit;
 }
@@ -293,20 +320,25 @@ bool multi_is_weapon_fire_allowed_server_side(rf::Entity *ep, int weapon_type, b
     rf::Player* pp = rf::player_from_entity_handle(ep->handle);
     if (ep->ai.current_primary_weapon != weapon_type) {
         xlog::debug("Player {} attempted to fire unselected weapon {}", pp->name, weapon_type);
+        send_private_message_for_cancelled_shot(pp, "You attempted to fire an unselected weapon.");
     }
     else if (is_entity_out_of_ammo(ep, weapon_type, alt_fire)) {
         xlog::debug("Player {} attempted to fire weapon {} without ammunition", pp->name, weapon_type);
+        send_private_message_for_cancelled_shot(pp, "You attempted to fire without ammo.");
     }
     else if (rf::weapon_is_on_off_weapon(weapon_type, alt_fire)) {
         xlog::debug("Player {} attempted to fire a single bullet from on/off weapon {}", pp->name, weapon_type);
+        send_private_message_for_cancelled_shot(pp, "You attempted to fire a single shot from an automatic weapon.");
     }
     else if (multi_is_selecting_weapon(pp)) {
         xlog::debug("Player {} attempted to fire weapon {} while selecting it", pp->name, weapon_type);
+        send_private_message_for_cancelled_shot(pp, "You attempted to fire while selecting a weapon.");
     }
     else if (rf::entity_is_reloading(ep)) {
         xlog::debug("Player {} attempted to fire weapon {} while reloading it", pp->name, weapon_type);
+        send_private_message_for_cancelled_shot(pp, "You attempted to fire while reloading.");
     }
-    else if (!multi_check_cps(pp, weapon_type, alt_fire)) {
+    else if (!multi_check_cps(pp, weapon_type)) {
         return true;
     }
     return false;
