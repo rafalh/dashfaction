@@ -318,7 +318,7 @@ static void send_private_message_with_stats(rf::Player* player)
 
 void shuffle_level_array()
 {
-    std::ranges::shuffle(rf::netgame.levels, rng);
+    std::ranges::shuffle(rf::netgame.levels, g_rng);
     xlog::warn("Shuffled level rotation");
 }
 
@@ -332,7 +332,7 @@ const char* get_rand_level_filename()
     }
 
     std::uniform_int_distribution<std::size_t> dist_levels(0, num_levels - 1);
-    std::size_t rand_level_index = dist_levels(rng);
+    std::size_t rand_level_index = dist_levels(g_rng);
 
     // avoid selecting current level filename (unless it appears more than once on map list)
     if (rf::netgame.levels[rand_level_index] == rf::level_filename_to_load) {
