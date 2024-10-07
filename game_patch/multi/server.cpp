@@ -600,7 +600,7 @@ FunHook<void(const char*, uint8_t, const rf::Vector3*, rf::Matrix3*, bool, bool,
             xlog::warn("num points: {}", rf::multi_respawn_num_points);
         }
         else {
-            // if random spawns is off, maintain stock behaviour
+            // if new spawn logic is off, maintain stock behaviour
             multi_respawn_create_point_hook.call_target(name, team, pos, orient, RedTeam, blue_team, bot);
         }
     }
@@ -621,7 +621,7 @@ std::shared_ptr<RespawnPoint> select_respawn_point_new(rf::Player* pp)
     bool avoid_last = g_additional_server_config.random_spawns.try_avoid_last;
     bool avoid_enemies = g_additional_server_config.random_spawns.try_avoid_enemies;
 
-    xlog::warn("Giving {} a spawn. They are on team {}, and their last index was {}. We ARE {}avoiding last, and ARE {}avoiding enemies.", pp->name, team, last_index, (avoid_last ? "" : "NOT "), (avoid_enemies ? "" : "NOT "));
+    xlog::warn("Giving {} a spawn. They are on team {}, and their last index was {}. We {}avoiding last, and {}avoiding enemies.", pp->name, team, last_index, (avoid_last ? "" : "NOT "), (avoid_enemies ? "" : "NOT "));
 
     // vars to store the furthest spawn point
     std::optional<std::size_t> furthest_spawn_index;
@@ -697,7 +697,7 @@ std::shared_ptr<RespawnPoint> select_respawn_point_new(rf::Player* pp)
         }
     }
 
-    // **Team game logic**: If it's a team game, prioritize valid team spawns
+    // Team game logic: If it's a team game, prioritize valid team spawns
     std::vector<std::size_t> valid_team_spawns;
     if (is_team_game) {
         for (std::size_t i = 0; i < respawn_points.size(); ++i) {
@@ -769,8 +769,8 @@ CallHook<rf::Entity*(rf::Player*, int, rf::Vector3*, rf::Matrix3*, int)> player_
             if (g_additional_server_config.random_spawns.enabled) {
                 // new spawn logic is enabled, try to find a valid respawn point
                 if (auto random_respawn = select_respawn_point_new(pp)) {
-                    xlog::warn("Spawning {} at ({}, {}, {})", pp->name, random_respawn->position.x,
-                               random_respawn->position.y, random_respawn->position.z);
+                    xlog::warn("Spawning {} at ({}, {}, {})",
+                        pp->name, random_respawn->position.x, random_respawn->position.y, random_respawn->position.z);
                     *pos = random_respawn->position;
                     *orient = random_respawn->orientation;
                     valid_respawn_found = true; // valid respawn was found using the new logic
