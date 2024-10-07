@@ -723,7 +723,7 @@ std::shared_ptr<RespawnPoint> select_respawn_point_new(rf::Player* pp)
 
             // Randomly select from the remaining valid team spawns
             std::uniform_int_distribution<std::size_t> team_range(0, valid_team_spawns.size() - 1);
-            std::size_t random_team_index = team_range(rng);
+            std::size_t random_team_index = team_range(g_rng);
 
             pdata.last_spawn_point_index = random_team_index;
             return {respawn_points[random_team_index]};
@@ -732,7 +732,7 @@ std::shared_ptr<RespawnPoint> select_respawn_point_new(rf::Player* pp)
 
     // Non-team or fallback logic: random spawn point selection
     std::uniform_int_distribution<std::size_t> random_range(0, respawn_points.size() - 1);
-    std::size_t random_index = random_range(rng);
+    std::size_t random_index = random_range(g_rng);
 
     // Avoid last_index if possible (if more than 1 spawn point exists and try_avoid_last is true)
     if (avoid_last && respawn_points.size() > 1 && random_index == last_index) {

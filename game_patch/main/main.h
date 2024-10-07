@@ -5,7 +5,7 @@
 extern GameConfig g_game_config;
 
 // random number generator
-extern std::mt19937 rng;
+extern std::mt19937 g_rng;
 void initialize_random_generator();
 
 #ifdef _WINDOWS_
