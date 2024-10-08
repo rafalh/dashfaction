@@ -20,6 +20,7 @@
 #include "../main/main.h"
 #include <common/utils/list-utils.h>
 #include "../rf/player/player.h"
+#include "../rf/misc.h"
 #include "../rf/multi.h"
 #include "../rf/parse.h"
 #include "../rf/weapon.h"
@@ -391,45 +392,39 @@ CodeInjection detect_browser_player_patch{
     },
 };
 
-void send_hit_sound_packet(rf::Player* target)
+void send_sound_packet(rf::Player* target, int& last_sent_time, int rate_limit, int sound_id)
 {
-    // rate limiting - max 5 per second
+    // Rate limiting - max `rate_limit` times per second
     int now = rf::timer_get(1000);
-    auto& pdata = get_player_additional_data(target);
-    if (now - pdata.last_hitsound_sent_ms < 1000 / g_additional_server_config.hit_sounds.rate_limit) {
+    if (now - last_sent_time < 1000 / rate_limit) {
         return;
     }
-    pdata.last_hitsound_sent_ms = now;
+    last_sent_time = now;
 
     // Send sound packet
     RF_SoundPacket packet;
     packet.header.type = RF_GPT_SOUND;
     packet.header.size = sizeof(packet) - sizeof(packet.header);
-    packet.sound_id = g_additional_server_config.hit_sounds.sound_id;
+    packet.sound_id = sound_id;
     // FIXME: it does not work on RF 1.21
     packet.pos.x = packet.pos.y = packet.pos.z = std::numeric_limits<float>::quiet_NaN();
     rf::multi_io_send(target, &packet, sizeof(packet));
+}
+
+void send_hit_sound_packet(rf::Player* target)
+{
+    auto& pdata = get_player_additional_data(target);
+    send_sound_packet(target, pdata.last_hitsound_sent_ms, g_additional_server_config.hit_sounds.rate_limit,
+                      g_additional_server_config.hit_sounds.sound_id);
 }
 
 void send_critical_hit_packet(rf::Player* target)
 {
-    // rate limiting
-    int now = rf::timer_get(1000);
     auto& pdata = get_player_additional_data(target);
-    if (now - pdata.last_critsound_sent_ms < 1000 / g_additional_server_config.critical_hits.rate_limit) {
-        return;
-    }
-    pdata.last_critsound_sent_ms = now;
-
-    // Send sound packet
-    RF_SoundPacket packet;
-    packet.header.type = RF_GPT_SOUND;
-    packet.header.size = sizeof(packet) - sizeof(packet.header);
-    packet.sound_id = g_additional_server_config.critical_hits.sound_id;
-    // FIXME: it does not work on RF 1.21
-    packet.pos.x = packet.pos.y = packet.pos.z = std::numeric_limits<float>::quiet_NaN();
-    rf::multi_io_send(target, &packet, sizeof(packet));
+    send_sound_packet(target, pdata.last_critsound_sent_ms, g_additional_server_config.critical_hits.rate_limit,
+                      g_additional_server_config.critical_hits.sound_id);
 }
+
 
 FunHook<float(rf::Entity*, float, int, int, int)> entity_damage_hook{
     0x0041A350,
@@ -442,42 +437,39 @@ FunHook<float(rf::Entity*, float, int, int, int)> entity_damage_hook{
             if (damage == 0.0f) {
                 return 0.0f;
             }
-        }
 
-        // Critical hits
-        if (rf::is_server && g_additional_server_config.critical_hits.enabled && is_pvp_damage && damage > 0.0f) {
-            float base_chance = g_additional_server_config.critical_hits.base_chance;
-            float bonus_chance = 0.0f;
-            float total_damage_current_life = 0.0f;
+            // Check if this is a crit
+            if (g_additional_server_config.critical_hits.enabled) {
+                float base_chance = g_additional_server_config.critical_hits.base_chance;
+                float bonus_chance = 0.0f;
 
-            if (killer_player && killer_player->stats) {
-                auto* killer_stats = static_cast<PlayerStatsNew*>(killer_player->stats);
-                total_damage_current_life =
-                    killer_stats->damage_given_current_life; // Use the total damage in the current life
-            }
+                // calculate bonus chance
+                if (g_additional_server_config.critical_hits.dynamic_scale && killer_player->stats) {
+                    auto* killer_stats = static_cast<PlayerStatsNew*>(killer_player->stats);
 
-            // if damage >= 1000, they get the full 10% bonus
-            bonus_chance = 0.1f * std::min(
-                total_damage_current_life / g_additional_server_config.critical_hits.dynamic_damage_for_max_bonus,
-                1.0f);
+                    bonus_chance = 0.1f * std::min(killer_stats->damage_given_current_life /
+                        g_additional_server_config.critical_hits.dynamic_damage_for_max_bonus, 1.0f);
+                }
 
-            float critical_hit_chance = base_chance + bonus_chance;
-            xlog::debug("Critical hit chance: {:.2f}", critical_hit_chance);
+                float critical_hit_chance = base_chance + bonus_chance;
+                xlog::debug("Critical hit chance: {:.2f}", critical_hit_chance);
 
-            // check if the random roll is a critical hit
-            std::uniform_real_distribution<float> dist(0.0f, 1.0f);
-            float random_value = dist(g_rng);
-            if (random_value < critical_hit_chance) {
-                // Apply critical hit modifier
-                //damage *= g_additional_server_config.critical_hits.critical_modifier;
-                damage *= (!rf::multi_powerup_has_player(killer_player, 1)) ? 4.0f : 1.0f; // hack, todo get amp bonus
-                //xlog::debug("Crit! Dealt damage: {:.2f}", damage);
-                int amp_time_to_add = rf::multi_powerup_get_time_until(killer_player, 1) +
-                                      g_additional_server_config.critical_hits.reward_duration;
-                rf::multi_powerup_add(killer_player, 1, amp_time_to_add);
-                send_critical_hit_packet(killer_player);
-                //auto message = std::format("\xA6 You got a critcal shot on {}", damaged_player->name);
-                //send_chat_line_packet(message.c_str(), killer_player);
+                std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+                float random_value = dist(g_rng);
+                if (random_value < critical_hit_chance) {
+
+                    // Apply amp modifier to the critical hit
+                    damage *= (!rf::multi_powerup_has_player(killer_player, 1)) ? rf::g_multi_damage_modifier : 1.0f;
+
+                    // On a crit, add amp for a duration
+                    int amp_time_to_add = rf::multi_powerup_get_time_until(killer_player, 1) +
+                                          g_additional_server_config.critical_hits.reward_duration;
+
+                    rf::multi_powerup_add(killer_player, 1, amp_time_to_add);
+
+                    // Notify with sound
+                    send_critical_hit_packet(killer_player);
+                }
             }
         }
 
@@ -494,7 +486,6 @@ FunHook<float(rf::Entity*, float, int, int, int)> entity_damage_hook{
             if (g_additional_server_config.hit_sounds.enabled) {
                 send_hit_sound_packet(killer_player);
             }
-            //xlog::warn("Time left on amp: {}", rf::multi_powerup_get_time_until(killer_player, 1));
         }
 
         return real_damage;
@@ -754,7 +745,7 @@ void server_init()
     // Detect if player joining to the server is a browser
     detect_browser_player_patch.install();
 
-    // Hit sounds
+    // Critical hits and hit sounds
     entity_damage_hook.install();
 
     // Item replacements
