@@ -61,12 +61,8 @@ Version 1.8.0 (released 2022-09-17)
 - Allow setting max players server setting to 1
 - Change launcher window title
 - Allow autocomplete for `map` command
-- Add version and date to `/info` server chat command
 - Enable `map` command in RCON
 - Change update checker URL
-- Fix particle damage on dedicated servers
-- Add `.` command to make finding commands easier
-- Fix blurry fonts in the launcher on HiDPI monitors
 - Add `fps_counter` command
 - Make editor window resizeable
 - Add `debug_event_msg` command that allows to track event messages in console
@@ -97,6 +93,11 @@ Version 1.8.0 (released 2022-09-17)
 - Change default FPS limit to 120 to comply with the stock game
 - Fix loading a save game when player entity is out of level bounds
 - Fix possible freeze when burning entity is destroyed
+- [@is-this-c](https://github.com/is-this-c)
+  - Add version and date to `/info` server chat command
+  - Fix particle damage on dedicated servers
+  - Add `.` command to make finding commands easier
+  - Fix blurry fonts in the launcher on HiDPI monitors
 
 Version 1.7.0 (released 2021-06-05)
 -----------------------------------
