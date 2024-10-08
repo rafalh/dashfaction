@@ -1,7 +1,10 @@
 #pragma once
 
 #include <optional>
+#include <xlog/xlog.h>
+#include "server_internal.h"
 #include "../rf/player/player.h"
+#include "../rf/os/timer.h"
 
 struct PlayerStatsNew : rf::PlayerLevelStats
 {
@@ -13,6 +16,7 @@ struct PlayerStatsNew : rf::PlayerLevelStats
     float num_shots_fired;
     float damage_received;
     float damage_given;
+    float damage_given_current_life;
 
     void inc_kills()
     {
@@ -25,6 +29,7 @@ struct PlayerStatsNew : rf::PlayerLevelStats
     {
         ++num_deaths;
         current_streak = 0;
+        damage_given_current_life = 0;
     }
 
     void add_shots_hit(float add)
@@ -47,6 +52,7 @@ struct PlayerStatsNew : rf::PlayerLevelStats
     void add_damage_given(float damage)
     {
         damage_given += damage;
+        damage_given_current_life += damage;
     }
 
     [[nodiscard]] float calc_accuracy() const
@@ -67,6 +73,7 @@ struct PlayerStatsNew : rf::PlayerLevelStats
         max_streak = 0;
         damage_received = 0;
         damage_given = 0;
+        damage_given_current_life = 0;
     }
 };
 

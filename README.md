@@ -160,8 +160,22 @@ Configuration example:
     $DF Hitsounds: true
         // Sound used for hit notification
         +Sound ID: 29
-        // max sound packets per second - keep it low to save bandwidth
+        // Max sound packets per second - keep it low to save bandwidth
         +Rate Limit: 10
+    // Enable critical hits
+    $DF Critical Hits: false
+        // Sound used for hit notification
+        +Sound ID: 35
+        // Max sound packets per second - keep it low to save bandwidth
+        +Rate Limit: 10
+        // Duration of damage amp reward on a critical hit
+        +Reward Duration: 1500
+        // Percentage chance of a critical hit
+        +Base Chance Percent: 0.1
+        // Enable dynamic chance bonus based on damage dealt in current life
+        +Use Dynamic Chance Bonus: true
+        // Amount of damage to deal in current life for the max dynamic chance bonus (+ 0.1)
+        +Dynamic Chance Damage Ceiling: 1200
     // Replace all "Shotgun" items with "rail gun" items when loading RFLs
     $DF Item Replacement: "Shotgun" "rail gun"
     // If enabled players are given full ammo when picking up weapon items, can be useful with the Weapons Stay standard option
