@@ -425,7 +425,6 @@ void send_critical_hit_packet(rf::Player* target)
                       g_additional_server_config.critical_hits.sound_id);
 }
 
-
 FunHook<float(rf::Entity*, float, int, int, int)> entity_damage_hook{
     0x0041A350,
     [](rf::Entity* damaged_ep, float damage, int killer_handle, int damage_type, int killer_uid) {
@@ -454,8 +453,8 @@ FunHook<float(rf::Entity*, float, int, int, int)> entity_damage_hook{
                 float critical_hit_chance = base_chance + bonus_chance;
                 xlog::debug("Critical hit chance: {:.2f}", critical_hit_chance);
 
-                std::uniform_real_distribution<float> dist(0.0f, 1.0f);
-                float random_value = dist(g_rng);
+                std::uniform_real_distribution<float> dist_crit(0.0f, 1.0f);
+                float random_value = dist_crit(g_rng);
                 if (random_value < critical_hit_chance) {
 
                     // Apply amp modifier to the critical hit
