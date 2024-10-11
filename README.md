@@ -150,6 +150,14 @@ Configuration example:
     $DF Vote Next: true
     // Enable vote previous
     $DF Vote Previous: true
+    // Use new improved spawn point selection logic. Full randomness if optional settings are turned off
+    $DF Use New Spawn Logic: false
+        // Attempt to avoid spawning players at the same location twice in a row
+        +Try Avoid Last: true
+        // Instead of randomness, always spawn players as far as possible from any enemies
+        +Try Avoid Enemies: false
+        // If off, disregard team-specific flags on spawn points (only relevant in team modes)
+        +Respect Team Spawns: true
     // Duration of player invulnerability after respawn in ms (default is the same as in stock RF - 1500)
     $DF Spawn Protection Duration: 1500
     // Initial player life (health) after spawn

@@ -31,9 +31,10 @@ struct HitSoundsConfig
 
 struct NewSpawnLogicConfig
 {
-    bool enabled = true;
+    bool enabled = false;
     bool try_avoid_last = true;
-    bool try_avoid_enemies = true;
+    bool try_avoid_enemies = false;
+    bool respect_team_spawns = true;
 };
 
 struct RespawnPoint

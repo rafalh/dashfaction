@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <limits>
 #include <format>
+#include <numeric>
 #include <windows.h>
 #include <winsock2.h>
 #include "server.h"
@@ -89,6 +90,9 @@ void load_additional_server_config(rf::Parser& parser)
         }
         if (parser.parse_optional("+Try Avoid Enemies:")) {
             g_additional_server_config.random_spawns.try_avoid_enemies = parser.parse_bool();
+        }
+        if (parser.parse_optional("+Respect Team Spawns:")) {
+            g_additional_server_config.random_spawns.respect_team_spawns = parser.parse_bool();
         }
     }
 
@@ -610,7 +614,7 @@ FunHook<void(const char*, uint8_t, const rf::Vector3*, rf::Matrix3*, bool, bool,
 std::shared_ptr<RespawnPoint> select_respawn_point_new(rf::Player* pp)
 {
     if (respawn_points.empty()) {
-        xlog::warn("No respawn points available!");
+        xlog::warn("No spawn points are available!");
         return {nullptr};
     }
 
@@ -620,10 +624,30 @@ std::shared_ptr<RespawnPoint> select_respawn_point_new(rf::Player* pp)
     bool is_team_game = multi_is_team_game_type();
     bool avoid_last = g_additional_server_config.random_spawns.try_avoid_last;
     bool avoid_enemies = g_additional_server_config.random_spawns.try_avoid_enemies;
+    bool respect_team_spawns = g_additional_server_config.random_spawns.respect_team_spawns;
 
-    xlog::warn("Giving {} a spawn. They are on team {}, and their last index was {}. We {}avoiding last, and {}avoiding enemies.", pp->name, team, last_index, (avoid_last ? "" : "NOT "), (avoid_enemies ? "" : "NOT "));
+    xlog::warn(
+        "Giving {} a spawn. They are on team {}, last index was {}. We {}avoiding last, and {}avoiding enemies.",
+        pp->name, (team ? "blue" : "red"), last_index, (avoid_last ? "" : "NOT "), (avoid_enemies ? "" : "NOT "));
 
-    if (avoid_enemies) {
+    // in team modes, restrict available spawns to our team
+    std::vector<std::size_t> valid_team_spawns;
+    if (is_team_game && respect_team_spawns) {
+        for (std::size_t i = 0; i < respawn_points.size(); ++i) {
+            const auto& spawn_point = respawn_points[i];
+            // Filter for matching team spawn points
+            if ((team == 0 && spawn_point->redTeam) || (team == 1 && spawn_point->blueTeam)) {
+                valid_team_spawns.push_back(i);
+            }
+        }
+
+        if (valid_team_spawns.empty()) {
+            xlog::warn("No spawn points are available for the {} team!", (team ? "blue" : "red"));
+        }
+    }
+
+    // avoiding enemies
+    if (avoid_enemies && (!valid_team_spawns.empty() || !is_team_game)) {
         std::optional<std::size_t> furthest_spawn_index;
         std::optional<std::size_t> second_furthest_spawn_index;
         float max_distance = 0.0f;
@@ -631,23 +655,44 @@ std::shared_ptr<RespawnPoint> select_respawn_point_new(rf::Player* pp)
         auto player_list = SinglyLinkedList{rf::player_list};
         bool has_enemies = false;
 
-        for (auto& player : player_list) { // check if we have enemies
-            if (is_team_game && !rf::player_is_dead(&player) && &player != pp && player.team != team) {
-                has_enemies = true; // in DM, this means at least one other player
-                break;
+        if (is_team_game) {
+            // in tdm/ctf, check if the other team has players
+            for (auto& player : player_list) {
+                if (!rf::player_is_dead(&player) && &player != pp && player.team != team) {
+                    has_enemies = true;
+                    break;
+                }
+            }
+        }
+        else {
+            // in dm, any other player is an enemy
+            for (auto& player : player_list) {
+                if (!rf::player_is_dead(&player) && &player != pp) {
+                    has_enemies = true;
+                    break;
+                }
             }
         }
 
-        if (has_enemies) {   
-            // If avoiding enemies and enemies are present, find the furthest spawn point from them
-            xlog::warn("Avoiding enemies enabled, searching for furthest spawn point from enemies.");
-            for (std::size_t i = 0; i < respawn_points.size(); ++i) {
+        if (has_enemies) {
+            std::vector<std::size_t> spawn_pool;
+
+            // check if we have team spawns (we only will in team modes)
+            if (respect_team_spawns && !valid_team_spawns.empty()) {
+                spawn_pool = valid_team_spawns;
+            }
+            else {
+                spawn_pool.resize(respawn_points.size());
+                std::iota(spawn_pool.begin(), spawn_pool.end(),
+                          0);
+            }
+
+            for (std::size_t i : spawn_pool) {
                 const auto& spawn_point = respawn_points[i];
                 rf::Vector3 spawn_position = spawn_point->position;
 
                 float min_distance_to_enemy = std::numeric_limits<float>::max();
 
-                // Calculate distance to all enemies (all players in deathmatch)
                 for (auto& player : player_list) {
                     if ((is_team_game && player.team != team) || (!is_team_game && &player != pp)) {
                         if (!rf::player_is_dead(&player)) {
@@ -660,12 +705,11 @@ std::shared_ptr<RespawnPoint> select_respawn_point_new(rf::Player* pp)
                     }
                 }
 
-                // Update furthest spawn point based on distance to enemies
                 if (min_distance_to_enemy > max_distance) {
                     if (avoid_last && i == last_index) {
                         second_max_distance = max_distance;
                         second_furthest_spawn_index = furthest_spawn_index;
-                        continue; // Skip if it's the last used spawn
+                        continue;
                     }
 
                     second_max_distance = max_distance;
@@ -676,11 +720,8 @@ std::shared_ptr<RespawnPoint> select_respawn_point_new(rf::Player* pp)
                 }
             }
 
-            // If we found a valid furthest spawn point, use it
             if (furthest_spawn_index) {
                 if (avoid_last && *furthest_spawn_index == last_index && second_furthest_spawn_index) {
-                    xlog::warn("Furthest spawn point is the last one used. Using the second furthest point: {}",
-                               *second_furthest_spawn_index);
                     pdata.last_spawn_point_index = *second_furthest_spawn_index;
                     return respawn_points[*second_furthest_spawn_index];
                 }
@@ -691,53 +732,34 @@ std::shared_ptr<RespawnPoint> select_respawn_point_new(rf::Player* pp)
         }
     }
 
-    // Team game logic: If it's a team game, prioritize valid team spawns
-    std::vector<std::size_t> valid_team_spawns;
-    if (is_team_game) {
-        for (std::size_t i = 0; i < respawn_points.size(); ++i) {
-            const auto& spawn_point = respawn_points[i];
 
-            // Only consider spawn points that match the player's team
-            if ((team == 0 && spawn_point->redTeam) || (team == 1 && spawn_point->blueTeam)) {
-                valid_team_spawns.push_back(i);
-            }
+    // use RNG and avoid last
+    if (!valid_team_spawns.empty()) {
+        if (avoid_last && valid_team_spawns.size() > 1) {
+            valid_team_spawns.erase(std::remove(valid_team_spawns.begin(), valid_team_spawns.end(), last_index),
+                                    valid_team_spawns.end());
+            xlog::warn("Excluding last spawn point index: {} from selection.", last_index);
         }
 
-        // If no valid team-specific spawn points are found, fall back to non-team-based logic
-        if (valid_team_spawns.empty()) {
-            xlog::warn("No team-specific spawn points available. Falling back to random selection.");
-        }
-        else {
-            // Avoid last spawn point if needed
-            if (avoid_last && valid_team_spawns.size() > 1) {
-                valid_team_spawns.erase(std::remove(valid_team_spawns.begin(), valid_team_spawns.end(), last_index),
-                                        valid_team_spawns.end());
-                xlog::warn("Excluding last spawn point index: {} from selection.", last_index);
-            }
+        std::uniform_int_distribution<std::size_t> team_range(0, valid_team_spawns.size() - 1);
+        std::size_t random_team_index = team_range(g_rng);
 
-            // Randomly select from the remaining valid team spawns
-            std::uniform_int_distribution<std::size_t> team_range(0, valid_team_spawns.size() - 1);
-            std::size_t random_team_index = team_range(g_rng);
-
-            pdata.last_spawn_point_index = random_team_index;
-            return {respawn_points[random_team_index]};
-        }
+        pdata.last_spawn_point_index = valid_team_spawns[random_team_index];
+        return {respawn_points[valid_team_spawns[random_team_index]]};
     }
 
-    // Non-team or fallback logic: random spawn point selection
+    // RNG fallback logic if DM or team game with no valid team spawns
     std::uniform_int_distribution<std::size_t> random_range(0, respawn_points.size() - 1);
     std::size_t random_index = random_range(g_rng);
 
-    // Avoid last_index if possible (if more than 1 spawn point exists and try_avoid_last is true)
     if (avoid_last && respawn_points.size() > 1 && random_index == last_index) {
-        xlog::warn("Randomly selected last spawn point, rerolling.");
         random_index = (random_index + 1) % respawn_points.size();
     }
 
     pdata.last_spawn_point_index = random_index;
-    xlog::warn("Randomly selected spawn point index from full pool: {}", random_index);
     return {respawn_points[random_index]};
 }
+
 
 
 
@@ -747,7 +769,7 @@ CallHook<rf::Entity*(rf::Player*, int, rf::Vector3*, rf::Matrix3*, int)> player_
         0x0045C807  // in load_level, used by single player and listen servers (initial spawn)
     },
      [](rf::Player* pp, int entity_type, rf::Vector3* pos, rf::Matrix3* orient, int mp_character) -> rf::Entity* {
-        xlog::warn("Processing player_create_entity request. Player: {}, Team: {}, Entity Type: {}, MP Character: {}",
+        xlog::debug("Processing player_create_entity request. Player: {}, Team: {}, Entity Type: {}, MP Character: {}",
             pp->name, pp->team, entity_type, mp_character);
 
         // in single player don't touch anything
@@ -763,7 +785,7 @@ CallHook<rf::Entity*(rf::Player*, int, rf::Vector3*, rf::Matrix3*, int)> player_
             if (g_additional_server_config.random_spawns.enabled) {
                 // new spawn logic is enabled, try to find a valid respawn point
                 if (auto random_respawn = select_respawn_point_new(pp)) {
-                    xlog::warn("Spawning {} at ({}, {}, {})",
+                    xlog::debug("Spawning {} at ({}, {}, {})",
                         pp->name, random_respawn->position.x, random_respawn->position.y, random_respawn->position.z);
                     *pos = random_respawn->position;
                     *orient = random_respawn->orientation;
@@ -780,7 +802,7 @@ CallHook<rf::Entity*(rf::Player*, int, rf::Vector3*, rf::Matrix3*, int)> player_
         if (!valid_respawn_found) {
             *pos = rf::level.player_start_pos;
             *orient = rf::level.player_start_orient;
-            xlog::warn("No Multiplayer Respawn Points found. Spawning {} at the Player Start.", pp->name);
+            xlog::warn("No spawn point found. Spawning {} at the Player Start.", pp->name);
         }
 
         return player_create_entity_hook.call_target(pp, entity_type, pos, orient, mp_character);     

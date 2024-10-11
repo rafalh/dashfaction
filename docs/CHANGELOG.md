@@ -43,7 +43,8 @@ Version 1.9.0 (not released yet)
 - Do not load unnecessary VPPs in dedicated server mode
 - Add level filename to "Level Initializing" console message
 - Properly handle WM_PAINT in dedicated server, may improve performance (DF bug)
-- Add optional improved respawn point selection method for multiplayer
+- Add improved and more flexible respawn point selection method for multiplayer
+- Adjust behaviour in multi if map has no spawn points, now spawns players at Player Start position
 
 Version 1.8.0 (released 2022-09-17)
 -----------------------------------
