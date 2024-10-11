@@ -4,6 +4,9 @@
 #include <string>
 #include <map>
 #include <optional>
+#include <vector>
+#include "../rf/math/vector.h"
+#include "../rf/math/matrix.h"
 
 // Forward declarations
 namespace rf
@@ -26,6 +29,25 @@ struct HitSoundsConfig
     int rate_limit = 10;
 };
 
+struct NewSpawnLogicConfig
+{
+    bool enabled = false;
+    bool try_avoid_last = true;
+    bool try_avoid_enemies = false;
+    bool respect_team_spawns = true;
+};
+
+struct RespawnPoint
+{
+    std::string name;
+    uint8_t team;
+    rf::Vector3 position;
+    rf::Matrix3 orientation;
+    bool redTeam;
+    bool blueTeam;
+    bool bot;
+};
+
 struct ServerAdditionalConfig
 {
     VoteConfig vote_kick;
@@ -34,6 +56,7 @@ struct ServerAdditionalConfig
     VoteConfig vote_restart;
     VoteConfig vote_next;
     VoteConfig vote_previous;
+    NewSpawnLogicConfig random_spawns;
     int spawn_protection_duration_ms = 1500;
     std::optional<float> spawn_life;
     std::optional<float> spawn_armor;

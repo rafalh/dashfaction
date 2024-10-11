@@ -175,6 +175,8 @@ namespace rf
     static auto& simultaneous_ping = addr_as_ref<uint32_t>(0x00599CD8);
     static auto& tracker_addr = addr_as_ref<NetAddr>(0x006FC550);
 
+    static auto& multi_respawn_num_points = addr_as_ref<uint32_t>(0x006A1458);
+
     enum ChatSayType {
         CHAT_SAY_GLOBAL = 0,
         CHAT_SAY_TEAM = 1,
