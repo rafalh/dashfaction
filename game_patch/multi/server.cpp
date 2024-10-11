@@ -597,7 +597,7 @@ FunHook<void(const char*, uint8_t, const rf::Vector3*, rf::Matrix3*, bool, bool,
             // tick up spawn point counter
             rf::multi_respawn_num_points += 1;    
 
-            // log spawn point creation info
+            // log spawn point creation info (avoid unneeded var if not debugging)
             #ifdef DEBUG
             const auto& respawn_point = respawn_points.back();
 
@@ -737,7 +737,6 @@ std::shared_ptr<RespawnPoint> select_respawn_point_new(rf::Player* pp)
             }
         }
     }
-
 
     // use RNG and avoid last
     if (!valid_team_spawns.empty()) {
