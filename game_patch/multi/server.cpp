@@ -765,9 +765,6 @@ std::shared_ptr<RespawnPoint> select_respawn_point_new(rf::Player* pp)
     return {respawn_points[random_index]};
 }
 
-
-
-
 CallHook<rf::Entity*(rf::Player*, int, rf::Vector3*, rf::Matrix3*, int)> player_create_entity_hook{
     {
         0x0048087D, // in spawn_player_server_side, used by servers
@@ -913,7 +910,9 @@ CodeInjection multi_limbo_init_injection{
         }
 
         // clear list of respawn points on map end
-        respawn_points.clear();
+        if (g_additional_server_config.random_spawns.enabled) {
+            respawn_points.clear();
+        }        
     },
 };
 
