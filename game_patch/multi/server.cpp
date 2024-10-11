@@ -582,26 +582,32 @@ FunHook<void(const char*, uint8_t, const rf::Vector3*, rf::Matrix3*, bool, bool,
     [](const char* name, uint8_t team, const rf::Vector3* pos, rf::Matrix3* orient, bool RedTeam, bool blue_team,
        bool bot) {
         if (g_additional_server_config.random_spawns.enabled) {
-            auto respawn_point = std::make_shared<RespawnPoint>();
-            respawn_point->name = name;
-            respawn_point->team = team;
-            respawn_point->position = *pos;
-            respawn_point->orientation = *orient;
-            respawn_point->redTeam = RedTeam;
-            respawn_point->blueTeam = blue_team;
-            respawn_point->bot = bot;
-
-            respawn_points.push_back(respawn_point);
+            respawn_points.emplace_back(std::make_shared<RespawnPoint>(
+                RespawnPoint{
+                .name = name,
+                .team = team,
+                .position = *pos,
+                .orientation = *orient,
+                .redTeam = RedTeam,
+                .blueTeam = blue_team,
+                .bot = bot
+                }
+            ));
 
             // tick up spawn point counter
-            rf::multi_respawn_num_points += 1;
+            rf::multi_respawn_num_points += 1;    
 
-            xlog::warn("New spawn point! Name: {}, Team: {}, RedTeam: {}, BlueTeam: {}, Bot: {}", respawn_point->name,
+            // log spawn point creation info
+            #ifdef DEBUG
+            const auto& respawn_point = respawn_points.back();
+
+            xlog::debug("New spawn point! Name: {}, Team: {}, RedTeam: {}, BlueTeam: {}, Bot: {}", respawn_point->name,
                        respawn_point->team, respawn_point->redTeam, respawn_point->blueTeam, respawn_point->bot);
             if (pos) {
-                xlog::warn("Position: ({}, {}, {})", pos->x, pos->y, pos->z);
+                xlog::debug("Position: ({}, {}, {})", pos->x, pos->y, pos->z);
             }
-            xlog::warn("Current num spawn points: {}", rf::multi_respawn_num_points);
+            xlog::debug("Current num spawn points: {}", rf::multi_respawn_num_points);
+            #endif
         }
         else {
             // if new spawn logic is off, maintain stock behaviour
@@ -626,7 +632,7 @@ std::shared_ptr<RespawnPoint> select_respawn_point_new(rf::Player* pp)
     bool avoid_enemies = g_additional_server_config.random_spawns.try_avoid_enemies;
     bool respect_team_spawns = g_additional_server_config.random_spawns.respect_team_spawns;
 
-    xlog::warn(
+    xlog::debug(
         "Giving {} a spawn. They are on team {}, last index was {}. We {}avoiding last, and {}avoiding enemies.",
         pp->name, (team ? "blue" : "red"), last_index, (avoid_last ? "" : "NOT "), (avoid_enemies ? "" : "NOT "));
 
@@ -738,7 +744,7 @@ std::shared_ptr<RespawnPoint> select_respawn_point_new(rf::Player* pp)
         if (avoid_last && valid_team_spawns.size() > 1) {
             valid_team_spawns.erase(std::remove(valid_team_spawns.begin(), valid_team_spawns.end(), last_index),
                                     valid_team_spawns.end());
-            xlog::warn("Excluding last spawn point index: {} from selection.", last_index);
+            xlog::debug("Excluding last spawn point index: {} from selection.", last_index);
         }
 
         std::uniform_int_distribution<std::size_t> team_range(0, valid_team_spawns.size() - 1);
