@@ -147,6 +147,31 @@ ConsoleCommand2 gamma_cmd{
     "gamma [value]",
 };
 
+//need to check on multi start and level init
+void evaluate_disable_textures()
+{
+    bool server_side_restrict_disable_textures =
+        rf::is_multi && !rf::is_server && get_df_server_info() && !get_df_server_info().value().allow_lmap;
+    // server doesn't allow but we have it on
+    if (server_side_restrict_disable_textures && g_game_config.try_disable_textures) {
+        xlog::warn("This server does not allow you to disable level textures!");
+        rf::gr::show_lightmaps = false;
+        rf::g_cache_clear();
+    }
+    // server doesn't care, we want it on, but it's currently off
+    else if (g_game_config.try_disable_textures && !rf::gr::show_lightmaps) {
+        rf::gr::show_lightmaps = true;
+        rf::g_cache_clear();
+    }
+    // server doesn't care, we want it off, but it's currently on
+    else if (!g_game_config.try_disable_textures && rf::gr::show_lightmaps) {
+        rf::gr::show_lightmaps = false;
+        rf::g_cache_clear();
+    }
+    else {}
+    // otherwise we have nothing we need to do, empty else to avoid warning
+}
+
 ConsoleCommand2 picmip_cmd{
     "picmip",
     [](std::optional<int> picmip_opt) {
@@ -161,12 +186,17 @@ ConsoleCommand2 picmip_cmd{
 };
 
 ConsoleCommand2 disable_textures_cmd{
-    "toggle_level_textures",
+    "disable_textures",
     []() {
-        rf::gr::show_lightmaps = !rf::gr::show_lightmaps;
-        rf::g_cache_clear();
+        g_game_config.try_disable_textures = !g_game_config.try_disable_textures;
+        g_game_config.save();
+
+        evaluate_disable_textures();
+
+        rf::console::print("Level textures are {}", g_game_config.try_disable_textures ?
+            "disabled. In multiplayer, this will only apply if the server allows it." : "enabled.");
     },
-    "Disable level textures for increased visibility. In multiplayer, only available if allowed by server.",
+    "Disable level textures for visibility. In multiplayer, this is only available if the server allows it.",
 };
 
 FunHook<float(const rf::Vector3&)> gr_get_apparent_distance_from_camera_hook{
