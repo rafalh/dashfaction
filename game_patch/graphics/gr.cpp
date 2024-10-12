@@ -9,10 +9,13 @@
 #include <patch_common/CodeInjection.h>
 #include <patch_common/ShortTypes.h>
 #include <patch_common/AsmWriter.h>
+#include <xlog/xlog.h>
 #include "../os/console.h"
 #include "../main/main.h"
 #include "../multi/multi.h"
 #include "../rf/gr/gr.h"
+#include "../rf/level.h"
+#include "../rf/geometry.h"
 #include "../rf/player/player.h"
 #include "../rf/multi.h"
 #include "../rf/os/os.h"
@@ -142,6 +145,28 @@ ConsoleCommand2 gamma_cmd{
     },
     "Sets gamma.",
     "gamma [value]",
+};
+
+ConsoleCommand2 picmip_cmd{
+    "picmip",
+    [](std::optional<int> picmip_opt) {
+        if (picmip_opt) {
+            rf::gr::bm_set_resolution_level_for_all(picmip_opt.value_or(0));
+            //rf::local_player->settings.textures_resolution_level = picmip_opt.value_or(rf::local_player->settings.textures_resolution_level);
+        }
+        rf::console::print("Current texture resolution reduction factor: {}",
+            rf::local_player->settings.textures_resolution_level);
+    },
+    "Set texture resolution reduction factor",
+};
+
+ConsoleCommand2 disable_textures_cmd{
+    "toggle_level_textures",
+    []() {
+        rf::gr::show_lightmaps = !rf::gr::show_lightmaps;
+        rf::g_cache_clear();
+    },
+    "Disable level textures for increased visibility. In multiplayer, only available if allowed by server.",
 };
 
 FunHook<float(const rf::Vector3&)> gr_get_apparent_distance_from_camera_hook{
@@ -326,6 +351,8 @@ void gr_apply_patch()
     // Commands
     fov_cmd.register_cmd();
     gamma_cmd.register_cmd();
+    picmip_cmd.register_cmd();
+    disable_textures_cmd.register_cmd();
     fullscreen_cmd.register_cmd();
     windowed_cmd.register_cmd();
     nearest_texture_filtering_cmd.register_cmd();
