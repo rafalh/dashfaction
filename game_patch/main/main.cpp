@@ -158,6 +158,9 @@ FunHook<void(bool)> level_init_post_hook{
         level_init_post_hook.call_target(transition);
         xlog::info("Level loaded: {}{}", rf::level.filename, transition ? " (transition)" : "");
         evaluate_fullbright_meshes();
+        if (g_game_config.try_disable_textures) {
+            evaluate_disable_textures();
+        }  
     },
 };
 

@@ -68,23 +68,25 @@ void recalc_mesh_static_lighting()
 
 void evaluate_fullbright_meshes()
 {
-    if (rf::LEVEL_LOADED) {
-        bool server_side_restrict_fb_mesh =
-            rf::is_multi && !rf::is_server && get_df_server_info() && !get_df_server_info().value().allow_fb_mesh;
-        if (server_side_restrict_fb_mesh && g_game_config.try_mesh_fullbright) {
-            xlog::warn("This server does not allow you to force fullbright meshes!");
-        }
-        else if (g_game_config.try_mesh_fullbright) {            
-            rf::gr::light_set_ambient(1.0f, 1.0f, 1.0f);
-            recalc_mesh_static_lighting();
-        }
-        else {
-            rf::gr::light_set_ambient(static_cast<float>(rf::level.ambient_light.red) / 255.0f,
-                                      static_cast<float>(rf::level.ambient_light.green) / 255.0f,
-                                      static_cast<float>(rf::level.ambient_light.blue) / 255.0f);
-            recalc_mesh_static_lighting();
-		}
-	}	
+    if (!rf::LEVEL_LOADED)
+        return;
+
+    bool server_side_restrict_fb_mesh =
+        rf::is_multi && !rf::is_server && get_df_server_info() && !get_df_server_info()->allow_fb_mesh;
+
+    if (server_side_restrict_fb_mesh && g_game_config.try_mesh_fullbright) {
+        xlog::warn("This server does not allow you to force fullbright meshes!");
+        return;
+    }
+
+    auto [r, g, b] = g_game_config.try_mesh_fullbright
+                         ? std::make_tuple(1.0f, 1.0f, 1.0f)
+                         : std::make_tuple(static_cast<float>(rf::level.ambient_light.red) / 255.0f,
+                                           static_cast<float>(rf::level.ambient_light.green) / 255.0f,
+                                           static_cast<float>(rf::level.ambient_light.blue) / 255.0f);
+
+    rf::gr::light_set_ambient(r, g, b);
+    recalc_mesh_static_lighting();
 }
 
 FunHook<void()> obj_light_calculate_hook{
