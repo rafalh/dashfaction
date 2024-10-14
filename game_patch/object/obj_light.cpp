@@ -75,7 +75,7 @@ void evaluate_fullbright_meshes()
         rf::is_multi && !rf::is_server && get_df_server_info() && !get_df_server_info()->allow_fb_mesh;
 
     if (server_side_restrict_fb_mesh && g_game_config.try_mesh_fullbright) {
-        xlog::warn("This server does not allow you to force fullbright meshes!");
+        rf::console::print("This server does not allow you to force fullbright meshes!");
         return;
     }
 

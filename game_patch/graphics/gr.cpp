@@ -154,7 +154,7 @@ void evaluate_lightmaps_only()
 
     if (server_side_restrict_lightmaps_only) {
         if (g_game_config.try_lightmaps_only) {
-            xlog::warn("This server does not allow you to use lightmap only mode!");
+            rf::console::print("This server does not allow you to use lightmap only mode!");
             rf::gr::show_lightmaps = false;
             rf::g_cache_clear();
         }
