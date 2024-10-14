@@ -147,51 +147,38 @@ ConsoleCommand2 gamma_cmd{
     "gamma [value]",
 };
 
-void evaluate_disable_textures()
+void evaluate_lightmaps_only()
 {
-    bool server_side_restrict_disable_textures =
+    bool server_side_restrict_lightmaps_only =
         rf::is_multi && !rf::is_server && get_df_server_info() && !get_df_server_info()->allow_lmap;
 
-    if (server_side_restrict_disable_textures) {
-        if (g_game_config.try_disable_textures) {
-            xlog::warn("This server does not allow you to disable level textures!");
+    if (server_side_restrict_lightmaps_only) {
+        if (g_game_config.try_lightmaps_only) {
+            xlog::warn("This server does not allow you to use lightmap only mode!");
             rf::gr::show_lightmaps = false;
             rf::g_cache_clear();
         }
     }
     else {
-        if (rf::gr::show_lightmaps != g_game_config.try_disable_textures) {
-            rf::gr::show_lightmaps = g_game_config.try_disable_textures;
+        if (rf::gr::show_lightmaps != g_game_config.try_lightmaps_only) {
+            rf::gr::show_lightmaps = g_game_config.try_lightmaps_only;
             rf::g_cache_clear();
         }
     }
 }
 
-ConsoleCommand2 picmip_cmd{
-    "picmip",
-    [](std::optional<int> picmip_opt) {
-        if (picmip_opt) {
-            rf::gr::bm_set_resolution_level_for_all(picmip_opt.value_or(0));
-            //rf::local_player->settings.textures_resolution_level = picmip_opt.value_or(rf::local_player->settings.textures_resolution_level);
-        }
-        rf::console::print("Current texture resolution reduction factor: {}",
-            rf::local_player->settings.textures_resolution_level);
-    },
-    "Set texture resolution reduction factor",
-};
-
-ConsoleCommand2 disable_textures_cmd{
-    "disable_textures",
+ConsoleCommand2 lightmaps_only_cmd{
+    "lightmaps_only",
     []() {
-        g_game_config.try_disable_textures = !g_game_config.try_disable_textures;
+        g_game_config.try_lightmaps_only = !g_game_config.try_lightmaps_only;
         g_game_config.save();
 
-        evaluate_disable_textures();
+        evaluate_lightmaps_only();
 
-        rf::console::print("Level textures are {}", g_game_config.try_disable_textures ?
-            "disabled. In multiplayer, this will only apply if the server allows it." : "enabled.");
+        rf::console::print("Lightmap only mode is {}", g_game_config.try_lightmaps_only ?
+            "enabled. In multiplayer, this will only apply if the server allows it." : "disabled.");
     },
-    "Disable level textures for visibility. In multiplayer, this is only available if the server allows it.",
+    "Render only lightmaps for level geometry (no textures). In multiplayer, this is only available if the server allows it.",
 };
 
 FunHook<float(const rf::Vector3&)> gr_get_apparent_distance_from_camera_hook{
@@ -376,8 +363,7 @@ void gr_apply_patch()
     // Commands
     fov_cmd.register_cmd();
     gamma_cmd.register_cmd();
-    picmip_cmd.register_cmd();
-    disable_textures_cmd.register_cmd();
+    lightmaps_only_cmd.register_cmd();
     fullscreen_cmd.register_cmd();
     windowed_cmd.register_cmd();
     nearest_texture_filtering_cmd.register_cmd();

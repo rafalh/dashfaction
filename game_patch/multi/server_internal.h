@@ -48,7 +48,7 @@ struct ServerAdditionalConfig
     std::optional<int> force_player_character;
     std::optional<float> max_fov;
     bool allow_fullbright_meshes = false;
-    bool allow_disable_textures = false;
+    bool allow_lightmaps_only = false;
     int anticheat_level = 0;
     bool stats_message_enabled = true;
     std::string welcome_message;

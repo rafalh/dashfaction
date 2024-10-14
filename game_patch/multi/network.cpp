@@ -667,8 +667,8 @@ struct DashFactionJoinAcceptPacketExt
         none           = 0,
         saving_enabled = 1,
         max_fov        = 2,
-        allow_fb_mesh  = 3,
-        allow_lmap     = 4,
+        allow_fb_mesh  = 4,
+        allow_lmap     = 8,
     } flags = Flags::none;
 
     float max_fov;
@@ -701,7 +701,7 @@ CallHook<int(const rf::NetAddr*, std::byte*, size_t)> send_join_accept_packet_ho
         if (server_allow_fullbright_meshes()) {
             ext_data.flags |= DashFactionJoinAcceptPacketExt::Flags::allow_fb_mesh;
         }
-        if (server_allow_disable_textures()) {
+        if (server_allow_lightmaps_only()) {
             ext_data.flags |= DashFactionJoinAcceptPacketExt::Flags::allow_lmap;
         }
         auto [new_data, new_len] = extend_packet(data, len, ext_data);

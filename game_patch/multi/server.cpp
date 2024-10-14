@@ -168,8 +168,8 @@ void load_additional_server_config(rf::Parser& parser)
         g_additional_server_config.allow_fullbright_meshes = parser.parse_bool();
     }
 
-    if (parser.parse_optional("$DF Allow Disable Textures:")) {
-        g_additional_server_config.allow_disable_textures = parser.parse_bool();
+    if (parser.parse_optional("$DF Allow Lightmaps Only Mode:")) {
+        g_additional_server_config.allow_lightmaps_only = parser.parse_bool();
     }
 
     if (parser.parse_optional("$DF Send Player Stats Message:")) {
@@ -767,9 +767,9 @@ bool server_allow_fullbright_meshes()
     return g_additional_server_config.allow_fullbright_meshes;
 }
 
-bool server_allow_disable_textures()
+bool server_allow_lightmaps_only()
 {
-    return g_additional_server_config.allow_disable_textures;
+    return g_additional_server_config.allow_lightmaps_only;
 }
 
 bool server_weapon_items_give_full_ammo()

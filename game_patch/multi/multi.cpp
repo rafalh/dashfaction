@@ -76,8 +76,8 @@ CodeInjection multi_start_injection{
     []() {
         void debug_multi_init();
         debug_multi_init();
-        if (g_game_config.try_disable_textures) {
-            evaluate_disable_textures();
+        if (g_game_config.try_lightmaps_only) {
+            evaluate_lightmaps_only();
         }        
     },
 };

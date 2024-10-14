@@ -62,7 +62,7 @@ struct GameConfig
     CfgVar<bool> show_enemy_bullets = true;
 
     CfgVar<bool> try_mesh_fullbright = false;
-    CfgVar<bool> try_disable_textures = false;
+    CfgVar<bool> try_lightmaps_only = false;
 
     static constexpr float min_fov = 75.0f;
     static constexpr float max_fov = 160.0f;

@@ -169,7 +169,7 @@ ConsoleCommand2 fullbright_models_cmd{
         rf::console::print("Fullbright meshes are {}", g_game_config.try_mesh_fullbright ?
 			"enabled. In multiplayer, this will only apply if the server allows it." : "disabled.");
     },
-    "Set all models to fullbright for visibility. In multiplayer, this is only available if the server allows it.",
+    "Set all meshes to render fullbright. In multiplayer, this is only available if the server allows it.",
 };
 
 void obj_light_apply_patch()
