@@ -97,7 +97,7 @@ FunHook<void()> obj_light_calculate_hook{
         rf::gr::view_matrix.make_identity();
         rf::gr::view_pos.zero();
         rf::gr::light_matrix.make_identity();
-        rf::gr::light_base.zero();      
+        rf::gr::light_base.zero();
 
         if (g_game_config.mesh_static_lighting) {
             // Enable static lights
