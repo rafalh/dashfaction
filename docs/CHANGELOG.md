@@ -43,6 +43,8 @@ Version 1.9.0 (not released yet)
 - Do not load unnecessary VPPs in dedicated server mode
 - Add level filename to "Level Initializing" console message
 - Properly handle WM_PAINT in dedicated server, may improve performance (DF bug)
+- Add `lightmaps_only` and `mesh_fullbright` commands
+- Add `$DF Allow Lightmaps Only Mode` and `$DF Allow Fullbright Meshes` dedicated server config options
 
 Version 1.8.0 (released 2022-09-17)
 -----------------------------------
