@@ -144,4 +144,5 @@ namespace rf
     static auto& hud_weapon_cycle_current_idx = addr_as_ref<int>(0x007C71A8);
 
     static auto& hud_do_frame = addr_as_ref<void(Player*)>(0x00437B80);
+    static auto& hud_msg = addr_as_ref<void(const char* text, int, int duration, Color*)>(0x004383C0);
 }

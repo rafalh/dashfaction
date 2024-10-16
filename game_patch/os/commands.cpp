@@ -4,6 +4,8 @@
 #include "../rf/multi.h"
 #include "../rf/player/player.h"
 #include "../rf/level.h"
+#include "../rf/entity.h"
+#include "../rf/hud.h"
 #include "../misc/misc.h"
 #include "../misc/vpackfile.h"
 #include <common/utils/list-utils.h>
@@ -101,6 +103,52 @@ FunHook<void()> verify_level_cmd_hook{
         } else {
             rf::console::print("No level loaded!");
         }
+    }
+};
+
+bool check_can_use_cheat_cmd()
+{
+    if (!(rf::level.flags & rf::LEVEL_LOADED)) {
+        rf::console::print("No level loaded!");
+        return false;
+    }
+    if (rf::is_multi) {
+        rf::console::print("That command can't be used in multiplayer.");
+        return false;
+    }
+    return true;
+}
+
+void handle_camera_command(std::string_view mode, bool explain_return_fp, FunHook<void()>& hook)
+{
+    if (!check_can_use_cheat_cmd()) {
+        return;
+    }
+    if (explain_return_fp) {
+        rf::console::print("Camera mode set to {}. Use `camera1` to return to first person.", mode);
+    }
+    else {
+        rf::console::print("Camera mode set to {}.", mode);
+    }
+    hook.call_target();
+}
+
+FunHook<void()> camera1_cmd_hook{0x00431270, []() { handle_camera_command("first person", false, camera1_cmd_hook); }};
+FunHook<void()> camera2_cmd_hook{0x004312D0, []() { handle_camera_command("free look", true, camera2_cmd_hook); }};
+FunHook<void()> camera3_cmd_hook{0x00431330, []() { handle_camera_command("third person", true, camera3_cmd_hook); }};
+
+FunHook<void()> heehoo_cmd_hook{
+    0x00431210,
+    []() {
+        if (!check_can_use_cheat_cmd()) {
+            return;
+        }
+        if (rf::entity_is_flying(rf::local_player_entity)) {
+            rf::hud_msg("You feel heavy", 0, 0, 0);
+        } else {
+            rf::hud_msg("You feel lighter", 0, 0, 0);
+        }
+        heehoo_cmd_hook.call_target();
     }
 };
 
@@ -205,5 +253,11 @@ void console_commands_init()
     map_cmd.register_cmd();
     level_info_cmd.register_cmd();
     map_info_cmd.register_cmd();
+
+    // Hooks for builtin commands
     verify_level_cmd_hook.install();
+    camera1_cmd_hook.install();
+    camera2_cmd_hook.install();
+    camera3_cmd_hook.install();
+    heehoo_cmd_hook.install();
 }
