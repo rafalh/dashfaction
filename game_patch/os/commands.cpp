@@ -125,7 +125,7 @@ void handle_camera_command(FunHook<void()>& hook)
     }
     hook.call_target();
 
-    rf::CameraMode current_mode = rf::camera_get_mode(rf::local_player->cam);
+    const rf::CameraMode current_mode = rf::camera_get_mode(*rf::local_player->cam);
 
     std::string mode_text = (current_mode == rf::CAMERA_FIRST_PERSON)          ? "first person"
                             : (current_mode == rf::CAMERA_THIRD_PERSON)    ? "third person"

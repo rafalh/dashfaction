@@ -46,5 +46,5 @@ namespace rf
         return result;
     }
 
-    static auto& camera_get_mode = addr_as_ref<CameraMode(rf::Camera*)>(0x0040D740);
+    static auto& camera_get_mode = addr_as_ref<CameraMode(const rf::Camera&)>(0x0040D740);
 }
