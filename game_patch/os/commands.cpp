@@ -92,6 +92,35 @@ DcCommandAlias map_info_cmd{
     level_info_cmd,
 };
 
+ConsoleCommand2 server_rcon_password_cmd{
+    "server_rcon_password",
+    [](std::optional<std::string> pattern) {
+        if (!rf::is_multi || !rf::is_server) {
+            rf::console::print("This command can only be run as a server!");
+            return;
+        }
+        rf::console::print("Current rcon password is: {}", rf::rcon_password);
+
+        if (pattern) {
+            if (pattern->size() > 16) {
+                // game limits client requests to 16 characters
+                rf::console::print("Server rcon password cannot exceed 16 characters.");
+                return;
+            }
+
+            std::strncpy(rf::rcon_password, pattern->c_str(), sizeof(rf::rcon_password) - 1);
+            rf::rcon_password[sizeof(rf::rcon_password) - 1] = '\0'; // null terminator
+            rf::console::print("Server rcon password set to: {}", *pattern);
+        }
+        else {
+            std::memset(rf::rcon_password, 0, sizeof(rf::rcon_password));
+            rf::console::print("Server rcon password removed.");
+        }
+    },
+    "Set or remove the server rcon password.",
+    "server_rcon_password <password>",
+};
+
 // only allow verify_level if a level is loaded (avoid a crash if command is run in menu)
 FunHook<void()> verify_level_cmd_hook{
     0x0045E1F0,
@@ -205,5 +234,6 @@ void console_commands_init()
     map_cmd.register_cmd();
     level_info_cmd.register_cmd();
     map_info_cmd.register_cmd();
+    server_rcon_password_cmd.register_cmd();
     verify_level_cmd_hook.install();
 }
