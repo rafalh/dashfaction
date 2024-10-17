@@ -3,6 +3,7 @@
 #include "multi_scoreboard.h"
 #include "../os/console.h"
 #include "../rf/entity.h"
+#include "../rf/level.h"
 #include "../rf/player/player.h"
 #include "../rf/multi.h"
 #include "../rf/gameseq.h"
@@ -229,8 +230,15 @@ FunHook<void(rf::Player*)> render_reticle_hook{
 ConsoleCommand2 spectate_cmd{
     "spectate",
     [](std::optional<std::string> player_name) {
+        if (!(rf::level.flags & rf::LEVEL_LOADED)) {
+            rf::console::output("No level loaded!", nullptr);
+            return;
+        }
+
         if (!rf::is_multi) {
-            rf::console::output("Spectate mode is only supported in multiplayer game!", nullptr);
+            // in single player, just enter free look mode
+            rf::console::output("Camera mode set to free look. Use `camera1` to return to first person.", nullptr);
+            rf::camera_enter_freelook(rf::local_player->cam);
             return;
         }
 

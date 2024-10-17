@@ -45,4 +45,6 @@ namespace rf
         AddrCaller{0x0040D780}.c_call(&result, camera);
         return result;
     }
+
+    static auto& camera_get_mode = addr_as_ref<CameraMode(const rf::Camera&)>(0x0040D740);
 }

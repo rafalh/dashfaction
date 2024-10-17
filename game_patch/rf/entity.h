@@ -414,6 +414,7 @@ namespace rf
     static auto& entity_fire_init_bones = addr_as_ref<bool(EntityFireInfo *efi, Object *objp)>(0x0042EB20);
     static auto& entity_is_swimming = addr_as_ref<bool(Entity* ep)>(0x0042A0A0);
     static auto& entity_is_falling = addr_as_ref<bool(Entity* ep)>(0x0042A020);
+    static auto& entity_is_flying = addr_as_ref<bool(Entity* ep)>(0x0042A060);
     static auto& entity_can_swim = addr_as_ref<bool(Entity* ep)>(0x00427FF0);
     static auto& entity_update_liquid_status = addr_as_ref<void(Entity* ep)>(0x00429100);
     static auto& entity_is_playing_action_animation = addr_as_ref<bool(Entity* entity, int action)>(0x00428D10);
