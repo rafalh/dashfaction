@@ -94,15 +94,15 @@ DcCommandAlias map_info_cmd{
 
 ConsoleCommand2 server_password_cmd{
     "server_password",
-    [](std::optional<std::string> pattern) {
+    [](std::optional<std::string> new_password) {
         if (!rf::is_multi || !rf::is_server) {
             rf::console::print("This command can only be run as a server!");
             return;
         }            
 
-        if (pattern) {
-            rf::netgame.password = pattern.value().c_str();
-            rf::console::print("Server password set to: {}", *pattern);
+        if (new_password) {
+            rf::netgame.password = new_password.value().c_str();
+            rf::console::print("Server password set to: {}", rf::netgame.password);
         }
         else {
             rf::netgame.password = "";
