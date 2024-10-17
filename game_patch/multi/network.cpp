@@ -664,11 +664,12 @@ struct DashFactionJoinAcceptPacketExt
     uint8_t version_minor = VERSION_MINOR;
 
     enum class Flags : uint32_t {
-        none           = 0,
-        saving_enabled = 1,
-        max_fov        = 2,
-        allow_fb_mesh  = 4,
-        allow_lmap     = 8,
+        none                = 0,
+        saving_enabled      = 1 << 0,
+        max_fov             = 1 << 1,
+        allow_fb_mesh       = 1 << 2,
+        allow_lmap          = 1 << 3,
+        allow_no_ss         = 1 << 4,
     } flags = Flags::none;
 
     float max_fov;
@@ -704,6 +705,9 @@ CallHook<int(const rf::NetAddr*, std::byte*, size_t)> send_join_accept_packet_ho
         if (server_allow_lightmaps_only()) {
             ext_data.flags |= DashFactionJoinAcceptPacketExt::Flags::allow_lmap;
         }
+        if (server_allow_disable_screenshake()) {
+            ext_data.flags |= DashFactionJoinAcceptPacketExt::Flags::allow_no_ss;
+        }
         auto [new_data, new_len] = extend_packet(data, len, ext_data);
         return send_join_accept_packet_hook.call_target(addr, new_data.get(), new_len);
     },
@@ -727,6 +731,7 @@ CodeInjection process_join_accept_injection{
             server_info.saving_enabled = !!(ext_data.flags & DashFactionJoinAcceptPacketExt::Flags::saving_enabled);
             server_info.allow_fb_mesh = !!(ext_data.flags & DashFactionJoinAcceptPacketExt::Flags::allow_fb_mesh);
             server_info.allow_lmap = !!(ext_data.flags & DashFactionJoinAcceptPacketExt::Flags::allow_lmap);
+            server_info.allow_no_ss = !!(ext_data.flags & DashFactionJoinAcceptPacketExt::Flags::allow_no_ss);
 
             constexpr float default_fov = 90.0f;
             if (!!(ext_data.flags & DashFactionJoinAcceptPacketExt::Flags::max_fov) && ext_data.max_fov >= default_fov) {

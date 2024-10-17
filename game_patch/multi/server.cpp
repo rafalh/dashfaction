@@ -172,6 +172,10 @@ void load_additional_server_config(rf::Parser& parser)
         g_additional_server_config.allow_lightmaps_only = parser.parse_bool();
     }
 
+    if (parser.parse_optional("$DF Allow Disable Screenshake:")) {
+        g_additional_server_config.allow_disable_screenshake = parser.parse_bool();
+    }
+
     if (parser.parse_optional("$DF Send Player Stats Message:")) {
         g_additional_server_config.stats_message_enabled = parser.parse_bool();
     }
@@ -770,6 +774,11 @@ bool server_allow_fullbright_meshes()
 bool server_allow_lightmaps_only()
 {
     return g_additional_server_config.allow_lightmaps_only;
+}
+
+bool server_allow_disable_screenshake()
+{
+    return g_additional_server_config.allow_disable_screenshake;
 }
 
 bool server_weapon_items_give_full_ammo()

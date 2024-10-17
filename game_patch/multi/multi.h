@@ -78,6 +78,7 @@ struct DashFactionServerInfo
     std::optional<float> max_fov;
     bool allow_fb_mesh = false;
     bool allow_lmap = false;
+    bool allow_no_ss = false;
 };
 
 void multi_level_download_update();

@@ -194,6 +194,8 @@ Configuration example:
     $DF Allow Fullbright Meshes: false
     // Allow clients to use `lightmaps_only`
     $DF Allow Lightmaps Only Mode: false
+    // Allow clients to use `disable_screenshake`
+    $DF Allow Disable Screenshake: false
     // If enabled a private message with player statistics is sent after each round.
     //$DF Send Player Stats Message: true
     // Send a chat message to players when they join the server ($PLAYER is replaced by player name)
