@@ -20,7 +20,9 @@ namespace rf
 #endif
         uint32_t file_size;
 #ifdef DASH_FACTION
+        // track whether the packfile was from user_maps or client_mods
         bool is_user_maps;
+        bool is_client_mods;
 #endif
     };
 #ifndef DASH_FACTION
@@ -46,6 +48,6 @@ namespace rf
     using VPackfileAddEntries_Type = uint32_t(VPackfile* packfile, const void* buf, unsigned num_files_in_block,
                                               unsigned* num_added);
     static auto& vpackfile_add_entries = addr_as_ref<VPackfileAddEntries_Type>(0x0052BD40);
-
-    static auto& vpackfile_loading_user_maps = addr_as_ref<bool>(0x01BDB21C);
+    // handled directly in vpackfile_add_new
+    //static auto& vpackfile_loading_user_maps = addr_as_ref<bool>(0x01BDB21C);
 }
