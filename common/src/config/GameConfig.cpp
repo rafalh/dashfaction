@@ -165,6 +165,7 @@ bool GameConfig::visit_vars(T&& visitor, bool is_save)
     result &= visitor(dash_faction_key, "Direct Input", direct_input);
     result &= visitor(dash_faction_key, "Fast Start", fast_start);
     result &= visitor(dash_faction_key, "Scoreboard Animations", scoreboard_anim);
+    result &= visitor(dash_faction_key, "Spectate Mode Minimal UI", spectate_mode_minimal_ui);
     result &= visitor(dash_faction_key, "Level Sound Volume", level_sound_volume);
     result &= visitor(dash_faction_key, "Allow Overwriting Game Files", allow_overwrite_game_files);
     result &= visitor(dash_faction_key, "Version", dash_faction_version);
