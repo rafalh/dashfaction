@@ -4,6 +4,7 @@
 #include <patch_common/CodeInjection.h>
 #include <patch_common/ShortTypes.h>
 #include <patch_common/AsmWriter.h>
+#include "../os/console.h"
 #include "../rf/file/file.h"
 #include "../rf/gr/gr.h"
 #include "../rf/sound/sound.h"
@@ -55,7 +56,7 @@ std::optional<std::string> extract_quoted_value(const std::string& value)
     }
 
     // if not wrapped in quotes, assume valid
-    xlog::warn("String value is not enclosed in quotes, accepting it anyway: '{}'", trimmed_value);
+    xlog::debug("String value is not enclosed in quotes, accepting it anyway: '{}'", trimmed_value);
     return trimmed_value;
 }
 
@@ -77,15 +78,50 @@ void open_url(const std::string& url)
     }
 }
 
-CodeInjection fpgun_ar_ammo_digit_color_injection{
+//consolidated logic for parsing colors
+std::tuple<int, int, int, int> extract_color_components(uint32_t color)
+{
+    return std::make_tuple((color >> 24) & 0xFF, // red
+                           (color >> 16) & 0xFF, // green
+                           (color >> 8) & 0xFF,  // blue
+                           color & 0xFF          // alpha
+    );
+}
+
+CallHook<void(int, int, int, int)> fpgun_ar_ammo_digit_color_hook{
     0x004ABC03,
-    [](auto& regs) {
-        uint32_t color = g_dash_options_config.ar_ammo_color.value();
-        rf::gr::set_color((color >> 24) & 0xFF, // r
-                            (color >> 16) & 0xFF, // g
-                            (color >> 8) & 0xFF,  // b 
-                            color & 0xFF);        // a              
-        regs.eip = 0x004ABC08;
+    [](int red, int green, int blue, int alpha) {
+        std::tie(red, green, blue, alpha) = extract_color_components(g_dash_options_config.ar_ammo_color.value());
+        fpgun_ar_ammo_digit_color_hook.call_target(red, green, blue, alpha);
+    }
+};
+
+CallHook<void(int, int, int, int)> precision_rifle_scope_color_hook{
+    0x004AC850, [](int red, int green, int blue, int alpha) {
+        std::tie(red, green, blue, alpha) = extract_color_components(g_dash_options_config.pr_scope_color.value());
+        precision_rifle_scope_color_hook.call_target(red, green, blue, alpha);
+    }
+};
+
+CallHook<void(int, int, int, int)> sniper_rifle_scope_color_hook{
+    0x004AC458, [](int red, int green, int blue, int alpha) {
+        std::tie(red, green, blue, alpha) = extract_color_components(g_dash_options_config.sr_scope_color.value());
+        sniper_rifle_scope_color_hook.call_target(red, green, blue, alpha);
+    }
+};
+
+CallHook<void(int, int, int, int)> rail_gun_fire_glow_hook{
+    0x004AC00E, [](int red, int green, int blue, int alpha) {
+        std::tie(red, green, blue, alpha) = extract_color_components(g_dash_options_config.rail_glow_color.value());
+        rail_gun_fire_glow_hook.call_target(red, green, blue, alpha);
+    }
+};
+
+CallHook<void(int, int, int, int)> rail_gun_fire_flash_hook{
+    0x004AC04A, [](int red, int green, int blue, int alpha) {
+        std::tie(red, green, blue, std::ignore) =
+            extract_color_components(g_dash_options_config.rail_flash_color.value());
+        rail_gun_fire_flash_hook.call_target(red, green, blue, alpha);
     }
 };
 
@@ -181,19 +217,6 @@ CallHook<int(const char*)> driller_geomod_emitter_get_index_hook{
     }
 };
 
-// geomod crater texture PPM broken currently and disabled, need to fix
-CallHook<void(rf::GSolid*, float)> geomod_set_autotexture_ppm_hook{
-    0x00466BD4,
-    [](rf::GSolid* this_ptr, float ppm) {
-        xlog::info("Original PPM: {}", ppm);
-
-        float custom_ppm = 24.0f;
-        xlog::info("Modified PPM: {}", custom_ppm);
-
-        geomod_set_autotexture_ppm_hook.call_target(this_ptr, custom_ppm);
-    }
-};
-
 // replace ice geomod region texture
 CallHook<int(const char*, int, bool)> ice_geo_crater_bm_load_hook {
     {
@@ -231,7 +254,7 @@ CallHook<void(const char*)> training_load_level_hook{
 // Implement demo_extras_summoner_trailer_click using FunHook
 FunHook<void(int, int)> extras_summoner_trailer_click_hook{
     0x0043EC80, [](int x, int y) {
-        xlog::warn("Summoner trailer button clicked");
+        xlog::debug("Summoner trailer button clicked");
         int action = g_dash_options_config.sumtrailer_button_action.value_or(0);
         switch (action) {
         case 1:
@@ -247,7 +270,7 @@ FunHook<void(int, int)> extras_summoner_trailer_click_hook{
         default:
             // play bink video, is case 0 but also default
             std::string trailer_path = g_dash_options_config.sumtrailer_button_bik_filename.value_or("sumtrailer.bik");
-            xlog::warn("Playing BIK file: {}", trailer_path);
+            xlog::debug("Playing BIK file: {}", trailer_path);
             rf::snd_pause(true);
             rf::bink_play(trailer_path.c_str());
             rf::snd_pause(false);
@@ -259,7 +282,7 @@ FunHook<void(int, int)> extras_summoner_trailer_click_hook{
 void handle_summoner_trailer_button()
 {
     if (int action = g_dash_options_config.sumtrailer_button_action.value_or(-1); action != -1) {
-        xlog::warn("Action ID: {}", g_dash_options_config.sumtrailer_button_action.value_or(-1));
+        //xlog::debug("Action ID: {}", g_dash_options_config.sumtrailer_button_action.value_or(-1));
         if (action == 3) {
             // action 3 means remove the button
             AsmWriter(0x0043EE14).nop(5);
@@ -273,64 +296,67 @@ void handle_summoner_trailer_button()
 
 void apply_dashoptions_patches()
 {
-    xlog::warn("Applying Dash Options patches");
+    xlog::debug("Applying Dash Options patches");
     // avoid unnecessary hooks by hooking only if corresponding options are specified
 
-    // apply UseStockPlayersConfig
     if (g_dash_options_config.use_stock_game_players_config.value_or(false)) {
-        // set mod to not make its own players.cfg but instead use the stock game one
         AsmWriter(0x004A8F99).jmp(0x004A9010);
         AsmWriter(0x004A8DCC).jmp(0x004A8E53);
     }
 
-    // apply AR ammo counter coloring
     if (g_dash_options_config.is_option_loaded(DashOptionID::AssaultRifleAmmoColor)) {
-        fpgun_ar_ammo_digit_color_injection.install();        
-    }         
+        fpgun_ar_ammo_digit_color_hook.install();
+    }
+
+    if (g_dash_options_config.is_option_loaded(DashOptionID::PrecisionRifleScopeColor)) {
+        precision_rifle_scope_color_hook.install();
+    }
+
+    if (g_dash_options_config.is_option_loaded(DashOptionID::SniperRifleScopeColor)) {
+        sniper_rifle_scope_color_hook.install();
+    }
+
+    if (g_dash_options_config.is_option_loaded(DashOptionID::RailDriverFireGlowColor)) {
+        rail_gun_fire_glow_hook.install();
+    }
+
+    if (g_dash_options_config.is_option_loaded(DashOptionID::RailDriverFireFlashColor)) {
+        rail_gun_fire_flash_hook.install();
+    }  
 
     // whether should apply is determined in helper function
     apply_geomod_mesh_patch();
 
-    // apply default geomod smoke emitter
     if (g_dash_options_config.is_option_loaded(DashOptionID::GeomodEmitter_Default)) {
         default_geomod_emitter_get_index_hook.install();
     }
 
-    // apply driller geomod smoke emitter
     if (g_dash_options_config.is_option_loaded(DashOptionID::GeomodEmitter_Driller)) {
         driller_geomod_emitter_get_index_hook.install();
     }    
-
-    // broken currently, need to fix
-    //geomod_set_autotexture_ppm_hook.install();
 
     if (g_dash_options_config.is_option_loaded(DashOptionID::GeomodTexture_Ice)) {
         ice_geo_crater_bm_load_hook.install();
     }
 
-    // first level filename from new game menu
     if (g_dash_options_config.is_option_loaded(DashOptionID::FirstLevelFilename)) {
         first_load_level_hook.install();
     }
 
-    // training level filename from new game menu
     if (g_dash_options_config.is_option_loaded(DashOptionID::TrainingLevelFilename)) {
         training_load_level_hook.install();
     }
 
-    // disable multiplayer button
     if (g_dash_options_config.disable_multiplayer_button.value_or(false)) {
         AsmWriter(0x0044391F).nop(5); // multi
     }
 
-    // disable singleplayer buttons
     if (g_dash_options_config.disable_singleplayer_buttons.value_or(false)) {
         AsmWriter(0x00443906).nop(5); // save
         AsmWriter(0x004438ED).nop(5); // load
         AsmWriter(0x004438D4).nop(5); // new game
     }
 
-    // customize behaviour of Summoner Trailer button
     if (g_dash_options_config.is_option_loaded(DashOptionID::SumTrailerButtonAction)) {
         handle_summoner_trailer_button();
     }
@@ -341,12 +367,11 @@ void set_option(DashOptionID option_id, std::optional<T>& option_field, const st
 {
     try {
         if constexpr (std::is_same_v<T, std::string>) {
-            // extract quoted string
             option_field = extract_quoted_value(option_value).value_or(option_value);
         }
         else if constexpr (std::is_same_v<T, uint32_t>) {
-            // parse hex color values
-            option_field = std::stoul(option_value, nullptr, 0);
+            // hex color values
+            option_field = std::stoul(extract_quoted_value(option_value).value_or(option_value), nullptr, 16);
         }
         else if constexpr (std::is_same_v<T, float>) {
             option_field = std::stof(option_value);
@@ -362,10 +387,10 @@ void set_option(DashOptionID option_id, std::optional<T>& option_field, const st
 
         // mark option as loaded
         mark_option_loaded(option_id);
-        xlog::warn("Parsed value has been saved: {}", option_field.value());
+        xlog::debug("Parsed value has been saved: {}", option_field.value());
     }
     catch (const std::exception& e) {
-        xlog::warn("Failed to parse value for option: {}. Error: {}", option_value, e.what());
+        xlog::debug("Failed to parse value for option: {}. Error: {}", option_value, e.what());
     }
 }
 
@@ -387,6 +412,10 @@ void process_dashoption_line(const std::string& option_name, const std::string& 
         {"$Disable Singleplayer Buttons", DashOptionID::DisableSingleplayerButtons},
         {"$Use Base Game Players Config", DashOptionID::UseStockPlayersConfig},
         {"$Assault Rifle Ammo Counter Color", DashOptionID::AssaultRifleAmmoColor},
+        {"$Precision Rifle Scope Color", DashOptionID::PrecisionRifleScopeColor},
+        {"$Sniper Rifle Scope Color", DashOptionID::SniperRifleScopeColor},
+        {"$Rail Driver Fire Glow Color", DashOptionID::RailDriverFireGlowColor},
+        {"$Rail Driver Fire Flash Color", DashOptionID::RailDriverFireFlashColor},
         {"$Summoner Trailer Button Action", DashOptionID::SumTrailerButtonAction},
         {"+Summoner Trailer Button URL", DashOptionID::SumTrailerButtonURL},
         {"+Summoner Trailer Button Bink Filename", DashOptionID::SumTrailerButtonBikFile}};
@@ -437,6 +466,18 @@ void process_dashoption_line(const std::string& option_name, const std::string& 
         case DashOptionID::AssaultRifleAmmoColor:
             set_option(it->second, g_dash_options_config.ar_ammo_color, option_value);
             break;
+        case DashOptionID::PrecisionRifleScopeColor:
+            set_option(it->second, g_dash_options_config.pr_scope_color, option_value);
+            break;
+        case DashOptionID::SniperRifleScopeColor:
+            set_option(it->second, g_dash_options_config.sr_scope_color, option_value);
+            break;
+        case DashOptionID::RailDriverFireGlowColor:
+            set_option(it->second, g_dash_options_config.rail_glow_color, option_value);
+            break;
+        case DashOptionID::RailDriverFireFlashColor:
+            set_option(it->second, g_dash_options_config.rail_flash_color, option_value);
+            break;
         case DashOptionID::SumTrailerButtonAction:
             set_option(it->second, g_dash_options_config.sumtrailer_button_action, option_value);
             break;
@@ -447,7 +488,7 @@ void process_dashoption_line(const std::string& option_name, const std::string& 
             set_option(it->second, g_dash_options_config.sumtrailer_button_bik_filename, option_value);
             break;
         default:
-            xlog::warn("Unrecognized DashOptionID: {}", it->first);
+            xlog::debug("Unrecognized DashOptionID: {}", it->first);
         }
     }
     else {
@@ -459,17 +500,17 @@ bool open_file(const std::string& file_path)
 {
     dashoptions_file = std::make_unique<rf::File>();
     if (dashoptions_file->open(file_path.c_str()) != 0) {
-        xlog::error("Failed to open {}", file_path);
+        xlog::debug("Failed to open {}", file_path);
         return false;
     }
-    xlog::warn("Successfully opened {}", file_path);
+    xlog::debug("Successfully opened {}", file_path);
     return true;
 }
 
 void close_file()
 {
     if (dashoptions_file) {
-        xlog::warn("Closing file.");
+        xlog::debug("Closing file.");
         dashoptions_file->close();
         dashoptions_file.reset();
 
@@ -483,14 +524,14 @@ void parse()
     std::string line;
     bool in_options_section = false; // track section, eventually this should be enum and support multiple sections
 
-    xlog::warn("Start parsing dashoptions.tbl");
+    xlog::debug("Start parsing dashoptions.tbl");
 
     while (true) {
         std::string buffer(2048, '\0'); // handle lines up to 2048 bytes, should be plenty
         int bytes_read = dashoptions_file->read(&buffer[0], buffer.size() - 1);
 
         if (bytes_read <= 0) {
-            xlog::warn("End of file or read error in dashoptions.tbl.");
+            xlog::debug("End of file or read error in dashoptions.tbl.");
             break;
         }
 
@@ -499,35 +540,35 @@ void parse()
 
         while (std::getline(file_stream, line)) {
             line = trim(line);
-            xlog::warn("Parsing line: '{}'", line);
+            xlog::debug("Parsing line: '{}'", line);
 
             // could be expanded to support multiple sections
             if (line == "#General") {
-                xlog::warn("Entering General section");
+                xlog::debug("Entering General section");
                 in_options_section = true;
                 continue;
             }
             else if (line == "#End") {
-                xlog::warn("Exiting General section");
+                xlog::debug("Exiting General section");
                 in_options_section = false;
                 break; // stop, reached the end of section
             }
 
             // skip anything outside the options section
             if (!in_options_section) {
-                xlog::warn("Skipping line outside of General section");
+                xlog::debug("Skipping line outside of General section");
                 continue;
             }
 
             // skip empty lines and comments
             if (line.empty() || line.find("//") == 0) {
-                xlog::warn("Skipping empty or comment line");
+                xlog::debug("Skipping empty or comment line");
                 continue;
             }
 
             // valid option lines start with $ or + and contain a delimiter :
             if ((line[0] != '$' && line[0] != '+') || line.find(':') == std::string::npos) {
-                xlog::warn("Skipping malformed line: '{}'", line);
+                xlog::debug("Skipping malformed line: '{}'", line);
                 continue;
             }
 
@@ -543,7 +584,7 @@ void parse()
 
 void load_dashoptions_config()
 {
-    xlog::warn("Mod launched, attempting to load Dash Options configuration");
+    xlog::debug("Mod launched, attempting to load Dash Options configuration");
 
     if (!open_file("dashoptions.tbl")) {
         return;
@@ -552,6 +593,6 @@ void load_dashoptions_config()
     parse();
     close_file();
 
-    xlog::warn("Dash Options configuration loaded");
+    rf::console::print("Dash Options configuration loaded");
 }
 }

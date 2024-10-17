@@ -21,6 +21,10 @@ enum class DashOptionID
     DisableSingleplayerButtons,
     UseStockPlayersConfig,
     AssaultRifleAmmoColor,
+    PrecisionRifleScopeColor,
+    SniperRifleScopeColor,
+    RailDriverFireGlowColor,
+    RailDriverFireFlashColor,
     SumTrailerButtonAction,
     SumTrailerButtonURL,
     SumTrailerButtonBikFile,
@@ -56,6 +60,10 @@ struct DashOptionsConfig
     std::optional<bool> disable_singleplayer_buttons;
     std::optional<bool> use_stock_game_players_config;
     std::optional<uint32_t> ar_ammo_color;
+    std::optional<uint32_t> pr_scope_color;
+    std::optional<uint32_t> sr_scope_color;
+    std::optional<uint32_t> rail_glow_color;
+    std::optional<uint32_t> rail_flash_color;
     std::optional<int> sumtrailer_button_action;
 
     //extended options
