@@ -94,26 +94,25 @@ DcCommandAlias map_info_cmd{
 
 ConsoleCommand2 server_rcon_password_cmd{
     "server_rcon_password",
-    [](std::optional<std::string> pattern) {
-        if (!rf::is_multi || !rf::is_server) {
-            rf::console::print("This command can only be run as a server!");
+    [](std::optional<std::string> new_rcon_password) {
+        if (!rf::is_multi || !rf::is_dedicated_server) {
+            rf::console::print("This command can only be run on a dedicated server!");
             return;
         }
-        rf::console::print("Current rcon password is: {}", rf::rcon_password);
 
-        if (pattern) {
-            if (pattern->size() > 16) {
+        if (new_rcon_password) {
+            if (new_rcon_password->size() > 16) {
                 // game limits client requests to 16 characters
                 rf::console::print("Server rcon password cannot exceed 16 characters.");
                 return;
             }
 
-            std::strncpy(rf::rcon_password, pattern->c_str(), sizeof(rf::rcon_password) - 1);
+            std::strncpy(rf::rcon_password, new_rcon_password->c_str(), sizeof(rf::rcon_password) - 1);
             rf::rcon_password[sizeof(rf::rcon_password) - 1] = '\0'; // null terminator
-            rf::console::print("Server rcon password set to: {}", *pattern);
+            rf::console::print("Server rcon password set to: {}", rf::rcon_password);
         }
         else {
-            std::memset(rf::rcon_password, 0, sizeof(rf::rcon_password));
+            *rf::rcon_password = '\0';
             rf::console::print("Server rcon password removed.");
         }
     },
