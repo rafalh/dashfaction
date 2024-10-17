@@ -384,7 +384,7 @@ CodeInjection game_set_file_paths_injection{
         if (rf::mod_param.found()) {
             std::string mod_dir = "mods\\";
             mod_dir += rf::mod_param.get_arg();
-            rf::file_add_path(mod_dir.c_str(), ".bik", false);
+            rf::file_add_path(mod_dir.c_str(), ".bik" "bluebeard.bty", false);
         }
     },
 };
