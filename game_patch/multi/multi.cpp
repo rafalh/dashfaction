@@ -260,58 +260,51 @@ bool multi_is_player_firing_too_fast(rf::Player* pp, int weapon_type)
     }
 
     int player_id = pp->net_data->player_id;
-    int now = rf::timer_get(1000); // current time in milliseconds
+    int now = rf::timer_get(1000);
 
-    static std::vector<int> last_weapon_id(rf::multi_max_player_id, 0);   // Track last weapon used per player
-    static std::vector<int> last_weapon_fire(rf::multi_max_player_id, 0); // Track last shot time per player
+    static std::vector<int> last_weapon_id(rf::multi_max_player_id, 0);
+    static std::vector<int> last_weapon_fire(rf::multi_max_player_id, 0);
 
-    // Determine the fire wait in milliseconds based on weapon type
     int fire_wait_ms = 0;
 
     if (rf::weapon_is_semi_automatic(weapon_type)) {
-        // For semi-auto weapons, use the server's fire wait setting
+        // for semi-auto weapons, use the server's fire wait setting
         fire_wait_ms = g_additional_server_config.click_limiter_fire_wait;
     }
     else {
-        // For automatic weapons, use the minimum fire wait in the weapons table
-        fire_wait_ms = std::min(rf::weapon_get_fire_wait_ms(weapon_type, 0), // Primary fire wait
-                                rf::weapon_get_fire_wait_ms(weapon_type, 1)  // Alternate fire wait
+        // for automatic weapons, use the minimum fire wait between both modes in weapons.tbl
+        fire_wait_ms = std::min(rf::weapon_get_fire_wait_ms(weapon_type, 0), // primary
+                                rf::weapon_get_fire_wait_ms(weapon_type, 1)  // alt
         );
     }
 
     // apply a 10% buffer for auto weapons
     if (!rf::weapon_is_semi_automatic(weapon_type))
     {
-        fire_wait_ms = static_cast<int>(fire_wait_ms * 0.9f); // 10% faster allowed
+        fire_wait_ms = static_cast<int>(fire_wait_ms * 0.9f);
         
     }
 
     // reset if weapon changed
     if (last_weapon_id[player_id] != weapon_type) {
-        xlog::debug("Player {} swapped weapon to {}", player_id, weapon_type);
         last_weapon_fire[player_id] = 0;
         last_weapon_id[player_id] = weapon_type;
     }
 
- // Check if the time since the last shot is less than the minimum wait time
-        int time_since_last_shot = now - last_weapon_fire[player_id];
+    // check if time since last shot is less than minimum wait time
+    int time_since_last_shot = now - last_weapon_fire[player_id];
 
     if (time_since_last_shot < fire_wait_ms)
         {
-            // xlog::warn("Canceled fire request from player {} for weapon {}. They are shooting too fast: Time since
-            // last shot {}ms is less than allowed {}ms",
-            //           pp->name, weapon_type, time_since_last_shot, fire_wait_ms);
+        send_private_message_for_cancelled_shot(pp, std::format(
+            "too fast! Time between shots: {}ms, server minimum: {}ms", time_since_last_shot, fire_wait_ms));
 
-        send_private_message_for_cancelled_shot(
-            pp, std::format("too fast! Time between shots: {}ms, server minimum: {}ms",
-                time_since_last_shot, fire_wait_ms));
-
-        return true; // max rate exceeded, cancel fire request
+        return true;
     }
 
-    // allow shot, update last fire timestamp
+    // we fired
     last_weapon_fire[player_id] = now;
-    return false; // Fire request is allowed
+    return false;
 }
 
 bool multi_is_weapon_fire_allowed_server_side(rf::Entity *ep, int weapon_type, bool alt_fire)
@@ -319,26 +312,18 @@ bool multi_is_weapon_fire_allowed_server_side(rf::Entity *ep, int weapon_type, b
     rf::Player* pp = rf::player_from_entity_handle(ep->handle);
     if (ep->ai.current_primary_weapon != weapon_type) {
         xlog::debug("Player {} attempted to fire unselected weapon {}", pp->name, weapon_type);
-        // causes spam if player fires immediately when they die
-        //send_private_message_for_cancelled_shot(pp, "You attempted to fire an unselected weapon.");
     }
     else if (is_entity_out_of_ammo(ep, weapon_type, alt_fire)) {
         xlog::debug("Player {} attempted to fire weapon {} without ammunition", pp->name, weapon_type);
-        send_private_message_for_cancelled_shot(pp, "You attempted to fire without ammo.");
     }
     else if (rf::weapon_is_on_off_weapon(weapon_type, alt_fire)) {
         xlog::debug("Player {} attempted to fire a single bullet from on/off weapon {}", pp->name, weapon_type);
-        send_private_message_for_cancelled_shot(pp, "You attempted to fire a single shot from an automatic weapon.");
     }
     else if (multi_is_selecting_weapon(pp)) {
         xlog::debug("Player {} attempted to fire weapon {} while selecting it", pp->name, weapon_type);
-        send_private_message_for_cancelled_shot(pp, "You attempted to fire while selecting a weapon.");
     }
     else if (rf::entity_is_reloading(ep)) {
         xlog::debug("Player {} attempted to fire weapon {} while reloading it", pp->name, weapon_type);
-        // a bug causes shotgun shots to be cancelled shortly after reloading
-        // needs to be fixed but for right now reducing chat spam by removing the notification
-        //send_private_message_for_cancelled_shot(pp, "You attempted to fire while reloading.");
     }
     else if (!multi_is_player_firing_too_fast(pp, weapon_type)) {
         return true;
