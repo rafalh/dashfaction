@@ -632,7 +632,7 @@ ConsoleCommand2 pow2_tex_cmd{
         rf::gr::d3d::p2t = !rf::gr::d3d::p2t;
         rf::console::print("Power of 2 textures: {}", rf::gr::d3d::p2t ? "on" : "off");
     },
-    "Forces usage of power of two textures. It may fix UV mappings in old levels. Onyl levels loaded after usage of this command are affected.",
+    "Forces usage of power of two textures. It may fix UV mappings in old levels. Only affects levels loaded after usage of this command.",
 };
 
 bool gr_d3d_is_d3d8to9()

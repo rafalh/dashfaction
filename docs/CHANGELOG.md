@@ -42,6 +42,8 @@ Version 1.9.0 (not released yet)
 - Add Kill Reward settings for dedicated servers
 - Do not load unnecessary VPPs in dedicated server mode
 - Add level filename to "Level Initializing" console message
+- Add `Lighting Color Range` option to launcher, allows level lighting to use full range of available colors
+- Add `lighting_color_range` command
 - Properly handle WM_PAINT in dedicated server, may improve performance (DF bug)
 - Fix crash when `verify_level` command is run without a level being loaded
 
