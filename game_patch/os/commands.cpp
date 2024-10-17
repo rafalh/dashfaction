@@ -107,30 +107,26 @@ FunHook<void()> verify_level_cmd_hook{
     }
 };
 
-bool check_can_use_cheat_cmd()
-{
-    return (rf::level.flags & rf::LEVEL_LOADED) && !rf::is_multi;
-}
-
 void handle_camera_command(FunHook<void()>& hook)
 {
-    if (!check_can_use_cheat_cmd()) {
-        if (!(rf::level.flags & rf::LEVEL_LOADED)) {
-            rf::console::print("No level loaded!");
-        }
-        else if (rf::is_multi) {
-            rf::console::print("That command can't be used in multiplayer.");
-        }
+    if (!(rf::level.flags & rf::LEVEL_LOADED)) {
+        rf::console::print("No level loaded!");
         return;
     }
+
+    if (rf::is_multi) {
+        rf::console::print("That command can't be used in multiplayer.");
+        return;
+    }
+
     hook.call_target();
 
     const rf::CameraMode current_mode = rf::camera_get_mode(*rf::local_player->cam);
 
-    std::string mode_text = (current_mode == rf::CAMERA_FIRST_PERSON)          ? "first person"
-                            : (current_mode == rf::CAMERA_THIRD_PERSON)    ? "third person"
+    std::string mode_text = (current_mode == rf::CAMERA_FIRST_PERSON)   ? "first person"
+                            : (current_mode == rf::CAMERA_THIRD_PERSON) ? "third person"
                             : (current_mode == rf::CAMERA_FREELOOK)     ? "free look"
-                                                                               : "unknown";
+                                                                        : "unknown";
 
     std::string helper_text =
         (current_mode == rf::CAMERA_FIRST_PERSON) ? "" : " Use `camera1` to return to first person.";
@@ -145,15 +141,16 @@ FunHook<void()> camera3_cmd_hook{0x00431330, []() { handle_camera_command(camera
 FunHook<void()> heehoo_cmd_hook{
     0x00431210,
     []() {
-    if (!check_can_use_cheat_cmd()) {
-        if (!(rf::level.flags & rf::LEVEL_LOADED)) {
-            rf::console::print("No level loaded!");
-        }
-        else if (rf::is_multi) {
-            rf::console::print("That command can't be used in multiplayer.");
-        }
+    if (!(rf::level.flags & rf::LEVEL_LOADED)) {
+        rf::console::print("No level loaded!");
         return;
     }
+
+    if (rf::is_multi) {
+        rf::console::print("That command can't be used in multiplayer.");
+        return;
+    }
+
     if (rf::entity_is_flying(rf::local_player_entity)) {
         rf::hud_msg("You feel heavy", 0, 0, 0);
     } else {
