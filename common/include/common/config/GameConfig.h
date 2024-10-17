@@ -63,7 +63,7 @@ struct GameConfig
 
     CfgVar<bool> try_mesh_fullbright = false;
     CfgVar<bool> try_lightmaps_only = false;
-    CfgVar<bool> try_disable_ss = false;
+    CfgVar<bool> try_disable_screenshake = false;
 
     static constexpr float min_fov = 75.0f;
     static constexpr float max_fov = 160.0f;

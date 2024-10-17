@@ -161,7 +161,7 @@ FunHook<void(bool)> level_init_post_hook{
         if (g_game_config.try_lightmaps_only) {
             evaluate_lightmaps_only();
         }
-        if (g_game_config.try_disable_ss) {
+        if (g_game_config.try_disable_screenshake) {
             evaluate_restrict_disable_ss();
         }  
     },

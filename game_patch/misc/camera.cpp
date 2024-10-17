@@ -32,7 +32,7 @@ FunHook<void(rf::Camera*, float, float)> camera_shake_hook{
     0x0040E0B0,
     [](rf::Camera* cp, float amplitude, float time_seconds) {
 
-        if (g_game_config.try_disable_ss && !server_side_restrict_disable_ss) {
+        if (g_game_config.try_disable_screenshake && !server_side_restrict_disable_ss) {
             return;
         }
 
@@ -46,7 +46,7 @@ void evaluate_restrict_disable_ss()
         rf::is_multi && !rf::is_server && get_df_server_info() && !get_df_server_info()->allow_no_ss;
 
     if (server_side_restrict_disable_ss) {
-        if (g_game_config.try_disable_ss) {
+        if (g_game_config.try_disable_screenshake) {
             rf::console::print("This server does not allow you to disable screenshake!");
         }
     }
@@ -55,13 +55,13 @@ void evaluate_restrict_disable_ss()
 ConsoleCommand2 disable_screenshake_cmd{
     "disable_screenshake",
     []() {
-        g_game_config.try_disable_ss = !g_game_config.try_disable_ss;
+        g_game_config.try_disable_screenshake = !g_game_config.try_disable_screenshake;
         g_game_config.save();
 
         evaluate_restrict_disable_ss();
 
         rf::console::print("Screenshake is {}",
-                           g_game_config.try_disable_ss
+                           g_game_config.try_disable_screenshake
                                ? "disabled. In multiplayer, this will only apply if the server allows it."
                                : "enabled.");
     },
