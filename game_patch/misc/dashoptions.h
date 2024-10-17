@@ -20,6 +20,8 @@ enum class DashOptionID
     DisableMultiplayerButton,
     DisableSingleplayerButtons,
     UseStockPlayersConfig,
+    IgnoreSwapAssaultRifleControls,
+    IgnoreSwapGrenadeControls,
     AssaultRifleAmmoColor,
     PrecisionRifleScopeColor,
     SniperRifleScopeColor,
@@ -59,6 +61,8 @@ struct DashOptionsConfig
     std::optional<bool> disable_multiplayer_button;
     std::optional<bool> disable_singleplayer_buttons;
     std::optional<bool> use_stock_game_players_config;
+    std::optional<bool> ignore_swap_assault_rifle_controls;
+    std::optional<bool> ignore_swap_grenade_controls;
     std::optional<uint32_t> ar_ammo_color;
     std::optional<uint32_t> pr_scope_color;
     std::optional<uint32_t> sr_scope_color;

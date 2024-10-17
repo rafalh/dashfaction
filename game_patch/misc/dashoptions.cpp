@@ -411,6 +411,8 @@ void process_dashoption_line(const std::string& option_name, const std::string& 
         {"$Disable Multiplayer Button", DashOptionID::DisableMultiplayerButton},
         {"$Disable Singleplayer Buttons", DashOptionID::DisableSingleplayerButtons},
         {"$Use Base Game Players Config", DashOptionID::UseStockPlayersConfig},
+        {"$Ignore Swap Assault Rifle Controls", DashOptionID::IgnoreSwapAssaultRifleControls},
+        {"$Ignore Swap Grenade Controls", DashOptionID::IgnoreSwapGrenadeControls},
         {"$Assault Rifle Ammo Counter Color", DashOptionID::AssaultRifleAmmoColor},
         {"$Precision Rifle Scope Color", DashOptionID::PrecisionRifleScopeColor},
         {"$Sniper Rifle Scope Color", DashOptionID::SniperRifleScopeColor},
@@ -462,6 +464,12 @@ void process_dashoption_line(const std::string& option_name, const std::string& 
             break;
         case DashOptionID::UseStockPlayersConfig:
             set_option(it->second, g_dash_options_config.use_stock_game_players_config, option_value);
+            break;
+        case DashOptionID::IgnoreSwapAssaultRifleControls:
+            set_option(it->second, g_dash_options_config.ignore_swap_assault_rifle_controls, option_value);
+            break;
+        case DashOptionID::IgnoreSwapGrenadeControls:
+            set_option(it->second, g_dash_options_config.ignore_swap_grenade_controls, option_value);
             break;
         case DashOptionID::AssaultRifleAmmoColor:
             set_option(it->second, g_dash_options_config.ar_ammo_color, option_value);
