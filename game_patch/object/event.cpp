@@ -220,8 +220,72 @@ ConsoleCommand2 debug_event_msg_cmd{
     }
 };
 
-void apply_event_patches()
+rf::Vector3 extract_yaw_vector(const rf::Matrix3& matrix)
 {
+    rf::Vector3 angles;
+    if (matrix.fvec.x == 0.0f && matrix.fvec.z == 0.0f) {
+        angles.y = 0.0f;
+    }
+    else {
+        angles.y = std::atan2(matrix.fvec.x, matrix.fvec.z);
+    }
+    return angles;
+}
+
+rf::Vector3 rotate_velocity(const rf::Matrix3& old_orient, const rf::Matrix3& new_orient, const rf::Vector3& old_vel)
+{
+    // convert velocity to world space
+    rf::Vector3 base_velocity = old_orient.copy_transpose().rvec * old_vel.x +
+                                  old_orient.copy_transpose().uvec * old_vel.y +
+                                  old_orient.copy_transpose().fvec * old_vel.z;
+
+    // rotate by new orient
+    return new_orient.rvec * base_velocity.x + new_orient.uvec * base_velocity.y + new_orient.fvec * base_velocity.z;
+}
+
+FunHook<void(rf::Event*)> event_player_teleport_on_hook{
+    0x004B9820,
+    [](rf::Event* event) {
+        rf::Entity* player_entity = rf::local_player_entity;
+
+        if (!player_entity)
+            return;
+
+        // in a vehicle
+        rf::Entity* host_entity = rf::entity_from_handle(player_entity->host_handle);
+
+        if (host_entity) {
+            // base game only cares about level filename, adding UID too is safer
+            if (rf::level.filename == "l20s2.rfl" && event->uid == 18458) {
+                player_entity = host_entity;
+            }
+            else {
+                rf::entity_detach_from_host(player_entity);
+            }
+        }
+
+        player_entity->p_data.pos = event->pos;
+        player_entity->p_data.next_pos = event->pos;
+        player_entity->pos = event->pos;
+
+        // maintain relative velocity
+        player_entity->p_data.vel = rotate_velocity(player_entity->p_data.orient, event->orient, player_entity->p_data.vel);
+
+        player_entity->control_data.phb = extract_yaw_vector(event->orient);
+        player_entity->orient = event->orient;
+        player_entity->p_data.orient = event->orient;
+        player_entity->p_data.next_orient = event->orient;
+        player_entity->eye_orient = event->orient;
+
+        // makes walking through teleporters smoother, base game turns this off for clients
+        if (rf::entity_on_ground(player_entity)) {
+            rf::physics_force_to_ground(player_entity);
+        }
+    }
+};
+
+void apply_event_patches()
+{    
     // Allow custom mesh (not used in clutter.tbl or items.tbl) in Switch_Model event
     switch_model_event_custom_mesh_patch.install();
     switch_model_event_obj_lighting_and_physics_fix.install();
@@ -247,6 +311,9 @@ void apply_event_patches()
 
     // Do not load next level if blackout is in progress
     event_load_level_turn_on_injection.install();
+
+    // Improve player teleport behaviour
+    event_player_teleport_on_hook.install();
 
     // Register commands
     debug_event_msg_cmd.register_cmd();

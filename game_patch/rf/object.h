@@ -132,6 +132,7 @@ namespace rf
     static auto& obj_light_free = addr_as_ref<void()>(0x0048B370);
     static auto& obj_light_alloc = addr_as_ref<void()>(0x0048B1D0);
     static auto& obj_light_calculate = addr_as_ref<void()>(0x0048B0E0);
+    static auto& physics_force_to_ground = addr_as_ref<void(Object* obj)>(0x004A0770);
 
     static auto& object_list = addr_as_ref<Object>(0x0073D880);
 }
