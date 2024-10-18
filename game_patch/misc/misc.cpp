@@ -8,6 +8,12 @@
 #include <patch_common/CodeInjection.h>
 #include <patch_common/FunHook.h>
 #include <cstring>
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <algorithm>
+#include <sstream>
+#include "dashoptions.h"
 #include "misc.h"
 #include "../sound/sound.h"
 #include "../os/console.h"
@@ -18,6 +24,7 @@
 #include "../rf/gameseq.h"
 #include "../rf/os/os.h"
 #include "../rf/misc.h"
+#include "../rf/parse.h"
 #include "../rf/vmesh.h"
 #include "../rf/level.h"
 #include "../rf/file/file.h"
@@ -396,6 +403,17 @@ CallHook level_init_pre_console_output_hook{
     },
 };
 
+CodeInjection all_table_files_loaded_injection{
+    0x004B249E, 
+    []() {
+        // after all other tbl files have been loaded, load dashoptions.tbl and parse it
+        // only if a TC mod is loaded
+        if (rf::mod_param.found()) {
+            dashopt::load_dashoptions_config();            
+        }
+    }
+};
+
 void misc_init()
 {
     // Window title (client and server)
@@ -502,6 +520,9 @@ void misc_init()
 
     // Add level name to "-- Level Initializing --" message
     level_init_pre_console_output_hook.install();
+
+    // Load dashoptionstbl
+    all_table_files_loaded_injection.install();
 
     // Apply patches from other files
     apply_main_menu_patches();
