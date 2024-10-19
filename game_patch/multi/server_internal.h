@@ -26,6 +26,12 @@ struct HitSoundsConfig
     int rate_limit = 10;
 };
 
+struct OvertimeConfig
+{
+    bool enabled = false;
+    int additional_time = 5;
+};
+
 struct ServerAdditionalConfig
 {
     VoteConfig vote_kick;
@@ -38,6 +44,7 @@ struct ServerAdditionalConfig
     std::optional<float> spawn_life;
     std::optional<float> spawn_armor;
     HitSoundsConfig hit_sounds;
+    OvertimeConfig overtime;
     std::map<std::string, std::string> item_replacements;
     std::string default_player_weapon;
     std::optional<int> default_player_weapon_ammo;

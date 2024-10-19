@@ -206,6 +206,10 @@ Configuration example:
     +Health Is Super:
     // Limit armor reward to 200 instead of 100
     +Armor Is Super:
+    // Enable for round to go to overtime when the time limit is up but score is tied
+    $DF Overtime Enabled: false
+        // Overtime ends when tie is broken or after this duration (whichever comes first)
+        +Duration: 5
 
 
 Building
