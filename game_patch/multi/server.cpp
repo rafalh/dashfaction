@@ -676,13 +676,20 @@ bool round_is_tied(rf::NetGameType game_type)
 
     switch (game_type) {
     case rf::NG_TYPE_DM: {
-        int first_player_score = rf::player_list->stats->score;
-        for (rf::Player* player = rf::player_list->next; player != rf::player_list; player = player->next) {
-            if (player->stats->score != first_player_score) {
-                return false;
+        int highest_score = rf::player_list->stats->score;
+        int players_with_highest_score = 1;
+
+        for (rf::Player* player = rf::player_list->next; player != nullptr &&
+            player != rf::player_list; player = player->next) {        
+            if (player->stats->score > highest_score) {
+                highest_score = player->stats->score;
+                players_with_highest_score = 1;
+            }
+            else if (player->stats->score == highest_score) {
+                players_with_highest_score++;
             }
         }
-        return true;
+        return players_with_highest_score >= 2;
     }
     case rf::NG_TYPE_CTF: {
         int red_score = rf::multi_ctf_get_red_team_score();
