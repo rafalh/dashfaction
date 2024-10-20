@@ -4,6 +4,13 @@
 #include "../rf/bmpman.h"
 #include "../rf/gr/gr.h"
 
+namespace rf
+{
+    static auto& bm_bitmaps = addr_as_ref<void*>(0x017C80C4);
+    static auto& bm_get_cache_slot = addr_as_ref<int(int)>(0x0050F440);
+    static auto& geomod_crater_texture_handle = addr_as_ref<int>(0x00646000);
+}
+
 void bm_set_dynamic(int bm_handle, bool dynamic);
 bool bm_is_dynamic(int bm_handle);
 void bm_change_format(int bm_handle, rf::bm::Format format);
