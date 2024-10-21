@@ -402,10 +402,12 @@ namespace rf
     static auto& entity_create =
         addr_as_ref<Entity*(int entity_type, const char* name, int parent_handle, const Vector3& pos,
         const Matrix3& orient, int create_flags, int mp_character)>(0x00422360);
+    static auto& entity_explode = addr_as_ref<bool(Entity* ep)>(0x00419420);
     static auto& entity_is_dying = addr_as_ref<bool(Entity *ep)>(0x00427020);
     static auto& entity_in_vehicle = addr_as_ref<bool(Entity *ep)>(0x004290D0);
     static auto& entity_is_jeep_driver = addr_as_ref<bool(Entity *ep)>(0x0042AC80);
     static auto& entity_is_jeep_gunner = addr_as_ref<bool(Entity *ep)>(0x0042ACD0);
+    static auto& entity_is_humanoid = addr_as_ref<bool(Entity* ep)>(0x0040A150);
     static auto& entity_is_driller = addr_as_ref<bool(Entity *ep)>(0x0042D780);
     static auto& entity_is_sub = addr_as_ref<bool(Entity *ep)>(0x0040A270);
     static auto& entity_is_jeep = addr_as_ref<bool(Entity *ep)>(0x0040A2F0);
@@ -425,6 +427,9 @@ namespace rf
     static auto& entity_turn_weapon_on = addr_as_ref<void __cdecl(int entity_handle, int weapon_type, bool alt_fire)>(0x0041A870);
     static auto& entity_turn_weapon_off = addr_as_ref<void __cdecl(int entity_handle, int weapon_type)>(0x0041AE70);
     static auto& entity_restore_mesh = addr_as_ref<void(Entity *ep, const char *mesh_name)>(0x0042C570);
+    static auto entity_blood_throw_gibs = addr_as_ref<void(int)>(0x0042E3C0);
+    static auto& game_do_explosion = addr_as_ref<void(int vclip, rf::GRoom* src_room, rf::Vector3* src_pos,
+        Vector3* pos, float radius, float damage_scale, rf::Vector3* dir)>(0x00436490);
 
     static auto& entity_list = addr_as_ref<Entity>(0x005CB060);
     static auto& local_player_entity = addr_as_ref<Entity*>(0x005CB054);

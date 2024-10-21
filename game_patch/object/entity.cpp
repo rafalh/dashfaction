@@ -5,6 +5,7 @@
 #include <xlog/xlog.h>
 #include "../rf/entity.h"
 #include "../rf/corpse.h"
+#include "../rf/multi.h"
 #include "../rf/weapon.h"
 #include "../rf/player/player.h"
 #include "../rf/particle_emitter.h"
@@ -201,8 +202,97 @@ CodeInjection entity_process_pre_hide_riot_shield_injection{
     },
 };
 
+//todo: bind to cvar
+FunHook<void(int)> entity_blood_throw_gibs_hook{
+    0x0042E3C0, [](int handle) {
+        if (!rf::is_multi) {
+            rf::Object* objp = rf::obj_from_handle(handle);
+
+            if (!objp) {
+                return; // return on invalid object
+            }
+
+            rf::Vector3 pos = objp->pos; // todo: factor in offset like entity_explode
+            rf::GRoom* room = objp->room;
+            int explosion_vclip = 30;
+            float explosion_vclip_radius = 1.0f;
+            rf::String debris_filename = "gibs0.V3D";
+
+            int debris_max_lifetime = 7000;
+            float debris_velocity = 8.5f;
+            float damage_scale = 1.0f;
+            rf::String cust_snd_set = "gib bounce";
+
+            if (objp->type == rf::OT_ENTITY) {
+                rf::Entity* ep = static_cast<rf::Entity*>(objp);
+
+                //xlog::warn("Gibbing entity {}, is {}, body temp: {}", ep->info->name,
+                //           rf::entity_is_humanoid(ep) ? "human" : "not human", ep->info->body_temp);
+
+                if (ep->info->explode_vclip_index < 0) {
+                    ep->info->explode_vclip_index = explosion_vclip; // game will crash without this
+                }
+                else {
+                    explosion_vclip = ep->info->explode_vclip_index;
+                }
+
+                explosion_vclip_radius =
+                    (ep->info->explode_vclip_radius > 0.0f) ? ep->info->explode_vclip_radius : explosion_vclip_radius;
+
+                debris_filename =
+                    (!ep->info->debris_filename.empty()) ? ep->info->debris_filename : debris_filename;
+
+                //ep->death_anim_index = -2; // stop death anim if exploding (not working, need fix)
+
+                //xlog::warn("Debris: {}, explosion: {}, explode rad: {}", debris_filename, explosion_vclip,
+                //           explosion_vclip_radius);
+            }
+
+            else if (objp->type = rf::OT_CORPSE) {
+            }
+
+            else {
+                return;
+            }
+
+            rf::game_do_explosion(
+                explosion_vclip, room, 0, &pos, explosion_vclip_radius, damage_scale, 0);
+
+            rf::debris_spawn_from_object(
+                objp, debris_filename, explosion_vclip, debris_max_lifetime, debris_velocity, &cust_snd_set);
+        }
+    }
+};
+
+CodeInjection entity_damage_death_injection{
+    0x0041A4B7,
+    [](auto& regs) {        
+        if (!rf::is_multi) {        
+            int damage_type = regs.ebp;
+            rf::Entity* ep = regs.esi;
+            int entity_handle = ep->handle;
+
+            //xlog::warn("Damage type: {}, ent {}, name {}, name2: {}",
+            //    damage_type, entity_handle, ep->info->name, ep->name);
+
+            if (damage_type == 3 && ep->info->body_temp >= 90.0f) {
+                //xlog::warn("Damage type: {}, ent {}, name {}, name2: {}, death anim: {}",
+                //    damage_type, entity_handle, ep->info->name, ep->name, ep->death_anim_index);
+                rf::entity_blood_throw_gibs(entity_handle);
+                // todo: handle destroying fire for ignited entities
+            }
+        }
+    }
+};
+
 void entity_do_patch()
 {
+    // always go to gibs (for testing, remove)
+    //AsmWriter(0x0041EE53).jmp(0x0041EE55);
+    entity_damage_death_injection.install();
+    entity_blood_throw_gibs_hook.install();
+
+
     // Fix player being stuck to ground when jumping, especially when FPS is greater than 200
     stuck_to_ground_when_jumping_fix.install();
     stuck_to_ground_when_using_jump_pad_fix.install();
