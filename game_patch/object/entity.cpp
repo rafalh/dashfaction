@@ -215,6 +215,7 @@ FunHook<void(int)> entity_blood_throw_gibs_hook{
             rf::Vector3 pos = objp->pos; // todo: factor in offset like entity_explode
             rf::GRoom* room = objp->room;
             int explosion_vclip = 30;
+            int chunk_explosion_vclip = 30;
             float explosion_vclip_radius = 1.0f;
             rf::String debris_filename = "df_meatchunks0.V3D";
 
@@ -229,20 +230,14 @@ FunHook<void(int)> entity_blood_throw_gibs_hook{
                 //xlog::warn("Gibbing entity {}, is {}, body temp: {}", ep->info->name,
                 //           rf::entity_is_humanoid(ep) ? "human" : "not human", ep->info->body_temp);
 
-                if (ep->info->explode_vclip_index < 0) {
-                    ep->info->explode_vclip_index = explosion_vclip; // game will crash without this
-                }
-                else {
-                    explosion_vclip = ep->info->explode_vclip_index;
-                }
+                explosion_vclip =
+                    (ep->info->explode_vclip_index < 0) ? ep->info->explode_vclip_index : explosion_vclip;
 
                 explosion_vclip_radius =
                     (ep->info->explode_vclip_radius > 0.0f) ? ep->info->explode_vclip_radius : explosion_vclip_radius;
 
                 debris_filename =
                     (!ep->info->debris_filename.empty()) ? ep->info->debris_filename : debris_filename;
-
-                //ep->death_anim_index = -2; // stop death anim if exploding (not working, need fix)
 
                 //xlog::warn("Debris: {}, explosion: {}, explode rad: {}", debris_filename, explosion_vclip,
                 //           explosion_vclip_radius);
@@ -259,30 +254,62 @@ FunHook<void(int)> entity_blood_throw_gibs_hook{
                 explosion_vclip, room, 0, &pos, explosion_vclip_radius, damage_scale, 0);
 
             rf::debris_spawn_from_object(
-                objp, debris_filename, explosion_vclip, debris_max_lifetime, debris_velocity, &cust_snd_set);
+                objp, debris_filename, chunk_explosion_vclip, debris_max_lifetime, debris_velocity, &cust_snd_set);
         }
     }
 };
 
 CodeInjection entity_damage_death_injection{
-    0x0041A4B7,
-    [](auto& regs) {        
-        if (!rf::is_multi) {        
-            int damage_type = regs.ebp;
-            rf::Entity* ep = regs.esi;
-            int entity_handle = ep->handle;
-
-            //xlog::warn("Damage type: {}, ent {}, name {}, name2: {}",
-            //    damage_type, entity_handle, ep->info->name, ep->name);
-
-            if (damage_type == 3 && ep->info->body_temp >= 90.0f) {
-                //xlog::warn("Damage type: {}, ent {}, name {}, name2: {}, death anim: {}",
-                //    damage_type, entity_handle, ep->info->name, ep->name, ep->death_anim_index);
-                rf::entity_blood_throw_gibs(entity_handle);
-                // todo: handle destroying fire for ignited entities
+    0x0041A413,
+    [](auto& regs) {
+        int damage_type = regs.ebp;
+        rf::Entity* ep = regs.esi;
+        if (ep) {
+            ep->ai.explosive_last_damage = (damage_type == 3);
+            if (ep->ai.explosive_last_damage) {
+                ep->death_anim_index = -1;
             }
+            //xlog::warn("Damage type: {}, name {}, name2: {}, explosive?: {}, flags: {}", damage_type, ep->info->name, ep->name, ep->ai.explosive_last_damage, ep->entity_flags);
         }
     }
+};
+
+CodeInjection entity_explode_on_death_injection{
+    0x0041EE4C,
+    [](auto& regs) {
+        rf::Entity* ep = regs.esi;
+        if (ep && ep->ai.explosive_last_damage) {
+            xlog::warn("Exploding! p1");
+            ep->death_anim_index = -2;
+            regs.eip = 0x0041EE55;         
+        }
+        //else {
+        //    xlog::warn("Not exploding! :(");
+        //    regs.eip = 0x0041EE84;
+        //}
+    },
+};
+
+CodeInjection no_death_anim_if_exploding_injection{
+    0x0041FF28,
+    [](auto& regs) {
+        rf::Entity* ep = regs.esi;
+        if (ep && ep->ai.explosive_last_damage) {
+            xlog::warn("Exploding! p2");            
+            regs.eip = 0x004200A0;
+        }
+    },
+};
+
+CodeInjection kill_entity_on_explode_injection{
+    0x0041EE5B,
+    [](auto& regs) {
+        rf::Object* objp = regs.esi;
+        if (objp) {
+            rf::obj_flag_dead(objp);
+            xlog::warn("Killing the object {}", objp->uid);
+        }
+    },
 };
 
 void entity_do_patch()
@@ -291,6 +318,9 @@ void entity_do_patch()
     //AsmWriter(0x0041EE53).jmp(0x0041EE55);
     entity_damage_death_injection.install();
     entity_blood_throw_gibs_hook.install();
+    entity_explode_on_death_injection.install();
+    //no_death_anim_if_exploding_injection.install();
+    //kill_entity_on_explode_injection.install();
 
 
     // Fix player being stuck to ground when jumping, especially when FPS is greater than 200
