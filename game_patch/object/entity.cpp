@@ -216,7 +216,7 @@ FunHook<void(int)> entity_blood_throw_gibs_hook{
             rf::GRoom* room = objp->room;
             int explosion_vclip = 30;
             float explosion_vclip_radius = 1.0f;
-            rf::String debris_filename = "gibs0.V3D";
+            rf::String debris_filename = "df_meatchunks0.V3D";
 
             int debris_max_lifetime = 7000;
             float debris_velocity = 8.5f;
