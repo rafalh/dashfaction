@@ -202,17 +202,16 @@ CodeInjection entity_process_pre_hide_riot_shield_injection{
     },
 };
 
-//todo: bind to cvar
 FunHook<void(int)> entity_blood_throw_gibs_hook{
     0x0042E3C0, [](int handle) {
-        if (!rf::is_multi) {
+        if (g_game_config.gibbing) {
             rf::Object* objp = rf::obj_from_handle(handle);
 
             if (!objp) {
-                return; // return on invalid object
+                return; // invalid object
             }
 
-            rf::Vector3 pos = objp->pos; // todo: factor in offset like entity_explode
+            rf::Vector3 pos = objp->pos;
             rf::GRoom* room = objp->room;
             int explosion_vclip = 30;
             int chunk_explosion_vclip = 30;
@@ -242,10 +241,8 @@ FunHook<void(int)> entity_blood_throw_gibs_hook{
                 //xlog::warn("Debris: {}, explosion: {}, explode rad: {}", debris_filename, explosion_vclip,
                 //           explosion_vclip_radius);
             }
-
             else if (objp->type = rf::OT_CORPSE) {
             }
-
             else {
                 return;
             }
@@ -259,14 +256,14 @@ FunHook<void(int)> entity_blood_throw_gibs_hook{
     }
 };
 
-CodeInjection entity_damage_death_injection{
+CodeInjection entity_damage_explosive_death_injection{
     0x0041A413,
     [](auto& regs) {
         int damage_type = regs.ebp;
         rf::Entity* ep = regs.esi;
-        if (ep) {
+        if (g_game_config.gibbing && ep) {
             ep->ai.explosive_last_damage = (damage_type == 3);
-            if (ep->ai.explosive_last_damage) {
+            if (ep->ai.explosive_last_damage && ep->info->body_temp >= 90.0f) {
                 ep->death_anim_index = -1;
             }
             //xlog::warn("Damage type: {}, name {}, name2: {}, explosive?: {}, flags: {}", damage_type, ep->info->name, ep->name, ep->ai.explosive_last_damage, ep->entity_flags);
@@ -274,40 +271,12 @@ CodeInjection entity_damage_death_injection{
     }
 };
 
-CodeInjection entity_explode_on_death_injection{
+CodeInjection entity_dying_frame_explode_injection{
     0x0041EE4C,
     [](auto& regs) {
         rf::Entity* ep = regs.esi;
-        if (ep && ep->ai.explosive_last_damage) {
-            xlog::warn("Exploding! p1");
-            ep->death_anim_index = -2;
-            regs.eip = 0x0041EE55;         
-        }
-        //else {
-        //    xlog::warn("Not exploding! :(");
-        //    regs.eip = 0x0041EE84;
-        //}
-    },
-};
-
-CodeInjection no_death_anim_if_exploding_injection{
-    0x0041FF28,
-    [](auto& regs) {
-        rf::Entity* ep = regs.esi;
-        if (ep && ep->ai.explosive_last_damage) {
-            xlog::warn("Exploding! p2");            
-            regs.eip = 0x004200A0;
-        }
-    },
-};
-
-CodeInjection kill_entity_on_explode_injection{
-    0x0041EE5B,
-    [](auto& regs) {
-        rf::Object* objp = regs.esi;
-        if (objp) {
-            rf::obj_flag_dead(objp);
-            xlog::warn("Killing the object {}", objp->uid);
+        if (g_game_config.gibbing && ep && ep->ai.explosive_last_damage && ep->info->body_temp >= 90.0f) {
+            regs.eip = 0x0041EE55;
         }
     },
 };
@@ -315,13 +284,10 @@ CodeInjection kill_entity_on_explode_injection{
 void entity_do_patch()
 {
     // always go to gibs (for testing, remove)
-    //AsmWriter(0x0041EE53).jmp(0x0041EE55);
-    entity_damage_death_injection.install();
+    //AsmWriter(0x0041EE53).jmp(0x0041EE55);    
     entity_blood_throw_gibs_hook.install();
-    entity_explode_on_death_injection.install();
-    //no_death_anim_if_exploding_injection.install();
-    //kill_entity_on_explode_injection.install();
-
+    entity_damage_explosive_death_injection.install();
+    entity_dying_frame_explode_injection.install();
 
     // Fix player being stuck to ground when jumping, especially when FPS is greater than 200
     stuck_to_ground_when_jumping_fix.install();

@@ -288,6 +288,16 @@ CodeInjection sr_load_player_weapon_anims_injection{
     },
 };
 
+ConsoleCommand2 toggle_gibs_cmd{
+    "toggle_gibs",
+    []() {
+        g_game_config.gibbing = !g_game_config.gibbing;
+        g_game_config.save();
+        rf::console::print("Gibbing is {}.", g_game_config.gibbing ? "enabled" : "disabled");
+    },
+    "Toggle entities and corpses exploding into chunks from explosives",
+};
+
 void player_do_patch()
 {
     // general hooks
@@ -349,4 +359,5 @@ void player_do_patch()
 
     // Commands
     damage_screen_flash_cmd.register_cmd();
+    toggle_gibs_cmd.register_cmd();
 }
