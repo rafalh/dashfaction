@@ -328,6 +328,9 @@ bool handle_server_chat_command(std::string_view server_command, rf::Player* sen
     else if (cmd_name == "stats") {
         send_private_message_with_stats(sender);
     }
+    else if (cmd_name == "ready") {
+        send_private_message_with_stats(sender);
+    }
     else {
         return false;
     }
@@ -563,8 +566,9 @@ FunHook<void(rf::Player*)> multi_spawn_player_server_side_hook{
         if (!check_player_ac_status(player)) {
             return;
         }
-
-        multi_spawn_player_server_side_hook.call_target(player);
+        //if (1 == 2) {
+        //    multi_spawn_player_server_side_hook.call_target(player);
+		//}
 
         rf::Entity* ep = rf::entity_from_handle(player->entity_handle);
         if (ep) {
