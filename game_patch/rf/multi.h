@@ -167,7 +167,7 @@ namespace rf
     static auto& multi_kill_local_player = addr_as_ref<void()>(0x004757A0);
     static auto& send_game_info_req_packet = addr_as_ref<void(const NetAddr& addr)>(0x0047B450);
     static auto& multi_entity_is_female = addr_as_ref<bool(int mp_character_idx)>(0x004762C0);
-
+    static auto& multi_powerup_add = addr_as_ref<void(Player* pp, int powerup_type, int time_ms)>(0x00480050);
     static auto& netgame = addr_as_ref<NetGameInfo>(0x0064EC28);
     static auto& is_multi = addr_as_ref<bool>(0x0064ECB9);
     static auto& is_server = addr_as_ref<bool>(0x0064ECBA);

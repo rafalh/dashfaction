@@ -74,8 +74,15 @@ void load_additional_server_config(rf::Parser& parser)
     parse_vote_config("Vote Restart", g_additional_server_config.vote_restart, parser);
     parse_vote_config("Vote Next", g_additional_server_config.vote_next, parser);
     parse_vote_config("Vote Previous", g_additional_server_config.vote_previous, parser);
-    if (parser.parse_optional("$DF Spawn Protection Duration:")) {
-        g_additional_server_config.spawn_protection_duration_ms = parser.parse_uint();
+
+    if (parser.parse_optional("$DF Spawn Protection Enabled:")) {
+        g_additional_server_config.spawn_protection.enabled = parser.parse_bool();
+        if (parser.parse_optional("+Duration:")) {
+            g_additional_server_config.spawn_protection.duration = parser.parse_uint();
+        }
+        if (parser.parse_optional("+Use Powerup:")) {
+            g_additional_server_config.spawn_protection.use_powerup = parser.parse_bool();
+        }
     }
 
     if (parser.parse_optional("$DF Spawn Health:")) {
@@ -353,7 +360,16 @@ bool check_server_chat_command(const char* msg, rf::Player* sender)
 CodeInjection spawn_protection_duration_patch{
     0x0048089A,
     [](auto& regs) {
-        *static_cast<int*>(regs.esp) = g_additional_server_config.spawn_protection_duration_ms;
+        if (g_additional_server_config.spawn_protection.enabled) {
+            if (g_additional_server_config.spawn_protection.use_powerup) {
+                rf::Player* pp = regs.esi;
+                rf::multi_powerup_add(pp, 0, g_additional_server_config.spawn_protection.duration);
+                return;
+            }
+        }
+        *static_cast<int*>(regs.esp) = g_additional_server_config.spawn_protection.enabled
+			? g_additional_server_config.spawn_protection.duration
+			: 0;
     },
 };
 
