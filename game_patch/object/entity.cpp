@@ -204,7 +204,7 @@ CodeInjection entity_process_pre_hide_riot_shield_injection{
 
 FunHook<void(int)> entity_blood_throw_gibs_hook{
     0x0042E3C0, [](int handle) {
-        if (g_game_config.gibbing) {
+        if (g_game_config.gibbing && !rf::is_multi) {
             rf::Object* objp = rf::obj_from_handle(handle);
 
             if (!objp) {
@@ -226,20 +226,14 @@ FunHook<void(int)> entity_blood_throw_gibs_hook{
             if (objp->type == rf::OT_ENTITY) {
                 rf::Entity* ep = static_cast<rf::Entity*>(objp);
 
-                //xlog::warn("Gibbing entity {}, is {}, body temp: {}", ep->info->name,
-                //           rf::entity_is_humanoid(ep) ? "human" : "not human", ep->info->body_temp);
+                explosion_vclip = (ep->info->explode_vclip_index < 0)
+					? ep->info->explode_vclip_index : explosion_vclip;
 
-                explosion_vclip =
-                    (ep->info->explode_vclip_index < 0) ? ep->info->explode_vclip_index : explosion_vclip;
+                explosion_vclip_radius = (ep->info->explode_vclip_radius > 0.0f)
+					? ep->info->explode_vclip_radius : explosion_vclip_radius;
 
-                explosion_vclip_radius =
-                    (ep->info->explode_vclip_radius > 0.0f) ? ep->info->explode_vclip_radius : explosion_vclip_radius;
-
-                debris_filename =
-                    (!ep->info->debris_filename.empty()) ? ep->info->debris_filename : debris_filename;
-
-                //xlog::warn("Debris: {}, explosion: {}, explode rad: {}", debris_filename, explosion_vclip,
-                //           explosion_vclip_radius);
+                debris_filename = (!ep->info->debris_filename.empty())
+					? ep->info->debris_filename : debris_filename;
             }
             else if (objp->type = rf::OT_CORPSE) {
             }
@@ -258,15 +252,14 @@ FunHook<void(int)> entity_blood_throw_gibs_hook{
 
 CodeInjection entity_damage_explosive_death_injection{
     0x0041A413,
-    [](auto& regs) {
-        int damage_type = regs.ebp;
+    [](auto& regs) {        
         rf::Entity* ep = regs.esi;
-        if (g_game_config.gibbing && ep) {
+        if (g_game_config.gibbing && !rf::is_multi && ep) {
+            int damage_type = regs.ebp;
             ep->ai.explosive_last_damage = (damage_type == 3);
             if (ep->ai.explosive_last_damage && ep->info->body_temp >= 90.0f) {
                 ep->death_anim_index = -1;
             }
-            //xlog::warn("Damage type: {}, name {}, name2: {}, explosive?: {}, flags: {}", damage_type, ep->info->name, ep->name, ep->ai.explosive_last_damage, ep->entity_flags);
         }
     }
 };
@@ -275,7 +268,8 @@ CodeInjection entity_dying_frame_explode_injection{
     0x0041EE4C,
     [](auto& regs) {
         rf::Entity* ep = regs.esi;
-        if (g_game_config.gibbing && ep && ep->ai.explosive_last_damage && ep->info->body_temp >= 90.0f) {
+        if (g_game_config.gibbing && !rf::is_multi && ep && ep->ai.explosive_last_damage &&
+			ep->info->body_temp >= 90.0f) {
             regs.eip = 0x0041EE55;
         }
     },
@@ -283,12 +277,6 @@ CodeInjection entity_dying_frame_explode_injection{
 
 void entity_do_patch()
 {
-    // always go to gibs (for testing, remove)
-    //AsmWriter(0x0041EE53).jmp(0x0041EE55);    
-    entity_blood_throw_gibs_hook.install();
-    entity_damage_explosive_death_injection.install();
-    entity_dying_frame_explode_injection.install();
-
     // Fix player being stuck to ground when jumping, especially when FPS is greater than 200
     stuck_to_ground_when_jumping_fix.install();
     stuck_to_ground_when_using_jump_pad_fix.install();
@@ -338,4 +326,9 @@ void entity_do_patch()
 
     // Hide riot shield third person model if entity is hidden (e.g. in cutscenes)
     entity_process_pre_hide_riot_shield_injection.install();
+
+	// Restore cut stock game feature for entities and corpses exploding into chunks
+	entity_blood_throw_gibs_hook.install();
+    entity_damage_explosive_death_injection.install();
+    entity_dying_frame_explode_injection.install();
 }

@@ -142,8 +142,6 @@ void console_commands_init()
     register_builtin_command("system_info", "Show system information", 0x00525A60);
     register_builtin_command("trilinear_filtering", "Toggle trilinear filtering", 0x0054F050);
     register_builtin_command("detail_textures", "Toggle detail textures", 0x0054F0B0);
-    register_builtin_command("drop_entity", "Drop any entity", 0x00418740); // for testing, remove
-    register_builtin_command("pcollide", "Toggle if player collides with the world", 0x004A0F60); // for testing, remove
 
 #ifdef DEBUG
     register_builtin_command("drop_fixed_cam", "Drop a fixed camera", 0x0040D220);
