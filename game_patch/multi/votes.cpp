@@ -14,6 +14,8 @@
 #include "server_internal.h"
 #include "multi.h"
 
+MatchInfo g_match_info;
+
 struct Vote
 {
 private:
@@ -176,6 +178,160 @@ protected:
         return true;
     }
 };
+
+int parse_match_team_size(std::string_view arg)
+{
+    if (arg.length() < 3 || arg[1] != 'v') {
+        return -1;
+    }
+
+    int a_size = arg[0] - '0';
+    int b_size = arg[2] - '0';
+
+    if (a_size < 1 || a_size > 8 || b_size != a_size) {
+        return -1;
+    }
+
+    return a_size;
+}
+
+void start_match()
+{
+    // g_active_match_players = ready_players_red + ready_players_blue;
+    g_match_info.ready_players_red.clear();
+    g_match_info.ready_players_blue.clear();
+    restart_current_level(); // Restart the current map to begin the match
+    // g_pre_match_active = false;
+}
+
+void add_ready_player(rf::Player* player)
+{
+    int team = player->team;
+    if (team == 0) { //red
+        if (g_match_info.ready_players_red.size() < g_match_info.team_size &&
+            g_match_info.ready_players_red.find(player) == g_match_info.ready_players_red.end()) {
+            g_match_info.ready_players_red.insert(player);
+            auto msg = std::format("{} ({}) is ready!",
+                                   player->name.c_str(), !player->team ? "RED" : "BLUE");
+            send_chat_line_packet(msg.c_str(), nullptr);
+        }
+        else {
+            auto msg =
+                std::format("You cannot ready. {}.", g_match_info.ready_players_red.size() >= g_match_info.team_size
+                                                                ? "Your team is full"
+                                                                : "You are already ready");
+            send_chat_line_packet(msg.c_str(), player);
+        }
+    }
+    else if (team == 1) {// blue
+        if (g_match_info.ready_players_blue.size() < g_match_info.team_size &&
+            g_match_info.ready_players_blue.find(player) == g_match_info.ready_players_blue.end()) {
+            g_match_info.ready_players_blue.insert(player);
+            auto msg = std::format("{} ({}) is ready!",
+                                   player->name.c_str(), !player->team ? "RED" : "BLUE");
+            send_chat_line_packet(msg.c_str(), nullptr);
+        }
+        else {
+            auto msg =
+                std::format("You cannot ready. {}.", g_match_info.ready_players_blue.size() >= g_match_info.team_size
+                                                         ? "Your team is full"
+                                                         : "You are already ready");
+            send_chat_line_packet(msg.c_str(), player);
+        }
+    }
+
+    if (g_match_info.ready_players_red.size() >= g_match_info.team_size &&
+        g_match_info.ready_players_blue.size() >= g_match_info.team_size) {
+        send_chat_line_packet("\xA6 All players are ready. Match starting!", nullptr);
+        start_match();
+    }
+    else {
+        auto msg = std::format("Still waiting for players - RED: {}, BLUE: {}.",
+                        g_match_info.team_size - g_match_info.ready_players_red.size(),
+                        g_match_info.team_size - g_match_info.ready_players_blue.size());
+        send_chat_line_packet(msg.c_str(), nullptr);
+    }
+}
+
+void remove_ready_player(rf::Player* player)
+{
+    g_match_info.ready_players_red.erase(player);
+    g_match_info.ready_players_blue.erase(player);
+
+    auto msg = std::format("{} is no longer ready! Waiting for {} red players and {} blue players.",
+                            player->name.c_str(),
+                            g_match_info.team_size - g_match_info.ready_players_red.size(),
+                            g_match_info.team_size - g_match_info.ready_players_blue.size());
+            send_chat_line_packet(msg.c_str(), nullptr);
+}
+
+void build_match_team_size(std::string_view arg)
+{
+    g_match_info.team_size = parse_match_team_size(arg);
+}
+
+struct VoteMatch : public Vote
+{
+    //int team_size;
+    //int required_players_ready_red;
+    //int required_players_ready_blue;    
+    //std::set<rf::Player*> ready_players_red;
+    //std::set<rf::Player*> ready_players_blue;
+
+    bool process_vote_arg(std::string_view arg, rf::Player* source) override
+    {
+        if (rf::multi_get_game_type() == rf::NG_TYPE_DM) {
+            send_chat_line_packet("\xA6 Match system is not available in deathmatch!", source);
+            return false;
+        }
+
+        if (arg.empty()) {
+            send_chat_line_packet("\xA6 You must specify a match size. Supported sizes are 1v1 up to 8v8.", source);
+            return false;
+        }
+
+        g_match_info.team_size = parse_match_team_size(arg);
+        //build_match_team_size(arg);
+
+        if (g_match_info.team_size < 1 || g_match_info.team_size > 8) {
+            send_chat_line_packet("\xA6 Invalid match size! Supported sizes are 1v1 up to 8v8.", source);
+            return false;
+        }
+
+        return true;
+    }
+
+    [[nodiscard]] std::string get_title() const override
+    {
+        return std::format("START {}v{} MATCH", g_match_info.team_size, g_match_info.team_size);      
+    }
+
+    void on_accepted() override
+    {
+        auto msg = std::format("\xA6 Vote passed."
+                               "\n============= {}v{} MATCH QUEUED =============\n"
+                               "Waiting for players. Send message \"/ready\" to ready up.",
+                               g_match_info.team_size, g_match_info.team_size);
+        send_chat_line_packet(msg.c_str(), nullptr);
+        g_match_info.pre_match_active = true;
+    }
+
+    bool is_player_ready(rf::Player* player) {
+        return g_match_info.ready_players_red.contains(player) || g_match_info.ready_players_blue.contains(player);
+    }
+
+    bool on_player_leave(rf::Player* player) override
+    {
+        remove_ready_player(player);
+        return Vote::on_player_leave(player);
+    }
+
+    [[nodiscard]] const VoteConfig& get_config() const override
+    {
+        return g_additional_server_config.vote_match;
+    }
+};
+
 
 struct VoteKick : public Vote
 {
@@ -381,6 +537,36 @@ public:
         return true;
     }
 
+    void ready(rf::Player* source)
+    {
+        if (g_match_info.pre_match_active) {
+            add_ready_player(source);
+        }
+        else {
+            send_chat_line_packet("No match is queued. Use \"/vote match\" to queue a match.", source);
+        }
+    }
+
+    void unready(rf::Player* source)
+    {
+        if (g_match_info.pre_match_active) {
+            remove_ready_player(source);
+        }
+        else {
+            send_chat_line_packet("No match is queued. Use \"/vote match\" to queue a match.", source);
+        }
+    }
+
+    void reset_match_state()
+    {
+        g_match_info.pre_match_active = false;
+        g_match_info.match_active = false;
+        g_match_info.team_size = 0;
+        g_match_info.active_match_players.clear();
+        g_match_info.ready_players_red.clear();
+        g_match_info.ready_players_blue.clear();
+    }
+
     void on_player_leave(rf::Player* player)
     {
         if (active_vote && !active_vote.value()->on_player_leave(player)) {
@@ -451,6 +637,8 @@ void handle_vote_command(std::string_view vote_name, std::string_view vote_arg, 
         g_vote_mgr.StartVote<VoteNext>(vote_arg, sender);
     else if (vote_name == "previous" || vote_name == "prev")
         g_vote_mgr.StartVote<VotePrevious>(vote_arg, sender);
+    else if (vote_name == "match")
+        g_vote_mgr.StartVote<VoteMatch>(vote_arg, sender);
     else if (vote_name == "yes" || vote_name == "y")
         g_vote_mgr.add_player_vote(true, sender);
     else if (vote_name == "no" || vote_name == "n")
@@ -459,6 +647,16 @@ void handle_vote_command(std::string_view vote_name, std::string_view vote_arg, 
         g_vote_mgr.try_cancel_vote(sender);
     else
         send_chat_line_packet("Unrecognized vote type!", sender);
+}
+
+void handle_ready_command(rf::Player* sender)
+{
+    g_vote_mgr.ready(sender);
+}
+
+void handle_unready_command(rf::Player* sender)
+{
+    g_vote_mgr.unready(sender);
 }
 
 void server_vote_do_frame()

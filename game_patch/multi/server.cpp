@@ -74,6 +74,7 @@ void load_additional_server_config(rf::Parser& parser)
     parse_vote_config("Vote Restart", g_additional_server_config.vote_restart, parser);
     parse_vote_config("Vote Next", g_additional_server_config.vote_next, parser);
     parse_vote_config("Vote Previous", g_additional_server_config.vote_previous, parser);
+    parse_vote_config("Vote Match", g_additional_server_config.vote_match, parser);
     if (parser.parse_optional("$DF Spawn Protection Duration:")) {
         g_additional_server_config.spawn_protection_duration_ms = parser.parse_uint();
     }
@@ -329,7 +330,10 @@ bool handle_server_chat_command(std::string_view server_command, rf::Player* sen
         send_private_message_with_stats(sender);
     }
     else if (cmd_name == "ready") {
-        send_private_message_with_stats(sender);
+        handle_ready_command(sender);
+    }
+    else if (cmd_name == "unready") {
+        handle_unready_command(sender);
     }
     else {
         return false;

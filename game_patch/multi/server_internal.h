@@ -2,6 +2,7 @@
 
 #include <string_view>
 #include <string>
+#include <set>
 #include <map>
 #include <optional>
 
@@ -34,6 +35,7 @@ struct ServerAdditionalConfig
     VoteConfig vote_restart;
     VoteConfig vote_next;
     VoteConfig vote_previous;
+    VoteConfig vote_match;
     int spawn_protection_duration_ms = 1500;
     std::optional<float> spawn_life;
     std::optional<float> spawn_armor;
@@ -58,11 +60,26 @@ struct ServerAdditionalConfig
     bool kill_reward_armor_super = false;
 };
 
+struct MatchInfo
+{
+    bool pre_match_active;
+    bool match_active;
+    int team_size;
+    std::set<rf::Player*> ready_players_red;
+    std::set<rf::Player*> ready_players_blue;
+    std::set<rf::Player*> active_match_players;
+};
+
 extern ServerAdditionalConfig g_additional_server_config;
 extern std::string g_prev_level;
+extern MatchInfo g_match_info;
+
+
 
 void cleanup_win32_server_console();
 void handle_vote_command(std::string_view vote_name, std::string_view vote_arg, rf::Player* sender);
+void handle_ready_command(rf::Player* sender);
+void handle_unready_command(rf::Player* sender);
 void server_vote_do_frame();
 void init_server_commands();
 void extend_round_time(int minutes);
