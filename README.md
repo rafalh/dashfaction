@@ -150,8 +150,12 @@ Configuration example:
     $DF Vote Next: true
     // Enable vote previous
     $DF Vote Previous: true
-    // Duration of player invulnerability after respawn in ms (default is the same as in stock RF - 1500)
-    $DF Spawn Protection Duration: 1500
+    // Determine whether players are granted some duration of invulnerability after spawning (stock RF is true)
+    $DF Spawn Protection Enabled: true
+        // Duration of the invulnerability in ms (stock RF is 1500)
+        +Duration: 1500
+        // Enable to use an Invulnerability powerup for the spawn protection (intended for run servers)
+        +Use Powerup: false
     // Initial player life (health) after spawn
     $DF Spawn Health: 100
     // Initial player armor after spawn
