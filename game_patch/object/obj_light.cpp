@@ -1,6 +1,7 @@
 #include <cassert>
 #include <xlog/xlog.h>
 #include <patch_common/FunHook.h>
+#include <patch_common/CallHook.h>
 #include <common/utils/list-utils.h>
 #include "../rf/object.h"
 #include "../rf/item.h"
@@ -133,6 +134,25 @@ ConsoleCommand2 mesh_static_lighting_cmd{
     "Toggle mesh static lighting calculation",
 };
 
+CallHook<void(rf::Entity*)> entity_update_muzzle_flash_light_hook{
+    0x0041E814,
+    [](rf::Entity* ep) {
+        if (g_game_config.muzzle_flash) {
+            entity_update_muzzle_flash_light_hook.call_target(ep);
+        }        
+    },
+};
+
+ConsoleCommand2 muzzle_flash_cmd{
+    "muzzle_flash",
+    []() {
+        g_game_config.muzzle_flash = !g_game_config.muzzle_flash;
+        g_game_config.save();
+        rf::console::print("Muzzle flash lights are {}", g_game_config.muzzle_flash ? "enabled" : "disabled");
+    },
+    "Toggle muzzle flash dynamic lights",
+};
+
 void obj_light_apply_patch()
 {
     // Fix/improve items and clutters static lighting calculation: fix matrices being zero and use static lights
@@ -143,6 +163,10 @@ void obj_light_apply_patch()
     // Fix invalid vertex offset in mesh lighting calculation
     write_mem<int8_t>(0x005042F0 + 2, sizeof(rf::Vector3));
 
+    // Don't create muzzle flash lights
+    entity_update_muzzle_flash_light_hook.install();
+
     // Commands
     mesh_static_lighting_cmd.register_cmd();
+    muzzle_flash_cmd.register_cmd();
 }
