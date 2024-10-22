@@ -134,9 +134,9 @@ ConsoleCommand2 mesh_static_lighting_cmd{
     "Toggle mesh static lighting calculation",
 };
 
-CallHook<void(rf::Entity*)> entity_update_muzzle_flash_light_hook{
+CallHook<void(rf::Entity&)> entity_update_muzzle_flash_light_hook{
     0x0041E814,
-    [](rf::Entity* ep) {
+    [](rf::Entity& ep) {
         if (g_game_config.muzzle_flash) {
             entity_update_muzzle_flash_light_hook.call_target(ep);
         }        
