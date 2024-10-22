@@ -402,12 +402,10 @@ namespace rf
     static auto& entity_create =
         addr_as_ref<Entity*(int entity_type, const char* name, int parent_handle, const Vector3& pos,
         const Matrix3& orient, int create_flags, int mp_character)>(0x00422360);
-    static auto& entity_explode = addr_as_ref<bool(Entity* ep)>(0x00419420);
     static auto& entity_is_dying = addr_as_ref<bool(Entity *ep)>(0x00427020);
     static auto& entity_in_vehicle = addr_as_ref<bool(Entity *ep)>(0x004290D0);
     static auto& entity_is_jeep_driver = addr_as_ref<bool(Entity *ep)>(0x0042AC80);
     static auto& entity_is_jeep_gunner = addr_as_ref<bool(Entity *ep)>(0x0042ACD0);
-    static auto& entity_is_humanoid = addr_as_ref<bool(Entity* ep)>(0x0040A150);
     static auto& entity_is_driller = addr_as_ref<bool(Entity *ep)>(0x0042D780);
     static auto& entity_is_sub = addr_as_ref<bool(Entity *ep)>(0x0040A270);
     static auto& entity_is_jeep = addr_as_ref<bool(Entity *ep)>(0x0040A2F0);
